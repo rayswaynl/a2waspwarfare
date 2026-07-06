@@ -1,4 +1,4 @@
-Private ["_hq","_unit","_rearmor","_x"];
+Private ["_hq","_unit","_rearmor","_rearmorEH","_x"];
 
 _unit = _this;
 
@@ -44,7 +44,19 @@ _rearmor = {
    				_result
   			};
 			
-player addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+if (!isNil "WFBE_PLAYERHDMEH_UNIT") then {
+	if (!isNull WFBE_PLAYERHDMEH_UNIT) then {
+		_rearmorEH = WFBE_PLAYERHDMEH_UNIT getVariable ["WFBE_PLAYERHDMEH", -1];
+		if (_rearmorEH >= 0) then {
+			WFBE_PLAYERHDMEH_UNIT removeEventHandler ["HandleDamage", _rearmorEH];
+			WFBE_PLAYERHDMEH_UNIT setVariable ["WFBE_PLAYERHDMEH", -1, false];
+		};
+	};
+};
+
+_rearmorEH = _unit addEventHandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+_unit setVariable ["WFBE_PLAYERHDMEH", _rearmorEH, false];
+WFBE_PLAYERHDMEH_UNIT = _unit;
 
 if (!isNull commanderTeam) then {
 	_hq = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
@@ -52,3 +64,10 @@ if (!isNull commanderTeam) then {
 };
 
 [sideJoinedText,'UnitsCreated',1] Call UpdateStatistics;
+
+//--- cmdcon44q (Ray report x3, 2026-07-04): the map-marker class affix ([MED]/[ENG]...) reads
+//--- wfbe_player_class off the UNIT OBJECT (updateteamsmarkers.sqf:310). Join and skin-swap set it,
+//--- but every RESPAWN creates a new body that never got it re-broadcast - so the affix silently died
+//--- with the player's first death. Re-broadcast here on the fresh body (WFBE_SK_V_Type is global).
+player setVariable ["wfbe_player_class", WFBE_SK_V_Type, true];
+

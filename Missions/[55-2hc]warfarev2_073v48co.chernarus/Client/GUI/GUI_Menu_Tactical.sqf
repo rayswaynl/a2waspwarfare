@@ -199,6 +199,9 @@ WFBE_CL_FNC_TelMuniEnable = {
 			{ if (!isNull _x && {alive _x}) exitWith {_platformAlive = true} } forEach _scuds;
 		};
 	};
+	if (!(_lvl >= 1 && _cmd && _platformAlive && _fnd >= _fee)) then {
+		["INFORMATION", Format ["TelMuniEnable denied: lvl=%1 cmd=%2 platform=%3 funds=%4 fee=%5", _lvl, _cmd, _platformAlive, _fnd, _fee]] Call WFBE_CO_FNC_LogContent;
+	};
 	if (_lvl >= 1 && _cmd && _platformAlive && _fnd >= _fee) then {true} else {false}
 };
 

@@ -26,7 +26,7 @@ Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units
          "_townCamps","_campObj","_sweepStart","_allOurs","_ups",
          "_campRange","_liveUnits","_inVehicle","_dismounted","_veh",
          "_driver","_cargo","_u","_settleTimeout","_lastLdrPos","_stuckTicks","_pLdr","_pPos","_pVeh","_pNear","_pRds","_pNode",
-         "_pUnstuckStreak","_pUnstuckMax","_pAvoid","_pAvoidKeep","_pAvoidCd","_cIsAvoided",
+         "_pUnstuckStreak","_pUnstuckMax","_pWedgePos","_pAvoid","_pAvoidKeep","_pAvoidCd","_cIsAvoided",
          "_cIsNaval","_navSkipLogged",
          "_perfProbe","_perfScope","_perfPickStart","_perfNavalSkipped","_perfAvoided"];  //--- cmdcon41-w3m: +_cIsNaval (naval-HVT skip test), _navSkipLogged (one-time-per-group INFO latch).
 
@@ -332,7 +332,15 @@ while {!WFBE_GameOver && _alive} do {
 						_stuckTicks = _stuckTicks + 1;
 					} else {
 						_stuckTicks = 0;
-						_pUnstuckStreak = 0;
+						//--- cmdcon44q (live: O 1-2-C 23x / B 1-1-I 18x unstuck loops): the unstuck's OWN teleport
+						//--- moves the leader >25m, so this branch zeroed the streak every time and the CIRCLING-FIX-B
+						//--- escape hatch (streak>=5 -> blacklist town) could NEVER fire. Only count it as real
+						//--- progress when the team is genuinely clear of the wedge area (>300m from last wedge site).
+						if (isNil "_pWedgePos") then {
+							_pUnstuckStreak = 0;
+						} else {
+							if ((_pPos distance _pWedgePos) > 300) then {_pUnstuckStreak = 0};
+						};
 					};
 					_lastLdrPos = _pPos;
 					if (_stuckTicks >= 3) then {
@@ -361,6 +369,7 @@ while {!WFBE_GameOver && _alive} do {
 							};
 						};
 						diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time/60)) + "|PATROL_UNSTUCK|" + (str _team));
+						_pWedgePos = _pPos;
 						_pUnstuckStreak = _pUnstuckStreak + 1;
 						_pUnstuckMax = missionNamespace getVariable ["WFBE_C_AICOM_PATROL_UNSTUCK_MAX", 5];
 						if (_perfProbe) then {

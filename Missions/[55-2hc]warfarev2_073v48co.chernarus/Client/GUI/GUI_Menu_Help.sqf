@@ -83,7 +83,7 @@ switch (_action) do {
 "<t size='1.4' color='" + HDR + "' underline='true'>Getting Started</t><br /><br />
 <t color='" + KEY + "'>CTI</t> (Conquer The Island) pits <t color='" + KEY + "'>West</t> against <t color='" + KEY + "'>East</t> for control of the map. Each side is led by a <t color='" + WARN + "'>Commander</t> who builds a base from the <t color='" + WARN + "'>MHQ</t> (Mobile HQ) and reinforces the team with bought units and vehicles.<br /><br />
 <t size='1.2' color='" + KEY + "'>Your first five minutes</t><br />
-1. Pick a class in the lobby (SOL / SUP / MED / ENG / SNI). Tags show on the map and in your Notes.<br />
+1. Pick a class in the lobby (SOL / SPEC / MED / ENG / SNI). Tags show on the map and in your Notes.<br />
 2. Spawn, then open the <t color='" + GOLD + "'>WF Menu</t> (scroll-wheel action, blue 'Options') for everything: buy gear, buy units, give orders.<br />
 3. Head to the nearest contested <t color='" + KEY + "'>town</t> (blue/red circle on the map) and help capture it.<br /><br />
 <t size='1.2' color='" + KEY + "'>How you win</t><br />
@@ -197,7 +197,7 @@ Capturing a town from GUER no longer hands you its static weapon emplacements - 
 <t size='1.2' color='" + KEY + "'>Wildcards</t><br />
 Random battlefield events fire through the round - veteran companies, town uprisings, heliborne QRF and more. Stay flexible.<br /><br />
 <t size='1.2' color='" + KEY + "'>Classes (both sides)</t><br />
-SOL / SUP / MED / ENG / SNI, shown on join and via the <t color='" + GOLD + "'>Class Info</t> action; tags appear on the map and in Notes. A medic-only <t color='" + KEY + "'>Redeployment Truck</t> (Light Factory, violet row) gives medics a forward spawn.<br />",
+SOL / SPEC / MED / ENG / SNI, shown on join and via the <t color='" + GOLD + "'>Class Info</t> action; tags appear on the map and in Notes. A medic-only <t color='" + KEY + "'>Redeployment Truck</t> (Light Factory, violet row) gives medics a forward spawn.<br />",
 
 //================================================================ 7  FAQ
 "<t size='1.4' color='" + HDR + "' underline='true'>Frequently Asked Questions</t><br /><br />

@@ -411,7 +411,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_OILFIELD_REPAIR_MSG") then {WFBE_C_OILFIELD_REPAIR_MSG = "The OILFIELD has been repaired and is paying out again."}; //--- repair broadcast line.
 	if (isNil "WFBE_C_OILFIELD_AICOM_PULL") then {WFBE_C_OILFIELD_AICOM_PULL = 1};         //--- (AI contests) 1 = stamp a spearhead weight bonus on the nearest real town while the field is NOT held by that AI side (pulls AICOM teams past the field to capture it organically). 0 = off.
 	if (isNil "WFBE_C_OILFIELD_AICOM_WEIGHT") then {WFBE_C_OILFIELD_AICOM_WEIGHT = 600};   //--- magnitude of the AICOM spearhead-weight bonus applied to the field's nearest town (added to wfbe_aicom_town_weight; town score divisor context ~50/m).
-	if (isNil "WFBE_C_OILFIELD_GUER_RAID") then {WFBE_C_OILFIELD_GUER_RAID = 0};           //--- (GUER raids) DEFAULT OFF (adds AI units): 1 = occasional GUER foot party raids the field while it is PAYING. Group-budget-aware.
+	if (isNil "WFBE_C_OILFIELD_GUER_RAID") then {WFBE_C_OILFIELD_GUER_RAID = if (worldName == "Takistan") then {1} else {0}}; //--- (GUER raids) DEFAULT ON on Takistan, OFF elsewhere (adds AI units): 1 = occasional GUER foot party raids the field while it is PAYING. Group-budget-aware.
 	if (isNil "WFBE_C_OILFIELD_GUER_RAID_INTERVAL") then {WFBE_C_OILFIELD_GUER_RAID_INTERVAL = 1500}; //--- min seconds between GUER raid spawns on the field.
 	if (isNil "WFBE_C_OILFIELD_GUER_RAID_SIZE") then {WFBE_C_OILFIELD_GUER_RAID_SIZE = 4}; //--- GUER foot raiders per raid party.
 	if (isNil "WFBE_C_OILFIELD_GUER_RAID_GRPCAP") then {WFBE_C_OILFIELD_GUER_RAID_GRPCAP = 120}; //--- do NOT spawn a raid if resistance group count is at/above this (leaves headroom below the 144 hard cap).
@@ -515,6 +515,7 @@ if (worldName == "Zargabad") then {
 		if (isNil "WFBE_C_AICOM_VEHICLE_SELFREPAIR")   then {WFBE_C_AICOM_VEHICLE_SELFREPAIR   = 1};
 		if (isNil "WFBE_C_AICOM_SELFREPAIR_SAFE_DIST") then {WFBE_C_AICOM_SELFREPAIR_SAFE_DIST = 250}; //--- m: no non-friendly Man/LandVehicle within this radius before a repair starts or completes.
 		if (isNil "WFBE_C_AICOM_SELFREPAIR_DELAY")     then {WFBE_C_AICOM_SELFREPAIR_DELAY     = 30};  //--- s the crew must hold a safe window before the field repair completes.
+		if (isNil "WFBE_C_AICOM_STUCK_REPAIR")         then {WFBE_C_AICOM_STUCK_REPAIR         = 0};  //--- TP-15: 1 = at a tier-2/3 UNSTUCK event, restore+rearm the stuck lead hull IN PLACE (no town detour), reusing the SELFREPAIR safe-dist gate. 0 = off (byte-identical).
 		//--- B754: also GROW the attack-heli cap (WFBE_C_AICOM_ATTACKHELI_MAX) over the match so the late air push isn't throttled at the early cap. Only when a base cap > 0 exists (0 still = no cap). Effective cap = base + floor(timeRatio * BONUS).
 		if (isNil "WFBE_C_AICOM_ATTACKHELI_MAX_TIME_BONUS") then {WFBE_C_AICOM_ATTACKHELI_MAX_TIME_BONUS = 4};
 		//--- B754 (Ray 2026-06-25) RELATIVE ROUND-CLOSER GATE: the absolute 12-town HQ-strike gate is unreachable in a lopsided game (b753 soak: WEST held 11 vs EAST's dug-in 2, myEff 70 vs 53, never hit 12 -> 8.4h with no winner). Let a runaway leader close BELOW the absolute gate when dominant on EFFECTIVE strength AND (enemy collapsed to <= ENEMY_MAX towns OR own >= TOWN_RATIO town lead), plus a STALL_OVERRIDE after N dominant-but-passive stall ticks. Never fires while behind on towns/strength.
@@ -733,6 +734,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_REPICK_MEMORY_MIN") then {WFBE_C_AICOM_REPICK_MEMORY_MIN = 5};   //--- minutes a picked primary stays penalised.
 	if (isNil "WFBE_C_AICOM_CONCENTRATE_TOWNS") then {WFBE_C_AICOM_CONCENTRATE_TOWNS = 4};//--- Ray 2026-06-28 CONCENTRATE-FIRST: while a commander owns FEWER than this many towns it puts its FULL strength on ONE fist town (no expand/harass split) - a true opening steamroller. Once it owns this many, the normal expand(EXPAND_TEAMS)+harass spread resumes. 0 = off (spread from town one).
 	if (isNil "WFBE_C_AICOM_DISBAND_LOWTIER_ENABLE") then {WFBE_C_AICOM_DISBAND_LOWTIER_ENABLE = 1};//--- Ray 2026-06-28: retire idle rear FOOT-infantry teams once the side fields mobile (light/heavy/air) teams - keeps force modern + frees pop/group cap for armour. 0 = off.
+	if (isNil "WFBE_C_AICOM_DISBAND_LOWTIER_INTERVAL") then {WFBE_C_AICOM_DISBAND_LOWTIER_INTERVAL = 600};//--- seconds between low-tier disband passes (at most ONE team retired per pass). Dedicated operator knob; DISBAND_INTERVAL remains for shared/full disband pacing.
 	if (isNil "WFBE_C_AICOM_DISBAND_INTERVAL") then {WFBE_C_AICOM_DISBAND_INTERVAL = 300};//--- seconds between disband passes (at most ONE team retired per pass) - long for immersion.
 	if (isNil "WFBE_C_AICOM_DISBAND_INFANTRY_FLOOR") then {WFBE_C_AICOM_DISBAND_INFANTRY_FLOOR = 2};//--- never disband below this many FOOT teams/side (keep a footprint). 3->2: with the 8-team cap a side rarely holds >3 foot teams so disband never fired.
 	if (isNil "WFBE_C_AICOM_DISBAND_VIEW_DIST") then {WFBE_C_AICOM_DISBAND_VIEW_DIST = 1500};//--- Ray 2026-06-28: NEVER retire a foot team with a human player within this many m (immersion - no team vanishing in a player's view). Proximity proxy for line-of-sight.
@@ -902,6 +904,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_AUTOFLIP") then {WFBE_C_AICOM_AUTOFLIP = 1};                   //--- Build84 (Ray, ON): auto-right flipped AICOM ground vehicles on server/HC (Marty AutoFlip thresholds; only when flipped+stuck). 0 = off.
 	if (isNil "WFBE_C_AICOM_SPAWN_ON_ROADS") then {WFBE_C_AICOM_SPAWN_ON_ROADS = 1};       //--- Build84: snap AICOM factory-produced unit spawn to nearest road within SPAWN_ROAD_RADIUS of the factory pad. 0 = pre-Build84 pad behaviour.
 	if (isNil "WFBE_C_AICOM_SPAWN_ROAD_RADIUS") then {WFBE_C_AICOM_SPAWN_ROAD_RADIUS = 60};//--- Build84: nearRoads search radius (m) for the AICOM road-spawn snap.
+	//--- === TP-9 PLAYER SPAWN-ON-ROADS (claude-gaming 2026-07-06) ===
+	if (isNil "WFBE_C_PLAYER_SPAWN_ON_ROADS") then {WFBE_C_PLAYER_SPAWN_ON_ROADS = 0}; //--- TP-9: snap player-factory spawn to nearest road (reuses WFBE_C_AICOM_SPAWN_ROAD_RADIUS). 0 = off (byte-identical to pre-TP-9 player spawn).
 	if (isNil "WFBE_C_AICOM_FOUND_REQUIRE_FACTORY") then {WFBE_C_AICOM_FOUND_REQUIRE_FACTORY = 0}; //--- Build84 (ships OFF - founding-starvation safety): 1 = only found a team type whose matching factory the side owns (no HQ 'magic' fallback); 0 = current HQ-fallback allowed.
 	if (isNil "WFBE_C_AICOM_PATROL_UNSTUCK_MAX") then {WFBE_C_AICOM_PATROL_UNSTUCK_MAX = 5}; //--- Build84: after N consecutive side-patrol wedges, drop target + re-pick a different frontline town (anti-orbit).
 	if (isNil "WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS") then {WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS = 250}; //--- Build84: 'at target' radius (m) for assault-arrive / uncapturable-abandon logic (was getVariable-default-only).
@@ -956,6 +960,8 @@ if (worldName == "Zargabad") then {
 	//--- cmdcon41-w3d COMMAND-MENU V2: new steering verbs (RALLY/REFIT/HOLD) + non-commander REQUEST-AI-SUPPORT nudge.
 	if (isNil "WFBE_C_CMD_MENU_V2")                    then {WFBE_C_CMD_MENU_V2 = 1};                   //--- master flag for the cmdcon41-w3d command-menu additions (steering verbs, nudge, UnitCamera guard). 0 = off.
 	if (isNil "WFBE_C_CMD_NUDGE_COOLDOWN")            then {WFBE_C_CMD_NUDGE_COOLDOWN = 180};          //--- s per-player cooldown on the non-commander "REQUEST AI SUPPORT" nudge.
+	if (isNil "WFBE_C_TEAM_FOCUS_COOLDOWN")           then {WFBE_C_TEAM_FOCUS_COOLDOWN = 120};         //--- s SERVER-SIDE per-player cooldown on the commander "aicom-focus" order (TP-13; client guard alone was spammable). 0 = disable (legacy behaviour).
+	if (isNil "WFBE_C_CMD_VERB_COOLDOWN")             then {WFBE_C_CMD_VERB_COOLDOWN = 60};            //--- s SERVER-SIDE per-player cooldown on the aicom-posture/fieldorder/defend/reinforce command verbs (TP-20; each verb had only a client-side cooldown). 0 = disable.
 	if (isNil "WFBE_C_CMD_NUDGE_RANGE")              then {WFBE_C_CMD_NUDGE_RANGE = 1500};            //--- m max distance a nudged AI team may be from the requesting player.
 	if (isNil "WFBE_C_CMD_REFIT_COST")               then {WFBE_C_CMD_REFIT_COST = 0};                //--- commander REFIT order charge toggle. 1 = legacy charging (funds debited per missing man). Ray 2026-07-04 default free (0): the player-commander REFIT verb costs nothing and is never blocked by low funds; mechanics/cooldown unchanged.
 	//--- cmdcon42-o ENEMY-BASE INTEL-LEAK CLAMP (Ray 2026-07-02): the war-room roster + AI-objective marker must not reveal the hidden enemy HQ when your squads push it (HQ-strike / base-assault order destinations). Producer-side: any RENDERED order destination within HQ_RADIUS of an ENEMY side's HQ is clamped to the nearest enemy-held town ("(advancing)"), never the true base pin. The team's real movement destination is untouched (recon-by-presence still works).
@@ -982,6 +988,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_ARMOR_SCREEN_R")  then {WFBE_C_AICOM_ARMOR_SCREEN_R = 80}; //--- m stand-off radius for the outward screen position.
 	if (isNil "WFBE_C_NAVAL_TWIN_HULLS")              then {WFBE_C_NAVAL_TWIN_HULLS = 1};              //--- Khe Sanh: outer carriers become deck-bridged TWIN-HULL super-carriers (middle keeps the SCUD, single hull).
 	if (isNil "WFBE_C_NAVAL_WEST_AAV")                then {WFBE_C_NAVAL_WEST_AAV = 0};                //--- Lane 45: default-off WEST AAV buy-row metadata hook for future naval-map beach-assault work.
+	if (isNil "WFBE_C_COASTAL_UTILITY_BOATS")         then {WFBE_C_COASTAL_UTILITY_BOATS = 0};         //--- Lane 184: default-off cheap PBX/RHIB-class Light-factory utility boats on coastal/naval maps only.
+	if (isNil "WFBE_C_COASTAL_UTILITY_BOAT_WATER_PROBES") then {WFBE_C_COASTAL_UTILITY_BOAT_WATER_PROBES = switch (toLower worldName) do {case "chernarus": {[[7000,150,0],[13500,1800,0],[600,6500,0]]}; default {[]};}}; //--- Lane 184: edge-water probes used to qualify coastal utility boats.
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL")           then {WFBE_C_VICTORY_TERRITORIAL = 1};           //--- Ray: hold >= FRAC of all towns for MINS unbroken -> win (announced start/milestones/broken; existing win path).
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL_FRAC")      then {WFBE_C_VICTORY_TERRITORIAL_FRAC = 0.8};    //--- town share required to run the clock.
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL_MINS")      then {WFBE_C_VICTORY_TERRITORIAL_MINS = 30};     //--- unbroken minutes at/above FRAC to win.
@@ -1067,6 +1075,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_PLANE_LOITER_RADIUS")     then {WFBE_C_AICOM_PLANE_LOITER_RADIUS = 600};    //--- completion radius of the plane orbit-attack MOVE (large = shallow bank, no terrain clipping).
 	if (isNil "WFBE_C_AICOM_BUILD_ROADCLEAR")         then {WFBE_C_AICOM_BUILD_ROADCLEAR = 1};          //--- Ray backlog: AICOM never places base structures/HQ/MHQ-deploy on or beside roads.
 	if (isNil "WFBE_C_AICOM_BUILD_ROAD_BUFFER")       then {WFBE_C_AICOM_BUILD_ROAD_BUFFER = 14};       //--- m minimum clearance from the nearest road segment (<=0 disables).
+	if (isNil "WFBE_C_AICOM_BUILD_MIN_FLAT_Z") then {WFBE_C_AICOM_BUILD_MIN_FLAT_Z = 0};  //--- TP-19: min surfaceNormal z (0..1) to accept a build spot; higher = flatter required (~0.90 = reject >26deg). 0 = OFF (no slope gate).
+	if (isNil "WFBE_C_AICOM_BUILD_TREE_CLEAR") then {WFBE_C_AICOM_BUILD_TREE_CLEAR = 0};  //--- TP-19: m radius that must be clear of map TREE/SMALL TREE for a build spot (~10 = no trees under the footprint). 0 = OFF (no tree gate).
 	if (isNil "WFBE_C_SKINSEL")                       then {WFBE_C_SKINSEL = 1};                       //--- cmdcon41-w3l: skin selector master (WF-menu SKIN button + first-spawn dialog + respawn restore). Legacy WFBE_C_SKIN_SELECTOR still honored as an OR.
 	if (isNil "WFBE_C_SKINSWAP_FUNDS_CARRY")          then {WFBE_C_SKINSWAP_FUNDS_CARRY = 1};          //--- cmdcon43-h: carry the player's wfbe_funds + wfbe_side across a skin swap so a failed rejoin (fresh/diverted/CIV group) never orphans his wallet to $0 (LIVE-confirmed cmdcon42b). 1 on, 0 off.
 	if (isNil "WFBE_C_FUNDS_HEAL_ZERO_GRACE")         then {WFBE_C_FUNDS_HEAL_ZERO_GRACE = 90};         //--- Ray pick A (2026-07-03): seconds the client funds self-heal refuses to accept a 0 wfbe_funds as "healed" (a transient JIP-sync 0 was the old zero-latch); keeps re-requesting the server lock-step record restore. Belt-and-suspenders atop the record fix. Higher = longer no-zero window.
@@ -1262,6 +1272,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- parked team's order. Was hardcoded 600s (10min) = stalemate-slow. Now config-driven.
 	if (isNil 'WFBE_C_AICOM_STUCK_SECS')  then {WFBE_C_AICOM_STUCK_SECS  = 210};
 	if (isNil 'WFBE_C_AICOM_STUCK_MOVED') then {WFBE_C_AICOM_STUCK_MOVED = 200};
+	if (isNil 'WFBE_C_AICOM_WATCHDOG_LASTSTAND_SKIP') then {WFBE_C_AICOM_WATCHDOG_LASTSTAND_SKIP = 1}; //--- 1 = last-stand recall shields HQ defenders from wedge-watchdog release; 0 = legacy.
 	if (isNil 'WFBE_C_AICOM_STUCK_FAR')   then {WFBE_C_AICOM_STUCK_FAR   = 300};
 	//--- ASSAULT TELEMETRY (task #48, #2): dispatch->arrival watcher thresholds (AssignTowns Hook B).
 	//--- ARRIVE_RADIUS 250m ~= town SAD radius (AIMoveTo uses 200) + leader margin to count "at the town".
@@ -1322,6 +1333,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- B36 hotfix (Ray 2026-06-15): AI commander starts with a flat 200k cash (was FUNDS_START x FUNDS_MULT ~=45k); it runs the whole side. Players start with 30k.
 	if (isNil "WFBE_C_AI_COMMANDER_START_FUNDS") then {WFBE_C_AI_COMMANDER_START_FUNDS = 200000}; //--- B67 (Ray 2026-06-21): RESTORED to 200000 (cash-rich directive). The earlier 60k trim was counterproductive - START_FUNDS cannot prepay un-unlocked tech (tech is interval-gated at 300s, money-independent), it only fuels UNIT FIELDING, which Ray now wants maximised. CASH only; never supply.
 	if (isNil "WFBE_C_ECONOMY_INCOME_INTERVAL") then {WFBE_C_ECONOMY_INCOME_INTERVAL = 60}; //--- Income Interval (Delay between each paycheck).
+	if (isNil "WFBE_C_INCOME_SLEEP_FPS_SCALE") then {WFBE_C_INCOME_SLEEP_FPS_SCALE = 1}; //--- Fleet lane 279: GetSleepFPS no longer shortens sleeps under low server FPS. 1 = raw configured interval; 2 = full load-shedding extension (5 fps -> 1.5x sleep), values between scale proportionally.
 	if (isNil "WFBE_C_ECONOMY_INCOME_SYSTEM") then {WFBE_C_ECONOMY_INCOME_SYSTEM = 3}; //--- Income System (1:Full, 2:Half (Half -> 120 SV Town = 60$ / 60SV), 3: Commander System, 4: Commander System: Full)
 	if (isNil "WFBE_C_ECONOMY_SUPPLY_START_WEST") then {WFBE_C_ECONOMY_SUPPLY_START_WEST = if (WF_Debug) then {900000} else {12800}};
 	if (isNil "WFBE_C_ECONOMY_SUPPLY_START_EAST") then {WFBE_C_ECONOMY_SUPPLY_START_EAST = if (WF_Debug) then {900000} else {12800}};
@@ -1335,8 +1347,8 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT") then {WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT = if (WF_Debug) then {900000} else {40000}};
 	if (isNil "WFBE_C_ECONOMY_SUPPLY_SYSTEM") then {WFBE_C_ECONOMY_SUPPLY_SYSTEM = 1}; //--- Supply System (0: Trucks, 1: Automatic with time).
 	WFBE_C_FIX_INCOME_SYSTEM4_DISPLAY = 0; //--- 1 makes Client_GetIncome mirror the server's income-system 4 x1.5 payout display.
-	WFBE_C_ECONOMY_INCOME_COEF = 14; //--- B67 (Ray 2026-06-21): 8->14. Boost town-driven CASH income ~1.75x (CASH path only: updateresources.sqf:60->95; the SUPPLY credit at :76 uses WFBE_C_ECONOMY_SUPPLY_INCOME_MULT and is UNCHANGED). Town Multiplicator Coefficient (SV * x).
-	WFBE_C_ECONOMY_SUPPLY_INCOME_MULT = 1.0; //--- Ray 2026-06-29 FULL SV-INCOME PARITY: un-throttle ongoing town SUPPLY income to stock 1.0. The credit is SIDE-WIDE (updateresources.sqf:87; funds AI + human commanders + GUER equally - see L420), so 1.0 gives AI commanders the same full supply SV income a human commander's economy gets (there was never an AI-specific handicap - the throttle hit everyone). Supersedes the B57 progression-throttle (0.35->0.5): the funds->supply bridge that made throttling safe is gone, research + factory-rebuild are now SUPPLY-ONLY, and 0.35/0.5 was starving the AI (live no-affordable-upgrade RPT: needed 9500 supply with ~1650 banked). NOTE: founding/research/structure costs were tuned against 0.35 (see L593) -> economy now runs ~2-3x faster; review costs if the AI over-builds. Cash/funds + starting-supply seed UNCHANGED (Ray: cash=units, supply=buildings+upgrades).
+	WFBE_C_ECONOMY_INCOME_COEF = if (worldName == "Zargabad") then {42} else {14}; //--- cmdcon44r (Ray 2026-07-04): ZG CASH x3 (14*3=42) - Ray: "cash stays at 3x". NOTE cash had never been multiplied on ZG (44p only tripled the SUPPLY stream), so this SETS the ZG cash stream to the x3 Ray specified; CH/TK unchanged at 14. Consumers: updateresources.sqf:16 + Common_GetTownsIncome.sqf:7 (both read this constant, both scale together). B67 (Ray 2026-06-21): 8->14. Boost town-driven CASH income ~1.75x (CASH path only: updateresources.sqf:60->95; the SUPPLY credit at :76 uses WFBE_C_ECONOMY_SUPPLY_INCOME_MULT and is UNCHANGED). Town Multiplicator Coefficient (SV * x).
+	WFBE_C_ECONOMY_SUPPLY_INCOME_MULT = if (worldName == "Zargabad") then {5.0} else {1.0}; //--- cmdcon44r (Ray 2026-07-04): ZG supply x3 -> x5 ("push ZG to 5x, cash stays at 3x"; cash stream split off to x3 via INCOME_COEF on the line above). 44p note: TRIPLE supply income on Zargabad only - the 11-town map generates too little SV for its pacing (CH/TK have 30-40 towns feeding the same economy). Side-wide credit (updateresources.sqf:96): players, human+AI commanders and GUER all x3 on ZG. CH/TK stay 1.0. Original 2026-06-29 parity note: un-throttle ongoing town SUPPLY income to stock 1.0. The credit is SIDE-WIDE (updateresources.sqf:87; funds AI + human commanders + GUER equally - see L420), so 1.0 gives AI commanders the same full supply SV income a human commander's economy gets (there was never an AI-specific handicap - the throttle hit everyone). Supersedes the B57 progression-throttle (0.35->0.5): the funds->supply bridge that made throttling safe is gone, research + factory-rebuild are now SUPPLY-ONLY, and 0.35/0.5 was starving the AI (live no-affordable-upgrade RPT: needed 9500 supply with ~1650 banked). NOTE: founding/research/structure costs were tuned against 0.35 (see L593) -> economy now runs ~2-3x faster; review costs if the AI over-builds. Cash/funds + starting-supply seed UNCHANGED (Ray: cash=units, supply=buildings+upgrades).
 	WFBE_C_ECONOMY_INCOME_DIVIDED = 1.2; //--- Prevent commander from being a millionaire, and add the rest to the players pool.
 	WFBE_C_ECONOMY_INCOME_PERCENT_MAX = 30; //--- Commander may set income up to x%.
 	WFBE_C_ECONOMY_SUPPLY_TIME_INCREASE_DELAY = 60; //--- Increase SV delay.
@@ -1398,6 +1410,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_MARKER_MOVE_INPLACE") then {WFBE_C_MARKER_MOVE_INPLACE = 1};      //--- 1: refresh nudges marker pos/dir/text in place (setMarker*Local) instead of delete+recreate on the rebuild path. 0: legacy delete+recreate. Cheapest win; no visible change.
 	if (isNil "WFBE_C_MARKER_LABEL_CULL") then {WFBE_C_MARKER_LABEL_CULL = 1};          //--- 1: when registered unit markers exceed the threshold, blank the TEXT on bulk unit markers (keep HQ/own-team/named); restore under threshold. Text draw is the expensive part of the A2 marker pass. 0: never cull.
 	if (isNil "WFBE_C_MARKER_LABEL_CULL_THRESHOLD") then {WFBE_C_MARKER_LABEL_CULL_THRESHOLD = 120}; //--- Registered-unit-marker count at/above which label culling engages (hysteresis-guarded in the loop).
+	if (isNil "WFBE_C_MARKERANIM_SLEEP") then {WFBE_C_MARKERANIM_SLEEP = 0.1};          //--- Seconds between TempAnim MarkerAnim pulse updates. 0.1 = 10 Hz; clamped to old 0.03 floor in Client_MarkerAnim.sqf.
 	//--- SHELVED (item 3, not shipped): wide-zoom per-group AGGREGATION would need the map control's zoom to
 	//--- know when to collapse per-unit markers to one per group. The only zoom read is ctrlMapScale, which is
 	//--- Arma-3-only (unavailable in A2-OA 1.64 - verified: used nowhere in this map-heavy mission), and the
@@ -1550,6 +1563,7 @@ if (WF_A2_Vanilla) then {
 		WFBE_C_BASE_COIN_DISTANCE_MIN = 100;
 		WFBE_C_BASE_COIN_GRADIENT_MAX = 4;
 };
+	if (isNil "WFBE_C_COIN_POLL_SLEEP") then {WFBE_C_COIN_POLL_SLEEP = 0.1}; //--- Seconds between CoIn menu affordability/commanding-menu polls. 0.1 keeps the UI responsive while cutting wake-ups 10x from the legacy 0.01.
 
 //--- Towns.
 	if (isNil "WFBE_C_TOWNS_AMOUNT") then {WFBE_C_TOWNS_AMOUNT = 7}; //--- Amount of towns (0: Very small, 1: Small, 2: Medium, 3: Large, 4: Full).
@@ -1715,7 +1729,7 @@ if (WF_A2_Vanilla) then {
 	if (isNil "WFBE_C_VEHICLE_FLAG_WEST") then {WFBE_C_VEHICLE_FLAG_WEST = "FlagCarrierNATO_EP1"}; // BLUFOR flag class flown on WEST vehicles.
 	if (isNil "WFBE_C_VEHICLE_FLAG_EAST") then {WFBE_C_VEHICLE_FLAG_EAST = "FlagCarrierRU"}; // OPFOR flag class flown on EAST vehicles.
 	if (isNil "WFBE_C_VEHICLE_FLAG_GUER") then {WFBE_C_VEHICLE_FLAG_GUER = "FlagCarrierGUE"}; // Resistance/GUER flag class flown on GUER vehicles.
-	if (isNil "WFBE_C_KILL_TALLY_DECAL") then {WFBE_C_KILL_TALLY_DECAL = 1}; // Lane 205 kill-tally marker, DEFAULT ON (Ray pick 2026-07-04 "visually nice" pass): a vehicle that scores enemy kills carries ONE dim hull-hugging local #lightpoint that heat-ramps amber (1-2 kills) -> orange (3-5) -> red (6-9) -> white-hot (10+). Server increments wfbe_kill_tally in RequestOnUnitKilled.sqf (null-guarded); Common_AddVehicleMarking.sqf installs the JIP-safe local watcher. Set 0 to disable; independent from WFBE_C_VEHICLE_MARKINGS (which stays 0 - it also repaints WEST hulls matte-black and attaches 3 lights/vehicle, failed the visual/FPS bar).
+	if (isNil "WFBE_C_KILL_TALLY_DECAL") then {WFBE_C_KILL_TALLY_DECAL = 0}; // Lane 205 kill-tally GLOW, OFF (Ray pick C 2026-07-04: tally now renders as a heat-coloured star count in the TAGS name-tag overlay, Init_Client.sqf - no lightpoint). a vehicle that scores enemy kills carries ONE dim hull-hugging local #lightpoint that heat-ramps amber (1-2 kills) -> orange (3-5) -> red (6-9) -> white-hot (10+). Server increments wfbe_kill_tally in RequestOnUnitKilled.sqf (null-guarded); Common_AddVehicleMarking.sqf installs the JIP-safe local watcher. Set 0 to disable; independent from WFBE_C_VEHICLE_MARKINGS (which stays 0 - it also repaints WEST hulls matte-black and attaches 3 lights/vehicle, failed the visual/FPS bar).
 	if (isNil "WFBE_C_VEHICLE_TINTS") then {WFBE_C_VEHICLE_TINTS = 0}; // B74.2 (Ray 2026-06-23): default OFF for now; switch preserved. [A/B: was flipped ON 2026-06-22 per Ray for the in-engine cosmetic check; revert to 0 if the look is bad] Vehicle faction body TINTS (cheap one-shot setObjectTexture colour strings in Common_AddVehicleTexture.sqf). Decoupled from WFBE_C_VEHICLE_MARKINGS so the tints can be LIVE while the expensive #lightpoint markings stay OFF. 1 enabled, 0 disabled. DEFAULT 0 (opt-in): the B66 side-resolve bug meant the tints were silently INERT in prod (resolved from a crewless hull = civilian -> no faction match); B67 fixed the resolution (now reads the authoritative _createSide passed by Common_CreateVehicle), so enabling this would for the FIRST TIME repaint selections 0+1 (often the whole hull) with a flat procedural colour on EVERY vehicle (WEST near-black / EAST olive / GUER tan) - unverified in-engine and possibly ugly. Flip to 1 only after an in-engine cosmetic check.
 	if (isNil "WFBE_C_VEHICLE_TINT_LEGEND") then {WFBE_C_VEHICLE_TINT_LEGEND = 1}; // b67 item #3: top-right client pop-up legend explaining the vehicle body TINTS above (WEST/BLUFOR=black, EAST/OPFOR=olive, GUER=tan). Shown once on first spawn + toggled with "]" (Init_Client.sqf, cutRsc "WFBE_VehicleTintLegend"). Pure client cosmetic, zero FPS cost; only appears when WFBE_C_VEHICLE_TINTS is also ON. Nil-guarded so it can be A/B'd independently: 1 enabled, 0 disabled.
 	//--- Triggered faction smoke (cosmetic): WFBE_CO_FNC_SpawnFactionSmoke drops ONE side-coloured smoke shell at assault onset / town garrison. Server-only, event-triggered, hard-capped + TTL + per-100m-grid cooldown. west=Green, east=Red, resistance=Orange. ON for live measurement.
@@ -1771,6 +1785,11 @@ missionNamespace setVariable ["WFBE_C_CIV_COLOR", "ColorYellow"];
 missionNamespace setVariable ["WFBE_C_UNKNOWN_COLOR", "ColorBlue"];
 };
 };
+
+if (isNil "WFBE_C_FIX_NEUTRAL_MAP_COLOR") then {WFBE_C_FIX_NEUTRAL_MAP_COLOR = 1};
+if (isNil "WFBE_C_NEUTRAL_COLOR") then {WFBE_C_NEUTRAL_COLOR = "ColorGray"};
+missionNamespace setVariable ["WFBE_C_FIX_NEUTRAL_MAP_COLOR", WFBE_C_FIX_NEUTRAL_MAP_COLOR];
+missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 
 	/* Special Variables, Those are used after the typical declaration above. */
 
@@ -2040,6 +2059,41 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Same allowDamage/setCaptive rationale as WFBE_HC_FNC_ParkDeadspawn (Init_HC.sqf). 1 = guard on
 //--- (default), 0 = legacy behaviour (armed leader parked live on the marker for the wait window).
 	if (isNil "WFBE_C_DEADSPAWN_GUARD") then {WFBE_C_DEADSPAWN_GUARD = 1};
+
+//--- TP-17 (fable/tp17-marker-destination): HQ team map markers DESTINATION-direction mode.
+//--- When flag>0, team arrows point toward the leader's active movement destination instead of
+//--- current facing direction. Falls back to facing when no valid destination is available.
+//--- Client-side only. Locality note: expectedDestination works on local units only; HC-owned
+//--- AI leaders fall back to getDir facing silently. Zero server load. Flag 0 = byte-identical.
+	if (isNil "WFBE_C_TEAMMARKER_DEST_DIR") then {WFBE_C_TEAMMARKER_DEST_DIR = 0}; //--- 0: facing direction (default, byte-identical to HEAD); >0: destination-direction when an active destination is available, facing fallback.
+//--- TP-16 / naval-cap-hinds: spawn 3x Mi-24 CAP per carrier instead of the default Hind + An2 pair.
+//--- Chernarus-only feature (IS_NAVAL_MAP); flag has no effect on non-naval mirrors.
+//--- Default 0 = current pair behaviour. Set > 0 to activate all-hind triple CAP.
+	if (isNil "WFBE_C_NAVAL_CAP_THREE_HINDS") then {WFBE_C_NAVAL_CAP_THREE_HINDS = 0};
+
+//--- TELEMETRY HOST V2 (tp4, 2026-07-06): when flag=1, GRPBUDGET+SRVPERF emit from
+//--- server_groupsGC.sqf (survives V2 cutover) and are suppressed in AI_Commander.sqf.
+//--- Default 0 = byte-identical to HEAD (old emitters run, new host silent).
+	if (isNil "WFBE_C_TELEM_HOST_V2") then {WFBE_C_TELEM_HOST_V2 = 0};
+
+//--- TP-21 (fable/tp21-team-menu-v2): TEAM MENU V2 — gear presets + squad actions.
+//--- 0 = byte-identical to HEAD (RscMenu_Team idd 13000 opens as before); >0 = opens
+//--- RscMenu_TeamV2 (idd 13050) which adds 4 persistent loadout preset slots
+//--- (save / apply / rebuy-last-kit, tier-gated) plus TM1-light squad actions
+//--- (Eject selected AI from vehicle, Disband reuse, Get-Out-and-Repair, out-of-fuel hint).
+//--- The REMOVED controls (VD/TG sliders, inline money transfer) are simply absent
+//--- from the V2 dialog; old RscMenu_Team is untouched and activates at flag=0.
+	if (isNil "WFBE_C_TEAM_MENU_V2") then {WFBE_C_TEAM_MENU_V2 = 0};
+//--- SPOTTER MARKS TEAM-WIDE (team-intel-pack, 2026-07-02): when 1, spotter map marks
+//--- are broadcast to all same-side clients (not just the spotter). Default 0 = local-only.
+//--- See Client\Module\Skill\Skill_Sniper.sqf + Client\PVFunctions\SpotterMarkContact.sqf.
+	if (isNil "WFBE_C_SPOTTER_TEAM_MARKS") then {WFBE_C_SPOTTER_TEAM_MARKS = 1};
+
+//--- NOTABLE-KILL FEED (team-intel-pack, 2026-07-02): side-wide SideMessage for high-value
+//--- kills (commander unit, HQ/MHQ structure, attack heli/jet, heavy tank). Default 0 = off.
+//--- WFBE_C_NOTABLE_KILL_THROTTLE: minimum seconds between feed messages per-side (spam guard).
+	if (isNil "WFBE_C_NOTABLE_KILL_FEED")     then {WFBE_C_NOTABLE_KILL_FEED     = 1};
+	if (isNil "WFBE_C_NOTABLE_KILL_THROTTLE") then {WFBE_C_NOTABLE_KILL_THROTTLE = 10};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

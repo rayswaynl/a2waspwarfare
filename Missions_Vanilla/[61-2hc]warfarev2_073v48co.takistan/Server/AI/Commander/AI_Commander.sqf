@@ -481,7 +481,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- human commander (from start, re-armed when a human leaves) before it starts building.
 		//--- Ray 2026-06-28: retire idle rear FOOT teams when mobile force is fielded - runs in EVERY command mode
 		//--- (AI-command OR human-commander); the in-view + safety checks inside the pass protect immersion/safety.
-		if (time - _ltDisband > (missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_INTERVAL", 300])) then {
+		if (time - _ltDisband > (missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_LOWTIER_INTERVAL", 600])) then {
 			if (!isNil "WFBE_SE_FNC_AI_Com_DisbandLowTier") then {(_side) Call WFBE_SE_FNC_AI_Com_DisbandLowTier};
 			_ltDisband = time;
 		};
@@ -898,7 +898,10 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		private ["_pActive"];
 		_pActive = 0;
 		{ if (_x getVariable ["wfbe_active", false]) then {_pActive = _pActive + 1} } forEach towns;
-		diag_log ("SRVPERF|v1|" + str (round (time / 60)) + "|fps=" + str (round (diag_fps)) + "|units=" + str (count allUnits) + "|groups=" + str (count allGroups) + "|veh=" + str (count vehicles) + "|dead=" + str (count allDead) + "|activeTowns=" + str _pActive);
+		//--- TELEM HOST V2 (tp4): when flag=1 this emitter is suppressed; groupsGC is the host.
+		if ((missionNamespace getVariable ["WFBE_C_TELEM_HOST_V2", 0]) < 1) then {
+			diag_log ("SRVPERF|v1|" + str (round (time / 60)) + "|fps=" + str (round (diag_fps)) + "|units=" + str (count allUnits) + "|groups=" + str (count allGroups) + "|veh=" + str (count vehicles) + "|dead=" + str (count allDead) + "|activeTowns=" + str _pActive);
+		};
 
 		//--- WASPSCALE (claude-gaming 2026-07-01): perf/scope tracker - one allUnits pass per 5-min window (reuses this
 		//--- SRVPERF throttle, zero per-frame cost) buckets live AI by side + counts humans, groups, fps, tier and map.
@@ -997,29 +1000,32 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		};
 		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps) + "|townsW=" + str _townsW + "|townsE=" + str _townsE + "|townsG=" + str _townsG + "|postW=" + _postW + "|postE=" + _postE + "|disp=" + str _disp + "|arrv=" + str _arrv + "|recov=" + str _recov + "|mhqrel=" + str _mhqrel + "|patr=" + str _patrN + "|sort=" + str _sortN + "|telW=" + str _telW + "|telE=" + str _telE + "|terr=" + _terr + "|fpsmin=" + str (round _fpsMin) + "|hc2fps=" + str (round _hc2Fps) + "|grpW=" + str _grpW + "|grpE=" + str _grpE + "|oilOwn=" + _oilOwnKV + "|oilInc=" + _oilIncKV + "|capAI=" + str (([(missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]]), _tier] call { private ["_arr","_ti"]; _arr = (_this select 0); _ti = (_this select 1) max 0; if (_ti > ((count _arr) - 1)) then {_ti = (count _arr) - 1}; if ((count _arr) < 1) then {-1} else {_arr select _ti} })) + "|capTeams=" + str (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 10]) + "|capMerge=" + str (missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_TARGET", 5]));
 
-		//--- GRPBUDGET (claude-gaming 2026-06-13): per-side group count vs Arma 2 OA's 144/side HARD CAP - the
-		//--- "group budget" alarm. Near the cap the AI commander cannot found teams (economy stalls on unspent
-		//--- funds) and spawns can SILENTLY FAIL. Server-global, shares the SRVPERF 300s throttle. Keep the
-		//--- normal GRPBUDGET line every window, but latch the loud WARN so a server that sits near cap for
-		//--- hours does not print the same alarm forever; RECOVER clears the latch when counts drop again.
-		private ["_gbW","_gbE","_gbG","_gbMax","_gbWarn"];
-		_gbW = missionNamespace getVariable ["wfbe_grpcnt_west", -1]; if (_gbW < 0) then { _gbW = {side _x == west} count allGroups; }; //--- B7: groupsGC cache + fallback
-		_gbE = missionNamespace getVariable ["wfbe_grpcnt_east", -1]; if (_gbE < 0) then { _gbE = {side _x == east} count allGroups; };
-		_gbG = missionNamespace getVariable ["wfbe_grpcnt_guer", -1]; if (_gbG < 0) then { _gbG = {side _x == resistance} count allGroups; };
-		_gbMax = _gbW max _gbE max _gbG;
-		diag_log ("GRPBUDGET|v1|" + str (round (time / 60)) + "|west=" + str _gbW + "|east=" + str _gbE + "|guer=" + str _gbG + "|cap=144");
-		_gbWarn = missionNamespace getVariable ["WFBE_C_GROUP_BUDGET_WARN", 125];
-		if (_gbMax >= _gbWarn) then {
-			if ((missionNamespace getVariable ["wfbe_grpbudget_warn_active", 0]) < 1) then {
-				missionNamespace setVariable ["wfbe_grpbudget_warn_active", 1];
-				diag_log ("GRPBUDGET|v1|WARN|" + str (round (time / 60)) + "|near-cap max=" + str _gbMax + "/144 warn=" + str _gbWarn + " (west=" + str _gbW + " east=" + str _gbE + " guer=" + str _gbG + ")");
+		//--- TELEM HOST V2 (tp4): when flag=1 this emitter is suppressed; groupsGC is the host.
+		if ((missionNamespace getVariable ["WFBE_C_TELEM_HOST_V2", 0]) < 1) then {
+			//--- GRPBUDGET (claude-gaming 2026-06-13): per-side group count vs Arma 2 OA's 144/side HARD CAP - the
+			//--- "group budget" alarm. Near the cap the AI commander cannot found teams (economy stalls on unspent
+			//--- funds) and spawns can SILENTLY FAIL. Server-global, shares the SRVPERF 300s throttle. Keep the
+			//--- normal GRPBUDGET line every window, but latch the loud WARN so a server that sits near cap for
+			//--- hours does not print the same alarm forever; RECOVER clears the latch when counts drop again.
+			private ["_gbW","_gbE","_gbG","_gbMax","_gbWarn"];
+			_gbW = missionNamespace getVariable ["wfbe_grpcnt_west", -1]; if (_gbW < 0) then { _gbW = {side _x == west} count allGroups; }; //--- B7: groupsGC cache + fallback
+			_gbE = missionNamespace getVariable ["wfbe_grpcnt_east", -1]; if (_gbE < 0) then { _gbE = {side _x == east} count allGroups; };
+			_gbG = missionNamespace getVariable ["wfbe_grpcnt_guer", -1]; if (_gbG < 0) then { _gbG = {side _x == resistance} count allGroups; };
+			_gbMax = _gbW max _gbE max _gbG;
+			diag_log ("GRPBUDGET|v1|" + str (round (time / 60)) + "|west=" + str _gbW + "|east=" + str _gbE + "|guer=" + str _gbG + "|cap=144");
+			_gbWarn = missionNamespace getVariable ["WFBE_C_GROUP_BUDGET_WARN", 125];
+			if (_gbMax >= _gbWarn) then {
+				if ((missionNamespace getVariable ["wfbe_grpbudget_warn_active", 0]) < 1) then {
+					missionNamespace setVariable ["wfbe_grpbudget_warn_active", 1];
+					diag_log ("GRPBUDGET|v1|WARN|" + str (round (time / 60)) + "|near-cap max=" + str _gbMax + "/144 warn=" + str _gbWarn + " (west=" + str _gbW + " east=" + str _gbE + " guer=" + str _gbG + ")");
+				};
+			} else {
+				if ((missionNamespace getVariable ["wfbe_grpbudget_warn_active", 0]) > 0) then {
+					missionNamespace setVariable ["wfbe_grpbudget_warn_active", 0];
+					diag_log ("GRPBUDGET|v1|RECOVER|" + str (round (time / 60)) + "|max=" + str _gbMax + "/144 warn=" + str _gbWarn + " (west=" + str _gbW + " east=" + str _gbE + " guer=" + str _gbG + ")");
+				};
 			};
-		} else {
-			if ((missionNamespace getVariable ["wfbe_grpbudget_warn_active", 0]) > 0) then {
-				missionNamespace setVariable ["wfbe_grpbudget_warn_active", 0];
-				diag_log ("GRPBUDGET|v1|RECOVER|" + str (round (time / 60)) + "|max=" + str _gbMax + "/144 warn=" + str _gbWarn + " (west=" + str _gbW + " east=" + str _gbE + " guer=" + str _gbG + ")");
-			};
-		};
+		}; //--- end WFBE_C_TELEM_HOST_V2 < 1 guard (GRPBUDGET)
 
 		//--- HCDELEG (claude-gaming 2026-06-15): SERVER-AUTHORITATIVE per-HC owned-unit load + imbalance
 		//--- ratio (task #34). CMDRSTAT only has the AGGREGATE hcTeams count; HCSTAT|v1 is HC-SELF-REPORTED

@@ -26,19 +26,18 @@
         //--- via the "attack-wave" HandleSpecial). This removes the clobber at the root with no shared server state.
         _attackWaveLength = (1 - _discountPercentage) * 1500;
 
-        ATTACK_WAVE_DETAILS = [_side, _discountPercentage, _attackWaveLength];
+        //--- Fix: call handler directly; publicVariableServer from server never fires own PVEH.
+        //--- No bare ATTACK_WAVE_DETAILS global needed: array is passed directly, per cmdcon41-w3f comment.
+        diag_log [_side, _discountPercentage, _attackWaveLength];
 
-        diag_log ATTACK_WAVE_DETAILS;
-
-        publicVariableServer "ATTACK_WAVE_DETAILS";
+        [_side, _discountPercentage, _attackWaveLength] Call WFBE_SE_FNC_HandleAttackWaveDetails;
 
         sleep _attackWaveLength;
 
         _attackWaveLength = 0;
 
         // Return to normal units' pricing after the wave (per-side value carried in the array; no shared global).
-        ATTACK_WAVE_DETAILS = [_side, 1, _attackWaveLength];
-
-        publicVariableServer "ATTACK_WAVE_DETAILS";
+        //--- Fix: call handler directly; publicVariableServer from server never fires own PVEH.
+        [_side, 1, _attackWaveLength] Call WFBE_SE_FNC_HandleAttackWaveDetails;
     };
 };

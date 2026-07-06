@@ -44,15 +44,18 @@
 	findIf / selectRandom / apply / forEachIndex - none of those exist in OA 1.64.
 */
 
-private ["_enable","_period","_initial","_tips","_gate","_flag","_deck","_n","_i","_last","_pick","_idx","_pair","_text","_ok"];
+private ["_enable","_period","_initial","_tips","_gate","_flag","_gateValue","_deck","_n","_i","_last","_pick","_idx","_pair","_text","_ok"];
 
 //--- Master toggle (default ON). Registered in Common\Init\Init_CommonConstants.sqf (cmdcon42-q).
 _enable = missionNamespace getVariable ["WFBE_C_TIPS_ENABLE", 1];
+if (typeName _enable != "SCALAR") exitWith {};
 if (_enable < 1) exitWith {};
 
 //--- Cadence + first-line delay (both real-time seconds). Defaults mirror Init_CommonConstants.
 _period  = missionNamespace getVariable ["WFBE_C_TIPS_PERIOD", 900];
 _initial = missionNamespace getVariable ["WFBE_C_TIPS_INITIAL", 420];
+if (typeName _period != "SCALAR") then {_period = 900};
+if (typeName _initial != "SCALAR") then {_initial = 420};
 if (_period < 30) then {_period = 30};       //--- floor so a mis-set param can't hammer the chat.
 if (_initial < 0) then {_initial = 0};
 
@@ -69,49 +72,63 @@ uiSleep _initial;
 //--- [tipText, gateFlagName]. gateFlagName "" = always shown. Every claim verified against
 //--- the mission code / Client\GUI\GUI_Menu_Help.sqf on this branch (cmdcon42-q).
 _tips = [
-	//--- ~ CORE GAMEPLAY (always eligible) ~
-	["Capture a town: clear its strongpoints, then win the numbers fight in the 40m ring around the town centre until it flips to your side.", ""],
-	["Defenders only spawn once a friendly unit crosses a town's 600m line - cross it deliberately, with support, not by accident.", ""],
-	["You can only attack a town that borders ground you already hold. Blue/red rings are capturable; hatched-yellow towns are still in peace-time.", ""],
-	["Two economies run the war: cash (you spend it on gear and units) and supply (the side pool your commander spends on structures and upgrades).", ""],
-	["Shuttle supply trucks between a service point and a town centre's 30m range to raise its Supply Value - a pushed town pays more and defends harder.", ""],
-	["Buy gear at the Barracks (or a captured town centre's stairs); buy infantry, vehicles and aircraft at the matching Factory in range.", ""],
-	["A Command Center lets you remote-buy infantry and vehicles from anywhere on the map - not just standing next to the factory.", ""],
-	["The buy queue shows N/CAP. Caps: Barracks 10, Light Factory 5, Heavy/Air Factory 3. Cancel Last refunds your most recent queued order.", ""],
-	["Everything lives in the WF Menu: scroll-wheel action menu, blue Options. Buy, build, order AI, request support - it's always one scroll away.", ""],
-	["No human commander in the first 5 minutes and the AI takes over building. You can claim Commander any time - any team you order becomes yours.", ""],
-	["The MHQ (Mobile HQ) is where a base is built. Drive it forward and deploy to plant your factories closer to the fight.", ""],
-	["Base buildings (MHQ, Barracks, all Factories) are unlimited-range respawns. A MEV/ambulance gives a forward spawn within 500m - drive one up.", ""],
-	["Fast-travel your squad from the Tactical Center - it moves you and your nearby units to a chosen point instead of a long drive back.", ""],
-	["Read the map: your units are orange, friendly towns green, enemy towns blue/red, an attack-in-progress ring is orange.", ""],
-	["Service points rearm, refuel, repair and heal - roll in before the next push instead of dying to an empty mag or a cracked engine.", ""],
-	["Build the Bank (Federal Reserve): while your HQ stands it pays $6,000 every 5 minutes split among living players. Kill the enemy's for a huge payout.", ""],
-	["Hold Krasnostav to unlock the Czech T-72 at Heavy Factory L4; hold the NW Airfield for RM-70 rocket artillery at Light Factory L4.", ""],
-	["Capturing an airfield gives a repair point, a free permanent 2,000m counter-battery radar, and a hangar with unique aircraft.", ""],
-	["Anti-Air Radar tracks enemy planes above ~30m and is the prerequisite for the Counter Battery Radar that pins enemy artillery for 75s.", ""],
-	["Patrols upgrade over 4 levels; up to 2 active patrols per side. Each active patrol drops every player's max AI by 1 - don't over-commit.", ""],
-	["Auto Wall Construction (scroll action 14) throws up defensive walls around your base structures - toggle it on after you deploy.", ""],
-	["Vote a side Commander and give orders - the AI commander spends the side economy and leads HQ teams; even under a human it keeps its squads fighting.", ""],
+	//--- ~ CORE LOOP ~
+	["Town capture works on numbers, not flags: push more of your side into the 40m ring around the town centre than the enemy and hold it until it flips.", ""],
+	["You can only attack a town that borders ground your side already controls. Hatched-yellow towns are still locked in peace-time and cannot be assaulted yet.", ""],
+	["Defenders respawn ONCE when a friendly unit crosses the 600m perimeter of a town - commit a real push, not a lone scout.", ""],
+	["Two currencies run the war. Cash is personal - you buy gear and units with it. Supply is the side pool - your commander spends it on structures and upgrades.", ""],
+	["MHQ (Mobile HQ) is not just a spawn point - drive it forward and deploy it to plant your factories closer to the front and cut your reinforcement time.", ""],
+	["Service points fully rearm, refuel, repair and heal. Use them before the next push - an empty mag or a red-engine vehicle is not a fighting asset.", ""],
+	["The buy queue cap is per-factory: Barracks 10, Light Factory 5, Heavy and Air Factory 3 each. Cancel Last refunds the most recently queued order.", ""],
+	["A Command Center lets you buy infantry and vehicles remotely from anywhere on the map. Without one you have to stand at the factory yourself.", ""],
+	["Capturing an airfield gives a permanent 2000m counter-battery radar, a repair depot, and access to jet-tier aircraft at that location.", ""],
+	["The Anti-Air Radar is a prerequisite for the Counter-Battery Radar. CB radar reveals firing artillery positions for 75 seconds - use it to plan counter-fire.", ""],
+	["Bank (Federal Reserve): while your HQ stands it pays $6,000 every 5 minutes split among living players. Destroying the enemy Bank pays a lump sum.", ""],
+	["Patrols grow over 4 upgrade levels; each active patrol reduces every player's AI recruit cap by 1. Do not over-invest in patrols at the cost of your own squad.", ""],
+	["Auto Wall Construction (scroll-wheel action 14) places defensive barriers around your base structures. Turn it on after deploying the MHQ.", ""],
+	["A MEV ambulance or Redeployment Truck parked within 500m of the front gives medics and their teammates a forward respawn at that vehicle.", ""],
+	["Salvage trucks recover value from destroyed vehicles on the field. Run them after a large engagement - leaving wrecks is leaving money behind.", ""],
+	["Supply trucks pay out when driven to a town centre within 30m. The town's Supply Value goes up, increasing its cash output and making it harder to take.", ""],
+	["Class tags (SOL/SUP/MED/ENG/SNI) appear on the map and in the Notes tab so your team can see where specialists are without calling it on voice.", ""],
+	["The Tactical Center fast-travels you and nearby squad members to a map point - use it to redeploy after a push instead of driving halfway across the map.", ""],
+	["Gear you buy from a Barracks or town centre is saved per-session. On respawn it is automatically restored if a Barracks is still standing.", ""],
+	["AI teams you command count against your AI slot budget, not the side's. Assign command only when you intend to actually direct the team.", ""],
+	["Vote in a human Commander early. The AI Commander will build and spend the side economy autonomously, but a human can redirect that spending immediately.", ""],
+	["Patrol level 3 completion pays an instant cash bonus to the whole side. Patrol level 4 completion pays an instant supply bonus.", ""],
 
-	//--- ~ BUILD 86/87 FEATURES (gated on their real feature flag) ~
-	["OILFIELD (Takistan): after it unlocks ~1 hour in, hold it with your units to earn passive supply income. Check your map for the marker.", "WFBE_C_OILFIELD_ENABLE"],
-	["Takistan OILFIELD can be sabotaged and repaired - deny the enemy the income by knocking it offline, or fix your own to keep it paying.", "WFBE_C_OILFIELD_SABOTAGE"],
-	["SKIN SELECTOR: pick your soldier's look from the WF menu SKIN button - your choice is restored automatically every time you respawn.", "WFBE_C_SKINSEL"],
-	["Capture the offshore carrier's SCUD and open SCUD STRIKE in the Tactical Center: click the map to drop a warhead where the enemy is massing.", "WFBE_C_SCUD_MENU"],
-	["Research the land SCUD TEL to unlock long-range strikes - but it can be killed before launch, so guard your launcher and hunt theirs.", "WFBE_C_ICBM_TEL"],
-	["SATURATION strike (from the TEL): a carrier-style MIRV set that saturates a target zone - drop it on a stacked enemy assault.", "WFBE_C_ICBM_TEL_SAT_COST"],
-	["RECON FLASH: a SCUD airburst that reveals every enemy in an 800m radius for ~45s and temp-marks them - blind-spot buster before a push.", "WFBE_C_ICBM_TEL_RECON_COST"],
-	["FASCAM strike scatters a field of AT mines across a chokepoint that self-clears after ~20 min - seal a road the enemy armour needs.", "WFBE_C_ICBM_TEL_FASCAM_COST"],
-	["STEEL RAIN: a rolling airburst barrage that shreds EXPOSED infantry in the open - punish a dug-out assault caught without cover.", "WFBE_C_ICBM_TEL_RAIN_COST"],
-	["BUNKER BUSTER: a single precision SCUD that guarantees the nearest enemy structure at the impact point dies - crack a hardened base.", "WFBE_C_ICBM_TEL_BUSTER_COST"],
-	["The SCUD TEL shares one cooldown across all its munitions - pick your shot; you can't chain a recon flash straight into a bunker buster.", "WFBE_C_ICBM_TEL"],
-	["GUER Insurgents are playable as a harass faction - pick the resistance slots to raid supply lines and objectives behind the frontline.", "WFBE_C_GUER_PLAYERSIDE"],
-	["As GUER you can buy a VBIED - drive it into a target, arm it and detonate; every kill in the blast pays your team cash.", "WFBE_C_GUER_VBIED_TYPE"],
-	["Your GUER Ka-137 recon drone ships with flares - the more enemy kills your side racks up, the bigger its countermeasure load.", "WFBE_C_GUER_KA137_FLARE_LAUNCHER"],
-	["Watch the skies: enemy Ka-137 drones can now roll in as a swarm - two or three in one group hunting your armour. Keep AA up.", "WFBE_C_GUER_KA137_SWARM"],
-	["The command menu has steering verbs: RALLY, REFIT and HOLD a team - and any player can REQUEST AI SUPPORT to nudge a nearby squad over.", "WFBE_C_CMD_MENU_V2"],
-	["Air cavalry: the AI commander can now airlift its assault teams straight into a contested town - expect enemy helis dropping troops on your flank.", "WFBE_C_AICOM_AIRMOBILE"],
-	["Heads up: the enemy AI can sling-lift vehicles under helicopters to relocate armour fast - a quiet flank can turn into a tank in your rear.", "WFBE_C_AICOM_VEHLIFT"],
+
+	//--- ~ VETERAN / NON-OBVIOUS ~
+	["Town ring count: game counts all living units of each side inside the 40m radius. Vehicles with crew count. Dead infantry do not.", ""],
+	["A town flips immediately once the ring count tips - you do not wait for a timer if your side outnumbers the defender in the ring.", ""],
+	["The Tactical Center's fast-travel has a range limit per destination. If a point is grayed out, it is out of reach from your current position.", ""],
+	["Salvage payout scales with the vehicle's buy cost, not its current condition. A fully wrecked enemy MBT still pays near its full salvage rate.", ""],
+	["Counter-battery radar triggers on live artillery fire. Mortars with short ranges and rockets both register - the readout is a 75s window, plan around that.", ""],
+	["Strategic spawn pads (Command -> Constructions -> Strategic) place faction-specific spawn nodes in the field. Placement matters - out of cover means they get shelled.", ""],
+	["Paradrop accuracy degrades with altitude. A lower, slower aircraft drops sticks closer together but exposes the plane longer to AA fire.", ""],
+	["You can airlift your own HQ vehicle. Use it to relocate a threatened MHQ without driving it through enemy lines.", "WFBE_C_AIRLIFT_OWN_HQ"],
+	["EASA (aircraft editor) saves per-aircraft loadout presets. Pre-arm your CAS slot before a push and you reload to that exact loadout after a rearm at service.", ""],
+	["AI team kills pay into the side war chest and into that team's squad wallet - not your personal cash. Run teams for economy, not for your own K/D.", ""],
+
+	//--- ~ FLAG-GATED FEATURES ~
+	["OILFIELD (Takistan only): becomes contestable after ~1 hour. Hold it with your units to earn passive supply income. Watch your map for the marker.", "WFBE_C_OILFIELD_ENABLE"],
+	["OILFIELD sabotage: an enemy that dwells inside the capture radius while your units are absent will knock the field offline. Repair it by holding it again.", "WFBE_C_OILFIELD_SABOTAGE"],
+	["Skin selector: open the WF menu and use the SKIN button to pick your soldier's appearance. Your choice persists through respawns.", "WFBE_C_SKINSEL"],
+	["Naval HVT carriers (Chernarus): three offshore LHDs are capturable. The central carrier holds the SCUD - control it to access carrier SCUD strikes.", "WFBE_C_NAVAL_HVT"],
+	["SCUD STRIKE: capture the carrier SCUD and the Tactical Center gets a map-click strike option. It fires the carrier's warhead payload at your target.", "WFBE_C_SCUD_MENU"],
+	["Land SCUD TEL unlocks at SCUD research L1. It can be destroyed before launch - the 5-minute countdown gives the enemy time to hunt it. Guard it or stay mobile.", "WFBE_C_ICBM_TEL"],
+	["TEL shared cooldown: all five TEL munitions (Saturation, Recon Flash, FASCAM, Steel Rain, Bunker Buster) share one cooldown. One shot locks the others out.", "WFBE_C_ICBM_TEL"],
+	["RECON FLASH (TEL): airburst reveals every enemy unit in an 800m radius for 45 seconds with temp map markers. Use it immediately before a planned assault.", "WFBE_C_ICBM_TEL_RECON_COST"],
+	["FASCAM (TEL): scatters 24 AT mines across a 150m radius. They self-clear after 20 minutes and there is a cap of 2 live fields per side at once.", "WFBE_C_ICBM_TEL_FASCAM_COST"],
+	["STEEL RAIN (TEL): rolling airbursts across a 300m area. Effective against infantry in the open; does not penetrate vehicles or structures.", "WFBE_C_ICBM_TEL_RAIN_COST"],
+	["BUNKER BUSTER (TEL): precision single warhead. Guarantees destruction of the nearest enemy structure within 30m of impact. Most expensive TEL shot.", "WFBE_C_ICBM_TEL_BUSTER_COST"],
+	["GUER insurgents are a third playable faction. They are a harassment side - no heavy base building, but mobile raid capability behind both frontlines.", "WFBE_C_GUER_PLAYERSIDE"],
+	["GUER VBIED: arm it in range of the target and detonate. Cash is paid to your GUER team for every kill inside the blast radius.", "WFBE_C_GUER_VBIED_TYPE"],
+	["GUER escalates with kills: more kills unlock higher vehicle tiers including the M113 VBIED. A low-kill GUER team is limited; a high-kill one is a real threat.", "WFBE_C_GUER_PLAYERSIDE"],
+	["GUER Ka-137 carries flares - its countermeasure stock grows as the GUER side racks up kills. Early in a round the drone has few; late it is much harder to missile.", "WFBE_C_GUER_KA137_FLARE_LAUNCHER"],
+	["GUER drones can spawn in swarms of two or three on the same target. One AA launcher may not be enough - coordinate if the drone count climbs.", "WFBE_C_GUER_KA137_SWARM"],
+	["Command menu RALLY, REFIT and HOLD let you steer AI teams without a full command order. Any player can request AI support to pull a nearby squad.", "WFBE_C_CMD_MENU_V2"],
+	["AI airmobile: the AI commander can fly its assault teams directly into contested towns via transport helicopter. Expect infantry drops on any contested flank.", "WFBE_C_AICOM_AIRMOBILE"],
+	["AI vehicle lift: at sufficient air-factory research the AI can sling-lift ground vehicles behind your lines. A quiet flank can become an armoured threat fast.", "WFBE_C_AICOM_VEHLIFT"],
 
 	//--- ~ COMMUNITY / META / ECONOMY-TRUTH (always eligible unless a real flag applies) ~
 	["Commanding? Delegated AI teams' kills pay their own squad wallet and the side war chest - not your personal funds. Play the whole board, not your K/D.", ""],
@@ -123,7 +140,7 @@ _tips = [
 	["Found a bug or a broken mechanic? Report it on our Discord (discord.me/warfare) with what you were doing - it genuinely helps us fix it.", ""],
 	["New here? Open Help in the WF menu - full pages on economy, capturing, commanding the AI and the factions, written for this exact mission.", ""],
 	["Running an optional mods setup? Check the community guide on Discord (discord.me/warfare) so you load only what this server actually supports.", ""],
-	["Class tags (SOL/SUP/MED/ENG/SNI) show on the map and in your Notes - a medic's Redeployment Truck even gives medics a forward spawn.", ""]
+	["Class tags (SOL/SPEC/MED/ENG/SNI) show on the map and in your Notes - a medic's Redeployment Truck even gives medics a forward spawn.", ""]
 ];
 
 //================================================================ ROTATION LOOP

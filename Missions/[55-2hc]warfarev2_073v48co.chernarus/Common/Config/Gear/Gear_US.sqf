@@ -343,6 +343,14 @@ _n = _n + [''];
 _o = _o + [25];
 _z = _z + [1];
 
+//--- ACR Czech gear wave (Ray pick 2026-07-04). Class names VERIFIED from mounted lite pbo configs;
+//--- Config_Weapons/Config_Magazines isClass-guard every entry, so machines without ACR mounted simply skip these.
+_u = _u + ["10Rnd_762x51_CZ750"]; //--- CZ 750 sniper mag
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [15];
+_z = _z + [3];
+
 [_faction, _u, _p, _n, _o, _z] Call Compile preprocessFile "Common\Config\Config_Magazines.sqf";
 
 _u = [];//--- Weapon
@@ -736,6 +744,33 @@ _p = _p + [''];
 _n = _n + [''];
 _o = _o + [5];
 _z = _z + [0];
+_m = _m + [-1];
+
+//--- ACR Czech gear wave (Ray pick 2026-07-04). Class names VERIFIED from mounted lite pbo configs;
+//--- Config_Weapons/Config_Magazines isClass-guard every entry, so machines without ACR mounted simply skip these.
+_u = _u + ["CZ805_A1_ACR"]; //--- CZ 805 BREN A1 rifle (STANAG mags already in shop)
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [120];
+_z = _z + [1];
+_m = _m + [-1];
+_u = _u + ["CZ805_A1_GL_ACR"]; //--- BREN A1 + grenade launcher
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [210];
+_z = _z + [2];
+_m = _m + [-1];
+_u = _u + ["CZ805_A2_ACR"]; //--- BREN A2 carbine
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [100];
+_z = _z + [1];
+_m = _m + [-1];
+_u = _u + ["CZ_750_S1_ACR"]; //--- CZ 750 S1 M1 sniper (SVD=150/z3 anchor)
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [160];
+_z = _z + [3];
 _m = _m + [-1];
 
 [_faction, _u, _p, _n, _o, _z, _m] Call Compile preprocessFile "Common\Config\Config_Weapons.sqf";

@@ -11,7 +11,7 @@
 	string set, so APPEND (never overwrite) is mandatory here.
 
 	Gate: WFBE_C_VEHICLE_MARKINGS (Init_CommonConstants.sqf). 0 = no markings AND no side-skins.
-	Kill tally marker gate: WFBE_C_KILL_TALLY_DECAL (default 1 since the 2026-07-04 Ray pick).
+	Kill tally marker gate: WFBE_C_KILL_TALLY_DECAL (default 0; set 1 to enable the hull-glow decal).
 	Independent from the side lights/tints; heat-ramp amber -> orange -> red -> white-hot, one dim local light.
 
 	Implementation: the zero-art "ships now" markings are dim LOCAL #lightpoint glows attached per
@@ -36,7 +36,7 @@ _side    = _this select 1;
 if ((missionNamespace getVariable ["WFBE_C_KILL_TALLY_DECAL", 0]) > 0) then {
 	_tallyMk = "this spawn {private ['_veh','_last','_cnt','_tier','_light','_bright','_color']; _veh = _this; _last = -1; while {alive _veh} do {_cnt = _veh getVariable ['wfbe_kill_tally',0]; if ((abs (_cnt - _last)) > 0) then {_last = _cnt; _light = _veh getVariable ['mks_tally',objNull]; if (_cnt <= 0) then {if !(isNull _light) then {deleteVehicle _light; _veh setVariable ['mks_tally',objNull]}} else {if (isNull _light) then {_light = '#lightpoint' createVehicleLocal (position _veh); _veh setVariable ['mks_tally',_light]; _light attachTo [_veh,[0,0.5,1.1]]}; _tier = 1; if (_cnt >= 3) then {_tier = 2}; if (_cnt >= 6) then {_tier = 3}; if (_cnt >= 10) then {_tier = 4}; _bright = 0.025; _color = [1.0,0.55,0.05]; switch (_tier) do {case 2: {_bright = 0.032; _color = [1.0,0.33,0.02]}; case 3: {_bright = 0.040; _color = [1.0,0.08,0.0]}; case 4: {_bright = 0.050; _color = [1.0,0.85,0.6]};}; _light setLightBrightness _bright; _light setLightColor _color; _light setLightAmbient _color};}; sleep 2;}; _light = _veh getVariable ['mks_tally',objNull]; if !(isNull _light) then {deleteVehicle _light};}";
 	_pending = _vehicle getVariable ["wfbe_pending_texture", ""];
-	if ((count _pending) > 0) then {_pending = _pending + "; " + _tallyMk} else {_pending = _tallyMk};
+	if (_pending != "") then {_pending = _pending + "; " + _tallyMk} else {_pending = _tallyMk}; //--- cmdcon44m: count on a STRING is A3-only; in A2 it errors and KILLS the caller (base founding died -> TEAMREG=0 on 44l).
 	_vehicle setVariable ["wfbe_pending_texture", _pending];
 };
 //--- Master gate (also governs the side-skins in Common_AddVehicleTexture.sqf).

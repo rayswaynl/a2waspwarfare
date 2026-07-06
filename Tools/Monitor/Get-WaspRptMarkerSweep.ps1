@@ -34,6 +34,7 @@ powershell -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WaspRptMarkerSweep.
 param(
 	[string[]]$RptPath = @(),
 	[string[]]$RptDirectory = @(),
+	[ValidateRange(0, 2147483647)]
 	[int]$Latest = 8,
 	[string[]]$Pattern = @(),
 	[string[]]$RequirePattern = @(),
@@ -44,6 +45,7 @@ param(
 	[string[]]$ExpectedTerrain = @("chernarus", "takistan"),
 	[switch]$RequireReleaseMarkers,
 	[string]$WindowMarker = "",
+	[ValidateRange(0, 2147483647)]
 	[int]$SampleLimit = 3,
 	[switch]$Recurse,
 	[switch]$Regex,

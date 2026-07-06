@@ -2,7 +2,7 @@
 //--- Interval-gated maintenance pass (Ray 2026-06-28): retire ONE idle, rear, FOOT-INFANTRY HC team
 //--- per pass once the side already fields higher-tier MOBILE teams (light/heavy/air), keeping the
 //--- force modern and freeing group/pop-cap headroom for armour. IMMERSION: one team per long interval
-//--- (WFBE_C_AICOM_DISBAND_INTERVAL), only rear/idle teams, only while a minimum infantry floor remains,
+//--- (WFBE_C_AICOM_DISBAND_LOWTIER_INTERVAL), only rear/idle teams, only while a minimum infantry floor remains,
 //--- only when mobile force is actually fielded.
 //---
 //--- SELECTOR ONLY. It sets the proven wfbe_aicom_disband flag (publicVariable'd); the HC-LOCAL executor

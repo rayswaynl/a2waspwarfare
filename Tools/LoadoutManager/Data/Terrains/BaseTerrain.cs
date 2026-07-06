@@ -10,6 +10,10 @@
 public abstract class BaseTerrain : InterfaceTerrain
 {
     private const string ReleaseCandidateId = "build89-cmdcon44-20260703";
+    private const string ChernarusHelpAirfieldsLine =
+        "NWAF, NEAF and Balota are capturable (40 SV, PMC garrison). Taking one gives a repair point and an exclusive hangar with unique aircraft (L-39, An-2, Mi-17 variants). Aircraft buy at hangars (green map symbol) when an Air Factory exists.<br />\",";
+    private const string GenericVanillaHelpAirfieldsLine =
+        "Some maps feature capturable PMC airfields (40 SV, PMC garrison). Taking one gives a repair point and an exclusive hangar with unique aircraft. Aircraft buy at hangars (green map symbol) when an Air Factory exists.<br />\",";
 
     // Properties that specifies the name/type of the terrain.
     public TerrainName TerrainName { get => terrainName; set => terrainName = value; }
@@ -260,13 +264,19 @@ class CfgSounds
         FileManager.CopyFilesFromSourceToDestination(sourceDirectory, _destinationDirectory, terrainModStatus);
     }
 
-    // Replaces the gui menu help mission name according to the current Terrain name
+    // Keeps the mirrored Help page accurate for vanilla maps that do not use Chernarus airfield names.
     private void ReplaceGUIMenuHelp(string _destinationDirectory)
     {
-        ReplaceContentOnASpecificFile(_destinationDirectory, @"\Client\GUI\GUI_Menu_Help.sqf",
-            "<t size='1.2' color='#2394ef' align='center'>Warfare WASP-AWESOME EDITION | v48 | - CO - Mission</t><br />",
-            $"<t size='1.2' color='#2394ef' align='center'>Warfare WASP-AWESOME EDITION | v48 | - CO -" +
-            $" {EnumExtensions.GetEnumMemberAttrValue(terrainName)}</t><br />");
+        if (terrainModStatus != TerrainModStatus.VANILLA || terrainName == TerrainName.CHERNARUS)
+        {
+            return;
+        }
+
+        ReplaceContentOnASpecificFile(
+            _destinationDirectory,
+            @"\Client\GUI\GUI_Menu_Help.sqf",
+            ChernarusHelpAirfieldsLine,
+            GenericVanillaHelpAirfieldsLine);
     }
 
     // Replaces the core /* Class Core */ Call compile for the mod maps

@@ -66,4 +66,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Ops\Set-MissionTempl
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Ops\Set-WaspCpuAffinity.Tests.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Ops\Test-WaspSlotCountConsistency.Tests.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Monitor\Get-WindowedRpt.Tests.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Monitor\Test-WaspRptMarkerSweep.SelfTest.ps1
 ```

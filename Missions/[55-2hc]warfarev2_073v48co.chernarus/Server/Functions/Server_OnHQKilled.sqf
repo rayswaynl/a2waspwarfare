@@ -10,6 +10,11 @@ Private ["_wreckObject", "_building","_dammages","_dammages_current","_get","_ki
 _structure = _this select 0;
 _killer = _this select 1;
 
+//--- DR-20: server-local killed EHs plus client process-killed-hq relays can replay the same HQ death.
+//--- Keep redundant detection, but let this consumer process each HQ object once.
+if (_structure getVariable ["wfbe_hq_killed_done", false]) exitWith {};
+_structure setVariable ["wfbe_hq_killed_done", true, true];
+
 // Marty : object that must be tracked by the HQ wreck marker.
 _wreckObject = _structure;
 

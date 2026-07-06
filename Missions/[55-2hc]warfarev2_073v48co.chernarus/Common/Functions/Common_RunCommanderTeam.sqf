@@ -195,10 +195,12 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 	{ if (!isNull _x && {_x isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) == 0}) exitWith {_hasAttackHeli = true} } forEach _vehicles; //--- B66
 	if (_hasAttackHeli) then { //--- B66 only run the cannon-nudge loop for teams that own an attack heli
 	[_team, _side, _vehicles] Spawn {
-		private ["_tm","_sd","_vehs","_h","_tgt","_cannon","_cannonMuzzle","_muzzles","_isGuided","_ammo","_band","_enSide"]; //--- B66 +_cannonMuzzle/_muzzles
+		private ["_tm","_sd","_vehs","_liveVehs","_h","_tgt","_cannon","_cannonMuzzle","_muzzles","_isGuided","_ammo","_band"]; //--- B66 +_cannonMuzzle/_muzzles; lane341 hostile filter uses getFriend
 		_tm = _this select 0; _sd = _this select 1; _vehs = _this select 2;
-		_enSide = if (_sd == west) then {east} else {west};
-		while {!WFBE_GameOver && !isNull _tm && {(count ((units _tm) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+		while {!WFBE_GameOver && !isNull _tm && {(count _vehs) > 0} && {(count ((units _tm) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+			_liveVehs = [];
+			{ if (!isNull _x && {alive _x}) then {_liveVehs = _liveVehs + [_x]} } forEach _vehs;
+			_vehs = _liveVehs;
 			{
 				_h = _x;
 				if (!isNull _h && {alive _h} && {_h isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _h) >> "transportSoldier")) == 0} && {!isNull (gunner _h)} && {alive (gunner _h)}) then {
@@ -211,7 +213,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 					if (_cannon != "") then {
 						_band = missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_RANGE", 700];
 						_tgt = objNull;
-						{ if (alive _x && {side _x == _enSide} && {(_h distance _x) < _band}) exitWith {_tgt = _x} } forEach ((getPos _h) nearEntities [["Man","Car","Tank","Air"], _band]);
+						{ if (alive _x && {(_sd getFriend (side _x)) < 0.6} && {(_h distance _x) < _band}) exitWith {_tgt = _x} } forEach ((getPos _h) nearEntities [["Man","Car","Wheeled_APC","Tank"], _band]);
 						if (!isNull _tgt) then {
 							_h flyInHeight ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_GUN_ALT", 35]) max (missionNamespace getVariable ["WFBE_C_AICOM_HELI_GUNFLOOR", 0]));
 							//--- B66 MUZZLE FIX: in OA selectWeapon wants a MUZZLE, not a weapon classname; a
@@ -906,6 +908,11 @@ while {!WFBE_GameOver && _alive} do {
 			_dCombat = if (isNull _dLdr) then {false} else {behaviour _dLdr == "COMBAT"};
 			if (_dNear == 0 && {!_dCombat}) then {
 				{ if (local _x) then {deleteVehicle _x} } forEach (units _team);
+				//--- cmdcon44s (correctness): retirement must delete the team HULLS too, not just the crew (units _team above).
+				//--- A retired REAR team otherwise leaves crewless tanks/helis parked at base forever - no reaper catches an
+				//--- HC-local, group-less hull. HC-local delete only; skip any hull a player is aboard (belt-and-braces; the
+				//--- _dNear guard already cleared nearby players). Capture the outer _x before the inner count (A2 rebind trap).
+				{ private ["_rv"]; _rv = _x; if (!isNull _rv && {local _rv} && {({isPlayer _x} count (crew _rv)) == 0}) then {deleteVehicle _rv} } forEach _vehicles;
 				_alive = false;
 				diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TEAM_RETIRE_HC|deleted-local-units|cmd=" + str _dCmd);
 			} else {
@@ -1010,6 +1017,24 @@ while {!WFBE_GameOver && _alive} do {
 								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RECOVERY_V2 dead-driver swap - moved live crewman into %3 driver seat.", _uSide, _uTeam, typeOf _uVeh]] Call WFBE_CO_FNC_AICOMLog;
 							};
 						};
+						//--- TP-15 STUCK-DRIVEN IN-PLACE REPAIR (WFBE_C_AICOM_STUCK_REPAIR default 0). A tier-2/3 unstuck means
+						//--- the hull sat wedged/parked far from target and NOT in contact (the tier is only set when the
+						//--- server flagged a non-combat stall). Rather than DETOUR the team to a town/service point, restore
+						//--- the lead hull IN PLACE so the reverse-nudge + re-route below act on a healthy, armed hull. Mirrors
+						//--- the SELFREPAIR idiom (local + alive + LandVehicle + no-threat gate); adds setVehicleAmmo 1 (a long
+						//--- stall can burn the leg ammo). One-shot at the event (this Spawn fires once per stuck re-issue), not
+						//--- a per-tick loop. A2-OA-safe: setDamage / setVehicleAmmo / nearEntities / getFriend (no A3 commands).
+						if (_uTier >= 2 && {(missionNamespace getVariable ["WFBE_C_AICOM_STUCK_REPAIR", 0]) > 0} && {!isNull _uVeh} && {_uVeh != _uLdr} && {alive _uVeh} && {local _uVeh} && {_uVeh isKindOf "LandVehicle"}) then {
+							private ["_srSafe2","_srThreat2"];
+							_srSafe2   = missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_SAFE_DIST", 250];
+							_srThreat2 = {!isNull _x && {alive _x} && {((side _uTeam) getFriend (side _x)) < 0.6}} count (_uVeh nearEntities [["Man","LandVehicle"], _srSafe2]);
+							if (_srThreat2 == 0) then {
+								_uVeh setDamage 0;
+								_uVeh setVehicleAmmo 1;
+								diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_REPAIR|team=" + (str _uTeam) + "|tier=" + str _uTier + "|veh=" + (typeOf _uVeh));
+							};
+						};
+
 						//--- Tier 1: break a physical wedge on the lead hull.
 						if (!isNull _uVeh && {_uVeh != _uLdr} && {alive _uVeh} && {canMove _uVeh}) then {
 							_uVeh setVelocity [0,0,0];

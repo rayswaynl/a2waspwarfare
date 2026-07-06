@@ -277,6 +277,29 @@ _n = _n + [''];
 _o = _o + [40];
 _z = _z + [4];
 
+//--- ACR Czech gear wave (Ray pick 2026-07-04). Class names VERIFIED from mounted lite pbo configs;
+//--- Config_Weapons/Config_Magazines isClass-guard every entry, so machines without ACR mounted simply skip these.
+_u = _u + ["30Rnd_556x45_Stanag"]; //--- for the captured BREN carbines (EAST shop lacked STANAG)
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [10];
+_z = _z + [1];
+_u = _u + ["20Rnd_9x19_EVO"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [10];
+_z = _z + [1];
+_u = _u + ["20Rnd_9x19_EVOSD"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [15];
+_z = _z + [2];
+_u = _u + ["18Rnd_9x19_PhantomSD"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [15];
+_z = _z + [2];
+
 [_faction, _u, _p, _n, _o, _z] Call Compile preprocessFile "Common\Config\Config_Magazines.sqf";
 
 _u = [];//--- Weapon
@@ -523,6 +546,33 @@ _p = _p + [''];
 _n = _n + [''];
 _o = _o + [5];
 _z = _z + [0];
+_m = _m + [-1];
+
+//--- ACR Czech gear wave (Ray pick 2026-07-04). Class names VERIFIED from mounted lite pbo configs;
+//--- Config_Weapons/Config_Magazines isClass-guard every entry, so machines without ACR mounted simply skip these.
+_u = _u + ["CZ805_A2_SD_ACR"]; //--- suppressed BREN carbine - spec-ops tier
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [260];
+_z = _z + [3];
+_m = _m + [-1];
+_u = _u + ["evo_sd_ACR"]; //--- Scorpion EVO 3 suppressed
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [200];
+_z = _z + [2];
+_m = _m + [-1];
+_u = _u + ["Evo_mrad_ACR"]; //--- Scorpion EVO 3 red-dot
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [120];
+_z = _z + [1];
+_m = _m + [-1];
+_u = _u + ["CZ_75_SP_01_PHANTOM_SD"]; //--- CZ 75 Phantom suppressed pistol
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [60];
+_z = _z + [2];
 _m = _m + [-1];
 
 [_faction, _u, _p, _n, _o, _z, _m] Call Compile preprocessFile "Common\Config\Config_Weapons.sqf";

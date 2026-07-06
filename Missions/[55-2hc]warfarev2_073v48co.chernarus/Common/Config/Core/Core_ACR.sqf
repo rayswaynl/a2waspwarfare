@@ -79,16 +79,16 @@ _c = _c + ['Pandur2_ACR'];
 _i = _i + [['','',2650,25,[true,false,2,0],3,1,0,'Czech',[]]];
 
 /* Support Trucks (T810 family) */
-_c = _c + ['T810_CZ_EP1'];
+_c = _c + ['T810_ACR']; //--- cmdcon44n: was 'T810_CZ_EP1' - class never existed; real lite/full DLC name verified in wheeled_acr.pbo config
 _i = _i + [['','',500,20,-2,1,1,0,'Czech',[]]];
 
-_c = _c + ['T810_Repair_CZ_EP1'];
+_c = _c + ['T810Repair_ACR']; //--- cmdcon44n: was 'T810_Repair_CZ_EP1' (never existed)
 _i = _i + [['','',2500,22,-2,2,1,0,'Czech',[]]];
 
-_c = _c + ['T810_Refuel_CZ_EP1'];
+_c = _c + ['T810Refuel_ACR']; //--- cmdcon44n: was 'T810_Refuel_CZ_EP1' (never existed)
 _i = _i + [['','',500,22,-2,1,1,0,'Czech',[]]];
 
-_c = _c + ['T810_Ammo_CZ_EP1'];
+_c = _c + ['T810Reammo_ACR']; //--- cmdcon44n: was 'T810_Ammo_CZ_EP1' (never existed; real name is Reammo)
 _i = _i + [['','',1750,22,-2,1,1,0,'Czech',[]]];
 
 /* Heavy Vehicles — ACR premium (capture-unlock) */

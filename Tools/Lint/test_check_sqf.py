@@ -40,6 +40,15 @@ class CheckSqfTests(unittest.TestCase):
         self.assertIn("A3SELECT", codes)
         self.assertIn("A3SORT", codes)
 
+    def test_bis_fnc_calls_are_reported_outside_comments_and_strings(self) -> None:
+        codes = lint_codes(
+            "// _ignored = _xs call BIS_fnc_arrayPush;\n"
+            '_alsoIgnored = "call BIS_fnc_areEqual";\n'
+            "_pick = _xs call BIS_fnc_selectRandom;\n"
+            "_same = [_a, _b] CALL bis_fnc_areEqual;\n"
+        )
+        self.assertEqual(codes.count("A3BISFNC"), 2)
+
     def test_group_getvariable_array_form_is_reported(self) -> None:
         codes = lint_codes('_team getVariable ["wfbe_aicom_order", []];\n')
         self.assertIn("GROUPGETVAR", codes)
@@ -47,6 +56,22 @@ class CheckSqfTests(unittest.TestCase):
     def test_string_find_preserves_string_context_but_ignores_comments(self) -> None:
         codes = lint_codes('// "abc" find "b"\n_hit = "abc" find "b";\n')
         self.assertEqual(codes.count("A3STRING"), 1)
+
+    def test_string_typed_constant_numeric_gate_is_reported(self) -> None:
+        codes = lint_codes(
+            'if ((missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", 0]) > 0) then {};\n'
+            "if ((missionNamespace getVariable ['WFBE_C_GUER_KA137_FLARE_LAUNCHER', false])) then {};\n"
+            'if ((missionNamespace getVariable [WFBE_C_SPECIAL_CLASS, 0]) > 0) then {};\n'
+        )
+        self.assertEqual(codes.count("A3NUMGATE"), 3)
+
+    def test_string_typed_constant_numeric_gate_ignores_comments_and_safe_defaults(self) -> None:
+        codes = lint_codes(
+            '// missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", 0]\n'
+            'if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {};\n'
+            'if ((missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"]) != "") then {};\n'
+        )
+        self.assertNotIn("A3NUMGATE", codes)
 
     def test_namespace_three_arg_setvariable_is_reported(self) -> None:
         codes = lint_codes('missionNamespace setVariable ["WFBE_ICBM_STATE", _state, true];\n')
@@ -64,12 +89,44 @@ class CheckSqfTests(unittest.TestCase):
         self.assertNotIn("NSSETVAR3", codes)
 
     def test_namespace_two_arg_with_nested_array_value_is_not_reported(self) -> None:
-        codes = lint_codes(
-            'missionNamespace setVariable ["wfbe_pair", [_town, false]];\n'
-            'missionNamespace setVariable ["wfbe_label", Format ["%1,%2", _a, _b]];\n'
-            'missionNamespace setVariable ["wfbe_sum", (_a + _b)];\n'
-        )
+        codes = lint_codes('missionNamespace setVariable ["k", [_a, _b]];\n')
         self.assertNotIn("NSSETVAR3", codes)
+
+    def test_namespace_two_arg_with_format_value_is_not_reported(self) -> None:
+        codes = lint_codes('missionNamespace setVariable ["k", Format ["%1", _v]];\n')
+        self.assertNotIn("NSSETVAR3", codes)
+
+    def test_namespace_two_arg_with_parenthesized_expression_value_is_not_reported(self) -> None:
+        codes = lint_codes('missionNamespace setVariable ["k", (_a + _b)];\n')
+        self.assertNotIn("NSSETVAR3", codes)
+
+    def test_parse_added_lines_from_diff_tracks_new_line_numbers(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            diff = (
+                "diff --git a/sample.sqf b/sample.sqf\n"
+                "--- a/sample.sqf\n"
+                "+++ b/sample.sqf\n"
+                "@@ -1,2 +1,4 @@\n"
+                " private _x;\n"
+                "+params [\"_unit\"];\n"
+                " _unit = player;\n"
+                "+_items pushBack _unit;\n"
+            )
+            added = check_sqf.parse_added_lines_from_diff(diff, root)
+
+        self.assertEqual(added[(root / "sample.sqf").resolve()], {2, 4})
+
+    def test_added_line_filter_drops_legacy_findings(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "sample.sqf"
+            source = 'params ["_old"];\n_items pushBack player;\n'
+            path.write_text(source, encoding="utf-8")
+            findings = check_sqf.lint_text(path, source, root, check_sqf.build_token_index(root))
+            filtered = check_sqf.filter_findings_to_added_lines(findings, {path.resolve(): {2}})
+
+        self.assertEqual([finding.code for finding in filtered], ["A3CMD"])
 
 
 if __name__ == "__main__":

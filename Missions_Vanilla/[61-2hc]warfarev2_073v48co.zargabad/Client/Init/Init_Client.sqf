@@ -299,6 +299,30 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 					};
 				};
 			} forEach (player nearEntities [["Man"], 120]);
+			//--- cmdcon44m (Ray pick C 2026-07-04): vehicle kill tallies ride the same TAGS toggle and the same
+			//--- control pool - no lightpoint, no extra rsc. Friendly-crewed or EMPTY hulls within 200m that have
+			//--- scored kills show a heat-coloured 'N KILLS' tag (amber -> orange -> red -> white-hot, the retired
+			//--- glow's ramp). Crewless side resolves to CIV in A2, so empty hulls pass by crew-count, NOT side;
+			//--- enemy CREWED vehicles never tag (no intel leak). Own vehicle excluded (tag would sit mid-screen).
+			{
+				private ['_tcnt','_tclr','_tpp','_tscr','_td','_tsz'];
+				_tcnt = _x getVariable ['wfbe_kill_tally', 0];
+				if (_shown < _max && {_tcnt > 0} && {alive _x} && {_x != vehicle player} && {(count crew _x == 0) || {side _x == side player}}) then {
+					_tpp = visiblePosition _x;
+					_tscr = worldToScreen [_tpp select 0, _tpp select 1, (_tpp select 2) + 2.6];
+					if (count _tscr == 2 && {(_tscr select 0) > 0} && {(_tscr select 0) < 1} && {(_tscr select 1) > 0} && {(_tscr select 1) < 1}) then {
+						_td = _x distance player;
+						_tsz = 0.016 + (0.014 * (1 - (_td / 200)));
+						_tclr = '#ffb040'; if (_tcnt >= 3) then {_tclr = '#ff7a20'}; if (_tcnt >= 6) then {_tclr = '#ff2a10'}; if (_tcnt >= 10) then {_tclr = '#ffe8c0'};
+						_ctrl = _disp displayCtrl (62000 + _shown);
+						_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='%3'>%1 %4</t>", _tcnt, _tsz, _tclr, if (_tcnt == 1) then {'KILL'} else {'KILLS'}]));
+						_ctrl ctrlSetPosition [(_tscr select 0) - 0.1, (_tscr select 1) - 0.025, 0.2, 0.03];
+						_ctrl ctrlCommit 0;
+						_ctrl ctrlShow true;
+						_shown = _shown + 1;
+					};
+				};
+			} forEach (player nearEntities [['LandVehicle','Air','Ship'], 200]);
 			for "_i" from _shown to (_max - 1) do {(_disp displayCtrl (62000 + _i)) ctrlShow false};
 			sleep 0.1;
 		};

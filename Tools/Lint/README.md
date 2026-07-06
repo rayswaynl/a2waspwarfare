@@ -9,6 +9,7 @@ python Tools\Lint\check_sqf.py Missions\[55-2hc]warfarev2_073v48co.chernarus\Cli
 python Tools\Lint\check_sqf.py --no-classname-index Missions\[55-2hc]warfarev2_073v48co.chernarus
 python Tools\Lint\test_check_sqf.py
 python Tools\Lint\check_sqf.py --select A3CMD,BRACKET --no-classname-index
+python Tools\Lint\check_sqf.py --diff-from origin/claude/build84-cmdcon36 --select A3CMD,A3MARKER,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,GROUPGETVAR,NSSETVAR3 --no-classname-index
 python Tools\Lint\check_sqf.py --ignore BOOLCMP,CLASSREF Missions\[55-2hc]warfarev2_073v48co.chernarus
 python Tools\Lint\check_stringtable_refs.py
 python Tools\Lint\check_stringtable_refs.py --orphans
@@ -17,7 +18,7 @@ python Tools\Lint\check_stringtable_refs.py --languages Russian,Czech --exit-zer
 python Tools\Lint\check_stringtable_refs.py --exit-zero
 ```
 
-With no paths, `check_sqf.py` scans both maintained mission roots.
+With no paths, `check_sqf.py` scans the maintained mission roots: source Chernarus plus the vanilla Takistan and Zargabad mirrors.
 
 With no paths, `check_stringtable_refs.py` scans the maintained Chernarus source mission and checks it against that mission's `stringtable.xml`. Pass explicit paths to scan a narrower file set or a per-map exception. BI/expansion keys such as `STR_EP1_`, `STR_DN_`, `STR_TASK*`, and input-display keys are ignored by default; use `--check-builtins` when you deliberately want to audit those too.
 
@@ -27,10 +28,14 @@ Use `--exit-zero` for report-only CI jobs that should print findings without fai
 
 Use `--select` for focused gates, such as an Arma 3 command-trap pass that should not fail on broad legacy `BOOLCMP` review findings. Use `--ignore` when you want the normal checker minus one or more noisy codes. Both options take comma-separated finding codes.
 
+Use `--diff-from <ref>` to report only findings whose primary line was added since that Git ref. This is useful for fleet PR self-checks where the full mission still has legacy review findings, but the new diff must be clean. With no paths, diff mode scans changed files under the maintained default mission roots; pass explicit SQF/HPP/EXT/FSM/SQM files or directories for narrower mission checks.
+
 ## Checks
 
 - `A3CMD`: common Arma 3 command traps from the fleet prompt.
+- `A3BISFNC`: `call BIS_fnc_*` usage that depends on Arma 3 function-library helpers.
 - `A3MARKER`: A3 NATO marker types such as `b_inf`.
+- `A3NUMGATE`: numeric `getVariable` gates on string-typed constant names ending in `_TYPE`, `_CLASS`, or `_LAUNCHER`.
 - `A3REVEAL`: array-form `reveal` usage.
 - `A3SELECT`: `select [start,count]` slice syntax.
 - `A3SORT`: sort-by-code syntax.

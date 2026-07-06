@@ -207,7 +207,16 @@ while {alive player && dialog} do {
 	_lastvd = _currentVD;
 	_lasttg = currentTG;
 	
-	if (_timer > 2) then {ctrlSetText [13010, Format [localize "STR_WF_Income",Call GetPlayerFunds,(sideJoined) Call GetIncome]];_timer = 0};
+	if (_timer > 2) then {
+		_newFunds = Call GetPlayerFunds;
+		if (_newFunds != _funds) then {
+			_funds = _newFunds;
+			sliderSetRange[13007,0,_funds];
+			if ((SliderPosition 13007) > _funds) then {SliderSetPosition[13007,_funds]};
+		};
+		ctrlSetText [13010, Format [localize "STR_WF_Income",_funds,(sideJoined) Call GetIncome]];
+		_timer = 0;
+	};
 	_timer = _timer + 0.05;
 	
 	//--- Back Button.

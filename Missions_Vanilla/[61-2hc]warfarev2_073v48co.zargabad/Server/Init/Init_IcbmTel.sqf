@@ -59,7 +59,10 @@ WFBE_SE_FNC_IcbmTelTheatrics = {
 WFBE_SE_FNC_SpawnIcbmTel = {
 	private ["_side","_sideText","_hq","_hqPos","_pos","_tel","_key","_existing"];
 	_side = _this select 0;
-	if !(_side in [west, east, resistance]) exitWith {objNull};
+	if !(_side in [west, east, resistance]) exitWith {
+		["WARNING", Format ["Init_IcbmTel.sqf : SpawnIcbmTel called with invalid side %1 — no TEL registered.", _side]] Call WFBE_CO_FNC_LogContent;
+		objNull
+	};
 	_sideText = str _side;
 	_key = Format ["WFBE_ICBM_TEL_%1", _sideText];
 
@@ -100,6 +103,8 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 	[_tel] Call WFBE_SE_FNC_IcbmTelTheatrics;
 
 	missionNamespace setVariable [_key, _tel];
+	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL registered in missionNamespace (%2) — isNull=%3.", _sideText, _key, isNull _tel]] Call WFBE_CO_FNC_LogContent;
+	diag_log (Format ["ICBMTEL|v1|REGISTER|%1|key=%2|isNull=%3", _sideText, _key, isNull _tel]);
 	//--- Clear any stale countdown latch on (re)spawn.
 	missionNamespace setVariable [Format ["WFBE_ICBM_TEL_CD_%1", _sideText], -1];
 

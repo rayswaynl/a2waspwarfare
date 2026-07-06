@@ -287,7 +287,7 @@ A stacked PR is required when your target file is already touched by an open (dr
 
 Before requesting review or marking a PR ready:
 
-- [ ] Lint gate passed: `check_sqf.py --select A3CMD,A3MARKER,A3REVEAL,A3SELECT,A3SORT,A3STRING,GROUPGETVAR,BRACKET,NSSETVAR3 --no-classname-index`
+- [ ] Lint gate passed: `check_sqf.py --select A3CMD,A3MARKER,A3NUMGATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,GROUPGETVAR,BRACKET,NSSETVAR3 --no-classname-index`
 - [ ] Net bracket delta is zero per edited file
 - [ ] All new classnames present in mission tree or config proof attached
 - [ ] Flag-off leaves mission byte-identical to HEAD (diff the generated output)

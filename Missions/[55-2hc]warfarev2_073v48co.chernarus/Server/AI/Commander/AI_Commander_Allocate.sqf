@@ -20,7 +20,7 @@
 	data; live group reads per-team; GroupGetBool for the A2 group-bool trap; no A3 commands).
 */
 
-private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_myTowns","_engageMin","_expandFirst","_concentrate"];
+private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_myTowns","_engageMin","_expandFirst","_concentrate"];
 _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) <= 0) exitWith {};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -264,10 +264,8 @@ if (_foFresh) then {
 		};
 	};
 };
-_harassTgt = objNull;
+_harassTgt = objNull; _harassFar = -1;
 if (_harassN > 0) then {
-	private ["_harassFar"];
-	_harassFar = -1;
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_HARASS_FALLBACK", 0]) > 0) then {
 		//--- HARASS FALLBACK (block-m): pick deepest town reachable by >=1 mounted eligible team.
 		//--- Pre-scan: collect positions of eligible mounted teams so we can test reachability upfront.
@@ -479,6 +477,10 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 	};
 } forEach _teams;
 
+if (_harassN > 0 && {_harassAssigned == 0} && {!isNull _harassTgt}) then {
+	diag_log ("AICOM2|WARN|HARASS_UNMET|" + str _side + "|harassN=" + str _harassN + "|harassTgt=" + (_harassTgt getVariable ["name","?"]) + "|harassFar=" + str (round _harassFar));
+};
+
 //--- D7 AICOM FEINT: optional feint dispatch. Self-contained, flag-gated (WFBE_C_AICOM_FEINT_ENABLE).
 //--- Runs AFTER the main ASSIGN loop so the feint write is the LAST write to wfbe_aicom_alloc_target this tick (wins).
 //--- Recall pass runs every tick (clears expired feint tags -> main fist/loop picks up the team next tick).
@@ -569,8 +571,10 @@ if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) t
 	_riTown = _riPair select 0;
 	_riT0   = _riPair select 1;
 	if (!isNull _riTown && {(time - _riT0) < (missionNamespace getVariable ["WFBE_C_AICOM_REINFORCE_TTL", 300])}) then {
-		private ["_riBest","_riBestD","_riGrp","_riLdr","_riAlive","_riMode","_riRelief","_riStrike"];
-		_riBest = grpNull; _riBestD = 1e9;
+		private ["_riBest","_riBestD","_riExisting","_riExistingD","_riTownSide","_riNeutral","_riGrp","_riLdr","_riAlive","_riMode","_riRelief","_riStrike"];
+		_riBest = grpNull; _riBestD = 1e9; _riExisting = grpNull; _riExistingD = 1e9;
+		_riTownSide = _riTown getVariable ["sideID", -1];
+		_riNeutral = (_riTownSide != _sideID) && {_riTownSide != _enemyID};
 		{
 			_riGrp = _x;
 			if (!isNull _riGrp) then {
@@ -585,9 +589,12 @@ if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) t
 				    && {([_riGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_riGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
 					private ["_riD"]; _riD = (getPos _riLdr) distance _riTown;
 					if (_riD < _riBestD) then {_riBestD = _riD; _riBest = _riGrp};
+					if (_riNeutral && {(_riGrp getVariable ["wfbe_aicom_alloc_target", objNull]) == _riTown} && {_riD < _riExistingD}) then {_riExistingD = _riD; _riExisting = _riGrp};
 				};
 			};
 		} forEach _teams;
+		//--- NEUTRAL REUSE (lane222): expansion may already have one team on this town; treat that as the reinforce team.
+		if (!isNull _riExisting) then {_riBest = _riExisting};
 		if (!isNull _riBest) then {
 			_riBest setVariable ["wfbe_aicom_alloc_target", _riTown];
 			_riBest setVariable ["wfbe_aicom_alloc_tick", time];
