@@ -2054,5 +2054,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- AI leaders fall back to getDir facing silently. Zero server load. Flag 0 = byte-identical.
 	if (isNil "WFBE_C_TEAMMARKER_DEST_DIR") then {WFBE_C_TEAMMARKER_DEST_DIR = 0}; //--- 0: facing direction (default, byte-identical to HEAD); >0: destination-direction when an active destination is available, facing fallback.
 
+//--- MATCH TELEMETRY (fable/match-facts-family, 2026-07-06): master gate for the MATCH|v1| family.
+//--- Default 1 (ON): this is purely additive RPT telemetry feeding the Stats V2 match-report pipeline;
+//--- no gameplay logic is gated on it. Set to 0 to suppress all MATCH|v1| lines (zero overhead).
+	if (isNil "WFBE_C_MATCH_TELEMETRY") then {WFBE_C_MATCH_TELEMETRY = 1};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

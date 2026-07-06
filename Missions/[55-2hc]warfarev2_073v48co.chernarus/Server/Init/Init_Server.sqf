@@ -181,6 +181,37 @@ waitUntil {commonInitComplete && townInit};
 //--- SELFTEST: one-line proof of live tunables, read AFTER params/constants are final (deploy verification).
 diag_log ("SELFTEST|v1|townsMax=" + str (missionNamespace getVariable ["WFBE_C_TOWNS_ACTIVE_MAX", -1]) + "|delegation=" + str (missionNamespace getVariable ["WFBE_C_AI_DELEGATION", -1]) + "|aicomLock=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", -1]) + "|aicomEnabled=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", -1]) + "|totalAiMax=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", -1]) + "|wildcardAlways=" + str (missionNamespace getVariable ["WFBE_C_WILDCARD_ALWAYS", 1]) + "|statlog=" + str (missionNamespace getVariable ["WFBE_C_STATLOG", -1]) + "|arm=" + (missionNamespace getVariable ["WFBE_C_AB_ARM", "LEGACY"]) + "|simGating=" + str (missionNamespace getVariable ["WFBE_C_SIM_GATING", 0]));
 
+//--- MATCH|v1|START|: one-shot match-identity line; feeds Stats V2 match-report pipeline.
+//--- Emitted here (after params + constants are final, before side-init) so every key lobby value
+//--- is readable. Gated on WFBE_C_MATCH_TELEMETRY (default 1 = additive telemetry ON).
+if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
+	private ["_mtStartTowns","_mtDelegation","_mtMaxPlayers","_mtAiEnabled","_mtStatlog","_mtGuer","_mtNaval","_mtOilfield","_mtBuild"];
+	_mtStartTowns  = missionNamespace getVariable ["WFBE_C_TOWNS_ACTIVE_MAX", -1];
+	_mtDelegation  = missionNamespace getVariable ["WFBE_C_AI_DELEGATION", -1];
+	_mtMaxPlayers  = WF_MAXPLAYERS;
+	_mtAiEnabled   = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", -1];
+	_mtStatlog     = missionNamespace getVariable ["WFBE_C_STATLOG", -1];
+	_mtGuer        = missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0];
+	_mtNaval       = missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 0];
+	_mtOilfield    = missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 0];
+	//--- Build id sourced from the same WASPRELEASE candidate string (initJIPCompatible.sqf line 40).
+	_mtBuild       = "build89-cmdcon44";
+	#ifdef WF_RELEASE_MARKER
+	_mtBuild = WF_RELEASE_MARKER;
+	#endif
+	diag_log ("MATCH|v1|START|world=" + worldName
+		+ "|build=" + str _mtBuild
+		+ "|towns=" + str _mtStartTowns
+		+ "|maxPlayers=" + str _mtMaxPlayers
+		+ "|aiEnabled=" + str _mtAiEnabled
+		+ "|delegation=" + str _mtDelegation
+		+ "|statlog=" + str _mtStatlog
+		+ "|guer=" + str _mtGuer
+		+ "|naval=" + str _mtNaval
+		+ "|oilfield=" + str _mtOilfield);
+	["INITIALIZATION", "Init_Server.sqf: MATCH|v1|START| emitted (WFBE_C_MATCH_TELEMETRY=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- Side logics.
 _present_west = missionNamespace getVariable "WFBE_WEST_PRESENT";
 _present_east = missionNamespace getVariable "WFBE_EAST_PRESENT";

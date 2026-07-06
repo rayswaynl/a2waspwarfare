@@ -234,6 +234,34 @@ while {!gameOver} do {
 					diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|ROUNDEND|" + str _winSide + "|" + str _aicomRoundSec + "|" + worldName);
 				};
 
+				//--- MATCH|v1|END|: single match-facts summary for Stats V2. Reuses the values already
+				//--- computed above (_winSide, _aicomRoundSec, per-side AICOMFINAL data). Gated on
+				//--- WFBE_C_MATCH_TELEMETRY (default 1). Zero recomputation: all fields are local vars.
+				if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
+					private ["_meWTowns","_meETowns","_meGTowns","_meWCas","_meECas","_meWVeh","_meEVeh","_mePlayers","_meWLogic","_meELogic","_meWSnap","_meESnap","_meSnapOk"];
+					_meWTowns  = west  Call GetTownsHeld;
+					_meETowns  = east  Call GetTownsHeld;
+					_meGTowns  = resistance Call GetTownsHeld;
+					_meWCas    = WF_Logic getVariable ["WESTCasualties",  0];
+					_meECas    = WF_Logic getVariable ["EASTCasualties",  0];
+					_meWVeh    = WF_Logic getVariable ["WESTVehiclesLost", 0];
+					_meEVeh    = WF_Logic getVariable ["EASTVehiclesLost", 0];
+					_mePlayers = { isPlayer _x } count playableUnits;
+					diag_log ("MATCH|v1|END|winner=" + str _winSide
+						+ "|durationSec=" + str _aicomRoundSec
+						+ "|world=" + worldName
+						+ "|townsW=" + str _meWTowns
+						+ "|townsE=" + str _meETowns
+						+ "|townsG=" + str _meGTowns
+						+ "|casW=" + str _meWCas
+						+ "|casE=" + str _meECas
+						+ "|vehLostW=" + str _meWVeh
+						+ "|vehLostE=" + str _meEVeh
+						+ "|players=" + str _mePlayers
+						+ "|totalTowns=" + str _total);
+					["INFORMATION", Format ["server_victory_threeway.sqf: MATCH|v1|END| emitted - winner=%1 duration=%2s.", str _winSide, _aicomRoundSec]] Call WFBE_CO_FNC_LogContent;
+				};
+
 				[_winSide] call WFBE_CO_FNC_LogGameEnd;
 			};
 		} forEach WFBE_PRESENTSIDES - [WFBE_DEFENDER];
