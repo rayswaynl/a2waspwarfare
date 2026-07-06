@@ -156,6 +156,10 @@ _IDCS = _IDCS - [_currentIDC];
 					hint parseText (Format ["<t color='#ff5a5a'>SCUD refused: your side already fields %1 launchers (max %2).</t>", _scudLive, _scudMax]);
 				};
 			};
+			if (!_skip && {_type == "Airport"} && {isNull _closest}) then {
+				_skip = true;
+				hint parseText "<t color='#ff9060'>No airport in range. Move closer to an airfield hangar and try again.</t>";
+			};
 			//--- AIRFIELD-OWNERSHIP GATE (fable/airfield-ownership-gate, GR-2026-07-06a):
 			//--- Block aircraft purchase at an airfield the buyer's side does not hold.
 			//--- Ownership: WFBE_CO_FNC_GetAirfieldOwnerSideID finds the nearest entry in the towns

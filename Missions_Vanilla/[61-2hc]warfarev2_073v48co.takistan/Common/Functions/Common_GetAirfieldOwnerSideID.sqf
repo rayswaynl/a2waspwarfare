@@ -19,10 +19,10 @@
 	fable/airfield-ownership-gate, GR-2026-07-06a
 */
 
-private [_afLogic,_radius,_best,_bestDist,_d,_sid];
+private ["_afLogic","_radius","_best","_bestDist","_d","_sid"];
 
 _afLogic = _this select 0;
-_radius  = missionNamespace getVariable [WFBE_C_AIRFIELD_OWNER_TOWN_RADIUS, 500];
+_radius  = missionNamespace getVariable ["WFBE_C_AIRFIELD_OWNER_TOWN_RADIUS", 500];
 _best     = objNull;
 _bestDist = _radius + 1;
 
@@ -33,7 +33,7 @@ _bestDist = _radius + 1;
 
 _sid = -1;
 if !(isNull _best) then {
-	if (_bestDist <= _radius) then {_sid = _best getVariable [sideID, -1]};
+	if (_bestDist <= _radius) then {_sid = _best getVariable ["sideID", -1]};
 };
 
 _sid
