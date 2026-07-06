@@ -188,7 +188,7 @@ if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 	private ["_mtStartTowns","_mtDelegation","_mtMaxPlayers","_mtAiEnabled","_mtStatlog","_mtGuer","_mtNaval","_mtOilfield","_mtBuild"];
 	_mtStartTowns  = missionNamespace getVariable ["WFBE_C_TOWNS_ACTIVE_MAX", -1];
 	_mtDelegation  = missionNamespace getVariable ["WFBE_C_AI_DELEGATION", -1];
-	_mtMaxPlayers  = WF_MAXPLAYERS;
+	_mtMaxPlayers  = getNumber (missionConfigFile >> "Header" >> "maxPlayers"); //--- A2-OA runtime read: WF_MAXPLAYERS is a preprocessor define (version.sqf) not included in Init_Server.sqf; missionConfigFile>>Header>>maxPlayers is compiled from Rsc/Header.hpp at preprocess time and yields the real slot count.
 	_mtAiEnabled   = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", -1];
 	_mtStatlog     = missionNamespace getVariable ["WFBE_C_STATLOG", -1];
 	_mtGuer        = missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0];
