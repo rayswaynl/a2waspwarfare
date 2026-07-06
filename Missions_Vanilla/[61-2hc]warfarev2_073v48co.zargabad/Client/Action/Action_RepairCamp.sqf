@@ -31,11 +31,13 @@ _temp = _camps;
 if (count _camps == 0) exitWith {hint (localize "STR_WF_Repair_Camp_None_Dead")};
 
 //--- Check if the repair is free or if it need to be paid.
-if ((missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") > 0) then {
-	//--- Check that the player has enough funds for a repair.
-	if ((Call WFBE_CL_FNC_GetClientFunds) < (missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE")) exitWith {hint Format [localize "STR_WF_Repair_Camp_NoFunds", (missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") - (Call WFBE_CL_FNC_GetClientFunds)]};
+//--- fix(hunt): the NoFunds guard was an exitWith INSIDE the then{} - on A2-OA that exits only the block and
+//--- FALLS THROUGH, so a broke player skipped the charge yet still ran the full repair flow (free repair), and
+//--- the camp-alive race below then REFUNDED money that was never paid. Hoisted to top scope so it really aborts.
+if (((missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") > 0) && {(Call WFBE_CL_FNC_GetClientFunds) < (missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE")}) exitWith {hint Format [localize "STR_WF_Repair_Camp_NoFunds", (missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") - (Call WFBE_CL_FNC_GetClientFunds)]};
 
-	//--- Purchase a repair.
+//--- Purchase a repair (price 0 = free camps, nothing to charge).
+if ((missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") > 0) then {
 	-(missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") Call WFBE_CL_FNC_ChangeClientFunds;
 };
 	

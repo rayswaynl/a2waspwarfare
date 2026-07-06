@@ -1,15 +1,21 @@
 
-"WFBE_Server_PV_SupplyMissionCompleted" addPublicVariableEventHandler {
+//--- fix(hunt): PVEH body extracted into WFBE_SE_FNC_HandleSupplyMissionCompleted so the server-side
+//--- ground-truck completion detector (supplyMissionStarted.sqf) can call it directly. publicVariableServer
+//--- executed ON the server never fires the server's own PVEH (engine trap; same extraction pattern as
+//--- WFBE_SE_FNC_HandleAttackWaveDetails in AttackWave.sqf), so ground-truck deliveries died silently.
+//--- Calling convention: _this IS the payload array [playerObject, supplyTruck, side]. The PVEH at the
+//--- bottom still relays the client (helicopter) sender supplyMissionUnload.sqf.
+WFBE_SE_FNC_HandleSupplyMissionCompleted = {
 
     private ['_namePlayer', '_associatedSupplyTruck', '_supplyAmount', '_sourceTown', '_sourceTownStr', '_sidePlayer', '_logMessage', '_byHeli', '_cashRun', '_comTeam', '_airLevel'];
 
-    _playerObject = (_this select 1) select 0;
-    _namePlayer = name ((_this select 1) select 0);
-    _associatedSupplyTruck = ((_this select 1) select 1);
+    _playerObject = _this select 0;
+    _namePlayer = name (_this select 0);
+    _associatedSupplyTruck = (_this select 1);
     _supplyAmount = _associatedSupplyTruck getVariable "SupplyAmount";
     _sourceTown = _associatedSupplyTruck getVariable "SupplyFromTown";
     _sourceTownStr = str (_sourceTown);
-    _sidePlayer = ((_this select 1) select 2);
+    _sidePlayer = (_this select 2);
 
     if (isNil "_supplyAmount") then {
         _supplyAmount = 0;
@@ -57,4 +63,9 @@
 
     publicVariable "WFBE_Server_PV_SupplyMissionCompletedMessage";
 
+};
+
+"WFBE_Server_PV_SupplyMissionCompleted" addPublicVariableEventHandler {
+    //--- Relay the client (helicopter) sender through the extracted handler.
+    (_this select 1) Call WFBE_SE_FNC_HandleSupplyMissionCompleted;
 };

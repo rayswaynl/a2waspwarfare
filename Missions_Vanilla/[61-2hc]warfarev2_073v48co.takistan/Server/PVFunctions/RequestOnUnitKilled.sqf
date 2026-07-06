@@ -363,8 +363,8 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 
 			[_killer_uid, "AwardBounty", [_killed_type, false, _killer_award]] Call WFBE_CO_FNC_SendToClients;
 
-			if (vehicle _killed != _killed) then { //--- Kill assist (players in the same vehicle). //--- wiki-wins: dropped "&& alive _killed" (always false for a just-killed unit, so the assist bounty never paid)
-				{if (alive _x && isPlayer _x) then {[getPlayerUID(_x), "AwardBounty", [_killed_type, true]] Call WFBE_CO_FNC_SendToClients}} forEach ((crew (vehicle _killed)) - [_killer, player]);
+			if (vehicle _killer != _killer) then { //--- fix(hunt): kill assist = players in the KILLER's vehicle (was keyed on the VICTIM's vehicle). //--- wiki-wins: dropped "&& alive _killed" (always false for a just-killed unit, so the assist bounty never paid)
+				{if (alive _x && isPlayer _x) then {[getPlayerUID(_x), "AwardBounty", [_killed_type, true]] Call WFBE_CO_FNC_SendToClients}} forEach ((crew (vehicle _killer)) - [_killer, player]); //--- fix(hunt): was crew (vehicle _killed) - inside this cross-side block those are the victim's own surviving crewmates (enemy side), so killing one crewman of a 2-man enemy vehicle paid the survivor a bounty.
 			};
 
 			};

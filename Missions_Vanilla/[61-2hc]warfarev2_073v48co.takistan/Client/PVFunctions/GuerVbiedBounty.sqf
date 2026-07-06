@@ -8,7 +8,7 @@
 
 Private ["_bounty"];
 
-if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}};
+if (!isNil "isHeadLessClient" && {isHeadLessClient}) exitWith {}; //--- fix(hunt): the old exitWith sat INSIDE a then{} - it exited only that block and FELL THROUGH to the wallet credit; top-scope form makes the HC guard real.
 if (isNull player) exitWith {};
 
 _bounty = _this;
