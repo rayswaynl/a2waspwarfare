@@ -7,3 +7,8 @@ Net effect: under enemy pressure (WEST base pressed this round) defense building
 Ruled out: STRUCTURES_FLAT_CHECK (0 in live PBO, byte-verified), TOWNS_BUILD_PROTECTION_RANGE 100->450 (#764) is dead data (no consumer), avail budget (260, overwritten green for cat-2 anyway), TeamV2 parse error (dialog-local).
 Hotfix in flight: branch fable/hotfix-defense-gates — (a) correctness reorder StaticWeapon override after enemy block, (b) flag WFBE_C_DEFENSE_CLIENT_GATE_ALIGN (default 0) aligning client gate to WFBE_C_DEFENSE_THREAT_MIN=3 to mirror server. Target: cc48.
 Workaround told to owner: clear enemies within 250m of HQ or build >250m out.
+
+## 2026-07-06 — owner reports #2/#3: AI builds on dirt roads + teams vanish
+- ROADS: TP-19 gate block has no road check (and the tree gate was DEAD on cc46 — nearestTerrainObjects A3-only, fixed in #777). Building `fable/aicom-road-clear` (flag WFBE_C_AICOM_BUILD_ROAD_CLEAR default 0, stacked on #777).
+- VANISHING TEAMS: investigation CONFIRMED tier-3 recovery teleports (6 this session, whole-team setPos snap to road node). ROOT BUG: player-proximity guard comment says 300m, code implements 100m (Common_RunCommanderTeam.sqf ~1068/~1127; the ~1113 velocity-hop 100m is intentional). Also STUCK_REPAIR averted 0 teleports — tier ladder never resets after successful repair. Ruled out: group GC (0 aicom deletions), SML (12/12 clean rejoins), despawn/cache (n/a). Building `fable/hotfix-teleport-guard`: guard param WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R default 300 (correctness) + WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER (flag, default 0).
+- Defense-gate hotfix #778 built; refuter running (key attack: does the StaticWeapon reorder now override the town-restriction red?).
