@@ -2057,7 +2057,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (Client_PreRespawnHandler.sqf) so the factory-queue cap counter cannot accumulate across deaths.
 //--- Default 0 (dark). Set 1 to activate the reset. The Client_BuildUnit.sqf decrements are `max 0`-clamped
 //--- (salvage-522) so an in-flight buy that resolves after a reset clamps to 0 instead of going negative.
-	if (isNil "WFBE_C_FIX_RESPAWN_UNITQUEU_RESET") then {WFBE_C_FIX_RESPAWN_UNITQUEU_RESET = 0};
+	if (isNil "WFBE_C_FIX_RESPAWN_UNITQUEU_RESET") then {WFBE_C_FIX_RESPAWN_UNITQUEU_RESET = 1};
 
 //--- DEADSPAWN NO-ARMED-UNITS GUARD (fable/deadspawn-guard, Ray 2026-07-04): while a dead AI team
 //--- leader is parked on its %1TempRespawnMarker holding point during the respawn wait
@@ -2151,7 +2151,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- the guarded roadsConnectedTo>=2 usable-road idiom, WFBE_NEURODEF_FORT_CHECKPOINT composition spawned
 //--- on the road axis, 2 GUER-manned MG statics, posted garrison, one-shot half-window reinforcement
 //--- pulse, and a 900-base (v1: 700) clear reward. Server-side only; nothing runs while the flag is 0.
-	if (isNil "WFBE_C_GUER_CP_V2") then {WFBE_C_GUER_CP_V2 = 0};
+	if (isNil "WFBE_C_GUER_CP_V2") then {WFBE_C_GUER_CP_V2 = 1};
 	if (isNil "WFBE_C_GUER_CP2_ROAD_RADIUS") then {WFBE_C_GUER_CP2_ROAD_RADIUS = 400};  //--- m: nearRoads candidate radius around the target town (v2 only).
 	if (isNil "WFBE_C_GUER_CP2_FOOT_BASE") then {WFBE_C_GUER_CP2_FOOT_BASE = 4};        //--- v2 garrison base headcount (v1: 3).
 	if (isNil "WFBE_C_GUER_CP2_FOOT_PER_TIER") then {WFBE_C_GUER_CP2_FOOT_PER_TIER = 2}; //--- v2 extra garrison per GUER vehicle tier (v1: 1).
