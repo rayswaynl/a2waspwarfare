@@ -104,6 +104,9 @@ NAMESPACE_SETVARIABLE_RE = re.compile(
     r"\b(missionNamespace|uiNamespace|profileNamespace)\s+setVariable\s*\[",
     re.IGNORECASE,
 )
+# noqa directive: // noqa or // noqa: CODE1,CODE2
+NOQA_RE = re.compile(r"//\s*noqa(?:\s*:\s*([A-Za-z0-9_,\s]+))?\s*$", re.IGNORECASE)
+
 FINDING_CODES = (
     "A3BISFNC",
     "A3CMD",
@@ -118,6 +121,7 @@ FINDING_CODES = (
     "BOOLCMP",
     "BRACKET",
     "CLASSREF",
+    "DEADNOQA",
     "DISABLESER",
     "GROUPGETVAR",
     "MILMARKER",
@@ -377,7 +381,42 @@ def build_token_index(root: Path) -> dict[str, set[Path]]:
     return index
 
 
+def parse_noqa_map(text: str) -> dict[int, set[str] | None]:
+    """Parse // noqa directives from raw source text (before comment masking).
+
+    Returns a dict mapping 1-based line numbers to:
+      - None       => bare // noqa: suppress ALL findings on that line
+      - set[str]   => // noqa: CODE1,CODE2 suppress only those codes
+
+    Scans the original text so the comment is still present.
+    Both .sqf and .hpp use // comments, so this works for all linted file types.
+    """
+    result: dict[int, set[str] | None] = {}
+    for lineno, line in enumerate(text.splitlines(), 1):
+        m = NOQA_RE.search(line)
+        if not m:
+            continue
+        if m.group(1):
+            codes = {c.strip().upper() for c in m.group(1).split(",") if c.strip()}
+            if codes:
+                result[lineno] = codes
+            else:
+                result[lineno] = None  # "// noqa:  " with no codes -> treat as bare
+        else:
+            result[lineno] = None  # bare // noqa
+    return result
+
+
 def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path]]) -> list[Finding]:
+    """Lint a single file and return findings with noqa suppression applied.
+
+    noqa directives are parsed from the raw text before masking so that
+    // noqa: A3CMD on a line suppresses A3CMD findings on that exact line.
+    DEADNOQA findings are appended for stale coded suppressions.
+    """
+    # Parse noqa directives before any masking (need comment text intact)
+    noqa_map = parse_noqa_map(text)
+
     findings: list[Finding] = []
     masked = mask_comments_and_strings(text)
     comments_masked = mask_comments(text)
@@ -494,7 +533,45 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
             line, col = line_col(line_starts(text), match.start())
             findings.append(Finding(path, line, col, "CLASSREF", f"Quoted classname-like token appears only in this file: {token}"))
 
+    # Apply noqa suppression and emit DEADNOQA for stale coded suppressions.
+    # Must run after all other rules so we know what each line actually fired.
+    if noqa_map:
+        kept: list[Finding] = []
+        suppressed: list[Finding] = []
+        for finding in findings:
+            directive = noqa_map.get(finding.line)
+            if finding.line in noqa_map and directive is None:
+                # Bare // noqa -> suppress all
+                suppressed.append(finding)
+            elif directive is not None and finding.code in directive:
+                suppressed.append(finding)
+            else:
+                kept.append(finding)
+        findings = kept
+
+        # Build DEADNOQA for coded noqa directives that suppressed nothing
+        suppressed_by_line: dict[int, set[str]] = {}
+        for f in suppressed:
+            suppressed_by_line.setdefault(f.line, set()).add(f.code)
+
+        for lineno, directive in noqa_map.items():
+            if directive is None:
+                # Bare noqa: never goes stale (spec: skip DEADNOQA for bare form)
+                pass
+            else:
+                # Coded noqa: dead for each code that suppressed nothing
+                suppressed_codes = suppressed_by_line.get(lineno, set())
+                dead_codes = directive - suppressed_codes
+                if dead_codes:
+                    dead_str = ",".join(sorted(dead_codes))
+                    findings.append(Finding(
+                        path, lineno, 1, "DEADNOQA",
+                        f"Stale // noqa: {dead_str} — no {dead_str} finding fires on this line",
+                    ))
+
     return findings
+
+
 
 
 def parse_code_filter(value: str, parser: argparse.ArgumentParser, option_name: str) -> set[str]:
@@ -553,7 +630,10 @@ def main(argv: list[str]) -> int:
 
     findings: list[Finding] = []
     for path in files:
-        findings.extend(lint_text(path.resolve(), read_text(path), root, token_index))
+        resolved = path.resolve()
+        raw_text = read_text(path)
+        findings.extend(lint_text(resolved, raw_text, root, token_index))
+
     if added_lines is not None:
         findings = filter_findings_to_added_lines(findings, added_lines)
     if selected_codes is not None:

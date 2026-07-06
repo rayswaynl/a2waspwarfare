@@ -1,6 +1,6 @@
 /* Parameters */
 
-	class Params {
+	class Params {  // noqa: A3CMD
 	//--- Supply-helicopter feature toggle: shelve the heli feature from the lobby (default Enabled).
 	class WFBE_C_SUPPLY_HELI_ENABLED {
 		title = "Supply Helicopters";

@@ -109,7 +109,7 @@ class CheckSqfTests(unittest.TestCase):
                 "+++ b/sample.sqf\n"
                 "@@ -1,2 +1,4 @@\n"
                 " private _x;\n"
-                "+params [\"_unit\"];\n"
+                '+params ["_unit"];\n'
                 " _unit = player;\n"
                 "+_items pushBack _unit;\n"
             )
@@ -273,6 +273,59 @@ class CheckSqfTests(unittest.TestCase):
         codes = lint_codes('waitUntil { _done == true };\n')
         self.assertIn("BOOLCMP", codes)
 
+    # ── NOQA per-line suppression ─────────────────────────────────────────────
+
+    def test_noqa_coded_a3cmd_suppresses_params(self) -> None:
+        # params; // noqa: A3CMD -> no A3CMD
+        codes = lint_codes('params;  // noqa: A3CMD\n')
+        self.assertNotIn("A3CMD", codes)
+
+    def test_noqa_bare_suppresses_all_findings(self) -> None:
+        # params; // noqa -> no findings at all on that line
+        codes = lint_codes('params;  // noqa\n')
+        self.assertNotIn("A3CMD", codes)
+
+    def test_noqa_wrong_code_does_not_suppress_a3cmd(self) -> None:
+        # params; // noqa: BRACKET -> A3CMD still fires (wrong code named)
+        codes = lint_codes('params;  // noqa: BRACKET\n')
+        self.assertIn("A3CMD", codes)
+
+    def test_noqa_wrong_code_emits_deadnoqa(self) -> None:
+        # params; // noqa: BRACKET -> DEADNOQA fires because BRACKET didn't fire
+        codes = lint_codes('params;  // noqa: BRACKET\n')
+        self.assertIn("DEADNOQA", codes)
+
+    def test_noqa_coded_a3private_suppresses_inline_private(self) -> None:
+        # private _x = 0; // noqa: A3PRIVATE -> no A3PRIVATE
+        codes = lint_codes('private _x = 0;  // noqa: A3PRIVATE\n')
+        self.assertNotIn("A3PRIVATE", codes)
+
+    def test_noqa_absent_line_still_fires_normally(self) -> None:
+        # regression: a line with no noqa still fires normally
+        codes = lint_codes('params;\n')
+        self.assertIn("A3CMD", codes)
+
+    def test_noqa_correct_suppression_does_not_emit_deadnoqa(self) -> None:
+        # params; // noqa: A3CMD -> A3CMD suppressed, no DEADNOQA
+        codes = lint_codes('params;  // noqa: A3CMD\n')
+        self.assertNotIn("DEADNOQA", codes)
+
+    def test_noqa_bare_never_emits_deadnoqa(self) -> None:
+        # bare // noqa -> never DEADNOQA even when no finding fires
+        codes = lint_codes('_x = 1;  // noqa\n')
+        self.assertNotIn("DEADNOQA", codes)
+
+    def test_noqa_works_in_hpp_file(self) -> None:
+        """// noqa: A3CMD suppresses A3CMD in .hpp files too."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "Parameters.hpp"
+            src = '\tclass Params {  // noqa: A3CMD\n}\n'
+            path.write_text(src, encoding="utf-8")
+            index = check_sqf.build_token_index(root)
+            findings = check_sqf.lint_text(path, src, root, index)
+            codes = [f.code for f in findings]
+        self.assertNotIn("A3CMD", codes)
 
 if __name__ == "__main__":
     unittest.main()
