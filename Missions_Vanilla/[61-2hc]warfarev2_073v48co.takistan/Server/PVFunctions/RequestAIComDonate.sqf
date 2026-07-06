@@ -39,10 +39,11 @@ if (isNull _donorTeam) exitWith {};
 //--- DR-55 forged-PVF hardening (flag-gated; OFF = legacy behavior).
 //--- The PVEH carries no trusted sender. Honest callers donate from a live
 //--- player; a forged payload can otherwise pass a non-player object.
-if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
-	if (!isPlayer _donor || {!alive _donor}) exitWith {
-		["WARNING", Format ["RequestAIComDonate.sqf: [DONATION] rejected - donor [%1] is not a live player.", _donor]] Call WFBE_CO_FNC_AICOMLog;
-	};
+//--- fix(hunt): this rejection was an exitWith INSIDE the hardening then{} - on A2-OA that exits only the
+//--- block and FELL THROUGH to the full donate flow (a forged non-player donor still drained the team).
+//--- A single top-scope if+exitWith rejects for real.
+if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0 && {!isPlayer _donor || {!alive _donor}}) exitWith {
+	["WARNING", Format ["RequestAIComDonate.sqf: [DONATION] rejected - donor [%1] is not a live player.", _donor]] Call WFBE_CO_FNC_AICOMLog;
 };
 
 //--- Validate amount > 0.

@@ -61,12 +61,12 @@ if (_barrackLvl < 1) exitWith {
 // Gate 5: Placement position inside a friendly base area.
 // Mirrors the bank-placement check in RequestStructure.sqf.
 // (_logik already fetched above.)
-_startPos  = _logik getVariable ["wfbe_startpos", objNull];
+_startPos  = _logik getVariable ["wfbe_startpos", [0,0,0]]; //--- fix(hunt): wfbe_startpos is a POSITION ARRAY (Init_Server.sqf:734), not an object - isNull/getPos on it dropped the HQ centre from the inside-base gate
 _baseAreas = _logik getVariable ["wfbe_basearea", []];
 _baseRange = missionNamespace getVariable ["WFBE_C_BASE_AREA_RANGE", 250];
 
 _centers = [];
-if !(isNull _startPos) then { _centers = _centers + [getPos _startPos] };
+_centers = _centers + [_startPos]; //--- fix(hunt): use the position directly (matches RequestStructure.sqf:62-66)
 {_centers = _centers + [getPos _x]} forEach _baseAreas;
 
 _inBase = false;
