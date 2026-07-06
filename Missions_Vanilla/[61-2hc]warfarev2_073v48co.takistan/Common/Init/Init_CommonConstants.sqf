@@ -2069,5 +2069,14 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Default 0 = byte-identical to HEAD (old emitters run, new host silent).
 	if (isNil "WFBE_C_TELEM_HOST_V2") then {WFBE_C_TELEM_HOST_V2 = 0};
 
+//--- TP-21 (fable/tp21-team-menu-v2): TEAM MENU V2 — gear presets + squad actions.
+//--- 0 = byte-identical to HEAD (RscMenu_Team idd 13000 opens as before); >0 = opens
+//--- RscMenu_TeamV2 (idd 13050) which adds 4 persistent loadout preset slots
+//--- (save / apply / rebuy-last-kit, tier-gated) plus TM1-light squad actions
+//--- (Eject selected AI from vehicle, Disband reuse, Get-Out-and-Repair, out-of-fuel hint).
+//--- The REMOVED controls (VD/TG sliders, inline money transfer) are simply absent
+//--- from the V2 dialog; old RscMenu_Team is untouched and activates at flag=0.
+	if (isNil "WFBE_C_TEAM_MENU_V2") then {WFBE_C_TEAM_MENU_V2 = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
