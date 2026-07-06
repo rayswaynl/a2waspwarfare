@@ -234,14 +234,14 @@ _slopeOK = {
 };
 //--- TREE-CLEAR gate (TP-19). Reject a candidate with a map tree/small-tree within WFBE_C_AICOM_BUILD_TREE_CLEAR m
 //--- (default 0 = OFF). Trees are TERRAIN objects (not caught by the _buildPosClear nearestObjects House/Wall scan),
-//--- so they need nearestTerrainObjects (valid A2-OA 1.64; array form [pos,types,radius]). Same flag-gated per-
+//--- the A3 answer is nearestTerrainObjects, but that command does NOT exist on A2 OA 1.64 (parse error); nearestObjects is used instead (A2-safe) though it cannot see map vegetation. Same flag-gated per-
 //--- candidate shape as _roadClearOK. On forest-dense maps the try budget + DRY fallback still guarantee a build.
 _treeClearOK = {
 	private ["_cpos","_tr"];
 	_cpos = _this;
 	_tr = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_TREE_CLEAR", 0];
 	if (_tr <= 0) exitWith {true};   //--- 0 disables the gate -> old behaviour.
-	(count (nearestTerrainObjects [_cpos, ["TREE","SMALL TREE"], _tr])) == 0
+	(count (nearestObjects [_cpos, ["Tree","SmallTree"], _tr])) == 0  //--- HOTFIX 2026-07-06: nearestTerrainObjects is A3-only (parse-error "Missing )" on A2 OA 1.64, live-burned build89). nearestObjects is A2-safe. NOTE: A2 OA has no reliable terrain-vegetation query, so this tree gate is a safe no-op for map trees until a real A2 method is found; the slope gate is the working half of TP-19.
 };
 //--- NEAREST-FACTORY-DISTANCE helper (Ray 2026-06-29, req #2). Distance (m) from _cand to the closest
 //--- existing SPAWN-POINT factory (Barracks/Light/Heavy/Aircraft - the player respawn structures per
