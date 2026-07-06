@@ -986,6 +986,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_ARMOR_SCREEN_R")  then {WFBE_C_AICOM_ARMOR_SCREEN_R = 80}; //--- m stand-off radius for the outward screen position.
 	if (isNil "WFBE_C_NAVAL_TWIN_HULLS")              then {WFBE_C_NAVAL_TWIN_HULLS = 1};              //--- Khe Sanh: outer carriers become deck-bridged TWIN-HULL super-carriers (middle keeps the SCUD, single hull).
 	if (isNil "WFBE_C_NAVAL_WEST_AAV")                then {WFBE_C_NAVAL_WEST_AAV = 0};                //--- Lane 45: default-off WEST AAV buy-row metadata hook for future naval-map beach-assault work.
+	if (isNil "WFBE_C_COASTAL_UTILITY_BOATS")         then {WFBE_C_COASTAL_UTILITY_BOATS = 0};         //--- Lane 184: default-off cheap PBX/RHIB-class Light-factory utility boats on coastal/naval maps only.
+	if (isNil "WFBE_C_COASTAL_UTILITY_BOAT_WATER_PROBES") then {WFBE_C_COASTAL_UTILITY_BOAT_WATER_PROBES = switch (toLower worldName) do {case "chernarus": {[[7000,150,0],[13500,1800,0],[600,6500,0]]}; default {[]};}}; //--- Lane 184: edge-water probes used to qualify coastal utility boats.
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL")           then {WFBE_C_VICTORY_TERRITORIAL = 1};           //--- Ray: hold >= FRAC of all towns for MINS unbroken -> win (announced start/milestones/broken; existing win path).
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL_FRAC")      then {WFBE_C_VICTORY_TERRITORIAL_FRAC = 0.8};    //--- town share required to run the clock.
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL_MINS")      then {WFBE_C_VICTORY_TERRITORIAL_MINS = 30};     //--- unbroken minutes at/above FRAC to win.
