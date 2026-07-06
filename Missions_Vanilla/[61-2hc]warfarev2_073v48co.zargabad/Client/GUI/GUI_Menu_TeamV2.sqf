@@ -261,18 +261,50 @@ while {alive player && dialog} do {
 			_costItem = missionNamespace getVariable _cleanBp;
 			if !(isNil "_costItem") then {_presetCost = _presetCost + (_costItem select 2)};
 		};
+		//--- Backpack contents pricing: _bpCnt = [[bpWeaponNames,bpWeaponCounts],[bpMagNames,bpMagCounts]].
+		//--- k=0 prefix "" (bp weapons), k=1 prefix "Mag_" (bp mags), matching Client_UI_Gear_UpdatePrice.sqf.
 		if !(WF_A2_Vanilla) then {
 			if (typeName _bpCnt == "ARRAY" && {count _bpCnt >= 2}) then {
-				private ["_bpMags","_bpCounts","_bci"];
-				_bpMags   = _bpCnt select 0;
-				_bpCounts = _bpCnt select 1;
-				for "_bci" from 0 to ((count _bpMags) - 1) do {
-					if (typeName (_bpMags select _bci) == "STRING") then {
-						_costItem = missionNamespace getVariable ("Mag_" + (_bpMags select _bci));
-						if !(isNil "_costItem") then {_presetCost = _presetCost + ((_costItem select 2) * (_bpCounts select _bci))};
+				private ["_bpK","_bpKNames","_bpKCounts","_bpKPrefix","_bpKi","_bpKItem"];
+				_bpKPrefix = "";
+				for "_bpK" from 0 to 1 do {
+					_bpKNames  = (_bpCnt select _bpK) select 0;
+					_bpKCounts = (_bpCnt select _bpK) select 1;
+					for "_bpKi" from 0 to ((count _bpKNames) - 1) do {
+						if (typeName (_bpKNames select _bpKi) == "STRING") then {
+							_bpKItem = missionNamespace getVariable (_bpKPrefix + (_bpKNames select _bpKi));
+							if !(isNil "_bpKItem") then {_presetCost = _presetCost + ((_bpKItem select 2) * (_bpKCounts select _bpKi))};
+						};
 					};
+					_bpKPrefix = "Mag_";
 				};
 			};
+		};
+		//--- Build cleaned _bpCnt: filter each sub-array against the item registry.
+		//--- Prevents injected classnames in a hand-edited profile from reaching EquipUnit.
+		private ["_cleanBpCnt","_cbpK","_cbpNames","_cbpCounts","_cbpCleanNames","_cbpCleanCounts","_cbpPrefix","_cbpI","_cbpItem"];
+		_cleanBpCnt = [];
+		if (typeName _bpCnt == "ARRAY" && {count _bpCnt >= 2}) then {
+			_cbpPrefix = "";
+			for "_cbpK" from 0 to 1 do {
+				_cbpNames  = (_bpCnt select _cbpK) select 0;
+				_cbpCounts = (_bpCnt select _cbpK) select 1;
+				_cbpCleanNames  = [];
+				_cbpCleanCounts = [];
+				for "_cbpI" from 0 to ((count _cbpNames) - 1) do {
+					if (typeName (_cbpNames select _cbpI) == "STRING") then {
+						_cbpItem = missionNamespace getVariable (_cbpPrefix + (_cbpNames select _cbpI));
+						if !(isNil "_cbpItem") then {
+							_cbpCleanNames  = _cbpCleanNames  + [_cbpNames  select _cbpI];
+							_cbpCleanCounts = _cbpCleanCounts + [_cbpCounts select _cbpI];
+						};
+					};
+				};
+				_cleanBpCnt = _cleanBpCnt + [[_cbpCleanNames, _cbpCleanCounts]];
+				_cbpPrefix = "Mag_";
+			};
+		} else {
+			_cleanBpCnt = _bpCnt;
 		};
 		//--- Check funds before equipping (Apply = buy the loadout now).
 		if ((Call GetPlayerFunds) < _presetCost) exitWith {
@@ -282,9 +314,9 @@ while {alive player && dialog} do {
 		-(_presetCost) Call WFBE_CL_FNC_ChangeClientFunds;
 		//--- Apply: equip via WFBE_CO_FNC_EquipUnit (same call as respawn path).
 		//--- EquipUnit signature: [unit, weapons, magazines, weaponCombined, backpack, backpackContent].
-		[player, _cleanWeps, _cleanMags, _wpCombined, _cleanBp, _bpCnt] Call WFBE_CO_FNC_EquipUnit;
-		//--- Write wfbe_custom_gear + wfbe_custom_gear_cost so respawn charges correctly.
-		player setVariable ["wfbe_custom_gear", +_gear2];
+		[player, _cleanWeps, _cleanMags, _wpCombined, _cleanBp, _cleanBpCnt] Call WFBE_CO_FNC_EquipUnit;
+		//--- Write wfbe_custom_gear with cleaned arrays so respawn handler receives only valid classnames.
+		player setVariable ["wfbe_custom_gear", [_cleanWeps, _cleanMags, _cleanBp, _cleanBpCnt, _wpCombined]];
 		player setVariable ["wfbe_custom_gear_cost", _presetCost];
 		hint Format ["Preset %1 applied ($%2 charged).", _slotIdx2 + 1, _presetCost];
 	};
@@ -304,40 +336,87 @@ while {alive player && dialog} do {
 		{_id4 = missionNamespace getVariable _x; if !(isNil "_id4") then {_it4 = _id4 select 3; if (_it4 > _topT3) then {_topT3 = _it4}}} forEach _sw4;
 		if (_sb4 != "") then {_id4 = missionNamespace getVariable _sb4; if !(isNil "_id4") then {_it4 = _id4 select 3; if (_it4 > _topT3) then {_topT3 = _it4}}};
 		if (_topT3 > _upgNow3) exitWith {hint Format ["Slot %1 requires gear tier %2 (you have %3). Cannot set as rebuy kit.", _slotIdx3 + 1, _topT3, _upgNow3]};
-		//--- Compute preset cost for respawn handler (same registry walk as Apply path).
-		private ["_rebuyCost","_rcItem","_rwList","_rmList","_rbpCls","_rbpCnt"];
-		_rwList  = _gear3 select 0;
-		_rmList  = _gear3 select 1;
-		_rbpCls  = _gear3 select 2;
-		_rbpCnt  = _gear3 select 3;
+		//--- Validate classnames against the item registry (same pattern as Apply path).
+		//--- Prevents injected non-strings/unknown classnames reaching wfbe_custom_gear on the respawn path.
+		private ["_rebuyCost","_rcItem","_rwList","_rmList","_rbpCls","_rbpCnt","_rbpWpCombined"];
+		private ["_rCleanWeps","_rCleanMags","_rCleanBp","_rDItem"];
+		_rwList        = _gear3 select 0;
+		_rmList        = _gear3 select 1;
+		_rbpCls        = _gear3 select 2;
+		_rbpCnt        = _gear3 select 3;
+		_rbpWpCombined = _gear3 select 4;
+		//--- Weapons: keep only registered strings.
+		_rCleanWeps = [];
+		{
+			if (typeName _x == "STRING") then {
+				_rDItem = missionNamespace getVariable _x;
+				if !(isNil "_rDItem") then {_rCleanWeps = _rCleanWeps + [_x]};
+			};
+		} forEach _rwList;
+		//--- Magazines: keep only registered strings.
+		_rCleanMags = [];
+		{
+			if (typeName _x == "STRING") then {
+				_rDItem = missionNamespace getVariable ("Mag_" + _x);
+				if !(isNil "_rDItem") then {_rCleanMags = _rCleanMags + [_x]};
+			};
+		} forEach _rmList;
+		//--- Backpack: validate string + registered.
+		_rCleanBp = _rbpCls;
+		if (_rbpCls != "") then {
+			if (typeName _rbpCls != "STRING") then {_rCleanBp = ""} else {
+				_rDItem = missionNamespace getVariable _rbpCls;
+				if (isNil "_rDItem") then {_rCleanBp = ""};
+			};
+		};
+		//--- Compute preset cost from validated arrays.
 		_rebuyCost = 0;
 		{
 			_rcItem = missionNamespace getVariable _x;
 			if !(isNil "_rcItem") then {_rebuyCost = _rebuyCost + (_rcItem select 2)};
-		} forEach _rwList;
+		} forEach _rCleanWeps;
 		{
 			_rcItem = missionNamespace getVariable ("Mag_" + _x);
 			if !(isNil "_rcItem") then {_rebuyCost = _rebuyCost + (_rcItem select 2)};
-		} forEach _rmList;
-		if (_rbpCls != "") then {
-			_rcItem = missionNamespace getVariable _rbpCls;
+		} forEach _rCleanMags;
+		if (_rCleanBp != "") then {
+			_rcItem = missionNamespace getVariable _rCleanBp;
 			if !(isNil "_rcItem") then {_rebuyCost = _rebuyCost + (_rcItem select 2)};
 		};
+		//--- Backpack contents pricing: _rbpCnt = [[bpWeaponNames,bpWeaponCounts],[bpMagNames,bpMagCounts]].
+		//--- k=0 prefix "" (bp weapons), k=1 prefix "Mag_" (bp mags).
+		private ["_rCleanBpCnt","_rbpK","_rbpKNames","_rbpKCounts","_rbpKPrefix","_rbpKi","_rbpKItem"];
+		private ["_rcbpCleanNames","_rcbpCleanCounts"];
+		_rCleanBpCnt = [];
 		if !(WF_A2_Vanilla) then {
 			if (typeName _rbpCnt == "ARRAY" && {count _rbpCnt >= 2}) then {
-				private ["_rbpMags","_rbpCounts","_rbci"];
-				_rbpMags   = _rbpCnt select 0;
-				_rbpCounts = _rbpCnt select 1;
-				for "_rbci" from 0 to ((count _rbpMags) - 1) do {
-					if (typeName (_rbpMags select _rbci) == "STRING") then {
-						_rcItem = missionNamespace getVariable ("Mag_" + (_rbpMags select _rbci));
-						if !(isNil "_rcItem") then {_rebuyCost = _rebuyCost + ((_rcItem select 2) * (_rbpCounts select _rbci))};
+				_rbpKPrefix = "";
+				for "_rbpK" from 0 to 1 do {
+					_rbpKNames  = (_rbpCnt select _rbpK) select 0;
+					_rbpKCounts = (_rbpCnt select _rbpK) select 1;
+					_rcbpCleanNames  = [];
+					_rcbpCleanCounts = [];
+					for "_rbpKi" from 0 to ((count _rbpKNames) - 1) do {
+						if (typeName (_rbpKNames select _rbpKi) == "STRING") then {
+							_rbpKItem = missionNamespace getVariable (_rbpKPrefix + (_rbpKNames select _rbpKi));
+							if !(isNil "_rbpKItem") then {
+								_rebuyCost = _rebuyCost + ((_rbpKItem select 2) * (_rbpKCounts select _rbpKi));
+								_rcbpCleanNames  = _rcbpCleanNames  + [_rbpKNames  select _rbpKi];
+								_rcbpCleanCounts = _rcbpCleanCounts + [_rbpKCounts select _rbpKi];
+							};
+						};
 					};
+					_rCleanBpCnt = _rCleanBpCnt + [[_rcbpCleanNames, _rcbpCleanCounts]];
+					_rbpKPrefix = "Mag_";
 				};
+			} else {
+				_rCleanBpCnt = _rbpCnt;
 			};
+		} else {
+			_rCleanBpCnt = _rbpCnt;
 		};
-		//--- Set wfbe_custom_gear + wfbe_custom_gear_cost: respawn handler reads these on death.
-		player setVariable ["wfbe_custom_gear", +_gear3];
+		//--- Set wfbe_custom_gear with cleaned arrays; respawn handler reads these on death.
+		player setVariable ["wfbe_custom_gear", [_rCleanWeps, _rCleanMags, _rCleanBp, _rCleanBpCnt, _rbpWpCombined]];
 		player setVariable ["wfbe_custom_gear_cost", _rebuyCost];
 		hint Format ["Preset %1 set as rebuy-on-death kit (cost: $%2).", _slotIdx3 + 1, _rebuyCost];
 	};
