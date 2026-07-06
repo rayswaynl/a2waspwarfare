@@ -11,7 +11,7 @@
 	string set, so APPEND (never overwrite) is mandatory here.
 
 	Gate: WFBE_C_VEHICLE_MARKINGS (Init_CommonConstants.sqf). 0 = no markings AND no side-skins.
-	Kill tally marker gate: WFBE_C_KILL_TALLY_DECAL (default 1 since the 2026-07-04 Ray pick).
+	Kill tally marker gate: WFBE_C_KILL_TALLY_DECAL (default 0; set 1 to enable the hull-glow decal).
 	Independent from the side lights/tints; heat-ramp amber -> orange -> red -> white-hot, one dim local light.
 
 	Implementation: the zero-art "ships now" markings are dim LOCAL #lightpoint glows attached per
