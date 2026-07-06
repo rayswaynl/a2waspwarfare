@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_artyScanRadius","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen","_roadClearOK","_slopeOK","_treeClearOK"];  //--- cmdcon41-w3k: +_roadClearOK (road-clear placement gate helper).
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_artyScanRadius","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen","_roadClearOK","_slopeOK","_treeClearOK","_tp19RoadClearOK"];  //--- cmdcon41-w3k: +_roadClearOK (road-clear placement gate helper).
 
 _side = _this;
 _sideText = str _side;
@@ -234,14 +234,30 @@ _slopeOK = {
 };
 //--- TREE-CLEAR gate (TP-19). Reject a candidate with a map tree/small-tree within WFBE_C_AICOM_BUILD_TREE_CLEAR m
 //--- (default 0 = OFF). Trees are TERRAIN objects (not caught by the _buildPosClear nearestObjects House/Wall scan),
-//--- the A3 answer is nearestTerrainObjects, but that command does NOT exist on A2 OA 1.64 (parse error); nearestObjects is used instead (A2-safe) though it cannot see map vegetation. Same flag-gated per-
+//--- the A3 answer is nearestTerrainObjects, but that command does NOT exist on A2 OA 1.64 (parse error on any boot with TREE_CLEAR>0); nearestObjects is A2-safe (catches placed objects, not map vegetation). Same flag-gated per-
 //--- candidate shape as _roadClearOK. On forest-dense maps the try budget + DRY fallback still guarantee a build.
 _treeClearOK = {
 	private ["_cpos","_tr"];
 	_cpos = _this;
 	_tr = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_TREE_CLEAR", 0];
 	if (_tr <= 0) exitWith {true};   //--- 0 disables the gate -> old behaviour.
-	(count (nearestObjects [_cpos, ["Tree","SmallTree"], _tr])) == 0  //--- HOTFIX 2026-07-06: nearestTerrainObjects is A3-only (parse-error "Missing )" on A2 OA 1.64, live-burned build89). nearestObjects is A2-safe. NOTE: A2 OA has no reliable terrain-vegetation query, so this tree gate is a safe no-op for map trees until a real A2 method is found; the slope gate is the working half of TP-19.
+	(count (nearestObjects [_cpos, ["Tree","SmallTree"], _tr])) == 0  //--- hotfix(live): nearestTerrainObjects is A3-only (RPT: Error Missing ) on every boot with TREE_CLEAR>0); swapped to nearestObjects (A2-safe). NOTE: A2 OA has no terrain-vegetation query so this gate is a documented no-op for map trees.
+};
+//--- ROAD-CLEAR gate (TP-19, owner report 2026-07-06: AI commander builds base structures on dirt roads).
+//--- Reject a build candidate if a road segment (paved OR dirt) exists within WFBE_C_AICOM_BUILD_ROAD_CLEAR m.
+//--- Gate idiom: `_pos nearRoads _radius, count > 0 = reject` - proven A2-OA-safe pattern, identical to the
+//--- nearRoads usage already live in the HQ-deploy nudge block, BuildRoadRoute, and the primary _roadClearOK
+//--- helper above (all use nearRoads; no isOnRoad/getRoadInfo - those are A3-only). This TP-19 gate
+//--- mirrors the flag-gated per-candidate shape of _slopeOK and _treeClearOK: 0 = OFF (byte-identical to
+//--- pre-PR behaviour), > 0 = reject radius in metres. Suggested live value: 6-8 m (covers the immediate
+//--- carriageway footprint without over-rejecting near-road factory slots). Default 0 keeps the gate inert
+//--- until a server operator tunes it. _this = candidate pos -> bool.
+_tp19RoadClearOK = {
+	private ["_cpos","_rc"];
+	_cpos = _this;
+	_rc = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_ROAD_CLEAR", 0];
+	if (_rc <= 0) exitWith {true};   //--- 0 disables the gate -> old behaviour (byte-identical).
+	(count (_cpos nearRoads _rc)) == 0
 };
 //--- NEAREST-FACTORY-DISTANCE helper (Ray 2026-06-29, req #2). Distance (m) from _cand to the closest
 //--- existing SPAWN-POINT factory (Barracks/Light/Heavy/Aircraft - the player respawn structures per
@@ -345,8 +361,9 @@ _findBuildPos = {
 					//--- CLEARANCE FIX (bug fix, ACTIVE): reject a candidate hard against a world building/wall so the
 					//--- factory spawn pads do not sit inside geometry (units spawning into a house/wall break).
 					if (!_blocked && {!(_cand call _buildPosClear)}) then {_blocked = true};
-					if (!_blocked && {!(_cand call _slopeOK)}) then {_blocked = true};       //--- TP-19 slope gate (flag-off = no-op)
-					if (!_blocked && {!(_cand call _treeClearOK)}) then {_blocked = true};   //--- TP-19 tree gate (flag-off = no-op)
+					if (!_blocked && {!(_cand call _slopeOK)}) then {_blocked = true};           //--- TP-19 slope gate (flag-off = no-op)
+					if (!_blocked && {!(_cand call _treeClearOK)}) then {_blocked = true};       //--- TP-19 tree gate (flag-off = no-op)
+					if (!_blocked && {!(_cand call _tp19RoadClearOK)}) then {_blocked = true};  //--- TP-19 road-clear gate (flag-off = no-op)
 					if (!_blocked && {!_haveClear}) then {_bestClear = _cand; _haveClear = true};
 					//--- Ray 2026-06-29 req #2 (SPACED-along-road, mode 2): a fully-clear candidate is a valid
 					//--- step. Instead of accepting the FIRST one (which clusters factory N+1 right next to factory
@@ -403,8 +420,9 @@ _findBuildPos = {
 					//--- CLEARANCE FIX (bug fix, ACTIVE): reject a candidate hard against a world building/wall so the
 					//--- factory spawn pads do not sit inside geometry (units spawning into a house/wall break).
 					if (_ok && {!(_p call _buildPosClear)}) then {_ok = false};
-					if (_ok && {!(_p call _slopeOK)}) then {_ok = false};       //--- TP-19 slope gate (flag-off = no-op)
-					if (_ok && {!(_p call _treeClearOK)}) then {_ok = false};   //--- TP-19 tree gate (flag-off = no-op)
+					if (_ok && {!(_p call _slopeOK)}) then {_ok = false};           //--- TP-19 slope gate (flag-off = no-op)
+					if (_ok && {!(_p call _treeClearOK)}) then {_ok = false};       //--- TP-19 tree gate (flag-off = no-op)
+					if (_ok && {!(_p call _tp19RoadClearOK)}) then {_ok = false};  //--- TP-19 road-clear gate (flag-off = no-op)
 					//--- FIX6 (Ray): record the ROAD-CLEAR fallback only once the candidate is BOTH road-clear AND
 					//--- spacing-OK (_ok survives the STRUCT_SPACING forEach above) - prevents a crowded fallback.
 					if (_ok && {!_haveClear}) then {_bestClear = _p; _haveClear = true};

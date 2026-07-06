@@ -280,6 +280,12 @@ if (worldName == "Zargabad") then {
 	WFBE_DAYNIGHT_DUSK_START = 20.5; //--- Dusk starts around 20:30.
 	WFBE_DAYNIGHT_DUSK_END = 21.5; //--- Night starts around 21:30.
 	WFBE_DAYNIGHT_TWILIGHT_WEIGHT = 3; //--- Dawn/dusk game hours take x times longer than full daylight game hours.
+//--- Permanent Daytime feature flag (fable/permanent-daytime, Build84).
+//--- 0 (default) = inert; flag-off leaves the mission byte-identical to HEAD.
+//--- >0 = force-enable the WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP loop regardless of its own value,
+//---     keeping the clock inside the daylight band (DAYLIGHT_START -> DAYLIGHT_END).
+//--- When WFBE_DAYNIGHT_ENABLED==1 (accelerated cycle ON), PERMANENT_DAY is silently ignored.
+	if (isNil "WFBE_C_PERMANENT_DAY") then {WFBE_C_PERMANENT_DAY = 0}; //--- Permanent daytime; default 0 (off).
 
 //--- AI.
 	if (isNil "WFBE_C_AI_COMMANDER_ENABLED") then {WFBE_C_AI_COMMANDER_ENABLED = 1}; //--- Enable or disable the AI Commanders.
@@ -1078,6 +1084,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_BUILD_ROAD_BUFFER")       then {WFBE_C_AICOM_BUILD_ROAD_BUFFER = 14};       //--- m minimum clearance from the nearest road segment (<=0 disables).
 	if (isNil "WFBE_C_AICOM_BUILD_MIN_FLAT_Z") then {WFBE_C_AICOM_BUILD_MIN_FLAT_Z = 0.90};  //--- TP-19: min surfaceNormal z (0..1) to accept a build spot; higher = flatter required (~0.90 = reject >26deg). 0 = OFF (no slope gate).
 	if (isNil "WFBE_C_AICOM_BUILD_TREE_CLEAR") then {WFBE_C_AICOM_BUILD_TREE_CLEAR = 10};  //--- TP-19: m radius that must be clear of map TREE/SMALL TREE for a build spot (~10 = no trees under the footprint). 0 = OFF (no tree gate).
+	if (isNil "WFBE_C_AICOM_BUILD_ROAD_CLEAR") then {WFBE_C_AICOM_BUILD_ROAD_CLEAR = 0};   //--- TP-19 (owner report 2026-07-06: AI built on dirt roads): metres radius around a build candidate that must be clear of any road segment (paved OR dirt, via nearRoads - A2-OA-safe). 0 = OFF (default, gate inert). Suggested live value 6-8 m; complement to WFBE_C_AICOM_BUILD_ROADCLEAR (the primary ON-by-default road gate).
 	if (isNil "WFBE_C_SKINSEL")                       then {WFBE_C_SKINSEL = 1};                       //--- cmdcon41-w3l: skin selector master (WF-menu SKIN button + first-spawn dialog + respawn restore). Legacy WFBE_C_SKIN_SELECTOR still honored as an OR.
 	if (isNil "WFBE_C_SKINSWAP_FUNDS_CARRY")          then {WFBE_C_SKINSWAP_FUNDS_CARRY = 1};          //--- cmdcon43-h: carry the player's wfbe_funds + wfbe_side across a skin swap so a failed rejoin (fresh/diverted/CIV group) never orphans his wallet to $0 (LIVE-confirmed cmdcon42b). 1 on, 0 off.
 	if (isNil "WFBE_C_FUNDS_HEAL_ZERO_GRACE")         then {WFBE_C_FUNDS_HEAL_ZERO_GRACE = 90};         //--- Ray pick A (2026-07-03): seconds the client funds self-heal refuses to accept a 0 wfbe_funds as "healed" (a transient JIP-sync 0 was the old zero-latch); keeps re-requesting the server lock-step record restore. Belt-and-suspenders atop the record fix. Higher = longer no-zero window.
@@ -1710,6 +1717,7 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_DEFENSE_BUDGET = 1;            // Per-base-area defense caps scaling with barracks level
 	WFBE_C_BASE_DEFENSE_STATICS_CAP = 25; // Max player-placed static base defenses (MGs/AA/AAPOD) per base area (raised from 10)
 	WFBE_C_DEFENSE_THREAT_MIN = 3;        // Min enemy ground units (west/east, no Air/GUER) inside base range before the statics/mines threat gate fires
+	if (isNil "WFBE_C_DEFENSE_CLIENT_GATE_ALIGN") then {WFBE_C_DEFENSE_CLIENT_GATE_ALIGN = 0}; //--- Default OFF: client placement preview uses per-unit exitWith scan. When 1, client enemy-in-base red only fires when enemy-side unit count >= WFBE_C_DEFENSE_THREAT_MIN (mirrors the server threat gate).
 	WFBE_C_WDDM_COMP_CAP = 3;            //--- Max WDDM commander compositions per base area (size-independent).
 	WFBE_C_FACTORY_QUEUE_LIMITS = 1;      // Per-factory production queue caps scaling with factory level
 	if (isNil "WFBE_C_FIX_FACTORY_QUEUE_TOKEN_HARDENING") then {WFBE_C_FIX_FACTORY_QUEUE_TOKEN_HARDENING = 0}; //--- Default-off: opt-in stronger player-buy FIFO tokens; 0 keeps legacy UID+diag_tickTime tokens.
@@ -2182,6 +2190,19 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- SML-1 Squad Micro Layer: camp-split captures (GR-2026-07-03a). Flag-gated default 0.
 	if (isNil "WFBE_C_SML_CAMP_SPLIT")    then {WFBE_C_SML_CAMP_SPLIT    = 1};   //--- 1=enable per-unit doStop/doMove camp-split; 0=byte-identical legacy behaviour.
 	if (isNil "WFBE_C_SML_WATCHDOG_TTL") then {WFBE_C_SML_WATCHDOG_TTL = 240};  //--- s: per-unit TTL before the watchdog forces doFollow back (covers all exit paths).
+//--- SML-3: graceful retreats (mauled individuals pull back while healthy units keep fighting). Flag default 0.
+	if (isNil "WFBE_C_SML_RETREAT")                   then {WFBE_C_SML_RETREAT                   = 0};
+	if (isNil "WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD")  then {WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD  = 0.5};  //--- getDammage >= this -> unit is mauled and pulls back.
+	if (isNil "WFBE_C_SML_RETREAT_HEALTHY_MIN")       then {WFBE_C_SML_RETREAT_HEALTHY_MIN       = 4};    //--- if fewer healthy units remain, skip retreat (whole-team attrition; disband/refit handles it).
+//--- SML-4: AT overwatch (launcher pre-positions on armor approach vector before the depot assault). Flag default 0.
+	if (isNil "WFBE_C_SML_AT_OVERWATCH")              then {WFBE_C_SML_AT_OVERWATCH              = 0};
+	if (isNil "WFBE_C_SML_AT_OVERWATCH_ARMOR_R")      then {WFBE_C_SML_AT_OVERWATCH_ARMOR_R      = 500};  //--- m: nearEntities Tank scan radius around _townCenter.
+	if (isNil "WFBE_C_SML_AT_OVERWATCH_OFFSET")       then {WFBE_C_SML_AT_OVERWATCH_OFFSET       = 80};   //--- m: overwatch offset from _dest on the armor approach bearing.
+//--- SML-5: surgical unstuck (nudge only individually-wedged units; pre-tier step in the unstuck ladder). Flag default 0.
+	if (isNil "WFBE_C_SML_SURGICAL_UNSTUCK")          then {WFBE_C_SML_SURGICAL_UNSTUCK          = 0};
+	if (isNil "WFBE_C_SML_UNSTUCK_MAX_UNITS")         then {WFBE_C_SML_UNSTUCK_MAX_UNITS         = 2};    //--- if more than this many units are wedged, fall through to tier escalation.
+	if (isNil "WFBE_C_SML_UNSTUCK_POS_DELTA")         then {WFBE_C_SML_UNSTUCK_POS_DELTA         = 8};    //--- m: unit moved less than this since last check -> considered wedged.
+	if (isNil "WFBE_C_SML_UNSTUCK_NUDGE_DIST")        then {WFBE_C_SML_UNSTUCK_NUDGE_DIST        = 20};   //--- m: nudge distance toward order destination.
 //--- GUER POP-UP CHECKPOINT v2 (claude/guer-cp-v2): road-snapped, road-aligned, physically blocking
 //--- G2 wildcard checkpoint (AI_Commander_Wildcard_GUER.sqf case 2). 0 (default) = the legacy v1 G2
 //--- block runs untouched (byte-identical behaviour); >0 = v2: candidates from `nearRoads` filtered by
@@ -2193,6 +2214,38 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GUER_CP2_FOOT_BASE") then {WFBE_C_GUER_CP2_FOOT_BASE = 4};        //--- v2 garrison base headcount (v1: 3).
 	if (isNil "WFBE_C_GUER_CP2_FOOT_PER_TIER") then {WFBE_C_GUER_CP2_FOOT_PER_TIER = 2}; //--- v2 extra garrison per GUER vehicle tier (v1: 1).
 	if (isNil "WFBE_C_GUER_CP2_ARMOR_EXTRA") then {WFBE_C_GUER_CP2_ARMOR_EXTRA = 1};    //--- v2 extra SAME-class hulls at tier>=2 (tier 3 = 2x T-72); read ONLY inside the CP_V2>0 branch, so inert while WFBE_C_GUER_CP_V2 = 0.
+//--- TELEPORT-GUARD FIX (2026-07-06): player-visible teleport guard radius for tier-3 SNAP branches
+//--- (Common_RunCommanderTeam.sqf vehicle + foot road-snap). Code previously hard-coded 100 m while
+//--- the design comment specified 300 m; owner witnessed 6 teleports on 2026-07-06 from this mismatch.
+//--- When any player is within this radius the snap is SKIPPED and execution falls through to the
+//--- existing no-snap path: the velocity-hop fallback at ~line 1113 then visibly bumps the hull free
+//--- (never-frozen guardrail). The 100 m velocity-hop fallback is a separate, intentional guard and
+//--- is unaffected by this constant.
+	if (isNil "WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R") then {WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R = 300};
+//--- STUCK_REPAIR_RESETS_TIER (2026-07-06, flag-gated default 0): when STUCK_REPAIR fires and the
+//--- hull canMove after in-place restoration, reset the team tier counter (wfbe_aicom_stuckstrikes)
+//--- to 0 so AssignTowns does not re-issue the next order at a still-high tier. Investigation showed
+//--- STUCK_REPAIR fired 3x but averted 0 teleports because the counter kept escalating. Inert at 0.
+	if (isNil "WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER") then {WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER = 0};
+
+
+//--- Aircraft spawn safety (fable/aircraft-spawn-safety, GR-2026-07-03a):
+//--- When >0, each aircraft purchase at an airfield/hangar attempts to find a clear
+//--- spawn slot (occupancy + slope) before placing the hull.  Falls back to the nominal
+//--- position on failure so the purchase is never blocked.  Default 0 = byte-identical.
+	if (isNil "WFBE_C_AIR_SPAWN_SAFETY")        then {WFBE_C_AIR_SPAWN_SAFETY        = 0};   //--- Master gate: 0=off, 1=on.
+	if (isNil "WFBE_C_AIR_SPAWN_CLEAR_RADIUS")  then {WFBE_C_AIR_SPAWN_CLEAR_RADIUS  = 12};  //--- m: vehicle+obstacle clear radius (rotor/wing clearance).
+	if (isNil "WFBE_C_AIR_SPAWN_SLOPE_MAX")     then {WFBE_C_AIR_SPAWN_SLOPE_MAX     = 0.97}; //--- surfaceNormal z-floor; 0.97 ~ 14-deg slope limit.
+
+//--- TOWN GARRISON DRESSING (lane 241, fable/qol-recycle-pick): server-side ZU-23 dressing
+//--- on active GUER-held contested towns. One crew gunner per town, optional night searchlight.
+//--- Worker: Server/Server_TownGarrisonDressing.sqf. Flag-off (0) = worker not launched = byte-identical.
+	if (isNil "WFBE_C_GARRISON_DRESSING")          then {WFBE_C_GARRISON_DRESSING = 0};           //--- Master enable. 0 = off (default); >0 = dress active contested GUER towns.
+	if (isNil "WFBE_C_GARRISON_DRESSING_INTERVAL") then {WFBE_C_GARRISON_DRESSING_INTERVAL = 45};  //--- Seconds between worker ticks.
+	if (isNil "WFBE_C_GARRISON_DRESSING_RADIUS")   then {WFBE_C_GARRISON_DRESSING_RADIUS = 900};   //--- m: enemy proximity gate + quiet-timeout radius.
+	if (isNil "WFBE_C_GARRISON_DRESSING_LIFETIME") then {WFBE_C_GARRISON_DRESSING_LIFETIME = 900}; //--- s: forced recycle age per gun (anti-accumulation).
+	if (isNil "WFBE_C_GARRISON_DRESSING_MAX")      then {WFBE_C_GARRISON_DRESSING_MAX = 6};        //--- Max simultaneous dressed towns across the map.
+	if (isNil "WFBE_C_GARRISON_DRESSING_SEARCHLIGHT") then {WFBE_C_GARRISON_DRESSING_SEARCHLIGHT = 1}; //--- 1: add SearchLight_RUS at night; 0: gun only.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

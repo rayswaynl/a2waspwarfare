@@ -971,6 +971,13 @@ if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1])
 	["INITIALIZATION", "Init_Server.sqf: B62 GUER air-def loop launched (un-gated from PLAYERSIDE)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- TOWN GARRISON DRESSING (lane 241, fable/qol-recycle-pick): ZU-23 dressing on active
+//--- contested GUER-held towns. Server-only, default 0 = worker not launched.
+if (isServer && {(missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING", 0]) > 0}) then {
+	[] execVM "Server\Server_TownGarrisonDressing.sqf";
+	["INITIALIZATION", "Init_Server.sqf: GUER garrison dressing loop launched."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- B74.2: GUER player ECONOMY (per-minute stipend + vehicle-tier broadcast). MOVED here from the GUER
 //--- team-registration block above so a registration error can't silently suppress the economy (same decoupling
 //--- rationale as the air-def launch). Gated on isServer + WFBE_C_GUER_PLAYERSIDE (the playable-side param); the
@@ -1111,6 +1118,7 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 			+ "|players=" + str _players
 			+ "|hc=" + str _hc
 			+ "|dnMode=" + str (missionNamespace getVariable ["WFBE_DAYNIGHT_ENABLED", 1])
+			+ "|permDay=" + str (missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0])
 			+ "|daytime=" + str (round (daytime * 100) / 100)
 			+ "|sun=" + str (round (sunOrMoon * 100) / 100)
 			+ "|srvFps=" + str (round diag_fps)
