@@ -23,6 +23,14 @@ def lint_codes(source: str) -> list[str]:
         return [finding.code for finding in check_sqf.lint_text(path, source, root, index)]
 
 
+def lint_codes_flaggate(source: str, added_line_nos: set[int], filename: str = "sample.sqf") -> list[str]:
+    """Call lint_flaggate directly and return codes found."""
+    with tempfile.TemporaryDirectory() as tmp:
+        root = Path(tmp)
+        path = (root / filename).resolve()
+        return [f.code for f in check_sqf.lint_flaggate(path, source, added_line_nos)]
+
+
 class CheckSqfTests(unittest.TestCase):
     def test_a3_prompt_traps_are_case_insensitive(self) -> None:
         codes = lint_codes("_xs pushback 1;\n_d = player distance2d target;\n")
@@ -326,6 +334,58 @@ class CheckSqfTests(unittest.TestCase):
             findings = check_sqf.lint_text(path, src, root, index)
             codes = [f.code for f in findings]
         self.assertNotIn("A3CMD", codes)
+
+
+    # ── FLAGGATE diff-mode rule ───────────────────────────────────────────────
+
+    def test_flaggate_unguarded_read_fires(self) -> None:
+        # Bare missionNamespace getVariable ["WFBE_C_FOO", 0] without guard -> FLAGGATE
+        src = '_v = missionNamespace getVariable ["WFBE_C_FOO", 0];\n'
+        codes = lint_codes_flaggate(src, {1})
+        self.assertIn("FLAGGATE", codes)
+
+    def test_flaggate_guarded_gt_zero_suppresses(self) -> None:
+        # > 0 guard on same line -> no FLAGGATE
+        src = 'if (missionNamespace getVariable ["WFBE_C_FOO", 0] > 0) then {};\n'
+        codes = lint_codes_flaggate(src, {1})
+        self.assertNotIn("FLAGGATE", codes)
+
+    def test_flaggate_silent_in_full_tree_mode(self) -> None:
+        # FLAGGATE must NOT fire from lint_text alone (no diff mode, no added_line_nos)
+        src = '_v = missionNamespace getVariable ["WFBE_C_FOO", 0];\n'
+        codes = lint_codes(src)
+        self.assertNotIn("FLAGGATE", codes)
+
+    def test_flaggate_silent_for_non_added_line(self) -> None:
+        # Same bare read but line NOT in added_line_nos -> no FLAGGATE
+        src = '_v = missionNamespace getVariable ["WFBE_C_FOO", 0];\n'
+        codes = lint_codes_flaggate(src, set())
+        self.assertNotIn("FLAGGATE", codes)
+
+    def test_flaggate_silent_for_non_wfbe_c_var(self) -> None:
+        # getVariable with a non-WFBE_C_ key should not fire FLAGGATE
+        src = '_v = missionNamespace getVariable ["someOtherVar", 0];\n'
+        codes = lint_codes_flaggate(src, {1})
+        self.assertNotIn("FLAGGATE", codes)
+
+    def test_flaggate_silent_in_init_commonconstants(self) -> None:
+        # Init_CommonConstants.sqf is excluded (flag definitions live there)
+        src = 'if (isNil "WFBE_C_FOO") then { missionNamespace getVariable ["WFBE_C_FOO", 0] };\n'
+        codes = lint_codes_flaggate(src, {1}, filename="Init_CommonConstants.sqf")
+        self.assertNotIn("FLAGGATE", codes)
+
+    def test_flaggate_ne_guard_suppresses(self) -> None:
+        # != 0 guard on same line -> no FLAGGATE
+        src = 'if (missionNamespace getVariable ["WFBE_C_FOO", 0] != 0) then {};\n'
+        codes = lint_codes_flaggate(src, {1})
+        self.assertNotIn("FLAGGATE", codes)
+
+    def test_flaggate_eq1_guard_suppresses(self) -> None:
+        # == 1 guard on same line -> no FLAGGATE
+        src = 'if (missionNamespace getVariable ["WFBE_C_FOO", 0] == 1) then {};\n'
+        codes = lint_codes_flaggate(src, {1})
+        self.assertNotIn("FLAGGATE", codes)
+
 
 if __name__ == "__main__":
     unittest.main()

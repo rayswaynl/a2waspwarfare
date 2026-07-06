@@ -104,6 +104,14 @@ NAMESPACE_SETVARIABLE_RE = re.compile(
     r"\b(missionNamespace|uiNamespace|profileNamespace)\s+setVariable\s*\[",
     re.IGNORECASE,
 )
+# Default-0 WFBE_C_* flag read: missionNamespace getVariable ["WFBE_C_<NAME>", 0]
+# Only fires in diff mode (added-line context). Exclude Init_CommonConstants.sqf.
+FLAGGATE_READ_RE = re.compile(
+    r'\bgetVariable\s*\[\s*["\']WFBE_C_[A-Za-z0-9_]+["\']\s*,\s*0\s*\]',
+    re.IGNORECASE,
+)
+# A sufficient numeric guard on the same / next-non-blank line: > 0, >0, != 0, !=0, == 1, ==1
+FLAGGATE_GUARD_RE = re.compile(r"(?:>|!=|==)\s*(?:0|1)\b|(?:>|!=|==)(?:0|1)\b")
 # noqa directive: // noqa or // noqa: CODE1,CODE2
 NOQA_RE = re.compile(r"//\s*noqa(?:\s*:\s*([A-Za-z0-9_,\s]+))?\s*$", re.IGNORECASE)
 
@@ -123,6 +131,7 @@ FINDING_CODES = (
     "CLASSREF",
     "DEADNOQA",
     "DISABLESER",
+    "FLAGGATE",
     "GROUPGETVAR",
     "MILMARKER",
     "NSSETVAR3",
@@ -572,6 +581,54 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
     return findings
 
 
+def lint_flaggate(
+    path: Path, text: str, added_line_nos: set[int]
+) -> list[Finding]:
+    """Emit FLAGGATE for added lines that read a default-0 WFBE_C_* flag without a numeric guard.
+
+    Only call in diff mode. Excludes Init_CommonConstants.sqf (flag definitions).
+    Checks the same line and the next non-blank line for a sufficient guard expression.
+
+    Uses mask_comments (not mask_comments_and_strings) so string literal content is preserved
+    for the flag-name regex match — the flag name lives inside a string.
+    """
+    if "Init_CommonConstants" in path.name:
+        return []
+
+    # mask_comments keeps string literals intact so the flag name is visible to the regex.
+    masked = mask_comments(text)
+    starts = line_starts(masked)
+    raw_lines = text.splitlines()
+
+    findings: list[Finding] = []
+    for m in FLAGGATE_READ_RE.finditer(masked):
+        line_no, col = line_col(starts, m.start())
+        if line_no not in added_line_nos:
+            continue
+
+        # Check same line for a guard
+        source_line = raw_lines[line_no - 1] if line_no <= len(raw_lines) else ""
+        if FLAGGATE_GUARD_RE.search(source_line):
+            continue
+
+        # Check next non-blank line
+        found_guard = False
+        for next_lineno in range(line_no, min(line_no + 5, len(raw_lines))):
+            next_line = raw_lines[next_lineno]  # 0-indexed, so this is line_no+1
+            if not next_line.strip():
+                continue
+            if FLAGGATE_GUARD_RE.search(next_line):
+                found_guard = True
+            break
+        if found_guard:
+            continue
+
+        findings.append(Finding(
+            path, line_no, col, "FLAGGATE",
+            "Default-0 flag read without numeric guard (> 0 / != 0 / == 1); "
+            "use (missionNamespace getVariable [..., 0] > 0)",
+        ))
+    return findings
 
 
 def parse_code_filter(value: str, parser: argparse.ArgumentParser, option_name: str) -> set[str]:
@@ -628,11 +685,24 @@ def main(argv: list[str]) -> int:
     if not args.no_classname_index and needs_classname_index:
         token_index = build_token_index(root)
 
+    # Determine if FLAGGATE should run (diff mode only)
+    flaggate_active = (
+        added_lines is not None
+        and (selected_codes is None or "FLAGGATE" in selected_codes)
+        and "FLAGGATE" not in ignored_codes
+    )
+
     findings: list[Finding] = []
     for path in files:
         resolved = path.resolve()
         raw_text = read_text(path)
         findings.extend(lint_text(resolved, raw_text, root, token_index))
+
+        # FLAGGATE: diff-mode only, runs on added lines
+        if flaggate_active:
+            file_added = added_lines.get(resolved, set())  # type: ignore[union-attr]
+            if file_added:
+                findings.extend(lint_flaggate(resolved, raw_text, file_added))
 
     if added_lines is not None:
         findings = filter_findings_to_added_lines(findings, added_lines)
