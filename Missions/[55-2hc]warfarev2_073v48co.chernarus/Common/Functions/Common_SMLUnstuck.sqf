@@ -130,7 +130,7 @@ waitUntil {
         if (alive _uNudge && {!(_uNudge in (units _uTeam))}) then {_groupChanged = true};
     } forEach _nudged;
     if (_groupChanged) then {_reason = "group_change"; true} else {false}
-    }}}}}
+    }}}}
 };
 
 //--- REJOIN: restore each nudged unit.

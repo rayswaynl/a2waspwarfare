@@ -1,41 +1,14 @@
-//--- SML-3: Graceful Retreats
-//--- HC-local only (spawned by Common_RunCommanderTeam.sqf during the depot-hold phase).
-//--- Gate: caller must already have checked (missionNamespace getVariable ["WFBE_C_SML_RETREAT",0]) > 0.
-//---
-//--- args: [_team, _footInf, _sideID, _side, _townCenter, _capSeq]
-//---
-//--- Behaviour:
-//---   Mauled individual soldiers (getDammage >= WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD) pull back
-//---   80m in the direction AWAY from _townCenter while healthy units keep fighting.
-//---   If fewer than WFBE_C_SML_RETREAT_HEALTHY_MIN healthy units remain the whole team is mauled;
-//---   do NOT try to retreat individuals (let the existing disband/refit systems handle it).
-//---   Each retreating unit gets a TTL watchdog stamp (wfbe_sml_detach_at).
-//---   Stamp serialize: if a unit already carries a stamp from another SML feature, skip it.
-//---
-//--- Exit paths:
-//---   (a) TTL expiry (WFBE_C_SML_WATCHDOG_TTL, default 240s)
-//---   (b) leader death
-//---   (c) team disband (wfbe_aicom_disband group var)
-//---   (d) retask: wfbe_aicom_order seq changed from _capSeq
-//---   (e) all mauled units dead or healed (getDammage < threshold)
-//---   (f) group change: any mauled unit no longer in _team
-//---   Sweeper: the plant-release line (~L2022 RunCommanderTeam) does doFollow on all _footInf
-//---   unconditionally, covering any unit whose stamp is set but whose watchdog script ended early.
-//---
-//--- Interplay with SML-1 (camp-split):
-//---   SML-1 stamps all _footInf on entry. If SML-3 fires AFTER camp-split is still active,
-//---   mauled units will already carry a stamp and SML-3 skips them (serialize via stamp check).
-//---   SML-3 fires from the depot-hold phase; SML-1 fires from camp-first phase (non-overlapping).
-//---
-//--- TELEMETRY (diag_log, always active on HC):
-//---   SML|v1|RETREAT|...       on entry
-//---   SML|v1|RETREAT_REJOIN|... on each exit path
-
-Private ["_team","_footInf","_sideID","_side","_townCenter","_capSeq"];
-Private ["_ttl","_threshold","_healthyMin","_stamp","_exitReason"];
-Private ["_mauled","_healthyCount","_i","_u","_bearing","_retreatPos","_retreatDone"];
-Private ["_aliveCheck","_ordN","_disbandFlag","_grpChg","_allGone","_posU"];
-
+//--- SML-3: Graceful Retreat (GR-2026-07-03a)
+//--- Mauled individual soldiers pull back ~80m from _townCenter while healthy units keep fighting.
+//--- Args: [_team, _footInf, _sideID, _side, _townCenter, _capSeq]
+//--- Stamp discipline: wfbe_sml_detach_at set on detach, cleared to nil on rejoin.
+//--- Flag-gated: WFBE_C_SML_RETREAT default 0.
+private ["_team","_footInf","_sideID","_side","_townCenter","_capSeq",
+         "_ttl","_thresh","_healthyMin","_stamp","_startTime",
+         "_healthyCount","_mauledCount","_mauled","_u","_order","_ordN",
+         "_bearing","_retreatPos","_posX","_posY","_elapsed","_reason",
+         "_disbandFlag","_disbanded","_allDone","_allHealed","_allDead","_groupChanged",
+         "_retasked","_leaderDead","_mX"];
 _team       = _this select 0;
 _footInf    = _this select 1;
 _sideID     = _this select 2;
@@ -44,96 +17,104 @@ _townCenter = _this select 4;
 _capSeq     = _this select 5;
 
 _ttl        = missionNamespace getVariable ["WFBE_C_SML_WATCHDOG_TTL", 240];
-_threshold  = missionNamespace getVariable ["WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD", 0.5];
+_thresh     = missionNamespace getVariable ["WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD", 0.5];
 _healthyMin = missionNamespace getVariable ["WFBE_C_SML_RETREAT_HEALTHY_MIN", 4];
+_stamp      = time;
+_startTime  = time;
 
-//--- Count healthy and mauled units; skip already-stamped units.
-_mauled       = [];
+//--- Count healthy vs mauled units.
 _healthyCount = 0;
-
+_mauledCount  = 0;
+_mauled       = [];
 {
-    _u = _x;
-    if (alive _u) then {
-        if ((getDammage _u) >= _threshold) then {
-            //--- Only retreat if no other SML feature already owns this unit.
-            _i = _u getVariable "wfbe_sml_detach_at";
-            if (isNil "_i") then {
-                _mauled = _mauled + [_u];
-            };
+    if (alive _x) then {
+        if ((getDammage _x) >= _thresh) then {
+            _mauledCount = _mauledCount + 1;
+            _mauled = _mauled + [_x];
         } else {
             _healthyCount = _healthyCount + 1;
         };
     };
 } forEach _footInf;
 
-//--- If fewer than _healthyMin healthy units remain, the whole team is mauled.
-//--- Do not retreat individuals; disband/refit systems handle total attrition.
-if (_healthyCount < _healthyMin) exitWith {};
-
-//--- No mauled units to retreat.
-if (count _mauled < 1) exitWith {};
-
-//--- Stamp and issue retreat orders.
-_stamp = time;
-{
-    _u = _x;
-    _u setVariable ["wfbe_sml_detach_at", _stamp];
-    //--- Bearing AWAY from town center (reverse of unit->townCenter vector).
-    _posU   = getPos _u;
-    _bearing = ((_posU select 0) - (_townCenter select 0)) atan2 ((_posU select 1) - (_townCenter select 1));
-    _retreatPos = [(_posU select 0) + 80 * (sin _bearing), (_posU select 1) + 80 * (cos _bearing), 0];
-    doStop _u;
-    _u doMove _retreatPos;
-} forEach _mauled;
-
-diag_log Format ["SML|v1|RETREAT|side=%1 team=%2 mauled=%3 healthy=%4 ttl=%5",
-    _side, _team, count _mauled, _healthyCount, _ttl];
-
-//--- ===== WATCHDOG LOOP =====
-_retreatDone = false;
-_exitReason  = "ttl";
-
-while {!_retreatDone} do {
-
-    //--- (a) TTL expiry
-    if (time > _stamp + _ttl) exitWith {_exitReason = "ttl"};
-
-    //--- (b) leader death
-    _aliveCheck = !isNull leader _team;
-    if (_aliveCheck) then {_aliveCheck = alive (leader _team)};
-    if (!_aliveCheck) exitWith {_exitReason = "leader_dead"};
-
-    //--- (c) team disband
-    _disbandFlag = _team getVariable "wfbe_aicom_disband";
-    if (!(isNil "_disbandFlag") && {_disbandFlag}) exitWith {_exitReason = "disband"};
-
-    //--- (d) retask: seq changed
-    _ordN = _team getVariable "wfbe_aicom_order";
-    if (isNil "_ordN") then {_ordN = []};
-    if (count _ordN >= 1 && {(_ordN select 0) != _capSeq}) exitWith {_exitReason = "retasked"};
-
-    //--- (e) all mauled units dead or healed
-    _allGone = true;
-    {
-        if (alive _x && {(getDammage _x) >= _threshold}) then {_allGone = false};
-    } forEach _mauled;
-    if (_allGone) exitWith {_exitReason = "all_dead_or_healed"};
-
-    //--- (f) group change
-    _grpChg = false;
-    {
-        if (alive _x && {!(group _x == _team)}) then {_grpChg = true};
-    } forEach _mauled;
-    if (_grpChg) exitWith {_exitReason = "group_change"};
-
-    sleep 3;
+//--- Guard: if whole team is mauled or not enough healthy, do nothing (disband/refit handles it).
+if (_healthyCount < _healthyMin) exitWith {
+    diag_log Format ["SML|v1|RETREAT_SKIP|side=%1 team=%2 healthy=%3 mauled=%4 (below_healthy_min=%5)", _side, _team, _healthyCount, _mauledCount, _healthyMin];
 };
 
-//--- ===== REJOIN: clear stamps + doFollow for all mauled units =====
+if (count _mauled == 0) exitWith {};
+
+//--- Detach each mauled unit: stamp + pull back 80m away from _townCenter.
 {
-    _x setVariable ["wfbe_sml_detach_at", nil];
-    if (alive _x) then {_x setUnitPos "AUTO"; _x doFollow (leader _team)};
+    _mX = _x;
+    if (!(isNil {_mX getVariable "wfbe_sml_detach_at"})) then {
+        //--- Already choreographed by another SML feature; skip to avoid double-detach.
+    } else {
+        _mX setVariable ["wfbe_sml_detach_at", time];
+        _posX   = (getPos _mX) select 0;
+        _posY   = (getPos _mX) select 1;
+        _bearing = (_posX - ((_townCenter) select 0)) atan2 (_posY - ((_townCenter) select 1));
+        _retreatPos = [_posX + 80 * (sin _bearing), _posY + 80 * (cos _bearing), 0];
+        doStop _mX;
+        _mX doMove _retreatPos;
+    };
 } forEach _mauled;
 
-diag_log Format ["SML|v1|RETREAT_REJOIN|side=%1 team=%2 reason=%3 elapsed=%4",
-    _side, _team, _exitReason, round (time - _stamp)];
+diag_log Format ["SML|v1|RETREAT|side=%1 team=%2 mauled=%3 healthy=%4 ttl=%5", _side, _team, _mauledCount, _healthyCount, _ttl];
+
+//--- WATCHDOG: poll every 3s until TTL or exit condition.
+_reason = "ttl";
+_disbandFlag = "wfbe_aicom_disband";
+waitUntil {
+    sleep 3;
+    _elapsed = time - _startTime;
+
+    //--- (a) TTL expiry.
+    if (_elapsed >= _ttl) then {_reason = "ttl"; true} else {
+
+    //--- (b) Leader death.
+    _leaderDead = (!alive (leader _team)) || {isNull (leader _team)};
+    if (_leaderDead) then {_reason = "leader_dead"; true} else {
+
+    //--- (c) Team disband flag.
+    _disbanded = _team getVariable _disbandFlag;
+    if (isNil "_disbanded") then {_disbanded = false};
+    if (_disbanded) then {_reason = "disband"; true} else {
+
+    //--- (d) Retask: order seq changed.
+    _ordN = _team getVariable "wfbe_aicom_order";
+    if (isNil "_ordN") then {_ordN = []};
+    _retasked = (count _ordN >= 1) && {(_ordN select 0) != _capSeq};
+    if (_retasked) then {_reason = "retasked"; true} else {
+
+    //--- (e) All mauled units dead or healed.
+    _allDone = true;
+    {
+        _mX = _x;
+        if (alive _mX && {_mX in (units _team)} && {(getDammage _mX) >= _thresh}) then {
+            _allDone = false;
+        };
+    } forEach _mauled;
+    if (_allDone) then {_reason = "all_dead_or_healed"; true} else {
+
+    //--- (f) Group change: any mauled unit no longer in _team.
+    _groupChanged = false;
+    {
+        _mX = _x;
+        if (alive _mX && {!(_mX in (units _team))}) then {_groupChanged = true};
+    } forEach _mauled;
+    if (_groupChanged) then {_reason = "group_change"; true} else {false}
+    }}}}}
+};
+
+//--- REJOIN: restore survivors still in the team.
+{
+    _mX = _x;
+    _mX setVariable ["wfbe_sml_detach_at", nil];
+    if (alive _mX && {_mX in (units _team)}) then {
+        _mX setUnitPos "AUTO";
+        _mX doFollow (leader _team);
+    };
+} forEach _mauled;
+
+diag_log Format ["SML|v1|RETREAT_REJOIN|side=%1 team=%2 reason=%3 elapsed=%4", _side, _team, _reason, (time - _startTime)];

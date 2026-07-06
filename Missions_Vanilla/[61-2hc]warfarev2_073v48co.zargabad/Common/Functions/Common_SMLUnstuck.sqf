@@ -1,184 +1,149 @@
-//--- SML-5: Surgical Unstuck
-//--- HC-local only (called synchronously from the unstuck Spawn in Common_RunCommanderTeam.sqf,
-//--- as a PRE-TIER step BEFORE tier 1/2/3 escalation fires).
-//--- Gate: caller must already have checked (missionNamespace getVariable ["WFBE_C_SML_SURGICAL_UNSTUCK",0]) > 0.
-//---
-//--- args: [_uTeam, _uSide]
-//---
-//--- Behaviour:
-//---   When the server-side stuck watcher fires (wfbe_aicom_unstuck > 0), only 1-2 individual
-//---   units may actually be wedged. This script checks per-unit position deltas:
-//---     - Each alive on-foot unit reads its wfbe_sml_pos_prev stamp (set on PRIOR unstuck call)
-//---     - If no stamp: initialise stamp now, skip nudging (first observation)
-//---     - If stamp exists and distance from prev pos < WFBE_C_SML_UNSTUCK_POS_DELTA: mark wedged
-//---   If wedgedCount == 0 OR wedgedCount > WFBE_C_SML_UNSTUCK_MAX_UNITS:
-//---     return without nudging (fall through to tier escalation which handles whole-team or no-op).
-//---   For each confirmed-wedged unit (up to max):
-//---     - Serialize via stamp: if wfbe_sml_detach_at already set, skip (another SML owns it)
-//---     - Stamp wfbe_sml_detach_at = time
-//---     - Compute nudge bearing: toward the team's order destination (read wfbe_aicom_order group var)
-//---     - doStop + doMove nudge_dist meters in that direction
-//---   Short TTL watchdog (30s or until all nudged units moved > pos_delta):
-//---     exits early when movement detected; full tier ladder still fires after this Call returns.
-//---   REJOIN: for each nudged unit: clear stamp, doFollow if alive.
-//---
-//--- Critical interplay with tier ladder:
-//---   This is a CALL (synchronous), not a Spawn. It runs, then execution returns to the Spawn
-//---   and the tier 1/2/3 ladder proceeds as normal regardless of what happened here.
-//---   At flag 0 this Call is never reached — tier logic is byte-identical to HEAD.
-//---   At flag 1 it inserts a pre-tier step only; tier escalation is never altered or suppressed.
-//---   The tier ladder may still reverse/teleport the lead hull — the surgical nudge is additive.
-//---
-//--- Interplay with SML-1, SML-3, SML-4:
-//---   All share wfbe_sml_detach_at. SML-5 checks and skips any unit already stamped by another
-//---   feature. The pos-prev stamp (wfbe_sml_pos_prev) is distinct from the choreography stamp.
-//---
-//--- Exit paths (watchdog only — the Call itself always returns to its caller):
-//---   (a) nudge TTL (30s)
-//---   (b) all nudged units moved > pos_delta
-//---   (c) leader dead
-//---   (d) team disband
-//---   (e) group change for any nudged unit
-//---
-//--- TELEMETRY (diag_log, always active on HC):
-//---   SML|v1|SURGICAL_UNSTUCK|...      on nudge entry
-//---   SML|v1|SURGICAL_UNSTUCK_DONE|... on watchdog exit
-
-Private ["_uTeam","_uSide"];
-Private ["_maxUnits","_posDelta","_nudgeDist","_nudgeTtl"];
-Private ["_liveFootUnits","_u","_prevPos","_curPos","_dx","_dy","_delta"];
-Private ["_wedged","_nudged","_stmp","_stmpChk","_ordN","_orderDest","_nudgeBrg","_nudgePos"];
-Private ["_uLdr","_watchDone","_exitReason","_watchStamp","_allMoved","_disbandFlag","_grpChg"];
-
+//--- SML-5: Surgical Unstuck (GR-2026-07-03a)
+//--- PRE-TIER step in the unstuck ladder: nudges only the individually wedged on-foot units.
+//--- Called synchronously (Call, not Spawn) from inside the existing UNSTUCK Spawn block.
+//--- Args: [_uTeam, _uSide]
+//--- Returns: true if a nudge was fired, false if tier escalation should handle it.
+//--- Stamp discipline: wfbe_sml_detach_at set on detach, cleared to nil on rejoin.
+//--- Flag-gated: WFBE_C_SML_SURGICAL_UNSTUCK default 0.
+private ["_uTeam","_uSide","_maxUnits","_posDelta","_nudgeDist",
+         "_liveFootUnits","_wedged","_nudged","_wedgedCount",
+         "_uX","_prevPos","_curPos","_dx","_dy","_delta2",
+         "_bearing","_nudgePos","_orderArr","_dest","_destX","_destY",
+         "_startTime","_shortTTL","_elapsed","_reason",
+         "_disbanded","_disbandFlag","_leaderDead","_allMoved","_groupChanged",
+         "_nX","_startPosX","_startPosY","_uNudge"];
 _uTeam = _this select 0;
 _uSide = _this select 1;
 
 _maxUnits  = missionNamespace getVariable ["WFBE_C_SML_UNSTUCK_MAX_UNITS", 2];
 _posDelta  = missionNamespace getVariable ["WFBE_C_SML_UNSTUCK_POS_DELTA", 8];
 _nudgeDist = missionNamespace getVariable ["WFBE_C_SML_UNSTUCK_NUDGE_DIST", 20];
-_nudgeTtl  = 30;
+_shortTTL  = 30;
+_startTime = time;
 
-_uLdr = leader _uTeam;
-if (isNull _uLdr || {!alive _uLdr}) exitWith {};
-
-//--- Collect alive on-foot units (vehicle _x == _x = on foot; A2-safe).
+//--- Step 1: Gather live on-foot units (not in a vehicle).
 _liveFootUnits = [];
 {
-    if (alive _x && {(vehicle _x) == _x}) then {
-        _liveFootUnits = _liveFootUnits + [_x];
+    _uX = _x;
+    if (alive _uX && {vehicle _uX == _uX}) then {
+        _liveFootUnits = _liveFootUnits + [_uX];
     };
 } forEach (units _uTeam);
 
-if (count _liveFootUnits < 1) exitWith {};
-
-//--- Determine which units are wedged by checking position delta since last call.
+//--- Step 2: Check per-unit position snapshots to find wedged units.
 _wedged = [];
 {
-    _u      = _x;
-    _curPos = getPos _u;
-    _prevPos = _u getVariable "wfbe_sml_pos_prev";
+    _uX = _x;
+    _prevPos = _uX getVariable "wfbe_sml_pos_prev";
+    _curPos  = [((getPos _uX) select 0), ((getPos _uX) select 1)];
     if (isNil "_prevPos") then {
-        //--- First observation: stamp current pos and do not mark as wedged yet.
-        _u setVariable ["wfbe_sml_pos_prev", [(_curPos select 0), (_curPos select 1)]];
+        //--- First check: stamp position, not yet confirmed stuck.
+        _uX setVariable ["wfbe_sml_pos_prev", _curPos];
     } else {
-        _dx    = (_curPos select 0) - (_prevPos select 0);
-        _dy    = (_curPos select 1) - (_prevPos select 1);
-        _delta = sqrt ((_dx * _dx) + (_dy * _dy));
-        if (_delta < _posDelta) then {
-            _wedged = _wedged + [_u];
+        _dx     = (_curPos select 0) - (_prevPos select 0);
+        _dy     = (_curPos select 1) - (_prevPos select 1);
+        _delta2 = _dx * _dx + _dy * _dy;
+        if (_delta2 < (_posDelta * _posDelta)) then {
+            //--- Has not moved enough: wedged.
+            _wedged = _wedged + [_uX];
         } else {
-            //--- Moved: refresh the position stamp so future checks use this new baseline.
-            _u setVariable ["wfbe_sml_pos_prev", [(_curPos select 0), (_curPos select 1)]];
+            //--- Still moving: update stamp.
+            _uX setVariable ["wfbe_sml_pos_prev", _curPos];
         };
     };
 } forEach _liveFootUnits;
 
-//--- Zero wedged or too many: fall through to tier escalation.
-if (count _wedged < 1 || {count _wedged > _maxUnits}) exitWith {};
+_wedgedCount = count _wedged;
 
-//--- Read the team's order destination for the nudge bearing.
-_ordN       = _uTeam getVariable "wfbe_aicom_order";
-_orderDest  = objNull;
-if (!(isNil "_ordN") && {count _ordN >= 3}) then {_orderDest = _ordN select 2};
+//--- Step 3: If none wedged or too many, let tier escalation handle it.
+if (_wedgedCount == 0 || {_wedgedCount > _maxUnits}) exitWith {false};
 
-//--- Nudge confirmed-wedged units.
+//--- Step 4: Read order destination for nudge bearing.
+_orderArr = _uTeam getVariable "wfbe_aicom_order";
+if (isNil "_orderArr") then {_orderArr = []};
+_dest = [];
+if (count _orderArr >= 3) then {_dest = _orderArr select 2};
+
+//--- Step 5: Nudge each wedged unit.
 _nudged = [];
-_stmp   = time;
 {
-    _u = _x;
-    //--- Skip if another SML feature already choreographs this unit.
-    _stmpChk = _u getVariable "wfbe_sml_detach_at";
-    if (isNil "_stmpChk") then {
-        //--- Compute bearing toward order dest; fall back to leader direction.
-        if (!(isNil "_orderDest") && {typeName _orderDest == "ARRAY"} && {count _orderDest >= 2}) then {
-            _nudgeBrg = (((_orderDest select 0) - ((getPos _u) select 0)) atan2 ((_orderDest select 1) - ((getPos _u) select 1)));
+    _uX = _x;
+    //--- Skip if already choreographed by another SML feature.
+    if (!(isNil {_uX getVariable "wfbe_sml_detach_at"})) then {
+        //--- Already stamped; skip.
+    } else {
+        _uX setVariable ["wfbe_sml_detach_at", time];
+        _curPos = getPos _uX;
+        if (count _dest >= 2) then {
+            _bearing = ((_dest select 0) - (_curPos select 0)) atan2 ((_dest select 1) - (_curPos select 1));
         } else {
-            _nudgeBrg = getDir _uLdr;
+            _bearing = getDir (leader _uTeam);
         };
-        _nudgePos = [((getPos _u) select 0) + _nudgeDist * (sin _nudgeBrg), ((getPos _u) select 1) + _nudgeDist * (cos _nudgeBrg), 0];
-        _u setVariable ["wfbe_sml_detach_at", _stmp];
-        _u setVariable ["wfbe_sml_pos_prev", [(_nudgePos select 0), (_nudgePos select 1)]];
-        doStop _u;
-        _u doMove _nudgePos;
-        _nudged = _nudged + [_u];
+        _nudgePos = [(_curPos select 0) + _nudgeDist * (sin _bearing), (_curPos select 1) + _nudgeDist * (cos _bearing), 0];
+        doStop _uX;
+        _uX doMove _nudgePos;
+        _nudged = _nudged + [[_uX, (_curPos select 0), (_curPos select 1)]];
     };
 } forEach _wedged;
 
-if (count _nudged < 1) exitWith {};
+if (count _nudged == 0) exitWith {false};
 
-diag_log Format ["SML|v1|SURGICAL_UNSTUCK|side=%1 team=%2 wedged=%3 nudged=%4 dist=%5",
-    _uSide, _uTeam, count _wedged, count _nudged, _nudgeDist];
+diag_log Format ["SML|v1|SURGICAL_UNSTUCK|side=%1 team=%2 wedged=%3 nudged=%4", _uSide, _uTeam, _wedgedCount, count _nudged];
 
-//--- ===== SHORT WATCHDOG (30s) =====
-//--- The tier ladder fires AFTER this Call returns, so we use a short dwell.
-_watchDone  = false;
-_exitReason = "ttl";
-_watchStamp = time;
+//--- SHORT WATCHDOG (30s): wait until nudged units have moved or TTL.
+_reason = "ttl_30s";
+_disbandFlag = "wfbe_aicom_disband";
+waitUntil {
+    sleep 3;
+    _elapsed = time - _startTime;
 
-while {!_watchDone} do {
+    //--- (a) Short TTL.
+    if (_elapsed >= _shortTTL) then {_reason = "ttl_30s"; true} else {
 
-    //--- (a) TTL
-    if (time > _watchStamp + _nudgeTtl) exitWith {_exitReason = "ttl"};
+    //--- (b) Leader death.
+    _leaderDead = (!alive (leader _uTeam)) || {isNull (leader _uTeam)};
+    if (_leaderDead) then {_reason = "leader_dead"; true} else {
 
-    //--- (c) leader dead
-    if (isNull (leader _uTeam) || {!alive (leader _uTeam)}) exitWith {_exitReason = "leader_dead"};
+    //--- (c) Team disband flag.
+    _disbanded = _uTeam getVariable _disbandFlag;
+    if (isNil "_disbanded") then {_disbanded = false};
+    if (_disbanded) then {_reason = "disband"; true} else {
 
-    //--- (d) team disband
-    _disbandFlag = _uTeam getVariable "wfbe_aicom_disband";
-    if (!(isNil "_disbandFlag") && {_disbandFlag}) exitWith {_exitReason = "disband"};
-
-    //--- (e) group change
-    _grpChg = false;
-    {
-        if (alive _x && {!(group _x == _uTeam)}) then {_grpChg = true};
-    } forEach _nudged;
-    if (_grpChg) exitWith {_exitReason = "group_change"};
-
-    //--- (b) all nudged units moved > _posDelta from their nudge origin
+    //--- (d) All nudged units have moved enough OR are dead.
     _allMoved = true;
     {
-        _u = _x;
-        if (alive _u) then {
-            _prevPos = _u getVariable "wfbe_sml_pos_prev";
-            _curPos  = getPos _u;
-            if (!(isNil "_prevPos")) then {
-                _dx    = (_curPos select 0) - (_prevPos select 0);
-                _dy    = (_curPos select 1) - (_prevPos select 1);
-                _delta = sqrt ((_dx * _dx) + (_dy * _dy));
-                if (_delta < _posDelta) then {_allMoved = false};
-            };
+        _uNudge    = _x select 0;
+        _startPosX = _x select 1;
+        _startPosY = _x select 2;
+        if (alive _uNudge) then {
+            _dx = ((getPos _uNudge) select 0) - _startPosX;
+            _dy = ((getPos _uNudge) select 1) - _startPosY;
+            if ((_dx * _dx + _dy * _dy) < (_posDelta * _posDelta)) then {_allMoved = false};
         };
     } forEach _nudged;
-    if (_allMoved) exitWith {_exitReason = "all_moved"};
+    if (_allMoved) then {_reason = "all_moved"; true} else {
 
-    sleep 3;
+    //--- (e) Group change: any nudged unit no longer in team.
+    _groupChanged = false;
+    {
+        _uNudge = _x select 0;
+        if (alive _uNudge && {!(_uNudge in (units _uTeam))}) then {_groupChanged = true};
+    } forEach _nudged;
+    if (_groupChanged) then {_reason = "group_change"; true} else {false}
+    }}}}
 };
 
-//--- ===== REJOIN =====
+//--- REJOIN: restore each nudged unit.
 {
-    _x setVariable ["wfbe_sml_detach_at", nil];
-    if (alive _x) then {_x setUnitPos "AUTO"; _x doFollow (leader _uTeam)};
+    _uNudge = _x select 0;
+    _uNudge setVariable ["wfbe_sml_detach_at", nil];
+    _uNudge setVariable ["wfbe_sml_pos_prev", nil];
+    if (alive _uNudge && {_uNudge in (units _uTeam)}) then {
+        _uNudge doFollow (leader _uTeam);
+    };
 } forEach _nudged;
 
-diag_log Format ["SML|v1|SURGICAL_UNSTUCK_DONE|side=%1 team=%2 reason=%3 elapsed=%4",
-    _uSide, _uTeam, _exitReason, round (time - _watchStamp)];
+diag_log Format ["SML|v1|SURGICAL_UNSTUCK_DONE|side=%1 team=%2 reason=%3 elapsed=%4", _uSide, _uTeam, _reason, (time - _startTime)];
+
+//--- Return true: nudge fired; tier escalation continues (Call returns here then Spawn resumes).
+true

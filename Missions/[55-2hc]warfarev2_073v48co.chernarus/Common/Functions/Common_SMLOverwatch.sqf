@@ -107,7 +107,7 @@ waitUntil {
     //--- (g) Group change: launcher no longer in _team.
     _groupChanged = alive _launcher && {!(_launcher in (units _team))};
     if (_groupChanged) then {_reason = "group_change"; true} else {false}
-    }}}}}}}
+    }}}}}}
 };
 
 //--- REJOIN.
