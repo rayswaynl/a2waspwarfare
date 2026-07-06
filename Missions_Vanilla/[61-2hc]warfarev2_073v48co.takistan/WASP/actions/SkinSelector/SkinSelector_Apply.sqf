@@ -444,6 +444,17 @@ if (!(isNull commanderTeam)) then {
 _uid = getPlayerUID player;
 missionNamespace setVariable [("WFBE_SkinSelector_Skin_" + _uid), _chosenClass];
 WFBE_SkinSelector_Applied = true;
+	//--- skin-persist 2026-07-06: write profileNamespace choice so skin survives session reconnects.
+	if ((missionNamespace getVariable ["WFBE_C_SKIN_PERSIST", 0]) > 0) then {
+		Private ["_sideStr"];
+		_sideStr = "WEST";
+		if (side group player == EAST) then {_sideStr = "EAST"};
+		if (side group player == resistance) then {_sideStr = "GUER"};
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {
+			[Format ["WFBE_SKIN_CHOICE_%1", _sideStr], _chosenClass] Call WFBE_CO_FNC_SetProfileVariable;
+			saveProfileNamespace;
+		};
+	};
 WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on successful completion
 
 diag_log format ["[WFBE (SKIN)] B6 COMPLETE: player='%1' class='%2' uid='%3'",
