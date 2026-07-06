@@ -49,6 +49,44 @@ _upgrade_artillery_xlabel = {
 
 	_label
 };
+_upgrade_icbm_xlabel = {
+	Private ["_cost","_costs","_dep","_depId","_depLabel","_depText","_deps","_d","_label","_labels","_levels","_links","_time","_times","_unlock","_unlocks"];
+	_levels = (missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LEVELS", WFBE_Client_SideJoinedText]) select WFBE_UP_ICBM;
+	_costs = (missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_COSTS", WFBE_Client_SideJoinedText]) select WFBE_UP_ICBM;
+	_links = (missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_LINKS", WFBE_Client_SideJoinedText]) select WFBE_UP_ICBM;
+	_times = (missionNamespace getVariable Format ["WFBE_C_UPGRADES_%1_TIMES", WFBE_Client_SideJoinedText]) select WFBE_UP_ICBM;
+	_labels = missionNamespace getVariable "WFBE_C_UPGRADES_LABELS";
+	_unlocks = ["SCUD TEL + conventional Command-menu strikes","ICBM nuclear strike from the Tactical Center"];
+	_label = "";
+
+	for '_i' from 0 to (_levels - 1) do {
+		_cost = if (_i < count _costs) then {_costs select _i} else {[0,0]};
+		_time = if (_i < count _times) then {_times select _i} else {0};
+		_deps = if (_i < count _links) then {_links select _i} else {[]};
+		_depText = "None";
+		if (count _deps > 0) then {
+			if (typeName (_deps select 0) == "ARRAY") then {
+				_depText = "";
+				for '_d' from 0 to (count _deps - 1) do {
+					_dep = _deps select _d;
+					_depId = _dep select 0;
+					_depLabel = if (_depId >= 0 && {_depId < count _labels}) then {_labels select _depId} else {Format ["Upgrade %1", _depId]};
+					if (_depText != "") then {_depText = _depText + ", "};
+					_depText = _depText + Format ["%1 level %2", _depLabel, _dep select 1];
+				};
+			} else {
+				_depId = _deps select 0;
+				_depLabel = if (_depId >= 0 && {_depId < count _labels}) then {_labels select _depId} else {Format ["Upgrade %1", _depId]};
+				_depText = Format ["%1 level %2", _depLabel, _deps select 1];
+			};
+		};
+		_unlock = if (_i < count _unlocks) then {_unlocks select _i} else {Format ["Upgrade level %1", _i + 1]};
+		_label = _label + Format[" - Level <t color='#F5D363'>%1</t>: %2<br/>   Cost: <t color='#F5D363'>%3 S</t> + <t color='#F5D363'>$%4</t>; Time: <t color='#F5D363'>%5s</t>; Requires: %6", _i + 1, _unlock, _cost select 0, _cost select 1, _time, _depText];
+		if (_i + 1 < _levels) then {_label = _label + "<br/>"};
+	};
+
+	_label
+};
 
 //--- UI Labels
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_LABELS"], [
@@ -90,7 +128,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_DESCRIPTIONS"], [
 	localize 'STR_WF_UPGRADE_Airlift_Desc',
 	localize 'STR_WF_UPGRADE_Countermeasures_Desc',
 	Format[localize 'STR_WF_UPGRADE_ArtilleryUpgrade_Desc', call _upgrade_artillery_xlabel],
-	localize 'STR_WF_UPGRADE_ICBM_Desc',
+	Format["%1<br/><br/><t color='#42b6ff' underline='1'>Level costs:</t><br/>%2", localize 'STR_WF_UPGRADE_ICBM_Desc', call _upgrade_icbm_xlabel],
 	localize 'STR_WF_UPGRADE_FastTravel_Desc',
 	localize 'STR_WF_UPGRADE_Gear_Desc',
 	localize 'STR_WF_UPGRADE_Ammo_Desc',
