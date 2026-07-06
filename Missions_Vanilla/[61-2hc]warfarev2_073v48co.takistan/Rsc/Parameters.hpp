@@ -726,4 +726,12 @@
 		default = 0;
 	};
 
+	// FPV strike drone: player-piloted kamikaze mini-UAV from the Tactical Center (default OFF - flag-gated).
+	class WFBE_C_FPV_DRONE {
+		title = "FPV strike drone (Tactical Center)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+
 };

@@ -54,6 +54,7 @@ KAT_ParaAmmo = Compile preprocessFile "Server\Support\Support_ParaAmmo.sqf";
 KAT_Paratroopers = Compile preprocessFile "Server\Support\Support_Paratroopers.sqf";
 KAT_ParaVehicles = Compile preprocessFile "Server\Support\Support_ParaVehicles.sqf";
 KAT_UAV = Compile preprocessFile "Server\Support\Support_UAV.sqf";
+KAT_FPV = Compile preprocessFile "Server\Support\Support_FPV.sqf";
 
 //--- NAVAL HVT: SCUD strike handler (feat/naval-hvt-objectives). Feature-flagged behind WFBE_C_NAVAL_HVT.
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {

@@ -2251,6 +2251,14 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GARRISON_DRESSING_MAX")      then {WFBE_C_GARRISON_DRESSING_MAX = 6};        //--- Max simultaneous dressed towns across the map.
 	if (isNil "WFBE_C_GARRISON_DRESSING_SEARCHLIGHT") then {WFBE_C_GARRISON_DRESSING_SEARCHLIGHT = 1}; //--- 1: add SearchLight_RUS at night; 0: gun only.
 
+//--- FPV STRIKE DRONE (fable/fpv-strike-drone): player-piloted kamikaze mini-UAV bought from the
+//--- Tactical Center (sibling of the UAV support call). Client module: Client/Module/FPV/.
+//--- Flag-off (0) = no menu row, module exits on entry = byte-identical behavior.
+	if (isNil "WFBE_C_FPV_DRONE")      then {WFBE_C_FPV_DRONE      = 0};           //--- Master gate: 0=off (default), 1=on. Lobby param mirrors this.
+	if (isNil "WFBE_C_FPV_DRONE_COST") then {WFBE_C_FPV_DRONE_COST = 7500};        //--- Purchase price (deducted client-side in fpv.sqf).
+	if (isNil "WFBE_C_FPV_DRONE_TTL")  then {WFBE_C_FPV_DRONE_TTL  = 240};         //--- s: battery life; expiry DISARMS then scuttles (no parked bomb).
+	if (isNil "WFBE_C_FPV_DRONE_AMMO") then {WFBE_C_FPV_DRONE_AMMO = "R_57mm_HE"}; //--- Warhead ammo class (RPG-warhead scale: hit 150 / indirect 40 / r 12).
+
 //--- AWACS PLATFORM RADAR (fable/awacs-radar, flag WFBE_C_AWACS default 0, lobby param):
 //--- while a CREWED friendly airframe from WFBE_C_AWACS_TYPES is airborne above MINALT the
 //--- owning side gets (a) the AAR air picture on the map WITHOUT being near an Anti-Air

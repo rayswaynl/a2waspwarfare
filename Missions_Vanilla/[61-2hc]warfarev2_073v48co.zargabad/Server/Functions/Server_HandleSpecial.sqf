@@ -71,6 +71,11 @@ switch (_args select 0) do {
 		_args spawn KAT_UAV;
 	};
 
+	//--- fable/fpv-strike-drone: lifecycle watchdog for the player-piloted FPV drone.
+	case "fpv": {
+		_args spawn KAT_FPV;
+	};
+
 	//--- NAVAL HVT: SCUD saturation strike (feat/naval-hvt-objectives).
 	//--- Server validates ownership + cooldown inside KAT_ScudStrike before firing.
 	case "ScudStrike": {

@@ -1,0 +1,68 @@
+Private ['_buildings','_checks','_class','_closest','_cost','_driver','_drone','_group'];
+
+//--- fable/fpv-strike-drone: player-piloted kamikaze mini-UAV (Tactical Center support call,
+//--- sibling of Client\Module\UAV\uav.sqf). Inert unless WFBE_C_FPV_DRONE > 0.
+if ((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) <= 0) exitWith {};
+
+if (!isNull playerFPV) then {if (!alive playerFPV) then {playerFPV = objNull}};
+if (!isNull playerFPV) exitWith {hint "You already have an FPV drone in the air."};
+
+_class = missionNamespace getVariable [Format ["WFBE_%1FPVDRONE",sideJoinedText], ""];
+if (_class == "") exitWith {};
+
+_buildings = (sideJoined) Call WFBE_CO_FNC_GetSideStructures;
+_checks = [sideJoined,missionNamespace getVariable Format ["WFBE_%1COMMANDCENTERTYPE",sideJoinedText],_buildings] Call GetFactories;
+_closest = objNull;
+if (count _checks > 0) then {
+	_closest = [player,_checks] Call WFBE_CO_FNC_GetClosestEntity;
+};
+
+if (isNull _closest) exitWith {};
+
+_cost = missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST", 7500];
+
+_drone = createVehicle [_class, getPos _closest, [], 0, "FLY"];
+playerFPV = _drone;
+_drone setVariable ["wfbe_fpv_armed", true];
+Call Compile Format ["_drone addEventHandler ['Killed',{[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled}]",sideID];
+_drone setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';",sideID];
+processInitCommands;
+
+//--- Warhead: fires on kill ONLY while armed. Battery-expiry and abort paths disarm first
+//--- (fpv_interface.sqf), so a dead battery never gifts a parked bomb. The hull is client-local
+//--- here, so the warhead ammo is created where the vehicle is local.
+_drone addEventHandler ['Killed', {
+	Private ['_d','_p'];
+	_d = _this select 0;
+	if (_d getVariable ['wfbe_fpv_armed', false]) then {
+		_d setVariable ['wfbe_fpv_armed', false];
+		_p = getPos _d;
+		createVehicle [missionNamespace getVariable ['WFBE_C_FPV_DRONE_AMMO', 'R_57mm_HE'], [_p select 0, _p select 1, (_p select 2) + 1], [], 0, 'NONE'];
+	};
+}];
+
+_group = [sideJoined, "misc"] Call WFBE_CO_FNC_CreateGroup;
+_driver = [missionNamespace getVariable Format ["WFBE_%1PILOT",sideJoinedText],_group,getPos _drone,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
+if (isNull _driver) exitWith {
+	//--- BUYFAIL guard (same idea as Client_BuildUnit): no pilot = no purchase, nothing charged yet.
+	["WARNING", "fpv.sqf: pilot creation failed - aborting FPV purchase."] Call WFBE_CO_FNC_LogContent;
+	_drone setVariable ["wfbe_fpv_armed", false];
+	deleteVehicle _drone;
+	playerFPV = objNull;
+};
+_driver moveInDriver _drone;
+
+//--- The player flies it; the AI pilot must never fight.
+{_driver disableAI _x} forEach ["TARGET","AUTOTARGET"];
+
+[sideJoinedText,'UnitsCreated',1] Call UpdateStatistics;
+[sideJoinedText,'VehiclesCreated',1] Call UpdateStatistics;
+
+-(_cost) Call ChangePlayerFunds;
+
+["RequestSpecial", ["fpv",sideJoined,_drone,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+["INFORMATION", Format ["fpv.sqf: FPV strike drone [%1] launched by [%2].", _class, name player]] Call WFBE_CO_FNC_LogContent;
+
+sleep 0.02;
+
+ExecVM "Client\Module\FPV\fpv_interface.sqf";
