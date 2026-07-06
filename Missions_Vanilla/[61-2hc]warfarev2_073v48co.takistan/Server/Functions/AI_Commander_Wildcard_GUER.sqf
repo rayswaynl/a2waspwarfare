@@ -272,8 +272,10 @@ while {!gameOver} do {
 								//--- (3) PHYSICAL BLOCK: the WFBE_NEURODEF_FORT_CHECKPOINT composition (Init_Defenses.sqf)
 								//--- spawned on the road, rotated to the road axis. Model-space trig mirrors
 								//--- Server_ConstructPosition.sqf; setDir convention (_dir - _relDir) mirrors
-								//--- Server_CreateDefenseTemplate.sqf, as does the wfbe_defense tag (readers only COUNT by
-								//--- that tag - no sweep deletes by it, so OUR watcher below owns the full teardown).
+								//--- Server_CreateDefenseTemplate.sqf. Props are deliberately NOT wfbe_defense-tagged:
+								//--- basearea.sqf _onAreaRemoved DELETES tagged objects whose class is in WFBE_%1DEFENSENAMES
+								//--- (CncBlock_Stripes/fort_bagfence_long ARE on the WEST/EAST lists) near a removed base
+								//--- area; OUR watcher below owns the full teardown, so the tag would only invite that sweep.
 								_cpObjs = [];
 								_cpTmpl = missionNamespace getVariable ["WFBE_NEURODEF_FORT_CHECKPOINT", []];
 								{
@@ -284,7 +286,6 @@ while {!gameOver} do {
 									         (_spawnPos select 1) - (_tRelPos select 0) * (sin _dir) + (_tRelPos select 1) * (cos _dir),
 									         0];
 									_obj = createVehicle [_tCls, [0,0,0], [], 0, "NONE"];
-									_obj setVariable ["wfbe_defense", true];
 									_obj setDir (_dir - _tRelDir);
 									_obj setPos _wPos;
 									_cpObjs set [count _cpObjs, _obj];
