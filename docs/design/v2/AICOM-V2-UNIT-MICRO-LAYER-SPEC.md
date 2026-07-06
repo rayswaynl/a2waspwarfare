@@ -1,8 +1,8 @@
-> **⚠ VERIFICATION CORRECTIONS (Fable claims-audit, 2026-07-06) — read before executing work orders:**
-> 1. **PR-WO-1 (#548) reframed:** `wfbe_aicom_econ_surge` is NOT missing — `AI_Commander.sqf:623` already sets it. #548 adds an independent FundsSink-cadence trigger (additive value, not a correctness fix). 
-> 2. **EXT-1 (pacing):** the spec's claims about `WFBE_C_AICOM_MARCH_YELLOW` coverage were inaccurate — re-verify the current march-discipline implementation before building transit-posture work.
-> 3. **EXT-4:** `land "GET OUT"` claims must be re-verified against RunCommanderTeam — the audit found the "NOT YET IMPLEMENTED" claim unsafe.
-> Minor: verify `ATV_US_EP1 isKindOf Motorcycle` in-config and the `Core_CO_US.sqf:143` citation before executing WO-5. Full audit in the verification transcript.
+> **✓ VERIFICATION CORRECTIONS RESOLVED (Fable claims-audit 2026-07-06, re-verified 2026-07-06):**
+> 1. **PR-WO-1 (#548) — RESOLVED:** `wfbe_aicom_econ_surge` is NOT missing. `AI_Commander.sqf:622-623` (the P4 wealth-conversion supervisor path inside `WFBE_C_AICOM_ECON_SINK`) already sets and broadcasts the flag via `_logik setVariable ["wfbe_aicom_econ_surge", true, true]` (comment: `cmdcon41-w3b: BROADCAST`). `AI_Commander_FundsSink.sqf` does NOT currently set this flag — it only arms `wfbe_aicom_reinforce_rich` and `wfbe_aicom_veteran_next`. PR #548 adds an independent FundsSink-cadence surge trigger: additive second trigger on the income cadence, NOT a missing-broadcast fix. PR-WO-1 rewritten accordingly.
+> 2. **EXT-1 (march pacing) — RESOLVED:** `WFBE_C_AICOM_MARCH_YELLOW` is ALREADY FULLY IMPLEMENTED in `Common_RunCommanderTeam.sqf`. Lines 1287-1296 (vehicle-branch) and 1333-1336 (foot-branch) both implement the YELLOW transit posture at the order-accept point, with the RED re-assert at the arrival latch (line 1450). This is live production code, not a comment or stub. EXT-1 rewritten to document the existing implementation and scope only what is genuinely new.
+> 3. **EXT-4 (`land "GET OUT"`) — RESOLVED:** `_h land "GET OUT"` IS already implemented in `Common_RunCommanderTeam.sqf` line 616, in the flat-LZ landing branch. The "NOT YET IMPLEMENTED" claim was incorrect. EXT-4 rewritten to reflect the true current state (full-land and eject exist; what is genuinely new is the third mode distinctions and `setUnloadInCombat`).
+> Minor: **Core_CO_US.sqf:143** citation confirmed — `ATV_US_EP1` is at line 143 of `Units_CO_US.sqf`. **`ATV_US_EP1 isKindOf "Motorcycle"`** — confirmed valid: the codebase treats `Motorcycle` as the A2 OA CfgVehicles base class for ATV-type vehicles throughout (AutoFlip.sqf:62, AwardBounty.sqf:27); ATV_US_EP1 inherits from this class in A2 OA EP1 config.
 
 # AICOM V2 Unit Micro-Layer — Spec &amp; Work Orders
 
@@ -164,7 +164,7 @@ Each work order specifies: objective, owner intent served, files, approach, flag
 
 **Status:** ATVs are technically in the USMC template pool (Squad_USMC.sqf lines 303-316: "Motorized - CROWS ATV Scout Section" with two `ATV_US_EP1`). They would almost never be picked because the effectiveness-weighted draw weights by BI `cost` — ATVs have a low cost score and compete against IFVs and APCs in the same light bucket.
 
-**Work order (fold-into-V2 cutover, AI_Commander_Teams.sqf):** Explicitly strip templates containing ATV/Motorcycle hull classnames from `_eligible` in the same pattern as the existing static-weapon strip (lines 409-423). Check `_x isKindOf "Motorcycle"` (A2 OA class hierarchy: ATV_US_EP1 inherits from `Motorcycle`) for every unit classname in the template. If any member isKindOf "Motorcycle", exclude the template from `_eligible`. GUARDRAIL: if stripping would empty the set, keep the original (same pattern as line 422). This is deterministic — the owner ruling "no ATVs/bikes" is explicit.
+**Work order (fold-into-V2 cutover, AI_Commander_Teams.sqf):** Explicitly strip templates containing ATV/Motorcycle hull classnames from `_eligible` in the same pattern as the existing static-weapon strip (lines 409-423). Check `_x isKindOf "Motorcycle"` for every unit classname in the template — `Motorcycle` is the confirmed A2 OA CfgVehicles base class used for ATV-type vehicles throughout this codebase (`Common_AICOM_AutoFlip.sqf:62`, `Client/PVFunctions/AwardBounty.sqf:27`, `Server/Functions/Server_AwardScorePlayer.sqf:21`). If any member isKindOf "Motorcycle", exclude the template from `_eligible`. GUARDRAIL: if stripping would empty the set, keep the original (same pattern as line 422). This is deterministic — the owner ruling "no ATVs/bikes" is explicit. Note: `isKindOf` is safe to use on vehicle classnames (the CLAUDE.md trap applies only to weapon/magazine classnames, not vehicles).
 
 **Flag:** `WFBE_C_AICOM_NO_BIKES` default 1 (stripping is the desired state; 0 reverts to current behaviour where ATVs are merely unlikely, not prohibited).  
 **Risk:** Only one template (USMC ATV scout) is affected. The GUARDRAIL prevents starvation.  
@@ -198,16 +198,22 @@ These are defined in `docs/design/v2/MICRO-LAYER.md` (read in full). All build o
 
 ### EXT-1: Road-march pacing (MICRO-LAYER.md line 46-51)
 
-**Design:** At the order-accept branch in RunCommanderTeam (around line 928-936 where `_arrived = false` is reset and the new route is laid), immediately before the road route spawn, issue: `_team setBehaviour "CARELESS"; _team setSpeedMode "FULL"; _team setFormation "COLUMN"`. This is the transit posture.
+**Verified current state — march discipline IS already implemented:** `WFBE_C_AICOM_MARCH_YELLOW` is a live, production flag with a default of 1. It is fully implemented in `Common_RunCommanderTeam.sqf` in two places:
 
-**Flip-to-COMBAT trigger (hard requirement from MICRO-LAYER.md):** The flip must fire on arrival OR contact OR timeout. Use the existing `_arrived` latch (line 1442) to flip back: `_team setCombatMode "RED"; _team setBehaviour "AWARE"; _team setSpeedMode "FULL"` at arrival gate. For contact en-route: the 20-second order-loop cadence can check `behaviour (leader _team) == "COMBAT"` — if true, the engine has already detected a threat and flipped the leader; in that case assert `_team setBehaviour "AWARE"` immediately. Timeout: if the team has not arrived within `WFBE_C_AICOM_MARCH_TIMEOUT` (default 600 s), flip to AWARE regardless.
+- **Vehicle-branch (lines 1287-1296):** At the order-accept / route-lay point, a `_marchCM` variable is computed (`"YELLOW"` if flag > 0, else `"RED"`), then `_team setBehaviour "AWARE"`, `_team setCombatMode _marchCM`, `_team setFormation "COLUMN"`, `_team setSpeedMode "FULL"` are called. This is the transit posture.
+- **Foot-branch (lines 1333-1336):** Identical logic computes `_marchCM` independently for the foot road-march path (the vehicle-branch variable is out of scope here, so a second declaration is correct).
+- **Arrival re-assert (line 1450):** `_team setCombatMode "RED"` is called unconditionally at the arrival latch, re-asserting RED regardless of the transit posture used.
 
-**Note:** `WFBE_C_AICOM_MARCH_YELLOW` is mentioned in a comment at line 1447 ("Transit may have run YELLOW") — this suggests the concept is already partially considered. Look for an existing flag before adding a new one.
+The comment at line 1447 ("Transit may have run YELLOW — WFBE_C_AICOM_MARCH_YELLOW") documents the existing implementation, not a future intent.
 
-**Flag:** `WFBE_C_AICOM_ROAD_MARCH_PACE` default 1  
-**Zargabad note:** Dense path mesh — stagger simultaneous doMoves over 2 driver ticks (MICRO-LAYER.md line 38: "Stagger simultaneous doMoves over 2 driver ticks on Zargabad").  
+**What is genuinely new work (if any):** The current implementation sets `AWARE` + COLUMN + FULL at the order-accept point but does NOT add a mid-transit contact check that asserts AWARE/RED if the engine independently flips the leader to COMBAT while en route. If the leader enters combat mid-march the engine transitions it, but the group-level `setCombatMode` is not re-asserted. Adding a 20-s tick contact check (`if (behaviour (leader _team) == "COMBAT") then {_team setCombatMode "RED"}`) is a genuine improvement over the existing behaviour. Additionally, a `WFBE_C_AICOM_MARCH_TIMEOUT` guard (flip to AWARE after N seconds without arrival) is not present in the current code and could be added.
+
+**Work order (pre-cutover, Common_RunCommanderTeam.sqf):** The transit-posture core (YELLOW march + COLUMN + FULL speed + RED on arrival) is ALREADY SHIPPED under `WFBE_C_AICOM_MARCH_YELLOW` default 1. Do not re-implement it. The only new buildable work is: (1) add a per-20s contact-check in the order loop that re-asserts RED when the engine has flipped the leader to COMBAT mid-transit; (2) optionally add a `WFBE_C_AICOM_MARCH_TIMEOUT` (default 600 s) to flip AWARE on a stalled column. Gate both additions under the existing `WFBE_C_AICOM_MARCH_YELLOW` flag — no new flag needed.
+
+**Flag:** Use existing `WFBE_C_AICOM_MARCH_YELLOW` (default 1). Do NOT introduce `WFBE_C_AICOM_ROAD_MARCH_PACE` — that would duplicate the existing flag.  
+**Zargabad note:** Dense path mesh — stagger simultaneous doMoves over 2 driver ticks (MICRO-LAYER.md line 38). This applies to the route-lay spawn, which is already a Spawn block — no change needed.  
 **Files:** `Common_RunCommanderTeam.sqf` only.  
-**Sequencing:** Pre-cutover.
+**Sequencing:** Pre-cutover. The core is already in place; only the contact-check addition is new work.
 
 ---
 
@@ -247,22 +253,25 @@ These are defined in `docs/design/v2/MICRO-LAYER.md` (read in full). All build o
 
 ### EXT-4: Air insertion modes — learner picks, driver executes (MICRO-LAYER.md lines 63-64)
 
-**Design:** The three execution modes are already partially implemented in RunCommanderTeam:
-- `land "LAND"` (full landing): the existing `_lzPos` flat-empty path (lines 503-504), which calls `doMove _lz` and lets the heli touch down.
-- Para-eject (`eject`): the existing hot-LZ paradrop path (lines 507-565), which forces a paradrop by passing `_flat = []` so the eject branch fires.
-- Low hover drop (`land "GET OUT"`): NOT YET IMPLEMENTED. Currently the only alternatives are full-landing vs eject.
+**Verified current state — two of three modes are already implemented:**
+
+- `land "GET OUT"` (hover-drop/unload): ALREADY IMPLEMENTED. `Common_RunCommanderTeam.sqf` line 616 calls `_h land "GET OUT"` inside the flat-LZ branch, followed by `_h flyInHeight 0`, a 40-second waitUntil on altitude < 1.5 m, then unassigns pax. This is the primary landing path for cold/flat LZs.
+- Para-eject (`eject`): ALREADY IMPLEMENTED. The hot-LZ paradrop path (lines 507-565) forces a paradrop by passing `_flat = []` so the eject branch fires when the LZ is contested or has no flat ground.
+- True `land "LAND"` (full taxi landing to stop): NOT present as a distinct third path. The current "flat-LZ" path uses `land "GET OUT"` which commands a hover-unload at low altitude, not a full roll-to-stop landing.
 
 **`flyInHeight` for transit vs run-in:** Already implemented: `_h flyInHeight (60 max WFBE_C_AICOM_HELI_RUNINFLOOR)` (line 606). Transit altitude tunable via `WFBE_C_AICOM_HELI_APPROACH_LIMITED` (line 603-604).
 
 **`setUnloadInCombat`:** NOT YET in RunCommanderTeam. This would prevent cargo AI from bailing under fire mid-transit.
 
-**Work order (pre-cutover, Common_RunCommanderTeam.sqf):**
-1. Add `setUnloadInCombat _airVeh` call immediately after the pax are loaded (after line 496 `orderGetIn true` calls). Set to a high threshold so AI does not bail mid-flight.
-2. Implement the low-hover-drop branch: after the heli reaches within 60 m of the LZ at low altitude, call `_h land "GET OUT"` instead of the full landing sequence. This is the third insertion mode.
-3. The "learner" (which mode to use) is a decision in the hot-LZ block (currently binary: flat-LZ = land, no-flat-LZ or hot = eject). Extend to three branches: safe + flat = land; safe + no-flat = hover-drop; hot = eject. Parameters: `WFBE_C_AICOM_AIR_INSERT_MODE_SAFE` (0=land, 1=hover, 2=eject, default 0).
+**What is genuinely new work:** The binary decision (flat-LZ = `land "GET OUT"` hover-drop; hot-LZ = eject) is live. The owner's "three modes" vision requires distinguishing safe-flat (hover-drop, current behaviour), safe-no-flat (also hover-drop but with offset LZ), and hot (eject, current behaviour). The learner logic is already binary; refining it to explicitly handle the safe-no-flat case as a distinct hover-drop with offset is additive. The main new capability is `setUnloadInCombat`.
 
-**Flag:** `WFBE_C_AICOM_AIR_INSERT_V2` default 0 (new hover-drop mode off by default; eject path unchanged)  
-**Risk:** `land "GET OUT"` in A2 OA: confirmed command name. Whether it halts at a reliable hover height needs an in-game test — mark as **UNKNOWN / needs live verification** before shipping.  
+**Work order (pre-cutover, Common_RunCommanderTeam.sqf):**
+1. Add `setUnloadInCombat _airVeh` call immediately after the pax are loaded (after the `orderGetIn true` calls for pax). Set to a high threshold so AI does not bail mid-flight. This is the primary new capability.
+2. The existing hot-LZ decision is binary (flat-LZ = hover-drop, no-flat or hot = eject). Extend to three explicit branches: safe + flat = hover-drop (current `land "GET OUT"` path, unchanged); safe + no-flat = hover-drop at an offset LZ clear of obstacles; hot = eject (current path, unchanged). Gate the three-branch learner under `WFBE_C_AICOM_AIR_INSERT_V2` default 0; when flag is 0, use the existing binary path unmodified.
+3. Do NOT rewrite or replace `land "GET OUT"` — it is already confirmed working at line 616.
+
+**Flag:** `WFBE_C_AICOM_AIR_INSERT_V2` default 0 (three-branch learner + setUnloadInCombat; existing paths unchanged at flag 0)  
+**Risk:** `land "GET OUT"` is confirmed in use at line 616 — no verification risk. `setUnloadInCombat` is listed in MICRO-LAYER.md as A2-OA-verified but not yet used in the codebase — confirm command signature before shipping. The three-branch learner is purely additive at flag 1.  
 **Sequencing:** Pre-cutover.
 
 ---
@@ -275,11 +284,13 @@ These are open PRs that must be reviewed, stacked or merged into the V2 cutover 
 
 ### PR-WO-1: PR #548 — Lane 227: Arm FundsSink econ surge
 
-**PR summary:** Adds the missing `wfbe_aicom_econ_surge` broadcast in `AI_Commander_FundsSink.sqf` beside the existing `wfbe_aicom_reinforce_rich` latch. 3 additions, 0 deletions. Inside the existing `WFBE_C_AICOM_FUNDS_SINK_ENABLE` default-off path.
+**PR summary:** Adds a `wfbe_aicom_econ_surge` broadcast in `AI_Commander_FundsSink.sqf` beside the existing `wfbe_aicom_reinforce_rich` latch. 3 additions, 0 deletions. Inside the existing `WFBE_C_AICOM_FUNDS_SINK_ENABLE` default-off path.
 
-**Work order:** Merge as-is. It is a correctness fix — the econ-surge broadcast that Teams.sqf and RunCommanderTeam's rich-gear block already read (`wfbe_aicom_econ_surge`, used at RunCommanderTeam line 426 for the gear-tier surge) was never set. Without this PR the econ-sink surge is inert. **Fold-into-cutover** (touches AI_Commander_FundsSink.sqf, a commander file).
+**Verified current state:** `wfbe_aicom_econ_surge` is already set and broadcast by the P4 supervisor in `AI_Commander.sqf` lines 622-623, inside the `WFBE_C_AICOM_ECON_SINK` wealth-conversion block — this fires on the strategy cadence (~60 s) when funds exceed `_esFrac * _esCap`. `AI_Commander_FundsSink.sqf` is called on the income cadence (~60 s, separately via `updateresources.sqf`). FundsSink currently sets `wfbe_aicom_reinforce_rich` and `wfbe_aicom_veteran_next` but does NOT set `wfbe_aicom_econ_surge`.
 
-**Risk:** None. The change is inside a default-off flag path. Lint clean per PR body.
+**Work order:** Merge as-is. PR #548 adds FundsSink as an independent second surge trigger on the income cadence — the P4 supervisor path at `AI_Commander.sqf:623` already sets the surge on the strategy cadence, so this is additive: two independent cadences can now both arm the gear-tier surge, giving more consistent surge coverage during the hoard-drain window. This is additive value, not a missing-broadcast fix. **Fold-into-cutover** (touches AI_Commander_FundsSink.sqf, a commander file).
+
+**Risk:** None. The change is inside a default-off flag path. With two independent setters, the flag can only transition false→true sooner, never incorrectly — the clear path (P4's `!_esRich` branch at line 627-631) continues to own the authoritative clear. Lint clean per PR body.
 
 ---
 
@@ -378,11 +389,11 @@ The following are explicitly OUT OF SCOPE for this lane, per owner rulings:
 | WO-4 | Rearm/repair triggers (confirm correct) | No change needed | Common driver | — |
 | WO-5 | No ATVs/bikes in composition | New strip rule | Commander | Fold-into-cutover |
 | WO-6 | Softest-lane push + fewer-but-better | New | Commander | Fold-into-cutover |
-| EXT-1 | Road-march pacing (CARELESS transit) | New | Common driver | Pre-cutover |
+| EXT-1 | Road-march pacing (MARCH_YELLOW — core ALREADY LIVE; contact-check new) | Partial (core done) | Common driver | Pre-cutover |
 | EXT-2 | Fire discipline (enableAttack, GREEN) | New | Both | Pre/Cutover split |
 | EXT-3 | Economy of force (joinSilent, selectLeader) | New | Both | Pre/Cutover split |
-| EXT-4 | Air insertion modes (hover-drop, setUnloadInCombat) | New | Common driver | Pre-cutover |
-| PR-WO-1 | PR #548 FundsSink broadcast | Merge as-is | Commander | Fold-into-cutover |
+| EXT-4 | Air insertion modes (land+eject ALREADY LIVE; setUnloadInCombat + 3-branch learner new) | Partial (2/3 done) | Common driver | Pre-cutover |
+| PR-WO-1 | PR #548 FundsSink — additive second surge trigger (P4 already sets surge) | Merge as-is | Commander | Fold-into-cutover |
 | PR-WO-2 | PR #561 Slung-vehicle guard | Merge as-is | Commander | Fold-into-cutover |
 | PR-WO-3 | PR #564 Research gap entries | Merge, keep dark | Commander | Fold-into-cutover |
 | PR-WO-4 | PR #570 Balance lobby params | Merge as-is | Params only | Fold-into-cutover |
