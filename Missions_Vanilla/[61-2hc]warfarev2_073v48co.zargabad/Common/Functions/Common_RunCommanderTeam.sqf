@@ -1035,6 +1035,12 @@ while {!WFBE_GameOver && _alive} do {
 							};
 						};
 
+						//--- SML-5 surgical unstuck: nudge only individually-wedged foot units before tier escalation. Flag-gated (WFBE_C_SML_SURGICAL_UNSTUCK default 0).
+						//--- NOTE: this is a synchronous Call inside an already-Spawned block. It returns and tier 1/2/3 escalation fires normally regardless.
+						//--- At flag 0 this block is never entered - tier logic is byte-identical to HEAD.
+						if ((missionNamespace getVariable ["WFBE_C_SML_SURGICAL_UNSTUCK", 0]) > 0) then {
+							[_uTeam, _uSide] Call WFBE_CO_FNC_SMLUnstuck;
+						};
 						//--- Tier 1: break a physical wedge on the lead hull.
 						if (!isNull _uVeh && {_uVeh != _uLdr} && {alive _uVeh} && {canMove _uVeh}) then {
 							_uVeh setVelocity [0,0,0];
@@ -2025,6 +2031,10 @@ while {!WFBE_GameOver && _alive} do {
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] camp-first window expired with %3 camp(s) un-held at [%4] - proceeding to center.", _side, _team, count _unheldCamps, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}]] Call WFBE_CO_FNC_AICOMLog;
 						};
 
+						//--- SML-4 overwatch: pre-position launcher soldier on armor approach vector before the depot assault. Flag-gated (WFBE_C_SML_AT_OVERWATCH default 0).
+						if ((missionNamespace getVariable ["WFBE_C_SML_AT_OVERWATCH", 0]) > 0) then {
+							[_team, _footInf, _sideID, _side, _townCenter, _dest, _capSeq] Spawn WFBE_CO_FNC_SMLOverwatch;
+						};
 						//--- ===== PRIMARY: DEPOT-CENTER HOLD + CLEAR (the actual town flip) =====
 						//--- Push every on-foot soldier ONTO the depot center and FIGHT there. This is
 						//--- the only thing that satisfies server_town.sqf mode-0: a WEST unit within
@@ -2042,6 +2052,10 @@ while {!WFBE_GameOver && _alive} do {
 						[_team, true, [[_townCenter, 'SAD', _capRange, 30, [], [], ["COMBAT","RED","LINE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						{if (alive _x) then {_x doMove _townCenter}} forEach _footInf;
 						if (!isNull leader _team && {alive leader _team}) then {(leader _team) doMove _townCenter};
+						//--- SML-3 retreat: mauled individual soldiers pull back toward rear while healthy units keep fighting. Flag-gated (WFBE_C_SML_RETREAT default 0).
+						if ((missionNamespace getVariable ["WFBE_C_SML_RETREAT", 0]) > 0) then {
+							[_team, _footInf, _sideID, _side, _townCenter, _capSeq] Spawn WFBE_CO_FNC_SMLRetreat;
+						};
 
 						//--- Hold/fight loop: up to ~150s. Exit early once no live resistance remains
 						//--- within the capture radius of the depot (the contested _skip clears -> the
