@@ -58,19 +58,51 @@ Never use — these are A3-only or wrong-spelling and will silently corrupt or c
 - `isEqualType`, `isEqualTo`, `params`, `pushBack`, `findIf`, `apply`
 - `selectRandom` (command form), `forceFollowRoad`, `worldSize`, `getPosVisual`
 - `remoteExec`, `distance2D`, `setGroupOwner`, `groupOwner`, `joinGroup`
+- `getOrDefault`, `deleteAt`, `setUnitLoadout`, `getUnitLoadout`, `selectRandomWeighted`
+- `regexFind`, `remoteExecCall`
 - Array-form `reveal`, A3 `find` on strings, substring `select [a, b]`, sort-by-code
+- `#` array selector (`_arr # 0`) — use `(_arr select 0)` instead
 - `inline private _x =` — use `private ["_x"]`
 - `==` / `!=` with Boolean operands — use `if (_flag)` / `if (!_flag)`
 - `missionNamespace setVariable` with a third (public) argument — NSSETVAR3 trap; A2/OA runtime error
 - `getVariable [name, default]` on a GROUP receiver — use `WFBE_CO_FNC_GroupGetBool` or 1-arg + `isNil`
 - Capture outer `_x` before any inner `forEach`; inner loop permanently rebinds it
+- `forEach` over an array with `nil` holes — guard with `if (!isNil "_x")` inside the loop
+- `&&` / `||` evaluate both sides eagerly; use `&& {code}` / `|| {code}` for lazy short-circuit
 - Never use `exitWith` inside `forEach` to skip one iteration — use `if` nesting instead
-- Never use `publicVariableServer` from the server — call the server callback directly
+- `publicVariableServer` from server-side code never fires the server's own PVEH — call the handler directly
 - Guard numeric-threshold flags with `> 0`, not bare `if (number)`
 - Never use `isKindOf` on weapon or magazine classnames — it walks `CfgVehicles`
 - "Has launcher" = non-empty `secondaryWeapon _unit`, not `primaryWeapon`
 - Never reset `MenuAction` before the second click in a two-click confirm flow
 - Every new classname must appear in the mission tree or the PR must include config proof
+
+### False positives — do NOT flag
+
+| Pattern | Why it is valid |
+|---|---|
+| `getDammage` / `setDammage` | Double-m spelling is correct in A2 OA; `getDamage` would be wrong |
+| `_`-prefixed locals | Local variables never leak to `missionNamespace`; namespace-leakage checks are false positives |
+| `exitWith` in `if(){}` | In an `if` block (not `forEach`) `exitWith` exits the whole script — that is intentional |
+| `&& {code}` / `|| {code}` | Lazy short-circuit form is valid A2 syntax; do not remove the braces |
+| SQF command casing | Command names are case-insensitive; casing-only diffs are false positives |
+| `getVariable [name, default]` on objects/namespaces | The 2-arg form is fine on non-group receivers; only the GROUP receiver is a trap |
+
+### Function registration
+
+New SQF function files are not auto-loaded. Register each new function in the matching init file:
+
+- Common functions → `Common/Init/Init_Common.sqf`
+- Server functions → `Server/Init/Init_Server.sqf`
+- Client functions → `Client/Init/Init_Client.sqf`
+
+Use `Compile preprocessFileLineNumbers` for each new function file:
+```sqf
+WFBE_CO_FNC_MyFunction = Compile preprocessFileLineNumbers "Common/Functions/Common_MyFunction.sqf";
+```
+
+Lobby param defaults in `Rsc/Parameters.hpp` (`default=`) override any script constants set in SQF;
+always check Parameters.hpp when a config value appears not to take effect.
 
 Valid A2 OA syntax that linters incorrectly flag as errors (do not remove):
 `getDammage`/`setDammage` (double-m is correct), `;;`, `&& {code}`, `|| {code}`, `isNil {block}`.
@@ -92,7 +124,7 @@ SQF command names are case-insensitive; casing-only diffs are false positives.
 
 1. Run the lint gate:
    ```
-   python Tools\Lint\check_sqf.py --select A3CMD,A3MARKER,A3NUMGATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,GROUPGETVAR,BRACKET,NSSETVAR3 --no-classname-index
+   python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,GROUPGETVAR,NSSETVAR3,PUBVARSV --no-classname-index
    ```
 2. Verify net bracket delta is zero per edited file (count `{` and `}`, count `[` and `]`).
 3. Confirm flag-off leaves the mission byte-identical to HEAD.
