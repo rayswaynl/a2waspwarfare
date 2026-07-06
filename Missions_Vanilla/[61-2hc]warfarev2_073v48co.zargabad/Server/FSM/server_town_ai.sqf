@@ -97,6 +97,7 @@ while {!WFBE_GameOver} do {
 		_position = [];
 		_groups = [];
 		_currentEnemies = 0; //--- Initialised here so deactivation check is safe when side is disabled.
+		_enemies = 0; //--- perf-dice fix (livetest 2026-07-06): must exist in TOWN-LOOP scope - assigned inside the _doScan block, and SQF inner-block assignments do not escape unless the var pre-exists in an outer scope (RPT: 'Undefined variable _enemies' at the deactivation check).
 
 		_town = towns select _i;
 		_town_teams = _town getVariable "wfbe_town_teams";
