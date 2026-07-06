@@ -1800,12 +1800,12 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- SPOTTER MARKS TEAM-WIDE (team-intel-pack, 2026-07-02): when 1, spotter map marks
 //--- are broadcast to all same-side clients (not just the spotter). Default 0 = local-only.
 //--- See Client\Module\Skill\Skill_Sniper.sqf + Client\PVFunctions\SpotterMarkContact.sqf.
-	if (isNil "WFBE_C_SPOTTER_TEAM_MARKS") then {WFBE_C_SPOTTER_TEAM_MARKS = 0};
+	if (isNil "WFBE_C_SPOTTER_TEAM_MARKS") then {WFBE_C_SPOTTER_TEAM_MARKS = 1};
 
 //--- NOTABLE-KILL FEED (team-intel-pack, 2026-07-02): side-wide SideMessage for high-value
 //--- kills (commander unit, HQ/MHQ structure, attack heli/jet, heavy tank). Default 0 = off.
 //--- WFBE_C_NOTABLE_KILL_THROTTLE: minimum seconds between feed messages per-side (spam guard).
-	if (isNil "WFBE_C_NOTABLE_KILL_FEED")     then {WFBE_C_NOTABLE_KILL_FEED     = 0};
+	if (isNil "WFBE_C_NOTABLE_KILL_FEED")     then {WFBE_C_NOTABLE_KILL_FEED     = 1};
 	if (isNil "WFBE_C_NOTABLE_KILL_THROTTLE") then {WFBE_C_NOTABLE_KILL_THROTTLE = 10};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
