@@ -280,6 +280,12 @@ if (worldName == "Zargabad") then {
 	WFBE_DAYNIGHT_DUSK_START = 20.5; //--- Dusk starts around 20:30.
 	WFBE_DAYNIGHT_DUSK_END = 21.5; //--- Night starts around 21:30.
 	WFBE_DAYNIGHT_TWILIGHT_WEIGHT = 3; //--- Dawn/dusk game hours take x times longer than full daylight game hours.
+//--- Permanent Daytime feature flag (fable/permanent-daytime, Build84).
+//--- 0 (default) = inert; flag-off leaves the mission byte-identical to HEAD.
+//--- >0 = force-enable the WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP loop regardless of its own value,
+//---     keeping the clock inside the daylight band (DAYLIGHT_START -> DAYLIGHT_END).
+//--- When WFBE_DAYNIGHT_ENABLED==1 (accelerated cycle ON), PERMANENT_DAY is silently ignored.
+	if (isNil "WFBE_C_PERMANENT_DAY") then {WFBE_C_PERMANENT_DAY = 0}; //--- Permanent daytime; default 0 (off).
 
 //--- AI.
 	if (isNil "WFBE_C_AI_COMMANDER_ENABLED") then {WFBE_C_AI_COMMANDER_ENABLED = 1}; //--- Enable or disable the AI Commanders.
