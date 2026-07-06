@@ -190,6 +190,17 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {
 		_n = _n + ["Land_transport_crates_EP1"];	//--- Roadblock / Checkpoint
 		_n = _n + ["Land_Barrel_water"];			//--- Observation Post
 	};
+	//--- fable/wddm-functional-defenses: FORTIFICATION PACK (Ray: "Fortifications! Not fortresses -
+	//--- useful items like a row of concrete walls, or a way to block LoS to your base... larger
+	//--- assets basically."). Five PASSIVE anchor-composition buildables; own flag so the pack can be
+	//--- toggled independently. Anchors -> WFBE_NEURODEF_FORTIF_* (Init_Defenses.sqf).
+	if ((missionNamespace getVariable ["WFBE_C_DEF_FORTIF_PACK", 0]) > 0) then {
+		_n = _n + ["Misc_cargo_cont_net1"];		//--- Wall Row (Concrete, ~22 m)
+		_n = _n + ["Misc_cargo_cont_net2"];		//--- Wall Corner (Concrete, L-section)
+		_n = _n + ["Misc_cargo_cont_net3"];		//--- LoS Screen (Tall, ~43 m)
+		_n = _n + ["Misc_cargo_cont_tiny"];		//--- HESCO Line (~39 m)
+		_n = _n + ["Misc_concrete_High"];		//--- Gate Complex (drive-through mouth)
+	};
 };
 
 missionNamespace setVariable [Format["WFBE_%1DEFENSENAMES", _side], _n];
