@@ -138,17 +138,19 @@ while {_i < count _pool} do {
 	_isGhillie = _entry select 2;
 
 	if (isClass (configFile >> "CfgVehicles" >> _cls)) then {
-		//--- Resolve display label from unit registry; fall back to config displayName.
-		_lbl = "";
-		Private ["_regEntry"];
-		_regEntry = missionNamespace getVariable [_cls, []];
-		if ((count _regEntry) > QUERYUNITLABEL) then {
-			_lbl = _regEntry select QUERYUNITLABEL;
-		};
+		//--- Use the pool entry flavor label; fall back to registry / config displayName only when blank.
+		_lbl = _entry select 1;
 		if (_lbl == "") then {
-			_lbl = [_cls, "displayName"] Call GetConfigInfo;
+			Private ["_regEntry"];
+			_regEntry = missionNamespace getVariable [_cls, []];
+			if ((count _regEntry) > QUERYUNITLABEL) then {
+				_lbl = _regEntry select QUERYUNITLABEL;
+			};
+			if (_lbl == "") then {
+				_lbl = [_cls, "displayName"] Call GetConfigInfo;
+			};
+			if (_lbl == "") then {_lbl = _cls};
 		};
-		if (_lbl == "") then {_lbl = _cls};
 
 		_filtered set [count _filtered, [_cls, _lbl, _isGhillie]];
 	};
