@@ -1003,7 +1003,7 @@ while {!WFBE_GameOver && _alive} do {
 				if (_pressAct) then {_usTier = 0};	//--- press guard: a stamped pressing team (valid press pos) is not a stuck re-issue - never fire the UNSTUCK strike ladder (teleport/reverse/lane-flip) on a live press
 				if (_usTier > 0) then {
 					[_team, _usTier, _side] Spawn {
-						private ["_uTeam","_uTier","_uSide","_uLdr","_uVeh","_uNode","_uRds","_uPlayerNear","_uOnFoot","_uHullDead","_uFootPlayerNear","_uFootRds","_uFootNode","_recV2","_uOnWater","_uForceRoad"]; //--- cmdcon41-w3e +_recV2/_uOnWater/_uForceRoad
+						private ["_uTeam","_uTier","_uSide","_uLdr","_uVeh","_uNode","_uRds","_uPlayerNear","_uOnFoot","_uHullDead","_uFootPlayerNear","_uFootRds","_uFootNode","_recV2","_uOnWater","_uForceRoad","_uFlush","_uFlushOrder","_uFlushSeq","_uFlushMode","_uFlushDest"]; //--- cmdcon41-w3e +_recV2/_uOnWater/_uForceRoad; lane377 +_uFlush*
 						_uTeam = _this select 0;
 						_uTier = _this select 1;
 						_uSide = _this select 2;
@@ -1023,6 +1023,7 @@ while {!WFBE_GameOver && _alive} do {
 						_recV2 = (missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_V2", 1]) > 0;
 						_uOnWater = false;
 						_uForceRoad = false;
+						_uFlush = (missionNamespace getVariable ["WFBE_C_AICOM_TELEPORT_ORDER_FLUSH", 1]) > 0;
 						//--- B37 (Ray 2026-06-16): log that the unstuck ACTION fired at this tier, so the
 						//--- strike -> fire -> recover lifecycle is visible (UNSTUCK_STRIKE -> UNSTUCK_FIRED ->
 						//--- next ASSAULT_STRANDED moved=).
@@ -1123,6 +1124,16 @@ while {!WFBE_GameOver && _alive} do {
 									if (!isNull _uNode && {!surfaceIsWater (getPos _uNode)}) then {
 										_uVeh setVelocity [0,0,0];
 										_uVeh setPos (getPos _uNode);
+										if (_uFlush) then {
+											_uFlushOrder = _uTeam getVariable "wfbe_aicom_order";
+											if (!isNil "_uFlushOrder" && {count _uFlushOrder >= 3}) then {
+												_uFlushSeq = _uFlushOrder select 0;
+												_uFlushMode = _uFlushOrder select 1;
+												_uFlushDest = _uFlushOrder select 2;
+												_uTeam setVariable ["wfbe_aicom_order", [_uFlushSeq + 1, _uFlushMode, _uFlushDest], true];
+												diag_log ("AICOMSTAT|v2|EVENT|" + str _uSide + "|" + str (round (time / 60)) + "|TELEPORT_ORDER_FLUSH|team=" + (str _uTeam) + "|seq=" + str (_uFlushSeq + 1) + "|mode=" + str _uFlushMode + "|kind=vehicle");
+											};
+										};
 										["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 unstuck teleport-nudge to road node (map=%3).", _uSide, _uTeam, worldName]] Call WFBE_CO_FNC_AICOMLog; //--- cmdcon43-j: +map= for per-map ladder attribution.
 									};
 								} else {
@@ -1193,6 +1204,16 @@ while {!WFBE_GameOver && _alive} do {
 									if (!isNull _uFootNode && {!surfaceIsWater (getPos _uFootNode)}) then {
 										_uLdr setVelocity [0,0,0];
 										_uLdr setPos (getPos _uFootNode);
+										if (_uFlush) then {
+											_uFlushOrder = _uTeam getVariable "wfbe_aicom_order";
+											if (!isNil "_uFlushOrder" && {count _uFlushOrder >= 3}) then {
+												_uFlushSeq = _uFlushOrder select 0;
+												_uFlushMode = _uFlushOrder select 1;
+												_uFlushDest = _uFlushOrder select 2;
+												_uTeam setVariable ["wfbe_aicom_order", [_uFlushSeq + 1, _uFlushMode, _uFlushDest], true];
+												diag_log ("AICOMSTAT|v2|EVENT|" + str _uSide + "|" + str (round (time / 60)) + "|TELEPORT_ORDER_FLUSH|team=" + (str _uTeam) + "|seq=" + str (_uFlushSeq + 1) + "|mode=" + str _uFlushMode + "|kind=foot");
+											};
+										};
 										//--- Re-form the squad on the relocated leader so dismounts/stragglers regroup (never idle).
 										{ if (alive _x && {_x != _uLdr} && {vehicle _x == _x}) then {_x doFollow _uLdr} } forEach (units _uTeam);
 										["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 FOOT/dead-hull unstuck teleport-nudge to road node (re-formed on leader) (map=%3).", _uSide, _uTeam, worldName]] Call WFBE_CO_FNC_AICOMLog; //--- cmdcon43-j: +map= for per-map ladder attribution.
