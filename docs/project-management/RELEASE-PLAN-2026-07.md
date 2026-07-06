@@ -1,5 +1,9 @@
 # WASP Warfare — Release Plan (owner-declared 2026-07-06)
 
+**VERSION NAME (owner, 2026-07-06): 1.0** — public name for the release. Engineering lineage keeps the
+cmdcon tags (release build marker: release-1.0 + cmdcon lineage in git tag, e.g. v100-release-1.0).
+Announcement, news post, wiki, and Discord all say **1.0**.
+
 **Definition (owner):** Release = the V2 era, publicly announced. AI Commander V2 cut over (V1 shelved,
 rollback flag live), all owner-picked features settled, no known release-blocking defects.
 **Timeline:** ASAP, quality-gated — no calendar date; gates decide.
@@ -31,4 +35,4 @@ rollback flag live), all owner-picked features settled, no known release-blockin
 - [ ] Blocker audit: zero release_blockers open (RCE class especially)
 - [ ] Cutover build boots clean on all 3 terrains (marker + error budget)
 - [ ] Rollback proven: DECAP_ENABLE=0 flip restores V1 behavior on the release build (soak 1 doubles as evidence)
-- [ ] Owner sign-off on announcement + version name
+- [x] Version name: 1.0 (owner) — [ ] announcement sign-off pending
