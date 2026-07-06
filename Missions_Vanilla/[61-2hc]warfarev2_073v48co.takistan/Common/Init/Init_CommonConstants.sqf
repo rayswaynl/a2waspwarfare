@@ -2203,5 +2203,16 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_AIR_SPAWN_SAFETY")        then {WFBE_C_AIR_SPAWN_SAFETY        = 0};   //--- Master gate: 0=off, 1=on.
 	if (isNil "WFBE_C_AIR_SPAWN_CLEAR_RADIUS")  then {WFBE_C_AIR_SPAWN_CLEAR_RADIUS  = 12};  //--- m: vehicle+obstacle clear radius (rotor/wing clearance).
 	if (isNil "WFBE_C_AIR_SPAWN_SLOPE_MAX")     then {WFBE_C_AIR_SPAWN_SLOPE_MAX     = 0.97}; //--- surfaceNormal z-floor; 0.97 ~ 14-deg slope limit.
+
+//--- TOWN GARRISON DRESSING (lane 241, fable/qol-recycle-pick): server-side ZU-23 dressing
+//--- on active GUER-held contested towns. One crew gunner per town, optional night searchlight.
+//--- Worker: Server/Server_TownGarrisonDressing.sqf. Flag-off (0) = worker not launched = byte-identical.
+	if (isNil "WFBE_C_GARRISON_DRESSING")          then {WFBE_C_GARRISON_DRESSING = 0};           //--- Master enable. 0 = off (default); >0 = dress active contested GUER towns.
+	if (isNil "WFBE_C_GARRISON_DRESSING_INTERVAL") then {WFBE_C_GARRISON_DRESSING_INTERVAL = 45};  //--- Seconds between worker ticks.
+	if (isNil "WFBE_C_GARRISON_DRESSING_RADIUS")   then {WFBE_C_GARRISON_DRESSING_RADIUS = 900};   //--- m: enemy proximity gate + quiet-timeout radius.
+	if (isNil "WFBE_C_GARRISON_DRESSING_LIFETIME") then {WFBE_C_GARRISON_DRESSING_LIFETIME = 900}; //--- s: forced recycle age per gun (anti-accumulation).
+	if (isNil "WFBE_C_GARRISON_DRESSING_MAX")      then {WFBE_C_GARRISON_DRESSING_MAX = 6};        //--- Max simultaneous dressed towns across the map.
+	if (isNil "WFBE_C_GARRISON_DRESSING_SEARCHLIGHT") then {WFBE_C_GARRISON_DRESSING_SEARCHLIGHT = 1}; //--- 1: add SearchLight_RUS at night; 0: gun only.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
