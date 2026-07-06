@@ -21,7 +21,7 @@ _town_capture_mode = missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_MODE", 
 
 while {!WFBE_GameOver} do {
 	_nearest = [player,towns] Call WFBE_CO_FNC_GetClosestEntity;
-	_update = if (player distance _nearest < (_nearest getVariable "range") && alive player) then {true} else {false};
+	_update = if (!isNull _nearest && {player distance _nearest < (_nearest getVariable "range")} && {alive player}) then {true} else {false};
 	
 	if(_update && !WFBE_GameOver)then{
 		_sideID = _nearest getVariable "sideID";
