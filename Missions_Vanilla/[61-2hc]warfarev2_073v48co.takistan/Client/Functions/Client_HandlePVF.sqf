@@ -17,10 +17,16 @@ _isHeadless = if !(isNil "isHeadLessClient") then {isHeadLessClient} else {!(has
 if (_isHeadless) then {
 	_hcAllowed = false;
 	if (_script == "CLTFNCHandleSpecial" && {(typeName _parameters) == "ARRAY"} && {(count _parameters) > 0}) then {
-		//--- fix(hunt): cleanup-townai / cleanup-airfield-garrison arrive as nil-destination broadcasts and
-		//--- previously reached the HC ONLY via the fall-through closed below - keep them allowlisted so
-		//--- HC-local delegated units are still torn down on town capture.
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team"]);
+		//--- HC-targeted HandleSpecial allowlist - ALL HC-destined actions and their server-side senders:
+		//---   delegate-townai            = Server_DelegateAITownHeadless (per-town AI ownership)
+		//---   delegate-ai-static-defence = Server_DelegateAIStaticDefenceHeadless (garrison posts)
+		//---   cleanup-townai             = server_town_ai (nil broadcast; tears down town AI on capture)
+		//---   cleanup-airfield-garrison  = server_town + server_town_ai (nil broadcast; clears airfield post)
+		//---   delegate-aicom-team        = AI_Commander_Teams:1206 + AI_Commander_Wildcard (team founding)
+		//---   delegate-sidepatrol        = server_side_patrols:276 + AI_Commander_Wildcard:663 (patrol founding)
+		//--- NOTE: aicom-team-merge is intentionally excluded (no active sender; WFBE_C_AICOM_HC_MERGE_ENABLE
+		//---        defaults to 0, no DRAFT worker registered, nil-guarded in AI_Commander.sqf).
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };
