@@ -113,3 +113,11 @@ Two stalled workflows stopped. Incomplete owner-approved work re-fired.
 - MERGE-DETECTION LAG: 576/580/593/596/644 stayed open despite tips being master-ancestors -> verified content in master (cat-file parents + is-ancestor), closed manually w/ receipts (580/644/576 flipped on their own meanwhile).
 - Discovered issue (parked): pre-existing conflict markers in Modded_Missions/[55-2hc]...Napf/* on build84 (Skill_Init, Structures_CO_US, Units_RU) - event-mission tree, not maintained terrains.
 - OPEN PRs = 13 floor: 515/614/637 (V2 fold), 717 (ledger), 726/732 (press stack), 740 (map rev2), 749/750/751/752/754 (new wave - verify wf_a0bb45e2-bbf running; 751 gets scope-localization-trap check), 753 (SML-1, B1 fix wf_82ed8a36-4c1 running).
+
+## 2026-07-06 — Third promotion (SML-1 + perf pack)
+- NEW-5 VERIFY (wf_a0bb45e2-bbf): #749 PASS, #750 PASS, #751 PASS (scope-localization fix confirmed: _currentEnemies/_enemies pre-initialized at town-loop scope, else-branch re-zeros), #752 FAIL (skill docs quote stale 9-code lint select vs 17-code post-#741 list + missing noqa docs -> fixer a54c05acb dispatched), #754 FAIL only on ICC tail conflict vs SML-1 (content verified: GUER volume preserved, road-snap A2-safe) — but claude/guer-cp-v2 is MOVING (Agent B actively pushing) -> do not merge a moving branch; re-verify at settled tip.
+- SML-1 MERGED: 960fe5d8b (B1 exitWith->flag-pattern fix verified, all 8 watchdog paths re-walked PASS). Post-merge commit audit: no 7z/template drift committed (my merge chain misfired cwd - caught and audited).
+- PERF PACK MERGED: #749/#750/#751 -> tip 1a0a1a7f7, lint 444.
+- PROMOTION 3: PR #757 -> master 04ca44f99, build84 absorbed. Branches pruned to 81. Open PRs: 10.
+- Cutover carry-over note: SML-1 hook site Common_RunCommanderTeam.sqf:1919-1921 must be re-added to the V2 driver at cutover (migration-map item).
+- Noted: new Agent B branch claude/wddm-functional-defenses appeared.
