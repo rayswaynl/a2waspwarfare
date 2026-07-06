@@ -128,7 +128,7 @@ while {!WFBE_GameOver} do {
 				if(_town_supply_time && _sideID != WFBE_C_UNKNOWN_ID && !_skipTimeSupply) then
 				{
 
-					if (_activeEnemies == 0 && (_supplyValue < _maxSupplyValue) && _sideID != RESISTANCEID) then
+					if (_activeEnemies == 0 && (_supplyValue < _maxSupplyValue) && _sideID != WFBE_C_GUER_ID) then
 					{
 
 						if (_isTimeToUpdateSuppluys) then {
