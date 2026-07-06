@@ -1,7 +1,7 @@
 # AICOM V2 Behaviour Spec 800: GUER Director (Virtual Resistance Ledger + Lightweight Brain)
 
 Guide rev: GUIDE-REV GR-2026-07-03a.
-Rev: A1/A2 reconciled into base sections 2026-07-06 — ORDER schema bumped to V2 (A1), `kind`/`denyReason` enums updated (A1/A2), conservation Behaviour 4 amended (A1), T1 fixtures corrected (A1), telemetry canonical example updated (A1/A2), `Init_CommonConstants.sqf` anchor corrected to :1595 (A2).
+Rev: A1/A2 reconciled into base sections 2026-07-06 — ORDER schema bumped to V2 (A1), `kind`/`denyReason` enums updated (A1/A2), conservation Behaviour 4 amended (A1), T1 fixtures corrected (A1), telemetry canonical example updated (A1/A2), `Init_CommonConstants.sqf` anchor corrected to :1597 at build84 tip 430885b30 — greppable by constant name (A2).
 Status: **APPROVED FOR IMPLEMENTATION** (Ray 2026-07-05; concept approved 2026-07-04 as option B). Relief waves are in scope (see Behaviour 2 and the wave rules below). Owner decisions D1 and D2 are both resolved (D2: implementation ruling 2026-07-05; D1: decision menu 2026-07-06 — retake defaults 0 on Chernarus, low on Takistan). **Amendments A1 (Player Commissar Panel) and A2 (Air-Contact Activation Tier), both owner-ruled 2026-07-06, are part of this lane** — see the amendment sections at the end of this document. Sequencing: after the V2 cutover stabilises, per `AICOM-V2-CUTOVER-AND-RECONCILIATION.md`. Markdown only; no gameplay code in this worktree.
 Scope: an invisible, in-theme "A-Life" layer for the resistance side — a persistent virtual population (per-town strength ledger + virtual cells moving between towns) with a small Assessment/Planning brain (reinforce, regroup, ambush, retake) on top. It replaces the memoryless respawn behaviour of V1 town garrisons and gives the third side agency, while staying invisible as a system: players only ever see resistance units doing plausible resistance things.
 
@@ -328,7 +328,7 @@ V1 already contains a complete two-tier activation design for exactly this rule 
 - `:227-236` — the air-only activation branch (`_enemies_ground == 0 && _enemies > 0` sets `wfbe_active_air` and calls the garrison tables with a third argument `true`) is therefore UNREACHABLE.
 - `Server/Functions/Server_GetTownGroups.sqf:12,143,151-152` and `Server_GetTownGroupsDefender.sqf:12` — the `_aa_get` table mode: filters the town's group table to `["AA_Light","AA_Heavy","Team_AA"]` and caps at 3 groups. Present for BOTH occupier and defender tables.
 - `:408` — deactivation clears `wfbe_active_air` alongside `wfbe_active`.
-- `Common/Init/Init_CommonConstants.sqf:1595` — `WFBE_C_TOWNS_DETECTION_RANGE_AIR = 50` ("Detect Air if > x"), the abandoned altitude threshold of the original design.
+- `Common/Init/Init_CommonConstants.sqf:1597` — `WFBE_C_TOWNS_DETECTION_RANGE_AIR = 50` ("Detect Air if > x"), the abandoned altitude threshold of the original design. (Line valid at build84 tip `430885b30`; earlier sections of this file gain lines with merges — locate by grepping the constant name, not the line number.)
 
 Net V1 behaviour today: aircraft above 20 m never activate a town (free overflight and hover-scouting); aircraft at or below 20 m trigger a FULL ground garrison spawn. Both are wrong under the owner rule.
 
