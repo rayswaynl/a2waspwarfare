@@ -9,7 +9,10 @@ Owner directive (~01:30): "set a loop… Finish all the work, test, and suggest 
 - `gh pr list` for new PRs from the Game PC seat (TP-14 driver-press expected on `fable/aicom-v2-l1-press`, then TP-13 rate-limit, TP-15 stuck-repair). Each: Agent A diff pass + Fable refuter (owner-intent + A2-safety lenses), post verdict comment, log.
 - TP-14 MUST contain the #724 MAJOR fix (phantom guards → `wfbe_aicom_garrison` side-logic compare + per-team `wfbe_aicom_holding_town`) + the stale `AI_Commander.sqf:503` comment fix. If missing → fix-request comment.
 
-### B. Hetzner autonomous soak program (the big one)
+### B. Hetzner autonomous soak program — PIPELINE DISCOVERED, RETRY PENDING (player online)
+**02:30 status: SOAK-BLOCKED — human player "hp" (UID 76561199004135096) actively playing (FPSREPORT players=3|hc=2). Retry the player check EVERY wake; deploy the moment the box is empty.**
+**Discovered pipeline (verified):** build via Patch-PboFile.ps1 overlay + LoadoutManager -> PBOs to C:/WASP/incoming/ as cc44u-{ch,tk,zg}.pbo (current live = cc44t) -> clone deploy44t.ps1 -> new deploy44u.ps1 (stops Arma2OA-PR8 service + MiksuuHC/HC2/WaspSeatHeal tasks, retires PBOs, installs cmdcon44uaicom CH pbo, parks TK/ZG, archives RPT to rpt-archive/arma2oaserver-deploy44u-<ts>.RPT, restarts, relaunches HCs, polls MISSINIT; logs to rotate2.log). Player check: C:/WASP/incoming/_asrcheck.ps1 or A2S port 2303 minus HC count. Single instance = live instance (owner-authorized). Game PC worktree C:/Users/Game/a2wasp-tp5 already at organic HEAD dd7200578 (incl. guard fix).
+**Harvest (after deploy):** fresh RPT at C:/Users/Administrator/AppData/Local/ArmA 2 OA/arma2oaserver.RPT, MISSINIT-scoped; grep AICOM2|v1|DECAP for inRange=/roll=/sensed= fields; scorecard via Tools/Soak/analyze_soak.py.
 1. Discover the deploy flow: read `C:\WASP\*.ps1`/deploy scripts on livehost + `C:\Users\Game\wasp-build`, `wasp-deploy-staging`, `_wasp_box_live` on the Game PC. Do NOT invent a deploy path — use the existing scripted one (deploy44q/r/s archives prove one exists).
 2. Build a TEST build from `fable/aicom-v2-l1-organic` (#724 head: includes #713+M0-M5+organic sensing, all flags 0 → DECAP shadow telemetry on).
 3. Player-safety check → deploy to the box → restart mission → AI-vs-AI soak (players=HCs only). Target ≥2h Chernarus; if stable, one ZG round to confirm #720's error-loop fix zone stays quiet (note: #720 is unmerged — ZG error will still appear unless the test build includes it; consider a second test build stacking #720+#724 if clean).
@@ -35,6 +38,7 @@ Owner directive (~01:30): "set a loop… Finish all the work, test, and suggest 
 - Context preservation: update this doc's Log section every wake BEFORE doing work.
 
 ## Log
+- 02:4x — Iter 1 done: soak BLOCKED (human online; pipeline fully mapped, retry armed). TP-16->#729, TP-17->#730, TP-18->#728 (grades 95/95/96, verify wave launching). #726 PASS (guard fix landed on organic dd7200578 — B self-served it), #727 PASS-WITH-NOTES. NEW: TP-20 for B queue = same rate-limit for aicom-posture/aicom-fieldorder.
 - 02:1x — Iter 1b: B already shipped #726 (TP-14, guard fix MISSING → fix-request posted) + #727 (TP-13, looks strong). Verifiers + soak-deploy + TP-16/17/18 launching. 4 closures done (#129/#553/#694/#261).
 - 02:0x — Iter 1: launching §B soak-deploy (background) + §C builds TP-16/17/18/13 (TP-13 reverted to B — its #727 predates my claim) + §D closures. 
 - 01:4x — Loop armed. Verification wave executed: #724 PASS(+MAJOR for TP-14), #722 closed REDUNDANT, #723 approved, TP-10 corrections prepended. Skills cycle closed. Wave-1/2/4 all landed + reviewed earlier.
@@ -58,5 +62,5 @@ Legend: ✅ done+reviewed · 🔶 in-flight · ⏳ queued (owner=me / B=Agent B)
 - ✅ wiki proposal · ✅ repo-instructions #725 · ✅ 2 skills · ⏳ close #129/#553/#694/#261 + 49-PR fold runbook (me: §D) · ⏳ bloat archive (74 STATUS docs) (me, low pri)
 
 ## Agent B night queue (Game PC — build lane; does NOT deploy/touch the box)
-TP-14 driver-press (incl. #724 guard fix + stale :503 comment) → TP-13 aicom-focus rate-limit → TP-15 stuck-driven in-place repair (from TP-10 §recommendation) → TP-19 factory/base construction placement safety (isFlatEmpty/slope/road/water) → then pull from the ⏳-B items above. One bounded draft PR at a time, full lint+mirror+template flow, self-grade ≥95 for AICOM code, escalate on cutover-file collisions.
+TP-14 driver-press (incl. #724 guard fix + stale :503 comment) → TP-13 aicom-focus rate-limit → TP-15 stuck-driven in-place repair (from TP-10 §recommendation) → TP-19 factory/base construction placement safety (isFlatEmpty/slope/road/water) → TP-20 rate-limit aicom-posture + aicom-fieldorder (same UID-key idiom as your #727) → then pull from the ⏳-B items above. One bounded draft PR at a time, full lint+mirror+template flow, self-grade ≥95 for AICOM code, escalate on cutover-file collisions.
 
