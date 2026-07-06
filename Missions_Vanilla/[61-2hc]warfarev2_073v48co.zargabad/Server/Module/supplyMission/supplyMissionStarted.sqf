@@ -105,8 +105,11 @@
                 _match = !(isNull _playerObject);
 
                 if (_match) then {
-				    WFBE_Server_PV_SupplyMissionCompleted = [_playerObject, _associatedSupplyTruck, side _playerObject];
-				    publicVariableServer "WFBE_Server_PV_SupplyMissionCompleted";
+				    //--- fix(hunt): this detector runs ON the server; publicVariableServer here never fires the server's own
+				    //--- PVEH (engine trap - see AttackWave.sqf), so ground-truck deliveries were never credited (no supply,
+				    //--- no cash, no message). Call the extracted completion handler directly; the heli path (client sender,
+				    //--- supplyMissionUnload.sqf) is unchanged.
+				    [_playerObject, _associatedSupplyTruck, side _playerObject] Call WFBE_SE_FNC_HandleSupplyMissionCompleted;
                 };
             };
 
