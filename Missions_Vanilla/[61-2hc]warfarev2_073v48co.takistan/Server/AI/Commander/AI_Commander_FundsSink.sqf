@@ -76,4 +76,4 @@ if (_drain > 0) then {
 
 //--- ONE-LINE soak confirmation (INFORMATION; always on so a soak RPT proves activation).
 ["INFORMATION", Format ["AI_Commander_FundsSink.sqf: [%1] FUNDS-SINK fired - funds %2 over threshold %3; armed wealth-conversion + veteran push, drained %4 into offense.", str _side, _funds, _threshold, _drain]] Call WFBE_CO_FNC_LogContent;
-diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|FUNDS_SINK|funds" + str _funds + "|drain" + str _drain);
+diag_log ("AICOM2|v1|FUNDS|" + (str _side) + "|" + str (round (time / 60)) + "|event=FUNDS_SINK|funds=" + str _funds + "|drain=" + str _drain);
