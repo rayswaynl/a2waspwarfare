@@ -1,6 +1,7 @@
 # AICOM V2 Behaviour Spec 800: GUER Director (Virtual Resistance Ledger + Lightweight Brain)
 
 Guide rev: GUIDE-REV GR-2026-07-03a.
+Rev: A1/A2 reconciled into base sections 2026-07-06 — ORDER schema bumped to V2 (A1), `kind`/`denyReason` enums updated (A1/A2), conservation Behaviour 4 amended (A1), T1 fixtures corrected (A1), telemetry canonical example updated (A1/A2), `Init_CommonConstants.sqf` anchor corrected to :1595 (A2).
 Status: **APPROVED FOR IMPLEMENTATION** (Ray 2026-07-05; concept approved 2026-07-04 as option B). Relief waves are in scope (see Behaviour 2 and the wave rules below). Owner decisions D1 and D2 are both resolved (D2: implementation ruling 2026-07-05; D1: decision menu 2026-07-06 — retake defaults 0 on Chernarus, low on Takistan). **Amendments A1 (Player Commissar Panel) and A2 (Air-Contact Activation Tier), both owner-ruled 2026-07-06, are part of this lane** — see the amendment sections at the end of this document. Sequencing: after the V2 cutover stabilises, per `AICOM-V2-CUTOVER-AND-RECONCILIATION.md`. Markdown only; no gameplay code in this worktree.
 Scope: an invisible, in-theme "A-Life" layer for the resistance side — a persistent virtual population (per-town strength ledger + virtual cells moving between towns) with a small Assessment/Planning brain (reinforce, regroup, ambush, retake) on top. It replaces the memoryless respawn behaviour of V1 town garrisons and gives the third side agency, while staying invisible as a system: players only ever see resistance units doing plausible resistance things.
 
@@ -38,9 +39,9 @@ In-theme constraint (owner, hard): **no civilian ambience.** No ALICE, no civili
    - Planning emits cell orders (reinforce, regroup, ambush, patrol, retake, hold) against the ledger — pure primitive data, T1-testable with no engine.
    - Execution is exactly two verbs against the world: materialize and dematerialize, both through existing V1 creation/deletion paths. There are no direct unit orders beyond what those paths already do.
 
-4. Conservation — no free volume:
-   - Total virtual strength changes only by: profile regen (toward baseline), observed attrition of materialized units, and transfers between ledger entries. No spawn-from-nothing.
-   - Per-town materialized output is capped at the V1 baseline for that town (`GetTownGroups`/`GetTownGroupsDefender` × existing coefficients) times `AICOMV2_GDIR_SURGE_MAX` (default 1.0 = never above V1).
+4. Conservation — no unpaid minting:
+   - Total virtual strength changes only by: profile regen (toward baseline), observed attrition of materialized units, transfers between ledger entries, and player-funded orders (Amendment A1). No unpaid spawn-from-nothing. Every funded order carries `fundedBy` and `pricePaid`; any volume increase without payment provenance is `conservationViolation`.
+   - Per-town autonomous materialized output is capped at the V1 baseline for that town (`GetTownGroups`/`GetTownGroupsDefender` × existing coefficients) times `AICOMV2_GDIR_SURGE_MAX` (default 1.0 = never above V1 autonomously). Funded strength from Amendment A1 player orders may push up to baseline × `AICOMV2_GDIR_PAID_SURGE_MAX` (default 1.5); the group budget still hard-binds at materialization regardless of source.
 
 5. Group-budget stewardship:
    - The materializer is GRPBUDGET-aware: it tracks the GUER side count against the 144/side hard cap and denies materialization above `AICOMV2_GDIR_GROUP_BUDGET_MAX` with `denyReason=groupBudgetExceeded`, instead of letting `createGroup` silently fail.
@@ -77,14 +78,14 @@ In-theme constraint (owner, hard): **no civilian ambience.** No ALICE, no civili
 
 `AICOMV2_GDIR_ORDER` record shape:
 
-`AICOMV2_GDIR_ORDER = ["AICOMV2_GDIR_ORDER_V1", timeSec, profileKey, orderKind, townId, routeKey, cellId, strengthDelta, groupBudgetBucket, denyReason, whyToken]`
+`AICOMV2_GDIR_ORDER = ["AICOMV2_GDIR_ORDER_V2", timeSec, profileKey, orderKind, townId, routeKey, cellId, strengthDelta, groupBudgetBucket, denyReason, whyToken, fundedBy, pricePaid]`
 
 Field rules:
 
 - `strength` / `strengthBaseline`: abstract strength points; `strengthBaseline` equals the V1 table output for that town (groups_max × coefficient) so parity is provable.
-- `kind` / `mission`: one of `garrison`, `reinforce`, `patrol`, `ambush`, `retake`.
+- `kind` / `mission`: one of `garrison`, `reinforce`, `patrol`, `ambush`, `retake`, `aaPicket`.
 - `orderKind`: one of `materialize`, `dematerialize`, `moveCell`, `foundCell`, `disbandCell`, `reinforce`, `regen`, `hold`, `noop`, `deny`.
-- `denyReason`: one of `none`, `groupBudgetExceeded`, `minSpawnDistance`, `conservationViolation`, `retakeDisabled`, `laneOff`, `noEvidence`.
+- `denyReason`: one of `none`, `groupBudgetExceeded`, `minSpawnDistance`, `conservationViolation`, `retakeDisabled`, `laneOff`, `noEvidence`, `cooldownActive`, `contractLimitReached`, `paidSurgeCapReached`, `panelOff`.
 - `suppressedUntilSec`: optional post-wipe suppression window during which a town regens but does not found offensive cells.
 - Records contain only arrays, strings, numbers, and `0`/`1` booleans. No object, group, code, classname, or exact hidden position crosses a layer boundary. Same schema discipline as every other V2 lane.
 - The Director never emits `AICOMV2_PLAN_DECISION`, never appears as a normalized-plan `sourceRecordKind`, and never issues advice to W/E lanes. Its public town-state side effects are simply legal evidence for lane 424 like any other resistance activity.
@@ -187,7 +188,7 @@ The Director introduces one new V3 family, `DIRECTOR`, with side token `GUER` �
 
 Ledger/order line (each accepted order):
 
-`AICOMSTAT|v3|DIRECTOR|GUER|<ELMIN>|GDIR_ORDER|order=<orderKind>|town=<townId>|route=<routeKey|none>|cell=<cellId|none>|kind=<garrison|reinforce|patrol|ambush|retake>|delta=<strengthDelta>|budget=<groupBudgetBucket>|deny=<denyReason>`
+`AICOMSTAT|v3|DIRECTOR|GUER|<ELMIN>|GDIR_ORDER|order=<orderKind>|town=<townId>|route=<routeKey|none>|cell=<cellId|none>|kind=<garrison|reinforce|patrol|ambush|retake|aaPicket>|delta=<strengthDelta>|budget=<groupBudgetBucket>|deny=<denyReason>|fundedBy=<uid|none>|pricePaid=<n>`
 
 Required volume-audit line whenever materialized output for a town differs from the V1 baseline:
 
@@ -208,9 +209,9 @@ Rules:
 
 T1 pure-core:
 
-- Ledger conservation fixtures: any sequence of orders keeps totalStrength = initial + regen − attrition; a minting order is rejected as `conservationViolation`.
-- Baseline-parity fixture: with no combat and full regen, materialization requests per town equal the V1 table output exactly (baseline reproduction).
-- Surge fixture: no order sequence can push a town's materialized strength above baseline × `AICOMV2_GDIR_SURGE_MAX`.
+- Ledger conservation fixtures: any sequence of orders keeps totalStrength = initial + regen − attrition + fundedTotal; an unpaid minting order (no `fundedBy`/`pricePaid` provenance) is rejected as `conservationViolation`; a funded minting order with valid provenance is accepted.
+- Baseline-parity fixture: with no combat and full regen, autonomous materialization requests per town equal the V1 table output exactly (baseline reproduction); funded orders may push above baseline only up to `AICOMV2_GDIR_PAID_SURGE_MAX`.
+- Surge fixture: no autonomous order sequence can push a town's materialized strength above baseline × `AICOMV2_GDIR_SURGE_MAX`; funded orders are bounded by baseline × `AICOMV2_GDIR_PAID_SURGE_MAX` and the group budget still hard-binds at materialization.
 - Budget fixtures: materialization above `AICOMV2_GDIR_GROUP_BUDGET_MAX` denies with `groupBudgetExceeded`; under pressure the planner dematerializes quiet buckets first.
 - Movement fixtures: cell ETAs respect `AICOMV2_GDIR_CELL_SPEED_MS`; no instant transfers.
 - Retake fixtures: with `AICOMV2_GDIR_RETAKE = 0` every retake order denies as `retakeDisabled`; with it on, retakes require superiority + no-recent-defender evidence + suppression clear.
@@ -327,7 +328,7 @@ V1 already contains a complete two-tier activation design for exactly this rule 
 - `:227-236` — the air-only activation branch (`_enemies_ground == 0 && _enemies > 0` sets `wfbe_active_air` and calls the garrison tables with a third argument `true`) is therefore UNREACHABLE.
 - `Server/Functions/Server_GetTownGroups.sqf:12,143,151-152` and `Server_GetTownGroupsDefender.sqf:12` — the `_aa_get` table mode: filters the town's group table to `["AA_Light","AA_Heavy","Team_AA"]` and caps at 3 groups. Present for BOTH occupier and defender tables.
 - `:408` — deactivation clears `wfbe_active_air` alongside `wfbe_active`.
-- `Common/Init/Init_CommonConstants.sqf:1593` — `WFBE_C_TOWNS_DETECTION_RANGE_AIR = 50` ("Detect Air if > x"), the abandoned altitude threshold of the original design.
+- `Common/Init/Init_CommonConstants.sqf:1595` — `WFBE_C_TOWNS_DETECTION_RANGE_AIR = 50` ("Detect Air if > x"), the abandoned altitude threshold of the original design.
 
 Net V1 behaviour today: aircraft above 20 m never activate a town (free overflight and hover-scouting); aircraft at or below 20 m trigger a FULL ground garrison spawn. Both are wrong under the owner rule.
 
