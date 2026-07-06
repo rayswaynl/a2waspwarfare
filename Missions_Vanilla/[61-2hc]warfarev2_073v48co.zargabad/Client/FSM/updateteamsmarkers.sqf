@@ -1,5 +1,5 @@
 // Marty: Performance Audit locals and marker update cache.
-private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites","_nextRebindCheck","_needRebind","_liveLeader","_cachedLeader","_liveHas","_cachedHas","_i","_ownMarker","_ownLastPos","_ownLastDir","_ownLastAlpha","_ownPos","_ownDir","_ownDirDiff"];
+private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites","_nextRebindCheck","_needRebind","_liveLeader","_cachedLeader","_liveHas","_cachedHas","_i","_ownMarker","_ownLastPos","_ownLastDir","_ownLastAlpha","_ownPos","_ownDir","_ownDirDiff","_destDirMode","_destPos","_destDir","_destBx","_destBy","_destDx","_destDy","_destData","_destMode","_destWpCount","_destWpIdx","_destStoredPos","_destStoredGrp"];
 
 _sideText = sideJoinedText;
 _label = "";
@@ -110,13 +110,69 @@ while {!gameOver} do {
 		//--- cmdcon26 OWN-ARROW DRAW. Paint the player's own orange arrow straight from the LOCAL 'player'
 		//--- handle every visible tick, independent of the (possibly broken/remote) clientTeams groups.
 		//--- Same move/turn gates as the per-team loop to avoid no-op marker writes.
+		//--- TP-17: read flag once per tick here (before alive-player check) so the
+		//--- team-marker loop below can use _destDirMode safely even when player is dead.
+		_destDirMode = (missionNamespace getVariable ["WFBE_C_TEAMMARKER_DEST_DIR", 0]) > 0;
 		if (alive player) then {
 			_ownPos = getPos player;
 			if ((_ownPos distance _ownLastPos) > 3) then {
 				_ownMarker setMarkerPosLocal _ownPos;
 				_ownLastPos = _ownPos;
 			};
+			//--- TP-17 DESTINATION-DIR (flag WFBE_C_TEAMMARKER_DEST_DIR default 0):
+			//--- When flag>0 and the player has an active move destination, point the own arrow
+			//--- toward that destination. Priority: (1) last shift-click map order stored in
+			//--- WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_POSITION (same source used by
+			//--- Client_SendSpawnedUnitsToLeaderWaypoint), (2) current group waypoint via
+			//--- currentWaypoint/waypointPosition on the player's own group (local to this
+			//--- client, since the player issued the waypoints), (3) engine expectedDestination
+			//--- on the player (DoNotPlan = no active destination). Falls back to getDir facing
+			//--- when no destination is found or when destination is too close (<= 25m).
+			//--- Bearing idiom: atan2 position-delta (binary getDir is A3-only). A2-OA-1.64-safe.
+			//--- Flag 0: the entire block collapses to the bare getDir line below (byte-identical).
+			//--- _destDirMode is read once per tick before the alive check (see above) so it is
+			//--- always initialised for the team-marker loop even when the player is dead.
 			_ownDir = getDir (vehicle player);
+			if (_destDirMode) then {
+				_destPos = [];
+				//--- Source 1: stored shift-click map order (missionNamespace-local, this client).
+				if (count _destPos == 0) then {
+					_destStoredGrp = missionNamespace getVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_GROUP", grpNull];
+					_destStoredPos = missionNamespace getVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_POSITION", []];
+					if (!isNull _destStoredGrp && {_destStoredGrp == group player} && {count _destStoredPos > 1}) then {
+						if (player distance _destStoredPos > 25) then {
+							_destPos = _destStoredPos;
+						};
+					};
+				};
+				//--- Source 2: current group waypoint (local to this client for the player's own group).
+				if (count _destPos == 0) then {
+					_destWpCount = count (waypoints group player);
+					_destWpIdx   = currentWaypoint group player;
+					if (_destWpCount > 0 && {_destWpIdx < _destWpCount}) then {
+						_destPos = waypointPosition [group player, _destWpIdx];
+						if (player distance _destPos <= 25) then {_destPos = []};
+					};
+				};
+				//--- Source 3: engine expectedDestination on the player (DoNotPlan = no active dest).
+				if (count _destPos == 0) then {
+					_destData = expectedDestination player;
+					_destMode = _destData select 1;
+					if (_destMode != "DoNotPlan") then {
+						_destPos = _destData select 0;
+						if (player distance _destPos <= 25) then {_destPos = []};
+					};
+				};
+				//--- Compute bearing player->destination (atan2 position-delta; binary getDir is A3-only).
+				//--- Guard a zero-length delta so atan2 does not divide by zero.
+				if (count _destPos > 1) then {
+					_destBx = (_destPos select 0) - (getPos player select 0);
+					_destBy = (_destPos select 1) - (getPos player select 1);
+					if (abs _destBx > 0.01 || {abs _destBy > 0.01}) then {
+						_ownDir = (_destBx atan2 _destBy) % 360;
+					};
+				};
+			};
 			//--- cmdcon42: the WAVE-2 own-marker CLASS TEXT writer was here and is intentionally removed
 			//--- (see the DOUBLE-CLASS-TAG FIX note above). The own-marker draws heading only; the class tag
 			//--- shows once via the per-team player marker's "[ENG]" suffix in the QoL-S4 block below.
@@ -344,6 +400,30 @@ while {!gameOver} do {
 						//--- it is the player's facing heading and is correct ON FOOT and MOUNTED alike. This
 						//--- matches the patrol/AICOM arrow loops, which use plain getDir. A2-OA-1.64-safe.
 						_dir = getDir _leaderVehicle;
+						//--- TP-17 DESTINATION-DIR: when flag>0, override _dir with the bearing from leader
+						//--- position to the leader's active move destination. Uses expectedDestination _leader
+						//--- (engine-native; returns DoNotPlan when the leader has no active destination or is
+						//--- not local to this machine, e.g. HC-owned AI leaders of other teams). In those
+						//--- cases the getDir facing set above is preserved unchanged (graceful fallback).
+						//--- Bearing idiom: atan2 position-delta (A2-safe; binary getDir is A3-only).
+						//--- Flag 0: block is a no-op; _dir stays as set by getDir above (byte-identical).
+						//--- _destDirMode is read once above and reused here (same while-loop tick).
+						if (_destDirMode) then {
+							_destPos  = [];
+							_destData = expectedDestination _leader;
+							_destMode = _destData select 1;
+							if (_destMode != "DoNotPlan") then {
+								_destPos = _destData select 0;
+								if (_leader distance _destPos <= 25) then {_destPos = []};
+							};
+							if (count _destPos > 1) then {
+								_destDx = (_destPos select 0) - (getPos _leader select 0);
+								_destDy = (_destPos select 1) - (getPos _leader select 1);
+								if (abs _destDx > 0.01 || {abs _destDy > 0.01}) then {
+									_dir = (_destDx atan2 _destDy) % 360;
+								};
+							};
+						};
 						_lastDir = _lastDirs select _markerIndex;
 						_dirDiff = abs (_dir - _lastDir);
 						if (_dirDiff > 180) then {_dirDiff = 360 - _dirDiff};

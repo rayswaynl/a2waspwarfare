@@ -2041,5 +2041,12 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (default), 0 = legacy behaviour (armed leader parked live on the marker for the wait window).
 	if (isNil "WFBE_C_DEADSPAWN_GUARD") then {WFBE_C_DEADSPAWN_GUARD = 1};
 
+//--- TP-17 (fable/tp17-marker-destination): HQ team map markers DESTINATION-direction mode.
+//--- When flag>0, team arrows point toward the leader's active movement destination instead of
+//--- current facing direction. Falls back to facing when no valid destination is available.
+//--- Client-side only. Locality note: expectedDestination works on local units only; HC-owned
+//--- AI leaders fall back to getDir facing silently. Zero server load. Flag 0 = byte-identical.
+	if (isNil "WFBE_C_TEAMMARKER_DEST_DIR") then {WFBE_C_TEAMMARKER_DEST_DIR = 0}; //--- 0: facing direction (default, byte-identical to HEAD); >0: destination-direction when an active destination is available, facing fallback.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
