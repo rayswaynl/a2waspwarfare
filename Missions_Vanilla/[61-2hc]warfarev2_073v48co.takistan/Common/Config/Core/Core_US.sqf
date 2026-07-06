@@ -389,4 +389,26 @@ _tkEasaRoster = Call Compile preprocessFile "Common\Functions\Common_TKEasaRoste
 	};
 } forEach _tkEasaRoster;
 
+//--- fable/east-c130 (flag WFBE_C_EAST_C130, default 0): EAST buys a captured C-130J as its AWACS-class
+//--- big fixed-wing (the An-2 is the only East fixed-wing transport otherwise). SYNTHETIC token, same
+//--- mechanism as the TK-EASA/AH6X_M134 rows above: buy tuples are keyed BY CLASSNAME in missionNamespace,
+//--- so re-registering 'C130J_US_EP1' with an East faction would clobber the WEST entry - the token avoids
+//--- that. Registered HERE (not Core_RU) because Core_RU loads before this file (Init_Common 271 vs 277)
+//--- and the deep-copied base tuple must already exist (inherits resolved crew array/picture/factory).
+//--- Remap token -> real hull: Client_BuildUnit.sqf (AH6X_M134 precedent). Stock livery: C130J has no
+//--- hiddenSelections, a scripted retint is impossible (config-proven in the PR body).
+if ((missionNamespace getVariable ["WFBE_C_EAST_C130", 0]) > 0) then {
+	private ["_eastC130Tuple"];
+	_eastC130Tuple = missionNamespace getVariable "C130J_US_EP1";
+	if (!isNil "_eastC130Tuple") then {
+		_eastC130Tuple = +_eastC130Tuple;                                //--- deep copy: inherits [1] picture, [4] crew, [6] factory, [9] turrets
+		_eastC130Tuple set [QUERYUNITLABEL, "C-130J Hercules (captured)"];
+		_eastC130Tuple set [QUERYUNITFACTION, "Russians"];               //--- East default faction (Root_RU) so the buy-list faction filter accepts it
+		missionNamespace setVariable ["EASTV_C130J", _eastC130Tuple];
+		diag_log "[WFBE (INIT)] Core_US: Registered East C-130 token 'EASTV_C130J' (base C130J_US_EP1).";
+	} else {
+		diag_log "[WFBE (WARNING)] Core_US: base hull 'C130J_US_EP1' not registered - East C-130 token hidden.";
+	};
+};
+
 diag_log Format ["[WFBE (INIT)][frameno:%2 | ticktime:%3] Core_US: Initialization (%1 Elements) - [Done]",count _c,diag_frameno,diag_tickTime];

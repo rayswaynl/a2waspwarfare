@@ -2271,5 +2271,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_AWACS_GROUND_DELAY")      then {WFBE_C_AWACS_GROUND_DELAY = 30};     //--- s: between ground sweeps.
 	if (isNil "WFBE_C_AWACS_GROUND_MINSPEED")   then {WFBE_C_AWACS_GROUND_MINSPEED = 5};   //--- km/h: MTI floor - only faster-moving targets are painted.
 
+//--- EAST C-130 (fable/east-c130): East/OPFOR buys a captured C-130J via synthetic token EASTV_C130J
+//--- (Core_US.sqf registration, Units_CO_RU roster, Client_BuildUnit remap). Gives East a big fixed-wing
+//--- radar/AWACS-role platform beside the An-2. Flag-off (0) = token never registered/listed = byte-identical.
+	if (isNil "WFBE_C_EAST_C130") then {WFBE_C_EAST_C130 = 0};   //--- Master gate: 0=off (default), 1=on. Lobby param mirrors this.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
