@@ -446,6 +446,9 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 			//=============================================================================
 			private ["_inlineGap","_inlineAnchor","_inlineParts","_deckZB","_bridgeZ","_seam_Y_offsets","_bY","_bwX","_bwY","_seamPier"];
 			_inlineGap = abs (missionNamespace getVariable ["WFBE_C_NAVAL_INLINE_GAP", -265]);
+			//--- Tuner guard: a gap of 0 would place Hull B exactly on Hull A (silent overlap). Self-heal to the
+			//--- design default and warn in RPT so a bad lobby/constants value is diagnosable, not invisible.
+			if (_inlineGap < 1) then {_inlineGap = 265; diag_log "NAVALHVT-INLINE: WFBE_C_NAVAL_INLINE_GAP resolved to 0 - self-healed to 265 (hulls would overlap)."};
 			_inlineAnchor = [
 				(_ocAnchor select 0) - _inlineGap * sin(_twinDir),
 				(_ocAnchor select 1) - _inlineGap * cos(_twinDir),
@@ -481,6 +484,10 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 					//--- Body +Y = world [sin dir, cos dir]; aft offset _bY is negative.
 					_bwX = (_ocAnchor select 0) + _bY * sin(_twinDir);
 					_bwY = (_ocAnchor select 1) + _bY * cos(_twinDir);
+					//--- Facing _twinDir (fore-aft), NOT +90 like the lateral bridge: the inline seam is a surface
+					//--- PATCH under the runway centreline (piers lie along the roll direction so a wheel crosses
+					//--- pier ends, not pier sides). The lateral path bridges a port-starboard GAP, hence its +90.
+					//--- If in-editor the pier long-axis proves perpendicular to placement dir, switch to (_twinDir + 90).
 					_seamPier = [_bridgeClass, [_bwX, _bwY, 0], _twinDir] Call WFBE_NavalHVT_SpawnProp;
 					if (!isNull _seamPier) then {
 						_seamPier setPosASL [_bwX, _bwY, _bridgeZ];
