@@ -468,7 +468,7 @@ while {!WFBE_GameOver} do {
 							sleep 30;
 
 							//--- Hard-despawn if town deactivated or flipped.
-							if (!(_loc getVariable ["wfbe_active", false]) && !(_loc getVariable ["wfbe_active_air", false]) && _clearCount > 0) then {
+							if (!(_loc getVariable ["wfbe_active", false]) && !(_loc getVariable ["wfbe_active_air", false])) then {
 								_scanActive = false;
 							};
 							if ((_loc getVariable ["sideID", -1]) != _newSIDAtCapture) then {_scanActive = false};
