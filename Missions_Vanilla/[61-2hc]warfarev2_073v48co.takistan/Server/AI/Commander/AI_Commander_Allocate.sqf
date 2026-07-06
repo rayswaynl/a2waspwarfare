@@ -20,7 +20,7 @@
 	data; live group reads per-team; GroupGetBool for the A2 group-bool trap; no A3 commands).
 */
 
-private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_myTowns","_engageMin","_expandFirst","_concentrate"];
+private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_expandWarnTown","_expandWarnDist","_myTowns","_engageMin","_expandFirst","_concentrate"];
 _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) <= 0) exitWith {};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -300,6 +300,7 @@ _neutTowns = [];
 private ["_assigned","_harassAssigned","_expandClaimed","_dedupOn"];
 _garGrp = _logik getVariable ["wfbe_aicom_garrison", grpNull];
 _assigned = 0; _harassAssigned = 0; _expandCount = 0;
+_expandWarnTown = objNull; _expandWarnDist = 1e9;
 _expandClaimed = [];   //--- DEDUP (block-m): neutral towns already claimed by an expand-lane team this tick
 //--- SPREAD (cmdcon41, claude-gaming 2026-07-02): per-fist-town load counter + cap. With a widened fist
 //--- (WFBE_C_AICOM2_FIST_TOWNS>1) the L268-272 nearest pick otherwise funnels every team onto the single
@@ -344,9 +345,9 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 					_eTgt = objNull; _eD = 1e9;
 					//--- DEDUP (block-m, WFBE_C_AICOM_EXPAND_DEDUP): skip towns already claimed this tick
 					if (_dedupOn) then {
-						{ _ev = _ldrPos distance _x; if (_ev <= _reach && {_ev < _eD} && {!(_x in _expandClaimed)}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
+						{ _ev = _ldrPos distance _x; if (_ev < _expandWarnDist) then {_expandWarnDist = _ev; _expandWarnTown = _x}; if (_ev <= _reach && {_ev < _eD} && {!(_x in _expandClaimed)}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
 					} else {
-						{ _ev = _ldrPos distance _x; if (_ev <= _reach && {_ev < _eD}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
+						{ _ev = _ldrPos distance _x; if (_ev < _expandWarnDist) then {_expandWarnDist = _ev; _expandWarnTown = _x}; if (_ev <= _reach && {_ev < _eD}) then {_eD = _ev; _eTgt = _x} } forEach _neutTowns;
 					};
 					if (!isNull _eTgt) then {
 						_tgt = _eTgt; _expandCount = _expandCount + 1;
@@ -397,6 +398,10 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 
 if (_harassN > 0 && {_harassAssigned == 0} && {!isNull _harassTgt}) then {
 	diag_log ("AICOM2|WARN|HARASS_UNMET|" + str _side + "|harassN=" + str _harassN + "|harassTgt=" + (_harassTgt getVariable ["name","?"]) + "|harassFar=" + str (round _harassFar));
+};
+
+if (_expandN > 0 && {_expandCount == 0} && {(count _neutTowns) > 0}) then {
+	diag_log ("AICOM2|WARN|EXPAND_UNREACHABLE|" + str _side + "|expandN=" + str _expandN + "|neutTowns=" + str (count _neutTowns) + "|nearest=" + (if (!isNull _expandWarnTown) then {_expandWarnTown getVariable ["name","?"]} else {"none"}) + "|nearestDist=" + (if (!isNull _expandWarnTown) then {str (round _expandWarnDist)} else {"-1"}));
 };
 
 //--- D7 AICOM FEINT: optional feint dispatch. Self-contained, flag-gated (WFBE_C_AICOM_FEINT_ENABLE).
