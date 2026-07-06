@@ -149,7 +149,7 @@ while {!WFBE_GameOver} do {
                 //--- Deterministic bearing from town name to keep placement stable across ticks.
                 //--- Sum foreachIndex over name chars as a cheap stable hash.
                 _tNameHash = 0;
-                { _tNameHash = _tNameHash + _foreachIndex; } forEach (_town getVariable ["name", ""]);
+                { _tNameHash = _tNameHash + _foreachIndex; } forEach (toArray (_town getVariable ["name", ""]));  //--- HOTFIX 2026-07-07: forEach over a String throws "Type String, expected Array" on A2 OA (live-burn RC12 #771). toArray converts the name to a char-code array so the deterministic name-length hash actually computes.
                 _bear = (_tNameHash * 73 + 17) mod 360;
 
                 //--- Place on ring between 40%-70% of town range (perimeter, clear of centre).
