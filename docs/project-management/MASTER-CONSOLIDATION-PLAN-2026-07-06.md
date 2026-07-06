@@ -116,9 +116,19 @@ CATEGORY A — Merged into master OR claude/build84-cmdcon36: 400 branches
 - **#614 (+#637) teleport-order-flush:** FOLD INTO V2 LANE (touches the same driver as the press hook; reconcile together). Owner raised a design Q (individual vs per-group AI) -> answered: Arma AI is group/team-based by engine design; per-unit behaviors (driver-swap/smoke) are preserved but orders/waypoints are per-group. No prior "all-individual" decision exists.
 - **#515 map-band scaling:** FOLD INTO V2 RECONCILIATION (shares distance constants with #724 sensing).
 - **#269 briefing HTML:** WIKI-THEN-CLOSE (move content to wiki, don't ship in-repo).
-- #703 Utes: PENDING (asking separately).
+- **#703 Utes:** WIKI-THEN-CLOSE (spec → wiki as future-scenario reference). **ALL 6 owner-decisions now resolved → every one of the 111 PRs has a final disposition.**
 
 ## Re-fire wave results (2026-07-06)
 - #737 Team Menu V2: 2nd fix pushed (Rebuy validation + bp_content pricing, SMAW $80). ⚠️ FAILED VERIFY TWICE PRIOR -> 3rd re-verify REQUIRED before merge (flagged: cleaned-gear storage format vs respawn-handler reader).
 - #740 migration map (512 lines) CREATED. #63 Command Center CREATED (stacked on motion-kit #61). #739 TP-20 verb rate-limits CREATED (stacked on #727).
 
+## EXECUTION SEQUENCE (owner-authorized: "get everything onto master, clean up all PRs, clean up branches")
+Fires when #737 3rd-verify + #377 flag-flip return clean. All-Fable. Order:
+1. **TAG milestones first (safety net):** v88-pre-consolidation @ current master (rollback point). [owner asked for stable-version bookmarks — done as tags]
+2. **MERGE set → build84** (chunked, checkpointed so a stall can't lose ground): the 41 MERGE + the REBASE-THEN-MERGE set after rebase, incl. tonight's verified PRs + #737(post-verify) + #377(flags-on) + the PVF-hardening batch. EXCLUDES the 18 FOLD-AT-CUTOVER (now incl. #515/#614/#637), HOLD, DISCARD, WIKI.
+3. **WIKI-THEN-CLOSE** (#334/342/372/379/384/391/418/427/435 + #269 + #703): extract audit/docs content to wiki pages, then close the PRs.
+4. **DISCARD-CLOSE** (#275/344/347/351/354/355/364/594): close with rationale.
+5. **FF build84 → master** via promotion PR (5 gates: candidates landed, no WIP, lint clean, FF-precondition, merge-tree zero-conflict). Confirmed CLEAN FAST-FORWARD (the 5 master-only commits already baked into build84).
+6. **TAG release:** v89-cmdcon44 @ new master tip.
+7. **PRUNE branches:** batch-delete the ~491 safe (merged + closed-PR), protecting master/build84/fable-completion-push/open-PR heads. (More become merged after step 2, so re-scan.)
+Reported at each milestone; master-FF + branch-prune are the points of no return, done with tags already in place.
