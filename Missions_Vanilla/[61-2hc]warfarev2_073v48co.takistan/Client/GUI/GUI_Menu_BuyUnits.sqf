@@ -156,6 +156,18 @@ _IDCS = _IDCS - [_currentIDC];
 					hint parseText (Format ["<t color='#ff5a5a'>SCUD refused: your side already fields %1 launchers (max %2).</t>", _scudLive, _scudMax]);
 				};
 			};
+			//--- AIRFIELD-OWNERSHIP GATE (fable/airfield-ownership-gate, GR-2026-07-03a):
+			//--- Block aircraft purchase at an airfield the buyer's side does not hold.
+			//--- Signal: sideID on the LocationLogicAirport logic (_closest) set by the town-capture
+			//--- system (same variable as all other town logics). Players only; AI uses Server_BuyUnit.
+			if (!_skip && {_type == "Airport"} && {(missionNamespace getVariable ["WFBE_C_AIRFIELD_OWNERSHIP_GATE", 0]) > 0}) then {
+				private ["_afSideID"];
+				_afSideID = _closest getVariable ["sideID", -1];
+				if !(_afSideID == sideID) then {
+					_skip = true;
+					hint parseText "<t color='#ff9060'>Airfield not owned. Capture this airfield before buying aircraft here.</t>";
+				};
+			};
 			//--- Make sure that we own all camps before being able to purchase infantry.
 			if (_type == "Depot" && _isInfantry && sideJoined != resistance) then {
 				_totalCamps = _closest Call GetTotalCamps;

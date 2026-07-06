@@ -2237,6 +2237,11 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GARRISON_DRESSING_LIFETIME") then {WFBE_C_GARRISON_DRESSING_LIFETIME = 900}; //--- s: forced recycle age per gun (anti-accumulation).
 	if (isNil "WFBE_C_GARRISON_DRESSING_MAX")      then {WFBE_C_GARRISON_DRESSING_MAX = 6};        //--- Max simultaneous dressed towns across the map.
 	if (isNil "WFBE_C_GARRISON_DRESSING_SEARCHLIGHT") then {WFBE_C_GARRISON_DRESSING_SEARCHLIGHT = 1}; //--- 1: add SearchLight_RUS at night; 0: gun only.
+//--- AIRFIELD-OWNERSHIP GATE (fable/airfield-ownership-gate, GR-2026-07-03a):
+//--- When >0, players may only purchase/spawn aircraft at an airfield the player's own side holds
+//--- (sideID on the LocationLogicAirport logic matches the buyer's side). Denied purchase: clear
+//--- hint, no funds deducted. Flag-off (0) = byte-identical (no gate). AI commander unaffected.
+	if (isNil "WFBE_C_AIRFIELD_OWNERSHIP_GATE") then {WFBE_C_AIRFIELD_OWNERSHIP_GATE = 0}; //--- 0=off (default, byte-identical); 1=on (block aircraft purchase at enemy/neutral airfields).
 
 //--- AWACS PLATFORM RADAR (fable/awacs-radar, flag WFBE_C_AWACS default 0, lobby param):
 //--- while a CREWED friendly airframe from WFBE_C_AWACS_TYPES is airborne above MINALT the

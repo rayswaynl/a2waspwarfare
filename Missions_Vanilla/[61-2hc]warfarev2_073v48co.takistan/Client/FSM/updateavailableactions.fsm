@@ -216,6 +216,12 @@ class FSM
        "//--- Airport." \n
        "if ((missionNamespace getVariable ""WFBE_C_GAMEPLAY_HANGARS_ENABLED"") > 0) then {" \n
        "	hangarInRange = if !(isNull ([vehicle player, _pura] Call WFBE_CL_FNC_GetClosestAirport)) then {true} else {false};" \n
+       "	//--- AIRFIELD-OWNERSHIP GATE: suppress hangar tab if the player does not own the airfield." \n
+       "	if (hangarInRange && {(missionNamespace getVariable [""WFBE_C_AIRFIELD_OWNERSHIP_GATE"", 0]) > 0}) then {" \n
+       "		private [""_afLogic""];" \n
+       "		_afLogic = [vehicle player, _pura] Call WFBE_CL_FNC_GetClosestAirport;" \n
+       "		if !(_afLogic getVariable [""sideID"", -1] == sideID) then {hangarInRange = false};" \n
+       "	};" \n
        "};" \n
        "" \n
        "//--- Fast Travel." \n
