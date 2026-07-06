@@ -719,5 +719,11 @@
 		texts[] = {"3 min","5 min","10 min"};
 		default = 300;
 	};
+	class WFBE_C_AWACS {
+		title = "AWACS platform radar (air picture + ground MTI sweep)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
 
 };

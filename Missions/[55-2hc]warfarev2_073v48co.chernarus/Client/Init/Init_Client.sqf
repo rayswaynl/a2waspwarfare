@@ -618,6 +618,7 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM") in [3,4]) then
 if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] execVM "Client\FSM\updateteamsmarkers.sqf"};
 [] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
 [] execVM "Client\FSM\updateaicommarkers.sqf"; //--- AI-commander team direction arrows (task #3).
+if ((missionNamespace getVariable ["WFBE_C_AWACS", 0]) > 0) then {[] execVM "Client\Module\AWACS\awacs_pilot_watch.sqf"}; //--- fable/awacs-radar: AWACS pilot watch (ground MTI sweep). Flag default 0 = never launched.
 
 //--- B62 (Ray 2026-06-21): OWN-SIDE MARKER RECONCILIATION / SELF-HEAL.
 //--- THE BUG (Ray RPT, OPFOR/insurgent JIP join): own-side FACTORY/structure markers AND own-side HQ-team
