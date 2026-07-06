@@ -1015,6 +1015,24 @@ while {!WFBE_GameOver && _alive} do {
 								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RECOVERY_V2 dead-driver swap - moved live crewman into %3 driver seat.", _uSide, _uTeam, typeOf _uVeh]] Call WFBE_CO_FNC_AICOMLog;
 							};
 						};
+						//--- TP-15 STUCK-DRIVEN IN-PLACE REPAIR (WFBE_C_AICOM_STUCK_REPAIR default 0). A tier-2/3 unstuck means
+						//--- the hull sat wedged/parked far from target and NOT in contact (the tier is only set when the
+						//--- server flagged a non-combat stall). Rather than DETOUR the team to a town/service point, restore
+						//--- the lead hull IN PLACE so the reverse-nudge + re-route below act on a healthy, armed hull. Mirrors
+						//--- the SELFREPAIR idiom (local + alive + LandVehicle + no-threat gate); adds setVehicleAmmo 1 (a long
+						//--- stall can burn the leg ammo). One-shot at the event (this Spawn fires once per stuck re-issue), not
+						//--- a per-tick loop. A2-OA-safe: setDamage / setVehicleAmmo / nearEntities / getFriend (no A3 commands).
+						if (_uTier >= 2 && {(missionNamespace getVariable ["WFBE_C_AICOM_STUCK_REPAIR", 0]) > 0} && {!isNull _uVeh} && {_uVeh != _uLdr} && {alive _uVeh} && {local _uVeh} && {_uVeh isKindOf "LandVehicle"}) then {
+							private ["_srSafe2","_srThreat2"];
+							_srSafe2   = missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_SAFE_DIST", 250];
+							_srThreat2 = {!isNull _x && {alive _x} && {((side _uTeam) getFriend (side _x)) < 0.6}} count (_uVeh nearEntities [["Man","LandVehicle"], _srSafe2]);
+							if (_srThreat2 == 0) then {
+								_uVeh setDamage 0;
+								_uVeh setVehicleAmmo 1;
+								diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_REPAIR|team=" + (str _uTeam) + "|tier=" + str _uTier + "|veh=" + (typeOf _uVeh));
+							};
+						};
+
 						//--- Tier 1: break a physical wedge on the lead hull.
 						if (!isNull _uVeh && {_uVeh != _uLdr} && {alive _uVeh} && {canMove _uVeh}) then {
 							_uVeh setVelocity [0,0,0];
