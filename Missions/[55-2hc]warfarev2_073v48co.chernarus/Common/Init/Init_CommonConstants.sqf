@@ -2196,5 +2196,12 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GUER_CP2_FOOT_PER_TIER") then {WFBE_C_GUER_CP2_FOOT_PER_TIER = 2}; //--- v2 extra garrison per GUER vehicle tier (v1: 1).
 	if (isNil "WFBE_C_GUER_CP2_ARMOR_EXTRA") then {WFBE_C_GUER_CP2_ARMOR_EXTRA = 1};    //--- v2 extra SAME-class hulls at tier>=2 (tier 3 = 2x T-72); read ONLY inside the CP_V2>0 branch, so inert while WFBE_C_GUER_CP_V2 = 0.
 
+//--- Aircraft spawn safety (fable/aircraft-spawn-safety, GR-2026-07-03a):
+//--- When >0, each aircraft purchase at an airfield/hangar attempts to find a clear
+//--- spawn slot (occupancy + slope) before placing the hull.  Falls back to the nominal
+//--- position on failure so the purchase is never blocked.  Default 0 = byte-identical.
+	if (isNil "WFBE_C_AIR_SPAWN_SAFETY")        then {WFBE_C_AIR_SPAWN_SAFETY        = 0};   //--- Master gate: 0=off, 1=on.
+	if (isNil "WFBE_C_AIR_SPAWN_CLEAR_RADIUS")  then {WFBE_C_AIR_SPAWN_CLEAR_RADIUS  = 12};  //--- m: vehicle+obstacle clear radius (rotor/wing clearance).
+	if (isNil "WFBE_C_AIR_SPAWN_SLOPE_MAX")     then {WFBE_C_AIR_SPAWN_SLOPE_MAX     = 0.97}; //--- surfaceNormal z-floor; 0.97 ~ 14-deg slope limit.
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
