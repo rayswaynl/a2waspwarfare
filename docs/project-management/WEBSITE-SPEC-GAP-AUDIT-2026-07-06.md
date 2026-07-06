@@ -1,3 +1,10 @@
+> **RETRACTED 2026-07-06 (orchestrator cross-check):** this audit read a STALE checkout, not origin/main.
+> Verified against actual origin/main: LiveValue/TownControlBar/AfterActionReportCard/DiscordEmbedPreview/BrandWatermark ALL exist,
+> brand-lab page exists, brand/icons (10 SVGs) + brand/overlays (4) + brand/motion/motion-tokens.css + brand/assets-inventory.md all exist,
+> globals.css carries 6 mw-motion/mw-ease refs. SURVIVING findings only: (1) WarLogFeed.tsx uses emoji glyphs lines 30-40 (spec forbids;
+> WarLogEvent.tsx motion-kit replacement exists but pages not rewired), (2) brand/masks/ empty, (3) icons 10 of ~20, (4) component USAGE
+> on live pages needs the real audit. A corrected usage-audit + fix PR supersedes this file. Do not act on the table below.
+
 # miksuu.com Visual/Motion Spec Gap Audit
 **Date:** 2026-07-06  
 **Spec:** `miksuus_warfare_claude_visual_motion_brief.txt` (found at `C:/Users/Steff/Downloads/`)  
