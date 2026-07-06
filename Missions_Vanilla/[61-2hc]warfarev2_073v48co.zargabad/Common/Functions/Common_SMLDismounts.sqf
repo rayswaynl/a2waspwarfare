@@ -39,7 +39,7 @@
 //---   SML|v1|REMOUNT|...   on each exit path
 
 private ["_team","_footInf","_sideID","_side","_capSeq","_campFirstEnd"];
-private ["_ttl","_stamp","_exitReason","_detachedBySML2","_dismountCount"];
+private ["_ttl","_stamp","_exitReason","_detachedBySML2","_dismountCount","_seatedStill"];
 private ["_aliveCheck","_disbandFlag","_ordN","_grpChg","_uX"];
 
 _team         = _this select 0;
@@ -66,11 +66,13 @@ _dismountCount  = 0;
         if (!(isNil {_uX getVariable "wfbe_sml_detach_at"})) then {
             //--- Already stamped; let the owning SML manage this unit.
         } else {
-            //--- Dismount: release vehicle assignment and cancel the pending get-in order.
-            //--- orderGetIn false is the A2-OA-safe way to cancel a vehicle boarding order;
-            //--- unassignVehicle clears the seat reservation so another unit may take it.
+            //--- Dismount idiom: unassignVehicle clears the seat reservation; moveOut ejects
+            //--- the unit immediately regardless of boarding state (proven in-tree at
+            //--- AI_Commander_MHQReloc.sqf:453 `moveOut _drv`). orderGetIn false only cancels
+            //--- a PENDING board order and is a silent no-op for already-seated cargo.
+            //--- HC locality holds: this script runs on the HC that owns the group.
             unassignVehicle _uX;
-            [_uX] orderGetIn false;
+            moveOut _uX;
             _uX setVariable ["wfbe_sml_detach_at", time];
             _detachedBySML2 set [count _detachedBySML2, _uX];
             _dismountCount = _dismountCount + 1;
@@ -81,8 +83,16 @@ _dismountCount  = 0;
 //--- Nothing to do: all _footInf already on foot or already stamped by another SML.
 if (_dismountCount == 0) exitWith {};
 
-diag_log Format ["SML|v1|DISMOUNT|side=%1 team=%2 dismounted=%3 ttl=%4",
-    _side, _team, _dismountCount, _ttl];
+//--- Honest telemetry: recount how many are still seated after moveOut (should be 0;
+//--- non-zero means a unit was re-seated or moveOut failed for some reason).
+_seatedStill = 0;
+{
+    _uX = _x;
+    if (alive _uX && {vehicle _uX != _uX}) then {_seatedStill = _seatedStill + 1};
+} forEach _detachedBySML2;
+
+diag_log Format ["SML|v1|DISMOUNT|side=%1 team=%2 dismounted=%3 seated_still=%4 ttl=%5",
+    _side, _team, _dismountCount, _seatedStill, _ttl];
 
 //--- ===== WATCHDOG LOOP =====
 //--- Poll until any exit condition fires, then clear stamps and doFollow.
@@ -134,7 +144,10 @@ while {true} do {
     _uX setVariable ["wfbe_sml_detach_at", nil];
     if (alive _uX && {_uX in (units _team)}) then {
         _uX setUnitPos "AUTO";
-        _uX doFollow (leader _team);
+        //--- W1: guard leader before doFollow, matching SML-3/4 idiom.
+        if (!isNull (leader _team) && {alive (leader _team)}) then {
+            _uX doFollow (leader _team);
+        };
     };
 } forEach _detachedBySML2;
 
