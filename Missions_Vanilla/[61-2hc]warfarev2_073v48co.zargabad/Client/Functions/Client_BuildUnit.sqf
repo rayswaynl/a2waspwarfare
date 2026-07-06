@@ -492,6 +492,74 @@ if (_isMan) then {
 	//--- GR-2026-07-03a diagnostic (ALWAYS-ON, mirrors the depot-pos trace): the FACTORY branch had no spawn-position
 	//--- evidence line. Emit resolved factory obj + getPos + computed spawn pos + class right BEFORE createVehicle so a
 	//--- future failed factory buy tells a bad resolve apart from a null/blocked spawn. One line per factory buy.
+	//--- WFBE_C_AIR_SPAWN_SAFETY (fable/aircraft-spawn-safety, GR-2026-07-06a restructure):
+	//--- PRE-CREATE candidate scan: eliminates the create-then-setPos window that could accrue
+	//--- collision damage in the engine physics thread between createVehicle and the old setPos.
+	//--- Gate: _factoryType == "Aircraft" || _factoryType == "Airport" identifies aircraft/airfield
+	//--- purchases before the vehicle exists (no isKindOf needed pre-creation).
+	//--- _unit is the fully-resolved hull classname here (AH6X_M134/TKV_* tokens already remapped).
+	//--- Failure modes addressed:
+	//---   FM-1  Factory pad picker picks without occupancy check: simultaneous buys land on the same pad.
+	//---   FM-2  Airport/hangar always spawns at a fixed offset: multiple buys collide on the same point.
+	//---   FM-3  No slope guard: fixed offset can land on taxiway edge, causing slide/flip on spawn.
+	//---   FM-4  No clearance guard: static obstacles within rotor/wingtip radius cause instant clip damage.
+	//--- Strategy: build a 9-candidate set (nominal + 8-point ring), evaluate slope + occupancy for each,
+	//---   take the first passing candidate and update _position before createVehicle.  Fall back to
+	//---   nominal if none pass (never block the purchase).  No setPos after creation.
+	//--- W3: clearance radius 17 m covers A-10 half-span (~17 m); large fixed-wing still limited by ring
+	//---   step (25.5 m at default radius), which may not clear a B-52-class span -- acceptable for A2 OA.
+	if ((missionNamespace getVariable ["WFBE_C_AIR_SPAWN_SAFETY", 0]) > 0
+		&& {_factoryType == "Aircraft" || _factoryType == "Airport"}) then {
+		private ["_nomPos","_safePos","_candidates","_ci","_cpos",
+		         "_objs","_sn","_slope","_clearRad","_slopeThresh","_ox","_oy",
+		         "_stepAng","_stepDist","_ri","_ra","_filtObjs"];
+		//--- nominal spawn position already computed above (factory pad or fixed offset).
+		_nomPos = _position;
+		_safePos = _nomPos;  //--- default: keep nominal if no candidate passes.
+		//--- W3: 17 m covers A-10 half-span; override via WFBE_C_AIR_SPAWN_CLEAR_RADIUS.
+		//--- Large fixed-wing (B-1 class) may still overlap at ring step 25.5 m -- document limitation.
+		_clearRad = missionNamespace getVariable ["WFBE_C_AIR_SPAWN_CLEAR_RADIUS", 17];
+		//--- Slope limit: surfaceNormal z=1.0 = flat; 0.97 ~= 14 deg max slope.
+		_slopeThresh = missionNamespace getVariable ["WFBE_C_AIR_SPAWN_SLOPE_MAX", 0.97];
+		//--- Build 9-candidate set: nominal (index 0) + 8-point ring at 1.5x clearance radius.
+		//--- Nominal is tested first -- an unoccupied nominal returns immediately with zero relocation.
+		_candidates = [[_nomPos select 0, _nomPos select 1, 0]];
+		_stepAng  = 45;
+		_stepDist = _clearRad * 1.5;
+		_ri = 0;
+		while {_ri < 8} do {
+			_ra = _ri * _stepAng;
+			_ox = (_nomPos select 0) + _stepDist * (sin _ra);
+			_oy = (_nomPos select 1) + _stepDist * (cos _ra);
+			_candidates = _candidates + [[_ox, _oy, 0]];
+			_ri = _ri + 1;
+		};
+		//--- Evaluate each candidate: (a) slope, (b) clearance from non-infantry objects.
+		_ci = 0;
+		while {_ci < (count _candidates)} do {
+			_cpos = _candidates select _ci;
+			_sn = surfaceNormal [_cpos select 0, _cpos select 1];
+			_slope = _sn select 2;
+			if (_slope < _slopeThresh) then { _ci = _ci + 1 } else {
+			//--- nearestObjects [[x,y,z], classes, radius] -- A2-OA safe (no A3 form).
+			_objs = nearestObjects [[_cpos select 0, _cpos select 1, 0], ["All"], _clearRad];
+			//--- No vehicle to exclude: scan runs before createVehicle.
+			_filtObjs = [];
+			{ if (!(_x isKindOf "Man")) then { _filtObjs = _filtObjs + [_x] } } forEach _objs;
+			if ((count _filtObjs) > 0) then { _ci = _ci + 1 } else {
+				_safePos = [_cpos select 0, _cpos select 1, 0.5];
+				_ci = count _candidates;
+			};
+			};
+		};
+		//--- Apply safe position BEFORE createVehicle: vehicle is created at the safe point directly.
+		_position = _safePos;
+		if ((_safePos select 0) != (_nomPos select 0) || {(_safePos select 1) != (_nomPos select 1)}) then {
+			diag_log Format ["AIRSPAWN|v2|pre-create-relocated|side=%1|class=%2|from=%3|to=%4", sideJoinedText, _unit, _nomPos, _safePos];
+		} else {
+			diag_log Format ["AIRSPAWN|v2|pre-create-ok|side=%1|class=%2|pos=%3", sideJoinedText, _unit, _safePos];
+		};
+	};
 	diag_log Format ["BUYTRACE|v1|factory-pos|side=%1|factory=%2|class=%3|obj=%4|objType=%5|objPos=%6|spawnPos=%7|remote=%8", sideJoinedText, _factory, _unit, _building, typeOf _building, getPos _building, _position, !(local _building)];
 	_vehicle = [_unit, _position, sideID, _direction, _locked] Call WFBE_CO_FNC_CreateVehicle;
 	//--- GR-2026-07-03a diagnostic (ALWAYS-ON): name the createVehicle RETURN at the call site so the next failed buy
@@ -925,91 +993,6 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 	};
 };
 
-
-
-
-	//--- WFBE_C_AIR_SPAWN_SAFETY (fable/aircraft-spawn-safety, GR-2026-07-03a):
-	//--- When the flag is >0 and the freshly-created vehicle is a rotary/fixed-wing aircraft,
-	//--- attempt to find a clear spawn position at the owned airfield / HeliHCivil pad set.
-	//--- Failure modes fixed:
-	//---   FM-1  Aircraft factory pad picker (lines 99-121) uses BIS_fnc_selectRandom (A3) which
-	//---         would already be caught by lint; the existing pad loop is fine.  The real issue
-	//---         is that NO occupancy check is done: if two purchases resolve simultaneously, both
-	//---         pick the same pad and one hull spawns into the other (mid-air collision on creation).
-	//---   FM-2  Airport/hangar path (WFBE_C_HANGAR_BUY_DISTANCE, default 60 m, dir 0) always spawns
-	//---         at the same fixed offset from the hangar logic object.  Multiple simultaneous buys
-	//---         at a player-owned airfield all land on the same world point.
-	//---   FM-3  No surfaceNormal/slope guard: the fixed offset from a hangar logic object can land
-	//---         on a taxiway edge or uneven ground, causing the aircraft to slide or flip on spawn.
-	//---   FM-4  No minimum-clearance guard from static obstacles (buildings, fences, other vehicles)
-	//---         within the rotor / wingtip radius, causing instant rotor-clip damage.
-	//--- Strategy: build a small candidate ring of offset positions around the nominal spawn point,
-	//---   test each for (a) vehicle occupancy, (b) static-object clearance, (c) slope acceptability.
-	//---   Take the first passing candidate; fall back to the nominal position if none pass (never
-	//---   block the purchase).  The check runs AFTER createVehicle (vehicle already exists) so we
-	//---   use setPos to relocate if a better slot is found.  Cheap: runs once per purchase event.
-	if ((missionNamespace getVariable ["WFBE_C_AIR_SPAWN_SAFETY", 0]) > 0 && {!isNull _vehicle} && {_vehicle isKindOf "Air"}) then {
-		private ["_nomPos","_safePos","_candidates","_ci","_cx","_cy","_cpos","_cposH",
-		         "_objs","_sn","_slope","_clearRad","_offsets","_oi","_ox","_oy",
-		         "_stepAng","_stepDist","_ring","_ri","_ra","_rd","_rpos"];
-		//--- nominal spawn position already computed above (factory pad or fixed offset).
-		_nomPos = _position;
-		_safePos = _nomPos;  //--- default: keep nominal if no candidate passes.
-		//--- Clearance radius: rotary ~10 m rotor disc radius; fixed-wing ~15 m half-span.
-		//--- Use 12 m as a single conservative value covering most A2 helis and small jets.
-		_clearRad = missionNamespace getVariable ["WFBE_C_AIR_SPAWN_CLEAR_RADIUS", 12];
-		//--- Slope limit: surfaceNormal [0,0,1] = perfectly flat (dot product 1.0).
-		//--- Accept any surface whose normal z-component exceeds the threshold (flat-ish).
-		//--- 0.97 ~= 14 deg slope max; airfields are typically < 2 deg.
-		_slopeThresh = missionNamespace getVariable ["WFBE_C_AIR_SPAWN_SLOPE_MAX", 0.97];
-		//--- Build candidate ring: 8 equally-spaced angles at 2 distances (the nominal slot
-		//--- itself plus an outer ring spaced 1.5x the clear radius away).
-		//--- We test the nominal position FIRST (candidate index 0), so an unoccupied
-		//--- nominal point is returned immediately with no relocation penalty.
-		_candidates = [[_nomPos select 0, _nomPos select 1, 0]];  //--- candidate 0 = nominal
-		_stepAng  = 45;   //--- 8 directions per ring
-		_stepDist = _clearRad * 1.5;  //--- ring radius
-		_ri = 0;
-		while {_ri < 8} do {
-			_ra = _ri * _stepAng;
-			//--- A2-safe trig: sin/cos are global commands.
-			_ox = (_nomPos select 0) + _stepDist * (sin _ra);
-			_oy = (_nomPos select 1) + _stepDist * (cos _ra);
-			_candidates = _candidates + [[_ox, _oy, 0]];
-			_ri = _ri + 1;
-		};
-		//--- Evaluate each candidate.
-		_ci = 0;
-		while {_ci < (count _candidates)} do {
-			_cpos = _candidates select _ci;
-			//--- (a) slope check via surfaceNormal (returns [x,y,z]; z=1.0 on flat ground).
-			_sn = surfaceNormal [_cpos select 0, _cpos select 1];
-			_slope = _sn select 2;  //--- z component
-			if (_slope < _slopeThresh) then { _ci = _ci + 1 } else {
-			//--- (b) vehicle-occupancy + static-object clearance via nearestObjects.
-			//---     nearestObjects [[x,y,z], classes, radius] — A2-OA safe (no A3 form).
-			_objs = nearestObjects [[_cpos select 0, _cpos select 1, 0], ["All"], _clearRad];
-			//--- Exclude the newly-created vehicle itself (it is already at _position).
-			_objs = _objs - [_vehicle];
-			//--- Exclude men (infantry don't block aircraft)
-			private ["_filtObjs","_fo"];
-			_filtObjs = [];
-			{ if (!(_x isKindOf "Man")) then { _filtObjs = _filtObjs + [_x] } } forEach _objs;
-			if ((count _filtObjs) > 0) then { _ci = _ci + 1 } else {
-				//--- Candidate passes both tests — use it.
-				_safePos = [_cpos select 0, _cpos select 1, 0.5];
-				_ci = count _candidates;  //--- break the while loop
-			};
-			};
-		};
-		//--- Relocate only if a strictly better position was found.
-		if ((_safePos select 0) != (_nomPos select 0) || {(_safePos select 1) != (_nomPos select 1)}) then {
-			_vehicle setPos _safePos;
-			diag_log Format ["AIRSPAWN|v1|relocated|side=%1|class=%2|from=%3|to=%4", sideJoinedText, typeOf _vehicle, _nomPos, _safePos];
-		} else {
-			diag_log Format ["AIRSPAWN|v1|ok|side=%1|class=%2|pos=%3", sideJoinedText, typeOf _vehicle, _safePos];
-		};
-	};
 	//--- Empty Vehicle: a crewless purchase is COMPLETE at this point - this exitWith only skips the
 	//--- crew-management remainder of this else-block (ENGINE-VERIFIED, see the _buyFailed contract above);
 	//--- execution falls through to the shared tail, which releases the queue slot exactly once and shows
