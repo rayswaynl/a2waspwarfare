@@ -60,7 +60,7 @@ while {true} do {
 detach _cargoVehicle;
 
 [_cargoVehicle,_side] Spawn {
-	Private ['_chute','_side','_vehicle'];
+	Private ['_chute','_dropStart','_side','_vehicle'];
 	_vehicle = _this select 0;
 	_side = _this select 1;
 	sleep 2;
@@ -69,8 +69,9 @@ detach _cargoVehicle;
 	_chute setPos [getPos _vehicle select 0, getPos _vehicle select 1, (getPos _vehicle select 2) - 11];
 	_chute setDir (getDir _vehicle);
 	_vehicle attachTo [_chute,[0,0,0]];
-	waitUntil {getPos _vehicle select 2 < 10 || !alive _vehicle};
-	detach _vehicle;
+	_dropStart = time;
+	while {!isNull _vehicle && alive _vehicle && ((getPos _vehicle select 2) >= 10) && ((time - _dropStart) < 120)} do {sleep 1};
+	if (!isNull _vehicle) then {detach _vehicle};
 	sleep 10;
 	deleteVehicle _chute;
 };
