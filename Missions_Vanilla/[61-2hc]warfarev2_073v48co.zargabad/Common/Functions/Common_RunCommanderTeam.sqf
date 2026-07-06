@@ -993,7 +993,7 @@ while {!WFBE_GameOver && _alive} do {
 				_usTier = if (count _order > 3) then {_order select 3} else {0}; //--- UNSTUCK FIX (Ray 2026-06-16): read the strike tier from the order seq (atomic), NOT the out-of-band wfbe_aicom_unstuck flag, which a later commander cycle reset to 0 before this fresh-seq block ran -> UNSTUCK_FIRED was ~never hit. Governor at ~459 still reads the flag for gear-slow (unaffected).
 				if (_pressSyn) then {_usTier = 0};   //--- stack-pass: synthetic press accepts are NOT stuck re-issues - never re-fire the strike ladder (reverse pulse / lane flip / tier-3 teleport) off the real order's stale tier
 				if (isNil "_usTier") then {_usTier = 0};
-				if (!isNil {_team getVariable "wfbe_aicom_decap"}) then {_usTier = 0};	//--- press guard: a stamped pressing team is not a stuck re-issue - never fire the UNSTUCK strike ladder (teleport/reverse/lane-flip) on a live press
+				if (_pressAct) then {_usTier = 0};	//--- press guard: a stamped pressing team (valid press pos) is not a stuck re-issue - never fire the UNSTUCK strike ladder (teleport/reverse/lane-flip) on a live press
 				if (_usTier > 0) then {
 					[_team, _usTier, _side] Spawn {
 						private ["_uTeam","_uTier","_uSide","_uLdr","_uVeh","_uNode","_uRds","_uPlayerNear","_uOnFoot","_uHullDead","_uFootPlayerNear","_uFootRds","_uFootNode","_recV2","_uOnWater","_uForceRoad"]; //--- cmdcon41-w3e +_recV2/_uOnWater/_uForceRoad
