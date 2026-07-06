@@ -115,7 +115,7 @@ if (_ctrlPressed) exitWith {
 			_confirmData = [_target, time + 3];
 			missionNamespace setVariable ["WFBE_CLIENT_DISBAND_PENDING", _confirmData];
 			_message = Format ["Hold CTRL-click again within 3s to disband AI %1.", _aiId];
-			titleText [_message, "PLAIN DOWN"];
+			hintSilent _message; //--- fix(hunt): Ray order - disband feedback stays OFF center screen (matches the eight hintSilent exits above; center-screen titleText regressed in the disband-confirm merge)
 			_disbandNow = false;
 		} else {
 			missionNamespace setVariable ["WFBE_CLIENT_DISBAND_PENDING", []];
@@ -125,7 +125,7 @@ if (_ctrlPressed) exitWith {
 	if (_disbandNow) then {
 		_target setDamage 1;
 		_message = Format ["Disbanded AI %1.", _aiId];
-		titleText [_message, "PLAIN DOWN"];
+		hintSilent _message; //--- fix(hunt): Ray order - disband feedback stays OFF center screen (matches the eight hintSilent exits above; center-screen titleText regressed in the disband-confirm merge)
 	};
 	false
 };
