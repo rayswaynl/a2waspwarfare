@@ -13,8 +13,14 @@ function Invoke-MarkerSweep {
 		[Parameter(Mandatory)] [string[]]$Arguments,
 		[switch]$ExpectFailure
 	)
-	$output = & powershell -NoProfile -ExecutionPolicy Bypass -File $scriptPath @Arguments 2>&1
-	$exitCode = $LASTEXITCODE
+	$oldErrorActionPreference = $ErrorActionPreference
+	$ErrorActionPreference = "Continue"
+	try {
+		$output = & powershell -NoProfile -ExecutionPolicy Bypass -File $scriptPath @Arguments 2>&1
+		$exitCode = $LASTEXITCODE
+	} finally {
+		$ErrorActionPreference = $oldErrorActionPreference
+	}
 	if ($ExpectFailure) {
 		if ($exitCode -eq 0) { throw "Expected marker sweep to fail, but exit code was 0. Output: $output" }
 	} else {
@@ -139,6 +145,18 @@ try {
 		"-RptDirectory", $tempRoot,
 		"-Latest", "2",
 		"-RequirePattern", "DOES_NOT_EXIST"
+	) -ExpectFailure)
+
+	[void](Invoke-MarkerSweep -Arguments @(
+		"-RptDirectory", $tempRoot,
+		"-Latest", "-1",
+		"-Json"
+	) -ExpectFailure)
+
+	[void](Invoke-MarkerSweep -Arguments @(
+		"-RptDirectory", $tempRoot,
+		"-SampleLimit", "-1",
+		"-Json"
 	) -ExpectFailure)
 
 	Write-Host "Test-WaspRptMarkerSweep.SelfTest: PASS"
