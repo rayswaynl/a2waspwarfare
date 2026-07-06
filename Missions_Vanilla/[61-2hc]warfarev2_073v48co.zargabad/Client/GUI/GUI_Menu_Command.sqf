@@ -255,14 +255,15 @@ while {alive player && dialog} do {
 					_focusArmed = false;
 					hintSilent parseText "<t color='#F8D664'>Focus only steers the AI when it holds command of this side.</t>";
 				} else {
-					if ((_now - _lastSend) < _cool) then {
-						hintSilent parseText "<t color='#F8D664'>Orders on cooldown - wait a moment.</t>";
+					private "_focusCool"; _focusCool = _cool max (missionNamespace getVariable ["WFBE_C_TEAM_FOCUS_COOLDOWN", 120]); //--- TP-13 stack-pass: the SERVER rate-limits focus at WFBE_C_TEAM_FOCUS_COOLDOWN (120s); gate the client to the same so it never shows a false "focus set" hint the server silently rejects.
+					if ((_now - _lastSend) < _focusCool) then {
+						hintSilent parseText "<t color='#F8D664'>AI focus on cooldown - wait a moment.</t>";
 					} else {
 						_position = _map posScreenToWorld [mouseX, mouseY];
 						private "_fT"; _fT = objNull;
 						if (!isNil "towns" && {count towns > 0}) then {_fT = [_position, towns] Call WFBE_CO_FNC_GetClosestEntity};
 						if (!isNull _fT) then {
-							["RequestSpecial", ["aicom-focus", sideJoined, _fT]] Call WFBE_CO_FNC_SendToServer;
+							["RequestSpecial", ["aicom-focus", sideJoined, _fT, player]] Call WFBE_CO_FNC_SendToServer; //--- TP-13: send player so the server can key its per-UID rate limit (server count-guards for legacy 3-arg senders)
 							["TempAnim", getPos _fT, "selector_selectedMission", 1, "ColorYellow", 1, 1.2] Spawn MarkerAnim;
 							_lastSend = _now; _focusArmed = false; _lastIntent = "";   //--- repaint the intent readout with the new focus town
 							hintSilent parseText (format ["<t color='#A0E060'>AI focus set: %1.</t>", _fT getVariable ["name", "?"]]);
