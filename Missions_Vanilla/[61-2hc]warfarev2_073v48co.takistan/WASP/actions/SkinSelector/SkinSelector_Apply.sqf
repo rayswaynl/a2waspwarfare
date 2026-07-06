@@ -453,6 +453,8 @@ WFBE_SkinSelector_Applied = true;
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {
 			[Format ["WFBE_SKIN_CHOICE_%1", _sideStr], _chosenClass] Call WFBE_CO_FNC_SetProfileVariable;
 			saveProfileNamespace;
+		} else {
+			diag_log "[WFBE (SKIN)] WARN: WFBE_C_SKIN_PERSIST enabled but WFBE_CO_FNC_SetProfileVariable not loaded - skin choice NOT persisted.";
 		};
 	};
 WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on successful completion
