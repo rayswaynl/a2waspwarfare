@@ -38,7 +38,7 @@
 private ["_side","_logik","_snap","_myEff","_enEff","_enTowns","_myTowns","_enHQ","_enHQPos","_enHQAlive",
 	"_domRatio","_abortRatio","_maxEnTowns","_armTicks","_minCommit","_dominant","_streak","_committed",
 	"_t0","_state","_tgtTowns","_teams","_nearTown","_bestD","_d","_t","_stamped","_sideText","_elMin",
-	"_senseRadius","_senseInterval","_senseChance","_commitRadius","_senseTick","_sensed","_inRange","_rollNow","_ldr"];
+	"_senseRadius","_senseInterval","_senseChance","_commitRadius","_senseTick","_sensed","_inRange","_rollNow","_ldr","_garTeam","_holdT","_isHolding"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -81,12 +81,21 @@ _sensed    = if (isNil "_sensed") then {false} else {_sensed};
 //--- every SENSE_INTERVAL ticks, chance SENSE_CHANCE, latches _sensed until contact is lost.
 //--- No roll, no ARM progress: _sensed=false blocks the streak entirely.
 _teams = _logik getVariable ["wfbe_teams", []];
+_garTeam = _logik getVariable ["wfbe_aicom_garrison", grpNull];   //--- REAL garrison marker (AssignTowns:246 sets it; the old wfbe_aicom_base_garrison team-var was set NOWHERE - #724 review MAJOR)
 _inRange = 0;
 if (_enHQAlive) then {
 	{
 		_t = _x;
 		if (!isNull _t && {({alive _x} count (units _t)) > 0}) then {
-			if (isNil {_t getVariable "wfbe_aicom_base_garrison"} && {isNil {_t getVariable "wfbe_aicom_hold"}}) then {
+			//--- REAL eligibility (#724 review MAJOR fix): the old guards checked phantom team-vars set nowhere.
+			//--- Garrison = the side-logic wfbe_aicom_garrison group (identity compare, Allocate :406 idiom);
+			//--- hold = per-team wfbe_aicom_holding_town latch (cleared to objNull, so isNil alone is not enough -
+			//--- AssignTowns :262 idiom); player-led teams excluded like every Allocate eligibility pass (never
+			//--- auto-press or sense off a human squad).
+			_holdT = _t getVariable "wfbe_aicom_holding_town";
+			_isHolding = false;
+			if (!isNil "_holdT") then {if (typeName _holdT == "OBJECT" && {!isNull _holdT}) then {_isHolding = true}};
+			if (_t != _garTeam && {!_isHolding} && {!isPlayer (leader _t)}) then {
 				_ldr = leader _t;
 				if (!isNull _ldr && {alive _ldr} && {((getPos _ldr) distance _enHQPos) <= _senseRadius}) then {_inRange = _inRange + 1};
 			};
@@ -158,7 +167,15 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ENABLE", 0]) > 0 && {_co
 	{
 		_t = _x;
 		if (!isNull _t && {({alive _x} count (units _t)) > 0}) then {
-			if (isNil {_t getVariable "wfbe_aicom_base_garrison"} && {isNil {_t getVariable "wfbe_aicom_hold"}}) then {
+			//--- REAL eligibility (#724 review MAJOR fix): the old guards checked phantom team-vars set nowhere.
+			//--- Garrison = the side-logic wfbe_aicom_garrison group (identity compare, Allocate :406 idiom);
+			//--- hold = per-team wfbe_aicom_holding_town latch (cleared to objNull, so isNil alone is not enough -
+			//--- AssignTowns :262 idiom); player-led teams excluded like every Allocate eligibility pass (never
+			//--- auto-press or sense off a human squad).
+			_holdT = _t getVariable "wfbe_aicom_holding_town";
+			_isHolding = false;
+			if (!isNil "_holdT") then {if (typeName _holdT == "OBJECT" && {!isNull _holdT}) then {_isHolding = true}};
+			if (_t != _garTeam && {!_isHolding} && {!isPlayer (leader _t)}) then {
 				//--- SCOPED COMMIT (owner Q1): only teams already NEAR the HQ press; the rest keep their towns.
 				_ldr = leader _t;
 				if (!isNull _ldr && {alive _ldr} && {((getPos _ldr) distance _enHQPos) <= _commitRadius}) then {
