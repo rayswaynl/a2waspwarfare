@@ -56,9 +56,9 @@ missionNamespace setVariable ['WFBE_NEURODEF_BANK_WALLS',[
 //--- additional concrete slabs to them like the HQ has for survivability".
 //---
 //--- The cmdcon42-g wall LADDER v2 (bagfence/HESCO/concrete material swap) is REVERTED —
-//--- those *_WALLS_V2 factory arrays are DELETED and the factories are back on their
+//--- those v2 factory wall arrays are DELETED and the factories are back on their
 //--- ORIGINAL legacy *_WALLS compositions (untouched above / in the HEAVY+AIRCRAFT blocks below).
-//--- WFBE_C_WALLS_V2 stays REGISTERED but is now DEAD (default 0); see Init_CommonConstants.sqf.
+//--- The dead v2 flag was removed entirely in the 2026-07-06 deadcode sweep.
 //---
 //--- These *_WALLS_V3 arrays = the ORIGINAL legacy factory walls PLUS a ring/segments of
 //--- Concrete_Wall_EP1 slabs, the EXACT class the HQ funnel uses (WFBE_NEURODEF_HEADQUARTERS_WALLS
