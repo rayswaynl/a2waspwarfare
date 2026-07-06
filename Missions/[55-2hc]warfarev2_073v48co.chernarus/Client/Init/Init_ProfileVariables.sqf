@@ -101,4 +101,18 @@ _profile_var = profileNamespace getVariable "WFBE_AUDIO_CUES";
 if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_AUDIO_CUES = _profile_var}};
 missionNamespace setVariable ["WFBE_AUDIO_CUES", WFBE_AUDIO_CUES];
 
+//--- TP-21: Team Menu V2 gear presets (4 slots, per-side, ARRAY of ARRAYs).
+//--- WFBE_PERSISTENT_TEAM_MENU_V2_PRESETS is side-keyed so each side has independent slots.
+//--- Format per slot: [] (empty/unset) or [weapons, magazines, backpack, bp_content, [p,s,l]] (wfbe_custom_gear shape).
+WFBE_TM2_Presets = [[],[],[],[]];
+_profile_var = profileNamespace getVariable Format["WFBE_PERSISTENT_TM2_PRESETS_%1", WFBE_Client_SideJoinedText];
+if !(isNil "_profile_var") then {
+	if (typeName _profile_var == "ARRAY") then {
+		if (count _profile_var == 4) then {
+			WFBE_TM2_Presets = _profile_var;
+		};
+	};
+};
+missionNamespace setVariable ["WFBE_TM2_Presets", WFBE_TM2_Presets];
+
 ["INITIALIZATION", "Init_ProfileVariables.sqf: Possible profile variables were defined."] Call WFBE_CO_FNC_LogContent;

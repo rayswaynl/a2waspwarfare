@@ -1,0 +1,417 @@
+disableSerialization;
+
+private ["_display","_units","_upgLevel","_presets","_i","_slot","_preset","_badge","_desc","_finalNumber","_isInVehicle","_descVehi","_targetUnit","_vehicle","_liveCrew","_destroy","_hitPoints","_hitCfg","_hitName","_curUnitSel","_need_save","_tier","_topTier","_weapons","_mags","_bp","_bpContent","_combo","_x","_crewList","_repairTimer"];
+
+_display = _this select 0;
+MenuAction = -1;
+_need_save = false;
+
+//--- Income readout.
+ctrlSetText [13010, Format [localize "STR_WF_Income", Call GetPlayerFunds, (sideJoined) Call GetIncome]];
+
+//--- FX / vote-popup / high-climb initial state (kept from V1).
+if (votePopUp) then {
+	ctrlSetText [13019, localize "STR_WF_VOTING_PopUpOffButton"];
+} else {
+	ctrlSetText [13019, localize "STR_WF_VOTING_PopUpOnButton"];
+};
+if (missionNamespace getVariable ["WFBE_HighClimbingDefaultEnabled", false]) then {
+	ctrlSetText [13020, localize "STR_WF_TEAM_HighClimbingDefaultOn"];
+} else {
+	ctrlSetText [13020, localize "STR_WF_TEAM_HighClimbingDefaultOff"];
+};
+{lbAdd [13018, _x]} forEach ["None","FX 1","FX 2","FX 3","FX 4","FX 5"];
+lbSetCurSel [13018, currentFX];
+
+//--- Gear tier gate level.
+_upgLevel = ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_GEAR;
+if ((sideJoined == resistance) && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {_upgLevel = 99};
+
+//--- WFBE_TM2_Presets: array of 4 slots, each slot is [] or [weapons,mags,bp,bpContent,[p,s,l]].
+//--- Loaded in Init_ProfileVariables.sqf from profileNamespace; we work with a local copy.
+_presets = missionNamespace getVariable ["WFBE_TM2_Presets", [[],[],[],[]]];
+if (count _presets != 4) then {_presets = [[],[],[],[]]};
+
+//--- Helper: compute gear badge string from preset slot (_slot = index 0..3).
+//--- Returns "---" for empty slot, or "[T0]".."[T4]" for highest tier item in the preset.
+//--- We compute once per refresh; wfbe_custom_gear format: [weapons,mags,bp,bpContent,[p,s,l]].
+//--- Item data lookup: missionNamespace getVariable classname -> [icon,name,cost,tier,...].
+//--- We check every weapon + backpack classname found in the slot for their registered tier.
+
+//--- Fill unit combo (squad AI only, no player).
+_units = ((units group player) Call GetLiveUnits) - [player];
+{
+	_desc = [typeOf _x, 'displayName'] Call GetConfigInfo;
+	_finalNumber = (_x) Call GetAIDigit;
+	_isInVehicle = "";
+	if (_x != vehicle _x) then {
+		_descVehi = [typeOf (vehicle _x), 'displayName'] Call GetConfigInfo;
+		_isInVehicle = " [" + _descVehi + "] ";
+	};
+	//--- Out-of-fuel hint: mark units in low-fuel owned vehicles.
+	private ["_fuelHint"];
+	_fuelHint = "";
+	if (_x != vehicle _x) then {
+		if ((fuel (vehicle _x)) < 0.05) then {_fuelHint = " [NO FUEL]"};
+	};
+	lbAdd [13071, "[" + _finalNumber + "] " + _desc + _isInVehicle + _fuelHint];
+} forEach _units;
+lbSetCurSel [13071, 0];
+
+//--- Local helper: compute badge for a preset slot array.
+//--- Returns string: "---" empty, "[T0]".."[T4]" otherwise.
+
+//--- Badge refresh sub (run on open + after save).
+//--- IDC badge controls: slots 1-4 = IDC 13051, 13055, 13059, 13063.
+private ["_badgeIDCs"];
+_badgeIDCs = [13051, 13055, 13059, 13063];
+
+{
+	_slot = _presets select _forEachIndex;
+	_badge = "---";
+	if (count _slot > 0) then {
+		_topTier = 0;
+		//--- weapons array (index 0), backpack classname (index 2).
+		private ["_slotWeps","_slotBp","_itemData","_itemTier"];
+		_slotWeps = _slot select 0;
+		_slotBp   = _slot select 2;
+		{
+			_itemData = missionNamespace getVariable _x;
+			if !(isNil "_itemData") then {
+				_itemTier = _itemData select 3;
+				if (_itemTier > _topTier) then {_topTier = _itemTier};
+			};
+		} forEach _slotWeps;
+		if (_slotBp != "") then {
+			_itemData = missionNamespace getVariable _slotBp;
+			if !(isNil "_itemData") then {
+				_itemTier = _itemData select 3;
+				if (_itemTier > _topTier) then {_topTier = _itemTier};
+			};
+		};
+		_badge = "[T" + str _topTier + "]";
+	};
+	ctrlSetText [_badgeIDCs select _forEachIndex, _badge];
+} forEach _presets;
+
+//--- Helper macro: apply/rebuy button grey-out based on tier gate + slot content.
+//--- Apply IDCs: 13053 13057 13061 13065 | Save IDCs: 13052 13056 13060 13064 | Rebuy IDCs: 13054 13058 13062 13066.
+private ["_applyIDCs","_rebuyIDCs"];
+_applyIDCs = [13053, 13057, 13061, 13065];
+_rebuyIDCs = [13054, 13058, 13062, 13066];
+
+{
+	_slot = _presets select _forEachIndex;
+	private ["_isEmpty","_topTier2","_canApply"];
+	_isEmpty = (count _slot == 0);
+	_topTier2 = 0;
+	if (!_isEmpty) then {
+		private ["_sw","_sb","_id","_it"];
+		_sw = _slot select 0;
+		_sb = _slot select 2;
+		{
+			_id = missionNamespace getVariable _x;
+			if !(isNil "_id") then {
+				_it = _id select 3;
+				if (_it > _topTier2) then {_topTier2 = _it};
+			};
+		} forEach _sw;
+		if (_sb != "") then {
+			_id = missionNamespace getVariable _sb;
+			if !(isNil "_id") then {
+				_it = _id select 3;
+				if (_it > _topTier2) then {_topTier2 = _it};
+			};
+		};
+	};
+	_canApply = (!_isEmpty) && {_topTier2 <= _upgLevel};
+	ctrlEnable [_applyIDCs select _forEachIndex, _canApply];
+	ctrlEnable [_rebuyIDCs select _forEachIndex, _canApply];
+} forEach _presets;
+
+//--- ============================================================
+//--- Main event loop.
+//--- ============================================================
+_repairTimer = 0; //--- used to pace the "repair in progress" hint.
+
+while {alive player && dialog} do {
+	sleep 0.05;
+
+	if (side group player != sideJoined) exitWith {closeDialog 0};
+	if (!dialog) exitWith {};
+
+	//--- Periodic income readout refresh (every ~2s).
+	_repairTimer = _repairTimer + 0.05;
+	if (_repairTimer > 2) then {
+		ctrlSetText [13010, Format [localize "STR_WF_Income", Call GetPlayerFunds, (sideJoined) Call GetIncome]];
+		_repairTimer = 0;
+	};
+
+	//--- ── GEAR PRESET SAVE (slots 1-4 = MenuAction 1001-1004) ──────────────────
+	if (MenuAction >= 1001 && {MenuAction <= 1004}) then {
+		private ["_slotIdx","_gear","_saveOk"];
+		_slotIdx = MenuAction - 1001; //--- 0..3
+		MenuAction = -1;
+		_gear = player getVariable "wfbe_custom_gear";
+		_saveOk = false;
+		if !(isNil "_gear") then {
+			if (typeName _gear == "ARRAY" && {count _gear == 5}) then {
+				_presets set [_slotIdx, +_gear]; //--- deep copy
+				_saveOk = true;
+			};
+		};
+		if (!_saveOk) then {
+			hint Format ["Slot %1: no gear purchased yet. Buy a loadout first.", _slotIdx + 1];
+		} else {
+			//--- Save to profileNamespace.
+			missionNamespace setVariable ["WFBE_TM2_Presets", _presets];
+			if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {
+				[Format ["WFBE_PERSISTENT_TM2_PRESETS_%1", WFBE_Client_SideJoinedText], _presets] Call WFBE_CO_FNC_SetProfileVariable;
+				_need_save = true;
+			} else {
+				profileNamespace setVariable [Format ["WFBE_PERSISTENT_TM2_PRESETS_%1", WFBE_Client_SideJoinedText], _presets];
+				saveProfileNamespace;
+			};
+			//--- Refresh badges and button state.
+			{
+				private ["_s2","_b2","_t2","_sw2","_sb2","_id2","_it2","_ca2"];
+				_s2 = _presets select _forEachIndex;
+				_b2 = "---";
+				if (count _s2 > 0) then {
+					_t2 = 0;
+					_sw2 = _s2 select 0;
+					_sb2 = _s2 select 2;
+					{_id2 = missionNamespace getVariable _x; if !(isNil "_id2") then {_it2 = _id2 select 3; if (_it2 > _t2) then {_t2 = _it2}}} forEach _sw2;
+					if (_sb2 != "") then {_id2 = missionNamespace getVariable _sb2; if !(isNil "_id2") then {_it2 = _id2 select 3; if (_it2 > _t2) then {_t2 = _it2}}};
+					_b2 = "[T" + str _t2 + "]";
+					_ca2 = (_t2 <= _upgLevel);
+					ctrlEnable [_applyIDCs select _forEachIndex, _ca2];
+					ctrlEnable [_rebuyIDCs select _forEachIndex, _ca2];
+				} else {
+					ctrlEnable [_applyIDCs select _forEachIndex, false];
+					ctrlEnable [_rebuyIDCs select _forEachIndex, false];
+				};
+				ctrlSetText [_badgeIDCs select _forEachIndex, _b2];
+			} forEach _presets;
+			hint Format ["Preset %1 saved.", _slotIdx + 1];
+		};
+	};
+
+	//--- ── GEAR PRESET APPLY (slots 1-4 = MenuAction 1011-1014) ─────────────────
+	if (MenuAction >= 1011 && {MenuAction <= 1014}) then {
+		private ["_slotIdx2","_gear2","_upgNow","_topT","_sw3","_sb3","_id3","_it3"];
+		_slotIdx2 = MenuAction - 1011;
+		MenuAction = -1;
+		_gear2 = _presets select _slotIdx2;
+		if (count _gear2 == 0) exitWith {hint Format ["Slot %1 is empty.", _slotIdx2 + 1]};
+		//--- Re-check tier gate at apply time.
+		_upgNow = ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_GEAR;
+		if ((sideJoined == resistance) && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {_upgNow = 99};
+		_topT = 0;
+		_sw3 = _gear2 select 0;
+		_sb3 = _gear2 select 2;
+		{_id3 = missionNamespace getVariable _x; if !(isNil "_id3") then {_it3 = _id3 select 3; if (_it3 > _topT) then {_topT = _it3}}} forEach _sw3;
+		if (_sb3 != "") then {_id3 = missionNamespace getVariable _sb3; if !(isNil "_id3") then {_it3 = _id3 select 3; if (_it3 > _topT) then {_topT = _it3}}};
+		if (_topT > _upgNow) exitWith {hint Format ["Slot %1 requires gear tier %2 (you have %3). Upgrade first.", _slotIdx2 + 1, _topT, _upgNow]};
+		//--- Validate each classname is available to this side (graceful skip for missing items).
+		private ["_wList","_mList","_bpCls","_bpCnt","_wpCombined","_item","_cfg"];
+		_wList   = _gear2 select 0;
+		_mList   = _gear2 select 1;
+		_bpCls   = _gear2 select 2;
+		_bpCnt   = _gear2 select 3;
+		_wpCombined = _gear2 select 4; //--- [primary, pistol, secondary]
+		//--- Apply: equip via WFBE_CO_FNC_EquipUnit (same call as respawn path).
+		//--- EquipUnit signature: [unit, weapons, magazines, weaponCombined, backpack, backpackContent].
+		[player, _wList, _mList, _wpCombined, _bpCls, _bpCnt] Call WFBE_CO_FNC_EquipUnit;
+		//--- Write wfbe_custom_gear so the NEXT rebuy applies this preset (not the last bought kit).
+		player setVariable ["wfbe_custom_gear", +_gear2];
+		hint Format ["Preset %1 applied.", _slotIdx2 + 1];
+	};
+
+	//--- ── GEAR PRESET REBUY (set as rebuy-on-death kit: 1021-1024) ─────────────
+	if (MenuAction >= 1021 && {MenuAction <= 1024}) then {
+		private ["_slotIdx3","_gear3","_upgNow3","_topT3","_sw4","_sb4","_id4","_it4"];
+		_slotIdx3 = MenuAction - 1021;
+		MenuAction = -1;
+		_gear3 = _presets select _slotIdx3;
+		if (count _gear3 == 0) exitWith {hint Format ["Slot %1 is empty.", _slotIdx3 + 1]};
+		_upgNow3 = ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_GEAR;
+		if ((sideJoined == resistance) && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {_upgNow3 = 99};
+		_topT3 = 0;
+		_sw4 = _gear3 select 0;
+		_sb4 = _gear3 select 2;
+		{_id4 = missionNamespace getVariable _x; if !(isNil "_id4") then {_it4 = _id4 select 3; if (_it4 > _topT3) then {_topT3 = _it4}}} forEach _sw4;
+		if (_sb4 != "") then {_id4 = missionNamespace getVariable _sb4; if !(isNil "_id4") then {_it4 = _id4 select 3; if (_it4 > _topT3) then {_topT3 = _it4}}};
+		if (_topT3 > _upgNow3) exitWith {hint Format ["Slot %1 requires gear tier %2 (you have %3). Cannot set as rebuy kit.", _slotIdx3 + 1, _topT3, _upgNow3]};
+		//--- Set wfbe_custom_gear: the respawn handler reads this variable and auto-applies on death.
+		player setVariable ["wfbe_custom_gear", +_gear3];
+		hint Format ["Preset %1 set as rebuy-on-death kit.", _slotIdx3 + 1];
+	};
+
+	//--- ── SQUAD: DISBAND (MenuAction 3 — reuses existing disband logic from V1) ──
+	if (MenuAction == 3) then {
+		MenuAction = -1;
+		titleText [localize "STR_WF_TEAM_MapShortcutDisbandTip", "PLAIN DOWN", 3];
+		_curUnitSel = lbCurSel 13071;
+		if (_curUnitSel != -1) then {
+			private ["_tgt","_veh2","_lc2","_des2"];
+			_tgt  = _units select _curUnitSel;
+			_veh2 = vehicle _tgt;
+			_des2 = [_tgt];
+			if (_veh2 != _tgt) then {
+				_lc2 = [];
+				{
+					if (alive _x || isPlayer _x) then {
+						if (_x != _tgt) then {_lc2 = _lc2 + [_x]};
+					};
+				} forEach crew _veh2;
+				if (count _lc2 == 0) then {_des2 = _des2 + [_veh2]};
+			};
+			{
+				if !(isPlayer _x) then {
+					if (_x isKindOf 'Man') then {removeAllWeapons _x};
+					_x setDammage 1;
+				};
+			} forEach _des2;
+			//--- Refresh unit combo.
+			_units = ((units group player) Call GetLiveUnits) - [player];
+			lbClear 13071;
+			{
+				private ["_d2","_fn2","_iv2","_dv2","_fh2"];
+				_d2  = [typeOf _x, 'displayName'] Call GetConfigInfo;
+				_fn2 = (_x) Call GetAIDigit;
+				_iv2 = "";
+				_fh2 = "";
+				if (_x != vehicle _x) then {
+					_dv2 = [typeOf (vehicle _x), 'displayName'] Call GetConfigInfo;
+					_iv2 = " [" + _dv2 + "] ";
+					if ((fuel (vehicle _x)) < 0.05) then {_fh2 = " [NO FUEL]"};
+				};
+				lbAdd [13071, "[" + _fn2 + "] " + _d2 + _iv2 + _fh2];
+			} forEach _units;
+			lbSetCurSel [13071, 0];
+		};
+	};
+
+	//--- ── SQUAD: EJECT (MenuAction 2001) ───────────────────────────────────────
+	if (MenuAction == 2001) then {
+		MenuAction = -1;
+		_curUnitSel = lbCurSel 13071;
+		if (_curUnitSel != -1) then {
+			private ["_ejUnit","_ejVeh"];
+			_ejUnit = _units select _curUnitSel;
+			_ejVeh  = vehicle _ejUnit;
+			if (_ejVeh != _ejUnit) then {
+				//--- Eject: action on the unit itself. Local only - works for HC-owned crew too (unit is local on HC).
+				_ejUnit action ["Eject", _ejVeh];
+				hint Format ["Ejecting %1 from %2.", [typeOf _ejUnit, 'displayName'] Call GetConfigInfo, [typeOf _ejVeh, 'displayName'] Call GetConfigInfo];
+			} else {
+				hint "Unit is not in a vehicle.";
+			};
+		};
+	};
+
+	//--- ── SQUAD: GET-OUT-AND-REPAIR (MenuAction 2002) ──────────────────────────
+	//--- All crew of the selected unit's vehicle dismount, repair mobility-only
+	//--- hitpoints (wheels/tracks/engine), then remount.
+	if (MenuAction == 2002) then {
+		MenuAction = -1;
+		_curUnitSel = lbCurSel 13071;
+		if (_curUnitSel != -1) then {
+			private ["_repUnit","_repVeh"];
+			_repUnit = _units select _curUnitSel;
+			_repVeh  = vehicle _repUnit;
+			if (_repVeh == _repUnit) exitWith {hint "Unit is not in a vehicle."};
+			closeDialog 0;
+			//--- Spawn so the dialog can close cleanly before the sleep-loop runs.
+			[_repVeh, _units] Spawn {
+				private ["_rv","_sqUnits","_crewList","_cu","_hp","_hpCfg","_hn","_repTime","_j"];
+				_rv       = _this select 0;
+				_sqUnits  = _this select 1;
+				_crewList = crew _rv;
+				//--- Dismount crew (AI only — do not eject the player).
+				{
+					if !(isPlayer _x) then {
+						_x action ["GetOut", _rv];
+					};
+				} forEach _crewList;
+				sleep 2;
+				hint "Crew dismounted. Repairing mobility...";
+				//--- Mobility-only repair: wheels/tracks/engine hitpoints only.
+				_repTime = 8;
+				_j = 0;
+				while {_j < _repTime} do {
+					sleep 1;
+					_j = _j + 1;
+				};
+				_hp = configFile >> "CfgVehicles" >> (typeOf _rv) >> "HitPoints";
+				if (isClass _hp && {(count _hp) > 0}) then {
+					for "_hi" from 0 to ((count _hp) - 1) do {
+						_hpCfg = _hp select _hi;
+						_hn = getText (_hpCfg >> "name");
+						//--- Only fix mobility hitpoints: wheel/track/engine/motor.
+						if ((_hn != "") && {((_hn find "wheel") >= 0) || {((_hn find "track") >= 0) || {((_hn find "engine") >= 0) || {(_hn find "motor") >= 0}}}}) then {
+							_rv setHit [_hn, 0];
+						};
+					};
+				};
+				hint "Mobility restored. Remounting...";
+				sleep 2;
+				//--- Remount: each crew member returns to their original seat.
+				{
+					if !(isPlayer _x) then {
+						_x moveInAny _rv;
+					};
+				} forEach _crewList;
+				hint "Crew remounted.";
+			};
+		};
+	};
+
+	//--- ── FX / vote / high-climb (same as V1) ─────────────────────────────────
+	if (MenuAction == 6) then {
+		MenuAction = -1;
+		currentFX = lbCurSel 13018;
+		[currentFX] Spawn FX;
+	};
+
+	if (MenuAction == 13) then {
+		MenuAction = -1;
+		if (votePopUp) then {
+			votePopUp = false;
+			ctrlSetText [13019, localize "STR_WF_VOTING_PopUpOnButton"];
+		} else {
+			votePopUp = true;
+			ctrlSetText [13019, localize "STR_WF_VOTING_PopUpOffButton"];
+		};
+	};
+
+	if (MenuAction == 14) then {
+		MenuAction = -1;
+		WFBE_HighClimbingDefaultEnabled = !(missionNamespace getVariable ["WFBE_HighClimbingDefaultEnabled", false]);
+		missionNamespace setVariable ["WFBE_HighClimbingDefaultEnabled", WFBE_HighClimbingDefaultEnabled];
+		if (WFBE_HighClimbingDefaultEnabled) then {
+			ctrlSetText [13020, localize "STR_WF_TEAM_HighClimbingDefaultOn"];
+		} else {
+			ctrlSetText [13020, localize "STR_WF_TEAM_HighClimbingDefaultOff"];
+		};
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {
+			["WFBE_HIGH_CLIMBING_DEFAULT_ENABLED", WFBE_HighClimbingDefaultEnabled] Call WFBE_CO_FNC_SetProfileVariable;
+			_need_save = true;
+		} else {
+			profileNamespace setVariable ["WFBE_HIGH_CLIMBING_DEFAULT_ENABLED", WFBE_HighClimbingDefaultEnabled];
+			saveProfileNamespace;
+		};
+	};
+
+	//--- ── BACK (MenuAction 8) ──────────────────────────────────────────────────
+	if (MenuAction == 8) exitWith {
+		MenuAction = -1;
+		closeDialog 0;
+		createDialog "WF_Menu";
+	};
+};
+
+if (_need_save) then {
+	if !(isNil "WFBE_CO_FNC_SaveProfile") then {Call WFBE_CO_FNC_SaveProfile};
+};

@@ -81,7 +81,11 @@ while {alive player && dialog} do {
 	if (MenuAction == 3) exitWith {
 		MenuAction = -1;
 		closeDialog 0;
-		createDialog "RscMenu_Team";
+		if ((missionNamespace getVariable ["WFBE_C_TEAM_MENU_V2", 0]) > 0) then {
+			createDialog "RscMenu_TeamV2";
+		} else {
+			createDialog "RscMenu_Team";
+		};
 	};
 
 	//--- Voting Menu.
