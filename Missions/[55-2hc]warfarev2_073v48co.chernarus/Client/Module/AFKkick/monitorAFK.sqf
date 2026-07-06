@@ -4,11 +4,12 @@
 	returns: nothing
 */
 
-private ["_timer","_timeLeftToKick","_sleep"];
+private ["_timer","_timeLeftToKick","_sleep","_kickRequested"];
 
 _timer = 0;
+_kickRequested = false;
 
-while {!gameOver} do {
+while {!gameOver && !_kickRequested} do {
     if (WFBE_CO_VAR_NotAFK_update) then {
         _timer = 0;
         WFBE_CO_VAR_NotAFK_update = false;
@@ -22,6 +23,8 @@ while {!gameOver} do {
     };
 
     if (_timer > WFBE_CO_VAR_AFKkickThreshold) then {
+        _kickRequested = true;
+        AFKthresholdExceededName = name player;
         publicVariableServer "AFKthresholdExceededName";
         //--- SG14: authority relocated to server; client only REPORTS — server validates and kicks.
         WFBE_PVF_RequestAFKKick = ["SRVFNCRequestAFKKick", [player]];

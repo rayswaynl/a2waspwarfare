@@ -4,8 +4,8 @@
 	Lightweight, robust A2-OA 1.64 first-spawn welcome for new players - assessed the #1
 	release gap. Pure client cosmetic: a short SEQUENCE of skippable structuredText `hint`
 	cards explaining what WASP Warfare is, the win goal, the 3 core actions, where the
-	scroll-wheel WF menu lives, and what happens on death/respawn. A mid-round joiner also
-	gets a brief "you joined an in-progress match" note.
+	scroll-wheel WF menu lives, commander/supply basics, EASA refits, and what happens on
+	death/respawn. A mid-round joiner also gets a brief "you joined an in-progress match" note.
 
 	Spawned ONCE from Init_Client.sqf AFTER clientInitComplete (see the guarded call there).
 	Never blocks input or enrollment: it only paints `hint` cards on a real-time `uiSleep`
@@ -29,7 +29,7 @@
 	A3-only commands.
 */
 
-private ["_enable","_guerNote","_isGuer","_isJip","_jipThreshold","_jipNote","_respawnNote","_scrollHint","_welcome"];
+private ["_commandHint","_easaEnabled","_easaHint","_enable","_guerNote","_isGuer","_isJip","_jipThreshold","_jipNote","_respawnNote","_scrollHint","_welcome"];
 
 //--- Master toggle (default ON). Read locally so we never edit the shared Init_CommonConstants.
 _enable = missionNamespace getVariable ["WFBE_C_ONBOARDING_ENABLE", 1];
@@ -45,6 +45,7 @@ uiNamespace setVariable ["WFBE_CL_VAR_OnboardingShown", true];
 _jipThreshold = missionNamespace getVariable ["WFBE_CL_VAR_OnboardingJipThreshold", 60];
 _isJip = (time > _jipThreshold);
 _isGuer = false;
+_easaEnabled = (missionNamespace getVariable ["WFBE_C_MODULE_WFBE_EASA", 0]) > 0;
 
 //--- Wait until the player object is real and alive before showing anything (covers a slow JIP
 //--- spawn). uiSleep is real-time so this still advances if the sim is briefly paused. Bounded
@@ -82,7 +83,27 @@ _scrollHint = parseText (
 hint _scrollHint;
 uiSleep 13;
 
-//--- CARD 3: GUER cue - only for playable resistance slots.
+//--- CARD 3: Commander / supply cue (why towns and orders matter).
+_commandHint = parseText (
+	"<t size='1.2' color='#28ff14'>Commander and supply move the war.</t><br/><br/>"
+	+ "The commander uses <t color='#42b6ff'>side supply</t> to build factories, defences and upgrades. Captured towns feed that supply, so holding camps matters even when you are buying with your own cash.<br/><br/>"
+	+ "Use the <t color='#42b6ff'>COMMAND / VOTE</t> tools to vote a commander and follow orders. If the AI is commander, it spends the side economy for you."
+);
+hint _commandHint;
+uiSleep 12;
+
+//--- CARD 4: EASA cue - only when the aircraft-loadout module is enabled.
+if (_easaEnabled) then {
+	_easaHint = parseText (
+		"<t size='1.2' color='#28ff14'>Aircraft can refit at service points.</t><br/><br/>"
+		+ "When EASA is unlocked, pilots in supported aircraft can use <t color='#42b6ff'>Loadout (EASA)</t> at base service points to swap anti-air, anti-ground or multirole kits.<br/><br/>"
+		+ "Engineers can use repair-truck service points; GUER pilots can use friendly town centers."
+	);
+	hint _easaHint;
+	uiSleep 12;
+};
+
+//--- CARD 5: GUER cue - only for playable resistance slots.
 if (_isGuer) then {
 	_guerNote = parseText (
 		"<t size='1.2' color='#28ff14'>GUER plays differently.</t><br/><br/>"
@@ -93,7 +114,7 @@ if (_isGuer) then {
 	uiSleep 13;
 };
 
-//--- CARD 4: JIP cue - only for a mid-round joiner.
+//--- CARD 6: JIP cue - only for a mid-round joiner.
 if (_isJip) then {
 	_jipNote = parseText (
 		"<t size='1.2' color='#28ff14'>You joined a match in progress.</t><br/><br/>"
@@ -103,7 +124,7 @@ if (_isJip) then {
 	uiSleep 11;
 };
 
-//--- CARD 5: RESPAWN legend (one-liner on death/respawn).
+//--- CARD 7: RESPAWN legend (one-liner on death/respawn).
 _respawnNote = parseText (
 	"<t size='1.2' color='#28ff14'>If you go down...</t><br/><br/>"
 	+ "You respawn back at base (or a mobile respawn point) and keep playing - no permadeath. Re-buy / re-gear from the action menu and head back to the fight.<br/><br/>"

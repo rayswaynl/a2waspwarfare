@@ -1577,7 +1577,7 @@ while {!gameOver} do {
 						//--- W19 Heliborne QRF: the threatened FRIENDLY town the QRF lands on.
 						case 19: {if (!isNil "_w19TownPos") then {_mkPos = _w19TownPos}; _mkLife = 300; _mkType = "mil_pickup"};
 						//--- W22 Top Gun: the loiter point over the front. Lifetime = the 180s loiter window.
-						case 22: {if (!isNil "_w22TargetPos") then {_mkPos = _w22TargetPos}; _mkLife = 180; _mkType = "mil_air"};
+						case 22: {if (!isNil "_w22TargetPos") then {_mkPos = _w22TargetPos}; _mkLife = 180; _mkType = "mil_circle"};
 						//--- W23/W24 handled below (their apply spawns at HQ; mark the front town they head to).
 						case 23: {};
 						case 24: {};

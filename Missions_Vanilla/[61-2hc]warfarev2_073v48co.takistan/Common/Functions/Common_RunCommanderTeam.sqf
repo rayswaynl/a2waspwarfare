@@ -195,10 +195,12 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 	{ if (!isNull _x && {_x isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) == 0}) exitWith {_hasAttackHeli = true} } forEach _vehicles; //--- B66
 	if (_hasAttackHeli) then { //--- B66 only run the cannon-nudge loop for teams that own an attack heli
 	[_team, _side, _vehicles] Spawn {
-		private ["_tm","_sd","_vehs","_h","_tgt","_cannon","_cannonMuzzle","_muzzles","_isGuided","_ammo","_band","_enSide"]; //--- B66 +_cannonMuzzle/_muzzles
+		private ["_tm","_sd","_vehs","_liveVehs","_h","_tgt","_cannon","_cannonMuzzle","_muzzles","_isGuided","_ammo","_band"]; //--- B66 +_cannonMuzzle/_muzzles; lane341 hostile filter uses getFriend
 		_tm = _this select 0; _sd = _this select 1; _vehs = _this select 2;
-		_enSide = if (_sd == west) then {east} else {west};
-		while {!WFBE_GameOver && !isNull _tm && {(count ((units _tm) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+		while {!WFBE_GameOver && !isNull _tm && {(count _vehs) > 0} && {(count ((units _tm) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+			_liveVehs = [];
+			{ if (!isNull _x && {alive _x}) then {_liveVehs = _liveVehs + [_x]} } forEach _vehs;
+			_vehs = _liveVehs;
 			{
 				_h = _x;
 				if (!isNull _h && {alive _h} && {_h isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _h) >> "transportSoldier")) == 0} && {!isNull (gunner _h)} && {alive (gunner _h)}) then {
@@ -211,7 +213,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 					if (_cannon != "") then {
 						_band = missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_RANGE", 700];
 						_tgt = objNull;
-						{ if (alive _x && {side _x == _enSide} && {(_h distance _x) < _band}) exitWith {_tgt = _x} } forEach ((getPos _h) nearEntities [["Man","Car","Tank","Air"], _band]);
+						{ if (alive _x && {(_sd getFriend (side _x)) < 0.6} && {(_h distance _x) < _band}) exitWith {_tgt = _x} } forEach ((getPos _h) nearEntities [["Man","Car","Wheeled_APC","Tank"], _band]);
 						if (!isNull _tgt) then {
 							_h flyInHeight ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_GUN_ALT", 35]) max (missionNamespace getVariable ["WFBE_C_AICOM_HELI_GUNFLOOR", 0]));
 							//--- B66 MUZZLE FIX: in OA selectWeapon wants a MUZZLE, not a weapon classname; a

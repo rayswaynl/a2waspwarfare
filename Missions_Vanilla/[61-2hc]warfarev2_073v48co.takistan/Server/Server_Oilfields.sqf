@@ -681,6 +681,10 @@ while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
 
 		diag_log Format ["OILFIELD|v1|CAPTURE|t=%1|owner=%2|w=%3|e=%4", round time, str _owner, _westNear, _eastNear];
 		["INFORMATION", Format ["Server_Oilfields.sqf: OILFIELD captured by %1 at t=%2s (WEST near=%3, EAST near=%4).", str _owner, round time, _westNear, _eastNear]] Call WFBE_CO_FNC_LogContent;
+		//--- MATCH|v1|MILESTONE|OILFIELD_CAP|: narrative beat for oilfield ownership flips (TK-only).
+		if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
+			diag_log ("MATCH|v1|MILESTONE|OILFIELD_CAP|owner=" + str _owner + "|tMin=" + str (round (time / 60)));
+		};
 	};
 
 	//--- (6) SABOTAGE + REPAIR. Only meaningful when a real side holds the field.

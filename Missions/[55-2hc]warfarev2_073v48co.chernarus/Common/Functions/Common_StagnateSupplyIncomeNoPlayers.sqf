@@ -1,9 +1,9 @@
-private ["_amount", "_side", "_sidePlayers", "_supplyDecreasePercentage", "_teamSkillWest", "_teamSkillEast", "_teamSkillWestResult", "_teamSkillEastResult", "_teamWestPlayers", "_teamEastPlayers"];
+private ["_amount", "_side", "_sidePlayerCount", "_supplyDecreasePercentage", "_teamSkillWest", "_teamSkillEast", "_teamSkillWestResult", "_teamSkillEastResult", "_teamWestPlayers", "_teamEastPlayers"];
 
 _amount = _this select 0; 
 _side = _this select 1;
 
-_sidePlayers = [];
+_sidePlayerCount = 0;
 _supplyDecreasePercentage = 0;
 
 _teamSkillWest = 0;
@@ -35,19 +35,10 @@ if (_side == west) then {
     };
 };
 
-{
-    if (isPlayer _x) then 
-    {
-        if (side _x == _side) then 
-        {
-            _sidePlayers = _sidePlayers + [_x];
-        };
-    };
-
-} forEach allUnits;
+_sidePlayerCount = {isPlayer _x && {side _x == _side}} count playableUnits;
 
 if (_side == west) then {
-    _teamWestPlayers = count _sidePlayers;
+    _teamWestPlayers = _sidePlayerCount;
     if (_teamWestPlayers <= 0) then {
         TEAM_WEST_TICKS_NO_PLAYERS = TEAM_WEST_TICKS_NO_PLAYERS + 1;
         _supplyDecreasePercentage = TEAM_WEST_TICKS_NO_PLAYERS * SUPPLY_INCOME_TICK_MODIFIER_MULTIPLIER;
@@ -56,7 +47,7 @@ if (_side == west) then {
     };
 } else {
     if (_side == east) then {
-        _teamEastPlayers = count _sidePlayers;
+        _teamEastPlayers = _sidePlayerCount;
         if (_teamEastPlayers <= 0) then {
             TEAM_EAST_TICKS_NO_PLAYERS = TEAM_EAST_TICKS_NO_PLAYERS + 1;
             _supplyDecreasePercentage = TEAM_EAST_TICKS_NO_PLAYERS * SUPPLY_INCOME_TICK_MODIFIER_MULTIPLIER;

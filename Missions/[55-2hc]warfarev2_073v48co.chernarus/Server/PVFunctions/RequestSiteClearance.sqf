@@ -22,8 +22,46 @@
 
 private ["_side","_pos","_reqPlayer"];
 
+if (isNil "_this") exitWith {
+	["WARNING", "RequestSiteClearance.sqf: rejected nil payload."] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName _this) in ["ARRAY"]) exitWith {
+	["WARNING", Format ["RequestSiteClearance.sqf: rejected non-array payload type [%1].", typeName _this]] Call WFBE_CO_FNC_LogContent;
+};
+if ((count _this) < 3) exitWith {
+	["WARNING", Format ["RequestSiteClearance.sqf: rejected short payload (%1 args).", count _this]] Call WFBE_CO_FNC_LogContent;
+};
+
 _side      = _this select 0;
 _pos       = _this select 1;
 _reqPlayer = _this select 2;
+
+if !((typeName _side) in ["SIDE"]) exitWith {
+	["WARNING", Format ["RequestSiteClearance.sqf: rejected side type [%1].", typeName _side]] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName _pos) in ["ARRAY"]) exitWith {
+	["WARNING", Format ["RequestSiteClearance.sqf: rejected position type [%1].", typeName _pos]] Call WFBE_CO_FNC_LogContent;
+};
+if ((count _pos) < 2) exitWith {
+	["WARNING", Format ["RequestSiteClearance.sqf: rejected short position (%1 fields).", count _pos]] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName (_pos select 0)) in ["SCALAR"]) exitWith {
+	["WARNING", Format ["RequestSiteClearance.sqf: rejected position X type [%1].", typeName (_pos select 0)]] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName (_pos select 1)) in ["SCALAR"]) exitWith {
+	["WARNING", Format ["RequestSiteClearance.sqf: rejected position Y type [%1].", typeName (_pos select 1)]] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName _reqPlayer) in ["OBJECT"]) exitWith {
+	["WARNING", Format ["RequestSiteClearance.sqf: rejected requester type [%1].", typeName _reqPlayer]] Call WFBE_CO_FNC_LogContent;
+};
+if (isNull _reqPlayer) exitWith {
+	["WARNING", "RequestSiteClearance.sqf: rejected null requester."] Call WFBE_CO_FNC_LogContent;
+};
+if !(isPlayer _reqPlayer) exitWith {
+	["WARNING", Format ["RequestSiteClearance.sqf: rejected non-player requester [%1].", _reqPlayer]] Call WFBE_CO_FNC_LogContent;
+};
+if !((side group _reqPlayer) in [_side]) exitWith {
+	["WARNING", Format ["RequestSiteClearance.sqf: rejected requester side mismatch [%1] for [%2].", side group _reqPlayer, _side]] Call WFBE_CO_FNC_LogContent;
+};
 
 [_side, _pos, _reqPlayer] Call WFBE_SE_FNC_SiteClearance;

@@ -157,3 +157,9 @@ if (_side == east) then
 // Marty end.
 
 ["INFORMATION", Format["Server_OnHQKilled.sqf : [%1] HQ [%2] has been destroyed by [%3], Teamkill? [%4], Side Teamkill? [%5]", _side, _structure_kind, name _killer, _teamkill, side _killer]] Call WFBE_CO_FNC_LogContent;
+
+//--- MATCH|v1|MILESTONE|HQ_DESTROYED|: narrative beat for HQ kills (teamkills excluded).
+//--- _side = the side whose HQ was destroyed (the losing side for this milestone).
+if ((!_teamkill) && {(missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0}) then {
+	diag_log ("MATCH|v1|MILESTONE|HQ_DESTROYED|side=" + str _side + "|tMin=" + str (round (time / 60)));
+};

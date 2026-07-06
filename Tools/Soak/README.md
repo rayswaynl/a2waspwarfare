@@ -130,10 +130,12 @@ section 6.
    is supplied — the HC `CAPTURED [` driver counts per town.
 7. **PERF** — WASPSCALE server-fps / HC-fps min/median/max, AI_TOT curve, GUER
    peak, and fps at peak AI load (the FPS-cliff check).
-8. **BUILD 86 LOG FAMILIES** — first-class counters for `MHQRELOC` verbs
+8. **BUILD 86+ LOG FAMILIES** — first-class counters for `MHQRELOC` verbs
    including `RELAXED`, `BUILD_ROAD_*` base-placement gates, ground-patrol
    naval-HVT skips, `ICBMTEL|v1|...` SCUD/TEL events and munitions, the
-   `[WFBE (SKIN)]` B0–B6 chain, plus EASA/gear log-line samples.
+   `[WFBE (SKIN)]` B0–B6 chain, EASA/gear log-line samples, and cmdcon43
+   families (`UPGRADE_SOUND`, `TIP_SKIP`, `TIP_SHOW`, `VEHLIFT_DROP`,
+   `VEHLIFT_ABORT`, `BISRNG`).
 9. **VERDICT** — PASS/WATCH/FAIL per KPI + overall (worst-of).
 
 ### Per-build comparison

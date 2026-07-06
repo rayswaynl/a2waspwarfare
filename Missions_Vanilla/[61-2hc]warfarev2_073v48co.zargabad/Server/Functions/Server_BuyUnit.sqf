@@ -113,6 +113,25 @@ if (!isPlayer (leader _team)) then {
 		};
 	};
 };
+//--- TP-9 PLAYER SPAWN-ON-ROADS (gated WFBE_C_PLAYER_SPAWN_ON_ROADS default 0): mirror the AI
+//--- road-snap into the player-factory spawn path. When enabled, snaps _position to the nearest
+//--- road node within WFBE_C_AICOM_SPAWN_ROAD_RADIUS m; if no road is found, _position is left
+//--- as-is (current behaviour = byte-identical fallback). Reuses WFBE_C_AICOM_SPAWN_ROAD_RADIUS:
+//--- no second radius constant because the snap geometry is identical for players and AI.
+//--- A2-OA-safe: nearRoads + WFBE_CO_FNC_GetClosestEntity + getPos (same idiom as the AI block).
+if (isPlayer (leader _team)) then {
+	if ((missionNamespace getVariable ["WFBE_C_PLAYER_SPAWN_ON_ROADS", 0]) > 0) then {
+		private ["_plRds","_plNode","_plPos"];
+		_plPos = _position;
+		_plRds = _plPos nearRoads (missionNamespace getVariable ["WFBE_C_AICOM_SPAWN_ROAD_RADIUS", 60]);
+		if (count _plRds > 0) then {
+			_plNode = [_plPos, _plRds] Call WFBE_CO_FNC_GetClosestEntity;
+			if (!isNull _plNode) then {_position = getPos _plNode};
+		} else {
+			["INFORMATION", Format ["Server_BuyUnit.sqf: PLAYER_SPAWN_ON_ROADS: no road within %1 m of factory for [%2]; using pad position.", (missionNamespace getVariable ["WFBE_C_AICOM_SPAWN_ROAD_RADIUS", 60]), _unitType]] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+};
 _longest = missionNamespace getVariable Format ["WFBE_LONGEST%1BUILDTIME",toUpper _factoryType];  //--- queue-fix 2026-06-14: keys stored UPPERCASE (Init_Common.sqf:356) but _factoryType is mixed-case -> _longest was nil -> the stuck-head purge (_ret>_longest) NEVER fired. toUpper re-arms it.
 if (isNil "_longest" || {_longest <= 0}) then {_longest = 60};  //--- safety floor so the deadline is always a real number
 

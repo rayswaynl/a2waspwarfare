@@ -12,7 +12,16 @@
 
 	_this = [facType("Barracks"/"Light"/"Heavy"), pos, dir, truck, player]
 */
-private ["_facType","_pos","_dir","_truck","_player","_idx","_avail","_reject","_structures","_index","_classname","_script"];
+private ["_secHardening","_facType","_pos","_dir","_truck","_player","_idx","_avail","_reject","_structures","_index","_classname","_script"];
+_secHardening = (missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0;
+
+if (_secHardening && {!((typeName _this) in ["ARRAY"])}) exitWith {
+	["WARNING", Format ["RequestFOBStructure.sqf: malformed payload type [%1] - rejected.", typeName _this]] Call WFBE_CO_FNC_LogContent;
+};
+if (_secHardening && {!((count _this) > 4)}) exitWith {
+	["WARNING", Format ["RequestFOBStructure.sqf: short payload [%1] - rejected.", _this]] Call WFBE_CO_FNC_LogContent;
+};
+
 _facType = _this select 0;
 _pos     = _this select 1;
 _dir     = _this select 2;
@@ -20,6 +29,13 @@ _truck   = _this select 3;
 _player  = _this select 4;
 
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) < 1) exitWith {};
+
+if (_secHardening && {!((typeName _player) in ["OBJECT"]) || {isNull _player} || {!isPlayer _player} || {!alive _player}}) exitWith {
+	["WARNING", Format ["RequestFOBStructure.sqf: caller [%1] is not a live player - rejected.", _player]] Call WFBE_CO_FNC_LogContent;
+};
+if (_secHardening && {!((side group _player) in [resistance])}) exitWith {
+	["WARNING", Format ["RequestFOBStructure.sqf: caller [%1] is not GUER - rejected.", _player]] Call WFBE_CO_FNC_LogContent;
+};
 
 _idx = (missionNamespace getVariable ["WFBE_C_GUER_FOB_STRUCTS", ["Barracks","Light","Heavy"]]) find _facType;
 if (_idx < 0) exitWith {["WARNING", Format ["RequestFOBStructure.sqf: unknown FOB type [%1] - rejected.", _facType]] Call WFBE_CO_FNC_LogContent};

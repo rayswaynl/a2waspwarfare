@@ -15,7 +15,7 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0","_perfStart"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -25,6 +25,7 @@ if (isNil "_logik") exitWith {};
 
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
+_perfStart = diag_tickTime;
 
 //--- Primary foe = the other commanding side (the defender never gets HQ-hunted).
 _enemySide = if (_side == west) then {east} else {west};
@@ -573,7 +574,17 @@ _relieved = 0;
 	_wTeam = _x;
 	if (!isNull _wTeam && {!isPlayer (leader _wTeam)} && {({alive _x} count (units _wTeam)) > 0}) then {
 		_wMode = toLower (_wTeam getVariable ["wfbe_teammode", "towns"]);
-		if (_wMode == "defense" || {_wMode == "move"}) then {
+		private "_wWatched";
+		_wWatched = false;
+		switch (_wMode) do {
+			case "defense": {_wWatched = true};
+			case "move": {_wWatched = true};
+		};
+		//--- Lane-325: last-stand recall deliberately parks defenders at HQ; do not let the
+		//--- wedge watchdog release them back to offense while that round-state is active.
+		if (_wWatched && {
+			(!_lastStand) || {(missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG_LASTSTAND_SKIP", 1]) <= 0}
+		}) then {
 			_wLdr = leader _wTeam;
 			if (!isNull _wLdr && {alive _wLdr} && {behaviour _wLdr != "COMBAT"}) then {
 				//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
@@ -616,7 +627,7 @@ _relieved = 0;
 				_wTeam setVariable ["wfbe_aicom_wedge_bc", [getPos (leader _wTeam), time]];
 			};
 		} else {
-			//--- Not in defense/move (back on towns/patrol/etc): clear any stale breadcrumb.
+			//--- Not watched right now (or last-stand skip is shielding HQ defenders): clear any stale breadcrumb.
 			if (!isNil {_wTeam getVariable "wfbe_aicom_wedge_bc"}) then {_wTeam setVariable ["wfbe_aicom_wedge_bc", nil]};
 		};
 	};
@@ -988,7 +999,7 @@ if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
 //--- (pressing vs consolidating vs defending) is explicit; FRONT reconstructs the front line (held /
 //--- contested counts + the primary target's name and whether it borders our territory). Both ride
 //--- the existing AI_Commander_Strategy worker (per side / ~60s; gated in AI_Commander.sqf:133-134).
-private ["_posture","_primT","_townStr","_myEff","_enEff","_garBodies","_garTeams"];
+private ["_posture","_primT","_townStr","_myEff","_enEff","_garBodies","_garTeams","_losingPress"];
 //--- B69 territory-credited-press-gate: effective strength credits held towns (garrison bodies never counted in _myStr).
 //--- POSTURE-gate ONLY; last-stand (l.66) + HQ-strike keep reading raw _myStr (those are maneuver-commit gates).
 _townStr = missionNamespace getVariable ["WFBE_C_AICOM_TOWN_STRENGTH", 2];
@@ -999,6 +1010,7 @@ _posture = if (_strikeOn) then {"HQ_STRIKE"} else {
 		if (_myTowns >= (_enemyTowns * 1.2) && {_myEff >= _enEff}) then {"PRESS"} else {"HOLD"}
 	}
 };
+_losingPress = false;
 //--- cmdcon41-w2 LOSING-SIDE PRESS FLOOR (Fable F7; flag WFBE_C_AICOM_LOSING_PRESS default 1). A losing side with an
 //--- intact army must NOT park in DEFEND (the EAST-sat-in-DEFEND-min201-415 pattern). When we are BEHIND on territory
 //--- (myTowns < enemyTowns) yet at rough strength parity (myEff >= 0.8 * enEff), NOT in last-stand, AND our own base is
@@ -1015,6 +1027,7 @@ if (((missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS", 1]) > 0) && {!_
 	};
 	if (!_lpBaseThreat) then {
 		_posture = "PRESS";
+		_losingPress = true;
 		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|LOSING_PRESS_FLOOR|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myEff=" + str _myEff + "|enEff=" + str _enEff);
 	};
 };
@@ -1049,8 +1062,9 @@ diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|
 //--- the override gate (myEff>=enEff, line ~579) then excluded - making the override structurally unreachable (live: EAST
 //--- stalled 17x, 0 round-enders). Now: count sustained territory dominance; emit the STALL telemetry only for the
 //--- PASSIVE subset (posture != PRESS) so the greppable signal keeps its original "dominant but idle" meaning.
+//--- Lane 328: losing-press-floor ticks are recovery aggression, not dominant-side stall evidence.
 private "_stallRatio"; _stallRatio = missionNamespace getVariable ["WFBE_C_AICOM_STALL_TOWN_RATIO", 2];
-if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * _stallRatio)} && {!_strikeOn}) then {
+if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * _stallRatio)} && {!_strikeOn} && {!_losingPress}) then {
 	_logik setVariable ["wfbe_aicom_stall_streak", (_logik getVariable ["wfbe_aicom_stall_streak", 0]) + 1];
 	if (_posture != "PRESS") then {
 		diag_log ("AICOMSTAT|v1|STALL|" + _sideText + "|" + str (round (time / 60)) + "|posture=" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|garBodies=" + str _garBodies + "|myEff=" + str _myEff + "|enEff=" + str _enEff + "|streak=" + str (_logik getVariable ["wfbe_aicom_stall_streak", 0]));
@@ -1126,4 +1140,8 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 		//--- in range the next cadence tick cannot fire a free salvo on an unstamped timer.
 		_logik setVariable ["wfbe_aicom_arty_last", time];
 	};
+};
+
+if !(isNil "PerformanceAudit_Record") then {
+	["aicom_strategy", diag_tickTime - _perfStart, Format["side:%1;teams:%2;myTowns:%3;enemyTowns:%4;targets:%5;attacked:%6;posture:%7;strike:%8;myStr:%9;enStr:%10;garBodies:%11;onFront:%12", _sideText, count _teams, _myTowns, _enemyTowns, count _targets, count _attacked, _posture, _strikeOn, _myStr, _enStr, _garBodies, _anyFront], "SERVER"] Call PerformanceAudit_Record;
 };

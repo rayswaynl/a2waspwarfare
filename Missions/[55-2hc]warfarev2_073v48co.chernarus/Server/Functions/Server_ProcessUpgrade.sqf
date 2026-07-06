@@ -84,8 +84,13 @@ if (_upgrade_id == WFBE_UP_PATROLS) then {
 			_patrolPlayers = 0;
 			{if ((isPlayer _x) && (alive _x) && (side _x == _side)) then {_patrolPlayers = _patrolPlayers + 1}} forEach playableUnits;
 			_patrolShare = round (_patrolCashPool / (_patrolPlayers max 1));
-			[_side, "BankPayout", [_patrolShare]] Call WFBE_CO_FNC_SendToClients;
-			["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Patrol T3 cash reward $%2 x %3 players (pool %4).", str _side, _patrolShare, _patrolPlayers, _patrolCashPool]] Call WFBE_CO_FNC_LogContent;
+			if (_patrolPlayers < 1) then {
+				[_side, _patrolCashPool, "Patrol upgrade T3 no-player reward fallback.", false] Call ChangeSideSupply;
+				["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Patrol T3 cash reward pool %2 redirected to side supply (no alive players).", str _side, _patrolCashPool]] Call WFBE_CO_FNC_LogContent;
+			} else {
+				[_side, "BankPayout", [_patrolShare]] Call WFBE_CO_FNC_SendToClients;
+				["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Patrol T3 cash reward $%2 x %3 players (pool %4).", str _side, _patrolShare, _patrolPlayers, _patrolCashPool]] Call WFBE_CO_FNC_LogContent;
+			};
 		};
 	};
 	if (_patrolNewLevel == 4) then {

@@ -22,7 +22,7 @@ private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_
               "_w11FreeFlag",
               "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
               "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger",
-              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech"]; //--- B66
+              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart"]; //--- B66
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -32,6 +32,7 @@ if (isNil "_logik") exitWith {};
 
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") then {_teams = []};
+_perfStart = diag_tickTime;
 
 //--- Snapshot the engine-global arrays once for this founding decision. The same worker pass
 //--- uses them for player scaling, safe retire checks, total-AI cap, group cap and vehicle caps;
@@ -1246,4 +1247,8 @@ if (count _live > 0) then {
 		};
 	};
 	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|via=server-local|template=" + str _pick + "|class=" + _cls + "|cost=" + str _price);
+};
+
+if !(isNil "PerformanceAudit_Record") then {
+	["aicom_teams_found", diag_tickTime - _perfStart, Format["side:%1;founded:%2;editor:%3;pending:%4;target:%5;eligible:%6;template:%7;price:%8;hc:%9;groups:%10;allUnits:%11;vehicles:%12", _sideText, _foundedTeams, _editorTeams, _pending, _target, count _eligible, _pick, _price, count _live > 0, _totalGroups, count _allUnits, count _allVehicles], "SERVER"] Call PerformanceAudit_Record;
 };

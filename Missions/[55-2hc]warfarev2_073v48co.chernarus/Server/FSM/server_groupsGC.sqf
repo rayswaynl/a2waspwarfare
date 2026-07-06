@@ -604,6 +604,47 @@ while {!WFBE_GameOver} do {
 		{
 			["INFORMATION", _x + " auditMs=" + str _auditMs] Call WFBE_CO_FNC_AICOMLog;
 		} forEach _auditLines;
+
+		//--- TELEM HOST V2 (tp4, 2026-07-06): GRPBUDGET + SRVPERF new host.
+		//--- Only active when WFBE_C_TELEM_HOST_V2 > 0 (default 0 = inert).
+		//--- Runs inside the existing 5-min (_lastAudit) gate - same 300s cadence,
+		//--- no extra throttle variable. Format is BYTE-IDENTICAL to the original
+		//--- emitters in AI_Commander.sqf (same field order + separators).
+		if ((missionNamespace getVariable ["WFBE_C_TELEM_HOST_V2", 0]) > 0) then {
+
+			//--- SRVPERF: server-global perf snapshot (was AI_Commander.sqf:901).
+			//--- Reads: towns wfbe_active flag, diag_fps, allUnits, allGroups, vehicles, allDead.
+			//--- All are engine globals or missionNamespace - accessible here without semantic change.
+			private ["_spActive"];
+			_spActive = 0;
+			{ if (_x getVariable ["wfbe_active", false]) then {_spActive = _spActive + 1} } forEach towns;
+			diag_log ("SRVPERF|v1|" + str (round (time / 60)) + "|fps=" + str (round (diag_fps)) + "|units=" + str (count allUnits) + "|groups=" + str (count allGroups) + "|veh=" + str (count vehicles) + "|dead=" + str (count allDead) + "|activeTowns=" + str _spActive);
+
+			//--- GRPBUDGET: per-side group count vs 144 hard cap (was AI_Commander.sqf:1010-1022).
+			//--- Reads wfbe_grpcnt_* from the cache this file already maintains (its own allGroups pass);
+			//--- fallback to a fresh count when the cache is missing (same fallback as the original).
+			//--- WARN/RECOVER latch (wfbe_grpbudget_warn_active) is missionNamespace - shared with
+			//--- AI_Commander when flag=0; when flag=1 only this host writes/reads it (no contention).
+			private ["_gbW","_gbE","_gbG","_gbMax","_gbWarn"];
+			_gbW = missionNamespace getVariable ["wfbe_grpcnt_west", -1]; if (_gbW < 0) then { _gbW = {side _x == west} count allGroups; };
+			_gbE = missionNamespace getVariable ["wfbe_grpcnt_east", -1]; if (_gbE < 0) then { _gbE = {side _x == east} count allGroups; };
+			_gbG = missionNamespace getVariable ["wfbe_grpcnt_guer", -1]; if (_gbG < 0) then { _gbG = {side _x == resistance} count allGroups; };
+			_gbMax = _gbW max _gbE max _gbG;
+			diag_log ("GRPBUDGET|v1|" + str (round (time / 60)) + "|west=" + str _gbW + "|east=" + str _gbE + "|guer=" + str _gbG + "|cap=144");
+			_gbWarn = missionNamespace getVariable ["WFBE_C_GROUP_BUDGET_WARN", 125];
+			if (_gbMax >= _gbWarn) then {
+				if ((missionNamespace getVariable ["wfbe_grpbudget_warn_active", 0]) < 1) then {
+					missionNamespace setVariable ["wfbe_grpbudget_warn_active", 1];
+					diag_log ("GRPBUDGET|v1|WARN|" + str (round (time / 60)) + "|near-cap max=" + str _gbMax + "/144 warn=" + str _gbWarn + " (west=" + str _gbW + " east=" + str _gbE + " guer=" + str _gbG + ")");
+				};
+			} else {
+				if ((missionNamespace getVariable ["wfbe_grpbudget_warn_active", 0]) > 0) then {
+					missionNamespace setVariable ["wfbe_grpbudget_warn_active", 0];
+					diag_log ("GRPBUDGET|v1|RECOVER|" + str (round (time / 60)) + "|max=" + str _gbMax + "/144 warn=" + str _gbWarn + " (west=" + str _gbW + " east=" + str _gbE + " guer=" + str _gbG + ")");
+				};
+			};
+
+		}; //--- end WFBE_C_TELEM_HOST_V2 block
 		}; // --- end D2 modulo gate (WFBE_C_GROUPAUDIT_EVERY) ---
 	};
 };

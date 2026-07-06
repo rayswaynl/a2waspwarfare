@@ -16,13 +16,42 @@
 };
 
 
-"ATTACK_WAVE_DETAILS" addPublicVariableEventHandler {
-
+//--- Fix: extracted PVEH body into WFBE_SE_FNC_HandleAttackWaveDetails so Server_AttackWave.sqf
+//--- can call it directly. publicVariableServer from the server never fires the server's own PVEH,
+//--- so the handler was dead for both wave-start and wave-end. The PVEH below still calls this
+//--- function so any future client->server ATTACK_WAVE_DETAILS publish also works.
+//--- Calling convention: _this IS the payload array [side, priceModifier, attackLength].
+//--- (Server_AttackWave.sqf calls directly; PVEH relay strips the varname with (_this select 1) Call.)
+WFBE_SE_FNC_HandleAttackWaveDetails = {
 	private ["_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
 
-	_side = ((_this select 1) select 0);
-	_priceModifier = ((_this select 1) select 1);
-    _attackLength = ((_this select 1) select 2);
+    if (typeName _this != "ARRAY") exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected malformed ATTACK_WAVE_DETAILS payload type [%1].", typeName _this]] Call WFBE_CO_FNC_LogContent;
+    };
+
+    if (count _this < 3) exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected short ATTACK_WAVE_DETAILS payload [%1] element(s).", count _this]] Call WFBE_CO_FNC_LogContent;
+    };
+
+	_side = _this select 0;
+	_priceModifier = _this select 1;
+    _attackLength = _this select 2;
+
+    if (typeName _side != "SIDE") exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS with invalid side type [%1].", typeName _side]] Call WFBE_CO_FNC_LogContent;
+    };
+
+    if (!(_side in [west, east])) exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS for unsupported side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+    };
+
+    if (typeName _priceModifier != "SCALAR") exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS with invalid modifier type [%1].", typeName _priceModifier]] Call WFBE_CO_FNC_LogContent;
+    };
+
+    if (typeName _attackLength != "SCALAR") exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS with invalid length type [%1].", typeName _attackLength]] Call WFBE_CO_FNC_LogContent;
+    };
 
     _priceModifierPercentage = round (_priceModifier * 100);
 
@@ -59,4 +88,9 @@
 
         [_side, "LocalizeMessage", ["AttackModeEnd"]] call WFBE_CO_FNC_SendToClients;
     };
+};
+
+"ATTACK_WAVE_DETAILS" addPublicVariableEventHandler {
+    //--- Relay any client->server ATTACK_WAVE_DETAILS publish through the extracted function.
+    (_this select 1) Call WFBE_SE_FNC_HandleAttackWaveDetails;
 };
