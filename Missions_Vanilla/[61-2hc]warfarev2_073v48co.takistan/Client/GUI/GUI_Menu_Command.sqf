@@ -214,12 +214,12 @@ while {alive player && dialog} do {
 				if ((_now - _lastSend) >= _cool) then {
 					if (_pb == 760 || _pb == 761) then {
 						private "_pv"; _pv = if (_pb == 760) then {"PUSH"} else {"HOLD"};
-						["RequestSpecial", ["aicom-posture", sideJoined, _pv]] Call WFBE_CO_FNC_SendToServer;
+						["RequestSpecial", ["aicom-posture", sideJoined, _pv, player]] Call WFBE_CO_FNC_SendToServer; //--- TP-20: player appended so the server can key its per-UID rate limit (server count-guards for legacy 3-arg senders).
 						_posture = _pv; _lastSend = _now; _lastIntent = "";   //--- force the readout to repaint with the new nudge line
 						hintSilent parseText (format ["<t color='#A0E060'>Posture nudge sent: %1.</t>", _pv]);
 					} else {
 						private "_pv"; _pv = switch (_pb) do {case 762:{"SPLIT"};case 763:{"MASS"};case 764:{"HARASS"};default{"FALLBACK"}};
-						["RequestSpecial", ["aicom-fieldorder", sideJoined, _pv]] Call WFBE_CO_FNC_SendToServer;
+						["RequestSpecial", ["aicom-fieldorder", sideJoined, _pv, player]] Call WFBE_CO_FNC_SendToServer; //--- TP-20: player appended so the server can key its per-UID rate limit (server count-guards for legacy 3-arg senders).
 						_posture = _pv; _lastSend = _now; _lastIntent = "";   //--- force the readout to repaint with the new field-order line
 						hintSilent parseText (format ["<t color='#A0E060'>Field order sent: %1.</t>", _pv]);
 					};

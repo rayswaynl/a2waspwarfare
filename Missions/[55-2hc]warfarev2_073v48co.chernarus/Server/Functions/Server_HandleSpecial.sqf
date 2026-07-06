@@ -380,15 +380,33 @@ switch (_args select 0) do {
 		//--- COMMAND-CENTER INSTRUCTION PANEL (PR1): a player set a DEFEND town for the AI commander (modeled
 		//--- EXACTLY on aicom-focus). Stamp it (+ a t0 timestamp) on the side logic; AI_Commander_Strategy.sqf
 		//--- reads it (TTL'd by WFBE_C_AICOM_DEFEND_TTL) and biases a reliever team to that town. side validated west/east.
-		private ["_dSide","_dTown","_dLogik"];
+		//--- TP-20 SERVER-SIDE RATE LIMIT (WFBE_C_CMD_VERB_COOLDOWN, 0 disables): defend/reinforce/posture/fieldorder each
+		//--- had only a client-side cooldown gate; a modified client could spam them server-side. UID-keyed on the side
+		//--- logic (wfbe_cmd_ prefix) identical to the aicom-focus guard (TP-13); legacy/anon senders share one side key.
+		private ["_dSide","_dTown","_dLogik","_dPlayer","_dUID","_dKey","_dCd","_dNow","_dLast"];
 		_dSide = _args select 1;
 		_dTown = _args select 2;
 		if (!isNil "_dTown" && {!isNull _dTown} && {_dSide in [west, east]}) then {
 			_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _dLogik) then {
-				_dLogik setVariable ["wfbe_aicom_defend_focus", _dTown];
-				_dLogik setVariable ["wfbe_aicom_defend_focus_t0", time];
-				diag_log ("AICOM2|v1|DEFEND|" + str _dSide + "|" + str (round (time / 60)) + "|set=" + (_dTown getVariable ["name", "?"]));
+				_dNow = time;
+				_dCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
+				if (count _args > 3) then {_dPlayer = _args select 3};
+				_dUID = "anon";
+				if (!isNil "_dPlayer" && {!isNull _dPlayer} && {isPlayer _dPlayer} && {side (group _dPlayer) == _dSide}) then {
+					private "_u"; _u = getPlayerUID _dPlayer;
+					if (!isNil "_u" && {_u != ""}) then {_dUID = _u};
+				};
+				_dKey  = "wfbe_cmd_defend_" + _dUID;
+				_dLast = _dLogik getVariable [_dKey, -1e9];
+				if (_dCd <= 0 || {(_dNow - _dLast) >= _dCd}) then {
+					_dLogik setVariable [_dKey, _dNow];
+					_dLogik setVariable ["wfbe_aicom_defend_focus", _dTown];
+					_dLogik setVariable ["wfbe_aicom_defend_focus_t0", time];
+					diag_log ("AICOM2|v1|DEFEND|" + str _dSide + "|" + str (round (time / 60)) + "|set=" + (_dTown getVariable ["name", "?"]) + "|uid=" + _dUID);
+				} else {
+					diag_log ("AICOM2|v1|DEFEND|REJECT|" + str _dSide + "|uid=" + _dUID + "|cdLeft=" + str (round (_dCd - (_dNow - _dLast))));
+				};
 			};
 		};
 	};
@@ -417,7 +435,7 @@ switch (_args select 0) do {
 		//--- Allocator (AI_Commander_Allocate.sqf) reads it while fresh (WFBE_C_AICOM_REINFORCE_TTL) and routes ONE eligible
 		//--- team into that town as part of the fist/expand set - additive, reversible, TTL-clears. AI-commander-run gate +
 		//--- west/east validation; the reinforced town must currently be OURS (you reinforce what you hold).
-		private ["_rSide","_rTown","_rLogik","_rCmd","_rHuman","_rRun","_rSID"];
+		private ["_rSide","_rTown","_rLogik","_rCmd","_rHuman","_rRun","_rSID","_rPlayer","_rUID","_rKey","_rCd","_rNow","_rLast"];
 		_rSide = _args select 1;
 		_rTown = _args select 2;
 		if (!isNil "_rTown" && {!isNull _rTown} && {_rSide in [west, east]}) then {
@@ -432,8 +450,23 @@ switch (_args select 0) do {
 				};
 				_rSID = (_rSide) Call WFBE_CO_FNC_GetSideID;
 				if (_rRun && {(_rTown getVariable ["sideID", -1]) == _rSID}) then {
-					_rLogik setVariable ["wfbe_aicom_reinforce", [_rTown, time]];
-					diag_log ("AICOM2|v1|ORDER|aicom-reinforce|" + str _rSide + "|" + str (round (time / 60)) + "|town=" + (_rTown getVariable ["name", "?"]));
+					_rNow = time;
+					_rCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
+					if (count _args > 3) then {_rPlayer = _args select 3};
+					_rUID = "anon";
+					if (!isNil "_rPlayer" && {!isNull _rPlayer} && {isPlayer _rPlayer} && {side (group _rPlayer) == _rSide}) then {
+						private "_u"; _u = getPlayerUID _rPlayer;
+						if (!isNil "_u" && {_u != ""}) then {_rUID = _u};
+					};
+					_rKey  = "wfbe_cmd_reinforce_" + _rUID;
+					_rLast = _rLogik getVariable [_rKey, -1e9];
+					if (_rCd <= 0 || {(_rNow - _rLast) >= _rCd}) then {
+						_rLogik setVariable [_rKey, _rNow];
+						_rLogik setVariable ["wfbe_aicom_reinforce", [_rTown, time]];
+						diag_log ("AICOM2|v1|ORDER|aicom-reinforce|" + str _rSide + "|" + str (round (time / 60)) + "|town=" + (_rTown getVariable ["name", "?"]) + "|uid=" + _rUID);
+					} else {
+						diag_log ("AICOM2|v1|ORDER|aicom-reinforce|REJECT|" + str _rSide + "|uid=" + _rUID + "|cdLeft=" + str (round (_rCd - (_rNow - _rLast))));
+					};
 				} else {
 					diag_log ("AICOM2|v1|ORDER|aicom-reinforce|REJECT|" + str _rSide + "|run=" + str _rRun + "|ownsTown=" + str ((_rTown getVariable ["sideID", -1]) == _rSID));
 				};
@@ -445,7 +478,7 @@ switch (_args select 0) do {
 		//--- consolidate). Stamp the string + a t0 on the side logic; the brain reads it (TTL WFBE_C_AICOM_POSTURE_TTL) and
 		//--- applies a SMALL bias only - it never hard-overrides the stance machine. AI-commander-run gate + west/east + a
 		//--- string whitelist so a malformed arg cannot poison the read.
-		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun"];
+		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun","_pPlayer","_pUID","_pKey","_pCd","_pNow","_pLast"];
 		_pSide = _args select 1;
 		_pPos  = _args select 2;
 		if ((typeName _pPos == "STRING") && {(_pPos == "PUSH") || (_pPos == "HOLD")} && {_pSide in [west, east]}) then {
@@ -459,9 +492,24 @@ switch (_args select 0) do {
 					_pRun = !_pHuman;
 				};
 				if (_pRun) then {
-					_pLogik setVariable ["wfbe_aicom_player_posture", _pPos];
-					_pLogik setVariable ["wfbe_aicom_player_posture_t0", time];
-					diag_log ("AICOM2|v1|ORDER|aicom-posture|" + str _pSide + "|" + str (round (time / 60)) + "|posture=" + _pPos);
+					_pNow = time;
+					_pCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
+					if (count _args > 3) then {_pPlayer = _args select 3};
+					_pUID = "anon";
+					if (!isNil "_pPlayer" && {!isNull _pPlayer} && {isPlayer _pPlayer} && {side (group _pPlayer) == _pSide}) then {
+						private "_u"; _u = getPlayerUID _pPlayer;
+						if (!isNil "_u" && {_u != ""}) then {_pUID = _u};
+					};
+					_pKey  = "wfbe_cmd_posture_" + _pUID;
+					_pLast = _pLogik getVariable [_pKey, -1e9];
+					if (_pCd <= 0 || {(_pNow - _pLast) >= _pCd}) then {
+						_pLogik setVariable [_pKey, _pNow];
+						_pLogik setVariable ["wfbe_aicom_player_posture", _pPos];
+						_pLogik setVariable ["wfbe_aicom_player_posture_t0", time];
+						diag_log ("AICOM2|v1|ORDER|aicom-posture|" + str _pSide + "|" + str (round (time / 60)) + "|posture=" + _pPos + "|uid=" + _pUID);
+					} else {
+						diag_log ("AICOM2|v1|ORDER|aicom-posture|REJECT|" + str _pSide + "|uid=" + _pUID + "|cdLeft=" + str (round (_pCd - (_pNow - _pLast))));
+					};
 				};
 			};
 		};
@@ -472,7 +520,7 @@ switch (_args select 0) do {
 		//--- WFBE_C_AICOM_POSTURE_TTL (reused), and shifts its levers while fresh. Same AI-commander-run gate +
 		//--- west/east + string whitelist as aicom-posture so a malformed arg cannot poison the read. Cloned from
 		//--- "aicom-posture" above.
-		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun"];
+		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun","_pPlayer","_pUID","_pKey","_pCd","_pNow","_pLast"];
 		_pSide = _args select 1;
 		_pPos  = _args select 2;
 		if ((typeName _pPos == "STRING") && {_pPos in ["SPLIT","MASS","HARASS","FALLBACK"]} && {_pSide in [west, east]}) then {
@@ -486,9 +534,24 @@ switch (_args select 0) do {
 					_pRun = !_pHuman;
 				};
 				if (_pRun) then {
-					_pLogik setVariable ["wfbe_aicom_player_fieldorder", _pPos];
-					_pLogik setVariable ["wfbe_aicom_player_fieldorder_t0", time];
-					diag_log ("AICOM2|v1|ORDER|aicom-fieldorder|" + str _pSide + "|" + str (round (time / 60)) + "|order=" + _pPos);
+					_pNow = time;
+					_pCd  = missionNamespace getVariable ["WFBE_C_CMD_VERB_COOLDOWN", 60];
+					if (count _args > 3) then {_pPlayer = _args select 3};
+					_pUID = "anon";
+					if (!isNil "_pPlayer" && {!isNull _pPlayer} && {isPlayer _pPlayer} && {side (group _pPlayer) == _pSide}) then {
+						private "_u"; _u = getPlayerUID _pPlayer;
+						if (!isNil "_u" && {_u != ""}) then {_pUID = _u};
+					};
+					_pKey  = "wfbe_cmd_fieldorder_" + _pUID;
+					_pLast = _pLogik getVariable [_pKey, -1e9];
+					if (_pCd <= 0 || {(_pNow - _pLast) >= _pCd}) then {
+						_pLogik setVariable [_pKey, _pNow];
+						_pLogik setVariable ["wfbe_aicom_player_fieldorder", _pPos];
+						_pLogik setVariable ["wfbe_aicom_player_fieldorder_t0", time];
+						diag_log ("AICOM2|v1|ORDER|aicom-fieldorder|" + str _pSide + "|" + str (round (time / 60)) + "|order=" + _pPos + "|uid=" + _pUID);
+					} else {
+						diag_log ("AICOM2|v1|ORDER|aicom-fieldorder|REJECT|" + str _pSide + "|uid=" + _pUID + "|cdLeft=" + str (round (_pCd - (_pNow - _pLast))));
+					};
 				};
 			};
 		};
