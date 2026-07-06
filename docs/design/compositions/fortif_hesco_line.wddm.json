@@ -1,0 +1,16 @@
+{
+  "name": "WFBE_NEURODEF_FORTIF_HESCO_LINE",
+  "parentW": 39,
+  "parentD": 4,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "FORTIF PACK. LONG HESCO LINE: 4x Land_HBarrier_large in a straight run at a 9.5 m pitch. Panel length ENGINE-MEASURED on the offline 1.64 rig: boundingBox dx = 10.387 m -> 0.887 m overlap per seam (slight overlap, never edge-to-edge), total run ~ 38.9 m. Deliberately a LONGER, materially-efficient perimeter run vs the legacy WFBE_NEURODEF_WALL_STRAIGHT (same class, 4 panels at a heavy 5 m pitch = only ~25 m): this is the 'larger assets' half of the WDDM redo. Passive, z=0, all dir 0.",
+  "objs": [
+    {"cls":"Land_HBarrier_large","x":-14.25,"y":0,"z":0,"dir":0,"role":"hesco panel 1 (west end)"},
+    {"cls":"Land_HBarrier_large","x":-4.75,"y":0,"z":0,"dir":0,"role":"hesco panel 2"},
+    {"cls":"Land_HBarrier_large","x":4.75,"y":0,"z":0,"dir":0,"role":"hesco panel 3"},
+    {"cls":"Land_HBarrier_large","x":14.25,"y":0,"z":0,"dir":0,"role":"hesco panel 4 (east end)"}
+  ]
+}

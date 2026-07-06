@@ -1,0 +1,20 @@
+{
+  "name": "WFBE_NEURODEF_FORT_CHECKPOINT_WEST",
+  "parentW": 20,
+  "parentD": 14,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "ROADBLOCK / CHECKPOINT — MANNED WEST variant (flag WFBE_C_DEF_FORT_MANNED). Same live layout as the side-neutral WFBE_NEURODEF_FORT_CHECKPOINT (staggered concrete chicane + two bag-fence guard positions) PLUS one manned .50cal M2 static BEHIND each guard bagfence (2 total). Soldier logic: a checkpoint nobody can shoot from is a speed bump — the guns give the guard positions teeth. Each MG sits outboard of its bagfence (the bags are its frontal cover) and is canted INWARD so both arcs converge on the stop line and the approach lane, mutually supporting across the road; a vehicle that rushes the chicane is in both guns' arcs the whole way through. The rear (-Y, friendly side) stays open. Manning is automatic via ConstructDefense (pooled DefenseTeam AI in empty gunner slots).",
+  "objs": [
+    {"cls":"Land_CncBlock_Stripes","x":-3,"y":5,"z":0,"dir":0,"role":"chicane block 1 (left) — forces vehicles right"},
+    {"cls":"Land_CncBlock_Stripes","x":3,"y":2,"z":0,"dir":0,"role":"chicane block 2 (right) — forces vehicles left"},
+    {"cls":"Land_CncBlock_Stripes","x":-3,"y":-1,"z":0,"dir":0,"role":"chicane block 3 (left) — completes the S-bend"},
+    {"cls":"Land_CncBlock_Stripes","x":0,"y":3.5,"z":0,"dir":0,"role":"stop-line block — marks the halt point"},
+    {"cls":"Land_fort_bagfence_long","x":-6,"y":3,"z":0,"dir":90,"role":"left guard position — cover, arc onto the stop line"},
+    {"cls":"Land_fort_bagfence_long","x":6,"y":1,"z":0,"dir":90,"role":"right guard position — cover, mutually supports left"},
+    {"cls":"M2StaticMG","x":-7.5,"y":3,"z":0,"dir":335,"role":"MANNED .50cal — behind the left guard bags, arc onto the stop line + approach"},
+    {"cls":"M2StaticMG","x":7.5,"y":1,"z":0,"dir":25,"role":"MANNED .50cal — behind the right guard bags, arc onto the stop line + approach"}
+  ]
+}

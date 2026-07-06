@@ -2142,6 +2142,43 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- no gameplay logic is gated on it. Set to 0 to suppress all MATCH|v1| lines (zero overhead).
 	if (isNil "WFBE_C_MATCH_TELEMETRY") then {WFBE_C_MATCH_TELEMETRY = 1};
 
+//--- fable/wddm-functional-defenses: MANNED FORTIFICATIONS. The three WDDM fortification
+//--- compositions (Strongpoint / Checkpoint / Observation Post) are cosmetic at HEAD (zero
+//--- gunner-slot children). Flag >0 -> WFBE_POSITION_TEMPLATE_MAP (Init_Defenses.sqf) marks the
+//--- three fort anchors factionSpecific, resolving the MANNED _WEST/_EAST variants (WEST =
+//--- M2StaticMG, EAST/GUER/TKA = DSHKM_TK_INS_EP1; STRONGPOINT +2 rampart-corner MGs,
+//--- CHECKPOINT +1 MG per guard position, OP +1 MG on the watchtower deck at the documented
+//--- Land_Fort_Watchtower_EP1 DECK_Z=5.4). Manning is the stock ConstructDefense pooled
+//--- DefenseTeam path - no new manning logic. 0 (default) = the side-neutral cosmetic arrays
+//--- resolve exactly as at HEAD (byte-identical behaviour).
+	if (isNil "WFBE_C_DEF_FORT_MANNED") then {WFBE_C_DEF_FORT_MANNED = 0};
+
+//--- fable/wddm-functional-defenses: FACTORY WALL SLABS v4. Redesign of the v3 concrete slab
+//--- layer (WFBE_NEURODEF_*_WALLS_V4, Init_Defenses.sqf): legacy ring verbatim + contiguous
+//--- Concrete_Wall_EP1 runs at the HQ 2.2 m overlap pitch (no lone single panels), slab-layer
+//--- gaps aligned with the legacy walking gaps, +X egress faces fully open on Light/Heavy/
+//--- Aircraft, Land_CncBlock_Stripes accents at gap mouths, ServicePoint slab-free.
+//--- Flag >0 -> Construction_Small/MediumSite.sqf prefer _WALLS_V4 where defined; 0 (default) ->
+//--- the existing WFBE_C_WALLS_V3 selection runs untouched (V3 stays the live default look).
+	if (isNil "WFBE_C_WALLS_V4") then {WFBE_C_WALLS_V4 = 0};
+
+//--- fable/wddm-functional-defenses: FORTIFICATION PACK. Ray (owner intent, verbatim gist):
+//--- "Fortifications! Not fortresses - useful items like a row of concrete walls, or a way to
+//--- block LoS to your base... larger assets basically." Five PASSIVE larger buildable
+//--- fortification compositions (Init_Defenses.sqf WFBE_NEURODEF_FORTIF_*: Concrete Wall Row ~22 m,
+//--- Concrete Wall Corner L-section, Tall LoS Screen ~43 m of Base_WarfareBBarrier10xTall,
+//--- HESCO Line ~39 m, Gate Complex drive-through mouth), WDDM-authored
+//--- (docs/design/compositions/fortif_*.wddm.json). Flag >0 -> the five anchor ghosts enter
+//--- WFBE_POSITION_TEMPLATE_MAP / WFBE_POSITION_ANCHOR_NAMES (Init_Defenses.sqf) + the side
+//--- Fortification menus (Structures_CO_US/_CO_RU/_CO_GUE/_OA_TKA v2 blocks). 0 (default) =
+//--- nothing is wired anywhere - byte-identical behaviour to HEAD.
+	if (isNil "WFBE_C_DEF_FORTIF_PACK") then {WFBE_C_DEF_FORTIF_PACK = 0};
+//--- Own composition cap for the fortification-pack anchors (Server\PVFunctions\RequestDefense.sqf
+//--- B3b): fortif placements are counted against THIS cap (distinct placement-IDs whose stamped
+//--- WFBE_WDDMAnchorClass is a fortif ghost) and are EXCLUDED from the WFBE_C_WDDM_COMP_CAP=3
+//--- weapon-position pool, so walls/screens never eat the weapon-position slots. Only read when
+//--- WFBE_C_DEF_FORTIF_PACK > 0 (at 0 the legacy single-pool count runs verbatim).
+	if (isNil "WFBE_C_DEF_FORTIF_CAP") then {WFBE_C_DEF_FORTIF_CAP = 6};
 //--- SML-1 Squad Micro Layer: camp-split captures (GR-2026-07-03a). Flag-gated default 0.
 	if (isNil "WFBE_C_SML_CAMP_SPLIT")    then {WFBE_C_SML_CAMP_SPLIT    = 1};   //--- 1=enable per-unit doStop/doMove camp-split; 0=byte-identical legacy behaviour.
 	if (isNil "WFBE_C_SML_WATCHDOG_TTL") then {WFBE_C_SML_WATCHDOG_TTL = 240};  //--- s: per-unit TTL before the watchdog forces doFollow back (covers all exit paths).
