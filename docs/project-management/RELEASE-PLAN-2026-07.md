@@ -32,7 +32,11 @@ rollback flag live), all owner-picked features settled, no known release-blockin
 
 ## Release gates (all must be green)
 - [ ] 3 clean soaks (runbook criteria) 
-- [ ] Blocker audit: zero release_blockers open (RCE class especially)
+- [~] Blocker audit DONE 2026-07-06: RCE + confused-deputy + SEND_MESSAGE injection CONFIRMED FIXED on master
+  (commits 7d60b02b4 + 4f2c506b5; allow-list + CODE-type checks verified via git cat-file). Remaining:
+  (1) PR #768 (supply pay-out no-op + DR-55 guard no-ops) — refuter running, merge on PASS;
+  (2) BattlEye posture: box has NO beserver.cfg (BE unarmed) — DECISION: ship 1.0 with BE OFF (A2 BE master
+  server down; enabling risks locking players out). BE filters + chat bridge = post-release, gated on BE ecosystem.
 - [ ] Cutover build boots clean on all 3 terrains (marker + error budget)
 - [ ] Rollback proven: DECAP_ENABLE=0 flip restores V1 behavior on the release build (soak 1 doubles as evidence)
 - [x] Version name: 1.0 (owner) — [ ] announcement sign-off pending
