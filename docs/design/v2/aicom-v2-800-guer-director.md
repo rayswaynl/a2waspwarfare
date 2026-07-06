@@ -1,7 +1,7 @@
 # AICOM V2 Behaviour Spec 800: GUER Director (Virtual Resistance Ledger + Lightweight Brain)
 
 Guide rev: GUIDE-REV GR-2026-07-03a.
-Status: **APPROVED FOR IMPLEMENTATION** (Ray 2026-07-05; concept approved 2026-07-04 as option B). Relief waves are in scope (see Behaviour 2 and the wave rules below). Owner decisions D1 and D2 are both resolved (D2: implementation ruling 2026-07-05; D1: decision menu 2026-07-06 — retake defaults 0 on Chernarus, low on Takistan). **Amendment A1 (Player Commissar Panel, owner decisions 2026-07-06) is part of this lane** — see the amendment section at the end of this document. Sequencing: after the V2 cutover stabilises, per `AICOM-V2-CUTOVER-AND-RECONCILIATION.md`. Markdown only; no gameplay code in this worktree.
+Status: **APPROVED FOR IMPLEMENTATION** (Ray 2026-07-05; concept approved 2026-07-04 as option B). Relief waves are in scope (see Behaviour 2 and the wave rules below). Owner decisions D1 and D2 are both resolved (D2: implementation ruling 2026-07-05; D1: decision menu 2026-07-06 — retake defaults 0 on Chernarus, low on Takistan). **Amendments A1 (Player Commissar Panel) and A2 (Air-Contact Activation Tier), both owner-ruled 2026-07-06, are part of this lane** — see the amendment sections at the end of this document. Sequencing: after the V2 cutover stabilises, per `AICOM-V2-CUTOVER-AND-RECONCILIATION.md`. Markdown only; no gameplay code in this worktree.
 Scope: an invisible, in-theme "A-Life" layer for the resistance side — a persistent virtual population (per-town strength ledger + virtual cells moving between towns) with a small Assessment/Planning brain (reinforce, regroup, ambush, retake) on top. It replaces the memoryless respawn behaviour of V1 town garrisons and gives the third side agency, while staying invisible as a system: players only ever see resistance units doing plausible resistance things.
 
 This lane is deliberately different from every other V2 lane in one way: it is the **single authorized writer of GUER volume**, and therefore defaults **OFF** (all other lane switches default 1). Lane 424 (Third-side) remains fully volume-protected and unchanged; see "Relationship To Lane 424".
@@ -93,7 +93,7 @@ Field rules:
 
 Verified local anchors (current tree unless marked V2-worktree):
 
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf:11` (600 m base detection), `:85` (nearEntities scan, Air excluded), `:93-95` (`WFBE_IsTownDefenderAI` filter), `:157` (`createGroup resistance` per activation), `:208-214` (deactivation deletes all town groups — the knowledge loss this lane fixes), `:235` (patrol start), `:246,256` (0.05 s/town + 5 s cycle sleeps): the existing bubble machinery this lane reuses as its materialization surface.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/FSM/server_town_ai.sqf:11` (600 m base detection), `:120` (nearEntities scan; the Air class IS in the scan list but the result is filtered `unitsBelowHeight 20` — see Amendment A2 for the dormant air tier this hides), `:93-95` (`WFBE_IsTownDefenderAI` filter), `:157` (`createGroup resistance` per activation), `:208-214` (deactivation deletes all town groups — the knowledge loss this lane fixes), `:235` (patrol start), `:246,256` (0.05 s/town + 5 s cycle sleeps): the existing bubble machinery this lane reuses as its materialization surface.
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:341`: `WFBE_C_TOWNS_UNITS_INACTIVE = 90` — the despawn window; V1 respawns at FULL strength after it, which is the memoryless behaviour being replaced.
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_GetTownGroups.sqf:141` and `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_GetTownGroupsDefender.sqf:134-140`: the supply-value and town-type group tables × `WFBE_C_TOWNS_UNITS_COEF` / `WFBE_C_TOWNS_UNITS_DEFENDER_COEF` — these become `strengthBaseline`, not rewrite targets.
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_CreateTownUnits.sqf:44` (existing `CreateTeam` call) and `:75` (0.5 s spread between groups): the only unit-creation path the Director's materializer may call for garrisons.
@@ -312,6 +312,46 @@ T2 local micro-soak: one purchase visible end-to-end (request, `GDIR_PANEL` acce
 
 T3 box soak: `fundedTotal` accounted in the conservation trend; `loadFactor` observably rises during low-FPS soak segments; the GUER group cap is never exceeded with maximum contracts armed.
 
+## Amendment A2: Air-Contact Activation Tier (owner rule 2026-07-06)
+
+Owner rule (verbatim): "Helicopters and jets flying in town bubbles should only activate AA units."
+
+### V1 evidence (corrects and extends the base-spec evidence)
+
+V1 already contains a complete two-tier activation design for exactly this rule — but it is DEAD on the current base branch. Verified anchors (`Server/FSM/server_town_ai.sqf`, base `claude/build84-cmdcon36`):
+
+- `:52` — per-town `wfbe_active_air` flag, initialised alongside `wfbe_active`.
+- `:120` — the activation scan includes the `Air` class but filters the result `unitsBelowHeight 20`, so aircraft above 20 m are invisible to towns.
+- `:172-173` — `_below = 1; _enemies_ground = 1;` hardcoded, so every detected enemy counts as ground.
+- `:189, :205` — the only writes of `_enemies_ground = 0` (active-town and GUER group-budget deferrals) zero `_enemies` in the same block.
+- `:227-236` — the air-only activation branch (`_enemies_ground == 0 && _enemies > 0` sets `wfbe_active_air` and calls the garrison tables with a third argument `true`) is therefore UNREACHABLE.
+- `Server/Functions/Server_GetTownGroups.sqf:12,143,151-152` and `Server_GetTownGroupsDefender.sqf:12` — the `_aa_get` table mode: filters the town's group table to `["AA_Light","AA_Heavy","Team_AA"]` and caps at 3 groups. Present for BOTH occupier and defender tables.
+- `:408` — deactivation clears `wfbe_active_air` alongside `wfbe_active`.
+- `Common/Init/Init_CommonConstants.sqf:1593` — `WFBE_C_TOWNS_DETECTION_RANGE_AIR = 50` ("Detect Air if > x"), the abandoned altitude threshold of the original design.
+
+Net V1 behaviour today: aircraft above 20 m never activate a town (free overflight and hover-scouting); aircraft at or below 20 m trigger a FULL ground garrison spawn. Both are wrong under the owner rule.
+
+### Behaviour rule
+
+- An enemy AIR VEHICLE (with alive crew aboard) inside a town's detection bubble activates ONLY the AA tier: the garrison tables are called with `_aa_get = true` — the existing filter and existing 3-group cap. No full garrison, no statics manning change, no patrol start, no side-message spam beyond the existing activation log.
+- Any DISMOUNTED enemy in the bubble — including troops landed or fast-roped from a helicopter — is ground contact and triggers normal full activation, which supersedes and absorbs an active AA tier (the AA groups simply become part of the active garrison).
+- Air contact is recognised at any altitude up to a profile ceiling `AICOMV2_GDIR_AIR_CEILING_M` (default 600) so high transiting jets do not churn activations; the existing `WFBE_C_TOWNS_DETECTION_RANGE_AIR` constant is left untouched (its default is not changed; the builder may retire it in favour of the new dial with a mapping note).
+- The rule applies to ALL garrison-owning sides through the shared bubble machinery — the `_aa_get` path already exists in both table functions. This also means W/E town garrisons will raise AA tiers against resistance aircraft, including Amendment A1 QRF helicopters: emergent and intended.
+- FPS note: this tier makes overflights cost at most 3 groups where today they cost either nothing (no AA threat at all) or a full garrison (below 20 m) — strictly better on both fun and load.
+
+### Director ledger integration (resistance towns)
+
+- The AA tier is an ordinary materialization: it draws the AA-capable portion from the town's ledger strength (conservation binds); survivors write back on air deactivation through the existing `:408` path.
+- The `kind` enum in `AICOMV2_GDIR_LEDGER` cell/order records gains `aaPicket`. AA-tier orders are `orderKind=materialize|kind=aaPicket` and respect `AICOMV2_GDIR_GROUP_BUDGET_MAX` like any other materialization.
+- An AA tier does NOT: found offensive cells, reset `suppressedUntilSec`, or count as the town having fought (`lastFoughtSec` updates only if the picket takes losses).
+- Escalation from AA tier to full activation on ground contact is a single additional materialize order for the remaining garrison strength — not a despawn/respawn.
+
+### Additional acceptance fixtures
+
+T1 pure-core: an air-contact event yields exactly one `kind=aaPicket` order of at most 3 groups; a ground-contact event supersedes an active picket with a full materialization order (no double-spawn of the AA fraction); picket write-back conserves strength; air contact above `AICOMV2_GDIR_AIR_CEILING_M` yields `noop`.
+T2 local micro-soak: a helicopter held inside the bubble above 20 m activates ONLY AA groups (RPT group log shows `wfbe_active_air` and no full-garrison spawn); dismounting infantry escalates to full activation; the aircraft leaving dematerializes the picket with survivors banked to the ledger.
+T3 box soak: rounds with air activity show `aaPicket` orders and ZERO full-garrison activations attributable to air-only contact; GUER group counts remain bounded with pickets active on multiple towns.
+
 ## Report Requirements For One-shot Build
 
-The one-shot build report must cite `GUIDE-REV GR-2026-07-03a`, name `WFBE_C_AICOM_V2_ENABLE` default `0` and `AICOMV2_LANE_GUER_DIRECTOR` default `0` as the Director lane switch (the documented default-0 exception), include ledger-conservation and baseline-parity fixtures, prove the Director never writes `sideID`/`supplyValue`/side relations and never emits `AICOMV2_PLAN_DECISION`, show `GDIR_VOLUME`/`GDIR_LEDGER`/`GDIR_ORDER` RPT examples including one attributable `changed=1`, prove lane-424 volume protection remains green, confirm no civilian/ambient content was introduced, and confirm Chernarus/Takistan mirrors. If the build includes Amendment A1 (Commissar Panel), the report must additionally name `AICOMV2_GDIR_PANEL` default `0`, include the unpaid-mint rejection and funded-provenance fixtures, show one `GDIR_PANEL` accept line with its matching `GDIR_VOLUME|changed=1|funded=1`, and prove panel-off byte-parity with the unamended lane.
+The one-shot build report must cite `GUIDE-REV GR-2026-07-03a`, name `WFBE_C_AICOM_V2_ENABLE` default `0` and `AICOMV2_LANE_GUER_DIRECTOR` default `0` as the Director lane switch (the documented default-0 exception), include ledger-conservation and baseline-parity fixtures, prove the Director never writes `sideID`/`supplyValue`/side relations and never emits `AICOMV2_PLAN_DECISION`, show `GDIR_VOLUME`/`GDIR_LEDGER`/`GDIR_ORDER` RPT examples including one attributable `changed=1`, prove lane-424 volume protection remains green, confirm no civilian/ambient content was introduced, and confirm Chernarus/Takistan mirrors. If the build includes Amendment A1 (Commissar Panel), the report must additionally name `AICOMV2_GDIR_PANEL` default `0`, include the unpaid-mint rejection and funded-provenance fixtures, show one `GDIR_PANEL` accept line with its matching `GDIR_VOLUME|changed=1|funded=1`, and prove panel-off byte-parity with the unamended lane. For Amendment A2, the report must show one RPT example of an air-only activation (`wfbe_active_air` with an `aaPicket` order and at most 3 groups), one ground-contact escalation, and the dead-code anchors it revived (`server_town_ai.sqf:172-173` hardcode removed or bypassed).
