@@ -65,6 +65,8 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 	sleep _townInitSleep;
 };
 
+//--- Perf phase jitter (2026-07-06): see server_town.sqf. Default 0 = V1.
+if ((missionNamespace getVariable ["WFBE_C_LOOP_PHASE_JITTER", 0]) > 0) then {sleep (random 5)};
 while {!WFBE_GameOver} do {
 
 	//--- Count currently active towns once per sweep; publish for groupsGC audit line.
