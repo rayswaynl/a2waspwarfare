@@ -1916,6 +1916,11 @@ while {!WFBE_GameOver && _alive} do {
 						//--- Mode 0/1, or the flag off, behave EXACTLY as before.
 						_capMode       = missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_MODE", 0];
 						_campGateMode2 = missionNamespace getVariable ["WFBE_C_AICOM_CAMP_GATE_MODE2", 1];
+						//--- SML-1 camp-split: when 2+ camps are unheld, spawn per-unit doStop/doMove orders with a TTL watchdog. Flag-gated (WFBE_C_SML_CAMP_SPLIT, default 0).
+						if ((missionNamespace getVariable ["WFBE_C_SML_CAMP_SPLIT", 0]) > 0) then {
+							[_team, _footInf, _unheldCamps, _sideID, _side, _townCenter, _capSeq, _campFirstEnd] Spawn WFBE_CO_FNC_SMLCampSplit;
+						};
+
 						while {count _unheldCamps > 0 && {time < _campFirstEnd} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
 							if (_capInt && {count _capOrdN >= 1} && {(_capOrdN select 0) != _capSeq}) then {_capAbort = true};
