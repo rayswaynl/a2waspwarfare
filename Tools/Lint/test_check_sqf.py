@@ -57,6 +57,22 @@ class CheckSqfTests(unittest.TestCase):
         codes = lint_codes('// "abc" find "b"\n_hit = "abc" find "b";\n')
         self.assertEqual(codes.count("A3STRING"), 1)
 
+    def test_string_typed_constant_numeric_gate_is_reported(self) -> None:
+        codes = lint_codes(
+            'if ((missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", 0]) > 0) then {};\n'
+            "if ((missionNamespace getVariable ['WFBE_C_GUER_KA137_FLARE_LAUNCHER', false])) then {};\n"
+            'if ((missionNamespace getVariable [WFBE_C_SPECIAL_CLASS, 0]) > 0) then {};\n'
+        )
+        self.assertEqual(codes.count("A3NUMGATE"), 3)
+
+    def test_string_typed_constant_numeric_gate_ignores_comments_and_safe_defaults(self) -> None:
+        codes = lint_codes(
+            '// missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", 0]\n'
+            'if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {};\n'
+            'if ((missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"]) != "") then {};\n'
+        )
+        self.assertNotIn("A3NUMGATE", codes)
+
     def test_namespace_three_arg_setvariable_is_reported(self) -> None:
         codes = lint_codes('missionNamespace setVariable ["WFBE_ICBM_STATE", _state, true];\n')
         self.assertIn("NSSETVAR3", codes)

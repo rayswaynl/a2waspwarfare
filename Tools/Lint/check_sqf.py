@@ -60,6 +60,15 @@ GROUP_GETVARIABLE_ARRAY_RE = re.compile(
     r")\s+getVariable\s*\[",
     re.IGNORECASE,
 )
+STRING_TYPED_NUMERIC_GATE_RE = re.compile(
+    r"\bgetVariable\s*\[\s*"
+    r"(?P<name>"
+    r"[\"'][A-Za-z_][A-Za-z0-9_]*(?:_TYPE|_CLASS|_LAUNCHER)[\"']|"
+    r"[A-Za-z_][A-Za-z0-9_]*(?:_TYPE|_CLASS|_LAUNCHER)"
+    r")"
+    r"\s*,\s*(?:0|false)\s*\]",
+    re.IGNORECASE,
+)
 NAMESPACE_SETVARIABLE_RE = re.compile(
     r"\b(missionNamespace|uiNamespace|profileNamespace)\s+setVariable\s*\[",
     re.IGNORECASE,
@@ -68,6 +77,7 @@ FINDING_CODES = (
     "A3BISFNC",
     "A3CMD",
     "A3MARKER",
+    "A3NUMGATE",
     "A3REVEAL",
     "A3SELECT",
     "A3SORT",
@@ -379,6 +389,18 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
     for match in A3_STRING_FIND_RE.finditer(comments_masked):
         line, col = line_col(comments_starts, match.start())
         findings.append(Finding(path, line, col, "A3STRING", "String find syntax is not A2/OA 1.64-safe"))
+
+    for match in STRING_TYPED_NUMERIC_GATE_RE.finditer(comments_masked):
+        line, col = line_col(comments_starts, match.start())
+        findings.append(
+            Finding(
+                path,
+                line,
+                col,
+                "A3NUMGATE",
+                f"Review numeric getVariable gate on string-typed constant name {match.group('name')}; use a numeric feature flag instead",
+            )
+        )
 
     for match in BOOLEAN_OP_RE.finditer(masked):
         line, col = line_col(starts, match.start(2))
