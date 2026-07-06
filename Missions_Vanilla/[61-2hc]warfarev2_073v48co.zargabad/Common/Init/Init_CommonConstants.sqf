@@ -2182,6 +2182,19 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- SML-1 Squad Micro Layer: camp-split captures (GR-2026-07-03a). Flag-gated default 0.
 	if (isNil "WFBE_C_SML_CAMP_SPLIT")    then {WFBE_C_SML_CAMP_SPLIT    = 1};   //--- 1=enable per-unit doStop/doMove camp-split; 0=byte-identical legacy behaviour.
 	if (isNil "WFBE_C_SML_WATCHDOG_TTL") then {WFBE_C_SML_WATCHDOG_TTL = 240};  //--- s: per-unit TTL before the watchdog forces doFollow back (covers all exit paths).
+//--- SML-3: graceful retreats (mauled individuals pull back while healthy units keep fighting). Flag default 0.
+	if (isNil "WFBE_C_SML_RETREAT")                   then {WFBE_C_SML_RETREAT                   = 0};
+	if (isNil "WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD")  then {WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD  = 0.5};  //--- getDammage >= this -> unit is mauled and pulls back.
+	if (isNil "WFBE_C_SML_RETREAT_HEALTHY_MIN")       then {WFBE_C_SML_RETREAT_HEALTHY_MIN       = 4};    //--- if fewer healthy units remain, skip retreat (whole-team attrition; disband/refit handles it).
+//--- SML-4: AT overwatch (launcher pre-positions on armor approach vector before the depot assault). Flag default 0.
+	if (isNil "WFBE_C_SML_AT_OVERWATCH")              then {WFBE_C_SML_AT_OVERWATCH              = 0};
+	if (isNil "WFBE_C_SML_AT_OVERWATCH_ARMOR_R")      then {WFBE_C_SML_AT_OVERWATCH_ARMOR_R      = 500};  //--- m: nearEntities Tank scan radius around _townCenter.
+	if (isNil "WFBE_C_SML_AT_OVERWATCH_OFFSET")       then {WFBE_C_SML_AT_OVERWATCH_OFFSET       = 80};   //--- m: overwatch offset from _dest on the armor approach bearing.
+//--- SML-5: surgical unstuck (nudge only individually-wedged units; pre-tier step in the unstuck ladder). Flag default 0.
+	if (isNil "WFBE_C_SML_SURGICAL_UNSTUCK")          then {WFBE_C_SML_SURGICAL_UNSTUCK          = 0};
+	if (isNil "WFBE_C_SML_UNSTUCK_MAX_UNITS")         then {WFBE_C_SML_UNSTUCK_MAX_UNITS         = 2};    //--- if more than this many units are wedged, fall through to tier escalation.
+	if (isNil "WFBE_C_SML_UNSTUCK_POS_DELTA")         then {WFBE_C_SML_UNSTUCK_POS_DELTA         = 8};    //--- m: unit moved less than this since last check -> considered wedged.
+	if (isNil "WFBE_C_SML_UNSTUCK_NUDGE_DIST")        then {WFBE_C_SML_UNSTUCK_NUDGE_DIST        = 20};   //--- m: nudge distance toward order destination.
 //--- GUER POP-UP CHECKPOINT v2 (claude/guer-cp-v2): road-snapped, road-aligned, physically blocking
 //--- G2 wildcard checkpoint (AI_Commander_Wildcard_GUER.sqf case 2). 0 (default) = the legacy v1 G2
 //--- block runs untouched (byte-identical behaviour); >0 = v2: candidates from `nearRoads` filtered by
