@@ -30,6 +30,8 @@ Owner directive (~01:30): "set a loop… Finish all the work, test, and suggest 
 - Close with rationale: #129 (superseded), #553 (superseded by #557), #694 (dup of #697), #261 (owner-rejected).
 - Prepare (do NOT mass-merge overnight): fold-batch plan for the 49 MERGE-CANDIDATEs — verify mergeability, group into ≤5-PR batches, write the morning merge runbook.
 
+### ⚠ SOAK STATUS FOR MORNING REPORT: pipeline fully mapped + deploy armed, but every check window had a human on the live box (single-instance = live). Needs owner action: free the box for a window, OR give me the authoritative empty-check (A2S port 2303 minus HC, or the exact mission-switcher.ps1 player-count call). Live box IS emitting AICOM2|v1| telemetry but on build cc44t (pre-#724) so the new inRange/roll/sensed fields require the deploy.
+
 ### E. Morning deliverable (~07:30-08:00)
 - `MORNING-REPORT-2026-07-06.md`: everything shipped/verified overnight, soak KPIs + DECAP sense-chain validation verdict, improvement suggestions ranked from soak evidence, open decisions. Peach+ DM the digest.
 
@@ -38,6 +40,7 @@ Owner directive (~01:30): "set a loop… Finish all the work, test, and suggest 
 - Context preservation: update this doc's Log section every wake BEFORE doing work.
 
 ## Log
+- 03:1x — Iter 4: merge runbook → MORNING-MERGE-RUNBOOK doc (10 batches + rebase queue). TP-10 spec corrections landed (c75b9c3f2) — notably MARCH_YELLOW pacing + land 'GET OUT' dismount ALREADY implemented (saves rebuild). Soak: 3 checks, box shows human 'Mitch McConnell' active t=963 then 17min heartbeat-silence but NO positive disconnect signal + no authoritative player-counter available → DEFERRED (won't restart on ambiguous-empty). Banking time on homepage reframe (Q10 default numbers).
 - 03:1x — Iter 3: #730 fix verified in-branch (both MAJORs closed, re-verified PASS, merge-ready). Soak player-check INCONCLUSIVE (no FPSREPORT in RPT tail — could be between-rounds/ssh; NOT treating as empty per safety principle) → deploy deferred to next clean positive read. All 6 overnight PRs (#726/#727/#728/#729/#730) now PASS/merge-ready.
 - 03:0x — Iter 2: verdicts in — #729 PASS, #728 PASS (both merge-ready), #730 FAIL (2 MAJOR: unguarded select 1 + [0,0,0] map-corner trap — flag-0 inert so no live risk; fix dispatched). Soak retry: still 1 human ("Mitch McConnell") — blocked. Player-check script now reliable (scp'd pcheck.ps1).
 - 02:4x — Iter 1 done: soak BLOCKED (human online; pipeline fully mapped, retry armed). TP-16->#729, TP-17->#730, TP-18->#728 (grades 95/95/96, verify wave launching). #726 PASS (guard fix landed on organic dd7200578 — B self-served it), #727 PASS-WITH-NOTES. NEW: TP-20 for B queue = same rate-limit for aicom-posture/aicom-fieldorder.
