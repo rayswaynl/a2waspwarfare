@@ -2237,11 +2237,15 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GARRISON_DRESSING_LIFETIME") then {WFBE_C_GARRISON_DRESSING_LIFETIME = 900}; //--- s: forced recycle age per gun (anti-accumulation).
 	if (isNil "WFBE_C_GARRISON_DRESSING_MAX")      then {WFBE_C_GARRISON_DRESSING_MAX = 6};        //--- Max simultaneous dressed towns across the map.
 	if (isNil "WFBE_C_GARRISON_DRESSING_SEARCHLIGHT") then {WFBE_C_GARRISON_DRESSING_SEARCHLIGHT = 1}; //--- 1: add SearchLight_RUS at night; 0: gun only.
-//--- AIRFIELD-OWNERSHIP GATE (fable/airfield-ownership-gate, GR-2026-07-03a):
-//--- When >0, players may only purchase/spawn aircraft at an airfield the player's own side holds
-//--- (sideID on the LocationLogicAirport logic matches the buyer's side). Denied purchase: clear
-//--- hint, no funds deducted. Flag-off (0) = byte-identical (no gate). AI commander unaffected.
-	if (isNil "WFBE_C_AIRFIELD_OWNERSHIP_GATE") then {WFBE_C_AIRFIELD_OWNERSHIP_GATE = 0}; //--- 0=off (default, byte-identical); 1=on (block aircraft purchase at enemy/neutral airfields).
+//--- AIRFIELD-OWNERSHIP GATE (fable/airfield-ownership-gate, GR-2026-07-06a):
+//--- When >0, players may only purchase/spawn aircraft at an airfield the player's own side holds.
+//--- Ownership proxy: WFBE_CO_FNC_GetAirfieldOwnerSideID finds the nearest entry in the towns array
+//--- within WFBE_C_AIRFIELD_OWNER_TOWN_RADIUS and reads its sideID (set by the capture system).
+//--- The airfield depot logic (wfbe_is_airfield=true) is always within ~80m of its companion
+//--- LocationLogicAirport (see binding table in PR body). Unbound airfield (radius miss) = ALLOWED.
+//--- Flag-off (0) = byte-identical (no gate). AI commander unaffected (AI uses Server_BuyUnit).
+	if (isNil "WFBE_C_AIRFIELD_OWNERSHIP_GATE")    then {WFBE_C_AIRFIELD_OWNERSHIP_GATE = 0};    //--- 0=off (default, byte-identical); 1=on (block aircraft purchase at enemy-owned airfields).
+	if (isNil "WFBE_C_AIRFIELD_OWNER_TOWN_RADIUS") then {WFBE_C_AIRFIELD_OWNER_TOWN_RADIUS = 500}; //--- m: radius for nearest-town ownership lookup. 500m safely binds each airport to its depot (max separation ~80m on all terrains; nearest non-airfield town is 679m+).
 
 //--- AWACS PLATFORM RADAR (fable/awacs-radar, flag WFBE_C_AWACS default 0, lobby param):
 //--- while a CREWED friendly airframe from WFBE_C_AWACS_TYPES is airborne above MINALT the

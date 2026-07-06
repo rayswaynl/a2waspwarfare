@@ -134,6 +134,7 @@ WFBE_CO_FNC_GetClosestEntity = Compile preprocessFileLineNumbers "Common\Functio
 WFBE_CO_FNC_GetClosestEntity2 = Compile preprocessFileLineNumbers "Common\Functions\Common_GetClosestEntity2.sqf";
 WFBE_CO_FNC_GetClosestEntity3 = Compile preprocessFileLineNumbers "Common\Functions\Common_GetClosestEntity3.sqf";
 WFBE_CO_FNC_GetClosestEntity4 = Compile preprocessFileLineNumbers "Common\Functions\Common_GetClosestEntity4.sqf";
+WFBE_CO_FNC_GetAirfieldOwnerSideID = Compile preprocessFileLineNumbers "Common\Functions\Common_GetAirfieldOwnerSideID.sqf"; //--- fable/airfield-ownership-gate: nearest-town ownership proxy for LocationLogicAirport objects.
 WFBE_CO_FNC_GetConfigEntry = Compile preprocessFileLineNumbers "Common\Functions\Common_GetConfigEntry.sqf";
 WFBE_CO_FNC_GetDirTo = Compile preprocessFileLineNumbers "Common\Functions\Common_GetDirTo.sqf";
 WFBE_CO_FNC_GetEmptyPosition = Compile preprocessFileLineNumbers "Common\Functions\Common_GetEmptyPosition.sqf";

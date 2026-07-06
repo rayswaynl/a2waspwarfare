@@ -215,12 +215,16 @@ class FSM
        "" \n
        "//--- Airport." \n
        "if ((missionNamespace getVariable ""WFBE_C_GAMEPLAY_HANGARS_ENABLED"") > 0) then {" \n
-       "	hangarInRange = if !(isNull ([vehicle player, _pura] Call WFBE_CL_FNC_GetClosestAirport)) then {true} else {false};" \n
-       "	//--- AIRFIELD-OWNERSHIP GATE: suppress hangar tab if the player does not own the airfield." \n
+       "	private [""_afLogicFSM""];" \n
+       "	_afLogicFSM = [vehicle player, _pura] Call WFBE_CL_FNC_GetClosestAirport;" \n
+       "	hangarInRange = if !(isNull _afLogicFSM) then {true} else {false};" \n
+       "	//--- AIRFIELD-OWNERSHIP GATE (GR-2026-07-06a): suppress hangar tab if enemy owns the airfield." \n
+       "	//--- WFBE_CO_FNC_GetAirfieldOwnerSideID finds the nearest towns-array depot and reads its sideID." \n
+       "	//--- sideID -1 = no depot in radius = neutral = ALLOWED (unbound airfields always open)." \n
        "	if (hangarInRange && {(missionNamespace getVariable [""WFBE_C_AIRFIELD_OWNERSHIP_GATE"", 0]) > 0}) then {" \n
-       "		private [""_afLogic""];" \n
-       "		_afLogic = [vehicle player, _pura] Call WFBE_CL_FNC_GetClosestAirport;" \n
-       "		if !(_afLogic getVariable [""sideID"", -1] == sideID) then {hangarInRange = false};" \n
+       "		private [""_afOwnerSID""];" \n
+       "		_afOwnerSID = [_afLogicFSM] Call WFBE_CO_FNC_GetAirfieldOwnerSideID;" \n
+       "		if !(_afOwnerSID == sideID || {_afOwnerSID == -1}) then {hangarInRange = false};" \n
        "	};" \n
        "};" \n
        "" \n
