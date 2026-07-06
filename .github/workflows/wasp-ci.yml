@@ -89,10 +89,54 @@ jobs:
         run: |
           python Tools\Lint\check_stringtable_refs.py --exit-zero
 
-      - name: Takistan mirror drift report
+      - name: Mirror drift report (TK + ZG)
         shell: pwsh
         continue-on-error: true
         env:
           A2WASP_SKIP_ZIP: "1"
         run: |
           dotnet run -c RELEASE --project Tools\LoadoutManager -- --check
+
+      # --- PowerShell tool tests (roadmap #01) ---
+      # All scripts are plain-assertion (no Pester); each exits 0 on pass, 1 on fail.
+      # Every script in the blocking step was run locally and confirmed passing (2026-07-06).
+
+      - name: PowerShell tool tests (blocking)
+        shell: pwsh
+        # Test-WaspVersionTemplates: guards WF_DEBUG, WASPRELEASE marker, and map/naval
+        # defines on all three terrain templates. Template drift is a recurring defect —
+        # confirmed PASS on this branch, wired blocking.
+        # Set-MissionTemplate.Tests, Set-WaspCpuAffinity.Tests, Get-WindowedRpt.Tests,
+        # RptParsing.Tests: dependency-free unit-test wrappers. All confirmed PASS locally.
+        run: |
+          pwsh Tools\Ops\Test-WaspVersionTemplates.ps1
+          pwsh Tools\Ops\Set-MissionTemplate.Tests.ps1
+          pwsh Tools\Ops\Set-WaspCpuAffinity.Tests.ps1
+          pwsh Tools\Monitor\Get-WindowedRpt.Tests.ps1
+          pwsh Tools\RptParsing\RptParsing.Tests.ps1
+
+      - name: PowerShell tool tests (advisory)
+        shell: pwsh
+        continue-on-error: true
+        # Test-WaspSlotCountConsistency.Tests.ps1: the fixture wrapper passes (tests tool
+        # logic), but the live repo has TK and ZG WF_MAXPLAYERS=61 vs 34 playable sqm slots.
+        # TODO: confirm TK/ZG 61-vs-34 slot mismatch intentional, then move to blocking step.
+        # Test-WaspRptMarkerSweep.SelfTest.ps1: passed locally; advisory as a precaution
+        # against runner environment differences (spawns a sub-process for the sweep tool).
+        run: |
+          pwsh Tools\Ops\Test-WaspSlotCountConsistency.Tests.ps1
+          pwsh Tools\Monitor\Test-WaspRptMarkerSweep.SelfTest.ps1
+
+      # --- BugHunt heuristics (roadmap #08) ---
+
+      - name: BugHunt heuristics (advisory)
+        shell: pwsh
+        continue-on-error: true
+        # Heuristic static scan of the Chernarus mission tree. Always advisory — findings
+        # are leads to eyeball, not proven bugs.
+        # A3-only command rule (Rule 1) is disabled inside the script: it duplicates
+        # check_sqf.py A3CMD (same command list, same tree) and would double-report every
+        # A3CMD finding. Active rules: off-by-one ascending loops, descending loops missing
+        # 'step -1', nil-hazard getVariable negation/arithmetic, missing compiled file paths.
+        run: |
+          pwsh Tools\PrTestHarness\BugHunt\Find-WaspBugHunt.ps1 -All -MinSeverity medium
