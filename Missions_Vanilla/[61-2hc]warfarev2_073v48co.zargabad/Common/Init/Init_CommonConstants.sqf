@@ -2056,6 +2056,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Client-side only. Locality note: expectedDestination works on local units only; HC-owned
 //--- AI leaders fall back to getDir facing silently. Zero server load. Flag 0 = byte-identical.
 	if (isNil "WFBE_C_TEAMMARKER_DEST_DIR") then {WFBE_C_TEAMMARKER_DEST_DIR = 0}; //--- 0: facing direction (default, byte-identical to HEAD); >0: destination-direction when an active destination is available, facing fallback.
+//--- TP-16 / naval-cap-hinds: spawn 3x Mi-24 CAP per carrier instead of the default Hind + An2 pair.
+//--- Chernarus-only feature (IS_NAVAL_MAP); flag has no effect on non-naval mirrors.
+//--- Default 0 = current pair behaviour. Set > 0 to activate all-hind triple CAP.
+	if (isNil "WFBE_C_NAVAL_CAP_THREE_HINDS") then {WFBE_C_NAVAL_CAP_THREE_HINDS = 0};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
