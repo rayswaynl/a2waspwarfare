@@ -2096,5 +2096,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_NOTABLE_KILL_FEED")     then {WFBE_C_NOTABLE_KILL_FEED     = 1};
 	if (isNil "WFBE_C_NOTABLE_KILL_THROTTLE") then {WFBE_C_NOTABLE_KILL_THROTTLE = 10};
 
+//--- MATCH TELEMETRY (fable/match-facts-family, 2026-07-06): master gate for the MATCH|v1| family.
+//--- Default 1 (ON): this is purely additive RPT telemetry feeding the Stats V2 match-report pipeline;
+//--- no gameplay logic is gated on it. Set to 0 to suppress all MATCH|v1| lines (zero overhead).
+	if (isNil "WFBE_C_MATCH_TELEMETRY") then {WFBE_C_MATCH_TELEMETRY = 1};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
