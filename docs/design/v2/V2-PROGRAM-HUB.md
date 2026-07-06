@@ -28,9 +28,9 @@ Current directory audit:
 | N2 | 408-414 | AICOM V2 design pack | Missing |
 | N3 | 415-426 | AICOM V2 behavior angles | Missing |
 | N4 | 427-434 | Utes Invasion | Missing |
-| N5 | 435-441 | Website and bot V2 prep | Missing |
+| N5 | 435-441 | Website and bot V2 prep | Partial - artifacts added by PR #704 |
 | N6 | 442-445 | Nightly soak farm | Missing |
-| N7 | 446-451 | Archive and web mining | Missing |
+| N7 | 446-451 | Archive and web mining | Partial - artifacts added by PR #704 |
 | N8 | 452-455 | Program hygiene | Hub draft present |
 
 ## Artifact Index
@@ -72,26 +72,26 @@ Current directory audit:
 | 432 | N4 | `docs/design/v2/utes-invasion/SPEC-ECONOMY.md` | MISSING | Asymmetric economy spec. |
 | 433 | N4 | `docs/design/v2/utes-invasion/SPEC-ROTATION-INTEGRATION.md` | MISSING | Rotation, params and stats integration. |
 | 434 | N4 | `docs/design/v2/utes-invasion/DATASET-AMPHIBIOUS-PRIORART.md` | MISSING | Amphibious prior-art catalog. |
-| 435 | N5 | `docs/design/v2/STATS-V2-SCHEMA.md` | MISSING | Stats V2 schema and migration spec. |
-| 436 | N5 | `docs/design/v2/INGEST-WORKER-SPEC.md` | MISSING | WASP ingest worker spec. |
-| 437 | N5 | `docs/design/v2/ADMIN-HUB-SPEC.md` | MISSING | Read-only admin hub spec. |
+| 435 | N5 | `docs/design/v2/STATS-V2-SCHEMA.md` | READY | Drizzle DDL draft for `matches`, `match_events`, `match_players`, rollup SQL, idempotency/backfill rules. |
+| 436 | N5 | `docs/design/v2/INGEST-WORKER-SPEC.md` | READY | WASPSTAT/AICOMSTAT/WASPSCALE ingest grammar, idempotency, transport modes, backfill procedure. |
+| 437 | N5 | `docs/design/v2/ADMIN-HUB-SPEC.md` | READY | Read-only admin page inventory, match/stats-health queries, `:8080` fold-in map. |
 | 438 | N5 | `docs/design/v2/GUIDES-AUDIT.md` | MISSING | Guide inventory and rewrite audit. |
 | 438 | N5 | `docs/design/v2/GUIDES-REWRITES/` | MISSING | Rewrite drafts for stale guide pages. |
-| 439 | N5 | `docs/design/v2/BOT-V2-SPEC.md` | MISSING | Match-report, mystats and alert spec. |
-| 440 | N5 | `docs/design/v2/PLAYER-STATS-UX-SPEC.md` | MISSING | Public player stats page UX spec. |
-| 441 | N5 | `docs/design/v2/STYLE-GUIDE.md` | MISSING | Player-facing writing style guide. |
+| 439 | N5 | `docs/design/v2/BOT-V2-SPEC.md` | READY | Match report, `/mystats`, admin alerts, outbox job types, embed fields. |
+| 440 | N5 | `docs/design/v2/PLAYER-STATS-UX-SPEC.md` | READY | Player profile component tree, query contract, privacy matrix, empty states. |
+| 441 | N5 | `docs/design/v2/STYLE-GUIDE.md` | READY | Tone, glossary, bot copy rules, anti-patterns, checklist. |
 | 442 | N6 | `docs/design/v2/SPEC-SOAK-FARM-NIGHTLY.md` | MISSING | Nightly soak-farm pipeline design. |
 | 443 | N6 | `docs/design/v2/SPEC-SOAK-LENS-PACK.md` | MISSING | Four-lens auto-analysis rule pack. |
 | 444 | N6 | `docs/design/v2/SPEC-SOAK-LEDGER-CONTRACT.md` | MISSING | Build-ledger data contract. |
 | 445 | N6 | `docs/design/v2/SPEC-BOX-RUNBOOK.md` | MISSING | Box runbook and DEPLOY-CLAIM protocol. |
-| 446 | N7 | `docs/design/v2/ARCHIVE-CTI-CATALOG.md` | MISSING | Jerry archive Warfare/CTI sweep. |
-| 447 | N7 | `docs/design/v2/MIKSUU-DRIVE-CATALOG.md` | MISSING | Miksuu Drive mirror catalog. |
-| 448 | N7 | `docs/design/v2/BENNY-DELTA-REPORT.md` | MISSING | Benny 2.073+ changelog and delta report. |
-| 449 | N7 | `docs/design/v2/CTI-COMMANDER-DESIGN-ANALYSIS.md` | MISSING | crCTI, MCTI and WICT commander extraction. |
-| 450 | N7 | `docs/design/v2/FORUMS-INTELLIGENCE-REPORT.md` | MISSING | Warfare/CTI forum intelligence sweep. |
-| 451 | N7 | `docs/design/v2/TERRAIN-CENSUS.md` | MISSING | Vanilla terrain gameplay census. |
+| 446 | N7 | `docs/design/v2/ARCHIVE-CTI-CATALOG.md` | DRAFT | Observed E: archive CTI candidates and top borrow-as-design picks; needs full extraction pass. PR #704. |
+| 447 | N7 | `docs/design/v2/MIKSUU-DRIVE-CATALOG.md` | DRAFT | Miksuu mirror catalog structure and partial observed root context; needs full mirror walk. PR #704. |
+| 448 | N7 | `docs/design/v2/BENNY-DELTA-REPORT.md` | DRAFT | Changelog-level delta matrix and skip filters; needs full source/version reconstruction. PR #704. |
+| 449 | N7 | `docs/design/v2/CTI-COMMANDER-DESIGN-ANALYSIS.md` | DRAFT | crCTI/MCTI/WICT analytical comparison with confidence tags; needs exact source appendix. PR #704. |
+| 450 | N7 | `docs/design/v2/FORUMS-INTELLIGENCE-REPORT.md` | DRAFT | 20 findings and 8 complaint patterns; needs exact forum quotes/source URLs. PR #704. |
+| 451 | N7 | `docs/design/v2/TERRAIN-CENSUS.md` | READY | Vanilla terrain CTI fit menu with mode twists and implementation caveats. PR #704. |
 | 452 | N8 | `docs/design/v2/V2-PROGRAM-HUB.md` | DRAFT | This hub PR; must be updated by each later prep lane. |
-| 453 | N8 | `docs/design/v2/PR-QUEUE-TRIAGE.md` | MISSING | Open PR queue owner decision table. |
+| 453 | N8 | `docs/design/v2/PR-QUEUE-TRIAGE.md` | BLOCKED | Triage method and owner filters; live PR enumeration not possible in sandbox. PR #704. |
 | 454 | N8 | `docs/design/v2/FLAG-CENSUS.md` | MISSING | Dark flag census and flip recommendations. |
 | 455 | N8 | `docs/design/v2/AGENTS-GUIDE-REV-STAGED-DIFF.md` | MISSING | Staged guide-rev diff pack. |
 
@@ -105,3 +105,20 @@ When a prep lane ships, update exactly its row before opening or updating the PR
 4. Leave unrelated rows untouched.
 
 For multi-artifact lanes, add one row per committed artifact or directory. If a lane chooses a wiki page instead of a source artifact, set the artifact cell to the wiki page name and explain that choice in `Notes`.
+
+## Cross-Cutting Constraints
+
+- No gameplay code in prep artifacts.
+- Do not use Arma 3 commands or docs for A2 OA 1.64 implementation.
+- Archive material is design input only until license and A2 compatibility are checked.
+- `WFBE_C_SIM_GATING` stays rejected.
+- PR bodies drafted later must cite `GUIDE-REV GR-2026-07-03a`.
+
+## Where Builders Start
+
+1. Stats/backend: `STATS-V2-SCHEMA.md` then `INGEST-WORKER-SPEC.md`.
+2. Website admin: `ADMIN-HUB-SPEC.md`.
+3. Public profile: `PLAYER-STATS-UX-SPEC.md`.
+4. Bot: `BOT-V2-SPEC.md`.
+5. Copy: `STYLE-GUIDE.md`, `GUIDES-AUDIT.md`, `GUIDES-REWRITES/`.
+6. Archive-informed design: use DRAFT reports only after filling source gaps.
