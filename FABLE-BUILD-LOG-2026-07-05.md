@@ -37,3 +37,10 @@ All dark feature PRs verified + merged to build84: #781 AWACS radar (PASS), #791
 Refuter tally for the day: 9 PRs caught with real blockers pre-merge, 3 of them silent-behavior bugs lint can't see (SML-2 no-op eject, airfield phantom signal, dead-code live-symbol deletion). FPV needed 2 security rounds (client-warhead → server conversion → ownership hole → token gate).
 Overnight loop 811a1806 now Phase-1 DONE; drives Phase 2 (soak 1→2→3, empty windows, DECAP off→on→on, restore cc48a each) + Phase 3 (monitor cc48a, hotfix branches never hot-deploy, Peach+ digests). OWNER-GATED (loop will NOT do): master merge, 1.0 build, live flag flip, announce, DECAP default.
 Flag-menu preconditions logged: FPV cross-side validation before enable; SEC_HARDENING arm; airfield nil-guard (low prio).
+
+## 2026-07-06 ~box14:19 — 🚀 WASP WARFARE 1.0 IS LIVE (release-1.0-rc2 / rc11, build84 414d77516)
+Deployed on the empty window after owner logged off ("get V1 going"). Active PBO cmdconRC11, procs 3/3, SVC running, 0 errors fresh boot (garrison disableMove crash GONE). Owner Peach+ DMed.
+Deploy story: first fire ABORTED SAFELY at pre-flight marker-check (bug: read only 32KB header, marker lives deeper in version.sqf) — service never touched, cc48a stayed live. Fixed the check to scan full PBO (ASCII), re-confirmed empty, re-fired → RC11_DEPLOYED clean.
+1.0 = cc48a lineage + full day's batch. LIVE flags: permday, SML-3/4/5, garrison dressing, aircraft spawn safety, stuck-repair tier-reset. DARK (present, ready to flip): AWACS, airfield gate, FPV, East C-130, SML-2, defense-gate align, road-clear. V2 commander (DECAP) = post-1.0 update; v2-cutover-r3 #793 + soaks staged. Build 88 = instant rollback.
+Owner-owed for full 1.0 close: round-2 flag menu + announcement sign-off (draft "WASP Warfare 1.0 is here" ready in miksuu content/drafts).
+Loop 73f42df3 now RC11_LIVE_MONITOR.
