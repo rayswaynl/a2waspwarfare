@@ -194,6 +194,12 @@ class FSM
        "	if (count _checks > 0) then {serviceInRange = true};" \n
        "};" \n
        "" \n
+       "if !(serviceInRange) then {" \n
+       "	_checks = nearestObjects [getPos player, [""Base_WarfareBVehicleServicePoint""], missionNamespace getVariable ""WFBE_C_UNITS_SUPPORT_RANGE""];" \n
+       "	_perfNearEntities = _perfNearEntities + 1;" \n
+       "	{if (alive _x && {_x getVariable [""WFBE_RepairTruckServicePoint"", false]}) exitWith {serviceInRange = true}} forEach _checks;" \n
+       "};" \n
+       "" \n
        "if (_antiairradar_enabled) then {" \n
        "	_checks = [sideJoined, missionNamespace getVariable Format [""WFBE_%1AARADARTYPE"",sideJoinedText],_buildings] Call GetFactories;" \n
        "	if (count _checks > 0) then {antiAirRadarInRange = true} else {antiAirRadarInRange = false};" \n
