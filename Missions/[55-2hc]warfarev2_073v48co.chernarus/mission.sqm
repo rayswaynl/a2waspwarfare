@@ -3554,7 +3554,7 @@ class Mission
 		};
 		class Item64
 		{
-			side="WEST";
+			side="CIVILIAN";
 			class Vehicles
 			{
 				items=1;
@@ -3562,21 +3562,21 @@ class Mission
 				{
 					position[]={2259.1614,512.45703,15296.355};
 					id=229;
-					side="WEST";
-					vehicle="FR_Miles";
+					side="CIVILIAN";
+					vehicle="Civilian";
 					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="HC";
+					description="RESERVED -- HC / do not use";
 					synchronizations[]={255};
 				};
 			};
 		};
 		class Item65
 		{
-			side="WEST";
+			side="CIVILIAN";
 			class Vehicles
 			{
 				items=1;
@@ -3584,14 +3584,14 @@ class Mission
 				{
 					position[]={2259.1116,512.63934,15297.525};
 					id=230;
-					side="WEST";
-					vehicle="FR_Miles";
+					side="CIVILIAN";
+					vehicle="Civilian";
 					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="Soldier (Double team size, Camps restore)";
+					description="RESERVED -- HC / do not use";
 					synchronizations[]={255};
 				};
 			};
@@ -3917,7 +3917,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_BLU";
-					synchronizations[]={229,239,230,231,240,241,232,233,242,234,235,236,237,259,268};
+					synchronizations[]={239,231,240,241,232,233,242,234,235,236,237,259,268};
 				};
 			};
 		};

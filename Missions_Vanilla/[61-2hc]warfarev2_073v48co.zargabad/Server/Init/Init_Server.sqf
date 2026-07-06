@@ -189,7 +189,7 @@ if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 	private ["_mtStartTowns","_mtDelegation","_mtMaxPlayers","_mtAiEnabled","_mtStatlog","_mtGuer","_mtNaval","_mtOilfield","_mtBuild"];
 	_mtStartTowns  = missionNamespace getVariable ["WFBE_C_TOWNS_ACTIVE_MAX", -1];
 	_mtDelegation  = missionNamespace getVariable ["WFBE_C_AI_DELEGATION", -1];
-	_mtMaxPlayers  = WF_MAXPLAYERS;
+	_mtMaxPlayers  = getNumber (missionConfigFile >> "Header" >> "maxPlayers"); //--- A2-OA runtime read: WF_MAXPLAYERS is a preprocessor define (version.sqf) not included in Init_Server.sqf; missionConfigFile>>Header>>maxPlayers is compiled from Rsc/Header.hpp at preprocess time and yields the real slot count.
 	_mtAiEnabled   = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", -1];
 	_mtStatlog     = missionNamespace getVariable ["WFBE_C_STATLOG", -1];
 	_mtGuer        = missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0];
@@ -972,6 +972,13 @@ if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1])
 	["INITIALIZATION", "Init_Server.sqf: B62 GUER air-def loop launched (un-gated from PLAYERSIDE)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- TOWN GARRISON DRESSING (lane 241, fable/qol-recycle-pick): ZU-23 dressing on active
+//--- contested GUER-held towns. Server-only, default 0 = worker not launched.
+if (isServer && {(missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING", 0]) > 0}) then {
+	[] execVM "Server\Server_TownGarrisonDressing.sqf";
+	["INITIALIZATION", "Init_Server.sqf: GUER garrison dressing loop launched."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- B74.2: GUER player ECONOMY (per-minute stipend + vehicle-tier broadcast). MOVED here from the GUER
 //--- team-registration block above so a registration error can't silently suppress the economy (same decoupling
 //--- rationale as the air-def launch). Gated on isServer + WFBE_C_GUER_PLAYERSIDE (the playable-side param); the
@@ -1112,6 +1119,7 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 			+ "|players=" + str _players
 			+ "|hc=" + str _hc
 			+ "|dnMode=" + str (missionNamespace getVariable ["WFBE_DAYNIGHT_ENABLED", 1])
+			+ "|permDay=" + str (missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0])
 			+ "|daytime=" + str (round (daytime * 100) / 100)
 			+ "|sun=" + str (round (sunOrMoon * 100) / 100)
 			+ "|srvFps=" + str (round diag_fps)
