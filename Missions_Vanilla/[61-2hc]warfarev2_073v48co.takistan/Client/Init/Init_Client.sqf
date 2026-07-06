@@ -1284,7 +1284,6 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
                 	_color = _colorGreen;
             	};
 
-            	if ((typeOf _preview) isKindOf "StaticWeapon") then { _color = _colorGreen; };
 
 			if (_itemcategory == 0) then {
 				Private ["_town","_townside","_eArea"];
@@ -1308,14 +1307,23 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
 	};
 
             		_detected = (_area nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"], missionNamespace getVariable "WFBE_C_BASE_AREA_RANGE"]) unitsBelowHeight 20;
-            		{
-            			if(_itemcategory !=0 && side _x == _opposite_side)exitwith{
+            		if (missionNamespace getVariable ["WFBE_C_DEFENSE_CLIENT_GATE_ALIGN", 0] > 0) then {
+            			if (_itemcategory != 0 && {side _x == _opposite_side} count _detected >= (missionNamespace getVariable ["WFBE_C_DEFENSE_THREAT_MIN", 3])) then {
             				_color = _colorRed;
             				hintSilent parseText "<t color='#fb0808'> Enemies are detected near your base! </t>";
             			};
+            		} else {
+            			{
+            				if(_itemcategory !=0 && side _x == _opposite_side)exitwith{
+            					_color = _colorRed;
+            					hintSilent parseText "<t color='#fb0808'> Enemies are detected near your base! </t>";
+            				};
 
-            		}foreach _detected;
+            			}foreach _detected;
+            		};
 };
+
+            	if ((typeOf _preview) isKindOf "StaticWeapon") then { _color = _colorGreen; };
 
 			_color
 		}];
