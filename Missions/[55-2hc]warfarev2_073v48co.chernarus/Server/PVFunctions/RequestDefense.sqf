@@ -163,6 +163,12 @@ if (_index != -1) then {
 				_isFortifAnchor = (_fortifPackOn && {(_fortifNames find _defenseType) != -1});
 				if (_isFortifAnchor) then { _compCap = missionNamespace getVariable ["WFBE_C_DEF_FORTIF_CAP", 6] };
 				_allDefNamesComp = missionNamespace getVariable [format ["WFBE_%1DEFENSENAMES", str _side], []];
+				//--- fix(wddm) cap visibility: LoS-Screen placements spawn ONLY Base_WarfareBBarrier10xTall
+				//--- children, a class absent from the active side DEFENSENAMES lists - widen the scan for
+				//--- fortif requests or those placements are never found and the fortif cap never fills.
+				//--- WFBE_FORTIF_COUNT_EXTRA is defined in Init_Defenses.sqf inside the WFBE_C_DEF_FORTIF_PACK
+				//--- block; nil at flag 0 -> this line is a no-op -> legacy behaviour byte-identical.
+				if (_isFortifAnchor && {!(isNil "WFBE_FORTIF_COUNT_EXTRA")}) then { _allDefNamesComp = _allDefNamesComp + WFBE_FORTIF_COUNT_EXTRA };
 				_compObjs     = nearestObjects [_nearestCenter, _allDefNamesComp, _baseRange];
 				_seenIDs      = [];
 				{

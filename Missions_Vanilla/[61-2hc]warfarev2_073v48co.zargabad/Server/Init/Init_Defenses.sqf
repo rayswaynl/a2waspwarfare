@@ -1180,5 +1180,16 @@ if ((missionNamespace getVariable ['WFBE_C_DEF_FORTIF_PACK', 0]) > 0) then {
 		['Misc_concrete_High','WFBE_NEURODEF_FORTIF_GATE_COMPLEX',false]	//--- Gate Complex (drive-through)
 	];
 	WFBE_FORTIF_ANCHOR_NAMES = ['Misc_cargo_cont_net1','Misc_cargo_cont_net2','Misc_cargo_cont_net3','Misc_cargo_cont_tiny','Misc_concrete_High'];
+	//--- fix(wddm) cap visibility: the B3b cap count (RequestDefense.sqf) scans nearestObjects over
+	//--- the side's DEFENSENAMES classlist, so a placement only counts if at least one spawned CHILD
+	//--- class is in that list. Wall Row/Corner/Gate count via Concrete_Wall_EP1 and the HESCO Line
+	//--- via Land_HBarrier_large (both in all four active lists), but the LoS Screen's ONLY child
+	//--- class Base_WarfareBBarrier10xTall lives solely in the LEGACY side lists (Structures_CDF/_RU/
+	//--- _USMC/...), never the active Structures_CO_US/_CO_RU/_CO_GUE/_OA_TKA - without this extra
+	//--- scan list a built LoS Screen would NEVER count against WFBE_C_DEF_FORTIF_CAP (unlimited
+	//--- spam). RequestDefense appends it to the scan classes for fortif-anchor requests only;
+	//--- Land_BarGate2 included for robustness should the gate JSON ever lose its wall children.
+	//--- Nil at flag 0 (this whole block is flag-gated) -> RequestDefense skips it -> byte-identical.
+	WFBE_FORTIF_COUNT_EXTRA = ['Base_WarfareBBarrier10xTall','Land_BarGate2'];
 	WFBE_POSITION_ANCHOR_NAMES = WFBE_POSITION_ANCHOR_NAMES + WFBE_FORTIF_ANCHOR_NAMES;
 };
