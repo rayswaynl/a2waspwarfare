@@ -531,14 +531,35 @@ while {alive player && dialog} do {
 				};
 				hint "Mobility restored. Remounting...";
 				sleep 2;
-				//--- Remount: guard vehicle still alive before moveInAny.
+				//--- Remount: role-based seats (moveInAny is A3-only; use moveInDriver/moveInGunner/moveInCargo).
 				if (!isNull _rv && {alive _rv}) then {
+					private ["_mu","_mounted"];
+					_mounted = 0;
 					{
-						if !(isPlayer _x) then {
-							_x moveInAny _rv;
+						_mu = _x;
+						if (alive _mu && !(isPlayer _mu) && (vehicle _mu == _mu)) then {
+							[_mu] allowGetIn true;
+							if (isNull (driver _rv)) then {
+								_mu moveInDriver _rv;
+								_mounted = _mounted + 1;
+							} else {
+								if (isNull (gunner _rv)) then {
+									_mu moveInGunner _rv;
+									_mounted = _mounted + 1;
+								} else {
+									if (_rv emptyPositions "cargo" > 0) then {
+										_mu moveInCargo _rv;
+										_mounted = _mounted + 1;
+									};
+								};
+							};
 						};
 					} forEach _crewList;
-					hint "Crew remounted.";
+					if (_mounted > 0) then {
+						hint "Crew remounted.";
+					} else {
+						hint "Crew dismounted — no free seats to remount.";
+					};
 				} else {
 					hint "Vehicle lost during repair — remount aborted.";
 				};
