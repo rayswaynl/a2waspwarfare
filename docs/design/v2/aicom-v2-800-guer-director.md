@@ -1,7 +1,7 @@
 # AICOM V2 Behaviour Spec 800: GUER Director (Virtual Resistance Ledger + Lightweight Brain)
 
 Guide rev: GUIDE-REV GR-2026-07-03a.
-Status: **APPROVED FOR IMPLEMENTATION** (Ray 2026-07-05; concept approved 2026-07-04 as option B). Relief waves are in scope (see Behaviour 2 and the wave rules below). Owner decision D2 is resolved by the implementation ruling; D1 (retake dial defaults) remains open. Sequencing: after the V2 cutover stabilises, per `AICOM-V2-CUTOVER-AND-RECONCILIATION.md`. Markdown only; no gameplay code in this worktree.
+Status: **APPROVED FOR IMPLEMENTATION** (Ray 2026-07-05; concept approved 2026-07-04 as option B). Relief waves are in scope (see Behaviour 2 and the wave rules below). Owner decisions D1 and D2 are both resolved (D2: implementation ruling 2026-07-05; D1: decision menu 2026-07-06 — retake defaults 0 on Chernarus, low on Takistan). **Amendment A1 (Player Commissar Panel, owner decisions 2026-07-06) is part of this lane** — see the amendment section at the end of this document. Sequencing: after the V2 cutover stabilises, per `AICOM-V2-CUTOVER-AND-RECONCILIATION.md`. Markdown only; no gameplay code in this worktree.
 Scope: an invisible, in-theme "A-Life" layer for the resistance side — a persistent virtual population (per-town strength ledger + virtual cells moving between towns) with a small Assessment/Planning brain (reinforce, regroup, ambush, retake) on top. It replaces the memoryless respawn behaviour of V1 town garrisons and gives the third side agency, while staying invisible as a system: players only ever see resistance units doing plausible resistance things.
 
 This lane is deliberately different from every other V2 lane in one way: it is the **single authorized writer of GUER volume**, and therefore defaults **OFF** (all other lane switches default 1). Lane 424 (Third-side) remains fully volume-protected and unchanged; see "Relationship To Lane 424".
@@ -237,9 +237,81 @@ T3 box soak:
 
 ## Owner Decisions Required
 
-- **D1 — Retake dial per map:** may resistance retake W/E-held towns, and at what intensity? Changes the core W/E loop (towns no longer stay conquered). Recommendation: default 0 on Chernarus, low (1) on an insurgency-flavoured Takistan profile, revisit for Utes after Invasion lands.
+- **D1 — Retake dial per map: RESOLVED (Ray 2026-07-06, decision menu).** Defaults accepted as recommended: 0 on Chernarus, low (1) on an insurgency-flavoured Takistan profile; revisit for Utes after Invasion lands.
 - **D2 — Volume-rule scoping: RESOLVED (Ray 2026-07-05, implementation ruling).** The program constraint "GUER volume is intentional, do not reduce" is amended to "…except via accepted GUER Director orders while `AICOMV2_LANE_GUER_DIRECTOR = 1`, with regen guaranteeing long-run parity (`regenDebt` → 0)". Lane 424's own prohibition is unchanged; the harness attributes volume changes by source.
+
+## Amendment A1: Player Commissar Panel (owner decisions 2026-07-06)
+
+Status: owner-ruled via decision board 2026-07-06 (14 decisions). Packaging per owner ruling: this amendment lives INSIDE lane 800 — no companion lane. Build with the lane, post-cutover.
+
+A GUER-team WF-menu panel: a clickable town map with coarse ledger intel plus three paid interventions (direct buy, QRF contract, counter-attack contract). It introduces player-funded strength as a second legal volume source alongside regen, with full payment provenance, and is the one intentional, scoped exception to invisibility rule 6.
+
+### Panel rules (locked)
+
+- The panel NEVER spawns units and NEVER writes the ledger. It submits player-request records to Planning; Planning validates and emits ordinary `AICOMV2_GDIR_ORDER` rows. The Director remains the single authorized GUER-volume writer.
+- Switch: `AICOMV2_GDIR_PANEL`, default 0; requires `AICOMV2_LANE_GUER_DIRECTOR = 1`. Panel-off = zero panel records, zero panel telemetry, and every base-spec proof holds unchanged.
+- Operator: any GUER player. Anti-spam: per-town action cooldown `AICOMV2_GDIR_PANEL_COOLDOWN_SEC` (default 600) and max active contracts per town `AICOMV2_GDIR_PANEL_CONTRACTS_MAX` (default 2). New `denyReason` values: `cooldownActive`, `contractLimitReached`, `paidSurgeCapReached`, `panelOff`.
+- Invisibility rule 6 amendment: the no-UI rule is scoped to W/E eyes. A GUER-side-only panel UI is legal; W/E clients never receive panel data, and no W/E-visible surface changes in any way.
+- Intel shown: coarse strength bands (weak/battered/strong) plus inbound-cell ETA only — never exact strength numbers. Per-click request-response between client and server; never a whole-ledger broadcast.
+- Rollout: both Chernarus and Takistan at once (mirrors), with the rest of the lane.
+
+### Conservation amendment (supersedes "no minting" in base Behaviour 4)
+
+The invariant becomes **no UNPAID minting**. Legal strength sources are now: profile regen (toward baseline), transfers between ledger entries, and player-funded orders. Every funded order carries `fundedBy` (player UID) and `pricePaid`; any volume increase without payment provenance remains `conservationViolation`. Director-autonomous behaviour is unchanged and stays provably V1-parity: with the panel unused or off, the base conservation proof holds exactly as written.
+
+### Action 1 — Direct buy
+
+Pay to add strength to a chosen resistance town. Delivery mode is chosen at purchase:
+
+- Convoy (base price): strength departs the nearest safe resistance town (or map-edge origin when none qualifies) as a normal cell with a real ETA — interceptable like any other cell.
+- Instant (premium): immediate ledger add, materializing on the next bubble activation. Price multiplier `AICOMV2_GDIR_PANEL_INSTANT_MULT` (default 1.5).
+
+Funded strength may push a town above V1 baseline up to `AICOMV2_GDIR_PAID_SURGE_MAX` (default 1.5). Director-autonomous output remains bounded by `AICOMV2_GDIR_SURGE_MAX` (default 1.0) — the paid cap applies only to funded strength, and the group budget still hard-binds at materialization.
+
+### Action 2 — QRF contract
+
+Pay upfront to arm a dormant contract on a resistance town (a zero-cost ledger row). It auto-fires when the town's public attacker state becomes active. Three products:
+
+- Insert (cheap): a helicopter delivers an infantry cell at a route-edge LZ beyond `AICOMV2_GDIR_MIN_SPAWN_M`, then departs.
+- Gunship (expensive): an armed helicopter on station for `AICOMV2_GDIR_QRF_CAS_SEC` (default 180), then departs.
+- Combo: both, priced at the sum of the two minus a small bundle discount.
+
+Lifetime: armed until fired, one shot, expires at end of round, no refund.
+
+Builder verification item (blocking for this action only): identify the existing V1 GUER air spawn path in the local tree. If none exists, the air materializer is the single, explicitly-scoped new execution path this amendment authorizes — gated behind the panel switch, using ONLY helicopter classnames verified in the existing GUER pools `['GUE','PMC','TKGUE']` in the local tree; no new classnames (base do-not-introduce rules stand).
+
+### Action 3 — Counter-attack contract
+
+Pay to arm a contract on a resistance-held town. If the town falls, after a randomized 2-5 minute delay the nearest resistance neighbour founds a retake cell whose strength is a drain from that neighbour's ledger plus a paid top-up funded by the contract price. One attempt per contract; the cell fights through the existing `server_town.sqf` capture loop like any other retake.
+
+Permission principle (locked, generalizes to the whole panel): `AICOMV2_GDIR_RETAKE` gates AUTONOMOUS Director initiative only. An explicit player-funded counter-attack contract fires even at `AICOMV2_GDIR_RETAKE = 0`. Dials gate autonomy, never player agency.
+
+### Pricing and funds
+
+Dynamic scarcity with a floor, doubling as a load-shedding valve:
+
+- `price = basePrice x scarcity x loadFactor`, floored at `basePrice`. `scarcity` rises with recent panel use on that town and decays back to 1.0 over time.
+- `loadFactor` derives from server health: it rises when server FPS is low or GUER group-budget headroom is thin, and falls toward its profile minimum when the server is healthy. The panel gets expensive exactly when the server can least afford more units (owner note, D9).
+- Payment: personal wallet. Additionally a "donate to town fund" verb: any GUER player can deposit money into a per-town fund; the fund auto-applies to that town's panel actions before personal money. Funds are per-round and non-refundable.
+- Dials: the `AICOMV2_GDIR_PANEL_PRICE_*` family (base price per action/product, scarcity step and decay, loadFactor bounds). Exact defaults are builder-tuned against GUER income (stipend + kill tiers) with the acceptance target that a typical round supports roughly 2-4 meaningful interventions per player.
+
+### Record and telemetry extensions
+
+- The ledger gains `contractRecords`: `[contractId, kind, townId, fundedBy, pricePaid, armedSinceSec, firedSec, state]` with `kind` one of `qrfInsert|qrfGunship|qrfCombo|counterAttack` and `state` one of `armed|fired|expired`.
+- `AICOMV2_GDIR_ORDER` bumps to `AICOMV2_GDIR_ORDER_V2` with two appended fields: `fundedBy` (player UID string or `none`) and `pricePaid` (number; 0 for unfunded orders).
+- New telemetry line per player request, accepted or denied:
+  `AICOMSTAT|v3|DIRECTOR|GUER|<ELMIN>|GDIR_PANEL|verb=<buy|qrf|counter|donate>|town=<townId>|product=<none|instant|convoy|qrfInsert|qrfGunship|qrfCombo>|price=<n>|fundedBy=<uid>|deny=<denyReason>`
+- The `GDIR_VOLUME` line gains `funded=<0|1>|fundedBy=<uid|none>`; a `changed=1` with `funded=1` requires a matching `GDIR_PANEL` accept line.
+- The `GDIR_LEDGER` conservation audit gains `fundedTotal=<n>`; the scorer's conservation proof becomes: totalStrength = initial + regen - attrition + fundedTotal.
+
+### Additional acceptance fixtures
+
+T1 pure-core: unpaid mint still rejects as `conservationViolation`; funded mint accepted only with `fundedBy` and `pricePaid`; funded strength never exceeds baseline x `AICOMV2_GDIR_PAID_SURGE_MAX`; cooldown and contract-limit denies; a QRF contract fires exactly once; a counter-attack fires at `AICOMV2_GDIR_RETAKE = 0` ONLY with payment provenance; panel-off fixture (zero panel records and telemetry; base-spec proofs unchanged).
+
+T2 local micro-soak: one purchase visible end-to-end (request, `GDIR_PANEL` accept, order, materialization); no panel data reaches a W/E client (public-variable audit); QRF helicopter path smoke on both maps.
+
+T3 box soak: `fundedTotal` accounted in the conservation trend; `loadFactor` observably rises during low-FPS soak segments; the GUER group cap is never exceeded with maximum contracts armed.
 
 ## Report Requirements For One-shot Build
 
-The one-shot build report must cite `GUIDE-REV GR-2026-07-03a`, name `WFBE_C_AICOM_V2_ENABLE` default `0` and `AICOMV2_LANE_GUER_DIRECTOR` default `0` as the Director lane switch (the documented default-0 exception), include ledger-conservation and baseline-parity fixtures, prove the Director never writes `sideID`/`supplyValue`/side relations and never emits `AICOMV2_PLAN_DECISION`, show `GDIR_VOLUME`/`GDIR_LEDGER`/`GDIR_ORDER` RPT examples including one attributable `changed=1`, prove lane-424 volume protection remains green, confirm no civilian/ambient content was introduced, and confirm Chernarus/Takistan mirrors.
+The one-shot build report must cite `GUIDE-REV GR-2026-07-03a`, name `WFBE_C_AICOM_V2_ENABLE` default `0` and `AICOMV2_LANE_GUER_DIRECTOR` default `0` as the Director lane switch (the documented default-0 exception), include ledger-conservation and baseline-parity fixtures, prove the Director never writes `sideID`/`supplyValue`/side relations and never emits `AICOMV2_PLAN_DECISION`, show `GDIR_VOLUME`/`GDIR_LEDGER`/`GDIR_ORDER` RPT examples including one attributable `changed=1`, prove lane-424 volume protection remains green, confirm no civilian/ambient content was introduced, and confirm Chernarus/Takistan mirrors. If the build includes Amendment A1 (Commissar Panel), the report must additionally name `AICOMV2_GDIR_PANEL` default `0`, include the unpaid-mint rejection and funded-provenance fixtures, show one `GDIR_PANEL` accept line with its matching `GDIR_VOLUME|changed=1|funded=1`, and prove panel-off byte-parity with the unamended lane.
