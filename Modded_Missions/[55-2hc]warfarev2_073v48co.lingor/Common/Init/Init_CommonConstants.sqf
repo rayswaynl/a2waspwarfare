@@ -231,14 +231,6 @@ with missionNamespace do {
 	WFBE_C_STRUCTURES_SALE_DELAY = 50; //--- Building is sold after x seconds.
 	WFBE_C_STRUCTURES_SALE_PERCENT = 50; //--- When a structure is sold, x% of supply goes back to the side.
 	WFBE_C_STRUCTURES_SERVICE_POINT_RANGE = 50;
-if (WF_A2_Vanilla) then {
-		WFBE_C_BASE_COIN_DISTANCE_MIN = 8;
-		WFBE_C_BASE_COIN_GRADIENT_MAX = 4;
-} else {
-		WFBE_C_BASE_COIN_DISTANCE_MIN = 100;
-		WFBE_C_BASE_COIN_GRADIENT_MAX = 4;
-};
-
 //--- Towns.
 	if (isNil "WFBE_C_TOWNS_AMOUNT") then {WFBE_C_TOWNS_AMOUNT = 7}; //--- Amount of towns (0: Very small, 1: Small, 2: Medium, 3: Large, 4: Full).
 	if (isNil "WFBE_C_TOWNS_BUILD_PROTECTION_RANGE") then {WFBE_C_TOWNS_BUILD_PROTECTION_RANGE = 450}; //--- Prevent construction in towns within that radius.

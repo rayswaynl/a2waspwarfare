@@ -156,6 +156,30 @@ _IDCS = _IDCS - [_currentIDC];
 					hint parseText (Format ["<t color='#ff5a5a'>SCUD refused: your side already fields %1 launchers (max %2).</t>", _scudLive, _scudMax]);
 				};
 			};
+			if (!_skip && {_type == "Airport"} && {isNull _closest}) then {
+				_skip = true;
+				hint parseText "<t color='#ff9060'>No airport in range. Move closer to an airfield hangar and try again.</t>";
+			};
+			//--- AIRFIELD-OWNERSHIP GATE (fable/airfield-ownership-gate, GR-2026-07-06a):
+			//--- Block aircraft purchase at an airfield the buyer's side does not hold.
+			//--- Ownership: WFBE_CO_FNC_GetAirfieldOwnerSideID finds the nearest entry in the towns
+			//--- array (which includes the airfield depot logic with wfbe_is_airfield=true) and reads
+			//--- its sideID. sideID -1 means no town in radius -> treat as neutral -> ALLOWED.
+			//--- Only ENEMY-owned airfields are denied; own/neutral = allowed. Players only; AI uses
+			//--- Server_BuyUnit directly (WFBE_PVF_BuyUnit on the server, not this client gate).
+			if (!_skip && {_type == "Airport"} && {(missionNamespace getVariable ["WFBE_C_AIRFIELD_OWNERSHIP_GATE", 0]) > 0}) then {
+				private ["_afSideID","_afLastLog"];
+				_afSideID = [_closest] Call WFBE_CO_FNC_GetAirfieldOwnerSideID;
+				if !(_afSideID == sideID || {_afSideID == -1}) then {
+					_skip = true;
+					hint parseText "<t color='#ff9060'>Airfield not owned. Capture this airfield before buying aircraft here.</t>";
+					_afLastLog = missionNamespace getVariable ["WFBE_AFGATE_LAST_LOG", -999];
+					if ((diag_tickTime - _afLastLog) > 30) then {
+						diag_log Format ["BUYTRACE|v2|af-gate-denied|side=%1|class=%2|afSideID=%3|afLogic=%4", sideJoinedText, _unit, _afSideID, _closest];
+						missionNamespace setVariable ["WFBE_AFGATE_LAST_LOG", diag_tickTime];
+					};
+				};
+			};
 			//--- Make sure that we own all camps before being able to purchase infantry.
 			if (_type == "Depot" && _isInfantry && sideJoined != resistance) then {
 				_totalCamps = _closest Call GetTotalCamps;
