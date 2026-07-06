@@ -20,6 +20,25 @@
       RACE-8  — same lockfile covers direct manual calls and rotate2 (rotate2 must
                 also be updated to honour C:\WASP\deploy.lock).
 
+    ADVERSARIAL FIXES (2026-07-06 patch):
+      B1/B2   — HC1 recovery path no longer calls Run-Task 'MiksuuHC', which would
+                invoke hc_launch.cmd whose first line is a blunt
+                  taskkill /f /im ArmA2OA.exe
+                (no command-line filter), killing the already-seated HC2.  The recovery
+                path now reads the MiksuuHC task's executable + arguments via schtasks
+                /query /xml and launches HC1 directly, targeted by PID — no .cmd
+                blunt-kill involved.  After any HC1 recovery, HC2 is re-verified still
+                seated; if HC2 also died it is recovered in turn.
+                BOX-SIDE NOTE: hc_launch.cmd's unfiltered taskkill is a latent hazard
+                even outside this script.  Replace line 1 with:
+                  taskkill /f /fi "COMMANDLINE eq *HC-AI-Control-1*"
+                as a separate box-side maintenance task.
+      PGATE   — Added player-empty guard at startup.  Reads the SNAP/FPSREPORT from
+                the running server RPT; aborts if players > 0 on either side unless
+                -Force is passed by the operator.
+      DONE    — Final output line now contains both DEPLOY_DONE (watcher contract) and
+                DEPLOY_V2_DONE (v2 detail) so legacy grep-based monitors stay satisfied.
+
 .PARAMETER BuildTag
     The build identifier embedded in PBO filenames, e.g. "cc48".
     Defaults to "cc47" for backwards compatibility with existing incoming files.
@@ -28,13 +47,18 @@
     Override the active-map auto-detect.  One of: ch, tk, zg.
     Leave empty to auto-detect from the cfg's first template stanza.
 
+.PARAMETER Force
+    Skip the player-empty guard.  Use only when the server is known empty and the
+    SNAP/FPSREPORT check is stale or unavailable.
+
 .EXAMPLE
     # Deploy build 89 cc48, Chernarus active:
     powershell -NoProfile -File C:\WASP\deploy-v2.ps1 -BuildTag cc48 -ActiveMap ch
 #>
 param(
     [string]$BuildTag  = 'cc47',
-    [string]$ActiveMap = ''
+    [string]$ActiveMap = '',
+    [switch]$Force
 )
 
 $ErrorActionPreference = 'Stop'
@@ -91,6 +115,65 @@ function Kill-Hc([string]$hcName) {
     if ($p) {
         try { Stop-Process -Id $p.Id -Force -EA Stop; L "killed HC $hcName (pid=$($p.Id))" }
         catch { L "kill HC $hcName note: $($_.Exception.Message)" }
+    }
+}
+
+# Launch HC1 directly — does NOT invoke hc_launch.cmd (which has a blunt unfiltered
+# taskkill as its first line and would kill the already-seated HC2).
+# Reads the MiksuuHC task's Exec node from schtasks /query /xml to obtain the exact
+# command + arguments the task would run, then invokes the .exe directly with those
+# arguments, skipping the .cmd wrapper entirely.
+# Returns $true if the process was started, $false on error.
+function Start-Hc1Direct {
+    try {
+        # Read the task XML to get the exact executable and argument list.
+        [xml]$taskXml = schtasks /query /tn MiksuuHC /xml ONE 2>$null
+        $exec = $taskXml.Task.Actions.Exec
+        $exePath  = $exec.Command
+        $exeArgs  = $exec.Arguments
+        $workDir  = $exec.WorkingDirectory
+
+        if (-not $exePath) {
+            L "Start-Hc1Direct: could not read MiksuuHC task XML — falling back to Run-Task"
+            Run-Task 'MiksuuHC'
+            return $true
+        }
+
+        # Strip any leading call to hc_launch.cmd: if the Exec Command IS the .cmd,
+        # we parse its /c "..." argument to get the real exe.
+        # If the task directly runs ArmA2OA.exe, use it as-is.
+        if ($exePath -match '\.cmd$') {
+            # Attempt to extract the ArmA2OA invocation by reading the .cmd file
+            # and skipping the taskkill line.
+            $cmdLines = @(Get-Content -LiteralPath $exePath -EA SilentlyContinue) |
+                Where-Object { $_ -notmatch '^\s*taskkill' -and $_ -notmatch '^\s*@echo' -and $_ -match 'ArmA2OA' }
+            # Parse the first matching start/run line for the exe and args.
+            # Format expected: [start /wait] "C:\...\ArmA2OA.exe" -args...
+            $startLine = $cmdLines | Select-Object -First 1
+            if ($startLine -match '"([^"]+ArmA2OA\.exe)"(.*)') {
+                $exePath = $Matches[1]
+                $exeArgs = $Matches[2].Trim()
+                L "Start-Hc1Direct: parsed ArmA2OA path from .cmd: $exePath"
+            } else {
+                L "Start-Hc1Direct: .cmd parse failed; using Run-Task fallback"
+                Run-Task 'MiksuuHC'
+                return $true
+            }
+        }
+
+        # Set SteamAppId so ArmA2OA does not show the Steam overlay nag.
+        $env:SteamAppId = '33930'
+        L "Start-Hc1Direct: launching $exePath $exeArgs"
+        if ($workDir -and [IO.Directory]::Exists($workDir)) {
+            Start-Process -FilePath $exePath -ArgumentList $exeArgs -WorkingDirectory $workDir
+        } else {
+            Start-Process -FilePath $exePath -ArgumentList $exeArgs
+        }
+        return $true
+    } catch {
+        L "Start-Hc1Direct error: $($_.Exception.Message) — falling back to Run-Task"
+        Run-Task 'MiksuuHC'
+        return $true
     }
 }
 
@@ -174,27 +257,106 @@ function Wait-HcSeated([string]$hcName, [int]$timeoutSec) {
     return $false
 }
 
-# Launch an HC via its scheduled task, then wait for it to seat.
+# Launch HC2 via its scheduled task, then wait for it to seat.
 # On seat failure: kill by reliable identifier, relaunch ONCE, wait again.
 # Returns $true if seated (either attempt), $false if both attempts fail.
-function Launch-And-Seat-Hc([string]$taskName, [string]$hcName) {
-    L "launching HC $hcName via task $taskName"
-    Run-Task $taskName
-    $seated = Wait-HcSeated $hcName $HC_SEAT_TIMEOUT
+function Launch-And-Seat-Hc2 {
+    L "launching HC2 (HC-AI-Control-2) via task MiksuuHC2"
+    Run-Task 'MiksuuHC2'
+    $seated = Wait-HcSeated 'HC-AI-Control-2' $HC_SEAT_TIMEOUT
     if ($seated) { return $true }
 
-    L "HC $hcName did NOT seat within ${HC_SEAT_TIMEOUT}s — targeted recovery (kill + relaunch once)"
-    End-Task $taskName
-    Kill-Hc $hcName
+    L "HC2 did NOT seat within ${HC_SEAT_TIMEOUT}s — targeted recovery (kill + relaunch once)"
+    End-Task 'MiksuuHC2'
+    Kill-Hc 'HC-AI-Control-2'
     Start-Sleep 4
-    Run-Task $taskName
-    $seated2 = Wait-HcSeated $hcName ($HC_SEAT_TIMEOUT + 30)
+    Run-Task 'MiksuuHC2'
+    $seated2 = Wait-HcSeated 'HC-AI-Control-2' ($HC_SEAT_TIMEOUT + 30)
     if ($seated2) {
-        L "HC $hcName seated on recovery attempt"
+        L "HC2 seated on recovery attempt"
         return $true
     }
-    L "HC $hcName FAILED to seat after recovery — manual intervention required"
+    L "HC2 FAILED to seat after recovery — manual intervention required"
     return $false
+}
+
+# Launch HC1, then wait for it to seat.
+# RECOVERY PATH: does NOT call Run-Task 'MiksuuHC' — that invokes hc_launch.cmd whose
+# first line is a blunt unfiltered taskkill /f /im ArmA2OA.exe that would kill any
+# already-seated HC2.  Instead: targeted Kill-Hc + Start-Hc1Direct (launches ArmA2OA
+# directly, skipping the .cmd).  After recovery, HC2 seat is re-verified.
+# Returns $true if HC1 seated (either attempt), $false if both attempts fail.
+# Out-param $script:hc2ok is updated if HC2 is found to have died after HC1 recovery.
+function Launch-And-Seat-Hc1 {
+    L "launching HC1 (HC-AI-Control-1) via task MiksuuHC"
+    Run-Task 'MiksuuHC'
+    $seated = Wait-HcSeated 'HC-AI-Control-1' $HC_SEAT_TIMEOUT
+    if ($seated) { return $true }
+
+    L "HC1 did NOT seat within ${HC_SEAT_TIMEOUT}s — SAFE targeted recovery (Kill-Hc + Start-Hc1Direct, NOT hc_launch.cmd)"
+    End-Task 'MiksuuHC'
+    Kill-Hc 'HC-AI-Control-1'   # targeted by CommandLine -name match; HC2 is NOT touched
+    Start-Sleep 4
+    Start-Hc1Direct              # launch directly, bypassing hc_launch.cmd's blunt taskkill
+    $seated2 = Wait-HcSeated 'HC-AI-Control-1' ($HC_SEAT_TIMEOUT + 30)
+    if ($seated2) {
+        L "HC1 seated on recovery attempt"
+
+        # B2 FIX: after HC1 recovery re-verify HC2 is still seated.
+        # hc_launch.cmd's blunt taskkill is avoided above, but a direct ArmA2OA crash
+        # or a race during recovery could still affect HC2.  Confirm it is alive.
+        L "post-HC1-recovery: re-verifying HC2 still seated..."
+        $hc2proc = Get-HcProcess 'HC-AI-Control-2'
+        if (-not $hc2proc) {
+            L "HC2 process gone after HC1 recovery — re-launching HC2"
+            $script:hc2ok = Launch-And-Seat-Hc2
+            L "HC2 re-seat result after HC1 recovery: $($script:hc2ok)"
+        } else {
+            L "HC2 process still alive after HC1 recovery (pid=$($hc2proc.Id)) — OK"
+        }
+
+        return $true
+    }
+    L "HC1 FAILED to seat after recovery — manual intervention required"
+    return $false
+}
+
+# ── pgate: player-empty guard ────────────────────────────────────────────────
+# Abort if players are present on either side unless -Force was passed.
+# Reads the most recent SNAP or FPSREPORT line from the server RPT.
+if (-not $Force) {
+    $pgateAbort = $false
+    try {
+        if ([IO.File]::Exists($RPT)) {
+            $rptLines = @(Get-Content -LiteralPath $RPT -EA SilentlyContinue)
+            # Look for SNAP or FPSREPORT lines which carry player counts: players=N
+            $snapLine = $rptLines | Select-String 'players=' | Select-Object -Last 1
+            if ($snapLine) {
+                $pMatch = [regex]::Match($snapLine.Line, 'players=(\d+)')
+                if ($pMatch.Success) {
+                    $playerCount = [int]$pMatch.Groups[1].Value
+                    if ($playerCount -gt 0) {
+                        Write-Output "DEPLOY_V2_ABORT_PLAYERS players=$playerCount (use -Force to override)"
+                        L "ABORT pgate: players=$playerCount on server — deploy rejected"
+                        $pgateAbort = $true
+                    } else {
+                        L "pgate: players=0 confirmed (SNAP/FPSREPORT)"
+                    }
+                } else {
+                    L "pgate: players= line found but count unparseable — proceeding"
+                }
+            } else {
+                L "pgate: no SNAP/FPSREPORT line in RPT — server may be down; proceeding"
+            }
+        } else {
+            L "pgate: RPT not present — server likely down; proceeding"
+        }
+    } catch {
+        L "pgate check error: $($_.Exception.Message) — proceeding"
+    }
+    if ($pgateAbort) { exit 1 }
+} else {
+    L "pgate skipped: -Force supplied by operator"
 }
 
 # ── Lockfile ─────────────────────────────────────────────────────────────────
@@ -366,13 +528,22 @@ try {
     if ($ready) { L "server ready (readiness probe passed)" }
     else         { L "WARNING: server readiness probe timed out after ${SERVER_READY_TIMEOUT}s — HCs launching anyway" }
 
-    # ── HC1: serialized + readiness-gated (RACE-2 fix: no kill/relaunch dance) ─
+    # ── HC1: safe launch + seat (B1/B2 fix: recovery does NOT use hc_launch.cmd) ─
     # HC1 = MiksuuHC, -name=HC-AI-Control-1
-    $hc1ok = Launch-And-Seat-Hc 'MiksuuHC' 'HC-AI-Control-1'
+    # Launch-And-Seat-Hc1 manages its own recovery path (Start-Hc1Direct) and
+    # re-verifies HC2 after any recovery attempt (writes $script:hc2ok).
+    $hc2ok = $false   # initialise before HC1 so Launch-And-Seat-Hc1 can update it
+    $hc1ok = Launch-And-Seat-Hc1
 
     # ── HC2: only after HC1 is confirmed seated ───────────────────────────────
     # HC2 = MiksuuHC2, -name=HC-AI-Control-2
-    $hc2ok = Launch-And-Seat-Hc 'MiksuuHC2' 'HC-AI-Control-2'
+    # If HC1 recovery already re-seated HC2 ($script:hc2ok is set), skip relaunch.
+    if ($hc1ok -and (Get-Variable 'hc2ok' -Scope Script -EA SilentlyContinue) -and $script:hc2ok) {
+        L "HC2 already confirmed seated by HC1 recovery re-verify — skipping HC2 launch"
+        $hc2ok = $script:hc2ok
+    } else {
+        $hc2ok = Launch-And-Seat-Hc2
+    }
 
     # ── Server tuning ─────────────────────────────────────────────────────────
     Start-Sleep 6
@@ -390,7 +561,8 @@ try {
     }
 
     $procs = @(Get-Process arma2oaserver, ArmA2OA -EA SilentlyContinue).Count
-    $tag   = "DEPLOY_V2_DONE BuildTag=$BuildTag active=$active procs=$procs/3 MISSINIT=$mi hc1=$hc1ok hc2=$hc2ok"
+    # Emit DEPLOY_DONE (legacy watcher contract) AND DEPLOY_V2_DONE (v2 detail).
+    $tag   = "DEPLOY_DONE DEPLOY_V2_DONE BuildTag=$BuildTag active=$active procs=$procs/3 MISSINIT=$mi hc1=$hc1ok hc2=$hc2ok"
     L $tag
     Write-Output $tag
 

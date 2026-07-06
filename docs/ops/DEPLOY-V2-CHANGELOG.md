@@ -1,5 +1,28 @@
 # deploy-v2.ps1 — Change Log
 
+## 2026-07-06 — Adversarial-verify patch (B1/B2 + pgate + DEPLOY_DONE)
+
+### Fixes applied
+
+| ID | Severity | Fix |
+|----|----------|-----|
+| B1/B2 | HIGH | HC1 recovery path no longer invokes `Run-Task 'MiksuuHC'`, which calls `hc_launch.cmd` whose **first line** is an unfiltered `taskkill /f /im ArmA2OA.exe` — this killed the already-seated HC2, leaving 0 HCs while the script reported success. The recovery now uses `Kill-Hc 'HC-AI-Control-1'` (CommandLine-targeted, HC2-safe) + `Start-Hc1Direct` (reads MiksuuHC task XML, launches ArmA2OA.exe directly, skipping the .cmd). After any HC1 recovery, HC2 is re-verified still seated; if HC2 also died it is recovered in turn. |
+| PGATE | MED | Added `-Force` switch parameter and player-empty guard at startup. Reads `players=N` from the most recent SNAP/FPSREPORT line in the server RPT; aborts with `DEPLOY_V2_ABORT_PLAYERS` if `players > 0` unless `-Force` is passed. |
+| DONE | LOW | Final output line now emits `DEPLOY_DONE DEPLOY_V2_DONE …` so legacy watcher/monitor cron jobs that grep for `DEPLOY_DONE` remain satisfied. |
+
+### Box-side follow-up (NOT done in this script — separate maintenance task)
+
+`C:\WASP\hc_launch.cmd` line 1 (`taskkill /f /im ArmA2OA.exe`) has no command-line filter and
+will kill **any** `ArmA2OA.exe` process, including a running HC2.  Replace with:
+
+```bat
+taskkill /f /fi "COMMANDLINE eq *HC-AI-Control-1*"
+```
+
+This is safe to apply independently at any time.
+
+---
+
 ## 2026-07-06 — Initial release (replaces deploy47.ps1 / deploy45.ps1 lineage)
 
 ### Background
