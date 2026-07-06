@@ -20,7 +20,7 @@ if (_isHeadless) then {
 		//--- fix(hunt): cleanup-townai / cleanup-airfield-garrison arrive as nil-destination broadcasts and
 		//--- previously reached the HC ONLY via the fall-through closed below - keep them allowlisted so
 		//--- HC-local delegated units are still torn down on town capture.
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison"]);
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };
