@@ -28,7 +28,7 @@ while {!WFBE_GameOver} do {
 	//--- per-camp nearEntities pass ~10x/s. Flag default 0 = exact V1 behaviour.
 	_gateSkip = false;
 	if ((missionNamespace getVariable ["WFBE_C_TOWN_CAMP_ACTIVE_GATE", 0]) > 0) then {
-		if (!(_town getVariable ["wfbe_active", false]) && {!(_town getVariable ["wfbe_active_air", false])} && {(time - (_town getVariable ["wfbe_inactivity", 0])) > (missionNamespace getVariable ["WFBE_C_TOWN_CAMP_IDLE_GRACE", 60])}) then {_gateSkip = true};
+		if (!(isNil {_town getVariable "wfbe_active"}) && {!(_town getVariable ["wfbe_active", false])} && {!(_town getVariable ["wfbe_active_air", false])} && {(time - (_town getVariable ["wfbe_inactivity", 0])) > (missionNamespace getVariable ["WFBE_C_TOWN_CAMP_IDLE_GRACE", 60])}) then {_gateSkip = true}; //--- isNil guard: never gate before server_town_ai.sqf has initialised this town's vars (review WARN: startup race)
 		if (isNil "WFBE_TownCampGateAnnounced") then {
 			WFBE_TownCampGateAnnounced = true;
 			["INFORMATION", "server_town_camp.sqf: active-gate enabled (WFBE_C_TOWN_CAMP_ACTIVE_GATE=1) - camp scans idle while their town is dormant."] Call WFBE_CO_FNC_AICOMLog;
