@@ -35,3 +35,13 @@ Tools/LoadoutManager/bin/
 a2waspwarfare_DiscordBot/a2waspwarfare_DiscordBot/
 
 A3missionTest/
+
+# Agent fleet output junk
+result-*.md
+JOURNAL.md
+_audit/
+work/
+
+# Windows redirect artifacts from Bash /dev/null on Windows
+C*tmp*.diff
+C*tmp*.txt
