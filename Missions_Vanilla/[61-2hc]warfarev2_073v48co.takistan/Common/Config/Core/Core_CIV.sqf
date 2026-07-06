@@ -187,7 +187,7 @@ _c = _c + ['Land_CncBlock_Stripes'];
 _i = _i + [[(if (_defPosV2) then {'AA Battery (H, 4 AI)'} else {'AA Position (Heavy, 4 AI)'}),'',4500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_Barrel_sand'];
-_i = _i + [[(if (_defPosV2) then {'Arty Pit (L, 1 AI)'} else {'Artillery (Light, 1 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Arty Pit (L, 2 AI)'} else {'Artillery (Light, 1 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_Ind_BoardsPack2'];
 _i = _i + [[(if (_defPosV2) then {'Arty Battery (H, 4 AI)'} else {'Artillery (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
@@ -196,7 +196,7 @@ _c = _c + ['Land_WoodenRamp'];
 _i = _i + [[(if (_defPosV2) then {'Mixed Post (L, 2 AI)'} else {'Mixed Position (Light, 2 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['RoadCone'];
-_i = _i + [[(if (_defPosV2) then {'Mixed Strpt (H, 4 AI)'} else {'Mixed Position (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Mixed Strpt (H, 3 AI)'} else {'Mixed Position (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Paleta1'];
 _i = _i + [['Wall - Straight','',250,0,0,0,'Fortification',0,'Civilians',[]]];
