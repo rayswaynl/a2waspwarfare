@@ -89,7 +89,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	//--- STRANDED (timeout exceeded, still far). Latched by wfbe_aicom_dispatch_open so it fires
 	//--- once per dispatch; a re-dispatch in Hook A re-opens the latch. Logging only, no behaviour.
 	if (_team getVariable ["wfbe_aicom_dispatch_open", false]) then {
-		private ["_dord","_dtgt","_dt0","_dldr","_ddist","_arrR","_toSecs","_elapsed"];
+		private ["_dord","_dtgt","_dt0","_dldr","_ddist","_arrR","_toSecs","_elapsed","_bandKey","_bandVal"];
 		_dord = _team getVariable ["wfbe_aicom_townorder", []];
 		if (count _dord >= 2) then {
 			_dtgt = _dord select 0;
@@ -103,6 +103,11 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 				if (_ddist <= _arrR) then {
 					//--- WASPSCALE arrv counter (cmdcon42): bump the cumulative-arrival counter the server-side WASPSCALE emit reads (arrv=). One per successful journey (latched once per dispatch by wfbe_aicom_dispatch_open). Server-local, monotonic.
 					missionNamespace setVariable ["wfbe_waspscale_arrv", (missionNamespace getVariable ["wfbe_waspscale_arrv", 0]) + 1];
+					//--- Lane 362: bucket successful journey latency for the next supervisor-window histogram.
+					_bandKey = "wfbe_aicom_arrival_slow";
+					if (_elapsed < 300) then {_bandKey = "wfbe_aicom_arrival_fast"} else {if (_elapsed < 600) then {_bandKey = "wfbe_aicom_arrival_med"}};
+					_bandVal = _logik getVariable [_bandKey, 0];
+					_logik setVariable [_bandKey, _bandVal + 1];
 					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_ARRIVED|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|elapsed=" + str _elapsed);
 					_team setVariable ["wfbe_aicom_dispatch_open", false];
 					//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, claude-gaming 2026-07-02): the team reached a town
@@ -777,6 +782,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_team setVariable ["wfbe_aicom_dispatch_open", true];
 						//--- WASPSCALE disp counter (cmdcon42): bump the cumulative-dispatch counter the server-side WASPSCALE emit reads (disp=). Server-local, monotonic; counts every (re)dispatch, matching the ASSAULT_DISPATCH log below.
 						missionNamespace setVariable ["wfbe_waspscale_disp", (missionNamespace getVariable ["wfbe_waspscale_disp", 0]) + 1];
+						_logik setVariable ["wfbe_aicom_arrival_dispatched", (_logik getVariable ["wfbe_aicom_arrival_dispatched", 0]) + 1];
 						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_DISPATCH|team=" + (str _team) + "|town=" + (_target getVariable ["name","town"]) + "|dist=" + str (round ((leader _team) distance _target)) + "|reissue=" + str (_priorOpen && _sameTgt));
 						["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] heading to attack town [%3].", _sideText, _team, _target getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
 					};
