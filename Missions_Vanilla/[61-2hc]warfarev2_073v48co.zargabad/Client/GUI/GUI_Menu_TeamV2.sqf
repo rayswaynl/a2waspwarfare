@@ -213,19 +213,80 @@ while {alive player && dialog} do {
 		{_id3 = missionNamespace getVariable _x; if !(isNil "_id3") then {_it3 = _id3 select 3; if (_it3 > _topT) then {_topT = _it3}}} forEach _sw3;
 		if (_sb3 != "") then {_id3 = missionNamespace getVariable _sb3; if !(isNil "_id3") then {_it3 = _id3 select 3; if (_it3 > _topT) then {_topT = _it3}}};
 		if (_topT > _upgNow) exitWith {hint Format ["Slot %1 requires gear tier %2 (you have %3). Upgrade first.", _slotIdx2 + 1, _topT, _upgNow]};
-		//--- Validate each classname is available to this side (graceful skip for missing items).
-		private ["_wList","_mList","_bpCls","_bpCnt","_wpCombined","_item","_cfg"];
-		_wList   = _gear2 select 0;
-		_mList   = _gear2 select 1;
-		_bpCls   = _gear2 select 2;
-		_bpCnt   = _gear2 select 3;
+		//--- Validate classnames against the item registry; reject non-strings and unknowns.
+		//--- Collect clean weapons / mags / bp from the preset, skipping anything not in the registry.
+		private ["_wList","_mList","_bpCls","_bpCnt","_wpCombined","_cleanWeps","_cleanMags","_cleanBp","_dItem"];
+		_wList      = _gear2 select 0;
+		_mList      = _gear2 select 1;
+		_bpCls      = _gear2 select 2;
+		_bpCnt      = _gear2 select 3;
 		_wpCombined = _gear2 select 4; //--- [primary, pistol, secondary]
+		//--- Weapons: keep only registered strings.
+		_cleanWeps = [];
+		{
+			if (typeName _x == "STRING") then {
+				_dItem = missionNamespace getVariable _x;
+				if !(isNil "_dItem") then {_cleanWeps = _cleanWeps + [_x]};
+			};
+		} forEach _wList;
+		//--- Magazines: keep only registered strings.
+		_cleanMags = [];
+		{
+			if (typeName _x == "STRING") then {
+				_dItem = missionNamespace getVariable ("Mag_" + _x);
+				if !(isNil "_dItem") then {_cleanMags = _cleanMags + [_x]};
+			};
+		} forEach _mList;
+		//--- Backpack: validate string + registered.
+		_cleanBp = _bpCls;
+		if (_bpCls != "") then {
+			if (typeName _bpCls != "STRING") then {_cleanBp = ""} else {
+				_dItem = missionNamespace getVariable _bpCls;
+				if (isNil "_dItem") then {_cleanBp = ""};
+			};
+		};
+		//--- Compute preset price from item registry (no BuyGear dialog dependency).
+		//--- Weapons: look up by classname; Magazines: use "Mag_" prefix; Backpack + contents: same.
+		private ["_presetCost","_costItem"];
+		_presetCost = 0;
+		{
+			_costItem = missionNamespace getVariable _x;
+			if !(isNil "_costItem") then {_presetCost = _presetCost + (_costItem select 2)};
+		} forEach _cleanWeps;
+		{
+			_costItem = missionNamespace getVariable ("Mag_" + _x);
+			if !(isNil "_costItem") then {_presetCost = _presetCost + (_costItem select 2)};
+		} forEach _cleanMags;
+		if (_cleanBp != "") then {
+			_costItem = missionNamespace getVariable _cleanBp;
+			if !(isNil "_costItem") then {_presetCost = _presetCost + (_costItem select 2)};
+		};
+		if !(WF_A2_Vanilla) then {
+			if (typeName _bpCnt == "ARRAY" && {count _bpCnt >= 2}) then {
+				private ["_bpMags","_bpCounts","_bci"];
+				_bpMags   = _bpCnt select 0;
+				_bpCounts = _bpCnt select 1;
+				for "_bci" from 0 to ((count _bpMags) - 1) do {
+					if (typeName (_bpMags select _bci) == "STRING") then {
+						_costItem = missionNamespace getVariable ("Mag_" + (_bpMags select _bci));
+						if !(isNil "_costItem") then {_presetCost = _presetCost + ((_costItem select 2) * (_bpCounts select _bci))};
+					};
+				};
+			};
+		};
+		//--- Check funds before equipping (Apply = buy the loadout now).
+		if ((Call GetPlayerFunds) < _presetCost) exitWith {
+			hint Format ["Preset %1: insufficient funds ($%2 needed, $%3 available).", _slotIdx2 + 1, _presetCost, Call GetPlayerFunds];
+		};
+		//--- Charge funds (same idiom as GUI_BuyGearMenu.sqf line 484).
+		-(_presetCost) Call WFBE_CL_FNC_ChangeClientFunds;
 		//--- Apply: equip via WFBE_CO_FNC_EquipUnit (same call as respawn path).
 		//--- EquipUnit signature: [unit, weapons, magazines, weaponCombined, backpack, backpackContent].
-		[player, _wList, _mList, _wpCombined, _bpCls, _bpCnt] Call WFBE_CO_FNC_EquipUnit;
-		//--- Write wfbe_custom_gear so the NEXT rebuy applies this preset (not the last bought kit).
+		[player, _cleanWeps, _cleanMags, _wpCombined, _cleanBp, _bpCnt] Call WFBE_CO_FNC_EquipUnit;
+		//--- Write wfbe_custom_gear + wfbe_custom_gear_cost so respawn charges correctly.
 		player setVariable ["wfbe_custom_gear", +_gear2];
-		hint Format ["Preset %1 applied.", _slotIdx2 + 1];
+		player setVariable ["wfbe_custom_gear_cost", _presetCost];
+		hint Format ["Preset %1 applied ($%2 charged).", _slotIdx2 + 1, _presetCost];
 	};
 
 	//--- ── GEAR PRESET REBUY (set as rebuy-on-death kit: 1021-1024) ─────────────
@@ -243,9 +304,42 @@ while {alive player && dialog} do {
 		{_id4 = missionNamespace getVariable _x; if !(isNil "_id4") then {_it4 = _id4 select 3; if (_it4 > _topT3) then {_topT3 = _it4}}} forEach _sw4;
 		if (_sb4 != "") then {_id4 = missionNamespace getVariable _sb4; if !(isNil "_id4") then {_it4 = _id4 select 3; if (_it4 > _topT3) then {_topT3 = _it4}}};
 		if (_topT3 > _upgNow3) exitWith {hint Format ["Slot %1 requires gear tier %2 (you have %3). Cannot set as rebuy kit.", _slotIdx3 + 1, _topT3, _upgNow3]};
-		//--- Set wfbe_custom_gear: the respawn handler reads this variable and auto-applies on death.
+		//--- Compute preset cost for respawn handler (same registry walk as Apply path).
+		private ["_rebuyCost","_rcItem","_rwList","_rmList","_rbpCls","_rbpCnt"];
+		_rwList  = _gear3 select 0;
+		_rmList  = _gear3 select 1;
+		_rbpCls  = _gear3 select 2;
+		_rbpCnt  = _gear3 select 3;
+		_rebuyCost = 0;
+		{
+			_rcItem = missionNamespace getVariable _x;
+			if !(isNil "_rcItem") then {_rebuyCost = _rebuyCost + (_rcItem select 2)};
+		} forEach _rwList;
+		{
+			_rcItem = missionNamespace getVariable ("Mag_" + _x);
+			if !(isNil "_rcItem") then {_rebuyCost = _rebuyCost + (_rcItem select 2)};
+		} forEach _rmList;
+		if (_rbpCls != "") then {
+			_rcItem = missionNamespace getVariable _rbpCls;
+			if !(isNil "_rcItem") then {_rebuyCost = _rebuyCost + (_rcItem select 2)};
+		};
+		if !(WF_A2_Vanilla) then {
+			if (typeName _rbpCnt == "ARRAY" && {count _rbpCnt >= 2}) then {
+				private ["_rbpMags","_rbpCounts","_rbci"];
+				_rbpMags   = _rbpCnt select 0;
+				_rbpCounts = _rbpCnt select 1;
+				for "_rbci" from 0 to ((count _rbpMags) - 1) do {
+					if (typeName (_rbpMags select _rbci) == "STRING") then {
+						_rcItem = missionNamespace getVariable ("Mag_" + (_rbpMags select _rbci));
+						if !(isNil "_rcItem") then {_rebuyCost = _rebuyCost + ((_rcItem select 2) * (_rbpCounts select _rbci))};
+					};
+				};
+			};
+		};
+		//--- Set wfbe_custom_gear + wfbe_custom_gear_cost: respawn handler reads these on death.
 		player setVariable ["wfbe_custom_gear", +_gear3];
-		hint Format ["Preset %1 set as rebuy-on-death kit.", _slotIdx3 + 1];
+		player setVariable ["wfbe_custom_gear_cost", _rebuyCost];
+		hint Format ["Preset %1 set as rebuy-on-death kit (cost: $%2).", _slotIdx3 + 1, _rebuyCost];
 	};
 
 	//--- ── SQUAD: DISBAND (MenuAction 3 — reuses existing disband logic from V1) ──
@@ -297,7 +391,7 @@ while {alive player && dialog} do {
 	if (MenuAction == 2001) then {
 		MenuAction = -1;
 		_curUnitSel = lbCurSel 13071;
-		if (_curUnitSel != -1) then {
+		if (_curUnitSel != -1 && {_curUnitSel < count _units}) then {
 			private ["_ejUnit","_ejVeh"];
 			_ejUnit = _units select _curUnitSel;
 			_ejVeh  = vehicle _ejUnit;
@@ -314,10 +408,11 @@ while {alive player && dialog} do {
 	//--- ── SQUAD: GET-OUT-AND-REPAIR (MenuAction 2002) ──────────────────────────
 	//--- All crew of the selected unit's vehicle dismount, repair mobility-only
 	//--- hitpoints (wheels/tracks/engine), then remount.
+	//--- INTENTIONALLY FREE: field-recovery QoL, not a purchase (no WFBE_CL_FNC_ChangeClientFunds call).
 	if (MenuAction == 2002) then {
 		MenuAction = -1;
 		_curUnitSel = lbCurSel 13071;
-		if (_curUnitSel != -1) then {
+		if (_curUnitSel != -1 && {_curUnitSel < count _units}) then {
 			private ["_repUnit","_repVeh"];
 			_repUnit = _units select _curUnitSel;
 			_repVeh  = vehicle _repUnit;
@@ -357,13 +452,17 @@ while {alive player && dialog} do {
 				};
 				hint "Mobility restored. Remounting...";
 				sleep 2;
-				//--- Remount: each crew member returns to their original seat.
-				{
-					if !(isPlayer _x) then {
-						_x moveInAny _rv;
-					};
-				} forEach _crewList;
-				hint "Crew remounted.";
+				//--- Remount: guard vehicle still alive before moveInAny.
+				if (!isNull _rv && {alive _rv}) then {
+					{
+						if !(isPlayer _x) then {
+							_x moveInAny _rv;
+						};
+					} forEach _crewList;
+					hint "Crew remounted.";
+				} else {
+					hint "Vehicle lost during repair — remount aborted.";
+				};
 			};
 		};
 	};

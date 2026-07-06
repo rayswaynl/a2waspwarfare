@@ -1642,7 +1642,7 @@ class RscMenu_TeamV2 {
 		};
 		/* --- GEAR PRESETS SECTION --- */
 		class CA_GP_Title : RscText_SubTitle {
-			idc = 13050;
+			idc = 13049;
 			x = 0.19634;
 			y = 0.265506;
 			w = 0.614;
