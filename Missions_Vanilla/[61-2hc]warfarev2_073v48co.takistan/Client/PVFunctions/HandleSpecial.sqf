@@ -99,7 +99,8 @@ switch (_request) do {
 				private ["_caller","_cost","_funds"];
 				_caller = _this select 1;
 				_cost   = WFBE_C_SCUD_COST;
-				_funds  = (group _caller) getVariable ["wfbe_funds", 0];
+				_funds  = (group _caller) getVariable "wfbe_funds"; //--- fix(hunt): G1 trap - the 2-arg [name,default] form returns nil (NOT the default) on a GROUP receiver when unset; nil < cost threw and silently killed this action
+				if (isNil "_funds") then {_funds = 0};
 				if (_funds < _cost) exitWith { hint localize "STR_WF_SCUD_NO_FUNDS"; };
 				hint localize "STR_WF_SCUD_SELECT_TARGET";
 				openMap true;

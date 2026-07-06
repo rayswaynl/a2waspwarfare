@@ -250,7 +250,7 @@ if (count _targets > 0) then {
 	{
 		_team = _x;
 		if (!isNull _team && {!isPlayer (leader _team)} && {({alive _x} count (units _team)) > 0}) then {
-			_wMode = toLower (_team getVariable ["wfbe_teammode", "towns"]);
+			_wMode = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 			//--- offense only: skip relief ("defense"), HQ-strike ("move") and the garrison team.
 			if ((_wMode == "towns" || {_wMode == ""}) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 				_wLdr = leader _team;
@@ -360,7 +360,7 @@ if (count _targets > 0) then {
 			{
 				_team = _x;
 				if (!isNull _team && {!isPlayer (leader _team)} && {({alive _x} count (units _team)) > 0}) then {
-					_wMode = toLower (_team getVariable ["wfbe_teammode", "towns"]);
+					_wMode = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 					if ((_wMode == "towns" || {_wMode == ""}) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 						_wLdr = leader _team;
 						if (!isNull _wLdr) then {_d = _wLdr distance _newPrim; if (_d < _newApproach) then {_newApproach = _d}};
@@ -436,7 +436,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 {
 	_team = _x;
 	if (!isNull _team) then {
-		_relTown = _team getVariable ["wfbe_aicom_relief", objNull];
+		_relTown = [_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
 		if (!isNull _relTown) then {
 			_quiet = !(_relTown getVariable ["wfbe_active", false]);
 			//--- punchy-AICOM RELIEF-TIMEOUT (Ray 2026-06-17): also release once the hold window
@@ -460,7 +460,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 				//--- WAVE-1 A3 (c): an HC team reads ONLY wfbe_aicom_order, not wfbe_teammode, so flip its order
 				//--- back to a fresh "towns" seq here; AssignTowns then re-issues a real attack target next cycle.
 				//--- Server-local teams ignore the order var and are driven by SetTeamMoveMode above (harmless).
-				if (_team getVariable ["wfbe_aicom_hc", false]) then {
+				if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 					_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos (leader _team)], true];
 				};
 				["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] released from relief duty at [%3]%4.", _sideText, _team, _relTown getVariable ["name", "town"], if (_relExpired) then {" (hold expired -> offense)"} else {""}]] Call WFBE_CO_FNC_AICOMLog;
@@ -525,12 +525,12 @@ _relieved = 0;
 						};
 					} forEach (units _team);
 					if (_relIsBigVeh || {_relAlive >= _relMinAlive}) then {
-						if ((toLower (_team getVariable ["wfbe_teammode", "towns"])) == "towns") then {
+						if ((toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool)) == "towns") then {
 							//--- WAVE-1 A3 (a): HC teams ARE now eligible for relief (the old !wfbe_aicom_hc exclusion made
 							//--- relief dead - every commander team is HC-resident). HC dispatch handled below via the order var.
 							//--- CAPTURE LOCK (GR-2026-07-03a): never DIVERT a mid-capture-drain team to relief (it would abandon a near-complete drain). CapLock
 							//--- returns a plain BOOL and auto-clears once the town is captured/dead/TTL/flips-to-us, so the team becomes relief-eligible again.
-							if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {!(_team getVariable ["wfbe_aicom_strike", false])} && {!([_team] Call WFBE_CO_FNC_CapLock)}) then {
+							if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_team] Call WFBE_CO_FNC_CapLock)}) then { //--- fix(hunt): G1-safe (unstamped teams nil-poisoned the chain and were unpickable)
 								_d = (leader _team) distance _town;
 								if (_d < _freeD) then {_freeD = _d; _free = _team};
 							};
@@ -573,7 +573,7 @@ _relieved = 0;
 {
 	_wTeam = _x;
 	if (!isNull _wTeam && {!isPlayer (leader _wTeam)} && {({alive _x} count (units _wTeam)) > 0}) then {
-		_wMode = toLower (_wTeam getVariable ["wfbe_teammode", "towns"]);
+		_wMode = toLower ([_wTeam, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 		private "_wWatched";
 		_wWatched = false;
 		switch (_wMode) do {
@@ -614,7 +614,7 @@ _relieved = 0;
 							//--- (or trips a teleport recovery) on the fresh towns dispatch. Reset to 0 so the offense leg
 							//--- starts the ladder clean. A2-OA-safe: plain setVariable on the group.
 							_wTeam setVariable ["wfbe_aicom_stuckstrikes", 0];
-							if (_wTeam getVariable ["wfbe_aicom_hc", false]) then {
+							if ([_wTeam, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 								_wTeam setVariable ["wfbe_aicom_order", [(if (isNil {_wTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_wTeam getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos _wLdr], true];
 							};
 							["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] WEDGE-WATCHDOG released from %3 (no move %4m in %5s, not in contact) -> offense.", _sideText, _wTeam, _wMode, round _wMoved, round (time - _wBcT)]] Call WFBE_CO_FNC_AICOMLog;
@@ -815,10 +815,10 @@ if (_strikeOn) then {
 					_logik setVariable ["wfbe_aicom_strike_staged", true];
 					{
 						_team = _x;
-						if (!isNull _team && {_team getVariable ["wfbe_aicom_strike", false]} && {({alive _x} count (units _team)) > 0}) then {
+						if (!isNull _team && {[_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool} && {({alive _x} count (units _team)) > 0}) then {
 							[_team, "move"] Call SetTeamMoveMode;
 							[_team, getPos _enemyHQ] Call SetTeamMovePos;
-							if (_team getVariable ["wfbe_aicom_hc", false]) then {
+							if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 								_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "goto", getPos _enemyHQ], true];
 							};
 						};
@@ -847,27 +847,27 @@ if (_strikeOn) then {
 			_team = _x;
 			//--- CAPTURE LOCK (GR-2026-07-03a): do not GRAB a mid-capture-drain team for the HQ strike (it would abandon a near-complete drain).
 			//--- WFBE_CO_FNC_CapLock is a plain BOOL and self-clears (captured/dead/TTL/town-ours), so the team is strike-eligible again after.
-			if (!isNull _team && {!isPlayer (leader _team)} && {!(_team getVariable ["wfbe_aicom_strike", false])} && {!([_team] Call WFBE_CO_FNC_CapLock)}) then {
-				if (isNull (_team getVariable ["wfbe_aicom_relief", objNull]) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
+			if (!isNull _team && {!isPlayer (leader _team)} && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_team] Call WFBE_CO_FNC_CapLock)}) then { //--- fix(hunt): G1-safe - freshly founded teams (no arrival yet) were silently unpickable for the HQ strike
+				if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 					_alive = {alive _x} count (units _team);
 					if (_alive > 0) then {
 						//--- F2 (fable/aicom-f2-strike-commit-f6, 2026-07-02): STRIKE-COMMIT guard. When WFBE_C_AICOM_STRIKE_COMMIT=1,
 						//--- a team with an OPEN dispatch that is PROGRESSING toward its target (closed >=150m) is skipped for the
 						//--- HQ strike-grab so an active journey is not killed. Default 0 = exact pre-F2 behaviour (nothing skipped).
 						//--- Exemptions: recycle-flagged teams and genuinely-stuck teams (stuckstrikes >= WFBE_C_AICOM_STUCK_ABANDON).
-						//--- Group-var idiom: 2-arg getVariable on a GROUP matches the idiom used in AI_Commander_Strategy.sqf
-						//--- (e.g. L811 _team getVariable ["wfbe_aicom_strike", false]) and in AI_Commander_AssignTowns.sqf
-						//--- (L525 _team getVariable ["wfbe_aicom_recycle", false]) for these exact vars.
+						//--- Group-var idiom (fix(hunt) 2026-07-06): GROUP reads routed through WFBE_CO_FNC_GroupGetBool - the 2-arg
+						//--- [name,default] form returns nil (not the default) on GROUP receivers when the var is unset (G1 trap),
+						//--- which nil-poisoned these chains for never-stamped teams.
 						//--- A2-OA 1.64: plain getVariable 2-arg + isNil, typeName OBJECT, numeric compare only, no Boolean ==/!=.
 						private ["_scSkip","_scRecycle","_scStrk","_scOrd","_scTgt","_scBc","_scProg"];
 						_scSkip = false;
 						if ((missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_COMMIT", 0]) > 0) then {
-							_scRecycle = _team getVariable ["wfbe_aicom_recycle", false];
-							_scStrk = _team getVariable ["wfbe_aicom_stuckstrikes", 0];
+							_scRecycle = [_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool;
+							_scStrk = [_team, "wfbe_aicom_stuckstrikes", 0] Call WFBE_CO_FNC_GroupGetBool;
 							if (isNil "_scStrk") then {_scStrk = 0};
 							if (!_scRecycle && {_scStrk < (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_ABANDON", 4])}) then {
-								if (_team getVariable ["wfbe_aicom_dispatch_open", false]) then {
-									_scOrd = _team getVariable ["wfbe_aicom_townorder", []];
+								if ([_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool) then {
+									_scOrd = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
 									if (count _scOrd >= 3) then {
 										_scTgt = _scOrd select 0;
 										_scBc  = _scOrd select 2;
@@ -927,7 +927,7 @@ if (_strikeOn) then {
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] WAR STATE: edge lost (towns %2v%3, strength %4v%5) - strike recalled.", _sideText, _myTowns, _enemyTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
 		{
 			_team = _x;
-			if (!isNull _team && {_team getVariable ["wfbe_aicom_strike", false]}) then {
+			if (!isNull _team && {[_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool}) then {
 				_team setVariable ["wfbe_aicom_strike", false];
 				[_team, "towns"] Call SetTeamMoveMode;
 				_team setVariable ["wfbe_aicom_townorder", []];

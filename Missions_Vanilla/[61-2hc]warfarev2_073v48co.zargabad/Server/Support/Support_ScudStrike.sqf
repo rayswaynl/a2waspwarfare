@@ -53,7 +53,8 @@ if ((_now - _lastFired) < WFBE_C_SCUD_COOLDOWN) exitWith {
 
 //--- VALIDATION 3: server-authoritative funds (deduct on the calling team's group).
 if (isNull _playerTeam) exitWith {["WARNING","Support_ScudStrike.sqf : denied -- null calling team."] Call WFBE_CO_FNC_LogContent};
-_funds = _playerTeam getVariable ["wfbe_funds", 0];
+_funds = _playerTeam getVariable "wfbe_funds"; //--- fix(hunt): G1 trap - 2-arg [name,default] getVariable returns nil on a GROUP when wfbe_funds is unset (fresh skin-swap/JIP group); nil vs cost either killed the handler or bypassed the gate and broadcast a nil wallet
+if (isNil "_funds" || {typeName _funds != "SCALAR"}) then {_funds = 0};
 if (_funds < WFBE_C_SCUD_COST) exitWith {
 	["INFORMATION", Format ["Support_ScudStrike.sqf : [%1] denied -- insufficient funds (%2 < %3).", str _side, _funds, WFBE_C_SCUD_COST]] Call WFBE_CO_FNC_LogContent;
 };
