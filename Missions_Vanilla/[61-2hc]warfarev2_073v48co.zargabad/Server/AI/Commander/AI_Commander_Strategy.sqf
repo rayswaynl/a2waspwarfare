@@ -573,7 +573,17 @@ _relieved = 0;
 	_wTeam = _x;
 	if (!isNull _wTeam && {!isPlayer (leader _wTeam)} && {({alive _x} count (units _wTeam)) > 0}) then {
 		_wMode = toLower (_wTeam getVariable ["wfbe_teammode", "towns"]);
-		if (_wMode == "defense" || {_wMode == "move"}) then {
+		private "_wWatched";
+		_wWatched = false;
+		switch (_wMode) do {
+			case "defense": {_wWatched = true};
+			case "move": {_wWatched = true};
+		};
+		//--- Lane-325: last-stand recall deliberately parks defenders at HQ; do not let the
+		//--- wedge watchdog release them back to offense while that round-state is active.
+		if (_wWatched && {
+			(!_lastStand) || {(missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG_LASTSTAND_SKIP", 1]) <= 0}
+		}) then {
 			_wLdr = leader _wTeam;
 			if (!isNull _wLdr && {alive _wLdr} && {behaviour _wLdr != "COMBAT"}) then {
 				//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
@@ -616,7 +626,7 @@ _relieved = 0;
 				_wTeam setVariable ["wfbe_aicom_wedge_bc", [getPos (leader _wTeam), time]];
 			};
 		} else {
-			//--- Not in defense/move (back on towns/patrol/etc): clear any stale breadcrumb.
+			//--- Not watched right now (or last-stand skip is shielding HQ defenders): clear any stale breadcrumb.
 			if (!isNil {_wTeam getVariable "wfbe_aicom_wedge_bc"}) then {_wTeam setVariable ["wfbe_aicom_wedge_bc", nil]};
 		};
 	};
