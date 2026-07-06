@@ -74,6 +74,10 @@ if !(alive _gunner) exitWith {
 	if !(isNull _artillery) then {
 		_artillery removeEventHandler ['Fired',_FEH];
 		if (_CBREH >= 0) then {_artillery removeEventHandler ['Fired',_CBREH]};
+		if (alive _artillery) then {
+			if (alive (driver _artillery)) then {{(driver _artillery) enableAI _x} forEach ['MOVE','TARGET','AUTOTARGET']};
+			_artillery setVariable ["restricted",false];
+		};
 	};
 };
 if !(alive _artillery) exitWith {
