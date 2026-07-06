@@ -25,6 +25,20 @@ if (isNil "WFBE_PR8_ServiceMenuProofLogged") then {
 };
 
 // Marty: Shared service helpers used by the selected-unit buttons and the new all-unit buttons.
+//--- fix(hunt): shared precondition mirroring SupportRearm.sqf's hard abort ("You can't rearm air in town"):
+//--- an Air vehicle whose support list contains a town Depot can never rearm, so no charge site may take the
+//--- money first (the pre-pay pattern has no refund path). [_veh, _supports] -> BOOL blocked.
+_martyRearmBlockedAirDepot = {
+	Private ["_veh","_supports","_blocked"];
+	_veh = _this select 0;
+	_supports = _this select 1;
+	_blocked = false;
+	if ((typeOf _veh) isKindOf "Air") then {
+		{if ((typeOf _x) == WFBE_Logic_Depot) then {_blocked = true}} forEach _supports;
+	};
+	_blocked
+};
+
 _martyServiceGetPrice = {
 	Private ["_action","_fuel","_get","_price","_type","_veh"];
 	_veh = _this select 0;
@@ -133,6 +147,7 @@ _martyServiceBuildBatch = {
 		if (_veh in _seen) then {_canAdd = false};
 		if !(alive _veh) then {_canAdd = false};
 		if !([_veh] Call _martyServiceCanUse) then {_canAdd = false};
+		if (_canAdd && {_action == "REARM"} && {[_veh, _nearSupport select _i] Call _martyRearmBlockedAirDepot}) then {_canAdd = false}; //--- fix(hunt): an air unit parked near a town depot would be charged its batch share and then hard-aborted by SupportRearm - keep it out of the batch (and out of the price).
 
 		if (_canAdd) then {
 			_seen = _seen + [_veh];
@@ -198,6 +213,14 @@ _martyServiceStartFull = {
 	_typeRepair = _this select 4;
 	_spType = _this select 5;
 	_label = [typeOf _veh, 'displayName'] Call GetConfigInfo;
+	
+	//--- fix(hunt): drop a doomed REARM leg (air near a town depot) BEFORE charging - SupportRearm hard-aborts
+	//--- that case after the bundled price was already taken (no refund path).
+	if (("REARM" in _actions) && {[_veh,_supports] Call _martyRearmBlockedAirDepot}) then {
+		_actions = _actions - ["REARM"];
+		_price = _price - ([_veh,"REARM"] Call _martyServiceGetPrice);
+		if (_price < 0) then {_price = 0};
+	};
 
 	if ((count _actions) == 0) exitWith {hint Format ["%1 does not need service.", _label]};
 
@@ -484,11 +507,15 @@ while {true} do {
 		//--- Rearm.
 		if (MenuAction == 1) then {
 			MenuAction = -1;
-			if (_funds >= _rearmPrice) then { //--- QoL: affordability guard (parity with repair/heal)
-			-_rearmPrice Call ChangePlayerFunds;
-			
-			//--- Spawn a Rearm thread.
-			[_veh,_nearSupport select _curSel,_typeRepair,_spType] Spawn SupportRearm;
+			if ((_curSel != -1) && {[_veh,_nearSupport select _curSel] Call _martyRearmBlockedAirDepot}) then {
+				hint "You can't rearm air in town"; //--- fix(hunt): precondition BEFORE the charge - SupportRearm hard-aborts this case AFTER the money is taken (no refund path).
+			} else {
+				if (_funds >= _rearmPrice) then { //--- QoL: affordability guard (parity with repair/heal)
+				-_rearmPrice Call ChangePlayerFunds;
+
+				//--- Spawn a Rearm thread.
+				[_veh,_nearSupport select _curSel,_typeRepair,_spType] Spawn SupportRearm;
+				};
 			};
 		};	
 		

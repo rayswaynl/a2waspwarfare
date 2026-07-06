@@ -66,7 +66,11 @@ WFBE_SE_FNC_HandleAttackWaveDetails = {
             ATTACK_WAVE_EAST_PRICE_MODIFIER = _priceModifier;
         };
 
-        [_side, -(_side call GetSideSupply),"Heavy attack mode activated."] Call ChangeSideSupply;
+        //--- fix(hunt): ChangeSideSupply delivers via publicVariableServer - a silent no-op ON the server (the
+        //--- exact trap the header of this file documents for the wave channel itself) - so the advertised
+        //--- full-supply sacrifice was never charged and HEAVY ATTACK re-armed for free every wave. Route the
+        //--- debit straight through the server-side supply handler instead.
+        [[format ["wfbe_supply_temp_%1", _side], [_side, -(_side call GetSideSupply), "Heavy attack mode activated."]], _side] Call WFBE_SE_FNC_HandleSideSupplyChange;
 
         [_side, "HandleSpecial", ["attack-wave", _priceModifier]] Call WFBE_CO_FNC_SendToClients;
 
