@@ -315,20 +315,22 @@ if (!isDedicated && !isHeadLessClient) then {
 		if (local player) then {skipTime (time / 3600)}; //--- If we're dealing with a client, he may have JIP half way through the game. Sync him via skipTime with the mission time.
 
 		// Ray 2026-06-24 (directive #2): PERMANENT DAYLIGHT. With the accelerated cycle OFF the engine clock still drifts toward night over a long round, so the server clamps daytime into the [START, END] band (08:00->17:00) and loops back to START. Server-authoritative; setDate replicates to all clients/HC. Disable with WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP=0.
-		if (isServer && {(missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") == 1}) then {
+		// fable/permanent-daytime (Build84): WFBE_C_PERMANENT_DAY > 0 force-enables the clamp regardless of WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP.
+		if (isServer && {((missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") == 1) || {(missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0]) > 0}}) then {
 			[] Spawn {
-				private ["_loStart","_loEnd","_check"];
+				private ["_loStart","_loEnd","_check","_permDay"];
 				_loStart = missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_START";
 				_loEnd   = missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_END";
 				_check   = missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CHECK";
+				_permDay = missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0];
 				if (isNil "_loStart") then {_loStart = 8};
 				if (isNil "_loEnd") then {_loEnd = 17};
 				if (isNil "_check") then {_check = 30};
-				diag_log format ["DAYLIGHT| clamp armed band=%1->%2 check=%3s start_daytime=%4", _loStart, _loEnd, _check, (round (daytime * 100) / 100)];
-				while {(missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") == 1} do {
+				diag_log format ["DAYLIGHT| clamp armed band=%1->%2 check=%3s start_daytime=%4 PERMANENT_DAY=%5", _loStart, _loEnd, _check, (round (daytime * 100) / 100), _permDay];
+				while {((missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") == 1) || {(missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0]) > 0}} do {
 					if (daytime >= _loEnd || daytime < _loStart) then {
 						setDate [(date select 0),(date select 1),(date select 2),_loStart,0];
-						diag_log format ["DAYLIGHT| looped to %1:00 (was daytime %2)", _loStart, (round (daytime * 100) / 100)];
+						["INFORMATION", format ["PERMANENT_DAY| reset to %1:00 (was daytime %2) PERMANENT_DAY=%3", _loStart, (round (daytime * 100) / 100), (missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0])]] Call WFBE_CO_FNC_LogContent;
 					};
 					sleep _check;
 				};

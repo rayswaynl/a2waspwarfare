@@ -245,6 +245,12 @@
 		texts[] = {"$STR_WF_PARAMETER_Weather_Clear","$STR_WF_PARAMETER_Weather_Cloudy","$STR_WF_PARAMETER_Weather_Rainy"};
 		default = 0;
 	};
+	class WFBE_C_PERMANENT_DAY {
+		title = "Permanent Daytime";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1; //--- owner flag menu 2026-07-06: permanent daytime ON
+	};
 	#ifndef VANILLA
 		class WFBE_C_MODULE_BIS_PMC {
 			title = "$STR_WF_PARAMETER_PMC";

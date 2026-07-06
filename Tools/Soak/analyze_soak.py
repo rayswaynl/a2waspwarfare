@@ -1472,8 +1472,8 @@ def render(soak, args):
         else:
             ap("  territorial clock   : %s" % _c("never engaged", C.DIM))
 
-    # 9. BUILD 86 LOG FAMILIES -----------------------------------------
-    ap(hdr("9. BUILD 86 LOG FAMILIES"))
+    # 9. BUILD 86+ LOG FAMILIES (cmdcon41-43) ---------------------------
+    ap(hdr("9. BUILD 86+ LOG FAMILIES  (cmdcon41-43)"))
     ap("  " + sub("MHQRELOC verbs"))
     if soak.mhq_verbs:
         ap("     %s" % ", ".join("%s=%d" % (k, v) for k, v in soak.mhq_verbs.most_common()))
