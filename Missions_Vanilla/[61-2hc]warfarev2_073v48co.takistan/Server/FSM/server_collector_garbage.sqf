@@ -1,6 +1,8 @@
 // Marty: Performance Audit locals.
 private["_whq","_ehq","_perfStart","_perfDead","_perfSpawned","_dead"];
 
+//--- Perf phase jitter (2026-07-06): see server_town.sqf. Default 0 = V1.
+if ((missionNamespace getVariable ["WFBE_C_LOOP_PHASE_JITTER", 0]) > 0) then {sleep (random 5)};
 while {!WFBE_GameOver} do {
 	// Marty: Performance Audit timing for the dead object garbage collector.
 	_perfStart = diag_tickTime;
