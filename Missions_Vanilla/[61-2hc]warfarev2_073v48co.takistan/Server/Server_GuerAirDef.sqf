@@ -192,7 +192,8 @@ while {!WFBE_GameOver} do {
 
 		//--- Refresh last-enemy timestamp (enemies of GUER = west + east near the town).
 		if (!_drop && !(isNull _eTown)) then {
-			_enemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _eTown) nearEntities [["Man"], ((_eTown getVariable ["range", 600]) max 600)]);
+			//--- fix(hunt): nearEntities "Man" returns only DISMOUNTED infantry - fully mounted assaults were invisible (defenders recalled as "quiet" mid-attack, paradrop/Mi-24 response never triggered). Include vehicle hulls: a crewed hull carries its crew's side; empty hulls resolve CIVILIAN and stay filtered by the side check.
+			_enemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _eTown) nearEntities [["Man","LandVehicle","Air","Ship"], ((_eTown getVariable ["range", 600]) max 600)]);
 			if (_enemiesNow > 0) then { _eLastEnemy = _now; };
 		};
 
@@ -252,7 +253,8 @@ while {!WFBE_GameOver} do {
 
 		//--- Refresh last-enemy timestamp (west + east near the town).
 		if (!_dDrop && !(isNull _dTown)) then {
-			_dEnemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _dTown) nearEntities [["Man"], ((_dTown getVariable ["range", 600]) max 600)]);
+			//--- fix(hunt): nearEntities "Man" returns only DISMOUNTED infantry - fully mounted assaults were invisible (defenders recalled as "quiet" mid-attack, paradrop/Mi-24 response never triggered). Include vehicle hulls: a crewed hull carries its crew's side; empty hulls resolve CIVILIAN and stay filtered by the side check.
+			_dEnemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _dTown) nearEntities [["Man","LandVehicle","Air","Ship"], ((_dTown getVariable ["range", 600]) max 600)]);
 			if (_dEnemiesNow > 0) then { _dLastEnemy = _now; };
 		};
 
@@ -285,7 +287,8 @@ while {!WFBE_GameOver} do {
 			_pos = getPos _town;
 
 			//--- Enemies near the town (west + east, GUER's foes).
-			_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man"], ((_town getVariable ["range", 600]) max 600)]);
+			//--- fix(hunt): nearEntities "Man" returns only DISMOUNTED infantry - fully mounted assaults were invisible (defenders recalled as "quiet" mid-attack, paradrop/Mi-24 response never triggered). Include vehicle hulls: a crewed hull carries its crew's side; empty hulls resolve CIVILIAN and stay filtered by the side check.
+			_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
 
 			//--- Enemy AIR near the town (crewed west/east aircraft) - the counter-air trigger. Scanned over
 			//--- `vehicles` (hull objects); side comes from the crewed hull, so an empty parked heli reads CIV
