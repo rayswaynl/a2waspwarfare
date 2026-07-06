@@ -708,6 +708,8 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 _enemyHQ = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;
 _wasStrike = _logik getVariable ["wfbe_aicom_strike_on", false];
 _strikeOn = false;
+//--- STEP 2 DECAP GATE (cutover build, GR-2026-07-03a): when WFBE_C_AICOM2_DECAP_ENABLE > 0, V2 Decapitate is the HQ-closer; suppress the V1 HQ-strike launch block so both do not run simultaneously. Flag-off (default 0) = byte-identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ENABLE", 0]) <= 0) then {
 //--- B69 (hqstrike-town-gate-fraction): scale the HQ-strike town gate to the live town count (was a dead literal _myTowns > 8). count towns = all capturable towns (40+ on live Chernarus).
 private ["_hqFrac","_hqFloor","_strikeMinTowns"];
 _hqFrac = missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_FRAC", 0.5];
@@ -758,6 +760,7 @@ if (_wasStrike && !_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
 	if ((_myTowns >= _strikeMinTowns) && {_myTowns >= _enemyTowns * 1.2} && {_sMyEff >= _sEnEff}) then {_strikeOn = true};
 	if (time - (_logik getVariable ["wfbe_aicom_strike_t0", -1e10]) < (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_MIN_HOLD", 600])) then {_strikeOn = true};
 };
+}; //--- end DECAP GATE (V1 HQ-strike block)
 if (_strikeOn) then {
 	_stratMode = "strike";
 	_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
