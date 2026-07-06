@@ -44,3 +44,9 @@ Deploy story: first fire ABORTED SAFELY at pre-flight marker-check (bug: read on
 1.0 = cc48a lineage + full day's batch. LIVE flags: permday, SML-3/4/5, garrison dressing, aircraft spawn safety, stuck-repair tier-reset. DARK (present, ready to flip): AWACS, airfield gate, FPV, East C-130, SML-2, defense-gate align, road-clear. V2 commander (DECAP) = post-1.0 update; v2-cutover-r3 #793 + soaks staged. Build 88 = instant rollback.
 Owner-owed for full 1.0 close: round-2 flag menu + announcement sign-off (draft "WASP Warfare 1.0 is here" ready in miksuu content/drafts).
 Loop 73f42df3 now RC11_LIVE_MONITOR.
+
+## 2026-07-07 — 🎉 WASP Warfare 1.0 GENUINELY LIVE (rc12/release-1.0-rc3, build84 8a14a48d3) — regression FIXED
+The AI-founding regression (rc11) root-caused, fixed, and PROVEN live. Recovery arc: monitor caught AI founding 0 teams within the hour → rolled back to cc48a (working AI confirmed 10/side) → root cause = #768's exitWith fix made the HC delegation allowlist ENFORCE with 2 entries missing (delegate-aicom-team + delegate-sidepatrol) → hotfix #794 added both + canonical reference + completeness audit (found the 2nd one before re-ship) → rebuilt rc12 → deployed to empty box → WATCHED foundedTeams climb live 0→1→4→7/side thru t=15 (matches cc48a healthy), teams fighting at 3.9km normal ranges, cull-only-after-genuine-failure. AI FUNCTIONING. 0-error boot (garrison fix confirmed). rc12 = the real 1.0. Owner DMed.
+Lesson saved: [[wasp-hc-pvf-allowlist-completeness]] — enforcing a previously-dead guard needs a completeness audit of its data.
+Minor follow-up (NON-URGENT, tracked): 1x _tNameHash town-name-hash error (forEach over a string in a name-hash) — does not affect AI/founding.
+Owner-owed to fully close 1.0: round-2 flag menu + announcement. Loop 73f42df3 = RC12_LIVE_MONITOR.
