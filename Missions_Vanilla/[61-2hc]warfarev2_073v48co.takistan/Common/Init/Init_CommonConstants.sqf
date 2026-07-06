@@ -2251,5 +2251,21 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GARRISON_DRESSING_MAX")      then {WFBE_C_GARRISON_DRESSING_MAX = 6};        //--- Max simultaneous dressed towns across the map.
 	if (isNil "WFBE_C_GARRISON_DRESSING_SEARCHLIGHT") then {WFBE_C_GARRISON_DRESSING_SEARCHLIGHT = 1}; //--- 1: add SearchLight_RUS at night; 0: gun only.
 
+//--- AWACS PLATFORM RADAR (fable/awacs-radar, flag WFBE_C_AWACS default 0, lobby param):
+//--- while a CREWED friendly airframe from WFBE_C_AWACS_TYPES is airborne above MINALT the
+//--- owning side gets (a) the AAR air picture on the map WITHOUT being near an Anti-Air
+//--- Radar structure (gate OR-extension in Common_MarkerLoop.sqf; registry feed OR-extension
+//--- in Init_Unit.sqf), and (b) a ground moving-target sweep from the PILOT's client
+//--- (Client\Module\AWACS\awacs_spotter.sqf) via the existing 'uav-reveal' path (fuzzed
+//--- orange ellipses, size grows with AWACS-to-target distance). Flag-off: watcher never
+//--- launched, scan never runs - inert.
+	if (isNil "WFBE_C_AWACS")                   then {WFBE_C_AWACS = 0};                   //--- Master gate: 0=off (default), 1=on.
+	if (isNil "WFBE_C_AWACS_TYPES")             then {WFBE_C_AWACS_TYPES = ['C130J_US_EP1','MV22','Mi17_TK_EP1','Mi17_Ins','An2_TK_EP1']}; //--- Platform classnames (any side flies them; matched lowercase).
+	if (isNil "WFBE_C_AWACS_MINALT")            then {WFBE_C_AWACS_MINALT = 150};          //--- m AGL: radar counts as 'up' above this altitude.
+	if (isNil "WFBE_C_AWACS_AIR_SCAN_INTERVAL") then {WFBE_C_AWACS_AIR_SCAN_INTERVAL = 5}; //--- s: per-client re-check cadence for 'friendly AWACS airborne' (map open only).
+	if (isNil "WFBE_C_AWACS_GROUND_RANGE")      then {WFBE_C_AWACS_GROUND_RANGE = 6000};   //--- m: ground sweep radius around the AWACS.
+	if (isNil "WFBE_C_AWACS_GROUND_DELAY")      then {WFBE_C_AWACS_GROUND_DELAY = 30};     //--- s: between ground sweeps.
+	if (isNil "WFBE_C_AWACS_GROUND_MINSPEED")   then {WFBE_C_AWACS_GROUND_MINSPEED = 5};   //--- km/h: MTI floor - only faster-moving targets are painted.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
