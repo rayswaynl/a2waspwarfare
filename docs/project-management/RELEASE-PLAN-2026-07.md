@@ -1,5 +1,16 @@
 # WASP Warfare — Release Plan (owner-declared 2026-07-06)
 
+## ⭐ PIVOT 2026-07-06 late (owner: "you pick, get V1 going"): 1.0 SHIPS ON V1 NOW.
+The V2 cutover soaks were blocked by the box being in live use. Owner directed shipping 1.0 on the
+current proven V1 commander immediately; V2 (#793) becomes the FIRST POST-1.0 UPDATE, validated by the
+already-staged soak program (soaks 1-3 run as post-release V2 validation, no longer the 1.0 gate).
+**1.0 = current build84 (cc48a lineage + all fixes + dark features) on V1. DECAP dark (0).**
+RC being built (release-1.0-rc1) + staged; deploy on owner go / empty window (NOT auto — box occupied).
+C-130 #786 = Option 1 (WEST-scoring accepted, dark) — Claude's pick, merging.
+Remaining owner steps for 1.0: (a) deploy go, (b) round-2 flag menu (which dark features on at/after launch),
+(c) announcement sign-off. DECAP-default + V2-cutover deferred to the post-1.0 V2 update.
+
+
 **VERSION NAME (owner, 2026-07-06): 1.0** — public name for the release. Engineering lineage keeps the
 cmdcon tags (release build marker: release-1.0 + cmdcon lineage in git tag, e.g. v100-release-1.0).
 Announcement, news post, wiki, and Discord all say **1.0**.
