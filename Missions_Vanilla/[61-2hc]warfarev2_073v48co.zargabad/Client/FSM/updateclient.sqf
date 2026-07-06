@@ -213,13 +213,21 @@ while {!gameOver && !_afkKickRequested} do {
 		_lastCommanderTeam = commanderTeam;
 		_MHQ = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
 
+		//--- fix(hunt): action cleanup must run on EVERY commander transition (null->X, X->null, X->Y).
+		//--- The old code cleaned only on became-null, so after a direct A->B vote flip the ex-commander kept
+		//--- working Lock/Unlock MHQ actions and re-elections stacked duplicates. Also: addAction ids are
+		//--- per-object monotonic, so the hardcoded RemoveAction 0-3 only matched on the FIRST cycle and it
+		//--- blindly deleted the HEAVY ATTACK action while its "actionAttached" latch stayed set (action gone
+		//--- for the HQ lifetime). Remove by STORED ids and clear the latch instead.
+		if (!IsNull _MHQ) then {
+			private ["_aid"];
+			{
+				_aid = _MHQ getVariable _x;
+				if (!isNil "_aid") then {_MHQ removeAction _aid; _MHQ setVariable [_x, nil]};
+			} forEach ["wfbe_mhq_unlock_aid","wfbe_mhq_lock_aid","wfbe_mhq_heavy_aid"];
+			_MHQ setVariable ["actionAttached", nil]; //--- re-arm the HEAVY ATTACK re-add below
+		};
 		if (IsNull commanderTeam) then {
-			if (!IsNull _MHQ) then {
-				_MHQ RemoveAction 0;
-				_MHQ RemoveAction 1;
-				_MHQ RemoveAction 2;
-				_MHQ RemoveAction 3;
-			};
 			if (!isNil "HQAction") then {player removeAction HQAction};
 			if (count (hcAllGroups player) > 0) then {HCRemoveAllGroups player};
 			{[_x,false] Call SetTeamAutonomous} forEach clientTeams;
@@ -228,8 +236,8 @@ while {!gameOver && !_afkKickRequested} do {
 		if (!isNull(commanderTeam)) then {
 			if (commanderTeam == Group player) then {
 				if (!IsNull _MHQ) then {
-					_MHQ addAction [localize "STR_WF_Unlock_MHQ","Client\Action\Action_ToggleLock.sqf", [], 95, false, true, '', 'alive _target && locked _target'];
-					_MHQ addAction [localize "STR_WF_Lock_MHQ","Client\Action\Action_ToggleLock.sqf", [], 94, false, true, '', 'alive _target && !(locked _target)'];
+					_MHQ setVariable ["wfbe_mhq_unlock_aid", _MHQ addAction [localize "STR_WF_Unlock_MHQ","Client\Action\Action_ToggleLock.sqf", [], 95, false, true, '', 'alive _target && locked _target']]; //--- fix(hunt): store the LOCAL action id for exact removal on commander change
+					_MHQ setVariable ["wfbe_mhq_lock_aid", _MHQ addAction [localize "STR_WF_Lock_MHQ","Client\Action\Action_ToggleLock.sqf", [], 94, false, true, '', 'alive _target && !(locked _target)']];
 				};
 				_deployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;
 				if (_deployed) then {
@@ -257,7 +265,7 @@ while {!gameOver && !_afkKickRequested} do {
 			SideHQAttack = _sideHQ;
 			_actionAttached = SideHQAttack getVariable "actionAttached";
 			if (isNil "_actionAttached") then {
-				_sideHQ addAction ["<t color='#ff6a00'>HEAVY ATTACK MODE</t>","Common\Functions\Common_AttackWaveActivate.sqf", [(sideJoined) call GetSideSupply, sideJoined], 1.5, false, false, "", "(((sideJoined) Call GetSideSupply) >= 25000) && (cursorTarget distance player < 50)"];
+				_sideHQ setVariable ["wfbe_mhq_heavy_aid", _sideHQ addAction ["<t color='#ff6a00'>HEAVY ATTACK MODE</t>","Common\Functions\Common_AttackWaveActivate.sqf", [(sideJoined) call GetSideSupply, sideJoined], 1.5, false, false, "", "(((sideJoined) Call GetSideSupply) >= 25000) && (cursorTarget distance player < 50)"]]; //--- fix(hunt): store the LOCAL action id for exact removal on commander change
 				_sideHQ setVariable ["actionAttached", true];
 			};
 		};

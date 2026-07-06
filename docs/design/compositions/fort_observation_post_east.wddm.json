@@ -1,0 +1,17 @@
+{
+  "name": "WFBE_NEURODEF_FORT_OP_EAST",
+  "parentW": 14,
+  "parentD": 14,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "OBSERVATION POST — MANNED EAST variant (flag WFBE_C_DEF_FORT_MANNED). Mirrors the WEST manned layout: one manned DShKM (DSHKM_TK_INS_EP1) on the watchtower deck at the documented Land_Fort_Watchtower_EP1 DECK_Z=5.4 (see WEST variant notes for the lift mechanics). EAST prop flavour: Land_CamoNetVar_EAST net (used by WFBE_NEURODEF_ARTILLERYRADAR_EAST) and TKBasicAmmunitionBox_EP1 cache — both already in the mission tree.",
+  "objs": [
+    {"cls":"Land_Fort_Watchtower_EP1","x":0,"y":2,"z":0,"dir":0,"role":"ELEVATED OBSERVATION — bunker-tower, long view over the approach"},
+    {"cls":"Land_CamoNetVar_EAST","x":0,"y":4,"z":0,"dir":0,"role":"concealment — breaks the tower silhouette (front, ground level; deck gun fires over it)"},
+    {"cls":"Land_fort_bagfence_round","x":0,"y":-1,"z":0,"dir":0,"role":"low fallback ring at the base (self-defence, not a bastion)"},
+    {"cls":"TKBasicAmmunitionBox_EP1","x":-2,"y":-3,"z":0,"dir":0,"role":"supply cache — low, behind the tower"},
+    {"cls":"DSHKM_TK_INS_EP1","x":0,"y":2,"z":5.4,"dir":0,"role":"MANNED DShKM — ON the watchtower deck (z=5.4 = documented Land_Fort_Watchtower_EP1 DECK_Z), long frontal arc"}
+  ]
+}

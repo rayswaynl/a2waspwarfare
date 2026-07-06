@@ -58,9 +58,9 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 	//--- returns nil even with a default -> nil < 0 threw and killed this worker).
 	if (!isNull _team) then {
 	_unassigned = false;
-	if ((_team getVariable ["wfbe_teamtype", -1]) < 0) then {_unassigned = true};
+	if (([_team, "wfbe_teamtype", -1] Call WFBE_CO_FNC_GroupGetBool) < 0) then {_unassigned = true}; //--- fix(hunt): G1-safe (unset teamtype returned nil; nil < 0 threw, so the team was never typed)
 	//--- V0.3: HC-resident teams carry a fixed template from founding - skip.
-	if (!isPlayer (leader _team) && {!(_team getVariable ["wfbe_aicom_hc", false])}) then {
+	if (!isPlayer (leader _team) && {!([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- fix(hunt): G1-safe - server-local founded/editor teams never carry wfbe_aicom_hc, !nil threw and AssignTypes skipped them (mirrors the B66 fix at AI_Commander_Produce.sqf:221)
 		if (_unassigned) then {
 			//--- Build the list of UNLOCKED template indices.
 			_eligible = [];

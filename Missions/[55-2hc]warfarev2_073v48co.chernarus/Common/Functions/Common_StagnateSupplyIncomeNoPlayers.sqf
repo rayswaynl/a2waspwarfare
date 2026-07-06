@@ -23,17 +23,12 @@ if !(isNil "WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill") then {
     };
 };
 
-if (_side == west) then {
-    if (_teamSkillWest > 0) exitWith {
-        _amount;
-    };
-} else {
-    if (_side == east) then {
-        if (_teamSkillEast > 0) exitWith {
-            _amount;
-        };
-    };
-};
+//--- fix(hunt): the skill-based bypass used exitWith nested inside then{} blocks - on A2-OA that exits
+//--- only the block and FALLS THROUGH (engine-verified), so the exemption was dead code. A top-scope
+//--- if () exitWith {} in a Call correctly returns the value.
+private ["_skillExempt"];
+_skillExempt = ((_side == west) && {_teamSkillWest > 0}) || ((_side == east) && {_teamSkillEast > 0});
+if (_skillExempt) exitWith {_amount};
 
 _sidePlayerCount = {isPlayer _x && {side _x == _side}} count playableUnits;
 
@@ -68,7 +63,7 @@ if (_supplyDecreasePercentage < 0) then {
     _supplyDecreasePercentage = 0;
 };
 
-if ((_supplyDecreasePercentage > 0) && (_supplyDecreasePercentage < 1)) then {
+if (_supplyDecreasePercentage > 0) then { //--- fix(hunt): the clamp above caps this at exactly 1; the old "< 1" upper check turned an empty side back to FULL income from tick 10 onward instead of 100% stagnation
     _amount = round(_amount * (1 - _supplyDecreasePercentage));
     ["INFORMATION",Format ["StagnateSupplyIncomeNoPlayers.sqf: Decreasing supply income of team [%1] after %2 ticks with no players by %3 percent. Supply income is now S %4.", str _side, if (_side == west) then {TEAM_WEST_TICKS_NO_PLAYERS} else {TEAM_EAST_TICKS_NO_PLAYERS}, round(_supplyDecreasePercentage * 100), _amount]] Call WFBE_CO_FNC_LogContent;
 };

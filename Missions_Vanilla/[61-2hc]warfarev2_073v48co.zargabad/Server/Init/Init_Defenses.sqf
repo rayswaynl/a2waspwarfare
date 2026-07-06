@@ -334,6 +334,179 @@ missionNamespace setVariable ['WFBE_NEURODEF_AIRCRAFT_WALLS_V3',
 	]
 ];
 
+//=============================================================================
+//--- fable/wddm-functional-defenses: FACTORY WALL SLABS v4 (flag WFBE_C_WALLS_V4, default 0;
+//--- WFBE_C_WALLS_V3 stays the LIVE default). Redesign of the v3 slab layer per the design
+//--- contract in the WALLS_V3 comment block above (violating it breaks vehicle deliveries):
+//---   * +X (model-right) face stays FULLY OPEN on Light/Heavy/Aircraft (Client_BuildUnit.sqf
+//---     spawns vehicles toward +X) - zero slabs on any +X plane;
+//---   * legacy infantry walking gaps preserved - the slab layer now GAPS where the legacy ring
+//---     gaps (v3 ran a solid outer wall straight past the -X walking gaps);
+//---   * slabs sit OUTSIDE the legacy ring, which is included VERBATIM (full arrays, no concat);
+//---   * contiguous runs at the HQ 2.2 m overlap pitch (WFBE_NEURODEF_HEADQUARTERS_WALLS look) -
+//---     NO lone floating single panels (the v3 Heavy [-3.6,16]/[-3.6,-17.5] and Aircraft
+//---     [-3.6,15]/[-3.6,-15] singles are replaced by proper runs/pairs);
+//---   * mirrored offsets symmetric; Land_CncBlock_Stripes accents at the gap mouths;
+//---   * SERVICEPOINT stays slab-free: no _V4 array exists, so the selection hooks fall through
+//---     to the V3 logic (empty array) - both drive-through faces stay clear.
+//--- Selected by Construction_Small/MediumSite.sqf: _WALLS_V4 preferred when WFBE_C_WALLS_V4>0
+//--- AND the array exists, else the existing V3/legacy logic runs untouched.
+//--- AUTO-GENERATED from docs/design/compositions/*_walls_v4.wddm.json by
+//--- Tools/WddmToSqf/wddm_to_sqf.py - the .wddm.json is the source of truth; do not hand-edit.
+//=============================================================================
+missionNamespace setVariable ['WFBE_NEURODEF_BARRACKS_WALLS_V4',[
+	['Base_WarfareBBarrier5x',[-7,11,0],0],
+	['Base_WarfareBBarrier5x',[7,11,0],0],
+	['Base_WarfareBBarrier5x',[-7,-11,0],0],
+	['Base_WarfareBBarrier5x',[7,-11,0],0],
+	['Base_WarfareBBarrier5x',[-11,-5,0],90],
+	['Base_WarfareBBarrier5x',[-11,5,0],90],
+	['Base_WarfareBBarrier5x',[11,-5,0],90],
+	['Base_WarfareBBarrier5x',[11,5,0],90],
+	['Concrete_Wall_EP1',[-7.6,13.5,0],0],
+	['Concrete_Wall_EP1',[-5.4,13.5,0],0],
+	['Concrete_Wall_EP1',[5.4,13.5,0],0],
+	['Concrete_Wall_EP1',[7.6,13.5,0],0],
+	['Concrete_Wall_EP1',[-7.6,-13.5,0],0],
+	['Concrete_Wall_EP1',[-5.4,-13.5,0],0],
+	['Concrete_Wall_EP1',[5.4,-13.5,0],0],
+	['Concrete_Wall_EP1',[7.6,-13.5,0],0],
+	['Concrete_Wall_EP1',[-13.5,-2.2,0],90],
+	['Concrete_Wall_EP1',[-13.5,0,0],90],
+	['Concrete_Wall_EP1',[-13.5,2.2,0],90],
+	['Concrete_Wall_EP1',[13.5,-2.2,0],90],
+	['Concrete_Wall_EP1',[13.5,0,0],90],
+	['Concrete_Wall_EP1',[13.5,2.2,0],90],
+	['Land_CncBlock_Stripes',[-1.6,14.2,0],335],
+	['Land_CncBlock_Stripes',[1.6,14.2,0],25],
+	['Land_CncBlock_Stripes',[-1.6,-14.2,0],205],
+	['Land_CncBlock_Stripes',[1.6,-14.2,0],155]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_LIGHT_WALLS_V4',[
+	['Land_HBarrier_large',[10,-1,0],90],
+	['Land_HBarrier_large',[10,9,0],-90],
+	['Land_HBarrier_large',[10,-8.5,0],90],
+	['Land_HBarrier_large',[7,-12,0],180],
+	['Land_HBarrier_large',[-7,-12,0],180],
+	['Land_HBarrier_large',[7,12,0],180],
+	['Land_HBarrier_large',[-7,12,0],180],
+	['Land_HBarrier_large',[-11,-9,0],90],
+	['Land_HBarrier_large',[-11,6,0],90],
+	['Land_HBarrier_large',[-11,9,0],90],
+	['Concrete_Wall_EP1',[-14,-8.8,0],90],
+	['Concrete_Wall_EP1',[-14,-6.6,0],90],
+	['Concrete_Wall_EP1',[-14,3.3,0],90],
+	['Concrete_Wall_EP1',[-14,5.5,0],90],
+	['Concrete_Wall_EP1',[-14,7.7,0],90],
+	['Concrete_Wall_EP1',[-7.6,15,0],0],
+	['Concrete_Wall_EP1',[-5.4,15,0],0],
+	['Concrete_Wall_EP1',[5.4,15,0],0],
+	['Concrete_Wall_EP1',[7.6,15,0],0],
+	['Concrete_Wall_EP1',[-7.6,-15,0],0],
+	['Concrete_Wall_EP1',[-5.4,-15,0],0],
+	['Concrete_Wall_EP1',[5.4,-15,0],0],
+	['Concrete_Wall_EP1',[7.6,-15,0],0],
+	['Land_CncBlock_Stripes',[-1.6,15.6,0],335],
+	['Land_CncBlock_Stripes',[1.6,15.6,0],25],
+	['Land_CncBlock_Stripes',[-14.8,-3.6,0],115],
+	['Land_CncBlock_Stripes',[-14.8,0.4,0],65]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_COMMANDCENTER_WALLS_V4',[
+	['Land_HBarrier_large',[4,-3.5,0],90],
+	['Land_HBarrier_large',[4,4,0],90],
+	['Land_HBarrier_large',[1,7.5,0],180],
+	['Land_HBarrier_large',[-2.5,7.5,0],180],
+	['Land_HBarrier_large',[-5.5,4,0],90],
+	['Land_HBarrier_large',[-5.5,-3.5,0],90],
+	['Land_HBarrier5',[4,-6.5,0],180],
+	['Concrete_Wall_EP1',[7.5,-4.4,0],90],
+	['Concrete_Wall_EP1',[7.5,-2.2,0],90],
+	['Concrete_Wall_EP1',[7.5,0,0],90],
+	['Concrete_Wall_EP1',[7.5,2.2,0],90],
+	['Concrete_Wall_EP1',[7.5,4.4,0],90],
+	['Concrete_Wall_EP1',[-9,-4.4,0],90],
+	['Concrete_Wall_EP1',[-9,-2.2,0],90],
+	['Concrete_Wall_EP1',[-9,0,0],90],
+	['Concrete_Wall_EP1',[-9,2.2,0],90],
+	['Concrete_Wall_EP1',[-9,4.4,0],90],
+	['Concrete_Wall_EP1',[-2.2,-10,0],0],
+	['Concrete_Wall_EP1',[0,-10,0],0],
+	['Concrete_Wall_EP1',[2.2,-10,0],0],
+	['Land_CncBlock_Stripes',[-7.2,6.6,0],335],
+	['Land_CncBlock_Stripes',[5.7,6.6,0],25]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_HEAVY_WALLS_V4',[
+	['Land_HBarrier_large',[14,-1,0],90],
+	['Land_HBarrier_large',[14,9,0],-90],
+	['Land_HBarrier_large',[14,-8.5,0],90],
+	['Land_HBarrier_large',[14,-11,0],90],
+	['Land_HBarrier_large',[11,-14.5,0],180],
+	['Land_HBarrier_large',[-3,-14.5,0],180],
+	['Land_HBarrier_large',[-10.5,-14.5,0],180],
+	['Land_HBarrier_large',[-14,-11,0],90],
+	['Land_HBarrier_large',[-14,4,0],90],
+	['Land_HBarrier_large',[-14,9.5,0],90],
+	['Land_HBarrier_large',[11,13,0],180],
+	['Land_HBarrier_large',[-4,13,0],180],
+	['Land_HBarrier_large',[-11,13,0],-180],
+	['Concrete_Wall_EP1',[-17,-11,0],90],
+	['Concrete_Wall_EP1',[-17,-8.8,0],90],
+	['Concrete_Wall_EP1',[-17,1.1,0],90],
+	['Concrete_Wall_EP1',[-17,3.3,0],90],
+	['Concrete_Wall_EP1',[-17,5.5,0],90],
+	['Concrete_Wall_EP1',[-17,7.7,0],90],
+	['Concrete_Wall_EP1',[-17,9.9,0],90],
+	['Concrete_Wall_EP1',[-8.8,16,0],0],
+	['Concrete_Wall_EP1',[-6.6,16,0],0],
+	['Concrete_Wall_EP1',[-4.4,16,0],0],
+	['Concrete_Wall_EP1',[-2.2,16,0],0],
+	['Concrete_Wall_EP1',[0,16,0],0],
+	['Concrete_Wall_EP1',[-8.8,-17.5,0],0],
+	['Concrete_Wall_EP1',[-6.6,-17.5,0],0],
+	['Concrete_Wall_EP1',[-4.4,-17.5,0],0],
+	['Concrete_Wall_EP1',[-2.2,-17.5,0],0],
+	['Concrete_Wall_EP1',[0,-17.5,0],0],
+	['Land_CncBlock_Stripes',[3,16,0],335],
+	['Land_CncBlock_Stripes',[5,16,0],25],
+	['Land_CncBlock_Stripes',[3,-17.5,0],205],
+	['Land_CncBlock_Stripes',[5,-17.5,0],155],
+	['Land_CncBlock_Stripes',[-17.8,-5.5,0],115],
+	['Land_CncBlock_Stripes',[-17.8,-1.5,0],65]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_AIRCRAFT_WALLS_V4',[
+	['Land_HBarrier_large',[10,-1,0],90],
+	['Land_HBarrier_large',[10,9,0],-90],
+	['Land_HBarrier_large',[10,-8.5,0],90],
+	['Land_HBarrier_large',[7,-12,0],180],
+	['Land_HBarrier_large',[-7,-12,0],180],
+	['Land_HBarrier_large',[7,12,0],180],
+	['Land_HBarrier_large',[-7,12,0],180],
+	['Land_HBarrier_large',[-11,-9,0],90],
+	['Land_HBarrier_large',[-11,6,0],90],
+	['Land_HBarrier_large',[-11,9,0],90],
+	['Concrete_Wall_EP1',[-14,-8.8,0],90],
+	['Concrete_Wall_EP1',[-14,-6.6,0],90],
+	['Concrete_Wall_EP1',[-14,3.3,0],90],
+	['Concrete_Wall_EP1',[-14,5.5,0],90],
+	['Concrete_Wall_EP1',[-14,7.7,0],90],
+	['Concrete_Wall_EP1',[-7.6,15,0],0],
+	['Concrete_Wall_EP1',[-5.4,15,0],0],
+	['Concrete_Wall_EP1',[5.4,15,0],0],
+	['Concrete_Wall_EP1',[7.6,15,0],0],
+	['Concrete_Wall_EP1',[-7.6,-15,0],0],
+	['Concrete_Wall_EP1',[-5.4,-15,0],0],
+	['Concrete_Wall_EP1',[5.4,-15,0],0],
+	['Concrete_Wall_EP1',[7.6,-15,0],0],
+	['Land_CncBlock_Stripes',[-1.6,15.6,0],335],
+	['Land_CncBlock_Stripes',[1.6,15.6,0],25],
+	['Land_CncBlock_Stripes',[-14.8,-3.6,0],115],
+	['Land_CncBlock_Stripes',[-14.8,0.4,0],65]
+]];
+
 missionNamespace setVariable ['WFBE_NEURODEF_MG',[
 	[if (WF_A2_Vanilla) then {'Land_fortified_nest_small'} else {'Land_fortified_nest_small_EP1'},[0.25,0,0],180],
 	['Land_fort_bagfence_corner',[-1,-3,0],0]
@@ -702,7 +875,7 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then 
 		['DSHKM_TK_INS_EP1',[-7,-6,0],200]
 	]];
 
-	//--- ARTILLERY PIT (LIGHT, 1 AI) WEST — M119 in an earthen artillery revetment (clear overhead), rear .50 picket, ammo behind cover, bag horseshoe.
+	//--- ARTILLERY PIT (LIGHT, 2 AI) WEST — M119 in an earthen artillery revetment (clear overhead), rear .50 picket, ammo behind cover, bag horseshoe.
 	missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_LIGHT_WEST',[
 		['Land_fort_artillery_nest_EP1',[0,3,0],0],
 		['M119_US_EP1',[0,3,0],0],
@@ -710,7 +883,7 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then 
 		['Land_fort_bagfence_round',[0,-5,0],0]
 	]];
 
-	//--- ARTILLERY PIT (LIGHT, 1 AI) EAST — D-30 in a revetment, rear DShK picket, ammo behind cover, HBarrier horseshoe.
+	//--- ARTILLERY PIT (LIGHT, 2 AI) EAST — D-30 in a revetment, rear DShK picket, ammo behind cover, HBarrier horseshoe.
 	missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_LIGHT_EAST',[
 		['Land_fort_artillery_nest_EP1',[0,3,0],0],
 		['D30_TK_EP1',[0,3,0],0],
@@ -756,7 +929,7 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then 
 		['Land_fort_bagfence_round',[5,3,0],0]
 	]];
 
-	//--- MIXED STRONGPOINT (HEAVY, 4 AI) WEST — twin .50 + TOW + rear Stinger + COVERED INFANTRY BUNKER fallback, HBarrier horseshoe, forward wire.
+	//--- MIXED STRONGPOINT (HEAVY, 3 AI) WEST — twin .50 + TOW + COVERED INFANTRY BUNKER fallback (unmanned), HBarrier horseshoe, forward wire.
 	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_HEAVY_WEST',[
 		['M2StaticMG',[-9,3,0],330],
 		['M2StaticMG',[9,3,0],30],
@@ -766,7 +939,7 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then 
 		['Land_fort_bagfence_round',[9,3,0],0]
 	]];
 
-	//--- MIXED STRONGPOINT (HEAVY, 4 AI) EAST — twin DShK + Metis + rear Igla + COVERED INFANTRY BUNKER fallback, HBarrier horseshoe + rear screen, forward traps.
+	//--- MIXED STRONGPOINT (HEAVY, 3 AI) EAST — twin DShK + Metis + COVERED INFANTRY BUNKER fallback (unmanned), HBarrier horseshoe + rear screen, forward traps.
 	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_HEAVY_EAST',[
 		['DSHKM_TK_INS_EP1',[-9,3,0],330],
 		['DSHKM_TK_INS_EP1',[9,3,0],30],
@@ -811,8 +984,165 @@ missionNamespace setVariable ['WFBE_NEURODEF_FORT_OP',[
 	['USBasicAmmunitionBox_EP1',[-2,-3,0],0]
 ]];
 
+//======================================================================================
+//--- fable/wddm-functional-defenses (flag WFBE_C_DEF_FORT_MANNED, default 0): MANNED fort variants.
+//--- The three fortification compositions above are COSMETIC (zero gunner-slot children). These
+//--- _WEST/_EAST variants are the same layouts PLUS manned MG statics (WEST = M2StaticMG .50cal,
+//--- EAST = DSHKM_TK_INS_EP1 - the exact families every DEFMENU_V2 composition already uses):
+//---   * STRONGPOINT: +2 MGs at the rampart forward corners, inward-canted interlocking arcs.
+//---   * CHECKPOINT:  +1 MG behind EACH bag-fence guard position (2 total), arcs on the stop line.
+//---   * OP:          +1 MG ON the watchtower deck. The gun child carries z=5.4 - the DOCUMENTED
+//---     Land_Fort_Watchtower_EP1 deck constant (Init_CommonConstants.sqf flak fallback table:
+//---     "original watchtower: STRUCTURE=Land_Fort_Watchtower_EP1 + DECK_Z=5.4 + AUTOZ=0").
+//---     Server_ConstructPosition.sqf lifts any child with z>0.1 via setPosATL (cmdcon42-g elevated-
+//---     child path); the flak AUTOZ boundingBox override stays inert here (host != flak host class).
+//--- Manning is AUTOMATIC: Server_ConstructPosition routes every child through ConstructDefense,
+//--- which seats pooled DefenseTeam AI in any empty gunner slot (Construction_StationaryDefense.sqf
+//--- + Server_HandleDefense.sqf moveInGunner - teleports to the turret at any height).
+//--- AUTO-GENERATED from docs/design/compositions/fort_*_west|east.wddm.json by
+//--- Tools/WddmToSqf/wddm_to_sqf.py - the .wddm.json is the source of truth; do not hand-edit.
+//--- Always defined (harmless when the flag is 0: WFBE_POSITION_TEMPLATE_MAP then resolves the
+//--- side-neutral cosmetic arrays above and these variants are never read).
+//--- GUER/TKA note: Server_ConstructPosition.sqf appends _WEST only for west; every other side
+//--- (east, GUER, TKA) resolves _EAST -> the DShKM variants, which fit all three.
+//======================================================================================
+missionNamespace setVariable ['WFBE_NEURODEF_FORT_STRONGPOINT_WEST',[
+	['Land_fortified_nest_big_EP1',[0,0,0],0],
+	['Land_fort_bagfence_long',[-4,3,0],25],
+	['Land_fort_bagfence_long',[4,3,0],335],
+	['Land_fort_rampart_EP1',[-9,-1,0],0],
+	['Land_fort_rampart_EP1',[9,-1,0],0],
+	['M2StaticMG',[-9,2,0],330],
+	['M2StaticMG',[9,2,0],30]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORT_STRONGPOINT_EAST',[
+	['Land_fortified_nest_big_EP1',[0,0,0],0],
+	['Land_fort_bagfence_long',[-4,3,0],25],
+	['Land_fort_bagfence_long',[4,3,0],335],
+	['Land_fort_rampart_EP1',[-9,-1,0],0],
+	['Land_fort_rampart_EP1',[9,-1,0],0],
+	['DSHKM_TK_INS_EP1',[-9,2,0],330],
+	['DSHKM_TK_INS_EP1',[9,2,0],30]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORT_CHECKPOINT_WEST',[
+	['Land_CncBlock_Stripes',[-3,5,0],0],
+	['Land_CncBlock_Stripes',[3,2,0],0],
+	['Land_CncBlock_Stripes',[-3,-1,0],0],
+	['Land_CncBlock_Stripes',[0,3.5,0],0],
+	['Land_fort_bagfence_long',[-6,3,0],90],
+	['Land_fort_bagfence_long',[6,1,0],90],
+	['M2StaticMG',[-7.5,3,0],335],
+	['M2StaticMG',[7.5,1,0],25]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORT_CHECKPOINT_EAST',[
+	['Land_CncBlock_Stripes',[-3,5,0],0],
+	['Land_CncBlock_Stripes',[3,2,0],0],
+	['Land_CncBlock_Stripes',[-3,-1,0],0],
+	['Land_CncBlock_Stripes',[0,3.5,0],0],
+	['Land_fort_bagfence_long',[-6,3,0],90],
+	['Land_fort_bagfence_long',[6,1,0],90],
+	['DSHKM_TK_INS_EP1',[-7.5,3,0],335],
+	['DSHKM_TK_INS_EP1',[7.5,1,0],25]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORT_OP_WEST',[
+	['Land_Fort_Watchtower_EP1',[0,2,0],0],
+	['Land_CamoNetVar_NATO',[0,4,0],0],
+	['Land_fort_bagfence_round',[0,-1,0],0],
+	['USBasicAmmunitionBox_EP1',[-2,-3,0],0],
+	['M2StaticMG',[0,2,5.4],0]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORT_OP_EAST',[
+	['Land_Fort_Watchtower_EP1',[0,2,0],0],
+	['Land_CamoNetVar_EAST',[0,4,0],0],
+	['Land_fort_bagfence_round',[0,-1,0],0],
+	['TKBasicAmmunitionBox_EP1',[-2,-3,0],0],
+	['DSHKM_TK_INS_EP1',[0,2,5.4],0]
+]];
+
+//======================================================================================
+//--- fable/wddm-functional-defenses (flag WFBE_C_DEF_FORTIF_PACK, default 0): FORTIFICATION PACK.
+//--- Ray (owner intent, verbatim gist): "Fortifications! Not fortresses - useful items like a row
+//--- of concrete walls, or a way to block LoS to your base... larger assets basically." Five LARGER
+//--- PASSIVE buildable fortification compositions whose function IS their geometry (cover + LoS
+//--- denial at meaningful scale). Side-neutral single arrays - no manning, no side variants, no
+//--- gunner-slot children; every child is routed through ConstructDefense as a plain prop.
+//--- Geometry is overlap-pitched so panels sit FLUSH (no see-through seams):
+//---   * WALL_ROW      10x Concrete_Wall_EP1 @ the HQ 2.2 m pitch (panel dx=2.574 engine-measured) ~22 m.
+//---   * WALL_CORNER   L-section, 2 runs of 5 panels meeting at 90 deg, runs interpenetrate at the corner.
+//---   * LOS_SCREEN    3x Base_WarfareBBarrier10xTall @ the proven WALLS_V4 10x-family 14 m pitch ~43 m
+//---                   TALL screen (THE block-LoS-to-your-base ask; panel >= 15 m -> >= 1 m seam overlap).
+//---   * HESCO_LINE    4x Land_HBarrier_large @ 9.5 m pitch (panel dx=10.387 engine-measured) ~39 m run.
+//---   * GATE_COMPLEX  Land_BarGate2 (dy=8.24 engine-measured, relDir 90 spans X) + 2 flanking
+//---                   Concrete_Wall_EP1 pairs + 4 Land_CncBlock_Stripes funnel accents: drive-through mouth.
+//--- AUTO-GENERATED from docs/design/compositions/fortif_*.wddm.json by Tools/WddmToSqf/wddm_to_sqf.py
+//--- - the .wddm.json is the source of truth; do not hand-edit, re-run the converter.
+//--- Always defined (harmless at flag 0: the anchors below only enter WFBE_POSITION_TEMPLATE_MAP /
+//--- ANCHOR_NAMES / the side menus when WFBE_C_DEF_FORTIF_PACK > 0, so these arrays are never read).
+//======================================================================================
+missionNamespace setVariable ['WFBE_NEURODEF_FORTIF_WALL_ROW',[
+	['Concrete_Wall_EP1',[-9.9,0,0],0],
+	['Concrete_Wall_EP1',[-7.7,0,0],0],
+	['Concrete_Wall_EP1',[-5.5,0,0],0],
+	['Concrete_Wall_EP1',[-3.3,0,0],0],
+	['Concrete_Wall_EP1',[-1.1,0,0],0],
+	['Concrete_Wall_EP1',[1.1,0,0],0],
+	['Concrete_Wall_EP1',[3.3,0,0],0],
+	['Concrete_Wall_EP1',[5.5,0,0],0],
+	['Concrete_Wall_EP1',[7.7,0,0],0],
+	['Concrete_Wall_EP1',[9.9,0,0],0]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORTIF_WALL_CORNER',[
+	['Concrete_Wall_EP1',[-4.4,-5.5,0],0],
+	['Concrete_Wall_EP1',[-2.2,-5.5,0],0],
+	['Concrete_Wall_EP1',[0,-5.5,0],0],
+	['Concrete_Wall_EP1',[2.2,-5.5,0],0],
+	['Concrete_Wall_EP1',[4.4,-5.5,0],0],
+	['Concrete_Wall_EP1',[-5.5,-4.4,0],90],
+	['Concrete_Wall_EP1',[-5.5,-2.2,0],90],
+	['Concrete_Wall_EP1',[-5.5,0,0],90],
+	['Concrete_Wall_EP1',[-5.5,2.2,0],90],
+	['Concrete_Wall_EP1',[-5.5,4.4,0],90]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORTIF_LOS_SCREEN',[
+	['Base_WarfareBBarrier10xTall',[-14,0,0],0],
+	['Base_WarfareBBarrier10xTall',[0,0,0],0],
+	['Base_WarfareBBarrier10xTall',[14,0,0],0]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORTIF_HESCO_LINE',[
+	['Land_HBarrier_large',[-14.25,0,0],0],
+	['Land_HBarrier_large',[-4.75,0,0],0],
+	['Land_HBarrier_large',[4.75,0,0],0],
+	['Land_HBarrier_large',[14.25,0,0],0]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORTIF_GATE_COMPLEX',[
+	['Land_BarGate2',[0,0,0],90],
+	['Concrete_Wall_EP1',[-4.9,0,0],0],
+	['Concrete_Wall_EP1',[-7.1,0,0],0],
+	['Concrete_Wall_EP1',[4.9,0,0],0],
+	['Concrete_Wall_EP1',[7.1,0,0],0],
+	['Land_CncBlock_Stripes',[-3.2,2.6,0],335],
+	['Land_CncBlock_Stripes',[3.2,2.6,0],25],
+	['Land_CncBlock_Stripes',[-3.2,-2.6,0],25],
+	['Land_CncBlock_Stripes',[3.2,-2.6,0],335]
+]];
+
 //--- Anchor (build-menu placeholder classname) -> composition template map.
 // [anchorClassname, baseTemplateVar, factionSpecific?]  (factionSpecific appends _WEST / _EAST at build time)
+//--- fable/wddm-functional-defenses: WFBE_C_DEF_FORT_MANNED>0 -> the three fort anchors become
+//--- factionSpecific (the manned _WEST/_EAST variants above resolve at build time, exactly the
+//--- AAPOS idiom). Flag 0 (default) -> factionSpecific=false -> the side-neutral cosmetic arrays
+//--- resolve - identical behaviour to HEAD.
+private '_fortManned';
+_fortManned = ((missionNamespace getVariable ['WFBE_C_DEF_FORT_MANNED', 0]) > 0);
 WFBE_POSITION_TEMPLATE_MAP = [
 	['Land_Ind_BoardsPack1','WFBE_NEURODEF_AAPOS',true],			//--- AA (light, 2 AI)
 	['Land_CncBlock_Stripes','WFBE_NEURODEF_AAPOS_HEAVY',true],			//--- AA (heavy, 4 AI)
@@ -826,9 +1156,40 @@ WFBE_POSITION_TEMPLATE_MAP = [
 	//--- cmdcon42-g menu v2 anchors (side-neutral hedgehog line; faction-specific flak tower).
 	['Misc_cargo_cont_small','WFBE_NEURODEF_HEDGEHOGLINE',false],	//--- Hedgehog Line (AT obstacle)
 	['Land_Ind_TankSmall','WFBE_NEURODEF_FLAKTOWER',true],			//--- Flak Tower (elevated AA, 1 AI)
-	//--- cmdcon44-c WDDM fortifications set (side-neutral compositions; ghosts are unused cargo/barrel models).
-	['Land_Misc_Cargo1B','WFBE_NEURODEF_FORT_STRONGPOINT',false],		//--- Infantry Strongpoint
-	['Land_transport_crates_EP1','WFBE_NEURODEF_FORT_CHECKPOINT',false],	//--- Roadblock / Checkpoint
-	['Land_Barrel_water','WFBE_NEURODEF_FORT_OP',false]					//--- Observation Post
+	//--- cmdcon44-c WDDM fortifications set (ghosts are unused cargo/barrel models). factionSpecific is
+	//--- _fortManned: false (default) = side-neutral cosmetic arrays; true = manned _WEST/_EAST variants.
+	['Land_Misc_Cargo1B','WFBE_NEURODEF_FORT_STRONGPOINT',_fortManned],		//--- Infantry Strongpoint
+	['Land_transport_crates_EP1','WFBE_NEURODEF_FORT_CHECKPOINT',_fortManned],	//--- Roadblock / Checkpoint
+	['Land_Barrel_water','WFBE_NEURODEF_FORT_OP',_fortManned]					//--- Observation Post
 ];
 WFBE_POSITION_ANCHOR_NAMES = ['Land_Ind_BoardsPack1','Land_CncBlock_Stripes','Land_Barrel_sand','Land_Ind_BoardsPack2','Land_WoodenRamp','RoadCone','Paleta1','Paleta2','Land_Ind_Timbers','Misc_cargo_cont_small','Land_Ind_TankSmall','Land_Misc_Cargo1B','Land_transport_crates_EP1','Land_Barrel_water'];
+
+//--- fable/wddm-functional-defenses: FORTIFICATION PACK anchor wiring. Ghost classes are unused
+//--- cheap props (all scope=2, CONFIG-VERIFIED in arma2-co-config-reference CfgVehicles.txt:
+//--- Misc_cargo_cont_net1/2/3 l.116983/116989/116995, Misc_cargo_cont_tiny l.116977,
+//--- Misc_concrete_High l.115920). WFBE_FORTIF_ANCHOR_NAMES additionally feeds the SEPARATE
+//--- fortification composition cap in Server\PVFunctions\RequestDefense.sqf (WFBE_C_DEF_FORTIF_CAP)
+//--- so passive walls never eat the 3-per-base weapon-position cap. Flag 0 (default) -> none of the
+//--- three lists changes -> byte-identical behaviour to HEAD.
+if ((missionNamespace getVariable ['WFBE_C_DEF_FORTIF_PACK', 0]) > 0) then {
+	WFBE_POSITION_TEMPLATE_MAP = WFBE_POSITION_TEMPLATE_MAP + [
+		['Misc_cargo_cont_net1','WFBE_NEURODEF_FORTIF_WALL_ROW',false],		//--- Concrete Wall Row (~22 m)
+		['Misc_cargo_cont_net2','WFBE_NEURODEF_FORTIF_WALL_CORNER',false],	//--- Concrete Wall Corner (L)
+		['Misc_cargo_cont_net3','WFBE_NEURODEF_FORTIF_LOS_SCREEN',false],	//--- Tall LoS Screen (~43 m)
+		['Misc_cargo_cont_tiny','WFBE_NEURODEF_FORTIF_HESCO_LINE',false],	//--- HESCO Line (~39 m)
+		['Misc_concrete_High','WFBE_NEURODEF_FORTIF_GATE_COMPLEX',false]	//--- Gate Complex (drive-through)
+	];
+	WFBE_FORTIF_ANCHOR_NAMES = ['Misc_cargo_cont_net1','Misc_cargo_cont_net2','Misc_cargo_cont_net3','Misc_cargo_cont_tiny','Misc_concrete_High'];
+	//--- fix(wddm) cap visibility: the B3b cap count (RequestDefense.sqf) scans nearestObjects over
+	//--- the side's DEFENSENAMES classlist, so a placement only counts if at least one spawned CHILD
+	//--- class is in that list. Wall Row/Corner/Gate count via Concrete_Wall_EP1 and the HESCO Line
+	//--- via Land_HBarrier_large (both in all four active lists), but the LoS Screen's ONLY child
+	//--- class Base_WarfareBBarrier10xTall lives solely in the LEGACY side lists (Structures_CDF/_RU/
+	//--- _USMC/...), never the active Structures_CO_US/_CO_RU/_CO_GUE/_OA_TKA - without this extra
+	//--- scan list a built LoS Screen would NEVER count against WFBE_C_DEF_FORTIF_CAP (unlimited
+	//--- spam). RequestDefense appends it to the scan classes for fortif-anchor requests only;
+	//--- Land_BarGate2 included for robustness should the gate JSON ever lose its wall children.
+	//--- Nil at flag 0 (this whole block is flag-gated) -> RequestDefense skips it -> byte-identical.
+	WFBE_FORTIF_COUNT_EXTRA = ['Base_WarfareBBarrier10xTall','Land_BarGate2'];
+	WFBE_POSITION_ANCHOR_NAMES = WFBE_POSITION_ANCHOR_NAMES + WFBE_FORTIF_ANCHOR_NAMES;
+};

@@ -54,7 +54,7 @@ _assigned = [];
 	if (!isNull _team) then {
 		if (({alive _x} count (units _team)) > 0) then {
 			private ["_curOrd","_curTgt"];
-			_curOrd = _team getVariable ["wfbe_aicom_townorder", []];
+			_curOrd = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
 			if (count _curOrd >= 1) then {
 				_curTgt = _curOrd select 0;
 				if (typeName _curTgt == "OBJECT" && {!isNull _curTgt}) then {
@@ -88,9 +88,9 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	//--- (Hook A latch), resolve exactly one ARRIVED (leader within arrive-radius of the town) or
 	//--- STRANDED (timeout exceeded, still far). Latched by wfbe_aicom_dispatch_open so it fires
 	//--- once per dispatch; a re-dispatch in Hook A re-opens the latch. Logging only, no behaviour.
-	if (_team getVariable ["wfbe_aicom_dispatch_open", false]) then {
+	if ([_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool) then {
 		private ["_dord","_dtgt","_dt0","_dldr","_ddist","_arrR","_toSecs","_elapsed","_bandKey","_bandVal"];
-		_dord = _team getVariable ["wfbe_aicom_townorder", []];
+		_dord = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
 		if (count _dord >= 2) then {
 			_dtgt = _dord select 0;
 			_dt0  = _dord select 1;
@@ -172,10 +172,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						//--- increment+latch idiom is repeated verbatim on both TARGET_ABANDON paths (kept inline,
 						//--- not factored, to stay A2-OA-safe - no code-block passing). A2-OA-safe (plain setVariable).
 						private ["_fjS","_fjThrS"];
-						_fjS = (_team getVariable ["wfbe_aicom_failedjourneys", 0]) + 1;
+						_fjS = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
 						_team setVariable ["wfbe_aicom_failedjourneys", _fjS];
 						_fjThrS = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
-						if (_fjThrS > 0 && {_fjS >= _fjThrS} && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
+						if (_fjThrS > 0 && {_fjS >= _fjThrS} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 							_team setVariable ["wfbe_aicom_recycle", true, true];
 							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjS + "|reason=stranded");
 						};
@@ -187,8 +187,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 			};
 		};
 	};
-	_autonomous = _team getVariable ["wfbe_autonomous", false];
-	_modeNow = toLower (_team getVariable ["wfbe_teammode", "towns"]);
+	_autonomous = [_team, "wfbe_autonomous", false] Call WFBE_CO_FNC_GroupGetBool;
+	_modeNow = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 	_canDrive = false;
 	_explicitMode = false;
 	//--- MANUAL-PIN (Build83, claude-gaming 2026-07-01): a team a HUMAN just ordered from the war-room console
@@ -245,7 +245,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					[_team, "defense"] Call SetTeamMoveMode;
 					[_team, getPos _hqG] Call SetTeamMovePos;
 					//--- V0.3: HC-resident teams get their orders via the public order variable.
-					if (_team getVariable ["wfbe_aicom_hc", false]) then {
+					if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 						_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _hqG], true];
 					};
 					_logik setVariable ["wfbe_aicom_garrison", _team];
@@ -287,8 +287,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 			};
 		};
 		if (!_explicitMode) then {
-			_mode = _team getVariable ["wfbe_teammode", ""];
-			_goto = _team getVariable ["wfbe_teamgoto", objNull];
+			_mode = [_team, "wfbe_teammode", ""] Call WFBE_CO_FNC_GroupGetBool;
+			_goto = [_team, "wfbe_teamgoto", objNull] Call WFBE_CO_FNC_GroupGetBool;
 
 			//--- V0.4.2 churn fix: orders are STICKY. Retarget only when the team has no
 			//--- valid enemy-town target, the target resolved (we captured it), or the team
@@ -305,7 +305,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						if ((_goto getVariable "sideID") == _sideID) then {
 							_needs = true;
 						} else {
-							_ord = _team getVariable ["wfbe_aicom_townorder", []];
+							_ord = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
 							if (count _ord < 3 || {(_ord select 0) != _goto}) then {
 								//--- No bookkeeping yet (legacy order) or goto changed under us: book it
 								//--- once without re-issuing waypoints; the stuck check takes over from here.
@@ -341,7 +341,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										//--- (teleport-nudge to nearest clear road node, no player nearby). The strike
 										//--- rides on the order broadcast below; the executor reads wfbe_aicom_unstuck.
 										private ["_strk"];
-										_strk = (_team getVariable ["wfbe_aicom_stuckstrikes", 0]) + 1;
+										_strk = ([_team, "wfbe_aicom_stuckstrikes", 0] Call WFBE_CO_FNC_GroupGetBool) + 1; //--- fix(hunt): G1-safe (nil+1 threw for stuck-since-spawn teams, so the unstick ladder never started)
 										_team setVariable ["wfbe_aicom_stuckstrikes", _strk];
 										diag_log (Format ["STUCKSTAT|v1|%1|%2|stuck|leader=%3|distStart=%4|distTgt=%5|reissue|strike=%6", _sideText, round (time / 60), typeOf _ldr, round (_ldr distance (_ord select 2)), round (_ldr distance _goto), _strk]);
 										//--- WAVE-1 CAUSE-2 TARGET-ABANDON: a team grinding one unreachable/unflippable town forever
@@ -353,7 +353,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										if (_strk > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_ABANDON", 4])) then {
 											private ["_abCd","_abBl","_abKeep"];
 											_abCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
-											_abBl = _team getVariable ["wfbe_aicom_blacklist", []];
+											_abBl = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetBool;
 											//--- prune expired entries + drop any prior entry for _goto, then add a fresh one.
 											_abKeep = [];
 											{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _goto}) then {_abKeep set [count _abKeep, _x]} } forEach _abBl;
@@ -364,10 +364,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, F4b): a TARGET_ABANDON is a failed journey - tally + latch.
 											if (true) then {
 												private ["_fjA","_fjThrA"];
-												_fjA = (_team getVariable ["wfbe_aicom_failedjourneys", 0]) + 1;
+												_fjA = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
 												_team setVariable ["wfbe_aicom_failedjourneys", _fjA];
 												_fjThrA = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
-												if (_fjThrA > 0 && {_fjA >= _fjThrA} && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
+												if (_fjThrA > 0 && {_fjA >= _fjThrA} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 													_team setVariable ["wfbe_aicom_recycle", true, true];
 													diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjA + "|reason=abandon");
 												};
@@ -421,9 +421,9 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											//--- unstuck ladder uses so an uncapturable depot climbs to ABANDON.
 											_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]];
 											private ["_strk"];
-											_strk = (_team getVariable ["wfbe_aicom_stuckstrikes", 0]) + 1;
+											_strk = ([_team, "wfbe_aicom_stuckstrikes", 0] Call WFBE_CO_FNC_GroupGetBool) + 1; //--- fix(hunt): G1-safe (nil+1 threw for stuck-since-spawn teams, so the unstick ladder never started)
 											_team setVariable ["wfbe_aicom_stuckstrikes", _strk];
-											diag_log (Format ["STUCKSTAT|v1|%1|%2|uncap-parked|leader=%3|distTgt=%4|cappasses=%5|strike=%6", _sideText, round (time / 60), typeOf _ldr, round (_ldr distance _goto), (_team getVariable ["wfbe_aicom_cappasses", 0]), _strk]);
+											diag_log (Format ["STUCKSTAT|v1|%1|%2|uncap-parked|leader=%3|distTgt=%4|cappasses=%5|strike=%6", _sideText, round (time / 60), typeOf _ldr, round (_ldr distance _goto), ([_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetBool), _strk]);
 											//--- STALL-ADVANCE FLOOR (Build84, claude-gaming 2026-07-02): the strike ladder above only
 											//--- reaches STUCK_ABANDON after several full 120s windows, and live RPT showed it almost never
 											//--- fires (each fresh order seq reset the phase bookkeeping before the counter accrued) -> a team
@@ -442,7 +442,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											if (_stallSecs > 0 && {(time - _gotoSince) > _stallSecs}) then {
 												private ["_saCd","_saBl","_saKeep"];
 												_saCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
-												_saBl = _team getVariable ["wfbe_aicom_blacklist", []];
+												_saBl = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetBool;
 												_saKeep = [];
 												{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _goto}) then {_saKeep set [count _saKeep, _x]} } forEach _saBl;
 												_saKeep set [count _saKeep, [_goto, time + _saCd]];
@@ -453,10 +453,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 												diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TARGET_ABANDON|team=" + (str _team) + "|town=" + (_goto getVariable ["name","town"]) + "|reason=stall-advance|onGoto=" + str (round (time - _gotoSince)) + "|cooldown=" + str _saCd);
 													//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, F4b): stall-advance abandon is a failed journey - tally + latch.
 													private ["_fjSA","_fjThrSA"];
-													_fjSA = (_team getVariable ["wfbe_aicom_failedjourneys", 0]) + 1;
+													_fjSA = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
 													_team setVariable ["wfbe_aicom_failedjourneys", _fjSA];
 													_fjThrSA = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
-													if (_fjThrSA > 0 && {_fjSA >= _fjThrSA} && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
+													if (_fjThrSA > 0 && {_fjSA >= _fjThrSA} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 														_team setVariable ["wfbe_aicom_recycle", true, true];
 														diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjSA + "|reason=abandon");
 													};
@@ -466,7 +466,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 												//--- ladder below-left; factored to keep both paths identical.
 												private ["_abCd","_abBl","_abKeep"];
 												_abCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
-												_abBl = _team getVariable ["wfbe_aicom_blacklist", []];
+												_abBl = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetBool;
 												_abKeep = [];
 												{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _goto}) then {_abKeep set [count _abKeep, _x]} } forEach _abBl;
 												_abKeep set [count _abKeep, [_goto, time + _abCd]];
@@ -475,10 +475,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 												diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TARGET_ABANDON|team=" + (str _team) + "|town=" + (_goto getVariable ["name","town"]) + "|reason=uncapturable|cooldown=" + str _abCd);
 													//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, F4b): uncapturable abandon is a failed journey - tally + latch.
 													private ["_fjUC","_fjThrUC"];
-													_fjUC = (_team getVariable ["wfbe_aicom_failedjourneys", 0]) + 1;
+													_fjUC = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
 													_team setVariable ["wfbe_aicom_failedjourneys", _fjUC];
 													_fjThrUC = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
-													if (_fjThrUC > 0 && {_fjUC >= _fjThrUC} && {!(_team getVariable ["wfbe_aicom_recycle", false])}) then {
+													if (_fjThrUC > 0 && {_fjUC >= _fjThrUC} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 														_team setVariable ["wfbe_aicom_recycle", true, true];
 														diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjUC + "|reason=abandon");
 													};
@@ -545,10 +545,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 			//--- on Boolean operands, no isEqualType). Guardrail: only SKIPS a retarget - it never leaves a team
 			//--- without its existing live order (the team keeps marching on its current waypoints).
 			if (_needs && {(missionNamespace getVariable ["WFBE_C_AICOM_JOURNEY_COMMIT", 1]) > 0}) then {
-				_jcRecycle = _team getVariable ["wfbe_aicom_recycle", false];
+				_jcRecycle = [_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool;
 				if (!_jcRecycle) then {
-					if (_team getVariable ["wfbe_aicom_dispatch_open", false]) then {
-						_jcOrd = _team getVariable ["wfbe_aicom_townorder", []];
+					if ([_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool) then {
+						_jcOrd = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
 						if (count _jcOrd >= 3) then {
 							_jcTgt = _jcOrd select 0;
 							_jcBc  = _jcOrd select 2;
@@ -637,7 +637,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					//--- if excluding the blacklist would leave NO uncaptured town, clear the blacklist and fall back
 					//--- to the full list so the team always gets a target (never idle). _blTowns gates the spearhead
 					//--- pick too; bootstrap (0-town opening rush) is exempt - it never reaches here.
-					_blList = _team getVariable ["wfbe_aicom_blacklist", []];
+					_blList = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetBool;
 					_blKeep = [];
 					_blTowns = [];
 					{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_blKeep set [count _blKeep, _x]; _blTowns set [count _blTowns, (_x select 0)]} } forEach _blList;
@@ -731,7 +731,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					if (!isNull _target) then {
 						[_team, "towns"] Call SetTeamMoveMode;
 						[_team, _target] Call SetTeamMovePos;
-						if (_team getVariable ["wfbe_aicom_hc", false]) then {
+						if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 							//--- V0.3: HC-resident team - the HC driver issues the local waypoints;
 							//--- server-side waypoint commands on remote groups are unreliable.
 							//--- ROAD-MARCH (task #14/#16): the executor turns a bare wfbe_aicom_order
@@ -745,7 +745,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							_hcLdr    = leader _team;
 							_hcOrigin = getPos _hcLdr;
 							_hcDest   = getPos _target;
-							_hcStrk   = _team getVariable ["wfbe_aicom_stuckstrikes", 0];
+							_hcStrk   = [_team, "wfbe_aicom_stuckstrikes", 0] Call WFBE_CO_FNC_GroupGetBool;
 							//--- Build up to N road-snapped waypoints evenly between origin and dest.
 							//--- Each guess is the straight-line fraction point; we snap it to the nearest
 							//--- real road node (nearRoads) so the convoy follows lanes A2 PFM can drive.
@@ -785,8 +785,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						//--- failure is logged + the team deliberately re-tasked. A NEW target (front rolled, target
 						//--- captured) legitimately resets the clock. The unstuck strike ladder still rides along.
 						private ["_priorOrd","_priorOpen","_dispT0","_sameTgt"];
-						_priorOrd  = _team getVariable ["wfbe_aicom_townorder", []];
-						_priorOpen = _team getVariable ["wfbe_aicom_dispatch_open", false];
+						_priorOrd  = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
+						_priorOpen = [_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool;
 						_sameTgt   = (count _priorOrd >= 1) && {(typeName (_priorOrd select 0)) == "OBJECT"} && {(_priorOrd select 0) == _target};
 						_dispT0    = if (_priorOpen && _sameTgt && {count _priorOrd >= 2}) then {_priorOrd select 1} else {time};
 						_team setVariable ["wfbe_aicom_townorder", [_target, _dispT0, getPos (leader _team)]];

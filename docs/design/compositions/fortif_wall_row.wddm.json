@@ -1,0 +1,22 @@
+{
+  "name": "WFBE_NEURODEF_FORTIF_WALL_ROW",
+  "parentW": 23,
+  "parentD": 2,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "FORTIF PACK (Ray, verbatim gist: 'Fortifications! Not fortresses - useful items like a row of concrete walls'). CONCRETE WALL ROW: 10x Concrete_Wall_EP1 in one solid straight run at the HQ 2.2 m overlap pitch (panel length ENGINE-MEASURED on the offline 1.64 rig: boundingBox dx = 2.574 m -> 0.374 m overlap per seam, no see-through gaps). Total run ~22.4 m of tall solid concrete: bullet cover + ground-level LoS block. Passive - zero gunner-slot children, zero AI. Array centered on the anchor; z=0 everywhere; wall long axis = model X (dir 0).",
+  "objs": [
+    {"cls":"Concrete_Wall_EP1","x":-9.9,"y":0,"z":0,"dir":0,"role":"panel 1 (west end)"},
+    {"cls":"Concrete_Wall_EP1","x":-7.7,"y":0,"z":0,"dir":0,"role":"panel 2"},
+    {"cls":"Concrete_Wall_EP1","x":-5.5,"y":0,"z":0,"dir":0,"role":"panel 3"},
+    {"cls":"Concrete_Wall_EP1","x":-3.3,"y":0,"z":0,"dir":0,"role":"panel 4"},
+    {"cls":"Concrete_Wall_EP1","x":-1.1,"y":0,"z":0,"dir":0,"role":"panel 5 (center-left)"},
+    {"cls":"Concrete_Wall_EP1","x":1.1,"y":0,"z":0,"dir":0,"role":"panel 6 (center-right)"},
+    {"cls":"Concrete_Wall_EP1","x":3.3,"y":0,"z":0,"dir":0,"role":"panel 7"},
+    {"cls":"Concrete_Wall_EP1","x":5.5,"y":0,"z":0,"dir":0,"role":"panel 8"},
+    {"cls":"Concrete_Wall_EP1","x":7.7,"y":0,"z":0,"dir":0,"role":"panel 9"},
+    {"cls":"Concrete_Wall_EP1","x":9.9,"y":0,"z":0,"dir":0,"role":"panel 10 (east end)"}
+  ]
+}

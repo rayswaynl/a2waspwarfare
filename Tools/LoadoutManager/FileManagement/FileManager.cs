@@ -275,6 +275,15 @@ _easaLoadout = _easaLoadout + [
 ";
     }
 
+    // Mission files are CRLF on disk (git text=auto smudges the LF blobs on Windows checkout),
+    // but generated strings mix LF ("\n" built parts) with CRLF (verbatim literals carry the
+    // .cs checkout EOL). Normalize every mission-file write to CRLF so output is deterministic
+    // and the byte-exact --check comparator can pass on a fresh checkout.
+    public static void WriteAllTextCrlf(string _targetPath, string _content)
+    {
+        System.IO.File.WriteAllText(_targetPath, _content.Replace("\r\n", "\n").Replace("\n", "\r\n"));
+    }
+
     public static void InsertGeneratedCodeInToAFile(string _generatedCode, string _targetPath, string _startReplaceFrom, string _endReplaceTo)
     {
         // Read the existing content from the file
@@ -293,7 +302,7 @@ _easaLoadout = _easaLoadout + [
             string newContent = before + _generatedCode + after;
 
             // Replace the old content with the new content
-            System.IO.File.WriteAllText(_targetPath, newContent);
+            WriteAllTextCrlf(_targetPath, newContent);
         }
         else
         {

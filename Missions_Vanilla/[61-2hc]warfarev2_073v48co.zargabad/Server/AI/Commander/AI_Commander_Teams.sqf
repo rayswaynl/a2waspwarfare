@@ -200,7 +200,7 @@ if (_foundedTeams > _target) then {
 	_safeDist = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
 	_pick = grpNull; _pickN = 1e9;
 	{
-		if (!isNull _x && {_x getVariable ["wfbe_aicom_hc", false]} && {!(_x getVariable ["wfbe_aicom_disband", false])}) then {
+		if (!isNull _x && {[_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool} && {!([_x, "wfbe_aicom_disband", false] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- fix(hunt): G1-safe - never-flagged teams returned nil for wfbe_aicom_disband, !nil threw, so the PC-cleanup retire pass never flagged anything
 			_ldr = leader _x;
 			if (!isNull _ldr && {alive _ldr}) then {
 				_nearP = {isPlayer _x && {alive _x} && {(_x distance _ldr) < _safeDist}} count _allUnits;
@@ -817,7 +817,7 @@ if (count _live > 0) then {
 		_d4Target = objNull;
 		private ["_garGrp"];
 		_garGrp = _logik getVariable ["wfbe_aicom_garrison", grpNull];
-		if (!isNull _garGrp) then {_d4Target = _garGrp getVariable ["wfbe_aicom_alloc_target", objNull]};
+		if (!isNull _garGrp) then {_d4Target = [_garGrp, "wfbe_aicom_alloc_target", objNull] Call WFBE_CO_FNC_GroupGetBool};
 		//--- Fallback: first non-null alloc_target across all founded teams.
 		if (isNull _d4Target) then {
 			{ if (!isNull (_x getVariable ["wfbe_aicom_alloc_target", objNull])) then { _d4Target = _x getVariable ["wfbe_aicom_alloc_target", objNull] } } forEach _teams;

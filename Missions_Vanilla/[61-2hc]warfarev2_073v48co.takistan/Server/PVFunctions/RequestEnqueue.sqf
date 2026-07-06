@@ -8,7 +8,7 @@
 	so [LF, LF, LF] runs LF1 -> LF2 -> LF3).
 */
 
-Private ["_side","_id","_logik","_queue","_levels","_enabled","_upgrades","_current","_pending","_lnk","_li","_clink","_linkNeeded","_target","_need","_eff"];
+Private ["_side","_id","_logik","_queue","_levels","_enabled","_upgrades","_current","_pending","_lnk","_li","_clink","_linkNeeded","_target","_need","_eff","_rejected"];
 
 _side = _this select 0;
 _id   = _this select 1;
@@ -24,19 +24,27 @@ if (isNull (_side Call WFBE_CO_FNC_GetCommanderTeam)) exitWith {};
 //--- side's queue. Without the acting player in the payload we cannot fully bind the request to
 //--- the requester (see clientSendChanges), but we can tighten the owning team to be genuinely
 //--- player-led and on _side - mirroring the RequestClaimCommander membership pattern.
+//--- fix(hunt): the three rejections below were exitWith INSIDE the hardening then{} - on A2-OA that exits
+//--- only the block and FALLS THROUGH to the queue-append, making the hardening a logged no-op.
+//--- Latch _rejected instead; the top-scope exitWith after the block aborts the handler for real.
+_rejected = false;
 if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
 	private "_cmdTeam";
 	_cmdTeam = _side Call WFBE_CO_FNC_GetCommanderTeam;
-	if (isNull _cmdTeam) exitWith {
+	if (isNull _cmdTeam) then {
+		_rejected = true;
 		["WARNING", Format ["RequestEnqueue.sqf: rejected - no commander team for side %1.", _side]] Call WFBE_CO_FNC_LogContent;
 	};
-	if (!isPlayer (leader _cmdTeam)) exitWith {
+	if (!_rejected && {!isPlayer (leader _cmdTeam)}) then {
+		_rejected = true;
 		["WARNING", Format ["RequestEnqueue.sqf: rejected - commander team for side %1 is not player-led.", _side]] Call WFBE_CO_FNC_LogContent;
 	};
-	if (side (leader _cmdTeam) != _side) exitWith {
+	if (!_rejected && {side (leader _cmdTeam) != _side}) then {
+		_rejected = true;
 		["WARNING", Format ["RequestEnqueue.sqf: rejected - commander team side mismatch for side %1.", _side]] Call WFBE_CO_FNC_LogContent;
 	};
 };
+if (_rejected) exitWith {};
 
 _enabled = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_ENABLED", str _side];
 if (_id < 0 || _id >= count _enabled) exitWith {};

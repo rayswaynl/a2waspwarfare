@@ -50,7 +50,7 @@ if (playerSide == _side_who_receive_message) then
 	// Send a text and audio message to all clients who are supposed to receive it.
 	systemChat _displayText;
 	//playSound _messageSoundName;
-	playSound [_messageSoundName, true];
+	if (_messageSoundName != "") then {playSound [_messageSoundName, true]}; //--- empty-name guard (livetest 2026-07-06): notable-kill feed passes "" for "text, no sound"; playSound ["",true] pops a "Sound not found" dialog. Empty = silent, not an error.
 	//player say3D _messageSoundName;
 };
 

@@ -1,0 +1,22 @@
+{
+  "name": "WFBE_NEURODEF_FORTIF_WALL_CORNER",
+  "parentW": 13,
+  "parentD": 13,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "FORTIF PACK. CONCRETE WALL CORNER: L-section, two runs of 5x Concrete_Wall_EP1 meeting at 90 degrees. Both runs use the HQ 2.2 m overlap pitch (panel dx = 2.574 m engine-measured -> 0.374 m overlap per seam). Corner point sits at (-5.5,-5.5): the X-run's end panel reaches x=-5.687 which is INSIDE the Y-run's wall slab (x in [-6.0,-5.0], panel dy = 1.01 m) and vice versa, so the two runs interpenetrate at the corner - no see-through corner seam. Bounding box is ~11.4 x 11.4 m centered ~(-0.15,-0.15) from the anchor (centered on the anchor within a panel-half). Passive, z=0, dirs 0 / 90 only.",
+  "objs": [
+    {"cls":"Concrete_Wall_EP1","x":-4.4,"y":-5.5,"z":0,"dir":0,"role":"X-run panel 1 (corner end, interpenetrates Y-run)"},
+    {"cls":"Concrete_Wall_EP1","x":-2.2,"y":-5.5,"z":0,"dir":0,"role":"X-run panel 2"},
+    {"cls":"Concrete_Wall_EP1","x":0,"y":-5.5,"z":0,"dir":0,"role":"X-run panel 3"},
+    {"cls":"Concrete_Wall_EP1","x":2.2,"y":-5.5,"z":0,"dir":0,"role":"X-run panel 4"},
+    {"cls":"Concrete_Wall_EP1","x":4.4,"y":-5.5,"z":0,"dir":0,"role":"X-run panel 5 (open end)"},
+    {"cls":"Concrete_Wall_EP1","x":-5.5,"y":-4.4,"z":0,"dir":90,"role":"Y-run panel 1 (corner end, interpenetrates X-run)"},
+    {"cls":"Concrete_Wall_EP1","x":-5.5,"y":-2.2,"z":0,"dir":90,"role":"Y-run panel 2"},
+    {"cls":"Concrete_Wall_EP1","x":-5.5,"y":0,"z":0,"dir":90,"role":"Y-run panel 3"},
+    {"cls":"Concrete_Wall_EP1","x":-5.5,"y":2.2,"z":0,"dir":90,"role":"Y-run panel 4"},
+    {"cls":"Concrete_Wall_EP1","x":-5.5,"y":4.4,"z":0,"dir":90,"role":"Y-run panel 5 (open end)"}
+  ]
+}

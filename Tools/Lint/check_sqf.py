@@ -45,6 +45,7 @@ A3_TRAPS = (
     "selectRandomWeighted",
     "regexFind",
     "remoteExecCall",
+    "nearestTerrainObjects",
     # NOTE: bare "insert" excluded. A3_TRAPS matching uses word-boundary regex
     # on comment/string-masked text (safe), but "insert" appears in plain English
     # comments too frequently to avoid noise.
