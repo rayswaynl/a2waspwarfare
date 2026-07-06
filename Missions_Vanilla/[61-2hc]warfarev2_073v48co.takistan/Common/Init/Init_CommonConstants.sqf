@@ -1557,6 +1557,7 @@ if (WF_A2_Vanilla) then {
 		WFBE_C_BASE_COIN_DISTANCE_MIN = 100;
 		WFBE_C_BASE_COIN_GRADIENT_MAX = 4;
 };
+	if (isNil "WFBE_C_COIN_POLL_SLEEP") then {WFBE_C_COIN_POLL_SLEEP = 0.1}; //--- Seconds between CoIn menu affordability/commanding-menu polls. 0.1 keeps the UI responsive while cutting wake-ups 10x from the legacy 0.01.
 
 //--- Towns.
 	if (isNil "WFBE_C_TOWNS_AMOUNT") then {WFBE_C_TOWNS_AMOUNT = 7}; //--- Amount of towns (0: Very small, 1: Small, 2: Medium, 3: Large, 4: Full).
