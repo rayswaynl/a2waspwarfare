@@ -189,7 +189,7 @@ already correctly operating from CIV.
 **Could serialized launch + readiness check replace the kill/relaunch?** Yes. If the goal
 is only to ensure both HCs are alive and on CIV before players join, then:
 1. Launch HC1, wait for `HCSIDE|v1|reseat|...|sideNow=CIV` in the RPT (or wait a fixed
-   interval knowing the reseat finishes within ~65 s).
+   interval knowing the reseat finishes within ~80 s worst-case (hcInitDeadline 20 s + bounded 60 s reseat loop)).
 2. Launch HC2.
 3. No kill/relaunch needed.
 
@@ -221,7 +221,7 @@ lobby seating.
 ```
 Engine allocates slot at connect time → always picks lowest-id free PLAY CDG slot.
 Lowest-id PLAY CDG in this mission is id=229 (WEST FR_Miles leader).
-forceHeadlessClient=1 on the CIV slot (id=268) is not honored by A2 OA 1.64 -client.
+forceHeadlessClient=1 on a CIV test slot was not honored by A2 OA 1.64 -client (MAGNET-HANDOFF worktree experiment; the live mission.sqm contains no forceHeadlessClient slots).
 No engine mechanism can reserve a specific slot for an HC before it connects.
 ```
 
@@ -229,7 +229,7 @@ The consequence is not a functional failure. The mission's Init_HC.sqf reseat-to
 reliably moves the HC off WEST and the server's `connected-hc` handler registers the correct
 CIV group. The only real costs are:
 1. One WEST lobby slot is cosmetically burned (HC shows up in BLUFOR scoreboard briefly).
-2. A WEST group with no players exists for the ~65 s reseat window, injecting a ghost team
+2. A WEST group with no players exists for the ~80 s worst-case reseat window (hcInitDeadline 20 s + bounded 60 s reseat loop), injecting a ghost team
    into team-balance math and supply-stagnation timers.
 3. The B746 BAIL line appears in the server RPT for HC-2 (enrollment resolver runs before
    the HC is registered, bails, recovers via re-announce).
@@ -315,7 +315,7 @@ telemetry will show whether the HC grabbed CIV natively.
 
 **Risk assessment:**
 - If the HC lands on CIV natively: reseat is a no-op (already civilian), the 1-slot WEST
-  burn is eliminated, B746 BAIL disappears, and the ghost WEST team for 65 s is gone.
+  burn is eliminated, B746 BAIL disappears, and the ghost WEST team for ~80 s worst-case is gone.
 - If a human lands on CIV: they spawn as a civilian with no warfare team — the existing
   enrollment guard bails them harmlessly (no `wfbe_side` on the CIV group). They see an
   error and rejoin on a WEST/EAST slot.
@@ -329,35 +329,39 @@ is updated accordingly.
 owner approval of the human-landing-on-CIV risk before proceeding. This is an **options PR
 for the owner** so he can decide.
 
-### 7.B: Name-based HC early-exit in enrollment resolver
+### 7.B: Stamp-only HC guard (HCGUARD name check removed)
 
-**Files to edit:**
+**Files edited:**
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnPlayerConnected.sqf`
+- (mirrors: TK, ZG)
 
-**Change (correctness fix, no flag required):** After the `local player` check at line 19
-of `origin/claude/build84-cmdcon36` (before the enrollment resolver), add:
+**Change applied (correctness fix, no flag required):** The name-based HCGUARD block was
+**removed**. The B761 stamp-based guard (`WFBE_HEADLESS_<uid>`) is the sole HC-identification
+mechanism. The guard comment was updated to state this explicitly.
 
-```sqf
-//--- HC name guard: known headless client names never run the enrollment resolver.
-//--- WFBE_HEADLESS_<uid> may not be set yet (HC re-announces after reseat), so we also
-//--- gate on the known name list used throughout the mission. This stops the B746 BAIL
-//--- noise for HC-2 that appears while the HC is still mid-reseat.
-if (_name in ["HC-AI-Control-1", "HC-AI-Control-2", "HC"]) exitWith {
-    diag_log Format ["[WFBE][HCGUARD CONNECT] skip enrollment for known HC [%1] [%2].", _name, _uid];
-};
-```
+**Why the name guard was wrong:**
+A human player named "HC" (or any of the three HC names) would have hit the `exitWith` at
+the HCGUARD, skipped enrollment entirely, and been lobby-stuck indefinitely. Player names
+are user-set and cannot serve as an authentication signal.
 
-This is safe because:
-1. The known-HC names are only used by headless clients in this deployment.
-2. A human impersonating one of these names would be denied enrollment (stuck in lobby),
-   but `-name` is not a spoofable auth vector in ArmA's dedicated-server trust model.
-3. The `connected-hc` handler in `Server_HandleSpecial.sqf` is the authoritative HC
-   registration path; the enrollment resolver adds nothing for HCs.
-4. The B761 check in the cutmap (`WFBE_HEADLESS_<uid>` nil-check) is the comprehensive
-   guard; this name-based guard is a belt-and-suspenders complement that fires even before
-   the registry is populated.
+**Why the stamp-only approach is correct:**
+`WFBE_HEADLESS_<uid>` is written server-side only (Server_HandleSpecial, `connected-hc` PVF
+handler). No client-side action can set it. A human with any name cannot match this condition.
 
-**Human enrollment flow is unchanged** — human players are never in the known-HC name list.
+**Human enrollment walk (name="HC", any uid):**
+1. `__SERVER__` / empty-uid / `local player` check → false (human client, remote). Continue.
+2. B761 stamp check: `WFBE_HEADLESS_<uid>` nil → false (no stamp for humans). Continue.
+3. Full enrollment resolver runs. Team found. Human enrolls normally.
+
+**HC path (stamped, post connected-hc):**
+1. `__SERVER__` check → false. Continue.
+2. B761 stamp check: `WFBE_HEADLESS_<uid>` set → `exitWith` fires. BAIL loop never runs.
+
+**Pre-stamp HC window (~0–80 s after boot):** HC connects, stamp not yet set, resolver runs,
+bails (CIV group has no `wfbe_side`), re-arms up to 3×. After `connected-hc` fires and stamp
+lands, subsequent connects (e.g., round-restart) exit cleanly at B761. This is unchanged
+behavior — the HCGUARD did not improve this window because it only fired for the 3 hard-coded
+names, and the real BAIL was already happening for HC-2 before the name check mattered.
 
 ---
 
