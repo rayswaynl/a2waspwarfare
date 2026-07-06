@@ -203,7 +203,7 @@ MATCH|v1|START|world=<worldName>|build=<buildId>|towns=<townsActiveMax>|maxPlaye
 | Field | Source | Notes |
 |-------|--------|-------|
 | `world` | `worldName` | Terrain string, e.g. `chernarus`, `takistan`, `zargabad`. |
-| `build` | `WF_RELEASE_MARKER` / `"build89-cmdcon44"` | Build identifier from `initJIPCompatible.sqf`. |
+| `build` | `"build89-cmdcon44"` (pipe-free literal) | Short build-id token; the full `WF_RELEASE_MARKER` string is not used here because it contains pipe characters that would shatter pipe-split parsers. |
 | `towns` | `WFBE_C_TOWNS_ACTIVE_MAX` | Configured max active towns for this match. |
 | `maxPlayers` | `WF_MAXPLAYERS` | Lobby player slot count. |
 | `aiEnabled` | `WFBE_C_AI_COMMANDER_ENABLED` | Whether AI commander is enabled. |
@@ -218,8 +218,10 @@ MATCH|v1|START|world=<worldName>|build=<buildId>|towns=<townsActiveMax>|maxPlaye
 ### MATCH|v1|END|
 
 Emitted exactly once per match from `Server/FSM/server_victory_threeway.sqf`, immediately
-after the `WASPSTAT|ROUNDEND` line. Reuses values already computed in the victory block —
-no recomputation.
+after the `WASPSTAT|ROUNDEND` line (or directly after `WFBE_GameOver = true` when
+`WFBE_C_STATLOG = 0`). `winner` is reused from the victory block; `durationSec` and
+town counts are recomputed independently so `END` is always correct regardless of
+`WFBE_C_STATLOG`.
 
 ```
 MATCH|v1|END|winner=<winSide>|durationSec=<durationSec>|world=<worldName>|townsW=<townsW>|townsE=<townsE>|townsG=<townsG>|casW=<casW>|casE=<casE>|vehLostW=<vehLostW>|vehLostE=<vehLostE>|players=<players>|totalTowns=<totalTowns>

@@ -194,13 +194,11 @@ if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 	_mtGuer        = missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0];
 	_mtNaval       = missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 0];
 	_mtOilfield    = missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 0];
-	//--- Build id sourced from the same WASPRELEASE candidate string (initJIPCompatible.sqf line 40).
+	//--- Build id: pipe-free short token (same token WASPSCALE uses); avoids the full
+	//--- WF_RELEASE_MARKER string which contains pipe chars that would shatter pipe-split parsers.
 	_mtBuild       = "build89-cmdcon44";
-	#ifdef WF_RELEASE_MARKER
-	_mtBuild = WF_RELEASE_MARKER;
-	#endif
 	diag_log ("MATCH|v1|START|world=" + worldName
-		+ "|build=" + str _mtBuild
+		+ "|build=" + _mtBuild
 		+ "|towns=" + str _mtStartTowns
 		+ "|maxPlayers=" + str _mtMaxPlayers
 		+ "|aiEnabled=" + str _mtAiEnabled

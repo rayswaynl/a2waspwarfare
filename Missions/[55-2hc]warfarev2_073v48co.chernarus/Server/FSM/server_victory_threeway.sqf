@@ -234,11 +234,12 @@ while {!gameOver} do {
 					diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|ROUNDEND|" + str _winSide + "|" + str _aicomRoundSec + "|" + worldName);
 				};
 
-				//--- MATCH|v1|END|: single match-facts summary for Stats V2. Reuses the values already
-				//--- computed above (_winSide, _aicomRoundSec, per-side AICOMFINAL data). Gated on
-				//--- WFBE_C_MATCH_TELEMETRY (default 1). Zero recomputation: all fields are local vars.
+				//--- MATCH|v1|END|: single match-facts summary for Stats V2. _winSide reused from
+				//--- the victory block; durationSec and town counts are recomputed independently
+				//--- (so END is correct regardless of WFBE_C_STATLOG). Gated on WFBE_C_MATCH_TELEMETRY (default 1).
 				if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
-					private ["_meWTowns","_meETowns","_meGTowns","_meWCas","_meECas","_meWVeh","_meEVeh","_mePlayers","_meWLogic","_meELogic","_meWSnap","_meESnap","_meSnapOk"];
+					private ["_meWTowns","_meETowns","_meGTowns","_meWCas","_meECas","_meWVeh","_meEVeh","_mePlayers","_meDurationSec"];
+					_meDurationSec = round(time);
 					_meWTowns  = west  Call GetTownsHeld;
 					_meETowns  = east  Call GetTownsHeld;
 					_meGTowns  = resistance Call GetTownsHeld;
@@ -248,7 +249,7 @@ while {!gameOver} do {
 					_meEVeh    = WF_Logic getVariable ["EASTVehiclesLost", 0];
 					_mePlayers = { isPlayer _x } count playableUnits;
 					diag_log ("MATCH|v1|END|winner=" + str _winSide
-						+ "|durationSec=" + str _aicomRoundSec
+						+ "|durationSec=" + str _meDurationSec
 						+ "|world=" + worldName
 						+ "|townsW=" + str _meWTowns
 						+ "|townsE=" + str _meETowns
@@ -259,7 +260,7 @@ while {!gameOver} do {
 						+ "|vehLostE=" + str _meEVeh
 						+ "|players=" + str _mePlayers
 						+ "|totalTowns=" + str _total);
-					["INFORMATION", Format ["server_victory_threeway.sqf: MATCH|v1|END| emitted - winner=%1 duration=%2s.", str _winSide, _aicomRoundSec]] Call WFBE_CO_FNC_LogContent;
+					["INFORMATION", Format ["server_victory_threeway.sqf: MATCH|v1|END| emitted - winner=%1 duration=%2s.", str _winSide, _meDurationSec]] Call WFBE_CO_FNC_LogContent;
 				};
 
 				[_winSide] call WFBE_CO_FNC_LogGameEnd;
