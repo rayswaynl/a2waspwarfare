@@ -17,11 +17,18 @@ _isHeadless = if !(isNil "isHeadLessClient") then {isHeadLessClient} else {!(has
 if (_isHeadless) then {
 	_hcAllowed = false;
 	if (_script == "CLTFNCHandleSpecial" && {(typeName _parameters) == "ARRAY"} && {(count _parameters) > 0}) then {
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence"]);
+		//--- fix(hunt): cleanup-townai / cleanup-airfield-garrison arrive as nil-destination broadcasts and
+		//--- previously reached the HC ONLY via the fall-through closed below - keep them allowlisted so
+		//--- HC-local delegated units are still torn down on town capture.
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison"]);
 	};
-	if !(_hcAllowed) exitWith {};
-	_exit = false;
+	if (_hcAllowed) then {_exit = false};
 };
+//--- fix(hunt): the old `if !(_hcAllowed) exitWith {}` sat INSIDE the then{} above - it exited only that
+//--- block and FELL THROUGH, and the nil-destination / side-match re-opens below then re-armed _exit=false
+//--- for every broadcast (endgame cameras, irsmoke FX, DashboardAnnounce... all ran on interface-less HCs,
+//--- HCs auto-seat a WEST slot so SIDE-scoped sends matched too). Top-scope exit makes the allowlist real.
+if (_isHeadless && {!_hcAllowed}) exitWith {};
 
 if (isNil '_destination') then {_destination = 0;_exit = false};
 if (typeName(_destination) == 'SIDE') then {if !(isNil "sideJoined") then {if (sideJoined == _destination) then {_exit = false}}};
