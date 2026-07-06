@@ -14,7 +14,13 @@ Cross-PR review the per-PR verifiers structurally couldn't do. 4/5 lenses return
 ## MAJOR 1 — AICOM UNSTUCK vs press (CONFIRMED, stack-level)
 While a team presses the HQ (#726), AssignTowns still sees it as "stuck" on its `alloc_target` town and escalates UNSTUCK tiers; the UNSTUCK Spawn reads the real server order (fist town) and steps/teleports the team **away from the HQ**. Live conflict once flag=1. Inert at flag 0 (no stamps). **Fix:** one guard before the `if (_usTier > 0)` block — `if (!isNil {_team getVariable "wfbe_aicom_decap"}) then {_usTier = 0}`. Dispatched → stacked PR on #726. **This was the gating blocker for enabling flag 1** — after it lands + the targeted sensing test, the stack is enable-ready.
 
-## MAJOR 2 — WFBE_C_KILL_TALLY_DECAL default drift (CONFIRMED, merge-safety)
+## ~~MAJOR 2~~ → NON-ISSUE — KILL_TALLY_DECAL (flags-census agent was WRONG)
+The flags-census agent asserted base=1; the integration agent (which actually READ the base) found base=**0** ("Lane 205 kill-tally GLOW, OFF, Ray pick C 2026-07-04"). I re-verified the base myself: `WFBE_C_KILL_TALLY_DECAL = 0` at `Init_CommonConstants.sqf:1718`. No branch touches it; three-way merge preserves 0. **No drift, no fix needed.** (Textbook verify-recalled-facts: the agent that re-read the source beat the agent that assumed.) The only residual is a stale "default 1" *comment* in Common_AddVehicleMarking.sqf — cosmetic. If you ever WANT the decal glow on, that's a deliberate one-liner, not a merge accident.
+
+## NEW MINOR (found while verifying the #732 fix) — []-sentinel vs !isNil
+The #732 UNSTUCK-guard uses `if (!isNil {_team getVariable "wfbe_aicom_decap"})`, but #726 clears the stamp to `[]` (empty-array broadcast-sentinel, since nil can't network on A2) on re-founded teams — and the hook's OWN validity check (`_pressAct`, line ~940) requires `typeName ARRAY && count >= 2`. So `!isNil` fires for `[]` too → a re-founded, stuck, NON-pressing team would skip the unstuck ladder for ≤1 strategy tick. Narrow + flag-0-inert, but a real inconsistency. **Fix dispatched:** replace the `!isNil` guard with the already-computed authoritative `if (_pressAct)` signal (excludes `[]`, no double read). Updates #732.
+
+## OLD MAJOR 2 text (kept for history) — WFBE_C_KILL_TALLY_DECAL default drift
 7 overnight branch snapshots carry `default=0` for this constant, but `master`/base (merged after those branches' branch-point) holds `default=1`. A careless merge of the constants file could regress the live default 1→0. **Mitigation:** the re-run integration test now explicitly verifies the integrated value stays `1`; the merge runbook must note "when resolving Init_CommonConstants.sqf conflicts, keep base default=1 for KILL_TALLY_DECAL." Not a code fix — a merge-discipline note. NO overnight PR intends to change it (they're stale branch-point snapshots).
 
 ## Client NOTE — marker Source 2 zero-guard
