@@ -875,7 +875,7 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then 
 		['DSHKM_TK_INS_EP1',[-7,-6,0],200]
 	]];
 
-	//--- ARTILLERY PIT (LIGHT, 1 AI) WEST — M119 in an earthen artillery revetment (clear overhead), rear .50 picket, ammo behind cover, bag horseshoe.
+	//--- ARTILLERY PIT (LIGHT, 2 AI) WEST — M119 in an earthen artillery revetment (clear overhead), rear .50 picket, ammo behind cover, bag horseshoe.
 	missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_LIGHT_WEST',[
 		['Land_fort_artillery_nest_EP1',[0,3,0],0],
 		['M119_US_EP1',[0,3,0],0],
@@ -883,7 +883,7 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then 
 		['Land_fort_bagfence_round',[0,-5,0],0]
 	]];
 
-	//--- ARTILLERY PIT (LIGHT, 1 AI) EAST — D-30 in a revetment, rear DShK picket, ammo behind cover, HBarrier horseshoe.
+	//--- ARTILLERY PIT (LIGHT, 2 AI) EAST — D-30 in a revetment, rear DShK picket, ammo behind cover, HBarrier horseshoe.
 	missionNamespace setVariable ['WFBE_NEURODEF_ARTYPOS_LIGHT_EAST',[
 		['Land_fort_artillery_nest_EP1',[0,3,0],0],
 		['D30_TK_EP1',[0,3,0],0],
@@ -929,7 +929,7 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then 
 		['Land_fort_bagfence_round',[5,3,0],0]
 	]];
 
-	//--- MIXED STRONGPOINT (HEAVY, 4 AI) WEST — twin .50 + TOW + rear Stinger + COVERED INFANTRY BUNKER fallback, HBarrier horseshoe, forward wire.
+	//--- MIXED STRONGPOINT (HEAVY, 3 AI) WEST — twin .50 + TOW + COVERED INFANTRY BUNKER fallback (unmanned), HBarrier horseshoe, forward wire.
 	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_HEAVY_WEST',[
 		['M2StaticMG',[-9,3,0],330],
 		['M2StaticMG',[9,3,0],30],
@@ -939,7 +939,7 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then 
 		['Land_fort_bagfence_round',[9,3,0],0]
 	]];
 
-	//--- MIXED STRONGPOINT (HEAVY, 4 AI) EAST — twin DShK + Metis + rear Igla + COVERED INFANTRY BUNKER fallback, HBarrier horseshoe + rear screen, forward traps.
+	//--- MIXED STRONGPOINT (HEAVY, 3 AI) EAST — twin DShK + Metis + COVERED INFANTRY BUNKER fallback (unmanned), HBarrier horseshoe + rear screen, forward traps.
 	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_HEAVY_EAST',[
 		['DSHKM_TK_INS_EP1',[-9,3,0],330],
 		['DSHKM_TK_INS_EP1',[9,3,0],30],
