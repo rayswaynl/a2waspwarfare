@@ -29,15 +29,16 @@ _drone setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';",sid
 processInitCommands;
 
 //--- Warhead: fires on kill ONLY while armed. Battery-expiry and abort paths disarm first
-//--- (fpv_interface.sqf), so a dead battery never gifts a parked bomb. The hull is client-local
-//--- here, so the warhead ammo is created where the vehicle is local.
+//--- (fpv_interface.sqf), so a dead battery never gifts a parked bomb.
+//--- Server-side detonation (SCUD pattern): the Killed EH sends the impact pos to the server;
+//--- KAT_FPVDetonate creates the warhead server-side so damage is globally authoritative.
 _drone addEventHandler ['Killed', {
 	Private ['_d','_p'];
 	_d = _this select 0;
 	if (_d getVariable ['wfbe_fpv_armed', false]) then {
 		_d setVariable ['wfbe_fpv_armed', false];
 		_p = getPos _d;
-		createVehicle [missionNamespace getVariable ['WFBE_C_FPV_DRONE_AMMO', 'R_57mm_HE'], [_p select 0, _p select 1, (_p select 2) + 1], [], 0, 'NONE'];
+		["RequestSpecial", ["fpv-detonate", [_p select 0, _p select 1, (_p select 2) + 1]]] Call WFBE_CO_FNC_SendToServer;
 	};
 }];
 

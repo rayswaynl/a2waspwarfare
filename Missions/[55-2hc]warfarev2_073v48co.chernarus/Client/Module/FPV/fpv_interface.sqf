@@ -76,4 +76,4 @@ if (!isNull _dgrp) then {deleteGroup _dgrp};
 
 WFBE_FPV_Boom = nil;
 WFBE_FPV_Terminate = nil;
-playerFPV = objNull;
+if (playerFPV == _drone) then {playerFPV = objNull};

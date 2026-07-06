@@ -76,6 +76,16 @@ switch (_args select 0) do {
 		_args spawn KAT_FPV;
 	};
 
+	//--- fable/fpv-strike-drone: server-side warhead detonation (Killed EH -> server). SCUD pattern.
+	//--- Payload: ["fpv-detonate", [x,y,z]]. Flag gate inside KAT_FPVDetonate.
+	case "fpv-detonate": {
+		if (!isNil "KAT_FPVDetonate") then {
+			_args spawn KAT_FPVDetonate;
+		} else {
+			["WARNING", "Server_HandleSpecial.sqf: fpv-detonate received but KAT_FPVDetonate is nil."] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+
 	//--- NAVAL HVT: SCUD saturation strike (feat/naval-hvt-objectives).
 	//--- Server validates ownership + cooldown inside KAT_ScudStrike before firing.
 	case "ScudStrike": {
