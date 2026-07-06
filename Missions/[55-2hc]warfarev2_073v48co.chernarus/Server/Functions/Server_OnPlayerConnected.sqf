@@ -28,6 +28,15 @@ if (!isNil {missionNamespace getVariable [Format ["WFBE_HEADLESS_%1", _uid], nil
 	diag_log Format ["[WFBE][B761 CONNECT] skip enrollment resolver for headless client [%1] [%2].", _name, _uid];
 };
 
+//--- HCGUARD (hc-slot-seating 2026-07-06): belt+suspenders name guard so known HC names
+//--- are skipped even before WFBE_HEADLESS_<uid> is stamped (the stamp arrives ~65 s after
+//--- boot, after Init_HC reseat + re-announce; B761 above catches post-stamp connects only).
+//--- HC names are deployment-constants; a human spoofing one would be denied warfare enrollment
+//--- (no wfbe_side stamp) and harmlessly stuck in lobby. A2-OA-1.64-safe: `in` on string array.
+if (_name in ["HC-AI-Control-1", "HC-AI-Control-2", "HC"]) exitWith {
+	diag_log Format ["[WFBE][HCGUARD CONNECT] skip enrollment for known HC name [%1] [%2].", _name, _uid];
+};
+
 //--- We try to get the player and it's group from the playableUnits.
 //--- B74.2.2: was 10 (a 5s ceiling). Widened to 60 (30s) so a JIP seat under heavy-AI / low-server-FPS
 //--- load has time to surface in playableUnits with a resolved getPlayerUID before we bail. 30s matches
