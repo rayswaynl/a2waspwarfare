@@ -453,6 +453,10 @@ if (_isMan) then {
 	_ah6xM134Kit = (_unit == "AH6X_M134");
 	if (_ah6xM134Kit) then {_unit = "AH6X_EP1"};
 
+	//--- fable/east-c130: EASTV_C130J is a SYNTHETIC East buy token (Core_US.sqf registration, Units_CO_RU
+	//--- roster, flag WFBE_C_EAST_C130) remapped to the real hull before createVehicle. Stock livery by design.
+	if (_unit == "EASTV_C130J") then {_unit = "C130J_US_EP1"};
+
 	//--- cmdcon42-i: TK-EASA variant tokens (e.g. "TKV_AH64D_HELLFIRE") are SYNTHETIC buy keys, NOT CfgVehicles
 	//--- classes, so createVehicle on the token would return objNull. Resolve the catalog row (self-gates on
 	//--- worldName + WFBE_C_TK_EASA_ROSTER -> [] on Chernarus), capture the kit, then remap _unit to the real base
@@ -519,6 +523,9 @@ if (_isMan) then {
 		//--- W3: 17 m covers A-10 half-span; override via WFBE_C_AIR_SPAWN_CLEAR_RADIUS.
 		//--- Large fixed-wing (B-1 class) may still overlap at ring step 25.5 m -- document limitation.
 		_clearRad = missionNamespace getVariable ["WFBE_C_AIR_SPAWN_CLEAR_RADIUS", 17];
+		//--- W2 (fable/east-c130): C-130J hull has ~40 m half-span; bump clearance to 22 m for this spawn only.
+		//--- Does not change the global default (17 m) used for all other airframes.
+		if (_unit == "C130J_US_EP1" && {WFBE_C_AIR_SPAWN_SAFETY > 0}) then {_clearRad = 22};
 		//--- Slope limit: surfaceNormal z=1.0 = flat; 0.97 ~= 14 deg max slope.
 		_slopeThresh = missionNamespace getVariable ["WFBE_C_AIR_SPAWN_SLOPE_MAX", 0.97];
 		//--- Build 9-candidate set: nominal (index 0) + 8-point ring at 1.5x clearance radius.

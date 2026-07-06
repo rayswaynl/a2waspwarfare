@@ -221,6 +221,12 @@ if (IS_mod_map_dependent) then {
     _u = _u		+ ['ibrPRACS_MiG21mol'];
 };
 
+//--- fable/east-c130 (flag WFBE_C_EAST_C130, default 0): captured C-130J token (registered in Core_US.sqf,
+//--- remapped to the real hull in Client_BuildUnit.sqf). AI never founds tokens (no squad template lists them).
+if ((missionNamespace getVariable ["WFBE_C_EAST_C130", 0]) > 0) then {
+	_u = _u		+ ['EASTV_C130J'];
+};
+
 missionNamespace setVariable [Format ["WFBE_%1AIRCRAFTUNITS", _side], _u];
 if (local player) then {['AIRCRAFT', _side, _u] Call Compile preProcessFile 'Client\Init\Init_Faction.sqf'};
 

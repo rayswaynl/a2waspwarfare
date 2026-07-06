@@ -734,4 +734,12 @@
 		default = 0;
 	};
 
+	// East captured C-130J (Aircraft Factory token, default OFF - flag-gated).
+	class WFBE_C_EAST_C130 {
+		title = "East captured C-130J (AWACS-role transport)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+
 };
