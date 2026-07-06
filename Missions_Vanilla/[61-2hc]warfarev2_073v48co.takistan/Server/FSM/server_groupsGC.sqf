@@ -13,6 +13,8 @@ Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWe
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 _auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
 
+//--- Perf phase jitter (2026-07-06): see server_town.sqf. Default 0 = V1.
+if ((missionNamespace getVariable ["WFBE_C_LOOP_PHASE_JITTER", 0]) > 0) then {sleep (random 60)};
 while {!WFBE_GameOver} do {
 	sleep 60;
 

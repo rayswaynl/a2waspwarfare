@@ -33,6 +33,15 @@ for "_j" from 0 to ((count towns) - 1) step 1 do
 	sleep 0.01;
 };
 
+//--- Perf phase jitter (2026-07-06, Ray): the 5 s town sweeps, 60 s groupsGC and 5 s dead collector all
+//--- fire on aligned multiples, so several heavy passes land on the same server frames. A one-time random
+//--- startup offset per loop de-correlates them (same pattern as WFBE_C_AICOM_SUPERVISOR_JITTER). Default 0 = V1.
+if ((missionNamespace getVariable ["WFBE_C_LOOP_PHASE_JITTER", 0]) > 0) then {
+	private "_phaseJitter";
+	_phaseJitter = random 5;
+	["INFORMATION", Format ["server_town.sqf: startup phase jitter %1s (WFBE_C_LOOP_PHASE_JITTER=1).", _phaseJitter]] Call WFBE_CO_FNC_AICOMLog;
+	sleep _phaseJitter;
+};
 while {!WFBE_GameOver} do {
 
 	for "_i" from 0 to ((count towns) - 1) step 1 do
