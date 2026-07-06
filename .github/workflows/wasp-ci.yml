@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - claude/build84-cmdcon36
+      - master
   workflow_dispatch:
 
 permissions:
@@ -58,11 +59,28 @@ jobs:
         run: |
           dotnet build Tools\LoadoutManager\LoadoutManager.csproj -c RELEASE
 
-      - name: SQF lint report
+      - name: SQF lint report (advisory)
         shell: pwsh
         continue-on-error: true
         run: |
-          python Tools\Lint\check_sqf.py --select A3CMD,A3MARKER,A3REVEAL,A3SELECT,A3SORT,A3STRING,GROUPGETVAR,BRACKET --no-classname-index
+          python Tools\Lint\check_sqf.py --no-classname-index
+
+      - name: SQF lint gate (blocking)
+        shell: pwsh
+        # Codes that are currently zero-findings on master and are high-confidence.
+        # A3CMD excluded: 2 known false positives on "class Params" classname.
+        # A3MARKER/GROUPGETVAR/DISABLESER excluded: active findings in codebase.
+        # PUBVARSV excluded: TK/ZG Server_AttackWave.sqf bug pending fix in a
+        # separate branch (fable/fix-attackwave); add PUBVARSV here after merge.
+        run: |
+          python Tools\Lint\check_sqf.py `
+            --select A3HASH,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,NSSETVAR3 `
+            --no-classname-index
+
+      - name: Agent docs sync check
+        shell: pwsh
+        run: |
+          pwsh Tools\Test-AgentDocsSync.ps1
 
       - name: Stringtable reference report
         shell: pwsh
