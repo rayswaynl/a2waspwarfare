@@ -16,13 +16,16 @@
 };
 
 
-"ATTACK_WAVE_DETAILS" addPublicVariableEventHandler {
+//--- Fix: extracted PVEH body into WFBE_SE_FNC_HandleAttackWaveDetails so Server_AttackWave.sqf
+//--- can call it directly. publicVariableServer from the server never fires the server's own PVEH,
+//--- so the handler was dead for both wave-start and wave-end. The PVEH below still calls this
+//--- function so any future client->server ATTACK_WAVE_DETAILS publish also works.
+WFBE_SE_FNC_HandleAttackWaveDetails = {
+    Private ["_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
 
-	private ["_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
-
-	_side = ((_this select 1) select 0);
-	_priceModifier = ((_this select 1) select 1);
-    _attackLength = ((_this select 1) select 2);
+    _side = (_this select 0);
+    _priceModifier = (_this select 1);
+    _attackLength = (_this select 2);
 
     _priceModifierPercentage = round (_priceModifier * 100);
 
@@ -59,4 +62,9 @@
 
         [_side, "LocalizeMessage", ["AttackModeEnd"]] call WFBE_CO_FNC_SendToClients;
     };
+};
+
+"ATTACK_WAVE_DETAILS" addPublicVariableEventHandler {
+    //--- Relay any client->server ATTACK_WAVE_DETAILS publish through the extracted function.
+    (_this select 1) Call WFBE_SE_FNC_HandleAttackWaveDetails;
 };
