@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_aicomConstLog","_arrFast","_arrMed","_arrSlow","_arrDisp","_syncAicomState"];
+private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_aicomConstLog","_arrFast","_arrMed","_arrSlow","_arrDisp","_syncAicomState","_aicomFlushResetOrder"];
 
 _args = _this;
 _side = if (typeName _args == "ARRAY") then {_args select 0} else {_args};
@@ -206,6 +206,36 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- would otherwise let the sink spend the human commander's side supply uncommanded. Keep this raw.
 		_humanSeated = _humanCmd;
 
+		_aicomFlushResetOrder = {
+			private ["_frTeam","_frSideID","_frOrder","_frSeq","_frPos"];
+			_frTeam = _this select 0;
+			_frSideID = _this select 1;
+			_frOrder = _frTeam getVariable "wfbe_aicom_order";
+			_frSeq = if (isNil "_frOrder") then {-1} else {_frOrder select 0};
+			_frPos = getPos (leader _frTeam);
+			_frTeam setVariable ["wfbe_aicom_order", [_frSeq + 1, "towns", _frPos], true];
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_TELEPORT_ORDER_FLUSH", 1]) > 0) then {
+				[_frTeam, _frSeq + 1, _frPos, _frSideID] Spawn {
+					private ["_pfTeam","_pfSeq","_pfOldPos","_pfSideID","_pfOrder","_pfPos"];
+					_pfTeam = _this select 0;
+					_pfSeq = _this select 1;
+					_pfOldPos = _this select 2;
+					_pfSideID = _this select 3;
+					sleep 0.25;
+					if (!isNull _pfTeam) then {
+						_pfPos = getPos (leader _pfTeam);
+						if ((_pfPos distance _pfOldPos) > 5) then {
+							_pfOrder = _pfTeam getVariable "wfbe_aicom_order";
+							if (!isNil "_pfOrder" && {count _pfOrder >= 3} && {(_pfOrder select 0) == _pfSeq} && {(_pfOrder select 1) == "towns"}) then {
+								_pfTeam setVariable ["wfbe_aicom_order", [_pfSeq + 1, "towns", _pfPos], true];
+								diag_log ("AICOMSTAT|v2|EVENT|" + str _pfSideID + "|" + str (round (time / 60)) + "|TELEPORT_ORDER_FLUSH|team=" + (str _pfTeam) + "|seq=" + str (_pfSeq + 1) + "|mode=towns|kind=reset");
+							};
+						};
+					};
+				};
+			};
+		};
+
 		//--- AI COMMANDER LOCK: when lock=1, treat _humanCmd as false so AI keeps full command
 		//--- even if a human occupies the commander slot (eval/night protection).
 		if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
@@ -222,9 +252,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					[_x, "towns"] Call SetTeamMoveMode;
 					_x setVariable ["wfbe_exec_sig", []];
 					if (_x getVariable ["wfbe_aicom_hc", false]) then {
-						_x setVariable ["wfbe_aicom_order",
-							[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
-							 "towns", getPos (leader _x)], true];
+						[_x, _myID] Call _aicomFlushResetOrder;
 					};
 				} } forEach (_logik getVariable ["wfbe_teams", []]);
 					_logik setVariable ["wfbe_aicom_focus", objNull]; _logik setVariable ["wfbe_aicom_focus_t0", -1e9]; //--- AICOM v2 fix (wiki cross-check): clear the commander FOCUS when a human commander leaves so a departed commander's "Move All" doesn't tunnel-vision the auto-AI for the 600s TTL.
@@ -246,9 +274,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				[_x, "towns"] Call SetTeamMoveMode;
 				_x setVariable ["wfbe_exec_sig", []];
 				if (_x getVariable ["wfbe_aicom_hc", false]) then {
-					_x setVariable ["wfbe_aicom_order",
-						[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
-						 "towns", getPos (leader _x)], true];
+					[_x, _myID] Call _aicomFlushResetOrder;
 				};
 			} } forEach (_logik getVariable ["wfbe_teams", []]);
 			_logik setVariable ["wfbe_aicom_focus", objNull];
@@ -410,7 +436,14 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		{ if ((_x getVariable "sideID") == _myID) then {_stipendTowns = _stipendTowns + 1} } forEach towns;
 		_stipendActive = (_stipendTowns == 0) && (time < _stipendMaxTime);
 		if (_stipendActive && !_prevStipendActive) then {
-			["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND started (0 towns, time %2 s < max %3 s).", str _side, round time, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
+			private ["_stipendSupplyFlag","_stipendSupplyState"];
+			_stipendFunds = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_FUNDS", 100];
+			_stipendSupplyFlag = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_SUPPLY_ENABLE", 0];
+			_dual = (missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) == 0;
+			_stipendSupplyOn = _dual && {_stipendSupplyFlag > 0};
+			_stipendSupplyState = if (_stipendSupplyOn) then {"ENABLED"} else {"SUPPRESSED"};
+			["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND started (0 towns, time %2 s < max %3 s; funds/min %4; supply %5, flag %6, dual %7).", str _side, round time, _stipendMaxTime, _stipendFunds, _stipendSupplyState, _stipendSupplyFlag, _dual]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|STIPEND_CONFIG|fundsGrant=" + str _stipendFunds + "|supplyEnable=" + str _stipendSupplyFlag + "|dual=" + str _dual + "|supply=" + _stipendSupplyState);
 			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|start");
 		};
 		if (!_stipendActive && _prevStipendActive) then {
