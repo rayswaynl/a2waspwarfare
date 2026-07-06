@@ -125,8 +125,10 @@ SQF command names are case-insensitive; casing-only diffs are false positives.
 
 1. Run the lint gate:
    ```
-   python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV --no-classname-index
+   python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV --no-classname-index
    ```
+   Per-line suppression: `// noqa: CODE` (e.g. `// noqa: A3CMD`) silences that code on the line;
+   bare `// noqa` silences all. Stale suppressions where no finding fires are reported as `DEADNOQA`.
 2. Verify net bracket delta is zero per edited file (count `{` and `}`, count `[` and `]`).
 3. Confirm flag-off leaves the mission byte-identical to HEAD.
 4. Confirm mirrors ran and TK/ZG templates are restored.
