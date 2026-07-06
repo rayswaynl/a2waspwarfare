@@ -1,4 +1,4 @@
-private ["_side","_sideMatches","_teamSkill","_playerStats","_playerScoreTotal","_playerTimePlayedTotal","_miniSleep"];
+private ["_side","_sideMatches","_teamSkill","_playerStats","_playerScoreTotal","_playerTimePlayedTotal","_miniSleep","_playerScore","_playerSkill"];
 
 _side = _this select 0;
 
@@ -18,6 +18,11 @@ _miniSleep = 0.10;
 		_playerScoreTotal = _playerStats select 0;
 		_playerTimePlayedTotal = _playerStats select 1;
 
+		//--- tp2 (claude): _playerSkill not in original private list; callDatabaseRetrieve's own
+		//--- private ["_playerSkill"] resets it to nil in the shared call scope. Pre-init to 0
+		//--- ensures line 30 (_teamSkill + _playerSkill) never reads nil even if the division
+		//--- path throws (e.g. _playerScoreTotal nil from a DB race on ZG/TK).
+		_playerSkill = 0;
 		//--- task46 (claude): zero-guard the divisor. A never-seen UID returns _playerTimePlayedTotal=0
 		//--- (DB sentinel can also drift to 0) -> div-by-zero. Mirror the [1,1] fallback used in
 		//--- mainLoop.sqf: 0 time means "no playtime yet", so contribute 0 skill rather than crash.

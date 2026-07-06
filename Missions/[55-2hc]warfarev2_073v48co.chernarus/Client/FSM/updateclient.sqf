@@ -145,8 +145,8 @@ while {!gameOver && !_afkKickRequested} do {
 		AFKthresholdExceededName = _namePlayer;
 		publicVariableServer "AFKthresholdExceededName";
 
-		kickAFK = format["%1 Kicked for AFKing", _namePlayer];
-		publicVariable "kickAFK";
+		WFBE_PVF_RequestAFKKick = ["SRVFNCRequestAFKKick", [player]];
+		publicVariableServer "WFBE_PVF_RequestAFKKick";
 	};
 
 	if (_afkShouldBe && !_afkKickRequested) then {

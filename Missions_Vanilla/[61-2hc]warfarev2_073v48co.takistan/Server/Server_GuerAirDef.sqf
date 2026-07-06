@@ -157,7 +157,10 @@ publicVariable "WFBE_ACTIVE_GUER_AIR";
 while {!WFBE_GameOver} do {
 	sleep _interval;
 
-	private ["_now","_kept","_townsWithAir","_aliveCount"];
+	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore"];
+	_perfStart = diag_tickTime;
+	_perfAirBefore = count _defenders;
+	_perfDropsBefore = count _drops;
 	_now = time;
 
 	//=== (1) PRUNE + (2) SELF-CLEAN ==========================================================
@@ -189,7 +192,7 @@ while {!WFBE_GameOver} do {
 
 		//--- Refresh last-enemy timestamp (enemies of GUER = west + east near the town).
 		if (!_drop && !(isNull _eTown)) then {
-			_enemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}} && {(_x distance _eTown) < ((_eTown getVariable ["range", 600]) max 600)}} count allUnits;
+			_enemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _eTown) nearEntities [["Man"], ((_eTown getVariable ["range", 600]) max 600)]);
 			if (_enemiesNow > 0) then { _eLastEnemy = _now; };
 		};
 
@@ -249,7 +252,7 @@ while {!WFBE_GameOver} do {
 
 		//--- Refresh last-enemy timestamp (west + east near the town).
 		if (!_dDrop && !(isNull _dTown)) then {
-			_dEnemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}} && {(_x distance _dTown) < ((_dTown getVariable ["range", 600]) max 600)}} count allUnits;
+			_dEnemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _dTown) nearEntities [["Man"], ((_dTown getVariable ["range", 600]) max 600)]);
 			if (_dEnemiesNow > 0) then { _dLastEnemy = _now; };
 		};
 
@@ -282,7 +285,7 @@ while {!WFBE_GameOver} do {
 			_pos = getPos _town;
 
 			//--- Enemies near the town (west + east, GUER's foes).
-			_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}} && {(_x distance _town) < ((_town getVariable ["range", 600]) max 600)}} count allUnits;
+			_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man"], ((_town getVariable ["range", 600]) max 600)]);
 
 			//--- Enemy AIR near the town (crewed west/east aircraft) - the counter-air trigger. Scanned over
 			//--- `vehicles` (hull objects); side comes from the crewed hull, so an empty parked heli reads CIV
@@ -311,8 +314,8 @@ while {!WFBE_GameOver} do {
 			//---   5. else recon MG (default).
 			_useMi24 = false; _useAA = false; _useAT = false; _useDrop = false;
 			if (_enemyAir > 0 && {(random 1) < _aaChance}) then { _useAA = true; };
-			//--- Ground attack = at least one non-air foe near the town. _enemies counts allUnits (infantry +
-			//--- crewed vehicle occupants) within range, so _enemies > _enemyAir means a genuine GROUND threat
+			//--- Ground attack = at least one non-air foe near the town. _enemies uses a bounded nearby-man
+			//--- scan, so _enemies > _enemyAir means a genuine GROUND threat
 			//--- (not merely aircraft overhead). Require that so a pure air raid never pulls an infantry drop.
 			if (!_useAA
 				&& {_enemies > 0}
@@ -628,4 +631,7 @@ while {!WFBE_GameOver} do {
 	{ if (!isNull (_x select 1) && {alive (_x select 1)}) then { _airList = _airList + [[(_x select 1), WFBE_C_GUER_ID]] } } forEach _defenders;
 	WFBE_ACTIVE_GUER_AIR = _airList;
 	publicVariable "WFBE_ACTIVE_GUER_AIR";
+	if !(isNil "PerformanceAudit_Record") then {
+		["guer_airdef_cycle", diag_tickTime - _perfStart, Format["towns:%1;airBefore:%2;airAfter:%3;dropsBefore:%4;dropsAfter:%5;markers:%6;cap:%7;dropCap:%8", count towns, _perfAirBefore, count _defenders, _perfDropsBefore, count _drops, count _airList, _maxAir, _dropMax], "SERVER"] Call PerformanceAudit_Record;
+	};
 };

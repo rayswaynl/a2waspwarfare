@@ -8,6 +8,22 @@
 
 Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak","_tallyCount"];
 
+if !((typeName _this) in ["ARRAY"]) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (non-array)."] Call WFBE_CO_FNC_LogContent;
+};
+if ((count _this) < 3) exitWith {
+	["WARNING", Format ["RequestOnUnitKilled.sqf: Rejected malformed kill payload (count %1).", count _this]] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName (_this select 0)) in ["OBJECT"]) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (killed is not an object)."] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName (_this select 1)) in ["OBJECT"]) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (killer is not an object)."] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName (_this select 2)) in ["SCALAR"]) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (side id is not scalar)."] Call WFBE_CO_FNC_LogContent;
+};
+
 _killed = _this select 0;
 _killer = _this select 1;
 _killed_side = (_this select 2) Call GetSideFromID;
@@ -233,6 +249,66 @@ if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 	WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
 	_wsk_line = "WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|KILL|" + _wsk_killerUID + "|" + _wsk_victimUID + "|" + _wsk_killerSide + "|" + _wsk_victimSide + "|" + _wsk_weapon + "|" + str _wsk_dist + "|" + _wsk_cat + "|hw=" + _wsk_hw + "|vc=" + _killed_type + "|t=" + str (round time);
 	diag_log _wsk_line;
+};
+
+//--- team-intel-pack NOTABLE-KILL FEED (WFBE_C_NOTABLE_KILL_FEED, default 0).
+//--- Broadcasts a side-wide SideMessage for high-value kills.
+//--- Runs server-side only (SideMessage is server-compiled).
+//--- Guard: killer and killed must be from different sides.
+if ((missionNamespace getVariable ["WFBE_C_NOTABLE_KILL_FEED", 0]) > 0 && {isServer} && {_killer_side != _killed_side}) then {
+	private ["_isNotable","_feedMsg","_throttleKey","_lastFeed","_throttle"];
+	_isNotable = false;
+	_feedMsg   = "";
+
+	//--- Heavy tank: Tank isKindOf (tracks T90, M1A2, BMP3, etc).
+	if (!_isNotable && {_killed isKindOf "Tank"}) then {
+		_isNotable = true;
+		_feedMsg   = Format ["[INTEL] Enemy %1 destroyed!", typeOf _killed];
+	};
+	//--- Attack helicopter or fixed-wing jet.
+	if (!_isNotable && {_killed isKindOf "Helicopter"}) then {
+		_isNotable = true;
+		_feedMsg   = Format ["[INTEL] Enemy helicopter %1 destroyed!", typeOf _killed];
+	};
+	if (!_isNotable && {_killed isKindOf "Plane"}) then {
+		_isNotable = true;
+		_feedMsg   = Format ["[INTEL] Enemy jet %1 destroyed!", typeOf _killed];
+	};
+	//--- HQ or MHQ structure: both the static HQ (Init_Server.sqf:661) and the deployed MHQ
+	//--- vehicle (Construction_HQSite.sqf:83) set wfbe_structure_type = "Headquarters".
+	if (!_isNotable) then {
+		if ((_killed getVariable ["wfbe_structure_type", ""]) == "Headquarters") then {
+			_isNotable = true;
+			_feedMsg   = "[INTEL] Enemy HQ destroyed!";
+		};
+	};
+	//--- Commander unit check intentionally omitted: the commander seat is a player role, not
+	//--- a tagged NPC object (wfbe_iscommander is not set anywhere in the codebase). A player
+	//--- death is always a notable kill but adding a "player killed" text here would fire on
+	//--- every infantry PVP kill, violating the high-value-only intent.
+
+	if (_isNotable && {_feedMsg != ""}) then {
+		//--- Throttle: max 1 notable-kill feed per WFBE_C_NOTABLE_KILL_THROTTLE seconds per killer side.
+		_throttleKey = Format ["WFBE_NOTABLE_LAST_FEED_%1", str _killer_side];
+		_lastFeed    = missionNamespace getVariable [_throttleKey, -999];
+		_throttle    = missionNamespace getVariable ["WFBE_C_NOTABLE_KILL_THROTTLE", 10];
+		if ((time - _lastFeed) >= _throttle) then {
+			missionNamespace setVariable [_throttleKey, time];
+			//--- SideMessage is always Spawn'd (it sleeps for kbTell).
+			//--- Route through VotingForNewCommander/NewIntelAvailable case (no-param path) is not
+			//--- suitable for a dynamic string; use WF_sendMessage (text+sound) for the text display
+			//--- and a separate SideMessage for the radio callout if desired.
+			//--- WF_sendMessage: [text, sound, side, isLocalized].
+			//--- Note (dedicated-server playerSide==sideUnknown path): WF_sendMessage's local
+			//--- "if (playerSide == _side_who_receive_message)" guard in Common_SendMessage.sqf
+			//--- will be false on a dedi (playerSide is sideUnknown), so the server's own
+			//--- systemChat call is skipped. This is harmless: the broadcast fires unconditionally
+			//--- via publicVariable "SEND_MESSAGE" (Common_SendMessage.sqf line 59), so all
+			//--- eligible clients receive the feed message correctly regardless.
+			[_feedMsg, "", _killer_side, false] Call WF_sendMessage;
+			["INFORMATION", Format ["RequestOnUnitKilled.sqf: notable-kill feed: [%1] %2 (%3)", _killer_side, typeOf _killed, _feedMsg]] Call WFBE_CO_FNC_LogContent;
+		};
+	};
 };
 
 if (WF_A2_Vanilla) then { //--- Garbage Collector.

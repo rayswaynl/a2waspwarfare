@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_syncAicomState"];
+private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_aicomConstLog","_arrFast","_arrMed","_arrSlow","_arrDisp","_syncAicomState"];
 
 _args = _this;
 _side = if (typeName _args == "ARRAY") then {_args select 0} else {_args};
@@ -127,6 +127,21 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 		//--- (WFBE_UP_CBRADAR guard kept so the flag is checked only when CBR exists in upgrades.)
 	};
 };
+
+_aicomConstLog = "AICOMSTAT|v2|CONSTANTS|" + (str _side) + "|0" +
+	"|STRATEGY_INTERVAL=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60]) +
+	"|CONCENTRATION=" + str (missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATION", 6]) +
+	"|SPEARHEAD_TOWNS_MAX=" + str (missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 2]) +
+	"|STRIKE_MIN_TOWNS=" + str (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS", 12]) +
+	"|LANE_OFFSET=" + str (missionNamespace getVariable ["WFBE_C_AICOM_LANE_OFFSET", 120]) +
+	"|TEAMS_TARGET=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TEAMS_TARGET", 4]) +
+	"|FUNDS_PER_EXTRA_TEAM=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_FUNDS_PER_EXTRA_TEAM", 15000]) +
+	"|STR_LONE_ALIVE=" + str (missionNamespace getVariable ["WFBE_C_AICOM_STR_LONE_ALIVE", 2]) +
+	"|STR_LONE_FARHQ=" + str (missionNamespace getVariable ["WFBE_C_AICOM_STR_LONE_FARHQ", 1500]) +
+	"|TOPUP_COOLDOWN=" + str (missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_COOLDOWN", 240]) +
+	"|AIR_MAX_TOTAL=" + str (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_TOTAL", 3]) +
+	"|PRODUCE_BATCH=" + str (missionNamespace getVariable ["WFBE_C_AICOM_PRODUCE_BATCH", 3]);
+diag_log _aicomConstLog;
 
 _ltTypes = 0; _ltUp = 0; _ltTown = 0; _ltProd = 0; _ltBase = 0; _ltTeams = 0; _ltStrat = 0; _ltStat = -301; _ltBrief = 0; _ltBaseSell = -1e6; _ltMHQReloc = 0; _ltDisband = 0;
 _ltBeacon = 0; //--- AICOM FORWARD SPAWN-BEACON throttle (Approach A): gated WFBE_C_AICOM_SPAWNBEACON_ENABLE (default 0 = INERT), paced to WFBE_C_AICOM_SPAWNBEACON_INTERVAL.
@@ -481,7 +496,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- human commander (from start, re-armed when a human leaves) before it starts building.
 		//--- Ray 2026-06-28: retire idle rear FOOT teams when mobile force is fielded - runs in EVERY command mode
 		//--- (AI-command OR human-commander); the in-view + safety checks inside the pass protect immersion/safety.
-		if (time - _ltDisband > (missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_INTERVAL", 300])) then {
+		if (time - _ltDisband > (missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_LOWTIER_INTERVAL", 600])) then {
 			if (!isNil "WFBE_SE_FNC_AI_Com_DisbandLowTier") then {(_side) Call WFBE_SE_FNC_AI_Com_DisbandLowTier};
 			_ltDisband = time;
 		};
@@ -611,7 +626,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				};
 			};
 			if ((missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK", 1]) > 0 && {!(_humanSeated && {(missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_HUMAN_OFF", 1]) > 0})}) then {
-				private ["_esFrac","_esCap","_esRich","_esPrevSurge","_esFunds","_esUpg","_esOrder","_esCosts","_esLinks","_esLvls","_esUp","_esOk","_esCur","_esCost","_esLnk","_esLinkNeeded","_esLi","_esClink","_esTgt","_esNeed","_esChosen","_esChosenCur","_esSupply","_esDual"];
+				private ["_esFrac","_esCap","_esRich","_esPrevSurge","_esFunds","_esUpg","_esOrder","_esCosts","_esLinks","_esLvls","_esUp","_esOk","_esCur","_esCost","_esLnk","_esLinkNeeded","_esLi","_esClink","_esTgt","_esNeed","_esChosen","_esChosenCur","_esSupply","_esDual","_esSkipLogKey"];
 				_esFrac = missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_FRAC", 0.85];
 				_esCap  = missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000];
 				_esFunds = (_side) Call GetAICommanderFunds;
@@ -654,9 +669,20 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 							if (_esChosen < 0) then {
 								//--- enabled? (disabled upgrades are never researchable)
 								_esOk = true;
-								if (_esUp < count _esOrder) then {if !(_esOrder select _esUp) then {_esOk = false}};
+								_esCur = _esUpg select _esUp;
+								if (_esUp < count _esOrder) then {
+									if !(_esOrder select _esUp) then {
+										_esOk = false;
+										if (_esUp < count _esLvls && {_esCur < (_esLvls select _esUp)}) then {
+											_esSkipLogKey = Format ["wfbe_aicom_econ_disabled_skip_%1", _esUp];
+											if !(_logik getVariable [_esSkipLogKey, false]) then {
+												_logik setVariable [_esSkipLogKey, true];
+												diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_SINK_DISABLED|id=" + str _esUp + "|cur=" + str _esCur + "|max=" + str (_esLvls select _esUp));
+											};
+										};
+									};
+								};
 								if (_esOk) then {
-									_esCur = _esUpg select _esUp;
 									//--- not maxed?
 									if (_esUp < count _esLvls && {_esCur < (_esLvls select _esUp)}) then {
 										//--- price of THIS level (researching level N+1 costs COSTS select N - the b74 off-by-one fix).
@@ -810,6 +836,17 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		};
 		_logik setVariable [_prevPtKey, _ptFunds];
 
+		//--- Lane 362: per-window assault-arrival latency histogram. AssignTowns bumps counters; this tick emits and resets them.
+		_arrFast = _logik getVariable ["wfbe_aicom_arrival_fast", 0];
+		_arrMed = _logik getVariable ["wfbe_aicom_arrival_med", 0];
+		_arrSlow = _logik getVariable ["wfbe_aicom_arrival_slow", 0];
+		_arrDisp = _logik getVariable ["wfbe_aicom_arrival_dispatched", 0];
+		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|ARRIVAL_BANDS|fast=" + str _arrFast + "|med=" + str _arrMed + "|slow=" + str _arrSlow + "|dispatched=" + str _arrDisp);
+		_logik setVariable ["wfbe_aicom_arrival_fast", 0];
+		_logik setVariable ["wfbe_aicom_arrival_med", 0];
+		_logik setVariable ["wfbe_aicom_arrival_slow", 0];
+		_logik setVariable ["wfbe_aicom_arrival_dispatched", 0];
+
 		_ltStat = time; //--- advance the throttle BEFORE CMDRSTAT so a CMDRSTAT failure could never spam/stall the AICOMSTAT tick
 
 		//--- CMDRSTAT (claude-gaming 2026-06-13): commander-team SERVER-LOCAL vs HC-DELEGATED split +
@@ -898,7 +935,10 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		private ["_pActive"];
 		_pActive = 0;
 		{ if (_x getVariable ["wfbe_active", false]) then {_pActive = _pActive + 1} } forEach towns;
-		diag_log ("SRVPERF|v1|" + str (round (time / 60)) + "|fps=" + str (round (diag_fps)) + "|units=" + str (count allUnits) + "|groups=" + str (count allGroups) + "|veh=" + str (count vehicles) + "|dead=" + str (count allDead) + "|activeTowns=" + str _pActive);
+		//--- TELEM HOST V2 (tp4): when flag=1 this emitter is suppressed; groupsGC is the host.
+		if ((missionNamespace getVariable ["WFBE_C_TELEM_HOST_V2", 0]) < 1) then {
+			diag_log ("SRVPERF|v1|" + str (round (time / 60)) + "|fps=" + str (round (diag_fps)) + "|units=" + str (count allUnits) + "|groups=" + str (count allGroups) + "|veh=" + str (count vehicles) + "|dead=" + str (count allDead) + "|activeTowns=" + str _pActive);
+		};
 
 		//--- WASPSCALE (claude-gaming 2026-07-01): perf/scope tracker - one allUnits pass per 5-min window (reuses this
 		//--- SRVPERF throttle, zero per-frame cost) buckets live AI by side + counts humans, groups, fps, tier and map.
@@ -997,29 +1037,32 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		};
 		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps) + "|townsW=" + str _townsW + "|townsE=" + str _townsE + "|townsG=" + str _townsG + "|postW=" + _postW + "|postE=" + _postE + "|disp=" + str _disp + "|arrv=" + str _arrv + "|recov=" + str _recov + "|mhqrel=" + str _mhqrel + "|patr=" + str _patrN + "|sort=" + str _sortN + "|telW=" + str _telW + "|telE=" + str _telE + "|terr=" + _terr + "|fpsmin=" + str (round _fpsMin) + "|hc2fps=" + str (round _hc2Fps) + "|grpW=" + str _grpW + "|grpE=" + str _grpE + "|oilOwn=" + _oilOwnKV + "|oilInc=" + _oilIncKV + "|capAI=" + str (([(missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]]), _tier] call { private ["_arr","_ti"]; _arr = (_this select 0); _ti = (_this select 1) max 0; if (_ti > ((count _arr) - 1)) then {_ti = (count _arr) - 1}; if ((count _arr) < 1) then {-1} else {_arr select _ti} })) + "|capTeams=" + str (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 10]) + "|capMerge=" + str (missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_TARGET", 5]));
 
-		//--- GRPBUDGET (claude-gaming 2026-06-13): per-side group count vs Arma 2 OA's 144/side HARD CAP - the
-		//--- "group budget" alarm. Near the cap the AI commander cannot found teams (economy stalls on unspent
-		//--- funds) and spawns can SILENTLY FAIL. Server-global, shares the SRVPERF 300s throttle. Keep the
-		//--- normal GRPBUDGET line every window, but latch the loud WARN so a server that sits near cap for
-		//--- hours does not print the same alarm forever; RECOVER clears the latch when counts drop again.
-		private ["_gbW","_gbE","_gbG","_gbMax","_gbWarn"];
-		_gbW = missionNamespace getVariable ["wfbe_grpcnt_west", -1]; if (_gbW < 0) then { _gbW = {side _x == west} count allGroups; }; //--- B7: groupsGC cache + fallback
-		_gbE = missionNamespace getVariable ["wfbe_grpcnt_east", -1]; if (_gbE < 0) then { _gbE = {side _x == east} count allGroups; };
-		_gbG = missionNamespace getVariable ["wfbe_grpcnt_guer", -1]; if (_gbG < 0) then { _gbG = {side _x == resistance} count allGroups; };
-		_gbMax = _gbW max _gbE max _gbG;
-		diag_log ("GRPBUDGET|v1|" + str (round (time / 60)) + "|west=" + str _gbW + "|east=" + str _gbE + "|guer=" + str _gbG + "|cap=144");
-		_gbWarn = missionNamespace getVariable ["WFBE_C_GROUP_BUDGET_WARN", 125];
-		if (_gbMax >= _gbWarn) then {
-			if ((missionNamespace getVariable ["wfbe_grpbudget_warn_active", 0]) < 1) then {
-				missionNamespace setVariable ["wfbe_grpbudget_warn_active", 1];
-				diag_log ("GRPBUDGET|v1|WARN|" + str (round (time / 60)) + "|near-cap max=" + str _gbMax + "/144 warn=" + str _gbWarn + " (west=" + str _gbW + " east=" + str _gbE + " guer=" + str _gbG + ")");
+		//--- TELEM HOST V2 (tp4): when flag=1 this emitter is suppressed; groupsGC is the host.
+		if ((missionNamespace getVariable ["WFBE_C_TELEM_HOST_V2", 0]) < 1) then {
+			//--- GRPBUDGET (claude-gaming 2026-06-13): per-side group count vs Arma 2 OA's 144/side HARD CAP - the
+			//--- "group budget" alarm. Near the cap the AI commander cannot found teams (economy stalls on unspent
+			//--- funds) and spawns can SILENTLY FAIL. Server-global, shares the SRVPERF 300s throttle. Keep the
+			//--- normal GRPBUDGET line every window, but latch the loud WARN so a server that sits near cap for
+			//--- hours does not print the same alarm forever; RECOVER clears the latch when counts drop again.
+			private ["_gbW","_gbE","_gbG","_gbMax","_gbWarn"];
+			_gbW = missionNamespace getVariable ["wfbe_grpcnt_west", -1]; if (_gbW < 0) then { _gbW = {side _x == west} count allGroups; }; //--- B7: groupsGC cache + fallback
+			_gbE = missionNamespace getVariable ["wfbe_grpcnt_east", -1]; if (_gbE < 0) then { _gbE = {side _x == east} count allGroups; };
+			_gbG = missionNamespace getVariable ["wfbe_grpcnt_guer", -1]; if (_gbG < 0) then { _gbG = {side _x == resistance} count allGroups; };
+			_gbMax = _gbW max _gbE max _gbG;
+			diag_log ("GRPBUDGET|v1|" + str (round (time / 60)) + "|west=" + str _gbW + "|east=" + str _gbE + "|guer=" + str _gbG + "|cap=144");
+			_gbWarn = missionNamespace getVariable ["WFBE_C_GROUP_BUDGET_WARN", 125];
+			if (_gbMax >= _gbWarn) then {
+				if ((missionNamespace getVariable ["wfbe_grpbudget_warn_active", 0]) < 1) then {
+					missionNamespace setVariable ["wfbe_grpbudget_warn_active", 1];
+					diag_log ("GRPBUDGET|v1|WARN|" + str (round (time / 60)) + "|near-cap max=" + str _gbMax + "/144 warn=" + str _gbWarn + " (west=" + str _gbW + " east=" + str _gbE + " guer=" + str _gbG + ")");
+				};
+			} else {
+				if ((missionNamespace getVariable ["wfbe_grpbudget_warn_active", 0]) > 0) then {
+					missionNamespace setVariable ["wfbe_grpbudget_warn_active", 0];
+					diag_log ("GRPBUDGET|v1|RECOVER|" + str (round (time / 60)) + "|max=" + str _gbMax + "/144 warn=" + str _gbWarn + " (west=" + str _gbW + " east=" + str _gbE + " guer=" + str _gbG + ")");
+				};
 			};
-		} else {
-			if ((missionNamespace getVariable ["wfbe_grpbudget_warn_active", 0]) > 0) then {
-				missionNamespace setVariable ["wfbe_grpbudget_warn_active", 0];
-				diag_log ("GRPBUDGET|v1|RECOVER|" + str (round (time / 60)) + "|max=" + str _gbMax + "/144 warn=" + str _gbWarn + " (west=" + str _gbW + " east=" + str _gbE + " guer=" + str _gbG + ")");
-			};
-		};
+		}; //--- end WFBE_C_TELEM_HOST_V2 < 1 guard (GRPBUDGET)
 
 		//--- HCDELEG (claude-gaming 2026-06-15): SERVER-AUTHORITATIVE per-HC owned-unit load + imbalance
 		//--- ratio (task #34). CMDRSTAT only has the AGGREGATE hcTeams count; HCSTAT|v1 is HC-SELF-REPORTED

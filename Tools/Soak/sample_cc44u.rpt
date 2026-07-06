@@ -1,0 +1,34 @@
+MISSINIT cc44u soak fixture - real AICOM2 grammar (AI_Commander_Decapitate.sqf + Common_RunCommanderTeam.sqf)
+AICOM2|v1|SNAP|West|1|myTowns=3|enTowns=2|neut=5|total=10|myStr=24|enStr=20|myEff=30|enEff=24|funds=12000|supply=0|players=4|myPlayers=2|teams=3|enHQ=alive
+AICOM2|v1|SNAP|East|1|myTowns=2|enTowns=3|neut=5|total=10|myStr=20|enStr=24|myEff=24|enEff=30|funds=9000|supply=0|players=4|myPlayers=2|teams=2|enHQ=alive
+AICOM2|v1|ALLOC|West|1|fist=1|primary=Vybor|src=auto|harassTo=Elektro|assigned=2|harass=1|expand=0|teams=3|myTowns=3|expandFirst=false|concentrate=true
+AICOM2|v1|ALLOC|East|1|fist=1|primary=Cherno|src=auto|harassTo=none|assigned=2|harass=0|expand=1|teams=2|myTowns=2|expandFirst=false|concentrate=false
+AICOM2|v1|FISTPOOL|West|2|soft=3|neutInclGuer=5|using=soft
+AICOM2|v1|SNAP|West|2|myTowns=4|enTowns=2|neut=4|total=10|myStr=26|enStr=19|myEff=34|enEff=23|funds=11000|supply=0|players=4|myPlayers=2|teams=3|enHQ=alive
+AICOM2|v1|SNAP|East|2|myTowns=2|enTowns=4|neut=4|total=10|myStr=19|enStr=26|myEff=23|enEff=34|funds=8500|supply=0|players=4|myPlayers=2|teams=2|enHQ=alive
+AICOM2|v1|ALLOC|West|2|fist=1|primary=Vybor|src=auto|harassTo=Elektro|assigned=3|harass=0|expand=0|teams=3|myTowns=4|expandFirst=false|concentrate=true
+AICOM2|v1|ALLOC|East|2|fist=1|primary=Cherno|src=FOCUS|harassTo=none|assigned=2|harass=0|expand=0|teams=2|myTowns=2|expandFirst=false|concentrate=true
+AICOM2|v1|DECAP|West|3|state=IDLE|streak=0|committed=0|myEff=34|enEff=23|enTowns=2|myTowns=4|enHQ=alive|inRange=0|roll=0|sensed=0|stamped=0|flag=0
+AICOM2|v1|DECAP|East|3|state=IDLE|streak=0|committed=0|myEff=23|enEff=34|enTowns=4|myTowns=2|enHQ=alive|inRange=0|roll=0|sensed=0|stamped=0|flag=0
+AICOM2|v1|SNAP|West|4|myTowns=5|enTowns=2|neut=3|total=10|myStr=28|enStr=18|myEff=38|enEff=22|funds=14000|supply=0|players=4|myPlayers=2|teams=4|enHQ=alive
+AICOM2|v1|SNAP|East|4|myTowns=2|enTowns=5|neut=3|total=10|myStr=18|enStr=28|myEff=22|enEff=38|funds=7000|supply=0|players=4|myPlayers=2|teams=2|enHQ=alive
+AICOM2|v1|DECAP|West|4|state=ARMING|streak=1|committed=0|myEff=38|enEff=22|enTowns=2|myTowns=5|enHQ=alive|inRange=2|roll=1|sensed=1|stamped=0|flag=0
+AICOM2|v1|DECAP|East|4|state=IDLE|streak=0|committed=0|myEff=22|enEff=38|enTowns=5|myTowns=2|enHQ=alive|inRange=0|roll=0|sensed=0|stamped=0|flag=0
+AICOM2|v1|ALLOC|West|4|fist=1|primary=Vybor|src=auto|harassTo=Elektro|assigned=3|harass=1|expand=0|teams=4|myTowns=5|expandFirst=false|concentrate=true
+AICOM2|v1|ALLOC|East|4|fist=1|primary=Cherno|src=auto|harassTo=none|assigned=2|harass=0|expand=0|teams=2|myTowns=2|expandFirst=false|concentrate=true
+AICOM2|v1|DECAP|West|5|state=ARMING|streak=2|committed=0|myEff=38|enEff=22|enTowns=2|myTowns=5|enHQ=alive|inRange=3|roll=0|sensed=1|stamped=0|flag=0
+AICOM2|v1|DECAP|East|5|state=IDLE|streak=0|committed=0|myEff=22|enEff=38|enTowns=5|myTowns=2|enHQ=alive|inRange=0|roll=0|sensed=0|stamped=0|flag=0
+AICOMSTAT|v1|POSTURE|WEST|5|ATTACK|myTowns=5|enTowns=2|myStr=28|enStr=18
+AICOMSTAT|v1|POSTURE|EAST|5|DEFEND|myTowns=2|enTowns=5|myStr=18|enStr=28
+AICOM2|v1|DECAP|West|6|state=COMMITTED|streak=3|committed=1|myEff=38|enEff=22|enTowns=2|myTowns=5|enHQ=alive|inRange=4|roll=1|sensed=1|stamped=2|flag=1
+AICOM2|v1|DECAP|East|6|state=IDLE|streak=0|committed=0|myEff=22|enEff=38|enTowns=5|myTowns=2|enHQ=alive|inRange=0|roll=0|sensed=0|stamped=0|flag=0
+AICOM2|v1|SNAP|West|7|myTowns=6|enTowns=1|neut=3|total=10|myStr=30|enStr=14|myEff=42|enEff=16|funds=16000|supply=0|players=4|myPlayers=2|teams=4|enHQ=alive
+AICOM2|v1|SNAP|East|7|myTowns=1|enTowns=6|neut=3|total=10|myStr=14|enStr=30|myEff=16|enEff=42|funds=5000|supply=0|players=4|myPlayers=2|teams=2|enHQ=alive
+AICOM2|v1|DECAP|West|7|state=COMMITTED|streak=3|committed=1|myEff=42|enEff=16|enTowns=1|myTowns=6|enHQ=alive|inRange=5|roll=1|sensed=1|stamped=3|flag=1
+AICOM2|v1|DECAP|East|7|state=IDLE|streak=0|committed=0|myEff=16|enEff=42|enTowns=6|myTowns=1|enHQ=alive|inRange=0|roll=0|sensed=0|stamped=0|flag=0
+AICOM2|v1|DECAP|West|8|PRESS|team=Group_0x1234abcd|dist=450
+AICOM2|v1|ORDER|war-room-task|West|7|mode=strike|goto=[2400, 1800]
+WASPSTAT|v1|1|CAPTURE|Vybor|0|1|t=420
+WASPSTAT|v1|2|KILL|||WEST|EAST|BMP2|300|cannon|hw=|vc=|t=450
+WASPSTAT|v1|3|ROUNDEND|WEST|2580|Chernarus
+WASPSCALE|v2|7|tier=2|players=4|AI_W=80|AI_E=60|AI_GUER=15|AI_TOT=155|groups=40|fps=38|map=Chernarus|build=cc44u|hc_fps=45

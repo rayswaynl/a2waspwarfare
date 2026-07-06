@@ -128,7 +128,7 @@ while {!WFBE_GameOver} do {
 				if(_town_supply_time && _sideID != WFBE_C_UNKNOWN_ID && !_skipTimeSupply) then
 				{
 
-					if (_activeEnemies == 0 && (_supplyValue < _maxSupplyValue) && _sideID != RESISTANCEID) then
+					if (_activeEnemies == 0 && (_supplyValue < _maxSupplyValue) && _sideID != WFBE_C_GUER_ID) then
 					{
 
 						if (_isTimeToUpdateSuppluys) then {
@@ -307,6 +307,11 @@ while {!WFBE_GameOver} do {
 					_ftTownName = _location getVariable ["name", "unknown"];
 					diag_log ("AICOMSTAT|v1|EVENT|" + (str _newSide) + "|" + str _ftMin + "|FIRST_TOWN|" + _ftTownName + "-t" + str _ftSec);
 					["INFORMATION", Format ["server_town.sqf: [%1] FIRST_TOWN captured: %2 at %3 min (%4 s).", str _newSide, _ftTownName, _ftMin, _ftSec]] Call WFBE_CO_FNC_LogContent;
+					//--- MATCH|v1|MILESTONE|FIRST_TOWN|: narrative beat for the after-match report.
+					//--- One-shot per side (same _ftFlag gate as the AICOMSTAT line above).
+					if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
+						diag_log ("MATCH|v1|MILESTONE|FIRST_TOWN|side=" + str _newSide + "|town=" + _ftTownName + "|tMin=" + str _ftMin);
+					};
 				};
 			};
 			// END AICOMSTAT FIRST_TOWN
@@ -348,6 +353,10 @@ while {!WFBE_GameOver} do {
 				//--- Announce capture to all players (no inbound warning; just the flip notification).
 				[nil, "HandleSpecial", ["naval-hvt-captured", _location, _newSID, _hvtName]] Call WFBE_CO_FNC_SendToClients;
 				["INFORMATION", Format ["server_town.sqf: Naval HVT [%1] captured by sideID %2.", _hvtName, _newSID]] Call WFBE_CO_FNC_LogContent;
+				//--- MATCH|v1|MILESTONE|CARRIER_CAP|: narrative beat for carrier captures.
+				if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
+					diag_log ("MATCH|v1|MILESTONE|CARRIER_CAP|carrier=" + _hvtName + "|newSideID=" + str _newSID + "|tMin=" + str (round (time / 60)));
+				};
 
 				//--- Recolour the naval HVT map marker to the new owner.
 				_navalMkr = _location getVariable ["wfbe_naval_marker", ""];

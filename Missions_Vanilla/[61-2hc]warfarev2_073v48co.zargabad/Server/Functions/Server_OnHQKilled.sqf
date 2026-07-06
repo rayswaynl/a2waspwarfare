@@ -10,6 +10,11 @@ Private ["_wreckObject", "_building","_dammages","_dammages_current","_get","_ki
 _structure = _this select 0;
 _killer = _this select 1;
 
+//--- DR-20: server-local killed EHs plus client process-killed-hq relays can replay the same HQ death.
+//--- Keep redundant detection, but let this consumer process each HQ object once.
+if (_structure getVariable ["wfbe_hq_killed_done", false]) exitWith {};
+_structure setVariable ["wfbe_hq_killed_done", true, true];
+
 // Marty : object that must be tracked by the HQ wreck marker.
 _wreckObject = _structure;
 
@@ -152,3 +157,9 @@ if (_side == east) then
 // Marty end.
 
 ["INFORMATION", Format["Server_OnHQKilled.sqf : [%1] HQ [%2] has been destroyed by [%3], Teamkill? [%4], Side Teamkill? [%5]", _side, _structure_kind, name _killer, _teamkill, side _killer]] Call WFBE_CO_FNC_LogContent;
+
+//--- MATCH|v1|MILESTONE|HQ_DESTROYED|: narrative beat for HQ kills (teamkills excluded).
+//--- _side = the side whose HQ was destroyed (the losing side for this milestone).
+if ((!_teamkill) && {(missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0}) then {
+	diag_log ("MATCH|v1|MILESTONE|HQ_DESTROYED|side=" + str _side + "|tMin=" + str (round (time / 60)));
+};

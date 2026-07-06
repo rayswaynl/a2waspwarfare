@@ -26,6 +26,27 @@ Scope deliberately stays out of AICOM, town, supply, score, and victory systems.
 LoadoutManager mirror with `A2WASP_SKIP_ZIP=1`, identical worker hashes across all three maintained
 roots, focused SQF lint zero findings, cached diff checks clean, and no `_MISSIONS.7z` artifact.
 
+## 2026-07-02 — Lane 49 client RPT error-family audit [codex/lane49-client-rpt-error-family-audit]
+
+Audited the current client RPT sample at `C:\Users\Game\wasp-rpt-reap\client-main.rpt` plus the
+brain/wiki RPT routing notes. Most raw error volume is optional-addon noise (`JSRS_Distance` and
+`warfxpe`), while several scary mission families in the sample are already fixed in current source
+by cmdcon42 skin-selector and respawn-menu guards.
+
+Shipped three tiny source guards that still mapped to maintained source: `Client_TipRotation.sqf`
+now type-checks tip master/cadence values and feature gates before numeric compares;
+`Init_TownMode.sqf` waits for `WFBE_Parameters_Ready` to exist before reading it; and `CM_Set.sqf`
+accepts the object payload used by the current `(_unit) execVM` call sites instead of assuming an
+array payload. Chernarus was edited first and mirrored to maintained Takistan through
+`Tools\LoadoutManager`.
+
+Verification: `A2WASP_SKIP_ZIP=1 dotnet run -c Release`, `A2WASP_SKIP_ZIP=1 dotnet run -c Release -- --check`,
+`git diff --check`, `git diff --cached --check`, and an A3-command scan over the touched files.
+
+## 2026-07-03 — Lane 138 RequestCommanderVote shape guard [codex/lane138-request-commander-vote-shape-guard]
+
+Added a narrow server-side malformed-payload guard for `RequestCommanderVote.sqf`: reject non-array payloads, short arrays, non-side side fields, sides outside `WFBE_PRESENTSIDES`, non-string names and null side logic before the existing vote restart code indexes or broadcasts. Honest `[sideJoined, name player]` vote-restart behavior is unchanged; vote-resolution semantics and requester authority migration remain separate commander-owner work.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
@@ -581,3 +602,17 @@ Validation:
 - Focused SQF lint over the six touched files reported 0 findings.
 - Full repo SQF trap gate still reports pre-existing unrelated findings outside this lane.
 - Diff checks, delimiter deltas, conflict-marker/NUL/backtick-zero scans, added-line trap scan, HUD SHA256 mirror parity, and constant flag presence checks passed.
+
+---
+
+## 2026-07-02 — Codex fleet lane 30: performance-audit probe extensions
+
+Claimed `fleet-lane-30-performance-audit-probe-extensions-2026-07-02` from the game-PC brain.
+
+Scope stayed observation-only and complementary to the older side-patrol probe work:
+- `AI_Commander_Teams.sqf`: add `aicom_teams_found` `PerformanceAudit_Record` row after a successful HC/server-local founding pass with team/pending/target/template/cost/world-count context.
+- `AI_Commander_Strategy.sqf`: add `aicom_strategy` row after a full strategy pass with town, target, posture, strike, strength, garrison-body, and front-state context.
+- `Server_GuerAirDef.sqf`: add `guer_airdef_cycle` row per maintain cycle with before/after air/drop registry sizes and marker/cap context.
+
+Chernarus source was edited first, then mirrored to vanilla Takistan with `A2WASP_SKIP_ZIP=1 dotnet run -c Release`.
+Validation so far: LoadoutManager mirror completed and packaging was skipped; `dotnet run -c Release -- --check` reported no generated drift; `git diff --check` only emitted expected CRLF warnings; SQF lint `BRACKET` and `A3CMD` found 0 issues on the six touched mission files; added-line A3/Boolean trap scan had no matches; Chernarus/Takistan touched file pairs matched after newline normalization; no `_MISSIONS.7z` artifact was created.

@@ -123,12 +123,16 @@ SQF command names are case-insensitive; casing-only diffs are false positives.
 
 ## Before every PR
 
+0. Re-read exact names, paths, and line numbers from source before editing — never rely
+   on summaries or prior context alone.
 1. Run the lint gate:
    ```
    python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV --no-classname-index
    ```
    Per-line suppression: `// noqa: CODE` (e.g. `// noqa: A3CMD`) silences that code on the line;
    bare `// noqa` silences all. Stale suppressions where no finding fires are reported as `DEADNOQA`.
+   The gate currently reports ~447 pre-existing findings across the tree; only NEW findings
+   in files you edited matter. Check your files, ignore the global count.
 2. Verify net bracket delta is zero per edited file (count `{` and `}`, count `[` and `]`).
 3. Confirm flag-off leaves the mission byte-identical to HEAD.
 4. Confirm mirrors ran and TK/ZG templates are restored.
@@ -175,6 +179,9 @@ from the repo; if not present, check the wiki Agent-Worklog and open PRs directl
 - Deep tooling reference (LoadoutManager full flow, template restore, RPT smoke, stacked-PR walkthrough,
   full trap taxonomy, match-report bugs, ZG constants): `docs/AGENT-HANDBOOK.md`
 - Wiki Agent-Guide: https://github.com/rayswaynl/a2waspwarfare/wiki/AI-Assistant-Developer-Guide
+- V2 cutover + telemetry relocation: `docs/design/v2/AICOM-V2-CUTOVER-AND-RECONCILIATION.md`.
+  Emitters in `Server/AI/Commander/*` that survive V2 (e.g. GRPBUDGET, SRVPERF) must be
+  relocated to a surviving host BEFORE V1 files are removed — see “Telemetry consumers” section.
 
 ---
 
@@ -199,3 +206,6 @@ from the repo; if not present, check the wiki Agent-Worklog and open PRs directl
     regardless of the define (`initJIPCompatible.sqf:72` forces it on for every HC).
     Use one always-on `INFORMATION`/`WARNING` line for the feature state transition or
     failure to confirm in RPT; gate verbose value dumps behind `WF_LOG_CONTENT`.
+  - Profile-persistent client toggles: restore from `profileNamespace` in
+    `Client/Init/Init_ProfileVariables.sqf` (runs on every join); write with
+    `WFBE_CO_FNC_SetProfileVariable` (established pattern — see TAGS persistence).

@@ -1303,18 +1303,6 @@ class WF_Menu {
 			action = "MenuAction = 24";
 			tooltip = "Player Settings (view distance, FPS, HUD, toggles)";
 		};
-		// Earplugs: lower the game volume without touching system audio (Arma 3-style QoL).
-		class CA_EAR_Button : RscButton_Main {
-			idc = 11022;
-			x = 0.626;
-			y = 0.767144;
-			w = 0.042;
-			h = 0.045;
-			text = "EAR";
-			sizeEx = 0.026;
-			action = "MenuAction = 22";
-			tooltip = "Earplugs In/Out (lowers game volume)";
-		};
 		// FPS: adaptive view-distance / target-FPS picker (sits between GPS and SKIN).
 		class CA_FPS_Button : RscButton_Main {
 			idc = 11023;
@@ -1580,6 +1568,338 @@ class RscMenu_Team {
 	};
 };
 
+//--- RscMenu_TeamV2 (idd 13050) --- Team Menu V2 (TP-21).
+//--- Opens in place of RscMenu_Team when WFBE_C_TEAM_MENU_V2 > 0.
+//--- Removed from V2: VD slider (13002/13003), TG slider (13004/13005),
+//---   inline money transfer (13006/13007/13008/13009/13012/13109).
+//--- Kept: income readout (13010), FX combo (13018), vote popup (13019), high-climb (13020).
+//--- New: gear preset rows (IDC 13051-13066), squad actions (13070-13074).
+class RscMenu_TeamV2 {
+	movingEnable = 1;
+	idd = 13050;
+	onLoad = "_this ExecVM ""Client\GUI\GUI_Menu_TeamV2.sqf""";
+
+	class controlsBackground {
+		class Background_M : RscText {
+			x = 0.187276;
+			y = 0.200401;
+			w = 0.625448;
+			h = 0.599268;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class Background_H : RscText {
+			x = 0.187276;
+			y = 0.200401;
+			w = 0.625448;
+			h = 0.0525;
+			moving = 1;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class Background_F : RscText {
+			x = 0.187276;
+			y = 0.747169;
+			w = 0.625448;
+			h = 0.0525;
+			moving = 1;
+			colorBackground[] = WFBE_Background_Color_Footer;
+		};
+		class Background_L : RscText {
+			x = 0.187276;
+			y = 0.251901;
+			w = 0.625448;
+			h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+	};
+	class controls {
+		/* Header */
+		class Title_TeamMenuV2 : RscText_Title {
+			idc = 13001;
+			x = 0.192941;
+			y = 0.206879;
+			w = 0.3;
+			text = "Team Menu V2";
+		};
+		class CA_IC_SubTitle : RscText_SubTitle {
+			idc = 13010;
+			x = 0.380877;
+			y = 0.20787;
+			w = 0.426891;
+			style = ST_RIGHT;
+		};
+		/* --- GEAR PRESETS SECTION --- */
+		class CA_GP_Title : RscText_SubTitle {
+			idc = 13049;
+			x = 0.19634;
+			y = 0.265506;
+			w = 0.614;
+			text = "Gear Presets  (save current kit / apply / set rebuy-on-death)";
+		};
+		/* Preset row 1 */
+		class CA_GP1_Badge : RscText {
+			idc = 13051;
+			x = 0.192941;
+			y = 0.298;
+			w = 0.055;
+			style = ST_CENTER;
+			text = "---";
+		};
+		class CA_GP1_Save : RscButton {
+			idc = 13052;
+			x = 0.252;
+			y = 0.296;
+			w = 0.14;
+			text = "Save 1";
+			action = "MenuAction = 1001";
+			tooltip = "Save current loadout to preset slot 1";
+		};
+		class CA_GP1_Apply : RscButton {
+			idc = 13053;
+			x = 0.398;
+			y = 0.296;
+			w = 0.14;
+			text = "Apply 1";
+			action = "MenuAction = 1011";
+			tooltip = "Equip preset slot 1 now";
+		};
+		class CA_GP1_Rebuy : RscButton {
+			idc = 13054;
+			x = 0.544;
+			y = 0.296;
+			w = 0.14;
+			text = "Rebuy 1";
+			action = "MenuAction = 1021";
+			tooltip = "Set slot 1 as the kit auto-applied on death";
+		};
+		/* Preset row 2 */
+		class CA_GP2_Badge : RscText {
+			idc = 13055;
+			x = 0.192941;
+			y = 0.336;
+			w = 0.055;
+			style = ST_CENTER;
+			text = "---";
+		};
+		class CA_GP2_Save : RscButton {
+			idc = 13056;
+			x = 0.252;
+			y = 0.334;
+			w = 0.14;
+			text = "Save 2";
+			action = "MenuAction = 1002";
+			tooltip = "Save current loadout to preset slot 2";
+		};
+		class CA_GP2_Apply : RscButton {
+			idc = 13057;
+			x = 0.398;
+			y = 0.334;
+			w = 0.14;
+			text = "Apply 2";
+			action = "MenuAction = 1012";
+			tooltip = "Equip preset slot 2 now";
+		};
+		class CA_GP2_Rebuy : RscButton {
+			idc = 13058;
+			x = 0.544;
+			y = 0.334;
+			w = 0.14;
+			text = "Rebuy 2";
+			action = "MenuAction = 1022";
+			tooltip = "Set slot 2 as the kit auto-applied on death";
+		};
+		/* Preset row 3 */
+		class CA_GP3_Badge : RscText {
+			idc = 13059;
+			x = 0.192941;
+			y = 0.374;
+			w = 0.055;
+			style = ST_CENTER;
+			text = "---";
+		};
+		class CA_GP3_Save : RscButton {
+			idc = 13060;
+			x = 0.252;
+			y = 0.372;
+			w = 0.14;
+			text = "Save 3";
+			action = "MenuAction = 1003";
+			tooltip = "Save current loadout to preset slot 3";
+		};
+		class CA_GP3_Apply : RscButton {
+			idc = 13061;
+			x = 0.398;
+			y = 0.372;
+			w = 0.14;
+			text = "Apply 3";
+			action = "MenuAction = 1013";
+			tooltip = "Equip preset slot 3 now";
+		};
+		class CA_GP3_Rebuy : RscButton {
+			idc = 13062;
+			x = 0.544;
+			y = 0.372;
+			w = 0.14;
+			text = "Rebuy 3";
+			action = "MenuAction = 1023";
+			tooltip = "Set slot 3 as the kit auto-applied on death";
+		};
+		/* Preset row 4 */
+		class CA_GP4_Badge : RscText {
+			idc = 13063;
+			x = 0.192941;
+			y = 0.412;
+			w = 0.055;
+			style = ST_CENTER;
+			text = "---";
+		};
+		class CA_GP4_Save : RscButton {
+			idc = 13064;
+			x = 0.252;
+			y = 0.410;
+			w = 0.14;
+			text = "Save 4";
+			action = "MenuAction = 1004";
+			tooltip = "Save current loadout to preset slot 4";
+		};
+		class CA_GP4_Apply : RscButton {
+			idc = 13065;
+			x = 0.398;
+			y = 0.410;
+			w = 0.14;
+			text = "Apply 4";
+			action = "MenuAction = 1014";
+			tooltip = "Equip preset slot 4 now";
+		};
+		class CA_GP4_Rebuy : RscButton {
+			idc = 13066;
+			x = 0.544;
+			y = 0.410;
+			w = 0.14;
+			text = "Rebuy 4";
+			action = "MenuAction = 1024";
+			tooltip = "Set slot 4 as the kit auto-applied on death";
+		};
+		/* Separator: presets / squad actions */
+		class Line_V2_Sep1 : RscText {
+			x = 0.192941;
+			y = 0.450;
+			w = 0.614486;
+			h = WFBE_SPT1;
+			colorBackground[] = WFBE_SPC1;
+		};
+		/* --- SQUAD ACTIONS SECTION --- */
+		class CA_SQ_Title : RscText_SubTitle {
+			idc = 13070;
+			x = 0.19634;
+			y = 0.456;
+			w = 0.3;
+			text = "Squad Actions";
+		};
+		/* Unit selector */
+		class CA_SQ_Combo : RscCombo {
+			idc = 13071;
+			x = 0.192941;
+			y = 0.493;
+			w = 0.279999;
+			h = 0.035;
+		};
+		/* Disband button */
+		class CA_SQ_Disband : RscButton {
+			idc = 13072;
+			x = 0.482;
+			y = 0.493;
+			w = 0.14;
+			text = "Disband";
+			action = "MenuAction = 3";
+			tooltip = "Disband selected AI from your squad";
+		};
+		/* Eject button */
+		class CA_SQ_Eject : RscButton {
+			idc = 13073;
+			x = 0.628;
+			y = 0.493;
+			w = 0.14;
+			text = "Eject";
+			action = "MenuAction = 2001";
+			tooltip = "Eject selected AI out of its vehicle";
+		};
+		/* Get-out-and-repair button */
+		class CA_SQ_Repair : RscButton {
+			idc = 13074;
+			x = 0.482;
+			y = 0.535;
+			w = 0.286;
+			text = "Get Out & Repair (mobility)";
+			action = "MenuAction = 2002";
+			tooltip = "AI crew dismounts and restores mobility (wheels/tracks/engine), then remounts";
+		};
+		/* Separator: squad / preferences */
+		class Line_V2_Sep2 : RscText {
+			x = 0.192941;
+			y = 0.576;
+			w = 0.614486;
+			h = WFBE_SPT1;
+			colorBackground[] = WFBE_SPC1;
+		};
+		/* --- PREFERENCES SECTION (kept from V1) --- */
+		class CA_FX_Label : RscText {
+			idc = 13015;
+			x = 0.19634;
+			y = 0.582;
+			w = 0.3;
+			text = $STR_WF_TEAM_GraphicFilterLabel;
+		};
+		class CA_FX_Combo : RscCombo {
+			idc = 13018;
+			x = 0.514313;
+			y = 0.582;
+			w = 0.0999999;
+			h = 0.035;
+			onLBSelChanged = "MenuAction = 6";
+		};
+		class CA_HighClimbing_Default_Button : RscButton {
+			idc = 13020;
+			x = 0.203;
+			y = 0.626;
+			w = 0.279;
+			text = "";
+			tooltip = "Toggle whether newly bought vehicles start with high climbing enabled";
+			action = "MenuAction = 14";
+		};
+		class VPOPON_Button : RscButton {
+			idc = 13019;
+			x = 0.203;
+			y = 0.668;
+			w = 0.279;
+			text = "";
+			tooltip = "Toggle the commander vote popup on join";
+			action = "MenuAction = 13";
+		};
+		/* Separator before footer */
+		class Line_V2_Sep3 : RscText {
+			x = 0.192941;
+			y = 0.708;
+			w = 0.614486;
+			h = WFBE_SPT1;
+			colorBackground[] = WFBE_SPC1;
+		};
+		/* Back / Exit */
+		class Back_Button : RscButton_Back {
+			x = 0.704632;
+			y = 0.753185;
+			action = "MenuAction = 8";
+			tooltip = $STR_WF_TOOLTIP_BackButton;
+		};
+		class Exit_Button : RscButton_Exit {
+			x = 0.766877;
+			y = 0.753185;
+			onButtonClick = "closeDialog 0;";
+			tooltip = $STR_WF_TOOLTIP_CloseButton;
+		};
+	};
+};
+
 //--- BuyUnits Menu. | ALL DONE!
 class RscMenu_BuyUnits {
 	movingEnable = 1;
@@ -1788,8 +2108,8 @@ class RscMenu_BuyUnits {
 			idc = 12024;
 			x = 0.350419;
 			y = 0.00775906;
-			w = 0.22;
-			style = ST_CENTER;
+			w = 0.185;
+			style = ST_LEFT;
 		};
 		//--- Task 33: cancel-last-queue button, placed in header next to queue count.
 		class CA_Cancel_Queue : RscButton {
@@ -1797,7 +2117,7 @@ class RscMenu_BuyUnits {
 			x = 0.578;
 			y = 0.00775906;
 			w = 0.07;
-			h = 0.035;
+			h = 0.037;
 			sizeEx = 0.022;
 			text = "Cancel Last";
 			tooltip = "Cancel and refund the most recent queued unit order";

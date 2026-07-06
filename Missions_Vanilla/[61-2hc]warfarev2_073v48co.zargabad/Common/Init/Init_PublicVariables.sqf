@@ -51,6 +51,7 @@ _l = _l + ["SetMHQLock"];
 _l = _l + ["Available"];
 _l = _l + ["RequestBaseArea"];
 _l = _l + ["NukeIncoming"];
+_l = _l + ["SpotterMarkContact"]; //--- team-intel-pack: side-scoped spotter mark (Client\PVFunctions\SpotterMarkContact.sqf).
 _l = _l + ["CounterBatteryContact"];
 _l = _l + ["BankPayout"];
 _l = _l + ["RestartAnnounce"];

@@ -490,11 +490,13 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 	_hvtLoc = _x;
 	[_hvtLoc] spawn {
 		private ["_loc","_pos","_sideID","_capGrp","_hind","_biplane","_hindPilot","_biplPilot","_armed",
-		         "_inactiveTime","_now","_detected","_players","_anyNear","_orbitAng","_dummy","_x"];
+		         "_inactiveTime","_now","_detected","_players","_anyNear","_orbitAng","_dummy","_x",
+		         "_threeHinds","_hind2","_hind3","_hindPilot2","_hindPilot3"];
 		_loc  = _this select 0;
 		_armed = false;
 		_inactiveTime = 0;
 		_orbitAng = random 360;
+		_threeHinds = (missionNamespace getVariable ["WFBE_C_NAVAL_CAP_THREE_HINDS", 0]) > 0;
 
 		while { !WFBE_GameOver } do {
 			sleep 10;
@@ -519,39 +521,79 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						_armed = true;
 						_capGrp = createGroup resistance;
 
-						//--- Spawn Hind gunship at 400m altitude north of asset.
-						_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
-						_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
-						_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-						if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-						_hindPilot moveInDriver _hind;
-						_capGrp setBehaviour "AWARE";
-						_capGrp setCombatMode "RED";
-						_hind flyInHeight 350;
-						_capGrp setSpeedMode "FULL";
+						if (_threeHinds) then {
+							//--- THREE-HIND path (WFBE_C_NAVAL_CAP_THREE_HINDS > 0): no An2.
+							_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
+							_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
+							_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+							if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+							_hindPilot moveInDriver _hind;
+							_hind flyInHeight 350;
 
-						//--- Spawn An2 biplane at 600m altitude.
-						_biplane = createVehicle ["An2_1_TK_CIV_EP1", [(_pos select 0) - 300, (_pos select 1) - 300, 600], [], 0, "FLY"];
-						_biplane setPosASL [(_pos select 0) - 300, (_pos select 1) - 300, 600];
-						_biplPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-						_biplPilot moveInDriver _biplane;
-						_biplane flyInHeight 550;
+							_hind2 = createVehicle ["Mi24_P", [(_pos select 0) - 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
+							_hind2 setPosASL [(_pos select 0) - 200, (_pos select 1) + 200, 400];
+							_hindPilot2 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+							_hindPilot2 moveInDriver _hind2;
+							_hind2 flyInHeight 350;
 
-						//--- Tag both as CAP so GC/groupsGC don't reap them.
-						_capGrp setVariable ["wfbe_naval_cap", true, true];
-						_hind   setVariable ["wfbe_naval_cap", true, true];
-						_biplane setVariable ["wfbe_naval_cap", true, true];
+							_hind3 = createVehicle ["Mi24_P", [(_pos select 0) + 0, (_pos select 1) - 300, 400], [], 0, "FLY"];
+							_hind3 setPosASL [(_pos select 0) + 0, (_pos select 1) - 300, 400];
+							_hindPilot3 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+							_hindPilot3 moveInDriver _hind3;
+							_hind3 flyInHeight 350;
 
-						["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (Hind + An2).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+							_capGrp setBehaviour "AWARE";
+							_capGrp setCombatMode "RED";
+							_capGrp setSpeedMode "FULL";
+
+							//--- Tag all three as CAP so GC/groupsGC don't reap them.
+							_capGrp setVariable ["wfbe_naval_cap", true, true];
+							_hind  setVariable ["wfbe_naval_cap", true, true];
+							_hind2 setVariable ["wfbe_naval_cap", true, true];
+							_hind3 setVariable ["wfbe_naval_cap", true, true];
+
+							["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (3x Mi-24).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+						} else {
+							//--- STANDARD path (flag 0): Hind + An2 pair (default).
+							_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
+							_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
+							_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+							if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+							_hindPilot moveInDriver _hind;
+							_capGrp setBehaviour "AWARE";
+							_capGrp setCombatMode "RED";
+							_hind flyInHeight 350;
+							_capGrp setSpeedMode "FULL";
+
+							//--- Spawn An2 biplane at 600m altitude.
+							_biplane = createVehicle ["An2_1_TK_CIV_EP1", [(_pos select 0) - 300, (_pos select 1) - 300, 600], [], 0, "FLY"];
+							_biplane setPosASL [(_pos select 0) - 300, (_pos select 1) - 300, 600];
+							_biplPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+							_biplPilot moveInDriver _biplane;
+							_biplane flyInHeight 550;
+
+							//--- Tag both as CAP so GC/groupsGC don't reap them.
+							_capGrp setVariable ["wfbe_naval_cap", true, true];
+							_hind   setVariable ["wfbe_naval_cap", true, true];
+							_biplane setVariable ["wfbe_naval_cap", true, true];
+
+							["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (Hind + An2).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+						};
 					};
 				} else {
 					//--- CAP is active — orbit the asset.
 					_orbitAng = _orbitAng + 8;
-					if (alive _hind) then {
-						_hindPilot doMove [(_pos select 0) + 400 * sin _orbitAng, (_pos select 1) + 400 * cos _orbitAng, 0];
-					};
-					if (alive _biplane) then {
-						_biplPilot doMove [(_pos select 0) + 700 * sin (_orbitAng + 180), (_pos select 1) + 700 * cos (_orbitAng + 180), 0];
+					if (_threeHinds) then {
+						if (alive _hind)  then {_hindPilot  doMove [(_pos select 0) + 400 * sin _orbitAng,         (_pos select 1) + 400 * cos _orbitAng, 0]};
+						if (alive _hind2) then {_hindPilot2 doMove [(_pos select 0) + 400 * sin (_orbitAng + 120), (_pos select 1) + 400 * cos (_orbitAng + 120), 0]};
+						if (alive _hind3) then {_hindPilot3 doMove [(_pos select 0) + 400 * sin (_orbitAng + 240), (_pos select 1) + 400 * cos (_orbitAng + 240), 0]};
+					} else {
+						if (alive _hind) then {
+							_hindPilot doMove [(_pos select 0) + 400 * sin _orbitAng, (_pos select 1) + 400 * cos _orbitAng, 0];
+						};
+						if (alive _biplane) then {
+							_biplPilot doMove [(_pos select 0) + 700 * sin (_orbitAng + 180), (_pos select 1) + 700 * cos (_orbitAng + 180), 0];
+						};
 					};
 				};
 
@@ -563,8 +605,14 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						//--- Despawn CAP.
 						_armed = false;
 						_inactiveTime = 0;
-						if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x} forEach (crew _hind);   deleteVehicle _hind };
-						if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
+						if (_threeHinds) then {
+							if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x} forEach (crew _hind);  deleteVehicle _hind };
+							if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x} forEach (crew _hind2); deleteVehicle _hind2 };
+							if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x} forEach (crew _hind3); deleteVehicle _hind3 };
+						} else {
+							if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x} forEach (crew _hind);   deleteVehicle _hind };
+							if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
+						};
 						if (!isNull _capGrp) then { deleteGroup _capGrp };
 						["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP despawned at %1 (inactivity).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
 					};

@@ -130,10 +130,12 @@ section 6.
    is supplied — the HC `CAPTURED [` driver counts per town.
 7. **PERF** — WASPSCALE server-fps / HC-fps min/median/max, AI_TOT curve, GUER
    peak, and fps at peak AI load (the FPS-cliff check).
-8. **BUILD 86 LOG FAMILIES** — first-class counters for `MHQRELOC` verbs
+8. **BUILD 86+ LOG FAMILIES** — first-class counters for `MHQRELOC` verbs
    including `RELAXED`, `BUILD_ROAD_*` base-placement gates, ground-patrol
    naval-HVT skips, `ICBMTEL|v1|...` SCUD/TEL events and munitions, the
-   `[WFBE (SKIN)]` B0–B6 chain, plus EASA/gear log-line samples.
+   `[WFBE (SKIN)]` B0–B6 chain, EASA/gear log-line samples, and cmdcon43
+   families (`UPGRADE_SOUND`, `TIP_SKIP`, `TIP_SHOW`, `VEHLIFT_DROP`,
+   `VEHLIFT_ABORT`, `BISRNG`).
 9. **VERDICT** — PASS/WATCH/FAIL per KPI + overall (worst-of).
 
 ### Per-build comparison
@@ -183,3 +185,136 @@ $ python analyze_soak.py C:/Users/Game/wasp-westwin-20260701.rpt
 
 A healthy **cmdcon41** soak should flip ARRIVAL/ZOMBIES/CHURN toward PASS and
 begin populating the section-5 new-event counters.
+
+---
+
+## Section 10 — AICOM2 soak-gate (V2 cutover, GR-2026-07-03a)
+
+Section 10 of the scorecard is added automatically when the RPT contains
+`AICOM2|v1|` lines.  It gates the parity-soak requirement from the AICOM V2
+cutover brief (Guide-Rev GR-2026-07-03a).
+
+### AICOM2 grammar reference
+
+| Family | Key fields |
+|--------|-----------|
+| `AICOM2\|v1\|SNAP\|<side>\|<tick>\|…` | myTowns, enTowns, myEff, enEff, funds, enHQ |
+| `AICOM2\|v1\|ALLOC\|<side>\|<tick>\|…` | primary, src, harassTo, assigned, harass, concentrate |
+| `AICOM2\|v1\|DECAP\|<side>\|<tick>\|…` | state (SCAN/TRACK/PRESS), inRange, roll, sensed, stamped |
+| `AICOM2\|v1\|FISTPOOL\|<side>\|…` | soft, neutInclGuer, using |
+| `AICOM2\|v1\|ORDER\|<subtype>\|<side>\|<tick>\|…` | mode, goto |
+| `AICOMSTAT\|v1\|POSTURE\|<SIDE>\|<tick>\|PRESS\|…` | myTowns, enTowns (PRESS-mode confirmation) |
+
+All lines are scoped to the last MISSINIT before scoring.
+
+### Section 10 heuristics
+
+| Signal | Description |
+|--------|-------------|
+| **SNAP trajectory** | myTowns first → last; peak; enHQ last value |
+| **ALLOC summary** | primary changes (strategy pivots), harass ticks, src distribution |
+| **DECAP state distribution** | SCAN/TRACK/PRESS counts per side |
+| **inRange streaks** | longest consecutive tick-run with inRange > 0 |
+| **Roll cadence** | expects ≥1 roll=1 every 4-tick window |
+| **Sensed latches** | count of false → true transitions on the sensed field |
+| **stamped max** | cumulative stamped counter high-water mark |
+| **PRESS events** | AICOMSTAT POSTURE PRESS confirmation count |
+| **DECAP verdict** | FAIL if SNAP present but DECAP entirely absent (V2 not wired); WATCH if roll cadence violated; PASS otherwise |
+
+The DECAP verdict participates in the OVERALL verdict (worst-of).
+
+### Fixture for section 10
+
+`sample_cc44u.rpt` is a ~33-line fixture covering the full AICOM2 grammar.
+It is used by `test_analyze_soak.py` (`AnalyzeSoakAicom2Tests`, 10 tests).
+Run with:
+
+```bash
+python analyze_soak.py Tools/Soak/sample_cc44u.rpt
+python -m unittest Tools/Soak/test_analyze_soak.py
+```
+
+---
+
+## Companion tools — AICOM2 soak-gate tooling
+
+These two PowerShell scripts live in `Tools/PrTestHarness/` and complement the
+Python analyzer for real-time soak monitoring and per-round scoring.
+
+---
+
+### `Tools/PrTestHarness/Aicom/Score-AicomRounds.ps1`
+
+Reads the **latest round** (MISSINIT-scoped) from an RPT file or the newest
+RPT in an archive directory and emits a compact round scorecard.
+
+**Scorecard sections:**
+
+- Round outcome (winner from WASPSTAT ROUNDEND or AICOMSTAT FINAL)
+- WASPSCALE FPS / HC-FPS samples (min / median / max, build label)
+- Per-side SNAP trajectory (towns, enHQ)
+- Per-side ALLOC summary (primary changes, harass ticks, src distribution)
+- Per-side DECAP chain (state distribution, inRange max + longest streak,
+  roll cadence, sensed latches, stamped max, PRESS events)
+- AICOM2 ORDER subtype counts
+- Error-family counts (Script error / Undefined variable / No entry / etc.)
+- Gate verdict (pass/fail, exit code 0/1)
+
+**Usage:**
+
+```powershell
+# Score the live server RPT
+.\Score-AicomRounds.ps1 -RptPath "C:\WASP\rpts\arma2oaserver.RPT"
+
+# Soak-gate mode (fail if gates not met)
+.\Score-AicomRounds.ps1 -RptPath "arma2oaserver.RPT" `
+    -MinSnapLines 5 -RequireDecap -MaxErrors 10
+
+# Auto-pick newest RPT from an archive dir
+.\Score-AicomRounds.ps1 -ArchiveDir "C:\WASP\rpts\"
+
+# Self-test against sample_cc44u.rpt
+.\Score-AicomRounds.ps1 -SelfTest
+```
+
+**Exit codes:** 0 = all gates pass, 1 = one or more gates failed.
+
+---
+
+### `Tools/PrTestHarness/Ops/aicom-watch.ps1`
+
+`tail -f` style live watcher filtering for `AICOM2|` and `AICOMSTAT|` lines.
+Colorizes DECAP state transitions (SCAN / TRACK / PRESS) and flags the moment
+a side crosses into PRESS mode.
+
+**Color key:**
+
+| Color | Meaning |
+|-------|---------|
+| dim   | SNAP lines (low-frequency summary) |
+| yellow | TRACK state |
+| red background | PRESS state / POSTURE PRESS events |
+| magenta | ORDER lines |
+| cyan | AICOMSTAT / FISTPOOL |
+| green background | ROUNDEND |
+
+A `-> ` annotation is appended when the DECAP state *changes*, making
+mode transitions visible at a glance.
+
+**Usage:**
+
+```powershell
+# Watch the default HC RPT (auto-discovered from %LOCALAPPDATA%\ArmA 2 OA\)
+.\aicom-watch.ps1
+
+# Watch only DECAP lines
+.\aicom-watch.ps1 -Family DECAP
+
+# Watch a specific RPT, also show ROUNDEND/KILL/CAPTURE
+.\aicom-watch.ps1 -RptPath "arma2oaserver.RPT" -ShowWaspstat
+
+# Self-test (no live RPT needed)
+.\aicom-watch.ps1 -SelfTest
+```
+
+CTRL+C to stop the watcher.  The script is non-destructive and read-only.

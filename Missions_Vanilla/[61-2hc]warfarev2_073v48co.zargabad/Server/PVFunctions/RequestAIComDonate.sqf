@@ -36,6 +36,15 @@ if (isNil "_amount")    exitWith {};
 if (isNull _donor)     exitWith {};
 if (isNull _donorTeam) exitWith {};
 
+//--- DR-55 forged-PVF hardening (flag-gated; OFF = legacy behavior).
+//--- The PVEH carries no trusted sender. Honest callers donate from a live
+//--- player; a forged payload can otherwise pass a non-player object.
+if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
+	if (!isPlayer _donor || {!alive _donor}) exitWith {
+		["WARNING", Format ["RequestAIComDonate.sqf: [DONATION] rejected - donor [%1] is not a live player.", _donor]] Call WFBE_CO_FNC_AICOMLog;
+	};
+};
+
 //--- Validate amount > 0.
 if (!(_amount > 0)) exitWith {
 	["INFORMATION", Format ["RequestAIComDonate.sqf: [DONATION] rejected for %1 - amount %2 not positive.", name _donor, _amount]] Call WFBE_CO_FNC_AICOMLog;
