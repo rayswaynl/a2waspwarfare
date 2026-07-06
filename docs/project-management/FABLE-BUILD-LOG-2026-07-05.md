@@ -122,3 +122,9 @@ Two stalled workflows stopped. Incomplete owner-approved work re-fired.
 - Cutover carry-over note: SML-1 hook site Common_RunCommanderTeam.sqf:1919-1921 must be re-added to the V2 driver at cutover (migration-map item).
 - Noted: new Agent B branch claude/wddm-functional-defenses appeared.
 - #752 skills pack: fixer a54c05acb closed all 3 blockers (17-code select in all 3 command-quoting skills, noqa/DEADNOQA documented in all 5) -> spot-checked greps on branch tip myself -> MERGED to build84 b8f8b8e72. Promotion 4 deferred: batching with #754 when Agent B's branch settles.
+
+## 2026-07-06 — Three rocks fired (owner: "Get started")
+- ROCK 1 V2 CUTOVER BUILD (wf_e764748b-7e4): branch fable/v2-cutover in worktree a2wasp-cutover. Phase A assemble (map rev-2 in-tree + press stack ee80a6818 + folds 614/637/515 + Decapitate registration) -> audit -> Phase B Part-3 telemetry dispositions + Part-5 removals (orphan-reference sweep mandatory) -> completeness audit -> draft PR. xhigh-effort Fable agents, fix-loop per phase, stop-on-persistent-FAIL. NOT mergeable without soak gate + owner flag decisions.
+- ROCK 2 AFTER-MATCH REPORT (wf_c9e2a389-8b8): miksuus-warfare feat/after-match-report; contract = REAL MATCH|v1| emitters on a2wasp master (#736); ingest (idempotent) + embed builder + TEST-guild post gated default-off; adversarial verify incl. grammar refute + no-live-intel rule.
+- ROCK 3 MIKSUU QUEUE (wf_b3a85b7d-aa1): preflight (verify #63 Command Center, rebase-fix #56 w/ superseded-check, sweep 60/61/62/49) -> serial merge with per-merge CI gate + stop-on-red + post-merge pm2/live check. Auto-deploy risk documented in executor prompt.
+- Concurrent: sensing watcher (box held by Agent B's wedged PerfON boot; escalation 04:11), #754/wddm inbound from Agent B.
