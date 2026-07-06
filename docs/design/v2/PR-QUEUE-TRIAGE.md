@@ -74,3 +74,16 @@ Not filled in this sandbox:
 - `HOLD-FOR-V2`: blocked
 - `CLOSE`: blocked
 - total open PRs: blocked
+
+## Visible Public Rows
+
+| PR | Title | Category | Reason | Stack status |
+| --- | --- | --- | --- | --- |
+| #1 | `feat: supply helicopters for both teams` | CLOSE | AGENTS owner constraints say not to re-propose AI supply trucks; supply-heli mechanics are adjacent and should not merge without owner re-approval. | Unknown; auth required. |
+| #2 | `docs: add developer wiki mirror` | HOLD-FOR-V2 | Docs-only reference material may still be useful, but must be reconciled against current GUIDE-REV and V2 artifact convention before merge. | Unknown; auth required. |
+| #3 | `docs(wiki): Claude review -- round 1 deepening + round 2 adversarial deep-review` | HOLD-FOR-V2 | Docs/review content may be useful as archive context, but should not outrank current V2 specs until reviewed for stale or duplicate instructions. | Unknown; auth required. |
+
+## Final Table Template
+
+| PR | Title | Files touched | Base | Stack | Category | One-line reason | Required owner decision |
+| --- | --- | --- | --- | --- | --- | --- | --- |

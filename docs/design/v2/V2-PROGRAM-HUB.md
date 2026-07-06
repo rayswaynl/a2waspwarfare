@@ -122,3 +122,11 @@ For multi-artifact lanes, add one row per committed artifact or directory. If a 
 4. Bot: `BOT-V2-SPEC.md`.
 5. Copy: `STYLE-GUIDE.md`, `GUIDES-AUDIT.md`, `GUIDES-REWRITES/`.
 6. Archive-informed design: use DRAFT reports only after filling source gaps.
+
+## Program Rules
+
+- All V2 prep output is research, specs, datasets, or reports under `docs/design/v2/`.
+- No gameplay code is produced by prep lanes.
+- V2 commander work follows the five design commandments: locality-first, pure testable planning core, master-flag fallback, perf/KPI self-watchdog, and defensive map-data reads.
+- V2 behavior must preserve the eight doctrine points: commit, mass, tempo, legibility, memory, non-psychic intel, money pressure, and no dead air.
+- Archive-derived ideas are design inputs only unless license and owner constraints are cleared.
