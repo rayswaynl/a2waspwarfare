@@ -8,7 +8,7 @@ private ["_team","_footInf","_sideID","_side","_townCenter","_capSeq",
          "_healthyCount","_mauledCount","_mauled","_u","_order","_ordN",
          "_bearing","_retreatPos","_posX","_posY","_elapsed","_reason",
          "_disbandFlag","_disbanded","_allDone","_allHealed","_allDead","_groupChanged",
-         "_retasked","_leaderDead","_mX"];
+         "_retasked","_leaderDead","_mX","_detachedBySML3"];
 _team       = _this select 0;
 _footInf    = _this select 1;
 _sideID     = _this select 2;
@@ -45,6 +45,8 @@ if (_healthyCount < _healthyMin) exitWith {
 if (count _mauled == 0) exitWith {};
 
 //--- Detach each mauled unit: stamp + pull back 80m away from _townCenter.
+//--- Only units SML-3 actually stamps are tracked in _detachedBySML3 for rejoin.
+_detachedBySML3 = [];
 {
     _mX = _x;
     if (!(isNil {_mX getVariable "wfbe_sml_detach_at"})) then {
@@ -57,6 +59,7 @@ if (count _mauled == 0) exitWith {};
         _retreatPos = [_posX + 80 * (sin _bearing), _posY + 80 * (cos _bearing), 0];
         doStop _mX;
         _mX doMove _retreatPos;
+        _detachedBySML3 set [count _detachedBySML3, _mX];
     };
 } forEach _mauled;
 
@@ -107,7 +110,7 @@ waitUntil {
     }}}}}
 };
 
-//--- REJOIN: restore survivors still in the team.
+//--- REJOIN: restore only units SML-3 actually detached (not units skipped due to another SML stamp).
 {
     _mX = _x;
     _mX setVariable ["wfbe_sml_detach_at", nil];
@@ -115,6 +118,6 @@ waitUntil {
         _mX setUnitPos "AUTO";
         _mX doFollow (leader _team);
     };
-} forEach _mauled;
+} forEach _detachedBySML3;
 
 diag_log Format ["SML|v1|RETREAT_REJOIN|side=%1 team=%2 reason=%3 elapsed=%4", _side, _team, _reason, (time - _startTime)];

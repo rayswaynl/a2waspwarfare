@@ -11,9 +11,15 @@ private ["_uTeam","_uSide","_maxUnits","_posDelta","_nudgeDist",
          "_bearing","_nudgePos","_orderArr","_dest","_destX","_destY",
          "_startTime","_shortTTL","_elapsed","_reason",
          "_disbanded","_disbandFlag","_leaderDead","_allMoved","_groupChanged",
-         "_nX","_startPosX","_startPosY","_uNudge"];
+         "_nX","_startPosX","_startPosY","_uNudge",
+         "_capSeq","_ordN","_retasked"];
 _uTeam = _this select 0;
 _uSide = _this select 1;
+
+//--- Capture initial order-seq for retasked detection (mirrors SML-3/SML-4 idiom).
+_capSeq = -1;
+_ordN = _uTeam getVariable "wfbe_aicom_order";
+if (!isNil "_ordN" && {count _ordN >= 1}) then {_capSeq = _ordN select 0};
 
 _maxUnits  = missionNamespace getVariable ["WFBE_C_SML_UNSTUCK_MAX_UNITS", 2];
 _posDelta  = missionNamespace getVariable ["WFBE_C_SML_UNSTUCK_POS_DELTA", 8];
@@ -109,7 +115,13 @@ waitUntil {
     if (isNil "_disbanded") then {_disbanded = false};
     if (_disbanded) then {_reason = "disband"; true} else {
 
-    //--- (d) All nudged units have moved enough OR are dead.
+    //--- (d) Retask: order seq changed (mirrors SML-3/SML-4 idiom).
+    _ordN = _uTeam getVariable "wfbe_aicom_order";
+    if (isNil "_ordN") then {_ordN = []};
+    _retasked = (count _ordN >= 1) && {(_ordN select 0) != _capSeq};
+    if (_retasked) then {_reason = "retasked"; true} else {
+
+    //--- (e) All nudged units have moved enough OR are dead.
     _allMoved = true;
     {
         _uNudge    = _x select 0;
@@ -130,7 +142,7 @@ waitUntil {
         if (alive _uNudge && {!(_uNudge in (units _uTeam))}) then {_groupChanged = true};
     } forEach _nudged;
     if (_groupChanged) then {_reason = "group_change"; true} else {false}
-    }}}}
+    }}}}}
 };
 
 //--- REJOIN: restore each nudged unit.
