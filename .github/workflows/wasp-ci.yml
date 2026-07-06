@@ -68,7 +68,8 @@ jobs:
       - name: SQF lint gate (blocking)
         shell: pwsh
         # Codes that are currently zero-findings on master and are high-confidence.
-        # A3CMD excluded: 2 known false positives on "class Params" classname.
+        # A3CMD now BLOCKING: its only 2 findings were "class Params" false positives,
+        # now annotated with `// noqa: A3CMD` in Rsc/Parameters.hpp (all 3 terrains).
         # A3MARKER/GROUPGETVAR/DISABLESER excluded: active findings in codebase.
         # PUBVARSV + MILMARKER excluded: bugs pending in PR #738 + PR #742;
         # add both to blocking after those merge.
@@ -76,7 +77,7 @@ jobs:
         # (fable/attackwave-jip-nilguards); add PUBVARSV here after that merges.
         run: |
           python Tools\Lint\check_sqf.py `
-            --select A3HASH,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,NSSETVAR3 `
+            --select A3CMD,A3HASH,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,NSSETVAR3 `
             --no-classname-index
 
       - name: Agent docs sync check
