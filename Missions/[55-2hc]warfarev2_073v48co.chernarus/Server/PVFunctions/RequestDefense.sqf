@@ -151,12 +151,33 @@ if (_index != -1) then {
 
 			if (_isAnchor) then {
 				_compCap      = missionNamespace getVariable ["WFBE_C_WDDM_COMP_CAP", 3];
+				//--- fable/wddm-functional-defenses (flag WFBE_C_DEF_FORTIF_PACK): the PASSIVE fortification-
+				//--- pack anchors (WFBE_FORTIF_ANCHOR_NAMES, Init_Defenses.sqf) get their OWN cap
+				//--- (WFBE_C_DEF_FORTIF_CAP, default 6) and their placements are excluded from the
+				//--- weapon-position pool (and vice versa), keyed off the WFBE_WDDMAnchorClass stamp every
+				//--- composition child carries. Flag 0 (default): _fortifPackOn is false -> the legacy
+				//--- single-pool count below runs verbatim (byte-identical behaviour to HEAD).
+				private ["_fortifPackOn","_fortifNames","_isFortifAnchor","_anchorCls","_cidIsFortif"];
+				_fortifPackOn   = ((missionNamespace getVariable ["WFBE_C_DEF_FORTIF_PACK", 0]) > 0);
+				_fortifNames    = if (isNil "WFBE_FORTIF_ANCHOR_NAMES") then {[]} else {WFBE_FORTIF_ANCHOR_NAMES};
+				_isFortifAnchor = (_fortifPackOn && {(_fortifNames find _defenseType) != -1});
+				if (_isFortifAnchor) then { _compCap = missionNamespace getVariable ["WFBE_C_DEF_FORTIF_CAP", 6] };
 				_allDefNamesComp = missionNamespace getVariable [format ["WFBE_%1DEFENSENAMES", str _side], []];
 				_compObjs     = nearestObjects [_nearestCenter, _allDefNamesComp, _baseRange];
 				_seenIDs      = [];
 				{
 					_cid = _x getVariable ["WFBE_WDDMPositionAnchor", ""];
-					if (_cid != "" && {!(_cid in _seenIDs)}) then { _seenIDs = _seenIDs + [_cid] };
+					if (_cid != "" && {!(_cid in _seenIDs)}) then {
+						if (!_fortifPackOn) then {
+							_seenIDs = _seenIDs + [_cid];
+						} else {
+							//--- Pool split: only count placements from the SAME pool as the request.
+							_anchorCls   = _x getVariable ["WFBE_WDDMAnchorClass", ""];
+							_cidIsFortif = ((_fortifNames find _anchorCls) != -1);
+							if (_isFortifAnchor && _cidIsFortif) then { _seenIDs = _seenIDs + [_cid] };
+							if (!_isFortifAnchor && !_cidIsFortif) then { _seenIDs = _seenIDs + [_cid] };
+						};
+					};
 				} forEach _compObjs;
 				if (count _seenIDs >= _compCap) then {
 					_budgetRejected = true;
