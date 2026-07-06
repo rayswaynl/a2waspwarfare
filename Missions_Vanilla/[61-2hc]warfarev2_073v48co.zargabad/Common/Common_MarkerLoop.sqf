@@ -9,7 +9,7 @@
 // tombstone the slot (set to 0) and compaction only rebuilds the array once enough
 // tombstones accumulate, keeping the lost-append race window negligible. The marker
 // name ledger sweep below heals any marker that would slip through regardless.
-Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_dist","_ehHandle","_lowFpsSince","_mapWasClosed","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_heightTiers","_aarWarnLevel","_aarHeight","_budgetMax","_budgetServiced","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades","_moveInPlace","_labelCullEnabled","_labelCullThreshold","_labelCulled","_regCount","_mapperfDiag","_mapperfNext"];
+Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_dist","_ehHandle","_lowFpsSince","_mapWasClosed","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_heightTiers","_aarWarnLevel","_aarHeight","_budgetMax","_budgetServiced","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades","_moveInPlace","_labelCullEnabled","_labelCullThreshold","_labelCulled","_regCount","_mapperfDiag","_mapperfNext","_awacsEnabled","_awacsMinAlt","_awacsNextCheck","_awacsTypes","_awacsUp","_awacsWasUp"];
 
 if (isNil "WFBE_CL_UnitMarkerRegistry") then {WFBE_CL_UnitMarkerRegistry = []};
 if (isNil "WFBE_CL_AARMarkerRegistry") then {WFBE_CL_AARMarkerRegistry = []};
@@ -23,6 +23,20 @@ _height = missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR_DETECTION
 _heightTiers = missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR_DETECTION_TIERS";
 // Trello card #66: AAR upgrade level at/above which a one-shot new-contact warning fires.
 _aarWarnLevel = missionNamespace getVariable ["WFBE_C_AAR_WARN_LEVEL", 1];
+
+// fable/awacs-radar (flag WFBE_C_AWACS, default 0): while a CREWED friendly airframe from
+// WFBE_C_AWACS_TYPES is airborne above MINALT, _awacsUp substitutes for antiAirRadarInRange
+// in the per-entry AAR gate below (mobile radar coverage). Types are matched LOWERCASE:
+// SQF 'in' on strings is case-sensitive and typeOf returns config casing.
+_awacsEnabled = (missionNamespace getVariable ["WFBE_C_AWACS", 0]) > 0;
+_awacsTypes = [];
+if (_awacsEnabled) then {
+	{_awacsTypes = _awacsTypes + [toLower _x]} forEach (missionNamespace getVariable ["WFBE_C_AWACS_TYPES", []]);
+};
+_awacsMinAlt = missionNamespace getVariable ["WFBE_C_AWACS_MINALT", 150];
+_awacsUp = false;
+_awacsWasUp = false;
+_awacsNextCheck = 0;
 
 // Marty: PERF1 slice C - local refresh lever. Manual map-marker rebuild action plus an
 // automatic rebuild when client FPS stays under the threshold for 60s (mitigation AND
@@ -431,6 +445,22 @@ while {true} do {
 		WFBE_CL_UnitMarkerRegistry = _compactNeeded;
 	};
 
+	// fable/awacs-radar: once per AIR_SCAN_INTERVAL while the map is open (the AAR section
+	// below is skipped entirely when the map is closed), re-check whether a crewed friendly
+	// AWACS platform is airborne above MINALT. 'side' of a crewless hull resolves CIVILIAN,
+	// so an abandoned airframe never grants coverage.
+	if (_awacsEnabled && {_mapVisible} && {_now >= _awacsNextCheck}) then {
+		_awacsNextCheck = _now + (missionNamespace getVariable ["WFBE_C_AWACS_AIR_SCAN_INTERVAL", 5]);
+		_awacsUp = false;
+		{
+			if ((toLower typeOf _x) in _awacsTypes) then {
+				if (alive _x && {side _x == sideJoined} && {((getPosATL _x) select 2) > _awacsMinAlt}) then {_awacsUp = true};
+			};
+		} forEach vehicles;
+		if (_awacsUp && {!_awacsWasUp}) then {_awacsWasUp = true; diag_log "AWACS: air picture UP (friendly AWACS airborne)"};
+		if (!_awacsUp && {_awacsWasUp}) then {_awacsWasUp = false; diag_log "AWACS: air picture DOWN"};
+	};
+
 	// ---------------------------------------------------------------- AAR markers
 	{
 		if (typeName _x == "ARRAY") then {
@@ -483,7 +513,7 @@ while {true} do {
 					_aarEntry set [11, _now + 2];
 				};
 
-				if !(antiAirRadarInRange) exitWith {
+				if (!(antiAirRadarInRange) && !(_awacsUp)) exitWith {
 					_aarEntry set [8, true];
 					if (_aarEntry select 4) then {
 						_markerName setMarkerAlphaLocal 0;

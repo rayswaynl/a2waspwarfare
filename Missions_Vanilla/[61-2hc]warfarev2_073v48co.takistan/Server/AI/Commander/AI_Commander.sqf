@@ -204,36 +204,6 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- would otherwise let the sink spend the human commander's side supply uncommanded. Keep this raw.
 		_humanSeated = _humanCmd;
 
-		_aicomFlushResetOrder = {
-			private ["_frTeam","_frSideID","_frOrder","_frSeq","_frPos"];
-			_frTeam = _this select 0;
-			_frSideID = _this select 1;
-			_frOrder = _frTeam getVariable "wfbe_aicom_order";
-			_frSeq = if (isNil "_frOrder") then {-1} else {_frOrder select 0};
-			_frPos = getPos (leader _frTeam);
-			_frTeam setVariable ["wfbe_aicom_order", [_frSeq + 1, "towns", _frPos], true];
-			if ((missionNamespace getVariable ["WFBE_C_AICOM_TELEPORT_ORDER_FLUSH", 1]) > 0) then {
-				[_frTeam, _frSeq + 1, _frPos, _frSideID] Spawn {
-					private ["_pfTeam","_pfSeq","_pfOldPos","_pfSideID","_pfOrder","_pfPos"];
-					_pfTeam = _this select 0;
-					_pfSeq = _this select 1;
-					_pfOldPos = _this select 2;
-					_pfSideID = _this select 3;
-					sleep 0.25;
-					if (!isNull _pfTeam) then {
-						_pfPos = getPos (leader _pfTeam);
-						if ((_pfPos distance _pfOldPos) > 5) then {
-							_pfOrder = _pfTeam getVariable "wfbe_aicom_order";
-							if (!isNil "_pfOrder" && {count _pfOrder >= 3} && {(_pfOrder select 0) == _pfSeq} && {(_pfOrder select 1) == "towns"}) then {
-								_pfTeam setVariable ["wfbe_aicom_order", [_pfSeq + 1, "towns", _pfPos], true];
-								diag_log ("AICOMSTAT|v2|EVENT|" + str _pfSideID + "|" + str (round (time / 60)) + "|TELEPORT_ORDER_FLUSH|team=" + (str _pfTeam) + "|seq=" + str (_pfSeq + 1) + "|mode=towns|kind=reset");
-							};
-						};
-					};
-				};
-			};
-		};
-
 		//--- AI COMMANDER LOCK: when lock=1, treat _humanCmd as false so AI keeps full command
 		//--- even if a human occupies the commander slot (eval/night protection).
 		if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
@@ -249,8 +219,10 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				{ if (!isNull _x) then {
 					[_x, "towns"] Call SetTeamMoveMode;
 					_x setVariable ["wfbe_exec_sig", []];
-					if (_x getVariable ["wfbe_aicom_hc", false]) then {
-						[_x, _myID] Call _aicomFlushResetOrder;
+					if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then { //--- fix(hunt): G1 - raw 2-arg group read returns nil for server-local founded teams (wfbe_aicom_hc never stamped) and if (nil) threw, killing this supervisor loop; match the sibling loops (GroupGetBool).
+						_x setVariable ["wfbe_aicom_order",
+							[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
+							 "towns", getPos (leader _x)], true];
 					};
 				} } forEach (_logik getVariable ["wfbe_teams", []]);
 					_logik setVariable ["wfbe_aicom_focus", objNull]; _logik setVariable ["wfbe_aicom_focus_t0", -1e9]; //--- AICOM v2 fix (wiki cross-check): clear the commander FOCUS when a human commander leaves so a departed commander's "Move All" doesn't tunnel-vision the auto-AI for the 600s TTL.
@@ -271,8 +243,10 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			{ if (!isNull _x) then {
 				[_x, "towns"] Call SetTeamMoveMode;
 				_x setVariable ["wfbe_exec_sig", []];
-				if (_x getVariable ["wfbe_aicom_hc", false]) then {
-					[_x, _myID] Call _aicomFlushResetOrder;
+				if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then { //--- fix(hunt): G1 - raw 2-arg group read returns nil for server-local founded teams (wfbe_aicom_hc never stamped) and if (nil) threw, killing this supervisor loop; match the sibling loops (GroupGetBool).
+					_x setVariable ["wfbe_aicom_order",
+						[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
+						 "towns", getPos (leader _x)], true];
 				};
 			} } forEach (_logik getVariable ["wfbe_teams", []]);
 			_logik setVariable ["wfbe_aicom_focus", objNull];

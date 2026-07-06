@@ -184,7 +184,7 @@ while {!WFBE_GameOver} do {
                                 if ((gunner _gun) != _crew) then { _crew moveInGunner _gun; };
                             };
                             if ((gunner _gun) == _crew) then {
-                                _crew disableMove true;
+                                _crew disableAI "MOVE";
                                 _crew allowFleeing 0;
                             };
 

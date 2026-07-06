@@ -162,7 +162,7 @@ if (_unit isKindOf "Air") then { //--- Air units.
 		};
 	};
 
-	if ((missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR") > 0) then { //--- AAR Tracking.
+	if ((missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR") > 0 || (missionNamespace getVariable ["WFBE_C_AWACS", 0]) > 0) then { //--- AAR Tracking. fable/awacs-radar: the AWACS air picture reads the same registry, so feed it when either flag is on.
 		if (sideJoined != _side) then { //--- Track the unit via AAR System, skip if the unit side is the same as the player one.
 			_perfAARStarted = 1;
 			[_unit, _side, _sideID] ExecVM 'Common\Common_AARadarMarkerUpdate.sqf';

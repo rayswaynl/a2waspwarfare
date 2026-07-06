@@ -975,9 +975,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_STRIKE_STAGE_DIST")       then {WFBE_C_AICOM_STRIKE_STAGE_DIST = 800};     //--- m short of the enemy HQ where the staging rally sits.
 	if (isNil "WFBE_C_AICOM_STRIKE_STAGE_ARRIVE")     then {WFBE_C_AICOM_STRIKE_STAGE_ARRIVE = 400};   //--- m: a striker within this of the rally counts as staged.
 	if (isNil "WFBE_C_AICOM_JOURNEY_COMMIT")          then {WFBE_C_AICOM_JOURNEY_COMMIT = 1};          //--- never retarget a team that is closing on its town (progress >= 150m since dispatch).
-	if (isNil "WFBE_C_AICOM_STRIKE_COMMIT") then {WFBE_C_AICOM_STRIKE_COMMIT = 0}; //--- 0=current (any towns-mode team is strike-grabbable); 1=a PROGRESSING team (open dispatch + progress>=150m + target still enemy) is skipped for the HQ strike-grab so an active journey is not killed. Exempts recycle-flagged + genuinely-stuck teams.
-	if (isNil "WFBE_C_AICOM_LADDER_DECAY")            then {WFBE_C_AICOM_LADDER_DECAY = 1};            //--- stuck-strike ladder decays (-1) on progress instead of resetting to 0 (wedgers eventually reach tier-3 recovery). //--- SUPERSEDED by WFBE_C_AICOM_STUCK_DECAY; no longer read.
-	if (isNil "WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE") then {WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE = 6}; //--- a team with this many failed journeys since its last arrival is recycled (combat- and player-guarded).
+	if (isNil "WFBE_C_AICOM_STRIKE_COMMIT") then {WFBE_C_AICOM_STRIKE_COMMIT = 0}; //--- 0=current (any towns-mode team is strike-grabbable); 1=a PROGRESSING team (open dispatch + progress>=150m + target still enemy) is skipped for the HQ strike-grab so an active journey is not killed. Exempts recycle-flagged + genuinely-stuck teams.	if (isNil "WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE") then {WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE = 6}; //--- a team with this many failed journeys since its last arrival is recycled (combat- and player-guarded).
 	//--- cmdcon43-pack2: AICOM effectiveness additions (items 2-4).
 	if (isNil "WFBE_C_AICOM_RESEARCH_AIR")    then {WFBE_C_AICOM_RESEARCH_AIR    = 0}; //--- 0=off; 1=AI appends [AIR,1][AIR,2] to doctrine research when an Aircraft Factory is present.
 	if (isNil "WFBE_C_AICOM_STRIKE_AT_BONUS") then {WFBE_C_AICOM_STRIKE_AT_BONUS = 0}; //--- 0=off; >0=score bonus for launcher-carrying teams in the HQ-strike picker (suggest 50).
@@ -1596,13 +1594,6 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_STRUCTURES_SALE_DELAY = 50; //--- Building is sold after x seconds.
 	WFBE_C_STRUCTURES_SALE_PERCENT = 50; //--- When a structure is sold, x% of supply goes back to the side.
 	WFBE_C_STRUCTURES_SERVICE_POINT_RANGE = 50;
-if (WF_A2_Vanilla) then {
-		WFBE_C_BASE_COIN_DISTANCE_MIN = 8;
-		WFBE_C_BASE_COIN_GRADIENT_MAX = 4;
-} else {
-		WFBE_C_BASE_COIN_DISTANCE_MIN = 100;
-		WFBE_C_BASE_COIN_GRADIENT_MAX = 4;
-};
 	if (isNil "WFBE_C_COIN_POLL_SLEEP") then {WFBE_C_COIN_POLL_SLEEP = 0.1}; //--- Seconds between CoIn menu affordability/commanding-menu polls. 0.1 keeps the UI responsive while cutting wake-ups 10x from the legacy 0.01.
 
 //--- Towns.
@@ -1964,10 +1955,6 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- WALLS v2 (factory wall-MATERIAL ladder, cmdcon42-g). REVERTED in Build 88 (cmdcon43-c):
 //--- Ray asked to undo the bagfence/HESCO/concrete material swap and instead keep the ORIGINAL
 //--- walls + add concrete slabs (see WFBE_C_WALLS_V3 below). The *_WALLS_V2 factory arrays are
-//--- DELETED and the Construction_*Site hooks no longer read this flag, so it is now DEAD.
-//--- Kept REGISTERED (default 0) only as a tombstone so no stale host profile forces the old ladder.
-	if (isNil "WFBE_C_WALLS_V2") then {WFBE_C_WALLS_V2 = 0};
-
 //--- WALLS v3 (factory ORIGINAL walls + HQ-style concrete SLABS, cmdcon43-c). Ray Build 88:
 //--- "revert the factory wall changes, and then just add additional concrete slabs to them like
 //--- the HQ has for survivability". 1 = each factory keeps its exact legacy walls AND gets an added
@@ -2217,6 +2204,9 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- SML-1 Squad Micro Layer: camp-split captures (GR-2026-07-03a). Flag-gated default 0.
 	if (isNil "WFBE_C_SML_CAMP_SPLIT")    then {WFBE_C_SML_CAMP_SPLIT    = 1};   //--- 1=enable per-unit doStop/doMove camp-split; 0=byte-identical legacy behaviour.
 	if (isNil "WFBE_C_SML_WATCHDOG_TTL") then {WFBE_C_SML_WATCHDOG_TTL = 240};  //--- s: per-unit TTL before the watchdog forces doFollow back (covers all exit paths).
+//--- SML-2: real dismounts (cargo infantry advance on foot; driver/gunner stay mounted for fire support). Flag-gated default 0.
+	if (isNil "WFBE_C_SML_DISMOUNTS")              then {WFBE_C_SML_DISMOUNTS              = 0};   //--- 1=enable real dismounts; 0=byte-identical legacy behaviour.
+	if (isNil "WFBE_C_SML_DISMOUNTS_RANGE")        then {WFBE_C_SML_DISMOUNTS_RANGE        = 150}; //--- m: dismount is triggered only when the team leader is within this range of the objective (reserved; caller already at capture site).
 //--- SML-3: graceful retreats (mauled individuals pull back while healthy units keep fighting). Flag default 0.
 	if (isNil "WFBE_C_SML_RETREAT")                   then {WFBE_C_SML_RETREAT                   = 1};
 	if (isNil "WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD")  then {WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD  = 0.5};  //--- getDammage >= this -> unit is mauled and pulls back.
@@ -2273,6 +2263,22 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GARRISON_DRESSING_LIFETIME") then {WFBE_C_GARRISON_DRESSING_LIFETIME = 900}; //--- s: forced recycle age per gun (anti-accumulation).
 	if (isNil "WFBE_C_GARRISON_DRESSING_MAX")      then {WFBE_C_GARRISON_DRESSING_MAX = 6};        //--- Max simultaneous dressed towns across the map.
 	if (isNil "WFBE_C_GARRISON_DRESSING_SEARCHLIGHT") then {WFBE_C_GARRISON_DRESSING_SEARCHLIGHT = 1}; //--- 1: add SearchLight_RUS at night; 0: gun only.
+
+//--- AWACS PLATFORM RADAR (fable/awacs-radar, flag WFBE_C_AWACS default 0, lobby param):
+//--- while a CREWED friendly airframe from WFBE_C_AWACS_TYPES is airborne above MINALT the
+//--- owning side gets (a) the AAR air picture on the map WITHOUT being near an Anti-Air
+//--- Radar structure (gate OR-extension in Common_MarkerLoop.sqf; registry feed OR-extension
+//--- in Init_Unit.sqf), and (b) a ground moving-target sweep from the PILOT's client
+//--- (Client\Module\AWACS\awacs_spotter.sqf) via the existing 'uav-reveal' path (fuzzed
+//--- orange ellipses, size grows with AWACS-to-target distance). Flag-off: watcher never
+//--- launched, scan never runs - inert.
+	if (isNil "WFBE_C_AWACS")                   then {WFBE_C_AWACS = 0};                   //--- Master gate: 0=off (default), 1=on.
+	if (isNil "WFBE_C_AWACS_TYPES")             then {WFBE_C_AWACS_TYPES = ['C130J_US_EP1','MV22','Mi17_TK_EP1','Mi17_Ins','An2_TK_EP1']}; //--- Platform classnames (any side flies them; matched lowercase).
+	if (isNil "WFBE_C_AWACS_MINALT")            then {WFBE_C_AWACS_MINALT = 150};          //--- m AGL: radar counts as 'up' above this altitude.
+	if (isNil "WFBE_C_AWACS_AIR_SCAN_INTERVAL") then {WFBE_C_AWACS_AIR_SCAN_INTERVAL = 5}; //--- s: per-client re-check cadence for 'friendly AWACS airborne' (map open only).
+	if (isNil "WFBE_C_AWACS_GROUND_RANGE")      then {WFBE_C_AWACS_GROUND_RANGE = 6000};   //--- m: ground sweep radius around the AWACS.
+	if (isNil "WFBE_C_AWACS_GROUND_DELAY")      then {WFBE_C_AWACS_GROUND_DELAY = 30};     //--- s: between ground sweeps.
+	if (isNil "WFBE_C_AWACS_GROUND_MINSPEED")   then {WFBE_C_AWACS_GROUND_MINSPEED = 5};   //--- km/h: MTI floor - only faster-moving targets are painted.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
