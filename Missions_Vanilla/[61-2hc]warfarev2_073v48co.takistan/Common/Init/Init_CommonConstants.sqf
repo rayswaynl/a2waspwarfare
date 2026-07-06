@@ -567,7 +567,16 @@ if (worldName == "Zargabad") then {
 	//--- The fix ranks enemy/neutral towns by NEAREST-TO-OUR-FRONT first (frontier prefilter +
 	//--- distance-dominant score) with a small pull toward the enemy HQ, so the army advances as
 	//--- a wave onto achievable nearby objectives instead of cherry-picking the enemy's rear.
-	if (isNil "WFBE_C_AICOM_FRONTIER_RADIUS") then {WFBE_C_AICOM_FRONTIER_RADIUS = 3000};   //--- m: a candidate town is "on the front" if it is within this distance of one of OUR owned towns (fallback: our HQ). Towns past this are deprioritised, not banned (guardrail: still targetable if the front is empty).
+	_wfbeAICOMMapSize = getNumber (configFile >> "CfgWorlds" >> worldName >> "mapSize");
+	if (_wfbeAICOMMapSize <= 0) then {
+		_wfbeAICOMMapSize = switch (worldName) do {
+			case "Takistan": {12800};
+			case "Zargabad": {4096};
+			default {15360};
+		};
+	};
+	_wfbeAICOMMapRadius = _wfbeAICOMMapSize / 2;
+	if (isNil "WFBE_C_AICOM_FRONTIER_RADIUS") then {WFBE_C_AICOM_FRONTIER_RADIUS = ((_wfbeAICOMMapRadius * 0.20) max 1500)};   //--- m: a candidate town is "on the front" if it is within this distance of one of OUR owned towns (fallback: our HQ). Towns past this are deprioritised, not banned (guardrail: still targetable if the front is empty). Scales to small maps via CfgWorlds mapSize while preserving pre-set overrides.
 	if (isNil "WFBE_C_AICOM_DISTANCE_DIVISOR") then {WFBE_C_AICOM_DISTANCE_DIVISOR = 50};   //--- score divisor on distance-to-front: one supply point is worth this many metres of march. Was effectively 150 (too weak); 50 makes distance dominate so the nearest contestable town wins.
 	if (isNil "WFBE_C_AICOM_HQ_PULL_DIVISOR") then {WFBE_C_AICOM_HQ_PULL_DIVISOR = 250};    //--- score divisor on distance-to-ENEMY-HQ: adds a small spearhead bias toward the enemy capital so the front advances in one direction instead of wandering. Larger = weaker pull. 0 disables the pull.
 	if (isNil "WFBE_C_AICOM_FAR_PENALTY") then {WFBE_C_AICOM_FAR_PENALTY = 1000};           //--- flat score penalty applied to any candidate OUTSIDE the frontier radius, so a rich deep city can no longer buy its way over a near contestable town. Large enough to swamp supply spread.
@@ -578,7 +587,7 @@ if (worldName == "Zargabad") then {
 	//--- owned town, add a flat score bonus to boost near-front objectives relative to equally-close but
 	//--- higher-supply-value towns further back. Gate flag 0 = inert (default; owner flips to 1 to enable).
 	if (isNil "WFBE_C_AICOM_NEAR_BAND") then {WFBE_C_AICOM_NEAR_BAND = 1};                    //--- cmdcon43 Ray-approved flip-ON (near-band bonus): 1 = near-band bonus active, 0 = inert.
-	if (isNil "WFBE_C_AICOM_NEAR_BAND_DIST") then {WFBE_C_AICOM_NEAR_BAND_DIST = 2000};       //--- m: candidate must be within this distance of our nearest owned town to earn the bonus.
+	if (isNil "WFBE_C_AICOM_NEAR_BAND_DIST") then {WFBE_C_AICOM_NEAR_BAND_DIST = ((_wfbeAICOMMapRadius * 0.14) max 1000)};       //--- m: candidate must be within this distance of our nearest owned town to earn the bonus. Scales to small maps via CfgWorlds mapSize while preserving pre-set overrides.
 	if (isNil "WFBE_C_AICOM_NEAR_BAND_BONUS") then {WFBE_C_AICOM_NEAR_BAND_BONUS = 300};      //--- score points added when the near-band gate passes (additive, after all penalties).
 	//--- V0.8 FORCE CONCENTRATION: how many teams pile onto the SAME top-priority town so the
 	//--- attack overwhelms the garrison, then roll forward once it flips. Replaces "one team per
