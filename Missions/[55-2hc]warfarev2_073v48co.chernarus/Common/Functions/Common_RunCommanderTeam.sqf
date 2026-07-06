@@ -1032,6 +1032,16 @@ while {!WFBE_GameOver && _alive} do {
 								_uVeh setDamage 0;
 								_uVeh setVehicleAmmo 1;
 								diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_REPAIR|team=" + (str _uTeam) + "|tier=" + str _uTier + "|veh=" + (typeOf _uVeh));
+								//--- STUCK_REPAIR_RESETS_TIER (2026-07-06, flag WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER default 0):
+								//--- A successful in-place repair (setDamage 0 + canMove) leaves the tier counter at the high
+								//--- pre-repair value; AssignTowns then re-issues at that same tier even though the hull is
+								//--- now healthy. Reset wfbe_aicom_stuckstrikes to 0 (broadcast so the server's next
+								//--- AssignTowns cycle reads the cleared counter). Inert when flag = 0.
+								//--- A2-OA-safe: group setVariable with broadcast=true, canMove (no A3 commands).
+								if ((missionNamespace getVariable ["WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER", 0]) > 0 && {canMove _uVeh}) then {
+									_uTeam setVariable ["wfbe_aicom_stuckstrikes", 0, true];
+									diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|UNSTUCK_TIER_RESET|team=" + (str _uTeam) + "|seq=" + str _seq + "|tier=" + str _uTier + "|map=" + worldName);
+								};
 							};
 						};
 
@@ -1069,9 +1079,16 @@ while {!WFBE_GameOver && _alive} do {
 						//--- Tier 3: last-resort teleport-nudge to the nearest clear road node,
 						//--- only if no player is close enough to witness it.
 						//--- cmdcon41-w3e (e) WATER GUARD: fire the road-snap at ANY tier when the hull is water-stuck (_uForceRoad).
+						//--- TELEPORT-GUARD FIX (2026-07-06): hoist the player-guard radius once per Spawn invocation so both snap
+						//--- branches (vehicle + foot) read the SAME parameterised constant (WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R,
+						//--- default 300). Guard matrix: player >= _uPGR -> snap allowed; player < _uPGR -> snap suppressed,
+						//--- vehicle-branch uses hop fallback (velocity-Z bump, no teleport) to cover the full exclusion zone.
+						//--- Foot-branch defers to doMove fallback (re-issues move order, no teleport). No dead zone. A2-OA-safe: missionNamespace getVariable.
+						private "_uPGR";
+						_uPGR = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R", 300];
 						if ((_uTier >= 3 || {_recV2 && _uForceRoad}) && {!isNull _uVeh} && {alive _uVeh}) then {
 							_uPlayerNear = false;
-							{ if (isPlayer _x && {(_x distance _uVeh) < 100}) then {_uPlayerNear = true} } forEach playableUnits;
+							{ if (isPlayer _x && {(_x distance _uVeh) < _uPGR}) then {_uPlayerNear = true} } forEach playableUnits;
 							if (!_uPlayerNear) then {
 								_uRds = (getPos _uVeh) nearRoads 150;
 								if (count _uRds > 0) then {
@@ -1115,8 +1132,8 @@ while {!WFBE_GameOver && _alive} do {
 								};
 							};
 						};
-						//--- B (Ray 2026-06-29 A/B): a player within 100m blocks the teleport, so un-wedge the lead hull with a small upward velocity hop - it breaks terrain friction and visibly bumps the hull free instead of leaving it frozen in the player's view (never-frozen guardrail). The fresh MOVE route below re-applies the order.
-						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then { private "_bNear"; _bNear = false; { if (isPlayer _x && {(_x distance _uVeh) < 100}) then {_bNear = true} } forEach playableUnits; if (_bNear) then { _uVeh setVelocity [(velocity _uVeh) select 0, (velocity _uVeh) select 1, 4] } };
+						//--- B (Ray 2026-06-29 A/B, guard widened 2026-07-06): a player within _uPGR (same snap-exclusion zone) blocks the teleport-snap; un-wedge the lead hull with a small upward velocity hop instead - it breaks terrain friction and visibly bumps the hull free (never-frozen guardrail). Result matrix: player < _uPGR -> hop; player >= _uPGR -> snap; no gap. The fresh MOVE route below re-applies the order.
+						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then { private "_bNear"; _bNear = false; { if (isPlayer _x && {(_x distance _uVeh) < _uPGR}) then {_bNear = true} } forEach playableUnits; if (_bNear) then { _uVeh setVelocity [(velocity _uVeh) select 0, (velocity _uVeh) select 1, 4] } };
 						//--- WAVE-1 CAUSE-1 FOOT/DEAD-HULL UNSTUCK (2026-06-19): the vehicle Tier-3 above gates on
 						//--- !isNull _uVeh && alive _uVeh, so a wedged FOOT team (leader on foot) or a team whose hull
 						//--- is null/dead/immobile NEVER recovers (live: distStart=0, strikes climbed to ~43). Add a
@@ -1130,7 +1147,7 @@ while {!WFBE_GameOver && _alive} do {
 						//--- cmdcon41-w3e (e) WATER GUARD: fire the foot road-snap at ANY tier when water-stuck (_uForceRoad).
 						if ((_uTier >= 3 || {_recV2 && _uForceRoad}) && {_uOnFoot || _uHullDead || {_recV2 && _uForceRoad}}) then {
 							_uFootPlayerNear = false;
-							{ if (isPlayer _x && {(_x distance _uLdr) < 100}) then {_uFootPlayerNear = true} } forEach playableUnits;
+							{ if (isPlayer _x && {(_x distance _uLdr) < _uPGR}) then {_uFootPlayerNear = true} } forEach playableUnits;
 							if (!_uFootPlayerNear) then {
 								//--- cmdcon41-w3e (d) SLOPE-AWARE FOOT SNAP: a foot team grinding a steep Takistan slope (surfaceNormal
 								//--- z below WFBE_C_AICOM_RECOVERY_SLOPE_Z, default 0.85) is exactly the hill-grind case - widen the road
@@ -1192,6 +1209,9 @@ while {!WFBE_GameOver && _alive} do {
 									};
 								};
 							};
+						} else {
+							//--- Foot snap deferred: player within _uPGR guard radius; re-issue move order (non-teleport fallback, retried next unstuck cycle).
+							_uLdr doMove _dest;
 						};
 					};
 				};

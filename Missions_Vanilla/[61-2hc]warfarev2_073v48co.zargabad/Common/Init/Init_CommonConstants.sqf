@@ -2214,6 +2214,20 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GUER_CP2_FOOT_BASE") then {WFBE_C_GUER_CP2_FOOT_BASE = 4};        //--- v2 garrison base headcount (v1: 3).
 	if (isNil "WFBE_C_GUER_CP2_FOOT_PER_TIER") then {WFBE_C_GUER_CP2_FOOT_PER_TIER = 2}; //--- v2 extra garrison per GUER vehicle tier (v1: 1).
 	if (isNil "WFBE_C_GUER_CP2_ARMOR_EXTRA") then {WFBE_C_GUER_CP2_ARMOR_EXTRA = 1};    //--- v2 extra SAME-class hulls at tier>=2 (tier 3 = 2x T-72); read ONLY inside the CP_V2>0 branch, so inert while WFBE_C_GUER_CP_V2 = 0.
+//--- TELEPORT-GUARD FIX (2026-07-06): player-visible teleport guard radius for tier-3 SNAP branches
+//--- (Common_RunCommanderTeam.sqf vehicle + foot road-snap). Code previously hard-coded 100 m while
+//--- the design comment specified 300 m; owner witnessed 6 teleports on 2026-07-06 from this mismatch.
+//--- When any player is within this radius the snap is SKIPPED and execution falls through to the
+//--- existing no-snap path: the velocity-hop fallback at ~line 1113 then visibly bumps the hull free
+//--- (never-frozen guardrail). The 100 m velocity-hop fallback is a separate, intentional guard and
+//--- is unaffected by this constant.
+	if (isNil "WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R") then {WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R = 300};
+//--- STUCK_REPAIR_RESETS_TIER (2026-07-06, flag-gated default 0): when STUCK_REPAIR fires and the
+//--- hull canMove after in-place restoration, reset the team tier counter (wfbe_aicom_stuckstrikes)
+//--- to 0 so AssignTowns does not re-issue the next order at a still-high tier. Investigation showed
+//--- STUCK_REPAIR fired 3x but averted 0 teleports because the counter kept escalating. Inert at 0.
+	if (isNil "WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER") then {WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER = 0};
+
 
 //--- Aircraft spawn safety (fable/aircraft-spawn-safety, GR-2026-07-03a):
 //--- When >0, each aircraft purchase at an airfield/hangar attempts to find a clear
