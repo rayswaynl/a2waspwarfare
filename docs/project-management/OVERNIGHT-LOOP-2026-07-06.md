@@ -39,6 +39,11 @@ Owner directive (~01:30): "set a loop… Finish all the work, test, and suggest 
 - Claim ledger = FABLE-BUILD-LOG on this branch. Agent B (Game PC) works its fixed queue (TP-14→TP-13→TP-15) and does NOT deploy or touch the box; only this loop deploys.
 - Context preservation: update this doc's Log section every wake BEFORE doing work.
 
+## ⚠ NOTES (morning execution wave)
+- **.bikey staging PARTIAL: 2 of 6 keys staged, 4 NOT FOUND** on repos/box — the 4 missing mods' keys must be sourced from each mod's distribution `keys/` folder (exact list in the ops-wave digest). #51 stays gated until keys are live.
+- **Migration map still composing** (heaviest ops lane, ~60 tool calls, active) — gets a full Agent-A read + verification before it counts; watch for a suspicious write path (`a2waspwarfare\..a2wasp-cutmap\...`) spotted mid-flight — verify the final PR has the doc at the CORRECT path docs/design/v2/.
+- Ops lanes done: wiki (3 pages live), guild runbook (#57 comment), hygiene (PR #734), sensing-test plan. Merge executor still mid-runbook.
+
 ## Log
 - Morning pass (post-loop): B's night log read — TP-15 was IN PROGRESS (iter 3) when its session stalled: worktree a2wasp-tp15 / branch fable/stuck-inplace-repair may hold partial work on the Game PC. NEW follow-ups from B: (1) #727 touched a CLIENT file → pbo version bump needed at next deploy; (2) aicom-defend + aicom-reinforce ALSO have the unguarded rate-limit pattern → TP-20 scope grows to 4 verbs (posture/fieldorder/defend/reinforce). Soak t=220: unchanged (healthy, IDLE, war stalled 6-1-39neut).
 - 06:1x — Iter 9 (FINAL): harvest #3 (t=187, ~3h) — build healthy (fps 42, deleg 93%, err ~21/hr no flood, grpNull=0); EAST tilting ahead 6-1 but 39 towns neutral = still no dominance, DECAP 372 all IDLE. Soak plateaued (validated all it can). MORNING-REPORT-2026-07-06.md written. Peach DM sent. LOOP ENDED (soak cc44u continues on box).
