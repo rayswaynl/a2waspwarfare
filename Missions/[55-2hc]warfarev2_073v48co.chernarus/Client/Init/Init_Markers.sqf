@@ -13,7 +13,12 @@ scriptName "Client\Init\Init_Markers.sqf";
 	
 	//--- Determine the coloration method.
 	_townColor = missionNamespace getVariable "WFBE_C_UNKNOWN_COLOR";
-	if (_townSide == WFBE_Client_SideID) then {
+	if ((missionNamespace getVariable ["WFBE_C_FIX_NEUTRAL_MAP_COLOR", 1]) > 0) then {
+		if (_townSide == WFBE_C_UNKNOWN_ID) then {
+			_townColor = missionNamespace getVariable ["WFBE_C_NEUTRAL_COLOR", _townColor];
+		};
+	};
+	if ((_townSide == WFBE_Client_SideID) || (_townSide == WFBE_C_GUER_ID)) then {
 		_townColor = missionNamespace getVariable (Format ["WFBE_C_%1_COLOR",(_townSide) Call WFBE_CO_FNC_GetSideFromID]);
 	};
 
@@ -36,7 +41,12 @@ scriptName "Client\Init\Init_Markers.sqf";
 		
 		// --- Determine the coloration method.
 		_campColor = missionNamespace getVariable "WFBE_C_UNKNOWN_COLOR";
-		if (_campSide == WFBE_Client_SideID) then {
+		if ((missionNamespace getVariable ["WFBE_C_FIX_NEUTRAL_MAP_COLOR", 1]) > 0) then {
+			if (_campSide == WFBE_C_UNKNOWN_ID) then {
+				_campColor = missionNamespace getVariable ["WFBE_C_NEUTRAL_COLOR", _campColor];
+			};
+		};
+		if ((_campSide == WFBE_Client_SideID) || (_campSide == WFBE_C_GUER_ID)) then {
 			_campColor = missionNamespace getVariable (Format ["WFBE_C_%1_COLOR",(_campSide) Call WFBE_CO_FNC_GetSideFromID]);
 		};
 
