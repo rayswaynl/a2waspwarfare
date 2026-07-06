@@ -1,92 +1,614 @@
-# AICOM V2 Migration / Port Map
+# AICOM V2 Migration Map — Spec ↔ Live Reconciliation
 
-Guide rev: GR-2026-07-03a. Scope: final-form migration spec only.
+**Artifact name:** `AICOM-V2-MIGRATION-MAP.md`
+**Guide-Rev:** GR-2026-07-03a → Rev 2
+**Status:** v1 DRAFT — binding for cutover step 2 (build gate). TBD cells are called out; do not advance to cutover-build without resolving them.
+**Owner ruling:** Ray, 2026-07-05. Source: `docs/design/v2/AICOM-V2-CUTOVER-AND-RECONCILIATION.md`.
 
-Purpose: prevent Fable from either re-implementing dead V1 behavior or dropping required live behavior. Every row names the V2 home layer and the required port action.
+---
 
-Port actions:
+### Changelog
 
-| Action | Meaning |
-|---|---|
-| Lift As-Is | Keep behavior and current semantics, only move behind V2 data/interface shape. |
-| Refactor | Keep intent, replace implementation shape to satisfy locality/pure-core/profile requirements. |
-| Drop-Intentional | Do not port. Row must state why and replacement/owner rationale. |
+**Rev 2 — 2026-07-06 verification corrections**
 
-## Supervisor and mandatory workers
+Five corrections applied after an adversarial verification pass on `origin/claude/build84-cmdcon36`:
 
-Source cadence evidence: `AI_Commander.sqf:274-544` dispatches workers; `Init_CommonConstants.sqf:307-313`, `:557`, `:614`, `:736`, `:872` define live cadences.
+1. **Decapitate / press-hook scope**: `WFBE_SE_FNC_AICOM2_Decapitate` and the
+   `Common_RunCommanderTeam.sqf` press-hook block live on
+   `fable/aicom-v2-l1-press-fix` (tip `ee80a6818`) — they are NOT present on
+   `origin/claude/build84-cmdcon36`. All affected rows in Part 1, Part 3 (DECAP family),
+   and Part 5 (Decapitate fold work order) re-scoped to `ON-BRANCH fable/aicom-v2-l1-press-fix`.
+   Also corrected `Init_Server.sqf` AICOM2 registration claim from "lines 79-81" to "lines 79-80"
+   (line 79 = Snapshot, line 80 = Allocate; line 81 is MHQReloc, not an AICOM2 registration).
 
-| V1 behavior | Source evidence | V1 cadence/gate | V2 home | Action | V2 final form |
-|---|---|---|---|---|---|
-| Supervisor side loop | `AI_Commander.sqf:3`, `:15`, `:160` | One server-side instance per present side; active gate pauses parts when human owns command | Execution supervisor | Refactor | New `AI_Commander_V2.sqf` runs per side only when `WFBE_C_AICOM_V2_ENABLE > 0`; V1 supervisor stays untouched for flag-off rollback. |
-| Worker phase jitter | `AI_Commander.sqf:44-50`; constant `WFBE_C_AICOM_SUPERVISOR_JITTER` at `Init_CommonConstants.sqf:1168` | Random start offset up to 7s | Execution supervisor | Lift As-Is | Keep jitter. Harness requires WEST/EAST first-tick offset >= 5s PASS. |
-| Execute worker | `AI_Commander.sqf:274`; `AI_Commander_Execute.sqf:6`, `:71-100` | Every supervisor pass while active | Execution | Refactor | Execution consumes V2 decision records and writes `wfbe_aicom_order = [seq,mode,pos,radius,targetId,why]`; server-local teams still use SetTeamMoveMode/SetTeamMovePos compatibility. |
-| PlayerArty worker | `AI_Commander.sqf:279`; `AI_Commander_PlayerArty.sqf:72` | Every pass if function exists | Planning/Execution fire-support | Refactor | Move target selection into planning; execution only fires already-owned arty. Keep no-cheat intel gate. |
-| Paratroops worker | `AI_Commander.sqf:286-287` | `WFBE_C_AI_COMMANDER_TOWN_INTERVAL` 120s | Planning/execution special insertion | Refactor | Fold into V2 fire/support/insertion decisions; no independent scheduler. |
-| AssignTowns worker | `AI_Commander.sqf:379-380`; `AI_Commander_AssignTowns.sqf:106`, `:149`, `:693-761` | `WFBE_C_AI_COMMANDER_TOWN_INTERVAL` 120s | Planning | Refactor | Becomes pure target/team assignment over `WorldState` + `Assessment`. Execution applies orders. Preserve arrival/stranded telemetry. |
-| HCTopUp/merge worker | `AI_Commander.sqf:453-454`; constants `WFBE_C_AICOM_HC_MERGE_*` at `Init_CommonConstants.sqf:1182-1187` | `WFBE_C_AICOM_HC_MERGE_INTERVAL` 120s; enabled by merge/topup flags | Planning/Execution lifecycle | Refactor | Planning emits `merge` or `refit/topup` decisions. Execution sends HC merge/topup payload. Default merge remains off unless owner flips. |
-| Teams worker | `AI_Commander.sqf:470-471`, `:533-534`; `AI_Commander_Teams.sqf` | `WFBE_C_AI_COMMANDER_TEAMS_INTERVAL` 90s | Planning/Execution economy-lifecycle | Refactor | Pure planner decides founding intent and team type; execution creates group and delegates. Uses map profile caps. |
-| Produce worker | `AI_Commander.sqf:474-475`, `:543-544`; `Init_CommonConstants.sqf:309` | `WFBE_C_AI_COMMANDER_PRODUCE_INTERVAL` 45s | Planning/Execution economy-lifecycle | Refactor | Planning chooses spend/refit/topup budget; execution performs existing CreateUnit/CreateVehicle paths. Must honor "money is pressure" spend floor. |
-| DisbandLowTier worker | `AI_Commander.sqf:484-485`; `Init_CommonConstants.sqf:736`, ZG override `:1835` | `WFBE_C_AICOM_DISBAND_INTERVAL` 300s CH/TK, 150s ZG | Planning/Execution lifecycle | Refactor | V2 lifecycle manager owns all retire/merge decisions with TTL and player-proximity guard. |
-| Snapshot worker | `AI_Commander.sqf:496` | Runs immediately before strategy tick | Perception | Lift As-Is concept, Refactor implementation | Replace with V2 perception record. Do not publish planner state from snapshot. |
-| Strategy worker | `AI_Commander.sqf:494-498`; `Init_CommonConstants.sqf:557` | `WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL` 60s | Assessment/Planning | Refactor | Split into pure assessment and pure planning. Preserve outputs `_myStr`, `_enStr`, `wfbe_aicom_targets`, `wfbe_aicom_laststand` via execution compatibility writes. |
-| MHQ relocation monitor | `AI_Commander.sqf:512-513`; `Init_CommonConstants.sqf:614` | `WFBE_C_AICOM_MHQ_RELOCATE_INTERVAL` 180s | Planning/Execution base relocation | Refactor | Planning scores relocation utility; execution runs existing drive/deploy mechanics. Preserve `DEPLOYED` telemetry and abort TTL. |
-| BaseSell worker | `AI_Commander.sqf:518-519`; `Init_CommonConstants.sqf:637` | Default-off gate `WFBE_C_AICOM_BASE_SELL_ENABLE`, 120s | Planning/Execution economy | Lift As-Is if flag enabled | Keep disabled by default. If enabled, V2 plans rare sell decisions; execution owns mutation. |
-| Base worker | `AI_Commander.sqf:522-523`; `Init_CommonConstants.sqf:312` | `WFBE_C_AI_COMMANDER_BASE_INTERVAL` 60s | Planning/Execution base/economy | Refactor | Planning chooses build order from profile and threat; execution performs current build path. |
-| SpawnBeacon worker | `AI_Commander.sqf:529-530`; `Init_CommonConstants.sqf:872` | Default-off `WFBE_C_AICOM_SPAWNBEACON_ENABLE`, 120s | Planning/Execution visible pulse | Drop-Intentional initially | Leave dark in V2 one-shot. It is a feature add, not required commander core. Replacement: no-dead-air pulse can use attack, arty, radio, wildcard first. |
-| AssignTypes worker | `AI_Commander.sqf:536-537`; `Init_CommonConstants.sqf:310` | `WFBE_C_AI_COMMANDER_TYPES_INTERVAL` 30s | Planning/economy | Refactor | Convert to pure team-type demand planner keyed by target, threat, profile and spend floor. |
-| Upgrade worker | `AI_Commander.sqf:539-540`; `Init_CommonConstants.sqf:307` | `WFBE_C_AI_COMMANDER_UPGRADE_INTERVAL` 300s and `wfbe_upgrading` gate | Planning/economy | Refactor | Replace static order injection with goal-driven research plan. Preserve one-upgrade-at-a-time guard. |
-| Wildcard supervisor sibling loop | `Init_CommonConstants.sqf:560`; wildcard files outside main loop | 900s per side | Planning/Execution pulse director | Refactor | Integrate as V2 escalation/no-dead-air director. It remains a sibling only if flag-off V1 path is active. |
+2. **Wildcard census gap**: `AI_Commander_Wildcard.sqf` (3 emitters, `Server/Functions/`) and
+   `AI_Commander_Wildcard_GUER.sqf` (6 emitters, `Server/Functions/`) added to Part 3 with
+   disposition ALREADY-V2. Both registered in `Init_Server.sqf` lines 85-86. Line numbers
+   verified by grep on `origin/claude/build84-cmdcon36`.
+   Census total corrected: old figure 168 was drawn from a different branch (`fable-completion-push`).
+   Recount on `build84-cmdcon36` tip (Chernarus source tree only, grep `AICOMSTAT` across all `.sqf`
+   in `Missions/[55-2hc]…`) yields **208 emitters across 40 source files**. See Part 3 summary.
 
-## Required behavior rows
+3. **BaseSell / FundsSink grammar**: disposition changed from ALREADY-V2 to PORT (v1 grammar remap).
+   Evidence: `AI_Commander_BaseSell.sqf` line 97 emits `AICOMSTAT|v1|EVENT|…|BASE_SELL`;
+   `AI_Commander_FundsSink.sqf` line 78 emits `AICOMSTAT|v1|EVENT|…|FUNDS_SINK`.
 
-| Behavior | Source evidence | V2 home | Action | Final migration instruction |
+4. **COMBATSTAT emitter**: `AI_Commander.sqf` line 889 (`AICOMSTAT|v2|EVENT|…|COMBATSTAT`) added
+   to the AI_Commander.sqf table with disposition ALREADY-V2. Per-file AICOMSTAT count in the
+   section header updated from `~20 AICOMSTAT` to `~21 AICOMSTAT` (verifier counted 22 — the
+   delta of 1 is a `diag_log` vs. comment/variable-name grep ambiguity; conservative count used).
+   Also fixed: Part 5 claim that `AI_Commander_Execute.sqf` has "No emitters" — it has
+   `AICOM2|v1|ORDER|war-room-task` at line 68, which is outside the AICOMSTAT census but the
+   "no emitters" claim was inaccurate.
+
+5. **STRIKE_STAGE_RELEASE contingency**: Strategy.sqf line ~813, disposition DROP, note updated
+   to make the contingency explicit: DROP is contingent on Decapitate being merged first.
+   Also fixed: Strategy.sqf snapshot read corrected from `~33` to `line 38`.
+
+This map is the mandatory output of cutover **Step 1 (Map)**. Every V1 worker, constant, and telemetry emitter must appear in one of the tables below. A V1 surface not listed here blocks the cutover build.
+
+---
+
+## Part 1 — AICOMV2_x ↔ AICOM2_y Record/Function Mapping Table
+
+The spec line (Codex pack PRs #700-705) named records `AICOMV2_*`. The live lane
+(`fable/aicom-v2-l1-press-fix`) uses `AICOM2_*` / `WFBE_SE_FNC_AICOM2_*` names registered in
+`Init_Server.sqf` lines 79-80 (line 79 = Snapshot, line 80 = Allocate; Decapitate registration is
+on `fable/aicom-v2-l1-press-fix` at line 81 of that branch's Init_Server.sqf, not on
+`build84-cmdcon36`). The reconciliation direction per the cutover brief: **live names
+win; spec vocabulary is renamed to match live**.
+
+### Milestone / Module Mapping
+
+| Spec pack name (PRs #700-705) | Live-lane equivalent | File | Status | Notes |
 |---|---|---|---|---|
-| Doctrine pick | `AI_Commander.sqf` boot program block and comments around doctrine/order | Planning profile | Refactor | Do not port as "personality". Convert to profile and skill-dial scalars: aggression, spend floor, attack-superiority threshold, tempo. Owner rejected doctrine personalities. |
-| Research-program inject | `AI_Commander.sqf:591` notes the same AI upgrade function path; upgrade order arrays in core upgrade files | Planning economy | Refactor | V2 build planner emits ordered research intents from threat mix. Existing `WFBE_SE_FNC_AI_Com_Upgrade` remains execution backend. |
-| Bootstrap stipend | `AI_Commander.sqf:418-442` | Planning/economy | Lift As-Is | Keep initial funds/supply stabilization but log into V3 constants/boot telemetry. |
-| Adaptive spend/banking valve | `Init_CommonConstants.sqf:338-356`; `AI_Commander.sqf:550` rich threshold | Planning/economy | Refactor | Preserve intent, but V2 spend floor is posture-keyed. Harness fails hoard+lose. |
-| Reactive CBR | `AI_Commander_Base.sqf:524`, `:595`; CBR min-time constant in init | Perception/Planning fire-support | Refactor | Perception records observable arty threat; planning chooses CBR build/research. Must reset threat on round boundary. |
-| AICOMSTAT telemetry block | Many `AICOMSTAT|v1/v2` emits; `AI_Commander.sqf:998` WASPSCALE v2 | Execution telemetry | Lift As-Is plus extend | Keep all retained V1/V2 events parseable. Add V3 heartbeat/profile/WHY events. |
-| AICOMHB heartbeat | Roster mandates v3; V1 lacks full heartbeat | Execution telemetry | Refactor | Emit `AICOMHB|v3|TICK` every strategy tick with gen/state/planSeq/decisions/cpuMs/profile. |
-| Watchdog restart | Constants `WFBE_C_AICOM_WATCHDOG*` at `Init_CommonConstants.sqf:1163-1165` | Execution supervisor | Lift As-Is concept | V2 watchdog restarts only V2 side supervisor. Count >2 in one soak is FAIL. |
-| HC founding path `delegate-aicom-team` | `Common_RunCommanderTeam.sqf:3`, `:84`, `:178`; Teams worker dispatches HC teams | Execution | Refactor | Server creates group, assigns stable primitive `groupKey`, then sends `delegate-aicom-team` payload with profileLite and first order. |
-| HC merge path | `AI_Commander.sqf:453-454`; `Init_CommonConstants.sqf:1182-1187` | Execution lifecycle | Refactor | Keep default-off merge flag; if on, planning emits merge decision and execution sends `aicom-team-merge` to HC owner. |
-| Capture-phase interrupt | `Common_RunCommanderTeam.sqf:1686`, `:2046-2076` | HC Execution | Lift As-Is | Keep local capture loop and order-seq interrupt behavior. Planning must never micro-manage camp loop. |
-| MHQ relocation monitor | `AI_Commander_MHQReloc.sqf`; scheduler at `AI_Commander.sqf:512-513` | Planning/Execution | Refactor | Planning emits relocate intent with score and abort TTL. Execution owns vehicle drive/deploy. |
-| Base-defense replace | `AI_Commander_Strategy.sqf:541-548`; `Server_HandleSpecial.sqf:705-706` | Planning/Execution defense | Refactor | V2 defense planner owns base security posture; execution writes `defense` order and HC `wfbe_aicom_order`. |
-| HQ strike package | `AI_Commander_Strategy.sqf:708-757`, `:806-903`, `:975-978` | Planning/Execution endgame | Refactor | Treat order/gate/picker as atomic. Port only when all three are implemented: trigger, staging/mass gate, striker release. |
-| Last-stand recall | `AI_Commander_Strategy.sqf:92-118` | Assessment/Planning defense | Refactor | Assessment computes laststand; planning emits defense orders. Execution writes compatibility `wfbe_aicom_laststand`. |
-| Wedge watchdog | `AI_Commander_Strategy.sqf:566-610` | Planning lifecycle | Refactor | Keep safety, but suppress during laststand/HQ defense and emit WHY. |
-| Factory rally set | `AI_Commander_Base.sqf:770` | Planning/Execution base | Lift As-Is | Keep rally placement as execution side effect from build planner. |
-| Side-wide target blacklist | `Init_CommonConstants.sqf:1119-1127`; AssignTowns abandoned target flow | Assessment/Planning | Refactor | Port as side memory array with TTL and pain reason. |
-| Stranded survivor merge | `Init_CommonConstants.sqf:1190-1195`; Produce/driver merge paths | Planning/Execution lifecycle | Refactor | V2 lifecycle owns, guarding slung/airborne units. |
-| Service detour/self-service | `Init_CommonConstants.sqf:1129-1136`; `Common_RunCommanderTeam.sqf` service logic | HC Execution with planning guard | Lift As-Is | Keep local service execution. Planning should mark team `refit` and avoid retarget churn. |
+| `AICOMV2_PullWorldState` | `WFBE_SE_FNC_AICOM2_Snapshot` | `AI_Commander_Snapshot.sqf` | LIVE (M0) | Full world-model snapshot; builds `wfbe_aicom2_snap` indexed by `WFBE_SNAP_*` constants (`Init_CommonConstants.sqf` lines 693-706). Behaviour-neutral shadow — nothing in the spec pack replaces it. **Spec name dropped; live name wins.** |
+| `AICOMV2_Allocate` | `WFBE_SE_FNC_AICOM2_Allocate` | `AI_Commander_Allocate.sqf` | LIVE (M1/M2/M4/M5) | Concentrates on one front fist (`WFBE_C_AICOM2_FIST_TOWNS`), M2 harass, M4 focus, M5 support-push, expansion-first gate + contested-engage fix (BUG-1, `WFBE_C_AICOM_ENGAGE_CONTESTED` default 1). **Spec name dropped.** |
+| `AICOMV2_Execute` | `WFBE_SE_FNC_AI_Com_Execute` | `AI_Commander_Execute.sqf` | V1 FILE — KEEP | Direction-agnostic waypoint issuer. Turns `wfbe_teammode`/`wfbe_teamgoto` into real waypoints. Not replaced by any V2 file. Survives cutover unchanged. |
+| `AICOMV2_Decapitate` | `WFBE_SE_FNC_AICOM2_Decapitate` | `AI_Commander_Decapitate.sqf` | **ON-BRANCH fable/aicom-v2-l1-press-fix (tip ee80a6818) — must be merged as part of the cutover build, not pre-existing on build84** | Organic base-sensing + ARM/COMMIT/ABORT state machine (`wfbe_aicom2_decap_streak`, `_committed`, etc. on side logic). Consumes Snapshot; stamps `wfbe_aicom_decap` broadcast (A2-OA network-safe); press hook in `Common/Functions/Common_RunCommanderTeam.sqf` line 928 consumes the stamp. `WFBE_SE_FNC_AICOM2_Decapitate` is registered at Init_Server.sqf line 81 on that branch. **Spec name dropped; live name wins.** |
+| `AICOMV2_PressHook` (driver-press) | Press hook block | `Common/Functions/Common_RunCommanderTeam.sqf` lines 928-996 | **ON-BRANCH fable/aicom-v2-l1-press-fix (tip ee80a6818) — must be merged as part of the cutover build, not pre-existing on build84** | HC-local press handler: reads `wfbe_aicom_decap` broadcast stamp → overrides dest, sets `wfbe_aicom_press_on` latch, emits `AICOM2|v1|DECAP|…|PRESS|`. Not a standalone file; embedded in the team driver. **Spec name dropped.** |
+| Spec stance machine (`AICOMV2_StanceEval`) | `AI_Commander_Strategy.sqf` POSTURE line (~line 1034) | `AI_Commander_Strategy.sqf` | V1 — TBD | The V1 Strategy worker computes ATTACK/DEFEND/LAST-STAND/HQ-STRIKE and emits `AICOMSTAT|v1|POSTURE`. No standalone V2 stance machine was built in the live lane. **Gap G4: POSTURE content is PORTed (see Part 3); the clean V2 stance machine is a post-cutover N3 increment (lane 408). Does not block the one-shot cutover.** |
+| `WFBE_SNAP_*` constants (index schema) | Array index constants | `Init_CommonConstants.sqf` lines 693-706 | LIVE | 26-field layout: `WFBE_SNAP_TIME=0`…`WFBE_SNAP_TGTTOWNOBJS=25`; per-team digest `WFBE_SNT_*` constants follow. Spec record names map to array indices; no naming conflict. |
+| `AICOM2_Snapshot` (namespace var) | `wfbe_aicom2_snap` on side logic object | — | LIVE | The cached snapshot array. Read by Allocate (`_snap = _logik getVariable ["wfbe_aicom2_snap", []]`), Decapitate (on-branch), Strategy (`_snapOk` path at line 38-40 of `AI_Commander_Strategy.sqf` on build84; `_snap = _logik getVariable ["wfbe_aicom2_snap", []]` is at line 39), AssignTowns (`_allocTgt` path). |
+| Spec harness acceptance fixtures | `Tools/PrTestHarness/Aicom/Score-AicomRounds.ps1` + `Tools/PrTestHarness/Ops/aicom-watch.ps1` | `fable/soak-gate-tooling` | EXISTS — NOT YET MERGED | Scorer and watcher exist on `fable/soak-gate-tooling`; parse AICOM2 natively. **Must merge to base before parity-soak step 3 can gate anything (Gap G1).** |
 
-## Intentional drops
+### V1 Files at a glance — 18 workers
 
-| Dropped behavior | Evidence | Reason | Replacement |
+| V1 Worker File | V2 Disposition |
+|---|---|
+| `AI_Commander.sqf` (supervisor) | KEEP — calls all workers; adds `WFBE_SE_FNC_AICOM2_*` milestones |
+| `AI_Commander_Snapshot.sqf` | KEEP — IS the V2 M0 implementation |
+| `AI_Commander_Allocate.sqf` | KEEP — IS the V2 M1/M2/M4/M5 implementation |
+| `AI_Commander_Decapitate.sqf` | KEEP — IS the V2 M5 closer |
+| `AI_Commander_Strategy.sqf` | KEEP (modified) — V2 gates the HQ-strike block when DECAP is armed; POSTURE line ported |
+| `AI_Commander_Execute.sqf` | KEEP — direction-agnostic |
+| `AI_Commander_AssignTowns.sqf` | KEEP — route/dispatch/stuck; reads `wfbe_aicom_alloc_target` set by Allocate |
+| `AI_Commander_AssignTypes.sqf` | KEEP — template assignment; unchanged |
+| `AI_Commander_Teams.sqf` | KEEP — team founding; unchanged |
+| `AI_Commander_Produce.sqf` | KEEP — per-unit reinforcement; unchanged |
+| `AI_Commander_Base.sqf` | KEEP — HQ deploy + base build; unchanged |
+| `AI_Commander_BaseSell.sqf` | KEEP — structure recycle; unchanged |
+| `AI_Commander_FundsSink.sqf` | KEEP — wealth-conversion surge; unchanged |
+| `AI_Commander_MHQReloc.sqf` | KEEP — MHQ relocation; unchanged |
+| `AI_Commander_DisbandLowTier.sqf` | KEEP — disband selector; unchanged |
+| `AI_Commander_Beacon.sqf` | KEEP — forward spawn beacon; unchanged |
+| `AI_Commander_Paratroops.sqf` | KEEP — paratroop reinforcement; unchanged |
+| `AI_Commander_PlayerArty.sqf` | KEEP — player arty resolver; unchanged |
+
+No V1 worker files are deleted at cutover step 2. Deletions happen at step 4 (Shelve) only for files
+whose content has been fully superseded by V2 equivalents. Based on live-lane code, no V1 worker is
+fully superseded today — the new V2 files (`Snapshot.sqf`, `Allocate.sqf`, `Decapitate.sqf`) are
+additions that run alongside V1 workers, not replacements. `AI_Commander_HCTopUp.DRAFT.sqf` is a
+draft not compiled by Init_Server.sqf; shelve it at step 4.
+
+---
+
+## Part 2 — Unified Telemetry Grammar Decision
+
+### Decision: `AICOM2|v1|` grows the v3 features
+
+Per the cutover brief §Fork resolution: "Either the `AICOM2|v1|` family grows the v3 features … or
+the v3 grammar adopts the `AICOM2` prefix — builders pick one."
+
+**Ruling: `AICOM2|v1|` is the unified prefix.** Rationale:
+
+- The live lane already emits `AICOM2|v1|SNAP`, `AICOM2|v1|ALLOC`, `AICOM2|v1|DECAP`,
+  `AICOM2|v1|FISTPOOL` (39 emitters in 5 files).
+- `analyze_soak.py` and `Score-AicomRounds.ps1` already parse `AICOM2|v1|*` natively
+  (on `fable/soak-gate-tooling`).
+- Growing in-place avoids a global find-replace across the mission tree and keeps the soak
+  tooling intact.
+- The `AICOMSTAT|v3|` grammar from the spec pack is abandoned; its named rows (PLAN/WHY/INTEL)
+  are implemented under `AICOM2|v1|` below.
+
+### Concrete line grammars for the three v3 additions
+
+All lines use pipe-delimited key=value fields after a fixed positional prefix. Fields are
+optional/sparse — a consumer that does not understand a field ignores it. `tick` is always
+`round(time/60)` (integer minutes elapsed). No pipes inside field values.
+
+#### WHY rows (decision correlation)
+
+Emitted immediately following an action line when the Allocator or Decapitate makes a significant
+state change. One WHY row per decision. Format:
+
+```
+AICOM2|v1|WHY|<SIDE>|<tick>|act=<ACTION_TYPE>|reason=<REASON_CODE>|intel=<INTEL_KEY>|conf=<0..1 float 1dp>|detail=<freeform no-pipes>
+```
+
+Examples:
+```
+AICOM2|v1|WHY|west|42|act=FIST_CHANGE|reason=FRONT_ADVANCE|intel=myTowns_gt_prev|conf=0.9|detail=fist moved Elektro to Chernogorsk after capture
+AICOM2|v1|WHY|east|67|act=DECAP_COMMIT|reason=DOMINANT_SUSTAINED|intel=myEff_1.7x_enEff|conf=0.8|detail=streak=3 inRange=2 sensed=1
+AICOM2|v1|WHY|west|88|act=DECAP_ABORT|reason=EFF_COLLAPSE|intel=myEff_lt_enEff_0.9|conf=1.0|detail=myEff=12 enEff=18 minCommit elapsed
+```
+
+Reason codes (initial set — extend without schema breakage):
+`FRONT_ADVANCE`, `CONTESTED_ENGAGE`, `EXPAND_FIRST`, `DOMINANT_SUSTAINED`, `EFF_COLLAPSE`,
+`HQ_DEAD`, `PLAYER_POSTURE`, `FIELD_ORDER`, `HARASS_RETARGET`, `CONSOLIDATE_PAUSE`, `STALL_REPICK`
+
+#### INTEL classification rows
+
+Emitted once per strategy tick by Snapshot, summarising the classified picture. One row per side.
+Format:
+
+```
+AICOM2|v1|INTEL|<SIDE>|<tick>|class=<THREAT_CLASS>|enTowns=<n>|enHQ=<alive|dead>|myEff=<n>|enEff=<n>|ratio=<2dp>|posture=<ATTACK|DEFEND|STALL|UNKNOWN>|inRange=<n>
+```
+
+`class` values: `DOMINANT` (ratio >= 1.5), `PARITY` (0.8..1.5), `DEFICIT` (< 0.8),
+`WIN_IMMINENT` (enHQ=alive and enTowns <= 1 and dominant),
+`STALEMATE` (both sides stalled > N ticks).
+
+Example:
+```
+AICOM2|v1|INTEL|east|42|class=DOMINANT|enTowns=3|enHQ=alive|myEff=28|enEff=14|ratio=2.00|posture=ATTACK|inRange=2
+```
+
+#### PLAN / DECISION rows
+
+Emitted by Allocator after fist selection is resolved. One PLAN row per strategy tick per side.
+The existing `AICOM2|v1|ALLOC` line stays for backward compat; the PLAN row adds explicit decision
+rationale that WHY rows cross-reference.
+
+```
+AICOM2|v1|PLAN|<SIDE>|<tick>|decision=<DECISION_CODE>|primary=<town>|secondary=<town|none>|harass=<town|none>|teamsAssigned=<n>|src=<AUTO|FOCUS|SUPPORT>|override=<FIELD_ORDER|POSTURE|none>
+```
+
+`decision` values: `FIST_STEADY`, `FIST_ADVANCE`, `FIST_RETREAT`, `FIST_NEUTRAL`
+(expansion-first in effect), `DECAP_OVERRIDE` (Decapitate committed), `IDLE`.
+
+Example:
+```
+AICOM2|v1|PLAN|west|42|decision=FIST_ADVANCE|primary=Chernogorsk|secondary=Elektro|harass=Berezino|teamsAssigned=5|src=AUTO|override=none
+```
+
+### Parser registration requirements
+
+Before parity soak (step 3) these three families must be registered in:
+- `Tools/Soak/analyze_soak.py` — add regex patterns in the AICOM2 section (lines 276-296)
+  mirroring the existing SNAP/ALLOC/DECAP patterns; add dual-match for ported AICOMSTAT lines (Gap G8)
+- `Tools/PrTestHarness/Aicom/Score-AicomRounds.ps1` — add WHY/INTEL/PLAN to the family filter
+  and scorecard output
+- `Tools/PrTestHarness/Ops/aicom-watch.ps1` — add colour-coding for WHY/INTEL rows
+
+---
+
+## Part 3 — 168 AICOMSTAT Emitter Disposition Table
+
+Census re-verified by grep (`Select-String "AICOMSTAT"`) across all `.sqf` files in the Chernarus
+source mission tree on `origin/claude/build84-cmdcon36` tip (2026-07-06). The original 168 figure was
+drawn from a different branch (`origin/claude/fable-completion-push`) and is now superseded.
+**Corrected total: 208 `AICOMSTAT` emitters across 40 source files on `build84-cmdcon36`.**
+The two Wildcard workers (`AI_Commander_Wildcard.sqf` + `AI_Commander_Wildcard_GUER.sqf`, 9 emitters
+combined) were missing from the original census. Remaining delta (208 − 168 = 40) reflects
+additional emitters in non-Commander files (FSM workers, Init, PVFunctions, server utility functions)
+that were not counted in the original fable-completion-push census. Disposition entries for those
+out-of-scope files are noted as KEEP-AS-IS or TBD in the Remaining Workers section below.
+
+Disposition codes:
+- **PORT** — content must be re-emitted under unified `AICOM2|v1|` grammar before step 4
+- **DROP** — content not meaningful in V2; remove at step 4 without a replacement
+- **KEEP-AS-IS** — emitter stays verbatim (not commander-owned or consumed by non-V2 tools)
+- **RELOCATE** — byte-identical format survives but hosting file is being shelved; move emission
+- **ALREADY-V2** — already emits `AICOMSTAT|v2|` sub-grammar; prefix-swap to `AICOM2|v2|` at step 4
+
+### AI_Commander.sqf (35 emitters; ~21 AICOMSTAT + ~14 other families)
+
+| Line | Event Tag | Current Format | Disposition | Notes |
+|---|---|---|---|---|
+| ~51 | `SUPERVISOR_JITTER` | `AICOMSTAT|v1|EVENT` | DROP | Phase-jitter V1 startup artefact; V2 de-correlates differently |
+| ~108 | `RESEARCH_AIR` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix to `AICOM2|v2|EVENT` at step 4 |
+| ~123 | `SCAFFOLD_RESEARCH` | `AICOMSTAT|v1|EVENT` | DROP | V1 scaffold path; PATROLS-4 research now covered by V2 doctrine program |
+| ~399 | `BOOTSTRAP_STIPEND|start` | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|STIPEND|<side>|<tick>|event=start` + WHY reason=BOOTSTRAP |
+| ~404 | `BOOTSTRAP_STIPEND|end-first-town` | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|STIPEND|<side>|<tick>|event=end|reason=first-town` |
+| ~407 | `BOOTSTRAP_STIPEND|end-timeout` | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|STIPEND|<side>|<tick>|event=end|reason=timeout` |
+| ~428 | `BOOTSTRAP_STIPEND_WINDFALL` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix; keep all k=v fields |
+| ~576 | `WEALTH_CONVERSION` | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|WEALTH|<side>|<tick>|event=conversion|funds=…` |
+| ~610 | `ECON_SINK_SURGE|off|human_commander` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix |
+| ~625 | `ECON_SINK_SURGE|on` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix |
+| ~630 | `ECON_SINK_SURGE|off` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix |
+| ~709 | `ECON_SINK_RESEARCH` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix |
+| ~724 | `SCAFFOLD_RESEARCH_REACTIVE` | `AICOMSTAT|v1|EVENT` | DROP | V1-only CBRadar reactive append; V2 doctrine program covers |
+| ~771 | `TICK` (300s heartbeat) | `AICOMSTAT|v1|TICK` | PORT | **Critical soak KPI.** → `AICOM2|v1|TICK|<side>|<tick>|towns=…|supply=…|funds=…|fTeams=…|eTeams=…|upgCsv=…|units=…` same fields, new prefix. Consumer: `analyze_soak.py` section 5. |
+| ~787 | `ECONOMY` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix |
+| ~809 | `ECONFLOW` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix |
+| 889 | `COMBATSTAT` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Verified at line 889 on `origin/claude/build84-cmdcon36`. Full format: `AICOMSTAT|v2|EVENT|<side>|<tick>|COMBATSTAT|cas=…|vehLost=…|made=…|killed=…|netCas=…|netVehLost=…|netMade=…|netKilled=…`. Port prefix to `AICOM2|v2|EVENT` at step 4. |
+| ~869 | `CMDRSTAT` | `CMDRSTAT|v1|` | KEEP-AS-IS | Not commander-owned; hosted in AI_Commander.sqf which is not shelved at cutover. Consumed by `analyze_soak.py` section 8. No action at cutover. |
+| ~901 | `SRVPERF` | `SRVPERF|v1|` | KEEP-AS-IS | Same — stays in AI_Commander.sqf. No action at cutover. |
+| ~998 | `WASPSCALE` | `WASPSCALE|v2|` | KEEP-AS-IS | Wire-stable soak KPI backbone; do not touch. Consumed by analyze_soak.py + box dashboard. |
+| ~1010,~1015,~1020 | `GRPBUDGET` (3 lines) | `GRPBUDGET|v1|` | KEEP-AS-IS | Cutover brief §NOTinscope exempts GRPBUDGET. If AI_Commander.sqf is eventually shelved at a later step, relocate emission to `server_groupsGC.sqf` byte-identical. No action at cutover steps 2-3. |
+| ~1049 | `HCDELEG` | `HCDELEG|v1|` | KEEP-AS-IS | HC delegation diagnostics; not commander-owned; survives |
+| ~1071 | `SUPERVISOR_SUPERSEDED` | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|SUPERVISOR|<side>|<tick>|event=superseded|old=…|new=…` |
+| ~1082 | `END` | `AICOMSTAT|v1|END` | PORT | **Critical round-end line.** → `AICOM2|v1|END|<side>|<tick>|winner=…|doctrine=…|towns=…|funds=…` Consumer: analyze_soak.py END-event detection. |
+| ~1094 | `ROUNDSTAT` | `ROUNDSTAT|v1|` | KEEP-AS-IS | Not commander-owned; stays in AI_Commander.sqf. Consumed by analyze_soak.py. |
+
+### AI_Commander_Strategy.sqf (18 AICOMSTAT emitters)
+
+| Line | Event Tag | Current Format | Disposition | Notes |
+|---|---|---|---|---|
+| ~371 | `SPEARHEAD_REPICK` | `AICOMSTAT|v1|SPEARHEAD_REPICK` | PORT | → `AICOM2|v1|STRATEGY|<side>|<tick>|event=spearhead_repick|stalled=…|approach=…|evals=…|newPrimary=…|cooldown=…` + WHY reason=STALL_REPICK. analyze_soak.py regex at line 247 must update prefix. |
+| ~402 | `FRONT_DWELL_HOLD` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix |
+| ~455 | `RELIEF_TOWN_LOST` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix |
+| ~556 | `RELIEF` | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|STRATEGY|<side>|<tick>|event=relief|town=…` |
+| ~562 | `RELIEF_CAP_SKIP` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix |
+| ~610 | `WEDGE_RELEASE` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix |
+| ~689 | `RALLY_ORDER` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Port prefix |
+| ~735 | `HQ_STRIKE_STALL_OVERRIDE` | `AICOMSTAT|v1|EVENT` | DROP | V1 HQ-strike path; superseded by Decapitate closer |
+| ~757 | `HQ_STRIKE` | `AICOMSTAT|v1|EVENT` | DROP | V1 HQ-strike path; superseded by Decapitate closer |
+| ~813 | `STRIKE_STAGE_RELEASE` | `AICOMSTAT|v2|EVENT` | DROP | V1 strike stage; superseded by Decapitate COMMIT/ABORT. **DROP is contingent on Decapitate (`fable/aicom-v2-l1-press-fix`) being merged first; until Decapitate is merged, this emitter is active and NOT superseded — do not remove before merge.** |
+| ~975 | `BASE_OVERRUN` (script-raze) | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|STRATEGY|<side>|<tick>|event=overrun|via=script-raze|strikers=…|enemies=…|siege=…` |
+| ~978 | `BASE_OVERRUN` (assault-progress) | `AICOMSTAT|v1|EVENT` | PORT | → same, `via=assault-progress` |
+| ~1018 | `LOSING_PRESS_FLOOR` | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|STRATEGY|<side>|<tick>|event=losing_press_floor|myTowns=…|enTowns=…|myEff=…|enEff=…` |
+| ~1034 | `POSTURE` | `AICOMSTAT|v1|POSTURE` | PORT | **Critical soak line. New format:** `AICOM2|v1|POSTURE|<side>|<tick>|<STANCE>|myTowns=…|enTowns=…|myStr=…|enStr=…|myEff=…|enEff=…|townStr=…|garBodies=…|strikeOn=…` analyze_soak.py regex at line 241 must update to `AICOM2\|v1\|POSTURE`. Score-AicomRounds must track POSTURE distribution. |
+| ~1036 | `FRONT` | `AICOMSTAT|v1|FRONT` | PORT | → `AICOM2|v1|FRONT|<side>|<tick>|held=…|enemyHeld=…|contested=…|primary=…|onFront=…` analyze_soak.py regex at line 244 must update prefix. |
+| ~1056 | `STALL` | `AICOMSTAT|v1|STALL` | PORT | → `AICOM2|v1|STALL|<side>|<tick>|posture=…|myTowns=…|enTowns=…|myStr=…|enStr=…|myEff=…|enEff=…|streak=…` |
+| ~1114 | `FIRE_MISSION` | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|STRATEGY|<side>|<tick>|event=fire_mission|type=…` |
+| (Strategy debug lines) | `AICOMDBG` / misc | TBD | TBD | Strategy may have additional debug lines not caught by primary grep; audit required before step 4 (Gap G9) |
+
+### AI_Commander_AssignTowns.sqf (18 AICOMSTAT emitters, all ALREADY-V2)
+
+All 18 emitters are `AICOMSTAT|v2|EVENT`. Disposition for all: **ALREADY-V2 → prefix-swap to
+`AICOM2|v2|EVENT` at step 4**. Events: `ASSAULT_ARRIVED`, `ORBITER_STUCK`, `ASSAULT_STRANDED`,
+`RECYCLE_FLAG` (×3), `GARRISON_REASSIGN`, `TARGET_ABANDON` (×3), `SIDE_BLACKLIST` (×2),
+`JOURNEY_COMMIT`, `CAPTURE_LOCK_SUPPRESS`, `UNSTUCK_STRIKE`, `CAPTURE_TRACE|ORDER_PUBLISHED`,
+`ASSAULT_DISPATCH`. No logic changes.
+
+### AI_Commander_Teams.sqf (8 AICOMSTAT emitters, all ALREADY-V2)
+
+All 8 emitters are `AICOMSTAT|v2|EVENT`. Disposition for all: **ALREADY-V2 → prefix-swap at step 4**.
+Events: `TEAMS_TARGET`, `HCDISPATCH`, `HCDISPATCH_REAP`, `TEAM_RETIRED`, `FOUND_GATE_SKIP`,
+`TEAM_FOUNDED` (×2). One emitter unconfirmed by grep — audit before step 4 (Gap G6).
+
+### AI_Commander_Allocate.sqf (3 AICOMSTAT emitters)
+
+| Line | Event Tag | Disposition | Notes |
 |---|---|---|---|
-| Dormant move-interval loop | `WFBE_C_AI_COMMANDER_MOVE_INTERVALS = 3600` at `Init_CommonConstants.sqf:302`; no live worker dispatch in `AI_Commander.sqf:274-544` | Orphaned scheduler. Re-adding would create unexplained long-period order churn. | V2 movement planning via route graph and order hysteresis. |
-| Independent paratroops scheduler as core worker | `AI_Commander.sqf:286-287` | Separate town-interval side effect conflicts with pure planning and legibility. | Fold into insertion/fire-support decisions with WHY and profile gates. |
-| Spawn beacon as mandatory V2 behavior | `AI_Commander.sqf:529-530`, default-off flag | Feature add, default-off, not required for V2 commander core. | Escalation/no-dead-air director may later include it behind explicit flag. |
-| Doctrine personalities | Roster owner constraint rejects doctrine personalities | Owner rejected. | Profile constants plus skill/handicap dial only. |
-| Any supply-truck AI commander loop | Archive prior art mentions ancestral supply trucks, but owner constraints say do not re-propose AI supply trucks | Owner constraint. | Money pressure handled by spend floors and existing economy, not new AI supply trucks. |
+| ~183 | `CAPDBG|SC` (residual) | DROP | Debug residual in scout path; no soak consumer |
+| ~233 | `ENEMY_TOWN_TARGET` | PORT | Can fold into the ALLOC line as extra fields or keep as `AICOM2|v1|ALLOC|…|event=ENEMY_TOWN_TARGET` |
+| ~334 | `HARASS_SKIP` | PORT | → `AICOM2|v1|ALLOC|…|event=HARASS_SKIP|skipped=…|picked=…` |
 
-## V2 implementation order
+### Common_RunCommanderTeam.sqf (23 AICOMSTAT emitters)
 
-1. Boot flag and profile loader.
-2. Perception record plus pure assessment harness.
-3. Planning record with existing V1-equivalent decisions only.
-4. Execution bridge to current `wfbe_aicom_order` and SetTeamMoveMode/SetTeamMovePos.
-5. Telemetry v3 heartbeat/profile/WHY.
-6. Add new doctrine features only after V1 parity harness passes.
+| Line | Key Event | Disposition | Notes |
+|---|---|---|---|
+| ~1034 | `UNSTUCK_FIRED` | ALREADY-V2 | `AICOMSTAT|v2|EVENT`; port prefix at step 4. Consumed by analyze_soak.py recov counter. |
+| (remaining ~22) | Capture-trace, garrison, stuck events | ALREADY-V2 or PORT | Most are `AICOMSTAT|v2|EVENT`; remaining V1 lines port to `AICOM2|v1|EXEC|…`. Full audit before step 4. |
 
-## Flag-off proof requirement
+### AI_Commander_MHQReloc.sqf (21 AICOMSTAT emitters, all PORT)
 
-Every migration PR must prove:
+All 21 emitters are `AICOMSTAT|v1|MHQRELOC|…`. Disposition for all: **PORT → `AICOM2|v1|MHQRELOC|<side>|<tick>|event=<TAG>|…`** preserving existing k=v fields. Events:
+`RELAXED`, `ABORT` (×3), `DEFER`, `TRIGGER`, `MOBILIZED`, `AUTOFUEL`, `ROUTE_CONTACT`,
+`ROUTE_CLEAR`, `NUDGE`, `STUCK_TELEPORT`, `TELEPORT_STEP`, `TELEPORT_BLOCKED`, `RELEASE` (×2),
+`FINAL_REVALIDATE` (×3), `DEPLOYED`. analyze_soak.py `AICOMSTAT|v1|MHQRELOC` regex at line 250
+must update prefix.
 
-- `WFBE_C_AICOM_V2_ENABLE = 0` leaves V1 supervisor dispatch unchanged.
-- No V2 variables are read by V1 code paths unless guarded behind V2 flag.
-- No V2 profile variables overwrite current `WFBE_C_AICOM_*` globals.
-- V1 telemetry remains parseable by current `Tools/Soak/analyze_soak.py`.
+### Remaining Workers (1-2 emitters each)
+
+| Worker | Count | Current Format | Disposition | Target format |
+|---|---|---|---|---|
+| `AI_Commander_Base.sqf` | 7 | Mix of v1/v2 EVENT | TBD — full audit required | `AICOM2|v1|BASE|…` for v1 lines; prefix-swap for v2 lines (Gap G5) |
+| `AI_Commander_Produce.sqf` | 1 | `AICOMSTAT|v2|EVENT|…|UNIT_PRODUCED` | ALREADY-V2 | Prefix-swap |
+| `AI_Commander_BaseSell.sqf` | 1 | `AICOMSTAT|v1|EVENT` | PORT (v1 grammar remap) | Line 97 on `build84-cmdcon36`: `AICOMSTAT|v1|EVENT|…|BASE_SELL|type=…|cost=…|refund=…`. → `AICOM2|v1|SELL|<side>|<tick>|event=BASE_SELL|type=…|cost=…|refund=…` |
+| `AI_Commander_DisbandLowTier.sqf` | 1 | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Prefix-swap |
+| `AI_Commander_FundsSink.sqf` | 1 | `AICOMSTAT|v1|EVENT` | PORT (v1 grammar remap) | Line 78 on `build84-cmdcon36`: `AICOMSTAT|v1|EVENT|…|FUNDS_SINK|funds…|drain…`. → `AICOM2|v1|FUNDS|<side>|<tick>|event=FUNDS_SINK|funds=…|drain=…` |
+| `AI_Commander_Beacon.sqf` | 2 | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|BEACON|<side>|<tick>|event=…` |
+| `AI_Commander_Paratroops.sqf` | 1 | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|PARATROOPS|<side>|<tick>|event=…` |
+| `AI_Commander_PlayerArty.sqf` | 1 | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|PLAYERARTY|<side>|<tick>|event=…` |
+| `AI_Commander_AssignTypes.sqf` | 1 | `AICOMSTAT|v1|EVENT` | PORT | → `AICOM2|v1|TEAMS|<side>|<tick>|event=assigntype|…` |
+
+### AI_Commander_Wildcard.sqf (3 AICOMSTAT emitters, all ALREADY-V2)
+
+File path: `Server/Functions/AI_Commander_Wildcard.sqf`. Registered in `Init_Server.sqf` line 85
+(`WFBE_SE_FNC_AI_Commander_Wildcard`). Spawned per AI side from Init_Server for WEST/EAST; GUER
+runs its own deck (see below). Emitter line numbers verified by grep on `origin/claude/build84-cmdcon36`:
+
+| Line | Event Tag | Current Format | Disposition | Notes |
+|---|---|---|---|---|
+| 876 | `UPRISING_DONE` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Full format: `AICOMSTAT|v2|EVENT|<side>|<tick>|UPRISING_DONE|cleared`. Port prefix to `AICOM2|v2|EVENT` at step 4. |
+| 1105 | `CONVOY_DELIVERED` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Full format: `AICOMSTAT|v2|EVENT|<side>|<tick>|CONVOY_DELIVERED|supply=…`. Port prefix at step 4. |
+| 1512 | `WILDCARD_W*` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Per-draw outcome line; event tag is `WILDCARD_W` + draw number (e.g. `WILDCARD_W1`). Port prefix at step 4. |
+
+### AI_Commander_Wildcard_GUER.sqf (6 AICOMSTAT emitters, all ALREADY-V2)
+
+File path: `Server/Functions/AI_Commander_Wildcard_GUER.sqf`. Registered in `Init_Server.sqf` line 86
+(`WFBE_SE_FNC_AI_Commander_Wildcard_GUER`). Spawned once for `resistance` from Init_Server.
+Emitter line numbers verified by grep on `origin/claude/build84-cmdcon36`:
+
+| Line | Event Tag | Current Format | Disposition | Notes |
+|---|---|---|---|---|
+| 285 | `GUERCP_CLEARED` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Checkpoint cleared by occupier. Port prefix at step 4. |
+| 302 | `GUERCP_HELD` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Checkpoint held to timeout; grants FOB token. Port prefix at step 4. |
+| 393 | `GUERSCAV_WRECK` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Per-wreck scavenge reward line. Port prefix at step 4. |
+| 400 | `GUERSCAV_DESPAWN` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Scavenger team despawn/TTL line. Port prefix at step 4. |
+| 416 | `GUERWILDCARD_G*` | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Per-draw outcome line; event tag is `GUERWILDCARD_G` + draw number (e.g. `GUERWILDCARD_G1`). Port prefix at step 4. |
+| (implicit at ~285/302 watcher) | `GUERCP_*` resolution lines | `AICOMSTAT|v2|EVENT` | ALREADY-V2 | Lines 285 and 302 are inside the checkpoint watcher spawn; counted above. |
+
+Note: grep returns 6 unique `diag_log ("AICOMSTAT|` lines (lines 285, 302, 393, 400, 416, and the
+`GUERWILDCARD_G*` line at 416 covers all draw outcomes in one emitter). The line-285 and line-302
+entries are the two resolution branches of the checkpoint watcher (mutually exclusive per lifecycle).
+
+### Disposition Summary (208 total — corrected from 168; see Rev 2 changelog)
+
+| Disposition | Approx count | Notes |
+|---|---|---|
+| ALREADY-V2 (prefix swap only) | ~94 | `AICOMSTAT|v2|EVENT` lines; trivial swap at step 4. Increase of ~9 vs Rev 1 reflects Wildcard worker emitters (9 new) and COMBATSTAT (1 new). |
+| PORT (grammar remap) | ~55 | V1 lines with soak value; new `AICOM2|v1|*` lines required. BaseSell and FundsSink moved here from ALREADY-V2 (+0 net: were miscounted as v2). |
+| DROP | ~8 | V1 HQ-strike path (×3), scaffold-research (×2), phase-jitter (×1), CAPDBG residual (×1), Strategy debug TBD (×1). STRIKE_STAGE_RELEASE DROP is contingent on Decapitate merge. |
+| KEEP-AS-IS / RELOCATE | ~20 | CMDRSTAT, SRVPERF, GRPBUDGET, HCDELEG, ROUNDSTAT, WASPSCALE — not commander-owned or wire-stable. Non-Commander files (FSM, Init, PVFunctions, server utilities) also KEEP-AS-IS; see note below. |
+| TBD (audit required) | 0 at category level | Base.sqf and Teams.sqf 8th emitter need line-level confirmation before step 4. Non-Commander files (31 additional emitters across 17 files outside the AI/Commander tree) not individually dispositioned; all treated as KEEP-AS-IS pending step 4 audit. |
+
+**Note on non-Commander file emitters (208 − 177 = 31 emitters in 17 files outside `Server/AI/Commander/`):**
+These files include FSM workers (`server_town.sqf` ×7, `server_victory_threeway.sqf` ×6),
+`Common/Functions/` workers, `Init_IcbmTel.sqf`, `Init_Server.sqf`, server PVFunctions, and
+`Server_GuerAirDef.sqf`. None of these files are targeted for shelving at cutover step 4; their
+AICOMSTAT emitters are treated as KEEP-AS-IS for the cutover scope. Full audit deferred to step 4.
+
+---
+
+## Part 4 — Consumer Port Plan and Gating Order
+
+Consumers must be ported to the unified grammar **before removal (step 4)**. The parity-soak scorer
+ports first because it gates step 3.
+
+### Consumer inventory
+
+| Consumer | Location | Parses | Port status | Action required |
+|---|---|---|---|---|
+| `Score-AicomRounds.ps1` | `Tools/PrTestHarness/Aicom/Score-AicomRounds.ps1` | `AICOM2|v1|SNAP/DECAP/ALLOC`, `WASPSCALE|v2|`, error families | EXISTS on `fable/soak-gate-tooling` — parses AICOM2 natively. **Merge to base.** | Merge `fable/soak-gate-tooling`; add WHY/INTEL/PLAN family patterns. |
+| `aicom-watch.ps1` | `Tools/PrTestHarness/Ops/aicom-watch.ps1` | `AICOM2|v1|*`, `AICOMSTAT|*`, `WASPSTAT|*` | EXISTS on `fable/soak-gate-tooling` — tails and colour-codes AICOM2 lines. | Merge with Score-AicomRounds; add WHY/INTEL colour rules. |
+| `analyze_soak.py` | `Tools/Soak/analyze_soak.py` | `AICOMSTAT|v1|TICK/POSTURE/MHQRELOC/FRONT/SPEARHEAD_REPICK`, `AICOMSTAT|v2|EVENT`, `AICOM2|v1|SNAP/ALLOC/DECAP/FISTPOOL` | AICOM2 section EXISTS on `fable/soak-gate-tooling` (lines 276-296). V1 AICOMSTAT patterns (lines 238-253) must **dual-match** old+new prefixes during transition window, then drop old at step 4. | Add `AICOM2\|v1\|POSTURE\|` as alternative in regex at line 241 etc.; add WHY/INTEL/PLAN patterns. |
+| `Get-WaspRptMarkerSweep.ps1` | `Tools/Monitor/` | `AICOMSTAT|`, `WASPSTAT|`, `WASPSCALE|` | Not yet updated | Add `AICOM2|` to catch-patterns. Low priority — not a soak gate. |
+| Box `update-PublicStats.ps1` | Livehost `C:\WASP\` | `EMPTYGRP|v1|` (known prefix mismatch — emits `EMPTYGRP|`, box parses `GRPEMPTY|`; dashboard gauge silently dead), AICOMSTAT families for :8080 dashboard | Not ported | **Known defect: fix `GRPEMPTY` consumer on box (Gap G2).** Add `AICOM2|` parse pass for :8080 dashboard. TBD — box-side script access required. |
+| Box RPT ingest worker | Livehost (path TBD) | Tails RPT → POST `/api/aicom-stats` | Not confirmed | Extend to parse `AICOM2|` prefix alongside `AICOMSTAT|`. Priority: before step 3. (Gap G3) |
+| Wiki pages | GitHub wiki | Narrative descriptions of V1 behaviour | Historical at step 5 | Target: `AI-Commander-Logging-And-AICOMSTAT-Telemetry`, `AICOMSTAT-V2-Event-Vocabulary-Census`, `WASPSCALE-V2-Telemetry-Reference`. Do not mark historical before step 5. |
+
+### Gating order
+
+1. **Before cutover build (step 2):** This migration map finalised and owner-approved. Strategy
+   HQ-strike guard coded; telemetry PORT implementations drafted.
+2. **Before parity soak (step 3):** `fable/soak-gate-tooling` merged; `Score-AicomRounds.ps1` and
+   `aicom-watch.ps1` operational with AICOM2 grammar; `analyze_soak.py` dual-matching old+new
+   prefixes; box-side ingest extended; box EMPTYGRP defect fixed.
+3. **Before shelve (step 4):** All PORT emitters re-emitted under `AICOM2|v1|`; all consumers
+   updated to new prefix only; V1-only emitters (DROP category) confirmed removed.
+4. **At shelve (step 4):** DROP-category emitters deleted from source; fully-superseded V1 files
+   (none yet identified) moved to tagged branch with `Shelved-AICOM-V1` wiki record; GRPBUDGET/
+   SRVPERF emission relocated if their host file enters the shelve set.
+5. **At flag retirement (step 5):** `WFBE_C_AICOM_V2_ENABLE` flag retired; wiki pages marked
+   historical; docs re-anchored to V2-only.
+
+---
+
+## Part 5 — V1 Commander Workers → V2 Home or Fold Work Order
+
+18 worker files on `origin/claude/build84-cmdcon36` under
+`Server/AI/Commander/`. Each entry gives the V2 disposition, telemetry fold work order, and
+spec-pack / N3-lane cross-reference.
+
+### Supervisor: `AI_Commander.sqf`
+
+**V2 home:** Stays as the supervisor. On `build84-cmdcon36` already calls
+`WFBE_SE_FNC_AICOM2_Snapshot` and `WFBE_SE_FNC_AICOM2_Allocate` per strategy tick.
+The call to `WFBE_SE_FNC_AICOM2_Decapitate` is added on `fable/aicom-v2-l1-press-fix` —
+**must be merged as part of the cutover build**. No standalone V2 replacement.
+
+**Fold work order:** Port AICOMSTAT emitters per Part 3. No structural logic changes.
+
+**8 IMPLEMENT-IN-ONE-SHOT PRs connection:** None of the N3 spec lanes replace the supervisor;
+they add behaviour in callee workers.
+
+### `AI_Commander_Snapshot.sqf` (M0)
+
+**V2 home:** This file IS the V2 M0 implementation. Function name `WFBE_SE_FNC_AICOM2_Snapshot`.
+
+**Fold work order:** Add INTEL row emission (Part 2) after the existing `AICOM2|v1|SNAP` line.
+No other changes.
+
+**Spec cross-ref:** Lane 408 (`AICOM-V2-LAYER-ARCH.md`, MISSING at hub) — the layer architecture
+spec described here. `WFBE_SNAP_*` constants are the canonical world-model interface.
+
+### `AI_Commander_Allocate.sqf` (M1/M2/M4/M5)
+
+**V2 home:** This file IS the V2 offensive authority. Function `WFBE_SE_FNC_AICOM2_Allocate`.
+
+**Fold work order:** Add PLAN row + WHY rows (Part 2). Port 3 AICOMSTAT emitters (Part 3).
+
+**Spec cross-ref:** Lane 415 (route-graph doctrine) → `_frontDist` helper and expansion-first
+logic already present. Lane 416 (fluidity/retasking latency) → `WFBE_C_AICOM2_CONSOLIDATE_SECS`
+already present. Lane 424 (GUER endgame) → `_guerID`-aware neutral-pool already present. Full
+spec-harness acceptance pending lane 414 (`AICOM-V2-ACCEPTANCE-HARNESS.md`, MISSING at hub).
+
+### `AI_Commander_Decapitate.sqf` (M5)
+
+**V2 home:** This file IS the V2 HQ closer. Function `WFBE_SE_FNC_AICOM2_Decapitate`.
+**Branch:** `fable/aicom-v2-l1-press-fix` (tip `ee80a6818`) — **ON-BRANCH, must be merged as
+part of the cutover build, not pre-existing on build84**. `WFBE_SE_FNC_AICOM2_Decapitate` is
+registered at Init_Server.sqf line 81 on that branch.
+
+**Fold work order:** Add WHY rows on state transitions (COMMIT, ABORT, WON-HQDEAD) (Part 2).
+No other changes. WHY row fold is a post-merge task.
+
+### `AI_Commander_Strategy.sqf`
+
+**V2 home:** Stays. Two modifications required at cutover build:
+
+1. **Gate the HQ-strike launch block** (lines ~730-760) on
+   `(missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ENABLE", 0]) <= 0` so V1 strike is
+   suppressed when V2 Decapitate is armed. Flag-off → byte-identical to HEAD (no gate fires).
+2. **Port POSTURE/FRONT/STALL/SPEARHEAD_REPICK emitters** to `AICOM2|v1|` prefix (see Part 3).
+
+**Fold work order:** One-line flag gate; port 18 telemetry emitters.
+
+**Spec cross-ref:** Lane 422 (defense/counterattack) maps to existing RELIEF block
+(lines ~440-565). Lane 423 (intel/perception) maps to `_attacked` scan and POSTURE computation.
+
+### `AI_Commander_Execute.sqf`
+
+**V2 home:** Stays unchanged. No logic changes.
+
+**Emitter note:** Contains one `AICOM2|v1|ORDER|war-room-task` emitter at line 68 (verified on
+`origin/claude/build84-cmdcon36`). This is outside the `AICOMSTAT` census (it uses the `AICOM2|v1|ORDER`
+prefix, not `AICOMSTAT`). The AICOMSTAT disposition table previously claimed "No emitters" — that
+was incorrect. No fold work order required for the AICOMSTAT census; the ORDER line survives as-is.
+
+### `AI_Commander_AssignTowns.sqf`
+
+**V2 home:** Stays. Allocate writes `wfbe_aicom_alloc_target` per team; AssignTowns reads it
+at the `_allocTgt` path and routes the team. This is the execution bridge between Allocate and movement.
+
+**Fold work order:** Port 18 emitters (all ALREADY-V2 → prefix swap). No logic changes.
+
+### `AI_Commander_AssignTypes.sqf`
+
+**V2 home:** Stays. Template assignment independent of planning layer.
+
+**Fold work order:** 1 emitter; PORT. No logic changes.
+
+**Spec cross-ref:** Lane 425 (difficulty profiles) may inject template weightings here — TBD at
+lane 425 build time.
+
+### `AI_Commander_Teams.sqf`
+
+**V2 home:** Stays. Team founding unchanged.
+
+**Fold work order:** Port 8 emitters (all ALREADY-V2 → prefix swap). Confirm 8th emitter before step 4.
+
+### `AI_Commander_Produce.sqf`
+
+**V2 home:** Stays. Per-unit reinforcement unchanged.
+
+**Fold work order:** 1 emitter; ALREADY-V2 → prefix swap.
+
+### `AI_Commander_Base.sqf`
+
+**V2 home:** Stays. HQ deploy + base build unchanged.
+
+**Fold work order:** 7 emitters; full audit required before step 4 (Gap G5). Expected: mix of
+`AICOM2|v1|BASE|…` PORT and ALREADY-V2 prefix-swap.
+
+### `AI_Commander_BaseSell.sqf`
+
+**V2 home:** Stays. Structure recycle unchanged.
+
+**Fold work order:** 1 emitter; PORT (v1 grammar remap, not ALREADY-V2). Line 97 on `build84-cmdcon36`
+emits `AICOMSTAT|v1|EVENT|…|BASE_SELL`. Must be re-emitted as `AICOM2|v1|SELL|<side>|<tick>|event=BASE_SELL|…`
+before step 4.
+
+### `AI_Commander_FundsSink.sqf`
+
+**V2 home:** Stays. Wealth-conversion unchanged.
+
+**Fold work order:** 1 emitter; PORT (v1 grammar remap, not ALREADY-V2). Line 78 on `build84-cmdcon36`
+emits `AICOMSTAT|v1|EVENT|…|FUNDS_SINK`. Must be re-emitted as `AICOM2|v1|FUNDS|<side>|<tick>|event=FUNDS_SINK|…`
+before step 4.
+
+### `AI_Commander_MHQReloc.sqf`
+
+**V2 home:** Stays. MHQ relocation unchanged. `_mhqrel` counter already consumed by WASPSCALE.
+
+**Fold work order:** 21 emitters; all PORT to `AICOM2|v1|MHQRELOC|…` (see Part 3).
+
+### `AI_Commander_DisbandLowTier.sqf`
+
+**V2 home:** Stays. Disband selector unchanged.
+
+**Fold work order:** 1 emitter; ALREADY-V2 → prefix swap.
+
+### `AI_Commander_Beacon.sqf`
+
+**V2 home:** Stays. Forward spawn beacon unchanged.
+
+**Fold work order:** 2 emitters; PORT to `AICOM2|v1|BEACON|…`.
+
+### `AI_Commander_Paratroops.sqf`
+
+**V2 home:** Stays. Paratroop drop unchanged.
+
+**Fold work order:** 1 emitter; PORT to `AICOM2|v1|PARATROOPS|…`.
+
+### `AI_Commander_PlayerArty.sqf`
+
+**V2 home:** Stays. Player arty resolver unchanged. Called every supervisor tick in assist-mode too.
+
+**Fold work order:** 1 emitter; PORT to `AICOM2|v1|PLAYERARTY|…`.
+
+### `AI_Commander_HCTopUp.DRAFT.sqf`
+
+Not compiled by `Init_Server.sqf`. Not one of the 18 live workers. **Shelve at step 4 alongside
+any fully-superseded V1 files; do not include in the cutover build.**
+
+### The 8 IMPLEMENT-IN-ONE-SHOT PRs (spec lanes 415-426, N3 block)
+
+These lanes add incremental V2 behaviours on top of the one-shot cutover. They are **not blocking
+the one-shot** (per cutover brief). Each maps to an N3 lane in V2-PROGRAM-HUB.md:
+
+| Lane | Spec doc | Target worker(s) | Cutover-block? |
+|---|---|---|---|
+| 415 | `AICOM-V2-MOVEMENT-ROUTE-GRAPH.md` | AssignTowns, Allocate | No |
+| 416 | `AICOM-V2-FLUIDITY-LATENCY.md` | Allocate, AssignTowns | No |
+| 417 | `AICOM-V2-BUILD-RESEARCH-PLANNER.md` | Base, Produce | No |
+| 418 | `AICOM-V2-BASE-RELOCATION.md` | MHQReloc | No |
+| 419 | `AICOM-V2-FIRE-SUPPORT.md` | Strategy (arty), PlayerArty | No |
+| 420 | `AICOM-V2-ESCALATION-DIRECTOR.md` | Strategy, Teams | No |
+| 421 | `AICOM-V2-LIFECYCLE-CLEANUP.md` | DisbandLowTier, Teams | No |
+| 422 | `AICOM-V2-DEFENSE-COUNTERATTACK.md` | Strategy (RELIEF block) | No |
+| 423 | `AICOM-V2-INTEL-PERCEPTION.md` | Snapshot, Allocate | No — INTEL row grammar spec'd in Part 2 |
+| 424 | `AICOM-V2-GUER-ENDGAME.md` | Allocate (neutral pool) | No — neutral-pool already live |
+| 425 | `AICOM-V2-DIFFICULTY-PROFILES.md` | AssignTypes, Teams | No |
+| 426 | `AICOM-V2-EXPLAINABILITY-COMMS.md` | WHY rows (Part 2) | No — grammar spec'd in Part 2 |
+
+The cutover build ships M0 + M1/M2/M4/M5 (present on `build84-cmdcon36`) + M5-closer + press-hook
+(on `fable/aicom-v2-l1-press-fix`, must be merged). N3 lanes are post-cutover increments on top of
+the unified `AICOM2|v1|` grammar.
+
+### Micro-layer spec cross-reference
+
+`docs/design/v2/MICRO-LAYER.md` defines the per-HC micro-layer contract. Its implementation lives
+in `Common/Functions/Common_RunCommanderTeam.sqf`. The press-hook (lines 928-996 on
+`fable/aicom-v2-l1-press-fix`, tip `ee80a6818`) is the first micro-layer behaviour added under V2
+— **ON-BRANCH, not yet on build84**. Remaining micro-layer behaviours — stuck-recovery v2 reference (codex lane 165),
+HC state upward report `WFBE_SNT_REPORT` (currently `[]` in all Snapshot team digests) — are TBD
+incremental additions that do not block the one-shot cutover.
+
+---
+
+## Known Gaps / TBD Items
+
+| # | Gap | Blocking step | Resolution path |
+|---|---|---|---|
+| G1 | `fable/soak-gate-tooling` not yet merged — `Score-AicomRounds.ps1` and `aicom-watch.ps1` not on base | Blocks step 3 gate | Merge before parity soak |
+| G2 | Box-side `update-PublicStats.ps1` EMPTYGRP prefix mismatch (emits `EMPTYGRP|v1|`, box parses `GRPEMPTY|v1|`; :8080 gauge silently dead) | No (pre-dates V2) | Fix consumer on box at step 3 prep |
+| G3 | Box-side RPT ingest worker path not confirmed; AICOM2 parsing not verified | Blocks step 3 consumer completeness | Confirm on livehost before soak |
+| G4 | V2 standalone stance machine (`AICOMV2_StanceEval`) not built; Strategy POSTURE remains V1 logic ported to `AICOM2|v1|POSTURE` | No (behaviour adequate; clean SM is post-cutover N3) | Post-cutover lane 408 |
+| G5 | `AI_Commander_Base.sqf` 7 emitters require full audit for PORT vs DROP vs ALREADY-V2 | No (base events are diagnostics, not soak KPIs) | Before step 4 |
+| G6 | `AI_Commander_Teams.sqf` 8th emitter not resolved by primary grep | No | Full grep audit before step 4 |
+| G7 | WHY/INTEL/PLAN grammar (Part 2) requires emitter implementation in Allocate, Decapitate, Snapshot | No (grammar spec ships here; emitter code is a post-cutover build task) | Post-cutover increment |
+| G8 | `analyze_soak.py` AICOMSTAT legacy patterns (lines 238-253) need dual-match during transition window (steps 2-3) before old prefix is removed | Blocks step 3 analysis correctness | Add `AICOM2\|v1\|POSTURE` etc. as alternatives in the regexes |
+| G9 | Strategy.sqf debug lines (`AICOMDBG` family) not fully counted in the 168 census | No (debug lines not soak KPIs) | Full grep audit before step 4 |
+
+---
+
+*Guide-Rev: GR-2026-07-03a → Rev 2 (2026-07-06 verification corrections). Do not advance to cutover step 2 without owner sign-off on this map.
+Cite this document in any cutover-related build report. Rev 2 corrects Decapitate/press-hook scope,
+Wildcard census gap, BaseSell/FundsSink grammar, COMBATSTAT entry, and STRIKE_STAGE_RELEASE contingency.*
