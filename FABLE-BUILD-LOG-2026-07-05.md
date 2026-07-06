@@ -20,3 +20,9 @@ Build: build_cc48.ps1 (fixed stale cmdcon45 prefix bug from cc47 script); 16/16 
 Boot errors: 2-line pre-existing wf_maxplayers undefined (MATCH telemetry Init_Server:191 — WF_MAXPLAYERS define never included; NOT a cc48 regression, dates to e6ab52ce6/cc46) -> hotfix branch fable/hotfix-match-maxplayers dispatched.
 Old known error trio: FIXED (no AI_Commander_Base:244 error in cc48 boot window).
 Flag menu still owed to owner for the dark set: SML-3/4/5, daytime, garrison, aircraft safety, road-clear dial, repair-tier-reset, defense client-gate align.
+
+## 2026-07-06 ~19:50 — cc48a DEPLOYED LIVE (v89-cmdcon48a, master a3851b3dc)
+Owner flag menu applied: PERMANENT_DAY=1 (via Parameters.hpp x3 — params trap respected), SML_RETREAT/AT_OVERWATCH/SURGICAL_UNSTUCK=1, GARRISON_DRESSING=1, AIR_SPAWN_SAFETY=1, AICOM_STUCK_REPAIR_RESETS_TIER=1. Kept dark: SML_DISMOUNTS (fresh fix, wants one live round of SML evidence), DEFENSE_CLIENT_GATE_ALIGN (owner), ROAD_CLEAR dial (redundant w/ primary 14m gate).
+SML-2 #787 merged after refuter FAIL->fix->PASS cycle (B1 flag-flip reversion via stale branch; B2 orderGetIn-false = seated-eject NO-OP -> moveOut; honest telemetry seated_still=). maxPlayers fix #782 live (boot error GONE). V2 cutover reconciled soak-ready as PR #788 (zero conflicts, invariants verified).
+Boot: PBO active, HCs CIV (HC2 one reseat again), 1 NEW live error: Server_TownGarrisonDressing.sqf:187 `disableMove` = NONEXISTENT command (not A3 — invented; lint blind spot) -> hotfix fable/hotfix-garrison-disablemove dispatched + linter addition. permDay FPSREPORT confirmation pending next window.
+NEW TRAP CLASS for taxonomy: invented commands that are neither A2 nor A3 pass the A3CMD lint; only live RPT catches them. Counter: a2oa-verify-command skill on every uncertain command + grow linter list reactively (moveInAny, disableMove).
