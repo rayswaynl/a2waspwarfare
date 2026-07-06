@@ -1,5 +1,5 @@
 // Marty: Performance Audit locals and marker update cache.
-private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites","_nextRebindCheck","_needRebind","_liveLeader","_cachedLeader","_liveHas","_cachedHas","_i","_ownMarker","_ownLastPos","_ownLastDir","_ownLastAlpha","_ownPos","_ownDir","_ownDirDiff","_destDirMode","_destPos","_destDir","_destBx","_destBy","_destDx","_destDy","_destData","_destMode","_destWpCount","_destWpIdx","_destStoredPos","_destStoredGrp"];
+private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites","_nextRebindCheck","_needRebind","_liveLeader","_cachedLeader","_liveHas","_cachedHas","_i","_ownMarker","_ownLastPos","_ownLastDir","_ownLastAlpha","_ownPos","_ownDir","_ownDirDiff","_destDirMode","_destPos","_destBx","_destBy","_destDx","_destDy","_destData","_destMode","_destWpCount","_destWpIdx","_destStoredPos","_destStoredGrp"];
 
 _sideText = sideJoinedText;
 _label = "";
@@ -157,10 +157,14 @@ while {!gameOver} do {
 				//--- Source 3: engine expectedDestination on the player (DoNotPlan = no active dest).
 				if (count _destPos == 0) then {
 					_destData = expectedDestination player;
-					_destMode = _destData select 1;
+					_destMode = "DoNotPlan";
+					if (count _destData > 1) then {_destMode = _destData select 1};
 					if (_destMode != "DoNotPlan") then {
 						_destPos = _destData select 0;
-						if (player distance _destPos <= 25) then {_destPos = []};
+						if ((_destPos select 0) == 0 && {(_destPos select 1) == 0}) then {_destPos = []};
+						if (count _destPos > 0) then {
+							if (player distance _destPos <= 25) then {_destPos = []};
+						};
 					};
 				};
 				//--- Compute bearing player->destination (atan2 position-delta; binary getDir is A3-only).
@@ -411,10 +415,14 @@ while {!gameOver} do {
 						if (_destDirMode) then {
 							_destPos  = [];
 							_destData = expectedDestination _leader;
-							_destMode = _destData select 1;
+							_destMode = "DoNotPlan";
+							if (count _destData > 1) then {_destMode = _destData select 1};
 							if (_destMode != "DoNotPlan") then {
 								_destPos = _destData select 0;
-								if (_leader distance _destPos <= 25) then {_destPos = []};
+								if ((_destPos select 0) == 0 && {(_destPos select 1) == 0}) then {_destPos = []};
+								if (count _destPos > 0) then {
+									if (_leader distance _destPos <= 25) then {_destPos = []};
+								};
 							};
 							if (count _destPos > 1) then {
 								_destDx = (_destPos select 0) - (getPos _leader select 0);
