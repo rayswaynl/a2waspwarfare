@@ -1,0 +1,17 @@
+{
+  "name": "WFBE_NEURODEF_FORT_OP_WEST",
+  "parentW": 14,
+  "parentD": 14,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "OBSERVATION POST — MANNED WEST variant (flag WFBE_C_DEF_FORT_MANNED). Same live layout as the side-neutral WFBE_NEURODEF_FORT_OP (watchtower + camo net + fallback bag ring + supply cache) PLUS one manned .50cal M2 on the watchtower deck. Soldier logic: an OP's whole value is height and fields of view — putting the gun ON the deck gives the observer both eyes and a weapon over the same long arc, and the tower parapet is his cover. The gun child carries z=5.4: the DOCUMENTED Land_Fort_Watchtower_EP1 deck constant (Init_CommonConstants.sqf flak-tower fallback table: STRUCTURE=Land_Fort_Watchtower_EP1 + DECK_Z=5.4). Server_ConstructPosition.sqf lifts any child with z>0.1 onto the deck via setPosATL (the flak-tower elevated-child path); the flak AUTOZ boundingBox override does not fire here because the host class is not the configured flak host, so the explicit 5.4 is used. Manning is automatic via ConstructDefense (gunner teleports in via moveInGunner — works at height, no ladder walk).",
+  "objs": [
+    {"cls":"Land_Fort_Watchtower_EP1","x":0,"y":2,"z":0,"dir":0,"role":"ELEVATED OBSERVATION — bunker-tower, long view over the approach"},
+    {"cls":"Land_CamoNetVar_NATO","x":0,"y":4,"z":0,"dir":0,"role":"concealment — breaks the tower silhouette (front, ground level; deck gun fires over it)"},
+    {"cls":"Land_fort_bagfence_round","x":0,"y":-1,"z":0,"dir":0,"role":"low fallback ring at the base (self-defence, not a bastion)"},
+    {"cls":"USBasicAmmunitionBox_EP1","x":-2,"y":-3,"z":0,"dir":0,"role":"supply cache — low, behind the tower"},
+    {"cls":"M2StaticMG","x":0,"y":2,"z":5.4,"dir":0,"role":"MANNED .50cal — ON the watchtower deck (z=5.4 = documented Land_Fort_Watchtower_EP1 DECK_Z), long frontal arc"}
+  ]
+}

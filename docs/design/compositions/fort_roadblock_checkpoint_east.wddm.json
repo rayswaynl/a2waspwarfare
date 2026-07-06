@@ -1,0 +1,20 @@
+{
+  "name": "WFBE_NEURODEF_FORT_CHECKPOINT_EAST",
+  "parentW": 20,
+  "parentD": 14,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "ROADBLOCK / CHECKPOINT — MANNED EAST variant (flag WFBE_C_DEF_FORT_MANNED). Mirrors the WEST manned layout exactly; weapon family swapped to DShKM (DSHKM_TK_INS_EP1 — standard EAST/GUER/TKA static in every DEFMENU_V2 EAST composition). One manned DShK behind each bag-fence guard position, arcs converging on the stop line and approach lane.",
+  "objs": [
+    {"cls":"Land_CncBlock_Stripes","x":-3,"y":5,"z":0,"dir":0,"role":"chicane block 1 (left) — forces vehicles right"},
+    {"cls":"Land_CncBlock_Stripes","x":3,"y":2,"z":0,"dir":0,"role":"chicane block 2 (right) — forces vehicles left"},
+    {"cls":"Land_CncBlock_Stripes","x":-3,"y":-1,"z":0,"dir":0,"role":"chicane block 3 (left) — completes the S-bend"},
+    {"cls":"Land_CncBlock_Stripes","x":0,"y":3.5,"z":0,"dir":0,"role":"stop-line block — marks the halt point"},
+    {"cls":"Land_fort_bagfence_long","x":-6,"y":3,"z":0,"dir":90,"role":"left guard position — cover, arc onto the stop line"},
+    {"cls":"Land_fort_bagfence_long","x":6,"y":1,"z":0,"dir":90,"role":"right guard position — cover, mutually supports left"},
+    {"cls":"DSHKM_TK_INS_EP1","x":-7.5,"y":3,"z":0,"dir":335,"role":"MANNED DShKM — behind the left guard bags, arc onto the stop line + approach"},
+    {"cls":"DSHKM_TK_INS_EP1","x":7.5,"y":1,"z":0,"dir":25,"role":"MANNED DShKM — behind the right guard bags, arc onto the stop line + approach"}
+  ]
+}

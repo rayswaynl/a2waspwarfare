@@ -21,12 +21,14 @@ if (_name == '__SERVER__' || _uid == '' || local player) exitWith {};
 //--- b761 (Ray 2026-06-26): a headless client is NOT a warfare player and must never run the human enrollment
 //--- resolver - it reseats itself to a civilian group (Init_HC) so it always bails the 3-retry self-heal and
 //--- adds fresh-round seat-magnet churn. Skip it once registered. WFBE_HEADLESS_<uid> is set ONLY for HCs
-//--- (Server_HandleSpecial; cleared in Server_OnPlayerDisconnected), so a human can NEVER match this. (If the
-//--- connected-hc PVF hasn't landed yet the HC harmlessly runs the resolver once; the stamp-on-demand tier
+//--- (Server_HandleSpecial; cleared in Server_OnPlayerDisconnected), so a human can NEVER match this regardless
+//--- of player name. This is the SOLE HC-identification gate: stamp-based, un-spoofable. (If the connected-hc
+//--- PVF hasn't landed yet the HC harmlessly runs the resolver once then re-arms; the stamp-on-demand tier
 //--- below also excludes HCs because they never store a RequestJoin body.)
 if (!isNil {missionNamespace getVariable [Format ["WFBE_HEADLESS_%1", _uid], nil]}) exitWith {
 	diag_log Format ["[WFBE][B761 CONNECT] skip enrollment resolver for headless client [%1] [%2].", _name, _uid];
 };
+
 
 //--- We try to get the player and it's group from the playableUnits.
 //--- B74.2.2: was 10 (a 5s ceiling). Widened to 60 (30s) so a JIP seat under heavy-AI / low-server-FPS

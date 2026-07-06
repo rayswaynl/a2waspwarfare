@@ -1,0 +1,19 @@
+{
+  "name": "WFBE_NEURODEF_FORT_STRONGPOINT_EAST",
+  "parentW": 20,
+  "parentD": 18,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "INFANTRY STRONGPOINT — MANNED EAST variant (flag WFBE_C_DEF_FORT_MANNED). Mirrors the WEST manned layout exactly; the only change is the weapon family: DShKM heavy MGs (DSHKM_TK_INS_EP1, the same EAST static every DEFMENU_V2 EAST composition uses — also fits GUER/TKA, which resolve to _EAST in Server_ConstructPosition.sqf). Two manned DShKs at the rampart forward corners with inward-canted interlocking arcs across the frontal approach.",
+  "objs": [
+    {"cls":"Land_fortified_nest_big_EP1","x":0,"y":0,"z":0,"dir":0,"role":"HARD CORE — central bunker (large)"},
+    {"cls":"Land_fort_bagfence_long","x":-4,"y":3,"z":0,"dir":25,"role":"comms trench — links left flank to the bunker"},
+    {"cls":"Land_fort_bagfence_long","x":4,"y":3,"z":0,"dir":335,"role":"comms trench — links right flank to the bunker"},
+    {"cls":"Land_fort_rampart_EP1","x":-9,"y":-1,"z":0,"dir":0,"role":"left flank rampart — dispersion + anti-enfilade"},
+    {"cls":"Land_fort_rampart_EP1","x":9,"y":-1,"z":0,"dir":0,"role":"right flank rampart — dispersion + anti-enfilade"},
+    {"cls":"DSHKM_TK_INS_EP1","x":-9,"y":2,"z":0,"dir":330,"role":"MANNED DShKM — left rampart corner, arc canted right-front (interlocks with right gun)"},
+    {"cls":"DSHKM_TK_INS_EP1","x":9,"y":2,"z":0,"dir":30,"role":"MANNED DShKM — right rampart corner, arc canted left-front (interlocks with left gun)"}
+  ]
+}

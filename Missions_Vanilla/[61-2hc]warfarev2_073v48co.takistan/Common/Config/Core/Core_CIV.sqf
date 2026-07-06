@@ -187,7 +187,7 @@ _c = _c + ['Land_CncBlock_Stripes'];
 _i = _i + [[(if (_defPosV2) then {'AA Battery (H, 4 AI)'} else {'AA Position (Heavy, 4 AI)'}),'',4500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_Barrel_sand'];
-_i = _i + [[(if (_defPosV2) then {'Arty Pit (L, 1 AI)'} else {'Artillery (Light, 1 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Arty Pit (L, 2 AI)'} else {'Artillery (Light, 1 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Land_Ind_BoardsPack2'];
 _i = _i + [[(if (_defPosV2) then {'Arty Battery (H, 4 AI)'} else {'Artillery (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
@@ -196,7 +196,7 @@ _c = _c + ['Land_WoodenRamp'];
 _i = _i + [[(if (_defPosV2) then {'Mixed Post (L, 2 AI)'} else {'Mixed Position (Light, 2 AI)'}),'',2500,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['RoadCone'];
-_i = _i + [[(if (_defPosV2) then {'Mixed Strpt (H, 4 AI)'} else {'Mixed Position (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
+_i = _i + [[(if (_defPosV2) then {'Mixed Strpt (H, 3 AI)'} else {'Mixed Position (Heavy, 4 AI)'}),'',5000,0,0,0,'Defense',0,'Civilians',[]]];
 
 _c = _c + ['Paleta1'];
 _i = _i + [['Wall - Straight','',250,0,0,0,'Fortification',0,'Civilians',[]]];
@@ -245,6 +245,34 @@ _i = _i + [['Checkpoint','',300,0,0,0,'Fortification',0,'Civilians',[]]];
 //--- Observation Post: elevated bunker-tower + concealment + discreet fallback.
 _c = _c + ['Land_Barrel_water'];
 _i = _i + [['Obs. Post','',200,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//======================================================================================
+//--- fable/wddm-functional-defenses (flag WFBE_C_DEF_FORTIF_PACK): FORTIFICATION PACK anchors.
+//--- Five PASSIVE larger fortification compositions (Init_Defenses.sqf WFBE_NEURODEF_FORTIF_*),
+//--- WDDM-authored (docs/design/compositions/fortif_*.wddm.json). Data arrays always registered
+//--- (harmless while no side's DEFENSENAMES list references the ghost - the flag gates those lists
+//--- in the Structures_* v2 blocks). Ghosts are unused net-container/concrete props (scope 2,
+//--- config-verified). Prices follow the wall ladder: walls cheap, LoS screen mid, gate mid.
+//======================================================================================
+//--- Concrete Wall Row: 10x Concrete_Wall_EP1 solid ~22 m run (HQ 2.2 m overlap pitch).
+_c = _c + ['Misc_cargo_cont_net1'];
+_i = _i + [['Wall Row (Concrete)','',250,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//--- Concrete Wall Corner: L-section, 2x5 panels meeting at 90 deg, flush corner.
+_c = _c + ['Misc_cargo_cont_net2'];
+_i = _i + [['Wall Corner (Concrete)','',300,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//--- Tall LoS Screen: 3x Base_WarfareBBarrier10xTall ~43 m (blocks line of sight to the base).
+_c = _c + ['Misc_cargo_cont_net3'];
+_i = _i + [['LoS Screen (Tall)','',500,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//--- HESCO Line: 4x Land_HBarrier_large ~39 m run (slight-overlap pitch).
+_c = _c + ['Misc_cargo_cont_tiny'];
+_i = _i + [['HESCO Line','',350,0,0,0,'Fortification',0,'Civilians',[]]];
+
+//--- Gate Complex: Land_BarGate2 + flanking concrete wall pairs + funnel accents (base entrance).
+_c = _c + ['Misc_concrete_High'];
+_i = _i + [['Gate Complex','',450,0,0,0,'Fortification',0,'Civilians',[]]];
 
 //--- Site Clearance (commander build-menu only; cost is dynamic server-side; label carries the per-tree price).
 if ((missionNamespace getVariable ["WFBE_C_UNITS_BULLDOZER", 0]) > 0) then {

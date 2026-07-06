@@ -15,7 +15,7 @@
         if (isNil {_associatedSupplyTruck getVariable "wfbe_supply_killed_eh_set"}) then {
             _associatedSupplyTruck setVariable ["wfbe_supply_killed_eh_set", true, true];
             _associatedSupplyTruck addEventHandler ["Killed", {
-            private ["_veh","_killer","_amt","_killerSide","_reward"];
+            private ["_veh","_killer","_amt","_killerSide","_ownerSideID","_reward"];
             _veh = _this select 0;
             _killer = _this select 1;
             _amt = _veh getVariable "SupplyAmount";
@@ -23,7 +23,12 @@
             if ((_amt > 0) && {!isNull _killer}) then {
                 _killerSide = side group _killer;
                 //--- Only a genuine ENEMY kill pays interdiction. Guards friendly-fire / self-destruct from minting own-side supply.
-                if ((_killerSide in WFBE_PRESENTSIDES) && {_killerSide != (side _veh)}) then {
+                //--- fix(hunt): a loaded truck is typically EMPTY/dead-crewed at kill time, so raw (side _veh) resolves
+                //--- CIVILIAN and a SAME-side kill passed this guard (friendly satchel = own-side supply minting).
+                //--- Resolve the owner via the authoritative wfbe_side_id stamp (Common_CreateVehicle.sqf:28), engine side fallback.
+                _ownerSideID = _veh getVariable ["wfbe_side_id", -1];
+                if (_ownerSideID < 0) then { _ownerSideID = (side _veh) Call WFBE_CO_FNC_GetSideID; };
+                if ((_killerSide in WFBE_PRESENTSIDES) && {((_killerSide) Call WFBE_CO_FNC_GetSideID) != _ownerSideID}) then {
                     _reward = round (_amt * WFBE_C_SUPPLY_INTERDICTION_CUT);
                     [_killerSide, _reward, format ["Logistics interdiction: enemy supply vehicle destroyed (+S %1).", _reward], false] call ChangeSideSupply;
                 };

@@ -49,7 +49,7 @@ if (playerSide == _side_who_receive_message) then
 
 	systemChat _displayText;
 	//playSound _messageSoundName;
-	playSound [_messageSoundName, true];
+	if (_messageSoundName != "") then {playSound [_messageSoundName, true]}; //--- empty-name guard (livetest 2026-07-06): notable-kill feed passes "" for "text, no sound"; playSound ["",true] pops a "Sound not found" dialog. Empty = silent, not an error.
 };
 
 // Broadcasting the publicVariable SEND_MESSAGE in order to trigger the EH running on every client.
