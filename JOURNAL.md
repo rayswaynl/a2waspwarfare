@@ -43,6 +43,10 @@ array payload. Chernarus was edited first and mirrored to maintained Takistan th
 Verification: `A2WASP_SKIP_ZIP=1 dotnet run -c Release`, `A2WASP_SKIP_ZIP=1 dotnet run -c Release -- --check`,
 `git diff --check`, `git diff --cached --check`, and an A3-command scan over the touched files.
 
+## 2026-07-03 — Lane 138 RequestCommanderVote shape guard [codex/lane138-request-commander-vote-shape-guard]
+
+Added a narrow server-side malformed-payload guard for `RequestCommanderVote.sqf`: reject non-array payloads, short arrays, non-side side fields, sides outside `WFBE_PRESENTSIDES`, non-string names and null side logic before the existing vote restart code indexes or broadcasts. Honest `[sideJoined, name player]` vote-restart behavior is unchanged; vote-resolution semantics and requester authority migration remain separate commander-owner work.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:

@@ -8,17 +8,33 @@ if (_secHardening && {!((count _this) > 1)}) exitWith {
 	["WARNING", Format ["RequestCommanderVote.sqf: short payload [%1] - rejected.", _this]] Call WFBE_CO_FNC_LogContent;
 };
 
+if !((typeName _this) in ["ARRAY"]) exitWith {
+	["WARNING", Format ["RequestCommanderVote.sqf: rejected malformed request - expected array payload, got %1.", typeName _this]] Call WFBE_CO_FNC_LogContent;
+};
+
+if ((count _this) < 2) exitWith {
+	["WARNING", Format ["RequestCommanderVote.sqf: rejected malformed request - expected [side,name], got %1 element(s).", count _this]] Call WFBE_CO_FNC_LogContent;
+};
+
 _side = _this select 0;
 _name = _this select 1;
 
-if (_secHardening && {!(_side in [east, west, resistance])}) exitWith {
-	["WARNING", Format ["RequestCommanderVote.sqf: invalid vote side [%1] - rejected.", _side]] Call WFBE_CO_FNC_LogContent;
+if !((typeName _side) in ["SIDE"]) exitWith {
+	["WARNING", Format ["RequestCommanderVote.sqf: rejected malformed request - side field type was %1.", typeName _side]] Call WFBE_CO_FNC_LogContent;
 };
-if (_secHardening && {!((typeName _name) in ["STRING"])}) exitWith {
-	["WARNING", Format ["RequestCommanderVote.sqf: invalid caller name [%1] - rejected.", _name]] Call WFBE_CO_FNC_LogContent;
+
+if !(_side in WFBE_PRESENTSIDES) exitWith {
+	["WARNING", Format ["RequestCommanderVote.sqf: rejected malformed request - side %1 is not present in this mission.", _side]] Call WFBE_CO_FNC_LogContent;
+};
+
+if !((typeName _name) in ["STRING"]) exitWith {
+	["WARNING", Format ["RequestCommanderVote.sqf: rejected malformed request - name field type was %1.", typeName _name]] Call WFBE_CO_FNC_LogContent;
 };
 
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+if (isNull _logik) exitWith {
+	["WARNING", Format ["RequestCommanderVote.sqf: rejected malformed request - side logic for %1 is null.", _side]] Call WFBE_CO_FNC_LogContent;
+};
 
 if ((_logik getVariable "wfbe_votetime") <= 0) then {
 	_team = -1;
