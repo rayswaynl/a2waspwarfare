@@ -205,7 +205,8 @@ while {!gameOver} do {
 					         "_bestRoad","_bestScore","_bestConn","_score","_dir","_dx","_dy","_neighbor","_nPos",
 					         "_roadDist","_cpTmpl","_cpObjs","_statics","_tCls","_tRelPos","_tRelDir","_wPos","_obj",
 					         "_statCls","_statSpecs","_sOff","_sDir","_statPos","_stat","_sGunner","_gpOffs","_gOff",
-					         "_gPos","_vehPos"];
+					         "_gPos","_vehPos",
+					         "_armExtra","_armN","_ax","_aLat","_aBack","_aPos","_aVeh","_ad1","_ad2"];
 					if (!isNull _target) then {
 						_targetPos = getPos _target;
 						_cp2Radius   = missionNamespace getVariable ["WFBE_C_GUER_CP2_ROAD_RADIUS", 400];
@@ -330,6 +331,33 @@ while {!gameOver} do {
 									};
 								} forEach _statSpecs;
 
+								//--- (4b) EXTRA ARMOR (tier>=2, sub-tunable WFBE_C_GUER_CP2_ARMOR_EXTRA, default 1): additional
+								//--- hull(s) of the SAME _cpVeh class posted as overwatch 25-35m BEHIND the block on the road
+								//--- axis (never blocking the chicane). Tier 2 = extra T-55, tier 3 = extra T-72 - the "T-72
+								//--- stronghold" fields 2x T-72. Map-correct for free: _cpVeh is already worldName-switched.
+								//--- Hulls join _statics so BOTH watcher resolutions run the same player-safe teardown.
+								_armN = 0;
+								_armExtra = missionNamespace getVariable ["WFBE_C_GUER_CP2_ARMOR_EXTRA", 1];
+								if (_tier >= 2 && {_armExtra > 0}) then {
+									for "_ax" from 1 to _armExtra do {
+										_aLat  = (_ax * 7) - 10;      //--- small lateral stagger so hulls never stack on the axis.
+										_aBack = -25 - (random 10);   //--- 25-35m behind the block (manning hull sits at -8).
+										_aPos = [(_spawnPos select 0) + _aLat * (cos _dir) + _aBack * (sin _dir),
+										         (_spawnPos select 1) - _aLat * (sin _dir) + _aBack * (cos _dir),
+										         0];
+										_aVeh = [_cpVeh, _aPos, resistance, _dir, false, true] Call WFBE_CO_FNC_CreateVehicle;
+										if (!isNull _aVeh) then {
+											_aVeh setPos _aPos;   //--- pin the overwatch spot (helper placement radius is 7m).
+											_ad1 = [_soldierClass, _grp, _aPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+											if (!isNull _ad1) then {_ad1 moveInDriver _aVeh; _ad1 setVariable ["WFBE_IsTownDefenderAI", true, true]};
+											_ad2 = [_soldierClass, _grp, _aPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+											if (!isNull _ad2) then {_ad2 moveInGunner _aVeh; _ad2 setVariable ["WFBE_IsTownDefenderAI", true, true]};
+											_statics set [count _statics, _aVeh];
+											_armN = _armN + 1;
+										};
+									};
+								};
+
 								//--- (5) GARRISON: posted at composition guard positions (fixed offsets rotated by _dir),
 								//--- not random scatter. doStop holds each man on his post; COMBAT/RED (below) keeps him
 								//--- fighting, so nobody reads as a frozen AI. Tier bump: +0.05*_tier on "general" skill.
@@ -362,7 +390,7 @@ while {!gameOver} do {
 								if ((_target getVariable ["sideID","?"]) == _eastID) then {_occSide = east};
 
 								//--- Always-on grep-smoke line (house pipe pattern; str-concat is the proven RPT-safe idiom).
-								diag_log ("GUERCP|v2|spawn|" + _cpLabel + "|" + (str (round _roadDist)) + "m");
+								diag_log ("GUERCP|v2|spawn|" + _cpLabel + "|" + (str (round _roadDist)) + "m|armor=" + (str _armN));
 
 								//--- WATCHER v2: v1 tax/resolution logic + (6) one-shot reinforcement pulse at half-window
 								//--- + (7) 900-base clear reward (v1: 700) and full composition/static teardown on BOTH paths.
