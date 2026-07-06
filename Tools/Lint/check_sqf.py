@@ -38,8 +38,31 @@ A3_TRAPS = (
     "setGroupOwner",
     "groupOwner",
     "joinGroup",
+    "getOrDefault",
+    "deleteAt",
+    "setUnitLoadout",
+    "getUnitLoadout",
+    "selectRandomWeighted",
+    "regexFind",
+    "remoteExecCall",
+    # NOTE: bare "insert" excluded. A3_TRAPS matching uses word-boundary regex
+    # on comment/string-masked text (safe), but "insert" appears in plain English
+    # comments too frequently to avoid noise.
 )
-BOOLEAN_OP_RE = re.compile(r"\b(if|while|waitUntil)\b[^\n]*(==|!=)")
+# Narrowed: only flag == / != against literal true / false; numeric / string
+# comparisons inside control expressions are valid A2 idioms.
+BOOLEAN_OP_RE = re.compile(
+    r"\b(if|while|waitUntil)\b[^\n]*(==|!=)\s*(?:true|false)\b"
+    r"|\b(?:true|false)\s*(==|!=)",
+    re.IGNORECASE,
+)
+# Inline private _var = value  (A3-only syntax, fatal on A2 OA 1.64)
+A3PRIVATE_RE = re.compile(r"\bprivate\s+_[A-Za-z][A-Za-z0-9_]*\s*=")
+# Hash array selector _arr # 0 (A3-only). Require char before # to be
+# alphanumeric / _ / ) / ] so preprocessor lines and ## token-paste never match.
+A3HASH_RE = re.compile(r"(?<=[A-Za-z0-9_)\]])\s*#(?!#)\s*(?:\d|_[A-Za-z])")
+# publicVariableServer called from server-side code (path /Server/ or \Server\)
+PUBVARSV_RE = re.compile(r"\bpublicVariableServer\b")
 QUOTED_TOKEN_RE = re.compile(r'"([A-Za-z][A-Za-z0-9_]{2,})"|\'([A-Za-z][A-Za-z0-9_]{2,})\'')
 CLASSNAME_HINT_RE = re.compile(r"^(?:[A-Z][A-Za-z0-9]*_|[A-Z]+_|[a-z]+_[A-Za-z0-9_]*|[A-Z][A-Za-z0-9]+[A-Z][A-Za-z0-9]*)")
 DISPLAY_TOKEN_RE = re.compile(r"\b(displayCtrl|ctrlSetText|ctrlSetTextColor|ctrlShow|ctrlEnable|lb[A-Z]|lnb[A-Z])\b")
@@ -76,8 +99,10 @@ NAMESPACE_SETVARIABLE_RE = re.compile(
 FINDING_CODES = (
     "A3BISFNC",
     "A3CMD",
+    "A3HASH",
     "A3MARKER",
     "A3NUMGATE",
+    "A3PRIVATE",
     "A3REVEAL",
     "A3SELECT",
     "A3SORT",
@@ -88,6 +113,7 @@ FINDING_CODES = (
     "DISABLESER",
     "GROUPGETVAR",
     "NSSETVAR3",
+    "PUBVARSV",
 )
 
 
@@ -403,8 +429,27 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
         )
 
     for match in BOOLEAN_OP_RE.finditer(masked):
-        line, col = line_col(starts, match.start(2))
-        findings.append(Finding(path, line, col, "BOOLCMP", "Review ==/!= inside a control expression; Boolean operands are rejected by the fleet prompt"))
+        line, col = line_col(starts, match.start())
+        findings.append(Finding(path, line, col, "BOOLCMP", "Comparison with literal true/false; use if (_flag) / if (!_flag) instead"))
+
+    for match in A3PRIVATE_RE.finditer(masked):
+        line, col = line_col(starts, match.start())
+        findings.append(Finding(path, line, col, "A3PRIVATE",
+            "Inline 'private _x = value' is A3-only; use 'private [\"_x\"]; _x = value' instead"))
+
+    for match in A3HASH_RE.finditer(masked):
+        line, col = line_col(starts, match.start())
+        findings.append(Finding(path, line, col, "A3HASH",
+            "The # array-selector (_arr # 0) is Arma 3-only; use (_arr select 0) instead"))
+
+    path_str = str(path)
+    _server_parts = {"Server", "server"}
+    if any(p in _server_parts for p in path.parts):
+        for match in PUBVARSV_RE.finditer(masked):
+            line, col = line_col(starts, match.start())
+            findings.append(Finding(path, line, col, "PUBVARSV",
+                "publicVariableServer on the server never fires the server's own PVEH "
+                "— call the handler directly"))
 
     stack: list[tuple[str, int]] = []
     pairs = {"(": ")", "[": "]", "{": "}"}
