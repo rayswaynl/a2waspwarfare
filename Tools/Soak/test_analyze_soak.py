@@ -112,12 +112,17 @@ class AnalyzeSoakAicom2Tests(unittest.TestCase):
     """Regression tests for the AICOM2 section (soak-gate tooling, cc44u fixture).
 
     Uses the sample_cc44u.rpt fixture file so the exact grammar from the live
-    emitter is exercised rather than inline strings.  The fixture contains:
-      - 7 SNAP lines per side (west/east)
+    emitter is exercised rather than inline strings.  The fixture uses the REAL
+    emitter grammar (AI_Commander_Decapitate.sqf + Common_RunCommanderTeam.sqf):
+      - 7 SNAP lines per side (West/East); sides normalised WEST/EAST upper-case
       - 4 ALLOC lines per side
-      - 4 DECAP lines per side (west: state sequence SCAN/TRACK/TRACK/PRESS/PRESS/PRESS)
-      - 1 FISTPOOL line (west)
-      - 1 ORDER line
+      - 6 DECAP closer lines for WEST (real state names: IDLE/ARMING/COMMITTED)
+        + 1 driver PRESS line (AICOM2|v1|DECAP|West|8|PRESS|team=...|dist=...)
+        * sensed is emitted as integer 1/0 (not "true"/"false")
+        * COMMITTED is the state emitted when the closer is actively pressing
+        * the driver PRESS line has no state= field (parsed with default IDLE)
+      - 1 FISTPOOL line (West)
+      - 1 ORDER line (war-room-task)
     """
 
     @classmethod
@@ -154,24 +159,36 @@ class AnalyzeSoakAicom2Tests(unittest.TestCase):
         # fixture: all 4 allocs go to 'Vybor', one EAST alloc changes primary -> WEST should be 0
         self.assertEqual(al["primary_changes"], 0)
 
-    def test_decap_west_press(self):
+    def test_decap_west_committed(self):
+        """COMMITTED is the real active-press state (not PRESS, which is a separate driver line)."""
         sd = self.a2["per_side"].get("WEST") or self.a2["per_side"].get("west")
         dec = sd["decap"]
         self.assertIsNotNone(dec, "WEST must have DECAP records in cc44u fixture")
-        # fixture: WEST DECAP states: SCAN, TRACK, TRACK, PRESS, PRESS, PRESS -> 3 PRESS ticks
-        self.assertGreaterEqual(dec["press_events"], 1)
+        # fixture: WEST DECAP closer states: IDLE/ARMING/ARMING/COMMITTED/COMMITTED
+        # The separate driver PRESS line (AICOM2|v1|DECAP|West|8|PRESS|...) is also
+        # captured but has no state= field so defaults to IDLE.
+        # Verify COMMITTED state is present in the distribution.
+        self.assertIn("COMMITTED", dec["state_dist"],
+                      "COMMITTED state must appear in WEST DECAP state distribution")
+        self.assertGreaterEqual(dec["state_dist"]["COMMITTED"], 1)
 
     def test_decap_sensed_latches(self):
         sd = self.a2["per_side"].get("WEST") or self.a2["per_side"].get("west")
         dec = sd["decap"]
-        # fixture: west sensed flips false->true once at tick=4
-        self.assertGreaterEqual(dec["sensed_latches"], 1)
+        # fixture: west sensed=0 at tick=3, sensed=1 at tick=4 (integer grammar).
+        # Parser must treat "1" as True -> one latch transition detected.
+        self.assertGreaterEqual(dec["sensed_latches"], 1,
+            "sensed latch must be detected; check that integer 1/0 is parsed (not true/false)")
 
     def test_decap_inrange_streak(self):
         sd = self.a2["per_side"].get("WEST") or self.a2["per_side"].get("west")
         dec = sd["decap"]
-        # fixture: ticks 4-7 all have inRange>0 for WEST -> streak >= 4
+        # fixture: ticks 4-7 all have inRange>0 for WEST (2/3/4/5), streak=4
         self.assertGreaterEqual(dec["inRange_max"], 2)
+        # roll cadence should be OK (not VIOLATED): only inRange>0 windows tested,
+        # and tick 3 (inRange=0) must be excluded from cadence evaluation.
+        self.assertNotEqual(dec["roll_cadence_ok"], False,
+            "roll cadence must not be VIOLATED; check inRange>0 filtering is applied")
 
     def test_decap_verdict_no_fail(self):
         # cc44u has both SNAP and DECAP so verdict must not be FAIL

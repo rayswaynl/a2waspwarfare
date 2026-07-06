@@ -174,7 +174,7 @@ def read_lines(path):
         return fh.readlines()
 
 
-STAT_MARKERS = ("WASPSTAT|", "AICOMSTAT|", "WASPSCALE|")
+STAT_MARKERS = ("WASPSTAT|", "AICOMSTAT|", "WASPSCALE|", "AICOM2|")
 
 
 def _has_stats(lines):
@@ -652,12 +652,17 @@ class Soak(object):
                 tick = _to_int(m.group(2), 0)
                 kv = parse_kvs(m.group(3))
                 self._note_tick(tick)
+                # sensed is emitted as integer "1"/"0" by AI_Commander_Decapitate.sqf.
+                # Accept both the real integer form and the legacy "true"/"false" form
+                # defensively (unit tests and older hand-crafted fixtures may use either).
+                _sensed_raw = kv.get("sensed", "0").strip().lower()
+                _sensed_bool = (_sensed_raw == "1") or (_sensed_raw == "true")
                 self.a2_decap[side].append({
                     "tick":    tick,
-                    "state":   kv.get("state", "SCAN"),
+                    "state":   kv.get("state", "IDLE"),
                     "inRange": _to_int(kv.get("inRange"), 0),
                     "roll":    _to_int(kv.get("roll"), 0),
-                    "sensed":  kv.get("sensed", "false").lower() == "true",
+                    "sensed":  _sensed_bool,
                     "stamped": _to_int(kv.get("stamped"), 0),
                 })
                 continue
@@ -864,12 +869,21 @@ class Soak(object):
         DECAP heuristics:
           - inRange_streaks: count consecutive DECAP ticks where inRange>0 per side.
           - roll_cadence_ok: at least one roll=1 every 4+ consecutive DECAP ticks
-            (the expected cadence is every-4-ticks).  Returns True/False/None (None
-            when <4 DECAP lines exist for that side).
-          - sensed_latches: transitions false->true per side (sensing episodes).
+            where inRange>0 (the emitter only rolls when a team is in proximity;
+            early-game ticks with inRange=0 are excluded from the cadence check).
+            Returns True/False/None (None when <4 inRange>0 DECAP lines exist).
+          - sensed_latches: transitions false->true per side (sensing episodes;
+            sensed is emitted as integer 1/0 by the real emitter).
           - stamped_total: max stamped value seen (cumulative counter).
-          - press_events: ticks where state==PRESS per side.
-          - state_dist: Counter of state values per side.
+          - press_events: ticks where state==COMMITTED (active press) per side.
+          - state_dist: Counter of real state values per side
+            (IDLE/ARMING/COMMIT/COMMITTED/ABORT/WON-HQDEAD).
+        DECAP verdict:
+          - FAIL  only when SNAP present on a side but DECAP entirely absent
+            (indicates cutover incomplete on a V2 build; PRESS is a separate
+            AICOM2|v1|DECAP|...|PRESS line from Common_RunCommanderTeam.sqf).
+          - WATCH when roll cadence violated over inRange>0 windows.
+          - PASS  when DECAP present and cadence OK (or <4 inRange>0 lines).
         """
         has_snap  = bool(self.a2_snap)
         has_alloc = bool(self.a2_alloc)
@@ -938,12 +952,16 @@ class Soak(object):
                 streaks.append(cur)
 
             # roll cadence: for every window of 4 consecutive DECAP ticks
-            # there should be at least one roll=1 (every-4-ticks cadence).
+            # where inRange>0, there should be at least one roll=1
+            # (every-4-ticks cadence).  Early-game ticks where inRange=0 must
+            # NOT be counted — the emitter only rolls when inRange>0, so a
+            # pre-contact window that contains no roll=1 is not a violation.
             roll_cadence_ok = None
-            if len(recs) >= 4:
+            inrange_recs = [r for r in recs if r["inRange"] > 0]
+            if len(inrange_recs) >= 4:
                 violations = 0
-                for i in range(0, len(recs) - 3, 4):
-                    window = recs[i:i + 4]
+                for i in range(0, len(inrange_recs) - 3, 4):
+                    window = inrange_recs[i:i + 4]
                     if not any(r["roll"] == 1 for r in window):
                         violations += 1
                 roll_cadence_ok = (violations == 0)

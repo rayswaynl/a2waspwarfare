@@ -224,11 +224,15 @@ function Parse-Round([string[]]$lines) {
                               harassTo=$kv["harassTo"]; assigned=(To-Int $kv["assigned"]) })
         }
         # -- AICOM2 DECAP --
+        # The real emitter (AI_Commander_Decapitate.sqf) outputs sensed as "1"/"0".
+        # Accept both the integer form and the legacy "true"/"false" form defensively.
         elseif ($ln -match "AICOM2\|v1\|DECAP\|([A-Za-z]+)\|(\d+)\|(.*)$") {
             $s = $Matches[1].ToUpper(); $t = To-Int $Matches[2]; $kv = Parse-KV $Matches[3]
             if (-not $decap.ContainsKey($s)) { $decap[$s] = [System.Collections.Generic.List[hashtable]]::new() }
+            $sensedRaw = if ($kv.ContainsKey("sensed")) { $kv["sensed"].Trim().ToLower() } else { "0" }
+            $sensedBool = ($sensedRaw -eq "1") -or ($sensedRaw -eq "true")
             $decap[$s].Add(@{ tick=$t; state=$kv["state"]; inRange=(To-Int $kv["inRange"])
-                              roll=(To-Int $kv["roll"]); sensed=($kv["sensed"] -eq "true")
+                              roll=(To-Int $kv["roll"]); sensed=$sensedBool
                               stamped=(To-Int $kv["stamped"]) })
         }
         # -- AICOM2 FISTPOOL --
@@ -374,12 +378,15 @@ function Score-Round([hashtable]$r, [string]$rptLabel) {
                 if ($row.inRange -gt 0) { $streak++ ; if ($streak -gt $maxStreak) { $maxStreak = $streak } }
                 else { $streak = 0 }
             }
-            # roll cadence check (>=1 roll=1 every 4 ticks)
+            # roll cadence check: only over inRange>0 ticks (the emitter only
+            # rolls when a team is in proximity; early-game zero-contact ticks
+            # must NOT be tested or they produce false VIOLATED verdicts).
             $cadenceOk = $null
-            if ($dc.Count -ge 4) {
+            $dcInRange = @($dc | Where-Object { $_.inRange -gt 0 })
+            if ($dcInRange.Count -ge 4) {
                 $violations = 0
-                for ($i = 0; $i -le $dc.Count - 4; $i += 4) {
-                    $win = $dc[$i..($i+3)]
+                for ($i = 0; $i -le $dcInRange.Count - 4; $i += 4) {
+                    $win = $dcInRange[$i..([math]::Min($i+3, $dcInRange.Count-1))]
                     if (-not ($win | Where-Object { $_.roll -eq 1 })) { $violations++ }
                 }
                 $cadenceOk = ($violations -eq 0)
@@ -391,7 +398,7 @@ function Score-Round([hashtable]$r, [string]$rptLabel) {
                 $prevSensed = $row.sensed
             }
             $stampedMax = ($dc | Measure-Object -Property stamped -Maximum).Maximum
-            $cadStr = if ($null -eq $cadenceOk) { dim "n/a (<4 lines)" }
+            $cadStr = if ($null -eq $cadenceOk) { dim "n/a (<4 inRange>0)" }
                       elseif ($cadenceOk) { grn "OK" } else { red "VIOLATED" }
             Write-Host ("    DECAP $($dc.Count) lines | states $stateDist | PRESS $pressCount | inRange-max $inRangeMax longest-streak $maxStreak")
             Write-Host ("          roll-cadence $cadStr | sensed-latches $sensedLatches | stamped-max $stampedMax")
@@ -477,13 +484,16 @@ function Run-SelfTest {
     if ($hasAlloc) { $checks.Add($(grn "PASS  ALLOC lines present")) }
     else { $checks.Add($(red "FAIL  ALLOC lines absent")); $pass = $false }
 
-    # 3. DECAP present for WEST with PRESS events
+    # 3. DECAP present for WEST with COMMITTED state (real active-press state name).
+    # The driver PRESS line (AICOM2|v1|DECAP|...|PRESS|team=...|dist=...) is a
+    # separate line from Common_RunCommanderTeam.sqf and has no state= field;
+    # it defaults to IDLE in the parser. COMMITTED is the closer state when pressing.
     $westDecap = $r.decap["WEST"]
-    $pressRows = @($westDecap | Where-Object { $_.state -eq "PRESS" })
-    if ($westDecap -and $westDecap.Count -gt 0 -and $pressRows.Count -ge 1) {
-        $checks.Add($(grn "PASS  WEST DECAP lines with PRESS events ($($pressRows.Count))"))
+    $committedRows = @($westDecap | Where-Object { $_.state -eq "COMMITTED" })
+    if ($westDecap -and $westDecap.Count -gt 0 -and $committedRows.Count -ge 1) {
+        $checks.Add($(grn "PASS  WEST DECAP lines with COMMITTED state ($($committedRows.Count))"))
     } else {
-        $checks.Add($(red "FAIL  WEST DECAP or PRESS events missing")); $pass = $false
+        $checks.Add($(red "FAIL  WEST DECAP or COMMITTED state missing")); $pass = $false
     }
 
     # 4. ROUNDEND parsed
@@ -518,6 +528,22 @@ function Run-SelfTest {
         } else {
             $checks.Add($(red "FAIL  V1-only fixture unexpectedly has AICOM2 lines")); $pass = $false
         }
+    }
+
+    # 8. sensed integer parsing: fixture has sensed=1 at tick>=4 for WEST.
+    # If parser reads "1" as False (old "true"/"false"-only logic), latches = 0.
+    $westDc = $r.decap["WEST"]
+    $sensedLatches = 0; $prev = $false
+    if ($westDc) {
+        foreach ($row in $westDc) {
+            if ($row.sensed -and -not $prev) { $sensedLatches++ }
+            $prev = $row.sensed
+        }
+    }
+    if ($sensedLatches -ge 1) {
+        $checks.Add($(grn "PASS  sensed integer 1/0 parsed correctly ($sensedLatches latch(es))"))
+    } else {
+        $checks.Add($(red "FAIL  sensed latch count=$sensedLatches (integer 1/0 parsing broken)")); $pass = $false
     }
 
     Write-Host (hdr "SELF-TEST  Score-AicomRounds.ps1")
