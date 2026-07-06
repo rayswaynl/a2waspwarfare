@@ -148,7 +148,7 @@ WFBE_MenuAction = -1;
 	_lastRemaining = -2;
 
 	while {alive player && dialog} do {
-		_runningState = WFBE_Client_Logic getVariable "wfbe_upgrading";
+		_runningState = WFBE_Client_Logic getVariable ["wfbe_upgrading", false];
 		if (isNil "_runningState") then {_runningState = false};
 
 		_runningId = WFBE_Client_Logic getVariable "wfbe_upgrading_id";
@@ -282,7 +282,7 @@ while {alive player && dialog} do {
 			//--- Stacking: Queue is enabled while levels remain unqueued; "-" while copies are queued.
 			_qpending = {_x == _id} count _qsel;
 			_qtotal = _qpending;
-			if ((WFBE_Client_Logic getVariable "wfbe_upgrading") && {(WFBE_Client_Logic getVariable "wfbe_upgrading_id") == _id}) then {_qtotal = _qtotal + 1};
+			if ((WFBE_Client_Logic getVariable ["wfbe_upgrading", false]) && {(WFBE_Client_Logic getVariable "wfbe_upgrading_id") == _id}) then {_qtotal = _qtotal + 1};
 			if (_player_commander) then {
 				ctrlEnable [504008, ((_upgrades select _id) + _qtotal) < (_upgrade_levels select _id)];
 				ctrlEnable [504009, _qpending > 0];
@@ -344,7 +344,7 @@ while {alive player && dialog} do {
 			_upgrade_current = _upgrades select _id;
 			_funds = call WFBE_CL_FNC_GetClientFunds;
 			_supply = if (_currency_system == 0) then {(WFBE_Client_SideJoined) call WFBE_CO_FNC_GetSideSupply} else {9000000};
-			if !(WFBE_Client_Logic getVariable "wfbe_upgrading") then {
+			if !(WFBE_Client_Logic getVariable ["wfbe_upgrading", false]) then {
 				if (_upgrade_current < (_upgrade_levels select _id)) then {
 					_upgrade_supply = ((_upgrade_costs select _id) select _upgrade_current) select 0;
 					_upgrade_price = ((_upgrade_costs select _id) select _upgrade_current) select 1;
@@ -427,7 +427,7 @@ while {alive player && dialog} do {
 			_upgrade_current = _upgrades select _id;
 			//--- Stacking: each click queues one more level until done + pending covers the max.
 			_qtotal = {_x == _id} count _queue;
-			if ((WFBE_Client_Logic getVariable "wfbe_upgrading") && {(WFBE_Client_Logic getVariable "wfbe_upgrading_id") == _id}) then {_qtotal = _qtotal + 1};
+			if ((WFBE_Client_Logic getVariable ["wfbe_upgrading", false]) && {(WFBE_Client_Logic getVariable "wfbe_upgrading_id") == _id}) then {_qtotal = _qtotal + 1};
 			if (_upgrade_current + _qtotal < (_upgrade_levels select _id)) then {
 				["RequestEnqueue", [WFBE_Client_SideJoined, _id]] call WFBE_CO_FNC_SendToServer;
 				hint parseText(Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Queued <t color='#B6F563'>%1</t> level <t color='#F5D363'>%2</t></t>", _upgrade_labels select _id, _upgrade_current + _qtotal + 1]);
@@ -457,8 +457,8 @@ while {alive player && dialog} do {
 	if (isNil "_running_id") then {_running_id = -1};
 	_qlist = WFBE_Client_Logic getVariable "wfbe_upgrade_queue";
 	if (isNil "_qlist") then {_qlist = []};
-	if ((_upgrade_isupgrading && !(WFBE_Client_Logic getVariable "wfbe_upgrading")) || (!_upgrade_isupgrading && (WFBE_Client_Logic getVariable "wfbe_upgrading")) || (_upgrade_running_id != _running_id) || ((str _qlist) != (str _queue_footer_old))) then {
-		_upgrade_isupgrading = (WFBE_Client_Logic getVariable "wfbe_upgrading");
+	if ((_upgrade_isupgrading && !(WFBE_Client_Logic getVariable ["wfbe_upgrading", false])) || (!_upgrade_isupgrading && (WFBE_Client_Logic getVariable ["wfbe_upgrading", false])) || (_upgrade_running_id != _running_id) || ((str _qlist) != (str _queue_footer_old))) then {
+		_upgrade_isupgrading = (WFBE_Client_Logic getVariable ["wfbe_upgrading", false]);
 		_upgrade_running_id = _running_id;
 		_running_label = if (_upgrade_running_id >= 0 && _upgrade_running_id < count _upgrade_labels) then {_upgrade_labels select _upgrade_running_id} else {"An upgrade"};
 		_queue_footer_old = + _qlist;

@@ -16,30 +16,26 @@
 };
 
 
-"ATTACK_WAVE_DETAILS" addPublicVariableEventHandler {
-
-	private ["_payload", "_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
+//--- Fix: extracted PVEH body into WFBE_SE_FNC_HandleAttackWaveDetails so Server_AttackWave.sqf
+//--- can call it directly. publicVariableServer from the server never fires the server's own PVEH,
+//--- so the handler was dead for both wave-start and wave-end. The PVEH below still calls this
+//--- function so any future client->server ATTACK_WAVE_DETAILS publish also works.
+//--- Calling convention: _this IS the payload array [side, priceModifier, attackLength].
+//--- (Server_AttackWave.sqf calls directly; PVEH relay strips the varname with (_this select 1) Call.)
+WFBE_SE_FNC_HandleAttackWaveDetails = {
+	private ["_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
 
     if (typeName _this != "ARRAY") exitWith {
-        ["WARNING", Format["AttackWave.sqf: rejected malformed ATTACK_WAVE_DETAILS event type [%1].", typeName _this]] Call WFBE_CO_FNC_LogContent;
+        ["WARNING", Format["AttackWave.sqf: rejected malformed ATTACK_WAVE_DETAILS payload type [%1].", typeName _this]] Call WFBE_CO_FNC_LogContent;
     };
 
-    if (count _this < 2) exitWith {
-        ["WARNING", Format["AttackWave.sqf: rejected short ATTACK_WAVE_DETAILS event [%1].", _this]] Call WFBE_CO_FNC_LogContent;
+    if (count _this < 3) exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected short ATTACK_WAVE_DETAILS payload [%1] element(s).", count _this]] Call WFBE_CO_FNC_LogContent;
     };
 
-    _payload = _this select 1;
-    if (typeName _payload != "ARRAY") exitWith {
-        ["WARNING", Format["AttackWave.sqf: rejected malformed ATTACK_WAVE_DETAILS payload type [%1].", typeName _payload]] Call WFBE_CO_FNC_LogContent;
-    };
-
-    if (count _payload < 3) exitWith {
-        ["WARNING", Format["AttackWave.sqf: rejected short ATTACK_WAVE_DETAILS payload [%1].", _payload]] Call WFBE_CO_FNC_LogContent;
-    };
-
-	_side = _payload select 0;
-	_priceModifier = _payload select 1;
-    _attackLength = _payload select 2;
+	_side = _this select 0;
+	_priceModifier = _this select 1;
+    _attackLength = _this select 2;
 
     if (typeName _side != "SIDE") exitWith {
         ["WARNING", Format["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS with invalid side type [%1].", typeName _side]] Call WFBE_CO_FNC_LogContent;
@@ -92,4 +88,9 @@
 
         [_side, "LocalizeMessage", ["AttackModeEnd"]] call WFBE_CO_FNC_SendToClients;
     };
+};
+
+"ATTACK_WAVE_DETAILS" addPublicVariableEventHandler {
+    //--- Relay any client->server ATTACK_WAVE_DETAILS publish through the extracted function.
+    (_this select 1) Call WFBE_SE_FNC_HandleAttackWaveDetails;
 };
