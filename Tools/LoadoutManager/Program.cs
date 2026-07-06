@@ -10,7 +10,9 @@ class Program
             arg.Equals("--dry-run", StringComparison.OrdinalIgnoreCase) ||
             arg.Equals("--check-takistan-mirror", StringComparison.OrdinalIgnoreCase)))
         {
-            return MirrorDriftChecker.CheckTakistanMirror();
+            int tkResult = MirrorDriftChecker.CheckTakistanMirror();
+            int zgResult = MirrorDriftChecker.CheckZargabadMirror();
+            return tkResult != 0 ? tkResult : zgResult;
         }
 
         SqfFileGenerator.GenerateCommonBalanceInitAndTheEasaFileForEachTerrain();

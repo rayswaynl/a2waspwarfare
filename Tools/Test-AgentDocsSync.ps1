@@ -98,6 +98,38 @@ if ($agentsTailText -ne $claudeTailText) {
     Write-Host "  PASS  AGENTS.md and CLAUDE.md are identical below line 1"
 }
 
+# ── 4. --select codes in AGENTS.md are a subset of FINDING_CODES in check_sqf.py ──
+$checkSqfPath = Join-Path $RepoRoot "Tools\Lint\check_sqf.py"
+
+if (Test-Path -LiteralPath $checkSqfPath) {
+    $agentsContent  = Read-RequiredFile $agentsPath
+    $checkSqfContent = Get-Content -LiteralPath $checkSqfPath -Raw
+
+    # Extract the --select code list from the lint gate command in AGENTS.md
+    $selectMatch = [regex]::Match($agentsContent, '--select\s+([A-Z0-9,]+)')
+    # Extract FINDING_CODES tuple from check_sqf.py
+    $findingCodesMatch = [regex]::Match($checkSqfContent, 'FINDING_CODES\s*=\s*\(([^)]+)\)')
+
+    if (-not $selectMatch.Success) {
+        Write-Host "  WARN  No --select codes found in AGENTS.md (check lint gate command)" -ForegroundColor Yellow
+    } elseif (-not $findingCodesMatch.Success) {
+        Write-Host "  WARN  FINDING_CODES not found in check_sqf.py" -ForegroundColor Yellow
+    } else {
+        $selectCodes  = $selectMatch.Groups[1].Value -split ',' | ForEach-Object { $_.Trim() }
+        $knownCodes   = [regex]::Matches($findingCodesMatch.Groups[1].Value, '"([A-Z0-9]+)"') |
+                        ForEach-Object { $_.Groups[1].Value }
+        $unknownCodes = $selectCodes | Where-Object { $_ -notin $knownCodes }
+        if ($unknownCodes) {
+            Write-Host ("  FAIL  --select codes in AGENTS.md not in FINDING_CODES: {0}" -f ($unknownCodes -join ', ')) -ForegroundColor Red
+            $script:fails++
+        } else {
+            Write-Host ("  PASS  All {0} --select code(s) in AGENTS.md are known FINDING_CODES" -f $selectCodes.Count)
+        }
+    }
+} else {
+    Write-Host "  SKIP  check_sqf.py not found; skipping --select code validation"
+}
+
 # ── Result ────────────────────────────────────────────────────────────────────
 Write-Host ""
 if ($script:fails -eq 0) {

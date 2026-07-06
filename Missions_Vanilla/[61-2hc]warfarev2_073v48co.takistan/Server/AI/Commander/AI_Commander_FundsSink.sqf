@@ -52,6 +52,7 @@ if (_funds <= _threshold) exitWith {};
 //--- (a) WEALTH-CONVERSION: arm the reinforcement-rich flag so AI_Commander_Produce doubles its
 //--- per-team batch cap on its next cadence -> existing teams refill fuller/faster = a heavy push.
 _logik setVariable ["wfbe_aicom_reinforce_rich", true];
+_logik setVariable ["wfbe_aicom_econ_surge", true, true]; //--- Keep Teams/AssignTypes surge consumers aligned with the income-cadence FundsSink pulse.
 
 //--- (b) VETERAN / PREMIUM one-shot, cooldown-respected (same lever + cooldown the P4 controller
 //--- uses in AI_Commander.sqf) so the hoard skews the NEXT founding/refill toward a heavy template

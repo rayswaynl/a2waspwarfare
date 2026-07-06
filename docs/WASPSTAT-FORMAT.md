@@ -171,3 +171,150 @@ WASPSTAT|v1|5|ROUNDEND|WEST|5432|chernarus
 - All emitters are server-side; no client-originated WASPSTAT lines exist.
 - The gate constant `WFBE_C_STATLOG` lives in `Common/Init/Init_CommonConstants.sqf` and
   defaults to `1` on the experital branch.
+
+---
+
+## MATCH family (Stats V2 step 1)
+
+Added in `fable/match-facts-family` (2026-07-06). The `MATCH|v1|` family is a parallel,
+independent prefix — it does **not** use the `WASPSTAT` prefix or the `WFBE_WASPSTAT_SEQ`
+sequence counter. Gate: `WFBE_C_MATCH_TELEMETRY` (default `1`; registered in
+`Common/Init/Init_CommonConstants.sqf`).
+
+All lines have the form:
+
+```
+MATCH|v1|<subtype>|<key=value>|<key=value>|...
+```
+
+Volume budget: ≤ ~50 lines per match.
+
+---
+
+### MATCH|v1|START|
+
+Emitted once per match from `Server/Init/Init_Server.sqf`, immediately after the `SELFTEST`
+line (params + constants are final, before side-init).
+
+```
+MATCH|v1|START|world=<worldName>|build=<buildId>|towns=<townsActiveMax>|maxPlayers=<WF_MAXPLAYERS>|aiEnabled=<aicomEnabled>|delegation=<delegation>|statlog=<statlog>|guer=<guerPlayerside>|naval=<navalHVT>|oilfield=<oilfieldEnable>
+```
+
+| Field | Source | Notes |
+|-------|--------|-------|
+| `world` | `worldName` | Terrain string, e.g. `chernarus`, `takistan`, `zargabad`. |
+| `build` | `"build89-cmdcon44"` (pipe-free literal) | Short build-id token; the full `WF_RELEASE_MARKER` string is not used here because it contains pipe characters that would shatter pipe-split parsers. |
+| `towns` | `WFBE_C_TOWNS_ACTIVE_MAX` | Configured max active towns for this match. |
+| `maxPlayers` | `WF_MAXPLAYERS` | Lobby player slot count. |
+| `aiEnabled` | `WFBE_C_AI_COMMANDER_ENABLED` | Whether AI commander is enabled. |
+| `delegation` | `WFBE_C_AI_DELEGATION` | HC delegation mode. |
+| `statlog` | `WFBE_C_STATLOG` | Whether WASPSTAT pipeline is active. |
+| `guer` | `WFBE_C_GUER_PLAYERSIDE` | Whether playable GUER faction is enabled. |
+| `naval` | `WFBE_C_NAVAL_HVT` | Whether naval HVT carriers are enabled. |
+| `oilfield` | `WFBE_C_OILFIELD_ENABLE` | Whether oilfield feature is enabled. |
+
+---
+
+### MATCH|v1|END|
+
+Emitted exactly once per match from `Server/FSM/server_victory_threeway.sqf`, immediately
+after the `WASPSTAT|ROUNDEND` line (or directly after `WFBE_GameOver = true` when
+`WFBE_C_STATLOG = 0`). `winner` is reused from the victory block; `durationSec` and
+town counts are recomputed independently so `END` is always correct regardless of
+`WFBE_C_STATLOG`.
+
+```
+MATCH|v1|END|winner=<winSide>|durationSec=<durationSec>|world=<worldName>|townsW=<townsW>|townsE=<townsE>|townsG=<townsG>|casW=<casW>|casE=<casE>|vehLostW=<vehLostW>|vehLostE=<vehLostE>|players=<players>|totalTowns=<totalTowns>
+```
+
+| Field | Source | Notes |
+|-------|--------|-------|
+| `winner` | `str _winSide` | Winning side object, e.g. `WEST`, `EAST`, `RESISTANCE`. |
+| `durationSec` | `round(time)` | Match uptime in seconds. Same source as `WASPSTAT|ROUNDEND`. |
+| `world` | `worldName` | Terrain string. |
+| `townsW` | `west Call GetTownsHeld` | Towns held by WEST at round end. |
+| `townsE` | `east Call GetTownsHeld` | Towns held by EAST at round end. |
+| `townsG` | `resistance Call GetTownsHeld` | Towns held by GUER at round end. |
+| `casW` | `WF_Logic getVariable "WESTCasualties"` | WEST casualties across the match. |
+| `casE` | `WF_Logic getVariable "EASTCasualties"` | EAST casualties across the match. |
+| `vehLostW` | `WF_Logic getVariable "WESTVehiclesLost"` | WEST vehicles destroyed. |
+| `vehLostE` | `WF_Logic getVariable "EASTVehiclesLost"` | EAST vehicles destroyed. |
+| `players` | `{ isPlayer _x } count playableUnits` | Peak connected player count at round end. |
+| `totalTowns` | `totalTowns` (local var in victory loop) | Total towns on the map. |
+
+---
+
+### MATCH|v1|MILESTONE|
+
+Sparse narrative beats emitted across the match. Each site emits at most once (or once per
+relevant event). Total volume: ≤ ~15 emission points per match, well within the 50-line budget.
+
+#### FIRST_TOWN
+
+```
+MATCH|v1|MILESTONE|FIRST_TOWN|side=<side>|town=<townName>|tMin=<tMin>
+```
+
+Emitted from `Server/FSM/server_town.sqf` inside the existing `FIRST_TOWN` idempotency
+block. One shot per side per round. Fires alongside the `AICOMSTAT|v1|FIRST_TOWN` line.
+
+| Field | Source |
+|-------|--------|
+| `side` | `str _newSide` |
+| `town` | `_location getVariable "name"` |
+| `tMin` | `round (time / 60)` |
+
+#### HQ_DESTROYED
+
+```
+MATCH|v1|MILESTONE|HQ_DESTROYED|side=<side>|tMin=<tMin>
+```
+
+Emitted from `Server/Functions/Server_OnHQKilled.sqf`. Only fires on a clean enemy kill
+(teamkills excluded via the `!_teamkill` guard).
+
+| Field | Source |
+|-------|--------|
+| `side` | `str _side` — the side whose HQ was destroyed. |
+| `tMin` | `round (time / 60)` |
+
+#### OILFIELD_CAP
+
+```
+MATCH|v1|MILESTONE|OILFIELD_CAP|owner=<newOwner>|tMin=<tMin>
+```
+
+Emitted from `Server/Server_Oilfields.sqf` at every ownership flip. Takistan-only (the
+oilfield feature is TK-only). Fires alongside the existing `OILFIELD|v1|CAPTURE` line.
+
+| Field | Source |
+|-------|--------|
+| `owner` | `str _owner` — the side that just took the oilfield. |
+| `tMin` | `round (time / 60)` |
+
+#### CARRIER_CAP
+
+```
+MATCH|v1|MILESTONE|CARRIER_CAP|carrier=<carrierName>|newSideID=<newSideID>|tMin=<tMin>
+```
+
+Emitted from `Server/FSM/server_town.sqf` inside the naval HVT capture block. Fires on
+each carrier ownership flip when `WFBE_C_NAVAL_HVT = 1`.
+
+| Field | Source |
+|-------|--------|
+| `carrier` | `_hvtName` — the carrier's town name (e.g. `Khe Sanh Alpha`). |
+| `newSideID` | `_newSID` — numeric side ID of the new owner. |
+| `tMin` | `round (time / 60)` |
+
+---
+
+## Example MATCH lines
+
+```
+MATCH|v1|START|world=chernarus|build=build89-cmdcon44|towns=20|maxPlayers=55|aiEnabled=1|delegation=2|statlog=1|guer=0|naval=0|oilfield=0
+MATCH|v1|MILESTONE|FIRST_TOWN|side=WEST|town=Elektrozavodsk|tMin=4
+MATCH|v1|MILESTONE|FIRST_TOWN|side=EAST|town=Berezino|tMin=5
+MATCH|v1|MILESTONE|HQ_DESTROYED|side=EAST|tMin=82
+MATCH|v1|END|winner=WEST|durationSec=5183|world=chernarus|townsW=18|townsE=0|townsG=2|casW=74|casE=139|vehLostW=12|vehLostE=28|players=22|totalTowns=20
+```

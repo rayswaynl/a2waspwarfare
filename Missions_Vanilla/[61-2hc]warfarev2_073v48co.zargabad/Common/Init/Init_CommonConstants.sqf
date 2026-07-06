@@ -662,6 +662,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_ARTY_TOWN_RANGE")       then {WFBE_C_AICOM_ARTY_TOWN_RANGE       = 300};     //--- metres: how close a captured town centre must be for the SPG to count as supported + clear to fire.
 	if (isNil "WFBE_C_AICOM_PARATROOPS_ENABLE")     then {WFBE_C_AICOM_PARATROOPS_ENABLE     = 1};       //--- 1 = AI calls Tactical Center paratroops (ONLY after building the Command Center + researching Paratroopers).
 	if (isNil "WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE") then {WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE = 1};       //--- 1 = AI arty uses alternate ammo types it has unlocked via WFBE_UP_ARTYAMMO (else HE only).
+	if (isNil "WFBE_C_AICOM_RESEARCH_GAP_FIX")      then {WFBE_C_AICOM_RESEARCH_GAP_FIX      = 0};       //--- 1 = add missing UnitCost/AmmoCoin commander research-order entries; 0 = legacy AI_ORDER.
 
 	//--- FUNDS-SINK (claude-gaming 2026-06-29, SYSTEM 1): in AI-vs-AI soak both commanders pin at WFBE_C_AICOM_WEALTH_CAP
 	//--- (~1.5M) with NOTHING to spend funds on - units cost funds but the 8-team hard cap blocks more teams, and tech/
@@ -1080,6 +1081,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_SKINSEL")                       then {WFBE_C_SKINSEL = 1};                       //--- cmdcon41-w3l: skin selector master (WF-menu SKIN button + first-spawn dialog + respawn restore). Legacy WFBE_C_SKIN_SELECTOR still honored as an OR.
 	if (isNil "WFBE_C_SKINSWAP_FUNDS_CARRY")          then {WFBE_C_SKINSWAP_FUNDS_CARRY = 1};          //--- cmdcon43-h: carry the player's wfbe_funds + wfbe_side across a skin swap so a failed rejoin (fresh/diverted/CIV group) never orphans his wallet to $0 (LIVE-confirmed cmdcon42b). 1 on, 0 off.
 	if (isNil "WFBE_C_FUNDS_HEAL_ZERO_GRACE")         then {WFBE_C_FUNDS_HEAL_ZERO_GRACE = 90};         //--- Ray pick A (2026-07-03): seconds the client funds self-heal refuses to accept a 0 wfbe_funds as "healed" (a transient JIP-sync 0 was the old zero-latch); keeps re-requesting the server lock-step record restore. Belt-and-suspenders atop the record fix. Higher = longer no-zero window.
+	if (isNil "WFBE_C_SKIN_PERSIST") then {WFBE_C_SKIN_PERSIST = 0};           //--- skin-persist 2026-07-06: persist player skin choice via profileNamespace across session reconnects; re-applies on respawn. 0 = off (default, byte-identical).
 
 	//--- === cmdcon41 wave-3m (live-RPT findings 2026-07-02): MHQ comeback + naval patrol guard ===
 	if (isNil "WFBE_C_AICOM_MHQ_RELAX")               then {WFBE_C_AICOM_MHQ_RELAX = 1};               //--- losing-side comeback: when no standoff clears the full ring, relax 600+buffer -> 600 -> FLOOR instead of aborting forever (live WEST: 21/21 aborts while ringed).
@@ -1469,7 +1471,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL") then {WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL = 0}; //--- Default-off: show the already-recorded GUER endgame stats as a third stats-panel column.
 	if (isNil "WFBE_C_FIX_VOTE_LIST_PRUNE") then {WFBE_C_FIX_VOTE_LIST_PRUNE = 0}; //--- Default-off: safer vote-dialog live-team row prune (reverse pass + stale index guard). 0 = legacy forward delete behaviour.
 	if (isNil "WFBE_C_FIX_VOTE_QA_EXECUTION") then {WFBE_C_FIX_VOTE_QA_EXECUTION = 0}; //--- Default-off: vote QA follow-up fixes for stored-index row color and commander primitive placeholder confirms.
-	if (isNil "WFBE_C_AMBIENT_SKIRMISH") then {WFBE_C_AMBIENT_SKIRMISH = 1}; //--- Ray 2026-07-04: ON for live testing. Lane 180: ambient WEST/EAST skirmish cells; server-only, one active cell cap, no AICOM/town/supply budget integration.
+	if (isNil "WFBE_C_AMBIENT_SKIRMISH") then {WFBE_C_AMBIENT_SKIRMISH = 0}; //--- Ray 2026-07-06: back to default-OFF (live test done; the GUER Director program + air-contact AA tier now own ambient life). Lane 180: ambient WEST/EAST skirmish cells; server-only, one active cell cap, no AICOM/town/supply budget integration.
 	if (isNil "WFBE_C_AMBIENT_SKIRMISH_INTERVAL") then {WFBE_C_AMBIENT_SKIRMISH_INTERVAL = 600}; //--- Seconds between spawn attempts while enabled.
 	if (isNil "WFBE_C_AMBIENT_SKIRMISH_LIFETIME") then {WFBE_C_AMBIENT_SKIRMISH_LIFETIME = 120}; //--- Seconds before the ambient cell self-cleans.
 	if (isNil "WFBE_C_AMBIENT_SKIRMISH_PLAYER_RADIUS") then {WFBE_C_AMBIENT_SKIRMISH_PLAYER_RADIUS = 1500}; //--- Never spawn inside this distance of a human player.
@@ -1579,6 +1581,7 @@ if (WF_A2_Vanilla) then {
 	if (isNil "WFBE_C_TOWNS_REINFORCEMENT_OCCUPATION") then {WFBE_C_TOWNS_REINFORCEMENT_OCCUPATION = 0}; //--- Enable towns occupation reinforcement.
 	if (isNil "WFBE_C_TOWNS_STARTING_MODE") then {WFBE_C_TOWNS_STARTING_MODE = 0}; //--- Town starting mode (0: Resistance, 1: 50% blu, 50% red, 2: Nearby Towns, 3: Random).
 	if (isNil "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") then {WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER = 1}; //--- Lock the vehicles of the defender side.
+	if (isNil "WFBE_C_TOWNS_CAPTURE_BAR_DETAIL") then {WFBE_C_TOWNS_CAPTURE_BAR_DETAIL = 0}; //--- Lane 52: 1 adds observed SV trend text to the client capture bar; 0 keeps the legacy town/SV label.
 
 	//--- Air units.
 	if (isNil "WFBE_C_JET_AA_SURVIVE") then {WFBE_C_JET_AA_SURVIVE = 1}; //--- Jets survive the 1st SPAAG (Tunguska/Linebacker) hit: fuel drained + slight damage for a landing attempt; a 2nd hit explodes. 0 disables.
@@ -2071,6 +2074,38 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Default 0 = current pair behaviour. Set > 0 to activate all-hind triple CAP.
 	if (isNil "WFBE_C_NAVAL_CAP_THREE_HINDS") then {WFBE_C_NAVAL_CAP_THREE_HINDS = 0};
 
+
+//======================================================================================
+//--- NAVAL INLINE SUPER-CARRIER (fable/naval-inline-hulls, Ray 2026-07-06):
+//--- A/B-testable bow-to-stern axis for the outer-carrier twin-hull system.
+//---
+//--- WFBE_C_NAVAL_INLINE_HULLS  (default 0):
+//---   Master switch.  When > 0, the second hull on each OUTER carrier is placed
+//---   INLINE (bow-to-stern, aft of Hull A) instead of LATERALLY (side-by-side).
+//---   Precedence: when this flag > 0 AND WFBE_C_NAVAL_TWIN_HULLS = 1, the inline
+//---   offset formula supersedes the lateral formula; all other twin-hull logic
+//---   (middle-carrier detection, SCUD, air-shop, CAP) is unchanged.
+//---   When 0: exact HEAD behaviour (lateral offset if WFBE_C_NAVAL_TWIN_HULLS=1).
+//---
+//--- WFBE_C_NAVAL_INLINE_GAP  (default -265):
+//---   Hull B anchor offset along the ship's LONG axis, in metres (body-space Y).
+//---   Negative = aft of Hull A anchor.  Tunable at mission start without a code
+//---   edit: read as getVariable ["WFBE_C_NAVAL_INLINE_GAP", -265] at spawn time.
+//---   Safe iterate range for in-editor seam alignment: -258 to -275.
+//---   Derivation: 128m (Hull A stern-to-anchor) + 9m (Hull A stern overhang)
+//---               + 8m (Hull B bow overhang) + 120m (Hull B anchor-to-bow) = 265m.
+//---
+//--- WFBE_C_NAVAL_SEAM_BRIDGE  (default 0):
+//---   When > 0, spawn 4x Land_nav_pier_m_1 bridge segments across the Hull A
+//---   stern / Hull B bow seam.  Placed at body-space Y offsets (-131,-134,-137,-140
+//---   from Hull A anchor) at the averaged deck-Z of both hulls.
+//---   Escalation-ladder step 2: flush-butt geometry is tried first (inline=1,
+//---   seam=0); add piers only if the seam wheeled-vehicle test requires it.
+//---   Has no effect unless WFBE_C_NAVAL_INLINE_HULLS > 0.
+//======================================================================================
+	if (isNil "WFBE_C_NAVAL_INLINE_HULLS") then {WFBE_C_NAVAL_INLINE_HULLS  = 0};   //--- 0 = lateral HEAD behaviour; >0 = inline bow-to-stern axis
+	if (isNil "WFBE_C_NAVAL_INLINE_GAP")   then {WFBE_C_NAVAL_INLINE_GAP    = -265}; //--- Hull B aft offset metres (body Y); tune -258..-275 in-editor
+	if (isNil "WFBE_C_NAVAL_SEAM_BRIDGE")  then {WFBE_C_NAVAL_SEAM_BRIDGE   = 0};   //--- 0 = no bridge piers; >0 = 4x Land_nav_pier_m_1 at seam
 //--- TELEMETRY HOST V2 (tp4, 2026-07-06): when flag=1, GRPBUDGET+SRVPERF emit from
 //--- server_groupsGC.sqf (survives V2 cutover) and are suppressed in AI_Commander.sqf.
 //--- Default 0 = byte-identical to HEAD (old emitters run, new host silent).
@@ -2094,6 +2129,11 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- WFBE_C_NOTABLE_KILL_THROTTLE: minimum seconds between feed messages per-side (spam guard).
 	if (isNil "WFBE_C_NOTABLE_KILL_FEED")     then {WFBE_C_NOTABLE_KILL_FEED     = 1};
 	if (isNil "WFBE_C_NOTABLE_KILL_THROTTLE") then {WFBE_C_NOTABLE_KILL_THROTTLE = 10};
+
+//--- MATCH TELEMETRY (fable/match-facts-family, 2026-07-06): master gate for the MATCH|v1| family.
+//--- Default 1 (ON): this is purely additive RPT telemetry feeding the Stats V2 match-report pipeline;
+//--- no gameplay logic is gated on it. Set to 0 to suppress all MATCH|v1| lines (zero overhead).
+	if (isNil "WFBE_C_MATCH_TELEMETRY") then {WFBE_C_MATCH_TELEMETRY = 1};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

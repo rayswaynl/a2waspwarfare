@@ -89,7 +89,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	//--- STRANDED (timeout exceeded, still far). Latched by wfbe_aicom_dispatch_open so it fires
 	//--- once per dispatch; a re-dispatch in Hook A re-opens the latch. Logging only, no behaviour.
 	if (_team getVariable ["wfbe_aicom_dispatch_open", false]) then {
-		private ["_dord","_dtgt","_dt0","_dldr","_ddist","_arrR","_toSecs","_elapsed"];
+		private ["_dord","_dtgt","_dt0","_dldr","_ddist","_arrR","_toSecs","_elapsed","_bandKey","_bandVal"];
 		_dord = _team getVariable ["wfbe_aicom_townorder", []];
 		if (count _dord >= 2) then {
 			_dtgt = _dord select 0;
@@ -103,6 +103,11 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 				if (_ddist <= _arrR) then {
 					//--- WASPSCALE arrv counter (cmdcon42): bump the cumulative-arrival counter the server-side WASPSCALE emit reads (arrv=). One per successful journey (latched once per dispatch by wfbe_aicom_dispatch_open). Server-local, monotonic.
 					missionNamespace setVariable ["wfbe_waspscale_arrv", (missionNamespace getVariable ["wfbe_waspscale_arrv", 0]) + 1];
+					//--- Lane 362: bucket successful journey latency for the next supervisor-window histogram.
+					_bandKey = "wfbe_aicom_arrival_slow";
+					if (_elapsed < 300) then {_bandKey = "wfbe_aicom_arrival_fast"} else {if (_elapsed < 600) then {_bandKey = "wfbe_aicom_arrival_med"}};
+					_bandVal = _logik getVariable [_bandKey, 0];
+					_logik setVariable [_bandKey, _bandVal + 1];
 					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_ARRIVED|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|elapsed=" + str _elapsed);
 					_team setVariable ["wfbe_aicom_dispatch_open", false];
 					//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, claude-gaming 2026-07-02): the team reached a town
@@ -258,17 +263,26 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 		//--- lapses, the latch is CLEARED and the team retargets normally next pass. A2-OA-safe (plain getVariable
 		//--- + isNil guard, typeName OBJECT test, numeric sideID compare, objNull broadcast clear).
 		if ((missionNamespace getVariable ["WFBE_C_AICOM_HOLD_MODE", 1]) > 0) then {
-			private ["_ht","_htLive"];
+			private ["_ht","_htLive","_htSide","_htUntil"];
 			_ht = _team getVariable "wfbe_aicom_holding_town";
 			_htLive = false;
 			if (!isNil "_ht") then {
 				if (typeName _ht == "OBJECT" && {!isNull _ht}) then {
-					if ((_ht getVariable ["sideID", -1]) == _sideID && {time < (_ht getVariable ["wfbe_aicom_hold_until", 0])}) then {_htLive = true};
+					_htSide = _ht getVariable ["sideID", -1];
+					_htUntil = _ht getVariable ["wfbe_aicom_hold_until", 0];
+					if (_htSide == _sideID && {time < _htUntil}) then {_htLive = true};
 				};
 			};
 			if (_htLive) then {
 				_explicitMode = true;
 			} else {
+				if (!isNil "_ht") then {
+					if (typeName _ht == "OBJECT" && {!isNull _ht}) then {
+						if (_htSide != _sideID) then {
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HOLD_TOWN_LOST|team=" + (str _team) + "|town=" + (_ht getVariable ["name","town"]) + "|townSide=" + str _htSide + "|remaining=" + str (round (_htUntil - time)));
+						};
+					};
+				};
 				_team setVariable ["wfbe_aicom_holding_town", objNull, true];
 			};
 		};
@@ -648,13 +662,19 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					};
 					//--- AICOM v2 (M1): if the single-authority Allocator assigned THIS team a target this cycle,
 					//--- USE it (concentrate on the fist) and skip the legacy spearhead/nearest pick below. Fresh-gated
-					//--- (<180s) so a stale assignment (Allocator off / not run) falls through to legacy = instant rollback.
+					//--- (WFBE_C_AICOM2_ALLOC_TICK_TTL, default 180s) so a stale assignment (Allocator off / not run) falls through to legacy = instant rollback.
 					if (isNull _target && {(missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) > 0}) then {
-						private ["_allocT","_allocTick"];
+						private ["_allocT","_allocTick","_allocTtl","_allocAge"];
 						_allocT    = _team getVariable "wfbe_aicom_alloc_target";
 						_allocTick = _team getVariable "wfbe_aicom_alloc_tick";
-						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {(time - _allocTick) < 180} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)}) then { //--- wiki cross-check fix: respect this team's stuck-abandon blacklist (don't re-send it at a town it gave up on as unreachable).
+						_allocTtl  = missionNamespace getVariable ["WFBE_C_AICOM2_ALLOC_TICK_TTL", 180];
+						if (!isNil "_allocTick") then {_allocAge = time - _allocTick} else {_allocAge = 1e9};
+						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)}) then { //--- wiki cross-check fix: respect this team's stuck-abandon blacklist (don't re-send it at a town it gave up on as unreachable).
 							_target = _allocT;
+						} else {
+							if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge >= _allocTtl}) then {
+								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ALLOC_TICK_STALE|team=" + (str _team) + "|town=" + (_allocT getVariable ["name","town"]) + "|age=" + str (round _allocAge) + "|ttl=" + str (round _allocTtl));
+							};
 						};
 					};
 					_spear = _logik getVariable ["wfbe_aicom_targets", []];
@@ -777,6 +797,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_team setVariable ["wfbe_aicom_dispatch_open", true];
 						//--- WASPSCALE disp counter (cmdcon42): bump the cumulative-dispatch counter the server-side WASPSCALE emit reads (disp=). Server-local, monotonic; counts every (re)dispatch, matching the ASSAULT_DISPATCH log below.
 						missionNamespace setVariable ["wfbe_waspscale_disp", (missionNamespace getVariable ["wfbe_waspscale_disp", 0]) + 1];
+						_logik setVariable ["wfbe_aicom_arrival_dispatched", (_logik getVariable ["wfbe_aicom_arrival_dispatched", 0]) + 1];
 						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_DISPATCH|team=" + (str _team) + "|town=" + (_target getVariable ["name","town"]) + "|dist=" + str (round ((leader _team) distance _target)) + "|reissue=" + str (_priorOpen && _sameTgt));
 						["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] heading to attack town [%3].", _sideText, _team, _target getVariable ["name", "town"]]] Call WFBE_CO_FNC_AICOMLog;
 					};
