@@ -18,11 +18,44 @@
 
 "ATTACK_WAVE_DETAILS" addPublicVariableEventHandler {
 
-	private ["_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
+	private ["_payload", "_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
 
-	_side = ((_this select 1) select 0);
-	_priceModifier = ((_this select 1) select 1);
-    _attackLength = ((_this select 1) select 2);
+    if (typeName _this != "ARRAY") exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected malformed ATTACK_WAVE_DETAILS event type [%1].", typeName _this]] Call WFBE_CO_FNC_LogContent;
+    };
+
+    if (count _this < 2) exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected short ATTACK_WAVE_DETAILS event [%1].", _this]] Call WFBE_CO_FNC_LogContent;
+    };
+
+    _payload = _this select 1;
+    if (typeName _payload != "ARRAY") exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected malformed ATTACK_WAVE_DETAILS payload type [%1].", typeName _payload]] Call WFBE_CO_FNC_LogContent;
+    };
+
+    if (count _payload < 3) exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected short ATTACK_WAVE_DETAILS payload [%1].", _payload]] Call WFBE_CO_FNC_LogContent;
+    };
+
+	_side = _payload select 0;
+	_priceModifier = _payload select 1;
+    _attackLength = _payload select 2;
+
+    if (typeName _side != "SIDE") exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS with invalid side type [%1].", typeName _side]] Call WFBE_CO_FNC_LogContent;
+    };
+
+    if (!(_side in [west, east])) exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS for unsupported side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+    };
+
+    if (typeName _priceModifier != "SCALAR") exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS with invalid modifier type [%1].", typeName _priceModifier]] Call WFBE_CO_FNC_LogContent;
+    };
+
+    if (typeName _attackLength != "SCALAR") exitWith {
+        ["WARNING", Format["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS with invalid length type [%1].", typeName _attackLength]] Call WFBE_CO_FNC_LogContent;
+    };
 
     _priceModifierPercentage = round (_priceModifier * 100);
 
