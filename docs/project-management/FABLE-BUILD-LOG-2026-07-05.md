@@ -50,3 +50,6 @@ Next increment after #724: Common_RunCommanderTeam consumes wfbe_aicom_decap →
 - **TP-10 spec: PASS-WITH-NOTES — 3 MAJOR claim corrections prepended to the spec** (#548 reframe, EXT-1 pacing re-verify, EXT-4 land-GET-OUT re-verify) before its work orders execute.
 **Protocol note:** the phantom-guard MAJOR was missed by the #713 author, the Opus review, AND Agent A's diff pass — caught only by the Fable refuter with full-repo grep. The verify-everything order is validated.
 
+## Q9 FINAL RULING (2026-07-06): Team menu = TM2 "Gear presets & quick-rebuy"
+Owner rejected all three coordination-angle options (A/B/C), picked TM2 from the fresh set: personal infantry loadout preset slots + "rebuy my last kit" after death + default spawn gear selection, riding the existing gear-save/EASA-style systems. Duplicates (VD/TG/money-transfer) removed as part of the same build. Keepers stay (disband/FX/vote/high-climb toggles). → **TP-21-M (mission): Team Menu V2 = TM2**, flag `WFBE_C_TEAM_MENU_V2` default 0, builds AFTER the merge batches settle (base moves). Research-first: how gear save currently works (gear menu save slots? EASA loadout persistence? profileNamespace patterns), where rebuy charges cash, JIP/respawn hooks.
+
