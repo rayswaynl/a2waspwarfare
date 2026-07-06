@@ -1711,6 +1711,7 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_DEFENSE_BUDGET = 1;            // Per-base-area defense caps scaling with barracks level
 	WFBE_C_BASE_DEFENSE_STATICS_CAP = 25; // Max player-placed static base defenses (MGs/AA/AAPOD) per base area (raised from 10)
 	WFBE_C_DEFENSE_THREAT_MIN = 3;        // Min enemy ground units (west/east, no Air/GUER) inside base range before the statics/mines threat gate fires
+	if (isNil "WFBE_C_DEFENSE_CLIENT_GATE_ALIGN") then {WFBE_C_DEFENSE_CLIENT_GATE_ALIGN = 0}; //--- Default OFF: client placement preview uses per-unit exitWith scan. When 1, client enemy-in-base red only fires when enemy-side unit count >= WFBE_C_DEFENSE_THREAT_MIN (mirrors the server threat gate).
 	WFBE_C_WDDM_COMP_CAP = 3;            //--- Max WDDM commander compositions per base area (size-independent).
 	WFBE_C_FACTORY_QUEUE_LIMITS = 1;      // Per-factory production queue caps scaling with factory level
 	if (isNil "WFBE_C_FIX_FACTORY_QUEUE_TOKEN_HARDENING") then {WFBE_C_FIX_FACTORY_QUEUE_TOKEN_HARDENING = 0}; //--- Default-off: opt-in stronger player-buy FIFO tokens; 0 keeps legacy UID+diag_tickTime tokens.
