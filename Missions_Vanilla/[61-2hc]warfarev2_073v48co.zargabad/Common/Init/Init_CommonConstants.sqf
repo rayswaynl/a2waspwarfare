@@ -2061,5 +2061,37 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Default 0 = current pair behaviour. Set > 0 to activate all-hind triple CAP.
 	if (isNil "WFBE_C_NAVAL_CAP_THREE_HINDS") then {WFBE_C_NAVAL_CAP_THREE_HINDS = 0};
 
+
+//======================================================================================
+//--- NAVAL INLINE SUPER-CARRIER (fable/naval-inline-hulls, Ray 2026-07-06):
+//--- A/B-testable bow-to-stern axis for the outer-carrier twin-hull system.
+//---
+//--- WFBE_C_NAVAL_INLINE_HULLS  (default 0):
+//---   Master switch.  When > 0, the second hull on each OUTER carrier is placed
+//---   INLINE (bow-to-stern, aft of Hull A) instead of LATERALLY (side-by-side).
+//---   Precedence: when this flag > 0 AND WFBE_C_NAVAL_TWIN_HULLS = 1, the inline
+//---   offset formula supersedes the lateral formula; all other twin-hull logic
+//---   (middle-carrier detection, SCUD, air-shop, CAP) is unchanged.
+//---   When 0: exact HEAD behaviour (lateral offset if WFBE_C_NAVAL_TWIN_HULLS=1).
+//---
+//--- WFBE_C_NAVAL_INLINE_GAP  (default -265):
+//---   Hull B anchor offset along the ship's LONG axis, in metres (body-space Y).
+//---   Negative = aft of Hull A anchor.  Tunable at mission start without a code
+//---   edit: read as getVariable ["WFBE_C_NAVAL_INLINE_GAP", -265] at spawn time.
+//---   Safe iterate range for in-editor seam alignment: -258 to -275.
+//---   Derivation: 128m (Hull A stern-to-anchor) + 9m (Hull A stern overhang)
+//---               + 8m (Hull B bow overhang) + 120m (Hull B anchor-to-bow) = 265m.
+//---
+//--- WFBE_C_NAVAL_SEAM_BRIDGE  (default 0):
+//---   When > 0, spawn 4x Land_nav_pier_m_1 bridge segments across the Hull A
+//---   stern / Hull B bow seam.  Placed at body-space Y offsets (-131,-134,-137,-140
+//---   from Hull A anchor) at the averaged deck-Z of both hulls.
+//---   Escalation-ladder step 2: flush-butt geometry is tried first (inline=1,
+//---   seam=0); add piers only if the seam wheeled-vehicle test requires it.
+//---   Has no effect unless WFBE_C_NAVAL_INLINE_HULLS > 0.
+//======================================================================================
+	if (isNil "WFBE_C_NAVAL_INLINE_HULLS") then {WFBE_C_NAVAL_INLINE_HULLS  = 0};   //--- 0 = lateral HEAD behaviour; >0 = inline bow-to-stern axis
+	if (isNil "WFBE_C_NAVAL_INLINE_GAP")   then {WFBE_C_NAVAL_INLINE_GAP    = -265}; //--- Hull B aft offset metres (body Y); tune -258..-275 in-editor
+	if (isNil "WFBE_C_NAVAL_SEAM_BRIDGE")  then {WFBE_C_NAVAL_SEAM_BRIDGE   = 0};   //--- 0 = no bridge piers; >0 = 4x Land_nav_pier_m_1 at seam
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

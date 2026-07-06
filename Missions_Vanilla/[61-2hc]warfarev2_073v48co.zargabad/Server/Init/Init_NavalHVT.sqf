@@ -405,34 +405,126 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 		_ocDeckZ = 16;
 		if (!isNull _ocLogic) then { _ocDeckZ = _ocLogic getVariable ["wfbe_naval_deckz", 16] };
 
-		//--- Perpendicular unit vector for heading _twinDir: [cos dir, -sin dir] (right-hand side of forward).
-		_perpX = cos _twinDir;
-		_perpY = -(sin _twinDir);
-		_twinAnchor = [(_ocAnchor select 0) + _twinGap * _perpX, (_ocAnchor select 1) + _twinGap * _perpY];
+		//--- fable/naval-inline-hulls (Ray 2026-07-06): A/B switch on WFBE_C_NAVAL_INLINE_HULLS.
+		//--- When > 0: place Hull B INLINE (bow-to-stern, aft of Hull A) instead of laterally.
+		//--- When = 0: verbatim HEAD lateral behaviour (unchanged).
+		if ((missionNamespace getVariable ["WFBE_C_NAVAL_INLINE_HULLS", 0]) > 0) then {
+			//=============================================================================
+			//--- INLINE PATH: bow-to-stern super-carrier axis.
+			//---
+			//--- Sign-convention proof (must match SpawnLHD's rotation in this file):
+			//---   SpawnLHD rotates offsets as:
+			//---     _dx = off_x*cos(_dir) - off_y*sin(_dir)
+			//---     _dy = off_x*sin(_dir) + off_y*cos(_dir)
+			//---   So body-space +Y maps to world [sin dir, cos dir] (the "forward" vector).
+			//---   Aft = opposite = body-space -Y = world [-sin dir, -cos dir].
+			//---
+			//---   Hull B anchor (aft of Hull A by |gap| metres):
+			//---     world_x = anchorX + gap * (-sin dir)  = anchorX - |gap|*sin(dir)
+			//---     world_y = anchorY + gap * (-cos dir)  = anchorY - |gap|*cos(dir)
+			//---   where gap = WFBE_C_NAVAL_INLINE_GAP (negative number, e.g. -265),
+			//---   so -gap (a positive number) gives the aft displacement:
+			//---     world_x = anchorX - (-265)*sin(dir)  [minus a negative = plus]
+			//---     world_y = anchorY - (-265)*cos(dir)
+			//---   Simplifying with _inlineGap = abs(WFBE_C_NAVAL_INLINE_GAP):
+			//---     world_x = anchorX - _inlineGap * sin(dir)
+			//---     world_y = anchorY - _inlineGap * cos(dir)
+			//---   Verified at dir=90 (east-facing, current layout):
+			//---     world_x = anchorX - 265*sin(90) = anchorX - 265*1 = anchorX - 265
+			//---     world_y = anchorY - 265*cos(90) = anchorY - 265*0 = anchorY
+			//---   i.e. Hull B is 265m to the WEST of Hull A when the ship faces east.
+			//---   That is aft (stern) of a heading-90 ship — correct.
+			//---
+			//---   Compare the lateral formula above:
+			//---     _perpX = cos(dir);  _perpY = -(sin dir)
+			//---     twinX  = anchorX + 42*cos(dir)
+			//---     twinY  = anchorY - 42*sin(dir)
+			//---   At dir=90: twinX = anchorX + 42*0 = anchorX
+			//---              twinY = anchorY - 42*1 = anchorY - 42  (pure -Y shift = south)
+			//---   That is perpendicular to heading-90 — correct for lateral.
+			//---   Same rotation identity (cos/sin of the same _dir); only the axis changes.
+			//=============================================================================
+			private ["_inlineGap","_inlineAnchor","_inlineParts","_deckZB","_bridgeZ","_seam_Y_offsets","_bY","_bwX","_bwY","_seamPier"];
+			_inlineGap = abs (missionNamespace getVariable ["WFBE_C_NAVAL_INLINE_GAP", -265]);
+			_inlineAnchor = [
+				(_ocAnchor select 0) - _inlineGap * sin(_twinDir),
+				(_ocAnchor select 1) - _inlineGap * cos(_twinDir),
+				0
+			];
 
-		//--- Second full LHD hull, same heading -> deck runs parallel to the original.
-		_twinParts = [[_twinAnchor select 0, _twinAnchor select 1, 0], _twinDir] Call WFBE_NavalHVT_SpawnLHD;
+			//--- Hull B: same heading, same SpawnLHD call — no game logic attached.
+			//--- Hull B carries ZERO town logic / camp / SCUD (all game-logic stays on Hull A).
+			_inlineParts = [_inlineAnchor, _twinDir] Call WFBE_NavalHVT_SpawnLHD;
 
-		//--- Bridge the gap with walkable piers, spaced across the 42m span at deck height. The piers sit at
-		//--- fractional steps between the original hull anchor and the twin anchor (excluding the very ends so
-		//--- they land in the gap, not inside a hull).
-		for [{_j = 1}, {_j <= _bridgeCount}, {_j = _j + 1}] do {
-			_frac = _j / (_bridgeCount + 1);
-			_bx = (_ocAnchor select 0) + ((_twinAnchor select 0) - (_ocAnchor select 0)) * _frac;
-			_by = (_ocAnchor select 1) + ((_twinAnchor select 1) - (_ocAnchor select 1)) * _frac;
-			//--- SpawnProp sets it static/indestructible + logs to RPT if the class is missing. Face it along
-			//--- the gap (perpendicular to ship heading) so the pier's long axis bridges hull-to-hull.
-			_pier = [_bridgeClass, [_bx, _by, 0], (_twinDir + 90)] Call WFBE_NavalHVT_SpawnProp;
-			//--- SpawnProp forces z=0 (sea level, correct for the shared hull parts); the pier must sit ON the
-			//--- deck, so re-seat the returned object at deck height here (helper left untouched). Guard isNull
-			//--- so a missing pier class (already logged by SpawnProp) does not error on setPosASL.
-			if (!isNull _pier) then {
-				_pier setPosASL [_bx, _by, _ocDeckZ];
+			//--- Seam-bridge piers (only when WFBE_C_NAVAL_SEAM_BRIDGE > 0).
+			//--- 4x Land_nav_pier_m_1 across the Hull A stern / Hull B bow join.
+			//--- Z = average of Hull A and Hull B deck heights (conservative floor to avoid float).
+			//--- Body-space Y offsets from Hull A anchor: nominally -131,-134,-137,-140
+			//--- (i.e. 131-140m aft of the Hull A anchor, inside the seam zone).
+			//--- VERIFY in-editor: adjust these Y values until piers land in the gap centre.
+			if ((missionNamespace getVariable ["WFBE_C_NAVAL_SEAM_BRIDGE", 0]) > 0) then {
+				//--- Probe Hull B deckZ from part[3] (same pattern as Hull A above).
+				_deckZB = _ocDeckZ;
+				if (count _inlineParts > 3) then {
+					private ["_bbB","_partB"];
+					_partB = _inlineParts select 3;
+					if (!isNull _partB) then {
+						_bbB   = boundingBox _partB;
+						_deckZB = (getPosASL _partB select 2) + ((_bbB select 1) select 2);
+					};
+				};
+				_bridgeZ = (_ocDeckZ + _deckZB) / 2;
+				_seam_Y_offsets = [-131, -134, -137, -140];
+				{
+					_bY  = _x;
+					//--- Convert body-space Y offset to world coords using the ship heading.
+					//--- Body +Y = world [sin dir, cos dir]; aft offset _bY is negative.
+					_bwX = (_ocAnchor select 0) + _bY * sin(_twinDir);
+					_bwY = (_ocAnchor select 1) + _bY * cos(_twinDir);
+					_seamPier = [_bridgeClass, [_bwX, _bwY, 0], _twinDir] Call WFBE_NavalHVT_SpawnProp;
+					if (!isNull _seamPier) then {
+						_seamPier setPosASL [_bwX, _bwY, _bridgeZ];
+					};
+				} forEach _seam_Y_offsets;
+				diag_log Format ["NAVALHVT-INLINE: [%1] seam bridge spawned (%2 piers at bridgeZ=%3).", _ocName, count _seam_Y_offsets, _bridgeZ];
 			};
-		};
 
-		["INITIALIZATION", Format ["Init_NavalHVT.sqf : cmdcon41-w3 twin hull built for OUTER carrier [%1] at %2 (gap %3m, %4 piers).", _ocName, _twinAnchor, _twinGap, _bridgeCount]] Call WFBE_CO_FNC_LogContent;
-		diag_log Format ["NAVALHVT-TWIN: [%1] twinAnchor=%2 deckZ=%3 perp=[%4,%5]", _ocName, _twinAnchor, _ocDeckZ, _perpX, _perpY];
+			["INITIALIZATION", Format ["Init_NavalHVT.sqf : fable/naval-inline-hulls — inline Hull B built for OUTER carrier [%1] at %2 (gap %3m).", _ocName, _inlineAnchor, _inlineGap]] Call WFBE_CO_FNC_LogContent;
+			diag_log Format ["NAVALHVT-INLINE: [%1] inlineAnchor=%2 deckZ=%3 gap=%4", _ocName, _inlineAnchor, _ocDeckZ, _inlineGap];
+
+		} else {
+			//=============================================================================
+			//--- LATERAL PATH (HEAD behaviour, verbatim — active when WFBE_C_NAVAL_INLINE_HULLS=0).
+			//=============================================================================
+			//--- Perpendicular unit vector for heading _twinDir: [cos dir, -sin dir] (right-hand side of forward).
+			_perpX = cos _twinDir;
+			_perpY = -(sin _twinDir);
+			_twinAnchor = [(_ocAnchor select 0) + _twinGap * _perpX, (_ocAnchor select 1) + _twinGap * _perpY];
+
+			//--- Second full LHD hull, same heading -> deck runs parallel to the original.
+			_twinParts = [[_twinAnchor select 0, _twinAnchor select 1, 0], _twinDir] Call WFBE_NavalHVT_SpawnLHD;
+
+			//--- Bridge the gap with walkable piers, spaced across the 42m span at deck height. The piers sit at
+			//--- fractional steps between the original hull anchor and the twin anchor (excluding the very ends so
+			//--- they land in the gap, not inside a hull).
+			for [{_j = 1}, {_j <= _bridgeCount}, {_j = _j + 1}] do {
+				_frac = _j / (_bridgeCount + 1);
+				_bx = (_ocAnchor select 0) + ((_twinAnchor select 0) - (_ocAnchor select 0)) * _frac;
+				_by = (_ocAnchor select 1) + ((_twinAnchor select 1) - (_ocAnchor select 1)) * _frac;
+				//--- SpawnProp sets it static/indestructible + logs to RPT if the class is missing. Face it along
+				//--- the gap (perpendicular to ship heading) so the pier's long axis bridges hull-to-hull.
+				_pier = [_bridgeClass, [_bx, _by, 0], (_twinDir + 90)] Call WFBE_NavalHVT_SpawnProp;
+				//--- SpawnProp forces z=0 (sea level, correct for the shared hull parts); the pier must sit ON the
+				//--- deck, so re-seat the returned object at deck height here (helper left untouched). Guard isNull
+				//--- so a missing pier class (already logged by SpawnProp) does not error on setPosASL.
+				if (!isNull _pier) then {
+					_pier setPosASL [_bx, _by, _ocDeckZ];
+				};
+			};
+
+			["INITIALIZATION", Format ["Init_NavalHVT.sqf : cmdcon41-w3 twin hull built for OUTER carrier [%1] at %2 (gap %3m, %4 piers).", _ocName, _twinAnchor, _twinGap, _bridgeCount]] Call WFBE_CO_FNC_LogContent;
+			diag_log Format ["NAVALHVT-TWIN: [%1] twinAnchor=%2 deckZ=%3 perp=[%4,%5]", _ocName, _twinAnchor, _ocDeckZ, _perpX, _perpY];
+		};
 	} forEach _outer;
 } else {
 	["INFORMATION", "Init_NavalHVT.sqf : WFBE_C_NAVAL_TWIN_HULLS=0 — twin-hull super-carriers OFF (single hulls only)."] Call WFBE_CO_FNC_LogContent;
