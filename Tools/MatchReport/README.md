@@ -111,25 +111,14 @@ must match `assets.py` exactly. `assets.py` is the registry (slots, sizes, promp
 the drop-folder PNGs are gitignored (binaries). The map is **not** an asset slot — an
 accurate procedural map beats a hallucinated generated one.
 
-## Known gaps → production wiring (all small, mostly mission-side)
+## Known gaps -> production wiring
 
-1. **Event timestamps.** `CAPTURE`/`KILL` lines carry **no match-time** today, so the
-   parser spreads events evenly across `[0, duration]` by sequence order — fine for the
-   look, not frame-accurate. Two clean fixes (pick one):
-   - add `round(time)` as a field to the `CAPTURE`/`KILL` emitters
-     (`Server/FSM/server_town.sqf`, `Server/PVFunctions/RequestOnUnitKilled.sqf`) and bump
-     the WASPSTAT format doc, **or**
-   - have the ingest stamp each line's arrival time and pass it via `parse_waspstat(line_times=…)`.
-2. **Town coordinates.** `TOWN_COORDS["chernarus"]` is hand-approximated and
-   `["takistan"]` is empty (unknown towns auto-place on a ring). Real fix: log each
-   town's `getPos` once at boot (one line in mission init) and paste the values in —
-   that makes both maps exact.
-3. **Player names.** WASPSTAT carries UID, not name. Pass `--names` (join from the
-   leaderboard `players` table) for real handles; otherwise `Op-<last4>`.
-4. **Trigger.** Wire a watcher on the `:3010` ingest: on a `ROUNDEND`, collect that
-   match's lines and invoke `render_report.py`. (≈30 lines, mirrors the existing RPT
-   reporters.) Output is already native-vertical; auto-posting to TikTok is deferred
-   (post manually first).
+See `PRODUCTION.md` for the source-anchored gap trace. Current Build84 already emits
+`t=<seconds>` on `CAPTURE` and `KILL`, and `matchdata.py` now has exact Chernarus and
+Takistan coordinates. The remaining small gaps are: document the optional `t=` fields in
+`docs/WASPSTAT-FORMAT.md`, add Zargabad `WORLD_SIZE`/`TOWN_COORDS`, wire a reliable
+UID-to-name TSV or confirm embedded `~name` coverage, and decide whether the scheduled
+runner is sufficient or if the `:3010` ingest should trigger it directly.
 
 ## Customisation knobs
 
