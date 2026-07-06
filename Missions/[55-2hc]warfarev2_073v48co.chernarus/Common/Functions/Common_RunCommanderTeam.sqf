@@ -1920,6 +1920,10 @@ while {!WFBE_GameOver && _alive} do {
 						if ((missionNamespace getVariable ["WFBE_C_SML_CAMP_SPLIT", 0]) > 0) then {
 							[_team, _footInf, _unheldCamps, _sideID, _side, _townCenter, _capSeq, _campFirstEnd] Spawn WFBE_CO_FNC_SMLCampSplit;
 						};
+						//--- SML-2 real dismounts: force cargo infantry off hulls; crew (driver/gunner) stay mounted for fire support. Flag-gated (WFBE_C_SML_DISMOUNTS, default 0).
+						if ((missionNamespace getVariable ["WFBE_C_SML_DISMOUNTS", 0]) > 0) then {
+							[_team, _footInf, _sideID, _side, _capSeq, _campFirstEnd] Spawn WFBE_CO_FNC_SMLDismounts;
+						};
 
 						while {count _unheldCamps > 0 && {time < _campFirstEnd} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 							_capOrdN = _team getVariable "wfbe_aicom_order"; if (isNil "_capOrdN") then {_capOrdN = []};
