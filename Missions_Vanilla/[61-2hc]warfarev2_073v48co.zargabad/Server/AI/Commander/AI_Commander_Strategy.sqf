@@ -745,7 +745,6 @@ if (!isNull _enemyHQ && {alive _enemyHQ} && {_myTowns > _enemyTowns}) then {
 	//--- Master flag WFBE_C_AICOM_STALL_OVERRIDE_ENABLE (default 1) for a clean one-switch revert.
 	if (((missionNamespace getVariable ["WFBE_C_AICOM_STALL_OVERRIDE_ENABLE", 1]) > 0) && {(_logik getVariable ["wfbe_aicom_stall_streak", 0]) >= (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 5])}) then {
 		_strikeOn = true;
-		if (!_wasStrike) then {diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE_STALL_OVERRIDE|streak=" + str (_logik getVariable ["wfbe_aicom_stall_streak", 0]) + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myEff=" + str _rMyEff + "|enEff=" + str _rEnEff)};
 	};
 };
 //--- B752 (Ray 2026-06-25): STICKY STRIKE. The recall gate used RAW maneuver _myStr, which dips below the concentrated
@@ -768,7 +767,6 @@ if (_strikeOn) then {
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] WAR STATE: winning (towns %2v%3, strength %4v%5) - HQ STRIKE launched.", _sideText, _myTowns, _enemyTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
 		_logik setVariable ["wfbe_aicom_strike_t0", time];
 		_logik setVariable ["wfbe_aicom_stall_streak", 0]; //--- Lane-324: belt-and-suspenders guard (review: the else-branch at line ~1037 already zeros streak on every strike tick via !_strikeOn; this entry-only reset is redundant but harmless).
-		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE|launched|myTowns=" + str _myTowns + "|gate=" + str _strikeMinTowns + "|total=" + str (count towns));
 	};
 	//--- cmdcon41-w2 STAGING-MASS (Fable F4/hqstrike-staging-rally-mass-before-assault; flag WFBE_C_AICOM_STRIKE_STAGE
 	//--- default 1). Rather than trickle strikers onto the enemy HQ one team at a time (piecemeal, chewed up by the home
@@ -826,7 +824,6 @@ if (_strikeOn) then {
 							};
 						};
 					} forEach _teams;
-					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRIKE_STAGE_RELEASE|bodies=" + str _stgBodies + "|need=" + str _stgBodiesNeed + "|held=" + str (round (time - _stgT0)));
 				} else {
 					//--- Still massing: newly-recruited strikers below are pointed at the rally, not the HQ.
 					_strikeDest = _stgRallyPos;
