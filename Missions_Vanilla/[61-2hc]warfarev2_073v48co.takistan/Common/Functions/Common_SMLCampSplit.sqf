@@ -28,7 +28,7 @@
 Private ["_team","_footInf","_unheldCamps","_sideID","_side","_townCenter","_capSeq","_campFirstEnd"];
 Private ["_ttl","_splitDone","_groupA","_groupB","_hold","_campA","_campB","_holdPos"];
 Private ["_nFoot","_half","_halfTwo","_i","_stamp","_exitReason"];
-Private ["_aliveCheck","_ordN","_disbandFlag","_grpChg"];
+Private ["_aliveCheck","_ordN","_disbandFlag","_grpChg","_campsDone"];
 
 _team         = _this select 0;
 _footInf      = _this select 1;
@@ -124,9 +124,12 @@ while {!_splitDone} do {
     if (time >= _campFirstEnd) exitWith {_exitReason = "campfirst_end"};
 
     //--- (a) check if BOTH camps are now held by our side (sideID flipped to _sideID)
-    if (!isNull _campA && {!isNull _campB}) then {
-        if ((_campA getVariable ["sideID",-1]) == _sideID && {(_campB getVariable ["sideID",-1]) == _sideID}) exitWith {_exitReason = "camps_done"};
-    };
+    //--- A2 OA rule: exitWith exits the scope of its direct if - must sit directly in the
+    //--- while-loop body, not inside a nested then-block. Use a flag variable instead.
+    _campsDone = (!isNull _campA && {!isNull _campB}
+        && {(_campA getVariable ["sideID",-1]) == _sideID}
+        && {(_campB getVariable ["sideID",-1]) == _sideID});
+    if (_campsDone) exitWith {_exitReason = "camps_done"};
 
     //--- (c) unit group change: any live detached unit no longer in _team -> bail
     //--- Note: exitWith inside forEach exits the forEach scope, NOT this while loop.
