@@ -110,3 +110,15 @@ TOTAL origin branches: 637 (plus 490 upstream/* not touched)
 CATEGORY A — Merged into master OR claude/build84-cmdcon36: 400 branches
   Method: git branch -r --merged origin/master (771) UNION git branch -r --merged origin/claude/build84-cmdcon36 (800), deduplicated = 801 total including upstream; 400 are origin-only non-protected branches.
   Includes: all cmdcon42/43/44/* sub-branches, codex/lane8 through codex/lane400+, all fable/* waves that were merged into build84 (agent-docs-v1, aicom-armor-screen-capture, aicom-d4-target-aware-comp, aicom-effectiveness-pack2, aicom-f2-strike-commit-f6, aicom-f5-near-band-bonus, aicom-feints, aicom-orbiter-stuckdecay, aicom-recon-drone-wildcard, aicom-targeting-fixes, aicom-v2-l1,
+
+## Owner PR decisions (2026-07-06 menu)
+- **#377 spotter marks + kill feed:** SHIP WITH FLAGS ON (owner wants it enabled, not dark) -> flip both flags default 1, then MERGE-TO-BUILD84.
+- **#614 (+#637) teleport-order-flush:** FOLD INTO V2 LANE (touches the same driver as the press hook; reconcile together). Owner raised a design Q (individual vs per-group AI) -> answered: Arma AI is group/team-based by engine design; per-unit behaviors (driver-swap/smoke) are preserved but orders/waypoints are per-group. No prior "all-individual" decision exists.
+- **#515 map-band scaling:** FOLD INTO V2 RECONCILIATION (shares distance constants with #724 sensing).
+- **#269 briefing HTML:** WIKI-THEN-CLOSE (move content to wiki, don't ship in-repo).
+- #703 Utes: PENDING (asking separately).
+
+## Re-fire wave results (2026-07-06)
+- #737 Team Menu V2: 2nd fix pushed (Rebuy validation + bp_content pricing, SMAW $80). ⚠️ FAILED VERIFY TWICE PRIOR -> 3rd re-verify REQUIRED before merge (flagged: cleaned-gear storage format vs respawn-handler reader).
+- #740 migration map (512 lines) CREATED. #63 Command Center CREATED (stacked on motion-kit #61). #739 TP-20 verb rate-limits CREATED (stacked on #727).
+
