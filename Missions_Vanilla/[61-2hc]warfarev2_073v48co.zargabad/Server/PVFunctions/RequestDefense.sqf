@@ -41,12 +41,12 @@ if (_index != -1) then {
 		//    (mirrors RequestStructure.sqf bank-placement pattern)
 		//----------------------------------------------------------------------
 		_logik     = _side Call WFBE_CO_FNC_GetSideLogic;
-		_startPos  = _logik getVariable ["wfbe_startpos", objNull];
+		_startPos  = _logik getVariable ["wfbe_startpos", [0,0,0]]; //--- fix(hunt): wfbe_startpos is a POSITION ARRAY (Init_Server.sqf:734), not an object - isNull/getPos on it dropped the HQ centre, silently bypassing the base-defense budget/threat gates at the main base
 		_baseAreas = _logik getVariable ["wfbe_basearea", []];
 		_baseRange = missionNamespace getVariable ["WFBE_C_BASE_AREA_RANGE", 250];
 
 		_centers = [];
-		if !(isNull _startPos) then { _centers = _centers + [getPos _startPos] };
+		_centers = _centers + [_startPos]; //--- fix(hunt): use the position directly (matches RequestStructure.sqf:62-66)
 		{ _centers = _centers + [getPos _x] } forEach _baseAreas;
 
 		_nearestCenter = [];
