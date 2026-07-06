@@ -1,0 +1,19 @@
+{
+  "name": "WFBE_NEURODEF_FORT_STRONGPOINT_WEST",
+  "parentW": 20,
+  "parentD": 18,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "INFANTRY STRONGPOINT — MANNED WEST variant (flag WFBE_C_DEF_FORT_MANNED). Same footprint as the side-neutral WFBE_NEURODEF_FORT_STRONGPOINT (live SQF layout: bunker core, two comms-trench bag runs, flank ramparts) PLUS two manned .50cal M2 statics at the rampart forward corners. Soldier logic: the cosmetic strongpoint had protected positions but no organic firepower; a strongpoint that cannot fire is scenery. The two MGs sit just forward of the flank ramparts so each rampart is the gun's shoulder cover, and their arcs are canted INWARD (left gun covers right-front, right gun covers left-front) for interlocking fire across the whole frontal approach with no dead ground in the middle. The bunker core and rear stay open for movement/resupply. Manning is automatic: Server_ConstructPosition.sqf routes every child through ConstructDefense, which seats pooled DefenseTeam AI in any empty gunner slot. Rampart uses the OA class directly (Land_fort_rampart_EP1) like every other _EP1 class in the DEFMENU_V2 sets — this server runs Combined Ops.",
+  "objs": [
+    {"cls":"Land_fortified_nest_big_EP1","x":0,"y":0,"z":0,"dir":0,"role":"HARD CORE — central bunker (large)"},
+    {"cls":"Land_fort_bagfence_long","x":-4,"y":3,"z":0,"dir":25,"role":"comms trench — links left flank to the bunker"},
+    {"cls":"Land_fort_bagfence_long","x":4,"y":3,"z":0,"dir":335,"role":"comms trench — links right flank to the bunker"},
+    {"cls":"Land_fort_rampart_EP1","x":-9,"y":-1,"z":0,"dir":0,"role":"left flank rampart — dispersion + anti-enfilade"},
+    {"cls":"Land_fort_rampart_EP1","x":9,"y":-1,"z":0,"dir":0,"role":"right flank rampart — dispersion + anti-enfilade"},
+    {"cls":"M2StaticMG","x":-9,"y":2,"z":0,"dir":330,"role":"MANNED .50cal — left rampart corner, arc canted right-front (interlocks with right gun)"},
+    {"cls":"M2StaticMG","x":9,"y":2,"z":0,"dir":30,"role":"MANNED .50cal — right rampart corner, arc canted left-front (interlocks with left gun)"}
+  ]
+}

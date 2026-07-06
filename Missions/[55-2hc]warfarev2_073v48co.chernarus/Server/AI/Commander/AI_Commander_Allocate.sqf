@@ -276,9 +276,9 @@ if (_harassN > 0) then {
 			_hfGrp = _x;
 			if (!isNull _hfGrp) then {
 				_hfLdr    = leader _hfGrp;
-				_hfMode   = toLower (_hfGrp getVariable ["wfbe_teammode", "towns"]);
-				_hfRelief = _hfGrp getVariable ["wfbe_aicom_relief", objNull];
-				_hfStrike = _hfGrp getVariable ["wfbe_aicom_strike", false];
+				_hfMode   = toLower ([_hfGrp, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool); //--- fix(hunt): G1-safe group reads (2-arg [name,default] getVariable returns nil on GROUPs when unset; helper is type-generic)
+				_hfRelief = [_hfGrp, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
+				_hfStrike = [_hfGrp, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool;
 				_hfHasVeh = false;
 				{ if (alive _x && {(vehicle _x) != _x} && {canMove (vehicle _x)} && {!((vehicle _x) isKindOf "Air")}) exitWith {_hfHasVeh = true} } forEach (units _hfGrp);
 				if (_hfHasVeh && {({alive _x} count (units _hfGrp)) > 0} && {!isNull _hfLdr} && {!isPlayer _hfLdr}
@@ -395,15 +395,15 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 	if (!isNull _grp) then {
 		_alive  = {alive _x} count (units _grp);
 		_ldr    = leader _grp;
-		_mode   = toLower (_grp getVariable ["wfbe_teammode", "towns"]);
-		_relief = _grp getVariable ["wfbe_aicom_relief", objNull];
-		_strike = _grp getVariable ["wfbe_aicom_strike", false];
+		_mode   = toLower ([_grp, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool); //--- fix(hunt): G1-safe - nil reads here nil-poisoned the eligibility chain so EVERY unstamped team failed eligibility every tick
+		_relief = [_grp, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
+		_strike = [_grp, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool;
 		//--- ELIGIBILITY: an offensive founded/HC team Strategy hasn't claimed (relief/strike), not the base
 		//--- garrison, not player-led, not under an explicit human order (move/patrol/defense).
 		if (_alive > 0 && {!isNull _ldr} && {!isPlayer _ldr} && {_grp != _garGrp}
 		    && {isNull _relief} && {!_strike} && {!(_mode in ["move","patrol","defense"])}
 		    && {!([_grp] Call WFBE_CO_FNC_CapLock)}   //--- CAPTURE LOCK (GR-2026-07-03a): skip a mid-capture-drain team so the Allocator does not re-aim it off a near-complete drain (plain BOOL, self-clears on captured/dead/TTL/town-ours).
-		    && {(_grp getVariable ["wfbe_aicom_feint_expiry", 0]) <= 0}   //--- FIX(review CRITICAL): skip feint-tagged teams so the feint alloc_target survives across ticks
+		    && {([_grp, "wfbe_aicom_feint_expiry", 0] Call WFBE_CO_FNC_GroupGetBool) <= 0}   //--- FIX(review CRITICAL): skip feint-tagged teams so the feint alloc_target survives across ticks
 		    && {([_grp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_grp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
 			_ldrPos = getPos _ldr;
 			_hasVeh = false;
@@ -497,7 +497,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_FEINT_ENABLE", 0]) > 0 && {!_ex
 	_feintRecalled = false;
 	{
 		_feintGrp    = _x;
-		_feintExpiry = _feintGrp getVariable ["wfbe_aicom_feint_expiry", 0];
+		_feintExpiry = [_feintGrp, "wfbe_aicom_feint_expiry", 0] Call WFBE_CO_FNC_GroupGetBool;
 		if (!isNull _feintGrp && {_feintExpiry > 0} && {time > _feintExpiry}) then {
 			_feintGrp setVariable ["wfbe_aicom_feint_expiry", 0];
 			if (count _fist > 0) then {
@@ -533,10 +533,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_FEINT_ENABLE", 0]) > 0 && {!_ex
 				_feintGrp    = _teams select _feintI;
 				_feintAlive  = {alive _x} count (units _feintGrp);
 				_feintLdr    = leader _feintGrp;
-				_feintMode   = toLower (_feintGrp getVariable ["wfbe_teammode", "towns"]);
-				_feintRelief = _feintGrp getVariable ["wfbe_aicom_relief", objNull];
-				_feintStrike = _feintGrp getVariable ["wfbe_aicom_strike", false];
-				_feintExpiry = _feintGrp getVariable ["wfbe_aicom_feint_expiry", 0];
+				_feintMode   = toLower ([_feintGrp, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
+				_feintRelief = [_feintGrp, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
+				_feintStrike = [_feintGrp, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool;
+				_feintExpiry = [_feintGrp, "wfbe_aicom_feint_expiry", 0] Call WFBE_CO_FNC_GroupGetBool;
 				_feintHasVeh = false;
 				{ if (alive _x && {(vehicle _x) != _x} && {canMove (vehicle _x)} && {!((vehicle _x) isKindOf "Air")}) exitWith {_feintHasVeh = true} } forEach (units _feintGrp);
 				if (!isNull _feintGrp && {_feintAlive > 0} && {!isNull _feintLdr} && {!isPlayer _feintLdr}
@@ -579,16 +579,16 @@ if (!isNil "_riPair" && {typeName _riPair == "ARRAY"} && {count _riPair == 2}) t
 			if (!isNull _riGrp) then {
 				_riAlive  = {alive _x} count (units _riGrp);
 				_riLdr    = leader _riGrp;
-				_riMode   = toLower (_riGrp getVariable ["wfbe_teammode", "towns"]);
-				_riRelief = _riGrp getVariable ["wfbe_aicom_relief", objNull];
-				_riStrike = _riGrp getVariable ["wfbe_aicom_strike", false];
+				_riMode   = toLower ([_riGrp, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
+				_riRelief = [_riGrp, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
+				_riStrike = [_riGrp, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool;
 				if (_riAlive > 0 && {!isNull _riLdr} && {!isPlayer _riLdr} && {_riGrp != _garGrp}
 				    && {isNull _riRelief} && {!_riStrike} && {!(_riMode in ["move","patrol","defense"])}
-				    && {(_riGrp getVariable ["wfbe_aicom_feint_expiry", 0]) <= 0}
+				    && {([_riGrp, "wfbe_aicom_feint_expiry", 0] Call WFBE_CO_FNC_GroupGetBool) <= 0}
 				    && {([_riGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_riGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
 					private ["_riD"]; _riD = (getPos _riLdr) distance _riTown;
 					if (_riD < _riBestD) then {_riBestD = _riD; _riBest = _riGrp};
-					if (_riNeutral && {(_riGrp getVariable ["wfbe_aicom_alloc_target", objNull]) == _riTown} && {_riD < _riExistingD}) then {_riExistingD = _riD; _riExisting = _riGrp};
+					if (_riNeutral && {([_riGrp, "wfbe_aicom_alloc_target", objNull] Call WFBE_CO_FNC_GroupGetBool) == _riTown} && {_riD < _riExistingD}) then {_riExistingD = _riD; _riExisting = _riGrp};
 				};
 			};
 		} forEach _teams;

@@ -103,7 +103,7 @@ class CfgSounds
     {string.Join(Environment.NewLine, soundClasses)}{upgradeSoundModeClasses}
 }};";
 
-            File.WriteAllText(soundDirectory + "description.ext", cfgSounds);
+            FileManager.WriteAllTextCrlf(soundDirectory + "description.ext", cfgSounds);
         }
 
         // Handle writing to the vanilla maps (Utes, Zargabad) more properly here later
@@ -111,6 +111,10 @@ class CfgSounds
         {
             UpdateFilesForTakistan(destinationDirectory);
             EnsureTakistanInitServerUsesCorrectMapId(destinationDirectory);
+            if (terrainName == TerrainName.TAKISTAN)
+            {
+                EnsureTakistanOilfieldLobbyParams(destinationDirectory);
+            }
         }
 
         // Perhaps do a inherited class from this to reduce spaghetti
@@ -184,7 +188,7 @@ class CfgSounds
         }
 
         // Write the content to the target file
-        File.WriteAllText(targetFile, _content);
+        FileManager.WriteAllTextCrlf(targetFile, _content);
     }
 
     // Method to determine the mission path based on whether the terrain is modded or not
@@ -356,7 +360,7 @@ class CfgSounds
 
         // Replace the string and update the file
         content = content.Replace(_contentToSearchFor, _contentToReplaceWith);
-        File.WriteAllText(finalPathToEdit, content);
+        FileManager.WriteAllTextCrlf(finalPathToEdit, content);
     }
 
     // Ensures a vanilla map's init_server uses its own database map id after copying
@@ -395,11 +399,68 @@ class CfgSounds
 
         if (updatedContent != fileContent)
         {
-            File.WriteAllText(initServerPath, updatedContent);
+            FileManager.WriteAllTextCrlf(initServerPath, updatedContent);
             return;
         }
 
         Console.WriteLine($"SET_MAP definition not updated for {terrainName} in {initServerPath}.");
+    }
+
+    // Takistan-only Oilfield lobby params. Rsc/Parameters.hpp is copied verbatim from
+    // Chernarus (which has no Oilfield block), so without this re-inject every mirror
+    // run clobbers the block out of the Takistan file. Idempotent: no-op when present.
+    private const string TakistanOilfieldLobbyParamsBlock =
+@"	class WFBE_C_OILFIELD_ENABLE {
+		title = ""Takistan Oilfield"";
+		values[] = {0,1};
+		texts[] = {""$STR_WF_Disabled"",""$STR_WF_Enabled""};
+		default = 1;
+	};
+	class WFBE_C_OILFIELD_UNLOCK_TIME {
+		title = ""Takistan Oilfield Unlock"";
+		values[] = {1800,2700,3600,5400};
+		texts[] = {""30 Minutes"",""45 Minutes"",""60 Minutes"",""90 Minutes""};
+		default = 3600;
+	};
+	class WFBE_C_OILFIELD_SABOTAGE {
+		title = ""Takistan Oilfield Sabotage"";
+		values[] = {0,1};
+		texts[] = {""$STR_WF_Disabled"",""$STR_WF_Enabled""};
+		default = 1;
+	};
+	class WFBE_C_OILFIELD_GUER_RAID {
+		title = ""Takistan Oilfield GUER Raids"";
+		values[] = {0,1};
+		texts[] = {""$STR_WF_Disabled"",""$STR_WF_Enabled""};
+		default = 0;
+	};
+";
+
+    private static void EnsureTakistanOilfieldLobbyParams(string _destinationDirectory)
+    {
+        string parametersPath = Path.Combine(_destinationDirectory, @"Rsc\Parameters.hpp");
+
+        if (!File.Exists(parametersPath))
+        {
+            Console.WriteLine($"Parameters.hpp not found at {parametersPath}");
+            return;
+        }
+
+        string fileContent = File.ReadAllText(parametersPath);
+
+        if (fileContent.Contains("class WFBE_C_OILFIELD_ENABLE"))
+        {
+            return;
+        }
+
+        const string anchor = "\tclass WFBE_C_AICOM_FUNDS_SINK_ENABLE {";
+        if (!fileContent.Contains(anchor))
+        {
+            Console.WriteLine($"Oilfield param anchor not found in {parametersPath}");
+            return;
+        }
+
+        FileManager.WriteAllTextCrlf(parametersPath, fileContent.Replace(anchor, TakistanOilfieldLobbyParamsBlock + anchor));
     }
 
     // Generates and returns the SQF code for a specific terrain. This method is built upon 
