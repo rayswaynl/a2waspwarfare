@@ -66,7 +66,16 @@ Expected: TK `WF_MAXPLAYERS 61` + `STARTING_DISTANCE 7500`; ZG `WF_MAXPLAYERS 61
 - Never stage: `_MISSIONS.7z`, a `nul` file artifact, or files whose only diff is
   line-ending churn (`git diff --stat` a suspiciously-whole-file diff before adding).
 
-## 6. Done when
+## 6. Per-line lint suppression (noqa) — for context during mirror review
+
+When reading mirror output, `// noqa: CODE` comments in source SQF suppress that specific
+lint code on that line; bare `// noqa` suppresses all codes. Stale suppressions where the
+finding no longer fires are reported as `DEADNOQA` — treat them as noise to clean up, not
+as deliberate annotations. `A3PRIVATE` was restored to the gate list by PR #741; any
+`// noqa: A3PRIVATE` in mirrored files should be removed once the underlying trap is fixed.
+Full gate command: see `sqf-edit-guard` § 4 or `pr-preflight` § 4.
+
+## 7. Done when
 
 `git status` shows CH edits + matching TK/ZG mirror output only, templates restored,
 `--check` clean, `Test-WaspVersionTemplates.ps1` all PASS.

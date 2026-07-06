@@ -43,11 +43,18 @@ EMP/WP/DECOY SCUD, doctrine personalities, GUER caps/nerfs.
 
 ## 4. Gates (all must pass — see sqf-edit-guard and mirror-regen for detail)
 
-1. `python Tools/Lint/check_sqf.py --select A3CMD,A3MARKER,A3REVEAL,A3SELECT,A3SORT,A3STRING,GROUPGETVAR,BRACKET,NSSETVAR3 --no-classname-index` → 0 findings.
+1. `python Tools/Lint/check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV --no-classname-index` — the gate reports ~447 pre-existing findings; only NEW findings in your edited files matter.
 2. Per changed file: net `{}` and `[]` delta vs merge-base = 0.
 3. Mirror ran (`dotnet run -c RELEASE`, `A2WASP_SKIP_ZIP=1`), `-- --check` clean,
    TK/ZG `version.sqf.template` restored to merge-base.
 4. Nothing staged from: `_MISSIONS.7z`, `nul`, line-ending-churn files.
+
+### Per-line suppression (noqa)
+
+Suppress a specific lint code on one line with `// noqa: CODE` (e.g. `// noqa: A3CMD`);
+bare `// noqa` silences all codes on that line. Stale suppressions are flagged as
+`DEADNOQA` — remove them, don't accumulate. `A3PRIVATE` was restored to the gate (PR #741)
+after a period of exclusion; audit for `// noqa: A3PRIVATE` leftovers before pushing.
 
 ## 5. PR mechanics
 

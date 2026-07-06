@@ -55,14 +55,25 @@ mirror (load **mirror-regen** after editing).
 ## 4. Post-edit gates (both must pass before staging)
 
 ```powershell
-python Tools/Lint/check_sqf.py --select A3CMD,A3MARKER,A3REVEAL,A3SELECT,A3SORT,A3STRING,GROUPGETVAR,BRACKET,NSSETVAR3 --no-classname-index
+python Tools/Lint/check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV --no-classname-index
 ```
-Expect 0 findings. Then per changed file, net `{}` and `[]` delta vs base must be zero:
+The gate reports ~447 pre-existing findings across the tree; only NEW findings in files you
+edited matter. Then per changed file, net `{}` and `[]` delta vs base must be zero:
 
 ```powershell
 git diff origin/claude/build84-cmdcon36 -- "CHANGED_FILE.sqf" | python -c "import sys; L=sys.stdin.read().splitlines(); A=''.join(l[1:] for l in L if l.startswith('+') and not l.startswith('+++')); R=''.join(l[1:] for l in L if l.startswith('-') and not l.startswith('---')); print('curly', A.count('{')-A.count('}')-R.count('{')+R.count('}'), 'square', A.count('[')-A.count(']')-R.count('[')+R.count(']'))"
 ```
 Both numbers must print 0.
+
+### Per-line suppression (noqa)
+
+Suppress a specific finding on one line with a trailing comment: `// noqa: CODE`
+(e.g. `// noqa: A3CMD`). Bare `// noqa` silences ALL codes on that line.
+Stale suppressions — where the annotated code no longer fires a finding on that line —
+are themselves reported as `DEADNOQA`. Remove them rather than stacking suppressions.
+`A3PRIVATE` was restored to the gate list (PR #741) after a period of exclusion; check
+for any `// noqa: A3PRIVATE` annotations added during that window and remove them if
+the underlying inline `private _x =` trap has already been corrected.
 
 If the edit added/changed any `STR_` reference or touched `stringtable.xml`, also run:
 

@@ -61,7 +61,16 @@ block of the HC RPT is scoped (it accumulates old matches). Verdicts: PASS/WATCH
 Absence of an expected token inside the current window is itself a finding — report
 "token X absent since MISSINIT", not "feature broken".
 
-## 5. Clock
+## 5. Per-line lint suppression (noqa) — for context when triaging RPT-adjacent code
+
+SQF source files may contain `// noqa: CODE` comments that suppress a specific lint code
+on that line (e.g. `// noqa: A3CMD`); bare `// noqa` suppresses all codes on the line.
+Stale suppressions where no finding fires are reported as `DEADNOQA` by the lint gate.
+`A3PRIVATE` was restored to the gate list by PR #741 after a period of exclusion; stale
+`// noqa: A3PRIVATE` annotations from that window should be removed once the underlying
+`private _x =` trap is corrected. Full gate command: see `sqf-edit-guard` § 4.
+
+## 6. Clock
 
 The box runs US Pacific (~9h behind Amsterdam). Convert before matching RPT timestamps
 to player reports or Discord messages.

@@ -44,8 +44,17 @@ you. Verify before writing; never "it's probably fine".
 Before any probe, run the lint gate — it already knows the common A3 traps:
 
 ```powershell
-python Tools/Lint/check_sqf.py --select A3CMD,A3MARKER,A3REVEAL,A3SELECT,A3SORT,A3STRING,GROUPGETVAR,BRACKET,NSSETVAR3 --no-classname-index
+python Tools/Lint/check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV --no-classname-index
 ```
 
+The gate reports ~447 pre-existing findings; only new findings in your edited files matter.
 A clean lint does NOT prove an unlisted command exists — the select list is a known-trap
 screen, not an OA dictionary. Unlisted + uncertain = climb the ladder.
+
+### Per-line suppression (noqa)
+
+Silence a specific finding on a line with `// noqa: CODE` (e.g. `// noqa: A3CMD`); bare
+`// noqa` silences all codes on that line. Stale suppressions that no longer match any
+finding are reported as `DEADNOQA` — remove rather than accumulate. `A3PRIVATE` was
+restored to the gate list by PR #741; check for `// noqa: A3PRIVATE` annotations left
+over from its earlier absence and remove them if the inline `private _x =` trap is fixed.
