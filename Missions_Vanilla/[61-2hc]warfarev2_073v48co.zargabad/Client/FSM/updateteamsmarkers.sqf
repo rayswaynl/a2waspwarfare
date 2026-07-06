@@ -151,6 +151,7 @@ while {!gameOver} do {
 					_destWpIdx   = currentWaypoint group player;
 					if (_destWpCount > 0 && {_destWpIdx < _destWpCount}) then {
 						_destPos = waypointPosition [group player, _destWpIdx];
+						if ((_destPos select 0) == 0 && {(_destPos select 1) == 0}) then {_destPos = []};
 						if (player distance _destPos <= 25) then {_destPos = []};
 					};
 				};
