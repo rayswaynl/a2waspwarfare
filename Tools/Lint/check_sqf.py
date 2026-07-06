@@ -38,12 +38,43 @@ A3_TRAPS = (
     "setGroupOwner",
     "groupOwner",
     "joinGroup",
+    "getOrDefault",
+    "deleteAt",
+    "setUnitLoadout",
+    "getUnitLoadout",
+    "selectRandomWeighted",
+    "regexFind",
+    "remoteExecCall",
+    # NOTE: bare "insert" excluded. A3_TRAPS matching uses word-boundary regex
+    # on comment/string-masked text (safe), but "insert" appears in plain English
+    # comments too frequently to avoid noise.
 )
-BOOLEAN_OP_RE = re.compile(r"\b(if|while|waitUntil)\b[^\n]*(==|!=)")
+# Narrowed: only flag == / != against literal true / false; numeric / string
+# comparisons inside control expressions are valid A2 idioms.
+BOOLEAN_OP_RE = re.compile(
+    r"\b(if|while|waitUntil)\b[^\n]*(==|!=)\s*(?:true|false)\b"
+    r"|\b(?:true|false)\s*(==|!=)",
+    re.IGNORECASE,
+)
+# Inline private _var = value  (A3-only syntax, fatal on A2 OA 1.64)
+A3PRIVATE_RE = re.compile(r"\bprivate\s+_[A-Za-z][A-Za-z0-9_]*\s*=")
+# Hash array selector _arr # 0 (A3-only). Require char before # to be
+# alphanumeric / _ / ) / ] so preprocessor lines and ## token-paste never match.
+A3HASH_RE = re.compile(r"(?<=[A-Za-z0-9_)\]])\s*#(?!#)\s*(?:\d|_[A-Za-z])")
+# publicVariableServer called from server-side code (path /Server/ or \Server\)
+PUBVARSV_RE = re.compile(r"\bpublicVariableServer\b")
 QUOTED_TOKEN_RE = re.compile(r'"([A-Za-z][A-Za-z0-9_]{2,})"|\'([A-Za-z][A-Za-z0-9_]{2,})\'')
 CLASSNAME_HINT_RE = re.compile(r"^(?:[A-Z][A-Za-z0-9]*_|[A-Z]+_|[a-z]+_[A-Za-z0-9_]*|[A-Z][A-Za-z0-9]+[A-Z][A-Za-z0-9]*)")
 DISPLAY_TOKEN_RE = re.compile(r"\b(displayCtrl|ctrlSetText|ctrlSetTextColor|ctrlShow|ctrlEnable|lb[A-Z]|lnb[A-Z])\b")
 A3_MARKER_TYPE_RE = re.compile(r"(?<![A-Za-z0-9_])[\"']([bon]_[A-Za-z0-9_]+)[\"']", re.IGNORECASE)
+# Valid A2/OA 1.64 CfgMarkers mil_* classes; anything else (e.g. "mil_air") throws
+# "No entry ...CfgMarkers.<type>" on every client that renders the marker.
+A2_MIL_MARKER_TYPES = frozenset((
+    "mil_ambush", "mil_arrow", "mil_arrow2", "mil_box", "mil_circle", "mil_cross",
+    "mil_destroy", "mil_dot", "mil_end", "mil_flag", "mil_join", "mil_marker",
+    "mil_objective", "mil_pickup", "mil_start", "mil_triangle", "mil_unknown", "mil_warning",
+))
+MIL_MARKER_TYPE_RE = re.compile(r"(?<![A-Za-z0-9_])[\"'](mil_[A-Za-z0-9_]+)[\"']", re.IGNORECASE)
 A3_REVEAL_ARRAY_LEFT_RE = re.compile(r"\[[^\]\n;]*\]\s+reveal\b", re.IGNORECASE)
 A3_REVEAL_ARRAY_RIGHT_RE = re.compile(r"\breveal\s+\[[^\]\n;]*\]", re.IGNORECASE)
 A3_SELECT_SLICE_RE = re.compile(r"\bselect\s*\[", re.IGNORECASE)
@@ -73,11 +104,24 @@ NAMESPACE_SETVARIABLE_RE = re.compile(
     r"\b(missionNamespace|uiNamespace|profileNamespace)\s+setVariable\s*\[",
     re.IGNORECASE,
 )
+# Default-0 WFBE_C_* flag read: missionNamespace getVariable ["WFBE_C_<NAME>", 0]
+# Only fires in diff mode (added-line context). Exclude Init_CommonConstants.sqf.
+FLAGGATE_READ_RE = re.compile(
+    r'\bgetVariable\s*\[\s*["\']WFBE_C_[A-Za-z0-9_]+["\']\s*,\s*0\s*\]',
+    re.IGNORECASE,
+)
+# A sufficient numeric guard on the same / next-non-blank line: > 0, >0, != 0, !=0, == 1, ==1
+FLAGGATE_GUARD_RE = re.compile(r"(?:>|!=|==)\s*(?:0|1)\b|(?:>|!=|==)(?:0|1)\b")
+# noqa directive: // noqa or // noqa: CODE1,CODE2
+NOQA_RE = re.compile(r"//\s*noqa(?:\s*:\s*([A-Za-z0-9_,\s]+))?\s*$", re.IGNORECASE)
+
 FINDING_CODES = (
     "A3BISFNC",
     "A3CMD",
+    "A3HASH",
     "A3MARKER",
     "A3NUMGATE",
+    "A3PRIVATE",
     "A3REVEAL",
     "A3SELECT",
     "A3SORT",
@@ -85,9 +129,13 @@ FINDING_CODES = (
     "BOOLCMP",
     "BRACKET",
     "CLASSREF",
+    "DEADNOQA",
     "DISABLESER",
+    "FLAGGATE",
     "GROUPGETVAR",
+    "MILMARKER",
     "NSSETVAR3",
+    "PUBVARSV",
 )
 
 
@@ -342,7 +390,42 @@ def build_token_index(root: Path) -> dict[str, set[Path]]:
     return index
 
 
+def parse_noqa_map(text: str) -> dict[int, set[str] | None]:
+    """Parse // noqa directives from raw source text (before comment masking).
+
+    Returns a dict mapping 1-based line numbers to:
+      - None       => bare // noqa: suppress ALL findings on that line
+      - set[str]   => // noqa: CODE1,CODE2 suppress only those codes
+
+    Scans the original text so the comment is still present.
+    Both .sqf and .hpp use // comments, so this works for all linted file types.
+    """
+    result: dict[int, set[str] | None] = {}
+    for lineno, line in enumerate(text.splitlines(), 1):
+        m = NOQA_RE.search(line)
+        if not m:
+            continue
+        if m.group(1):
+            codes = {c.strip().upper() for c in m.group(1).split(",") if c.strip()}
+            if codes:
+                result[lineno] = codes
+            else:
+                result[lineno] = None  # "// noqa:  " with no codes -> treat as bare
+        else:
+            result[lineno] = None  # bare // noqa
+    return result
+
+
 def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path]]) -> list[Finding]:
+    """Lint a single file and return findings with noqa suppression applied.
+
+    noqa directives are parsed from the raw text before masking so that
+    // noqa: A3CMD on a line suppresses A3CMD findings on that exact line.
+    DEADNOQA findings are appended for stale coded suppressions.
+    """
+    # Parse noqa directives before any masking (need comment text intact)
+    noqa_map = parse_noqa_map(text)
+
     findings: list[Finding] = []
     masked = mask_comments_and_strings(text)
     comments_masked = mask_comments(text)
@@ -386,6 +469,12 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
         line, col = line_col(comments_starts, match.start())
         findings.append(Finding(path, line, col, "A3MARKER", "A3 NATO marker type; use an A2/OA marker type instead"))
 
+    for match in MIL_MARKER_TYPE_RE.finditer(comments_masked):
+        if match.group(1).lower() in A2_MIL_MARKER_TYPES:
+            continue
+        line, col = line_col(comments_starts, match.start())
+        findings.append(Finding(path, line, col, "MILMARKER", f"Unknown mil_* marker type '{match.group(1)}' - not an A2/OA CfgMarkers class"))
+
     for match in A3_STRING_FIND_RE.finditer(comments_masked):
         line, col = line_col(comments_starts, match.start())
         findings.append(Finding(path, line, col, "A3STRING", "String find syntax is not A2/OA 1.64-safe"))
@@ -403,8 +492,27 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
         )
 
     for match in BOOLEAN_OP_RE.finditer(masked):
-        line, col = line_col(starts, match.start(2))
-        findings.append(Finding(path, line, col, "BOOLCMP", "Review ==/!= inside a control expression; Boolean operands are rejected by the fleet prompt"))
+        line, col = line_col(starts, match.start())
+        findings.append(Finding(path, line, col, "BOOLCMP", "Comparison with literal true/false; use if (_flag) / if (!_flag) instead"))
+
+    for match in A3PRIVATE_RE.finditer(masked):
+        line, col = line_col(starts, match.start())
+        findings.append(Finding(path, line, col, "A3PRIVATE",
+            "Inline 'private _x = value' is A3-only; use 'private [\"_x\"]; _x = value' instead"))
+
+    for match in A3HASH_RE.finditer(masked):
+        line, col = line_col(starts, match.start())
+        findings.append(Finding(path, line, col, "A3HASH",
+            "The # array-selector (_arr # 0) is Arma 3-only; use (_arr select 0) instead"))
+
+    path_str = str(path)
+    _server_parts = {"Server", "server"}
+    if any(p in _server_parts for p in path.parts):
+        for match in PUBVARSV_RE.finditer(masked):
+            line, col = line_col(starts, match.start())
+            findings.append(Finding(path, line, col, "PUBVARSV",
+                "publicVariableServer on the server never fires the server's own PVEH "
+                "— call the handler directly"))
 
     stack: list[tuple[str, int]] = []
     pairs = {"(": ")", "[": "]", "{": "}"}
@@ -434,6 +542,92 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
             line, col = line_col(line_starts(text), match.start())
             findings.append(Finding(path, line, col, "CLASSREF", f"Quoted classname-like token appears only in this file: {token}"))
 
+    # Apply noqa suppression and emit DEADNOQA for stale coded suppressions.
+    # Must run after all other rules so we know what each line actually fired.
+    if noqa_map:
+        kept: list[Finding] = []
+        suppressed: list[Finding] = []
+        for finding in findings:
+            directive = noqa_map.get(finding.line)
+            if finding.line in noqa_map and directive is None:
+                # Bare // noqa -> suppress all
+                suppressed.append(finding)
+            elif directive is not None and finding.code in directive:
+                suppressed.append(finding)
+            else:
+                kept.append(finding)
+        findings = kept
+
+        # Build DEADNOQA for coded noqa directives that suppressed nothing
+        suppressed_by_line: dict[int, set[str]] = {}
+        for f in suppressed:
+            suppressed_by_line.setdefault(f.line, set()).add(f.code)
+
+        for lineno, directive in noqa_map.items():
+            if directive is None:
+                # Bare noqa: never goes stale (spec: skip DEADNOQA for bare form)
+                pass
+            else:
+                # Coded noqa: dead for each code that suppressed nothing
+                suppressed_codes = suppressed_by_line.get(lineno, set())
+                dead_codes = directive - suppressed_codes
+                if dead_codes:
+                    dead_str = ",".join(sorted(dead_codes))
+                    findings.append(Finding(
+                        path, lineno, 1, "DEADNOQA",
+                        f"Stale // noqa: {dead_str} — no {dead_str} finding fires on this line",
+                    ))
+
+    return findings
+
+
+def lint_flaggate(
+    path: Path, text: str, added_line_nos: set[int]
+) -> list[Finding]:
+    """Emit FLAGGATE for added lines that read a default-0 WFBE_C_* flag without a numeric guard.
+
+    Only call in diff mode. Excludes Init_CommonConstants.sqf (flag definitions).
+    Checks the same line and the next non-blank line for a sufficient guard expression.
+
+    Uses mask_comments (not mask_comments_and_strings) so string literal content is preserved
+    for the flag-name regex match — the flag name lives inside a string.
+    """
+    if "Init_CommonConstants" in path.name:
+        return []
+
+    # mask_comments keeps string literals intact so the flag name is visible to the regex.
+    masked = mask_comments(text)
+    starts = line_starts(masked)
+    raw_lines = text.splitlines()
+
+    findings: list[Finding] = []
+    for m in FLAGGATE_READ_RE.finditer(masked):
+        line_no, col = line_col(starts, m.start())
+        if line_no not in added_line_nos:
+            continue
+
+        # Check same line for a guard
+        source_line = raw_lines[line_no - 1] if line_no <= len(raw_lines) else ""
+        if FLAGGATE_GUARD_RE.search(source_line):
+            continue
+
+        # Check next non-blank line
+        found_guard = False
+        for next_lineno in range(line_no, min(line_no + 5, len(raw_lines))):
+            next_line = raw_lines[next_lineno]  # 0-indexed, so this is line_no+1
+            if not next_line.strip():
+                continue
+            if FLAGGATE_GUARD_RE.search(next_line):
+                found_guard = True
+            break
+        if found_guard:
+            continue
+
+        findings.append(Finding(
+            path, line_no, col, "FLAGGATE",
+            "Default-0 flag read without numeric guard (> 0 / != 0 / == 1); "
+            "use (missionNamespace getVariable [..., 0] > 0)",
+        ))
     return findings
 
 
@@ -491,9 +685,25 @@ def main(argv: list[str]) -> int:
     if not args.no_classname_index and needs_classname_index:
         token_index = build_token_index(root)
 
+    # Determine if FLAGGATE should run (diff mode only)
+    flaggate_active = (
+        added_lines is not None
+        and (selected_codes is None or "FLAGGATE" in selected_codes)
+        and "FLAGGATE" not in ignored_codes
+    )
+
     findings: list[Finding] = []
     for path in files:
-        findings.extend(lint_text(path.resolve(), read_text(path), root, token_index))
+        resolved = path.resolve()
+        raw_text = read_text(path)
+        findings.extend(lint_text(resolved, raw_text, root, token_index))
+
+        # FLAGGATE: diff-mode only, runs on added lines
+        if flaggate_active:
+            file_added = added_lines.get(resolved, set())  # type: ignore[union-attr]
+            if file_added:
+                findings.extend(lint_flaggate(resolved, raw_text, file_added))
+
     if added_lines is not None:
         findings = filter_findings_to_added_lines(findings, added_lines)
     if selected_codes is not None:

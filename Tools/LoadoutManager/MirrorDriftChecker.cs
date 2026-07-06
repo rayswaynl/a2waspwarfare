@@ -2,6 +2,8 @@ public static class MirrorDriftChecker
 {
     private const string TakistanMissionRelativePath = @"Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan";
     private const string TakistanMissionDirectoryName = "[61-2hc]warfarev2_073v48co.takistan";
+    private const string ZargabadMissionRelativePath = @"Missions_Vanilla\[61-2hc]warfarev2_073v48co.zargabad";
+    private const string ZargabadMissionDirectoryName = "[61-2hc]warfarev2_073v48co.zargabad";
     private const int MaxReportedDifferences = 200;
     private static readonly string[] TakistanVersionGuardRelativePaths =
     {
@@ -46,7 +48,7 @@ public static class MirrorDriftChecker
             List<string> versionGuardFindings = FindTakistanVersionGuardFindings(expectedTakistanPath);
             if (differences.Count == 0 && versionGuardFindings.Count == 0)
             {
-                Console.WriteLine("Takistan mirror check passed: no generated drift detected.");
+                Console.WriteLine("Takistan drift: none (mirror check passed).");
                 return 0;
             }
 
@@ -71,6 +73,59 @@ public static class MirrorDriftChecker
                 {
                     Console.Error.WriteLine(finding);
                 }
+            }
+
+            return 1;
+        }
+        finally
+        {
+            TryDeleteDirectory(tempRoot);
+        }
+    }
+
+    public static int CheckZargabadMirror()
+    {
+        string repoRoot = FileManager.FindA2WaspWarfareDirectory().FullName;
+        string actualZargabadPath = Path.Combine(repoRoot, ZargabadMissionRelativePath);
+
+        if (!Directory.Exists(actualZargabadPath))
+        {
+            Console.Error.WriteLine($"Zargabad mission directory not found: {actualZargabadPath}");
+            return 2;
+        }
+
+        string tempRoot = Path.Combine(Path.GetTempPath(), "a2wasp-loadoutmanager-check-" + Guid.NewGuid().ToString("N"));
+        string expectedZargabadPath = Path.Combine(tempRoot, ZargabadMissionDirectoryName);
+
+        try
+        {
+            CopyDirectoryExact(actualZargabadPath, expectedZargabadPath);
+
+            GeneratedLoadoutFiles generatedFiles = SqfFileGenerator.BuildGeneratedFileStrings();
+            var zargabad = new ZARGABAD();
+            zargabad.WriteAndUpdateTerrainFiles(
+                generatedFiles.Easa.vanilla,
+                generatedFiles.CommonBalance.vanilla,
+                generatedFiles.AircraftDisplayNames.vanilla,
+                generatedFiles.AircraftDamageModelChanges.vanilla,
+                destinationDirectoryOverride: expectedZargabadPath);
+
+            List<string> differences = CompareDirectories(expectedZargabadPath, actualZargabadPath);
+            if (differences.Count == 0)
+            {
+                Console.WriteLine("Zargabad drift: none (mirror check passed).");
+                return 0;
+            }
+
+            Console.Error.WriteLine($"Zargabad drift: {differences.Count} difference(s) detected.");
+            foreach (string difference in differences.Take(MaxReportedDifferences))
+            {
+                Console.Error.WriteLine(difference);
+            }
+
+            if (differences.Count > MaxReportedDifferences)
+            {
+                Console.Error.WriteLine($"... {differences.Count - MaxReportedDifferences} more difference(s) not shown.");
             }
 
             return 1;
