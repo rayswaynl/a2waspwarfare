@@ -145,7 +145,6 @@ HandlePVF = Compile preprocessFile "Client\Functions\Client_HandlePVF.sqf";
 MarkerAnim = Compile preprocessFile "Client\Functions\Client_MarkerAnim.sqf";
 OnRespawnHandler = Compile preprocessFile "Client\Functions\Client_OnRespawnHandler.sqf";
 PreRespawnHandler = Compile preprocessFile "Client\Functions\Client_PreRespawnHandler.sqf";
-ReplaceArray = Compile preprocessFile "Client\Functions\Client_ReplaceArray.sqf";
 RequestFireMission = Compile preprocessFile "Client\Functions\Client_RequestFireMission.sqf";
 SetControlFadeAnim = Compile preprocessFile "Client\Functions\Client_SetControlFadeAnim.sqf";
 SetControlFadeAnimStop = Compile preprocessFile "Client\Functions\Client_SetControlFadeAnimStop.sqf";
@@ -157,8 +156,6 @@ SupportRepair = Compile preprocessFile "Client\Functions\Client_SupportRepair.sq
 TitleTextMessage = Compile preprocessFile "Client\Functions\Client_TitleTextMessage.sqf";
 UIChangeComboBuyUnits = Compile preprocessFile "Client\Functions\Client_UIChangeComboBuyUnits.sqf";
 UIFillListBuyUnits = Compile preprocessFile "Client\Functions\Client_UIFillListBuyUnits.sqf";
-UIFillListTeamOrders = Compile preprocessFile "Client\Functions\Client_UIFillListTeamOrders.sqf";
-UIFindLBValue = Compile preprocessFile "Client\Functions\Client_UIFindLBValue.sqf";
 
 //--- OPTIONAL CLIENT MODS (cmdcon42-m) — HOOK 3: run detection ONCE and, if any curated optional mod is
 //--- loaded on this client, emit a single friendly ack (systemChat + RPT line). Read-only, per-client, no
