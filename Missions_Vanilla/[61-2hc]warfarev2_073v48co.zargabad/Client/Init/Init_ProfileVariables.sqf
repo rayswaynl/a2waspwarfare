@@ -115,4 +115,10 @@ if !(isNil "_profile_var") then {
 };
 missionNamespace setVariable ["WFBE_TM2_Presets", WFBE_TM2_Presets];
 
+//--- TP-3 Item 4: TAGS persistence - restore saved value (default OFF for fresh profiles).
+WFBE_NameTagsEnabled = false;
+_profile_var = profileNamespace getVariable "WFBE_NAMETAGS_ENABLED";
+if !(isNil "_profile_var") then {if (typeName _profile_var == "BOOL") then {WFBE_NameTagsEnabled = _profile_var}};
+missionNamespace setVariable ["WFBE_NameTagsEnabled", WFBE_NameTagsEnabled];
+
 ["INITIALIZATION", "Init_ProfileVariables.sqf: Possible profile variables were defined."] Call WFBE_CO_FNC_LogContent;

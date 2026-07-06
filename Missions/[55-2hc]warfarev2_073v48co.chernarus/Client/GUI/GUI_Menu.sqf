@@ -315,27 +315,13 @@ while {alive player && dialog} do {
 
 	//--- wiki-wins: removed dormant GPS-zoom router cases (MenuAction 17/18) — no control or key ever sets those values, and zoomgps is never read elsewhere.
 
-	// Earplugs: fade game volume to 20% and back; state persists after the menu closes.
-	if (MenuAction == 22) then {
-		MenuAction = -1;
-		if (isNil "WFBE_Earplugs") then {WFBE_Earplugs = false};
-		if (WFBE_Earplugs) then {
-			WFBE_Earplugs = false;
-			1 fadeSound 1;
-			hint "Earplugs: OUT";
-		} else {
-			WFBE_Earplugs = true;
-			1 fadeSound 0.2;
-			hint "Earplugs: IN";
-		};
-	};
-
 	// qol-polish-pack: friendly name-tag overlay toggle (the worldToScreen loop + RscTitles live in Init_Client.sqf / Titles.hpp).
 	if (MenuAction == 25) then {
 		MenuAction = -1;
 		if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 		WFBE_NameTagsEnabled = !WFBE_NameTagsEnabled;
 		hint (Format ["Name tags: %1", if (WFBE_NameTagsEnabled) then {"ON"} else {"OFF"}]);
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_NAMETAGS_ENABLED", WFBE_NameTagsEnabled] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
 	sleep 0.1;
