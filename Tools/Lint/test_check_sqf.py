@@ -127,6 +127,24 @@ class CheckSqfTests(unittest.TestCase):
             filtered = check_sqf.filter_findings_to_added_lines(findings, {path.resolve(): {2}})
 
         self.assertEqual([finding.code for finding in filtered], ["A3CMD"])
+    # ── MILMARKER ───────────────────────────────────────────
+    def test_milmarker_unknown_type_is_flagged(self) -> None:
+        codes = lint_codes('_m setMarkerType "mil_air";')
+        self.assertIn("MILMARKER", codes)
+
+    def test_milmarker_valid_type_not_flagged(self) -> None:
+        codes = lint_codes('_m setMarkerType "mil_circle";')
+        self.assertNotIn("MILMARKER", codes)
+
+    def test_milmarker_case_insensitive_valid(self) -> None:
+        codes = lint_codes('_m setMarkerType "MIL_DOT";')
+        self.assertNotIn("MILMARKER", codes)
+
+    def test_milmarker_in_comment_not_flagged(self) -> None:
+        source = '// the old "mil_air" bug' + chr(10) + '_m setMarkerType "mil_dot";'
+        codes = lint_codes(source)
+        self.assertNotIn("MILMARKER", codes)
+
     # ── A3PRIVATE ─────────────────────────────────────────────────────────────
     def test_a3private_inline_is_flagged(self) -> None:
         codes = lint_codes('private _myVar = 0;\n')

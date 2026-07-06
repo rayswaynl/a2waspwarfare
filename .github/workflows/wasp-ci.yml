@@ -70,7 +70,9 @@ jobs:
         # Codes that are currently zero-findings on master and are high-confidence.
         # A3CMD excluded: 2 known false positives on "class Params" classname.
         # A3MARKER/GROUPGETVAR/DISABLESER excluded: active findings in codebase.
-        # PUBVARSV excluded: Server_AttackWave.sqf bug pending fix in PR #738
+        # PUBVARSV + MILMARKER excluded: bugs pending in PR #738 + PR #742;
+        # add both to blocking after those merge.
+        # PUBVARSV detail: Server_AttackWave.sqf pending in PR #738
         # (fable/attackwave-jip-nilguards); add PUBVARSV here after that merges.
         run: |
           python Tools\Lint\check_sqf.py `

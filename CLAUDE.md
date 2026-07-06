@@ -76,6 +76,7 @@ Never use — these are A3-only or wrong-spelling and will silently corrupt or c
 - "Has launcher" = non-empty `secondaryWeapon _unit`, not `primaryWeapon`
 - Never reset `MenuAction` before the second click in a two-click confirm flow
 - Every new classname must appear in the mission tree or the PR must include config proof
+- Marker types must be real A2/OA `CfgMarkers` classes; the valid `mil_*` set is the 18 in the linter allowlist ("mil_air" does NOT exist - it threw a No-entry dialog on every client)
 
 ### False positives — do NOT flag
 
@@ -124,7 +125,7 @@ SQF command names are case-insensitive; casing-only diffs are false positives.
 
 1. Run the lint gate:
    ```
-   python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,GROUPGETVAR,NSSETVAR3,PUBVARSV --no-classname-index
+   python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV --no-classname-index
    ```
 2. Verify net bracket delta is zero per edited file (count `{` and `}`, count `[` and `]`).
 3. Confirm flag-off leaves the mission byte-identical to HEAD.

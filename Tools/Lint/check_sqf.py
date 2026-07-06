@@ -67,6 +67,14 @@ QUOTED_TOKEN_RE = re.compile(r'"([A-Za-z][A-Za-z0-9_]{2,})"|\'([A-Za-z][A-Za-z0-
 CLASSNAME_HINT_RE = re.compile(r"^(?:[A-Z][A-Za-z0-9]*_|[A-Z]+_|[a-z]+_[A-Za-z0-9_]*|[A-Z][A-Za-z0-9]+[A-Z][A-Za-z0-9]*)")
 DISPLAY_TOKEN_RE = re.compile(r"\b(displayCtrl|ctrlSetText|ctrlSetTextColor|ctrlShow|ctrlEnable|lb[A-Z]|lnb[A-Z])\b")
 A3_MARKER_TYPE_RE = re.compile(r"(?<![A-Za-z0-9_])[\"']([bon]_[A-Za-z0-9_]+)[\"']", re.IGNORECASE)
+# Valid A2/OA 1.64 CfgMarkers mil_* classes; anything else (e.g. "mil_air") throws
+# "No entry ...CfgMarkers.<type>" on every client that renders the marker.
+A2_MIL_MARKER_TYPES = frozenset((
+    "mil_ambush", "mil_arrow", "mil_arrow2", "mil_box", "mil_circle", "mil_cross",
+    "mil_destroy", "mil_dot", "mil_end", "mil_flag", "mil_join", "mil_marker",
+    "mil_objective", "mil_pickup", "mil_start", "mil_triangle", "mil_unknown", "mil_warning",
+))
+MIL_MARKER_TYPE_RE = re.compile(r"(?<![A-Za-z0-9_])[\"'](mil_[A-Za-z0-9_]+)[\"']", re.IGNORECASE)
 A3_REVEAL_ARRAY_LEFT_RE = re.compile(r"\[[^\]\n;]*\]\s+reveal\b", re.IGNORECASE)
 A3_REVEAL_ARRAY_RIGHT_RE = re.compile(r"\breveal\s+\[[^\]\n;]*\]", re.IGNORECASE)
 A3_SELECT_SLICE_RE = re.compile(r"\bselect\s*\[", re.IGNORECASE)
@@ -112,6 +120,7 @@ FINDING_CODES = (
     "CLASSREF",
     "DISABLESER",
     "GROUPGETVAR",
+    "MILMARKER",
     "NSSETVAR3",
     "PUBVARSV",
 )
@@ -411,6 +420,12 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
     for match in A3_MARKER_TYPE_RE.finditer(comments_masked):
         line, col = line_col(comments_starts, match.start())
         findings.append(Finding(path, line, col, "A3MARKER", "A3 NATO marker type; use an A2/OA marker type instead"))
+
+    for match in MIL_MARKER_TYPE_RE.finditer(comments_masked):
+        if match.group(1).lower() in A2_MIL_MARKER_TYPES:
+            continue
+        line, col = line_col(comments_starts, match.start())
+        findings.append(Finding(path, line, col, "MILMARKER", f"Unknown mil_* marker type '{match.group(1)}' - not an A2/OA CfgMarkers class"))
 
     for match in A3_STRING_FIND_RE.finditer(comments_masked):
         line, col = line_col(comments_starts, match.start())
