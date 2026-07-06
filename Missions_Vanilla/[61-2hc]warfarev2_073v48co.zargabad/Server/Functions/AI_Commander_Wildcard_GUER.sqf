@@ -197,6 +197,251 @@ while {!gameOver} do {
 
 			//--- G2: POP-UP CHECKPOINT — interactive roadblock that FIELDS GUER'S UNLOCKED TIER vehicle.
 			case 2: {
+				//--- ===== G2 v2 (flag WFBE_C_GUER_CP_V2, default 0): road-snapped, road-aligned, physically
+				//--- blocking checkpoint - FORT_CHECKPOINT composition + manned MG statics + posted garrison +
+				//--- a one-shot reinforcement pulse. Flag 0 = ONLY the untouched v1 block (else-branch) runs.
+				if ((missionNamespace getVariable ["WFBE_C_GUER_CP_V2", 0]) > 0) then {
+					private ["_cp2Radius","_cp2FootBase","_cp2FootPer","_cands","_road","_rPos","_dTown","_conn",
+					         "_bestRoad","_bestScore","_bestConn","_score","_dir","_dx","_dy","_neighbor","_nPos",
+					         "_roadDist","_cpTmpl","_cpObjs","_statics","_tCls","_tRelPos","_tRelDir","_wPos","_obj",
+					         "_statCls","_statSpecs","_sOff","_sDir","_statPos","_stat","_sGunner","_gpOffs","_gOff",
+					         "_gPos","_vehPos"];
+					if (!isNull _target) then {
+						_targetPos = getPos _target;
+						_cp2Radius   = missionNamespace getVariable ["WFBE_C_GUER_CP2_ROAD_RADIUS", 400];
+						_cp2FootBase = missionNamespace getVariable ["WFBE_C_GUER_CP2_FOOT_BASE", 4];
+						_cp2FootPer  = missionNamespace getVariable ["WFBE_C_GUER_CP2_FOOT_PER_TIER", 2];
+
+						//--- (1) ROAD-FIRST PLACEMENT: real road segments around the town, never a random-bearing offset.
+						//--- Filter: dry land, junction connectivity >=2 (guarded roadsConnectedTo idiom copied from the
+						//--- _isUsableRoad helper in AI_Commander_Base.sqf - OA-only command, degrades to ACCEPT on Vanilla),
+						//--- stand-off band 180-380m from the town centre. Pick the candidate nearest the v1 280m feel.
+						_cands = _targetPos nearRoads _cp2Radius;
+						_bestRoad = objNull; _bestScore = 1e9; _bestConn = [];
+						{
+							_road = _x;   //--- capture outer _x before any nested code (house rule).
+							_rPos = getPos _road;
+							if (!(surfaceIsWater _rPos)) then {
+								_dTown = _rPos distance _targetPos;
+								if (_dTown >= 180 && {_dTown <= 380}) then {
+									_conn = [];
+									//--- roadsConnectedTo exists only on OA-class builds; never let it throw on Vanilla.
+									if (!isNil {missionNamespace getVariable "WF_A2_Vanilla"} && {!WF_A2_Vanilla}) then {
+										_conn = _road call {private "_c"; _c = []; if (!isNil {roadsConnectedTo _this}) then {_c = roadsConnectedTo _this}; _c};
+										if (count _conn < 2) then {_road = objNull};   //--- dead-end stub / field path: reject.
+									};
+									if (!isNull _road) then {
+										_score = abs (_dTown - 280);
+										if (_score < _bestScore) then {_bestScore = _score; _bestRoad = _road; _bestConn = _conn};
+									};
+								};
+							};
+						} forEach _cands;
+
+						if (!isNull _bestRoad) then {
+							_spawnPos = getPos _bestRoad;
+							_roadDist = _spawnPos distance _targetPos;
+
+							//--- (2) ROAD ALIGNMENT: face the block along the road axis (segment -> connected neighbour);
+							//--- fall back to the town bearing when the connectivity probe returned empty (Vanilla path).
+							if (count _bestConn > 0) then {
+								_neighbor = _bestConn select 0;
+								_nPos = getPos _neighbor;
+								_dx = (_nPos select 0) - (_spawnPos select 0);
+								_dy = (_nPos select 1) - (_spawnPos select 1);
+							} else {
+								_dx = (_targetPos select 0) - (_spawnPos select 0);
+								_dy = (_targetPos select 1) - (_spawnPos select 1);
+							};
+							//--- zero-guard idiom as AI_Commander_Base.sqf ~L418 (atan2 [0,0] would degenerate).
+							_dir = if (_dx == 0 && {_dy == 0}) then {random 360} else {_dx atan2 _dy};
+							if (_dir < 0) then {_dir = _dir + 360};
+
+							//--- READ GUER'S KILL-DRIVEN PROGRESSION (same roster + fallback as v1).
+							_tier = missionNamespace getVariable ["WFBE_GUER_VEHICLE_TIER", 0];
+							if (worldName == "Chernarus") then {
+								_cpVeh = switch (_tier) do {case 1:{"BRDM2_Gue"}; case 2:{"T55_TK_GUE_EP1"}; case 3:{"T72_Gue"}; default {"Offroad_DSHKM_Gue"}};
+							} else {
+								_cpVeh = switch (_tier) do {case 1:{"BRDM2_TK_GUE_EP1"}; case 2:{"T55_TK_GUE_EP1"}; case 3:{"T55_TK_GUE_EP1"}; default {"Offroad_DSHKM_TK_GUE_EP1"}};
+							};
+							if (!isClass (configFile >> "CfgVehicles" >> _cpVeh)) then {_cpVeh = _vbiedClass};   //--- safety fallback
+							_cpLabel = switch (_tier) do {case 1:{"BRDM checkpoint"}; case 2:{"T-55 strongpoint"}; case 3:{"T-72 stronghold"}; default {"technical roadblock"}};
+
+							_grp = [resistance, "guer-wc-checkpoint"] Call WFBE_CO_FNC_CreateGroup;
+							if (!isNull _grp) then {
+								//--- (3) PHYSICAL BLOCK: the WFBE_NEURODEF_FORT_CHECKPOINT composition (Init_Defenses.sqf)
+								//--- spawned on the road, rotated to the road axis. Model-space trig mirrors
+								//--- Server_ConstructPosition.sqf; setDir convention (_dir - _relDir) mirrors
+								//--- Server_CreateDefenseTemplate.sqf, as does the wfbe_defense tag (readers only COUNT by
+								//--- that tag - no sweep deletes by it, so OUR watcher below owns the full teardown).
+								_cpObjs = [];
+								_cpTmpl = missionNamespace getVariable ["WFBE_NEURODEF_FORT_CHECKPOINT", []];
+								{
+									_tCls    = _x select 0;
+									_tRelPos = _x select 1;
+									_tRelDir = _x select 2;
+									_wPos = [(_spawnPos select 0) + (_tRelPos select 0) * (cos _dir) + (_tRelPos select 1) * (sin _dir),
+									         (_spawnPos select 1) - (_tRelPos select 0) * (sin _dir) + (_tRelPos select 1) * (cos _dir),
+									         0];
+									_obj = createVehicle [_tCls, [0,0,0], [], 0, "NONE"];
+									_obj setVariable ["wfbe_defense", true];
+									_obj setDir (_dir - _tRelDir);
+									_obj setPos _wPos;
+									_cpObjs set [count _cpObjs, _obj];
+								} forEach _cpTmpl;
+
+								//--- Manning vehicle sits BEHIND the chicane on the road axis (bounty=true, road-aligned).
+								_vehPos = [(_spawnPos select 0) + (-8) * (sin _dir),
+								           (_spawnPos select 1) + (-8) * (cos _dir),
+								           0];
+								_veh = [_cpVeh, _vehPos, resistance, _dir, false, true] Call WFBE_CO_FNC_CreateVehicle;
+								if (!isNull _veh) then {
+									_d1 = [_soldierClass, _grp, _vehPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _d1) then {_d1 moveInDriver _veh; _d1 setVariable ["WFBE_IsTownDefenderAI", true, true]};
+									_d2 = [_soldierClass, _grp, _vehPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _d2) then {_d2 moveInGunner _veh; _d2 setVariable ["WFBE_IsTownDefenderAI", true, true]};
+								};
+
+								//--- (4) STATICS: two GUER-manned DShKM MGs behind the bagfence guard positions
+								//--- (composition-relative [-6,1] / [6,-1]; one covers each approach). Classnames are the
+								//--- side's EXISTING statics (Core_GUE.sqf 'DSHKM_Gue' / Core_TKGUE.sqf 'DSHKM_TK_GUE_EP1' -
+								//--- both already in the mission tree). Gunners join _grp so the CLEAR check counts them.
+								//--- NOT wfbe_defense-tagged: AI_Commander_Base.sqf counts StaticWeapon entities by that tag
+								//--- for BASE defense budgeting and these are not base defenses.
+								_statCls = if (worldName == "Chernarus") then {"DSHKM_Gue"} else {"DSHKM_TK_GUE_EP1"};
+								_statics = [];
+								_statSpecs = [[[-6,1,0], 0], [[6,-1,0], 180]];
+								{
+									_sOff = _x select 0;
+									_sDir = _dir + (_x select 1);
+									_statPos = [(_spawnPos select 0) + (_sOff select 0) * (cos _dir) + (_sOff select 1) * (sin _dir),
+									            (_spawnPos select 1) - (_sOff select 0) * (sin _dir) + (_sOff select 1) * (cos _dir),
+									            0];
+									_stat = [_statCls, _statPos, resistance, _sDir, false, true] Call WFBE_CO_FNC_CreateVehicle;
+									if (!isNull _stat) then {
+										_stat setPos _statPos;   //--- pin the exact composition spot (helper placement radius is 7m).
+										_sGunner = [_soldierClass, _grp, _statPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+										if (!isNull _sGunner) then {
+											_sGunner moveInGunner _stat;
+											_sGunner setVariable ["WFBE_IsTownDefenderAI", true, true];
+										};
+										_statics set [count _statics, _stat];
+									};
+								} forEach _statSpecs;
+
+								//--- (5) GARRISON: posted at composition guard positions (fixed offsets rotated by _dir),
+								//--- not random scatter. doStop holds each man on his post; COMBAT/RED (below) keeps him
+								//--- fighting, so nobody reads as a frozen AI. Tier bump: +0.05*_tier on "general" skill.
+								_gpOffs = [[-5,2,0],[5,0,0],[-2,-3,0],[2,6,0],[-7,-1,0],[7,3,0],[0,-5,0],[-4,7,0],[4,-4,0],[0,10,0]];
+								_footN = _cp2FootBase + (_cp2FootPer * _tier);
+								for "_n" from 1 to _footN do {
+									_gOff = _gpOffs select ((_n - 1) mod (count _gpOffs));
+									_gPos = [(_spawnPos select 0) + (_gOff select 0) * (cos _dir) + (_gOff select 1) * (sin _dir),
+									         (_spawnPos select 1) - (_gOff select 0) * (sin _dir) + (_gOff select 1) * (cos _dir),
+									         0];
+									_u = [_soldierClass, _grp, _gPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _u) then {
+										_u setVariable ["WFBE_IsTownDefenderAI", true, true];
+										if (_tier > 0) then {_u setSkill ["general", ((skill _u) + (0.05 * _tier)) min 1]};
+										_u setPos _gPos;
+										doStop _u;
+									};
+								};
+								_grp setBehaviour "COMBAT"; _grp setCombatMode "RED";
+
+								//--- Global map marker (enemy-visible ON PURPOSE - a contested objective, exactly as v1).
+								_mk = Format ["guer_cp_%1_%2", round time, round (random 99999)];
+								createMarker [_mk, _spawnPos];
+								_mk setMarkerType "mil_warning";
+								_mk setMarkerColor "ColorGreen";
+								_mk setMarkerText Format ["Insurgent Checkpoint (%1)", _cpLabel];
+
+								//--- Snapshot the occupier we tax + reward (town owner at spawn).
+								_occSide = west;
+								if ((_target getVariable ["sideID","?"]) == _eastID) then {_occSide = east};
+
+								//--- Always-on grep-smoke line (house pipe pattern; str-concat is the proven RPT-safe idiom).
+								diag_log ("GUERCP|v2|spawn|" + _cpLabel + "|" + (str (round _roadDist)) + "m");
+
+								//--- WATCHER v2: v1 tax/resolution logic + (6) one-shot reinforcement pulse at half-window
+								//--- + (7) 900-base clear reward (v1: 700) and full composition/static teardown on BOTH paths.
+								[_grp, _veh, _target, _occSide, _mk, _tier, _cpLabel, _cpObjs, _statics, _spawnPos, _soldierClass, _sideID] spawn {
+									private ["_g","_v","_town","_occ","_marker","_t","_label","_objs","_stats","_sp","_cls2","_sID2",
+									         "_el","_window","_cleared","_taxAmt","_toll","_clear","_fobIdx","_fobAvail","_fobName",
+									         "_reinforced","_rn","_ri","_rPos2","_ru","_s","_x"];
+									_g = _this select 0; _v = _this select 1; _town = _this select 2; _occ = _this select 3;
+									_marker = _this select 4; _t = _this select 5; _label = _this select 6;
+									_objs = _this select 7; _stats = _this select 8; _sp = _this select 9;
+									_cls2 = _this select 10; _sID2 = _this select 11;
+
+									_window  = missionNamespace getVariable ["WFBE_C_GUER_CP_WINDOW", 600];
+									_taxAmt  = (missionNamespace getVariable ["WFBE_C_GUER_CP_TAX",  60])  * (1 + _t);
+									_toll    = (missionNamespace getVariable ["WFBE_C_GUER_CP_TOLL", 250])  * (1 + _t);
+									_clear   = 900 * (1 + _t);   //--- v2: the fortified block is worth more to crack (v1 base: 700).
+
+									_el = 0; _cleared = false; _reinforced = false;
+									while {!_cleared && {_el < _window} && {!gameOver}} do {
+										sleep 30; _el = _el + 30;
+										//--- CLEAR check: the manning force (crew + statics gunners + foot, all in _g) is wiped.
+										if (({alive _x} count (units _g)) == 0) then {_cleared = true};
+										if (!_cleared) then {
+											//--- TAX tick: drain the occupier supply, pay GUER players a toll (unchanged from v1).
+											[_occ, -_taxAmt, "Insurgent checkpoint tax.", false] Call ChangeSideSupply;
+											[resistance, "GuerVbiedBounty", _toll] Call WFBE_CO_FNC_SendToClients;
+											//--- (6) REINFORCEMENT PULSE: once, at half-window, while the block still stands.
+											if (!_reinforced && {_el >= (_window / 2)}) then {
+												_reinforced = true;
+												_rn = 2 + _t;
+												for "_ri" from 1 to _rn do {
+													_rPos2 = [(_sp select 0) + (random 12) - 6, (_sp select 1) + (random 12) - 6, 0];
+													_ru = [_cls2, _g, _rPos2, _sID2] Call WFBE_CO_FNC_CreateUnit;
+													if (!isNull _ru) then {_ru setVariable ["WFBE_IsTownDefenderAI", true, true]};
+												};
+												diag_log Format ["AICOMSTAT|v2|EVENT|GUER|%1|GUERCP_REINFORCED|%2", round (time/60), _label];
+											};
+										};
+									};
+
+									if (_cleared) then {
+										//--- WINNER = the occupier whose supply road it threatened (same as v1, bigger base).
+										[_occ, _clear, "Insurgent checkpoint cleared - supply recovered.", false] Call ChangeSideSupply;
+										[nil, "LocalizeMessage", ["Wildcard", Format ["[Wildcard] %1 cleared the Insurgent Checkpoint near %2 (+supply).", str _occ, _town getVariable ["name","?"]]]] Call WFBE_CO_FNC_SendToClients;
+										diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERCP_CLEARED|" + (str _label) + "|byOcc=" + (str _occ) + "|clearSupply=" + (str _clear));
+									} else {
+										//--- GUER HELD it to timeout: FOB factory token, tier-scaled (identical to v1).
+										_fobIdx = 0;
+										if (_t >= 2) then {_fobIdx = 1};
+										if (_t >= 3) then {_fobIdx = 2};
+										_fobName  = ["Barracks","Light Factory","Heavy Factory"] select _fobIdx;
+										_fobAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]]);
+										_fobAvail set [_fobIdx, (_fobAvail select _fobIdx) + 1];
+										missionNamespace setVariable ["WFBE_GUER_FOB_AVAIL", _fobAvail];
+										publicVariable "WFBE_GUER_FOB_AVAIL";
+										[nil, "LocalizeMessage", ["Wildcard", Format ["[Wildcard] The Insurgent Checkpoint near %1 held - captured materiel: %2 FOB unlocked.", _town getVariable ["name","?"], _fobName]]] Call WFBE_CO_FNC_SendToClients;
+										diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERCP_HELD|" + (str _label) + "|fobToken=" + (str _fobName) + "|avail=" + (str _fobAvail));
+									};
+
+									//--- (7) CLEANUP (runs after BOTH resolution paths): composition props, then statics
+									//--- (player-safe, Server_GuerAirDef.sqf teardown idiom), then hull+crew, foot, group, marker.
+									{if (!isNull _x) then {deleteVehicle _x}} forEach _objs;
+									{
+										_s = _x;   //--- capture outer _x before the inner crew forEach (house rule).
+										if (!isNull _s && {({isPlayer _x} count (crew _s)) == 0}) then {
+											{deleteVehicle _x} forEach (crew _s);
+											deleteVehicle _s;
+										};
+									} forEach _stats;
+									if (!isNull _v && {({isPlayer _x} count (crew _v)) == 0}) then {{deleteVehicle _x} forEach (crew _v); deleteVehicle _v};
+									if (!isNull _g) then {{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _g); deleteGroup _g};
+									deleteMarker _marker;
+								};
+
+								_detail = Format ["G2v2 target=%1 tier=%2 veh=%3 foot=%4 roadD=%5m window=%6s", _target getVariable ["name","?"], _tier, _cpVeh, _footN, round _roadDist, missionNamespace getVariable ["WFBE_C_GUER_CP_WINDOW", 600]];
+							} else { _result = "partial"; _detail = "G2v2 group null at cap"; };
+						} else { _result = "ineligible"; _detail = "G2v2 no road candidate"; };
+					} else { _result = "ineligible"; _detail = "G2v2 no occupied town"; };
+				} else {
+				//--- v1 (legacy) G2 block below - UNTOUCHED bytes; the ONLY path while WFBE_C_GUER_CP_V2 = 0.
 				if (!isNull _target) then {
 					_targetPos = getPos _target;
 					//--- Spawn anchor ~280m out from the town on a random bearing, snapped to the nearest road
@@ -312,6 +557,7 @@ while {!gameOver} do {
 						_detail = Format ["target=%1 tier=%2 veh=%3 foot=%4 window=%5s", _target getVariable ["name","?"], _tier, _cpVeh, _footN, missionNamespace getVariable ["WFBE_C_GUER_CP_WINDOW", 600]];
 					} else { _result = "partial"; _detail = "G2 group null at cap"; };
 				} else { _result = "ineligible"; _detail = "G2 no occupied town"; };
+				}; //--- end v1 (legacy) G2 else-branch (flag WFBE_C_GUER_CP_V2 = 0 path).
 			};
 
 			//--- G5: SCAVENGER TEAM — 4-man foot team moves to abandoned wrecks, scraps them, pays GUER players.

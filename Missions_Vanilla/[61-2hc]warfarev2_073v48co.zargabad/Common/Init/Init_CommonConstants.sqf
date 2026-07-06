@@ -2103,5 +2103,16 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- no gameplay logic is gated on it. Set to 0 to suppress all MATCH|v1| lines (zero overhead).
 	if (isNil "WFBE_C_MATCH_TELEMETRY") then {WFBE_C_MATCH_TELEMETRY = 1};
 
+//--- GUER POP-UP CHECKPOINT v2 (claude/guer-cp-v2): road-snapped, road-aligned, physically blocking
+//--- G2 wildcard checkpoint (AI_Commander_Wildcard_GUER.sqf case 2). 0 (default) = the legacy v1 G2
+//--- block runs untouched (byte-identical behaviour); >0 = v2: candidates from `nearRoads` filtered by
+//--- the guarded roadsConnectedTo>=2 usable-road idiom, WFBE_NEURODEF_FORT_CHECKPOINT composition spawned
+//--- on the road axis, 2 GUER-manned MG statics, posted garrison, one-shot half-window reinforcement
+//--- pulse, and a 900-base (v1: 700) clear reward. Server-side only; nothing runs while the flag is 0.
+	if (isNil "WFBE_C_GUER_CP_V2") then {WFBE_C_GUER_CP_V2 = 0};
+	if (isNil "WFBE_C_GUER_CP2_ROAD_RADIUS") then {WFBE_C_GUER_CP2_ROAD_RADIUS = 400};  //--- m: nearRoads candidate radius around the target town (v2 only).
+	if (isNil "WFBE_C_GUER_CP2_FOOT_BASE") then {WFBE_C_GUER_CP2_FOOT_BASE = 4};        //--- v2 garrison base headcount (v1: 3).
+	if (isNil "WFBE_C_GUER_CP2_FOOT_PER_TIER") then {WFBE_C_GUER_CP2_FOOT_PER_TIER = 2}; //--- v2 extra garrison per GUER vehicle tier (v1: 1).
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
