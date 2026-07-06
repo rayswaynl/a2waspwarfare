@@ -43,7 +43,7 @@ if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
 		//--- position off-road/out-of-water. AICOM v2 (Ray 2026-07-01, road fix): the old code
 		//--- used a FIXED 22-50m annulus and, on give-up, RESET to the raw on-road spot - so a
 		//--- start location boxed in by roads kept planting the HQ ON the road. Replace with an
-		//--- EXPANDING-RING off-road search (mirrors the ring idiom in Common_GetSafePlace.sqf:
+		//--- EXPANDING-RING off-road search (mirrors the ring idiom of the old Common_GetSafePlace helper, removed 2026-07-06:
 		//--- sweep angles, then GROW the radius when a ring is exhausted) and KEEP the best
 		//--- off-road candidate ever found - NEVER reset to the raw on-road spot. The radius
 		//--- grows in WFBE_C_AICOM_HQ_NUDGE_STEP (default 25m) increments up to
@@ -71,7 +71,7 @@ if (!((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus)) exitWith {
 			//--- expanding ring: start just outside the road-reject radius, grow outward.
 			_nudgeRad = 22;
 			while {!_haveCand && {_nudgeRad <= _nudgeMaxR}} do {
-				//--- sweep the ring in fixed angular steps (36 deg == the Common_GetSafePlace sweep),
+				//--- sweep the ring in fixed angular steps (36 deg == that helper's sweep),
 				//--- with a small random phase so successive deploys do not all probe identical spots.
 				_nudgeAng = random 360;
 				for [{private "_k"; _k = 0}, {_k < 10 && {!_haveCand}}, {_k = _k + 1}] do {
