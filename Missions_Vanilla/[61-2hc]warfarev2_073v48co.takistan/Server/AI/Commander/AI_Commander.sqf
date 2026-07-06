@@ -481,7 +481,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- human commander (from start, re-armed when a human leaves) before it starts building.
 		//--- Ray 2026-06-28: retire idle rear FOOT teams when mobile force is fielded - runs in EVERY command mode
 		//--- (AI-command OR human-commander); the in-view + safety checks inside the pass protect immersion/safety.
-		if (time - _ltDisband > (missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_INTERVAL", 300])) then {
+		if (time - _ltDisband > (missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_LOWTIER_INTERVAL", 600])) then {
 			if (!isNil "WFBE_SE_FNC_AI_Com_DisbandLowTier") then {(_side) Call WFBE_SE_FNC_AI_Com_DisbandLowTier};
 			_ltDisband = time;
 		};
