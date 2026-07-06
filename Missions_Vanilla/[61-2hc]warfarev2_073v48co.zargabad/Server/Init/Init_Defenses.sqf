@@ -334,6 +334,179 @@ missionNamespace setVariable ['WFBE_NEURODEF_AIRCRAFT_WALLS_V3',
 	]
 ];
 
+//=============================================================================
+//--- fable/wddm-functional-defenses: FACTORY WALL SLABS v4 (flag WFBE_C_WALLS_V4, default 0;
+//--- WFBE_C_WALLS_V3 stays the LIVE default). Redesign of the v3 slab layer per the design
+//--- contract in the WALLS_V3 comment block above (violating it breaks vehicle deliveries):
+//---   * +X (model-right) face stays FULLY OPEN on Light/Heavy/Aircraft (Client_BuildUnit.sqf
+//---     spawns vehicles toward +X) - zero slabs on any +X plane;
+//---   * legacy infantry walking gaps preserved - the slab layer now GAPS where the legacy ring
+//---     gaps (v3 ran a solid outer wall straight past the -X walking gaps);
+//---   * slabs sit OUTSIDE the legacy ring, which is included VERBATIM (full arrays, no concat);
+//---   * contiguous runs at the HQ 2.2 m overlap pitch (WFBE_NEURODEF_HEADQUARTERS_WALLS look) -
+//---     NO lone floating single panels (the v3 Heavy [-3.6,16]/[-3.6,-17.5] and Aircraft
+//---     [-3.6,15]/[-3.6,-15] singles are replaced by proper runs/pairs);
+//---   * mirrored offsets symmetric; Land_CncBlock_Stripes accents at the gap mouths;
+//---   * SERVICEPOINT stays slab-free: no _V4 array exists, so the selection hooks fall through
+//---     to the V3 logic (empty array) - both drive-through faces stay clear.
+//--- Selected by Construction_Small/MediumSite.sqf: _WALLS_V4 preferred when WFBE_C_WALLS_V4>0
+//--- AND the array exists, else the existing V3/legacy logic runs untouched.
+//--- AUTO-GENERATED from docs/design/compositions/*_walls_v4.wddm.json by
+//--- Tools/WddmToSqf/wddm_to_sqf.py - the .wddm.json is the source of truth; do not hand-edit.
+//=============================================================================
+missionNamespace setVariable ['WFBE_NEURODEF_BARRACKS_WALLS_V4',[
+	['Base_WarfareBBarrier5x',[-7,11,0],0],
+	['Base_WarfareBBarrier5x',[7,11,0],0],
+	['Base_WarfareBBarrier5x',[-7,-11,0],0],
+	['Base_WarfareBBarrier5x',[7,-11,0],0],
+	['Base_WarfareBBarrier5x',[-11,-5,0],90],
+	['Base_WarfareBBarrier5x',[-11,5,0],90],
+	['Base_WarfareBBarrier5x',[11,-5,0],90],
+	['Base_WarfareBBarrier5x',[11,5,0],90],
+	['Concrete_Wall_EP1',[-7.6,13.5,0],0],
+	['Concrete_Wall_EP1',[-5.4,13.5,0],0],
+	['Concrete_Wall_EP1',[5.4,13.5,0],0],
+	['Concrete_Wall_EP1',[7.6,13.5,0],0],
+	['Concrete_Wall_EP1',[-7.6,-13.5,0],0],
+	['Concrete_Wall_EP1',[-5.4,-13.5,0],0],
+	['Concrete_Wall_EP1',[5.4,-13.5,0],0],
+	['Concrete_Wall_EP1',[7.6,-13.5,0],0],
+	['Concrete_Wall_EP1',[-13.5,-2.2,0],90],
+	['Concrete_Wall_EP1',[-13.5,0,0],90],
+	['Concrete_Wall_EP1',[-13.5,2.2,0],90],
+	['Concrete_Wall_EP1',[13.5,-2.2,0],90],
+	['Concrete_Wall_EP1',[13.5,0,0],90],
+	['Concrete_Wall_EP1',[13.5,2.2,0],90],
+	['Land_CncBlock_Stripes',[-1.6,14.2,0],335],
+	['Land_CncBlock_Stripes',[1.6,14.2,0],25],
+	['Land_CncBlock_Stripes',[-1.6,-14.2,0],205],
+	['Land_CncBlock_Stripes',[1.6,-14.2,0],155]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_LIGHT_WALLS_V4',[
+	['Land_HBarrier_large',[10,-1,0],90],
+	['Land_HBarrier_large',[10,9,0],-90],
+	['Land_HBarrier_large',[10,-8.5,0],90],
+	['Land_HBarrier_large',[7,-12,0],180],
+	['Land_HBarrier_large',[-7,-12,0],180],
+	['Land_HBarrier_large',[7,12,0],180],
+	['Land_HBarrier_large',[-7,12,0],180],
+	['Land_HBarrier_large',[-11,-9,0],90],
+	['Land_HBarrier_large',[-11,6,0],90],
+	['Land_HBarrier_large',[-11,9,0],90],
+	['Concrete_Wall_EP1',[-14,-8.8,0],90],
+	['Concrete_Wall_EP1',[-14,-6.6,0],90],
+	['Concrete_Wall_EP1',[-14,3.3,0],90],
+	['Concrete_Wall_EP1',[-14,5.5,0],90],
+	['Concrete_Wall_EP1',[-14,7.7,0],90],
+	['Concrete_Wall_EP1',[-7.6,15,0],0],
+	['Concrete_Wall_EP1',[-5.4,15,0],0],
+	['Concrete_Wall_EP1',[5.4,15,0],0],
+	['Concrete_Wall_EP1',[7.6,15,0],0],
+	['Concrete_Wall_EP1',[-7.6,-15,0],0],
+	['Concrete_Wall_EP1',[-5.4,-15,0],0],
+	['Concrete_Wall_EP1',[5.4,-15,0],0],
+	['Concrete_Wall_EP1',[7.6,-15,0],0],
+	['Land_CncBlock_Stripes',[-1.6,15.6,0],335],
+	['Land_CncBlock_Stripes',[1.6,15.6,0],25],
+	['Land_CncBlock_Stripes',[-14.8,-3.6,0],115],
+	['Land_CncBlock_Stripes',[-14.8,0.4,0],65]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_COMMANDCENTER_WALLS_V4',[
+	['Land_HBarrier_large',[4,-3.5,0],90],
+	['Land_HBarrier_large',[4,4,0],90],
+	['Land_HBarrier_large',[1,7.5,0],180],
+	['Land_HBarrier_large',[-2.5,7.5,0],180],
+	['Land_HBarrier_large',[-5.5,4,0],90],
+	['Land_HBarrier_large',[-5.5,-3.5,0],90],
+	['Land_HBarrier5',[4,-6.5,0],180],
+	['Concrete_Wall_EP1',[7.5,-4.4,0],90],
+	['Concrete_Wall_EP1',[7.5,-2.2,0],90],
+	['Concrete_Wall_EP1',[7.5,0,0],90],
+	['Concrete_Wall_EP1',[7.5,2.2,0],90],
+	['Concrete_Wall_EP1',[7.5,4.4,0],90],
+	['Concrete_Wall_EP1',[-9,-4.4,0],90],
+	['Concrete_Wall_EP1',[-9,-2.2,0],90],
+	['Concrete_Wall_EP1',[-9,0,0],90],
+	['Concrete_Wall_EP1',[-9,2.2,0],90],
+	['Concrete_Wall_EP1',[-9,4.4,0],90],
+	['Concrete_Wall_EP1',[-2.2,-10,0],0],
+	['Concrete_Wall_EP1',[0,-10,0],0],
+	['Concrete_Wall_EP1',[2.2,-10,0],0],
+	['Land_CncBlock_Stripes',[-7.2,6.6,0],335],
+	['Land_CncBlock_Stripes',[5.7,6.6,0],25]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_HEAVY_WALLS_V4',[
+	['Land_HBarrier_large',[14,-1,0],90],
+	['Land_HBarrier_large',[14,9,0],-90],
+	['Land_HBarrier_large',[14,-8.5,0],90],
+	['Land_HBarrier_large',[14,-11,0],90],
+	['Land_HBarrier_large',[11,-14.5,0],180],
+	['Land_HBarrier_large',[-3,-14.5,0],180],
+	['Land_HBarrier_large',[-10.5,-14.5,0],180],
+	['Land_HBarrier_large',[-14,-11,0],90],
+	['Land_HBarrier_large',[-14,4,0],90],
+	['Land_HBarrier_large',[-14,9.5,0],90],
+	['Land_HBarrier_large',[11,13,0],180],
+	['Land_HBarrier_large',[-4,13,0],180],
+	['Land_HBarrier_large',[-11,13,0],-180],
+	['Concrete_Wall_EP1',[-17,-11,0],90],
+	['Concrete_Wall_EP1',[-17,-8.8,0],90],
+	['Concrete_Wall_EP1',[-17,1.1,0],90],
+	['Concrete_Wall_EP1',[-17,3.3,0],90],
+	['Concrete_Wall_EP1',[-17,5.5,0],90],
+	['Concrete_Wall_EP1',[-17,7.7,0],90],
+	['Concrete_Wall_EP1',[-17,9.9,0],90],
+	['Concrete_Wall_EP1',[-8.8,16,0],0],
+	['Concrete_Wall_EP1',[-6.6,16,0],0],
+	['Concrete_Wall_EP1',[-4.4,16,0],0],
+	['Concrete_Wall_EP1',[-2.2,16,0],0],
+	['Concrete_Wall_EP1',[0,16,0],0],
+	['Concrete_Wall_EP1',[-8.8,-17.5,0],0],
+	['Concrete_Wall_EP1',[-6.6,-17.5,0],0],
+	['Concrete_Wall_EP1',[-4.4,-17.5,0],0],
+	['Concrete_Wall_EP1',[-2.2,-17.5,0],0],
+	['Concrete_Wall_EP1',[0,-17.5,0],0],
+	['Land_CncBlock_Stripes',[3,16,0],335],
+	['Land_CncBlock_Stripes',[5,16,0],25],
+	['Land_CncBlock_Stripes',[3,-17.5,0],205],
+	['Land_CncBlock_Stripes',[5,-17.5,0],155],
+	['Land_CncBlock_Stripes',[-17.8,-5.5,0],115],
+	['Land_CncBlock_Stripes',[-17.8,-1.5,0],65]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_AIRCRAFT_WALLS_V4',[
+	['Land_HBarrier_large',[10,-1,0],90],
+	['Land_HBarrier_large',[10,9,0],-90],
+	['Land_HBarrier_large',[10,-8.5,0],90],
+	['Land_HBarrier_large',[7,-12,0],180],
+	['Land_HBarrier_large',[-7,-12,0],180],
+	['Land_HBarrier_large',[7,12,0],180],
+	['Land_HBarrier_large',[-7,12,0],180],
+	['Land_HBarrier_large',[-11,-9,0],90],
+	['Land_HBarrier_large',[-11,6,0],90],
+	['Land_HBarrier_large',[-11,9,0],90],
+	['Concrete_Wall_EP1',[-14,-8.8,0],90],
+	['Concrete_Wall_EP1',[-14,-6.6,0],90],
+	['Concrete_Wall_EP1',[-14,3.3,0],90],
+	['Concrete_Wall_EP1',[-14,5.5,0],90],
+	['Concrete_Wall_EP1',[-14,7.7,0],90],
+	['Concrete_Wall_EP1',[-7.6,15,0],0],
+	['Concrete_Wall_EP1',[-5.4,15,0],0],
+	['Concrete_Wall_EP1',[5.4,15,0],0],
+	['Concrete_Wall_EP1',[7.6,15,0],0],
+	['Concrete_Wall_EP1',[-7.6,-15,0],0],
+	['Concrete_Wall_EP1',[-5.4,-15,0],0],
+	['Concrete_Wall_EP1',[5.4,-15,0],0],
+	['Concrete_Wall_EP1',[7.6,-15,0],0],
+	['Land_CncBlock_Stripes',[-1.6,15.6,0],335],
+	['Land_CncBlock_Stripes',[1.6,15.6,0],25],
+	['Land_CncBlock_Stripes',[-14.8,-3.6,0],115],
+	['Land_CncBlock_Stripes',[-14.8,0.4,0],65]
+]];
+
 missionNamespace setVariable ['WFBE_NEURODEF_MG',[
 	[if (WF_A2_Vanilla) then {'Land_fortified_nest_small'} else {'Land_fortified_nest_small_EP1'},[0.25,0,0],180],
 	['Land_fort_bagfence_corner',[-1,-3,0],0]

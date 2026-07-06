@@ -2114,5 +2114,14 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- resolve exactly as at HEAD (byte-identical behaviour).
 	if (isNil "WFBE_C_DEF_FORT_MANNED") then {WFBE_C_DEF_FORT_MANNED = 0};
 
+//--- fable/wddm-functional-defenses: FACTORY WALL SLABS v4. Redesign of the v3 concrete slab
+//--- layer (WFBE_NEURODEF_*_WALLS_V4, Init_Defenses.sqf): legacy ring verbatim + contiguous
+//--- Concrete_Wall_EP1 runs at the HQ 2.2 m overlap pitch (no lone single panels), slab-layer
+//--- gaps aligned with the legacy walking gaps, +X egress faces fully open on Light/Heavy/
+//--- Aircraft, Land_CncBlock_Stripes accents at gap mouths, ServicePoint slab-free.
+//--- Flag >0 -> Construction_Small/MediumSite.sqf prefer _WALLS_V4 where defined; 0 (default) ->
+//--- the existing WFBE_C_WALLS_V3 selection runs untouched (V3 stays the live default look).
+	if (isNil "WFBE_C_WALLS_V4") then {WFBE_C_WALLS_V4 = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

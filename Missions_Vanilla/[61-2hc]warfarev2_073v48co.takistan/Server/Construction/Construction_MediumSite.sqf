@@ -169,8 +169,16 @@ if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !
 	//--- (The cmdcon42-g _WALLS_V2 wall-ladder is reverted; WFBE_C_WALLS_V2 is dead.) See Server\Init\Init_Defenses.sqf.
 	private ["_wallVarName","_wallTpl"];
 	_wallVarName = format ["WFBE_NEURODEF_%1_WALLS", _rlType];
-	if ((missionNamespace getVariable ["WFBE_C_WALLS_V3", 1]) > 0) then {
-		if !(isNil {missionNamespace getVariable (_wallVarName + "_V3")}) then {_wallVarName = _wallVarName + "_V3"};
+	//--- fable/wddm-functional-defenses: WFBE_C_WALLS_V4 (default 0) prefers the redesigned _WALLS_V4
+	//--- slab layer (legacy ring + contiguous HQ-pitch Concrete_Wall_EP1 runs, walking gaps preserved,
+	//--- +X egress faces open) when the flag is on AND the _V4 array exists (ServicePoint has none ->
+	//--- falls through). Flag 0 or no _V4 array -> the V3/legacy logic below runs UNTOUCHED.
+	if (((missionNamespace getVariable ["WFBE_C_WALLS_V4", 0]) > 0) && {!(isNil {missionNamespace getVariable (_wallVarName + "_V4")})}) then {
+		_wallVarName = _wallVarName + "_V4";
+	} else {
+		if ((missionNamespace getVariable ["WFBE_C_WALLS_V3", 1]) > 0) then {
+			if !(isNil {missionNamespace getVariable (_wallVarName + "_V3")}) then {_wallVarName = _wallVarName + "_V3"};
+		};
 	};
 	_wallTpl = missionNamespace getVariable _wallVarName;
 	_defenses = [_site, _wallTpl] call CreateDefenseTemplate;
