@@ -1032,6 +1032,16 @@ while {!WFBE_GameOver && _alive} do {
 								_uVeh setDamage 0;
 								_uVeh setVehicleAmmo 1;
 								diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_REPAIR|team=" + (str _uTeam) + "|tier=" + str _uTier + "|veh=" + (typeOf _uVeh));
+								//--- STUCK_REPAIR_RESETS_TIER (2026-07-06, flag WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER default 0):
+								//--- A successful in-place repair (setDamage 0 + canMove) leaves the tier counter at the high
+								//--- pre-repair value; AssignTowns then re-issues at that same tier even though the hull is
+								//--- now healthy. Reset wfbe_aicom_stuckstrikes to 0 (broadcast so the server's next
+								//--- AssignTowns cycle reads the cleared counter). Inert when flag = 0.
+								//--- A2-OA-safe: group setVariable with broadcast=true, canMove (no A3 commands).
+								if ((missionNamespace getVariable ["WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER", 0]) > 0 && {canMove _uVeh}) then {
+									_uTeam setVariable ["wfbe_aicom_stuckstrikes", 0, true];
+									diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|UNSTUCK_TIER_RESET|team=" + (str _uTeam) + "|tier=" + str _uTier + "|map=" + worldName);
+								};
 							};
 						};
 
@@ -1063,9 +1073,15 @@ while {!WFBE_GameOver && _alive} do {
 						//--- Tier 3: last-resort teleport-nudge to the nearest clear road node,
 						//--- only if no player is close enough to witness it.
 						//--- cmdcon41-w3e (e) WATER GUARD: fire the road-snap at ANY tier when the hull is water-stuck (_uForceRoad).
+						//--- TELEPORT-GUARD FIX (2026-07-06): hoist the player-guard radius once per Spawn invocation so both snap
+						//--- branches (vehicle + foot) read the SAME parameterised constant (WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R,
+						//--- default 300). Previously both branches hard-coded 100, contradicting the 300m design comment above and
+						//--- allowing 6 owner-witnessed player-visible teleports on 2026-07-06. A2-OA-safe: missionNamespace getVariable.
+						private "_uPGR";
+						_uPGR = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R", 300];
 						if ((_uTier >= 3 || {_recV2 && _uForceRoad}) && {!isNull _uVeh} && {alive _uVeh}) then {
 							_uPlayerNear = false;
-							{ if (isPlayer _x && {(_x distance _uVeh) < 100}) then {_uPlayerNear = true} } forEach playableUnits;
+							{ if (isPlayer _x && {(_x distance _uVeh) < _uPGR}) then {_uPlayerNear = true} } forEach playableUnits;
 							if (!_uPlayerNear) then {
 								_uRds = (getPos _uVeh) nearRoads 150;
 								if (count _uRds > 0) then {
@@ -1124,7 +1140,7 @@ while {!WFBE_GameOver && _alive} do {
 						//--- cmdcon41-w3e (e) WATER GUARD: fire the foot road-snap at ANY tier when water-stuck (_uForceRoad).
 						if ((_uTier >= 3 || {_recV2 && _uForceRoad}) && {_uOnFoot || _uHullDead || {_recV2 && _uForceRoad}}) then {
 							_uFootPlayerNear = false;
-							{ if (isPlayer _x && {(_x distance _uLdr) < 100}) then {_uFootPlayerNear = true} } forEach playableUnits;
+							{ if (isPlayer _x && {(_x distance _uLdr) < _uPGR}) then {_uFootPlayerNear = true} } forEach playableUnits;
 							if (!_uFootPlayerNear) then {
 								//--- cmdcon41-w3e (d) SLOPE-AWARE FOOT SNAP: a foot team grinding a steep Takistan slope (surfaceNormal
 								//--- z below WFBE_C_AICOM_RECOVERY_SLOPE_Z, default 0.85) is exactly the hill-grind case - widen the road
