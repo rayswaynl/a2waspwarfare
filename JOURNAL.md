@@ -26,6 +26,23 @@ Scope deliberately stays out of AICOM, town, supply, score, and victory systems.
 LoadoutManager mirror with `A2WASP_SKIP_ZIP=1`, identical worker hashes across all three maintained
 roots, focused SQF lint zero findings, cached diff checks clean, and no `_MISSIONS.7z` artifact.
 
+## 2026-07-02 — Lane 49 client RPT error-family audit [codex/lane49-client-rpt-error-family-audit]
+
+Audited the current client RPT sample at `C:\Users\Game\wasp-rpt-reap\client-main.rpt` plus the
+brain/wiki RPT routing notes. Most raw error volume is optional-addon noise (`JSRS_Distance` and
+`warfxpe`), while several scary mission families in the sample are already fixed in current source
+by cmdcon42 skin-selector and respawn-menu guards.
+
+Shipped three tiny source guards that still mapped to maintained source: `Client_TipRotation.sqf`
+now type-checks tip master/cadence values and feature gates before numeric compares;
+`Init_TownMode.sqf` waits for `WFBE_Parameters_Ready` to exist before reading it; and `CM_Set.sqf`
+accepts the object payload used by the current `(_unit) execVM` call sites instead of assuming an
+array payload. Chernarus was edited first and mirrored to maintained Takistan through
+`Tools\LoadoutManager`.
+
+Verification: `A2WASP_SKIP_ZIP=1 dotnet run -c Release`, `A2WASP_SKIP_ZIP=1 dotnet run -c Release -- --check`,
+`git diff --check`, `git diff --cached --check`, and an A3-command scan over the touched files.
+
 ## 2026-07-02 — GUER naked spawn on Takistan + rifle-less GUER buy menu [claude/guer-gear-fixes]
 
 Two GUER player-side gear bugs, fixed in two commits:
