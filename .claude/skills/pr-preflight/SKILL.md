@@ -27,9 +27,9 @@ checklist condenses; the wiki wins on conflict.
 
 ## 2. Shelved / owner-rejected check
 
-Shelved PRs (wiki `Shelved-PR-*` pages, e.g.
-[Shelved-PR-Registry](https://github.com/rayswaynl/a2waspwarfare/wiki/Shelved-PR-Registry))
-are CLOSED proposals — never re-open or duplicate. Owner-rejected forever: sim/distance
+Shelved proposals (wiki `Shelved-*` pages; index at
+[Shelved-Registry](https://github.com/rayswaynl/a2waspwarfare/wiki/Shelved-Registry))
+are CLOSED — never re-open or duplicate. Owner-rejected forever: sim/distance
 gating (`WFBE_C_SIM_GATING`), antistack changes, TPWCAS, AI supply trucks, satchel AI,
 EMP/WP/DECOY SCUD, doctrine personalities, GUER caps/nerfs.
 

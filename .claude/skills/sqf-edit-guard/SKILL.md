@@ -74,6 +74,7 @@ python Tools/Lint/check_stringtable_refs.py
 
 ## 5. New classnames
 
-Every new classname must already appear in the mission tree, OR be verified in
-`C:/Users/Game/wasp-tools/arma2-co-config-reference/Config/CfgVehicles.txt` with that
+Every new classname must already appear in the mission tree, OR be verified in the
+config-reference repo [rayswaynl/arma2-co-config-reference](https://github.com/rayswaynl/arma2-co-config-reference)
+(`Config/CfgVehicles.txt`; use a local checkout if your environment has one) with that
 citation as config proof in the PR body.
