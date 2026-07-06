@@ -138,3 +138,14 @@ Reported at each milestone; master-FF + branch-prune are the points of no return
 - #377: both flags flipped default-on (SPOTTER_TEAM_MARKS + NOTABLE_KILL_FEED, both verified complete). MERGE-TO-BUILD84 with features live.
 EXECUTION SEQUENCE FIRING.
 
+## EXECUTION RESULTS (2026-07-06, workflow wf_1c40adc1-095 + my verification pass)
+- **53 PRs MERGED into build84** (all of Groups A/B/C that applied cleanly + rebases of 729/718/396). Tip moved 21977107d; lint stable throughout.
+- **8 DISCARD PRs closed** with rationale (275/344/347/351/354/355/364/594).
+- **11 WIKI-THEN-CLOSE PRs archived + closed**: new wiki pages Audit-Archive-2026-07 (9 audit PRs), Briefing-Reference (#269), Utes-Invasion-Concept (#703); #418 HQ-strike note also appended to AICOM-V2-Cutover-Status; all 4 nav surfaces wired; validate-wiki passed.
+- **16 PRs SKIPPED on non-trivial conflicts**: 738,721,719,705,704,700,664,616,583,556,546,477,443,399,338,328 → conflict-wave workflow wf_874aa7cf-0a8 fired (serial semantic merges, Fable executor + independent Fable auditor; #616 must preserve press-guard/AUTOFUEL/driver-swap; #738 must preserve #205 shape-guard; #338→#721 ordered on Client_TipRotation.sqf).
+- **My verification pass on the merged tree**: lint = 447 findings (== baseline, no rise); KILL_TALLY_DECAL=0 intact; "6 duplicate flag registrations" investigated → FALSE ALARM (the early block at Init_CommonConstants ~85-101 is inside `if (worldName == "Zargabad")` — deliberate ZG-scoped pre-sets from the ZG-runnable fix 32ceea651, documented no-double-assignment; CH/TK use Ray's annotated values).
+- **#377-flags-on merged BY HAND** (executor had misread it): merge commit 05399c634 on build84. Conflict was tail-append in Init_CommonConstants (kept both blocks) + ZG mirror; LoadoutManager regen **also healed pre-existing ZG mirror drift** (PVF-hardening PRs #203-#255 predate the ZG mirror, so their merges left ZG stale — 15 ZG files synced from CH). TK/ZG templates restored (61/7500, 61/5000). SPOTTER_TEAM_MARKS=1 + NOTABLE_KILL_FEED=1 confirmed on all mirrors. Minor note: the two flag comments still read "Default 0" from the pre-flip text — cosmetic, fix in any later tidy commit.
+- **Promotion gates**: GATE 3 ✅ (master unchanged 66b7c1aa0, merge-base da01762a6, zero net file delta master↔merge-base re-proven), GATE 4 ✅ (merge-tree zero conflicts), GATE 2 ✅ (lint 447), GATE 0/1 → 16 non-draft PRs targeting build84 are exactly the conflict-skips → promotion WAITS for the conflict wave, then re-gate and promote once, cleanly.
+- **Verify wave**: #739 + #740 verifiers running in the same workflow. #736 remains HOLD until its fix-verify is confirmed in the build log.
+- NEXT (on wave completion): re-run gates → promotion PR build84→master (merge commit, not squash) → tag v89-cmdcon44 → branch prune (re-scan merged set first; protect master/build84/fable-completion-push/open-PR heads).
+
