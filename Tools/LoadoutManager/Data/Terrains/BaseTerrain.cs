@@ -103,7 +103,7 @@ class CfgSounds
     {string.Join(Environment.NewLine, soundClasses)}{upgradeSoundModeClasses}
 }};";
 
-            File.WriteAllText(soundDirectory + "description.ext", cfgSounds);
+            FileManager.WriteAllTextCrlf(soundDirectory + "description.ext", cfgSounds);
         }
 
         // Handle writing to the vanilla maps (Utes, Zargabad) more properly here later
@@ -184,7 +184,7 @@ class CfgSounds
         }
 
         // Write the content to the target file
-        File.WriteAllText(targetFile, _content);
+        FileManager.WriteAllTextCrlf(targetFile, _content);
     }
 
     // Method to determine the mission path based on whether the terrain is modded or not
@@ -356,7 +356,7 @@ class CfgSounds
 
         // Replace the string and update the file
         content = content.Replace(_contentToSearchFor, _contentToReplaceWith);
-        File.WriteAllText(finalPathToEdit, content);
+        FileManager.WriteAllTextCrlf(finalPathToEdit, content);
     }
 
     // Ensures a vanilla map's init_server uses its own database map id after copying
@@ -395,7 +395,7 @@ class CfgSounds
 
         if (updatedContent != fileContent)
         {
-            File.WriteAllText(initServerPath, updatedContent);
+            FileManager.WriteAllTextCrlf(initServerPath, updatedContent);
             return;
         }
 
