@@ -8,6 +8,22 @@
 
 Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak","_tallyCount"];
 
+if !((typeName _this) in ["ARRAY"]) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (non-array)."] Call WFBE_CO_FNC_LogContent;
+};
+if ((count _this) < 3) exitWith {
+	["WARNING", Format ["RequestOnUnitKilled.sqf: Rejected malformed kill payload (count %1).", count _this]] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName (_this select 0)) in ["OBJECT"]) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (killed is not an object)."] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName (_this select 1)) in ["OBJECT"]) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (killer is not an object)."] Call WFBE_CO_FNC_LogContent;
+};
+if !((typeName (_this select 2)) in ["SCALAR"]) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (side id is not scalar)."] Call WFBE_CO_FNC_LogContent;
+};
+
 _killed = _this select 0;
 _killer = _this select 1;
 _killed_side = (_this select 2) Call GetSideFromID;
