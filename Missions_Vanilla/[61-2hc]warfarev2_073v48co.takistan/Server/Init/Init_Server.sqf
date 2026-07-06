@@ -1111,6 +1111,7 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 			+ "|players=" + str _players
 			+ "|hc=" + str _hc
 			+ "|dnMode=" + str (missionNamespace getVariable ["WFBE_DAYNIGHT_ENABLED", 1])
+			+ "|permDay=" + str (missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0])
 			+ "|daytime=" + str (round (daytime * 100) / 100)
 			+ "|sun=" + str (round (sunOrMoon * 100) / 100)
 			+ "|srvFps=" + str (round diag_fps)
