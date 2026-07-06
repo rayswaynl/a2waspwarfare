@@ -266,6 +266,8 @@ RE_ICBMTEL_SPAWNFAIL = re.compile(r"ICBMTEL-SPAWNFAIL")
 RE_SCUD_SUPPORT = re.compile(r"(Support_ScudStrike\.sqf|SCUD_THEATRICS)")
 RE_BUILD_ROAD = re.compile(r"\b(BUILD_ROAD_[A-Z_]+)\b(.*)$")
 RE_PATROL_NAVAL_SKIP = re.compile(r"ground patrol SKIPPING naval-HVT town \x5b(.+?)\x5d")
+RE_CMD43_FAMILY = re.compile(r"\b(UPGRADE_SOUND|TIP_SKIP|TIP_SHOW|VEHLIFT_DROP|VEHLIFT_ABORT)\b")
+RE_BISRNG = re.compile(r"\bBIS_fnc_selectRandom\b", re.IGNORECASE)
 RE_SKIN = re.compile(r"\[WFBE \(SKIN\)\]\s+([^:]+):?\s*(.*)$")
 RE_EASA = re.compile(r"\b(EASA|GUI_Menu_EASA|EASA_Equip)\b")
 RE_GEAR = re.compile(r"\b(GEAR|Gear|gear|GUI_BuyGearMenu)\b")
@@ -345,6 +347,9 @@ class Soak(object):
         self.gear_count = 0
         self.easa_lines = []
         self.gear_lines = []
+        self.cmd43 = Counter()
+        self.cmd43_samples = defaultdict(list)
+        self.upgrade_sound_modes = Counter()
         # captures (server-side WASPSTAT)
         self.captures = []                  # list of dict(town,new,old,t)
         self.capture_by_town = Counter()
@@ -536,6 +541,23 @@ class Soak(object):
 
             if RE_BASE_ASSAULT.search(ln):
                 self.base_assault_lines.append(ln.strip())
+                continue
+
+            m = RE_CMD43_FAMILY.search(ln)
+            if m:
+                family = m.group(1)
+                self.cmd43[family] += 1
+                if family == "UPGRADE_SOUND":
+                    mode = parse_kvs(ln).get("mode", "unknown")
+                    self.upgrade_sound_modes[mode] += 1
+                if len(self.cmd43_samples[family]) < 5:
+                    self.cmd43_samples[family].append(ln.strip())
+                continue
+
+            if RE_BISRNG.search(ln):
+                self.cmd43["BISRNG"] += 1
+                if len(self.cmd43_samples["BISRNG"]) < 5:
+                    self.cmd43_samples["BISRNG"].append(ln.strip())
                 continue
 
             m = RE_ICBMTEL.search(ln)
@@ -1512,6 +1534,18 @@ def render(soak, args):
     for sample in (soak.easa_lines[:2] + soak.gear_lines[:2]):
         ap("       %s" % sample[:110])
 
+    ap("  " + sub("cmdcon43 log families"))
+    if soak.cmd43:
+        ap("     %s" % ", ".join("%s=%d" % (k, v) for k, v in soak.cmd43.most_common()))
+        if soak.upgrade_sound_modes:
+            ap("     UPGRADE_SOUND modes: %s" % ", ".join(
+                "%s=%d" % (k, v) for k, v in soak.upgrade_sound_modes.most_common()))
+        for family in ("UPGRADE_SOUND", "TIP_SKIP", "TIP_SHOW", "VEHLIFT_DROP", "VEHLIFT_ABORT", "BISRNG"):
+            for sample in soak.cmd43_samples.get(family, [])[:2]:
+                ap("       %s" % sample[:110])
+    else:
+        ap("     %s" % _c("none", C.DIM))
+
     # 10. AICOM2 (V2 commander telemetry) --------------------------------
     a2 = soak.aicom2_summary()
     if a2.get("present"):
@@ -1669,6 +1703,8 @@ def build_json_data(soak, args):
             "skin_aborts": dict(soak.skin_aborts),
             "easa_lines": soak.easa_count,
             "gear_lines": soak.gear_count,
+            "cmdcon43": dict(soak.cmd43),
+            "upgrade_sound_modes": dict(soak.upgrade_sound_modes),
         },
     }
     if args.compare_data:
