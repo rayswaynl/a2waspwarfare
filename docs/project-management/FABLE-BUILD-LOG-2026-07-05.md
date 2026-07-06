@@ -74,3 +74,11 @@ Agents' worktree-add with a dotdot relative name (missing separator) creates a l
 - **#735 re-verify: PASS-WITH-NOTES** -- 3 cosmetic fixture MINORs (impossible roll+committed combo in fixture, spurious tick= in docstring, press_events always 0); gate is trustworthy. Notes-only cleanup optional.
 Two stalled workflows stopped. Incomplete owner-approved work re-fired.
 
+
+## 2026-07-06 — Consolidation execution (wave 2)
+- consolidation-execute (wf_1c40adc1-095): 53 PRs merged -> build84; 8 discards closed; 11 wiki-archived+closed (3 new pages, 4 nav surfaces, validate passed). 16 skipped on non-trivial conflicts.
+- My verify pass: lint 447 == baseline; KILL_TALLY_DECAL=0; dup-flag scare = ZG-scoped pre-sets (false alarm, verified in source at ICC ~85-101).
+- #377-flags-on hand-merged (05399c634): tail-append ICC conflict resolved keep-both (CRLF python), LoadoutManager regen healed 15 stale ZG-mirror files (PVF batch predates ZG mirror), templates restored, flags=1 confirmed on all 3 terrains.
+- Promotion gates: G2 lint OK, G3 master unchanged (66b7c1aa0 / base da01762a6, zero net delta re-proven), G4 merge-tree clean. G0: 16 non-draft conflict-skips -> conflict-wave-0706 (wf_874aa7cf-0a8) firing serial Fable executor + independent auditor + #739/#740 verifiers.
+- Peach+ status DM sent (delivered dm:834428635896610886).
+- PENDING on wave completion: re-gate -> promotion PR build84->master (merge commit) -> tag v89-cmdcon44 -> branch prune re-scan + batch delete.
