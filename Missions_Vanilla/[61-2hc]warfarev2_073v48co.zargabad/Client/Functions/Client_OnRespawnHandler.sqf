@@ -251,7 +251,7 @@ if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enable
 
 
 //--- skin-persist 2026-07-06: re-apply profileNamespace skin choice on respawn when flag enabled.
-if ((missionNamespace getVariable ["WFBE_C_SKIN_PERSIST", 0]) > 0) then {
+if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {(missionNamespace getVariable ["WFBE_C_SKIN_PERSIST", 0]) > 0}) then {
 	Private ["_sideStr","_persKey","_persCls","_pool","_i","_valid","_entry"];
 	_sideStr = "WEST";
 	if (side group _unit == EAST) then {_sideStr = "EAST"};
