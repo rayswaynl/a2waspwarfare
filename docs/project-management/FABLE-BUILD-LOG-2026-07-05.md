@@ -82,3 +82,12 @@ Two stalled workflows stopped. Incomplete owner-approved work re-fired.
 - Promotion gates: G2 lint OK, G3 master unchanged (66b7c1aa0 / base da01762a6, zero net delta re-proven), G4 merge-tree clean. G0: 16 non-draft conflict-skips -> conflict-wave-0706 (wf_874aa7cf-0a8) firing serial Fable executor + independent auditor + #739/#740 verifiers.
 - Peach+ status DM sent (delivered dm:834428635896610886).
 - PENDING on wave completion: re-gate -> promotion PR build84->master (merge commit) -> tag v89-cmdcon44 -> branch prune re-scan + batch delete.
+
+## 2026-07-06 — MASTER PROMOTED (wave 3)
+- conflict-wave-0706 (wf_874aa7cf-0a8): ALL 16 conflict PRs merged semantically (0 skips), lint 447 throughout. Key resolutions: #738 AttackWave shape-guards adapted to direct-payload convention w/ PVEH relay kept; #616 cannon-nudge merged around HEAD's _liveVehs purge; #338+#721 tip union (VETERAN+FLAG-GATED+COMMUNITY/META).
+- Independent Fable audit: 15/16 PASS + overall-FAIL on 2 findings -> triaged: (1) "press-guard absent" = FALSE POSITIVE induced by my audit prompt (#726/#732 are fold-at-cutover, never on build84; verified 0 hits for _pressAct/wfbe_aicom_decap on build84); (2) ZG Client_TipRotation divergence = REAL -> LoadoutManager regen healed 5 drifted ZG files (incl. AI_Commander_Strategy, Server_GuerAirDef), hashes now CH=TK=ZG, commit de93ab731.
+- #739 verify PASS (adversarial, zero conflicts) -> merged 83201396a. #740 verify FAIL (docs mislabel fold-at-cutover systems as "LIVE (M5)") -> corrections queued, stays open on V2 lane, NOT a promotion blocker.
+- Gates re-run: G0 zero non-draft PRs targeting build84 (17 drafts = intentional folds), G3 master unchanged, G4 zero conflicts, G2 lint 447.
+- PROMOTION: PR #746 created + merged (merge commit). master = 4734bce49, build84 fully absorbed (rev-list ^master = 0). 221 commits promoted.
+- TAGS on remote: v88-pre-consolidation (66b7c1aa0, rollback) + v89-cmdcon44 (4734bce49, release).
+- PRUNE: fresh re-scan post-promotion: 460 merged + old verified list -> 551-branch delete set (anchors/open-PR-heads/31 Cat-C manual-review protected); executing in 50-branch batches.
