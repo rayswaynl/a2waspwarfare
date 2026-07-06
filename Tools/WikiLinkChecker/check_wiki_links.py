@@ -22,7 +22,7 @@ from urllib.parse import unquote, urlparse
 MARKDOWN_LINK_RE = re.compile(r"(?<!!)\[[^\]\n]+\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 WIKI_LINK_RE = re.compile(r"\[\[([^\]\n]+)\]\]")
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*#*\s*$")
-BUILD_RE = re.compile(r"\b(?:Build|build|B)(\d{2,3})\b")
+BUILD_RE = re.compile(r"\b(?:Build|build|B)\s*(\d{2,3})\b")
 NON_ANCHOR_RE = re.compile(r"[^a-z0-9 _-]")
 
 SPECIAL_PAGES = {"_Sidebar.md", "_Footer.md"}
@@ -231,15 +231,25 @@ def check_orphans(pages: Dict[str, Page], incoming: Dict[str, Set[str]]) -> List
     return findings
 
 
-def check_stale_builds(root: Path, current_build: int) -> List[Finding]:
-    findings: List[Finding] = []
+def check_stale_builds(root: Path, threshold: int, current_build: Optional[int] = None) -> List[Finding]:
+    refs: Dict[str, List[Tuple[int, str, int]]] = {}
+    highest_build = current_build or 0
     for path in sorted(root.glob("*.md")):
         text = strip_code(path.read_text(encoding="utf-8", errors="replace"))
         for line_no, line in enumerate(text.splitlines(), start=1):
             for match in BUILD_RE.finditer(line):
                 value = int(match.group(1))
-                if value < current_build:
-                    findings.append(Finding("STALEBUILD", path.name, line_no, match.group(0), f"Mentions build {value}; current build is {current_build}"))
+                refs.setdefault(path.name, []).append((line_no, match.group(0), value))
+                highest_build = max(highest_build, value)
+    if highest_build == 0:
+        return []
+
+    findings: List[Finding] = []
+    stale_floor = highest_build - threshold
+    for path_name, page_refs in refs.items():
+        newest_ref = max(page_refs, key=lambda item: item[2])
+        if newest_ref[2] < stale_floor:
+            findings.append(Finding("BUILDREF", path_name, newest_ref[0], newest_ref[1], f"Highest cited build is {newest_ref[2]}; wiki maximum is {highest_build}; threshold is {threshold}"))
     return findings
 
 
@@ -251,11 +261,13 @@ def print_text(findings: Sequence[Finding]) -> None:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     parser = argparse.ArgumentParser(description="Check a local GitHub wiki clone for link hygiene.")
     parser.add_argument("wiki_root", type=Path, help="Path to the local a2waspwarfare.wiki checkout")
-    parser.add_argument("--current-build", type=int, default=86, help="Current build number for STALEBUILD findings")
-    parser.add_argument("--include-stale-builds", action="store_true", help="Report older Build/B references")
+    parser.add_argument("--current-build", type=int, default=None, help="Override the detected current build number for BUILDREF findings")
+    parser.add_argument("--include-stale-builds", action="store_true", help="Report stale Build/B references")
+    parser.add_argument("--stale-build-threshold", type=int, default=10, help="Build age threshold for BUILDREF findings")
     parser.add_argument("--no-orphans", action="store_true", help="Skip ORPHAN findings")
     parser.add_argument("--json", action="store_true", help="Emit JSON instead of text")
     parser.add_argument("--fail-on", default="DEADLINK,BADANCHOR", help="Comma-separated finding codes that should return exit 1")
+    parser.add_argument("--exit-zero", action="store_true", help="Always return exit code 0 after reporting findings")
     args = parser.parse_args(argv)
 
     root = args.wiki_root.resolve()
@@ -270,7 +282,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if not args.no_orphans:
         findings.extend(check_orphans(pages, incoming))
     if args.include_stale_builds:
-        findings.extend(check_stale_builds(root, args.current_build))
+        findings.extend(check_stale_builds(root, args.stale_build_threshold, args.current_build))
 
     findings.sort(key=lambda f: (f.path.lower(), f.line, f.code, f.target))
     if args.json:
@@ -284,6 +296,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         print(f"SUMMARY: pages={len({page.rel for page in pages.values()})} findings={len(findings)} {summary}")
 
     fail_codes = {code.strip().upper() for code in args.fail_on.split(",") if code.strip()}
+    if args.exit_zero:
+        return 0
     if any(item.code in fail_codes for item in findings):
         return 1
     return 0
