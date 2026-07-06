@@ -40,6 +40,15 @@ class CheckSqfTests(unittest.TestCase):
         self.assertIn("A3SELECT", codes)
         self.assertIn("A3SORT", codes)
 
+    def test_bis_fnc_calls_are_reported_outside_comments_and_strings(self) -> None:
+        codes = lint_codes(
+            "// _ignored = _xs call BIS_fnc_arrayPush;\n"
+            '_alsoIgnored = "call BIS_fnc_areEqual";\n'
+            "_pick = _xs call BIS_fnc_selectRandom;\n"
+            "_same = [_a, _b] CALL bis_fnc_areEqual;\n"
+        )
+        self.assertEqual(codes.count("A3BISFNC"), 2)
+
     def test_group_getvariable_array_form_is_reported(self) -> None:
         codes = lint_codes('_team getVariable ["wfbe_aicom_order", []];\n')
         self.assertIn("GROUPGETVAR", codes)
