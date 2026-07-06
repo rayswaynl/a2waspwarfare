@@ -230,7 +230,7 @@ case "Medic": {_default = missionNamespace getVariable Format["WFBE_%1_DefaultGe
 
 //--- Command Deck: re-apply persisted skin class after respawn.
 //--- sleep 0.5 first so the engine completes unit creation before we swap models.
-if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {missionNamespace getVariable ["WFBE_SkinSelector_Applied", false]}) then {
+if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {missionNamespace getVariable ["WFBE_SkinSelector_Applied", false]} && {(missionNamespace getVariable ["WFBE_C_SKIN_PERSIST", 0]) == 0}) then {
 	Private ["_uid","_skinKey","_savedSkin"];
 	_uid     = getPlayerUID _unit;
 	_skinKey = "WFBE_SkinSelector_Skin_" + _uid;
@@ -244,6 +244,39 @@ if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enable
 			_cls = _u getVariable ["WFBE_SkinSelector_PendingRespawnSkin", ""];
 			if (_cls != "" && {alive _u} && {vehicle _u == _u}) then {
 				[_cls] execVM "WASP\actions\SkinSelector\SkinSelector_Apply.sqf";
+			};
+		};
+	};
+};
+
+
+//--- skin-persist 2026-07-06: re-apply profileNamespace skin choice on respawn when flag enabled.
+if ((call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Enabled.sqf")) && {(missionNamespace getVariable ["WFBE_C_SKIN_PERSIST", 0]) > 0}) then {
+	Private ["_sideStr","_persKey","_persCls","_pool","_i","_valid","_entry"];
+	_sideStr = "WEST";
+	if (side group _unit == EAST) then {_sideStr = "EAST"};
+	if (side group _unit == resistance) then {_sideStr = "GUER"};
+	_persKey = Format ["WFBE_SKIN_CHOICE_%1", _sideStr];
+	_persCls = profileNamespace getVariable [_persKey, ""];
+	if (_persCls != "") then {
+		_pool = call (compile preprocessFile "WASP\actions\SkinSelector\SkinSelector_Data.sqf");
+		_valid = false;
+		_i = 0;
+		while {_i < count _pool} do {
+			_entry = _pool select _i;
+			if ((_entry select 0) == _persCls) then {_valid = true};
+			_i = _i + 1;
+		};
+		if (_valid) then {
+			_unit setVariable ["WFBE_SkinSelector_PendingRespawnSkin", _persCls];
+			[_unit] spawn {
+				Private ["_u","_cls"];
+				_u = _this select 0;
+				sleep 0.5;
+				_cls = _u getVariable ["WFBE_SkinSelector_PendingRespawnSkin", ""];
+				if (_cls != "" && {alive _u} && {vehicle _u == _u}) then {
+					[_cls] execVM "WASP\actions\SkinSelector\SkinSelector_Apply.sqf";
+				};
 			};
 		};
 	};
