@@ -38,6 +38,7 @@ Owner directive (~01:30): "set a loop… Finish all the work, test, and suggest 
 - Context preservation: update this doc's Log section every wake BEFORE doing work.
 
 ## Log
+- 03:1x — Iter 3: #730 fix verified in-branch (both MAJORs closed, re-verified PASS, merge-ready). Soak player-check INCONCLUSIVE (no FPSREPORT in RPT tail — could be between-rounds/ssh; NOT treating as empty per safety principle) → deploy deferred to next clean positive read. All 6 overnight PRs (#726/#727/#728/#729/#730) now PASS/merge-ready.
 - 03:0x — Iter 2: verdicts in — #729 PASS, #728 PASS (both merge-ready), #730 FAIL (2 MAJOR: unguarded select 1 + [0,0,0] map-corner trap — flag-0 inert so no live risk; fix dispatched). Soak retry: still 1 human ("Mitch McConnell") — blocked. Player-check script now reliable (scp'd pcheck.ps1).
 - 02:4x — Iter 1 done: soak BLOCKED (human online; pipeline fully mapped, retry armed). TP-16->#729, TP-17->#730, TP-18->#728 (grades 95/95/96, verify wave launching). #726 PASS (guard fix landed on organic dd7200578 — B self-served it), #727 PASS-WITH-NOTES. NEW: TP-20 for B queue = same rate-limit for aicom-posture/aicom-fieldorder.
 - 02:1x — Iter 1b: B already shipped #726 (TP-14, guard fix MISSING → fix-request posted) + #727 (TP-13, looks strong). Verifiers + soak-deploy + TP-16/17/18 launching. 4 closures done (#129/#553/#694/#261).
