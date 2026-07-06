@@ -132,3 +132,9 @@ Fires when #737 3rd-verify + #377 flag-flip return clean. All-Fable. Order:
 6. **TAG release:** v89-cmdcon44 @ new master tip.
 7. **PRUNE branches:** batch-delete the ~491 safe (merged + closed-PR), protecting master/build84/fable-completion-push/open-PR heads. (More become merged after step 2, so re-scan.)
 Reported at each milestone; master-FF + branch-prune are the points of no return, done with tags already in place.
+
+## GATES CLEARED 2026-07-06
+- #737 Team Menu V2: 3rd re-verify PASS (SMAW bp=$80 both paths, cleaned-gear structure matches EquipBackpack reader, validation complete). MERGE-TO-BUILD84.
+- #377: both flags flipped default-on (SPOTTER_TEAM_MARKS + NOTABLE_KILL_FEED, both verified complete). MERGE-TO-BUILD84 with features live.
+EXECUTION SEQUENCE FIRING.
+
