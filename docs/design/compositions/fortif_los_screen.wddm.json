@@ -1,0 +1,15 @@
+{
+  "name": "WFBE_NEURODEF_FORTIF_LOS_SCREEN",
+  "parentW": 44,
+  "parentD": 4,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "FORTIF PACK - THE 'block LoS to your base' ask. TALL LoS SCREEN: 3x Base_WarfareBBarrier10xTall (Wall (long tall), WF_hesco_big_10x.p3d - the tall stacked-hesco Warfare wall) in a slightly overlapped straight row. PITCH DERIVATION: the class is A2/CA content the OA-standalone offline rig cannot spawn, so the pitch is taken from the mission's own PROVEN 10x-family usage - the WALLS_V4 arrays (Init_Defenses.sqf factory wall slabs) run Base_WarfareBBarrier10x at a 14 m pitch and are flush on the box; the Tall shares the same 10-section hesco family/parent (Base_WarfareBBarrier5x, mapSize 10, arma2-co-config-reference CfgVehicles.txt:169454). Panel length >= 15 m -> >= 1 m overlap per seam at 14 m pitch, no see-through gaps; total screen ~ 43 m (larger than the initial ~30 m estimate because the real panel is a full 10-section wall - bigger asset, matches owner intent). Passive, z=0, all dir 0.",
+  "objs": [
+    {"cls":"Base_WarfareBBarrier10xTall","x":-14,"y":0,"z":0,"dir":0,"role":"tall screen panel 1 (west)"},
+    {"cls":"Base_WarfareBBarrier10xTall","x":0,"y":0,"z":0,"dir":0,"role":"tall screen panel 2 (center, on anchor)"},
+    {"cls":"Base_WarfareBBarrier10xTall","x":14,"y":0,"z":0,"dir":0,"role":"tall screen panel 3 (east)"}
+  ]
+}

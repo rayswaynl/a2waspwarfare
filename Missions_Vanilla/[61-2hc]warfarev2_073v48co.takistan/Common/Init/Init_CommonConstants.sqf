@@ -2123,5 +2123,23 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- the existing WFBE_C_WALLS_V3 selection runs untouched (V3 stays the live default look).
 	if (isNil "WFBE_C_WALLS_V4") then {WFBE_C_WALLS_V4 = 0};
 
+//--- fable/wddm-functional-defenses: FORTIFICATION PACK. Ray (owner intent, verbatim gist):
+//--- "Fortifications! Not fortresses - useful items like a row of concrete walls, or a way to
+//--- block LoS to your base... larger assets basically." Five PASSIVE larger buildable
+//--- fortification compositions (Init_Defenses.sqf WFBE_NEURODEF_FORTIF_*: Concrete Wall Row ~22 m,
+//--- Concrete Wall Corner L-section, Tall LoS Screen ~43 m of Base_WarfareBBarrier10xTall,
+//--- HESCO Line ~39 m, Gate Complex drive-through mouth), WDDM-authored
+//--- (docs/design/compositions/fortif_*.wddm.json). Flag >0 -> the five anchor ghosts enter
+//--- WFBE_POSITION_TEMPLATE_MAP / WFBE_POSITION_ANCHOR_NAMES (Init_Defenses.sqf) + the side
+//--- Fortification menus (Structures_CO_US/_CO_RU/_CO_GUE/_OA_TKA v2 blocks). 0 (default) =
+//--- nothing is wired anywhere - byte-identical behaviour to HEAD.
+	if (isNil "WFBE_C_DEF_FORTIF_PACK") then {WFBE_C_DEF_FORTIF_PACK = 0};
+//--- Own composition cap for the fortification-pack anchors (Server\PVFunctions\RequestDefense.sqf
+//--- B3b): fortif placements are counted against THIS cap (distinct placement-IDs whose stamped
+//--- WFBE_WDDMAnchorClass is a fortif ghost) and are EXCLUDED from the WFBE_C_WDDM_COMP_CAP=3
+//--- weapon-position pool, so walls/screens never eat the weapon-position slots. Only read when
+//--- WFBE_C_DEF_FORTIF_PACK > 0 (at 0 the legacy single-pool count runs verbatim).
+	if (isNil "WFBE_C_DEF_FORTIF_CAP") then {WFBE_C_DEF_FORTIF_CAP = 6};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

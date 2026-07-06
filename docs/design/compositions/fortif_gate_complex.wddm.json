@@ -1,0 +1,21 @@
+{
+  "name": "WFBE_NEURODEF_FORTIF_GATE_COMPLEX",
+  "parentW": 18,
+  "parentD": 7,
+  "parentDir": 0,
+  "structureType": "reserve",
+  "fortOnly": true,
+  "mode": "position",
+  "notes": "FORTIF PACK. GATE COMPLEX: a drive-through base-entrance mouth. Land_BarGate2 boom gate in the center (CONFIG-VERIFIED: arma2-co-config-reference CfgVehicles.txt:116856, class Land_BarGate2 : Land_HBarrier_large; ENGINE-MEASURED on the offline 1.64 rig: long axis is model Y, dy = 8.24 m -> placed at relDir 90 so the bar spans the wall line's X axis, covering x in [-4.12,4.12]). Two flanking Concrete_Wall_EP1 PAIRS at the HQ 2.2 m pitch on each side: inner panels at x = +/-4.9 span 3.61..6.19 m, overlapping the gate's measured extent (to 4.12 m) - no seam at the gate/wall junction; outer edge ~ +/-8.4 m -> mouth ~ 17 m wide. Four Land_CncBlock_Stripes accents angled 25/335 deg (the proven WALLS_V4 gap-mouth accent idiom) form a slow-down funnel front and rear while leaving a ~4 m center drive lane clear. Passive, z=0.",
+  "objs": [
+    {"cls":"Land_BarGate2","x":0,"y":0,"z":0,"dir":90,"role":"boom gate - the drive-through stop line (bar spans X at relDir 90)"},
+    {"cls":"Concrete_Wall_EP1","x":-4.9,"y":0,"z":0,"dir":0,"role":"left flank wall, inner panel (overlaps gate extent)"},
+    {"cls":"Concrete_Wall_EP1","x":-7.1,"y":0,"z":0,"dir":0,"role":"left flank wall, outer panel"},
+    {"cls":"Concrete_Wall_EP1","x":4.9,"y":0,"z":0,"dir":0,"role":"right flank wall, inner panel (overlaps gate extent)"},
+    {"cls":"Concrete_Wall_EP1","x":7.1,"y":0,"z":0,"dir":0,"role":"right flank wall, outer panel"},
+    {"cls":"Land_CncBlock_Stripes","x":-3.2,"y":2.6,"z":0,"dir":335,"role":"front funnel accent left (angled in, lane stays clear)"},
+    {"cls":"Land_CncBlock_Stripes","x":3.2,"y":2.6,"z":0,"dir":25,"role":"front funnel accent right"},
+    {"cls":"Land_CncBlock_Stripes","x":-3.2,"y":-2.6,"z":0,"dir":25,"role":"rear funnel accent left"},
+    {"cls":"Land_CncBlock_Stripes","x":3.2,"y":-2.6,"z":0,"dir":335,"role":"rear funnel accent right"}
+  ]
+}

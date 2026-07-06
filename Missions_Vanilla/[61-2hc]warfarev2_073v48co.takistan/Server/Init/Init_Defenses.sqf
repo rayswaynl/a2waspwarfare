@@ -1064,6 +1064,77 @@ missionNamespace setVariable ['WFBE_NEURODEF_FORT_OP_EAST',[
 	['DSHKM_TK_INS_EP1',[0,2,5.4],0]
 ]];
 
+//======================================================================================
+//--- fable/wddm-functional-defenses (flag WFBE_C_DEF_FORTIF_PACK, default 0): FORTIFICATION PACK.
+//--- Ray (owner intent, verbatim gist): "Fortifications! Not fortresses - useful items like a row
+//--- of concrete walls, or a way to block LoS to your base... larger assets basically." Five LARGER
+//--- PASSIVE buildable fortification compositions whose function IS their geometry (cover + LoS
+//--- denial at meaningful scale). Side-neutral single arrays - no manning, no side variants, no
+//--- gunner-slot children; every child is routed through ConstructDefense as a plain prop.
+//--- Geometry is overlap-pitched so panels sit FLUSH (no see-through seams):
+//---   * WALL_ROW      10x Concrete_Wall_EP1 @ the HQ 2.2 m pitch (panel dx=2.574 engine-measured) ~22 m.
+//---   * WALL_CORNER   L-section, 2 runs of 5 panels meeting at 90 deg, runs interpenetrate at the corner.
+//---   * LOS_SCREEN    3x Base_WarfareBBarrier10xTall @ the proven WALLS_V4 10x-family 14 m pitch ~43 m
+//---                   TALL screen (THE block-LoS-to-your-base ask; panel >= 15 m -> >= 1 m seam overlap).
+//---   * HESCO_LINE    4x Land_HBarrier_large @ 9.5 m pitch (panel dx=10.387 engine-measured) ~39 m run.
+//---   * GATE_COMPLEX  Land_BarGate2 (dy=8.24 engine-measured, relDir 90 spans X) + 2 flanking
+//---                   Concrete_Wall_EP1 pairs + 4 Land_CncBlock_Stripes funnel accents: drive-through mouth.
+//--- AUTO-GENERATED from docs/design/compositions/fortif_*.wddm.json by Tools/WddmToSqf/wddm_to_sqf.py
+//--- - the .wddm.json is the source of truth; do not hand-edit, re-run the converter.
+//--- Always defined (harmless at flag 0: the anchors below only enter WFBE_POSITION_TEMPLATE_MAP /
+//--- ANCHOR_NAMES / the side menus when WFBE_C_DEF_FORTIF_PACK > 0, so these arrays are never read).
+//======================================================================================
+missionNamespace setVariable ['WFBE_NEURODEF_FORTIF_WALL_ROW',[
+	['Concrete_Wall_EP1',[-9.9,0,0],0],
+	['Concrete_Wall_EP1',[-7.7,0,0],0],
+	['Concrete_Wall_EP1',[-5.5,0,0],0],
+	['Concrete_Wall_EP1',[-3.3,0,0],0],
+	['Concrete_Wall_EP1',[-1.1,0,0],0],
+	['Concrete_Wall_EP1',[1.1,0,0],0],
+	['Concrete_Wall_EP1',[3.3,0,0],0],
+	['Concrete_Wall_EP1',[5.5,0,0],0],
+	['Concrete_Wall_EP1',[7.7,0,0],0],
+	['Concrete_Wall_EP1',[9.9,0,0],0]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORTIF_WALL_CORNER',[
+	['Concrete_Wall_EP1',[-4.4,-5.5,0],0],
+	['Concrete_Wall_EP1',[-2.2,-5.5,0],0],
+	['Concrete_Wall_EP1',[0,-5.5,0],0],
+	['Concrete_Wall_EP1',[2.2,-5.5,0],0],
+	['Concrete_Wall_EP1',[4.4,-5.5,0],0],
+	['Concrete_Wall_EP1',[-5.5,-4.4,0],90],
+	['Concrete_Wall_EP1',[-5.5,-2.2,0],90],
+	['Concrete_Wall_EP1',[-5.5,0,0],90],
+	['Concrete_Wall_EP1',[-5.5,2.2,0],90],
+	['Concrete_Wall_EP1',[-5.5,4.4,0],90]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORTIF_LOS_SCREEN',[
+	['Base_WarfareBBarrier10xTall',[-14,0,0],0],
+	['Base_WarfareBBarrier10xTall',[0,0,0],0],
+	['Base_WarfareBBarrier10xTall',[14,0,0],0]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORTIF_HESCO_LINE',[
+	['Land_HBarrier_large',[-14.25,0,0],0],
+	['Land_HBarrier_large',[-4.75,0,0],0],
+	['Land_HBarrier_large',[4.75,0,0],0],
+	['Land_HBarrier_large',[14.25,0,0],0]
+]];
+
+missionNamespace setVariable ['WFBE_NEURODEF_FORTIF_GATE_COMPLEX',[
+	['Land_BarGate2',[0,0,0],90],
+	['Concrete_Wall_EP1',[-4.9,0,0],0],
+	['Concrete_Wall_EP1',[-7.1,0,0],0],
+	['Concrete_Wall_EP1',[4.9,0,0],0],
+	['Concrete_Wall_EP1',[7.1,0,0],0],
+	['Land_CncBlock_Stripes',[-3.2,2.6,0],335],
+	['Land_CncBlock_Stripes',[3.2,2.6,0],25],
+	['Land_CncBlock_Stripes',[-3.2,-2.6,0],25],
+	['Land_CncBlock_Stripes',[3.2,-2.6,0],335]
+]];
+
 //--- Anchor (build-menu placeholder classname) -> composition template map.
 // [anchorClassname, baseTemplateVar, factionSpecific?]  (factionSpecific appends _WEST / _EAST at build time)
 //--- fable/wddm-functional-defenses: WFBE_C_DEF_FORT_MANNED>0 -> the three fort anchors become
@@ -1092,3 +1163,22 @@ WFBE_POSITION_TEMPLATE_MAP = [
 	['Land_Barrel_water','WFBE_NEURODEF_FORT_OP',_fortManned]					//--- Observation Post
 ];
 WFBE_POSITION_ANCHOR_NAMES = ['Land_Ind_BoardsPack1','Land_CncBlock_Stripes','Land_Barrel_sand','Land_Ind_BoardsPack2','Land_WoodenRamp','RoadCone','Paleta1','Paleta2','Land_Ind_Timbers','Misc_cargo_cont_small','Land_Ind_TankSmall','Land_Misc_Cargo1B','Land_transport_crates_EP1','Land_Barrel_water'];
+
+//--- fable/wddm-functional-defenses: FORTIFICATION PACK anchor wiring. Ghost classes are unused
+//--- cheap props (all scope=2, CONFIG-VERIFIED in arma2-co-config-reference CfgVehicles.txt:
+//--- Misc_cargo_cont_net1/2/3 l.116983/116989/116995, Misc_cargo_cont_tiny l.116977,
+//--- Misc_concrete_High l.115920). WFBE_FORTIF_ANCHOR_NAMES additionally feeds the SEPARATE
+//--- fortification composition cap in Server\PVFunctions\RequestDefense.sqf (WFBE_C_DEF_FORTIF_CAP)
+//--- so passive walls never eat the 3-per-base weapon-position cap. Flag 0 (default) -> none of the
+//--- three lists changes -> byte-identical behaviour to HEAD.
+if ((missionNamespace getVariable ['WFBE_C_DEF_FORTIF_PACK', 0]) > 0) then {
+	WFBE_POSITION_TEMPLATE_MAP = WFBE_POSITION_TEMPLATE_MAP + [
+		['Misc_cargo_cont_net1','WFBE_NEURODEF_FORTIF_WALL_ROW',false],		//--- Concrete Wall Row (~22 m)
+		['Misc_cargo_cont_net2','WFBE_NEURODEF_FORTIF_WALL_CORNER',false],	//--- Concrete Wall Corner (L)
+		['Misc_cargo_cont_net3','WFBE_NEURODEF_FORTIF_LOS_SCREEN',false],	//--- Tall LoS Screen (~43 m)
+		['Misc_cargo_cont_tiny','WFBE_NEURODEF_FORTIF_HESCO_LINE',false],	//--- HESCO Line (~39 m)
+		['Misc_concrete_High','WFBE_NEURODEF_FORTIF_GATE_COMPLEX',false]	//--- Gate Complex (drive-through)
+	];
+	WFBE_FORTIF_ANCHOR_NAMES = ['Misc_cargo_cont_net1','Misc_cargo_cont_net2','Misc_cargo_cont_net3','Misc_cargo_cont_tiny','Misc_concrete_High'];
+	WFBE_POSITION_ANCHOR_NAMES = WFBE_POSITION_ANCHOR_NAMES + WFBE_FORTIF_ANCHOR_NAMES;
+};
