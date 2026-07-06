@@ -2,7 +2,7 @@
 	AI_Commander_Decapitate.sqf - AICOM v2 M5 DECAPITATE CLOSER. Server-side, per side.
 	Param: _this = side. Runs AFTER the M0 snapshot + the M1 Allocator each strategy tick
 	(it NEVER writes wfbe_aicom_targets - the Allocator's town-first fist stays authoritative), gated
-	by WFBE_C_AICOM2_DECAP_ENABLE (0 = inert -> reads snapshot + emits telemetry ONLY, no writes,
+	by WFBE_C_AICOM2_DECAP_ENABLE (0 = shadow -> sensing runs + telemetry + side-logic sense-state vars ONLY; no ORDER/stamp writes,
 	byte-identical behaviour to HEAD; instant rollback).
 
 	THE MISSING KILL-MOVE. Live evidence 2026-07-04 (ZG, players): the dominant side (EAST, 7 towns
@@ -38,7 +38,7 @@
 private ["_side","_logik","_snap","_myEff","_enEff","_enTowns","_myTowns","_enHQ","_enHQPos","_enHQAlive",
 	"_domRatio","_abortRatio","_maxEnTowns","_armTicks","_minCommit","_dominant","_streak","_committed",
 	"_t0","_state","_tgtTowns","_teams","_nearTown","_bestD","_d","_t","_stamped","_sideText","_elMin",
-	"_senseRadius","_senseInterval","_senseChance","_commitRadius","_senseTick","_sensed","_inRange","_rollNow","_ldr","_garTeam","_holdT","_isHolding"];
+	"_senseRadius","_senseInterval","_senseChance","_commitRadius","_senseTick","_sensed","_inRange","_rollNow","_ldr","_garTeam","_holdT","_isHolding","_capLk","_capLocked","_dHQ","_decV"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -95,7 +95,7 @@ if (_enHQAlive) then {
 			_holdT = _t getVariable "wfbe_aicom_holding_town";
 			_isHolding = false;
 			if (!isNil "_holdT") then {if (typeName _holdT == "OBJECT" && {!isNull _holdT}) then {_isHolding = true}};
-			if (_t != _garTeam && {!_isHolding} && {!isPlayer (leader _t)}) then {
+			if (_t != _garTeam && {!_isHolding} && {!isPlayer (leader _t)} && {({alive _x && {(vehicle _x) isKindOf "Air"}} count (units _t)) == 0}) then { //--- stack-pass: GROUND contract - a team with any live unit currently in an Air hull neither senses nor is stamped
 				_ldr = leader _t;
 				if (!isNull _ldr && {alive _ldr} && {((getPos _ldr) distance _enHQPos) <= _senseRadius}) then {_inRange = _inRange + 1};
 			};
@@ -107,7 +107,7 @@ if (_inRange == 0) then {
 	_sensed = false;   //--- contact lost -> sensing decays; a fresh roll is required next approach
 	_senseTick = 0;
 } else {
-	if (!_sensed) then {
+	if (!_sensed && {!_committed}) then {   //--- stack-pass: no rolls while COMMITTED (kills roll=1 telemetry pollution mid-commit)
 		_senseTick = _senseTick + 1;
 		if (_senseTick >= _senseInterval) then {
 			_senseTick = 0;
@@ -175,27 +175,38 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ENABLE", 0]) > 0 && {_co
 			_holdT = _t getVariable "wfbe_aicom_holding_town";
 			_isHolding = false;
 			if (!isNil "_holdT") then {if (typeName _holdT == "OBJECT" && {!isNull _holdT}) then {_isHolding = true}};
-			if (_t != _garTeam && {!_isHolding} && {!isPlayer (leader _t)}) then {
+			if (_t != _garTeam && {!_isHolding} && {!isPlayer (leader _t)} && {({alive _x && {(vehicle _x) isKindOf "Air"}} count (units _t)) == 0}) then { //--- stack-pass: GROUND contract - a team with any live unit currently in an Air hull neither senses nor is stamped
 				//--- SCOPED COMMIT (owner Q1): only teams already NEAR the HQ press; the rest keep their towns.
+				//--- stack-pass MAJOR fixes: stamp must BROADCAST (teams are HC-local; the 2-arg write never
+				//--- replicated -> the press layer was dead on the live 2-HC deploy) and clears must use the
+				//--- [] SENTINEL (nil cannot network on A2 OA - wfbe_aicom_caplock [] -clear idiom, :1508).
+				//--- Plus: mid-drain (caplocked) teams finish their capture before pressing, and the clear
+				//--- only fires past 1.2x the commit radius so a boundary team does not flap every tick.
 				_ldr = leader _t;
-				if (!isNull _ldr && {alive _ldr} && {((getPos _ldr) distance _enHQPos) <= _commitRadius}) then {
-					_t setVariable ["wfbe_aicom_decap", _enHQPos];
+				_capLk = _t getVariable "wfbe_aicom_caplock";
+				_capLocked = (!isNil "_capLk") && {typeName _capLk == "ARRAY"} && {count _capLk >= 2};
+				_dHQ = if (isNull _ldr) then {1e9} else {(getPos _ldr) distance _enHQPos};
+				if (!isNull _ldr && {alive _ldr} && {!_capLocked} && {_dHQ <= _commitRadius}) then {
+					_t setVariable ["wfbe_aicom_decap", _enHQPos, true];
 					if (!isNull _nearTown) then {_t setVariable ["wfbe_aicom_alloc_target", _nearTown]};
 					_stamped = _stamped + 1;
 				} else {
-					//--- drifted out of the press radius -> clear the stale stamp; its TOWN orders are untouched.
-					if (!isNil {_t getVariable "wfbe_aicom_decap"}) then {_t setVariable ["wfbe_aicom_decap", nil]};
+					if (_dHQ > (_commitRadius * 1.2) || {isNull _ldr} || {_capLocked}) then {
+						//--- out of the press band (or no longer pressable) -> sentinel-clear; TOWN orders untouched.
+						_decV = _t getVariable "wfbe_aicom_decap";
+						if (!isNil "_decV" && {typeName _decV == "ARRAY"} && {count _decV >= 2}) then {_t setVariable ["wfbe_aicom_decap", [], true]};
+					};
 				};
 			} else {
 				//--- became garrison/hold while committed -> the press stamp no longer applies; clear it (latent-consumer guard).
-				if (!isNil {_t getVariable "wfbe_aicom_decap"}) then {_t setVariable ["wfbe_aicom_decap", nil]};
+				_decV = _t getVariable "wfbe_aicom_decap"; if (!isNil "_decV" && {typeName _decV == "ARRAY"} && {count _decV >= 2}) then {_t setVariable ["wfbe_aicom_decap", [], true]}; //--- sentinel+broadcast (stack-pass)
 			};
 		} else {
-			if (!isNull _t && {!isNil {_t getVariable "wfbe_aicom_decap"}}) then {_t setVariable ["wfbe_aicom_decap", nil]};
+			if (!isNull _t) then {_decV = _t getVariable "wfbe_aicom_decap"; if (!isNil "_decV" && {typeName _decV == "ARRAY"} && {count _decV >= 2}) then {_t setVariable ["wfbe_aicom_decap", [], true]}}; //--- sentinel+broadcast (stack-pass)
 		};
 	} forEach _teams;
 } else {
-	{ if (!isNull _x && {!isNil {_x getVariable "wfbe_aicom_decap"}}) then {_x setVariable ["wfbe_aicom_decap", nil]} } forEach _teams;
+	{ if (!isNull _x) then {_decV = _x getVariable "wfbe_aicom_decap"; if (!isNil "_decV" && {typeName _decV == "ARRAY"} && {count _decV >= 2}) then {_x setVariable ["wfbe_aicom_decap", [], true]}} } forEach _teams; //--- sentinel+broadcast (stack-pass)
 	_stamped = 0;
 };
 
