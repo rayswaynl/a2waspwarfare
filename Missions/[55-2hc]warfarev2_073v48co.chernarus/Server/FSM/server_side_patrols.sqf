@@ -20,6 +20,8 @@ private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","
 
 waitUntil {townInitServer};
 sleep 30;
+//--- Perf phase jitter (2026-07-06): see server_town.sqf. Default 0 = V1.
+if ((missionNamespace getVariable ["WFBE_C_LOOP_PHASE_JITTER", 0]) > 0) then {sleep (random 20)};
 
 if (isNil "WFBE_ACTIVE_PATROLS") then {WFBE_ACTIVE_PATROLS = []; publicVariable "WFBE_ACTIVE_PATROLS"};
 //--- Commander-team arrow-marker feed (task #3), broadcast like WFBE_ACTIVE_PATROLS. Maintained by

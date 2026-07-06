@@ -1,6 +1,6 @@
 /* Parameters */
 
-	class Params {
+	class Params {  // noqa: A3CMD
 	//--- Supply-helicopter feature toggle: shelve the heli feature from the lobby (default Enabled).
 	class WFBE_C_SUPPLY_HELI_ENABLED {
 		title = "Supply Helicopters";
@@ -188,30 +188,6 @@
 		values[] = {30000, 35000,40000,45000,50000,60000,80000,100000};
 		texts[] = {"S 30000","S 35000","S 40000","S 45000","S 50000","S 60000","S 80000","S 100000"};
 		default = 50000;
-	};
-	class WFBE_C_OILFIELD_ENABLE {
-		title = "Takistan Oilfield";
-		values[] = {0,1};
-		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 1;
-	};
-	class WFBE_C_OILFIELD_UNLOCK_TIME {
-		title = "Takistan Oilfield Unlock";
-		values[] = {1800,2700,3600,5400};
-		texts[] = {"30 Minutes","45 Minutes","60 Minutes","90 Minutes"};
-		default = 3600;
-	};
-	class WFBE_C_OILFIELD_SABOTAGE {
-		title = "Takistan Oilfield Sabotage";
-		values[] = {0,1};
-		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 1;
-	};
-	class WFBE_C_OILFIELD_GUER_RAID {
-		title = "Takistan Oilfield GUER Raids";
-		values[] = {0,1};
-		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
 	};
 	class WFBE_C_AICOM_FUNDS_SINK_ENABLE {
 		title = "AI Commander Funds Sink";

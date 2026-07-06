@@ -1,4 +1,4 @@
-private["_camp","_town","_flag","_newSID","_force","_camp_cap_rate","_camp_range","_camp_range_players","_town_starting_sv","_camp_throttle","_camp_step_sleep","_camp_loop_sleep"];
+private["_camp","_town","_flag","_newSID","_force","_camp_cap_rate","_camp_range","_camp_range_players","_town_starting_sv","_camp_throttle","_camp_step_sleep","_camp_loop_sleep","_gateSkip"];
 
 _town = _this select 1;
 
@@ -21,6 +21,22 @@ if (_camp_throttle > 0) then {
 };
 
 while {!WFBE_GameOver} do {
+	//--- Perf active-gate (2026-07-06, Ray): camp capture only matters while someone is at the town.
+	//--- While the parent town is dormant (not active, no air tier, and no enemy seen by the activation
+	//--- scan within IDLE_GRACE - wfbe_inactivity is stamped even for activation-budget-DEFERRED towns,
+	//--- so a fight the budget would not activate still wakes the camps), idle instead of running the
+	//--- per-camp nearEntities pass ~10x/s. Flag default 0 = exact V1 behaviour.
+	_gateSkip = false;
+	if ((missionNamespace getVariable ["WFBE_C_TOWN_CAMP_ACTIVE_GATE", 0]) > 0) then {
+		if (!(isNil {_town getVariable "wfbe_active"}) && {!(_town getVariable ["wfbe_active", false])} && {!(_town getVariable ["wfbe_active_air", false])} && {(time - (_town getVariable ["wfbe_inactivity", 0])) > (missionNamespace getVariable ["WFBE_C_TOWN_CAMP_IDLE_GRACE", 60])}) then {_gateSkip = true}; //--- isNil guard: never gate before server_town_ai.sqf has initialised this town's vars (review WARN: startup race)
+		if (isNil "WFBE_TownCampGateAnnounced") then {
+			WFBE_TownCampGateAnnounced = true;
+			["INFORMATION", "server_town_camp.sqf: active-gate enabled (WFBE_C_TOWN_CAMP_ACTIVE_GATE=1) - camp scans idle while their town is dormant."] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
+	if (_gateSkip) then {
+		sleep (missionNamespace getVariable ["WFBE_C_TOWN_CAMP_IDLE_SLEEP", 3]);
+	} else {
 	for "_i" from 0 to ((count _camps) - 1) step 1 do
 	{
 		_camp = _camps select _i;
@@ -110,4 +126,5 @@ while {!WFBE_GameOver} do {
 		sleep _camp_step_sleep;
 	};
 	sleep _camp_loop_sleep;
+	};
 };

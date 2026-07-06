@@ -1185,6 +1185,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- Patch E: supervisor spawn-phase jitter. Random 0..JITTER s stagger on supervisor (re)spawn so both
 	//--- sides' heavy worker passes don't land on the same frame (smooths the server-FPS sawtooth).
 	if (isNil "WFBE_C_AICOM_SUPERVISOR_JITTER") then {WFBE_C_AICOM_SUPERVISOR_JITTER = 7}; //--- s max random spawn-phase stagger.
+	if (isNil "WFBE_C_LOOP_PHASE_JITTER") then {WFBE_C_LOOP_PHASE_JITTER = 0}; //--- Perf (2026-07-06): when 1, the heavy server loops (town capture + activation sweeps, groupsGC, dead collector, side patrols) each sleep a one-time random offset (up to one own period) at startup so their ticks stop landing on the same frames. Default off = V1 behaviour.
 	//--- Patch F: pending-slot timeout reaper. A reserved (pending) team-build slot that never materialises is
 	//--- reaped after this many s so it can't permanently occupy the team budget (3 * TEAMS_INTERVAL[=90]).
 	if (isNil "WFBE_C_AICOM_PENDING_TIMEOUT") then {WFBE_C_AICOM_PENDING_TIMEOUT = 270}; //--- s before a never-filled pending team slot is reaped.
@@ -1268,6 +1269,9 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_CAMPS_RANGE = 11.5;  //--- B74.2 (Ray 2026-06-23): 10 -> 11.5 (+15%). Widens the AI camp capture bubble so it registers the presence-based flip instead of orbiting the tight 10m ring (Ray: let the AI capture camps easier + not get stuck on them). PLAYERS are UNCHANGED - WFBE_C_CAMPS_RANGE_PLAYERS (below) still gates them at 5m (server_town_camp.sqf:29 filters players past that).
 	WFBE_C_CAMPS_RANGE_PLAYERS = 5;
 	if (isNil "WFBE_C_TOWN_CAMP_SCAN_THROTTLE") then {WFBE_C_TOWN_CAMP_SCAN_THROTTLE = 0}; //--- Lane 107: default off; when 1, server_town_camp uses the slower scan sleeps below.
+	if (isNil "WFBE_C_TOWN_CAMP_ACTIVE_GATE") then {WFBE_C_TOWN_CAMP_ACTIVE_GATE = 0}; //--- Perf (2026-07-06): when 1, a town's camp-scan loop idles while the town is dormant (not active, no air tier, no enemy seen within IDLE_GRACE). Default off = V1 behaviour.
+	if (isNil "WFBE_C_TOWN_CAMP_IDLE_SLEEP") then {WFBE_C_TOWN_CAMP_IDLE_SLEEP = 3}; //--- s between dormancy re-checks while the camp gate idles.
+	if (isNil "WFBE_C_TOWN_CAMP_IDLE_GRACE") then {WFBE_C_TOWN_CAMP_IDLE_GRACE = 60}; //--- s after the last enemy seen (wfbe_inactivity) before the camp loop may idle; covers activation-budget-deferred towns.
 	if (isNil "WFBE_C_TOWN_CAMP_STEP_SLEEP") then {WFBE_C_TOWN_CAMP_STEP_SLEEP = 0.03}; //--- Per-camp sleep while scan throttle is enabled.
 	if (isNil "WFBE_C_TOWN_CAMP_LOOP_SLEEP") then {WFBE_C_TOWN_CAMP_LOOP_SLEEP = 0.25}; //--- Full-pass sleep while scan throttle is enabled.
 	//--- Commander stuck-reaction (Slot 2, task #14): the AssignTowns breadcrumb re-issues a
@@ -1595,6 +1599,9 @@ if (WF_A2_Vanilla) then {
 	WFBE_C_TOWNS_DETECTION_RANGE_ACTIVE_COEF = 1; //--- Town activation range once active (town range * coef)
 	WFBE_C_TOWNS_DETECTION_RANGE_COEF = 1; //--- Town activation range while idling (town range * coef)
 	WFBE_C_TOWNS_DETECTION_RANGE_AIR = 50; //--- Detect Air if > x
+	if (isNil "WFBE_C_TOWN_SCAN_DICE") then {WFBE_C_TOWN_SCAN_DICE = 0}; //--- Perf (2026-07-06): when 1, DORMANT towns (not active, no air tier, no enemy seen within DICE_GRACE) roll per side per sweep whether to run the 600 m activation nearEntities scan. Active towns always scan. Default off = V1 behaviour.
+	if (isNil "WFBE_C_TOWN_SCAN_DICE_P") then {WFBE_C_TOWN_SCAN_DICE_P = 0.5}; //--- Probability a dormant town DOES scan on a given sweep (per side).
+	if (isNil "WFBE_C_TOWN_SCAN_DICE_GRACE") then {WFBE_C_TOWN_SCAN_DICE_GRACE = 30}; //--- s after the last enemy seen before a town counts as dormant for the dice.
 	WFBE_C_TOWNS_MORTARS_SCAN = 60; //--- Scan the area around a target for friends and enemies.
 	WFBE_C_TOWNS_MORTARS_INTERVAL = 200; //--- AI Mortars may fire each x seconds.
 	WFBE_C_TOWNS_MORTARS_PRECOGNITION = 25; //--- AI Mortars may fire at a target by precognition. This value is a percentage.
@@ -2074,6 +2081,38 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Default 0 = current pair behaviour. Set > 0 to activate all-hind triple CAP.
 	if (isNil "WFBE_C_NAVAL_CAP_THREE_HINDS") then {WFBE_C_NAVAL_CAP_THREE_HINDS = 0};
 
+
+//======================================================================================
+//--- NAVAL INLINE SUPER-CARRIER (fable/naval-inline-hulls, Ray 2026-07-06):
+//--- A/B-testable bow-to-stern axis for the outer-carrier twin-hull system.
+//---
+//--- WFBE_C_NAVAL_INLINE_HULLS  (default 0):
+//---   Master switch.  When > 0, the second hull on each OUTER carrier is placed
+//---   INLINE (bow-to-stern, aft of Hull A) instead of LATERALLY (side-by-side).
+//---   Precedence: when this flag > 0 AND WFBE_C_NAVAL_TWIN_HULLS = 1, the inline
+//---   offset formula supersedes the lateral formula; all other twin-hull logic
+//---   (middle-carrier detection, SCUD, air-shop, CAP) is unchanged.
+//---   When 0: exact HEAD behaviour (lateral offset if WFBE_C_NAVAL_TWIN_HULLS=1).
+//---
+//--- WFBE_C_NAVAL_INLINE_GAP  (default -265):
+//---   Hull B anchor offset along the ship's LONG axis, in metres (body-space Y).
+//---   Negative = aft of Hull A anchor.  Tunable at mission start without a code
+//---   edit: read as getVariable ["WFBE_C_NAVAL_INLINE_GAP", -265] at spawn time.
+//---   Safe iterate range for in-editor seam alignment: -258 to -275.
+//---   Derivation: 128m (Hull A stern-to-anchor) + 9m (Hull A stern overhang)
+//---               + 8m (Hull B bow overhang) + 120m (Hull B anchor-to-bow) = 265m.
+//---
+//--- WFBE_C_NAVAL_SEAM_BRIDGE  (default 0):
+//---   When > 0, spawn 4x Land_nav_pier_m_1 bridge segments across the Hull A
+//---   stern / Hull B bow seam.  Placed at body-space Y offsets (-131,-134,-137,-140
+//---   from Hull A anchor) at the averaged deck-Z of both hulls.
+//---   Escalation-ladder step 2: flush-butt geometry is tried first (inline=1,
+//---   seam=0); add piers only if the seam wheeled-vehicle test requires it.
+//---   Has no effect unless WFBE_C_NAVAL_INLINE_HULLS > 0.
+//======================================================================================
+	if (isNil "WFBE_C_NAVAL_INLINE_HULLS") then {WFBE_C_NAVAL_INLINE_HULLS  = 0};   //--- 0 = lateral HEAD behaviour; >0 = inline bow-to-stern axis
+	if (isNil "WFBE_C_NAVAL_INLINE_GAP")   then {WFBE_C_NAVAL_INLINE_GAP    = -265}; //--- Hull B aft offset metres (body Y); tune -258..-275 in-editor
+	if (isNil "WFBE_C_NAVAL_SEAM_BRIDGE")  then {WFBE_C_NAVAL_SEAM_BRIDGE   = 0};   //--- 0 = no bridge piers; >0 = 4x Land_nav_pier_m_1 at seam
 //--- TELEMETRY HOST V2 (tp4, 2026-07-06): when flag=1, GRPBUDGET+SRVPERF emit from
 //--- server_groupsGC.sqf (survives V2 cutover) and are suppressed in AI_Commander.sqf.
 //--- Default 0 = byte-identical to HEAD (old emitters run, new host silent).
@@ -2140,6 +2179,20 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- weapon-position pool, so walls/screens never eat the weapon-position slots. Only read when
 //--- WFBE_C_DEF_FORTIF_PACK > 0 (at 0 the legacy single-pool count runs verbatim).
 	if (isNil "WFBE_C_DEF_FORTIF_CAP") then {WFBE_C_DEF_FORTIF_CAP = 6};
+//--- SML-1 Squad Micro Layer: camp-split captures (GR-2026-07-03a). Flag-gated default 0.
+	if (isNil "WFBE_C_SML_CAMP_SPLIT")    then {WFBE_C_SML_CAMP_SPLIT    = 0};   //--- 1=enable per-unit doStop/doMove camp-split; 0=byte-identical legacy behaviour.
+	if (isNil "WFBE_C_SML_WATCHDOG_TTL") then {WFBE_C_SML_WATCHDOG_TTL = 240};  //--- s: per-unit TTL before the watchdog forces doFollow back (covers all exit paths).
+//--- GUER POP-UP CHECKPOINT v2 (claude/guer-cp-v2): road-snapped, road-aligned, physically blocking
+//--- G2 wildcard checkpoint (AI_Commander_Wildcard_GUER.sqf case 2). 0 (default) = the legacy v1 G2
+//--- block runs untouched (byte-identical behaviour); >0 = v2: candidates from `nearRoads` filtered by
+//--- the guarded roadsConnectedTo>=2 usable-road idiom, WFBE_NEURODEF_FORT_CHECKPOINT composition spawned
+//--- on the road axis, 2 GUER-manned MG statics, posted garrison, one-shot half-window reinforcement
+//--- pulse, and a 900-base (v1: 700) clear reward. Server-side only; nothing runs while the flag is 0.
+	if (isNil "WFBE_C_GUER_CP_V2") then {WFBE_C_GUER_CP_V2 = 0};
+	if (isNil "WFBE_C_GUER_CP2_ROAD_RADIUS") then {WFBE_C_GUER_CP2_ROAD_RADIUS = 400};  //--- m: nearRoads candidate radius around the target town (v2 only).
+	if (isNil "WFBE_C_GUER_CP2_FOOT_BASE") then {WFBE_C_GUER_CP2_FOOT_BASE = 4};        //--- v2 garrison base headcount (v1: 3).
+	if (isNil "WFBE_C_GUER_CP2_FOOT_PER_TIER") then {WFBE_C_GUER_CP2_FOOT_PER_TIER = 2}; //--- v2 extra garrison per GUER vehicle tier (v1: 1).
+	if (isNil "WFBE_C_GUER_CP2_ARMOR_EXTRA") then {WFBE_C_GUER_CP2_ARMOR_EXTRA = 1};    //--- v2 extra SAME-class hulls at tier>=2 (tier 3 = 2x T-72); read ONLY inside the CP_V2>0 branch, so inert while WFBE_C_GUER_CP_V2 = 0.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
