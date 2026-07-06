@@ -255,8 +255,9 @@ while {alive player && dialog} do {
 					_focusArmed = false;
 					hintSilent parseText "<t color='#F8D664'>Focus only steers the AI when it holds command of this side.</t>";
 				} else {
-					if ((_now - _lastSend) < _cool) then {
-						hintSilent parseText "<t color='#F8D664'>Orders on cooldown - wait a moment.</t>";
+					private "_focusCool"; _focusCool = _cool max (missionNamespace getVariable ["WFBE_C_TEAM_FOCUS_COOLDOWN", 120]); //--- TP-13 stack-pass: the SERVER rate-limits focus at WFBE_C_TEAM_FOCUS_COOLDOWN (120s); gate the client to the same so it never shows a false "focus set" hint the server silently rejects.
+					if ((_now - _lastSend) < _focusCool) then {
+						hintSilent parseText "<t color='#F8D664'>AI focus on cooldown - wait a moment.</t>";
 					} else {
 						_position = _map posScreenToWorld [mouseX, mouseY];
 						private "_fT"; _fT = objNull;

@@ -356,7 +356,13 @@ switch (_args select 0) do {
 				_fCd  = missionNamespace getVariable ["WFBE_C_TEAM_FOCUS_COOLDOWN", 120];
 				if (count _args > 3) then {_fPlayer = _args select 3};
 				_fUID = "anon";
-				if (!isNil "_fPlayer" && {!isNull _fPlayer}) then {_fUID = getPlayerUID _fPlayer; if (isNil "_fUID" || {_fUID == ""}) then {_fUID = str _fPlayer}};
+				//--- TP-13 stack-pass: only a REAL player on THIS side earns a per-UID key. A spoofed sender passing an
+				//--- arbitrary object (str-of-object = fresh key per object) would otherwise bypass the limit; such
+				//--- senders now fall through to the shared "anon" side key (throttled). No str-of-object fallback.
+				if (!isNil "_fPlayer" && {!isNull _fPlayer} && {isPlayer _fPlayer} && {side (group _fPlayer) == _fSide}) then {
+					private "_u"; _u = getPlayerUID _fPlayer;
+					if (!isNil "_u" && {_u != ""}) then {_fUID = _u};
+				};
 				_fKey = "wfbe_cmd_focus_" + _fUID;
 				_fLast = _fLogik getVariable [_fKey, -1e9];
 				if ((_fNow - _fLast) >= _fCd) then {
