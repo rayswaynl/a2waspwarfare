@@ -49,6 +49,7 @@ _update_slider = true;
 WFBE_MenuAction = -1;
 
 while {alive player && dialog} do {
+	if (WFBE_MenuAction == 3) exitWith {WFBE_MenuAction = -1; closeDialog 0; createDialog "WF_Menu";};
 	if (WFBE_MenuAction == 2) then {WFBE_MenuAction = -1; _update_slider = true};
 
 	_funds = Call WFBE_CL_FNC_GetClientFunds;

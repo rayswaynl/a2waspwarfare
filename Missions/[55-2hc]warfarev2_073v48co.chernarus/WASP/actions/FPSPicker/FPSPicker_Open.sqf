@@ -57,6 +57,7 @@ while {alive player && dialog} do {
 	if (WFBE_MenuAction == 9) exitWith {
 		WFBE_MenuAction = -1;
 		closeDialog 0;
+		createDialog "WF_Menu";
 	};
 
 	sleep 0.1;
