@@ -1497,6 +1497,28 @@ class RscMenu_Team {
 			w = 0.426891;
 			style = ST_RIGHT;
 		};
+		//--- Unit designer tab buttons (IDC 13080-13081; WFBE_C_UNIT_DESIGNER).
+		//--- GUI_Menu_TeamV2.sqf hides both on open; shows when flag > 0.
+		class CA_TAB_Presets : RscButton {
+			idc = 13080;
+			x = 0.502;
+			y = 0.207;
+			w = 0.078;
+			h = 0.028;
+			text = "Presets";
+			action = "MenuAction = 1100";
+			tooltip = "Gear presets and squad actions";
+		};
+		class CA_TAB_Units : RscButton {
+			idc = 13081;
+			x = 0.584;
+			y = 0.207;
+			w = 0.078;
+			h = 0.028;
+			text = "Units";
+			action = "MenuAction = 1200";
+			tooltip = "Unit template designer - apply loadout to AI squad buys";
+		};
 		/* Disband */
 		class CA_Disband_SubTitle : RscText_SubTitle {
 			idc = 13011;
@@ -1895,6 +1917,175 @@ class RscMenu_TeamV2 {
 			text = "";
 			tooltip = "Toggle the commander vote popup on join";
 			action = "MenuAction = 13";
+		};
+		/* --- UNIT DESIGNER SECTION (IDC 13100-13117; WFBE_C_UNIT_DESIGNER) ---
+		   ctrlShow-managed by GUI_Menu_TeamV2.sqf; hidden on open.             */
+		class CA_UD_Title : RscText_SubTitle {
+			idc = 13100;
+			x = 0.19634;
+			y = 0.265506;
+			w = 0.614;
+			text = "Unit Templates  (save loadout, activate to auto-equip bought AI infantry)";
+		};
+		class CA_UD_ActiveInfo : RscText {
+			idc = 13101;
+			x = 0.192941;
+			y = 0.284;
+			w = 0.614;
+			h = 0.028;
+			text = "Active: None  (no template applied on AI buys)";
+		};
+		class CA_UD1_Name : RscText {
+			idc = 13102;
+			x = 0.192941;
+			y = 0.308;
+			w = 0.200;
+			h = 0.031;
+			text = "--- Slot 1 empty ---";
+		};
+		class CA_UD1_Save : RscButton {
+			idc = 13103;
+			x = 0.397;
+			y = 0.306;
+			w = 0.115;
+			h = 0.034;
+			text = "Save 1";
+			action = "MenuAction = 2101";
+			tooltip = "Save current player loadout to unit template slot 1";
+		};
+		class CA_UD1_Activate : RscButton {
+			idc = 13104;
+			x = 0.516;
+			y = 0.306;
+			w = 0.145;
+			h = 0.034;
+			text = "Activate 1";
+			action = "MenuAction = 2111";
+			tooltip = "Toggle: apply this template to next AI infantry buy";
+		};
+		class CA_UD1_Delete : RscButton {
+			idc = 13105;
+			x = 0.666;
+			y = 0.306;
+			w = 0.110;
+			h = 0.034;
+			text = "Delete 1";
+			action = "MenuAction = 2121";
+			tooltip = "Clear unit template slot 1";
+		};
+		class CA_UD2_Name : RscText {
+			idc = 13106;
+			x = 0.192941;
+			y = 0.346;
+			w = 0.200;
+			h = 0.031;
+			text = "--- Slot 2 empty ---";
+		};
+		class CA_UD2_Save : RscButton {
+			idc = 13107;
+			x = 0.397;
+			y = 0.344;
+			w = 0.115;
+			h = 0.034;
+			text = "Save 2";
+			action = "MenuAction = 2102";
+			tooltip = "Save current player loadout to unit template slot 2";
+		};
+		class CA_UD2_Activate : RscButton {
+			idc = 13108;
+			x = 0.516;
+			y = 0.344;
+			w = 0.145;
+			h = 0.034;
+			text = "Activate 2";
+			action = "MenuAction = 2112";
+			tooltip = "Toggle: apply this template to next AI infantry buy";
+		};
+		class CA_UD2_Delete : RscButton {
+			idc = 13109;
+			x = 0.666;
+			y = 0.344;
+			w = 0.110;
+			h = 0.034;
+			text = "Delete 2";
+			action = "MenuAction = 2122";
+			tooltip = "Clear unit template slot 2";
+		};
+		class CA_UD3_Name : RscText {
+			idc = 13110;
+			x = 0.192941;
+			y = 0.384;
+			w = 0.200;
+			h = 0.031;
+			text = "--- Slot 3 empty ---";
+		};
+		class CA_UD3_Save : RscButton {
+			idc = 13111;
+			x = 0.397;
+			y = 0.382;
+			w = 0.115;
+			h = 0.034;
+			text = "Save 3";
+			action = "MenuAction = 2103";
+			tooltip = "Save current player loadout to unit template slot 3";
+		};
+		class CA_UD3_Activate : RscButton {
+			idc = 13112;
+			x = 0.516;
+			y = 0.382;
+			w = 0.145;
+			h = 0.034;
+			text = "Activate 3";
+			action = "MenuAction = 2113";
+			tooltip = "Toggle: apply this template to next AI infantry buy";
+		};
+		class CA_UD3_Delete : RscButton {
+			idc = 13113;
+			x = 0.666;
+			y = 0.382;
+			w = 0.110;
+			h = 0.034;
+			text = "Delete 3";
+			action = "MenuAction = 2123";
+			tooltip = "Clear unit template slot 3";
+		};
+		class CA_UD4_Name : RscText {
+			idc = 13114;
+			x = 0.192941;
+			y = 0.422;
+			w = 0.200;
+			h = 0.031;
+			text = "--- Slot 4 empty ---";
+		};
+		class CA_UD4_Save : RscButton {
+			idc = 13115;
+			x = 0.397;
+			y = 0.420;
+			w = 0.115;
+			h = 0.034;
+			text = "Save 4";
+			action = "MenuAction = 2104";
+			tooltip = "Save current player loadout to unit template slot 4";
+		};
+		class CA_UD4_Activate : RscButton {
+			idc = 13116;
+			x = 0.516;
+			y = 0.420;
+			w = 0.145;
+			h = 0.034;
+			text = "Activate 4";
+			action = "MenuAction = 2114";
+			tooltip = "Toggle: apply this template to next AI infantry buy";
+		};
+		class CA_UD4_Delete : RscButton {
+			idc = 13117;
+			x = 0.666;
+			y = 0.420;
+			w = 0.110;
+			h = 0.034;
+			text = "Delete 4";
+			action = "MenuAction = 2124";
+			tooltip = "Clear unit template slot 4";
 		};
 		/* Separator before footer */
 		class Line_V2_Sep3 : RscText {

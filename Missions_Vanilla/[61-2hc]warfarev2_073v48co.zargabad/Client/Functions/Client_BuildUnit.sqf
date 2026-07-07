@@ -435,6 +435,109 @@ if (_isMan) then {
 		_soldier setRank "PRIVATE";
 	};
 	_spawnedUnits = [_soldier];
+	//--- UD-23: Unit designer -- apply active template to bought infantry (WFBE_C_UNIT_DESIGNER).
+	if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
+		private ["_udActive2","_udTemplates2","_udTpl","_udWL","_udML","_udBpC","_udBpCt","_udWpC"];
+		private ["_udClW","_udClM","_udClBp","_udClBpCt","_udCost2","_udCI","_udDI"];
+		_udActive2    = missionNamespace getVariable ["WFBE_UD_Active", -1];
+		_udTemplates2 = missionNamespace getVariable ["WFBE_UD_Templates", [[],[],[],[]]];
+		if (_udActive2 >= 0 && {_udActive2 <= 3}) then {
+			_udTpl = _udTemplates2 select _udActive2;
+			if (count _udTpl > 0) then {
+				_udWL   = _udTpl select 0;
+				_udML   = _udTpl select 1;
+				_udBpC  = _udTpl select 2;
+				_udBpCt = _udTpl select 3;
+				_udWpC  = _udTpl select 4;
+				//--- Validate weapons: keep only missionNamespace-registered strings.
+				_udClW = [];
+				{
+					if (typeName _x == "STRING") then {
+						_udDI = missionNamespace getVariable _x;
+						if !(isNil "_udDI") then {_udClW = _udClW + [_x]};
+					};
+				} forEach _udWL;
+				//--- Validate magazines.
+				_udClM = [];
+				{
+					if (typeName _x == "STRING") then {
+						_udDI = missionNamespace getVariable ("Mag_" + _x);
+						if !(isNil "_udDI") then {_udClM = _udClM + [_x]};
+					};
+				} forEach _udML;
+				//--- Validate backpack classname.
+				_udClBp = _udBpC;
+				if (_udBpC != "") then {
+					if (typeName _udBpC != "STRING") then {_udClBp = ""} else {
+						_udDI = missionNamespace getVariable _udBpC;
+						if (isNil "_udDI") then {_udClBp = ""};
+					};
+				};
+				//--- Validate backpack contents (filter unregistered entries).
+				_udClBpCt = _udBpCt;
+				if (typeName _udBpCt == "ARRAY" && {count _udBpCt >= 2}) then {
+					private ["_udBK","_udBKN","_udBKC","_udBKClN","_udBKClC","_udBKP","_udBKI","_udBKIt"];
+					_udClBpCt = [];
+					_udBKP = "";
+					for "_udBK" from 0 to 1 do {
+						_udBKN  = (_udBpCt select _udBK) select 0;
+						_udBKC  = (_udBpCt select _udBK) select 1;
+						_udBKClN = [];
+						_udBKClC = [];
+						for "_udBKI" from 0 to ((count _udBKN) - 1) do {
+							if (typeName (_udBKN select _udBKI) == "STRING") then {
+								_udBKIt = missionNamespace getVariable (_udBKP + (_udBKN select _udBKI));
+								if !(isNil "_udBKIt") then {
+									_udBKClN = _udBKClN + [_udBKN select _udBKI];
+									_udBKClC = _udBKClC + [_udBKC select _udBKI];
+								};
+							};
+						};
+						_udClBpCt = _udClBpCt + [[_udBKClN, _udBKClC]];
+						_udBKP = "Mag_";
+					};
+				};
+				//--- Compute template gear cost from registry.
+				_udCost2 = 0;
+				{
+					_udCI = missionNamespace getVariable _x;
+					if !(isNil "_udCI") then {_udCost2 = _udCost2 + (_udCI select 2)};
+				} forEach _udClW;
+				{
+					_udCI = missionNamespace getVariable ("Mag_" + _x);
+					if !(isNil "_udCI") then {_udCost2 = _udCost2 + (_udCI select 2)};
+				} forEach _udClM;
+				if (_udClBp != "") then {
+					_udCI = missionNamespace getVariable _udClBp;
+					if !(isNil "_udCI") then {_udCost2 = _udCost2 + (_udCI select 2)};
+				};
+				if (typeName _udClBpCt == "ARRAY" && {count _udClBpCt >= 2}) then {
+					private ["_udBPK2","_udBPN2","_udBPC2","_udBPP2","_udBPI2","_udBPIt2"];
+					_udBPP2 = "";
+					for "_udBPK2" from 0 to 1 do {
+						_udBPN2 = (_udClBpCt select _udBPK2) select 0;
+						_udBPC2 = (_udClBpCt select _udBPK2) select 1;
+						for "_udBPI2" from 0 to ((count _udBPN2) - 1) do {
+							if (typeName (_udBPN2 select _udBPI2) == "STRING") then {
+								_udBPIt2 = missionNamespace getVariable (_udBPP2 + (_udBPN2 select _udBPI2));
+								if !(isNil "_udBPIt2") then {_udCost2 = _udCost2 + ((_udBPIt2 select 2) * (_udBPC2 select _udBPI2))};
+							};
+						};
+						_udBPP2 = "Mag_";
+					};
+				};
+				//--- Apply: equip AI infantry with template. Skip silently if player is too poor.
+				if ((Call GetPlayerFunds) >= _udCost2) then {
+					if (_udCost2 > 0) then {-(_udCost2) Call ChangePlayerFunds};
+					[_soldier, _udClW, _udClM, _udWpC, _udClBp, _udClBpCt] Call WFBE_CO_FNC_EquipUnit;
+					["INFORMATION", Format ["[UD] Applied template slot %1 to infantry ($%2 charged).", _udActive2 + 1, _udCost2]] Call WFBE_CO_FNC_LogContent;
+				} else {
+					["INFORMATION", Format ["[UD] Insufficient funds for template (slot %1, cost $%2) -- default gear kept.", _udActive2 + 1, _udCost2]] Call WFBE_CO_FNC_LogContent;
+				};
+			};
+		};
+	};
+
 
 	[sideJoinedText,'UnitsCreated',1] Call UpdateStatistics;
 } else {
