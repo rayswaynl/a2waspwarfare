@@ -58,6 +58,13 @@ _armorTank = _hostileArmor select 0;
 _bearing = ((getPos _armorTank) select 0 - (_dest select 0)) atan2 ((getPos _armorTank) select 1 - (_dest select 1));
 _overwatchPos = [(_dest select 0) + _offset * (sin _bearing), (_dest select 1) + _offset * (cos _bearing), 0];
 
+//--- fable/sml-overwatch-nan: degenerate geometry NaN'd the bearing chain in live play
+//--- (RPT: overwatchPos=[scalar NaN,scalar NaN,0] x3; detached launcher died within 3s every time).
+//--- Validate the computed position and skip the overwatch gracefully instead of detaching into NaN.
+if (!(finite (_overwatchPos select 0)) || {!(finite (_overwatchPos select 1))}) exitWith {
+	diag_log Format ["SML|v1|OVERWATCH_SKIP|side=%1 team=%2 reason=nan_pos dest=%3 armor=%4", _side, _team, _dest, getPos _armorTank];
+};
+
 //--- Step 4: Stamp and detach the launcher.
 _launcher setVariable ["wfbe_sml_detach_at", time];
 doStop _launcher;
