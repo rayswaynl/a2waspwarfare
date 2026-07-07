@@ -2231,7 +2231,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //---   Tune in-engine; default 1.6 m based on MAZ_543 model geometry.
 	if (isNil "WFBE_C_NAVAL_CAMPS_DECK")      then {WFBE_C_NAVAL_CAMPS_DECK      = 1};   //--- 1=reseat camp models to flight deck; 0=off (default 1, correctness fix)
 	if (isNil "WFBE_C_NAVAL_SCUD_CLEARANCE")  then {WFBE_C_NAVAL_SCUD_CLEARANCE  = 1.6}; //--- extra metres above deckZ for SCUD vehicle origin (tune in-engine)
-	if (isNil "WFBE_C_NAVAL_SCUD_SHOWPIECE") then {WFBE_C_NAVAL_SCUD_SHOWPIECE = 0}; //--- fable/scud-showpiece: 2nd deck SCUD + props + heli-only air shop on the SCUD carrier (0=off)
+	if (isNil "WFBE_C_NAVAL_SCUD_SHOWPIECE") then {WFBE_C_NAVAL_SCUD_SHOWPIECE = 1}; //--- ARMED [owner 2026-07-07: deploy ask] //--- fable/scud-showpiece: 2nd deck SCUD + props + heli-only air shop on the SCUD carrier (0=off)
 //--- TELEMETRY HOST V2 (tp4, 2026-07-06): when flag=1, GRPBUDGET+SRVPERF emit from
 //--- server_groupsGC.sqf (survives V2 cutover) and are suppressed in AI_Commander.sqf.
 //--- Default 0 = byte-identical to HEAD (old emitters run, new host silent).
