@@ -751,7 +751,7 @@
 		title = "GUER Resistance Lockout (activation delay)";
 		values[] = {0,15,20,30};
 		texts[] = {"Off","15 minutes","20 minutes","30 minutes"};
-		default = 20;
+		default = 0; //--- owner 2026-07-07: off for open-testing round (was 20)
 	};
 
 	// fable/drones-menu: GUER Drone Operations lobby params.
