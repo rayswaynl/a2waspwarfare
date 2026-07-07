@@ -729,7 +729,7 @@ if (worldName == "Zargabad") then {
 	//--- ahead and the enemy is collapsing, commit the fist onto the enemy HQ and PRESS until it is razed,
 	//--- instead of the current rally-and-hold that froze the 2026-07-04 ZG match 2-7-2 for 90 min. DEFAULT 0
 	//--- (inert; byte-identical to HEAD; the closer only reads the snapshot + emits telemetry when off). 1 = armed.
-	if (isNil "WFBE_C_AICOM2_DECAP_ENABLE")      then {WFBE_C_AICOM2_DECAP_ENABLE      = 0};
+	if (isNil "WFBE_C_AICOM2_DECAP_ENABLE")      then {WFBE_C_AICOM2_DECAP_ENABLE      = 1};
 	if (isNil "WFBE_C_AICOM2_DECAP_DOM_RATIO")   then {WFBE_C_AICOM2_DECAP_DOM_RATIO   = 1.5};  //--- ARM only while myEff >= enEff * this (decisive maneuver dominance, not a coin-flip edge).
 	if (isNil "WFBE_C_AICOM2_DECAP_ABORT_RATIO") then {WFBE_C_AICOM2_DECAP_ABORT_RATIO = 0.9};  //--- once COMMITTED, only abort if myEff < enEff * this (wide hysteresis a momentary garrison dip cannot cross).
 	if (isNil "WFBE_C_AICOM2_DECAP_MAX_ENTOWNS") then {WFBE_C_AICOM2_DECAP_MAX_ENTOWNS = 5};    //--- SECONDARY safety only (owner Q1 2026-07-06: demoted from primary trigger, was 2): even when sensed + dominant, no commit while the enemy holds more than this many towns.
@@ -1110,7 +1110,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_BUILD_ROAD_BUFFER")       then {WFBE_C_AICOM_BUILD_ROAD_BUFFER = 14};       //--- m minimum clearance from the nearest road segment (<=0 disables).
 	if (isNil "WFBE_C_AICOM_BUILD_MIN_FLAT_Z") then {WFBE_C_AICOM_BUILD_MIN_FLAT_Z = 0.90};  //--- TP-19: min surfaceNormal z (0..1) to accept a build spot; higher = flatter required (~0.90 = reject >26deg). 0 = OFF (no slope gate).
 	if (isNil "WFBE_C_AICOM_BUILD_TREE_CLEAR") then {WFBE_C_AICOM_BUILD_TREE_CLEAR = 10};  //--- TP-19: m radius that must be clear of map TREE/SMALL TREE for a build spot (~10 = no trees under the footprint). 0 = OFF (no tree gate).
-	if (isNil "WFBE_C_AICOM_BUILD_ROAD_CLEAR") then {WFBE_C_AICOM_BUILD_ROAD_CLEAR = 0};   //--- TP-19 (owner report 2026-07-06: AI built on dirt roads): metres radius around a build candidate that must be clear of any road segment (paved OR dirt, via nearRoads - A2-OA-safe). 0 = OFF (default, gate inert). Suggested live value 6-8 m; complement to WFBE_C_AICOM_BUILD_ROADCLEAR (the primary ON-by-default road gate).
+	if (isNil "WFBE_C_AICOM_BUILD_ROAD_CLEAR") then {WFBE_C_AICOM_BUILD_ROAD_CLEAR = 6};   //--- TP-19 (owner report 2026-07-06: AI built on dirt roads): metres radius around a build candidate that must be clear of any road segment (paved OR dirt, via nearRoads - A2-OA-safe). 0 = OFF (default, gate inert). Suggested live value 6-8 m; complement to WFBE_C_AICOM_BUILD_ROADCLEAR (the primary ON-by-default road gate).
 	if (isNil "WFBE_C_SKINSEL")                       then {WFBE_C_SKINSEL = 1};                       //--- cmdcon41-w3l: skin selector master (WF-menu SKIN button + first-spawn dialog + respawn restore). Legacy WFBE_C_SKIN_SELECTOR still honored as an OR.
 	if (isNil "WFBE_C_SKINSWAP_FUNDS_CARRY")          then {WFBE_C_SKINSWAP_FUNDS_CARRY = 1};          //--- cmdcon43-h: carry the player's wfbe_funds + wfbe_side across a skin swap so a failed rejoin (fresh/diverted/CIV group) never orphans his wallet to $0 (LIVE-confirmed cmdcon42b). 1 on, 0 off.
 	if (isNil "WFBE_C_FUNDS_HEAL_ZERO_GRACE")         then {WFBE_C_FUNDS_HEAL_ZERO_GRACE = 90};         //--- Ray pick A (2026-07-03): seconds the client funds self-heal refuses to accept a 0 wfbe_funds as "healed" (a transient JIP-sync 0 was the old zero-latch); keeps re-requesting the server lock-step record restore. Belt-and-suspenders atop the record fix. Higher = longer no-zero window.
@@ -1736,7 +1736,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_DEFENSE_BUDGET = 1;            // Per-base-area defense caps scaling with barracks level
 	WFBE_C_BASE_DEFENSE_STATICS_CAP = 25; // Max player-placed static base defenses (MGs/AA/AAPOD) per base area (raised from 10)
 	WFBE_C_DEFENSE_THREAT_MIN = 3;        // Min enemy ground units (west/east, no Air/GUER) inside base range before the statics/mines threat gate fires
-	if (isNil "WFBE_C_DEFENSE_CLIENT_GATE_ALIGN") then {WFBE_C_DEFENSE_CLIENT_GATE_ALIGN = 0}; //--- Default OFF: client placement preview uses per-unit exitWith scan. When 1, client enemy-in-base red only fires when enemy-side unit count >= WFBE_C_DEFENSE_THREAT_MIN (mirrors the server threat gate).
+	if (isNil "WFBE_C_DEFENSE_CLIENT_GATE_ALIGN") then {WFBE_C_DEFENSE_CLIENT_GATE_ALIGN = 1}; //--- Default OFF: client placement preview uses per-unit exitWith scan. When 1, client enemy-in-base red only fires when enemy-side unit count >= WFBE_C_DEFENSE_THREAT_MIN (mirrors the server threat gate).
 	WFBE_C_WDDM_COMP_CAP = 3;            //--- Max WDDM commander compositions per base area (size-independent).
 	WFBE_C_FACTORY_QUEUE_LIMITS = 1;      // Per-factory production queue caps scaling with factory level
 	if (isNil "WFBE_C_FIX_FACTORY_QUEUE_TOKEN_HARDENING") then {WFBE_C_FIX_FACTORY_QUEUE_TOKEN_HARDENING = 0}; //--- Default-off: opt-in stronger player-buy FIFO tokens; 0 keeps legacy UID+diag_tickTime tokens.
@@ -2206,7 +2206,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_SML_CAMP_SPLIT")    then {WFBE_C_SML_CAMP_SPLIT    = 1};   //--- 1=enable per-unit doStop/doMove camp-split; 0=byte-identical legacy behaviour.
 	if (isNil "WFBE_C_SML_WATCHDOG_TTL") then {WFBE_C_SML_WATCHDOG_TTL = 240};  //--- s: per-unit TTL before the watchdog forces doFollow back (covers all exit paths).
 //--- SML-2: real dismounts (cargo infantry advance on foot; driver/gunner stay mounted for fire support). Flag-gated default 0.
-	if (isNil "WFBE_C_SML_DISMOUNTS")              then {WFBE_C_SML_DISMOUNTS              = 0};   //--- 1=enable real dismounts; 0=byte-identical legacy behaviour.
+	if (isNil "WFBE_C_SML_DISMOUNTS")              then {WFBE_C_SML_DISMOUNTS              = 1};   //--- 1=enable real dismounts; 0=byte-identical legacy behaviour.
 	if (isNil "WFBE_C_SML_DISMOUNTS_RANGE")        then {WFBE_C_SML_DISMOUNTS_RANGE        = 150}; //--- m: dismount is triggered only when the team leader is within this range of the objective (reserved; caller already at capture site).
 //--- SML-3: graceful retreats (mauled individuals pull back while healthy units keep fighting). Flag default 0.
 	if (isNil "WFBE_C_SML_RETREAT")                   then {WFBE_C_SML_RETREAT                   = 1};
@@ -2271,7 +2271,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- The airfield depot logic (wfbe_is_airfield=true) is always within ~80m of its companion
 //--- LocationLogicAirport (see binding table in PR body). Unbound airfield (radius miss) = ALLOWED.
 //--- Flag-off (0) = byte-identical (no gate). AI commander unaffected (AI uses Server_BuyUnit).
-	if (isNil "WFBE_C_AIRFIELD_OWNERSHIP_GATE")    then {WFBE_C_AIRFIELD_OWNERSHIP_GATE = 0};    //--- 0=off (default, byte-identical); 1=on (block aircraft purchase at enemy-owned airfields).
+	if (isNil "WFBE_C_AIRFIELD_OWNERSHIP_GATE")    then {WFBE_C_AIRFIELD_OWNERSHIP_GATE = 1};    //--- 0=off (default, byte-identical); 1=on (block aircraft purchase at enemy-owned airfields).
 	if (isNil "WFBE_C_AIRFIELD_OWNER_TOWN_RADIUS") then {WFBE_C_AIRFIELD_OWNER_TOWN_RADIUS = 500}; //--- m: radius for nearest-town ownership lookup. 500m safely binds each airport to its depot (max separation ~80m on all terrains; nearest non-airfield town is 679m+).
 
 //--- FPV STRIKE DRONE (fable/fpv-strike-drone): player-piloted kamikaze mini-UAV bought from the
@@ -2290,7 +2290,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (Client\Module\AWACS\awacs_spotter.sqf) via the existing 'uav-reveal' path (fuzzed
 //--- orange ellipses, size grows with AWACS-to-target distance). Flag-off: watcher never
 //--- launched, scan never runs - inert.
-	if (isNil "WFBE_C_AWACS")                   then {WFBE_C_AWACS = 0};                   //--- Master gate: 0=off (default), 1=on.
+	if (isNil "WFBE_C_AWACS")                   then {WFBE_C_AWACS = 1};                   //--- Master gate: 0=off (default), 1=on.
 	if (isNil "WFBE_C_AWACS_TYPES")             then {WFBE_C_AWACS_TYPES = ['C130J_US_EP1','MV22','Mi17_TK_EP1','Mi17_Ins','An2_TK_EP1']}; //--- Platform classnames (any side flies them; matched lowercase).
 	if (isNil "WFBE_C_AWACS_MINALT")            then {WFBE_C_AWACS_MINALT = 150};          //--- m AGL: radar counts as 'up' above this altitude.
 	if (isNil "WFBE_C_AWACS_AIR_SCAN_INTERVAL") then {WFBE_C_AWACS_AIR_SCAN_INTERVAL = 5}; //--- s: per-client re-check cadence for 'friendly AWACS airborne' (map open only).
@@ -2301,7 +2301,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- EAST C-130 (fable/east-c130): East/OPFOR buys a captured C-130J via synthetic token EASTV_C130J
 //--- (Core_US.sqf registration, Units_CO_RU roster, Client_BuildUnit remap). Gives East a big fixed-wing
 //--- radar/AWACS-role platform beside the An-2. Flag-off (0) = token never registered/listed = byte-identical.
-	if (isNil "WFBE_C_EAST_C130") then {WFBE_C_EAST_C130 = 0};   //--- Master gate: 0=off (default), 1=on. Lobby param mirrors this.
+	if (isNil "WFBE_C_EAST_C130") then {WFBE_C_EAST_C130 = 1};   //--- Master gate: 0=off (default), 1=on. Lobby param mirrors this.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
