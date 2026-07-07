@@ -195,6 +195,12 @@
 		texts[] = {"$STR_WF_PARAMETER_No","$STR_WF_PARAMETER_Yes"};
 		default = 0;
 	};
+	class WFBE_C_AICOM2_REQDRAW_ENABLE {
+		title = "AI Commander War-Chest Requisition";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_PARAMETER_No","$STR_WF_PARAMETER_Yes"};
+		default = 1;
+	};
 	class WFBE_C_ENDGAME_FORCE_ENABLE {
 		title = "Endgame Force Economy Taper";
 		values[] = {0,1};

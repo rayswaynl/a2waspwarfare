@@ -218,6 +218,29 @@ while {!gameOver} do {
 
 				if (isNil "_logik") exitWith {};
 
+				//--- WAR-CHEST REQUISITION consume (cmdcon44 economy-sink, claude 2026-07-07): the supervisor armed a
+				//--- PAID early draw (team-cap-pinned + funds over FLOOR+COST). Debit HERE at draw time (never at arm
+				//--- time) so a skipped or dead draw can never eat money silently. Re-verify the wallet still covers
+				//--- COST while staying over FLOOR (Produce/TOPUP may have spent since the arm) and that the side is
+				//--- still AI-commanded; otherwise drop the request without charge (the arm-side cooldown still backs
+				//--- off re-arming). _paidDraw also zeroes W1 below (a paid draw must never roll the funds-refund card).
+				private ["_paidDraw","_reqCost","_reqFloor","_reqFunds"];
+				_paidDraw = false;
+				if ((missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_ENABLE", 0]) > 0 && {_logik getVariable ["wfbe_aicom_reqdraw_req", false]}) then {
+					_logik setVariable ["wfbe_aicom_reqdraw_req", false];
+					if (!_humanCmd) then {
+						_reqCost  = missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_COST", 75000];
+						_reqFloor = missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_FLOOR", 250000];
+						_reqFunds = (_side) Call GetAICommanderFunds;
+						if (_reqFunds >= (_reqCost + _reqFloor)) then {
+							[_side, -_reqCost] Call ChangeAICommanderFunds;
+							_paidDraw = true;
+							["INFORMATION", Format ["AI_Commander_Wildcard.sqf: [%1] REQDRAW consumed - paid %2 for a requisitioned draw (funds %3 -> %4).", _sideText, _reqCost, _reqFunds, _reqFunds - _reqCost]] Call WFBE_CO_FNC_AICOMLog;
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|REQDRAW_SPEND|cost=" + str _reqCost + "|funds=" + str (_reqFunds - _reqCost));
+						};
+					};
+				};
+
 				//--- -----------------------------------------------------------------------
 				//--- WAR STATE
 				//--- -----------------------------------------------------------------------
@@ -549,6 +572,11 @@ while {!gameOver} do {
 				if (!_w22Eligible) then {_wW22 = 0};
 				if (!_w23Eligible) then {_wW23 = 0};
 				if (!_w24Eligible) then {_wW24 = 0};
+
+				//--- REQDRAW (cmdcon44): a PAID draw must never roll W1 War Chest (funds refund = circular sink).
+				//--- Usually already 0 via the funds-rich eligibility skip above, but FUNDS_START is per-side config -
+				//--- keep the guarantee explicit.
+				if (_paidDraw) then {_wW1 = 0};
 
 				//--- Weight table: [cardID, weight]. Card IDs match W-numbers.
 				//--- W8 (Motor Pool Delivery) RETIRED 2026-06-15: it spawned a wfbe_persistent=true vehicle that NEVER
@@ -1634,5 +1662,18 @@ while {!gameOver} do {
 		}; //--- end !_skipAI
 	}; //--- end !_bothHuman
 
-	sleep _interval;
+	//--- WAR-CHEST REQUISITION early wake (cmdcon44, claude 2026-07-07): flag OFF keeps the original single
+	//--- full-interval sleep (inert path, byte-identical behaviour). Flag ON waits in 30s chunks and breaks
+	//--- early when the supervisor arms a paid draw, so the requisition fires within ~30s+jitter instead of
+	//--- up to a full interval later.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_ENABLE", 0]) <= 0) then {
+		sleep _interval;
+	} else {
+		private ["_reqSlept"];
+		_reqSlept = 0;
+		while {_reqSlept < _interval && {!(_logik getVariable ["wfbe_aicom_reqdraw_req", false])}} do {
+			sleep 30;
+			_reqSlept = _reqSlept + 30;
+		};
+	};
 };
