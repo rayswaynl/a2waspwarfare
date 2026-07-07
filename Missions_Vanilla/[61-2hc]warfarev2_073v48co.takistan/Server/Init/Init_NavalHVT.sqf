@@ -618,7 +618,8 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 	[_hvtLoc] spawn {
 		private ["_loc","_pos","_sideID","_capGrp","_hind","_biplane","_hindPilot","_biplPilot","_armed",
 		         "_inactiveTime","_now","_detected","_players","_anyNear","_orbitAng","_dummy","_x",
-		         "_threeHinds","_hind2","_hind3","_hindPilot2","_hindPilot3","_capL39","_jet1","_jet2","_jetPilot1","_jetPilot2"];
+		         "_threeHinds","_hind2","_hind3","_hindPilot2","_hindPilot3","_capL39","_jet1","_jet2","_jetPilot1","_jetPilot2",
+		         "_routeI","_route","_lap","_circuitTimeout","_circuitPts","_cMid","_cOuter","_airfieldPts","_legPt"];
 		_loc  = _this select 0;
 		_armed = false;
 		_inactiveTime = 0;
@@ -627,6 +628,27 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 		_orbitAng = random 360;
 		_threeHinds = (missionNamespace getVariable ["WFBE_C_NAVAL_CAP_THREE_HINDS", 0]) > 0;
 		_capL39 = (missionNamespace getVariable ["WFBE_C_NAVAL_CAP_L39", 0]) > 0; //--- naval-air-spawn-easa: supersedes THREE_HINDS + Mi24/An2 when >0.
+
+		//--- fable/l39-circuit (owner 2026-07-07): L39 sea patrol flies a CIRCUIT over all 3 carriers,
+		//--- with ONE inland-airfield visit (NEAF/NWAF alternating) every 3rd lap. Z is ALWAYS explicit:
+		//--- a Z=0 doMove is a commanded descent into the sea for fixed-wing AI (the post-#837 nosedive).
+		_routeI = 0; _route = []; _lap = 0; _circuitTimeout = 0;
+		_cMid   = missionNamespace getVariable ["WFBE_NAVAL_MIDDLE_ANCHOR", [(getPos _loc) select 0, (getPos _loc) select 1]];
+		_cOuter = missionNamespace getVariable ["WFBE_NAVAL_OUTER_PAIR", []];
+		_circuitPts = [[(getPos _loc) select 0, (getPos _loc) select 1, 550]];
+		if (count _cOuter >= 2) then {
+			_circuitPts = [
+				[((_cOuter select 0) select 1) select 0, ((_cOuter select 0) select 1) select 1, 550],
+				[_cMid select 0, _cMid select 1, 550],
+				[((_cOuter select 1) select 1) select 0, ((_cOuter select 1) select 1) select 1, 550]
+			];
+		};
+		_airfieldPts = [];
+		{
+			if ((_x getVariable ["name",""]) in ["NEAF","NWAF"]) then {
+				_airfieldPts = _airfieldPts + [[(getPos _x) select 0, (getPos _x) select 1, 550]];
+			};
+		} forEach towns;
 
 		while { !WFBE_GameOver } do {
 			sleep 10;
@@ -668,6 +690,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 							_jetPilot1 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 							if (isNil "_jetPilot1") then {_jetPilot1 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
 							_jetPilot1 moveInDriver _jet1;
+							_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 550]; //--- fable/l39-circuit: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
 
 							_jet2 = createVehicle ["L39_TK_EP1", [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650], [], 0, "FLY"];
 							_jet2 setPosASL [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650];
@@ -676,6 +699,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 							_jet2 flyInHeight 600;
 							_jetPilot2 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 							_jetPilot2 moveInDriver _jet2;
+							_jetPilot2 doMove [(_pos select 0) - 800, (_pos select 1), 600];
 
 							_capGrp setBehaviour "AWARE";
 							_capGrp setCombatMode "RED";
@@ -770,9 +794,24 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 					//--- CAP is active — orbit the asset.
 					_orbitAng = _orbitAng + 8;
 					if (_capL39) then {
-						//--- L39 jets orbit at 800m radius (needs wider arc than rotary).
-						if (alive _jet1) then {_jetPilot1 doMove [(_pos select 0) + 800 * sin _orbitAng,       (_pos select 1) + 800 * cos _orbitAng, 0]};
-						if (alive _jet2) then {_jetPilot2 doMove [(_pos select 0) + 800 * sin (_orbitAng + 180), (_pos select 1) + 800 * cos (_orbitAng + 180), 0]};
+						//--- fable/l39-circuit: carrier-circuit sea patrol (+ airfield leg every 3rd lap). Explicit Z.
+						if (_routeI >= count _route) then {
+							_lap = _lap + 1;
+							_route = +_circuitPts;
+							if (((_lap mod 3) == 0) && {count _airfieldPts > 0}) then {
+								_route = _route + [_airfieldPts select ((floor (_lap / 3)) mod (count _airfieldPts))];
+							};
+							_routeI = 0;
+						};
+						_legPt = _route select _routeI;
+						_circuitTimeout = _circuitTimeout + 10;
+						if ((!isNull _jet1 && {alive _jet1} && {((getPosASL _jet1) distance _legPt) < 500}) || _circuitTimeout > 120) then {
+							_routeI = _routeI + 1;
+							_circuitTimeout = 0;
+							if (_routeI < count _route) then {_legPt = _route select _routeI};
+						};
+						if (alive _jet1) then {_jetPilot1 doMove _legPt};
+						if (alive _jet2) then {_jetPilot2 doMove [(_legPt select 0) + 300, (_legPt select 1) + 300, _legPt select 2]};
 					} else {
 						if (_threeHinds) then {
 							if (alive _hind)  then {_hindPilot  doMove [(_pos select 0) + 400 * sin _orbitAng,         (_pos select 1) + 400 * cos _orbitAng, 0]};
@@ -783,7 +822,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_hindPilot doMove [(_pos select 0) + 400 * sin _orbitAng, (_pos select 1) + 400 * cos _orbitAng, 0];
 							};
 							if (alive _biplane) then {
-								_biplPilot doMove [(_pos select 0) + 700 * sin (_orbitAng + 180), (_pos select 1) + 700 * cos (_orbitAng + 180), 0];
+								_biplPilot doMove [(_pos select 0) + 700 * sin (_orbitAng + 180), (_pos select 1) + 700 * cos (_orbitAng + 180), 550]; //--- fable/l39-circuit: Z=0 = commanded descent for fixed-wing
 							};
 						};
 					};
