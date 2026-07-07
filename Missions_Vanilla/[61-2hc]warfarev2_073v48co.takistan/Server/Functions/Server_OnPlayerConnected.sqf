@@ -159,6 +159,29 @@ if (!isNil "WFBE_GUER_PLAYER_KILLS") then {_id publicVariableClient "WFBE_GUER_P
 if (!isNil "WFBE_GUER_VEHICLE_TIER") then {_id publicVariableClient "WFBE_GUER_VEHICLE_TIER"}; //--- B75: GUER vehicle tier JIP catch-up (kill-derived).
 if (!isNil "WFBE_GUER_FOB_AVAIL") then {_id publicVariableClient "WFBE_GUER_FOB_AVAIL"}; //--- B75: GUER FOB availability JIP catch-up (depot FOB trucks + RHUD).
 if (!isNil "WFBE_PopTier") then {_id publicVariableClient "WFBE_PopTier"}; //--- B74.2: player-pop tier JIP catch-up (AI cap + RHUD scaling).
+//--- fable/fob-polish (2026-07-07): replay ACTIVE GUER FOB markers to a GUER late joiner (#846 known gap).
+//--- WildcardMarker creates are fire-and-forget publicVariables, so a client that joined after the broadcast
+//--- never saw them. The server-side WFBE_GUER_FOB_ACTIVE ledger (added in RequestFOBStructure, retired in
+//--- Server_BuildingKilled's GuerFobCleared branch) is replayed with a TARGETED publicVariableClient of the
+//--- same wire payload WFBE_CO_FNC_SendToClients builds, so ONLY the joiner re-receives it (no side-wide
+//--- re-create, no repeated command-chat line). The client handler is idempotent (delete-then-create).
+//--- Spawned so the connect handler is not delayed; the sleep keeps successive writes to the same PV name
+//--- from coalescing into a single delivery. The ledger is copied (+) so a concurrent clear cannot mutate
+//--- the array mid-iteration.
+if ((_sideJoined == resistance) && {(count (missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []])) > 0}) then {
+	[_id, _name] Spawn {
+		private ["_rid","_rname","_fobReplay"];
+		_rid = _this select 0;
+		_rname = _this select 1;
+		_fobReplay = + (missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []]);
+		diag_log Format ["[WFBE][FOB-JIP] replaying %1 active FOB marker(s) to joiner %2", count _fobReplay, _rname];
+		{
+			WFBE_PVF_WildcardMarker = [resistance, "CLTFNCWildcardMarker", ["create", _x select 0, _x select 1, "ColorGreen", "mil_objective", Format ["FOB %1", _x select 2], "forward base active - spawn and resupply here"]];
+			_rid publicVariableClient "WFBE_PVF_WildcardMarker";
+			sleep 0.5;
+		} forEach _fobReplay;
+	};
+};
 
 //--- B63.2: late joiners also need side logic/object economy state that is only published on change.
 //--- wfbe_upgrades lives on the side logic object, so re-setting the same value with public=true dirties the

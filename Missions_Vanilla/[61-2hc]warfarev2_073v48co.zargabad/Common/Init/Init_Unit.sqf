@@ -94,6 +94,20 @@ if (_unit_kind in (missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []]))
 		"",
 		Format ["(_target getVariable ['wfbe_is_guer_fob', false]) && side group player == resistance && alive _target && player distance _target <= %1", missionNamespace getVariable ["WFBE_C_GUER_FOB_BUILD_RANGE", 30]]
 	];
+	//--- PR #846 follow-up (fable/fob-polish): one-shot driver-seat deploy hint. Each client attaches its own
+	//--- EH instance (this file runs on every client); the _fobWho == player guard picks the driver's machine
+	//--- and the LOCAL-ONLY wfbe_fob_seat_hinted flag (setVariable WITHOUT broadcast) keeps it one-shot per
+	//--- client without extra network traffic. Mirrors the VBIED GetIn idiom in Client_BuildUnit.sqf.
+	_unit addEventHandler ["GetIn", {
+		private ["_fobTrk","_fobSeat","_fobWho"];
+		_fobTrk  = _this select 0;
+		_fobSeat = _this select 1;
+		_fobWho  = _this select 2;
+		if ((_fobSeat == "driver") && {_fobWho == player} && {side group player == resistance} && {_fobTrk getVariable ["wfbe_is_guer_fob", false]} && {!(_fobTrk getVariable ["wfbe_fob_seat_hinted", false])}) then {
+			_fobTrk setVariable ["wfbe_fob_seat_hinted", true];
+			hintSilent parseText "<t color='#76F563'>FOB Delivery Truck</t> - drive to where you want your forward base (not too close to enemy towns or the enemy base), then use the action menu (mouse scroll) -> <t color='#76F563'>Build FOB</t>. The truck is consumed on deploy.";
+		};
+	}];
 };
 
 if (_unit isKindOf "Tank") then { //--- Tanks.

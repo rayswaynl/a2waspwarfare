@@ -77,6 +77,9 @@ if (!_reject) then {
 		//--- Side-scoped via the WildcardMarker createMarkerLocal idiom - WEST/EAST never see it.
 		//--- Name is deterministic from position so the destroy path can delete without shared state.
 		[resistance, "WildcardMarker", ["create", Format ["guer_fob_%1_%2", floor (_pos select 0), floor (_pos select 1)], _pos, "ColorGreen", "mil_objective", Format ["FOB %1", _facType], "forward base active - spawn and resupply here"]] Call WFBE_CO_FNC_SendToClients;
+		//--- fable/fob-polish (2026-07-07): record the active FOB in the server-side ledger so
+		//--- Server_OnPlayerConnected can replay the marker to late joiners (#846 known gap).
+		missionNamespace setVariable ["WFBE_GUER_FOB_ACTIVE", (missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []]) + [[Format ["guer_fob_%1_%2", floor (_pos select 0), floor (_pos select 1)], _pos, _facType]]];
 		//--- Consume the delivery truck - it "became" the FOB.
 		if (!isNull _truck) then {deleteVehicle _truck};
 	} else {
