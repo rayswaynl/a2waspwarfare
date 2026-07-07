@@ -471,3 +471,36 @@ python Tools\Soak\decision_engine.py --self-test
 python Tools\Soak\findings_emitter.py --self-test
 python Tools\Soak\chart_soak.py --self-test   # now includes the A/B delta chart
 ```
+
+---
+
+## Autopilot loop (self-driving, grade-mode)
+
+`Start-WaspAutopilot.ps1` chains the whole loop in one pass: grade an inbox of RPTs → run ready A/B
+experiments → refresh charts → surface flag recommendations. Read-only w.r.t. the game (never spawns
+Arma, never deploys); overlap-guarded; owner is the gate. Full design: `docs/design/v2/SPEC-SOAK-AUTOPILOT.md`.
+
+| File | Role |
+| --- | --- |
+| `Start-WaspAutopilot.ps1` | The pass driver (grade → experiment → chart → recommend → summary). `-DryRun` plans; `-Report`/`-Peach`. |
+| `run_experiment.py` | Gathers two arms from Run-Result JSONs → `ab_stats`/`decision_engine` → emits a finding. |
+| `Get-FlagRecommendation.ps1` | Surface-only recommendation deck (`recommendations.jsonl`). Labels context; never opens a PR / deploys. |
+
+```powershell
+# plan (no side effects)
+.\Tools\Soak\Start-WaspAutopilot.ps1 -Inbox <rpt-dir> -Scenario idle-soak -DryRun
+# one grade-mode pass, refresh charts, DM the owner
+.\Tools\Soak\Start-WaspAutopilot.ps1 -Inbox <rpt-dir> -Scenario idle-soak -Report -Peach
+```
+
+Also fixed in this lane (correctness): `Run-Scenario` now appends a `SKIP_BOX_DOWN`/`FAIL_ANALYZER`
+ledger row on a missing/failed RPT (instead of a silent throw), uses millisecond+source runIds (no
+same-second stampId collision), and `Append-LedgerRow`/`Run-Scenario` flatten the analyzer `roundend`
+object to a string so rows conform to the schema.
+
+**Verify:**
+```powershell
+python Tools\Soak\run_experiment.py --self-test
+pwsh   Tools\Soak\Get-FlagRecommendation.Tests.ps1
+pwsh   Tools\Soak\Start-WaspAutopilot.Tests.ps1
+```

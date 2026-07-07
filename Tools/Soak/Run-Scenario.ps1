@@ -135,24 +135,54 @@ if ($DryRun -or (-not $FromRpt)) {
 }
 
 # ---- FROM RPT: grade -------------------------------------------------------
-if (-not (Test-Path -LiteralPath $FromRpt)) { throw "Server RPT not found: $FromRpt" }
 New-Item -ItemType Directory -Force -Path $ResultsDir | Out-Null
 
 $nowUtc    = (Get-Date).ToUniversalTime()
-$stampUtc  = $nowUtc.ToString('yyyyMMdd-HHmmss') + 'Z'
-$runId     = "$($spec.name)-$($run.runLabel)-$stampUtc"
+# Millisecond resolution + the source RPT basename so grading two different RPTs in the same second
+# (as the autopilot does) can never collide on stampId. The processed-set handles same-RPT re-grades.
+$srcTag    = if ([string]::IsNullOrWhiteSpace($FromRpt)) { 'run' } else { [System.IO.Path]::GetFileNameWithoutExtension($FromRpt) }
+$stampUtc  = $nowUtc.ToString('yyyyMMdd-HHmmssfff') + 'Z'
+$runId     = "$($spec.name)-$($run.runLabel)-$srcTag-$stampUtc"
 $aJsonPath = Join-Path $ResultsDir "$runId.analyze.json"
+
+# Synthesize a stamp so a FAILURE row can still be attributed (the ledger MUST record failed/
+# truncated/crashed soaks -- a silent throw would leave no trace, which the design forbids).
+function New-RunStamp {
+    if (-not [string]::IsNullOrWhiteSpace($StampPath)) { return $StampPath }
+    $sp = Join-Path $ResultsDir "$runId.stamp.json"
+    $so = [ordered]@{ stampId = $runId; candidate = $run.map; terrain = $run.map
+                      role = "scenario:$($spec.name)"; pboName = $run.template; operator = 'sandbox'; git = $null }
+    [System.IO.File]::WriteAllText($sp, (ToJson $so), (New-Object System.Text.UTF8Encoding($false)))
+    return $sp
+}
+function Complete-Fail([string]$status, [string]$note) {
+    $sp = New-RunStamp
+    try {
+        $fa = @{ LedgerPath = $LedgerPath; Status = $status; StampPath = $sp; ServerRptPath = $FromRpt
+                 AllowDuplicateSkip = $true; Note = @("scenario=$($spec.name)", "run=$($run.runLabel)", $note) }
+        & $appender @fa | Out-Null
+    } catch { Write-Host "  (ledger $status append failed: $_)" }
+    Write-Host "RESULT  $status   ($note)"
+    return [ordered]@{ schema = 'a2wasp-run-result-v1'; runId = $runId; scenario = $spec.name
+                       source = 'FromRpt'; verdict = $status; note = $note; ledgerRowId = $null }
+}
+
+# missing RPT -> SKIP row (box down / no capture), not a silent throw
+if (-not (Test-Path -LiteralPath $FromRpt)) { return (Complete-Fail 'SKIP_BOX_DOWN' "server RPT not found: $FromRpt") }
 
 # 1) analyzer
 $aArgs = @($analyzer, $FromRpt)
 if (-not [string]::IsNullOrWhiteSpace($HcRpt)) { $aArgs += @('--hc', $HcRpt) }
 $aArgs += '--json'
 $aText = & python @aArgs 2>$null
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($aText)) { throw "FAIL_ANALYZER: analyze_soak.py produced no output for $FromRpt" }
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($aText)) { return (Complete-Fail 'FAIL_ANALYZER' "analyze_soak.py produced no output for $FromRpt") }
 [System.IO.File]::WriteAllText($aJsonPath, ($aText -join "`n"), (New-Object System.Text.UTF8Encoding($false)))
 $a = $aText | ConvertFrom-Json
 
 # 2) flat metrics
+# roundend is an object {winner,secs,map} when a round ended; take the winner side as the string.
+$roundWinner = $null
+if ($null -ne $a.roundend) { $roundWinner = if ($a.roundend -is [string]) { $a.roundend } elseif ($a.roundend.PSObject.Properties['winner']) { $a.roundend.winner } else { [string]$a.roundend } }
 $metrics = @{
     serverFpsMedian = Round1 (Get-Median $a.perf.fps)
     serverFpsMin    = Get-Min $a.perf.fps
@@ -165,7 +195,7 @@ $metrics = @{
     maxTownsWest    = $a.hold.max_towns.WEST
     maxTownsEast    = $a.hold.max_towns.EAST
     hours           = $a.hours
-    roundWinner     = $a.roundend
+    roundWinner     = $roundWinner
 }
 
 # 3) evaluate asserts

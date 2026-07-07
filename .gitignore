@@ -58,3 +58,8 @@ Tools/Soak/report/
 # Python bytecode cache
 __pycache__/
 *.pyc
+
+# Autopilot runtime artifacts (machine-local)
+Tools/Soak/findings.jsonl
+Tools/Soak/recommendations.jsonl
+Tools/Soak/farm-state.json

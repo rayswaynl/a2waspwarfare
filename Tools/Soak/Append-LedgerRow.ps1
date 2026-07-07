@@ -179,12 +179,20 @@ $aHours = $null
 if ($null -ne $a -and $null -ne $a.hours) { $aHours = [math]::Round([double]$a.hours, 3) }
 $ws = $null
 if ($null -ne $a) { $ws = $a.war_state_ext }
+# analyze_soak emits roundend as an object {winner,secs,map} when a round ended; the schema wants a
+# string|null, so flatten it (a raw object here fails schema conformance -- real bug on cc44u samples).
+$roundendStr = $null
+if ($null -ne $a -and $null -ne $a.roundend) {
+    if ($a.roundend -is [string]) { $roundendStr = $a.roundend }
+    elseif ($a.roundend.PSObject.Properties['winner']) { $roundendStr = "$($a.roundend.winner)@$($a.roundend.secs)s" }
+    else { $roundendStr = [string]$a.roundend }
+}
 
 $analyzer = [ordered]@{
     build    = $a.build
     map      = $a.map
     hours    = $aHours
-    roundend = $a.roundend
+    roundend = $roundendStr
     arrival = [ordered]@{
         dispatches                 = $a.arrival.dispatches
         arrivals                   = $a.arrival.arrivals
