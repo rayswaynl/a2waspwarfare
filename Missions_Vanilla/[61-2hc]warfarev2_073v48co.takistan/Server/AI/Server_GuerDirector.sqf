@@ -51,6 +51,13 @@ _ambushBubbleM  = missionNamespace getVariable ["AICOMV2_GDIR_AMBUSH_BUBBLE_M", 
 _suppressSec    = missionNamespace getVariable ["AICOMV2_GDIR_SUPPRESS_SEC",     600];
 _retakeEnabled  = missionNamespace getVariable ["AICOMV2_GDIR_RETAKE",           0];
 _playerSupport  = missionNamespace getVariable ["AICOMV2_GDIR_PLAYER_SUPPORT",   0];
+//--- P1/P2 hardening flags (fable/gdir-harden-shop).
+private ["_hardenOn","_moveTimeoutFactor","_cellSpeedMs","_jipSnapInterval","_jipSnapLastT"];
+_hardenOn          = (missionNamespace getVariable ["AICOMV2_GDIR_HARDEN",             1]) > 0;
+_moveTimeoutFactor = missionNamespace getVariable ["AICOMV2_GDIR_MOVE_TIMEOUT_FACTOR", 3];
+_cellSpeedMs       = missionNamespace getVariable ["AICOMV2_GDIR_CELL_SPEED_MS",       8];
+_jipSnapInterval   = missionNamespace getVariable ["AICOMV2_GDIR_JIP_SNAP_INTERVAL",   60];
+_jipSnapLastT      = 0;
 
 //===================================================================================
 // LEDGER: array of records, one per GUER/unknown town.
@@ -78,7 +85,7 @@ _regenDebt   = 0;
         _baseline = 0.5;
         if (count _grps > 0) then {_baseline = 1.0};
         _curStr  = _baseline;
-        _rec = [_town, _baseline, _curStr, 0, 0, count _grps];
+        _rec = [_town, _baseline, _curStr, 0, 0, count _grps, 0];
         _ledger set [count _ledger, _rec];
         _ledgerCount = _ledgerCount + 1;
     };
@@ -221,6 +228,12 @@ while {!WFBE_GameOver} do {
                 _dst set [3, (_dst select 3) + _send];
                 _orderCount  = _orderCount + 1;
                 _fundedTotal = _fundedTotal + _send;
+                //--- P1: record ETA for stuck-cell detection (hardenOn only).
+                if (_hardenOn && {(count _dst) > 6}) then {
+                    private ["_etaDist"];
+                    _etaDist = (getPos (_src select 0)) distance (getPos (_dst select 0));
+                    _dst set [6, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor];
+                };
                 diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER moveCell from=%2 to=%3 str=%4",
                     _elmin, _src select 0, _dst select 0, _send];
             };
@@ -244,6 +257,12 @@ while {!WFBE_GameOver} do {
                 _dst set [3, (_dst select 3) + _send];
                 _orderCount  = _orderCount + 1;
                 _fundedTotal = _fundedTotal + _send;
+                //--- P1: record ETA for stuck-cell detection (hardenOn only).
+                if (_hardenOn && {(count _dst) > 6}) then {
+                    private ["_etaDist"];
+                    _etaDist = (getPos (_src select 0)) distance (getPos (_dst select 0));
+                    _dst set [6, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor];
+                };
                 diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER moveCell from=%2 to=%3 str=%4 (threatened)",
                     _elmin, _src select 0, _dst select 0, _send];
             };
@@ -484,18 +503,28 @@ while {!WFBE_GameOver} do {
     //--------------------------------------------------------------------
     // PHASE 5: CELL ARRIVAL - clear in-transit balance each tick.
     // Transit accumulated in phase 4 is credited back each tick.
-    // (Full impl would be timer-driven per-cell; this is the conservative form.)
+    // P1 harden: if ETA recorded and past due, force-credit (teleport-merge) and log.
     //--------------------------------------------------------------------
     {
-        private ["_rec","_transit","_str","_base"];
+        private ["_rec","_transit","_str","_base","_eta"];
         _rec     = _x;
         _transit = _rec select 3;
         _str     = _rec select 2;
         _base    = _rec select 1;
+        _eta     = if ((count _rec) > 6) then {_rec select 6} else {0};
         if (_transit > 0) then {
+            //--- P1: ETA-timeout force-merge. If past ETA, force arrival and emit GDIR_MOVE_TIMEOUT.
+            if (_hardenOn && {_eta > 0} && {diag_tickTime > _eta}) then {
+                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_MOVE_TIMEOUT town=%2 transit=%3 etaExpired=%4 nowT=%5",
+                    _elmin, _rec select 0, _transit, _eta, diag_tickTime];
+                if ((count _rec) > 6) then {_rec set [6, 0]}; //--- clear ETA
+            };
             _str = [_str + _transit, 0, _surgeCapPaid * _base] call _fnClamp;
             _rec set [2, _str];
             _rec set [3, 0];
+        } else {
+            //--- No active transit: clear any stale ETA.
+            if (_hardenOn && {_eta > 0} && {(count _rec) > 6}) then {_rec set [6, 0]};
         };
     } forEach _ledger;
 
@@ -533,6 +562,46 @@ while {!WFBE_GameOver} do {
     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_LEDGER towns=%2 totalStr=%3 totalBase=%4 transit=%5 funded=%6 regenDebt=%7",
         _elmin, _ledgerCount, _totalStr, _totalBase, _totalTransit, _fundedTotal, _regenDebt];
 
+    //--------------------------------------------------------------------
+    // PHASE 8 (P2): JIP PV-SNAPSHOT - compact ledger values snapshot.
+    // Pushes to all clients on a throttled interval so late joiners see
+    // town band/fund/cooldown state without needing a director tick request.
+    // NO group objects in the snapshot - only values. Size: ~90 bytes per town.
+    //--------------------------------------------------------------------
+    if (_hardenOn && {(diag_tickTime - _jipSnapLastT) >= _jipSnapInterval}) then {
+        _jipSnapLastT = diag_tickTime;
+        private ["_snapNames","_snapStr","_snapBase","_snapFund","_snapCD"];
+        _snapNames = [];
+        _snapStr   = [];
+        _snapBase  = [];
+        _snapFund  = [];
+        _snapCD    = [];
+        private ["_snapNowT","_cdMap"];
+        _snapNowT = diag_tickTime;
+        _cdMap    = missionNamespace getVariable ["AICOMV2_GDIR_COOLDOWN_MAP", []];
+        {
+            private ["_sRec","_sTown","_sName","_sFundKey","_sFund","_sCD"];
+            _sRec  = _x;
+            _sTown = _sRec select 0;
+            _sName = _sTown getVariable ["wfbe_name", ""];
+            _sFundKey = Format ["AICOMV2_GDIR_TOWN_FUND_%1", _sName];
+            _sFund    = missionNamespace getVariable [_sFundKey, 0];
+            _sCD = 0;
+            {
+                if ((_x select 0) == _sName) then {_sCD = _snapNowT - (_x select 1)};
+            } forEach _cdMap;
+            _snapNames set [count _snapNames, _sName];
+            _snapStr   set [count _snapStr,   _sRec select 2];
+            _snapBase  set [count _snapBase,  _sRec select 1];
+            _snapFund  set [count _snapFund,  _sFund];
+            _snapCD    set [count _snapCD,    _sCD];
+        } forEach _ledger;
+        AICOMV2_GDIR_JIP_SNAP = [_snapNames, _snapStr, _snapBase, _snapFund, _snapCD];
+        publicVariable "AICOMV2_GDIR_JIP_SNAP";
+        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_JIP_SNAP published towns=%2", _elmin, count _snapNames];
+    };
+
 };
+
 
 ["INFORMATION", "Server_GuerDirector.sqf: WFBE_GameOver detected. GUER Director exiting."] Call WFBE_CO_FNC_LogContent;

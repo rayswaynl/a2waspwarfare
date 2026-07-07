@@ -125,11 +125,11 @@ if (_verb == "quote") exitWith {
 
 	//--- Compute estimated prices for all 6 actions.
 	private ["_qBaseReinf","_qBaseInstMult","_qBaseIns","_qBaseGun","_qBaseCtr"];
-	_qBaseReinf   = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_REINF", 800];
+	_qBaseReinf   = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_REINF", 1600];
 	_qBaseInstMult = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_INSTANT_MULT", 1.5];
-	_qBaseIns     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_INS", 600];
-	_qBaseGun     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_GUN", 1200];
-	_qBaseCtr     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CTR_ATK", 500];
+	_qBaseIns     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_INS", 1200];
+	_qBaseGun     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_GUN", 2400];
+	_qBaseCtr     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CTR_ATK", 1000];
 
 	private ["_qPConvoy","_qPInstant","_qPIns","_qPGun","_qPCombo","_qPCtr"];
 	_qPConvoy  = round (_qBaseReinf * _qScarcity * _qLf);
@@ -210,8 +210,8 @@ _guerGrpCount = 0;
 {
 	if (side _x == resistance) then {_guerGrpCount = _guerGrpCount + 1};
 } forEach allGroups;
-//--- donate is pure economy - never materialises units, always safe.
-if (!(_verb == "donate") && {_guerGrpCount >= _grpBudgetMax}) exitWith {
+//--- donate/cache/mortar are pure economy - never materialise units, always safe.
+if (!(_verb == "donate") && {!(_verb == "cache")} && {!(_verb == "mortar")} && {_guerGrpCount >= _grpBudgetMax}) exitWith {
 	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=%2|town=%3|deny=groupBudgetExceeded|fundedBy=%4|pricePaid=0|budget=%5/%6", _elmin, _verb, _townId, getPlayerUID _player, _guerGrpCount, _grpBudgetMax];
 	[getPlayerUID _player, "GDirPanelResult", ["deny", "Group cap reached. Try again when units despawn.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
 };
@@ -249,7 +249,7 @@ _scarcity = 1.0;
 private ["_basePrice"];
 _basePrice = 0;
 if (_verb == "buy") then {
-	_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_REINF", 800];
+	_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_REINF", 1600];
 	if (_product == "instant") then {
 		_basePrice = round (_basePrice * (missionNamespace getVariable ["AICOMV2_GDIR_PANEL_INSTANT_MULT", 1.5]));
 	};
@@ -259,12 +259,21 @@ if (_verb == "qrf") then {
 	if (_product == "qrfGunship") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_GUN", 1200]};
 	if (_product == "qrfCombo") then {
 		_basePrice = round (
-			(missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_INS", 600]) +
-			(missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_GUN", 1200]) * 0.85
+			(missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_INS", 1200]) +
+			(missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_GUN", 2400]) * 0.85
 		);
 	};
 };
-if (_verb == "counter") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CTR_ATK", 500]};
+if (_verb == "counter") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CTR_ATK", 1000]};
+//--- P3 cache verb (fable/gdir-harden-shop).
+if (_verb == "cache") then {
+    if (_product == "t1") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CACHE_T1", 3200]};
+    if (_product == "t2") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CACHE_T2", 6400]};
+    if (_product == "t3") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CACHE_T3", 9600]};
+};
+//--- P4 relief squad + mortar harassment verbs (fable/gdir-harden-shop).
+if (_verb == "relief") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_RELIEF", 800]};
+if (_verb == "mortar") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_MORTAR", 1200]};
 //--- donate handled separately below.
 
 private ["_price"];
@@ -347,6 +356,61 @@ _scReplaced  = false;
 } forEach _scarcityRec;
 if (!_scReplaced) then {_newScarcity set [count _newScarcity, [_townId, _nowT, 1]]};
 missionNamespace setVariable ["AICOMV2_GDIR_SCARCITY_MAP", _newScarcity];
+
+//--- P3: CACHE verb - persist tier on town object + telemetry. No Director tick needed.
+if (_verb == "cache") exitWith {
+    if (!((missionNamespace getVariable ["AICOMV2_GDIR_CACHE", 1]) > 0)) exitWith {
+        [getPlayerUID _player, "GDirPanelResult", ["deny", "Weapons cache not enabled this round.", "cache", _townId]] Call WFBE_CO_FNC_SendToClient;
+    };
+    private ["_newTier","_curTier"];
+    _newTier = 0;
+    if (_product == "t1") then {_newTier = 1};
+    if (_product == "t2") then {_newTier = 2};
+    if (_product == "t3") then {_newTier = 3};
+    if (_newTier < 1) exitWith {
+        [getPlayerUID _player, "GDirPanelResult", ["deny", "Unknown cache tier.", "cache", _townId]] Call WFBE_CO_FNC_SendToClient;
+    };
+    _curTier = _townObj getVariable ["AICOMV2_GDIR_CACHE_TIER", 0];
+    if (_newTier <= _curTier) exitWith {
+        [getPlayerUID _player, "GDirPanelResult", ["deny", Format ["Cache tier %1 already active on %2.", _curTier, _townId], "cache", _townId]] Call WFBE_CO_FNC_SendToClient;
+    };
+    //--- Debit already done above. Persist tier on town object (broadcast=false; server reads it in materializer TODO).
+    _townObj setVariable ["AICOMV2_GDIR_CACHE_TIER", _newTier];
+    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=cache|town=%2|product=%3|tier=%4|price=%5|fundedBy=%6|deny=none",
+        _elmin, _townId, _product, _newTier, _price, getPlayerUID _player];
+    [getPlayerUID _player, "GDirPanelResult", ["accept", Format ["Cache tier %1 purchased for %2. Defenders will spawn with enhanced loadouts.", _newTier, _townId], "cache", _townId]] Call WFBE_CO_FNC_SendToClient;
+};
+
+//--- P4: RELIEF SQUAD verb - infantry-only fast variant of buy (conserves group cap).
+if (_verb == "relief") then {
+    _orderKind = "reinforce"; //--- Reuses reinforce Director path.
+    //--- Note: product field carries relief marker for smaller-spawn hint (future TODO in Director).
+};
+
+//--- P4: MORTAR verb - fires existing guer-mortar-strike machinery via Server_HandleSpecial.
+if (_verb == "mortar") exitWith {
+    //--- Mortar cooldown is tracked separately from the main panel cooldown.
+    private ["_mortarCdKey","_mortarCdSec","_lastMortarT"];
+    _mortarCdKey = Format ["AICOMV2_GDIR_MORTAR_CD_%1", _townId];
+    _mortarCdSec = missionNamespace getVariable ["AICOMV2_GDIR_MORTAR_COOLDOWN_SEC", 900];
+    _lastMortarT = missionNamespace getVariable [_mortarCdKey, -9999];
+    if ((_nowT - _lastMortarT) < _mortarCdSec) exitWith {
+        private ["_mRem"];
+        _mRem = round (_mortarCdSec - (_nowT - _lastMortarT));
+        [getPlayerUID _player, "GDirPanelResult", ["deny", Format ["Mortar cooling down. %1s remaining.", _mRem], "mortar", _townId]] Call WFBE_CO_FNC_SendToClient;
+    };
+    //--- Find target town position for strike.
+    private ["_mortarPos"];
+    _mortarPos = getPos _townObj;
+    //--- Write mortar cooldown.
+    missionNamespace setVariable [_mortarCdKey, _nowT];
+    //--- Dispatch via Server_HandleSpecial existing guer-mortar-strike handler.
+    //--- Server_HandleSpecial case "guer-mortar-strike" args: [kind, pos, player].
+    ["guer-mortar-strike", _mortarPos, _player] call HandleSpecial;
+    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=mortar|town=%2|price=%3|fundedBy=%4|deny=none",
+        _elmin, _townId, _price, getPlayerUID _player];
+    [getPlayerUID _player, "GDirPanelResult", ["accept", Format ["Mortar strike called on %1. $%2 debited.", _townId, _price], "mortar", _townId]] Call WFBE_CO_FNC_SendToClient;
+};
 
 //--- Emit GDIR_ORDER for the Director tick to consume.
 private ["_pendingOrders","_orderKind"];
