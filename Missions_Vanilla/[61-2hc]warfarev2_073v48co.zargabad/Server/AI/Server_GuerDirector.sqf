@@ -436,6 +436,17 @@ while {!WFBE_GameOver} do {
                                         _hClass = "Ka137_MG_PMC";
                                     };
                                     _h    = _hClass createVehicle _spawnPos;
+                                    //--- Ka137 HP multiplier EH (mirrors WFBE_CO_FNC_CreateVehicle hook; raw createVehicle misses it).
+                                    if (_hClass == "Ka137_MG_PMC" && {(missionNamespace getVariable ["WFBE_C_KA137_HP_MULT", 3]) > 1}) then {
+                                        private ["_hpMult"];
+                                        _hpMult = missionNamespace getVariable ["WFBE_C_KA137_HP_MULT", 3];
+                                        _h addEventHandler ["HandleDamage", {
+                                            private ["_hdMult"];
+                                            _hdMult = missionNamespace getVariable ["WFBE_C_KA137_HP_MULT", 3];
+                                            if (_hdMult < 1) then {_hdMult = 1};
+                                            (_this select 2) / _hdMult
+                                        }];
+                                    };
                                     _hGrp = createGroup resistance;
                                     //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64).
                                     private ["_uPilot2","_uGun2"];
