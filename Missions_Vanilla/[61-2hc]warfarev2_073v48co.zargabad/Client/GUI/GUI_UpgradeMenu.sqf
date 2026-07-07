@@ -9,79 +9,218 @@ uiNamespace setVariable ["wfbe_display_upgrades", _this select 0];
 //--- buttons are disabled and the back button still routes to the WF menu. A2-OA safe (lnb*/structuredText only).
 if ((side group player) == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) exitWith {
 	disableSerialization;
-	private ["_disp","_names","_lastKey"];
-	_disp = _this select 0;
-	ctrlEnable [504007, false]; ctrlEnable [504008, false]; ctrlEnable [504009, false];
-	lnbClear 504001;
-	_names = ["Tech Kills","Heavy Vehicles","M113 VBIED","Ka-137 Flares","Barracks AI","FOB Field Bases"];
-	{ lnbAddRow [504001, ["", _x]] } forEach _names;
-	lnbSetCurSelRow [504001, 0];
-	((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504006) ctrlSetStructuredText (parseText "<t>GUER FIELD TECH - earned by kills (read-only). Select a line for details.</t>");
-	_lastKey = "";
-	WFBE_MenuAction = -1;
-	while {alive player && dialog} do {
-		private ["_kills","_tier","_avail","_k1","_k2","_k3","_m113k","_flare","_capAI","_baseAI","_perKills","_maxAI","_sel","_key","_next","_title","_html","_desc"];
-		_kills   = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
-		_tier    = missionNamespace getVariable ["WFBE_GUER_VEHICLE_TIER", 0];
-		_avail   = missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]];
-		if (typeName _avail != "ARRAY" || {count _avail < 3}) then {_avail = [0,0,0]};
-		_k1 = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15];
-		_k2 = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40];
-		_k3 = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80];
-		_m113k = missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25];
-		_flare = [60,120,240] select (_tier min 2);
-		_baseAI   = missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_BASE", 4];
-		_perKills = missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_PER_KILLS", 10];
-		_maxAI    = missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_MAX", 12];
-		_capAI = (_baseAI + floor (_kills / _perKills)) min _maxAI;
-
-		_sel = lnbCurSelRow 504001;
-		if (_sel < 0) then {_sel = 0};
-		//--- Re-render only when the selection or the live values change (cheap key).
-		_key = Format ["%1|%2|%3|%4", _sel, _kills, _tier, _avail];
-		if (_key != _lastKey) then {
-			_lastKey = _key;
-			_title = _names select _sel;
-			_html = "";
-			_desc = "";
-			switch (_sel) do {
-				case 0: {
-					_html = Format ["<t color='#B6F563' size='1.1'>Tech Kills: %1</t>", _kills];
-					_desc = "Cumulative kills made by GUER PLAYERS against WEST/EAST. This single number drives every field-tech line below - there is no cash upgrade, you simply fight for it.";
+	if (!((missionNamespace getVariable ["WFBE_C_GUER_TECHVIEW_V2", 1]) > 0)) then {
+		//--- V1 legacy rendering (WFBE_C_GUER_TECHVIEW_V2 = 0 = byte-identical behavior).
+		private ["_disp","_names","_lastKey"];
+		_disp = _this select 0;
+		ctrlEnable [504007, false]; ctrlEnable [504008, false]; ctrlEnable [504009, false];
+		lnbClear 504001;
+		_names = ["Tech Kills","Heavy Vehicles","M113 VBIED","Ka-137 Flares","Barracks AI","FOB Field Bases"];
+		{ lnbAddRow [504001, ["", _x]] } forEach _names;
+		lnbSetCurSelRow [504001, 0];
+		((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504006) ctrlSetStructuredText (parseText "<t>GUER FIELD TECH - earned by kills (read-only). Select a line for details.</t>");
+		_lastKey = "";
+		WFBE_MenuAction = -1;
+		while {alive player && dialog} do {
+			private ["_kills","_tier","_avail","_k1","_k2","_k3","_m113k","_flare","_capAI","_baseAI","_perKills","_maxAI","_sel","_key","_next","_title","_html","_desc"];
+			_kills   = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+			_tier    = missionNamespace getVariable ["WFBE_GUER_VEHICLE_TIER", 0];
+			_avail   = missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]];
+			if (typeName _avail != "ARRAY" || {count _avail < 3}) then {_avail = [0,0,0]};
+			_k1 = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15];
+			_k2 = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40];
+			_k3 = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80];
+			_m113k = missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25];
+			_flare = [60,120,240] select (_tier min 2);
+			_baseAI   = missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_BASE", 4];
+			_perKills = missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_PER_KILLS", 10];
+			_maxAI    = missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_MAX", 12];
+			_capAI = (_baseAI + floor (_kills / _perKills)) min _maxAI;
+			_sel = lnbCurSelRow 504001;
+			if (_sel < 0) then {_sel = 0};
+			_key = Format ["%1|%2|%3|%4", _sel, _kills, _tier, _avail];
+			if (_key != _lastKey) then {
+				_lastKey = _key;
+				_title = _names select _sel;
+				_html = "";
+				_desc = "";
+				switch (_sel) do {
+					case 0: {
+						_html = Format ["<t color='#B6F563' size='1.1'>Tech Kills: %1</t>", _kills];
+						_desc = "Cumulative kills made by GUER PLAYERS against WEST/EAST. This single number drives every field-tech line below - there is no cash upgrade, you simply fight for it.";
+					};
+					case 1: {
+						//--- tier-3 roster differs by map: Chernarus GUE has T-72 + BMP-2; Takistan GUE caps at a ZU-23 Ural (no T-72/BMP-2).
+						private ["_t3"];
+						_t3 = if (worldName == "Takistan" || worldName == "Zargabad") then {"ZU-23 Ural (heavy weapons)"} else {"T-72 + BMP-2"};
+						_next = if (_tier < 1) then {Format ["%1 kills -> BRDM-2 + T-34", _k1]} else {if (_tier < 2) then {Format ["%1 kills -> T-55", _k2]} else {if (_tier < 3) then {Format ["%1 kills -> %2", _k3, _t3]} else {"all unlocked"}}};
+						_html = Format ["<t color='#B6F563' size='1.1'>Heavy Vehicles - Tier %1 / 3</t><br/><t color='#F5D363'>Next: %2</t>", _tier, _next];
+						_desc = Format ["Tier 1 (%1 kills): BRDM-2 + T-34.<br/>Tier 2 (%2 kills): T-55.<br/>Tier 3 (%3 kills): %4.<br/>Unlocked vehicles appear in the depot.", _k1, _k2, _k3, _t3];
+					};
+					case 2: {
+						_html = Format ["<t color='#B6F563' size='1.1'>M113 VBIED: %1</t>", if (_kills >= _m113k) then {"UNLOCKED"} else {Format ["locked (%1 / %2 kills)", _kills, _m113k]}];
+						_desc = "An unarmed, armoured M113 driven as a suicide VBIED at ~2x its normal top speed. Bought from the depot like the truck VBIED. Tracked + fast, it reaches targets the soft truck can't.";
+					};
+					case 3: {
+						_html = Format ["<t color='#B6F563' size='1.1'>Ka-137 Flares: %1</t>", _flare];
+						_desc = "The bought Ka-137 gets countermeasure flares sized by tier: 60 (start) -> 120 (tier 1) -> 240 (tier 2+). Armed automatically when you buy the Ka-137.";
+					};
+					case 4: {
+						_html = Format ["<t color='#B6F563' size='1.1'>Barracks AI cap: %1</t>", _capAI];
+						_desc = Format ["Your barracks squad ceiling = %1 + 1 per %2 kills, capped at %3 (the engine group limit). More kills = a bigger fieldable GUER squad.", _baseAI, _perKills, _maxAI];
+					};
+					case 5: {
+						_html = Format ["<t color='#B6F563' size='1.1'>FOB bases available - B %1 | LF %2 | HF %3</t>", _avail select 0, _avail select 1, _avail select 2];
+						_desc = "Destroy an enemy Barracks / Light / Heavy factory to earn a FOB delivery truck of that type (buy it in the depot). Drive it to a valid spot and 'Build FOB' to raise a forward factory you can spawn on and produce from.";
+					};
+					default {};
 				};
-				case 1: {
-					//--- tier-3 roster differs by map: Chernarus GUE has T-72 + BMP-2; Takistan GUE caps at a ZU-23 Ural (no T-72/BMP-2).
-					private ["_t3"];
-					_t3 = if (worldName == "Takistan" || worldName == "Zargabad") then {"ZU-23 Ural (heavy weapons)"} else {"T-72 + BMP-2"};
-					_next = if (_tier < 1) then {Format ["%1 kills -> BRDM-2 + T-34", _k1]} else {if (_tier < 2) then {Format ["%1 kills -> T-55", _k2]} else {if (_tier < 3) then {Format ["%1 kills -> %2", _k3, _t3]} else {"all unlocked"}}};
-					_html = Format ["<t color='#B6F563' size='1.1'>Heavy Vehicles - Tier %1 / 3</t><br/><t color='#F5D363'>Next: %2</t>", _tier, _next];
-					_desc = Format ["Tier 1 (%1 kills): BRDM-2 + T-34.<br/>Tier 2 (%2 kills): T-55.<br/>Tier 3 (%3 kills): %4.<br/>Unlocked vehicles appear in the depot.", _k1, _k2, _k3, _t3];
-				};
-				case 2: {
-					_html = Format ["<t color='#B6F563' size='1.1'>M113 VBIED: %1</t>", if (_kills >= _m113k) then {"UNLOCKED"} else {Format ["locked (%1 / %2 kills)", _kills, _m113k]}];
-					_desc = "An unarmed, armoured M113 driven as a suicide VBIED at ~2x its normal top speed. Bought from the depot like the truck VBIED. Tracked + fast, it reaches targets the soft truck can't.";
-				};
-				case 3: {
-					_html = Format ["<t color='#B6F563' size='1.1'>Ka-137 Flares: %1</t>", _flare];
-					_desc = "The bought Ka-137 gets countermeasure flares sized by tier: 60 (start) -> 120 (tier 1) -> 240 (tier 2+). Armed automatically when you buy the Ka-137.";
-				};
-				case 4: {
-					_html = Format ["<t color='#B6F563' size='1.1'>Barracks AI cap: %1</t>", _capAI];
-					_desc = Format ["Your barracks squad ceiling = %1 + 1 per %2 kills, capped at %3 (the engine group limit). More kills = a bigger fieldable GUER squad.", _baseAI, _perKills, _maxAI];
-				};
-				case 5: {
-					_html = Format ["<t color='#B6F563' size='1.1'>FOB bases available - B %1 | LF %2 | HF %3</t>", _avail select 0, _avail select 1, _avail select 2];
-					_desc = "Destroy an enemy Barracks / Light / Heavy factory to earn a FOB delivery truck of that type (buy it in the depot). Drive it to a valid spot and 'Build FOB' to raise a forward factory you can spawn on and produce from.";
-				};
-				default {};
+				((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504003) ctrlSetStructuredText (parseText _html);
+				((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504005) ctrlSetStructuredText (parseText (Format ["<t color='#42b6ff' underline='1'>%1</t><br/><br/>%2", _title, _desc]));
 			};
-			((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504003) ctrlSetStructuredText (parseText _html);
-			((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504005) ctrlSetStructuredText (parseText (Format ["<t color='#42b6ff' underline='1'>%1</t><br/><br/>%2", _title, _desc]));
+			if (WFBE_MenuAction == 1000) exitWith {WFBE_MenuAction = -1; closeDialog 0; createDialog "WF_Menu"};
+			WFBE_MenuAction = -1;
+			sleep 0.25;
 		};
-
-		if (WFBE_MenuAction == 1000) exitWith {WFBE_MenuAction = -1; closeDialog 0; createDialog "WF_Menu"};
-		WFBE_MenuAction = -1; //--- swallow purchase/select actions (read-only view).
-		sleep 0.25;
+	} else {
+		//--- V2 progression-first re-render (WFBE_C_GUER_TECHVIEW_V2 > 0). Phases A + B1 + B3.
+		private ["_disp","_lastKey","_t3","_thresholds","_tierNames","_xlink","_xlinkRow","_hintOn","_hintedTier","_approachHinted"];
+		_disp = _this select 0;
+		ctrlEnable [504007, false]; ctrlEnable [504008, false]; ctrlEnable [504009, false];
+		_t3 = if (worldName == "Takistan" || {worldName == "Zargabad"}) then {"ZU-23 Ural"} else {"T-72 + BMP-2"};
+		_tierNames = ["Base", "Light Armor", "Main Battle", "Heavy Armor"];
+		_thresholds = [0, 0, 0, 0];
+		//--- B3: cross-link row to Commissar Panel (WFBE_C_GUER_TECHVIEW_XLINK). Inline default 1 = owner approved tonight.
+		_xlink = (missionNamespace getVariable ["WFBE_C_GUER_TECHVIEW_XLINK", 1]) > 0;
+		_xlinkRow = 4;
+		//--- B1: tier-crossing hints (WFBE_C_GUER_TECHVIEW_HINT). Inline default 1 = owner approved tonight.
+		_hintOn = (missionNamespace getVariable ["WFBE_C_GUER_TECHVIEW_HINT", 1]) > 0;
+		_hintedTier = -1;
+		_approachHinted = [false, false, false];
+		lnbClear 504001;
+		lnbAddRow [504001, ["[OK]", "Base", "Always active"]];
+		lnbAddRow [504001, ["--", "Light Armor (T1)", ""]];
+		lnbAddRow [504001, ["--", "Main Battle (T2)", ""]];
+		lnbAddRow [504001, ["--", "Heavy Armor (T3)", ""]];
+		if (_xlink) then {
+			lnbAddRow [504001, [">>", "[ Commission Panel ]", ""]];
+		};
+		lnbSetCurSelRow [504001, 0];
+		((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504006) ctrlSetStructuredText (parseText "<t>GUER FIELD TECH - earned by kills (read-only). Select a tier for details.</t>");
+		_lastKey = "";
+		WFBE_MenuAction = -1;
+		while {alive player && dialog} do {
+			private ["_kills","_tier","_k1","_k2","_k3","_sel","_key","_g0","_g1","_g2","_g3","_tierNameCur","_hdrHtml","_barHtml","_detHtml","_selThresh","_toGo","_barFill","_barEmpty","_barStr","_bk","_aIdx","_approachThresh","_m113k"];
+			_kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+			_tier  = missionNamespace getVariable ["WFBE_GUER_VEHICLE_TIER", 0];
+			_k1    = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15];
+			_k2    = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40];
+			_k3    = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80];
+			_m113k = missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25];
+			_thresholds set [1, _k1];
+			_thresholds set [2, _k2];
+			_thresholds set [3, _k3];
+			_sel = lnbCurSelRow 504001;
+			if (_sel < 0) then {_sel = 0};
+			_key = Format ["%1|%2|%3", _sel, _kills, _tier];
+			if (_key != _lastKey) then {
+				_lastKey = _key;
+				//--- Update tier-ladder glyphs: [OK] = surpassed, >> = current, -- = locked.
+				_g0 = if (_tier > 0) then {"[OK]"} else {">>"};
+				_g1 = if (_tier > 1) then {"[OK]"} else {if (_tier == 1) then {">>"} else {"--"}};
+				_g2 = if (_tier > 2) then {"[OK]"} else {if (_tier == 2) then {">>"} else {"--"}};
+				_g3 = if (_tier >= 3) then {">>"} else {"--"};
+				lnbSetText [504001, [0, 0], _g0];
+				lnbSetText [504001, [1, 0], _g1];
+				lnbSetText [504001, [2, 0], _g2];
+				lnbSetText [504001, [3, 0], _g3];
+				lnbSetText [504001, [1, 2], Format ["%1 kills", _k1]];
+				lnbSetText [504001, [2, 2], Format ["%1 kills", _k2]];
+				lnbSetText [504001, [3, 2], Format ["%1 kills", _k3]];
+				//--- Header bar: current tier name + total kills.
+				_tierNameCur = _tierNames select (_tier min 3);
+				_hdrHtml = Format ["<t>Field Tech: Tier %1 - %2  *  %3 kills</t>", _tier, _tierNameCur, _kills];
+				((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504006) ctrlSetStructuredText (parseText _hdrHtml);
+				//--- Detail panes driven by selected row.
+				_barHtml = "";
+				_detHtml = "";
+				if (_xlink && {_sel == _xlinkRow}) then {
+					//--- B3: cross-link row selected - enable the Upgrade button as "Open Panel" trigger.
+					ctrlEnable [504007, true];
+					ctrlSetText [504007, "Open Panel"];
+					_barHtml = "<t color='#F5D363'>Double-click or press 'Open Panel' to open the Commissar Panel.</t>";
+					_detHtml = "<t color='#42b6ff' underline='1'>Commission Panel</t><br/><br/>Opens the GUER Director town-action panel. Spend kill income on reinforcements, QRF, and supply actions for captured towns.<br/><br/><t color='#F56363'>Requires: GUER Director active and Commissar Panel enabled.</t>";
+				} else {
+					ctrlEnable [504007, false];
+					ctrlSetText [504007, "Upgrade"];
+					if (_sel >= 0 && {_sel <= 3}) then {
+						_selThresh = _thresholds select _sel;
+						if (_sel == 0 || {_tier >= _sel}) then {
+							_barHtml = Format ["<t color='#76F563'>[UNLOCKED] %1  *  %2 kills total</t>", (_tierNames select _sel), _kills];
+						} else {
+							_barFill  = floor ((_kills min _selThresh) * 10 / (_selThresh max 1));
+							_barEmpty = 10 - _barFill;
+							_barStr = "";
+							for "_bk" from 1 to _barFill  do {_barStr = _barStr + "#"};
+							for "_bk" from 1 to _barEmpty do {_barStr = _barStr + "-"};
+							_toGo = _selThresh - (_kills min _selThresh);
+							_barHtml = Format ["<t color='#F5D363'>%1  %2/%3  -  %4 kills to go</t>", _barStr, _kills, _selThresh, _toGo];
+						};
+						switch (_sel) do {
+							case 0: {
+								_detHtml = "<t color='#42b6ff' underline='1'>Base Tier</t><br/><br/>Starting state for all GUER players.<br/>- Standard insurgent loadout available in depot<br/>- Ka-137 with 60 countermeasure flares<br/>- Barracks AI cap at base value<br/><br/><t color='#888888'>All kills by GUER players count toward side tech level.</t>";
+							};
+							case 1: {
+								_detHtml = Format ["<t color='#42b6ff' underline='1'>Light Armor (Tier 1 - %1 kills)</t><br/><br/>Status: %2<br/>- BRDM-2 unlocked in depot<br/>- T-34 unlocked in depot<br/>- Ka-137 flares: 120<br/>- M113 VBIED: unlocks at %3 kills (tracked separately)<br/><br/><t color='#888888'>All kills by GUER players count toward side tech level.</t>", _k1, if (_tier >= 1) then {"UNLOCKED"} else {"Locked - keep fighting"}, _m113k];
+							};
+							case 2: {
+								_detHtml = Format ["<t color='#42b6ff' underline='1'>Main Battle (Tier 2 - %1 kills)</t><br/><br/>Status: %2<br/>- T-55 unlocked in depot<br/>- Ka-137 flares: 240<br/><br/><t color='#888888'>All kills by GUER players count toward side tech level.</t>", _k2, if (_tier >= 2) then {"UNLOCKED"} else {"Locked - keep fighting"}];
+							};
+							case 3: {
+								_detHtml = Format ["<t color='#42b6ff' underline='1'>Heavy Armor (Tier 3 - %1 kills)</t><br/><br/>Status: %2<br/>- %3 unlocked in depot<br/>- Ka-137 flares: 240 (sustained)<br/><br/><t color='#888888'>All kills by GUER players count toward side tech level.</t>", _k3, if (_tier >= 3) then {"UNLOCKED"} else {"Locked - keep fighting"}, _t3];
+							};
+							default {};
+						};
+					};
+				};
+				((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504003) ctrlSetStructuredText (parseText _barHtml);
+				((uiNamespace getVariable "wfbe_display_upgrades") displayCtrl 504005) ctrlSetStructuredText (parseText _detHtml);
+			};
+			//--- B1: tier-crossing and approach hints (single-fire per threshold, client-side only).
+			if (_hintOn) then {
+				if (_tier > _hintedTier) then {
+					_hintedTier = _tier;
+					if (_tier > 0) then {
+						hint parseText (Format ["<t color='#B6F563' size='1.2'>FIELD TECH UNLOCKED</t><br/><br/>GUER reached <t color='#F5D363'>Tier %1 - %2</t>.<br/>New vehicles are now available in the depot!", _tier, (_tierNames select (_tier min 3))]);
+					};
+				};
+				_aIdx = _tier + 1;
+				if (_aIdx <= 3) then {
+					if (!(_approachHinted select (_aIdx - 1))) then {
+						_approachThresh = floor ((_thresholds select _aIdx) * 9 / 10);
+						if (_kills >= _approachThresh && {_tier < _aIdx}) then {
+							_approachHinted set [(_aIdx - 1), true];
+							hint parseText (Format ["<t color='#F5D363' size='1.2'>APPROACHING TIER %1</t><br/><br/>%2 kills - %3 more to unlock <t color='#B6F563'>%4</t>!", _aIdx, _kills, (_thresholds select _aIdx) - _kills, (_tierNames select _aIdx)]);
+						};
+					};
+				};
+			};
+			//--- B3: cross-link action - double-click or Upgrade button (MenuAction 1) on the cross-link row.
+			if (_xlink && {WFBE_MenuAction == 1}) then {
+				if ((lnbCurSelRow 504001) == _xlinkRow) then {
+					WFBE_MenuAction = -1;
+					if (((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0) && {(missionNamespace getVariable ["AICOMV2_GDIR_PANEL", 0]) > 0}) then {
+						closeDialog 0;
+						createDialog "WFBE_GDirCommissarMenu";
+					} else {
+						hint parseText "<t color='#F56363'>Commission Panel is not available (GUER Director inactive).</t>";
+					};
+				};
+			};
+			if (WFBE_MenuAction == 1000) exitWith {WFBE_MenuAction = -1; closeDialog 0; createDialog "WF_Menu"};
+			WFBE_MenuAction = -1;
+			sleep 0.25;
+		};
 	};
 	uiNamespace setVariable ["wfbe_display_upgrades", nil];
 };
