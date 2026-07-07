@@ -504,7 +504,7 @@
 		title = "$STR_WF_PARAMETER_TownsAmount";
 		values[] = {0,1,2,3,4,5,6,7};
 		texts[] = {"$STR_WF_PARAMETER_Extra_Small","$STR_WF_PARAMETER_Small","$STR_WF_PARAMETER_Medium","$STR_WF_PARAMETER_Large","$STR_WF_PARAMETER_Full","$STR_WF_PARAMETER_RemovedBigTowns","$STR_WF_PARAMETER_RemovedCentralLine","$STR_WF_PARAMETER_RemovedSmallTowns"};
-		default = 7; //--- b89-params: align to CC isNil default; RemovedSmallTowns map layout.
+		default = 4; //--- owner 2026-07-07: FULL map (RemovedSmallTowns hid 17 towns incl Kabanino/Vybor/Pustoshka/Polana/Shakhovka). ICC isNil default in sync.
 	};
 	class WFBE_C_CAMPS_CREATE {
 		title = "$STR_WF_PARAMETER_TownsCamps";
