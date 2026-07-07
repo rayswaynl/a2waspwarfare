@@ -12,8 +12,8 @@ if (!((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0)) exi
 ["INITIALIZATION", "Server_GuerDirector.sqf: GUER Director lane 800 starting."] Call WFBE_CO_FNC_LogContent;
 
 //--- Wait for town initialisation.
-waitUntil {!isNil "WFBE_SE_Towns"};
-waitUntil {count WFBE_SE_Towns > 0};
+waitUntil {!isNil "towns"};
+waitUntil {count towns > 0};
 
 //--- Short delay to let town ownership settle before seeding ledger.
 sleep 5;
@@ -51,13 +51,29 @@ _ledgerCount = 0;
 _fundedTotal = 0;
 _regenDebt   = 0;
 
+//--- No-nerf census helper (Tier-0 fix): live GUER groups near a town object. Returns an ARRAY
+//--- so the existing `count _grps` call sites stay valid. Replaces the mis-argged, erroring
+//--- WFBE_SE_FNC_GetTownGroupsDefender calls (that fn is a spawn-roster PLANNER, not a live census).
+private ["_fnGuerGroups"];
+_fnGuerGroups = {
+    private ["_t","_out"];
+    _t = _this select 0;
+    _out = [];
+    {
+        if ((side _x == resistance) && {alive (leader _x)} && {(leader _x) distance _t < 600}) then {
+            _out set [count _out, _x];
+        };
+    } forEach allGroups;
+    _out
+};
+
 {
     private ["_town","_side","_rec"];
     _town = _x;
-    _side = _town getVariable ["wfbe_side", "UNKNOWN"];
-    if (_side == "GUER" || {_side == "UNKNOWN"}) then {
+    _side = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+    if (_side == WFBE_C_GUER_ID || {_side == WFBE_C_UNKNOWN_ID}) then {
         private ["_grps","_baseline","_curStr"];
-        _grps    = [_town, true, "EAST", false] call WFBE_SE_FNC_GetTownGroupsDefender;
+        _grps    = [_town] call _fnGuerGroups;
         _baseline = 0.5;
         if (count _grps > 0) then {_baseline = 1.0};
         _curStr  = _baseline;
@@ -65,7 +81,7 @@ _regenDebt   = 0;
         _ledger set [count _ledger, _rec];
         _ledgerCount = _ledgerCount + 1;
     };
-} forEach WFBE_SE_Towns;
+} forEach towns;
 
 ["INFORMATION", Format ["Server_GuerDirector.sqf: Ledger seeded. %1 GUER/unknown towns.", _ledgerCount]] Call WFBE_CO_FNC_LogContent;
 
@@ -123,17 +139,17 @@ while {!WFBE_GameOver} do {
         _active       = _town getVariable ["wfbe_active", false];
         _lastGrpCount = _rec select 5;
         if (!_active && {_lastGrpCount > 0}) then {
-            _grps        = [_town, true, "EAST", false] call WFBE_SE_FNC_GetTownGroupsDefender;
+            _grps        = [_town] call _fnGuerGroups;
             _nowGrpCount = count _grps;
             if (_lastGrpCount > 0) then {
                 _ratio = _nowGrpCount / _lastGrpCount;
                 _ratio = [_ratio, 0, 1] call _fnClamp;
-                _rec set [2, (_rec select 2) * _ratio];
+                _rec set [2, ((_rec select 2) * _ratio) max (_rec select 1)]; //--- no-nerf: floor at baseline
             };
             _rec set [5, 0];
         };
         if (_active) then {
-            _grps = [_town, true, "EAST", false] call WFBE_SE_FNC_GetTownGroupsDefender;
+            _grps = [_town] call _fnGuerGroups;
             _rec set [5, count _grps];
         };
     } forEach _ledger;
@@ -354,11 +370,11 @@ while {!WFBE_GameOver} do {
                                 _cFound   = true;
                             };
                         };
-                    } forEach WFBE_SE_Towns;
+                    } forEach towns;
 
                     if (_cFound && {!isNull _cTownObj}) then {
                         private ["_cTownSide"];
-                        _cTownSide = _cTownObj getVariable ["wfbe_side", "UNKNOWN"];
+                        _cTownSide = _cTownObj getVariable ["sideID", WFBE_C_UNKNOWN_ID];
 
                         //--- QRF: fire when town is actively under attack (wfbe_contact_time fresh).
                         if (_cKind == "qrfInsert" || {_cKind == "qrfGunship"} || {_cKind == "qrfCombo"}) then {
@@ -424,7 +440,7 @@ while {!WFBE_GameOver} do {
 
                         //--- COUNTER-ATTACK: fire when town is no longer held by GUER.
                         if (_cKind == "counterAttack") then {
-                            if (!(_cTownSide == "GUER" || {_cTownSide == "UNKNOWN"})) then {
+                            if (!(_cTownSide == WFBE_C_GUER_ID || {_cTownSide == WFBE_C_UNKNOWN_ID})) then {
                                 //--- Town fell. Fire retake after 2-5 min delay.
                                 private ["_delayMin","_delayMax","_delayT"];
                                 _delayMin = 120;
