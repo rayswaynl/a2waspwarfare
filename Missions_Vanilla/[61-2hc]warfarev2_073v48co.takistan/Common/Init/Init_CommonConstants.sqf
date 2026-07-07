@@ -1615,7 +1615,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_COIN_POLL_SLEEP") then {WFBE_C_COIN_POLL_SLEEP = 0.1}; //--- Seconds between CoIn menu affordability/commanding-menu polls. 0.1 keeps the UI responsive while cutting wake-ups 10x from the legacy 0.01.
 
 //--- Towns.
-	if (isNil "WFBE_C_TOWNS_AMOUNT") then {WFBE_C_TOWNS_AMOUNT = 7}; //--- Amount of towns (0: Very small, 1: Small, 2: Medium, 3: Large, 4: Full).
+	if (isNil "WFBE_C_TOWNS_AMOUNT") then {WFBE_C_TOWNS_AMOUNT = 4}; //--- Amount of towns (0: Very small, 1: Small, 2: Medium, 3: Large, 4: Full).
 	if (isNil "WFBE_C_TOWNS_BUILD_PROTECTION_RANGE") then {WFBE_C_TOWNS_BUILD_PROTECTION_RANGE = 450}; //--- Prevent construction in towns within that radius.
 	if (isNil "WFBE_C_TOWNS_CAPTURE_MODE") then {WFBE_C_TOWNS_CAPTURE_MODE = 0}; //--- A/B (claude-gaming 2026-06-14): 2->0 Classic. Mode 2 "All Camps" required an attacker to hold EVERY camp simultaneously with dismounted infantry (server_town.sqf:169-177) - AI commander teams arrive mounted + visit camps sequentially, so capDis=0 and only GUER (garrison stands on all camps) ever flipped towns. Mode 0 flips on defender-clear + presence within 40m; camps become a capture-SPEED bonus, not a gate. GUER unchanged (still defends/caps by presence). Reversible: revert to 2, or try 1 (Threshold/140m majority) if towns flip too fast. (0: Normal/Classic, 1: Threshold, 2: All Camps).
 	if (isNil "WFBE_C_TOWNS_DEFENDER") then {WFBE_C_TOWNS_DEFENDER = 2}; //--- Town defender Difficulty (0: Disabled, 1: Light, 2: Medium, 3: Hard, 4: Insane).
