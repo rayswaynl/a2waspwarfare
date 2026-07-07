@@ -145,7 +145,19 @@ if (!isNull _area) then {
 				};
 
 				//--- Manning Defenses. Always start the loop for a manned gun with a free gunner slot.
-				[_defense,_side,_team,_closest] Spawn HandleDefense;
+				//--- For player-built statics (!_isAIQuery), respect the WFBE_C_PLAYER_DEFENSE_AUTOMAN flag
+				//--- (default 1 = on). At flag 0 player guns are never registered for AI manning (current
+				//--- behaviour). For AI-issued builds (_isAIQuery) the flag is irrelevant - always man.
+				if (_isAIQuery || {(missionNamespace getVariable ["WFBE_C_PLAYER_DEFENSE_AUTOMAN", 1]) > 0}) then {
+					[_defense,_side,_team,_closest] Spawn HandleDefense;
+					//--- AUTOMAN|v1 telemetry: one line per player-built static registered for manning.
+					//--- Always-on (not gated by WF_LOG_CONTENT) so the RPT confirms the registration.
+					if (!_isAIQuery) then {
+						private ["_autoUID"];
+						_autoUID = if (!isNull _reqPlayer) then {getPlayerUID _reqPlayer} else {"srv"};
+						diag_log ("AUTOMAN|v1|side=" + str _side + "|type=" + _type + "|by=" + _autoUID);
+					};
+				};
 			};
 		};
 	};

@@ -2360,5 +2360,13 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- radar/AWACS-role platform beside the An-2. Flag-off (0) = token never registered/listed = byte-identical.
 	if (isNil "WFBE_C_EAST_C130") then {WFBE_C_EAST_C130 = 1};   //--- Master gate: 0=off (default), 1=on. Lobby param mirrors this.
 
+//--- PLAYER BASE DEFENSE AUTO-MANNING (fable/player-defense-automan):
+//--- When >0 and a player builds a gunner-capable static inside a base area, the defense is
+//--- registered for AI manning via the same Construction_StationaryDefense path as AI-commander
+//--- guns (DefenseTeam group, WFBE_DefenseBaseArea stamp, HandleDefense loop). The client toggle
+//--- (User16 / manningDefense, default true) still gates each individual build request.
+//--- Flag-off (0) = player statics never enter the manning path = current behaviour (byte-identical).
+	if (isNil "WFBE_C_PLAYER_DEFENSE_AUTOMAN") then {WFBE_C_PLAYER_DEFENSE_AUTOMAN = 1}; //--- 0=off (current behaviour); 1=on (man player-built base statics, respects client manningDefense toggle).
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
