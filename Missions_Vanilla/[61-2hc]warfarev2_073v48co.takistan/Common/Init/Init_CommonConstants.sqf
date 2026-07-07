@@ -2165,17 +2165,6 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- no gameplay logic is gated on it. Set to 0 to suppress all MATCH|v1| lines (zero overhead).
 	if (isNil "WFBE_C_MATCH_TELEMETRY") then {WFBE_C_MATCH_TELEMETRY = 1};
 
-//--- fable/wddm-functional-defenses: MANNED FORTIFICATIONS. The three WDDM fortification
-//--- compositions (Strongpoint / Checkpoint / Observation Post) are cosmetic at HEAD (zero
-//--- gunner-slot children). Flag >0 -> WFBE_POSITION_TEMPLATE_MAP (Init_Defenses.sqf) marks the
-//--- three fort anchors factionSpecific, resolving the MANNED _WEST/_EAST variants (WEST =
-//--- M2StaticMG, EAST/GUER/TKA = DSHKM_TK_INS_EP1; STRONGPOINT +2 rampart-corner MGs,
-//--- CHECKPOINT +1 MG per guard position, OP +1 MG on the watchtower deck at the documented
-//--- Land_Fort_Watchtower_EP1 DECK_Z=5.4). Manning is the stock ConstructDefense pooled
-//--- DefenseTeam path - no new manning logic. 0 (default) = the side-neutral cosmetic arrays
-//--- resolve exactly as at HEAD (byte-identical behaviour).
-	if (isNil "WFBE_C_DEF_FORT_MANNED") then {WFBE_C_DEF_FORT_MANNED = 0};
-
 //--- fable/wddm-functional-defenses: FACTORY WALL SLABS v4. Redesign of the v3 concrete slab
 //--- layer (WFBE_NEURODEF_*_WALLS_V4, Init_Defenses.sqf): legacy ring verbatim + contiguous
 //--- Concrete_Wall_EP1 runs at the HQ 2.2 m overlap pitch (no lone single panels), slab-layer

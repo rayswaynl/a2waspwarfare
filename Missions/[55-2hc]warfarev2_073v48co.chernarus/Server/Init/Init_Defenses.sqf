@@ -957,15 +957,6 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then 
 //--- fort_*.wddm.json) + converted below, wired into WFBE_POSITION_TEMPLATE_MAP + the Core_CIV
 //--- Fortification menu rows. Always defined (harmless if a side's menu list omits the anchor).
 //======================================================================================
-//--- INFANTRY STRONGPOINT (fortification, side-neutral) — central Bunker (large) hard core, two forward fighting bays with interlocking arcs, comms-trench bag runs linking them, flank ramparts (dispersion), rear resupply, open covered entrance, forward canalizing wire.
-missionNamespace setVariable ['WFBE_NEURODEF_FORT_STRONGPOINT',[
-	['Land_fortified_nest_big_EP1',[0,0,0],0],
-	['Land_fort_bagfence_long',[-4,3,0],25],
-	['Land_fort_bagfence_long',[4,3,0],335],
-	[if (WF_A2_Vanilla) then {'Land_fort_rampart'} else {'Land_fort_rampart_EP1'},[-9,-1,0],0],
-	[if (WF_A2_Vanilla) then {'Land_fort_rampart'} else {'Land_fort_rampart_EP1'},[9,-1,0],0]
-]];
-
 //--- ROADBLOCK / CHECKPOINT (fortification, side-neutral) — staggered concrete chicane forces vehicles single-file, gate stop line, mutually-supporting bag-fence guard positions, rear camo-netted shelter, shoulder tank traps, warning sign/cones, tie-in wire.
 missionNamespace setVariable ['WFBE_NEURODEF_FORT_CHECKPOINT',[
 	['Land_CncBlock_Stripes',[-3,5,0],0],
@@ -974,94 +965,6 @@ missionNamespace setVariable ['WFBE_NEURODEF_FORT_CHECKPOINT',[
 	['Land_CncBlock_Stripes',[0,3.5,0],0],
 	['Land_fort_bagfence_long',[-6,3,0],90],
 	['Land_fort_bagfence_long',[6,1,0],90]
-]];
-
-//--- OBSERVATION POST (fortification, side-neutral) — elevated bunker-tower for long fields of view, camo net breaking the silhouette, low bag-ring fallback (not a bastion), concealed rear supply cache, single discreet forward wire. Concealment over firepower.
-missionNamespace setVariable ['WFBE_NEURODEF_FORT_OP',[
-	['Land_Fort_Watchtower_EP1',[0,2,0],0],
-	['Land_CamoNetVar_NATO',[0,4,0],0],
-	['Land_fort_bagfence_round',[0,-1,0],0],
-	['USBasicAmmunitionBox_EP1',[-2,-3,0],0]
-]];
-
-//======================================================================================
-//--- fable/wddm-functional-defenses (flag WFBE_C_DEF_FORT_MANNED, default 0): MANNED fort variants.
-//--- The three fortification compositions above are COSMETIC (zero gunner-slot children). These
-//--- _WEST/_EAST variants are the same layouts PLUS manned MG statics (WEST = M2StaticMG .50cal,
-//--- EAST = DSHKM_TK_INS_EP1 - the exact families every DEFMENU_V2 composition already uses):
-//---   * STRONGPOINT: +2 MGs at the rampart forward corners, inward-canted interlocking arcs.
-//---   * CHECKPOINT:  +1 MG behind EACH bag-fence guard position (2 total), arcs on the stop line.
-//---   * OP:          +1 MG ON the watchtower deck. The gun child carries z=5.4 - the DOCUMENTED
-//---     Land_Fort_Watchtower_EP1 deck constant (Init_CommonConstants.sqf flak fallback table:
-//---     "original watchtower: STRUCTURE=Land_Fort_Watchtower_EP1 + DECK_Z=5.4 + AUTOZ=0").
-//---     Server_ConstructPosition.sqf lifts any child with z>0.1 via setPosATL (cmdcon42-g elevated-
-//---     child path); the flak AUTOZ boundingBox override stays inert here (host != flak host class).
-//--- Manning is AUTOMATIC: Server_ConstructPosition routes every child through ConstructDefense,
-//--- which seats pooled DefenseTeam AI in any empty gunner slot (Construction_StationaryDefense.sqf
-//--- + Server_HandleDefense.sqf moveInGunner - teleports to the turret at any height).
-//--- AUTO-GENERATED from docs/design/compositions/fort_*_west|east.wddm.json by
-//--- Tools/WddmToSqf/wddm_to_sqf.py - the .wddm.json is the source of truth; do not hand-edit.
-//--- Always defined (harmless when the flag is 0: WFBE_POSITION_TEMPLATE_MAP then resolves the
-//--- side-neutral cosmetic arrays above and these variants are never read).
-//--- GUER/TKA note: Server_ConstructPosition.sqf appends _WEST only for west; every other side
-//--- (east, GUER, TKA) resolves _EAST -> the DShKM variants, which fit all three.
-//======================================================================================
-missionNamespace setVariable ['WFBE_NEURODEF_FORT_STRONGPOINT_WEST',[
-	['Land_fortified_nest_big_EP1',[0,0,0],0],
-	['Land_fort_bagfence_long',[-4,3,0],25],
-	['Land_fort_bagfence_long',[4,3,0],335],
-	['Land_fort_rampart_EP1',[-9,-1,0],0],
-	['Land_fort_rampart_EP1',[9,-1,0],0],
-	['M2StaticMG',[-9,2,0],330],
-	['M2StaticMG',[9,2,0],30]
-]];
-
-missionNamespace setVariable ['WFBE_NEURODEF_FORT_STRONGPOINT_EAST',[
-	['Land_fortified_nest_big_EP1',[0,0,0],0],
-	['Land_fort_bagfence_long',[-4,3,0],25],
-	['Land_fort_bagfence_long',[4,3,0],335],
-	['Land_fort_rampart_EP1',[-9,-1,0],0],
-	['Land_fort_rampart_EP1',[9,-1,0],0],
-	['DSHKM_TK_INS_EP1',[-9,2,0],330],
-	['DSHKM_TK_INS_EP1',[9,2,0],30]
-]];
-
-missionNamespace setVariable ['WFBE_NEURODEF_FORT_CHECKPOINT_WEST',[
-	['Land_CncBlock_Stripes',[-3,5,0],0],
-	['Land_CncBlock_Stripes',[3,2,0],0],
-	['Land_CncBlock_Stripes',[-3,-1,0],0],
-	['Land_CncBlock_Stripes',[0,3.5,0],0],
-	['Land_fort_bagfence_long',[-6,3,0],90],
-	['Land_fort_bagfence_long',[6,1,0],90],
-	['M2StaticMG',[-7.5,3,0],335],
-	['M2StaticMG',[7.5,1,0],25]
-]];
-
-missionNamespace setVariable ['WFBE_NEURODEF_FORT_CHECKPOINT_EAST',[
-	['Land_CncBlock_Stripes',[-3,5,0],0],
-	['Land_CncBlock_Stripes',[3,2,0],0],
-	['Land_CncBlock_Stripes',[-3,-1,0],0],
-	['Land_CncBlock_Stripes',[0,3.5,0],0],
-	['Land_fort_bagfence_long',[-6,3,0],90],
-	['Land_fort_bagfence_long',[6,1,0],90],
-	['DSHKM_TK_INS_EP1',[-7.5,3,0],335],
-	['DSHKM_TK_INS_EP1',[7.5,1,0],25]
-]];
-
-missionNamespace setVariable ['WFBE_NEURODEF_FORT_OP_WEST',[
-	['Land_Fort_Watchtower_EP1',[0,2,0],0],
-	['Land_CamoNetVar_NATO',[0,4,0],0],
-	['Land_fort_bagfence_round',[0,-1,0],0],
-	['USBasicAmmunitionBox_EP1',[-2,-3,0],0],
-	['M2StaticMG',[0,2,5.4],0]
-]];
-
-missionNamespace setVariable ['WFBE_NEURODEF_FORT_OP_EAST',[
-	['Land_Fort_Watchtower_EP1',[0,2,0],0],
-	['Land_CamoNetVar_EAST',[0,4,0],0],
-	['Land_fort_bagfence_round',[0,-1,0],0],
-	['TKBasicAmmunitionBox_EP1',[-2,-3,0],0],
-	['DSHKM_TK_INS_EP1',[0,2,5.4],0]
 ]];
 
 //======================================================================================
@@ -1137,12 +1040,6 @@ missionNamespace setVariable ['WFBE_NEURODEF_FORTIF_GATE_COMPLEX',[
 
 //--- Anchor (build-menu placeholder classname) -> composition template map.
 // [anchorClassname, baseTemplateVar, factionSpecific?]  (factionSpecific appends _WEST / _EAST at build time)
-//--- fable/wddm-functional-defenses: WFBE_C_DEF_FORT_MANNED>0 -> the three fort anchors become
-//--- factionSpecific (the manned _WEST/_EAST variants above resolve at build time, exactly the
-//--- AAPOS idiom). Flag 0 (default) -> factionSpecific=false -> the side-neutral cosmetic arrays
-//--- resolve - identical behaviour to HEAD.
-private '_fortManned';
-_fortManned = ((missionNamespace getVariable ['WFBE_C_DEF_FORT_MANNED', 0]) > 0);
 WFBE_POSITION_TEMPLATE_MAP = [
 	['Land_Ind_BoardsPack1','WFBE_NEURODEF_AAPOS',true],			//--- AA (light, 2 AI)
 	['Land_CncBlock_Stripes','WFBE_NEURODEF_AAPOS_HEAVY',true],			//--- AA (heavy, 4 AI)
@@ -1156,13 +1053,8 @@ WFBE_POSITION_TEMPLATE_MAP = [
 	//--- cmdcon42-g menu v2 anchors (side-neutral hedgehog line; faction-specific flak tower).
 	['Misc_cargo_cont_small','WFBE_NEURODEF_HEDGEHOGLINE',false],	//--- Hedgehog Line (AT obstacle)
 	['Land_Ind_TankSmall','WFBE_NEURODEF_FLAKTOWER',true],			//--- Flak Tower (elevated AA, 1 AI)
-	//--- cmdcon44-c WDDM fortifications set (ghosts are unused cargo/barrel models). factionSpecific is
-	//--- _fortManned: false (default) = side-neutral cosmetic arrays; true = manned _WEST/_EAST variants.
-	['Land_Misc_Cargo1B','WFBE_NEURODEF_FORT_STRONGPOINT',_fortManned],		//--- Infantry Strongpoint
-	['Land_transport_crates_EP1','WFBE_NEURODEF_FORT_CHECKPOINT',_fortManned],	//--- Roadblock / Checkpoint
-	['Land_Barrel_water','WFBE_NEURODEF_FORT_OP',_fortManned]					//--- Observation Post
 ];
-WFBE_POSITION_ANCHOR_NAMES = ['Land_Ind_BoardsPack1','Land_CncBlock_Stripes','Land_Barrel_sand','Land_Ind_BoardsPack2','Land_WoodenRamp','RoadCone','Paleta1','Paleta2','Land_Ind_Timbers','Misc_cargo_cont_small','Land_Ind_TankSmall','Land_Misc_Cargo1B','Land_transport_crates_EP1','Land_Barrel_water'];
+WFBE_POSITION_ANCHOR_NAMES = ['Land_Ind_BoardsPack1','Land_CncBlock_Stripes','Land_Barrel_sand','Land_Ind_BoardsPack2','Land_WoodenRamp','RoadCone','Paleta1','Paleta2','Land_Ind_Timbers','Misc_cargo_cont_small','Land_Ind_TankSmall'];
 
 //--- fable/wddm-functional-defenses: FORTIFICATION PACK anchor wiring. Ghost classes are unused
 //--- cheap props (all scope=2, CONFIG-VERIFIED in arma2-co-config-reference CfgVehicles.txt:
