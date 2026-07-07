@@ -135,7 +135,7 @@ if (isServer) then {
 			_camp_counter = _camp_counter + 1;
 		} forEach _camps;
 
-		if(_camp_counter == count _camps)then{
+		if(_camp_counter == count _camps && {(count _camps > 0) || {!((missionNamespace getVariable ["WFBE_C_SKIP_EMPTY_CAMP_THREAD", 0]) > 0)}})then{
 			[_towns_camps, _town, _town_camp_flags] execVM "Server\FSM\server_town_camp.sqf";
 		};
 

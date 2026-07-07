@@ -381,7 +381,7 @@ while {!WFBE_GameOver} do {
 			_location setVariable ["wfbe_episode_spawned", false];
 
 			[nil, "TownCaptured", [_location, _sideID, _newSID]] Call WFBE_CO_FNC_SendToClients;
-			if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") > 0) then {[_location, _sideID, _newSID] Spawn WFBE_SE_FNC_SetCampsToSide};
+			if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") > 0 && {!(((missionNamespace getVariable ["WFBE_C_TOWN_CAPTURE_FLIPS_CAMPS", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_CAMPS_LEGACY_SKIP_ON_PERCAMP_FLIP", 0]) > 0})}) then {[_location, _sideID, _newSID] Spawn WFBE_SE_FNC_SetCampsToSide};
 
 			//--- NAVAL HVT: post-capture actions for offshore assets (feat/naval-hvt-objectives).
 			//--- Guard: only fires if the feature is ON and this location is tagged as a naval HVT.
