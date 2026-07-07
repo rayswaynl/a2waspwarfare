@@ -474,6 +474,11 @@ while {!WFBE_GameOver} do {
                                     _ctr set [7, "fired"];
                                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=%3 town=%4 fundedBy=%5",
                                         _elmin, _cId, _hClass, _cTown, _cUid];
+                                    //--- WFBE_C_GDIR_VIS: broadcast QRF fire to GUER side.
+                                    if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
+                                        WFBE_GDIR_ORDER_MSG = Format ["COMMISSAR: %1 inbound to %2", _cKind, _cTown];
+                                        publicVariable "WFBE_GDIR_ORDER_MSG";
+                                    };
                                 } else {
                                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_SKIP groupCapExceeded=%3/%4",
                                         _elmin, _cId, _curGuerGrps, _grpBudgetMax];
@@ -513,6 +518,11 @@ while {!WFBE_GameOver} do {
                                 };
                                 _ctr set [6, _nowT];
                                 _ctr set [7, "fired"];
+                                //--- WFBE_C_GDIR_VIS: broadcast counter-attack fire to GUER side.
+                                if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
+                                    WFBE_GDIR_ORDER_MSG = Format ["COMMISSAR: Counter-Attack dispatched to %1", _cTown];
+                                    publicVariable "WFBE_GDIR_ORDER_MSG";
+                                };
                             };
                         };
                     };

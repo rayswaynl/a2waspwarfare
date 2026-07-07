@@ -438,4 +438,19 @@ diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=%2|town=%3|produ
 //--- Push result to client.
 [getPlayerUID _player, "GDirPanelResult", ["accept", Format ["Order placed: $%1 debited. Action: %2.", _price, _verb], _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
 
+//--- WFBE_C_GDIR_VIS: broadcast accepted order to all GUER clients side-wide.
+if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
+	private ["_visLabel"];
+	if (_verb == "buy" && {_product == "convoy"}) then {_visLabel = "Convoy Reinforcements"};
+	if (_verb == "buy" && {_product == "instant"}) then {_visLabel = "Instant Reinforcements"};
+	if (_verb == "qrf" && {_product == "qrfInsert"}) then {_visLabel = "QRF Insert"};
+	if (_verb == "qrf" && {_product == "qrfGunship"}) then {_visLabel = "QRF Gunship"};
+	if (_verb == "qrf" && {_product == "qrfCombo"}) then {_visLabel = "QRF Combo"};
+	if (_verb == "counter") then {_visLabel = "Counter-Attack"};
+	if (_verb == "donate") then {_visLabel = "Donation"};
+	if (isNil "_visLabel") then {_visLabel = _verb};
+	WFBE_GDIR_ORDER_MSG = Format ["COMMISSAR: %1 ordered for %2", _visLabel, _townId];
+	publicVariable "WFBE_GDIR_ORDER_MSG";
+};
+
 ["INFORMATION", Format ["RequestGDirPanel: verb=%1 product=%2 town=%3 price=%4 fundedBy=%5.", _verb, _product, _townId, _price, name _player]] Call WFBE_CO_FNC_LogContent;

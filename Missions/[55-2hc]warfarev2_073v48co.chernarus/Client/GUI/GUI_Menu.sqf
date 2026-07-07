@@ -7,7 +7,16 @@ if (sideJoined == resistance) then { {ctrlEnable [_x, false]} forEach [11004,110
 //--- stays as a harmless no-op fallback.
 if (sideJoined == resistance) then {
 	ctrlEnable [11008, true];
-	ctrlSetText [11008, "Towns"]; //--- owner 2026-07-07: renamed from "Town Actions"
+	private ["_gvisTeam","_gvisWallet","_gvisLabel"];
+	if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
+		_gvisTeam = group player;
+		_gvisWallet = _gvisTeam getVariable "wfbe_funds";
+		if (isNil "_gvisWallet") then {_gvisWallet = 0};
+		_gvisLabel = Format ["Towns ($%1)", round _gvisWallet];
+	} else {
+		_gvisLabel = "Towns";
+	};
+	ctrlSetText [11008, _gvisLabel]; //--- WFBE_C_GDIR_VIS: wallet shown when flag on (default 1)
 };
 ctrlShow [11030, false];
 

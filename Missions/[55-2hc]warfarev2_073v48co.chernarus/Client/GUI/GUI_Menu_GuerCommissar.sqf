@@ -75,6 +75,67 @@ _selMarker setMarkerColorLocal "ColorGreen";
 _selMarker setMarkerSizeLocal [0.8, 0.8];
 _selMarker setMarkerTextLocal "";
 
+//--- WFBE_C_GDIR_VIS: heatmap marker tracking array (created on panel open).
+WFBE_COMM_HM_MARKERS = [];
+
+//--- WFBE_C_GDIR_VIS helper: refresh town-strength heatmap from JIP snap.
+//--- Creates local minimap markers per snap town (once) and updates
+//--- marker colors + LB row tints by ledger health (green>=baseline, yellow 50-100%, red<50%).
+//--- Uses _towns from calling scope (same pattern as WFBE_COMM_FNC_NearestTown).
+WFBE_COMM_FNC_RefreshHeatmap = {
+	if (!((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0)) exitWith {};
+	private ["_snap","_sNames","_sStr","_sBase","_hsz","_hi"];
+	_snap = if (isNil "WFBE_COMM_GDIR_SNAP") then {[]} else {WFBE_COMM_GDIR_SNAP};
+	if (count _snap < 3) exitWith {};
+	_sNames = _snap select 0;
+	_sStr   = _snap select 1;
+	_sBase  = _snap select 2;
+	_hsz = count _sNames;
+	_hi = 0;
+	while {_hi < _hsz} do {
+		private ["_sName","_sCur","_sBas","_ratio","_mCol","_lbCol","_hmM","_lbSz","_lbI"];
+		_sName = _sNames select _hi;
+		_sCur  = _sStr   select _hi;
+		_sBas  = _sBase  select _hi;
+		if (_sBas > 0) then {_ratio = _sCur / _sBas} else {_ratio = 1};
+		if (_ratio >= 1) then {
+			_mCol  = "ColorGreen";
+			_lbCol = [0.25, 0.85, 0.4, 1];
+		} else {
+			if (_ratio >= 0.5) then {
+				_mCol  = "ColorYellow";
+				_lbCol = [1.0, 0.85, 0.2, 1];
+			} else {
+				_mCol  = "ColorRed";
+				_lbCol = [1.0, 0.3, 0.2, 1];
+			};
+		};
+		_hmM = Format ["wfbe_gdir_hm_%1", _sName];
+		if !(_hmM in WFBE_COMM_HM_MARKERS) then {
+			private ["_tPos"];
+			_tPos = [0, 0, 0];
+			{
+				if ((_x getVariable ["name", ""]) == _sName) then {_tPos = getPos _x};
+			} forEach _towns;
+			createMarkerLocal [_hmM, _tPos];
+			_hmM setMarkerTypeLocal "mil_circle";
+			_hmM setMarkerSizeLocal [0.4, 0.4];
+			_hmM setMarkerTextLocal "";
+			WFBE_COMM_HM_MARKERS set [count WFBE_COMM_HM_MARKERS, _hmM];
+		};
+		_hmM setMarkerColorLocal _mCol;
+		_lbSz = lbSize 31010;
+		_lbI = 0;
+		while {_lbI < _lbSz} do {
+			if ((lbText [31010, _lbI]) == _sName) then {
+				lbSetColor [31010, _lbI, _lbCol];
+			};
+			_lbI = _lbI + 1;
+		};
+		_hi = _hi + 1;
+	};
+};
+
 //--- Centre minimap on the world centre initially; will snap to selected town below.
 private ["_worldCentre"];
 private ["_wSz"];
@@ -244,6 +305,8 @@ if (_firstTown != "") then {
 	[_firstTown] Call WFBE_COMM_FNC_SelectTownByName;
 	[_firstTown] Call WFBE_COMM_FNC_RequestQuote;
 };
+//--- WFBE_C_GDIR_VIS: initial heatmap on open.
+[] Call WFBE_COMM_FNC_RefreshHeatmap;
 
 //--- Main interaction loop.
 MenuAction = -1;
@@ -306,20 +369,48 @@ waitUntil {
 	//--- Update button enable states.
 	[_wallet, _townFund, WFBE_COMM_QUOTE_PRICES] Call WFBE_COMM_FNC_UpdateButtonStates;
 
+	//--- WFBE_C_GDIR_VIS: refresh heatmap each poll tick.
+	[] Call WFBE_COMM_FNC_RefreshHeatmap;
+
 	//--- Cooldown display for the selected town.
 	_panelCooldowns = missionNamespace getVariable ["AICOMV2_GDIR_COOLDOWN_MAP", []];
 	_nowT = diag_tickTime;
-	private ["_townCooldown","_cdRemaining"];
+	private ["_townCooldown","_cdRemaining","_cdText"];
 	_townCooldown = 0;
 	{
 		if ((_x select 0) == _selTownId) then {_townCooldown = _x select 1};
 	} forEach _panelCooldowns;
 	_cdRemaining = _cooldownSec - (_nowT - _townCooldown);
 	if (_cdRemaining > 0) then {
-		ctrlSetText [31079, Format ["Cooldown: %1s remaining on %2", round _cdRemaining, _selTownId]];
+		_cdText = Format ["Cooldown: %1s remaining on %2", round _cdRemaining, _selTownId];
 	} else {
-		ctrlSetText [31079, ""];
+		_cdText = "";
 	};
+	//--- WFBE_C_GDIR_VIS: armed QRF contract indicator for selected town.
+	if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
+		private ["_contracts","_ctrSz","_ci","_qrfArmed"];
+		_contracts = missionNamespace getVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", []];
+		_qrfArmed = false;
+		_ctrSz = count _contracts;
+		_ci = 0;
+		while {_ci < _ctrSz} do {
+			private ["_ctrR","_cKindR","_cTownR","_cStateR"];
+			_ctrR   = _contracts select _ci;
+			_cKindR = _ctrR select 1;
+			_cTownR = _ctrR select 2;
+			_cStateR = _ctrR select 7;
+			if (_cTownR == _selTownId && {_cStateR == "armed"} && {_cKindR != "counterAttack"}) then {_qrfArmed = true};
+			_ci = _ci + 1;
+		};
+		if (_qrfArmed) then {
+			if (_cdText != "") then {
+				_cdText = Format ["[QRF ARMED] %1", _cdText];
+			} else {
+				_cdText = "[QRF ARMED for this town]";
+			};
+		};
+	};
+	ctrlSetText [31079, _cdText];
 
 	//--- Button dispatches.
 	if (MenuAction == 21) then {
@@ -367,5 +458,8 @@ waitUntil {
 	(!alive player) || {!dialog} //--- fable/tonight-hotfixes: isDialog is not a command on A2 OA (undefined-variable spam every frame); `dialog` is the engine bool
 };
 
+//--- WFBE_C_GDIR_VIS: cleanup heatmap markers.
+{deleteMarkerLocal _x} forEach WFBE_COMM_HM_MARKERS;
+WFBE_COMM_HM_MARKERS = [];
 //--- Cleanup: remove local selection marker.
 deleteMarkerLocal _selMarker;
