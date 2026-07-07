@@ -116,11 +116,24 @@ _crewClass  = missionNamespace getVariable ["WFBE_GUERRESCREW",  "GUE_Soldier_Cr
 //--- server, where these AI hulls are local. The FlareCount write is deferred (sleep 3) so it lands AFTER
 //--- CM_Set.sqf's default write.
 _applyKaFlares = {
-	private ["_v","_n"];
+	private ["_v","_n","_eMin","_eMax","_tier","_tmin","_tmax"];
 	_v = _this select 0;
 	_n = 0;
 	if (_flareOn >= 1 && {!isNull _v}) then {
-		_n = _flareMin + floor(random (_flareMax - _flareMin + 1)); //--- MIN..MAX inclusive (MAX>=MIN guarded above).
+		_eMin = _flareMin; _eMax = _flareMax;
+		if ((missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARE_TIER_SCALE", 0]) > 0) then {
+			_tier = floor (missionNamespace getVariable ["WFBE_GUER_VEHICLE_TIER", 0]);
+			if (_tier < 0) then { _tier = 0 };
+			if (_tier > 3) then { _tier = 3 };
+			_tmin = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARE_TIERMIN", [5,30,60,60]];
+			_tmax = missionNamespace getVariable ["WFBE_C_GUER_KA137_FLARE_TIERMAX", [20,120,240,240]];
+			if ((count _tmin) > _tier && {(count _tmax) > _tier}) then {
+				_eMin = _tmin select _tier;
+				_eMax = _tmax select _tier;
+				if (_eMax < _eMin) then { _eMax = _eMin };
+			};
+		};
+		_n = _eMin + floor(random (_eMax - _eMin + 1)); //--- MIN..MAX inclusive; tier-scaled when WFBE_C_GUER_KA137_FLARE_TIER_SCALE>0.
 		//--- Mount the manual OA launcher + one flare mag (turret path [-1], as the Ka-137 fires from MainTurret).
 		{_v addMagazineTurret [_x, [-1]]} forEach [_flareMag];
 		{_v addWeaponTurret  [_x, [-1]]} forEach [_flareLauncher];
