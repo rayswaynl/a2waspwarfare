@@ -381,17 +381,42 @@ waitUntil {
 	//--- Cooldown display for the selected town.
 	_panelCooldowns = missionNamespace getVariable ["AICOMV2_GDIR_COOLDOWN_MAP", []];
 	_nowT = diag_tickTime;
-	private ["_townCooldown","_cdRemaining"];
+	private ["_townCooldown","_cdRemaining","_cdText"];
 	_townCooldown = 0;
 	{
 		if ((_x select 0) == _selTownId) then {_townCooldown = _x select 1};
 	} forEach _panelCooldowns;
 	_cdRemaining = _cooldownSec - (_nowT - _townCooldown);
 	if (_cdRemaining > 0) then {
-		ctrlSetText [31079, Format ["Cooldown: %1s remaining on %2", round _cdRemaining, _selTownId]];
+		_cdText = Format ["Cooldown: %1s remaining on %2", round _cdRemaining, _selTownId];
 	} else {
-		ctrlSetText [31079, ""];
+		_cdText = "";
 	};
+	//--- WFBE_C_GDIR_VIS: armed QRF contract indicator for selected town.
+	if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
+		private ["_contracts","_ctrSz","_ci","_qrfArmed"];
+		_contracts = missionNamespace getVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", []];
+		_qrfArmed = false;
+		_ctrSz = count _contracts;
+		_ci = 0;
+		while {_ci < _ctrSz} do {
+			private ["_ctrR","_cKindR","_cTownR","_cStateR"];
+			_ctrR   = _contracts select _ci;
+			_cKindR = _ctrR select 1;
+			_cTownR = _ctrR select 2;
+			_cStateR = _ctrR select 7;
+			if (_cTownR == _selTownId && {_cStateR == "armed"} && {_cKindR != "counterAttack"}) then {_qrfArmed = true};
+			_ci = _ci + 1;
+		};
+		if (_qrfArmed) then {
+			if (_cdText != "") then {
+				_cdText = Format ["[QRF ARMED] %1", _cdText];
+			} else {
+				_cdText = "[QRF ARMED for this town]";
+			};
+		};
+	};
+	ctrlSetText [31079, _cdText];
 
 	//--- Button dispatches.
 	if (MenuAction == 21) then {
