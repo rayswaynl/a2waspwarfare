@@ -75,7 +75,7 @@ if (_unit_kind in (missionNamespace getVariable "WFBE_REPAIRTRUCKS")) then { //-
 			missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_3RD'
 		] select (_repCount min 2);
 		_repSym = if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {"S"} else {"$"};
-		_unit addAction [Format [localize 'STR_WF_Repair_MHQ', Format ["%1%2", _repSym, _repNextPrice]],'Client\Action\Action_RepairMHQ.sqf', [], 98, false, true, '', 'alive _target'];
+		_unit addAction ['Repair Mobile HQ','Client\Action\Action_RepairMHQ.sqf', [], 98, false, true, '', 'alive _target'];
 	};
 };
 

@@ -10,6 +10,29 @@ if (WFBE_Client_Logic getVariable "wfbe_hq_repairing") exitWith {hint (localize 
 
 _currency_system = missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM";
 
+if ((missionNamespace getVariable ["WFBE_C_HQ_REPAIR_SCALING", 1]) > 0) exitWith {
+	private ["_scalingAvg185","_scalingRatio185","_repairCost185","_scalingCurr185","_scalingSym185"];
+	_scalingAvg185 = if (isNil "WFBE_HQ_REPAIR_AVG_SEC") then {21600} else {WFBE_HQ_REPAIR_AVG_SEC};
+	if (_scalingAvg185 <= 0) then {_scalingAvg185 = 21600};
+	_scalingRatio185 = time / _scalingAvg185;
+	if (_scalingRatio185 > 1) then {_scalingRatio185 = 1};
+	_repairCost185 = round (7500 + 42000 * _scalingRatio185);
+	_scalingCurr185 = if (_currency_system == 0) then {(sideJoined) Call GetSideSupply} else {Call GetPlayerFunds};
+	_scalingSym185  = if (_currency_system == 0) then {"S"} else {"$"};
+	if (_scalingCurr185 < _repairCost185) exitWith {hint Format [localize "STR_WF_INFO_Repair_MHQ_Funds", _scalingSym185, _repairCost185 - _scalingCurr185]};
+	if (_currency_system == 0) then {
+		[sideJoined, -_repairCost185, "MHQ repaired.", false] Call ChangeSideSupply;
+	} else {
+		-(_repairCost185) Call ChangePlayerFunds;
+	};
+	["RequestMHQRepair", sideJoined] Call WFBE_CO_FNC_SendToServer;
+	WF_Logic setVariable [Format ["%1MHQRepair", sideJoinedText], true, true];
+	_counter = missionNamespace getVariable Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined];
+	missionNamespace setVariable [Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined], _counter + 1];
+	hint Format [localize "STR_WF_INFO_Repair_MHQ_Repair", Format ["%1%2", _scalingSym185, _repairCost185]];
+};
+
+
 switch (missionNamespace getVariable Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined]) do {
     case 1: {
         missionNamespace setVariable [Format ['WFBE_C_BASE_HQ_REPAIR_PRICE_%1', sideJoined], missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_2ND'];

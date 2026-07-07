@@ -627,6 +627,16 @@ if (_keyE != "") then { profileNamespace setVariable ["WFBE_LAST_START_E", _keyE
 saveProfileNamespace;
 diag_log format ["## B67SPAWN: chosen start keys W=%1 E=%2 (rounded map pos; should vary match-to-match).", _keyW, _keyE];
 
+//--- 185 (HQ repair scaling): read rolling avg round length from profileNamespace and broadcast.
+private ["_rpavg185","_rpN185","_rpTotal185"];
+_rpavg185 = profileNamespace getVariable ["WFBE_RPAVG", [0, 0]];
+_rpN185     = _rpavg185 select 0;
+_rpTotal185 = _rpavg185 select 1;
+WFBE_HQ_REPAIR_AVG_SEC = if (_rpN185 > 0) then {_rpTotal185 / _rpN185} else {21600};
+publicVariable "WFBE_HQ_REPAIR_AVG_SEC";
+["INITIALIZATION", Format ["Init_Server.sqf: HQ repair avg = %1s from %2 recorded rounds (seed 21600 when none).", round WFBE_HQ_REPAIR_AVG_SEC, _rpN185]] Call WFBE_CO_FNC_LogContent;
+
+
 //--- BUILD88 (cmdcon43-f, Ray 2026-07-02) SPAWNCHK REGRESSION GUARD: the town-clearance filter above should
 //--- have kept every chosen start clear of town ranges, but a force-fall / pure-random / MODE 0-1 named-spawn
 //--- path can still hand back an inside-town start. Log a permanent WARNING line for the ACTUALLY CHOSEN WEST
