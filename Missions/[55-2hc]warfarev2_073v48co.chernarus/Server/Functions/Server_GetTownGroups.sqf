@@ -142,7 +142,7 @@ _groups_max = round(_groups_max * (missionNamespace getVariable "WFBE_C_TOWNS_UN
 
 //--- Commander Town Ledger (fable/ctl-impl-v1) materialization overlay (B2). Flag-off
 //--- (AICOMV2_LANE_CMD_TOWN_LEDGER=0) => this whole block is skipped, byte-identical to HEAD.
-if ((_side == west || {_side == east}) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+if ((_side == west || {_side == east}) && {!_aa_get} && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
 	private ["_ctlStr","_ctlMinStr","_ctlEff","_ctlBudgetMax","_ctlLogik","_ctlCached"];
 	_ctlStr      = _town getVariable ["wfbe_ctl_str", 1];
 	_ctlMinStr   = missionNamespace getVariable ["AICOMV2_CTL_SPAWN_MIN_STR", 0.25];

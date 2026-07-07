@@ -22,13 +22,10 @@ waitUntil {!isNil "towns"};
 waitUntil {count towns > 0};
 sleep 5;
 
-private ["_tickSec","_regenFullSec","_captureSeed","_spawnMinStr","_paidMax","_grpBudgetMax"];
+private ["_tickSec","_regenFullSec","_captureSeed"];
 _tickSec       = missionNamespace getVariable ["AICOMV2_CTL_TICK_SEC",         30];
 _regenFullSec  = missionNamespace getVariable ["AICOMV2_CTL_REGEN_FULL_SEC",   1800];
 _captureSeed   = missionNamespace getVariable ["AICOMV2_CTL_CAPTURE_SEED",     0.25];
-_spawnMinStr   = missionNamespace getVariable ["AICOMV2_CTL_SPAWN_MIN_STR",    0.25];
-_paidMax       = missionNamespace getVariable ["AICOMV2_CTL_PAID_MAX",         1.5];
-_grpBudgetMax  = missionNamespace getVariable ["AICOMV2_CTL_GROUP_BUDGET_MAX", 120];
 
 private ["_fnClamp"];
 _fnClamp = {
@@ -82,8 +79,7 @@ _seedE = [WFBE_C_EAST_ID, east] call _fnSeedSide;
 //===================================================================================
 // MAIN LOOP - one pass covers both sides per tick.
 //===================================================================================
-private ["_elmin","_tick","_regenPerTick","_lastAuditT"];
-_elmin        = 0;
+private ["_tick","_regenPerTick","_lastAuditT"];
 _tick         = 0;
 _regenPerTick = 1.0 / (_regenFullSec / _tickSec);
 _lastAuditT   = 0;
@@ -92,11 +88,10 @@ while {!WFBE_GameOver} do {
 
 	sleep _tickSec;
 	_tick  = _tick + 1;
-	_elmin = floor (diag_tickTime / 60);
 
 	private ["_fnTickSide"];
 	_fnTickSide = {
-		private ["_side","_logik","_ledger","_newTownsFound"];
+		private ["_side","_logik","_ledger"];
 		_side   = _this select 0;
 		_logik  = (_side) Call WFBE_CO_FNC_GetSideLogic;
 		_ledger = _logik getVariable ["WFBE_CTL_LEDGER", []];
@@ -137,14 +132,15 @@ while {!WFBE_GameOver} do {
 
 		//--- REGEN (B4) + publish wfbe_ctl_str for the materialization read-site (Task 4).
 		{
-			private ["_rec","_str","_regen"];
-			_rec = _x;
-			_str = _rec select 2;
-			if (_str < 1.0) then {
+			private ["_rec","_str","_regen","_regenTown"];
+			_rec       = _x;
+			_str       = _rec select 2;
+			_regenTown = _rec select 0;
+			if (_str < 1.0 && {!(_regenTown getVariable ["wfbe_active", false])}) then {
 				_regen = [_regenPerTick, 0, 1.0 - _str] call _fnClamp;
 				_rec set [2, _str + _regen];
 			};
-			(_rec select 0) setVariable ["wfbe_ctl_str", _rec select 2];
+			_regenTown setVariable ["wfbe_ctl_str", _rec select 2];
 		} forEach _ledger;
 
 		_logik setVariable ["WFBE_CTL_LEDGER", _ledger];

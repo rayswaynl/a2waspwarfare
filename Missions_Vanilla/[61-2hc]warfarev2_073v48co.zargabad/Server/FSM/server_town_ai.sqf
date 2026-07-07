@@ -518,7 +518,7 @@ while {!WFBE_GameOver} do {
 						_ctlLedger   = _ctlLogik getVariable ["WFBE_CTL_LEDGER", []];
 						_ctlSurviving = 0;
 						{
-							if (!isNull _x && {count (units _x) > 0}) then {_ctlSurviving = _ctlSurviving + (count (units _x))};
+							if (!isNull _x && {count (units _x) > 0}) then {_ctlSurviving = _ctlSurviving + 1};
 						} forEach _town_teams;
 						_ctlFound  = false;
 						_ctlRecIdx = 0;
