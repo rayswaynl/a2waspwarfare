@@ -1669,7 +1669,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 //--- Units.
 	if (isNil "WFBE_C_UNITS_BALANCING") then {WFBE_C_UNITS_BALANCING = 1}; //--- Enable Units weaponry balancing.
 	if (isNil "WFBE_C_UNITS_BOUNTY") then {WFBE_C_UNITS_BOUNTY = 1}; //--- Enable Units bounty on kill.
-	if (isNil "WFBE_C_FIRSTBLOOD_ENABLED") then {WFBE_C_FIRSTBLOOD_ENABLED = 0}; //--- First-blood (claude-gaming 2026-07-07): 1 = the first PVP kill of the match fires a one-time sting + announcement + killer bonus. Default 0 = off (inert).
+	if (isNil "WFBE_C_FIRSTBLOOD_ENABLED") then {WFBE_C_FIRSTBLOOD_ENABLED = 1}; //--- First-blood (claude-gaming 2026-07-07): 1 = the first PVP kill of the match fires a one-time sting + announcement + killer bonus. Default 0 = off (inert).
 	if (isNil "WFBE_C_FIRSTBLOOD_BONUS") then {WFBE_C_FIRSTBLOOD_BONUS = 1000}; //--- First-blood: cash bonus credited to the killer team wallet on first blood (only paid when WFBE_C_FIRSTBLOOD_ENABLED>0).
 	if (isNil "WFBE_FIRSTBLOOD_DONE") then {WFBE_FIRSTBLOOD_DONE = false}; //--- First-blood one-shot latch (runtime state, not a tunable); false each fresh mission instance.
 	if (isNil "WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW") then {WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW = 60}; //--- Seconds where a damaged vehicle can still award its last valid hitter.
@@ -2314,6 +2314,8 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GUER_CP_V2") then {WFBE_C_GUER_CP_V2 = 1};
 	if (isNil "WFBE_C_GUER_CP_BETWEEN") then {WFBE_C_GUER_CP_BETWEEN = 1}; //--- cmdcon45 (owner): G2 checkpoints anchor on the midpoint BETWEEN the occupied town and its nearest neighbour (0 = classic around-town).
 	if (isNil "WFBE_C_TOWN_CAPTURE_FLIPS_CAMPS") then {WFBE_C_TOWN_CAPTURE_FLIPS_CAMPS = 1}; //--- cmdcon45 (owner): town capture flips its remaining camps to the new owner (0 = legacy per-camp only).
+	if (isNil "WFBE_C_CAMPS_LEGACY_SKIP_ON_PERCAMP_FLIP") then {WFBE_C_CAMPS_LEGACY_SKIP_ON_PERCAMP_FLIP = 1}; //--- F8 (claude-gaming 2026-07-07): when 1 AND WFBE_C_TOWN_CAPTURE_FLIPS_CAMPS>0, suppress the legacy Server_SetCampsToSide double-flip on town capture (per-camp block already flips sideID/flag/broadcast). Default 0 = both paths fire (legacy also resets each camp supplyValue).
+	if (isNil "WFBE_C_SKIP_EMPTY_CAMP_THREAD") then {WFBE_C_SKIP_EMPTY_CAMP_THREAD = 1}; //--- F3 (claude-gaming 2026-07-07): when 1, Init_Town skips launching server_town_camp.sqf for a town with zero synced camps (naval carrier towns) so no permanently-idle worker spawns. Default 0 = unchanged (thread still launched).
 	if (isNil "WFBE_C_GUER_CP2_ROAD_RADIUS") then {WFBE_C_GUER_CP2_ROAD_RADIUS = 400};  //--- m: nearRoads candidate radius around the target town (v2 only).
 	if (isNil "WFBE_C_GUER_CP2_FOOT_BASE") then {WFBE_C_GUER_CP2_FOOT_BASE = 4};        //--- v2 garrison base headcount (v1: 3).
 	if (isNil "WFBE_C_GUER_CP2_FOOT_PER_TIER") then {WFBE_C_GUER_CP2_FOOT_PER_TIER = 2}; //--- v2 extra garrison per GUER vehicle tier (v1: 1).
@@ -2426,7 +2428,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_HQ_REPAIR_SCALING") then {WFBE_C_HQ_REPAIR_SCALING = 1}; //--- #185: HQ repair cost 7.5k -> 49.5k over the rolling average round length (profileNamespace WFBE_RPAVG). 0 = legacy 3-tier prices.
 	if (isNil "WFBE_C_GUER_PATROL_MARKERS") then {WFBE_C_GUER_PATROL_MARKERS = 1}; //--- owner: resistance-only map intel layer (friendly AI dots + owned-town health flags + inbound cell arrows).
 	if (isNil "WFBE_C_UNIT_DESIGNER") then {WFBE_C_UNIT_DESIGNER = 1}; //--- Team-menu Units tab: infantry loadout templates applied to bought AI squad units.
-	if (isNil "WFBE_C_SEAD") then {WFBE_C_SEAD = 0}; //--- B93 SEAD: scripted anti-radar guidance for tier-5 jets (F35B/Su34), 2-shot cap. DARK until Build 93.
+	if (isNil "WFBE_C_SEAD") then {WFBE_C_SEAD = 1}; //--- B93 SEAD: scripted anti-radar guidance for tier-5 jets (F35B/Su34), 2-shot cap. DARK until Build 93.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
