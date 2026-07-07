@@ -1956,6 +1956,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_PANEL_LF_MIN")          then {AICOMV2_GDIR_PANEL_LF_MIN = 1.0};          //--- loadFactor floor (healthy server).
 	if (isNil "AICOMV2_GDIR_PANEL_LF_MAX")          then {AICOMV2_GDIR_PANEL_LF_MAX = 2.5};          //--- loadFactor ceiling (stressed server).
 	if (isNil "AICOMV2_GDIR_QRF_CAS_SEC")           then {AICOMV2_GDIR_QRF_CAS_SEC = 180};          //--- Gunship on-station duration (s).
+	if (isNil "WFBE_C_GDIR_GARRISON_GAIN") then {WFBE_C_GDIR_GARRISON_GAIN = 0}; //--- Tier-1 ledger->real-garrison gain: 0=off (byte-identical). >0 = a Director-reinforced GUER town (wfbe_gdir_str ratio>1) wakes with +min(groups, round(groups*(ratio-1)*GAIN)) real defender groups, floored at V1 (no-nerf). ~1.0 => +50% at max funded surge (ratio 1.5).
 //--- End AICOM V2 Lane 800 constants.
 
 WFBE_C_STATS_ENABLED = true;
