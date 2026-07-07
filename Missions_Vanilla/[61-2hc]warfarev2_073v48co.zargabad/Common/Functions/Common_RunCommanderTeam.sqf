@@ -1282,7 +1282,17 @@ while {!WFBE_GameOver && _alive} do {
 							};
 						} else {
 							//--- Foot snap deferred: player within _uPGR guard radius; re-issue move order (non-teleport fallback, retried next unstuck cycle).
-							_uLdr doMove _dest;
+							//--- FIX (heavymon 2026-07-06, live x54): _dest is an OUTER driver-pass local - NEVER in scope inside this
+							//--- Spawn (locals are not inherited), so this threw "Undefined variable _dest" on EVERY player-near tier-3
+							//--- recovery and the fallback move was never issued = stuck team left idle exactly when a player is watching
+							//--- (the never-frozen mandate case). Re-read the order destination from the team var instead (same source
+							//--- the UNSTUCK_FIRED dist read uses). A2-safe: plain get + isNil, count guard.
+							private ["_uFbOrd","_uFbDest"];
+							_uFbOrd = _uTeam getVariable "wfbe_aicom_order";
+							if (!isNil "_uFbOrd" && {count _uFbOrd >= 3}) then {
+								_uFbDest = _uFbOrd select 2;
+								if (!isNil "_uFbDest") then {_uLdr doMove _uFbDest};
+							};
 						};
 					};
 				};
