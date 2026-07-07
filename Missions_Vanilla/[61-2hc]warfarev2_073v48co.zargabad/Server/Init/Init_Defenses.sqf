@@ -1052,7 +1052,7 @@ WFBE_POSITION_TEMPLATE_MAP = [
 	['Land_Ind_Timbers','WFBE_NEURODEF_WALL_GATE',false],
 	//--- cmdcon42-g menu v2 anchors (side-neutral hedgehog line; faction-specific flak tower).
 	['Misc_cargo_cont_small','WFBE_NEURODEF_HEDGEHOGLINE',false],	//--- Hedgehog Line (AT obstacle)
-	['Land_Ind_TankSmall','WFBE_NEURODEF_FLAKTOWER',true],			//--- Flak Tower (elevated AA, 1 AI)
+	['Land_Ind_TankSmall','WFBE_NEURODEF_FLAKTOWER',true]			//--- Flak Tower (elevated AA, 1 AI)
 ];
 WFBE_POSITION_ANCHOR_NAMES = ['Land_Ind_BoardsPack1','Land_CncBlock_Stripes','Land_Barrel_sand','Land_Ind_BoardsPack2','Land_WoodenRamp','RoadCone','Paleta1','Paleta2','Land_Ind_Timbers','Misc_cargo_cont_small','Land_Ind_TankSmall'];
 
