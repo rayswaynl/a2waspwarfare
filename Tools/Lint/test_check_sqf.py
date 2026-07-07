@@ -386,6 +386,48 @@ class CheckSqfTests(unittest.TestCase):
         codes = lint_codes_flaggate(src, {1})
         self.assertNotIn("FLAGGATE", codes)
 
+    # ── TRAILCOMMA trailing comma before ] ────────────────────────────────────
+
+    def test_trailcomma_same_line_is_flagged(self) -> None:
+        codes = lint_codes('_arr = [1, 2,];\n')
+        self.assertIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_newline_before_close_is_flagged(self) -> None:
+        codes = lint_codes('_arr = [\n\t1,\n\t2,\n];\n')
+        self.assertIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_line_comment_between_is_flagged(self) -> None:
+        # PR #801 incident shape: comma left on the new last element, //--- comment,
+        # then the closing bracket. Preprocessor strips the comment -> runtime ",]".
+        src = '_map = [\n\t["fort", true],\t//--- last element\n];\n'
+        codes = lint_codes(src)
+        self.assertIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_block_comment_between_is_flagged(self) -> None:
+        codes = lint_codes('_arr = [1, 2, /* tail */ ];\n')
+        self.assertIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_valid_array_not_flagged(self) -> None:
+        codes = lint_codes('_arr = [1, 2];\n_nested = [[1, 2], [3, 4]];\n')
+        self.assertNotIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_string_last_element_not_flagged(self) -> None:
+        # Masking must not blank the string to whitespace: [1, "two"] is valid.
+        codes = lint_codes('_a = [1, "two"];\n_b = ["x", \'y\'];\n_c = [1, ""];\n_d = [1, "a""b"];\n')
+        self.assertNotIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_in_string_not_flagged(self) -> None:
+        codes = lint_codes('_s = "a,]";\n_t = \'b,]\';\n_u = "a, ]";\n')
+        self.assertNotIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_in_comment_only_not_flagged(self) -> None:
+        codes = lint_codes('// old shape was [1, 2,]\n/* and [3,] too */\n_x = 1;\n')
+        self.assertNotIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_noqa_suppresses(self) -> None:
+        codes = lint_codes('_arr = [1, 2,];  // noqa: TRAILCOMMA\n')
+        self.assertNotIn("TRAILCOMMA", codes)
+
 
 if __name__ == "__main__":
     unittest.main()

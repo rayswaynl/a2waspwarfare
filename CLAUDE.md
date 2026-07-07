@@ -127,7 +127,7 @@ SQF command names are case-insensitive; casing-only diffs are false positives.
    on summaries or prior context alone.
 1. Run the lint gate:
    ```
-   python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV --no-classname-index
+   python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV,TRAILCOMMA --no-classname-index
    ```
    Per-line suppression: `// noqa: CODE` (e.g. `// noqa: A3CMD`) silences that code on the line;
    bare `// noqa` silences all. Stale suppressions where no finding fires are reported as `DEADNOQA`.
