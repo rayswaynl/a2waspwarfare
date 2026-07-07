@@ -97,6 +97,7 @@ while {!gameOver} do {
 
 				_comTeam = (_x) Call WFBE_CO_FNC_GetCommanderTeam;
 				if (isNull _comTeam) then {_comTeam = grpNull};
+				private "_sideNow"; _sideNow = _x;
 
 				{
 					if !(isNil '_x') then {
@@ -111,16 +112,16 @@ while {!gameOver} do {
 					};
 				} forEach (_logik getVariable "wfbe_teams");
 
-				if ((isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) && _commander_enabled) then {
-					if (((_x) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_x, round(_income * _pcMult * _aicomTaper)] Call ChangeAICommanderFunds}; //--- B752 (Ray 2026-06-25) anti-hoard funds-cap: stop town income above WFBE_C_AICOM_WEALTH_CAP (the 12h soak ballooned to 18M; the side still keeps millions to spend, the number just stops being meaningless).
+				if ((isNull(_sideNow Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) && _commander_enabled) then {
+					if (((_sideNow) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_sideNow, round(_income * _pcMult * _aicomTaper)] Call ChangeAICommanderFunds}; //--- B752 (Ray 2026-06-25) anti-hoard funds-cap: stop town income above WFBE_C_AICOM_WEALTH_CAP (the 12h soak ballooned to 18M; the side still keeps millions to spend, the number just stops being meaningless).
 				};
 			};
 
 			//--- V0.4.1: synthetic MONEY drip for the AI commander - never synthetic supply.
 			//--- Flows even with zero town income so PvE on a near-empty server stays fun
 			//--- (the AI keeps fielding armies); supply remains the real shared war resource.
-			if ((isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) && _commander_enabled) then {
-				if (((_x) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_x, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds}; //--- B752: same anti-hoard cap on the stipend drip.
+			if ((isNull(_sideNow Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) && _commander_enabled) then {
+				if (((_sideNow) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_sideNow, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds}; //--- B752: same anti-hoard cap on the stipend drip.
 			};
 
 		};
@@ -132,13 +133,13 @@ while {!gameOver} do {
 		//--- drained to $0, it could no longer buy units, and the war stalled (towns stopped
 		//--- changing hands all night; AI stuck ~8 towns). Funds are a SEPARATE currency from
 		//--- supply, so top them up here whenever the cap suppressed them. Never synthesises supply.
-		if (_supply >= _supply_max_limit && {isNull(_x Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}} && {_commander_enabled}) then {
+		if (_supply >= _supply_max_limit && {isNull(_sideNow Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}} && {_commander_enabled}) then {
 			_income = if (_is != 3) then {_supply} else {round(_supply * _incomeCoef)};
 			if (_is == 2) then {_income = round(_income / 2)};
 			if (_income > 0) then {
-				if (((_x) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_x, round(_income * _pcMult * _aicomTaper)] Call ChangeAICommanderFunds}; //--- B752 (Ray 2026-06-25) anti-hoard funds-cap: stop town income above WFBE_C_AICOM_WEALTH_CAP (the 12h soak ballooned to 18M; the side still keeps millions to spend, the number just stops being meaningless).
+				if (((_sideNow) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_sideNow, round(_income * _pcMult * _aicomTaper)] Call ChangeAICommanderFunds}; //--- B752 (Ray 2026-06-25) anti-hoard funds-cap: stop town income above WFBE_C_AICOM_WEALTH_CAP (the 12h soak ballooned to 18M; the side still keeps millions to spend, the number just stops being meaningless).
 			};
-			if (((_x) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_x, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds}; //--- B752: same anti-hoard cap on the stipend drip.
+			if (((_sideNow) Call GetAICommanderFunds) < (missionNamespace getVariable ["WFBE_C_AICOM_WEALTH_CAP", 1500000])) then {[_sideNow, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_INCOME_STIPEND", 25]] Call ChangeAICommanderFunds}; //--- B752: same anti-hoard cap on the stipend drip.
 		};
 
 		//--- FUNDS-SINK (claude-gaming 2026-06-29, SYSTEM 1): on this same income cadence, give a rich AICOM somewhere to
@@ -147,7 +148,7 @@ while {!gameOver} do {
 		//--- DEFAULT-OFF + nil-guarded: the worker self-gates on WFBE_C_AICOM_FUNDS_SINK_ENABLE and early-exits when dark,
 		//--- so this is a no-op until armed. _x = side (commander treasury is per-side; GUER already excluded by the forEach).
 		if ((missionNamespace getVariable ["WFBE_C_AICOM_FUNDS_SINK_ENABLE", 0]) > 0 && _commander_enabled && {!isNil "WFBE_SE_FNC_AI_Com_FundsSink"}) then {
-			(_x) Call WFBE_SE_FNC_AI_Com_FundsSink;
+			(_sideNow) Call WFBE_SE_FNC_AI_Com_FundsSink;
 		};
 
 	} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: funds-only stipend, no supply/commander economy

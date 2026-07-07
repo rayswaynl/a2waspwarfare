@@ -309,9 +309,7 @@ while {!WFBE_GameOver} do {
 						_ccOldSID = _ccCamp getVariable ["sideID", WFBE_C_UNKNOWN_ID];
 						if (_ccOldSID != _newSID) then {
 							_ccCamp setVariable ["sideID", _newSID, true];
-							_ccFlag = objNull;
-							_ccFlags = nearestObjects [_ccCamp, ["FlagCarrier"], 20];
-							if (count _ccFlags > 0) then {_ccFlag = _ccFlags select 0};
+							_ccFlag = _ccCamp getVariable ["wfbe_flag", objNull];
 							if (!isNull _ccFlag) then {
 								_ccFlag setFlagTexture (missionNamespace getVariable Format ["WFBE_%1FLAG", str _ccNewSide]);
 								_ccFlag setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format ["WFBE_%1FLAG", str _ccNewSide]]);

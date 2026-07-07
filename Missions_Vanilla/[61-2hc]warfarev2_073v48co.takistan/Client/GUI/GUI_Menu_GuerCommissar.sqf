@@ -103,14 +103,8 @@ WFBE_COMM_FNC_NearestTown = {
 
 //--- Helper: select town by name in LB_Towns and update highlight marker.
 WFBE_COMM_FNC_SelectTownByName = {
-	private ["_name","_idx","_tObj","_tPos"];
+	private ["_name","_tObj","_tPos"];
 	_name = _this select 0;
-	_idx = 0;
-	{
-		if ((lbText [31010, _x]) == _name) then {
-			_idx = _x;
-		};
-	} forEach (lbSize 31010 - 1);
 	//--- Find index by scanning
 	private ["_found","_i","_sz"];
 	_found = -1;

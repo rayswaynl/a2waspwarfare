@@ -694,7 +694,7 @@ switch (_args select 0) do {
 				_ryTeams = _ryLogik getVariable ["wfbe_teams", []];
 				if (_ryHuman && {_ryIdx < (count _ryTeams)}) then {
 					_ryTeam = _ryTeams select _ryIdx;
-					if (!isNull _ryTeam && {!isPlayer (leader _ryTeam)}) then {
+					if (!isNull _ryTeam && {({alive _x} count units _ryTeam) > 0} && {!isPlayer (leader _ryTeam)}) then {
 						//--- Nearest own rally point: own HQ, else nearest OWN-side town centre (fall back to HQ).
 						_rySID = (_rySide) Call WFBE_CO_FNC_GetSideID;
 						_ryHQ  = (_rySide) Call WFBE_CO_FNC_GetSideHQ;
@@ -804,7 +804,7 @@ switch (_args select 0) do {
 				_hdTeams = _hdLogik getVariable ["wfbe_teams", []];
 				if (_hdHuman && {_hdIdx < (count _hdTeams)}) then {
 					_hdTeam = _hdTeams select _hdIdx;
-					if (!isNull _hdTeam && {!isPlayer (leader _hdTeam)}) then {
+					if (!isNull _hdTeam && {({alive _x} count units _hdTeam) > 0} && {!isPlayer (leader _hdTeam)}) then {
 						_hdSID = (_hdSide) Call WFBE_CO_FNC_GetSideID;
 						_hdTown = objNull; _hdBest = 1e12;
 						{ if ((_x getVariable ["sideID", -1]) == _hdSID) then {private "_d"; _d = (leader _hdTeam) distance _x; if (_d < _hdBest) then {_hdBest = _d; _hdTown = _x}} } forEach towns;
