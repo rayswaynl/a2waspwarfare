@@ -16,7 +16,7 @@ missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['MtvrRepair
 missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_USMC','MtvrSalvage_DES_EP1']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_USMC','MtvrSupply_DES_EP1']];
 missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'MQ9PredatorB'];
-missionNamespace setVariable [Format["WFBE_%1FPVDRONE", _side], 'AH6X_EP1'];//--- fable/fpv-strike-drone airframe (unmanned Little Bird, OA base content).
+missionNamespace setVariable [Format["WFBE_%1FPVDRONE", _side], 'Ka137_PMC'];//--- fable/fpv-strike-drone airframe: Ka-137 coaxial mini drone helo (PMC-lite; armed sibling Ka137_MG_PMC is live in-tree as GUER tech).
 
 missionNamespace setVariable [Format["WFBE_%1AMMOTRUCKS", _side], ['MtvrReammo_DES_EP1','WarfareReammoTruck_USMC','WarfareReammoTruck_RU','UralReammo_TK_EP1']];//listed to get gearaccess in updateavailablaactions.sqf (listed both to get capture skill too)
 missionNamespace setVariable [Format["WFBE_%1ECMTRUCKS", _side], ['MtvrRefuel_DES_EP1','MtvrRefuel']];//listed to add ecm stuff

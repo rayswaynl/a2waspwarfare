@@ -1,8 +1,22 @@
-Private ['_buildings','_checks','_class','_closest','_cost','_driver','_drone','_group'];
+Private ['_buildings','_checks','_class','_closest','_cost','_driver','_drone','_group','_tier'];
 
 //--- fable/fpv-strike-drone: player-piloted kamikaze mini-UAV (Tactical Center support call,
 //--- sibling of Client\Module\UAV\uav.sqf). Inert unless WFBE_C_FPV_DRONE > 0.
+//--- Optional arg 0: warhead tier "light" | "standard" | "heavy" (default "standard"). The tier
+//--- only selects the PRICE here; the warhead is bound SERVER-side at launch (Support_FPV.sqf
+//--- whitelist) so a client can never escalate a paid tier or inject an ammo classname.
 if ((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) <= 0) exitWith {};
+
+_tier = "standard";
+if (!isNil "_this") then {
+	if ((typeName _this) == "ARRAY") then {
+		if ((count _this) > 0) then {
+			if ((typeName (_this select 0)) == "STRING") then {
+				if ((_this select 0) in ["light","standard","heavy"]) then {_tier = _this select 0};
+			};
+		};
+	};
+};
 
 if (!isNull playerFPV) then {if (!alive playerFPV) then {playerFPV = objNull}};
 if (!isNull playerFPV) exitWith {hint "You already have an FPV drone in the air."};
@@ -20,6 +34,8 @@ if (count _checks > 0) then {
 if (isNull _closest) exitWith {};
 
 _cost = missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST", 7500];
+if (_tier == "light") then {_cost = missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST_LIGHT", 4500]};
+if (_tier == "heavy") then {_cost = missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST_HEAVY", 12500]};
 
 _drone = createVehicle [_class, getPos _closest, [], 0, "FLY"];
 playerFPV = _drone;
@@ -61,8 +77,8 @@ _driver moveInDriver _drone;
 
 -(_cost) Call ChangePlayerFunds;
 
-["RequestSpecial", ["fpv",sideJoined,_drone,clientTeam]] Call WFBE_CO_FNC_SendToServer;
-["INFORMATION", Format ["fpv.sqf: FPV strike drone [%1] launched by [%2].", _class, name player]] Call WFBE_CO_FNC_LogContent;
+["RequestSpecial", ["fpv",sideJoined,_drone,clientTeam,_tier]] Call WFBE_CO_FNC_SendToServer;
+["INFORMATION", Format ["fpv.sqf: FPV strike drone [%1] tier [%2] launched by [%3].", _class, _tier, name player]] Call WFBE_CO_FNC_LogContent;
 
 sleep 0.02;
 

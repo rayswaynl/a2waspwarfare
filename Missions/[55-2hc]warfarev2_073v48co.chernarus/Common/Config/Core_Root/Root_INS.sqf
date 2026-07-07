@@ -15,7 +15,7 @@ missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['UralRepair
 missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_INS']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_INS']];
 missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'Pchela1T'];
-missionNamespace setVariable [Format["WFBE_%1FPVDRONE", _side], 'AH6X_EP1'];//--- fable/fpv-strike-drone airframe (unmanned Little Bird, OA base content).
+missionNamespace setVariable [Format["WFBE_%1FPVDRONE", _side], 'Ka137_PMC'];//--- fable/fpv-strike-drone airframe: Ka-137 coaxial mini drone helo (PMC-lite; armed sibling Ka137_MG_PMC is live in-tree as GUER tech).
 
 //--- Radio Announcers.
 missionNamespace setVariable [Format ["WFBE_%1_RadioAnnouncers", _side], ['WFHQ_CZ0','WFHQ_CZ1','WFHQ_CZ2']];

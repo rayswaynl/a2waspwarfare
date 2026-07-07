@@ -2253,7 +2253,11 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_FPV_DRONE")      then {WFBE_C_FPV_DRONE      = 0};           //--- Master gate: 0=off (default), 1=on. Lobby param mirrors this.
 	if (isNil "WFBE_C_FPV_DRONE_COST") then {WFBE_C_FPV_DRONE_COST = 7500};        //--- Purchase price (deducted client-side in fpv.sqf).
 	if (isNil "WFBE_C_FPV_DRONE_TTL")  then {WFBE_C_FPV_DRONE_TTL  = 240};         //--- s: battery life; expiry DISARMS then scuttles (no parked bomb).
-	if (isNil "WFBE_C_FPV_DRONE_AMMO") then {WFBE_C_FPV_DRONE_AMMO = "R_57mm_HE"}; //--- Warhead ammo class (RPG-warhead scale: hit 150 / indirect 40 / r 12).
+	if (isNil "WFBE_C_FPV_DRONE_AMMO") then {WFBE_C_FPV_DRONE_AMMO = "R_57mm_HE"}; //--- STANDARD tier warhead (HE: hit 150 / indirect 40 / r 12).
+	if (isNil "WFBE_C_FPV_DRONE_COST_LIGHT")  then {WFBE_C_FPV_DRONE_COST_LIGHT  = 4500};           //--- LIGHT tier price.
+	if (isNil "WFBE_C_FPV_DRONE_AMMO_LIGHT")  then {WFBE_C_FPV_DRONE_AMMO_LIGHT  = "R_OG7_AT"};     //--- LIGHT tier warhead (OG-7 frag: hit 75 / indirect 20 / r 12 - soft targets).
+	if (isNil "WFBE_C_FPV_DRONE_COST_HEAVY")  then {WFBE_C_FPV_DRONE_COST_HEAVY  = 12500};          //--- HEAVY tier price.
+	if (isNil "WFBE_C_FPV_DRONE_AMMO_HEAVY")  then {WFBE_C_FPV_DRONE_AMMO_HEAVY  = "M_Hellfire_AT"}; //--- HEAVY tier warhead (AT: hit 800 / indirect 20 / r 2 - precision armor kill, tiny splash).
 
 //--- AWACS PLATFORM RADAR (fable/awacs-radar, flag WFBE_C_AWACS default 0, lobby param):
 //--- while a CREWED friendly airframe from WFBE_C_AWACS_TYPES is airborne above MINALT the
