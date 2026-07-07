@@ -774,6 +774,16 @@ if (worldName == "Zargabad") then {
 	//--- 0 = off (no penalty; also disables the memory stamp). Read in AI_Commander_Allocate.sqf.
 	if (isNil "WFBE_C_AICOM_REPICK_PENALTY")    then {WFBE_C_AICOM_REPICK_PENALTY    = 500};
 	if (isNil "WFBE_C_AICOM_REPICK_MEMORY_MIN") then {WFBE_C_AICOM_REPICK_MEMORY_MIN = 5};   //--- minutes a picked primary stays penalised.
+	//--- WO-6 SOFTEST-LANE PUSH (fable, GR-2026-07-07a): AICOM-V2-UNIT-MICRO-LAYER-SPEC WO-6. After a detected
+	//--- town LOSS for a side, additively boost neutral/GUER-only capturable towns' scores in the Allocator's
+	//--- AUTO scorer (AI_Commander_Allocate.sqf) for AICOMV2_SOFTLANE_TICKS strategy ticks, so the commander
+	//--- leans toward the least-defended next target ("softest lane") rather than the obvious counter-attack on
+	//--- the town it just lost. Layered onto the existing REPICK_PENALTY scorer term, not a replacement for it.
+	//--- Default bonus 0 = fully inert (byte-identical decision output; the loss-detection block itself is also
+	//--- gated on bonus>0, so at 0 there is no extra state read/write either). Owner can arm by raising the bonus
+	//--- toward the WFBE_C_AICOM_REPICK_PENALTY/FAR_PENALTY scale (500-1000) once soaked; tune here, not in code.
+	if (isNil "AICOMV2_SOFTLANE_BONUS") then {AICOMV2_SOFTLANE_BONUS = 0};
+	if (isNil "AICOMV2_SOFTLANE_TICKS") then {AICOMV2_SOFTLANE_TICKS = 3};   //--- strategy ticks (WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL each) the post-loss bonus window stays active.
 	if (isNil "WFBE_C_AICOM_CONCENTRATE_TOWNS") then {WFBE_C_AICOM_CONCENTRATE_TOWNS = 4};//--- Ray 2026-06-28 CONCENTRATE-FIRST: while a commander owns FEWER than this many towns it puts its FULL strength on ONE fist town (no expand/harass split) - a true opening steamroller. Once it owns this many, the normal expand(EXPAND_TEAMS)+harass spread resumes. 0 = off (spread from town one).
 	if (isNil "WFBE_C_AICOM_DISBAND_LOWTIER_ENABLE") then {WFBE_C_AICOM_DISBAND_LOWTIER_ENABLE = 1};//--- Ray 2026-06-28: retire idle rear FOOT-infantry teams once the side fields mobile (light/heavy/air) teams - keeps force modern + frees pop/group cap for armour. 0 = off.
 	if (isNil "WFBE_C_AICOM_DISBAND_LOWTIER_INTERVAL") then {WFBE_C_AICOM_DISBAND_LOWTIER_INTERVAL = 600};//--- seconds between low-tier disband passes (at most ONE team retired per pass). Dedicated operator knob; DISBAND_INTERVAL remains for shared/full disband pacing.

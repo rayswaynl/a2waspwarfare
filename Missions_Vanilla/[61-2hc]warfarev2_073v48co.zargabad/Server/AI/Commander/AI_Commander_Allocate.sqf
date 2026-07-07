@@ -40,6 +40,30 @@ if (count _tgtTowns == 0) exitWith { _logik setVariable ["wfbe_aicom_targets", [
 //--- they clash (stops the early enemy-rush that ends matches prematurely). ANTI-STALL: if no neutral town remains
 //--- capturable it falls through and engages the enemy (never idle). The HQ-strike round-ender keeps its own gate.
 _myTowns   = _snap select WFBE_SNAP_MYTOWNS;
+//--- WO-6 SOFTEST-LANE PUSH (fable, GR-2026-07-07a): after a detected town LOSS for this side, temporarily
+//--- ADD AICOMV2_SOFTLANE_BONUS to neutral/GUER-only capturable towns' scores in the AUTO scorer below for
+//--- AICOMV2_SOFTLANE_TICKS strategy ticks, so the fist leans toward the least-defended next target instead
+//--- of the obvious counter-attack on the town just lost (owner intent, V2 doc AICOM-V2-UNIT-MICRO-LAYER-SPEC
+//--- WO-6 "softest-lane push"). Loss = this tick's MYTOWNS below the cached previous-tick count; the window
+//--- is stamped on the side logic and consumed by the scorer forEach below. Distinct lever from BUG-2
+//--- REPICK-PENALTY just below: REPICK discourages re-picking ANY recently-published fist primary; this ADDS
+//--- score to SOFT (non-enemy) towns broadly. The lost town itself may carry both a repick penalty (if it was
+//--- the recent primary) and, once reverted to neutral, the soft bonus - they partially offset there, which
+//--- matches the "no auto-recapture" spec intent while other soft towns still gain the full bonus. Default
+//--- AICOMV2_SOFTLANE_BONUS 0 = fully inert: no state read/write beyond the one getVariable below.
+private ["_softlaneBonus"];
+_softlaneBonus = missionNamespace getVariable ["AICOMV2_SOFTLANE_BONUS", 0];
+if (_softlaneBonus > 0) then {
+	private ["_slPrevTowns","_slTicks","_slUntil"];
+	_slPrevTowns = _logik getVariable ["wfbe_aicom_softlane_prevtowns", _myTowns];
+	if (_myTowns < _slPrevTowns) then {
+		_slTicks = missionNamespace getVariable ["AICOMV2_SOFTLANE_TICKS", 3];
+		_slUntil = time + (_slTicks * (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60]));
+		_logik setVariable ["wfbe_aicom_softlane_until", _slUntil];
+		diag_log ("AICOM2|v1|SOFTLANE|" + str _side + "|loss=" + str _slPrevTowns + "->" + str _myTowns + "|until=" + str _slUntil);
+	};
+	_logik setVariable ["wfbe_aicom_softlane_prevtowns", _myTowns];
+};
 _engageMin = missionNamespace getVariable ["WFBE_C_AICOM_ENGAGE_MIN_TOWNS", 10];
 //--- BUG-1 CONTESTED-ENGAGE (fable, GR-2026-07-03a): the expansion-first gate below pins this side to NEUTRAL-only
 //--- targets until it owns _engageMin towns. A side that stalls BELOW that count while the enemy holds towns then
@@ -154,6 +178,11 @@ if (!_fromFocus) then {
 	_repickTowns = [];
 	{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_repickKeep set [count _repickKeep, _x]; _repickTowns set [count _repickTowns, (_x select 0)]} } forEach _repickMem;
 	_logik setVariable ["wfbe_aicom_repick_mem", _repickKeep];
+	//--- WO-6 SOFTEST-LANE: resolve once whether the loss window (stamped near the top of the script) is still
+	//--- active this tick, before the scorer forEach below consumes it per-town. Off (bonus<=0 or window
+	//--- expired) = _softlaneActive false = zero score change, zero extra getVariable calls per town.
+	private ["_softlaneActive"];
+	_softlaneActive = (_softlaneBonus > 0) && {time < (_logik getVariable ["wfbe_aicom_softlane_until", -1])};
 	_scored = [];
 	{
 		private ["_tt","_dNear","_sc","_garTier"];
@@ -179,6 +208,11 @@ if (!_fromFocus) then {
 		if (_nearBand > 0 && {_dNear < _nearBandDist}) then {_sc = _sc + _nearBandBonus};   //--- F5: near-band bonus for towns immediately adjacent to our front (re-ranks; does not change eligibility).
 		if (_supportOn) then {_sc = _sc - ((_tt distance _supportCen) / _supDiv)};   //--- pull toward the players
 		if (_repickPen > 0 && {_tt in _repickTowns}) then {_sc = _sc - _repickPen};   //--- BUG-2 anti-dogpile: recently-picked primary is deprioritised so the fist rotates.
+		if (_softlaneActive) then {
+			private ["_tsid"];
+			_tsid = _tt getVariable ["sideID", -1];
+			if (_tsid != _sideID && {_tsid != _enemyID}) then {_sc = _sc + _softlaneBonus};   //--- WO-6 softest-lane: boost neutral/GUER-only towns over contested enemy towns during the post-loss window.
+		};
 		if (isNil "_sc") then {
 		};
 		_sc = if (isNil "_sc") then {-99999} else {_sc};
