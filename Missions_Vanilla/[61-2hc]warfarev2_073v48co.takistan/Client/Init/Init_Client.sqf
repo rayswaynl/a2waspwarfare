@@ -662,6 +662,7 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM") in [3,4]) then
 /* Exec SQF|FSM Misc stuff. */
 if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] execVM "Client\FSM\updateteamsmarkers.sqf"};
 if ((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) > 0) then {[] execVM "Client\Functions\Client_GuerLockout.sqf"}; //--- fable/guer-lockout: resistance activation delay
+if ((missionNamespace getVariable ["WFBE_C_GUER_PATROL_MARKERS", 1]) > 0) then {[] execVM "Client\Functions\Client_GuerPatrolMarkers.sqf"}; //--- fable/guer-patrol-markers: resistance-only friendly AI map dots
 [] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
 [] execVM "Client\FSM\updateaicommarkers.sqf"; //--- AI-commander team direction arrows (task #3).
 if ((missionNamespace getVariable ["WFBE_C_AWACS", 0]) > 0) then {[] execVM "Client\Module\AWACS\awacs_pilot_watch.sqf"}; //--- fable/awacs-radar: AWACS pilot watch (ground MTI sweep). Flag default 0 = never launched.
