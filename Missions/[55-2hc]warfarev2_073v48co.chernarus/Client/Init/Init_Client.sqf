@@ -1654,6 +1654,9 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- Ambulance / medic-redeploy range circles (Trello #76). Local map Ellipses around friendly
 //--- ambulances and redeploy trucks showing the mobile-respawn radius. Self-gates on WFBE_C_RESPAWN_MOBILE.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_AmbulanceRedeployCircles.sqf";
+//--- Artillery range rings (Trello #90). Client-local orange Ellipses around friendly arty pieces
+//--- showing their WFBE_%1_ARTILLERY_RANGES_MAX firing radius. Self-gates on WFBE_C_ARTY_RING.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_ArtyRangeRings.sqf";
 
 //--- New-player onboarding cards (claude-gaming 2026-06-29). Once-per-session, skippable structuredText
 //--- hint sequence (what WASP is + win goal + 3 core actions + scroll-menu + JIP cue + respawn legend).
