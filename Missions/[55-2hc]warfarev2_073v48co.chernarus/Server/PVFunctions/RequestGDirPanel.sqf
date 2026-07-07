@@ -187,8 +187,11 @@ _townFund    = missionNamespace getVariable [_townFundKey, 0];
 _wallet      = _team getVariable "wfbe_funds";
 if (isNil "_wallet") then {_wallet = 0};
 
-//--- DONATE: debit wallet into town fund only, no unit action.
-if (_verb == "donate") then {
+//--- DONATE: debit wallet into town fund only, no unit action. cmdcon45: exitWith-form (was
+//--- then{} + a bare inner exitWith - bare exitWith is a COMPILE error ("Missing ;", rc16 live)
+//--- that nils the whole handler; and even compiled, then{} would FALL THROUGH into the buy
+//--- pricing below after a donate. Top-scope if+exitWith ends the script here, both paths.
+if (_verb == "donate") exitWith {
 	private ["_donateAmt"];
 	_donateAmt = 200; //--- fixed chunk per click.
 	if (_wallet < _donateAmt) exitWith {
@@ -201,7 +204,6 @@ if (_verb == "donate") then {
 	[_team] Call WFBE_SE_FNC_SyncFundsRecord;
 	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=donate|town=%2|product=none|price=%3|fundedBy=%4|deny=none", _elmin, _townId, _donateAmt, getPlayerUID _player];
 	[getPlayerUID _player, "GDirPanelResult", ["accept", Format ["Donated $%1 to %2 town fund.", _donateAmt, _townId], "donate", _townId]] Call WFBE_CO_FNC_SendToClient;
-	exitWith {};
 };
 
 //--- Town fund covers price first, shortfall from personal wallet.
