@@ -173,9 +173,10 @@ function Should-Show([string]$line) {
     # Must be an AICOM2 / AICOMSTAT / optionally WASPSTAT line
     $isAicom2    = $line -match "AICOM2\|"
     $isAicomstat = $line -match "AICOMSTAT\|"
+    $isCtlstat   = $line -match "CTLSTAT\|"
     $isWaspstat  = $line -match "WASPSTAT\|"
 
-    if (-not ($isAicom2 -or $isAicomstat -or ($ShowWaspstat -and $isWaspstat))) {
+    if (-not ($isAicom2 -or $isAicomstat -or $isCtlstat -or ($ShowWaspstat -and $isWaspstat))) {
         return $false
     }
 
