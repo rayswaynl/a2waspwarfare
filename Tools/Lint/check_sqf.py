@@ -46,6 +46,7 @@ A3_TRAPS = (
     "regexFind",
     "remoteExecCall",
     "moveInAny",  # A3-only; unknown on A2 OA 1.64, causes "Error Missing ;"
+    "nearestTerrainObjects",  # A3-only; parse "Missing )" on A2 OA 1.64 (re-added: lost in a merge)
     "disableMove",  # invented identifier; does not exist on A2 OA 1.64 (nor A3); use disableAI "MOVE"
     # NOTE: bare "insert" excluded. A3_TRAPS matching uses word-boundary regex
     # on comment/string-masked text (safe), but "insert" appears in plain English
