@@ -9,7 +9,9 @@
 //--- (exact anchors below; all surfaceIsWater-validated, spread along the east coast)
 //---
 //--- IMPORTANT NOTES:
-//---   • setPosASL is used throughout for sea objects (NOT setPos/setPosATL which snap to seabed).
+//---   • setPosASL for point-placed sea objects (setPosATL snaps to SEABED - never use it here). LHD
+//---     HULL PARTS are the exception: canonical A2 assembly is setDir + plain setPos z=0 (engine seats
+//---     each section at model height; DayZ/Domination-verified). Verify partpos z at boot via NAVALHVT-DECK.
 //---   • All createVehicle calls are GLOBAL (server-authoritative, so AI/collision sees them).
 //---   • Town logics are PRE-PLACED in mission.sqm and registered by Init_Town.sqf before this runs.
 //---   • The GUER CAP (Mi24_P + An2) is PROXIMITY-GATED: only arms at ~1500-2000m player range
@@ -54,8 +56,14 @@ WFBE_NavalHVT_SpawnProp = {
 		diag_log (Format ["NAVALHVT-SPAWNFAIL: class '%1' failed to createVehicle at %2 - class missing/invalid; part skipped.", _cls, _pos]);
 		_obj
 	};
-	_obj setPosASL [_pos select 0, _pos select 1, 0];	//--- ASL = sea surface, not seabed
+	//--- cmdcon45 (Ray 2026-07-07): canonical A2 LHD assembly is setDir FIRST, then plain setPos
+	//--- (AGLS z=0 over water) so the engine seats each section at its model-defined height. The old
+	//--- setPosASL [x,y,0] crushed EVERY part (island + elevators included) to the waterline - that
+	//--- was the live "one big pancake stack" carrier + props/SCUD sunk into the hull. Pattern
+	//--- verified against the A2-engine DayZ LHD creator and Domination (same-point parts,
+	//--- dir-then-pos, flight deck ~15.9 m over the sea).
 	_obj setDir _dir;
+	_obj setPos [_pos select 0, _pos select 1, 0];
 	_obj enableSimulation false;
 	_obj allowDamage false;
 	_obj
@@ -103,8 +111,7 @@ WFBE_NavalHVT_SpawnLHD = {
 		_px = (_anchor select 0) + _dx;
 		_py = (_anchor select 1) + _dy;
 
-		_obj = [_cls, [_px, _py, 0]] Call WFBE_NavalHVT_SpawnProp;
-		_obj setDir _dir;
+		_obj = [_cls, [_px, _py, 0], _dir] Call WFBE_NavalHVT_SpawnProp;
 		_parts set [count _parts, _obj];
 	} forEach WFBE_C_NAVAL_LHD_OFFSETS;
 
@@ -203,14 +210,14 @@ _lhdAlphaParts = [[_aAlpha select 0, _aAlpha select 1, 0], 90] Call WFBE_NavalHV
 
 //--- Heli spawn pad on the deck.
 _pad = createVehicle ["HeliHCivil", ([_aAlpha, 10, 0] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
-_pad setPosASL ([_aAlpha, 10, 0] Call WFBE_NavalHVT_Off);
+_pad setPosASL [((_aAlpha select 0) + 10), (_aAlpha select 1), 15.9]; //--- cmdcon45: ON the deck (was z=0 = sea level INSIDE the hull).
 _pad enableSimulation false;
 _pad allowDamage false;
 
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdAlphaParts select 3;
 _bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck height (was a hardcoded 16 guess) so deck-respawned players land on the flight deck, not clipping the hull / falling into the sea. boundingBox is A2-OA 1.64-safe.
-_deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
+_deckZ = 15.9; //--- cmdcon45 (Ray 2026-07-07): flight deck is the engine-verified 15.9 m over the sea (DayZ LHD creator / Domination "spawn at 15.9 to be ON deck"). The B754 boundingBox read gave 22.42 (symmetrized model-box TOP, not the deck) so every deck respawn materialised ~8.5 m up and fell. _bb stays in the diag line for forensics.
 _lhdAlphaLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdAlphaLogic setVariable ["wfbe_is_naval_hvt", true, true];
 //--- cmdcon41-w2 (Ray 2026-07-02) TOWN-CENTER HEIGHT: raise the town logic from sea level (z=0, set at
@@ -231,14 +238,14 @@ diag_log Format ["NAVALHVT-DECK: Khe Sanh Alpha partpos=%1 bbMin=%2 bbMax=%3 dec
 _lhdBravoParts = [[_aBravo select 0, _aBravo select 1, 0], 90] Call WFBE_NavalHVT_SpawnLHD;
 
 _pad = createVehicle ["HeliHCivil", ([_aBravo, 10, 0] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
-_pad setPosASL ([_aBravo, 10, 0] Call WFBE_NavalHVT_Off);
+_pad setPosASL [((_aBravo select 0) + 10), (_aBravo select 1), 15.9]; //--- cmdcon45: ON the deck (was z=0 = sea level INSIDE the hull).
 _pad enableSimulation false;
 _pad allowDamage false;
 
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdBravoParts select 3;
 _bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck height (was a hardcoded 16 guess) so deck-respawned players land on the flight deck, not clipping the hull / falling into the sea. boundingBox is A2-OA 1.64-safe.
-_deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
+_deckZ = 15.9; //--- cmdcon45 (Ray 2026-07-07): flight deck is the engine-verified 15.9 m over the sea (DayZ LHD creator / Domination "spawn at 15.9 to be ON deck"). The B754 boundingBox read gave 22.42 (symmetrized model-box TOP, not the deck) so every deck respawn materialised ~8.5 m up and fell. _bb stays in the diag line for forensics.
 _lhdBravoLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdBravoLogic setVariable ["wfbe_is_naval_hvt", true, true];
 //--- cmdcon41-w2 (Ray 2026-07-02) TOWN-CENTER HEIGHT: raise Bravo's logic to deck height (see Alpha note above).
@@ -255,7 +262,7 @@ _lhdCharlieParts = [[_aCharlie select 0, _aCharlie select 1, 0], 90] Call WFBE_N
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdCharlieParts select 3;
 _bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck height (was a hardcoded 16 guess) so deck-respawned players land on the flight deck, not clipping the hull / falling into the sea. boundingBox is A2-OA 1.64-safe.
-_deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
+_deckZ = 15.9; //--- cmdcon45 (Ray 2026-07-07): flight deck is the engine-verified 15.9 m over the sea (DayZ LHD creator / Domination "spawn at 15.9 to be ON deck"). The B754 boundingBox read gave 22.42 (symmetrized model-box TOP, not the deck) so every deck respawn materialised ~8.5 m up and fell. _bb stays in the diag line for forensics.
 _lhdCharlieLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
 _lhdCharlieLogic setVariable ["wfbe_is_naval_hvt", true, true];
 //--- cmdcon41-w2 (Ray 2026-07-02) TOWN-CENTER HEIGHT: raise Charlie's logic to deck height (see Alpha note above).
@@ -282,7 +289,7 @@ if (_scudLogic == _lhdBravoLogic) then { _scudParts = _lhdBravoParts };
 
 //--- SCUD pad on the MIDDLE carrier's deck (addAction proximity reference).
 _scudPad = createVehicle ["HeliHCivil", [_scudAnchor select 0, _scudAnchor select 1, 0], [], 0, "NONE"];
-_scudPad setPosASL [_scudAnchor select 0, _scudAnchor select 1, _scudDeckZ];	//--- cmdcon41-w2 (Ray 2026-07-02): true deck height (was hardcoded 16, below the ~22m deck).
+_scudPad setPosASL [_scudAnchor select 0, _scudAnchor select 1, _scudDeckZ];	//--- cmdcon45: deckZ=15.9 (the "~22m deck" here was the bbMax artefact, see deckZ note above).
 _scudPad enableSimulation false;
 _scudPad allowDamage false;
 _scudPad setVariable ["wfbe_is_scud_pad", true, true];
