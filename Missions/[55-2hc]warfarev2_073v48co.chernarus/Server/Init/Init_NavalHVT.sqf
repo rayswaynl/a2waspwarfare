@@ -619,6 +619,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 		_inactiveTime = 0;
 		_orbitAng = random 360;
 		_threeHinds = (missionNamespace getVariable ["WFBE_C_NAVAL_CAP_THREE_HINDS", 0]) > 0;
+		_capL39 = (missionNamespace getVariable ["WFBE_C_NAVAL_CAP_L39", 0]) > 0; //--- naval-air-spawn-easa: supersedes THREE_HINDS + Mi24/An2 when >0.
 
 		while { !WFBE_GameOver } do {
 			sleep 10;
@@ -643,78 +644,140 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						_armed = true;
 						_capGrp = createGroup resistance;
 
-						if (_threeHinds) then {
-							//--- THREE-HIND path (WFBE_C_NAVAL_CAP_THREE_HINDS > 0): no An2.
-							_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
-							_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
-							_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-							_hindPilot moveInDriver _hind;
-							_hind flyInHeight 350;
+						if (_capL39) then {
+							//--- L39 CAP path (WFBE_C_NAVAL_CAP_L39 > 0): 2x L39_TK_EP1 jets.
+							//--- Supersedes THREE_HINDS and Mi24/An2 when both flags are >0.
+							//--- Fixed-wing MUST have setVelocity set at spawn - zero velocity
+							//---   causes immediate stall-dive on A2 OA (no lift at t=0).
+							//--- Config proof: arma2-co-config-reference/Config/CfgVehicles.txt
+							//---   line 185835  class L39_TK_EP1 : L39_base
+							_jetDir = random 360;
 
-							_hind2 = createVehicle ["Mi24_P", [(_pos select 0) - 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
-							_hind2 setPosASL [(_pos select 0) - 200, (_pos select 1) + 200, 400];
-							_hindPilot2 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							_hindPilot2 moveInDriver _hind2;
-							_hind2 flyInHeight 350;
+							_jet1 = createVehicle ["L39_TK_EP1", [(_pos select 0) + 300 * (sin _jetDir), (_pos select 1) + 300 * (cos _jetDir), 600], [], 0, "FLY"];
+							_jet1 setPosASL [(_pos select 0) + 300 * (sin _jetDir), (_pos select 1) + 300 * (cos _jetDir), 600];
+							_jet1 setDir _jetDir;
+							_jet1 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
+							_jet1 flyInHeight 550;
+							_jetPilot1 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+							if (isNil "_jetPilot1") then {_jetPilot1 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+							_jetPilot1 moveInDriver _jet1;
 
-							_hind3 = createVehicle ["Mi24_P", [(_pos select 0) + 0, (_pos select 1) - 300, 400], [], 0, "FLY"];
-							_hind3 setPosASL [(_pos select 0) + 0, (_pos select 1) - 300, 400];
-							_hindPilot3 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							_hindPilot3 moveInDriver _hind3;
-							_hind3 flyInHeight 350;
+							_jet2 = createVehicle ["L39_TK_EP1", [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650], [], 0, "FLY"];
+							_jet2 setPosASL [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650];
+							_jet2 setDir _jetDir;
+							_jet2 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
+							_jet2 flyInHeight 600;
+							_jetPilot2 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+							_jetPilot2 moveInDriver _jet2;
 
 							_capGrp setBehaviour "AWARE";
 							_capGrp setCombatMode "RED";
 							_capGrp setSpeedMode "FULL";
 
-							//--- Tag all three as CAP so GC/groupsGC don't reap them.
-							_capGrp setVariable ["wfbe_naval_cap", true, true];
-							_hind  setVariable ["wfbe_naval_cap", true, true];
-							_hind2 setVariable ["wfbe_naval_cap", true, true];
-							_hind3 setVariable ["wfbe_naval_cap", true, true];
-
-							["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (3x Mi-24).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
-						} else {
-							//--- STANDARD path (flag 0): Hind + An2 pair (default).
-							_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
-							_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
-							_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-							_hindPilot moveInDriver _hind;
-							_capGrp setBehaviour "AWARE";
-							_capGrp setCombatMode "RED";
-							_hind flyInHeight 350;
-							_capGrp setSpeedMode "FULL";
-
-							//--- Spawn An2 biplane at 600m altitude.
-							_biplane = createVehicle ["An2_1_TK_CIV_EP1", [(_pos select 0) - 300, (_pos select 1) - 300, 600], [], 0, "FLY"];
-							_biplane setPosASL [(_pos select 0) - 300, (_pos select 1) - 300, 600];
-							_biplPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							_biplPilot moveInDriver _biplane;
-							_biplane flyInHeight 550;
+							//--- EASA randomisation: stamp wfbe_naval_easa_pending on hull.
+							//--- Clients read it on EH_Init and call EASA_Equip themselves.
+							if ((missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0]) > 0) then {
+								_easaVehi = missionNamespace getVariable ["WFBE_EASA_Vehicles", []];
+								_easaIdx = _easaVehi find "L39_TK_EP1";
+								if (_easaIdx >= 0) then {
+									_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaIdx;
+									_easaRandIdx = floor (random (count _easaLoadouts));
+									_jet1 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
+									_jet2 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
+								};
+							};
 
 							//--- Tag both as CAP so GC/groupsGC don't reap them.
 							_capGrp setVariable ["wfbe_naval_cap", true, true];
-							_hind   setVariable ["wfbe_naval_cap", true, true];
-							_biplane setVariable ["wfbe_naval_cap", true, true];
+							_jet1 setVariable ["wfbe_naval_cap", true, true];
+							_jet2 setVariable ["wfbe_naval_cap", true, true];
 
-							["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (Hind + An2).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+							["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (2x L39_TK_EP1, easa_random=%2).", _loc getVariable "name", (missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0])]] Call WFBE_CO_FNC_LogContent;
+						} else {
+							if (_threeHinds) then {
+								//--- THREE-HIND path (WFBE_C_NAVAL_CAP_THREE_HINDS > 0): no An2.
+								_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
+								_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
+								_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+								_hindPilot moveInDriver _hind;
+								_hind flyInHeight 350;
+
+								_hind2 = createVehicle ["Mi24_P", [(_pos select 0) - 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
+								_hind2 setPosASL [(_pos select 0) - 200, (_pos select 1) + 200, 400];
+								_hindPilot2 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								_hindPilot2 moveInDriver _hind2;
+								_hind2 flyInHeight 350;
+
+								_hind3 = createVehicle ["Mi24_P", [(_pos select 0) + 0, (_pos select 1) - 300, 400], [], 0, "FLY"];
+								_hind3 setPosASL [(_pos select 0) + 0, (_pos select 1) - 300, 400];
+								_hindPilot3 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								_hindPilot3 moveInDriver _hind3;
+								_hind3 flyInHeight 350;
+
+								_capGrp setBehaviour "AWARE";
+								_capGrp setCombatMode "RED";
+								_capGrp setSpeedMode "FULL";
+
+								//--- Tag all three as CAP so GC/groupsGC don't reap them.
+								_capGrp setVariable ["wfbe_naval_cap", true, true];
+								_hind  setVariable ["wfbe_naval_cap", true, true];
+								_hind2 setVariable ["wfbe_naval_cap", true, true];
+								_hind3 setVariable ["wfbe_naval_cap", true, true];
+
+								["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (3x Mi-24).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+							} else {
+								//--- STANDARD path (WFBE_C_NAVAL_CAP_L39=0, THREE_HINDS=0): Hind + An2.
+								//--- naval-air-spawn-easa FIX: An2 is fixed-wing. createVehicle ["FLY"]
+								//---   gives zero velocity at t=0 -> stall-dive. Set forward speed.
+								_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
+								_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
+								_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+								_hindPilot moveInDriver _hind;
+								_capGrp setBehaviour "AWARE";
+								_capGrp setCombatMode "RED";
+								_hind flyInHeight 350;
+								_capGrp setSpeedMode "FULL";
+
+								//--- Spawn An2 biplane at 600m altitude with forward velocity.
+								_jetDir = random 360;
+								_biplane = createVehicle ["An2_1_TK_CIV_EP1", [(_pos select 0) - 300, (_pos select 1) - 300, 600], [], 0, "FLY"];
+								_biplane setPosASL [(_pos select 0) - 300, (_pos select 1) - 300, 600];
+								_biplane setDir _jetDir;
+								_biplane setVelocity [(sin _jetDir) * 60, (cos _jetDir) * 60, 0];
+								_biplane flyInHeight 550;
+								_biplPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								_biplPilot moveInDriver _biplane;
+
+								//--- Tag both as CAP so GC/groupsGC don't reap them.
+								_capGrp setVariable ["wfbe_naval_cap", true, true];
+								_hind   setVariable ["wfbe_naval_cap", true, true];
+								_biplane setVariable ["wfbe_naval_cap", true, true];
+
+								["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (Hind + An2, velocity-fixed).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+							};
 						};
 					};
 				} else {
 					//--- CAP is active — orbit the asset.
 					_orbitAng = _orbitAng + 8;
-					if (_threeHinds) then {
-						if (alive _hind)  then {_hindPilot  doMove [(_pos select 0) + 400 * sin _orbitAng,         (_pos select 1) + 400 * cos _orbitAng, 0]};
-						if (alive _hind2) then {_hindPilot2 doMove [(_pos select 0) + 400 * sin (_orbitAng + 120), (_pos select 1) + 400 * cos (_orbitAng + 120), 0]};
-						if (alive _hind3) then {_hindPilot3 doMove [(_pos select 0) + 400 * sin (_orbitAng + 240), (_pos select 1) + 400 * cos (_orbitAng + 240), 0]};
+					if (_capL39) then {
+						//--- L39 jets orbit at 800m radius (needs wider arc than rotary).
+						if (alive _jet1) then {_jetPilot1 doMove [(_pos select 0) + 800 * sin _orbitAng,       (_pos select 1) + 800 * cos _orbitAng, 0]};
+						if (alive _jet2) then {_jetPilot2 doMove [(_pos select 0) + 800 * sin (_orbitAng + 180), (_pos select 1) + 800 * cos (_orbitAng + 180), 0]};
 					} else {
-						if (alive _hind) then {
-							_hindPilot doMove [(_pos select 0) + 400 * sin _orbitAng, (_pos select 1) + 400 * cos _orbitAng, 0];
-						};
-						if (alive _biplane) then {
-							_biplPilot doMove [(_pos select 0) + 700 * sin (_orbitAng + 180), (_pos select 1) + 700 * cos (_orbitAng + 180), 0];
+						if (_threeHinds) then {
+							if (alive _hind)  then {_hindPilot  doMove [(_pos select 0) + 400 * sin _orbitAng,         (_pos select 1) + 400 * cos _orbitAng, 0]};
+							if (alive _hind2) then {_hindPilot2 doMove [(_pos select 0) + 400 * sin (_orbitAng + 120), (_pos select 1) + 400 * cos (_orbitAng + 120), 0]};
+							if (alive _hind3) then {_hindPilot3 doMove [(_pos select 0) + 400 * sin (_orbitAng + 240), (_pos select 1) + 400 * cos (_orbitAng + 240), 0]};
+						} else {
+							if (alive _hind) then {
+								_hindPilot doMove [(_pos select 0) + 400 * sin _orbitAng, (_pos select 1) + 400 * cos _orbitAng, 0];
+							};
+							if (alive _biplane) then {
+								_biplPilot doMove [(_pos select 0) + 700 * sin (_orbitAng + 180), (_pos select 1) + 700 * cos (_orbitAng + 180), 0];
+							};
 						};
 					};
 				};
@@ -727,13 +790,18 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						//--- Despawn CAP.
 						_armed = false;
 						_inactiveTime = 0;
-						if (_threeHinds) then {
-							if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x} forEach (crew _hind);  deleteVehicle _hind };
-							if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x} forEach (crew _hind2); deleteVehicle _hind2 };
-							if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x} forEach (crew _hind3); deleteVehicle _hind3 };
+						if (_capL39) then {
+							if (!isNull _jet1 && alive _jet1) then { {deleteVehicle _x} forEach (crew _jet1); deleteVehicle _jet1 };
+							if (!isNull _jet2 && alive _jet2) then { {deleteVehicle _x} forEach (crew _jet2); deleteVehicle _jet2 };
 						} else {
-							if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x} forEach (crew _hind);   deleteVehicle _hind };
-							if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
+							if (_threeHinds) then {
+								if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x} forEach (crew _hind);  deleteVehicle _hind };
+								if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x} forEach (crew _hind2); deleteVehicle _hind2 };
+								if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x} forEach (crew _hind3); deleteVehicle _hind3 };
+							} else {
+								if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x} forEach (crew _hind);   deleteVehicle _hind };
+								if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
+							};
 						};
 						if (!isNull _capGrp) then { deleteGroup _capGrp };
 						["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP despawned at %1 (inactivity).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;

@@ -289,6 +289,20 @@ if !(isNil "PerformanceAudit_Record") then {
 	};
 };
 
+//--- naval-air-spawn-easa: apply a pending EASA preset stamped by the server
+//--- during CAP spawn (Init_NavalHVT.sqf sets wfbe_naval_easa_pending = randIdx).
+//--- Runs on every joining client so JIP players also equip the hull correctly.
+//--- Guard: !isNil check avoids errors on non-CAP vehicles; EASA_Equip is a no-op
+//--- for classnames not in WFBE_EASA_Vehicles (safe for unknown airframes).
+if (!(_unit isKindOf "Man") && {!isNil {_unit getVariable "wfbe_naval_easa_pending"}}) then {
+	private ["_easaPendingIdx"];
+	_easaPendingIdx = _unit getVariable ["wfbe_naval_easa_pending", -1];
+	if (_easaPendingIdx >= 0) then {
+		[_unit, _easaPendingIdx] call EASA_Equip;
+		["INFORMATION", Format ["Init_Unit.sqf: naval EASA pending preset %1 applied to %2.", _easaPendingIdx, typeOf _unit]] Call WFBE_CO_FNC_LogContent;
+	};
+};
+
 // Marty : eventHandler for glitch rocket detection
 if (_unit isKindOf "Tank" || _unit isKindOf "Car" || _unit isKindOf "Air") then {
 	if (isNil {_unit getVariable "WFBE_MissileTerrainMaskingEH_Added"}) then { // the WFBE_MissileTerrainMaskingEH_Added is just to make sure the eventhandler has not been added already to this unit, in order to prevent creating multiple useless eventhandler (but its more a security than a necessity actually...
