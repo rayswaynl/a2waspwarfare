@@ -299,6 +299,50 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 					};
 				};
 			} forEach (player nearEntities [["Man"], 120]);
+			//--- WFBE_C_TAGS_AI: friendly AI infantry tags (same-side, within 150m, #b0ffb0 green).
+			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0) then {
+				{
+					private ["_aiunit","_aipp","_aiscr","_aid","_aisz"];
+					_aiunit = _x;
+					if (_shown < _max && {!isPlayer _aiunit} && {alive _aiunit} && {side _aiunit == side player}) then {
+						_aipp = visiblePosition _aiunit;
+						_aiscr = worldToScreen [_aipp select 0, _aipp select 1, (_aipp select 2) + 1.9];
+						if (count _aiscr == 2 && {(_aiscr select 0) > 0} && {(_aiscr select 0) < 1} && {(_aiscr select 1) > 0} && {(_aiscr select 1) < 1}) then {
+							_aid = _aiunit distance player;
+							_aisz = 0.016 + (0.012 * (1 - (_aid / 150)));
+							_ctrl = _disp displayCtrl (62000 + _shown);
+							_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='#b0ffb0'>%1</t>", name _aiunit, _aisz]));
+							_ctrl ctrlSetPosition [(_aiscr select 0) - 0.1, (_aiscr select 1) - 0.025, 0.2, 0.03];
+							_ctrl ctrlCommit 0;
+							_ctrl ctrlShow true;
+							_shown = _shown + 1;
+						};
+					};
+				} forEach (player nearEntities [["Man"], 150]);
+			};
+			//--- WFBE_C_TAGS_AI: friendly AI vehicle tags (same-side, pure-AI crew, within 200m, #ffffa0 yellow). Height 3.0m separates from kill-tally tags at 2.6m.
+			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0) then {
+				{
+					private ["_vhc","_vcnt","_vtxt","_vpp","_vscr","_vd","_vsz"];
+					_vhc = _x;
+					_vcnt = count crew _vhc;
+					if (_shown < _max && {alive _vhc} && {_vhc != vehicle player} && {_vcnt > 0} && {side _vhc == side player} && {({isPlayer _x} count (crew _vhc)) == 0}) then {
+						_vtxt = format ["%1 [%2]", getText (configFile >> "CfgVehicles" >> (typeOf _vhc) >> "displayName"), _vcnt];
+						_vpp = visiblePosition _vhc;
+						_vscr = worldToScreen [_vpp select 0, _vpp select 1, (_vpp select 2) + 3.0];
+						if (count _vscr == 2 && {(_vscr select 0) > 0} && {(_vscr select 0) < 1} && {(_vscr select 1) > 0} && {(_vscr select 1) < 1}) then {
+							_vd = _vhc distance player;
+							_vsz = 0.015 + (0.012 * (1 - (_vd / 200)));
+							_ctrl = _disp displayCtrl (62000 + _shown);
+							_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='#ffffa0'>%1</t>", _vtxt, _vsz]));
+							_ctrl ctrlSetPosition [(_vscr select 0) - 0.1, (_vscr select 1) - 0.025, 0.2, 0.03];
+							_ctrl ctrlCommit 0;
+							_ctrl ctrlShow true;
+							_shown = _shown + 1;
+						};
+					};
+				} forEach (player nearEntities [["LandVehicle","Air","Ship"], 200]);
+			};
 			//--- cmdcon44m (Ray pick C 2026-07-04): vehicle kill tallies ride the same TAGS toggle and the same
 			//--- control pool - no lightpoint, no extra rsc. Friendly-crewed or EMPTY hulls within 200m that have
 			//--- scored kills show a heat-coloured 'N KILLS' tag (amber -> orange -> red -> white-hot, the retired
