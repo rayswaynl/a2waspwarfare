@@ -702,12 +702,12 @@
 		default = 1;
 	};
 
-	// FPV strike drone: player-piloted kamikaze mini-UAV from the Tactical Center (default OFF - flag-gated).
+	// FPV strike drone: player-piloted kamikaze mini-UAV from the Tactical Center (enabled 2026-07-07 post #796 hardening).
 	class WFBE_C_FPV_DRONE {
 		title = "FPV strike drone (Tactical Center)";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1;
 	};
 
 	// East captured C-130J (Aircraft Factory token, default OFF - flag-gated).
