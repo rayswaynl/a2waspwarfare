@@ -3947,12 +3947,15 @@ class RscMenu_Help {
 };
 
 //--- Command Deck: Skin Selector (idd 27000).
+//--- Visual overhaul 2026-07 (owner inspiration package; wiki: UI-Design-Inspiration-2026-07).
+//--- Same idd + idcs (27001..27008) as before - SkinSelector_Open.sqf logic untouched.
 class WFBE_SkinSelectorMenu {
 	movingEnable = 1;
 	idd = 27000;
 	onLoad = "(_this) ExecVM 'Client\GUI\GUI_SkinSelectorMenu.sqf'";
 
 	class controlsBackground {
+		//--- Main plate.
 		class CA_Background : RscText {
 			x = 0.25;
 			y = 0.08;
@@ -3968,12 +3971,21 @@ class WFBE_SkinSelectorMenu {
 			h = 0.06;
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
+		//--- Footer plate behind the action row.
 		class CA_Background_Footer : CA_Background {
 			x = 0.25;
-			y = 0.08 + 0.80;
+			y = 0.08 + 0.755;
 			w = 0.50;
-			h = 0.04;
-			colorBackground[] = WFBE_Background_Color_Sub;
+			h = 0.085;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		//--- Preview plate (portrait backdrop, right column).
+		class CA_Background_Preview : CA_Background {
+			x = 0.485;
+			y = 0.175;
+			w = 0.255;
+			h = 0.30;
+			colorBackground[] = {0, 0, 0, 0.35};
 		};
 		//--- Accent border line below header.
 		class CA_Border : RscText {
@@ -3983,54 +3995,117 @@ class WFBE_SkinSelectorMenu {
 			h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
+		//--- Accent border line above footer.
+		class CA_Border_Footer : CA_Border {
+			y = 0.08 + 0.755;
+		};
+		//--- 1px outer frame.
+		class CA_Edge_Top : CA_Border {
+			y = 0.08;
+		};
+		class CA_Edge_Bottom : CA_Border {
+			y = 0.919;
+		};
+		class CA_Edge_Left : RscText {
+			x = 0.25;
+			y = 0.08;
+			w = WFBE_Background_Border_Thick;
+			h = 0.84;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class CA_Edge_Right : CA_Edge_Left {
+			x = 0.749;
+		};
+		//--- Vertical divider between list and preview columns (soft cyan).
+		class CA_Divider_V : RscText {
+			x = 0.480;
+			y = 0.147;
+			w = WFBE_Background_Border_Thick;
+			h = 0.628;
+			colorBackground[] = {0.2588, 0.7137, 1, 0.4};
+		};
+		//--- Divider under the name/faction block.
+		class CA_Divider_Info : RscText {
+			x = 0.485;
+			y = 0.565;
+			w = 0.255;
+			h = WFBE_Background_Border_Thick;
+			colorBackground[] = {0.2588, 0.7137, 1, 0.4};
+		};
 	};
 
 	class controls {
-		//--- Header title (idc 27008) — RscButton_Main so ctrlSetText works at runtime.
+		//--- Header title (idc 27008) - RscButton_Main so ctrlSetText works at runtime.
 		class CA_Title : RscButton_Main {
 			idc = 27008;
 			x = 0.255;
-			y = 0.08 + 0.012;
+			y = 0.08 + 0.009;
 			w = 0.35;
-			h = 0.038;
+			h = 0.042;
 			text = $STR_WF_SkinSelector_Title;
-			sizeEx = 0.028;
+			sizeEx = 0.032;
 			colorBackground[] = {0, 0, 0, 0};
-			colorBackgroundFocus[] = {0, 0, 0, 0};
 			colorBackgroundActive[] = {0, 0, 0, 0};
-			colorText[] = WFBE_Menu_Text_Color;
+			colorFocused[] = {0, 0, 0, 0};
+			colorText[] = WFBE_Menu_Title_Color;
 			shadow = 2;
 			default = false;
 		};
-		//--- Close button.
+		//--- Close button (flat, red on hover).
 		class CA_Quit_Button : RscButton_Main {
-			x = 0.25 + 0.45;
-			y = 0.08 + 0.0075;
-			w = 0.045;
-			h = 0.045;
+			x = 0.7065;
+			y = 0.0855;
+			w = 0.038;
+			h = 0.048;
 			text = "X";
 			shadow = 2;
-			sizeEx = 0.03;
+			sizeEx = 0.032;
+			colorBackground[] = {0, 0, 0, 0};
+			colorBackgroundActive[] = {0.9098, 0.3216, 0.2902, 0.8};
+			colorFocused[] = {0, 0, 0, 0};
+			colorText[] = {1, 1, 1, 0.6};
 			onButtonClick = "WFBE_MenuAction = 2;";
+		};
+		//--- Column section labels (static design captions).
+		class CA_ListLabel : RscText {
+			x = 0.255;
+			y = 0.147;
+			w = 0.22;
+			h = 0.024;
+			sizeEx = 0.019;
+			text = "AVAILABLE MODELS";
+			colorText[] = {1, 1, 1, 0.5};
+			shadow = 2;
+		};
+		class CA_PreviewLabel : CA_ListLabel {
+			x = 0.485;
+			w = 0.255;
+			text = "PREVIEW";
 		};
 		//--- Skin list (idc 27001).
 		class CA_SkinList : RscListBox {
 			idc = 27001;
 			x = 0.255;
-			y = 0.08 + 0.07;
+			y = 0.175;
 			w = 0.22;
-			h = 0.65;
-			rowHeight = 0.03;
+			h = 0.60;
+			rowHeight = 0.032;
+			sizeEx = 0.026;
+			colorBackground[] = {0, 0, 0, 0.35};
+			colorText[] = {1, 1, 1, 0.85};
+			colorSelect[] = {0, 0, 0, 0.9};
+			colorSelect2[] = {0, 0, 0, 0.9};
 			colorSelectBackground[] = WFBE_Menu_ListBox_Select_Color;
+			colorSelectBackground2[] = WFBE_Menu_ListBox_Select_Color;
 			onLBSelChanged = "";
 		};
-		//--- Portrait picture (idc 27002).
+		//--- Portrait picture (idc 27002), centered on the preview plate.
 		class CA_Portrait : RscPicture {
 			idc = 27002;
-			x = 0.485;
-			y = 0.08 + 0.07;
-			w = 0.12;
-			h = 0.24;
+			x = 0.5375;
+			y = 0.185;
+			w = 0.15;
+			h = 0.28;
 			style = 0x30 + 0x800;
 			text = "";
 		};
@@ -4038,10 +4113,10 @@ class WFBE_SkinSelectorMenu {
 		class CA_SkinName : RscText {
 			idc = 27003;
 			x = 0.485;
-			y = 0.08 + 0.32;
+			y = 0.487;
 			w = 0.255;
-			h = 0.04;
-			sizeEx = 0.026;
+			h = 0.038;
+			sizeEx = 0.030;
 			text = "";
 			colorText[] = WFBE_Menu_Text_Color;
 			shadow = 2;
@@ -4050,51 +4125,60 @@ class WFBE_SkinSelectorMenu {
 		class CA_FactionName : RscText {
 			idc = 27004;
 			x = 0.485;
-			y = 0.08 + 0.365;
+			y = 0.526;
 			w = 0.255;
-			h = 0.035;
-			sizeEx = 0.022;
+			h = 0.030;
+			sizeEx = 0.021;
 			text = "";
-			colorText[] = WFBE_Menu_Text_Color;
+			colorText[] = {1, 1, 1, 0.6};
 			shadow = 2;
 		};
-		//--- Ghillie note (idc 27005).
+		//--- Ghillie note (idc 27005), amber advisory above the footer.
 		class CA_GhillieNote : RscText {
 			idc = 27005;
 			x = 0.255;
-			y = 0.08 + 0.73;
-			w = 0.485;
-			h = 0.03;
-			sizeEx = 0.020;
+			y = 0.792;
+			w = 0.49;
+			h = 0.028;
+			sizeEx = 0.019;
 			text = "";
-			colorText[] = WFBE_Menu_Text_Color;
+			colorText[] = {0.9098, 0.7725, 0.2784, 0.9};
 			shadow = 2;
 		};
-		//--- APPLY button (idc 27006) — RscButton_Main for ctrlSetText compat.
+		//--- APPLY (idc 27006) - green primary action, right-aligned.
 		class CA_Apply : RscButton_Main {
 			idc = 27006;
-			x = 0.330;
-			y = 0.08 + 0.762;
-			w = 0.15;
-			h = 0.035;
+			x = 0.578;
+			y = 0.848;
+			w = 0.157;
+			h = 0.045;
 			sizeEx = 0.028;
 			text = $STR_WF_SkinSelector_Apply;
+			colorBackground[] = WFBE_Menu_Button_Sub_Color;
+			colorBackgroundActive[] = WFBE_Menu_Button_Sub_Focused_Color;
+			colorFocused[] = WFBE_Menu_Button_Sub_Focused_Color;
+			colorText[] = {0, 0, 0, 0.9};
+			shadow = 0;
 			action = "WFBE_MenuAction = 1";
 		};
-		//--- SKIP button (idc 27007).
+		//--- SKIP (idc 27007) - neutral secondary.
 		class CA_Skip : RscButton_Main {
 			idc = 27007;
-			x = 0.490;
-			y = 0.08 + 0.762;
-			w = 0.10;
-			h = 0.035;
+			x = 0.462;
+			y = 0.848;
+			w = 0.105;
+			h = 0.045;
 			sizeEx = 0.026;
 			text = $STR_WF_SkinSelector_Skip;
+			colorBackground[] = {1, 1, 1, 0.12};
+			colorBackgroundActive[] = {1, 1, 1, 0.28};
+			colorFocused[] = {1, 1, 1, 0.12};
+			colorText[] = {1, 1, 1, 0.8};
+			shadow = 0;
 			action = "WFBE_MenuAction = 2";
 		};
 	};
 };
-
 //--- Per-player Settings menu (idd 29000). Opened from the WF-menu GEAR button (revived skins slot, MenuAction 24).
 //--- All labels (29010-29014 toggles, 29020 VD) set live by WASP\actions\Settings\Settings_Open.sqf (sub-dialog global WFBE_MenuAction).
 class WFBE_SettingsMenu {
