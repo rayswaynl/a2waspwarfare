@@ -54,3 +54,7 @@ Tools/Soak/results/
 
 # Chart report output (chart_soak.py default; machine-local)
 Tools/Soak/report/
+
+# Python bytecode cache
+__pycache__/
+*.pyc
