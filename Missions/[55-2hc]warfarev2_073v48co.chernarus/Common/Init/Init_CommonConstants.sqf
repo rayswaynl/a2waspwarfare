@@ -2152,6 +2152,16 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Default 0 = current pair behaviour. Set > 0 to activate all-hind triple CAP.
 	if (isNil "WFBE_C_NAVAL_CAP_THREE_HINDS") then {WFBE_C_NAVAL_CAP_THREE_HINDS = 1};
 
+//--- naval-air-spawn-easa (fable/naval-air-spawn-easa, 2026-07-07):
+//--- WFBE_C_NAVAL_CAP_L39: when >0, the GUER carrier CAP becomes 2x L39_TK_EP1 jets
+//---   instead of the legacy Mi24_P + An2 (or THREE_HINDS) composition. L39 path
+//---   takes precedence over THREE_HINDS when both >0. Default 1 (live).
+//--- WFBE_C_NAVAL_EASA_RANDOM: when >0, aircraft spawned by the GUER CAP and by
+//---   carrier air-purchases get a random EASA preset for their airframe (silently
+//---   skips airframes not in WFBE_EASA_Vehicles). Default 1.
+	if (isNil "WFBE_C_NAVAL_CAP_L39")      then {WFBE_C_NAVAL_CAP_L39      = 1}; //--- 0=legacy Hind/An2; >0=twin L39 jets.
+	if (isNil "WFBE_C_NAVAL_EASA_RANDOM")  then {WFBE_C_NAVAL_EASA_RANDOM  = 1}; //--- 0=off; >0=randomise EASA on carrier/CAP spawns.
+
 
 //======================================================================================
 //--- NAVAL INLINE SUPER-CARRIER (fable/naval-inline-hulls, Ray 2026-07-06):
