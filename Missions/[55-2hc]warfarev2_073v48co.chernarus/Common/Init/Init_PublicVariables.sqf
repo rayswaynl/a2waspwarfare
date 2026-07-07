@@ -84,6 +84,14 @@ WFBE_SE_PVF_ALLOWED = [];
 //--- TODO (OnPlayerConnected): add publicVariableClient "AICOMV2_GDIR_JIP_SNAP" to
 //--- Server/Functions/Server_OnPlayerConnected.sqf after line 161 (WFBE_GUER_FOB_AVAIL block)
 //--- so late joiners get the snapshot immediately rather than waiting for the next Director tick.
+//--- 185 (HQ repair scaling): seed avg on all machines; server overwrites via publicVariable at init.
+WFBE_HQ_REPAIR_AVG_SEC = 21600;
+if (!isServer || {local player}) then {
+    "WFBE_HQ_REPAIR_AVG_SEC" addPublicVariableEventHandler {
+        WFBE_HQ_REPAIR_AVG_SEC = _this select 1;
+    };
+};
+
 AICOMV2_GDIR_JIP_SNAP = [];
 if (!isServer || {local player}) then {
     "AICOMV2_GDIR_JIP_SNAP" addPublicVariableEventHandler {

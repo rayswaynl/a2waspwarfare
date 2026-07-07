@@ -21,6 +21,17 @@ ctrlSetText [13002, Format [localize "STR_WF_TEAM_ViewDistanceLabel",_currentVD]
 ctrlSetText [13004, Format [localize "STR_WF_TEAM_TerrainGridLabel",currentTG]];
 ctrlSetText [13006, Format [localize "STR_WF_TEAM_MoneyTransfer",0]];
 ctrlSetText [13010, Format [localize "STR_WF_Income",Call GetPlayerFunds,(sideJoined) Call GetIncome]];
+if ((missionNamespace getVariable ["WFBE_C_HQ_REPAIR_SCALING", 1]) > 0) then {
+	private ["_rpS185","_rpR185","_rpC185","_rpSym185"];
+	_rpS185 = if (isNil "WFBE_HQ_REPAIR_AVG_SEC") then {21600} else {WFBE_HQ_REPAIR_AVG_SEC};
+	if (_rpS185 <= 0) then {_rpS185 = 21600};
+	_rpR185 = time / _rpS185;
+	if (_rpR185 > 1) then {_rpR185 = 1};
+	_rpC185 = round (7500 + 42000 * _rpR185);
+	_rpSym185 = if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {"S"} else {"$"};
+	ctrlSetText [13010, Format [localize "STR_WF_Income", Call GetPlayerFunds, (sideJoined) Call GetIncome] + Format [" | HQ Repair: %1%2", _rpSym185, _rpC185]];
+};
+
 
 SliderSetRange[13003, 1, missionNamespace getVariable "WFBE_C_ENVIRONMENT_MAX_VIEW"];
 SliderSetRange[13005, 1, missionNamespace getVariable "WFBE_C_ENVIRONMENT_MAX_CLUTTER"];
@@ -215,6 +226,17 @@ while {alive player && dialog} do {
 			if ((SliderPosition 13007) > _funds) then {SliderSetPosition[13007,_funds]};
 		};
 		ctrlSetText [13010, Format [localize "STR_WF_Income",_funds,(sideJoined) Call GetIncome]];
+if ((missionNamespace getVariable ["WFBE_C_HQ_REPAIR_SCALING", 1]) > 0) then {
+	private ["_rpS185b","_rpR185b","_rpC185b","_rpSym185b"];
+	_rpS185b = if (isNil "WFBE_HQ_REPAIR_AVG_SEC") then {21600} else {WFBE_HQ_REPAIR_AVG_SEC};
+	if (_rpS185b <= 0) then {_rpS185b = 21600};
+	_rpR185b = time / _rpS185b;
+	if (_rpR185b > 1) then {_rpR185b = 1};
+	_rpC185b = round (7500 + 42000 * _rpR185b);
+	_rpSym185b = if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {"S"} else {"$"};
+	ctrlSetText [13010, Format [localize "STR_WF_Income", _funds, (sideJoined) Call GetIncome] + Format [" | HQ Repair: %1%2", _rpSym185b, _rpC185b]];
+};
+
 		_timer = 0;
 	};
 	_timer = _timer + 0.05;
