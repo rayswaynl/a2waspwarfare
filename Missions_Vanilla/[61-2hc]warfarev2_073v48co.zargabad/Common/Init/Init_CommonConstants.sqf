@@ -2314,6 +2314,8 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GUER_CP_V2") then {WFBE_C_GUER_CP_V2 = 1};
 	if (isNil "WFBE_C_GUER_CP_BETWEEN") then {WFBE_C_GUER_CP_BETWEEN = 1}; //--- cmdcon45 (owner): G2 checkpoints anchor on the midpoint BETWEEN the occupied town and its nearest neighbour (0 = classic around-town).
 	if (isNil "WFBE_C_TOWN_CAPTURE_FLIPS_CAMPS") then {WFBE_C_TOWN_CAPTURE_FLIPS_CAMPS = 1}; //--- cmdcon45 (owner): town capture flips its remaining camps to the new owner (0 = legacy per-camp only).
+	if (isNil "WFBE_C_CAMPS_LEGACY_SKIP_ON_PERCAMP_FLIP") then {WFBE_C_CAMPS_LEGACY_SKIP_ON_PERCAMP_FLIP = 0}; //--- F8 (claude-gaming 2026-07-07): when 1 AND WFBE_C_TOWN_CAPTURE_FLIPS_CAMPS>0, suppress the legacy Server_SetCampsToSide double-flip on town capture (per-camp block already flips sideID/flag/broadcast). Default 0 = both paths fire (legacy also resets each camp supplyValue).
+	if (isNil "WFBE_C_SKIP_EMPTY_CAMP_THREAD") then {WFBE_C_SKIP_EMPTY_CAMP_THREAD = 0}; //--- F3 (claude-gaming 2026-07-07): when 1, Init_Town skips launching server_town_camp.sqf for a town with zero synced camps (naval carrier towns) so no permanently-idle worker spawns. Default 0 = unchanged (thread still launched).
 	if (isNil "WFBE_C_GUER_CP2_ROAD_RADIUS") then {WFBE_C_GUER_CP2_ROAD_RADIUS = 400};  //--- m: nearRoads candidate radius around the target town (v2 only).
 	if (isNil "WFBE_C_GUER_CP2_FOOT_BASE") then {WFBE_C_GUER_CP2_FOOT_BASE = 4};        //--- v2 garrison base headcount (v1: 3).
 	if (isNil "WFBE_C_GUER_CP2_FOOT_PER_TIER") then {WFBE_C_GUER_CP2_FOOT_PER_TIER = 2}; //--- v2 extra garrison per GUER vehicle tier (v1: 1).
