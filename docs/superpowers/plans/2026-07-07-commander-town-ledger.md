@@ -42,6 +42,15 @@ Global Constraints), PowerShell tooling (LoadoutManager mirror regen, `check_sqf
   3-arg `setVariable` (with broadcast) only where HC visibility is actually needed.
 - Commit format: `feat(<lane>): <summary> [flag <FLAG> default 0]`. No `Co-Authored-By`
   trailer in any commit.
+- **BOM discipline (added after Task 1 review):** every file this feature touches or
+  creates is confirmed BOM-less (verified directly on `Init_CommonConstants.sqf` during
+  Task 1). Python patch scripts must open files for reading with `encoding="utf-8-sig"`
+  (safe either way) but must write with plain `encoding="utf-8"` — `utf-8-sig` on write
+  unconditionally prepends a BOM even to a file that never had one, which is exactly the
+  failure class that caused the RC23 "double-BOM" incident in this repo (dead constants
+  parsing, dead AI spawns). Every code sample in this plan has been corrected to this
+  rule; if an implementer needs to write a NEW ad-hoc patch script not shown verbatim in
+  a task, follow the same rule.
 - After every `.sqf` edit: run the lint gate (Task 8) and confirm net `{}`/`[]` delta is
   zero for that file. Only NEW findings in edited files matter — the gate reports ~447
   pre-existing findings elsewhere; ignore those.
@@ -150,7 +159,7 @@ block = (
 )
 
 content = content.replace(anchor, block + anchor, 1)
-with io.open(path, "w", encoding="utf-8-sig", newline="") as f:
+with io.open(path, "w", encoding="utf-8", newline="") as f:
     f.write(content)
 print("patched Init_CommonConstants.sqf")
 ```
@@ -411,7 +420,7 @@ while {!WFBE_GameOver} do {
 """
 
 path = r"Missions\[55-2hc]warfarev2_073v48co.chernarus\Server\AI\Server_CmdTownLedger.sqf"
-with io.open(path, "w", encoding="utf-8-sig", newline="\r\n") as f:
+with io.open(path, "w", encoding="utf-8", newline="\r\n") as f:
     f.write(content)
 print("wrote Server_CmdTownLedger.sqf")
 ```
@@ -491,7 +500,7 @@ block = (
 )
 
 content = content.replace(anchor, anchor + block, 1)
-with io.open(path, "w", encoding="utf-8-sig", newline="") as f:
+with io.open(path, "w", encoding="utf-8", newline="") as f:
     f.write(content)
 print("patched Init_Server.sqf")
 ```
@@ -569,7 +578,7 @@ block = (
 )
 
 content = content.replace(anchor, anchor + block, 1)
-with io.open(path, "w", encoding="utf-8-sig", newline="") as f:
+with io.open(path, "w", encoding="utf-8", newline="") as f:
     f.write(content)
 print("patched Server_GetTownGroups.sqf")
 ```
@@ -662,7 +671,7 @@ block = (
 )
 
 content = content.replace(anchor, anchor + block, 1)
-with io.open(path, "w", encoding="utf-8-sig", newline="") as f:
+with io.open(path, "w", encoding="utf-8", newline="") as f:
     f.write(content)
 print("patched server_town_ai.sqf")
 ```
@@ -714,7 +723,7 @@ block = (
 )
 
 content = content.replace(anchor, anchor + block, 1)
-with io.open(path, "w", encoding="utf-8-sig", newline="") as f:
+with io.open(path, "w", encoding="utf-8", newline="") as f:
     f.write(content)
 print("patched Server_GetTownGroups.sqf (lastSpawnUnits)")
 ```
@@ -864,7 +873,7 @@ content = content.replace(
     block.replace("\r\n\r\n", "\r\n") + '//--- Reactive CBR research:',
     1
 )
-with io.open(path, "w", encoding="utf-8-sig", newline="") as f:
+with io.open(path, "w", encoding="utf-8", newline="") as f:
     f.write(content)
 print("patched AI_Commander.sqf")
 ```
