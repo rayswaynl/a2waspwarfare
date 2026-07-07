@@ -241,6 +241,9 @@ while {!WFBE_GameOver} do {
     if ((missionNamespace getVariable ["AICOMV2_GDIR_PANEL", 0]) > 0) then {
         private ["_pendingOrders","_consumed"];
         _pendingOrders = missionNamespace getVariable ["AICOMV2_GDIR_PENDING_ORDERS", []];
+        //--- Swap-and-clear IMMEDIATELY: orders PVF-appended while this tick processes land in the
+        //--- fresh array and survive to the next tick. Clearing after the loop dropped them silently.
+        missionNamespace setVariable ["AICOMV2_GDIR_PENDING_ORDERS", []];
         _consumed      = [];
         {
             private ["_ord","_kind","_townId","_product","_uid","_pricePaid","_ordTs"];
@@ -312,8 +315,7 @@ while {!WFBE_GameOver} do {
             };
         } forEach _pendingOrders;
 
-        //--- Clear consumed orders (write back empty list).
-        missionNamespace setVariable ["AICOMV2_GDIR_PENDING_ORDERS", []];
+        //--- (Pending list already swap-and-cleared at read time above.)
 
         //--- Contract poll: fire armed QRF contracts when town is under attack.
         //--- Fire armed counter-attack contracts when GUER no longer holds town.
@@ -379,12 +381,19 @@ while {!WFBE_GameOver} do {
                                     _hClass = "Ka137_MG_PMC"; //--- GUER insert: Ka-137 from Core_GUE.sqf.
                                     if (_cKind == "qrfGunship") then {_hClass = "Mi24_P"};  //--- GUER gunship.
                                     if (_cKind == "qrfCombo") then {
-                                        //--- Spawn both. Gunship first.
+                                        //--- Spawn both. Gunship first (FIX: _hClass was never set to the gunship
+                                        //--- here, so combo fired two Ka-137s and the telemetry lied).
+                                        _hClass = "Mi24_P";
                                         _h    = _hClass createVehicle _spawnPos;
                                         _hGrp = createGroup resistance;
-                                        createVehicleCrew _h;
+                                        //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64). Crew via the
+                                        //--- proven wildcard-GUER pattern: CreateUnit into the group + moveIn*.
+                                        private ["_uPilot","_uGun"];
+                                        _uPilot = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                        if (!isNull _uPilot) then {_uPilot moveInDriver _h};
+                                        _uGun = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                        if (!isNull _uGun) then {_uGun moveInGunner _h};
                                         _h setPos _spawnPos;
-                                        {[_x] join _hGrp} forEach crew _h;
                                         _hGrp addWaypoint [_cTownPos, 200];
                                         diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=Mi24_P town=%3 fundedBy=%4",
                                             _elmin, _cId, _cTown, _cUid];
@@ -392,9 +401,15 @@ while {!WFBE_GameOver} do {
                                     };
                                     _h    = _hClass createVehicle _spawnPos;
                                     _hGrp = createGroup resistance;
-                                    createVehicleCrew _h;
+                                    //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64).
+                                    private ["_uPilot2","_uGun2"];
+                                    _uPilot2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                    if (!isNull _uPilot2) then {_uPilot2 moveInDriver _h};
+                                    if (_hClass == "Mi24_P") then {
+                                        _uGun2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                        if (!isNull _uGun2) then {_uGun2 moveInGunner _h};
+                                    };
                                     _h setPos _spawnPos;
-                                    {[_x] join _hGrp} forEach crew _h;
                                     _hGrp addWaypoint [_cTownPos, 200];
                                     _ctr set [6, _nowT];
                                     _ctr set [7, "fired"];

@@ -34,6 +34,7 @@ A3_TRAPS = (
     "worldSize",
     "getPosVisual",
     "remoteExec",
+    "createVehicleCrew",
     "distance2D",
     "setGroupOwner",
     "groupOwner",

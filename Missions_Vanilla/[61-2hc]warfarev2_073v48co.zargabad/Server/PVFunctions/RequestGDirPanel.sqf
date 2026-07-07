@@ -56,6 +56,12 @@ if (isNull _team) exitWith {
 private ["_elmin"];
 _elmin = floor (diag_tickTime / 60);
 
+//--- Gate 2.5: towns list must be initialised (a hand-crafted PV can arrive pre-init and
+//--- the forEach below would crash on nil).
+if (isNil "WFBE_SE_Towns" || {count WFBE_SE_Towns == 0}) exitWith {
+	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=%2|deny=townsNotReady|fundedBy=%3|pricePaid=0", _elmin, _verb, getPlayerUID _player];
+};
+
 //--- Gate 3: locate the town in WFBE_SE_Towns.
 private ["_townObj","_townFound"];
 _townObj   = objNull;
