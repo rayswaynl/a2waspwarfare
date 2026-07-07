@@ -302,7 +302,7 @@ while {!WFBE_GameOver} do {
             _li = 0;
             {
                 if (!_found) then {
-                    if ((_x select 0 getVariable ["wfbe_name", ""]) == _townId) then {
+                    if ((_x select 0 getVariable ["name", ""]) == _townId) then {
                         _found  = true;
                         _recIdx = _li;
                     };
@@ -388,7 +388,7 @@ while {!WFBE_GameOver} do {
                     _cFound   = false;
                     {
                         if (!_cFound) then {
-                            if ((_x getVariable ["wfbe_name", ""]) == _cTown) then {
+                            if ((_x getVariable ["name", ""]) == _cTown) then {
                                 _cTownObj = _x;
                                 _cFound   = true;
                             };
@@ -489,7 +489,7 @@ while {!WFBE_GameOver} do {
                                 _ctrRecIdx = 0;
                                 {
                                     if (!_ctrFound) then {
-                                        if ((_x select 0 getVariable ["wfbe_name", ""]) == _cTown) then {
+                                        if ((_x select 0 getVariable ["name", ""]) == _cTown) then {
                                             _ctrFound = true;
                                         };
                                     };
@@ -597,7 +597,7 @@ while {!WFBE_GameOver} do {
             private ["_sRec","_sTown","_sName","_sFundKey","_sFund","_sCD"];
             _sRec  = _x;
             _sTown = _sRec select 0;
-            _sName = _sTown getVariable ["wfbe_name", ""];
+            _sName = _sTown getVariable ["name", ""];
             _sFundKey = Format ["AICOMV2_GDIR_TOWN_FUND_%1", _sName];
             _sFund    = missionNamespace getVariable [_sFundKey, 0];
             _sCD = 0;

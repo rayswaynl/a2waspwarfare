@@ -42,15 +42,23 @@ _map = _display displayCtrl 31060;
 
 //--- Populate town list (idc 31010) from WFBE_CL_Towns.
 private ["_towns","_firstTown"];
-_towns    = if (isNil "WFBE_CL_Towns") then {[]} else {WFBE_CL_Towns};
+_towns    = if (isNil "towns") then {[]} else {towns}; //--- fable/commissar-fix: WFBE_CL_Towns was never written; towns[] is populated on every client by Init_Town.sqf
 _firstTown = "";
 
 {
 	private ["_name"];
-	_name = _x getVariable ["wfbe_name", ""];
+	_name = _x getVariable ["name", ""];
 	if (_name != "") then {
 		private ["_idx"];
 		_idx = lbAdd [31010, _name];
+		//--- fable/commissar-fix: tint by owner side (sideID broadcast by Init_Town/camp FSM).
+		private ["_sid","_lbCol"];
+		_sid = _x getVariable ["sideID", -1];
+		_lbCol = [0.7, 0.7, 0.7, 1];
+		if (_sid == WESTID) then {_lbCol = [0.4, 0.7, 1, 1]};
+		if (_sid == EASTID) then {_lbCol = [1, 0.35, 0.3, 1]};
+		if (_sid == WFBE_C_GUER_ID) then {_lbCol = [0.25, 0.85, 0.4, 1]};
+		lbSetColor [31010, _idx, _lbCol];
 		if (_firstTown == "") then {_firstTown = _name};
 	};
 } forEach _towns;
@@ -117,7 +125,7 @@ WFBE_COMM_FNC_SelectTownByName = {
 	//--- Move highlight marker to this town.
 	_tObj = objNull;
 	{
-		if ((_x getVariable ["wfbe_name", ""]) == _name) then {_tObj = _x};
+		if ((_x getVariable ["name", ""]) == _name) then {_tObj = _x};
 	} forEach _towns;
 	if (!isNull _tObj) then {
 		_tPos = getPos _tObj;
@@ -277,7 +285,7 @@ waitUntil {
 		_clickPos = _map posScreenToWorld [mouseX, mouseY];
 		_nearObj = [_clickPos] Call WFBE_COMM_FNC_NearestTown;
 		if (!isNull _nearObj) then {
-			_nearName = _nearObj getVariable ["wfbe_name", ""];
+			_nearName = _nearObj getVariable ["name", ""];
 			if (_nearName != "" && {_nearName != _selTownId}) then {
 				_selTownId = _nearName;
 				[_selTownId] Call WFBE_COMM_FNC_SelectTownByName;
