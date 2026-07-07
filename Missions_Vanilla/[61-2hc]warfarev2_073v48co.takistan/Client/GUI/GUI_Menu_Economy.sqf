@@ -155,6 +155,30 @@ while {alive player && dialog} do {
 						
 							if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {[sideJoined, _supplyB, "Factory sold.", false] Call ChangeSideSupply} else {(_supplyB) Call ChangePlayerFunds};
 						};
+						//--- #692 queue-refund fix: sum and refund all pending build-queue costs before demolition.
+						//--- queu_costs is a parallel array storing the price each player paid at order time.
+						//--- Refund via the same channel as the factory-sell above (ChangeSideSupply / ChangePlayerFunds).
+						//--- Clearing queu BEFORE setDammage 1 routes each buyer's Client_BuildUnit.sqf coroutine
+						//--- through the E1 cancel path (_qIdx == -1 -> exitWith {}, no spawn) instead of the
+						//--- dead-building refund path, preventing a double-refund. A2-OA-safe: private/for/
+						//--- select/count; getVariable [2-arg] on OBJECT (not GROUP); setVariable broadcast.
+						private ["_qCosts","_qTotal","_qI"];
+						_qCosts = _closest getVariable ["queu_costs", []];
+						_qTotal = 0;
+						for "_qI" from 0 to ((count _qCosts) - 1) do {
+							_qTotal = _qTotal + (_qCosts select _qI);
+						};
+						if (_qTotal > 0) then {
+							if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
+								[sideJoined, _qTotal, "Factory sold - queued unit refunds.", false] Call ChangeSideSupply
+							} else {
+								(_qTotal) Call ChangePlayerFunds
+							};
+						};
+						_closest setVariable ["queu",        [], true];
+						_closest setVariable ["queu_costs",  [], true];
+						_closest setVariable ["queu_cpts",   [], true];
+						_closest setVariable ["queu_labels", [], true];
 						
 						//--- Inform the side.
 						// WFBE_LocalizeMessage = [sideJoined,'CLTFNCLOCALIZEMESSAGE',['StructureSold',_type]];
