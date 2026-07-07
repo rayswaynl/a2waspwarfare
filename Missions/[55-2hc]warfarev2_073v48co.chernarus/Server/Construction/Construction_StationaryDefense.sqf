@@ -1,5 +1,5 @@
 /* Description: Creates Defenses. */
-Private ["_area","_availweapons","_buildings","_builtByRepairTruck","_defense","_direction","_isAIQuery","_isArtillery","_manned","_manRange","_position","_side","_sideID","_type","_wddmChild"];
+Private ["_area","_availweapons","_buildings","_builtByRepairTruck","_defense","_direction","_isAIQuery","_isArtillery","_manned","_manRange","_position","_reqPlayer","_side","_sideID","_type","_wddmChild"];
 _type = _this select 0;
 _side = _this select 1;
 _position = _this select 2;
@@ -9,6 +9,7 @@ _isAIQuery = _this select 5;
 _manRange = if (count _this > 6) then {_this select 6} else {missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MANNING_RANGE"};
 _builtByRepairTruck = if (count _this > 7) then {_this select 7} else {false};
 _wddmChild = if (count _this > 8) then {_this select 8} else {false};
+_reqPlayer = if (count _this > 9) then {_this select 9} else {objNull};
 _sideID = (_side) Call GetSideID;
 
 //--- Marty 2026-06-13: guard the build position. A malformed _position (e.g. [] from a failed
