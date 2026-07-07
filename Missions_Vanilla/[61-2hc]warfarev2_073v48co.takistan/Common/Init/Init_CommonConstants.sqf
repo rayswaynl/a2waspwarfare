@@ -1912,7 +1912,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 //--- builds/deaths/factory/hq RecordStat call sites are NOT yet wired (emit 0) - fast-follow b74.2.
 //--- AICOM V2 Lane 800: GUER Director (virtual resistance ledger + lightweight brain).
 //--- Lane switch default 0 = inert (the documented exception to the lanes-default-1 rule).
-	if (isNil "AICOMV2_LANE_GUER_DIRECTOR")         then {AICOMV2_LANE_GUER_DIRECTOR = 0};         //--- Lane 800 switch: 0=OFF (byte-identical to V1), 1=Director active.
+	if (isNil "AICOMV2_LANE_GUER_DIRECTOR")         then {AICOMV2_LANE_GUER_DIRECTOR = 1};         //--- Lane 800 switch: 0=OFF (byte-identical to V1), 1=Director active.
 	if (isNil "AICOMV2_GDIR_TICK_SEC")              then {AICOMV2_GDIR_TICK_SEC = 30};             //--- Brain tick interval (s).
 	if (isNil "AICOMV2_GDIR_REGEN_FULL_SEC")        then {AICOMV2_GDIR_REGEN_FULL_SEC = 1800};    //--- Seconds for wiped garrison to regen to baseline with no reinforcement.
 	if (isNil "AICOMV2_GDIR_SURGE_MAX")             then {AICOMV2_GDIR_SURGE_MAX = 1.0};           //--- Autonomous materialised strength cap vs V1 baseline per town (1.0 = never above V1).
@@ -1928,7 +1928,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_AIR_CEILING_MIN_M")     then {AICOMV2_GDIR_AIR_CEILING_MIN_M = 100}; //--- Air below this m ALWAYS activates the AA tier on each sweep.
 	if (isNil "AICOMV2_GDIR_AIR_CEILING_MAX_M")     then {AICOMV2_GDIR_AIR_CEILING_MAX_M = 600}; //--- Air above this m NEVER activates the AA tier.
 //--- Amendment A1: Player Commissar Panel dials (panel switch AICOMV2_GDIR_PANEL default 0).
-	if (isNil "AICOMV2_GDIR_PANEL")                 then {AICOMV2_GDIR_PANEL = 0};               //--- A1 Commissar Panel gate: 0=off (byte-identical). Requires AICOMV2_LANE_GUER_DIRECTOR=1.
+	if (isNil "AICOMV2_GDIR_PANEL")                 then {AICOMV2_GDIR_PANEL = 1};               //--- A1 Commissar Panel gate: 0=off (byte-identical). Requires AICOMV2_LANE_GUER_DIRECTOR=1.
 	if (isNil "AICOMV2_GDIR_PANEL_COOLDOWN_SEC")    then {AICOMV2_GDIR_PANEL_COOLDOWN_SEC = 600};//--- Per-town action cooldown (s) between panel buys.
 	if (isNil "AICOMV2_GDIR_PANEL_CONTRACTS_MAX")   then {AICOMV2_GDIR_PANEL_CONTRACTS_MAX = 2}; //--- Max active contracts per town simultaneously.
 	if (isNil "AICOMV2_GDIR_PANEL_INSTANT_MULT")    then {AICOMV2_GDIR_PANEL_INSTANT_MULT = 1.5};//--- Price multiplier for instant delivery vs convoy.
