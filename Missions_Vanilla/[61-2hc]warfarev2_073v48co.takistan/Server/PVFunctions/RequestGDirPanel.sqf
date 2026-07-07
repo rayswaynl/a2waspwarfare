@@ -14,7 +14,7 @@
 	Parameters (from client via RequestGDirPanel SendToServer):
 	  0 - player body (Object)
 	  1 - verb   (String): "buy" | "qrf" | "counter" | "donate"
-	  2 - townId (String): getVariable ["wfbe_name",""] of the target town
+	  2 - townId (String): getVariable ["name",""] of the target town
 	  3 - product (String): "convoy"|"instant"|"qrfInsert"|"qrfGunship"|"qrfCombo"|"none"
 
 	A2-OA-1.64 safe: no params/pushBack/isEqualTo/apply/findIf/selectRandom/distance2D/remoteExec.
@@ -81,7 +81,7 @@ if (_verb == "quote") exitWith {
 	_qFound   = false;
 	{
 		if (!_qFound) then {
-			if ((_x getVariable ["wfbe_name", ""]) == _townId) then {
+			if ((_x getVariable ["name", ""]) == _townId) then {
 				_qTownObj = _x;
 				_qFound   = true;
 			};
@@ -159,7 +159,7 @@ _townObj   = objNull;
 _townFound = false;
 {
 	if (!_townFound) then {
-		if ((_x getVariable ["wfbe_name", ""]) == _townId) then {
+		if ((_x getVariable ["name", ""]) == _townId) then {
 			_townObj   = _x;
 			_townFound = true;
 		};

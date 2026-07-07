@@ -4595,8 +4595,8 @@ class WFBE_GDirCommissarMenu {
 		};
 		//--- Minimap backing plate.
 		class BG_Map : RscText {
-			x = 0.115; y = 0.440;
-			w = 0.222; h = 0.325;
+			x = 0.115; y = 0.386;
+			w = 0.222; h = 0.379;
 			colorBackground[] = {0, 0, 0, 0.5};
 		};
 	};
@@ -4631,12 +4631,12 @@ class WFBE_GDirCommissarMenu {
 		};
 		class LB_Towns : RscListBox {
 			idc = 31010;
-			x = 0.115; y = 0.263; w = 0.222; h = 0.170;
+			x = 0.115; y = 0.263; w = 0.222; h = 0.095;
 		};
 
 		//--- Map label.
 		class Lbl_Map : RscText {
-			x = 0.115; y = 0.436; w = 0.222; h = 0.022;
+			x = 0.115; y = 0.362; w = 0.222; h = 0.022;
 			text = "MAP (click to select town)";
 			sizeEx = 0.016;
 			colorText[] = {1, 1, 1, 0.5};
@@ -4646,8 +4646,8 @@ class WFBE_GDirCommissarMenu {
 		//--- Map-click: mouseButtonUp wired via event; loop reads _map posScreenToWorld[mouseX,mouseY].
 		class WF_MiniMap : RscMapControl {
 			idc = 31060;
-			x = 0.115; y = 0.440;
-			w = 0.222; h = 0.325;
+			x = 0.115; y = 0.386;
+			w = 0.222; h = 0.379;
 			ShowCountourInterval = 1;
 			onMouseMoving = "mouseX = (_this select 1); mouseY = (_this select 2)";
 			onMouseButtonDown = "mouseButtonDown = (_this select 1)";
