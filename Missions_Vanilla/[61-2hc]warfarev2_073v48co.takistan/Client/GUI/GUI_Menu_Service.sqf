@@ -120,10 +120,12 @@ _martyServiceBuildFull = {
 	_fullTypes = if (_veh isKindOf "Man") then {["HEAL"]} else {["REPAIR","REFUEL","REARM","HEAL"]};
 
 	{
-		_priceOne = [_veh,_x] Call _martyServiceGetPrice;
-		if (_priceOne > 0) then {
-			_actions = _actions + [_x];
-			_price = _price + _priceOne;
+		if (!(_x == "REPAIR" && {_veh getVariable ["wfbe_repair_inProgress", false]})) then {
+			_priceOne = [_veh,_x] Call _martyServiceGetPrice;
+			if (_priceOne > 0) then {
+				_actions = _actions + [_x];
+				_price = _price + _priceOne;
+			};
 		};
 	} forEach _fullTypes;
 
@@ -148,6 +150,7 @@ _martyServiceBuildBatch = {
 		if !(alive _veh) then {_canAdd = false};
 		if !([_veh] Call _martyServiceCanUse) then {_canAdd = false};
 		if (_canAdd && {_action == "REARM"} && {[_veh, _nearSupport select _i] Call _martyRearmBlockedAirDepot}) then {_canAdd = false}; //--- fix(hunt): an air unit parked near a town depot would be charged its batch share and then hard-aborted by SupportRearm - keep it out of the batch (and out of the price).
+		if (_canAdd && {_action == "REPAIR"} && {_veh getVariable ["wfbe_repair_inProgress", false]}) then {_canAdd = false}; //--- guard: skip vehicles already being repaired to prevent double-charge
 
 		if (_canAdd) then {
 			_seen = _seen + [_veh];
@@ -472,7 +475,7 @@ while {true} do {
 
 			_enabled = if (_canBeUsed && _rearmPrice > 0 && _funds >= _rearmPrice) then {true} else {false};
 			ctrlEnable [20003,_enabled];
-			_enabled = if (_canBeUsed && _repairPrice > 0 && _funds >= _repairPrice) then {true} else {false};
+			_enabled = if (_canBeUsed && _repairPrice > 0 && _funds >= _repairPrice && !(_veh getVariable ["wfbe_repair_inProgress", false])) then {true} else {false};
 			ctrlEnable [20004,_enabled];
 			_enabled = if (_canBeUsed && _refuelPrice > 0 && _funds >= _refuelPrice) then {true} else {false};
 			ctrlEnable [20005,_enabled];
@@ -523,7 +526,7 @@ while {true} do {
 		if (MenuAction == 2) then {
 			MenuAction = -1;
 
-			if (_repairPrice > 0 && _funds >= _repairPrice) then { //--- wiki-wins: affordability guard (parity with rearm/refuel)
+			if (!(_veh getVariable ["wfbe_repair_inProgress", false]) && _repairPrice > 0 && _funds >= _repairPrice) then { //--- guard: skip if repair already in progress (parity with rearm/refuel)
                 -_repairPrice Call ChangePlayerFunds;
 
                 //--- Spawn a Repair thread.

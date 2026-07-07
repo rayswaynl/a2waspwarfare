@@ -765,6 +765,13 @@ if (_isMan) then {
 	_vehicle addAction [localize "STR_WF_Unlock","Client\Action\Action_ToggleLock.sqf", [], 95, false, true, '', 'alive _target && locked _target'];
 	_vehicle addAction [localize "STR_WF_Lock","Client\Action\Action_ToggleLock.sqf", [], 94, false, true, '', 'alive _target && !(locked _target)'];
 
+	//--- Vehicle Sell (item #43): team-leader or side-commander sells an empty nearby vehicle for a partial cash refund.
+	//--- addAction is LOCAL (re-adds on rebuy) -- the buyer-owns-vehicle model; same constraint as lock/unlock.
+	//--- Non-Man units only (_isMan false). Condition string hides action when flag=0 or vehicle occupied/out-of-range.
+	if (!_isMan) then {
+		_vehicle addAction ["<t color='#e8c84a'>Sell Vehicle</t>", "Client\Action\Action_VehicleSell.sqf", [], 93, false, true, '', 'alive _target && {count crew _target == 0} && {(missionNamespace getVariable ["WFBE_C_VEHICLE_SELL", 1]) > 0} && {lightInRange || heavyInRange || depotInRange || aircraftInRange || hangarInRange} && {player == leader clientTeam || (!isNull commanderTeam && {commanderTeam == clientTeam})}'];
+	};
+
 	//--- GUER PLAYER VBIED: the buyable hilux1_civil_2_covered gets a driver-detonate action (Feature B player-side).
 	//--- The action is driver-only + resistance-only (condition) and asks the server to blast (mirrors AI wildcard W21)
 	//--- + pays the driver's GUER team cash-for-kills.
