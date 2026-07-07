@@ -1010,8 +1010,9 @@ if (worldName == "Zargabad") then {
 	//--- has NO sink. When at team cap with funds over FLOOR+COST, the supervisor arms a PAID early wildcard
 	//--- draw: the wildcard worker debits COST and rolls the normal curated deck (W1 War Chest excluded on
 	//--- paid draws - no funds-refund card). Converts the hoard into visible battlefield events through the
-	//--- existing tested deck. DEFAULT 0 = fully inert.
-	if (isNil "WFBE_C_AICOM2_REQDRAW_ENABLE")   then {WFBE_C_AICOM2_REQDRAW_ENABLE   = 0};      //--- master switch (0 = dark).
+	//--- existing tested deck. Owner-approved DEFAULT ON 2026-07-07 (lobby toggle in Rsc/Parameters.hpp;
+	//--- the param default= overrides this constant - keep them in sync). 0 = fully inert.
+	if (isNil "WFBE_C_AICOM2_REQDRAW_ENABLE")   then {WFBE_C_AICOM2_REQDRAW_ENABLE   = 1};      //--- master switch (owner default ON 2026-07-07; 0 = dark).
 	if (isNil "WFBE_C_AICOM2_REQDRAW_FLOOR")    then {WFBE_C_AICOM2_REQDRAW_FLOOR    = 250000}; //--- operating reserve: the sink never drains funds below this.
 	if (isNil "WFBE_C_AICOM2_REQDRAW_COST")     then {WFBE_C_AICOM2_REQDRAW_COST     = 75000};  //--- price of one requisitioned draw.
 	if (isNil "WFBE_C_AICOM2_REQDRAW_COOLDOWN") then {WFBE_C_AICOM2_REQDRAW_COOLDOWN = 480};    //--- min seconds between paid draws (max ~9.4k/min drain vs ~5.5k/min observed rc13 accrual).
