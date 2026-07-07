@@ -429,6 +429,11 @@ if (_isMan) then {
 		};
 	};
 
+	//--- TEAMBAR-FIRST (fable/player-teambar-slot): newly bought infantry AI must rank BELOW the player
+	//--- (COLONEL) so the A2 command bar always places the player at slot 1. PRIVATE is lowest rank.
+	if (!isNull _soldier && {(missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0}) then {
+		_soldier setRank "PRIVATE";
+	};
 	_spawnedUnits = [_soldier];
 
 	[sideJoinedText,'UnitsCreated',1] Call UpdateStatistics;

@@ -1129,6 +1129,13 @@ waitUntil {!isNull group player};
 //--- Make sure that player is always the leader.
 if (leader(group player) != player) then {(group player) selectLeader player};
 
+//--- TEAMBAR-FIRST (fable/player-teambar-slot): A2 command bar ranks units by RANK then join-order.
+//--- Set the player to COLONEL so they always render at slot 1 regardless of AI subordinate rank.
+if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
+	player setRank "COLONEL";
+	diag_log "[WFBE|TEAMBAR] Init_Client: player rank set to COLONEL for command-bar slot 1.";
+};
+
 /* Override player's Gear.*/
 // [player,Format ["WFBE_%1DEFAULTWEAPONS",sideJoinedText] Call GetNamespace,Format ["WFBE_%1DEFAULTAMMO",sideJoinedText] Call GetNamespace] Call EquipLoadout;
 /* Skill Module. */
