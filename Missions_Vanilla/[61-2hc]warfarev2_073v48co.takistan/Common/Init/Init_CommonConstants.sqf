@@ -2300,6 +2300,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- on the road axis, 2 GUER-manned MG statics, posted garrison, one-shot half-window reinforcement
 //--- pulse, and a 900-base (v1: 700) clear reward. Server-side only; nothing runs while the flag is 0.
 	if (isNil "WFBE_C_GUER_CP_V2") then {WFBE_C_GUER_CP_V2 = 1};
+	if (isNil "WFBE_C_GUER_CP_BETWEEN") then {WFBE_C_GUER_CP_BETWEEN = 1}; //--- cmdcon45 (owner): G2 checkpoints anchor on the midpoint BETWEEN the occupied town and its nearest neighbour (0 = classic around-town).
 	if (isNil "WFBE_C_GUER_CP2_ROAD_RADIUS") then {WFBE_C_GUER_CP2_ROAD_RADIUS = 400};  //--- m: nearRoads candidate radius around the target town (v2 only).
 	if (isNil "WFBE_C_GUER_CP2_FOOT_BASE") then {WFBE_C_GUER_CP2_FOOT_BASE = 4};        //--- v2 garrison base headcount (v1: 3).
 	if (isNil "WFBE_C_GUER_CP2_FOOT_PER_TIER") then {WFBE_C_GUER_CP2_FOOT_PER_TIER = 2}; //--- v2 extra garrison per GUER vehicle tier (v1: 1).

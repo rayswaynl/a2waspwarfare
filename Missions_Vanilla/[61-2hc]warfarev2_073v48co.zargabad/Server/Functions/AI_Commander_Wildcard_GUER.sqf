@@ -213,18 +213,40 @@ while {!gameOver} do {
 						_cp2FootBase = missionNamespace getVariable ["WFBE_C_GUER_CP2_FOOT_BASE", 4];
 						_cp2FootPer  = missionNamespace getVariable ["WFBE_C_GUER_CP2_FOOT_PER_TIER", 2];
 
+						//--- cmdcon45 (owner): checkpoints belong BETWEEN two towns (supply-corridor interdiction),
+						//--- not on the town doorstep. Anchor the road scan on the midpoint between the occupied town
+						//--- and its nearest neighbouring town; if no neighbour or no road near the corridor midpoint,
+						//--- fall back to the classic around-town scan below (second pass).
+						private ["_cpAnchor","_cpScanRad","_cpBandMin","_cpBandMax","_cpScoreTgt","_nbBest","_nbDist","_nbD"];
+						_cpAnchor = _targetPos; _cpScanRad = _cp2Radius; _cpBandMin = 180; _cpBandMax = 380; _cpScoreTgt = 280;
+						if ((missionNamespace getVariable ["WFBE_C_GUER_CP_BETWEEN", 1]) > 0) then {
+							_nbBest = objNull; _nbDist = 1e9;
+							{
+								if (!isNull _x && {_x != _target} && {!(_x getVariable ["wfbe_inactive", false])}) then {
+									_nbD = (getPos _x) distance _targetPos;
+									if (_nbD > 500 && {_nbD < 4500} && {_nbD < _nbDist}) then {_nbDist = _nbD; _nbBest = _x};
+								};
+							} forEach towns;
+							if (!isNull _nbBest) then {
+								_cpAnchor = [((_targetPos select 0) + ((getPos _nbBest) select 0)) / 2, ((_targetPos select 1) + ((getPos _nbBest) select 1)) / 2, 0];
+								_cpScanRad = _cp2Radius max (_nbDist * 0.4);	//--- sparse-road corridors still find a segment.
+								_cpBandMin = 0; _cpBandMax = _cpScanRad; _cpScoreTgt = 0;	//--- nearest road to the midpoint wins.
+								diag_log Format ["AICOMSTAT|v3|WILDCARD|GUER|G2|anchor=midpoint|town=%1|neighbour=%2|gap=%3", _target getVariable ["name","?"], _nbBest getVariable ["name","?"], round _nbDist];
+							};
+						};
+
 						//--- (1) ROAD-FIRST PLACEMENT: real road segments around the town, never a random-bearing offset.
 						//--- Filter: dry land, junction connectivity >=2 (guarded roadsConnectedTo idiom copied from the
 						//--- _isUsableRoad helper in AI_Commander_Base.sqf - OA-only command, degrades to ACCEPT on Vanilla),
 						//--- stand-off band 180-380m from the town centre. Pick the candidate nearest the v1 280m feel.
-						_cands = _targetPos nearRoads _cp2Radius;
+						_cands = _cpAnchor nearRoads _cpScanRad;
 						_bestRoad = objNull; _bestScore = 1e9; _bestConn = [];
 						{
 							_road = _x;   //--- capture outer _x before any nested code (house rule).
 							_rPos = getPos _road;
 							if (!(surfaceIsWater _rPos)) then {
-								_dTown = _rPos distance _targetPos;
-								if (_dTown >= 180 && {_dTown <= 380}) then {
+								_dTown = _rPos distance _cpAnchor;
+								if (_dTown >= _cpBandMin && {_dTown <= _cpBandMax}) then {
 									_conn = [];
 									//--- roadsConnectedTo exists only on OA-class builds; never let it throw on Vanilla.
 									if (!isNil {missionNamespace getVariable "WF_A2_Vanilla"} && {!WF_A2_Vanilla}) then {
@@ -232,12 +254,39 @@ while {!gameOver} do {
 										if (count _conn < 2) then {_road = objNull};   //--- dead-end stub / field path: reject.
 									};
 									if (!isNull _road) then {
-										_score = abs (_dTown - 280);
+										_score = abs (_dTown - _cpScoreTgt);
 										if (_score < _bestScore) then {_bestScore = _score; _bestRoad = _road; _bestConn = _conn};
 									};
 								};
 							};
 						} forEach _cands;
+
+						//--- Fallback pass: corridor midpoint produced no usable road segment - classic around-town scan.
+						if (isNull _bestRoad && {(_cpAnchor distance _targetPos) > 1}) then {
+							_cpAnchor = _targetPos; _cpScanRad = _cp2Radius; _cpBandMin = 180; _cpBandMax = 380; _cpScoreTgt = 280;
+							diag_log "AICOMSTAT|v3|WILDCARD|GUER|G2|anchor=fallback-town (no road near corridor midpoint)";
+							_cands = _cpAnchor nearRoads _cpScanRad;
+							_bestRoad = objNull; _bestScore = 1e9; _bestConn = [];
+							{
+								_road = _x;   //--- capture outer _x before any nested code (house rule).
+								_rPos = getPos _road;
+								if (!(surfaceIsWater _rPos)) then {
+									_dTown = _rPos distance _cpAnchor;
+									if (_dTown >= _cpBandMin && {_dTown <= _cpBandMax}) then {
+										_conn = [];
+										//--- roadsConnectedTo exists only on OA-class builds; never let it throw on Vanilla.
+										if (!isNil {missionNamespace getVariable "WF_A2_Vanilla"} && {!WF_A2_Vanilla}) then {
+											_conn = _road call {private "_c"; _c = []; if (!isNil {roadsConnectedTo _this}) then {_c = roadsConnectedTo _this}; _c};
+											if (count _conn < 2) then {_road = objNull};   //--- dead-end stub / field path: reject.
+										};
+										if (!isNull _road) then {
+											_score = abs (_dTown - _cpScoreTgt);
+											if (_score < _bestScore) then {_bestScore = _score; _bestRoad = _road; _bestConn = _conn};
+										};
+									};
+								};
+							} forEach _cands;
+						};
 
 						if (!isNull _bestRoad) then {
 							_spawnPos = getPos _bestRoad;
