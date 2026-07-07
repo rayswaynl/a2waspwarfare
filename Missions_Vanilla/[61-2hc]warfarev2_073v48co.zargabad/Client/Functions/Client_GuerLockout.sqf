@@ -30,4 +30,4 @@ while {time < _lockSec} do {
 	};
 };
 
-hint "RESISTANCE ACTIVATED\nThe insurgency is live - deploy, buying, and Town Actions are unlocked.";
+hint "RESISTANCE ACTIVATED\nThe insurgency is live - deploy, buying, and the Towns menu are unlocked.";
