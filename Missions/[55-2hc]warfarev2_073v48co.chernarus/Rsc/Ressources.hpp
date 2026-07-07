@@ -135,7 +135,7 @@ class RscButton {
 	offsetY = 0.003;
 	offsetPressedX = 0.002;
 	offsetPressedY = 0.002;
-	colorFocused[] = {0.72, 0.72, 0.45, 1.0};
+	colorFocused[] = {0.5882, 0.5882, 0.3529, 0.7}; //--- cmdcon45: reverted pass-1 bright ring - A2 PULSES colorFocused, full-alpha ring = perpetual blink on the focused button (owner-reported flicker)
 	colorShadow[] = {0.023529, 0, 0.0313725, 1};
 	colorBorder[] = {0.023529, 0, 0.0313725, 1};
 	borderSize = 0.0;

@@ -1121,66 +1121,10 @@ class WF_Menu {
 			h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
-		//--- UX Pass 1: section label above PURCHASE group (left col rows 1-2).
-		class Section_Purchase_L : RscText {
-			idc = -1;
-			x = 0.17598;
-			y = 0.244;
-			w = 0.313727;
-			h = 0.006;
-			colorBackground[] = {0, 0, 0, 0};
-			colorText[] = {0.2588, 0.7137, 1, 0.55};
-			text = "PURCHASE";
-			style = 0x02;
-			font = "Zeppelin32";
-			sizeEx = 0.018;
-			shadow = 0;
-		};
-		//--- UX Pass 1: section label above GENERAL group (left col rows 3-5).
-		class Section_General_L : RscText {
-			idc = -1;
-			x = 0.17598;
-			y = 0.446;
-			w = 0.313727;
-			h = 0.006;
-			colorBackground[] = {0, 0, 0, 0};
-			colorText[] = {0.2588, 0.7137, 1, 0.55};
-			text = "GENERAL";
-			style = 0x02;
-			font = "Zeppelin32";
-			sizeEx = 0.018;
-			shadow = 0;
-		};
-		//--- UX Pass 1: section label above COMMAND group (right col rows 1-5).
-		class Section_Command_R : RscText {
-			idc = -1;
-			x = 0.510943;
-			y = 0.244;
-			w = 0.313727;
-			h = 0.006;
-			colorBackground[] = {0, 0, 0, 0};
-			colorText[] = {0.2588, 0.7137, 1, 0.55};
-			text = "COMMAND";
-			style = 0x02;
-			font = "Zeppelin32";
-			sizeEx = 0.018;
-			shadow = 0;
-		};
-		//--- UX Pass 1: TOOLS label above footer strip (decorative).
-		class Section_Tools_F : RscText {
-			idc = -1;
-			x = 0.350;
-			y = 0.758;
-			w = 0.12;
-			h = 0.009;
-			colorBackground[] = {0, 0, 0, 0};
-			colorText[] = {0.2588, 0.7137, 1, 0.4};
-			text = "TOOLS";
-			style = 0x02;
-			font = "Zeppelin32";
-			sizeEx = 0.016;
-			shadow = 0;
-		};
+		//--- UX Pass 1: section label above PURCHASE group (left col rows 1-2).
+		//--- UX Pass 1: section label above GENERAL group (left col rows 3-5).
+		//--- UX Pass 1: section label above COMMAND group (right col rows 1-5).
+		//--- UX Pass 1: TOOLS label above footer strip (decorative).
 	};
 	class controls {
 		//--- === PURCHASE ===
