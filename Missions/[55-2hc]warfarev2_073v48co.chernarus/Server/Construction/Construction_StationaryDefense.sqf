@@ -95,6 +95,10 @@ Call Compile Format ["_defense addEventHandler ['Killed',{[_this select 0,_this 
 if (!isNull _area) then {
 	if (_defense emptyPositions "gunner" > 0 && (((missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MAX_AI") > 0) || _isAIQuery)) then {
 		_availweapons = _area getVariable "weapons";
+		//--- nil-guard: area logic has weapons set on HQ deploy; player-built statics in a pre-HQ or
+		//--- fresh area have weapons=nil. Treat nil as WFBE_C_BASE_DEFENSE_MAX_AI (the same value HQ
+		//--- deploy would stamp) so the count-vs-availweapons gate does not throw Undefined.
+		if (isNil "_availweapons") then {_availweapons = missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MAX_AI"};
 		Private ["_alives","_check","_closest","_team"];
 		_team = _area getVariable "DefenseTeam";
 
