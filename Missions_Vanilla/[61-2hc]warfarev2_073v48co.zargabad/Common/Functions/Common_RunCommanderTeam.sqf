@@ -1091,7 +1091,7 @@ while {!WFBE_GameOver && _alive} do {
 								//--- A2-OA-safe: group setVariable with broadcast=true, canMove (no A3 commands).
 								if ((missionNamespace getVariable ["WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER", 0]) > 0 && {canMove _uVeh}) then {
 									_uTeam setVariable ["wfbe_aicom_stuckstrikes", 0, true];
-									//--- _seq is from the outer while-loop and is not in Spawn scope (same class as #799 _dest fix).
+						//--- _seq is from the outer while-loop and is not in Spawn scope (same class as #799 _dest fix).
 						//--- Re-derive from wfbe_aicom_order select 0 which is already read as _uDbgOrder above.
 						private "_uDbgSeq";
 						_uDbgSeq = if (!isNil "_uDbgOrder" && {count _uDbgOrder >= 1}) then {_uDbgOrder select 0} else {-1};
