@@ -63,6 +63,12 @@ if (isNil "towns" || {count towns == 0}) exitWith { //--- #815: master roster is
 };
 
 
+//--- Hotfix: _nowT is used by the quote verb below (rate-limit + scarcity age) but was
+//--- first assigned only in the paid path further down - undefined here killed every
+//--- quote reply, leaving the panel stuck on "Fetching prices...".
+private ["_nowT"];
+_nowT = diag_tickTime;
+
 //--- QUOTE VERB: read-only price estimate, no debit, no cooldown, no contract write.
 //--- Passes Gate 1/2/2.5 (side+lane+towns), skips Gate 3-6 (town-find is done to get scarcity).
 //--- Rate limited: 2s per player to prevent spam.
