@@ -196,6 +196,58 @@ switch (_request) do {
 			_i = _i + 1;
 		} forEach _posList;
 	};
+	//--- pack-missiles F1 (ICBM countdown, WFBE_C_ICBM_COUNTDOWN=1) + F2 (missile warning, WFBE_C_MISSILE_WARNING=1).
+	//--- _args = [launchTime, impactTime]. Sent at NUKE launch: TEL path from Init_IcbmTel.sqf (server);
+	//--- classic path from nukeincoming.sqf (commander client). Guards: isDedicated + nil/null player.
+	//--- F1: hintSilent M:SS every 5s (mirrors Client_GuerLockout.sqf pattern); clears on impact.
+	//--- F2: titleText "PLAIN DOWN" + playSound "inbound" on first trigger; "inbound" every 10s after.
+	//---     Reuses existing "inbound" CfgSounds alarm (same as scud-klaxon-all / base-under-attack).
+	case "icbm-countdown": {
+		if (isDedicated) exitWith {};
+		if (isNil "player" || {isNull player}) exitWith {};
+		private ["_launchTime","_impactTime","_left","_m","_s"];
+		_launchTime = _args select 0;
+		_impactTime = _args select 1;
+		_left = _impactTime - time;
+		if (_left <= 0) exitWith {};
+		//--- F1: countdown HUD (hintSilent M:SS every 5s).
+		if ((missionNamespace getVariable ["WFBE_C_ICBM_COUNTDOWN", 1]) > 0) then {
+			[_impactTime] spawn {
+				private ["_iT","_left","_m","_s"];
+				_iT = _this select 0;
+				_left = _iT - time;
+				if (_left > 0) then {
+					_m = floor (_left / 60);
+					_s = floor (_left - (_m * 60));
+					hintSilent Format ["ICBM IMPACT IN %1:%2", _m, if (_s < 10) then {"0" + str _s} else {str _s}];
+				};
+				while {time < _iT} do {
+					sleep 5;
+					_left = _iT - time;
+					if (_left > 0) then {
+						_m = floor (_left / 60);
+						_s = floor (_left - (_m * 60));
+						hintSilent Format ["ICBM IMPACT IN %1:%2", _m, if (_s < 10) then {"0" + str _s} else {str _s}];
+					};
+				};
+				hintSilent "";
+			};
+		};
+		//--- F2: periodic audio alarm.
+		if ((missionNamespace getVariable ["WFBE_C_MISSILE_WARNING", 1]) > 0) then {
+			titleText ["! INCOMING ICBM !", "PLAIN DOWN", 5];
+			playSound "inbound";
+			[_impactTime] spawn {
+				private ["_iT"];
+				_iT = _this select 0;
+				while {time < _iT} do {
+					sleep 10;
+					if (time < _iT) then { playSound "inbound" };
+				};
+			};
+		};
+	};
+
 	//--- cmdcon41-w2 (Ray 2026-07-02) NAVAL HVT: the server (server_town.sqf) broadcasts this on every
 	//--- carrier flip, but the client case was MISSING so the flip notification was silently dropped. Add it,
 	//--- mirroring the neighbouring case style (hint + city-marker recolor). Payload after the request-strip:
