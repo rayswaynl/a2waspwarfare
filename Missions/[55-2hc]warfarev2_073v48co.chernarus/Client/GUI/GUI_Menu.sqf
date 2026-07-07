@@ -7,7 +7,7 @@ if (sideJoined == resistance) then { {ctrlEnable [_x, false]} forEach [11004,110
 //--- stays as a harmless no-op fallback.
 if (sideJoined == resistance) then {
 	ctrlEnable [11008, true];
-	ctrlSetText [11008, "Town Actions"];
+	ctrlSetText [11008, "Towns"]; //--- owner 2026-07-07: renamed from "Town Actions"
 };
 ctrlShow [11030, false];
 
