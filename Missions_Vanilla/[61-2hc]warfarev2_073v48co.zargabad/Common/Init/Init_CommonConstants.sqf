@@ -2370,6 +2370,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- radar/AWACS-role platform beside the An-2. Flag-off (0) = token never registered/listed = byte-identical.
 	if (isNil "WFBE_C_EAST_C130") then {WFBE_C_EAST_C130 = 1};   //--- Master gate: 0=off (default), 1=on. Lobby param mirrors this.
 
+//--- WFBE_C_PLAYER_TEAMBAR_FIRST (fable/player-teambar-slot 2026-07-07): set player rank to COLONEL
+//--- at enrollment/respawn/skin-swap so the A2 command bar sorts them to slot 1 (rank drives bar order;
+//--- selectLeader sets the star but does not reorder slots). 1 = enabled (default); 0 = legacy layout.
+	if (isNil "WFBE_C_PLAYER_TEAMBAR_FIRST") then {WFBE_C_PLAYER_TEAMBAR_FIRST = 1};
 //--- PLAYER BASE DEFENSE AUTO-MANNING (fable/player-defense-automan):
 //--- When >0 and a player builds a gunner-capable static inside a base area, the defense is
 //--- registered for AI manning via the same Construction_StationaryDefense path as AI-commander

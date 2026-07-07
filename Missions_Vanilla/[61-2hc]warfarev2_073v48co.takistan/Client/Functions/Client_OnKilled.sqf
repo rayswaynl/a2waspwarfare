@@ -141,6 +141,13 @@ if (group player == WFBE_Client_Team) then {
 	};
 };
 
+//--- TEAMBAR-FIRST (fable/player-teambar-slot): re-assert COLONEL after respawn so the command bar
+//--- resorts correctly even though the engine creates a new unit on respawn.
+if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
+	player setRank "COLONEL";
+	diag_log "[WFBE|TEAMBAR] Client_OnKilled: player rank set to COLONEL for command-bar slot 1.";
+};
+
 titleCut ["", "BLACK IN", 1];
 titleText [_deathText, "PLAIN DOWN", 5];
 
