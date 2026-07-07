@@ -1,4 +1,4 @@
-﻿//--- DO NOT CHANGE.
+//--- DO NOT CHANGE.
 WESTID = 0;
 EASTID = 1;
 RESISTANCEID = 2;
