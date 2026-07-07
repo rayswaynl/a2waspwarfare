@@ -219,6 +219,7 @@ _deckPart = _lhdAlphaParts select 3;
 _bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck height (was a hardcoded 16 guess) so deck-respawned players land on the flight deck, not clipping the hull / falling into the sea. boundingBox is A2-OA 1.64-safe.
 _deckZ = 15.9; //--- cmdcon45 (Ray 2026-07-07): flight deck is the engine-verified 15.9 m over the sea (DayZ LHD creator / Domination "spawn at 15.9 to be ON deck"). The B754 boundingBox read gave 22.42 (symmetrized model-box TOP, not the deck) so every deck respawn materialised ~8.5 m up and fell. _bb stays in the diag line for forensics.
 _lhdAlphaLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
+_lhdAlphaLogic setVariable ["wfbe_naval_deckpart", _lhdAlphaParts select 3, true]; //--- fable/naval-deck-fixes: reference hull part for model-space deck placement
 _lhdAlphaLogic setVariable ["wfbe_is_naval_hvt", true, true];
 //--- cmdcon41-w2 (Ray 2026-07-02) TOWN-CENTER HEIGHT: raise the town logic from sea level (z=0, set at
 //--- line ~140) to the flight-deck height so the player-facing town CENTER/marker sits ON the deck, not
@@ -247,6 +248,7 @@ _deckPart = _lhdBravoParts select 3;
 _bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck height (was a hardcoded 16 guess) so deck-respawned players land on the flight deck, not clipping the hull / falling into the sea. boundingBox is A2-OA 1.64-safe.
 _deckZ = 15.9; //--- cmdcon45 (Ray 2026-07-07): flight deck is the engine-verified 15.9 m over the sea (DayZ LHD creator / Domination "spawn at 15.9 to be ON deck"). The B754 boundingBox read gave 22.42 (symmetrized model-box TOP, not the deck) so every deck respawn materialised ~8.5 m up and fell. _bb stays in the diag line for forensics.
 _lhdBravoLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
+_lhdBravoLogic setVariable ["wfbe_naval_deckpart", _lhdBravoParts select 3, true]; //--- fable/naval-deck-fixes: reference hull part for model-space deck placement
 _lhdBravoLogic setVariable ["wfbe_is_naval_hvt", true, true];
 //--- cmdcon41-w2 (Ray 2026-07-02) TOWN-CENTER HEIGHT: raise Bravo's logic to deck height (see Alpha note above).
 _lhdBravoLogic setPosASL [(getPos _lhdBravoLogic) select 0, (getPos _lhdBravoLogic) select 1, _deckZ];
@@ -264,6 +266,7 @@ _deckPart = _lhdCharlieParts select 3;
 _bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck height (was a hardcoded 16 guess) so deck-respawned players land on the flight deck, not clipping the hull / falling into the sea. boundingBox is A2-OA 1.64-safe.
 _deckZ = 15.9; //--- cmdcon45 (Ray 2026-07-07): flight deck is the engine-verified 15.9 m over the sea (DayZ LHD creator / Domination "spawn at 15.9 to be ON deck"). The B754 boundingBox read gave 22.42 (symmetrized model-box TOP, not the deck) so every deck respawn materialised ~8.5 m up and fell. _bb stays in the diag line for forensics.
 _lhdCharlieLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
+_lhdCharlieLogic setVariable ["wfbe_naval_deckpart", _lhdCharlieParts select 3, true]; //--- fable/naval-deck-fixes: reference hull part for model-space deck placement
 _lhdCharlieLogic setVariable ["wfbe_is_naval_hvt", true, true];
 //--- cmdcon41-w2 (Ray 2026-07-02) TOWN-CENTER HEIGHT: raise Charlie's logic to deck height (see Alpha note above).
 _lhdCharlieLogic setPosASL [(getPos _lhdCharlieLogic) select 0, (getPos _lhdCharlieLogic) select 1, _deckZ];
@@ -347,14 +350,16 @@ if (isPlayer _x && {alive _x} && {(side _x) == _ownerSide} && {(_x distance _scu
 //--- the deckZ boundingBox on that carrier).
 private ["_scudModel","_scudDeckPart"];
 _scudDeckPart = _scudParts select 3;
-_scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [(_scudAnchor select 0) + 50, _scudAnchor select 1, 0], [], 0, "NONE"];
+private ["_scudXY"];
+_scudXY = _scudDeckPart modelToWorld [8, -14, 0]; //--- fable/naval-deck-fixes: anchor+50 put the launcher 41m past the bow (anchor sits ~21m east of hull center, half-length ~30m; live RPT showed [14750,2000] vs deck edge ~14709). Deck-part model space is heading-proof.
+_scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [_scudXY select 0, _scudXY select 1, 0], [], 0, "NONE"];
 //--- fable/naval-camps-on-deck (Ray 2026-07-07) SCUD CLEARANCE: the MAZ_543_SCUD_TK_EP1 vehicle origin
 //--- is mid-body (~1.6 m above the ground plane), so placing the origin at exactly deckZ sinks the
 //--- lower half of the vehicle into the deck. Add WFBE_C_NAVAL_SCUD_CLEARANCE (default 1.6) so the
 //--- hull clears the deck surface. Owner will eyeball and adjust the constant in-engine.
 private ["_scudSpawnZ"];
 _scudSpawnZ = _scudDeckZ + (missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 1.6]);
-_scudModel setPosASL [(_scudAnchor select 0) + 50, _scudAnchor select 1, _scudSpawnZ];
+_scudModel setPosASL [_scudXY select 0, _scudXY select 1, _scudSpawnZ];
 _scudModel setDir 90;
 _scudModel allowDamage false;
 //--- cmdcon41 SCUD THEATRICS (feature 1, Ray 2026-07-02): store the deck SCUD launcher on the platform logic so
@@ -365,8 +370,8 @@ _scudModel allowDamage false;
 //--- can test distance to the VISUAL launcher, not the invisible pad anchor (50m apart).
 _scudLogic setVariable ["wfbe_hvt_scud", _scudModel, true];
 _scudLogic setVariable ["wfbe_scud_model_ref", _scudModel, true];
-diag_log Format ["NAVALHVT-SCUD: visual SCUD spawned at [%1,%2,%3] (deckZ=%4 + clearance=%5); model ref stored.", (_scudAnchor select 0) + 50, _scudAnchor select 1, _scudSpawnZ, _scudDeckZ, missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 1.6]];
-[_scudModel, (_scudAnchor select 0) + 50, (_scudAnchor select 1), _scudSpawnZ, _scudDeckPart] spawn {
+diag_log Format ["NAVALHVT-SCUD: visual SCUD spawned at [%1,%2,%3] (deckZ=%4 + clearance=%5); model ref stored.", _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckZ, missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 1.6]];
+[_scudModel, _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckPart] spawn {
 	private ["_s","_px","_py","_dz","_deckPart","_off"];
 	_s        = _this select 0;
 	_px       = _this select 1;
@@ -613,10 +618,12 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 	[_hvtLoc] spawn {
 		private ["_loc","_pos","_sideID","_capGrp","_hind","_biplane","_hindPilot","_biplPilot","_armed",
 		         "_inactiveTime","_now","_detected","_players","_anyNear","_orbitAng","_dummy","_x",
-		         "_threeHinds","_hind2","_hind3","_hindPilot2","_hindPilot3"];
+		         "_threeHinds","_hind2","_hind3","_hindPilot2","_hindPilot3","_capL39","_jet1","_jet2","_jetPilot1","_jetPilot2"];
 		_loc  = _this select 0;
 		_armed = false;
 		_inactiveTime = 0;
+		_jet1 = objNull; _jet2 = objNull; _jetPilot1 = objNull; _jetPilot2 = objNull; //--- fable/naval-deck-fixes: were block-scoped in the arming branch, orbit/despawn ticks read them undefined (live RPT :767/:794)
+
 		_orbitAng = random 360;
 		_threeHinds = (missionNamespace getVariable ["WFBE_C_NAVAL_CAP_THREE_HINDS", 0]) > 0;
 		_capL39 = (missionNamespace getVariable ["WFBE_C_NAVAL_CAP_L39", 0]) > 0; //--- naval-air-spawn-easa: supersedes THREE_HINDS + Mi24/An2 when >0.
@@ -846,7 +853,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
 		private ["_navLogic","_navDeckZ","_navDir","_navAnchorX","_navAnchorY"];
 		_navLogic   = _x;
 		_navDeckZ   = _navLogic getVariable ["wfbe_naval_deckz", 15.9];
-		_navDir     = getDir _navLogic;
+		_navDir     = getDir (_navLogic getVariable ["wfbe_naval_deckpart", _navLogic]); //--- fable/naval-deck-fixes: town logics carry azimut=0 in mission.sqm; the hull part carries the true heading (90) - rotation math was silently wrong for the (currently dead) synced-camps path
 		_navAnchorX = (getPosASL _navLogic) select 0;
 		_navAnchorY = (getPosASL _navLogic) select 1;
 
@@ -872,7 +879,60 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
 			_camps = _loc getVariable ["camps", []];
 
 			if (count _camps == 0) exitWith {
-				diag_log Format ["NAVALHVT-CAMP: %1 no camps found after wait; reseat skipped.", _loc getVariable ["name","?"]];
+				//--- fable/naval-deck-fixes: runtime carrier towns can NEVER receive camps from Init_Town -
+				//--- camps come only from mission.sqm-synchronized LocationLogicCamp entities (Init_Town.sqf:59-72),
+				//--- so the wait above always ends empty and every carrier shipped uncapturable (live RPT: "no camps
+				//--- found after wait" x3). Build the full camp contract here instead: invisible-but-alive HeliHEmpty
+				//--- stand-ins (the B754b hangar pattern above - consumers key on wfbe_camp_bunker/sideID variables,
+				//--- not typeOf: see GUI_RespawnMenu.sqf:213), bunker model + flag + vars per Init_Town.sqf:105-136,
+				//--- then start THIS town's server_town_camp FSM (Init_Town launched it with an empty array here).
+				//--- Placement = deck-part MODEL space (heading-proof), port side, clear of the SCUD ([8,-14]).
+				private ["_deckPart","_newCamps","_newFlags","_cOff","_cXY","_cLogic","_cModel","_cFlag","_cFlagPos","_campHealth","_townSideID","_townSV","_depotCls2","_depots2","_depot2"];
+				_deckPart = _loc getVariable ["wfbe_naval_deckpart", objNull];
+				if (isNull _deckPart) exitWith {
+					diag_log Format ["NAVALHVT-CAMP: %1 no camps AND no deckpart ref; cannot build deck camps.", _loc getVariable ["name","?"]];
+				};
+				_townSideID = _loc getVariable ["sideID", WFBE_C_GUER_ID];
+				_townSV = _loc getVariable ["supplyValue", 0];
+				_newCamps = []; _newFlags = [];
+				{
+					_cOff = _x;
+					_cXY = _deckPart modelToWorld _cOff;
+					_cLogic = "HeliHEmpty" createVehicle [_cXY select 0, _cXY select 1, 0];
+					_cLogic setDir (getDir _deckPart);
+					_cLogic setPosASL [_cXY select 0, _cXY select 1, _deckZ];
+					_cLogic allowDamage false;
+					_cLogic setVariable ["town", _loc];
+					_cLogic setVariable ["sideID", _townSideID, true];
+					_cLogic setVariable ["supplyValue", _townSV, true];
+					_cModel = createVehicle [missionNamespace getVariable "WFBE_C_CAMP", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
+					_cModel setDir ((getDir _cLogic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
+					_cModel setPosASL [_cXY select 0, _cXY select 1, _deckZ];
+					_campHealth = missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF";
+					if !(isNil '_campHealth') then {
+						_cModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
+					};
+					_cFlag = createVehicle [missionNamespace getVariable "WFBE_C_CAMP_FLAG", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
+					_cFlagPos = _cLogic modelToWorld (missionNamespace getVariable ["WFBE_C_CAMP_FLAG_POS", [-5, 5]]);
+					_cFlag setPosASL [_cFlagPos select 0, _cFlagPos select 1, _deckZ];
+					_cLogic setVariable ["wfbe_flag", _cFlag];
+					_cLogic setVariable ["wfbe_camp_bunker", _cModel, true];
+					_newCamps = _newCamps + [_cLogic];
+					_newFlags = _newFlags + [_cFlag];
+				} forEach [[-10, 18, 0], [-10, -18, 0]];
+				_loc setVariable ["camps", _newCamps, true];
+				[_newCamps, _loc, _newFlags] execVM "Server\FSM\server_town_camp.sqf";
+				diag_log Format ["NAVALHVT-CAMP: %1 built %2 deck camps at deckZ=%3 (runtime town, no sqm camps); camp FSM started.", _loc getVariable ["name","?"], count _newCamps, _deckZ];
+				//--- Depot reseat (duplicated from the synced-camps path below, which this exitWith skips).
+				_depotCls2 = missionNamespace getVariable ["WFBE_C_DEPOT", ""];
+				if (_depotCls2 != "") then {
+					_depots2 = nearestObjects [getPosASL _loc, [_depotCls2], 50];
+					if (count _depots2 == 1) then {
+						_depot2 = _depots2 select 0;
+						_depot2 setPosASL [_ancX, _ancY, _deckZ];
+						diag_log Format ["NAVALHVT-CAMP: %1 depot reseated to [%2,%3,%4]", _loc getVariable ["name","?"], _ancX, _ancY, _deckZ];
+					};
+				};
 			};
 
 			//--- Re-seat each camp logic, then wait for the tent model (wfbe_camp_bunker)
