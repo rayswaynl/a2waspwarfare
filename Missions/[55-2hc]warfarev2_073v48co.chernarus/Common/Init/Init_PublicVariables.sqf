@@ -98,3 +98,13 @@ if (!isServer || {local player}) then {
         WFBE_COMM_GDIR_SNAP = _this select 1;
     };
 };
+
+//--- WFBE_C_GDIR_VIS: side-wide commissar order broadcast receiver.
+//--- Server (RequestGDirPanel + Server_GuerDirector) publishes WFBE_GDIR_ORDER_MSG
+//--- on each accepted panel action and each QRF/counter-attack contract fire.
+WFBE_GDIR_ORDER_MSG = "";
+if (!isServer || {local player}) then {
+    "WFBE_GDIR_ORDER_MSG" addPublicVariableEventHandler {
+        if (sideJoined == resistance) then {hint (_this select 1)};
+    };
+};
