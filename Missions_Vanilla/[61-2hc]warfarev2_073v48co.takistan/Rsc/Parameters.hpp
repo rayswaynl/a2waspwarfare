@@ -747,5 +747,11 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1;
 	};
+	class WFBE_C_GUER_LOCKOUT_MIN {
+		title = "GUER Resistance Lockout (activation delay)";
+		values[] = {0,15,20,30};
+		texts[] = {"Off","15 minutes","20 minutes","30 minutes"};
+		default = 20;
+	};
 
 };

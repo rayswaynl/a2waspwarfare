@@ -33,7 +33,7 @@ publicVariable "CBA_display_ingame_warnings";
 for '_i' from 0 to 3 do {diag_log "################################"};
 diag_log format ["## Island Name: [%1]", worldName];
 diag_log format ["## Mission Name: [%1]", WF_MISSIONNAME];
-diag_log "## Build: WASP Warfare Build 89 / cmdcon44";
+diag_log "## Build: WASP Warfare Build 91 / cmdcon44";
 #ifdef WF_RELEASE_MARKER
 diag_log WF_RELEASE_MARKER;
 #else

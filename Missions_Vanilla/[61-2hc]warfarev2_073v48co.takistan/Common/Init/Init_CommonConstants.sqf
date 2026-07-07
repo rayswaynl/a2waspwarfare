@@ -1975,6 +1975,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_MORTAR_COOLDOWN_SEC")    then {AICOMV2_GDIR_MORTAR_COOLDOWN_SEC = 900}; //--- Per-town mortar action cooldown (s); separate from action cooldown.
 	if (isNil "WFBE_C_GDIR_GARRISON_GAIN") then {WFBE_C_GDIR_GARRISON_GAIN = 0}; //--- Tier-1 ledger->real-garrison gain: 0=off (byte-identical). >0 = a Director-reinforced GUER town (wfbe_gdir_str ratio>1) wakes with +min(groups, round(groups*(ratio-1)*GAIN)) real defender groups, floored at V1 (no-nerf). ~1.0 => +50% at max funded surge (ratio 1.5).
 //--- End AICOM V2 Lane 800 constants.
+if (isNil "WFBE_C_GUER_LOCKOUT_MIN") then {WFBE_C_GUER_LOCKOUT_MIN = 20}; //--- fable/guer-lockout (owner 2026-07-07): GUER activation delay in MINUTES; Parameters.hpp default=20 MUST stay in sync; 0 = off. Gates: respawn-timer clamp (GUI_RespawnMenu), WF-menu buy/gear/TownActions (GUI_Menu), start-confine (Client_GuerLockout.sqf).
 
 WFBE_C_STATS_ENABLED = true;
 WFBE_C_STATS_FLUSH_INTERVAL = 60;
