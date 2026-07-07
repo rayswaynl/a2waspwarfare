@@ -46,6 +46,7 @@ Use `--diff-from <ref>` to report only findings whose primary line was added sin
 - `DISABLESER`: UI control helpers appear without `disableSerialization`.
 - `GROUPGETVAR`: two-argument `getVariable` on group-like expressions.
 - `NSSETVAR3`: `missionNamespace`/`uiNamespace`/`profileNamespace` `setVariable` with three or more top-level elements. The public-flag form is Arma 3-only; A2/OA 1.64 throws `Error 3 elements provided, 2 expected` at runtime and leaves the variable unset (shipped in Build 87, hotfixed in cmdcon42b). Object and group `setVariable` with a public flag is valid on A2/OA and is not flagged.
+- `TRAILCOMMA`: trailing comma immediately before a closing `]` in an array literal, allowing whitespace, newlines, and comments in between — the preprocessor strips comments, so `true],` followed by a `//---` comment and then `];` still fails to parse. Fatal `Error Missing [` at mission init on A2 OA 1.64 (PR #801 / `Init_Defenses.sqf` `WFBE_POSITION_TEMPLATE_MAP` incident, 2026-07-07, hotfixed in b517fd5e1). String contents never trigger it (`"a,]"` is safe).
 
 ## Stringtable Checks
 
