@@ -48,3 +48,6 @@ C*tmp*.txt
 
 # Soak ledger runtime data (append-only, machine-local; created by Append-LedgerRow.ps1)
 Tools/Soak/soak-ledger.jsonl
+
+# Scenario driver run artifacts (Run-Scenario.ps1 -FromRpt output; machine-local)
+Tools/Soak/results/

@@ -373,3 +373,44 @@ pwsh Tools\Soak\Append-LedgerRow.Tests.ps1     # writer round-trip + contract ch
 python Tools\Soak\validate_ledger.py --self-test
 python Tools\Soak\validate_ledger.py Tools\Soak\soak-ledger.jsonl   # conformance of a real ledger
 ```
+
+---
+
+## Scenarios (named, repeatable recipes)
+
+Instead of ad-hoc soaks, tests are **named recipes** in `scenarios.json`. `Get-ScenarioSpec.ps1`
+resolves a name to a full config; `Run-Scenario.ps1` plans or grades it and feeds the ledger above.
+
+**Catalog** (`scenarios.json`): `defend-town`, `big-assault`, `load-ramp` (popPin sweep),
+`idle-soak`, `hc-split` (1-HC-vs-2-HC sweep), `flight-probe`, `a-life-probe` (GUER Director aliveness).
+Each recipe carries a map/HC/popPin/duration config, the flags to inject, and threshold **asserts**
+(`severity: fail` → a miss makes the run FAIL; `watch` → WATCH).
+
+```powershell
+# list the catalog
+.\Tools\Soak\Get-ScenarioSpec.ps1 -List
+
+# resolve a recipe to concrete runs (sweeps expand to one run per value)
+.\Tools\Soak\Get-ScenarioSpec.ps1 -Name hc-split -Json
+
+# PLAN a run — prints config + the server/HC launch command lines + asserts. No side effects.
+.\Tools\Soak\Run-Scenario.ps1 -Name big-assault -DryRun
+
+# GRADE a produced RPT — analyze -> metrics -> verdict -> Run-Result JSON + ledger row (+ -Peach DM)
+.\Tools\Soak\Run-Scenario.ps1 -Name idle-soak -FromRpt <server.RPT> -HcRpt <ArmA2OA.RPT> -Peach
+```
+
+`Run-Scenario.ps1` **does not spawn Arma** — it plans (`-DryRun`) and grades (`-FromRpt`). Live boot
+orchestration is the sandbox-boot track; keeping the driver spawn-free makes it safe and fully
+testable. Each `-FromRpt` grade writes `results/<runId>.json` (the Standard Run-Result: config,
+metrics, per-assert verdicts, boot-smoke, ledger rowId, artifacts) and appends one ledger row.
+
+**Metrics** the asserts reference (computed from `analyze_soak.py` output): `serverFpsMedian`,
+`serverFpsMin`, `hcFpsMedian`, `hc2FpsMedian`, `aiTotPeak`, `guerPeak`, `captures`, `arrivalPct`,
+`maxTownsWest`, `maxTownsEast`, `hours`.
+
+**Verify:**
+```powershell
+pwsh Tools\Soak\Get-ScenarioSpec.Tests.ps1
+pwsh Tools\Soak\Run-Scenario.Tests.ps1
+```
