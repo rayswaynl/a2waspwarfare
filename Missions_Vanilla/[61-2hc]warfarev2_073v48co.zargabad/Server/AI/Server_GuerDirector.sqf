@@ -593,12 +593,13 @@ while {!WFBE_GameOver} do {
     //--------------------------------------------------------------------
     if (_hardenOn && {(diag_tickTime - _jipSnapLastT) >= _jipSnapInterval}) then {
         _jipSnapLastT = diag_tickTime;
-        private ["_snapNames","_snapStr","_snapBase","_snapFund","_snapCD"];
+        private ["_snapNames","_snapStr","_snapBase","_snapFund","_snapCD","_snapTransit"];
         _snapNames = [];
         _snapStr   = [];
         _snapBase  = [];
         _snapFund  = [];
         _snapCD    = [];
+        _snapTransit = []; //--- fable/guer-town-intel: in-transit strength per town (snap index 5)
         private ["_snapNowT","_cdMap"];
         _snapNowT = diag_tickTime;
         _cdMap    = missionNamespace getVariable ["AICOMV2_GDIR_COOLDOWN_MAP", []];
@@ -618,8 +619,9 @@ while {!WFBE_GameOver} do {
             _snapBase  set [count _snapBase,  _sRec select 1];
             _snapFund  set [count _snapFund,  _sFund];
             _snapCD    set [count _snapCD,    _sCD];
+            _snapTransit set [count _snapTransit, _sRec select 3];
         } forEach _ledger;
-        AICOMV2_GDIR_JIP_SNAP = [_snapNames, _snapStr, _snapBase, _snapFund, _snapCD];
+        AICOMV2_GDIR_JIP_SNAP = [_snapNames, _snapStr, _snapBase, _snapFund, _snapCD, _snapTransit]; //--- fable/guer-town-intel: index 5 appended - existing consumers read 0-4 unaffected
         publicVariable "AICOMV2_GDIR_JIP_SNAP";
         diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_JIP_SNAP published towns=%2", _elmin, count _snapNames];
     };
