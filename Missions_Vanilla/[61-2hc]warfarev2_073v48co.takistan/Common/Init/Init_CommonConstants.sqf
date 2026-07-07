@@ -975,6 +975,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_LOSING_PRESS")            then {WFBE_C_AICOM_LOSING_PRESS = 1};            //--- losing-side aggression floor: behind on towns + near strength parity + base safe -> minimum PRESS (never park in DEFEND).
 	if (isNil "WFBE_C_AICOM_WITHDRAW_EVAL")           then {WFBE_C_AICOM_WITHDRAW_EVAL = 1};           //--- graceful-withdrawal evaluator: bleeding HC teams get a "rally" order to the nearest own HQ/town (Ray: reinforce at friendly towns).
 	if (isNil "WFBE_C_AICOM_WITHDRAW_MIN_ALIVE")      then {WFBE_C_AICOM_WITHDRAW_MIN_ALIVE = 3};      //--- alive-count floor that triggers the withdrawal (MBT/attack-heli teams exempt).
+	if (isNil "WFBE_C_AICOM_WITHDRAW_COOLDOWN")       then {WFBE_C_AICOM_WITHDRAW_COOLDOWN = 240};     //--- claude/aicom-west-stuck (bug M): min seconds between auto-rally re-arms for the SAME understrength team - ends the rally-arrive-rally livelock, gives a bounded assault window between withdrawal episodes. Explicit driver wantrally requests bypass this.
 	if (isNil "WFBE_C_AICOM_STRIKE_STAGE")            then {WFBE_C_AICOM_STRIKE_STAGE = 1};            //--- HQ-strike staging: mass strikers at a rally short of the enemy HQ, then hit together.
 	if (isNil "WFBE_C_AICOM_STRIKE_STAGE_BODIES")     then {WFBE_C_AICOM_STRIKE_STAGE_BODIES = 14};    //--- staged bodies required before release.
 	if (isNil "WFBE_C_AICOM_STRIKE_STAGE_TIMEOUT")    then {WFBE_C_AICOM_STRIKE_STAGE_TIMEOUT = 240};  //--- s: release with whatever is staged (never deadlock).
@@ -991,6 +992,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_ORBITER_DETECT")         then {WFBE_C_AICOM_ORBITER_DETECT = 0};         //--- ORBITER DETECT: track COMBAT en-route teams with no closing distance; N windows = stuck (enter strike ladder). 1 = on, 0 = off.
 	if (isNil "WFBE_C_AICOM_ORBITER_WIN")            then {WFBE_C_AICOM_ORBITER_WIN   = 3};          //--- consecutive no-progress COMBAT windows before ORBITER_STUCK verdict (requires ORBITER_DETECT > 0).
 	if (isNil "WFBE_C_AICOM_STUCK_DECAY")            then {WFBE_C_AICOM_STUCK_DECAY   = 0};          //--- STUCK DECAY: on real forward progress, decay strike counter by 1 instead of hard-resetting to 0. 1 = decay, 0 = reset.
+	if (isNil "WFBE_C_AICOM_STUCK_GOALDELTA")        then {WFBE_C_AICOM_STUCK_GOALDELTA = 0};      //--- claude/aicom-west-stuck: AssignTowns position-stuck test measures distance-to-target CLOSED since the breadcrumb instead of raw leader displacement when 1 (root-cause fix for HighClimb-boosted wedged-hull false progress); 0 = legacy raw-displacement, byte-identical.
 	if (isNil "WFBE_C_AICOM_SVC_ALLTEAMS")            then {WFBE_C_AICOM_SVC_ALLTEAMS = 1};            //--- service/refit admits understrength INFANTRY teams too (was armour-only). Headcount-gated.
 	if (isNil "WFBE_C_AICOM_TOPUP_UNIT_COST")         then {WFBE_C_AICOM_TOPUP_UNIT_COST = 300};       //--- funds charged per replacement infantryman at a rally top-up.
 	if (isNil "WFBE_C_AICOM_TOPUP_COOLDOWN")          then {WFBE_C_AICOM_TOPUP_COOLDOWN = 240};        //--- s between top-ups per team.
