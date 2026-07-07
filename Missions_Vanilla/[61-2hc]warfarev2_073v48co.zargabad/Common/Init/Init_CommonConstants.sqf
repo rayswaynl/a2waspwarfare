@@ -1927,6 +1927,20 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 //--- Amendment A2: Air-Contact Activation Tier dials (folded under AICOMV2_LANE_GUER_DIRECTOR gate).
 	if (isNil "AICOMV2_GDIR_AIR_CEILING_MIN_M")     then {AICOMV2_GDIR_AIR_CEILING_MIN_M = 100}; //--- Air below this m ALWAYS activates the AA tier on each sweep.
 	if (isNil "AICOMV2_GDIR_AIR_CEILING_MAX_M")     then {AICOMV2_GDIR_AIR_CEILING_MAX_M = 600}; //--- Air above this m NEVER activates the AA tier.
+//--- Amendment A1: Player Commissar Panel dials (panel switch AICOMV2_GDIR_PANEL default 0).
+	if (isNil "AICOMV2_GDIR_PANEL")                 then {AICOMV2_GDIR_PANEL = 0};               //--- A1 Commissar Panel gate: 0=off (byte-identical). Requires AICOMV2_LANE_GUER_DIRECTOR=1.
+	if (isNil "AICOMV2_GDIR_PANEL_COOLDOWN_SEC")    then {AICOMV2_GDIR_PANEL_COOLDOWN_SEC = 600};//--- Per-town action cooldown (s) between panel buys.
+	if (isNil "AICOMV2_GDIR_PANEL_CONTRACTS_MAX")   then {AICOMV2_GDIR_PANEL_CONTRACTS_MAX = 2}; //--- Max active contracts per town simultaneously.
+	if (isNil "AICOMV2_GDIR_PANEL_INSTANT_MULT")    then {AICOMV2_GDIR_PANEL_INSTANT_MULT = 1.5};//--- Price multiplier for instant delivery vs convoy.
+	if (isNil "AICOMV2_GDIR_PANEL_PRICE_REINF")     then {AICOMV2_GDIR_PANEL_PRICE_REINF = 800}; //--- Base price: Action 1 convoy reinforcement.
+	if (isNil "AICOMV2_GDIR_PANEL_PRICE_QRF_INS")   then {AICOMV2_GDIR_PANEL_PRICE_QRF_INS = 600};  //--- Base price: Action 2 QRF insert tier.
+	if (isNil "AICOMV2_GDIR_PANEL_PRICE_QRF_GUN")   then {AICOMV2_GDIR_PANEL_PRICE_QRF_GUN = 1200}; //--- Base price: Action 2 QRF gunship tier.
+	if (isNil "AICOMV2_GDIR_PANEL_PRICE_CTR_ATK")   then {AICOMV2_GDIR_PANEL_PRICE_CTR_ATK = 500};  //--- Base price: Action 3 counter-attack contract.
+	if (isNil "AICOMV2_GDIR_PANEL_SCARCITY_STEP")   then {AICOMV2_GDIR_PANEL_SCARCITY_STEP = 0.2};  //--- Scarcity multiplier step per recent buy on same town.
+	if (isNil "AICOMV2_GDIR_PANEL_SCARCITY_DECAY")  then {AICOMV2_GDIR_PANEL_SCARCITY_DECAY = 120}; //--- Seconds for scarcity to decay one step back toward 1.0.
+	if (isNil "AICOMV2_GDIR_PANEL_LF_MIN")          then {AICOMV2_GDIR_PANEL_LF_MIN = 1.0};          //--- loadFactor floor (healthy server).
+	if (isNil "AICOMV2_GDIR_PANEL_LF_MAX")          then {AICOMV2_GDIR_PANEL_LF_MAX = 2.5};          //--- loadFactor ceiling (stressed server).
+	if (isNil "AICOMV2_GDIR_QRF_CAS_SEC")           then {AICOMV2_GDIR_QRF_CAS_SEC = 180};          //--- Gunship on-station duration (s).
 //--- End AICOM V2 Lane 800 constants.
 
 WFBE_C_STATS_ENABLED = true;

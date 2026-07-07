@@ -1405,7 +1405,19 @@ class WF_Menu {
 			onButtonClick = "closeDialog 0;";
 			tooltip = $STR_WF_TOOLTIP_CloseButton;
 		};
-		//--- GUER Director Commissar Panel hub button: claim idc 11030+, do NOT reuse 11001-11025.
+		//--- A1 Commissar Panel hub button (GUER-only; shown/hidden via ctrlShow in GUI_Menu.sqf).
+		class CA_GDirPanel : RscButton_Main {
+			idc = 11030;
+			x = 0.671;
+			y = 0.720;
+			w = 0.042;
+			h = 0.045;
+			text = "GUER";
+			sizeEx = 0.024;
+			action = "MenuAction = 30";
+			tooltip = "GUER Commissar Panel - buy reinforcements and contracts";
+			show = 0;
+		};
 	};
 };
 
@@ -4563,6 +4575,130 @@ class WFBE_PlayerSettingsMenu {
 			sizeEx = 0.026;
 			text = "Close";
 			action = "WFBE_MenuAction = 9";
+		};
+	};
+};
+
+
+//--- A1 Commissar Panel (idd=31000). Hub button idc=11030 in WF_Menu (idd=11000).
+//--- GUI loop script: Client\GUI\GUI_Menu_GuerCommissar.sqf
+class WFBE_GDirCommissarMenu {
+	movingEnable = 1;
+	idd = 31000;
+	onLoad = "_this ExecVM \"Client\\GUI\\GUI_Menu_GuerCommissar.sqf\"";
+
+	class controlsBackground {
+		class BG_M : RscText {
+			x = 0.187276; y = 0.200401; w = 0.625448; h = 0.599268;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class BG_H : RscText {
+			x = 0.187276; y = 0.200401; w = 0.625448; h = 0.0525;
+			moving = 1;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class BG_F : RscText {
+			x = 0.187276; y = 0.747169; w = 0.625448; h = 0.0525;
+			moving = 1;
+			colorBackground[] = WFBE_Background_Color_Footer;
+		};
+	};
+
+	class controls {
+		//--- Title bar.
+		class Title : RscText_Title {
+			x = 0.187276; y = 0.200401; w = 0.625448; h = 0.0525;
+			text = "GUER COMMISSAR PANEL";
+		};
+
+		//--- Town list (lb idc 31010).
+		class LB_Towns : RscListBox {
+			idc = 31010;
+			x = 0.197; y = 0.265; w = 0.200; h = 0.450;
+		};
+
+		//--- Section label: ACTION 1 - REINFORCEMENT.
+		class Lbl_Act1 : RscText {
+			idc = 31011;
+			x = 0.415; y = 0.265; w = 0.380; h = 0.030;
+			text = "ACTION 1 - REINFORCEMENT CONVOY";
+			sizeEx = 0.020;
+		};
+		class Btn_BuyConvoy : RscButton_Main {
+			idc = 31021;
+			x = 0.415; y = 0.300; w = 0.180; h = 0.042;
+			text = "BUY: CONVOY";
+			sizeEx = 0.022;
+			action = "MenuAction = 21";
+			tooltip = "Standard convoy reinforcement to selected town (base price).";
+		};
+		class Btn_BuyInstant : Btn_BuyConvoy {
+			idc = 31022;
+			x = 0.615;
+			text = "BUY: INSTANT";
+			action = "MenuAction = 22";
+			tooltip = "Instant reinforcement (~1.5x price premium).";
+		};
+
+		//--- Section label: ACTION 2 - QRF CONTRACT.
+		class Lbl_Act2 : RscText {
+			idc = 31012;
+			x = 0.415; y = 0.365; w = 0.380; h = 0.030;
+			text = "ACTION 2 - QRF CONTRACT (fires on town attack)";
+			sizeEx = 0.020;
+		};
+		class Btn_QRFInsert : Btn_BuyConvoy {
+			idc = 31031;
+			x = 0.415; y = 0.400; w = 0.115; h = 0.042;
+			text = "INSERT";
+			action = "MenuAction = 31";
+			tooltip = "QRF Insert contract: light helo deploys infantry on town attack.";
+		};
+		class Btn_QRFGunship : Btn_BuyConvoy {
+			idc = 31032;
+			x = 0.540; y = 0.400; w = 0.115; h = 0.042;
+			text = "GUNSHIP";
+			action = "MenuAction = 32";
+			tooltip = "QRF Gunship contract: attack helicopter strikes on town attack.";
+		};
+		class Btn_QRFCombo : Btn_BuyConvoy {
+			idc = 31033;
+			x = 0.665; y = 0.400; w = 0.115; h = 0.042;
+			text = "COMBO";
+			action = "MenuAction = 33";
+			tooltip = "QRF Combo: insert + gunship together (discounted).";
+		};
+
+		//--- Section label: ACTION 3 - COUNTER-ATTACK CONTRACT.
+		class Lbl_Act3 : RscText {
+			idc = 31013;
+			x = 0.415; y = 0.465; w = 0.380; h = 0.030;
+			text = "ACTION 3 - COUNTER-ATTACK CONTRACT";
+			sizeEx = 0.020;
+		};
+		class Btn_Counter : Btn_BuyConvoy {
+			idc = 31041;
+			x = 0.415; y = 0.500; w = 0.380; h = 0.042;
+			text = "COUNTER-ATTACK ON LOSS";
+			action = "MenuAction = 41";
+			tooltip = "If town falls, triggers retake attempt 2-5 min later.";
+		};
+
+		//--- DONATE: transfer personal funds to town pool.
+		class Btn_Donate : Btn_BuyConvoy {
+			idc = 31051;
+			x = 0.415; y = 0.565; w = 0.380; h = 0.042;
+			text = "DONATE $200 TO TOWN FUND";
+			action = "MenuAction = 51";
+			tooltip = "Donate $200 from your wallet to this town's funding pool.";
+		};
+
+		//--- Close button.
+		class Btn_Close : RscButton_Exit {
+			x = 0.730; y = 0.752; w = 0.070; h = 0.040;
+			onButtonClick = "closeDialog 0;";
+			tooltip = "Close panel";
 		};
 	};
 };

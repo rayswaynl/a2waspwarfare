@@ -1,6 +1,8 @@
 {ctrlEnable [_x, false]} forEach [11002, 11005, 11006, 11007, 11008];
 //--- GUER insurgents: commander/base/upgrade/economy/vote buttons are irrelevant (no HQ/commander/base). Grey them.
 if (sideJoined == resistance) then { {ctrlEnable [_x, false]} forEach [11004,11005,11006,11007,11008] };
+//--- A1 Commissar Panel: show hub button only for GUER.
+ctrlShow [11030, (sideJoined == resistance)];
 
 _enable = false;
 if ((barracksInRange || lightInRange || heavyInRange || aircraftInRange || hangarInRange || depotInRange) && (player == leader WFBE_Client_Team)) then {_enable = true};
@@ -322,6 +324,15 @@ while {alive player && dialog} do {
 		WFBE_NameTagsEnabled = !WFBE_NameTagsEnabled;
 		hint (Format ["Name tags: %1", if (WFBE_NameTagsEnabled) then {"ON"} else {"OFF"}]);
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_NAMETAGS_ENABLED", WFBE_NameTagsEnabled] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+
+	//--- A1 Commissar Panel: open GUER Director panel (GUER-only; guarded inside the onLoad).
+	if (MenuAction == 30) then {
+		MenuAction = -1;
+		if (sideJoined == resistance) then {
+			closeDialog 0;
+			createDialog "WFBE_GDirCommissarMenu";
+		};
 	};
 
 	sleep 0.1;
