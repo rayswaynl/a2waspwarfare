@@ -271,9 +271,32 @@ if (_verb == "cache") then {
     if (_product == "t2") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CACHE_T2", 6400]};
     if (_product == "t3") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CACHE_T3", 9600]};
 };
+//--- P4 MORTAR (relocated cmdcon45): pure pass-through to the existing guer-mortar-strike call-in,
+//--- which charges its OWN cost (WFBE_C_GUER_MORTAR_COST) + cooldown + range in Server_HandleSpecial.
+//--- Placed ABOVE the panel pricing/debit block so the panel NEVER debits for mortar (was a double-charge:
+//--- panel price + HandleSpecial cost). A short panel cooldown still gates spam-clicking for UI feedback.
+if (_verb == "mortar") exitWith {
+    private ["_mortarCdKey","_mortarCdSec","_lastMortarT"];
+    _mortarCdKey = Format ["AICOMV2_GDIR_MORTAR_CD_%1", _townId];
+    _mortarCdSec = missionNamespace getVariable ["AICOMV2_GDIR_MORTAR_COOLDOWN_SEC", 900];
+    _lastMortarT = missionNamespace getVariable [_mortarCdKey, -9999];
+    if ((_nowT - _lastMortarT) < _mortarCdSec) exitWith {
+        private ["_mRem"];
+        _mRem = round (_mortarCdSec - (_nowT - _lastMortarT));
+        [getPlayerUID _player, "GDirPanelResult", ["deny", Format ["Mortar cooling down. %1s remaining.", _mRem], "mortar", _townId]] Call WFBE_CO_FNC_SendToClient;
+    };
+    private ["_mortarPos"];
+    _mortarPos = getPos _townObj;
+    missionNamespace setVariable [_mortarCdKey, _nowT];
+    //--- HandleSpecial does the funds check/charge; if the team cannot afford it, it refuses + refunds its own cooldown.
+    ["guer-mortar-strike", _mortarPos, _player] call HandleSpecial;
+    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=mortar|town=%2|fundedBy=%3|deny=none|cost=viaHandleSpecial",
+        _elmin, _townId, getPlayerUID _player];
+    [getPlayerUID _player, "GDirPanelResult", ["accept", Format ["Mortar strike called on %1.", _townId], "mortar", _townId]] Call WFBE_CO_FNC_SendToClient;
+};
+
 //--- P4 relief squad + mortar harassment verbs (fable/gdir-harden-shop).
 if (_verb == "relief") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_RELIEF", 800]};
-if (_verb == "mortar") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_MORTAR", 1200]};
 //--- donate handled separately below.
 
 private ["_price"];
@@ -388,29 +411,6 @@ if (_verb == "relief") then {
 };
 
 //--- P4: MORTAR verb - fires existing guer-mortar-strike machinery via Server_HandleSpecial.
-if (_verb == "mortar") exitWith {
-    //--- Mortar cooldown is tracked separately from the main panel cooldown.
-    private ["_mortarCdKey","_mortarCdSec","_lastMortarT"];
-    _mortarCdKey = Format ["AICOMV2_GDIR_MORTAR_CD_%1", _townId];
-    _mortarCdSec = missionNamespace getVariable ["AICOMV2_GDIR_MORTAR_COOLDOWN_SEC", 900];
-    _lastMortarT = missionNamespace getVariable [_mortarCdKey, -9999];
-    if ((_nowT - _lastMortarT) < _mortarCdSec) exitWith {
-        private ["_mRem"];
-        _mRem = round (_mortarCdSec - (_nowT - _lastMortarT));
-        [getPlayerUID _player, "GDirPanelResult", ["deny", Format ["Mortar cooling down. %1s remaining.", _mRem], "mortar", _townId]] Call WFBE_CO_FNC_SendToClient;
-    };
-    //--- Find target town position for strike.
-    private ["_mortarPos"];
-    _mortarPos = getPos _townObj;
-    //--- Write mortar cooldown.
-    missionNamespace setVariable [_mortarCdKey, _nowT];
-    //--- Dispatch via Server_HandleSpecial existing guer-mortar-strike handler.
-    //--- Server_HandleSpecial case "guer-mortar-strike" args: [kind, pos, player].
-    ["guer-mortar-strike", _mortarPos, _player] call HandleSpecial;
-    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=mortar|town=%2|price=%3|fundedBy=%4|deny=none",
-        _elmin, _townId, _price, getPlayerUID _player];
-    [getPlayerUID _player, "GDirPanelResult", ["accept", Format ["Mortar strike called on %1. $%2 debited.", _townId, _price], "mortar", _townId]] Call WFBE_CO_FNC_SendToClient;
-};
 
 //--- Emit GDIR_ORDER for the Director tick to consume.
 private ["_pendingOrders","_orderKind"];
