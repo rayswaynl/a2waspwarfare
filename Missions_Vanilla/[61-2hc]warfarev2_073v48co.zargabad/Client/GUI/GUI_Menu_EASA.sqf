@@ -62,6 +62,7 @@ while {alive player && dialog} do {
 	if !(dialog) exitWith {};
 	
 	//--- Command AI.
+	if (MenuAction == 102) exitWith {MenuAction = -1; closeDialog 0; createDialog "WF_Menu";};
 	if (MenuAction == 101) then {
 		MenuAction = -1;
 		_funds = Call GetPlayerFunds;

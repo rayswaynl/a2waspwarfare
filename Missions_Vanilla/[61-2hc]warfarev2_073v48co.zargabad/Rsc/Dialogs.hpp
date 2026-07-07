@@ -563,6 +563,13 @@ class WFBE_TransferMenu {
 
 			colorText[] = {0.543, 0.5742, 0.4102, 1.0};
 		};
+		//--- UX Pass 1: Back to WF_Menu hub. WFBE_MenuAction 3 handled in GUI_TransferMenu.sqf.
+		class CA_Back_Button : RscButton_Back {
+			x = 0.0;
+			y = 0.562;
+			onButtonClick = "WFBE_MenuAction = 3;";
+			tooltip = $STR_WF_TOOLTIP_BackButton;
+		};
 	};
 };
 
@@ -1081,7 +1088,7 @@ class WF_Menu {
 	movingEnable = 1;
 	idd = 11000;
 	onLoad = "ExecVM ""Client\GUI\GUI_Menu.sqf""";
-	
+
 	class controlsBackground {
 		class Background_M : RscText {
 			x = 0.17467;
@@ -1114,8 +1121,69 @@ class WF_Menu {
 			h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
+		//--- UX Pass 1: section label above PURCHASE group (left col rows 1-2).
+		class Section_Purchase_L : RscText {
+			idc = -1;
+			x = 0.17598;
+			y = 0.244;
+			w = 0.313727;
+			h = 0.006;
+			colorBackground[] = {0, 0, 0, 0};
+			colorText[] = {0.2588, 0.7137, 1, 0.55};
+			text = "PURCHASE";
+			style = 0x02;
+			font = "Zeppelin32";
+			sizeEx = 0.018;
+			shadow = 0;
+		};
+		//--- UX Pass 1: section label above GENERAL group (left col rows 3-5).
+		class Section_General_L : RscText {
+			idc = -1;
+			x = 0.17598;
+			y = 0.446;
+			w = 0.313727;
+			h = 0.006;
+			colorBackground[] = {0, 0, 0, 0};
+			colorText[] = {0.2588, 0.7137, 1, 0.55};
+			text = "GENERAL";
+			style = 0x02;
+			font = "Zeppelin32";
+			sizeEx = 0.018;
+			shadow = 0;
+		};
+		//--- UX Pass 1: section label above COMMAND group (right col rows 1-5).
+		class Section_Command_R : RscText {
+			idc = -1;
+			x = 0.510943;
+			y = 0.244;
+			w = 0.313727;
+			h = 0.006;
+			colorBackground[] = {0, 0, 0, 0};
+			colorText[] = {0.2588, 0.7137, 1, 0.55};
+			text = "COMMAND";
+			style = 0x02;
+			font = "Zeppelin32";
+			sizeEx = 0.018;
+			shadow = 0;
+		};
+		//--- UX Pass 1: TOOLS label above footer strip (decorative).
+		class Section_Tools_F : RscText {
+			idc = -1;
+			x = 0.350;
+			y = 0.758;
+			w = 0.12;
+			h = 0.009;
+			colorBackground[] = {0, 0, 0, 0};
+			colorText[] = {0.2588, 0.7137, 1, 0.4};
+			text = "TOOLS";
+			style = 0x02;
+			font = "Zeppelin32";
+			sizeEx = 0.016;
+			shadow = 0;
+		};
 	};
 	class controls {
+		//--- === PURCHASE ===
 		class Button_A : RscShortcutButtonMain {
 			idc = 11001;
 			x = 0.17598;
@@ -1136,6 +1204,7 @@ class WF_Menu {
 			tooltip = $STR_WF_TOOLTIP_MainMenu_Purchase_Gear;
 			action = "MenuAction = 2";
 		};
+		//--- === GENERAL ===
 		class Button_C : RscShortcutButtonMain {
 			idc = 11003;
 			x = 0.17598;
@@ -1146,26 +1215,6 @@ class WF_Menu {
 			tooltip = $STR_WF_TOOLTIP_MainMenu_TeamMenu;
 			action = "MenuAction = 3";
 		};
-		class Button_D : RscShortcutButtonMain {
-			idc = 11004;
-			x = 0.510943;
-			y = 0.65356;
-			w = 0.313727;
-			h = 0.104575;
-			text = $STR_WF_MAIN_VotingMenu;
-			tooltip = $STR_WF_TOOLTIP_MainMenu_VoteForCommander;
-			action = "MenuAction = 4";
-		};
-		class Button_E : RscShortcutButtonMain {
-			idc = 11005;
-			x = 0.510943;
-			y = 0.250358;
-			w = 0.313727;
-			h = 0.104575;
-			text = $STR_WF_MAIN_CommandMenu;
-			tooltip = $STR_WF_TOOLTIP_CommandMenu_Commandteam;
-			action = "MenuAction = 5";
-		};
 		class Button_F : RscShortcutButtonMain {
 			idc = 11006;
 			x = 0.17598;
@@ -1175,29 +1224,6 @@ class WF_Menu {
 			text = $STR_WF_MAIN_TacticalMenu;
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_SpecialMenu;
 			action = "MenuAction = 6";
-		};		
-
-		
-		class Button_G : RscShortcutButtonMain {
-			idc = 11007;
-			x = 0.510943;
-			y = 0.451959;
-			w = 0.313727;
-			h = 0.104575;
-			text = $STR_WF_MAIN_UpgradeMenu;
-			tooltip = $STR_WF_TOOLTIP_CommandMenu_Upgrade_Menu;
-			action = "MenuAction = 7";
-		};
-		
-		class Button_H : RscShortcutButtonMain {
-			idc = 11008;
-			x = 0.510943;
-			y = 0.35116;
-			w = 0.313727;
-			h = 0.104575;
-			text = $STR_WF_MAIN_EconomyMenu;
-			tooltip = $STR_WF_TOOLTIP_CommandMenu_Commander_Menu;
-			action = "MenuAction = 8";
 		};
 		class Button_I : RscShortcutButtonMain {
 			idc = 11009;
@@ -1209,7 +1235,37 @@ class WF_Menu {
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_SupportMenu;
 			action = "MenuAction = 9";
 		};
-		
+		//--- === COMMAND ===
+		class Button_E : RscShortcutButtonMain {
+			idc = 11005;
+			x = 0.510943;
+			y = 0.250358;
+			w = 0.313727;
+			h = 0.104575;
+			text = $STR_WF_MAIN_CommandMenu;
+			tooltip = $STR_WF_TOOLTIP_CommandMenu_Commandteam;
+			action = "MenuAction = 5";
+		};
+		class Button_H : RscShortcutButtonMain {
+			idc = 11008;
+			x = 0.510943;
+			y = 0.35116;
+			w = 0.313727;
+			h = 0.104575;
+			text = $STR_WF_MAIN_EconomyMenu;
+			tooltip = $STR_WF_TOOLTIP_CommandMenu_Commander_Menu;
+			action = "MenuAction = 8";
+		};
+		class Button_G : RscShortcutButtonMain {
+			idc = 11007;
+			x = 0.510943;
+			y = 0.451959;
+			w = 0.313727;
+			h = 0.104575;
+			text = $STR_WF_MAIN_UpgradeMenu;
+			tooltip = $STR_WF_TOOLTIP_CommandMenu_Upgrade_Menu;
+			action = "MenuAction = 7";
+		};
 		class Button_J : RscShortcutButtonMain {
 			idc = 11010;
 			x = 0.510943;
@@ -1220,7 +1276,17 @@ class WF_Menu {
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_Help;
 			action = "MenuAction = 13";
 		};
-		
+		class Button_D : RscShortcutButtonMain {
+			idc = 11004;
+			x = 0.510943;
+			y = 0.65356;
+			w = 0.313727;
+			h = 0.104575;
+			text = $STR_WF_MAIN_VotingMenu;
+			tooltip = $STR_WF_TOOLTIP_MainMenu_VoteForCommander;
+			action = "MenuAction = 4";
+		};
+		//--- === Header title + parameter icon ===
 		class TitleMenu: RscText_Title {
 			idc = 11015;
 			x = 0.178164;
@@ -1238,6 +1304,7 @@ class WF_Menu {
 			action = "MenuAction = 12";
 			tooltip = $STR_WF_TOOLTIP_Parameter;
 		};
+		//--- === TOOLS footer strip ===
 		class CA_UN_Button : RscClickableText {
 			idc = 11013;
 			x = 0.194088;
@@ -1258,14 +1325,18 @@ class WF_Menu {
 			action = "MenuAction = 11";
 			tooltip = $STR_WF_TOOLTIP_HeadBugFix;
 		};
-		/* Exit */
-		class Exit_Button : RscButton_Exit {
-			x = 0.778103;
-			y = 0.769671;
-			onButtonClick = "closeDialog 0;";
-			tooltip = $STR_WF_TOOLTIP_CloseButton;
+		//--- cmdcon41-w3l: Command-Deck Skin Selector re-open button.
+		class CA_SkinSel_Button : RscButton_Main {
+			idc = 11025;
+			x = 0.362;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = $STR_WF_SkinSelector_MenuButton;
+			sizeEx = 0.024;
+			action = "MenuAction = 21";
+			tooltip = $STR_WF_SkinSelector_Title;
 		};
-		
 		class CA_HUD_Button : RscButton_Main {
 			idc = 11018;
 			x = 0.408;
@@ -1276,7 +1347,7 @@ class WF_Menu {
 			sizeEx = 0.026;
 			action = "MenuAction = 16";
 			tooltip = "HUD On/Off";
-		};		
+		};
 		// Marty: Reuse the old FPS-only HUD slot for GPS; FPS now lives in the RHUD/sidebar.
 		class CA_GPS_Button : RscButton_Main {
 			idc = 11019;
@@ -1288,6 +1359,18 @@ class WF_Menu {
 			sizeEx = 0.026;
 			action = "MenuAction = 19";
 			tooltip = "Enable GPS / Mini Map";
+		};
+		// FPS: adaptive view-distance / target-FPS picker (sits between GPS and SKIN).
+		class CA_FPS_Button : RscButton_Main {
+			idc = 11023;
+			x = 0.503;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = "FPS";
+			sizeEx = 0.026;
+			action = "MenuAction = 23";
+			tooltip = "Player Settings (view distance, FPS, HUD, toggles)";
 		};
 		//--- Command Deck: Skin Selector shortcut in footer strip.
 		class CA_Skin_Button : RscButton_Main {
@@ -1303,18 +1386,6 @@ class WF_Menu {
 			action = "MenuAction = 24";
 			tooltip = "Player Settings (view distance, FPS, HUD, toggles)";
 		};
-		// FPS: adaptive view-distance / target-FPS picker (sits between GPS and SKIN).
-		class CA_FPS_Button : RscButton_Main {
-			idc = 11023;
-			x = 0.503;
-			y = 0.767144;
-			w = 0.042;
-			h = 0.045;
-			text = "FPS";
-			sizeEx = 0.026;
-			action = "MenuAction = 23";
-			tooltip = "Player Settings (view distance, FPS, HUD, toggles)";
-		};
 		// qol-polish-pack: friendly name-tag overlay toggle (loop + RscTitles in Init_Client.sqf / Titles.hpp).
 		class CA_NT_Button : RscButton_Main {
 			idc = 11024;
@@ -1327,21 +1398,14 @@ class WF_Menu {
 			action = "MenuAction = 25";
 			tooltip = "Friendly name tags On/Off";
 		};
-		//--- cmdcon41-w3l: Command-Deck Skin Selector re-open button. The former SKIN slot (idc 11021)
-		//--- was repurposed to SETUP on 2026-06-24, leaving MenuAction 21 (GUI_Menu.sqf) unreachable.
-		//--- This restores a live footer entry in the gap between the HeadBug icon and HUD. The handler
-		//--- itself re-checks SkinSelector_Enabled + alive + on-foot, so a disabled/dead player is a no-op.
-		class CA_SkinSel_Button : RscButton_Main {
-			idc = 11025;
-			x = 0.362;
-			y = 0.767144;
-			w = 0.042;
-			h = 0.045;
-			text = $STR_WF_SkinSelector_MenuButton;
-			sizeEx = 0.024;
-			action = "MenuAction = 21";
-			tooltip = $STR_WF_SkinSelector_Title;
+		/* Exit */
+		class Exit_Button : RscButton_Exit {
+			x = 0.778103;
+			y = 0.769671;
+			onButtonClick = "closeDialog 0;";
+			tooltip = $STR_WF_TOOLTIP_CloseButton;
 		};
+		//--- GUER Director Commissar Panel hub button: claim idc 11030+, do NOT reuse 11001-11025.
 	};
 };
 
@@ -3579,6 +3643,13 @@ class RscMenu_EASA {
 			w = 0.1;
 			text = $STR_WF_Purchase;
 			action = "MenuAction = 101";
+		};
+		/* Back to WF_Menu hub (UX Pass 1). MenuAction 102 handled in GUI_Menu_EASA.sqf. */
+		class Back_Button : RscButton_Back {
+			x = 0.157263;
+			y = 0.755506;
+			onButtonClick = "MenuAction = 102;";
+			tooltip = $STR_WF_TOOLTIP_BackButton;
 		};
 		/* Exit */
 		class Exit_Button : RscButton_Exit {
