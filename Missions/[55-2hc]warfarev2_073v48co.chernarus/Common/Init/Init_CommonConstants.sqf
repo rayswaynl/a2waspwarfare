@@ -1738,7 +1738,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_DASHBOARD_MSGS") then {WFBE_C_DASHBOARD_MSGS = [
 		"WASP LIVE STATS & LEADERBOARD  >>  miksuu.com/leaderboard  <<  live server FPS, AI balance, K/D and per-build benchmarks - updated every round.",
 		"Join the WASP community on Discord  >>  discord.me/warfare  <<  feedback, bug reports & match times.",
-		"TIP: Build 89 is live - Zargabad towns now flip, WDDM-designed defense positions & fortifications ring the front, and town AA now guards active-air towns. Watch the skies.",
+		"TIP: Build 91 is live - Zargabad towns now flip, WDDM-designed defense positions & fortifications ring the front, and town AA now guards active-air towns. Watch the skies.",
 		"TIP: SCUD tech is now a two-level program. Land TEL munitions and carrier launches are powerful, but TELs can be destroyed.",
 		"TIP: Territorial victory is live - holding most towns long enough can win the round before every base is destroyed.",
 		"TIP: The WF menu SKIN button opens the skin selector; picked skins return after respawn."
