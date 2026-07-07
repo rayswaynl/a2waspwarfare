@@ -114,6 +114,22 @@ if !(isNil "_profile_var") then {
 	};
 };
 missionNamespace setVariable ["WFBE_TM2_Presets", WFBE_TM2_Presets];
+//--- UD-23: Unit designer templates (4 slots, per-side, ARRAY of ARRAYs).
+//--- Format per slot: [] (empty) or [weapons, magazines, backpack, bp_content, [p,s,l]].
+WFBE_UD_Templates = [[],[],[],[]];
+_profile_var = profileNamespace getVariable Format["WFBE_PERSISTENT_UD_TEMPLATES_%1", WFBE_Client_SideJoinedText];
+if !(isNil "_profile_var") then {
+	if (typeName _profile_var == "ARRAY") then {
+		if (count _profile_var == 4) then {
+			WFBE_UD_Templates = _profile_var;
+		};
+	};
+};
+missionNamespace setVariable ["WFBE_UD_Templates", WFBE_UD_Templates];
+//--- Active unit-template slot index (-1 = none). Not persisted (defaults to off per session).
+WFBE_UD_Active = -1;
+missionNamespace setVariable ["WFBE_UD_Active", WFBE_UD_Active];
+
 
 //--- TP-3 Item 4: TAGS persistence - restore saved value (default OFF for fresh profiles).
 WFBE_NameTagsEnabled = false;

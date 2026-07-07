@@ -1,6 +1,6 @@
 disableSerialization;
 
-private ["_display","_units","_upgLevel","_presets","_i","_slot","_preset","_badge","_desc","_finalNumber","_isInVehicle","_descVehi","_targetUnit","_vehicle","_liveCrew","_destroy","_hitPoints","_hitCfg","_hitName","_curUnitSel","_need_save","_tier","_topTier","_weapons","_mags","_bp","_bpContent","_combo","_x","_crewList","_repairTimer"];
+private ["_display","_units","_upgLevel","_presets","_i","_slot","_preset","_badge","_desc","_finalNumber","_isInVehicle","_descVehi","_targetUnit","_vehicle","_liveCrew","_destroy","_hitPoints","_hitCfg","_hitName","_curUnitSel","_need_save","_tier","_topTier","_weapons","_mags","_bp","_bpContent","_combo","_x","_crewList","_repairTimer","_udTemplates","_udActive","_udSlotIdx","_udTemplate","_udWList","_udMList","_udBpCls","_udBpCnt","_udWpCombined","_udCleanWeps","_udCleanMags","_udCleanBp","_udCleanBpCnt","_udCost","_udItem","_udNameIDCs","_udActiveIDCs","_udPresetIDCs","_udUDIDCs","_udSN","_udSW","_udSWItem"];
 
 _display = _this select 0;
 MenuAction = -1;
@@ -132,6 +132,47 @@ _rebuyIDCs = [13054, 13058, 13062, 13066];
 //--- ============================================================
 //--- Main event loop.
 //--- ============================================================
+//--- ── UNIT DESIGNER init (WFBE_C_UNIT_DESIGNER, default 1) ────────────────
+//--- Tab buttons (IDC 13080-13081) + UD controls (IDC 13100-13117) hidden on open.
+//--- Presets tab is shown by default.
+_udPresetIDCs = [13049,13051,13052,13053,13054,13055,13056,13057,13058,13059,13060,13061,13062,13063,13064,13065,13066];
+_udUDIDCs     = [13100,13101,13102,13103,13104,13105,13106,13107,13108,13109,13110,13111,13112,13113,13114,13115,13116,13117];
+{(_display displayCtrl _x) ctrlShow false} forEach ([13080,13081] + _udUDIDCs);
+if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
+	(_display displayCtrl 13080) ctrlShow true;
+	(_display displayCtrl 13081) ctrlShow true;
+	_udTemplates = missionNamespace getVariable ["WFBE_UD_Templates", [[],[],[],[]]];
+	_udActive    = missionNamespace getVariable ["WFBE_UD_Active", -1];
+	_udNameIDCs   = [13102,13106,13110,13114];
+	_udActiveIDCs = [13104,13108,13112,13116];
+	{
+		_udTemplate = _udTemplates select _forEachIndex;
+		_udSN = "--- Slot " + str (_forEachIndex + 1) + " empty ---";
+		if (count _udTemplate > 0) then {
+			_udSW = _udTemplate select 0;
+			if (count _udSW > 0) then {
+				_udSWItem = missionNamespace getVariable (_udSW select 0);
+				if !(isNil "_udSWItem") then {
+					_udSN = "Slot " + str (_forEachIndex + 1) + ": " + (_udSWItem select 1);
+				} else {
+					_udSN = "Slot " + str (_forEachIndex + 1) + ": (custom)";
+				};
+			};
+		};
+		ctrlSetText [_udNameIDCs select _forEachIndex, _udSN];
+		if (_forEachIndex == _udActive) then {
+			ctrlSetText [_udActiveIDCs select _forEachIndex, "* Active " + str (_forEachIndex + 1)];
+		} else {
+			ctrlSetText [_udActiveIDCs select _forEachIndex, "Activate " + str (_forEachIndex + 1)];
+		};
+	} forEach _udTemplates;
+	if (_udActive >= 0 && {_udActive <= 3}) then {
+		(_display displayCtrl 13101) ctrlSetText Format ["Active: Slot %1  (template applied on AI buys)", _udActive + 1];
+	} else {
+		(_display displayCtrl 13101) ctrlSetText "Active: None  (no template applied on AI buys)";
+	};
+};
+
 _repairTimer = 0; //--- used to pace the "repair in progress" hint.
 
 while {alive player && dialog} do {
@@ -604,6 +645,121 @@ while {alive player && dialog} do {
 	};
 
 	//--- ── BACK (MenuAction 8) ──────────────────────────────────────────────────
+
+	//--- ── UNIT DESIGNER handlers (WFBE_C_UNIT_DESIGNER) ──────────────────────
+	if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
+
+		//--- Tab switch: Presets (1100) / Units (1200).
+		if (MenuAction == 1100) then {
+			MenuAction = -1;
+			{(_display displayCtrl _x) ctrlShow true } forEach _udPresetIDCs;
+			{(_display displayCtrl _x) ctrlShow false} forEach _udUDIDCs;
+		};
+		if (MenuAction == 1200) then {
+			MenuAction = -1;
+			{(_display displayCtrl _x) ctrlShow false} forEach _udPresetIDCs;
+			{(_display displayCtrl _x) ctrlShow true } forEach _udUDIDCs;
+		};
+
+		//--- UD Save (2101-2104): capture player loadout into template slot.
+		if (MenuAction >= 2101 && {MenuAction <= 2104}) then {
+			_udSlotIdx = MenuAction - 2101;
+			MenuAction = -1;
+			_udTemplates = missionNamespace getVariable ["WFBE_UD_Templates", [[],[],[],[]]];
+			_udWList = player getVariable "wfbe_custom_gear";
+			if (isNil "_udWList") then {
+				hint Format ["UD Slot %1: no loadout to save. Buy a loadout first.", _udSlotIdx + 1];
+			} else {
+				if (typeName _udWList == "ARRAY" && {count _udWList == 5}) then {
+					_udTemplates set [_udSlotIdx, +_udWList];
+					missionNamespace setVariable ["WFBE_UD_Templates", _udTemplates];
+					if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {
+						[Format ["WFBE_PERSISTENT_UD_TEMPLATES_%1", WFBE_Client_SideJoinedText], _udTemplates] Call WFBE_CO_FNC_SetProfileVariable;
+						_need_save = true;
+					} else {
+						profileNamespace setVariable [Format ["WFBE_PERSISTENT_UD_TEMPLATES_%1", WFBE_Client_SideJoinedText], _udTemplates];
+						saveProfileNamespace;
+					};
+					_udNameIDCs = [13102,13106,13110,13114];
+					_udTemplate = _udTemplates select _udSlotIdx;
+					_udSN = "Slot " + str (_udSlotIdx + 1) + ": (custom)";
+					_udSW = _udTemplate select 0;
+					if (count _udSW > 0) then {
+						_udSWItem = missionNamespace getVariable (_udSW select 0);
+						if !(isNil "_udSWItem") then {_udSN = "Slot " + str (_udSlotIdx + 1) + ": " + (_udSWItem select 1)};
+					};
+					ctrlSetText [_udNameIDCs select _udSlotIdx, _udSN];
+					hint Format ["UD Slot %1 saved.", _udSlotIdx + 1];
+				} else {
+					hint "UD: Invalid loadout format -- buy a loadout via Buy Gear first.";
+				};
+			};
+		};
+
+		//--- UD Activate/toggle (2111-2114): set or clear active template slot.
+		if (MenuAction >= 2111 && {MenuAction <= 2114}) then {
+			_udSlotIdx = MenuAction - 2111;
+			MenuAction = -1;
+			_udTemplates = missionNamespace getVariable ["WFBE_UD_Templates", [[],[],[],[]]];
+			_udTemplate  = _udTemplates select _udSlotIdx;
+			if (count _udTemplate == 0) exitWith {hint Format ["UD Slot %1 is empty -- save a loadout first.", _udSlotIdx + 1]};
+			_udActive = missionNamespace getVariable ["WFBE_UD_Active", -1];
+			if (_udActive == _udSlotIdx) then {
+				_udActive = -1;
+			} else {
+				_udActive = _udSlotIdx;
+			};
+			missionNamespace setVariable ["WFBE_UD_Active", _udActive];
+			_udActiveIDCs = [13104,13108,13112,13116];
+			{
+				if (_forEachIndex == _udActive) then {
+					ctrlSetText [_udActiveIDCs select _forEachIndex, "* Active " + str (_forEachIndex + 1)];
+				} else {
+					ctrlSetText [_udActiveIDCs select _forEachIndex, "Activate " + str (_forEachIndex + 1)];
+				};
+			} forEach _udTemplates;
+			if (_udActive >= 0 && {_udActive <= 3}) then {
+				(_display displayCtrl 13101) ctrlSetText Format ["Active: Slot %1  (template applied on AI buys)", _udActive + 1];
+				hint Format ["UD Slot %1 activated.", _udActive + 1];
+			} else {
+				(_display displayCtrl 13101) ctrlSetText "Active: None  (no template applied on AI buys)";
+				hint "UD: Template deactivated.";
+			};
+		};
+
+		//--- UD Delete (2121-2124): clear template slot.
+		if (MenuAction >= 2121 && {MenuAction <= 2124}) then {
+			_udSlotIdx = MenuAction - 2121;
+			MenuAction = -1;
+			_udTemplates = missionNamespace getVariable ["WFBE_UD_Templates", [[],[],[],[]]];
+			_udTemplates set [_udSlotIdx, []];
+			missionNamespace setVariable ["WFBE_UD_Templates", _udTemplates];
+			_udActive = missionNamespace getVariable ["WFBE_UD_Active", -1];
+			if (_udActive == _udSlotIdx) then {
+				_udActive = -1;
+				missionNamespace setVariable ["WFBE_UD_Active", -1];
+			};
+			if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {
+				[Format ["WFBE_PERSISTENT_UD_TEMPLATES_%1", WFBE_Client_SideJoinedText], _udTemplates] Call WFBE_CO_FNC_SetProfileVariable;
+				_need_save = true;
+			} else {
+				profileNamespace setVariable [Format ["WFBE_PERSISTENT_UD_TEMPLATES_%1", WFBE_Client_SideJoinedText], _udTemplates];
+				saveProfileNamespace;
+			};
+			_udNameIDCs = [13102,13106,13110,13114];
+			_udActiveIDCs = [13104,13108,13112,13116];
+			ctrlSetText [_udNameIDCs select _udSlotIdx, "--- Slot " + str (_udSlotIdx + 1) + " empty ---"];
+			ctrlSetText [_udActiveIDCs select _udSlotIdx, "Activate " + str (_udSlotIdx + 1)];
+			if (_udActive >= 0 && {_udActive <= 3}) then {
+				(_display displayCtrl 13101) ctrlSetText Format ["Active: Slot %1  (template applied on AI buys)", _udActive + 1];
+			} else {
+				(_display displayCtrl 13101) ctrlSetText "Active: None  (no template applied on AI buys)";
+			};
+			hint Format ["UD Slot %1 deleted.", _udSlotIdx + 1];
+		};
+
+	}; //--- end WFBE_C_UNIT_DESIGNER block
+
 	if (MenuAction == 8) exitWith {
 		MenuAction = -1;
 		closeDialog 0;
