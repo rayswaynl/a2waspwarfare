@@ -780,10 +780,14 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				if (_ctlSkipReason == "" && {!_ctlFundsOk}) then {_ctlSkipReason = "floor"};
 				if (_ctlSkipReason == "" && {!_ctlCooldownOk}) then {_ctlSkipReason = "cooldown"};
 				if (_ctlSkipReason == "") then {
-					private ["_ctlLedger","_ctlTarget","_ctlI","_ctlBestVal","_ctlTownCd"];
+					private ["_ctlLedger","_ctlTarget","_ctlI","_ctlBestVal","_ctlBestStr","_ctlTownCd"];
 					_ctlLedger  = _logik getVariable ["WFBE_CTL_LEDGER", []];
 					_ctlTarget  = -1;
 					_ctlBestVal = -1;
+					//--- B7 tie-break: among equal wfbe_town_value candidates, prefer LOWEST strength
+					//--- (the weaker town is the more urgent repair target). Seeded high so the first
+					//--- eligible candidate always wins its own comparison.
+					_ctlBestStr = 1e10;
 					_ctlTownCd  = missionNamespace getVariable ["AICOMV2_CTL_INVEST_TOWN_COOLDOWN", 1200];
 					_ctlI = 0;
 					{
@@ -794,11 +798,11 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 						_eligible = (_ctlNow2 - (_rec select 4)) > _ctlTownCd;
 						if (_eligible && {_str < 1.0}) then {
 							_val = _town getVariable ["wfbe_town_value", 0];
-							if (_val > _ctlBestVal) then {_ctlBestVal = _val; _ctlTarget = _ctlI};
+							if (_val > _ctlBestVal || {_val == _ctlBestVal && {_str < _ctlBestStr}}) then {_ctlBestVal = _val; _ctlBestStr = _str; _ctlTarget = _ctlI};
 						};
 						if (_eligible && {_str >= 1.0 && {_str < 1.5}} && {_funds >= (missionNamespace getVariable ["AICOMV2_CTL_INVEST_SURGE_FLOOR", 600000])}) then {
 							_val = _town getVariable ["wfbe_town_value", 0];
-							if (_val > _ctlBestVal) then {_ctlBestVal = _val; _ctlTarget = _ctlI};
+							if (_val > _ctlBestVal || {_val == _ctlBestVal && {_str < _ctlBestStr}}) then {_ctlBestVal = _val; _ctlBestStr = _str; _ctlTarget = _ctlI};
 						};
 						_ctlI = _ctlI + 1;
 					} forEach _ctlLedger;

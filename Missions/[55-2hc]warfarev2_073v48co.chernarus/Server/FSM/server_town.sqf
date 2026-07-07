@@ -293,6 +293,16 @@ while {!WFBE_GameOver} do {
 			if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_newSide]) then {[_newSide, "Captured", _location] Spawn SideMessage};
 
 			_location setVariable ["sideID",_newSID,true];
+			//--- Commander Town Ledger (fable/ctl-impl-v1) capture seed (fix: capture-race). Publish
+			//--- wfbe_ctl_str immediately at the capture hook so a freshly captured W/E town reads its
+			//--- 0.25 seed on the very next materialization, instead of the getVariable default (1.0)
+			//--- for up to one CTL brain tick (AICOMV2_CTL_TICK_SEC, 30s). The brain's own seed pass
+			//--- (Server_CmdTownLedger.sqf) still creates the ledger RECORD and re-publishes the same
+			//--- value on its next tick - this hook only closes the race window. Flag-off => skipped,
+			//--- byte-identical to HEAD.
+			if ((_newSID == WFBE_C_WEST_ID || {_newSID == WFBE_C_EAST_ID}) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+				_location setVariable ["wfbe_ctl_str", missionNamespace getVariable ["AICOMV2_CTL_CAPTURE_SEED", 0.25]];
+			};
 			//--- cmdcon45 (owner: "Rogovo captured but camps still GUER"): capturing the TOWN flips its
 			//--- remaining camps to the new owner. Camps flip individually during the fight (that IS the
 			//--- capture-rate mechanic), but once the town falls, leftover old-side camps are stale enemy

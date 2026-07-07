@@ -159,6 +159,12 @@ function Format-Line([string]$line) {
         if ($line -match "POSTURE\|[A-Z]+\|\d+\|PRESS") { return bred $line }
         return cyn $line
     }
+    if ($line -match "CTLSTAT\|") {
+        # Commander Town Ledger (fable/ctl-impl-v1) telemetry - color like other AICOM families.
+        if ($line -match "\|deny=groupBudgetExceeded") { return bred $line }
+        if ($line -match "\|SEED\|") { return grn $line }
+        return cyn $line
+    }
     if ($line -match "WASPSTAT\|") {
         if ($line -match "ROUNDEND") { return bgrn $line }
         return dim $line

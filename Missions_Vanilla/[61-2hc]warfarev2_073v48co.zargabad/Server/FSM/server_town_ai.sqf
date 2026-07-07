@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
+Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
 
 _townInitSleep = missionNamespace getVariable ["WFBE_C_TOWNS_STARTUP_SLEEP", 0];
 if (_townInitSleep <= 0) then {_townInitSleep = 0.01};
@@ -493,6 +493,14 @@ while {!WFBE_GameOver} do {
 						};
 					};
 
+					//--- Commander Town Ledger (fable/ctl-impl-v1) survivor tally (B3, fix ORDER+DIM): the
+					//--- alive UNIT count is captured HERE, inside the deletion forEach below, BEFORE
+					//--- deleteVehicle runs on each unit - counting it AFTER (as before) always read ~0
+					//--- because the units were already gone. Unit count (not group count) per spec B3:
+					//--- field [3] "lastSpawnUnits" is a per-unit denominator, so the ratio must be unit/unit.
+					_ctlLaneOn = (_side == west || {_side == east}) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0};
+					_ctlSurviving = 0;
+
 					//--- Teams Units.
 					//--- Marty: delete only SERVER-LOCAL units here; HC-delegated units are deleted by the
 					//--- cleanup-townai broadcast above on the machine where they are local. A server-side
@@ -501,6 +509,9 @@ while {!WFBE_GameOver} do {
 					{
 						if !(isNil '_x') then {
 							if !(isNull _x) then {
+								if (_ctlLaneOn) then {
+									{if (alive _x) then {_ctlSurviving = _ctlSurviving + 1}} forEach units _x;
+								};
 								//--- B67 [wiki-wins]: never delete a player unit. The old loop deleted
 								//--- every server-local unit; a player whose unit is server-local (e.g. a
 								//--- JIP/HC-handoff edge) would be wiped on despawn. Guard with !isPlayer.
@@ -512,14 +523,13 @@ while {!WFBE_GameOver} do {
 
 					//--- Commander Town Ledger (fable/ctl-impl-v1) survivor read-back (B3).
 					//--- Flag-off (AICOMV2_LANE_CMD_TOWN_LEDGER=0) => skipped, byte-identical to HEAD.
-					if ((_side == west || {_side == east}) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
-						private ["_ctlLogik","_ctlLedger","_ctlSurviving","_ctlRecIdx","_ctlFound","_ctlI"];
+					//--- _ctlSurviving (alive UNIT count) was tallied above, in the SAME forEach that
+					//--- deletes the units, BEFORE deleteVehicle ran - counting it here (after deletion)
+					//--- would always read ~0 (fix: read-back ORDERING).
+					if (_ctlLaneOn) then {
+						private ["_ctlLogik","_ctlLedger","_ctlRecIdx","_ctlFound","_ctlI"];
 						_ctlLogik    = (_side) Call WFBE_CO_FNC_GetSideLogic;
 						_ctlLedger   = _ctlLogik getVariable ["WFBE_CTL_LEDGER", []];
-						_ctlSurviving = 0;
-						{
-							if (!isNull _x && {count (units _x) > 0}) then {_ctlSurviving = _ctlSurviving + 1};
-						} forEach _town_teams;
 						_ctlFound  = false;
 						_ctlRecIdx = 0;
 						_ctlI      = 0;
