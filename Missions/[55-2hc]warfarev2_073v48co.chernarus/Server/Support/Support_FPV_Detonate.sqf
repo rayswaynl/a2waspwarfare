@@ -15,7 +15,7 @@ if ((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) <= 0) exitWith {
 	["INFORMATION", "Support_FPV_Detonate.sqf: WFBE_C_FPV_DRONE=0, ignoring detonation request."] Call WFBE_CO_FNC_LogContent;
 };
 
-private ["_args","_pos","_ammoClass","_sides","_matchSide","_matchDrone","_token","_sKey","_sStr","_dronePos","_dist","_lastKey","_lastFire","_now"];
+private ["_args","_pos","_ammoClass","_sides","_matchSide","_matchDrone","_tier","_token","_sKey","_sStr","_dronePos","_dist","_lastKey","_lastFire","_now"];
 _args = _this;
 
 if (count _args < 2) exitWith {
@@ -84,9 +84,14 @@ if ((_now - _lastFire) < 5) exitWith {
 };
 missionNamespace setVariable [_lastKey, _now];
 
+//--- WARHEAD TIER: bound server-side at launch (Support_FPV.sqf, whitelist-validated) and read
+//--- off the matched ownership-token drone - never off the request payload.
+_tier = _matchDrone getVariable ["wfbe_fpv_tier", "standard"];
 _ammoClass = missionNamespace getVariable ["WFBE_C_FPV_DRONE_AMMO", "R_57mm_HE"];
+if (_tier == "light") then {_ammoClass = missionNamespace getVariable ["WFBE_C_FPV_DRONE_AMMO_LIGHT", "R_OG7_AT"]};
+if (_tier == "heavy") then {_ammoClass = missionNamespace getVariable ["WFBE_C_FPV_DRONE_AMMO_HEAVY", "M_Hellfire_AT"]};
 
-//--- FORENSICS: log accepted detonation with side and position.
-["INFORMATION", Format ["Support_FPV_Detonate.sqf: [%1] side [%2] detonated at %3.", _ammoClass, str _matchSide, _pos]] Call WFBE_CO_FNC_LogContent;
+//--- FORENSICS: log accepted detonation with tier, side and position.
+["INFORMATION", Format ["Support_FPV_Detonate.sqf: [%1] tier [%2] side [%3] detonated at %4.", _ammoClass, _tier, str _matchSide, _pos]] Call WFBE_CO_FNC_LogContent;
 
 createVehicle [_ammoClass, _pos, [], 0, "NONE"];

@@ -102,10 +102,14 @@ if ((missionNamespace getVariable ["WFBE_C_SCUD_MENU", 1]) > 0) then {
 //--- fable/fpv-strike-drone: player-piloted kamikaze mini-UAV. Row appended only when
 //--- WFBE_C_FPV_DRONE > 0 (flag-gated at BUILD time, same idiom as the SCUD rows above).
 if ((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) > 0) then {
-	_addToList = _addToList + ["FPV STRIKE DRONE"];
-	_addToListID = _addToListID + ["FPV_Strike"];
-	_addToListFee = _addToListFee + [(missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST", 7500])];
-	_addToListInterval = _addToListInterval + [0];	//--- one live drone per player is the real gate (enable switch).
+	_addToList = _addToList + ["FPV DRONE (LIGHT - frag)", "FPV DRONE (STANDARD - HE)", "FPV DRONE (HEAVY - AT)"];
+	_addToListID = _addToListID + ["FPV_Strike_Light", "FPV_Strike", "FPV_Strike_Heavy"];
+	_addToListFee = _addToListFee + [
+		(missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST_LIGHT", 4500]),
+		(missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST", 7500]),
+		(missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST_HEAVY", 12500])
+	];
+	_addToListInterval = _addToListInterval + [0,0,0];	//--- one live drone per player is the real gate (enable switch).
 };
 
 for '_i' from 0 to count(_addToList)-1 do {
@@ -393,7 +397,13 @@ while {alive player && dialog} do {
 				_controlEnable = if (alive playerUAV) then {true} else {false};
 			};
 			case "FPV_Strike": {
-				//--- fable/fpv-strike-drone: funds + one live drone per player.
+				//--- fable/fpv-strike-drone: funds + one live drone per player (all three tiers).
+				_controlEnable = if (_funds >= _currentFee && !(alive playerFPV)) then {true} else {false};
+			};
+			case "FPV_Strike_Light": {
+				_controlEnable = if (_funds >= _currentFee && !(alive playerFPV)) then {true} else {false};
+			};
+			case "FPV_Strike_Heavy": {
 				_controlEnable = if (_funds >= _currentFee && !(alive playerFPV)) then {true} else {false};
 			};
 			case "Units_Camera": {
@@ -498,6 +508,14 @@ while {alive player && dialog} do {
 			case "FPV_Strike": {
 				closeDialog 0;
 				ExecVM "Client\Module\FPV\fpv.sqf";
+			};
+			case "FPV_Strike_Light": {
+				closeDialog 0;
+				["light"] ExecVM "Client\Module\FPV\fpv.sqf";
+			};
+			case "FPV_Strike_Heavy": {
+				closeDialog 0;
+				["heavy"] ExecVM "Client\Module\FPV\fpv.sqf";
 			};
 			case "Units_Camera": {
 				closeDialog 0;
