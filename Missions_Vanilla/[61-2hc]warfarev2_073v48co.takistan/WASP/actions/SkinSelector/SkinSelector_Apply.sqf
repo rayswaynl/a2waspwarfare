@@ -424,7 +424,7 @@ if ((missionNamespace getVariable ["WFBE_C_SKINSWAP_FUNDS_CARRY", 1]) > 0) then 
 				_curGrp setVariable ["wfbe_side", _carrySide, true];
 			};
 			diag_log format ["[WFBE (SKIN)] B6_WALLET-CARRY: current group had no funds after swap - re-stamped wfbe_funds=%1 (carried=%2) side=%3 grp=%4",
-				(_curGrp getVariable ["wfbe_funds", 0]), (if (isNil "_carryFunds") then {"nil"} else {_carryFunds}), (side player), _curGrp];
+				(if (isNil {_curGrp getVariable "wfbe_funds"}) then {0} else {_curGrp getVariable "wfbe_funds"}), (if (isNil "_carryFunds") then {"nil"} else {_carryFunds}), (side player), _curGrp];
 			//--- Ask the server to re-broadcast the AUTHORITATIVE value onto this group (idempotent:
 			//--- it echoes an absolute stored value, never adds). This reconciles the server's own
 			//--- record with the client re-stamp and covers the case where _oldGrp's balance had

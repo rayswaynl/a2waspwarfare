@@ -371,7 +371,7 @@ while {alive player && dialog} do {
 				if (!isNil "_disp" && {typeName _disp == "ARRAY"} && {count _disp >= 2}) then {
 					_tn = (_disp select 1) + " (advancing)";
 				} else {
-				_goto = _grp getVariable ["wfbe_teamgoto", objNull];
+				_goto = _grp getVariable "wfbe_teamgoto"; if (isNil "_goto") then {_goto = objNull}; //--- claude/bughunt GROUPGETVAR: 2-arg default getVariable is unsupported on A2-OA GROUP receivers (yields nil) so the target-town resolve was always skipped (menu showed auto); 1-arg + isNil, matches line 370
 				_tn = "auto";
 				if (!isNil "_goto") then {
 					if (typeName _goto == "OBJECT") then {
