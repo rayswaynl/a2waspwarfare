@@ -38,6 +38,7 @@ while {alive player && dialog} do {
 		if (sideJoined == resistance) then {
 			{ctrlEnable [_x, false]} forEach [11004,11005,11006]; //--- GUER: hold commander/base/vote disabled - 11008 = Town Actions, re-enabled pre-loop for resistance, do NOT re-grey it here
 				ctrlEnable [11007, true]; //--- B75 (guer-tech): the Upgrade Center is a READ-ONLY kill-tech progression viewer for GUER (GUI_UpgradeMenu.sqf resistance branch).
+				if (((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) > time) then { {ctrlEnable [_x, false]} forEach [11001,11002,11008] }; //--- fable/guer-lockout: buy/gear/Town Actions held until activation
 		} else {
 	_enable = false; //added-MrNiceGuy
 	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_enable = true}};

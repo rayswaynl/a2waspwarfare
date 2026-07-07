@@ -52,6 +52,16 @@ if (isNil 'WFBE_RespawnTime') then {
 	//--- whole spawn-list `while` never ran, freezing the menu. Fall back to the config default (10).
 	if (isNil "WFBE_RespawnTime" || {typeName WFBE_RespawnTime != "SCALAR"}) then {WFBE_RespawnTime = 10};
 	if (WF_Debug) then {WFBE_RespawnTime = 5};
+	//--- fable/guer-lockout (owner 2026-07-07): resistance is locked for the first N minutes -
+	//--- clamp the respawn timer to the remaining lockout so the menu's own countdown displays it.
+	if ((sideJoined == resistance) && {((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) > time}) then {
+		Private ["_lockLeft"];
+		_lockLeft = ((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) - time;
+		if (_lockLeft > WFBE_RespawnTime) then {
+			WFBE_RespawnTime = ceil _lockLeft;
+			hintSilent "RESISTANCE LOCKDOWN\nThe insurgency has not activated yet - your deploy unlocks when the countdown ends.";
+		};
+	};
 
 	[] Spawn {
 		while {WFBE_RespawnTime > 0} do {
