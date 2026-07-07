@@ -1,8 +1,15 @@
 {ctrlEnable [_x, false]} forEach [11002, 11005, 11006, 11007, 11008];
 //--- GUER insurgents: commander/base/upgrade/economy/vote buttons are irrelevant (no HQ/commander/base). Grey them.
 if (sideJoined == resistance) then { {ctrlEnable [_x, false]} forEach [11004,11005,11006,11007,11008] };
-//--- A1 Commissar Panel: show hub button only for GUER.
-ctrlShow [11030, (sideJoined == resistance)];
+//--- A1 Commissar Panel (owner 2026-07-07): for GUER, REPURPOSE the (GUER-dead) Economy button as the
+//--- panel entry instead of the cramped corner button - re-enable it and relabel. MenuAction 8 branches
+//--- by side below. The corner 11030 button is retired (hidden for all sides); its MenuAction 30 path
+//--- stays as a harmless no-op fallback.
+if (sideJoined == resistance) then {
+	ctrlEnable [11008, true];
+	ctrlSetText [11008, "Town Actions"];
+};
+ctrlShow [11030, false];
 
 _enable = false;
 if ((barracksInRange || lightInRange || heavyInRange || aircraftInRange || hangarInRange || depotInRange) && (player == leader WFBE_Client_Team)) then {_enable = true};
@@ -222,7 +229,12 @@ while {alive player && dialog} do {
 	if (MenuAction == 8) exitWith { //added-MrNiceGuy
 		MenuAction = -1;
 		closeDialog 0;
-		createDialog "RscMenu_Economy";
+		//--- A1 Commissar Panel: the Economy slot doubles as the GUER Town Actions entry.
+		if (sideJoined == resistance) then {
+			createDialog "WFBE_GDirCommissarMenu";
+		} else {
+			createDialog "RscMenu_Economy";
+		};
 	};
 
 	//--- Service Menu.
