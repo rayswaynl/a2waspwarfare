@@ -4585,7 +4585,7 @@ class WFBE_PlayerSettingsMenu {
 class WFBE_GDirCommissarMenu {
 	movingEnable = 1;
 	idd = 31000;
-	onLoad = "_this ExecVM \"Client\\GUI\\GUI_Menu_GuerCommissar.sqf\"";
+	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_GuerCommissar.sqf'"; //--- cmdcon45: house pattern - A2 config strings do NOT accept C-style backslash-quote escapes (config parse error = the rc15 boot hang)
 
 	class controlsBackground {
 		class BG_M : RscText {
