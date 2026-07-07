@@ -4526,123 +4526,296 @@ class WFBE_PlayerSettingsMenu {
 
 //--- A1 Commissar Panel (idd=31000). Hub button idc=11030 in WF_Menu (idd=11000).
 //--- GUI loop script: Client\GUI\GUI_Menu_GuerCommissar.sqf
+//--- UX v2 (panel-v2): cost display (~est. labels + quote round-trip), minimap town selector,
+//---   SkinSelector-style framing, wallet+fund readout, button enable gate, cooldown display, Back nav.
+//--- IDC band: 31000-31099.
+//---   31010=town list  31011-31013=section labels  31021-22=buy  31031-33=QRF
+//---   31041=counter  31051=donate  31060=minimap  31070=wallet/fund readout
+//---   31071-77=per-action cost labels  31078=status text  31079=cooldown label
 class WFBE_GDirCommissarMenu {
 	movingEnable = 1;
 	idd = 31000;
-	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_GuerCommissar.sqf'"; //--- cmdcon45: house pattern - A2 config strings do NOT accept C-style backslash-quote escapes (config parse error = the rc15 boot hang)
+	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_GuerCommissar.sqf'"; //--- cmdcon45: house pattern - A2 config strings do NOT accept C-style backslash-quote escapes
 
 	class controlsBackground {
+		//--- Main plate (wider/taller to fit minimap + cost labels).
 		class BG_M : RscText {
-			x = 0.187276; y = 0.200401; w = 0.625448; h = 0.599268;
+			x = 0.110; y = 0.175; w = 0.780; h = 0.650;
 			colorBackground[] = WFBE_Background_Color;
 			moving = 1;
 		};
 		class BG_H : RscText {
-			x = 0.187276; y = 0.200401; w = 0.625448; h = 0.0525;
+			x = 0.110; y = 0.175; w = 0.780; h = 0.052;
 			moving = 1;
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
 		class BG_F : RscText {
-			x = 0.187276; y = 0.747169; w = 0.625448; h = 0.0525;
+			x = 0.110; y = 0.773; w = 0.780; h = 0.052;
 			moving = 1;
 			colorBackground[] = WFBE_Background_Color_Footer;
+		};
+		//--- Accent border below header (SkinSelector-style cyan line).
+		class BG_BorderH : RscText {
+			x = 0.110; y = 0.227;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		//--- Accent border above footer.
+		class BG_BorderF : RscText {
+			x = 0.110; y = 0.773;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		//--- 1px outer frame.
+		class BG_EdgeT : RscText {
+			x = 0.110; y = 0.175;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class BG_EdgeB : RscText {
+			x = 0.110; y = 0.825;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class BG_EdgeL : RscText {
+			x = 0.110; y = 0.175;
+			w = WFBE_Background_Border_Thick; h = 0.650;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class BG_EdgeR : RscText {
+			x = 0.890; y = 0.175;
+			w = WFBE_Background_Border_Thick; h = 0.650;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		//--- Vertical divider between left column (list+map) and right column (actions).
+		class BG_DivV : RscText {
+			x = 0.342; y = 0.240;
+			w = WFBE_Background_Border_Thick; h = 0.520;
+			colorBackground[] = {0.2588, 0.7137, 1, 0.4};
+		};
+		//--- Minimap backing plate.
+		class BG_Map : RscText {
+			x = 0.115; y = 0.440;
+			w = 0.222; h = 0.325;
+			colorBackground[] = {0, 0, 0, 0.5};
 		};
 	};
 
 	class controls {
 		//--- Title bar.
 		class Title : RscText_Title {
-			x = 0.187276; y = 0.200401; w = 0.625448; h = 0.0525;
+			x = 0.115; y = 0.175; w = 0.720; h = 0.052;
 			text = "GUER COMMISSAR PANEL";
 		};
 
-		//--- Town list (lb idc 31010).
-		class LB_Towns : RscListBox {
-			idc = 31010;
-			x = 0.197; y = 0.265; w = 0.200; h = 0.450;
+		//--- X button (flat, red-hover; SkinSelector-style).
+		class Btn_X : RscButton_Main {
+			x = 0.852; y = 0.182; w = 0.034; h = 0.040;
+			text = "X";
+			shadow = 2;
+			sizeEx = 0.028;
+			colorBackground[] = {0, 0, 0, 0};
+			colorBackgroundActive[] = {0.9098, 0.3216, 0.2902, 0.8};
+			colorText[] = {1, 1, 1, 0.6};
+			action = "closeDialog 0;";
+			tooltip = "Close panel";
 		};
 
-		//--- Section label: ACTION 1 - REINFORCEMENT.
+		//--- Left column: town list label + list.
+		class Lbl_Towns : RscText {
+			x = 0.115; y = 0.240; w = 0.222; h = 0.022;
+			text = "SELECT TOWN";
+			sizeEx = 0.018;
+			colorText[] = {1, 1, 1, 0.55};
+			shadow = 2;
+		};
+		class LB_Towns : RscListBox {
+			idc = 31010;
+			x = 0.115; y = 0.263; w = 0.222; h = 0.170;
+		};
+
+		//--- Map label.
+		class Lbl_Map : RscText {
+			x = 0.115; y = 0.436; w = 0.222; h = 0.022;
+			text = "MAP (click to select town)";
+			sizeEx = 0.016;
+			colorText[] = {1, 1, 1, 0.5};
+			shadow = 2;
+		};
+		//--- Minimap (idc 31060). Pattern from idd 12000 WF_MiniMap (idc 12015, Dialogs.hpp line 2088).
+		//--- Map-click: mouseButtonUp wired via event; loop reads _map posScreenToWorld[mouseX,mouseY].
+		class WF_MiniMap : RscMapControl {
+			idc = 31060;
+			x = 0.115; y = 0.440;
+			w = 0.222; h = 0.325;
+			ShowCountourInterval = 1;
+			onMouseMoving = "mouseX = (_this select 1); mouseY = (_this select 2)";
+			onMouseButtonDown = "mouseButtonDown = (_this select 1)";
+			onMouseButtonUp = "mouseButtonUp = (_this select 1)";
+		};
+
+		//--- Right column: wallet + town fund readout (idc 31070). Updated by loop script each tick.
+		class Lbl_Wallet : RscText {
+			idc = 31070;
+			x = 0.348; y = 0.240; w = 0.535; h = 0.026;
+			text = "Wallet: -- | Town Fund: --";
+			sizeEx = 0.019;
+			colorText[] = {0.2588, 0.7137, 1, 0.9};
+			shadow = 2;
+		};
+
+		//--- ACTION 1 - REINFORCEMENT.
 		class Lbl_Act1 : RscText {
 			idc = 31011;
-			x = 0.415; y = 0.265; w = 0.380; h = 0.030;
-			text = "ACTION 1 - REINFORCEMENT CONVOY";
-			sizeEx = 0.020;
+			x = 0.348; y = 0.273; w = 0.535; h = 0.025;
+			text = "ACTION 1 - REINFORCEMENT";
+			sizeEx = 0.019;
+			colorText[] = {1, 1, 1, 0.7};
+			shadow = 2;
+		};
+		class Lbl_Cost_Convoy : RscText {
+			idc = 31071;
+			x = 0.348; y = 0.298; w = 0.260; h = 0.020;
+			text = "~est. $--";
+			sizeEx = 0.017;
+			colorText[] = {1, 0.85, 0.3, 0.85};
+			shadow = 2;
+		};
+		class Lbl_Cost_Instant : Lbl_Cost_Convoy {
+			idc = 31072;
+			x = 0.610;
 		};
 		class Btn_BuyConvoy : RscButton_Main {
 			idc = 31021;
-			x = 0.415; y = 0.300; w = 0.180; h = 0.042;
+			x = 0.348; y = 0.319; w = 0.260; h = 0.040;
 			text = "BUY: CONVOY";
-			sizeEx = 0.022;
+			sizeEx = 0.021;
 			action = "MenuAction = 21";
 			tooltip = "Standard convoy reinforcement to selected town (base price).";
 		};
 		class Btn_BuyInstant : Btn_BuyConvoy {
 			idc = 31022;
-			x = 0.615;
+			x = 0.610;
 			text = "BUY: INSTANT";
 			action = "MenuAction = 22";
 			tooltip = "Instant reinforcement (~1.5x price premium).";
 		};
 
-		//--- Section label: ACTION 2 - QRF CONTRACT.
+		//--- ACTION 2 - QRF CONTRACT.
 		class Lbl_Act2 : RscText {
 			idc = 31012;
-			x = 0.415; y = 0.365; w = 0.380; h = 0.030;
-			text = "ACTION 2 - QRF CONTRACT (fires on town attack)";
-			sizeEx = 0.020;
+			x = 0.348; y = 0.368; w = 0.535; h = 0.025;
+			text = "ACTION 2 - QRF CONTRACT (on town attack)";
+			sizeEx = 0.019;
+			colorText[] = {1, 1, 1, 0.7};
+			shadow = 2;
+		};
+		class Lbl_Cost_QRFIns : RscText {
+			idc = 31073;
+			x = 0.348; y = 0.394; w = 0.168; h = 0.020;
+			text = "~est. $--";
+			sizeEx = 0.017;
+			colorText[] = {1, 0.85, 0.3, 0.85};
+			shadow = 2;
+		};
+		class Lbl_Cost_QRFGun : Lbl_Cost_QRFIns {
+			idc = 31074;
+			x = 0.518;
+		};
+		class Lbl_Cost_QRFCombo : Lbl_Cost_QRFIns {
+			idc = 31075;
+			x = 0.695;
 		};
 		class Btn_QRFInsert : Btn_BuyConvoy {
 			idc = 31031;
-			x = 0.415; y = 0.400; w = 0.115; h = 0.042;
+			x = 0.348; y = 0.415; w = 0.168; h = 0.040;
 			text = "INSERT";
 			action = "MenuAction = 31";
 			tooltip = "QRF Insert contract: light helo deploys infantry on town attack.";
 		};
 		class Btn_QRFGunship : Btn_BuyConvoy {
 			idc = 31032;
-			x = 0.540; y = 0.400; w = 0.115; h = 0.042;
+			x = 0.518; y = 0.415; w = 0.168; h = 0.040;
 			text = "GUNSHIP";
 			action = "MenuAction = 32";
 			tooltip = "QRF Gunship contract: attack helicopter strikes on town attack.";
 		};
 		class Btn_QRFCombo : Btn_BuyConvoy {
 			idc = 31033;
-			x = 0.665; y = 0.400; w = 0.115; h = 0.042;
+			x = 0.695; y = 0.415; w = 0.168; h = 0.040;
 			text = "COMBO";
 			action = "MenuAction = 33";
 			tooltip = "QRF Combo: insert + gunship together (discounted).";
 		};
 
-		//--- Section label: ACTION 3 - COUNTER-ATTACK CONTRACT.
+		//--- ACTION 3 - COUNTER-ATTACK CONTRACT.
 		class Lbl_Act3 : RscText {
 			idc = 31013;
-			x = 0.415; y = 0.465; w = 0.380; h = 0.030;
+			x = 0.348; y = 0.464; w = 0.535; h = 0.025;
 			text = "ACTION 3 - COUNTER-ATTACK CONTRACT";
-			sizeEx = 0.020;
+			sizeEx = 0.019;
+			colorText[] = {1, 1, 1, 0.7};
+			shadow = 2;
+		};
+		class Lbl_Cost_Counter : RscText {
+			idc = 31076;
+			x = 0.348; y = 0.490; w = 0.535; h = 0.020;
+			text = "~est. $--";
+			sizeEx = 0.017;
+			colorText[] = {1, 0.85, 0.3, 0.85};
+			shadow = 2;
 		};
 		class Btn_Counter : Btn_BuyConvoy {
 			idc = 31041;
-			x = 0.415; y = 0.500; w = 0.380; h = 0.042;
+			x = 0.348; y = 0.511; w = 0.535; h = 0.040;
 			text = "COUNTER-ATTACK ON LOSS";
 			action = "MenuAction = 41";
 			tooltip = "If town falls, triggers retake attempt 2-5 min later.";
 		};
 
-		//--- DONATE: transfer personal funds to town pool.
+		//--- DONATE.
+		class Lbl_Cost_Donate : RscText {
+			idc = 31077;
+			x = 0.348; y = 0.560; w = 0.535; h = 0.020;
+			text = "$200 fixed (from wallet to town fund)";
+			sizeEx = 0.017;
+			colorText[] = {1, 0.85, 0.3, 0.85};
+			shadow = 2;
+		};
 		class Btn_Donate : Btn_BuyConvoy {
 			idc = 31051;
-			x = 0.415; y = 0.565; w = 0.380; h = 0.042;
+			x = 0.348; y = 0.581; w = 0.535; h = 0.040;
 			text = "DONATE $200 TO TOWN FUND";
 			action = "MenuAction = 51";
 			tooltip = "Donate $200 from your wallet to this town's funding pool.";
 		};
 
-		//--- Close button.
-		class Btn_Close : RscButton_Exit {
-			x = 0.730; y = 0.752; w = 0.070; h = 0.040;
-			onButtonClick = "closeDialog 0;";
-			tooltip = "Close panel";
+		//--- Status text (idc 31078): deny reasons, pending quote notice.
+		class Lbl_Status : RscText {
+			idc = 31078;
+			x = 0.348; y = 0.630; w = 0.535; h = 0.025;
+			text = "";
+			sizeEx = 0.018;
+			colorText[] = {1, 0.4, 0.3, 0.9};
+			shadow = 2;
+		};
+		//--- Cooldown readout (idc 31079): per-town cooldown remaining.
+		class Lbl_Cooldown : RscText {
+			idc = 31079;
+			x = 0.348; y = 0.656; w = 0.535; h = 0.025;
+			text = "";
+			sizeEx = 0.018;
+			colorText[] = {1, 0.65, 0.2, 0.85};
+			shadow = 2;
+		};
+
+		//--- Footer: Back button (house pattern: createDialog WF_Menu after closeDialog).
+		class Btn_Back : RscButton_Main {
+			x = 0.115; y = 0.778; w = 0.080; h = 0.040;
+			text = "< BACK";
+			sizeEx = 0.019;
+			action = "MenuAction = 90";
+			tooltip = "Return to main menu";
 		};
 	};
 };

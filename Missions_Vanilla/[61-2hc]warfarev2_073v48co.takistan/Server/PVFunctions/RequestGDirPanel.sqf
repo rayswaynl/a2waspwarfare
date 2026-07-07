@@ -62,6 +62,97 @@ if (isNil "WFBE_SE_Towns" || {count WFBE_SE_Towns == 0}) exitWith {
 	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=%2|deny=townsNotReady|fundedBy=%3|pricePaid=0", _elmin, _verb, getPlayerUID _player];
 };
 
+
+//--- QUOTE VERB: read-only price estimate, no debit, no cooldown, no contract write.
+//--- Passes Gate 1/2/2.5 (side+lane+towns), skips Gate 3-6 (town-find is done to get scarcity).
+//--- Rate limited: 2s per player to prevent spam.
+if (_verb == "quote") exitWith {
+	private ["_quoteRateKey","_quoteLastT"];
+	_quoteRateKey = Format ["AICOMV2_GDIR_QUOTE_RATE_%1", getPlayerUID _player];
+	_quoteLastT   = missionNamespace getVariable [_quoteRateKey, -99];
+	if ((_nowT - _quoteLastT) < 2) exitWith {
+		diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=quote|town=%2|deny=rateLimit|fundedBy=%3", _elmin, _townId, getPlayerUID _player];
+	};
+	missionNamespace setVariable [_quoteRateKey, _nowT];
+
+	//--- Locate town for scarcity calc (no error reply on miss - client just keeps ~est. labels).
+	private ["_qTownObj","_qFound"];
+	_qTownObj = objNull;
+	_qFound   = false;
+	{
+		if (!_qFound) then {
+			if ((_x getVariable ["wfbe_name", ""]) == _townId) then {
+				_qTownObj = _x;
+				_qFound   = true;
+			};
+		};
+	} forEach WFBE_SE_Towns;
+
+	//--- Compute scarcity for this town.
+	private ["_qScarcityStep","_qScarcityDecay","_qScarcityRec","_qScarcity"];
+	_qScarcityStep  = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_SCARCITY_STEP", 0.2];
+	_qScarcityDecay = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_SCARCITY_DECAY", 120];
+	_qScarcityRec   = missionNamespace getVariable ["AICOMV2_GDIR_SCARCITY_MAP", []];
+	_qScarcity = 1.0;
+	{
+		if ((_x select 0) == _townId) then {
+			private ["_qAge","_qDecayed","_qRawSteps"];
+			_qAge       = _nowT - (_x select 1);
+			_qDecayed   = floor (_qAge / _qScarcityDecay);
+			_qRawSteps  = (_x select 2) - _qDecayed;
+			if (_qRawSteps < 0) then {_qRawSteps = 0};
+			_qScarcity = 1.0 + (_qScarcityStep * _qRawSteps);
+		};
+	} forEach _qScarcityRec;
+
+	//--- loadFactor at quote time (server FPS, same formula as real request).
+	private ["_qLfMin","_qLfMax","_qFps","_qLf"];
+	_qLfMin = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_LF_MIN", 1.0];
+	_qLfMax = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_LF_MAX", 2.5];
+	_qFps   = diag_fps;
+	_qLf    = _qLfMin;
+	if (_qFps < 10) then {_qLf = _qLfMax};
+	if (_qFps >= 10 && {_qFps < 20}) then {_qLf = _qLfMin + (_qLfMax - _qLfMin) * 0.5};
+	private ["_qGrpBudgetMax","_qGuerGrpCount"];
+	_qGrpBudgetMax = missionNamespace getVariable ["AICOMV2_GDIR_GROUP_BUDGET_MAX", 110];
+	_qGuerGrpCount = 0;
+	{
+		if (side _x == resistance) then {_qGuerGrpCount = _qGuerGrpCount + 1};
+	} forEach allGroups;
+	if ((_qGrpBudgetMax - _qGuerGrpCount) < 10) then {
+		if (_qLf < _qLfMax) then {_qLf = _qLfMax};
+	};
+
+	//--- Compute estimated prices for all 6 actions.
+	private ["_qBaseReinf","_qBaseInstMult","_qBaseIns","_qBaseGun","_qBaseCtr"];
+	_qBaseReinf   = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_REINF", 800];
+	_qBaseInstMult = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_INSTANT_MULT", 1.5];
+	_qBaseIns     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_INS", 600];
+	_qBaseGun     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_GUN", 1200];
+	_qBaseCtr     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CTR_ATK", 500];
+
+	private ["_qPConvoy","_qPInstant","_qPIns","_qPGun","_qPCombo","_qPCtr"];
+	_qPConvoy  = round (_qBaseReinf * _qScarcity * _qLf);
+	if (_qPConvoy  < _qBaseReinf) then {_qPConvoy  = _qBaseReinf};
+	_qPInstant = round (_qBaseReinf * _qBaseInstMult * _qScarcity * _qLf);
+	if (_qPInstant < round (_qBaseReinf * _qBaseInstMult)) then {_qPInstant = round (_qBaseReinf * _qBaseInstMult)};
+	_qPIns     = round (_qBaseIns  * _qScarcity * _qLf);
+	if (_qPIns   < _qBaseIns)  then {_qPIns  = _qBaseIns};
+	_qPGun     = round (_qBaseGun  * _qScarcity * _qLf);
+	if (_qPGun   < _qBaseGun)  then {_qPGun  = _qBaseGun};
+	_qPCombo   = round (_qBaseIns * _qScarcity * _qLf + _qBaseGun * _qScarcity * _qLf * 0.85);
+	if (_qPCombo < round (_qBaseIns + _qBaseGun * 0.85)) then {_qPCombo = round (_qBaseIns + _qBaseGun * 0.85)};
+	_qPCtr     = round (_qBaseCtr  * _qScarcity * _qLf);
+	if (_qPCtr   < _qBaseCtr)  then {_qPCtr  = _qBaseCtr};
+
+	//--- Reply: status "quote", message = comma-joined prices, verb = "quote", townId = townId.
+	//--- Payload: [convoy, instant, qrfInsert, qrfGunship, qrfCombo, counter, donate(fixed 200)].
+	private ["_qPriceStr"];
+	_qPriceStr = Format ["%1,%2,%3,%4,%5,%6,200", _qPConvoy, _qPInstant, _qPIns, _qPGun, _qPCombo, _qPCtr];
+	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=quote|town=%2|fundedBy=%3|prices=%4", _elmin, _townId, getPlayerUID _player, _qPriceStr];
+	[getPlayerUID _player, "GDirPanelResult", ["quote", _qPriceStr, "quote", _townId]] Call WFBE_CO_FNC_SendToClient;
+};
+
 //--- Gate 3: locate the town in WFBE_SE_Towns.
 private ["_townObj","_townFound"];
 _townObj   = objNull;
