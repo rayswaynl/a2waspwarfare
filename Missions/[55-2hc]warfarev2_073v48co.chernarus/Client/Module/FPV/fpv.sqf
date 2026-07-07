@@ -20,6 +20,7 @@ if (count _checks > 0) then {
 if (isNull _closest) exitWith {};
 
 _cost = missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST", 7500];
+if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {_cost = missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST_GUER", 5000]}; //--- fable/drones-menu: GUER rate $5k
 
 _drone = createVehicle [_class, getPos _closest, [], 0, "FLY"];
 playerFPV = _drone;

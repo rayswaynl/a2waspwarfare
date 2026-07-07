@@ -754,4 +754,30 @@
 		default = 20;
 	};
 
+	// fable/drones-menu: GUER Drone Operations lobby params.
+	class WFBE_C_GUER_DRONES_MENU {
+		title = "GUER Drone Operations menu (FPV strike - button 6)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
+	class WFBE_C_GUER_DRONE_SCUD {
+		title = "GUER SCUD carrier strike (requires GUER_DRONES_MENU=1)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+	class WFBE_C_FPV_DRONE_COST_GUER {
+		title = "GUER FPV drone cost ($)";
+		values[] = {2500,5000,7500,10000};
+		texts[] = {"$2500","$5000","$7500","$10000"};
+		default = 5000;
+	};
+	class WFBE_C_FPV_COOLDOWN {
+		title = "FPV rearm cooldown (seconds, all sides)";
+		values[] = {30,60,90,120};
+		texts[] = {"30s","60s","90s","120s"};
+		default = 60;
+	};
+
 };

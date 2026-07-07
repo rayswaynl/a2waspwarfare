@@ -34,6 +34,11 @@ missionNamespace setVariable [Format["WFBE_%1PARAVEHI", _side], 'Mi17_Civilian']
 missionNamespace setVariable [Format["WFBE_%1PARACHUTE", _side], 'ParachuteC'];//--- Supply Paradropping, Parachute Model.
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'WarfareSupplyTruck_Gue'];//--- Supply Truck model.
 
+//--- fable/drones-menu: FPV drone classname for GUER (unlocks the sideJoinedText lookup in fpv.sqf).
+if ((missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0) then {
+	missionNamespace setVariable [Format ["WFBE_%1FPVDRONE", _side], "AH6X_EP1"];
+};
+
 //--- Server only.
 if (isServer) then {
 	//--- Patrols. GUER revamp (task #17/#23): scary insurgents with technicals, an

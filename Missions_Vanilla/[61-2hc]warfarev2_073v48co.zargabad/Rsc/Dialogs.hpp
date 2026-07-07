@@ -4819,3 +4819,190 @@ class WFBE_GDirCommissarMenu {
 		};
 	};
 };
+
+//--- fable/drones-menu: GUER Drone Operations menu (idd=32000). IDC band 32000-32099.
+//---   FPV card: 32011-32014  SCUD card: 32020-32024  status: 32030  map: 32060  telemetry: 32061  back: 32070
+//--- GUI loop script: Client\GUI\GUI_Menu_GuerDrones.sqf
+class WFBE_GuerDronesMenu {
+	movingEnable = 1;
+	idd = 32000;
+	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_GuerDrones.sqf'";
+
+	class controlsBackground {
+		class BG_M : RscText {
+			x = 0.110; y = 0.175; w = 0.780; h = 0.650;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class BG_H : RscText {
+			x = 0.110; y = 0.175; w = 0.780; h = 0.052;
+			moving = 1;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class BG_F : RscText {
+			x = 0.110; y = 0.773; w = 0.780; h = 0.052;
+			moving = 1;
+			colorBackground[] = WFBE_Background_Color_Footer;
+		};
+		class BG_BorderH : RscText {
+			x = 0.110; y = 0.227;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = {0.35, 0.50, 0.20, 0.70};
+		};
+		class BG_BorderF : RscText {
+			x = 0.110; y = 0.773;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = {0.35, 0.50, 0.20, 0.70};
+		};
+		class BG_EdgeT : RscText {
+			x = 0.110; y = 0.175;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class BG_EdgeB : RscText {
+			x = 0.110; y = 0.825;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class BG_EdgeL : RscText {
+			x = 0.110; y = 0.175;
+			w = WFBE_Background_Border_Thick; h = 0.650;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class BG_EdgeR : RscText {
+			x = 0.890; y = 0.175;
+			w = WFBE_Background_Border_Thick; h = 0.650;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		//--- Vertical divider: left (FPV+SCUD cards) | right (map).
+		class BG_DivV : RscText {
+			x = 0.442; y = 0.240;
+			w = WFBE_Background_Border_Thick; h = 0.520;
+			colorBackground[] = {0.35, 0.50, 0.20, 0.40};
+		};
+		//--- Map backing plate.
+		class BG_Map : RscText {
+			x = 0.448; y = 0.230;
+			w = 0.437; h = 0.480;
+			colorBackground[] = {0, 0, 0, 0.5};
+		};
+	};
+
+	class controls {
+		//--- Header title.
+		class Title : RscText_Title {
+			x = 0.115; y = 0.175; w = 0.720; h = 0.052;
+			text = "RESISTANCE AIR DOCTRINE -- DRONE OPERATIONS";
+		};
+
+		//--- FPV card (left column, top).
+		class Lbl_FpvTitle : RscText {
+			idc = 32011;
+			x = 0.115; y = 0.237; w = 0.320; h = 0.026;
+			text = "FPV STRIKE DRONE";
+			sizeEx = 0.022;
+			colorText[] = {0.6, 0.8, 0.4, 1};
+			shadow = 2;
+		};
+		class Lbl_FpvState : RscText {
+			idc = 32012;
+			x = 0.115; y = 0.268; w = 0.320; h = 0.024;
+			text = "READY";
+			sizeEx = 0.017;
+			colorText[] = {0.8, 1, 0.6, 0.9};
+			shadow = 2;
+		};
+		class Btn_FpvLaunch : RscButton_Main {
+			idc = 32013;
+			x = 0.115; y = 0.297; w = 0.140; h = 0.038;
+			text = "LAUNCH";
+			action = "MenuAction = 1";
+		};
+		class Lbl_FpvCost : RscText {
+			idc = 32014;
+			x = 0.260; y = 0.297; w = 0.175; h = 0.038;
+			text = "$5000";
+			sizeEx = 0.017;
+			colorText[] = {0.2588, 0.7137, 1, 0.9};
+			shadow = 2;
+		};
+
+		//--- SCUD card (left column, mid; hidden by loop when WFBE_C_GUER_DRONE_SCUD=0).
+		class BG_ScudCard : RscText {
+			idc = 32020;
+			x = 0.115; y = 0.348; w = 0.320; h = 0.180;
+			colorBackground[] = {0.07, 0.07, 0.07, 0.6};
+		};
+		class Lbl_ScudTitle : RscText {
+			idc = 32021;
+			x = 0.115; y = 0.353; w = 0.320; h = 0.026;
+			text = "SCUD CARRIER STRIKE";
+			sizeEx = 0.022;
+			colorText[] = {0.6, 0.8, 0.4, 1};
+			shadow = 2;
+		};
+		class Lbl_ScudState : RscText {
+			idc = 32022;
+			x = 0.115; y = 0.383; w = 0.320; h = 0.024;
+			text = "[LOCKED]";
+			sizeEx = 0.017;
+			colorText[] = {0.8, 1, 0.6, 0.9};
+			shadow = 2;
+		};
+		class Btn_ScudFire : RscButton_Main {
+			idc = 32023;
+			x = 0.115; y = 0.412; w = 0.140; h = 0.038;
+			text = "TARGET";
+			action = "MenuAction = 80";
+		};
+		class Lbl_ScudCost : RscText {
+			idc = 32024;
+			x = 0.260; y = 0.412; w = 0.175; h = 0.038;
+			text = "$40000";
+			sizeEx = 0.017;
+			colorText[] = {0.2588, 0.7137, 1, 0.9};
+			shadow = 2;
+		};
+
+		//--- Status strip (wallet + live drones).
+		class Lbl_Status : RscText {
+			idc = 32030;
+			x = 0.115; y = 0.700; w = 0.320; h = 0.024;
+			text = "Wallet: $--- | Active drones: 0";
+			sizeEx = 0.016;
+			colorText[] = {0.2588, 0.7137, 1, 0.8};
+			shadow = 2;
+		};
+
+		//--- Right column: tactical map. Pattern from idd 31000 WF_MiniMap (idc 31060).
+		class WF_MiniMap : RscMapControl {
+			idc = 32060;
+			x = 0.448; y = 0.230;
+			w = 0.437; h = 0.480;
+			ShowCountourInterval = 1;
+			onMouseMoving = "mouseX = (_this select 1); mouseY = (_this select 2)";
+			onMouseButtonDown = "mouseButtonDown = (_this select 1)";
+			onMouseButtonUp = "mouseButtonUp = (_this select 1)";
+		};
+
+		//--- Drone telemetry readout (below map).
+		class Lbl_Telemetry : RscText {
+			idc = 32061;
+			x = 0.448; y = 0.715; w = 0.437; h = 0.024;
+			text = "FPV: no active drone";
+			sizeEx = 0.016;
+			colorText[] = {0.2588, 0.7137, 1, 0.8};
+			shadow = 2;
+		};
+
+		//--- Footer: Back button.
+		class Btn_Back : RscButton_Main {
+			idc = 32070;
+			x = 0.750; y = 0.779; w = 0.130; h = 0.040;
+			text = "< BACK";
+			sizeEx = 0.019;
+			action = "MenuAction = 90";
+			tooltip = "Return to main menu";
+		};
+	};
+};
