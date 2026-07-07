@@ -2429,6 +2429,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GUER_PATROL_MARKERS") then {WFBE_C_GUER_PATROL_MARKERS = 1}; //--- owner: resistance-only map intel layer (friendly AI dots + owned-town health flags + inbound cell arrows).
 	if (isNil "WFBE_C_UNIT_DESIGNER") then {WFBE_C_UNIT_DESIGNER = 1}; //--- Team-menu Units tab: infantry loadout templates applied to bought AI squad units.
 	if (isNil "WFBE_C_SEAD") then {WFBE_C_SEAD = 1}; //--- B93 SEAD: scripted anti-radar guidance for tier-5 jets (F35B/Su34), 2-shot cap. DARK until Build 93.
+	if (isNil "WFBE_C_AICOM_NO_BIKES") then {WFBE_C_AICOM_NO_BIKES = 1}; //--- fable/aicom-no-bikes (WO-5): strip ATV/Motorcycle-hull templates from AI commander team founding/buy rosters. GUARDRAIL keeps the original set if stripping would empty it. 0 = legacy behaviour (ATVs remain merely unlikely, not prohibited).
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

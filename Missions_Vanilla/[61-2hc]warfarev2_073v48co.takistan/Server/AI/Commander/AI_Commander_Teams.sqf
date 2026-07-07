@@ -431,6 +431,24 @@ if (count _live > 0) then {
 	if (count _eligNoStatic > 0) then {_eligible = _eligNoStatic};
 	if (count _eligible == 0) exitWith {};
 
+	//--- fable/aicom-no-bikes (WO-5, owner ruling "no ATVs/bikes"): strip every eligible template that contains an
+	//--- ATV/Motorcycle-hull unit from the AI commander roster. "Motorcycle" is the confirmed A2 OA CfgVehicles base
+	//--- class used for ATV-type vehicles throughout this codebase (Common_AICOM_AutoFlip.sqf, AwardBounty.sqf,
+	//--- Server_AwardScorePlayer.sqf). isKindOf is safe here (vehicle classnames, not weapon/magazine classnames).
+	//--- GUARDRAIL: if stripping would EMPTY the set, keep the original (mirrors the static-weapon strip above).
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_NO_BIKES", 1]) > 0) then {
+		private ["_eligNoBike","_nbEi","_nbHas"];
+		_eligNoBike = [];
+		{
+			_nbEi = _x;
+			_nbHas = false;
+			{ if ((typeName _x == "STRING") && {_x isKindOf "Motorcycle"}) exitWith {_nbHas = true} } forEach (_templates select _nbEi);
+			if (!_nbHas) then {_eligNoBike set [count _eligNoBike, _nbEi]};
+		} forEach _eligible;
+		if (count _eligNoBike > 0) then {_eligible = _eligNoBike};
+	};
+	if (count _eligible == 0) exitWith {};
+
 	//--- B59 ROSTER AIR-GATE (Ray 2026-06-20): the FOUNDING path (this file) had NO air-established gate, so
 	//--- a heli template (cheapest helis carried QUERYUNITUPGRADE air=0) was eligible at air-research 0 with no
 	//--- air factory. Mirror AI_Commander_Produce.sqf:47-52: until the side holds >= WFBE_C_AICOM_AIR_MIN_TOWNS
