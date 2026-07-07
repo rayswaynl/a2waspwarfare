@@ -1,0 +1,189 @@
+// Server_CmdTownLedger.sqf
+// Commander Town Ledger (CTL): virtual per-town strength ledger + paid AI investment
+// for WEST/EAST towns. Structurally mirrors Server_GuerDirector.sqf (Lane 800).
+// Flag gate: AICOMV2_LANE_CMD_TOWN_LEDGER (default 0 = inert; flag-off = byte-identical).
+// See docs/design/v2/aicom-v2-commander-town-ledger.md for full spec.
+//
+// A2 OA 1.64 compliant: array-append via set[count,v], private ["x"] declarations,
+// lazy && {} / || {}, no exitWith inside forEach.
+
+if (!((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0)) exitWith {};
+
+//--- Singleton guard (GUER Director precedent: duplicate instances would double-write
+//--- wfbe_ctl_str and desync the ledger).
+if ((missionNamespace getVariable ["AICOMV2_CTL_INSTANCE", 0]) > 0) exitWith {
+	diag_log "CTLSTAT|v1|BOTH|CTL_DUPLICATE_BLOCKED";
+};
+AICOMV2_CTL_INSTANCE = 1;
+
+["INITIALIZATION", "Server_CmdTownLedger.sqf: CTL starting."] Call WFBE_CO_FNC_LogContent;
+
+waitUntil {!isNil "towns"};
+waitUntil {count towns > 0};
+sleep 5;
+
+private ["_tickSec","_regenFullSec","_captureSeed","_spawnMinStr","_paidMax","_grpBudgetMax"];
+_tickSec       = missionNamespace getVariable ["AICOMV2_CTL_TICK_SEC",         30];
+_regenFullSec  = missionNamespace getVariable ["AICOMV2_CTL_REGEN_FULL_SEC",   1800];
+_captureSeed   = missionNamespace getVariable ["AICOMV2_CTL_CAPTURE_SEED",     0.25];
+_spawnMinStr   = missionNamespace getVariable ["AICOMV2_CTL_SPAWN_MIN_STR",    0.25];
+_paidMax       = missionNamespace getVariable ["AICOMV2_CTL_PAID_MAX",         1.5];
+_grpBudgetMax  = missionNamespace getVariable ["AICOMV2_CTL_GROUP_BUDGET_MAX", 120];
+
+private ["_fnClamp"];
+_fnClamp = {
+	private ["_val","_lo","_hi"];
+	_val = _this select 0;
+	_lo  = _this select 1;
+	_hi  = _this select 2;
+	if (_val < _lo) then {_val = _lo};
+	if (_val > _hi) then {_val = _hi};
+	_val
+};
+
+//===================================================================================
+// SEED: build the initial per-side ledgers from the current town roster.
+// Record layout: [0]=town, [1]=baselineGroups, [2]=strength, [3]=lastSpawnUnits,
+//                [4]=investT0, [5]=seedT0.
+//===================================================================================
+private ["_fnSeedSide"];
+_fnSeedSide = {
+	private ["_sideId","_side","_logik","_ledger","_n"];
+	_sideId = _this select 0;
+	_side   = _this select 1;
+	_logik  = (_side) Call WFBE_CO_FNC_GetSideLogic;
+	_ledger = [];
+	_n      = 0;
+	{
+		private ["_town","_tSide"];
+		_town  = _x;
+		_tSide = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+		if (_tSide == _sideId) then {
+			private ["_baseGroups","_rec"];
+			_baseGroups = count ([_town, _side] Call WFBE_SE_FNC_GetTownGroups);
+			_rec = [_town, _baseGroups, 1.0, 0, 0, diag_tickTime];
+			_ledger set [count _ledger, _rec];
+			_n = _n + 1;
+			diag_log Format ["CTLSTAT|v1|%1|SEED|town=%2|str=%3", str _side, _town getVariable ["name", "?"], 1.0];
+		};
+	} forEach towns;
+	_logik setVariable ["WFBE_CTL_LEDGER", _ledger];
+	_logik setVariable ["WFBE_CTL_DENY_COUNT", 0];
+	diag_log Format ["CTLSTAT|v1|%1|towns=%2|totalStr=%3|totalBase=%4|invested=0|denied=0", str _side, _n, _n, _n];
+	_n
+};
+
+private ["_seedW","_seedE"];
+_seedW = [WFBE_C_WEST_ID, west] call _fnSeedSide;
+_seedE = [WFBE_C_EAST_ID, east] call _fnSeedSide;
+
+["INFORMATION", Format ["Server_CmdTownLedger.sqf: Ledgers seeded. WEST=%1 EAST=%2 towns.", _seedW, _seedE]] Call WFBE_CO_FNC_LogContent;
+
+//===================================================================================
+// MAIN LOOP - one pass covers both sides per tick.
+//===================================================================================
+private ["_elmin","_tick","_regenPerTick","_lastAuditT"];
+_elmin        = 0;
+_tick         = 0;
+_regenPerTick = 1.0 / (_regenFullSec / _tickSec);
+_lastAuditT   = 0;
+
+while {!WFBE_GameOver} do {
+
+	sleep _tickSec;
+	_tick  = _tick + 1;
+	_elmin = floor (diag_tickTime / 60);
+
+	private ["_fnTickSide"];
+	_fnTickSide = {
+		private ["_side","_logik","_ledger","_newTownsFound"];
+		_side   = _this select 0;
+		_logik  = (_side) Call WFBE_CO_FNC_GetSideLogic;
+		_ledger = _logik getVariable ["WFBE_CTL_LEDGER", []];
+
+		//--- Pick up newly-captured towns not yet in the ledger (pure array walk over
+		//--- `towns`, which the seed pass already does once - no extra world scan added
+		//--- beyond what B1 already budgets for).
+		private ["_sideId"];
+		_sideId = if (_side == west) then {WFBE_C_WEST_ID} else {WFBE_C_EAST_ID};
+		{
+			private ["_town","_tSide","_found"];
+			_town  = _x;
+			_tSide = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+			if (_tSide == _sideId) then {
+				_found = false;
+				{if ((_x select 0) == _town) then {_found = true}} forEach _ledger;
+				if (!_found) then {
+					private ["_baseGroups","_rec"];
+					_baseGroups = count ([_town, _side] Call WFBE_SE_FNC_GetTownGroups);
+					_rec = [_town, _baseGroups, _captureSeed, 0, 0, diag_tickTime];
+					_ledger set [count _ledger, _rec];
+					diag_log Format ["CTLSTAT|v1|%1|SEED|town=%2|str=%3", str _side, _town getVariable ["name", "?"], _captureSeed];
+				};
+			};
+		} forEach towns;
+
+		//--- Drop records for towns no longer owned by this side.
+		private ["_kept"];
+		_kept = [];
+		{
+			private ["_rec","_town","_tSide"];
+			_rec   = _x;
+			_town  = _rec select 0;
+			_tSide = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+			if (_tSide == _sideId) then {_kept set [count _kept, _rec]};
+		} forEach _ledger;
+		_ledger = _kept;
+
+		//--- REGEN (B4) + publish wfbe_ctl_str for the materialization read-site (Task 4).
+		{
+			private ["_rec","_str","_regen"];
+			_rec = _x;
+			_str = _rec select 2;
+			if (_str < 1.0) then {
+				_regen = [_regenPerTick, 0, 1.0 - _str] call _fnClamp;
+				_rec set [2, _str + _regen];
+			};
+			(_rec select 0) setVariable ["wfbe_ctl_str", _rec select 2];
+		} forEach _ledger;
+
+		_logik setVariable ["WFBE_CTL_LEDGER", _ledger];
+		_ledger
+	};
+
+	private ["_ledgerW","_ledgerE"];
+	_ledgerW = [west] call _fnTickSide;
+	_ledgerE = [east] call _fnTickSide;
+
+	//--------------------------------------------------------------------
+	// AUDIT - every 300s, per side: towns/totalStr/totalBase/invested/denied.
+	//--------------------------------------------------------------------
+	if ((diag_tickTime - _lastAuditT) >= 300) then {
+		_lastAuditT = diag_tickTime;
+		private ["_fnAuditSide"];
+		_fnAuditSide = {
+			private ["_side","_ledger","_logik","_totalStr","_totalBase","_invested","_denied"];
+			_side      = _this select 0;
+			_ledger    = _this select 1;
+			_logik     = (_side) Call WFBE_CO_FNC_GetSideLogic;
+			_totalStr  = 0;
+			_totalBase = count _ledger;
+			_invested  = 0;
+			{
+				private ["_str"];
+				_str = _x select 2;
+				_totalStr = _totalStr + _str;
+				_invested = _invested + ((_str - 1.0) max 0);
+			} forEach _ledger;
+			_denied = _logik getVariable ["WFBE_CTL_DENY_COUNT", 0];
+			_logik setVariable ["WFBE_CTL_DENY_COUNT", 0];
+			diag_log Format ["CTLSTAT|v1|%1|towns=%2|totalStr=%3|totalBase=%4|invested=%5|denied=%6",
+				str _side, count _ledger, _totalStr, _totalBase, _invested, _denied];
+		};
+		[west, _ledgerW] call _fnAuditSide;
+		[east, _ledgerE] call _fnAuditSide;
+	};
+
+};
+
+["INFORMATION", "Server_CmdTownLedger.sqf: WFBE_GameOver detected. CTL exiting."] Call WFBE_CO_FNC_LogContent;

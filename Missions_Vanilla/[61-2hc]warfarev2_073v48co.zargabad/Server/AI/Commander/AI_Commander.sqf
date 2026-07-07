@@ -764,6 +764,73 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|REQDRAW_ARM|funds=" + str _funds + "|teams=" + str _fTeams + "|target=" + str _dynTarget);
 			};
 
+			//--- Commander Town Ledger investment arm (fable/ctl-impl-v1, B6/B7). Flag-off
+			//--- (AICOMV2_LANE_CMD_TOWN_LEDGER=0 or AICOMV2_CTL_INVEST_ENABLE=0) => skipped
+			//--- silently - the lane flag gates existence, not just behaviour, so no telemetry
+			//--- at all fires when either master switch is off.
+			if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0
+				&& {(missionNamespace getVariable ["AICOMV2_CTL_INVEST_ENABLE", 0]) > 0}) then {
+				private ["_ctlHumanBlock","_ctlFundsOk","_ctlCooldownOk","_ctlSkipReason","_ctlNow2"];
+				_ctlNow2       = time;
+				_ctlHumanBlock = _humanSeated && {(missionNamespace getVariable ["AICOMV2_CTL_INVEST_HUMAN_OFF", 1]) > 0};
+				_ctlFundsOk    = _funds >= ((missionNamespace getVariable ["AICOMV2_CTL_INVEST_COST", 50000]) + (missionNamespace getVariable ["AICOMV2_CTL_INVEST_FLOOR", 250000]));
+				_ctlCooldownOk = (_ctlNow2 - (_logik getVariable ["WFBE_CTL_INVEST_T0", -1e10])) > (missionNamespace getVariable ["AICOMV2_CTL_INVEST_COOLDOWN", 480]);
+				_ctlSkipReason = "";
+				if (_ctlHumanBlock) then {_ctlSkipReason = "human"};
+				if (_ctlSkipReason == "" && {!_ctlFundsOk}) then {_ctlSkipReason = "floor"};
+				if (_ctlSkipReason == "" && {!_ctlCooldownOk}) then {_ctlSkipReason = "cooldown"};
+				if (_ctlSkipReason == "") then {
+					private ["_ctlLedger","_ctlTarget","_ctlI","_ctlBestVal","_ctlTownCd"];
+					_ctlLedger  = _logik getVariable ["WFBE_CTL_LEDGER", []];
+					_ctlTarget  = -1;
+					_ctlBestVal = -1;
+					_ctlTownCd  = missionNamespace getVariable ["AICOMV2_CTL_INVEST_TOWN_COOLDOWN", 1200];
+					_ctlI = 0;
+					{
+						private ["_rec","_str","_town","_val","_eligible"];
+						_rec      = _x;
+						_str      = _rec select 2;
+						_town     = _rec select 0;
+						_eligible = (_ctlNow2 - (_rec select 4)) > _ctlTownCd;
+						if (_eligible && {_str < 1.0}) then {
+							_val = _town getVariable ["wfbe_town_value", 0];
+							if (_val > _ctlBestVal) then {_ctlBestVal = _val; _ctlTarget = _ctlI};
+						};
+						if (_eligible && {_str >= 1.0 && {_str < 1.5}} && {_funds >= (missionNamespace getVariable ["AICOMV2_CTL_INVEST_SURGE_FLOOR", 600000])}) then {
+							_val = _town getVariable ["wfbe_town_value", 0];
+							if (_val > _ctlBestVal) then {_ctlBestVal = _val; _ctlTarget = _ctlI};
+						};
+						_ctlI = _ctlI + 1;
+					} forEach _ctlLedger;
+					if (_ctlTarget >= 0) then {
+						private ["_ctlRec","_ctlStr","_ctlTier","_ctlCost","_ctlGain","_ctlNewStr"];
+						_ctlRec  = _ctlLedger select _ctlTarget;
+						_ctlStr  = _ctlRec select 2;
+						_ctlTier = if (_ctlStr < 1.0) then {"repair"} else {"surge"};
+						_ctlCost = missionNamespace getVariable ["AICOMV2_CTL_INVEST_COST", 50000];
+						if (_ctlTier == "surge") then {_ctlCost = _ctlCost * (missionNamespace getVariable ["AICOMV2_CTL_INVEST_SURGE_MULT", 2])};
+						_ctlGain   = missionNamespace getVariable ["AICOMV2_CTL_INVEST_GAIN", 0.25];
+						_ctlNewStr = (_ctlStr + _ctlGain) min (missionNamespace getVariable ["AICOMV2_CTL_PAID_MAX", 1.5]);
+						_ctlRec set [2, _ctlNewStr];
+						_ctlRec set [4, _ctlNow2];
+						_ctlLedger set [_ctlTarget, _ctlRec];
+						_logik setVariable ["WFBE_CTL_LEDGER", _ctlLedger];
+						_logik setVariable ["WFBE_CTL_INVEST_T0", _ctlNow2];
+						[_side, -_ctlCost] Call ChangeAICommanderFunds;
+						diag_log Format ["AICOMSTAT|v2|EVENT|%1|%2|CTL_INVEST|town=%3|tier=%4|cost=%5|str=%6|funds=%7|fundedBy=aicom",
+							str _side, round (time / 60), (_ctlRec select 0) getVariable ["name", "?"], _ctlTier, _ctlCost, _ctlNewStr, _funds - _ctlCost];
+					} else {
+						_ctlSkipReason = "noTarget";
+					};
+				};
+				//--- CTL_INVEST_SKIP: rate-limited to at most once per 300s per side, per spec
+				//--- ("no log spam") - separate cooldown timestamp from the purchase cooldown.
+				if (_ctlSkipReason != "" && {(_ctlNow2 - (_logik getVariable ["WFBE_CTL_INVEST_SKIP_T0", -1e10])) > 300}) then {
+					_logik setVariable ["WFBE_CTL_INVEST_SKIP_T0", _ctlNow2];
+					diag_log Format ["AICOMSTAT|v2|EVENT|%1|%2|CTL_INVEST_SKIP|reason=%3|funds=%4", str _side, round (time / 60), _ctlSkipReason, _funds];
+				};
+			};
+
 			//--- Reactive CBR research: append [WFBE_UP_CBRADAR,1/2] to the AI upgrade program
 			//--- once, the first tick after wfbe_aicom_arty_threat is set.  No-op if the constant
 			//--- or the upgrades-levels array doesn't include CBR (vanilla / non-experital builds).

@@ -140,6 +140,48 @@ switch (true) do {
 if (_randomize != 0) then {_groups_max = _groups_max + round(random _randomize - random _randomize)};
 _groups_max = round(_groups_max * (missionNamespace getVariable "WFBE_C_TOWNS_UNITS_COEF"));
 
+//--- Commander Town Ledger (fable/ctl-impl-v1) materialization overlay (B2). Flag-off
+//--- (AICOMV2_LANE_CMD_TOWN_LEDGER=0) => this whole block is skipped, byte-identical to HEAD.
+if ((_side == west || {_side == east}) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+	private ["_ctlStr","_ctlMinStr","_ctlEff","_ctlBudgetMax","_ctlLogik","_ctlCached"];
+	_ctlStr      = _town getVariable ["wfbe_ctl_str", 1];
+	_ctlMinStr   = missionNamespace getVariable ["AICOMV2_CTL_SPAWN_MIN_STR", 0.25];
+	_ctlEff      = _ctlStr max _ctlMinStr;
+	_groups_max  = round (_groups_max * _ctlEff);
+	if (_groups_max < 1) then {_groups_max = 1};
+	//--- B5: group-budget clamp using the existing 60s groupsGC cache (no new scans).
+	_ctlBudgetMax = missionNamespace getVariable ["AICOMV2_CTL_GROUP_BUDGET_MAX", 120];
+	_ctlCached    = if (_side == west) then {missionNamespace getVariable ["wfbe_grpcnt_west", -1]} else {missionNamespace getVariable ["wfbe_grpcnt_east", -1]};
+	if (_ctlCached >= 0 && {_ctlCached + _groups_max > _ctlBudgetMax}) then {
+		private ["_ctlFit"];
+		_ctlFit = _ctlBudgetMax - _ctlCached;
+		if (_ctlFit < 1) then {_ctlFit = 1};
+		_groups_max = _ctlFit;
+		_ctlLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+		_ctlLogik setVariable ["WFBE_CTL_DENY_COUNT", (_ctlLogik getVariable ["WFBE_CTL_DENY_COUNT", 0]) + 1];
+		diag_log Format ["CTLSTAT|v1|%1|SPAWN|town=%2|str=%3|groups=%4|deny=groupBudgetExceeded", str _side, _town getVariable ["name", "?"], _ctlStr, _groups_max];
+	} else {
+		diag_log Format ["CTLSTAT|v1|%1|SPAWN|town=%2|str=%3|groups=%4|deny=none", str _side, _town getVariable ["name", "?"], _ctlStr, _groups_max];
+	};
+	private ["_ctlLogik2","_ctlLedger2","_ctlI2","_ctlFound2"];
+	_ctlLogik2  = (_side) Call WFBE_CO_FNC_GetSideLogic;
+	_ctlLedger2 = _ctlLogik2 getVariable ["WFBE_CTL_LEDGER", []];
+	_ctlFound2  = false;
+	_ctlI2      = 0;
+	{
+		if (!_ctlFound2 && {(_x select 0) == _town}) then {
+			private ["_ctlRec2"];
+			_ctlRec2 = _x;
+			_ctlRec2 set [3, _groups_max];
+			_ctlLedger2 set [_ctlI2, _ctlRec2];
+			_ctlFound2 = true;
+		};
+		_ctlI2 = _ctlI2 + 1;
+	} forEach _ctlLedger2;
+	_ctlLogik2 setVariable ["WFBE_CTL_LEDGER", _ctlLedger2];
+};
+
+
 if (_aa_get) then {if (_groups_max > 3) then {_groups_max = 3}};
 
 _unit_infantry = [];
