@@ -572,13 +572,23 @@ if (_isMan) then {
 			diag_log Format ["AIRSPAWN|v2|pre-create-ok|side=%1|class=%2|pos=%3", sideJoinedText, _unit, _safePos];
 		};
 	};
-	//--- naval-air-spawn-easa: carrier HVT airfield deck-height fix.
-	//--- Client_GetClosestAirport returns the HeliHEmpty hangar at deck height
-	//--- (wfbe_naval_deckz, default 16 m ASL). The generic airport spawn code
-	//--- zeroes Z (sea level). Override Z to the deck height before createVehicle
-	//--- so the hull is placed on-deck, not at sea level.
+	//--- carrier-deck-spawn-xy (fable/tonight-hotfixes2): ROOT CAUSE FIX. The Depot buy path
+	//--- uses WFBE_C_DEPOT_BUY_DIR=0 (absolute north) + distance 21m; carriers face east
+	//--- (SpawnLHD dir=90) and their town logics keep getDir 0, so the spawn point lands 5m
+	//--- past the ~16m port half-beam - over open water - and the vehicle sinks unseen.
+	//--- The old Z-only override was inert (Depot path already preserves deck-height Z).
+	//--- Deck-centred point via deckpart modelToWorld [0,-50,0]: 50m toward the bow on the
+	//--- centreline, clear of the HeliH pad, SCUD, and stern camps.
 	if (_building getVariable ["wfbe_is_carrier_hvt", false]) then {
-		_position set [2, (_building getVariable ["wfbe_naval_deckz", 16])];
+		private ["_deckZ","_deckPart","_deckXY"];
+		_deckZ    = _building getVariable ["wfbe_naval_deckz", 15.9];
+		_deckPart = _building getVariable ["wfbe_naval_deckpart", objNull];
+		if (!isNull _deckPart) then {
+			_deckXY = _deckPart modelToWorld [0, -50, 0];
+			_position = [_deckXY select 0, _deckXY select 1, _deckZ];
+		} else {
+			_position = [(getPosASL _building) select 0, (getPosASL _building) select 1, _deckZ];
+		};
 	};
 	diag_log Format ["BUYTRACE|v1|factory-pos|side=%1|factory=%2|class=%3|obj=%4|objType=%5|objPos=%6|spawnPos=%7|remote=%8", sideJoinedText, _factory, _unit, _building, typeOf _building, getPos _building, _position, !(local _building)];
 	_vehicle = [_unit, _position, sideID, _direction, _locked] Call WFBE_CO_FNC_CreateVehicle;
@@ -596,7 +606,17 @@ if (_isMan) then {
 	//---   b) if WFBE_C_NAVAL_EASA_RANDOM > 0, apply a random EASA preset
 	//---      (EASA_Equip runs client-side on the local hull — safe here).
 	if (!isNull _vehicle && {_building getVariable ["wfbe_is_carrier_hvt", false]}) then {
-		private ["_carrierDir","_easaVehi","_easaTypeIdx","_easaLoadouts","_easaRandIdx"];
+		private ["_carrierDir","_easaVehi","_easaTypeIdx","_easaLoadouts","_easaRandIdx","_cReseatZ","_cReseatP"];
+		//--- carrier-deck-reseat (fable/tonight-hotfixes2): FORM createVehicle over water may seat
+		//--- the hull at the water surface despite _position Z. Hard-seat to deck height at the
+		//--- vehicle's actual post-create XY; reset the [0,0,-1] spawn kick for helicopters
+		//--- (planes get the 80 m/s launch override just below anyway).
+		_cReseatZ = _building getVariable ["wfbe_naval_deckz", 15.9];
+		_cReseatP = getPosASL _vehicle;
+		_vehicle setPosASL [_cReseatP select 0, _cReseatP select 1, _cReseatZ];
+		if (_vehicle isKindOf "Helicopter") then {
+			_vehicle setVelocity [0, 0, 0];
+		};
 		//--- Fixed-wing velocity fix: override the downward kick from FORM spawn.
 		if (_vehicle isKindOf "Plane") then {
 			_carrierDir = random 360;

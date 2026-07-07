@@ -133,7 +133,13 @@ Open the Team Menu -> Save Gear to store it as a preset.";
 		//--- Return the available spawn locations
 		_spawn_locations = [sideJoined, WFBE_DeathLocation] Call GetRespawnAvailable; if (isNil "_spawn_locations" || {typeName _spawn_locations != "ARRAY"}) then {diag_log Format ["WFBE RESPAWN b754-guard: GetRespawnAvailable returned non-array for side %1 - using [] this tick.", str sideJoined]; _spawn_locations = []}; //--- B754: stop the respawn-menu _x cascade + capture the root side in the RPT.
 			//--- cmdcon15 element-guard: drop any non-OBJECT / null / dead handle before the marker forEach loops + GetClosestEntity touch it.
-			{ if (isNil "_x" || {typeName _x != "OBJECT"} || {isNull _x}) then {_spawn_locations = _spawn_locations - [_x]} } forEach (+_spawn_locations);
+			//--- fable/tonight-hotfixes2: the old detect-bad-remove guard evaluated nil _x inside
+			//--- `- [_x]` which FAULTS on A2 OA before removing anything (517 errors/line/session,
+			//--- nil leaked to lines below + GetClosestEntity). Detect-good-keep never touches nil _x.
+			private ["_cleanLocs"];
+			_cleanLocs = [];
+			{ if (!isNil "_x" && {typeName _x == "OBJECT"} && {!isNull _x}) then {_cleanLocs = _cleanLocs + [_x]} } forEach _spawn_locations;
+			_spawn_locations = _cleanLocs;
 
 		//--- v2 feature 8: first-refresh pre-select of last remembered spawn.
 		if (_uiV2 > 0 && {_v2LastSpawnPending}) then {

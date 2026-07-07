@@ -15,6 +15,6 @@ if (isNil "_objects" || {typeName _objects != "ARRAY"}) exitWith {objNull}; //--
 
 _nearest = objNull;
 _distance = 100000;
-{if ((_x distance _object) < _distance) then {_nearest = _x;_distance = _x distance _object}} forEach _objects;
+{if (!isNil "_x" && {(_x distance _object) < _distance}) then {_nearest = _x;_distance = _x distance _object}} forEach _objects; //--- fable/tonight-hotfixes2: nil-hole guard
 
 _nearest
