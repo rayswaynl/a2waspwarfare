@@ -72,21 +72,26 @@ if (_matchSide == sideUnknown) exitWith {
 	["WARNING", Format ["Support_FPV_Detonate.sqf: no armed drone token found for pos %1 - request ignored (no-drone exploit attempt or stale request).", _pos]] Call WFBE_CO_FNC_LogContent;
 };
 
-//--- CONSUME the token: one launch = one detonation. Clear before createVehicle.
-missionNamespace setVariable [Format ["wfbe_fpv_det_%1", str _matchSide], objNull];
-
-//--- RATE LIMIT: per-side 5s cooldown. Mirror ArtySharedCooldown idiom.
+//--- RATE LIMIT: per-side 5s cooldown checked BEFORE consuming the token.
+//--- If rate-limited we preserve the one-shot token so the drone keeps its detonation.
+//--- WARNING is distinct from the no-token path to tell collisions from exploit attempts.
 _now = time;
 _lastKey = Format ["wfbe_fpv_det_last_%1", str _matchSide];
 _lastFire = missionNamespace getVariable [_lastKey, -1e9];
 if ((_now - _lastFire) < 5) exitWith {
-	["WARNING", Format ["Support_FPV_Detonate.sqf: [%1] rate-limited (gap %2s < 5s), ignored.", str _matchSide, round (_now - _lastFire)]] Call WFBE_CO_FNC_LogContent;
+	["WARNING", Format ["Support_FPV_Detonate.sqf: [%1] rate-limited (gap %2s < 5s) - token PRESERVED, no warhead fired.", str _matchSide, round (_now - _lastFire)]] Call WFBE_CO_FNC_LogContent;
 };
 missionNamespace setVariable [_lastKey, _now];
 
+//--- CONSUME the token: one launch = one detonation. Clear before createVehicle.
+missionNamespace setVariable [Format ["wfbe_fpv_det_%1", str _matchSide], objNull];
+
 _ammoClass = missionNamespace getVariable ["WFBE_C_FPV_DRONE_AMMO", "R_57mm_HE"];
 
-//--- FORENSICS: log accepted detonation with side and position.
-["INFORMATION", Format ["Support_FPV_Detonate.sqf: [%1] side [%2] detonated at %3.", _ammoClass, str _matchSide, _pos]] Call WFBE_CO_FNC_LogContent;
+//--- FORENSICS: log accepted detonation with side and server-authoritative drone position.
+["INFORMATION", Format ["Support_FPV_Detonate.sqf: [%1] side [%2] detonated at drone-pos %3 (client-pos %4).", _ammoClass, str _matchSide, _dronePos, _pos]] Call WFBE_CO_FNC_LogContent;
 
-createVehicle [_ammoClass, _pos, [], 0, "NONE"];
+//--- FIX (fable/fpv-auth-hardening): spawn warhead at the drone's actual server position,
+//--- NOT the client-supplied _pos. This eliminates the ~200m free-aim exploit where an
+//--- attacker could supply any _pos within the proximity gate and get a remote warhead.
+createVehicle [_ammoClass, _dronePos, [], 0, "NONE"];
