@@ -2258,6 +2258,8 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_FPV_DRONE_AMMO_LIGHT")  then {WFBE_C_FPV_DRONE_AMMO_LIGHT  = "R_OG7_AT"};     //--- LIGHT tier warhead (OG-7 frag: hit 75 / indirect 20 / r 12 - soft targets).
 	if (isNil "WFBE_C_FPV_DRONE_COST_HEAVY")  then {WFBE_C_FPV_DRONE_COST_HEAVY  = 12500};          //--- HEAVY tier price.
 	if (isNil "WFBE_C_FPV_DRONE_AMMO_HEAVY")  then {WFBE_C_FPV_DRONE_AMMO_HEAVY  = "M_Hellfire_AT"}; //--- HEAVY tier warhead (AT: hit 800 / indirect 20 / r 2 - precision armor kill, tiny splash).
+	if (isNil "WFBE_C_FPV_DRONE_MARK")     then {WFBE_C_FPV_DRONE_MARK     = 1};   //--- 1: blinking orange strobe on the hull (per-machine #lightpoint, marking-system idiom); 0: off.
+	if (isNil "WFBE_C_FPV_DRONE_TOPSPEED") then {WFBE_C_FPV_DRONE_TOPSPEED = 160}; //--- km/h: sport-mode velocity-assist ceiling (stock Ka-137 flight model tops out lower); 0 = stock.
 
 //--- AWACS PLATFORM RADAR (fable/awacs-radar, flag WFBE_C_AWACS default 0, lobby param):
 //--- while a CREWED friendly airframe from WFBE_C_AWACS_TYPES is airborne above MINALT the
