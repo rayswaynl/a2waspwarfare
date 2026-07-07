@@ -36,7 +36,7 @@ while {alive player && dialog} do {
 		if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_GEAR_PROXIMITY", 1]) < 1}) then { ctrlEnable [11002, true] };
 
 		if (sideJoined == resistance) then {
-			{ctrlEnable [_x, false]} forEach [11004,11005,11006,11008]; //--- GUER: hold commander/base/economy/vote disabled
+			{ctrlEnable [_x, false]} forEach [11004,11005,11006]; //--- GUER: hold commander/base/vote disabled - 11008 = Town Actions, re-enabled pre-loop for resistance, do NOT re-grey it here
 				ctrlEnable [11007, true]; //--- B75 (guer-tech): the Upgrade Center is a READ-ONLY kill-tech progression viewer for GUER (GUI_UpgradeMenu.sqf resistance branch).
 		} else {
 	_enable = false; //added-MrNiceGuy
