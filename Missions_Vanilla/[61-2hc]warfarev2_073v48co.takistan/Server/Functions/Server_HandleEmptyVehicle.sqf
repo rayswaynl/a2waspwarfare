@@ -34,7 +34,7 @@ if (typeOf _vehicle in ['V3S_Supply_TK_GUE_EP1','WarfareSupplyTruck_RU', 'Warfar
 while {alive _vehicle} do {
 	sleep 20;
 	
-	_timer = if (({alive _x} count crew _vehicle) > 0 || {(_vehicle getVariable ["wfbe_airlifted", false]) && {!isNull (attachedTo _vehicle)}}) then {0} else {_timer + 20}; //--- fable/airlift-gc-exempt: an airlifted hull is crewless by design - do not run down the empty-vehicle fuse while slung
+	_timer = if (({alive _x} count crew _vehicle) > 0 || {_vehicle getVariable ["wfbe_airlifted", false]}) then {0} else {_timer + 20}; //--- fable/airlift-gc-exempt: an airlifted hull is crewless by design - do not run down the empty-vehicle fuse while slung
 	if (_timer > _delay) exitWith {deleteVehicle _vehicle};
 };
 
