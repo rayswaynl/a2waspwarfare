@@ -310,14 +310,27 @@ while {!WFBE_GameOver} do {
 						_camps = +(_town getVariable "camps");
 						_positions = [];
 						_teams = [];
+						//--- fable/garrison-tonight (owner 2026-07-07): PERIMETER spread - ring the defenders around the
+						//--- town EDGE by bearing instead of clustering at camps/center. WFBE_C_TOWNS_PERIMETER 0 = legacy.
+						private ["_perimeterOn","_grpTotalP","_townRangeP","_townCenP","_bearingP","_distP"];
+						_perimeterOn = (missionNamespace getVariable ["WFBE_C_TOWNS_PERIMETER", 0]) > 0;
+						_grpTotalP   = count _groups; if (_grpTotalP < 1) then {_grpTotalP = 1};
+						_townRangeP  = _town getVariable ["range", 300]; if (_townRangeP < 120) then {_townRangeP = 120};
+						_townCenP    = getPos _town;
 						for '_i' from 0 to count(_groups)-1 do {
 							_position = [];
-							if (count _camps > 0 && random 100 > 50) then {
-								_camp = _camps select floor (random count _camps);
-								_camps = _camps - [_camp];
-								_position = ([getPos _camp, 10, 50] call WFBE_CO_FNC_GetRandomPosition);
+							if (_perimeterOn) then {
+								_bearingP = (360 / _grpTotalP) * _i + (random 40) - 20;
+								_distP    = _townRangeP * (0.70 + (random 0.25));
+								_position = [(_townCenP select 0) + _distP * (sin _bearingP), (_townCenP select 1) + _distP * (cos _bearingP), 0];
 							} else {
-								_position = ([getPos _town, 50, 300] call WFBE_CO_FNC_GetRandomPosition);
+								if (count _camps > 0 && random 100 > 50) then {
+									_camp = _camps select floor (random count _camps);
+									_camps = _camps - [_camp];
+									_position = ([getPos _camp, 10, 50] call WFBE_CO_FNC_GetRandomPosition);
+								} else {
+									_position = ([getPos _town, 50, 300] call WFBE_CO_FNC_GetRandomPosition);
+								};
 							};
 							_position = [_position, 50] call WFBE_CO_FNC_GetEmptyPosition;
 							[_positions, _position] call WFBE_CO_FNC_ArrayPush;
