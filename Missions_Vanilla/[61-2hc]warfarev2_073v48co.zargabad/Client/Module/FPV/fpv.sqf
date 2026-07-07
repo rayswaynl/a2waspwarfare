@@ -17,6 +17,10 @@ if (count _checks > 0) then {
 	_closest = [player,_checks] Call WFBE_CO_FNC_GetClosestEntity;
 };
 
+//--- fable/drones-menu hotfix: GUER is base-less - no command centre ever matches, so the null
+//--- exit below silently killed EVERY GUER launch. The FPV is a field launch from the operator.
+if (sideJoined == resistance) then {_closest = player};
+
 if (isNull _closest) exitWith {};
 
 _cost = missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST", 7500];
