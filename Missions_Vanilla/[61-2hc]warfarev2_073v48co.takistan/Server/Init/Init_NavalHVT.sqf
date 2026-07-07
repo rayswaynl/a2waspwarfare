@@ -392,6 +392,57 @@ diag_log Format ["NAVALHVT-SCUD: visual SCUD spawned at [%1,%2,%3] (deckZ=%4 + c
 	_s enableSimulation false;			//--- freeze it static (erect)
 };
 
+//--- fable/scud-showpiece (owner 2026-07-07): the SCUD deck is a SHOWPIECE - a second erect launcher
+//--- abeam the first + light deck dressing. All prop classes verified in-mission (Core_RU camo net,
+//--- Core_CIV bagfence, Construction/Oilfields Barrels). Flag WFBE_C_NAVAL_SCUD_SHOWPIECE default 0.
+if ((missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_SHOWPIECE", 0]) > 0) then {
+	private ["_scudXY2","_scudModel2","_propSpec","_propXY","_prop"];
+	_scudXY2 = _scudDeckPart modelToWorld [1, -14, 0]; //--- ~7 m abeam of the primary launcher (deck model space, heading-proof)
+	_scudModel2 = createVehicle ["MAZ_543_SCUD_TK_EP1", [_scudXY2 select 0, _scudXY2 select 1, 0], [], 0, "NONE"];
+	if (!isNull _scudModel2) then {
+		_scudModel2 setPosASL [_scudXY2 select 0, _scudXY2 select 1, _scudSpawnZ];
+		_scudModel2 setDir 90;
+		_scudModel2 allowDamage false;
+		//--- Same erect / re-seat / attachTo / freeze drill as the primary launcher above.
+		[_scudModel2, _scudXY2 select 0, _scudXY2 select 1, _scudSpawnZ, _scudDeckPart] spawn {
+			private ["_s","_px","_py","_dz","_deckPart","_off"];
+			_s        = _this select 0;
+			_px       = _this select 1;
+			_py       = _this select 2;
+			_dz       = _this select 3;
+			_deckPart = _this select 4;
+			_s action ["scudLaunch", _s];
+			sleep 6;
+			_s setPosASL [_px, _py, _dz];
+			_s setVectorUp [0,0,1];
+			if (!isNull _deckPart) then {
+				_off = _deckPart worldToModel (getPosASL _s);
+				_s attachTo [_deckPart, _off];
+				_s setVectorUp [0,0,1];
+			};
+			_s enableSimulation false;
+		};
+		diag_log Format ["NAVALHVT-SHOWPIECE: second SCUD spawned at [%1,%2,%3].", _scudXY2 select 0, _scudXY2 select 1, _scudSpawnZ];
+	};
+	//--- Deck dressing: [class, modelX, modelY, dir] in deck-part model space around the launchers.
+	//--- SpawnProp makes each static/indestructible and logs+skips absent classes; re-seat to deck
+	//--- height afterwards (pier idiom above).
+	{
+		_propSpec = _x;
+		_propXY = _scudDeckPart modelToWorld [(_propSpec select 1), (_propSpec select 2), 0];
+		_prop = [(_propSpec select 0), [_propXY select 0, _propXY select 1, 0], (_propSpec select 3)] Call WFBE_NavalHVT_SpawnProp;
+		if (!isNull _prop) then {
+			_prop setPosASL [_propXY select 0, _propXY select 1, _scudDeckZ];
+			_prop setVectorUp [0,0,1];
+		};
+	} forEach [
+		["Land_CamoNetB_EAST",      4.5, -19.5, 90],
+		["Land_fort_bagfence_long", 12,  -9,    0],
+		["Land_fort_bagfence_long", -3,  -9,    0],
+		["Barrels",                 12,  -19,   0]
+	];
+};
+
 //------------------------------------------------------------------------------------
 //--- cmdcon41-w3 (Ray 2026-07-02) TWIN-HULL SUPER-CARRIERS — build the second hull on each OUTER carrier
 //--- and bridge the gap with walkable pier statics. The MIDDLE carrier (SCUD carrier, resolved above) is

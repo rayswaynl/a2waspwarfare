@@ -463,6 +463,16 @@ _IDCS = _IDCS - [_currentIDC];
 						_listUnits = _listUnits + (_airfEntry select 1);
 					};
 
+					//--- fable/scud-showpiece: the SCUD showpiece carrier is HELI-ONLY - the twin launchers
+					//--- + dressing occupy the fixed-wing deck run. Other carriers/airfields keep full lists.
+					//--- Gate: flag on AND this hangar's town carries the SCUD pad ref (only the middle carrier does).
+					if ((missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_SHOWPIECE", 0]) > 0 && {!isNull _airfTownObj} && {!isNull (_airfTownObj getVariable ["wfbe_scud_pad_ref", objNull])}) then {
+						private ["_heliOnly"];
+						_heliOnly = [];
+						{ if (_x isKindOf "Helicopter") then {_heliOnly = _heliOnly + [_x]} } forEach _listUnits;
+						_listUnits = _heliOnly;
+					};
+
 					//--- Task 36 (live "empty airshop" fix): the roster is CROSS-FACTION
 					//--- (Takistani/Insurgent classes) and deliberately airfield-gated, so two
 					//--- standard filters must not apply here:
