@@ -2184,6 +2184,14 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_NAVAL_INLINE_HULLS") then {WFBE_C_NAVAL_INLINE_HULLS  = 1};   //--- 0 = lateral HEAD behaviour; >0 = inline bow-to-stern axis
 	if (isNil "WFBE_C_NAVAL_INLINE_GAP")   then {WFBE_C_NAVAL_INLINE_GAP    = -265}; //--- Hull B aft offset metres (body Y); tune -258..-275 in-editor
 	if (isNil "WFBE_C_NAVAL_SEAM_BRIDGE")  then {WFBE_C_NAVAL_SEAM_BRIDGE   = 0};   //--- 0 = no bridge piers; >0 = 4x Land_nav_pier_m_1 at seam
+//--- fable/naval-camps-on-deck (Ray 2026-07-07):
+//--- WFBE_C_NAVAL_CAMPS_DECK: when 1 (default), re-seat Khe Sanh camp logics/models/flags +
+//---   depot to deckZ after Init_Town spawns them (owner-reported: camps appeared at sea level).
+//--- WFBE_C_NAVAL_SCUD_CLEARANCE: extra metres above deckZ for the MAZ_543_SCUD_TK_EP1 origin so
+//---   the lower hull clears the deck surface (origin is mid-body, not bottom of vehicle).
+//---   Tune in-engine; default 1.6 m based on MAZ_543 model geometry.
+	if (isNil "WFBE_C_NAVAL_CAMPS_DECK")      then {WFBE_C_NAVAL_CAMPS_DECK      = 1};   //--- 1=reseat camp models to flight deck; 0=off (default 1, correctness fix)
+	if (isNil "WFBE_C_NAVAL_SCUD_CLEARANCE")  then {WFBE_C_NAVAL_SCUD_CLEARANCE  = 1.6}; //--- extra metres above deckZ for SCUD vehicle origin (tune in-engine)
 //--- TELEMETRY HOST V2 (tp4, 2026-07-06): when flag=1, GRPBUDGET+SRVPERF emit from
 //--- server_groupsGC.sqf (survives V2 cutover) and are suppressed in AI_Commander.sqf.
 //--- Default 0 = byte-identical to HEAD (old emitters run, new host silent).

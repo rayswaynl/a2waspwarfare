@@ -306,7 +306,13 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_scudLogic]];
 		_sideID    = _loc getVariable ["sideID", WFBE_C_GUER_ID];
 		_ownerSide = _sideID Call WFBE_CO_FNC_GetSideFromID;
 		{
-			if (isPlayer _x && {alive _x} && {(side _x) == _ownerSide} && {(_x distance _pad) < 50}) then {
+			//--- fable/naval-camps-on-deck (Ray 2026-07-07): gate on distance to the VISUAL SCUD model
+//--- (wfbe_scud_model_ref, stored above). The pad anchor is 50m from the launcher so players
+//--- standing at the SCUD were right at the boundary and the action never triggered. Fallback
+//--- to _pad preserves safe behaviour if the ref is absent.
+private ["_scudRef"];
+_scudRef = _loc getVariable ["wfbe_scud_model_ref", _pad];
+if (isPlayer _x && {alive _x} && {(side _x) == _ownerSide} && {(_x distance _scudRef) < 50}) then {
 				_team = group _x;
 				_isLeader = (_x == leader _team);
 				if (_isLeader) then {
@@ -342,15 +348,25 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_scudLogic]];
 private ["_scudModel","_scudDeckPart"];
 _scudDeckPart = _scudParts select 3;
 _scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [(_scudAnchor select 0) + 50, _scudAnchor select 1, 0], [], 0, "NONE"];
-_scudModel setPosASL [(_scudAnchor select 0) + 50, _scudAnchor select 1, _scudDeckZ];
+//--- fable/naval-camps-on-deck (Ray 2026-07-07) SCUD CLEARANCE: the MAZ_543_SCUD_TK_EP1 vehicle origin
+//--- is mid-body (~1.6 m above the ground plane), so placing the origin at exactly deckZ sinks the
+//--- lower half of the vehicle into the deck. Add WFBE_C_NAVAL_SCUD_CLEARANCE (default 1.6) so the
+//--- hull clears the deck surface. Owner will eyeball and adjust the constant in-engine.
+private ["_scudSpawnZ"];
+_scudSpawnZ = _scudDeckZ + (missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 1.6]);
+_scudModel setPosASL [(_scudAnchor select 0) + 50, _scudAnchor select 1, _scudSpawnZ];
 _scudModel setDir 90;
 _scudModel allowDamage false;
 //--- cmdcon41 SCUD THEATRICS (feature 1, Ray 2026-07-02): store the deck SCUD launcher on the platform logic so
 //--- Support_ScudStrike.sqf can find the firing carrier's launcher and play the erect/backblast at launch. The
 //--- platform logic == the single entry stored in WFBE_NAVAL_HVT_PLATFORMS above (the object ScudStrike validates
 //--- ownership on), so a strike resolves its launcher with one getVariable. Broadcast so any locality can read it.
+//--- fable/naval-camps-on-deck: also store wfbe_scud_model_ref so the addAction proximity gate (below)
+//--- can test distance to the VISUAL launcher, not the invisible pad anchor (50m apart).
 _scudLogic setVariable ["wfbe_hvt_scud", _scudModel, true];
-[_scudModel, (_scudAnchor select 0) + 50, (_scudAnchor select 1), _scudDeckZ, _scudDeckPart] spawn {
+_scudLogic setVariable ["wfbe_scud_model_ref", _scudModel, true];
+diag_log Format ["NAVALHVT-SCUD: visual SCUD spawned at [%1,%2,%3] (deckZ=%4 + clearance=%5); model ref stored.", (_scudAnchor select 0) + 50, _scudAnchor select 1, _scudSpawnZ, _scudDeckZ, missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 1.6]];
+[_scudModel, (_scudAnchor select 0) + 50, (_scudAnchor select 1), _scudSpawnZ, _scudDeckPart] spawn {
 	private ["_s","_px","_py","_dz","_deckPart","_off"];
 	_s        = _this select 0;
 	_px       = _this select 1;
@@ -727,5 +743,131 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 		};
 	};
 } forEach [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic];
+
+//------------------------------------------------------------------------------------
+//--- fable/naval-camps-on-deck (Ray 2026-07-07) CAMP + DEPOT DECK RESEAT.
+//---
+//--- Root cause: camp logics (LocationLogicCamp, synchronized to the town logic in
+//---   mission.sqm) sit at sea level. Init_Town.sqf's Spawn block reads getPos on
+//---   each camp logic and createVehicle/setPos the tent model + flag at that ATL
+//---   position — on open water that resolves to z=0 (sea surface inside the hull).
+//---   The naval town LOGIC is raised to deckZ (cmdcon41-w2) but the camp LOGICS
+//---   are separate synchronized objects that stay at sea level.
+//---
+//--- Fix: for each naval town, spawn a bounded poll that waits until Init_Town has
+//---   stored wfbe_camp_bunker on each camp logic (set ~line 129 of Init_Town, inside
+//---   the serverInitComplete waitUntil block). Once the model ref exists re-seat the
+//---   camp logic + model + flag to the deck. Depot model has no stored ref; find it
+//---   via nearestObjects at the town logic's new deck position.
+//---
+//--- Body-space camp offsets (heading 90, ship faces east):
+//---   Rotation: dx = bx*cos(dir)-by*sin(dir), dy = bx*sin(dir)+by*cos(dir)
+//---   Camp 1 body [0, +42] -> world anchor + [-42,  0]  (42 m west, on deck)
+//---   Camp 2 body [0, -72] -> world anchor + [+72,  0]  (72 m east, clear of SCUD@+50)
+//---   Both within the ~250 m hull extent, clear of heli pad (body [0,-10]).
+//---
+//--- WFBE_C_NAVAL_CAMPS_DECK default 1 (owner-reported correctness fix, always-on).
+//------------------------------------------------------------------------------------
+if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
+	private ["_campDeckOffsets"];
+	//--- Body-space [bx, by] offsets for each camp slot on the flight deck.
+	//--- Rotation: dx = bx*cos(dir)-by*sin(dir), dy = bx*sin(dir)+by*cos(dir).
+	_campDeckOffsets = [[0, 42], [0, -72]];
+
+	{
+		private ["_navLogic","_navDeckZ","_navDir","_navAnchorX","_navAnchorY"];
+		_navLogic   = _x;
+		_navDeckZ   = _navLogic getVariable ["wfbe_naval_deckz", 15.9];
+		_navDir     = getDir _navLogic;
+		_navAnchorX = (getPosASL _navLogic) select 0;
+		_navAnchorY = (getPosASL _navLogic) select 1;
+
+		[_navLogic, _navDeckZ, _navDir, _navAnchorX, _navAnchorY, _campDeckOffsets] spawn {
+			private ["_loc","_deckZ","_dir","_ancX","_ancY","_offsets","_camps","_elapsed"];
+			private ["_i","_off","_slotIdx","_bx","_by","_dx","_dy","_cx","_cy"];
+			private ["_model","_flag","_flagPos","_depotCls","_depots","_depot","_elapsed2"];
+			_loc     = _this select 0;
+			_deckZ   = _this select 1;
+			_dir     = _this select 2;
+			_ancX    = _this select 3;
+			_ancY    = _this select 4;
+			_offsets = _this select 5;
+
+			//--- Wait for Init_Town to publish the camps variable (line ~72 of Init_Town,
+			//--- set before the Spawn block; camp models spawn later inside the Spawn block).
+			_elapsed = 0;
+			waitUntil {
+				_elapsed = _elapsed + 2;
+				sleep 2;
+				(!isNil {_loc getVariable "camps"}) || (_elapsed >= 60)
+			};
+			_camps = _loc getVariable ["camps", []];
+
+			if (count _camps == 0) exitWith {
+				diag_log Format ["NAVALHVT-CAMP: %1 no camps found after wait; reseat skipped.", _loc getVariable ["name","?"]];
+			};
+
+			//--- Re-seat each camp logic, then wait for the tent model (wfbe_camp_bunker)
+			//--- to be spawned by Init_Town before moving the model + flag.
+			_i = 0;
+			{
+				private ["_campLogic","_slotIdx","_off","_bx","_by","_dx","_dy","_cx","_cy"];
+				private ["_model","_flag","_flagPos","_elapsed2"];
+				_campLogic = _x;
+
+				//--- Compute deck-space world position for this camp slot.
+				_slotIdx = _i;
+				if (_slotIdx >= count _offsets) then { _slotIdx = (count _offsets) - 1 };
+				_off = _offsets select _slotIdx;
+				_bx  = _off select 0;
+				_by  = _off select 1;
+				_dx  = _bx * (cos _dir) - _by * (sin _dir);
+				_dy  = _bx * (sin _dir) + _by * (cos _dir);
+				_cx  = _ancX + _dx;
+				_cy  = _ancY + _dy;
+
+				//--- Re-seat the LOGIC first (models that spawn AFTER will use getPos of the logic).
+				_campLogic setPosASL [_cx, _cy, _deckZ];
+
+				//--- Wait for tent model (wfbe_camp_bunker) to be spawned by Init_Town.
+				_elapsed2 = 0;
+				waitUntil {
+					_elapsed2 = _elapsed2 + 2;
+					sleep 2;
+					(!isNil {_campLogic getVariable "wfbe_camp_bunker"}) || (_elapsed2 >= 60)
+				};
+
+				_model = _campLogic getVariable ["wfbe_camp_bunker", objNull];
+				if (!isNull _model) then {
+					_model setPosASL [_cx, _cy, _deckZ];
+					//--- Re-seat flag (wfbe_flag stored on camp logic by Init_Town).
+					_flag = _campLogic getVariable ["wfbe_flag", objNull];
+					if (!isNull _flag) then {
+						//--- Replicate Init_Town's modelToWorld flag offset from the now-reseated logic.
+						_flagPos = _campLogic modelToWorld (missionNamespace getVariable ["WFBE_C_CAMP_FLAG_POS", [-5, 5]]);
+						_flag setPosASL [_flagPos select 0, _flagPos select 1, _deckZ];
+					};
+					diag_log Format ["NAVALHVT-CAMP: %1 camp %2 reseated to [%3,%4,%5] deckZ=%6", _loc getVariable ["name","?"], _i, _cx, _cy, _deckZ, _deckZ];
+				} else {
+					diag_log Format ["NAVALHVT-CAMP: %1 camp %2 tent model nil after 60s; logic reseated, model skipped.", _loc getVariable ["name","?"], _i];
+				};
+				_i = _i + 1;
+			} forEach _camps;
+
+			//--- DEPOT reseat: no stored ref; find via nearestObjects at the logic's deck position.
+			//--- Guard: only act if exactly one depot-class object within 50 m (prevents touching
+			//--- land-town depots if the search ever reaches them — it won't, but defensive).
+			_depotCls = missionNamespace getVariable ["WFBE_C_DEPOT", ""];
+			if (_depotCls != "") then {
+				_depots = nearestObjects [getPosASL _loc, [_depotCls], 50];
+				if (count _depots == 1) then {
+					_depot = _depots select 0;
+					_depot setPosASL [_ancX, _ancY, _deckZ];
+					diag_log Format ["NAVALHVT-CAMP: %1 depot reseated to [%2,%3,%4] deckZ=%5", _loc getVariable ["name","?"], _ancX, _ancY, _deckZ, _deckZ];
+				};
+			};
+		};
+	} forEach [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic];
+};
 
 ["INITIALIZATION", "Init_NavalHVT.sqf : All naval HVT assets spawned + CAP loops started."] Call WFBE_CO_FNC_LogContent;
