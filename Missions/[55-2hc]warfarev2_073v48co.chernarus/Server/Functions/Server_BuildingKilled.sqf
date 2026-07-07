@@ -77,6 +77,13 @@ if ((!isNull _killer) && (isPlayer _killer)) then
             private ["_fobMkPos"];
             _fobMkPos = getPos _structure;
             [resistance, "WildcardMarker", ["delete", Format ["guer_fob_%1_%2", floor (_fobMkPos select 0), floor (_fobMkPos select 1)]]] Call WFBE_CO_FNC_SendToClients;
+            //--- fable/fob-polish: retire the FOB from the server-side ledger (the JIP marker-replay source).
+            private ["_fobMkName","_fobActive","_fobKeep"];
+            _fobMkName = Format ["guer_fob_%1_%2", floor (_fobMkPos select 0), floor (_fobMkPos select 1)];
+            _fobActive = missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []];
+            _fobKeep = [];
+            {if ((_x select 0) != _fobMkName) then {_fobKeep = _fobKeep + [_x]}} forEach _fobActive;
+            missionNamespace setVariable ["WFBE_GUER_FOB_ACTIVE", _fobKeep];
        }
        else
        {

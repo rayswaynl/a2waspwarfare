@@ -862,6 +862,12 @@ _IDCS = _IDCS - [_currentIDC];
 				} else {
 					(_display displayCtrl 12022) ctrlSetStructuredText (parseText '');
 				};
+				//--- PR #846 follow-up (fable/fob-polish): FOB delivery truck explainer. Placed OUTSIDE the Library-gated
+				//--- block above: Ural_INS / UralOpen_INS (CH) and the TK/ZG FOB trucks have NO CfgVehicles Library class
+				//--- (config-reference verified; only GAZ_Vodnik has one), so a hint inside that block never fires for them.
+				if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit in (missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []])}) then {
+					hintSilent parseText "<t color='#76F563'>FOB Delivery Truck</t> - deploys a forward operating base. <br/> <br/>Buy it, drive it to where you want your forward base (not too close to enemy towns or the enemy base), then as the DRIVER use the action menu (mouse scroll) -> <t color='#76F563'>Build FOB</t>. The truck is consumed and the FOB factory is built in front of it - a GUER respawn point and forward production point. <br/> <br/>Listed in the depot only while your side holds the matching FOB token (earned by destroying enemy factories).";
+				};
 			};
 			
 			ctrlSetText [12034,Format ["$ %1",_currentCost]];
