@@ -94,4 +94,4 @@ if (!isNil "_live" && {typeName _live == "ARRAY"} && {_victimIdx - 1 >= 0} && {_
 _logik setVariable ["wfbe_structures", (_logik getVariable "wfbe_structures") - [_victim, objNull], true];
 deleteVehicle _victim;
 ["INFORMATION", Format ["AI_Commander_BaseSell.sqf: [%1] SOLD redundant %2 (cost %3, refunded %4 supply).", _sideText, _victimType, _victimCost, _refund]] Call WFBE_CO_FNC_AICOMLog;
-diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|BASE_SELL|type=" + _victimType + "|cost=" + str _victimCost + "|refund=" + str _refund);
+diag_log ("AICOM2|v1|SELL|" + _sideText + "|" + str (round (time / 60)) + "|event=BASE_SELL|type=" + _victimType + "|cost=" + str _victimCost + "|refund=" + str _refund);

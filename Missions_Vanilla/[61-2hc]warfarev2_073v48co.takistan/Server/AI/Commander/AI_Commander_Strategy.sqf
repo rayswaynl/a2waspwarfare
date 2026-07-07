@@ -708,6 +708,8 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 _enemyHQ = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;
 _wasStrike = _logik getVariable ["wfbe_aicom_strike_on", false];
 _strikeOn = false;
+//--- STEP 2 DECAP GATE (cutover build, GR-2026-07-03a): when WFBE_C_AICOM2_DECAP_ENABLE > 0, V2 Decapitate is the HQ-closer; suppress the V1 HQ-strike launch block so both do not run simultaneously. Flag-off (default 0) = byte-identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ENABLE", 0]) <= 0) then {
 //--- B69 (hqstrike-town-gate-fraction): scale the HQ-strike town gate to the live town count (was a dead literal _myTowns > 8). count towns = all capturable towns (40+ on live Chernarus).
 private ["_hqFrac","_hqFloor","_strikeMinTowns"];
 _hqFrac = missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_FRAC", 0.5];
@@ -743,7 +745,6 @@ if (!isNull _enemyHQ && {alive _enemyHQ} && {_myTowns > _enemyTowns}) then {
 	//--- Master flag WFBE_C_AICOM_STALL_OVERRIDE_ENABLE (default 1) for a clean one-switch revert.
 	if (((missionNamespace getVariable ["WFBE_C_AICOM_STALL_OVERRIDE_ENABLE", 1]) > 0) && {(_logik getVariable ["wfbe_aicom_stall_streak", 0]) >= (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 5])}) then {
 		_strikeOn = true;
-		if (!_wasStrike) then {diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE_STALL_OVERRIDE|streak=" + str (_logik getVariable ["wfbe_aicom_stall_streak", 0]) + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myEff=" + str _rMyEff + "|enEff=" + str _rEnEff)};
 	};
 };
 //--- B752 (Ray 2026-06-25): STICKY STRIKE. The recall gate used RAW maneuver _myStr, which dips below the concentrated
@@ -758,6 +759,7 @@ if (_wasStrike && !_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
 	if ((_myTowns >= _strikeMinTowns) && {_myTowns >= _enemyTowns * 1.2} && {_sMyEff >= _sEnEff}) then {_strikeOn = true};
 	if (time - (_logik getVariable ["wfbe_aicom_strike_t0", -1e10]) < (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_MIN_HOLD", 600])) then {_strikeOn = true};
 };
+}; //--- end DECAP GATE (V1 HQ-strike block)
 if (_strikeOn) then {
 	_stratMode = "strike";
 	_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
@@ -765,7 +767,6 @@ if (_strikeOn) then {
 		["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] WAR STATE: winning (towns %2v%3, strength %4v%5) - HQ STRIKE launched.", _sideText, _myTowns, _enemyTowns, _myStr, _enStr]] Call WFBE_CO_FNC_AICOMLog;
 		_logik setVariable ["wfbe_aicom_strike_t0", time];
 		_logik setVariable ["wfbe_aicom_stall_streak", 0]; //--- Lane-324: belt-and-suspenders guard (review: the else-branch at line ~1037 already zeros streak on every strike tick via !_strikeOn; this entry-only reset is redundant but harmless).
-		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HQ_STRIKE|launched|myTowns=" + str _myTowns + "|gate=" + str _strikeMinTowns + "|total=" + str (count towns));
 	};
 	//--- cmdcon41-w2 STAGING-MASS (Fable F4/hqstrike-staging-rally-mass-before-assault; flag WFBE_C_AICOM_STRIKE_STAGE
 	//--- default 1). Rather than trickle strikers onto the enemy HQ one team at a time (piecemeal, chewed up by the home
@@ -823,7 +824,6 @@ if (_strikeOn) then {
 							};
 						};
 					} forEach _teams;
-					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRIKE_STAGE_RELEASE|bodies=" + str _stgBodies + "|need=" + str _stgBodiesNeed + "|held=" + str (round (time - _stgT0)));
 				} else {
 					//--- Still massing: newly-recruited strikers below are pointed at the rally, not the HQ.
 					_strikeDest = _stgRallyPos;

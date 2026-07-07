@@ -24,7 +24,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
-         "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir"];
+         "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev"];
 
 _sideID = _this select 0;
 _template = _this select 1;
@@ -108,6 +108,8 @@ if (count _this > 6) then {
 	if (typeName _foundType == "SCALAR" && {_foundType >= 0}) then {_team setVariable ["wfbe_teamtype", _foundType, true]};
 };
 _team setVariable ["wfbe_queue", [], false];
+_team setVariable ["wfbe_aicom_decap", [], true];   //--- stack-pass: A2 recycles group slots - a re-founded team must never inherit a stale press stamp ([] = cleared sentinel)
+_team setVariable ["wfbe_aicom_press_on", nil];      //--- stack-pass: same for the HC-local press latch
 
 if (isServer) then {
 	["aicom-team-created", _sideID, _team] Call HandleSpecial;
@@ -930,6 +932,52 @@ while {!WFBE_GameOver && _alive} do {
 			_mode = _order select 1;
 			_dest = _order select 2;
 
+			//--- DECAP PRESS HOOK (consumes the #724 organic-closer stamp; the first and only reader).
+			//--- Per-pass plain get + isNil (group vars have no 2-arg default form). While stamped, override
+			//--- THIS pass's dest/mode with the stamped HQ pos + the existing "goto" press idiom (Strategy
+			//--- L903 doctrine: "goto" = press through the arrival SAD into the BASE-ASSAULT fire phase below;
+			//--- NOT "defense" hold, NOT "towns-target" capture). Stamp appear/clear each force ONE synthetic
+			//--- fresh-order pass (sentinel _lastSeq) so movement re-issues immediately and the team falls
+			//--- back to its REAL order the pass after the closer clears the stamp (drift/ABORT/WON) - the
+			//--- override is recomputed every pass, never latched. Fixed-wing teams excluded (ground press
+			//--- only this increment; heli-LIFT infantry teams are ordinary ground carriers here). At flag 0
+			//--- no stamp ever exists (#724 clears them) -> _pressPos isNil -> provably byte-inert no-op.
+			_pressSyn = false;
+			_pressPos = _team getVariable "wfbe_aicom_decap";
+			_pressAct = (!isNil "_pressPos") && {typeName _pressPos == "ARRAY"} && {count _pressPos >= 2};   //--- stack-pass: [] = broadcast-clear sentinel (nil cannot network on A2 OA)
+			if (_pressAct && {!_isPlaneTeam}) then {
+				_pressOn = _team getVariable "wfbe_aicom_press_on";
+				if (isNil "_pressOn") then {
+					_team setVariable ["wfbe_aicom_press_on", true];
+					_team setVariable ["wfbe_aicom_press_pos", _pressPos];
+					_team setVariable ["wfbe_aicom_rallying", false, true];   //--- stack-pass MAJOR: an ex-rally team must not take the RALLY-ARRIVED branch at the HQ (it would clear strike/caplock + flip teammode instead of assaulting)
+					_team setVariable ["wfbe_aicom_route", []];               //--- stack-pass MAJOR: drop the STALE town road chain (HC-local; the server re-snaps on its next real issue) - otherwise the synthetic accept re-lays node-1-first and the convoy BACKTRACKS the old route away from the HQ
+					_pressSyn = true;
+					_lastSeq = -999999;   //--- synthetic fresh order: re-route onto the HQ pos THIS pass
+					diag_log ("AICOM2|v1|DECAP|" + str _side + "|" + str (round (time / 60)) + "|PRESS|team=" + (str _team) + "|dist=" + str (round ((leader _team) distance _pressPos)));
+				} else {
+					//--- stack-pass: moving HQ mid-press (MHQ redeploys) -> re-lay movement once the stamp drifts >150m
+					_pressPrev = _team getVariable "wfbe_aicom_press_pos";
+					if (isNil "_pressPrev") then {_pressPrev = _pressPos};
+					if ((_pressPrev distance _pressPos) > 150) then {
+						_team setVariable ["wfbe_aicom_press_pos", _pressPos];
+						_team setVariable ["wfbe_aicom_route", []];
+						_pressSyn = true;
+						_lastSeq = -999999;
+					};
+				};
+				_mode = "goto";
+				_dest = _pressPos;
+			} else {
+				if (!isNil {_team getVariable "wfbe_aicom_press_on"}) then {
+					_team setVariable ["wfbe_aicom_press_on", nil];
+					_team setVariable ["wfbe_aicom_press_pos", nil];
+					_team setVariable ["wfbe_aicom_route", []];               //--- stack-pass: the stale chain is equally wrong for the re-accepted REAL order from out here - go direct; the server re-snaps on its next issue
+					_pressSyn = true;
+					_lastSeq = -999999;   //--- press ended -> re-accept the real order in the fresh-order block
+				};
+			};
+
 			if (_seq != _lastSeq) then {
 				//--- Fresh order: head out.
 				_lastSeq = _seq;
@@ -950,7 +998,9 @@ while {!WFBE_GameOver && _alive} do {
 				//---           (MEMORY guardrail: never a player-visible teleport / frozen AI).
 				//--- Every tier still ends in the road route below = the unit always holds a move.
 				_usTier = if (count _order > 3) then {_order select 3} else {0}; //--- UNSTUCK FIX (Ray 2026-06-16): read the strike tier from the order seq (atomic), NOT the out-of-band wfbe_aicom_unstuck flag, which a later commander cycle reset to 0 before this fresh-seq block ran -> UNSTUCK_FIRED was ~never hit. Governor at ~459 still reads the flag for gear-slow (unaffected).
+				if (_pressSyn) then {_usTier = 0};   //--- stack-pass: synthetic press accepts are NOT stuck re-issues - never re-fire the strike ladder (reverse pulse / lane flip / tier-3 teleport) off the real order's stale tier
 				if (isNil "_usTier") then {_usTier = 0};
+				if (_pressAct) then {_usTier = 0};	//--- press guard: a stamped pressing team (valid press pos) is not a stuck re-issue - never fire the UNSTUCK strike ladder (teleport/reverse/lane-flip) on a live press
 				if (_usTier > 0) then {
 					[_team, _usTier, _side] Spawn {
 						private ["_uTeam","_uTier","_uSide","_uLdr","_uVeh","_uNode","_uRds","_uPlayerNear","_uOnFoot","_uHullDead","_uFootPlayerNear","_uFootRds","_uFootNode","_recV2","_uOnWater","_uForceRoad","_uFlush","_uFlushOrder","_uFlushSeq","_uFlushMode","_uFlushDest"]; //--- cmdcon41-w3e +_recV2/_uOnWater/_uForceRoad; lane377 +_uFlush*

@@ -180,7 +180,6 @@ if (!_fromFocus) then {
 		if (_supportOn) then {_sc = _sc - ((_tt distance _supportCen) / _supDiv)};   //--- pull toward the players
 		if (_repickPen > 0 && {_tt in _repickTowns}) then {_sc = _sc - _repickPen};   //--- BUG-2 anti-dogpile: recently-picked primary is deprioritised so the fist rotates.
 		if (isNil "_sc") then {
-			diag_log ("CAPDBG|SC|" + (_tt getVariable ["name","?"]) + "|dNear=" + str(isNil "_dNear") + "|residual");
 		};
 		_sc = if (isNil "_sc") then {-99999} else {_sc};
 		_scored set [count _scored, [_sc, _tt]];
