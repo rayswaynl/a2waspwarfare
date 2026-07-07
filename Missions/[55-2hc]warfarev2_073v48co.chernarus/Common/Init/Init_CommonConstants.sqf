@@ -1667,6 +1667,9 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 //--- Units.
 	if (isNil "WFBE_C_UNITS_BALANCING") then {WFBE_C_UNITS_BALANCING = 1}; //--- Enable Units weaponry balancing.
 	if (isNil "WFBE_C_UNITS_BOUNTY") then {WFBE_C_UNITS_BOUNTY = 1}; //--- Enable Units bounty on kill.
+	if (isNil "WFBE_C_FIRSTBLOOD_ENABLED") then {WFBE_C_FIRSTBLOOD_ENABLED = 0}; //--- First-blood (claude-gaming 2026-07-07): 1 = the first PVP kill of the match fires a one-time sting + announcement + killer bonus. Default 0 = off (inert).
+	if (isNil "WFBE_C_FIRSTBLOOD_BONUS") then {WFBE_C_FIRSTBLOOD_BONUS = 1000}; //--- First-blood: cash bonus credited to the killer team wallet on first blood (only paid when WFBE_C_FIRSTBLOOD_ENABLED>0).
+	if (isNil "WFBE_FIRSTBLOOD_DONE") then {WFBE_FIRSTBLOOD_DONE = false}; //--- First-blood one-shot latch (runtime state, not a tunable); false each fresh mission instance.
 	if (isNil "WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW") then {WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW = 60}; //--- Seconds where a damaged vehicle can still award its last valid hitter.
 	if (isNil "WFBE_C_UNITS_CLEAN_TIMEOUT") then {WFBE_C_UNITS_CLEAN_TIMEOUT = 60}; //--- Lifespan of a dead body.
 	if (isNil "WFBE_C_UNITS_EMPTY_TIMEOUT") then {WFBE_C_UNITS_EMPTY_TIMEOUT = 1800}; //--- Lifespan of an empty vehicle (30 minutes).
