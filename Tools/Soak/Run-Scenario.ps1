@@ -38,7 +38,9 @@ param(
     # rig paths used only to render the launch plan (no process is started here)
     [string] $RigRoot   = 'C:\Users\Game\a2oa-local-1.64',
     [string] $A2Content = 'C:\Users\Game\a2-co\Arma 2',
-    [switch] $Peach
+    [switch] $Peach,
+    [switch] $Report,
+    [string] $ReportPath
 )
 
 $ErrorActionPreference = 'Stop'
@@ -282,13 +284,27 @@ $result = [ordered]@{
 $resultPath = Join-Path $ResultsDir "$runId.json"
 [System.IO.File]::WriteAllText($resultPath, (ToJson $result), (New-Object System.Text.UTF8Encoding($false)))
 
-# 8) plain-English summary (console always; Peach on request)
+# 8) regenerate the HTML chart report (opt-in). Charts are always emitted from the accumulated
+#    ledger + results so each grade refreshes the same self-contained report file.
+$reportOut = $null
+if ($Report) {
+    $charter = Join-Path $soakDir 'chart_soak.py'
+    if ([string]::IsNullOrWhiteSpace($ReportPath)) { $ReportPath = Join-Path $ResultsDir 'soak-report.html' }
+    try {
+        & python $charter --ledger $LedgerPath --results $ResultsDir --out $ReportPath 2>$null | Out-Null
+        if ($LASTEXITCODE -eq 0) { $reportOut = $ReportPath; $result.artifacts.report = $ReportPath
+            [System.IO.File]::WriteAllText($resultPath, (ToJson $result), (New-Object System.Text.UTF8Encoding($false))) }
+    } catch { Write-Host "  (chart report failed: $_)" }
+}
+
+# 9) plain-English summary (console always; Peach on request)
 $sfx = if ($null -ne $metrics.serverFpsMedian) { $metrics.serverFpsMedian } else { 'n/a' }
 $msg = "Scenario $($spec.name) [$($run.runLabel)] on $($run.map) ($($run.hcCount)HC, pin$($run.popPin)): $verdict. " +
        "server FPS median $sfx, AI peak $($metrics.aiTotPeak), captures $($metrics.captures), arrival $($metrics.arrivalPct)%. rowId $rowId."
 Write-Host ""
 Write-Host "RESULT  $verdict   ($resultPath)"
 Write-Host "  $msg"
+if ($reportOut) { Write-Host "  chart report: $reportOut" }
 
 if ($Peach) {
     $peachTool = 'C:\Users\Game\wasp-build\peach-dm.ps1'

@@ -51,3 +51,6 @@ Tools/Soak/soak-ledger.jsonl
 
 # Scenario driver run artifacts (Run-Scenario.ps1 -FromRpt output; machine-local)
 Tools/Soak/results/
+
+# Chart report output (chart_soak.py default; machine-local)
+Tools/Soak/report/

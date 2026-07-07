@@ -414,3 +414,32 @@ metrics, per-assert verdicts, boot-smoke, ledger rowId, artifacts) and appends o
 pwsh Tools\Soak\Get-ScenarioSpec.Tests.ps1
 pwsh Tools\Soak\Run-Scenario.Tests.ps1
 ```
+
+---
+
+## Charts (`chart_soak.py`)
+
+Renders the ledger + Run-Result JSONs as a single **self-contained HTML report** with inline SVG.
+**Dependency-free** (hand-rolled SVG — no matplotlib/numpy), so it runs on the box exactly as on a
+dev box. Charts are **theme-aware** (adapt to the viewer's light/dark) and **null is not zero**
+(a missing metric is skipped, never plotted as 0).
+
+Five chart types:
+1. **FPS knee** — `serverFpsMedian` vs `aiTotPeak` (with the documented ~450-470 unit band shaded).
+2. **HC split** — `serverFpsMedian` at 1 HC vs 2 HC for matched population (grouped bars).
+3. **Population sweep** — `serverFpsMedian` + `hcFpsMedian` vs `popPin`.
+4. **FPS timeline** — `serverFpsMedian` across ledger history.
+5. **Verdict tally** — PASS / WATCH / FAIL counts.
+
+```powershell
+# standalone
+python Tools\Soak\chart_soak.py --ledger Tools\Soak\soak-ledger.jsonl --results Tools\Soak\results --out report\soak-report.html
+
+# automatic: every grade refreshes the report
+.\Tools\Soak\Run-Scenario.ps1 -Name load-ramp -RunLabel pin10 -FromRpt <server.RPT> -Report
+
+# self-test
+python Tools\Soak\chart_soak.py --self-test
+```
+
+Empty inputs render gracefully (each card shows "no data yet" until runs accumulate).
