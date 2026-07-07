@@ -91,13 +91,16 @@ while {!gameOver} do {
 				};
 			};
 
+			private "_sideNow"; _sideNow = _x; //--- rc27 hotfix: was declared INSIDE the _income>0 block but read
+			//--- by the stipend/town-stall blocks after it - a zero-income side (GUER at round start, now that the
+			//--- lockout is off) skipped the declaration and flooded the RPT with Undefined variable _sideNow,
+			//--- killing the AI stipend/stall-refill for that side. Capture the side BEFORE the branch.
 			if (_income > 0) then {
 				// diag_log format ["Calling update tick (town supply income) for team %1, supply addition: %2",_x, _supply];
 				if (_currency_system == 0) then {[_x, round(_supply * (missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_INCOME_MULT", 1])), format ["Update tick (town supply income) for team %1.",_x], true] Call ChangeSideSupply};
 
 				_comTeam = (_x) Call WFBE_CO_FNC_GetCommanderTeam;
 				if (isNull _comTeam) then {_comTeam = grpNull};
-				private "_sideNow"; _sideNow = _x;
 
 				{
 					if !(isNil '_x') then {
