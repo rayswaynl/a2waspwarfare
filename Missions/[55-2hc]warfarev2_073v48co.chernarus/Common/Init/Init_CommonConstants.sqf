@@ -357,6 +357,8 @@ if (worldName == "Zargabad") then {
 	//--- as humans rise: low pop = more action, high pop = fewer-but-stronger (b74 cost-weighted picker). Base/HQ defenses
 	//--- are deliberately NOT tiered (Ray 2026-06-23). Numbers sized to the MEASURED test-box FPS curve (playable knee ~450-470 units).
 	if (isNil "WFBE_PopTier") then {WFBE_PopTier = 0};        //--- 0=LOW; default until the first server publish
+	//--- ===== TEST HARNESS (all default-off; never affects live play) =====
+	if (isNil "WFBE_C_TEST_POPTIER_PIN") then {WFBE_C_TEST_POPTIER_PIN = -1}; //--- Test-only scale pin: forces the effective human count (drives WFBE_PopTier + the AI-team curve) so an EMPTY box spawns full-scale load for stress tests. -1 = off; e.g. 12 = force FULL tier. Additive real spawns (NOT sim-gating/antistack).
 	WFBE_C_TOTAL_AI_MAX_BY_TIER       = [140,130,100,80];     //--- per-side commander-AI ceiling (founding gate + AI_Commander_Produce)
 	WFBE_C_AICOM_LOWPOP_EXTRA_BY_TIER = [3,2,0,0];            //--- funds-valve extra teams (valve only fires pop<=5 = LOW/MID)
 	WFBE_C_TOWNS_DEFENDER_BY_TIER     = [2,2,2,1];            //--- town garrison difficulty -> COEF (Medium/Medium/Medium/Light)

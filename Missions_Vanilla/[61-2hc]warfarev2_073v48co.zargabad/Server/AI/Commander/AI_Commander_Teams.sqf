@@ -86,6 +86,13 @@ private ["_pcN","_hcN","_pcExtraCap"];
 _pcN = {isPlayer _x} count _allUnits;
 _hcN = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 _pcN = (_pcN - _hcN) max 0;
+
+//--- TEST-ONLY scale pin (WFBE_C_TEST_POPTIER_PIN, default -1 = off): force the effective human
+//--- count so WFBE_PopTier + the AI-team curve build full-scale load on an EMPTY box for stress
+//--- testing. Additive: raises REAL spawn counts, never hides units (NOT sim-gating / NOT antistack).
+private ["_testPopPin"];
+_testPopPin = missionNamespace getVariable ["WFBE_C_TEST_POPTIER_PIN", -1];
+if (_testPopPin >= 0) then {_pcN = _testPopPin};
 	//--- B74.2 UNIFIED POP-TIER publisher (Ray 2026-06-23): the live human count is already settled here, so compute
 	//--- the tier and broadcast it ONCE per change so every AI subsystem (TOTAL_AI cap, town defenders/active-cap,
 	//--- side-patrols, the per-player AI buy-cap) scales off ONE source. 0=LOW(0-2)/1=MID(3-5)/2=HIGH(6-9)/3=FULL(10+).
