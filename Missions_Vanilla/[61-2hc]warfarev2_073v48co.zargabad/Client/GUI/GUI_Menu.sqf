@@ -23,7 +23,6 @@ ctrlShow [11030, false];
 if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {
 	ctrlEnable [11006, true];
 	ctrlSetText [11006, "DRONES"];
-	ctrlSetTooltip [11006, "Drone Operations: FPV strike drone - and the SCUD carrier strike once captured."]; //--- config tooltip still said Tactical Center
 };
 
 _enable = false;
