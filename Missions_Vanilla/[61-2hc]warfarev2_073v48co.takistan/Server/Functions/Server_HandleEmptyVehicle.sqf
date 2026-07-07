@@ -34,6 +34,13 @@ if (typeOf _vehicle in ['V3S_Supply_TK_GUE_EP1','WarfareSupplyTruck_RU', 'Warfar
 while {alive _vehicle} do {
 	sleep 20;
 	
+	//--- fable/watch-timer-undefined: the vehicle can be DELETED during the 20s sleep - a null object's 2-arg
+	//--- getVariable IGNORES the default (engine-verified XWT45-P4, same mechanism fixed in Server_HandleDefense.sqf
+	//--- 118fcda4a) - the wfbe_airlifted read below would come up nil, undefining _timer at the next line's
+	//--- '> _delay' check (live RPT: Undefined variable in expression: _timer, ~6x/window after MISSINIT).
+	//--- Block-exit falls through to the while condition, which ends the loop cleanly on the dead/deleted vehicle.
+	if (isNull _vehicle) exitWith {};
+	
 	_timer = if (({alive _x} count crew _vehicle) > 0 || {_vehicle getVariable ["wfbe_airlifted", false]}) then {0} else {_timer + 20}; //--- fable/airlift-gc-exempt: an airlifted hull is crewless by design - do not run down the empty-vehicle fuse while slung
 	if (_timer > _delay) exitWith {deleteVehicle _vehicle};
 };
