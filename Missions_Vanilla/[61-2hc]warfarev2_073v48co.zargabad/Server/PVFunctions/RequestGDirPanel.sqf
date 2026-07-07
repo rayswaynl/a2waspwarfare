@@ -58,7 +58,7 @@ _elmin = floor (diag_tickTime / 60);
 
 //--- Gate 2.5: towns list must be initialised (a hand-crafted PV can arrive pre-init and
 //--- the forEach below would crash on nil).
-if (isNil "WFBE_SE_Towns" || {count WFBE_SE_Towns == 0}) exitWith {
+if (isNil "towns" || {count towns == 0}) exitWith { //--- #815: master roster is `towns`
 	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=%2|deny=townsNotReady|fundedBy=%3|pricePaid=0", _elmin, _verb, getPlayerUID _player];
 };
 
@@ -86,7 +86,7 @@ if (_verb == "quote") exitWith {
 				_qFound   = true;
 			};
 		};
-	} forEach WFBE_SE_Towns;
+	} forEach towns;
 
 	//--- Compute scarcity for this town.
 	private ["_qScarcityStep","_qScarcityDecay","_qScarcityRec","_qScarcity"];
@@ -153,7 +153,7 @@ if (_verb == "quote") exitWith {
 	[getPlayerUID _player, "GDirPanelResult", ["quote", _qPriceStr, "quote", _townId]] Call WFBE_CO_FNC_SendToClient;
 };
 
-//--- Gate 3: locate the town in WFBE_SE_Towns.
+//--- Gate 3: locate the town in `towns`.
 private ["_townObj","_townFound"];
 _townObj   = objNull;
 _townFound = false;
@@ -164,7 +164,7 @@ _townFound = false;
 			_townFound = true;
 		};
 	};
-} forEach WFBE_SE_Towns;
+} forEach towns;
 if (!_townFound || {isNull _townObj}) exitWith {
 	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=%2|town=%3|deny=townNotFound|fundedBy=%4|pricePaid=0", _elmin, _verb, _townId, getPlayerUID _player];
 	[getPlayerUID _player, "GDirPanelResult", ["deny", "Town not found.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
