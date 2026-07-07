@@ -738,7 +738,7 @@ class Mission
 		}
 		class Item21
 		{
-			side="CIVILIAN";
+			side="CIV";
 			class Vehicles
 			{
 				items=1;
@@ -746,7 +746,7 @@ class Mission
 				{
 					position[]={1203.4164999999998,512.457,8158.522946666667};
 					id=50;
-					side="CIVILIAN";
+					side="CIV";
 					vehicle="Civilian";
 					player="PLAY CDG";
 					leader=1;
@@ -760,7 +760,7 @@ class Mission
 		}
 		class Item22
 		{
-			side="CIVILIAN";
+			side="CIV";
 			class Vehicles
 			{
 				items=1;
@@ -768,7 +768,7 @@ class Mission
 				{
 					position[]={1203.3666999999998,512.6393,8159.692946666667};
 					id=51;
-					side="CIVILIAN";
+					side="CIV";
 					vehicle="Civilian";
 					player="PLAY CDG";
 					leader=1;
