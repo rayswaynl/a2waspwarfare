@@ -79,7 +79,7 @@
 */
 
 private ["_side","_logik","_sideID","_interval","_enabled","_humanCmdWEST","_humanCmdEAST",
-         "_bothHuman","_cmdTeam","_hq","_sideText","_jitter","_humanCmd","_skipAI"];
+         "_bothHuman","_cmdTeam","_hq","_sideText","_jitter","_humanCmd","_skipAI","_wcCost","_wcCool","_wcKey","_wcLast","_wcFunds"];
 
 _side    = _this;
 _logik   = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -153,6 +153,40 @@ while {!gameOver} do {
 			if (!_skipAI && {!(_logik getVariable ["wfbe_aicom_running", false])}) then {
 				["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - wfbe_aicom_running false", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 				_skipAI = true;
+			};
+		};
+
+		//--- PURCHASE GATE (WFBE_C_AI_COMMANDER_WILDCARD_COST > 0, claude-gaming 2026-07-07):
+		//--- wildcards become a paid AI-commander action - the side spends wfbe_aicom_funds per draw
+		//--- and may draw at most once per WFBE_C_AI_COMMANDER_WILDCARD_COOLDOWN seconds (30 min).
+		//--- AI-commander only for now: a HUMAN-commanded side has no buy path yet, so under the
+		//--- purchase model it gets NO auto-draw (the old free human-side draw is gated off here).
+		//--- COST == 0 (default) leaves every branch below inert -> behaviour identical to legacy.
+		_wcCost = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_COST", 0];
+		if (!_skipAI && {_wcCost > 0}) then {
+			if (_humanCmd) then {
+				["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - purchase model (COST=%2), human commander has no buy path yet", _sideText, _wcCost]] Call WFBE_CO_FNC_AICOMLog;
+				_skipAI = true;
+			} else {
+				_wcCool = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_COOLDOWN", 1800];
+				_wcKey  = Format ["WFBE_WILDCARD_LASTFIRE_%1", _sideText];
+				_wcLast = missionNamespace getVariable [_wcKey, -99999];
+				if ((time - _wcLast) < _wcCool) then {
+					["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - wildcard cooldown (%2s of %3s left)", _sideText, round (_wcCool - (time - _wcLast)), _wcCool]] Call WFBE_CO_FNC_AICOMLog;
+					_skipAI = true;
+				};
+				if (!_skipAI) then {
+					_wcFunds = (_side) Call GetAICommanderFunds;
+					if (_wcFunds < _wcCost) then {
+						["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - cannot afford wildcard (have %2, need %3)", _sideText, round _wcFunds, _wcCost]] Call WFBE_CO_FNC_AICOMLog;
+						_skipAI = true;
+					} else {
+						//--- Charge BEFORE dispatch and stamp the cooldown immediately (mirror Init_IcbmTel fire order: no double-fire race).
+						[_side, -_wcCost] Call ChangeAICommanderFunds;
+						missionNamespace setVariable [_wcKey, time];
+						["INFORMATION", Format ["AI_Commander_Wildcard.sqf: %1 purchased a wildcard for %2 (funds %3 -> %4)", _sideText, _wcCost, round _wcFunds, round (_wcFunds - _wcCost)]] Call WFBE_CO_FNC_AICOMLog;
+					};
+				};
 			};
 		};
 

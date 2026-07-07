@@ -570,6 +570,8 @@ if (worldName == "Zargabad") then {
 	//--- V0.6: Wildcard events - one free random event per AI-commanded side per interval.
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD") then {WFBE_C_AI_COMMANDER_WILDCARD = 1};           //--- 0 disables wildcard events entirely.
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL") then {WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL = 900}; //--- Seconds between wildcard events per side (15 min - faster testing cadence, claude-gaming 2026-06-14; was 1800/30min).
+	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD_COST") then {WFBE_C_AI_COMMANDER_WILDCARD_COST = 0};       //--- funds the AI commander pays per wildcard draw. 0 = free/legacy (feature inert); >0 = purchase-gated (per-side afford check + cooldown). Intended live value 8000 (Ray 2026-07-07). claude-gaming.
+	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD_COOLDOWN") then {WFBE_C_AI_COMMANDER_WILDCARD_COOLDOWN = 1800}; //--- s min gap between purchased wildcard draws per side (30 min). Active only when WFBE_C_AI_COMMANDER_WILDCARD_COST > 0.
 	WFBE_C_AI_COMMANDER_SPEARHEAD_PER_TOWN = 3;   //--- V0.5: teams concentrated per spearhead town (legacy/fallback quota; per-tier quota below overrides).
 	//--- V0.8 COHERENT FRONT (claude-gaming 2026-06-14): the old spearhead scorer was
 	//--- supplyValue - dNear/150, which let a fat enemy city 8km away outscore the nearest
