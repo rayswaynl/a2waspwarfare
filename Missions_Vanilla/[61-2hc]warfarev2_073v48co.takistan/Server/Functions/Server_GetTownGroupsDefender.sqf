@@ -100,6 +100,20 @@ if (!isNil "_defByTier") then {
 };
 _groups_max = round(_groups_max * _defCoef);
 
+//--- Tier-1 (flag WFBE_C_GDIR_GARRISON_GAIN, default 0): a GUER town the Director judges REINFORCED
+//--- (ledger current/baseline ratio > 1, published as wfbe_gdir_str) wakes with a bigger real garrison.
+//--- Additive / no-nerf: the bonus is >= 0, so _groups_max is never reduced below the V1 count.
+private ["_gdirGain"];
+_gdirGain = missionNamespace getVariable ["WFBE_C_GDIR_GARRISON_GAIN", 0];
+if (_gdirGain > 0 && {(missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0}) then {
+	private ["_gdRatio","_gdBonus"];
+	_gdRatio = _town getVariable ["wfbe_gdir_str", 1];
+	if (_gdRatio > 1) then {
+		_gdBonus = (round (_groups_max * (_gdRatio - 1) * _gdirGain)) min _groups_max;
+		if (_gdBonus > 0) then {_groups_max = _groups_max + _gdBonus};
+	};
+};
+
 if (_aa_get) then {if (_groups_max > 3) then {_groups_max = 3}};
 
 _unit_infantry = [];

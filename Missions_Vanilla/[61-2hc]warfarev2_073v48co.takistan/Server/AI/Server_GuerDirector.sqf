@@ -135,6 +135,9 @@ while {!WFBE_GameOver} do {
             _rec set [2, _str + _regen];
             _regenDebt = [_regenDebt - _regen, 0, 999] call _fnClamp;
         };
+        //--- Tier-1: publish per-town strength ratio (current/baseline) to the town object so the V1
+        //--- defender spawner (Server_GetTownGroupsDefender) can size the real garrison. >1 = reinforced.
+        (_rec select 0) setVariable ["wfbe_gdir_str", (if (_base > 0) then {(_rec select 2) / _base} else {1})];
     } forEach _ledger;
 
     //--------------------------------------------------------------------
