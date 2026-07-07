@@ -342,5 +342,11 @@ if ($Peach) {
         try { & pwsh -NoProfile -File $peachTool -Text "[sandbox] $msg" | Out-Null; Write-Host "  (Peach DM sent)" }
         catch { Write-Host "  (Peach DM failed: $_)" }
     } else { Write-Host "  (Peach tool not found at $peachTool)" }
+    # ...and to the WASP Discord channel via the "Warfare Handler" bot (best-effort; no-op until the
+    # bot is granted View+Send on the channel). Machine-local helper; owns the token + channel id.
+    $whTool = 'C:\Users\Game\wasp-build\warfare-handler-post.ps1'
+    if (Test-Path -LiteralPath $whTool) {
+        try { & pwsh -NoProfile -File $whTool -Text "[sandbox] $msg" | Out-Null } catch {}
+    }
 }
 return $result
