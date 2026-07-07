@@ -4823,6 +4823,7 @@ class WFBE_GDirCommissarMenu {
 		class LB_Towns : RscListBox {
 			idc = 31010;
 			x = 0.115; y = 0.263; w = 0.222; h = 0.095;
+			rowHeight = 0.04; //--- Hotfix: engine "No entry ...rowHeight" popup without an explicit value.
 		};
 
 		//--- Map label.
