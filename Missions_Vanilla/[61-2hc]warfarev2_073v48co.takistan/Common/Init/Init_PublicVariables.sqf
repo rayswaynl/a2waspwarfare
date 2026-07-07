@@ -77,3 +77,16 @@ WFBE_SE_PVF_ALLOWED = [];
 } forEach _serverCommandPV;
 
 ["INITIALIZATION", Format ["Init_PublicVariables.sqf : Initialized [%1] Client PV and [%2] Server PV", count _clientCommandPV, count _serverCommandPV]] Call WFBE_CO_FNC_LogContent;
+
+//--- P2 (fable/gdir-harden-shop): GDIR JIP snapshot seed + PVEH.
+//--- Server publishes AICOMV2_GDIR_JIP_SNAP each director tick (throttled).
+//--- Clients cache the last snapshot in WFBE_COMM_GDIR_SNAP for the commissar panel list.
+//--- TODO (OnPlayerConnected): add publicVariableClient "AICOMV2_GDIR_JIP_SNAP" to
+//--- Server/Functions/Server_OnPlayerConnected.sqf after line 161 (WFBE_GUER_FOB_AVAIL block)
+//--- so late joiners get the snapshot immediately rather than waiting for the next Director tick.
+AICOMV2_GDIR_JIP_SNAP = [];
+if (!isServer || {local player}) then {
+    "AICOMV2_GDIR_JIP_SNAP" addPublicVariableEventHandler {
+        WFBE_COMM_GDIR_SNAP = _this select 1;
+    };
+};
