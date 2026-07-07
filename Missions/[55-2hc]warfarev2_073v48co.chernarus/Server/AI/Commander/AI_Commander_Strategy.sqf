@@ -675,7 +675,8 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 				_gwTrigger = false;
 				if (!_gwExempt) then {
 					if (_gwWant) then {_gwTrigger = true};
-					if (!_gwTrigger && {_gwAlive > 0} && {_gwAlive < _gwMinAlive} && {!_gwRallying}) then {_gwTrigger = true};
+					private ["_gwCoolUntil"]; _gwCoolUntil = _gwTeam getVariable "wfbe_aicom_rally_cooldown_until"; if (isNil "_gwCoolUntil") then {_gwCoolUntil = 0}; //--- claude/aicom-west-stuck: rally re-arm cooldown (bug M) - group-safe 1-arg get + isNil (2-arg group default is the GROUPGETVAR trap)
+					if (!_gwTrigger && {_gwAlive > 0} && {_gwAlive < _gwMinAlive} && {!_gwRallying} && {time >= _gwCoolUntil}) then {_gwTrigger = true}; //--- claude/aicom-west-stuck: cooldown-gated (was ungated) - blocks instant re-rally of a still-understrength team; the explicit driver wantrally arm one line above stays ungated
 				};
 				if (_gwTrigger) then {
 					//--- Rally = NEAREST of [own HQ pos] + every OWN-side town centre. Hand-rolled scalar min (no A3 sort).
@@ -696,6 +697,8 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 					_gwTeam setVariable ["wfbe_aicom_order", [(if (isNil {_gwTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_gwTeam getVariable "wfbe_aicom_order") select 0}) + 1, "rally", _gwRallyPos], true];
 					_gwTeam setVariable ["wfbe_aicom_wantrally", false, true];
 					_gwTeam setVariable ["wfbe_aicom_rallying", true, true];
+					//--- claude/aicom-west-stuck: stamp the per-team rally re-arm cooldown at ISSUE time (bug M root-cause). 2-arg server-local write, read only by this same server-side evaluator - the auto understrength trigger above cannot re-fire for WFBE_C_AICOM_WITHDRAW_COOLDOWN seconds, so a still-understrength team gets a bounded assault window under AssignTowns before it can be pulled back, ending the rally-arrive-rally livelock. Explicit driver wantrally requests bypass the gate and are never delayed. Not broadcast on purpose: only this server-side evaluator consults it, so no NSSETVAR3/cross-machine concern.
+					_gwTeam setVariable ["wfbe_aicom_rally_cooldown_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_COOLDOWN", 240])];
 					["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] GRACEFUL-WITHDRAW (%3 alive) -> rally at %4.", _sideText, _gwTeam, _gwAlive, _gwRallyPos]] Call WFBE_CO_FNC_AICOMLog;
 					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RALLY_ORDER|team=" + (str _gwTeam) + "|alive=" + str _gwAlive + "|want=" + str _gwWant);
 				};

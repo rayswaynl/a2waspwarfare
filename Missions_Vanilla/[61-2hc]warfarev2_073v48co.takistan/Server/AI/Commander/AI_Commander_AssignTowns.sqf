@@ -317,7 +317,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 								_team setVariable ["wfbe_aicom_goto_since", time];
 							} else {
 								if (time - (_ord select 1) > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_SECS", 210])) then {
-									private ["_ldr","_movedThr","_farThr","_airborne"];
+									private ["_ldr","_movedThr","_farThr","_airborne","_goalDeltaOn","_notProgressing"]; //--- claude/aicom-west-stuck: +2 privates for the goal-delta stuck test below
 									_ldr = leader _team;
 									_movedThr = missionNamespace getVariable ["WFBE_C_AICOM_STUCK_MOVED", 200];
 									_farThr   = missionNamespace getVariable ["WFBE_C_AICOM_STUCK_FAR", 300];
@@ -333,7 +333,21 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 									if (!_airborne && {!isNull _ldr} && {(vehicle _ldr) != _ldr} && {(vehicle _ldr) isKindOf "Air"}) then {_airborne = true};
 									//--- In-contact teams are legitimately stationary (firefight/bounding); never
 									//--- treat as stuck - refresh the breadcrumb so they keep fighting.
-									if ((!_airborne) && {behaviour _ldr != "COMBAT"} && {_ldr distance (_ord select 2) < _movedThr} && {_ldr distance _goto > _farThr}) then {
+									//--- claude/aicom-west-stuck: GOAL-DELTA stuck test (root-cause fix, flag WFBE_C_AICOM_STUCK_GOALDELTA,
+									//--- claude/aicom-west-stuck: default 0 = legacy raw-displacement test, byte-identical). Common_AICOM_HighClimb.sqf
+									//--- claude/aicom-west-stuck: setVelocity-boosts a wedged hull every tick on pure kinematics, which alone can
+									//--- claude/aicom-west-stuck: manufacture >= _movedThr of RAW leader displacement (jitter/slide) with ZERO net
+									//--- claude/aicom-west-stuck: closing on _goto - the legacy test read that as progress and hard-reset
+									//--- claude/aicom-west-stuck: wfbe_aicom_stuckstrikes, so RECOVERY_V2 never escalated past Tier-1. When the flag
+									//--- claude/aicom-west-stuck: is on, progress instead means how far DISTANCE-TO-TARGET closed since the
+									//--- claude/aicom-west-stuck: breadcrumb: (_goto distance breadcrumb) minus (_goto distance _ldr). A slow-but-real
+									//--- claude/aicom-west-stuck: climber (10-28 km/h up a long ridge) closes on _goto and is NOT penalised; only
+									//--- claude/aicom-west-stuck: motion that never translates into closing distance now fails. Both distance operand
+									//--- claude/aicom-west-stuck: orders are already live in this file (object distance breadcrumb, object distance obj).
+									//--- claude/aicom-west-stuck: A2-OA-safe: numeric subtraction, no ==/!= on Booleans, no A3 commands, no group 2-arg getVariable.
+									_goalDeltaOn = (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_GOALDELTA", 0]) > 0;
+									_notProgressing = if (_goalDeltaOn) then {((_goto distance (_ord select 2)) - (_goto distance _ldr)) < _movedThr} else {(_ldr distance (_ord select 2)) < _movedThr};
+									if ((!_airborne) && {behaviour _ldr != "COMBAT"} && {_notProgressing} && {_ldr distance _goto > _farThr}) then {
 										_needs = true; //--- parked far from target, not in contact: re-issue (unstick)
 										//--- REAL UNSTUCK (task #14/#16): the old remedy just re-emitted the same
 										//--- un-followable order. Bump a per-team STRIKE counter so the HC executor
