@@ -118,6 +118,65 @@ for '_i' from 0 to count(_groups)-1 do {
 		_team setVariable ["WFBE_TownAI_Side", _side, false];
 		_team setVariable ["WFBE_TownAI_Group", true, false];
 		[_town, _team, _sideID] execVM "Server\FSM\server_town_patrol.sqf";
+
+		//--- GDIR_CACHE loadout hook (fable/cache-loadout-hook): upgrade GUER town-defender
+		//--- infantry when a weapons cache has been purchased for this town. Only fires when:
+		//---   AICOMV2_GDIR_CACHE > 0  (feature gate)
+		//---   town sideID == WFBE_C_GUER_ID  (GUER towns only; captured town retains the
+		//---     AICOMV2_GDIR_CACHE_TIER value on the object for when GUER retakes it,
+		//---     but this hook skips non-GUER sideID so a captor does NOT inherit the upgrade)
+		//---   AICOMV2_GDIR_CACHE_TIER >= 1  (a cache purchase has been made for this town)
+		//--- Conservation: NEVER adds units. Only re-equips within the already-spawned set.
+		//--- Volume is sacred; GUER group count and unit count are untouched.
+		if ((AICOMV2_GDIR_CACHE > 0) && {_sideID == WFBE_C_GUER_ID}) then {
+			private ["_cacheTier","_cacheUpgraded","_cacheUnit","_cacheRpgCount","_cachePrimary","_cacheSnipeDone","_cacheAaDone"];
+			_cacheTier = _town getVariable ["AICOMV2_GDIR_CACHE_TIER", 0];
+			if (_cacheTier > 0) then {
+				_cacheUpgraded = 0;
+				_cacheRpgCount = 0;
+				_cacheSnipeDone = false;
+				_cacheAaDone = false;
+				{
+					_cacheUnit = _x;
+					if (alive _cacheUnit && {_cacheUnit isKindOf "Man"}) then {
+						//--- T1+: extra AK mags + one frag grenade + one smoke per defender.
+						_cacheUnit addMagazine "30Rnd_545x39_AK";
+						_cacheUnit addMagazine "30Rnd_545x39_AK";
+						_cacheUnit addMagazine "HandGrenade_East";
+						_cacheUnit addMagazine "SmokeShell";
+						_cacheUpgraded = _cacheUpgraded + 1;
+						//--- T2+: re-equip up to 2 riflemen (primary weapon, no secondary) as RPG-7V gunners.
+						//--- "Has launcher" = non-empty secondaryWeapon (A2 OA semantic).
+						if (_cacheTier >= 2 && {_cacheRpgCount < 2}) then {
+							_cachePrimary = primaryWeapon _cacheUnit;
+							if (((secondaryWeapon _cacheUnit) == "") && {!(_cachePrimary == "")}) then {
+								_cacheUnit addWeapon "RPG7V";
+								_cacheUnit addMagazine "PG7V";
+								_cacheUnit addMagazine "PG7V";
+								_cacheUnit addMagazine "PG7V";
+								_cacheRpgCount = _cacheRpgCount + 1;
+							};
+						};
+						//--- T3+: 1 MANPADS defender (Strela) + 1 marksman (SVD). Each is applied
+						//--- to the FIRST eligible unit that has no secondary weapon yet.
+						if (_cacheTier >= 3) then {
+							if ((!_cacheAaDone) && {(secondaryWeapon _cacheUnit) == ""}) then {
+								_cacheUnit addWeapon "Strela";
+								_cacheUnit addMagazine "Strela";
+								_cacheAaDone = true;
+							};
+							if ((!_cacheSnipeDone) && {(secondaryWeapon _cacheUnit) == ""}) then {
+								_cacheUnit addWeapon "SVD";
+								_cacheUnit addMagazine "10Rnd_762x54_SVD";
+								_cacheUnit addMagazine "10Rnd_762x54_SVD";
+								_cacheSnipeDone = true;
+							};
+						};
+					};
+				} forEach _units;
+				diag_log Format ["GDIR_CACHE|town=%1|tier=%2|upgraded=%3", (_town getVariable ["wfbe_name","?"]), _cacheTier, _cacheUpgraded];
+			};
+		};
 		//--- B5: per-group 400m reveal coalesced to ONE town-wide reveal per activation
 		//--- episode (after this loop). Each group used to fire its own RevealArea spawn,
 		//--- meaning one expensive nearEntities scan per group; for a town with many garrison
