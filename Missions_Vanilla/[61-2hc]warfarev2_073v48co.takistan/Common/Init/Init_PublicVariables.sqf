@@ -31,6 +31,7 @@ _l = _l + ["RequestSiteClearance"];
 _l = _l + ["RequestAIComDonate"];
 _l = _l + ["HCStat"];
 _l = _l + ["RequestAFKKick"]; //--- SG14: client reports AFK threshold exceeded; server validates and issues the BE kick.
+_l = _l + ["RequestGDirPanel"]; //--- A1 (Commissar Panel): GUER player buy/contract request -> server validates, debits wallet, emits GDIR_ORDER, pushes result to caller (Server\PVFunctions\RequestGDirPanel.sqf).
 
 _serverCommandPV = _l;
 
@@ -56,6 +57,7 @@ _l = _l + ["CounterBatteryContact"];
 _l = _l + ["BankPayout"];
 _l = _l + ["RestartAnnounce"];
 _l = _l + ["DashboardAnnounce"];
+_l = _l + ["GDirPanelResult"]; //--- A1 (Commissar Panel): server pushes action result back to the requesting GUER client (Client\PVFunctions\GDirPanelResult.sqf).
 
 _clientCommandPV = _l;
 

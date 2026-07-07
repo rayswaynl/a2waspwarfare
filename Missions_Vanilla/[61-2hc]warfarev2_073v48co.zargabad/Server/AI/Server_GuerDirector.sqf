@@ -234,6 +234,237 @@ while {!WFBE_GameOver} do {
     } forEach _stateThr;
 
     //--------------------------------------------------------------------
+    // PHASE 4.5: PENDING ORDERS - consume player Commissar Panel requests.
+    // Each entry: [orderKind, townId, product, playerUID, pricePaid, timestampSec]
+    // Guard: AICOMV2_GDIR_PANEL must be on (belt-and-suspenders; PVF already checked).
+    //--------------------------------------------------------------------
+    if ((missionNamespace getVariable ["AICOMV2_GDIR_PANEL", 0]) > 0) then {
+        private ["_pendingOrders","_consumed"];
+        _pendingOrders = missionNamespace getVariable ["AICOMV2_GDIR_PENDING_ORDERS", []];
+        //--- Swap-and-clear IMMEDIATELY: orders PVF-appended while this tick processes land in the
+        //--- fresh array and survive to the next tick. Clearing after the loop dropped them silently.
+        missionNamespace setVariable ["AICOMV2_GDIR_PENDING_ORDERS", []];
+        _consumed      = [];
+        {
+            private ["_ord","_kind","_townId","_product","_uid","_pricePaid","_ordTs"];
+            _ord       = _x;
+            _kind      = _ord select 0;
+            _townId    = _ord select 1;
+            _product   = _ord select 2;
+            _uid       = _ord select 3;
+            _pricePaid = _ord select 4;
+            _ordTs     = _ord select 5;
+
+            //--- Find target town in ledger.
+            private ["_found","_recIdx"];
+            _found  = false;
+            _recIdx = -1;
+            private ["_li"];
+            _li = 0;
+            {
+                if (!_found) then {
+                    if ((_x select 0 getVariable ["wfbe_name", ""]) == _townId) then {
+                        _found  = true;
+                        _recIdx = _li;
+                    };
+                };
+                _li = _li + 1;
+            } forEach _ledger;
+
+            if (_found) then {
+                private ["_rec","_str","_base"];
+                _rec  = _ledger select _recIdx;
+                _str  = _rec select 2;
+                _base = _rec select 1;
+
+                //--- REINFORCE: add funded strength proportional to price paid.
+                //--- Base price $800 ~> 0.20 strength; scale linearly.
+                if (_kind == "reinforce") then {
+                    private ["_gain","_baseReinf","_capStr"];
+                    _baseReinf = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_REINF", 800];
+                    _gain      = 0.20 * (_pricePaid / _baseReinf);
+                    _capStr    = _base * _surgeCapPaid;
+                    _str       = [_str + _gain, 0, _capStr] call _fnClamp;
+                    _rec set [2, _str];
+                    _fundedTotal = _fundedTotal + _gain;
+                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER kind=reinforce town=%2 product=%3 gain=%4 newStr=%5 fundedBy=%6 pricePaid=%7",
+                        _elmin, _townId, _product, _gain, _str, _uid, _pricePaid];
+                };
+
+                //--- QRF CONTRACT: arm a contract record; QRF air fires when town is attacked.
+                //--- Contract records are written by RequestGDirPanel.sqf; Director polls them.
+                if (_kind == "qrfContract") then {
+                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER kind=qrf town=%2 product=%3 armed fundedBy=%4 pricePaid=%5",
+                        _elmin, _townId, _product, _uid, _pricePaid];
+                    //--- QRF air materializer: fires when town wfbe_contact_time becomes fresh.
+                    //--- Handled in contract poll below (Phase 7 ext).
+                };
+
+                //--- COUNTER-ATTACK CONTRACT: arms a retake trigger that fires on town loss.
+                if (_kind == "counterContract") then {
+                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER kind=counterAttack town=%2 armed fundedBy=%3 pricePaid=%4",
+                        _elmin, _townId, _uid, _pricePaid];
+                    //--- Counter-attack handled in contract poll below.
+                };
+
+                _consumed set [count _consumed, _ord];
+            } else {
+                //--- Town not in ledger: drop and log.
+                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER DROP kind=%2 town=%3 notInLedger fundedBy=%4",
+                    _elmin, _kind, _townId, _uid];
+            };
+        } forEach _pendingOrders;
+
+        //--- (Pending list already swap-and-cleared at read time above.)
+
+        //--- Contract poll: fire armed QRF contracts when town is under attack.
+        //--- Fire armed counter-attack contracts when GUER no longer holds town.
+        private ["_contracts","_updContracts","_nowT"];
+        _contracts    = missionNamespace getVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", []];
+        _updContracts = [];
+        _nowT         = diag_tickTime;
+        {
+            private ["_ctr","_cId","_cKind","_cTown","_cUid","_cPrice","_cArmed","_cFired","_cState"];
+            _ctr    = _x;
+            _cId    = _ctr select 0;
+            _cKind  = _ctr select 1;
+            _cTown  = _ctr select 2;
+            _cUid   = _ctr select 3;
+            _cPrice = _ctr select 4;
+            _cArmed = _ctr select 5;
+            _cFired = _ctr select 6;
+            _cState = _ctr select 7;
+
+            //--- Skip already-fired or expired contracts.
+            if (_cState == "armed") then {
+                //--- Expire: end of round or >3600s old.
+                if (WFBE_GameOver || {(_nowT - _cArmed) > 3600}) then {
+                    _ctr set [7, "expired"];
+                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 kind=%3 town=%4 expired fundedBy=%5",
+                        _elmin, _cId, _cKind, _cTown, _cUid];
+                } else {
+                    //--- Find the town object.
+                    private ["_cTownObj","_cFound"];
+                    _cTownObj = objNull;
+                    _cFound   = false;
+                    {
+                        if (!_cFound) then {
+                            if ((_x getVariable ["wfbe_name", ""]) == _cTown) then {
+                                _cTownObj = _x;
+                                _cFound   = true;
+                            };
+                        };
+                    } forEach WFBE_SE_Towns;
+
+                    if (_cFound && {!isNull _cTownObj}) then {
+                        private ["_cTownSide"];
+                        _cTownSide = _cTownObj getVariable ["wfbe_side", "UNKNOWN"];
+
+                        //--- QRF: fire when town is actively under attack (wfbe_contact_time fresh).
+                        if (_cKind == "qrfInsert" || {_cKind == "qrfGunship"} || {_cKind == "qrfCombo"}) then {
+                            private ["_contactAge","_contactTime"];
+                            _contactTime = _cTownObj getVariable ["wfbe_contact_time", 0];
+                            _contactAge  = _nowT - _contactTime;
+                            if (_contactTime > 0 && {_contactAge < 120}) then {
+                                //--- Town under attack - fire QRF.
+                                private ["_spawnPos","_cTownPos"];
+                                _cTownPos  = getPos _cTownObj;
+                                _spawnPos  = [_cTownPos select 0, _cTownPos select 1, 50];
+
+                                //--- Group-cap check before materializing.
+                                private ["_curGuerGrps"];
+                                _curGuerGrps = 0;
+                                {if (side _x == resistance) then {_curGuerGrps = _curGuerGrps + 1}} forEach allGroups;
+                                if (_curGuerGrps < _grpBudgetMax) then {
+                                    //--- Authorized new air execution path for A1 panel (no V1 GUER air path existed).
+                                    private ["_hClass","_h","_hGrp"];
+                                    _hClass = "Ka137_MG_PMC"; //--- GUER insert: Ka-137 from Core_GUE.sqf.
+                                    if (_cKind == "qrfGunship") then {_hClass = "Mi24_P"};  //--- GUER gunship.
+                                    if (_cKind == "qrfCombo") then {
+                                        //--- Spawn both. Gunship first (FIX: _hClass was never set to the gunship
+                                        //--- here, so combo fired two Ka-137s and the telemetry lied).
+                                        _hClass = "Mi24_P";
+                                        _h    = _hClass createVehicle _spawnPos;
+                                        _hGrp = createGroup resistance;
+                                        //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64). Crew via the
+                                        //--- proven wildcard-GUER pattern: CreateUnit into the group + moveIn*.
+                                        private ["_uPilot","_uGun"];
+                                        _uPilot = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                        if (!isNull _uPilot) then {_uPilot moveInDriver _h};
+                                        _uGun = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                        if (!isNull _uGun) then {_uGun moveInGunner _h};
+                                        _h setPos _spawnPos;
+                                        _hGrp addWaypoint [_cTownPos, 200];
+                                        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=Mi24_P town=%3 fundedBy=%4",
+                                            _elmin, _cId, _cTown, _cUid];
+                                        _hClass = "Ka137_MG_PMC";
+                                    };
+                                    _h    = _hClass createVehicle _spawnPos;
+                                    _hGrp = createGroup resistance;
+                                    //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64).
+                                    private ["_uPilot2","_uGun2"];
+                                    _uPilot2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                    if (!isNull _uPilot2) then {_uPilot2 moveInDriver _h};
+                                    if (_hClass == "Mi24_P") then {
+                                        _uGun2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                        if (!isNull _uGun2) then {_uGun2 moveInGunner _h};
+                                    };
+                                    _h setPos _spawnPos;
+                                    _hGrp addWaypoint [_cTownPos, 200];
+                                    _ctr set [6, _nowT];
+                                    _ctr set [7, "fired"];
+                                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=%3 town=%4 fundedBy=%5",
+                                        _elmin, _cId, _hClass, _cTown, _cUid];
+                                } else {
+                                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_SKIP groupCapExceeded=%3/%4",
+                                        _elmin, _cId, _curGuerGrps, _grpBudgetMax];
+                                };
+                            };
+                        };
+
+                        //--- COUNTER-ATTACK: fire when town is no longer held by GUER.
+                        if (_cKind == "counterAttack") then {
+                            if (!(_cTownSide == "GUER" || {_cTownSide == "UNKNOWN"})) then {
+                                //--- Town fell. Fire retake after 2-5 min delay.
+                                private ["_delayMin","_delayMax","_delayT"];
+                                _delayMin = 120;
+                                _delayMax = 300;
+                                _delayT   = _delayMin + round (random (_delayMax - _delayMin));
+                                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 COUNTER_FIRE town=%3 delay=%4s fundedBy=%5",
+                                    _elmin, _cId, _cTown, _delayT, _cUid];
+                                //--- Boost strength to trigger the Director retake cell.
+                                //--- This fires even when AICOMV2_GDIR_RETAKE=0 (panel override per spec).
+                                private ["_ctrRecIdx","_ctrFound"];
+                                _ctrFound  = false;
+                                _ctrRecIdx = 0;
+                                {
+                                    if (!_ctrFound) then {
+                                        if ((_x select 0 getVariable ["wfbe_name", ""]) == _cTown) then {
+                                            _ctrFound = true;
+                                        };
+                                    };
+                                    if (!_ctrFound) then {_ctrRecIdx = _ctrRecIdx + 1};
+                                } forEach _ledger;
+                                if (_ctrFound && {_ctrRecIdx < count _ledger}) then {
+                                    private ["_ctrRec"];
+                                    _ctrRec = _ledger select _ctrRecIdx;
+                                    //--- Set strength to baseline to trigger a reinforce cell.
+                                    _ctrRec set [2, _ctrRec select 1];
+                                    _fundedTotal = _fundedTotal + (_ctrRec select 1);
+                                };
+                                _ctr set [6, _nowT];
+                                _ctr set [7, "fired"];
+                            };
+                        };
+                    };
+                };
+            };
+            _updContracts set [count _updContracts, _ctr];
+        } forEach _contracts;
+        missionNamespace setVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", _updContracts];
+    };
+
+    //--------------------------------------------------------------------
     // PHASE 5: CELL ARRIVAL - clear in-transit balance each tick.
     // Transit accumulated in phase 4 is credited back each tick.
     // (Full impl would be timer-driven per-cell; this is the conservative form.)
