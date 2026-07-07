@@ -2266,6 +2266,18 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GUER_CP2_FOOT_BASE") then {WFBE_C_GUER_CP2_FOOT_BASE = 4};        //--- v2 garrison base headcount (v1: 3).
 	if (isNil "WFBE_C_GUER_CP2_FOOT_PER_TIER") then {WFBE_C_GUER_CP2_FOOT_PER_TIER = 2}; //--- v2 extra garrison per GUER vehicle tier (v1: 1).
 	if (isNil "WFBE_C_GUER_CP2_ARMOR_EXTRA") then {WFBE_C_GUER_CP2_ARMOR_EXTRA = 1};    //--- v2 extra SAME-class hulls at tier>=2 (tier 3 = 2x T-72); read ONLY inside the CP_V2>0 branch, so inert while WFBE_C_GUER_CP_V2 = 0.
+	//--- Legacy GUER wildcard/checkpoint/scavenger tunables (flag-policy registration).
+	//--- Previously inline-only getVariable fallbacks in Server/Functions/AI_Commander_Wildcard_GUER.sqf;
+	//--- registered here at their EXACT prior inline defaults, so this block is behavior-neutral.
+	if (isNil "WFBE_C_GUER_WILDCARD")          then {WFBE_C_GUER_WILDCARD = 1};             //--- GUER wildcard deck master enable (1=on).
+	if (isNil "WFBE_C_GUER_WILDCARD_INTERVAL") then {WFBE_C_GUER_WILDCARD_INTERVAL = 1800};  //--- Seconds between GUER wildcard draws.
+	if (isNil "WFBE_C_GUER_CP_WINDOW")         then {WFBE_C_GUER_CP_WINDOW = 600};          //--- G2 checkpoint hold window (s) before it resolves.
+	if (isNil "WFBE_C_GUER_CP_TAX")            then {WFBE_C_GUER_CP_TAX = 60};              //--- Per-tick occupier supply tax while the CP stands (scaled by 1+tier).
+	if (isNil "WFBE_C_GUER_CP_TOLL")           then {WFBE_C_GUER_CP_TOLL = 250};            //--- Per-tick GUER toll payout while the CP stands (scaled by 1+tier).
+	if (isNil "WFBE_C_GUER_CP_CLEAR")          then {WFBE_C_GUER_CP_CLEAR = 700};           //--- Supply injection to whoever clears the CP (scaled by 1+tier).
+	if (isNil "WFBE_C_GUER_SCAV_REWARD")       then {WFBE_C_GUER_SCAV_REWARD = 300};        //--- G5 scavenger base cash per wreck scrapped.
+	if (isNil "WFBE_C_GUER_SCAV_PLAYER_BONUS") then {WFBE_C_GUER_SCAV_PLAYER_BONUS = 150};  //--- G5 extra bonus when a GUER player is near the scrap.
+	if (isNil "WFBE_C_GUER_SCAV_TTL")          then {WFBE_C_GUER_SCAV_TTL = 300};           //--- G5 scavenger team lifetime (s) before self-clean.
 //--- TELEPORT-GUARD FIX (2026-07-06): player-visible teleport guard radius for tier-3 SNAP branches
 //--- (Common_RunCommanderTeam.sqf vehicle + foot road-snap). Code previously hard-coded 100 m while
 //--- the design comment specified 300 m; owner witnessed 6 teleports on 2026-07-06 from this mismatch.
