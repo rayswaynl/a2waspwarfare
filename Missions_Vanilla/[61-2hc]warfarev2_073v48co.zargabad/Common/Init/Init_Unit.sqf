@@ -278,7 +278,11 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 
 _unit setVariable ["OriginalMarkerColor", _color, false];
 
-_params Spawn MarkerUpdate;
+//--- fable/marker-double-fix (owner 2026-07-07): the LOCAL player already carries the orange own-arrow
+//--- (GUER%1AdvancedSquadOWNMarker, updateteamsmarkers.sqf) at his position; the unitMarker mil_dot here
+//--- draws a SECOND orange icon on top of it = doubled self-marker (visible for GUER, which has no team-slot
+//--- arrow to mask it). Skip the dot for the OWN body only; remote teammates + AI + vehicles keep theirs.
+if (_unit != player) then {_params Spawn MarkerUpdate}; //--- own-body dot suppressed (== player); rest of Init_Unit MUST still run for the player, so gate ONLY this line - never exitWith here
 _perfMarkerType = _params select 0;
 _perfMarkerRefresh = _params select 6;
 
