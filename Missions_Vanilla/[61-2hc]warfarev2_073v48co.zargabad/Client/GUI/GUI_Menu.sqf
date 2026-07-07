@@ -10,11 +10,17 @@ if (sideJoined == resistance) then {
 	ctrlSetText [11008, "Towns"]; //--- owner 2026-07-07: renamed from "Town Actions"
 };
 ctrlShow [11030, false];
+//--- fable/drones-menu: for GUER, repurpose the (GUER-dead) Tactical Center button as the Drones entry.
+if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {
+	ctrlEnable [11006, true];
+	ctrlSetText [11006, "DRONES"];
+};
 
 _enable = false;
 if ((barracksInRange || lightInRange || heavyInRange || aircraftInRange || hangarInRange || depotInRange) && (player == leader WFBE_Client_Team)) then {_enable = true};
 ctrlEnable [11001,_enable];
 ctrlEnable [11006,commandInRange && (player == leader WFBE_Client_Team)]; //--- Special Menu
+if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {ctrlEnable [11006, true]}; //--- fable/drones-menu: restore DRONES enable overridden by line above
 
 MenuAction = -1;
 WFBE_ForceUpdate = true;
@@ -36,7 +42,8 @@ while {alive player && dialog} do {
 		if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_GEAR_PROXIMITY", 1]) < 1}) then { ctrlEnable [11002, true] };
 
 		if (sideJoined == resistance) then {
-			{ctrlEnable [_x, false]} forEach [11004,11005,11006]; //--- GUER: hold commander/base/vote disabled - 11008 = Town Actions, re-enabled pre-loop for resistance, do NOT re-grey it here
+			{ctrlEnable [_x, false]} forEach [11004,11005]; //--- GUER: hold commander/base/vote disabled; 11008=Towns re-enabled pre-loop
+			if ((missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) <= 0) then {ctrlEnable [11006, false]}; //--- fable/drones-menu: keep Drones button live when flag on
 				ctrlEnable [11007, true]; //--- B75 (guer-tech): the Upgrade Center is a READ-ONLY kill-tech progression viewer for GUER (GUI_UpgradeMenu.sqf resistance branch).
 				if (((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) > time) then { {ctrlEnable [_x, false]} forEach [11001,11002,11008] }; //--- fable/guer-lockout: buy/gear/Town Actions held until activation
 		} else {
@@ -216,7 +223,12 @@ while {alive player && dialog} do {
 	if (MenuAction == 6) exitWith { //added-MrNiceGuy
 		MenuAction = -1;
 		closeDialog 0;
-		createDialog "RscMenu_Tactical";
+		//--- fable/drones-menu: GUER opens Drone Ops menu; W/E keep Tactical Center.
+		if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {
+			createDialog "WFBE_GuerDronesMenu";
+		} else {
+			createDialog "RscMenu_Tactical";
+		};
 	};
 
 	//--- Upgrade Menu.
