@@ -96,6 +96,23 @@ while {WFBE_RespawnTime > 0 && dialog && alive player} do {
 	if (WFBE_MenuAction == 1) then {
 		WFBE_MenuAction = -1;
 		WFBE_RespawnDefaultGear = if (WFBE_RespawnDefaultGear) then {false} else {true};
+		//--- fable/keepkit-capture (owner 2026-07-07): the KEEP CURRENT button silently fell to default gear
+		//--- when the player never bought a kit (wfbe_custom_gear nil -> handler guard at Client_OnRespawnHandler:146
+		//--- fails). Capture the live inventory NOW so keep-current always has data; hint routes to Team Menu Save Gear
+		//--- to persist it. Fires only when toggling TO keep-current with no prior kit. A2-OA commands only.
+		if (!WFBE_RespawnDefaultGear && {isNil {player getVariable "wfbe_custom_gear"}}) then {
+			private ["_capBpObj","_capBp","_capPri","_capSec","_capPis"];
+			_capBpObj = unitBackpack player;
+			_capBp = if (!isNull _capBpObj) then {typeOf _capBpObj} else {""};
+			_capPri = primaryWeapon player;
+			_capSec = secondaryWeapon player;
+			_capPis = "";
+			{if (_x != _capPri && {_x != _capSec} && {_x != _capBp} && {_x != ""}) then {_capPis = _x}} forEach (weapons player);
+			player setVariable ["wfbe_custom_gear", [(weapons player) - [_capBp], magazines player, _capBp, [], [_capPri, _capPis, _capSec]]];
+			player setVariable ["wfbe_custom_gear_cost", 0];
+			hint "Current kit captured for respawn.
+Open the Team Menu -> Save Gear to store it as a preset.";
+		};
 		if (_uiV2 > 0) then {
 			ctrlSetText [511004, if (WFBE_RespawnDefaultGear) then {localize "STR_WF_RESPAWN_GearV2Default"} else {localize "STR_WF_RESPAWN_GearV2Current"}];
 			//--- v2 feature 7: tint button to signal state (blue = default kit; green = keep current).
