@@ -540,7 +540,7 @@
 		title = "$STR_WF_PARAMETER_TownsCaptureMode";
 		values[] = {0,1,2};
 		texts[] = {"$STR_WF_PARAMETER_Classic","$STR_WF_PARAMETER_TownsCaptureMode_Threshold","$STR_WF_PARAMETER_TownsCaptureMode_AllCamps"};
-		default = 0; //--- b89-params: align to CC isNil default; CC changed 2->0 Classic (AI teams mount+camp sequentially so AllCamps never flipped).
+		default = 2; //--- owner 2026-07-07: back to All Camps - viable now that cmdcon37 WFBE_C_AICOM_CAMP_GATE_MODE2=1 makes AI teams hold+clear camps instead of bailing.
 	};
 	class WFBE_C_TOWNS_DEFENDER {
 		title = "$STR_WF_PARAMETER_Defender";
