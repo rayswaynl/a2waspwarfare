@@ -41,7 +41,7 @@ _drone = createVehicle [_class, getPos _closest, [], 0, "FLY"];
 playerFPV = _drone;
 _drone setVariable ["wfbe_fpv_armed", true];
 Call Compile Format ["_drone addEventHandler ['Killed',{[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled}]",sideID];
-_drone setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';",sideID];
+_drone setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf'; if ((missionNamespace getVariable ['WFBE_C_FPV_DRONE_MARK',1]) > 0) then {this spawn {private ['_v','_l','_on']; _v = _this; _l = '#lightpoint' createVehicleLocal (position _v); _l attachTo [_v,[0,0,0.4]]; _l setLightColor [1.0,0.25,0.05]; _l setLightAmbient [1.0,0.25,0.05]; _on = true; while {alive _v} do {_l setLightBrightness (if (_on) then {0.06} else {0.004}); _on = !_on; sleep 0.45}; deleteVehicle _l}};",sideID];
 processInitCommands;
 
 //--- Warhead: fires on kill ONLY while armed. Battery-expiry and abort paths disarm first

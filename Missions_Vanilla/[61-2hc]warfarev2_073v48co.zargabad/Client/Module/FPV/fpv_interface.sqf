@@ -1,4 +1,4 @@
-Private ['_action_boom','_action_leave','_defaultTeamswitch','_dgrp','_driver','_drone','_ppColor','_t0','_ttl','_warned'];
+Private ['_action_boom','_action_leave','_boostLoop','_defaultTeamswitch','_dgrp','_driver','_drone','_ppColor','_t0','_ttl','_warned'];
 _defaultTeamswitch = teamswitchenabled;
 
 _drone = playerFPV;
@@ -26,6 +26,25 @@ _ppColor ppEffectEnable true;
 _ppColor ppEffectAdjust [1, 1, 0, [1, 1, 1, 0], [1, 1, 1, 0.0], [0.2, 0.2, 0.2, 0]];
 _ppColor ppEffectCommit 0;
 
+//--- SPORT MODE (WFBE_C_FPV_DRONE_TOPSPEED, km/h; 0 = stock): gentle client-local velocity
+//--- assist toward a higher top speed than the stock Ka-137 flight model allows (An-2 LowGear
+//--- flight-assist precedent). The hull is local to this client, so the physics blend is smooth
+//--- for the pilot; remote machines see normal interpolation.
+_boostLoop = _drone spawn {
+	private ["_cap","_d","_k","_v"];
+	_d = _this;
+	_cap = missionNamespace getVariable ["WFBE_C_FPV_DRONE_TOPSPEED", 160];
+	if (_cap <= 0) exitWith {};
+	while {alive _d} do {
+		if ((speed _d) > 30 && {(speed _d) < _cap}) then {
+			_k = 1.02;
+			_v = velocity _d;
+			_d setVelocity [(_v select 0) * _k, (_v select 1) * _k, (_v select 2) * _k];
+		};
+		sleep 0.15;
+	};
+};
+
 _ttl = missionNamespace getVariable ["WFBE_C_FPV_DRONE_TTL", 240];
 _t0 = time;
 _warned = false;
@@ -51,6 +70,8 @@ if (alive _drone) then {
 		hintSilent "FPV drone lost (battery depleted or aborted).";
 	};
 };
+
+if (!isNil "_boostLoop") then {if !(scriptDone _boostLoop) then {terminate _boostLoop}};
 
 //--- Release control and restore the player.
 objnull remoteControl _driver;
