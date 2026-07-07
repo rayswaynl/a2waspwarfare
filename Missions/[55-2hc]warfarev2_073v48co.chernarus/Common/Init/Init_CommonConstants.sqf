@@ -1910,6 +1910,25 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 //--- (box poster -> /api/stats -> ingame_stats -> /leaderboard). Currently WIRED fields: kills
 //--- infantry/vehicle/air/static (RequestOnUnitKilled), pvp_kills, playtime, side. Captures/supply/
 //--- builds/deaths/factory/hq RecordStat call sites are NOT yet wired (emit 0) - fast-follow b74.2.
+//--- AICOM V2 Lane 800: GUER Director (virtual resistance ledger + lightweight brain).
+//--- Lane switch default 0 = inert (the documented exception to the lanes-default-1 rule).
+	if (isNil "AICOMV2_LANE_GUER_DIRECTOR")         then {AICOMV2_LANE_GUER_DIRECTOR = 0};         //--- Lane 800 switch: 0=OFF (byte-identical to V1), 1=Director active.
+	if (isNil "AICOMV2_GDIR_TICK_SEC")              then {AICOMV2_GDIR_TICK_SEC = 30};             //--- Brain tick interval (s).
+	if (isNil "AICOMV2_GDIR_REGEN_FULL_SEC")        then {AICOMV2_GDIR_REGEN_FULL_SEC = 1800};    //--- Seconds for wiped garrison to regen to baseline with no reinforcement.
+	if (isNil "AICOMV2_GDIR_SURGE_MAX")             then {AICOMV2_GDIR_SURGE_MAX = 1.0};           //--- Autonomous materialised strength cap vs V1 baseline per town (1.0 = never above V1).
+	if (isNil "AICOMV2_GDIR_PAID_SURGE_MAX")        then {AICOMV2_GDIR_PAID_SURGE_MAX = 1.5};     //--- Funded-order cap (Amendment A1 Commissar Panel; panel switch default 0 = off).
+	if (isNil "AICOMV2_GDIR_GROUP_BUDGET_MAX")      then {AICOMV2_GDIR_GROUP_BUDGET_MAX = 110};   //--- GUER-side group ceiling for the materialiser (144 engine hard cap).
+	if (isNil "AICOMV2_GDIR_MIN_SPAWN_M")           then {AICOMV2_GDIR_MIN_SPAWN_M = 400};        //--- Minimum distance from any player for materialisation.
+	if (isNil "AICOMV2_GDIR_AMBUSH_BUBBLE_M")       then {AICOMV2_GDIR_AMBUSH_BUBBLE_M = 700};   //--- Route-point bubble radius for ambush-cell materialisation.
+	if (isNil "AICOMV2_GDIR_CELL_SPEED_MS")         then {AICOMV2_GDIR_CELL_SPEED_MS = 8};        //--- Virtual ground speed for cell movement (m/s).
+	if (isNil "AICOMV2_GDIR_SUPPRESS_SEC")          then {AICOMV2_GDIR_SUPPRESS_SEC = 600};       //--- Post-wipe offensive-suppression window (s).
+	if (isNil "AICOMV2_GDIR_RETAKE")                then {AICOMV2_GDIR_RETAKE = 0};               //--- Retake-cell aggression: 0=off, 1=low. Default 0 CH; TK profile may set 1.
+	if (isNil "AICOMV2_GDIR_PLAYER_SUPPORT")        then {AICOMV2_GDIR_PLAYER_SUPPORT = 0};       //--- Bias cells toward human GUER players (0=off).
+//--- Amendment A2: Air-Contact Activation Tier dials (folded under AICOMV2_LANE_GUER_DIRECTOR gate).
+	if (isNil "AICOMV2_GDIR_AIR_CEILING_MIN_M")     then {AICOMV2_GDIR_AIR_CEILING_MIN_M = 100}; //--- Air below this m ALWAYS activates the AA tier on each sweep.
+	if (isNil "AICOMV2_GDIR_AIR_CEILING_MAX_M")     then {AICOMV2_GDIR_AIR_CEILING_MAX_M = 600}; //--- Air above this m NEVER activates the AA tier.
+//--- End AICOM V2 Lane 800 constants.
+
 WFBE_C_STATS_ENABLED = true;
 WFBE_C_STATS_FLUSH_INTERVAL = 60;
 WFBE_STAT_KILLS_INFANTRY   = 0;

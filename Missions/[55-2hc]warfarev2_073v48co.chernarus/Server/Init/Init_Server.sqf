@@ -1058,6 +1058,13 @@ if ((missionNamespace getVariable ["WFBE_C_AMBIENT_SKIRMISH", 0]) > 0) then {
 	["INITIALIZATION", "Init_Server.sqf: Server_AmbientSkirmish.sqf launched (WFBE_C_AMBIENT_SKIRMISH=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- AICOM V2 Lane 800: GUER Director (virtual resistance ledger + lightweight brain).
+//--- Gated on AICOMV2_LANE_GUER_DIRECTOR (default 0 = inert). With flag 0 this launch block is byte-identical to V1.
+if (isServer && {(missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0}) then {
+	[] execVM "Server\AI\Server_GuerDirector.sqf";
+	["INITIALIZATION", "Init_Server.sqf: GUER Director (lane 800) launched (AICOMV2_LANE_GUER_DIRECTOR=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
 

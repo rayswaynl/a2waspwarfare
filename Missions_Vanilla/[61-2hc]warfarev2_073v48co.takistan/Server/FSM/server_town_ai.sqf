@@ -135,7 +135,20 @@ while {!WFBE_GameOver} do {
 				if (_doScan) then {
 				_dynRange = if (_town getVariable "wfbe_active" || _town getVariable "wfbe_active_air") then {_range_detect_active} else {_range_detect};
 				_scanStart = diag_tickTime;
-				_detected = (_town nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"],_dynRange]) unitsBelowHeight 20;
+								//--- A2 air-tier (lane 800): scan includes all Air; split into ground vs high-air lists.
+				private ["_detectedAll","_detectedGround","_detectedAir"];
+				_detectedAll = (_town nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"],_dynRange]);
+				_detectedGround = _detectedAll unitsBelowHeight 20;
+				_detectedAir = [];
+				if ((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0) then {
+					{
+						if ((_x isKindOf "Air") && {((getPos _x) select 2) > 20} && {({alive _x} count crew _x) > 0}) then {
+							[_detectedAir, _x] call WFBE_CO_FNC_ArrayPush;
+						};
+					} forEach _detectedAll;
+				};
+				_detected = _detectedGround;
+
 
 				//--- Defender classification: town/static defender AI must not wake towns (its own
 				//--- OR a neighbouring enemy town it wandered near) - only players and bought AI count.
@@ -190,6 +203,37 @@ while {!WFBE_GameOver} do {
 					if(!(_town getVariable "wfbe_active") && !(_town getVariable ["wfbe_episode_spawned", false])) then {
 						_below = 1;
 						_enemies_ground = 1;
+						//--- A2 air-contact check (lane 800 AICOMV2_LANE_GUER_DIRECTOR).
+						//--- If only high-air contacts exist (no ground), gate with dice-roll ceiling.
+						//--- Air below AIR_CEILING_MIN_M always activates; above AIR_CEILING_MAX_M never;
+						//--- in between, roll per sweep to accumulate activation risk over loiter time.
+						if ((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0 && {_enemies == 0} && {count _detectedAir > 0}) then {
+							private ["_airMinM","_airMaxM","_airAlt","_airRoll","_airContact"];
+							_airMinM = missionNamespace getVariable ["AICOMV2_GDIR_AIR_CEILING_MIN_M", 100];
+							_airMaxM = missionNamespace getVariable ["AICOMV2_GDIR_AIR_CEILING_MAX_M", 600];
+							//--- Take the lowest altitude of all detected high-air vehicles.
+							_airAlt = 99999;
+							{
+								private ["_alt"];
+								_alt = (getPos _x) select 2;
+								if (_alt < _airAlt) then {_airAlt = _alt};
+							} forEach _detectedAir;
+							_airContact = false;
+							if (_airAlt <= _airMinM) then {
+								_airContact = true;
+							} else {
+								if (_airAlt < _airMaxM) then {
+									//--- In the band: roll per sweep. Low alt = high probability.
+									_airRoll = random 1;
+									if (_airRoll < ((_airMaxM - _airAlt) / (_airMaxM - _airMinM))) then {_airContact = true};
+								};
+							};
+							if (_airContact) then {
+								//--- Air contact only: clear ground flag to route to AA-tier branch.
+								_enemies_ground = 0;
+								_enemies = count _detectedAir;
+							};
+						};
 
 						//--- ACTIVE-TOWN BUDGET: skip activation if cap is reached.
 						//--- B4: use the incremental _activeTownCount (seeded from the top-of-sweep
