@@ -263,6 +263,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_GUER_KA137_FLARE_TIER_SCALE") then {WFBE_C_GUER_KA137_FLARE_TIER_SCALE = 0}; //--- Feature gate: 0 = flat MIN-MAX (byte-identical to HEAD); >0 = scale the AI Ka-137 flare stock by GUER kill-tier (delivers the RequestOnUnitKilled "flares up to 120/240" milestone copy).
 	if (isNil "WFBE_C_GUER_KA137_FLARE_TIERMIN") then {WFBE_C_GUER_KA137_FLARE_TIERMIN = [5,30,60,60]};    //--- Per-tier (0..3) flare-stock lower bound; consulted ONLY when TIER_SCALE>0. Tier 0 = base MIN (5) so tier-0 hulls never change.
 	if (isNil "WFBE_C_GUER_KA137_FLARE_TIERMAX") then {WFBE_C_GUER_KA137_FLARE_TIERMAX = [20,120,240,240]}; //--- Per-tier (0..3) flare-stock upper bound; consulted ONLY when TIER_SCALE>0. t1=120/t2=240 match the milestone copy.
+	if (isNil "WFBE_C_KA137_HP_MULT") then {WFBE_C_KA137_HP_MULT = 3}; //--- cmdcon45 (owner): Ka-137 incoming-damage divisor = effective HP multiplier on all parts (1 = vanilla).
 
 //--- Day/night cycles.
 	// Marty: Defaults used when mission parameters do not provide the accelerated day/night settings.

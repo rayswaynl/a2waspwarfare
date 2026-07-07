@@ -99,6 +99,23 @@ if (_global && (missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED"
 	}];
 };
 
+//--- cmdcon45 (owner order): Ka-137 durability - divide ALL incoming part damage by
+//--- WFBE_C_KA137_HP_MULT (default 3 = 3x effective HP on every hit selection). Config armor is
+//--- not mission-editable; a HandleDamage divisor is the canonical mission-side buff (CBR {0}
+//--- precedent). Reads the constant per hit so it is live-tunable; guarded to >=1.
+if ((_type == "Ka137_MG_PMC") || {_type == "Ka137_PMC"}) then {
+	private ["_ka137Mult"];
+	_ka137Mult = missionNamespace getVariable ["WFBE_C_KA137_HP_MULT", 3];
+	if (_ka137Mult > 1) then {
+		_vehicle addEventHandler ["HandleDamage", {
+			private ["_hdMult"];
+			_hdMult = missionNamespace getVariable ["WFBE_C_KA137_HP_MULT", 3];
+			if (_hdMult < 1) then {_hdMult = 1};
+			(_this select 2) / _hdMult
+		}];
+	};
+};
+
 ["INFORMATION", Format ["Common_CreateVehicle.sqf: [%1] Vehicle [%2] was created at [%3].", _side Call WFBE_CO_FNC_GetSideFromID, _type, _position]] Call WFBE_CO_FNC_LogContent;
 
 if !(isNil "PerformanceAudit_Record") then {
