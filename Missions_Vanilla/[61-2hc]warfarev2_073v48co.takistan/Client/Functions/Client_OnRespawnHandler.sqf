@@ -170,6 +170,17 @@ if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear &&
 				_buildings = (sideJoined) Call WFBE_CO_FNC_GetSideStructures;
 				if (_spawn in _buildings || _spawn == ((sideJoined) Call WFBE_CO_FNC_GetSideHQ)) then {_charge = false};
 			};
+			//--- Camp-spawn gear exemption (WFBE_C_CAMP_RESPAWN_KEEP_GEAR): a friendly camp is a
+			//--- forward base, not a mobile unit. Spawning there should not cost custom gear any
+			//--- more than spawning at the side HQ does in mode 5. The exemption applies across
+			//--- all penalty modes (2-5) so camps remain free regardless of the mode chosen.
+			//--- Flag-off (= 0) restores the prior behaviour where camp charges fell through.
+			if ((missionNamespace getVariable ["WFBE_C_CAMP_RESPAWN_KEEP_GEAR", 1]) > 0) then {
+				if (typeOf _spawn == WFBE_Logic_Camp) then {
+					_charge = false;
+					diag_log Format ["WFBE CAMPGEAR: camp respawn at %1 - custom gear kept (flag WFBE_C_CAMP_RESPAWN_KEEP_GEAR=1).", _spawn];
+				};
+			};
 			
 			//--- Charge if possible.
 			_funds = Call GetPlayerFunds;
