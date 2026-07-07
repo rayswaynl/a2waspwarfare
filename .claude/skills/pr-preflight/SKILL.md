@@ -43,7 +43,7 @@ EMP/WP/DECOY SCUD, doctrine personalities, GUER caps/nerfs.
 
 ## 4. Gates (all must pass — see sqf-edit-guard and mirror-regen for detail)
 
-1. `python Tools/Lint/check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV --no-classname-index` — the gate reports ~447 pre-existing findings; only NEW findings in your edited files matter.
+1. `python Tools/Lint/check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,DBLBOM,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV,TRAILCOMMA --no-classname-index` — the gate reports ~447 pre-existing findings; only NEW findings in your edited files matter.
 2. Per changed file: net `{}` and `[]` delta vs merge-base = 0.
 3. Mirror ran (`dotnet run -c RELEASE`, `A2WASP_SKIP_ZIP=1`), `-- --check` clean,
    TK/ZG `version.sqf.template` restored to merge-base.
