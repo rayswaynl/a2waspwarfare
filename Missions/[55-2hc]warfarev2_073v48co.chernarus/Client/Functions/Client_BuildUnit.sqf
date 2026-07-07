@@ -1028,6 +1028,11 @@ if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {
 	_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];
 };
 
+//--- B93 SEAD: tier-5 jets get anti-radar guidance EH when WFBE_C_SEAD > 0
+if ((missionNamespace getVariable ["WFBE_C_SEAD", 0]) > 0 && {typeOf _vehicle in ["F35B","Su34"]}) then {
+	_vehicle addeventhandler ["Fired",{_this spawn WFBE_CO_FNC_HandleSEADMissile}];
+};
+
 if(typeOf _vehicle in ['T90','BMP3']) then {
 	_vehicle addeventhandler ['Fired',{_this spawn HandleATReload;}];
 };

@@ -161,6 +161,7 @@ WFBE_CO_FNC_OnUnitHit = Compile preprocessFileLineNumbers "Common\Functions\Comm
 WFBE_CO_FNC_OnUnitKilled = Compile preprocessFileLineNumbers "Common\Functions\Common_OnUnitKilled.sqf";
 WFBE_CO_FNC_RevealArea = Compile preprocessFileLineNumbers "Common\Functions\Common_RevealArea.sqf";
 WFBE_CO_FNC_RemoveAAMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_RemoveAAMissiles.sqf";
+WFBE_CO_FNC_HandleSEADMissile = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleSEADMissile.sqf"; //--- B93 SEAD (GR-2026-07-03a): anti-radar guidance for tier-5 jets; 2-shot limit per spawn; flag WFBE_C_SEAD default 0.
 WFBE_CO_FNC_RemoveCountermeasures = if !(WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_RemoveCountermeasures.sqf"} else {{}};
 WFBE_CO_FNC_SendToClient = if !(WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_SendToClient.sqf"} else {{}};
 WFBE_CO_FNC_SendToClients = Compile preprocessFileLineNumbers "Common\Functions\Common_SendToClients.sqf";
