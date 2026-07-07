@@ -510,6 +510,40 @@ while {!WFBE_GameOver} do {
 						};
 					} forEach _town_teams;
 
+					//--- Commander Town Ledger (fable/ctl-impl-v1) survivor read-back (B3).
+					//--- Flag-off (AICOMV2_LANE_CMD_TOWN_LEDGER=0) => skipped, byte-identical to HEAD.
+					if ((_side == west || {_side == east}) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+						private ["_ctlLogik","_ctlLedger","_ctlSurviving","_ctlRecIdx","_ctlFound","_ctlI"];
+						_ctlLogik    = (_side) Call WFBE_CO_FNC_GetSideLogic;
+						_ctlLedger   = _ctlLogik getVariable ["WFBE_CTL_LEDGER", []];
+						_ctlSurviving = 0;
+						{
+							if (!isNull _x && {count (units _x) > 0}) then {_ctlSurviving = _ctlSurviving + (count (units _x))};
+						} forEach _town_teams;
+						_ctlFound  = false;
+						_ctlRecIdx = 0;
+						_ctlI      = 0;
+						{
+							if (!_ctlFound && {(_x select 0) == _town}) then {_ctlFound = true; _ctlRecIdx = _ctlI};
+							_ctlI = _ctlI + 1;
+						} forEach _ctlLedger;
+						if (_ctlFound) then {
+							private ["_ctlRec","_ctlLastSpawn","_ctlRatio","_ctlNewStr"];
+							_ctlRec       = _ctlLedger select _ctlRecIdx;
+							_ctlLastSpawn = _ctlRec select 3;
+							if (_ctlLastSpawn > 0) then {
+								_ctlRatio  = (_ctlSurviving / _ctlLastSpawn) max 0;
+								if (_ctlRatio > 1) then {_ctlRatio = 1};
+								_ctlNewStr = ((_ctlRec select 2) * _ctlRatio) max 0;
+								_ctlRec set [2, _ctlNewStr];
+								diag_log Format ["CTLSTAT|v1|%1|READBACK|town=%2|ratio=%3|str=%4", str _side, _town getVariable ["name", "?"], _ctlRatio, _ctlNewStr];
+							};
+							_ctlRec set [3, 0];
+							_ctlLedger set [_ctlRecIdx, _ctlRec];
+							_ctlLogik setVariable ["WFBE_CTL_LEDGER", _ctlLedger];
+						};
+					};
+
 					//--- Teams vehicles.
 					//--- Marty: same locality rule as above - HC-local vehicles die via cleanup-townai.
 					{

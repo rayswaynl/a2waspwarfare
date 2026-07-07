@@ -163,6 +163,22 @@ if ((_side == west || {_side == east}) && {(missionNamespace getVariable ["AICOM
 	} else {
 		diag_log Format ["CTLSTAT|v1|%1|SPAWN|town=%2|str=%3|groups=%4|deny=none", str _side, _town getVariable ["name", "?"], _ctlStr, _groups_max];
 	};
+	private ["_ctlLogik2","_ctlLedger2","_ctlI2","_ctlFound2"];
+	_ctlLogik2  = (_side) Call WFBE_CO_FNC_GetSideLogic;
+	_ctlLedger2 = _ctlLogik2 getVariable ["WFBE_CTL_LEDGER", []];
+	_ctlFound2  = false;
+	_ctlI2      = 0;
+	{
+		if (!_ctlFound2 && {(_x select 0) == _town}) then {
+			private ["_ctlRec2"];
+			_ctlRec2 = _x;
+			_ctlRec2 set [3, _groups_max];
+			_ctlLedger2 set [_ctlI2, _ctlRec2];
+			_ctlFound2 = true;
+		};
+		_ctlI2 = _ctlI2 + 1;
+	} forEach _ctlLedger2;
+	_ctlLogik2 setVariable ["WFBE_CTL_LEDGER", _ctlLedger2];
 };
 
 
