@@ -429,6 +429,11 @@ if (_isMan) then {
 		};
 	};
 
+	//--- TEAMBAR-FIRST (fable/player-teambar-slot): newly bought infantry AI must rank BELOW the player
+	//--- (COLONEL) so the A2 command bar always places the player at slot 1. PRIVATE is lowest rank.
+	if (!isNull _soldier && {(missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0}) then {
+		_soldier setRank "PRIVATE";
+	};
 	_spawnedUnits = [_soldier];
 
 	[sideJoinedText,'UnitsCreated',1] Call UpdateStatistics;
@@ -567,11 +572,49 @@ if (_isMan) then {
 			diag_log Format ["AIRSPAWN|v2|pre-create-ok|side=%1|class=%2|pos=%3", sideJoinedText, _unit, _safePos];
 		};
 	};
+	//--- naval-air-spawn-easa: carrier HVT airfield deck-height fix.
+	//--- Client_GetClosestAirport returns the HeliHEmpty hangar at deck height
+	//--- (wfbe_naval_deckz, default 16 m ASL). The generic airport spawn code
+	//--- zeroes Z (sea level). Override Z to the deck height before createVehicle
+	//--- so the hull is placed on-deck, not at sea level.
+	if (_building getVariable ["wfbe_is_carrier_hvt", false]) then {
+		_position set [2, (_building getVariable ["wfbe_naval_deckz", 16])];
+	};
 	diag_log Format ["BUYTRACE|v1|factory-pos|side=%1|factory=%2|class=%3|obj=%4|objType=%5|objPos=%6|spawnPos=%7|remote=%8", sideJoinedText, _factory, _unit, _building, typeOf _building, getPos _building, _position, !(local _building)];
 	_vehicle = [_unit, _position, sideID, _direction, _locked] Call WFBE_CO_FNC_CreateVehicle;
 	//--- GR-2026-07-03a diagnostic (ALWAYS-ON): name the createVehicle RETURN at the call site so the next failed buy
 	//--- shows objNull-vs-hull without waiting for the downstream BUYFAIL guard. isNull => the BUYFAIL branch below fires.
 	diag_log Format ["BUYTRACE|v1|createveh|side=%1|factory=%2|class=%3|null=%4|veh=%5|vehPos=%6", sideJoinedText, _factory, _unit, isNull _vehicle, _vehicle, (if (isNull _vehicle) then {[]} else {getPos _vehicle})];
+
+	//--- naval-air-spawn-easa: carrier fixed-wing velocity fix + EASA random.
+	//--- WFBE_CO_FNC_CreateVehicle with _special="FORM" (default) calls
+	//---   setVelocity [0,0,-1] (downward kick) — safe for rotary/ground vehicles
+	//---   but causes fixed-wing to stall-dive on carrier deck spawn.
+	//--- Override: if spawned from a carrier HVT airfield AND the hull is a
+	//---   fixed-wing (isKindOf "Plane" walks CfgVehicles, valid for vehicles):
+	//---   a) set a random heading and apply forward speed (~80 m/s).
+	//---   b) if WFBE_C_NAVAL_EASA_RANDOM > 0, apply a random EASA preset
+	//---      (EASA_Equip runs client-side on the local hull — safe here).
+	if (!isNull _vehicle && {_building getVariable ["wfbe_is_carrier_hvt", false]}) then {
+		private ["_carrierDir","_easaVehi","_easaTypeIdx","_easaLoadouts","_easaRandIdx"];
+		//--- Fixed-wing velocity fix: override the downward kick from FORM spawn.
+		if (_vehicle isKindOf "Plane") then {
+			_carrierDir = random 360;
+			_vehicle setDir _carrierDir;
+			_vehicle setVelocity [(sin _carrierDir) * 80, (cos _carrierDir) * 80, 0];
+		};
+		//--- EASA random preset.
+		if ((missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0]) > 0) then {
+			_easaVehi = missionNamespace getVariable ["WFBE_EASA_Vehicles", []];
+			_easaTypeIdx = _easaVehi find (typeOf _vehicle);
+			if (_easaTypeIdx >= 0) then {
+				_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaTypeIdx;
+				_easaRandIdx = floor (random (count _easaLoadouts));
+				[_vehicle, _easaRandIdx] call EASA_Equip;
+				["INFORMATION", Format ["Client_BuildUnit.sqf: naval EASA random preset %1 applied to %2 (carrier buy).", _easaRandIdx, typeOf _vehicle]] Call WFBE_CO_FNC_LogContent;
+			};
+		};
+	};
 
 	//--- cmdcon42c HOTFIX (Ray 2026-07-02): UNIVERSAL BUYFAIL-REFUND GUARD. WFBE_CO_FNC_CreateVehicle
 	//--- returns objNull whenever the engine cannot spawn the hull - a bad/unresolved buy class (e.g. a

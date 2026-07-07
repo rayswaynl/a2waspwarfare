@@ -263,6 +263,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_GUER_KA137_FLARE_TIER_SCALE") then {WFBE_C_GUER_KA137_FLARE_TIER_SCALE = 0}; //--- Feature gate: 0 = flat MIN-MAX (byte-identical to HEAD); >0 = scale the AI Ka-137 flare stock by GUER kill-tier (delivers the RequestOnUnitKilled "flares up to 120/240" milestone copy).
 	if (isNil "WFBE_C_GUER_KA137_FLARE_TIERMIN") then {WFBE_C_GUER_KA137_FLARE_TIERMIN = [5,30,60,60]};    //--- Per-tier (0..3) flare-stock lower bound; consulted ONLY when TIER_SCALE>0. Tier 0 = base MIN (5) so tier-0 hulls never change.
 	if (isNil "WFBE_C_GUER_KA137_FLARE_TIERMAX") then {WFBE_C_GUER_KA137_FLARE_TIERMAX = [20,120,240,240]}; //--- Per-tier (0..3) flare-stock upper bound; consulted ONLY when TIER_SCALE>0. t1=120/t2=240 match the milestone copy.
+	if (isNil "WFBE_C_KA137_HP_MULT") then {WFBE_C_KA137_HP_MULT = 3}; //--- cmdcon45 (owner): Ka-137 incoming-damage divisor = effective HP multiplier on all parts (1 = vanilla).
 
 //--- Day/night cycles.
 	// Marty: Defaults used when mission parameters do not provide the accelerated day/night settings.
@@ -1587,6 +1588,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_RESPAWN_LEADER") then {WFBE_C_RESPAWN_LEADER = 2}; //--- Allow leader respawn (0: Disabled, 1: Enabled, 2: Enabled but default gear).
 	if (isNil "WFBE_C_RESPAWN_MOBILE") then {WFBE_C_RESPAWN_MOBILE = 2}; //--- Allow mobile respawn (0: Disabled, 1: Enabled, 2: Enabled but default gear).
 	if (isNil "WFBE_C_RESPAWN_PENALTY") then {WFBE_C_RESPAWN_PENALTY = 4}; //--- Respawn Penalty (0: None, 1: Remove All, 2: Pay full gear price, 3: Pay 1/2 gear price, 4: pay 1/4 gear price, 5: Charge on Mobile).
+	if (isNil "WFBE_C_CAMP_RESPAWN_KEEP_GEAR") then {WFBE_C_CAMP_RESPAWN_KEEP_GEAR = 1}; //--- Camp respawn gear penalty exemption (1: camp spawns are free, custom gear restored without charge; 0: camps treated as any other forward spawn and subject to normal penalty). Default 1 matches pre-b89 behaviour where camp charge was unintentional.
 	WFBE_C_RESPAWN_CAMPS_SAFE_RADIUS = 50;
 	WFBE_C_RESPAWN_RANGE_LEADER = 50;
 	WFBE_C_RESPAWN_RANGES = [250, 350, 500];
@@ -2167,6 +2169,16 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Default 0 = current pair behaviour. Set > 0 to activate all-hind triple CAP.
 	if (isNil "WFBE_C_NAVAL_CAP_THREE_HINDS") then {WFBE_C_NAVAL_CAP_THREE_HINDS = 1};
 
+//--- naval-air-spawn-easa (fable/naval-air-spawn-easa, 2026-07-07):
+//--- WFBE_C_NAVAL_CAP_L39: when >0, the GUER carrier CAP becomes 2x L39_TK_EP1 jets
+//---   instead of the legacy Mi24_P + An2 (or THREE_HINDS) composition. L39 path
+//---   takes precedence over THREE_HINDS when both >0. Default 1 (live).
+//--- WFBE_C_NAVAL_EASA_RANDOM: when >0, aircraft spawned by the GUER CAP and by
+//---   carrier air-purchases get a random EASA preset for their airframe (silently
+//---   skips airframes not in WFBE_EASA_Vehicles). Default 1.
+	if (isNil "WFBE_C_NAVAL_CAP_L39")      then {WFBE_C_NAVAL_CAP_L39      = 1}; //--- 0=legacy Hind/An2; >0=twin L39 jets.
+	if (isNil "WFBE_C_NAVAL_EASA_RANDOM")  then {WFBE_C_NAVAL_EASA_RANDOM  = 1}; //--- 0=off; >0=randomise EASA on carrier/CAP spawns.
+
 
 //======================================================================================
 //--- NAVAL INLINE SUPER-CARRIER (fable/naval-inline-hulls, Ray 2026-07-06):
@@ -2374,6 +2386,18 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (Core_US.sqf registration, Units_CO_RU roster, Client_BuildUnit remap). Gives East a big fixed-wing
 //--- radar/AWACS-role platform beside the An-2. Flag-off (0) = token never registered/listed = byte-identical.
 	if (isNil "WFBE_C_EAST_C130") then {WFBE_C_EAST_C130 = 1};   //--- Master gate: 0=off (default), 1=on. Lobby param mirrors this.
+
+//--- WFBE_C_PLAYER_TEAMBAR_FIRST (fable/player-teambar-slot 2026-07-07): set player rank to COLONEL
+//--- at enrollment/respawn/skin-swap so the A2 command bar sorts them to slot 1 (rank drives bar order;
+//--- selectLeader sets the star but does not reorder slots). 1 = enabled (default); 0 = legacy layout.
+	if (isNil "WFBE_C_PLAYER_TEAMBAR_FIRST") then {WFBE_C_PLAYER_TEAMBAR_FIRST = 1};
+//--- PLAYER BASE DEFENSE AUTO-MANNING (fable/player-defense-automan):
+//--- When >0 and a player builds a gunner-capable static inside a base area, the defense is
+//--- registered for AI manning via the same Construction_StationaryDefense path as AI-commander
+//--- guns (DefenseTeam group, WFBE_DefenseBaseArea stamp, HandleDefense loop). The client toggle
+//--- (User16 / manningDefense, default true) still gates each individual build request.
+//--- Flag-off (0) = player statics never enter the manning path = current behaviour (byte-identical).
+	if (isNil "WFBE_C_PLAYER_DEFENSE_AUTOMAN") then {WFBE_C_PLAYER_DEFENSE_AUTOMAN = 1}; //--- 0=off (current behaviour); 1=on (man player-built base statics, respects client manningDefense toggle).
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

@@ -690,6 +690,10 @@ while {!WFBE_GameOver} do {
 						_radar setVariable ["wfbe_cbr_radius", 2000, true]; //--- AF2: broadcast so clients read the fixed 2000 (Init_BaseStructure uses it for BOTH the circle radius AND the "_fixed" flag; un-broadcast -> client drew the 750/1500 upgrade tier and live-resized it)
 						//--- Indestructible: HandleDamage returning 0 prevents any damage being applied.
 						_radar addEventHandler ["HandleDamage", {0}];
+						//--- cmdcon45 (owner report): the GUER-classed radar building is a valid AI TARGET hostile to
+						//--- BOTH sides, so W/E AI dumped ammo into an indestructible object forever. Captive = treated
+						//--- as civilian by AI target selection; nobody engages it (it cannot be destroyed anyway).
+						_radar setCaptive true;
 
 						//--- Spawn side-matched dressing for visual identity (reuses buildable CBRADAR templates).
 						_dressTpl = Format ["WFBE_NEURODEF_CBRADAR_%1", if (_newSide == west) then {"WEST"} else {"EAST"}];

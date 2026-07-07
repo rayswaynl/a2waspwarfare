@@ -533,8 +533,11 @@ class RscTitles {
 		class RUBHUD_BuildQueue : RscStructuredText {
 			idc = 1374;
 			text = "";
-			x = 0.881728 * safezoneW + safezoneX;
-			y = 0.466000 * safezoneH + safezoneY;
+			//--- cmdcon45 (owner report: queue line misaligned vs RHUD rows): RscStructuredText TOP-aligns
+			//--- its text while the sibling RscText rows CENTER vertically, and structured text carries a
+			//--- small intrinsic left inset - compensate with a +y / -x nudge so the baseline + column line up.
+			x = 0.879728 * safezoneW + safezoneX;
+			y = 0.469500 * safezoneH + safezoneY;
 			w = 0.5426041 * safezoneW;
 			h = 0.0255556 * safezoneH;
 			size = 0.026;
