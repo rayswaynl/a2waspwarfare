@@ -6,7 +6,7 @@
 		- Killed side ID.
 */
 
-Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak","_tallyCount"];
+Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak","_tallyCount","_fbBonus"];
 
 if !((typeName _this) in ["ARRAY"]) exitWith {
 	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (non-array)."] Call WFBE_CO_FNC_LogContent;
@@ -81,6 +81,19 @@ if (_killer_side == sideEnemy) then { //--- Make sure the killer is not renegade
 };
 
 if (_killer_side == civilian) exitWith {}; //--- Side couldn't be determined? exit.
+
+//--- FIRST BLOOD (WFBE_C_FIRSTBLOOD_ENABLED > 0, claude-gaming 2026-07-07): the first PVP kill of the
+//--- match - a player downs an enemy player - fires ONE time: a server-wide sting + announcement and a
+//--- small cash bonus to the killer's team. One-shot via WFBE_FIRSTBLOOD_DONE. This PVF always runs on
+//--- the server, so the latch is a plain server-read missionNamespace bool (no publicVariable needed).
+//--- ENABLED == 0 (default) leaves the whole block inert -> behaviour identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_FIRSTBLOOD_ENABLED", 0]) > 0 && {!(missionNamespace getVariable ["WFBE_FIRSTBLOOD_DONE", false])} && {_killer_isplayer} && {_killed_isplayer} && {_killer_iswfteam} && {_killer_side != _killed_side} && {_killer_side in WFBE_PRESENTSIDES}) then {
+	missionNamespace setVariable ["WFBE_FIRSTBLOOD_DONE", true];
+	_fbBonus = missionNamespace getVariable ["WFBE_C_FIRSTBLOOD_BONUS", 1000];
+	if (_fbBonus > 0) then {[_killer_group, _fbBonus] Call WFBE_CO_FNC_ChangeTeamFunds};
+	[nil, "LocalizeMessage", ["FirstBlood", name _killer, name _killed, _fbBonus]] Call WFBE_CO_FNC_SendToClients;
+	["INFORMATION", Format ["RequestOnUnitKilled.sqf: FIRST BLOOD - %1 (%2) downed %3 (%4), bonus %5.", name _killer, str _killer_side, name _killed, str _killed_side, _fbBonus]] Call WFBE_CO_FNC_LogContent;
+};
 
 //--- Lane 205: optional vehicle kill tally. The visual marker watcher is installed at vehicle creation
 //--- by Common_AddVehicleMarking.sqf, so this path only owns the authoritative counter.
