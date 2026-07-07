@@ -278,6 +278,16 @@ while {!WFBE_GameOver} do {
 							//--- the old `forEach towns` recount and the top-of-sweep count above).
 							_activeTownCount = _activeTownCount + 1;
 
+							//--- Commander Town Ledger (fable/ctl-impl-v1) unit-count fix v2: tag this as a
+							//--- GROUND wave so the post-creation contribution below (and the async
+							//--- update-town-delegation report in Server_HandleSpecial.sqf) know whether to
+							//--- add this wave real unit count into ledger field [3] - matching the
+							//--- existing ground-only scope of the Server_GetTownGroups.sqf CTL blocks.
+							//--- Flag-gated so flag-off leaves the mission byte-identical to HEAD.
+							if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0) then {
+								_town setVariable ["wfbe_ctl_ground_wave", true];
+							};
+
 							if (_side == WFBE_DEFENDER) then {
 								_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroupsDefender
 							} else {
@@ -291,6 +301,14 @@ while {!WFBE_GameOver} do {
 							if(!(_town getVariable "wfbe_active_air")) then {
 								_town setVariable ["wfbe_active_air", true];
 								_town setVariable ["wfbe_episode_spawned", true];
+
+								//--- Commander Town Ledger (fable/ctl-impl-v1) unit-count fix v2: air-only
+								//--- waves stay OUT of ledger field [3] (matches the {!_aa_get} exclusion the
+								//--- CTL overlay blocks in Server_GetTownGroups.sqf already apply).
+								//--- Flag-gated so flag-off leaves the mission byte-identical to HEAD.
+								if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0) then {
+									_town setVariable ["wfbe_ctl_ground_wave", false];
+								};
 
 								if (_side == WFBE_DEFENDER) then {
 									_groups = [_town, _side, true] Call WFBE_SE_FNC_GetTownGroupsDefender
@@ -366,6 +384,35 @@ while {!WFBE_GameOver} do {
 							_town_teams = _town_teams + (_retVal select 0);
 							_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + (_retVal select 1)];
 							_town setVariable ['wfbe_town_teams', _town_teams];
+
+							//--- Commander Town Ledger (fable/ctl-impl-v1) unit-count fix v2 (PR #886 review:
+							//--- crew undercounting): add this wave REAL Man-unit count (server-direct portion)
+							//--- into ledger field [3]. (_retVal select 0) are the live groups CreateTownUnits
+							//--- just created - `units _x` on them already includes auto-crew (driver/gunner/
+							//--- commander), matching the survivor tally basis at deactivation below. Delegated
+							//--- portions of this same wave (client/HC) report their real counts separately via
+							//--- Server_HandleSpecial.sqf update-town-delegation once creation lands remotely.
+							//--- Ground-only (wfbe_ctl_ground_wave), flag-gated: byte-identical to HEAD when off.
+							if ((_side == west || {_side == east}) && {(_town getVariable ["wfbe_ctl_ground_wave", false])} && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+								private ["_ctlUnits6","_ctlLogik6","_ctlLedger6","_ctlI6","_ctlFound6"];
+								_ctlUnits6 = 0;
+								{_ctlUnits6 = _ctlUnits6 + (count units _x)} forEach (_retVal select 0);
+								_ctlLogik6  = (_side) Call WFBE_CO_FNC_GetSideLogic;
+								_ctlLedger6 = _ctlLogik6 getVariable ["WFBE_CTL_LEDGER", []];
+								_ctlFound6  = false;
+								_ctlI6      = 0;
+								{
+									if (!_ctlFound6 && {(_x select 0) == _town}) then {
+										private ["_ctlRec6"];
+										_ctlRec6 = _x;
+										_ctlRec6 set [3, (_ctlRec6 select 3) + _ctlUnits6];
+										_ctlLedger6 set [_ctlI6, _ctlRec6];
+										_ctlFound6 = true;
+									};
+									_ctlI6 = _ctlI6 + 1;
+								} forEach _ctlLedger6;
+								_ctlLogik6 setVariable ["WFBE_CTL_LEDGER", _ctlLedger6];
+							};
 						};
 
 						//--- Man the defenses.

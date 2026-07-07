@@ -273,16 +273,22 @@ if (_mergeTarget > 0 && {count _contents > 1}) then {
 	_contents = _merged;
 };
 
-//--- Commander Town Ledger (fable/ctl-impl-v1) unit-count fix: lastSpawnUnits (ledger field
-//--- [3]) must be a UNIT count (spec B3: "surviving / lastSpawnUnits" is a per-unit ratio),
-//--- not the GROUP count (_groups_max) the overlay above writes for telemetry/budget only.
-//--- Recorded here, once _contents (the final per-group classname rosters) is finalized, by
-//--- summing classnames across every roster - vehicle crews and merged infantry included.
+//--- Commander Town Ledger (fable/ctl-impl-v1) unit-count fix v2 (PR #886 review: crew
+//--- undercounting). lastSpawnUnits (ledger field [3]) must be a REAL Man-unit count incl.
+//--- vehicle crew (driver/gunner/commander) - matching the survivor tally basis
+//--- (server_town_ai.sqf sums units of each _grp, which includes auto-crew). Counting
+//--- _contents roster CLASSNAMES (the v1 fix above) undercounts every vehicle roster: one
+//--- vehicle classname is one roster entry, but Common_CreateTeam.sqf spawns that hull PLUS
+//--- up to 3 crew into the SAME group. No units exist yet at this point - Server_GetTownGroups.sqf
+//--- is a pure roster PLANNER called before any group/unit is spawned - so the real count can
+//--- only be known once Common_CreateTeam.sqf actually creates the groups. This block now only
+//--- RESETS field [3] to 0 for this wave; the real, crew-inclusive count is ADDED once creation
+//--- completes, at the two places the created group objects become known: server_town_ai.sqf
+//--- (server-direct creation, synchronous) and Server_HandleSpecial.sqf update-town-delegation
+//--- (client/HC-delegated creation, reported back once creation finishes remotely).
 //--- Flag-off (AICOMV2_LANE_CMD_TOWN_LEDGER=0) => this whole block is skipped, byte-identical to HEAD.
 if ((_side == west || {_side == east}) && {!_aa_get} && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
-	private ["_ctlUnitTotal","_ctlLogik3","_ctlLedger3","_ctlI3","_ctlFound3"];
-	_ctlUnitTotal = 0;
-	{_ctlUnitTotal = _ctlUnitTotal + (count _x)} forEach _contents;
+	private ["_ctlLogik3","_ctlLedger3","_ctlI3","_ctlFound3"];
 	_ctlLogik3  = (_side) Call WFBE_CO_FNC_GetSideLogic;
 	_ctlLedger3 = _ctlLogik3 getVariable ["WFBE_CTL_LEDGER", []];
 	_ctlFound3  = false;
@@ -291,7 +297,7 @@ if ((_side == west || {_side == east}) && {!_aa_get} && {(missionNamespace getVa
 		if (!_ctlFound3 && {(_x select 0) == _town}) then {
 			private ["_ctlRec3"];
 			_ctlRec3 = _x;
-			_ctlRec3 set [3, _ctlUnitTotal];
+			_ctlRec3 set [3, 0];
 			_ctlLedger3 set [_ctlI3, _ctlRec3];
 			_ctlFound3 = true;
 		};

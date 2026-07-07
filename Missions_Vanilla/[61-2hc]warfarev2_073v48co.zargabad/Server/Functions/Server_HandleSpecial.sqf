@@ -138,6 +138,42 @@ switch (_args select 0) do {
 			};
 		} forEach _teams;
 
+		//--- Commander Town Ledger (fable/ctl-impl-v1) unit-count fix v2 (PR #886 review: crew
+		//--- undercounting): this is the ONLY point the server learns about client/HC-delegated
+		//--- group creation (Client_DelegateTownAI.sqf already ran Common_CreateTownUnits.sqf
+		//--- remotely and reports the real, fully-crewed groups back here). Add their REAL
+		//--- Man-unit count (units _x already includes auto-crew) into ledger field [3], mirroring
+		//--- the server-direct contribution in server_town_ai.sqf. Side is derived from the town's
+		//--- own sideID (a town belongs to exactly one CTL ledger at a time - Server_CmdTownLedger.sqf
+		//--- keys records the same way), so the message format needs no changes. Ground-only
+		//--- (wfbe_ctl_ground_wave, set alongside the wave in server_town_ai.sqf) and flag-gated:
+		//--- byte-identical to HEAD when AICOMV2_LANE_CMD_TOWN_LEDGER=0.
+		if ((count _teams > 0) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0} && {(_town getVariable ["wfbe_ctl_ground_wave", false])}) then {
+			private ["_ctlSide7","_ctlSideId7"];
+			_ctlSideId7 = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+			_ctlSide7   = _ctlSideId7 Call WFBE_CO_FNC_GetSideFromID;
+			if (_ctlSide7 == west || {_ctlSide7 == east}) then {
+				private ["_ctlUnits7","_ctlLogik7","_ctlLedger7","_ctlI7","_ctlFound7"];
+				_ctlUnits7 = 0;
+				{_ctlUnits7 = _ctlUnits7 + (count units _x)} forEach _teams;
+				_ctlLogik7  = (_ctlSide7) Call WFBE_CO_FNC_GetSideLogic;
+				_ctlLedger7 = _ctlLogik7 getVariable ["WFBE_CTL_LEDGER", []];
+				_ctlFound7  = false;
+				_ctlI7      = 0;
+				{
+					if (!_ctlFound7 && {(_x select 0) == _town}) then {
+						private ["_ctlRec7"];
+						_ctlRec7 = _x;
+						_ctlRec7 set [3, (_ctlRec7 select 3) + _ctlUnits7];
+						_ctlLedger7 set [_ctlI7, _ctlRec7];
+						_ctlFound7 = true;
+					};
+					_ctlI7 = _ctlI7 + 1;
+				} forEach _ctlLedger7;
+				_ctlLogik7 setVariable ["WFBE_CTL_LEDGER", _ctlLedger7];
+			};
+		};
+
 		_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + _vehicles];
 		// Marty: Log the server acknowledgement of delegated town assets for production RPT diagnosis.
 		["INFORMATION", Format ["TOWN_AI_HC_CLEANUP server_update town:%1 teams:%2 vehicles:%3 totalTeams:%4 totalVehicles:%5", _town getVariable "name", count _teams, count _vehicles, count (_town getVariable "wfbe_town_teams"), count (_town getVariable 'wfbe_active_vehicles')]] Call WFBE_CO_FNC_LogContent;
