@@ -1973,6 +1973,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_RELIEF")     then {AICOMV2_GDIR_PANEL_PRICE_RELIEF = 800};  //--- Base price: relief squad (infantry-only fast buy). 1/2x of REINF base.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_MORTAR")     then {AICOMV2_GDIR_PANEL_PRICE_MORTAR = 1200}; //--- Base price: mortar harassment action.
 	if (isNil "AICOMV2_GDIR_MORTAR_COOLDOWN_SEC")    then {AICOMV2_GDIR_MORTAR_COOLDOWN_SEC = 900}; //--- Per-town mortar action cooldown (s); separate from action cooldown.
+	if (isNil "WFBE_C_GDIR_GARRISON_GAIN") then {WFBE_C_GDIR_GARRISON_GAIN = 0}; //--- Tier-1 ledger->real-garrison gain: 0=off (byte-identical). >0 = a Director-reinforced GUER town (wfbe_gdir_str ratio>1) wakes with +min(groups, round(groups*(ratio-1)*GAIN)) real defender groups, floored at V1 (no-nerf). ~1.0 => +50% at max funded surge (ratio 1.5).
 //--- End AICOM V2 Lane 800 constants.
 
 WFBE_C_STATS_ENABLED = true;
