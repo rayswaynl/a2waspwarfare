@@ -2191,7 +2191,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Aircraft, Land_CncBlock_Stripes accents at gap mouths, ServicePoint slab-free.
 //--- Flag >0 -> Construction_Small/MediumSite.sqf prefer _WALLS_V4 where defined; 0 (default) ->
 //--- the existing WFBE_C_WALLS_V3 selection runs untouched (V3 stays the live default look).
-	if (isNil "WFBE_C_WALLS_V4") then {WFBE_C_WALLS_V4 = 0};
+	if (isNil "WFBE_C_WALLS_V4") then {WFBE_C_WALLS_V4 = 1};
 
 //--- fable/wddm-functional-defenses: FORTIFICATION PACK. Ray (owner intent, verbatim gist):
 //--- "Fortifications! Not fortresses - useful items like a row of concrete walls, or a way to
