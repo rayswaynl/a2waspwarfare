@@ -45,3 +45,6 @@ work/
 # Windows redirect artifacts from Bash /dev/null on Windows
 C*tmp*.diff
 C*tmp*.txt
+
+# Soak ledger runtime data (append-only, machine-local; created by Append-LedgerRow.ps1)
+Tools/Soak/soak-ledger.jsonl

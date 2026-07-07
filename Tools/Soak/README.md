@@ -318,3 +318,58 @@ mode transitions visible at a glance.
 ```
 
 CTRL+C to stop the watcher.  The script is non-destructive and read-only.
+
+---
+
+## Soak ledger (the data spine)
+
+The ledger is the append-only, durable record every soak run flows into — the substrate the
+nightly farm, the Discord verdict poster, the golden-baseline regression check, and any future
+admin hub all read from. Its schema is frozen in
+[`docs/design/v2/SPEC-SOAK-LEDGER-CONTRACT.md`](../../docs/design/v2/SPEC-SOAK-LEDGER-CONTRACT.md)
+and mirrored as a machine-checkable JSON Schema in `run_result.schema.json`.
+
+**Files**
+
+| File | Role |
+| --- | --- |
+| `soak-ledger.jsonl` | The ledger itself. One JSON object per line; first line is a `#` header comment. Runtime data — **git-ignored**, created on first append. |
+| `run_result.schema.json` | JSON Schema (draft-07) freezing the v1 row contract. |
+| `Append-LedgerRow.ps1` | The only supported writer. Generates `rowId`, de-dupes on `stampId`, maps analyzer JSON into the curated row, appends one line. |
+| `Append-LedgerRow.Tests.ps1` | Dependency-free assertion suite (no Pester). Exit 0 pass / 1 fail. |
+| `validate_ledger.py` | Validates a ledger file against the schema without needing the `jsonschema` package. `--self-test` for CI. |
+| `golden-baselines.json` | Per-regime expected-value baselines for regression detection. Provisional `documented` seeds (n=0) get promoted to `measured` once ≥5 real rows exist. |
+
+**Core rules** (enforced by the writer + validator):
+
+- **Null is not zero.** An unknown/N-A field is `null` and is never omitted; `0` means a measured zero. Readers must never infer PASS from a missing field.
+- **`rowId` = `YYYYMMDD-NNNN`**, one-based and scoped to the UTC append date; the writer computes it, callers never pass it.
+- **Duplicate `stampId` is rejected** (throws, appends nothing) unless the row is a `SKIP_*` status *and* `-AllowDuplicateSkip` is set.
+
+**Append a row** (normal deploy-candidate run):
+
+```powershell
+python Tools\Soak\analyze_soak.py <server.RPT> --hc <ArmA2OA.RPT> --json > analyze.json
+$rowId = .\Tools\Soak\Append-LedgerRow.ps1 `
+    -LedgerPath   Tools\Soak\soak-ledger.jsonl `
+    -Status       POSTED `
+    -StampPath    <deploy-stamp.json> `
+    -AnalyzeJsonPath analyze.json `
+    -ServerRptPath <server.RPT> -HcRptPath <ArmA2OA.RPT> `
+    -DiscordGuildId 1510513623800221857 -DiscordChannelId 1510573856275038228
+```
+
+**Record a run that never produced an RPT** (box down, too short, etc.) — KPIs land as `null`, not `0`:
+
+```powershell
+.\Tools\Soak\Append-LedgerRow.ps1 -LedgerPath Tools\Soak\soak-ledger.jsonl `
+    -Status SKIP_BOX_DOWN -StampPath <stamp.json> -AllowDuplicateSkip -Note "SCP failed before analyzer stage."
+```
+
+**Verify** (both are CI-friendly, dependency-free):
+
+```powershell
+pwsh Tools\Soak\Append-LedgerRow.Tests.ps1     # writer round-trip + contract checks
+python Tools\Soak\validate_ledger.py --self-test
+python Tools\Soak\validate_ledger.py Tools\Soak\soak-ledger.jsonl   # conformance of a real ledger
+```
