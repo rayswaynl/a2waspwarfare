@@ -1587,6 +1587,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_RESPAWN_LEADER") then {WFBE_C_RESPAWN_LEADER = 2}; //--- Allow leader respawn (0: Disabled, 1: Enabled, 2: Enabled but default gear).
 	if (isNil "WFBE_C_RESPAWN_MOBILE") then {WFBE_C_RESPAWN_MOBILE = 2}; //--- Allow mobile respawn (0: Disabled, 1: Enabled, 2: Enabled but default gear).
 	if (isNil "WFBE_C_RESPAWN_PENALTY") then {WFBE_C_RESPAWN_PENALTY = 4}; //--- Respawn Penalty (0: None, 1: Remove All, 2: Pay full gear price, 3: Pay 1/2 gear price, 4: pay 1/4 gear price, 5: Charge on Mobile).
+	if (isNil "WFBE_C_CAMP_RESPAWN_KEEP_GEAR") then {WFBE_C_CAMP_RESPAWN_KEEP_GEAR = 1}; //--- Camp respawn gear penalty exemption (1: camp spawns are free, custom gear restored without charge; 0: camps treated as any other forward spawn and subject to normal penalty). Default 1 matches pre-b89 behaviour where camp charge was unintentional.
 	WFBE_C_RESPAWN_CAMPS_SAFE_RADIUS = 50;
 	WFBE_C_RESPAWN_RANGE_LEADER = 50;
 	WFBE_C_RESPAWN_RANGES = [250, 350, 500];
