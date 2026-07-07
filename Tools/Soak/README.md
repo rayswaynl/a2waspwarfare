@@ -443,3 +443,31 @@ python Tools\Soak\chart_soak.py --self-test
 ```
 
 Empty inputs render gracefully (each card shows "no data yet" until runs accumulate).
+
+---
+
+## Experiment engine (the autopilot brains)
+
+The stdlib modules that turn accumulated runs into honest, evidence-cited findings. Built so they
+**cannot lie on a thin corpus**: a fresh sandbox with < 5 replicates per arm returns `INCONCLUSIVE`,
+never a "finding". Everything is `--self-test`-gated and dependency-free (runs on the box).
+
+| File | Role |
+| --- | --- |
+| `ab_stats.py` | Replicate-aware A/B: Welch t vs an embedded t-table (no scipy) + Cohen's d, dual **statistical AND practical (MDE)** gate, hard **regime-match refusal**, nonparametric p10..p90 path for count metrics. Verdicts: BETTER / WORSE / NO_DIFF / INCONCLUSIVE / REFUSE_REGIME_MISMATCH. |
+| `decision_engine.py` | Convergence controller: replicate each A/B arm only while **underpowered** (2·SEM ≥ MDE), capped at N_MAX=12; sweep knee-bracketing with **BISECT** instead of piling replicates. Actions: NEED_MORE_REPLICATES / BISECT / CONVERGED / STOP. |
+| `findings_emitter.py` | Append-only `findings.jsonl` — every verdict cites both arms' ledger `rowIds`, n, σ, test, MDE. INCONCLUSIVE/REFUSE are recorded, never hidden. |
+| `mde-table.json` | Per-metric minimum detectable effect + direction (proposed; owner sign-off pending). |
+| `topExperiments.json` | The experiment queue (sweeps / A-B / grade), priority-ordered, `gatedOn` track-b where live boot is needed. |
+| `chart_soak.py` | +A/B delta chart (chart 6): per-metric %delta for the latest A/B, green=improved / red=regressed / gray=no-diff. |
+
+Honest-scope note: with no live boot yet (Track B), the corpus is thin, so most A/Bs correctly sit at
+`INCONCLUSIVE` and sweeps have no controlled X-axis. The engine is *ready* — it produces real verdicts
+the moment matched replicates accrue. INCONCLUSIVE is never presented as a win.
+
+```powershell
+python Tools\Soak\ab_stats.py --self-test
+python Tools\Soak\decision_engine.py --self-test
+python Tools\Soak\findings_emitter.py --self-test
+python Tools\Soak\chart_soak.py --self-test   # now includes the A/B delta chart
+```

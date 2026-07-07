@@ -329,6 +329,73 @@ def chart_verdicts(results, rows):
                      [{"name": "count", "color": PALETTE[2], "values": [tally[c] for c in cats]}], "count")
 
 
+def read_findings(path):
+    out = []
+    if not path or not os.path.exists(path):
+        return out
+    with open(path, "r", encoding="utf-8-sig") as fh:
+        for line in fh:
+            s = line.strip()
+            if not s or s.startswith("#"):
+                continue
+            try:
+                obj = json.loads(s)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(obj, dict) and obj.get("schema") == "a2wasp-finding-v1":
+                out.append(obj)
+    return out
+
+
+def chart_ab_delta(findings):
+    """Horizontal diverging bars: per-metric %delta for the most recent A/B experiment.
+    Bar extends right when B improved on A, left when it regressed; gray for no-diff/inconclusive."""
+    if not findings:
+        return None
+    # most recent experiment by findingId
+    latest = sorted(findings, key=lambda f: f.get("findingId", ""))[-1]
+    exp = latest.get("experiment")
+    group = [f for f in findings if f.get("experiment") == exp and f.get("evidence", {}).get("pctDelta") is not None]
+    if not group:
+        return None
+    W = 720
+    row_h, top, left = 30, 56, 168
+    H = top + row_h * len(group) + 16
+    cx = left + (W - left - 24 - 40) / 2  # center axis x (leave label + right margin)
+    half = (W - left - 24 - 40) / 2
+    maxd = max(abs(f["evidence"]["pctDelta"]) for f in group) or 1.0
+    color = {"better": "#4caf72", "worse": "#c94f4f"}
+    parts = ['<text x="24" y="26" font-size="15" font-weight="600" fill="currentColor">'
+             'A/B delta: %s (candidate vs baseline)</text>' % _esc(exp)]
+    parts.append('<line x1="%.1f" y1="%d" x2="%.1f" y2="%d" stroke="currentColor" stroke-opacity="0.35"/>'
+                 % (cx, top - 6, cx, top + row_h * len(group)))
+    for i, f in enumerate(sorted(group, key=lambda x: x.get("metric", ""))):
+        ev = f["evidence"]
+        y = top + i * row_h
+        pct = ev["pctDelta"]
+        d = ev.get("direction")
+        col = color.get(d, "#8a8f98")
+        w = abs(pct) / maxd * half
+        if d in ("better", "worse"):
+            x = cx if pct >= 0 else cx - w
+            bx = cx if d == "better" else cx - w  # extend toward the "good" side by direction
+            # place bar on the numeric-sign side so it reads naturally, color by good/bad
+            x = cx if pct >= 0 else cx - w
+            parts.append('<rect x="%.1f" y="%.1f" width="%.1f" height="14" fill="%s" rx="2"/>'
+                         % (x, y + 2, max(1.0, w), col))
+        else:
+            parts.append('<circle cx="%.1f" cy="%.1f" r="4" fill="%s"/>' % (cx, y + 9, col))
+        parts.append('<text x="%d" y="%.1f" font-size="12" fill="currentColor" fill-opacity="0.85">%s</text>'
+                     % (12, y + 13, _esc(f.get("metric", ""))))
+        lx = cx + (w + 6 if pct >= 0 else -(w + 6))
+        anchor = "start" if pct >= 0 else "end"
+        vlabel = ("%+.1f%%" % pct) + (" → %s" % f.get("verdict")) if f.get("verdict") in ("BETTER", "WORSE") else ("%+.1f%% (%s)" % (pct, f.get("verdict", "")))
+        parts.append('<text x="%.1f" y="%.1f" font-size="11" text-anchor="%s" fill="%s">%s</text>'
+                     % (lx, y + 13, anchor, col if d in ("better", "worse") else "currentColor", _esc(vlabel)))
+    return ('<svg viewBox="0 0 %d %d" width="100%%" xmlns="http://www.w3.org/2000/svg" '
+            'style="max-width:%dpx">%s</svg>' % (W, H, W, "".join(parts)))
+
+
 # ----------------------------------------------------------------------------- report
 _CSS = """
 :root{color-scheme:light dark;--bg:#ffffff;--fg:#1a1a1a;--card:#f6f7f9;--muted:#666;--line:#e2e4e8}
@@ -346,15 +413,17 @@ th{color:var(--muted);font-weight:600}
 """
 
 
-def build_report(ledger_path, results_dir, title="WASP sandbox soak report"):
+def build_report(ledger_path, results_dir, title="WASP sandbox soak report", findings_path=None):
     rows = list(iter_ledger(ledger_path))
     results = read_results(results_dir)
+    findings = read_findings(findings_path)
     charts = [
         ("FPS knee", chart_fps_knee(results, rows)),
         ("HC split", chart_hc_split(results)),
         ("Population sweep", chart_pop_sweep(results)),
         ("FPS timeline", chart_timeline(rows)),
         ("Verdicts", chart_verdicts(results, rows)),
+        ("A/B delta", chart_ab_delta(findings)),
     ]
     cards = []
     for name, svg in charts:
@@ -375,9 +444,10 @@ def build_report(ledger_path, results_dir, title="WASP sandbox soak report"):
              "<th>AIpeak</th><th>verdict</th></tr>%s</table>" % "".join(trows)) if trows else \
             '<div class="empty">no graded runs yet</div>'
 
-    body = ('<h1>%s</h1><p class="sub">%d ledger row(s) &middot; %d graded run(s)</p>'
+    body = ('<h1>%s</h1><p class="sub">%d ledger row(s) &middot; %d graded run(s) &middot; %d finding(s)</p>'
             '<div class="grid">%s</div><div class="card" style="margin-top:16px">'
-            '<b>Recent runs</b>%s</div>' % (_esc(title), len(rows), len(results), "".join(cards), table))
+            '<b>Recent runs</b>%s</div>' % (_esc(title), len(rows), len(results), len(findings),
+                                            "".join(cards), table))
     return "<!doctype html><html><head><meta charset='utf-8'><title>%s</title><style>%s</style></head>" \
            "<body>%s</body></html>" % (_esc(title), _CSS, body)
 
@@ -407,8 +477,18 @@ def _self_test():
             fh.write(json.dumps({"schema": "a2wasp-soak-ledger-row-v1", "rowId": "20260707-000%d" % (i + 1),
                                  "analyzer": {"perf": {"serverFpsMedian": fps, "aiTotPeak": 300 + i * 60}},
                                  "lenses": {"overall": "PASS" if fps >= 40 else "WATCH"}}) + "\n")
+    # findings for the A/B delta chart (an hc-split experiment, one finding per metric)
+    findings = os.path.join(d, "findings.jsonl")
+    with open(findings, "w") as fh:
+        fh.write("# header\n")
+        fh.write(json.dumps({"schema": "a2wasp-finding-v1", "findingId": "20260707-0001",
+                             "experiment": "hc-split@pin10", "metric": "serverFpsMedian", "verdict": "BETTER",
+                             "evidence": {"pctDelta": 24.2, "direction": "better"}}) + "\n")
+        fh.write(json.dumps({"schema": "a2wasp-finding-v1", "findingId": "20260707-0002",
+                             "experiment": "hc-split@pin10", "metric": "captures", "verdict": "NO_DIFF",
+                             "evidence": {"pctDelta": 0.0, "direction": "flat"}}) + "\n")
     out = os.path.join(d, "report.html")
-    open(out, "w", encoding="utf-8").write(build_report(ledger, res))
+    open(out, "w", encoding="utf-8").write(build_report(ledger, res, findings_path=findings))
     doc = open(out, encoding="utf-8").read()
     checks = [
         ("report built", os.path.getsize(out) > 500),
@@ -417,8 +497,9 @@ def _self_test():
         ("sweep chart present", "Population sweep" in doc),
         ("timeline chart present", "FPS over ledger" in doc),
         ("verdict chart present", "Verdict tally" in doc),
+        ("A/B delta chart present", "A/B delta" in doc and "hc-split@pin10" in doc),
         ("null skipped not zeroed", "no data yet" not in doc or True),
-        ("svg count >= 5", doc.count("<svg") >= 5),
+        ("svg count >= 6", doc.count("<svg") >= 6),
         ("knee band drawn", "#c94f4f" in doc),
     ]
     ok = True
@@ -436,6 +517,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--ledger", default=os.path.join(HERE, "soak-ledger.jsonl"))
     ap.add_argument("--results", default=os.path.join(HERE, "results"))
+    ap.add_argument("--findings", default=os.path.join(HERE, "findings.jsonl"))
     ap.add_argument("--out", default=os.path.join(HERE, "report", "soak-report.html"))
     ap.add_argument("--title", default="WASP sandbox soak report")
     ap.add_argument("--self-test", action="store_true")
@@ -444,7 +526,7 @@ def main():
         ok = _self_test()
         print("PASSED" if ok else "FAILED")
         return 0 if ok else 1
-    doc = build_report(a.ledger, a.results, a.title)
+    doc = build_report(a.ledger, a.results, a.title, findings_path=a.findings)
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     open(a.out, "w", encoding="utf-8").write(doc)
     print("wrote %s (%d bytes)" % (a.out, os.path.getsize(a.out)))
