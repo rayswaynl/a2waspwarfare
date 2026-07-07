@@ -744,6 +744,26 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				};
 			};
 
+			//--- WAR-CHEST REQUISITION arm (cmdcon44 economy-sink, claude 2026-07-07): at team cap the founding
+			//--- gate stops all TEAM_FOUNDED spend and the wallet climbs on income the ECON_SINK above ignores
+			//--- until 85% of the wealth cap (rc13 live: EAST 218k -> 726k+ with only TOPUP spend). While pinned
+			//--- (_fTeams >= _dynTarget, the P4 values computed above) and rich (funds cover COST while staying
+			//--- over FLOOR), arm ONE paid early wildcard draw for the worker to consume (AI_Commander_Wildcard.sqf
+			//--- debits at draw time - an unconsumed request never moves money). Human-seated pause mirrors the
+			//--- cmdcon42 econ-sink gate. Cooldown t0 is stamped at ARM so a dropped request still backs off.
+			if ((missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_ENABLE", 0]) > 0
+				&& {!(_humanSeated && {(missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_HUMAN_OFF", 1]) > 0})}
+				&& {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1]) > 0}
+				&& {_fTeams >= _dynTarget}
+				&& {_funds >= ((missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_COST", 75000]) + (missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_FLOOR", 250000]))}
+				&& {!(_logik getVariable ["wfbe_aicom_reqdraw_req", false])}
+				&& {time - (_logik getVariable ["wfbe_aicom_reqdraw_t0", -1e10]) > (missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_COOLDOWN", 480])}) then {
+				_logik setVariable ["wfbe_aicom_reqdraw_req", true];
+				_logik setVariable ["wfbe_aicom_reqdraw_t0", time];
+				["INFORMATION", Format ["AI_Commander.sqf: [%1] REQDRAW armed - funds %2 at team cap (%3/%4); paid wildcard draw requested.", str _side, _funds, _fTeams, _dynTarget]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|REQDRAW_ARM|funds=" + str _funds + "|teams=" + str _fTeams + "|target=" + str _dynTarget);
+			};
+
 			//--- Reactive CBR research: append [WFBE_UP_CBRADAR,1/2] to the AI upgrade program
 			//--- once, the first tick after wfbe_aicom_arty_threat is set.  No-op if the constant
 			//--- or the upgrades-levels array doesn't include CBR (vanilla / non-experital builds).

@@ -1004,6 +1004,17 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_ECON_SINK_FRAC")          then {WFBE_C_AICOM_ECON_SINK_FRAC = 0.85};       //--- rich threshold as a fraction of the wealth cap.
 	if (isNil "WFBE_C_AICOM_ECON_SINK_TEAMCAP")       then {WFBE_C_AICOM_ECON_SINK_TEAMCAP = 2};       //--- extra founding target while rich (still under the hard cap).
 	if (isNil "WFBE_C_AICOM_ECON_SINK_HUMAN_OFF")     then {WFBE_C_AICOM_ECON_SINK_HUMAN_OFF = 1};     //--- cmdcon42 (Ray): 1 = pause the econ-sink (surge + auto-research/spend) whenever a HUMAN sits in the commander slot, even under AICOM_LOCK. 0 = legacy (sink runs regardless).
+	//--- WAR-CHEST REQUISITION (cmdcon44 economy-sink, claude 2026-07-07): the V2 commander banks unbounded
+	//--- funds once team founding pins at the hard cap (rc13 live: EAST 218k -> 726k+ in one round with only
+	//--- TOPUP spend) - the ECON_SINK above only engages at 85% of the 1.5M wealth cap, so the 250k-1.27M band
+	//--- has NO sink. When at team cap with funds over FLOOR+COST, the supervisor arms a PAID early wildcard
+	//--- draw: the wildcard worker debits COST and rolls the normal curated deck (W1 War Chest excluded on
+	//--- paid draws - no funds-refund card). Converts the hoard into visible battlefield events through the
+	//--- existing tested deck. DEFAULT 0 = fully inert.
+	if (isNil "WFBE_C_AICOM2_REQDRAW_ENABLE")   then {WFBE_C_AICOM2_REQDRAW_ENABLE   = 0};      //--- master switch (0 = dark).
+	if (isNil "WFBE_C_AICOM2_REQDRAW_FLOOR")    then {WFBE_C_AICOM2_REQDRAW_FLOOR    = 250000}; //--- operating reserve: the sink never drains funds below this.
+	if (isNil "WFBE_C_AICOM2_REQDRAW_COST")     then {WFBE_C_AICOM2_REQDRAW_COST     = 75000};  //--- price of one requisitioned draw.
+	if (isNil "WFBE_C_AICOM2_REQDRAW_COOLDOWN") then {WFBE_C_AICOM2_REQDRAW_COOLDOWN = 480};    //--- min seconds between paid draws (max ~9.4k/min drain vs ~5.5k/min observed rc13 accrual).
 	if (isNil "WFBE_C_AICOM_MHQ_FINAL_STEPBACK")      then {WFBE_C_AICOM_MHQ_FINAL_STEPBACK = 120};    //--- m per step back toward own HQ when the final deploy spot fails revalidation.
 	if (isNil "WFBE_C_AICOM_MHQ_FINAL_MAXTRIES")      then {WFBE_C_AICOM_MHQ_FINAL_MAXTRIES = 12};     //--- revalidation step-back attempts before the safe fallback.
 	if (isNil "WFBE_C_AICOM_MHQ_ROUTE_DEESC")         then {WFBE_C_AICOM_MHQ_ROUTE_DEESC = 1};         //--- MHQ drive de-escalates (AWARE/NORMAL) near contact instead of barrelling in careless.
