@@ -370,7 +370,7 @@ waitUntil {
 		createDialog "WF_Menu";
 	};
 
-	(!alive player) || {!isDialog}
+	(!alive player) || {!dialog} //--- fable/tonight-hotfixes: isDialog is not a command on A2 OA (undefined-variable spam every frame); `dialog` is the engine bool
 };
 
 //--- Cleanup: remove local selection marker.

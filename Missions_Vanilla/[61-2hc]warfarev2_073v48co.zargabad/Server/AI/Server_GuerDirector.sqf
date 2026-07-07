@@ -9,6 +9,15 @@
 
 if (!((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0)) exitWith {};
 
+//--- fable/tonight-hotfixes (2026-07-07): singleton guard. Live RC24 RPT shows TWO Director
+//--- instances (double GDIR_LEDGER line per tick from tick 5+). Each instance keeps a private
+//--- _ledger, so the first funded order would make wfbe_gdir_str ping-pong between funded and
+//--- unfunded on alternate ticks. First instance claims the slot; later ones exit loudly.
+if ((missionNamespace getVariable ["AICOMV2_GDIR_INSTANCE", 0]) > 0) exitWith {
+	diag_log "AICOMSTAT|v3|DIRECTOR|GUER|0|GDIR_DUPLICATE_BLOCKED";
+};
+AICOMV2_GDIR_INSTANCE = 1;
+
 ["INITIALIZATION", "Server_GuerDirector.sqf: GUER Director lane 800 starting."] Call WFBE_CO_FNC_LogContent;
 
 //--- Wait for town initialisation.
