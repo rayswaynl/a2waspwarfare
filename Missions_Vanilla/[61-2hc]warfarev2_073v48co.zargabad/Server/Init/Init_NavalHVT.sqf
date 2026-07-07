@@ -853,7 +853,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
 		private ["_navLogic","_navDeckZ","_navDir","_navAnchorX","_navAnchorY"];
 		_navLogic   = _x;
 		_navDeckZ   = _navLogic getVariable ["wfbe_naval_deckz", 15.9];
-		_navDir     = getDir _navLogic;
+		_navDir     = getDir (_navLogic getVariable ["wfbe_naval_deckpart", _navLogic]); //--- fable/naval-deck-fixes: town logics carry azimut=0 in mission.sqm; the hull part carries the true heading (90) - rotation math was silently wrong for the (currently dead) synced-camps path
 		_navAnchorX = (getPosASL _navLogic) select 0;
 		_navAnchorY = (getPosASL _navLogic) select 1;
 
