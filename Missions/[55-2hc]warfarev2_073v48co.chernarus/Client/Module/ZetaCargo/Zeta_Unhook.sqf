@@ -8,6 +8,7 @@ _vehicle = _param select 0;
 
 _lifter setVariable ["Attached",false];
 detach _vehicle;
+_vehicle setVariable ["wfbe_airlifted", false, true]; //--- fable/airlift-gc-exempt
 
 //--- Trello #87: drop on the GROUND behind the lifter for ALL vehicles (was Zeta_Special-only),
 //--- so airlifted vehicles no longer land on the HQ roof / on top of the lifter.

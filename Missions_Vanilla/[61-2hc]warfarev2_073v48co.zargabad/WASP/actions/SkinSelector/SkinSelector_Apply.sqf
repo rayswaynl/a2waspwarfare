@@ -266,6 +266,14 @@ if (!(player == _newUnit)) exitWith {
 //--- Restore group leadership if the player led the original group.
 if (_wasLeader) then {(group _newUnit) selectLeader _newUnit};
 
+//--- TEAMBAR-FIRST (fable/player-teambar-slot): re-assert COLONEL on the new body so the command bar
+//--- resorts to player-first after a skin swap. The rank was copied from the old unit above (line 184)
+//--- but if the old body had a lower rank (e.g. first join before COLONEL was ever set) this corrects it.
+if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
+	_newUnit setRank "COLONEL";
+	diag_log "[WFBE|TEAMBAR] SkinSelector_Apply: new player body rank set to COLONEL for command-bar slot 1.";
+};
+
 //--- FALLBACK cleanup: the transient swap group is now empty (new unit moved to _oldGrp above); delete it.
 //--- Primary path never made a swap group (_swapGrp is grpNull), so this is a guarded no-op there.
 if (_usedSwapGrp && {!isNull _swapGrp}) then {if (count units _swapGrp == 0) then {deleteGroup _swapGrp}};
@@ -416,7 +424,7 @@ if ((missionNamespace getVariable ["WFBE_C_SKINSWAP_FUNDS_CARRY", 1]) > 0) then 
 				_curGrp setVariable ["wfbe_side", _carrySide, true];
 			};
 			diag_log format ["[WFBE (SKIN)] B6_WALLET-CARRY: current group had no funds after swap - re-stamped wfbe_funds=%1 (carried=%2) side=%3 grp=%4",
-				(_curGrp getVariable ["wfbe_funds", 0]), (if (isNil "_carryFunds") then {"nil"} else {_carryFunds}), (side player), _curGrp];
+				(if (isNil {_curGrp getVariable "wfbe_funds"}) then {0} else {_curGrp getVariable "wfbe_funds"}), (if (isNil "_carryFunds") then {"nil"} else {_carryFunds}), (side player), _curGrp];
 			//--- Ask the server to re-broadcast the AUTHORITATIVE value onto this group (idempotent:
 			//--- it echoes an absolute stored value, never adds). This reconciles the server's own
 			//--- record with the client re-stamp and covers the case where _oldGrp's balance had

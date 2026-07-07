@@ -34,6 +34,7 @@ A3_TRAPS = (
     "worldSize",
     "getPosVisual",
     "remoteExec",
+    "createVehicleCrew",
     "distance2D",
     "setGroupOwner",
     "groupOwner",
@@ -47,7 +48,7 @@ A3_TRAPS = (
     "remoteExecCall",
     "moveInAny",  # A3-only; unknown on A2 OA 1.64, causes "Error Missing ;"
     "nearestTerrainObjects",  # A3-only; parse "Missing )" on A2 OA 1.64 (re-added: lost in a merge)
-    "disableMove",  # A3-only/nonexistent; parse "Missing ;" on A2 OA 1.64 — use disableAI "MOVE"
+    "disableMove",  # invented identifier; does not exist on A2 OA 1.64 (nor A3); use disableAI "MOVE"
     # NOTE: bare "insert" excluded. A3_TRAPS matching uses word-boundary regex
     # on comment/string-masked text (safe), but "insert" appears in plain English
     # comments too frequently to avoid noise.
@@ -115,6 +116,15 @@ FLAGGATE_READ_RE = re.compile(
 )
 # A sufficient numeric guard on the same / next-non-blank line: > 0, >0, != 0, !=0, == 1, ==1
 FLAGGATE_GUARD_RE = re.compile(r"(?:>|!=|==)\s*(?:0|1)\b|(?:>|!=|==)(?:0|1)\b")
+# Trailing comma immediately before a closing ] in an array literal. Runs on
+# comment/string-masked text, so whitespace, newlines, and comments between the
+# comma and the ] all still match — the preprocessor strips comments, meaning
+# `true],\t//--- comment\n];` is still a fatal "Error Missing [" at mission init
+# (PR #801 / Init_Defenses.sqf WFBE_POSITION_TEMPLATE_MAP incident, 2026-07-07).
+TRAILCOMMA_RE = re.compile(r",\s*\]")
+# U+FEFF as decoded by read_text (utf-8, NOT utf-8-sig): a leading EF BB BF
+# survives decoding as this character, so BOM checks can run on the text.
+BOM_CHAR = "\ufeff"
 # noqa directive: // noqa or // noqa: CODE1,CODE2
 NOQA_RE = re.compile(r"//\s*noqa(?:\s*:\s*([A-Za-z0-9_,\s]+))?\s*$", re.IGNORECASE)
 
@@ -132,6 +142,7 @@ FINDING_CODES = (
     "BOOLCMP",
     "BRACKET",
     "CLASSREF",
+    "DBLBOM",
     "DEADNOQA",
     "DISABLESER",
     "FLAGGATE",
@@ -139,6 +150,7 @@ FINDING_CODES = (
     "MILMARKER",
     "NSSETVAR3",
     "PUBVARSV",
+    "TRAILCOMMA",
 )
 
 
@@ -247,7 +259,14 @@ def line_col(starts: list[int], index: int) -> tuple[int, int]:
     return line_idx + 1, index - starts[line_idx] + 1
 
 
-def mask_comments_and_strings(text: str) -> str:
+def mask_comments_and_strings(text: str, string_fill: str = " ") -> str:
+    """Blank comments and string literals, preserving length and newlines.
+
+    Comments always become whitespace. String literals (quotes included) become
+    string_fill — the default keeps the historical all-whitespace behaviour;
+    rules that must distinguish "was a string" from "was whitespace/comment"
+    (TRAILCOMMA) pass a non-whitespace fill instead.
+    """
     out: list[str] = []
     i = 0
     in_block = False
@@ -267,14 +286,14 @@ def mask_comments_and_strings(text: str) -> str:
         if in_string is not None:
             if ch == in_string:
                 if i + 1 < len(text) and text[i + 1] == in_string:
-                    out.extend("  ")
+                    out.extend(string_fill * 2)
                     i += 2
                 else:
-                    out.append(" ")
+                    out.append(string_fill)
                     i += 1
                     in_string = None
             else:
-                out.append("\n" if ch == "\n" else " ")
+                out.append("\n" if ch == "\n" else string_fill)
                 i += 1
             continue
         if ch == "/" and nxt == "/":
@@ -290,7 +309,7 @@ def mask_comments_and_strings(text: str) -> str:
             in_block = True
             continue
         if ch in ("'", '"'):
-            out.append(" ")
+            out.append(string_fill)
             i += 1
             in_string = ch
             continue
@@ -435,6 +454,33 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
     starts = line_starts(masked)
     comments_starts = line_starts(comments_masked)
 
+    # DBLBOM: at most one UTF-8 BOM, and only at byte 0. Scans RAW text —
+    # masking would blank a BOM hiding inside a string literal, but the physical
+    # bytes corrupt the file for the engine no matter where they sit. A doubled
+    # leading BOM parse-fails the whole file at line 1 ("Error Invalid number in
+    # expression") and nil'd the constants layer on live RC20/RC22 (2026-07-07,
+    # stripped in PR #832). `starts` maps raw offsets: masking is length- and
+    # newline-preserving.
+    leading_boms = 0
+    while leading_boms < len(text) and text[leading_boms] == BOM_CHAR:
+        leading_boms += 1
+    for match in re.finditer(BOM_CHAR, text):
+        index = match.start()
+        if index == 0:
+            continue
+        line, col = line_col(starts, index)
+        if index < leading_boms:
+            message = (
+                "File starts with more than one UTF-8 BOM - the A2 OA engine fails the whole "
+                "file at line 1 ('Error Invalid number in expression'); keep at most one BOM, at byte 0"
+            )
+        else:
+            message = (
+                "Stray UTF-8 BOM after byte 0 - remove it; BOM bytes are only valid as the "
+                "very first bytes of a file"
+            )
+        findings.append(Finding(path, line, col, "DBLBOM", message))
+
     for trap in A3_TRAPS:
         for match in re.finditer(rf"\b{re.escape(trap)}\b", masked, re.IGNORECASE):
             line, col = line_col(starts, match.start())
@@ -507,6 +553,16 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
         line, col = line_col(starts, match.start())
         findings.append(Finding(path, line, col, "A3HASH",
             "The # array-selector (_arr # 0) is Arma 3-only; use (_arr select 0) instead"))
+
+    # Strings must stay visible as non-whitespace here: [1, "two"] masked with
+    # plain spaces would read as ",   ]" and false-positive. Same newline layout
+    # as `masked`, so `starts` stays valid.
+    trail_masked = mask_comments_and_strings(text, string_fill="\x00")
+    for match in TRAILCOMMA_RE.finditer(trail_masked):
+        line, col = line_col(starts, match.start())
+        findings.append(Finding(path, line, col, "TRAILCOMMA",
+            "Trailing comma before ] in array literal - fatal 'Error Missing [' parse error on A2 OA 1.64 "
+            "(comments between the comma and ] are stripped by the preprocessor and do not save it)"))
 
     path_str = str(path)
     _server_parts = {"Server", "server"}

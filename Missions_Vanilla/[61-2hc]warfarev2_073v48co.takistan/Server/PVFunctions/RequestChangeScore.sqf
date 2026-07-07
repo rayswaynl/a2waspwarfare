@@ -1,4 +1,4 @@
-Private["_oldScore","_newScore","_playerChanged"];
+Private["_oldScore","_newScore","_playerChanged","_rejected"];
 
 _playerChanged = _this select 0;
 _newScore = _this select 1;
@@ -11,18 +11,27 @@ _newScore = _this select 1;
 //--- server-side guard rejects dead targets and clamps the single-event magnitude. Note: some
 //--- legit awards come from server-side AI events (e.g. Server_OnHQKilled with an AI team leader),
 //--- so we do NOT require isPlayer here - that would drop honest AI-team kill credit.
+//--- fix(hunt): the two rejections were exitWith INSIDE the then{} - on A2-OA that exits only the block
+//--- and FALLS THROUGH to the score write below, so every "rejected" forge was still applied. Latch +
+//--- top-scope exit (same repair as RequestVehicleLock.sqf / RequestEnqueue.sqf).
+_rejected = false;
 if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
-	if (isNull _playerChanged) exitWith {
+	if (isNull _playerChanged) then {
+		_rejected = true;
 		["WARNING", Format ["RequestChangeScore.sqf: rejected forged score change on null target [%1].", _playerChanged]] Call WFBE_CO_FNC_LogContent;
 	};
-	_oldScore = score _playerChanged;
 	//--- Clamp the magnitude of a single change. Largest LEGIT single award is a structure/HQ
 	//--- kill (Server_AwardScorePlayer.sqf: price*0.55/100*BUILDINGS_SCORE_COEF, a few thousand);
 	//--- this ceiling sits well above that yet blocks the gross forge (jump to millions / zero-out).
-	if ((abs (_newScore - _oldScore)) > 50000) exitWith {
-		["WARNING", Format ["RequestChangeScore.sqf: rejected oversized score delta on [%1] (old=%2 new=%3).", _playerChanged, _oldScore, _newScore]] Call WFBE_CO_FNC_LogContent;
+	if (!_rejected) then {
+		_oldScore = score _playerChanged;
+		if ((abs (_newScore - _oldScore)) > 50000) then {
+			_rejected = true;
+			["WARNING", Format ["RequestChangeScore.sqf: rejected oversized score delta on [%1] (old=%2 new=%3).", _playerChanged, _oldScore, _newScore]] Call WFBE_CO_FNC_LogContent;
+		};
 	};
 };
+if (_rejected) exitWith {};
 
 _oldScore = score _playerChanged;
 _playerChanged addScore -_oldScore;

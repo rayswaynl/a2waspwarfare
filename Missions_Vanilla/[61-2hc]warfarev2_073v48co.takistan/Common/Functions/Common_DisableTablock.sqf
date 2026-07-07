@@ -2,7 +2,7 @@
 This script allows air vehicles and Linebacker and Tunguska to use Tablock, but prohibits anything else doing so
 return value: true (tablock disabled), false (tablock enabled for Air and ground vehicles Linebacker/Tunguska with their rockets)
 
-TODO: Add weapons such as stinger and igla (from player), and vehicles such BRDM AA (later when added back) to this script
+NOTE: On-foot player infantry (vehicle player == player) already passes tablock through, covering player-held Stinger and Igla. BRDM AA vehicle support remains deferred (add explicit typeOf+currentWeapon check when that vehicle is re-added).
 
 Author: Die neunte Seele / Midnattsol, Miksuu
 */

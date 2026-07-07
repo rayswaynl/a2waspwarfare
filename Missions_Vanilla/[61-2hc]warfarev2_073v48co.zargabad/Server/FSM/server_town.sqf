@@ -293,6 +293,37 @@ while {!WFBE_GameOver} do {
 			if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_newSide]) then {[_newSide, "Captured", _location] Spawn SideMessage};
 
 			_location setVariable ["sideID",_newSID,true];
+			//--- cmdcon45 (owner: "Rogovo captured but camps still GUER"): capturing the TOWN flips its
+			//--- remaining camps to the new owner. Camps flip individually during the fight (that IS the
+			//--- capture-rate mechanic), but once the town falls, leftover old-side camps are stale enemy
+			//--- spawn points inside the captured town. Mirrors the individual-flip effects (sideID +
+			//--- JIP-safe flag texture + CampCaptured broadcast); no per-player capture credit for bulk flips.
+			if ((missionNamespace getVariable ["WFBE_C_TOWN_CAPTURE_FLIPS_CAMPS", 1]) > 0) then {
+				private ["_ccCamps","_ccCamp","_ccOldSID","_ccFlag","_ccFlags","_ccNewSide","_ccFlipped"];
+				_ccNewSide = (_newSID) Call WFBE_CO_FNC_GetSideFromID;
+				_ccCamps = _location getVariable ["camps", []];
+				_ccFlipped = 0;
+				{
+					_ccCamp = _x;
+					if (!isNull _ccCamp) then {
+						_ccOldSID = _ccCamp getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+						if (_ccOldSID != _newSID) then {
+							_ccCamp setVariable ["sideID", _newSID, true];
+							_ccFlag = _ccCamp getVariable ["wfbe_flag", objNull];
+							if (!isNull _ccFlag) then {
+								_ccFlag setFlagTexture (missionNamespace getVariable Format ["WFBE_%1FLAG", str _ccNewSide]);
+								_ccFlag setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format ["WFBE_%1FLAG", str _ccNewSide]]);
+							};
+							[nil, "CampCaptured", [_ccCamp, _newSID, _ccOldSID]] Call WFBE_CO_FNC_SendToClients;
+							_ccFlipped = _ccFlipped + 1;
+						};
+					};
+				} forEach _ccCamps;
+				if (_ccFlipped > 0) then {
+					processInitCommands; //--- one bake for all flipped flags (JIP-safe texture replay).
+					diag_log Format ["AICOMSTAT|v3|TOWN|CAPTURE|%1|campsFlipped=%2|to=%3", _location getVariable ["name","?"], _ccFlipped, _newSID];
+				};
+			};
 
 			//--- B74.2: leaderboard TOWN-capture credit to each capturing player physically present on the new
 			//--- owner's side at flip. _objects (the per-town capture scan above) holds the nearby entities; capture
@@ -350,7 +381,7 @@ while {!WFBE_GameOver} do {
 			_location setVariable ["wfbe_episode_spawned", false];
 
 			[nil, "TownCaptured", [_location, _sideID, _newSID]] Call WFBE_CO_FNC_SendToClients;
-			if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") > 0) then {[_location, _sideID, _newSID] Spawn WFBE_SE_FNC_SetCampsToSide};
+			if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") > 0 && {!(((missionNamespace getVariable ["WFBE_C_TOWN_CAPTURE_FLIPS_CAMPS", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_CAMPS_LEGACY_SKIP_ON_PERCAMP_FLIP", 0]) > 0})}) then {[_location, _sideID, _newSID] Spawn WFBE_SE_FNC_SetCampsToSide};
 
 			//--- NAVAL HVT: post-capture actions for offshore assets (feat/naval-hvt-objectives).
 			//--- Guard: only fires if the feature is ON and this location is tagged as a naval HVT.
@@ -690,6 +721,10 @@ while {!WFBE_GameOver} do {
 						_radar setVariable ["wfbe_cbr_radius", 2000, true]; //--- AF2: broadcast so clients read the fixed 2000 (Init_BaseStructure uses it for BOTH the circle radius AND the "_fixed" flag; un-broadcast -> client drew the 750/1500 upgrade tier and live-resized it)
 						//--- Indestructible: HandleDamage returning 0 prevents any damage being applied.
 						_radar addEventHandler ["HandleDamage", {0}];
+						//--- cmdcon45 (owner report): the GUER-classed radar building is a valid AI TARGET hostile to
+						//--- BOTH sides, so W/E AI dumped ammo into an indestructible object forever. Captive = treated
+						//--- as civilian by AI target selection; nobody engages it (it cannot be destroyed anyway).
+						_radar setCaptive true;
 
 						//--- Spawn side-matched dressing for visual identity (reuses buildable CBRADAR templates).
 						_dressTpl = Format ["WFBE_NEURODEF_CBRADAR_%1", if (_newSide == west) then {"WEST"} else {"EAST"}];

@@ -5,6 +5,9 @@ _nukeMarker = _this select 1;
 
 // Marty : 
 _time_before_ICBM_impact = missionNamespace getVariable "WFBE_ICBM_TIME_TO_IMPACT";
+//--- pack-missiles: broadcast countdown to all clients before the flight sleep.
+[nil, "HandleSpecial", ["icbm-countdown", time, time + (_time_before_ICBM_impact * 60)]] Call WFBE_CO_FNC_SendToClients;
+
 sleep (_time_before_ICBM_impact * 60) ;
 
 // Nuke effects :

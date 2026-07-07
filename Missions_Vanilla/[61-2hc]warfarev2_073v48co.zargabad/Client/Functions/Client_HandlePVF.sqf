@@ -17,11 +17,24 @@ _isHeadless = if !(isNil "isHeadLessClient") then {isHeadLessClient} else {!(has
 if (_isHeadless) then {
 	_hcAllowed = false;
 	if (_script == "CLTFNCHandleSpecial" && {(typeName _parameters) == "ARRAY"} && {(count _parameters) > 0}) then {
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence"]);
+		//--- HC-targeted HandleSpecial allowlist - ALL HC-destined actions and their server-side senders:
+		//---   delegate-townai            = Server_DelegateAITownHeadless (per-town AI ownership)
+		//---   delegate-ai-static-defence = Server_DelegateAIStaticDefenceHeadless (garrison posts)
+		//---   cleanup-townai             = server_town_ai (nil broadcast; tears down town AI on capture)
+		//---   cleanup-airfield-garrison  = server_town + server_town_ai (nil broadcast; clears airfield post)
+		//---   delegate-aicom-team        = AI_Commander_Teams:1206 + AI_Commander_Wildcard (team founding)
+		//---   delegate-sidepatrol        = server_side_patrols:276 + AI_Commander_Wildcard:663 (patrol founding)
+		//--- NOTE: aicom-team-merge is intentionally excluded (no active sender; WFBE_C_AICOM_HC_MERGE_ENABLE
+		//---        defaults to 0, no DRAFT worker registered, nil-guarded in AI_Commander.sqf).
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol"]);
 	};
-	if !(_hcAllowed) exitWith {};
-	_exit = false;
+	if (_hcAllowed) then {_exit = false};
 };
+//--- fix(hunt): the old `if !(_hcAllowed) exitWith {}` sat INSIDE the then{} above - it exited only that
+//--- block and FELL THROUGH, and the nil-destination / side-match re-opens below then re-armed _exit=false
+//--- for every broadcast (endgame cameras, irsmoke FX, DashboardAnnounce... all ran on interface-less HCs,
+//--- HCs auto-seat a WEST slot so SIDE-scoped sends matched too). Top-scope exit makes the allowlist real.
+if (_isHeadless && {!_hcAllowed}) exitWith {};
 
 if (isNil '_destination') then {_destination = 0;_exit = false};
 if (typeName(_destination) == 'SIDE') then {if !(isNil "sideJoined") then {if (sideJoined == _destination) then {_exit = false}}};

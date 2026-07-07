@@ -299,6 +299,50 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 					};
 				};
 			} forEach (player nearEntities [["Man"], 120]);
+			//--- WFBE_C_TAGS_AI: friendly AI infantry tags (same-side, within 150m, #b0ffb0 green).
+			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0) then {
+				{
+					private ["_aiunit","_aipp","_aiscr","_aid","_aisz"];
+					_aiunit = _x;
+					if (_shown < _max && {!isPlayer _aiunit} && {alive _aiunit} && {side _aiunit == side player}) then {
+						_aipp = visiblePosition _aiunit;
+						_aiscr = worldToScreen [_aipp select 0, _aipp select 1, (_aipp select 2) + 1.9];
+						if (count _aiscr == 2 && {(_aiscr select 0) > 0} && {(_aiscr select 0) < 1} && {(_aiscr select 1) > 0} && {(_aiscr select 1) < 1}) then {
+							_aid = _aiunit distance player;
+							_aisz = 0.016 + (0.012 * (1 - (_aid / 150)));
+							_ctrl = _disp displayCtrl (62000 + _shown);
+							_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='#b0ffb0'>%1</t>", name _aiunit, _aisz]));
+							_ctrl ctrlSetPosition [(_aiscr select 0) - 0.1, (_aiscr select 1) - 0.025, 0.2, 0.03];
+							_ctrl ctrlCommit 0;
+							_ctrl ctrlShow true;
+							_shown = _shown + 1;
+						};
+					};
+				} forEach (player nearEntities [["Man"], 150]);
+			};
+			//--- WFBE_C_TAGS_AI: friendly AI vehicle tags (same-side, pure-AI crew, within 200m, #ffffa0 yellow). Height 3.0m separates from kill-tally tags at 2.6m.
+			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0) then {
+				{
+					private ["_vhc","_vcnt","_vtxt","_vpp","_vscr","_vd","_vsz"];
+					_vhc = _x;
+					_vcnt = count crew _vhc;
+					if (_shown < _max && {alive _vhc} && {_vhc != vehicle player} && {_vcnt > 0} && {side _vhc == side player} && {({isPlayer _x} count (crew _vhc)) == 0}) then {
+						_vtxt = format ["%1 [%2]", getText (configFile >> "CfgVehicles" >> (typeOf _vhc) >> "displayName"), _vcnt];
+						_vpp = visiblePosition _vhc;
+						_vscr = worldToScreen [_vpp select 0, _vpp select 1, (_vpp select 2) + 3.0];
+						if (count _vscr == 2 && {(_vscr select 0) > 0} && {(_vscr select 0) < 1} && {(_vscr select 1) > 0} && {(_vscr select 1) < 1}) then {
+							_vd = _vhc distance player;
+							_vsz = 0.015 + (0.012 * (1 - (_vd / 200)));
+							_ctrl = _disp displayCtrl (62000 + _shown);
+							_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='#ffffa0'>%1</t>", _vtxt, _vsz]));
+							_ctrl ctrlSetPosition [(_vscr select 0) - 0.1, (_vscr select 1) - 0.025, 0.2, 0.03];
+							_ctrl ctrlCommit 0;
+							_ctrl ctrlShow true;
+							_shown = _shown + 1;
+						};
+					};
+				} forEach (player nearEntities [["LandVehicle","Air","Ship"], 200]);
+			};
 			//--- cmdcon44m (Ray pick C 2026-07-04): vehicle kill tallies ride the same TAGS toggle and the same
 			//--- control pool - no lightpoint, no extra rsc. Friendly-crewed or EMPTY hulls within 200m that have
 			//--- scored kills show a heat-coloured 'N KILLS' tag (amber -> orange -> red -> white-hot, the retired
@@ -546,6 +590,7 @@ fireMissionTime = -1000;
 artyRange = 15;
 artyPos = [0,0,0];
 playerUAV = objNull;
+playerFPV = objNull;
 comTask = objNull;
 voted = false;
 votePopUp = true;
@@ -616,8 +661,11 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM") in [3,4]) then
 
 /* Exec SQF|FSM Misc stuff. */
 if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] execVM "Client\FSM\updateteamsmarkers.sqf"};
+if ((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) > 0) then {[] execVM "Client\Functions\Client_GuerLockout.sqf"}; //--- fable/guer-lockout: resistance activation delay
+if ((missionNamespace getVariable ["WFBE_C_GUER_PATROL_MARKERS", 1]) > 0) then {[] execVM "Client\Functions\Client_GuerPatrolMarkers.sqf"}; //--- fable/guer-patrol-markers: resistance-only friendly AI map dots
 [] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
 [] execVM "Client\FSM\updateaicommarkers.sqf"; //--- AI-commander team direction arrows (task #3).
+if ((missionNamespace getVariable ["WFBE_C_AWACS", 0]) > 0) then {[] execVM "Client\Module\AWACS\awacs_pilot_watch.sqf"}; //--- fable/awacs-radar: AWACS pilot watch (ground MTI sweep). Flag default 0 = never launched.
 
 //--- B62 (Ray 2026-06-21): OWN-SIDE MARKER RECONCILIATION / SELF-HEAL.
 //--- THE BUG (Ray RPT, OPFOR/insurgent JIP join): own-side FACTORY/structure markers AND own-side HQ-team
@@ -1126,6 +1174,13 @@ waitUntil {!isNull group player};
 
 //--- Make sure that player is always the leader.
 if (leader(group player) != player) then {(group player) selectLeader player};
+
+//--- TEAMBAR-FIRST (fable/player-teambar-slot): A2 command bar ranks units by RANK then join-order.
+//--- Set the player to COLONEL so they always render at slot 1 regardless of AI subordinate rank.
+if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
+	player setRank "COLONEL";
+	diag_log "[WFBE|TEAMBAR] Init_Client: player rank set to COLONEL for command-bar slot 1.";
+};
 
 /* Override player's Gear.*/
 // [player,Format ["WFBE_%1DEFAULTWEAPONS",sideJoinedText] Call GetNamespace,Format ["WFBE_%1DEFAULTAMMO",sideJoinedText] Call GetNamespace] Call EquipLoadout;
@@ -1644,6 +1699,9 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- Ambulance / medic-redeploy range circles (Trello #76). Local map Ellipses around friendly
 //--- ambulances and redeploy trucks showing the mobile-respawn radius. Self-gates on WFBE_C_RESPAWN_MOBILE.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_AmbulanceRedeployCircles.sqf";
+//--- Artillery range rings (Trello #90). Client-local orange Ellipses around friendly arty pieces
+//--- showing their WFBE_%1_ARTILLERY_RANGES_MAX firing radius. Self-gates on WFBE_C_ARTY_RING.
+[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_ArtyRangeRings.sqf";
 
 //--- New-player onboarding cards (claude-gaming 2026-06-29). Once-per-session, skippable structuredText
 //--- hint sequence (what WASP is + win goal + 3 core actions + scroll-menu + JIP cue + respawn legend).

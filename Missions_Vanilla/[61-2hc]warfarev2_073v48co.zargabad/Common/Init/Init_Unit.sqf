@@ -75,7 +75,7 @@ if (_unit_kind in (missionNamespace getVariable "WFBE_REPAIRTRUCKS")) then { //-
 			missionNamespace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_3RD'
 		] select (_repCount min 2);
 		_repSym = if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {"S"} else {"$"};
-		_unit addAction [Format [localize 'STR_WF_Repair_MHQ', Format ["%1%2", _repSym, _repNextPrice]],'Client\Action\Action_RepairMHQ.sqf', [], 98, false, true, '', 'alive _target'];
+		_unit addAction ['Repair Mobile HQ','Client\Action\Action_RepairMHQ.sqf', [], 98, false, true, '', 'alive _target'];
 	};
 };
 
@@ -94,6 +94,20 @@ if (_unit_kind in (missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []]))
 		"",
 		Format ["(_target getVariable ['wfbe_is_guer_fob', false]) && side group player == resistance && alive _target && player distance _target <= %1", missionNamespace getVariable ["WFBE_C_GUER_FOB_BUILD_RANGE", 30]]
 	];
+	//--- PR #846 follow-up (fable/fob-polish): one-shot driver-seat deploy hint. Each client attaches its own
+	//--- EH instance (this file runs on every client); the _fobWho == player guard picks the driver's machine
+	//--- and the LOCAL-ONLY wfbe_fob_seat_hinted flag (setVariable WITHOUT broadcast) keeps it one-shot per
+	//--- client without extra network traffic. Mirrors the VBIED GetIn idiom in Client_BuildUnit.sqf.
+	_unit addEventHandler ["GetIn", {
+		private ["_fobTrk","_fobSeat","_fobWho"];
+		_fobTrk  = _this select 0;
+		_fobSeat = _this select 1;
+		_fobWho  = _this select 2;
+		if ((_fobSeat == "driver") && {_fobWho == player} && {side group player == resistance} && {_fobTrk getVariable ["wfbe_is_guer_fob", false]} && {!(_fobTrk getVariable ["wfbe_fob_seat_hinted", false])}) then {
+			_fobTrk setVariable ["wfbe_fob_seat_hinted", true];
+			hintSilent parseText "<t color='#76F563'>FOB Delivery Truck</t> - drive to where you want your forward base (not too close to enemy towns or the enemy base), then use the action menu (mouse scroll) -> <t color='#76F563'>Build FOB</t>. The truck is consumed on deploy.";
+		};
+	}];
 };
 
 if (_unit isKindOf "Tank") then { //--- Tanks.
@@ -162,7 +176,7 @@ if (_unit isKindOf "Air") then { //--- Air units.
 		};
 	};
 
-	if ((missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR") > 0) then { //--- AAR Tracking.
+	if ((missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR") > 0 || (missionNamespace getVariable ["WFBE_C_AWACS", 0]) > 0) then { //--- AAR Tracking. fable/awacs-radar: the AWACS air picture reads the same registry, so feed it when either flag is on.
 		if (sideJoined != _side) then { //--- Track the unit via AAR System, skip if the unit side is the same as the player one.
 			_perfAARStarted = 1;
 			[_unit, _side, _sideID] ExecVM 'Common\Common_AARadarMarkerUpdate.sqf';
@@ -278,7 +292,11 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 
 _unit setVariable ["OriginalMarkerColor", _color, false];
 
-_params Spawn MarkerUpdate;
+//--- fable/marker-double-fix (owner 2026-07-07): the LOCAL player already carries the orange own-arrow
+//--- (GUER%1AdvancedSquadOWNMarker, updateteamsmarkers.sqf) at his position; the unitMarker mil_dot here
+//--- draws a SECOND orange icon on top of it = doubled self-marker (visible for GUER, which has no team-slot
+//--- arrow to mask it). Skip the dot for the OWN body only; remote teammates + AI + vehicles keep theirs.
+if (_unit != player) then {_params Spawn MarkerUpdate}; //--- own-body dot suppressed (== player); rest of Init_Unit MUST still run for the player, so gate ONLY this line - never exitWith here
 _perfMarkerType = _params select 0;
 _perfMarkerRefresh = _params select 6;
 
@@ -286,6 +304,20 @@ _perfMarkerRefresh = _params select 6;
 if !(isNil "PerformanceAudit_Record") then {
 	if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
 		["init_unit_marker_spawn", 0, Format["type:%1;side:%2;isMan:%3;markerType:%4;refresh:%5;groupPlayer:%6;blinkingEH:%7", _unit_kind, _sideID, _isMan, _perfMarkerType, _perfMarkerRefresh, group _unit == group player, _perfBlinkingEH], "CLIENT"] Call PerformanceAudit_Record;
+	};
+};
+
+//--- naval-air-spawn-easa: apply a pending EASA preset stamped by the server
+//--- during CAP spawn (Init_NavalHVT.sqf sets wfbe_naval_easa_pending = randIdx).
+//--- Runs on every joining client so JIP players also equip the hull correctly.
+//--- Guard: !isNil check avoids errors on non-CAP vehicles; EASA_Equip is a no-op
+//--- for classnames not in WFBE_EASA_Vehicles (safe for unknown airframes).
+if (!(_unit isKindOf "Man") && {!isNil {_unit getVariable "wfbe_naval_easa_pending"}}) then {
+	private ["_easaPendingIdx"];
+	_easaPendingIdx = _unit getVariable ["wfbe_naval_easa_pending", -1];
+	if (_easaPendingIdx >= 0) then {
+		[_unit, _easaPendingIdx] call EASA_Equip;
+		["INFORMATION", Format ["Init_Unit.sqf: naval EASA pending preset %1 applied to %2.", _easaPendingIdx, typeOf _unit]] Call WFBE_CO_FNC_LogContent;
 	};
 };
 

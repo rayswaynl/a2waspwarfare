@@ -212,6 +212,15 @@ if (_unitType isKindOf "Man") then {
 	if (_unitType isKindOf "Air") then {_crew = missionNamespace getVariable Format ["WFBE_%1PILOT",_sideText]};
 
 	_special = if (_unitType isKindOf "Plane") then {"FLY"} else {"NONE"};
+	//--- fable/aicom-carrier-velocity (2026-07-07): AI buys at a captured carrier HVT airfield. The AI pad/apron
+	//--- sweep above cannot resolve on a carrier (every candidate is open water, surfaceIsWater rejects them), so
+	//--- _position falls back to the raw trig offset at the waterline. Mirror the player path's deck handling
+	//--- (Client_BuildUnit.sqf naval-air-spawn-easa): give the FLY-spawned fixed-wing the deck height so it
+	//--- air-starts with clearance instead of at sea level. wfbe_is_carrier_hvt / wfbe_naval_deckz are broadcast
+	//--- by Init_NavalHVT (public=true), so this reads correctly wherever the buy script runs.
+	if ((_unitType isKindOf "Plane") && {_building getVariable ["wfbe_is_carrier_hvt", false]}) then {
+		_position set [2, (_building getVariable ["wfbe_naval_deckz", 16])];
+	};
 	_vehicle = [_unitType, _position, _sideID, _dir, true, true, true, _special] Call WFBE_CO_FNC_CreateVehicle;
 	_vehicle addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
 
@@ -219,6 +228,8 @@ if (_unitType isKindOf "Man") then {
 	if(typeOf _vehicle in ['F35B','AV8B','AV8B2','A10','A10_US_EP1','Su25_Ins','Su25_TK_EP1','Su34','Su39','An2_TK_EP1','L159_ACR','L39_TK_EP1','ibrPRACS_MiG21mol']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles}];};
 	if (_vehicle isKindOf "Plane" && (missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) > 0) then {_vehicle addEventHandler ["HandleDamage", {_this Call HandleJetAADamage}];};
     if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];};
+	//--- B93 SEAD: tier-5 jets get anti-radar guidance EH when WFBE_C_SEAD > 0
+	if ((missionNamespace getVariable ["WFBE_C_SEAD", 0]) > 0 && {typeOf _vehicle in ["F35B","Su34"]}) then {_vehicle addeventhandler ["Fired",{_this spawn WFBE_CO_FNC_HandleSEADMissile}];};
 	if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base","BTR90_Base"] != 0) then {_vehicle addeventhandler ["fired",{_this spawn HandleReload;}]};
 	if(typeOf _vehicle in ['T90','BMP3']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleATReload;}];};
 	if(typeOf _vehicle in ['Pandur2_ACR']) then {
@@ -333,6 +344,24 @@ _vehicle allowCrewInImmobile true;
 	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
 	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull (driver _vehicle)}) then {
 		(driver _vehicle) commandMove _aiRally;
+	};
+	//--- fable/aicom-carrier-velocity (2026-07-07): carrier fixed-wing air-start chip - the AI-path equivalent of
+	//--- Client_BuildUnit.sqf:598-604 (player carrier velocity override). Common_CreateVehicle's FLY kick is only
+	//--- 50 m/s with a level Z and the carrier factory has no wfbe_aicom_factory_rally, so the fresh plane sat in
+	//--- the #845 kill window (low, slow, orderless -> mush into the sea). Match the player path's 80 m/s along
+	//--- the spawn heading, then give the pilot an immediate climb-out: flyInHeight 550 (the burned-in sea-safe
+	//--- naval altitude - Init_NavalHVT jets / #847 An2) and a doMove 2 km ahead with EXPLICIT Z (#845: a Z=0
+	//--- doMove is a commanded DESCENT for fixed-wing).
+	if ((_building getVariable ["wfbe_is_carrier_hvt", false]) && {_vehicle isKindOf "Plane"}) then {
+		private ["_ccOut"];
+		_vehicle setVelocity [(sin _dir) * 80, (cos _dir) * 80, 0];
+		_vehicle flyInHeight 550;
+		if (!isNull (driver _vehicle)) then {
+			_ccOut = [getPos _vehicle, 2000, _dir] Call GetPositionFrom;
+			_ccOut set [2, 550];
+			(driver _vehicle) doMove _ccOut;
+		};
+		["INFORMATION", Format ["Server_BuyUnit.sqf: carrier air-start chip applied to [%1].", _unitType]] Call WFBE_CO_FNC_LogContent;
 	};
 	[_sideText,'UnitsCreated',_built] Call UpdateStatistics;
 };

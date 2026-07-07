@@ -16,6 +16,7 @@ missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['KamazRepai
 missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_RU','UralSalvage_TK_EP1','Mi17_medevac_CDF']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_RU','UralSupply_TK_EP1']];
 missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'Pchela1T'];
+missionNamespace setVariable [Format["WFBE_%1FPVDRONE", _side], 'AH6X_EP1'];//--- fable/fpv-strike-drone airframe (unmanned Little Bird, OA base content).
 
 missionNamespace setVariable [Format["WFBE_%1AMMOTRUCKS", _side], ['MtvrReammo_DES_EP1','WarfareReammoTruck_USMC','WarfareReammoTruck_RU','UralReammo_TK_EP1']];//listed to get gearaccess in updateavailablaactions.sqf (listed both to get capture skill too)
 missionNamespace setVariable [Format["WFBE_%1ECMTRUCKS", _side], ['KamazRefuel','UralRefuel_TK_EP1']];//listed to add ecm stuff

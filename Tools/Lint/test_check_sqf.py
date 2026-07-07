@@ -386,6 +386,98 @@ class CheckSqfTests(unittest.TestCase):
         codes = lint_codes_flaggate(src, {1})
         self.assertNotIn("FLAGGATE", codes)
 
+    # ── TRAILCOMMA trailing comma before ] ────────────────────────────────────
+
+    def test_trailcomma_same_line_is_flagged(self) -> None:
+        codes = lint_codes('_arr = [1, 2,];\n')
+        self.assertIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_newline_before_close_is_flagged(self) -> None:
+        codes = lint_codes('_arr = [\n\t1,\n\t2,\n];\n')
+        self.assertIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_line_comment_between_is_flagged(self) -> None:
+        # PR #801 incident shape: comma left on the new last element, //--- comment,
+        # then the closing bracket. Preprocessor strips the comment -> runtime ",]".
+        src = '_map = [\n\t["fort", true],\t//--- last element\n];\n'
+        codes = lint_codes(src)
+        self.assertIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_block_comment_between_is_flagged(self) -> None:
+        codes = lint_codes('_arr = [1, 2, /* tail */ ];\n')
+        self.assertIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_valid_array_not_flagged(self) -> None:
+        codes = lint_codes('_arr = [1, 2];\n_nested = [[1, 2], [3, 4]];\n')
+        self.assertNotIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_string_last_element_not_flagged(self) -> None:
+        # Masking must not blank the string to whitespace: [1, "two"] is valid.
+        codes = lint_codes('_a = [1, "two"];\n_b = ["x", \'y\'];\n_c = [1, ""];\n_d = [1, "a""b"];\n')
+        self.assertNotIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_in_string_not_flagged(self) -> None:
+        codes = lint_codes('_s = "a,]";\n_t = \'b,]\';\n_u = "a, ]";\n')
+        self.assertNotIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_in_comment_only_not_flagged(self) -> None:
+        codes = lint_codes('// old shape was [1, 2,]\n/* and [3,] too */\n_x = 1;\n')
+        self.assertNotIn("TRAILCOMMA", codes)
+
+    def test_trailcomma_noqa_suppresses(self) -> None:
+        codes = lint_codes('_arr = [1, 2,];  // noqa: TRAILCOMMA\n')
+        self.assertNotIn("TRAILCOMMA", codes)
+
+    # ── DBLBOM double / stray UTF-8 BOM ───────────────────────────────────────
+
+    def test_dblbom_double_leading_bom_is_flagged(self) -> None:
+        # The 2026-07-07 RC20/RC22 incident shape: EF BB BF EF BB BF at byte 0
+        # nil'd the whole constants layer via a line-1 parse failure.
+        codes = lint_codes("\ufeff\ufeffWFBE_C_FOO = 1;\n")
+        self.assertIn("DBLBOM", codes)
+
+    def test_dblbom_single_leading_bom_not_flagged(self) -> None:
+        # A single leading BOM is the tolerated legacy state (27 files carry one).
+        codes = lint_codes("\ufeff_x = 1;\n")
+        self.assertNotIn("DBLBOM", codes)
+
+    def test_dblbom_no_bom_not_flagged(self) -> None:
+        codes = lint_codes("_x = 1;\n")
+        self.assertNotIn("DBLBOM", codes)
+
+    def test_dblbom_triple_leading_bom_flags_each_extra(self) -> None:
+        codes = lint_codes("\ufeff\ufeff\ufeff_x = 1;\n")
+        self.assertEqual(codes.count("DBLBOM"), 2)
+
+    def test_dblbom_mid_file_bom_is_flagged_with_line(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "sample.sqf"
+            src = "_x = 1;\n\ufeff_y = 2;\n"
+            path.write_text(src, encoding="utf-8")
+            findings = [f for f in check_sqf.lint_text(path, src, root, {}) if f.code == "DBLBOM"]
+        self.assertEqual(len(findings), 1)
+        self.assertEqual(findings[0].line, 2)
+
+    def test_dblbom_bom_inside_string_literal_is_flagged(self) -> None:
+        # Must scan RAW text: comment/string masking would blank a BOM hiding
+        # inside a literal, but the physical bytes still corrupt the file.
+        codes = lint_codes('_s = "a\ufeffb";\n')
+        self.assertIn("DBLBOM", codes)
+
+    def test_dblbom_in_hpp_file(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = root / "Parameters.hpp"
+            src = "\ufeff\ufeffclass Params {};\n"
+            path.write_text(src, encoding="utf-8")
+            findings = check_sqf.lint_text(path, src, root, {})
+        self.assertIn("DBLBOM", [f.code for f in findings])
+
+    def test_dblbom_noqa_suppresses(self) -> None:
+        codes = lint_codes("\ufeff\ufeff_x = 1;  // noqa: DBLBOM\n")
+        self.assertNotIn("DBLBOM", codes)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -15,6 +15,7 @@ missionNamespace setVariable [Format["WFBE_%1REPAIRTRUCKS", _side], ['UralRepair
 missionNamespace setVariable [Format["WFBE_%1SALVAGETRUCK", _side], ['WarfareSalvageTruck_INS']];
 missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCKS", _side], ['WarfareSupplyTruck_INS']];
 missionNamespace setVariable [Format["WFBE_%1UAV", _side], 'Pchela1T'];
+missionNamespace setVariable [Format["WFBE_%1FPVDRONE", _side], 'AH6X_EP1'];//--- fable/fpv-strike-drone airframe (unmanned Little Bird, OA base content).
 
 //--- Radio Announcers.
 missionNamespace setVariable [Format ["WFBE_%1_RadioAnnouncers", _side], ['WFHQ_CZ0','WFHQ_CZ1','WFHQ_CZ2']];

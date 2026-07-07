@@ -249,12 +249,6 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {
 	if ((missionNamespace getVariable ["WFBE_C_DEF_FLAKTOWER", 1]) > 0) then {
 		_n = _n + ["Land_Ind_TankSmall"];	//--- Flak Tower anchor (elevated AA + AI gunner)
 	};
-	//--- cmdcon44-c: WDDM fortifications set (anchors -> WFBE_NEURODEF_FORT_STRONGPOINT/_CHECKPOINT/_OP).
-	if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then {
-		_n = _n + ["Land_Misc_Cargo1B"];			//--- Infantry Strongpoint
-		_n = _n + ["Land_transport_crates_EP1"];	//--- Roadblock / Checkpoint
-		_n = _n + ["Land_Barrel_water"];			//--- Observation Post
-	};
 	//--- fable/wddm-functional-defenses: FORTIFICATION PACK (Ray: "Fortifications! Not fortresses -
 	//--- useful items like a row of concrete walls, or a way to block LoS to your base... larger
 	//--- assets basically."). Five PASSIVE anchor-composition buildables; own flag so the pack can be

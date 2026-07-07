@@ -54,6 +54,8 @@ KAT_ParaAmmo = Compile preprocessFile "Server\Support\Support_ParaAmmo.sqf";
 KAT_Paratroopers = Compile preprocessFile "Server\Support\Support_Paratroopers.sqf";
 KAT_ParaVehicles = Compile preprocessFile "Server\Support\Support_ParaVehicles.sqf";
 KAT_UAV = Compile preprocessFile "Server\Support\Support_UAV.sqf";
+KAT_FPV = Compile preprocessFile "Server\Support\Support_FPV.sqf";
+KAT_FPVDetonate = Compile preprocessFile "Server\Support\Support_FPV_Detonate.sqf";
 
 //--- NAVAL HVT: SCUD strike handler (feat/naval-hvt-objectives). Feature-flagged behind WFBE_C_NAVAL_HVT.
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
@@ -78,6 +80,7 @@ WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commande
 WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Strategy.sqf";
 WFBE_SE_FNC_AICOM2_Snapshot = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Snapshot.sqf"; //--- AICOM v2 rebuild (M0): world-model snapshot builder.
 WFBE_SE_FNC_AICOM2_Allocate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Allocate.sqf"; //--- AICOM v2 rebuild (M1): single offensive authority (flag WFBE_C_AICOM2_ALLOCATE_ENABLE).
+WFBE_SE_FNC_AICOM2_Decapitate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Decapitate.sqf"; //--- AICOM v2 rebuild (M5): DECAPITATE closer (flag WFBE_C_AICOM2_DECAP_ENABLE, default 0).
 WFBE_SE_FNC_AI_Com_MHQReloc = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_MHQReloc.sqf";
 WFBE_SE_FNC_AI_Com_PlayerArty = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_PlayerArty.sqf"; //--- COMMAND CONSOLE: assist-mode resolver for a player war-room ARTILLERY-HERE request (runs every tick, even under a human commander; fires only existing friendly guns).
 WFBE_SE_FNC_AI_Com_Paratroops = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Paratroops.sqf"; //--- AICOM PARATROOPS: tier+structure-gated AI paratroop reinforcement drop, reuses the player KAT_Paratroopers support fn (flag WFBE_C_AICOM_PARATROOPS_ENABLE, default 0 = inert).
@@ -94,7 +97,6 @@ WFBE_SE_FNC_OnHQKilled = Compile preprocessFileLineNumbers "Server\Functions\Ser
 WFBE_SE_FNC_OperateTownDefensesUnits = Compile preprocessFileLineNumbers "Server\Functions\Server_OperateTownDefensesUnits.sqf";
 WFBE_SE_FNC_ProcessUpgrade = Compile preprocessFileLineNumbers "Server\Functions\Server_ProcessUpgrade.sqf";
 WFBE_SE_FNC_SetCampsToSide = Compile preprocessFileLineNumbers "Server\Functions\Server_SetCampsToSide.sqf";
-WFBE_SE_FNC_SetLocalityOwner = if !(WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Server\Functions\Server_SetLocalityOwner.sqf"} else {{}};
 WFBE_SE_FNC_SpawnTownDefense = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnTownDefense.sqf";
 WFBE_SE_FNC_VoteForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_VoteForCommander.sqf";
 WFBE_SE_FNC_AssignForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_AssignNewCommander.sqf";
@@ -625,6 +627,16 @@ if (_keyE != "") then { profileNamespace setVariable ["WFBE_LAST_START_E", _keyE
 saveProfileNamespace;
 diag_log format ["## B67SPAWN: chosen start keys W=%1 E=%2 (rounded map pos; should vary match-to-match).", _keyW, _keyE];
 
+//--- 185 (HQ repair scaling): read rolling avg round length from profileNamespace and broadcast.
+private ["_rpavg185","_rpN185","_rpTotal185"];
+_rpavg185 = profileNamespace getVariable ["WFBE_RPAVG", [0, 0]];
+_rpN185     = _rpavg185 select 0;
+_rpTotal185 = _rpavg185 select 1;
+WFBE_HQ_REPAIR_AVG_SEC = if (_rpN185 > 0) then {_rpTotal185 / _rpN185} else {21600};
+publicVariable "WFBE_HQ_REPAIR_AVG_SEC";
+["INITIALIZATION", Format ["Init_Server.sqf: HQ repair avg = %1s from %2 recorded rounds (seed 21600 when none).", round WFBE_HQ_REPAIR_AVG_SEC, _rpN185]] Call WFBE_CO_FNC_LogContent;
+
+
 //--- BUILD88 (cmdcon43-f, Ray 2026-07-02) SPAWNCHK REGRESSION GUARD: the town-clearance filter above should
 //--- have kept every chosen start clear of town ranges, but a force-fall / pure-random / MODE 0-1 named-spawn
 //--- path can still hand back an inside-town start. Log a permanent WARNING line for the ACTUALLY CHOSEN WEST
@@ -1054,6 +1066,13 @@ if ((missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 1]) == 1 && {toLowe
 if ((missionNamespace getVariable ["WFBE_C_AMBIENT_SKIRMISH", 0]) > 0) then {
 	[] execVM "Server\Server_AmbientSkirmish.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Server_AmbientSkirmish.sqf launched (WFBE_C_AMBIENT_SKIRMISH=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- AICOM V2 Lane 800: GUER Director (virtual resistance ledger + lightweight brain).
+//--- Gated on AICOMV2_LANE_GUER_DIRECTOR (default 0 = inert). With flag 0 this launch block is byte-identical to V1.
+if (isServer && {(missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0}) then {
+	[] execVM "Server\AI\Server_GuerDirector.sqf";
+	["INITIALIZATION", "Init_Server.sqf: GUER Director (lane 800) launched (AICOMV2_LANE_GUER_DIRECTOR=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
 // run one global server town script to process supply updates in each town

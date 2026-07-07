@@ -9,7 +9,9 @@
 //--- (exact anchors below; all surfaceIsWater-validated, spread along the east coast)
 //---
 //--- IMPORTANT NOTES:
-//---   • setPosASL is used throughout for sea objects (NOT setPos/setPosATL which snap to seabed).
+//---   • setPosASL for point-placed sea objects (setPosATL snaps to SEABED - never use it here). LHD
+//---     HULL PARTS are the exception: canonical A2 assembly is setDir + plain setPos z=0 (engine seats
+//---     each section at model height; DayZ/Domination-verified). Verify partpos z at boot via NAVALHVT-DECK.
 //---   • All createVehicle calls are GLOBAL (server-authoritative, so AI/collision sees them).
 //---   • Town logics are PRE-PLACED in mission.sqm and registered by Init_Town.sqf before this runs.
 //---   • The GUER CAP (Mi24_P + An2) is PROXIMITY-GATED: only arms at ~1500-2000m player range
@@ -54,8 +56,14 @@ WFBE_NavalHVT_SpawnProp = {
 		diag_log (Format ["NAVALHVT-SPAWNFAIL: class '%1' failed to createVehicle at %2 - class missing/invalid; part skipped.", _cls, _pos]);
 		_obj
 	};
-	_obj setPosASL [_pos select 0, _pos select 1, 0];	//--- ASL = sea surface, not seabed
+	//--- cmdcon45 (Ray 2026-07-07): canonical A2 LHD assembly is setDir FIRST, then plain setPos
+	//--- (AGLS z=0 over water) so the engine seats each section at its model-defined height. The old
+	//--- setPosASL [x,y,0] crushed EVERY part (island + elevators included) to the waterline - that
+	//--- was the live "one big pancake stack" carrier + props/SCUD sunk into the hull. Pattern
+	//--- verified against the A2-engine DayZ LHD creator and Domination (same-point parts,
+	//--- dir-then-pos, flight deck ~15.9 m over the sea).
 	_obj setDir _dir;
+	_obj setPos [_pos select 0, _pos select 1, 0];
 	_obj enableSimulation false;
 	_obj allowDamage false;
 	_obj
@@ -103,8 +111,7 @@ WFBE_NavalHVT_SpawnLHD = {
 		_px = (_anchor select 0) + _dx;
 		_py = (_anchor select 1) + _dy;
 
-		_obj = [_cls, [_px, _py, 0]] Call WFBE_NavalHVT_SpawnProp;
-		_obj setDir _dir;
+		_obj = [_cls, [_px, _py, 0], _dir] Call WFBE_NavalHVT_SpawnProp;
 		_parts set [count _parts, _obj];
 	} forEach WFBE_C_NAVAL_LHD_OFFSETS;
 
@@ -203,15 +210,16 @@ _lhdAlphaParts = [[_aAlpha select 0, _aAlpha select 1, 0], 90] Call WFBE_NavalHV
 
 //--- Heli spawn pad on the deck.
 _pad = createVehicle ["HeliHCivil", ([_aAlpha, 10, 0] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
-_pad setPosASL ([_aAlpha, 10, 0] Call WFBE_NavalHVT_Off);
+_pad setPosASL [((_aAlpha select 0) + 10), (_aAlpha select 1), 15.9]; //--- cmdcon45: ON the deck (was z=0 = sea level INSIDE the hull).
 _pad enableSimulation false;
 _pad allowDamage false;
 
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdAlphaParts select 3;
 _bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck height (was a hardcoded 16 guess) so deck-respawned players land on the flight deck, not clipping the hull / falling into the sea. boundingBox is A2-OA 1.64-safe.
-_deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
+_deckZ = 15.9; //--- cmdcon45 (Ray 2026-07-07): flight deck is the engine-verified 15.9 m over the sea (DayZ LHD creator / Domination "spawn at 15.9 to be ON deck"). The B754 boundingBox read gave 22.42 (symmetrized model-box TOP, not the deck) so every deck respawn materialised ~8.5 m up and fell. _bb stays in the diag line for forensics.
 _lhdAlphaLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
+_lhdAlphaLogic setVariable ["wfbe_naval_deckpart", _lhdAlphaParts select 3, true]; //--- fable/naval-deck-fixes: reference hull part for model-space deck placement
 _lhdAlphaLogic setVariable ["wfbe_is_naval_hvt", true, true];
 //--- cmdcon41-w2 (Ray 2026-07-02) TOWN-CENTER HEIGHT: raise the town logic from sea level (z=0, set at
 //--- line ~140) to the flight-deck height so the player-facing town CENTER/marker sits ON the deck, not
@@ -231,15 +239,16 @@ diag_log Format ["NAVALHVT-DECK: Khe Sanh Alpha partpos=%1 bbMin=%2 bbMax=%3 dec
 _lhdBravoParts = [[_aBravo select 0, _aBravo select 1, 0], 90] Call WFBE_NavalHVT_SpawnLHD;
 
 _pad = createVehicle ["HeliHCivil", ([_aBravo, 10, 0] Call WFBE_NavalHVT_Off), [], 0, "NONE"];
-_pad setPosASL ([_aBravo, 10, 0] Call WFBE_NavalHVT_Off);
+_pad setPosASL [((_aBravo select 0) + 10), (_aBravo select 1), 15.9]; //--- cmdcon45: ON the deck (was z=0 = sea level INSIDE the hull).
 _pad enableSimulation false;
 _pad allowDamage false;
 
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdBravoParts select 3;
 _bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck height (was a hardcoded 16 guess) so deck-respawned players land on the flight deck, not clipping the hull / falling into the sea. boundingBox is A2-OA 1.64-safe.
-_deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
+_deckZ = 15.9; //--- cmdcon45 (Ray 2026-07-07): flight deck is the engine-verified 15.9 m over the sea (DayZ LHD creator / Domination "spawn at 15.9 to be ON deck"). The B754 boundingBox read gave 22.42 (symmetrized model-box TOP, not the deck) so every deck respawn materialised ~8.5 m up and fell. _bb stays in the diag line for forensics.
 _lhdBravoLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
+_lhdBravoLogic setVariable ["wfbe_naval_deckpart", _lhdBravoParts select 3, true]; //--- fable/naval-deck-fixes: reference hull part for model-space deck placement
 _lhdBravoLogic setVariable ["wfbe_is_naval_hvt", true, true];
 //--- cmdcon41-w2 (Ray 2026-07-02) TOWN-CENTER HEIGHT: raise Bravo's logic to deck height (see Alpha note above).
 _lhdBravoLogic setPosASL [(getPos _lhdBravoLogic) select 0, (getPos _lhdBravoLogic) select 1, _deckZ];
@@ -255,8 +264,9 @@ _lhdCharlieParts = [[_aCharlie select 0, _aCharlie select 1, 0], 90] Call WFBE_N
 //--- Deck-Z query: find the top-of-hull Z for spawn/teleport callers.
 _deckPart = _lhdCharlieParts select 3;
 _bb = boundingBox _deckPart; //--- B754 (Ray 2026-06-25): measure the REAL deck height (was a hardcoded 16 guess) so deck-respawned players land on the flight deck, not clipping the hull / falling into the sea. boundingBox is A2-OA 1.64-safe.
-_deckZ = (getPosASL _deckPart select 2) + ((_bb select 1) select 2);
+_deckZ = 15.9; //--- cmdcon45 (Ray 2026-07-07): flight deck is the engine-verified 15.9 m over the sea (DayZ LHD creator / Domination "spawn at 15.9 to be ON deck"). The B754 boundingBox read gave 22.42 (symmetrized model-box TOP, not the deck) so every deck respawn materialised ~8.5 m up and fell. _bb stays in the diag line for forensics.
 _lhdCharlieLogic setVariable ["wfbe_naval_deckz", _deckZ, true];
+_lhdCharlieLogic setVariable ["wfbe_naval_deckpart", _lhdCharlieParts select 3, true]; //--- fable/naval-deck-fixes: reference hull part for model-space deck placement
 _lhdCharlieLogic setVariable ["wfbe_is_naval_hvt", true, true];
 //--- cmdcon41-w2 (Ray 2026-07-02) TOWN-CENTER HEIGHT: raise Charlie's logic to deck height (see Alpha note above).
 _lhdCharlieLogic setPosASL [(getPos _lhdCharlieLogic) select 0, (getPos _lhdCharlieLogic) select 1, _deckZ];
@@ -282,7 +292,7 @@ if (_scudLogic == _lhdBravoLogic) then { _scudParts = _lhdBravoParts };
 
 //--- SCUD pad on the MIDDLE carrier's deck (addAction proximity reference).
 _scudPad = createVehicle ["HeliHCivil", [_scudAnchor select 0, _scudAnchor select 1, 0], [], 0, "NONE"];
-_scudPad setPosASL [_scudAnchor select 0, _scudAnchor select 1, _scudDeckZ];	//--- cmdcon41-w2 (Ray 2026-07-02): true deck height (was hardcoded 16, below the ~22m deck).
+_scudPad setPosASL [_scudAnchor select 0, _scudAnchor select 1, _scudDeckZ];	//--- cmdcon45: deckZ=15.9 (the "~22m deck" here was the bbMax artefact, see deckZ note above).
 _scudPad enableSimulation false;
 _scudPad allowDamage false;
 _scudPad setVariable ["wfbe_is_scud_pad", true, true];
@@ -299,7 +309,13 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_scudLogic]];
 		_sideID    = _loc getVariable ["sideID", WFBE_C_GUER_ID];
 		_ownerSide = _sideID Call WFBE_CO_FNC_GetSideFromID;
 		{
-			if (isPlayer _x && {alive _x} && {(side _x) == _ownerSide} && {(_x distance _pad) < 50}) then {
+			//--- fable/naval-camps-on-deck (Ray 2026-07-07): gate on distance to the VISUAL SCUD model
+//--- (wfbe_scud_model_ref, stored above). The pad anchor is 50m from the launcher so players
+//--- standing at the SCUD were right at the boundary and the action never triggered. Fallback
+//--- to _pad preserves safe behaviour if the ref is absent.
+private ["_scudRef"];
+_scudRef = _loc getVariable ["wfbe_scud_model_ref", _pad];
+if (isPlayer _x && {alive _x} && {(side _x) == _ownerSide} && {(_x distance _scudRef) < 50}) then {
 				_team = group _x;
 				_isLeader = (_x == leader _team);
 				if (_isLeader) then {
@@ -334,16 +350,28 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_scudLogic]];
 //--- the deckZ boundingBox on that carrier).
 private ["_scudModel","_scudDeckPart"];
 _scudDeckPart = _scudParts select 3;
-_scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [(_scudAnchor select 0) + 50, _scudAnchor select 1, 0], [], 0, "NONE"];
-_scudModel setPosASL [(_scudAnchor select 0) + 50, _scudAnchor select 1, _scudDeckZ];
+private ["_scudXY"];
+_scudXY = _scudDeckPart modelToWorld [8, -14, 0]; //--- fable/naval-deck-fixes: anchor+50 put the launcher 41m past the bow (anchor sits ~21m east of hull center, half-length ~30m; live RPT showed [14750,2000] vs deck edge ~14709). Deck-part model space is heading-proof.
+_scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [_scudXY select 0, _scudXY select 1, 0], [], 0, "NONE"];
+//--- fable/naval-camps-on-deck (Ray 2026-07-07) SCUD CLEARANCE: the MAZ_543_SCUD_TK_EP1 vehicle origin
+//--- is mid-body (~1.6 m above the ground plane), so placing the origin at exactly deckZ sinks the
+//--- lower half of the vehicle into the deck. Add WFBE_C_NAVAL_SCUD_CLEARANCE (default 1.6) so the
+//--- hull clears the deck surface. Owner will eyeball and adjust the constant in-engine.
+private ["_scudSpawnZ"];
+_scudSpawnZ = _scudDeckZ + (missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 1.6]);
+_scudModel setPosASL [_scudXY select 0, _scudXY select 1, _scudSpawnZ];
 _scudModel setDir 90;
 _scudModel allowDamage false;
 //--- cmdcon41 SCUD THEATRICS (feature 1, Ray 2026-07-02): store the deck SCUD launcher on the platform logic so
 //--- Support_ScudStrike.sqf can find the firing carrier's launcher and play the erect/backblast at launch. The
 //--- platform logic == the single entry stored in WFBE_NAVAL_HVT_PLATFORMS above (the object ScudStrike validates
 //--- ownership on), so a strike resolves its launcher with one getVariable. Broadcast so any locality can read it.
+//--- fable/naval-camps-on-deck: also store wfbe_scud_model_ref so the addAction proximity gate (below)
+//--- can test distance to the VISUAL launcher, not the invisible pad anchor (50m apart).
 _scudLogic setVariable ["wfbe_hvt_scud", _scudModel, true];
-[_scudModel, (_scudAnchor select 0) + 50, (_scudAnchor select 1), _scudDeckZ, _scudDeckPart] spawn {
+_scudLogic setVariable ["wfbe_scud_model_ref", _scudModel, true];
+diag_log Format ["NAVALHVT-SCUD: visual SCUD spawned at [%1,%2,%3] (deckZ=%4 + clearance=%5); model ref stored.", _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckZ, missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 1.6]];
+[_scudModel, _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckPart] spawn {
 	private ["_s","_px","_py","_dz","_deckPart","_off"];
 	_s        = _this select 0;
 	_px       = _this select 1;
@@ -590,12 +618,37 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 	[_hvtLoc] spawn {
 		private ["_loc","_pos","_sideID","_capGrp","_hind","_biplane","_hindPilot","_biplPilot","_armed",
 		         "_inactiveTime","_now","_detected","_players","_anyNear","_orbitAng","_dummy","_x",
-		         "_threeHinds","_hind2","_hind3","_hindPilot2","_hindPilot3"];
+		         "_threeHinds","_hind2","_hind3","_hindPilot2","_hindPilot3","_capL39","_jet1","_jet2","_jetPilot1","_jetPilot2",
+		         "_routeI","_route","_lap","_circuitTimeout","_circuitPts","_cMid","_cOuter","_airfieldPts","_legPt"];
 		_loc  = _this select 0;
 		_armed = false;
 		_inactiveTime = 0;
+		_jet1 = objNull; _jet2 = objNull; _jetPilot1 = objNull; _jetPilot2 = objNull; //--- fable/naval-deck-fixes: were block-scoped in the arming branch, orbit/despawn ticks read them undefined (live RPT :767/:794)
+
 		_orbitAng = random 360;
 		_threeHinds = (missionNamespace getVariable ["WFBE_C_NAVAL_CAP_THREE_HINDS", 0]) > 0;
+		_capL39 = (missionNamespace getVariable ["WFBE_C_NAVAL_CAP_L39", 0]) > 0; //--- naval-air-spawn-easa: supersedes THREE_HINDS + Mi24/An2 when >0.
+
+		//--- fable/l39-circuit (owner 2026-07-07): L39 sea patrol flies a CIRCUIT over all 3 carriers,
+		//--- with ONE inland-airfield visit (NEAF/NWAF alternating) every 3rd lap. Z is ALWAYS explicit:
+		//--- a Z=0 doMove is a commanded descent into the sea for fixed-wing AI (the post-#837 nosedive).
+		_routeI = 0; _route = []; _lap = 0; _circuitTimeout = 0;
+		_cMid   = missionNamespace getVariable ["WFBE_NAVAL_MIDDLE_ANCHOR", [(getPos _loc) select 0, (getPos _loc) select 1]];
+		_cOuter = missionNamespace getVariable ["WFBE_NAVAL_OUTER_PAIR", []];
+		_circuitPts = [[(getPos _loc) select 0, (getPos _loc) select 1, 550]];
+		if (count _cOuter >= 2) then {
+			_circuitPts = [
+				[((_cOuter select 0) select 1) select 0, ((_cOuter select 0) select 1) select 1, 550],
+				[_cMid select 0, _cMid select 1, 550],
+				[((_cOuter select 1) select 1) select 0, ((_cOuter select 1) select 1) select 1, 550]
+			];
+		};
+		_airfieldPts = [];
+		{
+			if ((_x getVariable ["name",""]) in ["NEAF","NWAF"]) then {
+				_airfieldPts = _airfieldPts + [[(getPos _x) select 0, (getPos _x) select 1, 550]];
+			};
+		} forEach towns;
 
 		while { !WFBE_GameOver } do {
 			sleep 10;
@@ -620,78 +673,157 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						_armed = true;
 						_capGrp = createGroup resistance;
 
-						if (_threeHinds) then {
-							//--- THREE-HIND path (WFBE_C_NAVAL_CAP_THREE_HINDS > 0): no An2.
-							_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
-							_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
-							_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-							_hindPilot moveInDriver _hind;
-							_hind flyInHeight 350;
+						if (_capL39) then {
+							//--- L39 CAP path (WFBE_C_NAVAL_CAP_L39 > 0): 2x L39_TK_EP1 jets.
+							//--- Supersedes THREE_HINDS and Mi24/An2 when both flags are >0.
+							//--- Fixed-wing MUST have setVelocity set at spawn - zero velocity
+							//---   causes immediate stall-dive on A2 OA (no lift at t=0).
+							//--- Config proof: arma2-co-config-reference/Config/CfgVehicles.txt
+							//---   line 185835  class L39_TK_EP1 : L39_base
+							_jetDir = random 360;
 
-							_hind2 = createVehicle ["Mi24_P", [(_pos select 0) - 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
-							_hind2 setPosASL [(_pos select 0) - 200, (_pos select 1) + 200, 400];
-							_hindPilot2 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							_hindPilot2 moveInDriver _hind2;
-							_hind2 flyInHeight 350;
+							_jet1 = createVehicle ["L39_TK_EP1", [(_pos select 0) + 300 * (sin _jetDir), (_pos select 1) + 300 * (cos _jetDir), 600], [], 0, "FLY"];
+							_jet1 setPosASL [(_pos select 0) + 300 * (sin _jetDir), (_pos select 1) + 300 * (cos _jetDir), 600];
+							_jet1 setDir _jetDir;
+							_jet1 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
+							_jet1 flyInHeight 550;
+							_jetPilot1 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+							if (isNil "_jetPilot1") then {_jetPilot1 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+							_jetPilot1 moveInDriver _jet1;
+							_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 550]; //--- fable/l39-circuit: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
 
-							_hind3 = createVehicle ["Mi24_P", [(_pos select 0) + 0, (_pos select 1) - 300, 400], [], 0, "FLY"];
-							_hind3 setPosASL [(_pos select 0) + 0, (_pos select 1) - 300, 400];
-							_hindPilot3 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							_hindPilot3 moveInDriver _hind3;
-							_hind3 flyInHeight 350;
+							_jet2 = createVehicle ["L39_TK_EP1", [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650], [], 0, "FLY"];
+							_jet2 setPosASL [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650];
+							_jet2 setDir _jetDir;
+							_jet2 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
+							_jet2 flyInHeight 600;
+							_jetPilot2 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+							_jetPilot2 moveInDriver _jet2;
+							_jetPilot2 doMove [(_pos select 0) - 800, (_pos select 1), 600];
 
 							_capGrp setBehaviour "AWARE";
 							_capGrp setCombatMode "RED";
 							_capGrp setSpeedMode "FULL";
 
-							//--- Tag all three as CAP so GC/groupsGC don't reap them.
-							_capGrp setVariable ["wfbe_naval_cap", true, true];
-							_hind  setVariable ["wfbe_naval_cap", true, true];
-							_hind2 setVariable ["wfbe_naval_cap", true, true];
-							_hind3 setVariable ["wfbe_naval_cap", true, true];
-
-							["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (3x Mi-24).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
-						} else {
-							//--- STANDARD path (flag 0): Hind + An2 pair (default).
-							_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
-							_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
-							_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-							_hindPilot moveInDriver _hind;
-							_capGrp setBehaviour "AWARE";
-							_capGrp setCombatMode "RED";
-							_hind flyInHeight 350;
-							_capGrp setSpeedMode "FULL";
-
-							//--- Spawn An2 biplane at 600m altitude.
-							_biplane = createVehicle ["An2_1_TK_CIV_EP1", [(_pos select 0) - 300, (_pos select 1) - 300, 600], [], 0, "FLY"];
-							_biplane setPosASL [(_pos select 0) - 300, (_pos select 1) - 300, 600];
-							_biplPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-							_biplPilot moveInDriver _biplane;
-							_biplane flyInHeight 550;
+							//--- EASA randomisation: stamp wfbe_naval_easa_pending on hull.
+							//--- Clients read it on EH_Init and call EASA_Equip themselves.
+							if ((missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0]) > 0) then {
+								_easaVehi = missionNamespace getVariable ["WFBE_EASA_Vehicles", []];
+								_easaIdx = _easaVehi find "L39_TK_EP1";
+								if (_easaIdx >= 0) then {
+									_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaIdx;
+									_easaRandIdx = floor (random (count _easaLoadouts));
+									_jet1 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
+									_jet2 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
+								};
+							};
 
 							//--- Tag both as CAP so GC/groupsGC don't reap them.
 							_capGrp setVariable ["wfbe_naval_cap", true, true];
-							_hind   setVariable ["wfbe_naval_cap", true, true];
-							_biplane setVariable ["wfbe_naval_cap", true, true];
+							_jet1 setVariable ["wfbe_naval_cap", true, true];
+							_jet2 setVariable ["wfbe_naval_cap", true, true];
 
-							["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (Hind + An2).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+							["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (2x L39_TK_EP1, easa_random=%2).", _loc getVariable "name", (missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0])]] Call WFBE_CO_FNC_LogContent;
+						} else {
+							if (_threeHinds) then {
+								//--- THREE-HIND path (WFBE_C_NAVAL_CAP_THREE_HINDS > 0): no An2.
+								_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
+								_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
+								_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+								_hindPilot moveInDriver _hind;
+								_hind flyInHeight 350;
+
+								_hind2 = createVehicle ["Mi24_P", [(_pos select 0) - 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
+								_hind2 setPosASL [(_pos select 0) - 200, (_pos select 1) + 200, 400];
+								_hindPilot2 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								_hindPilot2 moveInDriver _hind2;
+								_hind2 flyInHeight 350;
+
+								_hind3 = createVehicle ["Mi24_P", [(_pos select 0) + 0, (_pos select 1) - 300, 400], [], 0, "FLY"];
+								_hind3 setPosASL [(_pos select 0) + 0, (_pos select 1) - 300, 400];
+								_hindPilot3 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								_hindPilot3 moveInDriver _hind3;
+								_hind3 flyInHeight 350;
+
+								_capGrp setBehaviour "AWARE";
+								_capGrp setCombatMode "RED";
+								_capGrp setSpeedMode "FULL";
+
+								//--- Tag all three as CAP so GC/groupsGC don't reap them.
+								_capGrp setVariable ["wfbe_naval_cap", true, true];
+								_hind  setVariable ["wfbe_naval_cap", true, true];
+								_hind2 setVariable ["wfbe_naval_cap", true, true];
+								_hind3 setVariable ["wfbe_naval_cap", true, true];
+
+								["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (3x Mi-24).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+							} else {
+								//--- STANDARD path (WFBE_C_NAVAL_CAP_L39=0, THREE_HINDS=0): Hind + An2.
+								//--- naval-air-spawn-easa FIX: An2 is fixed-wing. createVehicle ["FLY"]
+								//---   gives zero velocity at t=0 -> stall-dive. Set forward speed.
+								_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
+								_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
+								_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+								_hindPilot moveInDriver _hind;
+								_capGrp setBehaviour "AWARE";
+								_capGrp setCombatMode "RED";
+								_hind flyInHeight 350;
+								_capGrp setSpeedMode "FULL";
+
+								//--- Spawn An2 biplane at 600m altitude with forward velocity.
+								_jetDir = random 360;
+								_biplane = createVehicle ["An2_1_TK_CIV_EP1", [(_pos select 0) - 300, (_pos select 1) - 300, 600], [], 0, "FLY"];
+								_biplane setPosASL [(_pos select 0) - 300, (_pos select 1) - 300, 600];
+								_biplane setDir _jetDir;
+								_biplane setVelocity [(sin _jetDir) * 60, (cos _jetDir) * 60, 0];
+								_biplane flyInHeight 550;
+								_biplPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								_biplPilot moveInDriver _biplane;
+
+								//--- Tag both as CAP so GC/groupsGC don't reap them.
+								_capGrp setVariable ["wfbe_naval_cap", true, true];
+								_hind   setVariable ["wfbe_naval_cap", true, true];
+								_biplane setVariable ["wfbe_naval_cap", true, true];
+
+								["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (Hind + An2, velocity-fixed).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+							};
 						};
 					};
 				} else {
 					//--- CAP is active — orbit the asset.
 					_orbitAng = _orbitAng + 8;
-					if (_threeHinds) then {
-						if (alive _hind)  then {_hindPilot  doMove [(_pos select 0) + 400 * sin _orbitAng,         (_pos select 1) + 400 * cos _orbitAng, 0]};
-						if (alive _hind2) then {_hindPilot2 doMove [(_pos select 0) + 400 * sin (_orbitAng + 120), (_pos select 1) + 400 * cos (_orbitAng + 120), 0]};
-						if (alive _hind3) then {_hindPilot3 doMove [(_pos select 0) + 400 * sin (_orbitAng + 240), (_pos select 1) + 400 * cos (_orbitAng + 240), 0]};
-					} else {
-						if (alive _hind) then {
-							_hindPilot doMove [(_pos select 0) + 400 * sin _orbitAng, (_pos select 1) + 400 * cos _orbitAng, 0];
+					if (_capL39) then {
+						//--- fable/l39-circuit: carrier-circuit sea patrol (+ airfield leg every 3rd lap). Explicit Z.
+						if (_routeI >= count _route) then {
+							_lap = _lap + 1;
+							_route = +_circuitPts;
+							if (((_lap mod 3) == 0) && {count _airfieldPts > 0}) then {
+								_route = _route + [_airfieldPts select ((floor (_lap / 3)) mod (count _airfieldPts))];
+							};
+							_routeI = 0;
 						};
-						if (alive _biplane) then {
-							_biplPilot doMove [(_pos select 0) + 700 * sin (_orbitAng + 180), (_pos select 1) + 700 * cos (_orbitAng + 180), 0];
+						_legPt = _route select _routeI;
+						_circuitTimeout = _circuitTimeout + 10;
+						if ((!isNull _jet1 && {alive _jet1} && {((getPosASL _jet1) distance _legPt) < 500}) || _circuitTimeout > 120) then {
+							_routeI = _routeI + 1;
+							_circuitTimeout = 0;
+							if (_routeI < count _route) then {_legPt = _route select _routeI};
+						};
+						if (alive _jet1) then {_jetPilot1 doMove _legPt};
+						if (alive _jet2) then {_jetPilot2 doMove [(_legPt select 0) + 300, (_legPt select 1) + 300, _legPt select 2]};
+					} else {
+						if (_threeHinds) then {
+							if (alive _hind)  then {_hindPilot  doMove [(_pos select 0) + 400 * sin _orbitAng,         (_pos select 1) + 400 * cos _orbitAng, 0]};
+							if (alive _hind2) then {_hindPilot2 doMove [(_pos select 0) + 400 * sin (_orbitAng + 120), (_pos select 1) + 400 * cos (_orbitAng + 120), 0]};
+							if (alive _hind3) then {_hindPilot3 doMove [(_pos select 0) + 400 * sin (_orbitAng + 240), (_pos select 1) + 400 * cos (_orbitAng + 240), 0]};
+						} else {
+							if (alive _hind) then {
+								_hindPilot doMove [(_pos select 0) + 400 * sin _orbitAng, (_pos select 1) + 400 * cos _orbitAng, 0];
+							};
+							if (alive _biplane) then {
+								_biplPilot doMove [(_pos select 0) + 700 * sin (_orbitAng + 180), (_pos select 1) + 700 * cos (_orbitAng + 180), 550]; //--- fable/l39-circuit: Z=0 = commanded descent for fixed-wing
+							};
 						};
 					};
 				};
@@ -704,13 +836,18 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						//--- Despawn CAP.
 						_armed = false;
 						_inactiveTime = 0;
-						if (_threeHinds) then {
-							if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x} forEach (crew _hind);  deleteVehicle _hind };
-							if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x} forEach (crew _hind2); deleteVehicle _hind2 };
-							if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x} forEach (crew _hind3); deleteVehicle _hind3 };
+						if (_capL39) then {
+							if (!isNull _jet1 && alive _jet1) then { {deleteVehicle _x} forEach (crew _jet1); deleteVehicle _jet1 };
+							if (!isNull _jet2 && alive _jet2) then { {deleteVehicle _x} forEach (crew _jet2); deleteVehicle _jet2 };
 						} else {
-							if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x} forEach (crew _hind);   deleteVehicle _hind };
-							if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
+							if (_threeHinds) then {
+								if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x} forEach (crew _hind);  deleteVehicle _hind };
+								if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x} forEach (crew _hind2); deleteVehicle _hind2 };
+								if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x} forEach (crew _hind3); deleteVehicle _hind3 };
+							} else {
+								if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x} forEach (crew _hind);   deleteVehicle _hind };
+								if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
+							};
 						};
 						if (!isNull _capGrp) then { deleteGroup _capGrp };
 						["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP despawned at %1 (inactivity).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
@@ -720,5 +857,184 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 		};
 	};
 } forEach [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic];
+
+//------------------------------------------------------------------------------------
+//--- fable/naval-camps-on-deck (Ray 2026-07-07) CAMP + DEPOT DECK RESEAT.
+//---
+//--- Root cause: camp logics (LocationLogicCamp, synchronized to the town logic in
+//---   mission.sqm) sit at sea level. Init_Town.sqf's Spawn block reads getPos on
+//---   each camp logic and createVehicle/setPos the tent model + flag at that ATL
+//---   position — on open water that resolves to z=0 (sea surface inside the hull).
+//---   The naval town LOGIC is raised to deckZ (cmdcon41-w2) but the camp LOGICS
+//---   are separate synchronized objects that stay at sea level.
+//---
+//--- Fix: for each naval town, spawn a bounded poll that waits until Init_Town has
+//---   stored wfbe_camp_bunker on each camp logic (set ~line 129 of Init_Town, inside
+//---   the serverInitComplete waitUntil block). Once the model ref exists re-seat the
+//---   camp logic + model + flag to the deck. Depot model has no stored ref; find it
+//---   via nearestObjects at the town logic's new deck position.
+//---
+//--- Body-space camp offsets (heading 90, ship faces east):
+//---   Rotation: dx = bx*cos(dir)-by*sin(dir), dy = bx*sin(dir)+by*cos(dir)
+//---   Camp 1 body [0, +42] -> world anchor + [-42,  0]  (42 m west, on deck)
+//---   Camp 2 body [0, -72] -> world anchor + [+72,  0]  (72 m east, clear of SCUD@+50)
+//---   Both within the ~250 m hull extent, clear of heli pad (body [0,-10]).
+//---
+//--- WFBE_C_NAVAL_CAMPS_DECK default 1 (owner-reported correctness fix, always-on).
+//------------------------------------------------------------------------------------
+if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
+	private ["_campDeckOffsets"];
+	//--- Body-space [bx, by] offsets for each camp slot on the flight deck.
+	//--- Rotation: dx = bx*cos(dir)-by*sin(dir), dy = bx*sin(dir)+by*cos(dir).
+	_campDeckOffsets = [[0, 42], [0, -72]];
+
+	{
+		private ["_navLogic","_navDeckZ","_navDir","_navAnchorX","_navAnchorY"];
+		_navLogic   = _x;
+		_navDeckZ   = _navLogic getVariable ["wfbe_naval_deckz", 15.9];
+		_navDir     = getDir (_navLogic getVariable ["wfbe_naval_deckpart", _navLogic]); //--- fable/naval-deck-fixes: town logics carry azimut=0 in mission.sqm; the hull part carries the true heading (90) - rotation math was silently wrong for the (currently dead) synced-camps path
+		_navAnchorX = (getPosASL _navLogic) select 0;
+		_navAnchorY = (getPosASL _navLogic) select 1;
+
+		[_navLogic, _navDeckZ, _navDir, _navAnchorX, _navAnchorY, _campDeckOffsets] spawn {
+			private ["_loc","_deckZ","_dir","_ancX","_ancY","_offsets","_camps","_elapsed"];
+			private ["_i","_off","_slotIdx","_bx","_by","_dx","_dy","_cx","_cy"];
+			private ["_model","_flag","_flagPos","_depotCls","_depots","_depot","_elapsed2"];
+			_loc     = _this select 0;
+			_deckZ   = _this select 1;
+			_dir     = _this select 2;
+			_ancX    = _this select 3;
+			_ancY    = _this select 4;
+			_offsets = _this select 5;
+
+			//--- Wait for Init_Town to publish the camps variable (line ~72 of Init_Town,
+			//--- set before the Spawn block; camp models spawn later inside the Spawn block).
+			_elapsed = 0;
+			waitUntil {
+				_elapsed = _elapsed + 2;
+				sleep 2;
+				(!isNil {_loc getVariable "camps"}) || (_elapsed >= 60)
+			};
+			_camps = _loc getVariable ["camps", []];
+
+			if (count _camps == 0) exitWith {
+				//--- fable/naval-deck-fixes: runtime carrier towns can NEVER receive camps from Init_Town -
+				//--- camps come only from mission.sqm-synchronized LocationLogicCamp entities (Init_Town.sqf:59-72),
+				//--- so the wait above always ends empty and every carrier shipped uncapturable (live RPT: "no camps
+				//--- found after wait" x3). Build the full camp contract here instead: invisible-but-alive HeliHEmpty
+				//--- stand-ins (the B754b hangar pattern above - consumers key on wfbe_camp_bunker/sideID variables,
+				//--- not typeOf: see GUI_RespawnMenu.sqf:213), bunker model + flag + vars per Init_Town.sqf:105-136,
+				//--- then start THIS town's server_town_camp FSM (Init_Town launched it with an empty array here).
+				//--- Placement = deck-part MODEL space (heading-proof), port side, clear of the SCUD ([8,-14]).
+				private ["_deckPart","_newCamps","_newFlags","_cOff","_cXY","_cLogic","_cModel","_cFlag","_cFlagPos","_campHealth","_townSideID","_townSV","_depotCls2","_depots2","_depot2"];
+				_deckPart = _loc getVariable ["wfbe_naval_deckpart", objNull];
+				if (isNull _deckPart) exitWith {
+					diag_log Format ["NAVALHVT-CAMP: %1 no camps AND no deckpart ref; cannot build deck camps.", _loc getVariable ["name","?"]];
+				};
+				_townSideID = _loc getVariable ["sideID", WFBE_C_GUER_ID];
+				_townSV = _loc getVariable ["supplyValue", 0];
+				_newCamps = []; _newFlags = [];
+				{
+					_cOff = _x;
+					_cXY = _deckPart modelToWorld _cOff;
+					_cLogic = "HeliHEmpty" createVehicle [_cXY select 0, _cXY select 1, 0];
+					_cLogic setDir (getDir _deckPart);
+					_cLogic setPosASL [_cXY select 0, _cXY select 1, _deckZ];
+					_cLogic allowDamage false;
+					_cLogic setVariable ["town", _loc];
+					_cLogic setVariable ["sideID", _townSideID, true];
+					_cLogic setVariable ["supplyValue", _townSV, true];
+					_cModel = createVehicle [missionNamespace getVariable "WFBE_C_CAMP", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
+					_cModel setDir ((getDir _cLogic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
+					_cModel setPosASL [_cXY select 0, _cXY select 1, _deckZ];
+					_campHealth = missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF";
+					if !(isNil '_campHealth') then {
+						_cModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
+					};
+					_cFlag = createVehicle [missionNamespace getVariable "WFBE_C_CAMP_FLAG", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
+					_cFlagPos = _cLogic modelToWorld (missionNamespace getVariable ["WFBE_C_CAMP_FLAG_POS", [-5, 5]]);
+					_cFlag setPosASL [_cFlagPos select 0, _cFlagPos select 1, _deckZ];
+					_cLogic setVariable ["wfbe_flag", _cFlag];
+					_cLogic setVariable ["wfbe_camp_bunker", _cModel, true];
+					_newCamps = _newCamps + [_cLogic];
+					_newFlags = _newFlags + [_cFlag];
+				} forEach [[-10, 18, 0], [-10, -18, 0]];
+				_loc setVariable ["camps", _newCamps, true];
+				[_newCamps, _loc, _newFlags] execVM "Server\FSM\server_town_camp.sqf";
+				diag_log Format ["NAVALHVT-CAMP: %1 built %2 deck camps at deckZ=%3 (runtime town, no sqm camps); camp FSM started.", _loc getVariable ["name","?"], count _newCamps, _deckZ];
+				//--- Depot reseat (duplicated from the synced-camps path below, which this exitWith skips).
+				_depotCls2 = missionNamespace getVariable ["WFBE_C_DEPOT", ""];
+				if (_depotCls2 != "") then {
+					_depots2 = nearestObjects [getPosASL _loc, [_depotCls2], 50];
+					if (count _depots2 == 1) then {
+						_depot2 = _depots2 select 0;
+						_depot2 setPosASL [_ancX, _ancY, _deckZ];
+						diag_log Format ["NAVALHVT-CAMP: %1 depot reseated to [%2,%3,%4]", _loc getVariable ["name","?"], _ancX, _ancY, _deckZ];
+					};
+				};
+			};
+
+			//--- Re-seat each camp logic, then wait for the tent model (wfbe_camp_bunker)
+			//--- to be spawned by Init_Town before moving the model + flag.
+			_i = 0;
+			{
+				private ["_campLogic","_slotIdx","_off","_bx","_by","_dx","_dy","_cx","_cy"];
+				private ["_model","_flag","_flagPos","_elapsed2"];
+				_campLogic = _x;
+
+				//--- Compute deck-space world position for this camp slot.
+				_slotIdx = _i;
+				if (_slotIdx >= count _offsets) then { _slotIdx = (count _offsets) - 1 };
+				_off = _offsets select _slotIdx;
+				_bx  = _off select 0;
+				_by  = _off select 1;
+				_dx  = _bx * (cos _dir) - _by * (sin _dir);
+				_dy  = _bx * (sin _dir) + _by * (cos _dir);
+				_cx  = _ancX + _dx;
+				_cy  = _ancY + _dy;
+
+				//--- Re-seat the LOGIC first (models that spawn AFTER will use getPos of the logic).
+				_campLogic setPosASL [_cx, _cy, _deckZ];
+
+				//--- Wait for tent model (wfbe_camp_bunker) to be spawned by Init_Town.
+				_elapsed2 = 0;
+				waitUntil {
+					_elapsed2 = _elapsed2 + 2;
+					sleep 2;
+					(!isNil {_campLogic getVariable "wfbe_camp_bunker"}) || (_elapsed2 >= 60)
+				};
+
+				_model = _campLogic getVariable ["wfbe_camp_bunker", objNull];
+				if (!isNull _model) then {
+					_model setPosASL [_cx, _cy, _deckZ];
+					//--- Re-seat flag (wfbe_flag stored on camp logic by Init_Town).
+					_flag = _campLogic getVariable ["wfbe_flag", objNull];
+					if (!isNull _flag) then {
+						//--- Replicate Init_Town's modelToWorld flag offset from the now-reseated logic.
+						_flagPos = _campLogic modelToWorld (missionNamespace getVariable ["WFBE_C_CAMP_FLAG_POS", [-5, 5]]);
+						_flag setPosASL [_flagPos select 0, _flagPos select 1, _deckZ];
+					};
+					diag_log Format ["NAVALHVT-CAMP: %1 camp %2 reseated to [%3,%4,%5] deckZ=%6", _loc getVariable ["name","?"], _i, _cx, _cy, _deckZ, _deckZ];
+				} else {
+					diag_log Format ["NAVALHVT-CAMP: %1 camp %2 tent model nil after 60s; logic reseated, model skipped.", _loc getVariable ["name","?"], _i];
+				};
+				_i = _i + 1;
+			} forEach _camps;
+
+			//--- DEPOT reseat: no stored ref; find via nearestObjects at the logic's deck position.
+			//--- Guard: only act if exactly one depot-class object within 50 m (prevents touching
+			//--- land-town depots if the search ever reaches them — it won't, but defensive).
+			_depotCls = missionNamespace getVariable ["WFBE_C_DEPOT", ""];
+			if (_depotCls != "") then {
+				_depots = nearestObjects [getPosASL _loc, [_depotCls], 50];
+				if (count _depots == 1) then {
+					_depot = _depots select 0;
+					_depot setPosASL [_ancX, _ancY, _deckZ];
+					diag_log Format ["NAVALHVT-CAMP: %1 depot reseated to [%2,%3,%4] deckZ=%5", _loc getVariable ["name","?"], _ancX, _ancY, _deckZ, _deckZ];
+				};
+			};
+		};
+	} forEach [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic];
+};
 
 ["INITIALIZATION", "Init_NavalHVT.sqf : All naval HVT assets spawned + CAP loops started."] Call WFBE_CO_FNC_LogContent;

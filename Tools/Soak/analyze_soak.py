@@ -672,8 +672,16 @@ class Soak(object):
             if m:
                 side = m.group(1).upper()
                 tick = _to_int(m.group(2), 0)
-                kv = parse_kvs(m.group(3))
+                rest = m.group(3)
                 self._note_tick(tick)
+                # AICOM2|v1|DECAP|<SIDE>|<tick>|PRESS|team=...|dist=... lines are emitted
+                # by Common_RunCommanderTeam.sqf (not AI_Commander_Decapitate.sqf).
+                # Detect by the leading PRESS| token and route to a2_press instead of
+                # a2_decap so the press counter is non-zero on a real soak RPT.
+                if rest.startswith("PRESS|"):
+                    self.a2_press[side].append(tick)
+                    continue
+                kv = parse_kvs(rest)
                 # sensed is emitted as integer "1"/"0" by AI_Commander_Decapitate.sqf.
                 # Accept both the real integer form and the legacy "true"/"false" form
                 # defensively (unit tests and older hand-crafted fixtures may use either).

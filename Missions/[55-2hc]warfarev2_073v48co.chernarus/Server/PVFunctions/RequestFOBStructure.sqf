@@ -73,6 +73,13 @@ if (!_reject) then {
 		[resistance, "HandleSpecial", ['building-started', _facType, _pos]] Call WFBE_CO_FNC_SendToClients;
 		[_classname, resistance, _pos, _dir, _index] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
 		["INFORMATION", Format ["RequestFOBStructure.sqf: GUER FOB [%1] (%2) building at %3. Avail now %4.", _facType, _classname, _pos, _avail]] Call WFBE_CO_FNC_LogContent;
+		//--- fable/fob-marker (owner 2026-07-07): resistance-only map marker while the FOB is active.
+		//--- Side-scoped via the WildcardMarker createMarkerLocal idiom - WEST/EAST never see it.
+		//--- Name is deterministic from position so the destroy path can delete without shared state.
+		[resistance, "WildcardMarker", ["create", Format ["guer_fob_%1_%2", floor (_pos select 0), floor (_pos select 1)], _pos, "ColorGreen", "mil_objective", Format ["FOB %1", _facType], "forward base active - spawn and resupply here"]] Call WFBE_CO_FNC_SendToClients;
+		//--- fable/fob-polish (2026-07-07): record the active FOB in the server-side ledger so
+		//--- Server_OnPlayerConnected can replay the marker to late joiners (#846 known gap).
+		missionNamespace setVariable ["WFBE_GUER_FOB_ACTIVE", (missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []]) + [[Format ["guer_fob_%1_%2", floor (_pos select 0), floor (_pos select 1)], _pos, _facType]]];
 		//--- Consume the delivery truck - it "became" the FOB.
 		if (!isNull _truck) then {deleteVehicle _truck};
 	} else {

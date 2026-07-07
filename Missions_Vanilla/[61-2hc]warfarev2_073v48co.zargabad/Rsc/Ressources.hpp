@@ -135,7 +135,7 @@ class RscButton {
 	offsetY = 0.003;
 	offsetPressedX = 0.002;
 	offsetPressedY = 0.002;
-	colorFocused[] = {0.5882, 0.5882, 0.3529, 0.7};
+	colorFocused[] = {0.5882, 0.5882, 0.3529, 0.7}; //--- cmdcon45: reverted pass-1 bright ring - A2 PULSES colorFocused, full-alpha ring = perpetual blink on the focused button (owner-reported flicker)
 	colorShadow[] = {0.023529, 0, 0.0313725, 1};
 	colorBorder[] = {0.023529, 0, 0.0313725, 1};
 	borderSize = 0.0;
@@ -335,7 +335,7 @@ class RscListBox {
 	sizeEx = 0.04221;
 	color[] = {0.2588, 0.7137, 1, 1};
 	colorText[] = {1, 1, 1, 0.75};
-	colorScrollbar[] = {0.95, 0, 0, 1};
+	colorScrollbar[] = {0.6, 0.7, 0.8, 1};
 	colorSelect[] = {0, 0, 0, 0.7};
 	colorSelect2[] = {0, 0, 0, 0.7};
 	colorSelectBackground[] = {0.2588, 0.7137, 1, 1};

@@ -35,7 +35,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=146;
+		items=148;
 		class Item134
 		{
 			side="LOGIC";
@@ -3554,7 +3554,7 @@ class Mission
 		};
 		class Item64
 		{
-			side="CIVILIAN";
+			side="CIV";
 			class Vehicles
 			{
 				items=1;
@@ -3562,7 +3562,7 @@ class Mission
 				{
 					position[]={2259.1614,512.45703,15296.355};
 					id=229;
-					side="CIVILIAN";
+					side="CIV";
 					vehicle="Civilian";
 					player="PLAY CDG";
 					leader=1;
@@ -3576,7 +3576,7 @@ class Mission
 		};
 		class Item65
 		{
-			side="CIVILIAN";
+			side="CIV";
 			class Vehicles
 			{
 				items=1;
@@ -3584,7 +3584,7 @@ class Mission
 				{
 					position[]={2259.1116,512.63934,15297.525};
 					id=230;
-					side="CIVILIAN";
+					side="CIV";
 					vehicle="Civilian";
 					player="PLAY CDG";
 					leader=1;
@@ -3917,7 +3917,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_BLU";
-					synchronizations[]={239,231,240,241,232,233,242,234,235,236,237,259,268};
+					synchronizations[]={239,231,240,241,232,233,242,234,235,236,237,259,268,9007,9008};
 				};
 			};
 		};
@@ -3999,7 +3999,7 @@ class Mission
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="HC";
+					description="Soldier (Double team size, Camps restore)";
 					synchronizations[]={256};
 				};
 			};
@@ -5240,6 +5240,50 @@ class Mission
 					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
+				};
+			};
+		};
+		class Item146
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={2261.1794,512.27637,15297.2210};
+					id=9007;
+					side="WEST";
+					vehicle="FR_Miles";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={255};
+				};
+			};
+		};
+		class Item147
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={2263.1794,512.27637,15299.2210};
+					id=9008;
+					side="WEST";
+					vehicle="FR_Miles";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={255};
 				};
 			};
 		};

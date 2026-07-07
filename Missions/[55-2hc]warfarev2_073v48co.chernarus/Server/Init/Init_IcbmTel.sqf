@@ -538,6 +538,9 @@ WFBE_SE_FNC_IcbmTelNuke = {
 
 	//--- Arm the countdown latch (the killed-EH reads this to know a NUKE is in flight -> destroy = cancel).
 	missionNamespace setVariable [_cdKey, time + _secs];
+	//--- pack-missiles: broadcast [launchTime, impactTime] to all clients for the countdown/warning HUD.
+	[nil, "HandleSpecial", ["icbm-countdown", time, time + _secs]] Call WFBE_CO_FNC_SendToClients;
+
 
 	//--- Theatrics at the TEL (erect + smoke) for the whole countdown feel.
 	[_tel] Call WFBE_SE_FNC_IcbmTelTheatrics;

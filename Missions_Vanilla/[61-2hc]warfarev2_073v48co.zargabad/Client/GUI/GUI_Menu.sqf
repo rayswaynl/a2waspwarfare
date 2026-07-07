@@ -1,11 +1,35 @@
 {ctrlEnable [_x, false]} forEach [11002, 11005, 11006, 11007, 11008];
 //--- GUER insurgents: commander/base/upgrade/economy/vote buttons are irrelevant (no HQ/commander/base). Grey them.
 if (sideJoined == resistance) then { {ctrlEnable [_x, false]} forEach [11004,11005,11006,11007,11008] };
+//--- A1 Commissar Panel (owner 2026-07-07): for GUER, REPURPOSE the (GUER-dead) Economy button as the
+//--- panel entry instead of the cramped corner button - re-enable it and relabel. MenuAction 8 branches
+//--- by side below. The corner 11030 button is retired (hidden for all sides); its MenuAction 30 path
+//--- stays as a harmless no-op fallback.
+if (sideJoined == resistance) then {
+	ctrlEnable [11008, true];
+	private ["_gvisTeam","_gvisWallet","_gvisLabel"];
+	if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
+		_gvisTeam = group player;
+		_gvisWallet = _gvisTeam getVariable "wfbe_funds";
+		if (isNil "_gvisWallet") then {_gvisWallet = 0};
+		_gvisLabel = Format ["Towns ($%1)", round _gvisWallet];
+	} else {
+		_gvisLabel = "Towns";
+	};
+	ctrlSetText [11008, _gvisLabel]; //--- WFBE_C_GDIR_VIS: wallet shown when flag on (default 1)
+};
+ctrlShow [11030, false];
+//--- fable/drones-menu: for GUER, repurpose the (GUER-dead) Tactical Center button as the Drones entry.
+if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {
+	ctrlEnable [11006, true];
+	ctrlSetText [11006, "DRONES"];
+};
 
 _enable = false;
 if ((barracksInRange || lightInRange || heavyInRange || aircraftInRange || hangarInRange || depotInRange) && (player == leader WFBE_Client_Team)) then {_enable = true};
 ctrlEnable [11001,_enable];
 ctrlEnable [11006,commandInRange && (player == leader WFBE_Client_Team)]; //--- Special Menu
+if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {ctrlEnable [11006, true]}; //--- fable/drones-menu: restore DRONES enable overridden by line above
 
 MenuAction = -1;
 WFBE_ForceUpdate = true;
@@ -27,8 +51,10 @@ while {alive player && dialog} do {
 		if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_GEAR_PROXIMITY", 1]) < 1}) then { ctrlEnable [11002, true] };
 
 		if (sideJoined == resistance) then {
-			{ctrlEnable [_x, false]} forEach [11004,11005,11006,11008]; //--- GUER: hold commander/base/economy/vote disabled
+			{ctrlEnable [_x, false]} forEach [11004,11005]; //--- GUER: hold commander/base/vote disabled; 11008=Towns re-enabled pre-loop
+			if ((missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) <= 0) then {ctrlEnable [11006, false]}; //--- fable/drones-menu: keep Drones button live when flag on
 				ctrlEnable [11007, true]; //--- B75 (guer-tech): the Upgrade Center is a READ-ONLY kill-tech progression viewer for GUER (GUI_UpgradeMenu.sqf resistance branch).
+				if (((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) > time) then { {ctrlEnable [_x, false]} forEach [11001,11002,11008] }; //--- fable/guer-lockout: buy/gear/Town Actions held until activation
 		} else {
 	_enable = false; //added-MrNiceGuy
 	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_enable = true}};
@@ -206,7 +232,12 @@ while {alive player && dialog} do {
 	if (MenuAction == 6) exitWith { //added-MrNiceGuy
 		MenuAction = -1;
 		closeDialog 0;
-		createDialog "RscMenu_Tactical";
+		//--- fable/drones-menu: GUER opens Drone Ops menu; W/E keep Tactical Center.
+		if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {
+			createDialog "WFBE_GuerDronesMenu";
+		} else {
+			createDialog "RscMenu_Tactical";
+		};
 	};
 
 	//--- Upgrade Menu.
@@ -220,7 +251,12 @@ while {alive player && dialog} do {
 	if (MenuAction == 8) exitWith { //added-MrNiceGuy
 		MenuAction = -1;
 		closeDialog 0;
-		createDialog "RscMenu_Economy";
+		//--- A1 Commissar Panel: the Economy slot doubles as the GUER Town Actions entry.
+		if (sideJoined == resistance) then {
+			createDialog "WFBE_GDirCommissarMenu";
+		} else {
+			createDialog "RscMenu_Economy";
+		};
 	};
 
 	//--- Service Menu.
@@ -322,6 +358,15 @@ while {alive player && dialog} do {
 		WFBE_NameTagsEnabled = !WFBE_NameTagsEnabled;
 		hint (Format ["Name tags: %1", if (WFBE_NameTagsEnabled) then {"ON"} else {"OFF"}]);
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_NAMETAGS_ENABLED", WFBE_NameTagsEnabled] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+
+	//--- A1 Commissar Panel: open GUER Director panel (GUER-only; guarded inside the onLoad).
+	if (MenuAction == 30) then {
+		MenuAction = -1;
+		if (sideJoined == resistance) then {
+			closeDialog 0;
+			createDialog "WFBE_GDirCommissarMenu";
+		};
 	};
 
 	sleep 0.1;

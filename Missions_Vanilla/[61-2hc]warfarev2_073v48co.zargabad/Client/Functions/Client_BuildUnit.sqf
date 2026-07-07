@@ -429,7 +429,115 @@ if (_isMan) then {
 		};
 	};
 
+	//--- TEAMBAR-FIRST (fable/player-teambar-slot): newly bought infantry AI must rank BELOW the player
+	//--- (COLONEL) so the A2 command bar always places the player at slot 1. PRIVATE is lowest rank.
+	if (!isNull _soldier && {(missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0}) then {
+		_soldier setRank "PRIVATE";
+	};
 	_spawnedUnits = [_soldier];
+	//--- UD-23: Unit designer -- apply active template to bought infantry (WFBE_C_UNIT_DESIGNER).
+	if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
+		private ["_udActive2","_udTemplates2","_udTpl","_udWL","_udML","_udBpC","_udBpCt","_udWpC"];
+		private ["_udClW","_udClM","_udClBp","_udClBpCt","_udCost2","_udCI","_udDI"];
+		_udActive2    = missionNamespace getVariable ["WFBE_UD_Active", -1];
+		_udTemplates2 = missionNamespace getVariable ["WFBE_UD_Templates", [[],[],[],[]]];
+		if (_udActive2 >= 0 && {_udActive2 <= 3}) then {
+			_udTpl = _udTemplates2 select _udActive2;
+			if (count _udTpl > 0) then {
+				_udWL   = _udTpl select 0;
+				_udML   = _udTpl select 1;
+				_udBpC  = _udTpl select 2;
+				_udBpCt = _udTpl select 3;
+				_udWpC  = _udTpl select 4;
+				//--- Validate weapons: keep only missionNamespace-registered strings.
+				_udClW = [];
+				{
+					if (typeName _x == "STRING") then {
+						_udDI = missionNamespace getVariable _x;
+						if !(isNil "_udDI") then {_udClW = _udClW + [_x]};
+					};
+				} forEach _udWL;
+				//--- Validate magazines.
+				_udClM = [];
+				{
+					if (typeName _x == "STRING") then {
+						_udDI = missionNamespace getVariable ("Mag_" + _x);
+						if !(isNil "_udDI") then {_udClM = _udClM + [_x]};
+					};
+				} forEach _udML;
+				//--- Validate backpack classname.
+				_udClBp = _udBpC;
+				if (_udBpC != "") then {
+					if (typeName _udBpC != "STRING") then {_udClBp = ""} else {
+						_udDI = missionNamespace getVariable _udBpC;
+						if (isNil "_udDI") then {_udClBp = ""};
+					};
+				};
+				//--- Validate backpack contents (filter unregistered entries).
+				_udClBpCt = _udBpCt;
+				if (typeName _udBpCt == "ARRAY" && {count _udBpCt >= 2}) then {
+					private ["_udBK","_udBKN","_udBKC","_udBKClN","_udBKClC","_udBKP","_udBKI","_udBKIt"];
+					_udClBpCt = [];
+					_udBKP = "";
+					for "_udBK" from 0 to 1 do {
+						_udBKN  = (_udBpCt select _udBK) select 0;
+						_udBKC  = (_udBpCt select _udBK) select 1;
+						_udBKClN = [];
+						_udBKClC = [];
+						for "_udBKI" from 0 to ((count _udBKN) - 1) do {
+							if (typeName (_udBKN select _udBKI) == "STRING") then {
+								_udBKIt = missionNamespace getVariable (_udBKP + (_udBKN select _udBKI));
+								if !(isNil "_udBKIt") then {
+									_udBKClN = _udBKClN + [_udBKN select _udBKI];
+									_udBKClC = _udBKClC + [_udBKC select _udBKI];
+								};
+							};
+						};
+						_udClBpCt = _udClBpCt + [[_udBKClN, _udBKClC]];
+						_udBKP = "Mag_";
+					};
+				};
+				//--- Compute template gear cost from registry.
+				_udCost2 = 0;
+				{
+					_udCI = missionNamespace getVariable _x;
+					if !(isNil "_udCI") then {_udCost2 = _udCost2 + (_udCI select 2)};
+				} forEach _udClW;
+				{
+					_udCI = missionNamespace getVariable ("Mag_" + _x);
+					if !(isNil "_udCI") then {_udCost2 = _udCost2 + (_udCI select 2)};
+				} forEach _udClM;
+				if (_udClBp != "") then {
+					_udCI = missionNamespace getVariable _udClBp;
+					if !(isNil "_udCI") then {_udCost2 = _udCost2 + (_udCI select 2)};
+				};
+				if (typeName _udClBpCt == "ARRAY" && {count _udClBpCt >= 2}) then {
+					private ["_udBPK2","_udBPN2","_udBPC2","_udBPP2","_udBPI2","_udBPIt2"];
+					_udBPP2 = "";
+					for "_udBPK2" from 0 to 1 do {
+						_udBPN2 = (_udClBpCt select _udBPK2) select 0;
+						_udBPC2 = (_udClBpCt select _udBPK2) select 1;
+						for "_udBPI2" from 0 to ((count _udBPN2) - 1) do {
+							if (typeName (_udBPN2 select _udBPI2) == "STRING") then {
+								_udBPIt2 = missionNamespace getVariable (_udBPP2 + (_udBPN2 select _udBPI2));
+								if !(isNil "_udBPIt2") then {_udCost2 = _udCost2 + ((_udBPIt2 select 2) * (_udBPC2 select _udBPI2))};
+							};
+						};
+						_udBPP2 = "Mag_";
+					};
+				};
+				//--- Apply: equip AI infantry with template. Skip silently if player is too poor.
+				if ((Call GetPlayerFunds) >= _udCost2) then {
+					if (_udCost2 > 0) then {-(_udCost2) Call ChangePlayerFunds};
+					[_soldier, _udClW, _udClM, _udWpC, _udClBp, _udClBpCt] Call WFBE_CO_FNC_EquipUnit;
+					["INFORMATION", Format ["[UD] Applied template slot %1 to infantry ($%2 charged).", _udActive2 + 1, _udCost2]] Call WFBE_CO_FNC_LogContent;
+				} else {
+					["INFORMATION", Format ["[UD] Insufficient funds for template (slot %1, cost $%2) -- default gear kept.", _udActive2 + 1, _udCost2]] Call WFBE_CO_FNC_LogContent;
+				};
+			};
+		};
+	};
+
 
 	[sideJoinedText,'UnitsCreated',1] Call UpdateStatistics;
 } else {
@@ -452,6 +560,10 @@ if (_isMan) then {
 	//--- _unit use (createVehicle, isKindOf "Air" pilot-crew + CM/AA blocks) sees the real hull.
 	_ah6xM134Kit = (_unit == "AH6X_M134");
 	if (_ah6xM134Kit) then {_unit = "AH6X_EP1"};
+
+	//--- fable/east-c130: EASTV_C130J is a SYNTHETIC East buy token (Core_US.sqf registration, Units_CO_RU
+	//--- roster, flag WFBE_C_EAST_C130) remapped to the real hull before createVehicle. Stock livery by design.
+	if (_unit == "EASTV_C130J") then {_unit = "C130J_US_EP1"};
 
 	//--- cmdcon42-i: TK-EASA variant tokens (e.g. "TKV_AH64D_HELLFIRE") are SYNTHETIC buy keys, NOT CfgVehicles
 	//--- classes, so createVehicle on the token would return objNull. Resolve the catalog row (self-gates on
@@ -519,6 +631,9 @@ if (_isMan) then {
 		//--- W3: 17 m covers A-10 half-span; override via WFBE_C_AIR_SPAWN_CLEAR_RADIUS.
 		//--- Large fixed-wing (B-1 class) may still overlap at ring step 25.5 m -- document limitation.
 		_clearRad = missionNamespace getVariable ["WFBE_C_AIR_SPAWN_CLEAR_RADIUS", 17];
+		//--- W2 (fable/east-c130): C-130J hull has ~40 m half-span; bump clearance to 22 m for this spawn only.
+		//--- Does not change the global default (17 m) used for all other airframes.
+		if (_unit == "C130J_US_EP1" && {WFBE_C_AIR_SPAWN_SAFETY > 0}) then {_clearRad = 22};
 		//--- Slope limit: surfaceNormal z=1.0 = flat; 0.97 ~= 14 deg max slope.
 		_slopeThresh = missionNamespace getVariable ["WFBE_C_AIR_SPAWN_SLOPE_MAX", 0.97];
 		//--- Build 9-candidate set: nominal (index 0) + 8-point ring at 1.5x clearance radius.
@@ -560,11 +675,69 @@ if (_isMan) then {
 			diag_log Format ["AIRSPAWN|v2|pre-create-ok|side=%1|class=%2|pos=%3", sideJoinedText, _unit, _safePos];
 		};
 	};
+	//--- carrier-deck-spawn-xy (fable/tonight-hotfixes2): ROOT CAUSE FIX. The Depot buy path
+	//--- uses WFBE_C_DEPOT_BUY_DIR=0 (absolute north) + distance 21m; carriers face east
+	//--- (SpawnLHD dir=90) and their town logics keep getDir 0, so the spawn point lands 5m
+	//--- past the ~16m port half-beam - over open water - and the vehicle sinks unseen.
+	//--- The old Z-only override was inert (Depot path already preserves deck-height Z).
+	//--- Deck-centred point via deckpart modelToWorld [0,-50,0]: 50m toward the bow on the
+	//--- centreline, clear of the HeliH pad, SCUD, and stern camps.
+	if (_building getVariable ["wfbe_is_carrier_hvt", false]) then {
+		private ["_deckZ","_deckPart","_deckXY"];
+		_deckZ    = _building getVariable ["wfbe_naval_deckz", 15.9];
+		_deckPart = _building getVariable ["wfbe_naval_deckpart", objNull];
+		if (!isNull _deckPart) then {
+			_deckXY = _deckPart modelToWorld [0, -50, 0];
+			_position = [_deckXY select 0, _deckXY select 1, _deckZ];
+		} else {
+			_position = [(getPosASL _building) select 0, (getPosASL _building) select 1, _deckZ];
+		};
+	};
 	diag_log Format ["BUYTRACE|v1|factory-pos|side=%1|factory=%2|class=%3|obj=%4|objType=%5|objPos=%6|spawnPos=%7|remote=%8", sideJoinedText, _factory, _unit, _building, typeOf _building, getPos _building, _position, !(local _building)];
 	_vehicle = [_unit, _position, sideID, _direction, _locked] Call WFBE_CO_FNC_CreateVehicle;
 	//--- GR-2026-07-03a diagnostic (ALWAYS-ON): name the createVehicle RETURN at the call site so the next failed buy
 	//--- shows objNull-vs-hull without waiting for the downstream BUYFAIL guard. isNull => the BUYFAIL branch below fires.
 	diag_log Format ["BUYTRACE|v1|createveh|side=%1|factory=%2|class=%3|null=%4|veh=%5|vehPos=%6", sideJoinedText, _factory, _unit, isNull _vehicle, _vehicle, (if (isNull _vehicle) then {[]} else {getPos _vehicle})];
+
+	//--- naval-air-spawn-easa: carrier fixed-wing velocity fix + EASA random.
+	//--- WFBE_CO_FNC_CreateVehicle with _special="FORM" (default) calls
+	//---   setVelocity [0,0,-1] (downward kick) — safe for rotary/ground vehicles
+	//---   but causes fixed-wing to stall-dive on carrier deck spawn.
+	//--- Override: if spawned from a carrier HVT airfield AND the hull is a
+	//---   fixed-wing (isKindOf "Plane" walks CfgVehicles, valid for vehicles):
+	//---   a) set a random heading and apply forward speed (~80 m/s).
+	//---   b) if WFBE_C_NAVAL_EASA_RANDOM > 0, apply a random EASA preset
+	//---      (EASA_Equip runs client-side on the local hull — safe here).
+	if (!isNull _vehicle && {_building getVariable ["wfbe_is_carrier_hvt", false]}) then {
+		private ["_carrierDir","_easaVehi","_easaTypeIdx","_easaLoadouts","_easaRandIdx","_cReseatZ","_cReseatP"];
+		//--- carrier-deck-reseat (fable/tonight-hotfixes2): FORM createVehicle over water may seat
+		//--- the hull at the water surface despite _position Z. Hard-seat to deck height at the
+		//--- vehicle's actual post-create XY; reset the [0,0,-1] spawn kick for helicopters
+		//--- (planes get the 80 m/s launch override just below anyway).
+		_cReseatZ = _building getVariable ["wfbe_naval_deckz", 15.9];
+		_cReseatP = getPosASL _vehicle;
+		_vehicle setPosASL [_cReseatP select 0, _cReseatP select 1, _cReseatZ];
+		if (_vehicle isKindOf "Helicopter") then {
+			_vehicle setVelocity [0, 0, 0];
+		};
+		//--- Fixed-wing velocity fix: override the downward kick from FORM spawn.
+		if (_vehicle isKindOf "Plane") then {
+			_carrierDir = random 360;
+			_vehicle setDir _carrierDir;
+			_vehicle setVelocity [(sin _carrierDir) * 80, (cos _carrierDir) * 80, 0];
+		};
+		//--- EASA random preset.
+		if ((missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0]) > 0) then {
+			_easaVehi = missionNamespace getVariable ["WFBE_EASA_Vehicles", []];
+			_easaTypeIdx = _easaVehi find (typeOf _vehicle);
+			if (_easaTypeIdx >= 0) then {
+				_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaTypeIdx;
+				_easaRandIdx = floor (random (count _easaLoadouts));
+				[_vehicle, _easaRandIdx] call EASA_Equip;
+				["INFORMATION", Format ["Client_BuildUnit.sqf: naval EASA random preset %1 applied to %2 (carrier buy).", _easaRandIdx, typeOf _vehicle]] Call WFBE_CO_FNC_LogContent;
+			};
+		};
+	};
 
 	//--- cmdcon42c HOTFIX (Ray 2026-07-02): UNIVERSAL BUYFAIL-REFUND GUARD. WFBE_CO_FNC_CreateVehicle
 	//--- returns objNull whenever the engine cannot spawn the hull - a bad/unresolved buy class (e.g. a
@@ -694,6 +867,13 @@ if (_isMan) then {
 	//--- Lock / Unlock.
 	_vehicle addAction [localize "STR_WF_Unlock","Client\Action\Action_ToggleLock.sqf", [], 95, false, true, '', 'alive _target && locked _target'];
 	_vehicle addAction [localize "STR_WF_Lock","Client\Action\Action_ToggleLock.sqf", [], 94, false, true, '', 'alive _target && !(locked _target)'];
+
+	//--- Vehicle Sell (item #43): team-leader or side-commander sells an empty nearby vehicle for a partial cash refund.
+	//--- addAction is LOCAL (re-adds on rebuy) -- the buyer-owns-vehicle model; same constraint as lock/unlock.
+	//--- Non-Man units only (_isMan false). Condition string hides action when flag=0 or vehicle occupied/out-of-range.
+	if (!_isMan) then {
+		_vehicle addAction ["<t color='#e8c84a'>Sell Vehicle</t>", "Client\Action\Action_VehicleSell.sqf", [], 93, false, true, '', 'alive _target && {count crew _target == 0} && {(missionNamespace getVariable ["WFBE_C_VEHICLE_SELL", 1]) > 0} && {lightInRange || heavyInRange || depotInRange || aircraftInRange || hangarInRange} && {player == leader clientTeam || (!isNull commanderTeam && {commanderTeam == clientTeam})}'];
+	};
 
 	//--- GUER PLAYER VBIED: the buyable hilux1_civil_2_covered gets a driver-detonate action (Feature B player-side).
 	//--- The action is driver-only + resistance-only (condition) and asks the server to blast (mirrors AI wildcard W21)
@@ -949,6 +1129,11 @@ if (_vehicle isKindOf "Plane" && (missionNamespace getVariable ["WFBE_C_JET_AA_S
 
 if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {
 	_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];
+};
+
+//--- B93 SEAD: tier-5 jets get anti-radar guidance EH when WFBE_C_SEAD > 0
+if ((missionNamespace getVariable ["WFBE_C_SEAD", 0]) > 0 && {typeOf _vehicle in ["F35B","Su34"]}) then {
+	_vehicle addeventhandler ["Fired",{_this spawn WFBE_CO_FNC_HandleSEADMissile}];
 };
 
 if(typeOf _vehicle in ['T90','BMP3']) then {

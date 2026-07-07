@@ -33,6 +33,7 @@ if (_index != -1) then {_position = Zeta_SpecialPosition select _index};
 if (count crew(_vehicle) > 0) exitWith {hint (localize 'STR_WF_INFO_Hook_Manned')};
 
 _vehicle attachTo [_lifter,_position];
+_vehicle setVariable ["wfbe_airlifted", true, true]; //--- fable/airlift-gc-exempt: mark cargo so Server_HandleEmptyVehicle does not delete the (necessarily crewless) lifted hull mid-flight
 _lifter setVariable ["Attached",true,false];
 _lifter removeAction _actionID;
 
@@ -44,6 +45,7 @@ while {!gameOver} do {
 	_isAttached = _lifter getVariable "Attached";
 	if ((getDammage _lifter > 0.3)||!_isAttached||isNull (driver _lifter)) exitWith {
 		detach _vehicle;
+		_vehicle setVariable ["wfbe_airlifted", false, true];
 		_lifter removeAction _action;
 		if (alive _lifter) then {_lifter addAction [localize "STR_WF_Lift","Client\Module\ZetaCargo\Zeta_Hook.sqf"]};
 	};

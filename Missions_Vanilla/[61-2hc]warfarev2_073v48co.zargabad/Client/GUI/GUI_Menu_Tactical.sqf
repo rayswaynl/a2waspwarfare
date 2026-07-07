@@ -99,6 +99,14 @@ if ((missionNamespace getVariable ["WFBE_C_SCUD_MENU", 1]) > 0) then {
 	_addToListFee = _addToListFee + [(missionNamespace getVariable ["WFBE_C_SCUD_COST", 25000])];
 	_addToListInterval = _addToListInterval + [0];	//--- server enforces the per-carrier cooldown (WFBE_C_SCUD_COOLDOWN).
 };
+//--- fable/fpv-strike-drone: player-piloted kamikaze mini-UAV. Row appended only when
+//--- WFBE_C_FPV_DRONE > 0 (flag-gated at BUILD time, same idiom as the SCUD rows above).
+if ((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) > 0) then {
+	_addToList = _addToList + ["FPV STRIKE DRONE"];
+	_addToListID = _addToListID + ["FPV_Strike"];
+	_addToListFee = _addToListFee + [(missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST", 7500])];
+	_addToListInterval = _addToListInterval + [0];	//--- one live drone per player is the real gate (enable switch).
+};
 
 for '_i' from 0 to count(_addToList)-1 do {
 	lbAdd [_listBox,_addToList select _i];
@@ -384,6 +392,10 @@ while {alive player && dialog} do {
 			case "UAV_Remote_Control": {
 				_controlEnable = if (alive playerUAV) then {true} else {false};
 			};
+			case "FPV_Strike": {
+				//--- fable/fpv-strike-drone: funds + one live drone per player.
+				_controlEnable = if (_funds >= _currentFee && !(alive playerFPV)) then {true} else {false};
+			};
 			case "Units_Camera": {
 				_controlEnable = commandInRange;
 			};
@@ -482,6 +494,10 @@ while {alive player && dialog} do {
 			case "UAV_Remote_Control": {
 				closeDialog 0;
 				ExecVM "Client\Module\UAV\uav.sqf";
+			};
+			case "FPV_Strike": {
+				closeDialog 0;
+				ExecVM "Client\Module\FPV\fpv.sqf";
 			};
 			case "Units_Camera": {
 				closeDialog 0;

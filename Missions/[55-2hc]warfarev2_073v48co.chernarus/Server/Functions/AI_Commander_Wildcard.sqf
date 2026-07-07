@@ -79,7 +79,7 @@
 */
 
 private ["_side","_logik","_sideID","_interval","_enabled","_humanCmdWEST","_humanCmdEAST",
-         "_bothHuman","_cmdTeam","_hq","_sideText","_jitter","_humanCmd","_skipAI"];
+         "_bothHuman","_cmdTeam","_hq","_sideText","_jitter","_humanCmd","_skipAI","_wcCost","_wcCool","_wcKey","_wcLast","_wcFunds"];
 
 _side    = _this;
 _logik   = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -156,6 +156,40 @@ while {!gameOver} do {
 			};
 		};
 
+		//--- PURCHASE GATE (WFBE_C_AI_COMMANDER_WILDCARD_COST > 0, claude-gaming 2026-07-07):
+		//--- wildcards become a paid AI-commander action - the side spends wfbe_aicom_funds per draw
+		//--- and may draw at most once per WFBE_C_AI_COMMANDER_WILDCARD_COOLDOWN seconds (30 min).
+		//--- AI-commander only for now: a HUMAN-commanded side has no buy path yet, so under the
+		//--- purchase model it gets NO auto-draw (the old free human-side draw is gated off here).
+		//--- COST == 0 (default) leaves every branch below inert -> behaviour identical to legacy.
+		_wcCost = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_COST", 0];
+		if (!_skipAI && {_wcCost > 0}) then {
+			if (_humanCmd) then {
+				["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - purchase model (COST=%2), human commander has no buy path yet", _sideText, _wcCost]] Call WFBE_CO_FNC_AICOMLog;
+				_skipAI = true;
+			} else {
+				_wcCool = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_COOLDOWN", 1800];
+				_wcKey  = Format ["WFBE_WILDCARD_LASTFIRE_%1", _sideText];
+				_wcLast = missionNamespace getVariable [_wcKey, -99999];
+				if ((time - _wcLast) < _wcCool) then {
+					["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - wildcard cooldown (%2s of %3s left)", _sideText, round (_wcCool - (time - _wcLast)), _wcCool]] Call WFBE_CO_FNC_AICOMLog;
+					_skipAI = true;
+				};
+				if (!_skipAI) then {
+					_wcFunds = (_side) Call GetAICommanderFunds;
+					if (_wcFunds < _wcCost) then {
+						["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - cannot afford wildcard (have %2, need %3)", _sideText, round _wcFunds, _wcCost]] Call WFBE_CO_FNC_AICOMLog;
+						_skipAI = true;
+					} else {
+						//--- Charge BEFORE dispatch and stamp the cooldown immediately (mirror Init_IcbmTel fire order: no double-fire race).
+						[_side, -_wcCost] Call ChangeAICommanderFunds;
+						missionNamespace setVariable [_wcKey, time];
+						["INFORMATION", Format ["AI_Commander_Wildcard.sqf: %1 purchased a wildcard for %2 (funds %3 -> %4)", _sideText, _wcCost, round _wcFunds, round (_wcFunds - _wcCost)]] Call WFBE_CO_FNC_AICOMLog;
+					};
+				};
+			};
+		};
+
 		if (!_skipAI) then {
 			//--- Isolate the draw+apply body so a runtime error kills only this spawn.
 			[_side, _humanCmd] spawn {
@@ -217,6 +251,29 @@ while {!gameOver} do {
 				_sideText = str _side;
 
 				if (isNil "_logik") exitWith {};
+
+				//--- WAR-CHEST REQUISITION consume (cmdcon44 economy-sink, claude 2026-07-07): the supervisor armed a
+				//--- PAID early draw (team-cap-pinned + funds over FLOOR+COST). Debit HERE at draw time (never at arm
+				//--- time) so a skipped or dead draw can never eat money silently. Re-verify the wallet still covers
+				//--- COST while staying over FLOOR (Produce/TOPUP may have spent since the arm) and that the side is
+				//--- still AI-commanded; otherwise drop the request without charge (the arm-side cooldown still backs
+				//--- off re-arming). _paidDraw also zeroes W1 below (a paid draw must never roll the funds-refund card).
+				private ["_paidDraw","_reqCost","_reqFloor","_reqFunds"];
+				_paidDraw = false;
+				if ((missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_ENABLE", 0]) > 0 && {_logik getVariable ["wfbe_aicom_reqdraw_req", false]}) then {
+					_logik setVariable ["wfbe_aicom_reqdraw_req", false];
+					if (!_humanCmd) then {
+						_reqCost  = missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_COST", 75000];
+						_reqFloor = missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_FLOOR", 250000];
+						_reqFunds = (_side) Call GetAICommanderFunds;
+						if (_reqFunds >= (_reqCost + _reqFloor)) then {
+							[_side, -_reqCost] Call ChangeAICommanderFunds;
+							_paidDraw = true;
+							["INFORMATION", Format ["AI_Commander_Wildcard.sqf: [%1] REQDRAW consumed - paid %2 for a requisitioned draw (funds %3 -> %4).", _sideText, _reqCost, _reqFunds, _reqFunds - _reqCost]] Call WFBE_CO_FNC_AICOMLog;
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|REQDRAW_SPEND|cost=" + str _reqCost + "|funds=" + str (_reqFunds - _reqCost));
+						};
+					};
+				};
 
 				//--- -----------------------------------------------------------------------
 				//--- WAR STATE
@@ -549,6 +606,11 @@ while {!gameOver} do {
 				if (!_w22Eligible) then {_wW22 = 0};
 				if (!_w23Eligible) then {_wW23 = 0};
 				if (!_w24Eligible) then {_wW24 = 0};
+
+				//--- REQDRAW (cmdcon44): a PAID draw must never roll W1 War Chest (funds refund = circular sink).
+				//--- Usually already 0 via the funds-rich eligibility skip above, but FUNDS_START is per-side config -
+				//--- keep the guarantee explicit.
+				if (_paidDraw) then {_wW1 = 0};
 
 				//--- Weight table: [cardID, weight]. Card IDs match W-numbers.
 				//--- W8 (Motor Pool Delivery) RETIRED 2026-06-15: it spawned a wfbe_persistent=true vehicle that NEVER
@@ -1634,5 +1696,18 @@ while {!gameOver} do {
 		}; //--- end !_skipAI
 	}; //--- end !_bothHuman
 
-	sleep _interval;
+	//--- WAR-CHEST REQUISITION early wake (cmdcon44, claude 2026-07-07): flag OFF keeps the original single
+	//--- full-interval sleep (inert path, byte-identical behaviour). Flag ON waits in 30s chunks and breaks
+	//--- early when the supervisor arms a paid draw, so the requisition fires within ~30s+jitter instead of
+	//--- up to a full interval later.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_ENABLE", 0]) <= 0) then {
+		sleep _interval;
+	} else {
+		private ["_reqSlept"];
+		_reqSlept = 0;
+		while {_reqSlept < _interval && {!(_logik getVariable ["wfbe_aicom_reqdraw_req", false])}} do {
+			sleep 30;
+			_reqSlept = _reqSlept + 30;
+		};
+	};
 };

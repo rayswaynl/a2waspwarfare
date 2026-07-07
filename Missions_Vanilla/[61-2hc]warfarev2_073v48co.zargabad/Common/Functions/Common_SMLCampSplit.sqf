@@ -91,8 +91,8 @@ _stamp = time;
 
 diag_log Format ["SML|v1|SPLIT|side=%1 team=%2 campA=%3 campB=%4 gA=%5 gB=%6 hold=%7 ttl=%8",
     _side, _team,
-    if (!isNull _campA) then {_campA getVariable ["name","?"]} else {"null"},
-    if (!isNull _campB) then {_campB getVariable ["name","?"]} else {"null"},
+    if (!isNull _campA) then {str (getPos _campA)} else {"null"}, //--- fable/sml-overwatch-nan: camp logics carry no name var (log read "?" forever); position is distinct + mappable
+    if (!isNull _campB) then {str (getPos _campB)} else {"null"},
     count _groupA, count _groupB, count _hold, _ttl];
 
 //--- ===== WATCHDOG LOOP =====

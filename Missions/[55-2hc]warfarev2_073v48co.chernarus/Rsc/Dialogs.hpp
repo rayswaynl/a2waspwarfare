@@ -563,6 +563,13 @@ class WFBE_TransferMenu {
 
 			colorText[] = {0.543, 0.5742, 0.4102, 1.0};
 		};
+		//--- UX Pass 1: Back to WF_Menu hub. WFBE_MenuAction 3 handled in GUI_TransferMenu.sqf.
+		class CA_Back_Button : RscButton_Back {
+			x = 0.0;
+			y = 0.562;
+			onButtonClick = "WFBE_MenuAction = 3;";
+			tooltip = $STR_WF_TOOLTIP_BackButton;
+		};
 	};
 };
 
@@ -1081,7 +1088,7 @@ class WF_Menu {
 	movingEnable = 1;
 	idd = 11000;
 	onLoad = "ExecVM ""Client\GUI\GUI_Menu.sqf""";
-	
+
 	class controlsBackground {
 		class Background_M : RscText {
 			x = 0.17467;
@@ -1114,8 +1121,13 @@ class WF_Menu {
 			h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
+		//--- UX Pass 1: section label above PURCHASE group (left col rows 1-2).
+		//--- UX Pass 1: section label above GENERAL group (left col rows 3-5).
+		//--- UX Pass 1: section label above COMMAND group (right col rows 1-5).
+		//--- UX Pass 1: TOOLS label above footer strip (decorative).
 	};
 	class controls {
+		//--- === PURCHASE ===
 		class Button_A : RscShortcutButtonMain {
 			idc = 11001;
 			x = 0.17598;
@@ -1136,6 +1148,7 @@ class WF_Menu {
 			tooltip = $STR_WF_TOOLTIP_MainMenu_Purchase_Gear;
 			action = "MenuAction = 2";
 		};
+		//--- === GENERAL ===
 		class Button_C : RscShortcutButtonMain {
 			idc = 11003;
 			x = 0.17598;
@@ -1146,26 +1159,6 @@ class WF_Menu {
 			tooltip = $STR_WF_TOOLTIP_MainMenu_TeamMenu;
 			action = "MenuAction = 3";
 		};
-		class Button_D : RscShortcutButtonMain {
-			idc = 11004;
-			x = 0.510943;
-			y = 0.65356;
-			w = 0.313727;
-			h = 0.104575;
-			text = $STR_WF_MAIN_VotingMenu;
-			tooltip = $STR_WF_TOOLTIP_MainMenu_VoteForCommander;
-			action = "MenuAction = 4";
-		};
-		class Button_E : RscShortcutButtonMain {
-			idc = 11005;
-			x = 0.510943;
-			y = 0.250358;
-			w = 0.313727;
-			h = 0.104575;
-			text = $STR_WF_MAIN_CommandMenu;
-			tooltip = $STR_WF_TOOLTIP_CommandMenu_Commandteam;
-			action = "MenuAction = 5";
-		};
 		class Button_F : RscShortcutButtonMain {
 			idc = 11006;
 			x = 0.17598;
@@ -1175,29 +1168,6 @@ class WF_Menu {
 			text = $STR_WF_MAIN_TacticalMenu;
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_SpecialMenu;
 			action = "MenuAction = 6";
-		};		
-
-		
-		class Button_G : RscShortcutButtonMain {
-			idc = 11007;
-			x = 0.510943;
-			y = 0.451959;
-			w = 0.313727;
-			h = 0.104575;
-			text = $STR_WF_MAIN_UpgradeMenu;
-			tooltip = $STR_WF_TOOLTIP_CommandMenu_Upgrade_Menu;
-			action = "MenuAction = 7";
-		};
-		
-		class Button_H : RscShortcutButtonMain {
-			idc = 11008;
-			x = 0.510943;
-			y = 0.35116;
-			w = 0.313727;
-			h = 0.104575;
-			text = $STR_WF_MAIN_EconomyMenu;
-			tooltip = $STR_WF_TOOLTIP_CommandMenu_Commander_Menu;
-			action = "MenuAction = 8";
 		};
 		class Button_I : RscShortcutButtonMain {
 			idc = 11009;
@@ -1209,7 +1179,37 @@ class WF_Menu {
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_SupportMenu;
 			action = "MenuAction = 9";
 		};
-		
+		//--- === COMMAND ===
+		class Button_E : RscShortcutButtonMain {
+			idc = 11005;
+			x = 0.510943;
+			y = 0.250358;
+			w = 0.313727;
+			h = 0.104575;
+			text = $STR_WF_MAIN_CommandMenu;
+			tooltip = $STR_WF_TOOLTIP_CommandMenu_Commandteam;
+			action = "MenuAction = 5";
+		};
+		class Button_H : RscShortcutButtonMain {
+			idc = 11008;
+			x = 0.510943;
+			y = 0.35116;
+			w = 0.313727;
+			h = 0.104575;
+			text = $STR_WF_MAIN_EconomyMenu;
+			tooltip = $STR_WF_TOOLTIP_CommandMenu_Commander_Menu;
+			action = "MenuAction = 8";
+		};
+		class Button_G : RscShortcutButtonMain {
+			idc = 11007;
+			x = 0.510943;
+			y = 0.451959;
+			w = 0.313727;
+			h = 0.104575;
+			text = $STR_WF_MAIN_UpgradeMenu;
+			tooltip = $STR_WF_TOOLTIP_CommandMenu_Upgrade_Menu;
+			action = "MenuAction = 7";
+		};
 		class Button_J : RscShortcutButtonMain {
 			idc = 11010;
 			x = 0.510943;
@@ -1220,7 +1220,17 @@ class WF_Menu {
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_Help;
 			action = "MenuAction = 13";
 		};
-		
+		class Button_D : RscShortcutButtonMain {
+			idc = 11004;
+			x = 0.510943;
+			y = 0.65356;
+			w = 0.313727;
+			h = 0.104575;
+			text = $STR_WF_MAIN_VotingMenu;
+			tooltip = $STR_WF_TOOLTIP_MainMenu_VoteForCommander;
+			action = "MenuAction = 4";
+		};
+		//--- === Header title + parameter icon ===
 		class TitleMenu: RscText_Title {
 			idc = 11015;
 			x = 0.178164;
@@ -1238,6 +1248,7 @@ class WF_Menu {
 			action = "MenuAction = 12";
 			tooltip = $STR_WF_TOOLTIP_Parameter;
 		};
+		//--- === TOOLS footer strip ===
 		class CA_UN_Button : RscClickableText {
 			idc = 11013;
 			x = 0.194088;
@@ -1258,14 +1269,18 @@ class WF_Menu {
 			action = "MenuAction = 11";
 			tooltip = $STR_WF_TOOLTIP_HeadBugFix;
 		};
-		/* Exit */
-		class Exit_Button : RscButton_Exit {
-			x = 0.778103;
-			y = 0.769671;
-			onButtonClick = "closeDialog 0;";
-			tooltip = $STR_WF_TOOLTIP_CloseButton;
+		//--- cmdcon41-w3l: Command-Deck Skin Selector re-open button.
+		class CA_SkinSel_Button : RscButton_Main {
+			idc = 11025;
+			x = 0.362;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = $STR_WF_SkinSelector_MenuButton;
+			sizeEx = 0.024;
+			action = "MenuAction = 21";
+			tooltip = $STR_WF_SkinSelector_Title;
 		};
-		
 		class CA_HUD_Button : RscButton_Main {
 			idc = 11018;
 			x = 0.408;
@@ -1276,7 +1291,7 @@ class WF_Menu {
 			sizeEx = 0.026;
 			action = "MenuAction = 16";
 			tooltip = "HUD On/Off";
-		};		
+		};
 		// Marty: Reuse the old FPS-only HUD slot for GPS; FPS now lives in the RHUD/sidebar.
 		class CA_GPS_Button : RscButton_Main {
 			idc = 11019;
@@ -1288,6 +1303,18 @@ class WF_Menu {
 			sizeEx = 0.026;
 			action = "MenuAction = 19";
 			tooltip = "Enable GPS / Mini Map";
+		};
+		// FPS: adaptive view-distance / target-FPS picker (sits between GPS and SKIN).
+		class CA_FPS_Button : RscButton_Main {
+			idc = 11023;
+			x = 0.503;
+			y = 0.767144;
+			w = 0.042;
+			h = 0.045;
+			text = "FPS";
+			sizeEx = 0.026;
+			action = "MenuAction = 23";
+			tooltip = "Player Settings (view distance, FPS, HUD, toggles)";
 		};
 		//--- Command Deck: Skin Selector shortcut in footer strip.
 		class CA_Skin_Button : RscButton_Main {
@@ -1303,18 +1330,6 @@ class WF_Menu {
 			action = "MenuAction = 24";
 			tooltip = "Player Settings (view distance, FPS, HUD, toggles)";
 		};
-		// FPS: adaptive view-distance / target-FPS picker (sits between GPS and SKIN).
-		class CA_FPS_Button : RscButton_Main {
-			idc = 11023;
-			x = 0.503;
-			y = 0.767144;
-			w = 0.042;
-			h = 0.045;
-			text = "FPS";
-			sizeEx = 0.026;
-			action = "MenuAction = 23";
-			tooltip = "Player Settings (view distance, FPS, HUD, toggles)";
-		};
 		// qol-polish-pack: friendly name-tag overlay toggle (loop + RscTitles in Init_Client.sqf / Titles.hpp).
 		class CA_NT_Button : RscButton_Main {
 			idc = 11024;
@@ -1327,20 +1342,25 @@ class WF_Menu {
 			action = "MenuAction = 25";
 			tooltip = "Friendly name tags On/Off";
 		};
-		//--- cmdcon41-w3l: Command-Deck Skin Selector re-open button. The former SKIN slot (idc 11021)
-		//--- was repurposed to SETUP on 2026-06-24, leaving MenuAction 21 (GUI_Menu.sqf) unreachable.
-		//--- This restores a live footer entry in the gap between the HeadBug icon and HUD. The handler
-		//--- itself re-checks SkinSelector_Enabled + alive + on-foot, so a disabled/dead player is a no-op.
-		class CA_SkinSel_Button : RscButton_Main {
-			idc = 11025;
-			x = 0.362;
-			y = 0.767144;
+		/* Exit */
+		class Exit_Button : RscButton_Exit {
+			x = 0.778103;
+			y = 0.769671;
+			onButtonClick = "closeDialog 0;";
+			tooltip = $STR_WF_TOOLTIP_CloseButton;
+		};
+		//--- A1 Commissar Panel hub button (GUER-only; shown/hidden via ctrlShow in GUI_Menu.sqf).
+		class CA_GDirPanel : RscButton_Main {
+			idc = 11030;
+			x = 0.671;
+			y = 0.720;
 			w = 0.042;
 			h = 0.045;
-			text = $STR_WF_SkinSelector_MenuButton;
+			text = "GUER";
 			sizeEx = 0.024;
-			action = "MenuAction = 21";
-			tooltip = $STR_WF_SkinSelector_Title;
+			action = "MenuAction = 30";
+			tooltip = "GUER Commissar Panel - buy reinforcements and contracts";
+			show = 0;
 		};
 	};
 };
@@ -1476,6 +1496,28 @@ class RscMenu_Team {
 			y = 0.20787;
 			w = 0.426891;
 			style = ST_RIGHT;
+		};
+		//--- Unit designer tab buttons (IDC 13080-13081; WFBE_C_UNIT_DESIGNER).
+		//--- GUI_Menu_TeamV2.sqf hides both on open; shows when flag > 0.
+		class CA_TAB_Presets : RscButton {
+			idc = 13080;
+			x = 0.502;
+			y = 0.207;
+			w = 0.078;
+			h = 0.028;
+			text = "Presets";
+			action = "MenuAction = 1100";
+			tooltip = "Gear presets and squad actions";
+		};
+		class CA_TAB_Units : RscButton {
+			idc = 13081;
+			x = 0.584;
+			y = 0.207;
+			w = 0.078;
+			h = 0.028;
+			text = "Units";
+			action = "MenuAction = 1200";
+			tooltip = "Unit template designer - apply loadout to AI squad buys";
 		};
 		/* Disband */
 		class CA_Disband_SubTitle : RscText_SubTitle {
@@ -1875,6 +1917,175 @@ class RscMenu_TeamV2 {
 			text = "";
 			tooltip = "Toggle the commander vote popup on join";
 			action = "MenuAction = 13";
+		};
+		/* --- UNIT DESIGNER SECTION (IDC 13100-13117; WFBE_C_UNIT_DESIGNER) ---
+		   ctrlShow-managed by GUI_Menu_TeamV2.sqf; hidden on open.             */
+		class CA_UD_Title : RscText_SubTitle {
+			idc = 13100;
+			x = 0.19634;
+			y = 0.265506;
+			w = 0.614;
+			text = "Unit Templates  (save loadout, activate to auto-equip bought AI infantry)";
+		};
+		class CA_UD_ActiveInfo : RscText {
+			idc = 13101;
+			x = 0.192941;
+			y = 0.284;
+			w = 0.614;
+			h = 0.028;
+			text = "Active: None  (no template applied on AI buys)";
+		};
+		class CA_UD1_Name : RscText {
+			idc = 13102;
+			x = 0.192941;
+			y = 0.308;
+			w = 0.200;
+			h = 0.031;
+			text = "--- Slot 1 empty ---";
+		};
+		class CA_UD1_Save : RscButton {
+			idc = 13103;
+			x = 0.397;
+			y = 0.306;
+			w = 0.115;
+			h = 0.034;
+			text = "Save 1";
+			action = "MenuAction = 2101";
+			tooltip = "Save current player loadout to unit template slot 1";
+		};
+		class CA_UD1_Activate : RscButton {
+			idc = 13104;
+			x = 0.516;
+			y = 0.306;
+			w = 0.145;
+			h = 0.034;
+			text = "Activate 1";
+			action = "MenuAction = 2111";
+			tooltip = "Toggle: apply this template to next AI infantry buy";
+		};
+		class CA_UD1_Delete : RscButton {
+			idc = 13105;
+			x = 0.666;
+			y = 0.306;
+			w = 0.110;
+			h = 0.034;
+			text = "Delete 1";
+			action = "MenuAction = 2121";
+			tooltip = "Clear unit template slot 1";
+		};
+		class CA_UD2_Name : RscText {
+			idc = 13106;
+			x = 0.192941;
+			y = 0.346;
+			w = 0.200;
+			h = 0.031;
+			text = "--- Slot 2 empty ---";
+		};
+		class CA_UD2_Save : RscButton {
+			idc = 13107;
+			x = 0.397;
+			y = 0.344;
+			w = 0.115;
+			h = 0.034;
+			text = "Save 2";
+			action = "MenuAction = 2102";
+			tooltip = "Save current player loadout to unit template slot 2";
+		};
+		class CA_UD2_Activate : RscButton {
+			idc = 13108;
+			x = 0.516;
+			y = 0.344;
+			w = 0.145;
+			h = 0.034;
+			text = "Activate 2";
+			action = "MenuAction = 2112";
+			tooltip = "Toggle: apply this template to next AI infantry buy";
+		};
+		class CA_UD2_Delete : RscButton {
+			idc = 13109;
+			x = 0.666;
+			y = 0.344;
+			w = 0.110;
+			h = 0.034;
+			text = "Delete 2";
+			action = "MenuAction = 2122";
+			tooltip = "Clear unit template slot 2";
+		};
+		class CA_UD3_Name : RscText {
+			idc = 13110;
+			x = 0.192941;
+			y = 0.384;
+			w = 0.200;
+			h = 0.031;
+			text = "--- Slot 3 empty ---";
+		};
+		class CA_UD3_Save : RscButton {
+			idc = 13111;
+			x = 0.397;
+			y = 0.382;
+			w = 0.115;
+			h = 0.034;
+			text = "Save 3";
+			action = "MenuAction = 2103";
+			tooltip = "Save current player loadout to unit template slot 3";
+		};
+		class CA_UD3_Activate : RscButton {
+			idc = 13112;
+			x = 0.516;
+			y = 0.382;
+			w = 0.145;
+			h = 0.034;
+			text = "Activate 3";
+			action = "MenuAction = 2113";
+			tooltip = "Toggle: apply this template to next AI infantry buy";
+		};
+		class CA_UD3_Delete : RscButton {
+			idc = 13113;
+			x = 0.666;
+			y = 0.382;
+			w = 0.110;
+			h = 0.034;
+			text = "Delete 3";
+			action = "MenuAction = 2123";
+			tooltip = "Clear unit template slot 3";
+		};
+		class CA_UD4_Name : RscText {
+			idc = 13114;
+			x = 0.192941;
+			y = 0.422;
+			w = 0.200;
+			h = 0.031;
+			text = "--- Slot 4 empty ---";
+		};
+		class CA_UD4_Save : RscButton {
+			idc = 13115;
+			x = 0.397;
+			y = 0.420;
+			w = 0.115;
+			h = 0.034;
+			text = "Save 4";
+			action = "MenuAction = 2104";
+			tooltip = "Save current player loadout to unit template slot 4";
+		};
+		class CA_UD4_Activate : RscButton {
+			idc = 13116;
+			x = 0.516;
+			y = 0.420;
+			w = 0.145;
+			h = 0.034;
+			text = "Activate 4";
+			action = "MenuAction = 2114";
+			tooltip = "Toggle: apply this template to next AI infantry buy";
+		};
+		class CA_UD4_Delete : RscButton {
+			idc = 13117;
+			x = 0.666;
+			y = 0.420;
+			w = 0.110;
+			h = 0.034;
+			text = "Delete 4";
+			action = "MenuAction = 2124";
+			tooltip = "Clear unit template slot 4";
 		};
 		/* Separator before footer */
 		class Line_V2_Sep3 : RscText {
@@ -3580,6 +3791,13 @@ class RscMenu_EASA {
 			text = $STR_WF_Purchase;
 			action = "MenuAction = 101";
 		};
+		/* Back to WF_Menu hub (UX Pass 1). MenuAction 102 handled in GUI_Menu_EASA.sqf. */
+		class Back_Button : RscButton_Back {
+			x = 0.157263;
+			y = 0.755506;
+			onButtonClick = "MenuAction = 102;";
+			tooltip = $STR_WF_TOOLTIP_BackButton;
+		};
 		/* Exit */
 		class Exit_Button : RscButton_Exit {
 			x = 0.799471;
@@ -3876,12 +4094,15 @@ class RscMenu_Help {
 };
 
 //--- Command Deck: Skin Selector (idd 27000).
+//--- Visual overhaul 2026-07 (owner inspiration package; wiki: UI-Design-Inspiration-2026-07).
+//--- Same idd + idcs (27001..27008) as before - SkinSelector_Open.sqf logic untouched.
 class WFBE_SkinSelectorMenu {
 	movingEnable = 1;
 	idd = 27000;
 	onLoad = "(_this) ExecVM 'Client\GUI\GUI_SkinSelectorMenu.sqf'";
 
 	class controlsBackground {
+		//--- Main plate.
 		class CA_Background : RscText {
 			x = 0.25;
 			y = 0.08;
@@ -3897,12 +4118,21 @@ class WFBE_SkinSelectorMenu {
 			h = 0.06;
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
+		//--- Footer plate behind the action row.
 		class CA_Background_Footer : CA_Background {
 			x = 0.25;
-			y = 0.08 + 0.80;
+			y = 0.08 + 0.755;
 			w = 0.50;
-			h = 0.04;
-			colorBackground[] = WFBE_Background_Color_Sub;
+			h = 0.085;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		//--- Preview plate (portrait backdrop, right column).
+		class CA_Background_Preview : CA_Background {
+			x = 0.485;
+			y = 0.175;
+			w = 0.255;
+			h = 0.30;
+			colorBackground[] = {0, 0, 0, 0.35};
 		};
 		//--- Accent border line below header.
 		class CA_Border : RscText {
@@ -3912,54 +4142,117 @@ class WFBE_SkinSelectorMenu {
 			h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
+		//--- Accent border line above footer.
+		class CA_Border_Footer : CA_Border {
+			y = 0.08 + 0.755;
+		};
+		//--- 1px outer frame.
+		class CA_Edge_Top : CA_Border {
+			y = 0.08;
+		};
+		class CA_Edge_Bottom : CA_Border {
+			y = 0.919;
+		};
+		class CA_Edge_Left : RscText {
+			x = 0.25;
+			y = 0.08;
+			w = WFBE_Background_Border_Thick;
+			h = 0.84;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class CA_Edge_Right : CA_Edge_Left {
+			x = 0.749;
+		};
+		//--- Vertical divider between list and preview columns (soft cyan).
+		class CA_Divider_V : RscText {
+			x = 0.480;
+			y = 0.147;
+			w = WFBE_Background_Border_Thick;
+			h = 0.628;
+			colorBackground[] = {0.2588, 0.7137, 1, 0.4};
+		};
+		//--- Divider under the name/faction block.
+		class CA_Divider_Info : RscText {
+			x = 0.485;
+			y = 0.565;
+			w = 0.255;
+			h = WFBE_Background_Border_Thick;
+			colorBackground[] = {0.2588, 0.7137, 1, 0.4};
+		};
 	};
 
 	class controls {
-		//--- Header title (idc 27008) — RscButton_Main so ctrlSetText works at runtime.
+		//--- Header title (idc 27008) - RscButton_Main so ctrlSetText works at runtime.
 		class CA_Title : RscButton_Main {
 			idc = 27008;
 			x = 0.255;
-			y = 0.08 + 0.012;
+			y = 0.08 + 0.009;
 			w = 0.35;
-			h = 0.038;
+			h = 0.042;
 			text = $STR_WF_SkinSelector_Title;
-			sizeEx = 0.028;
+			sizeEx = 0.032;
 			colorBackground[] = {0, 0, 0, 0};
-			colorBackgroundFocus[] = {0, 0, 0, 0};
 			colorBackgroundActive[] = {0, 0, 0, 0};
-			colorText[] = WFBE_Menu_Text_Color;
+			colorFocused[] = {0, 0, 0, 0};
+			colorText[] = WFBE_Menu_Title_Color;
 			shadow = 2;
 			default = false;
 		};
-		//--- Close button.
+		//--- Close button (flat, red on hover).
 		class CA_Quit_Button : RscButton_Main {
-			x = 0.25 + 0.45;
-			y = 0.08 + 0.0075;
-			w = 0.045;
-			h = 0.045;
+			x = 0.7065;
+			y = 0.0855;
+			w = 0.038;
+			h = 0.048;
 			text = "X";
 			shadow = 2;
-			sizeEx = 0.03;
+			sizeEx = 0.032;
+			colorBackground[] = {0, 0, 0, 0};
+			colorBackgroundActive[] = {0.9098, 0.3216, 0.2902, 0.8};
+			colorFocused[] = {0, 0, 0, 0};
+			colorText[] = {1, 1, 1, 0.6};
 			onButtonClick = "WFBE_MenuAction = 2;";
+		};
+		//--- Column section labels (static design captions).
+		class CA_ListLabel : RscText {
+			x = 0.255;
+			y = 0.147;
+			w = 0.22;
+			h = 0.024;
+			sizeEx = 0.019;
+			text = "AVAILABLE MODELS";
+			colorText[] = {1, 1, 1, 0.5};
+			shadow = 2;
+		};
+		class CA_PreviewLabel : CA_ListLabel {
+			x = 0.485;
+			w = 0.255;
+			text = "PREVIEW";
 		};
 		//--- Skin list (idc 27001).
 		class CA_SkinList : RscListBox {
 			idc = 27001;
 			x = 0.255;
-			y = 0.08 + 0.07;
+			y = 0.175;
 			w = 0.22;
-			h = 0.65;
-			rowHeight = 0.03;
+			h = 0.60;
+			rowHeight = 0.032;
+			sizeEx = 0.026;
+			colorBackground[] = {0, 0, 0, 0.35};
+			colorText[] = {1, 1, 1, 0.85};
+			colorSelect[] = {0, 0, 0, 0.9};
+			colorSelect2[] = {0, 0, 0, 0.9};
 			colorSelectBackground[] = WFBE_Menu_ListBox_Select_Color;
+			colorSelectBackground2[] = WFBE_Menu_ListBox_Select_Color;
 			onLBSelChanged = "";
 		};
-		//--- Portrait picture (idc 27002).
+		//--- Portrait picture (idc 27002), centered on the preview plate.
 		class CA_Portrait : RscPicture {
 			idc = 27002;
-			x = 0.485;
-			y = 0.08 + 0.07;
-			w = 0.12;
-			h = 0.24;
+			x = 0.5375;
+			y = 0.185;
+			w = 0.15;
+			h = 0.28;
 			style = 0x30 + 0x800;
 			text = "";
 		};
@@ -3967,10 +4260,10 @@ class WFBE_SkinSelectorMenu {
 		class CA_SkinName : RscText {
 			idc = 27003;
 			x = 0.485;
-			y = 0.08 + 0.32;
+			y = 0.487;
 			w = 0.255;
-			h = 0.04;
-			sizeEx = 0.026;
+			h = 0.038;
+			sizeEx = 0.030;
 			text = "";
 			colorText[] = WFBE_Menu_Text_Color;
 			shadow = 2;
@@ -3979,51 +4272,60 @@ class WFBE_SkinSelectorMenu {
 		class CA_FactionName : RscText {
 			idc = 27004;
 			x = 0.485;
-			y = 0.08 + 0.365;
+			y = 0.526;
 			w = 0.255;
-			h = 0.035;
-			sizeEx = 0.022;
+			h = 0.030;
+			sizeEx = 0.021;
 			text = "";
-			colorText[] = WFBE_Menu_Text_Color;
+			colorText[] = {1, 1, 1, 0.6};
 			shadow = 2;
 		};
-		//--- Ghillie note (idc 27005).
+		//--- Ghillie note (idc 27005), amber advisory above the footer.
 		class CA_GhillieNote : RscText {
 			idc = 27005;
 			x = 0.255;
-			y = 0.08 + 0.73;
-			w = 0.485;
-			h = 0.03;
-			sizeEx = 0.020;
+			y = 0.792;
+			w = 0.49;
+			h = 0.028;
+			sizeEx = 0.019;
 			text = "";
-			colorText[] = WFBE_Menu_Text_Color;
+			colorText[] = {0.9098, 0.7725, 0.2784, 0.9};
 			shadow = 2;
 		};
-		//--- APPLY button (idc 27006) — RscButton_Main for ctrlSetText compat.
+		//--- APPLY (idc 27006) - green primary action, right-aligned.
 		class CA_Apply : RscButton_Main {
 			idc = 27006;
-			x = 0.330;
-			y = 0.08 + 0.762;
-			w = 0.15;
-			h = 0.035;
+			x = 0.578;
+			y = 0.848;
+			w = 0.157;
+			h = 0.045;
 			sizeEx = 0.028;
 			text = $STR_WF_SkinSelector_Apply;
+			colorBackground[] = WFBE_Menu_Button_Sub_Color;
+			colorBackgroundActive[] = WFBE_Menu_Button_Sub_Focused_Color;
+			colorFocused[] = WFBE_Menu_Button_Sub_Focused_Color;
+			colorText[] = {0, 0, 0, 0.9};
+			shadow = 0;
 			action = "WFBE_MenuAction = 1";
 		};
-		//--- SKIP button (idc 27007).
+		//--- SKIP (idc 27007) - neutral secondary.
 		class CA_Skip : RscButton_Main {
 			idc = 27007;
-			x = 0.490;
-			y = 0.08 + 0.762;
-			w = 0.10;
-			h = 0.035;
+			x = 0.462;
+			y = 0.848;
+			w = 0.105;
+			h = 0.045;
 			sizeEx = 0.026;
 			text = $STR_WF_SkinSelector_Skip;
+			colorBackground[] = {1, 1, 1, 0.12};
+			colorBackgroundActive[] = {1, 1, 1, 0.28};
+			colorFocused[] = {1, 1, 1, 0.12};
+			colorText[] = {1, 1, 1, 0.8};
+			shadow = 0;
 			action = "WFBE_MenuAction = 2";
 		};
 	};
 };
-
 //--- Per-player Settings menu (idd 29000). Opened from the WF-menu GEAR button (revived skins slot, MenuAction 24).
 //--- All labels (29010-29014 toggles, 29020 VD) set live by WASP\actions\Settings\Settings_Open.sqf (sub-dialog global WFBE_MenuAction).
 class WFBE_SettingsMenu {
@@ -4408,6 +4710,490 @@ class WFBE_PlayerSettingsMenu {
 			sizeEx = 0.026;
 			text = "Close";
 			action = "WFBE_MenuAction = 9";
+		};
+	};
+};
+
+
+//--- A1 Commissar Panel (idd=31000). Hub button idc=11030 in WF_Menu (idd=11000).
+//--- GUI loop script: Client\GUI\GUI_Menu_GuerCommissar.sqf
+//--- UX v2 (panel-v2): cost display (~est. labels + quote round-trip), minimap town selector,
+//---   SkinSelector-style framing, wallet+fund readout, button enable gate, cooldown display, Back nav.
+//--- IDC band: 31000-31099.
+//---   31010=town list  31011-31013=section labels  31021-22=buy  31031-33=QRF
+//---   31041=counter  31051=donate  31060=minimap  31070=wallet/fund readout
+//---   31071-77=per-action cost labels  31078=status text  31079=cooldown label
+class WFBE_GDirCommissarMenu {
+	movingEnable = 1;
+	idd = 31000;
+	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_GuerCommissar.sqf'"; //--- cmdcon45: house pattern - A2 config strings do NOT accept C-style backslash-quote escapes
+
+	class controlsBackground {
+		//--- Main plate (wider/taller to fit minimap + cost labels).
+		class BG_M : RscText {
+			x = 0.110; y = 0.175; w = 0.780; h = 0.650;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class BG_H : RscText {
+			x = 0.110; y = 0.175; w = 0.780; h = 0.052;
+			moving = 1;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class BG_F : RscText {
+			x = 0.110; y = 0.773; w = 0.780; h = 0.052;
+			moving = 1;
+			colorBackground[] = WFBE_Background_Color_Footer;
+		};
+		//--- Accent border below header (SkinSelector-style cyan line).
+		class BG_BorderH : RscText {
+			x = 0.110; y = 0.227;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		//--- Accent border above footer.
+		class BG_BorderF : RscText {
+			x = 0.110; y = 0.773;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		//--- 1px outer frame.
+		class BG_EdgeT : RscText {
+			x = 0.110; y = 0.175;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class BG_EdgeB : RscText {
+			x = 0.110; y = 0.825;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class BG_EdgeL : RscText {
+			x = 0.110; y = 0.175;
+			w = WFBE_Background_Border_Thick; h = 0.650;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class BG_EdgeR : RscText {
+			x = 0.890; y = 0.175;
+			w = WFBE_Background_Border_Thick; h = 0.650;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		//--- Vertical divider between left column (list+map) and right column (actions).
+		class BG_DivV : RscText {
+			x = 0.342; y = 0.240;
+			w = WFBE_Background_Border_Thick; h = 0.520;
+			colorBackground[] = {0.2588, 0.7137, 1, 0.4};
+		};
+		//--- Minimap backing plate.
+		class BG_Map : RscText {
+			x = 0.115; y = 0.386;
+			w = 0.222; h = 0.379;
+			colorBackground[] = {0, 0, 0, 0.5};
+		};
+	};
+
+	class controls {
+		//--- Title bar.
+		class Title : RscText_Title {
+			x = 0.115; y = 0.175; w = 0.720; h = 0.052;
+			text = "GUER COMMISSAR PANEL";
+		};
+
+		//--- X button (flat, red-hover; SkinSelector-style).
+		class Btn_X : RscButton_Main {
+			x = 0.852; y = 0.182; w = 0.034; h = 0.040;
+			text = "X";
+			shadow = 2;
+			sizeEx = 0.028;
+			colorBackground[] = {0, 0, 0, 0};
+			colorBackgroundActive[] = {0.9098, 0.3216, 0.2902, 0.8};
+			colorText[] = {1, 1, 1, 0.6};
+			action = "closeDialog 0;";
+			tooltip = "Close panel";
+		};
+
+		//--- Left column: town list label + list.
+		class Lbl_Towns : RscText {
+			x = 0.115; y = 0.240; w = 0.222; h = 0.022;
+			text = "SELECT TOWN";
+			sizeEx = 0.018;
+			colorText[] = {1, 1, 1, 0.55};
+			shadow = 2;
+		};
+		class LB_Towns : RscListBox {
+			idc = 31010;
+			x = 0.115; y = 0.263; w = 0.222; h = 0.095;
+		};
+
+		//--- Map label.
+		class Lbl_Map : RscText {
+			x = 0.115; y = 0.362; w = 0.222; h = 0.022;
+			text = "MAP (click to select town)";
+			sizeEx = 0.016;
+			colorText[] = {1, 1, 1, 0.5};
+			shadow = 2;
+		};
+		//--- Minimap (idc 31060). Pattern from idd 12000 WF_MiniMap (idc 12015, Dialogs.hpp line 2088).
+		//--- Map-click: mouseButtonUp wired via event; loop reads _map posScreenToWorld[mouseX,mouseY].
+		class WF_MiniMap : RscMapControl {
+			idc = 31060;
+			x = 0.115; y = 0.386;
+			w = 0.222; h = 0.379;
+			ShowCountourInterval = 1;
+			onMouseMoving = "mouseX = (_this select 1); mouseY = (_this select 2)";
+			onMouseButtonDown = "mouseButtonDown = (_this select 1)";
+			onMouseButtonUp = "mouseButtonUp = (_this select 1)";
+		};
+
+		//--- Right column: wallet + town fund readout (idc 31070). Updated by loop script each tick.
+		class Lbl_Wallet : RscText {
+			idc = 31070;
+			x = 0.348; y = 0.240; w = 0.535; h = 0.026;
+			text = "Wallet: -- | Town Fund: --";
+			sizeEx = 0.019;
+			colorText[] = {0.2588, 0.7137, 1, 0.9};
+			shadow = 2;
+		};
+
+		//--- ACTION 1 - REINFORCEMENT.
+		class Lbl_Act1 : RscText {
+			idc = 31011;
+			x = 0.348; y = 0.273; w = 0.535; h = 0.025;
+			text = "ACTION 1 - REINFORCEMENT";
+			sizeEx = 0.019;
+			colorText[] = {1, 1, 1, 0.7};
+			shadow = 2;
+		};
+		class Lbl_Cost_Convoy : RscText {
+			idc = 31071;
+			x = 0.348; y = 0.298; w = 0.260; h = 0.020;
+			text = "~est. $--";
+			sizeEx = 0.017;
+			colorText[] = {1, 0.85, 0.3, 0.85};
+			shadow = 2;
+		};
+		class Lbl_Cost_Instant : Lbl_Cost_Convoy {
+			idc = 31072;
+			x = 0.610;
+		};
+		class Btn_BuyConvoy : RscButton_Main {
+			idc = 31021;
+			x = 0.348; y = 0.319; w = 0.260; h = 0.040;
+			text = "BUY: CONVOY";
+			sizeEx = 0.021;
+			action = "MenuAction = 21";
+			tooltip = "Standard convoy reinforcement to selected town (base price).";
+		};
+		class Btn_BuyInstant : Btn_BuyConvoy {
+			idc = 31022;
+			x = 0.610;
+			text = "BUY: INSTANT";
+			action = "MenuAction = 22";
+			tooltip = "Instant reinforcement (~1.5x price premium).";
+		};
+
+		//--- ACTION 2 - QRF CONTRACT.
+		class Lbl_Act2 : RscText {
+			idc = 31012;
+			x = 0.348; y = 0.368; w = 0.535; h = 0.025;
+			text = "ACTION 2 - QRF CONTRACT (on town attack)";
+			sizeEx = 0.019;
+			colorText[] = {1, 1, 1, 0.7};
+			shadow = 2;
+		};
+		class Lbl_Cost_QRFIns : RscText {
+			idc = 31073;
+			x = 0.348; y = 0.394; w = 0.168; h = 0.020;
+			text = "~est. $--";
+			sizeEx = 0.017;
+			colorText[] = {1, 0.85, 0.3, 0.85};
+			shadow = 2;
+		};
+		class Lbl_Cost_QRFGun : Lbl_Cost_QRFIns {
+			idc = 31074;
+			x = 0.518;
+		};
+		class Lbl_Cost_QRFCombo : Lbl_Cost_QRFIns {
+			idc = 31075;
+			x = 0.695;
+		};
+		class Btn_QRFInsert : Btn_BuyConvoy {
+			idc = 31031;
+			x = 0.348; y = 0.415; w = 0.168; h = 0.040;
+			text = "INSERT";
+			action = "MenuAction = 31";
+			tooltip = "QRF Insert contract: light helo deploys infantry on town attack.";
+		};
+		class Btn_QRFGunship : Btn_BuyConvoy {
+			idc = 31032;
+			x = 0.518; y = 0.415; w = 0.168; h = 0.040;
+			text = "GUNSHIP";
+			action = "MenuAction = 32";
+			tooltip = "QRF Gunship contract: attack helicopter strikes on town attack.";
+		};
+		class Btn_QRFCombo : Btn_BuyConvoy {
+			idc = 31033;
+			x = 0.695; y = 0.415; w = 0.168; h = 0.040;
+			text = "COMBO";
+			action = "MenuAction = 33";
+			tooltip = "QRF Combo: insert + gunship together (discounted).";
+		};
+
+		//--- ACTION 3 - COUNTER-ATTACK CONTRACT.
+		class Lbl_Act3 : RscText {
+			idc = 31013;
+			x = 0.348; y = 0.464; w = 0.535; h = 0.025;
+			text = "ACTION 3 - COUNTER-ATTACK CONTRACT";
+			sizeEx = 0.019;
+			colorText[] = {1, 1, 1, 0.7};
+			shadow = 2;
+		};
+		class Lbl_Cost_Counter : RscText {
+			idc = 31076;
+			x = 0.348; y = 0.490; w = 0.535; h = 0.020;
+			text = "~est. $--";
+			sizeEx = 0.017;
+			colorText[] = {1, 0.85, 0.3, 0.85};
+			shadow = 2;
+		};
+		class Btn_Counter : Btn_BuyConvoy {
+			idc = 31041;
+			x = 0.348; y = 0.511; w = 0.535; h = 0.040;
+			text = "COUNTER-ATTACK ON LOSS";
+			action = "MenuAction = 41";
+			tooltip = "If town falls, triggers retake attempt 2-5 min later.";
+		};
+
+		//--- DONATE.
+		class Lbl_Cost_Donate : RscText {
+			idc = 31077;
+			x = 0.348; y = 0.560; w = 0.535; h = 0.020;
+			text = "$200 fixed (from wallet to town fund)";
+			sizeEx = 0.017;
+			colorText[] = {1, 0.85, 0.3, 0.85};
+			shadow = 2;
+		};
+		class Btn_Donate : Btn_BuyConvoy {
+			idc = 31051;
+			x = 0.348; y = 0.581; w = 0.535; h = 0.040;
+			text = "DONATE $200 TO TOWN FUND";
+			action = "MenuAction = 51";
+			tooltip = "Donate $200 from your wallet to this town's funding pool.";
+		};
+
+		//--- Status text (idc 31078): deny reasons, pending quote notice.
+		class Lbl_Status : RscText {
+			idc = 31078;
+			x = 0.348; y = 0.630; w = 0.535; h = 0.025;
+			text = "";
+			sizeEx = 0.018;
+			colorText[] = {1, 0.4, 0.3, 0.9};
+			shadow = 2;
+		};
+		//--- Cooldown readout (idc 31079): per-town cooldown remaining.
+		class Lbl_Cooldown : RscText {
+			idc = 31079;
+			x = 0.348; y = 0.656; w = 0.535; h = 0.025;
+			text = "";
+			sizeEx = 0.018;
+			colorText[] = {1, 0.65, 0.2, 0.85};
+			shadow = 2;
+		};
+
+		//--- Footer: Back button (house pattern: createDialog WF_Menu after closeDialog).
+		class Btn_Back : RscButton_Main {
+			x = 0.115; y = 0.778; w = 0.080; h = 0.040;
+			text = "< BACK";
+			sizeEx = 0.019;
+			action = "MenuAction = 90";
+			tooltip = "Return to main menu";
+		};
+	};
+};
+
+//--- fable/drones-menu: GUER Drone Operations menu (idd=32000). IDC band 32000-32099.
+//---   FPV card: 32011-32014  SCUD card: 32020-32024  status: 32030  map: 32060  telemetry: 32061  back: 32070
+//--- GUI loop script: Client\GUI\GUI_Menu_GuerDrones.sqf
+class WFBE_GuerDronesMenu {
+	movingEnable = 1;
+	idd = 32000;
+	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_GuerDrones.sqf'";
+
+	class controlsBackground {
+		class BG_M : RscText {
+			x = 0.110; y = 0.175; w = 0.780; h = 0.650;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class BG_H : RscText {
+			x = 0.110; y = 0.175; w = 0.780; h = 0.052;
+			moving = 1;
+			colorBackground[] = WFBE_Background_Color_Header;
+		};
+		class BG_F : RscText {
+			x = 0.110; y = 0.773; w = 0.780; h = 0.052;
+			moving = 1;
+			colorBackground[] = WFBE_Background_Color_Footer;
+		};
+		class BG_BorderH : RscText {
+			x = 0.110; y = 0.227;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = {0.35, 0.50, 0.20, 0.70};
+		};
+		class BG_BorderF : RscText {
+			x = 0.110; y = 0.773;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = {0.35, 0.50, 0.20, 0.70};
+		};
+		class BG_EdgeT : RscText {
+			x = 0.110; y = 0.175;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class BG_EdgeB : RscText {
+			x = 0.110; y = 0.825;
+			w = 0.780; h = WFBE_Background_Border_Thick;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class BG_EdgeL : RscText {
+			x = 0.110; y = 0.175;
+			w = WFBE_Background_Border_Thick; h = 0.650;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		class BG_EdgeR : RscText {
+			x = 0.890; y = 0.175;
+			w = WFBE_Background_Border_Thick; h = 0.650;
+			colorBackground[] = WFBE_Background_Border;
+		};
+		//--- Vertical divider: left (FPV+SCUD cards) | right (map).
+		class BG_DivV : RscText {
+			x = 0.442; y = 0.240;
+			w = WFBE_Background_Border_Thick; h = 0.520;
+			colorBackground[] = {0.35, 0.50, 0.20, 0.40};
+		};
+		//--- Map backing plate.
+		class BG_Map : RscText {
+			x = 0.448; y = 0.230;
+			w = 0.437; h = 0.480;
+			colorBackground[] = {0, 0, 0, 0.5};
+		};
+	};
+
+	class controls {
+		//--- Header title.
+		class Title : RscText_Title {
+			x = 0.115; y = 0.175; w = 0.720; h = 0.052;
+			text = "RESISTANCE AIR DOCTRINE -- DRONE OPERATIONS";
+		};
+
+		//--- FPV card (left column, top).
+		class Lbl_FpvTitle : RscText {
+			idc = 32011;
+			x = 0.115; y = 0.237; w = 0.320; h = 0.026;
+			text = "FPV STRIKE DRONE";
+			sizeEx = 0.022;
+			colorText[] = {0.6, 0.8, 0.4, 1};
+			shadow = 2;
+		};
+		class Lbl_FpvState : RscText {
+			idc = 32012;
+			x = 0.115; y = 0.268; w = 0.320; h = 0.024;
+			text = "READY";
+			sizeEx = 0.017;
+			colorText[] = {0.8, 1, 0.6, 0.9};
+			shadow = 2;
+		};
+		class Btn_FpvLaunch : RscButton_Main {
+			idc = 32013;
+			x = 0.115; y = 0.297; w = 0.140; h = 0.038;
+			text = "LAUNCH";
+			action = "MenuAction = 1";
+		};
+		class Lbl_FpvCost : RscText {
+			idc = 32014;
+			x = 0.260; y = 0.297; w = 0.175; h = 0.038;
+			text = "$5000";
+			sizeEx = 0.017;
+			colorText[] = {0.2588, 0.7137, 1, 0.9};
+			shadow = 2;
+		};
+
+		//--- SCUD card (left column, mid; hidden by loop when WFBE_C_GUER_DRONE_SCUD=0).
+		class BG_ScudCard : RscText {
+			idc = 32020;
+			x = 0.115; y = 0.348; w = 0.320; h = 0.180;
+			colorBackground[] = {0.07, 0.07, 0.07, 0.6};
+		};
+		class Lbl_ScudTitle : RscText {
+			idc = 32021;
+			x = 0.115; y = 0.353; w = 0.320; h = 0.026;
+			text = "SCUD CARRIER STRIKE";
+			sizeEx = 0.022;
+			colorText[] = {0.6, 0.8, 0.4, 1};
+			shadow = 2;
+		};
+		class Lbl_ScudState : RscText {
+			idc = 32022;
+			x = 0.115; y = 0.383; w = 0.320; h = 0.024;
+			text = "[LOCKED]";
+			sizeEx = 0.017;
+			colorText[] = {0.8, 1, 0.6, 0.9};
+			shadow = 2;
+		};
+		class Btn_ScudFire : RscButton_Main {
+			idc = 32023;
+			x = 0.115; y = 0.412; w = 0.140; h = 0.038;
+			text = "TARGET";
+			action = "MenuAction = 80";
+		};
+		class Lbl_ScudCost : RscText {
+			idc = 32024;
+			x = 0.260; y = 0.412; w = 0.175; h = 0.038;
+			text = "$40000";
+			sizeEx = 0.017;
+			colorText[] = {0.2588, 0.7137, 1, 0.9};
+			shadow = 2;
+		};
+
+		//--- Status strip (wallet + live drones).
+		class Lbl_Status : RscText {
+			idc = 32030;
+			x = 0.115; y = 0.700; w = 0.320; h = 0.024;
+			text = "Wallet: $--- | Active drones: 0";
+			sizeEx = 0.016;
+			colorText[] = {0.2588, 0.7137, 1, 0.8};
+			shadow = 2;
+		};
+
+		//--- Right column: tactical map. Pattern from idd 31000 WF_MiniMap (idc 31060).
+		class WF_MiniMap : RscMapControl {
+			idc = 32060;
+			x = 0.448; y = 0.230;
+			w = 0.437; h = 0.480;
+			ShowCountourInterval = 1;
+			onMouseMoving = "mouseX = (_this select 1); mouseY = (_this select 2)";
+			onMouseButtonDown = "mouseButtonDown = (_this select 1)";
+			onMouseButtonUp = "mouseButtonUp = (_this select 1)";
+		};
+
+		//--- Drone telemetry readout (below map).
+		class Lbl_Telemetry : RscText {
+			idc = 32061;
+			x = 0.448; y = 0.715; w = 0.437; h = 0.024;
+			text = "FPV: no active drone";
+			sizeEx = 0.016;
+			colorText[] = {0.2588, 0.7137, 1, 0.8};
+			shadow = 2;
+		};
+
+		//--- Footer: Back button.
+		class Btn_Back : RscButton_Main {
+			idc = 32070;
+			x = 0.750; y = 0.779; w = 0.130; h = 0.040;
+			text = "< BACK";
+			sizeEx = 0.019;
+			action = "MenuAction = 90";
+			tooltip = "Return to main menu";
 		};
 	};
 };

@@ -1,5 +1,7 @@
 Private ['_airCoef','_artCoef','_cts','_distanceMin','_heaCoef','_hitCfg','_hitName','_hitPoints','_i','_ligCoef','_name','_nearIsDP','_nearIsRT','_nearIsSP','_repairRange','_repTime','_spType','_supportRange','_supports','_typeRepair','_veh'];
 _veh = _this select 0;
+if (_veh getVariable ["wfbe_repair_inProgress", false]) exitWith {hint "Repair already in progress."};
+_veh setVariable ["wfbe_repair_inProgress", true];
 _supports = _this select 1;
 _typeRepair = _this select 2;
 _spType = _this select 3;
@@ -92,3 +94,4 @@ if (_cts != 0) then {
 		_veh setVariable ["wfbe_jet_aa_lasthit", -100, true];
 	};
 };
+_veh setVariable ["wfbe_repair_inProgress", false];

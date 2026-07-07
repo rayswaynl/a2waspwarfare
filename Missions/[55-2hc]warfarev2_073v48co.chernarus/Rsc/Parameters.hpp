@@ -195,6 +195,12 @@
 		texts[] = {"$STR_WF_PARAMETER_No","$STR_WF_PARAMETER_Yes"};
 		default = 0;
 	};
+	class WFBE_C_AICOM2_REQDRAW_ENABLE {
+		title = "AI Commander War-Chest Requisition";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_PARAMETER_No","$STR_WF_PARAMETER_Yes"};
+		default = 1;
+	};
 	class WFBE_C_ENDGAME_FORCE_ENABLE {
 		title = "Endgame Force Economy Taper";
 		values[] = {0,1};
@@ -498,7 +504,7 @@
 		title = "$STR_WF_PARAMETER_TownsAmount";
 		values[] = {0,1,2,3,4,5,6,7};
 		texts[] = {"$STR_WF_PARAMETER_Extra_Small","$STR_WF_PARAMETER_Small","$STR_WF_PARAMETER_Medium","$STR_WF_PARAMETER_Large","$STR_WF_PARAMETER_Full","$STR_WF_PARAMETER_RemovedBigTowns","$STR_WF_PARAMETER_RemovedCentralLine","$STR_WF_PARAMETER_RemovedSmallTowns"};
-		default = 7; //--- b89-params: align to CC isNil default; RemovedSmallTowns map layout.
+		default = 4; //--- owner 2026-07-07: FULL map (RemovedSmallTowns hid 17 towns incl Kabanino/Vybor/Pustoshka/Polana/Shakhovka). ICC isNil default in sync.
 	};
 	class WFBE_C_CAMPS_CREATE {
 		title = "$STR_WF_PARAMETER_TownsCamps";
@@ -694,6 +700,60 @@
 		values[] = {180,300,600};
 		texts[] = {"3 min","5 min","10 min"};
 		default = 300;
+	};
+	class WFBE_C_AWACS {
+		title = "AWACS platform radar (air picture + ground MTI sweep)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
+
+	// FPV strike drone: player-piloted kamikaze mini-UAV from the Tactical Center (enabled 2026-07-07 post #796 hardening).
+	class WFBE_C_FPV_DRONE {
+		title = "FPV strike drone (Tactical Center)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
+
+	// East captured C-130J (Aircraft Factory token, default OFF - flag-gated).
+	class WFBE_C_EAST_C130 {
+		title = "East captured C-130J (AWACS-role transport)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
+	class WFBE_C_GUER_LOCKOUT_MIN {
+		title = "GUER Resistance Lockout (activation delay)";
+		values[] = {0,15,20,30};
+		texts[] = {"Off","15 minutes","20 minutes","30 minutes"};
+		default = 20;
+	};
+
+	// fable/drones-menu: GUER Drone Operations lobby params.
+	class WFBE_C_GUER_DRONES_MENU {
+		title = "GUER Drone Operations menu (FPV strike - button 6)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
+	class WFBE_C_GUER_DRONE_SCUD {
+		title = "GUER SCUD carrier strike (requires GUER_DRONES_MENU=1)";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+	class WFBE_C_FPV_DRONE_COST_GUER {
+		title = "GUER FPV drone cost ($)";
+		values[] = {2500,5000,7500,10000};
+		texts[] = {"$2500","$5000","$7500","$10000"};
+		default = 5000;
+	};
+	class WFBE_C_FPV_COOLDOWN {
+		title = "FPV rearm cooldown (seconds, all sides)";
+		values[] = {30,60,90,120};
+		texts[] = {"30s","60s","90s","120s"};
+		default = 60;
 	};
 
 };

@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_aicomConstLog","_arrFast","_arrMed","_arrSlow","_arrDisp","_syncAicomState"];
+private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_aicomConstLog","_arrFast","_arrMed","_arrSlow","_arrDisp","_syncAicomState","_aicomFlushResetOrder"];
 
 _args = _this;
 _side = if (typeName _args == "ARRAY") then {_args select 0} else {_args};
@@ -48,7 +48,6 @@ if (count (WFBE_PRESENTSIDES - [resistance]) > 1) then {
 	_phaseJitter = random (missionNamespace getVariable ["WFBE_C_AICOM_SUPERVISOR_JITTER", 7]);
 	if (_phaseJitter > 0) then {
 		["INFORMATION", Format ["AI_Commander.sqf: [%1] spawn phase-jitter %2s (worker de-correlation).", str _side, _phaseJitter]] Call WFBE_CO_FNC_AICOMLog;
-		diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|0|SUPERVISOR_JITTER|" + str _phaseJitter);
 		sleep _phaseJitter;
 	};
 };
@@ -120,7 +119,6 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 			_order = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], []];
 			missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _order + [[WFBE_UP_PATROLS,4]]];
 			["INFORMATION", Format ["AI_Commander.sqf: [%1] experital scaffold: Convoys (PATROLS lvl 4) appended to research program.", str _side]] Call WFBE_CO_FNC_AICOMLog;
-			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|0|SCAFFOLD_RESEARCH|Convoys-PATROLS4");
 		};
 		//--- CBR research is NOT appended here unconditionally.
 		//--- It is appended reactively in the main loop when wfbe_aicom_arty_threat is set.
@@ -221,7 +219,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				{ if (!isNull _x) then {
 					[_x, "towns"] Call SetTeamMoveMode;
 					_x setVariable ["wfbe_exec_sig", []];
-					if (_x getVariable ["wfbe_aicom_hc", false]) then {
+					if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then { //--- fix(hunt): G1 - raw 2-arg group read returns nil for server-local founded teams (wfbe_aicom_hc never stamped) and if (nil) threw, killing this supervisor loop; match the sibling loops (GroupGetBool).
 						_x setVariable ["wfbe_aicom_order",
 							[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
 							 "towns", getPos (leader _x)], true];
@@ -245,7 +243,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			{ if (!isNull _x) then {
 				[_x, "towns"] Call SetTeamMoveMode;
 				_x setVariable ["wfbe_exec_sig", []];
-				if (_x getVariable ["wfbe_aicom_hc", false]) then {
+				if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then { //--- fix(hunt): G1 - raw 2-arg group read returns nil for server-local founded teams (wfbe_aicom_hc never stamped) and if (nil) threw, killing this supervisor loop; match the sibling loops (GroupGetBool).
 					_x setVariable ["wfbe_aicom_order",
 						[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
 						 "towns", getPos (leader _x)], true];
@@ -410,7 +408,14 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		{ if ((_x getVariable "sideID") == _myID) then {_stipendTowns = _stipendTowns + 1} } forEach towns;
 		_stipendActive = (_stipendTowns == 0) && (time < _stipendMaxTime);
 		if (_stipendActive && !_prevStipendActive) then {
-			["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND started (0 towns, time %2 s < max %3 s).", str _side, round time, _stipendMaxTime]] Call WFBE_CO_FNC_AICOMLog;
+			private ["_stipendSupplyFlag","_stipendSupplyState"];
+			_stipendFunds = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_FUNDS", 100];
+			_stipendSupplyFlag = missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_SUPPLY_ENABLE", 0];
+			_dual = (missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) == 0;
+			_stipendSupplyOn = _dual && {_stipendSupplyFlag > 0};
+			_stipendSupplyState = if (_stipendSupplyOn) then {"ENABLED"} else {"SUPPRESSED"};
+			["INFORMATION", Format ["AI_Commander.sqf: [%1] BOOTSTRAP STIPEND started (0 towns, time %2 s < max %3 s; funds/min %4; supply %5, flag %6, dual %7).", str _side, round time, _stipendMaxTime, _stipendFunds, _stipendSupplyState, _stipendSupplyFlag, _dual]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|STIPEND_CONFIG|fundsGrant=" + str _stipendFunds + "|supplyEnable=" + str _stipendSupplyFlag + "|dual=" + str _dual + "|supply=" + _stipendSupplyState);
 			diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|BOOTSTRAP_STIPEND|start");
 		};
 		if (!_stipendActive && _prevStipendActive) then {
@@ -515,6 +520,8 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				//--- fist choice wins (overwrites wfbe_aicom_targets) + assigns each team an alloc_target.
 				//--- Inert unless WFBE_C_AICOM2_ALLOCATE_ENABLE>0 (checked inside) -> legacy path = instant rollback.
 				if (!isNil "WFBE_SE_FNC_AICOM2_Allocate") then {(_side) Call WFBE_SE_FNC_AICOM2_Allocate};
+				//--- M5 DECAPITATE closer runs AFTER the Allocator each tick; it NEVER writes wfbe_aicom_targets (the Allocator's town-first fist stays authoritative) - it only stamps wfbe_aicom_decap on teams already near the ORGANICALLY-SENSED enemy HQ (#724). Inert unless WFBE_C_AICOM2_DECAP_ENABLE > 0.
+				if (!isNil "WFBE_SE_FNC_AICOM2_Decapitate") then {(_side) Call WFBE_SE_FNC_AICOM2_Decapitate};
 				//--- NOTE (claude-gaming 2026-06-28): the AI-INTENT publish block was MOVED OUT of this gate
 				//--- (it used to live here) to the _active-gated block just below the Executor, so the command-console
 				//--- intent readout refreshes + reaches JIP/assist clients even when the AI is not in full-build mode.
@@ -737,6 +744,26 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				};
 			};
 
+			//--- WAR-CHEST REQUISITION arm (cmdcon44 economy-sink, claude 2026-07-07): at team cap the founding
+			//--- gate stops all TEAM_FOUNDED spend and the wallet climbs on income the ECON_SINK above ignores
+			//--- until 85% of the wealth cap (rc13 live: EAST 218k -> 726k+ with only TOPUP spend). While pinned
+			//--- (_fTeams >= _dynTarget, the P4 values computed above) and rich (funds cover COST while staying
+			//--- over FLOOR), arm ONE paid early wildcard draw for the worker to consume (AI_Commander_Wildcard.sqf
+			//--- debits at draw time - an unconsumed request never moves money). Human-seated pause mirrors the
+			//--- cmdcon42 econ-sink gate. Cooldown t0 is stamped at ARM so a dropped request still backs off.
+			if ((missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_ENABLE", 0]) > 0
+				&& {!(_humanSeated && {(missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_HUMAN_OFF", 1]) > 0})}
+				&& {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1]) > 0}
+				&& {_fTeams >= _dynTarget}
+				&& {_funds >= ((missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_COST", 75000]) + (missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_FLOOR", 250000]))}
+				&& {!(_logik getVariable ["wfbe_aicom_reqdraw_req", false])}
+				&& {time - (_logik getVariable ["wfbe_aicom_reqdraw_t0", -1e10]) > (missionNamespace getVariable ["WFBE_C_AICOM2_REQDRAW_COOLDOWN", 480])}) then {
+				_logik setVariable ["wfbe_aicom_reqdraw_req", true];
+				_logik setVariable ["wfbe_aicom_reqdraw_t0", time];
+				["INFORMATION", Format ["AI_Commander.sqf: [%1] REQDRAW armed - funds %2 at team cap (%3/%4); paid wildcard draw requested.", str _side, _funds, _fTeams, _dynTarget]] Call WFBE_CO_FNC_AICOMLog;
+				diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|REQDRAW_ARM|funds=" + str _funds + "|teams=" + str _fTeams + "|target=" + str _dynTarget);
+			};
+
 			//--- Reactive CBR research: append [WFBE_UP_CBRADAR,1/2] to the AI upgrade program
 			//--- once, the first tick after wfbe_aicom_arty_threat is set.  No-op if the constant
 			//--- or the upgrades-levels array doesn't include CBR (vanilla / non-experital builds).
@@ -747,7 +774,6 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _order + [[WFBE_UP_CBRADAR,1],[WFBE_UP_CBRADAR,2]]];
 					_cbrResearchAppended = true;
 					["INFORMATION", Format ["AI_Commander.sqf: [%1] CBRadar research (lvl 1-2) appended to program - arty threat confirmed at %2 min.", str _side, round (time / 60)]] Call WFBE_CO_FNC_AICOMLog;
-					diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|SCAFFOLD_RESEARCH_REACTIVE|CBRadar-1-2");
 				};
 			};
 		};

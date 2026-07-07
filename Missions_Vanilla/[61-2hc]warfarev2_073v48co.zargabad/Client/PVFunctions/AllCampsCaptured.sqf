@@ -19,4 +19,4 @@ if !(WFBE_Client_SideID in [_side_old,_side_new]) exitWith {};
 _camps = _town getVariable "camps";
 _color = missionNamespace getVariable (Format ["WFBE_C_%1_COLOR",(_side_new) Call WFBE_CO_FNC_GetSideFromID]);
 
-{(_x getVariable "wfbe_camp_marker") setMarkerColorLocal _color} forEach _camps;
+{ if (!isNull _x) then {(_x getVariable "wfbe_camp_marker") setMarkerColorLocal _color} } forEach _camps;

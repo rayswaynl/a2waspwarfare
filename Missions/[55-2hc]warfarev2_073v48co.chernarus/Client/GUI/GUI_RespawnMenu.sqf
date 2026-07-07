@@ -52,6 +52,16 @@ if (isNil 'WFBE_RespawnTime') then {
 	//--- whole spawn-list `while` never ran, freezing the menu. Fall back to the config default (10).
 	if (isNil "WFBE_RespawnTime" || {typeName WFBE_RespawnTime != "SCALAR"}) then {WFBE_RespawnTime = 10};
 	if (WF_Debug) then {WFBE_RespawnTime = 5};
+	//--- fable/guer-lockout (owner 2026-07-07): resistance is locked for the first N minutes -
+	//--- clamp the respawn timer to the remaining lockout so the menu's own countdown displays it.
+	if ((sideJoined == resistance) && {((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) > time}) then {
+		Private ["_lockLeft"];
+		_lockLeft = ((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) - time;
+		if (_lockLeft > WFBE_RespawnTime) then {
+			WFBE_RespawnTime = ceil _lockLeft;
+			hintSilent "RESISTANCE LOCKDOWN\nThe insurgency has not activated yet - your deploy unlocks when the countdown ends.";
+		};
+	};
 
 	[] Spawn {
 		while {WFBE_RespawnTime > 0} do {
@@ -86,6 +96,23 @@ while {WFBE_RespawnTime > 0 && dialog && alive player} do {
 	if (WFBE_MenuAction == 1) then {
 		WFBE_MenuAction = -1;
 		WFBE_RespawnDefaultGear = if (WFBE_RespawnDefaultGear) then {false} else {true};
+		//--- fable/keepkit-capture (owner 2026-07-07): the KEEP CURRENT button silently fell to default gear
+		//--- when the player never bought a kit (wfbe_custom_gear nil -> handler guard at Client_OnRespawnHandler:146
+		//--- fails). Capture the live inventory NOW so keep-current always has data; hint routes to Team Menu Save Gear
+		//--- to persist it. Fires only when toggling TO keep-current with no prior kit. A2-OA commands only.
+		if (!WFBE_RespawnDefaultGear && {isNil {player getVariable "wfbe_custom_gear"}}) then {
+			private ["_capBpObj","_capBp","_capPri","_capSec","_capPis","_capParsed"];
+			_capBpObj = unitBackpack player;
+			_capBp = if (!isNull _capBpObj) then {typeOf _capBpObj} else {""};
+			_capParsed = [(weapons player), (magazines player), player] Call WFBE_CL_FNC_GetParsedGear;
+			_capPri = _capParsed select 0;
+			_capSec = _capParsed select 1;
+			_capPis = _capParsed select 2;
+			player setVariable ["wfbe_custom_gear", [(weapons player) - [_capBp], magazines player, _capBp, [], [_capPri, _capPis, _capSec]]];
+			player setVariable ["wfbe_custom_gear_cost", 0];
+			hint "Current kit captured for respawn.
+Open the Team Menu -> Save Gear to store it as a preset.";
+		};
 		if (_uiV2 > 0) then {
 			ctrlSetText [511004, if (WFBE_RespawnDefaultGear) then {localize "STR_WF_RESPAWN_GearV2Default"} else {localize "STR_WF_RESPAWN_GearV2Current"}];
 			//--- v2 feature 7: tint button to signal state (blue = default kit; green = keep current).
@@ -106,7 +133,13 @@ while {WFBE_RespawnTime > 0 && dialog && alive player} do {
 		//--- Return the available spawn locations
 		_spawn_locations = [sideJoined, WFBE_DeathLocation] Call GetRespawnAvailable; if (isNil "_spawn_locations" || {typeName _spawn_locations != "ARRAY"}) then {diag_log Format ["WFBE RESPAWN b754-guard: GetRespawnAvailable returned non-array for side %1 - using [] this tick.", str sideJoined]; _spawn_locations = []}; //--- B754: stop the respawn-menu _x cascade + capture the root side in the RPT.
 			//--- cmdcon15 element-guard: drop any non-OBJECT / null / dead handle before the marker forEach loops + GetClosestEntity touch it.
-			{ if (isNil "_x" || {typeName _x != "OBJECT"} || {isNull _x}) then {_spawn_locations = _spawn_locations - [_x]} } forEach (+_spawn_locations);
+			//--- fable/tonight-hotfixes2: the old detect-bad-remove guard evaluated nil _x inside
+			//--- `- [_x]` which FAULTS on A2 OA before removing anything (517 errors/line/session,
+			//--- nil leaked to lines below + GetClosestEntity). Detect-good-keep never touches nil _x.
+			private ["_cleanLocs"];
+			_cleanLocs = [];
+			{ if (!isNil "_x" && {typeName _x == "OBJECT"} && {!isNull _x}) then {_cleanLocs = _cleanLocs + [_x]} } forEach _spawn_locations;
+			_spawn_locations = _cleanLocs;
 
 		//--- v2 feature 8: first-refresh pre-select of last remembered spawn.
 		if (_uiV2 > 0 && {_v2LastSpawnPending}) then {

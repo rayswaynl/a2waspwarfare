@@ -71,6 +71,21 @@ switch (_args select 0) do {
 		_args spawn KAT_UAV;
 	};
 
+	//--- fable/fpv-strike-drone: lifecycle watchdog for the player-piloted FPV drone.
+	case "fpv": {
+		_args spawn KAT_FPV;
+	};
+
+	//--- fable/fpv-strike-drone: server-side warhead detonation (Killed EH -> server). SCUD pattern.
+	//--- Payload: ["fpv-detonate", [x,y,z]]. Flag gate inside KAT_FPVDetonate.
+	case "fpv-detonate": {
+		if (!isNil "KAT_FPVDetonate") then {
+			_args spawn KAT_FPVDetonate;
+		} else {
+			["WARNING", "Server_HandleSpecial.sqf: fpv-detonate received but KAT_FPVDetonate is nil."] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+
 	//--- NAVAL HVT: SCUD saturation strike (feat/naval-hvt-objectives).
 	//--- Server validates ownership + cooldown inside KAT_ScudStrike before firing.
 	case "ScudStrike": {
@@ -679,7 +694,7 @@ switch (_args select 0) do {
 				_ryTeams = _ryLogik getVariable ["wfbe_teams", []];
 				if (_ryHuman && {_ryIdx < (count _ryTeams)}) then {
 					_ryTeam = _ryTeams select _ryIdx;
-					if (!isNull _ryTeam && {!isPlayer (leader _ryTeam)}) then {
+					if (!isNull _ryTeam && {({alive _x} count units _ryTeam) > 0} && {!isPlayer (leader _ryTeam)}) then {
 						//--- Nearest own rally point: own HQ, else nearest OWN-side town centre (fall back to HQ).
 						_rySID = (_rySide) Call WFBE_CO_FNC_GetSideID;
 						_ryHQ  = (_rySide) Call WFBE_CO_FNC_GetSideHQ;
@@ -789,7 +804,7 @@ switch (_args select 0) do {
 				_hdTeams = _hdLogik getVariable ["wfbe_teams", []];
 				if (_hdHuman && {_hdIdx < (count _hdTeams)}) then {
 					_hdTeam = _hdTeams select _hdIdx;
-					if (!isNull _hdTeam && {!isPlayer (leader _hdTeam)}) then {
+					if (!isNull _hdTeam && {({alive _x} count units _hdTeam) > 0} && {!isPlayer (leader _hdTeam)}) then {
 						_hdSID = (_hdSide) Call WFBE_CO_FNC_GetSideID;
 						_hdTown = objNull; _hdBest = 1e12;
 						{ if ((_x getVariable ["sideID", -1]) == _hdSID) then {private "_d"; _d = (leader _hdTeam) distance _x; if (_d < _hdBest) then {_hdBest = _d; _hdTown = _x}} } forEach towns;
