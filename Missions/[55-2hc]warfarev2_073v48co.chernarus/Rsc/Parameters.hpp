@@ -54,13 +54,13 @@
 		title = "$STR_WF_PARAMETER_KeepAI";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_PARAMETER_No","$STR_WF_PARAMETER_Yes"};//{"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1;
 	};
 	class WFBE_C_AI_TEAMS_ENABLED {
 		title = "$STR_WF_PARAMETER_AI";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1;
 	};
 	class WFBE_C_ARTILLERY {
 		title = "$STR_WF_PARAMETER_Arty";
@@ -335,7 +335,7 @@
 		title = "$STR_WF_PARAMETER_TrackAI";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1;
 	};
 	class WFBE_C_UNITS_TRACK_LEADERS {
 		title = "$STR_WF_PARAMETER_TrackPlayers";
