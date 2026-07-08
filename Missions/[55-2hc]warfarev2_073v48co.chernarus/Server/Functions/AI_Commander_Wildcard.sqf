@@ -616,10 +616,7 @@ while {!gameOver} do {
 				//--- W8 (Motor Pool Delivery) RETIRED 2026-06-15: it spawned a wfbe_persistent=true vehicle that NEVER
 				//--- despawned (worst perf/leak card) + a heavy eligibility scan. Slot 8 is GONE, not reused. W20
 				//--- (Captured Cache) is a NEW id appended below - it does NOT reuse the freed 8.
-				_weights = [[1,_wW1],[2,_wW2],[3,_wW3],[4,_wW4],[6,_wW6],[7,_wW7],
-				            [9,_wW9],[10,_wW10],[11,_wW11],[12,_wW12],
-				            [13,_wW13],[14,_wW14],[15,_wW15],[16,_wW16],[17,_wW17],[18,_wW18],[19,_wW19],
-				            [20,_wW20],[21,_wW21],[22,_wW22],[23,_wW23],[24,_wW24]];
+				_weights = [[1,_wW1],[2,_wW2],[4,_wW4],[6,_wW6],[11,_wW11],[12,_wW12],[13,_wW13],[15,_wW15],[16,_wW16],[19,_wW19],[20,_wW20],[22,_wW22],[23,_wW23],[24,_wW24]];
 
 				_cumSum = 0;
 				{ _cumSum = _cumSum + (_x select 1) } forEach _weights;
@@ -694,39 +691,6 @@ while {!gameOver} do {
 						} else {
 							_result = "ineligible";
 							_detail = Format ["supply already at cap %1", _maxSupply];
-						};
-					};
-
-					//--- W3 REMOVED 2026-06-16 (Ray): Bonus Patrol pulled from the deck - obsolete now the patrol cap was
-					//--- lowered. Base weight _wW3 is forced 0, so draw==3 is UNREACHABLE and this apply block never runs.
-					//--- Block left in place (inert) to avoid disturbing the surrounding switch structure.
-					//--- W3: BONUS PATROL — free patrol at current tier, cap bypass.
-					case 3: {
-						//--- FIX 2026-06-15 (claude-gaming): RESPECT the concurrent patrol cap instead of bypassing it.
-						//--- Reuse the EXACT cap the normal driver uses (server_side_patrols.sqf): WFBE_C_SIDE_PATROLS_MAX,
-						//--- with WFBE_C_SIDE_PATROLS_MAX_DEFENDER for the resistance/defender side.
-						_active = _logik getVariable ["wfbe_side_patrols", 0];
-						_w3Max  = missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX", 3];
-						if (_side == WFBE_DEFENDER) then {_w3Max = missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_DEFENDER", _w3Max]};
-						if (_active >= _w3Max) then {
-							//--- At/over cap: do NOT spawn, do NOT bump the counter - clean skip (still logs, deck moves on).
-							_result = "skipped: patrol cap";
-							_detail = Format ["patrol cap reached active=%1 max=%2 tier=%3", _active, _w3Max, _tier];
-						} else {
-							_template = _pool select floor(random count _pool);
-							_home     = _hq;
-							if (count _owned > 0) then {_home = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity};
-							//--- Under cap: book the slot synchronously (mirrors the normal driver), then dispatch.
-							_logik setVariable ["wfbe_side_patrols", _active + 1];
-							_logik setVariable ["wfbe_side_patrol_last", time];
-							//--- Least-loaded live HC (objNull if none). Reuse the declared _w6HcUnit slot.
-							_w6HcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
-							if (!isNull _w6HcUnit) then {
-								[_w6HcUnit, "HandleSpecial", ["delegate-sidepatrol", _sideID, _template, _home]] Call WFBE_CO_FNC_SendToClient;
-							} else {
-								[_sideID, _template, _home] Spawn WFBE_CO_FNC_RunSidePatrol;
-							};
-							_detail = Format ["tier=%1 template=%2 from=%3 active_after=%4 max=%5 hc=%6 humanCmd=%7", _tier, _template, _home getVariable ["name","?"], _active + 1, _w3Max, !isNull _w6HcUnit, _humanCmd];
 						};
 					};
 
@@ -873,110 +837,8 @@ while {!gameOver} do {
 						};
 					};
 
-					//--- W7: VETERAN COMPANY — set a one-shot flag on the side logic so that
-					//--- the next team founded by AI_Commander_Teams uses a premium template.
-					//--- Human side already blocked (re-draw above).
-					case 7: {
-						_logik setVariable ["wfbe_aicom_veteran_next", true];
-						//--- Also store a skill-boost target so Teams can apply it.
-						_logik setVariable ["wfbe_aicom_veteran_skill", 0.85];
-						_detail = Format ["flag set; next team will be premium template with skill=0.85 losing=%1", _losing];
-					};
-
 					//--- W8 (MOTOR POOL DELIVERY) RETIRED 2026-06-15: case handler removed. Draw 8 can no longer be
 					//--- selected (absent from the weights table), so no switch case is needed and none is defined here.
-
-					//--- W9 REMOVED 2026-06-16 (Ray): Uprising pulled from the deck - too invasive. Base weight _wW9 is
-					//--- forced 0 (and its escalation no-op'd), so draw==9 is UNREACHABLE and this apply block never runs.
-					//--- Block left in place (inert) to avoid disturbing the surrounding switch structure.
-					//--- W9: UPRISING — spawn a GUER attack force at enemy-held town nearest the front.
-					//--- Cap: 1 active uprising per side (wfbe_aicom_uprising_active flag on logik).
-					case 9: {
-						//--- Find enemy town nearest our front.
-						_targetTown = objNull;
-						_nearD      = 1e9;
-						{
-							_dd = 1e9;
-							_candTown = _x; //--- BUG-FIX 2026-06-14: capture outer candidate (inner forEach _owned shadows _x).
-							{ _dd = _dd min (_candTown distance _x) } forEach _owned; //--- was '_x distance _this' - _this is the SIDE -> "Type Side" error -> _targetTown never set -> false "no enemy town found".
-							if (count _owned == 0) then {_dd = _candTown distance _hq};
-							if (_dd < _nearD) then {_nearD = _dd; _targetTown = _candTown};
-						} forEach _cands;
-
-						if (!isNull _targetTown) then {
-							_guerTmpl = _guerTemplates select floor(random count _guerTemplates);
-							_guerGrp  = [resistance, "aicom-uprising"] Call WFBE_CO_FNC_CreateGroup;
-							if (isNull _guerGrp) exitWith {
-								_logik setVariable ["wfbe_aicom_uprising_active", false];
-								_result = "failed";
-								_detail = "W9 grpNull at group cap";
-							};
-							_guerPos  = getPos _targetTown;
-							_logik setVariable ["wfbe_aicom_uprising_active", true];
-
-							{
-								_guerUnit = _guerGrp createUnit [_x, [(_guerPos select 0) + (random 20) - 10, (_guerPos select 1) + (random 20) - 10, 0], [], 0, "FORM"];
-								//--- GUER GROUP CAP: tag uprising units as town-defenders (PUBLIC, mirrors
-								//--- Common_CreateTownUnits.sqf) so they do NOT wake towns via the activation
-								//--- scan - otherwise an untagged uprising force keeps GUER towns permanently
-								//--- active, blocking despawn and ratcheting the resistance group count up.
-								if (!isNull _guerUnit) then {_guerUnit setVariable ["WFBE_IsTownDefenderAI", true, true]};
-							} forEach _guerTmpl;
-
-							[_guerGrp, _guerPos, 200] Call AIPatrol;
-							_guerGrp setBehaviour "AWARE";
-							_guerGrp setCombatMode "RED";
-
-							//--- Clear active flag when the group is wiped.
-							[_guerGrp, _logik, _sideText] spawn {
-								private ["_grp","_lk","_st"];
-								_grp = _this select 0;
-								_lk  = _this select 1;
-								_st  = _this select 2;
-								waitUntil {sleep 30; ({alive _x} count (units _grp)) == 0 || gameOver};
-								_lk setVariable ["wfbe_aicom_uprising_active", false];
-								diag_log ("AICOMSTAT|v2|EVENT|" + _st + "|" + str (round (time / 60)) + "|UPRISING_DONE|cleared");
-							};
-
-							_detail = Format ["target=%1 template_size=%2 nearD=%3", _targetTown getVariable ["name","?"], count _guerTmpl, round _nearD];
-						} else {
-							_result = "ineligible";
-							_detail = "W9 no enemy town found";
-							_logik setVariable ["wfbe_aicom_uprising_active", false];
-						};
-					};
-
-					//--- W10 REMOVED 2026-06-16 (Ray): Lucky Salvage pulled from the deck - its salvage function moves to
-					//--- the new cleaner-tied Salvage Lottery. Base weight _wW10 is forced 0, so draw==10 is UNREACHABLE
-					//--- and this apply block never runs. Block left in place (inert) to avoid disturbing the switch structure.
-					//--- W10: LUCKY SALVAGE — sweep battlefield wrecks, convert to AI funds.
-					//--- Cap: ~15000 per sweep. Despawn swept wrecks.
-					case 10: {
-						_wkTotal = 0;
-						_wkCap   = 15000;
-						{
-							_wk   = _x;
-							if (!(alive _wk) && {!(_wk isKindOf "WarfareBBaseStructure")} && {!(_wk getVariable ["keepAlive", false])}) then {
-								_wkUD   = missionNamespace getVariable (typeOf _wk);
-								_wkCost = 250;
-								if (!isNil "_wkUD") then {
-									_wkCost = round(((_wkUD select QUERYUNITPRICE) * 0.30));
-									if (_wkCost < 50) then {_wkCost = 50};
-								};
-								if (_wkTotal + _wkCost <= _wkCap) then {
-									_wkTotal = _wkTotal + _wkCost;
-									deleteVehicle _wk;
-								};
-							};
-						} forEach allDead;
-						if (_wkTotal > 0) then {
-							[_side, _wkTotal] Call ChangeAICommanderFunds;
-							_detail = Format ["salvage_funds=%1 cap=%2", _wkTotal, _wkCap];
-						} else {
-							_result = "ineligible";
-							_detail = "W10 no salvageable wrecks found";
-						};
-					};
 
 					//--- W11: FIELD HOSPITAL — heal all wounded AI infantry side-wide (setDamage 0).
 					//--- Also sets a one-shot free re-founding flag on the side logic.
@@ -1043,46 +905,6 @@ while {!gameOver} do {
 							};
 						};
 
-						//--- W14: IRON DOME - up to 2 temporary CREWED AA at the most-threatened owned town. createVehicle DIRECT
-						//--- (NOT ConstructDefense, which would leak a persistent GC-exempt DefenseTeam group); full despawn at 300s.
-						case 14: {
-							_w14Target = objNull;
-							{ if ((_x getVariable ["wfbe_active", false]) || {_x getVariable ["wfbe_active_air", false]}) then {_w14Target = _x} } forEach _owned;
-							if (isNull _w14Target && {count _owned > 0}) then {_w14Target = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity};
-							if (isNull _w14Target) then {_w14Target = _hq};
-							_w14AAClass = missionNamespace getVariable [Format ["WFBE_%1DEFENSES_AAPOD", _sideText], ""];
-							if (typeName _w14AAClass == "ARRAY") then {if (count _w14AAClass > 0) then {_w14AAClass = _w14AAClass select 0} else {_w14AAClass = ""}};
-							_w14PilotClass = missionNamespace getVariable [Format ["WFBE_%1SOLDIER", _sideText], ""];
-							if (!isNull _w14Target && {alive _w14Target} && {typeName _w14AAClass == "STRING"} && {_w14AAClass != ""} && {_w14PilotClass != ""}) then {
-								_w14Pos = getPos _w14Target; _w14Placed = 0;
-								for "_w14i" from 1 to 2 do {
-									_w14Ang = random 360;
-									_w14DPos = [(_w14Pos select 0) + (35 + random 15) * sin _w14Ang, (_w14Pos select 1) + (35 + random 15) * cos _w14Ang, 0];
-									_w14AA = createVehicle [_w14AAClass, _w14DPos, [], 0, "NONE"];
-									if (!isNull _w14AA) then {
-										_w14AA setDir _w14Ang; _w14AA setPos _w14DPos; _w14AA setVariable ["wfbe_side", _side, true];
-										_w14Grp = [_side, "aicom-irondome"] Call WFBE_CO_FNC_CreateGroup;
-										if (!isNull _w14Grp) then {
-											_w14Gunner = [_w14PilotClass, _w14Grp, _w14DPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
-											if (!isNull _w14Gunner) then {_w14Gunner moveInGunner _w14AA};
-											_w14Placed = _w14Placed + 1;
-											[_w14AA, _w14Grp] spawn {
-												private ["_aa","_g"];
-												_aa = _this select 0; _g = _this select 1;
-												sleep 300;
-												{deleteVehicle _x} forEach (crew _aa);
-												if (!isNull _aa) then {deleteVehicle _aa};
-												if (!isNull _g) then {deleteGroup _g};
-											};
-										} else {
-											deleteVehicle _w14AA;
-										};
-									};
-								};
-								if (_w14Placed > 0) then {_detail = Format ["placed=%1 around=%2 timer=300s", _w14Placed, _w14Target getVariable ["name","?"]]} else {_result = "ineligible"; _detail = "W14 placed none"};
-							} else {_result = "ineligible"; _detail = "W14 no target / AA class / crew class"};
-						};
-
 						//--- W15: BLACK MARKET - 10-min 50% production discount flag (consumed in AI_Commander_Produce.sqf).
 						case 15: {
 							_w15Exp = time + 600;
@@ -1109,110 +931,6 @@ while {!gameOver} do {
 								_tierName = switch (_chosenUpID) do {case WFBE_UP_LIGHT: {"Light"}; case WFBE_UP_HEAVY: {"Heavy"}; case WFBE_UP_AIR: {"Air"}; default {"?"}};
 								_detail = Format ["tier=%1 new_level=%2 losing=%3", _tierName, _newUpgrades select _chosenUpID, _losing];
 							} else {_result = "ineligible"; _detail = "W16 no raisable tier"};
-						};
-
-						//--- W17: SUPPLY CONVOY - crewed truck HQ->nearest owned town; payout on arrival; self-clean on arrival/timeout(600s)/death.
-						case 17: {
-							_w17TruckClass = if (_side == west) then {"WarfareSupplyTruck_USMC"} else {"WarfareSupplyTruck_RU"};
-							_hqPos = getPos _hq; _w17Ang = random 360;
-							_w17SpawnPos = [(_hqPos select 0) + (40 + random 20) * sin _w17Ang, (_hqPos select 1) + (40 + random 20) * cos _w17Ang, 0];
-							_w17Truck = [_w17TruckClass, _w17SpawnPos, _side, random 360, false, true] Call WFBE_CO_FNC_CreateVehicle;
-							if (!isNull _w17Truck) then {
-								_soldierClass = missionNamespace getVariable [Format ["WFBE_%1SOLDIER", _sideText], ""];
-								_w17Grp = [_side, "aicom-convoy"] Call WFBE_CO_FNC_CreateGroup;
-								if (!isNull _w17Grp && {_soldierClass != ""} && {count _owned > 0}) then {
-									_w17Driver = [_soldierClass, _w17Grp, _w17SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
-									_w17Gunner = [_soldierClass, _w17Grp, _w17SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
-									if (!isNull _w17Driver) then {_w17Driver moveInDriver _w17Truck};
-									if (!isNull _w17Gunner) then {_w17Gunner moveInGunner _w17Truck};
-									//--- FRONT TARGET (fix #7): find the OWNED town nearest the enemy front,
-									//--- not the REAR town nearest HQ that GetClosestEntity would return.
-									//--- Mirrors W18/W21: for each owned town compute its min-distance to any
-									//--- enemy town (_cands); the owned town with the smallest such distance
-									//--- IS the front-line town.  Fallback: nearest owned town to HQ (safe
-									//--- default identical to the old behaviour) when _cands is empty.
-									_w17Target = objNull; _nearD = 1e9;
-									{
-										_candTown = _x; _dd = 1e9;
-										{ _dd = _dd min (_candTown distance _x) } forEach _cands;
-										if (count _cands == 0) then {_dd = _candTown distance _hq};
-										if (_dd < _nearD) then {_nearD = _dd; _w17Target = _candTown};
-									} forEach _owned;
-									if (isNull _w17Target) then {_w17Target = [_hq, _owned] Call WFBE_CO_FNC_GetClosestEntity};
-									_w17TargetPos = getPos _w17Target;
-									_w17MarkerName = Format ["aicom_convoy_%1_%2", _sideText, round time];
-									//--- B68 (Ray 2026-06-21) MARKER-LEAK FIX: this W17 supply-convoy marker was GLOBAL (createMarker / setMarker*, non-Local) = visible to ENEMY clients too (Ray: hostile teams must not see your supply patrols). The convoy truck already shows to its OWN side via the standard friendly unit-marker (Init_Unit SupplyVehicle path), so the global marker was a leak + redundant - removed. _w17MarkerName stays defined; the despawn block's deleteMarker on the now-uncreated name is a harmless no-op.
-									//--- B68: (convoy marker removed - was enemy-visible global)
-									//--- B68: (convoy marker removed)
-									//--- B68: (convoy marker removed)
-									[_w17Grp, _w17TargetPos, 100] Call AIPatrol;
-									_w17Grp setBehaviour "AWARE"; _w17Grp setCombatMode "YELLOW";
-									[_w17Truck, _w17Grp, _w17Target, _side, _w17MarkerName, _humanCmd] spawn {
-										private ["_truck","_grp","_tgt","_tSide","_mk","_human","_el","_arr","_dead","_sup","_grant","_cmd","_cf"];
-										_truck = _this select 0; _grp = _this select 1; _tgt = _this select 2; _tSide = _this select 3; _mk = _this select 4; _human = _this select 5;
-										_el = 0; _arr = false; _dead = false;
-										waitUntil { sleep 2; _el = _el + 2;
-											if (!alive _truck) then {_dead = true};
-											if (alive _truck && {(_truck distance _tgt) < 80}) then {_arr = true};
-											if (_el >= 600) then {_arr = true};
-											(_arr || _dead || gameOver) };
-										if (_arr && {!_dead} && {alive _truck}) then {
-											_sup = (_tSide) Call WFBE_CO_FNC_GetSideSupply; if (isNil "_sup") then {_sup = 0};
-											_grant = 1200 min ((missionNamespace getVariable ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT", 99999]) - _sup);
-											if (_grant > 0) then {[_tSide, _grant, "AI Commander Wildcard: supply convoy delivery.", false] Call ChangeSideSupply};
-											if (_human) then {
-												_cmd = (_tSide) Call WFBE_CO_FNC_GetCommanderTeam;
-												if (!isNull _cmd) then {_cf = _cmd getVariable "wfbe_funds"; if (isNil "_cf") then {_cf = 0}; _cmd setVariable ["wfbe_funds", _cf + 5000, true]};
-											} else {[_tSide, 5000] Call ChangeAICommanderFunds};
-											diag_log ("AICOMSTAT|v2|EVENT|" + str _tSide + "|" + str (round (time / 60)) + "|CONVOY_DELIVERED|supply=" + str _grant);
-										};
-										deleteMarker _mk;
-										{deleteVehicle _x} forEach (crew _truck);
-										if (!isNull _truck) then {deleteVehicle _truck};
-										if (!isNull _grp) then {deleteGroup _grp};
-									};
-									_detail = Format ["target=%1 truck=%2 humanCmd=%3", _w17Target getVariable ["name","?"], _w17TruckClass, _humanCmd];
-								} else {
-									if (!isNull _w17Grp) then {{deleteVehicle _x} forEach (units _w17Grp); deleteGroup _w17Grp};
-									deleteVehicle _w17Truck;
-									_result = "partial"; _detail = "W17 no group/soldier/owned town";
-								};
-							} else {_result = "ineligible"; _detail = Format ["W17 createVehicle null for %1", _w17TruckClass]};
-						};
-
-						//--- W18: BOUNTY HVT - one enemy officer at the spearhead enemy town with a GLOBAL marker. Bounty is paid ONCE
-						//--- by CreateUnit's built-in Killed handler (RequestOnUnitKilled: player->AwardBounty, AI->ChangeTeamFunds);
-						//--- the watcher ONLY cleans up marker+group on death / 30-min timeout (no manual award - would double-pay).
-						case 18: {
-							_w18Target = objNull; _w18Near = 1e9;
-							{ _clustTown = _x; _dd = 1e9; { _dd = _dd min (_clustTown distance _x) } forEach _owned; if (count _owned == 0) then {_dd = _clustTown distance _hq}; if (_dd < _w18Near) then {_w18Near = _dd; _w18Target = _clustTown} } forEach _cands;
-							_w18OfficerClass = missionNamespace getVariable [Format ["WFBE_%1_HVT_CLASS", str _enemySide], ""];
-							if (_w18OfficerClass == "") then { _w18ParaL3 = missionNamespace getVariable [Format ["WFBE_%1PARACHUTELEVEL3", str _enemySide], []]; if (count _w18ParaL3 > 0) then {_w18OfficerClass = _w18ParaL3 select 0} };
-							if (!isNull _w18Target && {_w18OfficerClass != ""}) then {
-								_w18Pos = getPos _w18Target;
-								_w18Grp = [_enemySide, "aicom-hvt"] Call WFBE_CO_FNC_CreateGroup;
-								if (!isNull _w18Grp) then {
-									_w18HVT = [_w18OfficerClass, _w18Grp, _w18Pos, _enemyID] Call WFBE_CO_FNC_CreateUnit;
-									if (!isNull _w18HVT) then {
-										[_w18Grp, _w18Pos, 120] Call AIPatrol;
-										_w18Grp setBehaviour "AWARE"; _w18Grp setCombatMode "RED";
-										_w18MarkerID = Format ["hvt_%1_%2", _sideText, round time];
-										createMarker [_w18MarkerID, _w18Pos];
-										_w18MarkerID setMarkerType "mil_dot";
-										_w18MarkerID setMarkerColor (if (_enemySide == west) then {"ColorBlue"} else {"ColorRed"});
-										_w18MarkerID setMarkerText Format ["HVT (%1)", str _enemySide];
-										[_w18HVT, _w18MarkerID, _w18Grp] spawn {
-											private ["_hvt","_mk","_grp","_el"];
-											_hvt = _this select 0; _mk = _this select 1; _grp = _this select 2; _el = 0;
-											waitUntil { sleep 5; _el = _el + 5; (!alive _hvt) || _el >= 1800 || gameOver };
-											deleteMarker _mk;
-											{deleteVehicle _x} forEach (units _grp);
-											if (!isNull _grp) then {deleteGroup _grp};
-										};
-										_detail = Format ["town=%1 class=%2 humanCmd=%3", _w18Target getVariable ["name","?"], _w18OfficerClass, _humanCmd];
-									} else {deleteGroup _w18Grp; _result = "ineligible"; _detail = "W18 createUnit null"};
-								} else {_result = "failed"; _detail = "W18 grp null at cap"};
-							} else {_result = "ineligible"; _detail = "W18 no enemy town / officer class"};
 						};
 
 						//--- W19: HELIBORNE QRF - air-insert a QRF infantry squad to the FRIENDLY town MOST under threat.
@@ -1340,98 +1058,6 @@ while {!gameOver} do {
 								_w20TierName = switch (_w20ChosenID) do {case WFBE_UP_PARATROOPERS: {"Paratroopers"}; case WFBE_UP_SUPPLYRATE: {"Supply Rate"}; case WFBE_UP_GEAR: {"Gear"}; default {"?"}};
 								_detail = Format ["support_tier=%1 new_level=%2 losing=%3", _w20TierName, _w20NewUpgrades select _w20ChosenID, _losing];
 							} else {_result = "ineligible"; _detail = "W20 no raisable support tier"};
-						};
-
-						//--- W21: GUER DRIVER-DETONATED VBIED (Feature B, Ray 2026-06-16). The drawing AI commander funds a side-resistance
-						//--- suicide car bomb aimed at the enemy-held town nearest our front. Spawn mirrors W17 Supply Convoy
-						//--- (CreateVehicle+CreateGroup+CreateUnit+moveInDriver+self-clean watcher); drive/behaviour mirror the live
-						//--- suicide-driver idiom in Support_Paratroopers.sqf:58-61 (CARELESS + BLUE + disableAI AUTOTARGET/TARGET +
-						//--- doMove). KILL-BOUNTY is AUTOMATIC: CreateVehicle bounty=true attaches the killed-EH -> RequestOnUnitKilled
-						//--- pays the player who DESTROYS it (last-hit window re-credits a shooter within 60s if the self-destruct
-						//--- lands the final blow). MANDATORY GUER invariant: WFBE_IsTownDefenderAI=true on the driver (W9:758) or
-						//--- GUER wakes WEST/EAST towns + blocks despawn. Detonation = stacked Sh_122_HE (122mm HE, confirmed loaded
-						//--- both maps in the artillery configs); NOT Sh_125_HE/Bo_GBU12 (not loaded here - the allMines trap).
-						case 21: {
-							_w21VbiedClass = "hilux1_civil_2_covered";
-							//--- TARGET: enemy town nearest our front (same nearest-front idiom W9/W18 use over _cands/_owned).
-							_w21Target = objNull; _nearD = 1e9;
-							{
-								_candTown = _x; _dd = 1e9;
-								{ _dd = _dd min (_candTown distance _x) } forEach _owned;
-								if (count _owned == 0) then {_dd = _candTown distance _hq};
-								if (_dd < _nearD) then {_nearD = _dd; _w21Target = _candTown};
-							} forEach _cands;
-							_soldierClass = missionNamespace getVariable ["WFBE_GUERRESSOLDIER", ""];
-							if (!isNull _w21Target && {_soldierClass != ""} && {!isNull _hq}) then {
-								_w21TargetPos = getPos _w21Target;
-								//--- SPAWN ANCHOR ~700m outside the enemy town on a random bearing (SVBIED drives in from the edge).
-								//--- FIX #8: re-roll bearing up to 20 times if the candidate lands in water
-								//--- (mirrors Common_WaypointPatrolTown.sqf:48-52); then snap to the nearest
-								//--- road node within 120m so the truck starts on a driveable surface.
-								_w21Ang      = random 360;
-								_w21SpawnPos = [(_w21TargetPos select 0) + 700 * sin _w21Ang, (_w21TargetPos select 1) + 700 * cos _w21Ang, 0];
-								_w21Try = 0;
-								while {surfaceIsWater _w21SpawnPos && {_w21Try < 20}} do {
-									_w21Ang      = random 360;
-									_w21SpawnPos = [(_w21TargetPos select 0) + 700 * sin _w21Ang, (_w21TargetPos select 1) + 700 * cos _w21Ang, 0];
-									_w21Try = _w21Try + 1;
-								};
-								//--- Snap to nearest road node (A2-OA nearRoads; safe even if list is empty).
-								_w21Roads = _w21SpawnPos nearRoads 120;
-								if (count _w21Roads > 0) then {_w21SpawnPos = getPos (_w21Roads select 0)};
-								//--- bounty=true (6th arg) -> killed-EH -> player who destroys it gets paid (RequestOnUnitKilled).
-								_w21Truck = [_w21VbiedClass, _w21SpawnPos, resistance, random 360, false, true] Call WFBE_CO_FNC_CreateVehicle;
-								if (!isNull _w21Truck) then {
-									_w21Grp = [resistance, "aicom-vbied"] Call WFBE_CO_FNC_CreateGroup;
-									if (!isNull _w21Grp) then {
-										_w21Drv = [_soldierClass, _w21Grp, _w21SpawnPos, (resistance Call WFBE_CO_FNC_GetSideID)] Call WFBE_CO_FNC_CreateUnit;
-										if (!isNull _w21Drv) then {
-											_w21Drv moveInDriver _w21Truck;
-											//--- MANDATORY GUER invariant (W9:758): tag town-defender or GUER wakes towns + blocks despawn.
-											_w21Drv setVariable ["WFBE_IsTownDefenderAI", true, true];
-											_w21Grp setBehaviour "CARELESS";     //--- ignore threats, just drive (Support_Paratroopers.sqf:59)
-											_w21Grp setCombatMode "BLUE";        //--- hold fire
-											{_w21Drv disableAI _x} forEach ["AUTOTARGET","TARGET"];   //--- Support_Paratroopers.sqf:61
-											_w21Drv doMove _w21TargetPos;        //--- doMove - Support_Paratroopers.sqf:58
-											//--- WATCHER: detonate on arrival (<25m) OR death OR 600s timeout, then clean up husk+group.
-											[_w21Truck, _w21TargetPos, _w21Grp] spawn {
-												private ["_veh","_tgt","_grp","_el","_boom","_p"];
-												_veh = _this select 0; _tgt = _this select 1; _grp = _this select 2;
-												_el = 0; _boom = false;
-												waitUntil { sleep 1; _el = _el + 1;
-													if (isNull _veh || {!alive _veh}) then {_boom = true};
-													if (!isNull _veh && {alive _veh} && {(_veh distance _tgt) < 25}) then {_boom = true};
-													if (_el >= 600) then {_boom = true};
-													(_boom || gameOver) };
-												//--- Detonate ONLY if it reached the town alive. A player who destroyed it en route already
-												//--- earned the kill-bounty via the killed-EH; no secondary blast in that case.
-												if (!isNull _veh && {alive _veh}) then {
-													_p = getPosATL _veh;
-													_veh setDamage 1;                 //--- pop the truck; killed-EH still fires for kill-credit
-													"Bo_FAB_250" createVehicle _p;     //--- B74.1 (Ray 2026-06-23): 3x FAB-250 aerial bombs (loaded via the EASA plane loadouts on both maps) = far bigger crater than the old 3x 122mm HE shell.
-													"Bo_FAB_250" createVehicle _p;
-													"Bo_FAB_250" createVehicle _p;
-												};
-												sleep 3;
-												{deleteVehicle _x} forEach (crew _veh);
-												if (!isNull _veh) then {deleteVehicle _veh};
-												if (!isNull _grp) then {deleteGroup _grp};
-											};
-											_detail = Format ["target=%1 chassis=%2 spawnD=%3 driver=%4", _w21Target getVariable ["name","?"], _w21VbiedClass, round (_w21SpawnPos distance _w21TargetPos), _soldierClass];
-										} else {
-											deleteVehicle _w21Truck; deleteGroup _w21Grp;
-											_result = "partial"; _detail = "W21 createUnit null (driver)";
-										};
-									} else {
-										deleteVehicle _w21Truck;
-										_result = "partial"; _detail = "W21 group null at cap";
-									};
-								} else {
-									_result = "ineligible"; _detail = Format ["W21 createVehicle null for %1", _w21VbiedClass];
-								};
-							} else {
-								_result = "ineligible"; _detail = "W21 no enemy town / GUER soldier class";
-							};
 						};
 
 						//--- W12: SPOILS OF WAR — 10-min double kill-bounty flag.
@@ -1583,23 +1209,15 @@ while {!gameOver} do {
 				_wNameMap = [
 					[1,"War Chest","bonus war funds for the side"],
 					[2,"Supply Drop","+1500 supply delivered to the front"],
-					[3,"Bonus Patrol","a free patrol takes the field"],
 					[4,"Airborne Assault","elite paratroopers drop on the front line"],
 					[6,"Air Cavalry","a free elite air-assault squad deploys to the front"],
-					[7,"Veteran Company","the next reinforcement company arrives battle-hardened"],
-					[9,"Uprising","a local insurgency rises against the enemy"],
-					[10,"Lucky Salvage","battlefield wrecks are salvaged for supply"],
 					[11,"Field Hospital","all wounded infantry are healed"],
 					[12,"Spoils of War","double kill-bounty for the next 10 minutes"],
 					[13,"Gunship Strike","an attack aircraft strafes a troop cluster"],
-					[14,"Iron Dome","temporary anti-air defends a threatened town"],
 					[15,"Black Market","50% production discount for the next 10 minutes"],
 					[16,"Lend-Lease","a vehicle tier (light/heavy/air) is upgraded"],
-					[17,"Supply Convoy","a supply convoy reinforces the nearest town"],
-					[18,"Bounty HVT","an enemy VIP appears with a bounty on his head"],
 					[19,"Heliborne QRF","a helicopter inserts a QRF at a threatened town"],
 					[20,"Captured Cache","a support tier (paratroopers/supply/gear) is upgraded"],
-					[21,"Insurgent Car Bomb","a suicide car bomb rolls on a front-line town - destroy it for a bounty"],
 					[22,"Top Gun","a fighter flies cover over the front and hunts enemy aircraft"],
 					[23,"Armor Column","a free tank platoon rolls to the front"],
 					[24,"Technical Swarm","a wave of gun-trucks charges the front"]
