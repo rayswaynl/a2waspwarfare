@@ -22,17 +22,23 @@ WASP_Radio_ManagerRunning = true;
 
 call compile preprocessFileLineNumbers "WASP\Radio\Radio_Config.sqf";
 
-private ["_curVeh","_curTrack","_startT","_dur","_n"];
+private ["_curVeh","_curTrack","_startT","_dur"];
 _curVeh = objNull;
 _curTrack = "";
 _startT = 0;
 _dur = 0;
-_n = count WASP_RADIO_PLAYLIST;
 
 while {true} do {
-	private ["_veh","_on","_idx","_track","_changed","_finished","_towerUp"];
+	private ["_veh","_on","_idx","_track","_changed","_finished","_towerUp","_stIdx","_station","_slots","_n"];
 	_veh = vehicle player;
 	_towerUp = (side player) call WFBE_CO_FNC_HasSideRadioTower;
+	_stIdx = _veh getVariable ["WASP_Radio_Station", 0];
+	_station = [];
+	if (_stIdx >= 0 && {_stIdx < (count WASP_RADIO_STATIONS)}) then {
+		_station = WASP_RADIO_STATIONS select _stIdx;
+	};
+	_slots = if ((count _station) > 0) then {_station select 1} else {[]};
+	_n = count _slots;
 	_on = (_veh != player)
 		&& {alive _veh}
 		&& {_veh getVariable ["WASP_Radio_On", false]}
@@ -42,26 +48,30 @@ while {true} do {
 
 	if (_on) then {
 		_idx = (_veh getVariable ["WASP_Radio_Index", 0]) % _n;
-		_track = WASP_RADIO_PLAYLIST select _idx;
+		_track = _slots select _idx;
 		_changed = (_veh != _curVeh) || {_track != _curTrack};
 		_finished = !_changed && {(time - _startT) >= _dur};
 
 		if (_finished) then {
 			_idx = (_idx + 1) % _n;
 			_veh setVariable ["WASP_Radio_Index", _idx, true];
-			_track = WASP_RADIO_PLAYLIST select _idx;
+			_track = _slots select _idx;
 			_changed = true;
 		};
 
 		if (_changed) then {
+			private ["_durIdx","_vol"];
 			// Graceful degradation: if the modpack addon isn't loaded the class is absent -> no-op (no RPT spam).
 			if (isClass (configFile >> "CfgMusic" >> _track)) then {
 				playMusic _track;
+				_vol = missionNamespace getVariable ["WASP_Radio_Volume", 1];
+				fadeMusic _vol;
 			};
 			_curVeh = _veh;
 			_curTrack = _track;
 			_startT = time;
-			_dur = WASP_RADIO_DUR select _idx;
+			_durIdx = WASP_RADIO_PLAYLIST find _track;
+			_dur = if (_durIdx >= 0) then {WASP_RADIO_DUR select _durIdx} else {120};
 		};
 	} else {
 		if (_curTrack != "") then {

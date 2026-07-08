@@ -29,3 +29,16 @@ if (isNil "WASP_RADIO_DUR")      then {
 
 if (isNil "WASP_RADIO_RANGE")    then { WASP_RADIO_RANGE = 40; };
 if (isNil "WASP_RADIO_AUTOPLAY") then { WASP_RADIO_AUTOPLAY = false; };
+
+if (isNil "WASP_RADIO_STATIONS") then {
+	// Station name -> ordered list of CfgMusic slots (from WASP_RADIO_PLAYLIST) to cycle.
+	// TODO: Nostalgia FM reuses the same addon slots as Miksuu Radio until dedicated
+	// CfgMusic classes ship in @mkswf_vehicle_radio; split the lists once new tracks exist.
+	WASP_RADIO_STATIONS = [
+		["Miksuu Radio",   ["mkswf_radio_1","mkswf_radio_2","mkswf_radio_3"]],
+		["Nostalgia FM",   ["mkswf_radio_4","mkswf_radio_5","mkswf_radio_6"]]
+	];
+};
+
+if (isNil "WASP_RADIO_MENU_TIMEOUT") then { WASP_RADIO_MENU_TIMEOUT = 15; };
+if (isNil "WASP_RADIO_VOLUME")       then { WASP_RADIO_VOLUME = 1; }; // client-side persisted volume (0..1), see Radio_SetVolume.sqf

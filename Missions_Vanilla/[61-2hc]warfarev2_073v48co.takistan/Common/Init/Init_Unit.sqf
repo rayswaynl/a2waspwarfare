@@ -191,13 +191,12 @@ if (_unit isKindOf "Air") then { //--- Air units.
 };
 
 if !(_isMan) then { //--- Vehicle Specific.
-	//--- WASP Vehicle Radio: occupant-only Radio actions (local). Gated on an alive side Radio Tower
-	//--- (WFBE_C_STRUCTURES_RADIOTOWER); audio ships in the @mkswf_vehicle_radio modpack addon, so the
-	//--- mission PBO stays small. isClass-guarded no-op if the addon is not loaded (no RPT spam).
+	//--- WASP Vehicle Radio: occupant-only Radio menu action (local). Gated on an alive side Radio
+	//--- Tower (WFBE_C_STRUCTURES_RADIOTOWER); selecting it expands temporary station/volume/off
+	//--- sub-actions for ~15s (see Radio_Menu.sqf). Audio ships in the @mkswf_vehicle_radio modpack
+	//--- addon, so the mission PBO stays small; isClass-guarded no-op if the addon is not loaded.
 	if ((missionNamespace getVariable ["WASP_RADIO_MODE", 1]) > 0 && {(missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0}) then {
-		_unit addAction ["<t color='#FFBD4C'>Radio: On</t>", "WASP\Radio\Radio_Toggle.sqf", [], 6, false, true, "", "vehicle player == _target && alive _target && !(_target getVariable ['WASP_Radio_On', false]) && ((side player) call WFBE_CO_FNC_HasSideRadioTower)"];
-		_unit addAction ["<t color='#FFBD4C'>Radio: Off</t>", "WASP\Radio\Radio_Toggle.sqf", [], 6, false, true, "", "vehicle player == _target && (_target getVariable ['WASP_Radio_On', false])"];
-		_unit addAction ["<t color='#FFBD4C'>Radio: Next station</t>", "WASP\Radio\Radio_NextStation.sqf", [], 5, false, true, "", "vehicle player == _target && (_target getVariable ['WASP_Radio_On', false]) && ((side player) call WFBE_CO_FNC_HasSideRadioTower)"];
+		_unit addAction ["<t color='#FFBD4C'>Radio</t>", "WASP\Radio\Radio_Menu.sqf", [], 6, false, true, "", "vehicle player == _target && alive _target && ((side player) call WFBE_CO_FNC_HasSideRadioTower)"];
 	};
 	if ((missionNamespace getVariable "WFBE_C_GAMEPLAY_MISSILES_RANGE") != 0) then { //--- Max missile range.
 		_unit addEventHandler ['incomingMissile', {_this Spawn HandleIncomingMissile}]; //--- Handle incoming missiles.
