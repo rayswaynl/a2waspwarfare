@@ -751,6 +751,19 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM2_DECAP_SENSE_CHANCE")   then {WFBE_C_AICOM2_DECAP_SENSE_CHANCE   = 0.35}; //--- chance a due dice roll latches "sensed" while a team is in range (random 1 < this; A2-safe).
 	if (isNil "WFBE_C_AICOM2_DECAP_COMMIT_RADIUS")  then {WFBE_C_AICOM2_DECAP_COMMIT_RADIUS  = WFBE_C_AICOM2_DECAP_SENSE_RADIUS}; //--- m: on COMMIT only teams with a leader inside this radius are stamped to press; distant teams keep their town orders (default = sense radius).
 
+	//--- M6 AIRRESP (AI_Commander_AirResp.sqf): organic W/E air-response closer, sibling to M5 DECAPITATE. Dispatches
+	//--- bounded air-response flights onto a lane already surfaced by the Allocator fist or the town-activation FSM
+	//--- (never a fresh whole-map scan) - see docs/design/v2/AICOM-AIR-GROUND-RESPONSE-SPEC-2026-07-07.md. OWNER
+	//--- DIRECTIVE 2026-07-08: ships ARMED (default 1), NOT the shadow/default-0 convention the design spec proposed -
+	//--- this changes live AI air behaviour once merged+deployed; needs a T3 soak before the owner ships it further.
+	if (isNil "WFBE_C_AICOM2_AIRRESP_ENABLE")        then {WFBE_C_AICOM2_AIRRESP_ENABLE        = 1};    //--- master switch. 1 = armed (owner override). 0 = shadow (sensing+telemetry only, no dispatch) for instant rollback.
+	if (isNil "WFBE_C_AICOM2_AIRRESP_SENSE_RADIUS")   then {WFBE_C_AICOM2_AIRRESP_SENSE_RADIUS   = if (worldName == "Zargabad") then {1800} else {2500}}; //--- m: per-town nearEntities scan radius for enemy-side players (2500 CH/TK, 1800 dense-urban ZG - mirrors the DECAP per-map ratio).
+	if (isNil "WFBE_C_AICOM2_AIRRESP_SENSE_INTERVAL") then {WFBE_C_AICOM2_AIRRESP_SENSE_INTERVAL = 3};    //--- strategy ticks between dice rolls (~3min at the 60s cadence - faster than the 30min Wildcard slot). No roll, no dispatch.
+	if (isNil "WFBE_C_AICOM2_AIRRESP_SENSE_CHANCE")   then {WFBE_C_AICOM2_AIRRESP_SENSE_CHANCE   = 0.5};  //--- chance a due dice roll latches "sensed" while a candidate lane has in-range enemy players (random 1 < this; A2-safe).
+	if (isNil "WFBE_C_AICOM2_AIRRESP_MAX_AIR")        then {WFBE_C_AICOM2_AIRRESP_MAX_AIR        = 2};    //--- global alive-cap on AICOM2-maneuver response flights per side. Separate budget from Wildcard's one-shots (W6/W13/W19/W22) and from WFBE_C_GUER_AIRDEF_MAX (a different side's economy).
+	if (isNil "WFBE_C_AICOM2_AIRRESP_LOITER_TIME")    then {WFBE_C_AICOM2_AIRRESP_LOITER_TIME    = 240};  //--- s a response flight stays on its lane before self-despawn/recycle; also the watchdog's hard ceiling even while the lane stays hot.
+	//--- WFBE_C_AICOM_AIR_MIN_TOWNS is already registered above (Init_CommonConstants.sqf:370, default 3) and shared with W6/W13 Wildcard eligibility - AIRRESP reuses it as-is, no re-registration.
+
 	//--- D7 AICOM FEINT: AI commander occasionally dispatches a small feint team toward a
 	//--- NON-target enemy town, then recalls it, to pressure the enemy rear and split attention.
 	//--- All four constants are inert while FEINT_ENABLE=0 (default). No gameplay effect at 0.
