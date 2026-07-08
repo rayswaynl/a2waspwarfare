@@ -537,6 +537,8 @@ while {alive player && dialog} do {
 			_repUnit = _units select _curUnitSel;
 			_repVeh  = vehicle _repUnit;
 			if (_repVeh == _repUnit) exitWith {hint "Unit is not in a vehicle."};
+			if (_repVeh getVariable ["wfbe_tm2_repair_lock", false]) exitWith {hint "Repair already in progress on this vehicle."};
+			_repVeh setVariable ["wfbe_tm2_repair_lock", true];
 			closeDialog 0;
 			//--- Spawn so the dialog can close cleanly before the sleep-loop runs.
 			[_repVeh, _units] Spawn {
@@ -604,6 +606,7 @@ while {alive player && dialog} do {
 				} else {
 					hint "Vehicle lost during repair — remount aborted.";
 				};
+				if (!isNull _rv) then {_rv setVariable ["wfbe_tm2_repair_lock", false]};
 			};
 		};
 	};
