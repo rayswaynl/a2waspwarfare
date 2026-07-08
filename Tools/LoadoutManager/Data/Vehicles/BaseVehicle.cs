@@ -249,18 +249,24 @@ public abstract class BaseVehicle : InterfaceVehicle
                             {
                                 extraWeaponsToAdd.Add(weaponDefinitionString);
 
-                                foreach (var vanillaWeapon in vanillaWeapons)
+                                foreach (AmmunitionType vanillaItem in Enum.GetValues(typeof(AmmunitionType)))
                                 {
-                                    var allVanillaAmmunitionTypes = (InterfaceAmmunition)EnumExtensions.GetInstance(item.ToString());
+                                    var vanillaAmmunitionType = (InterfaceAmmunition)EnumExtensions.GetInstance(vanillaItem.ToString());
+                                    var vanillaWeaponDefinition = (InterfaceWeapon)vanillaAmmunitionType.weaponDefinition;
 
-                                    foreach (var vanillaAmmunitionType in allVanillaAmmunitionTypes.AmmunitionTypes)
+                                    if (!vanillaWeapons.Contains(vanillaWeaponDefinition.WeaponType))
                                     {
-                                        var vanillaWeaponDefinition = (InterfaceWeapon)ammunitionType.weaponDefinition;
+                                        continue;
+                                    }
 
-                                        if (vanillaWeaponDefinition.WeaponType == weaponDefinition.WeaponType)
+                                    foreach (var vanillaAmmoType in vanillaAmmunitionType.AmmunitionTypes)
+                                    {
+                                        if (EnumExtensions.GetEnumMemberAttrValue(vanillaAmmoType) == commonKey)
                                         {
-                                            extraWeaponsToRemove.Add(EnumExtensions.GetEnumMemberAttrValue(vanillaWeapon));
+                                            extraWeaponsToRemove.Add(EnumExtensions.GetEnumMemberAttrValue(vanillaWeaponDefinition.WeaponType));
                                         }
+                                    }
+                                }
                                     }
                                 }
                             }
