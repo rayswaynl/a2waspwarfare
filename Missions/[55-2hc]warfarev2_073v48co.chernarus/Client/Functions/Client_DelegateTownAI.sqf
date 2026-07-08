@@ -45,12 +45,16 @@ if ((count _town_teams) > 0 || (count _town_vehicles) > 0) then {["RequestSpecia
 
 {
 	_x Spawn {
-		Private ["_team"];
+		Private ["_team","_remaining"];
 		_team = _this;
 		
 		if (isNull _team) exitWith {};
 		private "_wDeadline"; _wDeadline = time + 600; //--- wiki-wins: cap the watcher (was unbounded; a zombified/never-emptied group leaked this spawned thread for the rest of the mission)
 			while {count (units _team) > 0 && time < _wDeadline} do {sleep 1};
-		deleteGroup _team;
+		if (!isNull _team) then {
+			_remaining = +units _team;
+			{deleteVehicle _x} forEach _remaining;
+			deleteGroup _team;
+		};
 	};
 } forEach _town_teams; //--- Delete the group client-sided once it naturally becomes empty.
