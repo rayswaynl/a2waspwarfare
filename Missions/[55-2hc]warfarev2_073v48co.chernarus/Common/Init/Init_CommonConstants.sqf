@@ -2459,5 +2459,27 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_SCUD_SPEED_CAP_KMH") then {WFBE_C_SCUD_SPEED_CAP_KMH = 20}; //--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): drivable-SCUD top-speed governor in km/h, enforced client-side via periodic setVelocity in Client_BuildUnit.sqf WFBE_CL_FNC_TkScudSpeedGovernor (A2-OA has no setMaxSpeed/limitSpeed - that command is Arma-3-only, mirrors the existing WFBE_CL_FNC_GuerVbiedM113Boost setVelocity idiom in the same file). Intent: the SCUD is slow and precious - players should prefer airlifting it over driving. Set <=0 to disable the governor (stock vehicle top speed).
 	if (isNil "WFBE_C_AICOM_NO_BIKES") then {WFBE_C_AICOM_NO_BIKES = 1}; //--- fable/aicom-no-bikes (WO-5): strip ATV/Motorcycle-hull templates from AI commander team founding/buy rosters. GUARDRAIL keeps the original set if stripping would empty it. 0 = legacy behaviour (ATVs remain merely unlikely, not prohibited).
 
+
+//--- Commander Town Ledger (CTL, fable/ctl-impl-v1): virtual per-town strength ledger
+//--- + paid AI investment for WEST/EAST towns. Mirrors GUER Director (Lane 800). Flag-off
+//--- (0) = brain never launches, every overlay read site short-circuits = byte-identical.
+//--- See docs/design/v2/aicom-v2-commander-town-ledger.md for the full spec.
+	if (isNil "AICOMV2_LANE_CMD_TOWN_LEDGER") then {AICOMV2_LANE_CMD_TOWN_LEDGER = 0}; //--- Lane master switch: 0=off (default, byte-identical).
+	if (isNil "AICOMV2_CTL_TICK_SEC") then {AICOMV2_CTL_TICK_SEC = 30}; //--- Brain tick interval, seconds.
+	if (isNil "AICOMV2_CTL_REGEN_FULL_SEC") then {AICOMV2_CTL_REGEN_FULL_SEC = 1800}; //--- Zero-to-baseline regen duration, seconds.
+	if (isNil "AICOMV2_CTL_CAPTURE_SEED") then {AICOMV2_CTL_CAPTURE_SEED = 0.25}; //--- Strength at record creation (fresh capture).
+	if (isNil "AICOMV2_CTL_SPAWN_MIN_STR") then {AICOMV2_CTL_SPAWN_MIN_STR = 0.25}; //--- Materialization floor - a held town never activates empty.
+	if (isNil "AICOMV2_CTL_PAID_MAX") then {AICOMV2_CTL_PAID_MAX = 1.5}; //--- Funded strength cap.
+	if (isNil "AICOMV2_CTL_GROUP_BUDGET_MAX") then {AICOMV2_CTL_GROUP_BUDGET_MAX = 120}; //--- Per-side group ceiling at materialization.
+	if (isNil "AICOMV2_CTL_INVEST_ENABLE") then {AICOMV2_CTL_INVEST_ENABLE = 0}; //--- AI invest arm sub-flag: 0=off (default).
+	if (isNil "AICOMV2_CTL_INVEST_GAIN") then {AICOMV2_CTL_INVEST_GAIN = 0.25}; //--- Strength gained per purchase.
+	if (isNil "AICOMV2_CTL_INVEST_COST") then {AICOMV2_CTL_INVEST_COST = 50000}; //--- Repair-tier price.
+	if (isNil "AICOMV2_CTL_INVEST_SURGE_MULT") then {AICOMV2_CTL_INVEST_SURGE_MULT = 2}; //--- Surge-tier price multiplier.
+	if (isNil "AICOMV2_CTL_INVEST_FLOOR") then {AICOMV2_CTL_INVEST_FLOOR = 250000}; //--- Operating reserve (REQDRAW parity).
+	if (isNil "AICOMV2_CTL_INVEST_SURGE_FLOOR") then {AICOMV2_CTL_INVEST_SURGE_FLOOR = 600000}; //--- Rich threshold for above-baseline buys.
+	if (isNil "AICOMV2_CTL_INVEST_COOLDOWN") then {AICOMV2_CTL_INVEST_COOLDOWN = 480}; //--- Global seconds between buys per side.
+	if (isNil "AICOMV2_CTL_INVEST_TOWN_COOLDOWN") then {AICOMV2_CTL_INVEST_TOWN_COOLDOWN = 1200}; //--- Per-town seconds between buys.
+	if (isNil "AICOMV2_CTL_INVEST_HUMAN_OFF") then {AICOMV2_CTL_INVEST_HUMAN_OFF = 1}; //--- Pause AI spend while a human is seated (inert while lane=0).
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

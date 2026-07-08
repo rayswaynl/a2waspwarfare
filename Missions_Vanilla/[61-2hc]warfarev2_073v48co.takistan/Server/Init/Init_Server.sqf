@@ -1076,6 +1076,13 @@ if (isServer && {(missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]
 	["INITIALIZATION", "Init_Server.sqf: GUER Director (lane 800) launched (AICOMV2_LANE_GUER_DIRECTOR=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- Commander Town Ledger (fable/ctl-impl-v1): virtual per-town strength ledger + paid
+//--- AI investment for WEST/EAST towns. Gated on AICOMV2_LANE_CMD_TOWN_LEDGER (default 0).
+if (isServer && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+	[] execVM "Server\AI\Server_CmdTownLedger.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Commander Town Ledger launched (AICOMV2_LANE_CMD_TOWN_LEDGER=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 // run one global server town script to process supply updates in each town
 [] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
 

@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
+Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
 
 _townInitSleep = missionNamespace getVariable ["WFBE_C_TOWNS_STARTUP_SLEEP", 0];
 if (_townInitSleep <= 0) then {_townInitSleep = 0.01};
@@ -278,6 +278,16 @@ while {!WFBE_GameOver} do {
 							//--- the old `forEach towns` recount and the top-of-sweep count above).
 							_activeTownCount = _activeTownCount + 1;
 
+							//--- Commander Town Ledger (fable/ctl-impl-v1) unit-count fix v2: tag this as a
+							//--- GROUND wave so the post-creation contribution below (and the async
+							//--- update-town-delegation report in Server_HandleSpecial.sqf) know whether to
+							//--- add this wave real unit count into ledger field [3] - matching the
+							//--- existing ground-only scope of the Server_GetTownGroups.sqf CTL blocks.
+							//--- Flag-gated so flag-off leaves the mission byte-identical to HEAD.
+							if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0) then {
+								_town setVariable ["wfbe_ctl_ground_wave", true];
+							};
+
 							if (_side == WFBE_DEFENDER) then {
 								_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroupsDefender
 							} else {
@@ -291,6 +301,14 @@ while {!WFBE_GameOver} do {
 							if(!(_town getVariable "wfbe_active_air")) then {
 								_town setVariable ["wfbe_active_air", true];
 								_town setVariable ["wfbe_episode_spawned", true];
+
+								//--- Commander Town Ledger (fable/ctl-impl-v1) unit-count fix v2: air-only
+								//--- waves stay OUT of ledger field [3] (matches the {!_aa_get} exclusion the
+								//--- CTL overlay blocks in Server_GetTownGroups.sqf already apply).
+								//--- Flag-gated so flag-off leaves the mission byte-identical to HEAD.
+								if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0) then {
+									_town setVariable ["wfbe_ctl_ground_wave", false];
+								};
 
 								if (_side == WFBE_DEFENDER) then {
 									_groups = [_town, _side, true] Call WFBE_SE_FNC_GetTownGroupsDefender
@@ -366,6 +384,35 @@ while {!WFBE_GameOver} do {
 							_town_teams = _town_teams + (_retVal select 0);
 							_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + (_retVal select 1)];
 							_town setVariable ['wfbe_town_teams', _town_teams];
+
+							//--- Commander Town Ledger (fable/ctl-impl-v1) unit-count fix v2 (PR #886 review:
+							//--- crew undercounting): add this wave REAL Man-unit count (server-direct portion)
+							//--- into ledger field [3]. (_retVal select 0) are the live groups CreateTownUnits
+							//--- just created - `units _x` on them already includes auto-crew (driver/gunner/
+							//--- commander), matching the survivor tally basis at deactivation below. Delegated
+							//--- portions of this same wave (client/HC) report their real counts separately via
+							//--- Server_HandleSpecial.sqf update-town-delegation once creation lands remotely.
+							//--- Ground-only (wfbe_ctl_ground_wave), flag-gated: byte-identical to HEAD when off.
+							if ((_side == west || {_side == east}) && {(_town getVariable ["wfbe_ctl_ground_wave", false])} && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+								private ["_ctlUnits6","_ctlLogik6","_ctlLedger6","_ctlI6","_ctlFound6"];
+								_ctlUnits6 = 0;
+								{_ctlUnits6 = _ctlUnits6 + (count units _x)} forEach (_retVal select 0);
+								_ctlLogik6  = (_side) Call WFBE_CO_FNC_GetSideLogic;
+								_ctlLedger6 = _ctlLogik6 getVariable ["WFBE_CTL_LEDGER", []];
+								_ctlFound6  = false;
+								_ctlI6      = 0;
+								{
+									if (!_ctlFound6 && {(_x select 0) == _town}) then {
+										private ["_ctlRec6"];
+										_ctlRec6 = _x;
+										_ctlRec6 set [3, (_ctlRec6 select 3) + _ctlUnits6];
+										_ctlLedger6 set [_ctlI6, _ctlRec6];
+										_ctlFound6 = true;
+									};
+									_ctlI6 = _ctlI6 + 1;
+								} forEach _ctlLedger6;
+								_ctlLogik6 setVariable ["WFBE_CTL_LEDGER", _ctlLedger6];
+							};
 						};
 
 						//--- Man the defenses.
@@ -493,6 +540,14 @@ while {!WFBE_GameOver} do {
 						};
 					};
 
+					//--- Commander Town Ledger (fable/ctl-impl-v1) survivor tally (B3, fix ORDER+DIM): the
+					//--- alive UNIT count is captured HERE, inside the deletion forEach below, BEFORE
+					//--- deleteVehicle runs on each unit - counting it AFTER (as before) always read ~0
+					//--- because the units were already gone. Unit count (not group count) per spec B3:
+					//--- field [3] "lastSpawnUnits" is a per-unit denominator, so the ratio must be unit/unit.
+					_ctlLaneOn = (_side == west || {_side == east}) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0};
+					_ctlSurviving = 0;
+
 					//--- Teams Units.
 					//--- Marty: delete only SERVER-LOCAL units here; HC-delegated units are deleted by the
 					//--- cleanup-townai broadcast above on the machine where they are local. A server-side
@@ -501,6 +556,9 @@ while {!WFBE_GameOver} do {
 					{
 						if !(isNil '_x') then {
 							if !(isNull _x) then {
+								if (_ctlLaneOn) then {
+									{if (alive _x) then {_ctlSurviving = _ctlSurviving + 1}} forEach units _x;
+								};
 								//--- B67 [wiki-wins]: never delete a player unit. The old loop deleted
 								//--- every server-local unit; a player whose unit is server-local (e.g. a
 								//--- JIP/HC-handoff edge) would be wiped on despawn. Guard with !isPlayer.
@@ -509,6 +567,39 @@ while {!WFBE_GameOver} do {
 							};
 						};
 					} forEach _town_teams;
+
+					//--- Commander Town Ledger (fable/ctl-impl-v1) survivor read-back (B3).
+					//--- Flag-off (AICOMV2_LANE_CMD_TOWN_LEDGER=0) => skipped, byte-identical to HEAD.
+					//--- _ctlSurviving (alive UNIT count) was tallied above, in the SAME forEach that
+					//--- deletes the units, BEFORE deleteVehicle ran - counting it here (after deletion)
+					//--- would always read ~0 (fix: read-back ORDERING).
+					if (_ctlLaneOn) then {
+						private ["_ctlLogik","_ctlLedger","_ctlRecIdx","_ctlFound","_ctlI"];
+						_ctlLogik    = (_side) Call WFBE_CO_FNC_GetSideLogic;
+						_ctlLedger   = _ctlLogik getVariable ["WFBE_CTL_LEDGER", []];
+						_ctlFound  = false;
+						_ctlRecIdx = 0;
+						_ctlI      = 0;
+						{
+							if (!_ctlFound && {(_x select 0) == _town}) then {_ctlFound = true; _ctlRecIdx = _ctlI};
+							_ctlI = _ctlI + 1;
+						} forEach _ctlLedger;
+						if (_ctlFound) then {
+							private ["_ctlRec","_ctlLastSpawn","_ctlRatio","_ctlNewStr"];
+							_ctlRec       = _ctlLedger select _ctlRecIdx;
+							_ctlLastSpawn = _ctlRec select 3;
+							if (_ctlLastSpawn > 0) then {
+								_ctlRatio  = (_ctlSurviving / _ctlLastSpawn) max 0;
+								if (_ctlRatio > 1) then {_ctlRatio = 1};
+								_ctlNewStr = ((_ctlRec select 2) * _ctlRatio) max 0;
+								_ctlRec set [2, _ctlNewStr];
+								diag_log Format ["CTLSTAT|v1|%1|READBACK|town=%2|ratio=%3|str=%4", str _side, _town getVariable ["name", "?"], _ctlRatio, _ctlNewStr];
+							};
+							_ctlRec set [3, 0];
+							_ctlLedger set [_ctlRecIdx, _ctlRec];
+							_ctlLogik setVariable ["WFBE_CTL_LEDGER", _ctlLedger];
+						};
+					};
 
 					//--- Teams vehicles.
 					//--- Marty: same locality rule as above - HC-local vehicles die via cleanup-townai.
