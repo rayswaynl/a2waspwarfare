@@ -108,7 +108,7 @@ if (_isGuer) then {
 	_guerNote = parseText (
 		"<t size='1.2' color='#28ff14'>GUER plays differently.</t><br/><br/>"
 		+ "You are the resistance side: no standard commander upgrade queue. Your kills unlock field tech, and destroyed enemy factories unlock FOB truck options.<br/><br/>"
-		+ "Open the action / buy menus for <t color='#FFAC1C'>VBIED</t>, <t color='#FFAC1C'>mortar truck</t> and <t color='#FFAC1C'>FOB truck</t> plays. The RHUD shows <t color='#42b6ff'>Tech Kills</t> and <t color='#42b6ff'>FOB</t> tokens."
+		+ "Open the action / buy menus for <t color='#FFAC1C'>VBIED</t> and <t color='#FFAC1C'>FOB truck</t> plays. The RHUD shows <t color='#42b6ff'>Tech Kills</t> and <t color='#42b6ff'>FOB</t> tokens."
 	);
 	hint _guerNote;
 	uiSleep 13;
