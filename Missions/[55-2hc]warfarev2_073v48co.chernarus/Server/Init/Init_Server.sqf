@@ -52,6 +52,7 @@ UpdateTeam = Compile preprocessFile "Server\Functions\Server_UpdateTeam.sqf";
 //--- Support Functions.
 KAT_ParaAmmo = Compile preprocessFile "Server\Support\Support_ParaAmmo.sqf";
 KAT_Paratroopers = Compile preprocessFile "Server\Support\Support_Paratroopers.sqf";
+KAT_GuerHeliDrop = Compile preprocessFile "Server\Support\Support_GuerHeliDrop.sqf";	//--- fable/guer-barrelbomb
 KAT_ParaVehicles = Compile preprocessFile "Server\Support\Support_ParaVehicles.sqf";
 KAT_UAV = Compile preprocessFile "Server\Support\Support_UAV.sqf";
 KAT_FPV = Compile preprocessFile "Server\Support\Support_FPV.sqf";

@@ -140,6 +140,17 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoi
 			};
 		}];
 	};
+	//--- fable/guer-barrelbomb: WF-scroll "Call Barrel Bomb" action on the player's own Man body (not
+	//--- vehicle-attached - this is a town-center location capability, not a vehicle one). The condition
+	//--- string re-evaluates every frame so WFBE_C_GUER_HELIBOMB_ENABLE + the kill-tier gate are live-
+	//--- togglable without a respawn; town-center proximity mirrors Client_CanUseTownCenterEASA.sqf via
+	//--- WFBE_CL_FNC_CanUseTownCenterBarrelBomb (same "GUER-held or neutral town" idiom). Idempotent via
+	//--- wfbe_helibomb_action_added (mirrors the IED EH guard immediately above).
+	if !(_unit getVariable ["wfbe_helibomb_action_added", false]) then {
+		_unit setVariable ["wfbe_helibomb_action_added", true];
+		_unit addAction ["<t color='#ffcc33'>Call Barrel Bomb</t>","Client\Action\Action_GuerHeliBombCall.sqf", [], 6, false, true, "",
+			'alive _target && {(missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 0]) > 0} && {(missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0]) >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_HELIBOMB", 60])} && {!isNil "WFBE_CL_FNC_CanUseTownCenterBarrelBomb"} && {_target Call WFBE_CL_FNC_CanUseTownCenterBarrelBomb}'];
+	};
 };
 
 //--- Loadout.

@@ -324,4 +324,17 @@ switch (_request) do {
 		};
 		if (typeName _msg == "STRING" && {_msg != ""}) then {hint _msg};
 	};
+
+	//--- GUER Barrel Bomb result (server -> caller). Mirrors "guer-mortar-result" exactly: the server
+	//--- rejected the call-in (insufficient funds, or the kill-tier gate was not actually met server-
+	//--- side), so refund the client's optimistic cooldown stamp and tell the player why.
+	case "guer-helibomb-result": {
+		Private ["_ok","_msg"];
+		_ok  = _args select 0;
+		_msg = _args select 1;
+		if (!_ok) then {
+			player setVariable ["wfbe_helibomb_last", -9999];   //--- un-stamp: the drop never fired.
+		};
+		if (typeName _msg == "STRING" && {_msg != ""}) then {hint _msg};
+	};
 };
