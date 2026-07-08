@@ -98,6 +98,7 @@ WFBE_SE_FNC_OnHQKilled = Compile preprocessFileLineNumbers "Server\Functions\Ser
 WFBE_SE_FNC_OperateTownDefensesUnits = Compile preprocessFileLineNumbers "Server\Functions\Server_OperateTownDefensesUnits.sqf";
 WFBE_SE_FNC_ProcessUpgrade = Compile preprocessFileLineNumbers "Server\Functions\Server_ProcessUpgrade.sqf";
 WFBE_SE_FNC_SetCampsToSide = Compile preprocessFileLineNumbers "Server\Functions\Server_SetCampsToSide.sqf";
+WFBE_SE_FNC_NavalHVT_BubbleComplete = Compile preprocessFileLineNumbers "Server\Functions\Server_NavalHVT_BubbleComplete.sqf"; //--- fable/radius-hold-primitive (GR-2026-07-08a): onComplete callback for a RadiusHold-registered carrier bubble (Init_NavalHVT.sqf, flag WFBE_C_NAVALHVT_BUBBLE_ENABLE).
 WFBE_SE_FNC_SpawnTownDefense = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnTownDefense.sqf";
 WFBE_SE_FNC_VoteForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_VoteForCommander.sqf";
 WFBE_SE_FNC_AssignForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_AssignNewCommander.sqf";
@@ -1052,6 +1053,15 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1) then {
 	[] execVM "Server\Init\Init_IcbmTel.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Init_IcbmTel.sqf launched (WFBE_C_ICBM_TEL=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- ZG KOTH (fable/radius-hold-primitive consumer, GR-2026-07-08a, stacked on PR #916): Zargabad-only
+//--- King-of-the-Hill city-core radius-hold. Feature-flagged behind WFBE_C_ZG_KOTH_ENABLE (default 0);
+//--- additionally map-gated to Zargabad inside Init_ZgKoth.sqf itself. Same launch pattern as the
+//--- NAVAL_HVT/ICBM_TEL blocks above.
+if ((missionNamespace getVariable ["WFBE_C_ZG_KOTH_ENABLE", 0]) == 1) then {
+	[] execVM "Server\Init\Init_ZgKoth.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Init_ZgKoth.sqf launched (WFBE_C_ZG_KOTH_ENABLE=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- OILFIELDS (Ray 2026-07-01, Takistan): neutral capturable resource node (NOT a town — no town FSM).
