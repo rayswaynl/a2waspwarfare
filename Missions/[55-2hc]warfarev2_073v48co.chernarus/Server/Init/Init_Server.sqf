@@ -1055,6 +1055,15 @@ if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: Init_IcbmTel.sqf launched (WFBE_C_ICBM_TEL=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- ZG KOTH (fable/radius-hold-primitive consumer, GR-2026-07-08a, stacked on PR #916): Zargabad-only
+//--- King-of-the-Hill city-core radius-hold. Feature-flagged behind WFBE_C_ZG_KOTH_ENABLE (default 0);
+//--- additionally map-gated to Zargabad inside Init_ZgKoth.sqf itself. Same launch pattern as the
+//--- NAVAL_HVT/ICBM_TEL blocks above.
+if ((missionNamespace getVariable ["WFBE_C_ZG_KOTH_ENABLE", 0]) == 1) then {
+	[] execVM "Server\Init\Init_ZgKoth.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Init_ZgKoth.sqf launched (WFBE_C_ZG_KOTH_ENABLE=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- OILFIELDS (Ray 2026-07-01, Takistan): neutral capturable resource node (NOT a town — no town FSM).
 //--- Map-gated to Takistan inside the file (worldName check), plus the WFBE_C_OILFIELD_ENABLE flag (default 1).
 //--- The file self-waits townInit and self-gates internally, so launching it here is safe + strictly additive.
