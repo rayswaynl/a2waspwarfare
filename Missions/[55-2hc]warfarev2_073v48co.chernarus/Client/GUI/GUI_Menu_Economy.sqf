@@ -155,30 +155,32 @@ while {alive player && dialog} do {
 						
 							if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {[sideJoined, _supplyB, "Factory sold.", false] Call ChangeSideSupply} else {(_supplyB) Call ChangePlayerFunds};
 						};
-						//--- #692 queue-refund fix: sum and refund all pending build-queue costs before demolition.
-						//--- queu_costs is a parallel array storing the price each player paid at order time.
-						//--- Refund via the same channel as the factory-sell above (ChangeSideSupply / ChangePlayerFunds).
-						//--- Clearing queu BEFORE setDammage 1 routes each buyer's Client_BuildUnit.sqf coroutine
-						//--- through the E1 cancel path (_qIdx == -1 -> exitWith {}, no spawn) instead of the
-						//--- dead-building refund path, preventing a double-refund. A2-OA-safe: private/for/
-						//--- select/count; getVariable [2-arg] on OBJECT (not GROUP); setVariable broadcast.
-						private ["_qCosts","_qTotal","_qI"];
-						_qCosts = _closest getVariable ["queu_costs", []];
-						_qTotal = 0;
-						for "_qI" from 0 to ((count _qCosts) - 1) do {
-							_qTotal = _qTotal + (_qCosts select _qI);
-						};
-						if (_qTotal > 0) then {
-							if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
-								[sideJoined, _qTotal, "Factory sold - queued unit refunds.", false] Call ChangeSideSupply
-							} else {
-								(_qTotal) Call ChangePlayerFunds
-							};
-						};
-						_closest setVariable ["queu",        [], true];
-						_closest setVariable ["queu_costs",  [], true];
-						_closest setVariable ["queu_cpts",   [], true];
-						_closest setVariable ["queu_labels", [], true];
+						//--- #856 follow-up (closes the #692 queue-counter leak; owner's post-merge review
+						//--- comment on PR #856). #692 added a LUMP-SUM refund of all pending queu_costs to
+						//--- the SELLER, then force-cleared queu/queu_costs/queu_cpts/queu_labels before
+						//--- setDammage 1. That force-clear makes every still-waiting buyer's
+						//--- Client_BuildUnit.sqf coroutine resolve _qIdx == -1 on its next poll, routing it
+						//--- through the E1 CANCELLED-exit (Client_BuildUnit.sqf ~:372-376), which assumes
+						//--- Action_CancelQueue.sqf already decremented that buyer's unitQueu and the
+						//--- machine-local WFBE_C_QUEUE_<factory> counter. It had not -- both counters leak
+						//--- permanently for every buyer still queued (not yet building) when the factory
+						//--- sold. unitQueu and WFBE_C_QUEUE_<factory> are UNBROADCAST, buyer-client-local
+						//--- variables (Client_BuildUnit.sqf:11 plain `unitQueu = unitQueu + _cpt`; :391
+						//--- `missionNamespace setVariable` with no publicVariable/broadcast flag) -- this
+						//--- seller-side thread has no way to reach or decrement another player's copy, and
+						//--- no existing broadcast channel carries that request (see the rejected fix (b) in
+						//--- the PR body). So: do NOT lump-refund and do NOT force-clear the queue arrays
+						//--- here. Just let setDammage 1 below mark the building dead and leave queu/
+						//--- queu_costs/queu_cpts/queu_labels alone -- exactly like an organic combat kill
+						//--- (Server_BuildingKilled.sqf does no queue handling at all). Each buyer's own
+						//--- coroutine already detects !alive _building on its own machine within one 4s
+						//--- poll, self-dequeues its own entry (Client_BuildUnit.sqf:335-362), finds
+						//--- _qIdx >= 0 (skips E1), and hits the existing top-scope FC2 dead-building exit
+						//--- (Client_BuildUnit.sqf ~:389-394), which already refunds _currentCost to that
+						//--- buyer AND correctly decrements their own unitQueu / WFBE_C_QUEUE_<factory> --
+						//--- locally, no cross-client access needed. This also fixes the #692 lump-refund's
+						//--- second latent issue: it credited the SELLER's own team funds / side supply
+						//--- instead of the buyers who actually paid.
 						
 						//--- Inform the side.
 						// WFBE_LocalizeMessage = [sideJoined,'CLTFNCLOCALIZEMESSAGE',['StructureSold',_type]];
