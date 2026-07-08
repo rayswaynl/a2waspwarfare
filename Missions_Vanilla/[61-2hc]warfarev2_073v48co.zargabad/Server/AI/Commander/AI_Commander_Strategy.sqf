@@ -545,7 +545,7 @@ _relieved = 0;
 				//--- driver loop does NOT read - it reads ONLY wfbe_aicom_order. So for an HC team ALSO broadcast
 				//--- a "defense" order at the town (mirror the HQ-strike order idiom below). Server-local teams
 				//--- ignore the order var and use the SetTeamMove* writes above, so both paths stay covered.
-				if (_free getVariable ["wfbe_aicom_hc", false]) then {
+				if ([_free, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 					_free setVariable ["wfbe_aicom_order", [(if (isNil {_free getVariable "wfbe_aicom_order"}) then {-1} else {(_free getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _town], true];
 				};
 				_free setVariable ["wfbe_aicom_relief", _town];
@@ -915,7 +915,7 @@ if (_strikeOn) then {
 		[_best, "move"] Call SetTeamMoveMode;
 		//--- cmdcon41-w2 STAGING-MASS: while massing, point new strikers at the rally (_strikeDest = rally pos); once released it equals the enemy HQ.
 		[_best, _strikeDest] Call SetTeamMovePos;
-		if (_best getVariable ["wfbe_aicom_hc", false]) then {
+		if ([_best, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 			_best setVariable ["wfbe_aicom_order", [(if (isNil {_best getVariable "wfbe_aicom_order"}) then {-1} else {(_best getVariable "wfbe_aicom_order") select 0}) + 1, "goto", _strikeDest], true]; //--- HQ-STRIKE PRESS FIX (Ray): "defense" made the HC striker HOLD near the enemy HQ; "goto" routes through the driver else-branch (Common_RunCommanderTeam.sqf ~L749 = assault SAD WFBE_C_AICOM_ASSAULT_SAD onto _dest), so it PRESSES onto the HQ. Not "towns-target" (that triggers the town-depot capture phase, wrong for a base).
 		};
 		_strikeCount = _strikeCount + 1;

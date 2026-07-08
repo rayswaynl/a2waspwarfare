@@ -50,8 +50,8 @@ _editorTeams  = 0;
 {
 	if (!isNull _x) then {
 		_real = false;
-		if (_x getVariable ["wfbe_aicom_hc", false]) then {_real = true};
-		if (!_real && {_x getVariable ["wfbe_aicom_founded", false]}) then {_real = true};
+		if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {_real = true};
+		if (!_real && {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {_real = true};
 		if (_real) then {
 			_foundedTeams = _foundedTeams + 1;
 		} else {
