@@ -416,8 +416,6 @@ if (_verb == "relief") then {
     //--- Note: product field carries relief marker for smaller-spawn hint (future TODO in Director).
 };
 
-//--- P4: MORTAR verb - fires existing guer-mortar-strike machinery via Server_HandleSpecial.
-
 //--- Emit GDIR_ORDER for the Director tick to consume.
 private ["_pendingOrders","_orderKind"];
 _orderKind = "reinforce";
