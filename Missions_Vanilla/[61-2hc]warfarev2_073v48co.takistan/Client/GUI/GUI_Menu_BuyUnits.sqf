@@ -151,6 +151,8 @@ _IDCS = _IDCS - [_currentIDC];
 					{ if (!isNull _x && {alive _x}) then {_scudLive = _scudLive + 1} } forEach _scudArr;
 				};
 				_scudMax = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_MAX", 2];
+				//--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): one-per-side clamp. Does NOT touch WFBE_C_TK_SCUD_HF_MAX's own default (2) - just caps the effective ceiling read here. Server-side WFBE_SE_FNC_TkScudRegister applies the identical clamp as the authority.
+				if ((missionNamespace getVariable ["WFBE_C_SCUD_ONE_PER_SIDE", 1]) > 0) then {_scudMax = _scudMax min 1};
 				if (_scudLive >= _scudMax) then {
 					_skip = true;
 					hint parseText (Format ["<t color='#ff5a5a'>SCUD refused: your side already fields %1 launchers (max %2).</t>", _scudLive, _scudMax]);
