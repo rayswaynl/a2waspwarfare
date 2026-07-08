@@ -1,6 +1,6 @@
 /*
 	RequestGDirPanel.sqf  (A1 Commissar Panel - Amendment to Lane 800 GUER Director)
-	GUIDE-REV GR-2026-07-03a
+	GUIDE-REV GR-2026-07-08a
 
 	Client -> server request for a GUER player panel action (buy/qrf/counter/donate).
 	Validates sender is resistance, panel+lane gates are on, then:
@@ -403,8 +403,16 @@ if (_verb == "cache") exitWith {
     if (_newTier <= _curTier) exitWith {
         [_player, "GDirPanelResult", ["deny", Format ["Cache tier %1 already active on %2.", _curTier, _townId], "cache", _townId]] Call WFBE_CO_FNC_SendToClient;
     };
-    //--- Debit already done above. Persist tier on town object (broadcast=false; server reads it in materializer TODO).
-    _townObj setVariable ["AICOMV2_GDIR_CACHE_TIER", _newTier];
+    //--- fable/gdir-cache-materializer (GR-2026-07-08a): Debit already done above. Persist tier on
+    //--- town object, PUBLIC (3rd arg true) - town-defender group creation can run on the server,
+    //--- a delegated client, or a headless client (Common_CreateTownUnits.sqf is called from all
+    //--- three: Client_DelegateTownAI.sqf, Server_FNC_Delegation.sqf, server_town_ai.sqf), so a
+    //--- local-only (broadcast=false) tier would be invisible on any machine except the one that
+    //--- set it. Mirrors the WFBE_IsTownDefenderAI PUBLIC-tag pattern already used in
+    //--- Common_CreateTownUnits.sqf for the identical cross-machine-visibility problem.
+    //--- Materializer hook: Common_CreateTownUnits.sqf, per-unit forEach right after the
+    //--- town-defender skill spread.
+    _townObj setVariable ["AICOMV2_GDIR_CACHE_TIER", _newTier, true];
     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=cache|town=%2|product=%3|tier=%4|price=%5|fundedBy=%6|deny=none",
         _elmin, _townId, _product, _newTier, _price, getPlayerUID _player];
     [_player, "GDirPanelResult", ["accept", Format ["Cache tier %1 purchased for %2. Defenders will spawn with enhanced loadouts.", _newTier, _townId], "cache", _townId]] Call WFBE_CO_FNC_SendToClient;
