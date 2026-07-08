@@ -290,6 +290,18 @@ while {!gameOver} do {
 						_perfPlayerLeaders = _perfPlayerLeaders + 1;
 						_updateThisLeader = true;
 						_markerAlpha = 1;
+						//--- RC29 (Fable 2026-07-07) SELF-ARROW DEDUPE: this per-team leader marker becomes an
+						//--- orange isPlayer marker whenever the team's leader is a human player. When that human
+						//--- IS the local player (this client leads this team), the OWNMarker below (cmdcon26 fix)
+						//--- already draws a dedicated always-on orange arrow at the player's exact position. Both
+						//--- are mil_arrow2; while WFBE_C_TEAMMARKER_DEST_DIR was 0 both used plain getDir facing
+						//--- and silently overlapped, but the OWNMarker's destination-bearing priority (stored map
+						//--- order -> group waypoint -> expectedDestination) differs from this marker's (engine
+						//--- expectedDestination only), so flipping the flag to 1 made the two arrows visibly split.
+						//--- Force THIS marker invisible only for the player's own led team; the OWNMarker remains
+						//--- the single visible self-arrow. Other teams (AI-led, or led by OTHER human players) are
+						//--- untouched: _markerAlpha stays 1 and color/label/pos/dir logic below runs unchanged.
+						if (player == _leader) then {_markerAlpha = 0};
 						_playerAFKstate = _leader getVariable "WASP_AFK";
 						_label = Format[" %1", name _leader];
 						if !(isNil "_playerAFKstate") then {
