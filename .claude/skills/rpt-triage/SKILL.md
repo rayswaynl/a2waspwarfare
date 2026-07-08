@@ -2,7 +2,7 @@
 name: rpt-triage
 description: Load when diagnosing live-server, soak, or boot behavior from RPT logs — which RPT holds which subsystem, mandatory MISSINIT windowing via Get-WindowedRpt.ps1, analyze_soak.py grading, and the expected token vocabulary.
 ---
-<!-- source: Agent-Guide GUIDE-REV GR-2026-07-06a -->
+<!-- source: Agent-Guide GUIDE-REV GR-2026-07-08a -->
 
 # rpt-triage
 

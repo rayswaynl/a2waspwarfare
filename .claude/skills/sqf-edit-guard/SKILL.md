@@ -2,7 +2,7 @@
 name: sqf-edit-guard
 description: Load BEFORE creating or modifying any .sqf/.fsm/.hpp file under Missions/**. Banned A2-OA command checklist, engine-semantics traps, the mandatory targeted-Python CRLF editing workflow, and the post-edit lint + bracket gates.
 ---
-<!-- source: Agent-Guide GUIDE-REV GR-2026-07-06a -->
+<!-- source: Agent-Guide GUIDE-REV GR-2026-07-08a -->
 
 # sqf-edit-guard
 
@@ -61,7 +61,7 @@ The gate reports ~447 pre-existing findings across the tree; only NEW findings i
 edited matter. Then per changed file, net `{}` and `[]` delta vs base must be zero:
 
 ```powershell
-git diff origin/claude/build84-cmdcon36 -- "CHANGED_FILE.sqf" | python -c "import sys; L=sys.stdin.read().splitlines(); A=''.join(l[1:] for l in L if l.startswith('+') and not l.startswith('+++')); R=''.join(l[1:] for l in L if l.startswith('-') and not l.startswith('---')); print('curly', A.count('{')-A.count('}')-R.count('{')+R.count('}'), 'square', A.count('[')-A.count(']')-R.count('[')+R.count(']'))"
+git diff origin/master -- "CHANGED_FILE.sqf" | python -c "import sys; L=sys.stdin.read().splitlines(); A=''.join(l[1:] for l in L if l.startswith('+') and not l.startswith('+++')); R=''.join(l[1:] for l in L if l.startswith('-') and not l.startswith('---')); print('curly', A.count('{')-A.count('}')-R.count('{')+R.count('}'), 'square', A.count('[')-A.count(']')-R.count('[')+R.count(']'))"
 ```
 Both numbers must print 0.
 

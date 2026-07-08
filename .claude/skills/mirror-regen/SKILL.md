@@ -2,7 +2,7 @@
 name: mirror-regen
 description: Run AFTER any edit inside Missions/[55-2hc]warfarev2_073v48co.chernarus and BEFORE staging — propagates Chernarus changes to the Takistan and Zargabad mirrors via LoadoutManager, restores drifted templates, and spot-checks per-map values.
 ---
-<!-- source: Agent-Guide GUIDE-REV GR-2026-07-06a -->
+<!-- source: Agent-Guide GUIDE-REV GR-2026-07-08a -->
 
 # mirror-regen
 
@@ -38,7 +38,7 @@ LoadoutManager may touch TK/ZG `version.sqf.template` as a side effect. Restore 
 merge-base before staging (run from repo root):
 
 ```powershell
-git checkout origin/claude/build84-cmdcon36 -- "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf.template" "Missions_Vanilla/[61-2hc]warfarev2_073v48co.zargabad/version.sqf.template"
+git checkout origin/master -- "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf.template" "Missions_Vanilla/[61-2hc]warfarev2_073v48co.zargabad/version.sqf.template"
 ```
 
 Then run the invariant guard:

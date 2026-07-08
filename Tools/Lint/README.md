@@ -9,7 +9,7 @@ python Tools\Lint\check_sqf.py Missions\[55-2hc]warfarev2_073v48co.chernarus\Cli
 python Tools\Lint\check_sqf.py --no-classname-index Missions\[55-2hc]warfarev2_073v48co.chernarus
 python Tools\Lint\test_check_sqf.py
 python Tools\Lint\check_sqf.py --select A3CMD,BRACKET --no-classname-index
-python Tools\Lint\check_sqf.py --diff-from origin/claude/build84-cmdcon36 --select A3CMD,A3MARKER,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,GROUPGETVAR,NSSETVAR3 --no-classname-index
+python Tools\Lint\check_sqf.py --diff-from origin/master --select A3CMD,A3MARKER,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,GROUPGETVAR,NSSETVAR3 --no-classname-index
 python Tools\Lint\check_sqf.py --ignore BOOLCMP,CLASSREF Missions\[55-2hc]warfarev2_073v48co.chernarus
 python Tools\Lint\check_stringtable_refs.py
 python Tools\Lint\check_stringtable_refs.py --orphans
