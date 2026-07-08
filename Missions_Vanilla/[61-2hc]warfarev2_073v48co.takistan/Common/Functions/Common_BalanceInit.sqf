@@ -273,7 +273,6 @@ case "T34_TK_GUE_EP1": {
 case "M2A2_EP1": {
     _this removeMagazine "210Rnd_25mm_M242_HEI";
     _this removeMagazine "210Rnd_25mm_M242_APDS";
-    _this removeWeapon "TOWLauncher";
     _this removeWeapon "M242BC";
     _this addWeapon "M242";
 };
