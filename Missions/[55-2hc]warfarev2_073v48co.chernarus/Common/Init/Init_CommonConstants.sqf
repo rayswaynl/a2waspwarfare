@@ -2459,5 +2459,14 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_SCUD_ONE_PER_SIDE") then {WFBE_C_SCUD_ONE_PER_SIDE = 1}; //--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): when >0, clamps the per-side LIVE bought-SCUD cap to 1 (GUI_Menu_BuyUnits.sqf pre-purchase check + Init_IcbmTel.sqf WFBE_SE_FNC_TkScudRegister server-authoritative check both `min 1` the WFBE_C_TK_SCUD_HF_MAX-derived cap - that flag's own default of 2 is left untouched). Default 1 = ARMED per owner ask (one precious launcher per side); set 0 to fall back to the WFBE_C_TK_SCUD_HF_MAX cap alone.
 	if (isNil "WFBE_C_SCUD_SPEED_CAP_KMH") then {WFBE_C_SCUD_SPEED_CAP_KMH = 20}; //--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): drivable-SCUD top-speed governor in km/h, enforced client-side via periodic setVelocity in Client_BuildUnit.sqf WFBE_CL_FNC_TkScudSpeedGovernor (A2-OA has no setMaxSpeed/limitSpeed - that command is Arma-3-only, mirrors the existing WFBE_CL_FNC_GuerVbiedM113Boost setVelocity idiom in the same file). Intent: the SCUD is slow and precious - players should prefer airlifting it over driving. Set <=0 to disable the governor (stock vehicle top speed).
 
+//--- P5 CREW-COST TIER-SCALE (fable/crew-cost-tierscale, owner economy pick GR-2026-07-08a): crew-replacement cost
+//--- (charged in GUI_Menu_BuyUnits.sqf at all 3 crew-cost points) scales with the crewed vehicle's own buy-price
+//--- (QUERYUNITPRICE), the same price lookup the buy menu already uses for _currentCost - no new vehicle-cost
+//--- table. WFBE_C_UNITS_CREW_COST (above) remains the floor; the bonus only adds on top and is capped so heavy
+//--- air/armor crew never gets punitive. Default 0 = byte-identical flat WFBE_C_UNITS_CREW_COST per head.
+	if (isNil "WFBE_C_UNITS_CREW_COST_TIERSCALE") then {WFBE_C_UNITS_CREW_COST_TIERSCALE = 0}; //--- master gate: 0=off (default, flat WFBE_C_UNITS_CREW_COST/head, byte-identical to HEAD), 1=on (scale by vehicle price, see COEF/CAP below).
+	if (isNil "WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF") then {WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF = 0.03}; //--- owner-tunable: fraction of the crewed vehicle's QUERYUNITPRICE added per crew head on top of the WFBE_C_UNITS_CREW_COST floor (e.g. a 6500-price tank -> 120+6500*0.03=315/head before the cap; a 400-price jeep -> 120+400*0.03=132/head). Only read while TIERSCALE>0.
+	if (isNil "WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP") then {WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP = 400}; //--- owner-tunable: hard per-head ceiling (post-COEF) so the priciest air/armor (e.g. AH64D/A10 at 30-35k) never becomes a punitive crew tax. Only read while TIERSCALE>0.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

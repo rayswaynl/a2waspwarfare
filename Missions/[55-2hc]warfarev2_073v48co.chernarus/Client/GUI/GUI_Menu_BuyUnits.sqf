@@ -111,7 +111,17 @@ _IDCS = _IDCS - [_currentIDC];
 			if (_gunner) then {_extra = _extra + 1};
 			if (_commander) then {_extra = _extra + 1};
 			if (_extracrew) then {_extra = _extra + ((_currentUnit select QUERYUNITCREW) select 3)};
-			_currentCost = _currentCost + ((missionNamespace getVariable "WFBE_C_UNITS_CREW_COST") * _extra);
+			//--- P5 crew-cost tier-scale (fable/crew-cost-tierscale, owner economy pick GR-2026-07-08a): crew-replacement
+			//--- cost now scales with the crewed vehicle's own buy-price, reusing the same QUERYUNITPRICE lookup the
+			//--- _currentCost formula above already reads off _currentUnit - no new vehicle-cost table needed. The flat
+			//--- WFBE_C_UNITS_CREW_COST stays the floor; the tier bonus only adds on top and is capped (TIERSCALE_CAP)
+			//--- so even the priciest air/armor never gets punitive. Flag-off (TIERSCALE=0, default) = byte-identical
+			//--- flat WFBE_C_UNITS_CREW_COST per head (see also the two analogous charge points below in this file).
+			_crewCostPerHead = missionNamespace getVariable "WFBE_C_UNITS_CREW_COST";
+			if ((missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE", 0]) > 0) then {
+				_crewCostPerHead = (_crewCostPerHead + ((_currentUnit select QUERYUNITPRICE) * (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF", 0.03]))) min (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP", 400]);
+			};
+			_currentCost = _currentCost + (_crewCostPerHead * _extra);
 		};
 		if ((_currentRow) != -1) then {
 			_funds = Call GetPlayerFunds;
@@ -634,7 +644,13 @@ _IDCS = _IDCS - [_currentIDC];
 						if (_extracrew) then {_extra = _extra + _turretsCount};
 						
 						//--- Set the 'extra' price.
-						_currentCost = _currentCost + ((missionNamespace getVariable "WFBE_C_UNITS_CREW_COST") * _extra);
+						//--- P5 crew-cost tier-scale (fable/crew-cost-tierscale, GR-2026-07-08a): ARRAY-crew (typeName ARRAY) branch - see the
+						//--- single-unit purchase charge point above (~line 114) for the full rationale. Flag-off = byte-identical.
+						_crewCostPerHead = missionNamespace getVariable "WFBE_C_UNITS_CREW_COST";
+						if ((missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE", 0]) > 0) then {
+							_crewCostPerHead = (_crewCostPerHead + ((_currentUnit select QUERYUNITPRICE) * (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF", 0.03]))) min (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP", 400]);
+						};
+						_currentCost = _currentCost + (_crewCostPerHead * _extra);
 					} else {//--- Backward compability.
 						_c = 0;
 						_extra = 0;
@@ -687,7 +703,13 @@ _IDCS = _IDCS - [_currentIDC];
 						} forEach [profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ,_gunner,_commander,_extracrew];
 
 						//--- Set the 'extra' price.
-						_currentCost = _currentCost + ((missionNamespace getVariable "WFBE_C_UNITS_CREW_COST") * _extra);
+						//--- P5 crew-cost tier-scale (fable/crew-cost-tierscale, GR-2026-07-08a): backward-compatibility (scalar _slots) branch - see the
+						//--- single-unit purchase charge point above (~line 114) for the full rationale. Flag-off = byte-identical.
+						_crewCostPerHead = missionNamespace getVariable "WFBE_C_UNITS_CREW_COST";
+						if ((missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE", 0]) > 0) then {
+							_crewCostPerHead = (_crewCostPerHead + ((_currentUnit select QUERYUNITPRICE) * (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF", 0.03]))) min (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP", 400]);
+						};
+						_currentCost = _currentCost + (_crewCostPerHead * _extra);
 					};
 				} else {
 					{ctrlShow [_x,false]} forEach (_IDCSVehi);
