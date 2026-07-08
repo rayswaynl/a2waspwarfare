@@ -1,0 +1,277 @@
+[2026-06-20 11:51:04] tick start
+[2026-06-20 11:51:06] impression appended (tick 1)
+[2026-06-20 11:51:06] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 11:51:06] tick done
+[2026-06-20 11:53:28] tick start
+[2026-06-20 11:53:29] impression appended (tick 4 [PERF-DM])
+[2026-06-20 11:53:30] PERF DM HTTP 200 (tick 4)
+[2026-06-20 11:53:30] tick done
+[2026-06-20 12:17:56] tick start
+[2026-06-20 12:17:58] RERUN FIRED via WaspCleanRestart - reason: server down (procs=1/3) (same B57 mission, soak continues)
+[2026-06-20 12:17:58] impression appended (tick 5)
+[2026-06-20 12:17:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 12:17:58] tick done
+[2026-06-20 13:08:31] tick start
+[2026-06-20 13:08:32] impression appended (tick 6)
+[2026-06-20 13:08:32] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 13:08:32] tick done
+[2026-06-20 13:17:58] tick start
+[2026-06-20 13:18:00] impression appended (tick 7)
+[2026-06-20 13:18:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 13:18:00] tick done
+[2026-06-20 13:47:57] tick start
+[2026-06-20 13:47:58] impression appended (tick 8 [PERF-DM])
+[2026-06-20 13:47:59] PERF DM HTTP 200 (tick 8)
+[2026-06-20 13:47:59] tick done
+[2026-06-20 14:17:57] tick start
+[2026-06-20 14:17:59] impression appended (tick 9)
+[2026-06-20 14:17:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 14:17:59] tick done
+[2026-06-20 14:47:57] tick start
+[2026-06-20 14:47:59] impression appended (tick 10)
+[2026-06-20 14:47:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 14:47:59] tick done
+[2026-06-20 15:17:57] tick start
+[2026-06-20 15:17:59] impression appended (tick 11)
+[2026-06-20 15:17:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 15:17:59] tick done
+[2026-06-20 15:47:57] tick start
+[2026-06-20 15:47:59] impression appended (tick 12 [PERF-DM])
+[2026-06-20 15:47:59] PERF DM HTTP 200 (tick 12)
+[2026-06-20 15:47:59] tick done
+[2026-06-20 16:17:57] tick start
+[2026-06-20 16:17:59] impression appended (tick 13)
+[2026-06-20 16:17:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 16:17:59] tick done
+[2026-06-20 16:47:57] tick start
+[2026-06-20 16:48:00] impression appended (tick 14)
+[2026-06-20 16:48:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 16:48:00] tick done
+[2026-06-20 17:17:57] tick start
+[2026-06-20 17:18:00] impression appended (tick 15)
+[2026-06-20 17:18:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 17:18:00] tick done
+[2026-06-20 17:47:57] tick start
+[2026-06-20 17:48:00] impression appended (tick 16 [PERF-DM])
+[2026-06-20 17:48:01] PERF DM HTTP 200 (tick 16)
+[2026-06-20 17:48:01] tick done
+[2026-06-20 18:17:57] tick start
+[2026-06-20 18:18:00] impression appended (tick 17)
+[2026-06-20 18:18:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 18:18:00] tick done
+[2026-06-20 18:47:57] tick start
+[2026-06-20 18:48:00] impression appended (tick 18)
+[2026-06-20 18:48:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 18:48:00] tick done
+[2026-06-20 19:17:57] tick start
+[2026-06-20 19:18:00] impression appended (tick 19)
+[2026-06-20 19:18:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 19:18:00] tick done
+[2026-06-20 19:47:57] tick start
+[2026-06-20 19:48:01] impression appended (tick 20 [PERF-DM])
+[2026-06-20 19:48:02] PERF DM HTTP 200 (tick 20)
+[2026-06-20 19:48:02] tick done
+[2026-06-20 20:17:57] tick start
+[2026-06-20 20:18:01] impression appended (tick 21)
+[2026-06-20 20:18:01] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 20:18:01] tick done
+[2026-06-20 20:47:57] tick start
+[2026-06-20 20:48:01] impression appended (tick 22)
+[2026-06-20 20:48:01] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 20:48:01] tick done
+[2026-06-20 21:17:57] tick start
+[2026-06-20 21:18:00] impression appended (tick 23)
+[2026-06-20 21:18:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 21:18:00] tick done
+[2026-06-20 21:47:57] tick start
+[2026-06-20 21:48:04] impression appended (tick 24 [PERF-DM])
+[2026-06-20 21:48:04] PERF DM HTTP 200 (tick 24)
+[2026-06-20 21:48:04] tick done
+[2026-06-20 22:17:57] tick start
+[2026-06-20 22:18:02] impression appended (tick 25)
+[2026-06-20 22:18:02] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 22:18:02] tick done
+[2026-06-20 22:47:57] tick start
+[2026-06-20 22:48:04] impression appended (tick 26)
+[2026-06-20 22:48:04] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 22:48:04] tick done
+[2026-06-20 23:17:57] tick start
+[2026-06-20 23:18:07] impression appended (tick 27)
+[2026-06-20 23:18:07] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-20 23:18:07] tick done
+[2026-06-20 23:47:57] tick start
+[2026-06-20 23:48:07] impression appended (tick 28 [PERF-DM])
+[2026-06-20 23:48:07] PERF DM HTTP 200 (tick 28)
+[2026-06-20 23:48:07] tick done
+[2026-06-21 00:26:28] tick start
+[2026-06-21 00:26:29] impression appended (tick 1)
+[2026-06-21 00:26:29] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 00:26:29] tick done
+[2026-06-21 00:47:57] tick start
+[2026-06-21 00:47:58] impression appended (tick 2)
+[2026-06-21 00:47:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 00:47:58] tick done
+[2026-06-21 01:17:56] tick start
+[2026-06-21 01:17:57] impression appended (tick 3)
+[2026-06-21 01:17:57] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 01:17:57] tick done
+[2026-06-21 01:47:56] tick start
+[2026-06-21 01:47:57] impression appended (tick 4 [PERF-DM])
+[2026-06-21 01:47:58] PERF DM HTTP 200 (tick 4)
+[2026-06-21 01:47:58] tick done
+[2026-06-21 02:17:56] tick start
+[2026-06-21 02:17:58] impression appended (tick 5)
+[2026-06-21 02:17:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 02:17:58] tick done
+[2026-06-21 02:47:56] tick start
+[2026-06-21 02:47:58] impression appended (tick 6)
+[2026-06-21 02:47:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 02:47:58] tick done
+[2026-06-21 03:17:56] tick start
+[2026-06-21 03:17:59] impression appended (tick 7)
+[2026-06-21 03:17:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 03:17:59] tick done
+[2026-06-21 03:47:56] tick start
+[2026-06-21 03:47:58] impression appended (tick 8 [PERF-DM])
+[2026-06-21 03:47:59] PERF DM HTTP 200 (tick 8)
+[2026-06-21 03:47:59] tick done
+[2026-06-21 04:17:56] tick start
+[2026-06-21 04:17:58] impression appended (tick 9)
+[2026-06-21 04:17:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 04:17:58] tick done
+[2026-06-21 04:47:56] tick start
+[2026-06-21 04:47:59] impression appended (tick 10)
+[2026-06-21 04:47:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 04:47:59] tick done
+[2026-06-21 05:17:56] tick start
+[2026-06-21 05:17:59] impression appended (tick 11)
+[2026-06-21 05:17:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 05:17:59] tick done
+[2026-06-21 05:47:56] tick start
+[2026-06-21 05:48:00] impression appended (tick 12 [PERF-DM])
+[2026-06-21 05:48:00] PERF DM HTTP 200 (tick 12)
+[2026-06-21 05:48:00] tick done
+[2026-06-21 06:17:56] tick start
+[2026-06-21 06:18:00] impression appended (tick 13)
+[2026-06-21 06:18:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 06:18:00] tick done
+[2026-06-21 06:47:56] tick start
+[2026-06-21 06:48:00] impression appended (tick 14)
+[2026-06-21 06:48:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 06:48:00] tick done
+[2026-06-21 07:17:56] tick start
+[2026-06-21 07:18:00] impression appended (tick 15)
+[2026-06-21 07:18:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 07:18:00] tick done
+[2026-06-21 07:47:56] tick start
+[2026-06-21 07:48:00] impression appended (tick 16 [PERF-DM])
+[2026-06-21 07:48:01] PERF DM HTTP 200 (tick 16)
+[2026-06-21 07:48:01] tick done
+[2026-06-21 08:17:56] tick start
+[2026-06-21 08:18:00] impression appended (tick 17)
+[2026-06-21 08:18:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 08:18:00] tick done
+[2026-06-21 08:47:56] tick start
+[2026-06-21 08:48:01] impression appended (tick 18)
+[2026-06-21 08:48:01] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 08:48:01] tick done
+[2026-06-21 09:17:56] tick start
+[2026-06-21 09:17:58] RERUN FIRED via WaspServiceRestart - reason: MISSINIT changed (mission cycled) (same B59 mission, soak continues)
+[2026-06-21 09:17:58] impression appended (tick 19)
+[2026-06-21 09:17:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 09:17:58] tick done
+[2026-06-21 09:39:17] tick start
+[2026-06-21 09:39:18] impression appended (tick 1)
+[2026-06-21 09:39:18] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 09:39:18] tick done
+[2026-06-21 09:47:58] tick start
+[2026-06-21 09:47:59] impression appended (tick 2)
+[2026-06-21 09:47:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 09:47:59] tick done
+[2026-06-21 10:17:57] tick start
+[2026-06-21 10:17:58] RERUN FIRED via WaspServiceRestart - reason: MISSINIT changed (mission cycled) (same B61 mission, soak continues)
+[2026-06-21 10:17:58] impression appended (tick 3)
+[2026-06-21 10:17:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 10:17:58] tick done
+[2026-06-21 10:47:57] tick start
+[2026-06-21 10:47:58] RERUN FIRED via WaspServiceRestart - reason: MISSINIT changed (mission cycled) (same B61 mission, soak continues)
+[2026-06-21 10:47:59] impression appended (tick 4 [PERF-DM])
+[2026-06-21 10:47:59] PERF DM HTTP 200 (tick 4)
+[2026-06-21 10:47:59] tick done
+[2026-06-21 11:17:58] tick start
+[2026-06-21 11:17:58] impression appended (tick 1)
+[2026-06-21 11:17:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 11:17:58] tick done
+[2026-06-21 11:47:57] tick start
+[2026-06-21 11:47:58] impression appended (tick 2)
+[2026-06-21 11:47:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 11:47:58] tick done
+[2026-06-21 12:17:58] tick start
+[2026-06-21 12:17:59] impression appended (tick 1)
+[2026-06-21 12:17:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 12:17:59] tick done
+[2026-06-21 12:47:57] tick start
+[2026-06-21 12:47:58] impression appended (tick 1)
+[2026-06-21 12:47:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 12:47:58] tick done
+[2026-06-21 13:17:57] tick start
+[2026-06-21 13:17:58] impression appended (tick 1)
+[2026-06-21 13:17:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 13:17:58] tick done
+[2026-06-21 13:47:56] tick start
+[2026-06-21 13:47:58] impression appended (tick 2)
+[2026-06-21 13:47:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 13:47:58] tick done
+[2026-06-21 14:17:56] tick start
+[2026-06-21 14:17:58] impression appended (tick 3)
+[2026-06-21 14:17:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 14:17:58] tick done
+[2026-06-21 14:47:56] tick start
+[2026-06-21 14:47:58] impression appended (tick 4 [PERF-DM])
+[2026-06-21 14:47:58] PERF DM HTTP 200 (tick 4)
+[2026-06-21 14:47:58] tick done
+[2026-06-21 15:17:57] tick start
+[2026-06-21 15:17:58] impression appended (tick 1)
+[2026-06-21 15:17:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 15:17:58] tick done
+[2026-06-21 15:47:56] tick start
+[2026-06-21 15:47:58] impression appended (tick 2)
+[2026-06-21 15:47:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 15:47:58] tick done
+[2026-06-21 16:17:56] tick start
+[2026-06-21 16:17:59] impression appended (tick 3)
+[2026-06-21 16:17:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 16:17:59] tick done
+[2026-06-21 16:47:56] tick start
+[2026-06-21 16:47:59] impression appended (tick 4 [PERF-DM])
+[2026-06-21 16:48:00] PERF DM HTTP 200 (tick 4)
+[2026-06-21 16:48:00] tick done
+[2026-06-21 17:17:56] tick start
+[2026-06-21 17:17:59] impression appended (tick 5)
+[2026-06-21 17:17:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 17:17:59] tick done
+[2026-06-21 17:47:57] tick start
+[2026-06-21 17:47:59] impression appended (tick 6)
+[2026-06-21 17:47:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 17:47:59] tick done
+[2026-06-21 18:17:56] tick start
+[2026-06-21 18:18:00] impression appended (tick 7)
+[2026-06-21 18:18:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 18:18:00] tick done
+[2026-06-21 18:47:57] tick start
+[2026-06-21 18:47:59] impression appended (tick 1)
+[2026-06-21 18:47:59] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 18:47:59] tick done
+[2026-06-21 19:17:56] tick start
+[2026-06-21 19:18:00] impression appended (tick 2)
+[2026-06-21 19:18:00] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 19:18:00] tick done
+[2026-06-21 19:47:57] tick start
+[2026-06-21 19:47:58] impression appended (tick 1)
+[2026-06-21 19:47:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 19:47:58] tick done
+[2026-06-21 20:17:56] tick start
+[2026-06-21 20:17:58] RERUN FIRED via WaspServiceRestart - reason: server down (procs=2/3) (same B66 mission, soak continues)
+[2026-06-21 20:17:58] impression appended (tick 2)
+[2026-06-21 20:17:58] no DM this tick (impression-only; PERF DM every 4th)
+[2026-06-21 20:17:58] tick done
