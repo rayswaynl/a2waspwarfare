@@ -501,7 +501,7 @@ _relieved = 0;
 	if (_relieved < _reliefMax) then {
 		//--- Already has a reliever?
 		_free = grpNull;
-		{ if (!isNull _x && {(_x getVariable ["wfbe_aicom_relief", objNull]) == _town}) exitWith {_free = _x} } forEach _teams;
+		{ if (!isNull _x && {([_x, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) == _town}) exitWith {_free = _x} } forEach _teams;
 		if (isNull _free) then {
 			//--- Nearest eligible team: AI-led, alive, plain towns-mode (not garrison/strike/relief/HC).
 			_freeD = 1e9;
@@ -813,7 +813,7 @@ if (_strikeOn) then {
 				//--- Count alive striker bodies already gathered within STAGE_ARRIVE (400m) of the rally.
 				private ["_stgArrive"]; _stgArrive = missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_STAGE_ARRIVE", 400];
 				_stgBodies = 0;
-				{ if (!isNull _x && {_x getVariable ["wfbe_aicom_strike", false]}) then { { if (alive _x && {(_x distance _stgRallyPos) < _stgArrive}) then {_stgBodies = _stgBodies + 1} } forEach (units _x) } } forEach _teams;
+				{ if (!isNull _x && {[_x, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool}) then { { if (alive _x && {(_x distance _stgRallyPos) < _stgArrive}) then {_stgBodies = _stgBodies + 1} } forEach (units _x) } } forEach _teams;
 				if ((_stgBodies >= _stgBodiesNeed) || {(time - _stgT0) >= _stgTimeout}) then {
 					//--- RELEASE: enough mass (or timed out). Re-issue EVERY striker to the enemy HQ and mark released.
 					_logik setVariable ["wfbe_aicom_strike_staged", true];
@@ -836,7 +836,7 @@ if (_strikeOn) then {
 	};
 	//--- Keep up to 3 strongest field teams on the strike (refill as strikers die).
 	_strikeCount = 0;
-	{ if (!isNull _x && {_x getVariable ["wfbe_aicom_strike", false]} && {({alive _x} count (units _x)) > 0}) then {_strikeCount = _strikeCount + 1} } forEach _teams;
+	{ if (!isNull _x && {[_x, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool} && {({alive _x} count (units _x)) > 0}) then {_strikeCount = _strikeCount + 1} } forEach _teams;
 	//--- B74.1 (Ray 2026-06-23): commit HALF the side's live field teams (was a flat 3) so a dominant side throws
 		//--- real weight at the enemy base instead of a 3-team poke that never razed it. Floor at 3 for a small army.
 		private ["_strikeLive","_strikeTarget"];
@@ -953,7 +953,7 @@ if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
 	_ovrRaze  = missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_RAZE", 400];
 	_eHQpos = getPos _enemyHQ;
 	_ovrStrikers = 0;
-	{ if (!isNull _x && {_x getVariable ["wfbe_aicom_strike", false]}) then { { if (alive _x && {(_x distance _eHQpos) < _ovrDist}) then {_ovrStrikers = _ovrStrikers + 1} } forEach (units _x) } } forEach _teams;
+	{ if (!isNull _x && {[_x, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool}) then { { if (alive _x && {(_x distance _eHQpos) < _ovrDist}) then {_ovrStrikers = _ovrStrikers + 1} } forEach (units _x) } } forEach _teams;
 	_ovrEnemies = {alive _x && {(side _x) == _enemySide}} count (_eHQpos nearEntities [["Man","LandVehicle","Air"], _ovrClear]);
 	//--- B752 (Ray 2026-06-25): the old "0 enemy within 200m" razing gate was UNSATISFIABLE vs an entrenched/respawning
 	//--- home garrison (56-59 bodies) so a dominant strike besieged the base forever and the round NEVER closed (0 overruns
