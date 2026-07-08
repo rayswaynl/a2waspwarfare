@@ -31,6 +31,12 @@
             };
         base.defaultLoadout.AmmunitionTypesWithCount = new Dictionary<AmmunitionType, int>
             {
+                // B8 rework (PR #920 intent, applied at source): keep TOW-2 equipped by
+                // matching vanillaGameDefaultLoadout's count so the diff engine in
+                // BaseVehicle.GenerateCommonBalanceInitForTheVehicle() emits neither an
+                // add nor a remove for it. Do not drop this without also removing it from
+                // vanillaGameDefaultLoadout above, or TOW will be stripped again on regen.
+                { AmmunitionType.TWOROUNDTOWTWO, 10},
                 { AmmunitionType.TWOHUNDREDTENROUND25MMM242HEI, 0},
                 { AmmunitionType.TWOHUNDREDTENROUND25MMM242APDS, 0},
             };
