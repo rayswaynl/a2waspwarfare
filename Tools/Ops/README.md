@@ -44,6 +44,22 @@ $errors = Get-WindowedRpt -RptPath C:\WASP\arma2oaserver.RPT -Pattern 'Error|ERR
 `-Tail` returns the last N selected lines, and `-WindowMarker` can switch from the
 default `MISSINIT` mission window to a boot marker such as `Dedicated host created`.
 
+## Public Stats Generator
+
+`Update-PublicStats.ps1` is a **mirror of the live on-box script**, not a script meant to
+be run from this checkout. It is deployed at `C:\WASP\Update-PublicStats.ps1` on the
+Hetzner production box, runs every 5 minutes via the `WaspStatsUpdate` scheduled task,
+and parses the live `arma2oaserver.RPT` into `C:\WASP\web\stats.json` — the feed behind
+the public stats page (miksuu.com `/api/wasp-stats`).
+
+It was pulled from the box and committed here on 2026-07-08 purely to protect it from
+silent regression: the box copy had drifted ahead of the repo (it had already gained a
+`directorLedger` key that no repo copy tracked), so a future repo-driven redeploy of
+`C:\WASP\` could have clobbered it with a stale version. This repo copy is the record of
+that on-box state — the box remains the actual runtime. If you change this file, deploy
+the change to the box by hand and keep this copy in sync; there is no automated
+deploy/activation step wired up for it yet.
+
 ## Slot Count Consistency
 
 Use `Test-WaspSlotCountConsistency.ps1` to audit the tracked maintained mission
