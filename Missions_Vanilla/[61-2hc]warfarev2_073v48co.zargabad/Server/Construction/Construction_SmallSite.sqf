@@ -122,6 +122,19 @@ if (_rlType == "CBRadar" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_CO
 	["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] CBRadar registered. Registry size: %2.", str _side, count _cbrRegistry]] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- Radio Tower: register in per-side registry + flip the public alive-flag the client-side radio manager gates on.
+if (_rlType == "RadioTower" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then {
+	private ["_rtRegistry","_rtKey","_rtAliveVar"];
+	_rtKey = if (_side == west) then {"WFBE_RADIOTOWER_WEST"} else {"WFBE_RADIOTOWER_EAST"};
+	_rtRegistry = missionNamespace getVariable [_rtKey, []];
+	_rtRegistry = _rtRegistry + [_site];
+	missionNamespace setVariable [_rtKey, _rtRegistry];
+	_rtAliveVar = if (_side == west) then {"WFBE_RADIOTOWER_WEST_ALIVE"} else {"WFBE_RADIOTOWER_EAST_ALIVE"};
+	missionNamespace setVariable [_rtAliveVar, true];
+	publicVariable _rtAliveVar;
+	["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] RadioTower registered. Registry size: %2.", str _side, count _rtRegistry]] Call WFBE_CO_FNC_LogContent;
+};
+
 if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !(_rlType in ["AARadar","CBRadar"]))then{ //--- wiki-wins: per-side toggle (was the global isAutoWallConstructingEnabled, shared across sides)
 	//--- cmdcon43-c: WFBE_C_WALLS_V3 selects the "original walls + HQ-style concrete slabs" array
 	//--- (_WALLS_V3) over the plain legacy one at spawn time. Falls back to legacy if the _V3 var is

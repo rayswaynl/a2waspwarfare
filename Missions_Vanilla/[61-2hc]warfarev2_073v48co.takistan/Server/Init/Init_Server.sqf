@@ -143,6 +143,13 @@ if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	missionNamespace setVariable ["WFBE_BANK_WEST", objNull];
 	missionNamespace setVariable ["WFBE_BANK_EAST", objNull];
 };
+//--- Radio Tower: per-side registry + public alive-flag consumed client-side by WASP\Radio\Radio_Manager.sqf to gate playback.
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then {
+	missionNamespace setVariable ["WFBE_RADIOTOWER_WEST", []];
+	missionNamespace setVariable ["WFBE_RADIOTOWER_EAST", []];
+	WFBE_RADIOTOWER_WEST_ALIVE = false; publicVariable "WFBE_RADIOTOWER_WEST_ALIVE";
+	WFBE_RADIOTOWER_EAST_ALIVE = false; publicVariable "WFBE_RADIOTOWER_EAST_ALIVE";
+};
 
 //--- Least-loaded HC picker (single source of truth for delegation balance). Compiled
 //--- unconditionally - the commander/patrol/wildcard delegation sites are not gated by the
