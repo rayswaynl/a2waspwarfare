@@ -1312,9 +1312,13 @@ switch (_args select 0) do {
 					_cand = _x;
 					if (alive _cand && {(side _cand == east) || (side _cand == west)}) then {
 						if (_cand isKindOf "Man") then {
+							_cand setVariable ["wfbe_lasthitby", _driver, true]; //--- fable/fix-vbied-attribution (owner pick A3): pre-blast stamp so RequestOnUnitKilled's
+							//--- scoped Man-class fallback (RequestOnUnitKilled.sqf:44) can attribute this kill once the FAB-250 blast resolves.
+							_cand setVariable ["wfbe_lasthittime", time, true];
+							_cand setVariable ["wfbe_explosivesupportkill", true, true];
 							_victims = _victims + [_cand];
 						} else {
-							if (({alive _x} count (crew _cand)) > 0) then {_victims = _victims + [_cand]};
+							if (({alive _x} count (crew _cand)) > 0) then {_cand setVariable ["wfbe_lasthitby", _driver, true]; _cand setVariable ["wfbe_lasthittime", time, true]; _victims = _victims + [_cand]};
 						};
 					};
 				} forEach (nearestObjects [_p, ["Man","LandVehicle","Air"], _radius]);
@@ -1367,7 +1371,19 @@ switch (_args select 0) do {
 						};
 					} forEach _victims;
 					if (_payout > 0) then {
-						false; //--- Ray 2026-06-27: team-funds path DISABLED (paid group _driver captured PRE-suicide; never reaches the respawned base-less GUER detonator). Wallet/UID path below is the single channel. was: [_drvGrp, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
+						//--- fable/fix-vbied-attribution (owner pick A3, 2026-07-08): STAYS false BY DESIGN, not stale.
+						//--- Verified against DIAGNOSES-AND-SPECS.md Bug 2: once the pre-blast wfbe_lasthitby /
+						//--- wfbe_explosivesupportkill stamping above (this case) + the SCOPED RequestOnUnitKilled.sqf:44
+						//--- Man-class fallback land, RequestOnUnitKilled's own GUER kill-bounty block (coef 0.5 default,
+						//--- :167-189) starts paying TEAM funds for these same VBIED-killed Man victims for the FIRST TIME
+						//--- via the now-working last-hit attribution path -- THAT is the team-funds re-enable (a payout-
+						//--- composition change, not a gap). Restoring the old ChangeTeamFunds call here on top of that
+						//--- would DOUBLE-PAY every victim (this coef 0.5 payout + RequestOnUnitKilled's own coef 0.5
+						//--- payout for the identical kill set). Ray's original 2026-06-27 rationale (group captured
+						//--- PRE-suicide) is superseded by this payout-composition reasoning; the functional no-op is
+						//--- correct either way. Wallet/UID path below (_persBounty/_drvUID) is the unaffected personal-
+						//--- payout channel. was: [_drvGrp, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
+						false;
 						["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED cash-for-kills paid [%1] to [%2] (%3 targets in radius).", _payout, _drvGrp, count _victims]] Call WFBE_CO_FNC_LogContent;
 					};
 				};

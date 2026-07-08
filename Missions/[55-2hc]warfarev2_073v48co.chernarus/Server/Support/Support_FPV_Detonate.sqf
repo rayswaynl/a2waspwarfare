@@ -15,7 +15,7 @@ if ((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) <= 0) exitWith {
 	["INFORMATION", "Support_FPV_Detonate.sqf: WFBE_C_FPV_DRONE=0, ignoring detonation request."] Call WFBE_CO_FNC_LogContent;
 };
 
-private ["_args","_pos","_ammoClass","_sides","_matchSide","_matchDrone","_token","_sKey","_sStr","_dronePos","_dist","_lastKey","_lastFire","_now"];
+private ["_args","_pos","_ammoClass","_sides","_matchSide","_matchDrone","_token","_sKey","_sStr","_dronePos","_dist","_lastKey","_lastFire","_now","_driver","_stampRadius","_enemySides","_cand"];
 _args = _this;
 
 if (count _args < 2) exitWith {
@@ -90,6 +90,36 @@ _ammoClass = missionNamespace getVariable ["WFBE_C_FPV_DRONE_AMMO", "R_57mm_HE"]
 
 //--- FORENSICS: log accepted detonation with side and server-authoritative drone position.
 ["INFORMATION", Format ["Support_FPV_Detonate.sqf: [%1] side [%2] detonated at drone-pos %3 (client-pos %4).", _ammoClass, str _matchSide, _dronePos, _pos]] Call WFBE_CO_FNC_LogContent;
+
+//--- fable/fix-vbied-attribution (owner pick A3, 2026-07-08): pre-blast victim stamp. This
+//--- warhead was previously anonymous (zero wfbe_lasthitby stamping anywhere in this file) --
+//--- every kill from this player-purchased, player-guided weapon scored zero credit for the
+//--- pilot. Mirrors the VBIED/SCUD pre-blast snapshot pattern: resolve the drone's pilot (the
+//--- driver seat occupant, same accessor Support_FPV.sqf already uses to find the pilot for
+//--- cleanup) and stamp living enemy Man/crewed-vehicle targets within the warhead's own
+//--- CfgAmmo indirectHitRange BEFORE createVehicle, so RequestOnUnitKilled's now-scoped
+//--- Man-class fallback (wfbe_explosivesupportkill) can attribute the kill.
+_driver = driver _matchDrone;
+if (!isNull _driver) then {
+	_stampRadius = getNumber (configFile >> "CfgAmmo" >> _ammoClass >> "indirectHitRange");
+	if (_stampRadius <= 0) then { _stampRadius = 15; };
+	_enemySides = (WFBE_PRESENTSIDES + [resistance]) - [_matchSide];
+	{
+		_cand = _x;
+		if (alive _cand && {(side _cand) in _enemySides}) then {
+			if (_cand isKindOf "Man") then {
+				_cand setVariable ["wfbe_lasthitby", _driver, true];
+				_cand setVariable ["wfbe_lasthittime", time, true];
+				_cand setVariable ["wfbe_explosivesupportkill", true, true];
+			} else {
+				if (({alive _x} count (crew _cand)) > 0) then {
+					_cand setVariable ["wfbe_lasthitby", _driver, true];
+					_cand setVariable ["wfbe_lasthittime", time, true];
+				};
+			};
+		};
+	} forEach (nearestObjects [_dronePos, ["Man","LandVehicle","Air"], _stampRadius]);
+};
 
 //--- FIX (fable/fpv-auth-hardening): spawn warhead at the drone's actual server position,
 //--- NOT the client-supplied _pos. This eliminates the ~200m free-aim exploit where an
