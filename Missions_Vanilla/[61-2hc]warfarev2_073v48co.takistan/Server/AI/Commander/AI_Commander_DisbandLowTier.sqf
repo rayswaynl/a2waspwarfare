@@ -80,9 +80,9 @@ _bestType = -1;
 	};
 } forEach _teams;
 
-//--- gates: only trim foot when mobile force is fielded, we stay above the infantry floor, and a safe candidate exists.
+//--- gates: mobile force fielded; the infantry floor applies ONLY when the candidate is a FOOT team (a weak mobile/air candidate does not touch foot count); a safe candidate exists.
 if (!_hasMobile) exitWith {};
-if (_footCount <= _floor) exitWith {};
+if (_bestType == 0 && {_footCount <= _floor}) exitWith {};
 if (isNull _best) exitWith {};
 
 //--- flag it; the HC executor self-deletes with its own re-check, aicom-team-ended deregisters from wfbe_teams.
