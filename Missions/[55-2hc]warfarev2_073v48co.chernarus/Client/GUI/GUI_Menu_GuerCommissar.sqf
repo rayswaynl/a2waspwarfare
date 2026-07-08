@@ -1,7 +1,7 @@
 disableSerialization;
 /*
 	GUI_Menu_GuerCommissar.sqf  (A1 Commissar Panel - UX v2)
-	GUIDE-REV GR-2026-07-03a
+	GUIDE-REV GR-2026-07-08a
 
 	onLoad handler for WFBE_GDirCommissarMenu (idd=31000).
 	UX v2 additions vs v1:
@@ -447,6 +447,24 @@ waitUntil {
 		MenuAction = -1;
 		["RequestGDirPanel", [player, "donate", _selTownId, "none"]] Call WFBE_CO_FNC_SendToServer;
 		ctrlSetText [31078, "Donate order sent. Awaiting result..."];
+	};
+
+	//--- fable/gdir-vehicle-verb (GR-2026-07-08a): tier buttons wired to idc 31081-83 (Rsc/Dialogs.hpp).
+	//--- NEEDS IN-GAME VISUAL VERIFICATION - see script header banner.
+	if (MenuAction == 61) then {
+		MenuAction = -1;
+		["RequestGDirPanel", [player, "vehicle", _selTownId, "t1"]] Call WFBE_CO_FNC_SendToServer;
+		ctrlSetText [31078, "Vehicle (T1) order sent. Awaiting result..."];
+	};
+	if (MenuAction == 62) then {
+		MenuAction = -1;
+		["RequestGDirPanel", [player, "vehicle", _selTownId, "t2"]] Call WFBE_CO_FNC_SendToServer;
+		ctrlSetText [31078, "Vehicle (T2) order sent. Awaiting result..."];
+	};
+	if (MenuAction == 63) then {
+		MenuAction = -1;
+		["RequestGDirPanel", [player, "vehicle", _selTownId, "t3"]] Call WFBE_CO_FNC_SendToServer;
+		ctrlSetText [31078, "Vehicle (T3) order sent. Awaiting result..."];
 	};
 	if (MenuAction == 90) then {
 		MenuAction = -1;
