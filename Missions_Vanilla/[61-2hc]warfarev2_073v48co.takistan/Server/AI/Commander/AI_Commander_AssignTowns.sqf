@@ -39,16 +39,6 @@ if (!isNull _cmdTeam) then {
 //--- OA-safe filter: towns not owned by this side.
 _uncaptured = [];
 { if ((_x getVariable "sideID") != _sideID) then {_uncaptured set [count _uncaptured, _x]} } forEach towns;
-//--- AI-BEHAVIOR-LOOP-DESIGN.md sec6.1: TEST-ONLY scoping filter (not a world edit) - truncates the uncaptured-town pool to the first N (stable array-index order) before use. -1 = off (byte-identical; full map in play as today).
-if ((missionNamespace getVariable ["WFBE_C_TEST_TOWN_CAP", -1]) >= 0) then {
-	private ["_ttcN","_ttcOut","_ttcI"];
-	_ttcN = missionNamespace getVariable ["WFBE_C_TEST_TOWN_CAP", -1];
-	if (_ttcN < count _uncaptured) then {
-		_ttcOut = [];
-		for "_ttcI" from 0 to (_ttcN - 1) do {_ttcOut set [_ttcI, _uncaptured select _ttcI]};
-		_uncaptured = _ttcOut;
-	};
-};
 if (count _uncaptured == 0) exitWith {};
 
 _useArc = (missionNamespace getVariable "WFBE_C_AI_COMMANDER_USE_ARC_APPROACH") > 0;

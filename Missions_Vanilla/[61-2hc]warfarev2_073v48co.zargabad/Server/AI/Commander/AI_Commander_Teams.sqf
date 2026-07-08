@@ -153,8 +153,6 @@ if (_base != _tgtLogPrev) then {
 //--- banking valve. AICOM was fielding ~15 teams at low pop (base 12 + valve 3); Ray wants max 8 going forward.
 private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 8];
 if (_target > _teamsHardCap) then {_target = _teamsHardCap; _extra = (_target - _base) max 0};
-//--- AI-BEHAVIOR-LOOP-DESIGN.md sec6.2: TEST-ONLY late-override (mirrors WFBE_C_TEST_POPTIER_PIN's single-purpose override style). -1 = off (byte-identical; PC-tier curve + hard cap govern as today).
-if ((missionNamespace getVariable ["WFBE_C_TEST_TEAM_CAP", -1]) >= 0) then {_target = missionNamespace getVariable ["WFBE_C_TEST_TEAM_CAP", -1]};
 
 //--- ECON SINK team-cap surge (cmdcon41-w2, Ray-approved): when the commander is pinned rich (AI_Commander.sqf set
 //--- wfbe_aicom_econ_surge on the logic OBJECT), lift the founding target by WFBE_C_AICOM_ECON_SINK_TEAMCAP so the
