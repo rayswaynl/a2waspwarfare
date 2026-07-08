@@ -1,4 +1,4 @@
-Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_gbq","_id","_index","_isVehicle","_longest","_position","_queu","_queu2","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_vehicle","_waitTime"];
+Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_gbq","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_vehicle","_waitTime"];
 _id = _this select 0;
 _building = _this select 1;
 _unitType = _this select 2;
@@ -6,6 +6,10 @@ _side = _this select 3;
 _sideID = (_side) Call GetSideID;
 _team = _this select 4;
 _isVehicle = _this select 5;
+//--- N8 fix: exact funds/supply charged for THIS buy (threaded through from AI_Commander_Produce.sqf's
+//--- Spawn AIBuyUnit call so a live W15 Black Market discount refunds at the SAME rate it was charged,
+//--- not re-derived from list price). Defaults to 0 for any other/older caller (defensive, back-compat).
+_price = if (count _this > 6) then {_this select 6} else {0};
 
 _sideText = str _side;
 
@@ -222,6 +226,19 @@ if (_unitType isKindOf "Man") then {
 		_position set [2, (_building getVariable ["wfbe_naval_deckz", 16])];
 	};
 	_vehicle = [_unitType, _position, _sideID, _dir, true, true, true, _special] Call WFBE_CO_FNC_CreateVehicle;
+	//--- N8 BUYFAIL GUARD (MORE-FIXES-AND-IDEAS; mirrors the player-side cmdcon42c HOTFIX in
+	//--- Client_BuildUnit.sqf): WFBE_CO_FNC_CreateVehicle returns objNull whenever the engine cannot
+	//--- spawn the hull. Without this guard the AI path fell through into unconditional crew creation
+	//--- (orphaned unseated soldiers - moveInDriver/Gunner/Commander on a null hull is a no-op), an
+	//--- unconditional VehiclesCreated stat bump for a vehicle that does not exist, and no refund of the
+	//--- funds already deducted at order time (AI_Commander_Produce.sqf: ChangeAICommanderFunds). ENGINE-
+	//--- VERIFIED (cmdcon44-g, Client_BuildUnit.sqf:748): this exitWith only exits the enclosing else-
+	//--- block (the Man/Vehicle branch), not the whole script - the shared queue-release tail below
+	//--- (wfbe_queue) still runs exactly once, same contract as the player-side guard.
+	if (isNull _vehicle) exitWith {
+		if (_price > 0) then {[_side, _price] Call ChangeAICommanderFunds};
+		["WARNING", Format ["Server_BuyUnit.sqf: buy of [%1] produced objNull (spawn failed) - refunded %2 to side [%3]; no crew spawned.", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent;
+	};
 	_vehicle addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
 
 	// Could seperate the array here for modded vehicles
