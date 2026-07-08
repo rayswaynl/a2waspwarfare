@@ -180,6 +180,13 @@ _wlSupply   = missionNamespace getVariable [Format ["WFBE_%1SUPPLYTRUCKS", sideJ
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.2, 0.2, 1.0]];
 		lnbSetText  [_listBox,[_i,1],_description + " [VBIED - APC, 2x Speed]"];
 	};
+	//--- fable/guer-suicide-bike (flag WFBE_C_GUER_SUICIDE_BIKE, default 0): THIRD VBIED variant, a fast
+	//--- small suicide motorcycle. Same red weapon styling as the hilux/M113, distinct tag. Keyed off live
+	//--- WFBE_C_GUER_SUICIDE_BIKE_TYPE (TT650_Civ CH / Old_moto_TK_Civ_EP1 TK/ZG).
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0} && {_x == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Civ"])}) then {
+		lnbSetColor [_listBox,[_i,1],[1.0, 0.2, 0.2, 1.0]];
+		lnbSetText  [_listBox,[_i,1],_description + " [VBIED - Suicide Bike]"];
+	};
 	//--- B75 (guer-tech FOB): relabel the FOB delivery trucks "FOB (Barracks/Light Factory/Heavy Factory)" in the GUER
 	//--- buy list ONLY. The trucks ride their canonical (shared) registration to avoid clobbering the AI/EAST factions
 	//--- (see Core_GUE.sqf), so their displayed name would otherwise be the donor truck's. Resistance-gated so an EAST
