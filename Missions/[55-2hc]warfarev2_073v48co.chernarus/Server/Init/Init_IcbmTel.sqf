@@ -186,7 +186,7 @@ WFBE_SE_FNC_TkScudRegister = {
 	if (isNull _veh) exitWith {false};
 	if !(_side in [west, east, resistance]) exitWith {false};
 	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) <= 0) exitWith {false};
-	if (worldName != "Takistan") exitWith {false};
+	if (worldName != "Takistan" && {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) <= 0}) exitWith {false};
 	_key = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _side];
 	_live = [_side] Call WFBE_SE_FNC_TkScudPlatforms;   //--- compacted current list.
 	//--- already registered? (idempotent — a double send must not double-count).
