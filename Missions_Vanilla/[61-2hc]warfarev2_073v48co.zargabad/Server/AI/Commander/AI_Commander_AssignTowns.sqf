@@ -39,6 +39,16 @@ if (!isNull _cmdTeam) then {
 //--- OA-safe filter: towns not owned by this side.
 _uncaptured = [];
 { if ((_x getVariable "sideID") != _sideID) then {_uncaptured set [count _uncaptured, _x]} } forEach towns;
+//--- AI-BEHAVIOR-LOOP-DESIGN.md sec6.1: TEST-ONLY scoping filter (not a world edit) - truncates the uncaptured-town pool to the first N (stable array-index order) before use. -1 = off (byte-identical; full map in play as today).
+if ((missionNamespace getVariable ["WFBE_C_TEST_TOWN_CAP", -1]) >= 0) then {
+	private ["_ttcN","_ttcOut","_ttcI"];
+	_ttcN = missionNamespace getVariable ["WFBE_C_TEST_TOWN_CAP", -1];
+	if (_ttcN < count _uncaptured) then {
+		_ttcOut = [];
+		for "_ttcI" from 0 to (_ttcN - 1) do {_ttcOut set [_ttcI, _uncaptured select _ttcI]};
+		_uncaptured = _ttcOut;
+	};
+};
 if (count _uncaptured == 0) exitWith {};
 
 _useArc = (missionNamespace getVariable "WFBE_C_AI_COMMANDER_USE_ARC_APPROACH") > 0;
@@ -295,6 +305,41 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 			//--- has been visibly stuck on the same order for 10+ min without progress.
 			//--- Distance alone is NOT a reason - en-route teams keep their order.
 			_needs = false;
+			//--- AI-BEHAVIOR-LOOP-DESIGN.md sec2.2: 4th sibling abandon trigger, structurally BEFORE both ASSAULT-DYNTIMEOUT-DESIGN.md Fix A insertion sites (the _toSecs read + the townorder dispatch-tuple write) and outside the wfbe_aicom_dispatch_open branch entirely - no line overlap, no shared local beyond _needs/_sideText/time this loop already reads. Fires regardless of position-stuck state (a team happily clearing camp-to-camp is never position-stuck, so it would never trip STUCK_ABANDON, yet can still be cumulatively lingering).
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_DWELL_ENABLE", 0]) > 0) then {
+				private ["_dwArr","_dwTgt","_dwT0","_dwCum"];
+				_dwArr = _team getVariable "wfbe_aicom_dwell_town0";
+				if (!isNil "_dwArr" && {typeName _dwArr == "ARRAY"} && {count _dwArr >= 2}) then {
+					_dwTgt = _dwArr select 0; _dwT0 = _dwArr select 1;
+					if (typeName _dwTgt == "OBJECT" && {!isNull _dwTgt} && {(_dwTgt getVariable ["sideID", -1]) != _sideID}) then {
+						_dwCum = time - _dwT0;
+						if (_dwCum > (missionNamespace getVariable ["WFBE_C_AICOM_DWELL_MAX_SECS", 900])) then {
+							_needs = true;
+							private ["_dwCd","_dwBl","_dwKeep"];
+							_dwCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
+							_dwBl = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetBool;
+							_dwKeep = [];
+							{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _dwTgt}) then {_dwKeep set [count _dwKeep, _x]} } forEach _dwBl;
+							_dwKeep set [count _dwKeep, [_dwTgt, time + _dwCd]];
+							_team setVariable ["wfbe_aicom_blacklist", _dwKeep];
+							_team setVariable ["wfbe_aicom_stuckstrikes", 0];
+							_team setVariable ["wfbe_aicom_dwell_town0", nil];
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|DWELL_ABANDON|team=" + (str _team) + "|town=" + (_dwTgt getVariable ["name","town"]) + "|cumDwell=" + str (round _dwCum));
+							//--- FAILED-JOURNEY RECYCLE: same tally+latch idiom already copy-pasted in this file (STUCK_ABANDON/stall-advance/uncapturable blocks) - 5th copy, not a new pipeline. Also closes the design doc's own finding that capture-side releases were previously invisible to this counter.
+							private ["_fjD","_fjThrD"];
+							_fjD = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
+							_team setVariable ["wfbe_aicom_failedjourneys", _fjD];
+							_fjThrD = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
+							if (_fjThrD > 0 && {_fjD >= _fjThrD} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+								_team setVariable ["wfbe_aicom_recycle", true, true];
+								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjD + "|reason=dwell");
+							};
+						};
+					} else {
+						_team setVariable ["wfbe_aicom_dwell_town0", nil];
+					};
+				};
+			};
 			if (_mode == "towns" || _mode == "") then {
 				if (typeName _goto != "OBJECT") then {
 					_needs = true;

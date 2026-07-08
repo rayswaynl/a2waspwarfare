@@ -51,6 +51,17 @@ _enemyLogik = (_enemySide) Call WFBE_CO_FNC_GetSideLogic;
 //--- TOWN CENSUS: my / enemy / neutral counts + the two candidate lists the allocator needs.
 _myTowns = 0; _enemyTowns = 0; _neutTowns = 0; _totTowns = 0;
 _ownTownObjs = []; _tgtTownObjs = [];
+//--- AI-BEHAVIOR-LOOP-DESIGN.md sec6.1: TEST-ONLY scoping filter, first N towns (stable array-index order) feeding this census loop so AI_Commander_Allocate.sqf's _tgtTowns (reads the snapshot, not towns directly) sees the identical capped pool as AI_Commander_AssignTowns.sqf's _uncaptured truncation. -1 = off (byte-identical; full towns array in play as today).
+private ["_townsCapped"]; _townsCapped = towns;
+if ((missionNamespace getVariable ["WFBE_C_TEST_TOWN_CAP", -1]) >= 0) then {
+	private ["_ttcN","_ttcOut","_ttcI"];
+	_ttcN = missionNamespace getVariable ["WFBE_C_TEST_TOWN_CAP", -1];
+	if (_ttcN < count towns) then {
+		_ttcOut = [];
+		for "_ttcI" from 0 to (_ttcN - 1) do {_ttcOut set [_ttcI, towns select _ttcI]};
+		_townsCapped = _ttcOut;
+	};
+};
 {
 	_totTowns = _totTowns + 1;
 	if ((_x getVariable "sideID") == _sideID) then {
@@ -61,7 +72,7 @@ _ownTownObjs = []; _tgtTownObjs = [];
 		_tgtTownObjs set [count _tgtTownObjs, _x];
 		if ((_x getVariable "sideID") == _enemyID) then {_enemyTowns = _enemyTowns + 1} else {_neutTowns = _neutTowns + 1};
 	};
-} forEach towns;
+} forEach _townsCapped;
 if (_totTowns == 0 && {!isNil "towns"} && {(count towns) > 0}) then {
 	["WARNING", Format ["AI_Commander_Snapshot: census totTowns=0 but towns array has %1 entries - town sideID vars may not be initialised yet.", count towns]] Call WFBE_CO_FNC_AICOMLog;
 };
