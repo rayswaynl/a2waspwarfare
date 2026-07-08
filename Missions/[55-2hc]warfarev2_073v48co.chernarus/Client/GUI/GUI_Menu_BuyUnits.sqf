@@ -143,7 +143,7 @@ _IDCS = _IDCS - [_currentIDC];
 			//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD per-side live cap (Takistan). Refuse UP FRONT (before queuing +
 			//--- spending) when the side already fields WFBE_C_TK_SCUD_HF_MAX bought SCUDs. Reads the server-broadcast platform
 			//--- array (client-visible). The server re-enforces the cap on registration (delete + refund) as the authority.
-			if (!_skip && {(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0} && {worldName == "Takistan"} && {_unit == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
+			if (!_skip && {(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0} && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}} && {_unit == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
 				private ["_scudArr","_scudLive","_scudMax"];
 				_scudArr = missionNamespace getVariable [format ["WFBE_TK_SCUD_PLATFORMS_%1", str sideJoined], []];
 				_scudLive = 0;
@@ -151,6 +151,8 @@ _IDCS = _IDCS - [_currentIDC];
 					{ if (!isNull _x && {alive _x}) then {_scudLive = _scudLive + 1} } forEach _scudArr;
 				};
 				_scudMax = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_MAX", 2];
+				//--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): one-per-side clamp. Does NOT touch WFBE_C_TK_SCUD_HF_MAX's own default (2) - just caps the effective ceiling read here. Server-side WFBE_SE_FNC_TkScudRegister applies the identical clamp as the authority.
+				if ((missionNamespace getVariable ["WFBE_C_SCUD_ONE_PER_SIDE", 1]) > 0) then {_scudMax = _scudMax min 1};
 				if (_scudLive >= _scudMax) then {
 					_skip = true;
 					hint parseText (Format ["<t color='#ff5a5a'>SCUD refused: your side already fields %1 launchers (max %2).</t>", _scudLive, _scudMax]);

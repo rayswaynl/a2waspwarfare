@@ -1104,7 +1104,7 @@ if (worldName == "Zargabad") then {
 	//--- TEL or a bought SCUD) to the target, and range is measured FROM THAT PLATFORM (drive closer to reach further). NUKE
 	//--- stays research-TEL-only. Per-platform cooldown for conventional shots (parallel fire for big money). No respawn (it's a
 	//--- purchase). AICOM never buys it (team-template production only; the buy roster is not an AICOM source). No nuke ever.
-	if (isNil "WFBE_C_TK_SCUD_HF")                    then {WFBE_C_TK_SCUD_HF = 1};                     //--- master: producible SCUD at HF on Takistan (all behaviour also worldName-gated to "Takistan").
+	if (isNil "WFBE_C_TK_SCUD_HF")                    then {WFBE_C_TK_SCUD_HF = 1};                     //--- master: producible SCUD at HF (worldName-gated to "Takistan" unless WFBE_C_SCUD_DRIVABLE_ALLMAPS > 0 - see below).
 	if (isNil "WFBE_C_TK_SCUD_HF_COST")               then {WFBE_C_TK_SCUD_HF_COST = 28000};            //--- buy-row price of the producible SCUD launcher (conventional).
 	if (isNil "WFBE_C_TK_SCUD_HF_LEVEL")              then {WFBE_C_TK_SCUD_HF_LEVEL = 3};               //--- required HEAVY factory upgrade level for the buy row (the row's tier field).
 	if (isNil "WFBE_C_TK_SCUD_HF_MAX")                then {WFBE_C_TK_SCUD_HF_MAX = 2};                 //--- max LIVE bought SCUDs per side (purchase refused at cap; destroyed ones do NOT respawn).
@@ -2430,6 +2430,9 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GUER_PATROL_MARKERS") then {WFBE_C_GUER_PATROL_MARKERS = 1}; //--- owner: resistance-only map intel layer (friendly AI dots + owned-town health flags + inbound cell arrows).
 	if (isNil "WFBE_C_UNIT_DESIGNER") then {WFBE_C_UNIT_DESIGNER = 1}; //--- Team-menu Units tab: infantry loadout templates applied to bought AI squad units.
 	if (isNil "WFBE_C_SEAD") then {WFBE_C_SEAD = 1}; //--- B93 SEAD: scripted anti-radar guidance for tier-5 jets (F35B/Su34), 2-shot cap. DARK until Build 93.
+	if (isNil "WFBE_C_SCUD_DRIVABLE_ALLMAPS") then {WFBE_C_SCUD_DRIVABLE_ALLMAPS = 1}; //--- fable/scud-chernarus-artillery (owner 2026-07-08): when >0, drop the worldName=="Takistan" gate on the producible/crewed SCUD (Core_TKA.sqf buy-row, Client_BuildUnit.sqf platform wiring, GUI_Menu_BuyUnits.sqf cap check, Init_IcbmTel.sqf WFBE_SE_FNC_TkScudRegister, GUI_Menu_Tactical.sqf TelMuniEnable) so it is purchasable/drivable on every map, not just Takistan. Default 1 = ARMED per owner ask; set 0 to revert to Takistan-only.
+	if (isNil "WFBE_C_SCUD_ONE_PER_SIDE") then {WFBE_C_SCUD_ONE_PER_SIDE = 1}; //--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): when >0, clamps the per-side LIVE bought-SCUD cap to 1 (GUI_Menu_BuyUnits.sqf pre-purchase check + Init_IcbmTel.sqf WFBE_SE_FNC_TkScudRegister server-authoritative check both `min 1` the WFBE_C_TK_SCUD_HF_MAX-derived cap - that flag's own default of 2 is left untouched). Default 1 = ARMED per owner ask (one precious launcher per side); set 0 to fall back to the WFBE_C_TK_SCUD_HF_MAX cap alone.
+	if (isNil "WFBE_C_SCUD_SPEED_CAP_KMH") then {WFBE_C_SCUD_SPEED_CAP_KMH = 20}; //--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): drivable-SCUD top-speed governor in km/h, enforced client-side via periodic setVelocity in Client_BuildUnit.sqf WFBE_CL_FNC_TkScudSpeedGovernor (A2-OA has no setMaxSpeed/limitSpeed - that command is Arma-3-only, mirrors the existing WFBE_CL_FNC_GuerVbiedM113Boost setVelocity idiom in the same file). Intent: the SCUD is slow and precious - players should prefer airlifting it over driving. Set <=0 to disable the governor (stock vehicle top speed).
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

@@ -801,7 +801,7 @@ if (_isMan) then {
 	//--- and sends the SAME icbm-tel-fire payload the Tactical menu uses, WITH this specific hull as the platform hint (the
 	//--- server re-validates everything). Fires a SATURATION conventional strike (the flagship conventional munition). Mirrors
 	//--- the carrier scud-action-add + GUER-VBIED buyer-local-add / GetIn-re-add persistence idioms. TK + flag gated.
-	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan"} && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
+	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}} && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
 		//--- (a) SERVER-SIDE registration request (side-keyed platform array + cap enforcement live on the server). Pass the
 		//--- ACTUAL price paid (_currentCost, incl. modifiers + crew) so an over-cap refusal refunds the exact amount deducted.
 		["RequestSpecial", ["tk-scud-register", _vehicle, sideJoined, group player, _currentCost]] Call WFBE_CO_FNC_SendToServer;
@@ -849,13 +849,52 @@ if (_isMan) then {
 			_v setVariable ["wfbe_tk_scud_action", _aid];
 		};
 
+		//--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): drivable-SCUD speed governor. A2-OA has no
+		//--- setMaxSpeed/limitSpeed (Arma-3-only - see WFBE_CL_FNC_GuerVbiedM113Boost below for the identical constraint on
+		//--- the M113 VBIED), so cap top speed with the same periodic setVelocity idiom that boost loop uses, but scaling
+		//--- the WHOLE velocity vector DOWN to the cap instead of nudging one component up - a firm governor (direction
+		//--- preserved, magnitude clamped) rather than a soft nudge. Intent (owner): the SCUD is a slow, precious,
+		//--- airliftable asset, not a fast mobile launcher - driving it should be tedious enough that sling-loading is the
+		//--- practical way to relocate it. Idempotent via wfbe_scud_governor_running (one loop per local vehicle instance,
+		//--- mirrors the boost loop's dedupe pattern). Local-driver-gated exactly like the boost loop, so it shares that
+		//--- loop's known scope: reliable for the buyer's own machine across get-in/get-out; a teammate who becomes driver
+		//--- on an entirely different, never-subscribed client is the same documented gap the VBIED note above already
+		//--- accepts for this file's addAction/addEventHandler idiom.
+		WFBE_CL_FNC_TkScudSpeedGovernor = {
+			private ["_v"];
+			_v = _this;
+			if (isNull _v) exitWith {};
+			if (_v getVariable ["wfbe_scud_governor_running", false]) exitWith {};   //--- already governing on this machine.
+			_v setVariable ["wfbe_scud_governor_running", true];
+			[_v] spawn {
+				private ["_v","_cap","_s","_vel","_ratio"];
+				_v = _this select 0;
+				_cap = missionNamespace getVariable ["WFBE_C_SCUD_SPEED_CAP_KMH", 20];
+				while {alive _v && {driver _v == player} && {canMove _v} && {_cap > 0}} do {
+					_s = speed _v;
+					if (_s > _cap) then {
+						_vel = velocity _v;
+						_ratio = _cap / _s;
+						_v setVelocity [(_vel select 0) * _ratio, (_vel select 1) * _ratio, (_vel select 2) * _ratio];
+					};
+					sleep 0.1;
+				};
+				_v setVariable ["wfbe_scud_governor_running", false];
+			};
+		};
+
 		//--- Immediate buyer-local add (instant availability) + GetIn re-add for persistence (mirrors the VBIED idiom).
 		_vehicle call WFBE_CL_FNC_AddTkScudAction;
+		_vehicle call WFBE_CL_FNC_TkScudSpeedGovernor;
 		_vehicle addEventHandler ["GetIn", {
-			private ["_v","_u"];
+			private ["_v","_pos","_u"];
 			_v = _this select 0;
+			_pos = _this select 1;
 			_u = _this select 2;
-			if (_u == player) then { _v call WFBE_CL_FNC_AddTkScudAction };
+			if (_u == player) then {
+				_v call WFBE_CL_FNC_AddTkScudAction;
+				if (_pos == "driver") then { _v call WFBE_CL_FNC_TkScudSpeedGovernor };
+			};
 		}];
 	};
 

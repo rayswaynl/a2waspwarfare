@@ -186,12 +186,14 @@ WFBE_SE_FNC_TkScudRegister = {
 	if (isNull _veh) exitWith {false};
 	if !(_side in [west, east, resistance]) exitWith {false};
 	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) <= 0) exitWith {false};
-	if (worldName != "Takistan") exitWith {false};
+	if (worldName != "Takistan" && {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) <= 0}) exitWith {false};
 	_key = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _side];
 	_live = [_side] Call WFBE_SE_FNC_TkScudPlatforms;   //--- compacted current list.
 	//--- already registered? (idempotent — a double send must not double-count).
 	if (_veh in _live) exitWith {true};
 	_max = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_MAX", 2];
+	//--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): one-per-side clamp, server-authoritative. Does NOT touch WFBE_C_TK_SCUD_HF_MAX's own default (2) - just caps the effective ceiling read here. Mirrors the identical clamp in GUI_Menu_BuyUnits.sqf (this is the authority; that one is the pre-purchase UX gate).
+	if ((missionNamespace getVariable ["WFBE_C_SCUD_ONE_PER_SIDE", 1]) > 0) then {_max = _max min 1};
 	if (count _live >= _max) exitWith {
 		//--- refuse: destroy the surplus purchase + refund the buying team the EXACT amount paid (flag cost fallback), tell the side.
 		_refund = if (_paid >= 0) then {_paid} else {missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000]};
