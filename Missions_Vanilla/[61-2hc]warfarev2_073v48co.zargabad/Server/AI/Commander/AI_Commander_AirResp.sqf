@@ -123,6 +123,10 @@ if (!_inRange) then {
 	_senseTick = 0;
 	_laneTown = objNull;
 } else {
+	if (_bestTown != _laneTown) then {
+		_sensed = false;   //--- sensed lane switched while still in range -> latch does not carry to the new lane (mirrors DECAP's contact-lost reset, AI_Commander_Decapitate.sqf:106-108)
+		_senseTick = 0;
+	};
 	_laneTown = _bestTown;   //--- track the currently-best lane even before the roll latches (telemetry-visible)
 	if (!_sensed) then {
 		_senseTick = _senseTick + 1;
