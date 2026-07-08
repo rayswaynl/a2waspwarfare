@@ -257,7 +257,7 @@ public abstract class BaseVehicle : InterfaceVehicle
                                     {
                                         var vanillaWeaponDefinition = (InterfaceWeapon)ammunitionType.weaponDefinition;
 
-                                        if (vanillaWeaponDefinition.WeaponType == weaponDefinition.WeaponType)
+                                        if (_vanillaLoadout.AmmunitionTypesWithCount.Keys.Any(vk => ((InterfaceWeapon)((InterfaceAmmunition)EnumExtensions.GetInstance(vk.ToString())).weaponDefinition).WeaponType == vanillaWeapon && ((InterfaceAmmunition)EnumExtensions.GetInstance(vk.ToString())).AmmunitionTypes.Any(va => EnumExtensions.GetEnumMemberAttrValue(va) == commonKey)))
                                         {
                                             extraWeaponsToRemove.Add(EnumExtensions.GetEnumMemberAttrValue(vanillaWeapon));
                                         }
