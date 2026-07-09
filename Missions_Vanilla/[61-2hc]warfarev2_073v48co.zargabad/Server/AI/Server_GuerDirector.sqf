@@ -216,9 +216,10 @@ while {!WFBE_GameOver} do {
     // PHASE 4: PLANNING - reinforce depleted/threatened from surplus towns.
     // Conservation: drain source on dispatch; credit destination on arrival.
     //--------------------------------------------------------------------
-    private ["_sources","_orderCount"];
+    private ["_sources","_orderCount","_srcIdx"];
     _sources    = [];
     _orderCount = 0;
+    _srcIdx     = 0;
 
     {_sources set [count _sources, _x]} forEach _stateOpp;
     {_sources set [count _sources, _x]} forEach _stateSafe;
@@ -230,24 +231,29 @@ while {!WFBE_GameOver} do {
         _dstBase= _dst select 1;
         _needed = _dstBase - _dstStr;
         if (_needed > 0.05 && {count _sources > 0}) then {
-            _src    = _sources select 0;
-            _srcStr = _src select 2;
-            _srcBase= _src select 1;
-            _send   = [_needed * 0.5, 0, _srcStr - (_srcBase * 0.5)] call _fnClamp;
-            if (_send > 0.05) then {
-                _src set [2, _srcStr - _send];
-                _src set [3, (_src select 3) + _send];
-                _dst set [3, (_dst select 3) + _send];
-                _orderCount  = _orderCount + 1;
-                _fundedTotal = _fundedTotal + _send;
-                //--- P1: record ETA for stuck-cell detection (hardenOn only).
-                if (_hardenOn && {(count _dst) > 6}) then {
-                    private ["_etaDist"];
-                    _etaDist = (getPos (_src select 0)) distance (getPos (_dst select 0));
-                    _dst set [6, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor];
+            while {_srcIdx < count _sources && {(((_sources select _srcIdx) select 2) - ((_sources select _srcIdx) select 1) * 0.5) <= 0.05}} do {
+                _srcIdx = _srcIdx + 1;
+            };
+            if (_srcIdx < count _sources) then {
+                _src    = _sources select _srcIdx;
+                _srcStr = _src select 2;
+                _srcBase= _src select 1;
+                _send   = [_needed * 0.5, 0, _srcStr - (_srcBase * 0.5)] call _fnClamp;
+                if (_send > 0.05) then {
+                    _src set [2, _srcStr - _send];
+                    _src set [3, (_src select 3) + _send];
+                    _dst set [3, (_dst select 3) + _send];
+                    _orderCount  = _orderCount + 1;
+                    _fundedTotal = _fundedTotal + _send;
+                    //--- P1: record ETA for stuck-cell detection (hardenOn only).
+                    if (_hardenOn && {(count _dst) > 6}) then {
+                        private ["_etaDist"];
+                        _etaDist = (getPos (_src select 0)) distance (getPos (_dst select 0));
+                        _dst set [6, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor];
+                    };
+                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER moveCell from=%2 to=%3 str=%4",
+                        _elmin, _src select 0, _dst select 0, _send];
                 };
-                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER moveCell from=%2 to=%3 str=%4",
-                    _elmin, _src select 0, _dst select 0, _send];
             };
         };
     } forEach _stateDep;
@@ -259,24 +265,29 @@ while {!WFBE_GameOver} do {
         _dstBase= _dst select 1;
         _needed = _dstBase - _dstStr;
         if (_needed > 0.1 && {count _sources > 0}) then {
-            _src    = _sources select 0;
-            _srcStr = _src select 2;
-            _srcBase= _src select 1;
-            _send   = [_needed * 0.3, 0, _srcStr - (_srcBase * 0.6)] call _fnClamp;
-            if (_send > 0.05) then {
-                _src set [2, _srcStr - _send];
-                _src set [3, (_src select 3) + _send];
-                _dst set [3, (_dst select 3) + _send];
-                _orderCount  = _orderCount + 1;
-                _fundedTotal = _fundedTotal + _send;
-                //--- P1: record ETA for stuck-cell detection (hardenOn only).
-                if (_hardenOn && {(count _dst) > 6}) then {
-                    private ["_etaDist"];
-                    _etaDist = (getPos (_src select 0)) distance (getPos (_dst select 0));
-                    _dst set [6, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor];
+            while {_srcIdx < count _sources && {(((_sources select _srcIdx) select 2) - ((_sources select _srcIdx) select 1) * 0.6) <= 0.05}} do {
+                _srcIdx = _srcIdx + 1;
+            };
+            if (_srcIdx < count _sources) then {
+                _src    = _sources select _srcIdx;
+                _srcStr = _src select 2;
+                _srcBase= _src select 1;
+                _send   = [_needed * 0.3, 0, _srcStr - (_srcBase * 0.6)] call _fnClamp;
+                if (_send > 0.05) then {
+                    _src set [2, _srcStr - _send];
+                    _src set [3, (_src select 3) + _send];
+                    _dst set [3, (_dst select 3) + _send];
+                    _orderCount  = _orderCount + 1;
+                    _fundedTotal = _fundedTotal + _send;
+                    //--- P1: record ETA for stuck-cell detection (hardenOn only).
+                    if (_hardenOn && {(count _dst) > 6}) then {
+                        private ["_etaDist"];
+                        _etaDist = (getPos (_src select 0)) distance (getPos (_dst select 0));
+                        _dst set [6, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor];
+                    };
+                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER moveCell from=%2 to=%3 str=%4 (threatened)",
+                        _elmin, _src select 0, _dst select 0, _send];
                 };
-                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER moveCell from=%2 to=%3 str=%4 (threatened)",
-                    _elmin, _src select 0, _dst select 0, _send];
             };
         };
     } forEach _stateThr;
