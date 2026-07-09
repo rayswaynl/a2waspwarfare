@@ -32,12 +32,22 @@ didn't want.
 1. **The PBO** (`config.cpp` + `CfgPatches.hpp`, packed as `mkswf_vehicle_radio.pbo`) installs
    the normal addon way: `@mkswf_vehicle_radio\addons\mkswf_vehicle_radio.pbo`, same as before.
 2. **`a2waspwarfare_Extension.dll` + `ManagedBass.dll` + `Newtonsoft.Json.dll` + `bass.dll`**
-   are loose native/managed files, not PBO content — BIS's `callExtension` loads them via the
-   OS's own DLL search, not the engine's virtual file system, so they most likely need to sit
-   directly in the Arma 2 OA install root (next to `arma2oa.exe`), not inside `@mkswf_vehicle_radio\`.
-   **Open test-plan item**: confirm in-game whether `callExtension` can also resolve them from
-   inside an active `-mod=` addon folder — if so, step 2 simplifies to "same folder as the PBO."
-   Until that's confirmed on a box smoke, ship install instructions for the root-folder path.
+   must go directly in the **Arma 2 OA installation root** (the folder containing
+   `ArmA2OA.exe`), **not** inside `@mkswf_vehicle_radio\`. Confirmed via the current official
+   BIS wiki "Extensions" page (`community.bistudio.com/wiki/Extensions`, "Where to put
+   Extensions?" section, fetched 2026-07-09): the mod-folder search path
+   (`..\arma3\@ModXYZ\yourextension.dll`) is documented **only for Arma 3**
+   ("*Arma 3* will look at the following places..."); no equivalent statement exists for Arma
+   2 OA anywhere on that page, or anywhere else found. The install-root location (next to the
+   executable) is the older, universal convention that predates the mod-folder convenience
+   lookup, so it's the one guaranteed to work on A2 OA. These 4 files are loose
+   native/managed binaries, not PBO content, and are client-only - the dedicated server
+   doesn't need them (`GLOBALGAMESTATS` keeps using its own existing server-side copy).
+   Source of truth for these files stays in this repo folder (`Mods\mkswf_vehicle_radio\`);
+   the modpack zip / installer just needs to drop them one directory further out than the PBO.
+   (BattlEye note: since engine 1.46, BattlEye - when *enabled* - requires client extensions to
+   be whitelisted or it blocks their load; not a concern here since production runs
+   `BattlEye = 0`, per `server-config/server-pr8.cfg`, but relevant if that ever changes.)
 
 ## Packing + distributing
 There is no PBO build pipeline in this repo (addons are kept as loose source). To ship:
