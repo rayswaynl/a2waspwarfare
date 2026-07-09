@@ -143,6 +143,16 @@ switch (_request) do {
 		_msg = _args select 0;
 		if (typeName _msg == "STRING" && {_msg != ""}) then {systemChat _msg};
 	};
+	//--- zg-koth-announce (fable/radius-hold-primitive consumer, GR-2026-07-08a): plain public announcement
+	//--- for the Zargabad KotH hold, mirrors icbm-tel-msg verbatim (systemChat, no side-scoping needed - the
+	//--- server sends this with a nil destination so every client gets it). _args select 0 = the text.
+	case "zg-koth-announce": {
+		if (isDedicated) exitWith {};
+		if (isNil "player" || {isNull player}) exitWith {};
+		private ["_msg"];
+		_msg = _args select 0;
+		if (typeName _msg == "STRING" && {_msg != ""}) then {systemChat _msg};
+	};
 	//--- icbm-tel-marker: FRIENDLY-ONLY TEL map marker. _args = [_tel, _sideText]. mil_triangle in side colour,
 	//--- text "ICBM TEL". A tiny local watcher deletes it when the TEL dies (server re-sends this on each respawn).
 	case "icbm-tel-marker": {
