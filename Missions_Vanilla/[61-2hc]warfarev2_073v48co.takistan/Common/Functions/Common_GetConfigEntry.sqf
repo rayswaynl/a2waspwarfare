@@ -19,7 +19,7 @@ _entry = _config >> _entryName;
 
 //--- If the entry is not found and we are not yet at the config root, explore the class' parent.
 if (((configName (_config >> _entryName)) == "") && (!((configName _config) in ["CfgVehicles", "CfgWeapons", ""]))) then {
-	[inheritsFrom _config, _entryName] call WFBE_CO_FNC_GetConfigEntry;
+	_value = [inheritsFrom _config, _entryName] call WFBE_CO_FNC_GetConfigEntry;
 } else {
 	//--- Supporting either Numbers or Strings, and array ofc!
 	switch (true) do {
