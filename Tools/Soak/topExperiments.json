@@ -1,0 +1,49 @@
+{
+  "schema": "a2wasp-experiments-v1",
+  "notes": [
+    "The autopilot's work queue: experiments to run, priority-ordered. The planner picks the next",
+    "runnable one given the current corpus. kind: sweep (find a knee across a swept dimension), ab",
+    "(two matched arms), grade (single-run verdict / regression sentinel). gatedOn=track-b means the",
+    "experiment needs live boot to inject its controlled X-axis (flag/pin) and self-generate matched",
+    "replicates; grade-kind experiments run TODAY against any matching RPT. Each names the metric it",
+    "keys on and the scenario recipe it drives (see scenarios.json)."
+  ],
+  "experiments": [
+    {
+      "id": "fps-knee-hc-sensitivity", "kind": "sweep", "priority": 1, "gatedOn": "track-b",
+      "scenario": "load-ramp", "metric": "serverFpsMedian", "sweep": "popPin",
+      "question": "At what unit count does server FPS collapse, and does it move with HC count?",
+      "why": "highest-leverage open perf question; replaces the ~450-470 folklore with a measured knee per HC config"
+    },
+    {
+      "id": "hc-split-benefit", "kind": "ab", "priority": 2, "gatedOn": "track-b",
+      "scenario": "hc-split", "metric": "serverFpsMedian", "armA": "hc1", "armB": "hc2", "regime": "zargabad/*/pin10",
+      "question": "Does a 2nd headless client raise server FPS at matched population, or just relocate load?",
+      "why": "decides whether 2-HC is worth it; matched-pop A/B is the clean test"
+    },
+    {
+      "id": "guer-director-aliveness", "kind": "grade", "priority": 3, "gatedOn": null,
+      "scenario": "a-life-probe", "metric": "captures", "flag": "WFBE_C_GUER_DIRECTOR",
+      "question": "Does GDIR_LEDGER hold/grow (alive) vs decay to zero (inert), and does GDIR_ORDER fire?",
+      "why": "regression sentinel for PR #815; runnable now against any a-life RPT"
+    },
+    {
+      "id": "flight-reachability", "kind": "grade", "priority": 4, "gatedOn": "track-b",
+      "scenario": "flight-probe", "metric": "aiTotPeak", "flag": "WFBE_C_TEST_VERBS",
+      "question": "Does an AI commander ever field and fly air within the window, or is Aircraft-Factory capture the blocker?",
+      "why": "owner research interest (planes/choppers flying); needs the test-verb to force the precondition"
+    },
+    {
+      "id": "noise-floor-baseline", "kind": "sweep", "priority": 0, "gatedOn": "track-b",
+      "scenario": "idle-soak", "metric": "serverFpsMedian", "sweep": "replicate", "regime": "chernarus/1hc/pin6",
+      "question": "What is the run-to-run variance of serverFpsMedian at a fixed regime?",
+      "why": "must be measured FIRST: it calibrates every A/B's significance threshold and every golden band. Run before any A/B is trusted."
+    },
+    {
+      "id": "ambient-skirmish-cost", "kind": "ab", "priority": 5, "gatedOn": "track-b",
+      "scenario": "idle-soak", "metric": "serverFpsMedian", "flag": "WFBE_C_AMBIENT_SKIRMISH",
+      "question": "Is there a cheap 'world feels alive' win from ambient skirmishes without denting server FPS?",
+      "why": "world A-life interest; A/B flag-off vs flag-on at matched regime"
+    }
+  ]
+}

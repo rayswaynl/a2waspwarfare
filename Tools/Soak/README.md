@@ -318,3 +318,189 @@ mode transitions visible at a glance.
 ```
 
 CTRL+C to stop the watcher.  The script is non-destructive and read-only.
+
+---
+
+## Soak ledger (the data spine)
+
+The ledger is the append-only, durable record every soak run flows into — the substrate the
+nightly farm, the Discord verdict poster, the golden-baseline regression check, and any future
+admin hub all read from. Its schema is frozen in
+[`docs/design/v2/SPEC-SOAK-LEDGER-CONTRACT.md`](../../docs/design/v2/SPEC-SOAK-LEDGER-CONTRACT.md)
+and mirrored as a machine-checkable JSON Schema in `run_result.schema.json`.
+
+**Files**
+
+| File | Role |
+| --- | --- |
+| `soak-ledger.jsonl` | The ledger itself. One JSON object per line; first line is a `#` header comment. Runtime data — **git-ignored**, created on first append. |
+| `run_result.schema.json` | JSON Schema (draft-07) freezing the v1 row contract. |
+| `Append-LedgerRow.ps1` | The only supported writer. Generates `rowId`, de-dupes on `stampId`, maps analyzer JSON into the curated row, appends one line. |
+| `Append-LedgerRow.Tests.ps1` | Dependency-free assertion suite (no Pester). Exit 0 pass / 1 fail. |
+| `validate_ledger.py` | Validates a ledger file against the schema without needing the `jsonschema` package. `--self-test` for CI. |
+| `golden-baselines.json` | Per-regime expected-value baselines for regression detection. Provisional `documented` seeds (n=0) get promoted to `measured` once ≥5 real rows exist. |
+
+**Core rules** (enforced by the writer + validator):
+
+- **Null is not zero.** An unknown/N-A field is `null` and is never omitted; `0` means a measured zero. Readers must never infer PASS from a missing field.
+- **`rowId` = `YYYYMMDD-NNNN`**, one-based and scoped to the UTC append date; the writer computes it, callers never pass it.
+- **Duplicate `stampId` is rejected** (throws, appends nothing) unless the row is a `SKIP_*` status *and* `-AllowDuplicateSkip` is set.
+
+**Append a row** (normal deploy-candidate run):
+
+```powershell
+python Tools\Soak\analyze_soak.py <server.RPT> --hc <ArmA2OA.RPT> --json > analyze.json
+$rowId = .\Tools\Soak\Append-LedgerRow.ps1 `
+    -LedgerPath   Tools\Soak\soak-ledger.jsonl `
+    -Status       POSTED `
+    -StampPath    <deploy-stamp.json> `
+    -AnalyzeJsonPath analyze.json `
+    -ServerRptPath <server.RPT> -HcRptPath <ArmA2OA.RPT> `
+    -DiscordGuildId 1510513623800221857 -DiscordChannelId 1510573856275038228
+```
+
+**Record a run that never produced an RPT** (box down, too short, etc.) — KPIs land as `null`, not `0`:
+
+```powershell
+.\Tools\Soak\Append-LedgerRow.ps1 -LedgerPath Tools\Soak\soak-ledger.jsonl `
+    -Status SKIP_BOX_DOWN -StampPath <stamp.json> -AllowDuplicateSkip -Note "SCP failed before analyzer stage."
+```
+
+**Verify** (both are CI-friendly, dependency-free):
+
+```powershell
+pwsh Tools\Soak\Append-LedgerRow.Tests.ps1     # writer round-trip + contract checks
+python Tools\Soak\validate_ledger.py --self-test
+python Tools\Soak\validate_ledger.py Tools\Soak\soak-ledger.jsonl   # conformance of a real ledger
+```
+
+---
+
+## Scenarios (named, repeatable recipes)
+
+Instead of ad-hoc soaks, tests are **named recipes** in `scenarios.json`. `Get-ScenarioSpec.ps1`
+resolves a name to a full config; `Run-Scenario.ps1` plans or grades it and feeds the ledger above.
+
+**Catalog** (`scenarios.json`): `defend-town`, `big-assault`, `load-ramp` (popPin sweep),
+`idle-soak`, `hc-split` (1-HC-vs-2-HC sweep), `flight-probe`, `a-life-probe` (GUER Director aliveness).
+Each recipe carries a map/HC/popPin/duration config, the flags to inject, and threshold **asserts**
+(`severity: fail` → a miss makes the run FAIL; `watch` → WATCH).
+
+```powershell
+# list the catalog
+.\Tools\Soak\Get-ScenarioSpec.ps1 -List
+
+# resolve a recipe to concrete runs (sweeps expand to one run per value)
+.\Tools\Soak\Get-ScenarioSpec.ps1 -Name hc-split -Json
+
+# PLAN a run — prints config + the server/HC launch command lines + asserts. No side effects.
+.\Tools\Soak\Run-Scenario.ps1 -Name big-assault -DryRun
+
+# GRADE a produced RPT — analyze -> metrics -> verdict -> Run-Result JSON + ledger row (+ -Peach DM)
+.\Tools\Soak\Run-Scenario.ps1 -Name idle-soak -FromRpt <server.RPT> -HcRpt <ArmA2OA.RPT> -Peach
+```
+
+`Run-Scenario.ps1` **does not spawn Arma** — it plans (`-DryRun`) and grades (`-FromRpt`). Live boot
+orchestration is the sandbox-boot track; keeping the driver spawn-free makes it safe and fully
+testable. Each `-FromRpt` grade writes `results/<runId>.json` (the Standard Run-Result: config,
+metrics, per-assert verdicts, boot-smoke, ledger rowId, artifacts) and appends one ledger row.
+
+**Metrics** the asserts reference (computed from `analyze_soak.py` output): `serverFpsMedian`,
+`serverFpsMin`, `hcFpsMedian`, `hc2FpsMedian`, `aiTotPeak`, `guerPeak`, `captures`, `arrivalPct`,
+`maxTownsWest`, `maxTownsEast`, `hours`.
+
+**Verify:**
+```powershell
+pwsh Tools\Soak\Get-ScenarioSpec.Tests.ps1
+pwsh Tools\Soak\Run-Scenario.Tests.ps1
+```
+
+---
+
+## Charts (`chart_soak.py`)
+
+Renders the ledger + Run-Result JSONs as a single **self-contained HTML report** with inline SVG.
+**Dependency-free** (hand-rolled SVG — no matplotlib/numpy), so it runs on the box exactly as on a
+dev box. Charts are **theme-aware** (adapt to the viewer's light/dark) and **null is not zero**
+(a missing metric is skipped, never plotted as 0).
+
+Five chart types:
+1. **FPS knee** — `serverFpsMedian` vs `aiTotPeak` (with the documented ~450-470 unit band shaded).
+2. **HC split** — `serverFpsMedian` at 1 HC vs 2 HC for matched population (grouped bars).
+3. **Population sweep** — `serverFpsMedian` + `hcFpsMedian` vs `popPin`.
+4. **FPS timeline** — `serverFpsMedian` across ledger history.
+5. **Verdict tally** — PASS / WATCH / FAIL counts.
+
+```powershell
+# standalone
+python Tools\Soak\chart_soak.py --ledger Tools\Soak\soak-ledger.jsonl --results Tools\Soak\results --out report\soak-report.html
+
+# automatic: every grade refreshes the report
+.\Tools\Soak\Run-Scenario.ps1 -Name load-ramp -RunLabel pin10 -FromRpt <server.RPT> -Report
+
+# self-test
+python Tools\Soak\chart_soak.py --self-test
+```
+
+Empty inputs render gracefully (each card shows "no data yet" until runs accumulate).
+
+---
+
+## Experiment engine (the autopilot brains)
+
+The stdlib modules that turn accumulated runs into honest, evidence-cited findings. Built so they
+**cannot lie on a thin corpus**: a fresh sandbox with < 5 replicates per arm returns `INCONCLUSIVE`,
+never a "finding". Everything is `--self-test`-gated and dependency-free (runs on the box).
+
+| File | Role |
+| --- | --- |
+| `ab_stats.py` | Replicate-aware A/B: Welch t vs an embedded t-table (no scipy) + Cohen's d, dual **statistical AND practical (MDE)** gate, hard **regime-match refusal**, nonparametric p10..p90 path for count metrics. Verdicts: BETTER / WORSE / NO_DIFF / INCONCLUSIVE / REFUSE_REGIME_MISMATCH. |
+| `decision_engine.py` | Convergence controller: replicate each A/B arm only while **underpowered** (2·SEM ≥ MDE), capped at N_MAX=12; sweep knee-bracketing with **BISECT** instead of piling replicates. Actions: NEED_MORE_REPLICATES / BISECT / CONVERGED / STOP. |
+| `findings_emitter.py` | Append-only `findings.jsonl` — every verdict cites both arms' ledger `rowIds`, n, σ, test, MDE. INCONCLUSIVE/REFUSE are recorded, never hidden. |
+| `mde-table.json` | Per-metric minimum detectable effect + direction (proposed; owner sign-off pending). |
+| `topExperiments.json` | The experiment queue (sweeps / A-B / grade), priority-ordered, `gatedOn` track-b where live boot is needed. |
+| `chart_soak.py` | +A/B delta chart (chart 6): per-metric %delta for the latest A/B, green=improved / red=regressed / gray=no-diff. |
+
+Honest-scope note: with no live boot yet (Track B), the corpus is thin, so most A/Bs correctly sit at
+`INCONCLUSIVE` and sweeps have no controlled X-axis. The engine is *ready* — it produces real verdicts
+the moment matched replicates accrue. INCONCLUSIVE is never presented as a win.
+
+```powershell
+python Tools\Soak\ab_stats.py --self-test
+python Tools\Soak\decision_engine.py --self-test
+python Tools\Soak\findings_emitter.py --self-test
+python Tools\Soak\chart_soak.py --self-test   # now includes the A/B delta chart
+```
+
+---
+
+## Autopilot loop (self-driving, grade-mode)
+
+`Start-WaspAutopilot.ps1` chains the whole loop in one pass: grade an inbox of RPTs → run ready A/B
+experiments → refresh charts → surface flag recommendations. Read-only w.r.t. the game (never spawns
+Arma, never deploys); overlap-guarded; owner is the gate. Full design: `docs/design/v2/SPEC-SOAK-AUTOPILOT.md`.
+
+| File | Role |
+| --- | --- |
+| `Start-WaspAutopilot.ps1` | The pass driver (grade → experiment → chart → recommend → summary). `-DryRun` plans; `-Report`/`-Peach`. |
+| `run_experiment.py` | Gathers two arms from Run-Result JSONs → `ab_stats`/`decision_engine` → emits a finding. |
+| `Get-FlagRecommendation.ps1` | Surface-only recommendation deck (`recommendations.jsonl`). Labels context; never opens a PR / deploys. |
+
+```powershell
+# plan (no side effects)
+.\Tools\Soak\Start-WaspAutopilot.ps1 -Inbox <rpt-dir> -Scenario idle-soak -DryRun
+# one grade-mode pass, refresh charts, DM the owner
+.\Tools\Soak\Start-WaspAutopilot.ps1 -Inbox <rpt-dir> -Scenario idle-soak -Report -Peach
+```
+
+Also fixed in this lane (correctness): `Run-Scenario` now appends a `SKIP_BOX_DOWN`/`FAIL_ANALYZER`
+ledger row on a missing/failed RPT (instead of a silent throw), uses millisecond+source runIds (no
+same-second stampId collision), and `Append-LedgerRow`/`Run-Scenario` flatten the analyzer `roundend`
+object to a string so rows conform to the schema.
+
+**Verify:**
+```powershell
+python Tools\Soak\run_experiment.py --self-test
+pwsh   Tools\Soak\Get-FlagRecommendation.Tests.ps1
+pwsh   Tools\Soak\Start-WaspAutopilot.Tests.ps1
+```

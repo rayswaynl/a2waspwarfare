@@ -1,0 +1,41 @@
+{
+  "schema": "a2wasp-golden-baselines-v1",
+  "updatedAtUtc": "2026-07-07T00:00:00Z",
+  "notes": [
+    "Per-regime expected-value baselines for regression detection. A regime key identifies the",
+    "config dimensions that dominate performance: <terrain>/<hcCount>hc/pin<poptierPin>. 'pinLive'",
+    "means no WFBE_C_TEST_POPTIER_PIN (organic population).",
+    "Each metric carries {median, p10, p90, n, source}. source=documented => provisional seed from",
+    "prior observation/notes (n=0), NOT yet a measured distribution; source=measured => rolled from",
+    "n>=5 real ledger rows by Update-GoldenBaseline.ps1. A regression lens must treat 'documented'",
+    "baselines as soft (warn, do not fail) until they are promoted to 'measured'.",
+    "PROJECT FACT (not a regime): server FPS knee is observed at ~450-470 live AI units; below the",
+    "knee the server holds ~40+fps flat vs unit count, above it FPS degrades. Whether that knee is",
+    "global-sim-bound or per-machine/HC-bound is the top open perf question (see topExperiments)."
+  ],
+  "projectFacts": {
+    "fpsKneeUnitsLow": 450,
+    "fpsKneeUnitsHigh": 470,
+    "fpsKneeSource": "documented:soak-2026-06-27,wasp-poptier-and-benchmark",
+    "groupCapPerSide": 144,
+    "groupWarnPerSide": 125,
+    "groupCapSource": "documented:engine-limit"
+  },
+  "regimes": {
+    "chernarus/1hc/pinLive": {
+      "serverFpsMedian": { "median": 42, "p10": 40, "p90": 49, "n": 0, "source": "documented" },
+      "serverFpsMinWindow": { "median": 35, "p10": 33, "p90": 40, "n": 0, "source": "documented" },
+      "hcFpsMedian": { "median": 46, "p10": 44, "p90": 48, "n": 0, "source": "documented" },
+      "aiTotPeak": { "median": 375, "p10": 300, "p90": 450, "n": 0, "source": "documented" },
+      "arrivalPct": { "median": 25.0, "p10": 15.0, "p90": 40.0, "n": 0, "source": "documented" }
+    },
+    "zargabad/2hc/pinLive": {
+      "serverFpsMedian": { "median": 43, "p10": 40, "p90": 49, "n": 0, "source": "documented" },
+      "serverFpsMinWindow": { "median": 35, "p10": 33, "p90": 40, "n": 0, "source": "documented" },
+      "hcFpsMedian": { "median": 46, "p10": 44, "p90": 48, "n": 0, "source": "documented" },
+      "hc2FpsMedian": { "median": 46, "p10": 44, "p90": 48, "n": 0, "source": "documented" },
+      "aiTotPeak": { "median": 375, "p10": 300, "p90": 450, "n": 0, "source": "documented" },
+      "arrivalPct": { "median": 25.0, "p10": 15.0, "p90": 40.0, "n": 0, "source": "documented" }
+    }
+  }
+}
