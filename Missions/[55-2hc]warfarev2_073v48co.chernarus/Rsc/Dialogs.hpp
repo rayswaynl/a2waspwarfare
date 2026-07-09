@@ -4608,8 +4608,10 @@ class WFBE_FPSPickerMenu {
 //--- persists via WFBE_CO_FNC_SetProfileVariable using the SAME profile keys as before).
 //--- IDC map: 30001 title | 30009 close | Video: 30010 VD-label 30011 VD-slider(RscXSliderH)
 //--- 30012 Auto-VD toggle 30013..30016 FPS 30/45/50/60 | Gameplay: 30020..30026 seven toggles
-//--- Audio: 30030 Audio Cues | Tags: 30031 Name Tags, 30032 Show AI Tags (fable/tags-settings-integration;
-//--- footer Close 30040 shifted 0.702->0.736 to make room) | Slider range clamps to WFBE_C_ENVIRONMENT_MAX_VIEW.
+//--- Audio: 30030 Audio Cues | Tags: 30031 Name Tags, 30032 Show AI Tags (fable/tags-settings-integration) |
+//--- Misc: 30028 Vehicle Tint Legend (fable/ew-settings; own AI-Name-Tags idea dropped as a duplicate of
+//--- 30032 above - see Init_ProfileVariables.sqf) | footer Close 30040 shifted 0.702->0.780 to make room |
+//--- Slider range clamps to WFBE_C_ENVIRONMENT_MAX_VIEW.
 //--- A2-OA-safe: RscXSliderH (type 43) + RscButton_Main are already used by the Team menu (idd 13000).
 //--- No A3 checkbox class. ctrlShow on this idd dialog MUST use the global ctrlShow [idc,bool] form.
 class WFBE_PlayerSettingsMenu {
@@ -4617,8 +4619,11 @@ class WFBE_PlayerSettingsMenu {
 	idd = 30000;
 
 	class controlsBackground {
+		//--- Plate height 0.822->0.866 / footer offset 0.782->0.826 (release-merge relayout): grew +0.044
+		//--- to fit the MISC/Tint-Legend row as its own row below TAGS instead of overlapping it - see the
+		//--- MISC block below for the idc renumber this went with.
 		class CA_Background : RscText {
-			x = 0.275; y = 0.135; w = 0.45; h = 0.822;
+			x = 0.275; y = 0.135; w = 0.45; h = 0.866;
 			colorBackground[] = WFBE_Background_Color;
 			moving = 1;
 		};
@@ -4627,7 +4632,7 @@ class WFBE_PlayerSettingsMenu {
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
 		class CA_Background_Footer : CA_Background {
-			y = 0.135 + 0.782;
+			y = 0.135 + 0.826;
 			h = 0.04;
 			colorBackground[] = WFBE_Background_Color_Footer;
 		};
@@ -4767,10 +4772,22 @@ class WFBE_PlayerSettingsMenu {
 			action = "WFBE_MenuAction = 12";
 		};
 
+		//--- ===== MISC ===== (fable/ew-settings: Vehicle Tint Legend button. The PR's own "AI Name Tags" toggle
+		//--- was dropped here as a duplicate of CA_TagsAI above - both independently wired the same
+		//--- WFBE_C_TAGS_AI-adjacent idea into this dialog the same night; CA_TagsAI's per-player-opt-out design
+		//--- was kept. Session-only, no persistence added - matches the feature (the legend already resets
+		//--- each session); calls the exact same toggle function the ']' KeyDown handler uses (Init_Client.sqf).)
+		class CA_TintLegend : CA_HUD {
+			idc = 30028;
+			x = 0.29; y = 0.135 + 0.726; w = 0.42;
+			text = "Vehicle Tint Legend";
+			action = "if (WFBE_CL_VAR_TintLegendEnabled) then {(!WFBE_CL_VAR_TintLegendVisible) call WFBE_CL_FNC_ShowTintLegend}";
+		};
+
 		//--- ===== Footer Close =====
 		class CA_Done : RscButton_Main {
 			idc = 30040;
-			x = 0.29; y = 0.135 + 0.736; w = 0.42; h = 0.045;
+			x = 0.29; y = 0.135 + 0.780; w = 0.42; h = 0.045;
 			sizeEx = 0.026;
 			text = "Close";
 			action = "WFBE_MenuAction = 9";

@@ -145,7 +145,10 @@ while {alive player && dialog} do {
 
 	//--- Show AI Tags: per-player opt-out, ANDed with the mission-wide WFBE_C_TAGS_AI admin flag in
 	//--- Init_Client.sqf (both must be true for AI infantry/vehicle tags to draw). Default ON so behaviour
-	//--- is unchanged for players who never touch this control.
+	//--- is unchanged for players who never touch this control. (Release-merge note: fable/ew-settings
+	//--- independently re-implemented this same feature at the same WFBE_MenuAction==12 via a direct
+	//--- WFBE_C_TAGS_AI flip - dropped in favor of this CL-prefixed per-player-opt-out version, which
+	//--- doesn't shadow the mission-wide config constant's own name; see Init_ProfileVariables.sqf.)
 	if (WFBE_MenuAction == 12) then {
 		WFBE_MenuAction = -1;
 		WFBE_CL_ShowAITags = !(missionNamespace getVariable ["WFBE_CL_ShowAITags", true]);
