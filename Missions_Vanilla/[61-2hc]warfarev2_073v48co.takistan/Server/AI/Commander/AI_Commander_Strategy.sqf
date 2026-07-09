@@ -123,6 +123,17 @@ if (_lastStand) then {
 //--- (Skipped while in last-stand posture - teams are defending HQ.)
 if (_lastStand) exitWith {};
 
+//--- fable/alife-arty-dwell (2026-07-08): snapshot the LIVE published fist/target BEFORE this worker's own
+//--- SPEARHEAD scorer (below) and Allocate.sqf (which runs right after this worker each tick, per the call
+//--- order in AI_Commander.sqf) overwrite wfbe_aicom_targets. At this exact point it still holds whatever
+//--- AssignTowns/Execute dispatched teams against THIS tick (Allocate's fist when WFBE_C_AICOM2_ALLOCATE_ENABLE
+//--- is on, else this worker's own prior-tick pick) - i.e. the town actually under assault right now. The
+//--- ARTILLERY block (4, below) targets THIS instead of the freshly-rescored local _targets, which nobody has
+//--- acted on yet this tick and can diverge from the live fist under AICOM2 (the V1-vs-Allocate mismatch).
+private "_liveFistSnap";
+_liveFistSnap = _logik getVariable ["wfbe_aicom_targets", []];
+if (typeName _liveFistSnap != "ARRAY") then {_liveFistSnap = []};
+
 //--- 1) SPEARHEADS: COHERENT FRONT (V0.8, claude-gaming 2026-06-14). Rank enemy/neutral
 //--- towns by NEAREST-TO-OUR-FRONT first, with a small pull toward the enemy HQ, so the
 //--- army advances as a wave onto achievable nearby objectives instead of cherry-picking
@@ -1080,10 +1091,30 @@ if ((_enemyTowns > 0) && {_myTowns >= (_enemyTowns * _stallRatio)} && {!_strikeO
 // END POSTURE + FRONT
 
 //--- 4) ARTILLERY: soften the spearhead town or the enemy HQ - never near friendlies.
-//--- V0.6.3: OFF by default (owner call) - opt back in via WFBE_C_AI_COMMANDER_ARTILLERY = 1.
+//--- fable/alife-arty-dwell (2026-07-08, owner request "enable the max 2 tracked artillery per AI commander
+//--- idea... make sure it's used"): default flipped ON (was V0.6.3 owner-locked OFF; full history in
+//--- Init_CommonConstants.sqf). DWELL-AGED SOFTENING added below: the longer the current front primary has
+//--- been dwelled on, the shorter the cooldown - see WFBE_C_AICOM_ARTY_DWELL.
 if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable "WFBE_C_ARTILLERY") > 0}) then {
 	_upASel = (_logik getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT;
 	_cd = (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS") select (_upASel min ((count (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS")) - 1));
+	//--- fable/alife-arty-dwell DWELL TEMPO: shave WFBE_C_AICOM_ARTY_DWELL_K seconds off the cooldown per second
+	//--- of front-dwell age (wfbe_aicom_front_t0, stamped unconditionally by the FRONT_DWELL hysteresis block
+	//--- above - L375-410 - regardless of whether artillery is even enabled), floored at
+	//--- WFBE_C_AICOM_ARTY_DWELL_FLOOR so it never becomes full-auto spam. Dwell age is naturally bounded by
+	//--- WFBE_C_AICOM_FRONT_DWELL (~480s default - the hysteresis block restamps t0 once it elapses), so the max
+	//--- shrink is bounded too. Flag-gated (WFBE_C_AICOM_ARTY_DWELL, default ON) - one flip reverts to the
+	//--- legacy flat per-upgrade-tier cooldown.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_DWELL", 1]) > 0) then {
+		private ["_dwT0","_dwAge","_dwK","_dwFloor"];
+		_dwT0 = _logik getVariable "wfbe_aicom_front_t0";
+		if (!isNil "_dwT0") then {
+			_dwAge   = (time - _dwT0) max 0;
+			_dwK     = missionNamespace getVariable ["WFBE_C_AICOM_ARTY_DWELL_K", 0.5];
+			_dwFloor = missionNamespace getVariable ["WFBE_C_AICOM_ARTY_DWELL_FLOOR", 120];
+			_cd = (_cd - (_dwAge * _dwK)) max _dwFloor;
+		};
+	};
 	//--- COMMAND CONSOLE (PR backend, claude-gaming 2026-06-28) ARTY HOOK: a player ARTILLERY-HERE request
 	//--- (Server_HandleSpecial "aicom-arty-here" stamps wfbe_aicom_arty_request=[pos,time]). When fresh it
 	//--- targets the requested pos AND bypasses the AI's own fire cooldown so the call-in actually fires; the
@@ -1099,9 +1130,15 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 		};
 	};
 	if ((time - (_logik getVariable ["wfbe_aicom_arty_last", -1e6]) > _cd) || _riArtyFresh) then {
-		//--- Target: enemy HQ during a strike, else the top spearhead town.
+		//--- Target: enemy HQ during a strike, else the LIVE fist Allocate/AssignTowns are actually pressing
+		//--- this tick (_liveFistSnap, captured at the top of this worker before it gets overwritten - see the
+		//--- fable/alife-arty-dwell note there), falling back to this worker's own freshly-scored _targets only
+		//--- if no live fist is published yet (first tick, or AICOM2_ALLOCATE_ENABLE is off and this is the
+		//--- very first Strategy pass this side). Fixes the V1-scorer-vs-Allocate-fist divergence: previously
+		//--- this could shell a DIFFERENT town than the one teams were actually assaulting.
 		_artyTgt = [];
 		if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {_artyTgt = getPos _enemyHQ};
+		if (count _artyTgt == 0 && {count _liveFistSnap > 0}) then {_artyTgt = getPos (_liveFistSnap select 0)};
 		if (count _artyTgt == 0 && {count _targets > 0}) then {_artyTgt = getPos (_targets select 0)};
 		//--- COMMAND CONSOLE ARTY HOOK: a fresh player request overrides the auto target (player picks the impact).
 		if (_riArtyFresh) then {_artyTgt = _riArtyPos};

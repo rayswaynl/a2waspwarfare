@@ -427,15 +427,18 @@ while {!gameOver} do {
 
 				//--- W20: CAPTURED CACHE - mirror of W16 Lend-Lease but for the SUPPORT line W16 does NOT touch.
 				//--- Candidate support upgrade ids (Init_CommonConstants.sqf): Paratroopers / SupplyRate / Gear.
-				//--- W16 raises only Light/Heavy/Air, so these three are disjoint from it. Artillery-tied ids are
-				//--- EXCLUDED entirely while WFBE_C_AI_COMMANDER_ARTILLERY=0 (the AI is configured never to use arty),
-				//--- so a cache draw never sinks into a dead arty tier. Eligible when >=1 candidate tier is below max.
+				//--- W16 raises only Light/Heavy/Air, so these three are disjoint from it. Artillery-tied ids stay
+				//--- EXCLUDED here regardless of WFBE_C_AI_COMMANDER_ARTILLERY's default (flipped ON 2026-07-08,
+				//--- fable/alife-arty-dwell) - deliberately out of scope for that change; see the note below.
+				//--- Eligible when >=1 (non-arty) candidate tier is below max.
 				_w20Eligible  = false;
 				_w20MaxLevels = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_LEVELS", _sideText], []];
 				//--- Build the support-id set. Paratroopers/SupplyRate/Gear are NON-arty and AI-usable.
 				_w20SupIDs = [WFBE_UP_PARATROOPERS, WFBE_UP_SUPPLYRATE, WFBE_UP_GEAR];
-				//--- (No arty ids are added here; if arty is ever re-enabled this is the place to append them,
-				//---  gated on (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0.)
+				//--- (No arty ids are added here on purpose - fable/alife-arty-dwell 2026-07-08 flipped the master
+				//---  flag's default ON but intentionally left this wildcard-cache hookup untouched (unrelated
+				//---  behaviour, not requested). If arty upgrade ids are ever wanted here, gate on
+				//---  (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0.)
 				_w20Raisable = [];
 				if (!isNil "_upgrades") then {
 					{

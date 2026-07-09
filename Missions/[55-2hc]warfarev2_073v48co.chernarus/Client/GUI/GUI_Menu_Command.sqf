@@ -58,9 +58,10 @@ _cool = missionNamespace getVariable ["WFBE_C_AICOM_ORDER_COOLDOWN", 8];
 //--- (WFBE_C_AICOM_DIRECT_COOLDOWN, default 1.5s, defined in Init_CommonConstants) tracked by _lastDirect.
 _directCool = missionNamespace getVariable ["WFBE_C_AICOM_DIRECT_COOLDOWN", 1.5];
 //--- Artillery enable: a player war-room ARTILLERY-HERE request rides its OWN flag (WFBE_C_AICOM_PLAYER_ARTY),
-//--- SEPARATE from the hard-locked AI-autonomous-artillery flag (WFBE_C_AI_COMMANDER_ARTILLERY = 0, Steff). The
-//--- player request is serviced by an assist-mode resolver and only fires IF friendly artillery pieces exist; it
-//--- never re-enables the AI's own fire cadence or base-gun building. Button greys out when the flag is off.
+//--- SEPARATE from the AI-autonomous-artillery flag (WFBE_C_AI_COMMANDER_ARTILLERY, default ON since 2026-07-08
+//--- fable/alife-arty-dwell - was Steff-hard-locked to 0 before that). The player request is serviced by an
+//--- assist-mode resolver and only fires IF friendly artillery pieces exist; it never builds guns itself.
+//--- Button greys out when WFBE_C_AICOM_PLAYER_ARTY is off, independent of the AI's own arty state.
 _artyOn = (missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) > 0;
 
 //--- Request-Unit combo (idc 14640): the type strings sent verbatim as the aicom-request-unit arg.
