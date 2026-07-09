@@ -2270,6 +2270,26 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_NAVAL_CAP_L39")      then {WFBE_C_NAVAL_CAP_L39      = 1}; //--- 0=legacy Hind/An2; >0=twin L39 jets.
 	if (isNil "WFBE_C_NAVAL_EASA_RANDOM")  then {WFBE_C_NAVAL_EASA_RANDOM  = 1}; //--- 0=off; >0=randomise EASA on carrier/CAP spawns.
 
+//--- fable/naval-cap-variety (owner 2026-07-08): WFBE_C_NAVAL_CAP_MODE replaces the CAP_L39/THREE_HINDS
+//--- precedence chain with a weighted roll. 0 = LEGACY (byte-identical: CAP_L39 wins when both >0, else
+//--- THREE_HINDS, else Hind+An2 - CAP_L39/THREE_HINDS stay live under this mode, never deleted). 1 = WEIGHTED
+//--- ROLL (new default): ignore CAP_L39/THREE_HINDS, re-roll a composition every carrier arm-cycle from the
+//--- WFBE_C_NAVAL_CAP_WEIGHT_* shares below. See Init_NavalHVT.sqf CAP arm block.
+	if (isNil "WFBE_C_NAVAL_CAP_MODE") then {WFBE_C_NAVAL_CAP_MODE = 1}; //--- 0=legacy CAP_L39/THREE_HINDS chain; >0=weighted roll.
+	if (isNil "WFBE_C_NAVAL_CAP_WEIGHT_MI24")     then {WFBE_C_NAVAL_CAP_WEIGHT_MI24     = 45}; //--- weighted-roll share: 3x Mi-24_P (owner's TP-16 ask, primary again).
+	if (isNil "WFBE_C_NAVAL_CAP_WEIGHT_L39")      then {WFBE_C_NAVAL_CAP_WEIGHT_L39      = 40}; //--- weighted-roll share: 2x L39_TK_EP1 carrier circuit.
+	if (isNil "WFBE_C_NAVAL_CAP_WEIGHT_SUX")      then {WFBE_C_NAVAL_CAP_WEIGHT_SUX      = 8};  //--- weighted-roll share: 1x Su34, rare heavyweight.
+	if (isNil "WFBE_C_NAVAL_CAP_WEIGHT_SKIRMISH") then {WFBE_C_NAVAL_CAP_WEIGHT_SKIRMISH = 7};  //--- weighted-roll share: rare scripted air-duel spectacle.
+
+//--- naval-cap-variety SKIRMISH outcome config: additive spectacle, never leaves the carrier bare
+//--- (a WFBE_C_NAVAL_SKIRMISH_BASE_MODE composition still escorts). Intruder is a single jet, random
+//--- WEST/EAST, from a non-tier-5 tunable class pool, own mission-wide concurrency cap + lifetime.
+	if (isNil "WFBE_C_NAVAL_SKIRMISH_BASE_MODE")    then {WFBE_C_NAVAL_SKIRMISH_BASE_MODE    = "MI24"};
+	if (isNil "WFBE_C_NAVAL_SKIRMISH_WEST_CLASSES") then {WFBE_C_NAVAL_SKIRMISH_WEST_CLASSES = ["A10","A10_US_EP1","L159_ACR"]};
+	if (isNil "WFBE_C_NAVAL_SKIRMISH_EAST_CLASSES") then {WFBE_C_NAVAL_SKIRMISH_EAST_CLASSES = ["Su25_TK_EP1","Su25_Ins","ibrPRACS_MiG21mol"]};
+	if (isNil "WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE")   then {WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE   = 1};   //--- mission-wide concurrent naval-skirmish cap (all 3 carriers share this).
+	if (isNil "WFBE_C_NAVAL_SKIRMISH_LIFETIME")     then {WFBE_C_NAVAL_SKIRMISH_LIFETIME     = 240}; //--- s hard cleanup ceiling regardless of duel outcome.
+
 
 //======================================================================================
 //--- NAVAL INLINE SUPER-CARRIER (fable/naval-inline-hulls, Ray 2026-07-06):
