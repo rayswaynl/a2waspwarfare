@@ -181,6 +181,7 @@ WF_sendMessage = compile preprocessFileLineNumbers "Common\Functions\Common_Send
 WFBE_CO_FNC_StagnateSupplyIncomeNoPlayers = Compile preprocessFileLineNumbers "Common\Functions\Common_StagnateSupplyIncomeNoPlayers.sqf";
 // Marty: Defense budget — category helper (used by RequestDefense budget gate and available to client UI).
 WFBE_CO_FNC_GetDefenseCategory = Compile preprocessFileLineNumbers "Common\Functions\Common_GetDefenseCategory.sqf";
+WFBE_CO_FNC_DeadspawnPenPos = Compile preprocessFileLineNumbers "Common\Functions\Common_DeadspawnPenPos.sqf"; //--- fable/deadspawn-redesign: underwater join-pen position resolver, flag WFBE_C_DEADSPAWN_REDESIGN default 0.
 
 ["INITIALIZATION", "Init_Common.sqf: Functions are initialized."] Call WFBE_CO_FNC_LogContent;
 
