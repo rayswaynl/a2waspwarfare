@@ -32,6 +32,9 @@ _MISSIONS.7z
 
 Tools/LoadoutManager/bin/
 
+# NuGet restore output for Extension/ (packages.config-style, restorable via nuget.exe restore)
+packages/
+
 a2waspwarfare_DiscordBot/a2waspwarfare_DiscordBot/
 
 A3missionTest/
