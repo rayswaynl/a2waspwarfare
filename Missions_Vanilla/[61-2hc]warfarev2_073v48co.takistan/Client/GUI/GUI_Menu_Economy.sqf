@@ -119,7 +119,7 @@ while {alive player && dialog} do {
 			if (!isNull _closest && _closest distance _position < 100 && isNil {_closest getVariable "WFBE_SOLD"}) then {
 				_scName = getText (configFile >> "CfgVehicles" >> (typeOf _closest) >> "displayName");
 				_scId = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",sideJoinedText]) find (typeOf _closest);
-				_scRef = if (_scId > 0) then {round(((missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _scId) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT") / 100)} else {0};
+				_scRef = if (_scId > -1) then {round(((missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _scId) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT") / 100)} else {0};
 				if ([Format ["wf_sell_%1", _closest], Format ["<t color='#ff5a5a' size='1.1'>Sell %1?</t><br/>Refund $%2. Click it again to confirm.", _scName, _scRef]] call WFBE_CL_FNC_ConfirmAction) then {
 					MenuAction = -1;
 					mouseButtonDown = -1;
@@ -149,7 +149,7 @@ while {alive player && dialog} do {
 						_id = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",sideJoinedText]) find _type;
 						
 						//--- TODO: Change the find system with a getvar system.
-						if (_id > 0) then {
+						if (_id > -1) then {
 							_supplyB = (missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _id;
 							_supplyB = round((_supplyB * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT")) / 100);
 						
