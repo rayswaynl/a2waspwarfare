@@ -440,15 +440,25 @@ if (isPlayer _x && {alive _x} && {(side _x) == _ownerSide} && {(_x distance _scu
 //--- the deckZ boundingBox on that carrier).
 private ["_scudModel","_scudDeckPart"];
 _scudDeckPart = _scudParts select 3;
-private ["_scudXY"];
-_scudXY = _scudDeckPart modelToWorld [8, -14, 0]; //--- fable/naval-deck-fixes: anchor+50 put the launcher 41m past the bow (anchor sits ~21m east of hull center, half-length ~30m; live RPT showed [14750,2000] vs deck edge ~14709). Deck-part model space is heading-proof.
+private ["_scudXY","_scudOX","_scudOY"];
+//--- fable/scud-polish (owner 2026-07-09) DECK POSITION: was hardcoded [8, -14, 0], which hugged one side
+//--- hull. Deck-part model-space axes (cross-checked against this file's own forward/right vectors in the
+//--- TWIN-HULL note below, and confirmed by the showpiece launcher's "abeam" offset, which varies ONLY
+//--- the X term): X = LATERAL/beam offset (0 = this deck part's own centerline; +X/-X = toward one side
+//--- or the other), Y = LONGITUDINAL/fore-aft offset (+Y = toward the bow, -Y = toward the stern). New
+//--- defaults: OX=0 (centered, off the hull) and OY=-20 (was -14; pushed further toward the stern), per
+//--- Common/Init/Init_CommonConstants.sqf. Owner: nudge WFBE_C_NAVAL_SCUD_DECK_OX / _OY live in-engine -
+//--- neither Claude nor Codex can see the deck geometry, treat these as a starting guess.
+_scudOX = missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_DECK_OX", 0];
+_scudOY = missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_DECK_OY", -20];
+_scudXY = _scudDeckPart modelToWorld [_scudOX, _scudOY, 0]; //--- fable/naval-deck-fixes: anchor+50 put the launcher 41m past the bow (anchor sits ~21m east of hull center, half-length ~30m; live RPT showed [14750,2000] vs deck edge ~14709). Deck-part model space is heading-proof.
 _scudModel = createVehicle ["MAZ_543_SCUD_TK_EP1", [_scudXY select 0, _scudXY select 1, 0], [], 0, "NONE"];
 //--- fable/naval-camps-on-deck (Ray 2026-07-07) SCUD CLEARANCE: the MAZ_543_SCUD_TK_EP1 vehicle origin
 //--- is mid-body (~1.6 m above the ground plane), so placing the origin at exactly deckZ sinks the
-//--- lower half of the vehicle into the deck. Add WFBE_C_NAVAL_SCUD_CLEARANCE (default 1.6) so the
+//--- lower half of the vehicle into the deck. Add WFBE_C_NAVAL_SCUD_CLEARANCE (default 2.4) so the
 //--- hull clears the deck surface. Owner will eyeball and adjust the constant in-engine.
 private ["_scudSpawnZ"];
-_scudSpawnZ = _scudDeckZ + (missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 1.6]);
+_scudSpawnZ = _scudDeckZ + (missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 2.4]);
 _scudModel setPosASL [_scudXY select 0, _scudXY select 1, _scudSpawnZ];
 _scudModel setDir 90;
 _scudModel allowDamage false;
@@ -460,7 +470,7 @@ _scudModel allowDamage false;
 //--- can test distance to the VISUAL launcher, not the invisible pad anchor (50m apart).
 _scudLogic setVariable ["wfbe_hvt_scud", _scudModel, true];
 _scudLogic setVariable ["wfbe_scud_model_ref", _scudModel, true];
-diag_log Format ["NAVALHVT-SCUD: visual SCUD spawned at [%1,%2,%3] (deckZ=%4 + clearance=%5); model ref stored.", _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckZ, missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 1.6]];
+diag_log Format ["NAVALHVT-SCUD: visual SCUD spawned at [%1,%2,%3] (deckZ=%4 + clearance=%5); model ref stored.", _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckZ, missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_CLEARANCE", 2.4]];
 [_scudModel, _scudXY select 0, _scudXY select 1, _scudSpawnZ, _scudDeckPart] spawn {
 	private ["_s","_px","_py","_dz","_deckPart","_off"];
 	_s        = _this select 0;
@@ -483,11 +493,16 @@ diag_log Format ["NAVALHVT-SCUD: visual SCUD spawned at [%1,%2,%3] (deckZ=%4 + c
 };
 
 //--- fable/scud-showpiece (owner 2026-07-07): the SCUD deck is a SHOWPIECE - a second erect launcher
-//--- abeam the first + light deck dressing. All prop classes verified in-mission (Core_RU camo net,
-//--- Core_CIV bagfence, Construction/Oilfields Barrels). Flag WFBE_C_NAVAL_SCUD_SHOWPIECE default 0.
+//--- abeam the first. fable/scud-polish (owner 2026-07-09): the deck-dressing props (camo net,
+//--- bagfences, barrels) were removed per owner request - launcher(s) only now. Flag
+//--- WFBE_C_NAVAL_SCUD_SHOWPIECE default 0 still gates the second launcher.
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_SHOWPIECE", 0]) > 0) then {
-	private ["_scudXY2","_scudModel2","_propSpec","_propXY","_prop"];
-	_scudXY2 = _scudDeckPart modelToWorld [1, -14, 0]; //--- ~7 m abeam of the primary launcher (deck model space, heading-proof)
+	private ["_scudXY2","_scudModel2"];
+	//--- fable/scud-polish (owner 2026-07-09): reuse the primary launcher's tunable OX/OY so both SCUDs
+	//--- move together when the owner nudges the constants; keep the original 7 m abeam gap by offsetting
+	//--- OX (the lateral/beam term) by the same -7 delta as before ([1,-14,0] vs the primary's old
+	//--- [8,-14,0]).
+	_scudXY2 = _scudDeckPart modelToWorld [_scudOX - 7, _scudOY, 0]; //--- ~7 m abeam of the primary launcher (deck model space, heading-proof)
 	_scudModel2 = createVehicle ["MAZ_543_SCUD_TK_EP1", [_scudXY2 select 0, _scudXY2 select 1, 0], [], 0, "NONE"];
 	if (!isNull _scudModel2) then {
 		_scudModel2 setPosASL [_scudXY2 select 0, _scudXY2 select 1, _scudSpawnZ];
@@ -514,23 +529,6 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_SHOWPIECE", 0]) > 0) then 
 		};
 		diag_log Format ["NAVALHVT-SHOWPIECE: second SCUD spawned at [%1,%2,%3].", _scudXY2 select 0, _scudXY2 select 1, _scudSpawnZ];
 	};
-	//--- Deck dressing: [class, modelX, modelY, dir] in deck-part model space around the launchers.
-	//--- SpawnProp makes each static/indestructible and logs+skips absent classes; re-seat to deck
-	//--- height afterwards (pier idiom above).
-	{
-		_propSpec = _x;
-		_propXY = _scudDeckPart modelToWorld [(_propSpec select 1), (_propSpec select 2), 0];
-		_prop = [(_propSpec select 0), [_propXY select 0, _propXY select 1, 0], (_propSpec select 3)] Call WFBE_NavalHVT_SpawnProp;
-		if (!isNull _prop) then {
-			_prop setPosASL [_propXY select 0, _propXY select 1, _scudDeckZ];
-			_prop setVectorUp [0,0,1];
-		};
-	} forEach [
-		["Land_CamoNetB_EAST",      4.5, -19.5, 90],
-		["Land_fort_bagfence_long", 12,  -9,    0],
-		["Land_fort_bagfence_long", -3,  -9,    0],
-		["Barrels",                 12,  -19,   0]
-	];
 };
 
 //------------------------------------------------------------------------------------

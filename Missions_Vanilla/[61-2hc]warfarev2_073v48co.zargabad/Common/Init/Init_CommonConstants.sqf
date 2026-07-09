@@ -2327,9 +2327,20 @@ WFBE_STATS_DIRTY_UIDS = [];
 //---   depot to deckZ after Init_Town spawns them (owner-reported: camps appeared at sea level).
 //--- WFBE_C_NAVAL_SCUD_CLEARANCE: extra metres above deckZ for the MAZ_543_SCUD_TK_EP1 origin so
 //---   the lower hull clears the deck surface (origin is mid-body, not bottom of vehicle).
-//---   Tune in-engine; default 1.6 m based on MAZ_543 model geometry.
+//---   Tune in-engine; default 2.4 m (was 1.6 - owner 2026-07-09: wheels were still clipping the deck).
+//--- fable/scud-polish (owner 2026-07-09):
+//--- WFBE_C_NAVAL_SCUD_DECK_OX / WFBE_C_NAVAL_SCUD_DECK_OY: deck-relative launcher position, in the
+//---   deck part's own model space (see the SCUD block in Init_NavalHVT.sqf for the axis derivation).
+//---   OX = LATERAL/beam offset (0 = the deck part's own centerline; +/- = toward one side or the
+//---   other). OY = LONGITUDINAL/fore-aft offset (+ = toward the bow, - = toward the stern). Old
+//---   hardcoded offset [8, -14, 0] hugged one side hull; new defaults OX=0 (centered, off the hull)
+//---   / OY=-20 (was -14; further toward the stern). Both the primary and showpiece 2nd launcher read
+//---   these (showpiece keeps its ~7 m abeam gap via OX-7). Nudge in-engine - neither Claude nor Codex
+//---   can see the deck geometry, treat these as a starting guess.
 	if (isNil "WFBE_C_NAVAL_CAMPS_DECK")      then {WFBE_C_NAVAL_CAMPS_DECK      = 1};   //--- 1=reseat camp models to flight deck; 0=off (default 1, correctness fix)
-	if (isNil "WFBE_C_NAVAL_SCUD_CLEARANCE")  then {WFBE_C_NAVAL_SCUD_CLEARANCE  = 1.6}; //--- extra metres above deckZ for SCUD vehicle origin (tune in-engine)
+	if (isNil "WFBE_C_NAVAL_SCUD_CLEARANCE")  then {WFBE_C_NAVAL_SCUD_CLEARANCE  = 2.4}; //--- extra metres above deckZ for SCUD vehicle origin (tune in-engine)
+	if (isNil "WFBE_C_NAVAL_SCUD_DECK_OX")    then {WFBE_C_NAVAL_SCUD_DECK_OX    = 0};   //--- lateral/beam deck offset, model space (tune in-engine)
+	if (isNil "WFBE_C_NAVAL_SCUD_DECK_OY")    then {WFBE_C_NAVAL_SCUD_DECK_OY    = -20}; //--- longitudinal/fore-aft deck offset, model space (tune in-engine)
 	if (isNil "WFBE_C_NAVAL_SCUD_SHOWPIECE") then {WFBE_C_NAVAL_SCUD_SHOWPIECE = 1}; //--- ARMED [owner 2026-07-07: deploy ask] //--- fable/scud-showpiece: 2nd deck SCUD + props + heli-only air shop on the SCUD carrier (0=off)
 //--- TELEMETRY HOST V2 (tp4, 2026-07-06): when flag=1, GRPBUDGET+SRVPERF emit from
 //--- server_groupsGC.sqf (survives V2 cutover) and are suppressed in AI_Commander.sqf.
