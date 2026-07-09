@@ -64,8 +64,14 @@ while {!WFBE_GameOver} do {
 				_skip = false;
 				_protected = false;
 				_captured = false;
-				_sideID = _camp getVariable "sideID";
-				_supplyValue = _camp getVariable "supplyValue";
+				//--- N9 (fable/fix-camp-placement, 2026-07-08): nil-safe SV/side reads - same bug class + same
+				//--- fix pattern as cmdcon44-d (server_town.sqf). A camp mid-init (or on a transplanted map) can
+				//--- have sideID/supplyValue still unset; a plain 1-arg getVariable then poisons this scan with
+				//--- Undefined, silently stalling camp capture drain forever. 2-arg defaults mirror Init_Town.sqf's
+				//--- own camp seed default (sideID -> WFBE_DEFENDER_ID) and this file's own "full" SV fallback
+				//--- (_town_starting_sv, already used a few lines below at the capture-completion check).
+				_sideID = _camp getVariable ["sideID", WFBE_DEFENDER_ID];
+				_supplyValue = _camp getVariable ["supplyValue", _town_starting_sv];
 
 				_resistanceDominion = if (_resistance > _east && _resistance > _west) then {true} else {false};
 				_westDominion = if (_west > _east && _west > _resistance) then {true} else {false};

@@ -1282,15 +1282,18 @@ switch (_args select 0) do {
 		};
 	};
 	case "repair-camp": {
-		Private ["_camp_sideID","_logic","_repairSideID","_townModel"];
+		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY"];
 		_logic = _args select 1;
 		_repairSideID = _args select 2;
 
 		if (alive (_logic getVariable 'wfbe_camp_bunker')) exitWith {};
 
-		_townModel = (missionNamespace getVariable "WFBE_C_CAMP") createVehicle (getPos _logic);
+		//--- fable/fix-camp-placement (2026-07-08): same ATL ground-snap as Init_Town.sqf's seeder - a
+		//--- repaired camp must not re-bury itself on ZG (see Init_Town.sqf for full rationale + citations).
+		_campXY = getPos _logic;
+		_townModel = (missionNamespace getVariable "WFBE_C_CAMP") createVehicle [_campXY select 0, _campXY select 1, 0];
 		_townModel setDir ((getDir _logic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
-		_townModel setPos (getPos _logic);
+		_townModel setPos [_campXY select 0, _campXY select 1, 0];
 			/*--- wiki-wins: removed killed EH calling undefined WFBE_SE_FNC_OnBuildingKilled (threw a swallowed error on every bunker death); bunker dead-state is already polled via alive (_logic getVariable 'wfbe_camp_bunker') ---*/
 		_townModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
 		_logic setVariable ["wfbe_camp_bunker", _townModel, true];

@@ -103,11 +103,20 @@ if (isServer) then {
 		_town_camp_flags    = [];
 		_camp_counter = 0;
 		{
-			Private ["_camp_health","_flag","_pos","_townModel"];
+			Private ["_camp_health","_flag","_pos","_townModel","_campXY"];
+			//--- fable/fix-camp-placement (2026-07-08): ground-snap the spawn XY to ATL 0 (terrain surface).
+			//--- Fixes Zargabad's 13 LocationLogicCamp anchors, authored at literal elevation 0 in mission.sqm
+			//--- (buried/underwater on non-flat terrain - zargabad/mission.sqm:62 etc, all 13 confirmed Y=0).
+			//--- Chernarus/Takistan anchors already carry real elevations, so this is a no-op there. A2 OA has
+			//--- no getTerrainHeightASL (Server\server_heli_terrain_guard.sqf:8); z=0 in a 3-element
+			//--- createVehicle/setPos array IS the ATL ground-level literal (same idiom already shipped at
+			//--- Server\Init\Init_NavalHVT.sqf:947).
+			_campXY = getPos _x;
 			//--- Create the camp model.
-			_townModel = createVehicle [missionNamespace getVariable "WFBE_C_CAMP", getPos _x, [], 0, "NONE"];
+			_townModel = createVehicle [missionNamespace getVariable "WFBE_C_CAMP", [_campXY select 0, _campXY select 1, 0], [], 0, "NONE"];
 			_townModel setDir ((getDir _x) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
-			_townModel setPos (getPos _x);
+			_townModel setPos [_campXY select 0, _campXY select 1, 0];
+			["INFORMATION", Format ["Init_Town.sqf: camp ground-snap dz=%1m at %2 (town=%3).", ((getPos _x) select 2), _campXY, _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
 
 			//--- Maybe we want to make the camp stronger.
 			_camp_health = missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF";
@@ -115,9 +124,12 @@ if (isServer) then {
 				_townModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
 			};
 
-			//--- Create a flag near the camp location & position it.
-			_flag = createVehicle [missionNamespace getVariable "WFBE_C_CAMP_FLAG", getPos _x, [], 0, "NONE"];
-			_flag setPos (_x modelToWorld (missionNamespace getVariable "WFBE_C_CAMP_FLAG_POS"));
+			//--- Create a flag near the camp location & position it. fable/fix-camp-placement: ground-snap Z
+			//--- too (the raw modelToWorld result inherits _x's own buried Z on ZG; XY offset/rotation math
+			//--- from _x's transform is unchanged).
+			_pos = _x modelToWorld (missionNamespace getVariable "WFBE_C_CAMP_FLAG_POS");
+			_flag = createVehicle [missionNamespace getVariable "WFBE_C_CAMP_FLAG", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+			_flag setPos [_pos select 0, _pos select 1, 0];
 
 			_x setVariable ["wfbe_flag", _flag];
 
