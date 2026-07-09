@@ -1055,6 +1055,14 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: Init_NavalHVT.sqf launched (WFBE_C_NAVAL_HVT=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- USV FLOTILLA: 3-boat GUER coastal flotilla (AA/Rocket/HMG), gated on coastal-town-active OR
+//--- naval-HVT-carrier-approach (fable/usv-flotilla, owner 2026-07-08). Own flag, independent of
+//--- WFBE_C_NAVAL_HVT so it can be reverted without touching the carrier feature.
+if ((missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_ENABLE", 0]) == 1) then {
+	[] execVM "Server\Server_USVFlotilla.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_USVFlotilla.sqf launched (WFBE_C_USV_FLOTILLA_ENABLE=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): compiles the TEL spawn/fire functions + gates on
 //--- WFBE_C_ICBM_TEL. Same launch pattern as Init_NavalHVT above. The TEL itself is spawned per side when that
 //--- side COMPLETES the ICBM upgrade (hook in Server_ProcessUpgrade.sqf), NOT at boot, so it appears with the tech.

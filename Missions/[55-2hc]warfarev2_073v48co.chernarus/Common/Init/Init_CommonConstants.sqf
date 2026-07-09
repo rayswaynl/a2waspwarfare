@@ -2311,6 +2311,22 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE")   then {WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE   = 1};   //--- mission-wide concurrent naval-skirmish cap (all 3 carriers share this).
 	if (isNil "WFBE_C_NAVAL_SKIRMISH_LIFETIME")     then {WFBE_C_NAVAL_SKIRMISH_LIFETIME     = 240}; //--- s hard cleanup ceiling regardless of duel outcome.
 
+//--- USV FLOTILLA (fable/usv-flotilla, owner 2026-07-08): 3-boat GUER coastal flotilla, PBX hull +
+//--- attachTo static per boat (AA/ROCKET/HMG). Master gate default 0 = byte-identical to HEAD.
+//--- Piggybacks on IS_naval_map (see Server_USVFlotilla.sqf header) - no new map define needed.
+	if (isNil "WFBE_C_USV_FLOTILLA_ENABLE")   then {WFBE_C_USV_FLOTILLA_ENABLE = 0};   //--- master flag. 0 = OFF, byte-identical to HEAD.
+	if (isNil "WFBE_C_USV_FLOTILLA_COUNT")    then {WFBE_C_USV_FLOTILLA_COUNT = 3};    //--- boats roaming at once (owner: 3). Bumping this is a one-line tune; roles cycle round-robin.
+	if (isNil "WFBE_C_USV_FLOTILLA_ROLES")    then {WFBE_C_USV_FLOTILLA_ROLES = ["AA","ROCKET","HMG"]}; //--- role cycle order; default = one-of-each at COUNT=3.
+	if (isNil "WFBE_C_USV_FLOTILLA_SIDE")     then {WFBE_C_USV_FLOTILLA_SIDE = "GUER"}; //--- GUER-only per owner (matches every other asymmetric-GUER-asset precedent: naval CAP, air-def).
+	if (isNil "WFBE_C_USV_FLOTILLA_HULL")     then {WFBE_C_USV_FLOTILLA_HULL = "PBX"};  //--- GUER/RU small boat (Units_CO_RU.sqf:84,272,302).
+	if (isNil "WFBE_C_USV_CARRIER_APPROACH_RADIUS") then {WFBE_C_USV_CARRIER_APPROACH_RADIUS = 1800}; //--- m; mirrors Init_NavalHVT.sqf:713 CAP arm band.
+	if (isNil "WFBE_C_USV_FLOTILLA_QUIET_DESPAWN")  then {WFBE_C_USV_FLOTILLA_QUIET_DESPAWN = 120}; //--- s; mirrors naval CAP despawn timer (Init_NavalHVT.sqf:886).
+	if (isNil "WFBE_C_USV_FLOTILLA_COASTAL_CHECK_RADIUS")  then {WFBE_C_USV_FLOTILLA_COASTAL_CHECK_RADIUS = 400}; //--- m; one-time boot ring-sample radius for wfbe_is_coastal tagging.
+	if (isNil "WFBE_C_USV_FLOTILLA_COASTAL_CHECK_SAMPLES") then {WFBE_C_USV_FLOTILLA_COASTAL_CHECK_SAMPLES = 8}; //--- ring sample count for the same one-time pass.
+	if (isNil "WFBE_C_USV_FLOTILLA_MOUNT_OFFSET")   then {WFBE_C_USV_FLOTILLA_MOUNT_OFFSET = [0, -0.8, 1.0]}; //--- PLACEHOLDER attachTo offset - hand-tune in-editor against the PBX model (mirrors FINAL-SPECS.md V3S bed offset caveat).
+	if (isNil "WFBE_C_USV_FLOTILLA_ARRIVE_RADIUS")  then {WFBE_C_USV_FLOTILLA_ARRIVE_RADIUS = 50}; //--- m; waypoint-arrival threshold.
+	if (isNil "WFBE_C_USV_FLOTILLA_UNSTUCK_MAX")    then {WFBE_C_USV_FLOTILLA_UNSTUCK_MAX = 5}; //--- consecutive un-wedges before a leg is skipped; mirrors WFBE_C_AICOM_PATROL_UNSTUCK_MAX.
+
 
 //======================================================================================
 //--- NAVAL INLINE SUPER-CARRIER (fable/naval-inline-hulls, Ray 2026-07-06):
