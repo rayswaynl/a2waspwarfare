@@ -150,10 +150,16 @@ while {alive player && dialog} do {
 						
 						//--- TODO: Change the find system with a getvar system.
 						if (_id > -1) then {
-							_supplyB = (missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _id;
-							_supplyB = round((_supplyB * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT")) / 100);
-						
-							if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {[sideJoined, _supplyB, "Factory sold.", false] Call ChangeSideSupply} else {(_supplyB) Call ChangePlayerFunds};
+							private "_rtRlS";
+							_rtRlS = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES",sideJoinedText]) select _id;
+							//--- owner 2026-07-09: Radio Tower was bought with CASH -> refund CASH (salePercent of the cash price), not supply.
+							if (_rtRlS == "RadioTower") then {
+								(round(((missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER_CASH_COST", 2500]) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT")) / 100)) Call ChangePlayerFunds;
+							} else {
+								_supplyB = (missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _id;
+								_supplyB = round((_supplyB * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT")) / 100);
+								if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {[sideJoined, _supplyB, "Factory sold.", false] Call ChangeSideSupply} else {(_supplyB) Call ChangePlayerFunds};
+							};
 						};
 						//--- #856 follow-up (closes the #692 queue-counter leak; owner's post-merge review
 						//--- comment on PR #856). #692 added a LUMP-SUM refund of all pending queu_costs to
@@ -223,7 +229,7 @@ while {alive player && dialog} do {
 			_salePct = missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT";
 			{
 				_i2 = _sNames2 find (typeOf _x);
-				if (_i2 > 0 && isNil {_x getVariable "WFBE_SOLD"}) then {
+				if (_i2 > -1 && isNil {_x getVariable "WFBE_SOLD"}) then {
 					_ref2 = round(((_sCosts2 select _i2) * _salePct) / 100);
 					_mk = Format ["wfbe_econ_sell_%1", _forEachIndex];
 					createMarkerLocal [_mk, getPos _x];
@@ -240,7 +246,7 @@ while {alive player && dialog} do {
 		_pTxt = "<t color='#ffae3a' shadow='1'>SELL MODE - click a structure to sell.</t>";
 		if (!isNull _pNear && _pNear distance _pPos < 100 && isNil {_pNear getVariable "WFBE_SOLD"}) then {
 			_pId = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",sideJoinedText]) find (typeOf _pNear);
-			if (_pId > 0) then {
+			if (_pId > -1) then {
 				_pRef = round(((missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _pId) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT") / 100);
 				_pTxt = _pTxt + Format ["<br/><t color='#e0b94f' shadow='1'>%1</t> - refund <t color='#76f563' shadow='1'>$%2</t>", getText (configFile >> "CfgVehicles" >> (typeOf _pNear) >> "displayName"), _pRef];
 			};
