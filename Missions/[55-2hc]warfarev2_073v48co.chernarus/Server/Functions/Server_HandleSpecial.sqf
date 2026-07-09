@@ -1308,17 +1308,21 @@ switch (_args select 0) do {
 				//--- killed"). Snapshot living enemy MEN + CREWED vehicles in the (now FAB-250-sized) radius; crewed/alive
 				//--- only so empty wrecks never pay (keeps the C5 over-pay bound). _cand captures the outer _x because the
 				//--- crew-count below rebinds _x.
+				//--- fable/fix-vbied-attribution REWORK (#924, 2026-07-09): NO pre-blast wfbe_lasthitby stamp here
+				//--- (reverted). The earlier attempt stamped _driver as the last-hitter so RequestOnUnitKilled's
+				//--- delayed-hit fallback (RequestOnUnitKilled.sqf:53, requires "alive _last_hit") could attribute
+				//--- these kills - but _driver IS the suicide bomber inside _veh, guaranteed dead by "_veh setDamage 1"
+				//--- below at the SAME instant as these victims, so "alive _last_hit" can never be true and the
+				//--- fallback never actually fired for a single VBIED kill. Kill credit for this snapshot is applied
+				//--- directly after the settle instead (see the WFBE_GUER_PLAYER_KILLS block below) - matching the
+				//--- guer-mortar-strike / Support_GuerHeliDrop.sqf idiom already used for instigator-less ordnance.
 				{
 					_cand = _x;
 					if (alive _cand && {(side _cand == east) || (side _cand == west)}) then {
 						if (_cand isKindOf "Man") then {
-							_cand setVariable ["wfbe_lasthitby", _driver, true]; //--- fable/fix-vbied-attribution (owner pick A3): pre-blast stamp so RequestOnUnitKilled's
-							//--- scoped Man-class fallback (RequestOnUnitKilled.sqf:44) can attribute this kill once the FAB-250 blast resolves.
-							_cand setVariable ["wfbe_lasthittime", time, true];
-							_cand setVariable ["wfbe_explosivesupportkill", true, true];
 							_victims = _victims + [_cand];
 						} else {
-							if (({alive _x} count (crew _cand)) > 0) then {_cand setVariable ["wfbe_lasthitby", _driver, true]; _cand setVariable ["wfbe_lasthittime", time, true]; _victims = _victims + [_cand]};
+							if (({alive _x} count (crew _cand)) > 0) then {_victims = _victims + [_cand]};
 						};
 					};
 				} forEach (nearestObjects [_p, ["Man","LandVehicle","Air"], _radius]);
@@ -1366,6 +1370,35 @@ switch (_args select 0) do {
 									_b = round ((_get2 select QUERYUNITPRICE) * 0.7 * (missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_COEF"));
 									_persBounty = _persBounty + _b;
 									_persScore = _persScore + (ceil (_b / 100));
+								};
+							};
+							//--- fable/fix-vbied-attribution REWORK (#924, 2026-07-09): idempotent GUER kill-tier tech credit -
+							//--- ONE increment per confirmed-dead snapshot victim, this single settle pass only (can't double-count).
+							//--- The earlier attempt routed this through RequestOnUnitKilled's delayed-hit fallback via a pre-blast
+							//--- wfbe_lasthitby = _driver stamp (see the reverted snapshot-loop comment above) - that fallback
+							//--- requires "alive _last_hit" (RequestOnUnitKilled.sqf:53), which _driver (this same suicide bomber)
+							//--- can never satisfy, so it never attributed a single kill and WFBE_GUER_PLAYER_KILLS never advanced
+							//--- from a VBIED kill. Crediting it here directly (mirrors Support_GuerHeliDrop.sqf's own
+							//--- WFBE_C_GUER_HELIDROP_CREDIT_KILLS block for the identical "instigator dies with the ordnance"
+							//--- shape) is what actually gates the M113/BRDM/T-tier depot unlocks - GUI_UpgradeMenu.sqf,
+							//--- Root_GUE_PlayerOverlay.sqf and Client_UpdateRHUD.sqf all read WFBE_GUER_PLAYER_KILLS directly.
+							if ((missionNamespace getVariable ["WFBE_C_GUER_VBIED_CREDIT_KILLS", 1]) > 0) then {
+								WFBE_GUER_PLAYER_KILLS = (missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0]) + 1;
+								publicVariable "WFBE_GUER_PLAYER_KILLS";
+								//--- Same milestone/unlock table RequestOnUnitKilled.sqf:152-157 uses - keep in sync manually if
+								//--- those tiers ever change (same accepted duplication Support_GuerHeliDrop.sqf already carries).
+								private ["_vMilestones","_vMsg"];
+								_vMilestones = [
+									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15], "BRDM-2 + T-34 unlocked  -  Ka-137 flares up to 120"],
+									[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25], "M113 VBIED unlocked  -  armoured suicide APC at 2x speed"],
+									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40], "T-55 unlocked  -  Ka-137 flares up to 240"],
+									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80], "T-72 + BMP-2 unlocked"]
+								];
+								_vMsg = "";
+								{ if (WFBE_GUER_PLAYER_KILLS == (_x select 0)) then {_vMsg = _x select 1} } forEach _vMilestones;
+								if (_vMsg != "") then {
+									WFBE_GUER_UNLOCK_MSG = [WFBE_GUER_PLAYER_KILLS, _vMsg];
+									publicVariable "WFBE_GUER_UNLOCK_MSG";
 								};
 							};
 						};

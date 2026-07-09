@@ -159,7 +159,10 @@ _caller = leader _playerTeam;
 	//--- WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW) with no side effect; a victim legitimately killed by
 	//--- someone else is unaffected since RequestOnUnitKilled only reads this fallback when the real
 	//--- killer is null/dead/self.
-	if (!isNull _caller) then {
+	if (!isNull _caller && {alive _caller}) then { //--- #924 rework fold-in (2026-07-09, LOW finding): was missing an
+		//--- alive-check - a caller who disconnected/died between calling the strike and its HE/WP warheads landing
+		//--- would still get stamped as the last-hitter, misattributing kills to a dead/gone player. Mirrors the
+		//--- alive-guard the SADARM branch above and RequestOnUnitKilled.sqf's own delayed-hit fallback already apply.
 		{
 			if (alive _x && {(side _x) in _enemySides} && {_x isKindOf "Man"}) then {
 				_x setVariable ["wfbe_lasthitby", _caller, true];
