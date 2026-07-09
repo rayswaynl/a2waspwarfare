@@ -83,7 +83,7 @@ _enStr = 0;
 //--- 0) LAST-STAND: fewer than 2 own towns AND clearly outnumbered - recall all, skip attack.
 //--- AICOM v2 M3 (Ray "almost never defensive"): gate last-stand on EFFECTIVE strength (maneuver + held-town credit), NOT raw maneuver _myStr - so a territory-leader that garrisons towns never trips the recall-all-to-HQ (the dominant-but-passive STALL the 18h soak showed). Last-stand now fires only at <=1 town AND genuinely effectively-crushed = base under real threat.
 private ["_lsTS","_lsMyEff","_lsEnEff"]; _lsTS = missionNamespace getVariable ["WFBE_C_AICOM_TOWN_STRENGTH", 2]; _lsMyEff = _myStr + (_myTowns * _lsTS); _lsEnEff = _enStr + (_enemyTowns * _lsTS);
-_lastStand = (_myTowns <= (missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_TOWNS", 1])) && (_lsMyEff < (_lsEnEff * (missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_RATIO", 0.45]))); //--- B68 attack-bias (Ray 2026-06-21): last-stand only when <=1 town AND <45% of enemy maneuver strength (was <2 towns AND <70% = too eager). Defense rare; attack default.
+_lastStand = (_myTowns <= (missionNamespace getVariable [format ["WFBE_C_AICOM_LASTSTAND_TOWNS_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_TOWNS", 1]])) && (_lsMyEff < (_lsEnEff * (missionNamespace getVariable [format ["WFBE_C_AICOM_LASTSTAND_RATIO_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_RATIO", 0.45]]))); //--- B68 attack-bias (Ray 2026-06-21): last-stand only when <=1 town AND <45% of enemy maneuver strength (was <2 towns AND <70% = too eager). Defense rare; attack default.
 _stratMode = "spearhead"; //--- default; overridden below
 _logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
 if (_lastStand) then {
@@ -167,7 +167,7 @@ _farPen   = missionNamespace getVariable ["WFBE_C_AICOM_FAR_PENALTY", 1000];
 _enemyHQForRank = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;
 //--- Concentrate force: split across FEW towns (cap via SPEARHEAD_TOWNS_MAX), not the old
 //--- ceil(teams / per-town) which scattered into 3+ cities at one effective team each.
-_want = 1 max (missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 2]);
+_want = 1 max (missionNamespace getVariable [format ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 2]]);
 _want = _want min (count _cands);
 _targets = [];
 for "_i" from 1 to _want do {
@@ -306,7 +306,7 @@ if (count _targets > 0) then {
 		} else {
 			_cands = _candsF;
 		};
-		_want = 1 max (missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 2]);
+		_want = 1 max (missionNamespace getVariable [format ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 2]]);
 		_want = _want min (count _cands);
 		//--- Re-run the SAME scorer (identical weights) over the trimmed candidate set.
 		_targets = [];
@@ -380,7 +380,7 @@ if (count _targets > 0) then {
 //--- Selection-only: this reorders _targets before publish; it never moves a unit. A2-OA-safe: OBJECT/time/getVariable,
 //--- ==/!= only on the sideID scalar + object-null via isNull, string mode literals untouched.
 private ["_fhDwell","_fhPrim","_fhT0","_fhFresh","_fhValid"];
-_fhDwell = missionNamespace getVariable ["WFBE_C_AICOM_FRONT_DWELL", 480];
+_fhDwell = missionNamespace getVariable [format ["WFBE_C_AICOM_FRONT_DWELL_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_FRONT_DWELL", 480]];
 if (_fhDwell > 0 && {count _targets > 0}) then {
 	_fhFresh = _targets select 0;
 	_fhPrim = _logik getVariable "wfbe_aicom_front_prim";
@@ -471,7 +471,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 
 _attacked = [];
 private ["_atkTownCheck","_reliefEnemyDist","_reliefMax"];
-	_reliefEnemyDist = missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500];
+	_reliefEnemyDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
 	//--- B74.1 (Ray 2026-06-23): only DEFEND a town that is ACTUALLY under attack, not merely "active". wfbe_active =
 	//--- "town near the front/players" (server_town_ai.sqf:182), NOT "enemy attacking" - so the old gate yanked up to
 	//--- RELIEF_MAX teams off offense to sit in QUIET front towns ("too defensive", Ray). Require a live hostile (enemy
@@ -512,7 +512,7 @@ _relieved = 0;
 					//--- teams (vehicle is the punch). A2-OA safe: classname-literal isKindOf + getNumber transportSoldier
 					//--- (no A3 primitives), classified off the team's LIVE assigned vehicles (mirror AssignTowns:275 idiom).
 					private ["_relMinAlive","_relAlive","_relIsBigVeh","_veh"];
-					_relMinAlive = missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_MIN_ALIVE", 4];
+					_relMinAlive = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_MIN_ALIVE_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_MIN_ALIVE", 4]];
 					_relAlive    = {alive _x} count (units _team);
 					_relIsBigVeh = false;
 					{
@@ -549,7 +549,7 @@ _relieved = 0;
 					_free setVariable ["wfbe_aicom_order", [(if (isNil {_free getVariable "wfbe_aicom_order"}) then {-1} else {(_free getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _town], true];
 				};
 				_free setVariable ["wfbe_aicom_relief", _town];
-				_free setVariable ["wfbe_aicom_relief_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_HOLD", 240])]; //--- punchy-AICOM (Ray 2026-06-17): hold-window stamp; released back to offense when it expires.
+				_free setVariable ["wfbe_aicom_relief_until", time + (missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_HOLD_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_HOLD", 240]])]; //--- punchy-AICOM (Ray 2026-06-17): hold-window stamp; released back to offense when it expires.
 				_relieved = _relieved + 1;
 				_stratMode = "relief";
 				_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
@@ -717,7 +717,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ENABLE", 0]) <= 0) then 
 private ["_hqFrac","_hqFloor","_strikeMinTowns"];
 _hqFrac = missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_FRAC", 0.5];
 _hqFloor = missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_FLOOR", 3];
-_strikeMinTowns = missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS", 12]; //--- B74.1 (Ray 2026-06-23): was ceil((count towns)*0.5) = ~20 on Chernarus (40+ towns) = UNREACHABLE, so the HQ-strike NEVER fired and the round never ended. Launch at an ABSOLUTE 12+ towns. The _hqFrac/_hqFloor lines around this are now inert (the floor clamp below is a no-op since 12 > 3).
+_strikeMinTowns = missionNamespace getVariable [format ["WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS", 12]]; //--- B74.1 (Ray 2026-06-23): was ceil((count towns)*0.5) = ~20 on Chernarus (40+ towns) = UNREACHABLE, so the HQ-strike NEVER fired and the round never ended. Launch at an ABSOLUTE 12+ towns. The _hqFrac/_hqFloor lines around this are now inert (the floor clamp below is a no-op since 12 > 3).
 if (_strikeMinTowns < _hqFloor) then {_strikeMinTowns = _hqFloor};
 if (!isNull _enemyHQ && {alive _enemyHQ}) then {
 	if (_wasStrike) then {
@@ -739,14 +739,14 @@ if (!isNull _enemyHQ && {alive _enemyHQ} && {_myTowns > _enemyTowns}) then {
 	_rMyEff = _myStr + (_myTowns * _rTownStr);
 	_rEnEff = _enStr + (_enemyTowns * _rTownStr);
 	if (_rMyEff >= _rEnEff) then {
-		if ((_enemyTowns <= (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX", 2])) || {_myTowns >= (_enemyTowns * (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO", 3]))}) then {_strikeOn = true};
+		if ((_enemyTowns <= (missionNamespace getVariable [format ["WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX", 2]])) || {_myTowns >= (_enemyTowns * (missionNamespace getVariable [format ["WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO", 3]]))}) then {_strikeOn = true};
 	};
 	//--- D2 (cmdcon28): STALL-OVERRIDE now fires OUTSIDE the _rMyEff>=_rEnEff gate (was inside, which made it dead -
 	//--- the streak only builds while town-dominant-but-strength-deficit, exactly the case that gate excluded). The
 	//--- override breaks a frozen front the territorial leader can't convert (assault-reach ceiling). The streak only
 	//--- accrues at >= STALL_TOWN_RATIO x towns and we're inside _myTowns>_enemyTowns, so it can never fire from behind.
 	//--- Master flag WFBE_C_AICOM_STALL_OVERRIDE_ENABLE (default 1) for a clean one-switch revert.
-	if (((missionNamespace getVariable ["WFBE_C_AICOM_STALL_OVERRIDE_ENABLE", 1]) > 0) && {(_logik getVariable ["wfbe_aicom_stall_streak", 0]) >= (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 5])}) then {
+	if (((missionNamespace getVariable ["WFBE_C_AICOM_STALL_OVERRIDE_ENABLE", 1]) > 0) && {(_logik getVariable ["wfbe_aicom_stall_streak", 0]) >= (missionNamespace getVariable [format ["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 5]])}) then {
 		_strikeOn = true;
 	};
 };
@@ -760,7 +760,7 @@ if (_wasStrike && !_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
 	_sMyEff = _myStr + (_myTowns * _sTownStr);
 	_sEnEff = _enStr + (_enemyTowns * _sTownStr);
 	if ((_myTowns >= _strikeMinTowns) && {_myTowns >= _enemyTowns * 1.2} && {_sMyEff >= _sEnEff}) then {_strikeOn = true};
-	if (time - (_logik getVariable ["wfbe_aicom_strike_t0", -1e10]) < (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_MIN_HOLD", 600])) then {_strikeOn = true};
+	if (time - (_logik getVariable ["wfbe_aicom_strike_t0", -1e10]) < (missionNamespace getVariable [format ["WFBE_C_AICOM_HQSTRIKE_MIN_HOLD_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_MIN_HOLD", 600]])) then {_strikeOn = true};
 };
 }; //--- end DECAP GATE (V1 HQ-strike block)
 if (_strikeOn) then {
@@ -842,7 +842,7 @@ if (_strikeOn) then {
 		private ["_strikeLive","_strikeTarget"];
 		_strikeLive = 0;
 		{ if (!isNull _x && {!isPlayer (leader _x)} && {({alive _x} count (units _x)) > 0}) then {_strikeLive = _strikeLive + 1} } forEach _teams;
-		_strikeTarget = ceil (_strikeLive * (missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_CAP_FRAC", 0.5]));
+		_strikeTarget = ceil (_strikeLive * (missionNamespace getVariable [format ["WFBE_C_AICOM_HQSTRIKE_CAP_FRAC_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_CAP_FRAC", 0.5]]));
 		if (_strikeTarget < 3) then {_strikeTarget = 3};
 		while {_strikeCount < _strikeTarget} do {
 		_best = grpNull; _bestN = 1; //--- need at least 2 men to be worth sending
@@ -1026,7 +1026,7 @@ if (((missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS", 1]) > 0) && {!_
 	private ["_lpBaseThreat","_lpHQ","_lpDist"];
 	_lpBaseThreat = false;
 	_lpHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
-	_lpDist = missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500];
+	_lpDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
 	if (!isNull _lpHQ) then {
 		if (({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _lpHQ) nearEntities [["Man","LandVehicle","Air"], _lpDist])) > 0) then {_lpBaseThreat = true};
 	};

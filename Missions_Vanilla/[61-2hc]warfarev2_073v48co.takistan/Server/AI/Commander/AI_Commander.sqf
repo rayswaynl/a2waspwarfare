@@ -52,6 +52,101 @@ if (count (WFBE_PRESENTSIDES - [resistance]) > 1) then {
 	};
 };
 
+	//--- V1.0 TEMPERAMENT PRESETS (a-life; flag WFBE_C_AICOM_TEMPERAMENT default 0 = OFF, byte-identical
+	//--- to HEAD). Draws an archetype ONCE per side (Blitzer/Turtle/Feint-Artist), de-correlated from the
+	//--- enemy's pick (mirrors the doctrine coin-flip immediately below - same isNil-guard/_logik-storage
+	//--- idiom), and bundles a coherent set of EXISTING AICOM v2 play-shaping tunables into a per-side
+	//--- missionNamespace override (side-suffixed key, e.g. ..._WEST / ..._EAST) so the two sides can run
+	//--- genuinely different personalities in the SAME round. Consumer read sites in
+	//--- AI_Commander_Strategy.sqf / AI_Commander_Decapitate.sqf check the side-suffixed key FIRST,
+	//--- falling back to the existing global default when unset - flag off or side not yet drawn =
+	//--- byte-identical to HEAD.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_TEMPERAMENT", 0]) > 0 && {isNil {_logik getVariable "wfbe_aicom_temperament"}}) then {
+		private ["_eSideT","_eLogikT","_eTempD","_tempPool","_temperament","_tArch","_tKey","_tMult","_tIsInt","_tFloor","_tLit","_tBase","_tVal","_tSideKey"];
+		_eSideT  = if (_side == west) then {east} else {west};
+		_eLogikT = (_eSideT) Call WFBE_CO_FNC_GetSideLogic;
+		_eTempD  = if (isNil "_eLogikT" || {isNull _eLogikT}) then {""} else {_eLogikT getVariable ["wfbe_aicom_temperament", ""]};
+		//--- De-correlate: drop the enemy's archetype from the draw pool if it already picked (mirrors doctrine).
+		_tempPool = ["BLITZER","TURTLE","FEINT"] - [_eTempD];
+		if (count _tempPool == 0) then {_tempPool = ["BLITZER","TURTLE","FEINT"]}; //--- safety net: never an empty pool.
+		_temperament = _tempPool select floor(random count _tempPool);
+		_logik setVariable ["wfbe_aicom_temperament", _temperament];
+
+		//--- Archetype table: [globalKey, multiplier, isInt(0/1), floor, literalFallback]. literalFallback
+		//--- mirrors the read site's OWN inline default (belt-and-suspenders only - Init_CommonConstants.sqf
+		//--- always sets the real global before AI_Commander.sqf spawns, so this is essentially never hit).
+		_tArch = switch (_temperament) do {
+		case "BLITZER": {[
+			["WFBE_C_AICOM_FRONT_DWELL", 0.5, 1, 60, 480],
+			["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 0.5, 1, 1, 2],
+			["WFBE_C_AICOM_LASTSTAND_TOWNS", 1.0, 1, 1, 1],
+			["WFBE_C_AICOM_LASTSTAND_RATIO", 0.67, 0, 0.05, 0.45],
+			["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 0.6, 1, 100, 500],
+			["WFBE_C_AICOM_RELIEF_MIN_ALIVE", 1.5, 1, 1, 4],
+			["WFBE_C_AICOM_RELIEF_HOLD", 0.5, 1, 30, 240],
+			["WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS", 0.75, 1, 3, 12],
+			["WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX", 1.5, 1, 0, 2],
+			["WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO", 0.83, 0, 1.1, 3],
+			["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 0.6, 1, 1, 5],
+			["WFBE_C_AICOM_HQSTRIKE_MIN_HOLD", 0.67, 1, 60, 600],
+			["WFBE_C_AICOM_HQSTRIKE_CAP_FRAC", 1.3, 0, 0.1, 0.5],
+			["WFBE_C_AICOM2_DECAP_DOM_RATIO", 0.87, 0, 1.05, 1.5],
+			["WFBE_C_AICOM2_DECAP_ABORT_RATIO", 0.83, 0, 0.3, 0.9],
+			["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS", 1.4, 1, 1, 5],
+			["WFBE_C_AICOM2_DECAP_ARM_TICKS", 0.67, 1, 1, 3]
+		]};
+		case "TURTLE": {[
+			["WFBE_C_AICOM_FRONT_DWELL", 1.5, 1, 60, 480],
+			["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 1.5, 1, 1, 2],
+			["WFBE_C_AICOM_LASTSTAND_TOWNS", 2.0, 1, 1, 1],
+			["WFBE_C_AICOM_LASTSTAND_RATIO", 1.5, 0, 0.05, 0.45],
+			["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 1.4, 1, 100, 500],
+			["WFBE_C_AICOM_RELIEF_MIN_ALIVE", 0.5, 1, 1, 4],
+			["WFBE_C_AICOM_RELIEF_HOLD", 2.0, 1, 30, 240],
+			["WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS", 1.33, 1, 3, 12],
+			["WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX", 0.5, 1, 0, 2],
+			["WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO", 1.33, 0, 1.1, 3],
+			["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 1.6, 1, 1, 5],
+			["WFBE_C_AICOM_HQSTRIKE_MIN_HOLD", 1.5, 1, 60, 600],
+			["WFBE_C_AICOM_HQSTRIKE_CAP_FRAC", 0.7, 0, 0.1, 0.5],
+			["WFBE_C_AICOM2_DECAP_DOM_RATIO", 1.2, 0, 1.05, 1.5],
+			["WFBE_C_AICOM2_DECAP_ABORT_RATIO", 1.11, 0, 0.3, 0.9],
+			["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS", 0.6, 1, 1, 5],
+			["WFBE_C_AICOM2_DECAP_ARM_TICKS", 1.67, 1, 1, 3]
+		]};
+		default {[
+			["WFBE_C_AICOM_FRONT_DWELL", 0.75, 1, 60, 480],
+			["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 1.0, 1, 1, 2],
+			["WFBE_C_AICOM_LASTSTAND_TOWNS", 1.0, 1, 1, 1],
+			["WFBE_C_AICOM_LASTSTAND_RATIO", 1.0, 0, 0.05, 0.45],
+			["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 1.0, 1, 100, 500],
+			["WFBE_C_AICOM_RELIEF_MIN_ALIVE", 1.0, 1, 1, 4],
+			["WFBE_C_AICOM_RELIEF_HOLD", 0.75, 1, 30, 240],
+			["WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS", 1.0, 1, 3, 12],
+			["WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX", 1.0, 1, 0, 2],
+			["WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO", 1.0, 0, 1.1, 3],
+			["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 1.0, 1, 1, 5],
+			["WFBE_C_AICOM_HQSTRIKE_MIN_HOLD", 1.0, 1, 60, 600],
+			["WFBE_C_AICOM_HQSTRIKE_CAP_FRAC", 0.8, 0, 0.1, 0.5],
+			["WFBE_C_AICOM2_DECAP_DOM_RATIO", 1.0, 0, 1.05, 1.5],
+			["WFBE_C_AICOM2_DECAP_ABORT_RATIO", 1.0, 0, 0.3, 0.9],
+			["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS", 1.0, 1, 1, 5],
+			["WFBE_C_AICOM2_DECAP_ARM_TICKS", 1.0, 1, 1, 3]
+		]};
+		};
+		{
+			_tKey = _x select 0; _tMult = _x select 1; _tIsInt = _x select 2; _tFloor = _x select 3; _tLit = _x select 4;
+			_tBase = missionNamespace getVariable [_tKey, _tLit];
+			_tVal  = _tBase * _tMult;
+			if (_tIsInt > 0) then {_tVal = round _tVal};
+			if (_tVal < _tFloor) then {_tVal = _tFloor};
+			_tSideKey = format [(_tKey + "_%1"), _side];
+			missionNamespace setVariable [_tSideKey, _tVal];
+		} forEach _tArch;
+
+		["INFORMATION", Format ["AI_Commander.sqf: [%1] temperament drawn: %2 (de-correlated from enemy).", str _side, _temperament]] Call WFBE_CO_FNC_AICOMLog;
+	};
+
 //--- V0.2: pick a doctrine once - the primary factory path this AI builds around.
 if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 	//--- AICOM v2 (wiki + Miksuu strategy): de-correlate the doctrine from the ENEMY's for varied matches (was a
@@ -60,7 +155,15 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 		_eSideD = if (_side == west) then {east} else {west};
 		_eLogikD = (_eSideD) Call WFBE_CO_FNC_GetSideLogic;
 		_eDocD = if (isNil "_eLogikD" || {isNull _eLogikD}) then {""} else {_eLogikD getVariable ["wfbe_aicom_doctrine", ""]};
-		_doctrine = if (_eDocD == "HF") then {"LF"} else {if (_eDocD == "LF") then {"HF"} else {if (random 1 > 0.5) then {"HF"} else {"LF"}}};
+		_doctrine = if (_eDocD == "HF") then {"LF"} else {if (_eDocD == "LF") then {"HF"} else {
+			if (!isNil {_logik getVariable "wfbe_aicom_temperament"}) then {
+				private "_tHfBias";
+				_tHfBias = switch (_logik getVariable "wfbe_aicom_temperament") do {case "BLITZER": {0.7}; case "TURTLE": {0.3}; default {0.5}};
+				if (random 1 < _tHfBias) then {"HF"} else {"LF"}
+			} else {
+				if (random 1 > 0.5) then {"HF"} else {"LF"}
+			}
+		}};
 	_logik setVariable ["wfbe_aicom_doctrine", _doctrine];
 	["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine picked: %2 (primary factory path).", str _side, _doctrine]] Call WFBE_CO_FNC_AICOMLog;
 
