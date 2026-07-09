@@ -283,7 +283,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 	[_soldier] allowGetIn true;
 	[_soldier] orderGetIn true;
-	if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {(_vehicle) Call BalanceInit};
+	if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {_vehicle setVariable ["wfbe_balance_side", _side]; (_vehicle) Call BalanceInit};
 
 	if (_unitType isKindOf "Air") then {
 

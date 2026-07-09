@@ -1089,7 +1089,7 @@ if (_isMan) then {
 	if (_unit in (missionNamespace getVariable Format['WFBE_%1SALVAGETRUCK',sideJoinedText])) then {[_vehicle] execVM 'Client\FSM\updatesalvage.sqf'};
 
 	//--- Units Balancing.
-	if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {(_vehicle) Call BalanceInit};
+	if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {_vehicle setVariable ["wfbe_balance_side", sideJoined]; (_vehicle) Call BalanceInit};
 
 	if (_unit isKindOf "Air") then {
 		//--- Countermeasures.
