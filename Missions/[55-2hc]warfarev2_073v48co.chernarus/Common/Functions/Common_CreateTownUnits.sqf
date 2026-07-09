@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_built", "_builtveh", "_crews", "_groups", "_i", "_lock", "_logGroupCount", "_position", "_positions", "_retVal", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
+Private ["_built", "_builtveh", "_cacheTier", "_crews", "_groups", "_i", "_lock", "_logGroupCount", "_position", "_positions", "_retVal", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_strelaAssigned", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -21,6 +21,17 @@ _built = 0;
 _builtveh = 0;
 _town_teams = [];
 _town_vehicles = [];
+
+//--- fable/gdir-cache-materializer (GR-2026-07-08a): read this town's purchased cache tier
+//--- once, up front, for the whole activation episode. Gate-checked here (not just at
+//--- purchase time) so an admin can kill materialisation mid-round without touching the panel.
+//--- _side==WFBE_DEFENDER guard: AICOMV2_GDIR_* is a GUER-only economy feature, never applies
+//--- to WEST/EAST town holders.
+_cacheTier = 0;
+if (_side == WFBE_DEFENDER && {(missionNamespace getVariable ["AICOMV2_GDIR_CACHE", 0]) > 0}) then {
+	_cacheTier = _town getVariable ["AICOMV2_GDIR_CACHE_TIER", 0];
+};
+_strelaAssigned = false; //--- tier-3 Strela: ONE dedicated AA/AT defender per activation episode, not per-unit chance.
 
 //--- Task 34: resistance vehicles are always unlocked when the resistance side is inactive (WFBE_C_TOWNS_DEFENDER == 0).
 //--- When resistance IS active the existing WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER parameter governs the lock state
@@ -139,6 +150,46 @@ for '_i' from 0 to count(_groups)-1 do {
 				_x setSkill ["spotDistance",   _skillSpot];
 				_x setSkill ["courage",        _skillCourage];
 				_x setSkill _skillScalar;
+
+				//--- fable/gdir-cache-materializer (GR-2026-07-08a): AICOMV2_GDIR_CACHE loadout-apply
+				//--- hook. Cumulative by tier (a town holds ONE tier; higher tiers include lower-tier
+				//--- effects). Additive via addWeapon/addMagazine, never removes existing gear except
+				//--- the deliberate primary-weapon swap for the RPK conversion (mirrors the
+				//--- addWeapon/removeWeapon swap idiom already used in Common_CreateUnit.sqf for
+				//--- Ins_Soldier_AT/MVD_Soldier_AT). Classnames verified in
+				//--- Common\Config\Loadout\Loadout_GUE.sqf and Common\Config\Gear\Gear_GUE.sqf
+				//--- (GUER faction's own existing gear pool - no new content).
+				if (_cacheTier > 0) then {
+					//--- Tier 1: "AK+RPK mix + extra mags." One extra AK mag for every defender; ~35%
+					//--- of PLAIN AK riflemen (not MG/marksman/shotgun specialists) get converted to
+					//--- an RPK gunner. One frag grenade per defender (the "grenades" component).
+					_x addMagazine "30Rnd_545x39_AK";
+					_x addMagazine "HandGrenade_East";
+					if (!(_x hasWeapon "RPK_74") && {(primaryWeapon _x) in ["AK_47_M","AK_47_S","AK_74","AKS_74_kobra","AKS_74_pso","AKS_74_U","AKS_74_UN_kobra","AKS_GOLD"]} && {random 100 < 35}) then {
+						_x removeWeapon (primaryWeapon _x);
+						_x addWeapon "RPK_74";
+						_x addMagazine "75Rnd_545x39_RPK";
+						_x addMagazine "75Rnd_545x39_RPK";
+					};
+
+					//--- Tier 2: "+RPG-7V gunners." ~20% of defenders with an empty launcher slot become
+					//--- an RPG-7V AT gunner.
+					if (_cacheTier >= 2 && {secondaryWeapon _x == ""} && {random 100 < 20}) then {
+						_x addWeapon "RPG7V";
+						_x addMagazine "PG7V";
+						_x addMagazine "PG7V";
+					};
+
+					//--- Tier 3: "+Strela defender." Exactly ONE dedicated Strela AA/AT gunner per
+					//--- activation episode (not a per-unit chance - a single named defender, matching
+					//--- the singular "defender" in the gate's own comment).
+					if (_cacheTier >= 3 && {!_strelaAssigned} && {secondaryWeapon _x == ""}) then {
+						_x addWeapon "Strela";
+						_x addMagazine "Strela";
+						_x addMagazine "Strela";
+						_strelaAssigned = true;
+					};
+				};
 			};
 		} forEach _units;
 	};
