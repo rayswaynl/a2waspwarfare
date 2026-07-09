@@ -38,7 +38,7 @@
 private ["_side","_logik","_snap","_myEff","_enEff","_enTowns","_myTowns","_enHQ","_enHQPos","_enHQAlive",
 	"_domRatio","_abortRatio","_maxEnTowns","_armTicks","_minCommit","_dominant","_streak","_committed",
 	"_t0","_state","_tgtTowns","_teams","_nearTown","_bestD","_d","_t","_stamped","_sideText","_elMin",
-	"_senseRadius","_senseInterval","_senseChance","_commitRadius","_senseTick","_sensed","_inRange","_rollNow","_ldr","_garTeam","_holdT","_isHolding","_capLk","_capLocked","_dHQ","_decV"];
+	"_senseRadius","_senseInterval","_senseChance","_commitRadius","_senseTick","_sensed","_inRange","_rollNow","_ldr","_garTeam","_holdT","_isHolding","_capLk","_capLocked","_dHQ","_decV","_stallStreak"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -123,6 +123,16 @@ if (_inRange == 0) then {
 		};
 	};
 };
+
+//--- STALL-AWARE ARMING (owner easy-win, 2026-07-08): AI_Commander_Strategy.sqf already tracks
+//--- wfbe_aicom_stall_streak (increments while a side sits DOMINANT-BUT-PASSIVE per its own STALL_OVERRIDE
+//--- test). Read-only reuse here: once that streak has run STALL_RELAX+ ticks, relax the local DOM_RATIO
+//--- 20% so a side sitting just under the normal dominance bar (the documented dominant-but-just-under-
+//--- threshold HQ-hunt freeze) can still ARM the Decapitate closer. Additive only - never lowers _domRatio
+//--- below what a fresh (streak=0) side already uses, and _dominant's other three legs (sensed/inRange/
+//--- enTowns) are unchanged, so a side that never sensed the HQ still never arms.
+_stallStreak = _logik getVariable ["wfbe_aicom_stall_streak", 0];
+if (_stallStreak >= (missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_STALL_RELAX", 5])) then {_domRatio = _domRatio * 0.8};
 
 _dominant = _enHQAlive
 	&& {_sensed}
