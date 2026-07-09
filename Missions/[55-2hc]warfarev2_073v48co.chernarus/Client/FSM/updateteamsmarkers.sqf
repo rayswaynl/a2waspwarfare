@@ -79,6 +79,7 @@ _ownMarker setMarkerAlphaLocal 0;
 _ownLastPos   = [-99999,-99999,0];
 _ownLastDir   = -999;
 _ownLastAlpha = -1;
+_ownLastLabel = "";  //--- fable/marker-ownlabel (owner 2026-07-09): self-arrow name+class label cache
 //--- cmdcon42 (Ray 2026-07-02) DOUBLE-CLASS-TAG FIX: the WAVE-2 own-marker CLASS TEXT block that stamped the
 //--- BARE class ("ENG") straight onto the AdvancedSquadOWNMarker has been REMOVED. That own-marker sits at the
 //--- player's exact position, so its bare "ENG" rendered as a leading prefix ON TOP of the per-team player marker,
@@ -190,6 +191,19 @@ while {!gameOver} do {
 			if (_ownLastAlpha != 1) then {
 				_ownMarker setMarkerAlphaLocal 1;
 				_ownLastAlpha = 1;
+			};
+			//--- fable/marker-ownlabel (owner 2026-07-09): the OWNMarker is the single visible self-arrow
+			//--- (see the RC29 note above ~L318) but was left textless -> respawn showed a blank orange arrow.
+			//--- Give it the same " Name [CLS]" label the per-team leader marker builds (L323 + QoL-S4 switch).
+			_ownTag = switch (player getVariable ["wfbe_player_class", ""]) do {
+				case "Engineer": {"ENG"}; case "Soldier": {"SOL"}; case "SpecOps": {"SPEC"};
+				case "Spotter": {"SNI"}; case "Medic": {"MED"}; case "Officer": {"OFF"}; default {""};
+			};
+			_ownLabel = Format[" %1", name player];
+			if (_ownTag != "") then {_ownLabel = Format["%1 [%2]", _ownLabel, _ownTag]};
+			if (_ownLabel != _ownLastLabel) then {
+				_ownMarker setMarkerTextLocal _ownLabel;
+				_ownLastLabel = _ownLabel;
 			};
 		} else {
 			if (_ownLastAlpha != 0) then {

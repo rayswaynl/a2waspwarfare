@@ -1887,6 +1887,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_STRUCTURES_ARTILLERYRADAR = 0; // Artillery Radar buildable structure (WDDM walled-gate walls, fort-only by design)
 	WFBE_C_STRUCTURES_RESERVE = 0;        // Reserve buildable structure (WDDM floodlit walled-yard walls)
 	WFBE_C_STRUCTURES_RADIOTOWER = 1;     // Radio Tower buildable - gates the vehicle radio feature (WASP/Radio); Land_Telek2 model NOT verified present on TK/ZG runtime content
+	WFBE_C_STRUCTURES_RADIOTOWER_CASH_COST = 2500; // owner 2026-07-09: Radio Tower is bought with player CASH (not side supply). Read at the 3 coin economy touchpoints (Init_Coin buy-menu currency index 1, coin_interface deduction, GUI_Menu_Economy sell-refund), keyed on rlType "RadioTower".
 	WFBE_C_UNITS_REDEPLOYTRUCK = 1;       // Medic redeployment truck (forward spawn)
 	WFBE_C_SUPPORT_REARM_PROPORTIONAL = 1; //--- Rearm price scales with ammo actually missing (arty exempt)
 	WFBE_C_UNITS_BULLDOZER = 1;           //--- Engineer base-area tree clearing
@@ -2310,7 +2311,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- game logic. Default 0 = byte-identical legacy respawn screen (buttons hidden via
 //--- `show=0`, minimap geometry untouched). See docs/design/v2/TEAM-MENU-REPURPOSE-PROPOSAL-2026-07-07.md
 //--- for the Unit Designer / Gear Presets feature inventory this reuses.
-	if (isNil "WFBE_C_RESPAWN_SHORTCUTS") then {WFBE_C_RESPAWN_SHORTCUTS = 0};
+	if (isNil "WFBE_C_RESPAWN_SHORTCUTS") then {WFBE_C_RESPAWN_SHORTCUTS = 1}; //--- owner 2026-07-09: ACTIVATED - respawn-screen Team-Menu shortcuts (Customise AI Soldier + Saved Kits) + trimmed minimap (GUI_RespawnMenu.sqf:47-57)
 
 //--- DEADSPAWN NO-ARMED-UNITS GUARD (fable/deadspawn-guard, Ray 2026-07-04): while a dead AI team
 //--- leader is parked on its %1TempRespawnMarker holding point during the respawn wait

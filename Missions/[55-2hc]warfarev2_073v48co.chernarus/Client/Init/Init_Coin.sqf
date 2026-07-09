@@ -74,8 +74,18 @@ if (count _structures > 0) then {_coinCategories = _coinCategories + [localize "
 if (count _defenses > 0) then {if (_extra == "REPAIR") then {_coinCategories = []};_coinCategories = _coinCategories + [localize "str_m04t37_0"] + [localize "STR_WF_Fortification"] + [localize "STR_WF_Strategic"] + [localize "STR_WF_Ammo"]};
 
 if (_isHQdeployed && _i == 1 && _extra == "") then {_coinItemArray = _coinItemArray + [[_structures select 0,0,[0, _structureCosts select 0], (_structureDescriptions select 0) + " " +  localize "strwfhqmobilizeme"]]};
+//--- owner 2026-07-09: Radio Tower is a CASH purchase. The coin item cost is [currencyIndex, amount]:
+//--- index 0 = side supply (default for structures), index 1 = player funds. rlType lookup is index-parallel to _structures.
+private "_rtRlTypes";
+_rtRlTypes = missionNamespace getVariable Format["WFBE_%1STRUCTURES",sideJoinedText];
 for [{_i=_i}, {_i<count _structures}, {_i = _i+1}] do {
-  _coinItemArray = _coinItemArray + [[_structures select _i,0,[0, _structureCosts select _i], (_structureDescriptions select _i)]];
+  private "_itemCostEntry";
+  _itemCostEntry = if (((_rtRlTypes select _i) == "RadioTower")) then {
+    [1, missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER_CASH_COST", 2500]]
+  } else {
+    [0, _structureCosts select _i]
+  };
+  _coinItemArray = _coinItemArray + [[_structures select _i,0,_itemCostEntry, (_structureDescriptions select _i)]];
 };
 
 _fix = if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {1} else {0};
