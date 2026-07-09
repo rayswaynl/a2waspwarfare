@@ -300,10 +300,15 @@ WFBE_COMM_FNC_RequestQuote = {
 	["RequestGDirPanel", [player, "quote", _townId, "none"]] Call WFBE_CO_FNC_SendToServer;
 };
 
-//--- Snap minimap to selected town on open.
-if (_firstTown != "") then {
-	[_firstTown] Call WFBE_COMM_FNC_SelectTownByName;
-	[_firstTown] Call WFBE_COMM_FNC_RequestQuote;
+//--- Snap minimap to the town CLOSEST to the player on open (was: first town in _towns/list order).
+//--- fable/commissar-minimap: reuses the same nearest-town helper the map-click handler uses below.
+private ["_nearestTownObj","_openTownName"];
+_nearestTownObj = [getPos player] Call WFBE_COMM_FNC_NearestTown;
+_openTownName = if (!isNull _nearestTownObj) then {_nearestTownObj getVariable ["name", ""]} else {""};
+if (_openTownName == "") then {_openTownName = _firstTown}; //--- fallback: no towns yet, or nearest town has no name var.
+if (_openTownName != "") then {
+	[_openTownName] Call WFBE_COMM_FNC_SelectTownByName;
+	[_openTownName] Call WFBE_COMM_FNC_RequestQuote;
 };
 //--- WFBE_C_GDIR_VIS: initial heatmap on open.
 [] Call WFBE_COMM_FNC_RefreshHeatmap;
