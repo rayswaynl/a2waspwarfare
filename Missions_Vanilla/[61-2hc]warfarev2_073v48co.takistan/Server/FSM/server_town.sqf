@@ -2,7 +2,12 @@
 
 // "towns" use it to get all initiated towns on map
 
-_timeAttacked = 0;
+//--- N4 fix (MORE-FIXES-AND-IDEAS): _timeAttacked used to be a single local shared across
+//--- EVERY town and EVERY side (declared once here, outside both the town and while loops) -
+//--- one town going under attack suppressed the "under attack" alert for every OTHER
+//--- concurrent town/side for 60s. The throttle now lives on each town object instead
+//--- (wfbe_time_attacked, set at line ~270), matching this file's existing per-town-state
+//--- style (wfbe_contested/supplyValue). No longer declared/used here.
 _activeEnemies = 0;
 _contested = false;
 _sidesPresent = 0;
@@ -267,7 +272,13 @@ while {!WFBE_GameOver} do {
 			if (_rate < 1) then {_rate = 1};
 
 			if (_sideID != WFBE_C_UNKNOWN_ID) then {
-				if (_activeEnemies > 0 && time > _timeAttacked && (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_side])) then {_timeAttacked = time + 60;[_side, "IsUnderAttack", ["Town", _location]] Spawn SideMessage};
+				//--- N4 fix: per-town(+side) throttle instead of the old shared _timeAttacked local -
+				//--- stored on the town object (server-local only, same as wfbe_contested), so one
+				//--- town's alert no longer suppresses every other town's concurrent alert.
+				if (_activeEnemies > 0 && time > (_location getVariable ["wfbe_time_attacked", 0]) && (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_side])) then {
+					_location setVariable ["wfbe_time_attacked", time + 60];
+					[_side, "IsUnderAttack", ["Town", _location]] Spawn SideMessage;
+				};
 			};
 
 			_supplyValue = round(_supplyValue - (_resistance + _east + _west) * _rate);
@@ -453,7 +464,14 @@ while {!WFBE_GameOver} do {
 				sleep (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENDER_LINGER", 180]);
 				//--- Abort cleanup if the town has flipped back to the old owner's side.
 				if ((_loc getVariable ["sideID", -1]) == _newSIDAtCapture) then {
-					{if (alive _x) then {deleteVehicle _x}} forEach (units (missionNamespace getVariable [format ["WFBE_%1_DefenseTeam", _oldSide], grpNull]));
+					//--- N3 fix (MORE-FIXES-AND-IDEAS): this used to also sweep-delete every alive unit in
+					//--- the GLOBAL per-side WFBE_<SIDE>_DefenseTeam pool (one shared group created once at
+					//--- server start, Init_Server.sqf:255-256) - killing gunners at UNRELATED still-owned
+					//--- towns 180s after any single town flipped elsewhere. The call below (unchanged) is
+					//--- already the correct, town-SCOPED cleanup: OperateTownDefensesUnits "remove" walks
+					//--- ONLY _loc's own wfbe_town_defenses and deletes each position's tracked gunner
+					//--- (gunner _defense / wfbe_defense_operator) - it never touched the global pool, so
+					//--- removing the redundant global sweep loses no legitimate cleanup.
 					[_loc, _oldSide, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
 				};
 			};
