@@ -1565,7 +1565,7 @@ switch (_args select 0) do {
 		};
 		_pos    = _args select 1;
 		_player = _args select 2;
-		if ((typeName _pos == "ARRAY") && {!isNull _player} && {side _player == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+		if ((missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 0]) > 0 && {typeName _pos == "ARRAY"} && {!isNull _player} && {side _player == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {  //--- sweep-fix: master-flag re-check server-side so the feature is truly inert when WFBE_C_GUER_HELIBOMB_ENABLE=0 (a client can send the request even with its addAction hidden).
 			//--- KILL-TIER GATE (server-authoritative re-check): the addAction's own condition string already
 			//--- hides this from a not-yet-unlocked player client-side, but that is a UX convenience, not a
 			//--- trust boundary - re-check here before any funds move.
