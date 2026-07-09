@@ -67,7 +67,16 @@ missionNamespace setVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", 60];
 
 player call Compile preprocessFileLineNumbers "WASP\rpg_dropping\DropRPG.sqf";
 //--- Position the client on the temp spawn (Common is not yet init'd so we call is straigh away).
-player setPos ([getMarkerPos Format["%1TempRespawnMarker",sideJoinedText],1,10] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");
+//--- fable/deadspawn-redesign: flag-gated underwater holding pen. Flag 0 (default) keeps the
+//--- line below byte-for-byte the same call as HEAD. Flag 1 sends the join/transit placement
+//--- to Common_DeadspawnPenPos.sqf instead - the existing allowDamage-false transit window
+//--- (set a few lines above in this file, cleared on WFBE_Client_DeadspawnEscaped or the
+//--- existing 120s failsafe) already covers this new position unmodified.
+if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_REDESIGN", 0]) > 0) then {
+	player setPos ([] call WFBE_CO_FNC_DeadspawnPenPos);
+} else {
+	player setPos ([getMarkerPos Format["%1TempRespawnMarker",sideJoinedText],1,10] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");
+};
 (vehicle player) addEventHandler ["Fired",{_this Spawn HandleAT}]; (vehicle player) addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
 // Marty: Only attach the combat marker blinking Fired EH when the mission parameter enables the feature.
 if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {

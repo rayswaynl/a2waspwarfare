@@ -2287,6 +2287,13 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (default), 0 = legacy behaviour (armed leader parked live on the marker for the wait window).
 	if (isNil "WFBE_C_DEADSPAWN_GUARD") then {WFBE_C_DEADSPAWN_GUARD = 1};
 
+	//--- fable/deadspawn-redesign: replaces the shared-marker wall pen (Init_DeadspawnWall.sqf)
+	//--- with a single in-bounds underwater holding point (Common_DeadspawnPenPos.sqf) for the
+	//--- join/transit window. 1 = new underwater pen, 0 (default) = today's TempRespawnMarker
+	//--- pen, unchanged. Independent of WFBE_C_DEADSPAWN_GUARD above (that flag toggles the HC's
+	//--- own ParkDeadspawn behaviour, not the human join-placement this flag controls).
+	if (isNil "WFBE_C_DEADSPAWN_REDESIGN") then {WFBE_C_DEADSPAWN_REDESIGN = 0};
+
 //--- TP-17 (fable/tp17-marker-destination): HQ team map markers DESTINATION-direction mode.
 //--- When flag>0, team arrows point toward the leader's active movement destination instead of
 //--- current facing direction. Falls back to facing when no valid destination is available.
