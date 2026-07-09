@@ -112,8 +112,8 @@ _testTeamCap = missionNamespace getVariable ["WFBE_C_TEST_TEAM_CAP", -1];
 _base = switch (true) do {
 	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  12]};
 	case (_pcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  4]};
-	case (_pcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
-	default          {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
+	case (_pcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 4]};
+	default          {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 3]};
 };
 //--- cmdcon42-k TEAM-COUNT REDUCTION (Ray 2026-07-02, both maps via LoadoutManager mirror): drop WFBE_C_AICOM_TEAMS_DELTA
 //--- (default -3) teams off the PC-scaled BASE founding target for EACH AI commander so the new Build-87 dynamic systems
@@ -466,7 +466,7 @@ if (count _live > 0) then {
 	_rosterMyID = (_side) Call WFBE_CO_FNC_GetSideID;
 	_rosterOwnTowns = 0;
 	{ if ((_x getVariable "sideID") == _rosterMyID) then {_rosterOwnTowns = _rosterOwnTowns + 1} } forEach towns;
-	if ((_rosterOwnTowns < (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) && {!_freeAirWaive} && {!_airHeliWaive}) then { //--- B74: a captured airfield (free-buy) exempts the AIR_MIN_TOWNS strip so air comes online immediately on field capture. Build83 (Ray cmdcon34): a held Aircraft Factory ALSO exempts it (the AF only builds after AIR_MIN_TOWNS anyway, so holding one already implies establishment) - helis build once the factory stands.
+	if ((_rosterOwnTowns < (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 3])) && {!_freeAirWaive} && {!_airHeliWaive}) then { //--- B74: a captured airfield (free-buy) exempts the AIR_MIN_TOWNS strip so air comes online immediately on field capture. Build83 (Ray cmdcon34): a held Aircraft Factory ALSO exempts it (the AF only builds after AIR_MIN_TOWNS anyway, so holding one already implies establishment) - helis build once the factory stands.
 		_eligNoAir = [];
 		{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir set [count _eligNoAir, _x]} } forEach _eligible;
 		_eligible = _eligNoAir;

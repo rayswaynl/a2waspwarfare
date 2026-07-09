@@ -331,7 +331,7 @@ while {!gameOver} do {
 				_w6Eligible    = false;
 				_w6AirTemplate = [];          //--- resolved elite air-assault template (class array)
 				_w6AirTier     = -1;          //--- its air-upgrade requirement (higher = more elite)
-				if (!isNull _hq && {alive _hq} && {(count _owned > 0) || {count _cands > 0}} && {!isNil "_upgrades"} && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0} && {(count _owned) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])}) then {  //--- B59 (Ray 2026-06-20): gate W6 Air Cavalry on air research + established towns (mirror W13/Produce) so no early/ungated Mi-24
+				if (!isNull _hq && {alive _hq} && {(count _owned > 0) || {count _cands > 0}} && {!isNil "_upgrades"} && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0} && {(count _owned) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 3])}) then {  //--- B59 (Ray 2026-06-20): gate W6 Air Cavalry on air research + established towns (mirror W13/Produce) so no early/ungated Mi-24
 					_w6Tmpls   = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", _sideText], []];
 					_w6TmplUps = missionNamespace getVariable [Format ["WFBE_%1AITEAMUPGRADES", _sideText], []];
 					{

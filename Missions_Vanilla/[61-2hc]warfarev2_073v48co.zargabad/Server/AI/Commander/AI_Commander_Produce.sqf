@@ -52,7 +52,7 @@ _facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS"
 _myID = (_side) Call WFBE_CO_FNC_GetSideID;
 _ownTowns = 0;
 { if ((_x getVariable "sideID") == _myID) then {_ownTowns = _ownTowns + 1} } forEach towns;
-if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) then {
+if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 3])) then {
 	_facDefs = _facDefs + [["Aircraft","AIRCRAFTUNITS",WFBE_UP_AIR]];
 };
 //--- Build83 FLAT AIR CAP at the PRODUCE/refill gate (Ray cmdcon34, 2026-07-01): mirror the founding-gate flat cap
