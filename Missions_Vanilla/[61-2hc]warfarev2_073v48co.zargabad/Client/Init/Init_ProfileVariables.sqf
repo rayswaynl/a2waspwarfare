@@ -101,6 +101,13 @@ _profile_var = profileNamespace getVariable "WFBE_AUDIO_CUES";
 if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_AUDIO_CUES = _profile_var}};
 missionNamespace setVariable ["WFBE_AUDIO_CUES", WFBE_AUDIO_CUES];
 
+//--- AI name tags (fable/ew-settings): WFBE_C_TAGS_AI is a NUMBER (0/1, default 1/ON per Init_CommonConstants.sqf).
+//--- Mirrors the WFBE_AUDIO_CUES block above but SCALAR-typed to match the constant's type.
+WFBE_C_TAGS_AI = 1;
+_profile_var = profileNamespace getVariable "WFBE_C_TAGS_AI";
+if !(isNil '_profile_var') then {if (typeName _profile_var == "SCALAR") then {WFBE_C_TAGS_AI = _profile_var}};
+missionNamespace setVariable ["WFBE_C_TAGS_AI", WFBE_C_TAGS_AI];
+
 //--- TP-21: Team Menu V2 gear presets (4 slots, per-side, ARRAY of ARRAYs).
 //--- WFBE_PERSISTENT_TEAM_MENU_V2_PRESETS is side-keyed so each side has independent slots.
 //--- Format per slot: [] (empty/unset) or [weapons, magazines, backpack, bp_content, [p,s,l]] (wfbe_custom_gear shape).

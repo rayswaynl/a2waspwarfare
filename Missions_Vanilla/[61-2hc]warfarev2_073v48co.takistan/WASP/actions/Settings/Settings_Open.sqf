@@ -24,7 +24,7 @@
 */
 
 disableSerialization;
-private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_autoOn","_target","_maxVD","_curVD","_sliderVD","_lastSliderVD","_chosenVD","_hc","_maxTG","_curTG","_sliderTG","_lastSliderTG","_chosenTG"];
+private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_autoOn","_target","_maxVD","_curVD","_sliderVD","_lastSliderVD","_chosenVD","_hc","_tags","_maxTG","_curTG","_sliderTG","_lastSliderTG","_chosenTG"];
 
 if (!alive player) exitWith {};
 if (dialog) exitWith {};
@@ -68,6 +68,7 @@ while {alive player && dialog} do {
 	_autoOn = missionNamespace getVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false];
 	_target = missionNamespace getVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", 60];
 	_hc     = missionNamespace getVariable ["WFBE_HighClimbingDefaultEnabled", false];
+	_tags   = missionNamespace getVariable ["WFBE_C_TAGS_AI", 1];
 
 	ctrlSetText [30020, if (_hud)  then {"HUD Overlay: ON"}         else {"HUD Overlay: OFF"}];
 	ctrlSetText [30021, if (_aar)  then {"AAR Markers: ON"}         else {"AAR Markers: OFF"}];
@@ -81,6 +82,7 @@ while {alive player && dialog} do {
 	ctrlSetText [30010, format ["View Distance: %1 m", round viewDistance]];
 	ctrlSetText [30017, Format [localize "STR_WF_TEAM_TerrainGridLabel", round (missionNamespace getVariable ["currentTG", 25])]];
 	ctrlSetText [30027, if (_hc) then {localize "STR_WF_TEAM_HighClimbingDefaultOn"} else {localize "STR_WF_TEAM_HighClimbingDefaultOff"}];
+	ctrlSetText [30028, if (_tags > 0) then {"AI Name Tags: ON"} else {"AI Name Tags: OFF"}];
 
 	//--- VD slider poll (drag = instant apply). Auto-VD is disabled the moment the player takes manual control,
 	//--- otherwise the adaptive loop drifts the value back. Mirrors the Team-menu slider persistence.
@@ -126,6 +128,16 @@ while {alive player && dialog} do {
 		WFBE_HighClimbingDefaultEnabled = _hc;
 		missionNamespace setVariable ["WFBE_HighClimbingDefaultEnabled", _hc];
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_HIGH_CLIMBING_DEFAULT_ENABLED", _hc] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+
+	//--- AI name tags (fable/ew-settings): WFBE_C_TAGS_AI gates both the AI-infantry and AI-vehicle nametag
+	//--- blocks in Init_Client.sqf (:303/:324); only visibly effects when the master Name Tags toggle is
+	//--- also ON. NUMBER (0/1), not BOOL - flip via arithmetic, not !.
+	if (WFBE_MenuAction == 12) then {
+		WFBE_MenuAction = -1;
+		WFBE_C_TAGS_AI = if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 1]) > 0) then {0} else {1};
+		missionNamespace setVariable ["WFBE_C_TAGS_AI", WFBE_C_TAGS_AI];
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_C_TAGS_AI", WFBE_C_TAGS_AI] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
 	//--- AAR map markers: gate read live by Common_MarkerLoop.sqf. Hide currently-drawn markers at once when OFF.
