@@ -1347,6 +1347,14 @@ switch (_args select 0) do {
 				//--- killed"). Snapshot living enemy MEN + CREWED vehicles in the (now FAB-250-sized) radius; crewed/alive
 				//--- only so empty wrecks never pay (keeps the C5 over-pay bound). _cand captures the outer _x because the
 				//--- crew-count below rebinds _x.
+				//--- fable/fix-vbied-attribution REWORK (#924, 2026-07-09): NO pre-blast wfbe_lasthitby stamp here
+				//--- (reverted). The earlier attempt stamped _driver as the last-hitter so RequestOnUnitKilled's
+				//--- delayed-hit fallback (RequestOnUnitKilled.sqf:53, requires "alive _last_hit") could attribute
+				//--- these kills - but _driver IS the suicide bomber inside _veh, guaranteed dead by "_veh setDamage 1"
+				//--- below at the SAME instant as these victims, so "alive _last_hit" can never be true and the
+				//--- fallback never actually fired for a single VBIED kill. Kill credit for this snapshot is applied
+				//--- directly after the settle instead (see the WFBE_GUER_PLAYER_KILLS block below) - matching the
+				//--- guer-mortar-strike / Support_GuerHeliDrop.sqf idiom already used for instigator-less ordnance.
 				{
 					_cand = _x;
 					if (alive _cand && {(side _cand == east) || (side _cand == west)}) then {
@@ -1403,10 +1411,51 @@ switch (_args select 0) do {
 									_persScore = _persScore + (ceil (_b / 100));
 								};
 							};
+							//--- fable/fix-vbied-attribution REWORK (#924, 2026-07-09): idempotent GUER kill-tier tech credit -
+							//--- ONE increment per confirmed-dead snapshot victim, this single settle pass only (can't double-count).
+							//--- The earlier attempt routed this through RequestOnUnitKilled's delayed-hit fallback via a pre-blast
+							//--- wfbe_lasthitby = _driver stamp (see the reverted snapshot-loop comment above) - that fallback
+							//--- requires "alive _last_hit" (RequestOnUnitKilled.sqf:53), which _driver (this same suicide bomber)
+							//--- can never satisfy, so it never attributed a single kill and WFBE_GUER_PLAYER_KILLS never advanced
+							//--- from a VBIED kill. Crediting it here directly (mirrors Support_GuerHeliDrop.sqf's own
+							//--- WFBE_C_GUER_HELIDROP_CREDIT_KILLS block for the identical "instigator dies with the ordnance"
+							//--- shape) is what actually gates the M113/BRDM/T-tier depot unlocks - GUI_UpgradeMenu.sqf,
+							//--- Root_GUE_PlayerOverlay.sqf and Client_UpdateRHUD.sqf all read WFBE_GUER_PLAYER_KILLS directly.
+							if ((missionNamespace getVariable ["WFBE_C_GUER_VBIED_CREDIT_KILLS", 1]) > 0) then {
+								WFBE_GUER_PLAYER_KILLS = (missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0]) + 1;
+								publicVariable "WFBE_GUER_PLAYER_KILLS";
+								//--- Same milestone/unlock table RequestOnUnitKilled.sqf:152-157 uses - keep in sync manually if
+								//--- those tiers ever change (same accepted duplication Support_GuerHeliDrop.sqf already carries).
+								private ["_vMilestones","_vMsg"];
+								_vMilestones = [
+									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15], "BRDM-2 + T-34 unlocked  -  Ka-137 flares up to 120"],
+									[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25], "M113 VBIED unlocked  -  armoured suicide APC at 2x speed"],
+									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40], "T-55 unlocked  -  Ka-137 flares up to 240"],
+									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80], "T-72 + BMP-2 unlocked"]
+								];
+								_vMsg = "";
+								{ if (WFBE_GUER_PLAYER_KILLS == (_x select 0)) then {_vMsg = _x select 1} } forEach _vMilestones;
+								if (_vMsg != "") then {
+									WFBE_GUER_UNLOCK_MSG = [WFBE_GUER_PLAYER_KILLS, _vMsg];
+									publicVariable "WFBE_GUER_UNLOCK_MSG";
+								};
+							};
 						};
 					} forEach _victims;
 					if (_payout > 0) then {
-						false; //--- Ray 2026-06-27: team-funds path DISABLED (paid group _driver captured PRE-suicide; never reaches the respawned base-less GUER detonator). Wallet/UID path below is the single channel. was: [_drvGrp, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
+						//--- fable/fix-vbied-attribution (owner pick A3, 2026-07-08): STAYS false BY DESIGN, not stale.
+						//--- Verified against DIAGNOSES-AND-SPECS.md Bug 2: once the pre-blast wfbe_lasthitby /
+						//--- wfbe_explosivesupportkill stamping above (this case) + the SCOPED RequestOnUnitKilled.sqf:44
+						//--- Man-class fallback land, RequestOnUnitKilled's own GUER kill-bounty block (coef 0.5 default,
+						//--- :167-189) starts paying TEAM funds for these same VBIED-killed Man victims for the FIRST TIME
+						//--- via the now-working last-hit attribution path -- THAT is the team-funds re-enable (a payout-
+						//--- composition change, not a gap). Restoring the old ChangeTeamFunds call here on top of that
+						//--- would DOUBLE-PAY every victim (this coef 0.5 payout + RequestOnUnitKilled's own coef 0.5
+						//--- payout for the identical kill set). Ray's original 2026-06-27 rationale (group captured
+						//--- PRE-suicide) is superseded by this payout-composition reasoning; the functional no-op is
+						//--- correct either way. Wallet/UID path below (_persBounty/_drvUID) is the unaffected personal-
+						//--- payout channel. was: [_drvGrp, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
+						false;
 						["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED cash-for-kills paid [%1] to [%2] (%3 targets in radius).", _payout, _drvGrp, count _victims]] Call WFBE_CO_FNC_LogContent;
 					};
 				};

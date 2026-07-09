@@ -41,7 +41,7 @@ if (isPlayer _killed) then {
 	_killed setVariable ["wfbe_killstreak", 0, true];
 };
 
-if (!(_killed isKindOf "Man") && (_killer == _killed || isNull _killer || !alive _killer)) then { //--- Vehicles may crash or burn out after a valid hit.
+if ((!(_killed isKindOf "Man") || (_killed getVariable ["wfbe_explosivesupportkill", false])) && (_killer == _killed || isNull _killer || !alive _killer)) then { //--- Vehicles may crash or burn out after a valid hit; Man-class victims explicitly stamped as an anonymous explosive-support kill (VBIED/SCUD/FPV) also fall through here - fable/fix-vbied-attribution (owner pick A3, 2026-07-08): SCOPED to explosive-support kills only, NOT a blanket Man-class gate removal.
 	_last_hit = _killed getVariable ["wfbe_lasthitby", objNull];
 	// A2 OA: deleted objects can return nil even with a default; guard before isNull.
 	if (isNil "_last_hit") then { _last_hit = objNull };

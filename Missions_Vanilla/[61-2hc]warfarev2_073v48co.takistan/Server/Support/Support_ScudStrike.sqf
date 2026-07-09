@@ -150,6 +150,25 @@ _caller = leader _playerTeam;
 		};
 	} forEach (nearestObjects [_dest, ["LandVehicle","StaticWeapon"], _zoneR]);
 
+	//--- fable/fix-vbied-attribution (owner pick A3, N2, 2026-07-08): pre-blast Man-class victim stamp.
+	//--- The HE (anti-infantry, stated primary purpose) and WP warheads below carry NO instigator and
+	//--- never stamped anything (only the SADARM armour loop above did, vehicle-only) - every infantry
+	//--- kill from this ability scored zero credit, always (RequestOnUnitKilled.sqf:44 Man-class gate).
+	//--- Snapshot living enemy infantry across the full zone radius BEFORE any warhead lands, mirroring
+	//--- the SADARM stamp above extended to Man-class. Un-killed survivors' stamps just age out (60s
+	//--- WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW) with no side effect; a victim legitimately killed by
+	//--- someone else is unaffected since RequestOnUnitKilled only reads this fallback when the real
+	//--- killer is null/dead/self.
+	if (!isNull _caller) then {
+		{
+			if (alive _x && {(side _x) in _enemySides} && {_x isKindOf "Man"}) then {
+				_x setVariable ["wfbe_lasthitby", _caller, true];
+				_x setVariable ["wfbe_lasthittime", time, true];
+				_x setVariable ["wfbe_explosivesupportkill", true, true];
+			};
+		} forEach (nearestObjects [_dest, ["Man"], _zoneR]);
+	};
+
 	//--- SADARM x2: top-attack drop from altitude on the two best targets (scatter if none).
 	for "_i" from 0 to 1 do {
 		if (_i < count _armour) then {
