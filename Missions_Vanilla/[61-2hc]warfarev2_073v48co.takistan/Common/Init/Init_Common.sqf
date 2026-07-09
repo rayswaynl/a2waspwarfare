@@ -96,6 +96,7 @@ WFBE_CO_FNC_ArrayPush = Compile preprocessFileLineNumbers "Common\Functions\Comm
 WFBE_CO_FNC_ArrayRemoveIndex = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayRemoveIndex.sqf";
 WFBE_CO_FNC_ArrayShift = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayShift.sqf";
 WFBE_CO_FNC_ArrayShuffle = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayShuffle.sqf";
+WFBE_CO_FNC_GetTeamMarkerDestPos = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamMarkerDestPos.sqf"; //--- fix/own-marker-dest-dir-split (owner 2026-07-09): shared TP-17 3-source destination lookup for updateteamsmarkers.sqf OWNMarker + per-team leader blocks.
 WFBE_CO_FNC_ChangeTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_ChangeTeamFunds.sqf";
 WFBE_SE_FNC_SyncFundsRecord = Compile preprocessFileLineNumbers "Common\Functions\Common_SyncFundsRecord.sqf"; //--- Ray pick A: server-only lock-step of WFBE_JIP_USER<uid> cash with the group wallet (JIP zero-latch restore provably safe). Common so ChangeTeamFunds resolves the symbol on both sides; the fn itself bails if !isServer.
 WFBE_CO_FNC_ChangeUnitGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_ChangeUnitGroup.sqf";

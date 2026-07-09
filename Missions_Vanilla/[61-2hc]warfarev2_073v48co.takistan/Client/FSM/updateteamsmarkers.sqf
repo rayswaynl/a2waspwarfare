@@ -79,6 +79,9 @@ _ownMarker setMarkerAlphaLocal 0;
 _ownLastPos   = [-99999,-99999,0];
 _ownLastDir   = -999;
 _ownLastAlpha = -1;
+_ownLastLabel = "";  //--- fable/marker-ownlabel (owner 2026-07-09): self-arrow name+class label cache
+_classReqDone  = false; //--- fable/marker-classtag-jip (owner 2026-07-09): one-shot guard for the JIP class-tag re-broadcast request in the loop below
+_classReqTicks = 0;
 //--- cmdcon42 (Ray 2026-07-02) DOUBLE-CLASS-TAG FIX: the WAVE-2 own-marker CLASS TEXT block that stamped the
 //--- BARE class ("ENG") straight onto the AdvancedSquadOWNMarker has been REMOVED. That own-marker sits at the
 //--- player's exact position, so its bare "ENG" rendered as a leading prefix ON TOP of the per-team player marker,
@@ -107,6 +110,20 @@ while {!gameOver} do {
 		_updateAILeaders = time >= _nextAIUpdate;
 		if (_updateAILeaders) then {_nextAIUpdate = time + 1};
 
+		//--- fable/marker-classtag-jip (owner 2026-07-09): ask the server to re-broadcast every player's
+		//--- wfbe_player_class shortly after this loop goes live (they are NOT JIP-durable, so a joiner is
+		//--- missing the classes of players who spawned before it -> their "[ENG]" marker tag reads blank).
+		//--- Bounded to the first few VISIBLE ticks; re-armed once as belt-and-braces (publicVariableServer is
+		//--- itself not guaranteed). Mirrors the B74.2 WFBE_ReqAicomFeed feed-gap request (updateaicommarkers.sqf:59-67).
+		if (!_classReqDone && {!isNull player}) then {
+			_classReqTicks = _classReqTicks + 1;
+			if (_classReqTicks == 2 || {_classReqTicks == 10}) then {
+				WFBE_ReqPlayerClasses = player;
+				publicVariableServer "WFBE_ReqPlayerClasses";
+			};
+			if (_classReqTicks >= 10) then {_classReqDone = true};
+		};
+
 		//--- cmdcon26 OWN-ARROW DRAW. Paint the player's own orange arrow straight from the LOCAL 'player'
 		//--- handle every visible tick, independent of the (possibly broken/remote) clientTeams groups.
 		//--- Same move/turn gates as the per-team loop to avoid no-op marker writes.
@@ -134,40 +151,11 @@ while {!gameOver} do {
 			//--- always initialised for the team-marker loop even when the player is dead.
 			_ownDir = getDir (vehicle player);
 			if (_destDirMode) then {
-				_destPos = [];
-				//--- Source 1: stored shift-click map order (missionNamespace-local, this client).
-				if (count _destPos == 0) then {
-					_destStoredGrp = missionNamespace getVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_GROUP", grpNull];
-					_destStoredPos = missionNamespace getVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_POSITION", []];
-					if (!isNull _destStoredGrp && {_destStoredGrp == group player} && {count _destStoredPos > 1}) then {
-						if (player distance _destStoredPos > 25) then {
-							_destPos = _destStoredPos;
-						};
-					};
-				};
-				//--- Source 2: current group waypoint (local to this client for the player's own group).
-				if (count _destPos == 0) then {
-					_destWpCount = count (waypoints group player);
-					_destWpIdx   = currentWaypoint group player;
-					if (_destWpCount > 0 && {_destWpIdx < _destWpCount}) then {
-						_destPos = waypointPosition [group player, _destWpIdx];
-						if ((_destPos select 0) == 0 && {(_destPos select 1) == 0}) then {_destPos = []};
-						if (player distance _destPos <= 25) then {_destPos = []};
-					};
-				};
-				//--- Source 3: engine expectedDestination on the player (DoNotPlan = no active dest).
-				if (count _destPos == 0) then {
-					_destData = expectedDestination player;
-					_destMode = "DoNotPlan";
-					if (count _destData > 1) then {_destMode = _destData select 1};
-					if (_destMode != "DoNotPlan") then {
-						_destPos = _destData select 0;
-						if ((_destPos select 0) == 0 && {(_destPos select 1) == 0}) then {_destPos = []};
-						if (count _destPos > 0) then {
-							if (player distance _destPos <= 25) then {_destPos = []};
-						};
-					};
-				};
+				//--- fix/own-marker-dest-dir-split (owner 2026-07-09): shared 3-source lookup
+				//--- (stored shift-click order -> group waypoint -> expectedDestination), factored
+				//--- into Common_GetTeamMarkerDestPos.sqf so this OWNMarker block and the per-team
+				//--- player-leader block below (~L504) always agree on the destination source.
+				_destPos = [player] call WFBE_CO_FNC_GetTeamMarkerDestPos;
 				//--- Compute bearing player->destination (atan2 position-delta; binary getDir is A3-only).
 				//--- Guard a zero-length delta so atan2 does not divide by zero.
 				if (count _destPos > 1) then {
@@ -190,6 +178,19 @@ while {!gameOver} do {
 			if (_ownLastAlpha != 1) then {
 				_ownMarker setMarkerAlphaLocal 1;
 				_ownLastAlpha = 1;
+			};
+			//--- fable/marker-ownlabel (owner 2026-07-09): the OWNMarker is the single visible self-arrow
+			//--- (see the RC29 note above ~L318) but was left textless -> respawn showed a blank orange arrow.
+			//--- Give it the same " Name [CLS]" label the per-team leader marker builds (L323 + QoL-S4 switch).
+			_ownTag = switch (player getVariable ["wfbe_player_class", ""]) do {
+				case "Engineer": {"ENG"}; case "Soldier": {"SOL"}; case "SpecOps": {"SPEC"};
+				case "Spotter": {"SNI"}; case "Medic": {"MED"}; case "Officer": {"OFF"}; default {""};
+			};
+			_ownLabel = Format[" %1", name player];
+			if (_ownTag != "") then {_ownLabel = Format["%1 [%2]", _ownLabel, _ownTag]};
+			if (_ownLabel != _ownLastLabel) then {
+				_ownMarker setMarkerTextLocal _ownLabel;
+				_ownLastLabel = _ownLabel;
 			};
 		} else {
 			if (_ownLastAlpha != 0) then {
@@ -419,7 +420,27 @@ while {!gameOver} do {
 						if (_classTag != "") then {_label = Format["%1 [%2]", _label, _classTag]};
 					} else {
 						_perfAILeaders = _perfAILeaders + 1;
-						if (_updateAILeaders) then {_updateThisLeader = true};
+						if (_updateAILeaders) then {
+							_updateThisLeader = true;
+							//--- fable/marker-aitag (owner 2026-07-09): AI-led team markers previously showed only the
+							//--- literal "AI" (all label-building lived in the isPlayer branch above). Classify the team by
+							//--- its heaviest hull -> INF/LGHT/HVY/AIR and label "AI [<tag>]", matching the HQ-team
+							//--- (updateaicommarkers.sqf:127-138) + patrol markers. Gated to the ~1s _updateAILeaders cadence
+							//--- (runs only when this marker is actually rewritten) so it adds no per-tick cost.
+							private ["_aiTypeTag","_aiVeh"];
+							_aiTypeTag = "INF";
+							{
+								if (!isNull _x && {alive _x}) then {
+									_aiVeh = vehicle _x;
+									if (_aiVeh != _x) then {
+										if (_aiVeh isKindOf "Air") exitWith {_aiTypeTag = "AIR"};
+										if (_aiVeh isKindOf "Tank") then {if (_aiTypeTag != "AIR") then {_aiTypeTag = "HVY"}};
+										if ((_aiVeh isKindOf "Wheeled_APC") || {_aiVeh isKindOf "Car"}) then {if (_aiTypeTag == "INF") then {_aiTypeTag = "LGHT"}};
+									};
+								};
+							} forEach (units group _leader);
+							_label = Format["AI [%1]", _aiTypeTag];
+						};
 					};
 
 					if (_updateThisLeader) then {
@@ -452,17 +473,13 @@ while {!gameOver} do {
 						//--- Flag 0: block is a no-op; _dir stays as set by getDir above (byte-identical).
 						//--- _destDirMode is read once above and reused here (same while-loop tick).
 						if (_destDirMode) then {
-							_destPos  = [];
-							_destData = expectedDestination _leader;
-							_destMode = "DoNotPlan";
-							if (count _destData > 1) then {_destMode = _destData select 1};
-							if (_destMode != "DoNotPlan") then {
-								_destPos = _destData select 0;
-								if ((_destPos select 0) == 0 && {(_destPos select 1) == 0}) then {_destPos = []};
-								if (count _destPos > 0) then {
-									if (_leader distance _destPos <= 25) then {_destPos = []};
-								};
-							};
+							//--- fix/own-marker-dest-dir-split (owner 2026-07-09): shared 3-source lookup
+							//--- (stored shift-click order -> group waypoint -> expectedDestination), factored
+							//--- into Common_GetTeamMarkerDestPos.sqf so this per-team leader block and the
+							//--- OWNMarker block above (~L153) always agree on the destination source. Replaces
+							//--- the prior RC-ARROW-UNIFY verbatim-duplicated 3-source block with a shared call.
+							_destPos = [_leader] call WFBE_CO_FNC_GetTeamMarkerDestPos;
+							//--- Compute bearing leader->destination (atan2 position-delta; binary getDir is A3-only).
 							if (count _destPos > 1) then {
 								_destDx = (_destPos select 0) - (getPos _leader select 0);
 								_destDy = (_destPos select 1) - (getPos _leader select 1);
