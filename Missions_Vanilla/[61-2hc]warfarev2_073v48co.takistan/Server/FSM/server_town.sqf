@@ -430,6 +430,76 @@ while {!WFBE_GameOver} do {
 						_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
 						["INFORMATION", Format ["server_town.sqf: Carrier [%1] hangar respawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
 					};
+
+				//--- fable/ew-naval: gate the carrier ServicePoint behind its own default-0 flag per
+				//--- AGENTS.md flag policy - flag-off leaves the mission byte-identical to HEAD.
+				if ((missionNamespace getVariable ["WFBE_C_NAVAL_CARRIER_SERVICE_POINTS", 0]) > 0) then {
+					//--- fable/ew-naval win-1: Carrier ServicePoint (rearm/repair) on the flight deck. Reuses the
+					//--- airfield Task-12 ServicePoint idiom (server_town.sqf ~line 610: side-classname switch +
+					//--- wfbe_structures registration + Init_BaseStructure marker + Hit/Killed EH wiring), but places
+					//--- the prop with the carrier deck idiom (Init_NavalHVT.sqf:354/938 - deckPart modelToWorld XY +
+					//--- setPosASL to deckZ) instead of the airfield block's flat-ground setPos. Fires on every
+					//--- carrier flip (including to/from GUER) so the new owner always gets a working repair point.
+					private ["_navSpClass","_navSpDeckPart","_navSpDeckZ","_navSpXY","_navSpPos","_navSpDir","_navSpOld","_navSpOldStructures","_navSp","_navSpLogik"];
+
+					_navSpClass = switch (_hvtNewSide) do {
+						case west:       { if (IS_chernarus_map_dependent) then {"USMC_WarfareBVehicleServicePoint"} else {"US_WarfareBVehicleServicePoint_EP1"} };
+						case east:       { if (IS_chernarus_map_dependent) then {"INS_WarfareBVehicleServicePoint"} else {"TK_WarfareBVehicleServicePoint_EP1"} };
+						default          { if (IS_chernarus_map_dependent) then {"Gue_WarfareBVehicleServicePoint"} else {"TK_GUE_WarfareBVehicleServicePoint_EP1"} };
+					};
+
+					//--- Delete old naval SP if present (side changed or recapture); mirror the airfield SP cleanup.
+					_navSpOld = _location getVariable ["wfbe_carrier_sp", objNull];
+					if !(isNull _navSpOld) then {
+						{
+							_navSpOldStructures = _x getVariable ["wfbe_structures", []];
+							if (_navSpOld in _navSpOldStructures) then {
+								_x setVariable ["wfbe_structures", _navSpOldStructures - [_navSpOld], true];
+							};
+						} forEach [WFBE_L_BLU, WFBE_L_OPF, WFBE_L_GUE];
+						deleteVehicle _navSpOld;
+					};
+
+					//--- Deck placement: modelToWorld XY off the stored hull reference part, then setPosASL to deckZ
+					//--- (Init_NavalHVT.sqf:354 idiom). Offset [8,14,0] mirrors the visual SCUD's [8,-14] across the
+					//--- centreline (starboard bow) - clear of the centred hangar and the camp slots at [-10,+-18]/
+					//--- [0,42]/[0,-72]. Owner should eyeball this in-engine like the other deck props.
+					_navSpDeckPart = _location getVariable ["wfbe_naval_deckpart", objNull];
+					_navSpDeckZ    = _location getVariable ["wfbe_naval_deckz", 15.9];
+					if !(isNull _navSpDeckPart) then {
+						_navSpXY  = _navSpDeckPart modelToWorld [8, 14, 0];
+						_navSpPos = [_navSpXY select 0, _navSpXY select 1, _navSpDeckZ];
+						_navSpDir = getDir _navSpDeckPart;
+					} else {
+						//--- Fallback if the deckpart ref is somehow missing: flat placement 80m off the location (airfield-block pattern).
+						_navSpPos = [(getPos _location select 0), ((getPos _location select 1) + 80), _navSpDeckZ];
+						_navSpDir = 0;
+					};
+
+					_navSp = _navSpClass createVehicle [_navSpPos select 0, _navSpPos select 1, 0];
+					_navSp setPosASL _navSpPos;
+					_navSp setDir _navSpDir;
+					_navSp setVariable ["WFBE_RepairTruckServicePoint", true, true];
+					_navSp setVariable ["wfbe_side", _hvtNewSide]; //--- A1-fix parity with the airfield SP (server_town.sqf ~line 649) - Server_BuildingDamaged/BuildingKilled read this.
+
+					//--- Register in side logic structures list so clients can see it (same pattern as the airfield SP).
+					_navSpLogik = (_hvtNewSide) Call WFBE_CO_FNC_GetSideLogic;
+					_navSpLogik setVariable ["wfbe_structures", (_navSpLogik getVariable "wfbe_structures") + [_navSp], true];
+
+					//--- Trigger Init_BaseStructure on clients so a map marker is created.
+					_navSp setVehicleInit Format ["[this,false,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'", _newSID];
+					processInitCommands;
+
+					//--- Wire Hit/Killed EHs so destruction grants bounty and removes the SP from wfbe_structures (mirrors Construction_SmallSite.sqf / the airfield SP block).
+					_navSp addEventHandler ["hit", {_this Spawn BuildingDamaged}];
+					Call Compile Format ["_navSp AddEventHandler ['killed',{[_this select 0,_this select 1,'%1'] Spawn BuildingKilled}];", "ServicePoint"];
+
+					//--- Store on location for cleanup on next capture.
+					_location setVariable ["wfbe_carrier_sp", _navSp, true];
+
+					diag_log Format ["NAVALHVT-SP: carrier [%1] ServicePoint (%2) placed at %3 (deckZ=%4, dir=%5) for side %6.", _hvtName, _navSpClass, _navSpPos, _navSpDeckZ, _navSpDir, str _hvtNewSide];
+					["INFORMATION", Format ["server_town.sqf: Carrier [%1] ServicePoint spawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+				};
 				};
 			};
 

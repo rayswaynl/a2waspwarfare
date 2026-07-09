@@ -2216,6 +2216,12 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_NAVAL_CAP_L39")      then {WFBE_C_NAVAL_CAP_L39      = 1}; //--- 0=legacy Hind/An2; >0=twin L39 jets.
 	if (isNil "WFBE_C_NAVAL_EASA_RANDOM")  then {WFBE_C_NAVAL_EASA_RANDOM  = 1}; //--- 0=off; >0=randomise EASA on carrier/CAP spawns.
 
+//--- fable/ew-naval (Carrier ServicePoint): WFBE_C_NAVAL_CARRIER_SERVICE_POINTS - when >0, each captured
+//---   carrier HVT spawns a side-registered repair/rearm ServicePoint on the flight deck (server_town.sqf
+//---   carrier-capture block), mirroring the land-airfield Task-12 ServicePoint. Default 0 = current
+//---   behaviour (no deck ServicePoint); mission stays byte-identical to HEAD with the flag off.
+	if (isNil "WFBE_C_NAVAL_CARRIER_SERVICE_POINTS") then {WFBE_C_NAVAL_CARRIER_SERVICE_POINTS = 0}; //--- 0=off (byte-identical); >0=carrier deck gets a repair/rearm ServicePoint on capture.
+
 
 //======================================================================================
 //--- NAVAL INLINE SUPER-CARRIER (fable/naval-inline-hulls, Ray 2026-07-06):
