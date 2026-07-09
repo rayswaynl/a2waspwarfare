@@ -466,9 +466,10 @@ switch (_args select 0) do {
 		//--- request on the side logic; the assist-mode resolver (AI_Com_PlayerArty, every supervisor tick) consumes it
 		//--- fire-once - so it works even under a HUMAN commander, where the brain's own Strategy arty block is dormant.
 		//--- PRODUCTION FIX (claude-gaming 2026-06-28): gate on the SEPARATE player-arty flag (WFBE_C_AICOM_PLAYER_ARTY),
-		//--- NOT WFBE_C_AI_COMMANDER_ARTILLERY (which Steff hard-locks to 0 to keep the AI from using/building artillery).
-		//--- The player request is serviced in assist-mode by AI_Com_PlayerArty and only ever fires friendly pieces that
-		//--- already exist (it never builds guns), so it does not reopen the locked AI-autonomous-artillery behaviour.
+		//--- NOT WFBE_C_AI_COMMANDER_ARTILLERY (the AI's OWN fire/build gate - default ON since 2026-07-08
+		//--- fable/alife-arty-dwell, was Steff-hard-locked to 0 before that; see Init_CommonConstants.sqf).
+		//--- The player request is serviced in assist-mode by AI_Com_PlayerArty and only ever fires friendly pieces
+		//--- that already exist (it never builds guns), so it stays independent of the AI's own arty state either way.
 		private ["_aSide","_aPos","_aLogik"];
 		_aSide = _args select 1;
 		_aPos  = _args select 2;

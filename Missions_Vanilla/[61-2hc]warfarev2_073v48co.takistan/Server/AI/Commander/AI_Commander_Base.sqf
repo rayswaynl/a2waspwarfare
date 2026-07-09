@@ -869,13 +869,24 @@ if (_defCount < _defMax) then {
 	};
 };
 
-//--- 4) V0.5: two base artillery pieces once the defenses stand. Construction tags
+//--- 4) V0.5: base artillery pieces once the defenses stand (cap WFBE_C_AI_COMMANDER_ARTILLERY_MAX). Construction tags
 //--- them WFBE_CommanderArtillery; the strategy worker fires them at spearhead
 //--- towns / the enemy HQ (fire is free in WFBE - the real cooldown gates it).
-//--- V0.6.3: OFF by default (owner call) - opt back in via WFBE_C_AI_COMMANDER_ARTILLERY = 1.
+//--- fable/alife-arty-dwell (2026-07-08, owner request "enable the max 2 tracked artillery per AI commander
+//--- idea... make sure it's used"): default flipped ON (was V0.6.3 owner-locked OFF; see Init_CommonConstants.sqf
+//--- for the full history). Cap is now SELF-HEALING like the defenses cap just above (~L833-838): count LIVE
+//--- tagged pieces near HQ instead of a monotonic build counter, so a destroyed piece is REBUILT next pass
+//--- instead of the side being permanently down a gun for the rest of the round. wfbe_aicom_arty_built is kept
+//--- as the published var name (now holding the live count) for any existing telemetry readers. Cap constant is
+//--- WFBE_C_AI_COMMANDER_ARTILLERY_MAX (NOT the similarly-named WFBE_C_AICOM_ARTY_MAX, which caps the separate
+//--- always-on "AICOM TRACKED ARTILLERY" battery founded via AI_Commander_Teams.sqf - see the flag comments in
+//--- Init_CommonConstants.sqf and ARTILLERY-DWELL-NOTES.md for the full two-systems writeup).
 if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable "WFBE_C_ARTILLERY") > 0}) then {
-	_artyBuilt = _logik getVariable ["wfbe_aicom_arty_built", 0];
-	if (_artyBuilt < 2 && {(_logik getVariable ["wfbe_aicom_defenses", 0]) >= _defMax}) then {
+	private "_artyMax"; _artyMax = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY_MAX", 2];
+	_artyBuilt = 0;
+	{ if (!isNull _x && {alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText}) then {_artyBuilt = _artyBuilt + 1} } forEach (_hqPos nearEntities [["Tank","Car","Wheeled_APC","Tracked_APC"], (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])]);
+	_logik setVariable ["wfbe_aicom_arty_built", _artyBuilt];
+	if (_artyBuilt < _artyMax && {(_logik getVariable ["wfbe_aicom_defenses", 0]) >= _defMax}) then {
 		_have = false;
 		{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x}) exitWith {_have = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
 		if (_have) then {
@@ -920,7 +931,7 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 					_pos = [25, 38] Call _findBuildPos;
 					[_defClass, _side, _pos, random 360, true, true] Call ConstructDefense;
 					_logik setVariable ["wfbe_aicom_arty_built", _artyBuilt + 1];
-					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base artillery %2/2 [%3] (cost %4 funds).", _sideText, _artyBuilt + 1, _defClass, _defPrice]] Call WFBE_CO_FNC_AICOMLog;
+					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base artillery %2/%3 [%4] (cost %5 funds).", _sideText, _artyBuilt + 1, _artyMax, _defClass, _defPrice]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
 		};

@@ -580,9 +580,23 @@ if (worldName == "Zargabad") then {
 		if (isNil "WFBE_C_AICOM_NAVAL_AIR_ONLY") then {WFBE_C_AICOM_NAVAL_AIR_ONLY = 1};
 	//--- A/B EXPERIMENT (legacy-vs-next): arm label + sim-gating switch. LEGACY arm = control (gating off).
 	if (isNil "WFBE_C_AB_ARM") then {WFBE_C_AB_ARM = "NEXT-T1c"};
-	//--- Steff 2026-06-13: the AI must NOT be able to use artillery. Forced off (not a default)
-	//--- so no param/override can enable it - blocks both the fire-mission worker AND building base guns.
-	WFBE_C_AI_COMMANDER_ARTILLERY = 0;
+	//--- AI COMMANDER ARTILLERY: locked off 2026-06-13 (Steff), RE-ENABLED 2026-07-09 by owner - an INFORMED
+	//--- decision, not an oversight: Ray showed the owner the exact 2026-06-13 lock language below plus the
+	//--- two-systems ambiguity (this flag vs the separate always-on "AICOM TRACKED ARTILLERY" battery, see
+	//--- note further down) before he confirmed. Reverses the prior lock; ships with the new dwell-tempo
+	//--- softening + self-healing 2-piece cap (PR #960, fable/alife-arty-dwell). The flag is now isNil-guarded
+	//--- (like every other AICOM tunable) instead of force-assigned, so it defaults ON but a param/debug
+	//--- override can still dial it back to 0. Unlocks the fire-mission worker (AI_Commander_Strategy.sqf) AND
+	//--- base-gun building (AI_Commander_Base.sqf), both already flag-gated there; see WFBE_C_AICOM_ARTY_DWELL /
+	//--- WFBE_C_AI_COMMANDER_ARTILLERY_MAX below for the new dwell-tempo + cap knobs (distinct from the
+	//--- PRE-EXISTING WFBE_C_AICOM_ARTY_MAX=1 below, which caps a SEPARATE always-on "AICOM TRACKED ARTILLERY"
+	//--- mechanism - one battery founded via the normal team pipeline, AI_Commander_Teams.sqf ~L505/
+	//--- Common_RunCommanderTeam.sqf ~L2510. That system is untouched by this change; see
+	//--- ARTILLERY-DWELL-NOTES.md for the full two-systems writeup).
+	//--- Original lock (kept for history): "Steff 2026-06-13: the AI must NOT be able to use artillery. Forced
+	//--- off (not a default) so no param/override can enable it - blocks both the fire-mission worker AND
+	//--- building base guns."
+	if (isNil "WFBE_C_AI_COMMANDER_ARTILLERY") then {WFBE_C_AI_COMMANDER_ARTILLERY = 1};
 	if (isNil "WFBE_C_SIM_GATING") then {WFBE_C_SIM_GATING = 0}; //--- 1 only on the NEXT arm: enableSimulation off for AI far from any active town.
 	WFBE_C_AI_COMMANDER_LOG = 1;               //--- V0.4: always-on [AICOM] diag_log (independent of WF_LOG_CONTENT; 0 to silence).
 	//--- V0.5: PvE difficulty (lobby param WFBE_C_AI_COMMANDER_LEVEL: 0 Easy / 1 Normal / 2 Hard).
@@ -883,11 +897,11 @@ if (worldName == "Zargabad") then {
 		if (isNil "WFBE_C_AICOM_NUDGE_HARASS_TEAMS")  then {WFBE_C_AICOM_NUDGE_HARASS_TEAMS  = 4};  //--- HARASS: mounted rear-raid team count floored to this (pressure the enemy back-line).
 		if (isNil "WFBE_C_AICOM_NUDGE_FALLBACK_DELTA") then {WFBE_C_AICOM_NUDGE_FALLBACK_DELTA = 20}; //--- FALL BACK: towns added to the engage gate (stop clashing / pull back to owned towns).
 		//--- COMMAND CONSOLE PLAYER-ARTILLERY: a SEPARATE opt-in flag for the war-room ARTILLERY-HERE order, distinct from
-		//--- WFBE_C_AI_COMMANDER_ARTILLERY (which Steff hard-locks to 0 so the AI can neither fire nor BUILD artillery). When
-		//--- this is >0 the player request is accepted by the handler and serviced by the assist-mode resolver
-		//--- (WFBE_SE_FNC_AI_Com_PlayerArty), which only ever fires friendly artillery pieces that ALREADY exist on the map -
-		//--- it never builds guns - so enabling it does NOT reopen the AI's autonomous-artillery behaviour. Default 0 (off):
-		//--- with no base guns built (Steff lock) the order is a no-op, so it ships dark and safe until a build adds guns.
+		//--- WFBE_C_AI_COMMANDER_ARTILLERY (default flipped ON 2026-07-08, fable/alife-arty-dwell - see the flag def above;
+		//--- was Steff hard-locked to 0 before that). When this is >0 the player request is accepted by the handler and
+		//--- serviced by the assist-mode resolver (WFBE_SE_FNC_AI_Com_PlayerArty), which only ever fires friendly artillery
+		//--- pieces that ALREADY exist on the map - it never builds guns - so it stays independent of the AI's own arty
+		//--- state either way. Default 0 (off): the war-room button stays greyed out until a player opts in.
 		if (isNil "WFBE_C_AICOM_PLAYER_ARTY") then {WFBE_C_AICOM_PLAYER_ARTY = 0};
 	//=================================================================================================
 	if (isNil "WFBE_C_AICOM_MHQ_ENEMY_CLEAR")       then {WFBE_C_AICOM_MHQ_ENEMY_CLEAR       = 700};  //--- m: do NOT mobilize/deploy if an enemy is within this of the current HQ or the destination.
@@ -1041,6 +1055,17 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_MARCH_YELLOW")            then {WFBE_C_AICOM_MARCH_YELLOW = 1};            //--- Ray F1: YELLOW on the march (return fire, keep rolling), RED at the objective. 0 = legacy RED everywhere.
 	if (isNil "WFBE_C_AICOM_BREAKOFF_MIN")            then {WFBE_C_AICOM_BREAKOFF_MIN = 3};            //--- depot-hold break-off: below this many live units under fire -> withdraw to rally instead of grinding to zero.
 	if (isNil "WFBE_C_AICOM_FRONT_DWELL")             then {WFBE_C_AICOM_FRONT_DWELL = 480};           //--- spearhead hysteresis: the primary front target holds this long before re-scoring may flip it.
+	//--- fable/alife-arty-dwell (2026-07-08) DWELL-AGED ARTILLERY SOFTENING: the AICOM arty cooldown (AI_Commander_Strategy.sqf
+	//--- ~L1084) shrinks the longer the current front primary has been dwelled on (wfbe_aicom_front_t0, stamped by the
+	//--- FRONT_DWELL hysteresis above), so a town that resists longer gets shelled more often. Owner tuning knobs:
+	if (isNil "WFBE_C_AICOM_ARTY_DWELL")      then {WFBE_C_AICOM_ARTY_DWELL      = 1};   //--- master switch for the dwell-tempo shrink. 1 = ON (owner default-on request); 0 = legacy flat per-upgrade-tier cooldown.
+	if (isNil "WFBE_C_AICOM_ARTY_DWELL_K")    then {WFBE_C_AICOM_ARTY_DWELL_K    = 0.5}; //--- seconds shaved off the arty cooldown per second of front-dwell age (dwell age is naturally capped near WFBE_C_AICOM_FRONT_DWELL).
+	if (isNil "WFBE_C_AICOM_ARTY_DWELL_FLOOR") then {WFBE_C_AICOM_ARTY_DWELL_FLOOR = 120}; //--- s: cooldown floor the dwell shrink can reach, regardless of upgrade tier or dwell age (never full-auto spam).
+	//--- NOTE: named WFBE_C_AI_COMMANDER_ARTILLERY_MAX (not WFBE_C_AICOM_ARTY_MAX, which is ALREADY TAKEN a few
+	//--- hundred lines up by the unrelated "AICOM TRACKED ARTILLERY" battery-founding cap, Ray 2026-06-27) to
+	//--- avoid colliding with it - mirrors the WFBE_C_AI_COMMANDER_DEFENSES_MAX naming right above this system's
+	//--- own master flag (AI_Commander_Base.sqf).
+	if (isNil "WFBE_C_AI_COMMANDER_ARTILLERY_MAX") then {WFBE_C_AI_COMMANDER_ARTILLERY_MAX = 2}; //--- max SELF-PROPELLED base-built artillery pieces a commander may have LIVE at once (self-healing cap, AI_Commander_Base.sqf) - the owner's "max 2 tracked artillery" idea, now a named/tunable constant.
 	if (isNil "WFBE_C_AICOM_LOSING_PRESS")            then {WFBE_C_AICOM_LOSING_PRESS = 1};            //--- losing-side aggression floor: behind on towns + near strength parity + base safe -> minimum PRESS (never park in DEFEND).
 	if (isNil "WFBE_C_AICOM_WITHDRAW_EVAL")           then {WFBE_C_AICOM_WITHDRAW_EVAL = 1};           //--- graceful-withdrawal evaluator: bleeding HC teams get a "rally" order to the nearest own HQ/town (Ray: reinforce at friendly towns).
 	if (isNil "WFBE_C_AICOM_WITHDRAW_MIN_ALIVE")      then {WFBE_C_AICOM_WITHDRAW_MIN_ALIVE = 3};      //--- alive-count floor that triggers the withdrawal (MBT/attack-heli teams exempt).
