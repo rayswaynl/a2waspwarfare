@@ -537,7 +537,17 @@ class RscTitles {
 			//--- its text while the sibling RscText rows CENTER vertically, and structured text carries a
 			//--- small intrinsic left inset - compensate with a +y / -x nudge so the baseline + column line up.
 			x = 0.879728 * safezoneW + safezoneX;
-			y = 0.469500 * safezoneH + safezoneY;
+			//--- queue-into-rhud (owner: fold the build-queue line INTO the RHUD readout, not offset
+			//--- below it): this idc is never repositioned at runtime (Client_UpdateRHUD.sqf's
+			//--- _RHUDSetFullPosition never touches control index 29), so this static y is its only
+			//--- position, in every RHUD mode. Old value (0.469500) sat ~4 row-heights below where the
+			//--- grid's real last row ("Next:", _layoutPairs idx10) renders (_startY=0.18626*safezoneH +
+			//--- 10*_rowH(0.020) = 0.38626) - a stale constant left over from before _RHUDSetFullPosition's
+			//--- dynamic grid existed. Re-anchored to row idx11 (one past the grid) using the same
+			//--- _startY/_rowH the .sqf uses, plus the same +0.0035 nudge #825 already tuned for this
+			//--- control's top-align/left-inset vs the sibling RscText rows. Keep in sync with
+			//--- _RHUDSetFullPosition's _startY/_rowH/_layoutPairs if any of those ever change.
+			y = 0.409760 * safezoneH + safezoneY;
 			w = 0.5426041 * safezoneW;
 			h = 0.0255556 * safezoneH;
 			size = 0.026;
