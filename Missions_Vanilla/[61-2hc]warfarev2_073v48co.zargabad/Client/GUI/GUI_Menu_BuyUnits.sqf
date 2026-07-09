@@ -111,7 +111,17 @@ _IDCS = _IDCS - [_currentIDC];
 			if (_gunner) then {_extra = _extra + 1};
 			if (_commander) then {_extra = _extra + 1};
 			if (_extracrew) then {_extra = _extra + ((_currentUnit select QUERYUNITCREW) select 3)};
-			_currentCost = _currentCost + ((missionNamespace getVariable "WFBE_C_UNITS_CREW_COST") * _extra);
+			//--- P5 crew-cost tier-scale (fable/crew-cost-tierscale, owner economy pick GR-2026-07-08a): crew-replacement
+			//--- cost now scales with the crewed vehicle's own buy-price, reusing the same QUERYUNITPRICE lookup the
+			//--- _currentCost formula above already reads off _currentUnit - no new vehicle-cost table needed. The flat
+			//--- WFBE_C_UNITS_CREW_COST stays the floor; the tier bonus only adds on top and is capped (TIERSCALE_CAP)
+			//--- so even the priciest air/armor never gets punitive. Flag-off (TIERSCALE=0, default) = byte-identical
+			//--- flat WFBE_C_UNITS_CREW_COST per head (see also the two analogous charge points below in this file).
+			_crewCostPerHead = missionNamespace getVariable "WFBE_C_UNITS_CREW_COST";
+			if ((missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE", 0]) > 0) then {
+				_crewCostPerHead = (_crewCostPerHead + ((_currentUnit select QUERYUNITPRICE) * (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF", 0.03]))) min (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP", 400]);
+			};
+			_currentCost = _currentCost + (_crewCostPerHead * _extra);
 		};
 		if ((_currentRow) != -1) then {
 			_funds = Call GetPlayerFunds;
@@ -639,7 +649,13 @@ _IDCS = _IDCS - [_currentIDC];
 						if (_extracrew) then {_extra = _extra + _turretsCount};
 						
 						//--- Set the 'extra' price.
-						_currentCost = _currentCost + ((missionNamespace getVariable "WFBE_C_UNITS_CREW_COST") * _extra);
+						//--- P5 crew-cost tier-scale (fable/crew-cost-tierscale, GR-2026-07-08a): ARRAY-crew (typeName ARRAY) branch - see the
+						//--- single-unit purchase charge point above (~line 114) for the full rationale. Flag-off = byte-identical.
+						_crewCostPerHead = missionNamespace getVariable "WFBE_C_UNITS_CREW_COST";
+						if ((missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE", 0]) > 0) then {
+							_crewCostPerHead = (_crewCostPerHead + ((_currentUnit select QUERYUNITPRICE) * (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF", 0.03]))) min (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP", 400]);
+						};
+						_currentCost = _currentCost + (_crewCostPerHead * _extra);
 					} else {//--- Backward compability.
 						_c = 0;
 						_extra = 0;
@@ -692,7 +708,13 @@ _IDCS = _IDCS - [_currentIDC];
 						} forEach [profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ,_gunner,_commander,_extracrew];
 
 						//--- Set the 'extra' price.
-						_currentCost = _currentCost + ((missionNamespace getVariable "WFBE_C_UNITS_CREW_COST") * _extra);
+						//--- P5 crew-cost tier-scale (fable/crew-cost-tierscale, GR-2026-07-08a): backward-compatibility (scalar _slots) branch - see the
+						//--- single-unit purchase charge point above (~line 114) for the full rationale. Flag-off = byte-identical.
+						_crewCostPerHead = missionNamespace getVariable "WFBE_C_UNITS_CREW_COST";
+						if ((missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE", 0]) > 0) then {
+							_crewCostPerHead = (_crewCostPerHead + ((_currentUnit select QUERYUNITPRICE) * (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF", 0.03]))) min (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP", 400]);
+						};
+						_currentCost = _currentCost + (_crewCostPerHead * _extra);
 					};
 				} else {
 					{ctrlShow [_x,false]} forEach (_IDCSVehi);
@@ -849,6 +871,10 @@ _IDCS = _IDCS - [_currentIDC];
 					//--- B75 (guer-tech): kill-unlocked SECOND VBIED — the armoured M113 variant (~2x speed, no weapons).
 					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])}) then {
 						hintSilent parseText "VBIED (APC) - an unarmoured-crew but TRACKED suicide M113 that drives at roughly DOUBLE its normal top speed. <br/> <br/>Same one-shot use as the truck VBIED: drive into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. Its armour + speed let it punch through to a target the soft truck can't reach. Unlocked by GUER kills.";
+					};
+					//--- fable/guer-suicide-bike (flag WFBE_C_GUER_SUICIDE_BIKE, default 0): THIRD VBIED variant, a fast small suicide motorcycle.
+					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0} && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])}) then {
+						hintSilent parseText "VBIED (Bike) - a fast, small suicide motorcycle. <br/> <br/>Buy it, ride it into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. Its small silhouette and speed let it slip through where the truck can't. Same one-shot use: rider + bike are lost, and your GUER team is paid for the kills.";
 					};
 					
 					if (!(_unit in WFBE_C_SUPPLY_HELI_TYPES) && {_unit in (missionNamespace getVariable [format ["WFBE_%1LIFTVEHICLE", sideJoinedText], []])}) then {

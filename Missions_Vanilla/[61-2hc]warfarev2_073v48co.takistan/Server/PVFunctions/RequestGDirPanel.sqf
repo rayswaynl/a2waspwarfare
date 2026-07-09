@@ -1,6 +1,6 @@
 /*
 	RequestGDirPanel.sqf  (A1 Commissar Panel - Amendment to Lane 800 GUER Director)
-	GUIDE-REV GR-2026-07-03a
+	GUIDE-REV GR-2026-07-08a
 
 	Client -> server request for a GUER player panel action (buy/qrf/counter/donate).
 	Validates sender is resistance, panel+lane gates are on, then:
@@ -130,14 +130,16 @@ if (_verb == "quote") exitWith {
 	};
 
 	//--- Compute estimated prices for all 6 actions.
-	private ["_qBaseReinf","_qBaseInstMult","_qBaseIns","_qBaseGun","_qBaseCtr"];
+	private ["_qBaseReinf","_qBaseInstMult","_qBaseIns","_qBaseGun","_qBaseCtr","_qBaseRelief"];
 	_qBaseReinf   = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_REINF", 1600];
 	_qBaseInstMult = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_INSTANT_MULT", 1.5];
 	_qBaseIns     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_INS", 1200];
 	_qBaseGun     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_GUN", 2400];
 	_qBaseCtr     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CTR_ATK", 1000];
+	//--- fable/ew-guer: relief squad base price (same key RequestGDirPanel reads for the real debit below).
+	_qBaseRelief  = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_RELIEF", 800];
 
-	private ["_qPConvoy","_qPInstant","_qPIns","_qPGun","_qPCombo","_qPCtr"];
+	private ["_qPConvoy","_qPInstant","_qPIns","_qPGun","_qPCombo","_qPCtr","_qPRelief"];
 	_qPConvoy  = round (_qBaseReinf * _qScarcity * _qLf);
 	if (_qPConvoy  < _qBaseReinf) then {_qPConvoy  = _qBaseReinf};
 	_qPInstant = round (_qBaseReinf * _qBaseInstMult * _qScarcity * _qLf);
@@ -150,11 +152,15 @@ if (_verb == "quote") exitWith {
 	if (_qPCombo < round (_qBaseIns + _qBaseGun * 0.85)) then {_qPCombo = round (_qBaseIns + _qBaseGun * 0.85)};
 	_qPCtr     = round (_qBaseCtr  * _qScarcity * _qLf);
 	if (_qPCtr   < _qBaseCtr)  then {_qPCtr  = _qBaseCtr};
+	_qPRelief  = round (_qBaseRelief * _qScarcity * _qLf);
+	if (_qPRelief < _qBaseRelief) then {_qPRelief = _qBaseRelief};
 
 	//--- Reply: status "quote", message = comma-joined prices, verb = "quote", townId = townId.
-	//--- Payload: [convoy, instant, qrfInsert, qrfGunship, qrfCombo, counter, donate(fixed 200)].
+	//--- Payload: [convoy, instant, qrfInsert, qrfGunship, qrfCombo, counter, donate(fixed 200), relief].
+	//--- fable/ew-guer: appended relief as index 7 (8th value) - existing "count _prices < 7" client
+	//--- gates in GUI_Menu_GuerCommissar.sqf stay backward-compatible (8 >= 7).
 	private ["_qPriceStr"];
-	_qPriceStr = Format ["%1,%2,%3,%4,%5,%6,200", _qPConvoy, _qPInstant, _qPIns, _qPGun, _qPCombo, _qPCtr];
+	_qPriceStr = Format ["%1,%2,%3,%4,%5,%6,200,%7", _qPConvoy, _qPInstant, _qPIns, _qPGun, _qPCombo, _qPCtr, _qPRelief];
 	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=quote|town=%2|fundedBy=%3|prices=%4", _elmin, _townId, getPlayerUID _player, _qPriceStr];
 	[_player, "GDirPanelResult", ["quote", _qPriceStr, "quote", _townId]] Call WFBE_CO_FNC_SendToClient;
 };
@@ -276,6 +282,15 @@ if (_verb == "cache") then {
     if (_product == "t1") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CACHE_T1", 3200]};
     if (_product == "t2") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CACHE_T2", 6400]};
     if (_product == "t3") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CACHE_T3", 9600]};
+};
+
+//--- P5 vehicle verb (fable/gdir-vehicle-verb, GR-2026-07-08a): sibling of the cache verb above -
+//--- same t1/t2/t3 product shape, same town-fund-first/wallet-shortfall debit path below, same
+//--- persist-on-town-object pattern.
+if (_verb == "vehicle") then {
+    if (_product == "t1") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T1", 4800]};
+    if (_product == "t2") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T2", 9600]};
+    if (_product == "t3") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T3", 14400]};
 };
 //--- P4 MORTAR (relocated cmdcon45): pure pass-through to the existing guer-mortar-strike call-in,
 //--- which charges its OWN cost (WFBE_C_GUER_MORTAR_COST) + cooldown + range in Server_HandleSpecial.
@@ -403,11 +418,48 @@ if (_verb == "cache") exitWith {
     if (_newTier <= _curTier) exitWith {
         [_player, "GDirPanelResult", ["deny", Format ["Cache tier %1 already active on %2.", _curTier, _townId], "cache", _townId]] Call WFBE_CO_FNC_SendToClient;
     };
-    //--- Debit already done above. Persist tier on town object (broadcast=false; server reads it in materializer TODO).
-    _townObj setVariable ["AICOMV2_GDIR_CACHE_TIER", _newTier];
+    //--- fable/gdir-cache-materializer (GR-2026-07-08a): Debit already done above. Persist tier on
+    //--- town object, PUBLIC (3rd arg true) - town-defender group creation can run on the server,
+    //--- a delegated client, or a headless client (Common_CreateTownUnits.sqf is called from all
+    //--- three: Client_DelegateTownAI.sqf, Server_FNC_Delegation.sqf, server_town_ai.sqf), so a
+    //--- local-only (broadcast=false) tier would be invisible on any machine except the one that
+    //--- set it. Mirrors the WFBE_IsTownDefenderAI PUBLIC-tag pattern already used in
+    //--- Common_CreateTownUnits.sqf for the identical cross-machine-visibility problem.
+    //--- Materializer hook: Common_CreateTownUnits.sqf, per-unit forEach right after the
+    //--- town-defender skill spread.
+    _townObj setVariable ["AICOMV2_GDIR_CACHE_TIER", _newTier, true];
     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=cache|town=%2|product=%3|tier=%4|price=%5|fundedBy=%6|deny=none",
         _elmin, _townId, _product, _newTier, _price, getPlayerUID _player];
     [_player, "GDirPanelResult", ["accept", Format ["Cache tier %1 purchased for %2. Defenders will spawn with enhanced loadouts.", _newTier, _townId], "cache", _townId]] Call WFBE_CO_FNC_SendToClient;
+};
+
+//--- P5: VEHICLE verb (fable/gdir-vehicle-verb, GR-2026-07-08a) - sibling of the cache verb
+//--- above: persist tier on town object, PUBLIC (broadcast=true, same cross-machine reason as
+//--- cache - see the cache verb's comment). ONE-SHOT unlike cache: consumed by the
+//--- materializer on the town's next garrison spawn/regrow (Common_CreateTownUnits.sqf), so
+//--- there is no "current tier" guard once delivered - the persisted value resets to 0 there.
+if (_verb == "vehicle") exitWith {
+    if (!((missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0)) exitWith {  //--- FIX-931/night-sweep: fallback default was 1 (copy-pasted from the cache verb's own
+    //--- check), now matches AICOMV2_GDIR_VEHICLE's actual default of 0 in Init_CommonConstants.sqf.
+        [_player, "GDirPanelResult", ["deny", "Defensive vehicle purchase not enabled this round.", "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
+    };
+    private ["_newVehTier","_curVehTier"];
+    _newVehTier = 0;
+    if (_product == "t1") then {_newVehTier = 1};
+    if (_product == "t2") then {_newVehTier = 2};
+    if (_product == "t3") then {_newVehTier = 3};
+    if (_newVehTier < 1) exitWith {
+        [_player, "GDirPanelResult", ["deny", "Unknown vehicle tier.", "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
+    };
+    _curVehTier = _townObj getVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0];
+    if (_curVehTier > 0) exitWith {
+        [_player, "GDirPanelResult", ["deny", Format ["A vehicle order (tier %1) is already pending delivery on %2.", _curVehTier, _townId], "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
+    };
+    //--- Debit already done above. Persist tier on town object (PUBLIC - see header comment above).
+    _townObj setVariable ["AICOMV2_GDIR_VEHICLE_TIER", _newVehTier, true];
+    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=vehicle|town=%2|product=%3|tier=%4|price=%5|fundedBy=%6|deny=none",
+        _elmin, _townId, _product, _newVehTier, _price, getPlayerUID _player];
+    [_player, "GDirPanelResult", ["accept", Format ["Vehicle tier %1 ordered for %2. Delivered on next garrison spawn.", _newVehTier, _townId], "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
 };
 
 //--- P4: RELIEF SQUAD verb - infantry-only fast variant of buy (conserves group cap).

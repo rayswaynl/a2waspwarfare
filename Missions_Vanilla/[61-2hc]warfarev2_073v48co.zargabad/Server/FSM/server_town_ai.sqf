@@ -286,6 +286,11 @@ while {!WFBE_GameOver} do {
 							//--- Flag-gated so flag-off leaves the mission byte-identical to HEAD.
 							if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0) then {
 								_town setVariable ["wfbe_ctl_ground_wave", true];
+								//--- New-Bug-B fix (fable/ctl-survivor-bugs): snapshot the DEFENDING side at wave-creation
+								//--- time so the async HC-delegation report (Server_HandleSpecial.sqf) can credit the side
+								//--- that actually fielded this wave, not whichever side owns the town when the report
+								//--- lands (a mid-episode capture can flip that). Flag-gated, same as the tag above.
+								_town setVariable ["wfbe_ctl_wave_side", _side];
 							};
 
 							if (_side == WFBE_DEFENDER) then {
@@ -308,6 +313,11 @@ while {!WFBE_GameOver} do {
 								//--- Flag-gated so flag-off leaves the mission byte-identical to HEAD.
 								if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0) then {
 									_town setVariable ["wfbe_ctl_ground_wave", false];
+									//--- New-Bug-B fix (fable/ctl-survivor-bugs): keep the side snapshot in sync for air-only
+									//--- waves too (air-only waves never reach the HC-delegation credit block in
+									//--- Server_HandleSpecial.sqf, gated on wfbe_ctl_ground_wave==true, but this avoids a
+									//--- stale snapshot surviving from an earlier ground wave into this air-only one).
+									_town setVariable ["wfbe_ctl_wave_side", _side];
 								};
 
 								if (_side == WFBE_DEFENDER) then {
@@ -330,7 +340,7 @@ while {!WFBE_GameOver} do {
 						_teams = [];
 						//--- fable/garrison-tonight (owner 2026-07-07): PERIMETER spread - ring the defenders around the
 						//--- town EDGE by bearing instead of clustering at camps/center. WFBE_C_TOWNS_PERIMETER 0 = legacy.
-						private ["_perimeterOn","_grpTotalP","_townRangeP","_townCenP","_bearingP","_distP"];
+						private ["_perimeterOn","_grpTotalP","_townRangeP","_townCenP","_bearingP","_distP","_ctlNewGrp"];
 						_perimeterOn = (missionNamespace getVariable ["WFBE_C_TOWNS_PERIMETER", 0]) > 0;
 						_grpTotalP   = count _groups; if (_grpTotalP < 1) then {_grpTotalP = 1};
 						_townRangeP  = _town getVariable ["range", 300]; if (_townRangeP < 120) then {_townRangeP = 120};
@@ -352,7 +362,18 @@ while {!WFBE_GameOver} do {
 							};
 							_position = [_position, 50] call WFBE_CO_FNC_GetEmptyPosition;
 							[_positions, _position] call WFBE_CO_FNC_ArrayPush;
-							[_teams, ([_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup)] call WFBE_CO_FNC_ArrayPush;
+							_ctlNewGrp = ([_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup);
+							//--- New-Bug-A fix (fable/ctl-survivor-bugs): stamp each freshly created group with the SAME
+							//--- per-town wfbe_ctl_ground_wave state just set above for this wave (line ~287/~309), so
+							//--- the survivor-tally numerator below (deactivation block) can tell ground-wave groups
+							//--- from air-only-wave groups even after a later wave overwrites the per-town flag.
+							//--- Group-local, non-public setVariable: both write (here) and read (the numerator loop)
+							//--- run server-side in this same script, so no publicVariable sync is needed. Flag-gated:
+							//--- byte-identical to HEAD when AICOMV2_LANE_CMD_TOWN_LEDGER=0.
+							if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0) then {
+								_ctlNewGrp setVariable ["wfbe_ctl_ground_wave", (_town getVariable ["wfbe_ctl_ground_wave", true])];
+							};
+							[_teams, _ctlNewGrp] call WFBE_CO_FNC_ArrayPush;
 						};
 
 						_use_server = true;
@@ -556,7 +577,18 @@ while {!WFBE_GameOver} do {
 					{
 						if !(isNil '_x') then {
 							if !(isNull _x) then {
-								if (_ctlLaneOn) then {
+								//--- New-Bug-A fix (fable/ctl-survivor-bugs, mirror of Bug 2): the denominator (the two
+								//--- accumulation sites above + Server_GetTownGroups.sqf's CTL blocks) deliberately
+								//--- excludes air-only-wave contributions via {!_aa_get} / wfbe_ctl_ground_wave==false.
+								//--- This numerator tally used to sum ALL of _town_teams unconditionally - ground AND
+								//--- air-only groups both - once a ground wave was followed by a separate air-only tail
+								//--- wave within the same activation episode (the per-town flag gets overwritten by the
+								//--- later wave, but both waves' groups stay in _town_teams until full deactivation).
+								//--- Fix: check the PER-GROUP tag stamped at creation time (~line 355) instead of the
+								//--- current, possibly-overwritten, per-town flag. Default true (count) for any untagged
+								//--- group so pre-existing/edge-case groups keep the old behaviour - this only narrows
+								//--- counting for groups explicitly tagged air-only.
+								if (_ctlLaneOn && {([_x, "wfbe_ctl_ground_wave", true] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- sweep-fix #936: _x is a GROUP; 2-arg getVariable returns nil-not-default on groups (G1 trap) - route through the group-safe wrapper.
 									{if (alive _x) then {_ctlSurviving = _ctlSurviving + 1}} forEach units _x;
 								};
 								//--- B67 [wiki-wins]: never delete a player unit. The old loop deleted

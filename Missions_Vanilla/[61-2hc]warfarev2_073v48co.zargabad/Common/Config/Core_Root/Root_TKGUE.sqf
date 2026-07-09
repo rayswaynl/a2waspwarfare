@@ -167,6 +167,7 @@ if (WF_A2_CombinedOps) then {
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {local player} && {side group player == resistance}) then {
 	private ["_pool"];
 	WFBE_C_GUER_VBIED_TYPE = "datsun1_civil_2_covered";
+	WFBE_C_GUER_SUICIDE_BIKE_TYPE = "TT650_TK_CIV_EP1"; //--- fable/guer-suicide-bike: TK/ZG repoint (mirrors the VBIED_TYPE repoint above).
 	_pool = ["TK_GUE_Soldier_EP1","TK_GUE_Bonesetter_EP1","TK_GUE_Soldier_MG_EP1","TK_GUE_Soldier_AT_EP1","TK_GUE_Soldier_AA_EP1","TK_GUE_Soldier_Sniper_EP1","Offroad_DSHKM_TK_GUE_EP1","Pickup_PK_TK_GUE_EP1","V3S_TK_GUE_EP1","BTR40_MG_TK_GUE_EP1","datsun1_civil_2_covered","Ka137_MG_PMC"]; //--- BTR-40 (MG) tier-0 (2026-07-01).
 	if ((missionNamespace getVariable ["WFBE_C_GUER_CIVILIAN_DEPOT", 0]) > 0) then {_pool = _pool + ["Old_bike_TK_CIV_EP1","Old_moto_TK_Civ_EP1","Volha_1_TK_CIV_EP1","LandRover_TK_CIV_EP1","Ural_TK_CIV_EP1"]};
 	//--- fable/fix-guer-fob: C6 reseed clobbers WFBE_GUERDEPOTUNITS without the overlay's FOB-truck / M113-VBIED
@@ -182,5 +183,6 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {local p
 	for "_c6Fi" from 0 to ((count _c6FobTrucks) - 1) do {
 		if (_c6Fi < (count _c6FobAvail) && {(_c6FobAvail select _c6Fi) > 0}) then {_pool = _pool + [_c6FobTrucks select _c6Fi]};
 	};
+	if ((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) then {_pool = _pool + [missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_TK_CIV_EP1"]]}; //--- fable/guer-suicide-bike.
 	missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _pool];
 };

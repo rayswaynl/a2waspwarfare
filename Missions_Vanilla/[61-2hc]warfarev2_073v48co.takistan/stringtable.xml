@@ -1913,6 +1913,14 @@
         <English>Respawn</English>
         <Russian>Возрождение</Russian>
       </Key>
+      <Key ID="STR_WF_RESPAWN_CustomiseAI">
+        <English>Customise AI Soldier</English>
+        <Russian>Настройка ИИ-солдата</Russian>
+      </Key>
+      <Key ID="STR_WF_RESPAWN_SavedKits">
+        <English>Saved Kits</English>
+        <Russian>Сохранённые комплекты</Russian>
+      </Key>
 
 <!--Service Menu - ALL DONE-->
       <Key ID="STR_WF_SERVICE_EASA">
@@ -2254,6 +2262,14 @@
       <Key ID="STR_WF_TOOLTIP_RespawnDefault">
         <English>Toggle between the default and current gear</English>
         <Russian>Снаряж. станд/текущ</Russian>
+      </Key>
+      <Key ID="STR_WF_TOOLTIP_RespawnCustomiseAI">
+        <English>Open the Team Menu's Unit Designer to set the loadout template used for future AI purchases</English>
+        <Russian>Открыть конструктор юнитов (шаблон снаряжения для будущих ИИ)</Russian>
+      </Key>
+      <Key ID="STR_WF_TOOLTIP_RespawnSavedKits">
+        <English>Open the Team Menu's Gear Presets to save, apply, or set a rebuy-on-death kit</English>
+        <Russian>Открыть сохранённые комплекты снаряжения</Russian>
       </Key>
 	  <Key ID="STR_WF_TOOLTIP_RespawnST">
         <English>Respawn stucked Supply Trucks. ATTENTION => ALL Trucks will be destroyed!</English>

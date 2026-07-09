@@ -107,7 +107,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_GUER_VBIED_ARM_DELAY") then {WFBE_C_GUER_VBIED_ARM_DELAY = 3};
 	if (isNil "WFBE_C_GUER_VBIED_BLAST_RADIUS") then {WFBE_C_GUER_VBIED_BLAST_RADIUS = 60}; //--- B74.1 (Ray 2026-06-23): 30->60. The blast is now 3x Bo_FAB_250 (far bigger than the old 3x 122mm HE), so widen the cash-for-kills snapshot radius to match the real lethal zone - otherwise kills outside 30m didn't pay (Ray: "grant money whenever something is killed").
 	if (isNil "WFBE_C_GUER_VBIED_TYPE") then {WFBE_C_GUER_VBIED_TYPE = "hilux1_civil_2_covered"};
-	if (isNil "WFBE_C_GUER_KILL_BOUNTY_COEF") then {WFBE_C_GUER_KILL_BOUNTY_COEF = 0.5};
+	if (isNil "WFBE_C_GUER_KILL_BOUNTY_COEF") then {WFBE_C_GUER_KILL_BOUNTY_COEF = 0.4};
 	if (isNil "WFBE_C_GUER_IED_KILL_COEF") then {WFBE_C_GUER_IED_KILL_COEF = 0.30}; //--- B67 (Ray 2026-06-21) item #8: an IED kill pays only 30% of the normal vehicle/unit bounty (anti-farm) so spamming IEDs for cash is not worthwhile. Applied in RequestOnUnitKilled when the kill is tagged as an IED kill.
 
 	//--- GUER improvised mortar strike (V3S_Gue driver call-in barrage; Action_GuerMortarStrike.sqf -> RequestSpecial -> Server_HandleSpecial "guer-mortar-strike").
@@ -159,6 +159,13 @@ if (worldName == "Zargabad") then {
 		if (isNil "WFBE_C_GUER_VBIED_M113_TYPE") then {WFBE_C_GUER_VBIED_M113_TYPE = "M113_UN_EP1"};
 		if (isNil "WFBE_C_GUER_VBIED_M113_KILLS") then {WFBE_C_GUER_VBIED_M113_KILLS = 50}; //--- 2x-ed (was 25): GUER kills required before the M113 VBIED appears in the depot.
 		if (isNil "WFBE_C_GUER_VBIED_M113_SPEEDCOEF") then {WFBE_C_GUER_VBIED_M113_SPEEDCOEF = 2.0}; //--- target top-speed multiplier of the driver-local boost loop (~2x stock M113).
+		//--- Third VBIED variant: a fast, small SUICIDE MOTORCYCLE (fable/guer-suicide-bike). Reuses the truck
+		//--- VBIED's blast/attribution/payout machinery UNCHANGED (Server_HandleSpecial.sqf "guer-vbied-detonate"
+		//--- case) -- only a third accepted vehicle type is added there. Always available when the flag is on
+		//--- (tier-0, like the truck VBIED), not kill-gated like the M113. TYPE is repointed CH->TK/ZG the same
+		//--- way VBIED_TYPE is (Root_GUE.sqf / Root_TKGUE.sqf / Root_GUE_PlayerOverlay.sqf).
+		if (isNil "WFBE_C_GUER_SUICIDE_BIKE") then {WFBE_C_GUER_SUICIDE_BIKE = 0};
+		if (isNil "WFBE_C_GUER_SUICIDE_BIKE_TYPE") then {WFBE_C_GUER_SUICIDE_BIKE_TYPE = "TT650_Ins"};
 		//--- Ka-137 (Ka137_MG_PMC) flares: the recon heli ships with NO countermeasures. The GUER player's bought Ka-137
 		//--- gets a CMFlareLauncher + a flare magazine sized by the kill tier (more kills => more flares). NB: A2-OA stock
 		//--- has no 30Rnd flare mag, so the floor is 60Rnd (closest available); the count still increases 60->120->240
@@ -1186,7 +1193,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_ICBM_TEL_FASCAM_MAX")           then {WFBE_C_ICBM_TEL_FASCAM_MAX = 2};            //--- max live fields per side (refused before charging).
 	if (isNil "WFBE_C_ICBM_TEL_FASCAM_MINE_W")        then {WFBE_C_ICBM_TEL_FASCAM_MINE_W = "MineMine"};  //--- placed-mine class, west (createMine idiom).
 	if (isNil "WFBE_C_ICBM_TEL_FASCAM_MINE_E")        then {WFBE_C_ICBM_TEL_FASCAM_MINE_E = "MineMineE"}; //--- placed-mine class, east/GUER.
-	if (isNil "WFBE_C_ICBM_TEL_RAIN_COST")            then {WFBE_C_ICBM_TEL_RAIN_COST = 9000};          //--- STEEL RAIN price.
+	if (isNil "WFBE_C_ICBM_TEL_RAIN_COST")            then {WFBE_C_ICBM_TEL_RAIN_COST = 7500};          //--- STEEL RAIN price.
 	if (isNil "WFBE_C_ICBM_TEL_RAIN_BURSTS")          then {WFBE_C_ICBM_TEL_RAIN_BURSTS = 18};          //--- airbursts per barrage (~20s roll).
 	if (isNil "WFBE_C_ICBM_TEL_RAIN_R")               then {WFBE_C_ICBM_TEL_RAIN_R = 300};              //--- m burst-spread radius.
 	if (isNil "WFBE_C_ICBM_TEL_RAIN_BURST_R")         then {WFBE_C_ICBM_TEL_RAIN_BURST_R = 40};         //--- m per-burst kill radius vs EXPOSED infantry only.
@@ -1571,8 +1578,18 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_PLAYERS_MARKER_BLINKS = 16; // Keep it even number, otherwise the icon turns permanently red after blinking.
 	BLINKING_UNITS_WEST = [];
 	BLINKING_UNITS_EAST = [];
+	BLINKING_UNITS_GUER = [];
 	BLINKING_VEHICLES_WEST = [];
 	BLINKING_VEHICLES_EAST = [];
+	BLINKING_VEHICLES_GUER = [];
+//--- fable/marker-combat-flash (owner 2026-07-09): optional seconds-based override for the
+//--- combat-icon-blink duration above. WFBE_C_PLAYERS_MARKER_BLINKS is a blink-COUNT; the
+//--- Client_BookkeepBlinkingIcons.sqf loop ticks ~1/s, so 1 blink =~ 1 second. 0 = inert,
+//--- keeps the existing WFBE_C_PLAYERS_MARKER_BLINKS behavior byte-identical (flag-off).
+//--- >0 lets an admin dial the flash window in seconds without touching the existing
+//--- count-based default. Read in Client_BlinkMapIcon.sqf. Never change
+//--- WFBE_C_PLAYERS_MARKER_BLINKS's own default here (flag policy).
+	if (isNil "WFBE_C_MARKER_COMBAT_FLASH_SECS") then {WFBE_C_MARKER_COMBAT_FLASH_SECS = 0};
 
 //--- cmdcon43-b (Build 88): BIG-MAP FPS - marker RENDER-pass mitigation. The consolidated marker loop
 //--- (Common\Common_MarkerLoop.sqf) gates identically on any map consumer, so the script load is the same
@@ -2089,10 +2106,24 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 //--- P2 - JIP PV snapshot: compact ledger snapshot pushed to late joiners.
 	if (isNil "AICOMV2_GDIR_JIP_SNAP_INTERVAL")      then {AICOMV2_GDIR_JIP_SNAP_INTERVAL = 60};   //--- Min seconds between snapshot rebroadcasts (throttle).
 //--- P3 - Weapons cache: per-town purchasable loadout tier for town defenders.
-	if (isNil "AICOMV2_GDIR_CACHE")                  then {AICOMV2_GDIR_CACHE = 0};                 //--- Weapons cache gate: 0=off until the loadout-apply hook (Common_CreateTownUnits ~124) lands - avoids charging for an inert upgrade; flip to 1 with that hook.
+	if (isNil "AICOMV2_GDIR_CACHE")                  then {AICOMV2_GDIR_CACHE = 1};                 //--- fable/gdir-cache-materializer (GR-2026-07-08a): 1=on - loadout-apply hook now lives in Common_CreateTownUnits.sqf (per-unit forEach right after the town-defender skill spread, guarded on _side==WFBE_DEFENDER); reads this town's AICOMV2_GDIR_CACHE_TIER. Flipped from the 0-default now the upgrade is real.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_CACHE_T1")   then {AICOMV2_GDIR_PANEL_PRICE_CACHE_T1 = 3200}; //--- Base price: cache tier 1 (AK+RPK mix + extra mags). 2x doubled base.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_CACHE_T2")   then {AICOMV2_GDIR_PANEL_PRICE_CACHE_T2 = 6400}; //--- Base price: cache tier 2 (+RPG-7V gunners). 2x doubled base.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_CACHE_T3")   then {AICOMV2_GDIR_PANEL_PRICE_CACHE_T3 = 9600}; //--- Base price: cache tier 3 (+Strela defender). 2x doubled base.
+	//--- P5 - Defensive vehicle (fable/gdir-vehicle-verb, GR-2026-07-08a): town-donate-fund purchase
+	//--- of ONE tier-scaled defensive vehicle, delivered on the town's next garrison
+	//--- spawn/regrow (materialiser in Common_CreateTownUnits.sqf, same hook as the weapons
+	//--- cache). [FIX-931/night-sweep] Default OFF (was 1): the "Default ON, matching the
+	//--- cache verb's precedent" claim was false - AICOMV2_GDIR_CACHE itself defaults to 0
+	//--- (this file, ~line 2001) until its own hook lands. The GUI buttons (Rsc/Dialogs.hpp
+	//--- idc 31081-83) also compile unconditionally and can't be config-gated on a runtime
+	//--- var in A2 OA 1.64, so this default is the ONLY true inertness lever - see
+	//--- GUI_Menu_GuerCommissar.sqf for the client-side ctrlShow/ctrlEnable + MenuAction
+	//--- gate added alongside this fix.
+	if (isNil "AICOMV2_GDIR_VEHICLE")                then {AICOMV2_GDIR_VEHICLE = 0};                 //--- Defensive vehicle gate. Default OFF - see comment above (FIX-931).
+	if (isNil "AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T1") then {AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T1 = 4800}; //--- Base price: vehicle tier 1 (Offroad_DSHKM_Gue technical). 1.5x cache T1 (unilateral pricing call - see PR body).
+	if (isNil "AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T2") then {AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T2 = 9600}; //--- Base price: vehicle tier 2 (BMP2_GUE). 1.5x cache T2.
+	if (isNil "AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T3") then {AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T3 = 14400}; //--- Base price: vehicle tier 3 (T72_GUE). 1.5x cache T3.
 //--- P4 - Relief squad (AICOMV2_GDIR_PANEL gate) + mortar harassment.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_RELIEF")     then {AICOMV2_GDIR_PANEL_PRICE_RELIEF = 800};  //--- Base price: relief squad (infantry-only fast buy). 1/2x of REINF base.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_MORTAR")     then {AICOMV2_GDIR_PANEL_PRICE_MORTAR = 1200}; //--- Base price: mortar harassment action.
@@ -2272,7 +2303,14 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (Client_PreRespawnHandler.sqf) so the factory-queue cap counter cannot accumulate across deaths.
 //--- Default 0 (dark). Set 1 to activate the reset. The Client_BuildUnit.sqf decrements are `max 0`-clamped
 //--- (salvage-522) so an in-flight buy that resolves after a reset clamps to 0 instead of going negative.
-	if (isNil "WFBE_C_FIX_RESPAWN_UNITQUEU_RESET") then {WFBE_C_FIX_RESPAWN_UNITQUEU_RESET = 1};
+
+//--- fable/respawn-menu-shortcuts (owner 2026-07-09): two respawn-menu buttons that open the
+//--- existing Team Menu (RscMenu_TeamV2, idd 13050) - Gear Presets / Unit Designer tabs.
+//--- Pure UI convenience wiring into an already-shipped dialog (GUI_Menu_TeamV2.sqf); no new
+//--- game logic. Default 0 = byte-identical legacy respawn screen (buttons hidden via
+//--- `show=0`, minimap geometry untouched). See docs/design/v2/TEAM-MENU-REPURPOSE-PROPOSAL-2026-07-07.md
+//--- for the Unit Designer / Gear Presets feature inventory this reuses.
+	if (isNil "WFBE_C_RESPAWN_SHORTCUTS") then {WFBE_C_RESPAWN_SHORTCUTS = 0};
 
 //--- DEADSPAWN NO-ARMED-UNITS GUARD (fable/deadspawn-guard, Ray 2026-07-04): while a dead AI team
 //--- leader is parked on its %1TempRespawnMarker holding point during the respawn wait
@@ -2332,6 +2370,22 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_NAVAL_SKIRMISH_EAST_CLASSES") then {WFBE_C_NAVAL_SKIRMISH_EAST_CLASSES = ["Su25_TK_EP1","Su25_Ins","ibrPRACS_MiG21mol"]};
 	if (isNil "WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE")   then {WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE   = 1};   //--- mission-wide concurrent naval-skirmish cap (all 3 carriers share this).
 	if (isNil "WFBE_C_NAVAL_SKIRMISH_LIFETIME")     then {WFBE_C_NAVAL_SKIRMISH_LIFETIME     = 240}; //--- s hard cleanup ceiling regardless of duel outcome.
+
+//--- USV FLOTILLA (fable/usv-flotilla, owner 2026-07-08): 3-boat GUER coastal flotilla, PBX hull +
+//--- attachTo static per boat (AA/ROCKET/HMG). Master gate default 0 = byte-identical to HEAD.
+//--- Piggybacks on IS_naval_map (see Server_USVFlotilla.sqf header) - no new map define needed.
+	if (isNil "WFBE_C_USV_FLOTILLA_ENABLE")   then {WFBE_C_USV_FLOTILLA_ENABLE = 0};   //--- master flag. 0 = OFF, byte-identical to HEAD.
+	if (isNil "WFBE_C_USV_FLOTILLA_COUNT")    then {WFBE_C_USV_FLOTILLA_COUNT = 3};    //--- boats roaming at once (owner: 3). Bumping this is a one-line tune; roles cycle round-robin.
+	if (isNil "WFBE_C_USV_FLOTILLA_ROLES")    then {WFBE_C_USV_FLOTILLA_ROLES = ["AA","ROCKET","HMG"]}; //--- role cycle order; default = one-of-each at COUNT=3.
+	if (isNil "WFBE_C_USV_FLOTILLA_SIDE")     then {WFBE_C_USV_FLOTILLA_SIDE = "GUER"}; //--- GUER-only per owner (matches every other asymmetric-GUER-asset precedent: naval CAP, air-def).
+	if (isNil "WFBE_C_USV_FLOTILLA_HULL")     then {WFBE_C_USV_FLOTILLA_HULL = "PBX"};  //--- GUER/RU small boat (Units_CO_RU.sqf:84,272,302).
+	if (isNil "WFBE_C_USV_CARRIER_APPROACH_RADIUS") then {WFBE_C_USV_CARRIER_APPROACH_RADIUS = 1800}; //--- m; mirrors Init_NavalHVT.sqf:713 CAP arm band.
+	if (isNil "WFBE_C_USV_FLOTILLA_QUIET_DESPAWN")  then {WFBE_C_USV_FLOTILLA_QUIET_DESPAWN = 120}; //--- s; mirrors naval CAP despawn timer (Init_NavalHVT.sqf:886).
+	if (isNil "WFBE_C_USV_FLOTILLA_COASTAL_CHECK_RADIUS")  then {WFBE_C_USV_FLOTILLA_COASTAL_CHECK_RADIUS = 400}; //--- m; one-time boot ring-sample radius for wfbe_is_coastal tagging.
+	if (isNil "WFBE_C_USV_FLOTILLA_COASTAL_CHECK_SAMPLES") then {WFBE_C_USV_FLOTILLA_COASTAL_CHECK_SAMPLES = 8}; //--- ring sample count for the same one-time pass.
+	if (isNil "WFBE_C_USV_FLOTILLA_MOUNT_OFFSET")   then {WFBE_C_USV_FLOTILLA_MOUNT_OFFSET = [0, -0.8, 1.0]}; //--- PLACEHOLDER attachTo offset - hand-tune in-editor against the PBX model (mirrors FINAL-SPECS.md V3S bed offset caveat).
+	if (isNil "WFBE_C_USV_FLOTILLA_ARRIVE_RADIUS")  then {WFBE_C_USV_FLOTILLA_ARRIVE_RADIUS = 50}; //--- m; waypoint-arrival threshold.
+	if (isNil "WFBE_C_USV_FLOTILLA_UNSTUCK_MAX")    then {WFBE_C_USV_FLOTILLA_UNSTUCK_MAX = 5}; //--- consecutive un-wedges before a leg is skipped; mirrors WFBE_C_AICOM_PATROL_UNSTUCK_MAX.
 
 //--- fable/ew-naval (Carrier ServicePoint): WFBE_C_NAVAL_CARRIER_SERVICE_POINTS - when >0, each captured
 //---   carrier HVT spawns a side-registered repair/rearm ServicePoint on the flight deck (server_town.sqf
@@ -2545,7 +2599,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Tactical Center (sibling of the UAV support call). Client module: Client/Module/FPV/.
 //--- Flag-off (0) = no menu row, module exits on entry = byte-identical behavior.
 	if (isNil "WFBE_C_FPV_DRONE")      then {WFBE_C_FPV_DRONE      = 1};           //--- Master gate: 0=off (default), 1=on. Lobby param mirrors this.
-	if (isNil "WFBE_C_FPV_DRONE_COST") then {WFBE_C_FPV_DRONE_COST = 7500};        //--- Purchase price (deducted client-side in fpv.sqf).
+	if (isNil "WFBE_C_FPV_DRONE_COST") then {WFBE_C_FPV_DRONE_COST = 2500};        //--- Purchase price (deducted client-side in fpv.sqf).
 	if (isNil "WFBE_C_FPV_DRONE_TTL")  then {WFBE_C_FPV_DRONE_TTL  = 240};         //--- s: battery life; expiry DISARMS then scuttles (no parked bomb).
 	if (isNil "WFBE_C_FPV_DRONE_AMMO") then {WFBE_C_FPV_DRONE_AMMO = "R_57mm_HE"}; //--- Warhead ammo class (RPG-warhead scale: hit 150 / indirect 40 / r 12).
 
@@ -2633,6 +2687,15 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 	if (isNil "AICOMV2_CTL_INVEST_COOLDOWN") then {AICOMV2_CTL_INVEST_COOLDOWN = 480}; //--- Global seconds between buys per side.
 	if (isNil "AICOMV2_CTL_INVEST_TOWN_COOLDOWN") then {AICOMV2_CTL_INVEST_TOWN_COOLDOWN = 1200}; //--- Per-town seconds between buys.
 	if (isNil "AICOMV2_CTL_INVEST_HUMAN_OFF") then {AICOMV2_CTL_INVEST_HUMAN_OFF = 1}; //--- Pause AI spend while a human is seated (inert while lane=0).
+
+//--- P5 CREW-COST TIER-SCALE (fable/crew-cost-tierscale, owner economy pick GR-2026-07-08a): crew-replacement cost
+//--- (charged in GUI_Menu_BuyUnits.sqf at all 3 crew-cost points) scales with the crewed vehicle's own buy-price
+//--- (QUERYUNITPRICE), the same price lookup the buy menu already uses for _currentCost - no new vehicle-cost
+//--- table. WFBE_C_UNITS_CREW_COST (above) remains the floor; the bonus only adds on top and is capped so heavy
+//--- air/armor crew never gets punitive. Default 0 = byte-identical flat WFBE_C_UNITS_CREW_COST per head.
+	if (isNil "WFBE_C_UNITS_CREW_COST_TIERSCALE") then {WFBE_C_UNITS_CREW_COST_TIERSCALE = 0}; //--- master gate: 0=off (default, flat WFBE_C_UNITS_CREW_COST/head, byte-identical to HEAD), 1=on (scale by vehicle price, see COEF/CAP below).
+	if (isNil "WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF") then {WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF = 0.03}; //--- owner-tunable: fraction of the crewed vehicle's QUERYUNITPRICE added per crew head on top of the WFBE_C_UNITS_CREW_COST floor (e.g. a 6500-price tank -> 120+6500*0.03=315/head before the cap; a 400-price jeep -> 120+400*0.03=132/head). Only read while TIERSCALE>0.
+	if (isNil "WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP") then {WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP = 400}; //--- owner-tunable: hard per-head ceiling (post-COEF) so the priciest air/armor (e.g. AH64D/A10 at 30-35k) never becomes a punitive crew tax. Only read while TIERSCALE>0.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

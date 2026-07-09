@@ -236,6 +236,13 @@ while {true} do {
 							_tracked removeEventHandler ["Fired", _ehHandle];
 							_tracked setVariable ["WFBE_BlinkFiredEH", nil, false];
 						};
+						//--- fable/marker-combat-flash-fixes (owner 2026-07-09): mirror cleanup for the
+						//--- being-shot-at Hit EH added alongside WFBE_BlinkFiredEH.
+						_ehHandle = _tracked getVariable "WFBE_BlinkHitEH";
+						if !(isNil "_ehHandle") then {
+							_tracked removeEventHandler ["Hit", _ehHandle];
+							_tracked setVariable ["WFBE_BlinkHitEH", nil, false];
+						};
 						_ehHandle = _tracked getVariable "WFBE_MissileTerrainMaskingEH";
 						if !(isNil "_ehHandle") then {
 							_tracked removeEventHandler ["Fired", _ehHandle];

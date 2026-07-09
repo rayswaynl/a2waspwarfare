@@ -107,12 +107,15 @@ while {alive player && dialog} do {
 					if !(isNull leader _selected) then {
 						if (_selected != group player) then {
 							hint parseText format [localize "STR_WF_INFO_Funds_Sent", _funds_transfering, name leader _selected];
-							-(_funds_transfering) Call WFBE_CL_FNC_ChangeClientFunds;
-							[_selected, _funds_transfering] Call WFBE_CO_FNC_ChangeTeamFunds;
-							if (isPlayer leader _selected) then {
-									[getPlayerUID(leader _selected), "LocalizeMessage",['FundsTransfer',_funds_transfering,name player]] Call WFBE_CO_FNC_SendToClients;
-									["INFORMATION", Format ["Player %1 has sent cash to player %2).", name player, name leader _selected]] Call WFBE_CO_FNC_LogContent;
-							};
+							//--- N1 fix (GR-2026-07-08a): server is authoritative. The client-side optimistic
+							//--- debit+credit (WFBE_CL_FNC_ChangeClientFunds + WFBE_CO_FNC_ChangeTeamFunds, both
+							//--- executed on the caller's own machine) let any modified client forge the target
+							//--- team and/or amount with zero server validation - same exploit class as the
+							//--- donation row, closed the same way (E2 fix, above): RequestFundsTransfer re-derives
+							//--- the sender's own team server-side and re-checks the balance before moving a
+							//--- single dollar. Hint stays immediate/optimistic (unchanged UX); recipient notify
+							//--- + audit log now only fire on a server-confirmed transfer.
+							["RequestFundsTransfer", [player, _selected, _funds_transfering]] Call WFBE_CO_FNC_SendToServer;
 							_funds = Call WFBE_CL_FNC_GetClientFunds;
 							_last_update = -1;
 						} else {

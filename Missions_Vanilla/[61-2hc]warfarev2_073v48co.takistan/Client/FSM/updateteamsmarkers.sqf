@@ -1,5 +1,5 @@
 // Marty: Performance Audit locals and marker update cache.
-private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites","_nextRebindCheck","_needRebind","_liveLeader","_cachedLeader","_liveHas","_cachedHas","_i","_ownMarker","_ownLastPos","_ownLastDir","_ownLastAlpha","_ownPos","_ownDir","_ownDirDiff","_destDirMode","_destPos","_destBx","_destBy","_destDx","_destDy","_destData","_destMode","_destWpCount","_destWpIdx","_destStoredPos","_destStoredGrp"];
+private["_sideText","_label","_count","_marker","_markerIndex","_team","_leader","_leaderVehicle","_leaderChanged","_botUnitsInVehicle","_crewUnitsInVehicle","_cargoUnitsInVehicle","_crewText","_cargoText","_member","_memberVehicle","_roleUnit","_unitText","_updateAILeaders","_updateThisLeader","_nextAIUpdate","_playerAFKstate","_afkMarkerDiagnosticNextLog","_markerColor","_markerAlpha","_teamMarkerWoundTinted","_leaderHealth","_markerNames","_lastLeaders","_lastTexts","_lastAlphas","_lastColors","_lastPositions","_lastDirs","_pos","_dir","_lastPos","_lastDir","_dirDiff","_vel","_spd","_wfMenuDisplays","_mapConsumerVisible","_perfStart","_perfMarkerOps","_perfPlayerLeaders","_perfAILeaders","_perfSkippedWrites","_nextRebindCheck","_needRebind","_liveLeader","_cachedLeader","_liveHas","_cachedHas","_i","_ownMarker","_ownLastPos","_ownLastDir","_ownLastAlpha","_ownPos","_ownDir","_ownDirDiff","_destDirMode","_destPos","_destBx","_destBy","_destDx","_destDy","_destData","_destMode","_destWpCount","_destWpIdx","_destStoredPos","_destStoredGrp"];
 
 _sideText = sideJoinedText;
 _label = "";
@@ -281,6 +281,23 @@ while {!gameOver} do {
 					_leaderChanged = ((_lastLeaders select _markerIndex) != _leader);
 					_markerColor = "ColorBlue"; //--- cmdcon35: restore Miksuu friendly-blue teammate markers (was ColorBlack, reported as "weird color"); self stays ColorOrange below, AI-led teams read blue like the baseline b_inf symbol.
 					if (player == _leader) then {_markerColor = "ColorOrange"};
+					//--- fable/ew-markers WIN2: wounded-leader marker tint. Mirrors the 4 health
+					//--- breakpoints in Client_UpdateRHUD.sqf:426-429 (_health = 1-damage; <=0.89/
+					//--- 0.79/0.60/0.08), but maps them to colours OTHER than "ColorOrange" (reserved
+					//--- above for own-squad identity), and skips the player's own led team entirely
+					//--- so self never re-tints away from its identity colour (also moot visually --
+					//--- the per-team self marker is alpha-0; see the OWNMarker note below).
+					//--- PRECEDENCE chosen for this marker (highest to lowest, documented once here):
+					//--- own-squad ColorOrange > wounded-tint > AFK-grey (:305 area). An AFK-but-wounded
+					//--- ally keeps showing its wound colour, not grey -- see _teamMarkerWoundTinted.
+					_teamMarkerWoundTinted = false;
+					if !(player == _leader) then {
+						_leaderHealth = 1 - (damage _leader);
+						if (_leaderHealth <= 0.89) then {_markerColor = "ColorYellow"; _teamMarkerWoundTinted = true;};
+						if (_leaderHealth <= 0.79) then {_markerColor = "ColorBrown"; _teamMarkerWoundTinted = true;};
+						if (_leaderHealth <= 0.60) then {_markerColor = "ColorRed"; _teamMarkerWoundTinted = true;};
+						if (_leaderHealth <= 0.08) then {_markerColor = "ColorKhaki"; _teamMarkerWoundTinted = true;};
+					};
 
 					_markerAlpha = 0;
 					_label = "AI";
@@ -305,7 +322,16 @@ while {!gameOver} do {
 						_playerAFKstate = _leader getVariable "WASP_AFK";
 						_label = Format[" %1", name _leader];
 						if !(isNil "_playerAFKstate") then {
-							if (_playerAFKstate) then {_label = Format[" %1 (AFK)", name _leader]};
+							if (_playerAFKstate) then {
+								_label = Format[" %1 (AFK)", name _leader];
+								//--- fable/ew-markers WIN1: AFK grey-out. Lowest precedence of the 3 marker-
+								//--- colour cues (see the PRECEDENCE note above): skips own-squad (ColorOrange
+								//--- stays highest identity) and skips when the wound-tint above already fired,
+								//--- so an AFK-but-wounded ally still reads as wounded, not silently grey.
+								//--- "ColorGray" (not "Grey") matches the spelling this codebase already ships
+								//--- live for neutral markers (Init_CommonConstants.sqf WFBE_C_NEUTRAL_COLOR).
+								if (!(player == _leader) && {!_teamMarkerWoundTinted}) then {_markerColor = "ColorGray"};
+							};
 						};
 						// Marty: WF_Debug map-side probe confirms the marker loop sees the networked AFK state.
 						if (WF_Debug && !(isNil "_playerAFKstate")) then {

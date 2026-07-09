@@ -711,7 +711,7 @@
 		title = "GUER Scavenger Team wildcard (G5)";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1; //--- fable/ew-guer: 0->1, on by default (easy win).
 	};
 	class WFBE_C_GUER_SCAV_REWARD {
 		title = "GUER Scav wreck reward (cash per wreck)";
@@ -730,6 +730,16 @@
 		values[] = {180,300,600};
 		texts[] = {"3 min","5 min","10 min"};
 		default = 300;
+	};
+
+	// GUER civilian-depot lobby toggle (easy win): appends already-registered CIV/TKCIV
+	// transport classnames to the GUER player buy-depot pool. Consuming code already live
+	// in Root_GUE.sqf + Root_GUE_PlayerOverlay.sqf (missionNamespace getVariable, safe default 0).
+	class WFBE_C_GUER_CIVILIAN_DEPOT {
+		title = "GUER Civilian Vehicle Depot";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
 	};
 	class WFBE_C_AWACS {
 		title = "AWACS platform radar (air picture + ground MTI sweep)";

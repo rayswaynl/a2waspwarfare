@@ -441,6 +441,53 @@ class WFBE_RespawnMenu {
 			shadow = 1;
 			text = $STR_WF_RESPAWN_Legend;
 		};
+		//--- fable/respawn-menu-shortcuts (owner 2026-07-09): two shortcut buttons into the
+		//--- existing Team Menu (RscMenu_TeamV2, idd 13050). Hidden by default (show=0,
+		//--- WFBE_C_RESPAWN_SHORTCUTS=0); revealed + minimap trimmed at runtime by
+		//--- GUI_RespawnMenu.sqf only when the flag is armed.
+		class CA_CustomiseAI_Button : RscButton {
+			idc = 511006;
+			show = 0;
+			x = 0.01;
+			y = 0.075;
+			w = 0.485;
+			h = 0.035;
+			sizeEx = 0.028;
+
+			colorBackground[] = WFBE_Menu_Button_Sub_Color;
+			colorBackgroundActive[] = WFBE_Menu_Button_Sub_Color;
+			colorFocused[] = WFBE_Menu_Button_Sub_Focused_Color;
+
+			text = $STR_WF_RESPAWN_CustomiseAI;
+			tooltip = $STR_WF_TOOLTIP_RespawnCustomiseAI;
+			//--- Existing entry point (same call Client/GUI/GUI_Menu.sqf:110-117 uses for the
+			//--- WF-menu Team button). WFBE_TM2_OpenToUD pre-selects the Unit Designer tab -
+			//--- see GUI_Menu_TeamV2.sqf. Does NOT call closeDialog first: `dialog` must stay
+			//--- true across the swap so GUI_RespawnMenu.sqf's own while-loop guard
+			//--- (`while {... && dialog && alive player}`) never takes the premature-exit /
+			//--- auto-reopen branch that the CA_Quit_Button closeDialog path deliberately uses.
+			onButtonClick = "WFBE_TM2_OpenToUD = true; createDialog 'RscMenu_TeamV2';";
+		};
+		class CA_SavedKits_Button : RscButton {
+			idc = 511007;
+			show = 0;
+			x = 0.505;
+			y = 0.075;
+			w = 0.485;
+			h = 0.035;
+			sizeEx = 0.028;
+
+			colorBackground[] = WFBE_Menu_Button_Sub_Color;
+			colorBackgroundActive[] = WFBE_Menu_Button_Sub_Color;
+			colorFocused[] = WFBE_Menu_Button_Sub_Focused_Color;
+
+			text = $STR_WF_RESPAWN_SavedKits;
+			tooltip = $STR_WF_TOOLTIP_RespawnSavedKits;
+			//--- Existing entry point; opens directly on the Gear Presets tab (the dialog's
+			//--- own default tab on open - GUI_Menu_TeamV2.sqf:135-137). Same no-closeDialog
+			//--- rationale as CA_CustomiseAI_Button above.
+			onButtonClick = "createDialog 'RscMenu_TeamV2';";
+		};
 	};
 };
 
@@ -4757,15 +4804,23 @@ class WFBE_PlayerSettingsMenu {
 //---   31010=town list  31011-31013=section labels  31021-22=buy  31031-33=QRF
 //---   31041=counter  31051=donate  31060=minimap  31070=wallet/fund readout
 //---   31071-77=per-action cost labels  31078=status text  31079=cooldown label
+//---   31081-83=vehicle t1/t2/t3 (fable/gdir-vehicle-verb, GR-2026-07-08a; static tooltip price,
+//---   not quote-integrated - see GUI_Menu_GuerCommissar.sqf)
+//---   31084=relief section label  31085=relief cost label  31086=relief button (MenuAction 64,
+//---   fable/ew-guer; renumbered off the vehicle-verb range 31081-83/MenuAction 61-63 it originally
+//---   collided with at release-merge time - see also the vertical relayout below the vehicle row)
 class WFBE_GDirCommissarMenu {
 	movingEnable = 1;
 	idd = 31000;
 	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_GuerCommissar.sqf'"; //--- cmdcon45: house pattern - A2 config strings do NOT accept C-style backslash-quote escapes
 
 	class controlsBackground {
-		//--- Main plate (wider/taller to fit minimap + cost labels).
+		//--- Main plate (wider/taller to fit minimap + cost labels). Height 0.650->0.705
+		//--- (release-merge relayout): grew +0.055 to fit the Relief block (ACTION 4) as its
+		//--- own row below the vehicle-verb row instead of overlapping it - see the ACTION 4
+		//--- block below for the idc/MenuAction renumber this went with.
 		class BG_M : RscText {
-			x = 0.110; y = 0.175; w = 0.780; h = 0.650;
+			x = 0.110; y = 0.175; w = 0.780; h = 0.705;
 			colorBackground[] = WFBE_Background_Color;
 			moving = 1;
 		};
@@ -4775,7 +4830,7 @@ class WFBE_GDirCommissarMenu {
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
 		class BG_F : RscText {
-			x = 0.110; y = 0.773; w = 0.780; h = 0.052;
+			x = 0.110; y = 0.828; w = 0.780; h = 0.052;
 			moving = 1;
 			colorBackground[] = WFBE_Background_Color_Footer;
 		};
@@ -4787,7 +4842,7 @@ class WFBE_GDirCommissarMenu {
 		};
 		//--- Accent border above footer.
 		class BG_BorderF : RscText {
-			x = 0.110; y = 0.773;
+			x = 0.110; y = 0.828;
 			w = 0.780; h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
@@ -4798,18 +4853,18 @@ class WFBE_GDirCommissarMenu {
 			colorBackground[] = WFBE_Background_Border;
 		};
 		class BG_EdgeB : RscText {
-			x = 0.110; y = 0.825;
+			x = 0.110; y = 0.880;
 			w = 0.780; h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
 		class BG_EdgeL : RscText {
 			x = 0.110; y = 0.175;
-			w = WFBE_Background_Border_Thick; h = 0.650;
+			w = WFBE_Background_Border_Thick; h = 0.705;
 			colorBackground[] = WFBE_Background_Border;
 		};
 		class BG_EdgeR : RscText {
 			x = 0.890; y = 0.175;
-			w = WFBE_Background_Border_Thick; h = 0.650;
+			w = WFBE_Background_Border_Thick; h = 0.705;
 			colorBackground[] = WFBE_Background_Border;
 		};
 		//--- Vertical divider between left column (list+map) and right column (actions).
@@ -5017,6 +5072,35 @@ class WFBE_GDirCommissarMenu {
 			tooltip = "Donate $200 from your wallet to this town's funding pool.";
 		};
 
+		//--- ACTION - DEFENSIVE VEHICLE (fable/gdir-vehicle-verb, GR-2026-07-08a): tier-scaled
+		//--- vehicle order, delivered on the town's next garrison spawn/regrow. Static base-price
+		//--- tooltips (not quote-integrated - the live quote array is a fixed 7-element price row;
+		//--- extending it is out of scope here). Actual charge is still scarcity/load-factor
+		//--- adjusted server-side, same formula as every other verb - tooltip price is a floor.
+		//--- NEEDS IN-GAME VISUAL VERIFICATION before merge - untested layout, see script header.
+		class Btn_VehicleT1 : RscButton_Main {
+			idc = 31081;
+			x = 0.348; y = 0.686; w = 0.168; h = 0.040;
+			text = "VEHICLE T1";
+			sizeEx = 0.021;
+			action = "MenuAction = 61";
+			tooltip = "Order a technical (Offroad_DSHKM_Gue) for this town. From $4800, delivered next garrison spawn.";
+		};
+		class Btn_VehicleT2 : Btn_VehicleT1 {
+			idc = 31082;
+			x = 0.518;
+			text = "VEHICLE T2";
+			action = "MenuAction = 62";
+			tooltip = "Order an IFV (BMP2_GUE) for this town. From $9600, delivered next garrison spawn.";
+		};
+		class Btn_VehicleT3 : Btn_VehicleT1 {
+			idc = 31083;
+			x = 0.695;
+			text = "VEHICLE T3";
+			action = "MenuAction = 63";
+			tooltip = "Order a tank (T72_GUE) for this town. From $14400, delivered next garrison spawn.";
+		};
+
 		//--- Status text (idc 31078): deny reasons, pending quote notice.
 		class Lbl_Status : RscText {
 			idc = 31078;
@@ -5036,9 +5120,40 @@ class WFBE_GDirCommissarMenu {
 			shadow = 2;
 		};
 
+		//--- fable/ew-guer: ACTION 4 - RELIEF SQUAD (relief verb; reuses the same debit +
+		//--- reinforce-ledger path as ACTION 1 buy convoy - RequestGDirPanel.sqf verb="relief",
+		//--- Server_GuerDirector.sqf orderKind="reinforce"). idc band 31084-31086 + MenuAction 64
+		//--- (release-merge renumber: originally authored against 31081-31083/MenuAction 61,
+		//--- which collided with fable/gdir-vehicle-verb's Btn_VehicleT1-3 above - same idc AND
+		//--- same MenuAction, both merged independently the same night. Row repositioned below
+		//--- the vehicle row; see BG_M/BG_F height bump above for the matching plate/footer grow).
+		class Lbl_Act4 : RscText {
+			idc = 31084;
+			x = 0.348; y = 0.736; w = 0.535; h = 0.025;
+			text = "ACTION 4 - RELIEF SQUAD";
+			sizeEx = 0.019;
+			colorText[] = {1, 1, 1, 0.7};
+			shadow = 2;
+		};
+		class Lbl_Cost_Relief : RscText {
+			idc = 31085;
+			x = 0.348; y = 0.761; w = 0.535; h = 0.020;
+			text = "~est. $--";
+			sizeEx = 0.017;
+			colorText[] = {1, 0.85, 0.3, 0.85};
+			shadow = 2;
+		};
+		class Btn_Relief : Btn_BuyConvoy {
+			idc = 31086;
+			x = 0.348; y = 0.782; w = 0.535; h = 0.040;
+			text = "RELIEF SQUAD";
+			action = "MenuAction = 64";
+			tooltip = "Fast infantry-only reinforcement (conserves group cap).";
+		};
+
 		//--- Footer: Back button (house pattern: createDialog WF_Menu after closeDialog).
 		class Btn_Back : RscButton_Main {
-			x = 0.115; y = 0.778; w = 0.080; h = 0.040;
+			x = 0.115; y = 0.833; w = 0.080; h = 0.040;
 			text = "< BACK";
 			sizeEx = 0.019;
 			action = "MenuAction = 90";
