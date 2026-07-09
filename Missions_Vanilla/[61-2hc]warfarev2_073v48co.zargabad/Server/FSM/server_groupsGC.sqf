@@ -103,8 +103,8 @@ while {!WFBE_GameOver} do {
 				_baseCap = switch (true) do {
 					case (_basePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  15]};
 					case (_basePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  5]};
-					case (_basePcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
-					default              {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
+					case (_basePcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 4]};
+					default              {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 3]};
 				};
 				//--- cmdcon42-k: the re-adoption ceiling honours the same team-target delta+floor the founding
 				//--- loop applies (Ray: -3 teams/commander) so GC cannot re-adopt teams the founding lane retires.

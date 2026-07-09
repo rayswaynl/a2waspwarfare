@@ -517,7 +517,7 @@ if (_coreDone) then {
 	_myID = (_side) Call WFBE_CO_FNC_GetSideID;
 	_ownTowns = 0;
 	{ if ((_x getVariable "sideID") == _myID) then {_ownTowns = _ownTowns + 1} } forEach towns;
-	if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) then {
+	if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 3])) then {
 		_order = _order + ["Aircraft"];
 	};
 };
