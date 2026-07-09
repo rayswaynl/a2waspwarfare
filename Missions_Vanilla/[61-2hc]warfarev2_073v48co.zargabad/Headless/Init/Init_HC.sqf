@@ -29,8 +29,24 @@ waitUntil { uiSleep 0.5; (!isNull player) || (diag_tickTime > _hcInitDeadline) }
 //--- engine seated the HC late or locality hadn't transferred at the guard. We now wait for the player
 //--- object, then poll for up to ~60s, retrying the reseat until `side group player == civilian`. Idempotent.
 waitUntil {uiSleep 0.25; !isNull player}; //--- never run the guard before the player object exists.
-//--- TELEMETRY (task #34): make the engine's raw auto-seating server-visible BEFORE we touch it.
-["RequestSpecial", ["hc-preseat", [name player, str (side group player)]]] Call WFBE_CO_FNC_SendToServer;
+//--- HC-SENDTOSERVER-INIT-RACE (fable 2026-07-09): Common\Init\Init_Common.sqf:169 defines
+//--- WFBE_CO_FNC_SendToServer only after ~160 sequential Compile statements run. initJIPCompatible.sqf
+//--- fires that file (line 350, ExecVM) and this Init_HC.sqf (line 391, execVM) as two INDEPENDENT
+//--- scheduled scripts with no ordering guarantee between them. A normal client never reaches this call
+//--- before Init_Common.sqf finishes (the loading screen holds it back), but an HC has no loading screen
+//--- and can win the race, hitting an undefined-variable error on the very first SendToServer call below
+//--- (matches observed single-hit RPT errors at MISSINIT/rejoin boundaries - every later SendToServer
+//--- call in this file runs after this one and is never affected). Bounded isNil-symbol guard, same
+//--- idiom as the _hcInitDeadline poll above and the waitUntil {!isNil "..."} guards in
+//--- Client\Init\Init_Client.sqf.
+private "_sendToServerDeadline"; _sendToServerDeadline = diag_tickTime + 20;
+waitUntil { uiSleep 0.25; (!isNil "WFBE_CO_FNC_SendToServer") || (diag_tickTime > _sendToServerDeadline) };
+if (isNil "WFBE_CO_FNC_SendToServer") then {
+	diag_log "[WFBE][HC-SENDTOSERVER-INIT-RACE] Init_HC.sqf: WFBE_CO_FNC_SendToServer still nil after 20s wait - Init_Common.sqf has not finished compiling; hc-preseat telemetry call will be skipped.";
+} else {
+	//--- TELEMETRY (task #34): make the engine's raw auto-seating server-visible BEFORE we touch it.
+	["RequestSpecial", ["hc-preseat", [name player, str (side group player)]]] Call WFBE_CO_FNC_SendToServer;
+};
 
 //--- Mark the engine-selected slot group before leaving it. If that group becomes empty before the server's
 //--- connected-hc handler runs, leader/UID based pruning can miss it (HC UIDs may be empty/collide). The
