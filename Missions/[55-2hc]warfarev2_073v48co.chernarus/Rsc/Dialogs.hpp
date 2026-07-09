@@ -441,6 +441,53 @@ class WFBE_RespawnMenu {
 			shadow = 1;
 			text = $STR_WF_RESPAWN_Legend;
 		};
+		//--- fable/respawn-menu-shortcuts (owner 2026-07-09): two shortcut buttons into the
+		//--- existing Team Menu (RscMenu_TeamV2, idd 13050). Hidden by default (show=0,
+		//--- WFBE_C_RESPAWN_SHORTCUTS=0); revealed + minimap trimmed at runtime by
+		//--- GUI_RespawnMenu.sqf only when the flag is armed.
+		class CA_CustomiseAI_Button : RscButton {
+			idc = 511006;
+			show = 0;
+			x = 0.01;
+			y = 0.075;
+			w = 0.485;
+			h = 0.035;
+			sizeEx = 0.028;
+
+			colorBackground[] = WFBE_Menu_Button_Sub_Color;
+			colorBackgroundActive[] = WFBE_Menu_Button_Sub_Color;
+			colorFocused[] = WFBE_Menu_Button_Sub_Focused_Color;
+
+			text = $STR_WF_RESPAWN_CustomiseAI;
+			tooltip = $STR_WF_TOOLTIP_RespawnCustomiseAI;
+			//--- Existing entry point (same call Client/GUI/GUI_Menu.sqf:110-117 uses for the
+			//--- WF-menu Team button). WFBE_TM2_OpenToUD pre-selects the Unit Designer tab -
+			//--- see GUI_Menu_TeamV2.sqf. Does NOT call closeDialog first: `dialog` must stay
+			//--- true across the swap so GUI_RespawnMenu.sqf's own while-loop guard
+			//--- (`while {... && dialog && alive player}`) never takes the premature-exit /
+			//--- auto-reopen branch that the CA_Quit_Button closeDialog path deliberately uses.
+			onButtonClick = "WFBE_TM2_OpenToUD = true; createDialog 'RscMenu_TeamV2';";
+		};
+		class CA_SavedKits_Button : RscButton {
+			idc = 511007;
+			show = 0;
+			x = 0.505;
+			y = 0.075;
+			w = 0.485;
+			h = 0.035;
+			sizeEx = 0.028;
+
+			colorBackground[] = WFBE_Menu_Button_Sub_Color;
+			colorBackgroundActive[] = WFBE_Menu_Button_Sub_Color;
+			colorFocused[] = WFBE_Menu_Button_Sub_Focused_Color;
+
+			text = $STR_WF_RESPAWN_SavedKits;
+			tooltip = $STR_WF_TOOLTIP_RespawnSavedKits;
+			//--- Existing entry point; opens directly on the Gear Presets tab (the dialog's
+			//--- own default tab on open - GUI_Menu_TeamV2.sqf:135-137). Same no-closeDialog
+			//--- rationale as CA_CustomiseAI_Button above.
+			onButtonClick = "createDialog 'RscMenu_TeamV2';";
+		};
 	};
 };
 
