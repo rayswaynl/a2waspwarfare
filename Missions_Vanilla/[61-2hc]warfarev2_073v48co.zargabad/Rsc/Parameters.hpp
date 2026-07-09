@@ -92,6 +92,12 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1;
 	};
+	class WFBE_C_STRUCTURES_RADIOTOWER {
+		title = "Vehicle Radio (Radio Tower)";
+		values[] = {0,1};
+		texts[] = {"Disabled","Enabled"};
+		default = 0;
+	};
 	class WFBE_C_BASE_AREA {
 		title = "$STR_WF_PARAMETER_BaseArea";
 		values[] = {0,1,2,3,4,5,6,7,8,9,10,12,14,16,18,20,22,24};
