@@ -322,4 +322,19 @@ switch (_request) do {
 			[_unit] joinSilent grpNull;
 		};
 	};
+	//--- GUER Barrel Bomb result (server -> caller). The server rejected the call-in (insufficient
+	//--- funds, or the kill-tier gate was not actually met server-side), so refund the client's
+	//--- optimistic cooldown stamp and tell the player why. (Note: the sibling "guer-mortar-result"
+	//--- case this originally mirrored was removed by fable/guer-mortar-dedup's owner de-dup
+	//--- decision - Action_GuerMortarStrike.sqf no longer exists - so only the barrel-bomb case
+	//--- survives the merge here.)
+	case "guer-helibomb-result": {
+		Private ["_ok","_msg"];
+		_ok  = _args select 0;
+		_msg = _args select 1;
+		if (!_ok) then {
+			player setVariable ["wfbe_helibomb_last", -9999];   //--- un-stamp: the drop never fired.
+		};
+		if (typeName _msg == "STRING" && {_msg != ""}) then {hint _msg};
+	};
 };

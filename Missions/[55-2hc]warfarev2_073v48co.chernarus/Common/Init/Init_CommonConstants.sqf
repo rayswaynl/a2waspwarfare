@@ -119,6 +119,22 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_GUER_MORTAR_SPREAD_TIERSTEP") then {WFBE_C_GUER_MORTAR_SPREAD_TIERSTEP = 4};	//--- spread tightens by this many m per GUER vehicle tier.
 	if (isNil "WFBE_C_GUER_MORTAR_SPREAD_MIN")      then {WFBE_C_GUER_MORTAR_SPREAD_MIN      = 8};	//--- floor on the +/- spread (m), however high the tier.
 
+	//--- GUER BARREL BOMB (fable/guer-barrelbomb): kill-gated, heli-delivered call-in triggered by a WF-scroll
+	//--- action at a friendly town center (NOT the Commissar Panel, NOT a Tactical Center - see
+	//--- GUER-BARRELBOMB-REVISED.md). Action_GuerHeliBombCall.sqf -> RequestSpecial -> Server_HandleSpecial
+	//--- "guer-heli-bomb" -> Support_GuerHeliDrop.sqf (KAT_GuerHeliDrop).
+	if (isNil "WFBE_C_GUER_HELIBOMB_ENABLE")        then {WFBE_C_GUER_HELIBOMB_ENABLE        = 0};    //--- master flag. 0 = OFF, byte-identical to HEAD.
+	if (isNil "WFBE_C_GUER_HELIBOMB_COST")          then {WFBE_C_GUER_HELIBOMB_COST          = 3000}; //--- $ debited from the caller's GUER team per call-in.
+	if (isNil "WFBE_C_GUER_HELIBOMB_COOLDOWN")      then {WFBE_C_GUER_HELIBOMB_COOLDOWN      = 900};  //--- seconds between calls (per player).
+	if (isNil "WFBE_C_GUER_HELIBOMB_RANGE")         then {WFBE_C_GUER_HELIBOMB_RANGE         = 1600}; //--- max map-click designation range from the caller (m). Wider than mortar (1200) - a heli asset, not a foot call-in.
+	if (isNil "WFBE_C_GUER_HELIBOMB_SHELLS")        then {WFBE_C_GUER_HELIBOMB_SHELLS        = 1};    //--- ordnance drops per call-in. 1 = a single barrel bomb, not a barrage.
+	if (isNil "WFBE_C_GUER_HELIBOMB_SPREAD")        then {WFBE_C_GUER_HELIBOMB_SPREAD        = 15};   //--- +/- 2D impact offset from the exact click (m).
+	if (isNil "WFBE_C_GUER_HELIBOMB_RADIUS")        then {WFBE_C_GUER_HELIBOMB_RADIUS        = 60};   //--- kill-credit snapshot/lethal radius (m).
+	if (isNil "WFBE_C_GUER_KILLTIER_HELIBOMB")      then {WFBE_C_GUER_KILLTIER_HELIBOMB      = 60};   //--- cumulative GUER kills to unlock. Midpoint of the CURRENT M113(50)-T55(80) band - NOT the stale design doc's "30" (that now collides with KILLTIER_1=30 after the 2026-07 kill-tier retune; see build notes).
+	if (isNil "WFBE_C_GUER_HELIDROP_CREDIT_KILLS")  then {WFBE_C_GUER_HELIDROP_CREDIT_KILLS  = 1};    //--- 1 = barrel-bomb kills advance WFBE_GUER_PLAYER_KILLS (owner: "Yes - count them"). Idempotent single-pass credit in Support_GuerHeliDrop.sqf; no wfbe_lasthitby stamp is used (would double-count via RequestOnUnitKilled's delayed-hit path).
+
+	//--- GUER improvised armour (#109, shipped default-OFF): graded non-AT damage reduction on resistance light vehicles (technicals); AT/HEAT/ATGM pass through. See Common_GuerArmor.sqf. Un-shelve by raising the base above 0.
+
 	//--- GUER improvised armour (#109, shipped default-OFF): graded non-AT damage reduction on resistance light vehicles (technicals); AT/HEAT/ATGM pass through. See Common_GuerArmor.sqf. Un-shelve by raising the base above 0.
 	if (isNil "WFBE_C_GUER_IMPROVISED_ARMOR") then {WFBE_C_GUER_IMPROVISED_ARMOR = 0};	//--- base % damage reduction vs non-AT fire (0 = whole feature OFF).
 	if (isNil "WFBE_C_GUER_IMPROVISED_ARMOR_TIERSTEP") then {WFBE_C_GUER_IMPROVISED_ARMOR_TIERSTEP = 4};	//--- extra % per WFBE_GUER_VEHICLE_TIER.

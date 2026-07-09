@@ -1487,4 +1487,52 @@ switch (_args select 0) do {
 		};
 	};
 
+	//--- GUER BARREL BOMB (fable/guer-barrelbomb): a GUER player at a friendly town center designated a drop
+	//--- point on the map (Action_GuerHeliBombCall.sqf already validated side + range client-side, mirroring
+	//--- the removed guer-mortar-strike case exactly); here the SERVER re-validates the kill-tier gate (never
+	//--- trust the client's addAction visibility check), debits cost, and spawns the heli via
+	//--- Support_GuerHeliDrop.sqf (KAT_GuerHeliDrop) - flight, arrival, release, kill-credit, and return are
+	//--- ALL handled there (this case only owns validation, cost, dispatch). (Note: the sibling
+	//--- "guer-mortar-strike" case this originally mirrored was removed by fable/guer-mortar-dedup's owner
+	//--- de-dup decision - Action_GuerMortarStrike.sqf no longer exists - so only the barrel-bomb case
+	//--- survives the merge here.)
+	case "guer-heli-bomb": {
+		Private ["_pos","_player","_team","_cost","_kills","_tier"];
+		if (count _args < 3) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: guer-heli-bomb received a short payload (%1 args), ignored.", count _args]] Call WFBE_CO_FNC_LogContent;
+		};
+		_pos    = _args select 1;
+		_player = _args select 2;
+		if ((missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 0]) > 0 && {typeName _pos == "ARRAY"} && {!isNull _player} && {side _player == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {  //--- sweep-fix: master-flag re-check server-side so the feature is truly inert when WFBE_C_GUER_HELIBOMB_ENABLE=0 (a client can send the request even with its addAction hidden).
+			//--- KILL-TIER GATE (server-authoritative re-check): the addAction's own condition string already
+			//--- hides this from a not-yet-unlocked player client-side, but that is a UX convenience, not a
+			//--- trust boundary - re-check here before any funds move.
+			_kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+			_tier  = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_HELIBOMB", 60];
+			if (_kills < _tier) exitWith {
+				if (WF_A2_Vanilla) then {
+					[getPlayerUID _player, "HandleSpecial", ["guer-helibomb-result", [false, Format ["Barrel Bomb needs %1 GUER kills - the cell isn't ready.", _tier]]]] Call WFBE_CO_FNC_SendToClients;
+				} else {
+					[_player, "HandleSpecial", ["guer-helibomb-result", [false, Format ["Barrel Bomb needs %1 GUER kills - the cell isn't ready.", _tier]]]] Call WFBE_CO_FNC_SendToClient;
+				};
+				["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER heli-bomb DENIED (kill-tier %1/%2) for [%3].", _kills, _tier, name _player]] Call WFBE_CO_FNC_LogContent;
+			};
+
+			//--- COST: debit the GUER player's team funds before dispatch.
+			_team = group _player;
+			_cost = missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_COST", 3000];
+			if (isNull _team || {(_team Call WFBE_CO_FNC_GetTeamFunds) < _cost}) exitWith {
+				if (WF_A2_Vanilla) then {
+					[getPlayerUID _player, "HandleSpecial", ["guer-helibomb-result", [false, Format ["Barrel Bomb needs $%1 - the cell is broke.", _cost]]]] Call WFBE_CO_FNC_SendToClients;
+				} else {
+					[_player, "HandleSpecial", ["guer-helibomb-result", [false, Format ["Barrel Bomb needs $%1 - the cell is broke.", _cost]]]] Call WFBE_CO_FNC_SendToClient;
+				};
+				["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER heli-bomb DENIED (insufficient funds) for [%1] team [%2].", name _player, _team]] Call WFBE_CO_FNC_LogContent;
+			};
+			[_team, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds;
+
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER Barrel Bomb called by [%1] at %2 (cost %3).", name _player, _pos, _cost]] Call WFBE_CO_FNC_LogContent;
+			[nil, resistance, _pos, _team] Spawn KAT_GuerHeliDrop;
+		};
+	};
 };
