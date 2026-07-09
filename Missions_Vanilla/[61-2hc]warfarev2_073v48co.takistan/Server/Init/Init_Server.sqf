@@ -1372,3 +1372,25 @@ if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 };
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
+
+//--- HC CIV cosmetic reslot safe-window (flag WFBE_C_HC_CIV_RESLOT, fable/hc-civ-reslot, GR-2026-07-03a).
+//--- When the flag is on, publish WFBE_HC_RESLOT_SAFE = (zero real players connected) on a 5s server loop so a
+//--- box-side HC controller can bounce-reslot the HCs onto CIVILIAN slots ONLY inside an empty-server window
+//--- (the browser then shows the HCs as CIV, never as an occupied WEST player slot). HCs are excluded by name,
+//--- so the count is real players only. Flag-off (default 0): this block never runs, no PV is ever published
+//--- and no worker spawns -> byte-identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_HC_CIV_RESLOT", 0]) > 0) then {
+	WFBE_HC_RESLOT_SAFE = false;
+	publicVariable "WFBE_HC_RESLOT_SAFE";
+	[] Spawn {
+		private ["_hcNames"];
+		_hcNames = ["HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3"];
+		while {true} do {
+			private ["_real"];
+			_real = { (isPlayer _x) && {!((name _x) in _hcNames)} } count allUnits;
+			WFBE_HC_RESLOT_SAFE = (_real == 0);
+			publicVariable "WFBE_HC_RESLOT_SAFE";
+			sleep 5;
+		};
+	};
+};
