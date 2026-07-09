@@ -503,7 +503,9 @@ if (_airMaxTotalP > 0) then {
 				if (isNil "_q") then {_q = []};
 				_q = _q + [_id];
 				_team setVariable ["wfbe_queue", _q];
-				[_id, _facObj, _toBuild, _side, _team, _isVeh] Spawn AIBuyUnit;
+				//--- N8 fix: pass the exact _priceCharged (post W15-discount) so Server_BuyUnit.sqf can refund
+				//--- the SAME amount on a createVehicle spawn failure instead of re-deriving list price.
+				[_id, _facObj, _toBuild, _side, _team, _isVeh, _priceCharged] Spawn AIBuyUnit;
 				_ordered = _ordered + [_toBuild]; //--- E7: record in-flight order so the selector counts it
 				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5, batch %6/%7 rich=%8).", _sideText, _team, _toBuild, _typeName, _price, _batchOrdered + 1, _batchCap, _richFlag]] Call WFBE_CO_FNC_AICOMLog;
 

@@ -169,8 +169,13 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_
 				if (!isNull _pilot) then {
 					_pilot moveInDriver _heli;
 					_heli flyInHeight 200;
-					_grp setBehaviour "COMBAT"; _grp setCombatMode "RED";
+					//--- N5 fix (MORE-FIXES-AND-IDEAS): AIPatrol (AI_Patrol.sqf:8-9) unconditionally resets
+					//--- the group to AWARE/YELLOW as its first act, so setting COMBAT/RED BEFORE calling it
+					//--- was immediately clobbered - the dispatched response aircraft silently downgraded to
+					//--- passive patrol. Reorder: lay the patrol first, THEN set the aggressive posture -
+					//--- same pattern already proven correct in this file's siblings (W17/W18, AI_Commander_Wildcard.sqf).
 					[_grp, _lanePos, 250] Call AIPatrol;
+					_grp setBehaviour "COMBAT"; _grp setCombatMode "RED";
 					_flights = _flights + [[_grp, _heli, _laneTown, time]];
 					_dispatched = 1;
 					//--- WATCHDOG (owner Q7 default + spec SS2.1 'flexible, re-orderable' behaviour): polls the side's
