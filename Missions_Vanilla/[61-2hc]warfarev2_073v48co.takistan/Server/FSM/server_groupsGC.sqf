@@ -101,8 +101,11 @@ while {!WFBE_GameOver} do {
 					} forEach _baseTeams;
 				};
 				_baseCap = switch (true) do {
-					case (_basePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  15]};
-					case (_basePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  5]};
+					//--- release-merge note: #952 (LOW/MID) and #963 (HIGH/FULL) are sequential patches to this
+					//--- same switch, not alternatives - see AI_Commander_Teams.sqf for the full explanation.
+					//--- Values match live Init_CommonConstants.sqf (:358-361): LOW=10, MID=7, HIGH=4, FULL=3.
+					case (_basePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  10]};
+					case (_basePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  7]};
 					case (_basePcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 4]};
 					default              {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 3]};
 				};

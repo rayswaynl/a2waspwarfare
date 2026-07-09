@@ -504,7 +504,7 @@ while {!gameOver} do {
 				//--- the side fields a fixed-wing PLANE in WFBE_<side>AIRCRAFTUNITS (helis don't count - this is a jet).
 				_w22Eligible   = false;
 				_w22PlaneClass = "";
-				if (!isNull _hq && {alive _hq} && {!isNil "_upgrades"} && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0} && {(count _owned) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])}) then {
+				if (!isNull _hq && {alive _hq} && {!isNil "_upgrades"} && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0} && {(count _owned) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 3])}) then {
 					_w22AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
 					{ if (_w22PlaneClass == "" && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Plane"}) then {_w22PlaneClass = _x} } forEach _w22AirList;
 					if (_w22PlaneClass != "") then {_w22Eligible = true};
@@ -685,7 +685,7 @@ while {!gameOver} do {
 					//--- W2: SUPPLY DROP — +1500 supply, capped.
 					case 2: {
 						_supply    = (_side) Call WFBE_CO_FNC_GetSideSupply;
-						_maxSupply = missionNamespace getVariable ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT", 99999];
+						_maxSupply = missionNamespace getVariable ["WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT", 40000];
 						if (isNil "_supply") then {_supply = 0};
 						_supplyGrant = 1500 min (_maxSupply - _supply);
 						if (_supplyGrant > 0) then {

@@ -64,7 +64,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tic
 		//--- INDEPENDENTLY of the vehicle tier, so rebuild the pool when ANY of {tier, M113 unlock, FOB availability}
 		//--- changes - a composite signature, not the old tier-only guard.
 		_kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
-		_m113On = _kills >= (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25]);
+		_m113On = _kills >= (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 50]);
 		_fobAvail = missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]];
 		_civDepotOn = (missionNamespace getVariable ["WFBE_C_GUER_CIVILIAN_DEPOT", 0]) > 0;
 		_sig = Format ["%1|%2|%3|%4", _tier, _m113On, _fobAvail, _civDepotOn];
