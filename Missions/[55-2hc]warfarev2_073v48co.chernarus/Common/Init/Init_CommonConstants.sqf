@@ -149,7 +149,7 @@ if (worldName == "Zargabad") then {
 		//--- (tier-0, like the truck VBIED), not kill-gated like the M113. TYPE is repointed CH->TK/ZG the same
 		//--- way VBIED_TYPE is (Root_GUE.sqf / Root_TKGUE.sqf / Root_GUE_PlayerOverlay.sqf).
 		if (isNil "WFBE_C_GUER_SUICIDE_BIKE") then {WFBE_C_GUER_SUICIDE_BIKE = 0};
-		if (isNil "WFBE_C_GUER_SUICIDE_BIKE_TYPE") then {WFBE_C_GUER_SUICIDE_BIKE_TYPE = "TT650_Civ"};
+		if (isNil "WFBE_C_GUER_SUICIDE_BIKE_TYPE") then {WFBE_C_GUER_SUICIDE_BIKE_TYPE = "TT650_Ins"};
 		//--- Ka-137 (Ka137_MG_PMC) flares: the recon heli ships with NO countermeasures. The GUER player's bought Ka-137
 		//--- gets a CMFlareLauncher + a flare magazine sized by the kill tier (more kills => more flares). NB: A2-OA stock
 		//--- has no 30Rnd flare mag, so the floor is 60Rnd (closest available); the count still increases 60->120->240

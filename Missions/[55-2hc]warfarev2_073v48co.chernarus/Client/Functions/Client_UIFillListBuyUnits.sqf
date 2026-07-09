@@ -182,8 +182,8 @@ _wlSupply   = missionNamespace getVariable [Format ["WFBE_%1SUPPLYTRUCKS", sideJ
 	};
 	//--- fable/guer-suicide-bike (flag WFBE_C_GUER_SUICIDE_BIKE, default 0): THIRD VBIED variant, a fast
 	//--- small suicide motorcycle. Same red weapon styling as the hilux/M113, distinct tag. Keyed off live
-	//--- WFBE_C_GUER_SUICIDE_BIKE_TYPE (TT650_Civ CH / Old_moto_TK_Civ_EP1 TK/ZG).
-	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0} && {_x == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Civ"])}) then {
+	//--- WFBE_C_GUER_SUICIDE_BIKE_TYPE (TT650_Ins CH / TT650_TK_CIV_EP1 TK/ZG).
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0} && {_x == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])}) then {
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.2, 0.2, 1.0]];
 		lnbSetText  [_listBox,[_i,1],_description + " [VBIED - Suicide Bike]"];
 	};

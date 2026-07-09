@@ -846,7 +846,7 @@ _IDCS = _IDCS - [_currentIDC];
 						hintSilent parseText "VBIED (APC) - an unarmoured-crew but TRACKED suicide M113 that drives at roughly DOUBLE its normal top speed. <br/> <br/>Same one-shot use as the truck VBIED: drive into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. Its armour + speed let it punch through to a target the soft truck can't reach. Unlocked by GUER kills.";
 					};
 					//--- fable/guer-suicide-bike (flag WFBE_C_GUER_SUICIDE_BIKE, default 0): THIRD VBIED variant, a fast small suicide motorcycle.
-					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0} && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Civ"])}) then {
+					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0} && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])}) then {
 						hintSilent parseText "VBIED (Bike) - a fast, small suicide motorcycle. <br/> <br/>Buy it, ride it into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. Its small silhouette and speed let it slip through where the truck can't. Same one-shot use: rider + bike are lost, and your GUER team is paid for the kills.";
 					};
 					

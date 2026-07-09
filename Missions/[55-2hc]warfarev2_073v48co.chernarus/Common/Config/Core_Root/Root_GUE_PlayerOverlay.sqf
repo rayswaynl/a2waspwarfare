@@ -52,7 +52,7 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_CIVILIAN_DEPOT", 0]) > 0) then {
 	_seedPool = _seedPool + ["TT650_Civ","Tractor","SkodaRed","car_sedan","UralCivil"];
 };
 if ((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) then { //--- fable/guer-suicide-bike: first-tick seed (CH default type; TK/ZG corrected by the tier-loop below, same as the hilux/datsun VBIED already is).
-	_seedPool = _seedPool + [missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Civ"]];
+	_seedPool = _seedPool + [missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"]];
 };
 missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tick synchronous seed (tier loop below re-sets on tier change). BTR-40 is tier-0 (always available) as of 2026-07-01.
 [] spawn {
@@ -81,7 +81,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tic
 				"Ka137_MG_PMC"   //--- armed recon heli, pilot-fired; EASA AG/AA loadouts at a service point (see 8AM note)
 			];
 			if (_civDepotOn) then {_pool = _pool + ["TT650_Civ","Tractor","SkodaRed","car_sedan","UralCivil"]};
-			if ((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) then {_pool = _pool + [missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Civ"]]}; //--- fable/guer-suicide-bike.
+			if ((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) then {_pool = _pool + [missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"]]}; //--- fable/guer-suicide-bike.
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_Gue","T34_TK_GUE_EP1"]};
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1"]}; //--- BTR-40 moved to the tier-0 base pool (2026-07-01); T-55 stays tier-2.
 			if (_tier >= 3) then {_pool = _pool + ["T72_Gue","BMP2_Gue"]};
@@ -90,7 +90,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tic
 			//--- TK VBIED uses the datsun covered civilian pickup; repoint WFBE_C_GUER_VBIED_TYPE so the
 			//--- client detonate-action gate + server blast guard both match the TK truck (Chernarus keeps the hilux).
 			WFBE_C_GUER_VBIED_TYPE = "datsun1_civil_2_covered";
-			WFBE_C_GUER_SUICIDE_BIKE_TYPE = "Old_moto_TK_Civ_EP1"; //--- fable/guer-suicide-bike: TK/ZG repoint (mirrors the VBIED_TYPE repoint above).
+			WFBE_C_GUER_SUICIDE_BIKE_TYPE = "TT650_TK_CIV_EP1"; //--- fable/guer-suicide-bike: TK/ZG repoint (mirrors the VBIED_TYPE repoint above).
 			_pool = [
 				"TK_GUE_Soldier_EP1","TK_GUE_Bonesetter_EP1","TK_GUE_Soldier_MG_EP1","TK_GUE_Soldier_AT_EP1","TK_GUE_Soldier_AA_EP1","TK_GUE_Soldier_Sniper_EP1",
 				"Offroad_DSHKM_TK_GUE_EP1","Pickup_PK_TK_GUE_EP1","V3S_TK_GUE_EP1",
@@ -99,7 +99,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tic
 				"Ka137_MG_PMC"
 			];
 			if (_civDepotOn) then {_pool = _pool + ["Old_bike_TK_CIV_EP1","Old_moto_TK_Civ_EP1","Volha_1_TK_CIV_EP1","LandRover_TK_CIV_EP1","Ural_TK_CIV_EP1"]};
-			if ((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) then {_pool = _pool + [missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "Old_moto_TK_Civ_EP1"]]}; //--- fable/guer-suicide-bike.
+			if ((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) then {_pool = _pool + [missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_TK_CIV_EP1"]]}; //--- fable/guer-suicide-bike.
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_TK_GUE_EP1","T34_TK_GUE_EP1"]};
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1"]}; //--- BTR-40 (MG) moved to the tier-0 base pool (2026-07-01); T-55 stays tier-2.
 			if (_tier >= 3) then {_pool = _pool + ["Ural_ZU23_TK_GUE_EP1"]};
