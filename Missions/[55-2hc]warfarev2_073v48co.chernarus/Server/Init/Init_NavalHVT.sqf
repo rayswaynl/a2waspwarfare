@@ -70,6 +70,96 @@ WFBE_NavalHVT_SpawnProp = {
 };
 
 //------------------------------------------------------------------------------------
+//--- fable/naval-cap-variety (owner 2026-07-08): SKIRMISH outcome helper - spawns a single WEST/EAST
+//--- intruder jet near a carrier for the rare additive "duel" spectacle, self-cleans on a lifetime
+//--- ceiling or intruder death. Called `[_loc, _pos] spawn WFBE_NavalCap_FNC_SpawnSkirmish` from the
+//--- CAP arm block below; the caller increments WFBE_NAVAL_SKIRMISH_ACTIVE BEFORE spawning (no yield
+//--- point between that read and write, so it is race-safe against the other 2 carrier threads under
+//--- A2's cooperative SQF scheduler); this function decrements it on EVERY exit path so a create
+//--- failure can never leak the concurrency slot. Mirrors Server_AmbientSkirmish.sqf's spawn/duel/
+//--- self-clean shape (own group, own registry - no coupling to WFBE_AMBIENT_SKIRMISH_RUNNING, which
+//--- gates a separate, ground-only feature). A2 OA 1.64 safe: no selectRandom/pushBack/findIf/params;
+//--- select floor(random count), isNull/alive guards throughout.
+//------------------------------------------------------------------------------------
+WFBE_NavalCap_FNC_SpawnSkirmish = {
+	private ["_loc","_pos","_side","_sideStr","_classes","_cls","_ang","_spawnPos","_intruderGrp","_intruder","_pilotClass","_pilot","_lifetime","_maxWait","_reason"];
+	_loc = _this select 0;
+	_pos = _this select 1;
+
+	_side    = if ((random 1) < 0.5) then {west} else {east};
+	_sideStr = if (_side == west) then {"WEST"} else {"EAST"};
+	_classes = if (_side == west)
+		then {missionNamespace getVariable ["WFBE_C_NAVAL_SKIRMISH_WEST_CLASSES", ["A10","A10_US_EP1","L159_ACR"]]}
+		else {missionNamespace getVariable ["WFBE_C_NAVAL_SKIRMISH_EAST_CLASSES", ["Su25_TK_EP1","Su25_Ins","ibrPRACS_MiG21mol"]]};
+	_lifetime = missionNamespace getVariable ["WFBE_C_NAVAL_SKIRMISH_LIFETIME", 240];
+
+	if ((count _classes) < 1) exitWith {
+		missionNamespace setVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", ((missionNamespace getVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", 1]) - 1) max 0];
+		diag_log Format ["NAVALCAP|SKIRMISH|RESOLVE|carrier=%1|reason=no_classes|elapsed=0", _loc getVariable "name"];
+	};
+
+	_ang      = random 360;
+	_spawnPos = [(_pos select 0) + 1200 * (sin _ang), (_pos select 1) + 1200 * (cos _ang), 650];
+	_cls      = _classes select (floor (random (count _classes)));
+
+	_intruderGrp = [_side, "naval-cap-skirmish"] Call WFBE_CO_FNC_CreateGroup;
+	if (isNull _intruderGrp) exitWith {
+		missionNamespace setVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", ((missionNamespace getVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", 1]) - 1) max 0];
+		diag_log Format ["NAVALCAP|SKIRMISH|RESOLVE|carrier=%1|reason=no_group|elapsed=0", _loc getVariable "name"];
+	};
+
+	//--- Naval CAP's own idiom (Init_NavalHVT.sqf L39 arm block above), NOT AmbientSkirmish's ground
+	//--- _spawnGroup: airborne FLY special with an explicit direction so the wrapper's own anti-stall-dive
+	//--- setVelocity applies (Common_CreateVehicle.sqf: the "FLY" branch sets forward velocity from _direction).
+	_intruder = [_cls, _spawnPos, _side, _ang, false, true, true, "FLY"] Call WFBE_CO_FNC_CreateVehicle;
+	if (isNull _intruder) exitWith {
+		deleteGroup _intruderGrp;
+		missionNamespace setVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", ((missionNamespace getVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", 1]) - 1) max 0];
+		diag_log Format ["NAVALCAP|SKIRMISH|RESOLVE|carrier=%1|reason=create_failed|elapsed=0", _loc getVariable "name"];
+	};
+	_intruder flyInHeight 550;
+
+	_pilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideStr], "USMC_Soldier_Pilot"];
+	_pilot = [_pilotClass, _intruderGrp, _spawnPos, _side] Call WFBE_CO_FNC_CreateUnit;
+	if (isNull _pilot) exitWith {
+		if (!isNull _intruder && {({isPlayer _x} count (crew _intruder)) == 0}) then {deleteVehicle _intruder};
+		deleteGroup _intruderGrp;
+		missionNamespace setVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", ((missionNamespace getVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", 1]) - 1) max 0];
+		diag_log Format ["NAVALCAP|SKIRMISH|RESOLVE|carrier=%1|reason=no_pilot|elapsed=0", _loc getVariable "name"];
+	};
+	_pilot moveInDriver _intruder;
+
+	_intruderGrp setVariable ["wfbe_naval_cap_skirmish", true, true];
+	_intruder setVariable ["wfbe_naval_cap_skirmish", true, true];
+	_intruderGrp setBehaviour "COMBAT";
+	_intruderGrp setCombatMode "RED";
+	_intruderGrp setSpeedMode "FULL";
+	_pilot doMove [_pos select 0, _pos select 1, 0];
+
+	["INFORMATION", Format ["Init_NavalHVT.sqf : NAVALCAP SKIRMISH intruder armed at %1 (%2 %3).", _loc getVariable "name", _sideStr, _cls]] Call WFBE_CO_FNC_LogContent;
+	diag_log Format ["NAVALCAP|SKIRMISH|SPAWN|carrier=%1|side=%2|class=%3|baseMode=%4|activeCount=%5", _loc getVariable "name", _sideStr, _cls, missionNamespace getVariable ["WFBE_C_NAVAL_SKIRMISH_BASE_MODE", "MI24"], missionNamespace getVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", 1]];
+
+	//--- Self-clean: mirrors Server_AmbientSkirmish.sqf's lifetime sub-thread (its spawn block ~L229-248).
+	//--- Hard ceiling regardless of duel outcome; resolves early once the intruder is dead. Player-safe
+	//--- teardown (B66 rule, Server_GuerAirDef.sqf:220-227) even though an AI intruder is never expected
+	//--- to be boarded here.
+	_maxWait = 0;
+	waitUntil {
+		sleep 1;
+		_maxWait = _maxWait + 1;
+		(isNull _intruder) || {!(alive _intruder)} || {_maxWait >= _lifetime}
+	};
+
+	_reason = if (_maxWait >= _lifetime) then {"lifetime"} else {"intruder_killed"};
+	if (!isNull _intruder && {({isPlayer _x} count (crew _intruder)) == 0}) then { {deleteVehicle _x} forEach (crew _intruder); deleteVehicle _intruder; };
+	if (!isNull _intruderGrp) then { {if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _intruderGrp); deleteGroup _intruderGrp; };
+	missionNamespace setVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", ((missionNamespace getVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", 1]) - 1) max 0];
+
+	diag_log Format ["NAVALCAP|SKIRMISH|RESOLVE|carrier=%1|reason=%2|elapsed=%3", _loc getVariable "name", _reason, _maxWait];
+	["INFORMATION", Format ["Init_NavalHVT.sqf : NAVALCAP SKIRMISH resolved at %1 (reason=%2, elapsed=%3s).", _loc getVariable "name", _reason, _maxWait]] Call WFBE_CO_FNC_LogContent;
+};
+
+//------------------------------------------------------------------------------------
 //--- A2's LHD is a set of part-objects placed at the SAME world point; each model holds the FULL
 //--- ~250 m carrier geometry internally (rendering only its own section). Git-confirmed: the old code
 //--- SPREAD them fore-to-aft (22 m apart) and that showed SEVERAL STACKED CARRIERS - so [0,0,0] is
@@ -670,7 +760,9 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 		private ["_loc","_pos","_sideID","_capGrp","_hind","_biplane","_hindPilot","_biplPilot","_armed",
 		         "_inactiveTime","_now","_detected","_players","_anyNear","_orbitAng","_dummy","_x",
 		         "_threeHinds","_hind2","_hind3","_hindPilot2","_hindPilot3","_capL39","_jet1","_jet2","_jetPilot1","_jetPilot2",
-		         "_routeI","_route","_lap","_circuitTimeout","_circuitPts","_cMid","_cOuter","_airfieldPts","_legPt"];
+		         "_routeI","_route","_lap","_circuitTimeout","_circuitPts","_cMid","_cOuter","_airfieldPts","_legPt",
+		         "_navMode","_wMi24","_wL39","_wSux","_wSkr","_wTotal","_navRoll","_capMode",
+		         "_navSkirmishBase","_navSkirmishMax","_navSkirmishActive"];
 		_loc  = _this select 0;
 		_armed = false;
 		_inactiveTime = 0;
@@ -724,7 +816,51 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						_armed = true;
 						_capGrp = createGroup resistance;
 
-						if (_capL39) then {
+						_navMode = missionNamespace getVariable ["WFBE_C_NAVAL_CAP_MODE", 1]; //--- fable/naval-cap-variety: 0=legacy CAP_L39/THREE_HINDS chain, >0=weighted roll (default).
+						if (_navMode > 0) then {
+							_wMi24 = missionNamespace getVariable ["WFBE_C_NAVAL_CAP_WEIGHT_MI24", 45];
+							_wL39  = missionNamespace getVariable ["WFBE_C_NAVAL_CAP_WEIGHT_L39", 40];
+							_wSux  = missionNamespace getVariable ["WFBE_C_NAVAL_CAP_WEIGHT_SUX", 8];
+							_wSkr  = missionNamespace getVariable ["WFBE_C_NAVAL_CAP_WEIGHT_SKIRMISH", 7];
+							_wTotal = _wMi24 + _wL39 + _wSux + _wSkr;
+							if (_wTotal <= 0) then {_wTotal = 1; _wMi24 = 1; _wL39 = 0; _wSux = 0; _wSkr = 0}; //--- degenerate-config guard: never divide by zero, self-heal to Mi24-only.
+							_navRoll = random _wTotal;
+							_capMode = "MI24";
+							if (_navRoll >= _wMi24)                 then {_capMode = "L39"};
+							if (_navRoll >= _wMi24 + _wL39)         then {_capMode = "SUX"};
+							if (_navRoll >= _wMi24 + _wL39 + _wSux) then {_capMode = "SKIRMISH"};
+						} else {
+							//--- MODE=0: byte-identical legacy precedence (CAP_L39 wins over THREE_HINDS; both read once
+							//--- at thread start, line 680-681 - unchanged, never re-rolled, matching today's live behaviour).
+							_capMode = "LEGACY";
+							if (_threeHinds) then {_capMode = "MI24"};
+							if (_capL39) then {_capMode = "L39"};
+						};
+
+						//--- SKIRMISH is additive spectacle, not a CAP replacement (owner: never leave the carrier bare for
+						//--- a rare event) - resolve to the tunable base composition, then launch the intruder as its OWN
+						//--- self-clean sub-thread (own group, own registry, own cooldown - WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE)
+						//--- only while a mission-wide slot is free, so a saturated cap falls back to the base CAP silently
+						//--- instead of dropping the arm event.
+						if (_capMode == "SKIRMISH") then {
+							_navSkirmishBase = missionNamespace getVariable ["WFBE_C_NAVAL_SKIRMISH_BASE_MODE", "MI24"];
+							if !(_navSkirmishBase in ["MI24","L39","SUX"]) then {_navSkirmishBase = "MI24"};
+							_navSkirmishMax = missionNamespace getVariable ["WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE", 1];
+							_navSkirmishActive = missionNamespace getVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", 0];
+							if (_navSkirmishActive < _navSkirmishMax) then {
+								missionNamespace setVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", _navSkirmishActive + 1];
+								[_loc, _pos] spawn WFBE_NavalCap_FNC_SpawnSkirmish;
+								diag_log Format ["NAVALCAP|SKIRMISH|SPAWN|carrier=%1|baseMode=%2|activeCount=%3", _loc getVariable "name", _navSkirmishBase, _navSkirmishActive + 1];
+							} else {
+								diag_log Format ["NAVALCAP|SKIRMISH|SKIP|carrier=%1|reason=cap_saturated|activeCount=%2", _loc getVariable "name", _navSkirmishActive];
+							};
+							_capMode = _navSkirmishBase;
+						};
+
+						diag_log Format ["NAVALCAP|ROLL|carrier=%1|navMode=%2|weights=mi24:%3,l39:%4,sux:%5,skirmish:%6|picked=%7", _loc getVariable "name", _navMode, missionNamespace getVariable ["WFBE_C_NAVAL_CAP_WEIGHT_MI24", 45], missionNamespace getVariable ["WFBE_C_NAVAL_CAP_WEIGHT_L39", 40], missionNamespace getVariable ["WFBE_C_NAVAL_CAP_WEIGHT_SUX", 8], missionNamespace getVariable ["WFBE_C_NAVAL_CAP_WEIGHT_SKIRMISH", 7], _capMode];
+						["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP roll at %1 (mode=%2, picked=%3).", _loc getVariable "name", _navMode, _capMode]] Call WFBE_CO_FNC_LogContent;
+
+						if (_capMode == "L39") then {
 							//--- L39 CAP path (WFBE_C_NAVAL_CAP_L39 > 0): 2x L39_TK_EP1 jets.
 							//--- Supersedes THREE_HINDS and Mi24/An2 when both flags are >0.
 							//--- Fixed-wing MUST have setVelocity set at spawn - zero velocity
@@ -776,7 +912,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 
 							["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (2x L39_TK_EP1, easa_random=%2).", _loc getVariable "name", (missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0])]] Call WFBE_CO_FNC_LogContent;
 						} else {
-							if (_threeHinds) then {
+							if (_capMode == "MI24") then {
 								//--- THREE-HIND path (WFBE_C_NAVAL_CAP_THREE_HINDS > 0): no An2.
 								_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
 								_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
@@ -809,6 +945,52 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 
 								["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (3x Mi-24).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
 							} else {
+								if (_capMode == "SUX") then {
+									//--- SUX path (weighted-roll rare outcome, ~8%): 1x Su34, single pilot. No verified 2-seat/WSO
+									//--- crew handling exists in-repo for Su34 (it sits in the single-pilot tier-5 class list
+									//--- alongside A10/AV8B/L39_TK_EP1, never paired with gunner-seat logic) - mirrors the L39
+									//--- single-pilot idiom exactly. Su35 does NOT exist in this A2:OA install (zero repo
+									//--- matches) - Su34 is the only verified rare-heavyweight jet; never substitute Su35.
+									//--- Aliased into _jet1/_jetPilot1 so it rides the EXISTING L39 circuit orbit/despawn code
+									//--- verbatim (see the orbit/despawn dispatch below); _jet2/_jetPilot2 stay objNull (already
+									//--- the thread-start default, line 677) - the circuit code is already null-safe on _jet2,
+									//--- so a single-ship SUX composition needs no new guards there.
+									//--- Fixed-wing MUST have setVelocity set at spawn - zero velocity causes an immediate
+									//--- stall-dive on A2 OA (no lift at t=0), same as the L39/An2 spawns above.
+									_jetDir = random 360;
+
+									_jet1 = createVehicle ["Su34", [(_pos select 0) + 300 * (sin _jetDir), (_pos select 1) + 300 * (cos _jetDir), 700], [], 0, "FLY"];
+									_jet1 setPosASL [(_pos select 0) + 300 * (sin _jetDir), (_pos select 1) + 300 * (cos _jetDir), 700];
+									_jet1 setDir _jetDir;
+									_jet1 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
+									_jet1 flyInHeight 600;
+									_jetPilot1 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+									if (isNil "_jetPilot1") then {_jetPilot1 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
+									_jetPilot1 moveInDriver _jet1;
+									_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 600]; //--- fable/l39-circuit idiom: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
+
+									_capGrp setBehaviour "AWARE";
+									_capGrp setCombatMode "RED";
+									_capGrp setSpeedMode "FULL";
+
+									//--- EASA randomisation: stamp wfbe_naval_easa_pending on hull (same opt-in as L39; silently
+									//--- no-ops if Su34 is not in WFBE_EASA_Vehicles).
+									if ((missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0]) > 0) then {
+										_easaVehi = missionNamespace getVariable ["WFBE_EASA_Vehicles", []];
+										_easaIdx = _easaVehi find "Su34";
+										if (_easaIdx >= 0) then {
+											_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaIdx;
+											_easaRandIdx = floor (random (count _easaLoadouts));
+											_jet1 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
+										};
+									};
+
+									//--- Tag as CAP so GC/groupsGC don't reap it.
+									_capGrp setVariable ["wfbe_naval_cap", true, true];
+									_jet1 setVariable ["wfbe_naval_cap", true, true];
+
+									["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (1x Su34, rare).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+								} else {
 								//--- STANDARD path (WFBE_C_NAVAL_CAP_L39=0, THREE_HINDS=0): Hind + An2.
 								//--- naval-air-spawn-easa FIX: An2 is fixed-wing. createVehicle ["FLY"]
 								//---   gives zero velocity at t=0 -> stall-dive. Set forward speed.
@@ -838,13 +1020,14 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_biplane setVariable ["wfbe_naval_cap", true, true];
 
 								["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (Hind + An2, velocity-fixed).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+								}; //--- closes the SUX-vs-legacy else (fable/naval-cap-variety)
 							};
 						};
 					};
 				} else {
 					//--- CAP is active — orbit the asset.
 					_orbitAng = _orbitAng + 8;
-					if (_capL39) then {
+					if (_capMode == "L39" || _capMode == "SUX") then {
 						//--- fable/l39-circuit: carrier-circuit sea patrol (+ airfield leg every 3rd lap). Explicit Z.
 						if (_routeI >= count _route) then {
 							_lap = _lap + 1;
@@ -864,7 +1047,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						if (alive _jet1) then {_jetPilot1 doMove _legPt};
 						if (alive _jet2) then {_jetPilot2 doMove [(_legPt select 0) + 300, (_legPt select 1) + 300, _legPt select 2]};
 					} else {
-						if (_threeHinds) then {
+						if (_capMode == "MI24") then {
 							if (alive _hind)  then {_hindPilot  doMove [(_pos select 0) + 400 * sin _orbitAng,         (_pos select 1) + 400 * cos _orbitAng, 0]};
 							if (alive _hind2) then {_hindPilot2 doMove [(_pos select 0) + 400 * sin (_orbitAng + 120), (_pos select 1) + 400 * cos (_orbitAng + 120), 0]};
 							if (alive _hind3) then {_hindPilot3 doMove [(_pos select 0) + 400 * sin (_orbitAng + 240), (_pos select 1) + 400 * cos (_orbitAng + 240), 0]};
@@ -887,11 +1070,11 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						//--- Despawn CAP.
 						_armed = false;
 						_inactiveTime = 0;
-						if (_capL39) then {
+						if (_capMode == "L39" || _capMode == "SUX") then {
 							if (!isNull _jet1 && alive _jet1) then { {deleteVehicle _x} forEach (crew _jet1); deleteVehicle _jet1 };
 							if (!isNull _jet2 && alive _jet2) then { {deleteVehicle _x} forEach (crew _jet2); deleteVehicle _jet2 };
 						} else {
-							if (_threeHinds) then {
+							if (_capMode == "MI24") then {
 								if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x} forEach (crew _hind);  deleteVehicle _hind };
 								if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x} forEach (crew _hind2); deleteVehicle _hind2 };
 								if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x} forEach (crew _hind3); deleteVehicle _hind3 };
