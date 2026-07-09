@@ -54,10 +54,10 @@ _enHQ      = _snap select WFBE_SNAP_ENHQ;
 _enHQPos   = _snap select WFBE_SNAP_ENHQPOS;
 _enHQAlive = _snap select WFBE_SNAP_ENHQALIVE;
 
-_domRatio   = missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_DOM_RATIO", 1.5];
-_abortRatio = missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ABORT_RATIO", 0.9];
-_maxEnTowns = missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS", 5];
-_armTicks   = missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ARM_TICKS", 3];
+_domRatio   = missionNamespace getVariable [format ["WFBE_C_AICOM2_DECAP_DOM_RATIO_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_DOM_RATIO", 1.5]];
+_abortRatio = missionNamespace getVariable [format ["WFBE_C_AICOM2_DECAP_ABORT_RATIO_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ABORT_RATIO", 0.9]];
+_maxEnTowns = missionNamespace getVariable [format ["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS", 5]];
+_armTicks   = missionNamespace getVariable [format ["WFBE_C_AICOM2_DECAP_ARM_TICKS_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ARM_TICKS", 3]];
 _minCommit  = missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_MIN_COMMIT", 300];
 _senseRadius   = missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_SENSE_RADIUS", 3000];
 _senseInterval = missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_SENSE_INTERVAL", 4];
