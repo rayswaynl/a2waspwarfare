@@ -1897,6 +1897,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil 'WFBE_C_STRUCTURES_MAX_Bank') then {WFBE_C_STRUCTURES_MAX_Bank = 1};
 	if (isNil 'WFBE_C_STRUCTURES_MAX_CBRadar') then {WFBE_C_STRUCTURES_MAX_CBRadar = 1};
 	if (isNil 'WFBE_C_STRUCTURES_MAX_AARadar') then {WFBE_C_STRUCTURES_MAX_AARadar = 1};
+	if (isNil 'WFBE_C_STRUCTURES_RADAR_PENDING_WINDOW') then {WFBE_C_STRUCTURES_RADAR_PENDING_WINDOW = 180}; //--- fable/ew-economy: CBRadar/AARadar one-per-side reservation window (s) to close the duplicate-build race (mirrors WFBE_C_ECONOMY_BANK_PENDING_WINDOW above), RequestStructure.sqf.
 
 //--- Apply a towns unit coeficient.
 	WFBE_C_TOWNS_UNITS_COEF = switch (WFBE_C_TOWNS_OCCUPATION) do {case 1: {1}; case 2: {1.5}; case 3: {2}; case 4: {2.5}; default {1}};

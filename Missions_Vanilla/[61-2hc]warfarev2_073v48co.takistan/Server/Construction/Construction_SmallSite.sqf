@@ -120,6 +120,10 @@ if (_rlType == "CBRadar" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_CO
 	_cbrRegistry = _cbrRegistry + [_site];
 	missionNamespace setVariable [_cbrKey, _cbrRegistry];
 	["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] CBRadar registered. Registry size: %2.", str _side, count _cbrRegistry]] Call WFBE_CO_FNC_LogContent;
+	//--- fable/ew-economy: clear the synchronous pending reservation set in RequestStructure.sqf
+	//--- now that the real CBRadar is registered (the alive-scan guard there takes over from here).
+	//--- Mirrors the Bank pending-clear idiom (Construction_MediumSite.sqf).
+	missionNamespace setVariable [Format ["WFBE_%1_CBRadar_PENDING", str _side], -1e11];
 };
 
 //--- Radio Tower: register in per-side registry + flip the public alive-flag the client-side radio manager gates on.
