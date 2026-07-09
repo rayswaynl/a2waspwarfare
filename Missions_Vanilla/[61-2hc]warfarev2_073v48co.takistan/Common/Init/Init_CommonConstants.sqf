@@ -950,7 +950,7 @@ if (worldName == "Zargabad") then {
 	//--- AICOM FORWARD SPAWN-BEACON (Approach A, claude-gaming 2026-06-29): the commander parks a forward AMBULANCE
 	//--- (already a wired mobile respawn via WFBE_%1AMBULANCES) BEHIND the spearhead town so AI + humans get a forward
 	//--- spawn line that follows the front. DEFAULT-OFF / INERT (the supervisor hook only calls the worker when ENABLE>0).
-	if (isNil "WFBE_C_AICOM_SPAWNBEACON_ENABLE")   then {WFBE_C_AICOM_SPAWNBEACON_ENABLE   = 1};    //--- 0 = INERT (feature fully off), 1 = arm the forward-ambulance beacon worker.
+	if (isNil "WFBE_C_AICOM_SPAWNBEACON_ENABLE")   then {WFBE_C_AICOM_SPAWNBEACON_ENABLE   = 0};    //--- 0 = INERT (feature fully off), 1 = arm the forward-ambulance beacon worker.
 	if (isNil "WFBE_C_AICOM_SPAWNBEACON_INTERVAL") then {WFBE_C_AICOM_SPAWNBEACON_INTERVAL = 120};  //--- s: worker tick cadence (self-heal / re-stand check).
 	if (isNil "WFBE_C_AICOM_SPAWNBEACON_MAX")      then {WFBE_C_AICOM_SPAWNBEACON_MAX      = 1};    //--- beacons ALIVE at once per AI commander.
 	if (isNil "WFBE_C_AICOM_SPAWNBEACON_STANDOFF") then {WFBE_C_AICOM_SPAWNBEACON_STANDOFF = 300};  //--- m behind the spearhead town (toward rear HQ) so it sits in safe rear of the front.

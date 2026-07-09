@@ -14,7 +14,7 @@ _price = if (count _this > 6) then {_this select 6} else {0};
 _sideText = str _side;
 
 if (!(alive _building)||(isPlayer (leader _team))) exitWith {
-	_gbq = (_team getVariable "wfbe_queue") - _id;
+	_gbq = (_team getVariable "wfbe_queue") - [_id];
 	_team setVariable ["wfbe_queue",_gbq];
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
 	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
@@ -158,7 +158,7 @@ while {(count _queu == 0) || {(_id select 0) != (_queu select 0)}} do {  //--- q
 	//--- subtraction (removing the same token twice is a no-op), so the double pass cannot double-count.
 	//--- Client_BuildUnit.sqf's NUMERIC counters were not safe this way - see its cmdcon44-g comments.
 	if (!(alive _building)||(isNull _building)||(isPlayer (leader _team))) exitWith {
-		_gbq = (_team getVariable "wfbe_queue") - _id;
+		_gbq = (_team getVariable "wfbe_queue") - [_id];
 		_team setVariable ["wfbe_queue",_gbq];
 		_queu = _building getVariable "queu";
 		if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]};
@@ -189,7 +189,7 @@ _queu = _queu - [_id select 0];
 _building setVariable ["queu",_queu,true];
 
 if (!(alive _building)||(isPlayer (leader _team))) exitWith {
-	_gbq = (_team getVariable "wfbe_queue") - _id;
+	_gbq = (_team getVariable "wfbe_queue") - [_id];
 	_team setVariable ["wfbe_queue",_gbq];
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
 	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
@@ -383,5 +383,5 @@ _vehicle allowCrewInImmobile true;
 	[_sideText,'UnitsCreated',_built] Call UpdateStatistics;
 };
 
-_gbq = (_team getVariable "wfbe_queue") - _id;
+_gbq = (_team getVariable "wfbe_queue") - [_id];
 _team setVariable ["wfbe_queue",_gbq];

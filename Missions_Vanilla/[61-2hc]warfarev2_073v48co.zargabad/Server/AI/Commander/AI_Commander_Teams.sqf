@@ -845,7 +845,7 @@ if (count _live > 0) then {
 		if (!isNull _garGrp) then {_d4Target = [_garGrp, "wfbe_aicom_alloc_target", objNull] Call WFBE_CO_FNC_GroupGetBool};
 		//--- Fallback: first non-null alloc_target across all founded teams.
 		if (isNull _d4Target) then {
-			{ if (!isNull (_x getVariable ["wfbe_aicom_alloc_target", objNull])) then { _d4Target = _x getVariable ["wfbe_aicom_alloc_target", objNull] } } forEach _teams;
+			{ if (!isNull ([_x, "wfbe_aicom_alloc_target", objNull] Call WFBE_CO_FNC_GroupGetBool)) then { _d4Target = [_x, "wfbe_aicom_alloc_target", objNull] Call WFBE_CO_FNC_GroupGetBool } } forEach _teams;
 		};
 		if (!isNull _d4Target) then {
 			_d4Camps   = count (_d4Target getVariable ["camps", []]);
