@@ -733,6 +733,21 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM2_ALLOCATE_ENABLE") then {WFBE_C_AICOM2_ALLOCATE_ENABLE = 1};  //--- v2try (Ray 2026-06-27): brain ON for the live try-out. Rollback = set back to 0 (legacy targeting, instant).
 	if (isNil "WFBE_C_AICOM2_FIST_TOWNS")      then {WFBE_C_AICOM2_FIST_TOWNS      = 2};  //--- front towns the side concentrates on at once. cmdcon41 SPREAD: 1 -> 2 (1 = STEAMROLLER caused the live 7-teams-on-one-town dogpile; 2-3 = spread front, pairs with WFBE_C_AICOM2_FIST_PERTOWN).
 	if (isNil "WFBE_C_AICOM2_HARASS_TEAMS")    then {WFBE_C_AICOM2_HARASS_TEAMS    = 1};  //--- M2: how many (mounted) teams peel off the fist to raid the enemy's deepest REAR town (supply hub). 0 = pure concentration.
+	//--- FIX C: DOMINANT-SIDE PRESS FLOOR, V2 (fable, GR-2026-07-08a; design ASSAULT-DYNTIMEOUT-DESIGN.md + ADDENDUM 1).
+	//--- Re-pointed from the original V1 Strategy.sqf DOMINANT_PRESS draft: V2's Allocator overwrites V1's
+	//--- wfbe_aicom_targets almost every tick, so a Strategy-side floor never reaches live target selection - this
+	//--- lives inside AI_Commander_Allocate.sqf's fist/target-scoring block instead. Own-metrics only
+	//--- (WFBE_SNAP_MYEFF/ENEFF - same maneuver+held-town formula Strategy.sqf/Snapshot.sqf already compute).
+	//--- AMPLIFIES pressing only - never caps/dampens the weaker side (owner: FULL AGGRESSION, do not balance).
+	//--- 0 = fully inert (byte-identical).
+	if (isNil "WFBE_C_AICOM_PRESS_FLOOR_V2")     then {WFBE_C_AICOM_PRESS_FLOOR_V2     = 0};
+	if (isNil "WFBE_C_AICOM2_PRESS_DOM_RATIO")   then {WFBE_C_AICOM2_PRESS_DOM_RATIO   = 1.15}; //--- myEff >= enEff * this (AND myTowns >= enTowns) required to arm. Below WFBE_C_AICOM2_DECAP_DOM_RATIO(1.5) - this is a scoring nudge, not a full commit. ENGINEERING DEFAULT, soak-tune.
+	if (isNil "WFBE_C_AICOM2_PRESS_ENEMY_BONUS") then {WFBE_C_AICOM2_PRESS_ENEMY_BONUS = 400};  //--- score bonus added to ENEMY-held candidate towns in the AUTO scorer while dominant (same magnitude scale as the existing _nearBandBonus=300 / _repickPen=500). 0 = bonus off.
+	if (isNil "WFBE_C_AICOM2_PRESS_ENGAGE_BYPASS") then {WFBE_C_AICOM2_PRESS_ENGAGE_BYPASS = 1}; //--- while dominant, skip the expansion-first neutral-only gate even below WFBE_C_AICOM_ENGAGE_MIN_TOWNS. 0 = keep the gate (dominance only affects scoring, not the gate).
+	//--- Tier 2 / OPTIONAL / stretch (default 0 = off): extra concentrated fist-town slots while dominant. Higher
+	//--- blast radius than the scoring bonus (more teams committed = more concentration-cap/route-congestion
+	//--- interaction) - recommend soaking Tier 1 (above) alone first per the design's Section 4.3 staged rollout.
+	if (isNil "WFBE_C_AICOM2_PRESS_FIST_BONUS")  then {WFBE_C_AICOM2_PRESS_FIST_BONUS  = 0};
 	//--- M5 DECAPITATE closer (AI_Commander_Decapitate.sqf). The missing kill-move: when a side is DECISIVELY
 	//--- ahead and the enemy is collapsing, commit the fist onto the enemy HQ and PRESS until it is razed,
 	//--- instead of the current rally-and-hold that froze the 2026-07-04 ZG match 2-7-2 for 90 min. DEFAULT 0
@@ -1374,6 +1389,23 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- BOOTSTRAP is exempt (0 towns owned -> the opening dogpile rush is unchanged).
 	if (isNil 'WFBE_C_AICOM_ASSAULT_REACH_FOOT')    then {WFBE_C_AICOM_ASSAULT_REACH_FOOT    = if (worldName == "Takistan") then {1800} else {2500}};  //--- B66 (3000->2500m): tighten foot reach - keep thin foot teams on adjacent reachable towns (cut long death-marches; tighter contiguous front). [B57: 3500->3000.] cmdcon43-j (evidence-based, live TK RPT 2026-07-02): a foot team dispatched >~1800m to a Takistan mountain town GRINDS ridgelines and never arrives - every stranded foot team (RU_Soldier_LAT/AA, ASSAULT_STRANDED moved=2-11m over 8min) sat at distTgt 1819-2568m (median 2484), ZERO stuck below 1800m; on rolling Chernarus the same 2500m foot leg succeeds. TK-lower 1800 routes those teams to a nearer reachable town OR (INF_TRANSPORT, within REACH_MOUNTED 9km) hands them a truck for the mountain leg instead of a death-march. Same worldName idiom as ROAD_STANDOFF/LANE_OFFSET/RECOVERY_SLOPE_Z/RECOVERY_FOOT_ROAD_R just above. isNil guard keeps any pre-set param/global as the override.
 	if (isNil 'WFBE_C_AICOM_ASSAULT_REACH_MOUNTED') then {WFBE_C_AICOM_ASSAULT_REACH_MOUNTED = 9000};  //--- m: teams with a drivable vehicle may take the long leg to a far spearhead.
+	//--- FIX A: distance/mobility-aware assault timeout (fable, GR-2026-07-08a; design ASSAULT-DYNTIMEOUT-DESIGN.md
+	//--- + ADDENDUM 1). Flag WFBE_C_AICOM_ASSAULT_DYNTIMEOUT: 0 = legacy flat WFBE_C_AICOM_ASSAULT_TIMEOUT for every
+	//--- team (byte-identical to pre-change). 1 = per-dispatch dist/mobility-aware timeout, clamped MIN..MAX. ALL
+	//--- numeric defaults below are ENGINEERING DEFAULTS, NOT live-measured - re-derive via the design's Section 1.3
+	//--- calibration protocol from a confirmed-live ASSAULT_* RPT window before flipping this to 1 in production.
+	if (isNil 'WFBE_C_AICOM_ASSAULT_DYNTIMEOUT')    then {WFBE_C_AICOM_ASSAULT_DYNTIMEOUT    = 0};
+	if (isNil 'WFBE_C_AICOM_ASSAULT_SPEED_FOOT')    then {WFBE_C_AICOM_ASSAULT_SPEED_FOOT    = 2.2};  //--- m/s conservative cross-country foot pace. ENGINEERING DEFAULT.
+	if (isNil 'WFBE_C_AICOM_ASSAULT_SPEED_MOUNTED') then {WFBE_C_AICOM_ASSAULT_SPEED_MOUNTED = 7.5};  //--- m/s effective AI-driven road speed incl. hop-node deceleration. ENGINEERING DEFAULT.
+	if (isNil 'WFBE_C_AICOM_ASSAULT_SPEED_AIR')     then {WFBE_C_AICOM_ASSAULT_SPEED_AIR     = 35};   //--- m/s transport-heli team (_teamAir path, AI_Commander_AssignTowns.sqf only). ENGINEERING DEFAULT.
+	//--- Map-aware route-overhead factor (worldName idiom already used elsewhere in this file, e.g. REACH_FOOT just
+	//--- below). TERRAIN-CENSUS.md (docs/design/v2/) describes TK as ridges/long line-of-sight (worst detour) and ZG
+	//--- as compact urban (moderate detour despite short raw distance); CH is the mixed-road-network baseline. Per-
+	//--- map value, NOT a flat factor - confirm/correct via the design's Section 1.3 step 4, do not assume this ordering.
+	if (isNil 'WFBE_C_AICOM_ASSAULT_ROUTE_FACTOR')  then {WFBE_C_AICOM_ASSAULT_ROUTE_FACTOR  = if (worldName == "Takistan") then {1.5} else {if (worldName == "Zargabad") then {1.35} else {1.25}}};
+	if (isNil 'WFBE_C_AICOM_ASSAULT_SLACK')         then {WFBE_C_AICOM_ASSAULT_SLACK         = 120};  //--- s, one extra WFBE_C_AI_COMMANDER_TOWN_INTERVAL (120s) worker-pass margin.
+	if (isNil 'WFBE_C_AICOM_ASSAULT_TIMEOUT_MIN')   then {WFBE_C_AICOM_ASSAULT_TIMEOUT_MIN   = 420};  //--- s, floor = today's flat value - short legs are byte-identical to current behaviour.
+	if (isNil 'WFBE_C_AICOM_ASSAULT_TIMEOUT_MAX')   then {WFBE_C_AICOM_ASSAULT_TIMEOUT_MAX   = 1500}; //--- s, hard ceiling - beyond this a team is genuinely stuck (existing Recovery-V2 ladder applies), not just far.
 	//--- B66 INF-TRANSPORT: when 1, a pure-infantry AI team on a long approach (beyond REACH_FOOT but within
 	//--- REACH_MOUNTED) is given a faction troop-truck so foot teams can still cover the long leg instead of
 	//--- being skipped. The consumer resolves the per-side transport classname from the Core_USMC / Core_RU /

@@ -20,7 +20,7 @@
 	data; live group reads per-team; GroupGetBool for the A2 group-bool trap; no A3 commands).
 */
 
-private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_myTowns","_engageMin","_expandFirst","_concentrate"];
+private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_myTowns","_engageMin","_expandFirst","_concentrate","_pfEnTowns","_pfMyEff","_pfEnEff","_pfDominant"];
 _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) <= 0) exitWith {};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -40,6 +40,16 @@ if (count _tgtTowns == 0) exitWith { _logik setVariable ["wfbe_aicom_targets", [
 //--- they clash (stops the early enemy-rush that ends matches prematurely). ANTI-STALL: if no neutral town remains
 //--- capturable it falls through and engages the enemy (never idle). The HQ-strike round-ender keeps its own gate.
 _myTowns   = _snap select WFBE_SNAP_MYTOWNS;
+//--- FIX C: DOMINANT-SIDE PRESS FLOOR V2 (fable, GR-2026-07-08a; own-metrics; design ASSAULT-DYNTIMEOUT-DESIGN.md
+//--- + ADDENDUM 1 S3). Computed here, before any BUG-1/BUG-2/WO-6 block below, so it has zero ordering
+//--- dependency on them - own _pfEnTowns local, not a reuse of BUG-1's _enTownsSnap further down.
+_pfEnTowns  = _snap select WFBE_SNAP_ENTOWNS;
+_pfMyEff    = _snap select WFBE_SNAP_MYEFF;
+_pfEnEff    = _snap select WFBE_SNAP_ENEFF;
+_pfDominant = ((missionNamespace getVariable ["WFBE_C_AICOM_PRESS_FLOOR_V2", 0]) > 0) && {_myTowns >= _pfEnTowns} && {_pfMyEff >= (_pfEnEff * (missionNamespace getVariable ["WFBE_C_AICOM2_PRESS_DOM_RATIO", 1.15]))};   //--- ratio read deferred into the lazy && {} term so it is NEVER read at flag-off (inertness).
+if (_pfDominant) then {
+	diag_log ("AICOMSTAT|v2|EVENT|" + str _side + "|" + str (round (time / 60)) + "|DOMPRESS_V2|myTowns=" + str _myTowns + "|enTowns=" + str _pfEnTowns + "|myEff=" + str _pfMyEff + "|enEff=" + str _pfEnEff + "|ratio=" + str (missionNamespace getVariable ["WFBE_C_AICOM2_PRESS_DOM_RATIO", 1.15]));   //--- re-read for logging only - this branch only runs when _pfDominant is already true (flag already on), so this does not affect flag-off inertness.
+};
 //--- WO-6 SOFTEST-LANE PUSH (fable, GR-2026-07-07a): after a detected town LOSS for this side, temporarily
 //--- ADD AICOMV2_SOFTLANE_BONUS to neutral/GUER-only capturable towns' scores in the AUTO scorer below for
 //--- AICOMV2_SOFTLANE_TICKS strategy ticks, so the fist leans toward the least-defended next target instead
@@ -99,7 +109,7 @@ if (!isNil "_foPos" && {typeName _foPos == "STRING"} && {!isNil "_foT0"} && {(ti
 //--- engage threshold UP so the side stops clashing and pulls back to owned towns.
 if (_foFresh && {_foPos == "FALLBACK"}) then {_engageMin = _engageMin + (missionNamespace getVariable ["WFBE_C_AICOM_NUDGE_FALLBACK_DELTA", 20])};
 _expandFirst = false;
-if (_engageMin > 0 && {_myTowns < _engageMin} && {!_engContested}) then {
+if (_engageMin > 0 && {_myTowns < _engageMin} && {!_engContested} && {!(_pfDominant && {(missionNamespace getVariable ["WFBE_C_AICOM2_PRESS_ENGAGE_BYPASS", 1]) > 0})}) then {   //--- FIX C (fable, GR-2026-07-08a): OR-compose with BUG-1 - bypass the neutral-only gate when EITHER the enemy is contested-ahead OR we are dominant.
 		private ["_neutPool","_sid","_guerID","_softPool"];
 		_neutPool = [];
 		_softPool = [];
@@ -161,6 +171,10 @@ if (!_fromFocus) then {
 	//--- AUTO scorer: nearest-front + value, with optional support-push and default-off garrison softness terms.
 	private ["_fistMax","_frontRad","_distDiv","_farPen","_supDiv","_scored","_i","_nearBand","_nearBandDist","_nearBandBonus","_garPen"];
 	_fistMax  = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_TOWNS", 1];
+	if (_pfDominant) then {   //--- FIX C Tier 2 (fable, GR-2026-07-08a, optional/dark). Read gated behind _pfDominant so PRESS_FIST_BONUS is never read at flag-off/non-dominant (inertness).
+		private "_pfFistBonus"; _pfFistBonus = missionNamespace getVariable ["WFBE_C_AICOM2_PRESS_FIST_BONUS", 0];
+		if (_pfFistBonus > 0) then {_fistMax = _fistMax + _pfFistBonus};   //--- default 0 = no-op.
+	};
 	_frontRad = missionNamespace getVariable ["WFBE_C_AICOM_FRONTIER_RADIUS", 3000];
 	_distDiv  = missionNamespace getVariable ["WFBE_C_AICOM_DISTANCE_DIVISOR", 50]; if (_distDiv <= 0) then {_distDiv = 1};
 	_farPen   = missionNamespace getVariable ["WFBE_C_AICOM_FAR_PENALTY", 1000];
@@ -183,6 +197,7 @@ if (!_fromFocus) then {
 	//--- expired) = _softlaneActive false = zero score change, zero extra getVariable calls per town.
 	private ["_softlaneActive"];
 	_softlaneActive = (_softlaneBonus > 0) && {time < (_logik getVariable ["wfbe_aicom_softlane_until", -1])};
+	_softlaneActive = _softlaneActive && {!_pfDominant};   //--- FIX C x WO-6 (fable, GR-2026-07-08a, ADDENDUM 1 S1): a dominant side is not "reeling" - PRESS suppresses softlane outright. No-op at either flag off (see design).
 	_scored = [];
 	{
 		private ["_tt","_dNear","_sc","_garTier"];
@@ -212,6 +227,10 @@ if (!_fromFocus) then {
 			private ["_tsid"];
 			_tsid = _tt getVariable ["sideID", -1];
 			if (_tsid != _sideID && {_tsid != _enemyID}) then {_sc = _sc + _softlaneBonus};   //--- WO-6 softest-lane: boost neutral/GUER-only towns over contested enemy towns during the post-loss window.
+		};
+		if (_pfDominant) then {   //--- FIX C (fable, GR-2026-07-08a): enemy-held score bonus. Disjoint sideID filter vs WO-6 softlane above (never double-boosts the same town); placed after WO-6 per ADDENDUM 1 S3(c).
+			private "_pfBonus"; _pfBonus = missionNamespace getVariable ["WFBE_C_AICOM2_PRESS_ENEMY_BONUS", 400];
+			if (_pfBonus > 0 && {(_tt getVariable ["sideID", -1]) == _enemyID}) then {_sc = _sc + _pfBonus};
 		};
 		if (isNil "_sc") then {
 		};

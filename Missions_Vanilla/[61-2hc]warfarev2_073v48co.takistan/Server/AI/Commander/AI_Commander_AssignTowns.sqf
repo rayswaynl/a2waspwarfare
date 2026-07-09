@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle"]; //--- cmdcon41-w2: journey-commit privates
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs"]; //--- cmdcon41-w2: journey-commit privates
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -98,7 +98,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 				_dldr   = leader _team;
 				_ddist  = _dldr distance _dtgt;
 				_arrR   = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250];
-				_toSecs = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT", 420];
+				_toSecs = if (count _dord >= 4) then {_dord select 3} else {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT", 420]};   //--- FIX A (fable, GR-2026-07-08a): per-dispatch dyn-timeout if the 4th tuple element is present (WFBE_C_AICOM_ASSAULT_DYNTIMEOUT), else legacy flat default. _dord already declared/guarded count>=2 above.
 				_elapsed = round (time - _dt0);
 				if (_ddist <= _arrR) then {
 					//--- WASPSCALE arrv counter (cmdcon42): bump the cumulative-arrival counter the server-side WASPSCALE emit reads (arrv=). One per successful journey (latched once per dispatch by wfbe_aicom_dispatch_open). Server-local, monotonic.
@@ -433,7 +433,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											//--- Refresh the breadcrumb (so the position-stuck gate does NOT also fire and
 											//--- double-count) but do NOT zero strikes; bump the SAME strike counter the
 											//--- unstuck ladder uses so an uncapturable depot climbs to ABANDON.
-											_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]];
+											if (count _ord >= 4) then {_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr, _ord select 3]]} else {_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]]};   //--- DEFECT-2 FIX (fable, GR-2026-07-08a, adversarial-verify): preserve the Fix-A 4th tuple element (dyn-timeout budget) across this breadcrumb refresh - a bare 3-element write here truncated it on the first >210s stuck-recheck after every dispatch, silently reverting long-haul teams to the flat 420s legacy timeout. _ord is the SAME fresh read from :308 (mutually-exclusive branches, no intervening write).
 											private ["_strk"];
 											_strk = ([_team, "wfbe_aicom_stuckstrikes", 0] Call WFBE_CO_FNC_GroupGetBool) + 1; //--- fix(hunt): G1-safe (nil+1 threw for stuck-since-spawn teams, so the unstick ladder never started)
 											_team setVariable ["wfbe_aicom_stuckstrikes", _strk];
@@ -518,7 +518,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										} else {
 											//--- Real progress (en-route, actually moving, town not yet reached): refresh the
 											//--- breadcrumb and DECAY the unstuck strike ladder (the team moved, so it is not stuck).
-											_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]];
+											if (count _ord >= 4) then {_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr, _ord select 3]]} else {_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]]};   //--- DEFECT-2 FIX (fable, GR-2026-07-08a, adversarial-verify): preserve the Fix-A 4th tuple element (dyn-timeout budget) across this breadcrumb refresh - a bare 3-element write here truncated it on the first >210s stuck-recheck after every dispatch, silently reverting long-haul teams to the flat 420s legacy timeout. _ord is the SAME fresh read from :308 (mutually-exclusive branches, no intervening write).
 											//--- STUCK DECAY (cmdcon41-w3-orbiter, claude-gaming 2026-07-02, gate WFBE_C_AICOM_STUCK_DECAY default 0):
 											//--- an oscillating wedger that lurches 200m and re-sticks cycles tier-1 forever when the strike counter
 											//--- hard-resets to 0 on ANY forward lurch. When WFBE_C_AICOM_STUCK_DECAY > 0: DECAY by 1 ((v-1) max 0)
@@ -803,7 +803,33 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_priorOpen = [_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool;
 						_sameTgt   = (count _priorOrd >= 1) && {(typeName (_priorOrd select 0)) == "OBJECT"} && {(_priorOrd select 0) == _target};
 						_dispT0    = if (_priorOpen && _sameTgt && {count _priorOrd >= 2}) then {_priorOrd select 1} else {time};
-						_team setVariable ["wfbe_aicom_townorder", [_target, _dispT0, getPos (leader _team)]];
+						//--- FIX A: distance/mobility-aware assault timeout (fable, GR-2026-07-08a; design ASSAULT-DYNTIMEOUT-DESIGN.md
+						//--- S2.5). _asltSpeed/_asltDist/_asltToSecs are in the top-of-file private list. _mounted/_teamAir are the
+						//--- SAME locals the reach gate above already computed this iteration (no re-scan of units _team).
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_DYNTIMEOUT", 0]) > 0) then {
+							if (_priorOpen && _sameTgt && {count _priorOrd >= 4}) then {
+								//--- Re-issue on the SAME target: preserve the ORIGINAL per-dispatch budget, mirroring the existing
+								//--- _dispT0 preservation immediately above so a stuck re-issue does not silently grant a fresh clock.
+								_asltToSecs = _priorOrd select 3;
+							} else {
+								//--- DEFECT-1 FIX (fable, GR-2026-07-08a, adversarial-verify): the bootstrap branch (:601-623,
+								//--- taken whenever _bootstrap is true - universal at match start since WFBE_C_AICOM_BOOTSTRAP_BIAS
+								//--- defaults 1) never assigns _mounted/_teamAir (only the else-branch at :644/:648 does), so on a
+								//--- bootstrap-branch dispatch both are still nil here. isNil-guard both reads and fall back to the
+								//--- conservative FOOT speed profile (safe: bootstrap dispatches are early-game, short-range, nearest-
+								//--- to-HQ picks) instead of throwing "Type Any, expected Bool". Non-bootstrap behaviour is byte-
+								//--- identical (both vars are always non-nil booleans there, so !isNil is always true).
+								_asltSpeed  = if (!isNil "_teamAir" && {_teamAir}) then {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SPEED_AIR", 35]} else {
+									if (!isNil "_mounted" && {_mounted}) then {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SPEED_MOUNTED", 7.5]} else {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SPEED_FOOT", 2.2]}
+								};
+								_asltDist   = (leader _team) distance _target;
+								_asltToSecs = ((_asltDist / _asltSpeed) * (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ROUTE_FACTOR", 1.25])) + (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SLACK", 120]);
+								_asltToSecs = (_asltToSecs max (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT_MIN", 420])) min (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT_MAX", 1500]);
+							};
+						} else {
+							_asltToSecs = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT", 420];   //--- flag-off: legacy flat value: tuple still gets a 4th element for schema consistency but its VALUE equals the pre-patch default, so the outcome watcher decision is byte-identical.
+						};
+						_team setVariable ["wfbe_aicom_townorder", [_target, _dispT0, getPos (leader _team), _asltToSecs]];
 						//--- ASSAULT TELEMETRY (task #48, #2): book a watcher latch on every (re)dispatch and
 						//--- log the DISPATCH event. The OUTCOME watcher (Hook B, top of the per-team loop)
 						//--- resolves exactly one ARRIVED or STRANDED per dispatch. Logging only - no behaviour
