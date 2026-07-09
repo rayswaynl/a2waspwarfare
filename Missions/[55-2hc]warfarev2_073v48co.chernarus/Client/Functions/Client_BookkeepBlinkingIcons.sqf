@@ -46,6 +46,15 @@ while { !WFBE_GameOver } do {
                                 if (BLINKING_UNITS_EAST find _x == -1) then {
                                     [BLINKING_UNITS_EAST, _x] call BIS_fnc_arrayPush;
                                 };
+                            } else {
+                                //--- fable/marker-combat-flash (owner 2026-07-09) GUER-COVERAGE FIX: this
+                                //--- branch was WEST/EAST only - a GUER player's LFTB flip queued nowhere,
+                                //--- so combat-icon-blink never fired for resistance. Mirrors WEST/EAST.
+                                if (side player == resistance) then {
+                                    if (BLINKING_UNITS_GUER find _x == -1) then {
+                                        [BLINKING_UNITS_GUER, _x] call BIS_fnc_arrayPush;
+                                    };
+                                };
                             };
                         };
                     } else {
@@ -74,6 +83,21 @@ while { !WFBE_GameOver } do {
                                         BLINKING_UNITS_EAST = BLINKING_UNITS_EAST - [_x];
                                     };
                                 } forEach BLINKING_UNITS_EAST;
+                            } else {
+                                //--- fable/marker-combat-flash GUER-COVERAGE FIX: mirrors WEST/EAST cleanup.
+                                if (side player == resistance) then {
+                                    {
+                                        _unitLFTB = _x getVariable "LFTB";
+                                        if (!(isNil { _unitLFTB })) then {
+                                            if(!_unitLFTB) then {
+                                                BLINKING_UNITS_GUER = BLINKING_UNITS_GUER - [_x];
+                                            };
+                                        };
+                                        if (isNull _x) then {
+                                            BLINKING_UNITS_GUER = BLINKING_UNITS_GUER - [_x];
+                                        };
+                                    } forEach BLINKING_UNITS_GUER;
+                                };
                             };
                         };
                     };
@@ -93,6 +117,13 @@ while { !WFBE_GameOver } do {
                             };
                         };
 
+                        //--- fable/marker-combat-flash GUER-COVERAGE FIX: mirrors WEST/EAST above.
+                        if (side player == resistance) then {
+                            if (BLINKING_VEHICLES_GUER find _vehicleUnit == -1) then {
+                                [BLINKING_VEHICLES_GUER, _vehicleUnit] call BIS_fnc_arrayPush;
+                            };
+                        };
+
                         // Upstream miksuu/BlinkingMapIconsV2: also blink the mounted player's own
                         // soldier marker, so their map icon blinks alongside the active vehicle's.
                         if (isPlayer _x && (_x == gunner _vehicleUnit || _x == commander _vehicleUnit)) then {
@@ -105,6 +136,14 @@ while { !WFBE_GameOver } do {
                             if (side player == east) then {
                                 if (BLINKING_UNITS_EAST find _x == -1) then {
                                     [BLINKING_UNITS_EAST, _x] call BIS_fnc_arrayPush;
+                                };
+                            };
+
+                            //--- fable/marker-combat-flash GUER-COVERAGE FIX: mirrors WEST/EAST above
+                            //--- (crew-member self-marker also blinks alongside its blinking vehicle).
+                            if (side player == resistance) then {
+                                if (BLINKING_UNITS_GUER find _x == -1) then {
+                                    [BLINKING_UNITS_GUER, _x] call BIS_fnc_arrayPush;
                                 };
                             };
                         };
@@ -130,6 +169,19 @@ while { !WFBE_GameOver } do {
                                         BLINKING_VEHICLES_EAST = BLINKING_VEHICLES_EAST - [_x];
                                     };
                                 } forEach BLINKING_VEHICLES_EAST;
+                            } else {
+                                //--- fable/marker-combat-flash GUER-COVERAGE FIX: mirrors WEST/EAST cleanup.
+                                if (side player == resistance) then {
+                                    {
+                                        _vehicleLFTB = _vehicleUnit getVariable "LFTB";
+                                        if (!(isNil { _vehicleLFTB }) && !_vehicleLFTB) then {
+                                            BLINKING_VEHICLES_GUER = BLINKING_VEHICLES_GUER - [_vehicleUnit];
+                                        };
+                                        if (isNull _x) then {
+                                            BLINKING_VEHICLES_GUER = BLINKING_VEHICLES_GUER - [_x];
+                                        };
+                                    } forEach BLINKING_VEHICLES_GUER;
+                                };
                             };
                         };
                     };
@@ -157,6 +209,18 @@ while { !WFBE_GameOver } do {
         {
             [_x, _blinkRed] call WFBE_CL_FNC_BlinkMapIcon;
         } forEach BLINKING_VEHICLES_EAST;
+    };
+
+    //--- fable/marker-combat-flash (owner 2026-07-09) GUER-COVERAGE FIX: dispatch the GUER-side
+    //--- arrays too - this is the tail no side ever reached (dead LFTB writes for resistance).
+    if (side player == resistance) then {
+        {
+            [_x, _blinkRed] call WFBE_CL_FNC_BlinkMapIcon;
+        } forEach BLINKING_UNITS_GUER;
+
+        {
+            [_x, _blinkRed] call WFBE_CL_FNC_BlinkMapIcon;
+        } forEach BLINKING_VEHICLES_GUER;
     };
 
     _blinkRed = !_blinkRed;
