@@ -93,6 +93,13 @@ _pcN = (_pcN - _hcN) max 0;
 private ["_testPopPin"];
 _testPopPin = missionNamespace getVariable ["WFBE_C_TEST_POPTIER_PIN", -1];
 if (_testPopPin >= 0) then {_pcN = _testPopPin};
+//--- TEST-ONLY team cap (WFBE_C_TEST_TEAM_CAP, default -1 = off; declared next to WFBE_C_TEST_POPTIER_PIN in
+//--- Init_CommonConstants.sqf's TEST HARNESS block): hard-clamp the founding target to at most N teams/side,
+//--- for "2 teams + 1 town" minutes-fast dev loops. Read here (next to the poptier pin); applied as the FINAL
+//--- ceiling right before the founding gate below so it composes with the PC curve, delta, banking valve, hard
+//--- cap and econ-sink surge instead of racing them. -1 = off (no effect on live play).
+private ["_testTeamCap"];
+_testTeamCap = missionNamespace getVariable ["WFBE_C_TEST_TEAM_CAP", -1];
 	//--- B74.2 UNIFIED POP-TIER publisher (Ray 2026-06-23): the live human count is already settled here, so compute
 	//--- the tier and broadcast it ONCE per change so every AI subsystem (TOTAL_AI cap, town defenders/active-cap,
 	//--- side-patrols, the per-player AI buy-cap) scales off ONE source. 0=LOW(0-2)/1=MID(3-5)/2=HIGH(6-9)/3=FULL(10+).
@@ -233,6 +240,8 @@ if (_foundedTeams > _target) then {
 //--- to normal (no permanent target inflation). Placed AFTER the PC-cleanup block so the +1 never triggers a retire.
 //--- A2-OA-safe: boolean getVariable on the side-logic OBJECT _logik is reliable (not a group); plain if, no Bool ==.
 if ((_logik getVariable ["wfbe_aicom_veteran_next", false]) && {_logik getVariable ["wfbe_aicom_reinforce_rich", false]}) then {_target = (_target + 1) min _teamsHardCap}; //--- B747.1/Lane-358: veteran +1 must still respect the hard cap and current rich window.
+
+if (_testTeamCap >= 0) then {_target = _target min _testTeamCap}; //--- WFBE_C_TEST_TEAM_CAP final ceiling (test-only, default off).
 
 if ((_foundedTeams + _pending) >= _target) exitWith {};
 

@@ -155,7 +155,7 @@ if (isServer) then {
 		waitUntil {townInitServer};
 
 		// Marty: Prepare default static defenses only for resistance towns; BLUFOR/OPFOR occupation towns use mobile defenders only.
-		if ((_town getVariable "sideID") == WFBE_DEFENDER_ID && (missionNamespace getVariable "WFBE_C_TOWNS_DEFENDER") > 0) then {
+		if ((_town getVariable "sideID") == WFBE_DEFENDER_ID && (missionNamespace getVariable "WFBE_C_TOWNS_DEFENDER") > 0 && {!(_town getVariable ["wfbe_inactive", false])}) then { //--- WFBE_C_TEST_TOWN_CAP (test-only, default off): skip static-defense setup for towns capped out of towns[] by Server\Init\Init_Towns.sqf.
 			[_town, (_town getVariable "sideID") Call WFBE_CO_FNC_GetSideFromID, -1] Call WFBE_SE_FNC_ManageTownDefenses;
 		};
 
