@@ -16,7 +16,12 @@ _allowCustom = true;
 //--- and fire ONE authoritative funds re-broadcast (server-side RequestFundsResend is idempotent:
 //--- it echoes an absolute stored value, never adds, so this cannot duplicate money). A2-OA-1.64
 //--- safe (group player / typeName / SendToServer); idempotent (sets an absolute global, sends once).
-if (!isNull (group _unit)) then {clientTeam = group _unit};
+//--- fable/fix-respawn-clientteam-sync (bugrun BUGHUNT-4 CRIT): group respawn re-homed clientTeam here
+//--- but left the sibling global WFBE_Client_Team frozen at its Init_Client value. Client_OnKilled
+//--- gates its leader re-assert (and the slot-1 rejoin) on group-player-equals-WFBE_Client_Team, so a
+//--- stale value made BOTH silently skip after a group respawn. Re-sync both, exactly as
+//--- SkinSelector_Apply already does (clientTeam + WFBE_Client_Team = group player).
+if (!isNull (group _unit)) then {clientTeam = group _unit; WFBE_Client_Team = group _unit};
 if (!isNil "WFBE_Client_SideJoined") then {
 	["RequestFundsResend", [_unit, WFBE_Client_SideJoined]] Call WFBE_CO_FNC_SendToServer;
 };
