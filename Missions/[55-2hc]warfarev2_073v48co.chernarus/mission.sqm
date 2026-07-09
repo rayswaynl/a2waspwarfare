@@ -3562,7 +3562,6 @@ class Mission
 				{
 					position[]={2259.1614,512.45703,15296.355};
 					id=229;
-					forceHeadlessClient=1;
 					side="CIV";
 					vehicle="Civilian";
 					player="PLAY CDG";
@@ -3585,7 +3584,6 @@ class Mission
 				{
 					position[]={2259.1116,512.63934,15297.525};
 					id=230;
-					forceHeadlessClient=1;
 					side="CIV";
 					vehicle="Civilian";
 					player="PLAY CDG";

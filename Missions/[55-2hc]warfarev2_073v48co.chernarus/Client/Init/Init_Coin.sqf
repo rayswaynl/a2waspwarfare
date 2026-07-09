@@ -76,16 +76,27 @@ if (count _defenses > 0) then {if (_extra == "REPAIR") then {_coinCategories = [
 if (_isHQdeployed && _i == 1 && _extra == "") then {_coinItemArray = _coinItemArray + [[_structures select 0,0,[0, _structureCosts select 0], (_structureDescriptions select 0) + " " +  localize "strwfhqmobilizeme"]]};
 //--- owner 2026-07-09: Radio Tower is a CASH purchase. The coin item cost is [currencyIndex, amount]:
 //--- index 0 = side supply (default for structures), index 1 = player funds. rlType lookup is index-parallel to _structures.
-private "_rtRlTypes";
+//--- fable/radiotower-strategic-menu (owner 2026-07-09): Radio Tower belongs in the commander console's
+//--- STRATEGIC tab, not Base — it's a comms/utility unlock, not a production building. Structures are
+//--- normally hardcoded to category 0 (Base, the coinItemArray tuple's 2nd element == BIS_COIN_categories
+//--- index, see coin_interface.sqf:966-988 exact-match dispatch); this per-item override is the same
+//--- technique already used two lines above for the RadioTower cash cost. Strategic's index is
+//--- _indexCategory + 2, mirroring the defense-array switch below (Fortification=+1, Strategic=+2,
+//--- Ammo=+3) - valid whenever RadioTower is actually offered, since that only happens once HQ is
+//--- deployed, and _isHQdeployed also drives _updateDefenses (see _i==1 gate above), which populates the
+//--- Strategic category label alongside it.
+private ["_rtRlTypes","_rtStrategicCat"];
 _rtRlTypes = missionNamespace getVariable Format["WFBE_%1STRUCTURES",sideJoinedText];
+_rtStrategicCat = _indexCategory + 2;
 for [{_i=_i}, {_i<count _structures}, {_i = _i+1}] do {
-  private "_itemCostEntry";
+  private ["_itemCostEntry","_itemCatEntry"];
   _itemCostEntry = if (((_rtRlTypes select _i) == "RadioTower")) then {
     [1, missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER_CASH_COST", 2500]]
   } else {
     [0, _structureCosts select _i]
   };
-  _coinItemArray = _coinItemArray + [[_structures select _i,0,_itemCostEntry, (_structureDescriptions select _i)]];
+  _itemCatEntry = if (((_rtRlTypes select _i) == "RadioTower")) then {_rtStrategicCat} else {0};
+  _coinItemArray = _coinItemArray + [[_structures select _i,_itemCatEntry,_itemCostEntry, (_structureDescriptions select _i)]];
 };
 
 _fix = if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {1} else {0};
