@@ -1168,10 +1168,10 @@ class WF_Menu {
 			h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
-		//--- UX Pass 1: section label above PURCHASE group (left col rows 1-2).
-		//--- UX Pass 1: section label above GENERAL group (left col rows 3-5).
-		//--- UX Pass 1: section label above COMMAND group (right col rows 1-5).
-		//--- UX Pass 1: TOOLS label above footer strip (decorative).
+		//--- UX Pass 1: section label above PURCHASE group (left col rows 1-2).
+		//--- UX Pass 1: section label above GENERAL group (left col rows 3-5).
+		//--- UX Pass 1: section label above COMMAND group (right col rows 1-5).
+		//--- UX Pass 1: TOOLS label above footer strip (decorative).
 	};
 	class controls {
 		//--- === PURCHASE ===
@@ -4789,15 +4789,21 @@ class WFBE_PlayerSettingsMenu {
 //---   31071-77=per-action cost labels  31078=status text  31079=cooldown label
 //---   31081-83=vehicle t1/t2/t3 (fable/gdir-vehicle-verb, GR-2026-07-08a; static tooltip price,
 //---   not quote-integrated - see GUI_Menu_GuerCommissar.sqf)
+//---   31084=relief section label  31085=relief cost label  31086=relief button (MenuAction 64,
+//---   fable/ew-guer; renumbered off the vehicle-verb range 31081-83/MenuAction 61-63 it originally
+//---   collided with at release-merge time - see also the vertical relayout below the vehicle row)
 class WFBE_GDirCommissarMenu {
 	movingEnable = 1;
 	idd = 31000;
 	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_GuerCommissar.sqf'"; //--- cmdcon45: house pattern - A2 config strings do NOT accept C-style backslash-quote escapes
 
 	class controlsBackground {
-		//--- Main plate (wider/taller to fit minimap + cost labels).
+		//--- Main plate (wider/taller to fit minimap + cost labels). Height 0.650->0.705
+		//--- (release-merge relayout): grew +0.055 to fit the Relief block (ACTION 4) as its
+		//--- own row below the vehicle-verb row instead of overlapping it - see the ACTION 4
+		//--- block below for the idc/MenuAction renumber this went with.
 		class BG_M : RscText {
-			x = 0.110; y = 0.175; w = 0.780; h = 0.650;
+			x = 0.110; y = 0.175; w = 0.780; h = 0.705;
 			colorBackground[] = WFBE_Background_Color;
 			moving = 1;
 		};
@@ -4807,7 +4813,7 @@ class WFBE_GDirCommissarMenu {
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
 		class BG_F : RscText {
-			x = 0.110; y = 0.773; w = 0.780; h = 0.052;
+			x = 0.110; y = 0.828; w = 0.780; h = 0.052;
 			moving = 1;
 			colorBackground[] = WFBE_Background_Color_Footer;
 		};
@@ -4819,7 +4825,7 @@ class WFBE_GDirCommissarMenu {
 		};
 		//--- Accent border above footer.
 		class BG_BorderF : RscText {
-			x = 0.110; y = 0.773;
+			x = 0.110; y = 0.828;
 			w = 0.780; h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
@@ -4830,18 +4836,18 @@ class WFBE_GDirCommissarMenu {
 			colorBackground[] = WFBE_Background_Border;
 		};
 		class BG_EdgeB : RscText {
-			x = 0.110; y = 0.825;
+			x = 0.110; y = 0.880;
 			w = 0.780; h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
 		class BG_EdgeL : RscText {
 			x = 0.110; y = 0.175;
-			w = WFBE_Background_Border_Thick; h = 0.650;
+			w = WFBE_Background_Border_Thick; h = 0.705;
 			colorBackground[] = WFBE_Background_Border;
 		};
 		class BG_EdgeR : RscText {
 			x = 0.890; y = 0.175;
-			w = WFBE_Background_Border_Thick; h = 0.650;
+			w = WFBE_Background_Border_Thick; h = 0.705;
 			colorBackground[] = WFBE_Background_Border;
 		};
 		//--- Vertical divider between left column (list+map) and right column (actions).
@@ -5097,9 +5103,40 @@ class WFBE_GDirCommissarMenu {
 			shadow = 2;
 		};
 
+		//--- fable/ew-guer: ACTION 4 - RELIEF SQUAD (relief verb; reuses the same debit +
+		//--- reinforce-ledger path as ACTION 1 buy convoy - RequestGDirPanel.sqf verb="relief",
+		//--- Server_GuerDirector.sqf orderKind="reinforce"). idc band 31084-31086 + MenuAction 64
+		//--- (release-merge renumber: originally authored against 31081-31083/MenuAction 61,
+		//--- which collided with fable/gdir-vehicle-verb's Btn_VehicleT1-3 above - same idc AND
+		//--- same MenuAction, both merged independently the same night. Row repositioned below
+		//--- the vehicle row; see BG_M/BG_F height bump above for the matching plate/footer grow).
+		class Lbl_Act4 : RscText {
+			idc = 31084;
+			x = 0.348; y = 0.736; w = 0.535; h = 0.025;
+			text = "ACTION 4 - RELIEF SQUAD";
+			sizeEx = 0.019;
+			colorText[] = {1, 1, 1, 0.7};
+			shadow = 2;
+		};
+		class Lbl_Cost_Relief : RscText {
+			idc = 31085;
+			x = 0.348; y = 0.761; w = 0.535; h = 0.020;
+			text = "~est. $--";
+			sizeEx = 0.017;
+			colorText[] = {1, 0.85, 0.3, 0.85};
+			shadow = 2;
+		};
+		class Btn_Relief : Btn_BuyConvoy {
+			idc = 31086;
+			x = 0.348; y = 0.782; w = 0.535; h = 0.040;
+			text = "RELIEF SQUAD";
+			action = "MenuAction = 64";
+			tooltip = "Fast infantry-only reinforcement (conserves group cap).";
+		};
+
 		//--- Footer: Back button (house pattern: createDialog WF_Menu after closeDialog).
 		class Btn_Back : RscButton_Main {
-			x = 0.115; y = 0.778; w = 0.080; h = 0.040;
+			x = 0.115; y = 0.833; w = 0.080; h = 0.040;
 			text = "< BACK";
 			sizeEx = 0.019;
 			action = "MenuAction = 90";

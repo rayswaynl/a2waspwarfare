@@ -217,8 +217,8 @@ WFBE_COMM_FNC_RefreshWallet = {
 	[_wallet, _townFund]
 };
 
-//--- Helper: update cost labels from a price array [convoy, instant, qrfIns, qrfGun, qrfCombo, counter, donate].
-//--- If price array is empty, shows "~est. $--".
+//--- Helper: update cost labels from a price array [convoy, instant, qrfIns, qrfGun, qrfCombo, counter, donate, relief].
+//--- If price array is empty, shows "~est. $--". fable/ew-guer: relief (idx 7) is optional for back-compat.
 WFBE_COMM_FNC_SetCostLabels = {
 	private ["_prices","_p"];
 	_prices = _this select 0;
@@ -229,6 +229,7 @@ WFBE_COMM_FNC_SetCostLabels = {
 		ctrlSetText [31074, "~est. $--"];
 		ctrlSetText [31075, "~est. $--"];
 		ctrlSetText [31076, "~est. $--"];
+		ctrlSetText [31085, "~est. $--"];
 	} else {
 		ctrlSetText [31071, Format ["~est. $%1", _prices select 0]];
 		ctrlSetText [31072, Format ["~est. $%1", _prices select 1]];
@@ -236,6 +237,11 @@ WFBE_COMM_FNC_SetCostLabels = {
 		ctrlSetText [31074, Format ["~est. $%1", _prices select 3]];
 		ctrlSetText [31075, Format ["~est. $%1", _prices select 4]];
 		ctrlSetText [31076, Format ["~est. $%1", _prices select 5]];
+		if (count _prices >= 8) then {
+			ctrlSetText [31085, Format ["~est. $%1", _prices select 7]];
+		} else {
+			ctrlSetText [31085, "~est. $--"];
+		};
 	};
 };
 
@@ -263,6 +269,7 @@ WFBE_COMM_FNC_UpdateButtonStates = {
 		ctrlEnable [31033, false];
 		ctrlEnable [31041, false];
 		ctrlEnable [31051, false];
+		ctrlEnable [31086, false]; //--- fable/ew-guer: relief
 	} else {
 		//--- Buy: town fund covers first, shortfall from wallet.
 		private ["_canBuyConvoy","_canBuyInstant","_shortConvoy","_shortInstant"];
@@ -295,6 +302,17 @@ WFBE_COMM_FNC_UpdateButtonStates = {
 
 		//--- Donate: fixed $200 from wallet only.
 		ctrlEnable [31051, (_wallet >= 200)];
+
+		//--- fable/ew-guer: Relief squad (idx 7). Same group-budget + fund/wallet gate as buy/qrf/counter
+		//--- (relief is NOT exempt in RequestGDirPanel.sqf Gate 6 - it materialises units like reinforce).
+		if (count _prices >= 8) then {
+			private ["_shortRelief"];
+			_shortRelief = (_prices select 7) - _townFund;
+			if (_shortRelief < 0) then {_shortRelief = 0};
+			ctrlEnable [31086, (_grpOk && {_wallet >= _shortRelief})];
+		} else {
+			ctrlEnable [31086, false];
+		};
 	};
 };
 
@@ -486,6 +504,14 @@ waitUntil {
 		MenuAction = -1;
 		["RequestGDirPanel", [player, "vehicle", _selTownId, "t3"]] Call WFBE_CO_FNC_SendToServer;
 		ctrlSetText [31078, "Vehicle (T3) order sent. Awaiting result..."];
+	};
+	//--- fable/ew-guer: relief squad (mirrors Btn_Counter dispatch above). Release-merge renumber:
+	//--- MenuAction 61->64 (was 61, colliding with the vehicle-verb T1 handler immediately above -
+	//--- see Rsc/Dialogs.hpp Btn_Relief for the matching idc 31083->31086 renumber).
+	if (MenuAction == 64) then {
+		MenuAction = -1;
+		["RequestGDirPanel", [player, "relief", _selTownId, "none"]] Call WFBE_CO_FNC_SendToServer;
+		ctrlSetText [31078, "Relief squad order sent. Awaiting result..."];
 	};
 	if (MenuAction == 90) then {
 		MenuAction = -1;
