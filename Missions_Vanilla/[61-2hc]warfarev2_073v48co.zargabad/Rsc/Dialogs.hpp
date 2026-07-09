@@ -1281,17 +1281,6 @@ class WF_Menu {
 			action = "MenuAction = 21";
 			tooltip = $STR_WF_SkinSelector_Title;
 		};
-		class CA_HUD_Button : RscButton_Main {
-			idc = 11018;
-			x = 0.408;
-			y = 0.767144;
-			w = 0.042;
-			h = 0.045;
-			text = "HUD";
-			sizeEx = 0.026;
-			action = "MenuAction = 16";
-			tooltip = "HUD On/Off";
-		};
 		// Marty: Reuse the old FPS-only HUD slot for GPS; FPS now lives in the RHUD/sidebar.
 		class CA_GPS_Button : RscButton_Main {
 			idc = 11019;

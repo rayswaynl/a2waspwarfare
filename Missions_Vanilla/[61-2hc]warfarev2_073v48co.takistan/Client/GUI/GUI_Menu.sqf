@@ -22,7 +22,11 @@ ctrlShow [11030, false];
 //--- fable/drones-menu: for GUER, repurpose the (GUER-dead) Tactical Center button as the Drones entry.
 if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {
 	ctrlEnable [11006, true];
-	ctrlSetText [11006, "DRONES"];
+	ctrlSetText [11006, "Drone"];
+};
+//--- fable/guer-tabs-menu-declutter: for GUER, relabel the (GUER read-only kill-tech viewer) Factory Upgrade tab as Base unlocks.
+if (sideJoined == resistance) then {
+	ctrlSetText [11007, "Base unlocks"];
 };
 
 _enable = false;
@@ -305,13 +309,6 @@ while {alive player && dialog} do {
 		MenuAction = -1;
 		closeDialog 0;
 		createDialog "RscMenu_Help";
-	};
-
-        //-- HUD:
-	// Marty: Keep the menu loop alive so repeated HUD/FPS clicks are processed without reopening the WF menu.
-	if (MenuAction == 16) then {
-		MenuAction = -1;
-		if(RUBHUD)then{RUBHUD = false}else{RUBHUD = true};
 	};
 
 	// Marty: Reuse the old FPS-only slot as a GPS enabler; client/server FPS now lives in RHUD.
