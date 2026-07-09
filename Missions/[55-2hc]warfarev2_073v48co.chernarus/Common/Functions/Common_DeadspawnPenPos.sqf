@@ -69,9 +69,17 @@ _borderdis = _adis min _bdis;
 _posdis = _posXY distance [_half,_half];
 if !(_posdis < _borderdis) then { _seaPos = _seed; _posXY = [_seed select 0, _seed select 1] };
 
-//--- Submerge: same XY, pull Z well below the surface. surfaceIsWater was confirmed above (or
-//--- we're on the verified seed), so this is a normal swim-depth position - never "setPos
-//--- underground" (that trap is about solid terrain, not open water).
-_z = -8;
+//--- BUGFIX (fable/deadspawn-redesign, landlocked follow-up): the original version of this
+//--- function set Z=-8 unconditionally, including on the DRY fallback branch (no water found
+//--- anywhere in the ring search - the realistic case on Takistan/Zargabad). That would have
+//--- setPos'd a live player 8m INTO SOLID GROUND at exactly the hazard Init_HC.sqf's own
+//--- comment warns about ("NEVER setPos underground - that kills the unit"). Fixed: one
+//--- authoritative surfaceIsWater check on the FINAL resolved XY (after every fallback/
+//--- boundary-guard branch above has already settled) decides the offset - never inferred
+//--- from which branch produced the point.
+//--- Submerge only if this point is CONFIRMED water; dry fallback stays at ground level
+//--- (Z=0, ATL) - the landlocked enclosure (Init_DeadspawnPenEnclosure.sqf) contains the
+//--- player physically instead of relying on depth for a point that isn't water at all.
+if (surfaceIsWater [(_posXY select 0), (_posXY select 1), 0]) then { _z = -8 } else { _z = 0 };
 
 [(_posXY select 0), (_posXY select 1), _z]
