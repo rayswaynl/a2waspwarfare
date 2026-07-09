@@ -552,6 +552,37 @@ if (count _live > 0) then {
 			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] arty cap hit (alive %2 >= cap %3) - arty templates stripped this cycle.", _sideText, _artyAlive, _artyCap]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
+
+	//--- ECON-SURGE ARTY TOP-UP (owner-modified shape, 2026-07-08 easy-win pass): the original ask bumped _artyCap by 1
+	//--- under wfbe_aicom_econ_surge to found a WHOLE second artillery TEAM. Owner call: no second team - instead add
+	//--- ONE MORE gun to the EXISTING battery's own group (one more piece in the current SPG team). Reuses the EXACT
+	//--- founding compositor (WFBE_CO_FNC_CreateTeam, Common_CreateTeam.sqf) that built the original battery: this only
+	//--- STAMPS a request on the owning GROUP (mirrors the proven wfbe_aicom_topup_req pattern from Produce.sqf/
+	//--- Common_RunCommanderTeam.sqf - server publishes, the HC that actually owns the team's units consumes it
+	//--- locally, so no locality violation reading/writing a possibly-HC-local group from here). One-shot per battery
+	//--- (wfbe_aicom_arty_surged latch on the GROUP) so a standing surge flag cannot keep stacking guns forever; a
+	//--- freshly re-founded battery (after the old one dies) can surge again. A2-OA-safe: plain group getVariable +
+	//--- isNil (no 2-arg array form on a team/group var), setVariable 3rd broadcast arg (object/group - allowed).
+	if (_artyCap > 0 && {_artyAlive > 0} && {_logik getVariable ["wfbe_aicom_econ_surge", false]}) then {
+		private ["_esHull","_esTeam","_esSurged"];
+		_esHull = objNull;
+		{
+			if (isNull _esHull && {alive _x} && {(typeOf _x) in _artyCls} && {(count crew _x) > 0} && {side ((crew _x) select 0) == _side}) then {_esHull = _x};
+		} forEach _allVehicles;
+		if (!isNull _esHull) then {
+			_esTeam = group ((crew _esHull) select 0);
+			if (!isNull _esTeam) then {
+				_esSurged = _esTeam getVariable "wfbe_aicom_arty_surged";
+				_esSurged = (!isNil "_esSurged" && {_esSurged});
+				if (!_esSurged) then {
+					_esTeam setVariable ["wfbe_aicom_arty_surged", true, true];
+					_esTeam setVariable ["wfbe_aicom_arty_surge_req", [(typeOf _esHull), (getPosATL _esHull), time], true];
+					["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] ECON-SURGE arty top-up requested on existing battery team %2 (hull %3) - +1 gun to the SAME group, no new team founded.", _sideText, _esTeam, typeOf _esHull]] Call WFBE_CO_FNC_AICOMLog;
+				};
+			};
+		};
+	};
+
 	if (count _eligible == 0) exitWith {};
 
 	//--- FORCED-ARTY (Ray 2026-06-27, Issue 3 Part 2): GUARANTEE the 1 artillery battery is founded once eligible.

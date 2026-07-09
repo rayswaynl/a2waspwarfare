@@ -2603,6 +2603,34 @@ while {!WFBE_GameOver && _alive} do {
 		};
 	};
 
+	//--- ECON-SURGE ARTY TOP-UP CONSUMER (owner-modified econ-surge win, 2026-07-08): mirrors the TOP-UP CONSUMER
+	//--- above but for the single-gun request AI_Commander_Teams.sqf stamps on THIS team as wfbe_aicom_arty_surge_req
+	//--- = [classname, posArray, issuedTime] when wfbe_aicom_econ_surge fires and this team already owns the side's
+	//--- one live SPG battery. Adds ONE MORE crewed gun to the SAME group instead of founding a whole extra artillery
+	//--- team (explicit owner call, not the +1-team version the base idea proposed). Reuses WFBE_CO_FNC_CreateTeam
+	//--- (Common_CreateTeam.sqf) - the EXACT founding compositor that built the original battery (createVehicle +
+	//--- driver/gunner/commander moveIn + texture/marking/HandleDamage pipeline) - passing the EXISTING _team as its
+	//--- group arg so it APPENDS to that group instead of creating a new one. Same GetRandomPosition/GetEmptyPosition
+	//--- scatter idiom the founding call above uses so the new gun does not spawn stacked on the old one. Single-fire:
+	//--- AI_Commander_Teams.sqf already latches wfbe_aicom_arty_surged so it never re-stamps this team; the request is
+	//--- cleared immediately after consuming (A2: [] sentinel, not nil - same idiom as the TOP-UP request above).
+	if (_alive && {!isNull _team}) then {
+		private ["_esReq","_esCls","_esPos","_esSpawnPos"];
+		_esReq = _team getVariable "wfbe_aicom_arty_surge_req";
+		if (!isNil "_esReq" && {(typeName _esReq) == "ARRAY"} && {count _esReq >= 2}) then {
+			_esCls = _esReq select 0;
+			_esPos = _esReq select 1;
+			if ((typeName _esCls) == "STRING" && {_esCls != ""} && {(typeName _esPos) == "ARRAY"} && {count _esPos >= 2}) then {
+				_esSpawnPos = [_esPos, 20, 60] Call WFBE_CO_FNC_GetRandomPosition;
+				_esSpawnPos = [_esSpawnPos, 30] Call WFBE_CO_FNC_GetEmptyPosition;
+				[[_esCls], _esSpawnPos, _side, true, _team, true] Call WFBE_CO_FNC_CreateTeam;
+				diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|ARTY_SURGE_DONE|team=" + (str _team) + "|class=" + _esCls);
+				["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] ECON-SURGE +1 gun (%3) added to existing artillery group.", _side, _team, _esCls]] Call WFBE_CO_FNC_AICOMLog;
+			};
+			_team setVariable ["wfbe_aicom_arty_surge_req", [], true];
+		};
+	};
+
 	sleep 8;
 };
 
