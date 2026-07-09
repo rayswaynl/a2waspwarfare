@@ -647,6 +647,18 @@ while {alive player && dialog} do {
 		};
 	};
 
+	//--- ── TRANSFER FUNDS (MenuAction 101 — reuses V1's advanced transfer dialog) ──
+	//--- V2 dropped the inline money-transfer controls (see the Dialogs.hpp comment on
+	//--- RscMenu_TeamV2) and never re-added an entry point (DIAG-WFMENU-UX finding #2).
+	//--- Re-wires the EXISTING WFBE_TransferMenu dialog + its ChangeTeamFunds /
+	//--- ChangePlayerFunds backend -- same MenuAction code and same createDialog call
+	//--- as V1's GUI_Menu_Team.sqf MenuAction==101 handler. No transfer logic here.
+	if (MenuAction == 101) exitWith {
+		MenuAction = -1;
+		closeDialog 0;
+		createDialog "WFBE_TransferMenu";
+	};
+
 	//--- ── BACK (MenuAction 8) ──────────────────────────────────────────────────
 
 	//--- ── UNIT DESIGNER handlers (WFBE_C_UNIT_DESIGNER) ──────────────────────
