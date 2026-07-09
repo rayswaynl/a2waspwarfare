@@ -4723,6 +4723,7 @@ class WFBE_PlayerSettingsMenu {
 //---   31010=town list  31011-31013=section labels  31021-22=buy  31031-33=QRF
 //---   31041=counter  31051=donate  31060=minimap  31070=wallet/fund readout
 //---   31071-77=per-action cost labels  31078=status text  31079=cooldown label
+//---   31081=relief section label  31082=relief cost label  31083=relief button (MenuAction 61, fable/ew-guer)
 class WFBE_GDirCommissarMenu {
 	movingEnable = 1;
 	idd = 31000;
@@ -4999,6 +5000,33 @@ class WFBE_GDirCommissarMenu {
 			sizeEx = 0.018;
 			colorText[] = {1, 0.65, 0.2, 0.85};
 			shadow = 2;
+		};
+
+		//--- fable/ew-guer: ACTION 4 - RELIEF SQUAD (relief verb; reuses the same debit +
+		//--- reinforce-ledger path as ACTION 1 buy convoy - RequestGDirPanel.sqf verb="relief",
+		//--- Server_GuerDirector.sqf orderKind="reinforce"). idc band 31081-31083.
+		class Lbl_Act4 : RscText {
+			idc = 31081;
+			x = 0.348; y = 0.684; w = 0.535; h = 0.025;
+			text = "ACTION 4 - RELIEF SQUAD";
+			sizeEx = 0.019;
+			colorText[] = {1, 1, 1, 0.7};
+			shadow = 2;
+		};
+		class Lbl_Cost_Relief : RscText {
+			idc = 31082;
+			x = 0.348; y = 0.710; w = 0.535; h = 0.020;
+			text = "~est. $--";
+			sizeEx = 0.017;
+			colorText[] = {1, 0.85, 0.3, 0.85};
+			shadow = 2;
+		};
+		class Btn_Relief : Btn_BuyConvoy {
+			idc = 31083;
+			x = 0.348; y = 0.731; w = 0.535; h = 0.040;
+			text = "RELIEF SQUAD";
+			action = "MenuAction = 61";
+			tooltip = "Fast infantry-only reinforcement (conserves group cap).";
 		};
 
 		//--- Footer: Back button (house pattern: createDialog WF_Menu after closeDialog).

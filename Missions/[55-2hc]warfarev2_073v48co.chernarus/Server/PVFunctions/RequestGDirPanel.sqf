@@ -130,14 +130,16 @@ if (_verb == "quote") exitWith {
 	};
 
 	//--- Compute estimated prices for all 6 actions.
-	private ["_qBaseReinf","_qBaseInstMult","_qBaseIns","_qBaseGun","_qBaseCtr"];
+	private ["_qBaseReinf","_qBaseInstMult","_qBaseIns","_qBaseGun","_qBaseCtr","_qBaseRelief"];
 	_qBaseReinf   = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_REINF", 1600];
 	_qBaseInstMult = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_INSTANT_MULT", 1.5];
 	_qBaseIns     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_INS", 1200];
 	_qBaseGun     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_QRF_GUN", 2400];
 	_qBaseCtr     = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_CTR_ATK", 1000];
+	//--- fable/ew-guer: relief squad base price (same key RequestGDirPanel reads for the real debit below).
+	_qBaseRelief  = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_RELIEF", 800];
 
-	private ["_qPConvoy","_qPInstant","_qPIns","_qPGun","_qPCombo","_qPCtr"];
+	private ["_qPConvoy","_qPInstant","_qPIns","_qPGun","_qPCombo","_qPCtr","_qPRelief"];
 	_qPConvoy  = round (_qBaseReinf * _qScarcity * _qLf);
 	if (_qPConvoy  < _qBaseReinf) then {_qPConvoy  = _qBaseReinf};
 	_qPInstant = round (_qBaseReinf * _qBaseInstMult * _qScarcity * _qLf);
@@ -150,11 +152,15 @@ if (_verb == "quote") exitWith {
 	if (_qPCombo < round (_qBaseIns + _qBaseGun * 0.85)) then {_qPCombo = round (_qBaseIns + _qBaseGun * 0.85)};
 	_qPCtr     = round (_qBaseCtr  * _qScarcity * _qLf);
 	if (_qPCtr   < _qBaseCtr)  then {_qPCtr  = _qBaseCtr};
+	_qPRelief  = round (_qBaseRelief * _qScarcity * _qLf);
+	if (_qPRelief < _qBaseRelief) then {_qPRelief = _qBaseRelief};
 
 	//--- Reply: status "quote", message = comma-joined prices, verb = "quote", townId = townId.
-	//--- Payload: [convoy, instant, qrfInsert, qrfGunship, qrfCombo, counter, donate(fixed 200)].
+	//--- Payload: [convoy, instant, qrfInsert, qrfGunship, qrfCombo, counter, donate(fixed 200), relief].
+	//--- fable/ew-guer: appended relief as index 7 (8th value) - existing "count _prices < 7" client
+	//--- gates in GUI_Menu_GuerCommissar.sqf stay backward-compatible (8 >= 7).
 	private ["_qPriceStr"];
-	_qPriceStr = Format ["%1,%2,%3,%4,%5,%6,200", _qPConvoy, _qPInstant, _qPIns, _qPGun, _qPCombo, _qPCtr];
+	_qPriceStr = Format ["%1,%2,%3,%4,%5,%6,200,%7", _qPConvoy, _qPInstant, _qPIns, _qPGun, _qPCombo, _qPCtr, _qPRelief];
 	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=quote|town=%2|fundedBy=%3|prices=%4", _elmin, _townId, getPlayerUID _player, _qPriceStr];
 	[_player, "GDirPanelResult", ["quote", _qPriceStr, "quote", _townId]] Call WFBE_CO_FNC_SendToClient;
 };
