@@ -134,7 +134,7 @@ WFBE_NavalCap_FNC_SpawnSkirmish = {
 	_intruderGrp setBehaviour "COMBAT";
 	_intruderGrp setCombatMode "RED";
 	_intruderGrp setSpeedMode "FULL";
-	_pilot doMove [_pos select 0, _pos select 1, 0];
+	_pilot doMove [_pos select 0, _pos select 1, 550]; //--- sweep-fix #944: fixed-wing intruder needs cruise Z; Z=0 pitches jets into the sea (matches the L39/An2 Z=550 idiom in this file).
 
 	["INFORMATION", Format ["Init_NavalHVT.sqf : NAVALCAP SKIRMISH intruder armed at %1 (%2 %3).", _loc getVariable "name", _sideStr, _cls]] Call WFBE_CO_FNC_LogContent;
 	diag_log Format ["NAVALCAP|SKIRMISH|SPAWN|carrier=%1|side=%2|class=%3|baseMode=%4|activeCount=%5", _loc getVariable "name", _sideStr, _cls, missionNamespace getVariable ["WFBE_C_NAVAL_SKIRMISH_BASE_MODE", "MI24"], missionNamespace getVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", 1]];
