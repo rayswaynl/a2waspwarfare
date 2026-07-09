@@ -4561,7 +4561,8 @@ class WFBE_FPSPickerMenu {
 //--- persists via WFBE_CO_FNC_SetProfileVariable using the SAME profile keys as before).
 //--- IDC map: 30001 title | 30009 close | Video: 30010 VD-label 30011 VD-slider(RscXSliderH)
 //--- 30012 Auto-VD toggle 30013..30016 FPS 30/45/50/60 | Gameplay: 30020..30026 seven toggles
-//--- Audio: 30030 Audio Cues | 30040 footer Close. Slider range clamps to WFBE_C_ENVIRONMENT_MAX_VIEW.
+//--- Audio: 30030 Audio Cues | Tags: 30031 Name Tags, 30032 Show AI Tags (fable/tags-settings-integration;
+//--- footer Close 30040 shifted 0.702->0.736 to make room) | Slider range clamps to WFBE_C_ENVIRONMENT_MAX_VIEW.
 //--- A2-OA-safe: RscXSliderH (type 43) + RscButton_Main are already used by the Team menu (idd 13000).
 //--- No A3 checkbox class. ctrlShow on this idd dialog MUST use the global ctrlShow [idc,bool] form.
 class WFBE_PlayerSettingsMenu {
@@ -4703,10 +4704,26 @@ class WFBE_PlayerSettingsMenu {
 			action = "WFBE_MenuAction = 8";
 		};
 
+		//--- ===== TAGS =====
+		//--- fable/tags-settings-integration: name-tag overlay + AI-tag opt-out, wired into Settings for parity
+		//--- with the WF-menu "TAGS" button (MenuAction 25) and the WFBE_C_TAGS_AI admin flag (Init_CommonConstants.sqf).
+		class CA_Tags : CA_HUD {
+			idc = 30031;
+			x = 0.29; y = 0.135 + 0.679;
+			text = "Name Tags: OFF";
+			action = "WFBE_MenuAction = 11";
+		};
+		class CA_TagsAI : CA_HUD {
+			idc = 30032;
+			x = 0.505; y = 0.135 + 0.679;
+			text = "Show AI Tags: ON";
+			action = "WFBE_MenuAction = 12";
+		};
+
 		//--- ===== Footer Close =====
 		class CA_Done : RscButton_Main {
 			idc = 30040;
-			x = 0.29; y = 0.135 + 0.702; w = 0.42; h = 0.045;
+			x = 0.29; y = 0.135 + 0.736; w = 0.42; h = 0.045;
 			sizeEx = 0.026;
 			text = "Close";
 			action = "WFBE_MenuAction = 9";

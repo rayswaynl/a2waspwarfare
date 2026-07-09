@@ -268,8 +268,11 @@ waitUntil {commonInitComplete};
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Common initialization is complete at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
-//--- qol-polish-pack: friendly name-tag overlay, toggled from the WF menu "TAGS" button (MenuAction 25). Client-side, friendly-PLAYERS only,
-//--- distance-scaled, pooled controls (no per-frame create). A2-safe: worldToScreen / visiblePosition / ctrlSetStructuredText, no A3 commands.
+//--- qol-polish-pack: friendly name-tag overlay, toggled from the WF menu "TAGS" button (MenuAction 25) or the
+//--- Settings dialog (WFBE_MenuAction 11, same var+key - fable/tags-settings-integration). Client-side, friendly-PLAYERS
+//--- only, distance-scaled, pooled controls (no per-frame create). A2-safe: worldToScreen / visiblePosition /
+//--- ctrlSetStructuredText, no A3 commands. AI infantry/vehicle tags below are additionally gated by the
+//--- per-player WFBE_CL_ShowAITags opt-out (Settings dialog, WFBE_MenuAction 12).
 if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 [] spawn {
 	disableSerialization; //--- cmdcon42 (Ray 2026-07-02): this scheduled loop holds display/control handles (_disp, _ctrl) across waitUntil/sleep suspensions. Without disableSerialization the scheduler tries to serialise _disp when the script suspends and throws "variable '_disp' does not support serialization" the moment the TAGS button (MenuAction 25) enables the overlay. Must live in THIS script body (same scope as the display var), not a parent.
@@ -300,7 +303,8 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 				};
 			} forEach (player nearEntities [["Man"], 120]);
 			//--- WFBE_C_TAGS_AI: friendly AI infantry tags (same-side, within 150m, #b0ffb0 green).
-			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0) then {
+			//--- fable/tags-settings-integration: ANDed with the per-player Show-AI-Tags opt-out (Settings dialog, WFBE_MenuAction 12).
+			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0 && {missionNamespace getVariable ["WFBE_CL_ShowAITags", true]}) then {
 				{
 					private ["_aiunit","_aipp","_aiscr","_aid","_aisz"];
 					_aiunit = _x;
@@ -321,7 +325,8 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 				} forEach (player nearEntities [["Man"], 150]);
 			};
 			//--- WFBE_C_TAGS_AI: friendly AI vehicle tags (same-side, pure-AI crew, within 200m, #ffffa0 yellow). Height 3.0m separates from kill-tally tags at 2.6m.
-			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0) then {
+			//--- fable/tags-settings-integration: ANDed with the per-player Show-AI-Tags opt-out (Settings dialog, WFBE_MenuAction 12).
+			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0 && {missionNamespace getVariable ["WFBE_CL_ShowAITags", true]}) then {
 				{
 					private ["_vhc","_vcnt","_vtxt","_vpp","_vscr","_vd","_vsz"];
 					_vhc = _x;
