@@ -40,6 +40,18 @@ private ["_display","_map"];
 _display = _this select 0;
 _map = _display displayCtrl 31060;
 
+//--- [FIX-931/night-sweep] the vehicle-verb buttons (idc 31081-83, Rsc/Dialogs.hpp) compile
+//--- unconditionally - A2 OA 1.64 dialog configs can't read the runtime missionNamespace flag
+//--- set later by Init_CommonConstants.sqf, so compile-time gating is not possible. Gate
+//--- visibility/use here instead (global ctrlShow/ctrlEnable form - see GUI_Menu_Command.sqf's
+//--- ROOT-CAUSE FIX comment on why the global form, not the display-scoped one, is required for
+//--- idd createDialog menus) so the feature is byte-inert end-to-end while
+//--- AICOMV2_GDIR_VEHICLE=0 (the default after FIX-931). The MenuAction 61/62/63 handlers below
+//--- re-check the same flag as a second layer.
+private ["_vehVerbOn"];
+_vehVerbOn = (missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0;
+{ctrlShow [_x, _vehVerbOn]; ctrlEnable [_x, _vehVerbOn]} forEach [31081, 31082, 31083];
+
 //--- Populate town list (idc 31010) from WFBE_CL_Towns.
 private ["_towns","_firstTown"];
 _towns    = if (isNil "towns") then {[]} else {towns}; //--- fable/commissar-fix: WFBE_CL_Towns was never written; towns[] is populated on every client by Init_Town.sqf
@@ -451,17 +463,21 @@ waitUntil {
 
 	//--- fable/gdir-vehicle-verb (GR-2026-07-08a): tier buttons wired to idc 31081-83 (Rsc/Dialogs.hpp).
 	//--- NEEDS IN-GAME VISUAL VERIFICATION - see script header banner.
-	if (MenuAction == 61) then {
+	//--- [FIX-931/night-sweep] each condition re-checks AICOMV2_GDIR_VEHICLE as a second gate
+	//--- layer (the buttons that set MenuAction=61/62/63 are already hidden+disabled above when
+	//--- the flag is off, so this branch shouldn't be reachable in normal play - belt-and-
+	//--- suspenders per the fix brief).
+	if (MenuAction == 61 && {(missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0}) then {
 		MenuAction = -1;
 		["RequestGDirPanel", [player, "vehicle", _selTownId, "t1"]] Call WFBE_CO_FNC_SendToServer;
 		ctrlSetText [31078, "Vehicle (T1) order sent. Awaiting result..."];
 	};
-	if (MenuAction == 62) then {
+	if (MenuAction == 62 && {(missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0}) then {
 		MenuAction = -1;
 		["RequestGDirPanel", [player, "vehicle", _selTownId, "t2"]] Call WFBE_CO_FNC_SendToServer;
 		ctrlSetText [31078, "Vehicle (T2) order sent. Awaiting result..."];
 	};
-	if (MenuAction == 63) then {
+	if (MenuAction == 63 && {(missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0}) then {
 		MenuAction = -1;
 		["RequestGDirPanel", [player, "vehicle", _selTownId, "t3"]] Call WFBE_CO_FNC_SendToServer;
 		ctrlSetText [31078, "Vehicle (T3) order sent. Awaiting result..."];

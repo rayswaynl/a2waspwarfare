@@ -28,6 +28,19 @@ _town_vehicles = [];
 _vehTier = 0;
 if (_side == WFBE_DEFENDER && {(missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0}) then {
 	_vehTier = _town getVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0];
+	//--- [FIX-931/night-sweep] Consume the order HERE, immediately after the read and with
+	//--- NO yielding call in between - not after materialising below like the original code
+	//--- did. This function is invoked MULTIPLE TIMES per town per activation episode; the
+	//--- original only cleared the tier at the end of the materialize branch, AFTER calling
+	//--- WFBE_CO_FNC_GetRandomPosition / WFBE_CO_FNC_GetEmptyPosition (position-finders that
+	//--- can internally sleep/waitUntil and yield the SQF scheduler) - a second concurrent
+	//--- invocation could read the same still-unconsumed tier at that yield point and
+	//--- materialise a second vehicle from the SAME one-shot purchase (double-materialize).
+	//--- No yield point exists between this read and the write below, so this closes the
+	//--- race regardless of what runs afterward.
+	if (_vehTier > 0) then {
+		_town setVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0, true];
+	};
 };
 if (_vehTier > 0) then {
 	//--- ONE-SHOT delivery: ride the SAME CreateTeam pipeline as the rest of this activation
@@ -45,10 +58,8 @@ if (_vehTier > 0) then {
 		_groups    = _groups    + [[_vehClass]];
 		_positions = _positions + [_vehPos];
 		_teams     = _teams     + [grpNull];
-		//--- Consume the order now (broadcast=true - see RequestGDirPanel.sqf comment) so it
-		//--- does not re-deliver on every future activation of this town - one-time delivery,
-		//--- unlike the persistent cache tier.
-		_town setVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0, true];
+		//--- Order already consumed above (read+clear atomic, before any yielding call) -
+		//--- FIX-931/night-sweep. (Was: setVariable here, post-yield - double-materialize risk.)
 		["INFORMATION", Format ["Common_CreateTownUnits.sqf: Town [%1] materialised a purchased tier-%2 defensive vehicle [%3].", _town, _vehTier, _vehClass]] Call WFBE_CO_FNC_LogContent;
 	};
 };

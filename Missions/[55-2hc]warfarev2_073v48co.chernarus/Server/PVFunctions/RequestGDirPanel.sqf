@@ -425,7 +425,8 @@ if (_verb == "cache") exitWith {
 //--- materializer on the town's next garrison spawn/regrow (Common_CreateTownUnits.sqf), so
 //--- there is no "current tier" guard once delivered - the persisted value resets to 0 there.
 if (_verb == "vehicle") exitWith {
-    if (!((missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 1]) > 0)) exitWith {
+    if (!((missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0)) exitWith {  //--- FIX-931/night-sweep: fallback default was 1 (copy-pasted from the cache verb's own
+    //--- check), now matches AICOMV2_GDIR_VEHICLE's actual default of 0 in Init_CommonConstants.sqf.
         [_player, "GDirPanelResult", ["deny", "Defensive vehicle purchase not enabled this round.", "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
     };
     private ["_newVehTier","_curVehTier"];

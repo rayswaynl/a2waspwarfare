@@ -2006,8 +2006,14 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	//--- P5 - Defensive vehicle (fable/gdir-vehicle-verb, GR-2026-07-08a): town-donate-fund purchase
 	//--- of ONE tier-scaled defensive vehicle, delivered on the town's next garrison
 	//--- spawn/regrow (materialiser in Common_CreateTownUnits.sqf, same hook as the weapons
-	//--- cache). Default ON, matching the cache verb's precedent: pure player-funded purchase.
-	if (isNil "AICOMV2_GDIR_VEHICLE")                then {AICOMV2_GDIR_VEHICLE = 1};                 //--- Defensive vehicle gate.
+	//--- cache). [FIX-931/night-sweep] Default OFF (was 1): the "Default ON, matching the
+	//--- cache verb's precedent" claim was false - AICOMV2_GDIR_CACHE itself defaults to 0
+	//--- (this file, ~line 2001) until its own hook lands. The GUI buttons (Rsc/Dialogs.hpp
+	//--- idc 31081-83) also compile unconditionally and can't be config-gated on a runtime
+	//--- var in A2 OA 1.64, so this default is the ONLY true inertness lever - see
+	//--- GUI_Menu_GuerCommissar.sqf for the client-side ctrlShow/ctrlEnable + MenuAction
+	//--- gate added alongside this fix.
+	if (isNil "AICOMV2_GDIR_VEHICLE")                then {AICOMV2_GDIR_VEHICLE = 0};                 //--- Defensive vehicle gate. Default OFF - see comment above (FIX-931).
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T1") then {AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T1 = 4800}; //--- Base price: vehicle tier 1 (Offroad_DSHKM_Gue technical). 1.5x cache T1 (unilateral pricing call - see PR body).
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T2") then {AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T2 = 9600}; //--- Base price: vehicle tier 2 (BMP2_GUE). 1.5x cache T2.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T3") then {AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T3 = 14400}; //--- Base price: vehicle tier 3 (T72_GUE). 1.5x cache T3.
