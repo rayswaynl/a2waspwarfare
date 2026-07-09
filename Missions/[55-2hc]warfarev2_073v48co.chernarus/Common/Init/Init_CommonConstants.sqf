@@ -2336,7 +2336,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- current facing direction. Falls back to facing when no valid destination is available.
 //--- Client-side only. Locality note: expectedDestination works on local units only; HC-owned
 //--- AI leaders fall back to getDir facing silently. Zero server load. Flag 0 = byte-identical.
-	if (isNil "WFBE_C_TEAMMARKER_DEST_DIR") then {WFBE_C_TEAMMARKER_DEST_DIR = 1}; //--- 0: facing direction (default, byte-identical to HEAD); >0: destination-direction when an active destination is available, facing fallback.
+	if (isNil "WFBE_C_TEAMMARKER_DEST_DIR") then {WFBE_C_TEAMMARKER_DEST_DIR = 0}; //--- fable/marker-facing (owner 2026-07-09): reverted 1->0. Dest-dir mode hijacked the player's OWN arrow onto a NEVER-EXPIRED stored shift-click order (updateteamsmarkers.sqf:140-148; the _MAP_ORDER_TIME stamp was written but never read), permanently locking the self-arrow to a stale bearing = "facing the wrong way". Owner wants the conventional heading arrow. 0: facing (getDir); >0: destination-direction when an active destination is available, facing fallback.
 //--- TP-16 / naval-cap-hinds: spawn 3x Mi-24 CAP per carrier instead of the default Hind + An2 pair.
 //--- Chernarus-only feature (IS_NAVAL_MAP); flag has no effect on non-naval mirrors.
 //--- Default 0 = current pair behaviour. Set > 0 to activate all-hind triple CAP.

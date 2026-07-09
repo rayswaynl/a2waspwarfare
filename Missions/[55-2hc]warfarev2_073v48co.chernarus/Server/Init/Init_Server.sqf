@@ -1210,6 +1210,26 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 };
 ["INITIALIZATION", "Init_Server.sqf: B74.2 WFBE_ReqAicomFeed handler armed (own-side marker feed-gap recovery)."] Call WFBE_CO_FNC_LogContent;
 
+//--- fable/marker-classtag-jip (owner 2026-07-09): wfbe_player_class is broadcast once (client-side
+//--- setVariable [...,true] in Skill_Init / SkinSelector_Apply / Client_PreRespawnHandler) and is NOT
+//--- JIP-durable in A2-OA, so a joiner permanently reads "" for every player who set their class BEFORE
+//--- the join -> the "[ENG]" class tag silently vanishes on those players' map markers (name tags read
+//--- incomplete). Mirror the proven WFBE_ReqAicomFeed catch-up: on request, re-assert every connected
+//--- player's class globally so the requester (and everyone) re-receives it. Rare (JIP feed-gap only);
+//--- a handful of small object-var writes. The server holds each value (setVariable-true reaches it too).
+"WFBE_ReqPlayerClasses" addPublicVariableEventHandler {
+	private "_n";
+	_n = 0;
+	{
+		if (isPlayer _x) then {
+			_x setVariable ["wfbe_player_class", (_x getVariable ["wfbe_player_class", ""]), true];
+			_n = _n + 1;
+		};
+	} forEach playableUnits;
+	diag_log format ["[WFBE][classtag-jip] re-broadcast %1 player classes on request.", _n];
+};
+["INITIALIZATION", "Init_Server.sqf: fable classtag-jip WFBE_ReqPlayerClasses handler armed (marker class-tag JIP recovery)."] Call WFBE_CO_FNC_LogContent;
+
 /////////////////////////////////////////////////////////////////////////////////// map cleaners
 
 // weaponholder cleaner
