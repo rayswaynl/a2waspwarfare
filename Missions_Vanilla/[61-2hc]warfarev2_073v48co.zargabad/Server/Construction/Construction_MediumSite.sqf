@@ -149,6 +149,15 @@ if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0
 	["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] Bank registered. Marker [%2] created.", str _side, _markerName]] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- AARadar: clear the synchronous pending reservation set in RequestStructure.sqf now that the
+//--- real structure is registered (the alive-scan guard there takes over from here). AARadar has no
+//--- dedicated registry array of its own (unlike Bank/CBRadar) - the general wfbe_structures list
+//--- below plus the typeOf alive-scan in RequestStructure.sqf is sufficient. Mirrors the Bank
+//--- pending-clear immediately above (fable/ew-economy).
+if (_rlType == "AARadar") then {
+	missionNamespace setVariable [Format ["WFBE_%1_AARadar_PENDING", str _side], -1e11];
+};
+
 //--- Reserve / ArtilleryRadar: spawn faction composition dressing (task 13 — WDDM starred presets).
 //--- Mirrors the Bank branch above. Templates WFBE_NEURODEF_RESERVE_WEST/EAST and
 //--- WFBE_NEURODEF_ARTILLERYRADAR_WEST/EAST live in Server\Init\Init_Defenses.sqf.

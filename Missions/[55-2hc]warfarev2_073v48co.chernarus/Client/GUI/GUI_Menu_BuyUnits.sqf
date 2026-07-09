@@ -245,11 +245,14 @@ _IDCS = _IDCS - [_currentIDC];
 				//--- ran past it, so the readout showed "5/4"/"6/4" and a T-34 + infantry built at the same time.
 				//--- For DEPOT, additionally require the LIVE shared queue to have room so CAP is a true ceiling
 				//--- (isNull guard => treat as empty). This can only ever be MORE restrictive; base factories are
-				//--- left untouched (Depot-only branch), and the orphan-reaper in the display loop below keeps this
-				//--- shared-queue gate from ever soft-locking a depot whose head was orphaned by a disconnect.
+				//--- left untouched EXCEPT when only one live factory of the type remains (fable/ew-economy:
+				//--- _countAlive == 1, set/refreshed by the switch(_type) block above) - with a single instance,
+				//--- that building's queu array IS the side's whole per-type queue, so the same true-ceiling gate
+				//--- applies safely. The orphan-reaper in the display loop below keeps this
+				//--- shared-queue gate from ever soft-locking a depot (or single-factory type) whose head was orphaned by a disconnect.
 				private ["_depotQueueBlocked"];
 				_depotQueueBlocked = false;
-				if (_type == "Depot" && {!isNull _closest}) then {
+				if ((_type == "Depot" || _countAlive == 1) && {!isNull _closest}) then {
 					if ((count (_closest getVariable ["queu", []])) >= (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type])) then {
 						_depotQueueBlocked = true;
 						if (WF_Debug) then {["INFORMATION", Format ["GUI_Menu_BuyUnits.sqf: DEPOT buy blocked - shared queue full (%1/%2).", count (_closest getVariable ["queu", []]), missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type]]] Call WFBE_CO_FNC_LogContent};
@@ -528,8 +531,10 @@ _IDCS = _IDCS - [_currentIDC];
 		//--- longest build time + a generous 60s margin (so a legitimately-building head is NEVER reaped). Time-
 		//--- based, removes at most one head per deadline, converges, and only ever REMOVES a genuine orphan.
 		//--- wfbe_queu_head_seen is a LOCAL object var (each client times independently); the queu REMOVAL is
-		//--- public. Depot-only, so base factories keep their exact current behaviour.
-		if (_type == "Depot" && {!isNull _closest}) then {
+		//--- public. Depot, plus any other factory type currently down to its last live instance
+		//--- (_countAlive == 1) - see the matching widening on the buy-gate above; factories with 2+
+		//--- live instances keep their exact current behaviour (per-building queues aren't the whole picture there).
+		if ((_type == "Depot" || _countAlive == 1) && {!isNull _closest}) then {
 			private ["_rQueu","_rLongest","_rHead","_rSeen"];
 			_rQueu = _closest getVariable ["queu", []];
 			if (count _rQueu > 0) then {

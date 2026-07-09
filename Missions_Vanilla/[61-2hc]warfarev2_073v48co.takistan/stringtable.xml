@@ -5796,6 +5796,14 @@
       <English>Your side already has a bank. Only one bank may be active per side.</English>
       <Russian>У вашей стороны уже есть банк. На сторону может быть активен только один банк.</Russian>
     </Key>
+    <Key ID="AARadarAlreadyBuilt">
+      <English>Your side already has (or is currently building) an Anti-Air Radar. Only one may be active per side.</English>
+      <Russian>У вашей стороны уже есть (или сейчас строится) радар ПВО. Активным может быть только один на сторону.</Russian>
+    </Key>
+    <Key ID="CBRadarAlreadyBuilt">
+      <English>Your side already has (or is currently building) a Counter Battery Radar. Only one may be active per side.</English>
+      <Russian>У вашей стороны уже есть (или сейчас строится) контрбатарейный радар. Активным может быть только один на сторону.</Russian>
+    </Key>
     <Key ID="BankTooCloseToBase">
       <English>The bank must be built outside your base protection area.</English>
       <Russian>Банк нужно строить вне зоны защиты базы.</Russian>
