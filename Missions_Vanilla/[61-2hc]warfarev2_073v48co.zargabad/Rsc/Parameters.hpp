@@ -715,7 +715,7 @@
 		title = "GUER Civilian Vehicle Depot";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1; //--- release: enable all feature flags at launch, 0->1.
 	};
 	class WFBE_C_AWACS {
 		title = "AWACS platform radar (air picture + ground MTI sweep)";
