@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_built", "_builtveh", "_cacheTier", "_crews", "_groups", "_i", "_lock", "_logGroupCount", "_position", "_positions", "_retVal", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_strelaAssigned", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
+Private ["_built", "_builtveh", "_cacheTier", "_crews", "_groups", "_i", "_lock", "_logGroupCount", "_position", "_positions", "_retVal", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_strelaAssigned", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehClass", "_vehicles", "_vehPos", "_vehTier"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -32,6 +32,47 @@ if (_side == WFBE_DEFENDER && {(missionNamespace getVariable ["AICOMV2_GDIR_CACH
 	_cacheTier = _town getVariable ["AICOMV2_GDIR_CACHE_TIER", 0];
 };
 _strelaAssigned = false; //--- tier-3 Strela: ONE dedicated AA/AT defender per activation episode, not per-unit chance.
+//--- fable/gdir-vehicle-verb (GR-2026-07-08a): read this town's purchased vehicle-order tier
+//--- once, up front. Gate-checked here (not just at purchase time), same pattern as the
+//--- weapons-cache tier. _side==WFBE_DEFENDER guard: GUER-only economy feature.
+_vehTier = 0;
+if (_side == WFBE_DEFENDER && {(missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0}) then {
+	_vehTier = _town getVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0];
+	//--- [FIX-931/night-sweep] Consume the order HERE, immediately after the read and with
+	//--- NO yielding call in between - not after materialising below like the original code
+	//--- did. This function is invoked MULTIPLE TIMES per town per activation episode; the
+	//--- original only cleared the tier at the end of the materialize branch, AFTER calling
+	//--- WFBE_CO_FNC_GetRandomPosition / WFBE_CO_FNC_GetEmptyPosition (position-finders that
+	//--- can internally sleep/waitUntil and yield the SQF scheduler) - a second concurrent
+	//--- invocation could read the same still-unconsumed tier at that yield point and
+	//--- materialise a second vehicle from the SAME one-shot purchase (double-materialize).
+	//--- No yield point exists between this read and the write below, so this closes the
+	//--- race regardless of what runs afterward.
+	if (_vehTier > 0) then {
+		_town setVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0, true];
+	};
+};
+if (_vehTier > 0) then {
+	//--- ONE-SHOT delivery: ride the SAME CreateTeam pipeline as the rest of this activation
+	//--- episode (skill spread, patrol FSM, defender tagging, HandleEmptyVehicle taxi-lock
+	//--- below) instead of a bespoke spawn path - least-new-machinery route. Classnames
+	//--- verified in Common\Config\Groups\Groups_GUE.sqf (Motorized/Armored_Light/
+	//--- Armored_Heavy kinds - the SAME rosters already used for regular GUER garrison spawns).
+	_vehClass = "";
+	if (_vehTier == 1) then {_vehClass = "Offroad_DSHKM_Gue"};  //--- Groups_GUE.sqf Motorized kind.
+	if (_vehTier == 2) then {_vehClass = "BMP2_GUE"};           //--- Groups_GUE.sqf Armored_Light kind.
+	if (_vehTier >= 3) then {_vehClass = "T72_GUE"};            //--- Groups_GUE.sqf Armored_Heavy kind.
+	if (_vehClass != "") then {
+		_vehPos = ([getPos _town, 50, 300] call WFBE_CO_FNC_GetRandomPosition);
+		_vehPos = [_vehPos, 50] call WFBE_CO_FNC_GetEmptyPosition;
+		_groups    = _groups    + [[_vehClass]];
+		_positions = _positions + [_vehPos];
+		_teams     = _teams     + [grpNull];
+		//--- Order already consumed above (read+clear atomic, before any yielding call) -
+		//--- FIX-931/night-sweep. (Was: setVariable here, post-yield - double-materialize risk.)
+		["INFORMATION", Format ["Common_CreateTownUnits.sqf: Town [%1] materialised a purchased tier-%2 defensive vehicle [%3].", _town, _vehTier, _vehClass]] Call WFBE_CO_FNC_LogContent;
+	};
+};
 
 //--- Task 34: resistance vehicles are always unlocked when the resistance side is inactive (WFBE_C_TOWNS_DEFENDER == 0).
 //--- When resistance IS active the existing WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER parameter governs the lock state

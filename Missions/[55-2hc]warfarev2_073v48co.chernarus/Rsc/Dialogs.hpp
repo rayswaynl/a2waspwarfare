@@ -4723,6 +4723,8 @@ class WFBE_PlayerSettingsMenu {
 //---   31010=town list  31011-31013=section labels  31021-22=buy  31031-33=QRF
 //---   31041=counter  31051=donate  31060=minimap  31070=wallet/fund readout
 //---   31071-77=per-action cost labels  31078=status text  31079=cooldown label
+//---   31081-83=vehicle t1/t2/t3 (fable/gdir-vehicle-verb, GR-2026-07-08a; static tooltip price,
+//---   not quote-integrated - see GUI_Menu_GuerCommissar.sqf)
 class WFBE_GDirCommissarMenu {
 	movingEnable = 1;
 	idd = 31000;
@@ -4980,6 +4982,35 @@ class WFBE_GDirCommissarMenu {
 			text = "DONATE $200 TO TOWN FUND";
 			action = "MenuAction = 51";
 			tooltip = "Donate $200 from your wallet to this town's funding pool.";
+		};
+
+		//--- ACTION - DEFENSIVE VEHICLE (fable/gdir-vehicle-verb, GR-2026-07-08a): tier-scaled
+		//--- vehicle order, delivered on the town's next garrison spawn/regrow. Static base-price
+		//--- tooltips (not quote-integrated - the live quote array is a fixed 7-element price row;
+		//--- extending it is out of scope here). Actual charge is still scarcity/load-factor
+		//--- adjusted server-side, same formula as every other verb - tooltip price is a floor.
+		//--- NEEDS IN-GAME VISUAL VERIFICATION before merge - untested layout, see script header.
+		class Btn_VehicleT1 : RscButton_Main {
+			idc = 31081;
+			x = 0.348; y = 0.686; w = 0.168; h = 0.040;
+			text = "VEHICLE T1";
+			sizeEx = 0.021;
+			action = "MenuAction = 61";
+			tooltip = "Order a technical (Offroad_DSHKM_Gue) for this town. From $4800, delivered next garrison spawn.";
+		};
+		class Btn_VehicleT2 : Btn_VehicleT1 {
+			idc = 31082;
+			x = 0.518;
+			text = "VEHICLE T2";
+			action = "MenuAction = 62";
+			tooltip = "Order an IFV (BMP2_GUE) for this town. From $9600, delivered next garrison spawn.";
+		};
+		class Btn_VehicleT3 : Btn_VehicleT1 {
+			idc = 31083;
+			x = 0.695;
+			text = "VEHICLE T3";
+			action = "MenuAction = 63";
+			tooltip = "Order a tank (T72_GUE) for this town. From $14400, delivered next garrison spawn.";
 		};
 
 		//--- Status text (idc 31078): deny reasons, pending quote notice.
