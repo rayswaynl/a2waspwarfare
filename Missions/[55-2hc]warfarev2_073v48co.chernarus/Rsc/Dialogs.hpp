@@ -1616,6 +1616,8 @@ class RscMenu_Team {
 //---   inline money transfer (13006/13007/13008/13009/13012/13109).
 //--- Kept: income readout (13010), FX combo (13018), vote popup (13019), high-climb (13020).
 //--- New: gear preset rows (IDC 13051-13066), squad actions (13070-13074).
+//--- Re-added (DIAG-WFMENU-UX #2): Transfer Funds button (idc 13012, MenuAction 101)
+//---   reopens WFBE_TransferMenu (V1's advanced transfer dialog + backend).
 class RscMenu_TeamV2 {
 	movingEnable = 1;
 	idd = 13050;
@@ -1908,6 +1910,15 @@ class RscMenu_TeamV2 {
 			text = "";
 			tooltip = "Toggle whether newly bought vehicles start with high climbing enabled";
 			action = "MenuAction = 14";
+		};
+		class CA_TransferFunds_Button : RscButton {
+			idc = 13012;
+			x = 0.514313;
+			y = 0.626;
+			w = 0.279;
+			text = "Transfer Funds";
+			tooltip = "Open the advanced funds transfer menu (send cash to a teammate)";
+			action = "MenuAction = 101";
 		};
 		class VPOPON_Button : RscButton {
 			idc = 13019;
