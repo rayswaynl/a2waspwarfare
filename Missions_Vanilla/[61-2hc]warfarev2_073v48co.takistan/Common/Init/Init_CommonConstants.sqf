@@ -2333,6 +2333,12 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE")   then {WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE   = 1};   //--- mission-wide concurrent naval-skirmish cap (all 3 carriers share this).
 	if (isNil "WFBE_C_NAVAL_SKIRMISH_LIFETIME")     then {WFBE_C_NAVAL_SKIRMISH_LIFETIME     = 240}; //--- s hard cleanup ceiling regardless of duel outcome.
 
+//--- fable/ew-naval (Carrier ServicePoint): WFBE_C_NAVAL_CARRIER_SERVICE_POINTS - when >0, each captured
+//---   carrier HVT spawns a side-registered repair/rearm ServicePoint on the flight deck (server_town.sqf
+//---   carrier-capture block), mirroring the land-airfield Task-12 ServicePoint. Default 0 = current
+//---   behaviour (no deck ServicePoint); mission stays byte-identical to HEAD with the flag off.
+	if (isNil "WFBE_C_NAVAL_CARRIER_SERVICE_POINTS") then {WFBE_C_NAVAL_CARRIER_SERVICE_POINTS = 0}; //--- 0=off (byte-identical); >0=carrier deck gets a repair/rearm ServicePoint on capture.
+
 
 //======================================================================================
 //--- NAVAL INLINE SUPER-CARRIER (fable/naval-inline-hulls, Ray 2026-07-06):

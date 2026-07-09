@@ -882,7 +882,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 							_jet2 setDir _jetDir;
 							_jet2 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
 							_jet2 flyInHeight 600;
-							_jetPilot2 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+							_jetPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 							_jetPilot2 moveInDriver _jet2;
 							_jetPilot2 doMove [(_pos select 0) - 800, (_pos select 1), 600];
 
@@ -914,6 +914,19 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								//--- THREE-HIND path (WFBE_C_NAVAL_CAP_THREE_HINDS > 0): no An2.
 								_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
 								_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
+
+								//--- fable/ew-naval win-3: EASA random-loadout stamp for carrier Hinds (mirrors the L39 CAP stamp
+								//--- above, retargeted to Mi24_P + _hind). Dormant while WFBE_C_NAVAL_CAP_L39=1 (default) - only
+								//--- runs when a server sets that flag to 0 so the three-hind/standard CAP paths execute.
+								if ((missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0]) > 0) then {
+									_easaVehi = missionNamespace getVariable ["WFBE_EASA_Vehicles", []];
+									_easaIdx = _easaVehi find "Mi24_P";
+									if (_easaIdx >= 0) then {
+										_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaIdx;
+										_easaRandIdx = floor (random (count _easaLoadouts));
+										_hind setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
+									};
+								};
 								_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
 								_hindPilot moveInDriver _hind;
@@ -921,13 +934,39 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 
 								_hind2 = createVehicle ["Mi24_P", [(_pos select 0) - 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
 								_hind2 setPosASL [(_pos select 0) - 200, (_pos select 1) + 200, 400];
-								_hindPilot2 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+
+								//--- fable/ew-naval win-3: EASA random-loadout stamp for carrier Hinds (mirrors the L39 CAP stamp
+								//--- above, retargeted to Mi24_P + _hind2). Dormant while WFBE_C_NAVAL_CAP_L39=1 (default) - only
+								//--- runs when a server sets that flag to 0 so the three-hind/standard CAP paths execute.
+								if ((missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0]) > 0) then {
+									_easaVehi = missionNamespace getVariable ["WFBE_EASA_Vehicles", []];
+									_easaIdx = _easaVehi find "Mi24_P";
+									if (_easaIdx >= 0) then {
+										_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaIdx;
+										_easaRandIdx = floor (random (count _easaLoadouts));
+										_hind2 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
+									};
+								};
+								_hindPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								_hindPilot2 moveInDriver _hind2;
 								_hind2 flyInHeight 350;
 
 								_hind3 = createVehicle ["Mi24_P", [(_pos select 0) + 0, (_pos select 1) - 300, 400], [], 0, "FLY"];
 								_hind3 setPosASL [(_pos select 0) + 0, (_pos select 1) - 300, 400];
-								_hindPilot3 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+
+								//--- fable/ew-naval win-3: EASA random-loadout stamp for carrier Hinds (mirrors the L39 CAP stamp
+								//--- above, retargeted to Mi24_P + _hind3). Dormant while WFBE_C_NAVAL_CAP_L39=1 (default) - only
+								//--- runs when a server sets that flag to 0 so the three-hind/standard CAP paths execute.
+								if ((missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0]) > 0) then {
+									_easaVehi = missionNamespace getVariable ["WFBE_EASA_Vehicles", []];
+									_easaIdx = _easaVehi find "Mi24_P";
+									if (_easaIdx >= 0) then {
+										_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaIdx;
+										_easaRandIdx = floor (random (count _easaLoadouts));
+										_hind3 setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
+									};
+								};
+								_hindPilot3 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								_hindPilot3 moveInDriver _hind3;
 								_hind3 flyInHeight 350;
 
@@ -994,6 +1033,19 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								//---   gives zero velocity at t=0 -> stall-dive. Set forward speed.
 								_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
 								_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
+
+								//--- fable/ew-naval win-3: EASA random-loadout stamp for carrier Hinds (mirrors the L39 CAP stamp
+								//--- above, retargeted to Mi24_P + _hind). Dormant while WFBE_C_NAVAL_CAP_L39=1 (default) - only
+								//--- runs when a server sets that flag to 0 so the three-hind/standard CAP paths execute.
+								if ((missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0]) > 0) then {
+									_easaVehi = missionNamespace getVariable ["WFBE_EASA_Vehicles", []];
+									_easaIdx = _easaVehi find "Mi24_P";
+									if (_easaIdx >= 0) then {
+										_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaIdx;
+										_easaRandIdx = floor (random (count _easaLoadouts));
+										_hind setVariable ["wfbe_naval_easa_pending", _easaRandIdx, true];
+									};
+								};
 								_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNil "_hindPilot") then {_hindPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
 								_hindPilot moveInDriver _hind;
@@ -1009,7 +1061,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_biplane setDir _jetDir;
 								_biplane setVelocity [(sin _jetDir) * 60, (cos _jetDir) * 60, 0];
 								_biplane flyInHeight 550;
-								_biplPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								_biplPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								_biplPilot moveInDriver _biplane;
 
 								//--- Tag both as CAP so GC/groupsGC don't reap them.
