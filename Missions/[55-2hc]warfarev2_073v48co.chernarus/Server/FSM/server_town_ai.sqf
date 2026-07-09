@@ -588,7 +588,7 @@ while {!WFBE_GameOver} do {
 								//--- current, possibly-overwritten, per-town flag. Default true (count) for any untagged
 								//--- group so pre-existing/edge-case groups keep the old behaviour - this only narrows
 								//--- counting for groups explicitly tagged air-only.
-								if (_ctlLaneOn && {(_x getVariable ["wfbe_ctl_ground_wave", true])}) then {
+								if (_ctlLaneOn && {([_x, "wfbe_ctl_ground_wave", true] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- sweep-fix #936: _x is a GROUP; 2-arg getVariable returns nil-not-default on groups (G1 trap) - route through the group-safe wrapper.
 									{if (alive _x) then {_ctlSurviving = _ctlSurviving + 1}} forEach units _x;
 								};
 								//--- B67 [wiki-wins]: never delete a player unit. The old loop deleted
