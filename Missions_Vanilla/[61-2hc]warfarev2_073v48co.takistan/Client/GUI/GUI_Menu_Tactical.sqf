@@ -237,12 +237,31 @@ _textAnimHandler = [] spawn {};
 
 MenuAction = -1;
 mouseButtonUp = -1;
+//--- fable/fix-fpv-cooldown: rearm-cooldown parity with GUER (GUI_Menu_GuerDrones.sqf).
+//--- Tracks the playerFPV alive->dead transition so wfbe_fpv_cooldown stamps once per flight end.
+_fpvWasAlive = false;
 
 while {alive player && dialog} do {
 	if (side group player != sideJoined) exitWith {deleteMarkerLocal _marker;deleteMarkerLocal _area;{deleteMarkerLocal _x} forEach _markers;closeDialog 0};
 	if (!dialog) exitWith {deleteMarkerLocal _marker;deleteMarkerLocal _area;{deleteMarkerLocal _x} forEach _markers};
 	
 	_currentUpgrades = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
+	
+	//--- fable/fix-fpv-cooldown: WEST/EAST FPV rearm-cooldown gate, mirrors GUER's
+	//--- wfbe_fpv_guer_cooldown idiom (GUI_Menu_GuerDrones.sqf) using the SAME shared
+	//--- WFBE_C_FPV_COOLDOWN param (Rsc/Parameters.hpp titles it "all sides" - GUER was
+	//--- the only side actually enforcing it). Runs every tick, not selection-gated, so the
+	//--- cooldown starts the instant the drone dies even if FPV_Strike isn't the active row.
+	_fpvCooldown = missionNamespace getVariable ["wfbe_fpv_cooldown", 0];
+	if (!isNull playerFPV && {alive playerFPV}) then {
+		_fpvWasAlive = true;
+	} else {
+		if (_fpvWasAlive && {_fpvCooldown <= time}) then {
+			missionNamespace setVariable ["wfbe_fpv_cooldown", time + (missionNamespace getVariable ["WFBE_C_FPV_COOLDOWN", 60])];
+			_fpvCooldown = missionNamespace getVariable ["wfbe_fpv_cooldown", 0];
+		};
+		_fpvWasAlive = false;
+	};
 	
 	if (_ft > 0) then {
 		_currentLevel = _currentUpgrades select WFBE_UP_FASTTRAVEL;
@@ -414,7 +433,8 @@ while {alive player && dialog} do {
 			};
 			case "FPV_Strike": {
 				//--- fable/fpv-strike-drone: funds + one live drone per player.
-				_controlEnable = if (_funds >= _currentFee && !(alive playerFPV)) then {true} else {false};
+				//--- fable/fix-fpv-cooldown: + rearm-cooldown parity with GUER (WFBE_C_FPV_COOLDOWN).
+				_controlEnable = if (_funds >= _currentFee && !(alive playerFPV) && (missionNamespace getVariable ["wfbe_fpv_cooldown", 0]) <= time) then {true} else {false};
 			};
 			case "Units_Camera": {
 				_controlEnable = commandInRange;
