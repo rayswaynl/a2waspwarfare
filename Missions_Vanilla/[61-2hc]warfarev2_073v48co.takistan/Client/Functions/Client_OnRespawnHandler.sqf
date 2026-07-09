@@ -190,6 +190,7 @@ if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear &&
 				if (typeOf _spawn == WFBE_Logic_Camp) then {
 					_charge = false;
 					diag_log Format ["WFBE CAMPGEAR: camp respawn at %1 - custom gear kept (flag WFBE_C_CAMP_RESPAWN_KEEP_GEAR=1).", _spawn];
+					(localize "STR_WF_CHAT_Gear_CampKept") Call GroupChatMessage;  //--- wiki-wins: camp-free-gear chat feedback (was diag_log-only, invisible to players).
 				};
 			};
 			

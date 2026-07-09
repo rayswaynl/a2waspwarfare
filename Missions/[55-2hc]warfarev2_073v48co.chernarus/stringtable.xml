@@ -189,6 +189,10 @@
         <English>You were deducted from $%1 due to your gear</English>
         <Russian>У вас изъято $%1 за ваше снаряжение</Russian>
       </Key>
+      <Key ID="STR_WF_CHAT_Gear_CampKept">
+        <English>Your custom gear was kept: this is a friendly camp.</English>
+        <Russian>Ваше снаряжение сохранено: это дружественный лагерь.</Russian>
+      </Key>
       <Key ID="STR_WF_CHAT_Gear_RespawnUnaffordable">
         <English>Your custom gear was stripped: you could not afford the $%1 respawn gear cost.</English>
         <Russian>Ваше снаряжение сброшено: недостаточно средств на стоимость снаряжения $%1.</Russian>

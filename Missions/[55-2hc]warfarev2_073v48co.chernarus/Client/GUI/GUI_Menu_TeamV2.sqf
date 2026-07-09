@@ -150,12 +150,31 @@ if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
 		_udSN = "--- Slot " + str (_forEachIndex + 1) + " empty ---";
 		if (count _udTemplate > 0) then {
 			_udSW = _udTemplate select 0;
+			//--- UD tier badge (reuses the Presets tier-badge lookup, see :78-91): forEach over
+			//--- _udSW weapons + the backpack (index 2) tier check to compute _topTier.
+			_topTier = 0;
+			private ["_udBp","_udItemData","_udItemTier"];
+			{
+				_udItemData = missionNamespace getVariable _x;
+				if !(isNil "_udItemData") then {
+					_udItemTier = _udItemData select 3;
+					if (_udItemTier > _topTier) then {_topTier = _udItemTier};
+				};
+			} forEach _udSW;
+			_udBp = _udTemplate select 2;
+			if (_udBp != "") then {
+				_udItemData = missionNamespace getVariable _udBp;
+				if !(isNil "_udItemData") then {
+					_udItemTier = _udItemData select 3;
+					if (_udItemTier > _topTier) then {_topTier = _udItemTier};
+				};
+			};
 			if (count _udSW > 0) then {
 				_udSWItem = missionNamespace getVariable (_udSW select 0);
 				if !(isNil "_udSWItem") then {
-					_udSN = "Slot " + str (_forEachIndex + 1) + ": " + (_udSWItem select 1);
+					_udSN = "Slot " + str (_forEachIndex + 1) + ": " + (_udSWItem select 1) + " [T" + str _topTier + "]";
 				} else {
-					_udSN = "Slot " + str (_forEachIndex + 1) + ": (custom)";
+					_udSN = "Slot " + str (_forEachIndex + 1) + ": (custom) [T" + str _topTier + "]";
 				};
 			};
 		};
