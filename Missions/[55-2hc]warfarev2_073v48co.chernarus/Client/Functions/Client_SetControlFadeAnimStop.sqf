@@ -1,3 +1,4 @@
+disableSerialization;
 Private ["_control","_duration","_text","_textcontent"];
 _control = _this select 0;
 

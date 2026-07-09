@@ -6,6 +6,7 @@
 		- Refresh parts
 */
 
+disableSerialization;
 Private ["_magazines","_weapons"];
 
 _weapons = _this select 0;
