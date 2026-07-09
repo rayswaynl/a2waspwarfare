@@ -153,6 +153,35 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoi
 	};
 };
 
+//--- fable/marker-combat-flash (owner 2026-07-09) RESPAWN-BLINK-EH FIX: Common\Init\Init_Unit.sqf
+//--- attaches WFBE_BlinkFiredEH (the Fired handler that drives combat-icon-blink / teammate marker
+//--- flash) exactly once, at unit CREATION (Common_CreateUnit.sqf / Common_CreateVehicle.sqf). This
+//--- respawn handler builds a FRESH unit object that never goes through Init_Unit.sqf again, so -
+//--- once WFBE_C_MAP_ICON_BLINKING_ENABLED is on (it is, by default) - combat-icon-blink silently
+//--- died for the rest of the match after a player's first death. Re-attach here: same handler body
+//--- Init_Unit.sqf uses, same OriginalMarkerColor seed it would have set for the player's own body
+//--- (own-group man always resolves ColorOrange there). Idempotent per-object flag (mirrors the IED
+//--- guard immediately above; the object is fresh each respawn, but belt-and-braces).
+if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {
+	if !(_unit getVariable ["wfbe_blink_eh_added", false]) then {
+		_unit setVariable ["wfbe_blink_eh_added", true];
+		_unit setVariable ["OriginalMarkerColor", "ColorOrange", false];
+		_unit setVariable ["WFBE_BlinkFiredEH", _unit addEventHandler ["Fired", {
+			_u = _this select 0;
+			_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
+		}], false];
+		//--- fable/marker-combat-flash-fixes (owner 2026-07-09): re-attach the being-shot-at Hit EH
+		//--- too, on the same idempotency flag (both EHs are always added/removed together as a pair).
+		_unit setVariable ["WFBE_BlinkHitEH", _unit addEventHandler ["Hit", {
+			_u = _this select 0;
+			_causedBy = _this select 1;
+			if (!isNull _causedBy && {side _causedBy != side _u}) then {
+				_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
+			};
+		}], false];
+	};
+};
+
 //--- Loadout.
 if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear && _allowCustom) then {
 	_mode = missionNamespace getVariable "WFBE_C_RESPAWN_PENALTY";

@@ -1543,8 +1543,18 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_PLAYERS_MARKER_BLINKS = 16; // Keep it even number, otherwise the icon turns permanently red after blinking.
 	BLINKING_UNITS_WEST = [];
 	BLINKING_UNITS_EAST = [];
+	BLINKING_UNITS_GUER = [];
 	BLINKING_VEHICLES_WEST = [];
 	BLINKING_VEHICLES_EAST = [];
+	BLINKING_VEHICLES_GUER = [];
+//--- fable/marker-combat-flash (owner 2026-07-09): optional seconds-based override for the
+//--- combat-icon-blink duration above. WFBE_C_PLAYERS_MARKER_BLINKS is a blink-COUNT; the
+//--- Client_BookkeepBlinkingIcons.sqf loop ticks ~1/s, so 1 blink =~ 1 second. 0 = inert,
+//--- keeps the existing WFBE_C_PLAYERS_MARKER_BLINKS behavior byte-identical (flag-off).
+//--- >0 lets an admin dial the flash window in seconds without touching the existing
+//--- count-based default. Read in Client_BlinkMapIcon.sqf. Never change
+//--- WFBE_C_PLAYERS_MARKER_BLINKS's own default here (flag policy).
+	if (isNil "WFBE_C_MARKER_COMBAT_FLASH_SECS") then {WFBE_C_MARKER_COMBAT_FLASH_SECS = 0};
 
 //--- cmdcon43-b (Build 88): BIG-MAP FPS - marker RENDER-pass mitigation. The consolidated marker loop
 //--- (Common\Common_MarkerLoop.sqf) gates identically on any map consumer, so the script load is the same

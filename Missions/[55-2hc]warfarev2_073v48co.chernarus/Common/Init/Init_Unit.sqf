@@ -306,6 +306,20 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 		_u = _this select 0;                 // unit that fired
 		_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
 	}], false];
+	//--- fable/marker-combat-flash-fixes (owner 2026-07-09) BEING-SHOT-AT TRIGGER: also flash when
+	//--- the unit TAKES fire from an enemy, not just when they fire. Hit stacks safely (unlike
+	//--- HandleDamage, which this codebase already uses for the player rearmor system -
+	//--- Init_Client.sqf:102 - and which REPLACES rather than adds a second handler; Hit is the
+	//--- only A2-OA-safe damage-taken signal here). Reuses the same LFTB flag + 1Hz bookkeeping
+	//--- loop, no new per-frame cost. Filters to a hostile causer only (excludes self-damage/fall
+	//--- damage/friendly fire) to match "being shot at".
+	_unit setVariable ["WFBE_BlinkHitEH", _unit addEventHandler ["Hit", {
+		_u = _this select 0;
+		_causedBy = _this select 1;
+		if (!isNull _causedBy && {side _causedBy != side _u}) then {
+			_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
+		};
+	}], false];
 };
 
 _unit setVariable ["OriginalMarkerColor", _color, false];
