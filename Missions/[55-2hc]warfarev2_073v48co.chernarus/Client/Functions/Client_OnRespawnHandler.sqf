@@ -159,6 +159,15 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 			_u = _this select 0;
 			_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
 		}], false];
+		//--- fable/marker-combat-flash-fixes (owner 2026-07-09): re-attach the being-shot-at Hit EH
+		//--- too, on the same idempotency flag (both EHs are always added/removed together as a pair).
+		_unit setVariable ["WFBE_BlinkHitEH", _unit addEventHandler ["Hit", {
+			_u = _this select 0;
+			_causedBy = _this select 1;
+			if (!isNull _causedBy && {side _causedBy != side _u}) then {
+				_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
+			};
+		}], false];
 	};
 };
 
