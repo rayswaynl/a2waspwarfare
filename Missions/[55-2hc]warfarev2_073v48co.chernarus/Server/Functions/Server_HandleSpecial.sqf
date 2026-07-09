@@ -149,9 +149,18 @@ switch (_args select 0) do {
 		//--- (wfbe_ctl_ground_wave, set alongside the wave in server_town_ai.sqf) and flag-gated:
 		//--- byte-identical to HEAD when AICOMV2_LANE_CMD_TOWN_LEDGER=0.
 		if ((count _teams > 0) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0} && {(_town getVariable ["wfbe_ctl_ground_wave", false])}) then {
-			private ["_ctlSide7","_ctlSideId7"];
-			_ctlSideId7 = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
-			_ctlSide7   = _ctlSideId7 Call WFBE_CO_FNC_GetSideFromID;
+			private ["_ctlSide7"];
+			//--- New-Bug-B fix (fable/ctl-survivor-bugs): read the side SNAPSHOTTED at wave-creation time
+			//--- (server_town_ai.sqf: wfbe_ctl_wave_side, set alongside wfbe_ctl_ground_wave), not the
+			//--- town's LIVE sideID. HC/client-delegated group creation is async - if the town is
+			//--- captured in the window between wave dispatch and this report landing, the live sideID
+			//--- has already flipped to the NEW owner, and the old code credited that owner's
+			//--- freshly-seeded ledger record (_captureSeed=0.25, lastSpawnUnits=0) with a stray unit
+			//--- count from a wave it never fielded. sideUnknown default => the existing west/east
+			//--- guard right below already skips the credit entirely when there's no valid snapshot
+			//--- (unset, or the town changed hands again since) - same 'no valid record => no credit'
+			//--- posture as the _ctlFound7 guard further down; no new branch needed.
+			_ctlSide7 = _town getVariable ["wfbe_ctl_wave_side", sideUnknown];
 			if (_ctlSide7 == west || {_ctlSide7 == east}) then {
 				private ["_ctlUnits7","_ctlLogik7","_ctlLedger7","_ctlI7","_ctlFound7"];
 				_ctlUnits7 = 0;
