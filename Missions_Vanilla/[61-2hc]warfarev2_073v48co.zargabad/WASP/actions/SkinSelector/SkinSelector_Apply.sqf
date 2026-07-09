@@ -409,22 +409,39 @@ if ((missionNamespace getVariable ["WFBE_C_SKINSWAP_FUNDS_CARRY", 1]) > 0) then 
 		_curFunds = _curGrp getVariable "wfbe_funds";
 		//--- Only heal a group that has NO numeric funds of its own (the orphaned-wallet case).
 		if (isNil "_curFunds" || {typeName _curFunds != "SCALAR"}) then {
-			//--- Prefer the exact snapshot from the pre-swap funded group; if that too was missing
-			//--- (a chain of prior orphaning), fall back to the side START so the player is never
-			//--- left at a phantom $0. _carrySide feeds the START lookup and re-slots the group.
-			if (!isNil "_carryFunds" && {typeName _carryFunds == "SCALAR"}) then {
-				_curGrp setVariable ["wfbe_funds", _carryFunds, true];
-			} else {
-				private "_startFunds";
-				_startFunds = missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", (side player)], 0];
-				_curGrp setVariable ["wfbe_funds", _startFunds, true];
-			};
 			//--- Restore the group's warfare-slot identity so the server never reads it as civilian.
 			if (isNil {_curGrp getVariable "wfbe_side"} && {!isNil "_carrySide"}) then {
 				_curGrp setVariable ["wfbe_side", _carrySide, true];
 			};
-			diag_log format ["[WFBE (SKIN)] B6_WALLET-CARRY: current group had no funds after swap - re-stamped wfbe_funds=%1 (carried=%2) side=%3 grp=%4",
-				(if (isNil {_curGrp getVariable "wfbe_funds"}) then {0} else {_curGrp getVariable "wfbe_funds"}), (if (isNil "_carryFunds") then {"nil"} else {_carryFunds}), (side player), _curGrp];
+			//--- JIPCLOBBER FIX (Fable, skin<>JIP money-loss - owner live report): only carry forward the
+			//--- exact snapshot THIS client itself observed on _oldGrp a moment ago in this same script run
+			//--- (real, verified data - safe to re-stamp). The old code's fallback fabricated the side-START
+			//--- value out of thin air when even that snapshot was missing too; that path is now removed -
+			//--- see the else branch's comment below for why it was live-dangerous.
+			if (!isNil "_carryFunds" && {typeName _carryFunds == "SCALAR"}) then {
+				_curGrp setVariable ["wfbe_funds", _carryFunds, true];
+				diag_log format ["[WFBE (SKIN)] B6_WALLET-CARRY: current group had no funds after swap - re-stamped wfbe_funds=%1 (carried snapshot) side=%2 grp=%3",
+					_carryFunds, (side player), _curGrp];
+			} else {
+				//--- Neither the pre-swap snapshot NOR the post-swap group carries a known numeric balance.
+				//--- On a genuine first-ever join this DOES mean "never funded yet" - but from this client
+				//--- ALONE it is INDISTINGUISHABLE from a JIP reconnect whose real (possibly large, persisted)
+				//--- wfbe_funds broadcast simply has not replicated here yet (A2-OA does not replay a
+				//--- setVariable-broadcast to a client that joined/reconnected after it was sent - the exact
+				//--- quirk the EARLYHEAL / B76 FUNDS-HEAL self-heal loops in Init_Client.sqf exist to work
+				//--- around). This group is LOCAL to this client (its own leader), so a client-side
+				//--- setVariable-broadcast here is AUTHORITATIVE on the network and would CLOBBER a real,
+				//--- higher, server-held balance the instant it lands: Skill_Init.sqf auto-opens the skin
+				//--- selector on first join/reconnect (show-once flag lives on the player OBJECT, so a fresh
+				//--- reconnect re-triggers it), and a reconnecting player who applies a skin before their real
+				//--- funds replay lands would have their balance silently reset to the side START value - the
+				//--- previous fabricate-and-broadcast here is exactly that live "money disappeared" report.
+				//--- DO NOT fabricate a number - leave wfbe_funds untouched locally and let the server resolve
+				//--- it (RequestFundsResend below already prefers the authoritative WFBE_JIP_USER<uid> record
+				//--- over a missing group value, and only stamps START itself when no record exists either -
+				//--- a genuine first join).
+				diag_log format ["[WFBE (SKIN)] B6_WALLET-CARRY: current group has no funds and no carried snapshot - deferring to server RequestFundsResend instead of guessing (grp=%1 side=%2)", _curGrp, (side player)];
+			};
 			//--- Ask the server to re-broadcast the AUTHORITATIVE value onto this group (idempotent:
 			//--- it echoes an absolute stored value, never adds). This reconciles the server's own
 			//--- record with the client re-stamp and covers the case where _oldGrp's balance had
