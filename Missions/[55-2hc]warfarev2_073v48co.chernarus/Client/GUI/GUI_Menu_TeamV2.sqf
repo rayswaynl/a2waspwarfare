@@ -171,6 +171,16 @@ if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
 	} else {
 		(_display displayCtrl 13101) ctrlSetText "Active: None  (no template applied on AI buys)";
 	};
+	//--- fable/respawn-menu-shortcuts (owner 2026-07-09): "Customise AI Soldier" respawn-menu
+	//--- button sets WFBE_TM2_OpenToUD before createDialog - jump straight to the Unit
+	//--- Designer tab on open. Mirrors the exact show/hide toggle the Units tab button
+	//--- already uses (MenuAction 1200 below). No-op whenever Team Menu is opened any other
+	//--- way (WFBE_TM2_OpenToUD stays nil).
+	if (!(isNil "WFBE_TM2_OpenToUD") && {WFBE_TM2_OpenToUD}) then {
+		WFBE_TM2_OpenToUD = nil;
+		{(_display displayCtrl _x) ctrlShow false} forEach _udPresetIDCs;
+		{(_display displayCtrl _x) ctrlShow true } forEach _udUDIDCs;
+	};
 };
 
 _repairTimer = 0; //--- used to pace the "repair in progress" hint.

@@ -2182,7 +2182,14 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (Client_PreRespawnHandler.sqf) so the factory-queue cap counter cannot accumulate across deaths.
 //--- Default 0 (dark). Set 1 to activate the reset. The Client_BuildUnit.sqf decrements are `max 0`-clamped
 //--- (salvage-522) so an in-flight buy that resolves after a reset clamps to 0 instead of going negative.
-	if (isNil "WFBE_C_FIX_RESPAWN_UNITQUEU_RESET") then {WFBE_C_FIX_RESPAWN_UNITQUEU_RESET = 1};
+
+//--- fable/respawn-menu-shortcuts (owner 2026-07-09): two respawn-menu buttons that open the
+//--- existing Team Menu (RscMenu_TeamV2, idd 13050) - Gear Presets / Unit Designer tabs.
+//--- Pure UI convenience wiring into an already-shipped dialog (GUI_Menu_TeamV2.sqf); no new
+//--- game logic. Default 0 = byte-identical legacy respawn screen (buttons hidden via
+//--- `show=0`, minimap geometry untouched). See docs/design/v2/TEAM-MENU-REPURPOSE-PROPOSAL-2026-07-07.md
+//--- for the Unit Designer / Gear Presets feature inventory this reuses.
+	if (isNil "WFBE_C_RESPAWN_SHORTCUTS") then {WFBE_C_RESPAWN_SHORTCUTS = 0};
 
 //--- DEADSPAWN NO-ARMED-UNITS GUARD (fable/deadspawn-guard, Ray 2026-07-04): while a dead AI team
 //--- leader is parked on its %1TempRespawnMarker holding point during the respawn wait
