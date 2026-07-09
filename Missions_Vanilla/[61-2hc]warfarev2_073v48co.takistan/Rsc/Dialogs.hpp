@@ -4784,10 +4784,11 @@ class WFBE_GDirCommissarMenu {
 			w = WFBE_Background_Border_Thick; h = 0.520;
 			colorBackground[] = {0.2588, 0.7137, 1, 0.4};
 		};
-		//--- Minimap backing plate.
+		//--- Minimap backing plate. (fable/commissar-minimap: enlarged w/h to match WF_MiniMap below;
+		//--- tune these 2 lines + the matching WF_MiniMap block together, values must stay identical.)
 		class BG_Map : RscText {
-			x = 0.115; y = 0.386;
-			w = 0.222; h = 0.379;
+			x = 0.115; y = 0.361;
+			w = 0.226; h = 0.409;
 			colorBackground[] = {0, 0, 0, 0.5};
 		};
 	};
@@ -4822,13 +4823,13 @@ class WFBE_GDirCommissarMenu {
 		};
 		class LB_Towns : RscListBox {
 			idc = 31010;
-			x = 0.115; y = 0.263; w = 0.222; h = 0.095;
+			x = 0.115; y = 0.263; w = 0.222; h = 0.070; //--- fable/commissar-minimap: shrunk 0.025 to free vertical room for a bigger minimap below; list still scrolls.
 			rowHeight = 0.04; //--- Hotfix: engine "No entry ...rowHeight" popup without an explicit value.
 		};
 
 		//--- Map label.
 		class Lbl_Map : RscText {
-			x = 0.115; y = 0.362; w = 0.222; h = 0.022;
+			x = 0.115; y = 0.337; w = 0.222; h = 0.022; //--- fable/commissar-minimap: shifted up to track the shrunk LB_Towns above it.
 			text = "MAP (click to select town)";
 			sizeEx = 0.016;
 			colorText[] = {1, 1, 1, 0.5};
@@ -4838,8 +4839,8 @@ class WFBE_GDirCommissarMenu {
 		//--- Map-click: mouseButtonUp wired via event; loop reads _map posScreenToWorld[mouseX,mouseY].
 		class WF_MiniMap : RscMapControl {
 			idc = 31060;
-			x = 0.115; y = 0.386;
-			w = 0.222; h = 0.379;
+			x = 0.115; y = 0.361; //--- fable/commissar-minimap: was 0.222x0.379 @ (0.115,0.386); enlarged + shifted up, stays clear of BG_DivV (x=0.342) and the footer. Tune freely, keep in sync with BG_Map above.
+			w = 0.226; h = 0.409;
 			ShowCountourInterval = 1;
 			onMouseMoving = "mouseX = (_this select 1); mouseY = (_this select 2)";
 			onMouseButtonDown = "mouseButtonDown = (_this select 1)";
