@@ -933,6 +933,30 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 //---
 //--- WFBE_C_NAVAL_CAMPS_DECK default 1 (owner-reported correctness fix, always-on).
 //------------------------------------------------------------------------------------
+if ((missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0) then {
+	//--- fable/radius-hold-primitive (GR-2026-07-08a) BUBBLE consumer: register the shared radius-hold
+	//--- primitive on each carrier's existing town logic instead of spawning/reseating deck camps.
+	//--- Mutually exclusive with the WFBE_C_NAVAL_CAMPS_DECK path below (design doc S8) - camps never
+	//--- spawn for a bubble-enabled carrier, and server_town.sqf's camp-ratio capture-rate math is
+	//--- gated off for wfbe_is_naval_hvt towns whenever this flag is on (server_town.sqf's
+	//--- if-not-skip rate/drain block, now also guarded on this flag being 0).
+	{
+		private ["_bubLogic","_bubId"];
+		_bubLogic = _x;
+		_bubId = Format ["naval_%1", _bubLogic getVariable ["name","hvt"]];
+		[
+			_bubId,
+			_bubLogic,
+			missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_RADIUS", 180],
+			missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_HOLDSECS", 120],
+			[west, east, resistance],
+			0,
+			0,
+			"WFBE_SE_FNC_NavalHVT_BubbleComplete"
+		] call WFBE_CO_FNC_RadiusHold_Register;
+	} forEach [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic];
+	["INITIALIZATION", "Init_NavalHVT.sqf : WFBE_C_NAVALHVT_BUBBLE_ENABLE=1 - proximity bubbles registered on all 3 carriers, camp deck-reseat skipped."] Call WFBE_CO_FNC_LogContent;
+} else {
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
 	private ["_campDeckOffsets"];
 	//--- Body-space [bx, by] offsets for each camp slot on the flight deck.
@@ -1087,5 +1111,6 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
 		};
 	} forEach [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic];
 };
+}; //--- fable/radius-hold-primitive (GR-2026-07-08a): closes the WFBE_C_NAVALHVT_BUBBLE_ENABLE else-branch opened above the WFBE_C_NAVAL_CAMPS_DECK block.
 
 ["INITIALIZATION", "Init_NavalHVT.sqf : All naval HVT assets spawned + CAP loops started."] Call WFBE_CO_FNC_LogContent;

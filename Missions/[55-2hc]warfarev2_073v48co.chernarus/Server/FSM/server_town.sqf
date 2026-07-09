@@ -251,7 +251,7 @@ while {!WFBE_GameOver} do {
 			};
 		};
 
-		if !(_skip) then {
+		if !(_skip) && {!((_location getVariable ["wfbe_is_naval_hvt", false]) && {(missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0})} then {
 			_totalCamps = _location Call WFBE_CO_FNC_GetTotalCamps;
 			//--- ROOT FIX (cmdcon44e, rig-verified XWT45): a no-match default-less switch returns the switch
 			//--- VALUE (boolean true) - the tie case (dominion logic zeroes all three counts) fed boolean into

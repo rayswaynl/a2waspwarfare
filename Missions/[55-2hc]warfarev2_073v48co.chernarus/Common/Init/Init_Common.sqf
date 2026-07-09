@@ -181,6 +181,9 @@ WF_sendMessage = compile preprocessFileLineNumbers "Common\Functions\Common_Send
 WFBE_CO_FNC_StagnateSupplyIncomeNoPlayers = Compile preprocessFileLineNumbers "Common\Functions\Common_StagnateSupplyIncomeNoPlayers.sqf";
 // Marty: Defense budget — category helper (used by RequestDefense budget gate and available to client UI).
 WFBE_CO_FNC_GetDefenseCategory = Compile preprocessFileLineNumbers "Common\Functions\Common_GetDefenseCategory.sqf";
+WFBE_CO_FNC_RadiusHold_Register = Compile preprocessFileLineNumbers "Common\Functions\Common_RadiusHold.sqf"; //--- fable/radius-hold-primitive (GR-2026-07-08a): shared server-authoritative radius-presence-hold primitive. Flag WFBE_C_RADIUSHOLD_ENABLE default 0 (refuses registration, no dispatcher spawn).
+WFBE_CO_FNC_WeightedDraw = Compile preprocessFileLineNumbers "Common\Functions\Common_WeightedDraw.sqf"; //--- fable/radius-hold-primitive (GR-2026-07-08a): pure weighted-roll primitive extracted from AI_Commander_Wildcard.sqf proven algorithm.
+if (isNil "WFBE_RADIUSHOLD_REGISTRY") then { WFBE_RADIUSHOLD_REGISTRY = []; }; //--- fable/radius-hold-primitive: registry init (defense-in-depth; Common_RadiusHold.sqf also isNil-guards this on first register).
 
 ["INITIALIZATION", "Init_Common.sqf: Functions are initialized."] Call WFBE_CO_FNC_LogContent;
 
