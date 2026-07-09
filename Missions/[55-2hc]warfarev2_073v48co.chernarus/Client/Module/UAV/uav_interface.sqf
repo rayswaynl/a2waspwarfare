@@ -1,3 +1,4 @@
+disableSerialization;
 Private ['_IGUI_update','_alt','_defaultTeamswitch','_defaultvalue','_displayEH_keydown','_displayEH_mousebuttondown','_displayEH_mousezchanged','_locked','_logic','_mapEH_mousebttondown','_newalt','_newspeed','_ppBlur','_ppColor','_ppGrain','_ppInversion','_speed','_uav'];
 _defaultTeamswitch = teamswitchenabled;
 

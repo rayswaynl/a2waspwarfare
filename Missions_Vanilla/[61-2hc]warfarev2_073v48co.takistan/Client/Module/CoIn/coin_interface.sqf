@@ -1,3 +1,4 @@
+disableSerialization;
 _logic = _this select 3;
 _startPos = _this select 4;
 _source = _this select 5;
