@@ -60,6 +60,37 @@ while {!WFBE_GameOver} do {
 
 				_sideID = _location getVariable "sideID";
 				_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
+
+				//--- fable/fix-hangar-aircraft-buy: airfields tagged wfbe_skip_auto_hangar (NWAF/NEAF/Balota)
+				//--- never get a hangar+marker from Init_Airports.sqf, and Init_Town.sqf defaults every town's
+				//--- sideID to WFBE_DEFENDER_ID at boot without an actual capture transition, so the Task 12
+				//--- block below (~line 580) never fires for them either - the buy-aircraft prompt stays
+				//--- missing until the airfield is fought over at least once. Provision once for whichever
+				//--- side already owns it at first evaluation; wfbe_airfield_hangar_obj guards against
+				//--- re-firing, and a real capture later replaces the hangar exactly as before.
+				if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && {_location getVariable ["wfbe_is_airfield", false]} && {isNull (_location getVariable ["wfbe_airfield_hangar_obj", objNull])} && {_sideID != WFBE_C_UNKNOWN_ID}) then {
+					Private ["_bootAirfieldLogic","_bootAirfieldLogicChecks"];
+					_bootAirfieldLogic = _location getVariable ["wfbe_airfield_logic_ref", objNull];
+					if (isNull _bootAirfieldLogic) then {
+						_bootAirfieldLogicChecks = (getPos _location) nearEntities [["LocationLogicAirport"], 1500];
+						if (count _bootAirfieldLogicChecks > 0) then {
+							_bootAirfieldLogic = _bootAirfieldLogicChecks select 0;
+							_location setVariable ["wfbe_airfield_logic_ref", _bootAirfieldLogic, false];
+						};
+					};
+					//--- Don't spawn a duplicate: an airport NOT flagged wfbe_skip_auto_hangar (e.g. ZG's
+					//--- single airfield) already got a hangar straight from Init_Airports.sqf at boot -
+					//--- that one only linked wfbe_hangar on the airport logic, never wfbe_airfield_hangar_obj
+					//--- on the town, which is why the outer isNull check above missed it. Adopt it instead.
+					if !(isNull _bootAirfieldLogic) then {
+						if (isNull (_bootAirfieldLogic getVariable ["wfbe_hangar", objNull])) then {
+							[_location, _bootAirfieldLogic, _side] Call WFBE_SE_FNC_ProvisionAirfieldHangar;
+						} else {
+							_location setVariable ["wfbe_airfield_hangar_obj", (_bootAirfieldLogic getVariable ["wfbe_hangar", objNull]), true];
+						};
+					};
+				};
+
 				//--- PERF dedupe REVERTED (caused capture-detection wedges twice); back to the proven
 				//--- direct scan. The server_town_ai cache-write remains but is simply unread now.
 				_perfT0PA = diag_tickTime; //--- FPS PROFILING (claude-gaming): bracket the uncached per-town capture scan (suspected #1 server frametime sink)
@@ -578,7 +609,7 @@ while {!WFBE_GameOver} do {
 			//--- Task 12: Airfield capture — spawn repair point + exclusive hangar for the new owner.
 			//--- Task 13: Airfield built-in Counter Battery Radar (2000 m, follows owner).
 			if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && (_location getVariable ["wfbe_is_airfield", false])) then {
-				Private ["_airfieldLogic","_airfieldLogicChecks","_newHangar","_oldHangar","_oldSP","_logik","_sp","_spClass","_spPos",
+				Private ["_airfieldLogic","_airfieldLogicChecks","_oldSP","_logik","_sp","_spClass","_spPos",
 				         "_oldRadar","_oldDressing","_radarClass","_radarPos","_radar","_cbrKey","_cbrReg","_dressTpl",
 				         "_oldGarrison","_garUnit"];
 
@@ -665,22 +696,9 @@ while {!WFBE_GameOver} do {
 				//--- Store on location for cleanup on next capture.
 				_location setVariable ["wfbe_airfield_sp", _sp, true];
 
-				//--- Delete old hangar (previous owner's) and its link on the airport logic.
-				_oldHangar = _location getVariable ["wfbe_airfield_hangar_obj", objNull];
-				if !(isNull _oldHangar) then {
-					deleteVehicle _oldHangar;
-					if !(isNull _airfieldLogic) then { _airfieldLogic setVariable ["wfbe_hangar", nil, true] };
-				};
-
-				//--- Spawn new hangar on the airport logic so GetClosestAirport can find it.
-				if !(isNull _airfieldLogic) then {
-					_newHangar = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle (getPos _airfieldLogic);
-					_newHangar setDir ((getDir _airfieldLogic) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
-					_newHangar setPos (getPos _airfieldLogic);
-					_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
-					_airfieldLogic setVariable ["wfbe_hangar", _newHangar, true]; _airfieldLogic setVariable ["wfbe_airfield_side", _newSide, true]; //--- C-1: GUER airfield ownership gate
-					_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
-				};
+				//--- Provision (re-provision) the aircraft-buy hangar for the new owner. Also called by
+				//--- the boot bootstrap above (~line 63) for airfields that start pre-owned.
+				[_location, _airfieldLogic, _newSide] Call WFBE_SE_FNC_ProvisionAirfieldHangar;
 
 				//--- Task 13: Counter Battery Radar lifecycle.
 				//--- Gate: CBR feature must be enabled. Resistance has no CBR registry — radar skipped.
