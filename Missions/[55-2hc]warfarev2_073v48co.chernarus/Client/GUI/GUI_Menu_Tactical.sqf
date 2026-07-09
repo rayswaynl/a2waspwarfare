@@ -102,7 +102,7 @@ _IDCS = [17005,17006,17007,17034];
 //--- (matches their old flat-Tactical-Center-list availability, which was never gated by this flag).
 if ((missionNamespace getVariable "WFBE_C_ARTILLERY") == 0) then {{ctrlEnable [_x,false]} forEach _IDCS};
 
-{ctrlEnable [_x, false]} forEach [17010,17011,17012,17013,17014,17015,17017,17018,17020];
+{ctrlEnable [_x, false]} forEach [17020]; //--- cmdcon (fable, GR-2026-07-08a): trimmed 8 phantom idcs (17010-17015,17017,17018 exist nowhere in Rsc) - 17020 (Use button) kept, re-toggled at the MenuAction 20 gate below
 
 _currentValue = -1;
 _currentFee = -1;
