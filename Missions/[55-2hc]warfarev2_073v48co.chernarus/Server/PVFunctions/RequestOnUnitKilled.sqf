@@ -150,10 +150,10 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_kill
 	//--- unlock once. Broadcast [seq, text]; the GUER overlay watcher (Root_GUE_PlayerOverlay.sqf) shows it.
 	private ["_gMilestones","_gMsg"];
 	_gMilestones = [
-		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15], "BRDM-2 + T-34 unlocked  -  Ka-137 flares up to 120"],
-		[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25], "M113 VBIED unlocked  -  armoured suicide APC at 2x speed"],
-		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40], "T-55 unlocked  -  Ka-137 flares up to 240"],
-		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80], "T-72 + BMP-2 unlocked"]
+		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 30], "BRDM-2 + T-34 unlocked  -  Ka-137 flares up to 120"],
+		[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 50], "M113 VBIED unlocked  -  armoured suicide APC at 2x speed"],
+		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 80], "T-55 unlocked  -  Ka-137 flares up to 240"],
+		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 160], "T-72 + BMP-2 unlocked"]
 	];
 	_gMsg = "";
 	{ if (WFBE_GUER_PLAYER_KILLS == (_x select 0)) then {_gMsg = _x select 1} } forEach _gMilestones;

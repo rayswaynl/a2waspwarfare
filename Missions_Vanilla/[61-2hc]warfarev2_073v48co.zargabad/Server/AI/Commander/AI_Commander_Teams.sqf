@@ -103,8 +103,8 @@ if (_testPopPin >= 0) then {_pcN = _testPopPin};
 		diag_log format ["[POPTIER] humans=%1 tier=%2 (0=LOW 1=MID 2=HIGH 3=FULL)", _pcN, _popTier];
 	};
 _base = switch (true) do {
-	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  12]};
-	case (_pcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  4]};
+	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  10]};
+	case (_pcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  7]};
 	case (_pcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
 	default          {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
 };
@@ -113,14 +113,14 @@ _base = switch (true) do {
 //--- (retained transports, patrol escalation, swarms) have per-team AI headroom. This is the SINGLE authoritative adjusted
 //--- read of the base target: _base drives the funds-extra sum, the banking valve, the hard-cap clamp, the econ-sink surge,
 //--- the (_foundedTeams+_pending)>=_target founding gate, the PC-cleanup retire AND the wfbe_aicom_dyntarget publish below,
-//--- so every consumer inherits the reduction from here. The FLOOR (WFBE_C_AICOM_TEAMS_FLOOR, default 6) prevents a config
+//--- so every consumer inherits the reduction from here. The FLOOR (WFBE_C_AICOM_TEAMS_FLOOR, default 3) prevents a config
 //--- accident from zeroing the army (a side founding 0 teams loses this fork by walkover). The funds-extra + econ-sink surge
 //--- (+2) stay RELATIVE to the reduced base; the hard cap is untouched. DELTA 0 => _base unchanged => EXACT old behaviour.
 //--- A2-OA-safe: getVariable-with-default + plain max arithmetic, no A3 commands. _baseRaw kept for the once-per-side log.
 private ["_baseRaw","_teamsDelta"];
 _baseRaw    = _base;
 _teamsDelta = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_DELTA", -1];
-_base       = (_base + _teamsDelta) max (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 6]);
+_base       = (_base + _teamsDelta) max (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 3]);
 _pcExtraCap = switch (true) do { case (_pcN >= 10): {0}; case (_pcN >= 6): {1}; default {_maxExtra} };
 if (_extra > _pcExtraCap) then {_extra = _pcExtraCap};
 _target = _base + _extra;
@@ -133,7 +133,7 @@ private ["_tgtLogPrev"];
 _tgtLogPrev = _logik getVariable ["wfbe_aicom_teamstgt_log", -9999];
 if (_base != _tgtLogPrev) then {
 	_logik setVariable ["wfbe_aicom_teamstgt_log", _base];
-	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAMS_TARGET|base=" + str _baseRaw + "|delta=" + str _teamsDelta + "|effective=" + str _base + "|floor=" + str (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 6]) + "|pc=" + str _pcN);
+	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAMS_TARGET|base=" + str _baseRaw + "|delta=" + str _teamsDelta + "|effective=" + str _base + "|floor=" + str (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 3]) + "|pc=" + str _pcN);
 };
 
 	//--- B37 BANKING VALVE (Ray 2026-06-16, gated WFBE_C_AICOM_BANKING_VALVE default-ON): at LOW/MID pop a
@@ -151,7 +151,7 @@ if (_base != _tgtLogPrev) then {
 
 //--- B747.1 HARD CAP (Ray 2026-06-24): clamp the founding target to a ceiling regardless of the PC curve +
 //--- banking valve. AICOM was fielding ~15 teams at low pop (base 12 + valve 3); Ray wants max 8 going forward.
-private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 8];
+private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 10];
 if (_target > _teamsHardCap) then {_target = _teamsHardCap; _extra = (_target - _base) max 0};
 
 //--- ECON SINK team-cap surge (cmdcon41-w2, Ray-approved): when the commander is pinned rich (AI_Commander.sqf set

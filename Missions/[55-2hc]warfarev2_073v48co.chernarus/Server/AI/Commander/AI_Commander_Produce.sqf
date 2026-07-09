@@ -301,7 +301,7 @@ if (_airMaxTotalP > 0) then {
 					//--- LEADER object (never on the group). Fall through to the existing cull if no eligible target.
 					_mergeOn    = missionNamespace getVariable ["WFBE_C_AICOM_STRANDED_MERGE", 1];
 					_mergeRange = missionNamespace getVariable ["WFBE_C_AICOM_STRANDED_MERGE_RANGE", 1200];
-					_sizeMax    = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12]; //--- _sizeMax is declared later inside if(_canProduce); read a local copy here for the 8-12 ceiling guard.
+					_sizeMax    = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 8]; //--- _sizeMax is declared later inside if(_canProduce); read a local copy here for the 8-12 ceiling guard.
 					_mergeTeam  = grpNull;
 					_mergeBest  = _mergeRange;  //--- only accept candidates strictly inside the range cap
 					if (_mergeOn > 0) then {
@@ -408,7 +408,7 @@ if (_airMaxTotalP > 0) then {
 		private ["_tmplSize","_isMBT","_isAttackHeli","_floorN","_sizeMin","_sizeMax"];
 		_tmplSize = count _template;
 		_sizeMin  = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MIN", 8];
-		_sizeMax  = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12];
+		_sizeMax  = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 8];
 		_isMBT = false;
 		{ if (_x isKindOf "Tank") exitWith {_isMBT = true} } forEach _template;
 		_isAttackHeli = false;

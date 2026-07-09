@@ -101,8 +101,8 @@ while {!WFBE_GameOver} do {
 					} forEach _baseTeams;
 				};
 				_baseCap = switch (true) do {
-					case (_basePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  15]};
-					case (_basePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  5]};
+					case (_basePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  10]};
+					case (_basePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  7]};
 					case (_basePcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
 					default              {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
 				};
