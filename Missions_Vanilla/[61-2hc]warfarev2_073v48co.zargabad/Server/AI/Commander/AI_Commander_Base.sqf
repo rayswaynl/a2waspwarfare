@@ -932,6 +932,40 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 					};
 					_i = _i + 1;
 				};
+				//--- fix/aicom-dependency-gates (2026-07-10): the SPG pick above has NO unlock-tier check - every
+				//--- OTHER AI purchase path (AI_Commander_Teams.sqf:351-376) already gates per-unit QUERYUNITUPGRADE
+				//--- against the side's researched tier via this SAME _facMap idiom; mirror it here so base
+				//--- artillery requires the same research investment a human commander needs to open that unit's
+				//--- buy tab. Fails CLOSED: if _defClass matches no category list (a faction data gap) OR has no
+				//--- registered unit-price data, the piece is not built and a WARNING (not a silent skip) is
+				//--- logged so the gap surfaces in RPT instead of reading as AI passivity.
+				if (_defClass != "") then {
+					private ["_artyUd","_artyReqUp","_artyFacMap","_artyUnitList","_artyGateOk","_artyCatFound"];
+					_artyGateOk = false;
+					_artyCatFound = false;
+					if (!isNil "_upgrades") then {
+						_artyUd = missionNamespace getVariable _defClass;
+						if (!isNil "_artyUd") then {
+							_artyReqUp = _artyUd select QUERYUNITUPGRADE;
+							_artyFacMap = [["BARRACKSUNITS", WFBE_UP_BARRACKS], ["LIGHTUNITS", WFBE_UP_LIGHT], ["HEAVYUNITS", WFBE_UP_HEAVY], ["AIRCRAFTUNITS", WFBE_UP_AIR]];
+							{
+								_artyUnitList = missionNamespace getVariable [Format ["WFBE_%1%2", _sideText, _x select 0], []];
+								if (_defClass in _artyUnitList) exitWith {
+									_artyCatFound = true;
+									_artyGateOk = (_artyReqUp <= (_upgrades select (_x select 1)));
+								};
+							} forEach _artyFacMap;
+						};
+					};
+					if (!_artyGateOk) then {
+						if (_artyCatFound) then {
+							["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - %2 not yet researched.", _sideText, _defClass]] Call WFBE_CO_FNC_AICOMLog;
+						} else {
+							["WARNING", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - %2 not found in any per-side unit-tier list (unlock-gate data gap for this faction; base artillery stays dark until fixed).", _sideText, _defClass]] Call WFBE_CO_FNC_AICOMLog;
+						};
+						_defClass = "";
+					};
+				};
 				if (_defClass == "") then {
 					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - no SELF-PROPELLED (tracked/wheeled) arty class for this side (static towed/mortar excluded by design).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 				};
