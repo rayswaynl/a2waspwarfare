@@ -1,3 +1,4 @@
+disableSerialization;
 {ctrlEnable [_x, false]} forEach [11002, 11005, 11006, 11007, 11008];
 //--- GUER insurgents: commander/base/upgrade/economy/vote buttons are irrelevant (no HQ/commander/base). Grey them.
 if (sideJoined == resistance) then { {ctrlEnable [_x, false]} forEach [11004,11005,11006,11007,11008] };
