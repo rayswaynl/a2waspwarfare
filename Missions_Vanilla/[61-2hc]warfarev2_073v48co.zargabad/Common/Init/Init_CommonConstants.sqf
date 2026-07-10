@@ -955,7 +955,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_STR_LONE_FARHQ") then {WFBE_C_AICOM_STR_LONE_FARHQ = 1500};   //--- ...AND farther than this (m) from HQ is a stranded remnant, EXCLUDED from the _myStr maneuver-strength count so it does not deflate strength + trip the defensive gates. 0 disables the exclusion.
 	//--- B68 (Ray 2026-06-21) RETREAT-CULL hardening: the B67 progress-gated budget never culls a lone survivor
 	//--- that slowly crawls home from far away (re-issues retreat forever, milling at base, never assaulting).
-	if (isNil "WFBE_C_AICOM_RETREAT_MAX_ISSUES") then {WFBE_C_AICOM_RETREAT_MAX_ISSUES = 8}; //--- cull a lone survivor after this many retreat re-issues regardless of slow progress.
+	if (isNil "WFBE_C_AICOM_RETREAT_MAX_ISSUES") then {WFBE_C_AICOM_RETREAT_MAX_ISSUES = 20}; //--- cull a lone survivor after this many retreat re-issues regardless of slow progress. //--- fable/zg-west-collapse (2026-07-10): 8->20 (ZG-only). At the 45s produce cycle, 8 issues = only 360s grace - too short for WEST's ~3800m GUER-detour march on Firuz Baharv, so 21/21 assaults were recycled before arriving (tries=0 = progressing survivors killed by the absolute cap alone). 20 = 900s. MAX_TRIES(4/180s) + MAX_DIST(6000, instant) still cull genuinely-stuck teams. Rollback: 8.
 	if (isNil "WFBE_C_AICOM_RETREAT_MAX_DIST") then {WFBE_C_AICOM_RETREAT_MAX_DIST = 6000};  //--- cull a lone survivor immediately if farther than this (m) from HQ - not worth a multi-km walk home.
 	//--- B67 (Ray 2026-06-21) BUILD PLACEMENT (item #10): minimum centre-to-centre spacing between AI-built
 	//--- structures + a wider factory placement ring, so factories stop piling on top of each other.
