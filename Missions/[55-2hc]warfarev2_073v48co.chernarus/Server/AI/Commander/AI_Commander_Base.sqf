@@ -916,22 +916,38 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 				//--- Scan ALL families and accept the FIRST class that is a self-propelled hull (Tank/Car/Wheeled_APC/
 				//--- Tracked_APC and NOT StaticWeapon). If the side has no SPG class, build nothing - a static gun is
 				//--- never created for the AI. A2-OA-safe: string-form isKindOf on the classname (idiom: AwardBounty.sqf:34).
+				//--- fix/aicom-dependency-gates-followup (2026-07-10): walk EVERY classname in the family (not
+				//--- just index 0) - a map where the primary variant has no registered unit data or isn't in any
+				//--- per-side category list (e.g. bare 'MLRS' is TK/ZG-invisible; only 'MLRS_DES_EP1' is category-
+				//--- listed there) falls through to the next candidate in the SAME family instead of hard-failing it.
 				_i = 0;
 				while {_i < count _artyClasses && {_defClass == ""}} do {
-					private ["_cand","_isSP"];
+					private ["_cand","_isSP","_famArr","_j","_ud","_pickInCat","_pickFacMap","_pickUnitList"];
 					_fam = _artyClasses select _i;
-					_cand = "";
-					if (typeName _fam == "ARRAY") then {
-						if (count _fam > 0) then {_cand = _fam select 0};
-					} else {
-						_cand = _fam;
-					};
-					if (_cand != "" && {isClass (configFile >> "CfgVehicles" >> _cand)}) then {
-						_isSP = ((_cand isKindOf "Tank") || (_cand isKindOf "Car") || (_cand isKindOf "Wheeled_APC") || (_cand isKindOf "Tracked_APC")) && {!(_cand isKindOf "StaticWeapon")};
-						if (_isSP) then {_defClass = _cand};
+					_famArr = if (typeName _fam == "ARRAY") then {_fam} else {[_fam]};
+					_j = 0;
+					while {_j < count _famArr && {_defClass == ""}} do {
+						_cand = _famArr select _j;
+						if (_cand != "" && {isClass (configFile >> "CfgVehicles" >> _cand)}) then {
+							_isSP = ((_cand isKindOf "Tank") || (_cand isKindOf "Car") || (_cand isKindOf "Wheeled_APC") || (_cand isKindOf "Tracked_APC")) && {!(_cand isKindOf "StaticWeapon")};
+							if (_isSP) then {
+								_ud = missionNamespace getVariable _cand;
+								if (!isNil "_ud") then {
+									_pickInCat = false;
+									_pickFacMap = [["BARRACKSUNITS", WFBE_UP_BARRACKS], ["LIGHTUNITS", WFBE_UP_LIGHT], ["HEAVYUNITS", WFBE_UP_HEAVY], ["AIRCRAFTUNITS", WFBE_UP_AIR]];
+									{
+										_pickUnitList = missionNamespace getVariable [Format ["WFBE_%1%2", _sideText, _x select 0], []];
+										if (_cand in _pickUnitList) exitWith {_pickInCat = true};
+									} forEach _pickFacMap;
+									if (_pickInCat) then {_defClass = _cand};
+								};
+							};
+						};
+						_j = _j + 1;
 					};
 					_i = _i + 1;
 				};
+				private ["_artyPicked"]; _artyPicked = (_defClass != ""); //--- remembers a real pick happened, so the generic no-SPG log below is not emitted alongside the gate own not-yet-researched/data-gap log for the same tick.
 				//--- fix/aicom-dependency-gates (2026-07-10): the SPG pick above has NO unlock-tier check - every
 				//--- OTHER AI purchase path (AI_Commander_Teams.sqf:351-376) already gates per-unit QUERYUNITUPGRADE
 				//--- against the side's researched tier via this SAME _facMap idiom; mirror it here so base
@@ -966,7 +982,7 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 						_defClass = "";
 					};
 				};
-				if (_defClass == "") then {
+				if (_defClass == "" && {!_artyPicked}) then { //--- fix/aicom-dependency-gates-followup: suppress this generic log when the picker DID find an SPG candidate but the research-tier/category gate above rejected it - that branch already logged its own reason.
 					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - no SELF-PROPELLED (tracked/wheeled) arty class for this side (static towed/mortar excluded by design).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
