@@ -514,7 +514,11 @@ class CfgSounds
 #elif SERVER_DEBUG || AIRWAR_SERVER_DEBUG
         return "#define WF_LOG_CONTENT";
 #else
-        return "// #define WF_LOG_CONTENT";
+        // Owner-directed 2026-07-10: activate WFBE_CO_FNC_LogContent diagnostics on live
+        // (RELEASE/AIRWAR_RELEASE) packs too - was DEV/SERVER_DEBUG-only, hiding WARNING/ERROR
+        // diagnostics (e.g. HC-delegation collapse) from the live RPT. See PR body for the
+        // WFBE_LogLevel tiering finding (not usable as WARNING/ERROR-only filter today).
+        return "#define WF_LOG_CONTENT";
 #endif
     }
 
