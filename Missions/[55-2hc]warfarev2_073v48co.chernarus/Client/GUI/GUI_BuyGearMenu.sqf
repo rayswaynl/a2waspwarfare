@@ -242,6 +242,11 @@ while {true} do {
 			_item_selected = lnbData[_lb_cargo,[_ui_lnb_currow, 0]];
 			_get = missionNamespace getVariable _item_selected;
 
+			if !(isNil '_get') then {
+			//--- fable/fix-gear-nil-poison-part2 (extends BUGHUNT-4 fix a55605e10): the remove-item-from-
+			//--- backpack/vehicle handler read _get select 4/6 with no isNil guard at all. A stale/blank/
+			//--- unregistered lnb row (mid tab-switch) makes _get nil, and select on nil throws - poisoning
+			//--- the click frame. Guard matches the add-item handler above (a55605e10).
 			switch (_view) do {
 				case "backpack": {
 					_kind = switch (true) do { case ((_get select 4) < 6): {0}; case ((_get select 4) in [100,101]): {1}; default {-1}};
@@ -257,6 +262,7 @@ while {true} do {
 					_has_veh_changed = true;
 					_update_vehicle = true;
 				};
+			};
 			};
 
 			_update_inventory = true;
