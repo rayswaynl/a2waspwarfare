@@ -78,8 +78,11 @@ if (_wp_origin distance _wp_dest > _distance_node) then {
 	[_team, false, _wp_sel] Call WFBE_CO_FNC_WaypointsAdd;
 };
 
-// TODO CHECK THE COMBAT MODE / SPEED. (LIMITED & COMBAT)
-// TODO ADD RADIO ON SOME WP COMPLETION - B 1-1 A - HQ, we're attacking %1[town]
+// Combat mode/speed (STANCE task #1, cmdcon41-w2): already tuned above via _marchCombat
+// (RED, or YELLOW behind WFBE_C_AICOM_MARCH_YELLOW) + AWARE/FULL on every waypoint pushed
+// in this function - not a stale gap, no further tuning needed here.
+// Feature request (unimplemented, needs owner design decision): radio callout on WP
+// completion, e.g. "B 1-1 A - HQ, we're attacking %1[town]".
 _wp_sel = [];
 
 //--- Todo: May secure the camp.

@@ -883,6 +883,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 							_jet2 setVelocity [(sin _jetDir) * 90, (cos _jetDir) * 90, 0];
 							_jet2 flyInHeight 600;
 							_jetPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+							if (isNil "_jetPilot2") then {_jetPilot2 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: complete #990 coverage - same fallback as _hindPilot2/_hindPilot3
 							_jetPilot2 moveInDriver _jet2;
 							_jetPilot2 doMove [(_pos select 0) - 800, (_pos select 1), 600];
 
@@ -1064,6 +1065,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_biplane setVelocity [(sin _jetDir) * 60, (cos _jetDir) * 60, 0];
 								_biplane flyInHeight 550;
 								_biplPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								if (isNil "_biplPilot") then {_biplPilot = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: complete #990 coverage - same fallback as _hindPilot2/_hindPilot3
 								_biplPilot moveInDriver _biplane;
 
 								//--- Tag both as CAP so GC/groupsGC don't reap them.

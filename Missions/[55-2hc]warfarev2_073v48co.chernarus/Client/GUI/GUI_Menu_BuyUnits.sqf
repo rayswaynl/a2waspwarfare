@@ -102,6 +102,8 @@ _IDCS = _IDCS - [_currentIDC];
 		_currentValue = lnbValue[_listBox,[_currentRow,0]];
 		_unit = _listUnits select _currentValue;
 		_currentUnit = missionNamespace getVariable _unit;
+		//--- fable/fix-unit-purchase-nil-guards: guard nil _currentUnit (unregistered classname) before the select-chain below - matches a55605e10/#1003 shape. Nil = skip the whole purchase (no charge, no spawn).
+		if !(isNil "_currentUnit") then {
 		_currentCost = round (((_currentUnit select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER) * UNIT_COST_MODIFIER);
 		_cpt = 1;
 		_isInfantry = if (_unit isKindOf 'Man') then {true} else {false};
@@ -288,6 +290,9 @@ _IDCS = _IDCS - [_currentIDC];
 					hintSilent parseText ((Format [localize 'STR_WF_INFO_Queu_Max',_queueCap]) + Format [" (%1/%2)", _queueCount, _queueCap]);
 				};
 			};
+		};
+		} else {
+			["WARNING", Format ["GUI_Menu_BuyUnits.sqf: purchase classname [%1] not registered in missionNamespace; skipping buy (nil-poison guard, matches a55605e10/#1003).", _unit]] Call WFBE_CO_FNC_LogContent;
 		};
 	};
 	
@@ -590,6 +595,8 @@ _IDCS = _IDCS - [_currentIDC];
 			_currentValue = lnbValue[_listBox,[_currentRow,0]];
 			_unit = _listUnits select _currentValue;
 			_currentUnit = missionNamespace getVariable _unit;
+			//--- fable/fix-unit-purchase-nil-guards: guard nil _currentUnit (unregistered classname) before the select-chain below - matches a55605e10/#1003 shape. Nil = skip the panel refresh (stale/blank display, harmless).
+			if !(isNil "_currentUnit") then {
 			ctrlSetText [12009,_currentUnit select QUERYUNITPICTURE];
 			ctrlSetText [12033,_currentUnit select QUERYUNITFACTION];
 			ctrlSetText [12035,str (_currentUnit select QUERYUNITTIME)];
@@ -915,6 +922,10 @@ _IDCS = _IDCS - [_currentIDC];
 			
 			ctrlSetText [12034,Format ["$ %1",_currentCost]];
 			_updateDetails = false;
+			} else {
+				["WARNING", Format ["GUI_Menu_BuyUnits.sqf: preview classname [%1] not registered in missionNamespace; skipping detail-panel refresh (nil-poison guard, matches a55605e10/#1003).", _unit]] Call WFBE_CO_FNC_LogContent;
+				_updateDetails = false;
+			};
 		} else {
 			{ctrlSetText [_x , ""]} forEach [12009,12033,12034,12035,12036,12037,12038,12039];
 			//--- Task 33: show queue list in the description panel when no unit is selected.

@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
+private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
 
 _side = _this;
 _sideText = str _side;
@@ -465,11 +465,12 @@ if (_airMaxTotalP > 0) then {
 				if (isNil "_ud") exitWith {};
 
 				_typeName = _fac select 0;
-				_track    = _fac select 2;
-				_reqUp    = _ud select QUERYUNITUPGRADE;
 				_price    = _ud select QUERYUNITPRICE;
 
-				if (_reqUp > (_upgrades select _track)) exitWith {}; //--- Not unlocked yet.
+				//--- feat/common-isunitunlocked: shared facMap/QUERYUNITUPGRADE tier-unlock check (was the
+				//--- inline _track=_fac select 2 / _reqUp compare; the shared function re-derives the SAME
+				//--- track via its own facMap scan, since _fac (from _facDefs) mirrors that facMap 1:1).
+				if (!(([_toBuild, _sideText, _upgrades] Call WFBE_CO_FNC_IsUnitUnlocked) select 0)) exitWith {}; //--- Not unlocked yet.
 
 				_kind = _structTypes find _typeName;
 				if (_kind < 0) exitWith {};

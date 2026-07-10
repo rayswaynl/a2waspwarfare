@@ -7,7 +7,8 @@ for [{_i = 0},{_i < (count (missionConfigFile/"Params"))},{_i = _i + 1}]  do {
 	_texts = getArray (missionConfigFile >> "Params" >> _paramName >> "texts");
 	
 	_value = if (isMultiplayer) then {paramsArray select _i} else {getNumber (missionConfigFile >> "Params" >> _paramName >> "default")};
-	_status = _texts select (_values find _value);
+	_idx = _values find _value;
+	_status = if (_idx > -1) then {_texts select _idx} else {str _value};
 
 	lnbAddRow [22003,[_text,_status]];
 };

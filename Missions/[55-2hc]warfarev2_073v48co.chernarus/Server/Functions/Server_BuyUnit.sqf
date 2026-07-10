@@ -1,4 +1,4 @@
-Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_gbq","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_vehicle","_waitTime"];
+Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_gbq","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_unitTypeGet","_vehicle","_waitTime"];
 _id = _this select 0;
 _building = _this select 1;
 _unitType = _this select 2;
@@ -38,7 +38,17 @@ if (_index == -1) then {["WARNING", Format ["Server_BuyUnit.sqf: factory type [%
 _distance = if (_index != -1) then {(missionNamespace getVariable Format ["WFBE_%1STRUCTUREDISTANCES",_sideText]) select _index} else {0};
 _direction = if (_index != -1) then {(missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",_sideText]) select _index} else {0};
 _factoryType = if (_index != -1) then {(missionNamespace getVariable Format ["WFBE_%1STRUCTURES",_sideText]) select _index} else {""};
-_waitTime = (missionNamespace getVariable _unitType) select QUERYUNITTIME;
+//--- fable/fix-unit-purchase-nil-guards: guard nil _unitTypeGet (unregistered classname) before
+//--- the select below - matches a55605e10/#1003/GUI_Menu_BuyUnits.sqf/Client_BuildUnit.sqf shape.
+//--- Deliberately scoped to ONLY this line (not the _index/_distance/_direction/_factoryType
+//--- block above) so this hunk stays clear of open PR #1001, which guards that neighboring block.
+_unitTypeGet = missionNamespace getVariable _unitType;
+if !(isNil "_unitTypeGet") then {
+	_waitTime = _unitTypeGet select QUERYUNITTIME;
+} else {
+	_waitTime = 0;
+	["WARNING", Format ["Server_BuyUnit.sqf: unit classname [%1] not registered in missionNamespace; using safe default waitTime=0.", _unitType]] Call WFBE_CO_FNC_LogContent;
+};
 _position = [getPos _building,_distance,getDir _building + _direction] Call GetPositionFrom;
 //--- B67 OPEN SPAWN APRON: the fixed trig offset above has no flat/empty check, so AI
 //--- factory output can drop in trees / on a slope. For AI-owned factories ONLY

@@ -19,8 +19,13 @@ _factoryType = "";
 _description = "";
 
 _currentUnit = missionNamespace getVariable _unit;
+//--- fable/fix-unit-purchase-nil-guards: guard nil _currentUnit (unregistered classname) before the select-chain below - matches a55605e10/#1003/Server_BuyUnit.sqf(#1001) shape. Nil = keep the safe pre-init defaults above (_waitTime=0, _description="").
+if !(isNil "_currentUnit") then {
 _waitTime = _currentUnit select QUERYUNITTIME;
 _description = _currentUnit select QUERYUNITLABEL;
+} else {
+	["WARNING", Format ["Client_BuildUnit.sqf: unit classname [%1] not registered in missionNamespace; using safe defaults (waitTime=0, no description).", _unit]] Call WFBE_CO_FNC_LogContent;
+};
 	
 _spawnpaddir=2;
 
