@@ -151,40 +151,11 @@ while {!gameOver} do {
 			//--- always initialised for the team-marker loop even when the player is dead.
 			_ownDir = getDir (vehicle player);
 			if (_destDirMode) then {
-				_destPos = [];
-				//--- Source 1: stored shift-click map order (missionNamespace-local, this client).
-				if (count _destPos == 0) then {
-					_destStoredGrp = missionNamespace getVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_GROUP", grpNull];
-					_destStoredPos = missionNamespace getVariable ["WFBE_CLIENT_LAST_TEAMLEADER_MAP_ORDER_POSITION", []];
-					if (!isNull _destStoredGrp && {_destStoredGrp == group player} && {count _destStoredPos > 1}) then {
-						if (player distance _destStoredPos > 25) then {
-							_destPos = _destStoredPos;
-						};
-					};
-				};
-				//--- Source 2: current group waypoint (local to this client for the player's own group).
-				if (count _destPos == 0) then {
-					_destWpCount = count (waypoints group player);
-					_destWpIdx   = currentWaypoint group player;
-					if (_destWpCount > 0 && {_destWpIdx < _destWpCount}) then {
-						_destPos = waypointPosition [group player, _destWpIdx];
-						if ((_destPos select 0) == 0 && {(_destPos select 1) == 0}) then {_destPos = []};
-						if (player distance _destPos <= 25) then {_destPos = []};
-					};
-				};
-				//--- Source 3: engine expectedDestination on the player (DoNotPlan = no active dest).
-				if (count _destPos == 0) then {
-					_destData = expectedDestination player;
-					_destMode = "DoNotPlan";
-					if (count _destData > 1) then {_destMode = _destData select 1};
-					if (_destMode != "DoNotPlan") then {
-						_destPos = _destData select 0;
-						if ((_destPos select 0) == 0 && {(_destPos select 1) == 0}) then {_destPos = []};
-						if (count _destPos > 0) then {
-							if (player distance _destPos <= 25) then {_destPos = []};
-						};
-					};
-				};
+				//--- fix/own-marker-dest-dir-split (owner 2026-07-09): shared 3-source lookup
+				//--- (stored shift-click order -> group waypoint -> expectedDestination), factored
+				//--- into Common_GetTeamMarkerDestPos.sqf so this OWNMarker block and the per-team
+				//--- player-leader block below (~L504) always agree on the destination source.
+				_destPos = [player] call WFBE_CO_FNC_GetTeamMarkerDestPos;
 				//--- Compute bearing player->destination (atan2 position-delta; binary getDir is A3-only).
 				//--- Guard a zero-length delta so atan2 does not divide by zero.
 				if (count _destPos > 1) then {
@@ -502,17 +473,13 @@ while {!gameOver} do {
 						//--- Flag 0: block is a no-op; _dir stays as set by getDir above (byte-identical).
 						//--- _destDirMode is read once above and reused here (same while-loop tick).
 						if (_destDirMode) then {
-							_destPos  = [];
-							_destData = expectedDestination _leader;
-							_destMode = "DoNotPlan";
-							if (count _destData > 1) then {_destMode = _destData select 1};
-							if (_destMode != "DoNotPlan") then {
-								_destPos = _destData select 0;
-								if ((_destPos select 0) == 0 && {(_destPos select 1) == 0}) then {_destPos = []};
-								if (count _destPos > 0) then {
-									if (_leader distance _destPos <= 25) then {_destPos = []};
-								};
-							};
+							//--- fix/own-marker-dest-dir-split (owner 2026-07-09): shared 3-source lookup
+							//--- (stored shift-click order -> group waypoint -> expectedDestination), factored
+							//--- into Common_GetTeamMarkerDestPos.sqf so this per-team leader block and the
+							//--- OWNMarker block above (~L153) always agree on the destination source. Replaces
+							//--- the prior RC-ARROW-UNIFY verbatim-duplicated 3-source block with a shared call.
+							_destPos = [_leader] call WFBE_CO_FNC_GetTeamMarkerDestPos;
+							//--- Compute bearing leader->destination (atan2 position-delta; binary getDir is A3-only).
 							if (count _destPos > 1) then {
 								_destDx = (_destPos select 0) - (getPos _leader select 0);
 								_destDy = (_destPos select 1) - (getPos _leader select 1);
