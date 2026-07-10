@@ -29,9 +29,15 @@ _building setVariable ["queu",_queu,true];
 
 _type = typeOf _building;
 _index = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",_sideText]) find _type;
-_distance = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDISTANCES",_sideText]) select _index;
-_direction = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",_sideText]) select _index;
-_factoryType = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES",_sideText]) select _index;
+//--- crash-guard (mirrors Client_GetStructureMarkerLabel.sqf B62 / Client_BuildUnit.sqf): if _type is not
+//--- registered in STRUCTURENAMES, find returns -1 and select _index throws "Zero divisor" on A2-OA 1.64
+//--- (negative array index), aborting the whole AI buy mid-purchase. Default to the same safe zero-offset/
+//--- no-type values Client_BuildUnit.sqf uses; the switch-default and isNil floor further below already
+//--- handle an empty _factoryType safely.
+if (_index == -1) then {["WARNING", Format ["Server_BuyUnit.sqf: factory type [%1] not found in WFBE_%2STRUCTURENAMES; using safe defaults (no spawn-pad routing).", _type, _sideText]] Call WFBE_CO_FNC_LogContent};
+_distance = if (_index != -1) then {(missionNamespace getVariable Format ["WFBE_%1STRUCTUREDISTANCES",_sideText]) select _index} else {0};
+_direction = if (_index != -1) then {(missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",_sideText]) select _index} else {0};
+_factoryType = if (_index != -1) then {(missionNamespace getVariable Format ["WFBE_%1STRUCTURES",_sideText]) select _index} else {""};
 _waitTime = (missionNamespace getVariable _unitType) select QUERYUNITTIME;
 _position = [getPos _building,_distance,getDir _building + _direction] Call GetPositionFrom;
 //--- B67 OPEN SPAWN APRON: the fixed trig offset above has no flat/empty check, so AI
