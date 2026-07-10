@@ -1195,6 +1195,30 @@ if (leader(group player) != player) then {(group player) selectLeader player};
 if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
 	player setRank "COLONEL";
 	diag_log "[WFBE|TEAMBAR] Init_Client: player rank set to COLONEL for command-bar slot 1.";
+	//--- fable/init-slot1-rejoin (owner live 2026-07-10, ZG-1.2.1: "once again I am #2 in my own group" on a
+	//--- FRESH round - never died). The #977 slot-renumber only ran in Client_OnKilled (RESPAWN); at INITIAL
+	//--- spawn the player gets COLONEL rank but the A2 command-bar SLOT number still follows join order, so a
+	//--- player whose own group already holds mission-start AI stays #2. Run the SAME rejoin here, on a short
+	//--- delay so any async group assembly has settled. Client-local AI only (join needs locality); createGroup-
+	//--- null / not-leader / already-#1 cases skip cleanly. Mirrors Client_OnKilled's slot1-rejoin exactly.
+	[] spawn {
+		sleep 4;
+		if (alive player && {group player == WFBE_Client_Team} && {leader (group player) == player} && {((units group player) select 0) != player}) then {
+			Private ["_slot1Others","_slot1Tmp"];
+			_slot1Others = [];
+			{if (alive _x && {!isPlayer _x} && {local _x}) then {_slot1Others set [count _slot1Others, _x]}} forEach ((units group player) - [player]);
+			if (count _slot1Others > 0) then {
+				_slot1Tmp = createGroup (side group player);
+				if (!isNull _slot1Tmp) then {
+					_slot1Others joinSilent _slot1Tmp;
+					_slot1Others joinSilent (group player);
+					if (count units _slot1Tmp == 0) then {deleteGroup _slot1Tmp};
+					(group player) selectLeader player;
+					diag_log Format ["[WFBE|TEAMBAR] Init_Client slot1-rejoin: %1 AI squadmates re-joined behind the player.", count _slot1Others];
+				};
+			};
+		};
+	};
 };
 
 /* Override player's Gear.*/
