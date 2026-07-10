@@ -109,7 +109,7 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) 
 
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then { //--- Radio Tower: gates the vehicle-radio feature per side (see WASP/Radio). Land_Telek2 runtime presence on TK/ZG NOT verified - see PR.
 	_v = _v		+ ["RadioTower"];
-	_n = _n		+ ["Land_Telek2"];
+	_n = _n		+ ["Land_Antenna"];
 	_d = _d		+ ["Radio Tower"];
 	_c = _c		+ [1800];
 	_t = _t		+ [if (WF_Debug) then {1} else {60}];
@@ -157,7 +157,7 @@ for [{_count = count _v - 1},{_count >= 0},{_count = _count - 1}] do {
 
 {
 	missionNamespace setVariable [Format ["%1%2",_side, _x select 0], _x select 1];
-} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR","Land_Antenna"],["RT","Land_Telek2"],["BANK","Land_Mil_hangar_EP1"],["ARTRAD",_ARTRAD],["RES",_RES]]; //--- Land_telek1 rejected: likely absent
+} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR","Land_Antenna"],["RT","Land_Antenna"],["BANK","Land_Mil_hangar_EP1"],["ARTRAD",_ARTRAD],["RES",_RES]]; //--- Land_telek1 rejected: likely absent
 
 missionNamespace setVariable [Format["WFBE_%1MHQNAME", _side], _MHQ];
 missionNamespace setVariable [Format["WFBE_%1STRUCTURES", _side], _v];

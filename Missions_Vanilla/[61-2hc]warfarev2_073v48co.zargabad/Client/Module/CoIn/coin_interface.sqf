@@ -714,10 +714,16 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						_index = _structures find _class;
 						if (_index != -1) then {
 							_price = _costs select _index;
-							if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
-								[sideJoined, -_price,(format ["Either HQ deployed, or base structure building started. Class: %1", _class]), false] Call ChangeSideSupply;
+							//--- owner 2026-07-09: Radio Tower charges player CASH regardless of the currency system
+							//--- (matches Init_Coin.sqf [1,cash] buy-menu currency index + GUI_Menu_Economy sell-refund). rlType-keyed.
+							if (((missionNamespace getVariable Format["WFBE_%1STRUCTURES",sideJoinedText]) select _index) == "RadioTower") then {
+								-(missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER_CASH_COST", 2500]) Call ChangePlayerFunds;
 							} else {
-								-(_price) Call ChangePlayerFunds;
+								if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
+									[sideJoined, -_price,(format ["Either HQ deployed, or base structure building started. Class: %1", _class]), false] Call ChangeSideSupply;
+								} else {
+									-(_price) Call ChangePlayerFunds;
+								};
 							};
 							if (_index == 0) then {
 								_hqDeployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;
