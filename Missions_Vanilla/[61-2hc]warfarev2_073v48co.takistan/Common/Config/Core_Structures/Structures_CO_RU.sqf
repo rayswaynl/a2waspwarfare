@@ -107,9 +107,9 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) 
 	_dir = _dir	+ [90];
 };
 
-if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then { //--- Radio Tower: gates the vehicle-radio feature per side (see WASP/Radio). Land_Telek2 runtime presence on TK/ZG NOT verified - see PR.
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then { //--- Radio Tower: gates the vehicle-radio feature per side (see WASP/Radio). Land_Antenna - mirrored from the Chernarus 1.2.0 0b fix; proven createVehicle-able on this terrain by the CBR anchor below.
 	_v = _v		+ ["RadioTower"];
-	_n = _n		+ ["Land_Telek2"];
+	_n = _n		+ ["Land_Antenna"];
 	_d = _d		+ ["Radio Tower"];
 	_c = _c		+ [1800];
 	_t = _t		+ [if (WF_Debug) then {1} else {60}];
@@ -160,7 +160,7 @@ for [{_count = count _v - 1},{_count >= 0},{_count = _count - 1}] do {
 
 {
 	missionNamespace setVariable [Format ["%1%2",_side, _x select 0], _x select 1];
-} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR",_ARTRAD],["RT","Land_Telek2"],["BANK",(if ((missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2", 1]) > 0) then {missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2_CLASS", "Land_A_Office01_EP1"]} else {"Land_fortified_nest_big_EP1"})],["ARTRAD",_ARTRAD],["RES",_RES]]; //--- cmdcon42-g (part C): BANK anchor model matches the flag-selected Bank structure model above (WFBE_C_BANK_MODEL_V2). Land_telek1 rejected: likely absent
+} forEach [["HQ",_HQ],["BAR",_BAR],["LVF",_LVF],["CC",_CC],["HEAVY",_HEAVY],["AIR",_AIR],["SP",_SP],["AAR",_AAR],["CBR",_ARTRAD],["RT","Land_Antenna"],["BANK",(if ((missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2", 1]) > 0) then {missionNamespace getVariable ["WFBE_C_BANK_MODEL_V2_CLASS", "Land_A_Office01_EP1"]} else {"Land_fortified_nest_big_EP1"})],["ARTRAD",_ARTRAD],["RES",_RES]]; //--- cmdcon42-g (part C): BANK anchor model matches the flag-selected Bank structure model above (WFBE_C_BANK_MODEL_V2). Land_telek1 rejected: likely absent
 
 missionNamespace setVariable [Format["WFBE_%1MHQNAME", _side], _MHQ];
 missionNamespace setVariable [Format["WFBE_%1STRUCTURES", _side], _v];
