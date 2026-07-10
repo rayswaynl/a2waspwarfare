@@ -922,7 +922,7 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 				//--- listed there) falls through to the next candidate in the SAME family instead of hard-failing it.
 				_i = 0;
 				while {_i < count _artyClasses && {_defClass == ""}} do {
-					private ["_cand","_isSP","_famArr","_j","_ud","_pickInCat","_pickFacMap","_pickUnitList"];
+					private ["_cand","_isSP","_famArr","_j","_ud","_pickInCat"];
 					_fam = _artyClasses select _i;
 					_famArr = if (typeName _fam == "ARRAY") then {_fam} else {[_fam]};
 					_j = 0;
@@ -933,12 +933,10 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 							if (_isSP) then {
 								_ud = missionNamespace getVariable _cand;
 								if (!isNil "_ud") then {
-									_pickInCat = false;
-									_pickFacMap = [["BARRACKSUNITS", WFBE_UP_BARRACKS], ["LIGHTUNITS", WFBE_UP_LIGHT], ["HEAVYUNITS", WFBE_UP_HEAVY], ["AIRCRAFTUNITS", WFBE_UP_AIR]];
-									{
-										_pickUnitList = missionNamespace getVariable [Format ["WFBE_%1%2", _sideText, _x select 0], []];
-										if (_cand in _pickUnitList) exitWith {_pickInCat = true};
-									} forEach _pickFacMap;
+									//--- feat/common-isunitunlocked: shared facMap category-membership scan (found-only -
+									//--- this picker only needs "is _cand registered in a per-side unit list"; the dedicated
+									//--- research-tier gate runs separately below once a class is actually picked).
+									_pickInCat = (([_cand, _sideText, _upgrades] Call WFBE_CO_FNC_IsUnitUnlocked) select 1);
 									if (_pickInCat) then {_defClass = _cand};
 								};
 							};
@@ -956,21 +954,18 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 				//--- registered unit-price data, the piece is not built and a WARNING (not a silent skip) is
 				//--- logged so the gap surfaces in RPT instead of reading as AI passivity.
 				if (_defClass != "") then {
-					private ["_artyUd","_artyReqUp","_artyFacMap","_artyUnitList","_artyGateOk","_artyCatFound"];
+					private ["_artyUd","_artyGateOk","_artyCatFound"];
 					_artyGateOk = false;
 					_artyCatFound = false;
 					if (!isNil "_upgrades") then {
 						_artyUd = missionNamespace getVariable _defClass;
 						if (!isNil "_artyUd") then {
-							_artyReqUp = _artyUd select QUERYUNITUPGRADE;
-							_artyFacMap = [["BARRACKSUNITS", WFBE_UP_BARRACKS], ["LIGHTUNITS", WFBE_UP_LIGHT], ["HEAVYUNITS", WFBE_UP_HEAVY], ["AIRCRAFTUNITS", WFBE_UP_AIR]];
-							{
-								_artyUnitList = missionNamespace getVariable [Format ["WFBE_%1%2", _sideText, _x select 0], []];
-								if (_defClass in _artyUnitList) exitWith {
-									_artyCatFound = true;
-									_artyGateOk = (_artyReqUp <= (_upgrades select (_x select 1)));
-								};
-							} forEach _artyFacMap;
+							private ["_artyCheck"];
+							//--- feat/common-isunitunlocked: shared facMap/QUERYUNITUPGRADE tier-unlock check replaces
+							//--- the inline scan; [_unlocked, _found] mirrors _artyGateOk/_artyCatFound 1:1.
+							_artyCheck = [_defClass, _sideText, _upgrades] Call WFBE_CO_FNC_IsUnitUnlocked;
+							_artyGateOk = _artyCheck select 0;
+							_artyCatFound = _artyCheck select 1;
 						};
 					};
 					if (!_artyGateOk) then {
