@@ -1101,8 +1101,8 @@ if (count _live > 0) then {
 		if (!isNull _facObj) exitWith {};
 	} forEach (if (_doc == "HF") then {["Heavy","Light","Barracks"]} else {["Light","Heavy","Barracks"]});
 
-	//--- Build84 OWNED-FACTORY GATE (Ray 2026-07-01, gated WFBE_C_AICOM_FOUND_REQUIRE_FACTORY default 0 = OLD
-	//--- HQ-fallback allowed = SHIP-SAFE). Ray: "no magic infantry conjured at the HQ" - only produce troops for
+	//--- Build84 OWNED-FACTORY GATE (Ray 2026-07-01, ARMED 2026-07-10 by owner decision - default now 1, see
+	//--- PR "Feat: AI team founding requires factory"). Ray: "no magic infantry conjured at the HQ" - only produce troops for
 	//--- factories the commander OWNS. When the flag is 1: the picked team's type (_chosen: 0=inf,1=light,2=heavy,
 	//--- 3=air) must MATCH an owned factory (infantry->Barracks; armor light->Light or Heavy; armor heavy->Heavy
 	//--- or Light; air->Aircraft). If the side owns NO factory of that type, SKIP founding it this cycle so the
