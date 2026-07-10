@@ -119,7 +119,7 @@ while {alive player && dialog} do {
 			if (!isNull _closest && _closest distance _position < 100 && isNil {_closest getVariable "WFBE_SOLD"}) then {
 				_scName = getText (configFile >> "CfgVehicles" >> (typeOf _closest) >> "displayName");
 				_scId = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",sideJoinedText]) find (typeOf _closest);
-				_scRef = if (_scId > 0) then {round(((missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _scId) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT") / 100)} else {0};
+				_scRef = if (_scId > -1) then {round(((missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _scId) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT") / 100)} else {0};
 				if ([Format ["wf_sell_%1", _closest], Format ["<t color='#ff5a5a' size='1.1'>Sell %1?</t><br/>Refund $%2. Click it again to confirm.", _scName, _scRef]] call WFBE_CL_FNC_ConfirmAction) then {
 					MenuAction = -1;
 					mouseButtonDown = -1;
@@ -149,7 +149,7 @@ while {alive player && dialog} do {
 						_id = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",sideJoinedText]) find _type;
 						
 						//--- TODO: Change the find system with a getvar system.
-						if (_id > 0) then {
+						if (_id > -1) then {
 							private "_rtRlS";
 							_rtRlS = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES",sideJoinedText]) select _id;
 							//--- owner 2026-07-09: Radio Tower was bought with CASH -> refund CASH (salePercent of the cash price), not supply.
@@ -229,7 +229,7 @@ while {alive player && dialog} do {
 			_salePct = missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT";
 			{
 				_i2 = _sNames2 find (typeOf _x);
-				if (_i2 > 0 && isNil {_x getVariable "WFBE_SOLD"}) then {
+				if (_i2 > -1 && isNil {_x getVariable "WFBE_SOLD"}) then {
 					_ref2 = round(((_sCosts2 select _i2) * _salePct) / 100);
 					_mk = Format ["wfbe_econ_sell_%1", _forEachIndex];
 					createMarkerLocal [_mk, getPos _x];
@@ -246,7 +246,7 @@ while {alive player && dialog} do {
 		_pTxt = "<t color='#ffae3a' shadow='1'>SELL MODE - click a structure to sell.</t>";
 		if (!isNull _pNear && _pNear distance _pPos < 100 && isNil {_pNear getVariable "WFBE_SOLD"}) then {
 			_pId = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",sideJoinedText]) find (typeOf _pNear);
-			if (_pId > 0) then {
+			if (_pId > -1) then {
 				_pRef = round(((missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _pId) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT") / 100);
 				_pTxt = _pTxt + Format ["<br/><t color='#e0b94f' shadow='1'>%1</t> - refund <t color='#76f563' shadow='1'>$%2</t>", getText (configFile >> "CfgVehicles" >> (typeOf _pNear) >> "displayName"), _pRef];
 			};
