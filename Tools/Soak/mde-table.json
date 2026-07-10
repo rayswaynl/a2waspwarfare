@@ -1,0 +1,27 @@
+{
+  "schema": "a2wasp-mde-table-v1",
+  "notes": [
+    "Minimum Detectable Effect per metric: the smallest change that is worth calling a result. A/B",
+    "verdicts require BOTH statistical significance (Welch t / nonparametric separation) AND a delta",
+    ">= this floor, so we never ship a statistically-significant-but-trivial finding. 'path' picks the",
+    "ab_stats route: parametric (FPS) vs count (heavy-tailed events). 'direction' up=higher-is-better,",
+    "neutral=context-only (never a goal). These are PROPOSED floors pending owner sign-off (see the",
+    "autopilot spec open-decisions); until confirmed, treat as advisory defaults."
+  ],
+  "status": "proposed",
+  "metrics": {
+    "serverFpsMedian":    { "mde": 2.0, "direction": "up",      "path": "parametric", "unit": "fps" },
+    "serverFpsMin":       { "mde": 3.0, "direction": "up",      "path": "parametric", "unit": "fps" },
+    "serverFpsMinWindow": { "mde": 3.0, "direction": "up",      "path": "parametric", "unit": "fps" },
+    "hcFpsMedian":        { "mde": 2.0, "direction": "up",      "path": "parametric", "unit": "fps" },
+    "hc2FpsMedian":       { "mde": 2.0, "direction": "up",      "path": "parametric", "unit": "fps" },
+    "aiTotPeak":          { "mde": 40,  "direction": "neutral", "path": "parametric", "unit": "units" },
+    "guerPeak":           { "mde": 20,  "direction": "neutral", "path": "count",      "unit": "units" },
+    "captures":           { "mde": 2,   "direction": "up",      "path": "count",      "unit": "towns" },
+    "arrivalPct":         { "mde": 8.0, "direction": "up",      "path": "count",      "unit": "%" },
+    "maxTownsWest":       { "mde": 1,   "direction": "up",      "path": "count",      "unit": "towns" },
+    "maxTownsEast":       { "mde": 1,   "direction": "up",      "path": "count",      "unit": "towns" }
+  },
+  "nMax": 12,
+  "minN": 5
+}

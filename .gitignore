@@ -48,3 +48,21 @@ work/
 # Windows redirect artifacts from Bash /dev/null on Windows
 C*tmp*.diff
 C*tmp*.txt
+
+# Soak ledger runtime data (append-only, machine-local; created by Append-LedgerRow.ps1)
+Tools/Soak/soak-ledger.jsonl
+
+# Scenario driver run artifacts (Run-Scenario.ps1 -FromRpt output; machine-local)
+Tools/Soak/results/
+
+# Chart report output (chart_soak.py default; machine-local)
+Tools/Soak/report/
+
+# Python bytecode cache
+__pycache__/
+*.pyc
+
+# Autopilot runtime artifacts (machine-local)
+Tools/Soak/findings.jsonl
+Tools/Soak/recommendations.jsonl
+Tools/Soak/farm-state.json
