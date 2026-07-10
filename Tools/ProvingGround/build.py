@@ -11,6 +11,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import math
 import re
 import shutil
 import struct
@@ -35,6 +36,12 @@ OUTPUT_ROOT = (HERE / "out").resolve()
 MANIFEST_NAME = "WASP-LAB-MANIFEST.json"
 MANIFEST_SCHEMA = "wasp-proving-ground-build-v1"
 SAFE_LABEL_RE = re.compile(r"[A-Za-z0-9_.-]+")
+GROUP_PARTITION_ARMS = (4, 6, 8, 10, 12)
+GROUP_PARTITION_UNITS_PER_ANCHOR = 120
+GROUP_PARTITION_TARGET_UNITS = (240, 360)
+PARTITION_ID_EXCLUDED_FIELDS = frozenset(
+    ("description", "name", "syntheticGroups", "unitsPerGroup", "batchGroups")
+)
 
 PREINIT_CALL = 'call compile preprocessFileLineNumbers "test\\ProvingGround_PreInit.sqf";'
 PARAMS_ANCHOR = 'if (isMultiplayer) then {Call Compile preprocessFileLineNumbers "Common\\Init\\Init_Parameters.sqf"}; //--- In MP, we get the parameters.'
@@ -76,6 +83,83 @@ def resolve_scenario(name: str, catalog: dict[str, Any]) -> dict[str, Any]:
     return spec
 
 
+def is_group_partition(spec: dict[str, Any]) -> bool:
+    name = spec.get("name")
+    return isinstance(name, str) and name in {
+        f"density-{units_per_group}" for units_per_group in GROUP_PARTITION_ARMS
+    }
+
+
+def derive_workload_fields(spec: dict[str, Any]) -> None:
+    """Derive requested members and the equal 120-member density anchors."""
+    groups = spec["syntheticGroups"]
+    units_per_group = spec["unitsPerGroup"]
+    if not isinstance(groups, int) or isinstance(groups, bool):
+        raise ValueError(f"{spec['name']}: syntheticGroups must be an integer")
+    if not isinstance(units_per_group, int) or isinstance(units_per_group, bool):
+        raise ValueError(f"{spec['name']}: unitsPerGroup must be an integer")
+
+    target_units = groups * units_per_group
+    declared_target = spec.get("targetSyntheticUnits")
+    if declared_target is not None and declared_target != target_units:
+        raise ValueError(
+            f"{spec['name']}: targetSyntheticUnits={declared_target!r} does not match "
+            f"syntheticGroups*unitsPerGroup={target_units}"
+        )
+    spec["targetSyntheticUnits"] = target_units
+
+    if not is_group_partition(spec):
+        spec.setdefault("spawnAnchors", 0)
+        return
+
+    if spec["terrain"] != "utes":
+        raise ValueError(f"{spec['name']}: group-partition recipes require the Utes terrain")
+    expected_arm = int(str(spec["name"]).rsplit("-", 1)[1])
+    if units_per_group != expected_arm:
+        raise ValueError(
+            f"{spec['name']}: unitsPerGroup must remain {expected_arm} so the arm is not mislabeled"
+        )
+    if spec["syntheticMode"] != "path-loop":
+        raise ValueError(f"{spec['name']}: group-partition recipes require path-loop mode")
+    if spec["vehicleEvery"] != 0:
+        raise ValueError(f"{spec['name']}: group-partition recipes require vehicleEvery=0")
+    if spec["expectedHcs"] != 0:
+        raise ValueError(f"{spec['name']}: group-partition recipes require expectedHcs=0")
+    if spec["busRate"] != 0:
+        raise ValueError(f"{spec['name']}: group-partition recipes require busRate=0")
+    if spec["schedulerMode"] != "off":
+        raise ValueError(f"{spec['name']}: group-partition recipes require schedulerMode=off")
+    if target_units <= 0 or target_units % GROUP_PARTITION_UNITS_PER_ANCHOR != 0:
+        raise ValueError(
+            f"{spec['name']}: target workload must divide into exact "
+            f"{GROUP_PARTITION_UNITS_PER_ANCHOR}-member anchors"
+        )
+
+    anchors = target_units // GROUP_PARTITION_UNITS_PER_ANCHOR
+    if anchors > 3:
+        raise ValueError(
+            f"{spec['name']}: derived spawnAnchors={anchors} exceeds the three fixed Utes anchors"
+        )
+    if target_units not in GROUP_PARTITION_TARGET_UNITS:
+        raise ValueError(
+            f"{spec['name']}: group-partition target must be exactly 240 or 360 synthetic units"
+        )
+    if groups % anchors != 0:
+        raise ValueError(
+            f"{spec['name']}: {groups} groups cannot be divided equally across {anchors} anchors"
+        )
+    groups_per_anchor = groups // anchors
+    if groups_per_anchor * units_per_group != GROUP_PARTITION_UNITS_PER_ANCHOR:
+        raise ValueError(f"{spec['name']}: unequal requested member workload per anchor")
+    declared_anchors = spec.get("spawnAnchors")
+    if declared_anchors is not None and declared_anchors != anchors:
+        raise ValueError(
+            f"{spec['name']}: spawnAnchors={declared_anchors!r} does not match "
+            f"the derived equal-work count {anchors}"
+        )
+    spec["spawnAnchors"] = anchors
+
+
 def validate_scenario(spec: dict[str, Any]) -> None:
     if spec["terrain"] not in ("utes", "chernarus"):
         raise ValueError(f"{spec['name']}: terrain must be utes or chernarus")
@@ -84,13 +168,20 @@ def validate_scenario(spec: dict[str, Any]) -> None:
         "expectedHcs": (0, 4), "popTierPin": (-1, 64), "teamCap": (0, 16),
         "townCap": (-1, 64), "syntheticGroups": (0, 120), "unitsPerGroup": (1, 12),
         "batchGroups": (1, 10), "batchIntervalSec": (5, 600), "vehicleEvery": (0, 20),
+        "settleSec": (0, 600),
         "busRate": (0, 50), "minBusAttainmentPct": (0, 100), "minFps": (1, 60), "minHcFps": (1, 60),
         "minHcPct": (0, 100),
         "maxHcImbalancePct": (0, 100), "maxStuckPct": (0, 100), "startingDistance": (100, 10000),
     }
     for key, (low, high) in bounds.items():
         value = spec.get(key)
-        if not isinstance(value, (int, float)) or isinstance(value, bool) or value < low or value > high:
+        if (
+            not isinstance(value, (int, float))
+            or isinstance(value, bool)
+            or not math.isfinite(value)
+            or value < low
+            or value > high
+        ):
             raise ValueError(f"{spec['name']}: {key}={value!r} outside [{low}, {high}]")
     if spec["syntheticMode"] not in ("none", "idle", "path-loop", "combat"):
         raise ValueError(f"{spec['name']}: unsupported syntheticMode={spec['syntheticMode']!r}")
@@ -98,6 +189,14 @@ def validate_scenario(spec: dict[str, Any]) -> None:
         raise ValueError(f"{spec['name']}: schedulerMode must be off, shadow or active")
     if spec["syntheticMode"] == "none" and spec["syntheticGroups"] != 0:
         raise ValueError(f"{spec['name']}: syntheticMode none requires syntheticGroups=0")
+    derive_workload_fields(spec)
+    for key, (low, high) in {
+        "targetSyntheticUnits": (0, 1440),
+        "spawnAnchors": (0, 3),
+    }.items():
+        value = spec.get(key)
+        if not isinstance(value, int) or isinstance(value, bool) or value < low or value > high:
+            raise ValueError(f"{spec['name']}: {key}={value!r} outside integer range [{low}, {high}]")
     if not isinstance(spec.get("featureFlags"), dict):
         raise ValueError(f"{spec['name']}: featureFlags must be an object")
     for key, value in spec["featureFlags"].items():
@@ -113,6 +212,8 @@ def sqf_literal(value: Any) -> str:
     if isinstance(value, str):
         return '"' + value.replace('"', '""') + '"'
     if isinstance(value, (int, float)) and not isinstance(value, bool):
+        if not math.isfinite(value):
+            raise ValueError(f"cannot render non-finite number {value!r} as SQF")
         return str(value)
     if isinstance(value, list):
         return "[" + ",".join(sqf_literal(item) for item in value) + "]"
@@ -124,6 +225,15 @@ def config_digest(spec: dict[str, Any], workload_only: bool = False) -> str:
     if workload_only:
         payload.pop("variant", None)
         payload.pop("schedulerMode", None)
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()[:16]
+
+
+def partition_digest(spec: dict[str, Any]) -> str:
+    """Identify runtime config except non-runtime text and the intentional arm shape."""
+    payload = json.loads(json.dumps(spec))
+    for field in PARTITION_ID_EXCLUDED_FIELDS:
+        payload.pop(field, None)
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()[:16]
 
@@ -142,6 +252,7 @@ def render_config(
         ("WASP_LAB_CODE_ID", lab_id),
         ("WASP_LAB_CONFIG_ID", config_digest(spec)),
         ("WASP_LAB_WORKLOAD_ID", config_digest(spec, workload_only=True)),
+        ("WASP_LAB_PARTITION_ID", partition_digest(spec)),
         ("WASP_LAB_DURATION_SEC", spec["durationSec"]),
         ("WASP_LAB_SAMPLE_SEC", spec["sampleSec"]),
         ("WASP_LAB_WARMUP_SEC", spec["warmupSec"]),
@@ -149,7 +260,10 @@ def render_config(
         ("WASP_LAB_SCHEDULER_MODE", spec["schedulerMode"]),
         ("WASP_LAB_SYNTHETIC_MODE", spec["syntheticMode"]),
         ("WASP_LAB_SYNTHETIC_GROUPS", spec["syntheticGroups"]),
+        ("WASP_LAB_TARGET_SYNTHETIC_UNITS", spec["targetSyntheticUnits"]),
         ("WASP_LAB_UNITS_PER_GROUP", spec["unitsPerGroup"]),
+        ("WASP_LAB_SPAWN_ANCHORS", spec["spawnAnchors"]),
+        ("WASP_LAB_SETTLE_SEC", spec["settleSec"]),
         ("WASP_LAB_BATCH_GROUPS", spec["batchGroups"]),
         ("WASP_LAB_BATCH_INTERVAL_SEC", spec["batchIntervalSec"]),
         ("WASP_LAB_VEHICLE_EVERY", spec["vehicleEvery"]),
@@ -636,12 +750,18 @@ def main(argv: list[str] | None = None) -> int:
         for key, value in overrides.items():
             if value is not None:
                 spec[key] = value
+        if args.groups is not None or args.units_per_group is not None:
+            # Catalog values document the 240-member recipes. CLI scale overrides
+            # must re-derive both requested members and their equal anchor count.
+            spec.pop("targetSyntheticUnits", None)
+            spec.pop("spawnAnchors", None)
         # A 0-HC control is intentionally server-only, so an HC ownership gate
         # and HC round-trip load would be contradictory even when the recipe
         # normally expects HCs.
         if spec["expectedHcs"] == 0:
             spec["minHcPct"] = 0
-            spec["busRate"] = 0
+            if not is_group_partition(spec):
+                spec["busRate"] = 0
         validate_scenario(spec)
         source = args.source.resolve()
         validate_inputs(spec, source)
@@ -690,6 +810,7 @@ def main(argv: list[str] | None = None) -> int:
             "schema": MANIFEST_SCHEMA, "scenario": spec, "git": sha, "headGit": head_sha, "dirty": dirty,
             "candidate": candidate, "source": str(source), "mission": destination.name,
             "configId": config_digest(spec), "workloadId": config_digest(spec, workload_only=True),
+            "partitionId": partition_digest(spec),
             "sourceId": source_id, "labCodeId": lab_id,
             "artifactId": artifact_id,
             "editorVerificationRequired": spec["terrain"] == "utes",

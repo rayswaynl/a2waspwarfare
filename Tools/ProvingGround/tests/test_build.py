@@ -44,12 +44,182 @@ class BuildTests(unittest.TestCase):
         self.assertIn('missionNamespace setVariable ["WASP_LAB_VARIANT", "control"];', text)
         self.assertIn('missionNamespace setVariable ["WASP_LAB_SCHEDULER_MODE", "off"];', text)
         self.assertIn('missionNamespace setVariable ["WASP_LAB_MIN_HC_FPS", 25];', text)
+        self.assertIn('missionNamespace setVariable ["WASP_LAB_TARGET_SYNTHETIC_UNITS", 0];', text)
+        self.assertIn('missionNamespace setVariable ["WASP_LAB_SPAWN_ANCHORS", 0];', text)
+        self.assertIn('missionNamespace setVariable ["WASP_LAB_SETTLE_SEC", 60];', text)
+        self.assertRegex(text, r'missionNamespace setVariable \["WASP_LAB_PARTITION_ID", "[0-9a-f]{16}"\];')
+
+    def test_group_partition_catalog_has_equal_240_member_arms(self):
+        expected = {
+            4: 60,
+            6: 40,
+            8: 30,
+            10: 24,
+            12: 20,
+        }
+        partition_ids = set()
+        for arm, groups in expected.items():
+            with self.subTest(arm=arm):
+                spec = build.resolve_scenario(f"density-{arm}", self.catalog)
+                self.assertEqual(groups, spec["syntheticGroups"])
+                self.assertEqual(arm, spec["unitsPerGroup"])
+                self.assertEqual(240, spec["targetSyntheticUnits"])
+                self.assertEqual(2, spec["spawnAnchors"])
+                self.assertEqual(0, spec["vehicleEvery"])
+                self.assertEqual(0, spec["expectedHcs"])
+                partition_ids.add(build.partition_digest(spec))
+        self.assertEqual(1, len(partition_ids))
+
+    def test_partition_digest_removes_only_intentional_arm_fields(self):
+        spec = build.resolve_scenario("density-4", self.catalog)
+        digest = build.partition_digest(spec)
+        mutations = {
+            "description": "non-runtime label does not affect partition identity",
+            "name": "density-12",
+            "syntheticGroups": 20,
+            "unitsPerGroup": 12,
+            "batchGroups": 2,
+        }
+        for field, value in mutations.items():
+            with self.subTest(ignored_field=field):
+                changed = json.loads(json.dumps(spec))
+                changed[field] = value
+                self.assertEqual(digest, build.partition_digest(changed))
+        for field, value in (
+            ("targetSyntheticUnits", 360),
+            ("spawnAnchors", 3),
+            ("durationSec", 901),
+            ("minFps", 24),
+        ):
+            with self.subTest(retained_field=field):
+                changed = json.loads(json.dumps(spec))
+                changed[field] = value
+                self.assertNotEqual(digest, build.partition_digest(changed))
+        changed = json.loads(json.dumps(spec))
+        changed["featureFlags"]["WFBE_C_CAMPS_CREATE"] = 1
+        self.assertNotEqual(digest, build.partition_digest(changed))
+
+    def test_group_partition_360_override_derives_three_equal_anchors(self):
+        expected = {4: 90, 6: 60, 8: 45, 10: 36, 12: 30}
+        partition_ids = set()
+        for arm, groups in expected.items():
+            with self.subTest(arm=arm):
+                spec = build.resolve_scenario(f"density-{arm}", self.catalog)
+                spec["syntheticGroups"] = groups
+                spec.pop("targetSyntheticUnits")
+                spec.pop("spawnAnchors")
+                build.validate_scenario(spec)
+                self.assertEqual(360, spec["targetSyntheticUnits"])
+                self.assertEqual(3, spec["spawnAnchors"])
+                self.assertEqual(120, (groups // 3) * arm)
+                partition_ids.add(build.partition_digest(spec))
+        self.assertEqual(1, len(partition_ids))
+
+    def test_group_partition_rejects_one_anchor_120_unit_campaign(self):
+        spec = build.resolve_scenario("density-4", self.catalog)
+        spec["syntheticGroups"] = 30
+        spec.pop("targetSyntheticUnits")
+        spec.pop("spawnAnchors")
+        with self.assertRaisesRegex(ValueError, "exactly 240 or 360"):
+            build.validate_scenario(spec)
+
+    def test_group_partition_rejects_unequal_anchor_work(self):
+        spec = build.resolve_scenario("density-8", self.catalog)
+        spec["syntheticGroups"] = 44
+        spec.pop("targetSyntheticUnits")
+        spec.pop("spawnAnchors")
+        with self.assertRaisesRegex(ValueError, "exact 120-member anchors"):
+            build.validate_scenario(spec)
+
+    def test_group_partition_rejects_more_than_three_utes_anchors(self):
+        spec = build.resolve_scenario("density-8", self.catalog)
+        spec["syntheticGroups"] = 60
+        spec.pop("targetSyntheticUnits")
+        spec.pop("spawnAnchors")
+        with self.assertRaisesRegex(ValueError, "exceeds the three fixed Utes anchors"):
+            build.validate_scenario(spec)
+
+    def test_group_partition_rejects_bus_load(self):
+        spec = build.resolve_scenario("density-8", self.catalog)
+        spec["busRate"] = 1
+        with self.assertRaisesRegex(ValueError, "busRate=0"):
+            build.validate_scenario(spec)
+
+    def test_group_partition_rejects_scheduler_load(self):
+        spec = build.resolve_scenario("density-8", self.catalog)
+        spec["schedulerMode"] = "active"
+        with self.assertRaisesRegex(ValueError, "schedulerMode=off"):
+            build.validate_scenario(spec)
+
+    def test_group_partition_rejects_non_utes_terrain(self):
+        spec = build.resolve_scenario("density-8", self.catalog)
+        spec["terrain"] = "chernarus"
+        with self.assertRaisesRegex(ValueError, "require the Utes terrain"):
+            build.validate_scenario(spec)
+
+    def test_group_partition_cli_rejects_coupled_dimension_overrides(self):
+        for option, value in (("--bus-rate", "1"), ("--scheduler-mode", "active")):
+            with self.subTest(option=option):
+                completed = subprocess.run(
+                    [
+                        sys.executable,
+                        str(ROOT / "build.py"),
+                        "density-8",
+                        option,
+                        value,
+                        "--validate-only",
+                    ],
+                    cwd=str(build.REPO),
+                    check=False,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                )
+                self.assertNotEqual(completed.returncode, 0)
+                self.assertIn("group-partition recipes require", completed.stderr)
+
+    def test_partition_barrier_preserves_legacy_recipe_timing(self):
+        text = (ROOT / "mission" / "test" / "ProvingGround_Server.sqf").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("_end = _start + _duration;", text)
+        self.assertIn("if (_partitionMode) then {_end = -1};", text)
+        self.assertIn(
+            'missionNamespace setVariable ["WASP_LAB_PARTITION_MODE", _partitionMode];',
+            text,
+        )
+        self.assertIn(
+            'if (_partitionModeNow) then {_group setVariable ["wasp_lab_initial_target_idx", _targetIdx]} else {[_group, _targetIdx] Call WASP_LAB_FNC_AssignLeg};',
+            text,
+        )
+        self.assertIn(
+            '_sampleExpected = if (_partitionMode) then {floor (_duration / _sampleSec)} else {floor (((_duration - _warmup) max 0) / _sampleSec)};',
+            text,
+        )
+        self.assertIn(
+            '_busExpected = if (_partitionMode) then {round (_duration * _busRate)} else {round (((_duration - _warmup) max 0) * _busRate)};',
+            text,
+        )
+        self.assertIn(
+            '_isBenchmark = if (_partitionModeNow) then {_phaseNow == "MEASURE"} else {_elapsed >= _warmupSec};',
+            text,
+        )
 
     def test_scheduler_recipe_is_explicitly_opt_in(self):
         spec = build.resolve_scenario("scheduler-ramp", self.catalog)
         self.assertEqual(spec["schedulerMode"], "off")
         spec["schedulerMode"] = "active"
         build.validate_scenario(spec)
+
+    def test_non_finite_recipe_numbers_are_rejected(self):
+        for value in (float("nan"), float("inf"), float("-inf")):
+            with self.subTest(value=value):
+                spec = build.resolve_scenario("fast-smoke", self.catalog)
+                spec["durationSec"] = value
+                with self.assertRaisesRegex(ValueError, "durationSec"):
+                    build.validate_scenario(spec)
+                with self.assertRaisesRegex(ValueError, "non-finite"):
+                    build.sqf_literal(value)
 
     def test_zero_hc_cli_semantics_disable_ownership_gate(self):
         spec = build.resolve_scenario("hc-delegation", self.catalog)

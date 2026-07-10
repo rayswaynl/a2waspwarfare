@@ -165,6 +165,23 @@ WASPLAB|v1|RESULT|status=PASS
         self.assertIn("GIT_MISMATCH", codes)
         self.assertFalse(result["ok"])
 
+    def test_measurement_duration_ignores_variable_spawn_wall_time(self):
+        control = CONTROL.replace(
+            "|complete=1",
+            "|duration=10|measureDuration=2|complete=1",
+        )
+        candidate = CANDIDATE.replace(
+            "|complete=1",
+            "|duration=70|measureDuration=2|complete=1",
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            paths = self._write_pair(directory, control, candidate)
+            result = compare.compare_files(str(paths[0]), str(paths[1]))
+
+        codes = {warning["code"] for warning in result["warnings"]}
+        self.assertNotIn("RESULT_DURATION_MISMATCH", codes)
+        self.assertTrue(result["ok"])
+
     def test_missing_result_is_a_warning(self):
         incomplete = CANDIDATE.rsplit("\n", 2)[0] + "\n"
         with tempfile.TemporaryDirectory() as directory:

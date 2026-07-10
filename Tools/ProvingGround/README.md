@@ -63,7 +63,7 @@ python Tools\ProvingGround\build.py hc-delegation --expected-hcs 1 --variant hc1
 python Tools\ProvingGround\build.py hc-delegation --expected-hcs 2 --variant hc2 --force
 ```
 
-The builder forces `busRate=0` and disables the HC-ownership threshold whenever `expectedHcs=0`, even if the base recipe normally sends pings. There is no legal HC round-trip target in that topology. The `hc0` arm is therefore the server-only ownership/fallback baseline for the 0/1/2-HC and bounce comparisons, not a bus-throughput result.
+For non-partition recipes, the builder forces `busRate=0` and disables the HC-ownership threshold whenever `expectedHcs=0`, even if the base recipe normally sends pings. There is no legal HC round-trip target in that topology. Registered density recipes enforce the same zero-bus topology as an immutable partition constraint. The `hc0` arm is therefore the server-only ownership/fallback baseline for the 0/1/2-HC and bounce comparisons, not a bus-throughput result.
 
 Common bounded overrides are available without editing JSON:
 
@@ -72,6 +72,18 @@ Common bounded overrides are available without editing JSON:
 --bus-rate N      --team-cap N    --pop-pin N  --expected-hcs N
 --scheduler-mode off|shadow|active
 ```
+
+The five pure-infantry partition recipes derive their target and fixed anchors from the requested group count. Their registered 240-unit screen uses two 120-unit anchors; the 360-unit confirmation uses three:
+
+```text
+python Tools\ProvingGround\build.py density-4  --groups 90 --units-per-group 4  --force
+python Tools\ProvingGround\build.py density-6  --groups 60 --units-per-group 6  --force
+python Tools\ProvingGround\build.py density-8  --groups 45 --units-per-group 8  --force
+python Tools\ProvingGround\build.py density-10 --groups 36 --units-per-group 10 --force
+python Tools\ProvingGround\build.py density-12 --groups 30 --units-per-group 12 --force
+```
+
+The builder accepts only the registered 240-unit/two-anchor or 360-unit/three-anchor campaigns; it rejects one-anchor, unequal-anchor and larger Utes requests. These arms are a one-dimension group-partition test, so they also require `busRate=0` and `schedulerMode=off`; command-line overrides that enable either extra workload are rejected.
 
 For allocator, command-line, addon or scheduler experiments, label the arms `--variant control` and `--variant candidate-name`. Keep git SHA, mission recipe, `basic.cfg`, HC count, CPU masks, mods, view distance, OS power plan and run duration fixed unless that item is the tested dimension.
 
@@ -85,8 +97,11 @@ For allocator, command-line, addon or scheduler experiments, label the arms `--v
 | `scheduler-ramp` | Equal-total creation/path/bus workload for scheduler off/shadow/active A/Bs; active deliberately changes work timing. |
 | `pathfinding-ramp` | Repeated town-to-town infantry and supply-vehicle legs; arrival/stuck telemetry. |
 | `combat-ramp` | WEST/EAST SAD convergence, combat, deaths and cleanup. |
-| `density-4` | 240 synthetic infantry in 60 groups. |
-| `density-8` | The same 240 infantry in 30 groups; paired group-brain-cost test. |
+| `density-4` | 240 pure infantry in 60 groups, split equally across two fixed anchors. |
+| `density-6` | The same 240 infantry in 40 groups. |
+| `density-8` | The same 240 infantry in 30 groups. |
+| `density-10` | The same 240 infantry in 24 groups. |
+| `density-12` | The same 240 infantry in 20 groups; lab upper bound, not production policy. |
 | `current-map-fast` | Current Chernarus with one nearest town per side and two commander teams; live features enabled. |
 
 Synthetic groups are intentionally server-local so the density/path/combat and scheduler recipes stress the dedicated process. That is a benchmark topology, not a production ownership recommendation. In production the server should retain authoritative mission/economy/network work and the unavoidable or explicit fallback AI floor; eligible combat and town groups should normally be created on healthy HCs. `hc-delegation` uses the mission's real town/AICOM dispatch path; it does not fake locality.
@@ -122,22 +137,36 @@ python Tools\ProvingGround\compare.py control.RPT candidate.RPT
 python Tools\ProvingGround\compare.py control.RPT candidate.RPT --json
 ```
 
+`compare.py` deliberately rejects density arms with different scenario/group fields. Aggregate the intentional 4/6/8/10/12 partition instead:
+
+```text
+python Tools\ProvingGround\group_partition.py C:\WASP-Lab\runs\density-*.RPT
+python Tools\ProvingGround\group_partition.py C:\WASP-Lab\runs\density-*.RPT --json
+```
+
+The partition aggregator requires at least three complete `PASS` repetitions per arm; `--min-repetitions` may raise but never lower that floor. It checks the exact Utes three-town topology, source/lab/git and a normalized partition-contract digest, the exact phase barrier, finite/range-valid numeric START evidence, the registered `5/4/3/2/2` arm batch mapping, zero vehicles/crew/oversize/create failures, exact realized-group and anchor-index evidence, equal 120-member anchors, 98%-minimum target member/group exposure without more than one sampling interval of overcount, measurement windows, zero objects/groups remaining after cleanup, physically bounded arrival units and internally reconciled route outcomes. Any rejected input invalidates the supplied campaign; the tool never suppresses generic comparer warnings.
+
 ## Telemetry contract
 
 Plain `diag_log` is used so the lab remains visible when `WF_LOG_CONTENT` is compiled off:
 
 ```text
 WASPLAB|v1|START|run=...|scenario=...|map=...|variant=...|...
-WASPLAB|v1|SAMPLE|run=...|t=...|fps=...|ai=...|groups=...|srvAi=...|hcAi=...|hcPct=...|hcImbalancePct=...|hcFresh=...|hcFpsMin=...|stuck=...|probeMs=...
+WASPLAB|v1|PHASE|run=...|phase=<phase-name>|...
+WASPLAB|v1|REALIZED|run=...|group=...|anchor=...|requestedInfantry=...|createdInfantry=...|crew=...|vehicles=...|finalMembers=...
+WASPLAB|v1|COMPOSITION|run=...|histogram=...|anchorRequested=...|anchorMembers=...|memberSeconds=...|groupSeconds=...
+WASPLAB|v1|SAMPLE|run=...|t=...|phase=...|measureT=...|fps=...|ai=...|groups=...|srvAi=...|hcAi=...|hcPct=...|hcImbalancePct=...|hcFresh=...|hcFpsMin=...|stuck=...|probeMs=...
 WASPLAB|v1|BATCH|run=...|batch=...|spawnedTotal=...|spawnedDelta=...|ai=...|groups=...
 WASPLAB|v1|BUS|run=...|sentTotal=...|ackTotal=...|dropTotal=...|latencyMs=...
-WASPLAB|v1|PATHLEG|run=...|from=...|to=...|elapsed=...|status=ARRIVED
+WASPLAB|v1|PATHLEG|run=...|routeId=...|from=...|to=...|elapsed=...|status=STARTED|ARRIVED
 WASPLAB|v1|SCHED|run=...|budgetMs=...|elapsedMs=...|frameDelta=...|due=...|deferred=...
 WASPLAB|v1|ALERT|run=...|state=DEGRADED|COLLAPSED|OK|hcPct=...
 WASPLAB|v1|RESULT|run=...|status=PASS|FAIL|reason=...|hcFpsSamples=...|hcFpsMin=...|busFreshEndpoints=...|...
 ```
 
 Unlike the old `remote == 0` alert, the lab counts non-player AI against registered HC owner IDs that pass the validity checks above. With at least 40 AI after warm-up it marks `<60%` HC ownership for three samples as degraded and `<25%` for two samples as collapsed. Thresholds remain recipe data, and the result does not page or restart anything.
+
+The registered density/group-partition arms do not issue waypoints while groups are still being created. They emit `SPAWN -> SETTLE -> GO -> MEASURE -> CLEANUP`, reset benchmark counters at `GO`, then keep a fixed post-GO measurement duration. Member-seconds and group-seconds therefore exclude the partition-dependent ramp. The partition aggregator independently reconciles every `REALIZED` row with the cumulative composition and checks that phase-scoped member/group work counters are complete, monotonic and within one sample interval of the final totals. Other proving-ground recipes retain PR #997's original total-duration, wall-clock warm-up and immediate path/combat-order semantics.
 
 `minHcFps` defaults to 25. The harness enforces missing/stale endpoint and HC-FPS-floor failures only when both `busRate > 0` and `expectedHcs > 0`; this avoids pretending a no-bus or zero-HC control measured HC FPS. The 25-FPS floor is a lab safety gate, not evidence that 25 FPS is the desired scale target.
 

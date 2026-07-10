@@ -234,8 +234,18 @@ def compare_summaries(control, candidate):
             )
         )
 
-    control_duration = _number((control.get("result") or {}).get("duration"))
-    candidate_duration = _number((candidate.get("result") or {}).get("duration"))
+    control_result = control.get("result") or {}
+    candidate_result = candidate.get("result") or {}
+    control_duration = _number(
+        control_result.get("measureDuration")
+        if control_result.get("measureDuration") is not None
+        else control_result.get("duration")
+    )
+    candidate_duration = _number(
+        candidate_result.get("measureDuration")
+        if candidate_result.get("measureDuration") is not None
+        else candidate_result.get("duration")
+    )
     tolerance = max(
         2.0,
         _number(_start_value(control, "sampleSec")) or 0.0,
@@ -245,7 +255,7 @@ def compare_summaries(control, candidate):
         warnings.append(
             _warning(
                 "RESULT_DURATION_MISMATCH",
-                "result duration differs: control=%s candidate=%s"
+                "measurement duration differs: control=%s candidate=%s"
                 % (_trim_number(control_duration), _trim_number(candidate_duration)),
             )
         )

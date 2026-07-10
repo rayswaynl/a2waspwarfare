@@ -24,7 +24,7 @@ Those observations are not a universal engine benchmark. They are evidence that 
 | 4 | Fresh owner-keyed HC registry and bounce grace | Alive/non-null is not a freshness or owner check. A stale owner 2 or duplicate owner row can win selection; new groups then become sticky on the server. | Kill/rejoin each HC: no invalid-owner sends, no new server fallback during grace, new delegatable load returns to healthy HCs. |
 | 5 | Remove the O(`allGroups`) scan from every group creation | `Common/Functions/Common_CreateGroup.sqf:28-32` scans every group for every create; close to cap it performs GC and a second scan at `:35-58`. | Fixed 100-group creation microbench, exact cap behavior, same attribution and no `grpNull` regression. |
 | 6 | Compile vehicle helper code once during init | `Common/Functions/Common_CreateVehicle.sqf:30,33,40,46,50,56` preprocesses/compiles helpers repeatedly for every vehicle, including three unconditional paths. | 100 mixed vehicles, identical classes/crew/EHs/textures/JIP init; lower creation time and no missing helper. |
-| 7 | Consolidate groups before expanding their count | W/E town merge target is five while GUER is already denser. More units per existing local group usually cost less than more group brains, waypoints and bookkeeping. | Equal-unit `density-4` vs `density-8`; then W/E target 5→8→10 one rung per soak. Preserve capture/arrival/combat outcome. |
+| 7 | Measure group partition before expanding group size | W/E town merge target is five while GUER is already denser. More units per existing local group may cost less than more group brains, but larger formations can reduce offensive breadth or path quality. | Equal-unit `density-4/6/8/10/12` screen with realized member/anchor exposure; then composition-specific production trials. Preserve capture/arrival/combat outcome. |
 | 8 | Smooth hot scans and public-variable churn | Each active town's camp loop performs `nearEntities` per camp (`server_town_camp.sqf:40-54,132-134`). Full patrol/AICOM marker arrays can rebroadcast every 20 s (`server_side_patrols.sqf:84-120`). | Time-normalized camp capture within 5%; JIP markers recover within SLA; lower PV bytes/messages and fewer frame spikes. |
 | 9 | Prove cooperative mission-work scheduling | The lab v0 can measure dispatcher overhead and phase only its synthetic group/path/bus work. Production value begins only after one bounded real loop migrates with parity. | Three matched off/shadow/active `scheduler-ramp` runs; shadow overhead below measurement noise; p5/min improves without lower workload attainment or worse outcomes. |
 | 10 | Delegate GUER wildcard/garrison work | GUER wildcard/garrison groups are created directly on the server, making them a large steady local-AI floor. | Soak-only: kill credit, ledger, cleanup, owner loss and behavior parity before enabling. |
@@ -73,10 +73,12 @@ A2 OA is a 32-bit process and cannot directly load a 64-bit DLL. If later measur
 | `scheduler-ramp` | What overhead does server-only v0 add in shadow mode, and does active pacing improve p5/min without reducing equal-total work? |
 | `pathfinding-ramp` | How many moving infantry/vehicle groups complete repeated short legs; where does stuck rate rise? |
 | `combat-ramp` | Does FPS remain usable under contact, damage, deaths and cleanup rather than idle AI? |
-| `density-4` / `density-8` | At the same 240 units, how much does 60 groups vs 30 groups cost? |
+| `density-4/6/8/10/12` | At the same realized 240 infantry, how do 60/40/30/24/20 groups change cost and route outcomes? |
 | `current-map-fast` | Does a change still work against the current Chernarus topology and feature wiring? |
 
 Run mod/allocator changes as named variants of the exact same recipe and compare the last run in each RPT. Keep git SHA, mission, `basic.cfg`, process topology, view distance, mods, OS power plan and duration fixed.
+
+The partition screen uses two fixed 120-member anchors. A separate 360-unit confirmation uses three fixed 120-member anchors: `90x4`, `60x6`, `45x8`, `36x10`, `30x12`. Every arm is pure infantry (`vehicleEvery=0`) and server-local (`expectedHcs=0`). `SPAWN -> SETTLE -> GO -> MEASURE -> CLEANUP` prevents ramp duration from contaminating the post-GO FPS sample; realized composition, member-seconds, group-seconds and route starts/completions are mandatory evidence. Use `Tools/ProvingGround/group_partition.py`; do not weaken the generic comparer or treat the 12-member arm as production policy.
 
 Exact scheduler arms:
 
