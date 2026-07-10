@@ -1,0 +1,16 @@
+00:00:01 "WASPLAB|v1|START|run=discarded-older-run|scenario=smoke|map=Chernarus|build=old"
+00:00:02 "WASPLAB|v1|SAMPLE|run=discarded-older-run|t=1|fps=5|ai=999|groups=140|hcPct=0|stuck=99"
+00:00:03 Error in expression <old run error must not leak>
+00:00:04 "WASPLAB|v1|RESULT|run=discarded-older-run|status=FAIL|reason=old"
+
+01:00:00 "WASPLAB|v1|START|run=utes-path-001|scenario=path-mixed|map=Utes|build=lab-1|seed=42"
+01:00:10 "WASPLAB|v1|SAMPLE|run=utes-path-001|t=10|fps=47.5|srvAi=80|hcAi=20|otherAi=0|groups=20|remotePct=25|hcOwners=2|vehicles=10|arrived=5|tracked=6|probeMs=3.2|stuck=1"
+01:00:20 "WASPLAB|v1|BATCH|run=utes-path-001|t=20|batch=1|spawned=10|ai=110|groups=22"
+01:00:30 "WASPLAB|v1|BUS|run=utes-path-001|t=30|sentTotal=10|ackTotal=9|dropTotal=0|latencyMs=40"
+01:00:40 "WASPLAB|v1|SAMPLE|run=utes-path-001|t=40|fps=30|srvAi=90|hcAi=10|otherAi=0|groups=25|remotePct=12|hcOwners=2|vehicles=14|arrived=8|tracked=10|probeMs=4.5|stuck=3"
+01:00:50 "WASPLAB|v1|BUS|run=utes-path-001|t=50|sentTotal=20|ackTotal=18|dropTotal=1|latencyMs=60"
+01:01:00 "WASPLAB|v1|PATHLEG|run=utes-path-001|t=60|leg=coast-road-1|from=spawn-west|to=airfield|units=10|arrived=6|stuck=4|elapsed=50|status=PARTIAL"
+01:01:01 Error in expression <_owner select 1>
+01:01:01 Undefined variable in expression: _owner
+01:01:02 Cannot load texture ca\utes\data\harbor_co.paa
+01:01:03 "WASPLAB|v1|RESULT|run=utes-path-001|status=WARN|duration=63|reason=path_partial|fpsMin=30|fpsAvg=38.75|aiPeak=110|groupsPeak=25|hcPctMin=10|stuckMax=4|busSent=20|busAck=18|busLoss=2|busLatencyAvgMs=55|complete=1";
