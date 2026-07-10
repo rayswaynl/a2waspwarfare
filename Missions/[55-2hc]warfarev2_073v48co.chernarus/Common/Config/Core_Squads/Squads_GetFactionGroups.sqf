@@ -56,7 +56,10 @@ for "_i" from 0 to ((count _cfgFaction) - 1) do {
 							_levels set [_type, _upgrade];
 						} else {
 							["ERROR", Format ["Squads_GetFactionGroups.sqf: Unit [%1] is not defined in the Core files.", _unit]] Call WFBE_CO_FNC_LogContent;
-							/* TODO, Attempt to define*/
+							//--- Deliberate safe default: leave _require/_levels untouched for this unit's factory-type slot
+							//--- (stays [false,...]/[0,...]) instead of guessing a factory tier/price for an undefined
+							//--- unit. The ERROR above is the actionable signal; fix the Core_*.sqf entry for _unit
+							//--- rather than special-casing this fallback.
 						};
 					};
 				};
