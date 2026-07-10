@@ -32,6 +32,7 @@ Private ["_targetSyntheticUnits","_spawnAnchors","_settleSec","_partitionMode","
 Private ["_realizedGroups","_requestedInfantry","_createdInfantry","_createdCrew","_createdVehicles","_finalMembers"];
 Private ["_underfillGroups","_oversizeGroups","_createFailures","_createFailureGroups","_memberSeconds","_groupSeconds"];
 Private ["_pathLegsStarted","_routeIds","_histogram","_anchorRequested","_anchorMembers"];
+Private ["_drainDeadline","_drainTimedOut"];
 
 if (!isServer) exitWith {};
 if (!(missionNamespace getVariable ["WASP_LAB_ENABLED", false])) exitWith {};
@@ -125,6 +126,10 @@ missionNamespace setVariable ["WASP_LAB_MEASURE_START", -1];
 missionNamespace setVariable ["WASP_LAB_PHASE", "SPAWN"];
 missionNamespace setVariable ["WASP_LAB_PHASE_SEQ", 1];
 missionNamespace setVariable ["WASP_LAB_STOP", false];
+missionNamespace setVariable ["WASP_LAB_MEASURE_CLOSING", false];
+missionNamespace setVariable ["WASP_LAB_SAMPLE_INFLIGHT", 0];
+missionNamespace setVariable ["WASP_LAB_PATH_INFLIGHT", 0];
+missionNamespace setVariable ["WASP_LAB_DRAIN_FAILED", false];
 missionNamespace setVariable ["WASP_LAB_SPAWN_DONE", _totalGroups < 1];
 missionNamespace setVariable ["WASP_LAB_TRACKED_GROUPS", []];
 missionNamespace setVariable ["WASP_LAB_TRACKED_OBJECTS", []];
@@ -281,10 +286,12 @@ WASP_LAB_FNC_CompositionText = {
 };
 
 WASP_LAB_FNC_LogPhase = {
-	Private ["_phase","_measureStart","_measureT"];
+	Private ["_phase","_measureStart","_measureEnd","_measureNow","_measureT"];
 	_phase = missionNamespace getVariable ["WASP_LAB_PHASE", "SPAWN"];
 	_measureStart = missionNamespace getVariable ["WASP_LAB_MEASURE_START", -1];
-	_measureT = if (_measureStart >= 0) then {round (time - _measureStart)} else {-1};
+	_measureEnd = missionNamespace getVariable ["WASP_LAB_END", -1];
+	_measureNow = if (_phase == "CLEANUP" && {_measureEnd >= _measureStart}) then {time min _measureEnd} else {time};
+	_measureT = if (_measureStart >= 0) then {round (_measureNow - _measureStart)} else {-1};
 	diag_log ("WASPLAB|v1|PHASE|run=" + (missionNamespace getVariable ["WASP_LAB_RUN_ID", "?"]) +
 		"|phase=" + _phase + "|phaseSeq=" + str (missionNamespace getVariable ["WASP_LAB_PHASE_SEQ", 0]) +
 		"|t=" + str (round (time - (missionNamespace getVariable ["WASP_LAB_START", 0]))) + "|measureT=" + str _measureT +
@@ -313,10 +320,11 @@ WASP_LAB_FNC_RecordRoute = {
 };
 
 WASP_LAB_FNC_AccumulateExposure = {
-	Private ["_last","_now","_activeGroups","_activeMembers","_group"];
+	Private ["_last","_now","_delta","_activeGroups","_activeMembers","_group"];
 	if ((missionNamespace getVariable ["WASP_LAB_PHASE", "SPAWN"]) != "MEASURE") exitWith {};
 	_last = missionNamespace getVariable ["WASP_LAB_EXPOSURE_LAST", -1];
-	_now = time;
+	_now = time min (missionNamespace getVariable ["WASP_LAB_END", time]);
+	_delta = (_now - _last) max 0;
 	if (_last >= 0) then {
 		_activeGroups = 0;
 		_activeMembers = 0;
@@ -327,8 +335,8 @@ WASP_LAB_FNC_AccumulateExposure = {
 				_activeMembers = _activeMembers + count units _group;
 			};
 		} forEach (missionNamespace getVariable ["WASP_LAB_TRACKED_GROUPS", []]);
-		missionNamespace setVariable ["WASP_LAB_MEMBER_SECONDS", (missionNamespace getVariable ["WASP_LAB_MEMBER_SECONDS", 0]) + (_activeMembers * (_now - _last))];
-		missionNamespace setVariable ["WASP_LAB_GROUP_SECONDS", (missionNamespace getVariable ["WASP_LAB_GROUP_SECONDS", 0]) + (_activeGroups * (_now - _last))];
+		missionNamespace setVariable ["WASP_LAB_MEMBER_SECONDS", (missionNamespace getVariable ["WASP_LAB_MEMBER_SECONDS", 0]) + (_activeMembers * _delta)];
+		missionNamespace setVariable ["WASP_LAB_GROUP_SECONDS", (missionNamespace getVariable ["WASP_LAB_GROUP_SECONDS", 0]) + (_activeGroups * _delta)];
 	};
 	missionNamespace setVariable ["WASP_LAB_EXPOSURE_LAST", _now];
 };
@@ -404,9 +412,10 @@ WASP_LAB_FNC_HCOwners = {
 };
 
 WASP_LAB_FNC_AssignLeg = {
-	Private ["_group","_townIndex","_town","_target","_name","_labTowns","_fromTown","_fromName","_routeId","_phase","_partitionModeNow"];
+	Private ["_group","_townIndex","_town","_target","_name","_labTowns","_fromTown","_fromName","_routeId","_phase","_partitionModeNow","_groupId","_transition","_eventAt"];
 	_group = _this select 0;
 	_townIndex = _this select 1;
+	_eventAt = if (count _this > 2) then {_this select 2} else {-1};
 	_labTowns = missionNamespace getVariable ["WASP_LAB_TOWNS", []];
 	_partitionModeNow = missionNamespace getVariable ["WASP_LAB_PARTITION_MODE", false];
 	_phase = if (_partitionModeNow) then {missionNamespace getVariable ["WASP_LAB_PHASE", "SPAWN"]} else {"MEASURE"};
@@ -424,14 +433,23 @@ WASP_LAB_FNC_AssignLeg = {
 	_group setVariable ["wasp_lab_from_name", _fromName];
 	_group setVariable ["wasp_lab_target_name", _name];
 	if (_partitionModeNow) then {_group setVariable ["wasp_lab_route_id", _routeId]};
-	_group setVariable ["wasp_lab_leg_start", time];
+	if (_eventAt < 0) then {_eventAt = time};
+	_group setVariable ["wasp_lab_leg_start", _eventAt];
 	_group setVariable ["wasp_lab_last_move_t", time];
 	if (!isNull leader _group) then {_group setVariable ["wasp_lab_last_pos", getPos leader _group]};
 	if (_partitionModeNow) then {
+		_groupId = _group getVariable "wasp_lab_group_id";
+		if (isNil "_groupId") then {_groupId = -1};
+		_transition = _group getVariable "wasp_lab_transition";
+		if (isNil "_transition") then {_transition = 0};
+		_transition = _transition + 1;
+		_group setVariable ["wasp_lab_transition", _transition];
+		_group setVariable ["wasp_lab_active_transition", _transition];
 		[_routeId] Call WASP_LAB_FNC_RecordRoute;
 		diag_log ("WASPLAB|v1|PATHLEG|run=" + (missionNamespace getVariable ["WASP_LAB_RUN_ID", "?"]) +
-			"|t=" + str (round (time - (missionNamespace getVariable ["WASP_LAB_START", 0]))) +
-			"|measureT=" + str (round (time - (missionNamespace getVariable ["WASP_LAB_MEASURE_START", time]))) +
+			"|t=" + str (round (_eventAt - (missionNamespace getVariable ["WASP_LAB_START", 0]))) +
+			"|measureT=" + str (round (_eventAt - (missionNamespace getVariable ["WASP_LAB_MEASURE_START", _eventAt]))) +
+			"|group=" + str _groupId + "|transition=" + str _transition +
 			"|leg=" + str (_townIndex + 1) + "|routeId=" + _routeId + "|from=" + _fromName + "|to=" + _name +
 			"|units=" + str (count units _group) + "|arrived=0|stuck=0|elapsed=0|status=STARTED");
 	};
@@ -442,12 +460,26 @@ WASP_LAB_FNC_AssignLeg = {
 // control mode invokes the same step for every group, then sleeps five seconds.
 WASP_LAB_FNC_PathStep = {
 	Private ["_cursor","_groups","_group","_leader","_target","_lastPos","_lastMove","_idx","_from","_to",
-		"_legStart","_elapsed","_nextDelay","_labTowns","_partitionModeNow"];
+		"_legStart","_elapsed","_nextDelay","_labTowns","_partitionModeNow","_groupId","_transition","_pathInflight","_arrivalAt","_arrivalInWindow"];
 	_cursor = _this select 0;
 	_partitionModeNow = missionNamespace getVariable ["WASP_LAB_PARTITION_MODE", false];
-	if (_partitionModeNow && {(missionNamespace getVariable ["WASP_LAB_PHASE", "SPAWN"]) != "MEASURE"}) exitWith {[true, _cursor, 1, true, ""]};
+	if (_partitionModeNow) then {
+		_pathInflight = (missionNamespace getVariable ["WASP_LAB_PATH_INFLIGHT", 0]) + 1;
+		missionNamespace setVariable ["WASP_LAB_PATH_INFLIGHT", _pathInflight];
+	};
+	if (_partitionModeNow && {
+		(missionNamespace getVariable ["WASP_LAB_MEASURE_CLOSING", false]) ||
+		{missionNamespace getVariable ["WASP_LAB_STOP", false]} ||
+		{(missionNamespace getVariable ["WASP_LAB_PHASE", "SPAWN"]) != "MEASURE"}
+	}) exitWith {
+		missionNamespace setVariable ["WASP_LAB_PATH_INFLIGHT", ((missionNamespace getVariable ["WASP_LAB_PATH_INFLIGHT", 1]) - 1) max 0];
+		[true, _cursor, 1, true, ""]
+	};
 	_groups = missionNamespace getVariable ["WASP_LAB_TRACKED_GROUPS", []];
-	if (count _groups < 1) exitWith {[true, 0, 1, true, ""]};
+	if (count _groups < 1) exitWith {
+		if (_partitionModeNow) then {missionNamespace setVariable ["WASP_LAB_PATH_INFLIGHT", ((missionNamespace getVariable ["WASP_LAB_PATH_INFLIGHT", 1]) - 1) max 0]};
+		[true, 0, 1, true, ""]
+	};
 	if (_cursor >= count _groups) then {_cursor = 0};
 	_group = _groups select _cursor;
 	_labTowns = missionNamespace getVariable ["WASP_LAB_TOWNS", []];
@@ -465,27 +497,48 @@ WASP_LAB_FNC_PathStep = {
 				_group setVariable ["wasp_lab_last_move_t", time];
 			};
 			if (typeName _target == "ARRAY" && {count _target > 1} && {_leader distance _target < 100}) then {
-				_idx = _group getVariable "wasp_lab_route_idx";
-				if (isNil "_idx") then {_idx = 0};
-				_from = _group getVariable "wasp_lab_from_name";
-				if (isNil "_from") then {_from = str _idx};
-				_to = _group getVariable "wasp_lab_target_name";
-				if (isNil "_to") then {_to = str _idx};
-				_legStart = _group getVariable "wasp_lab_leg_start";
-				if (isNil "_legStart") then {_legStart = time};
-				_elapsed = round (time - _legStart);
-				missionNamespace setVariable ["WASP_LAB_PATH_ARRIVALS", (missionNamespace getVariable ["WASP_LAB_PATH_ARRIVALS", 0]) + 1];
-				diag_log ("WASPLAB|v1|PATHLEG|run=" + (missionNamespace getVariable ["WASP_LAB_RUN_ID", "?"]) +
-					"|t=" + str (round (time - (missionNamespace getVariable ["WASP_LAB_START", 0]))) +
-					(if (_partitionModeNow) then {"|measureT=" + str (round (time - (missionNamespace getVariable ["WASP_LAB_MEASURE_START", time])))} else {""}) +
-					"|leg=" + str (_idx + 1) + (if (_partitionModeNow) then {"|routeId=" + _from + ">" + _to} else {""}) + "|from=" + _from + "|to=" + _to +
-					"|units=" + str (count units _group) + "|arrived=1|stuck=0|elapsed=" + str _elapsed + "|status=ARRIVED");
-				[_group, _idx + 1] Call WASP_LAB_FNC_AssignLeg;
+				_arrivalAt = if (_partitionModeNow) then {time} else {-1};
+				_arrivalInWindow = !_partitionModeNow || {
+					!(missionNamespace getVariable ["WASP_LAB_MEASURE_CLOSING", false]) &&
+					{_arrivalAt <= (missionNamespace getVariable ["WASP_LAB_END", _arrivalAt])} &&
+					{(missionNamespace getVariable ["WASP_LAB_PHASE", "SPAWN"]) == "MEASURE"}
+				};
+				if (_arrivalInWindow) then {
+					_idx = _group getVariable "wasp_lab_route_idx";
+					if (isNil "_idx") then {_idx = 0};
+					_from = _group getVariable "wasp_lab_from_name";
+					if (isNil "_from") then {_from = str _idx};
+					_to = _group getVariable "wasp_lab_target_name";
+					if (isNil "_to") then {_to = str _idx};
+					_legStart = _group getVariable "wasp_lab_leg_start";
+					if (!_partitionModeNow) then {_arrivalAt = time};
+					if (isNil "_legStart") then {_legStart = _arrivalAt};
+					_elapsed = round (_arrivalAt - _legStart);
+					if (_partitionModeNow) then {
+						_groupId = _group getVariable "wasp_lab_group_id";
+						if (isNil "_groupId") then {_groupId = -1};
+						_transition = _group getVariable "wasp_lab_active_transition";
+						if (isNil "_transition") then {_transition = -1};
+					};
+					missionNamespace setVariable ["WASP_LAB_PATH_ARRIVALS", (missionNamespace getVariable ["WASP_LAB_PATH_ARRIVALS", 0]) + 1];
+					diag_log ("WASPLAB|v1|PATHLEG|run=" + (missionNamespace getVariable ["WASP_LAB_RUN_ID", "?"]) +
+						"|t=" + str (round ((if (_partitionModeNow) then {_arrivalAt} else {time}) - (missionNamespace getVariable ["WASP_LAB_START", 0]))) +
+						(if (_partitionModeNow) then {"|measureT=" + str (round (_arrivalAt - (missionNamespace getVariable ["WASP_LAB_MEASURE_START", _arrivalAt])))} else {""}) +
+						(if (_partitionModeNow) then {"|group=" + str _groupId + "|transition=" + str _transition} else {""}) +
+						"|leg=" + str (_idx + 1) + (if (_partitionModeNow) then {"|routeId=" + _from + ">" + _to} else {""}) + "|from=" + _from + "|to=" + _to +
+						"|units=" + str (count units _group) + "|arrived=1|stuck=0|elapsed=" + str _elapsed + "|status=ARRIVED");
+					if (_partitionModeNow) then {
+						[_group, _idx + 1, _arrivalAt] Call WASP_LAB_FNC_AssignLeg;
+					} else {
+						[_group, _idx + 1] Call WASP_LAB_FNC_AssignLeg;
+					};
+				};
 			};
 		};
 	};
 	_cursor = _cursor + 1;
 	_nextDelay = if (_cursor >= count _groups) then {5} else {0.01};
+	if (_partitionModeNow) then {missionNamespace setVariable ["WASP_LAB_PATH_INFLIGHT", ((missionNamespace getVariable ["WASP_LAB_PATH_INFLIGHT", 1]) - 1) max 0]};
 	[true, _cursor, _nextDelay, true, ""]
 };
 
@@ -586,6 +639,8 @@ WASP_LAB_FNC_SpawnOne = {
 			if (_partitionModeNow) then {
 				_group setVariable ["wasp_lab_anchor", _anchorIdx];
 				_group setVariable ["wasp_lab_route_id", _routeId];
+				_group setVariable ["wasp_lab_group_id", _made + 1];
+				_group setVariable ["wasp_lab_transition", 0];
 			};
 			if (_spawnMode == "path-loop") then {
 				if (_partitionModeNow) then {_group setVariable ["wasp_lab_initial_target_idx", _targetIdx]} else {[_group, _targetIdx] Call WASP_LAB_FNC_AssignLeg};
@@ -848,7 +903,7 @@ if (_busRate > 0 && {_schedulerMode != "active"}) then {
 		"_ownerCounts","_ownerGroupCounts","_ownerIdx","_hcMinAi","_hcMaxAi","_hcImbalance","_hcGroups",
 		"_hcMinGroups","_hcMaxGroups","_hcGroupImbalance","_ackRows","_ackRow","_hcFresh","_hcFpsNow",
 		"_hcEndpoint","_hcFpsValue","_activeMembers","_phaseNow","_measureStartNow","_measureT",
-		"_exposureLast","_exposureNow","_partitionModeNow","_isBenchmark"];
+		"_exposureLast","_exposureNow","_partitionModeNow","_isBenchmark","_sampleInflight","_sampleAt"];
 	_interval = _this select 0;
 	_warmupSec = _this select 1;
 	_bus = _this select 2;
@@ -859,6 +914,13 @@ if (_busRate > 0 && {_schedulerMode != "active"}) then {
 	while {!(missionNamespace getVariable ["WASP_LAB_STOP", false])} do {
 		_probeStart = diag_tickTime;
 		_partitionModeNow = missionNamespace getVariable ["WASP_LAB_PARTITION_MODE", false];
+		if (_partitionModeNow) then {
+			_sampleInflight = (missionNamespace getVariable ["WASP_LAB_SAMPLE_INFLIGHT", 0]) + 1;
+			missionNamespace setVariable ["WASP_LAB_SAMPLE_INFLIGHT", _sampleInflight];
+		};
+		if (_partitionModeNow && {missionNamespace getVariable ["WASP_LAB_MEASURE_CLOSING", false]}) exitWith {
+			missionNamespace setVariable ["WASP_LAB_SAMPLE_INFLIGHT", ((missionNamespace getVariable ["WASP_LAB_SAMPLE_INFLIGHT", 1]) - 1) max 0];
+		};
 		_owners = Call WASP_LAB_FNC_HCOwners;
 		_ownerCounts = [];
 		_ownerGroupCounts = [];
@@ -943,12 +1005,26 @@ if (_busRate > 0 && {_schedulerMode != "active"}) then {
 					{_leader distance _target > 100} && {(time - _lastMove) > 60}) then {_stuck = _stuck + 1};
 			};
 		} forEach _tracked;
+		_sampleAt = if (_partitionModeNow) then {time} else {-1};
+		if (_partitionModeNow) then {
+			_phaseNow = missionNamespace getVariable ["WASP_LAB_PHASE", "SPAWN"];
+			_measureStartNow = missionNamespace getVariable ["WASP_LAB_MEASURE_START", -1];
+		};
+		if (_partitionModeNow && {_phaseNow == "MEASURE"} && {
+			(missionNamespace getVariable ["WASP_LAB_MEASURE_CLOSING", false]) ||
+			{_sampleAt > (missionNamespace getVariable ["WASP_LAB_END", _sampleAt])}
+		}) exitWith {
+			missionNamespace setVariable ["WASP_LAB_SAMPLE_INFLIGHT", ((missionNamespace getVariable ["WASP_LAB_SAMPLE_INFLIGHT", 1]) - 1) max 0];
+		};
 		_probeMs = round ((diag_tickTime - _probeStart) * 10000) / 10;
 		_fps = round (diag_fps * 10) / 10;
-		_elapsed = round (time - (missionNamespace getVariable ["WASP_LAB_START", 0]));
-		_phaseNow = missionNamespace getVariable ["WASP_LAB_PHASE", "SPAWN"];
-		_measureStartNow = missionNamespace getVariable ["WASP_LAB_MEASURE_START", -1];
-		_measureT = if (_measureStartNow >= 0) then {round (time - _measureStartNow)} else {-1};
+		if (!_partitionModeNow) then {_sampleAt = time};
+		_elapsed = round (_sampleAt - (missionNamespace getVariable ["WASP_LAB_START", 0]));
+		if (!_partitionModeNow) then {
+			_phaseNow = missionNamespace getVariable ["WASP_LAB_PHASE", "SPAWN"];
+			_measureStartNow = missionNamespace getVariable ["WASP_LAB_MEASURE_START", -1];
+		};
+		_measureT = if (_measureStartNow >= 0) then {round (_sampleAt - _measureStartNow)} else {-1};
 		_isBenchmark = if (_partitionModeNow) then {_phaseNow == "MEASURE"} else {_elapsed >= _warmupSec};
 		_schedMode = missionNamespace getVariable ["WASP_LAB_SCHEDULER_MODE", "off"];
 		_schedAgeMs = if (_schedMode == "off") then {-1} else {round ((diag_tickTime - (missionNamespace getVariable ["WASP_SCHED_HEALTH_AT", diag_tickTime])) * 1000)};
@@ -957,7 +1033,7 @@ if (_busRate > 0 && {_schedulerMode != "active"}) then {
 		if (_isBenchmark) then {
 			if (_partitionModeNow) then {
 				_exposureLast = missionNamespace getVariable ["WASP_LAB_EXPOSURE_LAST", time];
-				_exposureNow = time;
+				_exposureNow = _sampleAt min (missionNamespace getVariable ["WASP_LAB_END", _sampleAt]);
 				missionNamespace setVariable ["WASP_LAB_MEMBER_SECONDS", (missionNamespace getVariable ["WASP_LAB_MEMBER_SECONDS", 0]) + (_activeMembers * (_exposureNow - _exposureLast))];
 				missionNamespace setVariable ["WASP_LAB_GROUP_SECONDS", (missionNamespace getVariable ["WASP_LAB_GROUP_SECONDS", 0]) + (_activeTracked * (_exposureNow - _exposureLast))];
 				missionNamespace setVariable ["WASP_LAB_EXPOSURE_LAST", _exposureNow];
@@ -1028,6 +1104,7 @@ if (_busRate > 0 && {_schedulerMode != "active"}) then {
 				_lastState = _status;
 			};
 		};
+		if (_partitionModeNow) then {missionNamespace setVariable ["WASP_LAB_SAMPLE_INFLIGHT", ((missionNamespace getVariable ["WASP_LAB_SAMPLE_INFLIGHT", 1]) - 1) max 0]};
 		sleep _interval;
 	};
 };
@@ -1066,8 +1143,28 @@ if (_partitionMode) then {
 		missionNamespace setVariable ["WASP_LAB_END", _end];
 		Call WASP_LAB_FNC_LogPhase;
 		waitUntil {sleep 1; time >= _end || {missionNamespace getVariable ["WASP_LAB_STOP", false]} || {WFBE_GameOver}};
-		Call WASP_LAB_FNC_AccumulateExposure;
 	};
+	missionNamespace setVariable ["WASP_LAB_MEASURE_CLOSING", true];
+	missionNamespace setVariable ["WASP_LAB_STOP", true];
+	_drainDeadline = diag_tickTime + 30;
+	waitUntil {
+		sleep 0.01;
+		((missionNamespace getVariable ["WASP_LAB_SAMPLE_INFLIGHT", 0]) < 1 &&
+		{(missionNamespace getVariable ["WASP_LAB_PATH_INFLIGHT", 0]) < 1}) ||
+		{diag_tickTime >= _drainDeadline}
+	};
+	_drainTimedOut = (missionNamespace getVariable ["WASP_LAB_SAMPLE_INFLIGHT", 0]) > 0 ||
+		{(missionNamespace getVariable ["WASP_LAB_PATH_INFLIGHT", 0]) > 0};
+	if (_drainTimedOut) then {
+		missionNamespace setVariable ["WASP_LAB_DRAIN_FAILED", true];
+		diag_log ("WASPLAB|v1|ABORT|run=" + _run + "|reason=measure_worker_drain_timeout");
+		waitUntil {
+			sleep 0.01;
+			(missionNamespace getVariable ["WASP_LAB_SAMPLE_INFLIGHT", 0]) < 1 &&
+			{(missionNamespace getVariable ["WASP_LAB_PATH_INFLIGHT", 0]) < 1}
+		};
+	};
+	Call WASP_LAB_FNC_AccumulateExposure;
 	missionNamespace setVariable ["WASP_LAB_PHASE", "CLEANUP"];
 	missionNamespace setVariable ["WASP_LAB_PHASE_SEQ", 5];
 	Call WASP_LAB_FNC_LogPhase;
@@ -1148,6 +1245,7 @@ _status = "PASS";
 _reason = "gates_met";
 if (_fpsN < 1) then {_status = "FAIL"; _reason = "no_post_warmup_samples"};
 if (_status == "PASS" && {_sampleExpected > 0} && {_sampleCoveragePct < 80}) then {_status = "FAIL"; _reason = "sample_coverage"};
+if (_status == "PASS" && {missionNamespace getVariable ["WASP_LAB_DRAIN_FAILED", false]}) then {_status = "FAIL"; _reason = "measure_worker_drain"};
 if (_status == "PASS" && {_fpsMin >= 0} && {_fpsMin < (missionNamespace getVariable ["WASP_LAB_MIN_FPS", 30])}) then {_status = "FAIL"; _reason = "fps_floor"};
 if (_status == "PASS" && {_expectedHcs > 0} && {(count (Call WASP_LAB_FNC_HCOwners)) < _expectedHcs}) then {_status = "FAIL"; _reason = "hc_count"};
 if (_status == "PASS" && {(missionNamespace getVariable ["WASP_LAB_MIN_HC_PCT", 0]) > 0} && {_aiPeak >= 40} && {_hcPctMin < 0}) then {_status = "FAIL"; _reason = "no_hc_ownership_samples"};

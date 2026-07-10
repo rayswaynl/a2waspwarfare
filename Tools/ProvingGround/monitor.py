@@ -29,6 +29,15 @@ import time
 
 
 MARKER = "WASPLAB|v1|"
+MAX_EXPECTED_SAMPLES = 1000000
+MAX_REASONABLE_FPS = 1000.0
+MAX_PARTITION_DRAIN_SEC = 32.0
+PARTITION_GROUP_IDS = tuple(range(1, 121))
+UTES_PARTITION_ROUTES = (
+    "Strelka>Airfield",
+    "Airfield>Kamenyy",
+    "Kamenyy>Strelka",
+)
 KINDS = (
     "BOOT", "START", "PHASE", "SAMPLE", "BATCH", "REALIZED", "COMPOSITION",
     "BUS", "PATHLEG", "SCHED", "ALERT", "RESULT", "ABORT", "SPAWN_FAIL",
@@ -188,11 +197,28 @@ def parse_marker(line):
                 )
             else:
                 seen_keys[folded_key] = key
-            parsed_value = _parse_value(value)
+            is_run_identity = folded_key in ("run", "runid") or (
+                folded_key == "id" and kind in ("START", "RESULT")
+            )
+            is_start_provenance = kind == "START" and folded_key in (
+                "build",
+                "git",
+                "source",
+                "lab",
+                "config",
+                "workload",
+                "partition",
+                "partitionid",
+            )
+            is_opaque = is_run_identity or is_start_provenance
+            parsed_value = value.strip() if is_opaque else _parse_value(value)
             if (
+                not is_opaque
+                and (
                 _INT_RE.match(value.strip())
                 or _FLOAT_RE.match(value.strip())
                 or _NONFINITE_RE.match(value.strip())
+                )
             ) and _number(
                 {"value": parsed_value}, "value"
             ) is None:
@@ -259,6 +285,15 @@ def _run_alias_conflict(fields, include_id=True):
     return len(set(str(value) for value in values)) > 1
 
 
+def _partition_alias_conflict(fields):
+    values = [
+        value
+        for key, value in fields.items()
+        if str(key).lower() in ("partition", "partitionid") and value is not None
+    ]
+    return len(set(str(value) for value in values)) > 1
+
+
 def _is_partition_start(fields):
     anchors = _number(fields, "spawnAnchors")
     return anchors is not None and anchors > 0
@@ -278,6 +313,13 @@ def _is_measurement_phase(value):
     if value is None:
         return False
     return str(value).strip().upper() in ("MEASURE", "MEASUREMENT", "MEASURING")
+
+
+def _cadence_limit(sample_sec):
+    """Allow rounding/scheduler jitter without allowing missing measurement windows."""
+    if sample_sec is None or sample_sec <= 0:
+        return None
+    return sample_sec + max(1.0, sample_sec * 0.25)
 
 
 def _sample_is_benchmark(fields, start):
@@ -339,6 +381,60 @@ def _histogram(value):
     return normalized or None
 
 
+def _strict_integer_map(value):
+    """Parse a non-empty integer map without accepting junk or duplicate keys."""
+    if value is None:
+        return None
+    parsed = value
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return None
+        try:
+            parsed = json.loads(text)
+        except (TypeError, ValueError):
+            parts = [part.strip() for part in re.split(r"[,;]", text)]
+            if not parts or any(not part for part in parts):
+                return None
+            parsed = []
+            pattern = re.compile(r"^([+-]?\d+)\s*(?::|=|x)\s*([+-]?\d+)$", re.IGNORECASE)
+            for part in parts:
+                match = pattern.match(part)
+                if match is None:
+                    return None
+                parsed.append((match.group(1), match.group(2)))
+
+    if isinstance(parsed, dict):
+        items = list(parsed.items())
+    elif isinstance(parsed, (list, tuple)):
+        items = list(parsed)
+    else:
+        return None
+    if not items:
+        return None
+
+    normalized = {}
+    for item in items:
+        if not isinstance(item, (list, tuple)) or len(item) != 2:
+            return None
+        key_number = _number({"value": item[0]}, "value")
+        value_number = _number({"value": item[1]}, "value")
+        if (
+            key_number is None
+            or value_number is None
+            or not key_number.is_integer()
+            or not value_number.is_integer()
+            or key_number < 0
+            or value_number < 0
+        ):
+            return None
+        key = int(key_number)
+        if key in normalized:
+            return None
+        normalized[key] = int(value_number)
+    return normalized
+
+
 def _string_list(value):
     """Normalize a JSON/SQF-style list or compact comma list to strings."""
     if value is None:
@@ -392,6 +488,17 @@ def _sample_hc_pct(fields):
     return None, None
 
 
+def _safe_mean(values):
+    """Average finite values without overflowing their intermediate sum."""
+    if not values:
+        return None
+    scale = max(abs(value) for value in values)
+    if scale == 0:
+        return 0.0
+    mean = scale * (sum(value / scale for value in values) / len(values))
+    return mean if math.isfinite(mean) else None
+
+
 def percentile(values, percent):
     """Linear percentile (same rank interpolation used by common data tools)."""
     if not values:
@@ -441,6 +548,14 @@ class RunState(object):
         if _run_alias_conflict(self.start):
             conflict = {
                 "kind": "START_RUN_ALIAS_CONFLICT",
+                "fields": {"eventKind": "START"},
+            }
+            if start_line is not None:
+                conflict["line"] = start_line
+            self.protocol_alerts.append(conflict)
+        if _partition_alias_conflict(self.start):
+            conflict = {
+                "kind": "START_PARTITION_ALIAS_CONFLICT",
                 "fields": {"eventKind": "START"},
             }
             if start_line is not None:
@@ -504,6 +619,7 @@ class RunState(object):
             stored = {
                 "kind": event["kind"],
                 "fields": dict(event["fields"]),
+                "event_index": len(self.events) + 1,
             }
             if line_number is not None:
                 stored["line"] = line_number
@@ -555,6 +671,7 @@ class RunState(object):
         hc_fps_values = []
         hc_fresh_values = []
         stuck_values = []
+        probe_ms_values = []
         remote_values = []
         boot_fps_values = []
         benchmark_sample_count = 0
@@ -607,9 +724,13 @@ class RunState(object):
             stuck = _number(fields, "stuck", "stuckUnits")
             if stuck is not None:
                 stuck_values.append(stuck)
+            probe_ms = _number(fields, "probeMs")
+            if probe_ms is not None and probe_ms >= 0:
+                probe_ms_values.append(probe_ms)
 
-        # A BATCH can be the exact crest between periodic SAMPLE ticks.
-        for batch in self.batches:
+        # A legacy BATCH can be the exact crest between periodic SAMPLE ticks.
+        # Partition BATCH markers are SPAWN-only and must not shape MEASURE peaks.
+        for batch in [] if _is_partition_start(self.start) else self.batches:
             fields = batch["fields"]
             batch_time = _number(fields, "t", "elapsed")
             if batch_time is not None and batch_time < warmup:
@@ -642,6 +763,7 @@ class RunState(object):
             "hc_fresh": hc_fresh_values,
             "remote_pct": remote_values,
             "stuck": stuck_values,
+            "probe_ms": probe_ms_values,
             "boot_fps": boot_fps_values,
             "warmup_sec": warmup,
             "benchmark_sample_count": benchmark_sample_count,
@@ -822,6 +944,8 @@ class RunState(object):
                     if measurement_started_phase is None:
                         measurement_started_phase = phase
             stored = {"fields": fields}
+            if "event_index" in record:
+                stored["event_index"] = record["event_index"]
             if "line" in record:
                 stored["line"] = record["line"]
             records.append(stored)
@@ -876,6 +1000,7 @@ class RunState(object):
         )
         totals = dict((name, 0.0) for name, _ in aliases)
         group_ids = []
+        event_indices = []
         histogram = {}
         anchor_requested = {}
         anchor_members = {}
@@ -885,6 +1010,8 @@ class RunState(object):
 
         for record in self.realized_records:
             fields = record["fields"]
+            if "event_index" in record:
+                event_indices.append(record["event_index"])
             group_id = _number(fields, "group", "groupId", "groupIndex")
             anchor = _number(fields, "anchor", "anchorId", "spawnAnchor")
             group_valid = (
@@ -940,6 +1067,7 @@ class RunState(object):
             "record_count": len(self.realized_records),
             "valid_count": valid_count,
             "group_ids": sorted(group_ids),
+            "event_indices": event_indices,
             "histogram": histogram,
             "anchor_requested": dict(
                 (key, _trim_number(value)) for key, value in anchor_requested.items()
@@ -961,8 +1089,16 @@ class RunState(object):
         ]
         member_values = []
         group_values = []
+        fps_values = []
+        ai_values = []
+        group_count_values = []
+        probe_ms_values = []
         measure_t_values = []
+        sample_t_values = []
+        event_indices = []
         for record in records:
+            if "event_index" in record:
+                event_indices.append(record["event_index"])
             member_seconds = _number(
                 record["fields"], "memberSeconds", "membersSeconds"
             )
@@ -972,12 +1108,27 @@ class RunState(object):
             measure_t = _number(
                 record["fields"], "measureT", "measurementElapsed", "measureElapsed"
             )
+            sample_t = _number(record["fields"], "t", "elapsed")
+            fps = _number(record["fields"], "fps", "serverFps", "srvFps")
+            ai = _sample_ai(record["fields"])
+            groups = _number(record["fields"], "groups", "groupCount")
+            probe_ms = _number(record["fields"], "probeMs")
             if member_seconds is not None:
                 member_values.append(member_seconds)
             if group_seconds is not None:
                 group_values.append(group_seconds)
             if measure_t is not None:
                 measure_t_values.append(measure_t)
+            if sample_t is not None:
+                sample_t_values.append(sample_t)
+            if fps is not None:
+                fps_values.append(fps)
+            if ai is not None and ai >= 0 and ai.is_integer():
+                ai_values.append(ai)
+            if groups is not None and groups >= 0 and groups.is_integer():
+                group_count_values.append(groups)
+            if probe_ms is not None and probe_ms >= 0:
+                probe_ms_values.append(probe_ms)
 
         def monotonic(values):
             return all(
@@ -995,11 +1146,22 @@ class RunState(object):
         sample_sec = _number(self.start, "sampleSec")
         measure_t_in_bounds = None
         terminal_progress_ok = None
+        cadence_limit = _cadence_limit(sample_sec)
+        first_measure_t_ok = None
+        measure_t_gap_ok = None
+        sample_t_monotonic = strictly_increasing(sample_t_values)
+        sample_t_gap_ok = None
+        sample_measure_alignment_ok = None
+        go_t = None
+        for phase_record in self.phase_records:
+            if str(_field(phase_record["fields"], "phase") or "").upper() == "GO":
+                go_t = _number(phase_record["fields"], "t", "elapsed")
+                break
         if duration is not None and sample_sec is not None and sample_sec > 0:
             measure_t_in_bounds = (
                 len(measure_t_values) == len(records)
                 and all(
-                    0 <= value <= duration + sample_sec
+                    0 <= value <= duration
                     for value in measure_t_values
                 )
             )
@@ -1007,11 +1169,64 @@ class RunState(object):
                 bool(measure_t_values)
                 and measure_t_values[-1] >= max(0.0, duration - sample_sec)
             )
+            first_measure_t_ok = (
+                bool(measure_t_values)
+                and cadence_limit is not None
+                and measure_t_values[0] <= cadence_limit
+            )
+            measure_t_gap_ok = (
+                len(measure_t_values) == len(records)
+                and cadence_limit is not None
+                and all(
+                    current - previous <= cadence_limit
+                    for previous, current in zip(
+                        measure_t_values, measure_t_values[1:]
+                    )
+                )
+            )
+            sample_t_gap_ok = (
+                len(sample_t_values) == len(records)
+                and cadence_limit is not None
+                and sample_t_monotonic
+                and all(
+                    current - previous <= cadence_limit
+                    for previous, current in zip(
+                        sample_t_values, sample_t_values[1:]
+                    )
+                )
+            )
+            sample_measure_alignment_ok = (
+                len(sample_t_values) == len(records)
+                and len(measure_t_values) == len(records)
+                and go_t is not None
+                and all(
+                    go_t <= sample_t <= go_t + duration
+                    and abs((sample_t - go_t) - measure_t) <= 1.0
+                    for sample_t, measure_t in zip(
+                        sample_t_values, measure_t_values
+                    )
+                )
+            )
 
         return {
             "record_count": len(records),
+            "event_indices": event_indices,
+            "fps_count": len(fps_values),
+            "fps_values": [_trim_number(value) for value in fps_values],
+            "ai_count": len(ai_values),
+            "ai_values": [_trim_number(value) for value in ai_values],
+            "groups_count": len(group_count_values),
+            "groups_values": [_trim_number(value) for value in group_count_values],
+            "probe_ms_count": len(probe_ms_values),
+            "probe_ms_values": [_trim_number(value) for value in probe_ms_values],
             "member_seconds_count": len(member_values),
             "group_seconds_count": len(group_values),
+            "member_seconds_values": [
+                _trim_number(value) for value in member_values
+            ],
+            "group_seconds_values": [
+                _trim_number(value) for value in group_values
+            ],
             "latest_member_seconds": (
                 _trim_number(member_values[-1]) if member_values else None
             ),
@@ -1022,6 +1237,11 @@ class RunState(object):
             "group_seconds_monotonic": monotonic(group_values),
             "measure_t_count": len(measure_t_values),
             "measure_t_values": [_trim_number(value) for value in measure_t_values],
+            "sample_t_count": len(sample_t_values),
+            "sample_t_values": [_trim_number(value) for value in sample_t_values],
+            "sample_t_monotonic": sample_t_monotonic,
+            "sample_t_gap_ok": sample_t_gap_ok,
+            "sample_measure_alignment_ok": sample_measure_alignment_ok,
             "latest_measure_t": (
                 _trim_number(measure_t_values[-1]) if measure_t_values else None
             ),
@@ -1029,6 +1249,9 @@ class RunState(object):
             "measure_t_unique_count": len(set(measure_t_values)),
             "measure_t_in_bounds": measure_t_in_bounds,
             "terminal_progress_ok": terminal_progress_ok,
+            "cadence_limit": _trim_number(cadence_limit),
+            "first_measure_t_ok": first_measure_t_ok,
+            "measure_t_gap_ok": measure_t_gap_ok,
         }
 
     def _composition_summary(self):
@@ -1236,6 +1459,776 @@ class RunState(object):
             "sample_evidence": self._sample_evidence(),
         }
 
+    def _composition_evidence_problems(self, composition):
+        """Reconcile cumulative composition with independently aggregated REALIZED rows."""
+        if not self.realized_records:
+            return (
+                ["partition has no REALIZED per-group evidence"]
+                if _is_partition_start(self.start)
+                else []
+            )
+        evidence = composition["realized_evidence"]
+        problems = []
+        target_groups = _number(self.start, "targetGroups")
+        if target_groups is not None:
+            target_is_integer = target_groups >= 0 and target_groups.is_integer()
+            if not target_is_integer or evidence["record_count"] != target_groups:
+                problems.append("REALIZED record count differs from targetGroups")
+            if not target_is_integer or evidence["valid_count"] != target_groups:
+                problems.append("REALIZED valid count differs from targetGroups")
+            if (
+                not target_is_integer
+                or len(evidence["group_ids"]) != target_groups
+                or any(
+                    group_id != index
+                    for index, group_id in enumerate(evidence["group_ids"], 1)
+                )
+            ):
+                problems.append("REALIZED group IDs contain gaps or duplicates")
+
+        for field in (
+            "requested_infantry",
+            "created_infantry",
+            "crew",
+            "vehicles",
+            "final_members",
+            "underfill_groups",
+            "oversize_groups",
+            "create_failures",
+            "create_failure_groups",
+        ):
+            evidence_value = _number(evidence, field)
+            cumulative_value = _number(composition, field)
+            if (
+                evidence_value is None
+                or cumulative_value is None
+                or abs(evidence_value - cumulative_value) > 1e-9
+            ):
+                problems.append("REALIZED %s differs from cumulative composition" % field)
+
+        for field in ("histogram", "anchor_requested", "anchor_members"):
+            evidence_map = _histogram(evidence.get(field))
+            cumulative_map = _histogram(composition.get(field))
+            if evidence_map is None or evidence_map != cumulative_map:
+                problems.append("REALIZED %s differs from cumulative composition" % field)
+        return problems
+
+    def _work_evidence_problems(self, work):
+        """Bound final work totals by the last independently observed MEASURE sample."""
+        if self.result is None:
+            return []
+        evidence = work["sample_evidence"]
+        if evidence["record_count"] < 1:
+            return (
+                ["partition has no MEASURE work-counter evidence"]
+                if _is_partition_start(self.start)
+                else []
+            )
+        if (
+            not _is_partition_start(self.start)
+            and evidence["member_seconds_count"] == 0
+            and evidence["group_seconds_count"] == 0
+            and _number(work, "member_seconds") is None
+            and _number(work, "group_seconds") is None
+        ):
+            return []
+        problems = []
+        if (
+            evidence["member_seconds_count"] != evidence["record_count"]
+            or not evidence["member_seconds_monotonic"]
+        ):
+            problems.append("memberSeconds samples are incomplete or non-monotonic")
+        if (
+            evidence["group_seconds_count"] != evidence["record_count"]
+            or not evidence["group_seconds_monotonic"]
+        ):
+            problems.append("groupSeconds samples are incomplete or non-monotonic")
+
+        sample_sec = _number(self.start, "sampleSec")
+        measure_values = evidence.get("measure_t_values")
+        measure_values = (
+            [_number({"value": value}, "value") for value in measure_values]
+            if isinstance(measure_values, list)
+            else None
+        )
+        for label, total_field, latest_field, target_field in (
+            ("memberSeconds", "member_seconds", "latest_member_seconds", "targetSyntheticUnits"),
+            ("groupSeconds", "group_seconds", "latest_group_seconds", "targetGroups"),
+        ):
+            total = _number(work, total_field)
+            latest = _number(evidence, latest_field)
+            target = _number(self.start, target_field)
+            if total is None or latest is None:
+                problems.append("%s final/sample evidence is missing" % label)
+                continue
+            if total + 1e-9 < latest:
+                problems.append("%s final total is below the last sample" % label)
+            elif (
+                target is not None
+                and sample_sec is not None
+                and total - latest > target * sample_sec + 1e-9
+            ):
+                problems.append("%s advances by more than one sample interval" % label)
+
+        for label, values_field, latest_field, target_field in (
+            (
+                "memberSeconds",
+                "member_seconds_values",
+                "latest_member_seconds",
+                "targetSyntheticUnits",
+            ),
+            (
+                "groupSeconds",
+                "group_seconds_values",
+                "latest_group_seconds",
+                "targetGroups",
+            ),
+        ):
+            raw_values = evidence.get(values_field)
+            values = (
+                [_number({"value": value}, "value") for value in raw_values]
+                if isinstance(raw_values, list)
+                else None
+            )
+            target = _number(self.start, target_field)
+            latest = _number(evidence, latest_field)
+            if (
+                values is None
+                or measure_values is None
+                or target is None
+                or len(values) != len(measure_values)
+                or any(value is None or value < 0 for value in values)
+                or any(value is None for value in measure_values)
+                or latest is None
+                or not values
+                or abs(values[-1] - latest) > 1e-9
+            ):
+                problems.append("%s sample series is incomplete" % label)
+                continue
+            previous_value = 0.0
+            previous_t = 0.0
+            for value, measure_t in zip(values, measure_values):
+                elapsed = measure_t - previous_t
+                if (
+                    value > target * (measure_t + 1.0) + 1e-9
+                    or value - previous_value
+                    > target * (elapsed + 1.0) + 1e-9
+                ):
+                    problems.append("%s exceeds the physical target*time envelope" % label)
+                    break
+                previous_value = value
+                previous_t = measure_t
+        return problems
+
+    def _partition_result_problems(
+        self, phase, composition, work, path, observed, expected_samples,
+        calculated_coverage,
+    ):
+        if not _is_partition_start(self.start) or self.result is None:
+            return [], []
+        required = (
+            "measureDuration",
+            "measureT",
+            "fpsMin",
+            "fpsAvg",
+            "fpsSamples",
+            "fpsExpected",
+            "fpsCoveragePct",
+            "aiPeak",
+            "groupsPeak",
+            "targetSyntheticUnits",
+            "targetGroups",
+            "spawnAnchors",
+            "realizedGroups",
+            "requestedInfantry",
+            "createdInfantry",
+            "crew",
+            "createdVehicles",
+            "finalMembers",
+            "histogram",
+            "underfillGroups",
+            "oversizeGroups",
+            "createFailures",
+            "createFailureGroups",
+            "anchorRequested",
+            "anchorMembers",
+            "memberSeconds",
+            "groupSeconds",
+            "pathLegsStarted",
+        )
+        missing = [field for field in required if _field(self.result, field) is None]
+        invalid = []
+        numeric_specs = {
+            "measureDuration": (False, 0, 14400),
+            "measureT": (False, 0, 14700),
+            "fpsMin": (False, 0, MAX_REASONABLE_FPS),
+            "fpsAvg": (False, 0, MAX_REASONABLE_FPS),
+            "fpsSamples": (True, 1, MAX_EXPECTED_SAMPLES),
+            "fpsExpected": (True, 1, MAX_EXPECTED_SAMPLES),
+            "fpsCoveragePct": (False, 0, 200),
+            "aiPeak": (True, 0, 10000000),
+            "groupsPeak": (True, 0, 1000000),
+            "targetSyntheticUnits": (True, 1, 1440),
+            "targetGroups": (True, 1, 120),
+            "spawnAnchors": (True, 1, 3),
+            "realizedGroups": (True, 1, 120),
+            "requestedInfantry": (True, 0, 1440),
+            "createdInfantry": (True, 0, 1440),
+            "crew": (True, 0, 1440),
+            "createdVehicles": (True, 0, 1440),
+            "finalMembers": (True, 0, 1440),
+            "underfillGroups": (True, 0, 120),
+            "oversizeGroups": (True, 0, 120),
+            "createFailures": (True, 0, 1000000),
+            "createFailureGroups": (True, 0, 120),
+            "memberSeconds": (False, 0, 1000000000),
+            "groupSeconds": (False, 0, 1000000000),
+            "pathLegsStarted": (True, 1, 1000000),
+        }
+        direct_numbers = {}
+        for field, (integer, minimum, maximum) in numeric_specs.items():
+            if field in missing:
+                continue
+            number = _number(self.result, field)
+            if (
+                number is None
+                or (integer and not number.is_integer())
+                or number < minimum
+                or number > maximum
+            ):
+                invalid.append("RESULT %s is outside its typed range" % field)
+            else:
+                direct_numbers[field] = number
+
+        direct_maps = {}
+        for field in ("histogram", "anchorRequested", "anchorMembers"):
+            if field in missing:
+                continue
+            value = _strict_integer_map(_field(self.result, field))
+            if value is None:
+                invalid.append("RESULT %s is not a non-empty integer map" % field)
+            else:
+                direct_maps[field] = value
+
+        sample_evidence = work.get("sample_evidence") or {}
+        realized_evidence = composition.get("realized_evidence") or {}
+        transition_evidence = path.get("transition_evidence") or []
+        cleanup_measure_t = None
+        cleanup_wall_t = None
+        go_wall_t = None
+        for phase_record in phase.get("records") or []:
+            fields = phase_record.get("fields") if isinstance(phase_record, dict) else None
+            fields = fields if isinstance(fields, dict) else {}
+            phase_name = str(_field(fields, "phase") or "").upper()
+            if phase_name == "GO":
+                go_wall_t = _number(fields, "t", "elapsed")
+            elif phase_name == "CLEANUP":
+                cleanup_measure_t = _number(fields, "measureT")
+                cleanup_wall_t = _number(fields, "t", "elapsed")
+        if cleanup_measure_t is None and cleanup_wall_t is not None and go_wall_t is not None:
+            cleanup_measure_t = cleanup_wall_t - go_wall_t
+        path_starts = sum(
+            1
+            for record in transition_evidence
+            if isinstance(record, dict)
+            and str(_field(record, "status") or "").upper() == "STARTED"
+        )
+        independent = {
+            "measureDuration": cleanup_measure_t,
+            "measureT": cleanup_measure_t,
+            "fpsMin": min(observed["fps"]) if observed["fps"] else None,
+            "fpsAvg": _safe_mean(observed["fps"]) if observed["fps"] else None,
+            "fpsSamples": len(observed["fps"]),
+            "fpsExpected": expected_samples,
+            "fpsCoveragePct": calculated_coverage,
+            "aiPeak": max(observed["ai"]) if observed["ai"] else None,
+            "groupsPeak": max(observed["groups"]) if observed["groups"] else None,
+            "targetSyntheticUnits": _number(self.start, "targetSyntheticUnits"),
+            "targetGroups": _number(self.start, "targetGroups"),
+            "spawnAnchors": _number(self.start, "spawnAnchors"),
+            "realizedGroups": _number(realized_evidence, "record_count"),
+            "requestedInfantry": _number(realized_evidence, "requested_infantry"),
+            "createdInfantry": _number(realized_evidence, "created_infantry"),
+            "crew": _number(realized_evidence, "crew"),
+            "createdVehicles": _number(realized_evidence, "vehicles"),
+            "finalMembers": _number(realized_evidence, "final_members"),
+            "underfillGroups": _number(realized_evidence, "underfill_groups"),
+            "oversizeGroups": _number(realized_evidence, "oversize_groups"),
+            "createFailures": _number(realized_evidence, "create_failures"),
+            "createFailureGroups": _number(realized_evidence, "create_failure_groups"),
+            "pathLegsStarted": float(path_starts),
+        }
+        for field, expected in independent.items():
+            direct = direct_numbers.get(field)
+            if direct is None or expected is None:
+                continue
+            tolerance = (
+                0.11
+                if field in ("fpsAvg", "fpsCoveragePct")
+                else 1e-9
+            )
+            if abs(direct - expected) > tolerance:
+                invalid.append("RESULT %s differs from independent evidence" % field)
+
+        for field, evidence_field in (
+            ("histogram", "histogram"),
+            ("anchorRequested", "anchor_requested"),
+            ("anchorMembers", "anchor_members"),
+        ):
+            direct = direct_maps.get(field)
+            expected = _strict_integer_map(realized_evidence.get(evidence_field))
+            if direct is not None and (expected is None or direct != expected):
+                invalid.append("RESULT %s differs from REALIZED evidence" % field)
+
+        missing_problems = (
+            ["RESULT is missing partition fields: %s" % ",".join(missing)]
+            if missing else []
+        )
+        return missing_problems, invalid
+
+    def _partition_path_problems(self, phase, path):
+        if not _is_partition_start(self.start):
+            return []
+        target_groups = _number(self.start, "targetGroups")
+        arm = _number(self.start, "unitsPerGroup")
+        duration = _number(self.start, "duration")
+        if (
+            target_groups is None
+            or not target_groups.is_integer()
+            or not 1 <= target_groups <= 120
+            or arm is None
+            or not arm.is_integer()
+            or int(arm) not in (4, 6, 8, 10, 12)
+            or duration is None
+            or not 0 < duration <= 14400
+        ):
+            return ["START lacks bounded integer targetGroups/unitsPerGroup"]
+        target_groups = int(target_groups)
+        arm = int(arm)
+
+        phase_indices = {}
+        phase_times = {}
+        for record in phase.get("records") or []:
+            fields = record.get("fields") if isinstance(record, dict) else None
+            fields = fields if isinstance(fields, dict) else {}
+            name = str(_field(fields, "phase") or "").upper()
+            index = _number(record, "event_index") if isinstance(record, dict) else None
+            if index is not None and index.is_integer():
+                phase_indices[name] = int(index)
+            at = _number(fields, "t", "elapsed")
+            if at is not None:
+                phase_times[name] = at
+        if any(name not in phase_indices for name in ("GO", "MEASURE", "CLEANUP")):
+            return ["phase event indices are missing for path validation"]
+        if any(name not in phase_times for name in ("GO", "MEASURE", "CLEANUP")):
+            return ["phase elapsed times are missing for path validation"]
+
+        raw_records = path.get("transition_evidence")
+        if not isinstance(raw_records, list) or not raw_records:
+            return ["PATHLEG transition evidence is missing"]
+        if len(raw_records) > 1000000:
+            return ["PATHLEG transition evidence exceeds its bounded record limit"]
+        records = []
+        for raw in raw_records:
+            if not isinstance(raw, dict):
+                return ["PATHLEG transition evidence contains a non-record"]
+            group_id = _number(raw, "group")
+            transition = _number(raw, "transition")
+            event_index = _number(raw, "event_index")
+            units = _number(raw, "units")
+            wall_t = _number(raw, "t")
+            measure_t = _number(raw, "measure_t", "measureT")
+            elapsed = _number(raw, "elapsed")
+            status = str(_field(raw, "status") or "").upper()
+            route_id = str(_field(raw, "route_id", "routeId") or "").strip()
+            if any(
+                value is None or not value.is_integer()
+                for value in (group_id, transition, event_index, units)
+            ):
+                return ["PATHLEG transition fields must be finite integers"]
+            if wall_t is None or measure_t is None or elapsed is None or not route_id:
+                return ["PATHLEG transition lacks clocks or route identity"]
+            records.append(
+                {
+                    "group": int(group_id),
+                    "transition": int(transition),
+                    "event_index": int(event_index),
+                    "units": int(units),
+                    "status": status,
+                    "route_id": route_id,
+                    "t": wall_t,
+                    "measure_t": measure_t,
+                    "elapsed": elapsed,
+                }
+            )
+        indices = [record["event_index"] for record in records]
+        if (
+            len(indices) != len(set(indices))
+            or any(index <= 0 for index in indices)
+            or any(current <= previous for previous, current in zip(indices, indices[1:]))
+        ):
+            return ["PATHLEG event indices must be positive and strictly increasing"]
+        if any(
+            current["t"] < previous["t"]
+            or current["measure_t"] < previous["measure_t"]
+            for previous, current in zip(records, records[1:])
+        ):
+            return ["PATHLEG clocks move backwards in event order"]
+
+        by_group = dict((group_id, []) for group_id in PARTITION_GROUP_IDS[:target_groups])
+        for record in records:
+            if record["group"] not in by_group:
+                return ["PATHLEG group ID is outside 1..targetGroups"]
+            if record["transition"] < 1 or not 1 <= record["units"] <= arm:
+                return ["PATHLEG transition or unit count is outside its contract"]
+            if record["route_id"] not in UTES_PARTITION_ROUTES:
+                return ["PATHLEG route is outside the fixed Utes directed cycle"]
+            if not phase_indices["GO"] < record["event_index"] < phase_indices["CLEANUP"]:
+                return ["PATHLEG record is outside GO..CLEANUP"]
+            if not phase_times["GO"] <= record["t"] <= phase_times["CLEANUP"]:
+                return ["PATHLEG wall clock is outside GO..CLEANUP"]
+            if record["measure_t"] < 0 or record["measure_t"] > duration:
+                return ["PATHLEG record is outside the configured measurement window"]
+            if abs(
+                (record["t"] - phase_times["GO"]) - record["measure_t"]
+            ) > 1.0:
+                return ["PATHLEG measureT does not reconcile with GO plus wall time"]
+            by_group[record["group"]].append(record)
+
+        for group_id, group_records in by_group.items():
+            if not group_records or len(group_records) % 2 != 1:
+                return ["group %s lacks exactly one active transition frontier" % group_id]
+            for position, record in enumerate(group_records):
+                expected_status = "STARTED" if position % 2 == 0 else "ARRIVED"
+                expected_transition = (position // 2) + 1
+                if (
+                    record["status"] != expected_status
+                    or record["transition"] != expected_transition
+                ):
+                    return ["group %s PATHLEG transitions are not ordered" % group_id]
+                if expected_status == "ARRIVED" and (
+                    record["route_id"] != group_records[position - 1]["route_id"]
+                ):
+                    return ["group %s ARRIVED route differs from its STARTED leg" % group_id]
+                if expected_status == "STARTED" and position > 0:
+                    previous_destination = group_records[position - 1]["route_id"].split(">", 1)[1]
+                    current_origin = record["route_id"].split(">", 1)[0]
+                    if previous_destination != current_origin:
+                        return ["group %s PATHLEG route continuity is broken" % group_id]
+                if not record["elapsed"].is_integer() or not 0 <= record["elapsed"] <= duration:
+                    return ["group %s PATHLEG elapsed is outside its contract" % group_id]
+                if expected_status == "STARTED" and record["elapsed"] != 0:
+                    return ["group %s STARTED elapsed must be zero" % group_id]
+                if expected_status == "ARRIVED" and abs(
+                    record["elapsed"] - (
+                        record["measure_t"] - group_records[position - 1]["measure_t"]
+                    )
+                ) > 1.0:
+                    return ["group %s ARRIVED elapsed does not match transition clocks" % group_id]
+                if position == 0:
+                    if not (
+                        phase_indices["GO"]
+                        < record["event_index"]
+                        < phase_indices["MEASURE"]
+                    ):
+                        return ["group %s initial STARTED is not at GO" % group_id]
+                    if record["units"] != arm:
+                        return ["group %s initial STARTED does not contain the full arm" % group_id]
+                elif record["event_index"] <= phase_indices["MEASURE"]:
+                    return ["group %s continuation precedes MEASURE" % group_id]
+
+        problems = []
+        started_records = [record for record in records if record["status"] == "STARTED"]
+        arrived_records = [record for record in records if record["status"] == "ARRIVED"]
+        expected_started_indices = [record["event_index"] for record in started_records]
+
+        def path_integer(field):
+            value = _number(path, field)
+            return int(value) if value is not None and value.is_integer() else None
+
+        expected_scalars = {
+            "count": len(records),
+            "started": len(started_records),
+            "completed": len(arrived_records),
+            "arrivals": len(arrived_records),
+            "arrival_units": sum(record["units"] for record in arrived_records),
+        }
+        for field, expected in expected_scalars.items():
+            if path_integer(field) != expected:
+                problems.append("pathlegs.%s differs from transition evidence" % field)
+        if expected_scalars["arrival_units"] < expected_scalars["completed"]:
+            problems.append("pathlegs.arrival_units are below one live unit per arrival")
+        if path.get("started_event_indices") != expected_started_indices:
+            problems.append("started_event_indices differ from STARTED transitions")
+
+        status = path.get("status")
+        if not isinstance(status, dict):
+            problems.append("pathlegs.status is missing")
+        else:
+            for name, expected in (
+                ("STARTED", len(started_records)),
+                ("ARRIVED", len(arrived_records)),
+            ):
+                value = _number(status, name)
+                if value is None or not value.is_integer() or int(value) != expected:
+                    problems.append("pathlegs.status %s differs from transition evidence" % name)
+
+        expected_routes = {}
+        for record in records:
+            route = expected_routes.setdefault(
+                record["route_id"],
+                {"records": 0, "started": 0, "completed": 0, "units": 0, "elapsed": []},
+            )
+            route["records"] += 1
+            if record["status"] == "STARTED":
+                route["started"] += 1
+            else:
+                route["completed"] += 1
+                route["units"] += record["units"]
+                route["elapsed"].append(record["elapsed"])
+        route_count = path_integer("route_count")
+        if route_count != len(expected_routes):
+            problems.append("pathlegs.route_count differs from transition routes")
+        route_ids = path.get("route_ids")
+        if not isinstance(route_ids, list) or set(str(value) for value in route_ids) != set(expected_routes):
+            problems.append("pathlegs.route_ids differ from transition routes")
+        routes = path.get("routes")
+        if not isinstance(routes, dict) or set(str(key) for key in routes) != set(expected_routes):
+            problems.append("pathlegs.routes differ from transition routes")
+        else:
+            for route_id, expected in expected_routes.items():
+                route = routes.get(route_id)
+                if not isinstance(route, dict):
+                    problems.append("route %s summary is missing" % route_id)
+                    continue
+                for field in ("records", "started", "completed", "units"):
+                    expected_value = expected[field]
+                    actual = _number(route, field)
+                    if actual is None or not actual.is_integer() or int(actual) != expected_value:
+                        problems.append("route %s %s differs from transition evidence" % (route_id, field))
+                arrived = _number(route, "arrived")
+                if arrived is None or not arrived.is_integer() or int(arrived) != expected["completed"]:
+                    problems.append("route %s arrived differs from transition evidence" % route_id)
+                route_status = route.get("status")
+                if not isinstance(route_status, dict):
+                    problems.append("route %s status is missing" % route_id)
+                else:
+                    for name, expected_value in (
+                        ("STARTED", expected["started"]),
+                        ("ARRIVED", expected["completed"]),
+                    ):
+                        value = _number(route_status, name)
+                        if value is None or not value.is_integer() or int(value) != expected_value:
+                            problems.append("route %s status %s differs from transition evidence" % (route_id, name))
+                if expected["units"] < expected["completed"]:
+                    problems.append("route %s arrival units are below live arrivals" % route_id)
+                expected_elapsed = (
+                    statistics.median(expected["elapsed"]) if expected["elapsed"] else None
+                )
+                actual_elapsed = _number(route, "elapsed_median")
+                if (
+                    (expected_elapsed is None and actual_elapsed is not None)
+                    or (expected_elapsed is not None and actual_elapsed is None)
+                    or (
+                        expected_elapsed is not None
+                        and actual_elapsed is not None
+                        and abs(actual_elapsed - expected_elapsed) > 1e-9
+                    )
+                ):
+                    problems.append(
+                        "route %s elapsed_median differs from transition evidence" % route_id
+                    )
+        return problems
+
+    def _partition_barrier_problems(self, phase, composition, work, path):
+        """Prove event order and elapsed-time barriers for registered partitions."""
+        if not _is_partition_start(self.start):
+            return []
+        problems = []
+        expected = ("SPAWN", "SETTLE", "GO", "MEASURE", "CLEANUP")
+        records = phase.get("records")
+        records = records if isinstance(records, list) else []
+        parsed = []
+        for record in records:
+            fields = record.get("fields") if isinstance(record, dict) else None
+            fields = fields if isinstance(fields, dict) else {}
+            name = str(_field(fields, "phase") or "").upper()
+            event_index = _number(record, "event_index") if isinstance(record, dict) else None
+            at = _number(fields, "t", "elapsed", "at")
+            measure_at = _number(fields, "measureT")
+            parsed.append((name, event_index, at, measure_at))
+        if tuple(item[0] for item in parsed) != expected:
+            problems.append("phase records are not the exact barrier sequence")
+            return problems
+        if any(item[1] is None or not item[1].is_integer() for item in parsed):
+            problems.append("phase records lack integer event indices")
+            return problems
+        indices = [int(item[1]) for item in parsed]
+        if any(value <= 0 for value in indices) or any(
+            current <= previous for previous, current in zip(indices, indices[1:])
+        ):
+            problems.append("phase event indices are not strictly increasing")
+        if any(item[2] is None for item in parsed):
+            problems.append("phase records lack finite elapsed times")
+            return problems
+
+        times = dict((item[0], item[2]) for item in parsed)
+        measure_times = dict((item[0], item[3]) for item in parsed)
+        ordered_times = [item[2] for item in parsed]
+        if any(
+            current < previous
+            for previous, current in zip(ordered_times, ordered_times[1:])
+        ):
+            problems.append("phase elapsed times are not monotonic")
+        settle_sec = _number(self.start, "settleSec") or 0.0
+        duration = _number(self.start, "duration")
+        settle_elapsed = times["GO"] - times["SETTLE"]
+        if (
+            settle_elapsed < max(0.0, settle_sec - 1.0)
+            or settle_elapsed > settle_sec + 2.0
+        ):
+            problems.append("SETTLE elapsed time differs from settleSec")
+        measure_elapsed = times["CLEANUP"] - times["GO"]
+        if duration is not None and (
+            measure_elapsed < duration - 1.0
+            or measure_elapsed > duration + MAX_PARTITION_DRAIN_SEC
+        ):
+            problems.append("CLEANUP wall clock is outside duration plus bounded drain")
+        if measure_times["GO"] is None or abs(measure_times["GO"]) > 1.0:
+            problems.append("GO phase measureT must be zero")
+        measure_phase_elapsed = times["MEASURE"] - times["GO"]
+        measure_phase_limit = _cadence_limit(_number(self.start, "sampleSec"))
+        if (
+            measure_times["MEASURE"] is None
+            or measure_phase_elapsed < 0
+            or abs(measure_times["MEASURE"] - measure_phase_elapsed) > 1.0
+            or measure_phase_limit is None
+            or measure_phase_elapsed > measure_phase_limit
+        ):
+            problems.append("MEASURE phase clock is not a bounded continuation of GO")
+        cleanup_measure_t = measure_times["CLEANUP"]
+        if (
+            cleanup_measure_t is None
+            or (duration is not None and abs(cleanup_measure_t - duration) > 2.0)
+        ):
+            problems.append("CLEANUP measureT differs from configured duration")
+
+        realized_indices = composition["realized_evidence"].get("event_indices")
+        target_groups = _number(self.start, "targetGroups")
+        target_group_count = (
+            int(target_groups)
+            if target_groups is not None
+            and 1 <= target_groups <= 120
+            and target_groups.is_integer()
+            else None
+        )
+        realized_ordered = (
+            isinstance(realized_indices, list)
+            and all(isinstance(value, int) for value in realized_indices)
+            and all(
+                current > previous
+                for previous, current in zip(realized_indices, realized_indices[1:])
+            )
+        )
+        if (
+            not isinstance(realized_indices, list)
+            or target_group_count is None
+            or len(realized_indices) != target_group_count
+            or not realized_ordered
+            or any(
+                not isinstance(value, int)
+                or value <= indices[0]
+                or value >= indices[1]
+                for value in realized_indices
+            )
+        ):
+            problems.append("REALIZED records are not strictly between SPAWN and SETTLE")
+
+        sample_indices = work["sample_evidence"].get("event_indices")
+        samples_ordered = (
+            isinstance(sample_indices, list)
+            and all(isinstance(value, int) for value in sample_indices)
+            and all(
+                current > previous
+                for previous, current in zip(sample_indices, sample_indices[1:])
+            )
+        )
+        if (
+            not isinstance(sample_indices, list)
+            or len(sample_indices) != work["sample_evidence"]["record_count"]
+            or not samples_ordered
+            or any(
+                not isinstance(value, int)
+                or value <= indices[3]
+                or value >= indices[4]
+                for value in sample_indices
+            )
+        ):
+            problems.append("MEASURE samples are not bounded by MEASURE and CLEANUP")
+        sample_times = work["sample_evidence"].get("sample_t_values")
+        normalized_sample_times = (
+            [_number({"value": value}, "value") for value in sample_times]
+            if isinstance(sample_times, list)
+            else None
+        )
+        if (
+            normalized_sample_times is None
+            or len(normalized_sample_times) != work["sample_evidence"]["record_count"]
+            or any(value is None for value in normalized_sample_times)
+            or any(
+                value < times["GO"] or value > times["CLEANUP"]
+                for value in normalized_sample_times
+            )
+        ):
+            problems.append("MEASURE sample clocks are outside GO..CLEANUP")
+
+        started_indices = path.get("started_event_indices")
+        starts_ordered = (
+            isinstance(started_indices, list)
+            and all(isinstance(value, int) for value in started_indices)
+            and all(
+                current > previous
+                for previous, current in zip(started_indices, started_indices[1:])
+            )
+        )
+        if (
+            not isinstance(started_indices, list)
+            or not starts_ordered
+            or any(
+                not isinstance(value, int)
+                or value <= indices[2]
+                or value >= indices[4]
+                for value in started_indices
+            )
+        ):
+            problems.append("PATHLEG starts are not bounded by GO and CLEANUP")
+
+        transition_indices = []
+        raw_transitions = path.get("transition_evidence")
+        if isinstance(raw_transitions, list):
+            for record in raw_transitions:
+                value = _field(record, "event_index") if isinstance(record, dict) else None
+                if not isinstance(value, int):
+                    transition_indices = []
+                    break
+                transition_indices.append(value)
+        all_event_indices = []
+        event_lists_valid = all(
+            isinstance(values, list)
+            for values in (indices, realized_indices, sample_indices, transition_indices)
+        )
+        if event_lists_valid:
+            for values in (indices, realized_indices, sample_indices, transition_indices):
+                all_event_indices.extend(values)
+        if (
+            not event_lists_valid
+            or not all_event_indices
+            or any(value <= 0 for value in all_event_indices)
+            or len(all_event_indices) != len(set(all_event_indices))
+        ):
+            problems.append("phase, REALIZED, PATHLEG, and SAMPLE event indices are not globally unique")
+        return problems
+
     def _path_summary(self):
         result = self.result or {}
         status_totals = {}
@@ -1243,6 +2236,8 @@ class RunState(object):
         completed_from_records = 0
         arrival_units_from_records = 0.0
         arrival_units_seen = False
+        started_event_indices = []
+        transition_evidence = []
 
         for leg in self.pathlegs:
             fields = leg["fields"]
@@ -1256,6 +2251,21 @@ class RunState(object):
             if units is not None and is_completed:
                 arrival_units_from_records += units
                 arrival_units_seen = True
+            transition_evidence.append(
+                {
+                    "group": _trim_number(_number(fields, "group", "groupId")),
+                    "transition": _trim_number(
+                        _number(fields, "transition", "transitionId")
+                    ),
+                    "status": status,
+                    "event_index": leg.get("event_index"),
+                    "measure_t": _trim_number(_number(fields, "measureT")),
+                    "t": _trim_number(_number(fields, "t", "elapsed")),
+                    "elapsed": _trim_number(_number(fields, "elapsed")),
+                    "units": _trim_number(_number(fields, "units")),
+                    "route_id": _field(fields, "routeId", "routeIdentity", "route"),
+                }
+            )
 
             route_id = _field(fields, "routeId", "routeIdentity", "route")
             if route_id is None:
@@ -1282,6 +2292,8 @@ class RunState(object):
             )
             route["records"] += 1
             if is_started:
+                if "event_index" in leg:
+                    started_event_indices.append(leg["event_index"])
                 route["started"] += 1
             if is_completed:
                 route["completed"] += 1
@@ -1326,6 +2338,9 @@ class RunState(object):
 
         normalized_routes = {}
         for route_id, route in routes.items():
+            normalized_status = dict(route["status"])
+            normalized_status.setdefault("STARTED", 0)
+            normalized_status.setdefault("ARRIVED", 0)
             route_pct = (
                 100.0 * route["completed"] / route["started"]
                 if route["started"] > 0 else None
@@ -1336,7 +2351,7 @@ class RunState(object):
                 "completed": route["completed"],
                 "completion_pct": _trim_number(route_pct),
                 "arrival_pct": _trim_number(route_pct),
-                "status": route["status"],
+                "status": normalized_status,
                 "arrived": _trim_number(route["arrived"]),
                 "units": _trim_number(route["units"]),
                 "elapsed_median": (
@@ -1406,18 +2421,24 @@ class RunState(object):
             "route_rate": _trim_number(route_rate),
             "route_count": len(normalized_routes),
             "routes": normalized_routes,
+            "started_event_indices": started_event_indices,
+            "transition_evidence": transition_evidence,
         }
 
     def summary(self, min_fps=None, active=False):
         observed = self._observations()
         result = dict(self.result) if self.result is not None else None
         result_fields = result or {}
+        phase_summary = self._phase_summary()
+        composition_summary = self._composition_summary()
+        work_summary = self._work_summary(phase_summary)
+        path_summary = self._path_summary()
 
         fps_values = observed["fps"]
         fps_min = min(fps_values) if fps_values else _number(result_fields, "fpsMin")
         fps_median = statistics.median(fps_values) if fps_values else None
         fps_avg = (
-            (sum(fps_values) / len(fps_values))
+            _safe_mean(fps_values)
             if fps_values
             else _number(result_fields, "fpsAvg")
         )
@@ -1425,11 +2446,11 @@ class RunState(object):
 
         ai_peak_values = list(observed["ai"])
         reported_ai_peak = _number(result_fields, "aiPeak")
-        if reported_ai_peak is not None:
+        if reported_ai_peak is not None and not _is_partition_start(self.start):
             ai_peak_values.append(reported_ai_peak)
         group_peak_values = list(observed["groups"])
         reported_groups_peak = _number(result_fields, "groupsPeak")
-        if reported_groups_peak is not None:
+        if reported_groups_peak is not None and not _is_partition_start(self.start):
             group_peak_values.append(reported_groups_peak)
 
         hc_values = observed["hc_pct"]
@@ -1476,6 +2497,44 @@ class RunState(object):
             )
 
         alerts = []
+        reported_fps_values = [
+            _number(result_fields, name)
+            for name in ("fpsMin", "fpsAvg", "fpsP5")
+        ]
+        if any(
+            value < 0 or value > MAX_REASONABLE_FPS
+            for value in fps_values + [
+                value for value in reported_fps_values if value is not None
+            ]
+        ):
+            alerts.append(
+                {
+                    "code": "FPS_OUT_OF_RANGE",
+                    "message": "FPS evidence is outside the bounded 0..%s range"
+                    % _trim_number(MAX_REASONABLE_FPS),
+                }
+            )
+        if _is_partition_start(self.start):
+            peak_problems = []
+            if (
+                reported_ai_peak is not None
+                and observed["ai"]
+                and abs(reported_ai_peak - max(observed["ai"])) > 1e-9
+            ):
+                peak_problems.append("aiPeak differs from MEASURE SAMPLE maximum")
+            if (
+                reported_groups_peak is not None
+                and observed["groups"]
+                and abs(reported_groups_peak - max(observed["groups"])) > 1e-9
+            ):
+                peak_problems.append("groupsPeak differs from MEASURE SAMPLE maximum")
+            if peak_problems:
+                alerts.append(
+                    {
+                        "code": "RESULT_PEAK_INCONSISTENT",
+                        "message": "; ".join(peak_problems),
+                    }
+                )
         if min_fps is not None and fps_min is not None and fps_min <= min_fps:
             alerts.append(
                 {
@@ -1573,7 +2632,7 @@ class RunState(object):
         start_duration = _number(self.start, "duration")
         start_sample_sec = _number(self.start, "sampleSec")
         warmup_sec = observed["warmup_sec"]
-        phase_scoped_measure = observed["measurement_sample_count"] > 0 or any(
+        phase_scoped_measure = _is_partition_start(self.start) or observed["measurement_sample_count"] > 0 or any(
             _is_measurement_phase(_field(record["fields"], "phase", "state", "name"))
             for record in self.phase_records
         )
@@ -1582,15 +2641,28 @@ class RunState(object):
                 start_duration if phase_scoped_measure
                 else max(0.0, start_duration - warmup_sec)
             )
-            expected_samples = max(1, int(measured_duration // start_sample_sec))
-            calculated_coverage = 100.0 * len(fps_values) / expected_samples
-            if self.result is not None and calculated_coverage < 80:
+            sample_ratio = measured_duration / start_sample_sec
+            if (
+                not math.isfinite(sample_ratio)
+                or sample_ratio < 0
+                or sample_ratio > MAX_EXPECTED_SAMPLES
+            ):
                 alerts.append(
                     {
-                        "code": "SAMPLE_COVERAGE_LOW",
-                        "message": "post-warmup FPS sample coverage %.1f%% (%s/%s)" % (calculated_coverage, len(fps_values), expected_samples),
+                        "code": "INVALID_SAMPLE_WINDOW",
+                        "message": "duration/sampleSec does not define a bounded finite sample window",
                     }
                 )
+            else:
+                expected_samples = max(1, int(sample_ratio))
+                calculated_coverage = 100.0 * len(fps_values) / expected_samples
+                if self.result is not None and calculated_coverage < 80:
+                    alerts.append(
+                        {
+                            "code": "SAMPLE_COVERAGE_LOW",
+                            "message": "post-warmup FPS sample coverage %.1f%% (%s/%s)" % (calculated_coverage, len(fps_values), expected_samples),
+                        }
+                    )
         if self.result is not None and phase_scoped_measure:
             time_evidence = self._sample_evidence()
             time_problems = []
@@ -1604,11 +2676,54 @@ class RunState(object):
                 time_problems.append("measureT is outside the measurement window")
             if time_evidence["terminal_progress_ok"] is not True:
                 time_problems.append("measureT does not reach the final sample interval")
+            if time_evidence["first_measure_t_ok"] is not True:
+                time_problems.append("first measureT exceeds the cadence plus jitter limit")
+            if time_evidence["measure_t_gap_ok"] is not True:
+                time_problems.append("measureT contains a gap above the cadence plus jitter limit")
+            if _is_partition_start(self.start):
+                if time_evidence["sample_t_count"] != time_evidence["record_count"]:
+                    time_problems.append("not every MEASURE sample has finite wall-clock t")
+                if time_evidence["sample_t_monotonic"] is not True:
+                    time_problems.append("SAMPLE wall-clock t is not strictly increasing")
+                if time_evidence["sample_t_gap_ok"] is not True:
+                    time_problems.append("SAMPLE wall-clock t exceeds the cadence plus jitter limit")
+                if time_evidence["sample_measure_alignment_ok"] is not True:
+                    time_problems.append("SAMPLE wall-clock t does not reconcile with GO plus measureT")
             if time_problems:
                 alerts.append(
                     {
                         "code": "MEASURE_TIME_INVALID",
                         "message": "; ".join(time_problems),
+                    }
+                )
+            if (
+                _is_partition_start(self.start)
+                and time_evidence["fps_count"] != time_evidence["record_count"]
+            ):
+                alerts.append(
+                    {
+                        "code": "MEASURE_FPS_INCOMPLETE",
+                        "message": "every partition MEASURE sample must carry finite FPS",
+                    }
+                )
+            if _is_partition_start(self.start) and (
+                time_evidence["ai_count"] != time_evidence["record_count"]
+                or time_evidence["groups_count"] != time_evidence["record_count"]
+            ):
+                alerts.append(
+                    {
+                        "code": "MEASURE_LOAD_INCOMPLETE",
+                        "message": "every partition MEASURE sample must carry integer AI and group counts",
+                    }
+                )
+            if (
+                _is_partition_start(self.start)
+                and time_evidence["probe_ms_count"] != time_evidence["record_count"]
+            ):
+                alerts.append(
+                    {
+                        "code": "MEASURE_PROBE_INCOMPLETE",
+                        "message": "every partition MEASURE sample must carry finite non-negative probeMs",
                     }
                 )
 
@@ -1671,6 +2786,66 @@ class RunState(object):
                         }
                     )
 
+        composition_problems = self._composition_evidence_problems(
+            composition_summary
+        )
+        if composition_problems:
+            alerts.append(
+                {
+                    "code": "REALIZED_EVIDENCE_INCONSISTENT",
+                    "message": "; ".join(composition_problems),
+                }
+            )
+        work_problems = self._work_evidence_problems(work_summary)
+        if work_problems:
+            alerts.append(
+                {
+                    "code": "RESULT_WORK_INCONSISTENT",
+                    "message": "; ".join(work_problems),
+                }
+            )
+        barrier_problems = self._partition_barrier_problems(
+            phase_summary, composition_summary, work_summary, path_summary
+        )
+        if barrier_problems:
+            alerts.append(
+                {
+                    "code": "PARTITION_BARRIER_INVALID",
+                    "message": "; ".join(barrier_problems),
+                }
+            )
+        result_missing, result_invalid = self._partition_result_problems(
+            phase_summary,
+            composition_summary,
+            work_summary,
+            path_summary,
+            observed,
+            expected_samples,
+            calculated_coverage,
+        )
+        if result_missing:
+            alerts.append(
+                {
+                    "code": "RESULT_PARTITION_FIELDS_MISSING",
+                    "message": "; ".join(result_missing),
+                }
+            )
+        if result_invalid:
+            alerts.append(
+                {
+                    "code": "RESULT_PARTITION_INVALID",
+                    "message": "; ".join(result_invalid),
+                }
+            )
+        path_problems = self._partition_path_problems(phase_summary, path_summary)
+        if path_problems:
+            alerts.append(
+                {
+                    "code": "PATH_TRANSITION_INVALID",
+                    "message": "; ".join(path_problems),
+                }
+            )
+
         for item in self.protocol_alerts:
             kind = item["kind"]
             fields = item["fields"]
@@ -1691,6 +2866,7 @@ class RunState(object):
                 "DUPLICATE_FIELD",
                 "INVALID_NUMERIC_FIELD",
                 "START_RUN_ALIAS_CONFLICT",
+                "START_PARTITION_ALIAS_CONFLICT",
                 "EVENT_RUN_ALIAS_CONFLICT",
                 "EVENT_RUN_MISSING",
             ):
@@ -1727,11 +2903,6 @@ class RunState(object):
             }
         )
 
-        phase_summary = self._phase_summary()
-        composition_summary = self._composition_summary()
-        work_summary = self._work_summary(phase_summary)
-        path_summary = self._path_summary()
-
         summary = {
             "protocol": "WASPLAB|v1",
             "found": True,
@@ -1760,6 +2931,21 @@ class RunState(object):
                 "avg": _trim_number(fps_avg),
                 "min": _trim_number(fps_min),
                 "p5": _trim_number(fps_p5),
+            },
+            "probe_ms": {
+                "count": len(observed["probe_ms"]),
+                "median": (
+                    _trim_number(statistics.median(observed["probe_ms"]))
+                    if observed["probe_ms"] else None
+                ),
+                "p95": (
+                    _trim_number(percentile(observed["probe_ms"], 95))
+                    if observed["probe_ms"] else None
+                ),
+                "max": (
+                    _trim_number(max(observed["probe_ms"]))
+                    if observed["probe_ms"] else None
+                ),
             },
             "warmup": {
                 "seconds": _trim_number(observed["warmup_sec"]),

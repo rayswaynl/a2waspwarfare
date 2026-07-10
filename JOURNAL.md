@@ -1,5 +1,38 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-10 — Utes partition adversarial contract repair [codex/utes-group-partition-lab]
+
+Follow-up to the draft entry below. This preserves the earlier 129-test checkpoint as history but
+supersedes it as the current verification claim. An independent deletion/forgery/concurrency audit
+found that the first draft could still certify incomplete or contradictory JSON evidence, trust
+unreconciled RESULT/path/route/probe summaries, accept unbounded dimensions, and attribute sampler
+or path work during the shutdown drain. The repaired producer now fences and drains in-flight
+partition workers, snapshots accepted observation clocks, caps exposure at the configured end, and
+suppresses post-window samples/arrivals. The monitor and partition aggregator now recompute raw
+sample/path/route evidence, enforce the exact Utes directed cycle and per-group transition frontier,
+reject conflicting run/partition aliases and malformed provenance, and fail closed on missing alert,
+fatal, clock, load, probe, composition, cleanup, or RESULT evidence.
+
+Self-caused repair regressions were recorded rather than hidden: early strictness changes briefly
+rejected legacy phase-scoped work, producer FPS/coverage rounding, delayed MEASURE markers and valid
+bounded cleanup drain; the path-race fix briefly shifted legacy non-partition clocks; the provenance
+gate briefly rejected the builder's valid `-dirty` SHA form; and repeated patching introduced mixed
+line endings. Each was corrected with a regression. All eight touched Proving Ground text files are
+now CRLF with no BOM, bare LF or NUL, while zero-anchor PR #997 recipe timing remains isolated from
+partition-only clocks and drain bookkeeping.
+
+Fresh post-normalization verification: Proving Ground **195/195 PASS**; SQF lint unit tests **75/75**,
+stringtable tests **6/6**, soak analyzer tests **22/22**; Python `py_compile` PASS; all six focused
+Proving Ground SQF files reported zero findings; all 12 catalog recipes and all five registered
+360-unit overrides validate; coupled bus/scheduler overrides and the impossible 60s/300s partition
+cadence reject. Same-path deterministic double build matched at 919 files, tree-index SHA-256
+`8B86843DCFC8AE5653835E53AE5CA6CA00C726F3E03E4D4F7C85A01C26511E09`; PBO 13,063,254 bytes,
+SHA-256 `1E46CCF555827BD1790812DEA692FBE7853322C40D91380B9AFF8656086C38D8`.
+
+No editor, Arma client, dedicated server, HC, SSH, deployment, service, restart, merge or production
+change was run. This remains a draft-only static/tooling repair; editor load/save and Game-PC/box
+runtime qualification remain separately owner-tokened gates.
+
 ## 2026-07-10 — Utes equal-work group-partition lab tooling [codex/utes-group-partition-lab]
 
 Built a draft-only change stacked on `agent/utes-proving-ground` / PR #997 head

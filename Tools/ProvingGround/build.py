@@ -190,6 +190,10 @@ def validate_scenario(spec: dict[str, Any]) -> None:
     if spec["syntheticMode"] == "none" and spec["syntheticGroups"] != 0:
         raise ValueError(f"{spec['name']}: syntheticMode none requires syntheticGroups=0")
     derive_workload_fields(spec)
+    if is_group_partition(spec) and spec["sampleSec"] > spec["durationSec"]:
+        raise ValueError(
+            f"{spec['name']}: group-partition sampleSec must not exceed durationSec"
+        )
     for key, (low, high) in {
         "targetSyntheticUnits": (0, 1440),
         "spawnAnchors": (0, 3),

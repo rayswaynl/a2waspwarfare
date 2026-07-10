@@ -151,6 +151,33 @@ class BuildTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "schedulerMode=off"):
             build.validate_scenario(spec)
 
+    def test_group_partition_rejects_sample_interval_longer_than_duration(self):
+        spec = build.resolve_scenario("density-4", self.catalog)
+        spec["durationSec"] = 60
+        spec["sampleSec"] = 300
+        with self.assertRaisesRegex(ValueError, "sampleSec must not exceed durationSec"):
+            build.validate_scenario(spec)
+
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "build.py"),
+                "density-4",
+                "--duration-sec",
+                "60",
+                "--sample-sec",
+                "300",
+                "--validate-only",
+            ],
+            cwd=str(build.REPO),
+            check=False,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertNotEqual(0, completed.returncode)
+        self.assertIn("sampleSec must not exceed durationSec", completed.stderr)
+
     def test_group_partition_rejects_non_utes_terrain(self):
         spec = build.resolve_scenario("density-8", self.catalog)
         spec["terrain"] = "chernarus"
@@ -203,6 +230,107 @@ class BuildTests(unittest.TestCase):
         self.assertIn(
             '_isBenchmark = if (_partitionModeNow) then {_phaseNow == "MEASURE"} else {_elapsed >= _warmupSec};',
             text,
+        )
+        self.assertIn(
+            '_eventAt = if (count _this > 2) then {_this select 2} else {-1};',
+            text,
+        )
+        self.assertIn('if (_eventAt < 0) then {_eventAt = time};', text)
+        self.assertIn(
+            '_arrivalAt = if (_partitionModeNow) then {time} else {-1};',
+            text,
+        )
+        self.assertIn('if (!_partitionModeNow) then {_arrivalAt = time};', text)
+        self.assertIn('[_group, _idx + 1] Call WASP_LAB_FNC_AssignLeg;', text)
+        self.assertIn(
+            '_sampleAt = if (_partitionModeNow) then {time} else {-1};',
+            text,
+        )
+        self.assertIn('if (!_partitionModeNow) then {_sampleAt = time};', text)
+
+    def test_partition_path_protocol_has_stable_group_transition_identity(self):
+        text = (ROOT / "mission" / "test" / "ProvingGround_Server.sqf").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('setVariable ["wasp_lab_group_id", _made + 1]', text)
+        self.assertIn('setVariable ["wasp_lab_transition", 0]', text)
+        self.assertIn('"|group=" + str _groupId + "|transition=" + str _transition', text)
+        self.assertGreaterEqual(text.count('"|group=" + str _groupId + "|transition=" + str _transition'), 2)
+
+    def test_partition_cleanup_drains_measure_workers_before_phase_transition(self):
+        text = (ROOT / "mission" / "test" / "ProvingGround_Server.sqf").read_text(
+            encoding="utf-8"
+        )
+        cleanup = text.index(
+            'missionNamespace setVariable ["WASP_LAB_PHASE", "CLEANUP"]'
+        )
+        closing = text.rindex(
+            'missionNamespace setVariable ["WASP_LAB_MEASURE_CLOSING", true]',
+            0,
+            cleanup,
+        )
+        stop = text.rindex(
+            'missionNamespace setVariable ["WASP_LAB_STOP", true]',
+            closing,
+            cleanup,
+        )
+        sample_drain = text.index('WASP_LAB_SAMPLE_INFLIGHT', stop, cleanup)
+        path_drain = text.index('WASP_LAB_PATH_INFLIGHT', stop, cleanup)
+        self.assertLess(closing, stop)
+        self.assertLess(stop, sample_drain)
+        self.assertLess(stop, path_drain)
+        self.assertLess(sample_drain, cleanup)
+        self.assertLess(path_drain, cleanup)
+
+        path_step = text[text.index("WASP_LAB_FNC_PathStep = {"):text.index(
+            'if (_mode == "path-loop" && {_schedulerMode == "active"})'
+        )]
+        self.assertLess(
+            path_step.index('WASP_LAB_PATH_INFLIGHT'),
+            path_step.index('WASP_LAB_MEASURE_CLOSING'),
+        )
+        self.assertIn('WASP_LAB_DRAIN_FAILED', text)
+        self.assertIn('time min _measureEnd', text)
+        self.assertIn(
+            '_now = time min (missionNamespace getVariable ["WASP_LAB_END", time]);',
+            text,
+        )
+        self.assertIn(
+            '_exposureNow = _sampleAt min (missionNamespace getVariable ["WASP_LAB_END", _sampleAt]);',
+            text,
+        )
+        self.assertIn('_delta = (_now - _last) max 0;', text)
+
+        arrival_guard = text.index('_arrivalInWindow = !_partitionModeNow || {')
+        arrival_count = text.index('WASP_LAB_PATH_ARRIVALS', arrival_guard)
+        self.assertLess(arrival_guard, arrival_count)
+        self.assertIn('WASP_LAB_MEASURE_CLOSING', text[arrival_guard:arrival_count])
+        self.assertIn('WASP_LAB_END', text[arrival_guard:arrival_count])
+        self.assertIn('_arrivalAt = if (_partitionModeNow) then {time} else {-1};', path_step)
+        self.assertIn('[_group, _idx + 1, _arrivalAt] Call WASP_LAB_FNC_AssignLeg;', path_step)
+        self.assertIn(
+            '_eventAt = if (count _this > 2) then {_this select 2} else {-1};',
+            text,
+        )
+
+        sampler_start = text.index("[_sampleSec, _warmup, _busRate] Spawn {")
+        sampler = text[sampler_start:text.index("\nif (_partitionMode) then {", sampler_start)]
+        sample_at = sampler.index(
+            '_sampleAt = if (_partitionModeNow) then {time} else {-1};'
+        )
+        sample_window = sampler.index('WASP_LAB_END', sample_at)
+        sample_counter = sampler.index('WASP_LAB_FPS_N', sample_window)
+        self.assertLess(sample_at, sample_window)
+        self.assertLess(sample_window, sample_counter)
+        self.assertIn('_elapsed = round (_sampleAt -', sampler)
+        self.assertIn('_measureT = if (_measureStartNow >= 0) then {round (_sampleAt -', sampler)
+        self.assertLess(
+            sampler.index('WASP_LAB_SAMPLE_INFLIGHT'),
+            sampler.index('_phaseNow = missionNamespace getVariable'),
+        )
+        self.assertLess(
+            sampler.rindex('WASP_LAB_SAMPLE_INFLIGHT'),
+            sampler.rindex('sleep _interval'),
         )
 
     def test_scheduler_recipe_is_explicitly_opt_in(self):
