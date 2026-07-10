@@ -190,8 +190,16 @@ if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !
 		};
 	};
 	_wallTpl = missionNamespace getVariable _wallVarName;
+	//--- fable/fix-walltpl-nil-radiotower (bugrun BUGHUNT-4 / live 1.2.0 RPT): a structure type with no
+	//--- WFBE_NEURODEF_<type>_WALLS template (e.g. the AI-built RadioTower added in 1.2.0) leaves _wallTpl
+	//--- nil, and CreateDefenseTemplate then errored every build. Treat "no template" as "no auto-walls",
+	//--- exactly like the AUTOWALL-off else branch below.
+	if (isNil "_wallTpl") then {
+		_site setVariable ["WFBE_Walls", []];
+	} else {
 	_defenses = [_site, _wallTpl] call CreateDefenseTemplate;
 	_site setVariable ["WFBE_Walls", _defenses];
+	};
 } else {
 	_site setVariable ["WFBE_Walls", []];
 	if (_rlType in ["AARadar","Bank","Reserve","ArtilleryRadar"]) then {

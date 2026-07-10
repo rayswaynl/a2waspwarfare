@@ -1,3 +1,4 @@
+disableSerialization;
 _logic = _this select 3;
 _startPos = _this select 4;
 _source = _this select 5;
@@ -111,7 +112,11 @@ _logic spawn {
 	};
 };
 
-//--- Border - temporary solution //TODO: move border if position of logic changes (eg. by placing hq)
+//--- Border - fixed to _startpos captured once at CoIn-menu-open (see _startpos assignment above/param).
+//--- Rebuilt only when BIS_COIN_areasize changes (search _createBorderScope below), NOT when the
+//--- underlying HQ/repair-source logic moves position during an already-open session (rare: would
+//--- require an HQ relocation mid-session). Documented gap, not fixed here - closing it needs a live
+//--- position-change watcher, which is a behavior change outside comment-cleanup scope.
 _createBorder = {
 	Private ["_logic","_startpos"];
 	_logic = _this select 0;

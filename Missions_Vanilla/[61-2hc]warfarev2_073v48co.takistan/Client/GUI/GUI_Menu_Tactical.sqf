@@ -42,9 +42,9 @@ _pard = missionNamespace getVariable "WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY"
 // Marty: Show each artillery type's effective min-max range next to its name (Trello #115).
 // Effective max uses the same WFBE_C_ARTILLERY divisor the menu applies for _maxRange below,
 // so the printed number matches the in/out-of-range coloring in the cannon list.
-_artyNames    = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText];
-_artyRangeMin = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",sideJoinedText];
-_artyRangeMax = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",sideJoinedText];
+_artyNames    = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText], []]; //--- fable/fix-tactical-arty-jip-crash: default [] - 1-arg read was nil on JIP/fast-open before the side arty config replicated, and `count nil` at the for-loop below crashed the whole Tactical menu init.
+_artyRangeMin = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_RANGES_MIN",sideJoinedText], []];
+_artyRangeMax = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_RANGES_MAX",sideJoinedText], []];
 _artyDivisor  = missionNamespace getVariable "WFBE_C_ARTILLERY";
 for "_artyI" from 0 to (count _artyNames) - 1 do {
 	_artyRowName = _artyNames select _artyI;
@@ -150,7 +150,7 @@ _startLoad = true;
 _currentAmmoOptions = [];
 _ignoreAmmoComboAction = false;
 _selectedAmmoByArtillery = [];
-_artilleryDisplayNames = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText];
+_artilleryDisplayNames = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText], []]; //--- fable/fix-tactical-arty-jip-crash: same JIP nil-count crash guard as line ~45.
 for "_i" from 0 to (count _artilleryDisplayNames) - 1 do {_selectedAmmoByArtillery set [_i, 0]};
 
 // Marty: Rebuild ammo choices from the selected artillery type and current upgrade level.
