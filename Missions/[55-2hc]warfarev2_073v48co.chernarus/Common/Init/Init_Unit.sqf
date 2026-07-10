@@ -53,7 +53,7 @@ if(!isNil 'Zeta_Lifter')then{
 		if (_upgrades select WFBE_UP_AIRLIFT > 0) then {_unit addAction [localize "STR_WF_Lift", 'Client\Module\ZetaCargo\Zeta_Hook.sqf']};
 	};
 };
-if (_unit_kind in (missionNamespace getVariable "WFBE_REPAIRTRUCKS")) then { //--- Repair Trucks.
+if (_unit_kind in (missionNamespace getVariable ["WFBE_REPAIRTRUCKS", []])) then { //--- Repair Trucks. (fable/fix-hc-repairtrucks-nil: default [] - nil here errored EVERY unit init on the HC and aborted the rest of this script)
 	//--- Build action.
 	_unit addAction [localize 'STR_WF_BuildMenu_Repair','Client\Action\Action_BuildRepair.sqf', [], 99, false, true, '', Format['side group player == side _target && alive _target && player distance _target <= %1', missionNamespace getVariable 'WFBE_C_UNITS_REPAIR_TRUCK_RANGE']];
 

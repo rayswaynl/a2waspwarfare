@@ -16,7 +16,7 @@
 	members at the factories per-unit (the V0.2 path).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget",
+private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget",
               "_allUnits","_allGroups","_allVehicles",
               "_w7Flag","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best","_w7SkillSend",
               "_w11FreeFlag",
@@ -347,8 +347,9 @@ if (count _live > 0) then {
 
 	//--- V0.6.2: gate templates on REAL unit data too (same rule Produce uses) - the
 	//--- hand-authored squad metadata is stale (RU tank platoon claims heavy 1; the
-	//--- T72_RU unit data says heavy 3 for humans). Track = factory unit-list membership.
-	_facMap = [["BARRACKSUNITS", WFBE_UP_BARRACKS], ["LIGHTUNITS", WFBE_UP_LIGHT], ["HEAVYUNITS", WFBE_UP_HEAVY], ["AIRCRAFTUNITS", WFBE_UP_AIR]];
+	//--- T72_RU unit data says heavy 3 for humans). Track = factory unit-list membership
+	//--- (feat/common-isunitunlocked: the per-template facMap literal that lived here moved
+	//--- into the shared Common_IsUnitUnlocked.sqf; the per-unit loop below now calls it).
 
 	_eligible = [];
 	for "_i" from 0 to (count _templates - 1) do {
@@ -368,15 +369,15 @@ if (count _live > 0) then {
 		if (_ok) then {
 			{
 				_cn = _x;
-				_ud = missionNamespace getVariable _cn;
-				if (!isNil "_ud") then {
-					{
-						_unitList = missionNamespace getVariable [Format ["WFBE_%1%2", _sideText, _x select 0], []];
-						if (_cn in _unitList) exitWith {
-							if (((_ud select QUERYUNITUPGRADE) > (_upgrades select (_x select 1))) && {!(_airTierWaive && {(_x select 1) == WFBE_UP_AIR})}) then {_ok = false}; //--- B74/Build83: waive the per-unit AIR factory-tier requirement at a captured airfield (jets+helis) OR when a held Aircraft Factory covers HELIS; non-air factory tiers still apply.
-						};
-					} forEach _facMap;
-				};
+				//--- feat/common-isunitunlocked: shared per-unit facMap/QUERYUNITUPGRADE tier-unlock check
+				//--- replaces the inline scan. AIR-track waiver preserved EXACTLY (B74/Build83): pass a COPY
+				//--- of _upgrades with the AIR slot raised past any real tier when _airTierWaive is set, so
+				//--- the shared comparison degrades to "always unlocked" for AIR only - non-air tracks are
+				//--- untouched. `+ []` forces a real array copy so the shared _upgrades is never mutated.
+				private ["_cnUpgrades"];
+				_cnUpgrades = _upgrades + [];
+				if (_airTierWaive) then {_cnUpgrades set [WFBE_UP_AIR, 1e6]};
+				if (!(([_cn, _sideText, _cnUpgrades] Call WFBE_CO_FNC_IsUnitUnlocked) select 0)) then {_ok = false};
 				//--- B66 CAPTURE-UNLOCK eligibility: a template containing a CAPTURE_UNLOCKS class
 				//--- (premium ACR units: T72M4CZ/RM70_ACR) is only eligible while this side HOLDS the
 				//--- trigger town. Mirror the client gate (Client_UIFillListBuyUnits): match the class
@@ -1101,8 +1102,8 @@ if (count _live > 0) then {
 		if (!isNull _facObj) exitWith {};
 	} forEach (if (_doc == "HF") then {["Heavy","Light","Barracks"]} else {["Light","Heavy","Barracks"]});
 
-	//--- Build84 OWNED-FACTORY GATE (Ray 2026-07-01, gated WFBE_C_AICOM_FOUND_REQUIRE_FACTORY default 0 = OLD
-	//--- HQ-fallback allowed = SHIP-SAFE). Ray: "no magic infantry conjured at the HQ" - only produce troops for
+	//--- Build84 OWNED-FACTORY GATE (Ray 2026-07-01, ARMED 2026-07-10 by owner decision - default now 1, see
+	//--- PR "Feat: AI team founding requires factory"). Ray: "no magic infantry conjured at the HQ" - only produce troops for
 	//--- factories the commander OWNS. When the flag is 1: the picked team's type (_chosen: 0=inf,1=light,2=heavy,
 	//--- 3=air) must MATCH an owned factory (infantry->Barracks; armor light->Light or Heavy; armor heavy->Heavy
 	//--- or Light; air->Aircraft). If the side owns NO factory of that type, SKIP founding it this cycle so the

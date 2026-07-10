@@ -149,6 +149,7 @@ WFBE_CO_FNC_GetSideSupply = Compile preprocessFileLineNumbers "Common\Functions\
 WFBE_CO_FNC_GetSideStructures = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideStructures.sqf";
 WFBE_CO_FNC_HasSideRadioTower = Compile preprocessFileLineNumbers "Common\Functions\Common_HasSideRadioTower.sqf";
 WFBE_CO_FNC_GetSideUpgrades = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideUpgrades.sqf";
+WFBE_CO_FNC_IsUnitUnlocked = Compile preprocessFileLineNumbers "Common\Functions\Common_IsUnitUnlocked.sqf"; //--- feat/common-isunitunlocked: shared per-unit facMap/QUERYUNITUPGRADE tier-unlock check (was duplicated across AI_Commander_Teams.sqf/Produce.sqf/Base.sqf); returns [unlocked,found].
 WFBE_CO_FNC_GetTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamFunds.sqf";
 WFBE_CO_FNC_GetTotalCamps = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTotalCamps.sqf";
 WFBE_CO_FNC_SanitizeGotoDisp = Compile preprocessFileLineNumbers "Common\Functions\Common_SanitizeGotoDisp.sqf"; //--- cmdcon42-o: enemy-base intel-leak clamp for order-destination DISPLAY surfaces (producer-side).
@@ -403,7 +404,7 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 1) then {
 
 _repairs = [];
 {
-	_repairs = _repairs + (missionNamespace getVariable Format["WFBE_%1REPAIRTRUCKS", _x]);
+	_repairs = _repairs + (missionNamespace getVariable [Format["WFBE_%1REPAIRTRUCKS", _x], []]); //--- fable/fix-hc-repairtrucks-nil: default [] - a side config not yet loaded on this machine (HC init order) made array+nil poison _repairs
 } forEach WFBE_PRESENTSIDES;
 
 missionNamespace setVariable ["WFBE_REPAIRTRUCKS", _repairs];

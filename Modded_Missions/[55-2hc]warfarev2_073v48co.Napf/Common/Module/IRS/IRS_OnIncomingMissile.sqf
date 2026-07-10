@@ -25,16 +25,6 @@ if (alive _vehicle) then {
 					(_vehicle) Spawn WFBE_CO_MOD_IRS_DeploySmoke;
 					_vehicle setVariable ["wfbe_irs_lastfired", time];
 					_vehicle setVariable ["wfbe_irs_flares", (_vehicle getVariable "wfbe_irs_flares") - 1, true];
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Common/Module/IRS/IRS_OnIncomingMissile.sqf
-					if (local player) then {
-						_vehicle vehicleChat Format[localize "STR_WF_CHAT_IRS_Deployed",_vehicle getVariable "wfbe_irs_flares"];
-
-						[_projectile, _vehicle] spawn WFBE_CO_FNC_IRS_PlayWarningSound;
-
-						[_projectile, _vehicle] spawn WFBE_CO_FNC_IRS_ShowWarning;
-
-					};
-========
 					if ((local player) && (player in crew _vehicle)) then {
 						
 						_upgrades = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
@@ -58,7 +48,6 @@ if (alive _vehicle) then {
 							};
 						};
                     };
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.Napf/Common/Module/IRS/IRS_OnIncomingMissile.sqf
 				};
 			};
 		};

@@ -695,7 +695,7 @@ if (worldName == "Zargabad") then {
 	//--- B74.2 (Ray 2026-06-24, directive #5): AI-commander STRUCTURE-SELL / recycle. When the side is over its redundant-
 	//--- structure threshold (or, once item 1/4 lands, over the base/building cap) the commander dismantles its LOWEST-COST
 	//--- non-HQ / non-CommandCenter structure, refunding a fraction of the build cost to side SUPPLY (mirrors a human recycle).
-	//--- Ships default-OFF (dark) so Ray can enable + tune the thresholds in soak. AI-commander build logic ONLY; humans unaffected.
+	//--- Ships ARMED (1) since 4d16fad70 (2026-06-24, same commit) - Ray armed it immediately rather than shipping dark; see the trailing comment on the flag line below. AI-commander build logic ONLY; humans unaffected.
 	if (isNil "WFBE_C_AICOM_BASE_SELL_ENABLE")      then {WFBE_C_AICOM_BASE_SELL_ENABLE      = 1};    //--- 1 = arm the sell worker (Ray armed it), 0 = inert (worker early-exits).
 		if (isNil "WFBE_C_AICOM_SELL_STRANDED") then {WFBE_C_AICOM_SELL_STRANDED = 1};  //--- B758 (Ray 2026-06-26): 1 = the sell worker prefers recouping the STRANDED OLD-BASE (structures far from the rebuilt HQ that still have a near copy) after an MHQ relocate, not only >MAX duplicates. 0 = original duplicate-only behaviour.
 	if (isNil "WFBE_C_AICOM_BASE_SELL_INTERVAL")    then {WFBE_C_AICOM_BASE_SELL_INTERVAL    = 120};  //--- s between sell evaluations per side (slow; selling is rare).
@@ -1039,7 +1039,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_SPAWN_ROAD_RADIUS") then {WFBE_C_AICOM_SPAWN_ROAD_RADIUS = 60};//--- Build84: nearRoads search radius (m) for the AICOM road-spawn snap.
 	//--- === TP-9 PLAYER SPAWN-ON-ROADS (claude-gaming 2026-07-06) ===
 	if (isNil "WFBE_C_PLAYER_SPAWN_ON_ROADS") then {WFBE_C_PLAYER_SPAWN_ON_ROADS = 1}; //--- TP-9: snap player-factory spawn to nearest road (reuses WFBE_C_AICOM_SPAWN_ROAD_RADIUS). 0 = off (byte-identical to pre-TP-9 player spawn).
-	if (isNil "WFBE_C_AICOM_FOUND_REQUIRE_FACTORY") then {WFBE_C_AICOM_FOUND_REQUIRE_FACTORY = 0}; //--- Build84 (ships OFF - founding-starvation safety): 1 = only found a team type whose matching factory the side owns (no HQ 'magic' fallback); 0 = current HQ-fallback allowed.
+	if (isNil "WFBE_C_AICOM_FOUND_REQUIRE_FACTORY") then {WFBE_C_AICOM_FOUND_REQUIRE_FACTORY = 1}; //--- Build84 (ARMED 2026-07-10, owner decision - see PR "Feat: AI team founding requires factory"): AI-commander founding requires the matching owned factory (no HQ 'magic' fallback) - parity with what players face. Investigation confirmed the existing STARVATION-SAFETY gate below already covers the early-game window: HQ-fallback still applies while a side owns zero factories, and the Barracks (first factory, ~2 min in) always permits infantry founding; only a same-cycle armor/air pick landing before its own factory finishes gets skipped and re-picked next 90s cycle - no dead foundings. 0 = pre-Build84 HQ-fallback allowed.
 	if (isNil "WFBE_C_AICOM_PATROL_UNSTUCK_MAX") then {WFBE_C_AICOM_PATROL_UNSTUCK_MAX = 5}; //--- Build84: after N consecutive side-patrol wedges, drop target + re-pick a different frontline town (anti-orbit).
 	if (isNil "WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS") then {WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS = 250}; //--- Build84: 'at target' radius (m) for assault-arrive / uncapturable-abandon logic (was getVariable-default-only).
 	if (isNil "WFBE_C_AICOM_AIR_LATE_MINS") then {WFBE_C_AICOM_AIR_LATE_MINS = 45};        //--- Build84 (Ray): mission minute at/after which 'late game' air scaling applies.
@@ -1301,7 +1301,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_CAPTURE_MAXPASSES") then {WFBE_C_AICOM_CAPTURE_MAXPASSES = 2};
 	//--- BLACKLIST_COOLDOWN: how long (s) an abandoned town stays excluded for THAT team (CAUSE-2 cooldown).
 	if (isNil "WFBE_C_AICOM_BLACKLIST_COOLDOWN") then {WFBE_C_AICOM_BLACKLIST_COOLDOWN = 600};
-	//--- AICOM SELF-SERVICE (B48, default OFF; ships dark for A/B). A damaged/low-ammo team detours to the nearest SAFE friendly town-centre, repairs+rearms+heals via the player primitives, then returns. See Common_AICOMServiceTick.sqf.
+	//--- AICOM SELF-SERVICE (B48). ARMED (1, hard-set) since 13fa61321 "soak(aicom): enable AICOM self-service on Chernarus for the 2026-06-19 all-day soak" - merged default OFF/dark for A/B, then soak-enabled; see the trailing comment on the flag line below. A damaged/low-ammo team detours to the nearest SAFE friendly town-centre, repairs+rearms+heals via the player primitives, then returns. See Common_AICOMServiceTick.sqf.
 	WFBE_C_AICOM_SERVICE_ENABLED = 1;   //--- SOAK-ENABLED on Chernarus (Ray 2026-06-19 all-day day-soak of the rearm/repair/heal AICOM self-service). Hard SET to 1 for the soak; rollback = "if (isNil ...) then {... = 0}".
 	if (isNil "WFBE_C_AICOM_SVC_DMG_THRESH") then {WFBE_C_AICOM_SVC_DMG_THRESH = 0.5};   //--- getDammage above this on a member/crew triggers a repair/heal detour.
 	if (isNil "WFBE_C_AICOM_SVC_AMMO_THRESH") then {WFBE_C_AICOM_SVC_AMMO_THRESH = 0.35};//--- a weaponed combat vehicle below this ammo fraction triggers a rearm detour.
@@ -1887,6 +1887,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_STRUCTURES_ARTILLERYRADAR = 0; // Artillery Radar buildable structure (WDDM walled-gate walls, fort-only by design)
 	WFBE_C_STRUCTURES_RESERVE = 0;        // Reserve buildable structure (WDDM floodlit walled-yard walls)
 	WFBE_C_STRUCTURES_RADIOTOWER = 1;     // Radio Tower buildable - gates the vehicle radio feature (WASP/Radio); Land_Telek2 model NOT verified present on TK/ZG runtime content
+	WFBE_C_STRUCTURES_RADIOTOWER_CASH_COST = 2500; // owner 2026-07-09: Radio Tower is bought with player CASH (not side supply). Read at the 3 coin economy touchpoints (Init_Coin buy-menu currency index 1, coin_interface deduction, GUI_Menu_Economy sell-refund), keyed on rlType "RadioTower".
 	WFBE_C_UNITS_REDEPLOYTRUCK = 1;       // Medic redeployment truck (forward spawn)
 	WFBE_C_SUPPORT_REARM_PROPORTIONAL = 1; //--- Rearm price scales with ammo actually missing (arty exempt)
 	WFBE_C_UNITS_BULLDOZER = 1;           //--- Engineer base-area tree clearing
@@ -2310,7 +2311,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- game logic. Default 0 = byte-identical legacy respawn screen (buttons hidden via
 //--- `show=0`, minimap geometry untouched). See docs/design/v2/TEAM-MENU-REPURPOSE-PROPOSAL-2026-07-07.md
 //--- for the Unit Designer / Gear Presets feature inventory this reuses.
-	if (isNil "WFBE_C_RESPAWN_SHORTCUTS") then {WFBE_C_RESPAWN_SHORTCUTS = 0};
+	if (isNil "WFBE_C_RESPAWN_SHORTCUTS") then {WFBE_C_RESPAWN_SHORTCUTS = 1}; //--- owner 2026-07-09: ACTIVATED - respawn-screen Team-Menu shortcuts (Customise AI Soldier + Saved Kits) + trimmed minimap (GUI_RespawnMenu.sqf:47-57)
 
 //--- DEADSPAWN NO-ARMED-UNITS GUARD (fable/deadspawn-guard, Ray 2026-07-04): while a dead AI team
 //--- leader is parked on its %1TempRespawnMarker holding point during the respawn wait
@@ -2335,7 +2336,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- current facing direction. Falls back to facing when no valid destination is available.
 //--- Client-side only. Locality note: expectedDestination works on local units only; HC-owned
 //--- AI leaders fall back to getDir facing silently. Zero server load. Flag 0 = byte-identical.
-	if (isNil "WFBE_C_TEAMMARKER_DEST_DIR") then {WFBE_C_TEAMMARKER_DEST_DIR = 1}; //--- 0: facing direction (default, byte-identical to HEAD); >0: destination-direction when an active destination is available, facing fallback.
+	if (isNil "WFBE_C_TEAMMARKER_DEST_DIR") then {WFBE_C_TEAMMARKER_DEST_DIR = 0}; //--- fable/marker-facing (owner 2026-07-09): reverted 1->0. Dest-dir mode hijacked the player's OWN arrow onto a NEVER-EXPIRED stored shift-click order (updateteamsmarkers.sqf:140-148; the _MAP_ORDER_TIME stamp was written but never read), permanently locking the self-arrow to a stale bearing = "facing the wrong way". Owner wants the conventional heading arrow. 0: facing (getDir); >0: destination-direction when an active destination is available, facing fallback.
 //--- TP-16 / naval-cap-hinds: spawn 3x Mi-24 CAP per carrier instead of the default Hind + An2 pair.
 //--- Chernarus-only feature (IS_NAVAL_MAP); flag has no effect on non-naval mirrors.
 //--- Default 0 = current pair behaviour. Set > 0 to activate all-hind triple CAP.
@@ -2649,15 +2650,15 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_HQ_REPAIR_SCALING") then {WFBE_C_HQ_REPAIR_SCALING = 1}; //--- #185: HQ repair cost 7.5k -> 49.5k over the rolling average round length (profileNamespace WFBE_RPAVG). 0 = legacy 3-tier prices.
 	if (isNil "WFBE_C_GUER_PATROL_MARKERS") then {WFBE_C_GUER_PATROL_MARKERS = 1}; //--- owner: resistance-only map intel layer (friendly AI dots + owned-town health flags + inbound cell arrows).
 	if (isNil "WFBE_C_UNIT_DESIGNER") then {WFBE_C_UNIT_DESIGNER = 1}; //--- Team-menu Units tab: infantry loadout templates applied to bought AI squad units.
-	if (isNil "WFBE_C_SEAD") then {WFBE_C_SEAD = 1}; //--- B93 SEAD: scripted anti-radar guidance for tier-5 jets (F35B/Su34), 2-shot cap. DARK until Build 93.
-if (isNil "WFBE_C_RADIUSHOLD_ENABLE") then {WFBE_C_RADIUSHOLD_ENABLE = 1}; //--- fable/radius-hold-primitive (GR-2026-07-08a): master gate for the shared radius-presence-hold primitive (Common_RadiusHold.sqf). DARK by default - 0 refuses every registration and the dispatcher never spawns.
+	if (isNil "WFBE_C_SEAD") then {WFBE_C_SEAD = 1}; //--- B93 SEAD: scripted anti-radar guidance for tier-5 jets (F35B/Su34), 2-shot cap. ARMED (1) since 0be461ef4 "feat(flags): arm first-blood, SEAD, camp single-flip, idle-thread skip [owner late window]" (2026-07-07) - merged dark pending Build 93.
+if (isNil "WFBE_C_RADIUSHOLD_ENABLE") then {WFBE_C_RADIUSHOLD_ENABLE = 1}; //--- fable/radius-hold-primitive (GR-2026-07-08a): master gate for the shared radius-presence-hold primitive (Common_RadiusHold.sqf). ARMED by default (1) since ee3f8193 "release: enable all feature flags at launch" (2026-07-09, owner-authorized) - merged dark (0); 0 refuses every registration and the dispatcher never spawns.
 if (isNil "WFBE_C_RADIUSHOLD_TICK_SECS") then {WFBE_C_RADIUSHOLD_TICK_SECS = 5}; //--- fable/radius-hold-primitive: shared dispatcher tick cadence (seconds) for all registered holds.
 if (isNil "WFBE_C_RADIUSHOLD_CONTEST_DECAY") then {WFBE_C_RADIUSHOLD_CONTEST_DECAY = 0}; //--- fable/radius-hold-primitive: per-tick progress decay applied only when contestMode=1 while a hold is contested.
 if (isNil "WFBE_C_RADIUSHOLD_MAX_ACTIVE") then {WFBE_C_RADIUSHOLD_MAX_ACTIVE = 8}; //--- fable/radius-hold-primitive: hard cap on simultaneously-registered holds.
-if (isNil "WFBE_C_NAVALHVT_BUBBLE_ENABLE") then {WFBE_C_NAVALHVT_BUBBLE_ENABLE = 1}; //--- fable/radius-hold-primitive: naval-HVT carrier bubble consumer master gate (Init_NavalHVT.sqf). DARK by default - camps-on-deck stays the live path until armed.
+if (isNil "WFBE_C_NAVALHVT_BUBBLE_ENABLE") then {WFBE_C_NAVALHVT_BUBBLE_ENABLE = 0}; //--- fable/fix-carrier-capture (owner live 2026-07-10 "carrier not capturing while on its deck"): default was 1, which SKIPS the camps-on-deck capture-drain (server_town.sqf:285) and registers proximity bubbles that do not grant deck capture - so a carrier could never be captured by standing on it. Restored to 0 = the DARK/intended default this comment already documented; camps-on-deck (with the B755 deckZ+12 height fix) is the live capture path.
 if (isNil "WFBE_C_NAVALHVT_BUBBLE_RADIUS") then {WFBE_C_NAVALHVT_BUBBLE_RADIUS = 180}; //--- fable/radius-hold-primitive: carrier bubble radius (metres) when WFBE_C_NAVALHVT_BUBBLE_ENABLE=1.
 if (isNil "WFBE_C_NAVALHVT_BUBBLE_HOLDSECS") then {WFBE_C_NAVALHVT_BUBBLE_HOLDSECS = 120}; //--- fable/radius-hold-primitive: uncontested seconds of eligible presence required to complete the carrier bubble hold.
-if (isNil "WFBE_C_ZG_KOTH_ENABLE") then {WFBE_C_ZG_KOTH_ENABLE = 1}; //--- fable/radius-hold-primitive consumer (GR-2026-07-08a, stacked on PR #916): Zargabad KotH city-core hold master flag. DARK by default; map-gated to Zargabad regardless (Init_ZgKoth.sqf).
+if (isNil "WFBE_C_ZG_KOTH_ENABLE") then {WFBE_C_ZG_KOTH_ENABLE = 1}; //--- fable/radius-hold-primitive consumer (GR-2026-07-08a, stacked on PR #916): Zargabad KotH city-core hold master flag. ARMED by default (1) since ee3f8193 "release: enable all feature flags at launch" (2026-07-09, owner-authorized) - merged dark (0); map-gated to Zargabad regardless (Init_ZgKoth.sqf).
 if (isNil "WFBE_C_ZG_KOTH_RADIUS") then {WFBE_C_ZG_KOTH_RADIUS = 150}; //--- fable/radius-hold-primitive consumer: ZG KotH hold-zone radius (metres) at city core. Owner-TBD, tune after test.
 if (isNil "WFBE_C_ZG_KOTH_HOLDSECS") then {WFBE_C_ZG_KOTH_HOLDSECS = 300}; //--- fable/radius-hold-primitive consumer: uncontested seconds of eligible presence to trigger the reward roll. Owner-TBD, tune after test.
 if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //--- fable/radius-hold-primitive consumer: re-arm cooldown after a payout (anti-farm gate). Owner-TBD, tune after test.
@@ -2671,7 +2672,7 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 //--- + paid AI investment for WEST/EAST towns. Mirrors GUER Director (Lane 800). Flag-off
 //--- (0) = brain never launches, every overlay read site short-circuits = byte-identical.
 //--- See docs/design/v2/aicom-v2-commander-town-ledger.md for the full spec.
-	if (isNil "AICOMV2_LANE_CMD_TOWN_LEDGER") then {AICOMV2_LANE_CMD_TOWN_LEDGER = 1}; //--- Lane master switch: 0=off (default, byte-identical).
+	if (isNil "AICOMV2_LANE_CMD_TOWN_LEDGER") then {AICOMV2_LANE_CMD_TOWN_LEDGER = 0}; //--- Lane master switch: 0=off (default, byte-identical). owner 2026-07-09: DISARMED for this patch (reconcile flip armed it, but its spec ships it dark) - CTL was never soak-tested + has 2 open survivor-tracking defects (New-Bug-A/B, CTL-ARMING-SPEC.md). Queued to next patch: fix both, then arm after a real soak.
 	if (isNil "AICOMV2_CTL_TICK_SEC") then {AICOMV2_CTL_TICK_SEC = 30}; //--- Brain tick interval, seconds.
 	if (isNil "AICOMV2_CTL_REGEN_FULL_SEC") then {AICOMV2_CTL_REGEN_FULL_SEC = 1800}; //--- Zero-to-baseline regen duration, seconds.
 	if (isNil "AICOMV2_CTL_CAPTURE_SEED") then {AICOMV2_CTL_CAPTURE_SEED = 0.25}; //--- Strength at record creation (fresh capture).

@@ -19,8 +19,13 @@ _factoryType = "";
 _description = "";
 
 _currentUnit = missionNamespace getVariable _unit;
+//--- fable/fix-unit-purchase-nil-guards: guard nil _currentUnit (unregistered classname) before the select-chain below - matches a55605e10/#1003/Server_BuyUnit.sqf(#1001) shape. Nil = keep the safe pre-init defaults above (_waitTime=0, _description="").
+if !(isNil "_currentUnit") then {
 _waitTime = _currentUnit select QUERYUNITTIME;
 _description = _currentUnit select QUERYUNITLABEL;
+} else {
+	["WARNING", Format ["Client_BuildUnit.sqf: unit classname [%1] not registered in missionNamespace; using safe defaults (waitTime=0, no description).", _unit]] Call WFBE_CO_FNC_LogContent;
+};
 	
 _spawnpaddir=2;
 
@@ -927,7 +932,7 @@ if (_isMan) then {
 	//--- NOTE (out of my file scope): for a teammate already standing on ANOTHER client when the truck spawns, the
 	//--- fully-correct delivery is an all-clients re-applier (the per-client updateclient.sqf MHQ-action pattern, or a
 	//--- registered PVFunction like SetMHQLock). That re-applier lives outside the GUER bundle's owned files.
-	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || ((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) || (((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])})}) then {  //--- B75: hilux/datsun truck VBIED OR the kill-gated M113 APC VBIED. fable/guer-suicide-bike: OR the flag-gated suicide motorcycle.
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || ((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) || (((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])})} && {(side group player) == resistance}) then {  //--- B75: hilux/datsun truck VBIED OR the kill-gated M113 APC VBIED. fable/guer-suicide-bike: OR the flag-gated suicide motorcycle.
 		//--- Global flag so any machine that gets this vehicle local can recognise + (re)arm the action.
 		_vehicle setVariable ["wfbe_is_guer_vbied", true, true];
 
