@@ -948,6 +948,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 									};
 								};
 								_hindPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								if (isNil "_hindPilot2") then {_hindPilot2 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: mirror the _hindPilot fallback so a bad WFBE_GUER_PILOT_CLASS does not leave the Hind pilotless
 								_hindPilot2 moveInDriver _hind2;
 								_hind2 flyInHeight 350;
 
@@ -967,6 +968,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 									};
 								};
 								_hindPilot3 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
+								if (isNil "_hindPilot3") then {_hindPilot3 = _capGrp createUnit ["GUE_Soldier", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: same fallback as _hindPilot2
 								_hindPilot3 moveInDriver _hind3;
 								_hind3 flyInHeight 350;
 
