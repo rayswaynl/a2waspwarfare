@@ -19,13 +19,9 @@
    immunity means nothing if the pen itself is off-map. So the resolved XY is
    verified in-bounds using the SAME formula Client_IsOnMap.sqf uses
    (WFBE_BOUNDARIESXY square boundary, centred on the map) before being
-   returned. If the ring search ever produced an out-of-bounds candidate
-   (never observed on Chernarus - the seed itself resolves within the first
-   couple of rings - but not analytically guaranteed for an arbitrary ring
-   count), this falls back to the literal seed [1000,1000], which IS
-   analytically in-bounds on Chernarus (verified by hand: ~9447m from map
-   centre vs a ~10861m corner border distance at that bearing) and remains
-   in-bounds on any map via the same dynamic WFBE_BOUNDARIESXY check.
+   returned. Any point with 0<=x<=15360 and 0<=y<=15360 trivially satisfies
+   this square-boundary test, so the seed below only needs to be real, deep
+   water - it does not need a separate in-bounds proof.
 
    Landlocked maps (no water found within the ring search) also fall back to
    the seed, so the pen still resolves to a real, in-bounds, on-map point
@@ -36,7 +32,27 @@
 
 private ["_boundary","_half","_seed","_seaPos","_ring","_step","_cand","_posXY","_difx","_dify","_dir","_adis","_bdis","_borderdis","_posdis","_z"];
 
-_seed = [1000, 1000, 0];
+//--- fable/deadspawn-chernarus-sea (owner 2026-07-09): the previous seed [1000,1000,0] (this file's
+//--- header above still described the SW-corner idiom it was copy-pasted from, per Init_HC.sqf's
+//--- WFBE_HC_FNC_ParkSeaHC) was NEVER actually verified as water on THIS terrain - only as in-bounds.
+//--- Owner report: the deadspawn pen does not land in the sea on Chernarus. [1000,1000] sits in the
+//--- SW interior landmass (Chernarus's coastline runs along the east/south, not the west), and the
+//--- ring search below only probes 8 fixed rays outward from the seed - it can easily miss real water
+//--- that isn't on one of those rays, falling through to the dry-land seed itself.
+//--- REPLACEMENT SEED: [10000, 400, 0] - 300m due south of the pre-placed, RPT-self-verified "Khe Sanh
+//--- Bravo" naval-HVT carrier logic at world [10000,700] (mission.sqm Item135/Item0, id=9003; anchor
+//--- consumed by Server\Init\Init_NavalHVT.sqf:252-254 as _aBravo, labelled "[B] Khe Sanh Bravo (LHD) —
+//--- SE sea" at Init_NavalHVT.sqf:326-327). That carrier spawn is guarded by its own runtime check
+//--- (Init_NavalHVT.sqf:241-247: diag_log WARN if `!(surfaceIsWater (getPos _lhdBravoLogic))`), so its
+//--- anchor is a live, production-verified deep-water point far from any coastline. 400 is chosen
+//--- 300m SOUTH of that anchor (further from the mainland, i.e. more conservatively offshore, not
+//--- less) so the pen point is comfortably clear of the LHD hull footprint (max ~42m lateral twin-hull
+//--- offset per Init_NavalHVT.sqf's TWIN-HULL geometry notes) while staying in the same open "SE sea"
+//--- water body. FLAG FOR OWNER: this was derived from mission.sqm/script cross-reference, NOT an
+//--- in-engine surfaceIsWater check (no running engine available here) - please sanity-check
+//--- [10000,400] on the Chernarus map (or watch the RPT for a "no water found" fallback) before this
+//--- ships.
+_seed = [10000, 400, 0];
 _seaPos = [];
 
 if (surfaceIsWater _seed) then { _seaPos = _seed };

@@ -81,6 +81,15 @@ if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && _type
 };
 
 if !(_spawnInside) then {
+	//--- fable/respawn-eject (owner rig-test 2026-07-09): respawn=3 (GROUP) can hand the player a body already
+	//--- seated as AI vehicle crew (e.g. #7 in an AAVP7) - the engine picks the next living unit in group player
+	//--- before any script runs, and the on-foot placement below setPos's the body but never ejects it, trapping
+	//--- the player as crew (unable even to unlock an HC-owned hull). We place on foot here, so eject first.
+	if (vehicle _unit != _unit) then {
+		unassignVehicle _unit;
+		moveOut _unit;
+	};
+
 	if (sideJoined == resistance) then {
 		//--- GUER respawn: honor the player's SELECTED town when valid; otherwise a random friendly town (resistance-held or neutral; never WEST/EAST = safe haven).
 		private ["_guerStart","_owned","_t","_usedFallbackPos"];
