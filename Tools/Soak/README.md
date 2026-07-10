@@ -200,12 +200,12 @@ cutover brief (Guide-Rev GR-2026-07-03a).
 |--------|-----------|
 | `AICOM2\|v1\|SNAP\|<side>\|<tick>\|…` | myTowns, enTowns, myEff, enEff, funds, enHQ |
 | `AICOM2\|v1\|ALLOC\|<side>\|<tick>\|…` | primary, src, harassTo, assigned, harass, concentrate |
-| `AICOM2\|v1\|DECAP\|<side>\|<tick>\|…` | state (SCAN/TRACK/PRESS), inRange, roll, sensed, stamped |
+| `AICOM2\|v1\|DECAP\|<side>\|<tick>\|state=…` | state (IDLE/ARMING/COMMIT/COMMITTED/ABORT/WON-HQDEAD), inRange, roll, sensed, stamped |
+| `AICOM2\|v1\|DECAP\|<side>\|<tick>\|PRESS\|…` | HC-local driver transition; team, dist |
 | `AICOM2\|v1\|FISTPOOL\|<side>\|…` | soft, neutInclGuer, using |
 | `AICOM2\|v1\|ORDER\|<subtype>\|<side>\|<tick>\|…` | mode, goto |
-| `AICOMSTAT\|v1\|POSTURE\|<SIDE>\|<tick>\|PRESS\|…` | myTowns, enTowns (PRESS-mode confirmation) |
 
-All lines are scoped to the last MISSINIT before scoring.
+Server and HC inputs are each scoped to their last meaningful MISSINIT before scoring.
 
 ### Section 10 heuristics
 
@@ -213,24 +213,26 @@ All lines are scoped to the last MISSINIT before scoring.
 |--------|-------------|
 | **SNAP trajectory** | myTowns first → last; peak; enHQ last value |
 | **ALLOC summary** | primary changes (strategy pivots), harass ticks, src distribution |
-| **DECAP state distribution** | SCAN/TRACK/PRESS counts per side |
+| **DECAP state distribution** | IDLE/ARMING/COMMIT/COMMITTED/ABORT/WON-HQDEAD counts per side |
 | **inRange streaks** | longest consecutive tick-run with inRange > 0 |
 | **Roll cadence** | expects ≥1 roll=1 every 4-tick window |
 | **Sensed latches** | count of false → true transitions on the sensed field |
 | **stamped max** | cumulative stamped counter high-water mark |
-| **PRESS events** | AICOMSTAT POSTURE PRESS confirmation count |
+| **COMMITTED ticks** | steady `COMMITTED` closer ticks after the one-tick `COMMIT` transition |
+| **Driver PRESS transitions** | HC-local `...|PRESS|team=...` transitions, kept separate from closer state |
 | **DECAP verdict** | FAIL if SNAP present but DECAP entirely absent (V2 not wired); WATCH if roll cadence violated; PASS otherwise |
 
 The DECAP verdict participates in the OVERALL verdict (worst-of).
 
 ### Fixture for section 10
 
-`sample_cc44u.rpt` is a ~33-line fixture covering the full AICOM2 grammar.
-It is used by `test_analyze_soak.py` (`AnalyzeSoakAicom2Tests`, 10 tests).
+`sample_cc44u.rpt` contains server-side commander telemetry and
+`sample_cc44u_hc.rpt` contains the HC-local driver transition. Together they
+exercise the real two-RPT boundary in `AnalyzeSoakAicom2Tests` (12 tests).
 Run with:
 
 ```bash
-python analyze_soak.py Tools/Soak/sample_cc44u.rpt
+python Tools/Soak/analyze_soak.py Tools/Soak/sample_cc44u.rpt --hc Tools/Soak/sample_cc44u_hc.rpt
 python -m unittest Tools/Soak/test_analyze_soak.py
 ```
 
@@ -245,8 +247,9 @@ Python analyzer for real-time soak monitoring and per-round scoring.
 
 ### `Tools/PrTestHarness/Aicom/Score-AicomRounds.ps1`
 
-Reads the **latest round** (MISSINIT-scoped) from an RPT file or the newest
-RPT in an archive directory and emits a compact round scorecard.
+Reads the **latest round** from a server RPT (or archive directory) plus an
+optional HC RPT, scopes each input independently, extracts HC driver transitions,
+and emits a compact scorecard without folding HC errors into server gates.
 
 **Scorecard sections:**
 
@@ -255,7 +258,7 @@ RPT in an archive directory and emits a compact round scorecard.
 - Per-side SNAP trajectory (towns, enHQ)
 - Per-side ALLOC summary (primary changes, harass ticks, src distribution)
 - Per-side DECAP chain (state distribution, inRange max + longest streak,
-  roll cadence, sensed latches, stamped max, PRESS events)
+  roll cadence, sensed latches, stamped max, COMMITTED ticks, driver transitions)
 - AICOM2 ORDER subtype counts
 - Error-family counts (Script error / Undefined variable / No entry / etc.)
 - Gate verdict (pass/fail, exit code 0/1)
@@ -266,6 +269,9 @@ RPT in an archive directory and emits a compact round scorecard.
 # Score the live server RPT
 .\Score-AicomRounds.ps1 -RptPath "C:\WASP\rpts\arma2oaserver.RPT"
 
+# Include HC-local driver PRESS transitions
+.\Score-AicomRounds.ps1 -RptPath "arma2oaserver.RPT" -HcRptPath "ArmA2OA.RPT"
+
 # Soak-gate mode (fail if gates not met)
 .\Score-AicomRounds.ps1 -RptPath "arma2oaserver.RPT" `
     -MinSnapLines 5 -RequireDecap -MaxErrors 10
@@ -273,7 +279,7 @@ RPT in an archive directory and emits a compact round scorecard.
 # Auto-pick newest RPT from an archive dir
 .\Score-AicomRounds.ps1 -ArchiveDir "C:\WASP\rpts\"
 
-# Self-test against sample_cc44u.rpt
+# Self-test against the server + HC fixtures
 .\Score-AicomRounds.ps1 -SelfTest
 ```
 
@@ -284,19 +290,20 @@ RPT in an archive directory and emits a compact round scorecard.
 ### `Tools/PrTestHarness/Ops/aicom-watch.ps1`
 
 `tail -f` style live watcher filtering for `AICOM2|` and `AICOMSTAT|` lines.
-Colorizes DECAP state transitions (SCAN / TRACK / PRESS) and flags the moment
-a side crosses into PRESS mode.
+Colorizes the live DECAP closer states and highlights an HC-local driver PRESS
+line without treating it as a closer-state transition.
 
 **Color key:**
 
 | Color | Meaning |
 |-------|---------|
-| dim   | SNAP lines (low-frequency summary) |
-| yellow | TRACK state |
-| red background | PRESS state / POSTURE PRESS events |
+| dim   | SNAP lines and IDLE state |
+| yellow | ARMING state |
+| red background | COMMIT/COMMITTED state and driver PRESS transition |
+| red | ABORT state |
+| green background | WON-HQDEAD / ROUNDEND |
 | magenta | ORDER lines |
 | cyan | AICOMSTAT / FISTPOOL |
-| green background | ROUNDEND |
 
 A `-> ` annotation is appended when the DECAP state *changes*, making
 mode transitions visible at a glance.

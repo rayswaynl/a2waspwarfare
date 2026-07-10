@@ -9,7 +9,7 @@
 
       - Round outcome: winner (ROUNDEND / AICOMSTAT FINAL) if present
       - DECAP chain summary (state distribution, sensing episodes, roll cadence,
-        stamped counts, PRESS events) per side -- the primary V2 health signal
+        COMMITTED ticks and HC-local driver PRESS transitions) per side
       - Error-family counts (Script error, Undefined variable, No entry, etc.)
       - FPS / AI delegation aggregates from WASPSCALE lines
       - ALLOC summary (primary changes, harass ticks, src distribution)
@@ -22,7 +22,7 @@
 
     SELF-TEST
       Run without arguments and the script exits 0 after printing its self-test
-      results against the bundled sample_cc44u.rpt fixture.
+      results against the bundled server + HC cc44u fixtures.
 
     COMPATIBLE WITH PS5.1+ (no REQUIRES header; tested on PS5 and PS7).
 
@@ -32,6 +32,10 @@
 .PARAMETER ArchiveDir
     Directory to scan for *.RPT / *.rpt files; the newest file is used.
     Mutually exclusive with -RptPath.
+
+.PARAMETER HcRptPath
+    Optional HC RPT. Scoped independently; only HC-local driver PRESS lines are
+    added to the server round, without polluting DECAP state or error counts.
 
 .PARAMETER MinSnapLines
     Gate: the latest round must have at least this many AICOM2|v1|SNAP lines
@@ -49,11 +53,15 @@
     Suppress ANSI colour output.
 
 .PARAMETER SelfTest
-    Run the self-test against sample_cc44u.rpt and exit.
+    Run the self-test against the server + HC cc44u fixtures and exit.
 
 .EXAMPLE
     # Score the latest round in the live server RPT
     .\Score-AicomRounds.ps1 -RptPath "C:\WASP\rpts\arma2oaserver.RPT"
+
+.EXAMPLE
+    # Score server-side closer state plus HC-local driver transitions
+    .\Score-AicomRounds.ps1 -RptPath ".\server.rpt" -HcRptPath ".\ArmA2OA.RPT"
 
 .EXAMPLE
     # Score with gates (soak-gate mode)
@@ -75,6 +83,8 @@
 param(
     [Parameter(ParameterSetName = "File")]
     [string]$RptPath = "",
+
+    [string]$HcRptPath = "",
 
     [Parameter(ParameterSetName = "Dir")]
     [string]$ArchiveDir = "",
@@ -139,8 +149,8 @@ function Scope-LastMissinit([string[]]$lines) {
         $end   = if ($k + 1 -lt $markers.Count) { $markers[$k + 1] } else { $lines.Count }
         $seg   = $lines[$start..($end - 1)]
         $hasStats = ($seg | Where-Object { $_ -match $statPat }) -ne $null
-        if ($hasStats -or $k -eq $markers.Count - 1) {
-            return $lines[$start..($lines.Count - 1)]
+        if ($hasStats) {
+            return $seg
         }
     }
     return $lines[$markers[-1]..($lines.Count - 1)]
@@ -227,11 +237,18 @@ function Parse-Round([string[]]$lines) {
         # The real emitter (AI_Commander_Decapitate.sqf) outputs sensed as "1"/"0".
         # Accept both the integer form and the legacy "true"/"false" form defensively.
         elseif ($ln -match "AICOM2\|v1\|DECAP\|([A-Za-z]+)\|(\d+)\|(.*)$") {
-            $s = $Matches[1].ToUpper(); $t = To-Int $Matches[2]; $kv = Parse-KV $Matches[3]
+            $s = $Matches[1].ToUpper(); $t = To-Int $Matches[2]; $rest = $Matches[3]
+            if ($rest.StartsWith("PRESS|")) {
+                if (-not $press.ContainsKey($s)) { $press[$s] = 0 }
+                $press[$s]++
+                continue
+            }
+            $kv = Parse-KV $rest
             if (-not $decap.ContainsKey($s)) { $decap[$s] = [System.Collections.Generic.List[hashtable]]::new() }
             $sensedRaw = if ($kv.ContainsKey("sensed")) { $kv["sensed"].Trim().ToLower() } else { "0" }
             $sensedBool = ($sensedRaw -eq "1") -or ($sensedRaw -eq "true")
-            $decap[$s].Add(@{ tick=$t; state=$kv["state"]; inRange=(To-Int $kv["inRange"])
+            $state = if ($kv.ContainsKey("state")) { $kv["state"] } else { "IDLE" }
+            $decap[$s].Add(@{ tick=$t; state=$state; inRange=(To-Int $kv["inRange"])
                               roll=(To-Int $kv["roll"]); sensed=$sensedBool
                               stamped=(To-Int $kv["stamped"]) })
         }
@@ -246,12 +263,6 @@ function Parse-Round([string[]]$lines) {
             $sub = $Matches[1]
             if (-not $orders.ContainsKey($sub)) { $orders[$sub] = 0 }
             $orders[$sub]++
-        }
-        # -- AICOMSTAT POSTURE PRESS --
-        elseif ($ln -match "AICOMSTAT\|v1\|POSTURE\|([A-Z]+)\|(\d+)\|PRESS\|") {
-            $s = $Matches[1]
-            if (-not $press.ContainsKey($s)) { $press[$s] = 0 }
-            $press[$s]++
         }
         # -- ROUNDEND --
         elseif ($ln -match "WASPSTAT\|v1\|\d+\|ROUNDEND\|([A-Z]+)\|(\d+)\|([^|`"]+)") {
@@ -334,7 +345,7 @@ function Score-Round([hashtable]$r, [string]$rptLabel) {
         $sn = $r.snap[$s]
         if ($sn -and $sn.Count -gt 0) {
             $first = $sn[0]; $last = $sn[$sn.Count - 1]
-            $peakT = ($sn | Measure-Object -Property myTowns -Maximum).Maximum
+            $peakT = ($sn | ForEach-Object { $_["myTowns"] } | Measure-Object -Maximum).Maximum
             Write-Host ("    SNAP  $($sn.Count) lines | myTowns $($first.myTowns)->$($last.myTowns) (peak $peakT)" +
                         " | enHQ-last $($last.enHQ)")
         } else {
@@ -358,7 +369,7 @@ function Score-Round([hashtable]$r, [string]$rptLabel) {
                 if ($primaries[$i] -ne $primaries[$i-1]) { $changes++ }
             }
             $harassTicks = @($al | Where-Object { $_.harassTo -ne "none" -and $_.harassTo -ne "" }).Count
-            $srcs = @($al | Group-Object src | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join " "
+            $srcs = @($al | Group-Object -Property { $_["src"] } | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join " "
             Write-Host ("    ALLOC $($al.Count) lines | primary-changes $changes | harass-ticks $harassTicks | src [$srcs]")
         } else {
             Write-Host ("    ALLOC $(dim 'no lines')")
@@ -369,9 +380,9 @@ function Score-Round([hashtable]$r, [string]$rptLabel) {
         $hasSn = ($sn -and $sn.Count -gt 0)
         if ($dc -and $dc.Count -gt 0) {
             # state distribution
-            $stateDist = @($dc | Group-Object state | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join " "
-            $pressCount = @($dc | Where-Object { $_.state -eq "PRESS" }).Count
-            $inRangeMax = ($dc | Measure-Object -Property inRange -Maximum).Maximum
+            $stateDist = @($dc | Group-Object -Property { $_["state"] } | ForEach-Object { "$($_.Name)=$($_.Count)" }) -join " "
+            $committedCount = @($dc | Where-Object { $_.state -eq "COMMITTED" }).Count
+            $inRangeMax = ($dc | ForEach-Object { $_["inRange"] } | Measure-Object -Maximum).Maximum
             # inRange streaks
             $streak = 0; $maxStreak = 0
             foreach ($row in $dc) {
@@ -397,10 +408,10 @@ function Score-Round([hashtable]$r, [string]$rptLabel) {
                 if ($row.sensed -and -not $prevSensed) { $sensedLatches++ }
                 $prevSensed = $row.sensed
             }
-            $stampedMax = ($dc | Measure-Object -Property stamped -Maximum).Maximum
+            $stampedMax = ($dc | ForEach-Object { $_["stamped"] } | Measure-Object -Maximum).Maximum
             $cadStr = if ($null -eq $cadenceOk) { dim "n/a (<4 inRange>0)" }
                       elseif ($cadenceOk) { grn "OK" } else { red "VIOLATED" }
-            Write-Host ("    DECAP $($dc.Count) lines | states $stateDist | PRESS $pressCount | inRange-max $inRangeMax longest-streak $maxStreak")
+            Write-Host ("    DECAP $($dc.Count) lines | states $stateDist | COMMITTED-ticks $committedCount | inRange-max $inRangeMax longest-streak $maxStreak")
             Write-Host ("          roll-cadence $cadStr | sensed-latches $sensedLatches | stamped-max $stampedMax")
         } else {
             if ($hasSn) {
@@ -414,7 +425,7 @@ function Score-Round([hashtable]$r, [string]$rptLabel) {
         }
 
         $pressCnt = if ($r.press.ContainsKey($s)) { $r.press[$s] } else { 0 }
-        Write-Host ("    PRESS-ticks (POSTURE PRESS) : $pressCnt")
+        Write-Host ("    driver PRESS transitions : $pressCnt")
     }
 
     # AICOM2 ORDER subtypes
@@ -460,15 +471,21 @@ function Score-Round([hashtable]$r, [string]$rptLabel) {
 # Self-test
 # ---------------------------------------------------------------------------
 function Run-SelfTest {
-    $fixture = Join-Path (Split-Path $MyInvocation.ScriptName) "..\..\Soak\sample_cc44u.rpt"
-    if (-not (Test-Path $fixture)) {
-        Write-Host (red "Self-test fixture not found: $fixture")
+    $fixtureDir = Join-Path (Split-Path $MyInvocation.ScriptName) "..\..\Soak"
+    $fixture = Join-Path $fixtureDir "sample_cc44u.rpt"
+    $hcFixture = Join-Path $fixtureDir "sample_cc44u_hc.rpt"
+    if (-not (Test-Path $fixture) -or -not (Test-Path $hcFixture)) {
+        Write-Host (red "Self-test server/HC fixtures not found under: $fixtureDir")
         exit 1
     }
     $fixture = (Resolve-Path $fixture).Path
+    $hcFixture = (Resolve-Path $hcFixture).Path
     $lines = @(Read-RptLines $fixture)
     $scoped = @(Scope-LastMissinit $lines)
-    $r = Parse-Round $scoped
+    $hcLines = @(Read-RptLines $hcFixture)
+    $hcScoped = @(Scope-LastMissinit $hcLines)
+    $combined = @($scoped) + @($hcScoped)
+    $r = Parse-Round $combined
 
     $pass = $true
     $checks = [System.Collections.Generic.List[string]]::new()
@@ -484,40 +501,54 @@ function Run-SelfTest {
     if ($hasAlloc) { $checks.Add($(grn "PASS  ALLOC lines present")) }
     else { $checks.Add($(red "FAIL  ALLOC lines absent")); $pass = $false }
 
-    # 3. DECAP present for WEST with COMMITTED state (real active-press state name).
-    # The driver PRESS line (AICOM2|v1|DECAP|...|PRESS|team=...|dist=...) is a
-    # separate line from Common_RunCommanderTeam.sqf and has no state= field;
-    # it defaults to IDLE in the parser. COMMITTED is the closer state when pressing.
+    # 3. DECAP has one COMMIT transition and one steady COMMITTED tick for WEST.
+    # The driver PRESS line is a separate transition from Common_RunCommanderTeam.sqf.
     $westDecap = $r.decap["WEST"]
     $committedRows = @($westDecap | Where-Object { $_.state -eq "COMMITTED" })
-    if ($westDecap -and $westDecap.Count -gt 0 -and $committedRows.Count -ge 1) {
-        $checks.Add($(grn "PASS  WEST DECAP lines with COMMITTED state ($($committedRows.Count))"))
+    $commitRows = @($westDecap | Where-Object { $_.state -eq "COMMIT" })
+    if ($westDecap -and $commitRows.Count -eq 1 -and $committedRows.Count -eq 1) {
+        $checks.Add($(grn "PASS  WEST DECAP COMMIT/COMMITTED sequence is 1/1"))
     } else {
-        $checks.Add($(red "FAIL  WEST DECAP or COMMITTED state missing")); $pass = $false
+        $checks.Add($(red "FAIL  WEST DECAP COMMIT/COMMITTED counts=$($commitRows.Count)/$($committedRows.Count), expected 1/1")); $pass = $false
     }
 
-    # 4. ROUNDEND parsed
+    # 4. The scorecard must keep closer COMMITTED ticks and driver PRESS transitions separate.
+    $scoreText = (Score-Round $r "self-test" 6>&1 | Out-String)
+    $closerMetricOk = $scoreText -match "(?m)^\s+DECAP 5 lines .*COMMITTED-ticks 1 .*"
+    $driverMetricOk = $scoreText -match "(?m)^\s+driver PRESS transitions\s+: 1\s*$"
+    $stateDistOk = ($scoreText -match "ARMING=2") -and
+                   ($scoreText -match "COMMIT=1") -and
+                   ($scoreText -match "COMMITTED=1") -and
+                   ($scoreText -match "IDLE=1")
+    $srcDistOk = $scoreText -match "src \[auto=3\]"
+    if ($closerMetricOk -and $driverMetricOk -and $stateDistOk -and $srcDistOk) {
+        $checks.Add($(grn "PASS  closer/driver metrics and grouped fields render correctly"))
+    } else {
+        $checks.Add($(red "FAIL  closer/driver or grouped scorecard fields are wrong")); $pass = $false
+    }
+
+    # 5. ROUNDEND parsed
     if ($r.roundend -and $r.roundend["winner"] -eq "WEST") {
         $checks.Add($(grn "PASS  ROUNDEND winner=WEST"))
     } else {
         $checks.Add($(red "FAIL  ROUNDEND not parsed or wrong winner")); $pass = $false
     }
 
-    # 5. No error families in fixture
+    # 6. No error families in fixture
     if ($r.errorFamilies.Count -eq 0) {
         $checks.Add($(grn "PASS  no error-family lines in fixture"))
     } else {
         $checks.Add($(red "FAIL  unexpected error-family lines: $($r.errorFamilies.Keys -join ', ')")); $pass = $false
     }
 
-    # 6. ORDER 'war-room-task' present
+    # 7. ORDER 'war-room-task' present
     if ($r.orders.ContainsKey("war-room-task") -and $r.orders["war-room-task"] -ge 1) {
         $checks.Add($(grn "PASS  ORDER war-room-task present"))
     } else {
         $checks.Add($(red "FAIL  ORDER war-room-task missing")); $pass = $false
     }
 
-    # 7. V1-only fixture (build86) must have zero AICOM2 lines
+    # 8. V1-only fixture (build86) must have zero AICOM2 lines
     $fixture86 = Join-Path (Split-Path $MyInvocation.ScriptName) "..\..\Soak\sample_build86.rpt"
     if (Test-Path $fixture86) {
         $lines86   = @(Read-RptLines (Resolve-Path $fixture86).Path)
@@ -530,7 +561,7 @@ function Run-SelfTest {
         }
     }
 
-    # 8. sensed integer parsing: fixture has sensed=1 at tick>=4 for WEST.
+    # 9. sensed integer parsing: fixture has sensed=1 at tick>=4 for WEST.
     # If parser reads "1" as False (old "true"/"false"-only logic), latches = 0.
     $westDc = $r.decap["WEST"]
     $sensedLatches = 0; $prev = $false
@@ -544,6 +575,33 @@ function Run-SelfTest {
         $checks.Add($(grn "PASS  sensed integer 1/0 parsed correctly ($sensedLatches latch(es))"))
     } else {
         $checks.Add($(red "FAIL  sensed latch count=$sensedLatches (integer 1/0 parsing broken)")); $pass = $false
+    }
+
+    # 10. A dead final boot must not hide the last played MISSINIT segment.
+    $scopeProbe = @(
+        "MISSINIT played",
+        "AICOM2|v1|SNAP|West|1|myTowns=1",
+        "MISSINIT dead-boot",
+        "server initialized without gameplay stats",
+        "Error in expression <dead boot only>"
+    )
+    $meaningful = @(Scope-LastMissinit $scopeProbe)
+    if ($meaningful.Count -eq 2 -and $meaningful[0] -eq "MISSINIT played" -and
+        -not ($meaningful -match "Error in expression")) {
+        $checks.Add($(grn "PASS  MISSINIT scoping ignores an empty final boot"))
+    } else {
+        $checks.Add($(red "FAIL  MISSINIT scoping included the empty final boot tail")); $pass = $false
+    }
+
+    # 11. Legacy posture PRESS is not the HC-local driver transition metric.
+    $mixed = Parse-Round (@($combined) + @(
+        "AICOMSTAT|v1|POSTURE|WEST|9|PRESS|myTowns=6|enTowns=1"
+    ))
+    $mixedDriverCount = if ($mixed.press.ContainsKey("WEST")) { $mixed.press["WEST"] } else { 0 }
+    if ($mixedDriverCount -eq 1) {
+        $checks.Add($(grn "PASS  legacy posture PRESS stays out of driver metric"))
+    } else {
+        $checks.Add($(red "FAIL  driver metric mixed in legacy posture PRESS ($mixedDriverCount)")); $pass = $false
     }
 
     Write-Host (hdr "SELF-TEST  Score-AicomRounds.ps1")
@@ -562,6 +620,18 @@ $rptFile = Pick-RptFile
 Write-Host (dim "  Scoring: $rptFile")
 $lines  = @(Read-RptLines $rptFile)
 $scoped = @(Scope-LastMissinit $lines)
+$rptLabel = Split-Path $rptFile -Leaf
+if ($HcRptPath -ne "") {
+    if (-not (Test-Path $HcRptPath)) { throw "HC RPT not found: $HcRptPath" }
+    Write-Host (dim "  HC RPT : $HcRptPath")
+    $hcLines = @(Read-RptLines $HcRptPath)
+    $hcScoped = @(Scope-LastMissinit $hcLines)
+    $hcDriverPress = @($hcScoped | Where-Object {
+        $_ -match "AICOM2\|v1\|DECAP\|[A-Za-z]+\|\d+\|PRESS\|"
+    })
+    $scoped = @($scoped) + @($hcDriverPress)
+    $rptLabel += " + $(Split-Path $HcRptPath -Leaf)"
+}
 $r      = Parse-Round $scoped
-$fails  = Score-Round $r (Split-Path $rptFile -Leaf)
+$fails  = Score-Round $r $rptLabel
 exit ([math]::Min($fails, 1))

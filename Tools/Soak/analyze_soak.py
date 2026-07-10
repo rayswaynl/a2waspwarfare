@@ -40,6 +40,7 @@ AICOM2 telemetry (V2 commander lines, section 10 of this scorecard):
     AICOM2|v1|SNAP|<SIDE>|<tick>|myTowns=|enTowns=|neut=|total=|myStr=|enStr=|myEff=|enEff=|funds=|supply=|players=|myPlayers=|teams=|enHQ=
     AICOM2|v1|ALLOC|<SIDE>|<tick>|fist=|primary=|src=|harassTo=|assigned=|harass=|expand=|teams=|myTowns=|expandFirst=|concentrate=
     AICOM2|v1|DECAP|<SIDE>|<tick>|state=|inRange=|roll=|sensed=|stamped=|tick=
+    AICOM2|v1|DECAP|<SIDE>|<tick>|PRESS|team=|dist=  (HC-local driver transition)
     AICOM2|v1|FISTPOOL|<SIDE>|soft=|neutInclGuer=|using=
     AICOM2|v1|ORDER|<subtype>|<SIDE>|<tick>|...kv...
     AICOMSTAT|v1|POSTURE (legacy V1 lines; also scored in section 10 for posture-mode distribution)
@@ -186,7 +187,7 @@ def _has_stats(lines):
 
 
 def scope_last_missinit(lines, require_stats=True):
-    """Return only the lines at/after the LAST *meaningful* MISSINIT marker.
+    """Return the LAST *meaningful* MISSINIT segment.
 
     A match ends with a post-deploy server/HC reboot that emits a fresh
     MISSINIT but no gameplay stats (the archived reference RPT has exactly this
@@ -194,7 +195,7 @@ def scope_last_missinit(lines, require_stats=True):
     to that empty tail and drop the whole match.
 
     So when require_stats is True we pick the last MISSINIT that is FOLLOWED by
-    at least one WASPSTAT/AICOMSTAT/WASPSCALE line. This:
+    at least one WASPSTAT/AICOMSTAT/WASPSCALE/AICOM2 line. This:
       * scopes the archived reference to its real match (ignoring the dead boot),
       * scopes a genuine multi-match server/HC RPT to its final *played* match,
       * is a no-op for a single-match soak RPT.
@@ -206,15 +207,13 @@ def scope_last_missinit(lines, require_stats=True):
         return lines, False
     if not require_stats:
         return lines[idxs[-1]:], True
-    # walk MISSINIT markers from last to first; take the first whose tail has stats
+    # Walk MISSINIT markers from last to first. Return only that marker's segment
+    # so errors from a later empty boot cannot leak into the played-match gate.
     for k in range(len(idxs) - 1, -1, -1):
         start = idxs[k]
         end = idxs[k + 1] if k + 1 < len(idxs) else len(lines)
-        # stats can appear anywhere from this MISSINIT to EOF; but to avoid
-        # bleeding a *previous* match's stats into an empty final boot, first
-        # check the segment up to the next MISSINIT, then fall back to EOF.
-        if _has_stats(lines[start:end]) or (k == len(idxs) - 1 and _has_stats(lines[start:])):
-            return lines[start:], True
+        if _has_stats(lines[start:end]):
+            return lines[start:end], True
     # no MISSINIT had stats after it; fall back to the last marker
     return lines[idxs[-1]:], True
 
@@ -294,11 +293,6 @@ RE_A2_FISTPOOL = re.compile(
 RE_A2_ORDER = re.compile(
     r"AICOM2\|v1\|ORDER\|([^|]+)\|([A-Za-z]+)\|(\d+)\|(.*)$"
 )
-RE_A2_PRESS = re.compile(
-    r"AICOMSTAT\|v1\|POSTURE\|([A-Z]+)\|(\d+)\|PRESS\|"
-)
-
-
 # ---------------------------------------------------------------------------
 # Main data container
 # ---------------------------------------------------------------------------
@@ -381,7 +375,7 @@ class Soak(object):
         self.a2_fistpool = defaultdict(list)
         # ORDER: subtype -> list of (side, tick, kv, raw)
         self.a2_order = defaultdict(list)
-        # PRESS ticks per side (AICOMSTAT|v1|POSTURE|<side>|<tick>|PRESS)
+        # HC-local AICOM2 driver PRESS transitions per side.
         self.a2_press = defaultdict(list)   # side -> list of tick
 
     # -- ingestion -------------------------------------------------------
@@ -719,19 +713,19 @@ class Soak(object):
                 self.a2_order[subtype].append((side, tick, kv, ln.strip()))
                 continue
 
-            m = RE_A2_PRESS.search(ln)
-            if m:
-                side = m.group(1)
-                tick = _to_int(m.group(2), 0)
-                self.a2_press[side].append(tick)
-                continue
-
     def ingest_hc(self, lines):
         self.hc_present = True
         scoped, ok = scope_last_missinit(lines)
         self.hc_scoped = ok
         for raw in scoped:
             ln = strip_line(raw)
+            m = RE_A2_DECAP.search(ln)
+            if m and m.group(3).startswith("PRESS|"):
+                side = m.group(1).upper()
+                tick = _to_int(m.group(2), 0)
+                self._note_tick(tick)
+                self.a2_press[side].append(tick)
+                continue
             if RE_CAPTURED.search(ln):
                 self.hc_captured.append(ln.strip())
                 # try to pull a town-ish token for dogpile counting.
@@ -966,7 +960,7 @@ class Soak(object):
             if not recs:
                 return None
             state_dist = dict(Counter(r["state"] for r in recs))
-            press_events = sum(1 for r in recs if r["state"] == "PRESS")
+            press_events = sum(1 for r in recs if r["state"] == "COMMITTED")
 
             # inRange>0 streaks (consecutive run lengths)
             streaks = []
@@ -1592,7 +1586,7 @@ def render(soak, args):
                     _c("VIOLATED", C.RED) if dec["roll_cadence_ok"] is False else
                     _c("n/a (<4)", C.DIM))
                 streaks_str = ("%d" % max(dec["inRange_streaks"])) if dec["inRange_streaks"] else "0"
-                ap("     DECAP %d lines | states %s | PRESS %d | inRange-max %d longest-streak %s" % (
+                ap("     DECAP %d lines | states %s | COMMITTED-ticks %d | inRange-max %d longest-streak %s" % (
                     dec["decap_count"],
                     " ".join("%s=%d" % kv for kv in sorted(dec["state_dist"].items())),
                     dec["press_events"], dec["inRange_max"], streaks_str))
@@ -1602,7 +1596,7 @@ def render(soak, args):
                 decap_note = (_c("FAIL: V2 build SNAP present but zero DECAP lines", C.RED)
                               if sn else _c("no lines", C.DIM))
                 ap("     DECAP %s" % decap_note)
-            ap("     PRESS-ticks (AICOMSTAT|v1|POSTURE PRESS) : %d" % sd["press_ticks"])
+            ap("     driver PRESS transitions : %d" % sd["press_ticks"])
         if a2["order_summary"]:
             ap("  " + sub("AICOM2|v1|ORDER subtypes"))
             for sub_t, n in sorted(a2["order_summary"].items()):

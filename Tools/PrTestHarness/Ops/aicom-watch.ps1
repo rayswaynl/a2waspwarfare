@@ -5,9 +5,9 @@
 
 .DESCRIPTION
     Streams new lines from an RPT file (Get-Content -Wait) and prints any line
-    that contains AICOM2| or /AICOMSTAT| or WASPSTAT|.  Colorizes DECAP state
-    changes (SCAN/TRACK/PRESS) to make commander-mode transitions visible at a
-    glance.
+    that contains AICOM2| or AICOMSTAT| or WASPSTAT|.  Colorizes the live
+    DECAP closer states (IDLE/ARMING/COMMIT/COMMITTED/ABORT/WON-HQDEAD) and
+    highlights HC-local driver PRESS transitions without treating them as state.
 
     Use this during a live soak run to monitor the AICOM V2 commander output in
     real-time without wading through unrelated RPT noise.
@@ -38,7 +38,7 @@
     Suppress ANSI colour output.
 
 .PARAMETER SelfTest
-    Run a quick self-test using the sample_cc44u.rpt fixture (non-streaming,
+    Run a quick self-test using the server + HC cc44u fixtures (non-streaming,
     prints what the watcher would have colourised) then exits.
 
 .EXAMPLE
@@ -106,22 +106,31 @@ function bred  ([string]$s) { col $s "41;97"  }  # red background
 $script:LastDecapState = @{}   # side -> last state string
 
 function Format-Decap([string]$line) {
+    # The HC-local driver emits a PRESS transition without a state= field. It is
+    # not a closer-state transition and must not overwrite LastDecapState.
+    if ($line -match "AICOM2\|v1\|DECAP\|[A-Za-z]+\|\d+\|PRESS\|") {
+        return "$line  $(bred '[driver PRESS]')"
+    }
+
     # Parse side and state from the DECAP line
     $side  = if ($line -match "AICOM2\|v1\|DECAP\|([A-Za-z]+)\|") { $Matches[1].ToUpper() } else { "?" }
-    $state = if ($line -match "\bstate=([A-Z]+)") { $Matches[1] } else { "?" }
+    $state = if ($line -match "\bstate=([A-Z-]+)") { $Matches[1] } else { "?" }
 
     $prev = if ($script:LastDecapState.ContainsKey($side)) { $script:LastDecapState[$side] } else { $null }
     $script:LastDecapState[$side] = $state
 
     # Colorize the state token inside the line
     $stateColor = switch ($state) {
-        "SCAN"  { dim    $state }
-        "TRACK" { yel    $state }
-        "PRESS" { bred   $state }
+        "IDLE"       { dim  $state }
+        "ARMING"     { yel  $state }
+        "COMMIT"     { bred $state }
+        "COMMITTED"  { bred $state }
+        "ABORT"      { red  $state }
+        "WON-HQDEAD" { bgrn $state }
         default { wht    $state }
     }
 
-    $colored = $line -replace "\bstate=[A-Z]+", "state=$stateColor"
+    $colored = $line -replace "\bstate=[A-Z-]+", "state=$stateColor"
 
     # Flag a transition
     if ($null -ne $prev -and $prev -ne $state) {
@@ -216,41 +225,54 @@ function Find-Rpt {
 # Self-test (non-streaming, reads fixture from disk)
 # ---------------------------------------------------------------------------
 function Run-SelfTest {
-    $fixture = Join-Path (Split-Path $MyInvocation.ScriptName) "..\..\Soak\sample_cc44u.rpt"
-    if (-not (Test-Path $fixture)) {
-        Write-Host (red "Self-test fixture not found: $fixture")
+    $fixtureDir = Join-Path (Split-Path $MyInvocation.ScriptName) "..\..\Soak"
+    $fixtures = @(
+        (Join-Path $fixtureDir "sample_cc44u.rpt"),
+        (Join-Path $fixtureDir "sample_cc44u_hc.rpt")
+    )
+    if (@($fixtures | Where-Object { -not (Test-Path $_) }).Count -gt 0) {
+        Write-Host (red "Self-test server/HC fixtures not found under: $fixtureDir")
         exit 1
     }
-    $fixture = (Resolve-Path $fixture).Path
-    Write-Host (bold (cyn "Self-test: replaying $fixture through the formatter"))
+    $fixtures = @($fixtures | ForEach-Object { (Resolve-Path $_).Path })
+    Write-Host (bold (cyn "Self-test: replaying server + HC fixtures through the formatter"))
     Write-Host (dim "  (in live mode this would stream new lines as they arrive)")
     Write-Host ""
 
     $linesShown = 0
-    $fs = [System.IO.File]::Open($fixture,
-        [System.IO.FileMode]::Open,
-        [System.IO.FileAccess]::Read,
-        [System.IO.FileShare]::ReadWrite)
-    try {
-        $reader = New-Object System.IO.StreamReader(
-            $fs, [System.Text.Encoding]::GetEncoding("iso-8859-1"))
+    $driverHighlighted = $false
+    $script:LastDecapState = @{}
+    foreach ($fixture in $fixtures) {
+        $fs = [System.IO.File]::Open($fixture,
+            [System.IO.FileMode]::Open,
+            [System.IO.FileAccess]::Read,
+            [System.IO.FileShare]::ReadWrite)
         try {
-            while (-not $reader.EndOfStream) {
-                $ln = $reader.ReadLine()
-                if (Should-Show $ln) {
-                    Write-Host (Format-Line $ln)
-                    $linesShown++
+            $reader = New-Object System.IO.StreamReader(
+                $fs, [System.Text.Encoding]::GetEncoding("iso-8859-1"))
+            try {
+                while (-not $reader.EndOfStream) {
+                    $ln = $reader.ReadLine()
+                    if (Should-Show $ln) {
+                        $formatted = Format-Line $ln
+                        Write-Host $formatted
+                        if ($ln -match "AICOM2\|v1\|DECAP\|[A-Za-z]+\|\d+\|PRESS\|") {
+                            $driverHighlighted = $formatted -match "driver PRESS"
+                        }
+                        $linesShown++
+                    }
                 }
-            }
-        } finally { $reader.Dispose() }
-    } finally { $fs.Dispose() }
+            } finally { $reader.Dispose() }
+        } finally { $fs.Dispose() }
+    }
 
     Write-Host ""
-    if ($linesShown -gt 0) {
+    $driverPreservedCloserState = $script:LastDecapState["WEST"] -eq "COMMITTED"
+    if ($linesShown -gt 0 -and $driverHighlighted -and $driverPreservedCloserState) {
         Write-Host (grn (bold "SELF-TEST PASSED  ($linesShown lines formatted)"))
         exit 0
     } else {
-        Write-Host (red "SELF-TEST FAILED  (no lines passed the filter -- check fixture path)")
+        Write-Host (red "SELF-TEST FAILED  (driver highlight/state preservation or fixture replay failed)")
         exit 1
     }
 }
@@ -267,7 +289,7 @@ function Start-Watch([string]$path) {
     Write-Host ""
 
     # State legend
-    Write-Host ("  $(dim 'SCAN') $(yel 'TRACK') $(bred 'PRESS')   " + (mag 'ORDER') + "   " + (cyn 'AICOMSTAT') + "   " + (grn 'ROUNDEND'))
+    Write-Host ("  $(dim 'IDLE') $(yel 'ARMING') $(bred 'COMMITTED') $(bred 'driver PRESS')   " + (mag 'ORDER') + "   " + (cyn 'AICOMSTAT') + "   " + (grn 'ROUNDEND'))
     Write-Host ""
 
     # Stream the file, printing matching lines as they arrive

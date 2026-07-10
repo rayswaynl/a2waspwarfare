@@ -60,6 +60,17 @@ class AnalyzeSoakCanonicalTests(unittest.TestCase):
         self.assertEqual(self.soak.arrive_count, 1)
         self.assertEqual(self.soak.reissue_count, 1)
 
+    def test_scope_excludes_dead_final_boot_tail(self):
+        lines = [
+            "MISSINIT played\n",
+            "AICOM2|v1|SNAP|West|1|myTowns=1\n",
+            "MISSINIT dead-boot\n",
+            "Error in expression <dead boot only>\n",
+        ]
+        scoped, ok = analyze_soak.scope_last_missinit(lines)
+        self.assertTrue(ok)
+        self.assertEqual(scoped, lines[:2])
+
     def test_arrival_pct(self):
         # 1 arrival / 3 dispatches
         self.assertAlmostEqual(self.soak.arrival_pct(), 100.0 / 3.0, places=3)
@@ -129,25 +140,28 @@ class AnalyzeSoakAicom2Tests(unittest.TestCase):
     Uses the sample_cc44u.rpt fixture file so the exact grammar from the live
     emitter is exercised rather than inline strings.  The fixture uses the REAL
     emitter grammar (AI_Commander_Decapitate.sqf + Common_RunCommanderTeam.sqf):
-      - 7 SNAP lines per side (West/East); sides normalised WEST/EAST upper-case
-      - 4 ALLOC lines per side
-      - 6 DECAP closer lines for WEST (real state names: IDLE/ARMING/COMMITTED)
-        + 1 driver PRESS line (AICOM2|v1|DECAP|West|8|PRESS|team=...|dist=...)
+      - 4 SNAP lines per side (West/East); sides normalised WEST/EAST upper-case
+      - 3 ALLOC lines per side
+      - 5 server-side DECAP closer lines for WEST (IDLE/ARMING/COMMIT/COMMITTED)
+        + 1 HC-local driver PRESS line (AICOM2|v1|DECAP|West|8|PRESS|team=...)
         * sensed is emitted as integer 1/0 (not "true"/"false")
-        * COMMITTED is the state emitted when the closer is actively pressing
-        * the driver PRESS line has no state= field (parsed with default IDLE)
+        * COMMIT is the transition tick; COMMITTED is the steady press state
+        * separate fixtures model the real server and HC streams
       - 1 FISTPOOL line (West)
       - 1 ORDER line (war-room-task)
     """
 
     @classmethod
     def setUpClass(cls):
-        fixture = Path(__file__).resolve().parent / "sample_cc44u.rpt"
-        with open(str(fixture), "r", encoding="latin-1") as fh:
-            lines = fh.readlines()
-        scoped, _ok = analyze_soak.scope_last_missinit(lines)
+        fixture_dir = Path(__file__).resolve().parent
+        with open(str(fixture_dir / "sample_cc44u.rpt"), "r", encoding="latin-1") as fh:
+            server_lines = fh.readlines()
+        with open(str(fixture_dir / "sample_cc44u_hc.rpt"), "r", encoding="latin-1") as fh:
+            hc_lines = fh.readlines()
+        scoped, _ok = analyze_soak.scope_last_missinit(server_lines)
         cls.soak = analyze_soak.Soak()
         cls.soak.ingest_server(scoped)
+        cls.soak.ingest_hc(hc_lines)
         cls.a2 = cls.soak.aicom2_summary()
 
     def test_present(self):
@@ -171,7 +185,7 @@ class AnalyzeSoakAicom2Tests(unittest.TestCase):
         sd = self.a2["per_side"].get("WEST") or self.a2["per_side"].get("west")
         al = sd["alloc"]
         self.assertIsNotNone(al)
-        # fixture: all 4 allocs go to 'Vybor', one EAST alloc changes primary -> WEST should be 0
+        # fixture: all 3 WEST allocs go to 'Vybor', so WEST churn should be 0
         self.assertEqual(al["primary_changes"], 0)
 
     def test_decap_west_committed(self):
@@ -179,13 +193,27 @@ class AnalyzeSoakAicom2Tests(unittest.TestCase):
         sd = self.a2["per_side"].get("WEST") or self.a2["per_side"].get("west")
         dec = sd["decap"]
         self.assertIsNotNone(dec, "WEST must have DECAP records in cc44u fixture")
-        # fixture: WEST DECAP closer states: IDLE/ARMING/ARMING/COMMITTED/COMMITTED
-        # The separate driver PRESS line (AICOM2|v1|DECAP|West|8|PRESS|...) is also
-        # captured but has no state= field so defaults to IDLE.
+        # fixture: WEST closer states: IDLE/ARMING/ARMING/COMMIT/COMMITTED
+        # The separate driver PRESS line is routed from the HC stream to press_ticks.
         # Verify COMMITTED state is present in the distribution.
         self.assertIn("COMMITTED", dec["state_dist"],
                       "COMMITTED state must appear in WEST DECAP state distribution")
-        self.assertGreaterEqual(dec["state_dist"]["COMMITTED"], 1)
+        self.assertEqual(dec["state_dist"]["COMMIT"], 1)
+        self.assertEqual(dec["state_dist"]["COMMITTED"], 1)
+
+    def test_decap_press_counts_real_closer_and_driver_events(self):
+        """Closer COMMITTED ticks and driver PRESS transitions stay distinct."""
+        sd = self.a2["per_side"].get("WEST") or self.a2["per_side"].get("west")
+        dec = sd["decap"]
+        self.assertEqual(dec["press_events"], 1)
+        self.assertEqual(sd["press_ticks"], 1)
+
+    def test_legacy_posture_press_is_not_a_driver_transition(self):
+        soak = analyze_soak.Soak()
+        soak.ingest_server([
+            "AICOMSTAT|v1|POSTURE|WEST|9|PRESS|myTowns=6|enTowns=1\n",
+        ])
+        self.assertEqual(dict(soak.a2_press), {})
 
     def test_decap_sensed_latches(self):
         sd = self.a2["per_side"].get("WEST") or self.a2["per_side"].get("west")
