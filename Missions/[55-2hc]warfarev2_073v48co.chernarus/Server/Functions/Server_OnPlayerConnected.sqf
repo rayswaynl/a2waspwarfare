@@ -158,6 +158,7 @@ if (!isNil "WFBE_ACTIVE_GUER_AIR") then {_id publicVariableClient "WFBE_ACTIVE_G
 if (!isNil "WFBE_GUER_PLAYER_KILLS") then {_id publicVariableClient "WFBE_GUER_PLAYER_KILLS"}; //--- B75: GUER kill-based tech counter JIP catch-up (drives buy pool + barracks AI cap + RHUD).
 if (!isNil "WFBE_GUER_VEHICLE_TIER") then {_id publicVariableClient "WFBE_GUER_VEHICLE_TIER"}; //--- B75: GUER vehicle tier JIP catch-up (kill-derived).
 if (!isNil "WFBE_GUER_FOB_AVAIL") then {_id publicVariableClient "WFBE_GUER_FOB_AVAIL"}; //--- B75: GUER FOB availability JIP catch-up (depot FOB trucks + RHUD).
+if (!isNil "AICOMV2_GDIR_JIP_SNAP") then {_id publicVariableClient "AICOMV2_GDIR_JIP_SNAP"}; //--- J10: GUER Director snapshot is not JIP-durable in A2-OA; target the current value to this joiner.
 if (!isNil "WFBE_PopTier") then {_id publicVariableClient "WFBE_PopTier"}; //--- B74.2: player-pop tier JIP catch-up (AI cap + RHUD scaling).
 //--- fable/fob-polish (2026-07-07): replay ACTIVE GUER FOB markers to a GUER late joiner (#846 known gap).
 //--- WildcardMarker creates are fire-and-forget publicVariables, so a client that joined after the broadcast
