@@ -934,6 +934,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_HELI_NUDGE_PERIOD") then {WFBE_C_AICOM_HELI_NUDGE_PERIOD = 7};   //--- s between nudges.
 	if (isNil "WFBE_C_AICOM_HELI_APPROACH_LIMITED") then {WFBE_C_AICOM_HELI_APPROACH_LIMITED = 0}; //--- Fleet lane 18: 1 = slow AICOM transport helis to LIMITED only for the final LZ run-in.
 	if (isNil "WFBE_C_AICOM_HELI_RUNINFLOOR") then {WFBE_C_AICOM_HELI_RUNINFLOOR = 0}; //--- m: minimum run-in altitude for AICOM transport helis (0=off/legacy 60m flat; set 60 CH or 80 TK for worldName-aware floor). Applied via max.
+	if (isNil "WFBE_C_AICOM_HELI_REFUND_MAX")  then {WFBE_C_AICOM_HELI_REFUND_MAX  = 40000}; //--- D4-FIX(c): hard fallback ceiling for the aicom-heli-refunded credit when the hull type cannot be re-priced server-side (unknown/absent classname). Generous vs any real AICOM transport heli price; never overrides a successfully re-derived real price (min() always wins).
 	if (isNil "WFBE_C_AICOM_HELI_GUNFLOOR")   then {WFBE_C_AICOM_HELI_GUNFLOOR   = 0}; //--- m: minimum gun-run altitude for AICOM attack helis (0=off/legacy 35m; set 35 CH or 50 TK). Applied via max on GUN_ALT.
 	//--- V0.7 bootstrap: until the side owns >= 1 town, bias target selection to the
 	//--- nearest-to-base, lowest-value town so the AI captures its first income source fast.

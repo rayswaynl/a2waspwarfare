@@ -1083,14 +1083,26 @@ switch (_args select 0) do {
 	//--- treasury write is authoritative; mirrors AI_Commander_Wildcard salvage payback
 	//--- ([_side, _wkTotal] Call ChangeAICommanderFunds, L726).
 	case "aicom-heli-refunded": {
-		Private ["_rSideID","_rSide","_rCost"];
+		Private ["_rSideID","_rSide","_rCost","_rType","_rUD","_rRealCost","_rCeiling","_rClamped"];
 		_rSideID = _args select 1;
 		_rCost   = _args select 2;
+		//--- D4-FIX(c): hull type (4th payload element) lets the server RE-DERIVE the real build price from its own
+		//--- unit-data table (same QUERYUNITPRICE lookup Common_RunCommanderTeam.sqf uses) instead of trusting the
+		//--- network-supplied dollar figure. Count-guarded: an old/short payload (pre-fix HC or a forged short array)
+		//--- degrades to the flat fallback ceiling below, never to unlimited trust.
+		_rType   = if (count _args > 3) then {_args select 3} else {""};
+		_rUD     = if (typeName _rType == "STRING" && {_rType != ""}) then {missionNamespace getVariable [_rType, []]} else {[]};
+		_rRealCost = 0;
+		if (typeName _rUD == "ARRAY" && {(count _rUD) > QUERYUNITPRICE}) then {_rRealCost = _rUD select QUERYUNITPRICE};
 		_rSide   = (_rSideID) Call WFBE_CO_FNC_GetSideFromID;
 		//--- _rSide is a Side (not an Object) so isNull is the wrong test and throws; validate it is a real combatant treasury side instead.
 		if ((_rSide in [east,west,resistance]) && {_rCost > 0}) then {
-			[_rSide, _rCost] Call ChangeAICommanderFunds;
-			["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded $%1 to [%2] AI-commander treasury (transport flew off-map).", _rCost, str _rSide]] Call WFBE_CO_FNC_AICOMLog;
+			//--- resolved real price wins outright; an unresolvable type falls back to a flat, generous ceiling (never
+			//--- zero) so a lookup miss never silently denies a legitimate refund - it just bounds it.
+			_rCeiling = if (_rRealCost > 0) then {_rRealCost} else {missionNamespace getVariable ["WFBE_C_AICOM_HELI_REFUND_MAX", 40000]};
+			_rClamped = (_rCost min _rCeiling) max 0;
+			[_rSide, _rClamped] Call ChangeAICommanderFunds;
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded $%1 (claimed %2, real %3, type %4) to [%5] AI-commander treasury (transport flew off-map).", _rClamped, _rCost, _rRealCost, _rType, str _rSide]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
 	case "sidepatrol-started": {
