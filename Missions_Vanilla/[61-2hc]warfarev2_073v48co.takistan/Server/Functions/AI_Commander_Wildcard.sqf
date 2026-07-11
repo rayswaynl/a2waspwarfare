@@ -239,7 +239,7 @@ while {!gameOver} do {
 		         "_w20Eligible","_w20SupIDs","_w20Raisable","_w20ChosenID","_w20NewUpgrades","_w20TierName","_w20MaxLevels","_w20SupID",
 				         "_w21Eligible","_wW21","_w21VbiedClass","_w21Grp","_w21Truck","_w21Drv","_w21Target","_w21TargetPos","_w21SpawnPos","_w21Ang","_w21Try","_w21Roads",
 		         "_wNameMap","_wName","_wDesc",
-		         "_w22Eligible","_w22PlaneClass","_w22AirList","_w22Target","_w22Targets","_w22Ang","_w22SpawnPos","_w22Plane","_w22Grp","_w22PilotClass","_w22Pilot","_w22TargetPos","_wW22",
+		         "_w22Eligible","_w22PlaneClass","_w22AirList","_w22Target","_w22Targets","_w22Ang","_w22SpawnPos","_w22Plane","_w22Grp","_w22PilotClass","_w22Pilot","_w22Gunner","_w22TargetPos","_wW22",
 		         "_w23Eligible","_w23Template","_w23Tier","_w23Tmpls","_w23TmplUps","_w23Cand","_w23Lead","_w23CandTier","_w23Idx","_w23UpArr","_wW23",
 		         "_w24Eligible","_w24Template","_w24Tier","_w24Tmpls","_w24TmplUps","_w24Cand","_w24Lead","_w24CandTier","_w24Idx","_w24UpArr","_w24n","_wW24",
 		         "_mkPos","_mkLife","_mkColor","_mkType","_mkName","_mkBestTown","_mkBestScore","_mkT4","_mkDNear","_mkD","_mkScore"];
@@ -1103,6 +1103,17 @@ while {!gameOver} do {
 									_w22Pilot = [_w22PilotClass, _w22Grp, _w22SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 									if (!isNull _w22Pilot) then {
 										_w22Pilot moveInDriver _w22Plane;
+										//--- PLANE GUNNER (flag WFBE_C_AIR_ATTACK_GUNNER, default 0/byte-identical): the W22 top-gun
+										//--- plane pick is the side's first Plane class, which can be a TWO-seat airframe (Su34: the
+										//--- WSO/gunner seat fires the guided armament) - it flew pilot-only and never engaged with
+										//--- those weapons. Mount a gunner too, mirroring B62 (Server_GuerAirDef.sqf:378-387) and the
+										//--- merged AirResp/W13 mounts (#1027/#1028). Gated on an EMPTY gunner seat, so single-seat
+										//--- fixed-wings (A10/AV8B/Su25) are unaffected even when the flag is armed. The 180s teardown
+										//--- above already deletes ALL crew ({deleteVehicle _x} forEach (crew _pl)), covering the gunner.
+										if ((missionNamespace getVariable ["WFBE_C_AIR_ATTACK_GUNNER", 0]) > 0 && {(_w22Plane emptyPositions "gunner") > 0}) then {
+											_w22Gunner = [_w22PilotClass, _w22Grp, _w22SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+											if (!isNull _w22Gunner) then { _w22Gunner moveInGunner _w22Plane; };
+										};
 										_w22Plane flyInHeight 600;
 										_w22Grp setBehaviour "COMBAT"; _w22Grp setCombatMode "RED";
 										_w22TargetPos = if (!isNull _w22Target) then {getPos _w22Target} else {_hqPos};
