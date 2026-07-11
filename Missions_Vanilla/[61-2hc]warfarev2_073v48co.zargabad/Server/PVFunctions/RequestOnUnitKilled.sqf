@@ -327,7 +327,11 @@ if ((missionNamespace getVariable ["WFBE_C_NOTABLE_KILL_FEED", 0]) > 0 && {isSer
 if (WF_A2_Vanilla) then { //--- Garbage Collector.
 	if (!isServer || local player) then {_objects = (WF_Logic getVariable "trash") + [_killed];	WF_Logic setVariable ["trash",_objects,true];} else {_killed setVariable ["wfbe_trashed", true];_killed Spawn TrashObject};
 } else {
-	if (isServer) then {_killed setVariable ["wfbe_trashed", true];	_killed Spawn TrashObject};
+	//--- These two branches were non-exclusive: this is a server PVFunction so isServer is always true,
+	//--- so a PLAYER death fired BOTH ifs -> _killed Spawn TrashObject twice (2x threads / RPT lines /
+	//--- deleteVehicle-deleteGroup attempts; TrashObject has no wfbe_trashed dedup guard). Gate the server
+	//--- branch on !player so exactly one spawn runs; end state is identical (trashed once).
+	if (isServer && {!_killed_isplayer}) then {_killed setVariable ["wfbe_trashed", true];	_killed Spawn TrashObject};
 	if (_killed_isplayer) then {_killed setVariable ["wfbe_trashed", true];	_killed Spawn TrashObject};
 };
 
