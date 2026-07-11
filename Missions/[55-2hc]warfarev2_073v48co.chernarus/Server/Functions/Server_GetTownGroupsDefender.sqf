@@ -11,7 +11,7 @@ _town = _this select 0;
 _side = _this select 1;
 _aa_get = if (count _this > 2) then {_this select 2} else {false};
 
-_sv = _town getVariable "supplyValue";
+_sv = _town getVariable ["supplyValue", 0];
 _town_airactive = _town getVariable ["wfbe_active_air", false];
 
 _units = [];
