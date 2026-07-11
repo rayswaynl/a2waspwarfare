@@ -898,6 +898,14 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						} else {
 							_asltToSecs = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT", 420];   //--- flag-off: legacy flat value: tuple still gets a 4th element for schema consistency but its VALUE equals the pre-patch default, so the outcome watcher decision is byte-identical.
 						};
+						//--- fable/assault-retarget-telemetry (2026-07-10): when a team with an OPEN dispatch is re-aimed at a
+						//--- DIFFERENT town (_priorOpen && !_sameTgt), the old dispatch's outcome-watcher (Hook B) is silently
+						//--- overwritten below and never logs ARRIVED/STRANDED - which is why ~84% of dispatches had no terminal
+						//--- outcome (mostly legitimate re-targeting, NOT failed attacks). Log RETARGET so the accounting closes:
+						//--- DISPATCH = ARRIVED + STRANDED + RETARGET + (in-flight). Pure telemetry, zero behaviour change.
+						if (_priorOpen && {!_sameTgt} && {count _priorOrd >= 1} && {(typeName (_priorOrd select 0)) == "OBJECT"} && {!isNull (_priorOrd select 0)}) then {
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_RETARGET|team=" + (str _team) + "|from=" + ((_priorOrd select 0) getVariable ["name","town"]) + "|to=" + (_target getVariable ["name","town"]) + "|elapsed=" + str (round (time - _dispT0)));
+						};
 						_team setVariable ["wfbe_aicom_townorder", [_target, _dispT0, getPos (leader _team), _asltToSecs]];
 						//--- ASSAULT TELEMETRY (task #48, #2): book a watcher latch on every (re)dispatch and
 						//--- log the DISPATCH event. The OUTCOME watcher (Hook B, top of the per-team loop)
