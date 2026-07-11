@@ -879,6 +879,13 @@ while {!gameOver} do {
 										_w13Pilot = [_w13PilotClass, _w13Grp, _w13SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 										if (!isNull _w13Pilot) then {
 											_w13Pilot moveInDriver _w13Heli;
+											//--- ATTACK-HELI GUNNER (flag WFBE_C_AIR_ATTACK_GUNNER, default 0/byte-identical): the W13
+											//--- gunship's main armament fires from the GUNNER seat - pilot-only flies but never engages.
+											//--- Mount a gunner (mirrors B62, Server_GuerAirDef.sqf:378-387), gated on an empty gunner seat.
+											if ((missionNamespace getVariable ["WFBE_C_AIR_ATTACK_GUNNER", 0]) > 0 && {(_w13Heli emptyPositions "gunner") > 0}) then {
+												private "_w13Gunner"; _w13Gunner = [_w13PilotClass, _w13Grp, _w13SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+												if (!isNull _w13Gunner) then { _w13Gunner moveInGunner _w13Heli; };
+											};
 											_w13TargetPos = getPos _w13TargetTown;
 											_w13Heli flyInHeight 200;
 											_w13Grp setBehaviour "COMBAT"; _w13Grp setCombatMode "RED";
