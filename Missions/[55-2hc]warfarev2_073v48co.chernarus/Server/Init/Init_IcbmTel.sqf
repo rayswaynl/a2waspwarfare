@@ -196,7 +196,14 @@ WFBE_SE_FNC_TkScudRegister = {
 	if ((missionNamespace getVariable ["WFBE_C_SCUD_ONE_PER_SIDE", 1]) > 0) then {_max = _max min 1};
 	if (count _live >= _max) exitWith {
 		//--- refuse: destroy the surplus purchase + refund the buying team the EXACT amount paid (flag cost fallback), tell the side.
-		_refund = if (_paid >= 0) then {_paid} else {missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000]};
+		//--- D4-FIX(b): _paid (_currentCost) is 100% client-controlled (Client_BuildUnit.sqf:812) and was credited
+		//--- verbatim whenever >=0 - a forged/inflated value MINTED funds on any refused-at-cap SCUD. Clamp to the
+		//--- real max legitimate HF price (base + a generous 5-crew-seat margin), computed live. Negative _paid still
+		//--- falls back to the flag cost (unchanged legacy behaviour). Byte-identical for honest play (_paid <= ceil).
+		private ["_hfBase","_hfCeil"];
+		_hfBase = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000];
+		_hfCeil = _hfBase + (5 * (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP", 400]));
+		_refund = if (_paid >= 0) then {(_paid min _hfCeil) max 0} else {_hfBase};
 		if (!isNull _team) then { [_team, _refund] Call WFBE_CO_FNC_ChangeTeamFunds };
 		deleteVehicle _veh;
 		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["SCUD refused: your side already fields %1 SCUD launchers (max %2). Refunded.", count _live, _max]]] Call WFBE_CO_FNC_SendToClients;
@@ -411,7 +418,11 @@ WFBE_SE_FNC_IcbmTelFire = {
 		case "FASCAM":     {missionNamespace getVariable ["WFBE_C_ICBM_TEL_FASCAM_COST", 14000]};
 		case "STEELRAIN":  {missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_COST", 9000]};
 		case "BUSTER":     {missionNamespace getVariable ["WFBE_C_ICBM_TEL_BUSTER_COST", 18000]};
-		default            {_fee};
+		//--- D4-FIX(a): NUKE (the only muni hitting default) cost is NEVER the client-supplied _fee anymore -
+		//--- re-derived from the server constant, so a forged/negative _fee can no longer become the charge
+		//--- (negative _fee => negative _cost => the -_cost charge at :474 MINTED funds; the :431 funds gate
+		//--- was also defeated by a negative cost). Byte-identical for honest play (client sends 75000).
+		default            {missionNamespace getVariable ["WFBE_C_ICBM_TEL_NUKE_COST", 75000]};
 	};
 	//--- cmdcon42-n (Ray 2026-07-02): AI fire reads/charges the AI treasury (wfbe_aicom_funds), not a player team; the null-team
 	//--- guard only applies to a human fire (an AI fire legitimately carries no player team). Human path is byte-unchanged.
