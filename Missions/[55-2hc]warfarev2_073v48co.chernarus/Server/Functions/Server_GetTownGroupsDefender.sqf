@@ -132,6 +132,37 @@ if ((missionNamespace getVariable ["AICOMV2_CTL_GARRISON_LINK", 0]) > 0 && {(mis
 	};
 };
 
+//--- EXPERIMENT (fable/ctl-comp-link, LAB-ONLY): composition-by-str. Once garrison-link scales the garrison
+//--- COUNT, this skews WHAT spawns by reusing the same CTL strength signal. Triple-gated (AICOMV2_CTL_COMP_LINK=0
+//--- OR AICOMV2_LANE_CMD_TOWN_LEDGER=0 OR _aa_get) => skipped, byte-identical to HEAD. Runs on _units (the
+//--- [type, force, kind] roster) BEFORE the force-multiplier expansion below. wfbe_ctl_str defaults to 1 for
+//--- non-CTL (GUER/neutral) towns => inside the (0.5,1.25) no-op band, structurally inert by default. Thin
+//--- (str<=0.5): drop heavy-role entries -> infantry-only (baseline Squad/Team always survive; count guard is a
+//--- second belt). Invested (str>=1.25): double heavy-role force multiplier -> armor/AA/AT/PMC dominate within
+//--- their existing bucket (never fabricates a template a tier did not curate). A2-OA-1.64-legal.
+if ((missionNamespace getVariable ["AICOMV2_CTL_COMP_LINK", 0]) > 0 && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0} && {!_aa_get}) then {
+	private ["_compStr","_compHeavy","_compUnits","_compChanged","_compBand"];
+	_compStr   = _town getVariable ["wfbe_ctl_str", 1];
+	_compHeavy = ["Team_AT","Squad_Contractor","AA_Light","AA_Heavy","Team_AA","Motorized","Mechanized","Mechanized_Heavy","Armored_Light","Armored_Heavy"];
+	_compUnits = []; _compChanged = false; _compBand = "noop";
+	if (_compStr <= 0.5) then {
+		_compBand = "thin";
+		{ if !((_x select 0) in _compHeavy) then {[_compUnits, _x] Call WFBE_CO_FNC_ArrayPush} else {_compChanged = true}; } forEach _units;
+	} else {
+		if (_compStr >= 1.25) then {
+			_compBand = "invested";
+			{ private "_e"; _e = _x;
+			  if ((_x select 0) in _compHeavy) then {_e = [_x select 0, (_x select 1) * 2, _x select 2]; _compChanged = true;};
+			  [_compUnits, _e] Call WFBE_CO_FNC_ArrayPush;
+			} forEach _units;
+		};
+	};
+	if (_compChanged && {count _compUnits > 0}) then {
+		_units = _compUnits;
+		diag_log Format ["CTLSTAT|v1|DEF|COMP|town=%1|str=%2|band=%3|types=%4/%5", _town getVariable ["name", "?"], _compStr, _compBand, count _units, count _compUnits];
+	};
+};
+
 if (_aa_get) then {if (_groups_max > 3) then {_groups_max = 3}};
 
 _unit_infantry = [];
