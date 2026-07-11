@@ -72,6 +72,12 @@
             };
 
             if ((!_byHeli) && _friendlyCommandCenterInProximity && (_ccDwell >= _unloadNeed)) exitWith {
+                //--- perf: the supply-truck position is fixed for this whole exitWith pass (no sleep between
+                //--- iterations), so the identical nearestObjects 8m sphere was being rescanned once per
+                //--- player in WFBE_SE_PLAYERLIST. Hoist it once and reuse - behaviour-identical (same objects),
+                //--- N scans -> 1 scan.
+                private "_nearTruck";
+                _nearTruck = nearestObjects [(getPos _associatedSupplyTruck), [], 8];
                 {
                     _iteratedPlayerUID = _x select 1;
                     // diag_log format ["_associatedSupplyTruck: %1, leader group: %2, getPlayerUID leader group _associatedSupplyTruck: %3, _iteratedPlayerUID: %4, _playerObject: %5", _associatedSupplyTruck, leader group _associatedSupplyTruck, getPlayerUID leader group _associatedSupplyTruck, _iteratedPlayerUID, _playerObject];
@@ -85,7 +91,7 @@
                             _playerObject = _leaderGroupIteratedObject;
                             // diag_log format ["_playerIsInProximityOfSupplyTruck, _iteratedObject: %1, _leaderGroupIteratedObject: %2", _iteratedObject, _leaderGroupIteratedObject];
                         };
-                    } forEach (nearestObjects [(getPos _associatedSupplyTruck), [], 8]);
+                    } forEach _nearTruck;
 
 
                     _playerIsDrivingSupplyTruck = ((getPlayerUID (leader group _associatedSupplyTruck)) == _iteratedPlayerUID);
