@@ -421,6 +421,10 @@ WFBE_SE_FNC_IcbmTelFire = {
 	private ["_badTeam"];
 	_badTeam = (!_isAiFire) && {isNull _playerTeam};
 	if (_badTeam) exitWith {["WARNING", Format ["Init_IcbmTel.sqf : [%1] TEL fire — null team.", _sideText]] Call WFBE_CO_FNC_LogContent};
+	//--- FIX D8b: resolve the human firer once, for STEELRAIN's kill-credit stamp. leader of a null
+	//--- team is objNull (A2-OA safe, no crash), so an AI-treasury fire simply carries no caller.
+	private ["_caller"];
+	_caller = leader _playerTeam;
 	if (_isAiFire) then {
 		_funds = _aiTreasury Call GetAICommanderFunds;
 	} else {
@@ -495,7 +499,7 @@ WFBE_SE_FNC_IcbmTelFire = {
 			case "SATURATION": {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelSaturation};
 			case "RECON":      {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelRecon};
 			case "FASCAM":     {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelFascam};
-			case "STEELRAIN":  {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelSteelRain};
+			case "STEELRAIN":  {[_side, _tgtPos, _caller] Spawn WFBE_SE_FNC_IcbmTelSteelRain};
 			case "BUSTER":     {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelBuster};
 			default            {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelSaturation};
 		};
@@ -819,9 +823,15 @@ WFBE_SE_FNC_IcbmTelFascam = {
 //--- WFBE_C_SCUD_WARHEAD_HE (Sh_125_HE) the sibling SATURATION/RECON + the live carrier SCUD use (proven mission ammo).
 //------------------------------------------------------------------------------------
 WFBE_SE_FNC_IcbmTelSteelRain = {
-	private ["_side","_dest","_bursts","_rad","_burstR","_he","_span","_gap","_i","_ang","_r","_bx","_alt","_bp","_dmgKilled","_u","_d","_add","_cur"];
+	private ["_side","_dest","_caller","_enemySides","_bursts","_rad","_burstR","_he","_span","_gap","_i","_ang","_r","_bx","_alt","_bp","_dmgKilled","_u","_d","_add","_cur"];
 	_side    = _this select 0;
 	_dest    = _this select 1;
+	//--- FIX D8b: optional 3rd arg (the human firer) — type-guarded, backward-compatible with any future caller.
+	_caller  = if (count _this > 2) then {_this select 2} else {objNull};
+	if (typeName _caller != "OBJECT") then {_caller = objNull};
+	//--- FIX D8b: BUSTER's ordering (subtract _side LAST) — NOT SATURATION/RECON's (:619/:669) — so a GUER
+	//--- (resistance) firer never re-admits itself into its own enemy set. Proven idiom at Init_IcbmTel.sqf:897.
+	_enemySides = (WFBE_PRESENTSIDES + [resistance]) - [_side];
 	_bursts  = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_BURSTS", 18];
 	_rad     = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_R", 300];
 	_burstR  = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_BURST_R", 40];
@@ -841,10 +851,14 @@ WFBE_SE_FNC_IcbmTelSteelRain = {
 		_alt = 25 + (random 10);
 		_bp  = [_bx select 0, _bx select 1, 0];   //--- ground reference for the infantry scan (2D distance).
 		_he createVehicle [_bx select 0, _bx select 1, _alt];
-		//--- SCRIPTED anti-infantry falloff: EXPOSED (on-foot) men only, bounded scan.
+		//--- SCRIPTED anti-infantry falloff: EXPOSED (on-foot) ENEMY men only, bounded scan.
+		//--- FIX D8b: side-gated (own-side/neutral units in your own barrage no longer take the scripted
+		//--- top-up; the real HE splash at the createVehicle above is untouched) + pre-hit kill-credit stamp
+		//--- mirroring Support_ScudStrike (fable/fix-vbied-attribution). STEELRAIN was the sole TEL munition
+		//--- missing both (its 5 siblings all gate on _enemySides and credit their kills).
 		{
 			_u = _x;
-			if (alive _u && {vehicle _u == _u}) then {
+			if (alive _u && {vehicle _u == _u} && {(side _u) in _enemySides}) then {
 				_d = _u distance _bp;
 				_add = 0;
 				if (_d < 10) then {_add = 0.9} else {
@@ -853,6 +867,11 @@ WFBE_SE_FNC_IcbmTelSteelRain = {
 					};
 				};
 				if (_add > 0) then {
+					if (!isNull _caller && {alive _caller}) then {
+						_u setVariable ["wfbe_lasthitby", _caller, true];
+						_u setVariable ["wfbe_lasthittime", time, true];
+						_u setVariable ["wfbe_explosivesupportkill", true, true];
+					};
 					_cur = damage _u;
 					_u setDamage ((_cur + _add) min 1);
 					if ((_cur + _add) >= 1) then {_dmgKilled = _dmgKilled + 1};
