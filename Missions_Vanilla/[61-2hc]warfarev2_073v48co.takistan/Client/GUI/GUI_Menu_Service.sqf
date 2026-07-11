@@ -336,7 +336,7 @@ _i = 0;
 	//--- Repair-truck-built service points (EASA-capable defenses; not in the side structures list).  FIX: rearm/repair/refuel now see a service point built from a repair truck.
 	_rtSPs = nearestObjects [getPos _x, ["Base_WarfareBVehicleServicePoint"], (missionNamespace getVariable "WFBE_C_UNITS_SUPPORT_RANGE")];
 	{
-		if (alive _x && {_x getVariable ["WFBE_RepairTruckServicePoint", false]}) then {
+		if (alive _x && {_x getVariable ["WFBE_RepairTruckServicePoint", false]} && {(_x getVariable ["wfbe_side", civilian]) == sideJoined}) then {
 			_add = true;
 			_nearSupport set [_i,(_nearSupport select _i) + [_x]];
 		};
