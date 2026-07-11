@@ -168,6 +168,14 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_
 				_pilot = [_pilotClass, _grp, _spawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 				if (!isNull _pilot) then {
 					_pilot moveInDriver _heli;
+					//--- ATTACK-HELI GUNNER (flag WFBE_C_AIR_ATTACK_GUNNER, default 0/byte-identical): AH64/AH1Z/Mi24
+					//--- fire their principal armament (Hellfire/TOW/Vikhr) from the GUNNER seat, so a pilot-only spawn
+					//--- flies but never engages. Mount a gunner too (mirrors the B62 fix at Server_GuerAirDef.sqf:378-387).
+					//--- Gated on an empty gunner seat, so a gunnerless airframe (or fixed-wing) is unaffected even when armed.
+					if ((missionNamespace getVariable ["WFBE_C_AIR_ATTACK_GUNNER", 0]) > 0 && {(_heli emptyPositions "gunner") > 0}) then {
+						private "_gunner"; _gunner = [_pilotClass, _grp, _spawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+						if (!isNull _gunner) then { _gunner moveInGunner _heli; };
+					};
 					_heli flyInHeight 200;
 					//--- N5 fix (MORE-FIXES-AND-IDEAS): AIPatrol (AI_Patrol.sqf:8-9) unconditionally resets
 					//--- the group to AWARE/YELLOW as its first act, so setting COMBAT/RED BEFORE calling it
