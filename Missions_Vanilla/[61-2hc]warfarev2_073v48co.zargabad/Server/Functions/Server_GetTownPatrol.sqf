@@ -11,7 +11,7 @@ _town = _this select 0;
 _side = _this select 1;
 
 _group = [];
-_sv = _town getVariable "supplyValue";
+_sv = _town getVariable ["supplyValue", 0];
 
 _type = switch (true) do {
 	case (_sv <= 30): {"LIGHT"};
