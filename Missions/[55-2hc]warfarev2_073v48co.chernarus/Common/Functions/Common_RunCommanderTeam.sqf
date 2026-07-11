@@ -31,6 +31,15 @@ _template = _this select 1;
 _pos = _this select 2;
 _side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
 
+//--- LAB QUIESCENCE PIN (perf proving-ground): when the lab sets WFBE_C_TEST_TEAM_CAP=0 the synthetic
+//--- benchmark wants ZERO AICOM-founded teams. AI_Commander_Teams.sqf gates its OWN founding path on
+//--- this, but wildcard events (W6/W19/W23/W24) dispatch here directly and would otherwise smuggle one
+//--- free team past the cap ~15min in, contaminating the run and starving the lab sample loop. Inert in
+//--- live play (WFBE_C_TEST_TEAM_CAP default -1, never 0). Correctness/lab fix; no feature flag.
+if ((missionNamespace getVariable ["WFBE_C_TEST_TEAM_CAP", -1]) == 0) exitWith {
+	["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] founding skipped - lab quiescence pin (WFBE_C_TEST_TEAM_CAP=0).", _side]] Call WFBE_CO_FNC_AICOMLog;
+};
+
 //--- PLANE AIRFIELD-SPAWN (Ray 2026-07-01, PLANE-ONLY "free air at captured airfields", gate WFBE_C_AICOM_PLANE_AIRSTART default-ON):
 //--- AI_Commander_Teams appends two trailing delegate args for a fixed-wing founding: slot 7 = is-plane-team flag (bool), slot 8 =
 //--- the runway/airfield heading (deg, resolved server-side from the airfield logic getDir). Read both count-guarded so every OTHER
