@@ -2702,5 +2702,13 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 	if (isNil "WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF") then {WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF = 0.03}; //--- owner-tunable: fraction of the crewed vehicle's QUERYUNITPRICE added per crew head on top of the WFBE_C_UNITS_CREW_COST floor (e.g. a 6500-price tank -> 120+6500*0.03=315/head before the cap; a 400-price jeep -> 120+400*0.03=132/head). Only read while TIERSCALE>0.
 	if (isNil "WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP") then {WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP = 400}; //--- owner-tunable: hard per-head ceiling (post-COEF) so the priciest air/armor (e.g. AH64D/A10 at 30-35k) never becomes a punitive crew tax. Only read while TIERSCALE>0.
 
+//--- DELEGHEALTH v2 (fable/deleghealth-v2, GR-2026-07-08a): stateful AI-only delegation-health telemetry
+//--- loop (Server/FSM/server_deleghealth.sqf, spawned from Init_Server.sqf). Truthful replacement for the
+//--- structurally-unfireable DELEGATION-DEAD alert (server_groupsGC.sqf:567 demands remote==0 over an
+//--- allUnits census that includes players and HC avatar bodies, so it can never fire while a human is
+//--- connected - proven blind on the measured 2026-07-09 double-HC-bounce collapse, remotePct 89->7).
+//--- Telemetry ONLY: no delegation behavior change, DELEGSTAT untouched, RPT lines only (never a Peach+ alert).
+	if (isNil "WFBE_C_DELEGHEALTH") then {WFBE_C_DELEGHEALTH = 0}; //--- master gate: 0=off (default - Init_Server never spawns the loop; runtime byte-identical to HEAD), 1=on (60s DELEGHEALTH|v2 AI-only per-owner tally + hysteretic HEALTHY/DEGRADED/COLLAPSED state lines, server only).
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

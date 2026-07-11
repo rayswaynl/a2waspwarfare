@@ -1298,6 +1298,15 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYERSTAT_ENABLED", 1]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: Player-stat leaderboard emitter FSM is initialized."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- DELEGHEALTH v2 (fable/deleghealth-v2, 2026-07-10): stateful AI-only delegation-health telemetry.
+//--- Truthful replacement for the structurally-unfireable DELEGATION-DEAD predicate (server_groupsGC.sqf,
+//--- which stays untouched): 60s AI-only per-owner tally + HCStat heartbeat freshness + hysteretic
+//--- HEALTHY/DEGRADED/COLLAPSED states, RPT lines only. Flag default 0 = the loop never spawns.
+if ((missionNamespace getVariable ["WFBE_C_DELEGHEALTH", 0]) > 0) then {
+	[] execVM "Server\FSM\server_deleghealth.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Delegation-health telemetry FSM is initialized."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- FPS PROFILING (claude-gaming 2026-06-13): enable the PerformanceAudit framework SERVER-SIDE ONLY so we
 //--- MEASURE where server frametime goes (uncached per-town capture scans suspected). Marty kept the GLOBAL
 //--- param off due to CLIENT-side AFK/commander regressions, so we force it here on the server only - clients
