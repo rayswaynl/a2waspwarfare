@@ -2683,6 +2683,7 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 	if (isNil "AICOMV2_CTL_PAID_MAX") then {AICOMV2_CTL_PAID_MAX = 1.5}; //--- Funded strength cap.
 	if (isNil "AICOMV2_CTL_GROUP_BUDGET_MAX") then {AICOMV2_CTL_GROUP_BUDGET_MAX = 120}; //--- Per-side group ceiling at materialization.
 	if (isNil "AICOMV2_CTL_INVEST_ENABLE") then {AICOMV2_CTL_INVEST_ENABLE = 1}; //--- AI invest arm sub-flag: 0=off (default).
+	if (isNil "AICOMV2_CTL_GARRISON_LINK") then {AICOMV2_CTL_GARRISON_LINK = 0}; //--- EXPERIMENT (fable/ctl-garrison-link): 0=off/byte-identical. Connects the town DEFENDER garrison (Server_GetTownGroupsDefender.sqf) to the CTL ledger strength wfbe_ctl_str, mirroring the attacker materialization in Server_GetTownGroups.sqf: a fresh/depleted W/E town garrisons thin (floored at AICOMV2_CTL_SPAWN_MIN_STR), an invested/regenerated town garrisons up toward AICOMV2_CTL_PAID_MAX. Requires AICOMV2_LANE_CMD_TOWN_LEDGER>0. Emits CTLSTAT|v1|<side>|GARRISON.
 	if (isNil "AICOMV2_CTL_INVEST_GAIN") then {AICOMV2_CTL_INVEST_GAIN = 0.25}; //--- Strength gained per purchase.
 	if (isNil "AICOMV2_CTL_INVEST_COST") then {AICOMV2_CTL_INVEST_COST = 50000}; //--- Repair-tier price.
 	if (isNil "AICOMV2_CTL_INVEST_SURGE_MULT") then {AICOMV2_CTL_INVEST_SURGE_MULT = 2}; //--- Surge-tier price multiplier.
