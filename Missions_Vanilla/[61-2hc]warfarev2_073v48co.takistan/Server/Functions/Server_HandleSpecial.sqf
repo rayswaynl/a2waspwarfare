@@ -187,24 +187,13 @@ switch (_args select 0) do {
 			//--- posture as the _ctlFound7 guard further down; no new branch needed.
 			_ctlSide7 = _town getVariable ["wfbe_ctl_wave_side", sideUnknown];
 			if (_ctlSide7 == west || {_ctlSide7 == east}) then {
-				private ["_ctlUnits7","_ctlLogik7","_ctlLedger7","_ctlI7","_ctlFound7"];
+				private ["_ctlUnits7"];
 				_ctlUnits7 = 0;
 				{_ctlUnits7 = _ctlUnits7 + (count units _x)} forEach _teams;
-				_ctlLogik7  = (_ctlSide7) Call WFBE_CO_FNC_GetSideLogic;
-				_ctlLedger7 = _ctlLogik7 getVariable ["WFBE_CTL_LEDGER", []];
-				_ctlFound7  = false;
-				_ctlI7      = 0;
-				{
-					if (!_ctlFound7 && {(_x select 0) == _town}) then {
-						private ["_ctlRec7"];
-						_ctlRec7 = _x;
-						_ctlRec7 set [3, (_ctlRec7 select 3) + _ctlUnits7];
-						_ctlLedger7 set [_ctlI7, _ctlRec7];
-						_ctlFound7 = true;
-					};
-					_ctlI7 = _ctlI7 + 1;
-				} forEach _ctlLedger7;
-				_ctlLogik7 setVariable ["WFBE_CTL_LEDGER", _ctlLedger7];
+				//--- CTL single-writer (fable/ctl-readback-singlewriter): accumulate the HC/client-delegated
+				//--- Man-unit count into the per-town spawn scalar (per-town, so the wave-side snapshot only
+				//--- gates WHETHER to credit - no valid snapshot => skip - not which record to touch).
+				_town setVariable ["wfbe_ctl_lastspawn", (_town getVariable ["wfbe_ctl_lastspawn", 0]) + _ctlUnits7];
 			};
 		};
 
