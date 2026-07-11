@@ -10,7 +10,7 @@ While {!(Alive Player)} do {sleep 2;};
 //player addAction [localize "STR_WASP_actions_OnArmor-GetOutArmor-group", "WASP\actions\OnArmor\GetOutBots.sqf", [], 1, false, true, "", "(cursorTarget isKindOf 'Tank')&&(player distance cursorTarget<30)"];
 
 //player addEventHandler ["HandleDamage", {false;if (player != (_this select 3)) then {(_this select 3) setDammage 0}}]; //--- God-Slayer mode.
-208 = player addAction ["<t color='#FF0000'>"+ "RECOVER HQ" + "  " + str (missionNameSpace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_CASH') +"$" +"</t>", "WASP\actions\Action_RepairMHQDepot.sqf", [], 1, false, true, "", "!(alive ((SideJoined) Call WFBE_CO_FNC_GetSideHQ))&&(leader  (SideJoined call GetCommanderTeam) == leader (vehicle player))&&(typeOf cursorTarget in ['Land_fortified_nest_big_EP1','WFBE_C_DEPOT'])&&(cursorTarget distance player < 100)"];
+player addAction ["<t color='#FF0000'>"+ "RECOVER HQ" + "  " + str (missionNameSpace getVariable 'WFBE_C_BASE_HQ_REPAIR_PRICE_CASH') +"$" +"</t>", "WASP\actions\Action_RepairMHQDepot.sqf", [], 1, false, true, "", "!(alive ((SideJoined) Call WFBE_CO_FNC_GetSideHQ))&&(leader  (SideJoined call GetCommanderTeam) == leader (vehicle player))&&(typeOf cursorTarget in ['Land_fortified_nest_big_EP1','WFBE_C_DEPOT'])&&(cursorTarget distance player < 100)"];
 
 //--- Task 30 (v2): class lookup moved OUT of the scroll-wheel menu (Steff) into the
 //--- map briefing Notes ("Class Guide" diary page, always readable). The auto-hint on
