@@ -716,10 +716,13 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 					{deleteVehicle _x} forEach _hcrew;
 					deleteVehicle _h;
 					if (_cost > 0) then {
+						//--- D4-FIX(c): append the hull TYPE so the server re-derives the real build price itself (same
+						//--- QUERYUNITPRICE lookup this file used) instead of trusting the network _cost verbatim - closes a
+						//--- fund-mint hole where ANY client (not just the real HC) could forge this PVF with an arbitrary figure.
 						if (isServer) then {
-							["aicom-heli-refunded", _sID, _cost] Call HandleSpecial;
+							["aicom-heli-refunded", _sID, _cost, _htype] Call HandleSpecial;
 						} else {
-							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost]] Call WFBE_CO_FNC_SendToServer;
+							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost, _htype]] Call WFBE_CO_FNC_SendToServer;
 						};
 						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team transport %2 flew off-map, deleted + refunded $%3.", _sd, _htype, _cost]] Call WFBE_CO_FNC_AICOMLog;
 					};
