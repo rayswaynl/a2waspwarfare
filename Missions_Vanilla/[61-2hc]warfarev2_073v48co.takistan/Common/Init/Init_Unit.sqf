@@ -29,6 +29,16 @@ _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 
 if !(local player) exitWith {}; //--- We don't need the server to process it.
 
+//--- HC THREAD-LEAK FIX (runtime-proven on MIKSUUS-TEST, WASPLAB|v1|HCINIT probe 2026-07-11): on a
+//--- headless client `player` IS the HC's own playable unit and IS local, so the guard above does NOT
+//--- exit - and clientInitComplete is only ever set by Init_Client.sqf, which never runs on an HC
+//--- (probe: cic=false + a canary waitUntil parked forever on BOTH HCs). Every server-broadcast
+//--- Init_Unit therefore permanently parked one scheduled thread PER UNIT on EVERY HC - each parked
+//--- waitUntil re-evaluates its condition every frame on the HC's single saturated core. Exit here
+//--- exactly like the dedicated server does above; the HC needs none of the client-side init below
+//--- (actions/markers/UI). Nil-guarded: real clients + server are byte-identical.
+if (!isNil "isHeadLessClient" && {isHeadLessClient}) exitWith {};
+
 waitUntil {clientInitComplete}; //--- Wait for the client part.
 
 sleep 2; //--- Wait a bit.
