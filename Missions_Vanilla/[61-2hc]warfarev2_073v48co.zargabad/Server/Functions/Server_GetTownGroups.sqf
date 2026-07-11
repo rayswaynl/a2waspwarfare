@@ -288,22 +288,11 @@ if (_mergeTarget > 0 && {count _contents > 1}) then {
 //--- (client/HC-delegated creation, reported back once creation finishes remotely).
 //--- Flag-off (AICOMV2_LANE_CMD_TOWN_LEDGER=0) => this whole block is skipped, byte-identical to HEAD.
 if ((_side == west || {_side == east}) && {!_aa_get} && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
-	private ["_ctlLogik3","_ctlLedger3","_ctlI3","_ctlFound3"];
-	_ctlLogik3  = (_side) Call WFBE_CO_FNC_GetSideLogic;
-	_ctlLedger3 = _ctlLogik3 getVariable ["WFBE_CTL_LEDGER", []];
-	_ctlFound3  = false;
-	_ctlI3      = 0;
-	{
-		if (!_ctlFound3 && {(_x select 0) == _town}) then {
-			private ["_ctlRec3"];
-			_ctlRec3 = _x;
-			_ctlRec3 set [3, 0];
-			_ctlLedger3 set [_ctlI3, _ctlRec3];
-			_ctlFound3 = true;
-		};
-		_ctlI3 = _ctlI3 + 1;
-	} forEach _ctlLedger3;
-	_ctlLogik3 setVariable ["WFBE_CTL_LEDGER", _ctlLedger3];
+	//--- CTL single-writer (fable/ctl-readback-singlewriter): reset the per-town spawn
+	//--- accumulator SCALAR instead of RMW-ing the shared WFBE_CTL_LEDGER array. The CTL tick
+	//--- (Server_CmdTownLedger.sqf) is now the SOLE writer of the ledger array; external sites
+	//--- publish per-town scalars it reads. Flag-off => skipped, byte-identical to HEAD.
+	_town setVariable ["wfbe_ctl_lastspawn", 0];
 };
 
 _contents

@@ -58,6 +58,10 @@ _fnSeedSide = {
 		if (_tSide == _sideId) then {
 			private ["_baseGroups","_rec"];
 			_baseGroups = count ([_town, _side] Call WFBE_SE_FNC_GetTownGroups);
+			//--- clear any stale pending/counter scalars (restart hygiene - same reason as the tick seed)
+			_town setVariable ["wfbe_ctl_pending_ratio", -1];
+			_town setVariable ["wfbe_ctl_pending_invest", 0];
+			_town setVariable ["wfbe_ctl_lastspawn", 0];
 			_rec = [_town, _baseGroups, 1.0, 0, 0, diag_tickTime];
 			_ledger set [count _ledger, _rec];
 			_n = _n + 1;
@@ -114,7 +118,7 @@ while {!WFBE_GameOver} do {
 					_rec = [_town, _baseGroups, _captureSeed, 0, 0, diag_tickTime];
 					_ledger set [count _ledger, _rec];
 					_town setVariable ["wfbe_ctl_pending_ratio", -1];
-					_town setVariable ["wfbe_ctl_pending_invest", -1];
+					_town setVariable ["wfbe_ctl_pending_invest", 0];
 					_town setVariable ["wfbe_ctl_lastspawn", 0];
 					diag_log Format ["CTLSTAT|v1|%1|SEED|town=%2|str=%3", str _side, _town getVariable ["name", "?"], _captureSeed];
 				};
@@ -147,11 +151,12 @@ while {!WFBE_GameOver} do {
 				_pTown setVariable ["wfbe_ctl_pending_ratio", -1];
 				diag_log Format ["CTLSTAT|v1|%1|READBACK|town=%2|str=%3", str _side, _pTown getVariable ["name", "?"], _recP select 2];
 			};
-			_pInvest = _pTown getVariable ["wfbe_ctl_pending_invest", -1];
-			if (_pInvest >= 0) then {
+			_pInvest = _pTown getVariable ["wfbe_ctl_pending_invest", 0];
+			if (_pInvest > 0) then {
 				_recP set [2, ((_recP select 2) + _pInvest) min (missionNamespace getVariable ["AICOMV2_CTL_PAID_MAX", 1.5])];
 				_recP set [4, time];
-				_pTown setVariable ["wfbe_ctl_pending_invest", -1];
+				_pTown setVariable ["wfbe_ctl_pending_invest", 0];
+				diag_log Format ["CTLSTAT|v1|%1|INVEST_APPLY|town=%2|str=%3", str _side, _pTown getVariable ["name", "?"], _recP select 2];
 			};
 			_recP set [3, _pTown getVariable ["wfbe_ctl_lastspawn", 0]];
 		} forEach _ledger;

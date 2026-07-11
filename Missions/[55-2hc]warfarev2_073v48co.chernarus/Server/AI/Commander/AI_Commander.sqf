@@ -924,7 +924,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 						//--- per-town scalar; the CTL tick applies it to strength [2] and stamps the town cooldown [4].
 						//--- The GLOBAL invest cooldown (WFBE_CTL_INVEST_T0 below - a logik var, not the ledger array)
 						//--- still fires here; its 480s window >> the 30s tick, so f cannot double-invest before apply.
-						(_ctlRec select 0) setVariable ["wfbe_ctl_pending_invest", _ctlGain];
+						(_ctlRec select 0) setVariable ["wfbe_ctl_pending_invest", ((_ctlRec select 0) getVariable ["wfbe_ctl_pending_invest", 0]) + _ctlGain];
 						_logik setVariable ["WFBE_CTL_INVEST_T0", _ctlNow2];
 						[_side, -_ctlCost] Call ChangeAICommanderFunds;
 						diag_log Format ["AICOMSTAT|v2|EVENT|%1|%2|CTL_INVEST|town=%3|tier=%4|cost=%5|str=%6|funds=%7|fundedBy=aicom",
