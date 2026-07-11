@@ -1,47 +1,50 @@
-# AICOM Behavior Reference - 2026-07-02
+# AICOM Behavior Reference - 2026-07-02 (reconciled 2026-07-12)
 
-Base: `claude/build84-cmdcon36` source state used by lane 168.
+Historical provenance: `claude/build84-cmdcon36`, the source state used by lane 168 for the original 2026-07-02 audit.
 
-This page is a compact "what is live now" map for the AI commander. It is meant for fleet workers and soak reviewers who need to know which AICOM behaviors are already in the mission, which flags gate them, and which RPT tokens prove they are firing. It is not a proposal page, and it should not be used to mark unmerged follow-up PRs as live.
+Current reconciliation: `origin/master@46d63b0651f67a418d00c951af015b33937af79e` on 2026-07-12. Dependency PR #1045 is present through merge commit `24a8696d535f56acd105ff08ae68551617a22da2`.
+
+This page is a compact current-source map for the AI commander. It distinguishes default-active behavior from code that is implemented but default-dark, and lists the RPT tokens that prove an enabled path is firing. It is not a proposal page, and it must not be used to mark unmerged follow-up PRs as live.
 
 ## Scope
 
 - Docs-only source reference. No mission SQF, generated mission mirror, packaging, deploy, or live server setting change.
-- Chernarus source is the reference path. Takistan inherits shared code through the normal mission source, with Takistan-only SCUD behavior called out separately.
-- Source anchors are line numbers in this branch on 2026-07-02. If a later PR moves code, update the anchors and the smoke checklist together.
-- The Fable behavior note remains useful rationale, but this page is the current live-behavior checklist.
+- Chernarus is the reference path. At the reconciled commit, all 17 implementation files cited below are byte-identical in the Chernarus, Takistan, and Zargabad mission mirrors. Takistan-only SCUD activation is called out separately.
+- Byte-identical mirrors do not imply identical runtime values: `worldName` branches and map-specific overrides intentionally vary selected caps, reach, route, slope, recovery, and air-start controls.
+- Source anchors are line numbers at the exact reconciled commit above. If a later PR moves code or changes a default, update the anchors, default-state wording, and smoke checklist together.
+- The Fable behavior note remains useful historical rationale. Current-state claims below come from the reconciled source and explicitly identify default-dark paths.
 
 ## Live Control Model
 
-The AI commander supervisor is enabled by default and ticks every 15 seconds. It logs a one-time boot snapshot with server group count, HC count, AI max, and start funds, then a recurring brief roughly every 300 seconds.
+The AI commander supervisor is enabled by default and ticks every 15 seconds. It logs a one-time boot snapshot with server group count, HC count, the configured flat AI-max value, and start funds, then a recurring brief roughly every 300 seconds. Founding separately enforces the effective population-tier side-AI ceiling described below.
 
 Source anchors:
 
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:241` enables the AI commander by default.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:244` keeps `WFBE_C_AI_COMMANDER_LOCK` default-off, allowing hybrid player command.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:258-264` sets the total AI max and core supervisor cadences.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:123-129` emits `[AICOM BOOT]`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:173-177` applies the AI commander lock override when the flag is enabled.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:1022-1033` emits the recurring `[AICOM BRIEF]`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:318` enables the AI commander by default.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:321` keeps `WFBE_C_AI_COMMANDER_LOCK` default-off, allowing hybrid player command.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:340-346` sets the total AI max and core supervisor cadences.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:260-266` emits `[AICOM BOOT]`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:310-314` applies the AI commander lock override when the flag is enabled.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:1299-1310` emits the recurring `[AICOM BRIEF]`.
 
 Hybrid behavior is live. When a human occupies the commander slot, the AI still keeps non-player-led founded teams moving unless a team is under an explicit player order or a fresh manual pin. The econ sink also pauses on a physically seated human commander, even if lock mode would otherwise keep the AI in full command.
 
 Source anchors:
 
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:32-37` detects a human commander.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:181-218` preserves player-led and explicitly ordered teams.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:575-582` pauses the econ sink while a human is seated.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:190-227` preserves player-led, manually pinned, and explicitly ordered teams.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:725-740` pauses the econ sink while a human is seated.
 
 ## Strategy And Posture
 
-The strategy worker computes posture from towns, effective strength, HQ strike state, front presence, and garrison bodies. It emits greppable posture, front, and stall telemetry so soak reviewers can explain whether the side is pressing, holding, defending, or stuck in dominance without captures.
+The strategy worker computes posture from towns, territory-credited effective strength, and HQ strike state. Front presence and garrison bodies are observational fields in the telemetry, not posture inputs. It emits greppable posture, front, and stall records so soak reviewers can explain whether the side is pressing, holding, defending, or stuck in dominance without captures.
 
 Source anchors:
 
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Strategy.sqf:913-965` builds `POSTURE` and `FRONT` telemetry.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Strategy.sqf:931-947` applies the losing-side press floor when the side is behind on towns but near strength parity and its base is safe.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Strategy.sqf:981-985` emits `STALL` for dominant-but-passive cases.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:822` gates `WFBE_C_AICOM_LOSING_PRESS`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Strategy.sqf:1039-1093` derives posture and emits `POSTURE` and `FRONT` telemetry.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Strategy.sqf:1058-1076` applies the losing-side press floor when the side is behind on towns but near strength parity and its base is safe.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Strategy.sqf:1094-1118` emits `STALL` for dominant-but-passive cases while maintaining the dominance streak.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1082` defaults `WFBE_C_AICOM_LOSING_PRESS` on.
 
 Primary RPT tokens:
 
@@ -52,17 +55,19 @@ Primary RPT tokens:
 
 ## Team Budget And Founding
 
-The live commander scales founded team targets by player-count bucket, clamps them with a hard cap, and blocks founding when the side AI count or side group count is already too high. It also has a rich-state economy path that can arm veteran founding, raise an econ-surge flag, and continue research while respecting the human-seated pause above.
+The live commander derives founded-team targets from player-count buckets, then applies configured deltas/floors, banking or surge adjustments, and a hard cap; Zargabad has map-specific cap overrides. Founding also stops when the effective population-tier side-AI ceiling or the side group ceiling is reached. A rich-state economy path can arm veteran founding, raise an econ-surge flag, and continue research while respecting the human-seated pause above.
 
 Source anchors:
 
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:277-281` defines the player-count team curve and hard cap.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Teams.sqf:230-255` gates founding on tiered side AI and group ceilings.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:520-549` detects wealth conversion and arms veteran founding.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:582-600` toggles econ-surge.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:359-363` defines the player-count team curve and hard cap.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:370-412` defines the shared target delta/floor, population-tier side-AI ceilings, low-pop banking allowance, and group cap.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:2037-2048` applies Zargabad-specific side-AI, hard-cap, and low/mid-pop target overrides.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Teams.sqf:251-278` gates founding on target, tiered side-AI, and group ceilings.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:674-703` detects wealth conversion and arms veteran founding.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf:722-757` gates the econ sink under a seated human and toggles econ-surge.
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTypes.sqf:276` logs `TEAM_TYPED`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_DisbandLowTier.sqf:79` logs low-tier `TEAM_RETIRED`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Teams.sqf:215` logs player-count-scale `TEAM_RETIRED`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_DisbandLowTier.sqf:88-96` logs low-tier or weak-team `TEAM_RETIRED`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Teams.sqf:236` logs player-count-scale `TEAM_RETIRED`.
 
 Primary RPT tokens:
 
@@ -77,14 +82,14 @@ The active allocator fans teams across a widened fist instead of dogpiling one t
 
 Source anchors:
 
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Allocate.sqf:44-51` lets fresh player `PUSH` or `HOLD` stamps bias the engage gate.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Allocate.sqf:228-280` assigns harass, neutral expansion, and cap-aware fist targets.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:636` sets `WFBE_C_AICOM2_FIST_TOWNS`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:807-810` enables spread mode and first-captor hold mode.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:246-267` preserves a live hold latch from retargeting.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:930-931` logs `CAPTURE_TRACE|ORDER_ACCEPT`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1586-1619` logs arrival-wait and begin-capture capture traces.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1961-1984` claims the post-capture hold and logs `HOLD-CLAIM`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Allocate.sqf:87-110` lets fresh player posture and field-order stamps bias the engage gate.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Allocate.sqf:419-539` assigns harass, neutral-expansion, and cap-aware fist targets.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:774-775` defaults the allocator on and sets `WFBE_C_AICOM2_FIST_TOWNS`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1055-1059` defaults spread mode and first-captor hold mode on and defines their caps/timer.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:258-288` preserves a live hold latch from retargeting.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:993-999` logs `CAPTURE_TRACE|ORDER_ACCEPT`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1873-1909` logs arrival-wait and begin-capture capture traces.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:2307-2339` claims the post-capture hold and logs `HOLD-CLAIM`.
 
 Primary RPT tokens:
 
@@ -95,23 +100,24 @@ Primary RPT tokens:
 
 ## Journey, Recovery, And Retargeting
 
-The live dispatch watcher tracks a team from order acceptance to arrival or stranded closure. A progressing team can keep its current journey instead of being retargeted mid-leg. Combat orbiters, repeated failed journeys, position-stuck teams, and uncapturable centers all feed recovery or recycling rather than allowing indefinite milling.
+The default-active dispatch watcher tracks a team from order acceptance to arrival or stranded closure. A progressing team can keep its current journey through normal AssignTowns retargeting; this is not a universal reservation because the default-dark `WFBE_C_AICOM_STRIKE_COMMIT` leaves progressing teams eligible for HQ-strike selection. Repeated failed journeys, position-stuck teams, and uncapturable centers feed recovery, retargeting, or recycling rather than allowing indefinite milling. Combat-orbiter detection (`WFBE_C_AICOM_ORBITER_DETECT`) and stuck-ladder decay (`WFBE_C_AICOM_STUCK_DECAY`) are implemented but default-dark at this base, so their behavior and telemetry are conditional rather than healthy-baseline expectations.
 
 Source anchors:
 
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:88-107` records arrival and increments the arrival counter.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:153-158` closes timed-out dispatches as `ASSAULT_STRANDED`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:115-145` detects combat orbiters and logs `ORBITER_STUCK`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:430-479` abandons stalled or uncapturable targets, counts failed journeys, and can side-blacklist towns.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:511-539` applies `WFBE_C_AICOM_JOURNEY_COMMIT` for progressing dispatches.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:830-832` gates journey commit, ladder decay, and failed-journey recycle.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1113-1138` defines stuck, arrival, reach, transport, and slope constants.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:86-118` records arrival, increments the arrival counter, and resets per-journey failure state.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:162-180` closes timed-out dispatches as `ASSAULT_STRANDED` and can latch recycling.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:120-161` implements combat-orbiter detection and `ORBITER_STUCK`, but only when `WFBE_C_AICOM_ORBITER_DETECT` is enabled.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:500-566` abandons stalled or uncapturable targets, counts failed journeys, and can side-blacklist towns.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:591-604` contains the default-dark stuck-ladder decay path and the default hard-reset path.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_AssignTowns.sqf:617-651` applies `WFBE_C_AICOM_JOURNEY_COMMIT` for progressing dispatches.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1091-1101` defaults journey commit and failed-journey recycle active, while orbiter detection and stuck-ladder decay default to `0`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1439-1489` defines stuck, arrival, dynamic-timeout, reach, and transport controls, including map-aware values.
 
 Primary RPT tokens:
 
 - `AICOMSTAT|v2|EVENT|...|ASSAULT_ARRIVED`
 - `AICOMSTAT|v2|EVENT|...|ASSAULT_STRANDED`
-- `AICOMSTAT|v2|EVENT|...|ORBITER_STUCK`
+- `AICOMSTAT|v2|EVENT|...|ORBITER_STUCK` (only when the default-dark orbiter detector is enabled)
 - `AICOMSTAT|v2|EVENT|...|JOURNEY_COMMIT`
 - `AICOMSTAT|v2|EVENT|...|TARGET_ABANDON`
 - `AICOMSTAT|v2|EVENT|...|SIDE_BLACKLIST`
@@ -121,12 +127,12 @@ Recovery v2 is live. A stuck re-issue can reverse and lane-flip a vehicle, swap 
 
 Source anchors:
 
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:930-972` accepts an order and starts the tiered unstuck action.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:986-1020` handles dead-driver swap, reverse pulse, and lane flip.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1025-1080` handles vehicle and foot road-snap recovery.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOM_AutoFlip.sqf:18-75` gates and logs `AUTOFLIP`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:794` gates AutoFlip.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:874` gates recovery v2.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:993-1063` accepts an order and starts/logs the tiered unstuck action.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1076-1150` handles dead-driver swap, reverse pulse, and lane flip.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1153-1295` handles guarded vehicle and foot road-snap/no-road recovery.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOM_AutoFlip.sqf:42-96` gates, rights, and logs `AUTOFLIP`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1040` defaults AutoFlip on.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1168-1173` defaults Recovery V2 and its no-road fallback on and defines its recovery controls.
 
 Primary RPT tokens:
 
@@ -136,18 +142,19 @@ Primary RPT tokens:
 
 ## Assault, Break-Off, Smoke, And Top-Up
 
-On town arrival the executor pushes infantry into the depot-center ring, keeps them there until the town flips or a bounded timeout/abort fires, and latches post-capture hold if enabled. Depleted teams under fire can break off into a rally order rather than grinding to zero. Smoke is live on assault approach and break-off.
+On town arrival the executor pushes infantry into the depot-center ring, keeps them there until the town flips or a bounded timeout/abort fires, and latches post-capture hold if enabled. A depleted team can break off into a rally order when enemy resistance remains in the depot capture ring, rather than grinding to zero. Smoke is live on assault approach and break-off.
 
 Source anchors:
 
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1274-1283` stamps `RALLY_FALLBACK`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1403-1410` defines approach-smoke behavior.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1847-1879` lays the depot-center hold and drain-wait loop.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1891-1941` detects break-off and emits break-off smoke.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:2223-2236` fires mobile artillery missions when friendly-fire clear.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:2243-2272` consumes HC top-up requests and logs `TOPUP_DONE`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:820` gates break-off minimum live units.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:859-860` gates smoke and its cooldown.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1510-1519` stamps `RALLY_FALLBACK`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:1640-1647` defines approach-smoke behavior.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:2181-2230` lays the depot-center hold and drain-wait loop.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:2236-2288` detects break-off and emits break-off smoke.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:2598-2611` fires mobile artillery missions when friendly-fire clear.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:2618-2658` consumes HC top-up requests and logs `TOPUP_DONE`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1018` defaults mobile artillery on.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1069` sets the default break-off minimum live units.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1145-1146` defaults smoke on and sets its cooldown.
 
 Primary RPT tokens:
 
@@ -167,7 +174,8 @@ Source anchors:
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMServiceTick.sqf:1-30` documents the live service contract and guardrails.
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMServiceTick.sqf:56-99` handles en-route service completion or abort.
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMServiceTick.sqf:180-205` chooses safe airfield/town service and logs `SERVICE_ENROUTE`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:991-999` defines the self-service thresholds and reach.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1103` admits understrength infantry teams to service by default.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1307-1315` enables self-service and defines its thresholds, safety radius, reach, and timeout.
 
 Primary RPT tokens:
 
@@ -176,26 +184,26 @@ Primary RPT tokens:
 
 ## Aircraft, Airmobile, And Vehicle Lift
 
-Aircraft founding is live with airfield gating. Held airfields can waive normal air tier for field buys, a held Aircraft Factory can enable heli templates, and air teams relocate to owned airfield spawn positions. Fixed-wing teams use plane-only runway/air-start logic while helis spawn grounded.
+Fixed-wing founding is airfield-gated. A held airfield can waive normal air tier for field buys, while a held Aircraft Factory can independently enable heli templates; when an airfield is held, air teams relocate to its spawn positions. Fixed-wing teams use plane-only runway/air-start logic while helis spawn grounded.
 
 Source anchors:
 
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:376-388` defines plane air-start, air cap, Aircraft Factory heli waive, and free-airfield behavior.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Teams.sqf:277-323` resolves airfield, free-air, and Aircraft Factory heli waive state.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Teams.sqf:1068-1089` detects jet versus generic air teams and relocates air spawns to held airfields.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:469-483` defines plane air-start, air cap, Aircraft Factory heli waive, and free-airfield behavior.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Teams.sqf:300-346` resolves airfield, free-air, and Aircraft Factory heli-waive state.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Teams.sqf:1220-1250` detects jet versus generic air teams and relocates air spawns to held airfields.
 
 Airmobile legs and retained team transports are live. A retained transport can fly later ordered legs, hot LZs can trigger paradrop, and eligible owned ground vehicles can be slung and deep-dropped behind the target.
 
 Source anchors:
 
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:401-405` gates airmobile, air retain, and vehicle lift.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:405-413` defines vehicle lift depth, armor tiers, air-tier gates, and allowlist fallback.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:643-667` retains founding air transports and logs `AIR_RETAIN`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMAirLeg.sqf:123` logs hot-LZ `AIRMOBILE_PARADROP`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMAirLeg.sqf:170-185` resolves vehicle-lift tier.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMAirLeg.sqf:261-276` slings a vehicle and logs `VEHLIFT` plus `AIRMOBILE_LEG`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMAirLeg.sqf:381-393` detaches the deep-dropped vehicle and logs `VEHDROP`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMAirReturn.sqf:1-50` returns the retained transport to base and clears the airborne exemption.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:497-501` defaults airmobile, air-retain, and vehicle-lift paths on.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:501-509` defines vehicle-lift depth, armor tiers, air-tier gates, and allowlist fallback.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_RunCommanderTeam.sqf:657-681` retains founding air transports and logs `AIR_RETAIN`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMAirLeg.sqf:124` logs hot-LZ `AIRMOBILE_PARADROP`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMAirLeg.sqf:171-186` resolves vehicle-lift tier.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMAirLeg.sqf:262-277` slings a vehicle and logs `VEHLIFT` plus `AIRMOBILE_LEG`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMAirLeg.sqf:385-397` detaches the deep-dropped vehicle and logs `VEHDROP`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Functions/Common_AICOMAirReturn.sqf:1-79` returns the retained transport to a live HQ or owned-town fallback and clears the airborne exemption.
 
 Primary RPT tokens:
 
@@ -207,14 +215,15 @@ Primary RPT tokens:
 
 ## Base, Forward Base, And MHQ Relocation
 
-The base worker builds and logs structures, factory rally positions, forward-base structures, and optional redundant-base sells. MHQ relocation is live with relaxed ring search, minimum advance, human-front defer, route contact handling, stuck nudges/teleports, and final deploy revalidation.
+The base worker builds and logs structures, factory rally positions, and forward-base structures. Base selling is default-active but only acts when its stranded-old-base or redundancy criteria select a safe victim. MHQ relocation is live with relaxed ring search, minimum advance, human-front defer, route contact handling, stuck nudges/teleports, and final deploy revalidation.
 
 Source anchors:
 
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Base.sqf:765` logs `FACTORY_RALLY_SET`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Base.sqf:774` logs `STRUCTURE_BUILT`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Base.sqf:964` logs `FWDBASE_BUILD`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_BaseSell.sqf:12` keeps base selling gated dark by default.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Base.sqf:829` logs `FACTORY_RALLY_SET`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Base.sqf:838` logs `STRUCTURE_BUILT`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Base.sqf:1084` logs `FWDBASE_BUILD`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:697-705` defaults base selling and stranded-old-base preference on and defines its cadence/refund/redundancy controls.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_BaseSell.sqf:12` applies the base-sell master gate.
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_BaseSell.sqf:97` logs `BASE_SELL` when enabled.
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_MHQReloc.sqf:176-203` logs relaxed relocation or aborts for insufficient advance/no buffer-clear standoff.
 - `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_MHQReloc.sqf:215-236` defers human-front relocation or triggers the relocation lifecycle.
@@ -227,7 +236,7 @@ Primary RPT tokens:
 - `AICOMSTAT|v2|EVENT|...|STRUCTURE_BUILT`
 - `AICOMSTAT|v1|EVENT|...|FACTORY_RALLY_SET`
 - `AICOMSTAT|v1|EVENT|...|FWDBASE_BUILD`
-- `AICOMSTAT|v1|EVENT|...|BASE_SELL`
+- `AICOM2|v1|SELL|...|event=BASE_SELL`
 - `AICOMSTAT|v1|MHQRELOC|...|RELAXED`
 - `AICOMSTAT|v1|MHQRELOC|...|DEFER|human-front`
 - `AICOMSTAT|v1|MHQRELOC|...|TRIGGER`
@@ -242,11 +251,11 @@ AI SCUD use is Takistan-only. The evaluator waits for mission initialization, ru
 
 Source anchors:
 
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:926-935` defines the AI SCUD master flag, cadence, cluster thresholds, HQ exclusion, confirmation radius, and buy thresholds.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_IcbmTel.sqf:1087-1111` clears or tracks clusters and logs `AI_SCUD_TRACK`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_IcbmTel.sqf:1113-1133` enforces interval/funds gate, fires, and logs `AI_SCUD` or `AI_SCUD_SKIP_FUNDS`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_IcbmTel.sqf:1136-1194` gates rich AI SCUD purchase and logs `AI_SCUD_BUY`.
-- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_IcbmTel.sqf:1197-1223` starts or skips the Takistan evaluator loop.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf:1222-1231` defines the AI SCUD master flag, cadence, cluster thresholds, HQ exclusion, confirmation radius, and buy thresholds.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_IcbmTel.sqf:1127-1151` clears or tracks clusters and logs `AI_SCUD_TRACK`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_IcbmTel.sqf:1153-1173` enforces interval/funds gate, fires, and logs `AI_SCUD` or `AI_SCUD_SKIP_FUNDS`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_IcbmTel.sqf:1176-1234` gates rich AI SCUD purchase and logs `AI_SCUD_BUY`.
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_IcbmTel.sqf:1237-1263` starts or skips the Takistan evaluator loop.
 
 Primary RPT tokens:
 
@@ -263,22 +272,22 @@ Use this as a quick RPT scan after a long AI-vs-AI or low-pop soak.
 
 Healthy baseline:
 
-- One `[AICOM BOOT]` per AI side after startup.
+- One `[AICOM BOOT]` per active supervisor instance after startup; ownership-generation restarts may create another instance.
 - Repeating `[AICOM BRIEF]` per active side roughly every 300 seconds.
 - `POSTURE` and `FRONT` lines per side; `STALL` only when a dominant side is not pressing.
 - `CAPTURE_TRACE|ORDER_ACCEPT` followed by either `ASSAULT_ARRIVED`, `BEGIN_CAPTURE`, or a bounded `ASSAULT_STRANDED`.
-- `HOLD-CLAIM` after a town flips, then later normal retargeting.
+- `HOLD-CLAIM` after a town flips, then later normal retargeting while hold mode remains enabled (default on).
 - Some mix of `TEAM_TYPED`, `STRUCTURE_BUILT`, `TOPUP_DONE`, and service or recovery events depending on battle state.
 
 Watch for suspicious patterns:
 
 - Hundreds of `UNSTUCK_FIRED` for the same team without later `ASSAULT_ARRIVED`, `TARGET_ABANDON`, `RECYCLE_FLAG`, or retarget evidence.
-- Repeated `ORBITER_STUCK` on the same town with no `TARGET_ABANDON` or side-blacklist follow-up.
+- When `WFBE_C_AICOM_ORBITER_DETECT` is explicitly enabled, repeated `ORBITER_STUCK` on the same town with no `TARGET_ABANDON` or side-blacklist follow-up. At the reconciled default `0`, no `ORBITER_STUCK` line is expected.
 - `MHQRELOC|ABORT|no-buffer-clear-standoff` every evaluation with no `RELAXED`, `DEFER`, or `TRIGGER`, especially on a compressed front.
 - `AI_SCUD_SKIP_FUNDS` every evaluation after rich/econ-surge conditions should exist.
 - `SERVICE_ENROUTE` without later `SERVICE_DONE` or a normal front retarget after timeout/contact.
-- A side emitting `STALL` for many intervals while holding a large town lead and not emitting `LOSING_PRESS_FLOOR`, `HQ_STRIKE`, or capture progress.
+- A side emitting `STALL` for many intervals while holding a large town lead and not emitting `HQ_STRIKE` or capture progress.
 
 ## Relation To Fable Work
 
-The Fable behavior page is analysis and design rationale. Several named ideas are live in this base and are source-backed above: journey commit, orbiter detection, ladder decay/recycle, losing-side press floor, MHQ relocation relax/final validation, recovery v2, and spread/hold. Future Fable PRs may refine those systems further, so do not treat the Fable page alone as live-state evidence. For release notes, cite the source anchors and RPT tokens from this reference.
+The Fable behavior page is historical analysis and design rationale. Default-active ideas source-backed above include journey commit, failed-journey recycle, the losing-side press floor, MHQ relocation relax/final validation, Recovery V2, and spread/hold. Combat-orbiter detection and stuck-ladder decay are implemented but default-dark (`0`) at the reconciled base and must not be described as live without an explicit runtime override. Future Fable PRs may refine these systems further, so do not treat the Fable page alone as current-state evidence. For release notes, cite the exact reconciled commit, source anchors, effective defaults, and RPT tokens from this reference.
