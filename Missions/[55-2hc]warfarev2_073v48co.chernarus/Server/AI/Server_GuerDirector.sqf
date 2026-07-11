@@ -164,7 +164,14 @@ while {!WFBE_GameOver} do {
             if (_lastGrpCount > 0) then {
                 _ratio = _nowGrpCount / _lastGrpCount;
                 _ratio = [_ratio, 0, 1] call _fnClamp;
-                _rec set [2, ((_rec select 2) * _ratio) max (_rec select 1)]; //--- #815 no-nerf: floor at baseline
+                //--- fable/fix-gdir-frozen-ledger (2026-07-09, bugrun BUGHUNT-4 CRIT): the #815 "no-nerf"
+                //--- floor was `max (_rec select 1)` = baseline. But strength SEEDS at baseline and _ratio is
+                //--- clamped to [0,1], so (str * ratio) is ALWAYS <= baseline -> max baseline pinned current
+                //--- strength at baseline forever -> PHASE 3 never sees depleted/threatened -> PHASE 4 funding
+                //--- never fired (live: funded=0/transit=0/totalStr=23 for 107 straight ticks). Floor at 0 so
+                //--- real combat losses register. NOTE: this ACTIVATES the dormant funding/dispatch path -
+                //--- soak before merging/arming.
+                _rec set [2, ((_rec select 2) * _ratio) max 0];
             };
             _rec set [5, 0];
         };
