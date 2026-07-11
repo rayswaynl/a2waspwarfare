@@ -415,24 +415,12 @@ while {!WFBE_GameOver} do {
 							//--- Server_HandleSpecial.sqf update-town-delegation once creation lands remotely.
 							//--- Ground-only (wfbe_ctl_ground_wave), flag-gated: byte-identical to HEAD when off.
 							if ((_side == west || {_side == east}) && {(_town getVariable ["wfbe_ctl_ground_wave", false])} && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
-								private ["_ctlUnits6","_ctlLogik6","_ctlLedger6","_ctlI6","_ctlFound6"];
+								private ["_ctlUnits6"];
 								_ctlUnits6 = 0;
 								{_ctlUnits6 = _ctlUnits6 + (count units _x)} forEach (_retVal select 0);
-								_ctlLogik6  = (_side) Call WFBE_CO_FNC_GetSideLogic;
-								_ctlLedger6 = _ctlLogik6 getVariable ["WFBE_CTL_LEDGER", []];
-								_ctlFound6  = false;
-								_ctlI6      = 0;
-								{
-									if (!_ctlFound6 && {(_x select 0) == _town}) then {
-										private ["_ctlRec6"];
-										_ctlRec6 = _x;
-										_ctlRec6 set [3, (_ctlRec6 select 3) + _ctlUnits6];
-										_ctlLedger6 set [_ctlI6, _ctlRec6];
-										_ctlFound6 = true;
-									};
-									_ctlI6 = _ctlI6 + 1;
-								} forEach _ctlLedger6;
-								_ctlLogik6 setVariable ["WFBE_CTL_LEDGER", _ctlLedger6];
+								//--- CTL single-writer (fable/ctl-readback-singlewriter): accumulate this wave real
+								//--- Man-unit count into the per-town spawn scalar, not the shared ledger array.
+								_town setVariable ["wfbe_ctl_lastspawn", (_town getVariable ["wfbe_ctl_lastspawn", 0]) + _ctlUnits6];
 							};
 						};
 
@@ -606,31 +594,18 @@ while {!WFBE_GameOver} do {
 					//--- deletes the units, BEFORE deleteVehicle ran - counting it here (after deletion)
 					//--- would always read ~0 (fix: read-back ORDERING).
 					if (_ctlLaneOn) then {
-						private ["_ctlLogik","_ctlLedger","_ctlRecIdx","_ctlFound","_ctlI"];
-						_ctlLogik    = (_side) Call WFBE_CO_FNC_GetSideLogic;
-						_ctlLedger   = _ctlLogik getVariable ["WFBE_CTL_LEDGER", []];
-						_ctlFound  = false;
-						_ctlRecIdx = 0;
-						_ctlI      = 0;
-						{
-							if (!_ctlFound && {(_x select 0) == _town}) then {_ctlFound = true; _ctlRecIdx = _ctlI};
-							_ctlI = _ctlI + 1;
-						} forEach _ctlLedger;
-						if (_ctlFound) then {
-							private ["_ctlRec","_ctlLastSpawn","_ctlRatio","_ctlNewStr"];
-							_ctlRec       = _ctlLedger select _ctlRecIdx;
-							_ctlLastSpawn = _ctlRec select 3;
-							if (_ctlLastSpawn > 0) then {
-								_ctlRatio  = (_ctlSurviving / _ctlLastSpawn) max 0;
-								if (_ctlRatio > 1) then {_ctlRatio = 1};
-								_ctlNewStr = ((_ctlRec select 2) * _ctlRatio) max 0;
-								_ctlRec set [2, _ctlNewStr];
-								diag_log Format ["CTLSTAT|v1|%1|READBACK|town=%2|ratio=%3|str=%4", str _side, _town getVariable ["name", "?"], _ctlRatio, _ctlNewStr];
-							};
-							_ctlRec set [3, 0];
-							_ctlLedger set [_ctlRecIdx, _ctlRec];
-							_ctlLogik setVariable ["WFBE_CTL_LEDGER", _ctlLedger];
+						//--- CTL single-writer (fable/ctl-readback-singlewriter): publish the survival RATIO to a
+						//--- per-town scalar; the CTL tick applies it to strength [2] (the tick is the sole ledger
+						//--- writer). _ctlSurviving was tallied above (the ORDER fix), before deleteVehicle ran.
+						private ["_ctlLastSpawn","_ctlRatio"];
+						_ctlLastSpawn = _town getVariable ["wfbe_ctl_lastspawn", 0];
+						if (_ctlLastSpawn > 0) then {
+							_ctlRatio = (_ctlSurviving / _ctlLastSpawn) max 0;
+							if (_ctlRatio > 1) then {_ctlRatio = 1};
+							_town setVariable ["wfbe_ctl_pending_ratio", _ctlRatio];
+							diag_log Format ["CTLSTAT|v1|%1|READBACK|town=%2|ratio=%3", str _side, _town getVariable ["name", "?"], _ctlRatio];
 						};
+						_town setVariable ["wfbe_ctl_lastspawn", 0];
 					};
 
 					//--- Teams vehicles.

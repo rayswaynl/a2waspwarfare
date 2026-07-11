@@ -920,10 +920,11 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 						if (_ctlTier == "surge") then {_ctlCost = _ctlCost * (missionNamespace getVariable ["AICOMV2_CTL_INVEST_SURGE_MULT", 2])};
 						_ctlGain   = missionNamespace getVariable ["AICOMV2_CTL_INVEST_GAIN", 0.25];
 						_ctlNewStr = (_ctlStr + _ctlGain) min (missionNamespace getVariable ["AICOMV2_CTL_PAID_MAX", 1.5]);
-						_ctlRec set [2, _ctlNewStr];
-						_ctlRec set [4, _ctlNow2];
-						_ctlLedger set [_ctlTarget, _ctlRec];
-						_logik setVariable ["WFBE_CTL_LEDGER", _ctlLedger];
+						//--- CTL single-writer (fable/ctl-readback-singlewriter): publish the invest GAIN to a
+						//--- per-town scalar; the CTL tick applies it to strength [2] and stamps the town cooldown [4].
+						//--- The GLOBAL invest cooldown (WFBE_CTL_INVEST_T0 below - a logik var, not the ledger array)
+						//--- still fires here; its 480s window >> the 30s tick, so f cannot double-invest before apply.
+						(_ctlRec select 0) setVariable ["wfbe_ctl_pending_invest", _ctlGain];
 						_logik setVariable ["WFBE_CTL_INVEST_T0", _ctlNow2];
 						[_side, -_ctlCost] Call ChangeAICommanderFunds;
 						diag_log Format ["AICOMSTAT|v2|EVENT|%1|%2|CTL_INVEST|town=%3|tier=%4|cost=%5|str=%6|funds=%7|fundedBy=aicom",
