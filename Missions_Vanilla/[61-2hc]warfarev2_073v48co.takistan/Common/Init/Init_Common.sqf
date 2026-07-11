@@ -233,8 +233,25 @@ isAutoWallConstructingEnabled = true; //--- legacy global (client CoIn UI still 
 WFBE_CO_VAR_SupplyMissionRegenInterval = 1800;
 
 /* Wait for BIS Module Init */
-waitUntil {!(isNil 'BIS_fnc_init')};
-waitUntil {BIS_fnc_init};
+//--- FIX D6b (WFBE hang-guard): mirrors the bounded-wait idiom at initJIPCompatible.sqf:366-382 (B56).
+//--- Was two unbounded waitUntils - if the FunctionsManager module (mission.sqm:172) fails to run its preInit
+//--- compile, BIS_fnc_init NEVER becomes non-nil/true and Init_Common.sqf hangs FOREVER on EVERY machine,
+//--- starving commonInitComplete (:475) and the whole townInit chain - the mission never starts, silently.
+//--- Bounded to 60s per stage (240 x 0.25s uiSleep, real-time). Two stages preserve the exact original
+//--- (defined-check, then truthy-check) semantics. Fallback is SAFE: it does NOT touch/fabricate BIS_fnc_init
+//--- - it only stops waiting; a later real BIS_fnc_* call gets its own localized RPT error instead of the
+//--- whole mission never starting (no worse than the hang, since under the hang those call sites never run).
+private ["_wBisA","_wBisB"];
+_wBisA = 0;
+while {isNil "BIS_fnc_init" && (_wBisA < 240)} do { uiSleep 0.25; _wBisA = _wBisA + 1; };
+if (isNil "BIS_fnc_init") then {
+	diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Common.sqf: BIS_fnc_init never became defined after 60s (isServer=%1 isDedicated=%2 isHeadLessClient=%3) - proceeding WITHOUT the BIS Functions library. Check for a missing/broken FunctionsManager module.", isServer, isDedicated, isHeadLessClient];
+};
+_wBisB = 0;
+while {!(isNil "BIS_fnc_init") && {!BIS_fnc_init} && (_wBisB < 240)} do { uiSleep 0.25; _wBisB = _wBisB + 1; };
+if (!isNil "BIS_fnc_init" && {!BIS_fnc_init}) then {
+	diag_log "[WFBE (INIT)] HANGGUARD| Init_Common.sqf: BIS_fnc_init stayed FALSE for 60s after becoming defined - proceeding WITHOUT confirmed-ready BIS Functions library. Check for a missing/broken FunctionsManager module.";
+};
 
 /* CORE SYSTEM - Start
 	Different Core are added depending on the current ArmA Version running, add yours bellow.
