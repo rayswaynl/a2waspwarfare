@@ -2329,7 +2329,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 
 	//--- fable/deadspawn-redesign: replaces the shared-marker wall pen (Init_DeadspawnWall.sqf)
 	//--- with a single in-bounds underwater holding point (Common_DeadspawnPenPos.sqf) for the
-	//--- join/transit window. 1 = new underwater pen, 0 (default) = today's TempRespawnMarker
+	//--- join/transit window. 1 (default) = new underwater pen, 0 = today's TempRespawnMarker
 	//--- pen, unchanged. Independent of WFBE_C_DEADSPAWN_GUARD above (that flag toggles the HC's
 	//--- own ParkDeadspawn behaviour, not the human join-placement this flag controls).
 	if (isNil "WFBE_C_DEADSPAWN_REDESIGN") then {WFBE_C_DEADSPAWN_REDESIGN = 1};

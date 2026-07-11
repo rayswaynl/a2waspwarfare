@@ -67,8 +67,8 @@ missionNamespace setVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", 60];
 
 player call Compile preprocessFileLineNumbers "WASP\rpg_dropping\DropRPG.sqf";
 //--- Position the client on the temp spawn (Common is not yet init'd so we call is straigh away).
-//--- fable/deadspawn-redesign: flag-gated underwater holding pen. Flag 0 (default) keeps the
-//--- line below byte-for-byte the same call as HEAD. Flag 1 sends the join/transit placement
+//--- fable/deadspawn-redesign: flag-gated underwater holding pen. Flag 0 keeps the
+//--- line below byte-for-byte the same call as HEAD. Flag 1 (default) sends the join/transit placement
 //--- to Common_DeadspawnPenPos.sqf instead - the existing allowDamage-false transit window
 //--- (set a few lines above in this file, cleared on WFBE_Client_DeadspawnEscaped or the
 //--- existing 120s failsafe) already covers this new position unmodified.
