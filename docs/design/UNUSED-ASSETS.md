@@ -20,7 +20,7 @@ The big structural facts that create most of the dormant pools:
 1. **USMC is not the live WEST faction.** `WFBE_C_UNITS_FACTION_WEST` selects `US` on both maps (`Core_US` / `Core_US_Camo`), **never** `USMC`. Everything unique to `Core_USMC.sqf` — **AAV, MV22, Zodiac, RHIB, RHIB2Turret** and the USMC boxes — is compiled but unreachable.
 2. **Both live maps are non-naval.** `IS_naval_map` is false on CH and TK, so every `if (IS_naval_map)` block that appends **PBX / Zodiac** to depot pools is skipped, and `Init_NavalHVT` exits immediately (`IS_naval_map=false` guard). All watercraft are effectively dead.
 3. **CIV faction is not a buy target.** `Core_CIV.sqf` holds **Smallboat_1, Smallboat_2, Fishing_Boat** and the whole civilian car/bus/tractor fleet; players never open a CIV shop, so these only ever appear as ambient/AI-driven props.
-4. **The wildcard deck has 9 inert cards** (weight forced to 0): W3 Bonus Patrol, W7 Veteran Company, W9 Uprising, W10 Lucky Salvage, W14 Iron Dome, W17 Supply Convoy, W18 Bounty HVT, **W21 GUER VBIED**. Their apply blocks (and the assets they would spawn) are dead but fully written.
+4. **The wildcard deck has 8 weight-zeroed inert cards** (weight forced to 0): W3 Bonus Patrol, W7 Veteran Company, W9 Uprising, W10 Lucky Salvage, W14 Iron Dome, W17 Supply Convoy, W18 Bounty HVT, **W21 GUER VBIED**. Their apply blocks (and the assets they would spawn) are dead but fully written. Slot **W8 Motor Pool Delivery** is separately **retired/absent** (removed from the weight table entirely, not weight-zeroed), so counting it the deck carries 9 dead slots total. The 2026-06-27 visible combat cards **W22 Top Gun / W23 Armor Column / W24 Technical Swarm** are active, not inert.
 
 ---
 

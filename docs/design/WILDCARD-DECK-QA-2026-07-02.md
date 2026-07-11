@@ -59,3 +59,16 @@ Compared Chernarus mission files against `Missions_Vanilla/[61-2hc]warfarev2_073
 - Compared Chernarus/Takistan vanilla wildcard-related file hashes as listed above.
 - No mission source was edited, so `Tools/LoadoutManager/dotnet run` was not run.
 - `git diff --check` passed before commit.
+
+## Reconciliation 2026-07-11 (fleet-task wasp-wildcard-deck-doc-contract-reconcile)
+
+Docs-only pass verifying WC-QA-03 against current `origin/master`. `AI_Commander_Wildcard.sqf` is now 1341 lines; anchors below refreshed from the 2026-07-02 snapshot. No mission source was edited in this lane.
+
+- **WC-QA-03 still stands.** The `.sqf` source header comment block remains stale vs the live deck:
+  - Live active deck (14 slots, base total 110): W1(17) W2(17) W4(6) W6(8) W11(8) W12(6) W13(6) W15(6) W16(6) W19(5) W20(6) W22(6) W23(7) W24(6) — `_weights` at `:622`, base weights `:567-575`.
+  - Header top DECK table still reads `total=123` and lists removed W7/W14/W17/W18/W21 as active while omitting W22-24 (`:12-33`); only the REMOVED/ADDED sections below it (`:35-51`) reflect reality.
+  - Header ESCALATION line still says "doubles W4/W7/W9" (`:65`); runtime escalation adjusts W4/W6/W13/W19/W22/W23/W24 (`:577-587`).
+  - Header lists interval `default 1800` (`:75`, `:92`), but the live constant sets **900s** (`Init_CommonConstants.sqf:614`, "15 min faster testing cadence, 2026-06-14"). Purchased-draw cooldown is 1800s, active only when COST>0 (`:616`).
+  - **Recommendation:** refresh the `.sqf` header comment block in a separate mission-edit lane (Python edit CH + LoadoutManager mirror + lint gate); out of scope for this docs-only task.
+- **UNUSED-ASSETS.md corrected in this lane:** "9 inert cards" -> "8 weight-zeroed" + clarified W8 retired/absent (9 dead slots incl. the retirement) + noted W22-24 active. Resolves the WC-QA-03 count discrepancy.
+- WC-QA-01 (W2 supply-cap announcement) and WC-QA-02 (stale player-facing help text) are unchanged and out of scope for this docs pass.
