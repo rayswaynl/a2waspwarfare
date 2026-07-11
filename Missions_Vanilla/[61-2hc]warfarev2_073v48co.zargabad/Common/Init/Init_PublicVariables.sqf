@@ -82,9 +82,9 @@ WFBE_SE_PVF_ALLOWED = [];
 //--- P2 (fable/gdir-harden-shop): GDIR JIP snapshot seed + PVEH.
 //--- Server publishes AICOMV2_GDIR_JIP_SNAP each director tick (throttled).
 //--- Clients cache the last snapshot in WFBE_COMM_GDIR_SNAP for the commissar panel list.
-//--- TODO (OnPlayerConnected): add publicVariableClient "AICOMV2_GDIR_JIP_SNAP" to
-//--- Server/Functions/Server_OnPlayerConnected.sqf after line 161 (WFBE_GUER_FOB_AVAIL block)
-//--- so late joiners get the snapshot immediately rather than waiting for the next Director tick.
+//--- Server_OnPlayerConnected targets the current value to each warfare joiner after team resolution,
+//--- closing A2-OA's non-JIP-durable publicVariable gap without changing the periodic publisher.
+//--- The nil-safe seed + one-shot cache also preserve a targeted value that lands while this PVEH installs.
 //--- 185 (HQ repair scaling): seed avg on all machines; server overwrites via publicVariable at init.
 WFBE_HQ_REPAIR_AVG_SEC = 21600;
 if (!isServer || {local player}) then {
@@ -93,11 +93,12 @@ if (!isServer || {local player}) then {
     };
 };
 
-AICOMV2_GDIR_JIP_SNAP = [];
+if (isNil "AICOMV2_GDIR_JIP_SNAP") then {AICOMV2_GDIR_JIP_SNAP = []};
 if (!isServer || {local player}) then {
     "AICOMV2_GDIR_JIP_SNAP" addPublicVariableEventHandler {
         WFBE_COMM_GDIR_SNAP = _this select 1;
     };
+    WFBE_COMM_GDIR_SNAP = AICOMV2_GDIR_JIP_SNAP;
 };
 
 //--- WFBE_C_GDIR_VIS: side-wide commissar order broadcast receiver.
