@@ -1052,7 +1052,7 @@ serverInitFull = true;
 //--- fable/deadspawn-redesign (landlocked follow-up): build the sealed landlocked-pen cell
 //--- IF this map's resolved pen point is dry (Takistan/Zargabad; no-op + log-only on a water
 //--- map like Chernarus). Flag-gated so this never runs while the redesign is off - the wall-
-//--- pen call above is untouched and remains the unconditional flag-off default.
+//--- pen call above is untouched and remains the unconditional flag-off baseline.
 if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_REDESIGN", 0]) > 0) then {
 	[] execVM "Server\Init\Init_DeadspawnPenEnclosure.sqf";
 };
