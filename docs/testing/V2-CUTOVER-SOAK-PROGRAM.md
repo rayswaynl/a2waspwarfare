@@ -1,223 +1,132 @@
-# V2 Cutover T3 Parity Soak Program
+# AICOM V2 Cutover Soak Program — Retired
 
-Guide-Rev: GR-2026-07-03a — binding document; supersedes any earlier draft soak spec.
-Owner: Ray (owner-authorised 2026-07-06).
-Status: **STAGED — awaiting first empty server window to fire soak 1.**
+Guide-Rev: GR-2026-07-08a
 
----
+Status: **RETIRED — historical plan, not an executable runbook**
 
-## 1. What a T3 parity soak is
+Original owner authorization: Ray, 2026-07-06
+Retirement basis: Fleet task `wasp-aicom-v2-cutover-doc-reconcile`, re-readied by the owner-directed queue audit on 2026-07-11
 
-A **T3 parity soak** is a full AI-vs-AI overnight match run on the live box in a dedicated empty window (no players), using the V2 cutover build (`fable/v2-cutover` rebased onto current master), with the `WFBE_C_AICOM_V2_ENABLE` rollback flag set to `DECAP_ENABLE=0` for soak 1 and `DECAP_ENABLE=1` for soak 2+.
+> Do not use this file to build, deploy, restore, or operate a server. The relevant AICOM2 machinery
+> was integrated through a different path; the one-shot branch/flag workflow was superseded, and the
+> full V1 removal described by the old plan did not occur as written. This file grants no runtime or
+> live-host authority. A current, claimed Fleet task must supply scope, host authority, rollback,
+> evidence gates, and an owner decision before any new soak or release action.
 
-The purpose is to validate that the V2 commander matches or exceeds the V1 baseline on all KPIs measured by `Tools/Soak/analyze_soak.py` (section 10: AICOM2 telemetry) before the cutover is declared stable and V1 code is shelved (step 4 of the five-step sequence in AICOM-V2-CUTOVER-AND-RECONCILIATION.md).
+## Why the old runbook was retired
 
-**"T3"** = the mission runs with full AI delegation (HC present, delegation tier 3), which is the configuration used on the live server. Soaks at lower tiers do not gate the cutover.
+The previous revision was a transition plan for rebasing `fable/v2-cutover`, building a special
+PBO, and switching a supposed global `WFBE_C_AICOM_V2_ENABLE` lobby flag. That no longer matches
+the repository:
 
-**"Parity"** = the soak RPT must satisfy the PASS/WATCH thresholds in `analyze_soak.py` at the same level as or better than the archived V1 reference baseline (`wasp-westwin-20260701.rpt`, 583 dispatches / 40 arrivals / 13 zombie teams / 32 W<->E kills).
+- No maintained source or lobby parameter named `WFBE_C_AICOM_V2_ENABLE` exists on current
+  `master`. The supposed flag is also absent from the tips of the #760, #788, and #793 cutover
+  branches; it was not a landed switch that was later removed.
+- AICOM2 Snapshot, Allocator, and Decapitate are integrated into the normal commander loop. The
+  functions are compiled directly by `Server/Init/Init_Server.sqf` and called on eligible strategy
+  cadence by `Server/AI/Commander/AI_Commander.sqf`.
+- Allocator and Decapitate have separate source constants, separate consumers, and different
+  flag-off behavior. Neither is a global V1/V2 switch.
+- The old `cc48` restore instructions, box paths, server commands, threshold snapshot, and
+  `fable/v2-cutover` rebase checklist are historical. Reusing them would bypass current source,
+  fixes, Fleet ownership, and deployment authority.
 
----
+The historical text remains recoverable from Git. At repository snapshot
+`bb79a88aa65f491a5c5d3d3d610c4e60237eb4b7`, its blob is
+`71e7ddd01f38ddcdf21f382a5a3cfebc92b8e8c7`. The canonical 14,010-byte Git blob has SHA-256
+`43B414A7838A4DDE9D06938F2726B2CF9FCCAE8CA05B4250BC4A42F7D152A9C7`; the previous 14,233-byte
+Windows CRLF checkout has SHA-256
+`6230ED334ADEF92F5B6905F14FACE9779343E73C429CEA1200CBA375BDF82ED5`.
 
-## 2. KPIs that decide PASS / WATCH / FAIL
+## Current integrated controls
 
-Graded by `python -X utf8 Tools/Soak/analyze_soak.py <server.rpt> --hc <hc.rpt> --json` against the thresholds in the tool. The soak-gate verdict is the **OVERALL** field (worst-of).
+The paths and line numbers below are anchored to `master` snapshot `bb79a88aa` observed during
+the reconciliation. Revalidate them against the current head before future work.
 
-| Section | Signal | PASS threshold | FAIL threshold |
-|---------|--------|---------------|----------------|
-| 1. ARRIVAL | Assault arrival % | > 20% (> 30% = great) | < 10% |
-| 2. ZOMBIES | Teams with 0 arrivals (>=3 dispatches) | <= 2 | > 5 |
-| 3. W<->E SHARE | Army-vs-army kill share of total kills | > 5% | < 2.5% |
-| 4. CHURN | FRONT primary changes / hour (per side) | <= 50% of baseline | > 80% of baseline |
-| 7. PERF | Server FPS median | >= 15 (no explicit gate; flag if < 12) | drop > 20% vs prior soak |
-| 10. AICOM2-DECAP | DECAP lines present + roll cadence | PASS = present + cadence OK | FAIL = SNAP present, DECAP absent |
+| Subsystem | Current default | Authoritative behavior |
+|---|---:|---|
+| Snapshot | no subsystem flag | `Init_Server.sqf:82` compiles M0 Snapshot unconditionally; `AI_Commander.sqf:618-621` calls it before Strategy when the strategy path and cadence are eligible. It has no global cutover flag. |
+| Allocator | `WFBE_C_AICOM2_ALLOCATE_ENABLE = 1` | Initialized to `1` when nil in `Common/Init/Init_CommonConstants.sqf:771-773`. At `0`, `AI_Commander_Allocate.sqf:25` exits before writing allocation state, and `AI_Commander_AssignTowns.sqf:746-762` ignores allocator targets unless the flag is positive. Legacy Strategy/AssignTowns target selection remains active. |
+| Decapitate | `WFBE_C_AICOM2_DECAP_ENABLE = 1` | Initialized to `1` when nil in `Init_CommonConstants.sqf:791-795`. At `0`, Decapitate may still maintain sensing/state and emit telemetry, but `AI_Commander_Decapitate.sqf:193-245` performs no press-stamp or allocation-target writes and clears existing press stamps. `AI_Commander_Strategy.sqf:753-804` enables the legacy HQ-strike block while the flag is non-positive. |
 
-**Additional V2-specific gates (manual review, not scored by the tool):**
+Allocator and Decapitate are compiled unconditionally at `Init_Server.sqf:83-84`. They are invoked
+after Strategy at `AI_Commander.sqf:622-627` only when `_aiStrategy` is true and the strategy cadence
+is due; their internal gates then control their own behavior. There are no
+`class WFBE_C_AICOM2_ALLOCATE_ENABLE` or `class WFBE_C_AICOM2_DECAP_ENABLE` entries in
+`Rsc/Parameters.hpp`, so these are not the lobby controls described by the retired plan.
 
-| Gate | What to check | PASS |
-|------|--------------|------|
-| DECAP shadow | `AICOM2|v1|DECAP` lines emitted for both WEST and EAST | Both sides emitting |
-| War progress | `WASPSTAT|v1|CAPTURE` events accumulate over the run; at least one town changes hands per faction | Yes |
-| Rollback flag | `WFBE_C_AICOM_V2_ENABLE` in RPT matches the intended flag value | Yes |
-| Error budget | Script error / Undefined variable / No entry error lines < 20 per match-hour | Yes |
+Source comments that still mention an older default do not override the executable assignments
+above. The current assignments are `1` for both controls.
 
----
+## Exact rollback semantics
 
-## 3. Exact execution procedure (per soak)
+There is no supported one-flag rollback to a byte-identical `cc48` or V1 mission.
 
-### Pre-conditions
+- Allocator rollback is scoped: on a fresh mission built with `WFBE_C_AICOM2_ALLOCATE_ENABLE = 0`,
+  the allocator is inert and the legacy town-target selection path remains active. A hot flip may
+  leave allocator state from earlier ticks, so it is not equivalent evidence. This control does not
+  disable Snapshot, Decapitate, AirResp, or later integrated commander changes.
+- Decapitate rollback is scoped: on a fresh mission built with `WFBE_C_AICOM2_DECAP_ENABLE = 0`,
+  DECAP makes no press-stamp or allocation-target writes and the legacy Strategy HQ-strike path is
+  active. Shadow sensing/state and telemetry may remain. This control does not disable the
+  allocator or the rest of AICOM2.
+- Setting both controls to `0` still does not recreate a historical mission tree. A full historical
+  rollback would be a new source/release proposal with current collision analysis and runtime
+  evidence, not a flag flip or the unaudited single-`cc48`-PBO restore from the retired runbook.
 
-- The live box (livehost = `78.46.107.142`) is **empty** (zero players, no active round, or a scheduled maintenance window).
-- `cc48` is the currently deployed build (confirmed via `ssh gamingpc "ssh livehost powershell -NoProfile -Command \"(Get-Content 'C:\WASP\version.txt')\""` or RPT header).
-- You have the `fable/v2-cutover` branch rebased onto the current master tip and the PBO built (see pre-flight checklist below).
-- The `WFBE_C_AICOM_V2_ENABLE` lobby parameter default is set to the correct value for this soak number (see flag schedule below).
+For a future authorized soak, operational rollback should restore the pinned, hashed pre-soak set
+of all three mission PBOs through the current deployment process. That artifact rollback is distinct
+from changing source defaults for a later fresh-mission build.
 
-### Flag schedule
+Any future default change must start from current `master`, edit the authoritative Chernarus
+source, regenerate the Takistan and Zargabad mirrors through LoadoutManager, and prove the intended
+fresh-mission behavior. It must not be applied ad hoc to a live mission namespace or server file.
 
-| Soak # | DECAP_ENABLE value | What it tests |
-|--------|-------------------|--------------|
-| 1 | 0 | V2 SNAP/ALLOC/FISTPOOL active, DECAP circuit **disabled** (shadow mode — validates commander core without the decapitate arm) |
-| 2 | 1 | Full V2 including DECAP arm — organic sensing, driver-press hook, UNSTUCK guard all active |
-| 3 | 1 | Repeat with different terrain (Takistan) or same Chernarus if soak 2 had anomalies; confirm parity is stable |
+## PR and Fleet provenance
 
-### Step-by-step
+- [PR #785](https://github.com/rayswaynl/a2waspwarfare/pull/785) merged the original runbook on
+  2026-07-06 at `30c48643f8c847b8c866fc250a1cdb1bf7ab86a2`.
+- [PR #760](https://github.com/rayswaynl/a2waspwarfare/pull/760), the original
+  `fable/v2-cutover` one-shot, closed unmerged on 2026-07-06 and was superseded by #788. Its
+  pending-rebase checklist is not current work.
+- [PR #761](https://github.com/rayswaynl/a2waspwarfare/pull/761) merged the accompanying bug pack
+  at `d77ef818d555d1bc9f1d238f8505a4500db1d0ea`; its fixes were preserved through reconciliation
+  and remain in current-master ancestry.
+- [PR #788](https://github.com/rayswaynl/a2waspwarfare/pull/788) was the next cutover attempt. It
+  closed unmerged and was superseded by #793.
+- [PR #793](https://github.com/rayswaynl/a2waspwarfare/pull/793), the reconciled
+  `fable/v2-cutover-r3`, merged on 2026-07-07 at merge commit `33fbd08e5`. It landed DECAP with a
+  default of `0`. The merge and the integrated Allocator/Decapitate commits are ancestors of
+  `master` snapshot `bb79a88aa`.
+- Commit `c9151e794` established the Allocator default of `1`. Commit `d21c610bf` later changed the
+  DECAP default to `1` for release 1.1. Both are ancestors of that master snapshot.
+- [PR #968](https://github.com/rayswaynl/a2waspwarfare/pull/968) later changed DECAP arming behavior,
+  another reason that future validation must use current source instead of the old frozen plan.
+- Fleet task `aicom2-decap-soak-gate` is the surviving validation record. It verified DECAP
+  ARM-to-COMMIT telemetry in combat-disabled performance windows, but remains blocked because those
+  windows cannot produce `BASE_OVERRUN` or a `ROUNDSTAT` winner. It requires a separately authorized,
+  combat-enabled, round-length soak; this retired file does not grant that authority.
 
-```
-STEP 1 — Build the soak PBO (on Main PC, development machine)
-  a. Fetch and rebase fable/v2-cutover onto master:
-       git -C C:\Users\Steff\a2waspwarfare fetch origin
-       git -C C:\Users\Steff\a2waspwarfare checkout fable/v2-cutover
-       git -C C:\Users\Steff\a2waspwarfare rebase origin/master
-     [If conflicts: resolve the 5 CH files listed in section 6, then mirror and verify]
-  b. Set DECAP_ENABLE in Common/Init/Init_CommonConstants.sqf:
-       soak 1:  WFBE_C_AICOM_V2_ENABLE default = 0
-       soak 2+: WFBE_C_AICOM_V2_ENABLE default = 1
-     (The lobby param in Rsc/Parameters.hpp overrides this; ensure Parameters.hpp
-      default= matches the intended value.)
-  c. Build the PBO:
-       cd C:\Users\Steff\a2waspwarfare\Tools\LoadoutManager
-       dotnet run -c RELEASE
-  d. Note the build label (version.sqf WF_VERSION string).
+## If validation is reopened
 
-STEP 2 — Stage on the box (during the empty window)
-  a. Confirm box is empty:
-       ssh gamingpc "ssh livehost powershell -NoProfile -Command \"Get-Content C:\WASP\players.txt\""
-     (or check BattleMetrics / Discord)
-  b. SCP the soak PBO to the box:
-       scp "C:\Users\Steff\a2waspwarfare\_MISSIONS\[55-2hc]warfarev2_073v48co.chernarus.pbo" \
-           "Administrator@78.46.107.142:C:/WASP/MPMissions/"
-  c. Deploy (using deploy-v2.ps1):
-       ssh gamingpc "ssh livehost powershell -NoProfile -File C:\WASP\deploy-v2.ps1 -Mission [55-2hc]warfarev2_073v48co.chernarus"
-  d. Verify MISSINIT fires in RPT:
-       ssh gamingpc "ssh livehost powershell -NoProfile -Command \"Select-String 'MISSINIT' C:\WASP\arma2oaserver.RPT | Select-Object -Last 3\""
+Use the current Fleet task and current tooling as the authority. At minimum:
 
-STEP 3 — Run the soak (2 hours minimum, 4+ preferred)
-  a. Let the mission run AI-vs-AI. Do NOT join as a player during the soak window.
-  b. Optionally watch AICOM2 lines live:
-       ssh gamingpc "ssh livehost powershell -NoProfile -File C:\WASP\Tools\PrTestHarness\Ops\aicom-watch.ps1"
-  c. Minimum duration: 120 minutes of AICOM tick (tick 120+ in the last WASPSCALE line).
+1. Confirm a unique owner, machine, worktree, branch, reviewer, and explicit runtime boundary.
+2. Pin the source commit, built artifact hash, terrain, effective flag values, and bounded RPT
+   session before grading.
+3. Use the current `Tools/Soak/README.md`, `Tools/Soak/analyze_soak.py`, and any task-specific
+   scorer self-tests rather than thresholds copied from this historical plan.
+4. Require a combat-enabled window for round-closer claims and preserve server/HC RPT hashes.
+5. Pin and hash the complete pre-soak three-PBO artifact set as the operational rollback input.
+6. Treat deploy, restore, server restart, and live-state changes as separate owner-authorized
+   operations. Documentation or read-only review authority is not deployment authority.
 
-STEP 4 — Restore cc48
-  a. SCP cc48 PBO back:
-       scp "C:\Users\Steff\a2waspwarfare\_MISSIONS\cc48_backup\[55-2hc]warfarev2_073v48co.chernarus.pbo" \
-           "Administrator@78.46.107.142:C:/WASP/MPMissions/"
-  b. Redeploy cc48:
-       ssh gamingpc "ssh livehost powershell -NoProfile -File C:\WASP\deploy-v2.ps1 -Mission [55-2hc]warfarev2_073v48co.chernarus"
-  c. Confirm MISSINIT in RPT shows cc48 build label.
-  d. Open server for players.
+## Current references
 
-STEP 5 — Pull RPTs and grade
-  Server RPT:
-    scp "Administrator@78.46.107.142:C:/Users/Administrator/Documents/Arma 2 Other Profiles/*/arma2oaserver.RPT" \
-        .\soak$(N)_server.rpt
-  HC RPT:
-    scp "Administrator@78.46.107.142:C:/Users/Administrator/AppData/Local/ArmA 2 OA/ArmA2OA.RPT" \
-        .\soak$(N)_hc.rpt
-
-  Grade:
-    python -X utf8 Tools\Soak\analyze_soak.py .\soak$(N)_server.rpt --hc .\soak$(N)_hc.rpt --json > soak$(N)_grade.json
-    python -X utf8 Tools\Soak\analyze_soak.py .\soak$(N)_server.rpt --hc .\soak$(N)_hc.rpt --no-color
-
-  Also run Score-AicomRounds.ps1 for the per-round scorecard:
-    .\Tools\PrTestHarness\Aicom\Score-AicomRounds.ps1 -RptPath .\soak$(N)_server.rpt -RequireDecap -MaxErrors 20
-
-STEP 6 — Record result
-  Update the soak log table in this file (section 5) with: soak#, date, DECAP_ENABLE value,
-  overall verdict, arrival%, zombie count, DECAP verdict, notes.
-  Save the grade JSON as docs/testing/soak-grades/soak$(N).json.
-```
-
----
-
-## 4. Rollback semantics
-
-The rollback flag `WFBE_C_AICOM_V2_ENABLE` (integer, default 0 during the transition window) is the sole cutover knob. When it is 0, the V1 commander paths run and the mission is byte-identical to cc48 from the perspective of AI behaviour.
-
-To rollback DURING a soak:
-1. Restore cc48 (step 4 above).
-2. No flag changes needed — cc48 does not carry the V2 branch.
-
-To rollback AFTER cutover is declared (V1 shelved):
-- Revert to the tagged `shelved/aicom-v1-<date>` branch using `git revert` or by cherry-picking cc48's mission tree onto a new branch.
-- This is a deliberate, coordinated operation; it is not a flag flip once step 4 (shelve) is complete.
-
----
-
-## 5. How many clean soaks gate the cutover — N = 3
-
-The cutover brief (GR-2026-07-03a step 3) defers N to the owner. This program proposes **N = 3** for the following reasons:
-
-1. **One soak is insufficient** to rule out lucky timing (e.g., both factions happened to start with good town positions). A2 AI is stochastic and match outcomes vary significantly run to run.
-2. **Two soaks** catches regressions that emerge only after the full DECAP arm is enabled (soak 1 with DECAP_ENABLE=0 does not stress the decapitate circuit). Soak 2 adds the DECAP arm; soak 3 is the confirmatory run.
-3. **Three soaks** (1 × shadow-mode + 2 × full-V2) is the minimum to establish that the DECAP arm is both functional (DECAP verdict = PASS in soak 2) and stable (DECAP verdict = PASS in soak 3 as well). This matches the empirical cadence used for the cmdcon41 fix-package validation.
-4. **Any FAIL verdict resets the counter** to 0 on that gate. A WATCH verdict does not reset; it is carried as a finding and addressed before the next soak if actionable.
-
-Gate: **3 consecutive soaks** where every graded KPI is PASS or WATCH (no FAIL), and the AICOM2-DECAP verdict is PASS in soaks 2 and 3 (where DECAP_ENABLE=1).
-
----
-
-## 6. Rebase check — fable/v2-cutover onto master
-
-**Checked: 2026-07-06 against master tip `169eb16fa`.**
-
-Trial merge (`git merge-tree b8f8b8e72 master fable/v2-cutover`) reports **5 conflicting file groups** (CH + TK + ZG mirrors = 15 git objects total, but only 5 unique logical files):
-
-| File (CH path) | Why it conflicts |
-|---------------|-----------------|
-| `Common/Functions/Common_RunCommanderTeam.sqf` | master: SML-3/4/5 hooks (#774) + teleport guard (#780) + stuck-repair reset. v2-cutover: DECAP driver-press hook + UNSTUCK press-guard. Both sides edited this file. |
-| `Common/Init/Init_CommonConstants.sqf` | master: SML-3/4/5 flag registrations + deploy-v2 flags. v2-cutover: WFBE_C_AICOM_V2_ENABLE registration. |
-| `Server/AI/Commander/AI_Commander_Allocate.sqf` | master: ROAD-CLEAR gate (#779). v2-cutover: V2 ALLOC telemetry emitter. |
-| `Server/AI/Commander/AI_Commander_Strategy.sqf` | master: Base paren hotfix (#777). v2-cutover: DECAP_ENABLE gate (V1 HQ-strike suppressed when V2 is armed). |
-| `Server/Init/Init_Server.sqf` | master: Deploy-v2 readiness gate (#770). v2-cutover: V2 init sequence. |
-
-**Conclusion: fable/v2-cutover does NOT merge cleanly onto master `169eb16fa`.** A manual rebase with conflict resolution is required before the soak PBO can be built.
-
-### Rebase resolution guide
-
-For each conflict file, the intent is:
-
-- `Common_RunCommanderTeam.sqf`: Keep BOTH the SML-3/4/5 hooks and the DECAP driver-press hook. The SML hooks are independent; they run in a different code path (SML overwatch/retreat/unstuck) from the DECAP press-hook (which triggers on HC AICOM loop). Merge by accepting both edits. Verify the stuck-repair tier reset (#780) is preserved.
-- `Init_CommonConstants.sqf`: Append V2 flag `WFBE_C_AICOM_V2_ENABLE` after the SML/deploy flags from master. No ordering dependency.
-- `AI_Commander_Allocate.sqf`: Accept master's ROAD-CLEAR gate and V2-cutover's ALLOC telemetry emitter. Both are additive.
-- `AI_Commander_Strategy.sqf`: Accept master's Base paren hotfix AND the DECAP_ENABLE gate. Apply paren fix first, then ensure the DECAP_ENABLE guard wraps the V1 HQ-strike block.
-- `Init_Server.sqf`: Accept master's deploy-v2 readiness gate and V2-cutover's init sequence. Ensure V2 init runs AFTER the readiness gate.
-
----
-
-## 7. Pre-flight checklist (before firing soak 1)
-
-- [ ] PR #784 (analyze_soak.py conflict fix) merged into claude/build84-cmdcon36
-- [ ] `python -X utf8 Tools/Soak/analyze_soak.py --help` on the box Python confirms no import errors
-- [ ] `fable/v2-cutover` rebased onto current master tip; conflicts resolved (section 6 guide applied)
-- [ ] Lint gate clean on rebased branch: `python Tools\Lint\check_sqf.py --select A3CMD,A3MARKER,A3NUMGATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,GROUPGETVAR,BRACKET,NSSETVAR3 --no-classname-index` — no new findings in V2-edited files
-- [ ] `WFBE_C_AICOM_V2_ENABLE` registered in `Init_CommonConstants.sqf` with `default = 0`
-- [ ] `Rsc/Parameters.hpp` lobby default for soak 1 set to `DECAP_ENABLE=0` (shadow mode)
-- [ ] LoadoutManager run; TK/ZG mirrors verified (templates restored)
-- [ ] cc48 PBO backed up on Main PC at a known path before deploying the soak build
-- [ ] Box has no active players (checked BattleMetrics + Discord)
-- [ ] aicom-watch.ps1 tested in dry-run to confirm it can connect to the box RPT path
-- [ ] Score-AicomRounds.ps1 self-test passes: `.\Score-AicomRounds.ps1 -SelfTest`
-- [ ] Soak window reserved: minimum 2.5 hours of uninterrupted empty server time
-
----
-
-## 8. Soak log (fill in as soaks complete)
-
-| Soak | Date | DECAP_ENABLE | Terrain | Duration | OVERALL | AICOM2-DECAP | Arrival% | Zombies | Notes |
-|------|------|-------------|---------|----------|---------|-------------|----------|---------|-------|
-| 1 | - | 0 | Chernarus | - | - | - | - | - | Shadow mode — DECAP circuit off |
-| 2 | - | 1 | Chernarus | - | - | - | - | - | Full V2 |
-| 3 | - | 1 | Chernarus/TK | - | - | - | - | - | Confirmatory |
-
-**N=3 gate**: all three OVERALL = PASS or WATCH; soaks 2 and 3 AICOM2-DECAP = PASS. If any OVERALL = FAIL, that soak does not count toward N; fix and re-run.
-
----
-
-## 9. References
-
-- `docs/design/v2/AICOM-V2-CUTOVER-AND-RECONCILIATION.md` — the five-step sequence and owner ruling
-- `Tools/Soak/README.md` — analyze_soak.py scorecard sections and KPI thresholds
-- `Tools/Soak/analyze_soak.py` — grader (section 10 = AICOM2 soak-gate; GUIDE-REV GR-2026-07-03a)
-- `Tools/PrTestHarness/Aicom/Score-AicomRounds.ps1` — per-round scorecard with gate mode
-- `Tools/PrTestHarness/Ops/aicom-watch.ps1` — live AICOM2 line watcher
-- `docs/design/v2/AICOM-V2-MIGRATION-MAP.md` — V1->V2 record/function mapping
-- `docs/design/v2/AICOM-V3-TELEMETRY-CONTRACT.md` — unified grammar (AICOM2|v1| family)
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Common/Init/Init_CommonConstants.sqf`
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Init/Init_Server.sqf`
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander.sqf`
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Allocate.sqf`
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Decapitate.sqf`
+- `Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/AI/Commander/AI_Commander_Strategy.sqf`
+- `Tools/Soak/README.md`
