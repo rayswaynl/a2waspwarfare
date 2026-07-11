@@ -162,7 +162,7 @@ if (count _queu > 0) then {
 	_queu2 = _building getVariable "queu";
 };
 
-while {(count _queu == 0) || {(_id select 0) != (_queu select 0)}} do {  //--- queue-fix: guard empty shared queu (concurrent AI teams / player drain) -> keep polling instead of indexing [] (was: Generic error at [] select 0)
+while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--- queue-fix (Generic-error crash): the factory FIFO is SHARED - player buys push STRING tokens (Client_BuildUnit.sqf:198) while AI buys push NUMBER tokens (AI_Commander_Produce.sqf:502 -> _id select 0). A raw != on a mixed-type head threw "Generic error" on A2-OA (empty-guard via lazy || only stopped [] select 0). Mirror the proven type-safe player idiom (Client_BuildUnit.sqf:278): (x in [head]) is false on type-mismatch, never throws.
 	sleep 4;
 	_ret = _ret + 4;
 	_queu = _building getVariable "queu";
@@ -183,7 +183,7 @@ while {(count _queu == 0) || {(_id select 0) != (_queu select 0)}} do {  //--- q
 		if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 	};
 
-	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) == (_queu2 select 0)}) then {  //--- queue-fix: guard empty queu/queu2 before head-compare
+	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) in [_queu2 select 0]}) then {  //--- queue-fix: guard empty queu/queu2 before head-compare + type-safe head-compare (mirror Client_BuildUnit.sqf:302) - a mixed player/AI head token would throw Generic error on raw ==
 		if (_ret > _longest) then {
 			if (count _queu > 0) then {
 				_queu = _building getVariable "queu";
@@ -192,7 +192,7 @@ while {(count _queu == 0) || {(_id select 0) != (_queu select 0)}} do {  //--- q
 			};
 		};
 	};
-	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) != (_queu2 select 0)}) then {  //--- queue-fix 2026-06-14: reset the stuck-head timer ONLY when the head actually advances, not when a sibling / another team's unit churns the shared factory queue (that reset was defeating the purge under batch ordering).
+	if ((count _queu > 0) && {count _queu2 > 0} && {!((_queu select 0) in [_queu2 select 0])}) then {  //--- queue-fix: type-safe head-compare (mirror Client_BuildUnit.sqf idiom) - raw != threw Generic error on a mixed player/AI head. 2026-06-14: reset the stuck-head timer ONLY when the head actually advances, not when a sibling / another team's unit churns the shared factory queue (that reset was defeating the purge under batch ordering).
 		_ret = 0;
 		_queu2 = _building getVariable "queu";
 	};
