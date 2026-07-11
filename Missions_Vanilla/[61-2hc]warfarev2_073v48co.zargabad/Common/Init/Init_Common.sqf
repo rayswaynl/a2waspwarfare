@@ -166,6 +166,15 @@ WFBE_CO_FNC_OnUnitKilled = Compile preprocessFileLineNumbers "Common\Functions\C
 WFBE_CO_FNC_RevealArea = Compile preprocessFileLineNumbers "Common\Functions\Common_RevealArea.sqf";
 WFBE_CO_FNC_RemoveAAMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_RemoveAAMissiles.sqf";
 WFBE_CO_FNC_HandleSEADMissile = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleSEADMissile.sqf"; //--- B93 SEAD (GR-2026-07-03a): anti-radar guidance for tier-5 jets; 2-shot limit per spawn; flag WFBE_C_SEAD default 0.
+//--- PERF (HC-squeeze roadmap): Common_CreateVehicle re-read + re-compiled these six files FROM DISK on
+//--- every vehicle spawn (Call Compile preprocessFile) - 3 of them unconditionally per spawn. Compile once
+//--- here like every other WFBE_CO_FNC_* and Call the compiled function; byte-identical behaviour.
+WFBE_CO_FNC_ModifyVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_ModifyVehicle.sqf";
+WFBE_CO_FNC_ModifyAirVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_ModifyAirVehicle.sqf";
+WFBE_CO_FNC_GuerArmor = Compile preprocessFileLineNumbers "Common\Functions\Common_GuerArmor.sqf";
+WFBE_CO_FNC_AddVehicleMarking = Compile preprocessFileLineNumbers "Common\Functions\Common_AddVehicleMarking.sqf";
+WFBE_CO_FNC_AddVehicleFlag = Compile preprocessFileLineNumbers "Common\Functions\Common_AddVehicleFlag.sqf";
+WFBE_CO_FNC_AddVehicleTexture = Compile preprocessFileLineNumbers "Common\Functions\Common_AddVehicleTexture.sqf";
 WFBE_CO_FNC_RemoveCountermeasures = if !(WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_RemoveCountermeasures.sqf"} else {{}};
 WFBE_CO_FNC_SendToClient = if !(WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_SendToClient.sqf"} else {{}};
 WFBE_CO_FNC_SendToClients = Compile preprocessFileLineNumbers "Common\Functions\Common_SendToClients.sqf";
