@@ -151,6 +151,7 @@ cut, not before.
 6. Tag naming convention (per the version-name ruling above): `v100-release-1.0`, annotated with
    the exact commit SHA and cut date. Follow existing tag conventions
    (`v89-cmdcon44`, `v89-cmdcon48`, `v89-cmdcon48a`, `v88-pre-consolidation`) for message format.
-7. Do NOT push the tag, deploy the build, or touch the live Hetzner server
-   (`78.46.107.142`) as part of this checklist. Tagging `master` is a repo action; deploying it to
-   the live game server is a separate, explicitly gated action requiring its own owner go-ahead.
+7. Do NOT push the tag, deploy the build, or touch the live production server
+   (see internal ops runbook for host details) as part of this checklist. Tagging `master` is a
+   repo action; deploying it to the live game server is a separate, explicitly gated action
+   requiring its own owner go-ahead.
