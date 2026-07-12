@@ -8,8 +8,9 @@
 
 	Owner picks (2026-07-08): city core (~4071,4183), NEUTRAL start, [west,east] eligible to
 	accrue/win (GUER can raid/contest presence but is excluded from _eligibleSides so it can never
-	win), cash/supply rewards live, vehicle-wave/air-support reward tiers are explicit TODO stubs
-	(reuse existing spawn paths, do not invent new ones - see WFBE_FNC_ZgKoth_OnComplete below).
+	win), all four reward tiers wired and live (d023 WIRE-4-TIER, owner 2026-07-12): cash/supply plus
+	vehicle-wave/air-support, the last two founding ONE free commander team via the existing W6/W19
+	spawn path (WFBE_CO_FNC_RunCommanderTeam) - see WFBE_FNC_ZgKoth_OnComplete below.
 	Master flag WFBE_C_ZG_KOTH_ENABLE defaults 0. ZG-only via worldName gate below.
 
 	Launch pattern mirrors Init_Server.sqf's existing WFBE_C_NAVAL_HVT / WFBE_C_ICBM_TEL blocks
@@ -177,29 +178,72 @@ if (!isNil "WFBE_ZGKOTH_ANCHOR" && {!isNull WFBE_ZGKOTH_ANCHOR}) then {
 	_winningSide is the SIDE constant that completed the hold. Runs server-side only (the shared
 	dispatcher that invokes it is isServer-gated).
 
-	Reward-deck (ZARGABAD-OBJECTIVE.md tiers), rolled via the extracted WFBE_CO_FNC_WeightedDraw
-	(single-arg contract: [_weightPairs] call WFBE_CO_FNC_WeightedDraw - NOT the AI-commander
-	wildcard function itself, per design doc S0.2's explicit correction). fable/zg-koth-reweight-visibility
-	(owner 2026-07-10): vehicle_wave/air_support are unwired TODO stubs (their case bodies below spawn
-	nothing) - excluded from the active _weights draw below so no completion pays out zero. cash:supply
-	keeps the original 50:30 (5:3) ratio, rescaled to sum 100 (62.5:37.5, rounded to the nearest clean
-	integer pair 63:37):
-		common (weight 63): cash injection to the winning side (mirrors wildcard W1's ChangeAICommanderFunds shape)
-		common (weight 37): supply crate (mirrors wildcard W2's ChangeSideSupply shape)
-	vehicle_wave/air_support case bodies are left in place, NOT deleted - re-adding
-	["vehicle_wave",12]/["air_support",8] to _weights below is the entire re-activation diff once their
-	reward spawn paths are wired (see the TODO comments on those two cases).
+	Reward-deck rolled via the extracted WFBE_CO_FNC_WeightedDraw (single-arg contract:
+	[_weightPairs] call WFBE_CO_FNC_WeightedDraw - NOT the AI-commander wildcard function itself,
+	per design doc S0.2's explicit correction). d023 WIRE-4-TIER (owner 2026-07-12): all four tiers
+	are wired at the ORIGINAL design weights (PR #916 commit 5cbb20578), superseding the
+	fable/zg-koth-reweight-visibility cash/supply-only 63:37 interim:
+		common   (weight 50): cash injection - 15% of FUNDS_START (mirrors wildcard W1's ChangeAICommanderFunds shape)
+		common   (weight 30): supply crate - +800 capped (mirrors wildcard W2's ChangeSideSupply shape)
+		uncommon (weight 12): vehicle wave - ONE free ground-vehicle commander team founded at the winning-side HQ
+		rare     (weight  8): air support  - ONE free helicopter commander team founded at the winning-side HQ
+	The last two REUSE the exact W6 Air Cavalry / W19 Heliborne QRF founding path via the local
+	_foundRewardTeam helper (defined at the top of this function) - no new spawn code. If the winning
+	side has no matching template the tier falls back to the cash injection so a hold never pays zero.
 	Escalating the tier with overheld duration (ZARGABAD-OBJECTIVE.md) needs the dispatcher itself to
 	track "time held past threshold" - that is a primitive change, not a consumer change, so it is
 	deliberately NOT implemented here.
 */
 WFBE_FNC_ZgKoth_OnComplete = {
-	private ["_holdId","_anchor","_winningSide","_weights","_tier","_bonus","_fundsStart","_supply","_maxSupply","_supplyGrant"];
+	private ["_holdId","_anchor","_winningSide","_weights","_tier","_bonus","_fundsStart","_supply","_maxSupply","_supplyGrant","_foundRewardTeam"];
 	_holdId      = _this select 0;
 	_anchor      = _this select 1;
 	_winningSide = _this select 2;
 
-	_weights = [["cash",63],["supply",37]]; //--- fable/zg-koth-reweight-visibility: vehicle_wave/air_support excluded (TODO stubs, see cases below) - ratio preserved from 50:30.
+	//--- d023 WIRE-4-TIER reward-team founder (vehicle_wave / air_support). REUSE, NOT REINVENT:
+	//--- resolve ONE template from the winning side's OWN AI-commander pool (WFBE_<SIDE>AITEAMTEMPLATES)
+	//--- and found ONE FREE team at that side's HQ through the EXACT path W6 Air Cavalry / W19 Heliborne
+	//--- QRF use (AI_Commander_Wildcard.sqf:829-837): a least-loaded live HC via 'delegate-aicom-team',
+	//--- else the server-local WFBE_CO_FNC_RunCommanderTeam 3-arg fallback. No new spawn code - the team
+	//--- registers in wfbe_teams, rides the normal team GC, and the brain orders it forward. Free (no
+	//--- funds debited, mirrors W6). Fixed-wing leads are excluded from the air pick: the 3-arg founding
+	//--- path cannot pass a runway heading (slots 7/8), so a heli air-inserts where a Plane would not.
+	//--- _this: [_side, _wantAir]  _wantAir true = air support (Air, non-Plane), false = ground vehicle.
+	//--- Returns TRUE when a team was founded, FALSE when the side has no matching template.
+	_foundRewardTeam = {
+		private ["_rSide","_wantAir","_rSideID","_rSideText","_rHq","_rTmpls","_rPick","_rLead","_rSpawn","_rHc"];
+		_rSide   = _this select 0;
+		_wantAir = _this select 1;
+		_rHq     = _rSide call WFBE_CO_FNC_GetSideHQ;
+		if (isNull _rHq || {!alive _rHq}) exitWith {false};
+		_rSideID   = _rSide call WFBE_CO_FNC_GetSideID;
+		_rSideText = str _rSide;
+		_rTmpls    = missionNamespace getVariable [Format ["WFBE_%1AITEAMTEMPLATES", _rSideText], []];
+		_rPick     = [];
+		{
+			if (count _rPick == 0 && {count _x > 0}) then {
+				_rLead = _x select 0;
+				if (isClass (configFile >> "CfgVehicles" >> _rLead)) then {
+					if (_wantAir) then {
+						if (_rLead isKindOf "Air" && {!(_rLead isKindOf "Plane")}) then {_rPick = _x};
+					} else {
+						if (_rLead isKindOf "LandVehicle" && {!(_rLead isKindOf "Man")}) then {_rPick = _x};
+					};
+				};
+			};
+		} forEach _rTmpls;
+		if (count _rPick == 0) exitWith {false};
+		_rSpawn = getPos _rHq;
+		_rHc    = call WFBE_CO_FNC_PickLeastLoadedHC;
+		if (!isNull _rHc) then {
+			[_rHc, "HandleSpecial", ['delegate-aicom-team', _rSideID, _rPick, _rSpawn, 0]] Call WFBE_CO_FNC_SendToClient;
+		} else {
+			[_rSideID, _rPick, _rSpawn] Spawn WFBE_CO_FNC_RunCommanderTeam;
+		};
+		true
+	};
+
+	_weights = [["cash",50],["supply",30],["vehicle_wave",12],["air_support",8]]; //--- d023 WIRE-4-TIER (owner 2026-07-12): full 4-tier deck at the ORIGINAL design weights (PR #916 commit 5cbb20578); supersedes the fable/zg-koth-reweight-visibility cash/supply-only 63:37 interim.
 	_tier = [_weights] call WFBE_CO_FNC_WeightedDraw;
 
 	switch (_tier) do {
@@ -218,19 +262,23 @@ WFBE_FNC_ZgKoth_OnComplete = {
 			};
 		};
 		case "vehicle_wave": {
-			//--- fable/zg-koth-reweight-visibility (2026-07-10): unreachable while _weights above stays
-			//--- cash/supply-only - add ["vehicle_wave",12] back into _weights once wired. Case body unchanged.
-			//--- TODO before merge: wire into the existing vehicle-wave/QRF spawn path (design doc cites
-			//--- AI_Commander_Wildcard.sqf's W6/W19/W23 founding path as the reuse target). Deliberately
-			//--- not stubbing further here - inventing new spawn/materialization code is against the
-			//--- owner's "reuse, don't reimplement" framing for this feature.
-			["ZGKOTH-TODO", "WFBE_FNC_ZgKoth_OnComplete: vehicle_wave tier drawn but reward spawn path not wired - see TODO comment."] Call WFBE_CO_FNC_LogContent;
+			if (!([_winningSide, false] call _foundRewardTeam)) then {
+				//--- No ground-vehicle template for this side: fall back to the cash injection (case "cash"
+				//--- primitive) so a held objective never pays out nothing. 15% of FUNDS_START, mirrors W1.
+				_fundsStart = missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _winningSide], 0];
+				_bonus = round(_fundsStart * 0.15);
+				[_winningSide, _bonus] Call ChangeAICommanderFunds;
+				_tier = "cash(vehicle_wave-fallback)";
+			};
 		};
 		case "air_support": {
-			//--- fable/zg-koth-reweight-visibility (2026-07-10): unreachable while _weights above stays
-			//--- cash/supply-only - add ["air_support",8] back into _weights once wired. Case body unchanged.
-			//--- same TODO as vehicle_wave.
-			["ZGKOTH-TODO", "WFBE_FNC_ZgKoth_OnComplete: air_support tier drawn but reward spawn path not wired - see TODO comment."] Call WFBE_CO_FNC_LogContent;
+			if (!([_winningSide, true] call _foundRewardTeam)) then {
+				//--- No helicopter template for this side: same cash fallback as vehicle_wave above.
+				_fundsStart = missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _winningSide], 0];
+				_bonus = round(_fundsStart * 0.15);
+				[_winningSide, _bonus] Call ChangeAICommanderFunds;
+				_tier = "cash(air_support-fallback)";
+			};
 		};
 	};
 
