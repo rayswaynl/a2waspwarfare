@@ -79,10 +79,14 @@ The whole lifecycle stays local to the dedicated server:
 - create the truck and crew with canonical mission helpers;
 - found exactly eight living AI: one driver and seven escorts/cargo;
 - lock the truck against player entry before publishing it;
+- immediately define server-local wfbe_trashable=false, then publish the
+  truck into the side registry before any yield or client-visible stamp; the
+  collector treats the variable's presence, not its boolean value, as owned;
 - stamp the group wfbe_persistent=true and wfbe_ai_supply_group=true;
 - stamp the truck wfbe_ai_supplytruck=true with broadcast enabled as a client
   affordance, not as server authority;
-- keep side-logic wfbe_ai_supplytrucks pruned to live managed trucks;
+- prune only objNull registry entries; every non-null managed hull, alive or
+  dead, remains cleanup-owned and blocks replacement until safely deleted;
 - treat server-local membership in a WEST/EAST registry as authoritative;
 - never append the group to wfbe_teams or stamp wfbe_aicom_hc;
 - never transfer the group to an HC.
@@ -98,13 +102,18 @@ The explicit phases are:
 WAIT -> SPAWN -> RELOAD -> OUTBOUND -> DELIVER -> RETURN -> RELOAD
 
 CONTACT is a temporary overlay on either travel leg. Every phase has a bounded
-timeout and a single cleanup owner.
+timeout and a single cleanup owner. Common_TrashObject consults the same
+server-local WEST/EAST registry authority before removing handlers and again
+immediately before deletion. A registry member is handed back to the lifecycle;
+RequestOnUnitKilled remains unchanged and therefore completes ordinary combat
+attribution, statistics, and bounty flow.
 
 ### WAIT and SPAWN
 
-Prune null/dead registry entries first. Re-check the flag, mode, AICOM,
-side-AI, group-cap, HQ, and eligible-town gates immediately before creating
-anything. If any gate fails, wait on the bounded supervisor cadence without
+Prune objNull registry entries first. Any non-null registry member, alive or
+dead, remains lifecycle-owned and blocks replacement until it is safely deleted
+or confirmed objNull. Re-check the flag, mode, AICOM, side-AI, group-cap, HQ,
+and eligible-town gates immediately before creating anything. If any gate fails, wait on the bounded supervisor cadence without
 creating new state.
 
 Preserve HEAD's existing truck-mode compatibility baseline when the feature is
@@ -201,15 +210,23 @@ WFBE_SE_FNC_HandleSideSupplyChange and a separate owner decision.
 
 ## Cleanup and administrative respawn
 
-One lifecycle owner removes the truck from wfbe_ai_supplytrucks, clears
-persistence, removes handlers, deletes managed AI and hulls locally, and deletes
-the empty group. Cleanup is idempotent across partial spawn, death, timeout,
-HQ loss, ownership flip, feature/mode change, and game over.
+One lifecycle owner clears persistence, removes handlers, deletes managed AI and
+a safe server-local hull, confirms the hull objNull, removes that registry entry,
+and deletes the empty group. Cleanup is idempotent across partial spawn, death, timeout,
+HQ loss, ownership flip, feature/mode change, and game over. Generic trash never
+becomes a second hull owner: its early registry fence covers normal calls, while
+its pre-delete fence catches a call that began before lifecycle registration.
+The worker keeps wfbe_trashable defined and retains registry membership until the
+hull is deleted locally or confirmed objNull; it never prunes a non-null dead
+current truck merely because alive is false.
 
 The truck is locked and the server rejects player crew/cargo. As a final safety
-fence, cleanup never deletes a player-occupied hull. If impossible/stale state
-shows a player aboard, emit ABORT, defer deletion, keep the registry ownership
-latch, and retry after the player leaves; never transfer cleanup authority.
+fence, cleanup never deletes a player-occupied or non-server-local hull. Test
+player occupancy without an alive filter because dead player crew can remain in a
+wreck. If impossible/stale state shows either condition, emit one throttled
+ABORT, defer deletion, keep wfbe_trashable plus the registry ownership latch, and
+retry after the player leaves/locality returns; never transfer cleanup authority
+and never add a TTL that can force-delete an occupant.
 
 RequestSpecial carries no authenticated sender identity. Appending client-
 supplied player/team objects cannot secure RespawnST because a malicious client
@@ -246,20 +263,22 @@ personal reward, or supply-run-stat paths.
 ## Planned runtime file set
 
 1. Common/Init/Init_CommonConstants.sqf: register the new default-zero flag.
-2. Server/AI/AI_UpdateSupplyTruck.sqf: replace the dead launcher with the
+2. Common/Functions/Common_TrashObject.sqf: defer twice to authoritative
+   registry ownership, before handler removal and immediately before deletion.
+3. Server/AI/AI_UpdateSupplyTruck.sqf: replace the dead launcher with the
    explicit server-owned lifecycle; remove the missing ExecFSM dependency.
-3. Server/Init/Init_Server.sqf: compile, preserve the flag-off empty registry
+4. Server/Init/Init_Server.sqf: compile, preserve the flag-off empty registry
    and warning, and double-gate one worker for each present WEST/EAST side.
-4. Client/Module/supplyMission/supplyMissionStart.sqf: reject stamped AI trucks
+5. Client/Module/supplyMission/supplyMissionStart.sqf: reject stamped AI trucks
    for immediate client UX.
-5. Server/Module/supplyMission/supplyMissionStarted.sqf: reject authoritative
+6. Server/Module/supplyMission/supplyMissionStarted.sqf: reject authoritative
    registry members before any start-side mutation.
-6. Server/Module/supplyMission/supplyMissionCompleted.sqf: reject authoritative
+7. Server/Module/supplyMission/supplyMissionCompleted.sqf: reject authoritative
    registry members at the central handler entry before every side effect.
-7. Client/GUI/GUI_Menu_Economy.sqf and
+8. Client/GUI/GUI_Menu_Economy.sqf and
    Server/Functions/Server_HandleSpecial.sqf: disable/reject remote RespawnST
    while the feature is enabled; preserve flag-off behavior.
-8. Tools/Lint/test_ai_supply_truck_contract.py: static default-off, authority,
+9. Tools/Lint/test_ai_supply_truck_contract.py: static default-off, authority,
    registry, no-FSM, no-player-cargo, and SV-clamp contract tests.
 
 Only Chernarus source is edited directly. LoadoutManager generates Takistan and
@@ -285,7 +304,10 @@ Zargabad mirrors. Rsc/Parameters.hpp is not changed by this task.
 - Players cannot load, start, or directly complete a supply mission with an AI
   convoy; the server check uses registry membership.
 - No AI supply-run/delivery/synthetic-UID statistic appears. Canonical ordinary
-  combat kill attribution remains unchanged.
+  combat kill attribution remains unchanged, while generic trash defers both
+  before handler removal and before deletion for authoritative registry members.
+- A forged client UX stamp alone never suppresses generic cleanup; a flag flip,
+  dead player in crew, or non-local hull retains lifecycle ownership until safe.
 - No missing supplytruck.fsm call, sim/distance gating, antistack edit, direct
   bank mint, HC-stat path, deployment, restart, or live mutation.
 - Full SQF lint, delimiter/CRLF checks, LoadoutManager generation, CH/TK/ZG

@@ -21,6 +21,7 @@ INIT_SERVER = Path("Server/Init/Init_Server.sqf")
 CLIENT_START = Path("Client/Module/supplyMission/supplyMissionStart.sqf")
 SERVER_START = Path("Server/Module/supplyMission/supplyMissionStarted.sqf")
 SERVER_COMPLETE = Path("Server/Module/supplyMission/supplyMissionCompleted.sqf")
+TRASH_OBJECT = Path("Common/Functions/Common_TrashObject.sqf")
 ECONOMY_GUI = Path("Client/GUI/GUI_Menu_Economy.sqf")
 HANDLE_SPECIAL = Path("Server/Functions/Server_HandleSpecial.sqf")
 MIRRORED_FILES = (
@@ -28,6 +29,7 @@ MIRRORED_FILES = (
     CLIENT_START,
     SERVER_START,
     SERVER_COMPLETE,
+    TRASH_OBJECT,
     ECONOMY_GUI,
     HANDLE_SPECIAL,
 )
@@ -89,6 +91,36 @@ class AiSupplyTruckContractTests(unittest.TestCase):
                 self.assertIn('getVariable "wfbe_ai_supplytrucks"', helper)
                 self.assertIn("_candidate in _registry", helper)
                 self.assertNotIn("wfbe_ai_supplytruck\"", helper)
+
+    def test_generic_trash_defers_twice_to_server_registry_owner(self) -> None:
+        call = "_object Call WFBE_SE_FNC_IsAISupplyTruck"
+        for root in MAINTAINED_ROOTS:
+            code = mask_comments(read(root, TRASH_OBJECT))
+            first = code.find(call)
+            second = code.find(call, first + len(call))
+            exit_guard = "if (_isAISupplyTruck) exitWith {"
+            server_guard = (
+                'if (isServer && {!isNil "WFBE_SE_FNC_IsAISupplyTruck"})'
+            )
+            first_exit = code.find(exit_guard)
+            second_exit = code.find(exit_guard, first_exit + len(exit_guard))
+            handler_removal = code.find('removeAllEventHandlers "hit"')
+            delay = code.find("sleep _delay;")
+            deletion = code.find("deleteVehicle _object")
+            with self.subTest(root=root.name):
+                self.assertEqual(code.count(call), 2)
+                self.assertGreaterEqual(first, 0)
+                self.assertEqual(code.count(server_guard), 2)
+                self.assertEqual(code.count(exit_guard), 2)
+                self.assertGreater(first_exit, first)
+                self.assertGreater(handler_removal, first_exit)
+                self.assertGreater(second, delay)
+                self.assertGreater(second_exit, second)
+                self.assertGreater(deletion, second_exit)
+                self.assertNotIn(
+                    'getVariable ["wfbe_ai_supplytruck"', code
+                )
+                self.assertNotIn("WFBE_C_AI_SUPPLY_TRUCK_ENABLE", code)
 
     def test_server_start_rejects_registry_member_before_any_mutation(self) -> None:
         for root in MAINTAINED_ROOTS:

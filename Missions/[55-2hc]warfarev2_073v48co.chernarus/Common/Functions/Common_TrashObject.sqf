@@ -4,11 +4,21 @@
 		- Object.
 */
 
-Private ["_delay","_group","_isMan","_object","_town"];
+Private ["_delay","_group","_isAISupplyTruck","_isMan","_object","_town"];
 
 _object = _this;
 _town = [_object] Call GetClosestLocation;
 if !(isNull _object) then {
+	//--- AI supply lifecycle registry membership is server authority. Hand the hull
+	//--- back before generic cleanup can remove canonical combat handlers.
+	_isAISupplyTruck = false;
+	if (isServer && {!isNil "WFBE_SE_FNC_IsAISupplyTruck"}) then {
+		_isAISupplyTruck = _object Call WFBE_SE_FNC_IsAISupplyTruck;
+	};
+	if (_isAISupplyTruck) exitWith {
+		["INFORMATION", Format ["Server_TrashObject.sqf: Deferred registered AI supply truck [%1] to its lifecycle owner before generic cleanup.", _object]] Call WFBE_CO_FNC_LogContent;
+	};
+
 	_isMan = if (_object isKindOf "Man") then {true} else {false};
 
 	_group = if (_isMan) then {group _object} else {grpNull};
@@ -31,6 +41,16 @@ if !(isNull _object) then {
 		while {_held < _delay && {({isPlayer _x && {alive _x} && {_x distance _object < _prox}} count playableUnits) > 0}} do {
 			sleep 3; _held = _held + 3;
 		};
+	};
+
+	//--- Re-check after the delay: a generic thread may have started just before
+	//--- the lifecycle registered the truck. Never race its occupied-hull fence.
+	_isAISupplyTruck = false;
+	if (isServer && {!isNil "WFBE_SE_FNC_IsAISupplyTruck"}) then {
+		_isAISupplyTruck = _object Call WFBE_SE_FNC_IsAISupplyTruck;
+	};
+	if (_isAISupplyTruck) exitWith {
+		["INFORMATION", Format ["Server_TrashObject.sqf: Deferred registered AI supply truck [%1] to its lifecycle owner before deletion.", _object]] Call WFBE_CO_FNC_LogContent;
 	};
 
 	["INFORMATION", Format["Server_TrashObject.sqf: Deleting [%1], it has been [%2] seconds.", _object, _delay]] Call WFBE_CO_FNC_LogContent;
