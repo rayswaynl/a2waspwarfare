@@ -193,16 +193,18 @@ if (_target == _base && {_lastDynTarget > _base}) then {
 //--- continuously >0; a large, growing pendingAgeSec across cycles = the stick the deferred fix targets.
 //--- Silent while pending==0, so a healthy server produces no HCDISPATCH lines.
 if (_pending > 0) then {
-	private ["_pendSince"];
+	private ["_pendSince","_pendTimeout"];
 	_pendSince = _logik getVariable ["wfbe_aicom_pending_since", -1];
+	_pendTimeout = missionNamespace getVariable ["WFBE_C_AICOM_PENDING_TIMEOUT", 270];
 	if (_pendSince < 0) then {_pendSince = time; _logik setVariable ["wfbe_aicom_pending_since", _pendSince]};
 	diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH|pending=" + str _pending + "|founded=" + str _foundedTeams + "|target=" + str _target + "|pendingAgeSec=" + str (round (time - _pendSince)));
 	//--- B69 (pending-slot-timeout-reaper): a lost HC dispatch ack would pin _pending>0 forever, starving founding via the (_foundedTeams+_pending)>=_target guard below. After a timeout, reap the oldest still-pending slot so founding resumes. (_pending is a single per-side counter, so this ages the oldest pending slot, not a per-slot timer.)
-	if ((time - _pendSince) > (missionNamespace getVariable ["WFBE_C_AICOM_PENDING_TIMEOUT", 270])) then {
+	if ((time - _pendSince) > _pendTimeout) then {
 		_pending = _pending - 1;
 		_logik setVariable ["wfbe_aicom_pending", _pending];
 		if (_pending > 0) then {_logik setVariable ["wfbe_aicom_pending_since", time]} else {_logik setVariable ["wfbe_aicom_pending_since", -1]};
 		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH_REAP|pending->" + str _pending + "|reason=ack-timeout");
+		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC dispatch pending slot reaped after timeout (pending->%2, age=%3s, timeout=%4s).", _sideText, _pending, round (time - _pendSince), _pendTimeout]] Call WFBE_CO_FNC_AICOMLog;
 	};
 } else {
 	_logik setVariable ["wfbe_aicom_pending_since", -1];
