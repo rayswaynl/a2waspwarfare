@@ -637,7 +637,7 @@ while {!gameOver} do {
 					if (_cumSum > 0) then {
 						//--- DE-CORRELATION: second independent random call mixed in.
 						_entropy = random 1;
-						_roll    = (random _cumSum) + _entropy * 0.0001;
+						_roll    = ((random _cumSum) + _entropy * 0.0001) min (_cumSum - 0.00001);
 						_i = 0; _chosen = 0; _cumSum2 = 0;
 						while {_i < count _weights && {_chosen == 0}} do {
 							_cumSum2 = _cumSum2 + ((_weights select _i) select 1);
