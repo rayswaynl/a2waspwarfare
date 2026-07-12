@@ -1,7 +1,7 @@
 # BattlEye Enablement — Setup Notes & Test-Box Status (2026-07-12)
 
 This documents how to turn on BattlEye + the filters in this folder, and the current
-blocking finding on the Hetzner test box (`78.46.107.142`, service `Arma2OA-PR8`).
+blocking finding on the Hetzner test box (`<test box public IP>`, service `Arma2OA-PR8`).
 See `README-anticheat.md` for the filter design/tuning workflow itself.
 
 ## Enablement steps (when safe to do — see blocker below)
