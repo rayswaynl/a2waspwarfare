@@ -2498,7 +2498,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- WFBE_POSITION_TEMPLATE_MAP / WFBE_POSITION_ANCHOR_NAMES (Init_Defenses.sqf) + the side
 //--- Fortification menus (Structures_CO_US/_CO_RU/_CO_GUE/_OA_TKA v2 blocks). 0 (default) =
 //--- nothing is wired anywhere - byte-identical behaviour to HEAD.
-	if (isNil "WFBE_C_DEF_FORTIF_PACK") then {WFBE_C_DEF_FORTIF_PACK = 0};
+	if (isNil "WFBE_C_DEF_FORTIF_PACK") then {WFBE_C_DEF_FORTIF_PACK = 1};
 //--- Own composition cap for the fortification-pack anchors (Server\PVFunctions\RequestDefense.sqf
 //--- B3b): fortif placements are counted against THIS cap (distinct placement-IDs whose stamped
 //--- WFBE_WDDMAnchorClass is a fortif ghost) and are EXCLUDED from the WFBE_C_WDDM_COMP_CAP=3
