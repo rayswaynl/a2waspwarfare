@@ -76,33 +76,37 @@ if (_mode == "auth") exitWith {
 	_token = "";
 	_expires = 0;
 	isNil {
-		_authNow = time;
-		_authLast = missionNamespace getVariable [_authLastKey, -1e9];
-		if (typeName _authLast != "SCALAR") then {_authLast = -1e9};
-		if ((_authNow - _authLast) < 1) then {
+		_authInflight = missionNamespace getVariable [_authInflightKey, ""];
+		if (typeName _authInflight != "STRING") then {_authInflight = ""};
+		if (_authInflight != "") then {
 			_authBlocked = true;
 		} else {
-			missionNamespace setVariable [_authLastKey, _authNow];
-			_authInflight = missionNamespace getVariable [_authInflightKey, ""];
-			if (typeName _authInflight != "STRING") then {_authInflight = ""};
-			if (_authInflight != "") then {
-				_authBlocked = true;
-			} else {
-				_cap = missionNamespace getVariable [_capKey, []];
-				_capValid = false;
-				if (typeName _cap == "ARRAY" && {count _cap >= 2}) then {
-					if (typeName (_cap select 0) == "STRING" && {typeName (_cap select 1) == "SCALAR"}) then {
-						if ((_cap select 0) != "" && {(_cap select 1) > time}) then {_capValid = true};
-					};
+			_cap = missionNamespace getVariable [_capKey, []];
+			_capValid = false;
+			if (typeName _cap == "ARRAY" && {count _cap >= 2}) then {
+				if (typeName (_cap select 0) == "STRING" && {typeName (_cap select 1) == "SCALAR"}) then {
+					if ((_cap select 0) != "" && {(_cap select 1) > time}) then {_capValid = true};
 				};
-				if (!_capValid) then {
+			};
+			//--- Only the FRESH-MINT path is rate-limited. Reusing an already-valid capability is a
+			//--- cheap read with no state mutation and must stay ungated - throttling it too would let
+			//--- a spamming attacker deny a victim's own legitimate reuse for up to 1s at a time,
+			//--- which is a WORSE outcome than the flood this hardens against.
+			if (_capValid) then {
+				_token = _cap select 0;
+				_expires = _cap select 1;
+			} else {
+				_authNow = time;
+				_authLast = missionNamespace getVariable [_authLastKey, -1e9];
+				if (typeName _authLast != "SCALAR") then {_authLast = -1e9};
+				if ((_authNow - _authLast) < 1) then {
+					_authBlocked = true;
+				} else {
+					missionNamespace setVariable [_authLastKey, _authNow];
 					_token = Format ["%1:%2:%3:%4", _authUID, floor (diag_tickTime * 1000), floor (random 1000000000), floor (random 1000000000)];
 					_expires = time + 15;
 					_cap = [_token, _expires];
 					missionNamespace setVariable [_capKey, _cap];
-				} else {
-					_token = _cap select 0;
-					_expires = _cap select 1;
 				};
 			};
 		};
