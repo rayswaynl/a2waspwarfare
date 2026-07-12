@@ -84,6 +84,65 @@ switch (_request) do {
 		missionNamespace setVariable ['WFBE_OPFOR_SCORE_JOIN', (_args select 2)]
 	};
 	case "uav-reveal": {_args spawn WFBE_CL_FNC_Reveal_UAV};
+	//--- The auth response is accepted only when it echoes the private client challenge.
+	case "fpv-auth-token": {
+		Private ["_fpvAuthChallenge","_fpvChallengeKey","_fpvExpires","_fpvToken"];
+		if (count _args < 3) exitWith {};
+		_fpvToken = _args select 0;
+		_fpvExpires = _args select 1;
+		_fpvAuthChallenge = _args select 2;
+		_fpvChallengeKey = Format ["wfbe_fpv_auth_challenge_%1", getPlayerUID player];
+		if (typeName _fpvToken != "STRING" || {_fpvToken == ""}) exitWith {};
+		if (typeName _fpvExpires != "SCALAR" || {_fpvExpires <= time}) exitWith {};
+		if (typeName _fpvAuthChallenge != "STRING" || {_fpvAuthChallenge != (missionNamespace getVariable [_fpvChallengeKey, ""])}) exitWith {};
+		missionNamespace setVariable [Format ["wfbe_fpv_cap_client_%1", getPlayerUID player], [_fpvToken, _fpvExpires]];
+	};
+	//--- Purchase results carry the private capability and exact objects. Fake/stale client-bus
+	//--- packets cannot change stats, cooldown, or tear down a newer flight.
+	case "fpv-purchase-result": {
+		Private ["_fpvDriver","_fpvDrone","_fpvExpectedToken","_fpvGroup","_fpvMsg","_fpvNext","_fpvNextKey","_fpvOK","_fpvResultKey","_fpvStatusKey","_fpvToken","_fpvTokenAccepted"];
+		if (count _args < 6) exitWith {};
+		_fpvOK = _args select 0;
+		_fpvNext = _args select 1;
+		_fpvMsg = _args select 2;
+		_fpvDrone = _args select 3;
+		_fpvDriver = _args select 4;
+		_fpvToken = _args select 5;
+		if (typeName _fpvOK != "BOOL" || {typeName _fpvToken != "STRING"}) exitWith {};
+		_fpvResultKey = Format ["wfbe_fpv_purchase_token_%1", getPlayerUID player];
+		_fpvTokenAccepted = false;
+		isNil {
+			_fpvExpectedToken = missionNamespace getVariable [_fpvResultKey, ""];
+			if (_fpvExpectedToken != "" && {_fpvToken == _fpvExpectedToken}) then {
+				missionNamespace setVariable [_fpvResultKey, ""];
+				_fpvTokenAccepted = true;
+			};
+		};
+		if (!_fpvTokenAccepted) exitWith {};
+		_fpvStatusKey = Format ["wfbe_fpv_purchase_status_%1", getPlayerUID player];
+		missionNamespace setVariable [_fpvStatusKey, if (_fpvOK) then {1} else {-1}];
+		_fpvNextKey = Format ["wfbe_fpv_next_%1", getPlayerUID player];
+		if (typeName _fpvNext == "SCALAR") then {missionNamespace setVariable [_fpvNextKey, _fpvNext]};
+		if (_fpvOK) then {
+			[sideJoinedText,'UnitsCreated',1] Call UpdateStatistics;
+			[sideJoinedText,'VehiclesCreated',1] Call UpdateStatistics;
+		} else {
+			if (typeName _fpvDrone == "OBJECT" && {_fpvDrone == playerFPV}) then {
+				_fpvGroup = grpNull;
+				if (typeName _fpvDriver == "OBJECT" && {!isNull _fpvDriver} && {!isPlayer _fpvDriver} && {_fpvDriver == driver _fpvDrone}) then {
+					_fpvGroup = group _fpvDriver;
+					deleteVehicle _fpvDriver;
+				};
+				if (!isNull playerFPV) then {
+					playerFPV setVariable ["wfbe_fpv_armed", false];
+					deleteVehicle playerFPV;
+				};
+				playerFPV = objNull;
+				if (!isNull _fpvGroup && {count units _fpvGroup == 0}) then {deleteGroup _fpvGroup};
+			};
+		};
+		if (typeName _fpvMsg == "STRING" && {_fpvMsg != ""}) then {hint _fpvMsg};
+	};
 	//--- task46 (claude) N-FEAT-1: register the SCUD-strike addAction on the CLIENT.
 	//--- The server (Init_NavalHVT.sqf) does the proximity/leader/owner-side gate, then sends this
 	//--- signal to the player's UID; the action must live in the player's LOCAL space to be visible

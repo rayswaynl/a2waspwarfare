@@ -71,6 +71,12 @@ WFBE_SE_PVF_ALLOWED = [];
 	if (!isServer || local player) then {Format['WFBE_PVF_%1',_x] addPublicVariableEventHandler {(_this select 1) Spawn WFBE_CL_FNC_HandlePVF}};
 } forEach _clientCommandPV;
 
+//--- FPV purchase capabilities/results use a dedicated targeted PV so legacy HandleSpecial
+//--- writers cannot cross-route private tokens through the shared transport variable.
+if (!isServer || local player) then {
+	"WFBE_PVF_FPVPrivate" addPublicVariableEventHandler {(_this select 1) Spawn WFBE_CL_FNC_HandlePVF};
+};
+
 {
 	Call Compile Format["SRVFNC%1 = compile preprocessFileLineNumbers 'Server\PVFunctions\%1.sqf'", _x];
 	WFBE_SE_PVF_ALLOWED = WFBE_SE_PVF_ALLOWED + [Format["SRVFNC%1", _x]];
