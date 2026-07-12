@@ -31,7 +31,7 @@ etc.) be diffed dated snapshot over dated snapshot.
 
 ## Provenance
 
-- Box path: `C:\WASP\profiles-pr8\basic.cfg` (Hetzner livehost, 78.46.107.142)
+- Box path: `C:\WASP\profiles-pr8\basic.cfg` (Hetzner livehost, IP redacted — see private ops runbook)
 - Pulled via: Game PC `WaspCfgBackup` scheduled task (daily 03:30) → Main PC `PullWaspCfgBackup`
   scheduled task (daily 04:00)
 - basic.cfg size at capture: 286 bytes
