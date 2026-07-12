@@ -1160,6 +1160,12 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 //--- covered by both server loops is harmless (both only raise flyInHeight, never lower it).
 [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HeliTerrainGuard.sqf";
 
+//--- AICOM SMALL-ARMS x AIR ENGAGEMENT ENVELOPE (fable/smallarms-air-envelope): per-machine steering loop that
+//--- clears a NON-AA unit's lock on an aircraft it cannot damage when the aircraft is beyond the effective range
+//--- (WFBE_C_SMALLARMS_AIR_ENVELOPE, default 0 = OFF -> self-exits, byte-identical to HEAD). Runs on server + each
+//--- HC (same file, Init_HC.sqf) touching only LOCAL units. NOT sim-gating: unit<->target range, sim never frozen.
+[] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_SmallArmsAirEnvelope.sqf";
+
 //--- Client FPS telemetry receiver (2026-06-15, Net_2 request).
 //--- Each PLAYER client publishes [uid, name, avgFps, minFps] every WFBE_C_CLIENT_FPS_REPORT_INTERVAL s
 //--- when the WFBE_C_CLIENT_FPS_REPORT lobby param is ON. We stamp it server-side with what the client

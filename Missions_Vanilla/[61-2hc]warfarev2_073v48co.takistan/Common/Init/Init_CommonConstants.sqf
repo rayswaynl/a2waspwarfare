@@ -2710,6 +2710,17 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 //--- connected - proven blind on the measured 2026-07-09 double-HC-bounce collapse, remotePct 89->7).
 //--- Telemetry ONLY: no delegation behavior change, DELEGSTAT untouched, RPT lines only (never a Peach+ alert).
 	if (isNil "WFBE_C_DELEGHEALTH") then {WFBE_C_DELEGHEALTH = 0}; //--- master gate: 0=off (default - Init_Server never spawns the loop; runtime byte-identical to HEAD), 1=on (60s DELEGHEALTH|v2 AI-only per-owner tally + hysteretic HEALTHY/DEGRADED/COLLAPSED state lines, server only).
+//--- fable/smallarms-air-envelope (GR-2026-07-08a): effectiveness-scaled small-arms x AIR engagement
+//--- envelope. A NON-AA (small-arms) unit's lock on an aircraft it cannot damage is CLEARED
+//--- (doTarget/doWatch objNull) ONLY when the aircraft is BEYOND the effective range - within range it
+//--- still shoots (point-blank heli = everyone fires). Steering runs in the per-machine manager
+//--- Common_AICOM_SmallArmsAirEnvelope.sqf (server + HC); the classifier is stamped at spawn
+//--- (WFBE_effAntiAir). NOT sim/distance-gating: distance is unit<->its-air-target, never unit<->player;
+//--- simulation is never frozen (precedent: the shipped default-ON B60 HELI CANNON-NUDGE). Master 0 =
+//--- manager never starts + no spawn stamp = runtime byte-identical to HEAD.
+	if (isNil "WFBE_C_SMALLARMS_AIR_ENVELOPE") then {WFBE_C_SMALLARMS_AIR_ENVELOPE = 0}; //--- master gate: 0=off (default), 1=on.
+	if (isNil "WFBE_C_SMALLARMS_AIR_ENVELOPE_RANGE") then {WFBE_C_SMALLARMS_AIR_ENVELOPE_RANGE = 300}; //--- small-arms x Air effective envelope, metres (tunable); beyond this a small-arms unit is steered off an air lock.
+	if (isNil "WFBE_C_SMALLARMS_AIR_ENVELOPE_TICK") then {WFBE_C_SMALLARMS_AIR_ENVELOPE_TICK = 5}; //--- manager sweep cadence, seconds (tunable, 4-8s band).
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
