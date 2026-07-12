@@ -1,6 +1,6 @@
-# Flag System Quick Reference - 2026-07-03
+# Flag System Quick Reference - 2026-07-12
 
-Base checked: `origin/claude/build84-cmdcon36@873c7f7af2`.
+Base checked: `origin/master@bbab122f0eb40b1351d075d05a12da6960499a12`.
 
 Scope: fleet lane 316 reference for `Common/Init/Init_CommonConstants.sqf`, the main source-side index of `WFBE_C_*` tunables and feature gates. This page is documentation-only and does not change any mission behavior.
 
@@ -19,7 +19,7 @@ Practical consequence: if a name exists in `Rsc/Parameters.hpp`, check that clas
 
 ## Known Overrides
 
-- `WFBE_C_GUER_PLAYERSIDE` is both a constant fallback (`Init_CommonConstants.sqf:101`) and a lobby param (`Parameters.hpp:629`). Dedicated MP then force-reads the parameter default again at `initJIPCompatible.sqf:142-147` because the last parameter can be stale in cached `paramsArray`.
+- `WFBE_C_GUER_PLAYERSIDE` is both a constant fallback (`Init_CommonConstants.sqf:106`, value `1`) and a lobby param (`Parameters.hpp:659-664`, default `1`). Dedicated MP then force-reads the parameter default again at `initJIPCompatible.sqf:142-147` because the last parameter can be stale in cached `paramsArray`.
 - Starting funds and supply are exposed in the lobby (`Parameters.hpp:161-183`) and have SQF fallbacks (`Init_CommonConstants.sqf:1277-1286`), but dedicated MP also applies the economy boost and lean override at `initJIPCompatible.sqf:149-173`.
 - The live side-supply cap is the lobby parameter `WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT` (`Parameters.hpp:186`), not the local fallback alone. The constants file documents this at `Init_CommonConstants.sqf:1287-1293`.
 - `WFBE_C_GAMEPLAY_FAST_TRAVEL` defaults to fee mode in the lobby (`Parameters.hpp:244`) while the SQF fallback is free mode (`Init_CommonConstants.sqf:1396`). Dedicated MP reads the lobby value.
@@ -32,8 +32,8 @@ Practical consequence: if a name exists in `Rsc/Parameters.hpp`, check that clas
 | Upgrade ids | `Init_CommonConstants.sqf:37-60` | `WFBE_UP_BARRACKS` through `WFBE_UP_PATROLS` are fixed index constants. These must match all side upgrade arrays. |
 | Boot/side ids | `Init_CommonConstants.sqf:24-33` | `WFBE_C_WEST_ID`, `WFBE_C_EAST_ID`, `WFBE_C_GUER_ID`, `WFBE_C_CIV_ID`, and `WFBE_C_UNKNOWN_ID` are not feature flags. |
 | Zargabad pre-sets | `Init_CommonConstants.sqf:75-96` | ZG seeds selected AICOM/base constants before the later `isNil` CH/TK fallbacks, so the ZG value wins without changing CH/TK defaults. |
-| GUER player systems | `Init_CommonConstants.sqf:101-215` | Playable GUER, VBIED, mortar, improvised armor, kill tiers, FOBs, depot-neutral buy, and barracks AI cap. |
-| GUER air defense and Ka-137 | `Init_CommonConstants.sqf:220-250`, `:356-359` | Server GUER air-defense loop, Ka-137 swarm/flare knobs, paradrop cap, and Ka-137 reward coefficient. These are mostly constants-only, not lobby params. |
+| GUER player systems | `Init_CommonConstants.sqf:106-250` | Playable GUER, VBIED, mortar, improvised armor, kill tiers, FOBs, depot-neutral buy, and barracks AI cap. |
+| GUER air defense and Ka-137 | `Init_CommonConstants.sqf:252-289`, `:408-411` | Server GUER air-defense loop, Ka-137 swarm/flare knobs, paradrop cap, and Ka-137 reward coefficient. These are mostly constants-only, not lobby params. |
 | AI commander master and pop scale | `Init_CommonConstants.sqf:273-360` | AI commander enable/lock/garrison, GUER group cap, AI group size, team-count curve, pop-tier arrays, AICOM group cap, and route basics. |
 | AICOM air and airlift | `Init_CommonConstants.sqf:417-456` | Plane air-start, air hull caps, heli/airfield waivers, hot-LZ paradrop, retained transport, and tiered vehicle lift. |
 | AICOM objective scoring | `Init_CommonConstants.sqf:560-577`, `:686-710` | Near-band, concentration, spearhead count, HQ strike thresholds, v2 allocate/fist/harass/expand flags. |
@@ -59,7 +59,7 @@ The current lobby file exposes only a subset of the flag space. Major exposed fa
 | Gameplay | `:220-351` | Fast travel, friendly fire, boundaries, missiles, team-swap, thermal imaging, victory condition |
 | Modules | `:213`, `:381-430` | PMC, flares, auto-CM, EASA, ICBM, IR smoke lobby name |
 | Towns and patrols | `:479-557` | Town amount, capture mode, defender/occupation, patrols, build protection, town start mode |
-| GUER lobby controls | `:629-656` | Playable GUER and scavenger values; air-defense, kill-tier, FOB, Ka-137, and mortar knobs are not exposed here. |
+| GUER lobby controls | `:659-719` | Playable GUER, kill tiers, scavenger values, and civilian-depot toggle; air-defense, FOB, Ka-137, and mortar knobs are not exposed here. |
 
 ## Editing Rules
 

@@ -9,6 +9,7 @@ Guide rev for downstream PR bodies: GR-2026-07-03a.
 - `FLIP-ON`: reasonable candidate for owner-approved default-on or soak-on after smoke.
 - `HOLD-DARK`: keep default-off.
 - `OWNER-DECIDE`: gameplay/product call; do not flip by agent initiative.
+- `OWNER-DECIDED-ON`: owner has explicitly armed the current default; preserve that decision unless a new owner task changes it.
 - `NOT-A-FEATURE-FLAG`: value is an enum/counter/side id or tuning zero, not a dark feature gate.
 
 Hard rule: `WFBE_C_SIM_GATING` is always `HOLD-DARK`.
@@ -46,7 +47,7 @@ Hard rule: `WFBE_C_SIM_GATING` is always `HOLD-DARK`.
 | `WFBE_C_AICOM_HELI_APPROACH_LIMITED` | 800 | 0 | OWNER-DECIDE | AI heli safety tweak; needs in-engine flight check. |
 | `WFBE_C_AICOM_HELI_RUNINFLOOR` | 801 | 0 | OWNER-DECIDE | Terrain-specific flight floor; map-profile V2 should own. |
 | `WFBE_C_AICOM_HELI_GUNFLOOR` | 802 | 0 | OWNER-DECIDE | Terrain-specific attack-heli floor. |
-| `WFBE_C_AICOM_FOUND_REQUIRE_FACTORY` | 905 | 0 | HOLD-DARK | Can starve founding; keep dark until V2 economy/factory rules. |
+| `WFBE_C_AICOM_FOUND_REQUIRE_FACTORY` | 1045 | 1 | OWNER-DECIDED-ON | Owner armed 2026-07-10 after starvation-safety review; zero-factory HQ fallback remains and unmatched picks skip cleanly for the next cycle. |
 | `WFBE_C_AICOM_SPREAD_TIERCAP` | 917 | 0 | OWNER-DECIDE | Fist spread tuning; soak-only candidate. |
 | `WFBE_C_AICOM_OVERRUN_SCRIPTRAZE` | 925 | 0 | HOLD-DARK | Owner preference is real destruction; keep scripted raze off. |
 | `WFBE_C_AICOM_STRIKE_COMMIT` | 940 | 0 | FLIP-ON | Prevents HQ strike from stealing progressing teams; matches doctrine. Needs soak. |

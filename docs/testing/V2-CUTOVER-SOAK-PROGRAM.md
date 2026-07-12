@@ -40,19 +40,20 @@ Windows CRLF checkout has SHA-256
 
 ## Current integrated controls
 
-The paths and line numbers below are anchored to `master` snapshot `bb79a88aa` observed during
+The paths and line numbers below are anchored to `master` snapshot `bbab122f0` observed during
 the reconciliation. Revalidate them against the current head before future work.
 
 | Subsystem | Current default | Authoritative behavior |
 |---|---:|---|
-| Snapshot | no subsystem flag | `Init_Server.sqf:82` compiles M0 Snapshot unconditionally; `AI_Commander.sqf:618-621` calls it before Strategy when the strategy path and cadence are eligible. It has no global cutover flag. |
-| Allocator | `WFBE_C_AICOM2_ALLOCATE_ENABLE = 1` | Initialized to `1` when nil in `Common/Init/Init_CommonConstants.sqf:771-773`. At `0`, `AI_Commander_Allocate.sqf:25` exits before writing allocation state, and `AI_Commander_AssignTowns.sqf:746-762` ignores allocator targets unless the flag is positive. Legacy Strategy/AssignTowns target selection remains active. |
-| Decapitate | `WFBE_C_AICOM2_DECAP_ENABLE = 1` | Initialized to `1` when nil in `Init_CommonConstants.sqf:791-795`. At `0`, Decapitate may still maintain sensing/state and emit telemetry, but `AI_Commander_Decapitate.sqf:193-245` performs no press-stamp or allocation-target writes and clears existing press stamps. `AI_Commander_Strategy.sqf:753-804` enables the legacy HQ-strike block while the flag is non-positive. |
+| Snapshot | no subsystem flag | `Init_Server.sqf:82` compiles M0 Snapshot unconditionally; `AI_Commander.sqf:620-621` calls it before Strategy when the strategy path and cadence are eligible. It has no global cutover flag. |
+| Allocator | `WFBE_C_AICOM2_ALLOCATE_ENABLE = 1` | Initialized to `1` when nil in `Common/Init/Init_CommonConstants.sqf:774`. At `0`, `AI_Commander_Allocate.sqf:25` exits before writing allocation state, and `AI_Commander_AssignTowns.sqf:749-762` ignores allocator targets unless the flag is positive. Legacy Strategy/AssignTowns target selection remains active. |
+| Decapitate | `WFBE_C_AICOM2_DECAP_ENABLE = 1` | Initialized to `1` when nil in `Init_CommonConstants.sqf:796`. At `0`, Decapitate may still maintain sensing/state and emit telemetry, but `AI_Commander_Decapitate.sqf:193-245` performs no press-stamp or allocation-target writes and clears existing press stamps. `AI_Commander_Strategy.sqf:753-804` enables the legacy HQ-strike block while the flag is non-positive. |
 
-Allocator and Decapitate are compiled unconditionally at `Init_Server.sqf:83-84`. They are invoked
-after Strategy at `AI_Commander.sqf:622-627` only when `_aiStrategy` is true and the strategy cadence
+Allocator, Decapitate, and AirResp are compiled unconditionally at `Init_Server.sqf:83-85`. They are invoked
+after Strategy at `AI_Commander.sqf:620-629` only when `_aiStrategy` is true and the strategy cadence
 is due; their internal gates then control their own behavior. There are no
-`class WFBE_C_AICOM2_ALLOCATE_ENABLE` or `class WFBE_C_AICOM2_DECAP_ENABLE` entries in
+`class WFBE_C_AICOM2_ALLOCATE_ENABLE`, `class WFBE_C_AICOM2_DECAP_ENABLE`, or
+`class WFBE_C_AICOM2_AIRRESP_ENABLE` entries in
 `Rsc/Parameters.hpp`, so these are not the lobby controls described by the retired plan.
 
 Source comments that still mention an older default do not override the executable assignments
