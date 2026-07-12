@@ -283,10 +283,10 @@ _jipLatch = missionNamespace getVariable format["WFBE_JIP_LATCH%1", _uid];
 if (!isNil "_jipLatch" && {(time - _jipLatch) < 15}) exitWith {
 	diag_log (Format ["[WFBE][JIPFUNDS] duplicate connect-resolve for [%1] within 15s - funds block skipped (latch).", _uid]);
 };
-missionNamespace setVariable [format["WFBE_JIP_LATCH%1", _uid], time];
 if (str _sideJoined == "CIV") exitWith {
 	diag_log (Format ["[WFBE][JIPFUNDS] side unresolved (CIV) for [%1] - funds block deferred, nothing written.", _uid]);
 };
+missionNamespace setVariable [format["WFBE_JIP_LATCH%1", _uid], time];
 
 //--- The player has joined for the first time.
 if (isNil '_get') exitWith {
