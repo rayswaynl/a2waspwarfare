@@ -1,8 +1,12 @@
 # Default-Off Feature Flag Readiness Sweep
 
-Date: 2026-07-03
-Lane: fleet lane 303, docs-only source PR
-Base checked: `origin/claude/build84-cmdcon36@873c7f7af25070bbf690d27cc4c006d45a00155f`
+Date: 2026-07-11
+Lane: Fleet task `wasp-default-off-readiness-sweep-completeness-review`, docs-only source PR
+Original six-row audit base: `origin/claude/build84-cmdcon36@873c7f7af25070bbf690d27cc4c006d45a00155f`
+Beacon reconciliation base: `origin/master@051524dca71d8ff4a597f5b34d9476b095844dd0`
+Beacon inventory provenance: [PR #1045](https://github.com/rayswaynl/a2waspwarfare/pull/1045) head
+`feb02a653aecc8dc00c76da4eeef585ea6f0f9ad`, merged 2026-07-11T18:28:20Z as
+`24a8696d535f56acd105ff08ae68551617a22da2`; read-only evidence, not this branch's stack base.
 
 ## Scope
 
@@ -13,13 +17,18 @@ and what evidence is still required before any flag can safely move to default 1
 No mission source, lobby parameters, generated mirrors, package artifacts, deploy
 scripts, or live runtime state are changed here.
 
+The six pre-existing table entries retain their 2026-07-03 audit base and anchors.
+This completeness pass revalidated only the new spawn-beacon entry against the
+beacon reconciliation base above.
+
 ## Summary
 
-| Flag | Current state on Build84 | Flip readiness | Recommendation |
+| Flag | Current state on cited base | Flip readiness | Recommendation |
 | --- | --- | --- | --- |
 | `WFBE_C_SMUGGLER_ENABLE` | No live flag registration or reader found on the target base. The AN-2 smuggler concept is documented as adjacent future work in `docs/design/UNUSED-ASSETS.md:35` and `:55`, but this base has no dormant switch to arm. | Not present | Do not add or flip in release prep. Wait for a dedicated smuggler implementation lane and its own default-off gate. |
 | `WFBE_C_ENDGAME_FORCE_ENABLE` | Registered default 0 in `Common/Init/Init_CommonConstants.sqf:663`. When enabled, `server_victory_threeway.sqf:22-38` publishes `WFBE_ENDGAME_FORCE_MULT`; `updateresources.sqf:53-54` applies it to AICOM town income. | Wired but needs soak proof | Keep default 0 until a long-round soak confirms the taper resolves stalemates without starving normal comeback play. |
 | `WFBE_C_AICOM_FUNDS_SINK_ENABLE` | Registered default 0 in `Init_CommonConstants.sqf:651`. `AI_Commander_FundsSink.sqf:31` early-exits when dark; `updateresources.sqf:147-149` calls it only when the flag is positive and the worker exists. | Wired but needs economy soak | Keep default 0 until soak data shows the drain rate and veteran push do not overcorrect rich-side behavior. |
+| `WFBE_C_AICOM_SPAWNBEACON_ENABLE` | Registered default 0 in `Init_CommonConstants.sqf:1009`. The worker compiles at `Init_Server.sqf:79`, but `AI_Commander.sqf:652-657` calls it only when the flag is positive and `AI_Commander_Beacon.sqf:23-24` rechecks the gate at entry. Flag 0 is behaviorally inert after compile. | Wired; supervised soak gated | Keep default 0. Arm only in an owner-authorized controlled soak, and keep two-sided testing blocked on the independent side-ownership review prerequisite. |
 | `WFBE_C_VEHICLE_MARKINGS` | Registered default 0 in `Init_CommonConstants.sqf:1666`. `Common_AddVehicleMarking.sqf:41` gates local `#lightpoint` markings; `Common_CreateVehicle.sqf:45-55` feeds the shared pending-texture path. | Not ready for default-on | Keep default 0 until in-engine attach/FPS and visual smoke prove the per-vehicle lightpoints and side skins are acceptable at AI-heavy scale. |
 | `WFBE_C_VEHICLE_FLAGS` | Registered default 0 in `Init_CommonConstants.sqf:1670`. `Common_AddVehicleFlag.sqf:30` gates per-vehicle `FlagCarrier` attachment; `Common_CreateVehicle.sqf:48-50` wires it into the same JIP-safe pending-texture path. | Not ready for default-on | Keep default 0 until the flag object attachment cost is measured in a heavy-AI session. |
 | `WFBE_C_WALLS_V2` | Registered default 0 as a tombstone in `Init_CommonConstants.sqf:1813-1818`. `Init_Defenses.sqf:58-61` says the v2 factory wall ladder arrays are deleted; construction hooks at `Construction_MediumSite.sqf:170` and `Construction_SmallSite.sqf:127` state the old v2 ladder is reverted/dead. | Dead flag | Keep default 0. Future work should remove or continue tombstoning it in a cleanup lane, not flip it. |
@@ -41,6 +50,19 @@ Required proof before enabling:
 - A soak where one or both commanders cross `WFBE_C_AICOM_FUNDS_SINK_THRESHOLD` and the RPT logs `AI_Commander_FundsSink.sqf: ... FUNDS-SINK fired`.
 - Comparison of commander funds, team pressure, and veteran/premium founding frequency before and after the drain.
 - A rollback note for `WFBE_C_AICOM_FUNDS_SINK_DRAIN_PCT` and `WFBE_C_AICOM_FUNDS_SINK_DRAIN_MAX` if the push wave becomes too spiky.
+
+### AICOM forward spawn beacon
+
+The worker is compiled regardless of the flag value, so the default-0 readiness claim
+is behavioral rather than byte-inert.
+
+Required proof before enabling:
+
+- At default 0, capture server/HC RPT evidence showing no `SPAWNBEACON_FIELDED` or `SPAWNBEACON_RESTOOD` events and no associated commander-funds debit, beacon object creation, or reposition. The supervisor and worker-entry gates must remain intact.
+- In an owner-authorized isolated flag-1 window, start with one AI-commander side and verify the `FIELDED`/`RESTOOD` event sequence, `WFBE_C_AICOM_SPAWNBEACON_MAX = 1`, the funds debit, the 300-second re-buy cooldown, and the 300 m standoff/600 m re-stand placement behavior.
+- Verify water/enemy-town placement guards plus AI, human, and JIP mobile-respawn usability with `WFBE_C_RESPAWN_MOBILE > 0`, including spawn behavior for the locked cargo vehicle. Destroy the beacon and prove replacement timing and normal wreck cleanup.
+- Keep two-sided flag-1 testing blocked until the side-ownership/census prerequisite recorded by Fleet task `wasp-aicom-forward-spawn-beacon-review` is fixed and independently reviewed. A one-sided soak is not two-sided readiness evidence.
+- Roll back to 0 and prove that no later beacon events, funds debits, object creations, or repositions occur. Preserve the RPT and configuration provenance with the soak packet.
 
 ### Vehicle markings and vehicle flags
 
@@ -69,6 +91,9 @@ compatibility is no longer needed.
 ## Verification
 
 - `rg -n "WFBE_C_SMUGGLER_ENABLE" -S .` returned no matches on this base.
-- `rg -n "WFBE_C_(SMUGGLER_ENABLE|ENDGAME_FORCE_ENABLE|AICOM_FUNDS_SINK_ENABLE|VEHICLE_MARKINGS|VEHICLE_FLAGS|WALLS_V2)" -S Missions/[55-2hc]warfarev2_073v48co.chernarus docs` was used for the source inventory.
+- `rg -n "WFBE_C_(SMUGGLER_ENABLE|ENDGAME_FORCE_ENABLE|AICOM_FUNDS_SINK_ENABLE|AICOM_SPAWNBEACON_ENABLE|VEHICLE_MARKINGS|VEHICLE_FLAGS|WALLS_V2)" -S Missions/[55-2hc]warfarev2_073v48co.chernarus docs` was used for the source inventory.
+- PR #1045 head `feb02a653aecc8dc00c76da4eeef585ea6f0f9ad` reconciles the behavioral inventory at `docs/design/v2/AICOM-V2-BEHAVIORAL-INVENTORY.md:98` and `:369-374` to the guarded default 0 and current source anchors; its only changed file is that inventory document.
+- The independent read-only review packet `game-pc-handoffs/AICOM-SPAWNBEACON-REVIEW-20260711.md` has SHA-256 `29904253AF0BF2F39A74D7EDA4C38ACF095E64B1D4F9F1C6C87D638620BAAF5D` and supplies the supervised-soak prerequisite above; it is not flag-on authorization.
 - The PR is docs-only; no SQF, SQM, HPP, EXT, generated mirror, package, or deploy file changed.
+- Markdown table integrity and `git diff --check` were verified for the one-file diff.
 - LoadoutManager was not run because no mission files changed.
