@@ -407,7 +407,7 @@ diag_log Format ["OILFIELD|v1|UNLOCK|t=%1|pos=%2", round time, _nodePos];
 
 //------------------------------------------------------------------------------------
 //--- (5) LIVE MARKER LABEL helper. Rebuilds the marker text from live state so the map narrates the
-//--- stakes. Cheap (one setMarkerText); only called on state changes, not per scan. Owner-gated by
+//--- stakes. The scan loop calls this every tick, so only broadcast when the rendered text changed. Owner-gated by
 //--- WFBE_C_OILFIELD_MARKER_LIVE (default ON) so the label can be reverted to static with a flag.
 //------------------------------------------------------------------------------------
 WFBE_FNC_OilfieldRefreshLabel = {
@@ -428,7 +428,7 @@ WFBE_FNC_OilfieldRefreshLabel = {
 	} else {
 		_txt = _baseLabel + " [NEUTRAL]";
 	};
-	_mkr setMarkerText _txt;
+	if ((markerText _mkr) != _txt) then {_mkr setMarkerText _txt};
 };
 
 //--- Paint the initial (neutral) label immediately.
