@@ -24,6 +24,19 @@ if (_timer < 300) then {_timer = 300};
 _firstDelay = missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_CLEANER_FIRST_DELAY", 90];
 if (_firstDelay < 1) then {_firstDelay = 90};
 
+//--- BOOT-STALL GUARD (flag WFBE_C_DROPPEDITEMS_CLEANER_DEFER_FIRST, default 0 = HEAD behaviour).
+//--- The first whole-island weaponholder sweep is IDENTICAL in radius (20000) and results to every
+//--- later sweep, but when it fires early at ~90s it lands inside the boot/spawn storm where the
+//--- server main thread is saturated, so the SAME scan measures ~6.5s wall (Performance Audit
+//--- cleaner_droppeditems MAX_MS 6414-6583, scanned:0 deleted:0) vs ~48-115ms once the server has
+//--- settled. The sibling whole-map cleaners (crater/ruins) never spike because their first sweep
+//--- is floored to >=1800s. When this flag is >0, defer the first droppeditems sweep to the steady
+//--- cadence (_timer) so pass 1 also runs on a settled server. Nothing is skipped: at ~90s the
+//--- early sweep finds ZERO drops (no deaths yet), so deferring only shifts an empty scan.
+if ((missionNamespace getVariable ["WFBE_C_DROPPEDITEMS_CLEANER_DEFER_FIRST", 0]) > 0) then {
+	if (_firstDelay < _timer) then {_firstDelay = _timer};
+};
+
 //--- Per-cycle deletion cap. Delete at most N this cycle and defer the rest to the next
 //--- cycle, so a one-off debris spike cannot stall the server. The cooperative sleeps between
 //--- deletes are preserved below.
