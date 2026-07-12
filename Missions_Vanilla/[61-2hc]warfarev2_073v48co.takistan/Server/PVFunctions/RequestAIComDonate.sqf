@@ -22,7 +22,7 @@
 */
 
 private ["_donor","_donorTeam","_amount","_side","_logik","_teamFunds","_aicomRunning",
-         "_cmdTeam","_humanCmd","_curFunds","_walletAfter","_donorName","_donorUID"];
+         "_cmdTeam","_humanCmd","_walletAfter","_donorName","_donorUID"];
 
 _donor     = _this select 0;
 _donorTeam = _this select 1;
@@ -80,8 +80,6 @@ if (_teamFunds < _amount) exitWith {
 };
 
 //--- Execute transfer.
-_curFunds = (_side) Call GetAICommanderFunds;
-
 [_donorTeam, -_amount] Call ChangeTeamFunds;
 [_side, _amount] Call ChangeAICommanderFunds;
 

@@ -33,6 +33,26 @@ while {true} do {
 		};
 	} forEach allGroups;
 
+	//--- fable/ew-markers WIN4: GUER FOB delivery-truck markers -- reuses this loop's own
+	//--- delete-and-rebuild _known/_i cleanup. Iterates `vehicles` like the established
+	//--- wfbe_is_guer_fob consumer in Client_GetRespawnAvailable.sqf:117-119. "ColorGreen"
+	//--- matches this file's own GUER-friendly palette (patrol dots above, healthy-town
+	//--- flags below) and the #76F563 GUER-FOB branding in Init_Unit.sqf:88/108 (that hex is
+	//--- structured-text colour for addAction/hint labels; setMarkerColorLocal needs a named
+	//--- CfgMarkerColors class, not an arbitrary hex string).
+	{
+		if (alive _x && {_x getVariable ["wfbe_is_guer_fob", false]}) then {
+			_name = Format ["guer_fob_%1", _i];
+			_name = createMarkerLocal [_name, getPos _x];
+			_name setMarkerTypeLocal "mil_dot";
+			_name setMarkerColorLocal "ColorGreen";
+			_name setMarkerSizeLocal [0.6, 0.6];
+			_name setMarkerTextLocal "Guer FOB";
+			_known = _known + [_name];
+			_i = _i + 1;
+		};
+	} forEach vehicles;
+
 	//--- fable/guer-town-intel (owner): GUER-owned town status + inbound reinforcements.
 	//--- Flag per owned town, colored by Director ledger health (str vs base from the JIP snap:
 	//--- green = holding, yellow = pressured, red = critical). "+N inbound" dot when virtual

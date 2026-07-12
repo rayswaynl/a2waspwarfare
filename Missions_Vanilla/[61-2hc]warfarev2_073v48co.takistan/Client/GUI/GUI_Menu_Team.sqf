@@ -102,16 +102,15 @@ while {alive player && dialog} do {
 	if (MenuAction == 1) then {
 		MenuAction = -1;
 		if ((_transferAmount != 0)&&((_list_Players select _curSel) != group player)) then {
-			[(_list_Players select _curSel),_transferAmount] Call ChangeTeamFunds;
-			-_transferAmount Call ChangePlayerFunds;
+			//--- N1 fix (GR-2026-07-08a): same client-authoritative ChangeTeamFunds/ChangePlayerFunds
+			//--- sink as the old GUI_TransferMenu.sqf path (this is the classic WF menu's alternate
+			//--- entry point to the identical bug) - any modified client could forge the target team
+			//--- and/or amount with zero server validation. Routed through the same
+			//--- RequestFundsTransfer PVF; it re-derives the sender's own team server-side and
+			//--- re-checks the balance before moving a single dollar. Recipient notify now only
+			//--- fires on a server-confirmed transfer.
+			["RequestFundsTransfer", [player, (_list_Players select _curSel), _transferAmount]] Call WFBE_CO_FNC_SendToServer;
 			_funds = Call GetPlayerFunds;
-			if (isPlayer leader (_list_Players select _curSel)) then {
-				// if (WF_A2_Vanilla) then {
-					[getPlayerUID(leader (_list_Players select _curSel)), "LocalizeMessage",['FundsTransfer',_transferAmount,name player]] Call WFBE_CO_FNC_SendToClients;
-				// } else {
-					// [leader (clientTeams select _curSel), "LocalizeMessage",['FundsTransfer',_transferAmount,name player]] Call WFBE_CO_FNC_SendToClient;
-				// };
-			};
 			sliderSetRange[13007,0,_funds];
 		};
 	};

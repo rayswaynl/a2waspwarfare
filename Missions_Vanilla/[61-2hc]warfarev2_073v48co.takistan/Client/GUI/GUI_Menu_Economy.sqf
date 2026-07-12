@@ -119,7 +119,7 @@ while {alive player && dialog} do {
 			if (!isNull _closest && _closest distance _position < 100 && isNil {_closest getVariable "WFBE_SOLD"}) then {
 				_scName = getText (configFile >> "CfgVehicles" >> (typeOf _closest) >> "displayName");
 				_scId = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",sideJoinedText]) find (typeOf _closest);
-				_scRef = if (_scId > 0) then {round(((missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _scId) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT") / 100)} else {0};
+				_scRef = if (_scId > -1) then {round(((missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _scId) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT") / 100)} else {0};
 				if ([Format ["wf_sell_%1", _closest], Format ["<t color='#ff5a5a' size='1.1'>Sell %1?</t><br/>Refund $%2. Click it again to confirm.", _scName, _scRef]] call WFBE_CL_FNC_ConfirmAction) then {
 					MenuAction = -1;
 					mouseButtonDown = -1;
@@ -149,36 +149,44 @@ while {alive player && dialog} do {
 						_id = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",sideJoinedText]) find _type;
 						
 						//--- TODO: Change the find system with a getvar system.
-						if (_id > 0) then {
-							_supplyB = (missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _id;
-							_supplyB = round((_supplyB * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT")) / 100);
-						
-							if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {[sideJoined, _supplyB, "Factory sold.", false] Call ChangeSideSupply} else {(_supplyB) Call ChangePlayerFunds};
-						};
-						//--- #692 queue-refund fix: sum and refund all pending build-queue costs before demolition.
-						//--- queu_costs is a parallel array storing the price each player paid at order time.
-						//--- Refund via the same channel as the factory-sell above (ChangeSideSupply / ChangePlayerFunds).
-						//--- Clearing queu BEFORE setDammage 1 routes each buyer's Client_BuildUnit.sqf coroutine
-						//--- through the E1 cancel path (_qIdx == -1 -> exitWith {}, no spawn) instead of the
-						//--- dead-building refund path, preventing a double-refund. A2-OA-safe: private/for/
-						//--- select/count; getVariable [2-arg] on OBJECT (not GROUP); setVariable broadcast.
-						private ["_qCosts","_qTotal","_qI"];
-						_qCosts = _closest getVariable ["queu_costs", []];
-						_qTotal = 0;
-						for "_qI" from 0 to ((count _qCosts) - 1) do {
-							_qTotal = _qTotal + (_qCosts select _qI);
-						};
-						if (_qTotal > 0) then {
-							if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
-								[sideJoined, _qTotal, "Factory sold - queued unit refunds.", false] Call ChangeSideSupply
+						if (_id > -1) then {
+							private "_rtRlS";
+							_rtRlS = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES",sideJoinedText]) select _id;
+							//--- owner 2026-07-09: Radio Tower was bought with CASH -> refund CASH (salePercent of the cash price), not supply.
+							if (_rtRlS == "RadioTower") then {
+								(round(((missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER_CASH_COST", 2500]) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT")) / 100)) Call ChangePlayerFunds;
 							} else {
-								(_qTotal) Call ChangePlayerFunds
+								_supplyB = (missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _id;
+								_supplyB = round((_supplyB * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT")) / 100);
+								if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {[sideJoined, _supplyB, "Factory sold.", false] Call ChangeSideSupply} else {(_supplyB) Call ChangePlayerFunds};
 							};
 						};
-						_closest setVariable ["queu",        [], true];
-						_closest setVariable ["queu_costs",  [], true];
-						_closest setVariable ["queu_cpts",   [], true];
-						_closest setVariable ["queu_labels", [], true];
+						//--- #856 follow-up (closes the #692 queue-counter leak; owner's post-merge review
+						//--- comment on PR #856). #692 added a LUMP-SUM refund of all pending queu_costs to
+						//--- the SELLER, then force-cleared queu/queu_costs/queu_cpts/queu_labels before
+						//--- setDammage 1. That force-clear makes every still-waiting buyer's
+						//--- Client_BuildUnit.sqf coroutine resolve _qIdx == -1 on its next poll, routing it
+						//--- through the E1 CANCELLED-exit (Client_BuildUnit.sqf ~:372-376), which assumes
+						//--- Action_CancelQueue.sqf already decremented that buyer's unitQueu and the
+						//--- machine-local WFBE_C_QUEUE_<factory> counter. It had not -- both counters leak
+						//--- permanently for every buyer still queued (not yet building) when the factory
+						//--- sold. unitQueu and WFBE_C_QUEUE_<factory> are UNBROADCAST, buyer-client-local
+						//--- variables (Client_BuildUnit.sqf:11 plain `unitQueu = unitQueu + _cpt`; :391
+						//--- `missionNamespace setVariable` with no publicVariable/broadcast flag) -- this
+						//--- seller-side thread has no way to reach or decrement another player's copy, and
+						//--- no existing broadcast channel carries that request (see the rejected fix (b) in
+						//--- the PR body). So: do NOT lump-refund and do NOT force-clear the queue arrays
+						//--- here. Just let setDammage 1 below mark the building dead and leave queu/
+						//--- queu_costs/queu_cpts/queu_labels alone -- exactly like an organic combat kill
+						//--- (Server_BuildingKilled.sqf does no queue handling at all). Each buyer's own
+						//--- coroutine already detects !alive _building on its own machine within one 4s
+						//--- poll, self-dequeues its own entry (Client_BuildUnit.sqf:335-362), finds
+						//--- _qIdx >= 0 (skips E1), and hits the existing top-scope FC2 dead-building exit
+						//--- (Client_BuildUnit.sqf ~:389-394), which already refunds _currentCost to that
+						//--- buyer AND correctly decrements their own unitQueu / WFBE_C_QUEUE_<factory> --
+						//--- locally, no cross-client access needed. This also fixes the #692 lump-refund's
+						//--- second latent issue: it credited the SELLER's own team funds / side supply
+						//--- instead of the buyers who actually paid.
 						
 						//--- Inform the side.
 						// WFBE_LocalizeMessage = [sideJoined,'CLTFNCLOCALIZEMESSAGE',['StructureSold',_type]];
@@ -221,7 +229,7 @@ while {alive player && dialog} do {
 			_salePct = missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT";
 			{
 				_i2 = _sNames2 find (typeOf _x);
-				if (_i2 > 0 && isNil {_x getVariable "WFBE_SOLD"}) then {
+				if (_i2 > -1 && isNil {_x getVariable "WFBE_SOLD"}) then {
 					_ref2 = round(((_sCosts2 select _i2) * _salePct) / 100);
 					_mk = Format ["wfbe_econ_sell_%1", _forEachIndex];
 					createMarkerLocal [_mk, getPos _x];
@@ -238,7 +246,7 @@ while {alive player && dialog} do {
 		_pTxt = "<t color='#ffae3a' shadow='1'>SELL MODE - click a structure to sell.</t>";
 		if (!isNull _pNear && _pNear distance _pPos < 100 && isNil {_pNear getVariable "WFBE_SOLD"}) then {
 			_pId = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",sideJoinedText]) find (typeOf _pNear);
-			if (_pId > 0) then {
+			if (_pId > -1) then {
 				_pRef = round(((missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS",sideJoinedText]) select _pId) * (missionNamespace getVariable "WFBE_C_STRUCTURES_SALE_PERCENT") / 100);
 				_pTxt = _pTxt + Format ["<br/><t color='#e0b94f' shadow='1'>%1</t> - refund <t color='#76f563' shadow='1'>$%2</t>", getText (configFile >> "CfgVehicles" >> (typeOf _pNear) >> "displayName"), _pRef];
 			};

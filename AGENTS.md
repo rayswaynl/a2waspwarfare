@@ -1,10 +1,11 @@
 # WASP Warfare — Agent Guide
-<!-- GUIDE-REV: GR-2026-07-03a — PR bodies MUST cite this rev -->
+<!-- GUIDE-REV: GR-2026-07-08a — PR bodies MUST cite this rev -->
 
 This is an Arma 2: Operation Arrowhead 1.64 (EOL) Warfare fork. Three maintained terrains:
 Chernarus (source), Takistan (mirror), Zargabad (mirror). All work is delivered as draft PRs
-to `origin/claude/build84-cmdcon36`; agents never deploy to the live server. SQF scripting
-reference: https://community.bistudio.com/wiki/Category:Arma_2:_Operation_Arrowhead:_Scripting_Commands
+to `origin/master`; agents never deploy to the live server. `claude/build84-cmdcon36` is
+historical — fully merged into `master` as of 2026-07-08; never branch from or target it.
+SQF scripting reference: https://community.bistudio.com/wiki/Category:Arma_2:_Operation_Arrowhead:_Scripting_Commands
 Ignore all Arma 3 documentation. Deep reference: `docs/AGENT-HANDBOOK.md`.
 
 ---
@@ -30,7 +31,7 @@ After the run, restore any `version.sqf.template` that drifted on TK or ZG to it
 merge-base state before staging:
 
 ```powershell
-git checkout origin/claude/build84-cmdcon36 -- \
+git checkout origin/master -- \
   "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf.template" \
   "Missions_Vanilla/[61-2hc]warfarev2_073v48co.zargabad/version.sqf.template"
 ```
@@ -127,7 +128,7 @@ SQF command names are case-insensitive; casing-only diffs are false positives.
    on summaries or prior context alone.
 1. Run the lint gate:
    ```
-   python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV --no-classname-index
+   python Tools\Lint\check_sqf.py --select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,DBLBOM,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV,TRAILCOMMA --no-classname-index
    ```
    Per-line suppression: `// noqa: CODE` (e.g. `// noqa: A3CMD`) silences that code on the line;
    bare `// noqa` silences all. Stale suppressions where no finding fires are reported as `DEADNOQA`.
@@ -142,11 +143,13 @@ SQF command names are case-insensitive; casing-only diffs are false positives.
 
 ## PR mechanics
 
-- Draft PRs only: `gh pr create --draft --base claude/build84-cmdcon36`
-- Branch naming: `codex/<lane>-<topic>` or `fable/<topic>`; never target `master`
+- Draft PRs only: `gh pr create --draft --base master`
+- Branch naming: `codex/<lane>-<topic>` or `fable/<topic>`; base all PRs on `master`
+  (owner pick E2, 2026-07-08 — `claude/build84-cmdcon36` is fully merged and retired as a
+  base; do not branch from or target it)
 - Commit format: `feat(<lane>): <summary> [flag <FLAG> default 0]`
 - PR body required fields: feature description, flag name + default, why flag-off is inert,
-  test plan, mirrors confirmed, GUIDE-REV `GR-2026-07-03a`
+  test plan, mirrors confirmed, GUIDE-REV `GR-2026-07-08a`
 - Never stage line-ending-churn files, `_MISSIONS.7z`, or a `nul` file artifact
 
 ---

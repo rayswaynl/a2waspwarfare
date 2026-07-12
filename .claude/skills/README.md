@@ -1,4 +1,4 @@
-<!-- source: Agent-Guide GUIDE-REV GR-2026-07-06a -->
+<!-- source: Agent-Guide GUIDE-REV GR-2026-07-08a -->
 # Agent skills pack
 
 | Skill | One-liner |

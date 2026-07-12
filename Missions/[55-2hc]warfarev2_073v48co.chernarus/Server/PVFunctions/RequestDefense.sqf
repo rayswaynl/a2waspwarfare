@@ -309,9 +309,9 @@ if (_index != -1) then {
 					//--- B74.2: leaderboard DEFENSE-built credit to the placing player (gates passed; player-only path).
 					if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {private "_dUid"; _dUid = getPlayerUID _reqPlayer; if (_dUid != "") then {[_dUid, WFBE_STAT_DEFENSES_BUILT, 1] call WFBE_SE_FNC_RecordStat}};
 				if (!isNil "WFBE_POSITION_ANCHOR_NAMES" && {(WFBE_POSITION_ANCHOR_NAMES find _defenseType) != -1}) then {
-					[_side,_defenseType,_pos,_dir,_manned] Spawn Server_ConstructPosition;
+					[_side,_defenseType,_pos,_dir,_manned,_reqPlayer] Spawn Server_ConstructPosition;
 				} else {
-					[_defenseType,_side,_pos,_dir,_manned,false,missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MANNING_RANGE",_builtByRepairTruck] Call ConstructDefense;
+					[_defenseType,_side,_pos,_dir,_manned,false,missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MANNING_RANGE",_builtByRepairTruck,false,_reqPlayer] Call ConstructDefense;
 				};
 			};
 
@@ -320,9 +320,9 @@ if (_index != -1) then {
 			//--- B74.2: leaderboard DEFENSE-built credit to the placing player (outside base; player-only path).
 			if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {private "_dUid"; _dUid = getPlayerUID _reqPlayer; if (_dUid != "") then {[_dUid, WFBE_STAT_DEFENSES_BUILT, 1] call WFBE_SE_FNC_RecordStat}};
 			if (!isNil "WFBE_POSITION_ANCHOR_NAMES" && {(WFBE_POSITION_ANCHOR_NAMES find _defenseType) != -1}) then {
-				[_side,_defenseType,_pos,_dir,_manned] Spawn Server_ConstructPosition;
+				[_side,_defenseType,_pos,_dir,_manned,_reqPlayer] Spawn Server_ConstructPosition;
 			} else {
-				[_defenseType,_side,_pos,_dir,_manned,false,missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MANNING_RANGE",_builtByRepairTruck] Call ConstructDefense;
+				[_defenseType,_side,_pos,_dir,_manned,false,missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MANNING_RANGE",_builtByRepairTruck,false,_reqPlayer] Call ConstructDefense;
 			};
 		};
 
@@ -331,9 +331,9 @@ if (_index != -1) then {
 		//--- B74.2: leaderboard DEFENSE-built credit to the placing player (budget gate off; player-only path).
 		if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {private "_dUid"; _dUid = getPlayerUID _reqPlayer; if (_dUid != "") then {[_dUid, WFBE_STAT_DEFENSES_BUILT, 1] call WFBE_SE_FNC_RecordStat}};
 		if (!isNil "WFBE_POSITION_ANCHOR_NAMES" && {(WFBE_POSITION_ANCHOR_NAMES find _defenseType) != -1}) then {
-			[_side,_defenseType,_pos,_dir,_manned] Spawn Server_ConstructPosition;
+			[_side,_defenseType,_pos,_dir,_manned,_reqPlayer] Spawn Server_ConstructPosition;
 		} else {
-			[_defenseType,_side,_pos,_dir,_manned,false,missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MANNING_RANGE",_builtByRepairTruck] Call ConstructDefense;
+			[_defenseType,_side,_pos,_dir,_manned,false,missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MANNING_RANGE",_builtByRepairTruck,false,_reqPlayer] Call ConstructDefense;
 		};
 	};
 };

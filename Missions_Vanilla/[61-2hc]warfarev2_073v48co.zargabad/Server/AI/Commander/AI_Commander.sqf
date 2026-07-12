@@ -52,6 +52,101 @@ if (count (WFBE_PRESENTSIDES - [resistance]) > 1) then {
 	};
 };
 
+	//--- V1.0 TEMPERAMENT PRESETS (a-life; flag WFBE_C_AICOM_TEMPERAMENT default 0 = OFF, byte-identical
+	//--- to HEAD). Draws an archetype ONCE per side (Blitzer/Turtle/Feint-Artist), de-correlated from the
+	//--- enemy's pick (mirrors the doctrine coin-flip immediately below - same isNil-guard/_logik-storage
+	//--- idiom), and bundles a coherent set of EXISTING AICOM v2 play-shaping tunables into a per-side
+	//--- missionNamespace override (side-suffixed key, e.g. ..._WEST / ..._EAST) so the two sides can run
+	//--- genuinely different personalities in the SAME round. Consumer read sites in
+	//--- AI_Commander_Strategy.sqf / AI_Commander_Decapitate.sqf check the side-suffixed key FIRST,
+	//--- falling back to the existing global default when unset - flag off or side not yet drawn =
+	//--- byte-identical to HEAD.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_TEMPERAMENT", 0]) > 0 && {isNil {_logik getVariable "wfbe_aicom_temperament"}}) then {
+		private ["_eSideT","_eLogikT","_eTempD","_tempPool","_temperament","_tArch","_tKey","_tMult","_tIsInt","_tFloor","_tLit","_tBase","_tVal","_tSideKey"];
+		_eSideT  = if (_side == west) then {east} else {west};
+		_eLogikT = (_eSideT) Call WFBE_CO_FNC_GetSideLogic;
+		_eTempD  = if (isNil "_eLogikT" || {isNull _eLogikT}) then {""} else {_eLogikT getVariable ["wfbe_aicom_temperament", ""]};
+		//--- De-correlate: drop the enemy's archetype from the draw pool if it already picked (mirrors doctrine).
+		_tempPool = ["BLITZER","TURTLE","FEINT"] - [_eTempD];
+		if (count _tempPool == 0) then {_tempPool = ["BLITZER","TURTLE","FEINT"]}; //--- safety net: never an empty pool.
+		_temperament = _tempPool select floor(random count _tempPool);
+		_logik setVariable ["wfbe_aicom_temperament", _temperament];
+
+		//--- Archetype table: [globalKey, multiplier, isInt(0/1), floor, literalFallback]. literalFallback
+		//--- mirrors the read site's OWN inline default (belt-and-suspenders only - Init_CommonConstants.sqf
+		//--- always sets the real global before AI_Commander.sqf spawns, so this is essentially never hit).
+		_tArch = switch (_temperament) do {
+		case "BLITZER": {[
+			["WFBE_C_AICOM_FRONT_DWELL", 0.5, 1, 60, 480],
+			["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 0.5, 1, 1, 2],
+			["WFBE_C_AICOM_LASTSTAND_TOWNS", 1.0, 1, 1, 1],
+			["WFBE_C_AICOM_LASTSTAND_RATIO", 0.67, 0, 0.05, 0.45],
+			["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 0.6, 1, 100, 500],
+			["WFBE_C_AICOM_RELIEF_MIN_ALIVE", 1.5, 1, 1, 4],
+			["WFBE_C_AICOM_RELIEF_HOLD", 0.5, 1, 30, 240],
+			["WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS", 0.75, 1, 3, 12],
+			["WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX", 1.5, 1, 0, 2],
+			["WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO", 0.83, 0, 1.1, 3],
+			["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 0.6, 1, 1, 5],
+			["WFBE_C_AICOM_HQSTRIKE_MIN_HOLD", 0.67, 1, 60, 600],
+			["WFBE_C_AICOM_HQSTRIKE_CAP_FRAC", 1.3, 0, 0.1, 0.5],
+			["WFBE_C_AICOM2_DECAP_DOM_RATIO", 0.87, 0, 1.05, 1.5],
+			["WFBE_C_AICOM2_DECAP_ABORT_RATIO", 0.83, 0, 0.3, 0.9],
+			["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS", 1.4, 1, 1, 5],
+			["WFBE_C_AICOM2_DECAP_ARM_TICKS", 0.67, 1, 1, 3]
+		]};
+		case "TURTLE": {[
+			["WFBE_C_AICOM_FRONT_DWELL", 1.5, 1, 60, 480],
+			["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 1.5, 1, 1, 2],
+			["WFBE_C_AICOM_LASTSTAND_TOWNS", 2.0, 1, 1, 1],
+			["WFBE_C_AICOM_LASTSTAND_RATIO", 1.5, 0, 0.05, 0.45],
+			["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 1.4, 1, 100, 500],
+			["WFBE_C_AICOM_RELIEF_MIN_ALIVE", 0.5, 1, 1, 4],
+			["WFBE_C_AICOM_RELIEF_HOLD", 2.0, 1, 30, 240],
+			["WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS", 1.33, 1, 3, 12],
+			["WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX", 0.5, 1, 0, 2],
+			["WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO", 1.33, 0, 1.1, 3],
+			["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 1.6, 1, 1, 5],
+			["WFBE_C_AICOM_HQSTRIKE_MIN_HOLD", 1.5, 1, 60, 600],
+			["WFBE_C_AICOM_HQSTRIKE_CAP_FRAC", 0.7, 0, 0.1, 0.5],
+			["WFBE_C_AICOM2_DECAP_DOM_RATIO", 1.2, 0, 1.05, 1.5],
+			["WFBE_C_AICOM2_DECAP_ABORT_RATIO", 1.11, 0, 0.3, 0.9],
+			["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS", 0.6, 1, 1, 5],
+			["WFBE_C_AICOM2_DECAP_ARM_TICKS", 1.67, 1, 1, 3]
+		]};
+		default {[
+			["WFBE_C_AICOM_FRONT_DWELL", 0.75, 1, 60, 480],
+			["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 1.0, 1, 1, 2],
+			["WFBE_C_AICOM_LASTSTAND_TOWNS", 1.0, 1, 1, 1],
+			["WFBE_C_AICOM_LASTSTAND_RATIO", 1.0, 0, 0.05, 0.45],
+			["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 1.0, 1, 100, 500],
+			["WFBE_C_AICOM_RELIEF_MIN_ALIVE", 1.0, 1, 1, 4],
+			["WFBE_C_AICOM_RELIEF_HOLD", 0.75, 1, 30, 240],
+			["WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS", 1.0, 1, 3, 12],
+			["WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX", 1.0, 1, 0, 2],
+			["WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO", 1.0, 0, 1.1, 3],
+			["WFBE_C_AICOM_HQSTRIKE_STALL_OVERRIDE", 1.0, 1, 1, 5],
+			["WFBE_C_AICOM_HQSTRIKE_MIN_HOLD", 1.0, 1, 60, 600],
+			["WFBE_C_AICOM_HQSTRIKE_CAP_FRAC", 0.8, 0, 0.1, 0.5],
+			["WFBE_C_AICOM2_DECAP_DOM_RATIO", 1.0, 0, 1.05, 1.5],
+			["WFBE_C_AICOM2_DECAP_ABORT_RATIO", 1.0, 0, 0.3, 0.9],
+			["WFBE_C_AICOM2_DECAP_MAX_ENTOWNS", 1.0, 1, 1, 5],
+			["WFBE_C_AICOM2_DECAP_ARM_TICKS", 1.0, 1, 1, 3]
+		]};
+		};
+		{
+			_tKey = _x select 0; _tMult = _x select 1; _tIsInt = _x select 2; _tFloor = _x select 3; _tLit = _x select 4;
+			_tBase = missionNamespace getVariable [_tKey, _tLit];
+			_tVal  = _tBase * _tMult;
+			if (_tIsInt > 0) then {_tVal = round _tVal};
+			if (_tVal < _tFloor) then {_tVal = _tFloor};
+			_tSideKey = format [(_tKey + "_%1"), _side];
+			missionNamespace setVariable [_tSideKey, _tVal];
+		} forEach _tArch;
+
+		["INFORMATION", Format ["AI_Commander.sqf: [%1] temperament drawn: %2 (de-correlated from enemy).", str _side, _temperament]] Call WFBE_CO_FNC_AICOMLog;
+	};
+
 //--- V0.2: pick a doctrine once - the primary factory path this AI builds around.
 if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 	//--- AICOM v2 (wiki + Miksuu strategy): de-correlate the doctrine from the ENEMY's for varied matches (was a
@@ -60,7 +155,15 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 		_eSideD = if (_side == west) then {east} else {west};
 		_eLogikD = (_eSideD) Call WFBE_CO_FNC_GetSideLogic;
 		_eDocD = if (isNil "_eLogikD" || {isNull _eLogikD}) then {""} else {_eLogikD getVariable ["wfbe_aicom_doctrine", ""]};
-		_doctrine = if (_eDocD == "HF") then {"LF"} else {if (_eDocD == "LF") then {"HF"} else {if (random 1 > 0.5) then {"HF"} else {"LF"}}};
+		_doctrine = if (_eDocD == "HF") then {"LF"} else {if (_eDocD == "LF") then {"HF"} else {
+			if (!isNil {_logik getVariable "wfbe_aicom_temperament"}) then {
+				private "_tHfBias";
+				_tHfBias = switch (_logik getVariable "wfbe_aicom_temperament") do {case "BLITZER": {0.7}; case "TURTLE": {0.3}; default {0.5}};
+				if (random 1 < _tHfBias) then {"HF"} else {"LF"}
+			} else {
+				if (random 1 > 0.5) then {"HF"} else {"LF"}
+			}
+		}};
 	_logik setVariable ["wfbe_aicom_doctrine", _doctrine];
 	["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine picked: %2 (primary factory path).", str _side, _doctrine]] Call WFBE_CO_FNC_AICOMLog;
 
@@ -522,6 +625,8 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				if (!isNil "WFBE_SE_FNC_AICOM2_Allocate") then {(_side) Call WFBE_SE_FNC_AICOM2_Allocate};
 				//--- M5 DECAPITATE closer runs AFTER the Allocator each tick; it NEVER writes wfbe_aicom_targets (the Allocator's town-first fist stays authoritative) - it only stamps wfbe_aicom_decap on teams already near the ORGANICALLY-SENSED enemy HQ (#724). Inert unless WFBE_C_AICOM2_DECAP_ENABLE > 0.
 				if (!isNil "WFBE_SE_FNC_AICOM2_Decapitate") then {(_side) Call WFBE_SE_FNC_AICOM2_Decapitate};
+				//--- M6 AIRRESP closer runs AFTER DECAP each tick; it NEVER founds a ground team or touches wfbe_aicom_decap/wfbe_aicom_targets/wfbe_aicom_alloc_target - it only dispatches its own tracked air response flights onto an organically-sensed W/E lane. Inert unless WFBE_C_AICOM2_AIRRESP_ENABLE > 0 (ARMED, default 1, owner 2026-07-08).
+				if (!isNil "WFBE_SE_FNC_AICOM2_AirResp") then {(_side) Call WFBE_SE_FNC_AICOM2_AirResp};
 				//--- NOTE (claude-gaming 2026-06-28): the AI-INTENT publish block was MOVED OUT of this gate
 				//--- (it used to live here) to the _active-gated block just below the Executor, so the command-console
 				//--- intent readout refreshes + reaches JIP/assist clients even when the AI is not in full-build mode.
@@ -762,6 +867,78 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				_logik setVariable ["wfbe_aicom_reqdraw_t0", time];
 				["INFORMATION", Format ["AI_Commander.sqf: [%1] REQDRAW armed - funds %2 at team cap (%3/%4); paid wildcard draw requested.", str _side, _funds, _fTeams, _dynTarget]] Call WFBE_CO_FNC_AICOMLog;
 				diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|REQDRAW_ARM|funds=" + str _funds + "|teams=" + str _fTeams + "|target=" + str _dynTarget);
+			};
+
+			//--- Commander Town Ledger investment arm (fable/ctl-impl-v1, B6/B7). Flag-off
+			//--- (AICOMV2_LANE_CMD_TOWN_LEDGER=0 or AICOMV2_CTL_INVEST_ENABLE=0) => skipped
+			//--- silently - the lane flag gates existence, not just behaviour, so no telemetry
+			//--- at all fires when either master switch is off.
+			if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0
+				&& {(missionNamespace getVariable ["AICOMV2_CTL_INVEST_ENABLE", 0]) > 0}) then {
+				private ["_ctlHumanBlock","_ctlFundsOk","_ctlCooldownOk","_ctlSkipReason","_ctlNow2"];
+				_ctlNow2       = time;
+				_ctlHumanBlock = _humanSeated && {(missionNamespace getVariable ["AICOMV2_CTL_INVEST_HUMAN_OFF", 1]) > 0};
+				_ctlFundsOk    = _funds >= ((missionNamespace getVariable ["AICOMV2_CTL_INVEST_COST", 50000]) + (missionNamespace getVariable ["AICOMV2_CTL_INVEST_FLOOR", 250000]));
+				_ctlCooldownOk = (_ctlNow2 - (_logik getVariable ["WFBE_CTL_INVEST_T0", -1e10])) > (missionNamespace getVariable ["AICOMV2_CTL_INVEST_COOLDOWN", 480]);
+				_ctlSkipReason = "";
+				if (_ctlHumanBlock) then {_ctlSkipReason = "human"};
+				if (_ctlSkipReason == "" && {!_ctlFundsOk}) then {_ctlSkipReason = "floor"};
+				if (_ctlSkipReason == "" && {!_ctlCooldownOk}) then {_ctlSkipReason = "cooldown"};
+				if (_ctlSkipReason == "") then {
+					private ["_ctlLedger","_ctlTarget","_ctlI","_ctlBestVal","_ctlBestStr","_ctlTownCd"];
+					_ctlLedger  = _logik getVariable ["WFBE_CTL_LEDGER", []];
+					_ctlTarget  = -1;
+					_ctlBestVal = -1;
+					//--- B7 tie-break: among equal wfbe_town_value candidates, prefer LOWEST strength
+					//--- (the weaker town is the more urgent repair target). Seeded high so the first
+					//--- eligible candidate always wins its own comparison.
+					_ctlBestStr = 1e10;
+					_ctlTownCd  = missionNamespace getVariable ["AICOMV2_CTL_INVEST_TOWN_COOLDOWN", 1200];
+					_ctlI = 0;
+					{
+						private ["_rec","_str","_town","_val","_eligible"];
+						_rec      = _x;
+						_str      = _rec select 2;
+						_town     = _rec select 0;
+						_eligible = (_ctlNow2 - (_rec select 4)) > _ctlTownCd;
+						if (_eligible && {_str < 1.0}) then {
+							_val = _town getVariable ["wfbe_town_value", 0];
+							if (_val > _ctlBestVal || {_val == _ctlBestVal && {_str < _ctlBestStr}}) then {_ctlBestVal = _val; _ctlBestStr = _str; _ctlTarget = _ctlI};
+						};
+						if (_eligible && {_str >= 1.0 && {_str < 1.5}} && {_funds >= (missionNamespace getVariable ["AICOMV2_CTL_INVEST_SURGE_FLOOR", 600000])}) then {
+							_val = _town getVariable ["wfbe_town_value", 0];
+							if (_val > _ctlBestVal || {_val == _ctlBestVal && {_str < _ctlBestStr}}) then {_ctlBestVal = _val; _ctlBestStr = _str; _ctlTarget = _ctlI};
+						};
+						_ctlI = _ctlI + 1;
+					} forEach _ctlLedger;
+					if (_ctlTarget >= 0) then {
+						private ["_ctlRec","_ctlStr","_ctlTier","_ctlCost","_ctlGain","_ctlNewStr"];
+						_ctlRec  = _ctlLedger select _ctlTarget;
+						_ctlStr  = _ctlRec select 2;
+						_ctlTier = if (_ctlStr < 1.0) then {"repair"} else {"surge"};
+						_ctlCost = missionNamespace getVariable ["AICOMV2_CTL_INVEST_COST", 50000];
+						if (_ctlTier == "surge") then {_ctlCost = _ctlCost * (missionNamespace getVariable ["AICOMV2_CTL_INVEST_SURGE_MULT", 2])};
+						_ctlGain   = missionNamespace getVariable ["AICOMV2_CTL_INVEST_GAIN", 0.25];
+						_ctlNewStr = (_ctlStr + _ctlGain) min (missionNamespace getVariable ["AICOMV2_CTL_PAID_MAX", 1.5]);
+						//--- CTL single-writer (fable/ctl-readback-singlewriter): publish the invest GAIN to a
+						//--- per-town scalar; the CTL tick applies it to strength [2] and stamps the town cooldown [4].
+						//--- The GLOBAL invest cooldown (WFBE_CTL_INVEST_T0 below - a logik var, not the ledger array)
+						//--- still fires here; its 480s window >> the 30s tick, so f cannot double-invest before apply.
+						(_ctlRec select 0) setVariable ["wfbe_ctl_pending_invest", ((_ctlRec select 0) getVariable ["wfbe_ctl_pending_invest", 0]) + _ctlGain];
+						_logik setVariable ["WFBE_CTL_INVEST_T0", _ctlNow2];
+						[_side, -_ctlCost] Call ChangeAICommanderFunds;
+						diag_log Format ["AICOMSTAT|v2|EVENT|%1|%2|CTL_INVEST|town=%3|tier=%4|cost=%5|str=%6|funds=%7|fundedBy=aicom",
+							str _side, round (time / 60), (_ctlRec select 0) getVariable ["name", "?"], _ctlTier, _ctlCost, _ctlNewStr, _funds - _ctlCost];
+					} else {
+						_ctlSkipReason = "noTarget";
+					};
+				};
+				//--- CTL_INVEST_SKIP: rate-limited to at most once per 300s per side, per spec
+				//--- ("no log spam") - separate cooldown timestamp from the purchase cooldown.
+				if (_ctlSkipReason != "" && {(_ctlNow2 - (_logik getVariable ["WFBE_CTL_INVEST_SKIP_T0", -1e10])) > 300}) then {
+					_logik setVariable ["WFBE_CTL_INVEST_SKIP_T0", _ctlNow2];
+					diag_log Format ["AICOMSTAT|v2|EVENT|%1|%2|CTL_INVEST_SKIP|reason=%3|funds=%4", str _side, round (time / 60), _ctlSkipReason, _funds];
+				};
 			};
 
 			//--- Reactive CBR research: append [WFBE_UP_CBRADAR,1/2] to the AI upgrade program

@@ -5,7 +5,7 @@
 		- List.
 */
 
-Private["_distance","_nearest","_object","_objects"];
+Private["_distance","_nearest","_object","_objects","_d"];
 
 _object = _this select 0;
 _objects = _this select 1;
@@ -15,6 +15,6 @@ if (isNil "_objects" || {typeName _objects != "ARRAY"}) exitWith {objNull}; //--
 
 _nearest = objNull;
 _distance = 100000;
-{if (!isNil "_x" && {(_x distance _object) < _distance}) then {_nearest = _x;_distance = _x distance _object}} forEach _objects; //--- fable/tonight-hotfixes2: nil-hole guard
+{if (!isNil "_x") then {_d = _x distance _object; if (_d < _distance) then {_nearest = _x;_distance = _d}}} forEach _objects; //--- perf: compute (_x distance _object) once per candidate, was twice on each new-nearest; behaviour-identical. nil-hole guard retained.
 
 _nearest

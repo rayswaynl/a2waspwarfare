@@ -73,17 +73,9 @@ if ((!isNull _killer) && (isPlayer _killer)) then
 	   {
             if (_structure isKindOf "Base_WarfareBBarracks") then {[_side_killer, 500, "GUER FOB barracks cleared", false] Call ChangeSideSupply};
             [_side_killer, "LocalizeMessage", ["GuerFobCleared", (name _killer), _bounty, _type, _side]] call WFBE_CO_FNC_SendToClients;
-            //--- fable/fob-marker: drop the resistance-only active-FOB marker (name = deterministic from pos).
-            private ["_fobMkPos"];
-            _fobMkPos = getPos _structure;
-            [resistance, "WildcardMarker", ["delete", Format ["guer_fob_%1_%2", floor (_fobMkPos select 0), floor (_fobMkPos select 1)]]] Call WFBE_CO_FNC_SendToClients;
-            //--- fable/fob-polish: retire the FOB from the server-side ledger (the JIP marker-replay source).
-            private ["_fobMkName","_fobActive","_fobKeep"];
-            _fobMkName = Format ["guer_fob_%1_%2", floor (_fobMkPos select 0), floor (_fobMkPos select 1)];
-            _fobActive = missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []];
-            _fobKeep = [];
-            {if ((_x select 0) != _fobMkName) then {_fobKeep = _fobKeep + [_x]}} forEach _fobActive;
-            missionNamespace setVariable ["WFBE_GUER_FOB_ACTIVE", _fobKeep];
+            //--- fable/fix-guer-fob (N6): FOB marker + ledger cleanup MOVED to the unconditional "Decrement
+            //--- building limit" section below (WFBE_GUER_FOB_ACTIVE / guer_fob_* marker) so it runs for every
+            //--- kill source, not just isPlayer(_killer) - see that section.
        }
        else
        {
@@ -128,6 +120,20 @@ if (_teamkill) then
 else
 {
     ["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] Structure [%2] has been destroyed by [%3].", str _side, _type, _killer]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Radio Tower special case: recompute the per-side alive-any registry + re-broadcast the public flag
+//--- the client-side WASP\Radio\Radio_Manager.sqf gate reads. No cleanup exists if the flag is off (matches CBR).
+if ((_structure getVariable ["wfbe_structure_type", ""]) == "RadioTower" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then {
+	private ["_rtKey","_rtAliveVar","_rtRegistry","_rtAnyAlive"];
+	_rtKey = if (_side == west) then {"WFBE_RADIOTOWER_WEST"} else {"WFBE_RADIOTOWER_EAST"};
+	_rtAliveVar = if (_side == west) then {"WFBE_RADIOTOWER_WEST_ALIVE"} else {"WFBE_RADIOTOWER_EAST_ALIVE"};
+	_rtRegistry = missionNamespace getVariable [_rtKey, []];
+	_rtAnyAlive = false;
+	{if (!isNull _x && {alive _x}) exitWith {_rtAnyAlive = true}} forEach _rtRegistry;
+	missionNamespace setVariable [_rtAliveVar, _rtAnyAlive];
+	publicVariable _rtAliveVar;
+	["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] RadioTower destroyed. Any-alive now %2.", str _side, _rtAnyAlive]] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- Bank special case: raid reward split, global broadcast, registry cleanup + marker delete.
@@ -175,6 +181,24 @@ if(_side != resistance)then{
     _gLogik = (resistance) Call WFBE_CO_FNC_GetSideLogic;
     if (!isNull _gLogik && {!isNil {_gLogik getVariable "wfbe_structures"}}) then {
         _gLogik setVariable ["wfbe_structures", (_gLogik getVariable "wfbe_structures") - [_structure, objNull], true];
+    };
+    //--- fable/fix-guer-fob (N6): FOB marker + ledger cleanup relocated OUT of the isPlayer(_killer) gate above -
+    //--- it now runs for every kill source (player, AI, artillery, mines). It previously lived only inside that
+    //--- gate, so a non-player kill of a resistance FOB left a permanent phantom "FOB active" marker that
+    //--- JIP-replay recreated forever. Content below is unchanged from its prior location (isPlayer/_side==resistance
+    //--- checks dropped - this branch already only runs for _side == resistance, and cleanup owes nothing to who killed it).
+    if ((_structure isKindOf "Base_WarfareBBarracks") || (_structure isKindOf "Base_WarfareBLightFactory") || (_structure isKindOf "Base_WarfareBHeavyFactory")) then {
+        //--- fable/fob-marker: drop the resistance-only active-FOB marker (name = deterministic from pos).
+        private ["_fobMkPos"];
+        _fobMkPos = getPos _structure;
+        [resistance, "WildcardMarker", ["delete", Format ["guer_fob_%1_%2", floor (_fobMkPos select 0), floor (_fobMkPos select 1)]]] Call WFBE_CO_FNC_SendToClients;
+        //--- fable/fob-polish: retire the FOB from the server-side ledger (the JIP marker-replay source).
+        private ["_fobMkName","_fobActive","_fobKeep"];
+        _fobMkName = Format ["guer_fob_%1_%2", floor (_fobMkPos select 0), floor (_fobMkPos select 1)];
+        _fobActive = missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []];
+        _fobKeep = [];
+        {if ((_x select 0) != _fobMkName) then {_fobKeep = _fobKeep + [_x]}} forEach _fobActive;
+        missionNamespace setVariable ["WFBE_GUER_FOB_ACTIVE", _fobKeep];
     };
     [resistance, "Destroyed", ["Base", _structure]] Spawn SideMessage;
 };

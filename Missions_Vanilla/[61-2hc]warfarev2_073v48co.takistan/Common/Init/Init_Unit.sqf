@@ -29,6 +29,16 @@ _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 
 if !(local player) exitWith {}; //--- We don't need the server to process it.
 
+//--- HC THREAD-LEAK FIX (runtime-proven on MIKSUUS-TEST, WASPLAB|v1|HCINIT probe 2026-07-11): on a
+//--- headless client `player` IS the HC's own playable unit and IS local, so the guard above does NOT
+//--- exit - and clientInitComplete is only ever set by Init_Client.sqf, which never runs on an HC
+//--- (probe: cic=false + a canary waitUntil parked forever on BOTH HCs). Every server-broadcast
+//--- Init_Unit therefore permanently parked one scheduled thread PER UNIT on EVERY HC - each parked
+//--- waitUntil re-evaluates its condition every frame on the HC's single saturated core. Exit here
+//--- exactly like the dedicated server does above; the HC needs none of the client-side init below
+//--- (actions/markers/UI). Nil-guarded: real clients + server are byte-identical.
+if (!isNil "isHeadLessClient" && {isHeadLessClient}) exitWith {};
+
 waitUntil {clientInitComplete}; //--- Wait for the client part.
 
 sleep 2; //--- Wait a bit.
@@ -53,7 +63,7 @@ if(!isNil 'Zeta_Lifter')then{
 		if (_upgrades select WFBE_UP_AIRLIFT > 0) then {_unit addAction [localize "STR_WF_Lift", 'Client\Module\ZetaCargo\Zeta_Hook.sqf']};
 	};
 };
-if (_unit_kind in (missionNamespace getVariable "WFBE_REPAIRTRUCKS")) then { //--- Repair Trucks.
+if (_unit_kind in (missionNamespace getVariable ["WFBE_REPAIRTRUCKS", []])) then { //--- Repair Trucks. (fable/fix-hc-repairtrucks-nil: default [] - nil here errored EVERY unit init on the HC and aborted the rest of this script)
 	//--- Build action.
 	_unit addAction [localize 'STR_WF_BuildMenu_Repair','Client\Action\Action_BuildRepair.sqf', [], 99, false, true, '', Format['side group player == side _target && alive _target && player distance _target <= %1', missionNamespace getVariable 'WFBE_C_UNITS_REPAIR_TRUCK_RANGE']];
 
@@ -191,6 +201,13 @@ if (_unit isKindOf "Air") then { //--- Air units.
 };
 
 if !(_isMan) then { //--- Vehicle Specific.
+	//--- WASP Vehicle Radio: occupant-only Radio menu action (local). Gated on an alive side Radio
+	//--- Tower (WFBE_C_STRUCTURES_RADIOTOWER); selecting it expands temporary station/volume/off
+	//--- sub-actions for ~15s (see Radio_Menu.sqf). Audio ships in the @mkswf_vehicle_radio modpack
+	//--- addon, so the mission PBO stays small; isClass-guarded no-op if the addon is not loaded.
+	if ((missionNamespace getVariable ["WASP_RADIO_MODE", 1]) > 0 && {(missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0}) then {
+		_unit addAction ["<t color='#FFBD4C'>Radio</t>", "WASP\Radio\Radio_Menu.sqf", [], 6, false, true, "", "vehicle player == _target && alive _target && ((side player) call WFBE_CO_FNC_HasSideRadioTower)"];
+	};
 	if ((missionNamespace getVariable "WFBE_C_GAMEPLAY_MISSILES_RANGE") != 0) then { //--- Max missile range.
 		_unit addEventHandler ['incomingMissile', {_this Spawn HandleIncomingMissile}]; //--- Handle incoming missiles.
 	};
@@ -217,6 +234,17 @@ if (_isMan && {isPlayer _unit} && {local _unit} && {(missionNamespace getVariabl
 				_shooter setVariable ["wfbe_ied_recent", time, true];
 			};
 		}];
+	};
+	//--- fable/guer-barrelbomb: WF-scroll "Call Barrel Bomb" action on the player's own Man body (not
+	//--- vehicle-attached - this is a town-center location capability, not a vehicle one). The condition
+	//--- string re-evaluates every frame so WFBE_C_GUER_HELIBOMB_ENABLE + the kill-tier gate are live-
+	//--- togglable without a respawn; town-center proximity mirrors Client_CanUseTownCenterEASA.sqf via
+	//--- WFBE_CL_FNC_CanUseTownCenterBarrelBomb (same "GUER-held or neutral town" idiom). Idempotent via
+	//--- wfbe_helibomb_action_added (mirrors the IED EH guard immediately above).
+	if !(_unit getVariable ["wfbe_helibomb_action_added", false]) then {
+		_unit setVariable ["wfbe_helibomb_action_added", true];
+		_unit addAction ["<t color='#ffcc33'>Call Barrel Bomb</t>","Client\Action\Action_GuerHeliBombCall.sqf", [], 6, false, true, "",
+			'alive _target && {(missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 0]) > 0} && {(missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0]) >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_HELIBOMB", 60])} && {!isNil "WFBE_CL_FNC_CanUseTownCenterBarrelBomb"} && {_target Call WFBE_CL_FNC_CanUseTownCenterBarrelBomb}'];
 	};
 };
 
@@ -287,6 +315,20 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 	_unit setVariable ["WFBE_BlinkFiredEH", _unit addEventHandler ["Fired", {
 		_u = _this select 0;                 // unit that fired
 		_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
+	}], false];
+	//--- fable/marker-combat-flash-fixes (owner 2026-07-09) BEING-SHOT-AT TRIGGER: also flash when
+	//--- the unit TAKES fire from an enemy, not just when they fire. Hit stacks safely (unlike
+	//--- HandleDamage, which this codebase already uses for the player rearmor system -
+	//--- Init_Client.sqf:102 - and which REPLACES rather than adds a second handler; Hit is the
+	//--- only A2-OA-safe damage-taken signal here). Reuses the same LFTB flag + 1Hz bookkeeping
+	//--- loop, no new per-frame cost. Filters to a hostile causer only (excludes self-damage/fall
+	//--- damage/friendly fire) to match "being shot at".
+	_unit setVariable ["WFBE_BlinkHitEH", _unit addEventHandler ["Hit", {
+		_u = _this select 0;
+		_causedBy = _this select 1;
+		if (!isNull _causedBy && {side _causedBy != side _u}) then {
+			_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
+		};
 	}], false];
 };
 

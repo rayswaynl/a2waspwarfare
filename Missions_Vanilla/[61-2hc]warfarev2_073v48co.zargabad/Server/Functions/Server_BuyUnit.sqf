@@ -1,4 +1,4 @@
-Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_gbq","_id","_index","_isVehicle","_longest","_position","_queu","_queu2","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_vehicle","_waitTime"];
+Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_unitTypeGet","_vehicle","_waitTime"];
 _id = _this select 0;
 _building = _this select 1;
 _unitType = _this select 2;
@@ -6,12 +6,15 @@ _side = _this select 3;
 _sideID = (_side) Call GetSideID;
 _team = _this select 4;
 _isVehicle = _this select 5;
+//--- N8 fix: exact funds/supply charged for THIS buy (threaded through from AI_Commander_Produce.sqf's
+//--- Spawn AIBuyUnit call so a live W15 Black Market discount refunds at the SAME rate it was charged,
+//--- not re-derived from list price). Defaults to 0 for any other/older caller (defensive, back-compat).
+_price = if (count _this > 6) then {_this select 6} else {0};
 
 _sideText = str _side;
 
 if (!(alive _building)||(isPlayer (leader _team))) exitWith {
-	_gbq = (_team getVariable "wfbe_queue") - _id;
-	_team setVariable ["wfbe_queue",_gbq];
+	_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
 	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 };
@@ -25,10 +28,26 @@ _building setVariable ["queu",_queu,true];
 
 _type = typeOf _building;
 _index = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",_sideText]) find _type;
-_distance = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDISTANCES",_sideText]) select _index;
-_direction = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",_sideText]) select _index;
-_factoryType = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES",_sideText]) select _index;
-_waitTime = (missionNamespace getVariable _unitType) select QUERYUNITTIME;
+//--- crash-guard (mirrors Client_GetStructureMarkerLabel.sqf B62 / Client_BuildUnit.sqf): if _type is not
+//--- registered in STRUCTURENAMES, find returns -1 and select _index throws "Zero divisor" on A2-OA 1.64
+//--- (negative array index), aborting the whole AI buy mid-purchase. Default to the same safe zero-offset/
+//--- no-type values Client_BuildUnit.sqf uses; the switch-default and isNil floor further below already
+//--- handle an empty _factoryType safely.
+if (_index == -1) then {["WARNING", Format ["Server_BuyUnit.sqf: factory type [%1] not found in WFBE_%2STRUCTURENAMES; using safe defaults (no spawn-pad routing).", _type, _sideText]] Call WFBE_CO_FNC_LogContent};
+_distance = if (_index != -1) then {(missionNamespace getVariable Format ["WFBE_%1STRUCTUREDISTANCES",_sideText]) select _index} else {0};
+_direction = if (_index != -1) then {(missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",_sideText]) select _index} else {0};
+_factoryType = if (_index != -1) then {(missionNamespace getVariable Format ["WFBE_%1STRUCTURES",_sideText]) select _index} else {""};
+//--- fable/fix-unit-purchase-nil-guards: guard nil _unitTypeGet (unregistered classname) before
+//--- the select below - matches a55605e10/#1003/GUI_Menu_BuyUnits.sqf/Client_BuildUnit.sqf shape.
+//--- Deliberately scoped to ONLY this line (not the _index/_distance/_direction/_factoryType
+//--- block above) so this hunk stays clear of open PR #1001, which guards that neighboring block.
+_unitTypeGet = missionNamespace getVariable _unitType;
+if !(isNil "_unitTypeGet") then {
+	_waitTime = _unitTypeGet select QUERYUNITTIME;
+} else {
+	_waitTime = 0;
+	["WARNING", Format ["Server_BuyUnit.sqf: unit classname [%1] not registered in missionNamespace; using safe default waitTime=0.", _unitType]] Call WFBE_CO_FNC_LogContent;
+};
 _position = [getPos _building,_distance,getDir _building + _direction] Call GetPositionFrom;
 //--- B67 OPEN SPAWN APRON: the fixed trig offset above has no flat/empty check, so AI
 //--- factory output can drop in trees / on a slope. For AI-owned factories ONLY
@@ -142,7 +161,7 @@ if (count _queu > 0) then {
 	_queu2 = _building getVariable "queu";
 };
 
-while {(count _queu == 0) || {(_id select 0) != (_queu select 0)}} do {  //--- queue-fix: guard empty shared queu (concurrent AI teams / player drain) -> keep polling instead of indexing [] (was: Generic error at [] select 0)
+while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--- queue-fix (Generic-error crash): the factory FIFO is SHARED - player buys push STRING tokens (Client_BuildUnit.sqf:198) while AI buys push NUMBER tokens (AI_Commander_Produce.sqf:502 -> _id select 0). A raw != on a mixed-type head threw "Generic error" on A2-OA (empty-guard via lazy || only stopped [] select 0). Mirror the proven type-safe player idiom (Client_BuildUnit.sqf:278): (x in [head]) is false on type-mismatch, never throws.
 	sleep 4;
 	_ret = _ret + 4;
 	_queu = _building getVariable "queu";
@@ -154,8 +173,7 @@ while {(count _queu == 0) || {(_id select 0) != (_queu select 0)}} do {  //--- q
 	//--- subtraction (removing the same token twice is a no-op), so the double pass cannot double-count.
 	//--- Client_BuildUnit.sqf's NUMERIC counters were not safe this way - see its cmdcon44-g comments.
 	if (!(alive _building)||(isNull _building)||(isPlayer (leader _team))) exitWith {
-		_gbq = (_team getVariable "wfbe_queue") - _id;
-		_team setVariable ["wfbe_queue",_gbq];
+		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 		_queu = _building getVariable "queu";
 		if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]};
 		_building setVariable ["queu",_queu,true];
@@ -163,7 +181,7 @@ while {(count _queu == 0) || {(_id select 0) != (_queu select 0)}} do {  //--- q
 		if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 	};
 
-	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) == (_queu2 select 0)}) then {  //--- queue-fix: guard empty queu/queu2 before head-compare
+	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) in [_queu2 select 0]}) then {  //--- queue-fix: guard empty queu/queu2 before head-compare + type-safe head-compare (mirror Client_BuildUnit.sqf:302) - a mixed player/AI head token would throw Generic error on raw ==
 		if (_ret > _longest) then {
 			if (count _queu > 0) then {
 				_queu = _building getVariable "queu";
@@ -172,7 +190,7 @@ while {(count _queu == 0) || {(_id select 0) != (_queu select 0)}} do {  //--- q
 			};
 		};
 	};
-	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) != (_queu2 select 0)}) then {  //--- queue-fix 2026-06-14: reset the stuck-head timer ONLY when the head actually advances, not when a sibling / another team's unit churns the shared factory queue (that reset was defeating the purge under batch ordering).
+	if ((count _queu > 0) && {count _queu2 > 0} && {!((_queu select 0) in [_queu2 select 0])}) then {  //--- queue-fix: type-safe head-compare (mirror Client_BuildUnit.sqf idiom) - raw != threw Generic error on a mixed player/AI head. 2026-06-14: reset the stuck-head timer ONLY when the head actually advances, not when a sibling / another team's unit churns the shared factory queue (that reset was defeating the purge under batch ordering).
 		_ret = 0;
 		_queu2 = _building getVariable "queu";
 	};
@@ -185,8 +203,7 @@ _queu = _queu - [_id select 0];
 _building setVariable ["queu",_queu,true];
 
 if (!(alive _building)||(isPlayer (leader _team))) exitWith {
-	_gbq = (_team getVariable "wfbe_queue") - _id;
-	_team setVariable ["wfbe_queue",_gbq];
+	_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
 	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 };
@@ -222,6 +239,19 @@ if (_unitType isKindOf "Man") then {
 		_position set [2, (_building getVariable ["wfbe_naval_deckz", 16])];
 	};
 	_vehicle = [_unitType, _position, _sideID, _dir, true, true, true, _special] Call WFBE_CO_FNC_CreateVehicle;
+	//--- N8 BUYFAIL GUARD (MORE-FIXES-AND-IDEAS; mirrors the player-side cmdcon42c HOTFIX in
+	//--- Client_BuildUnit.sqf): WFBE_CO_FNC_CreateVehicle returns objNull whenever the engine cannot
+	//--- spawn the hull. Without this guard the AI path fell through into unconditional crew creation
+	//--- (orphaned unseated soldiers - moveInDriver/Gunner/Commander on a null hull is a no-op), an
+	//--- unconditional VehiclesCreated stat bump for a vehicle that does not exist, and no refund of the
+	//--- funds already deducted at order time (AI_Commander_Produce.sqf: ChangeAICommanderFunds). ENGINE-
+	//--- VERIFIED (cmdcon44-g, Client_BuildUnit.sqf:748): this exitWith only exits the enclosing else-
+	//--- block (the Man/Vehicle branch), not the whole script - the shared queue-release tail below
+	//--- (wfbe_queue) still runs exactly once, same contract as the player-side guard.
+	if (isNull _vehicle) exitWith {
+		if (_price > 0) then {[_side, _price] Call ChangeAICommanderFunds};
+		["WARNING", Format ["Server_BuyUnit.sqf: buy of [%1] produced objNull (spawn failed) - refunded %2 to side [%3]; no crew spawned.", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent;
+	};
 	_vehicle addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
 
 	// Could seperate the array here for modded vehicles
@@ -266,7 +296,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 	[_soldier] allowGetIn true;
 	[_soldier] orderGetIn true;
-	if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {(_vehicle) Call BalanceInit};
+	if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {_vehicle setVariable ["wfbe_balance_side", _side]; (_vehicle) Call BalanceInit};
 
 	if (_unitType isKindOf "Air") then {
 
@@ -366,5 +396,4 @@ _vehicle allowCrewInImmobile true;
 	[_sideText,'UnitsCreated',_built] Call UpdateStatistics;
 };
 
-_gbq = (_team getVariable "wfbe_queue") - _id;
-_team setVariable ["wfbe_queue",_gbq];
+_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];

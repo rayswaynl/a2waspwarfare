@@ -52,6 +52,7 @@ UpdateTeam = Compile preprocessFile "Server\Functions\Server_UpdateTeam.sqf";
 //--- Support Functions.
 KAT_ParaAmmo = Compile preprocessFile "Server\Support\Support_ParaAmmo.sqf";
 KAT_Paratroopers = Compile preprocessFile "Server\Support\Support_Paratroopers.sqf";
+KAT_GuerHeliDrop = Compile preprocessFile "Server\Support\Support_GuerHeliDrop.sqf";	//--- fable/guer-barrelbomb
 KAT_ParaVehicles = Compile preprocessFile "Server\Support\Support_ParaVehicles.sqf";
 KAT_UAV = Compile preprocessFile "Server\Support\Support_UAV.sqf";
 KAT_FPV = Compile preprocessFile "Server\Support\Support_FPV.sqf";
@@ -81,6 +82,7 @@ WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Comma
 WFBE_SE_FNC_AICOM2_Snapshot = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Snapshot.sqf"; //--- AICOM v2 rebuild (M0): world-model snapshot builder.
 WFBE_SE_FNC_AICOM2_Allocate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Allocate.sqf"; //--- AICOM v2 rebuild (M1): single offensive authority (flag WFBE_C_AICOM2_ALLOCATE_ENABLE).
 WFBE_SE_FNC_AICOM2_Decapitate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Decapitate.sqf"; //--- AICOM v2 rebuild (M5): DECAPITATE closer (flag WFBE_C_AICOM2_DECAP_ENABLE, default 0).
+WFBE_SE_FNC_AICOM2_AirResp = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_AirResp.sqf"; //--- AICOM v2 rebuild (M6): AIRRESP organic W/E air-response closer (flag WFBE_C_AICOM2_AIRRESP_ENABLE, default 1 - ARMED live per owner directive 2026-07-08; see PR body).
 WFBE_SE_FNC_AI_Com_MHQReloc = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_MHQReloc.sqf";
 WFBE_SE_FNC_AI_Com_PlayerArty = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_PlayerArty.sqf"; //--- COMMAND CONSOLE: assist-mode resolver for a player war-room ARTILLERY-HERE request (runs every tick, even under a human commander; fires only existing friendly guns).
 WFBE_SE_FNC_AI_Com_Paratroops = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Paratroops.sqf"; //--- AICOM PARATROOPS: tier+structure-gated AI paratroop reinforcement drop, reuses the player KAT_Paratroopers support fn (flag WFBE_C_AICOM_PARATROOPS_ENABLE, default 0 = inert).
@@ -96,7 +98,9 @@ WFBE_SE_FNC_ManageTownDefenses = Compile preprocessFileLineNumbers "Server\Funct
 WFBE_SE_FNC_OnHQKilled = Compile preprocessFileLineNumbers "Server\Functions\Server_OnHQKilled.sqf";
 WFBE_SE_FNC_OperateTownDefensesUnits = Compile preprocessFileLineNumbers "Server\Functions\Server_OperateTownDefensesUnits.sqf";
 WFBE_SE_FNC_ProcessUpgrade = Compile preprocessFileLineNumbers "Server\Functions\Server_ProcessUpgrade.sqf";
+WFBE_SE_FNC_ProvisionAirfieldHangar = Compile preprocessFileLineNumbers "Server\Functions\Server_ProvisionAirfieldHangar.sqf";
 WFBE_SE_FNC_SetCampsToSide = Compile preprocessFileLineNumbers "Server\Functions\Server_SetCampsToSide.sqf";
+WFBE_SE_FNC_NavalHVT_BubbleComplete = Compile preprocessFileLineNumbers "Server\Functions\Server_NavalHVT_BubbleComplete.sqf"; //--- fable/radius-hold-primitive (GR-2026-07-08a): onComplete callback for a RadiusHold-registered carrier bubble (Init_NavalHVT.sqf, flag WFBE_C_NAVALHVT_BUBBLE_ENABLE).
 WFBE_SE_FNC_SpawnTownDefense = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnTownDefense.sqf";
 WFBE_SE_FNC_VoteForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_VoteForCommander.sqf";
 WFBE_SE_FNC_AssignForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_AssignNewCommander.sqf";
@@ -141,6 +145,13 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) 
 if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	missionNamespace setVariable ["WFBE_BANK_WEST", objNull];
 	missionNamespace setVariable ["WFBE_BANK_EAST", objNull];
+};
+//--- Radio Tower: per-side registry + public alive-flag consumed client-side by WASP\Radio\Radio_Manager.sqf to gate playback.
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then {
+	missionNamespace setVariable ["WFBE_RADIOTOWER_WEST", []];
+	missionNamespace setVariable ["WFBE_RADIOTOWER_EAST", []];
+	WFBE_RADIOTOWER_WEST_ALIVE = false; publicVariable "WFBE_RADIOTOWER_WEST_ALIVE";
+	WFBE_RADIOTOWER_EAST_ALIVE = false; publicVariable "WFBE_RADIOTOWER_EAST_ALIVE";
 };
 
 //--- Least-loaded HC picker (single source of truth for delegation balance). Compiled
@@ -825,7 +836,7 @@ emptyQueu = [];
 		clearMagazineCargoGlobal _vehicle;
 		emptyQueu = emptyQueu + [_vehicle];
 		[_vehicle] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
-		if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {(_vehicle) Call BalanceInit};
+		if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {_vehicle setVariable ["wfbe_balance_side", _side]; (_vehicle) Call BalanceInit};
 if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];};
 if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base"] != 0) then {_vehicle addeventhandler ["fired",{_this spawn HandleReload;}];};
 if({(_vehicle isKindOf _x)} count ["Tank","Wheeled_APC"] !=0) then {_vehicle addeventhandler ['Engine',{_this execVM "Client\Module\Engines\Engine.sqf"}];
@@ -842,7 +853,7 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 		clearMagazineCargoGlobal _vehicle;
 		emptyQueu = emptyQueu + [_vehicle];
 		[_vehicle] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
-		if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {(_vehicle) Call BalanceInit};
+		if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {_vehicle setVariable ["wfbe_balance_side", _side]; (_vehicle) Call BalanceInit};
 
 if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];};
 if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base"] != 0) then {_vehicle addeventhandler ["fired",{_this spawn HandleReload;}];};
@@ -1038,11 +1049,27 @@ serverInitFull = true;
 //--- protection in Init_Client.sqf is left intact as the first layer.
 [] execVM "Server\Init\Init_DeadspawnWall.sqf";
 
+//--- fable/deadspawn-redesign (landlocked follow-up): build the sealed landlocked-pen cell
+//--- IF this map's resolved pen point is dry (Takistan/Zargabad; no-op + log-only on a water
+//--- map like Chernarus). Flag-gated so this never runs while the redesign is off - the wall-
+//--- pen call above is untouched and remains the unconditional flag-off baseline.
+if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_REDESIGN", 0]) > 0) then {
+	[] execVM "Server\Init\Init_DeadspawnPenEnclosure.sqf";
+};
+
 //--- NAVAL HVT: spawn offshore assets + register towns + start CAP loops (feat/naval-hvt-objectives).
 //--- Runs AFTER townInit (it calls waitUntil {townInit} internally), so no ordering conflict.
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 	[] execVM "Server\Init\Init_NavalHVT.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Init_NavalHVT.sqf launched (WFBE_C_NAVAL_HVT=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- USV FLOTILLA: 3-boat GUER coastal flotilla (AA/Rocket/HMG), gated on coastal-town-active OR
+//--- naval-HVT-carrier-approach (fable/usv-flotilla, owner 2026-07-08). Own flag, independent of
+//--- WFBE_C_NAVAL_HVT so it can be reverted without touching the carrier feature.
+if ((missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_ENABLE", 0]) == 1) then {
+	[] execVM "Server\Server_USVFlotilla.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_USVFlotilla.sqf launched (WFBE_C_USV_FLOTILLA_ENABLE=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): compiles the TEL spawn/fire functions + gates on
@@ -1051,6 +1078,15 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) == 1) then {
 	[] execVM "Server\Init\Init_IcbmTel.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Init_IcbmTel.sqf launched (WFBE_C_ICBM_TEL=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- ZG KOTH (fable/radius-hold-primitive consumer, GR-2026-07-08a, stacked on PR #916): Zargabad-only
+//--- King-of-the-Hill city-core radius-hold. Feature-flagged behind WFBE_C_ZG_KOTH_ENABLE (default 0);
+//--- additionally map-gated to Zargabad inside Init_ZgKoth.sqf itself. Same launch pattern as the
+//--- NAVAL_HVT/ICBM_TEL blocks above.
+if ((missionNamespace getVariable ["WFBE_C_ZG_KOTH_ENABLE", 0]) == 1) then {
+	[] execVM "Server\Init\Init_ZgKoth.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Init_ZgKoth.sqf launched (WFBE_C_ZG_KOTH_ENABLE=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- OILFIELDS (Ray 2026-07-01, Takistan): neutral capturable resource node (NOT a town — no town FSM).
@@ -1073,6 +1109,13 @@ if ((missionNamespace getVariable ["WFBE_C_AMBIENT_SKIRMISH", 0]) > 0) then {
 if (isServer && {(missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0}) then {
 	[] execVM "Server\AI\Server_GuerDirector.sqf";
 	["INITIALIZATION", "Init_Server.sqf: GUER Director (lane 800) launched (AICOMV2_LANE_GUER_DIRECTOR=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Commander Town Ledger (fable/ctl-impl-v1): virtual per-town strength ledger + paid
+//--- AI investment for WEST/EAST towns. Gated on AICOMV2_LANE_CMD_TOWN_LEDGER (default 0).
+if (isServer && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+	[] execVM "Server\AI\Server_CmdTownLedger.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Commander Town Ledger launched (AICOMV2_LANE_CMD_TOWN_LEDGER=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
 // run one global server town script to process supply updates in each town
@@ -1167,6 +1210,26 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 };
 ["INITIALIZATION", "Init_Server.sqf: B74.2 WFBE_ReqAicomFeed handler armed (own-side marker feed-gap recovery)."] Call WFBE_CO_FNC_LogContent;
 
+//--- fable/marker-classtag-jip (owner 2026-07-09): wfbe_player_class is broadcast once (client-side
+//--- setVariable [...,true] in Skill_Init / SkinSelector_Apply / Client_PreRespawnHandler) and is NOT
+//--- JIP-durable in A2-OA, so a joiner permanently reads "" for every player who set their class BEFORE
+//--- the join -> the "[ENG]" class tag silently vanishes on those players' map markers (name tags read
+//--- incomplete). Mirror the proven WFBE_ReqAicomFeed catch-up: on request, re-assert every connected
+//--- player's class globally so the requester (and everyone) re-receives it. Rare (JIP feed-gap only);
+//--- a handful of small object-var writes. The server holds each value (setVariable-true reaches it too).
+"WFBE_ReqPlayerClasses" addPublicVariableEventHandler {
+	private "_n";
+	_n = 0;
+	{
+		if (isPlayer _x) then {
+			_x setVariable ["wfbe_player_class", (_x getVariable ["wfbe_player_class", ""]), true];
+			_n = _n + 1;
+		};
+	} forEach playableUnits;
+	diag_log format ["[WFBE][classtag-jip] re-broadcast %1 player classes on request.", _n];
+};
+["INITIALIZATION", "Init_Server.sqf: fable classtag-jip WFBE_ReqPlayerClasses handler armed (marker class-tag JIP recovery)."] Call WFBE_CO_FNC_LogContent;
+
 /////////////////////////////////////////////////////////////////////////////////// map cleaners
 
 // weaponholder cleaner
@@ -1233,6 +1296,15 @@ if ((missionNamespace getVariable ["WFBE_C_DASHBOARD_ANNOUNCE_ENABLED", 1]) == 1
 if ((missionNamespace getVariable ["WFBE_C_PLAYERSTAT_ENABLED", 1]) == 1) then {
 	[] execVM "Server\FSM\server_playerstat_loop.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Player-stat leaderboard emitter FSM is initialized."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- DELEGHEALTH v2 (fable/deleghealth-v2, 2026-07-10): stateful AI-only delegation-health telemetry.
+//--- Truthful replacement for the structurally-unfireable DELEGATION-DEAD predicate (server_groupsGC.sqf,
+//--- which stays untouched): 60s AI-only per-owner tally + HCStat heartbeat freshness + hysteretic
+//--- HEALTHY/DEGRADED/COLLAPSED states, RPT lines only. Flag default 0 = the loop never spawns.
+if ((missionNamespace getVariable ["WFBE_C_DELEGHEALTH", 0]) > 0) then {
+	[] execVM "Server\FSM\server_deleghealth.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Delegation-health telemetry FSM is initialized."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- FPS PROFILING (claude-gaming 2026-06-13): enable the PerformanceAudit framework SERVER-SIDE ONLY so we
@@ -1364,3 +1436,25 @@ if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 };
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
+
+//--- HC CIV cosmetic reslot safe-window (flag WFBE_C_HC_CIV_RESLOT, fable/hc-civ-reslot, GR-2026-07-03a).
+//--- When the flag is on, publish WFBE_HC_RESLOT_SAFE = (zero real players connected) on a 5s server loop so a
+//--- box-side HC controller can bounce-reslot the HCs onto CIVILIAN slots ONLY inside an empty-server window
+//--- (the browser then shows the HCs as CIV, never as an occupied WEST player slot). HCs are excluded by name,
+//--- so the count is real players only. Flag-off (default 0): this block never runs, no PV is ever published
+//--- and no worker spawns -> byte-identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_HC_CIV_RESLOT", 0]) > 0) then {
+	WFBE_HC_RESLOT_SAFE = false;
+	publicVariable "WFBE_HC_RESLOT_SAFE";
+	[] Spawn {
+		private ["_hcNames"];
+		_hcNames = ["HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3"];
+		while {true} do {
+			private ["_real"];
+			_real = { (isPlayer _x) && {!((name _x) in _hcNames)} } count allUnits;
+			WFBE_HC_RESLOT_SAFE = (_real == 0);
+			publicVariable "WFBE_HC_RESLOT_SAFE";
+			sleep 5;
+		};
+	};
+};

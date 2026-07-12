@@ -2,6 +2,15 @@
 
 Base checked: `origin/claude/build84-cmdcon36@8e341a952`.
 
+## Current reconciliation (2026-07-11)
+
+The 2026-07-02 body below remains a historical snapshot based on `origin/claude/build84-cmdcon36@8e341a952`. Current facts were rechecked at `origin/master@bb79a88aa65f491a5c5d3d3d610c4e60237eb4b7` on 2026-07-11.
+
+- **FT-1 - addressed on current master.** Commit `74fb226a3b70e4445b49c8813a46fda8802cde28` added a uniform flat-plus-distance destination gate at `Client/GUI/GUI_Menu_Tactical.sqf:317-326`, a click-time funds recheck at `:654-670`, a failed-recheck block at `:671-676`, and keeps deductions after the guard at `:693-702`.
+- **FT-2 - separate and partially unresolved.** Marker text now uses `_feeTotal` at `GUI_Menu_Tactical.sqf:343-345`, but the support-list row still shows `$0` at `:116`.
+- **Residual, not an FT-1 regression.** At line 662 the membership test uses `_x` while the list stores `vehicle _x`; a multi-crew vehicle can therefore be overcounted during the recheck, while the actual charger deduplicates vehicles at line 702. This reconciliation does not claim exact bill parity or complete pricing-QA closure.
+- This is a documentation-only reconciliation; it makes no runtime or source behavior change.
+
 Scope: fleet lane 59 refresh of the existing fast-travel QA pass. This pass stays docs-only because the actionable source fix is in `Client/GUI/GUI_Menu_Tactical.sqf`, which remains in the GUI avoid-list for fleet work.
 
 ## Summary

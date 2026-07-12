@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_track","_ud","_reqUp","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
+private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
 
 _side = _this;
 _sideText = str _side;
@@ -52,7 +52,7 @@ _facDefs = [["Barracks","BARRACKSUNITS",WFBE_UP_BARRACKS], ["Light","LIGHTUNITS"
 _myID = (_side) Call WFBE_CO_FNC_GetSideID;
 _ownTowns = 0;
 { if ((_x getVariable "sideID") == _myID) then {_ownTowns = _ownTowns + 1} } forEach towns;
-if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) then {
+if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 3])) then {
 	_facDefs = _facDefs + [["Aircraft","AIRCRAFTUNITS",WFBE_UP_AIR]];
 };
 //--- Build83 FLAT AIR CAP at the PRODUCE/refill gate (Ray cmdcon34, 2026-07-01): mirror the founding-gate flat cap
@@ -301,7 +301,7 @@ if (_airMaxTotalP > 0) then {
 					//--- LEADER object (never on the group). Fall through to the existing cull if no eligible target.
 					_mergeOn    = missionNamespace getVariable ["WFBE_C_AICOM_STRANDED_MERGE", 1];
 					_mergeRange = missionNamespace getVariable ["WFBE_C_AICOM_STRANDED_MERGE_RANGE", 1200];
-					_sizeMax    = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12]; //--- _sizeMax is declared later inside if(_canProduce); read a local copy here for the 8-12 ceiling guard.
+					_sizeMax    = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 8]; //--- _sizeMax is declared later inside if(_canProduce); read a local copy here for the 8-12 ceiling guard.
 					_mergeTeam  = grpNull;
 					_mergeBest  = _mergeRange;  //--- only accept candidates strictly inside the range cap
 					if (_mergeOn > 0) then {
@@ -408,7 +408,7 @@ if (_airMaxTotalP > 0) then {
 		private ["_tmplSize","_isMBT","_isAttackHeli","_floorN","_sizeMin","_sizeMax"];
 		_tmplSize = count _template;
 		_sizeMin  = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MIN", 8];
-		_sizeMax  = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 12];
+		_sizeMax  = missionNamespace getVariable ["WFBE_C_AICOM_TEAM_SIZE_MAX", 8];
 		_isMBT = false;
 		{ if (_x isKindOf "Tank") exitWith {_isMBT = true} } forEach _template;
 		_isAttackHeli = false;
@@ -465,11 +465,12 @@ if (_airMaxTotalP > 0) then {
 				if (isNil "_ud") exitWith {};
 
 				_typeName = _fac select 0;
-				_track    = _fac select 2;
-				_reqUp    = _ud select QUERYUNITUPGRADE;
 				_price    = _ud select QUERYUNITPRICE;
 
-				if (_reqUp > (_upgrades select _track)) exitWith {}; //--- Not unlocked yet.
+				//--- feat/common-isunitunlocked: shared facMap/QUERYUNITUPGRADE tier-unlock check (was the
+				//--- inline _track=_fac select 2 / _reqUp compare; the shared function re-derives the SAME
+				//--- track via its own facMap scan, since _fac (from _facDefs) mirrors that facMap 1:1).
+				if (!(([_toBuild, _sideText, _upgrades] Call WFBE_CO_FNC_IsUnitUnlocked) select 0)) exitWith {}; //--- Not unlocked yet.
 
 				_kind = _structTypes find _typeName;
 				if (_kind < 0) exitWith {};
@@ -503,7 +504,9 @@ if (_airMaxTotalP > 0) then {
 				if (isNil "_q") then {_q = []};
 				_q = _q + [_id];
 				_team setVariable ["wfbe_queue", _q];
-				[_id, _facObj, _toBuild, _side, _team, _isVeh] Spawn AIBuyUnit;
+				//--- N8 fix: pass the exact _priceCharged (post W15-discount) so Server_BuyUnit.sqf can refund
+				//--- the SAME amount on a createVehicle spawn failure instead of re-deriving list price.
+				[_id, _facObj, _toBuild, _side, _team, _isVeh, _priceCharged] Spawn AIBuyUnit;
 				_ordered = _ordered + [_toBuild]; //--- E7: record in-flight order so the selector counts it
 				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5, batch %6/%7 rich=%8).", _sideText, _team, _toBuild, _typeName, _price, _batchOrdered + 1, _batchCap, _richFlag]] Call WFBE_CO_FNC_AICOMLog;
 

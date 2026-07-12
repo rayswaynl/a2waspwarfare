@@ -44,6 +44,18 @@ if (_uiV2 > 0) then {
 	ctrlShow [511005, false];
 };
 
+//--- fable/respawn-menu-shortcuts (owner 2026-07-09): reveal the two Team-Menu shortcut
+//--- buttons (511006 Customise AI Soldier / 511007 Saved Kits) and trim the minimap to make
+//--- room, only when WFBE_C_RESPAWN_SHORTCUTS is armed. Flag off (default) = untouched
+//--- legacy layout, byte-identical behaviour.
+_shortcuts = missionNamespace getVariable ["WFBE_C_RESPAWN_SHORTCUTS", 0];
+if (_shortcuts > 0) then {
+	ctrlShow [511006, true];
+	ctrlShow [511007, true];
+	((uiNamespace getVariable "wfbe_display_respawn") displayCtrl 511001) ctrlSetPosition [0.01, 0.115, 0.98, 0.755];
+	((uiNamespace getVariable "wfbe_display_respawn") displayCtrl 511001) ctrlCommit 0;
+};
+
 //--- Register the UI (if needed).
 if (isNil 'WFBE_RespawnTime') then {
 	WFBE_RespawnTime = missionNamespace getVariable "WFBE_C_RESPAWN_DELAY";

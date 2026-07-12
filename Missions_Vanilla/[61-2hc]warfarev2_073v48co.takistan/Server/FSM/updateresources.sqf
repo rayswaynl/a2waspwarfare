@@ -63,6 +63,7 @@ while {!gameOver} do {
 		_supply = 0;
 
 		_supply =  (_x) Call WFBE_CO_FNC_GetTownsSupply;
+		private "_sideNow"; _sideNow = _x; //--- patch4: capture side at forEach-body scope so the TOWN-STALL FIX + FUNDS-SINK blocks below (outside the supply<cap then-block) see a live side.
 		//--- B74.1 (Ray 2026-06-23): AICOM income TAPER for the territorial leader - diminishing per-town funds above
 		//--- TAPER_TOWNS so a runaway leader's treasury can't compound unbounded (soak: leader ran to +281k/tick). Each
 		//--- town beyond the threshold contributes only TAPER_RATE of a normal town. AICOM-ONLY: applied ONLY to the
@@ -91,13 +92,16 @@ while {!gameOver} do {
 				};
 			};
 
+			//--- rc27 hotfix (patch4): _sideNow now captured at forEach-body scope above; was declared INSIDE the _income>0 block but read
+			//--- by the stipend/town-stall blocks after it - a zero-income side (GUER at round start, now that the
+			//--- lockout is off) skipped the declaration and flooded the RPT with Undefined variable _sideNow,
+			//--- killing the AI stipend/stall-refill for that side. Capture the side BEFORE the branch.
 			if (_income > 0) then {
 				// diag_log format ["Calling update tick (town supply income) for team %1, supply addition: %2",_x, _supply];
 				if (_currency_system == 0) then {[_x, round(_supply * (missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_INCOME_MULT", 1])), format ["Update tick (town supply income) for team %1.",_x], true] Call ChangeSideSupply};
 
 				_comTeam = (_x) Call WFBE_CO_FNC_GetCommanderTeam;
 				if (isNull _comTeam) then {_comTeam = grpNull};
-				private "_sideNow"; _sideNow = _x;
 
 				{
 					if !(isNil '_x') then {

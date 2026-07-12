@@ -1,3 +1,4 @@
+disableSerialization;
 {ctrlEnable [_x, false]} forEach [11002, 11005, 11006, 11007, 11008];
 //--- GUER insurgents: commander/base/upgrade/economy/vote buttons are irrelevant (no HQ/commander/base). Grey them.
 if (sideJoined == resistance) then { {ctrlEnable [_x, false]} forEach [11004,11005,11006,11007,11008] };
@@ -22,7 +23,11 @@ ctrlShow [11030, false];
 //--- fable/drones-menu: for GUER, repurpose the (GUER-dead) Tactical Center button as the Drones entry.
 if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {
 	ctrlEnable [11006, true];
-	ctrlSetText [11006, "DRONES"];
+	ctrlSetText [11006, "Drone"];
+};
+//--- fable/guer-tabs-menu-declutter: for GUER, relabel the (GUER read-only kill-tech viewer) Factory Upgrade tab as Base unlocks.
+if (sideJoined == resistance) then {
+	ctrlSetText [11007, "Base unlocks"];
 };
 
 _enable = false;
@@ -278,11 +283,19 @@ while {alive player && dialog} do {
 		};
 	};
 
-	//--- FPS / view-distance button now opens the unified PLAYER SETTINGS dialog (GR-2026-07-03a).
-	if (MenuAction == 23) exitWith {
+	//--- RADIO: vehicle radio menu (replaces the obsolete FPS button, which duplicated the SETUP/GEAR
+	//--- Settings entry point at MenuAction 24). Gate at click time: needs the player in a vehicle AND
+	//--- a side Radio Tower, matching the vehicle addAction gate in Init_Unit.sqf.
+	if (MenuAction == 26) exitWith {
 		MenuAction = -1;
+		if (vehicle player == player) exitWith {
+			hint "Radio requires a vehicle.";
+		};
+		if !((side player) call WFBE_CO_FNC_HasSideRadioTower) exitWith {
+			hint "Requires a Radio Tower.";
+		};
 		closeDialog 0;
-		[] execVM "WASP\actions\Settings\Settings_Open.sqf";
+		[vehicle player, player] execVM "WASP\Radio\Radio_Menu.sqf";
 	};
 
 	//--- B748: Settings menu (GEAR button = revived skins slot, idc 11021).
@@ -297,13 +310,6 @@ while {alive player && dialog} do {
 		MenuAction = -1;
 		closeDialog 0;
 		createDialog "RscMenu_Help";
-	};
-
-        //-- HUD:
-	// Marty: Keep the menu loop alive so repeated HUD/FPS clicks are processed without reopening the WF menu.
-	if (MenuAction == 16) then {
-		MenuAction = -1;
-		if(RUBHUD)then{RUBHUD = false}else{RUBHUD = true};
 	};
 
 	// Marty: Reuse the old FPS-only slot as a GPS enabler; client/server FPS now lives in RHUD.

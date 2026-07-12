@@ -31,7 +31,13 @@ _wps = [];
 //--- block below so a patrol is NEVER left without a live order (never-frozen mandate). Bounded:
 //--- one BuildRoadRoute call (its own hop loop is <=8) + one linear waypoint lay, no per-frame work.
 //--- A2-OA-1.64-safe: plain getVariable/count/select, if/else on side-ID !=, no A3 commands.
-_rbEnabled = (missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0;
+//--- AIR-EXCLUSION FIX: this road-bias corridor is a GROUND-only helper (BuildRoadRoute snaps waypoints to
+//--- the road net between owned towns). AI_Patrol is also called for AIR dispatch (AI_Commander_AirResp.sqf,
+//--- AI_Commander_Wildcard.sqf W13/W22, Server_GuerAirDef.sqf), which was routing helis/planes ALONG GROUND
+//--- ROADS between owned towns instead of to their target. Exclude Air here so air falls through to the legacy
+//--- direct-destination block below. Byte-identical for ground patrols (isKindOf "Air" is false for a man/ground
+//--- vehicle leader). A2-OA-1.64-safe: vehicle/leader/isKindOf.
+_rbEnabled = ((missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0) && {!((vehicle (leader _team)) isKindOf "Air")};
 if (_rbEnabled) then {
 	_rbSideID = (side _team) Call WFBE_CO_FNC_GetSideID;
 	_rbOwned = [];

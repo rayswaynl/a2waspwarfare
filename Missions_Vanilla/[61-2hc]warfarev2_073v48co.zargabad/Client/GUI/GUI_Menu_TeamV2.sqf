@@ -150,12 +150,31 @@ if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
 		_udSN = "--- Slot " + str (_forEachIndex + 1) + " empty ---";
 		if (count _udTemplate > 0) then {
 			_udSW = _udTemplate select 0;
+			//--- UD tier badge (reuses the Presets tier-badge lookup, see :78-91): forEach over
+			//--- _udSW weapons + the backpack (index 2) tier check to compute _topTier.
+			_topTier = 0;
+			private ["_udBp","_udItemData","_udItemTier"];
+			{
+				_udItemData = missionNamespace getVariable _x;
+				if !(isNil "_udItemData") then {
+					_udItemTier = _udItemData select 3;
+					if (_udItemTier > _topTier) then {_topTier = _udItemTier};
+				};
+			} forEach _udSW;
+			_udBp = _udTemplate select 2;
+			if (_udBp != "") then {
+				_udItemData = missionNamespace getVariable _udBp;
+				if !(isNil "_udItemData") then {
+					_udItemTier = _udItemData select 3;
+					if (_udItemTier > _topTier) then {_topTier = _udItemTier};
+				};
+			};
 			if (count _udSW > 0) then {
 				_udSWItem = missionNamespace getVariable (_udSW select 0);
 				if !(isNil "_udSWItem") then {
-					_udSN = "Slot " + str (_forEachIndex + 1) + ": " + (_udSWItem select 1);
+					_udSN = "Slot " + str (_forEachIndex + 1) + ": " + (_udSWItem select 1) + " [T" + str _topTier + "]";
 				} else {
-					_udSN = "Slot " + str (_forEachIndex + 1) + ": (custom)";
+					_udSN = "Slot " + str (_forEachIndex + 1) + ": (custom) [T" + str _topTier + "]";
 				};
 			};
 		};
@@ -170,6 +189,16 @@ if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
 		(_display displayCtrl 13101) ctrlSetText Format ["Active: Slot %1  (template applied on AI buys)", _udActive + 1];
 	} else {
 		(_display displayCtrl 13101) ctrlSetText "Active: None  (no template applied on AI buys)";
+	};
+	//--- fable/respawn-menu-shortcuts (owner 2026-07-09): "Customise AI Soldier" respawn-menu
+	//--- button sets WFBE_TM2_OpenToUD before createDialog - jump straight to the Unit
+	//--- Designer tab on open. Mirrors the exact show/hide toggle the Units tab button
+	//--- already uses (MenuAction 1200 below). No-op whenever Team Menu is opened any other
+	//--- way (WFBE_TM2_OpenToUD stays nil).
+	if (!(isNil "WFBE_TM2_OpenToUD") && {WFBE_TM2_OpenToUD}) then {
+		WFBE_TM2_OpenToUD = nil;
+		{(_display displayCtrl _x) ctrlShow false} forEach _udPresetIDCs;
+		{(_display displayCtrl _x) ctrlShow true } forEach _udUDIDCs;
 	};
 };
 
@@ -537,6 +566,8 @@ while {alive player && dialog} do {
 			_repUnit = _units select _curUnitSel;
 			_repVeh  = vehicle _repUnit;
 			if (_repVeh == _repUnit) exitWith {hint "Unit is not in a vehicle."};
+			if (_repVeh getVariable ["wfbe_tm2_repair_lock", false]) exitWith {hint "Repair already in progress on this vehicle."};
+			_repVeh setVariable ["wfbe_tm2_repair_lock", true, true]; //--- sweep-fix #932: broadcast so other clients see the lock (was local-only -> cross-client double-repair race).
 			closeDialog 0;
 			//--- Spawn so the dialog can close cleanly before the sleep-loop runs.
 			[_repVeh, _units] Spawn {
@@ -604,6 +635,7 @@ while {alive player && dialog} do {
 				} else {
 					hint "Vehicle lost during repair — remount aborted.";
 				};
+				if (!isNull _rv) then {_rv setVariable ["wfbe_tm2_repair_lock", false, true]};
 			};
 		};
 	};
@@ -642,6 +674,18 @@ while {alive player && dialog} do {
 			profileNamespace setVariable ["WFBE_HIGH_CLIMBING_DEFAULT_ENABLED", WFBE_HighClimbingDefaultEnabled];
 			saveProfileNamespace;
 		};
+	};
+
+	//--- ── TRANSFER FUNDS (MenuAction 101 — reuses V1's advanced transfer dialog) ──
+	//--- V2 dropped the inline money-transfer controls (see the Dialogs.hpp comment on
+	//--- RscMenu_TeamV2) and never re-added an entry point (DIAG-WFMENU-UX finding #2).
+	//--- Re-wires the EXISTING WFBE_TransferMenu dialog + its ChangeTeamFunds /
+	//--- ChangePlayerFunds backend -- same MenuAction code and same createDialog call
+	//--- as V1's GUI_Menu_Team.sqf MenuAction==101 handler. No transfer logic here.
+	if (MenuAction == 101) exitWith {
+		MenuAction = -1;
+		closeDialog 0;
+		createDialog "WFBE_TransferMenu";
 	};
 
 	//--- ── BACK (MenuAction 8) ──────────────────────────────────────────────────

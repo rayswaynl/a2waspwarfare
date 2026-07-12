@@ -102,6 +102,8 @@ _IDCS = _IDCS - [_currentIDC];
 		_currentValue = lnbValue[_listBox,[_currentRow,0]];
 		_unit = _listUnits select _currentValue;
 		_currentUnit = missionNamespace getVariable _unit;
+		//--- fable/fix-unit-purchase-nil-guards: guard nil _currentUnit (unregistered classname) before the select-chain below - matches a55605e10/#1003 shape. Nil = skip the whole purchase (no charge, no spawn).
+		if !(isNil "_currentUnit") then {
 		_currentCost = round (((_currentUnit select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER) * UNIT_COST_MODIFIER);
 		_cpt = 1;
 		_isInfantry = if (_unit isKindOf 'Man') then {true} else {false};
@@ -111,7 +113,17 @@ _IDCS = _IDCS - [_currentIDC];
 			if (_gunner) then {_extra = _extra + 1};
 			if (_commander) then {_extra = _extra + 1};
 			if (_extracrew) then {_extra = _extra + ((_currentUnit select QUERYUNITCREW) select 3)};
-			_currentCost = _currentCost + ((missionNamespace getVariable "WFBE_C_UNITS_CREW_COST") * _extra);
+			//--- P5 crew-cost tier-scale (fable/crew-cost-tierscale, owner economy pick GR-2026-07-08a): crew-replacement
+			//--- cost now scales with the crewed vehicle's own buy-price, reusing the same QUERYUNITPRICE lookup the
+			//--- _currentCost formula above already reads off _currentUnit - no new vehicle-cost table needed. The flat
+			//--- WFBE_C_UNITS_CREW_COST stays the floor; the tier bonus only adds on top and is capped (TIERSCALE_CAP)
+			//--- so even the priciest air/armor never gets punitive. Flag-off (TIERSCALE=0, default) = byte-identical
+			//--- flat WFBE_C_UNITS_CREW_COST per head (see also the two analogous charge points below in this file).
+			_crewCostPerHead = missionNamespace getVariable "WFBE_C_UNITS_CREW_COST";
+			if ((missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE", 0]) > 0) then {
+				_crewCostPerHead = (_crewCostPerHead + ((_currentUnit select QUERYUNITPRICE) * (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF", 0.03]))) min (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP", 400]);
+			};
+			_currentCost = _currentCost + (_crewCostPerHead * _extra);
 		};
 		if ((_currentRow) != -1) then {
 			_funds = Call GetPlayerFunds;
@@ -143,7 +155,7 @@ _IDCS = _IDCS - [_currentIDC];
 			//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD per-side live cap (Takistan). Refuse UP FRONT (before queuing +
 			//--- spending) when the side already fields WFBE_C_TK_SCUD_HF_MAX bought SCUDs. Reads the server-broadcast platform
 			//--- array (client-visible). The server re-enforces the cap on registration (delete + refund) as the authority.
-			if (!_skip && {(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0} && {worldName == "Takistan"} && {_unit == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
+			if (!_skip && {(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0} && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}} && {_unit == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
 				private ["_scudArr","_scudLive","_scudMax"];
 				_scudArr = missionNamespace getVariable [format ["WFBE_TK_SCUD_PLATFORMS_%1", str sideJoined], []];
 				_scudLive = 0;
@@ -151,6 +163,8 @@ _IDCS = _IDCS - [_currentIDC];
 					{ if (!isNull _x && {alive _x}) then {_scudLive = _scudLive + 1} } forEach _scudArr;
 				};
 				_scudMax = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_MAX", 2];
+				//--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): one-per-side clamp. Does NOT touch WFBE_C_TK_SCUD_HF_MAX's own default (2) - just caps the effective ceiling read here. Server-side WFBE_SE_FNC_TkScudRegister applies the identical clamp as the authority.
+				if ((missionNamespace getVariable ["WFBE_C_SCUD_ONE_PER_SIDE", 1]) > 0) then {_scudMax = _scudMax min 1};
 				if (_scudLive >= _scudMax) then {
 					_skip = true;
 					hint parseText (Format ["<t color='#ff5a5a'>SCUD refused: your side already fields %1 launchers (max %2).</t>", _scudLive, _scudMax]);
@@ -233,11 +247,14 @@ _IDCS = _IDCS - [_currentIDC];
 				//--- ran past it, so the readout showed "5/4"/"6/4" and a T-34 + infantry built at the same time.
 				//--- For DEPOT, additionally require the LIVE shared queue to have room so CAP is a true ceiling
 				//--- (isNull guard => treat as empty). This can only ever be MORE restrictive; base factories are
-				//--- left untouched (Depot-only branch), and the orphan-reaper in the display loop below keeps this
-				//--- shared-queue gate from ever soft-locking a depot whose head was orphaned by a disconnect.
+				//--- left untouched EXCEPT when only one live factory of the type remains (fable/ew-economy:
+				//--- _countAlive == 1, set/refreshed by the switch(_type) block above) - with a single instance,
+				//--- that building's queu array IS the side's whole per-type queue, so the same true-ceiling gate
+				//--- applies safely. The orphan-reaper in the display loop below keeps this
+				//--- shared-queue gate from ever soft-locking a depot (or single-factory type) whose head was orphaned by a disconnect.
 				private ["_depotQueueBlocked"];
 				_depotQueueBlocked = false;
-				if (_type == "Depot" && {!isNull _closest}) then {
+				if ((_type == "Depot" || _countAlive == 1) && {!isNull _closest}) then {
 					if ((count (_closest getVariable ["queu", []])) >= (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type])) then {
 						_depotQueueBlocked = true;
 						if (WF_Debug) then {["INFORMATION", Format ["GUI_Menu_BuyUnits.sqf: DEPOT buy blocked - shared queue full (%1/%2).", count (_closest getVariable ["queu", []]), missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type]]] Call WFBE_CO_FNC_LogContent};
@@ -273,6 +290,9 @@ _IDCS = _IDCS - [_currentIDC];
 					hintSilent parseText ((Format [localize 'STR_WF_INFO_Queu_Max',_queueCap]) + Format [" (%1/%2)", _queueCount, _queueCap]);
 				};
 			};
+		};
+		} else {
+			["WARNING", Format ["GUI_Menu_BuyUnits.sqf: purchase classname [%1] not registered in missionNamespace; skipping buy (nil-poison guard, matches a55605e10/#1003).", _unit]] Call WFBE_CO_FNC_LogContent;
 		};
 	};
 	
@@ -463,6 +483,16 @@ _IDCS = _IDCS - [_currentIDC];
 						_listUnits = _listUnits + (_airfEntry select 1);
 					};
 
+					//--- fable/scud-showpiece: the SCUD showpiece carrier is HELI-ONLY - the twin launchers
+					//--- + dressing occupy the fixed-wing deck run. Other carriers/airfields keep full lists.
+					//--- Gate: flag on AND this hangar's town carries the SCUD pad ref (only the middle carrier does).
+					if ((missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_SHOWPIECE", 0]) > 0 && {!isNull _airfTownObj} && {!isNull (_airfTownObj getVariable ["wfbe_scud_pad_ref", objNull])}) then {
+						private ["_heliOnly"];
+						_heliOnly = [];
+						{ if (_x isKindOf "Helicopter") then {_heliOnly = _heliOnly + [_x]} } forEach _listUnits;
+						_listUnits = _heliOnly;
+					};
+
 					//--- Task 36 (live "empty airshop" fix): the roster is CROSS-FACTION
 					//--- (Takistani/Insurgent classes) and deliberately airfield-gated, so two
 					//--- standard filters must not apply here:
@@ -506,8 +536,10 @@ _IDCS = _IDCS - [_currentIDC];
 		//--- longest build time + a generous 60s margin (so a legitimately-building head is NEVER reaped). Time-
 		//--- based, removes at most one head per deadline, converges, and only ever REMOVES a genuine orphan.
 		//--- wfbe_queu_head_seen is a LOCAL object var (each client times independently); the queu REMOVAL is
-		//--- public. Depot-only, so base factories keep their exact current behaviour.
-		if (_type == "Depot" && {!isNull _closest}) then {
+		//--- public. Depot, plus any other factory type currently down to its last live instance
+		//--- (_countAlive == 1) - see the matching widening on the buy-gate above; factories with 2+
+		//--- live instances keep their exact current behaviour (per-building queues aren't the whole picture there).
+		if ((_type == "Depot" || _countAlive == 1) && {!isNull _closest}) then {
 			private ["_rQueu","_rLongest","_rHead","_rSeen"];
 			_rQueu = _closest getVariable ["queu", []];
 			if (count _rQueu > 0) then {
@@ -563,6 +595,8 @@ _IDCS = _IDCS - [_currentIDC];
 			_currentValue = lnbValue[_listBox,[_currentRow,0]];
 			_unit = _listUnits select _currentValue;
 			_currentUnit = missionNamespace getVariable _unit;
+			//--- fable/fix-unit-purchase-nil-guards: guard nil _currentUnit (unregistered classname) before the select-chain below - matches a55605e10/#1003 shape. Nil = skip the panel refresh (stale/blank display, harmless).
+			if !(isNil "_currentUnit") then {
 			ctrlSetText [12009,_currentUnit select QUERYUNITPICTURE];
 			ctrlSetText [12033,_currentUnit select QUERYUNITFACTION];
 			ctrlSetText [12035,str (_currentUnit select QUERYUNITTIME)];
@@ -622,7 +656,13 @@ _IDCS = _IDCS - [_currentIDC];
 						if (_extracrew) then {_extra = _extra + _turretsCount};
 						
 						//--- Set the 'extra' price.
-						_currentCost = _currentCost + ((missionNamespace getVariable "WFBE_C_UNITS_CREW_COST") * _extra);
+						//--- P5 crew-cost tier-scale (fable/crew-cost-tierscale, GR-2026-07-08a): ARRAY-crew (typeName ARRAY) branch - see the
+						//--- single-unit purchase charge point above (~line 114) for the full rationale. Flag-off = byte-identical.
+						_crewCostPerHead = missionNamespace getVariable "WFBE_C_UNITS_CREW_COST";
+						if ((missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE", 0]) > 0) then {
+							_crewCostPerHead = (_crewCostPerHead + ((_currentUnit select QUERYUNITPRICE) * (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF", 0.03]))) min (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP", 400]);
+						};
+						_currentCost = _currentCost + (_crewCostPerHead * _extra);
 					} else {//--- Backward compability.
 						_c = 0;
 						_extra = 0;
@@ -675,7 +715,13 @@ _IDCS = _IDCS - [_currentIDC];
 						} forEach [profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ,_gunner,_commander,_extracrew];
 
 						//--- Set the 'extra' price.
-						_currentCost = _currentCost + ((missionNamespace getVariable "WFBE_C_UNITS_CREW_COST") * _extra);
+						//--- P5 crew-cost tier-scale (fable/crew-cost-tierscale, GR-2026-07-08a): backward-compatibility (scalar _slots) branch - see the
+						//--- single-unit purchase charge point above (~line 114) for the full rationale. Flag-off = byte-identical.
+						_crewCostPerHead = missionNamespace getVariable "WFBE_C_UNITS_CREW_COST";
+						if ((missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE", 0]) > 0) then {
+							_crewCostPerHead = (_crewCostPerHead + ((_currentUnit select QUERYUNITPRICE) * (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_COEF", 0.03]))) min (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP", 400]);
+						};
+						_currentCost = _currentCost + (_crewCostPerHead * _extra);
 					};
 				} else {
 					{ctrlShow [_x,false]} forEach (_IDCSVehi);
@@ -822,7 +868,7 @@ _IDCS = _IDCS - [_currentIDC];
 					if (_unit in WFBE_C_SUPPLY_HELI_TYPES) then {
 						hintSilent parseText "Supply helicopters work like supply trucks but deliver supply by air. <br/> <br/>Requires the Aircraft Factory at level 3. At Air level 4, deliveries become CASH RUNS straight to the commander's funds. Air delivery pays the pilot a larger reward. <br/> <br/>Aim at a friendly [+SUPPLY] town's helicopter, use LOAD SUPPLIES, then fly to your Command Center (marked C). A loaded helicopter shot down hands the enemy a share of the cargo.";
 					};
-					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])}) then {
+					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])} && {(side group player) == resistance}) then {
 						hintSilent parseText "VBIED - driver-detonated suicide truck. <br/> <br/>Buy it, drive it into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. After a short arm delay it explodes and your GUER team is paid for the kills. One-shot - truck + driver are lost.";
 					};
 					//--- GUER improvised mortar truck (V3S_Gue): explain the driver call-in strike. Runs AFTER the ambulance hint so it overrides (V3S_Gue is the GUER ambulance class).
@@ -830,8 +876,12 @@ _IDCS = _IDCS - [_currentIDC];
 						hintSilent parseText "<t color='#33ccff'>Improvised Mortar Truck</t> - a mobile call-in barrage. <br/> <br/>Drive it near the front, then as the DRIVER use the action menu (mouse scroll) -> <t color='#33ccff'>Call mortar strike</t>. Click the map within range to mark the impact point and a short barrage drops there. <br/> <br/>A cooldown and a small per-strike fee apply; accuracy tightens as your GUER vehicle tier rises. (This same truck also doubles as your ambulance / mobile respawn.)";
 					};
 					//--- B75 (guer-tech): kill-unlocked SECOND VBIED — the armoured M113 variant (~2x speed, no weapons).
-					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])}) then {
+					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])} && {(side group player) == resistance}) then {
 						hintSilent parseText "VBIED (APC) - an unarmoured-crew but TRACKED suicide M113 that drives at roughly DOUBLE its normal top speed. <br/> <br/>Same one-shot use as the truck VBIED: drive into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. Its armour + speed let it punch through to a target the soft truck can't reach. Unlocked by GUER kills.";
+					};
+					//--- fable/guer-suicide-bike (flag WFBE_C_GUER_SUICIDE_BIKE, default 0): THIRD VBIED variant, a fast small suicide motorcycle.
+					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0} && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])} && {(side group player) == resistance}) then {
+						hintSilent parseText "VBIED (Bike) - a fast, small suicide motorcycle. <br/> <br/>Buy it, ride it into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. Its small silhouette and speed let it slip through where the truck can't. Same one-shot use: rider + bike are lost, and your GUER team is paid for the kills.";
 					};
 					
 					if (!(_unit in WFBE_C_SUPPLY_HELI_TYPES) && {_unit in (missionNamespace getVariable [format ["WFBE_%1LIFTVEHICLE", sideJoinedText], []])}) then {
@@ -872,6 +922,10 @@ _IDCS = _IDCS - [_currentIDC];
 			
 			ctrlSetText [12034,Format ["$ %1",_currentCost]];
 			_updateDetails = false;
+			} else {
+				["WARNING", Format ["GUI_Menu_BuyUnits.sqf: preview classname [%1] not registered in missionNamespace; skipping detail-panel refresh (nil-poison guard, matches a55605e10/#1003).", _unit]] Call WFBE_CO_FNC_LogContent;
+				_updateDetails = false;
+			};
 		} else {
 			{ctrlSetText [_x , ""]} forEach [12009,12033,12034,12035,12036,12037,12038,12039];
 			//--- Task 33: show queue list in the description panel when no unit is selected.

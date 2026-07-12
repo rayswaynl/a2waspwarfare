@@ -67,7 +67,16 @@ missionNamespace setVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", 60];
 
 player call Compile preprocessFileLineNumbers "WASP\rpg_dropping\DropRPG.sqf";
 //--- Position the client on the temp spawn (Common is not yet init'd so we call is straigh away).
-player setPos ([getMarkerPos Format["%1TempRespawnMarker",sideJoinedText],1,10] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");
+//--- fable/deadspawn-redesign: flag-gated underwater holding pen. Flag 0 keeps the
+//--- line below byte-for-byte the same call as HEAD. Flag 1 (default) sends the join/transit placement
+//--- to Common_DeadspawnPenPos.sqf instead - the existing allowDamage-false transit window
+//--- (set a few lines above in this file, cleared on WFBE_Client_DeadspawnEscaped or the
+//--- existing 120s failsafe) already covers this new position unmodified.
+if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_REDESIGN", 0]) > 0) then {
+	player setPos ([] call WFBE_CO_FNC_DeadspawnPenPos);
+} else {
+	player setPos ([getMarkerPos Format["%1TempRespawnMarker",sideJoinedText],1,10] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");
+};
 (vehicle player) addEventHandler ["Fired",{_this Spawn HandleAT}]; (vehicle player) addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
 // Marty: Only attach the combat marker blinking Fired EH when the mission parameter enables the feature.
 if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {
@@ -199,6 +208,7 @@ WFBE_CL_FNC_CanRepairCampNearby = Compile preprocessFileLineNumbers "Client\Func
 WFBE_CL_FNC_GetRepairTruckServicePoints = Compile preprocessFileLineNumbers "Client\Functions\Client_GetRepairTruckServicePoints.sqf";
 WFBE_CL_FNC_CanUseRepairPointEASA = Compile preprocessFileLineNumbers "Client\Functions\Client_CanUseRepairPointEASA.sqf";
 WFBE_CL_FNC_CanUseTownCenterEASA = Compile preprocessFileLineNumbers "Client\Functions\Client_CanUseTownCenterEASA.sqf";	//--- GUER-only: EASA at friendly town centers (base-less faction has no service points)
+WFBE_CL_FNC_CanUseTownCenterBarrelBomb = Compile preprocessFileLineNumbers "Client\Functions\Client_CanUseTownCenterBarrelBomb.sqf";	//--- fable/guer-barrelbomb: GUER-only, same town-center idiom as the EASA check above - "Call Barrel Bomb" addAction condition.
 WFBE_CL_FNC_GetClosestAirport = Compile preprocessFileLineNumbers "Client\Functions\Client_GetClosestAirport.sqf";
 WFBE_CL_FNC_GetClosestCamp = Compile preprocessFileLineNumbers "Client\Functions\Client_GetClosestCamp.sqf";
 WFBE_CL_FNC_GetClosestDepot = Compile preprocessFileLineNumbers "Client\Functions\Client_GetClosestDepot.sqf";
@@ -268,8 +278,11 @@ waitUntil {commonInitComplete};
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Common initialization is complete at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
-//--- qol-polish-pack: friendly name-tag overlay, toggled from the WF menu "TAGS" button (MenuAction 25). Client-side, friendly-PLAYERS only,
-//--- distance-scaled, pooled controls (no per-frame create). A2-safe: worldToScreen / visiblePosition / ctrlSetStructuredText, no A3 commands.
+//--- qol-polish-pack: friendly name-tag overlay, toggled from the WF menu "TAGS" button (MenuAction 25) or the
+//--- Settings dialog (WFBE_MenuAction 11, same var+key - fable/tags-settings-integration). Client-side, friendly-PLAYERS
+//--- only, distance-scaled, pooled controls (no per-frame create). A2-safe: worldToScreen / visiblePosition /
+//--- ctrlSetStructuredText, no A3 commands. AI infantry/vehicle tags below are additionally gated by the
+//--- per-player WFBE_CL_ShowAITags opt-out (Settings dialog, WFBE_MenuAction 12).
 if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 [] spawn {
 	disableSerialization; //--- cmdcon42 (Ray 2026-07-02): this scheduled loop holds display/control handles (_disp, _ctrl) across waitUntil/sleep suspensions. Without disableSerialization the scheduler tries to serialise _disp when the script suspends and throws "variable '_disp' does not support serialization" the moment the TAGS button (MenuAction 25) enables the overlay. Must live in THIS script body (same scope as the display var), not a parent.
@@ -300,7 +313,8 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 				};
 			} forEach (player nearEntities [["Man"], 120]);
 			//--- WFBE_C_TAGS_AI: friendly AI infantry tags (same-side, within 150m, #b0ffb0 green).
-			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0) then {
+			//--- fable/tags-settings-integration: ANDed with the per-player Show-AI-Tags opt-out (Settings dialog, WFBE_MenuAction 12).
+			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0 && {missionNamespace getVariable ["WFBE_CL_ShowAITags", true]}) then {
 				{
 					private ["_aiunit","_aipp","_aiscr","_aid","_aisz"];
 					_aiunit = _x;
@@ -321,7 +335,8 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 				} forEach (player nearEntities [["Man"], 150]);
 			};
 			//--- WFBE_C_TAGS_AI: friendly AI vehicle tags (same-side, pure-AI crew, within 200m, #ffffa0 yellow). Height 3.0m separates from kill-tally tags at 2.6m.
-			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0) then {
+			//--- fable/tags-settings-integration: ANDed with the per-player Show-AI-Tags opt-out (Settings dialog, WFBE_MenuAction 12).
+			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0 && {missionNamespace getVariable ["WFBE_CL_ShowAITags", true]}) then {
 				{
 					private ["_vhc","_vcnt","_vtxt","_vpp","_vscr","_vd","_vsz"];
 					_vhc = _x;
@@ -1180,6 +1195,30 @@ if (leader(group player) != player) then {(group player) selectLeader player};
 if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
 	player setRank "COLONEL";
 	diag_log "[WFBE|TEAMBAR] Init_Client: player rank set to COLONEL for command-bar slot 1.";
+	//--- fable/init-slot1-rejoin (owner live 2026-07-10, ZG-1.2.1: "once again I am #2 in my own group" on a
+	//--- FRESH round - never died). The #977 slot-renumber only ran in Client_OnKilled (RESPAWN); at INITIAL
+	//--- spawn the player gets COLONEL rank but the A2 command-bar SLOT number still follows join order, so a
+	//--- player whose own group already holds mission-start AI stays #2. Run the SAME rejoin here, on a short
+	//--- delay so any async group assembly has settled. Client-local AI only (join needs locality); createGroup-
+	//--- null / not-leader / already-#1 cases skip cleanly. Mirrors Client_OnKilled's slot1-rejoin exactly.
+	[] spawn {
+		sleep 4;
+		if (alive player && {group player == WFBE_Client_Team} && {leader (group player) == player} && {((units group player) select 0) != player}) then {
+			Private ["_slot1Others","_slot1Tmp"];
+			_slot1Others = [];
+			{if (alive _x && {!isPlayer _x} && {local _x}) then {_slot1Others set [count _slot1Others, _x]}} forEach ((units group player) - [player]);
+			if (count _slot1Others > 0) then {
+				_slot1Tmp = createGroup (side group player);
+				if (!isNull _slot1Tmp) then {
+					_slot1Others joinSilent _slot1Tmp;
+					_slot1Others joinSilent (group player);
+					if (count units _slot1Tmp == 0) then {deleteGroup _slot1Tmp};
+					(group player) selectLeader player;
+					diag_log Format ["[WFBE|TEAMBAR] Init_Client slot1-rejoin: %1 AI squadmates re-joined behind the player.", count _slot1Others];
+				};
+			};
+		};
+	};
 };
 
 /* Override player's Gear.*/
@@ -1263,6 +1302,7 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
 
             	if (!isNull _area && {(_area getVariable ['avail', 0]) <= 0}) then { _color = _colorRed }; //--- cmdcon33: guard objNull _area (no base area before first HQ deploy -> nil<=0 falsely reddened the HQ ghost)
            		if (surfaceIsWater(position _preview)) then { _color = _colorRed }; if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_CHECK", 1]) > 0 && {({_preview isKindOf _x} count _affected) != 0} && {!(_preview isKindOf "Warfare_HQ_base_unfolded")} && {count ((position _preview) isFlatEmpty [(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_RADIUS", 10]), 0, (missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_GRAD", 0.5]), 10, 0, false, objNull]) == 0}) then { _color = _colorRed }; //--- qol-polish-pack: reject too-steep ground for base structures (players lacked the slope check the AI commander already has)
+           		if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_TREE_CLEAR", 0]) > 0 && {({_preview isKindOf _x} count _affected) != 0} && {!(_preview isKindOf "Warfare_HQ_base_unfolded")} && {count (nearestObjects [position _preview, ["Tree","SmallTree"], (missionNamespace getVariable ["WFBE_C_STRUCTURES_TREE_CLEAR", 0])]) != 0}) then { _color = _colorRed }; //--- fable/player-build-placement-gate: reject placement near trees for base structures (parity with the AI commander's _treeClearOK gate, PR #733 TP-19; nearestObjects not nearestTerrainObjects - the latter is A3-only, hotfixed out of the AI-side gate after a live RPT crash - see AI_Commander_Base.sqf:244)
 
 			if ({_preview isKindOf _x} count _affected != 0) then {
                 	Private["_building","_sort","_strs","_lax","_lay"];
@@ -1364,7 +1404,7 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
                         _opposite_side = west;
 	};
 
-            		_detected = (_area nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"], missionNamespace getVariable "WFBE_C_BASE_AREA_RANGE"]) unitsBelowHeight 20;
+            		_detected = if (isNull _area) then {[]} else {(_area nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"], missionNamespace getVariable "WFBE_C_BASE_AREA_RANGE"]) unitsBelowHeight 20}; //--- patch R1: guard null _area (GetClosestEntity2 -> objNull when no base area) that made nearEntities throw ~89x/session
             		if (missionNamespace getVariable ["WFBE_C_DEFENSE_CLIENT_GATE_ALIGN", 0] > 0) then {
             			if (_itemcategory != 0 && ({side _x == _opposite_side} count _detected) >= (missionNamespace getVariable ["WFBE_C_DEFENSE_THREAT_MIN", 3])) then {
             				_color = _colorRed;

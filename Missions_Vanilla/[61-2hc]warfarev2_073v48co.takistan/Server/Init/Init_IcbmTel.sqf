@@ -186,15 +186,24 @@ WFBE_SE_FNC_TkScudRegister = {
 	if (isNull _veh) exitWith {false};
 	if !(_side in [west, east, resistance]) exitWith {false};
 	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) <= 0) exitWith {false};
-	if (worldName != "Takistan") exitWith {false};
+	if (worldName != "Takistan" && {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) <= 0}) exitWith {false};
 	_key = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _side];
 	_live = [_side] Call WFBE_SE_FNC_TkScudPlatforms;   //--- compacted current list.
 	//--- already registered? (idempotent — a double send must not double-count).
 	if (_veh in _live) exitWith {true};
 	_max = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_MAX", 2];
+	//--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): one-per-side clamp, server-authoritative. Does NOT touch WFBE_C_TK_SCUD_HF_MAX's own default (2) - just caps the effective ceiling read here. Mirrors the identical clamp in GUI_Menu_BuyUnits.sqf (this is the authority; that one is the pre-purchase UX gate).
+	if ((missionNamespace getVariable ["WFBE_C_SCUD_ONE_PER_SIDE", 1]) > 0) then {_max = _max min 1};
 	if (count _live >= _max) exitWith {
 		//--- refuse: destroy the surplus purchase + refund the buying team the EXACT amount paid (flag cost fallback), tell the side.
-		_refund = if (_paid >= 0) then {_paid} else {missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000]};
+		//--- D4-FIX(b): _paid (_currentCost) is 100% client-controlled (Client_BuildUnit.sqf:812) and was credited
+		//--- verbatim whenever >=0 - a forged/inflated value MINTED funds on any refused-at-cap SCUD. Clamp to the
+		//--- real max legitimate HF price (base + a generous 5-crew-seat margin), computed live. Negative _paid still
+		//--- falls back to the flag cost (unchanged legacy behaviour). Byte-identical for honest play (_paid <= ceil).
+		private ["_hfBase","_hfCeil"];
+		_hfBase = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000];
+		_hfCeil = _hfBase + (5 * (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP", 400]));
+		_refund = if (_paid >= 0) then {(_paid min _hfCeil) max 0} else {_hfBase};
 		if (!isNull _team) then { [_team, _refund] Call WFBE_CO_FNC_ChangeTeamFunds };
 		deleteVehicle _veh;
 		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["SCUD refused: your side already fields %1 SCUD launchers (max %2). Refunded.", count _live, _max]]] Call WFBE_CO_FNC_SendToClients;
@@ -409,7 +418,11 @@ WFBE_SE_FNC_IcbmTelFire = {
 		case "FASCAM":     {missionNamespace getVariable ["WFBE_C_ICBM_TEL_FASCAM_COST", 14000]};
 		case "STEELRAIN":  {missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_COST", 9000]};
 		case "BUSTER":     {missionNamespace getVariable ["WFBE_C_ICBM_TEL_BUSTER_COST", 18000]};
-		default            {_fee};
+		//--- D4-FIX(a): NUKE (the only muni hitting default) cost is NEVER the client-supplied _fee anymore -
+		//--- re-derived from the server constant, so a forged/negative _fee can no longer become the charge
+		//--- (negative _fee => negative _cost => the -_cost charge at :474 MINTED funds; the :431 funds gate
+		//--- was also defeated by a negative cost). Byte-identical for honest play (client sends 75000).
+		default            {missionNamespace getVariable ["WFBE_C_ICBM_TEL_NUKE_COST", 75000]};
 	};
 	//--- cmdcon42-n (Ray 2026-07-02): AI fire reads/charges the AI treasury (wfbe_aicom_funds), not a player team; the null-team
 	//--- guard only applies to a human fire (an AI fire legitimately carries no player team). Human path is byte-unchanged.
@@ -419,6 +432,10 @@ WFBE_SE_FNC_IcbmTelFire = {
 	private ["_badTeam"];
 	_badTeam = (!_isAiFire) && {isNull _playerTeam};
 	if (_badTeam) exitWith {["WARNING", Format ["Init_IcbmTel.sqf : [%1] TEL fire — null team.", _sideText]] Call WFBE_CO_FNC_LogContent};
+	//--- FIX D8b: resolve the human firer once, for STEELRAIN's kill-credit stamp. leader of a null
+	//--- team is objNull (A2-OA safe, no crash), so an AI-treasury fire simply carries no caller.
+	private ["_caller"];
+	_caller = leader _playerTeam;
 	if (_isAiFire) then {
 		_funds = _aiTreasury Call GetAICommanderFunds;
 	} else {
@@ -493,7 +510,7 @@ WFBE_SE_FNC_IcbmTelFire = {
 			case "SATURATION": {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelSaturation};
 			case "RECON":      {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelRecon};
 			case "FASCAM":     {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelFascam};
-			case "STEELRAIN":  {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelSteelRain};
+			case "STEELRAIN":  {[_side, _tgtPos, _caller] Spawn WFBE_SE_FNC_IcbmTelSteelRain};
 			case "BUSTER":     {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelBuster};
 			default            {[_side, _tgtPos] Spawn WFBE_SE_FNC_IcbmTelSaturation};
 		};
@@ -817,9 +834,15 @@ WFBE_SE_FNC_IcbmTelFascam = {
 //--- WFBE_C_SCUD_WARHEAD_HE (Sh_125_HE) the sibling SATURATION/RECON + the live carrier SCUD use (proven mission ammo).
 //------------------------------------------------------------------------------------
 WFBE_SE_FNC_IcbmTelSteelRain = {
-	private ["_side","_dest","_bursts","_rad","_burstR","_he","_span","_gap","_i","_ang","_r","_bx","_alt","_bp","_dmgKilled","_u","_d","_add","_cur"];
+	private ["_side","_dest","_caller","_enemySides","_bursts","_rad","_burstR","_he","_span","_gap","_i","_ang","_r","_bx","_alt","_bp","_dmgKilled","_u","_d","_add","_cur"];
 	_side    = _this select 0;
 	_dest    = _this select 1;
+	//--- FIX D8b: optional 3rd arg (the human firer) — type-guarded, backward-compatible with any future caller.
+	_caller  = if (count _this > 2) then {_this select 2} else {objNull};
+	if (typeName _caller != "OBJECT") then {_caller = objNull};
+	//--- FIX D8b: BUSTER's ordering (subtract _side LAST) — NOT SATURATION/RECON's (:619/:669) — so a GUER
+	//--- (resistance) firer never re-admits itself into its own enemy set. Proven idiom at Init_IcbmTel.sqf:897.
+	_enemySides = (WFBE_PRESENTSIDES + [resistance]) - [_side];
 	_bursts  = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_BURSTS", 18];
 	_rad     = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_R", 300];
 	_burstR  = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_BURST_R", 40];
@@ -839,10 +862,14 @@ WFBE_SE_FNC_IcbmTelSteelRain = {
 		_alt = 25 + (random 10);
 		_bp  = [_bx select 0, _bx select 1, 0];   //--- ground reference for the infantry scan (2D distance).
 		_he createVehicle [_bx select 0, _bx select 1, _alt];
-		//--- SCRIPTED anti-infantry falloff: EXPOSED (on-foot) men only, bounded scan.
+		//--- SCRIPTED anti-infantry falloff: EXPOSED (on-foot) ENEMY men only, bounded scan.
+		//--- FIX D8b: side-gated (own-side/neutral units in your own barrage no longer take the scripted
+		//--- top-up; the real HE splash at the createVehicle above is untouched) + pre-hit kill-credit stamp
+		//--- mirroring Support_ScudStrike (fable/fix-vbied-attribution). STEELRAIN was the sole TEL munition
+		//--- missing both (its 5 siblings all gate on _enemySides and credit their kills).
 		{
 			_u = _x;
-			if (alive _u && {vehicle _u == _u}) then {
+			if (alive _u && {vehicle _u == _u} && {(side _u) in _enemySides}) then {
 				_d = _u distance _bp;
 				_add = 0;
 				if (_d < 10) then {_add = 0.9} else {
@@ -851,6 +878,11 @@ WFBE_SE_FNC_IcbmTelSteelRain = {
 					};
 				};
 				if (_add > 0) then {
+					if (!isNull _caller && {alive _caller}) then {
+						_u setVariable ["wfbe_lasthitby", _caller, true];
+						_u setVariable ["wfbe_lasthittime", time, true];
+						_u setVariable ["wfbe_explosivesupportkill", true, true];
+					};
 					_cur = damage _u;
 					_u setDamage ((_cur + _add) min 1);
 					if ((_cur + _add) >= 1) then {_dmgKilled = _dmgKilled + 1};

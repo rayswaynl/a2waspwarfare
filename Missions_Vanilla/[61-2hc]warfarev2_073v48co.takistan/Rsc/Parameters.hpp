@@ -54,13 +54,13 @@
 		title = "$STR_WF_PARAMETER_KeepAI";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_PARAMETER_No","$STR_WF_PARAMETER_Yes"};//{"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1;
 	};
 	class WFBE_C_AI_TEAMS_ENABLED {
 		title = "$STR_WF_PARAMETER_AI";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1;
 	};
 	class WFBE_C_ARTILLERY {
 		title = "$STR_WF_PARAMETER_Arty";
@@ -91,6 +91,12 @@
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1;
+	};
+	class WFBE_C_STRUCTURES_RADIOTOWER {
+		title = "Vehicle Radio (Radio Tower)";
+		values[] = {0,1};
+		texts[] = {"Disabled","Enabled"};
+		default = 0;
 	};
 	class WFBE_C_BASE_AREA {
 		title = "$STR_WF_PARAMETER_BaseArea";
@@ -359,7 +365,7 @@
 		title = "$STR_WF_PARAMETER_TrackAI";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1;
 	};
 	class WFBE_C_UNITS_TRACK_LEADERS {
 		title = "$STR_WF_PARAMETER_TrackPlayers";
@@ -705,7 +711,7 @@
 		title = "GUER Scavenger Team wildcard (G5)";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1; //--- fable/ew-guer: 0->1, on by default (easy win).
 	};
 	class WFBE_C_GUER_SCAV_REWARD {
 		title = "GUER Scav wreck reward (cash per wreck)";
@@ -724,6 +730,16 @@
 		values[] = {180,300,600};
 		texts[] = {"3 min","5 min","10 min"};
 		default = 300;
+	};
+
+	// GUER civilian-depot lobby toggle (easy win): appends already-registered CIV/TKCIV
+	// transport classnames to the GUER player buy-depot pool. Consuming code already live
+	// in Root_GUE.sqf + Root_GUE_PlayerOverlay.sqf (missionNamespace getVariable, safe default 0).
+	class WFBE_C_GUER_CIVILIAN_DEPOT {
+		title = "GUER Civilian Vehicle Depot";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1; //--- release: enable all feature flags at launch, 0->1.
 	};
 	class WFBE_C_AWACS {
 		title = "AWACS platform radar (air picture + ground MTI sweep)";
@@ -751,7 +767,7 @@
 		title = "GUER Resistance Lockout (activation delay)";
 		values[] = {0,15,20,30};
 		texts[] = {"Off","15 minutes","20 minutes","30 minutes"};
-		default = 20;
+		default = 0; //--- owner 2026-07-07: off for open-testing round (was 20)
 	};
 
 	// fable/drones-menu: GUER Drone Operations lobby params.

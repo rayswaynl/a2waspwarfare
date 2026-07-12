@@ -2,7 +2,7 @@
 name: a2oa-verify-command
 description: Load whenever you are not CERTAIN a scripting command or language semantic exists and behaves as expected on Arma 2 OA 1.64 — verification ladder from wiki reference to offline engine probe.
 ---
-<!-- source: Agent-Guide GUIDE-REV GR-2026-07-06a -->
+<!-- source: Agent-Guide GUIDE-REV GR-2026-07-08a -->
 
 # a2oa-verify-command
 

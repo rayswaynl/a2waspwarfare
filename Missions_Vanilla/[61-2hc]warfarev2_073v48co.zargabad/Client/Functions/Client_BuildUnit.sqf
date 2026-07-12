@@ -19,8 +19,13 @@ _factoryType = "";
 _description = "";
 
 _currentUnit = missionNamespace getVariable _unit;
+//--- fable/fix-unit-purchase-nil-guards: guard nil _currentUnit (unregistered classname) before the select-chain below - matches a55605e10/#1003/Server_BuyUnit.sqf(#1001) shape. Nil = keep the safe pre-init defaults above (_waitTime=0, _description="").
+if !(isNil "_currentUnit") then {
 _waitTime = _currentUnit select QUERYUNITTIME;
 _description = _currentUnit select QUERYUNITLABEL;
+} else {
+	["WARNING", Format ["Client_BuildUnit.sqf: unit classname [%1] not registered in missionNamespace; using safe defaults (waitTime=0, no description).", _unit]] Call WFBE_CO_FNC_LogContent;
+};
 	
 _spawnpaddir=2;
 
@@ -801,7 +806,7 @@ if (_isMan) then {
 	//--- and sends the SAME icbm-tel-fire payload the Tactical menu uses, WITH this specific hull as the platform hint (the
 	//--- server re-validates everything). Fires a SATURATION conventional strike (the flagship conventional munition). Mirrors
 	//--- the carrier scud-action-add + GUER-VBIED buyer-local-add / GetIn-re-add persistence idioms. TK + flag gated.
-	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan"} && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
+	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}} && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
 		//--- (a) SERVER-SIDE registration request (side-keyed platform array + cap enforcement live on the server). Pass the
 		//--- ACTUAL price paid (_currentCost, incl. modifiers + crew) so an over-cap refusal refunds the exact amount deducted.
 		["RequestSpecial", ["tk-scud-register", _vehicle, sideJoined, group player, _currentCost]] Call WFBE_CO_FNC_SendToServer;
@@ -849,13 +854,52 @@ if (_isMan) then {
 			_v setVariable ["wfbe_tk_scud_action", _aid];
 		};
 
+		//--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): drivable-SCUD speed governor. A2-OA has no
+		//--- setMaxSpeed/limitSpeed (Arma-3-only - see WFBE_CL_FNC_GuerVbiedM113Boost below for the identical constraint on
+		//--- the M113 VBIED), so cap top speed with the same periodic setVelocity idiom that boost loop uses, but scaling
+		//--- the WHOLE velocity vector DOWN to the cap instead of nudging one component up - a firm governor (direction
+		//--- preserved, magnitude clamped) rather than a soft nudge. Intent (owner): the SCUD is a slow, precious,
+		//--- airliftable asset, not a fast mobile launcher - driving it should be tedious enough that sling-loading is the
+		//--- practical way to relocate it. Idempotent via wfbe_scud_governor_running (one loop per local vehicle instance,
+		//--- mirrors the boost loop's dedupe pattern). Local-driver-gated exactly like the boost loop, so it shares that
+		//--- loop's known scope: reliable for the buyer's own machine across get-in/get-out; a teammate who becomes driver
+		//--- on an entirely different, never-subscribed client is the same documented gap the VBIED note above already
+		//--- accepts for this file's addAction/addEventHandler idiom.
+		WFBE_CL_FNC_TkScudSpeedGovernor = {
+			private ["_v"];
+			_v = _this;
+			if (isNull _v) exitWith {};
+			if (_v getVariable ["wfbe_scud_governor_running", false]) exitWith {};   //--- already governing on this machine.
+			_v setVariable ["wfbe_scud_governor_running", true];
+			[_v] spawn {
+				private ["_v","_cap","_s","_vel","_ratio"];
+				_v = _this select 0;
+				_cap = missionNamespace getVariable ["WFBE_C_SCUD_SPEED_CAP_KMH", 20];
+				while {alive _v && {driver _v == player} && {canMove _v} && {_cap > 0}} do {
+					_s = speed _v;
+					if (_s > _cap) then {
+						_vel = velocity _v;
+						_ratio = _cap / _s;
+						_v setVelocity [(_vel select 0) * _ratio, (_vel select 1) * _ratio, (_vel select 2) * _ratio];
+					};
+					sleep 0.1;
+				};
+				_v setVariable ["wfbe_scud_governor_running", false];
+			};
+		};
+
 		//--- Immediate buyer-local add (instant availability) + GetIn re-add for persistence (mirrors the VBIED idiom).
 		_vehicle call WFBE_CL_FNC_AddTkScudAction;
+		_vehicle call WFBE_CL_FNC_TkScudSpeedGovernor;
 		_vehicle addEventHandler ["GetIn", {
-			private ["_v","_u"];
+			private ["_v","_pos","_u"];
 			_v = _this select 0;
+			_pos = _this select 1;
 			_u = _this select 2;
-			if (_u == player) then { _v call WFBE_CL_FNC_AddTkScudAction };
+			if (_u == player) then {
+				_v call WFBE_CL_FNC_AddTkScudAction;
+				if (_pos == "driver") then { _v call WFBE_CL_FNC_TkScudSpeedGovernor };
+			};
 		}];
 	};
 
@@ -888,7 +932,7 @@ if (_isMan) then {
 	//--- NOTE (out of my file scope): for a teammate already standing on ANOTHER client when the truck spawns, the
 	//--- fully-correct delivery is an all-clients re-applier (the per-client updateclient.sqf MHQ-action pattern, or a
 	//--- registered PVFunction like SetMHQLock). That re-applier lives outside the GUER bundle's owned files.
-	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || ((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"]))}) then {  //--- B75: hilux/datsun truck VBIED OR the kill-gated M113 APC VBIED.
+	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || ((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) || (((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])})} && {(side group player) == resistance}) then {  //--- B75: hilux/datsun truck VBIED OR the kill-gated M113 APC VBIED. fable/guer-suicide-bike: OR the flag-gated suicide motorcycle.
 		//--- Global flag so any machine that gets this vehicle local can recognise + (re)arm the action.
 		_vehicle setVariable ["wfbe_is_guer_vbied", true, true];
 
@@ -897,9 +941,14 @@ if (_isMan) then {
 		if ((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) then {
 			_vehicle setVariable ["wfbe_vbied_m113", true, true];
 		} else {
-			//--- B67 (guer-reward): the truck VBIED is a Car, so enable Valhalla High Climbing on it (broadcast) so the
-			//--- suicide truck can scale steep terrain to reach targets. Mirrors LowGear_Toggle.sqf's enable path.
-			_vehicle setVariable ["WFBE_HighClimbingEnabled", true, true];
+			if (((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])}) then {
+				//--- fable/guer-suicide-bike: Motorcycle-class hull, already fast/nimble stock -- no movement-assist
+				//--- boost needed (unlike the Car VBIED's Valhalla climb or the M113's speed loop).
+			} else {
+				//--- B67 (guer-reward): the truck VBIED is a Car, so enable Valhalla High Climbing on it (broadcast) so the
+				//--- suicide truck can scale steep terrain to reach targets. Mirrors LowGear_Toggle.sqf's enable path.
+				_vehicle setVariable ["WFBE_HighClimbingEnabled", true, true];
+			};
 		};
 
 		//--- Local helper: add the detonate action once per local vehicle instance (dedupe via wfbe_vbied_action).
@@ -974,42 +1023,6 @@ if (_isMan) then {
 		}];
 	};
 
-	//--- GUER PLAYER MORTAR STRIKE: the buyable V3S_Gue truck gets a driver-only "Call mortar strike" action — a
-	//--- cooldown-gated, range-limited call-in barrage (Action_GuerMortarStrike.sqf -> RequestSpecial "guer-mortar-strike"
-	//--- -> Server_HandleSpecial spawns scripted 82mm HE ordnance). This mirrors the GUER VBIED block above EXACTLY:
-	//--- addAction is LOCAL and not JIP-persistent, so we (a) tag the truck with a broadcast flag any machine can
-	//--- recognise, and (b) attach a GetIn driver-path that re-adds the action to the *local* driver instance whenever a
-	//--- resistance player takes the wheel — so the buyer keeps it across get-out/get-in and a local player who inherits
-	//--- the truck as driver gets it on their own machine. Idempotent via wfbe_mortar_action (one action per local
-	//--- vehicle instance). Gate-OFF / non-V3S = no flag, no EH, no action (byte-for-byte today's behaviour).
-	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(typeOf _vehicle) == "V3S_Gue"}) then {
-		//--- Global flag so any machine that gets this vehicle local can recognise + (re)arm the action.
-		_vehicle setVariable ["wfbe_is_guer_mortar", true, true];
-
-		//--- Local helper: add the mortar action once per local vehicle instance (dedupe via wfbe_mortar_action).
-		WFBE_CL_FNC_AddGuerMortarAction = {
-			private ["_v","_aid"];
-			_v = _this;
-			if (isNull _v) exitWith {};
-			if (!(_v getVariable ["wfbe_is_guer_mortar", false])) exitWith {};
-			if ((_v getVariable ["wfbe_mortar_action", -1]) >= 0) exitWith {};   //--- already armed on this machine.
-			_aid = _v addAction ["<t color='#ffcc33'>Call mortar strike</t>","Client\Action\Action_GuerMortarStrike.sqf", [], 6, false, true, "", "driver _target == _this && {side _this == resistance}"];
-			_v setVariable ["wfbe_mortar_action", _aid];
-		};
-
-		//--- Immediate buyer-local add (instant availability) + GetIn driver-path re-add for persistence.
-		_vehicle call WFBE_CL_FNC_AddGuerMortarAction;
-		_vehicle addEventHandler ["GetIn", {
-			private ["_v","_pos","_u"];
-			_v = _this select 0;
-			_pos = _this select 1;
-			_u = _this select 2;
-			if (_pos == "driver" && {_u == player} && {side _u == resistance}) then {
-				_v call WFBE_CL_FNC_AddGuerMortarAction;
-			};
-		}];
-	};
-
 	//--- B75 (guer-tech FOB): tag a freshly-bought GUER FOB delivery truck (broadcast) so any machine can recognise it
 	//--- as a real FOB truck (vs an AI faction's Ural_INS that shares the classname). The flag gates the "Build FOB"
 	//--- action (Init_Unit.sqf) and the spawn-on-truck list (Client_GetRespawnAvailable.sqf).
@@ -1050,7 +1063,7 @@ if (_isMan) then {
 	if (_unit in (missionNamespace getVariable Format['WFBE_%1SALVAGETRUCK',sideJoinedText])) then {[_vehicle] execVM 'Client\FSM\updatesalvage.sqf'};
 
 	//--- Units Balancing.
-	if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {(_vehicle) Call BalanceInit};
+	if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {_vehicle setVariable ["wfbe_balance_side", sideJoined]; (_vehicle) Call BalanceInit};
 
 	if (_unit isKindOf "Air") then {
 		//--- Countermeasures.

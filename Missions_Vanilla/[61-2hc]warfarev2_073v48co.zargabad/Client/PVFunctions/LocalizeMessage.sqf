@@ -49,6 +49,8 @@ switch (_localize) do {
 	case "CommanderDisconnected": {_txt = Localize "strwfcommanderdisconnected"};
 	case "TacticalLaunch": {_txt = Localize "STR_WF_CHAT_ICBM_Launch"};
 	case "CBRadarNeedsAAR": {_txt = Localize "CBRadarNeedsAAR"};
+	case "AARadarAlreadyBuilt": {_txt = Localize "AARadarAlreadyBuilt"}; //--- fable/ew-economy
+	case "CBRadarAlreadyBuilt": {_txt = Localize "CBRadarAlreadyBuilt"}; //--- fable/ew-economy
 	case "BankAlreadyBuilt": {_txt = Localize "BankAlreadyBuilt"};
 	case "BankTooCloseToBase": {_txt = Localize "BankTooCloseToBase"};
 	case "BankDestroyed": {

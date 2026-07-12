@@ -1,5 +1,5 @@
 # AGENT-HANDBOOK — WASP Warfare deep reference
-<!-- GUIDE-REV: GR-2026-07-03a -->
+<!-- GUIDE-REV: GR-2026-07-08a -->
 
 This file is the deep companion to `AGENTS.md` / `CLAUDE.md`. Read those first; come here
 for the full how-to on tooling, traps, coordination, and deploy policy.
@@ -57,7 +57,7 @@ LoadoutManager sometimes touches `version.sqf.template` as a side effect of terr
 processing. Always restore both TK and ZG templates to the branch HEAD before staging:
 
 ```powershell
-git checkout origin/claude/build84-cmdcon36 -- `
+git checkout origin/master -- `
   "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/version.sqf.template" `
   "Missions_Vanilla/[61-2hc]warfarev2_073v48co.zargabad/version.sqf.template"
 ```
@@ -266,9 +266,9 @@ Key tokens to search for in RPT:
 
 A stacked PR is required when your target file is already touched by an open (draft) PR.
 
-1. Identify the in-flight PR number (`gh pr list --state open --base claude/build84-cmdcon36`).
+1. Identify the in-flight PR number (`gh pr list --state open --base master`).
 2. Find its branch HEAD: `gh pr view <N> --json headRefName,headRefOid`.
-3. Create your branch from that HEAD, not from `origin/claude/build84-cmdcon36`:
+3. Create your branch from that HEAD, not from `origin/master`:
    ```
    git checkout -b codex/<lane>-<topic> <headRefOid>
    ```
@@ -278,8 +278,9 @@ A stacked PR is required when your target file is already touched by an open (dr
    gh pr create --draft --base <in-flight-branch> --title "..."
    ```
 6. In the PR body state: "Stacked on #NNN — rebases cleanly on that PR's HEAD."
-7. When the upstream PR merges, rebase your branch onto `claude/build84-cmdcon36` and
-   change the base: `gh pr edit <your-N> --base claude/build84-cmdcon36`.
+7. When the upstream PR merges, rebase your branch onto `master` and
+   change the base: `gh pr edit <your-N> --base master`. (`claude/build84-cmdcon36` is
+   retired as a PR base — fully merged into `master` as of 2026-07-08.)
 
 ---
 
@@ -298,7 +299,7 @@ Before requesting review or marking a PR ready:
 - [ ] No NSSETVAR3 in the diff
 - [ ] No `inline private _x =` in the diff
 - [ ] No `Co-Authored-By` trailer in any commit
-- [ ] PR body cites GUIDE-REV `GR-2026-07-03a`
+- [ ] PR body cites GUIDE-REV `GR-2026-07-08a`
 - [ ] PR body contains: flag name, default, why flag-off is inert, test plan
 - [ ] Shelved-PR register checked for duplicate proposals
 

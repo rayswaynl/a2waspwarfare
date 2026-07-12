@@ -96,6 +96,7 @@ WFBE_CO_FNC_ArrayPush = Compile preprocessFileLineNumbers "Common\Functions\Comm
 WFBE_CO_FNC_ArrayRemoveIndex = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayRemoveIndex.sqf";
 WFBE_CO_FNC_ArrayShift = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayShift.sqf";
 WFBE_CO_FNC_ArrayShuffle = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayShuffle.sqf";
+WFBE_CO_FNC_GetTeamMarkerDestPos = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamMarkerDestPos.sqf"; //--- fix/own-marker-dest-dir-split (owner 2026-07-09): shared TP-17 3-source destination lookup for updateteamsmarkers.sqf OWNMarker + per-team leader blocks.
 WFBE_CO_FNC_ChangeTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_ChangeTeamFunds.sqf";
 WFBE_SE_FNC_SyncFundsRecord = Compile preprocessFileLineNumbers "Common\Functions\Common_SyncFundsRecord.sqf"; //--- Ray pick A: server-only lock-step of WFBE_JIP_USER<uid> cash with the group wallet (JIP zero-latch restore provably safe). Common so ChangeTeamFunds resolves the symbol on both sides; the fn itself bails if !isServer.
 WFBE_CO_FNC_ChangeUnitGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_ChangeUnitGroup.sqf";
@@ -147,7 +148,9 @@ WFBE_CO_FNC_GetSideID = Compile preprocessFileLineNumbers "Common\Functions\Comm
 WFBE_CO_FNC_GetSideLogic = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideLogic.sqf";
 WFBE_CO_FNC_GetSideSupply = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideSupply.sqf";
 WFBE_CO_FNC_GetSideStructures = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideStructures.sqf";
+WFBE_CO_FNC_HasSideRadioTower = Compile preprocessFileLineNumbers "Common\Functions\Common_HasSideRadioTower.sqf";
 WFBE_CO_FNC_GetSideUpgrades = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideUpgrades.sqf";
+WFBE_CO_FNC_IsUnitUnlocked = Compile preprocessFileLineNumbers "Common\Functions\Common_IsUnitUnlocked.sqf"; //--- feat/common-isunitunlocked: shared per-unit facMap/QUERYUNITUPGRADE tier-unlock check (was duplicated across AI_Commander_Teams.sqf/Produce.sqf/Base.sqf); returns [unlocked,found].
 WFBE_CO_FNC_GetTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamFunds.sqf";
 WFBE_CO_FNC_GetTotalCamps = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTotalCamps.sqf";
 WFBE_CO_FNC_SanitizeGotoDisp = Compile preprocessFileLineNumbers "Common\Functions\Common_SanitizeGotoDisp.sqf"; //--- cmdcon42-o: enemy-base intel-leak clamp for order-destination DISPLAY surfaces (producer-side).
@@ -156,12 +159,22 @@ WFBE_CO_FNC_GetTownsSupply = Compile preprocessFileLineNumbers "Common\Functions
 WFBE_CO_FNC_GetUnitConfigGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitConfigGear.sqf";
 //--- wiki-wins: removed dead compile WFBE_CO_FNC_GetUnitsPerSide (zero call sites repo-wide)
 WFBE_CO_FNC_GetVehicleTurretsGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetVehicleTurretsGear.sqf";
+WFBE_CO_FNC_ValidateCampPos = Compile preprocessFileLineNumbers "Common\Functions\Common_ValidateCampPos.sqf"; //--- fable/fix-camp-placement: shared 6-gate position validator, ported from AI_Commander_Base.sqf (unwired new file, zero call sites yet).
 WFBE_CO_FNC_HandleArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleArtillery.sqf";
 WFBE_CO_FNC_OnUnitHit = Compile preprocessFileLineNumbers "Common\Functions\Common_OnUnitHit.sqf";
 WFBE_CO_FNC_OnUnitKilled = Compile preprocessFileLineNumbers "Common\Functions\Common_OnUnitKilled.sqf";
 WFBE_CO_FNC_RevealArea = Compile preprocessFileLineNumbers "Common\Functions\Common_RevealArea.sqf";
 WFBE_CO_FNC_RemoveAAMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_RemoveAAMissiles.sqf";
 WFBE_CO_FNC_HandleSEADMissile = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleSEADMissile.sqf"; //--- B93 SEAD (GR-2026-07-03a): anti-radar guidance for tier-5 jets; 2-shot limit per spawn; flag WFBE_C_SEAD default 0.
+//--- PERF (HC-squeeze roadmap): Common_CreateVehicle re-read + re-compiled these six files FROM DISK on
+//--- every vehicle spawn (Call Compile preprocessFile) - 3 of them unconditionally per spawn. Compile once
+//--- here like every other WFBE_CO_FNC_* and Call the compiled function; byte-identical behaviour.
+WFBE_CO_FNC_ModifyVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_ModifyVehicle.sqf";
+WFBE_CO_FNC_ModifyAirVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_ModifyAirVehicle.sqf";
+WFBE_CO_FNC_GuerArmor = Compile preprocessFileLineNumbers "Common\Functions\Common_GuerArmor.sqf";
+WFBE_CO_FNC_AddVehicleMarking = Compile preprocessFileLineNumbers "Common\Functions\Common_AddVehicleMarking.sqf";
+WFBE_CO_FNC_AddVehicleFlag = Compile preprocessFileLineNumbers "Common\Functions\Common_AddVehicleFlag.sqf";
+WFBE_CO_FNC_AddVehicleTexture = Compile preprocessFileLineNumbers "Common\Functions\Common_AddVehicleTexture.sqf";
 WFBE_CO_FNC_RemoveCountermeasures = if !(WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_RemoveCountermeasures.sqf"} else {{}};
 WFBE_CO_FNC_SendToClient = if !(WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_SendToClient.sqf"} else {{}};
 WFBE_CO_FNC_SendToClients = Compile preprocessFileLineNumbers "Common\Functions\Common_SendToClients.sqf";
@@ -180,6 +193,10 @@ WF_sendMessage = compile preprocessFileLineNumbers "Common\Functions\Common_Send
 WFBE_CO_FNC_StagnateSupplyIncomeNoPlayers = Compile preprocessFileLineNumbers "Common\Functions\Common_StagnateSupplyIncomeNoPlayers.sqf";
 // Marty: Defense budget — category helper (used by RequestDefense budget gate and available to client UI).
 WFBE_CO_FNC_GetDefenseCategory = Compile preprocessFileLineNumbers "Common\Functions\Common_GetDefenseCategory.sqf";
+WFBE_CO_FNC_RadiusHold_Register = Compile preprocessFileLineNumbers "Common\Functions\Common_RadiusHold.sqf"; //--- fable/radius-hold-primitive (GR-2026-07-08a): shared server-authoritative radius-presence-hold primitive. Flag WFBE_C_RADIUSHOLD_ENABLE default 0 (refuses registration, no dispatcher spawn).
+WFBE_CO_FNC_WeightedDraw = Compile preprocessFileLineNumbers "Common\Functions\Common_WeightedDraw.sqf"; //--- fable/radius-hold-primitive (GR-2026-07-08a): pure weighted-roll primitive extracted from AI_Commander_Wildcard.sqf proven algorithm.
+if (isNil "WFBE_RADIUSHOLD_REGISTRY") then { WFBE_RADIUSHOLD_REGISTRY = []; }; //--- fable/radius-hold-primitive: registry init (defense-in-depth; Common_RadiusHold.sqf also isNil-guards this on first register).
+WFBE_CO_FNC_DeadspawnPenPos = Compile preprocessFileLineNumbers "Common\Functions\Common_DeadspawnPenPos.sqf"; //--- fable/deadspawn-redesign: underwater join-pen position resolver, flag WFBE_C_DEADSPAWN_REDESIGN default 1.
 
 ["INITIALIZATION", "Init_Common.sqf: Functions are initialized."] Call WFBE_CO_FNC_LogContent;
 
@@ -225,8 +242,25 @@ isAutoWallConstructingEnabled = true; //--- legacy global (client CoIn UI still 
 WFBE_CO_VAR_SupplyMissionRegenInterval = 1800;
 
 /* Wait for BIS Module Init */
-waitUntil {!(isNil 'BIS_fnc_init')};
-waitUntil {BIS_fnc_init};
+//--- FIX D6b (WFBE hang-guard): mirrors the bounded-wait idiom at initJIPCompatible.sqf:366-382 (B56).
+//--- Was two unbounded waitUntils - if the FunctionsManager module (mission.sqm:172) fails to run its preInit
+//--- compile, BIS_fnc_init NEVER becomes non-nil/true and Init_Common.sqf hangs FOREVER on EVERY machine,
+//--- starving commonInitComplete (:475) and the whole townInit chain - the mission never starts, silently.
+//--- Bounded to 60s per stage (240 x 0.25s uiSleep, real-time). Two stages preserve the exact original
+//--- (defined-check, then truthy-check) semantics. Fallback is SAFE: it does NOT touch/fabricate BIS_fnc_init
+//--- - it only stops waiting; a later real BIS_fnc_* call gets its own localized RPT error instead of the
+//--- whole mission never starting (no worse than the hang, since under the hang those call sites never run).
+private ["_wBisA","_wBisB"];
+_wBisA = 0;
+while {isNil "BIS_fnc_init" && (_wBisA < 240)} do { uiSleep 0.25; _wBisA = _wBisA + 1; };
+if (isNil "BIS_fnc_init") then {
+	diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Common.sqf: BIS_fnc_init never became defined after 60s (isServer=%1 isDedicated=%2 isHeadLessClient=%3) - proceeding WITHOUT the BIS Functions library. Check for a missing/broken FunctionsManager module.", isServer, isDedicated, isHeadLessClient];
+};
+_wBisB = 0;
+while {!(isNil "BIS_fnc_init") && {!BIS_fnc_init} && (_wBisB < 240)} do { uiSleep 0.25; _wBisB = _wBisB + 1; };
+if (!isNil "BIS_fnc_init" && {!BIS_fnc_init}) then {
+	diag_log "[WFBE (INIT)] HANGGUARD| Init_Common.sqf: BIS_fnc_init stayed FALSE for 60s after becoming defined - proceeding WITHOUT confirmed-ready BIS Functions library. Check for a missing/broken FunctionsManager module.";
+};
 
 /* CORE SYSTEM - Start
 	Different Core are added depending on the current ArmA Version running, add yours bellow.
@@ -397,7 +431,7 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 1) then {
 
 _repairs = [];
 {
-	_repairs = _repairs + (missionNamespace getVariable Format["WFBE_%1REPAIRTRUCKS", _x]);
+	_repairs = _repairs + (missionNamespace getVariable [Format["WFBE_%1REPAIRTRUCKS", _x], []]); //--- fable/fix-hc-repairtrucks-nil: default [] - a side config not yet loaded on this machine (HC init order) made array+nil poison _repairs
 } forEach WFBE_PRESENTSIDES;
 
 missionNamespace setVariable ["WFBE_REPAIRTRUCKS", _repairs];

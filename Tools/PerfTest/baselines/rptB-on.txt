@@ -1,0 +1,265 @@
+
+
+=====================================================================
+== C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead\arma2oaserver.exe
+== "C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead\arma2oaserver.exe" -port=2302 -config=C:\WASP\profiles-pr8\server-pr8.cfg -cfg=C:\WASP\profiles-pr8\basic.cfg "-mod=C:\Program Files (x86)\Steam\steamapps\common\Arma 2;expansion;@CBA_CO;@adwasp;@admkswf" -malloc=mimalloc -world=empty
+=====================================================================
+Exe timestamp: 2026/06/09 04:43:07
+Current time:  2026/07/06 03:17:45
+
+Version 1.64.144629
+Unable to initialize Steam API.
+Updating base class ->ViewOptics, by tgw_vehfixes\config.bin/CfgVehicles/HMMWV_TOW/Turrets/MainTurret/ViewOptics/
+Updating base class ->ViewOptics, by tgw_vehfixes\config.bin/CfgVehicles/BAF_FV510_D/Turrets/MainTurret/Turrets/CommanderOptics/ViewOptics/
+Updating base class ViewOptics->, by ca\communityconfigurationproject_e\gameplay_addedthermalviewtoa2groundvehicles\config.bin/CfgVehicles/HMMWV_TOW/Turrets/MainTurret/ViewOptics/ (original (ca\wheeled\config.bin - no unload))
+Updating base class ViewOptics->, by ca\communityconfigurationproject_e\gameplay_changedthermaldisplaysystem\config.bin/CfgVehicles/BAF_FV510_D/Turrets/MainTurret/Turrets/CommanderOptics/ViewOptics/ (original (ca\tracked_d_baf\config.bin - no unload))
+Updating base class Turrets->Turrets, by ca\communityconfigurationproject_e\gameplay_madepilotscontrolunguidedrockets\config.bin/CfgVehicles/Mi24_D_Base_TK_EP1/Turrets/
+Updating base class MainTurret->MainTurret, by ca\communityconfigurationproject_e\gameplay_madepilotscontrolunguidedrockets\config.bin/CfgVehicles/Mi24_D_Base_TK_EP1/Turrets/MainTurret/
+Updating base class HitPoints->HitPoints, by corepatch\corepatch_characters\config.bin/CfgVehicles/UN_CDF_Soldier_base_EP1/HitPoints/
+Updating base class HitPoints->HitPoints, by corepatch\corepatch_characters\config.bin/CfgVehicles/CDF_Commander/HitPoints/
+Updating base class HitPoints->HitPoints, by corepatch\corepatch_characters\config.bin/CfgVehicles/CDF_Soldier_Militia/HitPoints/
+Updating base class HitPoints->HitPoints, by corepatch\corepatch_characters\config.bin/CfgVehicles/CDF_Soldier_Officer/HitPoints/
+Updating base class HitPoints->HitPoints, by corepatch\corepatch_characters\config.bin/CfgVehicles/CDF_Soldier_Sniper/HitPoints/
+Updating base class HitPoints->HitPoints, by corepatch\corepatch_characters\config.bin/CfgVehicles/CDF_Soldier_Spotter/HitPoints/
+Updating base class HitPoints->HitPoints, by corepatch\corepatch_characters\config.bin/CfgVehicles/CZ_Soldier_Crew_Wdl_ACR/HitPoints/
+Initializing Steam server - Game Port: 2302, Steam Query Port: 2303
+Connected to Steam servers
+Mission WASP_PerfON_TEST.Chernarus: Number of roles (34) is different from 'description.ext::Header::maxPlayer' (55)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+Server error: Player without identity "HC-AI-Control-1" (id 336807195)
+[7994,117.988,0,"XEH: PreInit Started. v1.0.1.196. MISSINIT: missionName=WASP_PerfON_TEST, worldName=Chernarus, isMultiplayer=true, isServer=true, isDedicated=true"]
+[7994,118.876,0,"XEH: PreInit Finished. CACHE DISABLED? (Disable caching with cba_cache_disable.pbo): SLX_XEH_RECOMPILE=false, CBA_COMPILE_RECOMPILE=false, CBA_FUNC_RECOMPILE=false"]
+[8003,120.72,0,"XEH: PostInit Started"]
+[8003,120.728,0,"CBA_VERSIONING: cba=1.0.1.196, "]
+[8003,120.83,0,"XEH: PostInit Finished. State: _isClient=false, _isJip=false, _isDedClient=false, _isServer=true, _isDedServer=true, _playerCheckDone=true, _sp=false, _startInitDone=true, _postInitDone=true, _mpRespawn=true, _machineType=0, _sessionId=1, _level=0, _timeOut=false, _game=1, BIS_functions=L 1-1-D:1, group=L 1-1-D"]
+"################################"
+"################################"
+"################################"
+"################################"
+"## Island Name: [Chernarus]"
+"## Mission Name: [[55] Warfare V48 Chernarus]"
+"## Build: WASP Warfare Build 89 / cmdcon44"
+"WASPRELEASE|v1|candidate=build89-cmdcon44-20260703|git=51c65e720a|terrain=chernarus"
+"MISSINIT: missionName=[55] Warfare V48 Chernarus, worldName=Chernarus, isMultiplayer=true, isServer=true, isDedicated=true"
+"## Starting Distance: [7500]"
+"## Max players Defined: [55]"
+"## LOG CONTENT : [NOT ACTIVATED]"
+"################################"
+"################################"
+"################################"
+"################################"
+"[WFBE (INIT)] INFORMATION: ViewDistance force ACTIVE: WFBE_C_ENVIRONMENT_MAX_VIEW=6000 (mission param default; cached/lobby paramsArray value ignored)"
+"[WFBE (INIT)] EconomyBoost +50pct ACTIVE: fundsW=38400 fundsE=38400 supplyW=14400 supplyE=14400"
+"[WFBE (INIT)] STARTING ECON (Ray B36.1): funds=30000 supply=12800 per side - the REAL dedicated-MP override (Init_CommonConstants never fires here). AI-cmdr seed = flat 200k (Init_Server)."
+"[WFBE (INIT)] WF_DEBUG_STATE WF_Debug=false upgradesClearance=0"
+"[WFBE (WARNING)][frameno:8051 | ticktime:122.188] Core_ACR: Element 'T72M4CZ' is not a valid class (DLC absent) - skipped."
+"[WFBE (INIT)][frameno:8054 | ticktime:122.255] Core_ACR: Initialization (33 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8058 | ticktime:122.341] Core_BAF: Initialization (34 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8062 | ticktime:122.43] Core_BAFD: Initialization (30 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8066 | ticktime:122.519] Core_BAFW: Initialization (39 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8076 | ticktime:122.737] Core_CDF: Initialization (50 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8077 | ticktime:122.758] Core_DeltaForce: Initialization (11 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8084 | ticktime:122.912] Core_CIV: Initialization (69 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8084 | ticktime:122.914] Core_FR: Initialization (16 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8093 | ticktime:123.11] Core_GUE: Initialization (43 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8105 | ticktime:123.373] Core_INS: Initialization (55 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8105 | ticktime:123.374] Core_MVD: Initialization (6 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8108 | ticktime:123.438] Core_PMC: Duplicated Element found 'Ka137_MG_PMC'"
+"[WFBE (INIT)][frameno:8108 | ticktime:123.44] Core_PMC: Initialization (23 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8119 | ticktime:123.679] Core_RU: Duplicated Element found 'Mi24_P'"
+"[WFBE (INIT)][frameno:8121 | ticktime:123.725] Core_RU: Initialization (63 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8122 | ticktime:123.745] Core_Spetsnaz: Initialization (7 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8131 | ticktime:123.944] Core_TKA: Duplicated Element found 'BVP1_TK_ACR'"
+"[WFBE (INIT)][frameno:8137 | ticktime:124.075] Core_TKA: Duplicated Element found 'Pchela1T'"
+"[WFBE (INIT)][frameno:8137 | ticktime:124.075] Core_TKA: Initialization (78 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8140 | ticktime:124.141] Core_TKCIV: Duplicated Element found 'Land_HBarrier3'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.161] Core_TKCIV: Duplicated Element found 'Land_HBarrier5'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.161] Core_TKCIV: Duplicated Element found 'Land_HBarrier_large'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.161] Core_TKCIV: Duplicated Element found 'Land_fort_bagfence_long'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.161] Core_TKCIV: Duplicated Element found 'Land_fort_bagfence_corner'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.161] Core_TKCIV: Duplicated Element found 'Land_fort_bagfence_round'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.161] Core_TKCIV: Duplicated Element found 'Hhedgehog_concreteBig'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.161] Core_TKCIV: Duplicated Element found 'HeliH'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.161] Core_TKCIV: Duplicated Element found 'Land_Campfire'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.162] Core_TKCIV: Duplicated Element found 'Sign_Danger'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.162] Core_TKCIV: Duplicated Element found 'Fort_RazorWire'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.162] Core_TKCIV: Duplicated Element found 'Land_Ind_IlluminantTower'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.162] Core_TKCIV: Duplicated Element found 'Land_Pneu'"
+"[WFBE (INIT)][frameno:8141 | ticktime:124.162] Core_TKCIV: Initialization (36 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8150 | ticktime:124.362] Core_TKGUE: Initialization (42 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8151 | ticktime:124.382] Core_TKSF: Initialization (3 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8171 | ticktime:124.821] Core_US: Registered synthetic buy token 'AH6X_M134' (AH-6X M134) as a copy of AH6X_EP1."
+"[WFBE (INIT)][frameno:8171 | ticktime:124.823] Core_US: Initialization (89 Elements) - [Done]"
+"[WFBE (INIT)][frameno:8187 | ticktime:125.173] Core_USMC: Initialization (73 Elements) - [Done]"
+Error in expression <true};   
+(count (nearestTerrainObjects [_cpos, ["TREE","SMALL TREE"], _tr])) ==>
+  Error position: <[_cpos, ["TREE","SMALL TREE"], _tr])) ==>
+  Error Missing )
+File mpmissions\WASP_PerfON_TEST.Chernarus\Server\AI\Commander\AI_Commander_Base.sqf, line 244
+Error in expression <true};   
+(count (nearestTerrainObjects [_cpos, ["TREE","SMALL TREE"], _tr])) ==>
+  Error position: <[_cpos, ["TREE","SMALL TREE"], _tr])) ==>
+  Error Missing )
+File mpmissions\WASP_PerfON_TEST.Chernarus\Server\AI\Commander\AI_Commander_Base.sqf, line 244
+"[AICOM INFORMATION] Common_AICOM_HighClimb.sqf: AICOM high-climb manager started (SERVER)."
+"AICOMSTAT|v1|EVENT|true|0|HIGHCLIMB_HB|machine=SERVER|teams=0|localVeh=0|started=0"
+"[AICOM INFORMATION] Common_AICOM_AutoFlip.sqf: AICOM auto-unflip manager started (SERVER)."
+"AICOMSTAT|v1|EVENT|true|0|AUTOFLIP_HB|machine=SERVER|localVeh=0|tilted=0"
+"HCSIDE|v1|preseat|name="HC-AI-Control-1"|engineSide=WEST"
+"HCSIDE|v1|reseat|name="HC-AI-Control-1"|result=done|sideNow=CIV"
+"HCSTAT|v1|HC-2:28|fps=45|units=1|groups=1|t=0"
+Mission WASP_PerfON_TEST.Chernarus: Number of roles (34) is different from 'description.ext::Header::maxPlayer' (55)
+Mission WASP_PerfON_TEST.Chernarus: Number of roles (34) is different from 'description.ext::Header::maxPlayer' (55)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+Server error: Player without identity "HC-AI-Control-1" (id 398558164)
+[10395,176.3,0,"XEH: PreInit Started. v1.0.1.196. MISSINIT: missionName=WASP_PerfON_TEST, worldName=Chernarus, isMultiplayer=true, isServer=true, isDedicated=true"]
+[10395,176.357,0,"XEH: PreInit Finished. CACHE DISABLED? (Disable caching with cba_cache_disable.pbo): SLX_XEH_RECOMPILE=false, CBA_COMPILE_RECOMPILE=false, CBA_FUNC_RECOMPILE=false"]
+[10400,177.081,0,"XEH: PostInit Started"]
+[10400,177.081,0,"CBA_VERSIONING: cba=1.0.1.196, "]
+[10400,177.17,0,"XEH: PostInit Finished. State: _isClient=false, _isJip=false, _isDedClient=false, _isServer=true, _isDedServer=true, _playerCheckDone=true, _sp=false, _startInitDone=true, _postInitDone=true, _mpRespawn=true, _machineType=0, _sessionId=2, _level=0, _timeOut=false, _game=1, BIS_functions=L 1-1-D:1, group=L 1-1-D"]
+"################################"
+"################################"
+"################################"
+"################################"
+"## Island Name: [Chernarus]"
+"## Mission Name: [[55] Warfare V48 Chernarus]"
+"## Build: WASP Warfare Build 89 / cmdcon44"
+"WASPRELEASE|v1|candidate=build89-cmdcon44-20260703|git=51c65e720a|terrain=chernarus"
+"MISSINIT: missionName=[55] Warfare V48 Chernarus, worldName=Chernarus, isMultiplayer=true, isServer=true, isDedicated=true"
+"## Starting Distance: [7500]"
+"## Max players Defined: [55]"
+"## LOG CONTENT : [NOT ACTIVATED]"
+"################################"
+"################################"
+"################################"
+"################################"
+"[WFBE (INIT)] INFORMATION: ViewDistance force ACTIVE: WFBE_C_ENVIRONMENT_MAX_VIEW=6000 (mission param default; cached/lobby paramsArray value ignored)"
+"[WFBE (INIT)] EconomyBoost +50pct ACTIVE: fundsW=38400 fundsE=38400 supplyW=14400 supplyE=14400"
+"[WFBE (INIT)] STARTING ECON (Ray B36.1): funds=30000 supply=12800 per side - the REAL dedicated-MP override (Init_CommonConstants never fires here). AI-cmdr seed = flat 200k (Init_Server)."
+"[WFBE (INIT)] WF_DEBUG_STATE WF_Debug=false upgradesClearance=0"
+"[WFBE (WARNING)][frameno:10442 | ticktime:178.081] Core_ACR: Element 'T72M4CZ' is not a valid class (DLC absent) - skipped."
+"[WFBE (INIT)][frameno:10445 | ticktime:178.148] Core_ACR: Initialization (33 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10449 | ticktime:178.235] Core_BAF: Initialization (34 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10453 | ticktime:178.322] Core_BAFD: Initialization (30 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10457 | ticktime:178.41] Core_BAFW: Initialization (39 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10469 | ticktime:178.675] Core_CDF: Initialization (50 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10469 | ticktime:178.676] Core_DeltaForce: Initialization (11 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10476 | ticktime:178.829] Core_CIV: Initialization (69 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10477 | ticktime:178.85] Core_FR: Initialization (16 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10486 | ticktime:179.048] Core_GUE: Initialization (43 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10498 | ticktime:179.313] Core_INS: Initialization (55 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10499 | ticktime:179.334] Core_MVD: Initialization (6 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10500 | ticktime:179.358] Core_PMC: Duplicated Element found 'Ka137_MG_PMC'"
+"[WFBE (INIT)][frameno:10501 | ticktime:179.38] Core_PMC: Initialization (23 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10512 | ticktime:179.62] Core_RU: Duplicated Element found 'Mi24_P'"
+"[WFBE (INIT)][frameno:10514 | ticktime:179.665] Core_RU: Initialization (63 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10515 | ticktime:179.686] Core_Spetsnaz: Initialization (7 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10524 | ticktime:179.887] Core_TKA: Duplicated Element found 'BVP1_TK_ACR'"
+"[WFBE (INIT)][frameno:10532 | ticktime:180.062] Core_TKA: Duplicated Element found 'Pchela1T'"
+"[WFBE (INIT)][frameno:10532 | ticktime:180.063] Core_TKA: Initialization (78 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.15] Core_TKCIV: Duplicated Element found 'Land_HBarrier3'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.15] Core_TKCIV: Duplicated Element found 'Land_HBarrier5'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.15] Core_TKCIV: Duplicated Element found 'Land_HBarrier_large'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.151] Core_TKCIV: Duplicated Element found 'Land_fort_bagfence_long'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.151] Core_TKCIV: Duplicated Element found 'Land_fort_bagfence_corner'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.151] Core_TKCIV: Duplicated Element found 'Land_fort_bagfence_round'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.151] Core_TKCIV: Duplicated Element found 'Hhedgehog_concreteBig'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.151] Core_TKCIV: Duplicated Element found 'HeliH'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.151] Core_TKCIV: Duplicated Element found 'Land_Campfire'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.151] Core_TKCIV: Duplicated Element found 'Sign_Danger'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.151] Core_TKCIV: Duplicated Element found 'Fort_RazorWire'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.151] Core_TKCIV: Duplicated Element found 'Land_Ind_IlluminantTower'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.151] Core_TKCIV: Duplicated Element found 'Land_Pneu'"
+"[WFBE (INIT)][frameno:10536 | ticktime:180.151] Core_TKCIV: Initialization (36 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10545 | ticktime:180.347] Core_TKGUE: Initialization (42 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10545 | ticktime:180.348] Core_TKSF: Initialization (3 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10564 | ticktime:180.765] Core_US: Registered synthetic buy token 'AH6X_M134' (AH-6X M134) as a copy of AH6X_EP1."
+"[WFBE (INIT)][frameno:10564 | ticktime:180.766] Core_US: Initialization (89 Elements) - [Done]"
+"[WFBE (INIT)][frameno:10579 | ticktime:181.097] Core_USMC: Initialization (73 Elements) - [Done]"
+Error in expression <true};   
+(count (nearestTerrainObjects [_cpos, ["TREE","SMALL TREE"], _tr])) ==>
+  Error position: <[_cpos, ["TREE","SMALL TREE"], _tr])) ==>
+  Error Missing )
+File mpmissions\WASP_PerfON_TEST.Chernarus\Server\AI\Commander\AI_Commander_Base.sqf, line 244
+Error in expression <true};   
+(count (nearestTerrainObjects [_cpos, ["TREE","SMALL TREE"], _tr])) ==>
+  Error position: <[_cpos, ["TREE","SMALL TREE"], _tr])) ==>
+  Error Missing )
+File mpmissions\WASP_PerfON_TEST.Chernarus\Server\AI\Commander\AI_Commander_Base.sqf, line 244
+"[AICOM INFORMATION] Common_AICOM_HighClimb.sqf: AICOM high-climb manager started (SERVER)."
+"AICOMSTAT|v1|EVENT|true|0|HIGHCLIMB_HB|machine=SERVER|teams=0|localVeh=0|started=0"
+"[AICOM INFORMATION] Common_AICOM_AutoFlip.sqf: AICOM auto-unflip manager started (SERVER)."
+"AICOMSTAT|v1|EVENT|true|0|AUTOFLIP_HB|machine=SERVER|localVeh=0|tilted=0"

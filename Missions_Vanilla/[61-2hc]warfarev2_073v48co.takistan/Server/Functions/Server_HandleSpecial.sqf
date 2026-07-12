@@ -33,7 +33,32 @@ switch (_args select 0) do {
 						[leader _group, "HandleSpecial", ["group-join-request", _player]] Call WFBE_CO_FNC_SendToClient;
 					};
 				} else {
-					if (isNil {_group getVariable "wfbe_uid"}) then { //--- Ensure that the group is ai-controlled.
+					//--- fable/no-player-into-aicom (owner 2026-07-09): the ONLY existing gate here was "isNil
+					//--- wfbe_uid" ("is this NOT a specific player's own squad") - that test is TRUE for a
+					//--- generic pooled/AI-founded squad, but it is ALSO TRUE for an AI-COMMANDER (HC-owned)
+					//--- team, since aicom-hc teams are founded by the commander system, not stamped with any
+					//--- player's wfbe_uid (see Common_RunCommanderTeam.sqf:98, which stamps wfbe_aicom_hc, never
+					//--- wfbe_uid). So a client-supplied _group pointing at a live aicom-hc formation used to sail
+					//--- straight through into WFBE_CO_FNC_ChangeUnitGroup, silently folding the requesting player
+					//--- in as just another body - matching the report ("member #N of an AI-commander team, can't
+					//--- unlock the team's vehicle, ghost groups"): the vehicle-unlock/ownership logic downstream
+					//--- keys off wfbe_aicom_hc-team semantics a rank-and-file human was never meant to satisfy,
+					//--- and the player's own prior squad is left behind as an orphaned/empty leftover.
+					//--- GUARD: require the SAME wfbe_aicom_hc query every other AICOM consumer in this codebase
+					//--- uses to test "is this an AI-commander team" (AI_Commander*.sqf, server_groupsGC.sqf,
+					//--- Server_OnPlayerDisconnected.sqf all gate on the identical
+					//--- `[_grp,"wfbe_aicom_hc",false] Call WFBE_CO_FNC_GroupGetBool` idiom - GroupGetBool is the
+					//--- established nil-safe reader for a Group variable on A2 OA 1.64, where a raw 2-arg
+					//--- `_grp getVariable "wfbe_aicom_hc"` throws for a team that was never stamped). Excluding
+					//--- aicom-hc targets makes the merged unit set here provably player-free of aicom membership
+					//--- (the only unit ever merged through this branch is `_player`, so blocking aicom-hc
+					//--- destinations outright is equivalent to "never merge a player into an AI-commander team").
+					//--- Legitimate AI-commander team behaviour is unaffected: HC teams are never populated via
+					//--- this player-initiated join-request flow (they are founded/crewed exclusively by
+					//--- AI_Commander_Teams.sqf / Common_RunCommanderTeam.sqf), so removing them as a valid
+					//--- "join this AI squad" target does not change how the AI commander fills, moves, or fights
+					//--- with its own teams - it only removes a target class this feature was never meant to offer.
+					if (isNil {_group getVariable "wfbe_uid"} && {!([_group, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- Ensure that the group is ai-controlled AND not an AI-commander (HC-owned) team.
 						[_player, _group, _side] Call WFBE_CO_FNC_ChangeUnitGroup;
 
 						//--- Tell the player that his request is granted.
@@ -137,6 +162,40 @@ switch (_args select 0) do {
 				};
 			};
 		} forEach _teams;
+
+		//--- Commander Town Ledger (fable/ctl-impl-v1) unit-count fix v2 (PR #886 review: crew
+		//--- undercounting): this is the ONLY point the server learns about client/HC-delegated
+		//--- group creation (Client_DelegateTownAI.sqf already ran Common_CreateTownUnits.sqf
+		//--- remotely and reports the real, fully-crewed groups back here). Add their REAL
+		//--- Man-unit count (units _x already includes auto-crew) into ledger field [3], mirroring
+		//--- the server-direct contribution in server_town_ai.sqf. Side is derived from the town's
+		//--- own sideID (a town belongs to exactly one CTL ledger at a time - Server_CmdTownLedger.sqf
+		//--- keys records the same way), so the message format needs no changes. Ground-only
+		//--- (wfbe_ctl_ground_wave, set alongside the wave in server_town_ai.sqf) and flag-gated:
+		//--- byte-identical to HEAD when AICOMV2_LANE_CMD_TOWN_LEDGER=0.
+		if ((count _teams > 0) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0} && {(_town getVariable ["wfbe_ctl_ground_wave", false])}) then {
+			private ["_ctlSide7"];
+			//--- New-Bug-B fix (fable/ctl-survivor-bugs): read the side SNAPSHOTTED at wave-creation time
+			//--- (server_town_ai.sqf: wfbe_ctl_wave_side, set alongside wfbe_ctl_ground_wave), not the
+			//--- town's LIVE sideID. HC/client-delegated group creation is async - if the town is
+			//--- captured in the window between wave dispatch and this report landing, the live sideID
+			//--- has already flipped to the NEW owner, and the old code credited that owner's
+			//--- freshly-seeded ledger record (_captureSeed=0.25, lastSpawnUnits=0) with a stray unit
+			//--- count from a wave it never fielded. sideUnknown default => the existing west/east
+			//--- guard right below already skips the credit entirely when there's no valid snapshot
+			//--- (unset, or the town changed hands again since) - same 'no valid record => no credit'
+			//--- posture as the _ctlFound7 guard further down; no new branch needed.
+			_ctlSide7 = _town getVariable ["wfbe_ctl_wave_side", sideUnknown];
+			if (_ctlSide7 == west || {_ctlSide7 == east}) then {
+				private ["_ctlUnits7"];
+				_ctlUnits7 = 0;
+				{_ctlUnits7 = _ctlUnits7 + (count units _x)} forEach _teams;
+				//--- CTL single-writer (fable/ctl-readback-singlewriter): accumulate the HC/client-delegated
+				//--- Man-unit count into the per-town spawn scalar (per-town, so the wave-side snapshot only
+				//--- gates WHETHER to credit - no valid snapshot => skip - not which record to touch).
+				_town setVariable ["wfbe_ctl_lastspawn", (_town getVariable ["wfbe_ctl_lastspawn", 0]) + _ctlUnits7];
+			};
+		};
 
 		_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + _vehicles];
 		// Marty: Log the server acknowledgement of delegated town assets for production RPT diagnosis.
@@ -430,9 +489,10 @@ switch (_args select 0) do {
 		//--- request on the side logic; the assist-mode resolver (AI_Com_PlayerArty, every supervisor tick) consumes it
 		//--- fire-once - so it works even under a HUMAN commander, where the brain's own Strategy arty block is dormant.
 		//--- PRODUCTION FIX (claude-gaming 2026-06-28): gate on the SEPARATE player-arty flag (WFBE_C_AICOM_PLAYER_ARTY),
-		//--- NOT WFBE_C_AI_COMMANDER_ARTILLERY (which Steff hard-locks to 0 to keep the AI from using/building artillery).
-		//--- The player request is serviced in assist-mode by AI_Com_PlayerArty and only ever fires friendly pieces that
-		//--- already exist (it never builds guns), so it does not reopen the locked AI-autonomous-artillery behaviour.
+		//--- NOT WFBE_C_AI_COMMANDER_ARTILLERY (the AI's OWN fire/build gate - default ON since 2026-07-08
+		//--- fable/alife-arty-dwell, was Steff-hard-locked to 0 before that; see Init_CommonConstants.sqf).
+		//--- The player request is serviced in assist-mode by AI_Com_PlayerArty and only ever fires friendly pieces
+		//--- that already exist (it never builds guns), so it stays independent of the AI's own arty state either way.
 		private ["_aSide","_aPos","_aLogik"];
 		_aSide = _args select 1;
 		_aPos  = _args select 2;
@@ -1012,14 +1072,26 @@ switch (_args select 0) do {
 	//--- treasury write is authoritative; mirrors AI_Commander_Wildcard salvage payback
 	//--- ([_side, _wkTotal] Call ChangeAICommanderFunds, L726).
 	case "aicom-heli-refunded": {
-		Private ["_rSideID","_rSide","_rCost"];
+		Private ["_rSideID","_rSide","_rCost","_rType","_rUD","_rRealCost","_rCeiling","_rClamped"];
 		_rSideID = _args select 1;
 		_rCost   = _args select 2;
+		//--- D4-FIX(c): hull type (4th payload element) lets the server RE-DERIVE the real build price from its own
+		//--- unit-data table (same QUERYUNITPRICE lookup Common_RunCommanderTeam.sqf uses) instead of trusting the
+		//--- network-supplied dollar figure. Count-guarded: an old/short payload (pre-fix HC or a forged short array)
+		//--- degrades to the flat fallback ceiling below, never to unlimited trust.
+		_rType   = if (count _args > 3) then {_args select 3} else {""};
+		_rUD     = if (typeName _rType == "STRING" && {_rType != ""}) then {missionNamespace getVariable [_rType, []]} else {[]};
+		_rRealCost = 0;
+		if (typeName _rUD == "ARRAY" && {(count _rUD) > QUERYUNITPRICE}) then {_rRealCost = _rUD select QUERYUNITPRICE};
 		_rSide   = (_rSideID) Call WFBE_CO_FNC_GetSideFromID;
 		//--- _rSide is a Side (not an Object) so isNull is the wrong test and throws; validate it is a real combatant treasury side instead.
 		if ((_rSide in [east,west,resistance]) && {_rCost > 0}) then {
-			[_rSide, _rCost] Call ChangeAICommanderFunds;
-			["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded $%1 to [%2] AI-commander treasury (transport flew off-map).", _rCost, str _rSide]] Call WFBE_CO_FNC_AICOMLog;
+			//--- resolved real price wins outright; an unresolvable type falls back to a flat, generous ceiling (never
+			//--- zero) so a lookup miss never silently denies a legitimate refund - it just bounds it.
+			_rCeiling = if (_rRealCost > 0) then {_rRealCost} else {missionNamespace getVariable ["WFBE_C_AICOM_HELI_REFUND_MAX", 40000]};
+			_rClamped = (_rCost min _rCeiling) max 0;
+			[_rSide, _rClamped] Call ChangeAICommanderFunds;
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded $%1 (claimed %2, real %3, type %4) to [%5] AI-commander treasury (transport flew off-map).", _rClamped, _rCost, _rRealCost, _rType, str _rSide]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
 	case "sidepatrol-started": {
@@ -1246,15 +1318,18 @@ switch (_args select 0) do {
 		};
 	};
 	case "repair-camp": {
-		Private ["_camp_sideID","_logic","_repairSideID","_townModel"];
+		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY"];
 		_logic = _args select 1;
 		_repairSideID = _args select 2;
 
 		if (alive (_logic getVariable 'wfbe_camp_bunker')) exitWith {};
 
-		_townModel = (missionNamespace getVariable "WFBE_C_CAMP") createVehicle (getPos _logic);
+		//--- fable/fix-camp-placement (2026-07-08): same ATL ground-snap as Init_Town.sqf's seeder - a
+		//--- repaired camp must not re-bury itself on ZG (see Init_Town.sqf for full rationale + citations).
+		_campXY = getPos _logic;
+		_townModel = (missionNamespace getVariable "WFBE_C_CAMP") createVehicle [_campXY select 0, _campXY select 1, 0];
 		_townModel setDir ((getDir _logic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
-		_townModel setPos (getPos _logic);
+		_townModel setPos [_campXY select 0, _campXY select 1, 0];
 			/*--- wiki-wins: removed killed EH calling undefined WFBE_SE_FNC_OnBuildingKilled (threw a swallowed error on every bunker death); bunker dead-state is already polled via alive (_logic getVariable 'wfbe_camp_bunker') ---*/
 		_townModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
 		_logic setVariable ["wfbe_camp_bunker", _townModel, true];
@@ -1286,7 +1361,7 @@ switch (_args select 0) do {
 		Private ["_veh","_driver"];
 		_veh = _args select 1;
 		_driver = _args select 2;
-		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {(typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || (typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"]))}) then {  //--- B75: accept either VBIED type (hilux/datsun truck OR the kill-gated M113 APC).
+		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {(typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || (typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) || (((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) && {typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])})}) then {  //--- B75: accept either VBIED type (hilux/datsun truck OR the kill-gated M113 APC). fable/guer-suicide-bike: OR the flag-gated suicide motorcycle -- SAME case body below, so it inherits the SAME wfbe_lasthitby/wfbe_lasthittime/wfbe_explosivesupportkill attribution stamping as fable/fix-vbied-attribution (#924) unchanged.
 			[_veh, _driver] spawn {
 				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand","_structVictims","_sStructs","_struct","_facBounty","_facScore","_fobIdx","_fobAvail"];
 				_veh = _this select 0;
@@ -1308,6 +1383,14 @@ switch (_args select 0) do {
 				//--- killed"). Snapshot living enemy MEN + CREWED vehicles in the (now FAB-250-sized) radius; crewed/alive
 				//--- only so empty wrecks never pay (keeps the C5 over-pay bound). _cand captures the outer _x because the
 				//--- crew-count below rebinds _x.
+				//--- fable/fix-vbied-attribution REWORK (#924, 2026-07-09): NO pre-blast wfbe_lasthitby stamp here
+				//--- (reverted). The earlier attempt stamped _driver as the last-hitter so RequestOnUnitKilled's
+				//--- delayed-hit fallback (RequestOnUnitKilled.sqf:53, requires "alive _last_hit") could attribute
+				//--- these kills - but _driver IS the suicide bomber inside _veh, guaranteed dead by "_veh setDamage 1"
+				//--- below at the SAME instant as these victims, so "alive _last_hit" can never be true and the
+				//--- fallback never actually fired for a single VBIED kill. Kill credit for this snapshot is applied
+				//--- directly after the settle instead (see the WFBE_GUER_PLAYER_KILLS block below) - matching the
+				//--- guer-mortar-strike / Support_GuerHeliDrop.sqf idiom already used for instigator-less ordnance.
 				{
 					_cand = _x;
 					if (alive _cand && {(side _cand == east) || (side _cand == west)}) then {
@@ -1364,10 +1447,51 @@ switch (_args select 0) do {
 									_persScore = _persScore + (ceil (_b / 100));
 								};
 							};
+							//--- fable/fix-vbied-attribution REWORK (#924, 2026-07-09): idempotent GUER kill-tier tech credit -
+							//--- ONE increment per confirmed-dead snapshot victim, this single settle pass only (can't double-count).
+							//--- The earlier attempt routed this through RequestOnUnitKilled's delayed-hit fallback via a pre-blast
+							//--- wfbe_lasthitby = _driver stamp (see the reverted snapshot-loop comment above) - that fallback
+							//--- requires "alive _last_hit" (RequestOnUnitKilled.sqf:53), which _driver (this same suicide bomber)
+							//--- can never satisfy, so it never attributed a single kill and WFBE_GUER_PLAYER_KILLS never advanced
+							//--- from a VBIED kill. Crediting it here directly (mirrors Support_GuerHeliDrop.sqf's own
+							//--- WFBE_C_GUER_HELIDROP_CREDIT_KILLS block for the identical "instigator dies with the ordnance"
+							//--- shape) is what actually gates the M113/BRDM/T-tier depot unlocks - GUI_UpgradeMenu.sqf,
+							//--- Root_GUE_PlayerOverlay.sqf and Client_UpdateRHUD.sqf all read WFBE_GUER_PLAYER_KILLS directly.
+							if ((missionNamespace getVariable ["WFBE_C_GUER_VBIED_CREDIT_KILLS", 1]) > 0) then {
+								WFBE_GUER_PLAYER_KILLS = (missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0]) + 1;
+								publicVariable "WFBE_GUER_PLAYER_KILLS";
+								//--- Same milestone/unlock table RequestOnUnitKilled.sqf:152-157 uses - keep in sync manually if
+								//--- those tiers ever change (same accepted duplication Support_GuerHeliDrop.sqf already carries).
+								private ["_vMilestones","_vMsg"];
+								_vMilestones = [
+									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15], "BRDM-2 + T-34 unlocked  -  Ka-137 flares up to 120"],
+									[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25], "M113 VBIED unlocked  -  armoured suicide APC at 2x speed"],
+									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40], "T-55 unlocked  -  Ka-137 flares up to 240"],
+									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80], "T-72 + BMP-2 unlocked"]
+								];
+								_vMsg = "";
+								{ if (WFBE_GUER_PLAYER_KILLS == (_x select 0)) then {_vMsg = _x select 1} } forEach _vMilestones;
+								if (_vMsg != "") then {
+									WFBE_GUER_UNLOCK_MSG = [WFBE_GUER_PLAYER_KILLS, _vMsg];
+									publicVariable "WFBE_GUER_UNLOCK_MSG";
+								};
+							};
 						};
 					} forEach _victims;
 					if (_payout > 0) then {
-						false; //--- Ray 2026-06-27: team-funds path DISABLED (paid group _driver captured PRE-suicide; never reaches the respawned base-less GUER detonator). Wallet/UID path below is the single channel. was: [_drvGrp, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
+						//--- fable/fix-vbied-attribution (owner pick A3, 2026-07-08): STAYS false BY DESIGN, not stale.
+						//--- Verified against DIAGNOSES-AND-SPECS.md Bug 2: once the pre-blast wfbe_lasthitby /
+						//--- wfbe_explosivesupportkill stamping above (this case) + the SCOPED RequestOnUnitKilled.sqf:44
+						//--- Man-class fallback land, RequestOnUnitKilled's own GUER kill-bounty block (coef 0.5 default,
+						//--- :167-189) starts paying TEAM funds for these same VBIED-killed Man victims for the FIRST TIME
+						//--- via the now-working last-hit attribution path -- THAT is the team-funds re-enable (a payout-
+						//--- composition change, not a gap). Restoring the old ChangeTeamFunds call here on top of that
+						//--- would DOUBLE-PAY every victim (this coef 0.5 payout + RequestOnUnitKilled's own coef 0.5
+						//--- payout for the identical kill set). Ray's original 2026-06-27 rationale (group captured
+						//--- PRE-suicide) is superseded by this payout-composition reasoning; the functional no-op is
+						//--- correct either way. Wallet/UID path below (_persBounty/_drvUID) is the unaffected personal-
+						//--- payout channel. was: [_drvGrp, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
+						false;
 						["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED cash-for-kills paid [%1] to [%2] (%3 targets in radius).", _payout, _drvGrp, count _victims]] Call WFBE_CO_FNC_LogContent;
 					};
 				};
@@ -1432,123 +1556,50 @@ switch (_args select 0) do {
 		};
 	};
 
-	//--- GUER PLAYER MORTAR STRIKE (improvised indirect fire). A GUER player driving a V3S_Gue designated an impact
-	//--- point on the map (Action_GuerMortarStrike.sqf already validated driver-only + within-range on the client);
-	//--- here the SERVER spawns a small scripted 82mm-HE barrage at that position. We reuse the SAME scripted-ordnance
-	//--- building block the VBIED case above proved out (createVehicle of a vanilla HE round at a position), just
-	//--- spread over a few shells with a small spread + short inter-shell delay so it reads as a barrage rather than a
-	//--- single blast. Sh_82_HE is the 82mm mortar HE round the mission's own GUER/INS artillery configs already load
-	//--- on BOTH maps (Common\Config\Core_Artillery\Artillery_*GUE*.sqf), so it is guaranteed present. Server-side, so
-	//--- kill credit + createVehicle damage behave normally. Gate-guarded; the client only sends this for a resistance
-	//--- V3S_Gue driver, so gate-OFF is a byte-for-byte no-op.
-	case "guer-mortar-strike": {
-		Private ["_pos","_player","_team","_cost","_funds"];
-		//--- GUARD (claude-gaming): mirror the group-query guard - a short payload (count _args <= 2) used to
-		//--- crash at "_player = _args select 2". The valid sender is a 3-arg ["guer-mortar-strike",_pos,_player];
-		//--- bail safely on anything shorter rather than select-crash.
+	//--- GUER BARREL BOMB (fable/guer-barrelbomb): a GUER player at a friendly town center designated a drop
+	//--- point on the map (Action_GuerHeliBombCall.sqf already validated side + range client-side, mirroring
+	//--- guer-mortar-strike exactly); here the SERVER re-validates the kill-tier gate (never trust the
+	//--- client's addAction visibility check), debits cost, and spawns the heli via Support_GuerHeliDrop.sqf
+	//--- (KAT_GuerHeliDrop) - flight, arrival, release, kill-credit, and return are ALL handled there
+	//--- (mirrors the "guer-mortar-strike" case's own shape: this case only owns validation, cost, dispatch).
+	case "guer-heli-bomb": {
+		Private ["_pos","_player","_team","_cost","_kills","_tier"];
 		if (count _args < 3) exitWith {
-			["WARNING", Format ["Server_HandleSpecial.sqf: guer-mortar-strike received a short payload (%1 args), ignored.", count _args]] Call WFBE_CO_FNC_LogContent;
+			["WARNING", Format ["Server_HandleSpecial.sqf: guer-heli-bomb received a short payload (%1 args), ignored.", count _args]] Call WFBE_CO_FNC_LogContent;
 		};
 		_pos    = _args select 1;
 		_player = _args select 2;
-		if ((typeName _pos == "ARRAY") && {!isNull _player} && {side _player == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
-			//--- COST: debit the GUER player's team funds before firing. The funds-holding team is `group _player`
-			//--- (the SAME team the VBIED case pays via WFBE_CO_FNC_ChangeTeamFunds). If the team cannot afford the
-			//--- call-in fee we DON'T fire, DON'T let the cooldown burn (the client optimistically stamped it before
-			//--- sending), and tell the player why via the guer-mortar-result client receiver.
-			_team = group _player;
-			_cost = missionNamespace getVariable ["WFBE_C_GUER_MORTAR_COST", 200];
-			_funds = _team Call WFBE_CO_FNC_GetTeamFunds;
-			if (isNull _team || {_funds < _cost}) exitWith {
-				//--- Refund cooldown + notify the caller (dual path: object send on non-vanilla, UID send on vanilla).
+		if ((missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 0]) > 0 && {typeName _pos == "ARRAY"} && {!isNull _player} && {side _player == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {  //--- sweep-fix: master-flag re-check server-side so the feature is truly inert when WFBE_C_GUER_HELIBOMB_ENABLE=0 (a client can send the request even with its addAction hidden).
+			//--- KILL-TIER GATE (server-authoritative re-check): the addAction's own condition string already
+			//--- hides this from a not-yet-unlocked player client-side, but that is a UX convenience, not a
+			//--- trust boundary - re-check here before any funds move.
+			_kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
+			_tier  = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_HELIBOMB", 60];
+			if (_kills < _tier) exitWith {
 				if (WF_A2_Vanilla) then {
-					[getPlayerUID _player, "HandleSpecial", ["guer-mortar-result", [false, Format ["Mortar strike needs $%1 - the cell is broke.", _cost]]]] Call WFBE_CO_FNC_SendToClients;
+					[getPlayerUID _player, "HandleSpecial", ["guer-helibomb-result", [false, Format ["Barrel Bomb needs %1 GUER kills - the cell isn't ready.", _tier]]]] Call WFBE_CO_FNC_SendToClients;
 				} else {
-					[_player, "HandleSpecial", ["guer-mortar-result", [false, Format ["Mortar strike needs $%1 - the cell is broke.", _cost]]]] Call WFBE_CO_FNC_SendToClient;
+					[_player, "HandleSpecial", ["guer-helibomb-result", [false, Format ["Barrel Bomb needs %1 GUER kills - the cell isn't ready.", _tier]]]] Call WFBE_CO_FNC_SendToClient;
 				};
-				["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER mortar strike DENIED (insufficient funds) for [%1] team [%2] (have %3, need %4).", name _player, _team, _funds, _cost]] Call WFBE_CO_FNC_LogContent;
+				["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER heli-bomb DENIED (kill-tier %1/%2) for [%3].", _kills, _tier, name _player]] Call WFBE_CO_FNC_LogContent;
 			};
-			//--- Affordable: debit now (negative delta = spend), then fire.
+
+			//--- COST: debit the GUER player's team funds before dispatch. Same funds-holding team + refund-on-
+			//--- deny shape as guer-mortar-strike (Server_HandleSpecial.sqf "guer-mortar-strike" above).
+			_team = group _player;
+			_cost = missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_COST", 3000];
+			if (isNull _team || {(_team Call WFBE_CO_FNC_GetTeamFunds) < _cost}) exitWith {
+				if (WF_A2_Vanilla) then {
+					[getPlayerUID _player, "HandleSpecial", ["guer-helibomb-result", [false, Format ["Barrel Bomb needs $%1 - the cell is broke.", _cost]]]] Call WFBE_CO_FNC_SendToClients;
+				} else {
+					[_player, "HandleSpecial", ["guer-helibomb-result", [false, Format ["Barrel Bomb needs $%1 - the cell is broke.", _cost]]]] Call WFBE_CO_FNC_SendToClient;
+				};
+				["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER heli-bomb DENIED (insufficient funds) for [%1] team [%2].", name _player, _team]] Call WFBE_CO_FNC_LogContent;
+			};
 			[_team, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds;
 
-			//--- INCOMING WARNING (counter-play + atmosphere): drop a cheap GLOBAL "Incoming" marker at the impact
-			//--- point so EVERYONE (incl. the targeted enemy) gets a fair chance to scatter. Plain createMarker on the
-			//--- server replicates to all clients (incl. JIP). A server-side timed spawn deletes it after a few seconds
-			//--- (mirrors the ArtyMarkerCleanup case), so it survives the caller disconnecting and never leaks.
-			Private ["_mname"];
-			_mname = Format ["wfbe_guermortar_%1", round (diag_tickTime * 1000)];
-			createMarker [_mname, _pos];
-			_mname setMarkerType "mil_destroy";
-			_mname setMarkerColor "ColorRed";
-			_mname setMarkerText "Incoming";
-			_mname setMarkerSize [1, 1];
-			[_mname] spawn {
-				Private ["_m"];
-				_m = _this select 0;
-				sleep 12;
-				deleteMarker _m;
-			};
-
-			//--- BARRAGE: walk the shells in over a few seconds. Tier-scaled spread tightens the grouping as the GUER
-			//--- faction levels up (its WFBE_GUER_VEHICLE_TIER). Each shell is created at a +/-_spread 2D offset, then
-			//--- lifted 120m ABOVE GROUND at that offset (setPosATL z is above-terrain) so it falls correctly onto the
-			//--- actual terrain instead of a flat sea-level Z (which mis-impacts on hills). Sh_82_HE is the GUER 82mm
-			//--- mortar HE round loaded on both maps. Server-side, so kill credit + createVehicle damage behave normally.
-			[_pos, _team] spawn {
-				Private ["_pos","_team","_shells","_tier","_spread","_radius","_coef","_i","_off2d","_sp","_victims","_cand","_payout","_get"];
-				_pos = _this select 0;
-				_team = _this select 1;
-				_shells = missionNamespace getVariable ["WFBE_C_GUER_MORTAR_SHELLS", 6];
-				if (_shells < 1) then {_shells = 1};
-				//--- TIER-SCALED SPREAD: base spread minus tier*step, floored at the minimum.
-				_tier = missionNamespace getVariable ["WFBE_GUER_VEHICLE_TIER", 0];
-				if (_tier < 0) then {_tier = 0};
-				_spread = (missionNamespace getVariable ["WFBE_C_GUER_MORTAR_SPREAD", 25]) - (_tier * (missionNamespace getVariable ["WFBE_C_GUER_MORTAR_SPREAD_TIERSTEP", 4]));
-				if (_spread < (missionNamespace getVariable ["WFBE_C_GUER_MORTAR_SPREAD_MIN", 8])) then {_spread = missionNamespace getVariable ["WFBE_C_GUER_MORTAR_SPREAD_MIN", 8]};
-
-				//--- KILL CREDIT (mirror the VBIED cash-for-kills): snapshot living enemy WEST/EAST Men + crewed
-				//--- vehicles within the impact radius BEFORE the barrage, then after it resolves pay the GUER team
-				//--- unitprice * WFBE_C_GUER_KILL_BOUNTY_COEF for each one now dead. Same WFBE_CO_FNC_ChangeTeamFunds
-				//--- path + bounty coef the VBIED case uses; the shells carry no instigator so RequestOnUnitKilled
-				//--- never double-pays. _cand captures the outer _x because the crew-count test below rebinds _x.
-				_radius = _spread + 30;   //--- lethal snapshot a bit wider than the shell grouping (HE splash).
-				_coef = missionNamespace getVariable ["WFBE_C_GUER_KILL_BOUNTY_COEF", 0.5];
-				_victims = [];
-				{
-					_cand = _x;
-					if (alive _cand && {(side _cand == east) || (side _cand == west)}) then {
-						if (_cand isKindOf "Man") then {
-							_victims = _victims + [_cand];
-						} else {
-							if (({alive _x} count (crew _cand)) > 0) then {_victims = _victims + [_cand]};
-						};
-					};
-				} forEach (nearestObjects [_pos, ["Man","LandVehicle","Air"], _radius]);
-
-				for "_i" from 1 to _shells do {
-					_off2d = [(_pos select 0) + (-_spread + random (2 * _spread)), (_pos select 1) + (-_spread + random (2 * _spread))];
-					_sp = "Sh_82_HE" createVehicle _off2d;
-					_sp setPosATL [(_off2d select 0), (_off2d select 1), 120];   //--- 120m ABOVE GROUND so it falls onto terrain.
-					sleep (0.4 + random 0.6);
-				};
-
-				//--- settle, then pay the GUER team for each snapshot victim the barrage killed.
-				sleep 4;
-				if (!isNull _team) then {
-					_payout = 0;
-					{
-						if (!alive _x) then {
-							_get = missionNamespace getVariable (typeOf _x);
-							if (!isNil "_get") then {_payout = _payout + round ((_get select QUERYUNITPRICE) * _coef)};
-						};
-					} forEach _victims;
-					if (_payout > 0) then {
-						[_team, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
-						["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER mortar cash-for-kills paid [%1] to [%2] (%3 targets snapshotted).", _payout, _team, count _victims]] Call WFBE_CO_FNC_LogContent;
-					};
-				};
-			};
-			["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER mortar strike called by [%1] at %2 (%3 shells, cost %4).", name _player, _pos, missionNamespace getVariable ["WFBE_C_GUER_MORTAR_SHELLS", 6], _cost]] Call WFBE_CO_FNC_LogContent;
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER Barrel Bomb called by [%1] at %2 (cost %3).", name _player, _pos, _cost]] Call WFBE_CO_FNC_LogContent;
+			[nil, resistance, _pos, _team] Spawn KAT_GuerHeliDrop;
 		};
 	};
 };

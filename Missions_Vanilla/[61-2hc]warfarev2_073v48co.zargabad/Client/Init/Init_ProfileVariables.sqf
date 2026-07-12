@@ -101,6 +101,20 @@ _profile_var = profileNamespace getVariable "WFBE_AUDIO_CUES";
 if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_AUDIO_CUES = _profile_var}};
 missionNamespace setVariable ["WFBE_AUDIO_CUES", WFBE_AUDIO_CUES];
 
+//--- fable/tags-settings-integration: Show AI Tags (default ON; ANDed with the WFBE_C_TAGS_AI admin flag
+//--- in Init_Client.sqf's AI infantry/vehicle tag gates. Settings dialog WFBE_MenuAction 12).
+//--- (Release-merge note: fable/ew-settings independently re-authored this same "AI Name Tags" toggle as a
+//--- direct WFBE_C_TAGS_AI profile-restore block, colliding on both idc 30028->reassigned-to-Tint-Legend
+//--- and WFBE_MenuAction 12. Kept this (tags-settings-integration) version - it's the correct per-player
+//--- opt-out design (CL-prefixed, ANDed with the true mission-wide WFBE_C_TAGS_AI constant), whereas the
+//--- other PR's version would have had individual clients locally shadowing the mission-config-named
+//--- variable itself. fable/ew-settings' only non-duplicate content, the Vehicle Tint Legend button, is
+//--- kept - see Rsc/Dialogs.hpp CA_TintLegend.)
+WFBE_CL_ShowAITags = true;
+_profile_var = profileNamespace getVariable "WFBE_SHOW_AI_TAGS";
+if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_CL_ShowAITags = _profile_var}};
+missionNamespace setVariable ["WFBE_CL_ShowAITags", WFBE_CL_ShowAITags];
+
 //--- TP-21: Team Menu V2 gear presets (4 slots, per-side, ARRAY of ARRAYs).
 //--- WFBE_PERSISTENT_TEAM_MENU_V2_PRESETS is side-keyed so each side has independent slots.
 //--- Format per slot: [] (empty/unset) or [weapons, magazines, backpack, bp_content, [p,s,l]] (wfbe_custom_gear shape).

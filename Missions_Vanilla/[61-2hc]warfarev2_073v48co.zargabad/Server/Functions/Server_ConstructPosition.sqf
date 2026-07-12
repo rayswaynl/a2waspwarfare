@@ -6,14 +6,15 @@
    enabled exactly like an individually-built defense, and every prop (wall/sandbag/ammo) is placed the
    same way — no duplicated manning logic.
 
-   Called from Server\PVFunctions\RequestDefense.sqf:  [_side,_anchorType,_pos,_dir,_manned] Spawn Server_ConstructPosition;
+   Called from Server\PVFunctions\RequestDefense.sqf:  [_side,_anchorType,_pos,_dir,_manned,_reqPlayer] Spawn Server_ConstructPosition;
 */
-Private ["_side","_anchorType","_pos","_dir","_manned","_map","_base","_factionSpecific","_tplName","_template","_origin","_created","_i","_entry","_cls","_relPos","_relDir","_worldPos","_worldDir","_one","_placementID","_flakHostCls","_flakAutoZ","_deckTop","_bb"];
+Private ["_side","_anchorType","_pos","_dir","_manned","_reqPlayer","_map","_base","_factionSpecific","_tplName","_template","_origin","_created","_i","_entry","_cls","_relPos","_relDir","_worldPos","_worldDir","_one","_placementID","_flakHostCls","_flakAutoZ","_deckTop","_bb"];
 _side       = _this select 0;
 _anchorType = _this select 1;
 _pos        = _this select 2;
 _dir        = _this select 3;
 _manned     = _this select 4;
+_reqPlayer  = if (count _this > 5) then {_this select 5} else {objNull};
 
 //--- cmdcon44-c (Build 89): flak-tower deck AUTO-HEIGHT. The Flak Tower composition mounts an AA gun on a
 //--- non-zero z (the tower deck). Rather than trust a hardcoded deck estimate (the thin illuminant tower's
@@ -72,7 +73,7 @@ for "_i" from 0 to (count _template - 1) do {
 
 	//--- Stock defense builder: guns get manned + scored + artillery-enabled; props get placed.
 	//--- WDDM children are tagged before manning starts so duplicate crew requests can be filtered.
-	_one = [_cls, _side, _worldPos, _worldDir, _manned, false, missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MANNING_RANGE", false, true] Call ConstructDefense;
+	_one = [_cls, _side, _worldPos, _worldDir, _manned, false, missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MANNING_RANGE", false, true, _reqPlayer] Call ConstructDefense;
 	if (!isNil "_one") then {
 		if (typeName _one == "OBJECT") then {
 			_one setVariable ["WFBE_WDDMPositionAnchor", _placementID, true];

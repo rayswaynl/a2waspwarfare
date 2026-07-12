@@ -18,7 +18,16 @@ _teams = _this select 4;
 
 ["INFORMATION", Format["Client_DelegateTownAI.sqf: Received a town delegation request from the server for [%1] [%2].", _side, _town]] Call WFBE_CO_FNC_LogContent;
 
-sleep (random 1); //--- Delay a bit to prevent a bandwidth congestion.
+//--- fable/hc-deleg-throttle (owner rig-test 2026-07-09): cap CONCURRENT unit-creation batches per HC.
+//--- Root cause of "AI freezes soon after match start": ~12 towns activate near-simultaneously at start,
+//--- each fanning 2-8 delegate-townai messages onto 2 HCs; each spawns a heavy CreateTownUnits batch
+//--- (createUnit/setSkill/addWeapon per unit). Dozens running at once starve the HC's SQF scheduler and it
+//--- freezes its whole owned AI population. The old `sleep (random 1)` only jittered START time, it did NOT
+//--- cap concurrency. Acquire an in-flight slot (max 3 concurrent batches/HC, ~10s safety timeout) before the
+//--- heavy body; released at end-of-file. Counter is per-HC (missionNamespace is machine-local).
+private "_qWait"; _qWait = 0;
+while {((missionNamespace getVariable ["WFBE_HC_DELEG_INFLIGHT", 0]) >= 3) && {_qWait < 100}} do {sleep 0.1; _qWait = _qWait + 1};
+missionNamespace setVariable ["WFBE_HC_DELEG_INFLIGHT", ((missionNamespace getVariable ["WFBE_HC_DELEG_INFLIGHT", 0]) + 1)];
 
 for "_i" from 0 to ((count _teams) - 1) do {
 	_team = _teams select _i;
@@ -45,12 +54,19 @@ if ((count _town_teams) > 0 || (count _town_vehicles) > 0) then {["RequestSpecia
 
 {
 	_x Spawn {
-		Private ["_team"];
+		Private ["_team","_remaining"];
 		_team = _this;
 		
 		if (isNull _team) exitWith {};
 		private "_wDeadline"; _wDeadline = time + 600; //--- wiki-wins: cap the watcher (was unbounded; a zombified/never-emptied group leaked this spawned thread for the rest of the mission)
 			while {count (units _team) > 0 && time < _wDeadline} do {sleep 1};
-		deleteGroup _team;
+		if (!isNull _team) then {
+			_remaining = +units _team;
+			{deleteVehicle _x} forEach _remaining;
+			deleteGroup _team;
+		};
 	};
 } forEach _town_teams; //--- Delete the group client-sided once it naturally becomes empty.
+
+//--- fable/hc-deleg-throttle: release the in-flight slot now this heavy creation batch has been dispatched.
+missionNamespace setVariable ["WFBE_HC_DELEG_INFLIGHT", (((missionNamespace getVariable ["WFBE_HC_DELEG_INFLIGHT", 0]) - 1) max 0)];

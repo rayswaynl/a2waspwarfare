@@ -37,6 +37,44 @@ if (_rlType == "CBRadar") then {
 	};
 };
 
+//--- CBRadar/AARadar: one per side + duplicate-build race guard (fable/ew-economy). Mirrors the
+//--- Bank pending-reservation guard below: WFBE_C_STRUCTURES_MAX_CBRadar/AARadar (both default 1,
+//--- Init_CommonConstants.sqf) is otherwise enforced ONLY client-side via the per-client
+//--- wfbe_structures_live counter (coin_interface.sqf), which is racy - two clients (or one client
+//--- double-clicking before its own local counter refreshes) can both pass that gate and fire this
+//--- PV inside the same ~60s build window, landing two radars. Reject synchronously if a live one
+//--- already exists on this side OR a recent pending reservation (another accepted-but-still-
+//--- constructing request) is in flight - same shape as the Bank guard immediately below.
+if (_rlType in ["CBRadar","AARadar"]) then {
+	private ["_rrClassVar","_rrClass","_rrAlive","_rrStructs","_rrPendingKey","_rrPendingTime","_rrPendingWindow","_rrMsg"];
+	_rrClassVar = if (_rlType == "AARadar") then {Format ["%1AAR", str _side]} else {Format ["%1CBR", str _side]};
+	_rrClass = missionNamespace getVariable [_rrClassVar, ""];
+	_rrAlive = false;
+	if (_rrClass != "") then {
+		_rrStructs = (_side) Call WFBE_CO_FNC_GetSideStructures;
+		{if (alive _x && typeOf _x == _rrClass) exitWith {_rrAlive = true}} forEach _rrStructs;
+	};
+	_rrPendingKey = Format ["WFBE_%1_%2_PENDING", str _side, _rlType];
+	_rrPendingWindow = missionNamespace getVariable ["WFBE_C_STRUCTURES_RADAR_PENDING_WINDOW", 180];
+	_rrPendingTime = missionNamespace getVariable [_rrPendingKey, -1e11];
+	_rrMsg = if (_rlType == "AARadar") then {"AARadarAlreadyBuilt"} else {"CBRadarAlreadyBuilt"};
+	if (!_reject && _rrAlive) then {
+		_reject = true; //--- B66 idiom: was exitWith (escaped only the then{}).
+		[_side, "LocalizeMessage", [_rrMsg]] Call WFBE_CO_FNC_SendToClients;
+		["WARNING", Format ["RequestStructure.sqf: [%1] %2 build rejected - one already alive.", str _side, _rlType]] Call WFBE_CO_FNC_LogContent;
+	};
+	if (!_reject && (time - _rrPendingTime) < _rrPendingWindow) then {
+		_reject = true; //--- duplicate-click race: a reservation for this side+type is already in flight.
+		[_side, "LocalizeMessage", [_rrMsg]] Call WFBE_CO_FNC_SendToClients;
+		["WARNING", Format ["RequestStructure.sqf: [%1] %2 build rejected - reservation already pending (%3s ago).", str _side, _rlType, (time - _rrPendingTime)]] Call WFBE_CO_FNC_LogContent;
+	};
+	//--- Reserve the slot synchronously at accept time. Construction_SmallSite.sqf (CBRadar) /
+	//--- Construction_MediumSite.sqf (AARadar) clear this flag once the real structure registers.
+	if (!_reject) then {
+		missionNamespace setVariable [_rrPendingKey, time];
+	};
+};
+
 //--- Bank: one per side + must be placed outside own base protection area.
 if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	private ["_bankKey","_existingBank","_logik","_startPos","_baseAreas","_protRange","_tooClose","_checkCenters","_pendingKey","_pendingTime","_pendingWindow"];

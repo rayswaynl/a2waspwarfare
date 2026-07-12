@@ -146,6 +146,26 @@ if (group player == WFBE_Client_Team) then {
 if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
 	player setRank "COLONEL";
 	diag_log "[WFBE|TEAMBAR] Client_OnKilled: player rank set to COLONEL for command-bar slot 1.";
+	//--- fable/respawn-slot1-rejoin (owner live 2026-07-09 "once again I am #2 in my group"): rank sets the
+	//--- star sort but A2 command-bar SLOT numbers follow unit join order, and group respawn seats the player
+	//--- in the dead AI slot (#2+). Renumber by re-joining the AI squadmates behind the player: out to a temp
+	//--- group and straight back (same group, so group waypoints/identity survive). Client-local AI only (join
+	//--- needs locality); createGroup-null (side group cap) or a foreign group skips cleanly.
+	if (group player == WFBE_Client_Team && {leader (group player) == player} && {((units group player) select 0) != player}) then {
+		Private ["_slot1Others","_slot1Tmp"];
+		_slot1Others = [];
+		{if (alive _x && {!isPlayer _x} && {local _x}) then {_slot1Others set [count _slot1Others, _x]}} forEach ((units group player) - [player]);
+		if (count _slot1Others > 0) then {
+			_slot1Tmp = createGroup (side group player);
+			if (!isNull _slot1Tmp) then {
+				_slot1Others joinSilent _slot1Tmp;
+				_slot1Others joinSilent (group player);
+				if (count units _slot1Tmp == 0) then {deleteGroup _slot1Tmp};
+				(group player) selectLeader player;
+				diag_log Format ["[WFBE|TEAMBAR] slot1-rejoin: %1 AI squadmates re-joined behind the player.", count _slot1Others];
+			};
+		};
+	};
 };
 
 titleCut ["", "BLACK IN", 1];

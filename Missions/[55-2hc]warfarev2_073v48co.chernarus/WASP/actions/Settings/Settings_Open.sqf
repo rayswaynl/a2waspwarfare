@@ -13,6 +13,8 @@
 	  GAMEPLAY : HUD overlay | AAR map markers | Bomb-altitude warning | Ambulance redeploy circles |
 	             Kill feed | Auto IR smoke | Auto deploy bipod | High-climbing default
 	  AUDIO    : Audio cues
+	  TAGS     : Name tags on/off (same var+key as the WF-menu TAGS button) | Show AI tags (per-player
+	             opt-out ANDed with the WFBE_C_TAGS_AI admin flag in Init_Client.sqf) [fable/tags-settings-integration]
 
 	The terrain-grid slider (setTerrainGrid, key WFBE_PERSISTENT_CONST_TERRAIN_GRID) and the high-climbing
 	toggle (WFBE_HighClimbingDefaultEnabled, key WFBE_HIGH_CLIMBING_DEFAULT_ENABLED) share var + key + localized
@@ -24,7 +26,7 @@
 */
 
 disableSerialization;
-private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_autoOn","_target","_maxVD","_curVD","_sliderVD","_lastSliderVD","_chosenVD","_hc","_maxTG","_curTG","_sliderTG","_lastSliderTG","_chosenTG"];
+private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_autoOn","_target","_maxVD","_curVD","_sliderVD","_lastSliderVD","_chosenVD","_hc","_maxTG","_curTG","_sliderTG","_lastSliderTG","_chosenTG","_tags","_tagsAI"];
 
 if (!alive player) exitWith {};
 if (dialog) exitWith {};
@@ -68,6 +70,8 @@ while {alive player && dialog} do {
 	_autoOn = missionNamespace getVariable ["TOOGLE_AUTO_DISTANCE_VIEW", false];
 	_target = missionNamespace getVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", 60];
 	_hc     = missionNamespace getVariable ["WFBE_HighClimbingDefaultEnabled", false];
+	_tags   = missionNamespace getVariable ["WFBE_NameTagsEnabled", false];
+	_tagsAI = missionNamespace getVariable ["WFBE_CL_ShowAITags", true];
 
 	ctrlSetText [30020, if (_hud)  then {"HUD Overlay: ON"}         else {"HUD Overlay: OFF"}];
 	ctrlSetText [30021, if (_aar)  then {"AAR Markers: ON"}         else {"AAR Markers: OFF"}];
@@ -81,6 +85,8 @@ while {alive player && dialog} do {
 	ctrlSetText [30010, format ["View Distance: %1 m", round viewDistance]];
 	ctrlSetText [30017, Format [localize "STR_WF_TEAM_TerrainGridLabel", round (missionNamespace getVariable ["currentTG", 25])]];
 	ctrlSetText [30027, if (_hc) then {localize "STR_WF_TEAM_HighClimbingDefaultOn"} else {localize "STR_WF_TEAM_HighClimbingDefaultOff"}];
+	ctrlSetText [30031, if (_tags)   then {"Name Tags: ON"}    else {"Name Tags: OFF"}];
+	ctrlSetText [30032, if (_tagsAI) then {"Show AI Tags: ON"} else {"Show AI Tags: OFF"}];
 
 	//--- VD slider poll (drag = instant apply). Auto-VD is disabled the moment the player takes manual control,
 	//--- otherwise the adaptive loop drifts the value back. Mirrors the Team-menu slider persistence.
@@ -126,6 +132,28 @@ while {alive player && dialog} do {
 		WFBE_HighClimbingDefaultEnabled = _hc;
 		missionNamespace setVariable ["WFBE_HighClimbingDefaultEnabled", _hc];
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_HIGH_CLIMBING_DEFAULT_ENABLED", _hc] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+
+	//--- Name Tags: same var + profile key as the WF-menu "TAGS" button (MenuAction 25, GUI_Menu.sqf) so either
+	//--- entry point flips the SAME state. WFBE_NameTagsEnabled is read by the name-tag loop in Init_Client.sqf.
+	if (WFBE_MenuAction == 11) then {
+		WFBE_MenuAction = -1;
+		WFBE_NameTagsEnabled = !(missionNamespace getVariable ["WFBE_NameTagsEnabled", false]);
+		missionNamespace setVariable ["WFBE_NameTagsEnabled", WFBE_NameTagsEnabled];
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_NAMETAGS_ENABLED", WFBE_NameTagsEnabled] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+
+	//--- Show AI Tags: per-player opt-out, ANDed with the mission-wide WFBE_C_TAGS_AI admin flag in
+	//--- Init_Client.sqf (both must be true for AI infantry/vehicle tags to draw). Default ON so behaviour
+	//--- is unchanged for players who never touch this control. (Release-merge note: fable/ew-settings
+	//--- independently re-implemented this same feature at the same WFBE_MenuAction==12 via a direct
+	//--- WFBE_C_TAGS_AI flip - dropped in favor of this CL-prefixed per-player-opt-out version, which
+	//--- doesn't shadow the mission-wide config constant's own name; see Init_ProfileVariables.sqf.)
+	if (WFBE_MenuAction == 12) then {
+		WFBE_MenuAction = -1;
+		WFBE_CL_ShowAITags = !(missionNamespace getVariable ["WFBE_CL_ShowAITags", true]);
+		missionNamespace setVariable ["WFBE_CL_ShowAITags", WFBE_CL_ShowAITags];
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_SHOW_AI_TAGS", WFBE_CL_ShowAITags] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
 	//--- AAR map markers: gate read live by Common_MarkerLoop.sqf. Hide currently-drawn markers at once when OFF.
