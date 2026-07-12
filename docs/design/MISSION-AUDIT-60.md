@@ -4,11 +4,11 @@ Fleet `w2mcwe481`: 60-agent sweep of the Chernarus mission — **756 files, 59 a
 skeptically synthesized. **Headline caveat: ~40-50% of the raw "A2-OA syntax" flags are FALSE POSITIVES.**
 Everything in TOP below was read directly or is a high-confidence pattern; verify data/classnames before shipping.
 
-## Status refresh - live lane 2026-07-02
+## Status refresh - current master 2026-07-12
 
-- **Live on `origin/claude/build84-cmdcon36@11736873a`:** #1 and #2 HQ killed-EH casing now send `_MHQ` in both maintained roots; #5 `RequestStructure` now exits on `_index < 0` before selecting the structure array.
-- **Draft PRs open:** #4 US/USMC GER/BAF garrison classnames are routed through clean draft PR #176 (`fable/lane35-garrison-classnames`). Do not duplicate that branch.
-- **PR #169 SHELVED:** `codex/gear-price-double-count` (gear price double-count fix) was shelved and is no longer open. See `wiki/Shelved-PR-*.md`. Do not reopen or duplicate.
+- **Live on `origin/master@bbab122f0eb40b1351d075d05a12da6960499a12`:** #1 and #2 HQ killed-EH casing now send `_MHQ` in all maintained roots; #5 `RequestStructure` exits on `_index < 0` before selecting the structure array.
+- **Merged / present on current master:** #4 US/USMC GER/BAF garrison classnames were fixed by merged PR #176 (`fable/lane35-garrison-classnames`). Do not duplicate.
+- **PR #169 CLOSED UNMERGED; fix later merged via PR #295:** `codex/gear-price-double-count` closed without merge; the same gear-loop fix is present on current `origin/master`. Do not reopen or duplicate.
 - **Fresh false-positive verdicts:** follow-up fable verification closed #7, #8, and #9 as not-real: dynamic `publicVariable format [...]` is valid and matches the supply JIP pull chain; `isNil { ... }` is valid A2 OA syntax; `Init_Town.sqf` returns absolute damage math from the `handleDamage` EH.
 
 ## ⛔ REJECTED — false positives / already handled (do NOT patch)
@@ -31,9 +31,9 @@ Everything in TOP below was read directly or is a high-confidence pattern; verif
 
 **2. Same bug on the mobilized-HQ path** (CONFIRMED, LIVE DONE) — `Server/Construction/Construction_HQSite.sqf:104` now sends `_MHQ` in both maintained roots.
 
-**3. Gear price counted twice** (CONFIRMED, PR #169 OPEN) — `Client/Functions/Client_UI_Gear_UpdatePrice.sqf:74-88`: a `for..do {…} forEach _gear_new` runs the whole block N extra times → inflated price. Routed through clean draft PR #169; smoke-test after that PR is folded.
+**3. Gear price counted twice** (CONFIRMED, FIXED ON CURRENT MASTER VIA PR #295; PR #169 CLOSED UNMERGED) — `Client/Functions/Client_UI_Gear_UpdatePrice.sqf:74-89` now closes the indexed loop with plain `};` at line 88; no duplicate trailing `forEach _gear_new` remains. No new patch.
 
-**4. US garrison teams spawn German/British units** (CONFIRMED, PR #176 OPEN) — `Common/Config/Groups/Groups_US.sqf:118-121` (`GER_Soldier_MG_EP1`), `:134,139-141` (`BAF_Soldier_AT/AAT_DDPM`); same BAF pattern exists in `Groups_USMC.sqf`. Routed through clean draft PR #176, which swaps the GER/BAF infantry rows to role-matched US/USMC equivalents and regenerates the Takistan mirror.
+**4. US garrison teams spawned German/British units** (CONFIRMED, FIXED ON CURRENT MASTER VIA MERGED PR #176) — role-matched US/USMC replacements are present in Chernarus, Takistan, and Zargabad. No new patch.
 
 **5. `RequestStructure` find→-1→picks LAST element** (CONFIRMED, LIVE DONE) — `Server/PVFunctions/RequestStructure.sqf:10-12` now computes `_index`, exits on `_index < 0`, then selects `_structures select _index` in both maintained roots.
 
@@ -51,10 +51,10 @@ Everything in TOP below was read directly or is a high-confidence pattern; verif
 
 ## QUICK WINS (safe near-one-liners)
 - `Server_MHQRepair.sqf:43` `_mhq`→`_MHQ` (#1 ✅ live) · `Construction_HQSite.sqf:104` `_mhq`→`_MHQ` (#2 ✅ live)
-- `Client_UI_Gear_UpdatePrice.sqf:88` drop `forEach _gear_new` (#3 — PR #169 SHELVED; propose a new PR if re-taking)
+- `Client_UI_Gear_UpdatePrice.sqf:88` duplicate suffix removed (#3 ✅ fixed on current master via PR #295; PR #169 closed unmerged)
 - `Server/PVFunctions/RequestStructure.sqf:10-12` `_index < 0` guard (#5 ✅ live)
 - `Core_MVD.sqf:50` log says `Core_RU`→`Core_MVD` · `Squads_GetFactionGroups.sqf:58` wrong file in error string
-- `Groups_US.sqf` / `Groups_USMC.sqf` GER/BAF→US classnames (#4 routed via PR #176) · `Artillery_OA_TKA/TKGUE.sqf:14` de-dup illum ammo (verify alt class)
+- `Groups_US.sqf` / `Groups_USMC.sqf` GER/BAF→US classnames (#4 ✅ fixed on current master via merged PR #176) · `Artillery_OA_TKA/TKGUE.sqf:14` de-dup illum ammo (verify alt class)
 - Getter defaults `Common_GetTeamType/Autonomous/Respawn/MovePos.sqf:3` → `getVariable ["key", default]` (match Common_GetTeamMoveMode)
 
 ## NEEDS CARE (verify/balance before patch)
@@ -62,4 +62,4 @@ TKGUE arrays (#6) · tech-tree gates (#10) · security/anti-forge UID validation
 → fold into the flag-gated `WFBE_C_SEC_HARDENING` lane, not a hotfix) · `Init_Towns.sqf:82,84` ellipse math
 (`_posy` uses `select 0`, `_e = sqrt(_size^2-_size^2)=0` — verify consumed before fixing; may be dead).
 
-> Recommended next order after this refresh: PR #169 is SHELVED; if re-taking #3, open a new branch. Wait for PR #176 to fold #4, then data-verify #6 as faction-roster/balance work and #10 as a balance-owner decision. Skip the whole REJECTED list.
+> Recommended next order after this refresh: #3 and #4 are already on current master (#3 via PR #295; #4 via PR #176). Data-verify #6 as faction-roster/balance work and #10 as a balance-owner decision. Skip the whole REJECTED list.

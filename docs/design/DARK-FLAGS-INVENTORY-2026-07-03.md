@@ -11,6 +11,11 @@ changed.
 The scan source was the Chernarus source mission because maintained terrain
 copies are generated from it unless a lane is explicitly mission.sqm-specific.
 
+Current-source correction (2026-07-12): `WFBE_C_AICOM_FOUND_REQUIRE_FACTORY`
+was owner-armed at `1` on 2026-07-10 and now lives at
+`Init_CommonConstants.sqf:1045`. It is therefore excluded from the dark-flag
+table below; the rest of this document retains its 2026-07-03 snapshot scope.
+
 ## Counting Rules
 
 Counted:
@@ -46,7 +51,6 @@ Not counted:
 | `WFBE_C_ENDGAME_FORCE_ENABLE` | `Common/Init/Init_CommonConstants.sqf:635` | Arms the late-round income taper / soft-forcing path. | High: match pacing |
 | `WFBE_C_AICOM_PLAYER_ARTY` | `Common/Init/Init_CommonConstants.sqf:698` | Enables the separate player-requested AICOM artillery helper. | High: artillery owner gate |
 | `WFBE_C_AICOM_HELI_APPROACH_LIMITED` | `Common/Init/Init_CommonConstants.sqf:718` | Slows AICOM transport helis to LIMITED on final LZ approach. | Medium: aircraft behavior |
-| `WFBE_C_AICOM_FOUND_REQUIRE_FACTORY` | `Common/Init/Init_CommonConstants.sqf:820` | Requires matching owned factories before founding AICOM team types. | Medium: AICOM starvation risk |
 | `WFBE_C_AICOM_OVERRUN_SCRIPTRAZE` | `Common/Init/Init_CommonConstants.sqf:839` | Re-enables scripted siege-timer razing instead of real destruction only. | High: victory/base assault semantics |
 | `WFBE_C_AICOM_STRIKE_COMMIT` | `Common/Init/Init_CommonConstants.sqf:854` | Protects progressing teams from HQ-strike grabs. | Medium: AICOM strategy |
 | `WFBE_C_NAVAL_WEST_AAV` | `Common/Init/Init_CommonConstants.sqf:886` | Enables WEST AAV buy-row metadata for future naval beach-assault work. | Low: dormant metadata |
