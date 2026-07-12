@@ -1,4 +1,4 @@
-Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_gbq","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_unitTypeGet","_vehicle","_waitTime"];
+Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_unitTypeGet","_vehicle","_waitTime"];
 _id = _this select 0;
 _building = _this select 1;
 _unitType = _this select 2;
@@ -14,8 +14,7 @@ _price = if (count _this > 6) then {_this select 6} else {0};
 _sideText = str _side;
 
 if (!(alive _building)||(isPlayer (leader _team))) exitWith {
-	_gbq = (_team getVariable "wfbe_queue") - [_id];
-	_team setVariable ["wfbe_queue",_gbq];
+	_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
 	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 };
@@ -174,8 +173,7 @@ while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--
 	//--- subtraction (removing the same token twice is a no-op), so the double pass cannot double-count.
 	//--- Client_BuildUnit.sqf's NUMERIC counters were not safe this way - see its cmdcon44-g comments.
 	if (!(alive _building)||(isNull _building)||(isPlayer (leader _team))) exitWith {
-		_gbq = (_team getVariable "wfbe_queue") - [_id];
-		_team setVariable ["wfbe_queue",_gbq];
+		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 		_queu = _building getVariable "queu";
 		if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]};
 		_building setVariable ["queu",_queu,true];
@@ -205,8 +203,7 @@ _queu = _queu - [_id select 0];
 _building setVariable ["queu",_queu,true];
 
 if (!(alive _building)||(isPlayer (leader _team))) exitWith {
-	_gbq = (_team getVariable "wfbe_queue") - [_id];
-	_team setVariable ["wfbe_queue",_gbq];
+	_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
 	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 };
@@ -399,5 +396,4 @@ _vehicle allowCrewInImmobile true;
 	[_sideText,'UnitsCreated',_built] Call UpdateStatistics;
 };
 
-_gbq = (_team getVariable "wfbe_queue") - [_id];
-_team setVariable ["wfbe_queue",_gbq];
+_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
