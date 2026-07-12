@@ -9,6 +9,7 @@ import unittest
 from pathlib import Path
 
 import check_stringtable_refs
+from test_sniper_marker_locality import SniperMarkerLocalityTests
 
 
 class CheckStringtableRefsTests(unittest.TestCase):
