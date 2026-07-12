@@ -7,7 +7,6 @@ HandleRocketTraccer = Compile preprocessFileLineNumbers "Common\Functions\Common
 HandleCommanderReload = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleCommanderReload.sqf";
 HandleReload = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleReload.sqf";
 HandleATReload = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleATReload.sqf";
-//HandleATReloadVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleATReloadVehicle.sqf";
 HandleATMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleATMissiles.sqf";
 HandleAAMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleAAMissiles.sqf";
 HandleJetAADamage = Compile preprocessFileLineNumbers "Common\Functions\Common_JetAADamage.sqf";
