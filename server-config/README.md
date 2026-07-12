@@ -34,6 +34,7 @@ Arma 2 OA defaults.
   server itself runs `-malloc=mimalloc`. Both custom allocators are engaged.
 - `headlessClients[] = {"127.0.0.1"}` + `localClient[] = {"127.0.0.1"}` register the two local
   HCs. `verifySignatures = 0` and `BattlEye = 0` are intentional (optional client mods permitted).
+- **Hardening caveat — this file is the box-rebuild source of truth (see top).** `verifySignatures = 0`, `BattlEye = 0`, and `kickDuplicate = 0` are scoped to this optional-mods **test** box. Before reusing this config for any **public / competitive / hardened** deployment, restore `verifySignatures = 2` and `BattlEye = 1` (as in the secure `Configs/serverconfig.cfg` sample). The `passwordAdmin` redaction policy above still applies.
 
 ## Not versioned here (box-only)
 
