@@ -103,14 +103,19 @@ WEST (or EAST), burning a warfare player slot and injecting a phantom player int
 
 ### (b) server.cfg / class Missions param overrides
 
-**Mechanism:** `server.cfg` can specify `missionWhitelist`, `missionSelector`, and per-slot
-parameters in the `class Missions` block, but A2 OA does not support per-slot HC routing
-in `server.cfg`. There is no `forcedSlot[]` or `headlessClientSlot[]` key.
+**Mechanism:** `headlessClients[]` and `localClient[]` are valid A2 OA `server.cfg` settings:
+the first allowlists HC source IPs, while the second grants trusted clients unlimited
+bandwidth and nearly zero latency (available since OA build 99184). The committed
+`server-config/server-pr8.cfg` uses both. They do not route a client to a particular lobby
+slot, side, or role; there is still no `forcedSlot[]` or `headlessClientSlot[]` key.
 
-**Does it work on A2 OA 1.64?** No. The Bohemia wiki confirms these fields are A3-specific
-(`headlessClients[]`, `localClient[]`). A2 OA has no equivalent.
+**Does it work on A2 OA 1.64?** Yes for HC connection allowlisting and local-client network
+handling; no for per-slot routing. See Bohemia's
+[Arma 2 Server Config File](https://community.bohemia.net/wiki/Arma_2%3A_Server_Config_File)
+under "Dedicated client in Headless Client mode."
 
-**Verdict:** Not applicable. Do not pursue.
+**Verdict:** Keep these settings for their network purpose, but do not pursue them as a
+slot-assignment fix.
 
 ---
 
@@ -204,8 +209,9 @@ wait (enough for the bounded reseat loop to finish) is sufficient.
 
 ### (f) Reserved slots via description.ext or lobby scripting
 
-**Mechanism:** In A3, `description.ext` supports `headlessClients[]` and `localClient[]`
-arrays that reserve slots. In A2 OA there is no equivalent. The `description.ext` file in
+**Mechanism:** `headlessClients[]` and `localClient[]` are server configuration settings,
+not `description.ext` slot declarations, in both A2 OA and A3. They allowlist/classify
+network clients but do not reserve or select a lobby slot. The `description.ext` file in
 this mission (`Header.hpp`) does not have any slot-reservation feature.
 
 Lobby scripting via `JIPCompatible` init or pre-mission scripts cannot run before the engine
@@ -375,7 +381,8 @@ names, and the real BAIL was already happening for HC-2 before the name check ma
    lowest available WEST regardless of what we rename (MAGNET-HANDOFF).
 4. **Delay-only approach (JIP timing)** — no effect; engine takes lowest slot regardless
    of when HC connects on an empty server (MAGNET-HANDOFF).
-5. **server.cfg `headlessClients[]`** — A3-only, does not exist in A2 OA 1.64.
+5. **server.cfg `headlessClients[]` / `localClient[]`** — valid A2 OA connection-allowlist
+   and bandwidth/latency settings, but they cannot reserve a lobby slot or choose its side/role.
 6. **description.ext reserved slots** — no such feature in A2 OA.
 
 ---
