@@ -25,6 +25,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_SPAWNBEACON_ENABLE", 0]) <= 0) 
 
 _side = _this;
 _sideText = str _side;
+_myID = (_side) Call WFBE_CO_FNC_GetSideID;
 
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
@@ -46,12 +47,12 @@ _standoff = missionNamespace getVariable ["WFBE_C_AICOM_SPAWNBEACON_STANDOFF", 3
 _refwd    = missionNamespace getVariable ["WFBE_C_AICOM_SPAWNBEACON_REFWD", 600];
 _cooldown = missionNamespace getVariable ["WFBE_C_AICOM_SPAWNBEACON_COOLDOWN", 300];
 
-//--- 2) Count LIVE beacons we own (tagged wfbe_aicom_beacon). vehicles is a manageable global on this side.
+//--- 2) Count LIVE beacons we own (tagged wfbe_aicom_beacon + owning side ID).
 //--- Keep a handle to the (single, or first) current beacon for the re-stand-forward check below.
 _beacons = 0;
 _curBeacon = objNull;
 {
-	if (!isNull _x && {alive _x} && {_x getVariable ["wfbe_aicom_beacon", false]}) then {
+	if (!isNull _x && {alive _x} && {_x getVariable ["wfbe_aicom_beacon", false]} && {(_x getVariable ["wfbe_aicom_beacon_side", -1]) == _myID}) then {
 		_beacons = _beacons + 1;
 		if (isNull _curBeacon) then {_curBeacon = _x};
 	};
@@ -66,8 +67,6 @@ _target = _targets select 0;
 if (isNull _target) exitWith {};
 _tgtPos = getPos _target;
 if (typeName _tgtPos != "ARRAY" || {count _tgtPos < 2}) exitWith {};
-
-_myID = (_side) Call WFBE_CO_FNC_GetSideID;
 
 //--- 4) ANCHOR = our OWNED FORWARD town: among towns where (getVariable "sideID")==_myID, the one NEAREST the fist
 //--- (the leading edge of owned territory). Mirror the FWDBASE owned-town preference (AI_Commander_Base.sqf:698-708).
@@ -144,6 +143,7 @@ if (_funds < _price) exitWith {};
 _veh = createVehicle [_amb, _pos, [], 0, "NONE"];
 _veh setDir _dir;
 _veh setVariable ["wfbe_aicom_beacon", true, true];
+_veh setVariable ["wfbe_aicom_beacon_side", _myID, true];
 _veh setFuel 0.5;
 _veh lock true;
 _logik setVariable ["wfbe_aicom_beaconbuilt", time];
