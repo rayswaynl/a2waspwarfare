@@ -36,6 +36,7 @@ jobs:
           python Tools\Lint\test_fpv_purchase_authority.py
           python Tools\Lint\test_check_stringtable_refs.py
           python Tools\Soak\test_analyze_soak.py
+          python Tools\Pack\test_pack_pbo.py
 
       - name: Soak analyzer sample smoke
         shell: pwsh
