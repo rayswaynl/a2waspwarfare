@@ -1,5 +1,5 @@
 disableSerialization; //--- Hotfix: _map holds a control - engine serialization error without this.
-Private ["_map","_fpvCooldown","_fpvWasAlive","_fpvState","_fpvRemain","_fpvTTL",
+Private ["_map","_fpvCooldown","_fpvState","_fpvRemain","_fpvTTL",
          "_fpvElapsed","_battPct","_battFull","_battEmpty","_battBar","_battI",
          "_hvtList","_platform","_carHolder","_hSID","_carrierOwned",
          "_scudState","_scudCost","_scudCooldownKey","_scudLast","_scudRemain",
@@ -22,7 +22,6 @@ mouseButtonUp = -1;
 mouseX = 0.5;
 mouseY = 0.5;
 
-_fpvWasAlive   = false;
 _scudTargeting = false;
 _scudTargetPos = [];
 
@@ -36,10 +35,10 @@ while {alive player && dialog} do {
 	if (isNil "_funds") then {_funds = 0};
 
 	//--- FPV state machine.
-	_fpvCooldown = missionNamespace getVariable ["wfbe_fpv_guer_cooldown", 0];
+	_fpvCooldown = missionNamespace getVariable [Format ["wfbe_fpv_next_%1", getPlayerUID player], 0];
+	if (typeName _fpvCooldown != "SCALAR") then {_fpvCooldown = 0};
 	if (!isNull playerFPV && {alive playerFPV}) then {
 		//--- IN FLIGHT: track time for battery bar.
-		_fpvWasAlive = true;
 		_fpvTTL     = missionNamespace getVariable ["WFBE_C_FPV_DRONE_TTL", 240];
 		_fpvElapsed = time - (missionNamespace getVariable ["wfbe_fpv_guer_launch", time]);
 		_fpvRemain  = (_fpvTTL - _fpvElapsed) max 0;
@@ -52,12 +51,7 @@ while {alive player && dialog} do {
 		_battBar    = _battBar + "]";
 		_fpvState   = 1;
 	} else {
-		//--- Not in flight: stamp cooldown when drone was alive and just ended.
-		if (_fpvWasAlive && {_fpvCooldown <= time}) then {
-			missionNamespace setVariable ["wfbe_fpv_guer_cooldown", time + (missionNamespace getVariable ["WFBE_C_FPV_COOLDOWN", 60])];
-			_fpvCooldown = missionNamespace getVariable ["wfbe_fpv_guer_cooldown", 0];
-		};
-		_fpvWasAlive = false;
+		//--- Not in flight: the server-owned per-UID stamp is the only rearm authority.
 		if (_fpvCooldown > time) then {
 			_fpvRemain = _fpvCooldown - time;
 			_fpvState  = 2;
