@@ -389,11 +389,6 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- Executor: every tick (responsive explicit orders, human or AI).
 		(_side) Call WFBE_SE_FNC_AI_Com_Execute;
 
-		//--- COMMAND CONSOLE: player war-room ARTILLERY-HERE resolver - every tick (so it bites under a HUMAN commander,
-		//--- where the autonomous Strategy arty block is dormant). Self-gates on WFBE_C_AICOM_PLAYER_ARTY + a fresh,
-		//--- friendly-fire-guarded, fire-once request; nil-guarded so it is inert until the function is registered.
-		if (!isNil "WFBE_SE_FNC_AI_Com_PlayerArty") then {(_side) Call WFBE_SE_FNC_AI_Com_PlayerArty};
-
 		//--- AICOM PARATROOPS (claude-gaming 2026-06-29): tier+structure-gated AI paratroop reinforcement drop.
 		//--- Paced to the town interval (cheap O(towns) threat scan); the worker HARD-gates on the researched
 		//--- Paratroopers upgrade tier + a live Tactical Center (CommandCenter) structure, self-cooldowns the
@@ -632,6 +627,10 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				//--- intent readout refreshes + reaches JIP/assist clients even when the AI is not in full-build mode.
 			};
 		};
+		//--- COMMAND CONSOLE: player war-room ARTILLERY-HERE fallback runs every active tick.
+		//--- Keep it AFTER Strategy so a due Strategy pass arbitrates simultaneous player/grudge
+		//--- requests once; when Strategy is dormant or not due, this still services the player request.
+		if (!isNil "WFBE_SE_FNC_AI_Com_PlayerArty") then {(_side) Call WFBE_SE_FNC_AI_Com_PlayerArty};
 		if (_canBuild) then {
 			//--- B60 MHQ RELOCATION (Ray 2026-06-21): when the front advances far from the deployed HQ,
 			//--- mobilize -> DRIVE the MHQ forward to a standoff behind the front town -> re-deploy. Self-gates

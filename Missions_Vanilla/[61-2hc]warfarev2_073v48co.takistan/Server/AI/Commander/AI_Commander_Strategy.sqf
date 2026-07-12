@@ -1147,7 +1147,7 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 	//--- (Server_HandleSpecial "aicom-arty-here" stamps wfbe_aicom_arty_request=[pos,time]). When fresh it
 	//--- targets the requested pos AND bypasses the AI's own fire cooldown so the call-in actually fires; the
 	//--- request is CLEARED after this block so it fires exactly once. Additive, reversible, TTL-gated.
-	private ["_riArtyReq","_riArtyPos","_riArtyT0","_riArtyFresh","_riArtyX","_riArtyY"];
+	private ["_riArtyReq","_riArtyPos","_riArtyT0","_riArtyFresh","_riArtyX","_riArtyY","_grudgeArtyReq","_grudgeArtyPos","_grudgeArtyT0","_grudgeArtyFresh","_grudgeArtyX","_grudgeArtyY","_grudgeArtyUse"];
 	_riArtyReq = _logik getVariable "wfbe_aicom_arty_request";
 	_riArtyPos = []; _riArtyFresh = false;
 	if (!isNil "_riArtyReq" && {typeName _riArtyReq == "ARRAY"} && {count _riArtyReq == 2}) then {
@@ -1157,7 +1157,20 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 			if ((typeName _riArtyX == "SCALAR") && {typeName _riArtyY == "SCALAR"} && {(time - _riArtyT0) < (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUEST_TTL", 120])}) then {_riArtyFresh = true};
 		};
 	};
-	if ((time - (_logik getVariable ["wfbe_aicom_arty_last", -1e6]) > _cd) || _riArtyFresh) then {
+	//--- GRUDGE BARRAGE: consume the dedicated server-local request through this AI-only
+	//--- artillery block. Keeping it off the player request key preserves the AI artillery gates.
+	_grudgeArtyReq = _logik getVariable "wfbe_aicom_grudge_barrage_request";
+	_grudgeArtyPos = []; _grudgeArtyFresh = false;
+	if (!isNil "_grudgeArtyReq" && {typeName _grudgeArtyReq == "ARRAY"} && {count _grudgeArtyReq == 2}) then {
+		_grudgeArtyPos = _grudgeArtyReq select 0; _grudgeArtyT0 = _grudgeArtyReq select 1;
+		if ((typeName _grudgeArtyPos == "ARRAY") && {count _grudgeArtyPos >= 2} && {typeName _grudgeArtyT0 == "SCALAR"}) then {
+			_grudgeArtyX = _grudgeArtyPos select 0; _grudgeArtyY = _grudgeArtyPos select 1;
+			if ((typeName _grudgeArtyX == "SCALAR") && {typeName _grudgeArtyY == "SCALAR"} && {(time - _grudgeArtyT0) < (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUEST_TTL", 120])}) then {_grudgeArtyFresh = true};
+		};
+	};
+	//--- An explicit player call keeps priority; leave a simultaneous grudge request for the next tick.
+	_grudgeArtyUse = _grudgeArtyFresh && {!_riArtyFresh};
+	if ((time - (_logik getVariable ["wfbe_aicom_arty_last", -1e6]) > _cd) || _riArtyFresh || _grudgeArtyUse) then {
 		//--- Target: enemy HQ during a strike, else the LIVE fist Allocate/AssignTowns are actually pressing
 		//--- this tick (_liveFistSnap, captured at the top of this worker before it gets overwritten - see the
 		//--- fable/alife-arty-dwell note there), falling back to this worker's own freshly-scored _targets only
@@ -1168,7 +1181,8 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 		if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {_artyTgt = getPos _enemyHQ};
 		if (count _artyTgt == 0 && {count _liveFistSnap > 0}) then {_artyTgt = getPos (_liveFistSnap select 0)};
 		if (count _artyTgt == 0 && {count _targets > 0}) then {_artyTgt = getPos (_targets select 0)};
-		//--- COMMAND CONSOLE ARTY HOOK: a fresh player request overrides the auto target (player picks the impact).
+		//--- Request hooks: grudge overrides the auto target; an explicit player call wins if both are fresh.
+		if (_grudgeArtyUse) then {_artyTgt = _grudgeArtyPos};
 		if (_riArtyFresh) then {_artyTgt = _riArtyPos};
 		if (count _artyTgt > 0) then {
 			//--- Friendly-fire guard: no own troops near the impact zone.
@@ -1202,6 +1216,11 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 				} forEach _pieces;
 			};
 		};
+	};
+	//--- GRUDGE BARRAGE: consume the selected request once, even when no gun can service it.
+	if (_grudgeArtyUse) then {
+		_logik setVariable ["wfbe_aicom_grudge_barrage_request", []];
+		_logik setVariable ["wfbe_aicom_arty_last", time];
 	};
 	//--- COMMAND CONSOLE ARTY HOOK: consume the player request (fire-once) - clear it whether or not a gun was in range.
 	if (_riArtyFresh) then {
