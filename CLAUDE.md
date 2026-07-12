@@ -173,6 +173,31 @@ from the repo; if not present, check the wiki Agent-Worklog and open PRs directl
 
 ---
 
+## Codex harness conventions
+
+Codex lanes always pin model AND reasoning effort explicitly — never a bare `gpt-5.6`,
+never an omitted effort level:
+
+- `gpt-5.6-luna` / `high` — default for scoped implementation.
+- `gpt-5.6-terra` / `high` — everyday-hard work.
+- `gpt-5.6-sol` at `ultra`/`max` only with written justification in the task or PR body;
+  never Sol below `high`.
+- "Spark" (GPT-5.3-Codex-Spark) is a separate low-latency preview model, not a GPT-5.6
+  tier — never substitute it for a pinned GPT-5.6 lane.
+
+Follow the official Codex prompting-guide harness pattern
+(`developers.openai.com/cookbook/examples/gpt-5/codex_prompting_guide`):
+
+- One-line preamble narrating intent every 1-3 execution steps.
+- File edits via `apply_patch` (V4A diff format).
+- Persistence: finish the task end-to-end within the turn instead of returning early
+  with questions whose answers are derivable from the repo.
+
+These conventions are subordinate to repo-specific guards — the linters, edit-guards,
+and preflight checks defined elsewhere in this file win on any conflict.
+
+---
+
 ## Where to look
 
 - AICOM team logs: HC RPT (`ArmA2OA.RPT`), not `arma2oaserver.RPT`; scope reads to the
