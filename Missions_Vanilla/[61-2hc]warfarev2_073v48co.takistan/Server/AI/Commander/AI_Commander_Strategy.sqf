@@ -1043,16 +1043,33 @@ if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
 //--- (pressing vs consolidating vs defending) is explicit; FRONT reconstructs the front line (held /
 //--- contested counts + the primary target's name and whether it borders our territory). Both ride
 //--- the existing AI_Commander_Strategy worker (per side / ~60s; gated in AI_Commander.sqf:133-134).
-private ["_posture","_primT","_townStr","_myEff","_enEff","_garBodies","_garTeams","_losingPress"];
+private ["_posture","_postureReason","_primT","_townStr","_myEff","_enEff","_garBodies","_garTeams","_losingPress"];
 //--- B69 territory-credited-press-gate: effective strength credits held towns (garrison bodies never counted in _myStr).
 //--- POSTURE-gate ONLY; last-stand (l.66) + HQ-strike keep reading raw _myStr (those are maneuver-commit gates).
 _townStr = missionNamespace getVariable ["WFBE_C_AICOM_TOWN_STRENGTH", 2];
 _myEff = _myStr + (_myTowns * _townStr);
 _enEff = _enStr + (_enemyTowns * _townStr);
-_posture = if (_strikeOn) then {"HQ_STRIKE"} else {
-	if (_myTowns < _enemyTowns || {_myEff < _enEff}) then {"DEFEND"} else {
-		if (_myTowns >= (_enemyTowns * 1.2) && {_myEff >= _enEff}) then {"PRESS"} else {"HOLD"}
-	}
+if (_strikeOn) then {
+	_posture = "HQ_STRIKE";
+	_postureReason = "hq-strike";
+} else {
+	if (_myTowns < _enemyTowns) then {
+		_posture = "DEFEND";
+		_postureReason = "behind-towns";
+	} else {
+		if (_myEff < _enEff) then {
+			_posture = "DEFEND";
+			_postureReason = "behind-strength";
+		} else {
+			if (_myTowns >= (_enemyTowns * 1.2)) then {
+				_posture = "PRESS";
+				_postureReason = "winning";
+			} else {
+				_posture = "HOLD";
+				_postureReason = "balanced";
+			};
+		};
+	};
 };
 _losingPress = false;
 //--- cmdcon41-w2 LOSING-SIDE PRESS FLOOR (Fable F7; flag WFBE_C_AICOM_LOSING_PRESS default 1). A losing side with an
@@ -1071,6 +1088,7 @@ if (((missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS", 1]) > 0) && {!_
 	};
 	if (!_lpBaseThreat) then {
 		_posture = "PRESS";
+		_postureReason = "losing-press-floor";
 		_losingPress = true;
 		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|LOSING_PRESS_FLOOR|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myEff=" + str _myEff + "|enEff=" + str _enEff);
 	};
@@ -1088,7 +1106,7 @@ _garBodies = 0;
 		} forEach _garTeams;
 	};
 } forEach towns;
-diag_log ("AICOMSTAT|v1|POSTURE|" + _sideText + "|" + str (round (time / 60)) + "|" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|myEff=" + str _myEff + "|enEff=" + str _enEff + "|townStr=" + str _townStr + "|garBodies=" + str _garBodies + "|strikeOn=" + str _strikeOn);
+diag_log ("AICOMSTAT|v1|POSTURE|" + _sideText + "|" + str (round (time / 60)) + "|" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|myEff=" + str _myEff + "|enEff=" + str _enEff + "|townStr=" + str _townStr + "|garBodies=" + str _garBodies + "|reason=" + _postureReason + "|strikeOn=" + str _strikeOn);
 _primT = if (count _targets > 0) then {_targets select 0} else {objNull};
 diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|held=" + str _myTowns + "|enemyHeld=" + str _enemyTowns + "|contested=" + str (count _attacked) + "|primary=" + (if (isNull _primT) then {"none"} else {_primT getVariable ["name","?"]}) + "|onFront=" + str _anyFront);
 //--- B58 SOAK DRAFT (2026-06-21, claude-gaming, propose-only): surface the DOMINANT-BUT-PASSIVE stall.
