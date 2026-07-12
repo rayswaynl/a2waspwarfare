@@ -13,9 +13,18 @@ _new = _this select 1;
 _mags = _this select 2;
 
 _get = missionNamespace getVariable _old;
+
+//--- fable/fix-gear-nil-poison-part2 (extends BUGHUNT-4 fix a55605e10): _old_mags/_old_belong/_pool_max
+//--- were read via select on _get with no isNil guard. A stale/unregistered _old classname (fed from
+//--- the same GUI_BuyGearMenu weapon-swap rows as the already-fixed add-item handler) makes _get nil,
+//--- and select on nil threw. Default to an empty swap (no magazines removed) when _old does not
+//--- resolve, matching the _new_mags nil-guard just below.
+_old_mags = []; _old_belong = -1; _pool_max = 12;
+if !(isNil '_get') then {
 _old_mags = _get select 6;
 _old_belong = _get select 4;
 _pool_max = if ((_get select 4) == 2) then {8} else {12};
+};
 _get = missionNamespace getVariable _new;
 
 _new_mags = if (isNil '_get') then {[]} else {_get select 6};

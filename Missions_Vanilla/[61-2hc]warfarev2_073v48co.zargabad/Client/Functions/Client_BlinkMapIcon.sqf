@@ -27,7 +27,17 @@ if (_flashRed) then {
     _unit setVariable ["Blinks", _blinks, false];
 };
 
-if ((_unit getVariable "Blinks") > (missionNamespace getVariable "WFBE_C_PLAYERS_MARKER_BLINKS")) then {
+//--- fable/marker-combat-flash (owner 2026-07-09): optional seconds-based override. 0 (default) is
+//--- inert and falls through to the existing WFBE_C_PLAYERS_MARKER_BLINKS blink-COUNT below -
+//--- byte-identical when the new flag is left at 0. >0 lets an admin dial the flash window in
+//--- seconds; the Bookkeep loop ticks ~1/s so 1 blink =~ 1s - round() is an adequate map-icon-pulse
+//--- approximation, no sub-second precision needed. A2-OA-1.64-safe.
+private ["_flashSecs","_blinkLimit"];
+_flashSecs = missionNamespace getVariable ["WFBE_C_MARKER_COMBAT_FLASH_SECS", 0];
+_blinkLimit = missionNamespace getVariable "WFBE_C_PLAYERS_MARKER_BLINKS";
+if (_flashSecs > 0) then {_blinkLimit = round _flashSecs};
+
+if ((_unit getVariable "Blinks") > _blinkLimit) then {
     _unit setVariable ["LFTB", false, false];
     _marker setMarkerColorLocal _markerColor;
     _unit setVariable ["Blinks", 0, false];

@@ -195,6 +195,13 @@ for '_i' from 0 to count(_groups)-1 do {
 
 			[group _unit, 175, getPos _defence] spawn WFBE_CO_FNC_RevealArea;
 			_unit allowFleeing 0;
+			//--- D10#4 (WFBE_C_STATIC_DEF_COMBAT): explicit combat posture on the (HC-local) gunner group so it
+			//--- engages; AWARE (not COMBAT) keeps the gunner on the static weapon (the instant-mount watchdog above
+			//--- also disableAI "MOVE" pins him). Per-unit set is idempotent + naturally covers overflow groups. Flag default 0.
+			if ((missionNamespace getVariable ["WFBE_C_STATIC_DEF_COMBAT", 0]) > 0 && {!isNull (group _unit)}) then {
+				(group _unit) setBehaviour "AWARE";
+				(group _unit) setCombatMode "RED";
+			};
 		};
 	};
 };

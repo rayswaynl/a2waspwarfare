@@ -16,7 +16,12 @@ _allowCustom = true;
 //--- and fire ONE authoritative funds re-broadcast (server-side RequestFundsResend is idempotent:
 //--- it echoes an absolute stored value, never adds, so this cannot duplicate money). A2-OA-1.64
 //--- safe (group player / typeName / SendToServer); idempotent (sets an absolute global, sends once).
-if (!isNull (group _unit)) then {clientTeam = group _unit};
+//--- fable/fix-respawn-clientteam-sync (bugrun BUGHUNT-4 CRIT): group respawn re-homed clientTeam here
+//--- but left the sibling global WFBE_Client_Team frozen at its Init_Client value. Client_OnKilled
+//--- gates its leader re-assert (and the slot-1 rejoin) on group-player-equals-WFBE_Client_Team, so a
+//--- stale value made BOTH silently skip after a group respawn. Re-sync both, exactly as
+//--- SkinSelector_Apply already does (clientTeam + WFBE_Client_Team = group player).
+if (!isNull (group _unit)) then {clientTeam = group _unit; WFBE_Client_Team = group _unit};
 if (!isNil "WFBE_Client_SideJoined") then {
 	["RequestFundsResend", [_unit, WFBE_Client_SideJoined]] Call WFBE_CO_FNC_SendToServer;
 };
@@ -76,6 +81,15 @@ if ((missionNamespace getVariable ["WFBE_C_UNITS_REDEPLOYTRUCK",0]) > 0 && _type
 };
 
 if !(_spawnInside) then {
+	//--- fable/respawn-eject (owner rig-test 2026-07-09): respawn=3 (GROUP) can hand the player a body already
+	//--- seated as AI vehicle crew (e.g. #7 in an AAVP7) - the engine picks the next living unit in group player
+	//--- before any script runs, and the on-foot placement below setPos's the body but never ejects it, trapping
+	//--- the player as crew (unable even to unlock an HC-owned hull). We place on foot here, so eject first.
+	if (vehicle _unit != _unit) then {
+		unassignVehicle _unit;
+		moveOut _unit;
+	};
+
 	if (sideJoined == resistance) then {
 		//--- GUER respawn: honor the player's SELECTED town when valid; otherwise a random friendly town (resistance-held or neutral; never WEST/EAST = safe haven).
 		private ["_guerStart","_owned","_t","_usedFallbackPos"];
@@ -140,6 +154,46 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoi
 			};
 		}];
 	};
+	//--- fable/guer-barrelbomb: WF-scroll "Call Barrel Bomb" action on the player's own Man body (not
+	//--- vehicle-attached - this is a town-center location capability, not a vehicle one). The condition
+	//--- string re-evaluates every frame so WFBE_C_GUER_HELIBOMB_ENABLE + the kill-tier gate are live-
+	//--- togglable without a respawn; town-center proximity mirrors Client_CanUseTownCenterEASA.sqf via
+	//--- WFBE_CL_FNC_CanUseTownCenterBarrelBomb (same "GUER-held or neutral town" idiom). Idempotent via
+	//--- wfbe_helibomb_action_added (mirrors the IED EH guard immediately above).
+	if !(_unit getVariable ["wfbe_helibomb_action_added", false]) then {
+		_unit setVariable ["wfbe_helibomb_action_added", true];
+		_unit addAction ["<t color='#ffcc33'>Call Barrel Bomb</t>","Client\Action\Action_GuerHeliBombCall.sqf", [], 6, false, true, "",
+			'alive _target && {(missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 0]) > 0} && {(missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0]) >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_HELIBOMB", 60])} && {!isNil "WFBE_CL_FNC_CanUseTownCenterBarrelBomb"} && {_target Call WFBE_CL_FNC_CanUseTownCenterBarrelBomb}'];
+	};
+};
+
+//--- fable/marker-combat-flash (owner 2026-07-09) RESPAWN-BLINK-EH FIX: Common\Init\Init_Unit.sqf
+//--- attaches WFBE_BlinkFiredEH (the Fired handler that drives combat-icon-blink / teammate marker
+//--- flash) exactly once, at unit CREATION (Common_CreateUnit.sqf / Common_CreateVehicle.sqf). This
+//--- respawn handler builds a FRESH unit object that never goes through Init_Unit.sqf again, so -
+//--- once WFBE_C_MAP_ICON_BLINKING_ENABLED is on (it is, by default) - combat-icon-blink silently
+//--- died for the rest of the match after a player's first death. Re-attach here: same handler body
+//--- Init_Unit.sqf uses, same OriginalMarkerColor seed it would have set for the player's own body
+//--- (own-group man always resolves ColorOrange there). Idempotent per-object flag (mirrors the IED
+//--- guard immediately above; the object is fresh each respawn, but belt-and-braces).
+if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {
+	if !(_unit getVariable ["wfbe_blink_eh_added", false]) then {
+		_unit setVariable ["wfbe_blink_eh_added", true];
+		_unit setVariable ["OriginalMarkerColor", "ColorOrange", false];
+		_unit setVariable ["WFBE_BlinkFiredEH", _unit addEventHandler ["Fired", {
+			_u = _this select 0;
+			_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
+		}], false];
+		//--- fable/marker-combat-flash-fixes (owner 2026-07-09): re-attach the being-shot-at Hit EH
+		//--- too, on the same idempotency flag (both EHs are always added/removed together as a pair).
+		_unit setVariable ["WFBE_BlinkHitEH", _unit addEventHandler ["Hit", {
+			_u = _this select 0;
+			_causedBy = _this select 1;
+			if (!isNull _causedBy && {side _causedBy != side _u}) then {
+				_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
+			};
+		}], false];
+	};
 };
 
 //--- Loadout.
@@ -179,6 +233,7 @@ if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear &&
 				if (typeOf _spawn == WFBE_Logic_Camp) then {
 					_charge = false;
 					diag_log Format ["WFBE CAMPGEAR: camp respawn at %1 - custom gear kept (flag WFBE_C_CAMP_RESPAWN_KEEP_GEAR=1).", _spawn];
+					(localize "STR_WF_CHAT_Gear_CampKept") Call GroupChatMessage;  //--- wiki-wins: camp-free-gear chat feedback (was diag_log-only, invisible to players).
 				};
 			};
 			

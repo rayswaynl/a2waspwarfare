@@ -1,3 +1,4 @@
+disableSerialization;
 Private ['_action_leave','_defaultTeamswitch','_displayEH_keydown','_displayEH_mousebuttondown','_locked','_logic','_mapEH_mousebttondown','_ppColor','_uav'];
 _defaultTeamswitch = teamswitchenabled;
 

@@ -1,0 +1,178 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/rayswaynl/a2waspwarfare/Tools/Soak/run_result.schema.json",
+  "title": "a2wasp-soak-ledger-row-v1",
+  "description": "One append-only soak-ledger row. Frozen contract; see docs/design/v2/SPEC-SOAK-LEDGER-CONTRACT.md. Null means unknown/not-applicable and is never omitted; 0 is a real zero. Readers must never infer PASS from a missing field.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema", "rowId", "createdAtUtc", "status",
+    "identity", "provenance", "analyzer", "lenses", "discord", "notes"
+  ],
+  "properties": {
+    "schema": { "const": "a2wasp-soak-ledger-row-v1" },
+    "rowId": { "type": "string", "pattern": "^[0-9]{8}-[0-9]{4}$" },
+    "createdAtUtc": { "type": "string", "format": "date-time" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "POSTED", "POSTED_LEDGER_ONLY", "DRY_RUN",
+        "SKIP_NO_STAMP", "SKIP_BAD_STAMP", "SKIP_DUPLICATE",
+        "SKIP_VERSION_MISMATCH", "SKIP_TOO_SHORT", "SKIP_BOX_DOWN",
+        "FAIL_ANALYZER", "FAIL_LENS", "FAIL_LEDGER"
+      ]
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stampId", "candidate", "terrain", "role", "git", "archiveSha256", "pboName", "operator"],
+      "properties": {
+        "stampId":      { "type": ["string", "null"] },
+        "candidate":    { "type": ["string", "null"] },
+        "terrain":      { "type": ["string", "null"] },
+        "role":         { "type": ["string", "null"] },
+        "git":          { "type": ["string", "null"] },
+        "archiveSha256":{ "type": ["string", "null"] },
+        "pboName":      { "type": ["string", "null"] },
+        "operator":     { "type": ["string", "null"] }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["serverRptPath", "hcRptPath", "analyzeJsonPath", "lensJsonPath", "serverRptSha256", "hcRptSha256"],
+      "properties": {
+        "serverRptPath":  { "type": ["string", "null"] },
+        "hcRptPath":      { "type": ["string", "null"] },
+        "analyzeJsonPath":{ "type": ["string", "null"] },
+        "lensJsonPath":   { "type": ["string", "null"] },
+        "serverRptSha256":{ "type": ["string", "null"] },
+        "hcRptSha256":    { "type": ["string", "null"] }
+      }
+    },
+    "analyzer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["build", "map", "hours", "roundend", "arrival", "zombies", "armyVsArmy", "churn", "hold", "perf", "warStateExt"],
+      "properties": {
+        "build":    { "type": ["string", "null"] },
+        "map":      { "type": ["string", "null"] },
+        "hours":    { "type": ["number", "null"] },
+        "roundend": { "type": ["string", "null"] },
+        "arrival": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["dispatches", "arrivals", "arrivalPct", "medianDispatchToArrivalMin"],
+          "properties": {
+            "dispatches":                 { "type": ["integer", "null"] },
+            "arrivals":                   { "type": ["integer", "null"] },
+            "arrivalPct":                 { "type": ["number", "null"] },
+            "medianDispatchToArrivalMin": { "type": ["number", "null"] }
+          }
+        },
+        "zombies": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["minDispatch", "count"],
+          "properties": {
+            "minDispatch": { "type": ["integer", "null"] },
+            "count":       { "type": ["integer", "null"] }
+          }
+        },
+        "armyVsArmy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["totalKills", "weKills", "weSharePct"],
+          "properties": {
+            "totalKills": { "type": ["integer", "null"] },
+            "weKills":    { "type": ["integer", "null"] },
+            "weSharePct": { "type": ["number", "null"] }
+          }
+        },
+        "churn": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["frontChangesWest", "frontChangesEast", "reissueCount", "targetAbandonTotal"],
+          "properties": {
+            "frontChangesWest":   { "type": ["integer", "null"] },
+            "frontChangesEast":   { "type": ["integer", "null"] },
+            "reissueCount":       { "type": ["integer", "null"] },
+            "targetAbandonTotal": { "type": ["integer", "null"] }
+          }
+        },
+        "hold": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["captures", "maxTownsWest", "maxTownsEast", "hcCaptured"],
+          "properties": {
+            "captures":     { "type": ["integer", "null"] },
+            "maxTownsWest": { "type": ["integer", "null"] },
+            "maxTownsEast": { "type": ["integer", "null"] },
+            "hcCaptured":   { "type": ["integer", "null"] }
+          }
+        },
+        "perf": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["serverFpsMin", "serverFpsMedian", "serverFpsMax", "serverFpsMinWindow", "hcFpsMin", "hcFpsMedian", "hc2FpsMedian", "aiTotPeak", "guerPeak", "samples"],
+          "properties": {
+            "serverFpsMin":       { "type": ["number", "null"] },
+            "serverFpsMedian":    { "type": ["number", "null"] },
+            "serverFpsMax":       { "type": ["number", "null"] },
+            "serverFpsMinWindow": { "type": ["number", "null"] },
+            "hcFpsMin":           { "type": ["number", "null"] },
+            "hcFpsMedian":        { "type": ["number", "null"] },
+            "hc2FpsMedian":       { "type": ["number", "null"] },
+            "aiTotPeak":          { "type": ["integer", "null"] },
+            "guerPeak":           { "type": ["integer", "null"] },
+            "samples":            { "type": ["integer", "null"] }
+          }
+        },
+        "warStateExt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["present", "arrivalRatePct", "townsW", "townsE", "terr"],
+          "properties": {
+            "present":        { "type": "boolean" },
+            "arrivalRatePct": { "type": ["number", "null"] },
+            "townsW":         { "type": ["integer", "null"] },
+            "townsE":         { "type": ["integer", "null"] },
+            "terr":           { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+    "lenses": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["overall", "worstLens", "release", "errors", "war", "perf", "summary"],
+      "properties": {
+        "overall":   { "type": ["string", "null"], "enum": ["PASS", "WATCH", "FAIL", "SKIP", null] },
+        "worstLens": { "type": ["string", "null"] },
+        "release":   { "type": ["string", "null"], "enum": ["PASS", "WATCH", "FAIL", "SKIP", null] },
+        "errors":    { "type": ["string", "null"], "enum": ["PASS", "WATCH", "FAIL", "SKIP", null] },
+        "war":       { "type": ["string", "null"], "enum": ["PASS", "WATCH", "FAIL", "SKIP", null] },
+        "perf":      { "type": ["string", "null"], "enum": ["PASS", "WATCH", "FAIL", "SKIP", null] },
+        "summary":   { "type": ["string", "null"] }
+      }
+    },
+    "discord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "status", "guildId", "channelId", "messageId", "postedAtUtc", "error"],
+      "properties": {
+        "enabled":     { "type": "boolean" },
+        "status":      { "type": ["string", "null"] },
+        "guildId":     { "type": ["string", "null"] },
+        "channelId":   { "type": ["string", "null"] },
+        "messageId":   { "type": ["string", "null"] },
+        "postedAtUtc": { "type": ["string", "null"] },
+        "error":       { "type": ["string", "null"] }
+      }
+    },
+    "notes": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

@@ -476,13 +476,11 @@ while {true} do {
 			if (count _ups > WFBE_UP_PATROLS && {(_ups select WFBE_UP_PATROLS) > 0}) then {_mbu = (_mbu - 1) max 1};
 			_currentUnitsCount = Count ((Units (group player)) Call GetLiveUnits);
 			_maxUnitsCount = if (count _ups > WFBE_UP_BARRACKS) then {_ups select WFBE_UP_BARRACKS} else {0};
-			switch (_maxUnitsCount) do {
-				case 0: {_maxUnitsCount = round(_mbu / 4)};
-				case 1: {_maxUnitsCount = round(_mbu / 4)*2};
-				case 2: {_maxUnitsCount = round(_mbu / 4)*3};
-				case 3: {_maxUnitsCount = _mbu};
-				default {_maxUnitsCount = _mbu};
-			};
+			//--- b750 cap-formula sync (fix: RHUD showed a stale cap vs the enforced buy-gate). Match
+			//--- GUI_Menu_BuyUnits.sqf:198-199 exactly: cap = 10 + 2*barracksLevel, clamped to pop-tier max _mbu.
+			//--- The old round(_mbu/4)*N switch was the pre-b750 regression (lvl-0 capped at 4) fixed in the
+			//--- buy-gate 2026-06-24 (605ad73) but never mirrored to the RHUD - HUD and buy-gate disagreed.
+			_maxUnitsCount = (10 + (_maxUnitsCount * 2)) min _mbu;
 			_isCommanderTeam = false;
 			if (!isNull commanderTeam) then {_isCommanderTeam = commanderTeam == group player};
 			if (_isCommanderTeam) then {_maxUnitsCount = _maxUnitsCount + 10};

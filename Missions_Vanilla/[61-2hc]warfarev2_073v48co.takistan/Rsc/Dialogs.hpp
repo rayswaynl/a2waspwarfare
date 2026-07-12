@@ -441,6 +441,53 @@ class WFBE_RespawnMenu {
 			shadow = 1;
 			text = $STR_WF_RESPAWN_Legend;
 		};
+		//--- fable/respawn-menu-shortcuts (owner 2026-07-09): two shortcut buttons into the
+		//--- existing Team Menu (RscMenu_TeamV2, idd 13050). Hidden by default (show=0,
+		//--- WFBE_C_RESPAWN_SHORTCUTS=0); revealed + minimap trimmed at runtime by
+		//--- GUI_RespawnMenu.sqf only when the flag is armed.
+		class CA_CustomiseAI_Button : RscButton {
+			idc = 511006;
+			show = 0;
+			x = 0.01;
+			y = 0.075;
+			w = 0.485;
+			h = 0.035;
+			sizeEx = 0.028;
+
+			colorBackground[] = WFBE_Menu_Button_Sub_Color;
+			colorBackgroundActive[] = WFBE_Menu_Button_Sub_Color;
+			colorFocused[] = WFBE_Menu_Button_Sub_Focused_Color;
+
+			text = $STR_WF_RESPAWN_CustomiseAI;
+			tooltip = $STR_WF_TOOLTIP_RespawnCustomiseAI;
+			//--- Existing entry point (same call Client/GUI/GUI_Menu.sqf:110-117 uses for the
+			//--- WF-menu Team button). WFBE_TM2_OpenToUD pre-selects the Unit Designer tab -
+			//--- see GUI_Menu_TeamV2.sqf. Does NOT call closeDialog first: `dialog` must stay
+			//--- true across the swap so GUI_RespawnMenu.sqf's own while-loop guard
+			//--- (`while {... && dialog && alive player}`) never takes the premature-exit /
+			//--- auto-reopen branch that the CA_Quit_Button closeDialog path deliberately uses.
+			onButtonClick = "WFBE_TM2_OpenToUD = true; createDialog 'RscMenu_TeamV2';";
+		};
+		class CA_SavedKits_Button : RscButton {
+			idc = 511007;
+			show = 0;
+			x = 0.505;
+			y = 0.075;
+			w = 0.485;
+			h = 0.035;
+			sizeEx = 0.028;
+
+			colorBackground[] = WFBE_Menu_Button_Sub_Color;
+			colorBackgroundActive[] = WFBE_Menu_Button_Sub_Color;
+			colorFocused[] = WFBE_Menu_Button_Sub_Focused_Color;
+
+			text = $STR_WF_RESPAWN_SavedKits;
+			tooltip = $STR_WF_TOOLTIP_RespawnSavedKits;
+			//--- Existing entry point; opens directly on the Gear Presets tab (the dialog's
+			//--- own default tab on open - GUI_Menu_TeamV2.sqf:135-137). Same no-closeDialog
+			//--- rationale as CA_CustomiseAI_Button above.
+			onButtonClick = "createDialog 'RscMenu_TeamV2';";
+		};
 	};
 };
 
@@ -1121,10 +1168,10 @@ class WF_Menu {
 			h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
-		//--- UX Pass 1: section label above PURCHASE group (left col rows 1-2).
-		//--- UX Pass 1: section label above GENERAL group (left col rows 3-5).
-		//--- UX Pass 1: section label above COMMAND group (right col rows 1-5).
-		//--- UX Pass 1: TOOLS label above footer strip (decorative).
+		//--- UX Pass 1: section label above PURCHASE group (left col rows 1-2).
+		//--- UX Pass 1: section label above GENERAL group (left col rows 3-5).
+		//--- UX Pass 1: section label above COMMAND group (right col rows 1-5).
+		//--- UX Pass 1: TOOLS label above footer strip (decorative).
 	};
 	class controls {
 		//--- === PURCHASE ===
@@ -1281,17 +1328,6 @@ class WF_Menu {
 			action = "MenuAction = 21";
 			tooltip = $STR_WF_SkinSelector_Title;
 		};
-		class CA_HUD_Button : RscButton_Main {
-			idc = 11018;
-			x = 0.408;
-			y = 0.767144;
-			w = 0.042;
-			h = 0.045;
-			text = "HUD";
-			sizeEx = 0.026;
-			action = "MenuAction = 16";
-			tooltip = "HUD On/Off";
-		};
 		// Marty: Reuse the old FPS-only HUD slot for GPS; FPS now lives in the RHUD/sidebar.
 		class CA_GPS_Button : RscButton_Main {
 			idc = 11019;
@@ -1304,17 +1340,17 @@ class WF_Menu {
 			action = "MenuAction = 19";
 			tooltip = "Enable GPS / Mini Map";
 		};
-		// FPS: adaptive view-distance / target-FPS picker (sits between GPS and SKIN).
-		class CA_FPS_Button : RscButton_Main {
+		// RADIO: vehicle radio menu (replaces the obsolete FPS/settings-duplicate button, sits between GPS and SKIN).
+		class CA_Radio_Button : RscButton_Main {
 			idc = 11023;
 			x = 0.503;
 			y = 0.767144;
 			w = 0.042;
 			h = 0.045;
-			text = "FPS";
+			text = "RADIO";
 			sizeEx = 0.026;
-			action = "MenuAction = 23";
-			tooltip = "Player Settings (view distance, FPS, HUD, toggles)";
+			action = "MenuAction = 26";
+			tooltip = "Vehicle Radio (requires a vehicle + Radio Tower)";
 		};
 		//--- Command Deck: Skin Selector shortcut in footer strip.
 		class CA_Skin_Button : RscButton_Main {
@@ -1616,6 +1652,8 @@ class RscMenu_Team {
 //---   inline money transfer (13006/13007/13008/13009/13012/13109).
 //--- Kept: income readout (13010), FX combo (13018), vote popup (13019), high-climb (13020).
 //--- New: gear preset rows (IDC 13051-13066), squad actions (13070-13074).
+//--- Re-added (DIAG-WFMENU-UX #2): Transfer Funds button (idc 13012, MenuAction 101)
+//---   reopens WFBE_TransferMenu (V1's advanced transfer dialog + backend).
 class RscMenu_TeamV2 {
 	movingEnable = 1;
 	idd = 13050;
@@ -1908,6 +1946,15 @@ class RscMenu_TeamV2 {
 			text = "";
 			tooltip = "Toggle whether newly bought vehicles start with high climbing enabled";
 			action = "MenuAction = 14";
+		};
+		class CA_TransferFunds_Button : RscButton {
+			idc = 13012;
+			x = 0.514313;
+			y = 0.626;
+			w = 0.279;
+			text = "Transfer Funds";
+			tooltip = "Open the advanced funds transfer menu (send cash to a teammate)";
+			action = "MenuAction = 101";
 		};
 		class VPOPON_Button : RscButton {
 			idc = 13019;
@@ -4561,7 +4608,10 @@ class WFBE_FPSPickerMenu {
 //--- persists via WFBE_CO_FNC_SetProfileVariable using the SAME profile keys as before).
 //--- IDC map: 30001 title | 30009 close | Video: 30010 VD-label 30011 VD-slider(RscXSliderH)
 //--- 30012 Auto-VD toggle 30013..30016 FPS 30/45/50/60 | Gameplay: 30020..30026 seven toggles
-//--- Audio: 30030 Audio Cues | 30040 footer Close. Slider range clamps to WFBE_C_ENVIRONMENT_MAX_VIEW.
+//--- Audio: 30030 Audio Cues | Tags: 30031 Name Tags, 30032 Show AI Tags (fable/tags-settings-integration) |
+//--- Misc: 30028 Vehicle Tint Legend (fable/ew-settings; own AI-Name-Tags idea dropped as a duplicate of
+//--- 30032 above - see Init_ProfileVariables.sqf) | footer Close 30040 shifted 0.702->0.780 to make room |
+//--- Slider range clamps to WFBE_C_ENVIRONMENT_MAX_VIEW.
 //--- A2-OA-safe: RscXSliderH (type 43) + RscButton_Main are already used by the Team menu (idd 13000).
 //--- No A3 checkbox class. ctrlShow on this idd dialog MUST use the global ctrlShow [idc,bool] form.
 class WFBE_PlayerSettingsMenu {
@@ -4569,8 +4619,11 @@ class WFBE_PlayerSettingsMenu {
 	idd = 30000;
 
 	class controlsBackground {
+		//--- Plate height 0.822->0.866 / footer offset 0.782->0.826 (release-merge relayout): grew +0.044
+		//--- to fit the MISC/Tint-Legend row as its own row below TAGS instead of overlapping it - see the
+		//--- MISC block below for the idc renumber this went with.
 		class CA_Background : RscText {
-			x = 0.275; y = 0.135; w = 0.45; h = 0.822;
+			x = 0.275; y = 0.135; w = 0.45; h = 0.866;
 			colorBackground[] = WFBE_Background_Color;
 			moving = 1;
 		};
@@ -4579,7 +4632,7 @@ class WFBE_PlayerSettingsMenu {
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
 		class CA_Background_Footer : CA_Background {
-			y = 0.135 + 0.782;
+			y = 0.135 + 0.826;
 			h = 0.04;
 			colorBackground[] = WFBE_Background_Color_Footer;
 		};
@@ -4703,10 +4756,38 @@ class WFBE_PlayerSettingsMenu {
 			action = "WFBE_MenuAction = 8";
 		};
 
+		//--- ===== TAGS =====
+		//--- fable/tags-settings-integration: name-tag overlay + AI-tag opt-out, wired into Settings for parity
+		//--- with the WF-menu "TAGS" button (MenuAction 25) and the WFBE_C_TAGS_AI admin flag (Init_CommonConstants.sqf).
+		class CA_Tags : CA_HUD {
+			idc = 30031;
+			x = 0.29; y = 0.135 + 0.679;
+			text = "Name Tags: OFF";
+			action = "WFBE_MenuAction = 11";
+		};
+		class CA_TagsAI : CA_HUD {
+			idc = 30032;
+			x = 0.505; y = 0.135 + 0.679;
+			text = "Show AI Tags: ON";
+			action = "WFBE_MenuAction = 12";
+		};
+
+		//--- ===== MISC ===== (fable/ew-settings: Vehicle Tint Legend button. The PR's own "AI Name Tags" toggle
+		//--- was dropped here as a duplicate of CA_TagsAI above - both independently wired the same
+		//--- WFBE_C_TAGS_AI-adjacent idea into this dialog the same night; CA_TagsAI's per-player-opt-out design
+		//--- was kept. Session-only, no persistence added - matches the feature (the legend already resets
+		//--- each session); calls the exact same toggle function the ']' KeyDown handler uses (Init_Client.sqf).)
+		class CA_TintLegend : CA_HUD {
+			idc = 30028;
+			x = 0.29; y = 0.135 + 0.726; w = 0.42;
+			text = "Vehicle Tint Legend";
+			action = "if (WFBE_CL_VAR_TintLegendEnabled) then {(!WFBE_CL_VAR_TintLegendVisible) call WFBE_CL_FNC_ShowTintLegend}";
+		};
+
 		//--- ===== Footer Close =====
 		class CA_Done : RscButton_Main {
 			idc = 30040;
-			x = 0.29; y = 0.135 + 0.702; w = 0.42; h = 0.045;
+			x = 0.29; y = 0.135 + 0.780; w = 0.42; h = 0.045;
 			sizeEx = 0.026;
 			text = "Close";
 			action = "WFBE_MenuAction = 9";
@@ -4723,15 +4804,23 @@ class WFBE_PlayerSettingsMenu {
 //---   31010=town list  31011-31013=section labels  31021-22=buy  31031-33=QRF
 //---   31041=counter  31051=donate  31060=minimap  31070=wallet/fund readout
 //---   31071-77=per-action cost labels  31078=status text  31079=cooldown label
+//---   31081-83=vehicle t1/t2/t3 (fable/gdir-vehicle-verb, GR-2026-07-08a; static tooltip price,
+//---   not quote-integrated - see GUI_Menu_GuerCommissar.sqf)
+//---   31084=relief section label  31085=relief cost label  31086=relief button (MenuAction 64,
+//---   fable/ew-guer; renumbered off the vehicle-verb range 31081-83/MenuAction 61-63 it originally
+//---   collided with at release-merge time - see also the vertical relayout below the vehicle row)
 class WFBE_GDirCommissarMenu {
 	movingEnable = 1;
 	idd = 31000;
 	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_GuerCommissar.sqf'"; //--- cmdcon45: house pattern - A2 config strings do NOT accept C-style backslash-quote escapes
 
 	class controlsBackground {
-		//--- Main plate (wider/taller to fit minimap + cost labels).
+		//--- Main plate (wider/taller to fit minimap + cost labels). Height 0.650->0.705
+		//--- (release-merge relayout): grew +0.055 to fit the Relief block (ACTION 4) as its
+		//--- own row below the vehicle-verb row instead of overlapping it - see the ACTION 4
+		//--- block below for the idc/MenuAction renumber this went with.
 		class BG_M : RscText {
-			x = 0.110; y = 0.175; w = 0.780; h = 0.650;
+			x = 0.110; y = 0.175; w = 0.780; h = 0.705;
 			colorBackground[] = WFBE_Background_Color;
 			moving = 1;
 		};
@@ -4741,7 +4830,7 @@ class WFBE_GDirCommissarMenu {
 			colorBackground[] = WFBE_Background_Color_Header;
 		};
 		class BG_F : RscText {
-			x = 0.110; y = 0.773; w = 0.780; h = 0.052;
+			x = 0.110; y = 0.828; w = 0.780; h = 0.052;
 			moving = 1;
 			colorBackground[] = WFBE_Background_Color_Footer;
 		};
@@ -4753,7 +4842,7 @@ class WFBE_GDirCommissarMenu {
 		};
 		//--- Accent border above footer.
 		class BG_BorderF : RscText {
-			x = 0.110; y = 0.773;
+			x = 0.110; y = 0.828;
 			w = 0.780; h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
@@ -4764,18 +4853,18 @@ class WFBE_GDirCommissarMenu {
 			colorBackground[] = WFBE_Background_Border;
 		};
 		class BG_EdgeB : RscText {
-			x = 0.110; y = 0.825;
+			x = 0.110; y = 0.880;
 			w = 0.780; h = WFBE_Background_Border_Thick;
 			colorBackground[] = WFBE_Background_Border;
 		};
 		class BG_EdgeL : RscText {
 			x = 0.110; y = 0.175;
-			w = WFBE_Background_Border_Thick; h = 0.650;
+			w = WFBE_Background_Border_Thick; h = 0.705;
 			colorBackground[] = WFBE_Background_Border;
 		};
 		class BG_EdgeR : RscText {
 			x = 0.890; y = 0.175;
-			w = WFBE_Background_Border_Thick; h = 0.650;
+			w = WFBE_Background_Border_Thick; h = 0.705;
 			colorBackground[] = WFBE_Background_Border;
 		};
 		//--- Vertical divider between left column (list+map) and right column (actions).
@@ -4784,10 +4873,11 @@ class WFBE_GDirCommissarMenu {
 			w = WFBE_Background_Border_Thick; h = 0.520;
 			colorBackground[] = {0.2588, 0.7137, 1, 0.4};
 		};
-		//--- Minimap backing plate.
+		//--- Minimap backing plate. (fable/commissar-minimap: enlarged w/h to match WF_MiniMap below;
+		//--- tune these 2 lines + the matching WF_MiniMap block together, values must stay identical.)
 		class BG_Map : RscText {
-			x = 0.115; y = 0.386;
-			w = 0.222; h = 0.379;
+			x = 0.115; y = 0.361;
+			w = 0.226; h = 0.409;
 			colorBackground[] = {0, 0, 0, 0.5};
 		};
 	};
@@ -4822,12 +4912,13 @@ class WFBE_GDirCommissarMenu {
 		};
 		class LB_Towns : RscListBox {
 			idc = 31010;
-			x = 0.115; y = 0.263; w = 0.222; h = 0.095;
+			x = 0.115; y = 0.263; w = 0.222; h = 0.070; //--- fable/commissar-minimap: shrunk 0.025 to free vertical room for a bigger minimap below; list still scrolls.
+			rowHeight = 0.04; //--- Hotfix: engine "No entry ...rowHeight" popup without an explicit value.
 		};
 
 		//--- Map label.
 		class Lbl_Map : RscText {
-			x = 0.115; y = 0.362; w = 0.222; h = 0.022;
+			x = 0.115; y = 0.337; w = 0.222; h = 0.022; //--- fable/commissar-minimap: shifted up to track the shrunk LB_Towns above it.
 			text = "MAP (click to select town)";
 			sizeEx = 0.016;
 			colorText[] = {1, 1, 1, 0.5};
@@ -4837,8 +4928,8 @@ class WFBE_GDirCommissarMenu {
 		//--- Map-click: mouseButtonUp wired via event; loop reads _map posScreenToWorld[mouseX,mouseY].
 		class WF_MiniMap : RscMapControl {
 			idc = 31060;
-			x = 0.115; y = 0.386;
-			w = 0.222; h = 0.379;
+			x = 0.115; y = 0.361; //--- fable/commissar-minimap: was 0.222x0.379 @ (0.115,0.386); enlarged + shifted up, stays clear of BG_DivV (x=0.342) and the footer. Tune freely, keep in sync with BG_Map above.
+			w = 0.226; h = 0.409;
 			ShowCountourInterval = 1;
 			onMouseMoving = "mouseX = (_this select 1); mouseY = (_this select 2)";
 			onMouseButtonDown = "mouseButtonDown = (_this select 1)";
@@ -4981,6 +5072,35 @@ class WFBE_GDirCommissarMenu {
 			tooltip = "Donate $200 from your wallet to this town's funding pool.";
 		};
 
+		//--- ACTION - DEFENSIVE VEHICLE (fable/gdir-vehicle-verb, GR-2026-07-08a): tier-scaled
+		//--- vehicle order, delivered on the town's next garrison spawn/regrow. Static base-price
+		//--- tooltips (not quote-integrated - the live quote array is a fixed 7-element price row;
+		//--- extending it is out of scope here). Actual charge is still scarcity/load-factor
+		//--- adjusted server-side, same formula as every other verb - tooltip price is a floor.
+		//--- NEEDS IN-GAME VISUAL VERIFICATION before merge - untested layout, see script header.
+		class Btn_VehicleT1 : RscButton_Main {
+			idc = 31081;
+			x = 0.348; y = 0.686; w = 0.168; h = 0.040;
+			text = "VEHICLE T1";
+			sizeEx = 0.021;
+			action = "MenuAction = 61";
+			tooltip = "Order a technical (Offroad_DSHKM_Gue) for this town. From $4800, delivered next garrison spawn.";
+		};
+		class Btn_VehicleT2 : Btn_VehicleT1 {
+			idc = 31082;
+			x = 0.518;
+			text = "VEHICLE T2";
+			action = "MenuAction = 62";
+			tooltip = "Order an IFV (BMP2_GUE) for this town. From $9600, delivered next garrison spawn.";
+		};
+		class Btn_VehicleT3 : Btn_VehicleT1 {
+			idc = 31083;
+			x = 0.695;
+			text = "VEHICLE T3";
+			action = "MenuAction = 63";
+			tooltip = "Order a tank (T72_GUE) for this town. From $14400, delivered next garrison spawn.";
+		};
+
 		//--- Status text (idc 31078): deny reasons, pending quote notice.
 		class Lbl_Status : RscText {
 			idc = 31078;
@@ -5000,9 +5120,40 @@ class WFBE_GDirCommissarMenu {
 			shadow = 2;
 		};
 
+		//--- fable/ew-guer: ACTION 4 - RELIEF SQUAD (relief verb; reuses the same debit +
+		//--- reinforce-ledger path as ACTION 1 buy convoy - RequestGDirPanel.sqf verb="relief",
+		//--- Server_GuerDirector.sqf orderKind="reinforce"). idc band 31084-31086 + MenuAction 64
+		//--- (release-merge renumber: originally authored against 31081-31083/MenuAction 61,
+		//--- which collided with fable/gdir-vehicle-verb's Btn_VehicleT1-3 above - same idc AND
+		//--- same MenuAction, both merged independently the same night. Row repositioned below
+		//--- the vehicle row; see BG_M/BG_F height bump above for the matching plate/footer grow).
+		class Lbl_Act4 : RscText {
+			idc = 31084;
+			x = 0.348; y = 0.736; w = 0.535; h = 0.025;
+			text = "ACTION 4 - RELIEF SQUAD";
+			sizeEx = 0.019;
+			colorText[] = {1, 1, 1, 0.7};
+			shadow = 2;
+		};
+		class Lbl_Cost_Relief : RscText {
+			idc = 31085;
+			x = 0.348; y = 0.761; w = 0.535; h = 0.020;
+			text = "~est. $--";
+			sizeEx = 0.017;
+			colorText[] = {1, 0.85, 0.3, 0.85};
+			shadow = 2;
+		};
+		class Btn_Relief : Btn_BuyConvoy {
+			idc = 31086;
+			x = 0.348; y = 0.782; w = 0.535; h = 0.040;
+			text = "RELIEF SQUAD";
+			action = "MenuAction = 64";
+			tooltip = "Fast infantry-only reinforcement (conserves group cap).";
+		};
+
 		//--- Footer: Back button (house pattern: createDialog WF_Menu after closeDialog).
 		class Btn_Back : RscButton_Main {
-			x = 0.115; y = 0.778; w = 0.080; h = 0.040;
+			x = 0.115; y = 0.833; w = 0.080; h = 0.040;
 			text = "< BACK";
 			sizeEx = 0.019;
 			action = "MenuAction = 90";

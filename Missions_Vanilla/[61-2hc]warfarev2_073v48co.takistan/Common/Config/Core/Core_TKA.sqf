@@ -153,9 +153,9 @@ _i = _i + [['','',5200,30,-2,3,2,0,'Takistani Army',[]]];
 
 //--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD (conventional) buy-row metadata — TAKISTAN ONLY. Price + tier come from
 //--- flags (default 28000 / HEAVY level 3). Fields: [label,picture,PRICE,TIME,CREW(-2=auto),UPGRADE,FACTORY(2=Heavy),SKILL,faction,turrets].
-//--- Registered only when the master flag is on AND worldName=="Takistan" so the row never surfaces off-TK. Explicit label
+//--- Registered when the master flag is on AND (worldName=="Takistan" OR WFBE_C_SCUD_DRIVABLE_ALLMAPS>0 - fable/scud-chernarus-artillery, owner 2026-07-08). Explicit label
 //--- (index 0) so the buy menu shows "SCUD Launcher (conventional)" instead of the raw config displayName.
-if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan"}) then {
+if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}}) then {
 	_c = _c + [missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"]];
 	_i = _i + [['SCUD Launcher (conventional)','',(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000]),40,-2,(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_LEVEL", 3]),2,0,'Takistani Army',[]]];
 };

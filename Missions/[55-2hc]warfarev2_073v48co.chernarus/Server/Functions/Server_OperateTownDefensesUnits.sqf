@@ -95,6 +95,16 @@ switch (_action) do {
 			sleep 0.5;
 		} forEach (_town getVariable "wfbe_town_defenses");
 
+		//--- D10#4 (WFBE_C_STATIC_DEF_COMBAT): give the manned static-defence group an explicit combat posture
+		//--- so it actually engages (legacy: no setBehaviour/setCombatMode anywhere -> gunners sat passive while
+		//--- roaming garrisons are forced RED). AWARE (not COMBAT) keeps manned-static gunners ON their guns
+		//--- rather than dismounting to seek cover. Flag default 0 = legacy passive. Harmless no-op on the
+		//--- HC-delegated path (server _team is empty there; the HC group is postured in Common_CreateUnitForStaticDefence).
+		if ((missionNamespace getVariable ["WFBE_C_STATIC_DEF_COMBAT", 0]) > 0 && {!isNull _team}) then {
+			_team setBehaviour "AWARE";
+			_team setCombatMode "RED";
+		};
+
 		//--- Reveal the town area to the statics.
 		if (count (_town getVariable "wfbe_town_defenses") > 0) then {
 			[_team, _town getVariable "range", _town] Call RevealArea;

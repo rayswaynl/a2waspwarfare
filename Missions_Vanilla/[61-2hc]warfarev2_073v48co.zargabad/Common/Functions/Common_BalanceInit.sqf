@@ -271,14 +271,8 @@ case "T34_TK_GUE_EP1": {
 
 // M2A2 Bradley [HF1]
 case "M2A2_EP1": {
-    _this removeMagazine "2Rnd_TOW2";
-    _this removeMagazine "2Rnd_TOW2";
-    _this removeMagazine "2Rnd_TOW2";
-    _this removeMagazine "2Rnd_TOW2";
-    _this removeMagazine "2Rnd_TOW2";
     _this removeMagazine "210Rnd_25mm_M242_HEI";
     _this removeMagazine "210Rnd_25mm_M242_APDS";
-    _this removeWeapon "TOWLauncher";
     _this removeWeapon "M242BC";
     _this addWeapon "M242";
 };
@@ -311,7 +305,7 @@ case "AH6J_EP1": {
 
 // BMP-2 [HF1]
 case "BMP2_INS": {
-_currentFactoryLevel = ((side group player) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_HEAVY; 
+_currentFactoryLevel = ((_this getVariable ["wfbe_balance_side", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_HEAVY; 
 if (_currentFactoryLevel < 2) then {
     _this removeWeapon "AT5LauncherSingle";
 };
@@ -319,7 +313,7 @@ if (_currentFactoryLevel < 2) then {
 
 // BMP-2 [HF1]
 case "BMP2_TK_EP1": {
-_currentFactoryLevel = ((side group player) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_HEAVY; 
+_currentFactoryLevel = ((_this getVariable ["wfbe_balance_side", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_HEAVY; 
 if (_currentFactoryLevel < 2) then {
     _this removeWeapon "AT5LauncherSingle";
 };
@@ -341,7 +335,7 @@ case "BRDM2_ATGM_INS": {
 
 // BTR-90 [LF3]
 case "BTR90": {
-_currentFactoryLevel = ((side group player) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_LIGHT; 
+_currentFactoryLevel = ((_this getVariable ["wfbe_balance_side", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_LIGHT; 
 if (_currentFactoryLevel < 4) then {
     _this removeWeapon "AT5LauncherSingle";
 };
@@ -355,7 +349,7 @@ case "Pandur2_ACR": {
     _this addMagazineTurret ["210Rnd_25mm_M242_APDS", [0]];
     _this addMagazineTurret ["210Rnd_25mm_M242_HEI", [0]];
     _this addWeaponTurret ["M242", [0]];
-_currentFactoryLevel = ((side group player) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_LIGHT; 
+_currentFactoryLevel = ((_this getVariable ["wfbe_balance_side", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_LIGHT; 
 if (_currentFactoryLevel < 4) then {
     _this removeWeaponTurret ["SpikeLauncher_ACR", [0]];
 };

@@ -1,5 +1,44 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-07 — RC29 doubled player-arrow dedupe [fable/rc29-doubled-arrow]
+
+Task: FIX doubled player arrow on the map (two mil_arrow2 markers track the player).
+
+Root-cause confirmed by reading `Client/FSM/updateteamsmarkers.sqf` in full: two markers draw at
+the player's position when the player leads a team —
+(A) the per-team leader marker `%1AdvancedSquad%2Marker` (isPlayer branch, `player == _leader` ->
+ColorOrange, alpha 1), and (B) the cmdcon26 own-arrow `%1AdvancedSquadOWNMarker` (always drawn from
+the local `player` handle). Both are `mil_arrow2`. While `WFBE_C_TEAMMARKER_DEST_DIR` was 0, both
+used plain `getDir` facing and silently overlapped. Once flipped to 1 (live), (A)'s destination
+bearing comes from `expectedDestination _leader` only, while (B)'s comes from a 3-source priority
+(stored map order -> group waypoint -> expectedDestination) — different computed bearing -> the two
+arrows visibly split.
+
+Fix: suppress (A) for the exact team the player leads by forcing `_markerAlpha = 0` right after it
+is set to 1 in the isPlayer branch (`if (player == _leader) then {_markerAlpha = 0};`), leaving (B)
+OWNMarker as the single visible self-arrow. Chose to keep (B) because it is the more robust source
+(cmdcon26 fixed OWNMarker specifically to survive broken/late-JIP `clientTeams` group refs, and its
+destination-bearing has richer priority). Other teams (AI-led or led by OTHER human players) are
+untouched — the `player == _leader` guard only matches the local player's own led team; a
+non-leading player never trips it either.
+
+Discovered issue (documented, not fixed — out of scope, flag-gated and off by default): the combat
+"blink icon red on fire" feature (`WFBE_C_MAP_ICON_BLINKING_ENABLED`, default 0) points
+`unitMarkerBlink` at marker (A) for team leaders. If a player who leads a team fires while that flag
+is ever turned on, the existing blink-on-fire indicator for their own marker becomes invisible (still
+functions correctly for AI-led and other-player-led teams). Flagging for owner review; a follow-up
+would redirect `unitMarkerBlink` to the OWNMarker when `_leader == player`.
+
+Verification: targeted Python byte-edit (CRLF preserved, no BOM, single exact match, net `{}`/`[]`
+delta 0 in all three terrains vs `origin/claude/build84-cmdcon36`), `check_sqf.py` lint gate run with
+the full selector list — zero findings in `updateteamsmarkers.sqf` across CH/TK/ZG (repo-wide finding
+count identical before/after: 204), LoadoutManager mirror run (`A2WASP_SKIP_ZIP=1`) then
+`--check` reported zero drift, `version.sqf.template` restored to merge-base for TK/ZG (no drift to
+restore — already clean), `Test-WaspVersionTemplates.ps1` all PASS, per-map spot-check confirmed
+(TK `WF_MAXPLAYERS 61`/`STARTING_DISTANCE 7500`, ZG `WF_MAXPLAYERS 61`/`STARTING_DISTANCE 5000`), no
+`_MISSIONS.7z`/`nul`/line-ending-churn staged. Static validation only — no live/box runtime test
+performed (owner constraint: never deploy/restart/pack the live server or HCs).
+
 ## 2026-07-03 — Fleet lane 376: AICOM top-up request TTL
 
 Added a default-on stale-request guard for `wfbe_aicom_topup_req` across Chernarus plus maintained

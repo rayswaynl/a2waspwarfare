@@ -1,0 +1,232 @@
+disableSerialization;
+
+_display = _this select 0;
+MenuAction = -1;
+
+_currentVD = viewDistance;
+_funds = Call GetPlayerFunds;
+
+if (votePopUp) then {
+	ctrlSetText[13019, localize "STR_WF_VOTING_PopUpOffButton"];
+} else {
+	ctrlSetText[13019, localize "STR_WF_VOTING_PopUpOnButton"];
+};
+if (missionNamespace getVariable ["WFBE_HighClimbingDefaultEnabled", false]) then {
+	ctrlSetText[13020, localize "STR_WF_TEAM_HighClimbingDefaultOn"];
+} else {
+	ctrlSetText[13020, localize "STR_WF_TEAM_HighClimbingDefaultOff"];
+};
+
+ctrlSetText [13002, Format [localize "STR_WF_TEAM_ViewDistanceLabel",_currentVD]];
+ctrlSetText [13004, Format [localize "STR_WF_TEAM_TerrainGridLabel",currentTG]];
+ctrlSetText [13006, Format [localize "STR_WF_TEAM_MoneyTransfer",0]];
+ctrlSetText [13010, Format [localize "STR_WF_Income",Call GetPlayerFunds,(sideJoined) Call GetIncome]];
+
+SliderSetRange[13003, 1, missionNamespace getVariable "WFBE_C_ENVIRONMENT_MAX_VIEW"];
+SliderSetRange[13005, 1, missionNamespace getVariable "WFBE_C_ENVIRONMENT_MAX_CLUTTER"];
+SliderSetRange[13007,0,_funds];
+SliderSetPosition[13003,_currentVD];
+SliderSetPosition[13005,currentTG];
+_lastvd = _currentVD;
+_lasttg = currentTG;	
+_timer = 0;
+_need_save = false;
+
+// Marty : players 
+private ["_list_Players"];
+_list_Players = [];
+
+{
+	if (isPlayer (leader _x)) then {_list_Players = _list_Players + [_x]};
+	
+} forEach clientTeams;
+
+_i = 1;
+{
+	//_xtra = if (isPlayer (leader _x)) then {name (leader _x)} else {"AI"};	
+	if (isPlayer (leader _x)) then 
+	{
+		_xtra = name (leader _x);
+		lbAdd[13008,Format ["[%1] %2",_i,_xtra]];
+		_i = _i + 1;
+	};
+
+} forEach clientTeams; 
+
+lbSetCurSel[13008,0];
+
+_units = ((units group player) Call GetLiveUnits);
+_units = _units - [player];
+{
+	_desc = [typeOf _x, 'displayName'] Call GetConfigInfo;
+	_finalNumber = (_x) Call GetAIDigit;
+	_isInVehicle = "";
+	if (_x != vehicle _x) then {
+		_descVehi = [typeOf (vehicle _x), 'displayName'] Call GetConfigInfo;
+		_isInVehicle = " [" + _descVehi + "] ";
+	};
+	_txt = "["+_finalNumber+"] "+ _desc + _isInVehicle;
+	lbAdd[13013,_txt];
+} forEach _units;
+lbSetCurSel[13013,0];
+
+{lbAdd[13018,_x]} forEach ["None","FX 1","FX 2","FX 3","FX 4","FX 5"];
+lbSetCurSel[13018,currentFX];
+
+while {alive player && dialog} do {
+	sleep 0.05;
+	
+	if (side group player != sideJoined) exitWith {closeDialog 0};
+	if (!dialog) exitWith {};
+	
+	_curSel = lbCurSel 13008;
+	_currentVD = Floor (SliderPosition 13003);
+	currentTG = Floor (SliderPosition 13005);
+	_transferAmount = Floor (SliderPosition 13007);
+	
+	ctrlSetText [13002, Format [localize "STR_WF_TEAM_ViewDistanceLabel",_currentVD]];
+	ctrlSetText [13004, Format [localize "STR_WF_TEAM_TerrainGridLabel",currentTG]];
+	ctrlSetText [13006, Format [localize "STR_WF_TEAM_MoneyTransfer",_transferAmount]];
+	
+	if (MenuAction == 1) then {
+		MenuAction = -1;
+		if ((_transferAmount != 0)&&((_list_Players select _curSel) != group player)) then {
+			[(_list_Players select _curSel),_transferAmount] Call ChangeTeamFunds;
+			-_transferAmount Call ChangePlayerFunds;
+			_funds = Call GetPlayerFunds;
+			if (isPlayer leader (_list_Players select _curSel)) then {
+				// if (WF_A2_Vanilla) then {
+					[getPlayerUID(leader (_list_Players select _curSel)), "LocalizeMessage",['FundsTransfer',_transferAmount,name player]] Call WFBE_CO_FNC_SendToClients;
+				// } else {
+					// [leader (clientTeams select _curSel), "LocalizeMessage",['FundsTransfer',_transferAmount,name player]] Call WFBE_CO_FNC_SendToClient;
+				// };
+			};
+			sliderSetRange[13007,0,_funds];
+		};
+	};
+	
+	if (MenuAction == 3) then {
+		MenuAction = -1;
+		// Marty: Teach players the faster map selection/disband shortcuts whenever they use the classic WF menu button.
+		titleText [localize "STR_WF_TEAM_MapShortcutDisbandTip", "PLAIN DOWN", 3];
+		_curUnitSel = lbCurSel 13013;
+		if (_curUnitSel != -1) then {
+			Private ["_targetUnit","_liveCrew"];
+			_targetUnit = _units select _curUnitSel;
+			_vehicle = vehicle _targetUnit;
+
+			_destroy = [_targetUnit];
+			if (_vehicle != _targetUnit) then {
+				_liveCrew = [];
+				{
+					if (alive _x || isPlayer _x) then {  //--- salvage-522 (c): a dead player still in a seat has alive==false; isPlayer keeps the vehicle so we don't wreck it around them.
+						if (_x != _targetUnit) then {_liveCrew = _liveCrew + [_x]};
+					};
+				} forEach crew _vehicle;
+				if (count _liveCrew == 0) then {_destroy = _destroy + [_vehicle]};
+			};
+			{
+				if !(isPlayer _x) then {
+					if (_x isKindOf 'Man') then {removeAllWeapons _x};
+					_x setDammage 1;
+				};
+			} forEach _destroy;
+			
+			_units = ((units group player) Call GetLiveUnits);
+			_units = _units - [leader group player];
+			lbClear 13013;
+			{
+				_desc = [typeOf _x, 'displayName'] Call GetConfigInfo;
+				_finalNumber = (_x) Call GetAIDigit;
+				_isInVehicle = "";
+				if (_x != vehicle _x) then {
+					_descVehi = [typeOf (vehicle _x), 'displayName'] Call GetConfigInfo;
+					_isInVehicle = " [" + _descVehi + "] ";
+				};
+				_txt = "["+_finalNumber+"] "+ _desc + _isInVehicle;
+				lbAdd[13013,_txt];
+			} forEach _units;
+			lbSetCurSel[13013,0];
+		};
+	};
+	
+	if (MenuAction == 6) then {
+		MenuAction = -1;
+		currentFX = lbCurSel 13018;
+		[currentFX] Spawn FX;
+	};
+	
+	//--- Vote Pop-Up //added-MrNiceGuy
+	if (MenuAction == 13) then {
+		MenuAction = -1;
+		if (votePopUp) then {
+			votePopUp = false;
+			ctrlSetText[13019, localize "STR_WF_VOTING_PopUpOnButton"];
+		} else {
+			votePopUp = true;
+			ctrlSetText[13019, localize "STR_WF_VOTING_PopUpOffButton"];
+		};
+	};
+
+	//--- High climbing default preference.
+	if (MenuAction == 14) then {
+		MenuAction = -1;
+		WFBE_HighClimbingDefaultEnabled = !(missionNamespace getVariable ["WFBE_HighClimbingDefaultEnabled", false]);
+		missionNamespace setVariable ["WFBE_HighClimbingDefaultEnabled", WFBE_HighClimbingDefaultEnabled];
+
+		if (WFBE_HighClimbingDefaultEnabled) then {
+			ctrlSetText[13020, localize "STR_WF_TEAM_HighClimbingDefaultOn"];
+		} else {
+			ctrlSetText[13020, localize "STR_WF_TEAM_HighClimbingDefaultOff"];
+		};
+
+		if !(isNil 'WFBE_CO_FNC_SetProfileVariable') then {
+			['WFBE_HIGH_CLIMBING_DEFAULT_ENABLED', WFBE_HighClimbingDefaultEnabled] Call WFBE_CO_FNC_SetProfileVariable;
+			_need_save = true;
+		} else {
+			profileNamespace setVariable ['WFBE_HIGH_CLIMBING_DEFAULT_ENABLED', WFBE_HighClimbingDefaultEnabled];
+			saveProfileNamespace;
+		};
+	};
+	
+	//--- WF3 Adv Funds transfers.
+	if (MenuAction == 101) exitWith {
+		MenuAction = -1;
+		closeDialog 0;
+		createDialog "WFBE_TransferMenu";
+	};
+	
+	if (_currentVD != _lastvd) then {
+		setViewDistance _currentVD;
+		if !(isNil 'WFBE_CO_FNC_SetProfileVariable') then {['WFBE_PERSISTENT_CONST_VIEW_DISTANCE', _currentVD] Call WFBE_CO_FNC_SetProfileVariable; _need_save = true};
+	};
+	if (currentTG != _lasttg) then {
+		setTerrainGrid currentTG;
+		if !(isNil 'WFBE_CO_FNC_SetProfileVariable') then {['WFBE_PERSISTENT_CONST_TERRAIN_GRID', currentTG] Call WFBE_CO_FNC_SetProfileVariable; _need_save = true};
+	};
+	_lastvd = _currentVD;
+	_lasttg = currentTG;
+	
+	if (_timer > 2) then {
+		_newFunds = Call GetPlayerFunds;
+		if (_newFunds != _funds) then {
+			_funds = _newFunds;
+			sliderSetRange[13007,0,_funds];
+			if ((SliderPosition 13007) > _funds) then {SliderSetPosition[13007,_funds]};
+		};
+		ctrlSetText [13010, Format [localize "STR_WF_Income",_funds,(sideJoined) Call GetIncome]];
+		_timer = 0;
+	};
+	_timer = _timer + 0.05;
+	
+	//--- Back Button.
+	if (MenuAction == 8) exitWith { //---added-MrNiceGuy
+		MenuAction = -1;
+		closeDialog 0;
+		createDialog "WF_Menu";
+	};
+};
+
+if (_need_save) then {
+	if !(isNil 'WFBE_CO_FNC_SaveProfile') then {Call WFBE_CO_FNC_SaveProfile};
+};

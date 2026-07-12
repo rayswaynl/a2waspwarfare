@@ -6,7 +6,7 @@ _totalSupply = 0;
 
 {
 	if ((_x getVariable "sideID") == _sideID) then	{
-		_totalSupply = _totalSupply + (_x getVariable "supplyValue");
+		_totalSupply = _totalSupply + (_x getVariable ["supplyValue", 0]);
 	};
 } forEach towns;
 

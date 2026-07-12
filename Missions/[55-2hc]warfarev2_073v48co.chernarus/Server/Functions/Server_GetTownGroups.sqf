@@ -11,7 +11,7 @@ _town = _this select 0;
 _side = _this select 1;
 _aa_get = if (count _this > 2) then {_this select 2} else {false};
 
-_sv = _town getVariable "supplyValue";
+_sv = _town getVariable ["supplyValue", 0];
 _town_airactive = _town getVariable ["wfbe_active_air", false];
 
 _units = [];
@@ -140,6 +140,36 @@ switch (true) do {
 if (_randomize != 0) then {_groups_max = _groups_max + round(random _randomize - random _randomize)};
 _groups_max = round(_groups_max * (missionNamespace getVariable "WFBE_C_TOWNS_UNITS_COEF"));
 
+//--- Commander Town Ledger (fable/ctl-impl-v1) materialization overlay (B2). Flag-off
+//--- (AICOMV2_LANE_CMD_TOWN_LEDGER=0) => this whole block is skipped, byte-identical to HEAD.
+if ((_side == west || {_side == east}) && {!_aa_get} && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+	private ["_ctlStr","_ctlMinStr","_ctlEff","_ctlBudgetMax","_ctlLogik","_ctlCached"];
+	_ctlStr      = _town getVariable ["wfbe_ctl_str", 1];
+	_ctlMinStr   = missionNamespace getVariable ["AICOMV2_CTL_SPAWN_MIN_STR", 0.25];
+	_ctlEff      = _ctlStr max _ctlMinStr;
+	_groups_max  = round (_groups_max * _ctlEff);
+	if (_groups_max < 1) then {_groups_max = 1};
+	//--- B5: group-budget clamp using the existing 60s groupsGC cache (no new scans).
+	_ctlBudgetMax = missionNamespace getVariable ["AICOMV2_CTL_GROUP_BUDGET_MAX", 120];
+	_ctlCached    = if (_side == west) then {missionNamespace getVariable ["wfbe_grpcnt_west", -1]} else {missionNamespace getVariable ["wfbe_grpcnt_east", -1]};
+	if (_ctlCached >= 0 && {_ctlCached + _groups_max > _ctlBudgetMax}) then {
+		private ["_ctlFit"];
+		_ctlFit = _ctlBudgetMax - _ctlCached;
+		if (_ctlFit < 1) then {_ctlFit = 1};
+		_groups_max = _ctlFit;
+		_ctlLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+		_ctlLogik setVariable ["WFBE_CTL_DENY_COUNT", (_ctlLogik getVariable ["WFBE_CTL_DENY_COUNT", 0]) + 1];
+		diag_log Format ["CTLSTAT|v1|%1|SPAWN|town=%2|str=%3|groups=%4|deny=groupBudgetExceeded", str _side, _town getVariable ["name", "?"], _ctlStr, _groups_max];
+	} else {
+		diag_log Format ["CTLSTAT|v1|%1|SPAWN|town=%2|str=%3|groups=%4|deny=none", str _side, _town getVariable ["name", "?"], _ctlStr, _groups_max];
+	};
+	//--- lastSpawnUnits (ledger field [3]) is written further below, once the real per-unit
+	//--- roster (_contents) exists - writing the GROUP count (_groups_max) here would make
+	//--- field [3] dimensionally wrong for the per-UNIT survivor ratio read at deactivation
+	//--- (fix: unit-vs-group dimension).
+};
+
+
 if (_aa_get) then {if (_groups_max > 3) then {_groups_max = 3}};
 
 _unit_infantry = [];
@@ -241,6 +271,28 @@ if (_mergeTarget > 0 && {count _contents > 1}) then {
 	{[_merged, _x] Call WFBE_CO_FNC_ArrayPush} forEach _vehRosters; //--- vehicles unchanged, appended
 
 	_contents = _merged;
+};
+
+//--- Commander Town Ledger (fable/ctl-impl-v1) unit-count fix v2 (PR #886 review: crew
+//--- undercounting). lastSpawnUnits (ledger field [3]) must be a REAL Man-unit count incl.
+//--- vehicle crew (driver/gunner/commander) - matching the survivor tally basis
+//--- (server_town_ai.sqf sums units of each _grp, which includes auto-crew). Counting
+//--- _contents roster CLASSNAMES (the v1 fix above) undercounts every vehicle roster: one
+//--- vehicle classname is one roster entry, but Common_CreateTeam.sqf spawns that hull PLUS
+//--- up to 3 crew into the SAME group. No units exist yet at this point - Server_GetTownGroups.sqf
+//--- is a pure roster PLANNER called before any group/unit is spawned - so the real count can
+//--- only be known once Common_CreateTeam.sqf actually creates the groups. This block now only
+//--- RESETS field [3] to 0 for this wave; the real, crew-inclusive count is ADDED once creation
+//--- completes, at the two places the created group objects become known: server_town_ai.sqf
+//--- (server-direct creation, synchronous) and Server_HandleSpecial.sqf update-town-delegation
+//--- (client/HC-delegated creation, reported back once creation finishes remotely).
+//--- Flag-off (AICOMV2_LANE_CMD_TOWN_LEDGER=0) => this whole block is skipped, byte-identical to HEAD.
+if ((_side == west || {_side == east}) && {!_aa_get} && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+	//--- CTL single-writer (fable/ctl-readback-singlewriter): reset the per-town spawn
+	//--- accumulator SCALAR instead of RMW-ing the shared WFBE_CTL_LEDGER array. The CTL tick
+	//--- (Server_CmdTownLedger.sqf) is now the SOLE writer of the ledger array; external sites
+	//--- publish per-town scalars it reads. Flag-off => skipped, byte-identical to HEAD.
+	_town setVariable ["wfbe_ctl_lastspawn", 0];
 };
 
 _contents

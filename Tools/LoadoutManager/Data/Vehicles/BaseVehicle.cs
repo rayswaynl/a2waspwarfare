@@ -147,7 +147,7 @@ public abstract class BaseVehicle : InterfaceVehicle
         }
 
         //     _this removeWeaponTurret ["ATKMK44_ACR", [0]];
-        sb.AppendLine($"{facLevelVariable} = ((side group player) Call WFBE_CO_FNC_GetSideUpgrades) select {facTypeVariable}; ");
+        sb.AppendLine($"{facLevelVariable} = ((_this getVariable [\"wfbe_balance_side\", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select {facTypeVariable}; ");
         sb.AppendLine($"if ({facLevelVariable} < {weaponsToRemoveUntilFactoryLevelOnAVehicle.First().Value}) then {{");
         sb.AppendLine($"    _this removeWeapon \"{EnumExtensions.GetEnumMemberAttrValue(
             weaponsToRemoveUntilFactoryLevelOnAVehicle.First().Key)}\";");
@@ -172,7 +172,7 @@ public abstract class BaseVehicle : InterfaceVehicle
         }
 
         //     _this removeWeaponTurret ["ATKMK44_ACR", [0]];
-        sb.AppendLine($"{facLevelVariable} = ((side group player) Call WFBE_CO_FNC_GetSideUpgrades) select {facTypeVariable}; ");
+        sb.AppendLine($"{facLevelVariable} = ((_this getVariable [\"wfbe_balance_side\", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select {facTypeVariable}; ");
         sb.AppendLine($"if ({facLevelVariable} < {weaponsOnTheTurretToRemoveUntilFactoryLevelOnAVehicle.First().Value}) then {{");
         sb.AppendLine($"    _this removeWeaponTurret [\"{EnumExtensions.GetEnumMemberAttrValue(
             weaponsOnTheTurretToRemoveUntilFactoryLevelOnAVehicle.First().Key)}\", [{turretPos}]];");
@@ -257,7 +257,7 @@ public abstract class BaseVehicle : InterfaceVehicle
                                     {
                                         var vanillaWeaponDefinition = (InterfaceWeapon)ammunitionType.weaponDefinition;
 
-                                        if (vanillaWeaponDefinition.WeaponType == weaponDefinition.WeaponType)
+                                        if (_vanillaLoadout.AmmunitionTypesWithCount.Keys.Any(vk => ((InterfaceWeapon)((InterfaceAmmunition)EnumExtensions.GetInstance(vk.ToString())).weaponDefinition).WeaponType == vanillaWeapon && ((InterfaceAmmunition)EnumExtensions.GetInstance(vk.ToString())).AmmunitionTypes.Any(va => EnumExtensions.GetEnumMemberAttrValue(va) == commonKey)))
                                         {
                                             extraWeaponsToRemove.Add(EnumExtensions.GetEnumMemberAttrValue(vanillaWeapon));
                                         }

@@ -1,0 +1,28 @@
+class CfgMusic
+{
+	tracks[] = {"wf_outro", "wf_music_match_start", "wf_music_town_capture", "wf_music_victory"};
+	class wf_outro
+	{
+		// display name
+		name	= "Warfare Victory OST";
+
+		// filename, volume, pitch
+		sound[]	= { "\Music\wf_intro_2_7.ogg", db + 10, 1.0 };
+	};
+	class wf_music_match_start
+	{
+		name = "WASP Match Start";
+		sound[] = { "\Music\wasp_match_start.ogg", db + 0, 1.0 };
+	};
+	class wf_music_town_capture
+	{
+		name = "WASP Town Capture";
+		sound[] = { "\Music\wasp_town_capture.ogg", db + 0, 1.0 };
+	};
+	class wf_music_victory
+	{
+		name = "WASP Victory";
+		sound[] = { "\Music\wasp_victory.ogg", db + 0, 1.0 };
+	};
+
+};

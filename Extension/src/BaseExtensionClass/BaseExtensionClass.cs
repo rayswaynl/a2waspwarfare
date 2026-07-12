@@ -2,7 +2,7 @@
 
 public abstract class BaseExtensionClass : InterfaceExtension
 {
-    public void ActivateExtensionMethodAndSerialize(string[] _args)
+    public virtual void ActivateExtensionMethodAndSerialize(string[] _args)
     {
         try
         {

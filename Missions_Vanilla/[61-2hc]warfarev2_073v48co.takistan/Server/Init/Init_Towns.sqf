@@ -177,6 +177,45 @@ if ((missionNamespace getVariable ["WFBE_C_LOG_TOWN_COORDS", 0]) == 1) then {
 	diag_log Format ["TOWNPOS|v1|%1|__COUNT__|%2|0", worldName, count towns];
 };
 
+//--- ===== TEST-ONLY fast-bench town cap (WFBE_C_TEST_TOWN_CAP, default -1 = off; declared in
+//--- Common\Init\Init_CommonConstants.sqf's TEST HARNESS block next to WFBE_C_TEST_POPTIER_PIN) =====
+//--- When >0: keep only the N towns nearest EACH side's start position (wfbe_startpos, already set by
+//--- Init_Server.sqf before this file is Call-compiled - Server\Init\Init_Server.sqf:747 runs before :1089)
+//--- ACTIVE, using the same [pos,towns] Call SortByDistance utility the "Nearby Towns" mode above already
+//--- uses. Every OTHER town is dropped from towns[] and flagged wfbe_inactive=true - the SAME "town doesn't
+//--- exist for gameplay" mechanism Common\Init\Init_Town.sqf already uses for TownTemplate-disabled towns
+//--- (Init_Town.sqf:30-33), so every consumer that trusts towns[] (server_town_ai.sqf's whole activation
+//--- loop, server_town.sqf supply, AI_Commander_AssignTowns, patrols, GUI town lists) automatically skips
+//--- them - no deletion of the town object/camps/depot model, so nothing that already holds a reference
+//--- breaks. Pairs with WFBE_C_TEST_TEAM_CAP + WF_Debug for a "2 teams + 1 town" minutes-fast dev bench.
+//--- -1/0 = off (this whole block is skipped; no effect on live play).
+private ["_testTownCap"];
+_testTownCap = missionNamespace getVariable ["WFBE_C_TEST_TOWN_CAP", -1];
+if (_testTownCap > 0) then {
+	private ["_capWStart","_capEStart","_capAll","_capKeep","_capNear","_capN","_capDropped","_z2"];
+	_capWStart = (west Call WFBE_CO_FNC_GetSideLogic) getVariable ["wfbe_startpos", [0,0,0]];
+	_capEStart = (east Call WFBE_CO_FNC_GetSideLogic) getVariable ["wfbe_startpos", [0,0,0]];
+	_capAll  = +towns;
+	_capKeep = [];
+	{
+		_capNear = [_x, _capAll] Call SortByDistance;
+		_capN = _testTownCap min (count _capNear);
+		for [{_z2 = 0},{_z2 < _capN},{_z2 = _z2 + 1}] do {
+			if !((_capNear select _z2) in _capKeep) then {_capKeep = _capKeep + [_capNear select _z2]};
+		};
+	} forEach [_capWStart, _capEStart];
+	_capDropped = 0;
+	{
+		if !(_x in _capKeep) then {
+			_x setVariable ["wfbe_inactive", true, true];
+			towns = towns - [_x];
+			_capDropped = _capDropped + 1;
+		};
+	} forEach _capAll;
+	diag_log format ["FASTBENCH|v1|TOWN_CAP|cap=%1|kept=%2|dropped=%3|total=%4", _testTownCap, count _capKeep, _capDropped, count _capAll];
+	["INFORMATION", Format ["Init_Towns.sqf: WFBE_C_TEST_TOWN_CAP=%1 active - kept %2 towns (nearest %1 per side), dropped %3 (marked wfbe_inactive).", _testTownCap, count _capKeep, _capDropped]] Call WFBE_CO_FNC_LogContent;
+};
+
 townInitServer = true;
 
 ["INITIALIZATION", "Init_Towns.sqf: Town starting mode is done."] Call WFBE_CO_FNC_LogContent;

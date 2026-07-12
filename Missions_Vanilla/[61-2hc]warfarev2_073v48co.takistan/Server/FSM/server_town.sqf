@@ -2,7 +2,12 @@
 
 // "towns" use it to get all initiated towns on map
 
-_timeAttacked = 0;
+//--- N4 fix (MORE-FIXES-AND-IDEAS): _timeAttacked used to be a single local shared across
+//--- EVERY town and EVERY side (declared once here, outside both the town and while loops) -
+//--- one town going under attack suppressed the "under attack" alert for every OTHER
+//--- concurrent town/side for 60s. The throttle now lives on each town object instead
+//--- (wfbe_time_attacked, set at line ~270), matching this file's existing per-town-state
+//--- style (wfbe_contested/supplyValue). No longer declared/used here.
 _activeEnemies = 0;
 _contested = false;
 _sidesPresent = 0;
@@ -60,6 +65,37 @@ while {!WFBE_GameOver} do {
 
 				_sideID = _location getVariable "sideID";
 				_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
+
+				//--- fable/fix-hangar-aircraft-buy: airfields tagged wfbe_skip_auto_hangar (NWAF/NEAF/Balota)
+				//--- never get a hangar+marker from Init_Airports.sqf, and Init_Town.sqf defaults every town's
+				//--- sideID to WFBE_DEFENDER_ID at boot without an actual capture transition, so the Task 12
+				//--- block below (~line 580) never fires for them either - the buy-aircraft prompt stays
+				//--- missing until the airfield is fought over at least once. Provision once for whichever
+				//--- side already owns it at first evaluation; wfbe_airfield_hangar_obj guards against
+				//--- re-firing, and a real capture later replaces the hangar exactly as before.
+				if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && {_location getVariable ["wfbe_is_airfield", false]} && {isNull (_location getVariable ["wfbe_airfield_hangar_obj", objNull])} && {_sideID != WFBE_C_UNKNOWN_ID}) then {
+					Private ["_bootAirfieldLogic","_bootAirfieldLogicChecks"];
+					_bootAirfieldLogic = _location getVariable ["wfbe_airfield_logic_ref", objNull];
+					if (isNull _bootAirfieldLogic) then {
+						_bootAirfieldLogicChecks = (getPos _location) nearEntities [["LocationLogicAirport"], 1500];
+						if (count _bootAirfieldLogicChecks > 0) then {
+							_bootAirfieldLogic = _bootAirfieldLogicChecks select 0;
+							_location setVariable ["wfbe_airfield_logic_ref", _bootAirfieldLogic, false];
+						};
+					};
+					//--- Don't spawn a duplicate: an airport NOT flagged wfbe_skip_auto_hangar (e.g. ZG's
+					//--- single airfield) already got a hangar straight from Init_Airports.sqf at boot -
+					//--- that one only linked wfbe_hangar on the airport logic, never wfbe_airfield_hangar_obj
+					//--- on the town, which is why the outer isNull check above missed it. Adopt it instead.
+					if !(isNull _bootAirfieldLogic) then {
+						if (isNull (_bootAirfieldLogic getVariable ["wfbe_hangar", objNull])) then {
+							[_location, _bootAirfieldLogic, _side] Call WFBE_SE_FNC_ProvisionAirfieldHangar;
+						} else {
+							_location setVariable ["wfbe_airfield_hangar_obj", (_bootAirfieldLogic getVariable ["wfbe_hangar", objNull]), true];
+						};
+					};
+				};
+
 				//--- PERF dedupe REVERTED (caused capture-detection wedges twice); back to the proven
 				//--- direct scan. The server_town_ai cache-write remains but is simply unread now.
 				_perfT0PA = diag_tickTime; //--- FPS PROFILING (claude-gaming): bracket the uncached per-town capture scan (suspected #1 server frametime sink)
@@ -246,7 +282,7 @@ while {!WFBE_GameOver} do {
 			};
 		};
 
-		if !(_skip) then {
+		if (!(_skip) && {!((_location getVariable ["wfbe_is_naval_hvt", false]) && {(missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0})}) then {
 			_totalCamps = _location Call WFBE_CO_FNC_GetTotalCamps;
 			//--- ROOT FIX (cmdcon44e, rig-verified XWT45): a no-match default-less switch returns the switch
 			//--- VALUE (boolean true) - the tie case (dominion logic zeroes all three counts) fed boolean into
@@ -267,7 +303,13 @@ while {!WFBE_GameOver} do {
 			if (_rate < 1) then {_rate = 1};
 
 			if (_sideID != WFBE_C_UNKNOWN_ID) then {
-				if (_activeEnemies > 0 && time > _timeAttacked && (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_side])) then {_timeAttacked = time + 60;[_side, "IsUnderAttack", ["Town", _location]] Spawn SideMessage};
+				//--- N4 fix: per-town(+side) throttle instead of the old shared _timeAttacked local -
+				//--- stored on the town object (server-local only, same as wfbe_contested), so one
+				//--- town's alert no longer suppresses every other town's concurrent alert.
+				if (_activeEnemies > 0 && time > (_location getVariable ["wfbe_time_attacked", 0]) && (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_side])) then {
+					_location setVariable ["wfbe_time_attacked", time + 60];
+					[_side, "IsUnderAttack", ["Town", _location]] Spawn SideMessage;
+				};
 			};
 
 			_supplyValue = round(_supplyValue - (_resistance + _east + _west) * _rate);
@@ -293,6 +335,16 @@ while {!WFBE_GameOver} do {
 			if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_newSide]) then {[_newSide, "Captured", _location] Spawn SideMessage};
 
 			_location setVariable ["sideID",_newSID,true];
+			//--- Commander Town Ledger (fable/ctl-impl-v1) capture seed (fix: capture-race). Publish
+			//--- wfbe_ctl_str immediately at the capture hook so a freshly captured W/E town reads its
+			//--- 0.25 seed on the very next materialization, instead of the getVariable default (1.0)
+			//--- for up to one CTL brain tick (AICOMV2_CTL_TICK_SEC, 30s). The brain's own seed pass
+			//--- (Server_CmdTownLedger.sqf) still creates the ledger RECORD and re-publishes the same
+			//--- value on its next tick - this hook only closes the race window. Flag-off => skipped,
+			//--- byte-identical to HEAD.
+			if ((_newSID == WFBE_C_WEST_ID || {_newSID == WFBE_C_EAST_ID}) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+				_location setVariable ["wfbe_ctl_str", missionNamespace getVariable ["AICOMV2_CTL_CAPTURE_SEED", 0.25]];
+			};
 			//--- cmdcon45 (owner: "Rogovo captured but camps still GUER"): capturing the TOWN flips its
 			//--- remaining camps to the new owner. Camps flip individually during the fight (that IS the
 			//--- capture-rate mechanic), but once the town falls, leftover old-side camps are stale enemy
@@ -430,6 +482,76 @@ while {!WFBE_GameOver} do {
 						_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
 						["INFORMATION", Format ["server_town.sqf: Carrier [%1] hangar respawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
 					};
+
+				//--- fable/ew-naval: gate the carrier ServicePoint behind its own default-0 flag per
+				//--- AGENTS.md flag policy - flag-off leaves the mission byte-identical to HEAD.
+				if ((missionNamespace getVariable ["WFBE_C_NAVAL_CARRIER_SERVICE_POINTS", 0]) > 0) then {
+					//--- fable/ew-naval win-1: Carrier ServicePoint (rearm/repair) on the flight deck. Reuses the
+					//--- airfield Task-12 ServicePoint idiom (server_town.sqf ~line 610: side-classname switch +
+					//--- wfbe_structures registration + Init_BaseStructure marker + Hit/Killed EH wiring), but places
+					//--- the prop with the carrier deck idiom (Init_NavalHVT.sqf:354/938 - deckPart modelToWorld XY +
+					//--- setPosASL to deckZ) instead of the airfield block's flat-ground setPos. Fires on every
+					//--- carrier flip (including to/from GUER) so the new owner always gets a working repair point.
+					private ["_navSpClass","_navSpDeckPart","_navSpDeckZ","_navSpXY","_navSpPos","_navSpDir","_navSpOld","_navSpOldStructures","_navSp","_navSpLogik"];
+
+					_navSpClass = switch (_hvtNewSide) do {
+						case west:       { if (IS_chernarus_map_dependent) then {"USMC_WarfareBVehicleServicePoint"} else {"US_WarfareBVehicleServicePoint_EP1"} };
+						case east:       { if (IS_chernarus_map_dependent) then {"INS_WarfareBVehicleServicePoint"} else {"TK_WarfareBVehicleServicePoint_EP1"} };
+						default          { if (IS_chernarus_map_dependent) then {"Gue_WarfareBVehicleServicePoint"} else {"TK_GUE_WarfareBVehicleServicePoint_EP1"} };
+					};
+
+					//--- Delete old naval SP if present (side changed or recapture); mirror the airfield SP cleanup.
+					_navSpOld = _location getVariable ["wfbe_carrier_sp", objNull];
+					if !(isNull _navSpOld) then {
+						{
+							_navSpOldStructures = _x getVariable ["wfbe_structures", []];
+							if (_navSpOld in _navSpOldStructures) then {
+								_x setVariable ["wfbe_structures", _navSpOldStructures - [_navSpOld], true];
+							};
+						} forEach [WFBE_L_BLU, WFBE_L_OPF, WFBE_L_GUE];
+						deleteVehicle _navSpOld;
+					};
+
+					//--- Deck placement: modelToWorld XY off the stored hull reference part, then setPosASL to deckZ
+					//--- (Init_NavalHVT.sqf:354 idiom). Offset [8,14,0] mirrors the visual SCUD's [8,-14] across the
+					//--- centreline (starboard bow) - clear of the centred hangar and the camp slots at [-10,+-18]/
+					//--- [0,42]/[0,-72]. Owner should eyeball this in-engine like the other deck props.
+					_navSpDeckPart = _location getVariable ["wfbe_naval_deckpart", objNull];
+					_navSpDeckZ    = _location getVariable ["wfbe_naval_deckz", 15.9];
+					if !(isNull _navSpDeckPart) then {
+						_navSpXY  = _navSpDeckPart modelToWorld [8, 14, 0];
+						_navSpPos = [_navSpXY select 0, _navSpXY select 1, _navSpDeckZ];
+						_navSpDir = getDir _navSpDeckPart;
+					} else {
+						//--- Fallback if the deckpart ref is somehow missing: flat placement 80m off the location (airfield-block pattern).
+						_navSpPos = [(getPos _location select 0), ((getPos _location select 1) + 80), _navSpDeckZ];
+						_navSpDir = 0;
+					};
+
+					_navSp = _navSpClass createVehicle [_navSpPos select 0, _navSpPos select 1, 0];
+					_navSp setPosASL _navSpPos;
+					_navSp setDir _navSpDir;
+					_navSp setVariable ["WFBE_RepairTruckServicePoint", true, true];
+					_navSp setVariable ["wfbe_side", _hvtNewSide, true]; //--- A1-fix parity with the airfield SP (server_town.sqf ~line 649) - Server_BuildingDamaged/BuildingKilled read this.
+
+					//--- Register in side logic structures list so clients can see it (same pattern as the airfield SP).
+					_navSpLogik = (_hvtNewSide) Call WFBE_CO_FNC_GetSideLogic;
+					_navSpLogik setVariable ["wfbe_structures", (_navSpLogik getVariable "wfbe_structures") + [_navSp], true];
+
+					//--- Trigger Init_BaseStructure on clients so a map marker is created.
+					_navSp setVehicleInit Format ["[this,false,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'", _newSID];
+					processInitCommands;
+
+					//--- Wire Hit/Killed EHs so destruction grants bounty and removes the SP from wfbe_structures (mirrors Construction_SmallSite.sqf / the airfield SP block).
+					_navSp addEventHandler ["hit", {_this Spawn BuildingDamaged}];
+					Call Compile Format ["_navSp AddEventHandler ['killed',{[_this select 0,_this select 1,'%1'] Spawn BuildingKilled}];", "ServicePoint"];
+
+					//--- Store on location for cleanup on next capture.
+					_location setVariable ["wfbe_carrier_sp", _navSp, true];
+
+					diag_log Format ["NAVALHVT-SP: carrier [%1] ServicePoint (%2) placed at %3 (deckZ=%4, dir=%5) for side %6.", _hvtName, _navSpClass, _navSpPos, _navSpDeckZ, _navSpDir, str _hvtNewSide];
+					["INFORMATION", Format ["server_town.sqf: Carrier [%1] ServicePoint spawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+				};
 				};
 			};
 
@@ -443,7 +565,14 @@ while {!WFBE_GameOver} do {
 				sleep (missionNamespace getVariable ["WFBE_C_TOWNS_DEFENDER_LINGER", 180]);
 				//--- Abort cleanup if the town has flipped back to the old owner's side.
 				if ((_loc getVariable ["sideID", -1]) == _newSIDAtCapture) then {
-					{if (alive _x) then {deleteVehicle _x}} forEach (units (missionNamespace getVariable [format ["WFBE_%1_DefenseTeam", _oldSide], grpNull]));
+					//--- N3 fix (MORE-FIXES-AND-IDEAS): this used to also sweep-delete every alive unit in
+					//--- the GLOBAL per-side WFBE_<SIDE>_DefenseTeam pool (one shared group created once at
+					//--- server start, Init_Server.sqf:255-256) - killing gunners at UNRELATED still-owned
+					//--- towns 180s after any single town flipped elsewhere. The call below (unchanged) is
+					//--- already the correct, town-SCOPED cleanup: OperateTownDefensesUnits "remove" walks
+					//--- ONLY _loc's own wfbe_town_defenses and deletes each position's tracked gunner
+					//--- (gunner _defense / wfbe_defense_operator) - it never touched the global pool, so
+					//--- removing the redundant global sweep loses no legitimate cleanup.
 					[_loc, _oldSide, "remove"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
 				};
 			};
@@ -578,7 +707,7 @@ while {!WFBE_GameOver} do {
 			//--- Task 12: Airfield capture — spawn repair point + exclusive hangar for the new owner.
 			//--- Task 13: Airfield built-in Counter Battery Radar (2000 m, follows owner).
 			if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && (_location getVariable ["wfbe_is_airfield", false])) then {
-				Private ["_airfieldLogic","_airfieldLogicChecks","_newHangar","_oldHangar","_oldSP","_logik","_sp","_spClass","_spPos",
+				Private ["_airfieldLogic","_airfieldLogicChecks","_oldSP","_logik","_sp","_spClass","_spPos",
 				         "_oldRadar","_oldDressing","_radarClass","_radarPos","_radar","_cbrKey","_cbrReg","_dressTpl",
 				         "_oldGarrison","_garUnit"];
 
@@ -646,7 +775,7 @@ while {!WFBE_GameOver} do {
 				_sp = _spClass createVehicle _spPos;
 				_sp setPos _spPos;
 				_sp setVariable ["WFBE_RepairTruckServicePoint", true, true];
-				_sp setVariable ["wfbe_side", _newSide]; //--- A1 fix: airfield repair-point was missing wfbe_side ->
+				_sp setVariable ["wfbe_side", _newSide, true]; //--- A1 fix: airfield repair-point was missing wfbe_side ->
 				//--- Server_BuildingDamaged/BuildingKilled read nil side and threw on hit. Mirror Construction_SmallSite:107.
 
 				//--- Register in side logic structures list so clients can see it.
@@ -665,22 +794,9 @@ while {!WFBE_GameOver} do {
 				//--- Store on location for cleanup on next capture.
 				_location setVariable ["wfbe_airfield_sp", _sp, true];
 
-				//--- Delete old hangar (previous owner's) and its link on the airport logic.
-				_oldHangar = _location getVariable ["wfbe_airfield_hangar_obj", objNull];
-				if !(isNull _oldHangar) then {
-					deleteVehicle _oldHangar;
-					if !(isNull _airfieldLogic) then { _airfieldLogic setVariable ["wfbe_hangar", nil, true] };
-				};
-
-				//--- Spawn new hangar on the airport logic so GetClosestAirport can find it.
-				if !(isNull _airfieldLogic) then {
-					_newHangar = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle (getPos _airfieldLogic);
-					_newHangar setDir ((getDir _airfieldLogic) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
-					_newHangar setPos (getPos _airfieldLogic);
-					_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
-					_airfieldLogic setVariable ["wfbe_hangar", _newHangar, true]; _airfieldLogic setVariable ["wfbe_airfield_side", _newSide, true]; //--- C-1: GUER airfield ownership gate
-					_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
-				};
+				//--- Provision (re-provision) the aircraft-buy hangar for the new owner. Also called by
+				//--- the boot bootstrap above (~line 63) for airfields that start pre-owned.
+				[_location, _airfieldLogic, _newSide] Call WFBE_SE_FNC_ProvisionAirfieldHangar;
 
 				//--- Task 13: Counter Battery Radar lifecycle.
 				//--- Gate: CBR feature must be enabled. Resistance has no CBR registry — radar skipped.

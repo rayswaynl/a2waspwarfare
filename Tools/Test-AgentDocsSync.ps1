@@ -7,7 +7,7 @@
 .DESCRIPTION
     AGENTS.md and CLAUDE.md must be byte-identical below line 1 (the first line may
     differ to identify the file). Both files and docs/AGENT-HANDBOOK.md must contain
-    the GUIDE-REV string "GR-2026-07-03a".
+    the GUIDE-REV string "GR-2026-07-08a".
 
     Exits 0 on PASS, 1 on any failure.
 #>
@@ -24,7 +24,7 @@ if ([string]::IsNullOrWhiteSpace($RepoRoot)) {
     $RepoRoot = Split-Path -Parent (Split-Path -Parent $scriptPath)
 }
 
-$GUIDE_REV = "GR-2026-07-03a"
+$GUIDE_REV = "GR-2026-07-08a"
 
 $agentsPath   = Join-Path $RepoRoot "AGENTS.md"
 $claudePath   = Join-Path $RepoRoot "CLAUDE.md"

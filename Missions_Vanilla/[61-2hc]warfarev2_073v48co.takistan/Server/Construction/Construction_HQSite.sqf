@@ -55,10 +55,19 @@ if (!_deployed) then {
             (_logic getVariable "DefenseTeam") setVariable ["wfbe_persistent", true];
 	        _logic setVariable ["weapons",missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MAX_AI"];
         [nil, "RequestBaseArea", [_logic, _position,_side,_logik,_areas]] Call WFBE_CO_FNC_SendToClients;
-			/* _logic setPos _position;
+			//--- fix(base): on a dedicated server the SendToClients above is only a publicVariable -
+			//--- the server itself never runs RequestBaseArea, and on a headless-only session (fresh
+			//--- boot, HQs auto-deploy before any human joins) NO machine runs it: the area logic
+			//--- stayed at [0,0,0] and wfbe_basearea stayed [], so Construction_StationaryDefense.sqf
+			//--- (!isNull _area, line ~96) silently skipped manning EVERY AI base defense
+			//--- (placed-but-unmanned guns, box test 2026-07-11). Restore the server-side
+			//--- registration (below, previously commented out) ALONGSIDE the client broadcast:
+			//--- the public wfbe_basearea write replicates to clients; the client handler stays for
+			//--- client-local avail/side copies, and its identical-snapshot write is idempotent.
+			_logic setPos _position;
 			_logic setVariable ["avail",missionNamespace getVariable "WFBE_C_BASE_AV_STRUCTURES"];
 			_logic setVariable ["side",_side];
-			_logik setVariable ["wfbe_basearea", _areas + [_logic], true];*/
+			_logik setVariable ["wfbe_basearea", _areas + [_logic], true];
 		};
 	};
 

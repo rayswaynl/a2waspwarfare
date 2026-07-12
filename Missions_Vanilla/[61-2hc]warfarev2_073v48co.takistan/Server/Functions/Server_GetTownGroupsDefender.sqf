@@ -11,7 +11,7 @@ _town = _this select 0;
 _side = _this select 1;
 _aa_get = if (count _this > 2) then {_this select 2} else {false};
 
-_sv = _town getVariable "supplyValue";
+_sv = _town getVariable ["supplyValue", 0];
 _town_airactive = _town getVariable ["wfbe_active_air", false];
 
 _units = [];
@@ -111,6 +111,24 @@ if (_gdirGain > 0 && {(missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR
 	if (_gdRatio > 1) then {
 		_gdBonus = (round (_groups_max * (_gdRatio - 1) * _gdirGain)) min _groups_max;
 		if (_gdBonus > 0) then {_groups_max = _groups_max + _gdBonus};
+	};
+};
+
+//--- EXPERIMENT (fable/ctl-garrison-link): connect the DEFENDER garrison to the CTL ledger strength,
+//--- mirroring the attacker materialization in Server_GetTownGroups.sqf. Flag-off (AICOMV2_CTL_GARRISON_LINK=0
+//--- OR AICOMV2_LANE_CMD_TOWN_LEDGER=0) => this block is skipped, byte-identical to HEAD. wfbe_ctl_str defaults
+//--- to 1 for non-CTL (GUER/neutral) towns, so those stay at their V1 count even when armed; a WEST/EAST town
+//--- garrisons in proportion to its ledger strength: fresh/depleted -> thin (floored at CTL_SPAWN_MIN_STR),
+//--- invested/regenerated -> up toward CTL_PAID_MAX. A2-OA-1.64-legal (getVariable / round / plain arithmetic).
+if ((missionNamespace getVariable ["AICOMV2_CTL_GARRISON_LINK", 0]) > 0 && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+	private ["_ctlStr","_ctlEff","_ctlBase"];
+	_ctlBase = _groups_max;
+	_ctlStr  = _town getVariable ["wfbe_ctl_str", 1];
+	_ctlEff  = _ctlStr max (missionNamespace getVariable ["AICOMV2_CTL_SPAWN_MIN_STR", 0.25]);
+	_groups_max = round (_groups_max * _ctlEff);
+	if (_groups_max < 1) then {_groups_max = 1};
+	if (_groups_max != _ctlBase) then {
+		diag_log Format ["CTLSTAT|v1|DEF|GARRISON|town=%1|str=%2|groups=%3|base=%4", _town getVariable ["name", "?"], _ctlStr, _groups_max, _ctlBase];
 	};
 };
 

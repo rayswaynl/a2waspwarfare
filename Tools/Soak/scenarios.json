@@ -1,0 +1,93 @@
+{
+  "schema": "a2wasp-scenarios-v1",
+  "notes": [
+    "Named, versioned test recipes for the WASP sandbox. Get-ScenarioSpec.ps1 resolves a name to a",
+    "full config; Run-Scenario.ps1 executes (or grades an existing RPT) and emits a Standard",
+    "Run-Result JSON + a soak-ledger row. Flags listed under 'flags' are set on the mission at boot",
+    "(name -> value). 'requires' names a harness capability the recipe needs that may not be merged",
+    "yet (the driver warns rather than silently mis-running). popPin is the WFBE_C_TEST_POPTIER_PIN",
+    "value (per-commander team count; -1 = organic population). asserts.metric references the flat",
+    "metric keys Run-Scenario computes from analyze_soak.py output: serverFpsMedian, serverFpsMin,",
+    "hcFpsMedian, aiTotPeak, guerPeak, captures, arrivalPct, maxTownsWest, maxTownsEast, hours.",
+    "severity=fail -> a miss makes the run FAIL; severity=watch -> a miss makes it WATCH."
+  ],
+  "defaults": {
+    "map": "chernarus",
+    "hcCount": 1,
+    "popPin": -1,
+    "durationMin": 60,
+    "flags": {},
+    "requires": []
+  },
+  "popTiers": { "LOW": 3, "MED": 6, "HIGH": 10, "MAX": 14 },
+  "templates": {
+    "chernarus": "[55-2hc]warfarev2_073v48co.chernarus",
+    "takistan": "[61-2hc]warfarev2_073v48co.takistan",
+    "zargabad": "[61-2hc]warfarev2_073v48co.zargabad"
+  },
+  "scenarios": {
+    "defend-town": {
+      "description": "One HC, moderate population. Baseline: teams found, move, and hold captured towns; server holds frame.",
+      "map": "chernarus", "hcCount": 1, "popPin": 6, "durationMin": 60,
+      "flags": {},
+      "asserts": [
+        { "metric": "serverFpsMedian", "op": "ge", "threshold": 38, "severity": "fail" },
+        { "metric": "captures", "op": "ge", "threshold": 1, "severity": "watch" },
+        { "metric": "arrivalPct", "op": "ge", "threshold": 15, "severity": "watch" }
+      ]
+    },
+    "big-assault": {
+      "description": "Two HCs, high population. Stress: assault progresses and the server holds a usable frame under load.",
+      "map": "zargabad", "hcCount": 2, "popPin": 12, "durationMin": 90,
+      "flags": {},
+      "asserts": [
+        { "metric": "serverFpsMedian", "op": "ge", "threshold": 30, "severity": "fail" },
+        { "metric": "aiTotPeak", "op": "ge", "threshold": 300, "severity": "watch" },
+        { "metric": "captures", "op": "ge", "threshold": 2, "severity": "watch" }
+      ]
+    },
+    "load-ramp": {
+      "description": "Sweep population LOW->MAX at fixed HC count and chart server/HC FPS vs unit count. Locates the FPS knee.",
+      "map": "chernarus", "hcCount": 1, "durationMin": 25,
+      "sweep": { "dimension": "popPin", "values": [3, 6, 10, 14] },
+      "flags": {},
+      "asserts": [
+        { "metric": "serverFpsMedian", "op": "ge", "threshold": 20, "severity": "watch" }
+      ]
+    },
+    "idle-soak": {
+      "description": "Low population, long run, no forced action. Leak/stability sentinel: FPS stays flat and the error stream stays clean.",
+      "map": "chernarus", "hcCount": 1, "popPin": 3, "durationMin": 120,
+      "flags": {},
+      "asserts": [
+        { "metric": "serverFpsMedian", "op": "ge", "threshold": 42, "severity": "fail" }
+      ]
+    },
+    "hc-split": {
+      "description": "Same population run at 1 HC then 2 HC. Answers whether a 2nd HC raises the FPS knee or just relocates load (top open perf question).",
+      "map": "zargabad", "popPin": 10, "durationMin": 45,
+      "sweep": { "dimension": "hcCount", "values": [1, 2] },
+      "flags": {},
+      "asserts": [
+        { "metric": "serverFpsMedian", "op": "ge", "threshold": 30, "severity": "watch" }
+      ]
+    },
+    "flight-probe": {
+      "description": "Force high own-town count + Aircraft-Factory ownership for one side and observe whether an AI commander ever fields and flies air. Optionally A/B the SLX_AI_Steering flight mod.",
+      "map": "takistan", "hcCount": 2, "popPin": 12, "durationMin": 60,
+      "flags": {},
+      "requires": ["WFBE_C_TEST_VERBS"],
+      "asserts": [
+        { "metric": "serverFpsMedian", "op": "ge", "threshold": 30, "severity": "watch" }
+      ]
+    },
+    "a-life-probe": {
+      "description": "GUER Director aliveness. Low population, no forced captures: does GDIR_LEDGER totalStr hold/grow (alive) vs decay to zero (inert), and does GDIR_ORDER fire at a nonzero cadence? Regression sentinel for PR #815.",
+      "map": "chernarus", "hcCount": 1, "popPin": 4, "durationMin": 60,
+      "flags": { "WFBE_C_GUER_DIRECTOR": 1 },
+      "asserts": [
+        { "metric": "serverFpsMedian", "op": "ge", "threshold": 40, "severity": "watch" }
+      ]
+    }
+  }
+}

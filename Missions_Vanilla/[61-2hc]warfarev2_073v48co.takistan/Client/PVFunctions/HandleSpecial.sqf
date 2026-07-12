@@ -143,6 +143,16 @@ switch (_request) do {
 		_msg = _args select 0;
 		if (typeName _msg == "STRING" && {_msg != ""}) then {systemChat _msg};
 	};
+	//--- zg-koth-announce (fable/radius-hold-primitive consumer, GR-2026-07-08a): plain public announcement
+	//--- for the Zargabad KotH hold, mirrors icbm-tel-msg verbatim (systemChat, no side-scoping needed - the
+	//--- server sends this with a nil destination so every client gets it). _args select 0 = the text.
+	case "zg-koth-announce": {
+		if (isDedicated) exitWith {};
+		if (isNil "player" || {isNull player}) exitWith {};
+		private ["_msg"];
+		_msg = _args select 0;
+		if (typeName _msg == "STRING" && {_msg != ""}) then {systemChat _msg};
+	};
 	//--- icbm-tel-marker: FRIENDLY-ONLY TEL map marker. _args = [_tel, _sideText]. mil_triangle in side colour,
 	//--- text "ICBM TEL". A tiny local watcher deletes it when the TEL dies (server re-sends this on each respawn).
 	case "icbm-tel-marker": {
@@ -312,15 +322,18 @@ switch (_request) do {
 			[_unit] joinSilent grpNull;
 		};
 	};
-	//--- GUER mortar strike result (server -> caller). The server rejected the strike (e.g. the GUER team could not
-	//--- afford the call-in fee). Refund the client's optimistic cooldown stamp (set in Action_GuerMortarStrike.sqf
-	//--- before the request was sent) so the failed attempt does not burn the cooldown, and tell the player why.
-	case "guer-mortar-result": {
+	//--- GUER Barrel Bomb result (server -> caller). The server rejected the call-in (insufficient
+	//--- funds, or the kill-tier gate was not actually met server-side), so refund the client's
+	//--- optimistic cooldown stamp and tell the player why. (Note: the sibling "guer-mortar-result"
+	//--- case this originally mirrored was removed by fable/guer-mortar-dedup's owner de-dup
+	//--- decision - Action_GuerMortarStrike.sqf no longer exists - so only the barrel-bomb case
+	//--- survives the merge here.)
+	case "guer-helibomb-result": {
 		Private ["_ok","_msg"];
 		_ok  = _args select 0;
 		_msg = _args select 1;
 		if (!_ok) then {
-			player setVariable ["wfbe_mortar_last", -9999];   //--- un-stamp: the strike never fired.
+			player setVariable ["wfbe_helibomb_last", -9999];   //--- un-stamp: the drop never fired.
 		};
 		if (typeName _msg == "STRING" && {_msg != ""}) then {hint _msg};
 	};

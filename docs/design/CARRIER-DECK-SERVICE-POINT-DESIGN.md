@@ -3,6 +3,56 @@
 
 Lane: 285
 
+## STATUS (reconciled 2026-07-11, Fleet task wasp-carrier-servicepoint-design-runtime-reconcile)
+
+**This feature is IMPLEMENTED on master and ARMED BY DEFAULT.** The original page below described a
+docs-only/deferred proposal with `WFBE_C_NAVAL_CARRIER_SERVICE_POINTS` default `0`; that framing is
+historical. Current master state (all three mirrored maps — Chernarus, Takistan, Zargabad):
+
+- **Flag**: `Common/Init/Init_CommonConstants.sqf:2398` — `WFBE_C_NAVAL_CARRIER_SERVICE_POINTS = 1`
+  (isNil-guarded). Default flipped 0→1 by `ee3f81937` ("release: enable all feature flags at
+  launch"). NOTE: the prose comment above it (lines 2394-2397) and the gate comment at
+  `server_town.sqf:486` still say "default-0" — comment drift, not fixed here (source edit outside
+  this docs-only task).
+- **Rollback**: set the lobby/mission variable to `0` — the gate at `server_town.sqf:488` makes
+  flag-off byte-identical (no SP spawn; an SP already spawned in a running round is not retroactively
+  removed until the next capture).
+- **Implementation**: inline in the carrier-capture block of `Server/FSM/server_town.sqf:486-554`
+  (fires on every carrier flip, including to/from GUER). There is **no** shared helper and **no**
+  init-time spawn: the proposal's "call it from the `Init_NavalHVT.sqf` loop" half was not built, so
+  a never-captured carrier has no ServicePoint until its first capture.
+- **Shipped shape** (matches most of the proposal): side-classname switch (`:497-501`), old-SP
+  removal from all three side `wfbe_structures` lists before deletion (`:504-513`), deck placement
+  via `wfbe_naval_deckpart` modelToWorld + `setPosASL` to `wfbe_naval_deckz` with offset `[8,14,0]`
+  starboard-bow (`:515-533`), `wfbe_side` set (`:535`), owning-side `wfbe_structures` registration
+  (`:538-539`), `Init_BaseStructure` marker init (`:542-543`), Hit/Killed EH wiring with
+  ServicePoint bounty tag (`:546-547`), stored as `wfbe_carrier_sp` on the location (`:550`),
+  `NAVALHVT-SP` diag_log breadcrumb (`:552`).
+- **Deliberate deviation from this page's recommendation**: the shipped SP **sets**
+  `WFBE_RepairTruckServicePoint = true` (`server_town.sqf:534`), and the repair-truck scan in
+  `Client/GUI/GUI_Menu_Service.sqf:337-343` still adds any alive tagged
+  `Base_WarfareBVehicleServicePoint` in `WFBE_C_UNITS_SUPPORT_RANGE` **without an owner-side
+  check**. The cross-side-service concern this page raised is therefore LIVE in the armed build: a
+  hostile vehicle within support range of an enemy carrier's SP can be offered repair/refuel through
+  the tag path (the `wfbe_structures` path stays correctly side-gated). Nobody has ruled on whether
+  that is acceptable (it also applies to land repair-truck-built SPs) — flag for the owner alongside
+  runtime validation.
+- **Validation status: STATIC ONLY.** No `NAVALHVT-SP` line appears in any handoff/report evidence
+  (grep over game-pc-handoffs and Fleet Reports, 2026-07-11), so the in-game validation plan below
+  has never been executed — deck placement, capture cleanup, marker lifecycle, and the side-gating
+  question above are all unverified at runtime. Static evidence must not be read as runtime
+  readiness (per the reconcile task's own boundary).
+
+Anchor drift in the historical text below (Build84 line numbers): the carrier capture block cited as
+`server_town.sqf:358-382` now spans the naval-HVT block at `~441-555`; the land-airfield SP block
+cited as `562-617` now sits at `~741-795` (`wfbe_airfield_sp` at `:758/:795`); the GUI service-menu
+anchors cited as `233/296-306/311-317` now sit at `:259` (GetFactories) and `:337-343` (repair-truck
+tag scan). The historical text is preserved unedited below as the design record.
+
+---
+
+## Historical design note (pre-implementation, Build84 anchors — superseded by STATUS above)
+
 This is a docs-only source PR for the carrier deck service point lane. Runtime edits are deferred
 because the needed capture lifecycle is in `Server/FSM/server_town.sqf`, which is hot in active
 draft PRs #566, #589 and #643. This note records the Build84 anchors and the intended stacked

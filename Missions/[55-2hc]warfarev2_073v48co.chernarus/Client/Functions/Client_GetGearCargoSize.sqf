@@ -20,7 +20,7 @@ _size_w = 0;
 _size_m = 0;
 _m = 0;
 
-for '_i' from 0 to 2 do {
+for '_i' from 0 to ((count _existing_content) - 1) do {
 	if (count(_existing_content select _i) > 0) then {
 		_prefix = if (_i == 1) then {"Mag_"} else {""};
 		_items = ((_existing_content) select _i) select 0;

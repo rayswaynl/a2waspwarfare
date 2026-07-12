@@ -2,7 +2,7 @@
 name: pr-preflight
 description: Load BEFORE any `git push` or `gh pr create` in this repo — claim/duplication checks, shelved-work registry, flag-policy audit, full lint gates, draft-PR mechanics and required body fields, and evidence-wording rules.
 ---
-<!-- source: Agent-Guide GUIDE-REV GR-2026-07-06a -->
+<!-- source: Agent-Guide GUIDE-REV GR-2026-07-08a -->
 
 # pr-preflight
 
@@ -59,10 +59,11 @@ after a period of exclusion; audit for `// noqa: A3PRIVATE` leftovers before pus
 ## 5. PR mechanics
 
 ```powershell
-gh pr create --draft --base claude/build84-cmdcon36
+gh pr create --draft --base master
 ```
 
-- DRAFT only; never target `master`. Commit format:
+- DRAFT only; base on `master` (owner pick E2, 2026-07-08 — `claude/build84-cmdcon36` is
+  fully merged and retired as a base). Commit format:
   `feat(<lane>): <summary> [flag <FLAG> default 0]` — NO `Co-Authored-By` trailer.
 - Body required fields: Feature; flag + default; why flag-off is inert; test plan;
   mirrors confirmed (CH→TK→ZG); GUIDE-REV stamp; "stacked on #NNN" if applicable.

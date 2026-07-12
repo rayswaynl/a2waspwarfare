@@ -1,7 +1,7 @@
 disableSerialization;
 /*
 	GUI_Menu_GuerCommissar.sqf  (A1 Commissar Panel - UX v2)
-	GUIDE-REV GR-2026-07-03a
+	GUIDE-REV GR-2026-07-08a
 
 	onLoad handler for WFBE_GDirCommissarMenu (idd=31000).
 	UX v2 additions vs v1:
@@ -39,6 +39,18 @@ if (!(sideJoined == resistance)) exitWith {
 private ["_display","_map"];
 _display = _this select 0;
 _map = _display displayCtrl 31060;
+
+//--- [FIX-931/night-sweep] the vehicle-verb buttons (idc 31081-83, Rsc/Dialogs.hpp) compile
+//--- unconditionally - A2 OA 1.64 dialog configs can't read the runtime missionNamespace flag
+//--- set later by Init_CommonConstants.sqf, so compile-time gating is not possible. Gate
+//--- visibility/use here instead (global ctrlShow/ctrlEnable form - see GUI_Menu_Command.sqf's
+//--- ROOT-CAUSE FIX comment on why the global form, not the display-scoped one, is required for
+//--- idd createDialog menus) so the feature is byte-inert end-to-end while
+//--- AICOMV2_GDIR_VEHICLE=0 (the default after FIX-931). The MenuAction 61/62/63 handlers below
+//--- re-check the same flag as a second layer.
+private ["_vehVerbOn"];
+_vehVerbOn = (missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0;
+{ctrlShow [_x, _vehVerbOn]; ctrlEnable [_x, _vehVerbOn]} forEach [31081, 31082, 31083];
 
 //--- Populate town list (idc 31010) from WFBE_CL_Towns.
 private ["_towns","_firstTown"];
@@ -205,8 +217,8 @@ WFBE_COMM_FNC_RefreshWallet = {
 	[_wallet, _townFund]
 };
 
-//--- Helper: update cost labels from a price array [convoy, instant, qrfIns, qrfGun, qrfCombo, counter, donate].
-//--- If price array is empty, shows "~est. $--".
+//--- Helper: update cost labels from a price array [convoy, instant, qrfIns, qrfGun, qrfCombo, counter, donate, relief].
+//--- If price array is empty, shows "~est. $--". fable/ew-guer: relief (idx 7) is optional for back-compat.
 WFBE_COMM_FNC_SetCostLabels = {
 	private ["_prices","_p"];
 	_prices = _this select 0;
@@ -217,6 +229,7 @@ WFBE_COMM_FNC_SetCostLabels = {
 		ctrlSetText [31074, "~est. $--"];
 		ctrlSetText [31075, "~est. $--"];
 		ctrlSetText [31076, "~est. $--"];
+		ctrlSetText [31085, "~est. $--"];
 	} else {
 		ctrlSetText [31071, Format ["~est. $%1", _prices select 0]];
 		ctrlSetText [31072, Format ["~est. $%1", _prices select 1]];
@@ -224,6 +237,11 @@ WFBE_COMM_FNC_SetCostLabels = {
 		ctrlSetText [31074, Format ["~est. $%1", _prices select 3]];
 		ctrlSetText [31075, Format ["~est. $%1", _prices select 4]];
 		ctrlSetText [31076, Format ["~est. $%1", _prices select 5]];
+		if (count _prices >= 8) then {
+			ctrlSetText [31085, Format ["~est. $%1", _prices select 7]];
+		} else {
+			ctrlSetText [31085, "~est. $--"];
+		};
 	};
 };
 
@@ -251,6 +269,7 @@ WFBE_COMM_FNC_UpdateButtonStates = {
 		ctrlEnable [31033, false];
 		ctrlEnable [31041, false];
 		ctrlEnable [31051, false];
+		ctrlEnable [31086, false]; //--- fable/ew-guer: relief
 	} else {
 		//--- Buy: town fund covers first, shortfall from wallet.
 		private ["_canBuyConvoy","_canBuyInstant","_shortConvoy","_shortInstant"];
@@ -283,6 +302,17 @@ WFBE_COMM_FNC_UpdateButtonStates = {
 
 		//--- Donate: fixed $200 from wallet only.
 		ctrlEnable [31051, (_wallet >= 200)];
+
+		//--- fable/ew-guer: Relief squad (idx 7). Same group-budget + fund/wallet gate as buy/qrf/counter
+		//--- (relief is NOT exempt in RequestGDirPanel.sqf Gate 6 - it materialises units like reinforce).
+		if (count _prices >= 8) then {
+			private ["_shortRelief"];
+			_shortRelief = (_prices select 7) - _townFund;
+			if (_shortRelief < 0) then {_shortRelief = 0};
+			ctrlEnable [31086, (_grpOk && {_wallet >= _shortRelief})];
+		} else {
+			ctrlEnable [31086, false];
+		};
 	};
 };
 
@@ -300,10 +330,15 @@ WFBE_COMM_FNC_RequestQuote = {
 	["RequestGDirPanel", [player, "quote", _townId, "none"]] Call WFBE_CO_FNC_SendToServer;
 };
 
-//--- Snap minimap to selected town on open.
-if (_firstTown != "") then {
-	[_firstTown] Call WFBE_COMM_FNC_SelectTownByName;
-	[_firstTown] Call WFBE_COMM_FNC_RequestQuote;
+//--- Snap minimap to the town CLOSEST to the player on open (was: first town in _towns/list order).
+//--- fable/commissar-minimap: reuses the same nearest-town helper the map-click handler uses below.
+private ["_nearestTownObj","_openTownName"];
+_nearestTownObj = [getPos player] Call WFBE_COMM_FNC_NearestTown;
+_openTownName = if (!isNull _nearestTownObj) then {_nearestTownObj getVariable ["name", ""]} else {""};
+if (_openTownName == "") then {_openTownName = _firstTown}; //--- fallback: no towns yet, or nearest town has no name var.
+if (_openTownName != "") then {
+	[_openTownName] Call WFBE_COMM_FNC_SelectTownByName;
+	[_openTownName] Call WFBE_COMM_FNC_RequestQuote;
 };
 //--- WFBE_C_GDIR_VIS: initial heatmap on open.
 [] Call WFBE_COMM_FNC_RefreshHeatmap;
@@ -447,6 +482,36 @@ waitUntil {
 		MenuAction = -1;
 		["RequestGDirPanel", [player, "donate", _selTownId, "none"]] Call WFBE_CO_FNC_SendToServer;
 		ctrlSetText [31078, "Donate order sent. Awaiting result..."];
+	};
+
+	//--- fable/gdir-vehicle-verb (GR-2026-07-08a): tier buttons wired to idc 31081-83 (Rsc/Dialogs.hpp).
+	//--- NEEDS IN-GAME VISUAL VERIFICATION - see script header banner.
+	//--- [FIX-931/night-sweep] each condition re-checks AICOMV2_GDIR_VEHICLE as a second gate
+	//--- layer (the buttons that set MenuAction=61/62/63 are already hidden+disabled above when
+	//--- the flag is off, so this branch shouldn't be reachable in normal play - belt-and-
+	//--- suspenders per the fix brief).
+	if (MenuAction == 61 && {(missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0}) then {
+		MenuAction = -1;
+		["RequestGDirPanel", [player, "vehicle", _selTownId, "t1"]] Call WFBE_CO_FNC_SendToServer;
+		ctrlSetText [31078, "Vehicle (T1) order sent. Awaiting result..."];
+	};
+	if (MenuAction == 62 && {(missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0}) then {
+		MenuAction = -1;
+		["RequestGDirPanel", [player, "vehicle", _selTownId, "t2"]] Call WFBE_CO_FNC_SendToServer;
+		ctrlSetText [31078, "Vehicle (T2) order sent. Awaiting result..."];
+	};
+	if (MenuAction == 63 && {(missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0}) then {
+		MenuAction = -1;
+		["RequestGDirPanel", [player, "vehicle", _selTownId, "t3"]] Call WFBE_CO_FNC_SendToServer;
+		ctrlSetText [31078, "Vehicle (T3) order sent. Awaiting result..."];
+	};
+	//--- fable/ew-guer: relief squad (mirrors Btn_Counter dispatch above). Release-merge renumber:
+	//--- MenuAction 61->64 (was 61, colliding with the vehicle-verb T1 handler immediately above -
+	//--- see Rsc/Dialogs.hpp Btn_Relief for the matching idc 31083->31086 renumber).
+	if (MenuAction == 64) then {
+		MenuAction = -1;
+		["RequestGDirPanel", [player, "relief", _selTownId, "none"]] Call WFBE_CO_FNC_SendToServer;
+		ctrlSetText [31078, "Relief squad order sent. Awaiting result..."];
 	};
 	if (MenuAction == 90) then {
 		MenuAction = -1;

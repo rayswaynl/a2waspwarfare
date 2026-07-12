@@ -517,7 +517,7 @@ if (_coreDone) then {
 	_myID = (_side) Call WFBE_CO_FNC_GetSideID;
 	_ownTowns = 0;
 	{ if ((_x getVariable "sideID") == _myID) then {_ownTowns = _ownTowns + 1} } forEach towns;
-	if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) then {
+	if (_ownTowns >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 3])) then {
 		_order = _order + ["Aircraft"];
 	};
 };
@@ -607,6 +607,20 @@ if (_resIdx >= 0) then {
 	_resCost = _costs select _resIdx;
 	if (_econOpen && {_supply > _resCost * 1.5}) then {
 		_order = _order + ["Reserve"];
+		_scaffoldActivated = true;
+	};
+};
+//--- RADIO TOWER (owner rig-test 2026-07-09): let the AI build it too so the vehicle-radio feature is
+//--- available without a human building the tower. `_names find "RadioTower" == -1` (flag
+//--- WFBE_C_STRUCTURES_RADIOTOWER off) is the natural no-op. Low priority; plain supply-multiple gate so it
+//--- never starves military builds. AI pays supply (STRUCTURECOSTS); the $2500 player-cash override is
+//--- coin-interface-only, so the AI supply path is unaffected.
+private ["_radioIdx","_radioCost"];
+_radioIdx = _names find "RadioTower";
+if (_radioIdx >= 0) then {
+	_radioCost = _costs select _radioIdx;
+	if (_econOpen && {_supply > _radioCost * 1.5}) then {
+		_order = _order + ["RadioTower"];
 		_scaffoldActivated = true;
 	};
 };
@@ -869,13 +883,24 @@ if (_defCount < _defMax) then {
 	};
 };
 
-//--- 4) V0.5: two base artillery pieces once the defenses stand. Construction tags
+//--- 4) V0.5: base artillery pieces once the defenses stand (cap WFBE_C_AI_COMMANDER_ARTILLERY_MAX). Construction tags
 //--- them WFBE_CommanderArtillery; the strategy worker fires them at spearhead
 //--- towns / the enemy HQ (fire is free in WFBE - the real cooldown gates it).
-//--- V0.6.3: OFF by default (owner call) - opt back in via WFBE_C_AI_COMMANDER_ARTILLERY = 1.
+//--- fable/alife-arty-dwell (2026-07-08, owner request "enable the max 2 tracked artillery per AI commander
+//--- idea... make sure it's used"): default flipped ON (was V0.6.3 owner-locked OFF; see Init_CommonConstants.sqf
+//--- for the full history). Cap is now SELF-HEALING like the defenses cap just above (~L833-838): count LIVE
+//--- tagged pieces near HQ instead of a monotonic build counter, so a destroyed piece is REBUILT next pass
+//--- instead of the side being permanently down a gun for the rest of the round. wfbe_aicom_arty_built is kept
+//--- as the published var name (now holding the live count) for any existing telemetry readers. Cap constant is
+//--- WFBE_C_AI_COMMANDER_ARTILLERY_MAX (NOT the similarly-named WFBE_C_AICOM_ARTY_MAX, which caps the separate
+//--- always-on "AICOM TRACKED ARTILLERY" battery founded via AI_Commander_Teams.sqf - see the flag comments in
+//--- Init_CommonConstants.sqf and ARTILLERY-DWELL-NOTES.md for the full two-systems writeup).
 if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable "WFBE_C_ARTILLERY") > 0}) then {
-	_artyBuilt = _logik getVariable ["wfbe_aicom_arty_built", 0];
-	if (_artyBuilt < 2 && {(_logik getVariable ["wfbe_aicom_defenses", 0]) >= _defMax}) then {
+	private "_artyMax"; _artyMax = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY_MAX", 2];
+	_artyBuilt = 0;
+	{ if (!isNull _x && {alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText}) then {_artyBuilt = _artyBuilt + 1} } forEach (_hqPos nearEntities [["Tank","Car","Wheeled_APC","Tracked_APC"], (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])]);
+	_logik setVariable ["wfbe_aicom_arty_built", _artyBuilt];
+	if (_artyBuilt < _artyMax && {(_logik getVariable ["wfbe_aicom_defenses", 0]) >= _defMax}) then {
 		_have = false;
 		{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x}) exitWith {_have = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
 		if (_have) then {
@@ -891,23 +916,68 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 				//--- Scan ALL families and accept the FIRST class that is a self-propelled hull (Tank/Car/Wheeled_APC/
 				//--- Tracked_APC and NOT StaticWeapon). If the side has no SPG class, build nothing - a static gun is
 				//--- never created for the AI. A2-OA-safe: string-form isKindOf on the classname (idiom: AwardBounty.sqf:34).
+				//--- fix/aicom-dependency-gates-followup (2026-07-10): walk EVERY classname in the family (not
+				//--- just index 0) - a map where the primary variant has no registered unit data or isn't in any
+				//--- per-side category list (e.g. bare 'MLRS' is TK/ZG-invisible; only 'MLRS_DES_EP1' is category-
+				//--- listed there) falls through to the next candidate in the SAME family instead of hard-failing it.
 				_i = 0;
 				while {_i < count _artyClasses && {_defClass == ""}} do {
-					private ["_cand","_isSP"];
+					private ["_cand","_isSP","_famArr","_j","_ud","_pickInCat"];
 					_fam = _artyClasses select _i;
-					_cand = "";
-					if (typeName _fam == "ARRAY") then {
-						if (count _fam > 0) then {_cand = _fam select 0};
-					} else {
-						_cand = _fam;
-					};
-					if (_cand != "" && {isClass (configFile >> "CfgVehicles" >> _cand)}) then {
-						_isSP = ((_cand isKindOf "Tank") || (_cand isKindOf "Car") || (_cand isKindOf "Wheeled_APC") || (_cand isKindOf "Tracked_APC")) && {!(_cand isKindOf "StaticWeapon")};
-						if (_isSP) then {_defClass = _cand};
+					_famArr = if (typeName _fam == "ARRAY") then {_fam} else {[_fam]};
+					_j = 0;
+					while {_j < count _famArr && {_defClass == ""}} do {
+						_cand = _famArr select _j;
+						if (_cand != "" && {isClass (configFile >> "CfgVehicles" >> _cand)}) then {
+							_isSP = ((_cand isKindOf "Tank") || (_cand isKindOf "Car") || (_cand isKindOf "Wheeled_APC") || (_cand isKindOf "Tracked_APC")) && {!(_cand isKindOf "StaticWeapon")};
+							if (_isSP) then {
+								_ud = missionNamespace getVariable _cand;
+								if (!isNil "_ud") then {
+									//--- feat/common-isunitunlocked: shared facMap category-membership scan (found-only -
+									//--- this picker only needs "is _cand registered in a per-side unit list"; the dedicated
+									//--- research-tier gate runs separately below once a class is actually picked).
+									_pickInCat = (([_cand, _sideText, _upgrades] Call WFBE_CO_FNC_IsUnitUnlocked) select 1);
+									if (_pickInCat) then {_defClass = _cand};
+								};
+							};
+						};
+						_j = _j + 1;
 					};
 					_i = _i + 1;
 				};
-				if (_defClass == "") then {
+				private ["_artyPicked"]; _artyPicked = (_defClass != ""); //--- remembers a real pick happened, so the generic no-SPG log below is not emitted alongside the gate own not-yet-researched/data-gap log for the same tick.
+				//--- fix/aicom-dependency-gates (2026-07-10): the SPG pick above has NO unlock-tier check - every
+				//--- OTHER AI purchase path (AI_Commander_Teams.sqf:351-376) already gates per-unit QUERYUNITUPGRADE
+				//--- against the side's researched tier via this SAME _facMap idiom; mirror it here so base
+				//--- artillery requires the same research investment a human commander needs to open that unit's
+				//--- buy tab. Fails CLOSED: if _defClass matches no category list (a faction data gap) OR has no
+				//--- registered unit-price data, the piece is not built and a WARNING (not a silent skip) is
+				//--- logged so the gap surfaces in RPT instead of reading as AI passivity.
+				if (_defClass != "") then {
+					private ["_artyUd","_artyGateOk","_artyCatFound"];
+					_artyGateOk = false;
+					_artyCatFound = false;
+					if (!isNil "_upgrades") then {
+						_artyUd = missionNamespace getVariable _defClass;
+						if (!isNil "_artyUd") then {
+							private ["_artyCheck"];
+							//--- feat/common-isunitunlocked: shared facMap/QUERYUNITUPGRADE tier-unlock check replaces
+							//--- the inline scan; [_unlocked, _found] mirrors _artyGateOk/_artyCatFound 1:1.
+							_artyCheck = [_defClass, _sideText, _upgrades] Call WFBE_CO_FNC_IsUnitUnlocked;
+							_artyGateOk = _artyCheck select 0;
+							_artyCatFound = _artyCheck select 1;
+						};
+					};
+					if (!_artyGateOk) then {
+						if (_artyCatFound) then {
+							["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - %2 not yet researched.", _sideText, _defClass]] Call WFBE_CO_FNC_AICOMLog;
+						} else {
+							["WARNING", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - %2 not found in any per-side unit-tier list (unlock-gate data gap for this faction; base artillery stays dark until fixed).", _sideText, _defClass]] Call WFBE_CO_FNC_AICOMLog;
+						};
+						_defClass = "";
+					};
+				};
+				if (_defClass == "" && {!_artyPicked}) then { //--- fix/aicom-dependency-gates-followup: suppress this generic log when the picker DID find an SPG candidate but the research-tier/category gate above rejected it - that branch already logged its own reason.
 					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - no SELF-PROPELLED (tracked/wheeled) arty class for this side (static towed/mortar excluded by design).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
@@ -920,7 +990,7 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 					_pos = [25, 38] Call _findBuildPos;
 					[_defClass, _side, _pos, random 360, true, true] Call ConstructDefense;
 					_logik setVariable ["wfbe_aicom_arty_built", _artyBuilt + 1];
-					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base artillery %2/2 [%3] (cost %4 funds).", _sideText, _artyBuilt + 1, _defClass, _defPrice]] Call WFBE_CO_FNC_AICOMLog;
+					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base artillery %2/%3 [%4] (cost %5 funds).", _sideText, _artyBuilt + 1, _artyMax, _defClass, _defPrice]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
 		};

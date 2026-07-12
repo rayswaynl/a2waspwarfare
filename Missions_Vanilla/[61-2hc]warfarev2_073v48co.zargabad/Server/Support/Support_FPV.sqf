@@ -32,7 +32,14 @@ _timeout = (missionNamespace getVariable ["WFBE_C_FPV_DRONE_TTL", 240]) + 120;
 ["INFORMATION", Format ["Support_FPV.sqf: [%1] Team [%2] [%3] launched an FPV strike drone.", str _side, _playerTeam, name (leader _playerTeam)]] Call WFBE_CO_FNC_LogContent;
 //--- SECURITY (fable/fpv-strike-drone): stamp armed-drone ownership token so Support_FPV_Detonate
 //--- can verify the requestor has a real drone in the air (one-shot; cleared on watchdog exit).
-missionNamespace setVariable [Format ["wfbe_fpv_det_%1", str _side], _drone];
+//--- FIX D8a: per-drone registry, not a per-side singleton. A second same-side drone must not
+//--- clobber the first's armed token (was: scalar overwrite -> later "no armed drone token found").
+private ["_fpvKey","_fpvArr"];
+_fpvKey = Format ["wfbe_fpv_det_arr_%1", str _side];
+_fpvArr = missionNamespace getVariable [_fpvKey, []];
+if (typeName _fpvArr != "ARRAY") then {_fpvArr = []};
+_fpvArr set [count _fpvArr, _drone];
+missionNamespace setVariable [_fpvKey, _fpvArr];
 
 while {true} do {
 	sleep 5;
@@ -40,6 +47,13 @@ while {true} do {
 };
 
 //--- SECURITY: clear the ownership token so no stale detonation can fire after the drone is gone.
-missionNamespace setVariable [Format ["wfbe_fpv_det_%1", str _side], objNull];
+//--- FIX D8a: remove ONLY this drone's own entry - never blind-clobber the whole side's slot
+//--- (a sibling same-side drone that is still armed must keep its own token).
+private ["_fpvKey2","_fpvArr2"];
+_fpvKey2 = Format ["wfbe_fpv_det_arr_%1", str _side];
+_fpvArr2 = missionNamespace getVariable [_fpvKey2, []];
+if (typeName _fpvArr2 != "ARRAY") then {_fpvArr2 = []};
+_fpvArr2 = _fpvArr2 - [_drone];
+missionNamespace setVariable [_fpvKey2, _fpvArr2];
 if (!isNull _driver) then {if (alive _driver) then {_driver setDammage 1};if (isNil {_driver getVariable "wfbe_trashed"}) then {_driver setVariable ["wfbe_trashed", true];_driver Spawn TrashObject}};
 if (!isNull _drone) then {if (alive _drone) then {_drone setDammage 1};if (isNil {_drone getVariable "wfbe_trashed"}) then {_drone setVariable ["wfbe_trashed", true];_drone Spawn TrashObject}};

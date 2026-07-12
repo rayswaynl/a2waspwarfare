@@ -184,7 +184,7 @@ while {!WFBE_GameOver} do {
                                 if ((gunner _gun) != _crew) then { _crew moveInGunner _gun; };
                             };
                             if ((gunner _gun) == _crew) then {
-                                _crew disableAI "MOVE";
+                                _crew disableAI "MOVE";  //--- HOTFIX 2026-07-06: disableMove is not a valid A2 OA 1.64 command (parse "Missing ;", live-burned build89 garrison dressing #771). disableAI "MOVE" is the A2-correct immobilizer.
                                 _crew allowFleeing 0;
                             };
 

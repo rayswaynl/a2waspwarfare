@@ -42,9 +42,9 @@ diag_log format ["GUERSTIPEND|START|startTowns=%1|baseRate=%2|townBonus=%3|inter
 //--- (30m/90m/180m) is REMOVED. BRDM/T-34 @ killtier1, T-55 @ killtier2, T-72/BMP2 @ killtier3.
 _kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
 _tier = 0;
-if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15])) then {_tier = 1};
-if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40])) then {_tier = 2};
-if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80])) then {_tier = 3};
+if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 30])) then {_tier = 1};
+if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 80])) then {_tier = 2};
+if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 160])) then {_tier = 3};
 missionNamespace setVariable ["WFBE_GUER_VEHICLE_TIER", _tier];
 publicVariable "WFBE_GUER_VEHICLE_TIER";
 diag_log format ["GUERSTIPEND|TIERSEED|tier=%1|kills=%2|t=%3", _tier, _kills, round time];
@@ -57,9 +57,9 @@ while {!WFBE_GameOver} do {
 	//--- BRDM/T-34 @ killtier1, T-55 @ killtier2, T-72/BMP2 @ killtier3.
 	_kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
 	_tier = 0;
-	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15])) then {_tier = 1};
-	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40])) then {_tier = 2};
-	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80])) then {_tier = 3};
+	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 30])) then {_tier = 1};
+	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 80])) then {_tier = 2};
+	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 160])) then {_tier = 3};
 	//--- B74.2 JIP DURABILITY: re-broadcast EVERY loop, not just on change. publicVariable is NOT JIP-replayed in
 	//--- A2-OA, and the GUER buy overlay (Root_GUE_PlayerOverlay.sqf) reads WFBE_GUER_VEHICLE_TIER with a default
 	//--- of 0 - so a GUER player who JIPs after a tier transition was silently stuck at tier 0 (no BRDM/T-55/T-72).

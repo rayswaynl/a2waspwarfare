@@ -40,10 +40,6 @@
 
 #include "Sounds\description.ext"
 
-<<<<<<<< HEAD:Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/description.ext
-#include "Music\description.ext"
-========
->>>>>>>> AntiStackPreparation:Modded_Missions/[55-2hc]warfarev2_073v48co.Napf/description.ext
 //--- Header contains the mission tite.
 #include "Rsc\Header.hpp"
 

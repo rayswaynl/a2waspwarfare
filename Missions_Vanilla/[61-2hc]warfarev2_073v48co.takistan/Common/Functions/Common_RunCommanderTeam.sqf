@@ -31,6 +31,15 @@ _template = _this select 1;
 _pos = _this select 2;
 _side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
 
+//--- LAB QUIESCENCE PIN (perf proving-ground): when the lab sets WFBE_C_TEST_TEAM_CAP=0 the synthetic
+//--- benchmark wants ZERO AICOM-founded teams. AI_Commander_Teams.sqf gates its OWN founding path on
+//--- this, but wildcard events (W6/W19/W23/W24) dispatch here directly and would otherwise smuggle one
+//--- free team past the cap ~15min in, contaminating the run and starving the lab sample loop. Inert in
+//--- live play (WFBE_C_TEST_TEAM_CAP default -1, never 0). Correctness/lab fix; no feature flag.
+if ((missionNamespace getVariable ["WFBE_C_TEST_TEAM_CAP", -1]) == 0) exitWith {
+	["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] founding skipped - lab quiescence pin (WFBE_C_TEST_TEAM_CAP=0).", _side]] Call WFBE_CO_FNC_AICOMLog;
+};
+
 //--- PLANE AIRFIELD-SPAWN (Ray 2026-07-01, PLANE-ONLY "free air at captured airfields", gate WFBE_C_AICOM_PLANE_AIRSTART default-ON):
 //--- AI_Commander_Teams appends two trailing delegate args for a fixed-wing founding: slot 7 = is-plane-team flag (bool), slot 8 =
 //--- the runway/airfield heading (deg, resolved server-side from the airfield logic getDir). Read both count-guarded so every OTHER
@@ -716,10 +725,13 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 					{deleteVehicle _x} forEach _hcrew;
 					deleteVehicle _h;
 					if (_cost > 0) then {
+						//--- D4-FIX(c): append the hull TYPE so the server re-derives the real build price itself (same
+						//--- QUERYUNITPRICE lookup this file used) instead of trusting the network _cost verbatim - closes a
+						//--- fund-mint hole where ANY client (not just the real HC) could forge this PVF with an arbitrary figure.
 						if (isServer) then {
-							["aicom-heli-refunded", _sID, _cost] Call HandleSpecial;
+							["aicom-heli-refunded", _sID, _cost, _htype] Call HandleSpecial;
 						} else {
-							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost]] Call WFBE_CO_FNC_SendToServer;
+							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost, _htype]] Call WFBE_CO_FNC_SendToServer;
 						};
 						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team transport %2 flew off-map, deleted + refunded $%3.", _sd, _htype, _cost]] Call WFBE_CO_FNC_AICOMLog;
 					};
@@ -985,6 +997,13 @@ while {!WFBE_GameOver && _alive} do {
 				_captureDone = false;
 				_team setVariable ["wfbe_aicom_arrival_trace_at", time + 60];
 				diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_ACCEPT|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round ((leader _team) distance _dest)));
+				//--- AI-BEHAVIOR-LOOP-DESIGN.md sec1.2 (MARCH): brand-new GROUP var wfbe_aicom_phase, zero prior writers (grepped whole tree this pass). Flag default 0 = fully inert. Only stamped for the real towns-target order (goto/defense/rally siblings at this same fresh-order block stay phase "").
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_PHASE_ENABLE", 0]) > 0 && {_mode == "towns-target"}) then {
+					private ["_phPrev"];
+					_phPrev = _team getVariable "wfbe_aicom_phase"; if (isNil "_phPrev") then {_phPrev = ""};
+					_team setVariable ["wfbe_aicom_phase", "MARCH", true];
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|PHASE_TRANSITION|team=" + (str _team) + "|town=?|from=" + _phPrev + "|to=MARCH");
+				};
 
 				//--- REAL UNSTUCK (task #14/#16): if this fresh order is a STUCK re-issue
 				//--- (server bumped wfbe_aicom_unstuck > 0 because the team sat parked far
@@ -1888,6 +1907,13 @@ while {!WFBE_GameOver && _alive} do {
 				//--- a single failed pass is never a dead end.
 				if (_arrived && !_captureDone && _mode == "towns-target") then {
 					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|BEGIN_CAPTURE|team=" + (str _team) + "|seq=" + str _seq + "|dist=" + str (round ((leader _team) distance _dest)));
+					//--- AI-BEHAVIOR-LOOP-DESIGN.md sec1.2 (CAMP_SWEEP): single choke-point every arrival already funnels through (_arrived && !_captureDone && _mode=="towns-target" guaranteed by the enclosing if above); no new gating logic needed.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_PHASE_ENABLE", 0]) > 0) then {
+						private ["_phPrev"];
+						_phPrev = _team getVariable "wfbe_aicom_phase"; if (isNil "_phPrev") then {_phPrev = ""};
+						_team setVariable ["wfbe_aicom_phase", "CAMP_SWEEP", true];
+						diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|PHASE_TRANSITION|team=" + (str _team) + "|town=?|from=" + _phPrev + "|to=CAMP_SWEEP");
+					};
 
 					//--- WAVE-1 CAUSE-3 EARLY-EXIT: bail the whole capture phase if the team is gone or has
 					//--- no live units (a wipe mid-phase would otherwise run scans/waypoints on a dead group).
@@ -1916,6 +1942,14 @@ while {!WFBE_GameOver && _alive} do {
 						_townObj = [_dest, towns] Call WFBE_CO_FNC_GetClosestEntity;
 					};
 					if (!isNull _townObj) then {_townCamps = _townObj getVariable ["camps", []]};
+					//--- AI-BEHAVIOR-LOOP-DESIGN.md sec2.1: cumulative per-team-per-town dwell clock. Brand-new GROUP var wfbe_aicom_dwell_town0, zero prior writers (grepped whole tree this pass). SAME town as last capture attempt -> deliberately do NOT overwrite t0 (this is what makes the clock cumulative ACROSS a RELEASE->repick-same-town cycle).
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_DWELL_ENABLE", 0]) > 0) then {
+						private ["_dwPrev"];
+						_dwPrev = _team getVariable "wfbe_aicom_dwell_town0";
+						if (isNil "_dwPrev" || {typeName _dwPrev != "ARRAY"} || {count _dwPrev < 2} || {(_dwPrev select 0) != _townObj}) then {
+							_team setVariable ["wfbe_aicom_dwell_town0", [_townObj, time], true];
+						};
+					};
 
 					//--- Depot-center scan point (server_town.sqf scans nearEntities around the
 					//--- town LOGIC). Fall back to the order dest if the town object is unknown.
@@ -2158,6 +2192,13 @@ while {!WFBE_GameOver && _alive} do {
 						//--- depot center let one enemy grenade wipe the whole hold; LINE spreads the squad so a single
 						//--- frag can't clear them. FORMATION only - COMBAT/RED behaviour + _capRange radius unchanged.
 						//--- (Road-march arrival handoff lines and the secondary depot SADs ~L1250/1252 are left as-is.)
+						//--- AI-BEHAVIOR-LOOP-DESIGN.md sec1.2 (CENTER_PUSH): fires whether or not the camp-first gate above timed out (matches the code's own "camp-first window expired... proceeding to center" fallback).
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_PHASE_ENABLE", 0]) > 0) then {
+							private ["_phPrev"];
+							_phPrev = _team getVariable "wfbe_aicom_phase"; if (isNil "_phPrev") then {_phPrev = ""};
+							_team setVariable ["wfbe_aicom_phase", "CENTER_PUSH", true];
+							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|PHASE_TRANSITION|team=" + (str _team) + "|town=" + (if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"?"}) + "|from=" + _phPrev + "|to=CENTER_PUSH");
+						};
 						[_team, true, [[_townCenter, 'SAD', _capRange, 30, [], [], ["COMBAT","RED","LINE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 						{if (alive _x) then {_x doMove _townCenter}} forEach _footInf;
 						if (!isNull leader _team && {alive leader _team}) then {(leader _team) doMove _townCenter};
@@ -2287,9 +2328,23 @@ while {!WFBE_GameOver && _alive} do {
 								_team setVariable ["wfbe_aicom_relief", objNull, true];
 								_team setVariable ["wfbe_aicom_caplock", [], true];   //--- CAPTURE LOCK CLEAR (GR-2026-07-03a): no longer draining -> re-taskable now.
 								_holdClaimed = true;
+								//--- AI-BEHAVIOR-LOOP-DESIGN.md sec1.2/1.3 (CONSOLIDATE): this phase's duration is already bounded by WFBE_C_AICOM_HOLD_SECS (owner-tunable, default 180s, unchanged by this design); no new timer needed.
+								if ((missionNamespace getVariable ["WFBE_C_AICOM_PHASE_ENABLE", 0]) > 0) then {
+									private ["_phPrev"];
+									_phPrev = _team getVariable "wfbe_aicom_phase"; if (isNil "_phPrev") then {_phPrev = ""};
+									_team setVariable ["wfbe_aicom_phase", "CONSOLIDATE", true];
+									diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|PHASE_TRANSITION|team=" + (str _team) + "|town=" + (_townObj getVariable ["name","?"]) + "|from=" + _phPrev + "|to=CONSOLIDATE");
+								};
 								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] HOLD-CLAIM [%3] on defense for %4s.", _side, _team, _townObj getVariable ["name","?"], (missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180])]] Call WFBE_CO_FNC_AICOMLog;
 							};
 							if (!_holdClaimed) then {
+							//--- AI-BEHAVIOR-LOOP-DESIGN.md sec1.2 (NEXT_TARGET, path 1 of 2): transient - the very next "Fresh order: head out." pass overwrites it back to MARCH. _townObj is guaranteed non-null here (this whole branch is nested inside the _townFlipped==true block above).
+							if ((missionNamespace getVariable ["WFBE_C_AICOM_PHASE_ENABLE", 0]) > 0) then {
+								private ["_phPrev"];
+								_phPrev = _team getVariable "wfbe_aicom_phase"; if (isNil "_phPrev") then {_phPrev = ""};
+								_team setVariable ["wfbe_aicom_phase", "NEXT_TARGET", true];
+								diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|PHASE_TRANSITION|team=" + (str _team) + "|town=" + (_townObj getVariable ["name","?"]) + "|from=" + _phPrev + "|to=NEXT_TARGET");
+							};
 							//--- ON-CAPTURE RE-TASK (BUG B): drop the captured-town order so AssignTowns
 							//--- retargets THIS team next tick instead of letting it idle ~2 min at the
 							//--- center. AssignTowns L168-169 retargets when isNull _goto (=> _needs=true),
@@ -2329,6 +2384,13 @@ while {!WFBE_GameOver && _alive} do {
 								//--- retargets (isNull _goto => _needs=true), and clear strike/relief so Strategy will not re-grab.
 								_captureDone = true;     //--- stop re-running this phase for the dropped order
 								_capReleased = true;
+								//--- AI-BEHAVIOR-LOOP-DESIGN.md sec1.2 (NEXT_TARGET, path 2 of 2): CAPTURE_MAXPASSES release branch (RELEASED uncapturable depot). _townObj may be null here (this branch does not require _townFlipped), guard matches the existing RELEASED log line below.
+								if ((missionNamespace getVariable ["WFBE_C_AICOM_PHASE_ENABLE", 0]) > 0) then {
+									private ["_phPrev"];
+									_phPrev = _team getVariable "wfbe_aicom_phase"; if (isNil "_phPrev") then {_phPrev = ""};
+									_team setVariable ["wfbe_aicom_phase", "NEXT_TARGET", true];
+									diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|PHASE_TRANSITION|team=" + (str _team) + "|town=" + (if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"?"}) + "|from=" + _phPrev + "|to=NEXT_TARGET");
+								};
 								_team setVariable ["wfbe_aicom_cappasses", 0];
 								_team setVariable ["wfbe_teamgoto", objNull, true];
 								_team setVariable ["wfbe_aicom_townorder", [], false];
@@ -2600,6 +2662,34 @@ while {!WFBE_GameOver && _alive} do {
 				//--- Malformed request (bad counts/types): clear it so it cannot loop forever.
 				_team setVariable ["wfbe_aicom_topup_req", [], true];
 			};
+		};
+	};
+
+	//--- ECON-SURGE ARTY TOP-UP CONSUMER (owner-modified econ-surge win, 2026-07-08): mirrors the TOP-UP CONSUMER
+	//--- above but for the single-gun request AI_Commander_Teams.sqf stamps on THIS team as wfbe_aicom_arty_surge_req
+	//--- = [classname, posArray, issuedTime] when wfbe_aicom_econ_surge fires and this team already owns the side's
+	//--- one live SPG battery. Adds ONE MORE crewed gun to the SAME group instead of founding a whole extra artillery
+	//--- team (explicit owner call, not the +1-team version the base idea proposed). Reuses WFBE_CO_FNC_CreateTeam
+	//--- (Common_CreateTeam.sqf) - the EXACT founding compositor that built the original battery (createVehicle +
+	//--- driver/gunner/commander moveIn + texture/marking/HandleDamage pipeline) - passing the EXISTING _team as its
+	//--- group arg so it APPENDS to that group instead of creating a new one. Same GetRandomPosition/GetEmptyPosition
+	//--- scatter idiom the founding call above uses so the new gun does not spawn stacked on the old one. Single-fire:
+	//--- AI_Commander_Teams.sqf already latches wfbe_aicom_arty_surged so it never re-stamps this team; the request is
+	//--- cleared immediately after consuming (A2: [] sentinel, not nil - same idiom as the TOP-UP request above).
+	if (_alive && {!isNull _team}) then {
+		private ["_esReq","_esCls","_esPos","_esSpawnPos"];
+		_esReq = _team getVariable "wfbe_aicom_arty_surge_req";
+		if (!isNil "_esReq" && {(typeName _esReq) == "ARRAY"} && {count _esReq >= 2}) then {
+			_esCls = _esReq select 0;
+			_esPos = _esReq select 1;
+			if ((typeName _esCls) == "STRING" && {_esCls != ""} && {(typeName _esPos) == "ARRAY"} && {count _esPos >= 2}) then {
+				_esSpawnPos = [_esPos, 20, 60] Call WFBE_CO_FNC_GetRandomPosition;
+				_esSpawnPos = [_esSpawnPos, 30] Call WFBE_CO_FNC_GetEmptyPosition;
+				[[_esCls], _esSpawnPos, _side, true, _team, true] Call WFBE_CO_FNC_CreateTeam;
+				diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|ARTY_SURGE_DONE|team=" + (str _team) + "|class=" + _esCls);
+				["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] ECON-SURGE +1 gun (%3) added to existing artillery group.", _side, _team, _esCls]] Call WFBE_CO_FNC_AICOMLog;
+			};
+			_team setVariable ["wfbe_aicom_arty_surge_req", [], true];
 		};
 	};
 

@@ -1,0 +1,108 @@
+// Marty: Track artillery ammo locals used in the team notification payload.
+Private ["_ammoIndex","_ammoName","_ammoOption","_ammoOptions","_ammoSelection","_arty_countdown","_arty_radius","_count","_destination","_gunCount","_i","_index","_logik","_side","_type","_units"];
+
+_destination 	= _this select 0;
+_index 			= _this select 1;
+_arty_countdown = _this select 2;
+_arty_radius    = _this select 3;
+
+_units = [group player, false, _index, WFBE_Client_SideJoinedText] Call GetTeamArtillery;
+if (count _units < 1) exitWith {};
+
+_type = ((missionNamespace getVariable Format ['WFBE_%1_ARTILLERY_CLASSNAMES', WFBE_Client_SideJoinedText]) select _index) find (typeOf (_units select 0));
+if (_type < 0) exitWith {};
+
+if ((missionNamespace getVariable ["WFBE_C_ARTY_SHARED_COOLDOWN", 0]) > 0) then {
+	_logik = (WFBE_Client_SideJoined) Call WFBE_CO_FNC_GetSideLogic;
+	if (!isNull _logik) then {_logik setVariable ["wfbe_arty_last_fire", time]};
+	["RequestSpecial", ["ArtySharedCooldown", WFBE_Client_SideJoined, group player]] Call WFBE_CO_FNC_SendToServer;
+};
+
+{[_x, _destination, WFBE_Client_SideJoined, artyRange] Spawn WFBE_CO_FNC_FireArtillery} forEach _units;
+
+//Keep weapons reloaded.
+// _units = [Group player,true,_index,sideJoinedText] Call GetTeamArtillery;
+// {if (!someAmmo _x) then {[_x, sideJoined] Call RearmVehicle}} forEach _units;
+
+//Marty : add artillery marker on map with the player name who call it
+_marker_name 	    = format["ARTY_%1", diag_tickTime];
+_markerPosition     = _destination;
+_markerType		    = "Destroy";
+_markerText 	    = format["ARTY [%1]", name player];
+_markerColor	    = "ColorRed";
+_markerSide		    = playerSide;
+_markerRadius       = _arty_radius;
+_marker_ellipse_name= format["Elipse_%1", _marker_name];
+
+[_marker_name, _markerPosition, _markerType, _markerText, _markerColor, _markerSide, _marker_ellipse_name,_markerRadius ] call WF_createMarker ;
+
+// Marty (Trello #171): The barrage markers are GLOBAL (WF_createMarker uses createMarker), but the
+// old WFBE_CL_FNC_Delete_Marker only ran deleteMarkerLocal in a timed spawn on THIS client, so if the
+// caller disconnected mid-barrage the markers leaked on every other client. Route the timed removal
+// through the SERVER instead: it deletes the markers globally regardless of the caller's connection.
+// 80s mirrors the previous predefined removal delay (prevents weird exitWith races in the arty script).
+["RequestSpecial", ["ArtyMarkerCleanup", [_marker_name, _marker_ellipse_name], 80]] Call WFBE_CO_FNC_SendToServer ;
+
+//Send audio + text message to the team side to warn them
+_playerName 	= name player;
+
+// Marty: Add the selected artillery ammunition display name to the team warning.
+_ammoOptions = [WFBE_Client_SideJoinedText, _index] Call WFBE_CO_FNC_GetArtilleryAmmoOptions;
+_ammoSelection = (_units select 0) getVariable ["WFBE_A_ArtilleryAmmoSelection", []];
+if (typeName _ammoSelection != "ARRAY") then {_ammoSelection = []};
+if (count _ammoSelection < 2) then {_ammoSelection = [_index, 0]};
+if ((_ammoSelection select 0) != _index) then {_ammoSelection = [_index, 0]};
+
+_ammoIndex = _ammoSelection select 1;
+_ammoName = if (count _ammoOptions > 0) then {(_ammoOptions select 0) select 0} else {"artillery ammunition"};
+
+for "_i" from 0 to (count _ammoOptions) - 1 do {
+	_ammoOption = _ammoOptions select _i;
+	if ((_ammoOption select 3) == _ammoIndex) exitWith {_ammoName = _ammoOption select 0};
+};
+
+// Marty: Pass the firing gun count as %3 so teammates know how many tubes are on the mission (Trello #116).
+_gunCount = count _units;
+// SECURITY (RCE fix): the player name (name player) is attacker-controllable, so embedding it via str()
+// into an SQF string that the receiver "call compile"d allowed a crafted name to break out and execute
+// arbitrary code on every teammate. The multi-language payload is now structured data
+// [stringtableKey, formatArgs]; the receiver resolves it with localize + format (never compiled), so the
+// name is treated as plain text. See Common_SendMessage.sqf / Client_onEventHandler_SEND_MESSAGE.sqf.
+_Compile_Multi_language_message	= ["STR_WF_INFO_Arty_called_message", [_playerName, _ammoName, _gunCount]];
+
+_audio_message 	= "ARTY_message_to_friendly_players_v2"; //In case of failure in conditions below, faction is considered as american by default to determine the audio message.
+if (IS_Takistan_Faction_On_This_Map  && playerSide == east) then {_audio_message 	= "ARTY_message_to_friendly_takistanish_v1"	};
+if (IS_Russian_Faction_On_This_Map   && playerSide == east) then {_audio_message 	= "ARTY_message_to_friendly_russian_v1"		};
+if (IS_American_Faction_on_this_map  && playerSide == west) then {_audio_message 	= "ARTY_message_to_friendly_players_v2"		};
+
+_side = playerSide ;
+
+_is_multi_language_message = true ;
+
+[_Compile_Multi_language_message, _audio_message, _side, _is_multi_language_message ] call WF_sendMessage ;
+//Marty.
+
+// Marty arty cooldown
+[] spawn 
+{
+    _side = playerSide ;
+    _currentUpgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+
+	_startTime = time;
+
+    // Marty : The missionNamespace artillery timeout is used directly in the while condition in order to retrieve the real countdown arty in case when a reloading upgrade artillery has been made.
+    while {(_startTime + ((missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS") select (_currentUpgrades select WFBE_UP_ARTYTIMEOUT))) > time} do {
+        
+        _currentUpgrades = (_side) call WFBE_CO_FNC_GetSideUpgrades;
+        //_currentTime = floor((_startTime + ((missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS") select (_currentUpgrades select WFBE_UP_ARTYTIMEOUT))) - time);  
+        //systemChat format ["Temps restant : %1 secondes", _currentTime];
+        
+        sleep 1;
+    };
+
+    _text_when_arty_ready_again = localize "STR_WF_INFO_Arty_cool_down_over";
+    //hint _text_when_arty_ready_again ;
+    titleText [_text_when_arty_ready_again, "PLAIN DOWN", 2];
+    playSound ["ARTY_cooldown_over",true];
+
+};

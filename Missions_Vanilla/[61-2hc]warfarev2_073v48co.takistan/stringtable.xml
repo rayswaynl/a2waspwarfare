@@ -189,6 +189,10 @@
         <English>You were deducted from $%1 due to your gear</English>
         <Russian>У вас изъято $%1 за ваше снаряжение</Russian>
       </Key>
+      <Key ID="STR_WF_CHAT_Gear_CampKept">
+        <English>Your custom gear was kept: this is a friendly camp.</English>
+        <Russian>Ваше снаряжение сохранено: это дружественный лагерь.</Russian>
+      </Key>
       <Key ID="STR_WF_CHAT_Gear_RespawnUnaffordable">
         <English>Your custom gear was stripped: you could not afford the $%1 respawn gear cost.</English>
         <Russian>Ваше снаряжение сброшено: недостаточно средств на стоимость снаряжения $%1.</Russian>
@@ -1909,6 +1913,14 @@
         <English>Respawn</English>
         <Russian>Возрождение</Russian>
       </Key>
+      <Key ID="STR_WF_RESPAWN_CustomiseAI">
+        <English>Customise AI Soldier</English>
+        <Russian>Настройка ИИ-солдата</Russian>
+      </Key>
+      <Key ID="STR_WF_RESPAWN_SavedKits">
+        <English>Saved Kits</English>
+        <Russian>Сохранённые комплекты</Russian>
+      </Key>
 
 <!--Service Menu - ALL DONE-->
       <Key ID="STR_WF_SERVICE_EASA">
@@ -2250,6 +2262,14 @@
       <Key ID="STR_WF_TOOLTIP_RespawnDefault">
         <English>Toggle between the default and current gear</English>
         <Russian>Снаряж. станд/текущ</Russian>
+      </Key>
+      <Key ID="STR_WF_TOOLTIP_RespawnCustomiseAI">
+        <English>Open the Team Menu's Unit Designer to set the loadout template used for future AI purchases</English>
+        <Russian>Открыть конструктор юнитов (шаблон снаряжения для будущих ИИ)</Russian>
+      </Key>
+      <Key ID="STR_WF_TOOLTIP_RespawnSavedKits">
+        <English>Open the Team Menu's Gear Presets to save, apply, or set a rebuy-on-death kit</English>
+        <Russian>Открыть сохранённые комплекты снаряжения</Russian>
       </Key>
 	  <Key ID="STR_WF_TOOLTIP_RespawnST">
         <English>Respawn stucked Supply Trucks. ATTENTION => ALL Trucks will be destroyed!</English>
@@ -5791,6 +5811,14 @@
     <Key ID="BankAlreadyBuilt">
       <English>Your side already has a bank. Only one bank may be active per side.</English>
       <Russian>У вашей стороны уже есть банк. На сторону может быть активен только один банк.</Russian>
+    </Key>
+    <Key ID="AARadarAlreadyBuilt">
+      <English>Your side already has (or is currently building) an Anti-Air Radar. Only one may be active per side.</English>
+      <Russian>У вашей стороны уже есть (или сейчас строится) радар ПВО. Активным может быть только один на сторону.</Russian>
+    </Key>
+    <Key ID="CBRadarAlreadyBuilt">
+      <English>Your side already has (or is currently building) a Counter Battery Radar. Only one may be active per side.</English>
+      <Russian>У вашей стороны уже есть (или сейчас строится) контрбатарейный радар. Активным может быть только один на сторону.</Russian>
     </Key>
     <Key ID="BankTooCloseToBase">
       <English>The bank must be built outside your base protection area.</English>

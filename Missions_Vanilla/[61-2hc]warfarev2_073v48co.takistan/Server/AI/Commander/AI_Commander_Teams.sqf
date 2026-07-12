@@ -16,7 +16,7 @@
 	members at the factories per-unit (the V0.2 path).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_facMap","_unitList","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget",
+private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget",
               "_allUnits","_allGroups","_allVehicles",
               "_w7Flag","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best","_w7SkillSend",
               "_w11FreeFlag",
@@ -50,8 +50,8 @@ _editorTeams  = 0;
 {
 	if (!isNull _x) then {
 		_real = false;
-		if (_x getVariable ["wfbe_aicom_hc", false]) then {_real = true};
-		if (!_real && {_x getVariable ["wfbe_aicom_founded", false]}) then {_real = true};
+		if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {_real = true};
+		if (!_real && {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {_real = true};
 		if (_real) then {
 			_foundedTeams = _foundedTeams + 1;
 		} else {
@@ -93,6 +93,13 @@ _pcN = (_pcN - _hcN) max 0;
 private ["_testPopPin"];
 _testPopPin = missionNamespace getVariable ["WFBE_C_TEST_POPTIER_PIN", -1];
 if (_testPopPin >= 0) then {_pcN = _testPopPin};
+//--- TEST-ONLY team cap (WFBE_C_TEST_TEAM_CAP, default -1 = off; declared next to WFBE_C_TEST_POPTIER_PIN in
+//--- Init_CommonConstants.sqf's TEST HARNESS block): hard-clamp the founding target to at most N teams/side,
+//--- for "2 teams + 1 town" minutes-fast dev loops. Read here (next to the poptier pin); applied as the FINAL
+//--- ceiling right before the founding gate below so it composes with the PC curve, delta, banking valve, hard
+//--- cap and econ-sink surge instead of racing them. -1 = off (no effect on live play).
+private ["_testTeamCap"];
+_testTeamCap = missionNamespace getVariable ["WFBE_C_TEST_TEAM_CAP", -1];
 	//--- B74.2 UNIFIED POP-TIER publisher (Ray 2026-06-23): the live human count is already settled here, so compute
 	//--- the tier and broadcast it ONCE per change so every AI subsystem (TOTAL_AI cap, town defenders/active-cap,
 	//--- side-patrols, the per-player AI buy-cap) scales off ONE source. 0=LOW(0-2)/1=MID(3-5)/2=HIGH(6-9)/3=FULL(10+).
@@ -103,24 +110,29 @@ if (_testPopPin >= 0) then {_pcN = _testPopPin};
 		diag_log format ["[POPTIER] humans=%1 tier=%2 (0=LOW 1=MID 2=HIGH 3=FULL)", _pcN, _popTier];
 	};
 _base = switch (true) do {
-	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  12]};
-	case (_pcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  4]};
-	case (_pcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 3]};
-	default          {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 2]};
+	//--- release-merge note: #952 (LOW/MID) and #963 (HIGH/FULL) are sequential patches to this same
+	//--- switch, not alternatives - #952's own body admits it left PC_HIGH/PC_FULL stale ("follow-up,
+	//--- needs owner decision"), and #963's body says it's syncing those two fields "in the two files
+	//--- that already had PC_LOW/PC_MID... synced". Values below match live Init_CommonConstants.sqf
+	//--- (:358-361) exactly: LOW=10, MID=7, HIGH=4, FULL=3.
+	case (_pcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  10]};
+	case (_pcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  7]};
+	case (_pcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 4]};
+	default          {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 3]};
 };
 //--- cmdcon42-k TEAM-COUNT REDUCTION (Ray 2026-07-02, both maps via LoadoutManager mirror): drop WFBE_C_AICOM_TEAMS_DELTA
 //--- (default -3) teams off the PC-scaled BASE founding target for EACH AI commander so the new Build-87 dynamic systems
 //--- (retained transports, patrol escalation, swarms) have per-team AI headroom. This is the SINGLE authoritative adjusted
 //--- read of the base target: _base drives the funds-extra sum, the banking valve, the hard-cap clamp, the econ-sink surge,
 //--- the (_foundedTeams+_pending)>=_target founding gate, the PC-cleanup retire AND the wfbe_aicom_dyntarget publish below,
-//--- so every consumer inherits the reduction from here. The FLOOR (WFBE_C_AICOM_TEAMS_FLOOR, default 6) prevents a config
+//--- so every consumer inherits the reduction from here. The FLOOR (WFBE_C_AICOM_TEAMS_FLOOR, default 3) prevents a config
 //--- accident from zeroing the army (a side founding 0 teams loses this fork by walkover). The funds-extra + econ-sink surge
 //--- (+2) stay RELATIVE to the reduced base; the hard cap is untouched. DELTA 0 => _base unchanged => EXACT old behaviour.
 //--- A2-OA-safe: getVariable-with-default + plain max arithmetic, no A3 commands. _baseRaw kept for the once-per-side log.
 private ["_baseRaw","_teamsDelta"];
 _baseRaw    = _base;
 _teamsDelta = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_DELTA", -1];
-_base       = (_base + _teamsDelta) max (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 6]);
+_base       = (_base + _teamsDelta) max (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 3]);
 _pcExtraCap = switch (true) do { case (_pcN >= 10): {0}; case (_pcN >= 6): {1}; default {_maxExtra} };
 if (_extra > _pcExtraCap) then {_extra = _pcExtraCap};
 _target = _base + _extra;
@@ -133,7 +145,7 @@ private ["_tgtLogPrev"];
 _tgtLogPrev = _logik getVariable ["wfbe_aicom_teamstgt_log", -9999];
 if (_base != _tgtLogPrev) then {
 	_logik setVariable ["wfbe_aicom_teamstgt_log", _base];
-	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAMS_TARGET|base=" + str _baseRaw + "|delta=" + str _teamsDelta + "|effective=" + str _base + "|floor=" + str (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 6]) + "|pc=" + str _pcN);
+	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAMS_TARGET|base=" + str _baseRaw + "|delta=" + str _teamsDelta + "|effective=" + str _base + "|floor=" + str (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 3]) + "|pc=" + str _pcN);
 };
 
 	//--- B37 BANKING VALVE (Ray 2026-06-16, gated WFBE_C_AICOM_BANKING_VALVE default-ON): at LOW/MID pop a
@@ -151,7 +163,7 @@ if (_base != _tgtLogPrev) then {
 
 //--- B747.1 HARD CAP (Ray 2026-06-24): clamp the founding target to a ceiling regardless of the PC curve +
 //--- banking valve. AICOM was fielding ~15 teams at low pop (base 12 + valve 3); Ray wants max 8 going forward.
-private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 8];
+private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 10];
 if (_target > _teamsHardCap) then {_target = _teamsHardCap; _extra = (_target - _base) max 0};
 
 //--- ECON SINK team-cap surge (cmdcon41-w2, Ray-approved): when the commander is pinned rich (AI_Commander.sqf set
@@ -233,6 +245,8 @@ if (_foundedTeams > _target) then {
 //--- to normal (no permanent target inflation). Placed AFTER the PC-cleanup block so the +1 never triggers a retire.
 //--- A2-OA-safe: boolean getVariable on the side-logic OBJECT _logik is reliable (not a group); plain if, no Bool ==.
 if ((_logik getVariable ["wfbe_aicom_veteran_next", false]) && {_logik getVariable ["wfbe_aicom_reinforce_rich", false]}) then {_target = (_target + 1) min _teamsHardCap}; //--- B747.1/Lane-358: veteran +1 must still respect the hard cap and current rich window.
+
+if (_testTeamCap >= 0) then {_target = _target min _testTeamCap}; //--- WFBE_C_TEST_TEAM_CAP final ceiling (test-only, default off).
 
 if ((_foundedTeams + _pending) >= _target) exitWith {};
 
@@ -333,8 +347,9 @@ if (count _live > 0) then {
 
 	//--- V0.6.2: gate templates on REAL unit data too (same rule Produce uses) - the
 	//--- hand-authored squad metadata is stale (RU tank platoon claims heavy 1; the
-	//--- T72_RU unit data says heavy 3 for humans). Track = factory unit-list membership.
-	_facMap = [["BARRACKSUNITS", WFBE_UP_BARRACKS], ["LIGHTUNITS", WFBE_UP_LIGHT], ["HEAVYUNITS", WFBE_UP_HEAVY], ["AIRCRAFTUNITS", WFBE_UP_AIR]];
+	//--- T72_RU unit data says heavy 3 for humans). Track = factory unit-list membership
+	//--- (feat/common-isunitunlocked: the per-template facMap literal that lived here moved
+	//--- into the shared Common_IsUnitUnlocked.sqf; the per-unit loop below now calls it).
 
 	_eligible = [];
 	for "_i" from 0 to (count _templates - 1) do {
@@ -354,15 +369,15 @@ if (count _live > 0) then {
 		if (_ok) then {
 			{
 				_cn = _x;
-				_ud = missionNamespace getVariable _cn;
-				if (!isNil "_ud") then {
-					{
-						_unitList = missionNamespace getVariable [Format ["WFBE_%1%2", _sideText, _x select 0], []];
-						if (_cn in _unitList) exitWith {
-							if (((_ud select QUERYUNITUPGRADE) > (_upgrades select (_x select 1))) && {!(_airTierWaive && {(_x select 1) == WFBE_UP_AIR})}) then {_ok = false}; //--- B74/Build83: waive the per-unit AIR factory-tier requirement at a captured airfield (jets+helis) OR when a held Aircraft Factory covers HELIS; non-air factory tiers still apply.
-						};
-					} forEach _facMap;
-				};
+				//--- feat/common-isunitunlocked: shared per-unit facMap/QUERYUNITUPGRADE tier-unlock check
+				//--- replaces the inline scan. AIR-track waiver preserved EXACTLY (B74/Build83): pass a COPY
+				//--- of _upgrades with the AIR slot raised past any real tier when _airTierWaive is set, so
+				//--- the shared comparison degrades to "always unlocked" for AIR only - non-air tracks are
+				//--- untouched. `+ []` forces a real array copy so the shared _upgrades is never mutated.
+				private ["_cnUpgrades"];
+				_cnUpgrades = _upgrades + [];
+				if (_airTierWaive) then {_cnUpgrades set [WFBE_UP_AIR, 1e6]};
+				if (!(([_cn, _sideText, _cnUpgrades] Call WFBE_CO_FNC_IsUnitUnlocked) select 0)) then {_ok = false};
 				//--- B66 CAPTURE-UNLOCK eligibility: a template containing a CAPTURE_UNLOCKS class
 				//--- (premium ACR units: T72M4CZ/RM70_ACR) is only eligible while this side HOLDS the
 				//--- trigger town. Mirror the client gate (Client_UIFillListBuyUnits): match the class
@@ -431,6 +446,24 @@ if (count _live > 0) then {
 	if (count _eligNoStatic > 0) then {_eligible = _eligNoStatic};
 	if (count _eligible == 0) exitWith {};
 
+	//--- fable/aicom-no-bikes (WO-5, owner ruling "no ATVs/bikes"): strip every eligible template that contains an
+	//--- ATV/Motorcycle-hull unit from the AI commander roster. "Motorcycle" is the confirmed A2 OA CfgVehicles base
+	//--- class used for ATV-type vehicles throughout this codebase (Common_AICOM_AutoFlip.sqf, AwardBounty.sqf,
+	//--- Server_AwardScorePlayer.sqf). isKindOf is safe here (vehicle classnames, not weapon/magazine classnames).
+	//--- GUARDRAIL: if stripping would EMPTY the set, keep the original (mirrors the static-weapon strip above).
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_NO_BIKES", 1]) > 0) then {
+		private ["_eligNoBike","_nbEi","_nbHas"];
+		_eligNoBike = [];
+		{
+			_nbEi = _x;
+			_nbHas = false;
+			{ if ((typeName _x == "STRING") && {_x isKindOf "Motorcycle"}) exitWith {_nbHas = true} } forEach (_templates select _nbEi);
+			if (!_nbHas) then {_eligNoBike set [count _eligNoBike, _nbEi]};
+		} forEach _eligible;
+		if (count _eligNoBike > 0) then {_eligible = _eligNoBike};
+	};
+	if (count _eligible == 0) exitWith {};
+
 	//--- B59 ROSTER AIR-GATE (Ray 2026-06-20): the FOUNDING path (this file) had NO air-established gate, so
 	//--- a heli template (cheapest helis carried QUERYUNITUPGRADE air=0) was eligible at air-research 0 with no
 	//--- air factory. Mirror AI_Commander_Produce.sqf:47-52: until the side holds >= WFBE_C_AICOM_AIR_MIN_TOWNS
@@ -439,7 +472,7 @@ if (count _live > 0) then {
 	_rosterMyID = (_side) Call WFBE_CO_FNC_GetSideID;
 	_rosterOwnTowns = 0;
 	{ if ((_x getVariable "sideID") == _rosterMyID) then {_rosterOwnTowns = _rosterOwnTowns + 1} } forEach towns;
-	if ((_rosterOwnTowns < (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 4])) && {!_freeAirWaive} && {!_airHeliWaive}) then { //--- B74: a captured airfield (free-buy) exempts the AIR_MIN_TOWNS strip so air comes online immediately on field capture. Build83 (Ray cmdcon34): a held Aircraft Factory ALSO exempts it (the AF only builds after AIR_MIN_TOWNS anyway, so holding one already implies establishment) - helis build once the factory stands.
+	if ((_rosterOwnTowns < (missionNamespace getVariable ["WFBE_C_AICOM_AIR_MIN_TOWNS", 3])) && {!_freeAirWaive} && {!_airHeliWaive}) then { //--- B74: a captured airfield (free-buy) exempts the AIR_MIN_TOWNS strip so air comes online immediately on field capture. Build83 (Ray cmdcon34): a held Aircraft Factory ALSO exempts it (the AF only builds after AIR_MIN_TOWNS anyway, so holding one already implies establishment) - helis build once the factory stands.
 		_eligNoAir = [];
 		{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir set [count _eligNoAir, _x]} } forEach _eligible;
 		_eligible = _eligNoAir;
@@ -552,6 +585,37 @@ if (count _live > 0) then {
 			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] arty cap hit (alive %2 >= cap %3) - arty templates stripped this cycle.", _sideText, _artyAlive, _artyCap]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
+
+	//--- ECON-SURGE ARTY TOP-UP (owner-modified shape, 2026-07-08 easy-win pass): the original ask bumped _artyCap by 1
+	//--- under wfbe_aicom_econ_surge to found a WHOLE second artillery TEAM. Owner call: no second team - instead add
+	//--- ONE MORE gun to the EXISTING battery's own group (one more piece in the current SPG team). Reuses the EXACT
+	//--- founding compositor (WFBE_CO_FNC_CreateTeam, Common_CreateTeam.sqf) that built the original battery: this only
+	//--- STAMPS a request on the owning GROUP (mirrors the proven wfbe_aicom_topup_req pattern from Produce.sqf/
+	//--- Common_RunCommanderTeam.sqf - server publishes, the HC that actually owns the team's units consumes it
+	//--- locally, so no locality violation reading/writing a possibly-HC-local group from here). One-shot per battery
+	//--- (wfbe_aicom_arty_surged latch on the GROUP) so a standing surge flag cannot keep stacking guns forever; a
+	//--- freshly re-founded battery (after the old one dies) can surge again. A2-OA-safe: plain group getVariable +
+	//--- isNil (no 2-arg array form on a team/group var), setVariable 3rd broadcast arg (object/group - allowed).
+	if (_artyCap > 0 && {_artyAlive > 0} && {_logik getVariable ["wfbe_aicom_econ_surge", false]}) then {
+		private ["_esHull","_esTeam","_esSurged"];
+		_esHull = objNull;
+		{
+			if (isNull _esHull && {alive _x} && {(typeOf _x) in _artyCls} && {(count crew _x) > 0} && {side ((crew _x) select 0) == _side}) then {_esHull = _x};
+		} forEach _allVehicles;
+		if (!isNull _esHull) then {
+			_esTeam = group ((crew _esHull) select 0);
+			if (!isNull _esTeam) then {
+				_esSurged = _esTeam getVariable "wfbe_aicom_arty_surged";
+				_esSurged = (!isNil "_esSurged" && {_esSurged});
+				if (!_esSurged) then {
+					_esTeam setVariable ["wfbe_aicom_arty_surged", true, true];
+					_esTeam setVariable ["wfbe_aicom_arty_surge_req", [(typeOf _esHull), (getPosATL _esHull), time], true];
+					["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] ECON-SURGE arty top-up requested on existing battery team %2 (hull %3) - +1 gun to the SAME group, no new team founded.", _sideText, _esTeam, typeOf _esHull]] Call WFBE_CO_FNC_AICOMLog;
+				};
+			};
+		};
+	};
+
 	if (count _eligible == 0) exitWith {};
 
 	//--- FORCED-ARTY (Ray 2026-06-27, Issue 3 Part 2): GUARANTEE the 1 artillery battery is founded once eligible.
@@ -827,7 +891,7 @@ if (count _live > 0) then {
 		if (!isNull _garGrp) then {_d4Target = [_garGrp, "wfbe_aicom_alloc_target", objNull] Call WFBE_CO_FNC_GroupGetBool};
 		//--- Fallback: first non-null alloc_target across all founded teams.
 		if (isNull _d4Target) then {
-			{ if (!isNull (_x getVariable ["wfbe_aicom_alloc_target", objNull])) then { _d4Target = _x getVariable ["wfbe_aicom_alloc_target", objNull] } } forEach _teams;
+			{ if (!isNull ([_x, "wfbe_aicom_alloc_target", objNull] Call WFBE_CO_FNC_GroupGetBool)) then { _d4Target = [_x, "wfbe_aicom_alloc_target", objNull] Call WFBE_CO_FNC_GroupGetBool } } forEach _teams;
 		};
 		if (!isNull _d4Target) then {
 			_d4Camps   = count (_d4Target getVariable ["camps", []]);
@@ -1038,8 +1102,8 @@ if (count _live > 0) then {
 		if (!isNull _facObj) exitWith {};
 	} forEach (if (_doc == "HF") then {["Heavy","Light","Barracks"]} else {["Light","Heavy","Barracks"]});
 
-	//--- Build84 OWNED-FACTORY GATE (Ray 2026-07-01, gated WFBE_C_AICOM_FOUND_REQUIRE_FACTORY default 0 = OLD
-	//--- HQ-fallback allowed = SHIP-SAFE). Ray: "no magic infantry conjured at the HQ" - only produce troops for
+	//--- Build84 OWNED-FACTORY GATE (Ray 2026-07-01, ARMED 2026-07-10 by owner decision - default now 1, see
+	//--- PR "Feat: AI team founding requires factory"). Ray: "no magic infantry conjured at the HQ" - only produce troops for
 	//--- factories the commander OWNS. When the flag is 1: the picked team's type (_chosen: 0=inf,1=light,2=heavy,
 	//--- 3=air) must MATCH an owned factory (infantry->Barracks; armor light->Light or Heavy; armor heavy->Heavy
 	//--- or Light; air->Aircraft). If the side owns NO factory of that type, SKIP founding it this cycle so the

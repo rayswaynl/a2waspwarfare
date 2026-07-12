@@ -170,7 +170,7 @@ publicVariable "WFBE_ACTIVE_GUER_AIR";
 while {!WFBE_GameOver} do {
 	sleep _interval;
 
-	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore"];
+	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore","_prunedGroups"];
 	_perfStart = diag_tickTime;
 	_perfAirBefore = count _defenders;
 	_perfDropsBefore = count _drops;
@@ -180,6 +180,7 @@ while {!WFBE_GameOver} do {
 	//--- Rebuild the registry, dropping anything that is dead/destroyed or should be despawned.
 	_kept         = [];
 	_townsWithAir = [];
+	_prunedGroups = [];
 	{
 		private ["_entry","_eTown","_eVeh","_eGrp","_eSpawn","_eLastEnemy","_drop","_reason","_enemiesNow","_townSide","_townActive"];
 		_entry      = _x;
@@ -221,10 +222,15 @@ while {!WFBE_GameOver} do {
 			//--- crewing/occupying a defender hull or its group. NEVER deleteVehicle a player.
 			//--- If ANY crew member is a player, skip the hull teardown entirely (leave the air
 			//--- for the player; the registry entry is dropped either way so the maintain sweep
-			//--- stops tracking it). Group teardown only deletes non-player units.
-			//--- W13 self-clean: crew + hull + group (player-safe).
+			//--- stops tracking it).
+			//--- fix(swarm): W13 self-clean only tears down THIS entry's own crew+hull here. Ka-137
+			//--- swarm extras register under the LEADER's shared _grp (see the SWARM ROLL block below),
+			//--- so blanket-deleting units _eGrp here used to wipe every sibling drone's crew too on
+			//--- ANY single prune - derelict hulls then sat in the registry (alive, crewless) for up to
+			//--- _lifetime (900s). Group teardown is deferred to the post-pass below, which only frees
+			//--- a group once no KEPT entry still references it.
 			if (!isNull _eVeh && {({isPlayer _x} count (crew _eVeh)) == 0}) then { {deleteVehicle _x} forEach (crew _eVeh); deleteVehicle _eVeh; };
-			if (!isNull _eGrp) then { {if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _eGrp); deleteGroup _eGrp; };
+			if (!isNull _eGrp) then { _prunedGroups = _prunedGroups + [_eGrp]; };
 			diag_log format ["GUERAIRDEF|DESPAWN|town=%1|reason=%2|alive=%3", (if (isNull _eTown) then {"?"} else {_eTown getVariable ["name","?"]}), _reason, (count _kept)];
 		} else {
 			_kept         = _kept + [[_eTown, _eVeh, _eGrp, _eSpawn, _eLastEnemy]];
@@ -233,6 +239,22 @@ while {!WFBE_GameOver} do {
 	} forEach _defenders;
 	_defenders  = _kept;
 	_aliveCount = count _defenders;
+
+	//--- fix(swarm): finalize deferred group teardown. A group is only freed once no KEPT
+	//--- registry entry still references it (leader + every swarm extra that shared it have
+	//--- ALL been pruned). Any pruned group still shared by a surviving sibling is left alone -
+	//--- its crew/hull were untouched above, so the sibling keeps its group and orders intact.
+	private ["_keptGroups"];
+	_keptGroups = [];
+	{ _keptGroups = _keptGroups + [(_x select 2)]; } forEach _defenders;
+	{
+		private ["_pg"];
+		_pg = _x;
+		if (!isNull _pg && {!(_pg in _keptGroups)}) then {
+			{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _pg);
+			deleteGroup _pg;
+		};
+	} forEach _prunedGroups;
 
 	//=== (1b) PRUNE + SELF-CLEAN the PARADROPPED squads (build83) =============================
 	//--- Same lifecycle as the air: drop a squad when it is wiped out, its town is lost/inactive,

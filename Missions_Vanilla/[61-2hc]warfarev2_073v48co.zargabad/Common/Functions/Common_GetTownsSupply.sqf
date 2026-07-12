@@ -4,7 +4,7 @@ _side = (_this) Call GetSideID;
 
 _income = 0;
 {
-	if ((_x getVariable "sideID") == _side) then {_income = _income + (_x getVariable "supplyValue")};
+	if ((_x getVariable "sideID") == _side) then {_income = _income + (_x getVariable ["supplyValue", 0])};
 } forEach towns;
 
 _income

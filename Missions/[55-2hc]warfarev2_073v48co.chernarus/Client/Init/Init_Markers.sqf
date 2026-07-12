@@ -86,7 +86,7 @@ scriptName "Client\Init\Init_Markers.sqf";
 //--- without a code change; the default keeps the icon small (matches the camp 0.5 marker scale).
 //--- Local markers only — purely a client-side map icon.
 [] Spawn {
-	private ["_sz","_deadline","_loc","_isShop","_mk"];
+	private ["_sz","_deadline","_loc","_isShop","_mk","_mkPos","_afLogicChecks"];
 	_sz       = missionNamespace getVariable ["WFBE_C_SHOP_POI_MARKER_SIZE", 0.6];
 	//--- Stop re-scanning ~60s after init: carriers are wired immediately after townInit, so any
 	//--- replication lag is comfortably covered; airfields are already flagged on the first pass.
@@ -100,7 +100,16 @@ scriptName "Client\Init\Init_Markers.sqf";
 				_mk = Format ["WFBE_%1_ShopPOI", str _loc];
 				//--- Only create once (markerType of a non-existent marker is "", so this is the create-guard).
 				if ((markerType _mk) == "") then {
-					createMarkerLocal [_mk, getPos _loc];
+					//--- fable/fix-hangar-aircraft-buy: anchor on the actual LocationLogicAirport, not the
+					//--- town/depot logic - the hangar/buy-point sits there (~80m away), so the town position
+					//--- put the triangle off the real shop bubble. Carriers/naval HVTs are their own airfield
+					//--- ref (Init_NavalHVT.sqf) - getPos _loc is already correct for those, left unchanged.
+					_mkPos = getPos _loc;
+					if (_loc getVariable ["wfbe_is_airfield", false]) then {
+						_afLogicChecks = (getPos _loc) nearEntities [["LocationLogicAirport"], 1500];
+						if (count _afLogicChecks > 0) then { _mkPos = getPos (_afLogicChecks select 0) };
+					};
+					createMarkerLocal [_mk, _mkPos];
 					_mk setMarkerTypeLocal "mil_triangle";
 					_mk setMarkerColorLocal "ColorYellow";
 					_mk setMarkerSizeLocal [_sz, _sz];

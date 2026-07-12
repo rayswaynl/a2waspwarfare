@@ -29,7 +29,7 @@ if (isNil "WFBE_ACTIVE_PATROLS") then {WFBE_ACTIVE_PATROLS = []; publicVariable 
 //--- JIP clients see a defined empty array. Entries: [leader, sideID, dir, team].
 if (isNil "WFBE_ACTIVE_AICOM_TEAMS") then {WFBE_ACTIVE_AICOM_TEAMS = []; publicVariable "WFBE_ACTIVE_AICOM_TEAMS"};
 
-_delay = missionNamespace getVariable "WFBE_C_PATROLS_DELAY_SPAWN";
+_delay = missionNamespace getVariable ["WFBE_C_PATROLS_DELAY_SPAWN", 360];  //--- 2-arg default (was 1-arg): matches the Init_Server.sqf value and the sibling reads at L39/L49. Guards the -(_delay) / (time - _last > _delay) reads below from an Undefined-variable throw when the constant has not been published yet (observed under long lab runs), which otherwise spams every cycle and never issues a patrol.
 //--- B74.2 (Ray 2026-06-23): WEST/EAST side-patrol cap is now POP-TIER aware (was the flat
 //--- WFBE_C_SIDE_PATROLS_MAX). Read WFBE_C_SIDE_PATROLS_MAX_BY_TIER select WFBE_PopTier per cycle (the
 //--- server publishes WFBE_PopTier 0=LOW/1=MID/2=HIGH/3=FULL, changing ~every 90s) so the concurrent

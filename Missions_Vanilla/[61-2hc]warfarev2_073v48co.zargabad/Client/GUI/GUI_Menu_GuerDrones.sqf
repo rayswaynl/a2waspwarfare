@@ -1,3 +1,4 @@
+disableSerialization; //--- Hotfix: _map holds a control - engine serialization error without this.
 Private ["_map","_fpvCooldown","_fpvWasAlive","_fpvState","_fpvRemain","_fpvTTL",
          "_fpvElapsed","_battPct","_battFull","_battEmpty","_battBar","_battI",
          "_hvtList","_platform","_carHolder","_hSID","_carrierOwned",

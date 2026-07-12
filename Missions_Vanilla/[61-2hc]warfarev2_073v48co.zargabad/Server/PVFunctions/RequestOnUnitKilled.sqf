@@ -41,7 +41,7 @@ if (isPlayer _killed) then {
 	_killed setVariable ["wfbe_killstreak", 0, true];
 };
 
-if (!(_killed isKindOf "Man") && (_killer == _killed || isNull _killer || !alive _killer)) then { //--- Vehicles may crash or burn out after a valid hit.
+if ((!(_killed isKindOf "Man") || (_killed getVariable ["wfbe_explosivesupportkill", false])) && (_killer == _killed || isNull _killer || !alive _killer)) then { //--- Vehicles may crash or burn out after a valid hit; Man-class victims explicitly stamped as an anonymous explosive-support kill (VBIED/SCUD/FPV) also fall through here - fable/fix-vbied-attribution (owner pick A3, 2026-07-08): SCOPED to explosive-support kills only, NOT a blanket Man-class gate removal.
 	_last_hit = _killed getVariable ["wfbe_lasthitby", objNull];
 	// A2 OA: deleted objects can return nil even with a default; guard before isNull.
 	if (isNil "_last_hit") then { _last_hit = objNull };
@@ -150,10 +150,10 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_kill
 	//--- unlock once. Broadcast [seq, text]; the GUER overlay watcher (Root_GUE_PlayerOverlay.sqf) shows it.
 	private ["_gMilestones","_gMsg"];
 	_gMilestones = [
-		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15], "BRDM-2 + T-34 unlocked  -  Ka-137 flares up to 120"],
-		[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25], "M113 VBIED unlocked  -  armoured suicide APC at 2x speed"],
-		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40], "T-55 unlocked  -  Ka-137 flares up to 240"],
-		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80], "T-72 + BMP-2 unlocked"]
+		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 30], "BRDM-2 + T-34 unlocked  -  Ka-137 flares up to 120"],
+		[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 50], "M113 VBIED unlocked  -  armoured suicide APC at 2x speed"],
+		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 80], "T-55 unlocked  -  Ka-137 flares up to 240"],
+		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 160], "T-72 + BMP-2 unlocked"]
 	];
 	_gMsg = "";
 	{ if (WFBE_GUER_PLAYER_KILLS == (_x select 0)) then {_gMsg = _x select 1} } forEach _gMilestones;
@@ -327,7 +327,11 @@ if ((missionNamespace getVariable ["WFBE_C_NOTABLE_KILL_FEED", 0]) > 0 && {isSer
 if (WF_A2_Vanilla) then { //--- Garbage Collector.
 	if (!isServer || local player) then {_objects = (WF_Logic getVariable "trash") + [_killed];	WF_Logic setVariable ["trash",_objects,true];} else {_killed setVariable ["wfbe_trashed", true];_killed Spawn TrashObject};
 } else {
-	if (isServer) then {_killed setVariable ["wfbe_trashed", true];	_killed Spawn TrashObject};
+	//--- These two branches were non-exclusive: this is a server PVFunction so isServer is always true,
+	//--- so a PLAYER death fired BOTH ifs -> _killed Spawn TrashObject twice (2x threads / RPT lines /
+	//--- deleteVehicle-deleteGroup attempts; TrashObject has no wfbe_trashed dedup guard). Gate the server
+	//--- branch on !player so exactly one spawn runs; end state is identical (trashed once).
+	if (isServer && {!_killed_isplayer}) then {_killed setVariable ["wfbe_trashed", true];	_killed Spawn TrashObject};
 	if (_killed_isplayer) then {_killed setVariable ["wfbe_trashed", true];	_killed Spawn TrashObject};
 };
 

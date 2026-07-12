@@ -42,9 +42,9 @@ _pard = missionNamespace getVariable "WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY"
 // Marty: Show each artillery type's effective min-max range next to its name (Trello #115).
 // Effective max uses the same WFBE_C_ARTILLERY divisor the menu applies for _maxRange below,
 // so the printed number matches the in/out-of-range coloring in the cannon list.
-_artyNames    = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText];
-_artyRangeMin = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",sideJoinedText];
-_artyRangeMax = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",sideJoinedText];
+_artyNames    = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText], []]; //--- fable/fix-tactical-arty-jip-crash: default [] - 1-arg read was nil on JIP/fast-open before the side arty config replicated, and `count nil` at the for-loop below crashed the whole Tactical menu init.
+_artyRangeMin = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_RANGES_MIN",sideJoinedText], []];
+_artyRangeMax = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_RANGES_MAX",sideJoinedText], []];
 _artyDivisor  = missionNamespace getVariable "WFBE_C_ARTILLERY";
 for "_artyI" from 0 to (count _artyNames) - 1 do {
 	_artyRowName = _artyNames select _artyI;
@@ -57,11 +57,52 @@ for "_artyI" from 0 to (count _artyNames) - 1 do {
 };
 lbSetCurSel[17008,0];
 
+//--- fable/scud-chernarus-artillery (owner 2026-07-08): SCUD/TEL true integration into the Artillery
+//--- panel (idc 17008) instead of the flat Tactical-Center support list. Appended AFTER the cannon rows
+//--- so every existing cannon index/array read below _artyCount is untouched. Row labels use the SAME
+//--- "owned-unit ranger" idiom the cannon rows use for range (here: live platform count).
+_artyCount = count _artyNames;
+_telRowIDs = [];
+_telRowFee = [];
+if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) > 0) then {
+	private ["_telObj","_telAlive","_platN","_scuds","_x"];
+	_telObj = missionNamespace getVariable [format ["WFBE_ICBM_TEL_%1", str sideJoined], objNull];
+	_telAlive = (!isNull _telObj && {alive _telObj});
+	_platN = if (_telAlive) then {1} else {0};
+	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}}) then {
+		_scuds = missionNamespace getVariable [format ["WFBE_TK_SCUD_PLATFORMS_%1", str sideJoined], []];
+		if (typeName _scuds == "ARRAY") then {
+			{ if (!isNull _x && {alive _x}) then {_platN = _platN + 1} } forEach _scuds;
+		};
+	};
+	_telRowIDs = _telRowIDs + ["TEL_Saturation","TEL_Recon","TEL_Fascam","TEL_SteelRain","TEL_Buster"];
+	_telRowFee = _telRowFee + [
+		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_SAT_COST", 12000]),
+		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_RECON_COST", 10000]),
+		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_FASCAM_COST", 14000]),
+		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_COST", 9000]),
+		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_BUSTER_COST", 18000])
+	];
+	lbAdd [17008, Format ["SCUD: SATURATION (platforms: %1)", _platN]];
+	lbAdd [17008, Format ["SCUD: RECON FLASH (platforms: %1)", _platN]];
+	lbAdd [17008, Format ["SCUD: FASCAM - mines (platforms: %1)", _platN]];
+	lbAdd [17008, Format ["SCUD: STEEL RAIN - anti-inf (platforms: %1)", _platN]];
+	lbAdd [17008, Format ["SCUD: BUNKER BUSTER - point (platforms: %1)", _platN]];
+};
+if ((missionNamespace getVariable ["WFBE_C_SCUD_MENU", 1]) > 0) then {
+	_telRowIDs = _telRowIDs + ["SCUD_Carrier"];
+	_telRowFee = _telRowFee + [(missionNamespace getVariable ["WFBE_C_SCUD_COST", 25000])];
+	lbAdd [17008, "SCUD STRIKE (carrier)"];
+};
+
 // Marty: Include the artillery ammo selector in the artillery enable/disable state.
-_IDCS = [17005,17006,17007,17008,17034];
+_IDCS = [17005,17006,17007,17034];
+//--- fable/scud-chernarus-artillery: 17008 excluded from this arty-off disable list - it now also
+//--- hosts SCUD/TEL rows (idx >= _artyCount), which must stay selectable even when WFBE_C_ARTILLERY=0
+//--- (matches their old flat-Tactical-Center-list availability, which was never gated by this flag).
 if ((missionNamespace getVariable "WFBE_C_ARTILLERY") == 0) then {{ctrlEnable [_x,false]} forEach _IDCS};
 
-{ctrlEnable [_x, false]} forEach [17010,17011,17012,17013,17014,17015,17017,17018,17020];
+{ctrlEnable [_x, false]} forEach [17020]; //--- cmdcon (fable, GR-2026-07-08a): trimmed 8 phantom idcs (17010-17015,17017,17018 exist nowhere in Rsc) - 17020 (Use button) kept, re-toggled at the MenuAction 20 gate below
 
 _currentValue = -1;
 _currentFee = -1;
@@ -75,30 +116,9 @@ _addToListID = ["Fast_Travel","ICBM","Paradrop_Ammo","Paradrop_Vehicle","Paratro
 _addToListFee = [0,75000,9500,3500,8500,0,12500,0,0];
 _addToListInterval = [0,1000,800,600,_pard,0,0,0,0];	//--- QoL fix: paratrooper cooldown now respects WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY (was hardcoded 900, silently ignoring the mission param)
 
-//--- cmdcon41-w3i (Ray 2026-07-02) SCUD/TEL MUNITIONS moved into the Tactical menu (this is the ONE place all SCUD/TEL
-//--- fire calls now live, beside the classic ICBM/NUKE row — the w3g war-room buttons were removed). Each is appended as a
-//--- support-list entry with plain-string labels; enable-gated in the switch below; each arms a map-click that sends the
-//--- SAME server payload the buttons used (icbm-tel-fire for the 5 TEL munitions; ScudStrike for the carrier). Entries are
-//--- feature-flag-gated at BUILD time: the 5 TEL munitions require WFBE_C_ICBM_TEL; the carrier SCUD requires WFBE_C_SCUD_MENU.
-//--- Fees pull live from the same cost flags the server charges (server remains authoritative; the client display matches).
-if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) > 0) then {
-	_addToList = _addToList + ["SCUD: SATURATION", "SCUD: RECON FLASH", "SCUD: FASCAM (mines)", "SCUD: STEEL RAIN (anti-inf)", "SCUD: BUNKER BUSTER (point)"];
-	_addToListID = _addToListID + ["TEL_Saturation","TEL_Recon","TEL_Fascam","TEL_SteelRain","TEL_Buster"];
-	_addToListFee = _addToListFee + [
-		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_SAT_COST", 12000]),
-		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_RECON_COST", 10000]),
-		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_FASCAM_COST", 14000]),
-		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_COST", 9000]),
-		(missionNamespace getVariable ["WFBE_C_ICBM_TEL_BUSTER_COST", 18000])
-	];
-	_addToListInterval = _addToListInterval + [0,0,0,0,0];	//--- server enforces the SHARED TEL cooldown (WFBE_C_ICBM_TEL_COOLDOWN); no client interval gate.
-};
-if ((missionNamespace getVariable ["WFBE_C_SCUD_MENU", 1]) > 0) then {
-	_addToList = _addToList + ["SCUD STRIKE (carrier)"];
-	_addToListID = _addToListID + ["SCUD_Carrier"];
-	_addToListFee = _addToListFee + [(missionNamespace getVariable ["WFBE_C_SCUD_COST", 25000])];
-	_addToListInterval = _addToListInterval + [0];	//--- server enforces the per-carrier cooldown (WFBE_C_SCUD_COOLDOWN).
-};
+//--- fable/scud-chernarus-artillery (owner 2026-07-08): SCUD/TEL fire moved OUT of this flat support
+//--- list and into the dedicated Artillery panel (idc 17008 - see the block appended after the cannon
+//--- row loop above). Single registration point - not re-added here to avoid double-registering the action.
 //--- fable/fpv-strike-drone: player-piloted kamikaze mini-UAV. Row appended only when
 //--- WFBE_C_FPV_DRONE > 0 (flag-gated at BUILD time, same idiom as the SCUD rows above).
 if ((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) > 0) then {
@@ -130,7 +150,7 @@ _startLoad = true;
 _currentAmmoOptions = [];
 _ignoreAmmoComboAction = false;
 _selectedAmmoByArtillery = [];
-_artilleryDisplayNames = missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText];
+_artilleryDisplayNames = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_DISPLAY_NAME",sideJoinedText], []]; //--- fable/fix-tactical-arty-jip-crash: same JIP nil-count crash guard as line ~45.
 for "_i" from 0 to (count _artilleryDisplayNames) - 1 do {_selectedAmmoByArtillery set [_i, 0]};
 
 // Marty: Rebuild ammo choices from the selected artillery type and current upgrade level.
@@ -142,7 +162,7 @@ _refreshAmmoCombo = {
 	_currentAmmoOptions = [];
 	ctrlEnable [17034,false];
 
-	if (_artilleryIndex < 0) exitWith {};
+	if (_artilleryIndex < 0 || {_artilleryIndex >= _artyCount}) exitWith {};
 
 	_currentAmmoOptions = [sideJoinedText, _artilleryIndex] Call WFBE_CO_FNC_GetArtilleryAmmoOptions;
 	if (count _currentAmmoOptions == 0) exitWith {};
@@ -200,7 +220,7 @@ WFBE_CL_FNC_TelMuniEnable = {
 	//--- own bought SCUDs — so a conventional entry should enable when the side has ANY alive platform (research TEL OR a
 	//--- registered bought SCUD, server-broadcast array). Off-TK / flag-off this is byte-for-byte the old research-TEL gate.
 	_platformAlive = _telAlive;
-	if (!_platformAlive && {(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0} && {worldName == "Takistan"}) then {
+	if (!_platformAlive && {(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0} && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}}) then {
 		private ["_scuds","_x"];
 		_scuds = missionNamespace getVariable [format ["WFBE_TK_SCUD_PLATFORMS_%1", str sideJoined], []];
 		if (typeName _scuds == "ARRAY") then {
@@ -217,12 +237,31 @@ _textAnimHandler = [] spawn {};
 
 MenuAction = -1;
 mouseButtonUp = -1;
+//--- fable/fix-fpv-cooldown: rearm-cooldown parity with GUER (GUI_Menu_GuerDrones.sqf).
+//--- Tracks the playerFPV alive->dead transition so wfbe_fpv_cooldown stamps once per flight end.
+_fpvWasAlive = false;
 
 while {alive player && dialog} do {
 	if (side group player != sideJoined) exitWith {deleteMarkerLocal _marker;deleteMarkerLocal _area;{deleteMarkerLocal _x} forEach _markers;closeDialog 0};
 	if (!dialog) exitWith {deleteMarkerLocal _marker;deleteMarkerLocal _area;{deleteMarkerLocal _x} forEach _markers};
 	
 	_currentUpgrades = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
+	
+	//--- fable/fix-fpv-cooldown: WEST/EAST FPV rearm-cooldown gate, mirrors GUER's
+	//--- wfbe_fpv_guer_cooldown idiom (GUI_Menu_GuerDrones.sqf) using the SAME shared
+	//--- WFBE_C_FPV_COOLDOWN param (Rsc/Parameters.hpp titles it "all sides" - GUER was
+	//--- the only side actually enforcing it). Runs every tick, not selection-gated, so the
+	//--- cooldown starts the instant the drone dies even if FPV_Strike isn't the active row.
+	_fpvCooldown = missionNamespace getVariable ["wfbe_fpv_cooldown", 0];
+	if (!isNull playerFPV && {alive playerFPV}) then {
+		_fpvWasAlive = true;
+	} else {
+		if (_fpvWasAlive && {_fpvCooldown <= time}) then {
+			missionNamespace setVariable ["wfbe_fpv_cooldown", time + (missionNamespace getVariable ["WFBE_C_FPV_COOLDOWN", 60])];
+			_fpvCooldown = missionNamespace getVariable ["wfbe_fpv_cooldown", 0];
+		};
+		_fpvWasAlive = false;
+	};
 	
 	if (_ft > 0) then {
 		_currentLevel = _currentUpgrades select WFBE_UP_FASTTRAVEL;
@@ -394,7 +433,8 @@ while {alive player && dialog} do {
 			};
 			case "FPV_Strike": {
 				//--- fable/fpv-strike-drone: funds + one live drone per player.
-				_controlEnable = if (_funds >= _currentFee && !(alive playerFPV)) then {true} else {false};
+				//--- fable/fix-fpv-cooldown: + rearm-cooldown parity with GUER (WFBE_C_FPV_COOLDOWN).
+				_controlEnable = if (_funds >= _currentFee && !(alive playerFPV) && (missionNamespace getVariable ["wfbe_fpv_cooldown", 0]) <= time) then {true} else {false};
 			};
 			case "Units_Camera": {
 				_controlEnable = commandInRange;
@@ -891,7 +931,8 @@ while {alive player && dialog} do {
 	};
 	
 	//--- Update the Artillery Status.
-	if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0) then {
+	_artyIdx = lbCurSel(17008);
+	if ((missionNamespace getVariable "WFBE_C_ARTILLERY") > 0 && {_artyIdx < _artyCount}) then {
 		_fireTime = (missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS") select (_currentUpgrades select WFBE_UP_ARTYTIMEOUT);
 		_artyLastFire = fireMissionTime;
 		if (isNil "_artyLastFire") then {_artyLastFire = -1000};
@@ -910,18 +951,52 @@ while {alive player && dialog} do {
 		_enable = if (_status > 0) then {false} else {true};
 		ctrlEnable [17007,_enable];
 	};
+	//--- fable/scud-chernarus-artillery: SCUD/TEL rows (idx >= _artyCount) get their own status/enable
+	//--- readout, reusing the shared TelMuniEnable gate / carrier-ownership check that used to gate the
+	//--- old flat Tactical-Center list entries, instead of the tube-artillery cooldown readout above.
+	if (_artyIdx >= _artyCount) then {
+		private ["_telSpecial","_telFee","_telFunds","_telEnable","_commander","_ownsCarrier","_x"];
+		_telSpecial = _telRowIDs select (_artyIdx - _artyCount);
+		_telFee = _telRowFee select (_artyIdx - _artyCount);
+		_telFunds = Call GetPlayerFunds;
+		_telEnable = false;
+		if (_telSpecial == "SCUD_Carrier") then {
+			_commander = false;
+			if (!isNull commanderTeam) then { if (commanderTeam == group player) then {_commander = true} };
+			_ownsCarrier = false;
+			if (!isNil "towns") then {
+				{ if (!isNull _x && {_x getVariable ["wfbe_is_naval_hvt", false]} && {(_x getVariable ["sideID", -1]) == sideID}) exitWith {_ownsCarrier = true} } forEach towns;
+			};
+			_telEnable = _commander && _ownsCarrier && (_telFunds >= _telFee);
+		} else {
+			_telEnable = [_currentUpgrades, _telFee, _telFunds] Call WFBE_CL_FNC_TelMuniEnable;
+		};
+		_txt = if (_telEnable) then {Format['<t align="left" color="#73FF47">%1</t>',localize 'STR_WF_TACTICAL_Available']} else {Format['<t align="left" color="#FF4747">%1</t>',localize 'STR_WF_Disabled']};
+		(_display displayCtrl 17016) ctrlSetStructuredText (parseText _txt);
+		ctrlEnable [17007,_telEnable];
+	};
 	
 	//--- Request Fire Mission.
 	if (MenuAction == 2) then {
 		MenuAction = -1;
-		_units = [Group player,false,lbCurSel(17008),sideJoinedText] Call GetTeamArtillery;
-		if (Count _units > 0) then {
-			fireMissionTime = time;
-			[GetMarkerPos "artilleryMarker",lbCurSel(17008), _fireTime, artyRange] Spawn RequestFireMission;
-			
+		if (_artyIdx < _artyCount) then {
+			_units = [Group player,false,_artyIdx,sideJoinedText] Call GetTeamArtillery;
+			if (Count _units > 0) then {
+				fireMissionTime = time;
+				[GetMarkerPos "artilleryMarker",_artyIdx, _fireTime, artyRange] Spawn RequestFireMission;
+				
+			} else {
+				hint (localize "STR_WF_INFO_NoArty");
+			};
 		} else {
-			hint (localize "STR_WF_INFO_NoArty");
-		};			
+			//--- fable/scud-chernarus-artillery: SCUD/TEL row selected - arm the SAME map-click fire dispatch
+			//--- the old flat Tactical-Center list used (MenuAction 80-85, resolved further below in this same
+			//--- script), by feeding the resolved special/fee through the existing MenuAction==20 switch. No new
+			//--- fire logic - single registration point (the old flat-list rows were removed above).
+			_currentSpecial = _telRowIDs select (_artyIdx - _artyCount);
+			_currentFee = _telRowFee select (_artyIdx - _artyCount);
+			MenuAction = 20;
+		};
 	};
 	
 	//--- Crew All Artillery (Card #113): mount available group AI into the empty driver/gunner
@@ -994,13 +1069,20 @@ while {alive player && dialog} do {
 		MenuAction = -1;
 		
 		_index = lbCurSel(17008);
-		_minRange = (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",sideJoined]) select _index;
-		_maxRange = round(((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",sideJoined]) select _index) / (missionNamespace getVariable "WFBE_C_ARTILLERY"));
+		//--- fable/scud-chernarus-artillery: SCUD/TEL rows (idx >= _artyCount) have no tube-artillery
+		//--- range/GetTeamArtillery data - skip the cannon-only reads instead of indexing past the end.
+		if (_index >= 0 && {_index < _artyCount}) then {
+			_minRange = (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",sideJoined]) select _index;
+			_maxRange = round(((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",sideJoined]) select _index) / (missionNamespace getVariable "WFBE_C_ARTILLERY"));
+			_trackingArray = [group player,true,_index,sideJoined] Call GetTeamArtillery;
+		} else {
+			_minRange = 0;
+			_maxRange = 0;
+			_trackingArray = [];
+		};
 
 		// Marty: Refresh available ammunition whenever the artillery type changes.
 		[] Call _refreshAmmoCombo;
-
-		_trackingArray = [group player,true,lbCurSel(17008),sideJoined] Call GetTeamArtillery;
 		
 		_requestMarkerTransition = true;
 		_requestRangedList = true;
@@ -1049,9 +1131,13 @@ while {alive player && dialog} do {
 	if (MenuAction == 60) then {
 		MenuAction = -1;
 		
-		ctrlMapAnimClear _map;
-		_map ctrlMapAnimAdd [1,.475,getPos(_trackingArray select (lnbCurSelRow 17024))];
-		ctrlMapAnimCommit _map;
+		//--- fable/scud-chernarus-artillery: guard against an empty/stale _trackingArray (e.g. a SCUD/TEL
+		//--- row is selected, so the owned-unit tracker list is empty) - avoids an out-of-range select.
+		if ((lnbCurSelRow 17024) >= 0 && {(lnbCurSelRow 17024) < count _trackingArray}) then {
+			ctrlMapAnimClear _map;
+			_map ctrlMapAnimAdd [1,.475,getPos(_trackingArray select (lnbCurSelRow 17024))];
+			ctrlMapAnimCommit _map;
+		};
 	};
 	
 	//--- Flush on change.
@@ -1076,7 +1162,8 @@ while {alive player && dialog} do {
 		//--- No need to update the list all the time.
 		if (time - _lastArtyUpdate > 5) then {
 			_lastArtyUpdate = time;
-			_trackingArray = [group player,true,lbCurSel(17008),sideJoined] Call GetTeamArtillery;
+			//--- fable/scud-chernarus-artillery: SCUD/TEL rows have no GetTeamArtillery data - empty list.
+			_trackingArray = if (lbCurSel(17008) < _artyCount) then {[group player,true,lbCurSel(17008),sideJoined] Call GetTeamArtillery} else {[]};
 		};
 		
 		//--- Clear & Fill;
@@ -1144,7 +1231,8 @@ while {alive player && dialog} do {
 			//--- No need to update the marker all the time.
 			if (time - _lastArtyUpdate > 5) then {
 				_lastArtyUpdate = time;
-				_trackingArray = [group player,true,lbCurSel(17008),sideJoined] Call GetTeamArtillery;
+				//--- fable/scud-chernarus-artillery: SCUD/TEL rows have no GetTeamArtillery data - empty list.
+				_trackingArray = if (lbCurSel(17008) < _artyCount) then {[group player,true,lbCurSel(17008),sideJoined] Call GetTeamArtillery} else {[]};
 			};
 			
 			//--- Live Feed.

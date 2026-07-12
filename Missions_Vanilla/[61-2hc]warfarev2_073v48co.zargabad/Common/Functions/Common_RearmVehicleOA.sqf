@@ -34,7 +34,7 @@ _isArtillery = [_type, _side] Call IsArtillery;
 if (_isArtillery != -1) then {[_vehicle, _isArtillery, _side] Call EquipArtillery};
 
 //--- Balanced Unit.
-if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0 && typeOf _vehicle != 'M6_EP1') then {(_vehicle) Call BalanceInit};
+if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0 && typeOf _vehicle != 'M6_EP1') then {_vehicle setVariable ["wfbe_balance_side", _side]; (_vehicle) Call BalanceInit};
 
 if (_vehicle isKindOf "Air") then {
 	//--- Countermeasures.

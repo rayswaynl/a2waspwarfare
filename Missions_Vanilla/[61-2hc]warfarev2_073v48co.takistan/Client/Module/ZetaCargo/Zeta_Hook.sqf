@@ -42,6 +42,18 @@ _action = _lifter addAction [localize "STR_WF_Lift_Detach","Client\Module\ZetaCa
 
 while {!gameOver} do {
 	sleep 2;
+	//--- watch/big-pass (3rd instance of the XWT45-P4 defect class - see 118fcda4a Server_HandleDefense.sqf
+	//--- and c2145e750/#896 Server_HandleEmptyVehicle.sqf): _lifter can be DELETED during this 2s sleep by
+	//--- Server_HandleEmptyVehicle's own crew-empty GC (spawned per-vehicle from Server_BuyUnit.sqf) - only
+	//--- the hooked cargo _vehicle is exempted via wfbe_airlifted, NOT the lifter itself, so a pilot-less
+	//--- lifter's empty timer keeps advancing while airlifting. A null object's getVariable read below would
+	//--- come up Void, undefining _isAttached at the next line's '!_isAttached' check (LATENT - not yet fired
+	//--- live). Block-exit falls through to the while condition; mirror the loop's own cleanup (detach +
+	//--- wfbe_airlifted reset) so the cargo is not left glued/flagged to a deleted lifter.
+	if (isNull _lifter) exitWith {
+		detach _vehicle;
+		_vehicle setVariable ["wfbe_airlifted", false, true];
+	};
 	_isAttached = _lifter getVariable "Attached";
 	if ((getDammage _lifter > 0.3)||!_isAttached||isNull (driver _lifter)) exitWith {
 		detach _vehicle;

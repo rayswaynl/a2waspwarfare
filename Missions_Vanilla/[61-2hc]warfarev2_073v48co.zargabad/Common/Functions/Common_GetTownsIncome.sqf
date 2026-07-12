@@ -9,8 +9,8 @@ if (_incomeSystem == 3) then {_incomeCoef = missionNamespace getVariable "WFBE_C
 {
 	if ((_x getVariable "sideID") == _side) then {
 		switch (_incomeSystem) do {
-			case 3: {_income = _income + ((_x getVariable "supplyValue")*_incomeCoef)};
-			default {_income = _income + (_x getVariable "supplyValue")};
+			case 3: {_income = _income + ((_x getVariable ["supplyValue", 0])*_incomeCoef)};
+			default {_income = _income + (_x getVariable ["supplyValue", 0])};
 		};
 	};
 } forEach towns;
