@@ -392,7 +392,12 @@ while {!WFBE_GameOver} do {
 								if (_liveHCs > 0) then {
 									[_town, _side, _groups, _positions, _teams] Call WFBE_CO_FNC_DelegateAITownHeadless;
 									// Marty: HC-local groups are reported back by update-town-delegation after creation.
-									_town setVariable ['wfbe_town_teams', _town_teams];
+									//--- fable/townteams-queue-singlewriter: NO write-back here. This branch never modifies
+									//--- _town_teams locally (unchanged since the read at wave start), so re-writing the stale
+									//--- pre-dispatch snapshot only races the async update-town-delegation append in
+									//--- Server_HandleSpecial.sqf - that lost update dropped the HC-reported delegated groups
+									//--- from wfbe_town_teams, orphaning them past deactivation cleanup (historical zombies).
+									//--- The HC-report handler is now the sole mutator of the delegated contribution (CTL single-writer doctrine, PR 1044).
 									_use_server = false;
 								};
 							};
