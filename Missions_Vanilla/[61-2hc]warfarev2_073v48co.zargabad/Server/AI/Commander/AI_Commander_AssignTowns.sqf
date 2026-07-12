@@ -930,7 +930,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 																_grNew = +_grList;
 																_grNew set [_grHit, [_target, _grEntry select 1, true]];
 																_logik setVariable ["wfbe_aicom_grudge", _grNew];
-																_logik setVariable ["wfbe_aicom_grudge_barrage_request", [getPos _target, time], true];
+																_logik setVariable ["wfbe_aicom_grudge_barrage_request", [getPos _target, time]];
 																diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|GRUDGE_BARRAGE_REQUEST|town=" + (_target getVariable ["name","town"]));
 															};
 														};
