@@ -479,5 +479,40 @@ class CheckSqfTests(unittest.TestCase):
         self.assertNotIn("DBLBOM", codes)
 
 
+class JipCivLatchOrderTests(unittest.TestCase):
+    CONNECT_PATHS = (
+        Path("Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnPlayerConnected.sqf"),
+        Path("Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Server/Functions/Server_OnPlayerConnected.sqf"),
+        Path("Missions_Vanilla/[61-2hc]warfarev2_073v48co.zargabad/Server/Functions/Server_OnPlayerConnected.sqf"),
+        Path("Tools/PerfTest/missions/WASP_PerfOFF_TEST.Chernarus/Server/Functions/Server_OnPlayerConnected.sqf"),
+    )
+    LATCH_GUARD = 'if (!isNil "_jipLatch" && {(time - _jipLatch) < 15}) exitWith {'
+    CIV_DEFER = 'if (str _sideJoined == "CIV") exitWith {'
+    LATCH_WRITE = 'missionNamespace setVariable [format["WFBE_JIP_LATCH%1", _uid], time];'
+    FIRST_JOIN = "if (isNil '_get') exitWith {"
+
+    def test_unresolved_side_bails_before_writing_jip_latch(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+
+        for relative_path in self.CONNECT_PATHS:
+            text = (root / relative_path).read_text(encoding="utf-8")
+            anchors = (
+                self.LATCH_GUARD,
+                self.CIV_DEFER,
+                self.LATCH_WRITE,
+                self.FIRST_JOIN,
+            )
+
+            for anchor in anchors:
+                self.assertEqual(text.count(anchor), 1, f"unexpected anchor count in {relative_path}")
+
+            positions = tuple(text.index(anchor) for anchor in anchors)
+            self.assertEqual(
+                positions,
+                tuple(sorted(positions)),
+                f"JIP latch order is unsafe in {relative_path}",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
