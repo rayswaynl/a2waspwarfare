@@ -47,12 +47,12 @@ if (typeName _mode != "STRING") exitWith {
 //--- Phase 1: atomically mint/reuse a short-lived capability and return it only to the
 //--- nominated player's owner. A per-UID in-flight reservation blocks overlapping handshakes.
 if (_mode == "auth") exitWith {
-	Private ["_authBlocked","_authChallenge","_authInflight","_authInflightKey","_authPlayer","_authUID","_capValid","_expires","_token"];
+	Private ["_authBlocked","_authChallenge","_authInflight","_authInflightKey","_authLast","_authLastKey","_authNow","_authPlayer","_authUID","_capValid","_expires","_token"];
 	if (count _args < 4) exitWith {};
 	_authPlayer = _args select 2;
 	_authChallenge = _args select 3;
 	if (typeName _authPlayer != "OBJECT" || {isNull _authPlayer}) exitWith {};
-	if (typeName _authChallenge != "STRING" || {_authChallenge == ""}) exitWith {};
+	if (typeName _authChallenge != "STRING" || {_authChallenge == ""} || {(count toArray _authChallenge) > 96}) exitWith {};
 	if (!alive _authPlayer || {!isPlayer _authPlayer}) exitWith {};
 	if (!((side (group _authPlayer)) in [west,east,resistance])) exitWith {};
 	if (!((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) > 0)) exitWith {};
@@ -61,34 +61,55 @@ if (_mode == "auth") exitWith {
 
 	_capKey = Format ["wfbe_fpv_cap_server_%1", _authUID];
 	_authInflightKey = Format ["wfbe_fpv_purchase_inflight_%1", _authUID];
+	//--- SECURITY (harden-in-place, d028 FPV follow-up): "auth" was the one mode with no
+	//--- cost/cooldown/registration gate of its own - purchase is bounded by the active-slot
+	//--- + rearm cooldown, and status/purchase both require an unguessable secret, but auth can
+	//--- be requested for ANY valid player reference with no rate limit at all. A modified
+	//--- client could flood this entry point - for its own UID or any other connected player's
+	//--- UID - at an unbounded rate for free. Add a per-target-UID minimum interval, mirroring
+	//--- the existing per-side cooldown pattern in Support_FPV_Detonate.sqf / Support_ScudStrike.sqf,
+	//--- so repeated requests against the same UID are throttled server-side regardless of who
+	//--- issues them. The stamp is written before any other work so the gate bounds call
+	//--- FREQUENCY, not just the minted-token outcome.
+	_authLastKey = Format ["wfbe_fpv_auth_last_%1", _authUID];
 	_authBlocked = false;
 	_token = "";
 	_expires = 0;
 	isNil {
-		_authInflight = missionNamespace getVariable [_authInflightKey, ""];
-		if (typeName _authInflight != "STRING") then {_authInflight = ""};
-		if (_authInflight != "") then {
+		_authNow = time;
+		_authLast = missionNamespace getVariable [_authLastKey, -1e9];
+		if (typeName _authLast != "SCALAR") then {_authLast = -1e9};
+		if ((_authNow - _authLast) < 1) then {
 			_authBlocked = true;
 		} else {
-			_cap = missionNamespace getVariable [_capKey, []];
-			_capValid = false;
-			if (typeName _cap == "ARRAY" && {count _cap >= 2}) then {
-				if (typeName (_cap select 0) == "STRING" && {typeName (_cap select 1) == "SCALAR"}) then {
-					if ((_cap select 0) != "" && {(_cap select 1) > time}) then {_capValid = true};
-				};
-			};
-			if (!_capValid) then {
-				_token = Format ["%1:%2:%3:%4", _authUID, floor (diag_tickTime * 1000), floor (random 1000000000), floor (random 1000000000)];
-				_expires = time + 15;
-				_cap = [_token, _expires];
-				missionNamespace setVariable [_capKey, _cap];
+			missionNamespace setVariable [_authLastKey, _authNow];
+			_authInflight = missionNamespace getVariable [_authInflightKey, ""];
+			if (typeName _authInflight != "STRING") then {_authInflight = ""};
+			if (_authInflight != "") then {
+				_authBlocked = true;
 			} else {
-				_token = _cap select 0;
-				_expires = _cap select 1;
+				_cap = missionNamespace getVariable [_capKey, []];
+				_capValid = false;
+				if (typeName _cap == "ARRAY" && {count _cap >= 2}) then {
+					if (typeName (_cap select 0) == "STRING" && {typeName (_cap select 1) == "SCALAR"}) then {
+						if ((_cap select 0) != "" && {(_cap select 1) > time}) then {_capValid = true};
+					};
+				};
+				if (!_capValid) then {
+					_token = Format ["%1:%2:%3:%4", _authUID, floor (diag_tickTime * 1000), floor (random 1000000000), floor (random 1000000000)];
+					_expires = time + 15;
+					_cap = [_token, _expires];
+					missionNamespace setVariable [_capKey, _cap];
+				} else {
+					_token = _cap select 0;
+					_expires = _cap select 1;
+				};
 			};
 		};
 	};
-	if (_authBlocked) exitWith {};
+	if (_authBlocked) exitWith {
+		["WARNING", Format ["Support_FPV.sqf: auth request throttled for UID [%1].", _authUID]] Call WFBE_CO_FNC_LogContent;
+	};
 	[_authPlayer, ["fpv-auth-token", _token, _expires, _authChallenge]] Call _sendPrivate;
 };
 
