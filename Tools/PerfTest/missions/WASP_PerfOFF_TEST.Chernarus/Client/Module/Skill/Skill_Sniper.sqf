@@ -21,7 +21,7 @@ if (_spotUID == "") then {_spotUID = "X"};
 _markerName = Format ["Spot_%1_%2", _spotUID, markerID];
 createMarkerLocal [_markerName,_screenPos];
 _markertime = [daytime] call bis_fnc_timetostring;
-_markerName setMarkerText Format ['SPOTTED: %1',_markertime];
+_markerName setMarkerTextLocal Format ['SPOTTED: %1',_markertime];
 _markerName setMarkerTypeLocal "mil_destroy";
 _markerName setMarkerColorLocal "ColorRed";
 _markerName setMarkerSizeLocal [0.5,0.5];
