@@ -109,6 +109,7 @@ WFBE_CO_FNC_AICOMAirLeg = Compile preprocessFileLineNumbers "Common\Functions\Co
 WFBE_CO_FNC_AICOMAirReturn = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirReturn.sqf"; //--- cmdcon42-f shared post-drop RETURN-TO-BASE-AND-HOLD (the founding WFBE_C_AICOM_AIR_RETAIN path + air-mobile legs call this SAME code - no duplication). Scheduled-context only (it sleeps).
 WFBE_CO_FNC_AICOMServiceTick = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMServiceTick.sqf"; //--- B48 AICOM self-service (default OFF: WFBE_C_AICOM_SERVICE_ENABLED)
 WFBE_CO_FNC_AICOMLog = Compile preprocessFileLineNumbers "Common\Functions\Common_AICommanderLog.sqf";
+WFBE_CO_FNC_SmallArmsEffAntiAir = Compile preprocessFileLineNumbers "Common\Functions\Common_SmallArmsEffAntiAir.sqf"; //--- fable/smallarms-air-envelope: WEAPON-capability AA classifier (MANPAD launcher/missile) for the WFBE_C_SMALLARMS_AIR_ENVELOPE steering manager. Returns BOOL; true = immune to air-lock steering.
 WFBE_CO_FNC_SpawnFactionSmoke = Compile preprocessFileLineNumbers "Common\Functions\Common_SpawnFactionSmoke.sqf"; //--- Cosmetic: server-only triggered faction smoke (gated WFBE_C_FSMOKE_ENABLED; capped+TTL+cooldown).
 // Marty: Central createGroup wrapper (LEVER 2) - registered immediately after AICOMLog so the wrapper can call it.
 WFBE_CO_FNC_CreateGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateGroup.sqf";

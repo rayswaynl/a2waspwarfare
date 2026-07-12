@@ -231,6 +231,13 @@ for '_i' from 0 to count(_groups)-1 do {
 						_strelaAssigned = true;
 					};
 				};
+				//--- fable/smallarms-air-envelope: (re)stamp the AA classifier AFTER the tiered garrison
+				//--- loadout is applied - the Tier-3 Strela AA gunner above gets its launcher HERE, post-
+				//--- CreateUnit, so the one dedicated air-defender reads effAntiAir=true and is never steered
+				//--- off. Flag-gated: inert (no stamp) when WFBE_C_SMALLARMS_AIR_ENVELOPE = 0. _x = this unit.
+				if ((missionNamespace getVariable ["WFBE_C_SMALLARMS_AIR_ENVELOPE", 0]) > 0) then {
+					_x setVariable ["WFBE_effAntiAir", [_x] Call WFBE_CO_FNC_SmallArmsEffAntiAir, false];
+				};
 			};
 		} forEach _units;
 	};

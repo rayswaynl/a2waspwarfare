@@ -129,6 +129,14 @@ _unit addEventHandler ['Killed', Format ['[_this select 0,_this select 1,%1] Spa
 
 ["INFORMATION", Format ["Common_CreateUnit.sqf: [%1] Unit [%2] was created at [%3] and has been assigned to team [%4]", _side Call WFBE_CO_FNC_GetSideFromID, _type, _position, _team]] Call WFBE_CO_FNC_LogContent;
 
+//--- fable/smallarms-air-envelope: stamp the effectiveness-AA classifier ONCE at spawn so the
+//--- WFBE_C_SMALLARMS_AIR_ENVELOPE steering manager reads an O(1) cached bool per tick instead of
+//--- re-scanning magazines. Flag-gated so flag-off is byte-identical to HEAD (no stamp). AA units
+//--- (MANPAD launcher/missile) => true = never steered off an air lock at any range.
+if ((missionNamespace getVariable ["WFBE_C_SMALLARMS_AIR_ENVELOPE", 0]) > 0) then {
+	_unit setVariable ["WFBE_effAntiAir", [_unit] Call WFBE_CO_FNC_SmallArmsEffAntiAir, false];
+};
+
 // Marty: Audit one unit creation so logs can correlate client marker init storms with AI growth.
 if !(isNil "PerformanceAudit_Record") then {
 	if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
