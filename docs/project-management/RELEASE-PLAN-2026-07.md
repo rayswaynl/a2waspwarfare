@@ -28,6 +28,7 @@ rollback flag live), all owner-picked features settled, no known release-blockin
 - **Dark-flag disposition** (before release): each remaining dark flag → ship-on / ship-dark / cut:
   SML_DISMOUNTS, DEFENSE_CLIENT_GATE_ALIGN, AICOM_BUILD_ROAD_CLEAR dial, WALLS_V4, DEF_FORTIF_PACK,
   NAVAL HVT flags, GUER Director V2 lane (post-release per spec), airfield-ownership gate (building).
+  - **DEF_FORTIF_PACK → ship-on** (owner, Command Review 2026-07-12): armed to default 1 on the release line (`claude/build84-cmdcon36`) via `fable/arm-def-fortif-pack`; `origin/master` already carried =1, so this aligns the PR base with master. Other flags in this list remain pending round 2 (post-release).
 - **Watching:** permDay FPSREPORT confirm, first MATCH|v1|END → match-report embed verify.
 
 ## Release gates (all must be green)
