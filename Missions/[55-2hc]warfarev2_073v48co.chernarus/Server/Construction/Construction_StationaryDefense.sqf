@@ -36,6 +36,7 @@ if (_builtByRepairTruck) then {
 	_defense setVariable ["WFBE_BuiltByRepairTruck", true, true];
 	if ((typeOf _defense) isKindOf "Base_WarfareBVehicleServicePoint") then {
 		_defense setVariable ["WFBE_RepairTruckServicePoint", true, true];
+		_defense setVariable ["wfbe_side", _side, true];	//--- broadcast owner so the client repair-truck-SP side filter can read it
 	};
 };
 ["INFORMATION", Format ["Construction_StationaryDefense.sqf: [%1] Defense [%2] has been constructed.", str _side, _type]] Call WFBE_CO_FNC_LogContent;

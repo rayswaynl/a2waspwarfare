@@ -532,7 +532,7 @@ while {!WFBE_GameOver} do {
 					_navSp setPosASL _navSpPos;
 					_navSp setDir _navSpDir;
 					_navSp setVariable ["WFBE_RepairTruckServicePoint", true, true];
-					_navSp setVariable ["wfbe_side", _hvtNewSide]; //--- A1-fix parity with the airfield SP (server_town.sqf ~line 649) - Server_BuildingDamaged/BuildingKilled read this.
+					_navSp setVariable ["wfbe_side", _hvtNewSide, true]; //--- A1-fix parity with the airfield SP (server_town.sqf ~line 649) - Server_BuildingDamaged/BuildingKilled read this.
 
 					//--- Register in side logic structures list so clients can see it (same pattern as the airfield SP).
 					_navSpLogik = (_hvtNewSide) Call WFBE_CO_FNC_GetSideLogic;
@@ -775,7 +775,7 @@ while {!WFBE_GameOver} do {
 				_sp = _spClass createVehicle _spPos;
 				_sp setPos _spPos;
 				_sp setVariable ["WFBE_RepairTruckServicePoint", true, true];
-				_sp setVariable ["wfbe_side", _newSide]; //--- A1 fix: airfield repair-point was missing wfbe_side ->
+				_sp setVariable ["wfbe_side", _newSide, true]; //--- A1 fix: airfield repair-point was missing wfbe_side ->
 				//--- Server_BuildingDamaged/BuildingKilled read nil side and threw on hit. Mirror Construction_SmallSite:107.
 
 				//--- Register in side logic structures list so clients can see it.
