@@ -3,6 +3,9 @@
         private ['_associatedSupplyTruck', '_associatedSourceTown', '_sidePlayer','_iteratedObject','_friendlyCommandCenterInProximity','_playerObject','_match','_currentSupplyTruckDriverLeader','_playerIsDrivingSupplyTruck','_playerisInProximityOfSupplyTruck','_byHeli','_vp','_cp','_dx','_dy','_ccDwell','_heliCCSeen','_unloadNeed'];
         _playerObject = _this select 0;
         _associatedSupplyTruck = _this select 1;
+        if (_associatedSupplyTruck Call WFBE_SE_FNC_IsAISupplyTruck) exitWith {
+            ["WARNING", Format ["SupplyMissionStarted.sqf: Rejected AI logistics truck [%1] before player supply-mission mutation.", _associatedSupplyTruck]] Call WFBE_CO_FNC_LogContent;
+        };
         _associatedSourceTown = _this select 2;
         _byHeli = _associatedSupplyTruck getVariable "SupplyByHeli";
         if (isNil "_byHeli") then { _byHeli = false; };

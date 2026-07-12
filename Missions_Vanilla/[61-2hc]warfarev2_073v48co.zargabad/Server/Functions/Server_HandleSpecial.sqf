@@ -85,6 +85,9 @@ switch (_args select 0) do {
 	};
 
 	case "RespawnST": {
+		if ((missionNamespace getVariable ["WFBE_C_AI_SUPPLY_TRUCK_ENABLE", 0]) > 0) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: RespawnST rejected while server-owned AI supply logistics are enabled."] Call WFBE_CO_FNC_LogContent;
+		};
 		Private ["_side","_st"];
 		_side = _args select 1;
 		_st = (_side call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_ai_supplytrucks";

@@ -335,6 +335,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AI_TEAMS_ENABLED") then {WFBE_C_AI_TEAMS_ENABLED = 1}; //--- Enable or disable the AI Teams.
 	if (isNil "WFBE_C_AI_TEAMS_JIP_PRESERVE") then {WFBE_C_AI_TEAMS_JIP_PRESERVE = 1}; //--- Keep the AI Teams units on JIP.
 	WFBE_C_AI_COMMANDER_MOVE_INTERVALS = 3600;
+	if (isNil "WFBE_C_AI_SUPPLY_TRUCK_ENABLE") then {WFBE_C_AI_SUPPLY_TRUCK_ENABLE = 0}; //--- d022: server-owned AI logistics convoy; default 0/off and also requires truck economy mode.
 	WFBE_C_AI_COMMANDER_SUPPLY_TRUCKS_MAX = 5;
 	//--- AI Commander revival (feat/ai-commander).
 	WFBE_C_AI_COMMANDER_TOTAL_AI_MAX = 140;    //--- B59 (Ray 2026-06-20): 130->190 so 15 teams/side actually fill (15*12 worst-case +10 buffer) and the side-gate (AI_Commander_Produce.sqf:28-30) doesn't starve the last teams below the 8-floor. Rollback: 130. Prior punchy-AICOM (Ray 2026-06-17): 72->130. Sized for 10 teams x [8,12] units: worst case 10*12=120, +10 buffer so the side-gate in AI_Commander_Produce.sqf (:28-30) does not fire at 119 and starve the last team back below the 8-floor. DELIBERATE commander-AI raise (testing trade-off Ray accepts). Rollback: 72.

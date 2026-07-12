@@ -17,6 +17,9 @@ _cursorTarget = cursorTarget;
 if (isNull _cursorTarget) exitWith {
     format ["Aim at an empty supply truck, or at an empty supply helicopter once Aircraft Factory is level 3."] call GroupChatMessage;
 };
+if (_cursorTarget getVariable ["wfbe_ai_supplytruck", false]) exitWith {
+    format ["This supply truck is reserved for AI logistics and cannot carry a player supply mission."] call GroupChatMessage;
+};
 
 _type = typeOf _cursorTarget;
 _isTruck = _type in WFBE_C_SUPPLY_TRUCK_TYPES;

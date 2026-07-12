@@ -10,6 +10,7 @@ mouseButtonUp = -1;
 _incomeSystem = missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM";
 _incomeDividision = missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_DIVIDED";
 _supplySystem = missionNamespace getVariable "WFBE_C_ECONOMY_SUPPLY_SYSTEM";
+_aiSupplyTruckEnabled = (missionNamespace getVariable ["WFBE_C_AI_SUPPLY_TRUCK_ENABLE", 0]) > 0;
 _lastComboUpdate = -30;
 _lastPurchase = -5;
 _income = 0;
@@ -88,7 +89,7 @@ while {alive player && dialog} do {
 	};
 	
 	//--- ST Handler.
-	if (_supplySystem == 0) then {
+	if (_supplySystem == 0 && {!_aiSupplyTruckEnabled}) then {
 		_isCommander = false;
 		if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_isCommander = true}};
 		ctrlEnable [23016,if (time - _lastUse > 5 && _isCommander) then {true} else {false}];
@@ -97,11 +98,13 @@ while {alive player && dialog} do {
 	//--- Respawn Supply Trucks.
 	if (MenuAction == 4) then {
 		MenuAction = -1;
-		// WFBE_RequestSpecial = ['SRVFNCREQUESTSPECIAL',["RespawnST",sideJoined]];
-		// publicVariable 'WFBE_RequestSpecial';
-		// if (isHostedServer) then {['SRVFNCREQUESTSPECIAL',["RespawnST",sideJoined]] Spawn HandleSPVF};
-		["RequestSpecial", ["RespawnST",sideJoined]] Call WFBE_CO_FNC_SendToServer;
-		_lastUse = time;
+		if (!_aiSupplyTruckEnabled) then {
+			// WFBE_RequestSpecial = ['SRVFNCREQUESTSPECIAL',["RespawnST",sideJoined]];
+			// publicVariable 'WFBE_RequestSpecial';
+			// if (isHostedServer) then {['SRVFNCREQUESTSPECIAL',["RespawnST",sideJoined]] Spawn HandleSPVF};
+			["RequestSpecial", ["RespawnST",sideJoined]] Call WFBE_CO_FNC_SendToServer;
+			_lastUse = time;
+		};
 	};
 	
 	//added-MrNiceGuy

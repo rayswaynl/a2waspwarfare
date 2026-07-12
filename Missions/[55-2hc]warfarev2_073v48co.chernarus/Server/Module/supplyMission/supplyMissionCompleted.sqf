@@ -5,13 +5,38 @@
 //--- WFBE_SE_FNC_HandleAttackWaveDetails in AttackWave.sqf), so ground-truck deliveries died silently.
 //--- Calling convention: _this IS the payload array [playerObject, supplyTruck, side]. The PVEH at the
 //--- bottom still relays the client (helicopter) sender supplyMissionUnload.sqf.
+//--- d022: server-local WEST/EAST registry membership is the authority boundary. The broadcast
+//--- wfbe_ai_supplytruck object stamp is client UX only and must never authorize a server decision.
+WFBE_SE_FNC_IsAISupplyTruck = {
+    private ["_candidate", "_found", "_logic", "_registry"];
+
+    _candidate = _this;
+    _found = false;
+    if (typeName _candidate != "OBJECT") exitWith {false};
+    if (isNull _candidate) exitWith {false};
+
+    {
+        _logic = _x Call WFBE_CO_FNC_GetSideLogic;
+        if (!isNull _logic) then {
+            _registry = _logic getVariable "wfbe_ai_supplytrucks";
+            if (isNil "_registry") then {_registry = []};
+            if (typeName _registry == "ARRAY" && {_candidate in _registry}) then {_found = true};
+        };
+    } forEach [west,east];
+
+    _found
+};
+
 WFBE_SE_FNC_HandleSupplyMissionCompleted = {
 
-    private ['_namePlayer', '_associatedSupplyTruck', '_supplyAmount', '_sourceTown', '_sourceTownStr', '_sidePlayer', '_logMessage', '_byHeli', '_cashRun', '_comTeam', '_airLevel'];
+    private ['_namePlayer', '_associatedSupplyTruck', '_supplyAmount', '_sourceTown', '_sourceTownStr', '_sidePlayer', '_logMessage', '_byHeli', '_cashRun', '_comTeam', '_airLevel', '_playerObject'];
 
     _playerObject = _this select 0;
-    _namePlayer = name (_this select 0);
-    _associatedSupplyTruck = (_this select 1);
+    _associatedSupplyTruck = _this select 1;
+    if (_associatedSupplyTruck Call WFBE_SE_FNC_IsAISupplyTruck) exitWith {
+        ["WARNING", Format ["SupplyMissionCompleted.sqf: Rejected AI logistics truck [%1] before player completion side effects.", _associatedSupplyTruck]] Call WFBE_CO_FNC_LogContent;
+    };
+    _namePlayer = name _playerObject;
     _supplyAmount = _associatedSupplyTruck getVariable "SupplyAmount";
     _sourceTown = _associatedSupplyTruck getVariable "SupplyFromTown";
     _sourceTownStr = str (_sourceTown);
