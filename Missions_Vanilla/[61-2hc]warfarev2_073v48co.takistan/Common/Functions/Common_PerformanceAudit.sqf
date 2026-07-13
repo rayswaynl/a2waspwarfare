@@ -18,7 +18,9 @@ if (isNil "PerformanceAuditSessionId") then {
 };
 if (isNil "PerformanceAuditAnchorVersion") then {PerformanceAuditAnchorVersion = "20260524"};
 // Client frame telemetry uses this local anchor for time-to-playable; OA 1.64 has no wall-clock SQF command.
-if (isNil "PerformanceAuditMissionStartTick") then {PerformanceAuditMissionStartTick = diag_tickTime};
+if ((missionNamespace getVariable ["WFBE_C_CLIENT_FRAME_TELEMETRY", 0]) > 0) then {
+	if (isNil "PerformanceAuditMissionStartTick") then {PerformanceAuditMissionStartTick = diag_tickTime};
+};
 
 PerformanceAudit_Round2 = {
 	round ((_this) * 100) / 100
