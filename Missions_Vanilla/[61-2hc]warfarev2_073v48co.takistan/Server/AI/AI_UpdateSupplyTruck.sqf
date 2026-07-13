@@ -195,6 +195,7 @@ while {!WFBE_GameOver} do {
 					_reseated = false;
 					_done = false;
 					_abort = false;
+					_contactUntil = 0;
 					while {!_done} do {
 						if (WFBE_GameOver || {!((missionNamespace getVariable ["WFBE_C_AI_SUPPLY_TRUCK_ENABLE", 0]) > 0)} || {(missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_SYSTEM", 1]) != 0} || {!((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0)} || {!alive _hq} || {!(_side Call WFBE_CO_FNC_GetSideHQDeployStatus)}) then {_abort = true};
 						if (_abort) then {
@@ -206,10 +207,19 @@ while {!WFBE_GameOver} do {
 							_routeTarget = if (_phase == "OUTBOUND") then {_target} else {_anchor};
 							[_group, true, [[getPos _routeTarget, "MOVE", 100, 80, "", []]]] Call AIWPAdd;
 							_legStart = time;
-							_contactUntil = 0;
 							while {alive _truck && {!_abort}} do {
 								sleep 2;
 								if (WFBE_GameOver || {!((missionNamespace getVariable ["WFBE_C_AI_SUPPLY_TRUCK_ENABLE", 0]) > 0)} || {!((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0)}) then {_abort = true};
+								if (_phase == "RETURN" && {isNull _anchor || {!alive _anchor}}) then {
+									_anchor = _side Call WFBE_CO_FNC_GetSideHQ;
+									if (isNull _anchor || {!alive _anchor}) then {
+										_abort = true;
+									} else {
+										_routeTarget = _anchor;
+										[_group, true, [[getPos _routeTarget, "MOVE", 100, 80, "", []]]] Call AIWPAdd;
+										_legStart = time;
+									};
+								};
 								_driver = driver _truck;
 								if (isNull _driver || {!alive _driver}) then {
 									if (!_reseated) then {

@@ -258,6 +258,16 @@ class AiSupplyTruckContractTests(unittest.TestCase):
                 self.assertIn("while {!isNull _truck", code)
                 self.assertIn("hull-delete-unconfirmed", code)
                 self.assertGreaterEqual(code.count("_target = objNull"), 2)
+                self.assertGreaterEqual(
+                    code.count('if (_phase == "RETURN" && {isNull _anchor || {!alive _anchor}}) then {'),
+                    2,
+                )
+                self.assertIn("_routeTarget = _anchor;", code)
+                outer_start = code.find("while {!_done} do {")
+                inner_start = code.find("while {alive _truck", outer_start)
+                self.assertGreaterEqual(outer_start, 0)
+                self.assertGreater(inner_start, outer_start)
+                self.assertNotIn("_contactUntil = 0;", code[outer_start:inner_start])
 
     def test_init_server_compiles_and_double_gates_both_sides(self) -> None:
         for root in MAINTAINED_ROOTS:
