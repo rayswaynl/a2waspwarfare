@@ -407,10 +407,17 @@ switch (_args select 0) do {
 		};
 	};
 	case "aicom-team-created": {
-		Private ["_csideID","_cteam","_cVehicles","_clogik","_caicomList","_cdir","_cldr","_cSide","_cHcOwner","_cHcGroup","_cAuthorityOk","_cPending","_cPendingLive","_cPendingFound","_cHeli","_cType","_cData","_cPrice","_cSeq","_cNonce","_cReceipts"];
-		if (count _args > 3 && {typeName (_args select 3) == "ARRAY"}) then {_cVehicles = _args select 3} else {_cVehicles = []};
+		Private ["_csideID","_cteam","_cVehicles","_cRefundToken","_clogik","_caicomList","_cdir","_cldr","_cSide","_cHcOwner","_cHcGroup","_cAuthorityOk","_cPending","_cPendingLive","_cPendingFound","_cHeli","_cType","_cData","_cPrice","_cReceipts"];
+		if (count _args != 5) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: aicom-team-created rejected malformed envelope (%1 args).", count _args]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (typeName (_args select 1) != "SCALAR" || {typeName (_args select 2) != "GROUP"} || {typeName (_args select 3) != "ARRAY"} || {typeName (_args select 4) != "STRING"} || {(_args select 4) == ""}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: aicom-team-created rejected invalid authority envelope."] Call WFBE_CO_FNC_LogContent;
+		};
 		_csideID = _args select 1;
 		_cteam = _args select 2;
+		_cVehicles = _args select 3;
+		_cRefundToken = _args select 4;
 		_cSide = (_csideID) Call WFBE_CO_FNC_GetSideFromID;
 		_clogik = (_cSide) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _clogik) then {
@@ -420,21 +427,21 @@ switch (_args select 0) do {
 				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
 
 				//--- Server-owned refund receipt: register the actual HC-local transport before the HC can
-				//--- report its off-map deletion. The receipt binds side, team, assigned HC owner, exact hull
-				//--- classname, and server-derived price; the public nonce is only a lookup handle.
+				//--- report its off-map deletion. The receipt binds side, team, assigned HC owner, exact hull,
+				//--- server-derived price, and a private one-shot dispatch capability.
 				_cHeli = objNull;
 				_cHcOwner = if (!isNull (leader _cteam)) then {owner (leader _cteam)} else {0};
 				_cHcGroup = missionNamespace getVariable [Format ["WFBE_HEADLESS_OWNER_%1", _cHcOwner], grpNull];
 				_cPending = missionNamespace getVariable ["WFBE_AICOM_TEAM_REFUND_PENDING", []];
 				_cPendingLive = [];
-				_cPendingFound = local (leader _cteam);
+				_cPendingFound = false;
 				{
-					if (count _x >= 3 && {(time - (_x select 2)) < 300}) then {
-						if (!_cPendingFound && {(_x select 0) == _csideID} && {(_x select 1) == _cHcOwner}) then {_cPendingFound = true} else {_cPendingLive = _cPendingLive + [_x]};
+					if (count _x >= 4 && {(time - (_x select 2)) < 300}) then {
+						if (!_cPendingFound && {(_x select 0) == _csideID} && {(_x select 1) == _cHcOwner} && {(_x select 3) == _cRefundToken}) then {_cPendingFound = true} else {_cPendingLive = _cPendingLive + [_x]};
 					};
 				} forEach _cPending;
 				missionNamespace setVariable ["WFBE_AICOM_TEAM_REFUND_PENDING", _cPendingLive];
-				_cAuthorityOk = local (leader _cteam);
+				_cAuthorityOk = _cPendingFound && {local (leader _cteam)};
 				if (!_cAuthorityOk && {_cPendingFound} && {!isNull _cHcGroup} && {!isNull (leader _cHcGroup)} && {owner (leader _cHcGroup) == _cHcOwner}) then {_cAuthorityOk = true};
 				if ([_cteam, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool && {_cHcOwner > 0} && {_cAuthorityOk}) then {
 					{
@@ -446,14 +453,10 @@ switch (_args select 0) do {
 					_cData = missionNamespace getVariable [_cType, []];
 					_cPrice = if (typeName _cData == "ARRAY" && {(count _cData) > QUERYUNITPRICE}) then {_cData select QUERYUNITPRICE} else {0};
 					if (_cPrice > 0 && {_cSide in [west, east, resistance]}) then {
-						_cSeq = (missionNamespace getVariable ["WFBE_AICOM_REFUND_SEQ", 0]) + 1;
-						missionNamespace setVariable ["WFBE_AICOM_REFUND_SEQ", _cSeq];
-						_cNonce = "aicom-heli|" + (str _cteam) + "|" + (str _cSeq);
 						_cReceipts = missionNamespace getVariable ["WFBE_AICOM_HELI_REFUND_RECEIPTS", []];
-						_cReceipts = _cReceipts + [[_cNonce, _cteam, _cHeli, _csideID, _cSide, _cHcOwner, _cType, _cPrice, 0]];
+						_cReceipts = _cReceipts + [[_cRefundToken, _cteam, _cHeli, _csideID, _cSide, _cHcOwner, _cType, _cPrice, 0]];
 						missionNamespace setVariable ["WFBE_AICOM_HELI_REFUND_RECEIPTS", _cReceipts];
-						_cteam setVariable ["wfbe_aicom_refund_nonce", _cNonce, true];
-						diag_log Format ["AICOMREFUND|v2|REGISTER|side=%1|team=%2|owner=%3|type=%4|price=%5", str _cSide, _cteam, _cHcOwner, _cType, _cPrice];
+						diag_log Format ["AICOMREFUND|v3|REGISTER|side=%1|team=%2|owner=%3|type=%4|price=%5", str _cSide, _cteam, _cHcOwner, _cType, _cPrice];
 					};
 				};
 				//--- Direction-arrow marker feed (mirrors WFBE_ACTIVE_PATROLS): register
@@ -1181,9 +1184,10 @@ switch (_args select 0) do {
 			case "zargabad": {8192};
 			default {15360};
 		};
-		_rGone = isNull _rVehicle;
-		if (!_rGone && {!alive _rVehicle}) then {_rGone = true};
-		if (!_rGone && {alive _rVehicle}) then {
+		//--- Completion must arrive while the exact receipt hull is still alive and outside the map.
+		//--- A dead/null vehicle is a destroyed or otherwise invalid transport, never a refund trigger.
+		_rGone = false;
+		if (!isNull _rVehicle && {alive _rVehicle}) then {
 			_rPos = getPos _rVehicle;
 			_rGone = ((_rPos select 0) < 0) || {((_rPos select 0) > _rWsz)} || {((_rPos select 1) < 0)} || {((_rPos select 1) > _rWsz)};
 		};
