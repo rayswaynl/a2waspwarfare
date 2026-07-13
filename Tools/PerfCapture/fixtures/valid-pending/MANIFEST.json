@@ -1,0 +1,65 @@
+{
+  "schema_version": "a2wasp-perf-run-manifest-v1",
+  "run_id": "01AB23CD",
+  "created_utc": "2026-07-13T09:59:00Z",
+  "date_utc": "20260713",
+  "regime": "R300-FULL",
+  "scenario": "CHERNARUS-COMBAT",
+  "arm": "CONTROL",
+  "build_id": "deadbeef",
+  "artifact_directory": "20260713_R300-FULL_CHERNARUS-COMBAT_CONTROL_01AB23CD_deadbeef",
+  "source": {
+    "repository": "https://github.com/rayswaynl/a2waspwarfare.git",
+    "git_commit": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "git_tree": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "dirty": false
+  },
+  "specimens": [
+    { "id": "arma2oa-exe", "kind": "executable", "path": "C:\\PerfLab\\ArmA2OA.exe", "sha256": "1111111111111111111111111111111111111111111111111111111111111111", "size_bytes": 1, "notes": null },
+    { "id": "allocator-dll", "kind": "dll", "path": "C:\\PerfLab\\dll\\allocator.dll", "sha256": "2222222222222222222222222222222222222222222222222222222222222222", "size_bytes": 2, "notes": "Relevant loaded allocator" },
+    { "id": "mission-pbo", "kind": "mission_pbo", "path": "C:\\PerfLab\\mpmissions\\wasp.chernarus.pbo", "sha256": "3333333333333333333333333333333333333333333333333333333333333333", "size_bytes": 3, "notes": null },
+    { "id": "basic-config", "kind": "config", "path": "CONFIG-SNAPSHOT/basic.cfg", "sha256": "4444444444444444444444444444444444444444444444444444444444444444", "size_bytes": 4, "notes": null },
+    { "id": "collector-tool", "kind": "tool", "path": "CONFIG-SNAPSHOT/Collect-ProcessMetrics.ps1", "sha256": "5555555555555555555555555555555555555555555555555555555555555555", "size_bytes": 5, "notes": null }
+  ],
+  "host": {
+    "machine_id": "lab-a",
+    "os": { "caption": "Windows", "version": "10.0", "build": "00000", "architecture": "64-bit" },
+    "cpu": { "name": "Example CPU", "physical_cores": 8, "logical_processors": 16, "processor_groups": 1, "topology_source": "Win32_Processor" }
+  },
+  "mission": {
+    "map": "Chernarus",
+    "mission_name": "WASP Warfare",
+    "mission_pbo_specimen_id": "mission-pbo",
+    "flags": [ { "name": "WFBE_C_PERFORMANCE_AUDIT_ENABLED", "value": 1 } ],
+    "mod_order": ["@CBA_CO"],
+    "player_count": 1,
+    "expected_hcs": 1
+  },
+  "process_topology": [
+    { "role": "server", "pid": 4242, "start_utc": "2026-07-13T09:55:00Z", "executable_specimen_id": "arma2oa-exe", "command_line_redacted": "ArmA2OAServer.exe -config=server.cfg -password=<redacted>", "command_line_sha256": "6666666666666666666666666666666666666666666666666666666666666666", "affinity_mask_hex": "0x00FF", "mod_order": ["@CBA_CO"] },
+    { "role": "hc-01", "pid": 4243, "start_utc": "2026-07-13T09:56:00Z", "executable_specimen_id": "arma2oa-exe", "command_line_redacted": "ArmA2OA.exe -client -password=<redacted>", "command_line_sha256": "7777777777777777777777777777777777777777777777777777777777777777", "affinity_mask_hex": "0x0F00", "mod_order": ["@CBA_CO"] },
+    { "role": "client-01", "pid": 4244, "start_utc": "2026-07-13T09:57:00Z", "executable_specimen_id": "arma2oa-exe", "command_line_redacted": "ArmA2OA.exe -connect=<test-host> -password=<redacted>", "command_line_sha256": "8888888888888888888888888888888888888888888888888888888888888888", "affinity_mask_hex": "0xF000", "mod_order": ["@CBA_CO"] }
+  ],
+  "workload": {
+    "requested": { "label": "R300 full mission", "ai_total": 300, "groups_total": null, "vehicles_total": null, "active_towns": null, "hcs": 1, "players": 1, "parameters": [ { "name": "warmup_seconds", "value": 300, "unit": "seconds" } ] },
+    "attained": { "label": null, "ai_total": null, "groups_total": null, "vehicles_total": null, "active_towns": null, "hcs": null, "players": null, "parameters": [] }
+  },
+  "timing": { "start_utc": "2026-07-13T10:00:00Z", "warmup_end_utc": "2026-07-13T10:05:00Z", "end_utc": null },
+  "validation": {
+    "status": "pending",
+    "invalid_reasons": [],
+    "predeclared_invalid_rules": ["Expected HC topology not attained", "Manifest identity mismatch", "Collector overhead comparable to measured effect"]
+  },
+  "artifacts": [
+    { "kind": "config_snapshot", "path": "CONFIG-SNAPSHOT/", "required": true, "sha256": null },
+    { "kind": "server_rpt", "path": "server.rpt", "required": true, "sha256": null },
+    { "kind": "hc_rpt", "path": "hc-01.rpt", "required": true, "sha256": null },
+    { "kind": "client_telemetry", "path": "client-01.telemetry.json", "required": true, "sha256": null },
+    { "kind": "process_metrics", "path": "process-metrics.csv", "required": true, "sha256": null },
+    { "kind": "process_identity", "path": "process-identity.json", "required": true, "sha256": null },
+    { "kind": "collector_overhead", "path": "collector-overhead.json", "required": true, "sha256": null },
+    { "kind": "network_metrics", "path": "network-metrics.csv", "required": false, "sha256": null },
+    { "kind": "gameplay_invariants", "path": "gameplay-invariants.json", "required": true, "sha256": null },
+    { "kind": "analysis", "path": "analysis/", "required": true, "sha256": null }
+  ]
+}

@@ -1,0 +1,256 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/rayswaynl/a2waspwarfare/Tools/PerfCapture/run-manifest.schema.json",
+  "title": "a2wasp-perf-run-manifest-v1",
+  "description": "Immutable identity and evidence contract for one performance run. Every field is present; null means unknown or not yet attained, never zero.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "run_id",
+    "created_utc",
+    "date_utc",
+    "regime",
+    "scenario",
+    "arm",
+    "build_id",
+    "artifact_directory",
+    "source",
+    "specimens",
+    "host",
+    "mission",
+    "process_topology",
+    "workload",
+    "timing",
+    "validation",
+    "artifacts"
+  ],
+  "properties": {
+    "schema_version": { "const": "a2wasp-perf-run-manifest-v1" },
+    "run_id": { "type": "string", "pattern": "^[A-F0-9]{8}$" },
+    "created_utc": { "type": "string", "format": "date-time" },
+    "date_utc": { "type": "string", "pattern": "^[0-9]{8}$" },
+    "regime": { "$ref": "#/definitions/nameToken" },
+    "scenario": { "$ref": "#/definitions/nameToken" },
+    "arm": { "$ref": "#/definitions/nameToken" },
+    "build_id": { "type": "string", "pattern": "^[A-Za-z0-9]{8}$" },
+    "artifact_directory": { "type": "string", "minLength": 1 },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "git_commit", "git_tree", "dirty"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "git_commit": { "$ref": "#/definitions/gitObject" },
+        "git_tree": { "$ref": "#/definitions/gitObject" },
+        "dirty": { "type": "boolean" }
+      }
+    },
+    "specimens": {
+      "type": "array",
+      "minItems": 5,
+      "items": { "$ref": "#/definitions/specimen" }
+    },
+    "host": { "$ref": "#/definitions/host" },
+    "mission": { "$ref": "#/definitions/mission" },
+    "process_topology": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/process" }
+    },
+    "workload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested", "attained"],
+      "properties": {
+        "requested": { "$ref": "#/definitions/workloadState" },
+        "attained": { "$ref": "#/definitions/workloadState" }
+      }
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start_utc", "warmup_end_utc", "end_utc"],
+      "properties": {
+        "start_utc": { "type": "string", "format": "date-time" },
+        "warmup_end_utc": { "type": "string", "format": "date-time" },
+        "end_utc": { "type": ["string", "null"], "format": "date-time" }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "invalid_reasons", "predeclared_invalid_rules"],
+      "properties": {
+        "status": { "type": "string", "enum": ["pending", "valid", "invalid"] },
+        "invalid_reasons": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "predeclared_invalid_rules": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/artifact" }
+    }
+  },
+  "definitions": {
+    "nameToken": {
+      "type": "string",
+      "pattern": "^[A-Z0-9][A-Z0-9-]{0,31}$"
+    },
+    "gitObject": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{40}$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "nullableSha256": {
+      "type": ["string", "null"],
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "specimen": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "path", "sha256", "size_bytes", "notes"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,47}$" },
+        "kind": {
+          "type": "string",
+          "enum": ["executable", "dll", "mission_pbo", "config", "tool"]
+        },
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/definitions/sha256" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "notes": { "type": ["string", "null"] }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["machine_id", "os", "cpu"],
+      "properties": {
+        "machine_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]{0,31}$" },
+        "os": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["caption", "version", "build", "architecture"],
+          "properties": {
+            "caption": { "type": "string", "minLength": 1 },
+            "version": { "type": "string", "minLength": 1 },
+            "build": { "type": "string", "minLength": 1 },
+            "architecture": { "type": "string", "minLength": 1 }
+          }
+        },
+        "cpu": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name", "physical_cores", "logical_processors", "processor_groups", "topology_source"],
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "physical_cores": { "type": "integer", "minimum": 1 },
+            "logical_processors": { "type": "integer", "minimum": 1 },
+            "processor_groups": { "type": "integer", "minimum": 1 },
+            "topology_source": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "flag": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "value": { "type": ["string", "number", "boolean", "null"] }
+      }
+    },
+    "mission": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["map", "mission_name", "mission_pbo_specimen_id", "flags", "mod_order", "player_count", "expected_hcs"],
+      "properties": {
+        "map": { "type": "string", "minLength": 1 },
+        "mission_name": { "type": "string", "minLength": 1 },
+        "mission_pbo_specimen_id": { "type": "string", "minLength": 1 },
+        "flags": { "type": "array", "items": { "$ref": "#/definitions/flag" } },
+        "mod_order": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "player_count": { "type": "integer", "minimum": 0 },
+        "expected_hcs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "process": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "pid", "start_utc", "executable_specimen_id", "command_line_redacted", "command_line_sha256", "affinity_mask_hex", "mod_order"],
+      "properties": {
+        "role": { "type": "string", "pattern": "^(server|hc-[0-9]{2}|client-[0-9]{2})$" },
+        "pid": { "type": "integer", "minimum": 1 },
+        "start_utc": { "type": "string", "format": "date-time" },
+        "executable_specimen_id": { "type": "string", "minLength": 1 },
+        "command_line_redacted": { "type": "string", "minLength": 1 },
+        "command_line_sha256": { "$ref": "#/definitions/sha256" },
+        "affinity_mask_hex": { "type": "string", "pattern": "^0x[0-9A-F]+$" },
+        "mod_order": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "parameter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value", "unit"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "value": { "type": ["string", "number", "boolean", "null"] },
+        "unit": { "type": ["string", "null"] }
+      }
+    },
+    "workloadState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "ai_total", "groups_total", "vehicles_total", "active_towns", "hcs", "players", "parameters"],
+      "properties": {
+        "label": { "type": ["string", "null"] },
+        "ai_total": { "type": ["integer", "null"], "minimum": 0 },
+        "groups_total": { "type": ["integer", "null"], "minimum": 0 },
+        "vehicles_total": { "type": ["integer", "null"], "minimum": 0 },
+        "active_towns": { "type": ["integer", "null"], "minimum": 0 },
+        "hcs": { "type": ["integer", "null"], "minimum": 0 },
+        "players": { "type": ["integer", "null"], "minimum": 0 },
+        "parameters": { "type": "array", "items": { "$ref": "#/definitions/parameter" } }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "path", "required", "sha256"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "config_snapshot",
+            "server_rpt",
+            "hc_rpt",
+            "client_telemetry",
+            "process_metrics",
+            "process_identity",
+            "collector_overhead",
+            "network_metrics",
+            "gameplay_invariants",
+            "analysis"
+          ]
+        },
+        "path": { "type": "string", "minLength": 1 },
+        "required": { "type": "boolean" },
+        "sha256": { "$ref": "#/definitions/nullableSha256" }
+      }
+    }
+  }
+}
