@@ -8,7 +8,7 @@
 	change cannot create or retain new gameplay state.
 */
 
-private ["_side","_sideText","_sideId","_logic","_registry","_newRegistry","_hasTruck","_capTiers","_capTier","_capLast","_cap","_sideAI","_groupCount","_groupCap","_hq","_target","_bestDeficit","_bestDistance","_town","_townSideId","_sv","_maxSV","_deficit","_distance","_group","_truck","_truckType","_spawnPos","_templates","_templateTypes","_templateIndex","_template","_units","_unit","_unitClass","_i","_structures","_anchor","_anchorFound","_candidate","_cleanup","_cleanupOk","_occupied","_crew","_j","_phase","_contactUntil","_legStart","_tripToken","_delivered","_reseated","_driver","_seat","_routeTarget","_before","_after","_rates","_upgrades","_rateIndex","_truckRate","_activeContact","_done","_abort","_lastLog","_diagLog"];
+private ["_side","_sideText","_sideId","_logic","_registry","_newRegistry","_hasTruck","_capTiers","_capTier","_capLast","_cap","_sideAI","_groupCount","_groupCap","_hq","_target","_bestDeficit","_bestDistance","_town","_townSideId","_sv","_maxSV","_deficit","_distance","_group","_truck","_truckType","_spawnPos","_templates","_templateTypes","_templateIndex","_template","_units","_unit","_unitClass","_i","_structures","_anchor","_anchorFound","_candidate","_cleanup","_cleanupOk","_occupied","_crew","_j","_phase","_contactUntil","_legStart","_tripToken","_delivered","_reseated","_driver","_seat","_routeTarget","_before","_after","_rates","_upgrades","_rateIndex","_truckRate","_activeContact","_done","_abort","_lastLog","_diagLog","_deleteUntil","_targetOccupied","_numericSV"];
 
 _side = _this select 0;
 if (!isServer) exitWith {};
@@ -72,12 +72,14 @@ while {!WFBE_GameOver} do {
 			_townSideId = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
 			_sv = _town getVariable ["supplyValue", -1];
 			_maxSV = _town getVariable ["maxSupplyValue", -1];
-			_deficit = _maxSV - _sv;
-			_distance = _town distance _hq;
-			if (_townSideId == _sideId && {!(_town getVariable ["wfbe_contested", false])} && {!(_town getVariable ["wfbe_is_naval_hvt", false])} && {!(_town getVariable ["wfbe_inactive", false])} && {_sv >= 0} && {_maxSV > 0} && {_deficit > 0} && {(_deficit > _bestDeficit) || {_deficit == _bestDeficit && {_distance < _bestDistance}}}) then {
-				_target = _town;
-				_bestDeficit = _deficit;
-				_bestDistance = _distance;
+			if (typeName _sv == "SCALAR" && {typeName _maxSV == "SCALAR"}) then {
+				_deficit = _maxSV - _sv;
+				_distance = _town distance _hq;
+				if (_townSideId == _sideId && {!(_town getVariable ["wfbe_contested", false])} && {!(_town getVariable ["wfbe_is_naval_hvt", false])} && {!(_town getVariable ["wfbe_inactive", false])} && {_sv >= 0} && {_maxSV > 0} && {_deficit > 0} && {(_deficit > _bestDeficit) || {_deficit == _bestDeficit && {_distance < _bestDistance}}}) then {
+					_target = _town;
+					_bestDeficit = _deficit;
+					_bestDistance = _distance;
+				};
 			};
 		} forEach towns;
 		if (isNull _target) then {_hasTruck = true};
@@ -90,7 +92,7 @@ while {!WFBE_GameOver} do {
 			_hasTruck = true;
 		} else {
 			_truckType = missionNamespace getVariable [Format ["WFBE_%1SUPPLYTRUCK", _sideText], ""];
-			_truck = [_truckType, _spawnPos, _side, getDir _hq, 2, true, true, "NONE"] Call WFBE_CO_FNC_CreateVehicle;
+			_truck = [_truckType, _spawnPos, _side, getDir _hq, true, true, true, "NONE"] Call WFBE_CO_FNC_CreateVehicle;
 			if (isNull _truck) then {
 				deleteGroup _group;
 				_hasTruck = true;
@@ -131,14 +133,14 @@ while {!WFBE_GameOver} do {
 						_vehicle = _this select 0;
 						_source = _this select 1;
 						_ownSide = _vehicle getVariable ["wfbe_ai_supply_side", sideEmpty];
-						if (!isNull _source && {side _source != _ownSide} && {side _source in [west,east,resistance]}) then {_vehicle setVariable ["wfbe_ai_supply_contact", true]};
+						if (!isNull _source && {alive _source} && {side _source != _ownSide} && {side _source in [west,east,resistance]}) then {_vehicle setVariable ["wfbe_ai_supply_contact", true]};
 					}];
 					_truck addEventHandler ["Hit", {
 						private ["_vehicle","_source","_ownSide"];
 						_vehicle = _this select 0;
 						_source = _this select 1;
 						_ownSide = _vehicle getVariable ["wfbe_ai_supply_side", sideEmpty];
-						if (!isNull _source && {side _source != _ownSide} && {side _source in [west,east,resistance]}) then {_vehicle setVariable ["wfbe_ai_supply_contact", true]};
+						if (!isNull _source && {alive _source} && {side _source != _ownSide} && {side _source in [west,east,resistance]}) then {_vehicle setVariable ["wfbe_ai_supply_contact", true]};
 					}];
 					_diagLog = Format ["AISUPPLY|v1|%1|%2|SPAWN|crew=8|town=%3", _sideText, round (time / 60), _target getVariable ["name", "town"]];
 					diag_log _diagLog;
@@ -164,6 +166,9 @@ while {!WFBE_GameOver} do {
 						_truck removeAllEventHandlers "Killed";
 						{if (!isNull _x) then {deleteVehicle _x}} forEach _units;
 						deleteVehicle _truck;
+						_deleteUntil = time + 5;
+						while {!isNull _truck && {time < _deleteUntil}} do {sleep 0.1};
+						if (!isNull _truck) exitWith {diag_log Format ["AISUPPLY|v1|%1|%2|ABORT|reason=hull-delete-unconfirmed", _sideText, round (time / 60)]; false};
 						_remaining = _logic getVariable ["wfbe_ai_supplytrucks", []];
 						_currentRegistry = [];
 						{if (!isNull _x && {_x != _truck}) then {_currentRegistry = _currentRegistry + [_x]}} forEach _remaining;
@@ -190,18 +195,21 @@ while {!WFBE_GameOver} do {
 					_reseated = false;
 					_done = false;
 					_abort = false;
-					while {!_done && {!WFBE_GameOver}} do {
-						if (!((missionNamespace getVariable ["WFBE_C_AI_SUPPLY_TRUCK_ENABLE", 0]) > 0) || {(missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_SYSTEM", 1]) != 0} || {!alive _hq} || {!(_side Call WFBE_CO_FNC_GetSideHQDeployStatus)}) then {_abort = true};
+					while {!_done} do {
+						if (WFBE_GameOver || {!((missionNamespace getVariable ["WFBE_C_AI_SUPPLY_TRUCK_ENABLE", 0]) > 0)} || {(missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_SYSTEM", 1]) != 0} || {!((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0)} || {!alive _hq} || {!(_side Call WFBE_CO_FNC_GetSideHQDeployStatus)}) then {_abort = true};
 						if (_abort) then {
 							_cleanupOk = call _cleanup;
 							if (_cleanupOk) then {_done = true} else {sleep 30};
 						} else {
+							if (_phase == "RETURN" && {isNull _anchor || {!alive _anchor}}) then {_anchor = _side Call WFBE_CO_FNC_GetSideHQ};
+							if (_phase == "RETURN" && {isNull _anchor || {!alive _anchor}}) then {_abort = true};
 							_routeTarget = if (_phase == "OUTBOUND") then {_target} else {_anchor};
 							[_group, true, [[getPos _routeTarget, "MOVE", 100, 80, "", []]]] Call AIWPAdd;
 							_legStart = time;
 							_contactUntil = 0;
-							while {alive _truck && {!WFBE_GameOver} && {!_abort}} do {
+							while {alive _truck && {!_abort}} do {
 								sleep 2;
+								if (WFBE_GameOver || {!((missionNamespace getVariable ["WFBE_C_AI_SUPPLY_TRUCK_ENABLE", 0]) > 0)} || {!((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0)}) then {_abort = true};
 								_driver = driver _truck;
 								if (isNull _driver || {!alive _driver}) then {
 									if (!_reseated) then {
@@ -213,17 +221,25 @@ while {!WFBE_GameOver} do {
 								_activeContact = _truck getVariable ["wfbe_ai_supply_contact", false];
 								if (_activeContact) then {
 									_truck setVariable ["wfbe_ai_supply_contact", false];
+									if (_contactUntil <= time) then {
+										_group setBehaviour "AWARE";
+										_group setCombatMode "RED";
+										_group setSpeedMode "FULL";
+										for "_j" from 0 to ((count _units) - 1) do {
+											if (alive (_units select _j) && {(_units select _j) != driver _truck}) then {unassignVehicle (_units select _j); (_units select _j) action ["EJECT", _truck]};
+										};
+										diag_log Format ["AISUPPLY|v1|%1|%2|CONTACT|escalated", _sideText, round (time / 60)];
+									};
 									_contactUntil = time + 60;
-									_group setBehaviour "AWARE";
-									_group setCombatMode "RED";
-									_group setSpeedMode "FULL";
-									diag_log Format ["AISUPPLY|v1|%1|%2|CONTACT|escalated", _sideText, round (time / 60)];
 								};
 								if (_contactUntil > 0 && {time > _contactUntil}) then {
 									_contactUntil = 0;
 									_group setBehaviour "SAFE";
 									_group setCombatMode "YELLOW";
 									_group setSpeedMode "NORMAL";
+									for "_j" from 0 to ((count _units) - 1) do {
+										if (alive (_units select _j) && {(_units select _j) != driver _truck} && {!isPlayer (_units select _j)}) then {(_units select _j) moveInCargo _truck};
+									};
 									diag_log Format ["AISUPPLY|v1|%1|%2|CLEAR|transit-restored", _sideText, round (time / 60)];
 									[_group, true, [[getPos _routeTarget, "MOVE", 100, 80, "", []]]] Call AIWPAdd;
 								};
@@ -237,6 +253,13 @@ while {!WFBE_GameOver} do {
 								if (_phase == "OUTBOUND") then {
 									_sv = _target getVariable ["supplyValue", -1];
 									_maxSV = _target getVariable ["maxSupplyValue", -1];
+									_crew = crew _truck;
+									_targetOccupied = false;
+									{if (isPlayer _x) then {_targetOccupied = true}} forEach _crew;
+									_numericSV = typeName _sv == "SCALAR" && {typeName _maxSV == "SCALAR"};
+									if (_targetOccupied || {!_numericSV} || {surfaceIsWater (getPos _target)}) then {
+										_abort = true;
+									} else {
 									if ((_target getVariable ["sideID", WFBE_C_UNKNOWN_ID]) != _sideId || {_target getVariable ["wfbe_contested", false]} || {_target getVariable ["wfbe_is_naval_hvt", false]} || {_sv < 0} || {_maxSV <= _sv} || {!alive _driver}) then {
 										_phase = "RETURN";
 									} else {
@@ -250,12 +273,13 @@ while {!WFBE_GameOver} do {
 										_before = _sv;
 										_after = (_before + _truckRate) min _maxSV;
 										if (!_delivered) then {
-											_target setVariable ["supplyValue", _after, true];
 											_delivered = true;
+											_target setVariable ["supplyValue", _after, true];
 											diag_log Format ["AISUPPLY|v1|%1|%2|DELIVER|town=%3|before=%4|after=%5|max=%6|rate=%7|trip=%8", _sideText, round (time / 60), _target getVariable ["name", "town"], _before, _after, _maxSV, _truckRate, _tripToken];
 										};
 										_phase = "RETURN";
 									};
+								};
 								} else {
 									_delivered = false;
 									_tripToken = _tripToken + 1;
@@ -263,12 +287,34 @@ while {!WFBE_GameOver} do {
 									diag_log Format ["AISUPPLY|v1|%1|%2|RETURN|anchor=%3|trip=%4", _sideText, round (time / 60), str _anchor, _tripToken];
 									sleep 30;
 									if (!alive _anchor) then {_anchor = _side Call WFBE_CO_FNC_GetSideHQ};
-									if (isNull _anchor || {!alive _anchor}) then {_abort = true} else {_phase = "OUTBOUND"};
+									if (isNull _anchor || {!alive _anchor}) then {
+										_abort = true;
+									} else {
+										_target = objNull;
+										_bestDeficit = 0;
+										_bestDistance = 1e10;
+										{
+											_town = _x;
+											_townSideId = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+											_sv = _town getVariable ["supplyValue", -1];
+											_maxSV = _town getVariable ["maxSupplyValue", -1];
+											if (typeName _sv == "SCALAR" && {typeName _maxSV == "SCALAR"}) then {
+												_deficit = _maxSV - _sv;
+												_distance = _town distance _hq;
+												if (_townSideId == _sideId && {!(_town getVariable ["wfbe_contested", false])} && {!(_town getVariable ["wfbe_is_naval_hvt", false])} && {!(_town getVariable ["wfbe_inactive", false])} && {_sv >= 0} && {_maxSV > 0} && {_deficit > 0} && {(_deficit > _bestDeficit) || {_deficit == _bestDeficit && {_distance < _bestDistance}}}) then {
+													_target = _town;
+													_bestDeficit = _deficit;
+													_bestDistance = _distance;
+												};
+											};
+										} forEach towns;
+										if (isNull _target) then {_abort = true} else {_phase = "OUTBOUND"};
+									};
 								};
 							};
 						};
 					};
-					if (!_done && {!WFBE_GameOver}) then {
+					if (!_done) then {
 						_cleanupOk = call _cleanup;
 						if (!_cleanupOk) then {sleep 30};
 					};

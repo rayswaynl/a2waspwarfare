@@ -211,6 +211,7 @@ class AiSupplyTruckContractTests(unittest.TestCase):
             with self.subTest(root=root.name):
                 self.assertIn('Call WFBE_CO_FNC_CreateGroup', code)
                 self.assertIn('for "_i" from 0 to 7', code)
+                self.assertIn('getDir _hq, true, true, true, "NONE"', code)
                 self.assertIn("if (count _units < 8)", code)
                 publication = code.find('_registry = _registry + [_truck]')
                 registry = code.find(
@@ -235,20 +236,41 @@ class AiSupplyTruckContractTests(unittest.TestCase):
                 self.assertIn('if (!_delivered) then', code)
                 self.assertIn('setVariable ["supplyValue", _after, true]', code)
                 self.assertIn('trip=%8', code)
+                self.assertIn('typeName _sv == "SCALAR"', code)
+                self.assertIn('surfaceIsWater (getPos _target)', code)
+                self.assertIn('_targetOccupied', code)
+                latch = code.find("_delivered = true;")
+                mutation = code.find('setVariable ["supplyValue", _after, true]')
+                self.assertGreaterEqual(latch, 0)
+                self.assertGreater(mutation, latch)
                 self.assertNotIn("ChangeSideSupply", code)
                 self.assertNotIn("SupplyAmount", code)
 
+    def test_worker_shutdown_contact_and_cleanup_fences_are_explicit(self) -> None:
+        for root in MAINTAINED_ROOTS:
+            code = mask_comments(read(root, WORKER))
+            with self.subTest(root=root.name):
+                self.assertIn('getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]', code)
+                self.assertIn("if (WFBE_GameOver", code)
+                self.assertIn("alive _source", code)
+                self.assertIn('action ["EJECT", _truck]', code)
+                self.assertIn("moveInCargo _truck", code)
+                self.assertIn("while {!isNull _truck", code)
+                self.assertIn("hull-delete-unconfirmed", code)
+                self.assertGreaterEqual(code.count("_target = objNull"), 2)
+
     def test_init_server_compiles_and_double_gates_both_sides(self) -> None:
-        code = mask_comments(read(MAINTAINED_ROOTS[0], INIT_SERVER))
-        self.assertIn(
-            'UpdateSupplyTruck = Compile preprocessFileLineNumbers '
-            '"Server\\AI\\AI_UpdateSupplyTruck.sqf"',
-            code,
-        )
-        launch = code[code.find("serverInitFull = true;") :]
-        self.assertIn('getVariable ["WFBE_C_AI_SUPPLY_TRUCK_ENABLE", 0]', launch)
-        self.assertIn('getVariable ["WFBE_C_ECONOMY_SUPPLY_SYSTEM", 1]', launch)
-        self.assertIn("forEach [west,east]", launch)
+        for root in MAINTAINED_ROOTS:
+            code = mask_comments(read(root, INIT_SERVER))
+            self.assertIn(
+                'UpdateSupplyTruck = Compile preprocessFileLineNumbers '
+                '"Server\\AI\\AI_UpdateSupplyTruck.sqf"',
+                code,
+            )
+            launch = code[code.find("serverInitFull = true;") :]
+            self.assertIn('getVariable ["WFBE_C_AI_SUPPLY_TRUCK_ENABLE", 0]', launch)
+            self.assertIn('getVariable ["WFBE_C_ECONOMY_SUPPLY_SYSTEM", 1]', launch)
+            self.assertIn("forEach [west,east]", launch)
 
 
 if __name__ == "__main__":
