@@ -101,8 +101,10 @@ Expected: failure because `Collect-ProcessMetrics.ps1` does not exist.
 
 **Step 1: Implement identity preflight**
 
-Validate the manifest, resolve only declared PIDs, verify start time/executable
-SHA/command SHA/affinity, hash accessible modules once, and write ordered
+Validate the manifest, bind the running collector and validator to explicit tool
+specimens, resolve only declared PIDs, verify start time/executable SHA/size,
+command SHA/affinity, hash accessible modules once, require declared DLL
+specimens to be loaded at the expected hash/size, and write ordered
 `process-identity.json`. Do not expose an unredacted command line.
 
 **Step 2: Implement minimal sampling**

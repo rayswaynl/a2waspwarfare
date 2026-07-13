@@ -45,6 +45,8 @@ unknown or not yet attained; zero remains a measured zero. The schema covers:
 - run identity, artifact directory naming, regime/scenario/arm/build;
 - source commit/tree identity and dirty-state declaration;
 - executable, DLL, mission PBO, config, and tool specimens with SHA-256/size;
+- explicit collector/validator tool specimen links and per-process required DLL
+  specimen links;
 - anonymized host OS/CPU/topology;
 - map, mission, flags, mod order, player count, expected HCs;
 - per-process role, PID, start UTC, executable specimen reference, redacted
@@ -63,9 +65,10 @@ status/null consistency, required specimen kinds, and role/topology agreement.
 
 The collector requires `MANIFEST.json` to be pending and located inside the
 named run artifact directory. It validates the manifest, records its starting SHA-256, resolves
-each declared PID, and verifies PID reuse protection (creation time), executable
-hash, raw-command hash, and affinity before sampling. A mismatch is a fail-closed
-preflight error. Accessible loaded modules are hashed once into
+the declared collector and validator tool hashes/sizes, resolves each declared
+PID, and verifies PID reuse protection (creation time), executable hash/size,
+raw-command hash, affinity, and required loaded DLL hashes/sizes before sampling.
+A mismatch is a fail-closed preflight error. Accessible loaded modules are hashed once into
 `process-identity.json`; unavailable modules are represented as null/error, never
 as a fabricated zero.
 
@@ -82,8 +85,9 @@ the row records `process-unavailable`; the tool does not restart it.
 
 At completion the collector re-hashes the manifest and fails if it changed
 during capture. `collector-overhead.json` reports collector wall/CPU time,
-per-sample query p50/p95/max, deadline misses, module-hash time, output size, and
-CPU expressed both as logical-core and total-machine percentages. The contract
+per-sample query p50/p95/max, deadline misses, identity-preflight and loaded-module
+inventory time, output size, and CPU expressed both as logical-core and
+total-machine percentages. Wall/CPU timing starts before validation. The contract
 does not invent a universal pass threshold; every experiment reports these
 values beside the effect it is attempting to measure.
 
@@ -93,11 +97,13 @@ Every partial/unavailable metric stays null with an availability/error marker.
 Identity mismatches and manifest mutation stop the capture. Ordinary counter
 unavailability is recorded without changing the target process.
 
-Python unit tests exercise valid, malformed, cross-field-invalid, canonical,
-sealed, and tampered manifests. Plain-assertion PowerShell integration tests use
+Python unit tests exercise valid, malformed, artifact-incomplete,
+cross-field-invalid, canonical, sealed, and tampered manifests. Plain-assertion
+PowerShell integration tests use
 three benign test-owned sleeping processes for server/HC/client roles, prove the
 collector leaves them running, verify CSV/identity/overhead schemas, and verify
-manifest placement, lifecycle, and PID/hash mismatch failures.
+manifest placement, lifecycle, collector-tool, required-DLL, and PID/hash
+mismatch failures.
 No Arma runtime is required.
 
 Rollback is deletion of `Tools/PerfCapture` and its documentation, or closing

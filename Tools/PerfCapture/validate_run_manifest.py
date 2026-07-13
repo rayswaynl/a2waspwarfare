@@ -203,6 +203,33 @@ def _cross_field_errors(document: dict[str, Any]) -> list[str]:
                     f"$.specimens: missing required specimen kind: {required_kind}"
                 )
 
+    capture_tools = document.get("capture_tools")
+    if isinstance(capture_tools, dict):
+        collector_tool_id = capture_tools.get("collector_specimen_id")
+        validator_tool_id = capture_tools.get("validator_specimen_id")
+        for field_name, specimen_id, label in (
+            ("collector_specimen_id", collector_tool_id, "collector"),
+            ("validator_specimen_id", validator_tool_id, "validator"),
+        ):
+            specimen = specimen_by_id.get(specimen_id)
+            if specimen_id is not None and specimen is None:
+                errors.append(
+                    f"$.capture_tools.{field_name}: unknown {label} tool specimen "
+                    f"{specimen_id!r}"
+                )
+            elif specimen is not None and specimen.get("kind") != "tool":
+                errors.append(
+                    f"$.capture_tools.{field_name}: referenced specimen is not a tool"
+                )
+        if (
+            isinstance(collector_tool_id, str)
+            and isinstance(validator_tool_id, str)
+            and collector_tool_id == validator_tool_id
+        ):
+            errors.append(
+                "$.capture_tools: collector and validator tool specimens must differ"
+            )
+
     mission = document.get("mission")
     if isinstance(mission, dict):
         pbo_id = mission.get("mission_pbo_specimen_id")
@@ -218,6 +245,8 @@ def _cross_field_errors(document: dict[str, Any]) -> list[str]:
 
     topology = document.get("process_topology")
     hc_count = 0
+    client_count = 0
+    referenced_module_ids: set[str] = set()
     if isinstance(topology, list):
         roles = [item.get("role") for item in topology if isinstance(item, dict)]
         pids = [item.get("pid") for item in topology if isinstance(item, dict)]
@@ -231,6 +260,8 @@ def _cross_field_errors(document: dict[str, Any]) -> list[str]:
             role = process.get("role")
             if isinstance(role, str) and role.startswith("hc-"):
                 hc_count += 1
+            if isinstance(role, str) and role.startswith("client-"):
+                client_count += 1
             specimen_id = process.get("executable_specimen_id")
             specimen = specimen_by_id.get(specimen_id)
             if specimen_id is not None and specimen is None:
@@ -243,6 +274,28 @@ def _cross_field_errors(document: dict[str, Any]) -> list[str]:
                     f"$.process_topology[{index}].executable_specimen_id: "
                     "referenced specimen is not executable"
                 )
+            module_ids = process.get("module_specimen_ids")
+            if isinstance(module_ids, list):
+                for duplicate in _duplicate_values(module_ids):
+                    errors.append(
+                        f"$.process_topology[{index}].module_specimen_ids: "
+                        f"duplicate module specimen {duplicate!r}"
+                    )
+                for module_id in module_ids:
+                    if not isinstance(module_id, str):
+                        continue
+                    referenced_module_ids.add(module_id)
+                    module_specimen = specimen_by_id.get(module_id)
+                    if module_specimen is None:
+                        errors.append(
+                            f"$.process_topology[{index}].module_specimen_ids: "
+                            f"unknown module specimen {module_id!r}"
+                        )
+                    elif module_specimen.get("kind") != "dll":
+                        errors.append(
+                            f"$.process_topology[{index}].module_specimen_ids: "
+                            f"specimen {module_id!r} is not a DLL"
+                        )
             redacted_command = process.get("command_line_redacted")
             if isinstance(redacted_command, str):
                 sensitive_switch = re.search(
@@ -255,6 +308,12 @@ def _cross_field_errors(document: dict[str, Any]) -> list[str]:
                         f"$.process_topology[{index}].command_line_redacted: "
                         "sensitive command-line switch must use <redacted>"
                     )
+
+    for specimen_id, specimen in specimen_by_id.items():
+        if specimen.get("kind") == "dll" and specimen_id not in referenced_module_ids:
+            errors.append(
+                f"$.specimens: DLL specimen is not bound to any process: {specimen_id!r}"
+            )
 
     if isinstance(mission, dict) and isinstance(mission.get("expected_hcs"), int):
         if mission["expected_hcs"] != hc_count:
@@ -386,6 +445,58 @@ def _cross_field_errors(document: dict[str, Any]) -> list[str]:
                     f"$.artifacts[{index}].path: must be a relative run-local path "
                     "using forward slashes"
                 )
+        artifacts_by_kind: dict[str, list[dict[str, Any]]] = {}
+        for artifact in artifacts:
+            if isinstance(artifact, dict) and isinstance(artifact.get("kind"), str):
+                artifacts_by_kind.setdefault(artifact["kind"], []).append(artifact)
+
+        singleton_required_kinds = (
+            "config_snapshot",
+            "server_rpt",
+            "process_metrics",
+            "process_identity",
+            "collector_overhead",
+            "gameplay_invariants",
+            "analysis",
+        )
+        for kind in singleton_required_kinds:
+            entries = artifacts_by_kind.get(kind, [])
+            if len(entries) == 0:
+                errors.append(f"$.artifacts: missing required artifact kind {kind}")
+            elif len(entries) != 1:
+                errors.append(
+                    f"$.artifacts: artifact kind {kind} must appear exactly once"
+                )
+            for entry in entries:
+                if entry.get("required") is not True:
+                    errors.append(
+                        f"$.artifacts: artifact kind {kind} must be marked required"
+                    )
+
+        network_entries = artifacts_by_kind.get("network_metrics", [])
+        if len(network_entries) > 1:
+            errors.append(
+                "$.artifacts: artifact kind network_metrics may appear at most once"
+            )
+
+        hc_entries = artifacts_by_kind.get("hc_rpt", [])
+        if len(hc_entries) != hc_count:
+            errors.append(
+                "$.artifacts: hc_rpt count must match declared HC roles "
+                f"({len(hc_entries)} != {hc_count})"
+            )
+        client_entries = artifacts_by_kind.get("client_telemetry", [])
+        if len(client_entries) != client_count:
+            errors.append(
+                "$.artifacts: client_telemetry count must match declared client roles "
+                f"({len(client_entries)} != {client_count})"
+            )
+        for kind, entries in (("hc_rpt", hc_entries), ("client_telemetry", client_entries)):
+            for entry in entries:
+                if entry.get("required") is not True:
+                    errors.append(
+                        f"$.artifacts: artifact kind {kind} must be marked required"
+                    )
 
     return errors
 
@@ -497,10 +608,12 @@ def finalize_manifest(
     if document.get("validation", {}).get("status") == "pending":
         raise ValueError("pending manifest cannot be finalized")
 
+    canonical = canonical_bytes(document)
     if existing_seal is not None:
+        if raw != canonical:
+            raise ValueError("sealed manifest is not canonical")
         return existing_seal
 
-    canonical = canonical_bytes(document)
     digest = sha256_bytes(canonical)
     _atomic_write(path, canonical)
     _atomic_write(seal_path, f"{digest}  MANIFEST.json\n".encode("ascii"))

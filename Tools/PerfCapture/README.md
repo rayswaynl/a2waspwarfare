@@ -40,6 +40,9 @@ eight alphanumeric characters.
    `<redacted>`; `command_line_sha256` hashes the exact unredacted UTF-8 command
    line so identity remains provable. The validator rejects unredacted common
    password switches.
+   Snapshot the exact collector and validator files as the two specimens named
+   by `capture_tools`. Bind every declared DLL specimen to at least one process
+   through `module_specimen_ids`.
 3. Validate before capture:
 
    ```powershell
@@ -56,8 +59,9 @@ eight alphanumeric characters.
      -IntervalSeconds 1
    ```
 
-   The collector fails before sampling if PID/start time, executable SHA-256,
-   raw-command SHA-256, or affinity does not match the manifest. It also hashes
+   The collector fails before sampling if collector/validator SHA-256 and size,
+   required loaded-DLL SHA-256 and size, PID/start time, executable SHA-256 and
+   size, raw-command SHA-256, or affinity does not match the manifest. It also hashes
    the manifest before and after capture and rejects a run whose identity changed
    while samples were being taken. Capture accepts only a pending manifest stored
    directly in that output directory; finalized runs cannot be recaptured.
@@ -92,24 +96,28 @@ Top-level fields are:
 | `created_utc`, `timing` | UTC creation, start, warm-up end, and end boundaries. |
 | `source` | Repository, exact commit/tree, and dirty declaration. |
 | `specimens` | Executable, relevant DLL, mission PBO, config, and collector/tool SHA-256/size identities. |
+| `capture_tools` | Explicit collector and manifest-validator tool specimen references. |
 | `host` | Anonymous machine label plus OS/CPU/topology. |
 | `mission` | Map, mission PBO reference, flags, mod order, players, expected HCs. |
-| `process_topology` | Unique role/PID/start/executable reference/command hash/affinity/mod order. |
+| `process_topology` | Unique role/PID/start/executable and required-DLL references/command hash/affinity/mod order. |
 | `workload` | Requested and attained labels/counts/experiment-specific parameters. |
 | `validation` | Pending/valid/invalid state, predeclared rules, actual invalid reasons. |
 | `artifacts` | Required/optional artifact paths and final hashes. |
 
 The dependency-free validator additionally enforces unique IDs/roles/PIDs and
-artifact paths, valid specimen references, required specimen kinds, HC count,
-directory identity, UTC ordering, pending/final consistency, and required
-artifact hashes for a valid run.
+artifact paths, valid and distinct capture-tool references, required DLL
+bindings, required singleton evidence kinds, HC/client artifact counts matched
+to declared topology, HC count, directory identity, UTC ordering, pending/final
+consistency, and required artifact hashes for a valid run.
 
 ## Process output contracts
 
 `process-identity.json` (`a2wasp-process-identity-v1`) stores the manifest and
-collector hashes plus one target record per role. Each record contains PID,
+collector/validator specimen IDs and hashes plus one target record per role.
+Each record contains PID,
 start UTC, executable path/hash/specimen ID, redacted command line, raw-command
-hash, affinity, context-switch source, and a one-time loaded-module inventory.
+hash, affinity, required module specimen IDs, context-switch source, and a
+one-time loaded-module inventory.
 Each accessible module has path, file name, SHA-256, byte size, file version,
 and null error; inaccessible entries use null values plus an error string.
 
@@ -152,8 +160,9 @@ means zero.
 
 `collector-overhead.json` (`a2wasp-collector-overhead-v1`) records target and
 sample counts, interval/wall/collector CPU, peak collector working set,
-module-hash time, query p50/p95/max, missed deadlines, output bytes, bytes per
-process-sample, and before/after manifest hashes.
+identity-preflight and loaded-module inventory time, query p50/p95/max, missed
+deadlines, output bytes, bytes per process-sample, and before/after manifest
+hashes. Wall/CPU measurement begins before manifest validation and tool binding.
 
 ## Tests
 

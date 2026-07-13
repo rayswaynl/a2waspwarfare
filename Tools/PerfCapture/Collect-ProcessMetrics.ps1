@@ -35,6 +35,9 @@ $metricsPath = Join-Path $OutputDirectory 'process-metrics.csv'
 $identityPath = Join-Path $OutputDirectory 'process-identity.json'
 $overheadPath = Join-Path $OutputDirectory 'collector-overhead.json'
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+$collectorProcess = Get-Process -Id $PID
+$collectorCpuStart = $collectorProcess.TotalProcessorTime.TotalSeconds
+$wall = [System.Diagnostics.Stopwatch]::StartNew()
 
 function Format-Utc([datetime]$Value) {
     return $Value.ToUniversalTime().ToString(
@@ -357,10 +360,29 @@ foreach ($specimen in @($script:manifest.specimens)) {
     $specimens[[string]$specimen.id] = $specimen
 }
 
-$collectorProcess = Get-Process -Id $PID
-$collectorCpuStart = $collectorProcess.TotalProcessorTime.TotalSeconds
-$wall = [System.Diagnostics.Stopwatch]::StartNew()
-$moduleWatch = [System.Diagnostics.Stopwatch]::StartNew()
+$collectorSpecimenId = [string]$script:manifest.capture_tools.collector_specimen_id
+$validatorSpecimenId = [string]$script:manifest.capture_tools.validator_specimen_id
+$collectorSpecimen = $specimens[$collectorSpecimenId]
+$validatorSpecimen = $specimens[$validatorSpecimenId]
+$collectorActualSha = Get-FileSha256 $PSCommandPath
+$validatorActualSha = Get-FileSha256 $validator
+$collectorActualSize = [int64](Get-Item -LiteralPath $PSCommandPath).Length
+$validatorActualSize = [int64](Get-Item -LiteralPath $validator).Length
+if (
+    $collectorActualSha -ne [string]$collectorSpecimen.sha256 -or
+    $collectorActualSize -ne [int64]$collectorSpecimen.size_bytes
+) {
+    throw "Collector tool hash mismatch for specimen '$collectorSpecimenId'"
+}
+if (
+    $validatorActualSha -ne [string]$validatorSpecimen.sha256 -or
+    $validatorActualSize -ne [int64]$validatorSpecimen.size_bytes
+) {
+    throw "Manifest validator tool hash mismatch for specimen '$validatorSpecimenId'"
+}
+
+$identityWatch = [System.Diagnostics.Stopwatch]::StartNew()
+$moduleWatch = New-Object System.Diagnostics.Stopwatch
 $identityTargets = New-Object System.Collections.Generic.List[object]
 
 foreach ($target in $targets) {
@@ -386,7 +408,12 @@ foreach ($target in $targets) {
         throw "Target $($target.role) references missing executable specimen '$specimenId'"
     }
     $expectedExecutableSha = [string]$specimens[$specimenId].sha256
-    if ($actualExecutableSha -ne $expectedExecutableSha) {
+    $actualExecutableSize = [int64](Get-Item -LiteralPath $executablePath).Length
+    $expectedExecutableSize = [int64]$specimens[$specimenId].size_bytes
+    if (
+        $actualExecutableSha -ne $expectedExecutableSha -or
+        $actualExecutableSize -ne $expectedExecutableSize
+    ) {
         throw "Target $($target.role) executable hash mismatch"
     }
 
@@ -403,7 +430,28 @@ foreach ($target in $targets) {
         throw "Target $($target.role) affinity mismatch"
     }
 
-    $modules = @(Get-ModuleInventory $live)
+    $moduleWatch.Start()
+    try {
+        $modules = @(Get-ModuleInventory $live)
+    } finally {
+        $moduleWatch.Stop()
+    }
+    $requiredModuleSpecimenIds = @($target.module_specimen_ids)
+    foreach ($requiredModuleSpecimenId in $requiredModuleSpecimenIds) {
+        $requiredModuleSpecimen = $specimens[[string]$requiredModuleSpecimenId]
+        $matchingModules = @(
+            $modules | Where-Object {
+                $_.sha256 -eq [string]$requiredModuleSpecimen.sha256 -and
+                $_.size_bytes -eq [int64]$requiredModuleSpecimen.size_bytes
+            }
+        )
+        if ($matchingModules.Count -eq 0) {
+            throw (
+                "Target {0} required module specimen '{1}' is not loaded with the declared hash/size" -f
+                $target.role, $requiredModuleSpecimenId
+            )
+        }
+    }
     $identityTargets.Add([pscustomobject][ordered]@{
         role = [string]$target.role
         pid = $pidValue
@@ -411,6 +459,7 @@ foreach ($target in $targets) {
         executable_path = $executablePath
         executable_sha256 = $actualExecutableSha
         executable_specimen_id = $specimenId
+        required_module_specimen_ids = $requiredModuleSpecimenIds
         command_line_redacted = [string]$target.command_line_redacted
         command_line_sha256 = $actualCommandSha
         affinity_mask_hex = ('0x{0:X}' -f $actualAffinity)
@@ -418,7 +467,7 @@ foreach ($target in $targets) {
         modules = @($modules)
     })
 }
-$moduleWatch.Stop()
+$identityWatch.Stop()
 
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
 foreach ($path in @($metricsPath, $identityPath, $overheadPath)) {
@@ -430,7 +479,10 @@ $identity = [pscustomobject][ordered]@{
     run_id = [string]$script:manifest.run_id
     captured_utc = Format-Utc ([datetime]::UtcNow)
     manifest_sha256 = $manifestStartSha
-    collector_sha256 = Get-FileSha256 $PSCommandPath
+    collector_specimen_id = $collectorSpecimenId
+    collector_sha256 = $collectorActualSha
+    validator_specimen_id = $validatorSpecimenId
+    validator_sha256 = $validatorActualSha
     targets = $identityTargets.ToArray()
 }
 Write-Json $identityPath $identity
@@ -512,6 +564,7 @@ $overhead = [pscustomobject][ordered]@{
     collector_cpu_logical_core_percent = $collectorCorePercent
     collector_cpu_total_capacity_percent = $collectorTotalPercent
     collector_peak_working_set_bytes = [int64]$collectorProcess.PeakWorkingSet64
+    identity_preflight_wall_ms = [math]::Round($identityWatch.Elapsed.TotalMilliseconds, 3)
     module_hash_wall_ms = [math]::Round($moduleWatch.Elapsed.TotalMilliseconds, 3)
     query_duration_ms_p50 = Get-Percentile $queryDurations.ToArray() 50
     query_duration_ms_p95 = Get-Percentile $queryDurations.ToArray() 95

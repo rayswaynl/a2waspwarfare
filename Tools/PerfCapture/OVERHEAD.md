@@ -21,18 +21,19 @@ Measured `collector-overhead.json`:
 | Targets | 3 |
 | One-second intervals requested | 30 |
 | Process rows written | 90 |
-| Wall time | 32.711627 s |
-| Collector CPU time | 3.359375 s |
-| Average collector CPU, one-core scale | 10.269666% (about 0.103 core) |
-| Average collector CPU, total-machine scale | 0.641854% |
-| Peak collector working set | 189,734,912 bytes |
-| One-time module hash time | 3,188.111 ms |
-| Query duration p50 | 500.934 ms |
-| Query duration p95 | 612.024 ms |
-| Query duration max | 665.891 ms |
+| Wall time | 32.316557 s |
+| Collector CPU time | 3.343750 s |
+| Average collector CPU, one-core scale | 10.346863% (about 0.103 core) |
+| Average collector CPU, total-machine scale | 0.646679% |
+| Peak collector working set | 189,194,240 bytes |
+| Full identity preflight time | 2,673.765 ms |
+| Loaded-module inventory/hash time | 1,166.040 ms |
+| Query duration p50 | 551.644 ms |
+| Query duration p95 | 616.536 ms |
+| Query duration max | 627.043 ms |
 | Deadline misses | 0 |
-| CSV + identity bytes before overhead JSON | 198,968 bytes |
-| Bytes per process row | 2,210.756 bytes |
+| CSV + identity bytes before overhead JSON | 199,543 bytes |
+| Bytes per process row | 2,217.144 bytes |
 | Manifest changed during capture | false |
 
 The task defines no universal pass threshold, so this report does not invent
@@ -56,8 +57,10 @@ three-role measurement above had zero deadline misses.
 
 ## Interpretation limits
 
-- Module hashing is a one-time identity cost included in total wall/CPU but not
-  in per-sample query percentiles.
+- Manifest validation, tool binding, executable identity, and loaded-module
+  hashing are one-time costs included in total wall/CPU but not in per-sample
+  query percentiles. The module line is the subset spent enumerating/hashing
+  loaded modules.
 - Sleeping PowerShell processes do not reproduce Arma module count, working set,
   I/O, or contention. Repeat the overhead measurement beside every named Arma
   regime.

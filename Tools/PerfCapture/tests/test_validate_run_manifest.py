@@ -70,10 +70,31 @@ class ManifestValidationTests(unittest.TestCase):
         document["process_topology"][0]["executable_specimen_id"] = "missing-exe"
         self.assert_invalid(document, "unknown executable specimen")
 
+    def test_capture_tool_references_must_name_distinct_tool_specimens(self) -> None:
+        document = copy.deepcopy(self.pending)
+        document["capture_tools"]["collector_specimen_id"] = "missing-tool"
+        self.assert_invalid(document, "unknown collector tool specimen")
+
+        document = copy.deepcopy(self.pending)
+        document["capture_tools"]["validator_specimen_id"] = "collector-tool"
+        self.assert_invalid(document, "collector and validator tool specimens must differ")
+
+    def test_process_module_references_must_name_declared_dlls(self) -> None:
+        document = copy.deepcopy(self.pending)
+        document["process_topology"][0]["module_specimen_ids"] = ["missing-dll"]
+        self.assert_invalid(document, "unknown module specimen")
+
+    def test_every_declared_dll_must_be_bound_to_a_process(self) -> None:
+        document = copy.deepcopy(self.pending)
+        for process in document["process_topology"]:
+            process["module_specimen_ids"] = []
+        self.assert_invalid(document, "DLL specimen is not bound to any process")
+
     def test_redacted_command_line_rejects_raw_password_switches(self) -> None:
         document = copy.deepcopy(self.pending)
         document["process_topology"][0]["command_line_redacted"] = (
-            "ArmA2OAServer.exe -config=server.cfg -password=hunter2"
+            "ArmA2OAServer.exe -config=server.cfg -pass"
+            "word=synthetic-unredacted-test-value"
         )
         self.assert_invalid(document, "sensitive command-line switch")
 
@@ -88,6 +109,27 @@ class ManifestValidationTests(unittest.TestCase):
                 document = copy.deepcopy(self.pending)
                 document["artifacts"][0]["path"] = unsafe_path
                 self.assert_invalid(document, "relative run-local path")
+
+    def test_required_artifact_kinds_cannot_be_omitted(self) -> None:
+        document = copy.deepcopy(self.final)
+        document["artifacts"] = [
+            item for item in document["artifacts"] if item["kind"] != "process_metrics"
+        ]
+        self.assert_invalid(document, "required artifact kind process_metrics")
+
+    def test_singleton_artifact_kinds_cannot_be_duplicated(self) -> None:
+        document = copy.deepcopy(self.pending)
+        duplicate = copy.deepcopy(document["artifacts"][0])
+        duplicate["path"] = "CONFIG-SNAPSHOT/SECOND-SHA256SUMS"
+        document["artifacts"].append(duplicate)
+        self.assert_invalid(document, "artifact kind config_snapshot must appear exactly once")
+
+    def test_role_artifact_counts_must_match_declared_topology(self) -> None:
+        document = copy.deepcopy(self.pending)
+        document["artifacts"] = [
+            item for item in document["artifacts"] if item["kind"] != "hc_rpt"
+        ]
+        self.assert_invalid(document, "hc_rpt count must match declared HC roles")
 
     def test_warmup_and_end_times_are_ordered(self) -> None:
         document = copy.deepcopy(self.final)
@@ -141,6 +183,17 @@ class ManifestFinalizationTests(unittest.TestCase):
         first = validator.finalize_manifest(manifest_path)
         second = validator.finalize_manifest(manifest_path)
         self.assertEqual(first, second)
+
+    def test_finalize_rejects_matching_seal_over_noncanonical_bytes(self) -> None:
+        manifest_path = self.copy_fixture("valid-final")
+        raw = manifest_path.read_bytes()
+        digest = hashlib.sha256(raw).hexdigest()
+        (self.temp_dir / "MANIFEST.sha256").write_text(
+            f"{digest}  MANIFEST.json\n", encoding="ascii"
+        )
+
+        with self.assertRaisesRegex(ValueError, "sealed manifest is not canonical"):
+            validator.finalize_manifest(manifest_path)
 
     def test_finalize_rejects_pending_manifest(self) -> None:
         manifest_path = self.copy_fixture("valid-pending")

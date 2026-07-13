@@ -17,6 +17,7 @@
     "artifact_directory",
     "source",
     "specimens",
+    "capture_tools",
     "host",
     "mission",
     "process_topology",
@@ -48,8 +49,17 @@
     },
     "specimens": {
       "type": "array",
-      "minItems": 5,
+      "minItems": 6,
       "items": { "$ref": "#/definitions/specimen" }
+    },
+    "capture_tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["collector_specimen_id", "validator_specimen_id"],
+      "properties": {
+        "collector_specimen_id": { "type": "string", "minLength": 1 },
+        "validator_specimen_id": { "type": "string", "minLength": 1 }
+      }
     },
     "host": { "$ref": "#/definitions/host" },
     "mission": { "$ref": "#/definitions/mission" },
@@ -190,12 +200,13 @@
     "process": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["role", "pid", "start_utc", "executable_specimen_id", "command_line_redacted", "command_line_sha256", "affinity_mask_hex", "mod_order"],
+      "required": ["role", "pid", "start_utc", "executable_specimen_id", "module_specimen_ids", "command_line_redacted", "command_line_sha256", "affinity_mask_hex", "mod_order"],
       "properties": {
         "role": { "type": "string", "pattern": "^(server|hc-[0-9]{2}|client-[0-9]{2})$" },
         "pid": { "type": "integer", "minimum": 1 },
         "start_utc": { "type": "string", "format": "date-time" },
         "executable_specimen_id": { "type": "string", "minLength": 1 },
+        "module_specimen_ids": { "type": "array", "items": { "type": "string", "minLength": 1 } },
         "command_line_redacted": { "type": "string", "minLength": 1 },
         "command_line_sha256": { "$ref": "#/definitions/sha256" },
         "affinity_mask_hex": { "type": "string", "pattern": "^0x[0-9A-F]+$" },

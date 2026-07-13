@@ -65,17 +65,44 @@ function New-TestManifest([System.Diagnostics.Process[]]$Processes, [string]$Des
     $exeSpecimen.sha256 = (Get-FileHash -LiteralPath $exe.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
     $exeSpecimen.size_bytes = [int64]$exe.Length
 
+    $collectorItem = Get-Item -LiteralPath $collector
+    $collectorSpecimen = @($document.specimens | Where-Object { $_.id -eq $document.capture_tools.collector_specimen_id })[0]
+    $collectorSpecimen.path = $collectorItem.FullName
+    $collectorSpecimen.sha256 = (Get-FileHash -LiteralPath $collectorItem.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+    $collectorSpecimen.size_bytes = [int64]$collectorItem.Length
+
+    $validatorItem = Get-Item -LiteralPath $validator
+    $validatorSpecimen = @($document.specimens | Where-Object { $_.id -eq $document.capture_tools.validator_specimen_id })[0]
+    $validatorSpecimen.path = $validatorItem.FullName
+    $validatorSpecimen.sha256 = (Get-FileHash -LiteralPath $validatorItem.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+    $validatorSpecimen.size_bytes = [int64]$validatorItem.Length
+
+    $dllModule = @(
+        $firstLive.Modules |
+            Where-Object { $_.FileName -and [System.IO.Path]::GetExtension($_.FileName) -ieq '.dll' } |
+            Sort-Object FileName |
+            Select-Object -First 1
+    )[0]
+    $dllItem = Get-Item -LiteralPath $dllModule.FileName
+    $dllSpecimen = @($document.specimens | Where-Object { $_.id -eq 'allocator-dll' })[0]
+    $dllSpecimen.path = $dllItem.FullName
+    $dllSpecimen.sha256 = (Get-FileHash -LiteralPath $dllItem.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+    $dllSpecimen.size_bytes = [int64]$dllItem.Length
+
     $roleNames = @('server', 'hc-01', 'client-01')
     $topology = @()
     for ($index = 0; $index -lt $Processes.Count; $index++) {
         $process = $Processes[$index]
         $cim = Get-CimInstance Win32_Process -Filter "ProcessId=$($process.Id)" -ErrorAction Stop
         $live = Get-Process -Id $process.Id -ErrorAction Stop
+        $moduleSpecimenIds = New-Object System.Collections.Generic.List[string]
+        if ($index -eq 0) { $moduleSpecimenIds.Add('allocator-dll') }
         $topology += [pscustomobject][ordered]@{
             role = $roleNames[$index]
             pid = [int]$process.Id
             start_utc = Format-Utc ([datetime]$cim.CreationDate)
             executable_specimen_id = 'arma2oa-exe'
+            module_specimen_ids = @($moduleSpecimenIds.ToArray())
             command_line_redacted = [string]$cim.CommandLine
             command_line_sha256 = Get-TextSha256 ([string]$cim.CommandLine)
             affinity_mask_hex = ('0x{0:X}' -f [uint64]$live.ProcessorAffinity.ToInt64())
@@ -199,13 +226,18 @@ try {
     Assert (($actualColumns -join '|') -eq ($expectedColumns -join '|')) 'CSV columns match the frozen order'
 
     $identity = Get-Content -Raw -LiteralPath $identityPath | ConvertFrom-Json
+    $declaredCollectorSpecimen = @($document.specimens | Where-Object { $_.id -eq $document.capture_tools.collector_specimen_id })[0]
+    $declaredValidatorSpecimen = @($document.specimens | Where-Object { $_.id -eq $document.capture_tools.validator_specimen_id })[0]
     Assert ($identity.schema_version -eq 'a2wasp-process-identity-v1') 'identity schema version is explicit'
     Assert ($identity.run_id -eq $document.run_id) 'identity carries run ID'
     Assert (@($identity.targets).Count -eq 3) 'three declared target identities emitted'
     Assert ($identity.targets[0].executable_sha256 -eq $document.specimens[0].sha256) 'executable identity hash matches manifest'
     Assert ($identity.targets[0].command_line_sha256 -eq $document.process_topology[0].command_line_sha256) 'raw command line represented only by matching hash'
+    Assert ($identity.collector_sha256 -eq $declaredCollectorSpecimen.sha256) 'collector hash is bound to its declared tool specimen'
+    Assert ($identity.validator_sha256 -eq $declaredValidatorSpecimen.sha256) 'validator hash is bound to its declared tool specimen'
     Assert (@($identity.targets[0].modules).Count -gt 0) 'module inventory captured once'
     Assert (@($identity.targets[0].modules | Where-Object { $_.sha256 }).Count -gt 0) 'at least one accessible module hash captured'
+    Assert ((@($identity.targets | ForEach-Object { $_.required_module_specimen_ids }) -contains 'allocator-dll')) 'required DLL specimen binding is recorded'
 
     $overhead = Get-Content -Raw -LiteralPath $overheadPath | ConvertFrom-Json
     Assert ($overhead.schema_version -eq 'a2wasp-collector-overhead-v1') 'overhead schema version is explicit'
@@ -214,6 +246,8 @@ try {
     Assert ($null -ne $overhead.query_duration_ms_p50) 'overhead records query p50'
     Assert ($null -ne $overhead.query_duration_ms_p95) 'overhead records query p95'
     Assert ($null -ne $overhead.collector_cpu_logical_core_percent) 'overhead records collector CPU'
+    Assert ($null -ne $overhead.identity_preflight_wall_ms) 'overhead records full identity preflight time'
+    Assert ($null -ne $overhead.module_hash_wall_ms) 'overhead records loaded-module inventory time'
     Assert ($overhead.manifest_changed_during_capture -eq $false) 'manifest stayed unchanged during capture'
     $wallBound = ($CaptureSamples * $CaptureIntervalSeconds) + 10
     Assert ($overhead.wall_seconds -lt $wallBound) 'benign capture avoids slow global counter providers'
@@ -224,7 +258,43 @@ try {
         Assert (-not $helper.HasExited) "collector leaves target PID $($helper.Id) running"
     }
 
-    Write-Host "`n[4] identity mismatch fails closed"
+    Write-Host "`n[4] collector tool mismatch fails closed"
+    $badToolRoot = Join-Path $work 'bad-tool'
+    $badToolOutput = Join-Path $badToolRoot $document.artifact_directory
+    New-Item -ItemType Directory -Path $badToolOutput -Force | Out-Null
+    $badToolManifest = Join-Path $badToolOutput 'MANIFEST.json'
+    $badTool = Get-Content -Raw -LiteralPath $manifest | ConvertFrom-Json
+    @($badTool.specimens | Where-Object { $_.id -eq $badTool.capture_tools.collector_specimen_id })[0].sha256 = ('0' * 64)
+    $badTool | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $badToolManifest -Encoding UTF8
+    $threw = $false
+    try {
+        & $collector -ManifestPath $badToolManifest -OutputDirectory $badToolOutput -SampleCount 1 -IntervalSeconds 0.1
+    } catch {
+        $threw = $true
+        Assert ($_.Exception.Message -match 'collector tool hash mismatch') 'tool mismatch error names collector hash'
+    }
+    Assert $threw 'collector tool mismatch throws before capture'
+    Assert (-not (Test-Path -LiteralPath (Join-Path $badToolOutput 'process-metrics.csv'))) 'collector tool mismatch writes no metrics CSV'
+
+    Write-Host "`n[5] required DLL mismatch fails closed"
+    $badDllRoot = Join-Path $work 'bad-dll'
+    $badDllOutput = Join-Path $badDllRoot $document.artifact_directory
+    New-Item -ItemType Directory -Path $badDllOutput -Force | Out-Null
+    $badDllManifest = Join-Path $badDllOutput 'MANIFEST.json'
+    $badDll = Get-Content -Raw -LiteralPath $manifest | ConvertFrom-Json
+    @($badDll.specimens | Where-Object { $_.id -eq 'allocator-dll' })[0].sha256 = ('0' * 64)
+    $badDll | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath $badDllManifest -Encoding UTF8
+    $threw = $false
+    try {
+        & $collector -ManifestPath $badDllManifest -OutputDirectory $badDllOutput -SampleCount 1 -IntervalSeconds 0.1
+    } catch {
+        $threw = $true
+        Assert ($_.Exception.Message -match 'required module specimen') 'DLL mismatch error names required module specimen'
+    }
+    Assert $threw 'required DLL mismatch throws before capture'
+    Assert (-not (Test-Path -LiteralPath (Join-Path $badDllOutput 'process-metrics.csv'))) 'required DLL mismatch writes no metrics CSV'
+
+    Write-Host "`n[6] command identity mismatch fails closed"
     $badRoot = Join-Path $work 'bad-identity'
     New-Item -ItemType Directory -Path $badRoot -Force | Out-Null
     $badOutput = Join-Path $badRoot $document.artifact_directory

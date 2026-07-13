@@ -19,8 +19,10 @@
     { "id": "allocator-dll", "kind": "dll", "path": "C:\\PerfLab\\dll\\allocator.dll", "sha256": "2222222222222222222222222222222222222222222222222222222222222222", "size_bytes": 2, "notes": "Relevant loaded allocator" },
     { "id": "mission-pbo", "kind": "mission_pbo", "path": "C:\\PerfLab\\mpmissions\\wasp.chernarus.pbo", "sha256": "3333333333333333333333333333333333333333333333333333333333333333", "size_bytes": 3, "notes": null },
     { "id": "basic-config", "kind": "config", "path": "CONFIG-SNAPSHOT/basic.cfg", "sha256": "4444444444444444444444444444444444444444444444444444444444444444", "size_bytes": 4, "notes": null },
-    { "id": "collector-tool", "kind": "tool", "path": "CONFIG-SNAPSHOT/Collect-ProcessMetrics.ps1", "sha256": "5555555555555555555555555555555555555555555555555555555555555555", "size_bytes": 5, "notes": null }
+    { "id": "collector-tool", "kind": "tool", "path": "CONFIG-SNAPSHOT/Collect-ProcessMetrics.ps1", "sha256": "5555555555555555555555555555555555555555555555555555555555555555", "size_bytes": 5, "notes": null },
+    { "id": "validator-tool", "kind": "tool", "path": "CONFIG-SNAPSHOT/validate_run_manifest.py", "sha256": "5656565656565656565656565656565656565656565656565656565656565656", "size_bytes": 6, "notes": null }
   ],
+  "capture_tools": { "collector_specimen_id": "collector-tool", "validator_specimen_id": "validator-tool" },
   "host": {
     "machine_id": "lab-a",
     "os": { "caption": "Windows", "version": "10.0", "build": "00000", "architecture": "64-bit" },
@@ -36,9 +38,9 @@
     "expected_hcs": 1
   },
   "process_topology": [
-    { "role": "server", "pid": 4242, "start_utc": "2026-07-13T09:55:00Z", "executable_specimen_id": "arma2oa-exe", "command_line_redacted": "ArmA2OAServer.exe -config=server.cfg -password=<redacted>", "command_line_sha256": "6666666666666666666666666666666666666666666666666666666666666666", "affinity_mask_hex": "0x00FF", "mod_order": ["@CBA_CO"] },
-    { "role": "hc-01", "pid": 4243, "start_utc": "2026-07-13T09:56:00Z", "executable_specimen_id": "arma2oa-exe", "command_line_redacted": "ArmA2OA.exe -client -password=<redacted>", "command_line_sha256": "7777777777777777777777777777777777777777777777777777777777777777", "affinity_mask_hex": "0x0F00", "mod_order": ["@CBA_CO"] },
-    { "role": "client-01", "pid": 4244, "start_utc": "2026-07-13T09:57:00Z", "executable_specimen_id": "arma2oa-exe", "command_line_redacted": "ArmA2OA.exe -connect=<test-host> -password=<redacted>", "command_line_sha256": "8888888888888888888888888888888888888888888888888888888888888888", "affinity_mask_hex": "0xF000", "mod_order": ["@CBA_CO"] }
+    { "role": "server", "pid": 4242, "start_utc": "2026-07-13T09:55:00Z", "executable_specimen_id": "arma2oa-exe", "module_specimen_ids": ["allocator-dll"], "command_line_redacted": "ArmA2OAServer.exe -config=server.cfg -password=<redacted>", "command_line_sha256": "6666666666666666666666666666666666666666666666666666666666666666", "affinity_mask_hex": "0x00FF", "mod_order": ["@CBA_CO"] },
+    { "role": "hc-01", "pid": 4243, "start_utc": "2026-07-13T09:56:00Z", "executable_specimen_id": "arma2oa-exe", "module_specimen_ids": [], "command_line_redacted": "ArmA2OA.exe -client -password=<redacted>", "command_line_sha256": "7777777777777777777777777777777777777777777777777777777777777777", "affinity_mask_hex": "0x0F00", "mod_order": ["@CBA_CO"] },
+    { "role": "client-01", "pid": 4244, "start_utc": "2026-07-13T09:57:00Z", "executable_specimen_id": "arma2oa-exe", "module_specimen_ids": [], "command_line_redacted": "ArmA2OA.exe -connect=<test-host> -password=<redacted>", "command_line_sha256": "8888888888888888888888888888888888888888888888888888888888888888", "affinity_mask_hex": "0xF000", "mod_order": ["@CBA_CO"] }
   ],
   "workload": {
     "requested": { "label": "R300 full mission", "ai_total": 300, "groups_total": null, "vehicles_total": null, "active_towns": null, "hcs": 1, "players": 1, "parameters": [ { "name": "warmup_seconds", "value": 300, "unit": "seconds" } ] },
