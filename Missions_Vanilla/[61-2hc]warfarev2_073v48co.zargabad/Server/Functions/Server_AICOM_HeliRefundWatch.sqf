@@ -14,7 +14,16 @@ if (count _this < 1) exitWith {};
 _token = _this select 0;
 if (typeName _token != "STRING" || {_token == ""}) exitWith {};
 
-_deadline = time + 390;
+//--- DEADLINE FIX: cover the full server-observed flight-refund budget, not just part of it.
+//--- Receipt registration (aicom-team-created -> Server_HandleSpecial.sqf) fires synchronously,
+//--- in the same tick as the AIR-INSERT Spawn block below in Common_RunCommanderTeam.sqf, so the
+//--- worst-case time from registration to the hull reaching the map edge is the sum of that
+//--- blocks own waits: board(30s) + run-in(240s) + land/disembark(40s) + fly-to-edge(360s) = 670s.
+//--- The prior 390s deadline expired BEFORE a legitimate long flight could ever reach the edge,
+//--- silently dropping the refund (receipt just goes stale/unconsumed). 900s covers the full
+//--- 670s budget with a ~230s margin for scheduler/poll jitter; it does not change WHO gets paid
+//--- or HOW MUCH, only how long the server is willing to keep watching a legitimate flight.
+_deadline = time + 900;
 _finished = false;
 while {time < _deadline && {!_finished}} do {
 	_receipts = missionNamespace getVariable ["WFBE_AICOM_HELI_REFUND_RECEIPTS", []];
