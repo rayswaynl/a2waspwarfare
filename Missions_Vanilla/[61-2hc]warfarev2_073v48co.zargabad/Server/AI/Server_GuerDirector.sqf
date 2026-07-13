@@ -76,7 +76,7 @@ _jipSnapLastT      = 0;
 //   2 = current virtual strength (0.0..1.0)
 //   3 = in-transit strength (cells dispatched but not yet arrived)
 //   4 = suppress timer (diag_tickTime when last contact ended; 0 = not suppressed)
-//   5 = last-tick group count (for survivor read-back on deactivation)
+//   5 = last observed group count (active contact + survivor read-back on deactivation)
 //===================================================================================
 private ["_ledger","_ledgerCount","_fundedTotal","_regenDebt"];
 _ledger      = [];
@@ -150,7 +150,7 @@ while {!WFBE_GameOver} do {
     } forEach _ledger;
 
     //--------------------------------------------------------------------
-    // PHASE 2: OBSERVE - read group count on recently-deactivated towns.
+    // PHASE 2: OBSERVE - account for survivors during contact and at deactivation.
     //--------------------------------------------------------------------
     {
         private ["_rec","_town","_active","_lastGrpCount","_grps","_nowGrpCount","_ratio"];
@@ -176,8 +176,16 @@ while {!WFBE_GameOver} do {
             _rec set [5, 0];
         };
         if (_active) then {
-            _grps = [_town] call _fnGuerGroups;
-            _rec set [5, count _grps];
+            _grps        = [_town] call _fnGuerGroups;
+            _nowGrpCount = count _grps;
+            if (_lastGrpCount > 0) then {
+                //--- Sustained contact has no deactivation edge to trigger read-back. Apply each
+                //--- observed survivor loss once, with the same floor-at-zero rule as deactivation.
+                _ratio = _nowGrpCount / _lastGrpCount;
+                _ratio = [_ratio, 0, 1] call _fnClamp;
+                _rec set [2, ((_rec select 2) * _ratio) max 0];
+            };
+            _rec set [5, _nowGrpCount];
         };
     } forEach _ledger;
 
