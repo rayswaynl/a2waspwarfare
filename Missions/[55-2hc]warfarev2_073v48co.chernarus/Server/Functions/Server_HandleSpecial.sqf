@@ -1144,8 +1144,8 @@ switch (_args select 0) do {
 	//--- treasury write is authoritative; mirrors AI_Commander_Wildcard salvage payback
 	//--- ([_side, _wkTotal] Call ChangeAICommanderFunds, L726).
 	case "aicom-heli-refunded": {
-		Private ["_rSideID","_rSide","_rCost","_rType","_rTeam","_rToken","_rSenderOwner","_rReceipts","_rReceipt","_rReceiptIndex","_rFound","_rVehicle","_rCurrentOwner","_rHcGroup","_rAuthorityOk","_rGone","_rPos","_rWsz","_rValid"];
-		if (count _args != 7) exitWith {
+		Private ["_rSideID","_rSide","_rCost","_rType","_rTeam","_rToken","_rSenderOwner","_rComplete","_rReceipts","_rReceipt","_rReceiptIndex","_rFound","_rVehicle","_rCurrentOwner","_rHcGroup","_rAuthorityOk","_rGone","_rPos","_rWsz","_rValid"];
+		if (count _args != 8) exitWith {
 			["WARNING", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded rejected malformed envelope (%1 args).", count _args]] Call WFBE_CO_FNC_LogContent;
 		};
 		_rSideID = _args select 1;
@@ -1154,7 +1154,8 @@ switch (_args select 0) do {
 		_rTeam = _args select 4;
 		_rToken = _args select 5;
 		_rSenderOwner = _args select 6;
-		if (typeName _rSideID != "SCALAR" || {typeName _rCost != "SCALAR"} || {typeName _rType != "STRING"} || {typeName _rTeam != "GROUP"} || {typeName _rToken != "STRING"} || {typeName _rSenderOwner != "SCALAR"}) exitWith {
+		_rComplete = _args select 7;
+		if (typeName _rSideID != "SCALAR" || {typeName _rCost != "SCALAR"} || {typeName _rType != "STRING"} || {typeName _rTeam != "GROUP"} || {typeName _rToken != "STRING"} || {typeName _rSenderOwner != "SCALAR"} || {typeName _rComplete != "BOOL"}) exitWith {
 			["WARNING", "Server_HandleSpecial.sqf: aicom-heli-refunded rejected invalid field types."] Call WFBE_CO_FNC_LogContent;
 		};
 		if (_rCost < 0) exitWith {
@@ -1184,12 +1185,17 @@ switch (_args select 0) do {
 			case "zargabad": {8192};
 			default {15360};
 		};
-		//--- Completion must arrive while the exact receipt hull is still alive and outside the map.
-		//--- A dead/null vehicle is a destroyed or otherwise invalid transport, never a refund trigger.
+		//--- Completion is authenticated by the private capability. A null hull is valid only after that
+		//--- explicit completion envelope (the HC may delete it before the PV reaches the server); a present
+		//--- dead hull is destroyed or otherwise invalid and never a refund trigger.
 		_rGone = false;
-		if (!isNull _rVehicle && {alive _rVehicle}) then {
-			_rPos = getPos _rVehicle;
-			_rGone = ((_rPos select 0) < 0) || {((_rPos select 0) > _rWsz)} || {((_rPos select 1) < 0)} || {((_rPos select 1) > _rWsz)};
+		if (isNull _rVehicle) then {
+			_rGone = _rComplete;
+		} else {
+			if (alive _rVehicle) then {
+				_rPos = getPos _rVehicle;
+				_rGone = _rComplete && {((_rPos select 0) < 0) || {((_rPos select 0) > _rWsz)} || {((_rPos select 1) < 0)} || {((_rPos select 1) > _rWsz)}};
+			};
 		};
 		_rValid = (_rReceipt select 8) == 0
 			&& {_rReceipt select 3 == _rSideID}

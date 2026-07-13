@@ -748,9 +748,9 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 						//--- Authority closure: the server issued this capability only to the assigned HC and bound it
 						//--- to the exact transport receipt. The server derives the credit and never trusts the dollar claim.
 						if (isServer) then {
-							["aicom-heli-refunded", _sID, _cost, _htype, _tm, _refundToken, owner (leader _tm)] Call HandleSpecial;
+							["aicom-heli-refunded", _sID, _cost, _htype, _tm, _refundToken, owner (leader _tm), true] Call HandleSpecial;
 						} else {
-							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost, _htype, _tm, _refundToken, owner (leader _tm)]] Call WFBE_CO_FNC_SendToServer;
+							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost, _htype, _tm, _refundToken, owner (leader _tm), true]] Call WFBE_CO_FNC_SendToServer;
 						};
 						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team transport %2 flew off-map, deleted + refunded $%3.", _sd, _htype, _cost]] Call WFBE_CO_FNC_AICOMLog;
 					};
