@@ -153,9 +153,9 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 };
 
 //------------------------------------------------------------------------------------
-//--- cmdcon42-j (Ray 2026-07-02) PRODUCIBLE SCUD (Takistan): bought SCUDs are side launch PLATFORMS. Registered
-//--- server-side into a side-keyed missionNamespace array (WFBE_TK_SCUD_PLATFORMS_<side>) at purchase (client sends
-//--- "tk-scud-register"). Platforms are pruned lazily (dead/deleted refs dropped) wherever the array is read. A bought
+//--- cmdcon42-j (Ray 2026-07-02) PRODUCIBLE SCUD: bought SCUDs are side launch PLATFORMS. Player hulls are
+//--- admitted only after consuming the private, server-issued Heavy-Factory purchase proof; AI buys use the trusted
+//--- server call. Platforms are pruned lazily (dead/deleted refs dropped) wherever the array is read. A bought
 //--- SCUD is a CONVENTIONAL platform only — it can NEVER nuke (NUKE stays research-TEL-only, gated in the fire path).
 //------------------------------------------------------------------------------------
 
@@ -174,65 +174,221 @@ WFBE_SE_FNC_TkScudPlatforms = {
 	_live
 };
 
-//--- Register a freshly-bought SCUD as a side platform. Enforces the per-side live cap (WFBE_C_TK_SCUD_HF_MAX):
-//--- at/over cap the vehicle is DELETED and the buyer refunded, and the caller is told (refused-at-cap message).
-//--- Returns true if registered, false if refused. Server-authoritative.
+//--- Register a freshly-bought SCUD as a side platform. Human registration consumes a one-shot purchase proof
+//--- before any cap/debit/delete/tag/registry effect; no client-provided cost is accepted and no refund is minted.
+//--- Trusted AI purchases retain the direct server call. Returns true if registered, false if refused.
 WFBE_SE_FNC_TkScudRegister = {
-	private ["_veh","_side","_team","_paid","_key","_live","_max","_arr","_refund"];
-	_veh  = _this select 0;
+	private ["_arr","_authBad","_authPlayer","_authToken","_authUID","_cost","_funds","_isAiRegister","_key","_live","_max","_proof","_proofClass","_proofExpires","_proofFactory","_proofKey","_proofNotBefore","_proofSide","_proofTeam","_proofUID","_side","_team","_veh"];
+	_veh = _this select 0;
 	_side = _this select 1;
-	_team = if (count _this > 2) then {_this select 2} else {grpNull};
-	_paid = if (count _this > 3) then {_this select 3} else {-1};   //--- actual price paid (for an exact over-cap refund); <0 => fall back to the flag cost.
-	if (isNull _veh) exitWith {false};
-	if !(_side in [west, east, resistance]) exitWith {false};
-	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) <= 0) exitWith {false};
-	if (worldName != "Takistan" && {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) <= 0}) exitWith {false};
-	_key = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _side];
-	_live = [_side] Call WFBE_SE_FNC_TkScudPlatforms;   //--- compacted current list.
-	//--- already registered? (idempotent — a double send must not double-count).
-	if (_veh in _live) exitWith {true};
-	_max = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_MAX", 2];
-	//--- owner refinement 2026-07-08 (fable/scud-chernarus-artillery): one-per-side clamp, server-authoritative. Does NOT touch WFBE_C_TK_SCUD_HF_MAX's own default (2) - just caps the effective ceiling read here. Mirrors the identical clamp in GUI_Menu_BuyUnits.sqf (this is the authority; that one is the pre-purchase UX gate).
-	if ((missionNamespace getVariable ["WFBE_C_SCUD_ONE_PER_SIDE", 1]) > 0) then {_max = _max min 1};
-	if (count _live >= _max) exitWith {
-		//--- refuse: destroy the surplus purchase + refund the buying team the EXACT amount paid (flag cost fallback), tell the side.
-		//--- D4-FIX(b): _paid (_currentCost) is 100% client-controlled (Client_BuildUnit.sqf:812) and was credited
-		//--- verbatim whenever >=0 - a forged/inflated value MINTED funds on any refused-at-cap SCUD. Clamp to the
-		//--- real max legitimate HF price (base + a generous 5-crew-seat margin), computed live. Negative _paid still
-		//--- falls back to the flag cost (unchanged legacy behaviour). Byte-identical for honest play (_paid <= ceil).
-		private ["_hfBase","_hfCeil"];
-		_hfBase = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_COST", 28000];
-		_hfCeil = _hfBase + (5 * (missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST_TIERSCALE_CAP", 400]));
-		_refund = if (_paid >= 0) then {(_paid min _hfCeil) max 0} else {_hfBase};
-		if (!isNull _team) then { [_team, _refund] Call WFBE_CO_FNC_ChangeTeamFunds };
-		deleteVehicle _veh;
-		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["SCUD refused: your side already fields %1 SCUD launchers (max %2). Refunded.", count _live, _max]]] Call WFBE_CO_FNC_SendToClients;
-		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] bought-SCUD REFUSED at cap (%2/%3) - deleted + refunded.", str _side, count _live, _max]] Call WFBE_CO_FNC_LogContent;
-		diag_log (Format ["ICBMTEL|v1|SCUDBUY-REFUSE-CAP|%1|live=%2|max=%3", str _side, count _live, _max]);
+	_team = _this select 2;
+	_isAiRegister = (count _this == 4 && {typeName (_this select 3) == "SCALAR"} && {typeName _team == "GROUP"} && {isNull _team});
+	_cost = if (_isAiRegister) then {_this select 3} else {0};
+	_authPlayer = if (!_isAiRegister && {count _this > 3}) then {_this select 3} else {objNull};
+	_authToken = if (!_isAiRegister && {count _this > 4}) then {_this select 4} else {""};
+	_authBad = "";
+
+	if (typeName _veh != "OBJECT" || {isNull _veh}) then {_authBad = "invalid vehicle"};
+	if (_authBad == "" && {!alive _veh}) then {_authBad = "dead vehicle"};
+	if (_authBad == "" && {typeName _side != "SIDE"}) then {_authBad = "invalid side shape"};
+	if (_authBad == "" && {!(_side in [west,east,resistance])}) then {_authBad = "non-playable side"};
+	if (_authBad == "" && {typeName _team != "GROUP"}) then {_authBad = "invalid team shape"};
+	if (_authBad == "" && {typeOf _veh != (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {_authBad = "wrong SCUD class"};
+	if (_authBad == "" && {!((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 0]) > 0)}) then {_authBad = "bought SCUD disabled"};
+	if (_authBad == "" && {worldName != "Takistan" && {!((missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 0]) > 0)}}) then {_authBad = "bought SCUD disabled on this terrain"};
+
+	if (!_isAiRegister && {_authBad == ""}) then {
+		if (isNull _team) then {_authBad = "null player team"};
+		if (_authBad == "" && {typeName _authPlayer != "OBJECT"}) then {_authBad = "invalid player shape"};
+		if (_authBad == "" && {isNull _authPlayer}) then {_authBad = "null player"};
+		if (_authBad == "" && {!alive _authPlayer}) then {_authBad = "dead player"};
+		if (_authBad == "" && {!isPlayer _authPlayer}) then {_authBad = "non-player caller"};
+		if (_authBad == "" && {typeName _authToken != "STRING" || {_authToken == ""}}) then {_authBad = "invalid purchase proof"};
+		if (_authBad == "" && {_authPlayer != leader _team}) then {_authBad = "caller is not team leader"};
+		if (_authBad == "" && {group _authPlayer != _team}) then {_authBad = "player/team binding failed"};
+		if (_authBad == "" && {side (group _authPlayer) != _side}) then {_authBad = "player/side binding failed"};
+		if (_authBad == "" && {owner _veh != owner _authPlayer}) then {_authBad = "vehicle/player network ownership mismatch"};
+	};
+
+	if (!_isAiRegister && {_authBad == ""}) then {
+		_authUID = getPlayerUID _authPlayer;
+		if (_authUID == "") then {_authBad = "missing player UID"};
+	};
+	if (!_isAiRegister && {_authBad == ""}) then {
+		_proofKey = Format ["wfbe_icbm_tel_purchase_cap_server_%1", _authUID];
+		_proof = missionNamespace getVariable [_proofKey, []];
+		if (typeName _proof != "ARRAY" || {count _proof != 9}) then {_authBad = "missing purchase proof"};
+		if (_authBad == "" && {typeName (_proof select 0) != "STRING" || {(_proof select 0) != _authToken}}) then {_authBad = "mismatched purchase proof"};
+		if (_authBad == "") then {
+			//--- One shot: consume before cap, funds, registry, tags, deletion, or any other side effect.
+			missionNamespace setVariable [_proofKey, []];
+			_proofExpires = _proof select 1;
+			_proofNotBefore = _proof select 2;
+			_proofFactory = _proof select 3;
+			_proofClass = _proof select 4;
+			_proofTeam = _proof select 5;
+			_proofSide = _proof select 6;
+			_cost = _proof select 7;
+			_proofUID = _proof select 8;
+			if (typeName _proofExpires != "SCALAR" || {_proofExpires <= time}) then {_authBad = "expired purchase proof"};
+			if (_authBad == "" && {typeName _proofNotBefore != "SCALAR" || {time < _proofNotBefore}}) then {_authBad = "purchase completed before its server build window"};
+			if (_authBad == "" && {typeName _proofFactory != "OBJECT" || {isNull _proofFactory} || {!alive _proofFactory}}) then {_authBad = "purchase factory is gone"};
+			if (_authBad == "" && {typeName _proofClass != "STRING" || {_proofClass != typeOf _veh}}) then {_authBad = "vehicle/class proof mismatch"};
+			if (_authBad == "" && {typeName _proofTeam != "GROUP" || {_proofTeam != _team}}) then {_authBad = "team/proof mismatch"};
+			if (_authBad == "" && {typeName _proofSide != "SIDE" || {_proofSide != _side}}) then {_authBad = "side/proof mismatch"};
+			if (_authBad == "" && {typeName _cost != "SCALAR" || {_cost <= 0}}) then {_authBad = "cost/proof mismatch"};
+			if (_authBad == "" && {typeName _proofUID != "STRING" || {_proofUID != _authUID}}) then {_authBad = "UID/proof mismatch"};
+			if (_authBad == "" && {_veh distance _proofFactory > ((missionNamespace getVariable ["WFBE_C_UNITS_PURCHASE_RANGE", 150]) + 100)}) then {_authBad = "vehicle spawned outside its certified factory"};
+		};
+	};
+	if (_authBad != "") exitWith {
+		["WARNING", Format ["Init_IcbmTel.sqf: SCUD registration denied before purchase side effects: %1 (side %2).", _authBad, str _side]] Call WFBE_CO_FNC_LogContent;
 		false
 	};
-	//--- register: tag the hull (side + platform marker + no-respawn), append to the side array, broadcast.
+
+	_key = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _side];
+	_live = [_side] Call WFBE_SE_FNC_TkScudPlatforms;
+	if (_veh in _live) exitWith {true};
+	_max = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_MAX", 2];
+	if ((missionNamespace getVariable ["WFBE_C_SCUD_ONE_PER_SIDE", 1]) > 0) then {_max = _max min 1};
+	if (count _live >= _max) exitWith {
+		deleteVehicle _veh;
+		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["SCUD refused: your side already fields %1 launchers (max %2). No hull cost was charged.", count _live, _max]]] Call WFBE_CO_FNC_SendToClients;
+		["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] certified SCUD refused at cap (%2/%3), exact proof-bound hull deleted, no refund.", str _side, count _live, _max]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if (!_isAiRegister) then {
+		_funds = _team Call WFBE_CO_FNC_GetTeamFunds;
+		if (typeName _funds != "SCALAR") then {_funds = 0};
+		if (_funds < _cost) then {_authBad = "insufficient funds at certified debit"};
+	};
+	if (_authBad != "") exitWith {
+		deleteVehicle _veh;
+		[_side, "HandleSpecial", ["icbm-tel-msg", Format ["SCUD purchase failed: the buying team no longer has the server-certified hull cost ($%1).", _cost]]] Call WFBE_CO_FNC_SendToClients;
+		["WARNING", Format ["Init_IcbmTel.sqf: certified SCUD purchase denied at debit (funds %1, cost %2); exact proof-bound hull deleted, no refund.", _funds, _cost]] Call WFBE_CO_FNC_LogContent;
+		false
+	};
+	if (!_isAiRegister) then {[_team, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds};
+
 	_veh setVariable ["wfbe_tk_scud_side", _side, true];
 	_veh setVariable ["wfbe_is_tk_scud", true, true];
 	_arr = _live + [_veh];
 	missionNamespace setVariable [_key, _arr];
-	//--- KILLED EH: drop from the registry on death. NO respawn (it's a purchase). Server-side (hull is a shared object).
 	_veh addEventHandler ["Killed", {
 		private ["_dead","_dSide","_dKey","_dArr","_dLive","_x"];
 		_dead = _this select 0;
 		_dSide = _dead getVariable ["wfbe_tk_scud_side", sideUnknown];
-		if !(_dSide in [west, east, resistance]) exitWith {};
+		if !(_dSide in [west,east,resistance]) exitWith {};
 		_dKey = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _dSide];
 		_dArr = missionNamespace getVariable [_dKey, []];
 		if (typeName _dArr != "ARRAY") then {_dArr = []};
 		_dLive = [];
-		{ if (!isNull _x && {alive _x} && {_x != _dead}) then {_dLive set [count _dLive, _x]} } forEach _dArr;
+		{if (!isNull _x && {alive _x} && {_x != _dead}) then {_dLive set [count _dLive, _x]}} forEach _dArr;
 		missionNamespace setVariable [_dKey, _dLive];
 		diag_log (Format ["ICBMTEL|v1|SCUD-DESTROYED|%1|remaining=%2 (no respawn)", str _dSide, count _dLive]);
 	}];
-	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] bought-SCUD REGISTERED as platform (%2/%3 live).", str _side, count _arr, _max]] Call WFBE_CO_FNC_LogContent;
-	diag_log (Format ["ICBMTEL|v1|SCUDBUY|%1|live=%2|max=%3", str _side, count _arr, _max]);
+	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] bought-SCUD REGISTERED (%2/%3 live, serverCost=%4, ai=%5).", str _side, count _arr, _max, _cost, _isAiRegister]] Call WFBE_CO_FNC_LogContent;
+	diag_log (Format ["ICBMTEL|v2|SCUDBUY|%1|live=%2|max=%3|cost=%4|ai=%5", str _side, count _arr, _max, _cost, _isAiRegister]);
 	true
+};
+
+//--- Issue a purchase proof only for a live player at their own registered Heavy Factory.
+//--- The proof reserves no funds and creates no object; registration later rechecks cap/funds,
+//--- charges the exact server-derived base hull cost, and binds the exact locally spawned hull.
+WFBE_SE_FNC_IcbmTelPurchaseAuth = {
+	private ["_attackMod","_authBad","_authChallenge","_authPlayer","_authUID","_basePrice","_cost","_existingProof","_expires","_factory","_factoryIndex","_factoryNames","_factoryTypes","_funds","_live","_max","_notBefore","_proofKey","_pvf","_replyId","_replyUID","_requiredLevel","_side","_team","_token","_unitCostLevel","_unitMod","_unitType","_unitData","_upgrades","_waitTime"];
+	if (typeName _this != "ARRAY" || {count _this != 4}) exitWith {};
+	_authPlayer = _this select 0;
+	_authChallenge = _this select 1;
+	_factory = _this select 2;
+	_unitType = _this select 3;
+	_authBad = "";
+	if (typeName _authPlayer != "OBJECT" || {isNull _authPlayer} || {!alive _authPlayer} || {!isPlayer _authPlayer}) then {_authBad = "invalid player"};
+	if (_authBad == "" && {typeName _authChallenge != "STRING" || {_authChallenge == ""}}) then {_authBad = "invalid challenge"};
+	if (_authBad == "" && {typeName _factory != "OBJECT" || {isNull _factory} || {!alive _factory}}) then {_authBad = "invalid Heavy Factory"};
+	if (_authBad == "" && {typeName _unitType != "STRING" || {_unitType != (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}}) then {_authBad = "wrong SCUD class"};
+	if (_authBad == "" && {!((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 0]) > 0)}) then {_authBad = "SCUD purchases are disabled"};
+	if (_authBad == "" && {worldName != "Takistan" && {!((missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 0]) > 0)}}) then {_authBad = "SCUD purchases are disabled on this terrain"};
+
+	if (_authBad == "") then {
+		_team = group _authPlayer;
+		_side = side _team;
+		if (isNull _team || {!(_side in [west,east,resistance])}) then {_authBad = "invalid player team"};
+		if (_authBad == "" && {_authPlayer != leader _team}) then {_authBad = "buyer is not team leader"};
+		if (_authBad == "" && {!(_factory in (_side Call WFBE_CO_FNC_GetSideStructures))}) then {_authBad = "factory is not owned by the buyer side"};
+		if (_authBad == "" && {_authPlayer distance _factory > (missionNamespace getVariable ["WFBE_C_UNITS_PURCHASE_RANGE", 150])}) then {_authBad = "buyer is out of factory purchase range"};
+	};
+	if (_authBad == "") then {
+		_factoryNames = missionNamespace getVariable [Format ["WFBE_%1STRUCTURENAMES", str _side], []];
+		_factoryTypes = missionNamespace getVariable [Format ["WFBE_%1STRUCTURES", str _side], []];
+		_factoryIndex = _factoryNames find (typeOf _factory);
+		if (_factoryIndex < 0 || {_factoryIndex >= count _factoryTypes} || {(_factoryTypes select _factoryIndex) != "Heavy"}) then {_authBad = "purchase source is not a Heavy Factory"};
+	};
+	if (_authBad == "") then {
+		_unitData = missionNamespace getVariable _unitType;
+		if (isNil "_unitData" || {typeName _unitData != "ARRAY"} || {count _unitData <= QUERYUNITFACTORY}) then {_authBad = "SCUD unit data is unavailable"};
+	};
+	if (_authBad == "") then {
+		_requiredLevel = _unitData select QUERYUNITUPGRADE;
+		_factoryIndex = _unitData select QUERYUNITFACTORY;
+		_upgrades = _side Call WFBE_CO_FNC_GetSideUpgrades;
+		if (typeName _requiredLevel != "SCALAR" || {typeName _factoryIndex != "SCALAR"} || {typeName _upgrades != "ARRAY"} || {_factoryIndex < 0} || {_factoryIndex >= count _upgrades} || {(_upgrades select _factoryIndex) < _requiredLevel}) then {_authBad = "Heavy Factory technology is insufficient"};
+	};
+	if (_authBad == "") then {
+		_authUID = getPlayerUID _authPlayer;
+		if (_authUID == "") then {_authBad = "missing player UID"};
+	};
+	if (_authBad == "") then {
+		_live = [_side] Call WFBE_SE_FNC_TkScudPlatforms;
+		_max = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_MAX", 2];
+		if ((missionNamespace getVariable ["WFBE_C_SCUD_ONE_PER_SIDE", 1]) > 0) then {_max = _max min 1};
+		if (count _live >= _max) then {_authBad = "the side SCUD cap is already full"};
+	};
+	if (_authBad == "") then {
+		_basePrice = _unitData select QUERYUNITPRICE;
+		_waitTime = _unitData select QUERYUNITTIME;
+		if (typeName _basePrice != "SCALAR" || {_basePrice <= 0} || {typeName _waitTime != "SCALAR"} || {_waitTime < 0}) then {_authBad = "invalid server unit price or build time"};
+	};
+	if (_authBad == "") then {
+		_attackMod = 1;
+		if (_side == west) then {_attackMod = missionNamespace getVariable ["ATTACK_WAVE_WEST_PRICE_MODIFIER", 1]};
+		if (_side == east) then {_attackMod = missionNamespace getVariable ["ATTACK_WAVE_EAST_PRICE_MODIFIER", 1]};
+		_unitCostLevel = _upgrades select WFBE_UP_UNITCOST;
+		_unitMod = 1;
+		if (_unitCostLevel == 1) then {_unitMod = 0.75};
+		if (_unitCostLevel >= 2) then {_unitMod = 0.5};
+		_cost = round ((_basePrice * _attackMod) * _unitMod);
+		_funds = _team Call WFBE_CO_FNC_GetTeamFunds;
+		if (typeName _funds != "SCALAR" || {_funds < _cost}) then {_authBad = Format ["insufficient server-visible funds for the $%1 hull", _cost]};
+	};
+
+	_token = "";
+	_expires = 0;
+	if (_authBad == "") then {
+		_proofKey = Format ["wfbe_icbm_tel_purchase_cap_server_%1", _authUID];
+		_existingProof = missionNamespace getVariable [_proofKey, []];
+		if (typeName _existingProof == "ARRAY" && {count _existingProof == 9}) then {
+			if (typeName (_existingProof select 1) == "SCALAR" && {(_existingProof select 1) > time}) then {_authBad = "a certified SCUD build is already pending"};
+		};
+	};
+	if (_authBad == "") then {
+		_token = Format ["BUY:%1:%2:%3:%4", _authUID, floor (diag_tickTime * 1000), floor (random 1000000000), floor (random 1000000000)];
+		_notBefore = time + ((_waitTime - 5) max 0);
+		_expires = time + _waitTime + 180;
+		missionNamespace setVariable [_proofKey, [_token,_expires,_notBefore,_factory,_unitType,_team,_side,_cost,_authUID]];
+		["INFORMATION", Format ["Init_IcbmTel.sqf: certified SCUD purchase intent uid=%1 side=%2 class=%3 cost=%4 factory=%5.", _authUID, str _side, _unitType, _cost, _factory]] Call WFBE_CO_FNC_LogContent;
+	};
+	if (_authBad != "") then {["WARNING", Format ["Init_IcbmTel.sqf: SCUD purchase proof denied: %1.", _authBad]] Call WFBE_CO_FNC_LogContent};
+	_replyId = if (typeName _authPlayer == "OBJECT" && {!isNull _authPlayer}) then {owner _authPlayer} else {-1};
+	_replyUID = "";
+	if !(isNil "_authUID") then {_replyUID = _authUID};
+	_pvf = [_replyUID, "CLTFNCHandleSpecial", ["icbm-tel-purchase-token", _token, _expires, _authChallenge, _authBad]];
+	if (!isHostedServer) then {
+		if (_replyId > 0) then {isNil {WFBE_PVF_IcbmTelPrivate = _pvf; _replyId publicVariableClient "WFBE_PVF_IcbmTelPrivate"}};
+	} else {
+		_pvf Spawn WFBE_CL_FNC_HandlePVF;
+		if (isMultiplayer && {_replyId > 0}) then {isNil {WFBE_PVF_IcbmTelPrivate = _pvf; _replyId publicVariableClient "WFBE_PVF_IcbmTelPrivate"}};
+	};
 };
 
 //--- Return ALL alive conventional launch platforms for a side = the research TEL (if alive) + every alive bought SCUD.
@@ -341,6 +497,11 @@ WFBE_SE_FNC_IcbmTelFire = {
 	if (typeName _side != "SIDE") then {_authBad = "invalid side shape"};
 	if (_authBad == "" && {!(_side in [west,east,resistance])}) then {_authBad = "non-playable side"};
 	if (_authBad == "" && {typeName _target != "ARRAY" && {typeName _target != "OBJECT"}}) then {_authBad = "invalid target shape"};
+	if (_authBad == "" && {typeName _target == "ARRAY"}) then {
+		if (count _target < 2) then {_authBad = "short target position"} else {
+			if (typeName (_target select 0) != "SCALAR" || {typeName (_target select 1) != "SCALAR"}) then {_authBad = "non-scalar target coordinates"};
+		};
+	};
 	if (_authBad == "" && {typeName _muni != "STRING"}) then {_authBad = "invalid munition shape"};
 	if (_authBad == "" && {typeName _fee != "SCALAR"}) then {_authBad = "invalid fee shape"};
 	if (_authBad == "" && {typeName _platformHint != "OBJECT"}) then {_authBad = "invalid platform shape"};
@@ -403,6 +564,7 @@ WFBE_SE_FNC_IcbmTelFire = {
 			if (_authBad == "" && {!alive _platformHint}) then {_authBad = "SCUD is not alive"};
 			if (_authBad == "" && {!(_platformHint in _registered)}) then {_authBad = "SCUD is not registered for the side"};
 			if (_authBad == "" && {!(_platformHint getVariable ["wfbe_is_tk_scud", false])}) then {_authBad = "platform is not a bought SCUD"};
+			if (_authBad == "" && {typeOf _platformHint != (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {_authBad = "platform has the wrong SCUD class"};
 			if (_authBad == "" && {(_platformHint getVariable ["wfbe_tk_scud_side", sideUnknown]) != _side}) then {_authBad = "SCUD side binding failed"};
 			if (_authBad == "" && {!(_authPlayer in crew _platformHint)}) then {_authBad = "caller is not SCUD crew"};
 		};

@@ -1,10 +1,11 @@
-Private ["_building","_buyFailed","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta","_qTailFn","_qTail","_isTkvToken"];
+Private ["_building","_buyFailed","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta","_qTailFn","_qTail","_isTkvToken","_scudProof"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
 _factory = _this select 3;
 _cpt = _this select 4;
-_currentCost = if (count _this > 5) then {_this select 5} else {0}; //--- FC2: purchase price, for refund if the factory is destroyed mid-build.
+_currentCost = if (count _this > 5) then {_this select 5} else {0}; //--- FC2: client-paid crew component; SCUD hull cost is charged by the server on proof consumption.
+_scudProof = if (count _this > 6) then {_this select 6} else {""};
 
 _isMan = if (_unit isKindOf "Man") then {true} else {false};
 
@@ -801,15 +802,15 @@ if (_isMan) then {
 	if (isHostedServer) then {_vehicle setVariable ["WFBE_Taxi_Prohib", true]};
 
 	//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD (Takistan). A bought MAZ_543_SCUD_TK_EP1 becomes a side launch
-	//--- platform: (a) ask the SERVER to register it (cap-enforced there — a surplus purchase is deleted + refunded), and
+	//--- platform: (a) consume its server-issued purchase proof (cap/funds rechecked; no client-controlled refund), and
 	//--- (b) give the vehicle a "SCUD Fire Mission (map-click)" action for its crew/owner-side players that opens a map-click
 	//--- and sends the SAME icbm-tel-fire payload the Tactical menu uses, WITH this specific hull as the platform hint (the
 	//--- server re-validates everything). Fires a SATURATION conventional strike (the flagship conventional munition). Mirrors
 	//--- the carrier scud-action-add + GUER-VBIED buyer-local-add / GetIn-re-add persistence idioms. TK + flag gated.
 	if ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}} && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
-		//--- (a) SERVER-SIDE registration request (side-keyed platform array + cap enforcement live on the server). Pass the
-		//--- ACTUAL price paid (_currentCost, incl. modifiers + crew) so an over-cap refusal refunds the exact amount deducted.
-		["RequestSpecial", ["tk-scud-register", _vehicle, sideJoined, group player, _currentCost]] Call WFBE_CO_FNC_SendToServer;
+		//--- (a) Consume the server-issued purchase proof against this exact spawned hull. No client-provided
+		//--- cost or shared registration request can establish provenance, delete a vehicle, or create a refund.
+		[_vehicle, sideJoined, group player, player, _scudProof] Spawn WFBE_CO_FNC_RequestIcbmTelRegister;
 
 		//--- Global flag so any machine that gets this hull local can recognise it + (re)arm the action.
 		_vehicle setVariable ["wfbe_is_tk_scud", true, true];

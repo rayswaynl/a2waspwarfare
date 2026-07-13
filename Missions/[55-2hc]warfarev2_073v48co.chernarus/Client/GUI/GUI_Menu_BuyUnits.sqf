@@ -105,6 +105,7 @@ _IDCS = _IDCS - [_currentIDC];
 		//--- fable/fix-unit-purchase-nil-guards: guard nil _currentUnit (unregistered classname) before the select-chain below - matches a55605e10/#1003 shape. Nil = skip the whole purchase (no charge, no spawn).
 		if !(isNil "_currentUnit") then {
 		_currentCost = round (((_currentUnit select QUERYUNITPRICE) * ATTACK_WAVE_PRICE_MODIFIER) * UNIT_COST_MODIFIER);
+		_baseHullCost = _currentCost;
 		_cpt = 1;
 		_isInfantry = if (_unit isKindOf 'Man') then {true} else {false};
 		if !(_isInfantry) then {
@@ -152,11 +153,11 @@ _IDCS = _IDCS - [_currentIDC];
 				diag_log Format ["BUYTRACE|v1|depot-refused|side=%1|class=%2|range=%3|reason=null-depot-in-range", sideJoinedText, _unit, (missionNamespace getVariable ["WFBE_C_TOWNS_PURCHASE_RANGE", 60])];
 				["WARNING", Format ["GUI_Menu_BuyUnits.sqf: DEPOT buy of [%1] refused up-front - no depot resolved in range %2 (side=%3). Buy NOT charged (prevents the silent charge-then-refund).", _unit, (missionNamespace getVariable ["WFBE_C_TOWNS_PURCHASE_RANGE", 60]), sideJoinedText]] Call WFBE_CO_FNC_LogContent;
 			};
-			//--- cmdcon42-j (Ray 2026-07-02): PRODUCIBLE SCUD per-side live cap (Takistan). Refuse UP FRONT (before queuing +
-			//--- spending) when the side already fields WFBE_C_TK_SCUD_HF_MAX bought SCUDs. Reads the server-broadcast platform
-			//--- array (client-visible). The server re-enforces the cap on registration (delete + refund) as the authority.
+			//--- Bought SCUD preflight: refuse at the live cap, and require an empty Heavy Factory queue so the
+			//--- server-issued proof's bounded build window covers the exact purchase being certified. The server
+			//--- independently rechecks factory ownership/type/range, cap, build time, class, team, side, and funds.
 			if (!_skip && {(missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0} && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}} && {_unit == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}) then {
-				private ["_scudArr","_scudLive","_scudMax"];
+				private ["_scudArr","_scudLive","_scudMax","_scudQueue"];
 				_scudArr = missionNamespace getVariable [format ["WFBE_TK_SCUD_PLATFORMS_%1", str sideJoined], []];
 				_scudLive = 0;
 				if (typeName _scudArr == "ARRAY") then {
@@ -168,6 +169,11 @@ _IDCS = _IDCS - [_currentIDC];
 				if (_scudLive >= _scudMax) then {
 					_skip = true;
 					hint parseText (Format ["<t color='#ff5a5a'>SCUD refused: your side already fields %1 launchers (max %2).</t>", _scudLive, _scudMax]);
+				};
+				_scudQueue = if (isNull _closest) then {[]} else {_closest getVariable ["queu", []]};
+				if (!_skip && {typeName _scudQueue == "ARRAY"} && {count _scudQueue > 0}) then {
+					_skip = true;
+					hint parseText "<t color='#ffb050'>SCUD requires an empty Heavy Factory queue. Let the current build finish, then order the launcher.</t>";
 				};
 			};
 			if (!_skip && {_type == "Airport"} && {isNull _closest}) then {
@@ -269,12 +275,19 @@ _IDCS = _IDCS - [_currentIDC];
 					_txt = parseText(Format [localize 'STR_WF_INFO_BuyEffective',_currentUnitLabel]);
 					if (!isNil '_queu') then {if (count _queu > 0) then {_txt = parseText(Format [localize 'STR_WF_INFO_Queu',_currentUnitLabel])}};
 					hint _txt;
-					_params = if (_isInfantry) then {[_closest,_unit,[],_type,_cpt,_currentCost]} else {[_closest,_unit,[profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ,_gunner,_commander,_extracrew,_isLocked],_type,_cpt,_currentCost]};
+					_isScudPurchase = ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}} && {_unit == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])});
+					_clientPaidCost = _currentCost;
+					if (_isScudPurchase) then {_clientPaidCost = (_currentCost - _baseHullCost) max 0};
+					_params = if (_isInfantry) then {[_closest,_unit,[],_type,_cpt,_clientPaidCost]} else {[_closest,_unit,[profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ,_gunner,_commander,_extracrew,_isLocked],_type,_cpt,_clientPaidCost]};
 					//--- depot-buy-round3 (diagnostic, ALWAYS-ON): charge-time trace. Pairs with the spawn-position
 					//--- BUYTRACE in Client_BuildUnit so the next failed buy's client RPT pinpoints where the flow died.
 					diag_log Format ["BUYTRACE|v1|charge|side=%1|factory=%2|class=%3|cost=%4|cpt=%5|depot=%6|depotNull=%7", sideJoinedText, _type, _unit, _currentCost, _cpt, _closest, isNull _closest];
-					_params Spawn BuildUnit;
-					-(_currentCost) Call ChangePlayerFunds;
+					if (_isScudPurchase) then {
+						[_params, _closest, _unit, sideJoined, group player, _clientPaidCost] Spawn WFBE_CO_FNC_RequestIcbmTelPurchase;
+					} else {
+						_params Spawn BuildUnit;
+						-(_currentCost) Call ChangePlayerFunds;
+					};
 					//--- QoL trio feat.3: stamp last-purchase time for advisor nudge.
 					if ((missionNamespace getVariable ["WFBE_C_QOL_TRIO", 1]) > 0) then {
 						WFBE_QOL_LAST_PURCHASE_TIME = time;

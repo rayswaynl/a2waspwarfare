@@ -98,6 +98,22 @@ switch (_request) do {
 		missionNamespace setVariable [Format ["wfbe_icbm_tel_cap_client_%1", getPlayerUID player], [_telToken, _telExpires]];
 	};
 
+	//--- Accept a purchase proof (or immediate denial reason) only for this client's challenge.
+	case "icbm-tel-purchase-token": {
+		Private ["_buyChallenge","_buyChallengeKey","_buyExpires","_buyMessage","_buyToken"];
+		if (count _args != 4) exitWith {};
+		_buyToken = _args select 0;
+		_buyExpires = _args select 1;
+		_buyChallenge = _args select 2;
+		_buyMessage = _args select 3;
+		_buyChallengeKey = Format ["wfbe_icbm_tel_purchase_challenge_%1", getPlayerUID player];
+		if (typeName _buyToken != "STRING") exitWith {};
+		if (typeName _buyExpires != "SCALAR") exitWith {};
+		if (typeName _buyMessage != "STRING") exitWith {};
+		if (typeName _buyChallenge != "STRING" || {_buyChallenge != (missionNamespace getVariable [_buyChallengeKey, ""])}) exitWith {};
+		missionNamespace setVariable [Format ["wfbe_icbm_tel_purchase_cap_client_%1", getPlayerUID player], [_buyToken, _buyExpires, _buyMessage]];
+	};
+
 	//--- The auth response is accepted only when it echoes the private client challenge.
 	case "fpv-auth-token": {
 		Private ["_fpvAuthChallenge","_fpvChallengeKey","_fpvExpires","_fpvToken"];

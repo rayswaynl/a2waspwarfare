@@ -200,6 +200,8 @@ if (isNil "WFBE_RADIUSHOLD_REGISTRY") then { WFBE_RADIUSHOLD_REGISTRY = []; }; /
 WFBE_CO_FNC_DeadspawnPenPos = Compile preprocessFileLineNumbers "Common\Functions\Common_DeadspawnPenPos.sqf"; //--- fable/deadspawn-redesign: underwater join-pen position resolver, flag WFBE_C_DEADSPAWN_REDESIGN default 1.
 
 WFBE_CO_FNC_RequestIcbmTelFire = Compile preprocessFileLineNumbers "Common\Functions\Common_RequestIcbmTelFire.sqf"; //--- sender-bound, one-shot ICBM/TEL launch capability.
+WFBE_CO_FNC_RequestIcbmTelPurchase = Compile preprocessFileLineNumbers "Common\Functions\Common_RequestIcbmTelPurchase.sqf"; //--- server-issued proof for a legitimate player SCUD purchase.
+WFBE_CO_FNC_RequestIcbmTelRegister = Compile preprocessFileLineNumbers "Common\Functions\Common_RequestIcbmTelRegister.sqf"; //--- binds a spawned SCUD to its purchase proof.
 
 ["INITIALIZATION", "Init_Common.sqf: Functions are initialized."] Call WFBE_CO_FNC_LogContent;
 
