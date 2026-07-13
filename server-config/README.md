@@ -40,3 +40,24 @@ Arma 2 OA defaults.
 
 `hc-profile\hc-video.cfg`, the Sandboxie box definition for HC2, Steam credentials, and the
 `min*_launch.cmd` variants. The mission PBOs are produced by `Tools/LoadoutManager`, not stored here.
+
+## ACR asymmetric / client-HC-only mount (terrain test path)
+
+The live topology (as of 2026-07-11 preflight) runs the dedicated server **without** the ACR mod while both HCs carry `;ACR;` in their `-mod` lines (see `hc_launch.cmd`, `hc2_launch.cmd`). This is permitted because `server-pr8.cfg` has `verifySignatures = 0`.
+
+- Server mod line (baked in Arma2OA-PR8 service): ends at `@admkswf` (no ACR).
+- HC mod lines: `...;expansion;ACR;@CBA_CO;@adwasp;@admkswf` (full ACR present on clients/HCs only).
+
+**Purpose for terrains**: the full ACR product includes terrain pbos `Woodland_ACR.pbo` (Bukovina) and `Mountains_ACR.pbo` (Bystrica) plus `plants_e2.pbo`. These hard-crash `arma2oaserver.exe` when loaded server-side (even with real product key). Client/HC-only mount is the fallback experiment (see Fleet task `acr-terrain-client-only-mount` and game-pc-handoffs ACR-TERRAIN-CLIENTMOUNT-PREFLIGHT-20260711.md).
+
+**Scope reality**: a dedi cannot host a mission on a world the server binary has not loaded. Client/HC-only ACR can never enable Bukovina/Bystrica *rotation maps*. It can however:
+- Prove that full-product terrain pbos load cleanly on HC/client processes.
+- Enable a **split-mount** for ACR *units* on stock terrains: server carries only the non-terrain ACR pbos (wheeled_acr, tracked_acr, characters_acr, weapons_acr for T72M4CZ + roster) while terrains stay HC/client-only.
+
+**Test matrix (to be executed in restore-clean window after ACR-FULL steps 1-2 on box)**:
+- a) Dedi no terrain pbos + HCs with full ACR: Zargabad mission, clean HC join, no ACR-terrain RPT errors.
+- b) Split: non-terrain ACR pbos on dedi+HCs; exercise T72M4CZ/CAWheeled_ACR classes on stock map.
+- c) Real client with full ACR joins (verifySignatures=0 expects no kick).
+- Rollback: restore the .cmd files + service definition from this source + prior snapshots.
+
+When the full server-side terrain path succeeds, this client-only config remains available for perf/optional reasons. Update this section with evidence (RPT excerpts, pbo hashes vs ACR-FULL-MANIFEST) after any run.
