@@ -1,10 +1,15 @@
-Private ['_towns','_value'];
+Private ['_towns','_value','_wParameters'];
 
 if (isNil "WFBE_Parameters_Ready") then {
 	WFBE_Parameters_Ready = false;
 };
 
-waitUntil {WFBE_Parameters_Ready};
+//--- J6 HANGGUARD: missing parameter readiness must not freeze town-mode setup forever.
+_wParameters = 0;
+while {(!WFBE_Parameters_Ready) && (_wParameters < 240)} do { uiSleep 0.25; _wParameters = _wParameters + 1; };
+if (!WFBE_Parameters_Ready) then {
+	diag_log "[WFBE (INIT)] HANGGUARD| Init_TownMode.sqf: parameters were not ready after 60s - proceeding with town-mode setup.";
+};
 
 TownTemplate = [];
 switch (missionNamespace getVariable "WFBE_C_TOWNS_AMOUNT") do {

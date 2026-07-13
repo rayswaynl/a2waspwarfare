@@ -1,6 +1,11 @@
-Private ["_towns"];
+Private ["_towns","_wTownMode"];
 
-waitUntil {townModeSet};
+//--- J6 HANGGUARD: town mode must not stall the entire town census forever.
+_wTownMode = 0;
+while {(!townModeSet) && (_wTownMode < 240)} do { uiSleep 0.25; _wTownMode = _wTownMode + 1; };
+if (!townModeSet) then {
+	diag_log "[WFBE (INIT)] HANGGUARD| Init_Towns.sqf: town mode was not ready after 60s - proceeding with town census.";
+};
 
 //--- Get all of the city logics.
 _towns = [0,0,0] nearEntities [["LocationLogicDepot"], 100000];

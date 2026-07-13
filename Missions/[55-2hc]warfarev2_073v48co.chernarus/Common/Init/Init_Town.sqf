@@ -1,4 +1,4 @@
-Private ['_camps','_marker','_town','_townDubbingName','_townMaxSV','_townName','_townRange','_townStartSV','_townValue','_town_type'];
+Private ['_camps','_marker','_town','_townDubbingName','_townMaxSV','_townName','_townRange','_townStartSV','_townValue','_town_type','_wCamps','_wCommonInit','_wServerInit','_wSupplyValue','_wTownInitServer','_wTownMode'];
 
 _town = _this select 0;
 _townName = _this select 1;
@@ -21,7 +21,12 @@ if(isNil "WFBE_Parameters_Ready")then{
 };
 
 
-waitUntil {townModeSet && WFBE_Parameters_Ready};
+//--- J6 HANGGUARD: mode/parameter readiness must not leave a town thread parked forever.
+_wTownMode = 0;
+while {(!townModeSet || !WFBE_Parameters_Ready) && (_wTownMode < 240)} do { uiSleep 0.25; _wTownMode = _wTownMode + 1; };
+if (!townModeSet || !WFBE_Parameters_Ready) then {
+	diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: town mode/parameters were not ready after 60s - proceeding (town=%1).", (_town getVariable ["name", "?"])];
+};
 
 //--- Prevent the isServer bug on the client.
 sleep (1.2 + random 0.2);
@@ -48,7 +53,12 @@ _town setVariable ["wfbe_town_type", _town_type];
 //--- AI-commander spearhead ranking can reward high-value towns (read nil-safe in Strategy).
 if (!isNil "_townValue") then {_town setVariable ["wfbe_town_value", _townValue]};
 
-waitUntil {commonInitComplete};
+//--- J6 HANGGUARD: common initialization must not park every town forever.
+_wCommonInit = 0;
+while {(!commonInitComplete) && (_wCommonInit < 240)} do { uiSleep 0.25; _wCommonInit = _wCommonInit + 1; };
+if (!commonInitComplete) then {
+	diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: common initialization was not complete after 60s - proceeding (town=%1).", (_town getVariable ["name", "?"])];
+};
 
 if (isServer) then {
 	Private ["_camps", "_defenses", "_synced"];
@@ -81,7 +91,7 @@ if (isServer) then {
 
 	//--- Don't pause.
 	[_town,_townStartSV,_townRange] Spawn {
-		Private ["_camps","_defenses","_marker","_size","_town","_townModel","_townRange","_townStartSV"];
+		Private ["_camps","_defenses","_marker","_size","_town","_townModel","_townRange","_townStartSV","_wServerInit","_wSupplyValue","_wTownInitServer"];
 		_town = _this select 0;
 		_townStartSV = _this select 1;
 		_townRange = _this select 2;
@@ -98,7 +108,12 @@ if (isServer) then {
 
 		sleep (random 1);
 
-		waitUntil {serverInitComplete};
+		//--- J6 HANGGUARD: server initialization must not park a town worker forever.
+		_wServerInit = 0;
+		while {(!serverInitComplete) && (_wServerInit < 240)} do { uiSleep 0.25; _wServerInit = _wServerInit + 1; };
+		if (!serverInitComplete) then {
+			diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: server initialization was not complete after 60s - proceeding (town=%1).", (_town getVariable ["name", "?"])];
+		};
 		_towns_camps 		= [];
 		_town_camp_flags    = [];
 		_camp_counter = 0;
@@ -136,11 +151,16 @@ if (isServer) then {
 			//--- Initialize the camp.
 			if (isNil {_x getVariable "sideID"}) then {_x setVariable ["sideID",WFBE_DEFENDER_ID,true]};
 			if (isNil {_x getVariable "supplyValue"}) then {
-				waitUntil {!isNil {_town getVariable "supplyValue"}};
-				_x setVariable ["supplyValue", _town getVariable "supplyValue", true];
-				_x setVariable ["wfbe_camp_bunker", _townModel, true];
-				_towns_camps = _towns_camps + [_x];
-				//[_x, _town, _flag] execVM "Server\FSM\server_town_camp.sqf";
+				_wSupplyValue = 0;
+				while {isNil {_town getVariable "supplyValue"} && (_wSupplyValue < 120)} do { uiSleep 0.25; _wSupplyValue = _wSupplyValue + 1; };
+				if (!isNil {_town getVariable "supplyValue"}) then {
+					_x setVariable ["supplyValue", _town getVariable "supplyValue", true];
+					_x setVariable ["wfbe_camp_bunker", _townModel, true];
+					_towns_camps = _towns_camps + [_x];
+					//[_x, _town, _flag] execVM "Server\FSM\server_town_camp.sqf";
+				} else {
+					diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: town supplyValue was not ready after 30s - skipping camp supply sync (town=%1).", (_town getVariable ["name", "?"])];
+				};
 			};
 			_town_camp_flags = _town_camp_flags + [_flag];
 			["INITIALIZATION",Format ["Init_Town.sqf : Initialized Camp in [%1].", _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
@@ -152,7 +172,12 @@ if (isServer) then {
 		};
 
 
-		waitUntil {townInitServer};
+		//--- J6 HANGGUARD: the server town census must not park this worker forever.
+		_wTownInitServer = 0;
+		while {(!townInitServer) && (_wTownInitServer < 240)} do { uiSleep 0.25; _wTownInitServer = _wTownInitServer + 1; };
+		if (!townInitServer) then {
+			diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: townInitServer was not ready after 60s - proceeding (town=%1).", (_town getVariable ["name", "?"])];
+		};
 
 		// Marty: Prepare default static defenses only for resistance towns; BLUFOR/OPFOR occupation towns use mobile defenders only.
 		if ((_town getVariable "sideID") == WFBE_DEFENDER_ID && (missionNamespace getVariable "WFBE_C_TOWNS_DEFENDER") > 0 && {!(_town getVariable ["wfbe_inactive", false])}) then { //--- WFBE_C_TEST_TOWN_CAP (test-only, default off): skip static-defense setup for towns capped out of towns[] by Server\Init\Init_Towns.sqf.
@@ -169,16 +194,20 @@ if (isServer) then {
 
 //--- Client camp init.
 if (local player) then {
-	waitUntil {!isNil {_town getVariable "camps"}};
+	_wCamps = 0;
+	while {isNil {_town getVariable "camps"} && (_wCamps < 120)} do { uiSleep 0.25; _wCamps = _wCamps + 1; };
+	if (!isNil {_town getVariable "camps"}) then {
+		_camps = _town getVariable "camps";
+		for '_i' from 0 to count(_camps)-1 do {
+			_camp = _camps select _i;
+			_camp setVariable ["wfbe_camp_marker", Format ["WFBE_%1_CityMarker_Camp%2", str _town, _i]];
+			_camp setVariable ["town", _town];
+		};
 
-	_camps = _town getVariable "camps";
-	for '_i' from 0 to count(_camps)-1 do {
-		_camp = _camps select _i;
-		_camp setVariable ["wfbe_camp_marker", Format ["WFBE_%1_CityMarker_Camp%2", str _town, _i]];
-		_camp setVariable ["town", _town];
+		["INITIALIZATION",Format ["Init_Town.sqf : (Client) Initialized Camps [%1] for town [%2].", count _camps, _townName]] Call WFBE_CO_FNC_LogContent;
+	} else {
+		diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: town camps were not synced after 30s - skipping client camp setup (town=%1).", (_town getVariable ["name", "?"])];
 	};
-
-	["INITIALIZATION",Format ["Init_Town.sqf : (Client) Initialized Camps [%1] for town [%2].", count _camps, _townName]] Call WFBE_CO_FNC_LogContent;
 };
 
 ["INITIALIZATION",Format ["Init_Town.sqf : Initialized town [%1].", _townName]] Call WFBE_CO_FNC_LogContent;
