@@ -429,9 +429,28 @@ WFBE_SE_FNC_IcbmTelFire = {
 	//--- A2-OA gotcha (the FASCAM-cap note above): an `exitWith` nested inside a `then/else {}` exits ONLY that block, not the
 	//--- function — so the null-team refusal MUST be a TOP-LEVEL `if ... exitWith` (compute the flag first, then refuse) or a
 	//--- human fire with a null team would fall through and continue. AI fires carry no team, so the guard is human-only.
-	private ["_badTeam"];
+	private ["_badTeam", "_authBad"];
 	_badTeam = (!_isAiFire) && {isNull _playerTeam};
+	//--- sender/team authority proof (wasp-steelrain-authority-proof-20260713): enforce that for a human
+	//--- fire the passed _playerTeam is led by a live isPlayer whose side exactly matches the claimed _side.
+	//--- This proves the RequestSpecial payload's sender/team is authoritative for the side (and thus for
+	//--- using that side's TEL, charging its funds, and stamping kill credit via _caller). Spoofed side or
+	//--- non-player team leader now rejected before any side effect. AI fires carry grpNull + _isAiFire side
+	//--- and legitimately bypass. Pattern matches RequestSiteClearance.sqf + RequestAIComDonate + HandleSpecial
+	//--- aicom-focus guards. The PVEH/RequestSpecial envelope itself carries no implicit sender (see Server_HandlePVF
+	//--- and Client_HandlePVF SIDE filter relying on explicit payload _destination); the explicit team+side in
+	//--- payload + this server validation is what proves authority. HandlePVF side filter truth for *outgoing*
+	//--- (AWACS #781) is orthogonal but now fed only proven _side values from gated fires.
+	_authBad = false;
+	if (!_isAiFire) then {
+		private ["_ldr"];
+		_ldr = leader _playerTeam;
+		if (isNull _ldr || {!isPlayer _ldr} || {side _ldr != _side}) then {_authBad = true};
+	};
 	if (_badTeam) exitWith {["WARNING", Format ["Init_IcbmTel.sqf : [%1] TEL fire — null team.", _sideText]] Call WFBE_CO_FNC_LogContent};
+	if (_authBad) exitWith {
+		["WARNING", Format ["Init_IcbmTel.sqf : [%1] TEL fire — sender/team authority mismatch (leader not player on claimed side).", _sideText]] Call WFBE_CO_FNC_LogContent};
+	};
 	//--- FIX D8b: resolve the human firer once, for STEELRAIN's kill-credit stamp. leader of a null
 	//--- team is objNull (A2-OA safe, no crash), so an AI-treasury fire simply carries no caller.
 	private ["_caller"];
