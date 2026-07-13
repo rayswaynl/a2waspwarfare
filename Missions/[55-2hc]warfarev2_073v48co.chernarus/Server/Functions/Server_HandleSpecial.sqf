@@ -207,8 +207,9 @@ switch (_args select 0) do {
 	};
 	//--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): the commander's ICBM fire, intercepted client-side
 	//--- (GUI_Menu_Tactical.sqf when WFBE_C_ICBM_TEL=1) and routed here. Server-authoritative gate lives in
-	//--- WFBE_SE_FNC_IcbmTelFire (TEL alive + shared cooldown + range + funds); it spawns/refuses accordingly.
-	//--- Payload: ["icbm-tel-fire", side, target, munition, playerTeam, fee, platformHint?]. Fn-guarded (Init_IcbmTel compiles it).
+	//--- WFBE_SE_FNC_IcbmTelFire (TEL alive + shared cooldown + range + funds + sender/team authority).
+	//--- Sender/team authority (isPlayer leader on claimed side for human fires) proven/enforced inside
+	//--- IcbmTelFire for kill-credit path (wasp-steelrain-authority-proof-20260713). Payload: ["icbm-tel-fire", side, target, munition, playerTeam, fee, platformHint?].
 	//--- cmdcon42-j (Ray 2026-07-02): optional 7th element = a specific bought-SCUD platform hint (from the vehicle action).
 	//--- The server re-validates it (ignored for NUKE; only honoured if an alive side platform) — never trusted blindly.
 	case "icbm-tel-fire": {
