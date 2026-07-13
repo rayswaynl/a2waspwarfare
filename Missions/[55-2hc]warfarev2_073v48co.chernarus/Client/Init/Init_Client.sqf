@@ -1736,6 +1736,12 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- WFBE_C_CLIENT_FPS_REPORT lobby param; players only. Reports avg/min FPS to the server.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_FpsReport.sqf";
 
+//--- Client frame-pacing baseline (codex-gaming-lane-2, 2026-07-13). Self-gates on the
+//--- default-off WFBE_C_CLIENT_FRAME_TELEMETRY parameter; local CLIENTFRAME|v1| RPT only.
+if ((missionNamespace getVariable ["WFBE_C_CLIENT_FRAME_TELEMETRY", 0]) > 0) then {
+	[] execVM "Client\Functions\Client_FrameTelemetry.sqf";
+};
+
 //--- Ambulance / medic-redeploy range circles (Trello #76). Local map Ellipses around friendly
 //--- ambulances and redeploy trucks showing the mobile-respawn radius. Self-gates on WFBE_C_RESPAWN_MOBILE.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_AmbulanceRedeployCircles.sqf";
