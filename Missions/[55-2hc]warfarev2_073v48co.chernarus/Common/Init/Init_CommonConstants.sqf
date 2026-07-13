@@ -2722,5 +2722,10 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 	if (isNil "WFBE_C_SMALLARMS_AIR_ENVELOPE_RANGE") then {WFBE_C_SMALLARMS_AIR_ENVELOPE_RANGE = 300}; //--- small-arms x Air effective envelope, metres (tunable); beyond this a small-arms unit is steered off an air lock.
 	if (isNil "WFBE_C_SMALLARMS_AIR_ENVELOPE_TICK") then {WFBE_C_SMALLARMS_AIR_ENVELOPE_TICK = 5}; //--- manager sweep cadence, seconds (tunable, 4-8s band).
 
+//--- CLIENT FRAME-PACING TELEMETRY (codex-gaming-lane-2, 2026-07-13): local RPT-only baseline.
+//--- 0 = no sampler VM, no diag_fps reads, no entity scan and no network traffic.
+if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY") then {WFBE_C_CLIENT_FRAME_TELEMETRY = 0};
+if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL") then {WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL = 60};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
