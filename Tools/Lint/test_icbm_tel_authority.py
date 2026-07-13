@@ -53,9 +53,9 @@ class IcbmTelAuthorityTests(unittest.TestCase):
     def test_fire_client_uses_private_challenge_capability(self) -> None:
         source = mask_comments(read(MAINTAINED_ROOTS[0], TEL_CLIENT))
         required = (
-            'Format ["wfbe_icbm_tel_cap_client_%1", getPlayerUID player]',
-            'Format ["wfbe_icbm_tel_auth_challenge_%1", getPlayerUID player]',
-            '["icbm-tel-auth",player,_challenge] Call _sendTelToServer',
+            'Format ["wfbe_icbm_tel_fire_cap_client_%1", getPlayerUID player]',
+            'Format ["wfbe_icbm_tel_fire_auth_challenge_%1", getPlayerUID player]',
+            '["icbm-tel-auth","fire",player,_challenge] Call _sendTelToServer',
             '"icbm-tel-fire",_side,_target,_muni,_team,_fee,_platform,player,_token',
             'publicVariableServer "WFBE_PVF_RequestSpecial"',
         )
@@ -68,8 +68,11 @@ class IcbmTelAuthorityTests(unittest.TestCase):
         purchase = mask_comments(read(MAINTAINED_ROOTS[0], TEL_PURCHASE))
         registration = mask_comments(read(MAINTAINED_ROOTS[0], TEL_REGISTER))
         required_purchase = (
+            'Format ["wfbe_icbm_tel_purchase_auth_challenge_%1", _uid]',
+            '["icbm-tel-auth","purchase",player,_authChallenge] Call _sendTelToServer',
+            'Format ["wfbe_icbm_tel_purchase_cap_client_%1", _uid]',
             'Format ["wfbe_icbm_tel_purchase_challenge_%1", _uid]',
-            '["icbm-tel-purchase-auth",player,_challenge,_factory,_unit] Call _sendTelToServer',
+            '["icbm-tel-purchase-auth",player,_challenge,_factory,_unit,_authToken] Call _sendTelToServer',
             '_params set [6, _token]',
             '_params Spawn BuildUnit',
             'publicVariableServer "WFBE_PVF_RequestSpecial"',
@@ -108,7 +111,10 @@ class IcbmTelAuthorityTests(unittest.TestCase):
         result = mask_comments(read(MAINTAINED_ROOTS[0], CLIENT_RESULT))
         required = (
             'case "icbm-tel-auth-token"',
+            '_telPurpose in ["fire","purchase"]',
+            'Format ["wfbe_icbm_tel_%1_auth_challenge_%2", _telPurpose, getPlayerUID player]',
             '_telChallenge != (missionNamespace getVariable [_telChallengeKey, ""])',
+            'Format ["wfbe_icbm_tel_%1_cap_client_%2", _telPurpose, getPlayerUID player]',
             'case "icbm-tel-purchase-token"',
             'Format ["wfbe_icbm_tel_purchase_challenge_%1", getPlayerUID player]',
             '_buyChallenge != (missionNamespace getVariable [_buyChallengeKey, ""])',
@@ -117,6 +123,27 @@ class IcbmTelAuthorityTests(unittest.TestCase):
         for token in required:
             with self.subTest(token=token):
                 self.assertIn(token, result)
+
+    def test_server_auth_is_purpose_bound_and_reuses_private_capability(self) -> None:
+        server = mask_comments(read(MAINTAINED_ROOTS[0], TEL_SERVER))
+        start = server.find("WFBE_SE_FNC_IcbmTelAuth = {")
+        end = server.find("WFBE_SE_FNC_IcbmTelFire = {", start)
+        self.assertGreaterEqual(start, 0)
+        self.assertGreaterEqual(end, 0)
+        auth = server[start:end]
+        required = (
+            'count _this != 3',
+            '_authPurpose in ["fire","purchase"]',
+            'Format ["wfbe_icbm_tel_%1_cap_server_%2", _authPurpose, _authUID]',
+            'if (_capValid) then',
+            '_token = _cap select 0',
+            '["icbm-tel-auth-token", _authPurpose, _token, _expires, _authChallenge]',
+            '_replyId publicVariableClient "WFBE_PVF_IcbmTelPrivate"',
+        )
+        for token in required:
+            with self.subTest(token=token):
+                self.assertIn(token, auth)
+        self.assertNotIn("purchase_proof_server", auth)
 
     def test_server_binds_and_consumes_fire_capability_before_side_effects(self) -> None:
         server = mask_comments(read(MAINTAINED_ROOTS[0], TEL_SERVER))
@@ -130,7 +157,7 @@ class IcbmTelAuthorityTests(unittest.TestCase):
             "group _authPlayer != _playerTeam",
             "side (group _authPlayer) != _side",
             "getPlayerUID _authPlayer",
-            'Format ["wfbe_icbm_tel_cap_server_%1", _authUID]',
+            'Format ["wfbe_icbm_tel_fire_cap_server_%1", _authUID]',
             "_authToken != (_authCap select 0)",
             "missionNamespace setVariable [_authCapKey, []]",
             "_commanderTeam = _side Call WFBE_CO_FNC_GetCommanderTeam",
@@ -156,11 +183,11 @@ class IcbmTelAuthorityTests(unittest.TestCase):
         handler = mask_comments(read(MAINTAINED_ROOTS[0], SERVER_SPECIAL))
         required = (
             'case "icbm-tel-auth"',
-            "if (count _args != 3) exitWith",
+            "if (count _args != 4) exitWith",
             "if (count _args != 9) exitWith",
             "[_tSide, _tTarget, _tMuni, _tTeam, _tFee, _tPlat, sideUnknown, _tPlayer, _tToken] Spawn WFBE_SE_FNC_IcbmTelFire",
             'case "icbm-tel-purchase-auth"',
-            "if (count _args != 5) exitWith",
+            "if (count _args != 6) exitWith",
             'case "icbm-tel-register"',
             "if (count _args != 6) exitWith",
         )
@@ -178,6 +205,9 @@ class IcbmTelAuthorityTests(unittest.TestCase):
         purchase = server[start:end]
         required = (
             "getPlayerUID _authPlayer",
+            'Format ["wfbe_icbm_tel_purchase_cap_server_%1", _authUID]',
+            "_authToken != (_authCap select 0)",
+            "missionNamespace setVariable [_authCapKey, []]",
             "_authPlayer != leader _team",
             "_factory in (_side Call WFBE_CO_FNC_GetSideStructures)",
             '(_factoryTypes select _factoryIndex) != "Heavy"',
@@ -187,13 +217,22 @@ class IcbmTelAuthorityTests(unittest.TestCase):
             "_unitData select QUERYUNITUPGRADE",
             "_unitData select QUERYUNITFACTORY",
             "_team Call WFBE_CO_FNC_GetTeamFunds",
-            'Format ["wfbe_icbm_tel_purchase_cap_server_%1", _authUID]',
+            'Format ["wfbe_icbm_tel_purchase_proof_server_%1", _authUID]',
             "[_token,_expires,_notBefore,_factory,_unitType,_team,_side,_cost,_authUID]",
             '_replyId publicVariableClient "WFBE_PVF_IcbmTelPrivate"',
         )
         for token in required:
             with self.subTest(token=token):
                 self.assertIn(token, purchase)
+        consume = purchase.find("missionNamespace setVariable [_authCapKey, []]")
+        proof = purchase.find("missionNamespace setVariable [_proofKey,")
+        self.assertGreaterEqual(consume, 0)
+        self.assertGreaterEqual(proof, 0)
+        self.assertLess(consume, proof)
+        self.assertLess(
+            consume,
+            purchase.find('Format ["wfbe_icbm_tel_purchase_proof_server_%1", _authUID]'),
+        )
 
     def test_registration_consumes_proof_before_debit_registry_or_deletion(self) -> None:
         server = mask_comments(read(MAINTAINED_ROOTS[0], TEL_SERVER))
@@ -203,7 +242,7 @@ class IcbmTelAuthorityTests(unittest.TestCase):
         self.assertGreaterEqual(end, 0)
         register = server[start:end]
         required = (
-            'Format ["wfbe_icbm_tel_purchase_cap_server_%1", _authUID]',
+            'Format ["wfbe_icbm_tel_purchase_proof_server_%1", _authUID]',
             "missionNamespace setVariable [_proofKey, []]",
             "_proofClass != typeOf _veh",
             "_proofTeam != _team",

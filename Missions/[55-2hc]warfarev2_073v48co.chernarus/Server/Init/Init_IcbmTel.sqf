@@ -215,7 +215,7 @@ WFBE_SE_FNC_TkScudRegister = {
 		if (_authUID == "") then {_authBad = "missing player UID"};
 	};
 	if (!_isAiRegister && {_authBad == ""}) then {
-		_proofKey = Format ["wfbe_icbm_tel_purchase_cap_server_%1", _authUID];
+		_proofKey = Format ["wfbe_icbm_tel_purchase_proof_server_%1", _authUID];
 		_proof = missionNamespace getVariable [_proofKey, []];
 		if (typeName _proof != "ARRAY" || {count _proof != 9}) then {_authBad = "missing purchase proof"};
 		if (_authBad == "" && {typeName (_proof select 0) != "STRING" || {(_proof select 0) != _authToken}}) then {_authBad = "mismatched purchase proof"};
@@ -296,15 +296,17 @@ WFBE_SE_FNC_TkScudRegister = {
 //--- The proof reserves no funds and creates no object; registration later rechecks cap/funds,
 //--- charges the exact server-derived base hull cost, and binds the exact locally spawned hull.
 WFBE_SE_FNC_IcbmTelPurchaseAuth = {
-	private ["_attackMod","_authBad","_authChallenge","_authPlayer","_authUID","_basePrice","_cost","_existingProof","_expires","_factory","_factoryIndex","_factoryNames","_factoryTypes","_funds","_live","_max","_notBefore","_proofKey","_pvf","_replyId","_replyUID","_requiredLevel","_side","_team","_token","_unitCostLevel","_unitMod","_unitType","_unitData","_upgrades","_waitTime"];
-	if (typeName _this != "ARRAY" || {count _this != 4}) exitWith {};
+	private ["_attackMod","_authBad","_authCap","_authCapExpires","_authCapKey","_authChallenge","_authPlayer","_authState","_authToken","_authUID","_basePrice","_cost","_existingProof","_expires","_factory","_factoryIndex","_factoryNames","_factoryTypes","_funds","_live","_max","_notBefore","_proofKey","_pvf","_replyId","_replyUID","_requiredLevel","_side","_team","_token","_unitCostLevel","_unitMod","_unitType","_unitData","_upgrades","_waitTime"];
+	if (typeName _this != "ARRAY" || {count _this != 5}) exitWith {};
 	_authPlayer = _this select 0;
 	_authChallenge = _this select 1;
 	_factory = _this select 2;
 	_unitType = _this select 3;
+	_authToken = _this select 4;
 	_authBad = "";
 	if (typeName _authPlayer != "OBJECT" || {isNull _authPlayer} || {!alive _authPlayer} || {!isPlayer _authPlayer}) then {_authBad = "invalid player"};
 	if (_authBad == "" && {typeName _authChallenge != "STRING" || {_authChallenge == ""}}) then {_authBad = "invalid challenge"};
+	if (_authBad == "" && {typeName _authToken != "STRING" || {_authToken == ""}}) then {_authBad = "invalid purchase capability"};
 	if (_authBad == "" && {typeName _factory != "OBJECT" || {isNull _factory} || {!alive _factory}}) then {_authBad = "invalid Heavy Factory"};
 	if (_authBad == "" && {typeName _unitType != "STRING" || {_unitType != (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])}}) then {_authBad = "wrong SCUD class"};
 	if (_authBad == "" && {!((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 0]) > 0)}) then {_authBad = "SCUD purchases are disabled"};
@@ -339,6 +341,30 @@ WFBE_SE_FNC_IcbmTelPurchaseAuth = {
 		if (_authUID == "") then {_authBad = "missing player UID"};
 	};
 	if (_authBad == "") then {
+		_authCapKey = Format ["wfbe_icbm_tel_purchase_cap_server_%1", _authUID];
+		_authState = 0;
+		_authCapExpires = 0;
+		isNil {
+			_authCap = missionNamespace getVariable [_authCapKey, []];
+			if (typeName _authCap != "ARRAY" || {count _authCap != 2}) then {
+				_authState = -1;
+			} else {
+				if (typeName (_authCap select 0) != "STRING" || {typeName (_authCap select 1) != "SCALAR"}) then {
+					_authState = -2;
+				} else {
+					if (_authToken != (_authCap select 0)) then {
+						_authState = -3;
+					} else {
+						_authCapExpires = _authCap select 1;
+						missionNamespace setVariable [_authCapKey, []];
+						if (_authCapExpires <= time) then {_authState = -4} else {_authState = 1};
+					};
+				};
+			};
+		};
+		if (_authState != 1) then {_authBad = "missing, stale, or mismatched purchase capability"};
+	};
+	if (_authBad == "") then {
 		_live = [_side] Call WFBE_SE_FNC_TkScudPlatforms;
 		_max = missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_MAX", 2];
 		if ((missionNamespace getVariable ["WFBE_C_SCUD_ONE_PER_SIDE", 1]) > 0) then {_max = _max min 1};
@@ -365,7 +391,7 @@ WFBE_SE_FNC_IcbmTelPurchaseAuth = {
 	_token = "";
 	_expires = 0;
 	if (_authBad == "") then {
-		_proofKey = Format ["wfbe_icbm_tel_purchase_cap_server_%1", _authUID];
+		_proofKey = Format ["wfbe_icbm_tel_purchase_proof_server_%1", _authUID];
 		_existingProof = missionNamespace getVariable [_proofKey, []];
 		if (typeName _existingProof == "ARRAY" && {count _existingProof == 9}) then {
 			if (typeName (_existingProof select 1) == "SCALAR" && {(_existingProof select 1) > time}) then {_authBad = "a certified SCUD build is already pending"};
@@ -435,10 +461,12 @@ WFBE_SE_FNC_TkScudNearestPlatform = {
 //--- The shared RequestSpecial PVEH carries no sender identity, so possession of this private
 //--- one-shot token is the connection-to-player proof used by the fire path below.
 WFBE_SE_FNC_IcbmTelAuth = {
-	private ["_authChallenge","_authPlayer","_authSide","_authUID","_cap","_capKey","_capValid","_expires","_pvf","_replyId","_token"];
-	if (typeName _this != "ARRAY" || {count _this != 2}) exitWith {};
-	_authPlayer = _this select 0;
-	_authChallenge = _this select 1;
+	private ["_authChallenge","_authPlayer","_authPurpose","_authSide","_authUID","_cap","_capKey","_capValid","_expires","_pvf","_replyId","_token"];
+	if (typeName _this != "ARRAY" || {count _this != 3}) exitWith {};
+	_authPurpose = _this select 0;
+	_authPlayer = _this select 1;
+	_authChallenge = _this select 2;
+	if (typeName _authPurpose != "STRING" || {!(_authPurpose in ["fire","purchase"])}) exitWith {};
 	if (typeName _authPlayer != "OBJECT" || {isNull _authPlayer}) exitWith {};
 	if (typeName _authChallenge != "STRING" || {_authChallenge == ""}) exitWith {};
 	if (!alive _authPlayer || {!isPlayer _authPlayer}) exitWith {};
@@ -448,29 +476,30 @@ WFBE_SE_FNC_IcbmTelAuth = {
 	_authUID = getPlayerUID _authPlayer;
 	if (_authUID == "") exitWith {};
 
-	_capKey = Format ["wfbe_icbm_tel_cap_server_%1", _authUID];
+	_capKey = Format ["wfbe_icbm_tel_%1_cap_server_%2", _authPurpose, _authUID];
 	_capValid = false;
 	_token = "";
 	_expires = 0;
 	isNil {
 		_cap = missionNamespace getVariable [_capKey, []];
-		if (typeName _cap == "ARRAY" && {count _cap >= 2}) then {
+		if (typeName _cap == "ARRAY" && {count _cap == 2}) then {
 			if (typeName (_cap select 0) == "STRING" && {typeName (_cap select 1) == "SCALAR"}) then {
 				if ((_cap select 0) != "" && {(_cap select 1) > time}) then {_capValid = true};
 			};
 		};
 		if (_capValid) then {
+			//--- Reuse prevents nomination spam from replacing the secret before its owner consumes it.
 			_token = _cap select 0;
 			_expires = _cap select 1;
 		} else {
-			_token = Format ["%1:%2:%3:%4", _authUID, floor (diag_tickTime * 1000), floor (random 1000000000), floor (random 1000000000)];
+			_token = Format ["%1:%2:%3:%4:%5", _authPurpose, _authUID, floor (diag_tickTime * 1000), floor (random 1000000000), floor (random 1000000000)];
 			_expires = time + 15;
 			missionNamespace setVariable [_capKey, [_token, _expires]];
 		};
 	};
 
 	_replyId = owner _authPlayer;
-	_pvf = [_authUID, "CLTFNCHandleSpecial", ["icbm-tel-auth-token", _token, _expires, _authChallenge]];
+	_pvf = [_authUID, "CLTFNCHandleSpecial", ["icbm-tel-auth-token", _authPurpose, _token, _expires, _authChallenge]];
 	if (!isHostedServer) then {
 		if (_replyId > 0) then {isNil {WFBE_PVF_IcbmTelPrivate = _pvf; _replyId publicVariableClient "WFBE_PVF_IcbmTelPrivate"}};
 	} else {
@@ -523,7 +552,7 @@ WFBE_SE_FNC_IcbmTelFire = {
 	};
 
 	if (!_isAiFire && {_authBad == ""}) then {
-		_authCapKey = Format ["wfbe_icbm_tel_cap_server_%1", _authUID];
+		_authCapKey = Format ["wfbe_icbm_tel_fire_cap_server_%1", _authUID];
 		_authState = 0;
 		_authCapExpires = 0;
 		isNil {

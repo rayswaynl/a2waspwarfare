@@ -22,7 +22,7 @@ if (isNull player || {!alive player} || {!isPlayer player}) exitWith {};
 
 _uid = getPlayerUID player;
 if (_uid == "") exitWith {};
-_pendingKey = Format ["wfbe_icbm_tel_auth_pending_%1", _uid];
+_pendingKey = Format ["wfbe_icbm_tel_fire_auth_pending_%1", _uid];
 if (missionNamespace getVariable [_pendingKey, false]) exitWith {hint "TEL launch authorization is already pending."};
 missionNamespace setVariable [_pendingKey, true];
 
@@ -38,8 +38,8 @@ _sendTelToServer = {
 	};
 };
 
-_capKey = Format ["wfbe_icbm_tel_cap_client_%1", getPlayerUID player];
-_challengeKey = Format ["wfbe_icbm_tel_auth_challenge_%1", getPlayerUID player];
+_capKey = Format ["wfbe_icbm_tel_fire_cap_client_%1", getPlayerUID player];
+_challengeKey = Format ["wfbe_icbm_tel_fire_auth_challenge_%1", getPlayerUID player];
 _cap = missionNamespace getVariable [_capKey, []];
 _capValid = false;
 if (typeName _cap == "ARRAY" && {count _cap >= 2}) then {
@@ -51,7 +51,7 @@ if (typeName _cap == "ARRAY" && {count _cap >= 2}) then {
 if (!_capValid) then {
 	_challenge = Format ["%1:%2:%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000000)];
 	missionNamespace setVariable [_challengeKey, _challenge];
-	["icbm-tel-auth",player,_challenge] Call _sendTelToServer;
+	["icbm-tel-auth","fire",player,_challenge] Call _sendTelToServer;
 	_capDeadline = time + 5;
 	waitUntil {
 		sleep 0.05;

@@ -1,4 +1,4 @@
-Private ["_cap","_capDeadline","_capKey","_capValid","_challenge","_challengeKey","_clientCost","_factory","_factoryType","_params","_pendingKey","_proof","_sendTelToServer","_side","_team","_token","_uid","_unit"];
+Private ["_authCap","_authCapDeadline","_authCapKey","_authCapValid","_authChallenge","_authChallengeKey","_authToken","_capDeadline","_capKey","_capValid","_challenge","_challengeKey","_clientCost","_factory","_factoryType","_params","_pendingKey","_proof","_sendTelToServer","_side","_team","_token","_uid","_unit"];
 
 //--- Ask the server to certify this exact HF purchase before the client build starts. The
 //--- server binds the proof to player UID, team, side, factory, configured SCUD class, price,
@@ -39,12 +39,50 @@ _sendTelToServer = {
 	};
 };
 
+//--- A shared-bus request may nominate any player object. Require a purpose-bound secret
+//--- returned only to this player's network owner before the server may create proof state.
+_authCapKey = Format ["wfbe_icbm_tel_purchase_cap_client_%1", _uid];
+_authChallengeKey = Format ["wfbe_icbm_tel_purchase_auth_challenge_%1", _uid];
+_authCap = missionNamespace getVariable [_authCapKey, []];
+_authCapValid = false;
+if (typeName _authCap == "ARRAY" && {count _authCap >= 2}) then {
+	if (typeName (_authCap select 0) == "STRING" && {typeName (_authCap select 1) == "SCALAR"}) then {
+		if ((_authCap select 0) != "" && {(_authCap select 1) > time}) then {_authCapValid = true};
+	};
+};
+if (!_authCapValid) then {
+	_authChallenge = Format ["AUTH:%1:%2:%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000000)];
+	missionNamespace setVariable [_authChallengeKey, _authChallenge];
+	["icbm-tel-auth","purchase",player,_authChallenge] Call _sendTelToServer;
+	_authCapDeadline = time + 5;
+	waitUntil {
+		sleep 0.05;
+		_authCap = missionNamespace getVariable [_authCapKey, []];
+		_authCapValid = false;
+		if (typeName _authCap == "ARRAY" && {count _authCap >= 2}) then {
+			if (typeName (_authCap select 0) == "STRING" && {typeName (_authCap select 1) == "SCALAR"}) then {
+				if ((_authCap select 0) != "" && {(_authCap select 1) > time}) then {_authCapValid = true};
+			};
+		};
+		_authCapValid || {time >= _authCapDeadline}
+	};
+	missionNamespace setVariable [_authChallengeKey, ""];
+};
+if (!_authCapValid) exitWith {
+	missionNamespace setVariable [_pendingKey, false];
+	_factoryType = _params select 3;
+	missionNamespace setVariable [Format ["WFBE_C_QUEUE_%1",_factoryType],((missionNamespace getVariable Format ["WFBE_C_QUEUE_%1",_factoryType])-1) max 0];
+	hint "SCUD purchase authorization timed out. Nothing was charged.";
+};
+_authToken = _authCap select 0;
+missionNamespace setVariable [_authCapKey, []];
+
 _capKey = Format ["wfbe_icbm_tel_purchase_cap_client_%1", _uid];
 _challengeKey = Format ["wfbe_icbm_tel_purchase_challenge_%1", _uid];
 missionNamespace setVariable [_capKey, []];
-_challenge = Format ["%1:%2:%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000000)];
+_challenge = Format ["BUY:%1:%2:%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000000)];
 missionNamespace setVariable [_challengeKey, _challenge];
-["icbm-tel-purchase-auth",player,_challenge,_factory,_unit] Call _sendTelToServer;
+["icbm-tel-purchase-auth",player,_challenge,_factory,_unit,_authToken] Call _sendTelToServer;
 
 _capDeadline = time + 5;
 _proof = [];

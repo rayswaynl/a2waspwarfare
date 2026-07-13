@@ -212,14 +212,15 @@ switch (_args select 0) do {
 	//--- cmdcon42-j (Ray 2026-07-02): optional 7th element = a specific bought-SCUD platform hint (from the vehicle action).
 	//--- The server re-validates it (ignored for NUKE; only honoured if an alive side platform) — never trusted blindly.
 	case "icbm-tel-auth": {
-		if (count _args != 3) exitWith {
+		if (count _args != 4) exitWith {
 			["WARNING", Format ["Server_HandleSpecial.sqf: icbm-tel-auth received malformed payload (%1 fields).", count _args]] Call WFBE_CO_FNC_LogContent;
 		};
 		if (!isNil "WFBE_SE_FNC_IcbmTelAuth") then {
-			private ["_tAuthPlayer","_tChallenge"];
-			_tAuthPlayer = _args select 1;
-			_tChallenge = _args select 2;
-			[_tAuthPlayer, _tChallenge] Call WFBE_SE_FNC_IcbmTelAuth;
+			private ["_tAuthPlayer","_tChallenge","_tPurpose"];
+			_tPurpose = _args select 1;
+			_tAuthPlayer = _args select 2;
+			_tChallenge = _args select 3;
+			[_tPurpose, _tAuthPlayer, _tChallenge] Call WFBE_SE_FNC_IcbmTelAuth;
 		};
 	};
 	case "icbm-tel-fire": {
@@ -243,11 +244,11 @@ switch (_args select 0) do {
 	};
 	//--- A purchase proof is issued before the client build and privately returned to that player.
 	case "icbm-tel-purchase-auth": {
-		if (count _args != 5) exitWith {
+		if (count _args != 6) exitWith {
 			["WARNING", Format ["Server_HandleSpecial.sqf: icbm-tel-purchase-auth malformed (%1 fields).", count _args]] Call WFBE_CO_FNC_LogContent;
 		};
 		if (!isNil "WFBE_SE_FNC_IcbmTelPurchaseAuth") then {
-			[_args select 1, _args select 2, _args select 3, _args select 4] Call WFBE_SE_FNC_IcbmTelPurchaseAuth;
+			[_args select 1, _args select 2, _args select 3, _args select 4, _args select 5] Call WFBE_SE_FNC_IcbmTelPurchaseAuth;
 		};
 	};
 	//--- Registration can only consume the privately delivered, server-stored purchase proof.

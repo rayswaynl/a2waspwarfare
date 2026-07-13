@@ -86,16 +86,18 @@ switch (_request) do {
 	case "uav-reveal": {_args spawn WFBE_CL_FNC_Reveal_UAV};
 	//--- Accept the ICBM/TEL token only when it echoes this client's private challenge.
 	case "icbm-tel-auth-token": {
-		Private ["_telChallenge","_telChallengeKey","_telExpires","_telToken"];
-		if (count _args != 3) exitWith {};
-		_telToken = _args select 0;
-		_telExpires = _args select 1;
-		_telChallenge = _args select 2;
-		_telChallengeKey = Format ["wfbe_icbm_tel_auth_challenge_%1", getPlayerUID player];
+		Private ["_telChallenge","_telChallengeKey","_telExpires","_telPurpose","_telToken"];
+		if (count _args != 4) exitWith {};
+		_telPurpose = _args select 0;
+		_telToken = _args select 1;
+		_telExpires = _args select 2;
+		_telChallenge = _args select 3;
+		if (typeName _telPurpose != "STRING" || {!(_telPurpose in ["fire","purchase"])}) exitWith {};
+		_telChallengeKey = Format ["wfbe_icbm_tel_%1_auth_challenge_%2", _telPurpose, getPlayerUID player];
 		if (typeName _telToken != "STRING" || {_telToken == ""}) exitWith {};
 		if (typeName _telExpires != "SCALAR" || {_telExpires <= time}) exitWith {};
 		if (typeName _telChallenge != "STRING" || {_telChallenge != (missionNamespace getVariable [_telChallengeKey, ""])}) exitWith {};
-		missionNamespace setVariable [Format ["wfbe_icbm_tel_cap_client_%1", getPlayerUID player], [_telToken, _telExpires]];
+		missionNamespace setVariable [Format ["wfbe_icbm_tel_%1_cap_client_%2", _telPurpose, getPlayerUID player], [_telToken, _telExpires]];
 	};
 
 	//--- Accept a purchase proof (or immediate denial reason) only for this client's challenge.
