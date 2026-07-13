@@ -47,7 +47,9 @@ MHQRepair = Compile preprocessFile "Server\Functions\Server_MHQRepair.sqf";
 SideMessage = Compile preprocessFile "Server\Functions\Server_SideMessage.sqf";
 
 UpdateTeam = Compile preprocessFile "Server\Functions\Server_UpdateTeam.sqf";
-/* UpdateSupplyTruck = Compile preprocessFile "Server\AI\AI_UpdateSupplyTruck.sqf"; */
+//--- d022: explicit server-owned AI supply-truck worker. The worker and the launch below
+//--- are both gated; flag 0 keeps the legacy empty-registry/warning baseline inert.
+UpdateSupplyTruck = Compile preprocessFileLineNumbers "Server\AI\AI_UpdateSupplyTruck.sqf";
 
 //--- Support Functions.
 KAT_ParaAmmo = Compile preprocessFile "Server\Support\Support_ParaAmmo.sqf";
@@ -1040,6 +1042,12 @@ if (isNil "WFBE_EDITOR_GROUPS_TAGGED") then {
 [] Call Compile preprocessFile "Server\Config\Config_GUE.sqf";
 
 serverInitFull = true;
+
+//--- d022: double-gated launch. No HC delegation, wfbe_teams registration, or simulation gating.
+if (isServer && {(missionNamespace getVariable ["WFBE_C_AI_SUPPLY_TRUCK_ENABLE", 0]) > 0} && {(missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_SYSTEM", 1]) == 0} && {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0}) then {
+	{[_x] Spawn UpdateSupplyTruck} forEach [west,east];
+	["INITIALIZATION", "Init_Server.sqf: server-owned AI supply-truck workers launched (d022, default-off)."] Call WFBE_CO_FNC_LogContent;
+};
 
 //--- DEADSPAWN PHYSICAL PROTECTION (claude-gaming 2026-06-14): ring each per-side
 //--- TempRespawnMarker with tall H-barriers so an enemy-side AI-slot bot cannot shoot

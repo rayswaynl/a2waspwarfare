@@ -18,6 +18,7 @@ MAINTAINED_ROOTS = (
 
 CONSTANTS = Path("Common/Init/Init_CommonConstants.sqf")
 INIT_SERVER = Path("Server/Init/Init_Server.sqf")
+WORKER = Path("Server/AI/AI_UpdateSupplyTruck.sqf")
 CLIENT_START = Path("Client/Module/supplyMission/supplyMissionStart.sqf")
 SERVER_START = Path("Server/Module/supplyMission/supplyMissionStarted.sqf")
 SERVER_COMPLETE = Path("Server/Module/supplyMission/supplyMissionCompleted.sqf")
@@ -26,6 +27,7 @@ ECONOMY_GUI = Path("Client/GUI/GUI_Menu_Economy.sqf")
 HANDLE_SPECIAL = Path("Server/Functions/Server_HandleSpecial.sqf")
 MIRRORED_FILES = (
     CONSTANTS,
+    WORKER,
     CLIENT_START,
     SERVER_START,
     SERVER_COMPLETE,
@@ -187,6 +189,66 @@ class AiSupplyTruckContractTests(unittest.TestCase):
             copies = [(root / relative).read_bytes() for root in MAINTAINED_ROOTS]
             with self.subTest(path=str(relative)):
                 self.assertEqual(len(set(copies)), 1)
+
+    def test_worker_is_explicit_server_local_and_not_the_retired_fsm(self) -> None:
+        for root in MAINTAINED_ROOTS:
+            code = mask_comments(read(root, WORKER))
+            with self.subTest(root=root.name):
+                self.assertIn("if (!isServer) exitWith {}", code)
+                self.assertIn("if (_side != west && {_side != east}) exitWith {}", code)
+                self.assertIn('getVariable ["WFBE_C_AI_SUPPLY_TRUCK_ENABLE", 0]', code)
+                self.assertIn('getVariable ["WFBE_C_ECONOMY_SUPPLY_SYSTEM", 1]', code)
+                self.assertNotIn("ExecFSM", code)
+                self.assertNotIn("supplytruck.fsm", code)
+                self.assertNotIn("enableSimulation", code)
+                self.assertNotIn("hideObject", code)
+                self.assertNotIn("wfbe_teams", code)
+                self.assertNotIn("wfbe_aicom_hc", code)
+
+    def test_worker_owns_eight_units_and_registry_before_public_stamp(self) -> None:
+        for root in MAINTAINED_ROOTS:
+            code = mask_comments(read(root, WORKER))
+            with self.subTest(root=root.name):
+                self.assertIn('Call WFBE_CO_FNC_CreateGroup', code)
+                self.assertIn('for "_i" from 0 to 7', code)
+                self.assertIn("if (count _units < 8)", code)
+                publication = code.find('_registry = _registry + [_truck]')
+                registry = code.find(
+                    '_logic setVariable ["wfbe_ai_supplytrucks", _registry]',
+                    publication,
+                )
+                stamp = code.find('_truck setVariable ["wfbe_ai_supplytruck", true, true]')
+                self.assertGreaterEqual(publication, 0)
+                self.assertGreaterEqual(registry, 0)
+                self.assertGreater(stamp, registry)
+                self.assertIn('_truck setVariable ["wfbe_trashable", false]', code)
+                self.assertIn('_group setVariable ["wfbe_persistent", true]', code)
+                self.assertIn('_group setVariable ["wfbe_ai_supply_group", true]', code)
+
+    def test_worker_clamps_truck_rate_and_latches_delivery(self) -> None:
+        for root in MAINTAINED_ROOTS:
+            code = mask_comments(read(root, WORKER))
+            with self.subTest(root=root.name):
+                self.assertIn('WFBE_C_TOWNS_SUPPLY_LEVELS_TRUCK', code)
+                self.assertIn('if (_rateIndex < 0) then {_rateIndex = 0}', code)
+                self.assertIn('if (_rateIndex >= count _rates)', code)
+                self.assertIn('if (!_delivered) then', code)
+                self.assertIn('setVariable ["supplyValue", _after, true]', code)
+                self.assertIn('trip=%8', code)
+                self.assertNotIn("ChangeSideSupply", code)
+                self.assertNotIn("SupplyAmount", code)
+
+    def test_init_server_compiles_and_double_gates_both_sides(self) -> None:
+        code = mask_comments(read(MAINTAINED_ROOTS[0], INIT_SERVER))
+        self.assertIn(
+            'UpdateSupplyTruck = Compile preprocessFileLineNumbers '
+            '"Server\\AI\\AI_UpdateSupplyTruck.sqf"',
+            code,
+        )
+        launch = code[code.find("serverInitFull = true;") :]
+        self.assertIn('getVariable ["WFBE_C_AI_SUPPLY_TRUCK_ENABLE", 0]', launch)
+        self.assertIn('getVariable ["WFBE_C_ECONOMY_SUPPLY_SYSTEM", 1]', launch)
+        self.assertIn("forEach [west,east]", launch)
 
 
 if __name__ == "__main__":
