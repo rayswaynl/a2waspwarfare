@@ -84,6 +84,20 @@ switch (_request) do {
 		missionNamespace setVariable ['WFBE_OPFOR_SCORE_JOIN', (_args select 2)]
 	};
 	case "uav-reveal": {_args spawn WFBE_CL_FNC_Reveal_UAV};
+	//--- Accept the ICBM/TEL token only when it echoes this client's private challenge.
+	case "icbm-tel-auth-token": {
+		Private ["_telChallenge","_telChallengeKey","_telExpires","_telToken"];
+		if (count _args != 3) exitWith {};
+		_telToken = _args select 0;
+		_telExpires = _args select 1;
+		_telChallenge = _args select 2;
+		_telChallengeKey = Format ["wfbe_icbm_tel_auth_challenge_%1", getPlayerUID player];
+		if (typeName _telToken != "STRING" || {_telToken == ""}) exitWith {};
+		if (typeName _telExpires != "SCALAR" || {_telExpires <= time}) exitWith {};
+		if (typeName _telChallenge != "STRING" || {_telChallenge != (missionNamespace getVariable [_telChallengeKey, ""])}) exitWith {};
+		missionNamespace setVariable [Format ["wfbe_icbm_tel_cap_client_%1", getPlayerUID player], [_telToken, _telExpires]];
+	};
+
 	//--- The auth response is accepted only when it echoes the private client challenge.
 	case "fpv-auth-token": {
 		Private ["_fpvAuthChallenge","_fpvChallengeKey","_fpvExpires","_fpvToken"];

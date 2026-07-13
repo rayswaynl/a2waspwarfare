@@ -842,7 +842,7 @@ if (_isMan) then {
 						if (isNull _veh || {!alive _veh}) exitWith { hintSilent parseText "<t color='#ff5a5a'>That SCUD is gone.</t>"; };
 						//--- SAME payload the Tactical menu sends, + this hull as the platform hint. No client fund deduction
 						//--- (the server WFBE_SE_FNC_IcbmTelFire re-validates platform/cooldown/range/funds and charges).
-						["RequestSpecial", ["icbm-tel-fire", playerSide, [_pos select 0, _pos select 1, 0], "SATURATION", group player, 0, _veh]] Call WFBE_CO_FNC_SendToServer;
+						[playerSide, [_pos select 0, _pos select 1, 0], "SATURATION", group player, 0, _veh] Spawn WFBE_CO_FNC_RequestIcbmTelFire;
 						hintSilent parseText "<t color='#F89060'>SCUD saturation order sent (server validates SCUD + range + funds).</t>";
 						false
 					};

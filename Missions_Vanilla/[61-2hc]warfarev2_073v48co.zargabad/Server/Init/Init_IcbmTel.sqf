@@ -275,32 +275,145 @@ WFBE_SE_FNC_TkScudNearestPlatform = {
 //--- (research TEL OR bought SCUD) to the target; range is measured from THAT platform; per-platform cooldown. NUKE is
 //--- research-TEL-only (a bought SCUD can never nuke) and keeps the side-shared cooldown/countdown/counterplay unchanged.
 //------------------------------------------------------------------------------------
-WFBE_SE_FNC_IcbmTelFire = {
-	private ["_side","_target","_muni","_playerTeam","_fee","_platformHint","_aiTreasury","_isAiFire","_sideText","_telKey","_tel","_now","_cdKey","_last","_cool",
-	         "_tgtPos","_range","_dist","_cost","_funds","_platform"];
-	_side         = _this select 0;
-	_target       = _this select 1;
-	_muni         = _this select 2;
-	_playerTeam   = _this select 3;
-	_fee          = if (count _this > 4) then {_this select 4} else {0};
-	//--- cmdcon42-j (Ray 2026-07-02): OPTIONAL platform hint (the specific bought SCUD whose vehicle-action fired). The
-	//--- server IGNORES it for NUKE and only HONOURS it for conventional munitions if it is an alive side platform; otherwise
-	//--- (or when nil) the nearest-to-target platform is chosen. Never trusted blindly — always re-validated below.
-	_platformHint = if (count _this > 5) then {_this select 5} else {objNull};
-	if (typeName _platformHint != "OBJECT") then {_platformHint = objNull};
-	//--- cmdcon42-n (Ray 2026-07-02): OPTIONAL AI-treasury flag (7th param). When it is a real side, this fire is an AI
-	//--- COMMANDER launch: funds are read/charged against the SEPARATE AI treasury (wfbe_aicom_funds via GetAICommanderFunds /
-	//--- ChangeAICommanderFunds) instead of a player team's wfbe_funds, and the null-team guard is bypassed (an AI fire carries
-	//--- no player team). Every other check (platform selection, level gate, cooldown, range, cap) is IDENTICAL to a human fire —
-	//--- the AI plays by the same launch rules; only the wallet differs. A2-OA-safe: a plain side test (no isEqualType/isNil abuse).
-	_aiTreasury = if (count _this > 6) then {_this select 6} else {sideUnknown};
-	_isAiFire = (_aiTreasury in [west, east, resistance]);
+//--- Mint/reuse a short-lived capability and return it only to the nominated player's owner.
+//--- The shared RequestSpecial PVEH carries no sender identity, so possession of this private
+//--- one-shot token is the connection-to-player proof used by the fire path below.
+WFBE_SE_FNC_IcbmTelAuth = {
+	private ["_authChallenge","_authPlayer","_authSide","_authUID","_cap","_capKey","_capValid","_expires","_pvf","_replyId","_token"];
+	if (typeName _this != "ARRAY" || {count _this != 2}) exitWith {};
+	_authPlayer = _this select 0;
+	_authChallenge = _this select 1;
+	if (typeName _authPlayer != "OBJECT" || {isNull _authPlayer}) exitWith {};
+	if (typeName _authChallenge != "STRING" || {_authChallenge == ""}) exitWith {};
+	if (!alive _authPlayer || {!isPlayer _authPlayer}) exitWith {};
+	if !((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 0]) > 0) exitWith {};
+	_authSide = side (group _authPlayer);
+	if !(_authSide in [west,east,resistance]) exitWith {};
+	_authUID = getPlayerUID _authPlayer;
+	if (_authUID == "") exitWith {};
 
-	if !(_side in [west, east, resistance]) exitWith {};
+	_capKey = Format ["wfbe_icbm_tel_cap_server_%1", _authUID];
+	_capValid = false;
+	_token = "";
+	_expires = 0;
+	isNil {
+		_cap = missionNamespace getVariable [_capKey, []];
+		if (typeName _cap == "ARRAY" && {count _cap >= 2}) then {
+			if (typeName (_cap select 0) == "STRING" && {typeName (_cap select 1) == "SCALAR"}) then {
+				if ((_cap select 0) != "" && {(_cap select 1) > time}) then {_capValid = true};
+			};
+		};
+		if (_capValid) then {
+			_token = _cap select 0;
+			_expires = _cap select 1;
+		} else {
+			_token = Format ["%1:%2:%3:%4", _authUID, floor (diag_tickTime * 1000), floor (random 1000000000), floor (random 1000000000)];
+			_expires = time + 15;
+			missionNamespace setVariable [_capKey, [_token, _expires]];
+		};
+	};
+
+	_replyId = owner _authPlayer;
+	_pvf = [_authUID, "CLTFNCHandleSpecial", ["icbm-tel-auth-token", _token, _expires, _authChallenge]];
+	if (!isHostedServer) then {
+		if (_replyId > 0) then {isNil {WFBE_PVF_IcbmTelPrivate = _pvf; _replyId publicVariableClient "WFBE_PVF_IcbmTelPrivate"}};
+	} else {
+		_pvf Spawn WFBE_CL_FNC_HandlePVF;
+		if (isMultiplayer && {_replyId > 0}) then {isNil {WFBE_PVF_IcbmTelPrivate = _pvf; _replyId publicVariableClient "WFBE_PVF_IcbmTelPrivate"}};
+	};
+};
+
+WFBE_SE_FNC_IcbmTelFire = {
+	private ["_aiTreasury","_authBad","_authCap","_authCapExpires","_authCapKey","_authPlayer","_authState","_authToken","_authUID","_caller","_commanderTeam","_fee","_funds","_isAiFire","_muni","_now","_platform","_platformHint","_playerTeam","_registered","_side","_sideText","_target","_tel","_telKey","_tgtPos","_range","_dist","_cost","_cdKey","_last","_cool"];
+	_side = _this select 0;
+	_target = _this select 1;
+	_muni = _this select 2;
+	_playerTeam = _this select 3;
+	_fee = if (count _this > 4) then {_this select 4} else {0};
+	_platformHint = if (count _this > 5) then {_this select 5} else {objNull};
+	_aiTreasury = if (count _this > 6) then {_this select 6} else {sideUnknown};
+	_authPlayer = if (count _this > 7) then {_this select 7} else {objNull};
+	_authToken = if (count _this > 8) then {_this select 8} else {""};
+	_isAiFire = (typeName _aiTreasury == "SIDE" && {_aiTreasury in [west,east,resistance]});
+	_caller = objNull;
+	_authBad = "";
+
+	if (typeName _side != "SIDE") then {_authBad = "invalid side shape"};
+	if (_authBad == "" && {!(_side in [west,east,resistance])}) then {_authBad = "non-playable side"};
+	if (_authBad == "" && {typeName _target != "ARRAY" && {typeName _target != "OBJECT"}}) then {_authBad = "invalid target shape"};
+	if (_authBad == "" && {typeName _muni != "STRING"}) then {_authBad = "invalid munition shape"};
+	if (_authBad == "" && {typeName _fee != "SCALAR"}) then {_authBad = "invalid fee shape"};
+	if (_authBad == "" && {typeName _platformHint != "OBJECT"}) then {_authBad = "invalid platform shape"};
+
+	if (!_isAiFire && {_authBad == ""}) then {
+		if (typeName _playerTeam != "GROUP") then {_authBad = "invalid team shape"};
+		if (_authBad == "" && {isNull _playerTeam}) then {_authBad = "null team"};
+		if (_authBad == "" && {typeName _authPlayer != "OBJECT"}) then {_authBad = "invalid player shape"};
+		if (_authBad == "" && {isNull _authPlayer}) then {_authBad = "null player"};
+		if (_authBad == "" && {!alive _authPlayer}) then {_authBad = "dead player"};
+		if (_authBad == "" && {!isPlayer _authPlayer}) then {_authBad = "non-player caller"};
+		if (_authBad == "" && {typeName _authToken != "STRING" || {_authToken == ""}}) then {_authBad = "invalid capability shape"};
+		if (_authBad == "" && {!((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 0]) > 0)}) then {_authBad = "feature disabled"};
+	};
+
+	if (!_isAiFire && {_authBad == ""}) then {
+		_authUID = getPlayerUID _authPlayer;
+		if (_authUID == "") then {_authBad = "missing player UID"};
+	};
+
+	if (!_isAiFire && {_authBad == ""}) then {
+		_authCapKey = Format ["wfbe_icbm_tel_cap_server_%1", _authUID];
+		_authState = 0;
+		_authCapExpires = 0;
+		isNil {
+			_authCap = missionNamespace getVariable [_authCapKey, []];
+			if (typeName _authCap != "ARRAY" || {count _authCap < 2}) then {
+				_authState = -1;
+			} else {
+				if (typeName (_authCap select 0) != "STRING" || {typeName (_authCap select 1) != "SCALAR"}) then {
+					_authState = -2;
+				} else {
+					if (_authToken != (_authCap select 0)) then {
+						_authState = -3;
+					} else {
+						_authCapExpires = _authCap select 1;
+						missionNamespace setVariable [_authCapKey, []];
+						if (_authCapExpires <= time) then {_authState = -4} else {_authState = 1};
+					};
+				};
+			};
+		};
+		if (_authState != 1) then {_authBad = "missing, stale, or mismatched capability"};
+	};
+
+	if (!_isAiFire && {_authBad == ""}) then {
+		if (_authPlayer != leader _playerTeam) then {_authBad = "caller is not team leader"};
+		if (_authBad == "" && {group _authPlayer != _playerTeam}) then {_authBad = "player/team binding failed"};
+		if (_authBad == "" && {side (group _authPlayer) != _side}) then {_authBad = "player/side binding failed"};
+	};
+
+	if (!_isAiFire && {_authBad == ""}) then {
+		if (isNull _platformHint) then {
+			_commanderTeam = _side Call WFBE_CO_FNC_GetCommanderTeam;
+			if (isNull _commanderTeam || {_playerTeam != _commanderTeam}) then {_authBad = "tactical caller is not the side commander"};
+		} else {
+			_registered = missionNamespace getVariable [Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _side], []];
+			if (typeName _registered != "ARRAY") then {_registered = []};
+			if (_muni != "SATURATION") then {_authBad = "bought SCUD only supports saturation"};
+			if (_authBad == "" && {!alive _platformHint}) then {_authBad = "SCUD is not alive"};
+			if (_authBad == "" && {!(_platformHint in _registered)}) then {_authBad = "SCUD is not registered for the side"};
+			if (_authBad == "" && {!(_platformHint getVariable ["wfbe_is_tk_scud", false])}) then {_authBad = "platform is not a bought SCUD"};
+			if (_authBad == "" && {(_platformHint getVariable ["wfbe_tk_scud_side", sideUnknown]) != _side}) then {_authBad = "SCUD side binding failed"};
+			if (_authBad == "" && {!(_authPlayer in crew _platformHint)}) then {_authBad = "caller is not SCUD crew"};
+		};
+	};
+
+	if (_authBad != "") exitWith {
+		["WARNING", Format ["Init_IcbmTel.sqf: TEL fire denied before launch state: %1 (side %2).", _authBad, str _side]] Call WFBE_CO_FNC_LogContent;
+	};
+	if (!_isAiFire) then {_caller = _authPlayer};
 	_sideText = str _side;
-	//--- exact-case munition whitelist (no isEqualType); default any unknown to NUKE (safe classic behaviour).
-	//--- cmdcon41-w3i (Ray 2026-07-02): +FASCAM (scatter AT mines), +STEELRAIN (airburst anti-infantry), +BUSTER (bunker-buster
-	//--- + guaranteed nearest-enemy-structure kill). All conventional (level >= 1, like SATURATION/RECON), shared cooldown/range/funds.
+	//--- exact-case munition whitelist; an authorized unknown retains the classic safe NUKE fallback.
 	if !(_muni in ["NUKE","SATURATION","RECON","FASCAM","STEELRAIN","BUSTER"]) then {_muni = "NUKE"};
 
 	//--- Read THIS side's SCUD/ICBM research level up front (used by the level gate below).
@@ -424,37 +537,8 @@ WFBE_SE_FNC_IcbmTelFire = {
 		//--- was also defeated by a negative cost). Byte-identical for honest play (client sends 75000).
 		default            {missionNamespace getVariable ["WFBE_C_ICBM_TEL_NUKE_COST", 75000]};
 	};
-	//--- cmdcon42-n (Ray 2026-07-02): AI fire reads/charges the AI treasury (wfbe_aicom_funds), not a player team; the null-team
-	//--- guard only applies to a human fire (an AI fire legitimately carries no player team). Human path is byte-unchanged.
-	//--- A2-OA gotcha (the FASCAM-cap note above): an `exitWith` nested inside a `then/else {}` exits ONLY that block, not the
-	//--- function — so the null-team refusal MUST be a TOP-LEVEL `if ... exitWith` (compute the flag first, then refuse) or a
-	//--- human fire with a null team would fall through and continue. AI fires carry no team, so the guard is human-only.
-	private ["_badTeam", "_authBad"];
-	_badTeam = (!_isAiFire) && {isNull _playerTeam};
-	//--- sender/team authority proof (wasp-steelrain-authority-proof-20260713): enforce that for a human
-	//--- fire the passed _playerTeam is led by a live isPlayer whose side exactly matches the claimed _side.
-	//--- This proves the RequestSpecial payload's sender/team is authoritative for the side (and thus for
-	//--- using that side's TEL, charging its funds, and stamping kill credit via _caller). Spoofed side or
-	//--- non-player team leader now rejected before any side effect. AI fires carry grpNull + _isAiFire side
-	//--- and legitimately bypass. Pattern matches RequestSiteClearance.sqf + RequestAIComDonate + HandleSpecial
-	//--- aicom-focus guards. The PVEH/RequestSpecial envelope itself carries no implicit sender (see Server_HandlePVF
-	//--- and Client_HandlePVF SIDE filter relying on explicit payload _destination); the explicit team+side in
-	//--- payload + this server validation is what proves authority. HandlePVF side filter truth for *outgoing*
-	//--- (AWACS #781) is orthogonal but now fed only proven _side values from gated fires.
-	_authBad = false;
-	if (!_isAiFire) then {
-		private ["_ldr"];
-		_ldr = leader _playerTeam;
-		if (isNull _ldr || {!isPlayer _ldr} || {side _ldr != _side}) then {_authBad = true};
-	};
-	if (_badTeam) exitWith {["WARNING", Format ["Init_IcbmTel.sqf : [%1] TEL fire — null team.", _sideText]] Call WFBE_CO_FNC_LogContent};
-	if (_authBad) exitWith {
-		["WARNING", Format ["Init_IcbmTel.sqf : [%1] TEL fire — sender/team authority mismatch (leader not player on claimed side).", _sideText]] Call WFBE_CO_FNC_LogContent};
-	};
-	//--- FIX D8b: resolve the human firer once, for STEELRAIN's kill-credit stamp. leader of a null
-	//--- team is objNull (A2-OA safe, no crash), so an AI-treasury fire simply carries no caller.
-	private ["_caller"];
-	_caller = leader _playerTeam;
+	//--- Human caller/team/side/capability/role checks and caller binding completed above before
+	//--- platform selection, cooldown, respawn scheduling, output, debit, or kill-credit state.
 	if (_isAiFire) then {
 		_funds = _aiTreasury Call GetAICommanderFunds;
 	} else {

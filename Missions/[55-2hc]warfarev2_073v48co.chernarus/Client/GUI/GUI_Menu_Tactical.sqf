@@ -778,7 +778,7 @@ while {alive player && dialog} do {
 				if (_scudLvl < 2) exitWith {
 					hintSilent parseText "<t color='#F8D664'>The NUKE needs the ICBM tech (SCUD level 2). Research it first.</t>";
 				};
-				["RequestSpecial", ["icbm-tel-fire", playerSide, [_callPos select 0, _callPos select 1, 0], "NUKE", group player, _currentFee]] Call WFBE_CO_FNC_SendToServer;
+				[playerSide, [_callPos select 0, _callPos select 1, 0], "NUKE", group player, _currentFee, objNull] Spawn WFBE_CO_FNC_RequestIcbmTelFire;
 				hintSilent parseText "<t color='#F89060'>ICBM launch order sent to your land TEL. Protect it - if it is destroyed before impact, the strike aborts.</t>";
 			};
 			//--- CLASSIC path (WFBE_C_ICBM_TEL=0): fire immediately from the commander's client as before.
@@ -863,7 +863,7 @@ while {alive player && dialog} do {
 			[17022] Call SetControlFadeAnimStop;
 			MenuAction = -1;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
-			["RequestSpecial", ["icbm-tel-fire", playerSide, [_callPos select 0, _callPos select 1, 0], "SATURATION", group player, _currentFee]] Call WFBE_CO_FNC_SendToServer;
+			[playerSide, [_callPos select 0, _callPos select 1, 0], "SATURATION", group player, _currentFee, objNull] Spawn WFBE_CO_FNC_RequestIcbmTelFire;
 			hintSilent parseText "<t color='#F89060'>TEL saturation order sent to your land TEL (server validates TEL + range + funds).</t>";
 		};
 		//--- cmdcon41-w3i (Ray 2026-07-02) TEL RECON fire. Two-click map confirm (ICBM idiom); NO client fund deduction
@@ -875,7 +875,7 @@ while {alive player && dialog} do {
 			[17022] Call SetControlFadeAnimStop;
 			MenuAction = -1;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
-			["RequestSpecial", ["icbm-tel-fire", playerSide, [_callPos select 0, _callPos select 1, 0], "RECON", group player, _currentFee]] Call WFBE_CO_FNC_SendToServer;
+			[playerSide, [_callPos select 0, _callPos select 1, 0], "RECON", group player, _currentFee, objNull] Spawn WFBE_CO_FNC_RequestIcbmTelFire;
 			hintSilent parseText "<t color='#F89060'>TEL recon flash order sent to your land TEL (server validates TEL + range + funds).</t>";
 		};
 		//--- cmdcon41-w3i (Ray 2026-07-02) TEL FASCAM fire. Two-click map confirm (ICBM idiom); NO client fund deduction
@@ -887,7 +887,7 @@ while {alive player && dialog} do {
 			[17022] Call SetControlFadeAnimStop;
 			MenuAction = -1;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
-			["RequestSpecial", ["icbm-tel-fire", playerSide, [_callPos select 0, _callPos select 1, 0], "FASCAM", group player, _currentFee]] Call WFBE_CO_FNC_SendToServer;
+			[playerSide, [_callPos select 0, _callPos select 1, 0], "FASCAM", group player, _currentFee, objNull] Spawn WFBE_CO_FNC_RequestIcbmTelFire;
 			hintSilent parseText "<t color='#F89060'>TEL FASCAM mine barrage order sent to your land TEL (server validates TEL + range + funds).</t>";
 		};
 		//--- cmdcon41-w3i (Ray 2026-07-02) TEL STEELRAIN fire. Two-click map confirm (ICBM idiom); NO client fund deduction
@@ -899,7 +899,7 @@ while {alive player && dialog} do {
 			[17022] Call SetControlFadeAnimStop;
 			MenuAction = -1;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
-			["RequestSpecial", ["icbm-tel-fire", playerSide, [_callPos select 0, _callPos select 1, 0], "STEELRAIN", group player, _currentFee]] Call WFBE_CO_FNC_SendToServer;
+			[playerSide, [_callPos select 0, _callPos select 1, 0], "STEELRAIN", group player, _currentFee, objNull] Spawn WFBE_CO_FNC_RequestIcbmTelFire;
 			hintSilent parseText "<t color='#F89060'>TEL steel rain order sent to your land TEL (server validates TEL + range + funds).</t>";
 		};
 		//--- cmdcon41-w3i (Ray 2026-07-02) TEL BUSTER fire. Two-click map confirm (ICBM idiom); NO client fund deduction
@@ -911,7 +911,7 @@ while {alive player && dialog} do {
 			[17022] Call SetControlFadeAnimStop;
 			MenuAction = -1;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
-			["RequestSpecial", ["icbm-tel-fire", playerSide, [_callPos select 0, _callPos select 1, 0], "BUSTER", group player, _currentFee]] Call WFBE_CO_FNC_SendToServer;
+			[playerSide, [_callPos select 0, _callPos select 1, 0], "BUSTER", group player, _currentFee, objNull] Spawn WFBE_CO_FNC_RequestIcbmTelFire;
 			hintSilent parseText "<t color='#F89060'>TEL bunker buster order sent to your land TEL (server validates TEL + range + funds).</t>";
 		};
 	};

@@ -211,16 +211,32 @@ switch (_args select 0) do {
 	//--- Payload: ["icbm-tel-fire", side, target, munition, playerTeam, fee, platformHint?]. Fn-guarded (Init_IcbmTel compiles it).
 	//--- cmdcon42-j (Ray 2026-07-02): optional 7th element = a specific bought-SCUD platform hint (from the vehicle action).
 	//--- The server re-validates it (ignored for NUKE; only honoured if an alive side platform) — never trusted blindly.
+	case "icbm-tel-auth": {
+		if (count _args != 3) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: icbm-tel-auth received malformed payload (%1 fields).", count _args]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (!isNil "WFBE_SE_FNC_IcbmTelAuth") then {
+			private ["_tAuthPlayer","_tChallenge"];
+			_tAuthPlayer = _args select 1;
+			_tChallenge = _args select 2;
+			[_tAuthPlayer, _tChallenge] Call WFBE_SE_FNC_IcbmTelAuth;
+		};
+	};
 	case "icbm-tel-fire": {
+		if (count _args != 9) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: icbm-tel-fire received malformed payload (%1 fields).", count _args]] Call WFBE_CO_FNC_LogContent;
+		};
 		if (!isNil "WFBE_SE_FNC_IcbmTelFire") then {
-			private ["_tSide","_tTarget","_tMuni","_tTeam","_tFee","_tPlat"];
-			_tSide   = _args select 1;
+			private ["_tFee","_tMuni","_tPlat","_tPlayer","_tSide","_tTarget","_tTeam","_tToken"];
+			_tSide = _args select 1;
 			_tTarget = _args select 2;
-			_tMuni   = _args select 3;
-			_tTeam   = _args select 4;
-			_tFee    = if (count _args > 5) then {_args select 5} else {0};
-			_tPlat   = if (count _args > 6) then {_args select 6} else {objNull};
-			[_tSide, _tTarget, _tMuni, _tTeam, _tFee, _tPlat] Spawn WFBE_SE_FNC_IcbmTelFire;
+			_tMuni = _args select 3;
+			_tTeam = _args select 4;
+			_tFee = _args select 5;
+			_tPlat = _args select 6;
+			_tPlayer = if (count _args > 7) then {_args select 7} else {objNull};
+			_tToken = if (count _args > 8) then {_args select 8} else {""};
+			[_tSide, _tTarget, _tMuni, _tTeam, _tFee, _tPlat, sideUnknown, _tPlayer, _tToken] Spawn WFBE_SE_FNC_IcbmTelFire;
 		} else {
 			["WARNING", "Server_HandleSpecial.sqf: icbm-tel-fire received but WFBE_SE_FNC_IcbmTelFire is nil (WFBE_C_ICBM_TEL=0?)."] Call WFBE_CO_FNC_LogContent;
 		};
