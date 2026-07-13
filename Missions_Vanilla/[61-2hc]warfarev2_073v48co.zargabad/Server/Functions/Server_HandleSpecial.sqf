@@ -102,7 +102,7 @@ switch (_args select 0) do {
 	};
 
 	//--- fable/fpv-strike-drone: server-side warhead detonation (Killed EH -> server). SCUD pattern.
-	//--- Payload: ["fpv-detonate", [x,y,z]]. Flag gate inside KAT_FPVDetonate.
+	//--- Payload: ["fpv-detonate", [_drone, _privateCapability, [x,y,z]]]. Flag gate inside KAT_FPVDetonate.
 	case "fpv-detonate": {
 		if (!isNil "KAT_FPVDetonate") then {
 			_args spawn KAT_FPVDetonate;
