@@ -18,7 +18,7 @@
     
     if ((side player) == _side) then {
         if (_playerObject == player) then {
-            (_reward) call ChangePlayerFunds;
+            //--- J1 funds authority: wallet write removed - the server pays the delivering team in supplyMissionCompleted.sqf; _reward above is kept for the message text below.
             playSound "commanderNotification";
             _message = format ["You completed a %1 supply run and earned $%2%3.", (if (_byHeli) then {"HELI"} else {"truck"}), _reward, (if (_cashRun) then {" (cash run)"} else {""})];
             _message call GroupChatMessage;

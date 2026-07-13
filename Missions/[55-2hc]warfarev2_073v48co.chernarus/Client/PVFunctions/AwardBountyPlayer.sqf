@@ -26,8 +26,13 @@ _bounty = round _bounty;
 _mult = 1 + ((_streak min WFBE_C_UNITS_BOUNTY_STREAK_CAP) * WFBE_C_UNITS_BOUNTY_STREAK_COEF);
 _bounty = round (_bounty * _mult);
 
+//--- J1 funds authority: the server now computes AND credits this bounty (WFBE_CO_FNC_ComputePvpBounty,
+//--- RequestOnUnitKilled.sqf) and forwards the authoritative amount as payload element 2 - display that;
+//--- the local math above stays as the legacy-payload fallback.
+if ((typeName _this == "ARRAY") && {(count _this) > 2}) then {_bounty = _this select 2};
+
 sleep (random 3);
 
-//--- B748: Kill Feed Settings opt-out gates ONLY the chat line; the bounty payout below is NEVER gated.
+//--- B748: Kill Feed Settings opt-out gates ONLY the chat line (J1: the payout itself is now server-side).
 if (missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]) then {Format[Localize "STR_WF_CHAT_Award_Bounty", _bounty, _name] Call GroupChatMessage};
-(_bounty) Call ChangePlayerFunds;
+//--- J1 funds authority: wallet write removed - the server credits the killer's group in RequestOnUnitKilled.sqf.

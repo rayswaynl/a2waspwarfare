@@ -466,6 +466,7 @@ while {!gameOver} do {
 											//--- TAX tick: drain the occupier supply, pay GUER players a toll (unchanged from v1).
 											[_occ, -_taxAmt, "Insurgent checkpoint tax.", false] Call ChangeSideSupply;
 											[resistance, "GuerVbiedBounty", _toll] Call WFBE_CO_FNC_SendToClients;
+											[resistance, _toll] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (the client handler no longer writes the wallet; the PVF stays for the client trace line).
 											//--- (6) REINFORCEMENT PULSE: once, at half-window, while the block still stands.
 											if (!_reinforced && {_el >= (_window / 2)}) then {
 												_reinforced = true;
@@ -598,6 +599,7 @@ while {!gameOver} do {
 									//--- TAX tick: drain the occupier's supply, pay GUER players a toll.
 									[_occ, -_taxAmt, "Insurgent checkpoint tax.", false] Call ChangeSideSupply;
 									[resistance, "GuerVbiedBounty", _toll] Call WFBE_CO_FNC_SendToClients;
+									[resistance, _toll] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (the client handler no longer writes the wallet; the PVF stays for the client trace line).
 								};
 							};
 
@@ -712,6 +714,7 @@ while {!gameOver} do {
 									if (_alive && {_el < _ttl}) then {
 										//--- Reward + delete wreck.
 										[resistance, "GuerVbiedBounty", _rew] Call WFBE_CO_FNC_SendToClients;
+										[resistance, _rew] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (the client handler no longer writes the wallet).
 										if (!isNull _bestV) then {deleteVehicle _bestV};
 										_vehs = _vehs - [_bestV];
 										diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time/60)) + "|GUERSCAV_WRECK|reward=" + str _rew + "|type=" + typeOf _bestV + "|remaining=" + str (count _vehs));

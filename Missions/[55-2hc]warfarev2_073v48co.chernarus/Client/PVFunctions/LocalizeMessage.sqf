@@ -68,11 +68,11 @@ switch (_localize) do {
 	case "SiteClearanceNoSupply": {_txt = Format [Localize "SiteClearanceNoSupply", _this select 1]};
 	case "SiteClearanceDone": {_txt = Format [Localize "SiteClearanceDone", _this select 1, _this select 2]};
 	case "SiteClearanceOutsideBase": {_txt = Localize "SiteClearanceOutsideBase"};
-	case "Teamkill": {_txt = Format [Localize "STR_WF_CHAT_Teamkill",(missionNamespace getVariable "WFBE_C_PLAYERS_PENALTY_TEAMKILL")]; -(missionNamespace getVariable "WFBE_C_PLAYERS_PENALTY_TEAMKILL") Call ChangePlayerFunds};
+	case "Teamkill": {_txt = Format [Localize "STR_WF_CHAT_Teamkill",(missionNamespace getVariable "WFBE_C_PLAYERS_PENALTY_TEAMKILL")]}; //--- J1 funds authority: debit moved server-side (RequestOnUnitKilled.sqf); chat text kept.
 	case "FundsTransfer": {_txt = Format [Localize "STR_WF_CHAT_FundsTransfer",_this select 1,_this select 2];_commandChat = false;playSound ["cashierSound", true];};
 	case "StructureSold": {_txt = Format [Localize "STR_WF_CHAT_Structure_Sold",([_this select 1,'displayName'] Call GetConfigInfo), ([_object, towns] Call GetClosestLocation)]};
 	case "StructureSell": {_txt = Format [Localize "STR_WF_CHAT_Structure_Sell",([_this select 1,'displayName'] Call GetConfigInfo), ([_object, towns] Call GetClosestLocation), _this select 2]};
-	case "SecondaryAward": {_txt = Format [Localize "STR_WF_CHAT_Secondary_Award",_this select 1, _this select 2];(_this select 2) Call ChangePlayerFunds};
+	case "SecondaryAward": {_txt = Format [Localize "STR_WF_CHAT_Secondary_Award",_this select 1, _this select 2]}; //--- J1 funds authority: DEAD-SENDER case (zero senders in tree) - forgeable wallet write removed, message kept.
 	case "StructureTK": {_txt = Format [Localize "STR_WF_CHAT_SatchelTK",_this select 1, _this select 2, [_this select 3, 'displayName'] Call GetConfigInfo, _this select 4]};
 
 
@@ -86,7 +86,7 @@ switch (_localize) do {
         if ((name player) == _killer_name) then
         {
             _txt = format [localize "STR_WF_HeadHunterReceiveBounty", _bounty, ([_structure_kind, "displayName"] call GetConfigInfo)];
-            _bounty call ChangePlayerFunds;
+            //--- J1 funds authority: credit moved server-side (Server_BuildingKilled.sqf / Server_OnHQKilled.sqf).
             _commandChat = false;
         }
         else
@@ -130,7 +130,7 @@ switch (_localize) do {
         if ((name player) == _killer_name) then
         {
             _txt = format ["You cleared a Guerrilla FOB (%1) and earned %2!", ([_structure_kind, "displayName"] call GetConfigInfo), _bounty];
-            _bounty call ChangePlayerFunds;
+            //--- J1 funds authority: credit moved server-side (Server_BuildingKilled.sqf).
             _commandChat = false;
         }
         else
