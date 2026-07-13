@@ -14,9 +14,10 @@ does not discover "whatever ArmA process looks right" because that can silently
 mix server, HC, client, or stale processes. Files are written only beneath the
 operator-selected artifact directory.
 
-The manifest has two lifecycle states. A `pending` manifest is valid before the
+The manifest has three lifecycle states. A `pending` manifest is valid before the
 run and may contain null end/attained values. After capture, the operator records
-attained workload, end time, validity, invalid reasons, and artifact paths, then
+attained workload, end time, a `valid` or `invalid` result, invalid reasons, and
+artifact paths, then
 finalizes it. Finalization rewrites JSON into a canonical byte representation
 and creates `MANIFEST.sha256`. Any later validation verifies the digest and
 refuses a changed sealed manifest. This resolves the apparent conflict between
@@ -60,20 +61,23 @@ status/null consistency, required specimen kinds, and role/topology agreement.
 
 ## Process data flow
 
-The collector validates the manifest, records its starting SHA-256, resolves
+The collector requires `MANIFEST.json` to be pending and located inside the
+named run artifact directory. It validates the manifest, records its starting SHA-256, resolves
 each declared PID, and verifies PID reuse protection (creation time), executable
 hash, raw-command hash, and affinity before sampling. A mismatch is a fail-closed
 preflight error. Accessible loaded modules are hashed once into
 `process-identity.json`; unavailable modules are represented as null/error, never
 as a fabricated zero.
 
-Each interval queries `Win32_Process`, formatted process counters, formatted
-thread counters, and `Get-Process`. Rows are emitted in stable role order to
-`process-metrics.csv`. They include cumulative CPU user/kernel/total time,
+Each interval issues one PID-restricted `Win32_Process` query and uses
+`Get-Process` only for the same declared targets. Rows are emitted in stable
+role order to `process-metrics.csv`. They include cumulative CPU
+user/kernel/total time,
 process CPU percentage, logical-core equivalents, total-capacity percentage,
-thread and handle counts, context-switch rate when available, working/private/
+thread and handle counts, an explicit unavailable marker for context-switch
+rate when no bounded source exists, working/private/
 commit/virtual bytes, page-fault total/rate, cumulative I/O operations/bytes and
-formatted rates, affinity, and explicit sample status/error. If a target exits,
+derived rates, affinity, and explicit sample status/error. If a target exits,
 the row records `process-unavailable`; the tool does not restart it.
 
 At completion the collector re-hashes the manifest and fails if it changed
@@ -91,8 +95,9 @@ unavailability is recorded without changing the target process.
 
 Python unit tests exercise valid, malformed, cross-field-invalid, canonical,
 sealed, and tampered manifests. Plain-assertion PowerShell integration tests use
-a benign test-owned sleeping process, prove the collector leaves it running,
-verify CSV/identity/overhead schemas, and verify PID/hash mismatch failures.
+three benign test-owned sleeping processes for server/HC/client roles, prove the
+collector leaves them running, verify CSV/identity/overhead schemas, and verify
+manifest placement, lifecycle, and PID/hash mismatch failures.
 No Arma runtime is required.
 
 Rollback is deletion of `Tools/PerfCapture` and its documentation, or closing

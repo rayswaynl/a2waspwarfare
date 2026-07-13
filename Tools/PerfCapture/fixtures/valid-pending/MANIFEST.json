@@ -48,10 +48,10 @@
   "validation": {
     "status": "pending",
     "invalid_reasons": [],
-    "predeclared_invalid_rules": ["Expected HC topology not attained", "Manifest identity mismatch", "Collector overhead comparable to measured effect"]
+    "predeclared_invalid_rules": ["Expected HC topology not attained", "Manifest identity mismatch", "Any non-ok process sample", "Collector overhead comparable to measured effect"]
   },
   "artifacts": [
-    { "kind": "config_snapshot", "path": "CONFIG-SNAPSHOT/", "required": true, "sha256": null },
+    { "kind": "config_snapshot", "path": "CONFIG-SNAPSHOT/SHA256SUMS", "required": true, "sha256": null },
     { "kind": "server_rpt", "path": "server.rpt", "required": true, "sha256": null },
     { "kind": "hc_rpt", "path": "hc-01.rpt", "required": true, "sha256": null },
     { "kind": "client_telemetry", "path": "client-01.telemetry.json", "required": true, "sha256": null },
@@ -60,6 +60,6 @@
     { "kind": "collector_overhead", "path": "collector-overhead.json", "required": true, "sha256": null },
     { "kind": "network_metrics", "path": "network-metrics.csv", "required": false, "sha256": null },
     { "kind": "gameplay_invariants", "path": "gameplay-invariants.json", "required": true, "sha256": null },
-    { "kind": "analysis", "path": "analysis/", "required": true, "sha256": null }
+    { "kind": "analysis", "path": "analysis/RESULTS.md", "required": true, "sha256": null }
   ]
 }

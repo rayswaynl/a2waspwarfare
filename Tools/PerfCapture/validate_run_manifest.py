@@ -163,6 +163,14 @@ def _duplicate_values(values: list[Any]) -> list[Any]:
     return duplicates
 
 
+def _is_relative_run_artifact_path(value: Any) -> bool:
+    if not isinstance(value, str) or not value or "\\" in value or ":" in value:
+        return False
+    if value.startswith("/"):
+        return False
+    return all(part not in {"", ".", ".."} for part in value.split("/"))
+
+
 def _cross_field_errors(document: dict[str, Any]) -> list[str]:
     errors: list[str] = []
 
@@ -235,6 +243,18 @@ def _cross_field_errors(document: dict[str, Any]) -> list[str]:
                     f"$.process_topology[{index}].executable_specimen_id: "
                     "referenced specimen is not executable"
                 )
+            redacted_command = process.get("command_line_redacted")
+            if isinstance(redacted_command, str):
+                sensitive_switch = re.search(
+                    r"(?i)(?:^|\s)-(?:password|passwordadmin|servercommandpassword)\s*=\s*"
+                    r"(?!<redacted>(?:\s|$))\S+",
+                    redacted_command,
+                )
+                if sensitive_switch is not None:
+                    errors.append(
+                        f"$.process_topology[{index}].command_line_redacted: "
+                        "sensitive command-line switch must use <redacted>"
+                    )
 
     if isinstance(mission, dict) and isinstance(mission.get("expected_hcs"), int):
         if mission["expected_hcs"] != hc_count:
@@ -357,6 +377,15 @@ def _cross_field_errors(document: dict[str, Any]) -> list[str]:
         paths = [item.get("path") for item in artifacts if isinstance(item, dict)]
         for duplicate in _duplicate_values(paths):
             errors.append(f"$.artifacts: duplicate artifact path {duplicate!r}")
+        for index, artifact in enumerate(artifacts):
+            if not isinstance(artifact, dict):
+                continue
+            path = artifact.get("path")
+            if isinstance(path, str) and not _is_relative_run_artifact_path(path):
+                errors.append(
+                    f"$.artifacts[{index}].path: must be a relative run-local path "
+                    "using forward slashes"
+                )
 
     return errors
 

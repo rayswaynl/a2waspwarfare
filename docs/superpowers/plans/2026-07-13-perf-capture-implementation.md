@@ -77,11 +77,11 @@ Commit only schema, fixtures, validator, tests, and the already-reviewed design.
 
 **Step 1: Write the integration test**
 
-The test starts one hidden, test-owned sleeping PowerShell process, creates a
-matching pending manifest in a temporary directory, then invokes the absent
-collector for two short samples. It asserts:
+The test starts three hidden, test-owned sleeping PowerShell processes for
+server/HC/client roles, creates a matching pending manifest in its artifact
+directory, then invokes the absent collector for two short samples. It asserts:
 
-- fixed CSV columns and two rows for the declared role;
+- fixed CSV columns and two rows for each declared role;
 - identity JSON contains executable/command/module hashes or explicit errors;
 - overhead JSON contains timing, CPU, deadline, and output-size fields;
 - the helper process is still running after collection;

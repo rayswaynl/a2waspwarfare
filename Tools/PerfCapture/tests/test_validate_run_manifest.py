@@ -70,10 +70,24 @@ class ManifestValidationTests(unittest.TestCase):
         document["process_topology"][0]["executable_specimen_id"] = "missing-exe"
         self.assert_invalid(document, "unknown executable specimen")
 
+    def test_redacted_command_line_rejects_raw_password_switches(self) -> None:
+        document = copy.deepcopy(self.pending)
+        document["process_topology"][0]["command_line_redacted"] = (
+            "ArmA2OAServer.exe -config=server.cfg -password=hunter2"
+        )
+        self.assert_invalid(document, "sensitive command-line switch")
+
     def test_artifact_directory_must_match_run_identity(self) -> None:
         document = copy.deepcopy(self.pending)
         document["artifact_directory"] = "20260713_WRONG"
         self.assert_invalid(document, "artifact_directory must equal")
+
+    def test_artifact_paths_must_be_relative_and_run_local(self) -> None:
+        for unsafe_path in ("../outside.txt", "C:/outside.txt", "analysis\\RESULTS.md"):
+            with self.subTest(path=unsafe_path):
+                document = copy.deepcopy(self.pending)
+                document["artifacts"][0]["path"] = unsafe_path
+                self.assert_invalid(document, "relative run-local path")
 
     def test_warmup_and_end_times_are_ordered(self) -> None:
         document = copy.deepcopy(self.final)
