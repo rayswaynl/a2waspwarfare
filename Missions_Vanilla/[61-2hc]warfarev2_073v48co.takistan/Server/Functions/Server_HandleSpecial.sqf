@@ -445,7 +445,7 @@ switch (_args select 0) do {
 				if (!_cAuthorityOk && {_cPendingFound} && {!isNull _cHcGroup} && {!isNull (leader _cHcGroup)} && {owner (leader _cHcGroup) == _cHcOwner}) then {_cAuthorityOk = true};
 				if ([_cteam, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool && {_cHcOwner > 0} && {_cAuthorityOk}) then {
 					{
-						if (isNull _cHeli && {!isNull _x} && {_x isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0} && {!isNull (driver _x)} && {owner (driver _x) == _cHcOwner}) then {_cHeli = _x};
+						if (isNull _cHeli && {!isNull _x} && {_x isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0} && {!isNull (driver _x)} && {owner (driver _x) == _cHcOwner} && {group (driver _x) == _cteam}) then {_cHeli = _x};
 					} forEach _cVehicles;
 				};
 				if (!isNull _cHeli) then {
