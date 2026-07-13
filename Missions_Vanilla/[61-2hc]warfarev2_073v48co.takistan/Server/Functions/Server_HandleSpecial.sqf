@@ -457,6 +457,8 @@ switch (_args select 0) do {
 						_cReceipts = _cReceipts + [[_cRefundToken, _cteam, _cHeli, _csideID, _cSide, _cHcOwner, _cType, _cPrice, 0]];
 						missionNamespace setVariable ["WFBE_AICOM_HELI_REFUND_RECEIPTS", _cReceipts];
 						diag_log Format ["AICOMREFUND|v3|REGISTER|side=%1|team=%2|owner=%3|type=%4|price=%5", str _cSide, _cteam, _cHcOwner, _cType, _cPrice];
+						//--- Refund completion is server-observed; no HC/client completion PVF is accepted.
+						[_cRefundToken] Spawn WFBE_SE_FNC_AICOM_HeliRefundWatch;
 					};
 				};
 				//--- Direction-arrow marker feed (mirrors WFBE_ACTIVE_PATROLS): register
@@ -1138,84 +1140,12 @@ switch (_args select 0) do {
 			["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-vehicle-abandoned enrolled hull [%1] type [%2] into empty-collector.", _avVeh, typeOf _avVeh]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
-	//--- HELI FLY-OFF REFUND (user request): a commander team's empty AIR transport flew off
-	//--- the map edge ALIVE and was deleted by Common_RunCommanderTeam.sqf. Refund its build
-	//--- cost to that side's server-authoritative AI-commander treasury. Server-routed so the
-	//--- treasury write is authoritative; mirrors AI_Commander_Wildcard salvage payback
-	//--- ([_side, _wkTotal] Call ChangeAICommanderFunds, L726).
+	//--- HELI FLY-OFF REFUND completion bus retired: the server watcher owns the receipt and
+	//--- observes the exact server-known hull. A generic RequestSpecial payload has no trustworthy
+	//--- network-origin field on A2 OA, so accepting a client/HC completion envelope cannot prove
+	//--- who issued it. Keep the case reject-only for stale/forged callers.
 	case "aicom-heli-refunded": {
-		Private ["_rSideID","_rSide","_rCost","_rType","_rTeam","_rToken","_rSenderOwner","_rComplete","_rReceipts","_rReceipt","_rReceiptIndex","_rFound","_rVehicle","_rCurrentOwner","_rHcGroup","_rAuthorityOk","_rGone","_rPos","_rWsz","_rValid"];
-		if (count _args != 8) exitWith {
-			["WARNING", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded rejected malformed envelope (%1 args).", count _args]] Call WFBE_CO_FNC_LogContent;
-		};
-		_rSideID = _args select 1;
-		_rCost = _args select 2;
-		_rType = _args select 3;
-		_rTeam = _args select 4;
-		_rToken = _args select 5;
-		_rSenderOwner = _args select 6;
-		_rComplete = _args select 7;
-		if (typeName _rSideID != "SCALAR" || {typeName _rCost != "SCALAR"} || {typeName _rType != "STRING"} || {typeName _rTeam != "GROUP"} || {typeName _rToken != "STRING"} || {typeName _rSenderOwner != "SCALAR"} || {typeName _rComplete != "BOOL"}) exitWith {
-			["WARNING", "Server_HandleSpecial.sqf: aicom-heli-refunded rejected invalid field types."] Call WFBE_CO_FNC_LogContent;
-		};
-		if (_rCost < 0) exitWith {
-			["WARNING", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded rejected negative claimed price %1.", _rCost]] Call WFBE_CO_FNC_LogContent;
-		};
-		_rReceipts = missionNamespace getVariable ["WFBE_AICOM_HELI_REFUND_RECEIPTS", []];
-		_rReceiptIndex = -1;
-		_rFound = false;
-		{
-			if (count _x >= 9 && {(_x select 0) == _rToken} && {(_x select 1) == _rTeam}) then {
-				_rReceipt = _x;
-				_rReceiptIndex = _forEachIndex;
-				_rFound = true;
-			};
-		} forEach _rReceipts;
-		if (!_rFound) exitWith {
-			["WARNING", "Server_HandleSpecial.sqf: aicom-heli-refunded rejected unknown team receipt."] Call WFBE_CO_FNC_LogContent;
-		};
-		_rSide = (_rSideID) Call WFBE_CO_FNC_GetSideFromID;
-		_rVehicle = _rReceipt select 2;
-		_rCurrentOwner = if (!isNull (leader _rTeam)) then {owner (leader _rTeam)} else {0};
-		_rHcGroup = missionNamespace getVariable [Format ["WFBE_HEADLESS_OWNER_%1", _rCurrentOwner], grpNull];
-		_rAuthorityOk = local (leader _rTeam);
-		if (!_rAuthorityOk && {!isNull _rHcGroup} && {!isNull (leader _rHcGroup)} && {owner (leader _rHcGroup) == _rCurrentOwner}) then {_rAuthorityOk = true};
-		_rWsz = switch (toLower worldName) do {
-			case "takistan": {12800};
-			case "zargabad": {8192};
-			default {15360};
-		};
-		//--- Completion is authenticated by the private capability. A null hull is valid only after that
-		//--- explicit completion envelope (the HC may delete it before the PV reaches the server); a present
-		//--- dead hull is destroyed or otherwise invalid and never a refund trigger.
-		_rGone = false;
-		if (isNull _rVehicle) then {
-			_rGone = _rComplete;
-		} else {
-			if (alive _rVehicle) then {
-				_rPos = getPos _rVehicle;
-				_rGone = _rComplete && {((_rPos select 0) < 0) || {((_rPos select 0) > _rWsz)} || {((_rPos select 1) < 0)} || {((_rPos select 1) > _rWsz)}};
-			};
-		};
-		_rValid = (_rReceipt select 8) == 0
-			&& {_rReceipt select 3 == _rSideID}
-			&& {_rReceipt select 4 == _rSide}
-			&& {_rReceipt select 5 == _rCurrentOwner}
-			&& {_rSenderOwner == _rCurrentOwner}
-			&& {_rCurrentOwner > 0}
-			&& {_rAuthorityOk}
-			&& {_rType == (_rReceipt select 6)}
-			&& {_rCost == (_rReceipt select 7)}
-			&& {_rGone};
-		if (!_rValid) exitWith {
-			["WARNING", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded rejected receipt validation (team=%1 owner=%2 type=%3).", _rTeam, _rCurrentOwner, _rType]] Call WFBE_CO_FNC_LogContent;
-		};
-		//--- Consume before credit: concurrent/replayed requests see state 1 and cannot mint twice.
-		_rReceipt set [8, 1];
-		_rReceipts set [_rReceiptIndex, _rReceipt];
-		missionNamespace setVariable ["WFBE_AICOM_HELI_REFUND_RECEIPTS", _rReceipts];
-		[_rSide, _rReceipt select 7] Call ChangeAICommanderFunds;
-		["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded accepted $%1 for [%2] owner %3 (server receipt, one-shot).", _rReceipt select 7, str _rSide, _rCurrentOwner]] Call WFBE_CO_FNC_AICOMLog;
+		["WARNING", "Server_HandleSpecial.sqf: remote aicom-heli-refunded completion rejected; server receipt watcher owns refunds."] Call WFBE_CO_FNC_LogContent;
 	};
 	case "sidepatrol-started": {
 		Private ["_psideID","_punit","_plist"];

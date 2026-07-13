@@ -744,16 +744,11 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 				if (!isNull _h && {alive _h} && {(((getPos _h) select 0) < 0) || (((getPos _h) select 0) > _wsz) || (((getPos _h) select 1) < 0) || (((getPos _h) select 1) > _wsz)} && {_h getVariable ["wfbe_aicom_transport", false]}) then {
 						private ["_htype"];
 						_htype = typeOf _h;          //--- capture BEFORE delete (typeOf of a deleted obj is "").
-					if (_cost > 0 && {_refundToken != ""}) then {
-						//--- Authority closure: the server issued this capability only to the assigned HC and bound it
-						//--- to the exact transport receipt. The server derives the credit and never trusts the dollar claim.
-						if (isServer) then {
-							["aicom-heli-refunded", _sID, _cost, _htype, _tm, _refundToken, owner (leader _tm), true] Call HandleSpecial;
-						} else {
-							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost, _htype, _tm, _refundToken, owner (leader _tm), true]] Call WFBE_CO_FNC_SendToServer;
-						};
-						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team transport %2 flew off-map, deleted + refunded $%3.", _sd, _htype, _cost]] Call WFBE_CO_FNC_AICOMLog;
-					};
+						//--- The server receipt watcher observes the live off-map hull and performs the one-shot
+						//--- treasury credit from server-owned state. Hold the hull briefly so the server can see
+						//--- the authenticated edge transition before this HC-local delete.
+						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team transport %2 reached the map edge; server receipt watcher owns refund $%3.", _sd, _htype, _cost]] Call WFBE_CO_FNC_AICOMLog;
+						sleep 20;
 					_hcrew = crew _h;
 					{deleteVehicle _x} forEach _hcrew;
 					deleteVehicle _h;
