@@ -24,7 +24,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
-         "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev"];
+         "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev","_refundToken"];
 
 _sideID = _this select 0;
 _template = _this select 1;
@@ -121,9 +121,9 @@ _team setVariable ["wfbe_aicom_decap", [], true];   //--- stack-pass: A2 recycle
 _team setVariable ["wfbe_aicom_press_on", nil];      //--- stack-pass: same for the HC-local press latch
 
 if (isServer) then {
-	["aicom-team-created", _sideID, _team] Call HandleSpecial;
+	["aicom-team-created", _sideID, _team, _vehicles] Call HandleSpecial;
 } else {
-	["RequestSpecial", ["aicom-team-created", _sideID, _team]] Call WFBE_CO_FNC_SendToServer;
+	["RequestSpecial", ["aicom-team-created", _sideID, _team, _vehicles]] Call WFBE_CO_FNC_SendToServer;
 };
 
 ["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] commander team spawned (%2 units, %3 vehicles).", _side, count _units, count _vehicles]] Call WFBE_CO_FNC_AICOMLog;
@@ -596,7 +596,7 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 		//--- flat-list, so the run-in halts short of the town and the existing (count _fl > 0) land-gate is false -> eject.
 		if (_forceDrop) then {_lzPos = _dropLz; _flat = []};
 		[_airVeh, _lzPos, _flat, _lifted, _team, _pos, _side, _sideID, _heliCost] Spawn {
-			private ["_h","_lz","_fl","_pax","_tm","_obj","_t0","_sd","_sID","_cost","_edge","_wsz","_ex","_ey","_offPos","_hcrew","_approachLimited"];
+			private ["_h","_lz","_fl","_pax","_tm","_obj","_t0","_sd","_sID","_cost","_edge","_wsz","_ex","_ey","_offPos","_hcrew","_approachLimited","_refundToken"];
 			_h    = _this select 0;
 			_lz   = _this select 1;
 			_fl   = _this select 2;
@@ -725,13 +725,15 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 					{deleteVehicle _x} forEach _hcrew;
 					deleteVehicle _h;
 					if (_cost > 0) then {
-						//--- D4-FIX(c): append the hull TYPE so the server re-derives the real build price itself (same
-						//--- QUERYUNITPRICE lookup this file used) instead of trusting the network _cost verbatim - closes a
-						//--- fund-mint hole where ANY client (not just the real HC) could forge this PVF with an arbitrary figure.
+						//--- Authority closure: the server registered this exact hull at team creation and publishes a
+						//--- one-shot nonce on the team. The HC must return that nonce, the team owner, and the captured
+						//--- type; the server derives the credit from its receipt and never trusts the dollar claim.
+						_refundToken = _tm getVariable "wfbe_aicom_refund_nonce";
+						if (isNil "_refundToken") then {_refundToken = ""};
 						if (isServer) then {
-							["aicom-heli-refunded", _sID, _cost, _htype] Call HandleSpecial;
+							["aicom-heli-refunded", _sID, _cost, _htype, _tm, _refundToken, owner (leader _tm)] Call HandleSpecial;
 						} else {
-							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost, _htype]] Call WFBE_CO_FNC_SendToServer;
+							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost, _htype, _tm, _refundToken, owner (leader _tm)]] Call WFBE_CO_FNC_SendToServer;
 						};
 						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team transport %2 flew off-map, deleted + refunded $%3.", _sd, _htype, _cost]] Call WFBE_CO_FNC_AICOMLog;
 					};

@@ -407,15 +407,55 @@ switch (_args select 0) do {
 		};
 	};
 	case "aicom-team-created": {
-		Private ["_csideID","_cteam","_clogik","_caicomList","_cdir","_cldr"];
+		Private ["_csideID","_cteam","_cVehicles","_clogik","_caicomList","_cdir","_cldr","_cSide","_cHcOwner","_cHcGroup","_cAuthorityOk","_cPending","_cPendingLive","_cPendingFound","_cHeli","_cType","_cData","_cPrice","_cSeq","_cNonce","_cReceipts"];
+		if (count _args > 3 && {typeName (_args select 3) == "ARRAY"}) then {_cVehicles = _args select 3} else {_cVehicles = []};
 		_csideID = _args select 1;
 		_cteam = _args select 2;
-		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
+		_cSide = (_csideID) Call WFBE_CO_FNC_GetSideFromID;
+		_clogik = (_cSide) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _clogik) then {
 			_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
 			if ((_clogik getVariable ["wfbe_aicom_pending", 0]) <= 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
 			if (!isNull _cteam) then {
 				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
+
+				//--- Server-owned refund receipt: register the actual HC-local transport before the HC can
+				//--- report its off-map deletion. The receipt binds side, team, assigned HC owner, exact hull
+				//--- classname, and server-derived price; the public nonce is only a lookup handle.
+				_cHeli = objNull;
+				_cHcOwner = if (!isNull (leader _cteam)) then {owner (leader _cteam)} else {0};
+				_cHcGroup = missionNamespace getVariable [Format ["WFBE_HEADLESS_OWNER_%1", _cHcOwner], grpNull];
+				_cPending = missionNamespace getVariable ["WFBE_AICOM_TEAM_REFUND_PENDING", []];
+				_cPendingLive = [];
+				_cPendingFound = local (leader _cteam);
+				{
+					if (count _x >= 3 && {(time - (_x select 2)) < 300}) then {
+						if (!_cPendingFound && {(_x select 0) == _csideID} && {(_x select 1) == _cHcOwner}) then {_cPendingFound = true} else {_cPendingLive = _cPendingLive + [_x]};
+					};
+				} forEach _cPending;
+				missionNamespace setVariable ["WFBE_AICOM_TEAM_REFUND_PENDING", _cPendingLive];
+				_cAuthorityOk = local (leader _cteam);
+				if (!_cAuthorityOk && {_cPendingFound} && {!isNull _cHcGroup} && {!isNull (leader _cHcGroup)} && {owner (leader _cHcGroup) == _cHcOwner}) then {_cAuthorityOk = true};
+				if ([_cteam, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool && {_cHcOwner > 0} && {_cAuthorityOk}) then {
+					{
+						if (isNull _cHeli && {!isNull _x} && {_x isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0} && {!isNull (driver _x)} && {owner (driver _x) == _cHcOwner}) then {_cHeli = _x};
+					} forEach _cVehicles;
+				};
+				if (!isNull _cHeli) then {
+					_cType = typeOf _cHeli;
+					_cData = missionNamespace getVariable [_cType, []];
+					_cPrice = if (typeName _cData == "ARRAY" && {(count _cData) > QUERYUNITPRICE}) then {_cData select QUERYUNITPRICE} else {0};
+					if (_cPrice > 0 && {_cSide in [west, east, resistance]}) then {
+						_cSeq = (missionNamespace getVariable ["WFBE_AICOM_REFUND_SEQ", 0]) + 1;
+						missionNamespace setVariable ["WFBE_AICOM_REFUND_SEQ", _cSeq];
+						_cNonce = "aicom-heli|" + (str _cteam) + "|" + (str _cSeq);
+						_cReceipts = missionNamespace getVariable ["WFBE_AICOM_HELI_REFUND_RECEIPTS", []];
+						_cReceipts = _cReceipts + [[_cNonce, _cteam, _cHeli, _csideID, _cSide, _cHcOwner, _cType, _cPrice, 0]];
+						missionNamespace setVariable ["WFBE_AICOM_HELI_REFUND_RECEIPTS", _cReceipts];
+						_cteam setVariable ["wfbe_aicom_refund_nonce", _cNonce, true];
+						diag_log Format ["AICOMREFUND|v2|REGISTER|side=%1|team=%2|owner=%3|type=%4|price=%5", str _cSide, _cteam, _cHcOwner, _cType, _cPrice];
+					};
+				};
 				//--- Direction-arrow marker feed (mirrors WFBE_ACTIVE_PATROLS): register
 				//--- [leader, sideID, dir, team] so every client can draw a side-coloured
 				//--- mil_arrow2 at the commander team's leader. dir is patched later by the
@@ -976,9 +1016,18 @@ switch (_args select 0) do {
 	//--- the Transfer menu (GUI_TransferMenu.sqf) - it shares the same "aicom-donate-confirm" client confirm. Donating
 	//--- to the AI treasury only makes sense while the AI runs the side, which that path already enforces.
 	case "aicom-team-ended": {
-		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew","_cteams","_cregistered"];
+		Private ["_csideID","_cteam","_clogik","_caicomList","_caicomNew","_cteams","_cregistered","_cReceipts","_cReceiptsNew"];
 		_csideID = _args select 1;
 		_cteam = _args select 2;
+		//--- Expire this team's receipt even when the transport was retained or destroyed; a receipt is never
+		//--- reusable by a later team or a replay after team teardown.
+		_cReceipts = missionNamespace getVariable ["WFBE_AICOM_HELI_REFUND_RECEIPTS", []];
+		_cReceiptsNew = [];
+		{
+			if ((_x select 1) != _cteam) then {_cReceiptsNew = _cReceiptsNew + [_x]};
+		} forEach _cReceipts;
+		missionNamespace setVariable ["WFBE_AICOM_HELI_REFUND_RECEIPTS", _cReceiptsNew];
+
 		//--- Drop this team's arrow-marker entry (match slot 3 == team) and any null leftovers,
 		//--- then re-broadcast so every client deletes the marker. Mirrors sidepatrol-ended.
 		_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
@@ -1092,27 +1141,71 @@ switch (_args select 0) do {
 	//--- treasury write is authoritative; mirrors AI_Commander_Wildcard salvage payback
 	//--- ([_side, _wkTotal] Call ChangeAICommanderFunds, L726).
 	case "aicom-heli-refunded": {
-		Private ["_rSideID","_rSide","_rCost","_rType","_rUD","_rRealCost","_rCeiling","_rClamped"];
-		_rSideID = _args select 1;
-		_rCost   = _args select 2;
-		//--- D4-FIX(c): hull type (4th payload element) lets the server RE-DERIVE the real build price from its own
-		//--- unit-data table (same QUERYUNITPRICE lookup Common_RunCommanderTeam.sqf uses) instead of trusting the
-		//--- network-supplied dollar figure. Count-guarded: an old/short payload (pre-fix HC or a forged short array)
-		//--- degrades to the flat fallback ceiling below, never to unlimited trust.
-		_rType   = if (count _args > 3) then {_args select 3} else {""};
-		_rUD     = if (typeName _rType == "STRING" && {_rType != ""}) then {missionNamespace getVariable [_rType, []]} else {[]};
-		_rRealCost = 0;
-		if (typeName _rUD == "ARRAY" && {(count _rUD) > QUERYUNITPRICE}) then {_rRealCost = _rUD select QUERYUNITPRICE};
-		_rSide   = (_rSideID) Call WFBE_CO_FNC_GetSideFromID;
-		//--- _rSide is a Side (not an Object) so isNull is the wrong test and throws; validate it is a real combatant treasury side instead.
-		if ((_rSide in [east,west,resistance]) && {_rCost > 0}) then {
-			//--- resolved real price wins outright; an unresolvable type falls back to a flat, generous ceiling (never
-			//--- zero) so a lookup miss never silently denies a legitimate refund - it just bounds it.
-			_rCeiling = if (_rRealCost > 0) then {_rRealCost} else {missionNamespace getVariable ["WFBE_C_AICOM_HELI_REFUND_MAX", 40000]};
-			_rClamped = (_rCost min _rCeiling) max 0;
-			[_rSide, _rClamped] Call ChangeAICommanderFunds;
-			["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded $%1 (claimed %2, real %3, type %4) to [%5] AI-commander treasury (transport flew off-map).", _rClamped, _rCost, _rRealCost, _rType, str _rSide]] Call WFBE_CO_FNC_AICOMLog;
+		Private ["_rSideID","_rSide","_rCost","_rType","_rTeam","_rToken","_rSenderOwner","_rReceipts","_rReceipt","_rReceiptIndex","_rFound","_rVehicle","_rCurrentOwner","_rHcGroup","_rAuthorityOk","_rGone","_rPos","_rWsz","_rValid"];
+		if (count _args != 7) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded rejected malformed envelope (%1 args).", count _args]] Call WFBE_CO_FNC_LogContent;
 		};
+		_rSideID = _args select 1;
+		_rCost = _args select 2;
+		_rType = _args select 3;
+		_rTeam = _args select 4;
+		_rToken = _args select 5;
+		_rSenderOwner = _args select 6;
+		if (typeName _rSideID != "SCALAR" || {typeName _rCost != "SCALAR"} || {typeName _rType != "STRING"} || {typeName _rTeam != "GROUP"} || {typeName _rToken != "STRING"} || {typeName _rSenderOwner != "SCALAR"}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: aicom-heli-refunded rejected invalid field types."] Call WFBE_CO_FNC_LogContent;
+		};
+		if (_rCost < 0) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded rejected negative claimed price %1.", _rCost]] Call WFBE_CO_FNC_LogContent;
+		};
+		_rReceipts = missionNamespace getVariable ["WFBE_AICOM_HELI_REFUND_RECEIPTS", []];
+		_rReceiptIndex = -1;
+		_rFound = false;
+		{
+			if (count _x >= 9 && {(_x select 0) == _rToken} && {(_x select 1) == _rTeam}) then {
+				_rReceipt = _x;
+				_rReceiptIndex = _forEachIndex;
+				_rFound = true;
+			};
+		} forEach _rReceipts;
+		if (!_rFound) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: aicom-heli-refunded rejected unknown team receipt."] Call WFBE_CO_FNC_LogContent;
+		};
+		_rSide = (_rSideID) Call WFBE_CO_FNC_GetSideFromID;
+		_rVehicle = _rReceipt select 2;
+		_rCurrentOwner = if (!isNull (leader _rTeam)) then {owner (leader _rTeam)} else {0};
+		_rHcGroup = missionNamespace getVariable [Format ["WFBE_HEADLESS_OWNER_%1", _rCurrentOwner], grpNull];
+		_rAuthorityOk = local (leader _rTeam);
+		if (!_rAuthorityOk && {!isNull _rHcGroup} && {!isNull (leader _rHcGroup)} && {owner (leader _rHcGroup) == _rCurrentOwner}) then {_rAuthorityOk = true};
+		_rWsz = switch (toLower worldName) do {
+			case "takistan": {12800};
+			case "zargabad": {8192};
+			default {15360};
+		};
+		_rGone = isNull _rVehicle;
+		if (!_rGone && {!alive _rVehicle}) then {_rGone = true};
+		if (!_rGone && {alive _rVehicle}) then {
+			_rPos = getPos _rVehicle;
+			_rGone = ((_rPos select 0) < 0) || {((_rPos select 0) > _rWsz)} || {((_rPos select 1) < 0)} || {((_rPos select 1) > _rWsz)};
+		};
+		_rValid = (_rReceipt select 8) == 0
+			&& {_rReceipt select 3 == _rSideID}
+			&& {_rReceipt select 4 == _rSide}
+			&& {_rReceipt select 5 == _rCurrentOwner}
+			&& {_rSenderOwner == _rCurrentOwner}
+			&& {_rCurrentOwner > 0}
+			&& {_rAuthorityOk}
+			&& {_rType == (_rReceipt select 6)}
+			&& {_rCost == (_rReceipt select 7)}
+			&& {_rGone};
+		if (!_rValid) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded rejected receipt validation (team=%1 owner=%2 type=%3).", _rTeam, _rCurrentOwner, _rType]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- Consume before credit: concurrent/replayed requests see state 1 and cannot mint twice.
+		_rReceipt set [8, 1];
+		_rReceipts set [_rReceiptIndex, _rReceipt];
+		missionNamespace setVariable ["WFBE_AICOM_HELI_REFUND_RECEIPTS", _rReceipts];
+		[_rSide, _rReceipt select 7] Call ChangeAICommanderFunds;
+		["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-heli-refunded accepted $%1 for [%2] owner %3 (server receipt, one-shot).", _rReceipt select 7, str _rSide, _rCurrentOwner]] Call WFBE_CO_FNC_AICOMLog;
 	};
 	case "sidepatrol-started": {
 		Private ["_psideID","_punit","_plist"];

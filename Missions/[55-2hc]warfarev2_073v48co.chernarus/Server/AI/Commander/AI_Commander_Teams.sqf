@@ -17,7 +17,7 @@
 */
 
 private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget",
-              "_allUnits","_allGroups","_allVehicles",
+              "_allUnits","_allGroups","_allVehicles","_refundPending","_refundPendingLive",
               "_w7Flag","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best","_w7SkillSend",
               "_w11FreeFlag",
               "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
@@ -1276,6 +1276,16 @@ if (count _live > 0) then {
 	//--- PLANE AIR-START (Ray 2026-07-01, PLANE-ONLY): append the is-jet-team flag + runway heading as trailing delegate args (slots
 	//--- 8/9 of the inner array; after HandleSpecial strips the leading string they land at Common_RunCommanderTeam _this indices 7/8).
 	//--- Purely additive - every other delegate reader ignores them (count-guarded), so ground/heli founding is byte-identical.
+	//--- Authority closure: the server records this dispatch before the HC can create a group. The later
+	//--- aicom-team-created registration must consume this owner-bound entry, so a broad client bus replay
+	//--- cannot mint a new transport receipt for an unrelated or already-existing team.
+	_refundPending = missionNamespace getVariable ["WFBE_AICOM_TEAM_REFUND_PENDING", []];
+	_refundPendingLive = [];
+	{
+		if (count _x >= 3 && {(time - (_x select 2)) < 300}) then {_refundPendingLive = _refundPendingLive + [_x]};
+	} forEach _refundPending;
+	_refundPending = _refundPendingLive + [[_sideID, owner _hcUnit, time]];
+	missionNamespace setVariable ["WFBE_AICOM_TEAM_REFUND_PENDING", _refundPending];
 	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass, _foundType, _isJetTeam, _runwayDir]] Call WFBE_CO_FNC_SendToClient;
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
