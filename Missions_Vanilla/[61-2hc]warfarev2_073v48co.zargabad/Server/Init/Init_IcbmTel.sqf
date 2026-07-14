@@ -925,7 +925,10 @@ WFBE_SE_FNC_IcbmTelSaturation = {
 	_warHE     = missionNamespace getVariable ["WFBE_C_SCUD_WARHEAD_HE", "Sh_125_HE"];
 	_warSADARM = missionNamespace getVariable ["WFBE_C_SCUD_WARHEAD_SADARM", "Bo_GBU12_LGB"];
 	_warWP     = missionNamespace getVariable ["WFBE_C_SCUD_WARHEAD_WP", "SmokeShellWhite"];
-	_enemySides = (WFBE_PRESENTSIDES - [_side]) + [resistance];
+	//--- ORDERING FIX (Section-I follow-up): subtract _side LAST (the D8b STEELRAIN/BUSTER idiom) so a GUER
+	//--- (resistance) firer never re-admits itself - the old subtract-then-add-back made a GUER strike target
+	//--- its own units. Membership-identical for west/east firers (_enemySides is only read via `in` tests).
+	_enemySides = (WFBE_PRESENTSIDES + [resistance]) - [_side];
 
 	//--- brief flight feel before impact (the missile is notional; keep it snappy).
 	sleep 6;
@@ -975,7 +978,10 @@ WFBE_SE_FNC_IcbmTelRecon = {
 	_r    = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RECON_R", 800];
 	_secs = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RECON_SECS", 45];
 	_cap  = 40;   //--- hard cap on markers (bounded).
-	_enemySides = (WFBE_PRESENTSIDES - [_side]) + [resistance];
+	//--- ORDERING FIX (Section-I follow-up): subtract _side LAST (the D8b STEELRAIN/BUSTER idiom) so a GUER
+	//--- (resistance) firer never reveals/marks its OWN units to itself. Membership-identical for west/east
+	//--- firers (_enemySides is only read via the `in` test below).
+	_enemySides = (WFBE_PRESENTSIDES + [resistance]) - [_side];
 
 	sleep 4;   //--- short time-of-flight to the airburst.
 
@@ -1134,8 +1140,8 @@ WFBE_SE_FNC_IcbmTelSteelRain = {
 	//--- FIX D8b: optional 3rd arg (the human firer) — type-guarded, backward-compatible with any future caller.
 	_caller  = if (count _this > 2) then {_this select 2} else {objNull};
 	if (typeName _caller != "OBJECT") then {_caller = objNull};
-	//--- FIX D8b: BUSTER's ordering (subtract _side LAST) — NOT SATURATION/RECON's (:619/:669) — so a GUER
-	//--- (resistance) firer never re-admits itself into its own enemy set. Proven idiom at Init_IcbmTel.sqf:897.
+	//--- FIX D8b: BUSTER's ordering (subtract _side LAST) so a GUER (resistance) firer never re-admits itself
+	//--- into its own enemy set. SATURATION/RECON were aligned to this same ordering (Section-I ordering fix).
 	_enemySides = (WFBE_PRESENTSIDES + [resistance]) - [_side];
 	_bursts  = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_BURSTS", 18];
 	_rad     = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_R", 300];
