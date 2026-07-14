@@ -107,7 +107,11 @@ if ((missionNamespace getVariable ["WFBE_C_SCUD_THEATRICS", 1]) == 1) then {
 };
 
 //--- LAUNCH: one Chukar from the carrier, flown ballistic toward the target (pure vector, no pilot).
-_enemySides = (WFBE_PRESENTSIDES - [_side]) + [resistance];
+//--- ORDERING FIX (Section-I twin of #1097 SAT/RECON): subtract _side LAST (the D8b STEELRAIN/BUSTER idiom) so a
+//--- GUER (resistance) firer never re-admits itself into its own SCUD enemy/target set - the old subtract-then-
+//--- add-back made a GUER strike able to target its own units. Membership-identical for west/east firers
+//--- (_enemySides is only ever read via the (side _x) in _enemySides test at line ~148 below).
+_enemySides = (WFBE_PRESENTSIDES + [resistance]) - [_side];
 _launchPos = [getPos _platform select 0, getPos _platform select 1, 350];
 _dx = (_destination select 0) - (_launchPos select 0);
 _dy = (_destination select 1) - (_launchPos select 1);
