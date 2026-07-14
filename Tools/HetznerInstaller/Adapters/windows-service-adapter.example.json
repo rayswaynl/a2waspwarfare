@@ -1,0 +1,30 @@
+{
+  "SchemaVersion": 1,
+  "ConfigType": "windows-service-adapter-v1",
+  "EnvironmentId": "MIKSUUS-TEST",
+  "ServiceName": "WASP-MIKSUUS-TEST",
+  "ServerRptPath": "D:\\MIKSUUS-TEST\\profiles\\server\\ArmA2OA.RPT",
+  "MissionPboPath": "D:\\MIKSUUS-TEST\\mpmissions\\candidate.chernarus.pbo",
+  "HeadlessClients": [
+    {
+      "Name": "HC-AI-Control-1",
+      "RptIdentity": "hc-2/HC-AI-Control-1",
+      "SandboxRoot": "D:\\MIKSUUS-TEST\\sandboxes\\HC1",
+      "ProfileRoot": "D:\\MIKSUUS-TEST\\profiles\\HC1",
+      "RptPath": "D:\\MIKSUUS-TEST\\profiles\\HC1\\ArmA2OA.RPT",
+      "CommandLineFingerprint": "REPLACE_WITH_MEASURED_SHA256",
+      "LaunchTaskName": "MIKSUUS-TEST-HC1",
+      "ProcessName": "ArmA2OA.exe"
+    },
+    {
+      "Name": "HC-AI-Control-2",
+      "RptIdentity": "hc-2/HC-AI-Control-2",
+      "SandboxRoot": "D:\\MIKSUUS-TEST\\sandboxes\\HC2",
+      "ProfileRoot": "D:\\MIKSUUS-TEST\\profiles\\HC2",
+      "RptPath": "D:\\MIKSUUS-TEST\\profiles\\HC2\\ArmA2OA.RPT",
+      "CommandLineFingerprint": "REPLACE_WITH_MEASURED_SHA256",
+      "LaunchTaskName": "MIKSUUS-TEST-HC2",
+      "ProcessName": "ArmA2OA.exe"
+    }
+  ]
+}

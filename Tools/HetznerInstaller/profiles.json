@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 2,
+  "profiles": [
+    {
+      "name": "hc-0",
+      "profileId": "hc-0",
+      "headlessClients": 0,
+      "hcExecutable": "ArmA2OA.exe",
+      "hcPortBase": 2302,
+      "hcModLine": "@CBA_CO;@adwasp;@admkswf",
+      "hcAllocator": "tbb4malloc_bi",
+      "hcNamePrefix": "HC-AI-Control",
+      "rptIdentityPrefix": "HC-AI-Control",
+      "topology": "server-only-fallback-control",
+      "steamIsolationAdapter": "shared-profile",
+      "operational": true
+    },
+    {
+      "name": "hc-1",
+      "profileId": "hc-1",
+      "headlessClients": 1,
+      "hcExecutable": "ArmA2OA.exe",
+      "hcPortBase": 2302,
+      "hcModLine": "@CBA_CO;@adwasp;@admkswf",
+      "hcAllocator": "tbb4malloc_bi",
+      "hcNamePrefix": "HC-AI-Control",
+      "rptIdentityPrefix": "HC-AI-Control",
+      "topology": "single-hc-fallback-control",
+      "steamIsolationAdapter": "shared-profile",
+      "operational": true
+    },
+    {
+      "name": "hc-2",
+      "profileId": "hc-2",
+      "headlessClients": 2,
+      "hcExecutable": "ArmA2OA.exe",
+      "hcPortBase": 2302,
+      "hcModLine": "@CBA_CO;@adwasp;@admkswf",
+      "hcAllocator": "tbb4malloc_bi",
+      "hcNamePrefix": "HC-AI-Control",
+      "rptIdentityPrefix": "HC-AI-Control",
+      "topology": "primary-two-hc-bound-adapter-required",
+      "steamIsolationAdapter": "windows-service-adapter-v1",
+      "operational": false
+    },
+    {
+      "name": "hc-3",
+      "profileId": "hc-3",
+      "headlessClients": 3,
+      "hcExecutable": "ArmA2OA.exe",
+      "hcPortBase": 2302,
+      "hcModLine": "@CBA_CO;@adwasp;@admkswf",
+      "hcAllocator": "tbb4malloc_bi",
+      "hcNamePrefix": "HC-AI-Control",
+      "rptIdentityPrefix": "HC-AI-Control",
+      "topology": "experimental-three-hc-bound-adapter-required",
+      "steamIsolationAdapter": "windows-service-adapter-v1",
+      "operational": false
+    }
+  ]
+}
