@@ -77,6 +77,11 @@ if (!isServer || local player) then {
 	"WFBE_PVF_FPVPrivate" addPublicVariableEventHandler {(_this select 1) Spawn WFBE_CL_FNC_HandlePVF};
 };
 
+//--- ICBM/TEL capabilities use a dedicated targeted PV so no shared client bus can expose tokens.
+if (!isServer || local player) then {
+	"WFBE_PVF_IcbmTelPrivate" addPublicVariableEventHandler {(_this select 1) Spawn WFBE_CL_FNC_HandlePVF};
+};
+
 {
 	Call Compile Format["SRVFNC%1 = compile preprocessFileLineNumbers 'Server\PVFunctions\%1.sqf'", _x];
 	WFBE_SE_PVF_ALLOWED = WFBE_SE_PVF_ALLOWED + [Format["SRVFNC%1", _x]];
