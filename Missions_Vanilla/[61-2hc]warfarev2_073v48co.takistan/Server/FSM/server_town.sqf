@@ -615,7 +615,7 @@ while {!WFBE_GameOver} do {
 					[_location, _newSide, _newSID] spawn {
 						Private ["_loc","_side","_newSIDAtCapture","_squadGrp","_squadUnits","_squadVehicles",
 						         "_clearCount","_detected","_squadTeam","_upgLvl","_tplName","_spawnPos",
-						         "_retVal","_scanActive","_townRange","_guerCount","_mopupEnd"];
+						         "_retVal","_scanActive","_townRange","_guerCount","_mopupEnd","_squadRoster","_tplRosters"];
 						_loc             = _this select 0;
 						_side            = _this select 1;
 						_newSIDAtCapture = _this select 2;
@@ -630,12 +630,21 @@ while {!WFBE_GameOver} do {
 						_upgLvl  = ((_side) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_BARRACKS;
 						_tplName = Format ["Squad_%1", _upgLvl];
 
+						//--- Expand group-template KEY to a flat CfgVehicles classname roster before CreateTeam.
+						//--- CreateTeam (guard 2026-06-14) rejects non-class tokens like "Squad_1" (live RPT A2 mop-up silent fail).
+						//--- Same lookup + random-select pattern as Server_GetTownGroups.sqf / Server_GetTownGroupsDefender.sqf.
+						_squadRoster = [];
+						_tplRosters = missionNamespace getVariable Format ["WFBE_%1_GROUPS_%2", _side, _tplName];
+						if (!(isNil "_tplRosters") && {count _tplRosters > 0}) then {
+							_squadRoster = _tplRosters select floor(random count _tplRosters);
+						};
+
 						//--- Spawn position near town centre.
 						_spawnPos = [getPos _loc, 50, 200] call WFBE_CO_FNC_GetRandomPosition;
 						_spawnPos = [_spawnPos, 50] call WFBE_CO_FNC_GetEmptyPosition;
 
 						_squadTeam = [_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup;
-						_retVal    = [_tplName, _spawnPos, _side, true, _squadTeam, true, 90] call WFBE_CO_FNC_CreateTeam;
+						_retVal    = [_squadRoster, _spawnPos, _side, true, _squadTeam, true, 90] call WFBE_CO_FNC_CreateTeam;
 						_squadUnits    = _retVal select 0;
 						_squadVehicles = _retVal select 1;
 						_squadGrp      = _retVal select 2;
