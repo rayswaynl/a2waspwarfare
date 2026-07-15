@@ -214,7 +214,7 @@ while {!gameOver} do {
 				         "_supply","_maxSupply","_supplyGrant",
 				         "_template","_home","_active","_hcs","_live",
 				         "_cands","_bestScore","_bestTown","_score","_dNear","_d","_t4Town",
-				         "_w4LvlText","_destination","_w4PrevParaLevel",
+				         "_w4LvlText","_destination",
 				         "_facDefs","_facEntry","_facListName","_facList",
 				         "_unitClass","_unitUD","_unitPrice","_unitUpReq",
 				         "_structures","_facObj","_facClass","_facIdx","_facNames","_v","_crew","_grp",
@@ -724,24 +724,15 @@ while {!gameOver} do {
 							_w4Units = missionNamespace getVariable [Format ["WFBE_%1PARACHUTELEVEL3", _sideText], []];
 							_w4Model = missionNamespace getVariable [Format ["WFBE_%1PARACARGO", _sideText], ""];
 							if (count _w4Units > 0 && {_w4Model != ""}) then {
-								//--- FIX 2026-06-15 (claude-gaming): force a LEVEL-3 drop for this wildcard WITHOUT leaking the
-								//--- setting into later NORMAL paradrops. Snapshot the side's current WFBE_<side>PARACHUTELEVEL,
-								//--- set 3 for the drop, then RESTORE the captured value via a short spawn (style mirrors the
-								//--- cleanup spawns used by W9/W13/W14/W18). 10s is ample for Support_Paratroopers to read it.
-								_w4PrevParaLevel = missionNamespace getVariable [Format ["WFBE_%1PARACHUTELEVEL", _sideText], 0];
-								missionNamespace setVariable [Format ["WFBE_%1PARACHUTELEVEL", _sideText], 3];
-								//--- Override the level variable so Paratroopers reads level 3.
+								//--- A1 FIX (2026-07-15): the old override wrote WFBE_<side>PARACHUTELEVEL (no level suffix), a
+								//--- variable Support_Paratroopers.sqf never reads (it derives the level from wfbe_upgrades), so an
+								//--- unresearched side (level 0) errored on the nil PARACHUTELEVEL0 key - and the 10s restore wrote
+								//--- the snapshot default 0 back into the global. The level-3 override is now passed explicitly as
+								//--- the optional 5th Support_Paratroopers argument (race-free, no global state).
 								_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 								if (isNull _cmdTeam) then {_cmdTeam = [_side, "aicom-wildcard"] Call WFBE_CO_FNC_CreateGroup};
-								[nil, _side, _destination, _cmdTeam] Spawn (Compile preprocessFile "Server\Support\Support_Paratroopers.sqf");
-								//--- RESTORE the prior paradrop level after the drop is dispatched (no level-3 leak).
-								[_w4PrevParaLevel, _sideText] spawn {
-									private ["_prev","_st"];
-									_prev = _this select 0; _st = _this select 1;
-									sleep 10;
-									missionNamespace setVariable [Format ["WFBE_%1PARACHUTELEVEL", _st], _prev];
-								};
-								_detail = Format ["target=%1 level=3 model=%2 prevLevel=%3 humanCmd=%4", _bestTown getVariable ["name","?"], _w4Model, _w4PrevParaLevel, _humanCmd];
+								[nil, _side, _destination, _cmdTeam, 3] Spawn (Compile preprocessFile "Server\Support\Support_Paratroopers.sqf");
+								_detail = Format ["target=%1 level=3 model=%2 humanCmd=%3", _bestTown getVariable ["name","?"], _w4Model, _humanCmd];
 							} else {
 								_result = "ineligible";
 								_detail = "W4 no PARACHUTELEVEL3 units defined";
