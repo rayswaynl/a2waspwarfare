@@ -2722,5 +2722,14 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 	if (isNil "WFBE_C_SMALLARMS_AIR_ENVELOPE_RANGE") then {WFBE_C_SMALLARMS_AIR_ENVELOPE_RANGE = 300}; //--- small-arms x Air effective envelope, metres (tunable); beyond this a small-arms unit is steered off an air lock.
 	if (isNil "WFBE_C_SMALLARMS_AIR_ENVELOPE_TICK") then {WFBE_C_SMALLARMS_AIR_ENVELOPE_TICK = 5}; //--- manager sweep cadence, seconds (tunable, 4-8s band).
 
+//--- perf/aicom-strategy-towncache (draft PR): opt-in per-call memoization for the redundant
+//--- "nearest own town" distance recompute in AI_Commander_Strategy.sqf (4 sites re-scan
+//--- _ownTownObjs for the same candidate town within one Strategy call - initial spearhead
+//--- scorer, stall re-pick, front telemetry, AICOMDBG trace). Default 0 = every site keeps its
+//--- ORIGINAL untouched computation, byte-identical to HEAD. For the matched before/after
+//--- PerformanceAudit A/B only - do not flip on live before that A/B + a gameplay-invariant
+//--- check confirm the cached and uncached paths pick identical targets.
+	if (isNil "WFBE_C_AICOM_STRATEGY_TOWNCACHE") then {WFBE_C_AICOM_STRATEGY_TOWNCACHE = 0}; //--- master gate: 0=off (default, byte-identical to HEAD), 1=on (memoize _dNear per candidate town for this Strategy call only - perf A/B test only).
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

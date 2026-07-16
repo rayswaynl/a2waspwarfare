@@ -134,6 +134,19 @@ private "_liveFistSnap";
 _liveFistSnap = _logik getVariable ["wfbe_aicom_targets", []];
 if (typeName _liveFistSnap != "ARRAY") then {_liveFistSnap = []};
 
+//--- perf/aicom-strategy-towncache (draft PR, flag default 0): per-call memoization for the
+//--- "nearest own town" distance (_dNear) that 4 sites below independently recompute via a
+//--- nested forEach _ownTownObjs (spearhead scorer x2 - initial pick + stall re-pick -, front
+//--- telemetry, AICOMDBG trace). _ownTownObjs and this side's HQ are never reassigned after
+//--- this point in the call, so memoizing _dNear by candidate-town identity for the rest of
+//--- THIS call is byte-identical to recomputing it fresh every time. Flag OFF (default) takes
+//--- the untouched original computation at every site - byte-identical mission. Flag ON is for
+//--- the matched before/after PerformanceAudit A/B only (see PR body).
+private ["_twCacheOn","_twCacheTowns","_twCacheDNear"];
+_twCacheOn = (missionNamespace getVariable ["WFBE_C_AICOM_STRATEGY_TOWNCACHE", 0]) > 0;
+_twCacheTowns = [];
+_twCacheDNear = [];
+
 //--- 1) SPEARHEADS: COHERENT FRONT (V0.8, claude-gaming 2026-06-14). Rank enemy/neutral
 //--- towns by NEAREST-TO-OUR-FRONT first, with a small pull toward the enemy HQ, so the
 //--- army advances as a wave onto achievable nearby objectives instead of cherry-picking
@@ -195,9 +208,21 @@ for "_i" from 1 to _want do {
 		if (!(_t in _targets)) then {
 			//--- Frontline distance = to our nearest OWN town (fallback: our HQ) = the
 			//--- coherent-front / adjacency signal. Small dNear = borders owned territory.
-			_dNear = 1e9;
-			{ _d = _t distance _x; if (_d < _dNear) then {_dNear = _d} } forEach _ownTownObjs;
-			if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+			if (_twCacheOn) then {
+				_dNear = -1;
+				{ if (_x == _t) exitWith {_dNear = _twCacheDNear select _forEachIndex} } forEach _twCacheTowns;
+				if (_dNear < 0) then {
+					_dNear = 1e9;
+					{ _d = _t distance _x; if (_d < _dNear) then {_dNear = _d} } forEach _ownTownObjs;
+					if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+					_twCacheTowns set [count _twCacheTowns, _t];
+					_twCacheDNear set [count _twCacheDNear, _dNear];
+				};
+			} else {
+				_dNear = 1e9;
+				{ _d = _t distance _x; if (_d < _dNear) then {_dNear = _d} } forEach _ownTownObjs;
+				if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+			};
 			//--- Distance toward the ENEMY HQ (avoid binary getDir per A2 rules - plain distance).
 			_dHQ = if (!isNull _enemyHQForRank) then {_t distance _enemyHQForRank} else {0};
 			//--- V0.6 task 49a: town weight hook (nil-safe, zero on this mission).
@@ -335,9 +360,21 @@ if (count _targets > 0) then {
 			{
 				_t = _x;
 				if (!(_t in _targets)) then {
-					_dNear = 1e9;
-					{ _d = _t distance _x; if (_d < _dNear) then {_dNear = _d} } forEach _ownTownObjs;
-					if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+					if (_twCacheOn) then {
+						_dNear = -1;
+						{ if (_x == _t) exitWith {_dNear = _twCacheDNear select _forEachIndex} } forEach _twCacheTowns;
+						if (_dNear < 0) then {
+							_dNear = 1e9;
+							{ _d = _t distance _x; if (_d < _dNear) then {_dNear = _d} } forEach _ownTownObjs;
+							if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+							_twCacheTowns set [count _twCacheTowns, _t];
+							_twCacheDNear set [count _twCacheDNear, _dNear];
+						};
+					} else {
+						_dNear = 1e9;
+						{ _d = _t distance _x; if (_d < _dNear) then {_dNear = _d} } forEach _ownTownObjs;
+						if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+					};
 					_dHQ = if (!isNull _enemyHQForRank) then {_t distance _enemyHQForRank} else {0};
 					private ["_hardTier","_softW","_valDiv"];
 					_softW = missionNamespace getVariable ["WFBE_C_AICOM_SOFT_WEIGHT", 12];
@@ -434,9 +471,21 @@ if (_fhDwell > 0 && {count _targets > 0}) then {
 _anyFront = false;
 if (count _targets > 0) then {
 	_t = _targets select 0;
-	_dNear = 1e9;
-	{ _d = _t distance _x; if (_d < _dNear) then {_dNear = _d} } forEach _ownTownObjs;
-	if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+	if (_twCacheOn) then {
+		_dNear = -1;
+		{ if (_x == _t) exitWith {_dNear = _twCacheDNear select _forEachIndex} } forEach _twCacheTowns;
+		if (_dNear < 0) then {
+			_dNear = 1e9;
+			{ _d = _t distance _x; if (_d < _dNear) then {_dNear = _d} } forEach _ownTownObjs;
+			if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+			_twCacheTowns set [count _twCacheTowns, _t];
+			_twCacheDNear set [count _twCacheDNear, _dNear];
+		};
+	} else {
+		_dNear = 1e9;
+		{ _d = _t distance _x; if (_d < _dNear) then {_dNear = _d} } forEach _ownTownObjs;
+		if (_dNear > 1e8) then {_dNear = _t distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+	};
 	_anyFront = (_dNear <= _frontRad);
 };
 
@@ -446,9 +495,21 @@ if (count _targets > 0) then {
 private ["_tDbg", "_dDbg", "_dd"];
 {
 	_tDbg = _x;
-	_dDbg = 1e9;
-	{ _dd = _tDbg distance _x; if (_dd < _dDbg) then {_dDbg = _dd} } forEach _ownTownObjs;
-	if (_dDbg > 1e8) then {_dDbg = _tDbg distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};   //--- match the real scorer's HQ fallback (no 1e9 sentinel in telemetry)
+	if (_twCacheOn) then {
+		_dDbg = -1;
+		{ if (_x == _tDbg) exitWith {_dDbg = _twCacheDNear select _forEachIndex} } forEach _twCacheTowns;
+		if (_dDbg < 0) then {
+			_dDbg = 1e9;
+			{ _dd = _tDbg distance _x; if (_dd < _dDbg) then {_dDbg = _dd} } forEach _ownTownObjs;
+			if (_dDbg > 1e8) then {_dDbg = _tDbg distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};
+			_twCacheTowns set [count _twCacheTowns, _tDbg];
+			_twCacheDNear set [count _twCacheDNear, _dDbg];
+		};
+	} else {
+		_dDbg = 1e9;
+		{ _dd = _tDbg distance _x; if (_dd < _dDbg) then {_dDbg = _dd} } forEach _ownTownObjs;
+		if (_dDbg > 1e8) then {_dDbg = _tDbg distance ((_side) Call WFBE_CO_FNC_GetSideHQ)};   //--- match the real scorer's HQ fallback (no 1e9 sentinel in telemetry)
+	};
 	diag_log ("AICOMDBG|v1|SPEARHEAD|" + (str _side) + "|" + str (round (time / 60)) + "|town=" + (_tDbg getVariable ["name", "?"]) + "|supply=" + str (_tDbg getVariable ["supplyValue", 0]) + "|distFront=" + str (round _dDbg) + "|onFront=" + str (_dDbg <= _frontRad) + "|teams=" + str (count _teams) + "|want=" + str _want + "|conc=" + str (missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATION", 3]));
 } forEach _targets;
 
