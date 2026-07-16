@@ -54,8 +54,50 @@ Foundation exists: #57 guild-architect (tested on test guild) + bot `rolepicker`
 ## 10. AI commander behavior task map
 TP-5 (#713 re-scope, gated Q1) → then, from the master file's owner wishes onto V2 lanes: softest-lane push (416/420), composition breadth incl. no-ATV rule (417 + D4), infinite AI fuel + stuck-driven rearm/repair (421 + micro-extensions pacing/fire-discipline/economy-of-force/air-insertion — approved 07-04), transport depth (Code Archaeologist first), aircraft spawn polish (already airfield-aware; add isFlatEmpty fallback), strategic-spawn road-snap for players (proven AI path exists — copy + flag `WFBE_C_PLAYER_SPAWN_ON_ROADS`), base placement safety (AICOMPLACE evidence exists), no deception systems.
 
-## 11. HC/ASR/performance audit task map (research-only)
-Evidence to chase: HC delegation collapse in live 07-05 (remotePct 92–95% → 21–37%) — hypothesis: GUER/server-local group crowding; stuck-team terrain traps (B 1-1-K/L PATROL_UNSTUCK loops); `antistack_main` 500–600 ms (known, document); Zargabad error flood (TP-2 fixes); client 15–21 FPS @460 AI (VD/AI-budget tuning input). Plus pending from memory: HC `-mod=@adwasp` + `-malloc` verification. Output = audit/recommendation PR, **no runtime changes**.
+## 11. HC/ASR/performance audit task map (production research-only; lab prototype present)
+
+### Confirmed live incident — HC delegation collapse (2026-07-09/10)
+The earlier "GUER/server-local crowding" hypothesis is superseded by stronger live + source evidence. During the live 1.2.0 match the dedicated server carried **85–93% of `allUnits`** while both HCs were effectively idle (`DELEGSTAT remotePct` reached 7%); server FPS sagged about 47 → 30 under load and later recovered. The processes remained up, so this is degraded-but-up and **not** a Peach+ wake condition.
+
+Confirmed mechanisms (source paths and line numbers verified unchanged at live git `b9af9b96`):
+
+- `Common_SendToClient.sqf:24,29`, `Common_SendToClients.sqf:15,18`, and `Common_SendToServerOptimized.sqf:15` build and `compile` a fresh SQF transport envelope for every send. This is a confirmed hot-path defect and credible bus/scheduler-pressure contributor; the fraction of the live collapse it caused still needs a controlled compile-free A/B test before being called causal in isolation.
+- Town activation fans one message per group with no sender-side pacing (`Server_DelegateAITownHeadless.sqf:46-56`). The HC's max-three guard runs only after those packets have crossed the bus, and its 10 s soft timeout can admit a fourth-or-later batch (`Client_DelegateTownAI.sqf:21-30,71-72`).
+- HC endpoint health is not authoritative. The picker accepts any non-null, live leader (`Server_PickLeastLoadedHC.sqf:31-40`), while registration pruning does not require owner `>2`, freshness, or unique owner across all surviving rows (`Server_HandleSpecial.sqf:1198-1226`). Duplicate owner rows are under-counted because the load tally credits only the first `_owners find` match (`Server_PickLeastLoadedHC.sqf:43-56`). `Common_SendToClient` accepts `_id > 0`, although owner 2 is the dedicated server, so a stale endpoint can be routed to a machine without the HC client handler (`Common_SendToClient.sqf:16-24`).
+- The only death alert is structurally blind to this incident: `server_groupsGC.sqf:560-569` warns only when `_delegRemote == 0`. `remote` means merely "not local to the server" across all `allUnits`; it is not an HC-owned-AI census and can include human players and HC avatars. Therefore 7% can be a functional zero-HC-AI collapse without satisfying the alert.
+- Lost/new groups are sticky in OA; there is no safe shipped mechanism that continuously migrates an existing AI group between HCs. A restart/reconnect can therefore leave load on the dedicated server even after the registry looks live. Exact ownership paths still require the forced-HC-bounce rig test below.
+
+### Proving ground + cooperative scheduler v0 — **LAB ONLY / DO NOT MERGE**
+
+`Tools/ProvingGround` now generates isolated Utes or current-map test missions, owner-aware `WASPLAB|v1` telemetry, RPT monitor/compare tools and a default-off cooperative scheduler v0. V0 runs only on the server and controls only synthetic lab group creation, path continuations and bounded Common_Send pressure. It uses four linearly scanned lane arrays, a 32-job cap, a separate heartbeat and the code's current 1/0.75/0.5/0.25 ms advisory launch budgets. It does **not** contain a timing wheel, shared snapshot service, HC-local scheduler, HC creation backpressure or any migrated production loop.
+
+Matched build arms are:
+
+```text
+python Tools\ProvingGround\build.py scheduler-ramp --variant sched-off --scheduler-mode off --force
+python Tools\ProvingGround\build.py scheduler-ramp --variant sched-shadow --scheduler-mode shadow --force
+python Tools\ProvingGround\build.py scheduler-ramp --variant sched-active --scheduler-mode active --force
+```
+
+Shadow versus off measures dispatcher overhead. Active versus off also changes work timing by spreading creation and path continuations, so it is a scheduler-plus-pacing test. No gain is verified: the planning hypothesis is 0–5% median movement and 5–15% better p5/min FPS during bursty lab work, with neutral or negative results possible when engine AI dominates. The live 47→30→recovery observation is not a scheduler forecast.
+
+All AI remains continuously materialized and fully engine-simulated. There is no simulation gating, frozen/virtualized force, external movement/combat simulation or production ownership change. Synthetic groups are deliberately server-local to stress the dedicated process; production should keep authority on the server while creating eligible combat/town groups on healthy HCs. Current lab `hcPct` uses registered valid-looking owner IDs but still has no delegation-eligibility classification. For bus-enabled recipes, validated LabPong ACK rows now add a ten-second fresh-endpoint count and returned HC `diag_fps`: `SAMPLE` exposes `hcFresh`/`hcFpsMin`, while `RESULT` records `busFreshEndpoints`/`hcFpsSamples`/`hcFpsMin`; monitor and comparer promote the result. The default `minHcFps=25` missing/stale/floor gates apply only with `busRate > 0` and `expectedHcs > 0`; no-bus recipes still require HC RPTs, and 25 is a safety floor rather than the ≥40 scale target.
+
+The builder forces `busRate=0` for `expectedHcs=0`: the HC round-trip bus has no legal target. `hc0` remains the server-only ownership/fallback baseline for the 0/1/2-HC and bounce matrix, not bus-throughput or HC-FPS evidence.
+
+No DLL or sidecar is included. A2 OA is x86 and cannot directly load an x64 DLL. A future, separate research PR may test an x86 extension—or an optional x86 bridge to an x64 sidecar—only for bounded pure-data advisory work with immutable messages and no engine pointers. LAA status and allocator choices are also separate memory-headroom/stability A/Bs, not promised FPS upgrades. See `Tools/ProvingGround/README.md`, `docs/design/WASP-RUNTIME-SCHEDULER.md` and `docs/testing/WASP-AI-SCALE-AND-SERVER-PERF-PLAN.md`.
+
+Staged repair train (separate draft PRs; do not arm from documentation):
+
+1. **Truthful health first:** emit `DELEGHEALTH|v2` every 60 s with server-AI and AI-per-owner counts, fresh/eligible HC endpoints, queue/in-flight state, and hysteretic states. Candidate thresholds after minute 5 and at least 40 eligible AI: degraded `<60%` on HCs for three samples; collapsed `<25%` for two samples or no fresh HC; clear `>75%` for three. This remains an ops/document alert, not a Peach+ page.
+2. **Compile-free transport + route rejection:** replace the per-send compiled envelope with A2-safe `missionNamespace setVariable` plus the existing named public-variable operations; reject remote client owner IDs `<=2` and rate-limit `HCROUTE_DROP` telemetry. Preserve the hosted-server local path byte-for-byte in behavior.
+3. **Owner-keyed fresh registry:** keep one newest row per owner with HC object/group/netId, heartbeat timestamp, FPS, local units and groups; require non-null/alive/CIV/owner `>2` and a bounded TTL (candidate 150 s) in one shared `GetFreshHCs` selector used by every delegate path. If selection fails, do not silently fall back to registry index 0.
+4. **Flow-controlled, idempotent heavy dispatch:** put town/AICOM creation behind a bounded server queue (initial candidate: one send/250 ms globally, at most two accepted-but-incomplete batches per HC). Add dispatch IDs, accept/completion ACKs, receiver de-duplication and bounded retries; never blind-retry an unknown-completion batch because that can duplicate units/economy.
+5. **Sticky failure policy:** no speculative OA group migration. Define bounded server fallback or safe retire/recreate/refund rules only after the editor rig proves ownership and combat/economy invariants; town AI may remain server-local until normal deactivation and then reactivate on a healthy HC.
+
+Verification gates: lint every touched SQF with the project A2 selector and mirror mission-source changes across Chernarus/Takistan/Zargabad; then run identical 0/1/2-HC small-map scenarios through cold start, burst town activation, HC-A bounce/rejoin, HC-B bounce/rejoin and a 50 → 200 → 400 AI ramp. For stages 2–4 require zero invalid-owner sends, zero duplicate dispatch completion, bounded queue depth, truthful owner counts, both HCs accepting work after recovery, and an A/B reduction in send CPU/traffic without missing AI. Stage 5 additionally needs a long soak plus in-editor checks for group locality, waypoints, kill ownership, cleanup and refunds. **No runtime HC architecture change ships from this map alone.**
+
+Remaining audit inputs: stuck-team terrain traps (B 1-1-K/L `PATROL_UNSTUCK` loops); `antistack_main` 500–600 ms (known, document/A-B rather than blind-edit); Zargabad error flood (TP-2 fixes); client 15–21 FPS @460 AI (VD/AI-budget tuning input); HC `-mod=@adwasp` + `-malloc` verification. Production output remains an audit/recommendation lane until each repair clears its gate; the generated lab prototype remains explicitly DO NOT MERGE/DEPLOY until its editor and dedicated 0/1/2-HC gates pass and the owner removes that status.
 
 ## 12. Owner questions
 `OWNER-QUESTIONS-BEFORE-BUILD.md` — Q1 (#713 params) gates TP-5; Q2 (naming) gates routing work; Q4 (An-2) gates one edit; Q7 (PR closures/merges) gates queue hygiene. Defaults documented; non-questions building now.

@@ -37,6 +37,7 @@ jobs:
           python Tools\Lint\test_icbm_tel_authority.py
           python Tools\Lint\test_check_stringtable_refs.py
           python Tools\Soak\test_analyze_soak.py
+          python -m unittest discover -s Tools\ProvingGround\tests -p "test_*.py" -v
 
       - name: Soak analyzer sample smoke
         shell: pwsh
