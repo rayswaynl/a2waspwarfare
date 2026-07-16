@@ -438,7 +438,7 @@ while {!WFBE_GameOver} do {
 			//--- NAVAL HVT: post-capture actions for offshore assets (feat/naval-hvt-objectives).
 			//--- Guard: only fires if the feature is ON and this location is tagged as a naval HVT.
 			if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1 && {_location getVariable ["wfbe_is_naval_hvt", false]}) then {
-				private ["_hvtName","_hvtNewSide","_airLogicRef","_newHangar","_oldHangar","_navalMkr"];
+				private ["_hvtName","_hvtNewSide","_airLogicRef","_newHangar","_oldHangar"];
 				_hvtName    = _location getVariable ["name", "Naval HVT"];
 				_hvtNewSide = _newSID Call WFBE_CO_FNC_GetSideFromID;
 
@@ -448,12 +448,6 @@ while {!WFBE_GameOver} do {
 				//--- MATCH|v1|MILESTONE|CARRIER_CAP|: narrative beat for carrier captures.
 				if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 					diag_log ("MATCH|v1|MILESTONE|CARRIER_CAP|carrier=" + _hvtName + "|newSideID=" + str _newSID + "|tMin=" + str (round (time / 60)));
-				};
-
-				//--- Recolour the naval HVT map marker to the new owner.
-				_navalMkr = _location getVariable ["wfbe_naval_marker", ""];
-				if (_navalMkr != "") then {
-					_navalMkr setMarkerColor (missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _hvtNewSide], "ColorGreen"]);
 				};
 
 				//--- If this is a carrier HVT (LHD), update the airfield hangar for the new owner

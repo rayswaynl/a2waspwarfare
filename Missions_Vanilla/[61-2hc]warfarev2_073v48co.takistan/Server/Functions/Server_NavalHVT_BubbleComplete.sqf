@@ -16,7 +16,7 @@
 */
 
 private ["_holdId","_anchor","_winningSide","_oldSideID","_oldSide","_newSID","_objects",
-	         "_capUid","_hvtName","_hvtNewSide","_airLogicRef","_newHangar","_oldHangar","_navalMkr",
+	         "_capUid","_hvtName","_hvtNewSide","_airLogicRef","_newHangar","_oldHangar",
 	         "_navDeckZ","_navRefPos"];
 
 _holdId      = _this select 0;
@@ -76,11 +76,6 @@ _hvtNewSide = _newSID Call WFBE_CO_FNC_GetSideFromID;
 ["INFORMATION", Format ["Server_NavalHVT_BubbleComplete.sqf: Naval HVT [%1] captured by sideID %2.", _hvtName, _newSID]] Call WFBE_CO_FNC_LogContent;
 if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 	diag_log ("MATCH|v1|MILESTONE|CARRIER_CAP|carrier=" + _hvtName + "|newSideID=" + str _newSID + "|tMin=" + str (round (time / 60)));
-};
-
-_navalMkr = _anchor getVariable ["wfbe_naval_marker", ""];
-if (_navalMkr != "") then {
-	_navalMkr setMarkerColor (missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _hvtNewSide], "ColorGreen"]);
 };
 
 if (_anchor getVariable ["wfbe_is_carrier_hvt", false]) then {

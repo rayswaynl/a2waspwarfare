@@ -350,19 +350,13 @@ while {!WFBE_GameOver} do {
 			//--- NAVAL HVT: post-capture actions for offshore assets (feat/naval-hvt-objectives).
 			//--- Guard: only fires if the feature is ON and this location is tagged as a naval HVT.
 			if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1 && {_location getVariable ["wfbe_is_naval_hvt", false]}) then {
-				private ["_hvtName","_hvtNewSide","_airLogicRef","_newHangar","_oldHangar","_navalMkr"];
+				private ["_hvtName","_hvtNewSide","_airLogicRef","_newHangar","_oldHangar"];
 				_hvtName    = _location getVariable ["name", "Naval HVT"];
 				_hvtNewSide = _newSID Call WFBE_CO_FNC_GetSideFromID;
 
 				//--- Announce capture to all players (no inbound warning; just the flip notification).
 				[nil, "HandleSpecial", ["naval-hvt-captured", _location, _newSID, _hvtName]] Call WFBE_CO_FNC_SendToClients;
 				["INFORMATION", Format ["server_town.sqf: Naval HVT [%1] captured by sideID %2.", _hvtName, _newSID]] Call WFBE_CO_FNC_LogContent;
-
-				//--- Recolour the naval HVT map marker to the new owner.
-				_navalMkr = _location getVariable ["wfbe_naval_marker", ""];
-				if (_navalMkr != "") then {
-					_navalMkr setMarkerColor (missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _hvtNewSide], "ColorGreen"]);
-				};
 
 				//--- If this is a carrier HVT (LHD), update the airfield hangar for the new owner
 				//--- so the aircraft-sell block on next capture works correctly.
