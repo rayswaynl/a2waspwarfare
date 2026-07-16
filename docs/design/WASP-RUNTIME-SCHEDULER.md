@@ -1,6 +1,6 @@
 # WASP runtime scheduler — A2 OA lab design
 
-> **LAB ONLY — DO NOT MERGE OR DEPLOY.** The implemented v0 exists only in generated proving-ground missions, is default-off and server-only, and still requires an A2 OA dedicated-rig run. It does not authorize a production flag, addon, allocator, executable change, native extension or service action.
+> **LAB ONLY — NEVER DEPLOYED.** This design doc merges as tooling documentation (owner plan pick 4, 2026-07-15; see "Lab-only tooling policy" in `docs/AGENT-HANDBOOK.md`). The implemented v0 exists only in generated proving-ground missions, is default-off and server-only, and still requires an A2 OA dedicated-rig run. It does not authorize a production flag, addon, allocator, executable change, native extension or service action.
 
 ## Feasibility and non-goals
 

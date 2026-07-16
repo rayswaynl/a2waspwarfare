@@ -37,7 +37,6 @@ jobs:
           python Tools\Lint\test_icbm_tel_authority.py
           python Tools\Lint\test_check_stringtable_refs.py
           python Tools\Soak\test_analyze_soak.py
-          python -m unittest discover -s Tools\ProvingGround\tests -p "test_*.py" -v
 
       - name: Soak analyzer sample smoke
         shell: pwsh
@@ -144,3 +143,29 @@ jobs:
         # 'step -1', nil-hazard getVariable negation/arithmetic, missing compiled file paths.
         run: |
           pwsh Tools\PrTestHarness\BugHunt\Find-WaspBugHunt.ps1 -All -MinSeverity medium
+
+  # --- LAB GUARD -----------------------------------------------------------
+  # Tools/ProvingGround is a lab-only perf/scale test rig, deliberately isolated in
+  # its own job so its status never blends with (or masks) the shipped-mission
+  # gates above. It generates isolated Utes/current-map proving-ground missions
+  # into a gitignored Tools/ProvingGround/out/ directory for local experiments
+  # only: it is never referenced by Missions/ or Missions_Vanilla/, never
+  # packaged into a shipped PBO, and never deploys to a live server. See
+  # "Lab-only tooling policy" in docs/AGENT-HANDBOOK.md.
+  lab-provingground:
+    name: "LAB ONLY - Tools/ProvingGround (non-shipping test rig)"
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Tools/ProvingGround unit tests (lab-only)
+        shell: pwsh
+        run: |
+          python -m unittest discover -s Tools\ProvingGround\tests -p "test_*.py" -v

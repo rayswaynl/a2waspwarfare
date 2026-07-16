@@ -345,6 +345,38 @@ If you need to verify live server state for debugging, ask the owner to run the 
 
 ---
 
+## Lab-only tooling policy (`Tools/ProvingGround`)
+
+Established 2026-07-16 (owner plan pick 4) to codify a convention that previously existed
+only as narrative "DO NOT MERGE" banners on individual draft PRs.
+
+`Tools/ProvingGround` is a local perf/scale test rig: it generates isolated Utes (or
+current-map) proving-ground missions plus an experimental server-only cooperative
+scheduler v0, for offline lab experiments. The guard has two parts:
+
+1. **Never referenced by shipped missions.** `build.py` copies the current Chernarus
+   source into a gitignored `Tools/ProvingGround/out/` directory and applies a
+   test-only overlay there — nothing under `Missions/` or `Missions_Vanilla/` is
+   edited, and no `Tools/ProvingGround` output is a fourth production mirror or ever
+   placed under `Missions_Vanilla/`. Nothing in the mission source tree imports from or
+   references `Tools/ProvingGround`.
+2. **CI marks the lab path distinctly.** `Tools/ProvingGround`'s own test suite runs in
+   the dedicated `lab-provingground` job in `.github/workflows/wasp-ci.yml`, named
+   `"LAB ONLY - Tools/ProvingGround (non-shipping test rig)"` — never folded into the
+   `tooling` job that gates shipped-mission SQF lint, stringtable, and mirror-drift
+   checks. A regression in the lab rig shows up as its own status check and can never
+   mask (or be masked by) a production-tooling failure.
+
+Merging code under `Tools/ProvingGround` (or its docs) is **not** the same claim as the
+Utes topology or the scheduler v0 being production-ready. Those remain gated behind
+editor load/save verification and real dedicated 0/1/2-HC boot tests — see
+`docs/project-management/FABLE-ACTIVE-COMPLETION-MAP.md` section 11 for the current gate
+status and the staged repair train. Any future `Tools/*Lab*`-style rig should follow the
+same two-part guard: gitignored output with no mission-tree references, plus its own
+named, isolated CI job.
+
+---
+
 ## Shelved-PR register
 
 Before proposing any fix for an audit-flagged issue, check the Shelved-PR pages in the

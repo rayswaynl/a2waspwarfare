@@ -1,6 +1,6 @@
 # Utes equal-work group-partition contract
 
-> **LAB ONLY — DO NOT MERGE OR DEPLOY.** This contract measures server-local synthetic groups. It does not authorize a production team-size change and does not prove HC-owned AICOM behavior.
+> **LAB ONLY — NEVER DEPLOYED.** This contract merges as tooling documentation (owner plan pick 4, 2026-07-15; see "Lab-only tooling policy" in `docs/AGENT-HANDBOOK.md`). It measures server-local synthetic groups only. It does not authorize a production team-size change and does not prove HC-owned AICOM behavior.
 
 ## Question
 

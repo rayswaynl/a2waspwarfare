@@ -1,6 +1,6 @@
 # WASP Proving Ground
 
-> **LAB ONLY — DO NOT MERGE OR DEPLOY.** Utes still requires editor and dedicated 0/1/2-HC verification. The scheduler is an experimental server-only v0, not production runtime code.
+> **LAB ONLY — NEVER DEPLOYED, NEVER SHIPPED.** This tooling merge is owner-ratified (plan pick 4, 2026-07-15) and runs in its own `lab-provingground` CI job — see "Lab-only tooling policy" in `docs/AGENT-HANDBOOK.md`. That ratifies merging the *tooling*, not the artifact: the Utes topology still requires editor and dedicated 0/1/2-HC verification, and the scheduler remains an experimental server-only v0, not production runtime code. Neither is referenced by any shipped mission.
 
 A generated, current-source test mission for fast AI, HC, pathfinding, network-bus, group-density and server-performance experiments.
 

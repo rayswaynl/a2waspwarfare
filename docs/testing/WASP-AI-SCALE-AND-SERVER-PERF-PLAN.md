@@ -1,6 +1,6 @@
 # WASP AI scale and server-performance plan
 
-> **LAB ONLY — DO NOT MERGE OR DEPLOY.** The proving-ground scheduler is a default-off, server-only v0. Utes and every performance claim remain dedicated-rig work.
+> **LAB ONLY — NEVER DEPLOYED.** This plan merges as tooling documentation (owner plan pick 4, 2026-07-15; see "Lab-only tooling policy" in `docs/AGENT-HANDBOOK.md`). The proving-ground scheduler is a default-off, server-only v0. Utes and every performance claim remain dedicated-rig work.
 
 Status: source-verified design and proving-ground plan. No production flag, service, executable, allocator, mod, DLL or sidecar is changed by this document or the proving-ground PR.
 
