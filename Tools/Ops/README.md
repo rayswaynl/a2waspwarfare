@@ -4,6 +4,26 @@ These scripts are operator-side helpers for local server administration. They do
 launch Arma, deploy PBOs, touch mission source, or change live state unless their own
 `-Apply` switch is passed.
 
+## Full Deploy Pipeline
+
+Use `Deploy-Wasp.ps1` — the ONE reusable, idempotent deploy pipeline that replaces the
+~150 single-use throwaway deploy scripts. It composes the existing helpers
+(`Set-MissionTemplate.ps1`, the `WaspServiceRestart` task, `Tools/LoadoutManager`) to run the
+whole chain: build/mirror → pack → archive+copy → repoint cfg → restart → verify, with a real
+rolling rollback archive.
+
+```powershell
+.\Deploy-Wasp.ps1 -Build cmdcon48aicom -ActiveMap ch          # dry run (writes nothing)
+.\Deploy-Wasp.ps1 -Build cmdcon48aicom -ActiveMap ch -Apply   # real deploy (owner, on the box)
+.\Deploy-Wasp.ps1 -ActiveMap ch -Rollback -Apply              # restore previous known-good PBO
+```
+
+It is safe by default (dry run without `-Apply`) and is built so the 2026-06-23 "cfg guard
+threw after the service was stopped" incident cannot recur — the cfg is repointed while the
+server is still up, and the restart task is the only stop/start. Full design, the flagged
+external PBO-packer dependency (Mikero), and the rollback model are in
+[`docs/ops/DEPLOY-PIPELINE.md`](../../docs/ops/DEPLOY-PIPELINE.md).
+
 ## Mission Template Repoint
 
 Use `Set-MissionTemplate.ps1` to update the active `template = "...";` line in a server
