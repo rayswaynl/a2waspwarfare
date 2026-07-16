@@ -1,4 +1,4 @@
-Private["_activeDrone","_activeKey","_atomicState","_argDriver","_argDrone","_argPlayer","_argTeam","_argToken","_args","_cap","_capExpired","_capExpires","_capKey","_clientSide","_cooldown","_cost","_deny","_driver","_drone","_existingFpvArr","_existingFpvKey","_expectedClass","_expectedPilot","_funds","_inflight","_inflightKey","_mode","_next","_nextKey","_player","_playerTeam","_replyId","_requestBound","_result","_resultKey","_slotReserved","_sendPrivate","_seatDeadline","_serverSide","_side","_timeStart","_timeout","_uid"];
+Private["_activeDrone","_activeKey","_atomicState","_argDriver","_argDrone","_argPlayer","_argTeam","_argToken","_args","_cap","_capExpired","_capExpires","_capKey","_clientSide","_cooldown","_cost","_deny","_detGrace","_driver","_drone","_existingFpvArr","_existingFpvKey","_expectedClass","_expectedPilot","_funds","_inflight","_inflightKey","_mode","_next","_nextKey","_player","_playerTeam","_replyId","_requestBound","_result","_resultKey","_slotReserved","_sendPrivate","_seatDeadline","_serverSide","_side","_timeStart","_timeout","_uid"];
 
 //--- OA 1.62+ targeted PVF sender. The shared RequestSpecial bus carries no sender identity, so
 //--- capability and purchase results must never use the legacy all-client vanilla broadcast.
@@ -404,6 +404,7 @@ isNil {
 
 _timeStart = time;
 _timeout = (missionNamespace getVariable ["WFBE_C_FPV_DRONE_TTL", 240]) + 120;
+_detGrace = 15;
 ["INFORMATION", Format ["Support_FPV.sqf: [%1] Team [%2] [%3] launched an FPV strike drone (cost %4).", str _side, _playerTeam, name _player, _cost]] Call WFBE_CO_FNC_LogContent;
 //--- SECURITY (fable/fpv-strike-drone): stamp armed-drone ownership token so Support_FPV_Detonate
 //--- can verify the requestor has a real drone in the air (one-shot; cleared on watchdog exit).
@@ -415,11 +416,21 @@ _fpvArr = missionNamespace getVariable [_fpvKey, []];
 if (typeName _fpvArr != "ARRAY") then {_fpvArr = []};
 _fpvArr set [count _fpvArr, _drone];
 missionNamespace setVariable [_fpvKey, _fpvArr];
+//--- Keep the capability server-local on the exact drone object. The detonation request
+//--- must present this private purchase capability; a forged client cannot read another
+//--- client's local copy, and the server never trusts the request position.
+_drone setVariable ["wfbe_fpv_det_cap", _argToken];
+_drone setVariable ["wfbe_fpv_det_owner", _replyId];
 
 while {true} do {
 	sleep 5;
 	if (!(isPlayer (leader _playerTeam)) || !alive _drone || ((time - _timeStart) > _timeout)) exitWith {};
 };
+
+//--- Give the owning client a bounded window to deliver the Killed EH request before
+//--- removing a dead drone from the exact-match registry. No authority is granted by this
+//--- grace alone: the server still requires the per-drone capability below.
+if (!alive _drone) then {sleep _detGrace};
 
 //--- Rearm begins when the flight ends, matching the approved IN FLIGHT -> REARMING contract.
 //--- Keep the active slot reserved until this watchdog settles so a death/abort cannot race a new buy.
