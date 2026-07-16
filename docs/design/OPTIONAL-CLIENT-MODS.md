@@ -20,7 +20,7 @@ load it — that is the event-modpack lane, not this one).
 - Launch line (verbatim):
   ```
   arma2oaserver.exe -port=2302 -config=C:\WASP\profiles-pr8\server-pr8.cfg -cfg=C:\WASP\profiles-pr8\basic.cfg
-    "-mod=C:\Program Files (x86)\Steam\steamapps\common\Arma 2;expansion;ACR;@CBA_CO;@adwasp;@admkswf"
+    "-mod=C:\Program Files (x86)\Steam\steamapps\common\Arma 2;expansion;@CBA_CO;@adwasp;@admkswf"
     -malloc=mimalloc -world=empty
   ```
   No `-serverMod=`, no `-beplugin`/`-bepath`, no `equalModRequired` anywhere.

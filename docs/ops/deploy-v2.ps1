@@ -92,7 +92,7 @@ $GAME_PORT  = 2302
 #   recovery scripts.
 $HC1_EXE     = 'C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead\ArmA2OA.exe'
 $HC1_WORKDIR = 'C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead'
-$HC1_ARGS    = '-client -connect=127.0.0.1 -port=2302 -name="HC-AI-Control-1" -mod=@CBA_CO;@adwasp;@admkswf;ACR'
+$HC1_ARGS    = '-client -connect=127.0.0.1 -port=2302 -name="HC-AI-Control-1" -mod=ACR;@CBA_CO;@adwasp;@admkswf'
 $HC1_APPID   = '33930'   # Arma 2: Operation Arrowhead Steam App ID
 
 # Build-parameterised PBO names
