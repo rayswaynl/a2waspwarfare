@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "WASP client frame telemetry baseline",
+  "type": "object",
+  "required": ["schema", "status", "reports", "frameSamples", "frameTimeMs", "fps", "longFrames", "state", "contextLast", "runtimeCorrelation"],
+  "properties": {
+    "schema": { "const": "wasp-client-frame-telemetry-v1" },
+    "status": { "enum": ["baseline_ready", "no_data"] },
+    "sessionId": { "type": ["string", "null"] },
+    "map": { "type": ["string", "null"] },
+    "reports": { "type": "integer", "minimum": 0 },
+    "frameSamples": { "type": "integer", "minimum": 0 },
+    "frameTimeMs": {
+      "type": "object",
+      "required": ["p50", "p95", "p99", "max"],
+      "properties": {
+        "p50": { "type": ["number", "null"] },
+        "p95": { "type": ["number", "null"] },
+        "p99": { "type": ["number", "null"] },
+        "max": { "type": ["number", "null"] }
+      }
+    },
+    "fps": {
+      "type": "object",
+      "required": ["average", "p50", "p01LowProxy", "min"],
+      "properties": {
+        "average": { "type": ["number", "null"] },
+        "p50": { "type": ["number", "null"] },
+        "p01LowProxy": { "type": ["number", "null"] },
+        "min": { "type": ["number", "null"] }
+      }
+    },
+    "longFrames": { "type": "object" },
+    "state": { "type": "object" },
+    "contextLast": { "type": "object" },
+    "timeToPlayableSec": { "type": ["number", "null"] },
+    "runtimeCorrelation": {
+      "type": "object",
+      "required": ["status", "samples"],
+      "properties": {
+        "status": { "enum": ["not_provided", "matched", "unavailable_no_timestamp_match"] },
+        "samples": { "type": "integer", "minimum": 0 },
+        "hardwareTier": { "type": ["string", "null"] },
+        "processCpuPctAvg": { "type": ["number", "null"] },
+        "processCpuPctP95": { "type": ["number", "null"] },
+        "workingSetMbAvg": { "type": ["number", "null"] },
+        "workingSetMbP95": { "type": ["number", "null"] }
+      }
+    }
+  }
+}
