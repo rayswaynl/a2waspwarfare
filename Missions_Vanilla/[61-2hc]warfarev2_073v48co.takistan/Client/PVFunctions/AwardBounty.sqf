@@ -1,4 +1,4 @@
-Private["_assist","_bounty","_get","_name","_type","_faction"];
+Private["_assist","_bounty","_get","_name","_type","_faction","_srvBounty"];
 
 if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}};
 if (isNull player) exitWith {};
@@ -6,6 +6,10 @@ if (isNull player) exitWith {};
 _type = _this select 0;
 _assist = _this select 1;
 _ai = if (count _this > 2) then {_this select 2} else {objNull};
+//--- J1 funds authority: the server now credits the bounty (RequestOnUnitKilled.sqf) and appends the
+//--- authoritative amount as payload element 3; this handler keeps its identical local math only as a
+//--- legacy-payload display fallback.
+_srvBounty = if (count _this > 3) then {_this select 3} else {-1};
 
 _get = missionNamespace getVariable _type;
 if (isNil "_get") exitWith {}; //--- Build83 (Ray client RPT 2026-07-01): killed type with no price-registry entry -> _get nil -> the select lines below spammed "Undefined variable _get" every such kill. No price = no bounty, so exit cleanly.
@@ -52,13 +56,15 @@ sleep (random 3);
 //--- Are we dealing with a kill assist or a full kill.
 if (_assist) then {
 	_bounty = _bounty * (missionNamespace getVariable "WFBE_C_UNITS_BOUNTY_ASSISTANCE_COEF");
-	//--- B748: Kill Feed Settings opt-out gates ONLY the chat line; the bounty payout below is NEVER gated.
+	if (_srvBounty >= 0) then {_bounty = _srvBounty}; //--- J1: display the server-paid amount (already post-coef).
+	//--- B748: Kill Feed Settings opt-out gates ONLY the chat line (J1: the payout itself is now server-side).
 	if (missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]) then {Format[Localize "STR_WF_CHAT_Award_Bounty_Assist", _bounty, _name] Call GroupChatMessage};
 } else {
+	if (_srvBounty >= 0) then {_bounty = _srvBounty}; //--- J1: display the server-paid amount.
 	if (missionNamespace getVariable ["WFBE_KILL_MESSAGES", true]) then {Format[Localize "STR_WF_CHAT_Award_Bounty", _bounty, _name] Call GroupChatMessage};
 };
 
-(_bounty) Call ChangePlayerFunds;
+//--- J1 funds authority: wallet write removed - the server credits the killer's/assister's group in RequestOnUnitKilled.sqf.
 /* 
 if (alive _ai) then {//--- If the killer was one of our ai, then we improve it's skill.
 	Private ["_skill", "_skill_ai"];

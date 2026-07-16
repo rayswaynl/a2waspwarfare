@@ -1156,6 +1156,7 @@ switch (_args select 0) do {
 		_cShare = round (_cPool / (_cCount max 1));
 
 		[_cSide, "BankPayout", [_cShare]] Call WFBE_CO_FNC_SendToClients;
+		[_cSide, _cShare] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (BankPayout keeps only the message).
 		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] convoy payout $%2 x %3 players at [%4].", str _cSide, _cShare, _cCount, if (!isNull _cTown) then {_cTown getVariable ["name","?"]} else {"?"}]] Call WFBE_CO_FNC_LogContent;
 	};
 	//--- HC SEATING TELEMETRY (task #34): pure RPT logging, no gameplay effect. Mirrors the HCSIDE|v1|connect
@@ -1563,6 +1564,7 @@ switch (_args select 0) do {
 				diag_log ("GUERVBIED|v1|drvUID=" + (str _drvUID) + "|victims=" + (str (count _victims)) + "|payout=" + (str _payout) + "|persBounty=" + (str _persBounty) + "|persScore=" + (str _persScore)); //--- Ray 2026-06-27: definitive trace of a GUER VBIED payout (always-on).
 					if (_drvUID != "" && {_persBounty > 0}) then {
 					[_drvUID, "GuerVbiedBounty", _persBounty] Call WFBE_CO_FNC_SendToClients;
+					if (!isNull _drvGrp) then { [_drvGrp, _persBounty] Call WFBE_CO_FNC_ChangeTeamFunds }; //--- J1 funds authority: credit the PRE-BLAST captured slot group (the suicide driver is guaranteed dead at settle, so any alive/UID-scan resolve would pay nobody; his client handler no longer writes the wallet).
 					["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED personal bounty [%1] + score [%2] paid to detonator UID [%3].", _persBounty, _persScore, _drvUID]] Call WFBE_CO_FNC_LogContent;
 				};
 				if (!isNull _driver && {_persScore > 0}) then {

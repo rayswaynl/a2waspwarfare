@@ -1,5 +1,5 @@
 /* BankPayout.sqf — client-side PVF handler.
-   Pays the local player a bank dividend and shows a quiet group-chat notification.
+   Shows the quiet group-chat dividend notification (J1 funds authority: the credit itself now lands server-side).
 
    Parameters (as received via WFBE_CL_FNC_HandlePVF dispatch):
      0 - payout amount (number)
@@ -14,6 +14,6 @@ if (isNil "WFBE_Client_SideID") exitWith {};
 _amount = _this select 0;
 
 if (!alive player) exitWith {}; //--- M-3: the pool is divided by ALIVE players only (Server_BankIncome.sqf:39); a dead-at-tick player applying the share makes total payout exceed the 6000 pool
-_amount Call WFBE_CL_FNC_ChangeClientFunds;
+//--- J1 funds authority: wallet write removed - the server credits each recipient group (WFBE_SE_FNC_CreditSidePlayers for the pool payouts; group _killer for the bank-raid bonus).
 
 Format [Localize "BankDividend", _amount] Call GroupChatMessage;

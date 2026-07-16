@@ -73,6 +73,7 @@ if ((!isNull _killer) && (isPlayer _killer)) then
 	   {
             if (_structure isKindOf "Base_WarfareBBarracks") then {[_side_killer, 500, "GUER FOB barracks cleared", false] Call ChangeSideSupply};
             [_side_killer, "LocalizeMessage", ["GuerFobCleared", (name _killer), _bounty, _type, _side]] call WFBE_CO_FNC_SendToClients;
+            if (_bounty > 0) then { [_killerGroup, _bounty] Call WFBE_CO_FNC_ChangeTeamFunds }; //--- J1 funds authority: server-side credit (the name-matched client write is removed; same-name double-mint closed).
             //--- fable/fix-guer-fob (N6): FOB marker + ledger cleanup MOVED to the unconditional "Decrement
             //--- building limit" section below (WFBE_GUER_FOB_ACTIVE / guer_fob_* marker) so it runs for every
             //--- kill source, not just isPlayer(_killer) - see that section.
@@ -87,11 +88,13 @@ if ((!isNull _killer) && (isPlayer _killer)) then
 
             [_side_killer, "LocalizeMessage", ["HeadHunterReceiveBountyInSupplies", _side_killer, _type, _supplies, _side]] call WFBE_CO_FNC_SendToClients;
             [_side_killer, "LocalizeMessage", ["HeadHunterReceiveBounty", (name _killer), _bounty, _type, _side]] call WFBE_CO_FNC_SendToClients;
+            if (_bounty > 0) then { [_killerGroup, _bounty] Call WFBE_CO_FNC_ChangeTeamFunds }; //--- J1 funds authority: server-side credit (the name-matched client write is removed).
             [_side_killer, _supplies, "GUER barracks bounty", false] Call ChangeSideSupply;
             }
        else
        {
             [_side_killer, "LocalizeMessage", ["HeadHunterReceiveBounty", (name _killer), _bounty, _type, _side]] call WFBE_CO_FNC_SendToClients;
+            if (_bounty > 0) then { [_killerGroup, _bounty] Call WFBE_CO_FNC_ChangeTeamFunds }; //--- J1 funds authority: server-side credit (the name-matched client write is removed).
        };
        };
 
@@ -153,6 +156,7 @@ if ((_structure getVariable ["wfbe_structure_type", ""]) == "Bank" && (missionNa
 		_bankBounty = 25000;
 		[(side group _killer), 10000, "Bank destruction", false] Call ChangeSideSupply;
 		[getPlayerUID _killer, "BankPayout", [_bankBounty]] Call WFBE_CO_FNC_SendToClients; //--- E5: route the $25k payout by the REAL UID, not the display-masked _killer_uid ("xxxxxxx" when WFBE_C_GAMEPLAY_UID_SHOW==0 -> no client matched -> $0 paid)
+		[group _killer, _bankBounty] Call WFBE_CO_FNC_ChangeTeamFunds; //--- J1 funds authority: server-side credit (the UID-routed BankPayout above keeps only the message; isPlayer-gated at the enclosing if).
 		//--- Global broadcast: everyone hears the bank fell.
 		private ["_sideName"];
 		_sideName = if (_side == west) then {"Federal Reserve"} else {"Bank Rossii"};

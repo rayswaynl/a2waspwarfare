@@ -39,8 +39,15 @@ WFBE_SE_FNC_HandleSupplyMissionCompleted = {
 
     WFBE_Server_PV_SupplyMissionCompletedMessage = [format ["%1 has transported S %2 to base from %3.", _namePlayer, _supplyAmount, _sourceTownStr], _sidePlayer, _supplyAmount, _playerObject, _byHeli, _cashRun];
 
+    //--- J1 funds authority: pay the delivering player's team server-side (identical formula to the client
+    //--- message line; WFBE_C_SUPPLY_HELI_REWARD_MULT is an unconditional Common constant). Unconditional wrt
+    //--- _cashRun - the client paid the pilot in BOTH branches. The client handler no longer writes the wallet.
+    if (!isNull _playerObject && {isPlayer _playerObject}) then {
+        [group _playerObject, if (_byHeli) then {round (_supplyAmount * WFBE_C_SUPPLY_HELI_REWARD_MULT)} else {_supplyAmount}] Call WFBE_CO_FNC_ChangeTeamFunds;
+    };
+
     if (_cashRun) then {
-        //--- Cash run: pilot is paid client-side; commander gets a tithe minted on top. Pool gets nothing.
+        //--- Cash run: pilot's team is paid server-side above (J1); commander gets a tithe minted on top. Pool gets nothing.
         _comTeam = (_sidePlayer) call WFBE_CO_FNC_GetCommanderTeam;
         if (!isNull _comTeam) then {
             [_comTeam, round (_supplyAmount * WFBE_C_SUPPLY_HELI_REWARD_MULT * WFBE_C_SUPPLY_CASHRUN_COMMANDER_CUT)] Call WFBE_CO_FNC_ChangeTeamFunds;

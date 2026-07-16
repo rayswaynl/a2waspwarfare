@@ -8,8 +8,8 @@
      0 - bank object (the core structure)
      1 - owning side
 
-   Payout mechanism: side-targeted BankPayout PVF which calls
-   WFBE_CL_FNC_ChangeClientFunds on each receiving client.
+   Payout mechanism (J1 funds authority): the server credits each eligible player group directly
+   (WFBE_SE_FNC_CreditSidePlayers); the side-targeted BankPayout PVF keeps only the chat notification.
    This mirrors TownCaptured.sqf's pattern for side-targeted client payouts.
 */
 Private ["_bank","_side","_interval","_pool","_share","_playerCount","_logik","_hqAlive"];
@@ -39,6 +39,7 @@ while {alive _bank} do {
 		{if ((isPlayer _x) && (alive _x) && (side _x == _side)) then {_playerCount = _playerCount + 1}} forEach playableUnits;
 		_share = round (_pool / (_playerCount max 1));
 		[_side, "BankPayout", [_share]] Call WFBE_CO_FNC_SendToClients;
+		[_side, _share] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (BankPayout keeps only the message).
 		["INFORMATION", Format ["Server_BankIncome.sqf: [%1] Dividend $%2 x %3 players sent (pool %4).", str _side, _share, _playerCount, _pool]] Call WFBE_CO_FNC_LogContent;
 	};
 };
