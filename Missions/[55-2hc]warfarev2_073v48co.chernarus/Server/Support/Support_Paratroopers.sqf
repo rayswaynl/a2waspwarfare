@@ -1,4 +1,4 @@
-Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_destination','_greenlight','_grp','_index','_isAI','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
+Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_destination','_greenlight','_grp','_index','_isAI','_lvlOverride','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
 
 _side = _this select 1;
 _destination = _this select 2;
@@ -34,10 +34,17 @@ if !(isNil '_bd') then {
 //--- Get the units and the air vehicle, exit if nil.
 _currentUpgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 _currentLevel = _currentUpgrades select WFBE_UP_PARATROOPERS;
+//--- Optional explicit level override (5th argument; W4 AIRBORNE ASSAULT passes 3): the roster keys only exist
+//--- for levels 1-3, and the upgrade-derived level is 0 while the tier is unresearched - callers granting a free
+//--- drop must pass the level here instead of relying on the side's researched tier.
+if (count _this > 4) then {
+	_lvlOverride = _this select 4;
+	if (!isNil "_lvlOverride") then {if ((typeName _lvlOverride) == "SCALAR" && {_lvlOverride > 0}) then {_currentLevel = _lvlOverride}};
+};
 _units = missionNamespace getVariable Format ["WFBE_%1PARACHUTELEVEL%2", str _side, _currentLevel];
 _vehicle_model = missionNamespace getVariable Format ["WFBE_%1PARACARGO", str _side];
 
-if (isNil '_units' || isNil '_vehicle_model') exitWith {["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle or units are not defined.", _side]] Call WFBE_CO_FNC_LogContent};
+if (isNil '_units' || isNil '_vehicle_model') exitWith {["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle or units are not defined (level %2).", _side, _currentLevel]] Call WFBE_CO_FNC_LogContent};
 
 //--- Determine how many vehicles do we need.
 _vehicle_cargo = getNumber(configFile >> 'CfgVehicles' >> _vehicle_model >> 'transportSoldier');
