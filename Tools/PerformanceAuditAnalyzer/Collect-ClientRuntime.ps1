@@ -38,10 +38,10 @@ while ($true) {
 	$cpuPct = $null
 	$workingSetMb = $null
 	$processName = $null
-	$pid = $null
+	$procId = $null
 	if ($null -ne $process) {
 		$processName = $process.ProcessName
-		$pid = $process.Id
+		$procId = $process.Id
 		$workingSetMb = [math]::Round(([double]$process.WorkingSet64 / 1MB), 2)
 		$key = [string]$process.Id
 		if ($previous.ContainsKey($key)) {
@@ -58,7 +58,7 @@ while ($true) {
 	$row = [ordered]@{
 		wallTime = $now.ToUniversalTime().ToString("o")
 		processName = $processName
-		pid = $pid
+		pid = $procId
 		processCpuPct = $cpuPct
 		workingSetMb = $workingSetMb
 		hardwareTier = $hardwareTier

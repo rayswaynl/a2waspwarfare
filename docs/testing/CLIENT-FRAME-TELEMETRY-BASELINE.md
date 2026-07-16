@@ -8,8 +8,13 @@ simulation, or send a per-sample network message.
 
 Set the lobby parameter `WFBE_C_CLIENT_FRAME_TELEMETRY` to `1` for a measurement run. The
 default is `0`. `WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL` controls report cadence and defaults to
-60 seconds. The existing coarse `WFBE_C_CLIENT_FPS_REPORT` default is also corrected to `0` so
-client measurement is opt-in at the lobby boundary.
+60 seconds. Both lobby params default to off/60 in `Rsc/Parameters.hpp`, so this stream is
+opt-in at the lobby boundary.
+
+Note: the pre-existing coarse `WFBE_C_CLIENT_FPS_REPORT` param is a SEPARATE, older stream and
+is **not** changed by this work - it remains `default = 1` (ON) in `Rsc/Parameters.hpp`, which is
+the authoritative default and overrides the `0` fallback used by the `getVariable` call sites in
+`Client_FpsReport.sqf` and `Init_Server.sqf`. Flipping it is a separate decision, out of scope here.
 
 The client samples the inverse `diag_fps` frame-time proxy at a 250 ms scheduled cadence. Once
 per report it writes one `CLIENTFRAME|v1|` line containing frame samples and context: frame-time
