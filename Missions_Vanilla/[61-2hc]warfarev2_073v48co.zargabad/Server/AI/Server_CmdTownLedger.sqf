@@ -41,7 +41,7 @@ _fnClamp = {
 //===================================================================================
 // SEED: build the initial per-side ledgers from the current town roster.
 // Record layout: [0]=town, [1]=baselineGroups, [2]=strength, [3]=lastSpawnUnits,
-//                [4]=investT0, [5]=seedT0.
+//                [4]=seedT0.
 //===================================================================================
 private ["_fnSeedSide"];
 _fnSeedSide = {
@@ -63,7 +63,7 @@ _fnSeedSide = {
 			_town setVariable ["wfbe_ctl_pending_invest", 0];
 			_town setVariable ["wfbe_ctl_pending_invest_cost", 0];
 			_town setVariable ["wfbe_ctl_lastspawn", 0];
-			_rec = [_town, _baseGroups, 1.0, 0, 0, diag_tickTime];
+			_rec = [_town, _baseGroups, 1.0, 0, diag_tickTime];
 			_ledger set [count _ledger, _rec];
 			_n = _n + 1;
 			diag_log Format ["CTLSTAT|v1|%1|SEED|town=%2|str=%3", str _side, _town getVariable ["name", "?"], 1.0];
@@ -116,7 +116,7 @@ while {!WFBE_GameOver} do {
 				if (!_found) then {
 					private ["_baseGroups","_rec"];
 					_baseGroups = count ([_town, _side] Call WFBE_SE_FNC_GetTownGroups);
-					_rec = [_town, _baseGroups, _captureSeed, 0, 0, diag_tickTime];
+					_rec = [_town, _baseGroups, _captureSeed, 0, diag_tickTime];
 					_ledger set [count _ledger, _rec];
 					_town setVariable ["wfbe_ctl_pending_ratio", -1];
 					//--- Preserve a paid pre-capture investment for the new owner; the old-side
@@ -167,7 +167,6 @@ while {!WFBE_GameOver} do {
 			_pInvest = _pTown getVariable ["wfbe_ctl_pending_invest", 0];
 			if (_pInvest > 0) then {
 				_recP set [2, ((_recP select 2) + _pInvest) min (missionNamespace getVariable ["AICOMV2_CTL_PAID_MAX", 1.5])];
-				_recP set [4, time];
 				_pTown setVariable ["wfbe_ctl_pending_invest", 0];
 				_pTown setVariable ["wfbe_ctl_pending_invest_cost", 0];
 				diag_log Format ["CTLSTAT|v1|%1|INVEST_APPLY|town=%2|str=%3", str _side, _pTown getVariable ["name", "?"], _recP select 2];

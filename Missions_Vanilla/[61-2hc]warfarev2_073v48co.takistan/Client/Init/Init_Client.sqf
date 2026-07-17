@@ -5,7 +5,7 @@ diag_log format ["Init_Client.sqf: Client initialization begins at [%1]", time];
 
 //--- JOIN ROBUSTNESS (B49 2026-06-19): a stalled client init must NEVER leave the player on a permanent
 //--- black screen. The BLACK FADED fade (layer 12452, set in initJIPCompatible) is normally cleared at
-//--- ~L849 (BLACK IN). If client init stalls before that, this watchdog force-clears the fade after 45s
+//--- ~L849 (BLACK IN). If client init stalls before that, this watchdog force-clears the fade for 90 seconds
 //--- and logs it (so a recurring stall is visible in the client RPT). Happy-path joins set
 //--- clientInitComplete (~L1032) long after the fade clears, so this only fires on a genuine stall.
 //--- JIP FADE FIX v4 (2026-06-20): the v2/v3 watchdogs FROZE - they gated on waitUntil/sleep/clientInitComplete

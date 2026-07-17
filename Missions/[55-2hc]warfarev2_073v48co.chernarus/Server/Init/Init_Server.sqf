@@ -18,8 +18,8 @@ AIBuyUnit = Compile preprocessFile "Server\Functions\Server_BuyUnit.sqf";
 //--- assist on the SERVER, where server-local founded commander teams are local (the player client assist
 //--- never runs here). The manager self-gates OFF unless WFBE_C_AICOM_HIGHCLIMB==1 and enumerates only the
 //--- side-logic wfbe_teams (bounded, no allUnits). Each HC starts its own copy from Init_HC.sqf.
-if (isServer) then { [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HighClimb.sqf" };
-if (isServer) then { [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_AutoFlip.sqf" };  //--- Build84 (Ray): auto-right flipped AICOM ground vehicles (server-local founded teams).
+[] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_HighClimb.sqf";
+[] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_AutoFlip.sqf";  //--- Build84 (Ray): auto-right flipped AICOM ground vehicles (server-local founded teams).
 if (WF_A2_Vanilla) then {AISquadRespawn = Compile preprocessFile "Server\AI\AI_SquadRespawn.sqf"};
 if !(WF_A2_Vanilla) then {AIAdvancedRespawn = Compile preprocessFile "Server\AI\AI_AdvancedRespawn.sqf"};
 AIMoveTo = Compile preprocessFile "Server\AI\Orders\AI_MoveTo.sqf";
@@ -108,7 +108,6 @@ WFBE_SE_FNC_VoteForCommander = Compile preprocessFileLineNumbers "Server\Functio
 WFBE_SE_FNC_AssignForCommander = Compile preprocessFileLineNumbers "Server\Functions\Server_AssignNewCommander.sqf";
 WFBE_CO_FNC_InitAFKkickHandler = Compile preprocessFileLineNumbers "Server\Module\afkKick\initAFKkickHandler.sqf";
 WFBE_CO_FNC_LogGameEnd = Compile preprocessFileLineNumbers "Server\Functions\Server_LogGameEnd.sqf";
-// WFBE_CO_FNC_monitorServerFPS = Compile preprocessFileLineNumbers "Server\Module\serverFPS\monitorServerFPS.sqf";
 WFBE_SE_FNC_SupplyMissionCompleted = Call Compile preprocessFileLineNumbers "Server\Module\supplyMission\supplyMissionCompleted.sqf";
 WFBE_SE_FNC_IsSupplyMissionActiveInTown = Call Compile preprocessFileLineNumbers "Server\Module\supplyMission\isSupplyMissionActiveInTown.sqf";
 WFBE_SE_FNC_SupplyMissionStarted = Call Compile preprocessFileLineNumbers "Server\Module\supplyMission\supplyMissionStarted.sqf";
@@ -130,8 +129,6 @@ WFBE_SE_PV_RequestSupplyValue = Call Compile preprocessFileLineNumbers "Server\F
 WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill = Compile preprocessFileLineNumbers "Server\Module\AntiStack\callDatabaseRequestSideTotalSkill.sqf";
 WFBE_SE_FNC_CallDatabaseFlushPlayerList = Compile preprocessFileLineNumbers "Server\Module\AntiStack\callDatabaseFlushPlayerList.sqf";
 WFBE_SE_FNC_CallDatabaseSetMap = Compile preprocessFileLineNumbers "Server\Module\AntiStack\callDatabaseSetMap.sqf";
-//WFBE_CO_FNC_InitAFKkickHandler = Compile preprocessFileLineNumbers "Server\Module\afkKick\initAFKkickHandler.sqf";
-// WFBE_CO_FNC_monitorServerFPS = Compile preprocessFileLineNumbers "Server\Module\serverFPS\monitorServerFPS.sqf";
 WFBE_SE_FNC_AttackWave = Call Compile preprocessFileLineNumbers "Server\PVFunctions\AttackWave.sqf";
 WFBE_SE_FNC_AttackWavePVEH = Call Compile preprocessFileLineNumbers "Server\Functions\Server_AttackWave.sqf";
 WFBE_SE_FNC_CounterBatteryCheck = Compile preprocessFileLineNumbers "Server\Functions\Server_CounterBattery.sqf";
@@ -226,9 +223,9 @@ if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 };
 
 //--- Side logics.
-_present_west = missionNamespace getVariable "WFBE_WEST_PRESENT";
-_present_east = missionNamespace getVariable "WFBE_EAST_PRESENT";
-_present_res = missionNamespace getVariable "WFBE_GUER_PRESENT";
+_present_west = missionNamespace getVariable ["WFBE_WEST_PRESENT", false];
+_present_east = missionNamespace getVariable ["WFBE_EAST_PRESENT", false];
+_present_res = missionNamespace getVariable ["WFBE_GUER_PRESENT", false];
 
 //--- New Variables.
 if ((missionNamespace getVariable "WFBE_C_TOWNS_PATROLS") > 0) then {
@@ -425,7 +422,8 @@ _egressOK = {
 	_margin   = missionNamespace getVariable ["WFBE_C_BASE_EDGE_MARGIN", 400];
 
 	//--- Reject candidates hugging any map edge (corner-box guard).
-	_ws = 15360;  //--- Legacy default: A2 OA has no dynamic map-size command, and Chernarus map size is 15360.
+	_ws = getNumber (configFile >> "CfgWorlds" >> worldName >> "mapSize");
+	if (_ws < 1) then {_ws = 15360};
 	if ((missionNamespace getVariable ["WFBE_C_BASE_EGRESS_MAP_BOUNDS", 0]) > 0) then {
 		_ws = missionNamespace getVariable ["WFBE_BOUNDARIESXY", 15360];
 		if (_ws < 1) then {_ws = 15360};
@@ -643,8 +641,10 @@ diag_log format ["## B67SPAWN: chosen start keys W=%1 E=%2 (rounded map pos; sho
 //--- 185 (HQ repair scaling): read rolling avg round length from profileNamespace and broadcast.
 private ["_rpavg185","_rpN185","_rpTotal185"];
 _rpavg185 = profileNamespace getVariable ["WFBE_RPAVG", [0, 0]];
+if ((typeName _rpavg185) != "ARRAY" || {count _rpavg185 < 2}) then {_rpavg185 = [0, 0]};
 _rpN185     = _rpavg185 select 0;
 _rpTotal185 = _rpavg185 select 1;
+if ((typeName _rpN185) != "SCALAR" || {(typeName _rpTotal185) != "SCALAR"}) then {_rpN185 = 0; _rpTotal185 = 0};
 WFBE_HQ_REPAIR_AVG_SEC = if (_rpN185 > 0) then {_rpTotal185 / _rpN185} else {21600};
 publicVariable "WFBE_HQ_REPAIR_AVG_SEC";
 ["INITIALIZATION", Format ["Init_Server.sqf: HQ repair avg = %1s from %2 recorded rounds (seed 21600 when none).", round WFBE_HQ_REPAIR_AVG_SEC, _rpN185]] Call WFBE_CO_FNC_LogContent;

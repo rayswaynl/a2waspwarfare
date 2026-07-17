@@ -40,12 +40,6 @@ switch (WFBE_SK_V_Type) do {
 	
 	};
 	
-	case 'Officer': {
-		//--- MASH deploy ability removed (June bundle). Officers keep the near-camp repair action.
-		// Marty: Only show Repair Camp when the player is near a destroyed camp.
-		_unit addAction ["<t color='#11ec52'>" + localize 'STR_WF_Repair_Camp' + "</t>",'Client\Action\Action_RepairCampEngineer.sqf', [], 97, false, true, '', 'alive _target && !isNil "WFBE_CL_FNC_CanRepairCampNearby" && (_target Call WFBE_CL_FNC_CanRepairCampNearby)'];
-	};
-
 	case 'SpecOps': {
 		// Supply truck mission
 		_unit addAction [

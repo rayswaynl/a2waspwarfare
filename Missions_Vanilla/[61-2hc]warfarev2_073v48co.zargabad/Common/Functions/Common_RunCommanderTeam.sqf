@@ -2633,7 +2633,7 @@ while {!WFBE_GameOver && _alive} do {
 	};
 
 	//--- cmdcon41-w2 TOP-UP CONSUMER (Ray: reinforce at friendly towns). Strategy publishes wfbe_aicom_topup_req
-	//--- on THIS team as [count, posArray, classArray, issuedTime]; the units are LOCAL here (HC/server that owns the team),
+	//--- on THIS team as [count, posArray, classArray, issuedTime, charge]; the units are LOCAL here (HC/server that owns the team),
 	//--- so we create them straight into _team via the mission helper WFBE_CO_FNC_CreateUnit (same signature as
 	//--- Common_RunSidePatrol.sqf:113 - it sets skill, backfills weapons, adds the Killed EH, and honours HC
 	//--- locality). Cap creations at 4 per tick; DEFER (keep the request) when a player is within 300m of pos so
@@ -2641,22 +2641,26 @@ while {!WFBE_GameOver && _alive} do {
 	//--- groups); typeName guards (no A3 isEqualType); clear the var by setting [] and testing count>0 (A2 setVariable
 	//--- nil on groups is unreliable). Never create if _team is null. Never-frozen: additions inherit the team order.
 	if (_alive && {!isNull _team}) then {
-		private ["_topReq","_topN","_topPos","_topCls","_topIssued","_topTtl","_topMade","_topDefer","_topClass","_topUnit"];
+		private ["_topReq","_topN","_topPos","_topCls","_topIssued","_topCharge","_topTtl","_topMade","_topDefer","_topClass","_topUnit"];
 		_topReq = _team getVariable "wfbe_aicom_topup_req";
 		if (!isNil "_topReq" && {(typeName _topReq) == "ARRAY"} && {count _topReq >= 3}) then {
 			_topN   = _topReq select 0;
 			_topPos = _topReq select 1;
 			_topCls = _topReq select 2;
 			_topIssued = time;
+			_topCharge = 0;
 			if ((count _topReq) > 3) then {_topIssued = _topReq select 3};
+			if ((count _topReq) > 4) then {_topCharge = _topReq select 4};
 			_topTtl = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_REQ_TTL", 300];
 			if ((typeName _topTtl) != "SCALAR") then {_topTtl = 300};
+			if ((typeName _topCharge) != "SCALAR" || {_topCharge < 0}) then {_topCharge = 0};
 			if ((typeName _topN) == "SCALAR" && {_topN > 0} && {(typeName _topPos) == "ARRAY"} && {count _topPos >= 2} && {(typeName _topCls) == "ARRAY"} && {count _topCls > 0}) then {
 				if ((typeName _topIssued) != "SCALAR") then {_topIssued = time};
 				if ((count _topReq) < 4) then {_team setVariable ["wfbe_aicom_topup_req", [_topN, _topPos, _topCls, _topIssued], true]}; //--- legacy 3-slot request: stamp once so it can age out.
 				if ((_topTtl > 0) && {(time - _topIssued) > _topTtl}) then {
 					_team setVariable ["wfbe_aicom_topup_req", [], true];
-					diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_REQ_STALE|team=" + (str _team) + "|age=" + str (round (time - _topIssued)) + "|ttl=" + str _topTtl);
+					if (_topCharge > 0) then {[_side, _topCharge] Call ChangeAICommanderFunds;};
+					diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_REQ_STALE_REFUND|team=" + (str _team) + "|age=" + str (round (time - _topIssued)) + "|ttl=" + str _topTtl + "|refund=" + str _topCharge);
 				} else {
 					//--- DEFER if any player is within 300m of the spawn pos (keep the request untouched for a later tick).
 					_topDefer = false;

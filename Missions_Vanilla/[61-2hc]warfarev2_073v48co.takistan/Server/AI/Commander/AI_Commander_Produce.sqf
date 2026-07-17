@@ -129,7 +129,7 @@ if (_airMaxTotalP > 0) then {
 		//--- (3) TOWN-CENTER TOP-UP DISPATCHER (Ray: reinforce at friendly towns): an HC team that is RALLYING or
 		//--- PARKED (leader within 400m of its own HQ or an OWN-side town centre) and understrength (alive < 6)
 		//--- gets an infantry top-up. We CHARGE the side up front (per-missing-unit flat cost) and broadcast a
-		//--- wfbe_aicom_topup_req [count,pos,classes,issuedTime] the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
+		//--- wfbe_aicom_topup_req [count,pos,classes,issuedTime,charge] the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
 		//--- one top-up per team per COOLDOWN via a group stamp. Never fires in COMBAT (rallying/parked implies not) or while pending disband (PR #542).
 		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag"];
 		if (_wm_alive < 6 && {behaviour _wm_ldr != "COMBAT"}) then {
@@ -189,7 +189,7 @@ if (_airMaxTotalP > 0) then {
 							if (_wm_curFunds >= _wm_charge) then {
 								[_side, -_wm_charge] Call ChangeAICommanderFunds;
 								_wm_rallyPos = getPosATL _wm_ldr; //--- plain array = the rally pos the driver spawns at
-								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls, _wm_now], true];
+								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls, _wm_now, _wm_charge], true];
 								_team setVariable ["wfbe_aicom_topup_stamp", _wm_now, false]; //--- rate-limit stamp (local group var)
 								//--- VISIBILITY: UID-targeted command-chat line to the seated human commander ONLY (Client_HandlePVF
 								//--- STRING destination = exact player UID; LocalizeMessage "QuartermasterRefit" is a passthrough case).
@@ -204,6 +204,8 @@ if (_airMaxTotalP > 0) then {
 								["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TOPUP_REQ (missing=%3, alive=%4, rally=%5, cost=%6, classes=%7)%8 - charged, broadcast to HC driver.", _sideText, _team, _wm_missing, _wm_alive, _wm_rally, _wm_charge, _wm_infCls, _wm_humanTag]] Call WFBE_CO_FNC_AICOMLog;
 							};
 						};
+						} else {
+							["WARNING", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TOPUP_REQ skipped: no infantry class resolved from barracks roster.", _sideText, _team]] Call WFBE_CO_FNC_AICOMLog;
 					};
 				};
 			};
