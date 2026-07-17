@@ -103,9 +103,6 @@ _i = _i + [['','',6800,35,-2,3,1,0,'CDF',[]]];
 _c = _c + ['BMP2_Ambul_CDF'];
 _i = _i + [['','',3800,20,-2,0,2,0,'CDF',[]]];
 
-_c = _c + ['BVP1_TK_ACR'];
-_i = _i + [['','',2200,22,-2,1,2,0,'CDF',[]]];
-
 _c = _c + ['BMP2_CDF'];
 _i = _i + [['','',2600,30,-2,1,2,0,'CDF',[]]];
 
@@ -158,7 +155,7 @@ _i = _i + [['','',2250,0,1,0,'Defense',0,'CDF',[]]];
 /* Service point */
 
 _c = _c + ['CDF_WarfareBVehicleServicePoint'];
-_i = _i + [['','',5500,0,0,0,'Strategic',0,'US',[]]];
+_i = _i + [['','',5500,0,0,0,'Strategic',0,'CDF',[]]];
 
 
 for '_z' from 0 to (count _c)-1 do {

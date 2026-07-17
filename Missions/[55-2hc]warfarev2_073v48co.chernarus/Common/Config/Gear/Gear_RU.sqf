@@ -575,6 +575,20 @@ _o = _o + [60];
 _z = _z + [2];
 _m = _m + [-1];
 
+//--- Cross-faction loadout entries need local price rows; values mirror their source catalogues.
+_u = _u + ["m8_carbine"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [220]; _z = _z + [2]; _m = _m + [-1];
+_u = _u + ["m8_carbine_pmc"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [230]; _z = _z + [2]; _m = _m + [-1];
+_u = _u + ["m8_carbineGL"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [235]; _z = _z + [3]; _m = _m + [-1];
+_u = _u + ["m8_compact"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [225]; _z = _z + [2]; _m = _m + [-1];
+_u = _u + ["m8_compact_pmc"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [235]; _z = _z + [2]; _m = _m + [-1];
+_u = _u + ["m8_holo_sd"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [250]; _z = _z + [3]; _m = _m + [-1];
+_u = _u + ["m8_SAW"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [250]; _z = _z + [2]; _m = _m + [-1];
+_u = _u + ["m8_sharpshooter"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [270]; _z = _z + [3]; _m = _m + [-1];
+_u = _u + ["m8_tws"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [380]; _z = _z + [5]; _m = _m + [-1];
+_u = _u + ["m8_tws_sd"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [350]; _z = _z + [5]; _m = _m + [-1];
+_u = _u + ["AA12_PMC"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [225]; _z = _z + [2]; _m = _m + [-1];
+_u = _u + ["SMAW"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [400]; _z = _z + [4]; _m = _m + [-1];
+
 [_faction, _u, _p, _n, _o, _z, _m] Call Compile preprocessFile "Common\Config\Config_Weapons.sqf";
 
 _u = [];//--- Backpack

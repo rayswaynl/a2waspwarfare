@@ -63,10 +63,10 @@ _c = _c + ['Land_HBarrier3'];
 _i = _i + [['','',30,0,0,0,'Fortification',0,'Takistani Civilians',[]]];
 
 _c = _c + ['Land_HBarrier5'];
-_i = _i + [['','',50,0,0,'Fortification',0,'Takistani Civilians',[]]];
+_i = _i + [['','',50,0,0,0,'Fortification',0,'Takistani Civilians',[]]];
 
 _c = _c + ['Land_HBarrier_large'];
-_i = _i + [['','',80,0,0,'Fortification',0,'Takistani Civilians',[]]];
+_i = _i + [['','',80,0,0,0,'Fortification',0,'Takistani Civilians',[]]];
 
 _c = _c + ['Land_fort_bagfence_long'];
 _i = _i + [['','',10,0,0,0,'Fortification',0,'Takistani Civilians',[]]];
