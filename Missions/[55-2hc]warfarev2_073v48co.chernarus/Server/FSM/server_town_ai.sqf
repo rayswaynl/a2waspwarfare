@@ -38,12 +38,15 @@ _activeTownsBudgetMax = missionNamespace getVariable "WFBE_C_TOWNS_ACTIVE_MAX";
 if (isNil "_activeTownsBudgetMax") then { _activeTownsBudgetMax = 6 };
 _budgetDeferLast = -9999; //--- Debounce timestamp for the "deferred" log line (1 per 5 min).
 
-//--- GUER GROUP CAP: hard ceiling on total resistance groups (bounds runaway growth toward the ~144/side engine limit).
-//--- Tunable WFBE_C_GUER_GROUPS_MAX; default 80. Recounted once per sweep (cheap) and used to defer resistance garrisons.
+//--- GUER GROUP CAP: hard ceiling on total resistance GARRISON groups (bounds runaway growth toward the ~144/side engine limit).
+//--- P1 harden: count only groups currently assigned to a town garrison (wfbe_town_teams). The old
+//--- allGroups count included Director QRF/patrols, GUER player groups, and empty groups, which could
+//--- starve town garrisons even when the real garrison count was well below the cap.
+//--- Tunable WFBE_C_GUER_GROUPS_MAX; default 80. Recounted once per sweep and used to defer resistance garrisons.
 _guerGroupsMax = missionNamespace getVariable "WFBE_C_GUER_GROUPS_MAX";
 if (isNil "_guerGroupsMax") then { _guerGroupsMax = 80 }; //--- keep in sync with WFBE_C_GUER_GROUPS_MAX (80)
 _guerDeferLast = -9999; //--- Debounce timestamp for the GUER-cap "deferred" log line (1 per 5 min).
-_guerGroupCount = 0;    //--- Live resistance group count; refreshed once per sweep below.
+_guerGroupCount = 0;    //--- Live resistance garrison group count; refreshed once per sweep below.
 
 for "_k" from 0 to ((count towns) - 1) step 1 do
 {
@@ -86,11 +89,16 @@ while {!WFBE_GameOver} do {
 		if (_popTier <= ((count _activeMaxByTier) - 1)) then { _activeTownsBudgetMax = _activeMaxByTier select _popTier };
 	};
 
-	//--- GUER GROUP CAP: recount live resistance groups ONCE per sweep (not per town).
-	//--- server_groupsGC.sqf computes a GUER group count only as a local (_cntGuer) and never
-	//--- publishes a group count to missionNamespace, so use the allGroups fallback here,
-	//--- hoisted out of the per-town loop so it stays cheap.
-	_guerGroupCount = missionNamespace getVariable ["wfbe_grpcnt_guer", -1]; if (_guerGroupCount < 0) then { _guerGroupCount = {side _x == resistance} count allGroups; }; //--- B7: read groupsGC per-side count cache; live-scan fallback until the first GC sweep warms it
+	//--- GUER GROUP CAP: recount live resistance GARRISON groups ONCE per sweep (not per town).
+	//--- P1 harden: only groups still attached to a town's wfbe_town_teams count toward the cap.
+	//--- This excludes Director QRF/patrols, GUER player groups, and empty/orphan groups.
+	_guerGroupCount = 0;
+	{
+		private ["_garrisonT","_teamsT"];
+		_garrisonT = _x;
+		_teamsT = _garrisonT getVariable ["wfbe_town_teams", []];
+		{ if (side _x == resistance) then { _guerGroupCount = _guerGroupCount + 1 } } forEach _teamsT;
+	} forEach towns;
 
 	for "_i" from 0 to ((count towns) - 1) step 1 do
 	{
@@ -263,6 +271,7 @@ while {!WFBE_GameOver} do {
 							if ((_now - _guerDeferLast) >= 300) then {
 								_guerDeferLast = _now;
 								["INFORMATION", Format ["server_town_ai.sqf: GUER garrison deferred for %1 - resistance group budget %2/%3", _town getVariable "name", _guerGroupCount, _guerGroupsMax]] Call WFBE_CO_FNC_AICOMLog;
+								diag_log Format ["TOWNAI|GUER_CAP|town=%1|garrison=%2|max=%3", _town getVariable ["name", _town], _guerGroupCount, _guerGroupsMax];
 							};
 							//--- Zero both flags to skip ground AND air activation branches below.
 							_enemies_ground = 0;

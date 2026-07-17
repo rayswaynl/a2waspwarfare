@@ -75,7 +75,14 @@ while {!WFBE_GameOver} do {
 	if (!isNil "WFBE_GUER_FOB_AVAIL") then {publicVariable "WFBE_GUER_FOB_AVAIL"};
 
 	//--- (2) Stipend, scaled by GUER town deficit.
+	//--- P1 harden: track the live PEAK town count so the deficit reflects the best recent
+	//--- GUER holdings, not the frozen mission-start value. Captures raise the reference;
+	//--- losses from that peak increase the recovery stipend.
 	_curTowns = {(_x getVariable ["sideID", -1]) == WFBE_C_GUER_ID} count towns;
+	if (_curTowns > _startTownCount) then {
+		diag_log format ["GUERSTIPEND|PEAK|old=%1|new=%2|t=%3", _startTownCount, _curTowns, round time];
+		_startTownCount = _curTowns;
+	};
 	_deficit  = (_startTownCount - _curTowns) max 0;
 	_rate     = (_baseRate + (_deficit * _townBonus)) min (_baseRate * 3);
 

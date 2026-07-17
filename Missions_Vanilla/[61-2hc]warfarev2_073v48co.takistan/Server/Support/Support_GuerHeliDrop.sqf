@@ -120,6 +120,7 @@ if (_greenlight) then {
 		Private "_m";
 		_m = _this select 0;
 		sleep 12;
+		diag_log Format ["GUERHELIBOMB|MARKER|name=%1|timeout=12", _m];
 		deleteMarker _m;
 	};
 

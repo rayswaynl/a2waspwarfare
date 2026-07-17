@@ -182,6 +182,11 @@ while {!WFBE_GameOver} do {
                 _ratio = _nowGrpCount / _lastGrpCount;
                 _ratio = [_ratio, 0, 1] call _fnClamp;
                 _rec set [2, ((_rec select 2) * _ratio) max 0];
+            } else {
+                //--- P1 harden: seed the observed group count on the first active tick so a
+                //--- wipe during the first cycle is not silently ignored.
+                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_SURVIVOR_SEED town=%2 firstCount=%3",
+                    _elmin, _town getVariable ["name", str _town], _nowGrpCount];
             };
             _rec set [4, _nowGrpCount];
         };
@@ -450,60 +455,95 @@ while {!WFBE_GameOver} do {
                                 _qrfSlots = 1;
                                 if (_cKind == "qrfCombo") then {_qrfSlots = 2};
                                 if ((_curGuerGrps + _qrfSlots) <= _grpBudgetMax) then {
-                                    //--- Authorized new air execution path for A1 panel (no V1 GUER air path existed).
+                                    //--- P1 harden: route QRF air through the standard creation hooks
+                                    //--- (CreateVehicle + CreateUnit) so it picks up KA137 HP-mult, air
+                                    //--- rearmor, side markings, bounty EHs, cargo clear, countermeasure/AA
+                                    //--- stripping, and empty-vehicle GC just like normal AI buys.
                                     private ["_hClass","_h","_hGrp"];
                                     _hClass = "Ka137_MG_PMC"; //--- GUER insert: Ka-137 from Core_GUE.sqf.
                                     if (_cKind == "qrfGunship") then {_hClass = "Mi24_P"};  //--- GUER gunship.
                                     if (_cKind == "qrfCombo") then {
-                                        //--- Spawn both. Gunship first (FIX: _hClass was never set to the gunship
-                                        //--- here, so combo fired two Ka-137s and the telemetry lied).
+                                        //--- Spawn both. Gunship first.
                                         _hClass = "Mi24_P";
-                                        _h    = _hClass createVehicle _spawnPos;
-                                        _hGrp = createGroup resistance;
-                                        //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64). Crew via the
-                                        //--- proven wildcard-GUER pattern: CreateUnit into the group + moveIn*.
-                                        private ["_uPilot","_uGun"];
-                                        _uPilot = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                        if (!isNull _uPilot) then {_uPilot moveInDriver _h};
-                                        _uGun = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                        if (!isNull _uGun) then {_uGun moveInGunner _h};
-                                        _h setPos _spawnPos;
-                                        _hGrp addWaypoint [_cTownPos, 200];
-                                        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=Mi24_P town=%3 fundedBy=%4",
-                                            _elmin, _cId, _cTown, _cUid];
+                                        _h = [_hClass, _spawnPos, resistance, 0, false, true, true, "FORM"] Call WFBE_CO_FNC_CreateVehicle;
+                                        if (!isNull _h) then {
+                                            _h setPos _spawnPos;
+                                            _hGrp = createGroup resistance;
+                                            private ["_uPilot","_uGun"];
+                                            _uPilot = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                            if (!isNull _uPilot) then {_uPilot moveInDriver _h};
+                                            _uGun = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                            if (!isNull _uGun) then {_uGun moveInGunner _h};
+                                            _hGrp addWaypoint [_cTownPos, 200];
+                                            //--- Standard AI-buy GC + cleanup hooks.
+                                            emptyQueu = emptyQueu + [_h];
+                                            [_h] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
+                                            (_h) Call WFBE_CO_FNC_ClearVehicleCargo;
+                                            if !(WF_A2_Vanilla) then {
+                                                switch (missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") do {
+                                                    case 0: {(_h) Call WFBE_CO_FNC_RemoveCountermeasures};
+                                                    case 1: {
+                                                        if (((resistance Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_FLARESCM) == 0) then {
+                                                            (_h) Call WFBE_CO_FNC_RemoveCountermeasures;
+                                                        };
+                                                    };
+                                                };
+                                            };
+                                            switch (missionNamespace getVariable "WFBE_C_GAMEPLAY_AIR_AA_MISSILES") do {
+                                                case 0: {(_h) Call WFBE_CO_FNC_RemoveAAMissiles};
+                                                case 1: {
+                                                    if (((resistance Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_AIRAAM) == 0) then {
+                                                        (_h) Call WFBE_CO_FNC_RemoveAAMissiles;
+                                                    };
+                                                };
+                                            };
+                                            diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=Mi24_P town=%3 fundedBy=%4 hooks=CreateVehicle",
+                                                _elmin, _cId, _cTown, _cUid];
+                                        };
                                         _hClass = "Ka137_MG_PMC";
                                     };
-                                    _h    = _hClass createVehicle _spawnPos;
-                                    //--- Ka137 HP multiplier EH (mirrors WFBE_CO_FNC_CreateVehicle hook; raw createVehicle misses it).
-                                    if (_hClass == "Ka137_MG_PMC" && {(missionNamespace getVariable ["WFBE_C_KA137_HP_MULT", 3]) > 1}) then {
-                                        private ["_hpMult"];
-                                        _hpMult = missionNamespace getVariable ["WFBE_C_KA137_HP_MULT", 3];
-                                        _h addEventHandler ["HandleDamage", {
-                                            private ["_hdMult"];
-                                            _hdMult = missionNamespace getVariable ["WFBE_C_KA137_HP_MULT", 3];
-                                            if (_hdMult < 1) then {_hdMult = 1};
-                                            (_this select 2) / _hdMult
-                                        }];
-                                    };
-                                    _hGrp = createGroup resistance;
-                                    //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64).
-                                    private ["_uPilot2","_uGun2"];
-                                    _uPilot2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                    if (!isNull _uPilot2) then {_uPilot2 moveInDriver _h};
-                                    if (_hClass == "Mi24_P") then {
-                                        _uGun2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                        if (!isNull _uGun2) then {_uGun2 moveInGunner _h};
-                                    };
-                                    _h setPos _spawnPos;
-                                    _hGrp addWaypoint [_cTownPos, 200];
-                                    _ctr set [6, _nowT];
-                                    _ctr set [7, "fired"];
-                                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=%3 town=%4 fundedBy=%5",
-                                        _elmin, _cId, _hClass, _cTown, _cUid];
-                                    //--- WFBE_C_GDIR_VIS: broadcast QRF fire to GUER side.
-                                    if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
-                                        WFBE_GDIR_ORDER_MSG = Format ["COMMISSAR: %1 inbound to %2", _cKind, _cTown];
-                                        publicVariable "WFBE_GDIR_ORDER_MSG";
+                                    _h = [_hClass, _spawnPos, resistance, 0, false, true, true, "FORM"] Call WFBE_CO_FNC_CreateVehicle;
+                                    if (!isNull _h) then {
+                                        _h setPos _spawnPos;
+                                        _hGrp = createGroup resistance;
+                                        private ["_uPilot2","_uGun2"];
+                                        _uPilot2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                        if (!isNull _uPilot2) then {_uPilot2 moveInDriver _h};
+                                        if (_hClass == "Mi24_P") then {
+                                            _uGun2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
+                                            if (!isNull _uGun2) then {_uGun2 moveInGunner _h};
+                                        };
+                                        _hGrp addWaypoint [_cTownPos, 200];
+                                        emptyQueu = emptyQueu + [_h];
+                                        [_h] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
+                                        (_h) Call WFBE_CO_FNC_ClearVehicleCargo;
+                                        if !(WF_A2_Vanilla) then {
+                                            switch (missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") do {
+                                                case 0: {(_h) Call WFBE_CO_FNC_RemoveCountermeasures};
+                                                case 1: {
+                                                    if (((resistance Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_FLARESCM) == 0) then {
+                                                        (_h) Call WFBE_CO_FNC_RemoveCountermeasures;
+                                                    };
+                                                };
+                                            };
+                                        };
+                                        switch (missionNamespace getVariable "WFBE_C_GAMEPLAY_AIR_AA_MISSILES") do {
+                                            case 0: {(_h) Call WFBE_CO_FNC_RemoveAAMissiles};
+                                            case 1: {
+                                                if (((resistance Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_AIRAAM) == 0) then {
+                                                    (_h) Call WFBE_CO_FNC_RemoveAAMissiles;
+                                                };
+                                            };
+                                        };
+                                        _ctr set [6, _nowT];
+                                        _ctr set [7, "fired"];
+                                        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=%3 town=%4 fundedBy=%5 hooks=CreateVehicle",
+                                            _elmin, _cId, _hClass, _cTown, _cUid];
+                                        //--- WFBE_C_GDIR_VIS: broadcast QRF fire to GUER side.
+                                        if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
+                                            WFBE_GDIR_ORDER_MSG = Format ["COMMISSAR: %1 inbound to %2", _cKind, _cTown];
+                                            publicVariable "WFBE_GDIR_ORDER_MSG";
+                                        };
                                     };
                                 } else {
                                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_SKIP groupCapExceeded=%3/%4",
