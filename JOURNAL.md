@@ -655,3 +655,99 @@ Scope stayed observation-only and complementary to the older side-patrol probe w
 
 Chernarus source was edited first, then mirrored to vanilla Takistan with `A2WASP_SKIP_ZIP=1 dotnet run -c Release`.
 Validation so far: LoadoutManager mirror completed and packaging was skipped; `dotnet run -c Release -- --check` reported no generated drift; `git diff --check` only emitted expected CRLF warnings; SQF lint `BRACKET` and `A3CMD` found 0 issues on the six touched mission files; added-line A3/Boolean trap scan had no matches; Chernarus/Takistan touched file pairs matched after newline normalization; no `_MISSIONS.7z` artifact was created.
+
+---
+
+## 2026-07-17 — wasp-tonight-fix-20260717: pre-playtest bughunt fixes
+
+Fleet card `wasp-tonight-fix-20260717`, agent `claude-wasp-tonightfix-20260717`. Worktree
+`C:\Users\Steff\wasp-tonight-fix-20260717` (branch `wasp-tonight-fix-20260717`, off
+`origin/master` 8092c6b80f). Public playtest tonight on build `v2armed-20260717`. Draft PR +
+staged PBO only, no deploy.
+
+### Confirmed bughunt fixes (5)
+
+1. **HIGH — wildcard cost unaffordable.** `Init_CommonConstants.sqf:616`
+   `WFBE_C_AI_COMMANDER_WILDCARD_COST` 150000 -> 8000 (matches the inline comment's own
+   "Intended live value 8000 (Ray 2026-07-07)"; AI commander funds pool runs ~30-60k so 150k
+   silently disabled all 17 wildcard cards).
+2. **HIGH — GUER player kills double-paid bounty.** `RequestOnUnitKilled.sqf` ~173: added
+   `&& {!(isPlayer (leader _killer_group))}` to the GUER-bounty block so a player-led GUER kill
+   pays only the normal player-bounty path (~line 393-400), not both.
+3. **HIGH — vehicle kill-assist double/triple-paid.** `RequestOnUnitKilled.sqf` ~402-413: added
+   an `_assistCreditedGroups` de-dup array so a same-squad vehicle crew (one wallet, multiple
+   crewmates) is credited once per group, not once per surviving crewmate.
+4. **HIGH — HC merge/topup flags are inert no-ops.** `Init_CommonConstants.sqf:1362-1363`:
+   `WFBE_C_AICOM_HC_MERGE_ENABLE` and `WFBE_C_AICOM_HC_TOPUP_ENABLE` reverted 1->0. Both only
+   ever call `WFBE_SE_FNC_AI_Com_HCTopUp` (`AI_Commander.sqf:572`, nil-guarded), which is never
+   compiled/registered anywhere in the tree (`grep` confirmed only the 3 mirrored call sites,
+   no `= Compile ...` registration). Arming either flag does nothing; not safe to implement the
+   missing worker tonight, so reverted to the actually-inert default.
+5. **MEDIUM — GUER group-cap stale count.** `server_town_ai.sqf` ~331 (right after the town
+   ACTIVATED log line): added `if (_side == resistance) then { _guerGroupCount = _guerGroupCount
+   + (count _groups) };`, mirroring the existing `_activeTownCount = _activeTownCount + 1`
+   live-increment pattern at ~line 279 so groups spawned earlier in the same sweep count against
+   the cap for towns processed later in that same sweep.
+
+### Owner live-observation diagnoses
+
+- **B — deadspawn at team HQ instead of offshore (CONFIRMED + FIXED).** `Client/Init/Init_Client.sqf`
+  ~70-76 called `[] call WFBE_CO_FNC_DeadspawnPenPos`, a function registered by `Init_Common.sqf`
+  which is `ExecVM`'d asynchronously at `initJIPCompatible.sqf:350`, ~36 lines before
+  `Init_Client.sqf` is *also* `ExecVM`'d at line 386 — two independent async threads with no
+  ordering guarantee. When `Init_Client.sqf` reaches the positioning line before `Init_Common.sqf`
+  has registered the function, `WFBE_CO_FNC_DeadspawnPenPos` is still nil, `call` on it throws an
+  Undefined-variable error, `setPos` gets no argument, and the player is left at the default MP
+  join position (team HQ area) — exactly the report. Fixed by compiling
+  `Common_DeadspawnPenPos.sqf` inline (`[] call Compile preprocessFile
+  "Common\Functions\Common_DeadspawnPenPos.sqf"`) instead of depending on the async registration,
+  matching the race-safe idiom the ELSE branch one line below already uses for the legacy marker
+  path (its own comment: "Common is not yet init'd so we call is straight away").
+- **A — second unit joins player's group on spawn** and **C — orange dots / missing HQ TEAM
+  marker** — delegated to a read-only Explore subagent for independent investigation; see its
+  findings folded into the PR body / final report (not duplicated here to avoid drift between two
+  written copies of the same conclusion).
+
+### Coordinator-added scope: FPV drone regression (SAFE FALLBACK applied, not root-caused)
+
+Owner report mid-task: FPV drone spawns mid-air, player cannot take control, drone falls and
+self-detonates. Traced the control-handoff path: `fpv_interface.sqf` (which does the actual
+`player remoteControl _driver`) only runs if `fpv.sqf`'s purchase-status poll resolves to
+`_purchaseStatus == 1`. `Support_FPV.sqf:308-318` has a 1-second `_seatDeadline` waitUntil for
+server-side pilot-seating replication to confirm — under real multi-player network conditions
+(vs. solo dev testing) this can plausibly deny with "FPV pilot seating did not replicate to the
+server." Separately, PR #1096 (`3b60ffceb9`, merged 2026-07-16 18:43) tightened the drone's
+`Killed` EH to require a capability-token match before requesting server detonation. The drone
+stays `wfbe_fpv_armed = true` for its entire uncontrolled fall (that flag is only cleared inside
+`fpv_interface.sqf`, which never launched), so the crash still detonates it. This spans a
+multi-file purchase-authority race that predates today's PR interacting with today's tightened
+detonation binding — not confidently isolated to one low-risk line change under tonight's time
+pressure. Applied the instructed SAFE FALLBACK instead: flipped `WFBE_C_FPV_DRONE` default 1->0
+in both `Rsc/Parameters.hpp` (lobby param, which wins live) and `Init_CommonConstants.sqf` (was
+already drifted 1 vs. its own "0=off (default)" comment — fixed the drift in the same edit).
+Feature off restores pre-#1096 player experience for tonight; full diagnosis is an open item for
+the owner.
+
+### Gates
+
+- `python Tools/Lint/check_sqf.py --select ... --no-classname-index`: only pre-existing baseline
+  findings in touched files (6 `A3MARKER` hits in `Init_Client.sqf`, line-shifted by +11 from my
+  insertion, verified identical against the `origin/master` baseline at the pre-shift line
+  numbers — zero new findings).
+- Bracket delta: all 5 Chernarus files (+ matching TK/ZG mirrors) net curly/square delta = 0
+  vs. `origin/master`.
+- Mirror: `A2WASP_SKIP_ZIP=1 dotnet run -c RELEASE` completed for CH/TK/ZG; `-- --check` reports
+  "drift: none" for both TK and ZG; `version.sqf.template` restored to merge-base on both;
+  `Test-WaspVersionTemplates.ps1` all PASS.
+- `git status`: exactly 5 Chernarus source files + their TK/ZG mirror counterparts (15 files
+  total), no `_MISSIONS.7z`, no `nul` artifact, no line-ending-churn files.
+
+### Discovered issues (out of scope, flagged not fixed)
+
+- `Support_FPV.sqf:308-318`'s 1-second pilot-seating replication deadline is a pre-existing
+  hazard independent of tonight's safe-fallback flag flip; may need a longer timeout or a retry
+  instead of an outright deny under live network conditions. Left for a dedicated follow-up.
+- Stray unmerged branch `codex/wildcard-deck-doc-reconcile` (no open PR attached) sets
+  `WFBE_C_AI_COMMANDER_WILDCARD_COST` to `0` — conflicts with this PR's `150000 -> 8000` value if
+  that branch is ever revived. Flagged in the PR body as a merge-collision risk; not blocking
+  since it carries no open PR claim.

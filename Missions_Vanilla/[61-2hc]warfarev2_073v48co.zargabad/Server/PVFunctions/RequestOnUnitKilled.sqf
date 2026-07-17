@@ -170,7 +170,7 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_kill
 };
 
 //--- GUER kill bounty: credit the killer's GUER team for WEST/EAST kills (server-side; bypasses the WFBE_C_UNITS_BOUNTY coef gate).
-	if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_killer_side == resistance} && {_killer_side != _killed_side} && {_killer_iswfteam}) then {
+	if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_killer_side == resistance} && {_killer_side != _killed_side} && {_killer_iswfteam} && {!(isPlayer (leader _killer_group))}) then { //--- fix(tonight-20260717): gate on AI-led GUER team only; a player-led GUER kill already pays via the normal player-bounty path below (~line 393-400), so without this gate a player kill paid BOTH paths (double bounty).
 		private ["_guerKillGet","_guerBounty","_guerCoef","_iedRecent","_isIedKill"];
 		//--- B67 (Ray 2026-06-21) item #3: IED anti-farm. If this kill was tagged as an IED kill by the killer's
 		//--- Fired EH (Client_OnRespawnHandler.sqf stamps wfbe_ied_recent = time on a BAF_ied detonation), and that
@@ -404,9 +404,12 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 				//--- credited server-side to each qualifying crew member's OWN group (each assister's client used to
 				//--- credit its own clientTeam = group player).
 				_srvAssist = [_killed_type, true] Call WFBE_CO_FNC_ComputeKillBounty;
+				private ["_assistCreditedGroups"]; //--- fix(tonight-20260717): de-dup per-group credit below.
+				_assistCreditedGroups = [];
 				{if (alive _x && isPlayer _x) then {
-					if ((getPlayerUID _x) != "" && {_srvAssist > 0} && {!((name _x) in _hcNames)}) then {
+					if ((getPlayerUID _x) != "" && {_srvAssist > 0} && {!((name _x) in _hcNames)} && {!(group _x in _assistCreditedGroups)}) then { //--- fix(tonight-20260717): was keyed only on _hcNames with no per-group de-dup, so a same-squad vehicle crew (one wallet, multiple crewmates) got credited once PER surviving crewmate instead of once per group.
 						[group _x, _srvAssist] Call WFBE_CO_FNC_ChangeTeamFunds;
+						_assistCreditedGroups set [count _assistCreditedGroups, group _x];
 					};
 					[getPlayerUID(_x), "AwardBounty", [_killed_type, true, objNull, _srvAssist]] Call WFBE_CO_FNC_SendToClients;
 				}} forEach ((crew (vehicle _killer)) - [_killer, player]); //--- fix(hunt): was crew (vehicle _killed) - inside this cross-side block those are the victim's own surviving crewmates (enemy side), so killing one crewman of a 2-man enemy vehicle paid the survivor a bounty.
