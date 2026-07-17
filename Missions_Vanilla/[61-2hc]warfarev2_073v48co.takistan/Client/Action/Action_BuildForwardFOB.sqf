@@ -1,7 +1,8 @@
 /*
 	Action_BuildForwardFOB.sqf - "Build Forward FOB" addAction handler (flag WFBE_C_STRUCTURES_FOB, 2026-07-17).
 
-	Attached to a WEST/EAST supply truck in Common\Init\Init_Unit.sqf when the flag is on. Resolves a build
+	Attached to a WEST/EAST repair truck in Common\Init\Init_Unit.sqf when the flag is on (OWNER CORRECTION
+	2026-07-17: v1 wrongly attached to the supply truck; corrected to the repair truck before ship). Resolves a build
 	point a short distance in front of the truck, runs client-side PRE-checks (funds / cap / base-area
 	placement) purely for instant feedback, then asks the SERVER to build authoritatively - Server\PVFunctions\
 	RequestForwardFOB.sqf re-validates all three (this client side is advisory and spoofable) and constructs.

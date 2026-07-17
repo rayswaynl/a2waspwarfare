@@ -120,13 +120,17 @@ if (_unit_kind in (missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []]))
 	}];
 };
 
-//--- Forward FOB (flag WFBE_C_STRUCTURES_FOB, 2026-07-17): Build action on a WEST/EAST supply truck.
+//--- Forward FOB (flag WFBE_C_STRUCTURES_FOB, 2026-07-17): Build action on a WEST/EAST repair truck.
 //--- Mirrors the GUER Build-FOB block above, with three differences from owner ruling 2: it gates on the
-//--- standard per-side supply-truck roster (WFBE_%1SUPPLYTRUCKS - the PLURAL array is the one actually read
-//--- at runtime, see :295; the singular WFBE_%1SUPPLYTRUCK has no reader anywhere in the tree) instead of a
+//--- standard per-side repair-truck roster (WFBE_%1REPAIRTRUCKS - the PLURAL array is the one actually
+//--- read at runtime below (RepairVehicle marker) and aggregated into WFBE_REPAIRTRUCKS in Init_Common.sqf;
+//--- it is the same roster that already carries the Repair / Repair-Camp actions above) instead of a
 //--- dedicated delivery-truck list, it has no commander/token gate, and it is cash-priced + capped.
+//--- OWNER CORRECTION 2026-07-17: v1 mistakenly gated this on the SUPPLY-truck roster
+//--- (WFBE_%1SUPPLYTRUCKS); the ruled intent (Radio Tower "engineer truck only" ruling) is the REPAIR
+//--- truck. Corrected before WFBE_C_STRUCTURES_FOB ever shipped at non-zero.
 //--- Flag-off: the action is never attached, so the truck is byte-identical to HEAD.
-if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FOB", 0]) > 0 && {_side in [west, east]} && {_unit_kind in (missionNamespace getVariable [Format ['WFBE_%1SUPPLYTRUCKS', str _side], []])}) then {
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FOB", 0]) > 0 && {_side in [west, east]} && {_unit_kind in (missionNamespace getVariable [Format ['WFBE_%1REPAIRTRUCKS', str _side], []])}) then {
 	_unit addAction [
 		"<t color='#76F563'>Build Forward FOB</t>",
 		"Client\Action\Action_BuildForwardFOB.sqf",

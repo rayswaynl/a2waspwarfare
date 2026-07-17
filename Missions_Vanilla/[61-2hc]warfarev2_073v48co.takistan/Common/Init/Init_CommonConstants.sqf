@@ -2735,12 +2735,14 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY") then {WFBE_C_CLIENT_FRAME_TELEMETRY = 1};
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL") then {WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL = 60};
 
-//--- FORWARD FOB (owner rulings 2026-07-17; spec FORWARD-FOB-SPEC-20260717.md). A WEST/EAST supply truck can
-//--- build a forward base: the per-side forward-camp tent (WFBE_%1FARP - already declared by every faction
-//--- config, read by nothing else) as a real LocationLogicCamp bunker, plus a Land_Vysilac_FM mast beside it.
-//--- v1 effects: forward respawn, gear resupply, a vehicle repair bubble and a side-scoped hostile-proximity
-//--- ping. Flag-off (default 0): no addAction is ever attached, the PVF and both server functions return
-//--- immediately and no loop spawns -> byte-identical to HEAD.
+//--- FORWARD FOB (owner rulings 2026-07-17; spec FORWARD-FOB-SPEC-20260717.md; OWNER CORRECTION 2026-07-17
+//--- same day - v1 wrongly built from the supply truck, corrected to the repair truck before ship). A
+//--- WEST/EAST repair truck can build a forward base: the per-side forward-camp tent (WFBE_%1FARP - already
+//--- declared by every faction config, read by nothing else) as a real LocationLogicCamp bunker, plus a
+//--- Land_Vysilac_FM mast beside it. v1 effects: forward respawn, gear resupply, a vehicle repair bubble and
+//--- a side-scoped hostile-proximity ping. The repair truck is KEPT (not consumed) by default - it deploys
+//--- the FOB and drives away. Flag-off (default 0): no addAction is ever attached, the PVF and both server
+//--- functions return immediately and no loop spawns -> byte-identical to HEAD.
 if (isNil "WFBE_C_STRUCTURES_FOB") then {WFBE_C_STRUCTURES_FOB = 0};             //--- master gate. 0 = off (default).
 if (isNil "WFBE_C_FOB_COST") then {WFBE_C_FOB_COST = 25000};                     //--- cash cost (owner ruling 2), charged server-side.
 if (isNil "WFBE_C_FOB_CAP_PER_SIDE") then {WFBE_C_FOB_CAP_PER_SIDE = 2};         //--- hard per-side cap on ALIVE FOBs (owner ruling 2).
@@ -2748,7 +2750,7 @@ if (isNil "WFBE_C_FOB_MIN_RANGE") then {WFBE_C_FOB_MIN_RANGE = 370};            
 if (isNil "WFBE_C_FOB_BUILD_DIST") then {WFBE_C_FOB_BUILD_DIST = 22};            //--- metres in front of the truck (mirrors WFBE_C_GUER_FOB_BUILD_DIST).
 if (isNil "WFBE_C_FOB_BUILD_RANGE") then {WFBE_C_FOB_BUILD_RANGE = 30};          //--- max player->truck distance to use the action.
 if (isNil "WFBE_C_FOB_ANTENNA") then {WFBE_C_FOB_ANTENNA = "Land_Vysilac_FM"};   //--- identity mast; already live as the Radio Tower model (Structures_CO_US.sqf:112).
-if (isNil "WFBE_C_FOB_CONSUME_TRUCK") then {WFBE_C_FOB_CONSUME_TRUCK = 1};       //--- 1 = delete the supply truck on a successful build ("the truck became the FOB").
+if (isNil "WFBE_C_FOB_CONSUME_TRUCK") then {WFBE_C_FOB_CONSUME_TRUCK = 0};       //--- 0 = keep the repair truck on a successful build (OWNER CORRECTION 2026-07-17: it deploys the FOB and drives away). Tunable; 1 restores the old "truck became the FOB" consume behaviour.
 if (isNil "WFBE_C_FOB_PING_RADIUS") then {WFBE_C_FOB_PING_RADIUS = 300};         //--- hostile-detection radius for the ping (placeholder, tune during soak).
 if (isNil "WFBE_C_FOB_PING_INTERVAL") then {WFBE_C_FOB_PING_INTERVAL = 15};      //--- seconds between GetHostilesInArea polls (placeholder, tune during soak).
 if (isNil "WFBE_C_FOB_SERVICE_RADIUS") then {WFBE_C_FOB_SERVICE_RADIUS = 30};    //--- vehicle repair-bubble radius.

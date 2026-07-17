@@ -9,8 +9,9 @@
 	nearEntities returning a dead camp, and it closes the Action_RepairCamp.sqf resurrect path, which selects
 	ANY in-range camp logic whose bunker is dead with no side check - i.e. an ENEMY repair truck could
 	otherwise rebuild our $25k FOB as a WFBE_C_CAMP watchtower and flip it to their side via the
-	Server_HandleSpecial.sqf:1341 "repair-camp" branch. v1 rule: a destroyed FOB is rebuilt from a new supply
-	truck, not field-repaired. (Field repair is a phase-2 candidate - it needs its own side gate first.)
+	Server_HandleSpecial.sqf:1341 "repair-camp" branch. v1 rule: a destroyed FOB is rebuilt from a new repair
+	truck (OWNER CORRECTION 2026-07-17: was "supply truck"), not field-repaired. (Field repair is a
+	phase-2 candidate - it needs its own side gate first.)
 
 	A2 OA 1.64 safe: array-form private only, no params/pushBack, no exitWith inside forEach.
 

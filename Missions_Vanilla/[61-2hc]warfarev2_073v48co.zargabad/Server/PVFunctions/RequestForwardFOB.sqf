@@ -1,5 +1,6 @@
 /*
-	RequestForwardFOB.sqf - SERVER PVF: build a Forward FOB from a WEST/EAST supply truck.
+	RequestForwardFOB.sqf - SERVER PVF: build a Forward FOB from a WEST/EAST repair truck (OWNER CORRECTION
+	2026-07-17: v1 wrongly built it from the supply truck; corrected to the repair truck before ship).
 	  Flag WFBE_C_STRUCTURES_FOB. Owner rulings 2026-07-17; spec FORWARD-FOB-SPEC-20260717.md.
 
 	Sent by Client\Action\Action_BuildForwardFOB.sqf. AUTHORITATIVE: re-validates the per-side alive cap, the
@@ -151,9 +152,10 @@ if (!_reject) then {
 	//--- Per-FOB worker: hostile-proximity ping + vehicle repair bubble.
 	[_logic, _tent, _antenna, _side] Spawn WFBE_SE_FNC_ForwardFOBWorker;
 
-	//--- Consume the truck - the $25k should carry a logistics cost, not just a cash one (spec 3;
-	//--- mirrors RequestFOBStructure.sqf:84 "the truck became the FOB").
-	if ((missionNamespace getVariable ["WFBE_C_FOB_CONSUME_TRUCK", 1]) > 0 && {!isNull _truck}) then {deleteVehicle _truck};
+	//--- Keep the truck (OWNER CORRECTION 2026-07-17): the repair truck deploys the FOB and drives away,
+	//--- it is not consumed - WFBE_C_FOB_CONSUME_TRUCK now defaults to 0. Left as a tunable in case a
+	//--- future ruling wants the logistics-cost behaviour back (RequestFOBStructure.sqf:84 precedent).
+	if ((missionNamespace getVariable ["WFBE_C_FOB_CONSUME_TRUCK", 0]) > 0 && {!isNull _truck}) then {deleteVehicle _truck};
 
 	["INFORMATION", Format ["RequestForwardFOB.sqf: [%1] Forward FOB built at %2 (tent %3). Alive now %4/%5. Charged $%6.", str _side, _pos, _tentCls, count _reg, _cap, _cost]] Call WFBE_CO_FNC_LogContent;
 
