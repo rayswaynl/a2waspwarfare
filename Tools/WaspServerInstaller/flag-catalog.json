@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 1,
+  "generatedFor": "wasp-main-server-installer-20260717",
+  "layerNote": "Lobby Parameters.hpp default= WINS over Init_CommonConstants.sqf isNil fallbacks when the param is registered in Rsc/Parameters.hpp. Installer flag-plan always records which layer takes effect. Changing lobby defaults requires a mission repack (Deploy-Wasp); script-only constants also require a mission rebuild unless a future pre-init overlay is added.",
+  "flags": [
+    {
+      "id": "WFBE_C_AI_DELEGATION",
+      "layer": "lobby",
+      "title": "AI Delegation mode",
+      "description": "0=server AI, 1=player-client FPS-gated, 2=headless clients (recommended when HCs > 0).",
+      "safeDefault": 2,
+      "values": [0, 1, 2],
+      "source": "Rsc/Parameters.hpp + wiki Headless-Client-Scaling-And-Topology"
+    },
+    {
+      "id": "WFBE_C_AI_COMMANDER_ENABLED",
+      "layer": "lobby",
+      "title": "AI Commander",
+      "description": "Master on/off for AI commander (side AI HQ brain).",
+      "safeDefault": 1,
+      "values": [0, 1],
+      "source": "Rsc/Parameters.hpp"
+    },
+    {
+      "id": "WFBE_C_AI_COMMANDER_LEVEL",
+      "layer": "lobby",
+      "title": "AI Commander difficulty",
+      "description": "Tunes AI commander synthetic money intensity (not supply).",
+      "safeDefault": 1,
+      "values": [0, 1, 2],
+      "source": "Rsc/Parameters.hpp"
+    },
+    {
+      "id": "WFBE_C_AI_MAX",
+      "layer": "lobby",
+      "title": "AI group size",
+      "description": "Max AI units per AI team group.",
+      "safeDefault": null,
+      "values": null,
+      "source": "Rsc/Parameters.hpp (keep mission default unless intentionally retuning)"
+    },
+    {
+      "id": "WFBE_C_PLAYERS_AI_MAX",
+      "layer": "lobby",
+      "title": "Player group size",
+      "description": "Max AI units a player can command.",
+      "safeDefault": null,
+      "source": "Rsc/Parameters.hpp"
+    },
+    {
+      "id": "WFBE_C_AI_TEAMS_ENABLED",
+      "layer": "lobby",
+      "title": "AI teams",
+      "description": "Enable AI teammate slots.",
+      "safeDefault": 1,
+      "source": "Rsc/Parameters.hpp"
+    },
+    {
+      "id": "WFBE_C_ARTILLERY",
+      "layer": "lobby",
+      "title": "Artillery",
+      "description": "Artillery system enable / mode.",
+      "safeDefault": null,
+      "source": "Rsc/Parameters.hpp"
+    },
+    {
+      "id": "WFBE_C_PERMANENT_DAY",
+      "layer": "lobby",
+      "title": "Permanent daytime",
+      "description": "Owner preference: permanent daytime ON for visibility.",
+      "safeDefault": 1,
+      "source": "Rsc/Parameters.hpp (owner flag menu 2026-07-06)"
+    },
+    {
+      "id": "WFBE_C_VICTORY_TERRITORIAL",
+      "layer": "lobby",
+      "title": "Territorial victory",
+      "description": "Territorial end condition.",
+      "safeDefault": null,
+      "source": "Rsc/Parameters.hpp"
+    },
+    {
+      "id": "WFBE_C_STATLOG",
+      "layer": "script",
+      "title": "WASPSTAT RPT telemetry",
+      "description": "Structured [WASPSTAT] RPT lines (gameplay/scale telemetry backbone).",
+      "safeDefault": 1,
+      "telemetryModes": { "on": 1, "off": 0, "stats-only": 0 },
+      "source": "Init_CommonConstants.sqf WFBE_C_STATLOG"
+    },
+    {
+      "id": "WFBE_C_STATS_ENABLED",
+      "layer": "script",
+      "title": "Player stats flush pipeline",
+      "description": "Batched stats flush feeding public leaderboard ingest.",
+      "safeDefault": true,
+      "telemetryModes": { "on": true, "off": false, "stats-only": true },
+      "source": "Init_CommonConstants.sqf WFBE_C_STATS_ENABLED"
+    },
+    {
+      "id": "WFBE_C_PLAYERSTAT_ENABLED",
+      "layer": "script",
+      "title": "PLAYERSTAT leaderboard emit",
+      "description": "Per-player PLAYERSTAT snapshots (name-bearing leaderboard feed).",
+      "safeDefault": 1,
+      "telemetryModes": { "on": 1, "off": 0, "stats-only": 1 },
+      "source": "Init_CommonConstants.sqf WFBE_C_PLAYERSTAT_ENABLED"
+    },
+    {
+      "id": "WFBE_C_MATCH_TELEMETRY",
+      "layer": "script",
+      "title": "MATCH|v1| telemetry",
+      "description": "Match-facts family RPT lines for match reports.",
+      "safeDefault": 1,
+      "telemetryModes": { "on": 1, "off": 0, "stats-only": 0 },
+      "source": "Init_CommonConstants.sqf WFBE_C_MATCH_TELEMETRY"
+    },
+    {
+      "id": "WFBE_C_TELEM_HOST_V2",
+      "layer": "script",
+      "title": "Telemetry host v2",
+      "description": "When 1, GRPBUDGET+SRVPERF emit from V2 host path.",
+      "safeDefault": 0,
+      "telemetryModes": { "on": 1, "off": 0, "stats-only": 0 },
+      "source": "Init_CommonConstants.sqf WFBE_C_TELEM_HOST_V2"
+    },
+    {
+      "id": "WFBE_C_AI_COMMANDER_LOG",
+      "layer": "script",
+      "title": "AICOM always-on log",
+      "description": "Independent of WF_LOG_CONTENT; 0 silences [AICOM] diag_log.",
+      "safeDefault": 1,
+      "telemetryModes": { "on": 1, "off": 0, "stats-only": 0 },
+      "source": "Init_CommonConstants.sqf"
+    }
+  ]
+}

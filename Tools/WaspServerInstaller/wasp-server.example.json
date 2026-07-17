@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "profileName": "miksuu-main-example",
+    "description": "Example config for Tools/WaspServerInstaller. Secrets are never stored here — pass at Apply time. difficulty is always Veteran (immutable).",
+    "basedOn": [
+      "PR #1102 Tools/HetznerInstaller (transactional fence install)",
+      "Tools/Ops/Deploy-Wasp.ps1 (mission PBO deploy/verify/rollback — separate step)",
+      "server-config/* live snapshot (PR #1081 family)",
+      "Tools/Ops/Set-WaspCpuAffinity.ps1"
+    ]
+  },
+  "server": {
+    "hostname": "Miksuu's Warfare | CTI | TvT | PvE",
+    "password": "",
+    "passwordAdmin": "",
+    "port": 2302,
+    "maxPlayers": 56,
+    "persistent": 1,
+    "battlEye": 0,
+    "kickDuplicate": 1,
+    "verifySignatures": 2,
+    "motd": [
+      "Welcome to Miksuu's Warfare.",
+      "Discord: discord.me/warfare",
+      "Difficulty is Veteran (locked)."
+    ],
+    "motdInterval": 30,
+    "rules": [
+      "No cheating / exploits.",
+      "Respect players and admins.",
+      "Teamkill griefing = kick/ban."
+    ],
+    "difficulty": "Veteran"
+  },
+  "mission": {
+    "template": "[55-2hc]warfarev2_073v48co.chernarus",
+    "className": "Main_Chernarus",
+    "pboFileName": "[55-2hc]warfarev2_073v48co.chernarus.pbo"
+  },
+  "headlessClients": {
+    "count": 2,
+    "bindAddresses": ["127.0.0.1"],
+    "modLine": "@CBA_CO;@adwasp;@admkswf",
+    "includeArma2RootInMod": true,
+    "namePrefix": "HC-AI-Control",
+    "hcAllocator": "tbb4malloc_bi",
+    "hcCpuCount": 2,
+    "hcExThreads": 3,
+    "hcMaxMem": 2047,
+    "useSandboxieForHc2Plus": true,
+    "sandboxieBoxName": "HC2",
+    "why": "HC count default 2 matches live WASP primary topology (server-config README + Hetzner profiles hc-2). More HCs need extra interactive Steam sessions; wiki: ~1 server + 1/HC + 1 OS headroom cores."
+  },
+  "telemetry": {
+    "mode": "on",
+    "modes": {
+      "on": "Full WASPSCALE/gameplay RPT telemetry + player-stats pipeline",
+      "off": "All installer-mapped telemetry flags off",
+      "stats-only": "Gameplay/WASPSCALE-family flags off; player-stats + PLAYERSTAT remain on for leaderboard feed"
+    },
+    "rptTailProducer": true,
+    "why": "Maps to WFBE_C_STATLOG / WFBE_C_STATS_ENABLED / WFBE_C_PLAYERSTAT_ENABLED / WFBE_C_MATCH_TELEMETRY / WFBE_C_TELEM_HOST_V2 per flag-catalog.json"
+  },
+  "featureFlags": {
+    "WFBE_C_AI_DELEGATION": 2,
+    "WFBE_C_AI_COMMANDER_ENABLED": 1,
+    "WFBE_C_PERMANENT_DAY": 1
+  },
+  "perf": {
+    "serverMalloc": "mimalloc",
+    "serverMallocWhy": "Measured WASP dedicated default; server-config/README.md allocator split (server mimalloc / HC tbb4malloc_bi). mimalloc works on A2OA 1.64 per fleet custom-allocator finding.",
+    "serverMallocFallback": "tbb4malloc_bi",
+    "serverCpuCount": 2,
+    "serverCpuCountWhy": "WASP HC launch lines and hosting corpus use cpuCount=2 for isolation; main loop is effectively single-thread-bound — cpuCount is engine-belief override, not free multi-core sim (GROK-SERVER-HOSTING-CORPUS + BI era wiki).",
+    "serverExThreads": 3,
+    "serverExThreadsWhy": "UNVERIFIED optimal for dedicated under modern P/E-core hosts. Conservative choice matches live HC lines (exThreads=3). Auto is 3 dual / 7 quad+; picking 7 unmeasured on main — stay conservative.",
+    "serverPriority": "High",
+    "serverPriorityWhy": "Hosting corpus / box tuning notes: keep dedicated sim at High; HCs AboveNormal so server wins contention (OS-side; not an engine guarantee).",
+    "hcPriority": "AboveNormal",
+    "hcPriorityWhy": "See serverPriorityWhy; Set-WaspCpuAffinity + post-boot tuning pattern.",
+    "maxMem": 2047,
+    "maxMemWhy": "32-bit process hard ceiling ~2047 MB (BI/wiki; local HC lines).",
+    "affinity": {
+      "enabled": true,
+      "reserveOsLogicalCores": 2,
+      "serverLogicalCores": 4,
+      "coresPerHc": 2,
+      "hyperthreadSiblingAware": true,
+      "why": "Disjoint server vs HC masks; never share server cores with HCs. Set-WaspCpuAffinity.ps1 + wiki Operator-Monitor-And-CPU-Affinity-Tools-Reference. Masks are hardware-specific — recompute on the target box."
+    },
+    "basicCfg": {
+      "MinBandwidth": 131072,
+      "MaxBandwidth": 104857600,
+      "MaxMsgSend": 512,
+      "MaxSizeGuaranteed": 512,
+      "MaxSizeNonguaranteed": 512,
+      "MinErrorToSend": 0.005,
+      "MinErrorToSendNear": 0.03,
+      "MaxCustomFileSize": 0,
+      "why": "Live server-config/basic.cfg JIP-stall fix: MaxSizeGuaranteed=512 (1024 caused permanent black 'Receiving mission'). MaxMsgSend/MaxSize*=512 co-tuned. Installer VERSIONS basic.cfg (basic.cfg.v1) to avoid unversioned overwrite risk.",
+      "slotScaling": {
+        "enabled": true,
+        "baseMaxPlayers": 56,
+        "MaxMsgSendPerExtra8Slots": 0,
+        "note": "Default keeps proven 512 values; enable only if uplink evidence says raise. Do not invent bandwidth numbers."
+      }
+    },
+    "asrAi": {
+      "enabled": true,
+      "userconfigRelative": "userconfig/asr_ai/asr_ai_settings.hpp",
+      "knobs": {
+        "enabled": 1,
+        "debug": 0,
+        "gunshotHearing": 1,
+        "joinInProgress": 1
+      },
+      "why": "ASR AI via @adwasp is the one real modpack FPS/AI-behavior lever on HC locality (server-config README: do not drop @adwasp from HC mod line). Exact hpp knobs vary by ASR build — installer writes a minimal documented skeleton; owner merges with live userconfig."
+    }
+  },
+  "paths": {
+    "arma2oaRoot": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Arma 2 Operation Arrowhead",
+    "arma2Root": "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Arma 2",
+    "installRoot": "",
+    "profilesDirName": "profiles-main",
+    "firewallRuleName": "WASP-Arma2OA"
+  },
+  "reconcile": {
+    "deployWasp": "After config apply, use Tools/Ops/Deploy-Wasp.ps1 to pack+place mission PBOs and repoint template (separate -Apply). This installer does NOT deploy to live slots.",
+    "hetznerInstaller": "For fenced transactional copy of PBO+canonical configs into a new host tree, hand rendered outputs to PR #1102 Tools/HetznerInstaller (MIKSUUS-TEST fence only until owner opens runtime gate).",
+    "setWaspCpuAffinity": "Generated launch scripts embed affinity masks; optional post-boot: Tools/Ops/Set-WaspCpuAffinity.ps1 -ServerMask <hex> -HcMasks <hex,...> -Apply"
+  }
+}
