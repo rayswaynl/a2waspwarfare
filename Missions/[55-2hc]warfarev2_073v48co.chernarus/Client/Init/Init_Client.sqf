@@ -1231,6 +1231,32 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 	};
 };
 
+//--- SPAWN-BUDDY-DISBAND (wasp-aicom-idle-diagnosis-20260717, owner live report 2026-07-17: "I spawn with
+//--- another unit in my group"). AI-Teams pre-groups a fresh player with a mission-start AI squadmate by
+//--- design (the TEAMBAR-FIRST block above only fixes slot ORDER, it does not remove the AI); this is a
+//--- separate opt-in that removes the AI entirely so the player spawns solo. Same INITIAL-spawn identity
+//--- check as TEAMBAR-FIRST above (group player == WFBE_Client_Team) so a respawn/skin-swap/earned squad is
+//--- NEVER touched - only the very first fresh-round grouping is affected. Client-local AI only (join needs
+//--- locality); the AI is NOT deleted, only split into its own fresh group and left standing, so it remains
+//--- a valid side asset (e.g. still countable by AI-cap/GC) - it simply stops riding the player's command bar.
+if ((missionNamespace getVariable ["WFBE_C_SPAWN_BUDDY_DISBAND", 0]) > 0) then {
+	[] spawn {
+		sleep 4;
+		if (alive player && {group player == WFBE_Client_Team} && {leader (group player) == player} && {(count units group player) > 1}) then {
+			Private ["_buddyOthers","_buddyTmp"];
+			_buddyOthers = [];
+			{if (alive _x && {!isPlayer _x} && {local _x}) then {_buddyOthers set [count _buddyOthers, _x]}} forEach ((units group player) - [player]);
+			if (count _buddyOthers > 0) then {
+				_buddyTmp = createGroup (side group player);
+				if (!isNull _buddyTmp) then {
+					_buddyOthers joinSilent _buddyTmp;
+					diag_log Format ["[WFBE|SPAWNBUDDY] Init_Client spawn-buddy-disband: %1 AI squadmate(s) split off the fresh player group at initial spawn.", count _buddyOthers];
+				};
+			};
+		};
+	};
+};
+
 /* Override player's Gear.*/
 // [player,Format ["WFBE_%1DEFAULTWEAPONS",sideJoinedText] Call GetNamespace,Format ["WFBE_%1DEFAULTAMMO",sideJoinedText] Call GetNamespace] Call EquipLoadout;
 /* Skill Module. */

@@ -2633,6 +2633,14 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- at enrollment/respawn/skin-swap so the A2 command bar sorts them to slot 1 (rank drives bar order;
 //--- selectLeader sets the star but does not reorder slots). 1 = enabled (default); 0 = legacy layout.
 	if (isNil "WFBE_C_PLAYER_TEAMBAR_FIRST") then {WFBE_C_PLAYER_TEAMBAR_FIRST = 1};
+
+//--- WFBE_C_SPAWN_BUDDY_DISBAND (wasp-aicom-idle-diagnosis-20260717, owner live report 2026-07-17: "I spawn
+//--- with another unit in my group" - AI-Teams pre-grouped squadmate at INITIAL spawn is by-design, but the
+//--- owner wants a clean solo spawn). 1 = at INITIAL spawn only (never on respawn - a bought/earned squad is
+//--- never touched), any client-local, non-player AI unit already in the fresh player group is silently
+//--- disbanded into its own group and left standing (not deleted - still a valid AI asset for the side, just
+//--- no longer riding the player's command bar). 0 = legacy behaviour (default; byte-identical to HEAD).
+	if (isNil "WFBE_C_SPAWN_BUDDY_DISBAND") then {WFBE_C_SPAWN_BUDDY_DISBAND = 0};
 //--- PLAYER BASE DEFENSE AUTO-MANNING (fable/player-defense-automan):
 //--- When >0 and a player builds a gunner-capable static inside a base area, the defense is
 //--- registered for AI manning via the same Construction_StationaryDefense path as AI-commander
