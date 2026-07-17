@@ -917,6 +917,9 @@ if (_isMan) then {
 	//--- addAction is LOCAL (re-adds on rebuy) -- the buyer-owns-vehicle model; same constraint as lock/unlock.
 	//--- Non-Man units only (_isMan false). Condition string hides action when flag=0 or vehicle occupied/out-of-range.
 	if (!_isMan) then {
+		//--- item #43 hardening: tag the buying team (broadcast) so the RequestVehicleSell PVF can
+		//--- validate ownership server-side; untagged hulls (AI/town/enemy) are not sellable.
+		_vehicle setVariable ["wfbe_buyteam", clientTeam, true];
 		_vehicle addAction ["<t color='#e8c84a'>Sell Vehicle</t>", "Client\Action\Action_VehicleSell.sqf", [], 93, false, true, '', 'alive _target && {count crew _target == 0} && {(missionNamespace getVariable ["WFBE_C_VEHICLE_SELL", 1]) > 0} && {lightInRange || heavyInRange || depotInRange || aircraftInRange || hangarInRange} && {player == leader clientTeam || (!isNull commanderTeam && {commanderTeam == clientTeam})}'];
 	};
 

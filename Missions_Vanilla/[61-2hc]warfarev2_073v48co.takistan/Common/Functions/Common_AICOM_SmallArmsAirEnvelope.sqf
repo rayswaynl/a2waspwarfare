@@ -119,7 +119,9 @@ WFBE_CO_FNC_AICOM_AirEnvelope_WalkTeam = {
 	_n    = 0;
 	if (isNull _team) exitWith {_n};
 	{
-		if (!(_x in _seen)) then {
+		//--- O(1) machine-local visited flag replaces the O(n) `in` scan of the sweep-wide _seen.
+		if (!(_x getVariable ["WFBE_airenv_seen", false])) then {
+			_x setVariable ["WFBE_airenv_seen", true, false];
 			_seen set [count _seen, _x];
 			_n = _n + ([_x, _rng] Call WFBE_CO_FNC_AICOM_AirEnvelope_Steer);
 		};
@@ -196,6 +198,10 @@ while {!WFBE_gameover} do {
 				["aicom_airenvelope", diag_tickTime - _perfStart, Format["groups:%1;units:%2;steers:%3", _perfGroups, count _seen, _perfSteers], _machineTag] Call PerformanceAudit_Record;
 			};
 		};
+
+		//--- O(n) flag-clear pass so the NEXT sweep dedupes fresh (cleared to false, not nil; local
+		//--- write, silent no-op on units deleted mid-sweep).
+		{_x setVariable ["WFBE_airenv_seen", false, false];} forEach _seen;
 	};
 
 	//--- ALWAYS-ON 300s telemetry heartbeat (fires even when idle, so a soak can tell ARMED-IDLE

@@ -306,7 +306,12 @@ if (_deny == "") then {
 };
 
 if (_requestBound && {_deny == ""}) then {
-	_seatDeadline = diag_tickTime + 1;
+	//--- fix(fpv-handoff-race): 1s was tighter than real client->server crew replication under load -
+	//--- the purchase PV routinely arrives ahead of the pilot's GetIn update, so healthy launches were
+	//--- denied and torn down. The per-UID in-flight reservation blocks overlapping buys and the client
+	//--- status poll treats in-flight as "keep waiting", so a longer bounded window is safe; nothing is
+	//--- charged until after this gate.
+	_seatDeadline = diag_tickTime + 10;
 	waitUntil {
 		sleep 0.05;
 		(driver _drone == _driver) || {diag_tickTime >= _seatDeadline} || {isNull _drone} || {isNull _driver}

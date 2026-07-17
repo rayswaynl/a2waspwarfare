@@ -33,6 +33,7 @@ _l = _l + ["RequestFundsTransfer"]; //--- N1 fix (GR-2026-07-08a): player-to-pla
 _l = _l + ["HCStat"];
 _l = _l + ["RequestAFKKick"]; //--- SG14: client reports AFK threshold exceeded; server validates and issues the BE kick.
 _l = _l + ["RequestGDirPanel"]; //--- A1 (Commissar Panel): GUER player buy/contract request -> server validates, debits wallet, emits GDIR_ORDER, pushes result to caller (Server\PVFunctions\RequestGDirPanel.sqf).
+_l = _l + ["RequestVehicleSell"]; //--- item #43 hardening: vehicle sell-back - server recomputes the refund (price table * fraction * health), validates seller/ownership/crew, credits the buying team and deletes (Server\PVFunctions\RequestVehicleSell.sqf).
 
 _serverCommandPV = _l;
 

@@ -761,17 +761,15 @@
 	};
 
 	// FPV strike drone: player-piloted kamikaze mini-UAV from the Tactical Center (enabled 2026-07-07 post #796 hardening).
-	// SAFE FALLBACK (tonight-20260717): default flipped 1->0. Live playtest report: drone spawns airborne,
-	// player cannot take control (fpv_interface.sqf never launches - purchase-authority deny/race in
-	// Support_FPV.sqf ~line 308 1s pilot-seating replication deadline, compounded by the new detonation
-	// capability binding from #1096), drone falls uncontrolled while still wfbe_fpv_armed and self-detonates
-	// on ground impact. Root cause spans a multi-file purchase-authority race, not safe to hotfix live
-	// tonight - feature off restores pre-#1096 player experience. Re-enable after full diagnosis.
+	// RE-ENABLED (fixwave-20260717): tonight-20260717 safe-fallback (1->0) reverted with the purchase-authority
+	// race fix - Support_FPV.sqf pilot-seating replication window 1s->10s, and the client deny path
+	// (Client/PVFunctions/HandleSpecial.sqf) now tears the pending drone down DISARMED even when the echoed
+	// drone reference deserialized as objNull on the server (purchase PV outran createVehicle replication).
 	class WFBE_C_FPV_DRONE {
 		title = "FPV strike drone (Tactical Center)";
 		values[] = {0,1};
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
-		default = 0;
+		default = 1;
 	};
 
 	// East captured C-130J (Aircraft Factory token, default OFF - flag-gated).
