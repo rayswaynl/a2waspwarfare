@@ -30,7 +30,7 @@
 
 private ["_u", "_isAA", "_sw"];
 
-_u = _this;
+_u = _this select 0; //--- RPT fix (owner order 2026-07-17): all 3 call sites (Common_CreateUnit.sqf:137, Common_CreateTownUnits.sqf:239, Common_AICOM_SmallArmsAirEnvelope.sqf:87) pass an ARRAY [_unit], not the unit itself - isNull on the raw array threw a type error every unit spawn (44+ RPT errors/window live), making this classifier 100% inert.
 _isAA = false;
 
 if (isNull _u) exitWith {false};
