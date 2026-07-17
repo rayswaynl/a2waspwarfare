@@ -18,7 +18,9 @@ _select = _wp_origin;
 //--- Clear the AI waypoints
 (_team) Call WFBE_CO_FNC_WaypointsRemove;
 _distance_node = 700;
-_side = (_team getVariable "wfbe_side") Call WFBE_CO_FNC_GetSideID;
+_side = _team getVariable "wfbe_side";
+if (isNil "_side") then {_side = side _team};  //--- POST-MATCH FIX (2026-07-17): teams that reach assault dispatch without a wfbe_side group var (recycled/re-formed HC groups) fed nil into GetSideID, which returns nil for a nil input (switch-on-nil), leaving _side undefined -> Undefined variable _side at PosIsSafe lines 51-52 right after ASSAULT_DISPATCH. Fall back to the group engine side so _side is always a valid side ID.
+_side = _side Call WFBE_CO_FNC_GetSideID;
 
 //--- cmdcon41-w2 (mhq-... yellow-march): behind WFBE_C_AICOM_MARCH_YELLOW>0, the TRANSIT MOVE nodes' combat
 //--- mode switches "RED"->"YELLOW" so a marching column returns fire but does NOT peel off to hunt every
