@@ -125,8 +125,8 @@ else
     ["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] Structure [%2] has been destroyed by [%3].", str _side, _type, _killer]] Call WFBE_CO_FNC_LogContent;
 };
 
-//--- Radio Tower special case: recompute the per-side alive-any registry + re-broadcast the public flag
-//--- the client-side WASP\Radio\Radio_Manager.sqf gate reads. No cleanup exists if the flag is off (matches CBR).
+//--- Radio Tower special case: recompute the per-side alive-any registry + re-broadcast the public
+//--- alive flag (WFBE_CO_FNC_HasSideRadioTower reads it). No cleanup exists if the flag is off (matches CBR).
 if ((_structure getVariable ["wfbe_structure_type", ""]) == "RadioTower" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then {
 	private ["_rtKey","_rtAliveVar","_rtRegistry","_rtAnyAlive"];
 	_rtKey = if (_side == west) then {"WFBE_RADIOTOWER_WEST"} else {"WFBE_RADIOTOWER_EAST"};

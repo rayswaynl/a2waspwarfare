@@ -93,7 +93,7 @@
 		default = 1;
 	};
 	class WFBE_C_STRUCTURES_RADIOTOWER {
-		title = "Vehicle Radio (Radio Tower)";
+		title = "Radio Tower";
 		values[] = {0,1};
 		texts[] = {"Disabled","Enabled"};
 		default = 0;

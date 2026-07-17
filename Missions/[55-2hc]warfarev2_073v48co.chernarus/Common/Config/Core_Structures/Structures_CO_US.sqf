@@ -107,7 +107,7 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) 
 	_dir = _dir	+ [90];
 };
 
-if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then { //--- Radio Tower: gates the vehicle-radio feature per side (see WASP/Radio). Land_Vysilac_FM (owner-chosen lattice broadcast tower 2026-07-10) - base-A2 CAStructures, all-map safe.
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then { //--- Radio Tower: buildable comms structure. Land_Vysilac_FM (owner-chosen lattice broadcast tower 2026-07-10) - base-A2 CAStructures, all-map safe.
 	_v = _v		+ ["RadioTower"];
 	_n = _n		+ ["Land_Vysilac_FM"];
 	_d = _d		+ ["Radio Tower"];
