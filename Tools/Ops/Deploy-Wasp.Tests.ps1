@@ -80,6 +80,32 @@ Assert (@(Get-ArchivesToPrune $names 10).Count -eq 0) "keep more than present ->
 Assert (@(Get-ArchivesToPrune @() 5).Count -eq 0) "empty archive -> prune nothing"
 Assert (@(Get-ArchivesToPrune $names 0).Count -eq 6) "keep 0 -> prune all"
 
+Write-Host "== BUG 4 (2026-07-17): verify timeout must outlast the box's restart+mission-load =="
+# The box surfaces the WASPSCALE build= line ~5-6 min after the restart fires. At the old 240s
+# ceiling a HEALTHY deploy returned svc=True proc=True build=False -> auto-rollback, and the
+# rollback's own verify timed out the same way (verify=UNCONFIRMED). Pinned by AST so a future
+# edit can't quietly drop the timeout back under the box's boot, or drop -TimeoutSec from one
+# call site and leave the other on the function default (the exact shape of the original bug).
+$deployAst = [System.Management.Automation.Language.Parser]::ParseFile($deploy, [ref]$null, [ref]$null)
+$OBSERVED_LAG_SEC = 360   # ~6 min, the slow end of the observed build= lag
+
+$fnAst = @($deployAst.FindAll({ param($n)
+    $n -is [System.Management.Automation.Language.FunctionDefinitionAst] -and $n.Name -eq 'Test-WaspLive' }, $true))[0]
+$fnTimeout = @($fnAst.Body.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'TimeoutSec' })[0]
+Assert ([int]$fnTimeout.DefaultValue.Extent.Text -ge $OBSERVED_LAG_SEC) "Test-WaspLive -TimeoutSec default outlasts the observed build= lag"
+
+$scriptTimeout = @($deployAst.ParamBlock.Parameters | Where-Object { $_.Name.VariablePath.UserPath -eq 'VerifyTimeoutSec' })[0]
+Assert ($null -ne $scriptTimeout) "-VerifyTimeoutSec is an operator-settable script param"
+Assert ([int]$scriptTimeout.DefaultValue.Extent.Text -ge $OBSERVED_LAG_SEC) "-VerifyTimeoutSec default outlasts the observed build= lag"
+
+# every Test-WaspLive CALL (deploy verify + rollback verify) must thread the operator's value.
+$calls = @($deployAst.FindAll({ param($n)
+    $n -is [System.Management.Automation.Language.CommandAst] -and $n.GetCommandName() -eq 'Test-WaspLive' }, $true))
+Assert ($calls.Count -eq 2) "both verify call sites present (deploy + rollback)"
+$threaded = @($calls | Where-Object { @($_.CommandElements | Where-Object {
+    $_ -is [System.Management.Automation.Language.CommandParameterAst] -and $_.ParameterName -eq 'TimeoutSec' }).Count -eq 1 })
+Assert ($threaded.Count -eq $calls.Count) "every Test-WaspLive call passes -TimeoutSec (no call left on the bare default)"
+
 Write-Host ""
 if ($script:fails -eq 0) { Write-Host "ALL PASS" -ForegroundColor Green; exit 0 }
 else { Write-Host "$($script:fails) FAILED" -ForegroundColor Red; exit 1 }

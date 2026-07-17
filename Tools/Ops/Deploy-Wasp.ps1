@@ -54,6 +54,13 @@
       Invoke-WaspServiceRestart ends a still-Running task instance and kills orphan procs
       before triggering, then guards for the service to come Running and surfaces the
       ACR/desktop-session dependency instead of silently looping.
+      BUG 4 (verify timeout): phase 6 polled for only 240s, but the box's WASPSCALE `build=`
+      line first surfaces ~5-6 min after the restart task fires (restart ~4-5 min + mission
+      load). A healthy deploy therefore verified as FAILED (svc=True proc=True build=False) and
+      auto-rolled back - and the rollback's own verify then timed out the same way, leaving the
+      restore UNCONFIRMED. Verify now polls -VerifyTimeoutSec (default 480) on BOTH the deploy
+      and rollback checks. Auto-rollback is unchanged: it still fires on a real failure, just no
+      longer on a slow-but-good one.
 
 .PARAMETER Build
     Build tag embedded in the deployed PBO filename, e.g. 'cmdcon48aicom' or 'b86'.
@@ -103,6 +110,14 @@
 .PARAMETER ExpectBuild
     Substring the deployed WASPSCALE `build=` field must contain for verify to pass.
     Default: the -Build tag (or the map-name token it reduces to).
+
+.PARAMETER VerifyTimeoutSec
+    How long phase 6 polls for the expected WASPSCALE `build=` line before declaring the deploy
+    failed (and auto-rolling back). Default: 480. The live box needs ~5-6 min after the restart
+    task fires before the line surfaces (restart ~4-5 min + mission load), so the previous 240s
+    ceiling false-failed healthy deploys - see the 2026-07-17 note below. Also bounds the
+    post-rollback verify. Raise it on a slower box; do NOT lower it below the observed
+    restart+load time or a good deploy will roll itself back.
 
 .PARAMETER TemplatePattern
     Regex passed through to Set-MissionTemplate for WHICH template line to repoint. Defaults
@@ -172,6 +187,7 @@ param(
     [int]$LockStaleMinutes = 30,
     [string]$RptPath     = 'C:\Users\Administrator\AppData\Local\ArmA 2 OA\arma2oaserver.RPT',
     [string]$ExpectBuild,
+    [int]$VerifyTimeoutSec = 480,
     [string]$TemplatePattern,
     [switch]$RunBuild,
     [switch]$RunPack,
@@ -221,12 +237,16 @@ function Write-DryNote([string]$m) { Write-Host "[Deploy-Wasp][DRY-RUN] $m" -For
 # current-match WASPSCALE line carries the expected build token. Bounded poll; read-only.
 # Returns $true only when all three hold. Windows RPT after the last MISSINIT boundary so a
 # stale previous-match line can't produce a false pass.
+# BUG 4 (2026-07-17): the default was 240s, but the box surfaces the WASPSCALE build= line only
+# ~5-6 min after the restart fires - so this returned $false on a HEALTHY deploy and the caller
+# auto-rolled it back. svc/proc go true within ~4-5 min; build= is the laggard. Callers pass
+# -VerifyTimeoutSec; the default here matches it so an unparameterised call can't regress.
 function Test-WaspLive {
     param(
         [string]$ServiceName,
         [string]$RptPath,
         [string]$ExpectBuild,
-        [int]$TimeoutSec = 240
+        [int]$TimeoutSec = 480
     )
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
     $svcOk = $false; $procOk = $false; $buildOk = $false
@@ -557,7 +577,7 @@ if (-not $Apply) {
     Write-DryNote "phase 3 stage+copy: would place $pboName into $MissionsDir"
     Write-DryNote "phase 4 repoint : would dry-run cfg repoint while UP (verify-before-stop), then STOP service '$ServiceName' + end HCs, then real Set-MissionTemplate -Apply -MissionName '$missionName' (cfg unlocked only when stopped - BUG 1)"
     Write-DryNote "phase 5 restart : would safely (re)start via '$RestartTask' - end stuck task, kill orphan procs, trigger, then guard ${RestartGuardSec}s for '$ServiceName' Running (BUG 3)"
-    Write-DryNote "phase 6 verify  : would confirm service '$ServiceName' Running, 3 procs (server+2HC), and RPT 'WASPSCALE|v2|...|build=' contains '$ExpectBuild'"
+    Write-DryNote "phase 6 verify  : would confirm service '$ServiceName' Running, 3 procs (server+2HC), and RPT 'WASPSCALE|v2|...|build=' contains '$ExpectBuild' - polling up to ${VerifyTimeoutSec}s (box surfaces build= ~5-6min post-restart; BUG 4)"
     Write-Output "WASP_DEPLOY_DRYRUN map=$ActiveMap build=$Build mission=$missionName expectBuild=$ExpectBuild"
     return
 }
@@ -648,7 +668,7 @@ try {
     }
 
     # ── Phase 6: verify ───────────────────────────────────────────────────────────
-    $verifyOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath -ExpectBuild $ExpectBuild
+    $verifyOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath -ExpectBuild $ExpectBuild -TimeoutSec $VerifyTimeoutSec
     if ($verifyOk) {
         # prune any OTHER active-map PBOs so exactly one remains (park model + match-report dual-PBO guard).
         Get-ChildItem -LiteralPath $MissionsDir -Filter ("*.{0}.pbo" -f $map.Ext) -ErrorAction SilentlyContinue |
@@ -674,7 +694,7 @@ try {
     Remove-Item -LiteralPath $livePbo -Force -ErrorAction SilentlyContinue
     $rbUp = Invoke-WaspServiceRestart -RestartTask $RestartTask -ServiceName $ServiceName -GuardSec $RestartGuardSec
     $rbOk = $false
-    if ($rbUp) { $rbOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath -ExpectBuild (Get-ExpectedBuildToken $prevMissionName) }
+    if ($rbUp) { $rbOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath -ExpectBuild (Get-ExpectedBuildToken $prevMissionName) -TimeoutSec $VerifyTimeoutSec }
     Write-Output ("WASP_DEPLOY_ROLLED_BACK map={0} failedBuild={1} restored={2} verify={3}" -f $ActiveMap, $Build, $prevMissionName, ($(if($rbOk){'OK'}else{'UNCONFIRMED'})))
 }
 finally {

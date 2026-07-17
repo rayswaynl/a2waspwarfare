@@ -123,6 +123,15 @@ derived exactly as the on-server parser does (`AI_Commander.sqf`): the `cmdcon<â
 mission name if present, otherwise the full mission name. Use a `cmdcon`-style build tag for a
 clean telemetry token; any tag still verifies via substring match (`-ExpectBuild` to override).
 
+**Give it time to appear.** The service and the 3-process chain come up within ~4-5 min of the
+restart task firing, but the `WASPSCALE build=` line only lands ~5-6 min in (restart + mission
+load). Verify polls for `-VerifyTimeoutSec` (default **480**) before giving up. The original
+240s ceiling was *shorter than the box's own boot*, so a healthy deploy reported
+`svc=True proc=True build=False` and auto-rolled itself back â€” and the rollback's verify then
+timed out identically, reporting `verify=UNCONFIRMED` on a restore that was in fact fine
+(observed twice on the 2026-07-17 v2 deploy; re-running with 480s verified clean). Only lower
+this below the box's restart+load time if you want that false negative back.
+
 ---
 
 ## Relationship to `deploy-v2.ps1`
@@ -164,6 +173,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Ops\Deploy-Wasp.Test
 | `-PboTool <path>` | Explicit packer path (else auto-detect). |
 | `-KeepArchives <N>` | Rollback retention depth (default 5). |
 | `-NoAutoRollback` | Disable restore-on-failure after verify. |
+| `-VerifyTimeoutSec <N>` | How long phase 6 waits for the `WASPSCALE build=` line (default 480). Bounds the post-rollback verify too. |
 | `-RepoRoot` / `-MissionsDir` / `-CfgPath` / `-RptPath` / `-ArchiveRoot` / `-StageRoot` | Path overrides; defaults match the live box. |
 
 The build machine and the box can be the same host or split: run pack on the machine with the
