@@ -94,6 +94,11 @@ WFBE_SE_FNC_GetTownGroupsDefender = Compile preprocessFileLineNumbers "Server\Fu
 WFBE_SE_FNC_GetTownPatrol = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownPatrol.sqf";
 WFBE_SE_FNC_HandleEmptyVehicle = Compile preprocessFileLineNumbers "Server\Functions\Server_HandleEmptyVehicle.sqf";
 WFBE_SE_FNC_HandlePVF = Compile preprocessFileLineNumbers "Server\Functions\Server_HandlePVF.sqf";
+//--- Forward FOB (flag WFBE_C_STRUCTURES_FOB): tent 'killed' teardown + the per-FOB ping/repair worker.
+//--- Both self-gate on the flag via their caller (Server\PVFunctions\RequestForwardFOB.sqf), which is the
+//--- only thing that references them - compiling them flag-off costs one preprocess each and runs no code.
+WFBE_SE_FNC_ForwardFOBKilled = Compile preprocessFileLineNumbers "Server\Functions\Server_ForwardFOBKilled.sqf";
+WFBE_SE_FNC_ForwardFOBWorker = Compile preprocessFileLineNumbers "Server\Functions\Server_ForwardFOBWorker.sqf";
 WFBE_SE_FNC_ManageTownDefenses = Compile preprocessFileLineNumbers "Server\Functions\Server_ManageTownDefenses.sqf";
 WFBE_SE_FNC_OnHQKilled = Compile preprocessFileLineNumbers "Server\Functions\Server_OnHQKilled.sqf";
 WFBE_SE_FNC_OperateTownDefensesUnits = Compile preprocessFileLineNumbers "Server\Functions\Server_OperateTownDefensesUnits.sqf";

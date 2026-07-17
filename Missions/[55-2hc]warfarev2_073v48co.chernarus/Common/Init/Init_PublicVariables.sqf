@@ -14,6 +14,7 @@ _l = _l + ["RequestNewCommander"];
 _l = _l + ["RequestClaimCommander"]; //--- mid-round "TAKE COMMAND" claim of an empty (AI-run) commander seat (Server\PVFunctions\RequestClaimCommander.sqf).
 _l = _l + ["RequestStructure"];
 _l = _l + ["RequestFOBStructure"]; //--- B75 (guer-tech): GUER FOB field-factory build (Server\PVFunctions\RequestFOBStructure.sqf).
+_l = _l + ["RequestForwardFOB"]; //--- Forward FOB (flag WFBE_C_STRUCTURES_FOB): WEST/EAST supply-truck forward base - cash-priced, capped, server-authoritative (Server\PVFunctions\RequestForwardFOB.sqf).
 _l = _l + ["RequestDefense"];
 _l = _l + ["RequestJoin"];
 _l = _l + ["RequestFundsResend"]; //--- B76 (Ray 2026-06-29): JIP funds self-heal - client asks the server to re-broadcast its own-group wfbe_funds when a slow team-sync left it with $0 (Server\PVFunctions\RequestFundsResend.sqf).

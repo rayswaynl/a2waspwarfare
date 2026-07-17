@@ -120,6 +120,25 @@ if (_unit_kind in (missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []]))
 	}];
 };
 
+//--- Forward FOB (flag WFBE_C_STRUCTURES_FOB, 2026-07-17): Build action on a WEST/EAST supply truck.
+//--- Mirrors the GUER Build-FOB block above, with three differences from owner ruling 2: it gates on the
+//--- standard per-side supply-truck roster (WFBE_%1SUPPLYTRUCKS - the PLURAL array is the one actually read
+//--- at runtime, see :295; the singular WFBE_%1SUPPLYTRUCK has no reader anywhere in the tree) instead of a
+//--- dedicated delivery-truck list, it has no commander/token gate, and it is cash-priced + capped.
+//--- Flag-off: the action is never attached, so the truck is byte-identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FOB", 0]) > 0 && {_side in [west, east]} && {_unit_kind in (missionNamespace getVariable [Format ['WFBE_%1SUPPLYTRUCKS', str _side], []])}) then {
+	_unit addAction [
+		"<t color='#76F563'>Build Forward FOB</t>",
+		"Client\Action\Action_BuildForwardFOB.sqf",
+		[],
+		99,
+		false,
+		true,
+		"",
+		Format ["side group player == side _target && alive _target && player distance _target <= %1", missionNamespace getVariable ["WFBE_C_FOB_BUILD_RANGE", 30]]
+	];
+};
+
 if (_unit isKindOf "Tank") then { //--- Tanks.
 	//--- Valhalla Low gear.
 	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOn")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(vehicle player == _target) && !(_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];
