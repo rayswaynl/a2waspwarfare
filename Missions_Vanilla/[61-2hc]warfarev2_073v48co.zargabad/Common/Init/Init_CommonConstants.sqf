@@ -2637,9 +2637,11 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- WFBE_C_SPAWN_BUDDY_DISBAND (wasp-aicom-idle-diagnosis-20260717, owner live report 2026-07-17: "I spawn
 //--- with another unit in my group" - AI-Teams pre-grouped squadmate at INITIAL spawn is by-design, but the
 //--- owner wants a clean solo spawn). 1 = at INITIAL spawn only (never on respawn - a bought/earned squad is
-//--- never touched), any client-local, non-player AI unit already in the fresh player group is silently
-//--- disbanded into its own group and left standing (not deleted - still a valid AI asset for the side, just
-//--- no longer riding the player's command bar). 0 = legacy behaviour (default; byte-identical to HEAD).
+//--- never touched), any client-local, non-player AI unit already in the fresh player group is deleted so the
+//--- player spawns solo. Deleted, NOT split into a spare group: splitting leaked one empty group per player
+//--- per round (against A2's ~144-per-side group cap) and left an orderless AI standing at base all match.
+//--- Armed from the lobby (Rsc\Parameters.hpp, last entry) or here; the isNil guard below lets the lobby win.
+//--- 0 = legacy behaviour (default; byte-identical to HEAD).
 	if (isNil "WFBE_C_SPAWN_BUDDY_DISBAND") then {WFBE_C_SPAWN_BUDDY_DISBAND = 0};
 //--- PLAYER BASE DEFENSE AUTO-MANNING (fable/player-defense-automan):
 //--- When >0 and a player builds a gunner-capable static inside a base area, the defense is

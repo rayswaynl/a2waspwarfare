@@ -5,8 +5,10 @@
 .DESCRIPTION
     Checks the source contract that prevents the #1120 follow-up regressions:
     the flag is lobby-armable, the slot-order and removal paths share one
-    delayed decision point, and removal deletes the unwanted local AI instead
-    of creating an idle/leaked group.
+    delayed decision point, removal deletes the unwanted local AI instead
+    of creating an idle/leaked group, and the param stays LAST in class Params
+    (Init_Parameters.sqf reads paramsArray positionally: a mid-list entry reads
+    the next param's stale cached value and can self-arm this default-0 flag).
 #>
 
 [CmdletBinding()]
@@ -29,7 +31,8 @@ $checks = @(
     @{ Name = "lobby parameter exists"; Pass = $params -match '(?s)class\s+WFBE_C_SPAWN_BUDDY_DISBAND\s*\{.*?default\s*=\s*0\s*;' },
     @{ Name = "one delayed spawn-buddy decision point"; Pass = ([regex]::Matches($client, 'SPAWN-BUDDY-DISBAND')).Count -eq 1 },
     @{ Name = "slot ordering and removal are mutually exclusive"; Pass = $client -match '(?s)if\s*\(_spawnBuddyDisband\)\s*then\s*\{.*?deleteVehicle.*?\}\s*else\s*\{.*?_slot1Others\s+joinSilent' },
-    @{ Name = "removal does not create a group"; Pass = $removePath -match 'deleteVehicle' -and $removePath -notmatch 'createGroup' }
+    @{ Name = "removal does not create a group"; Pass = $removePath -match 'deleteVehicle' -and $removePath -notmatch 'createGroup' },
+    @{ Name = "param is LAST in class Params (positional paramsArray safety)"; Pass = (([regex]::Matches($params, '(?m)^\s*class\s+(\w+)\s*\{') | Where-Object { $_.Groups[1].Value -ne 'Params' } | Select-Object -Last 1).Groups[1].Value -eq 'WFBE_C_SPAWN_BUDDY_DISBAND') }
 )
 
 $failed = @($checks | Where-Object { -not $_.Pass })
