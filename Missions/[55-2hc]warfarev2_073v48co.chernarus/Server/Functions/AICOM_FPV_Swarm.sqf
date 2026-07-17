@@ -32,7 +32,9 @@
 	     between each drone (WFBE_C_AICOM_FPV_SWARM_LAUNCH_GAP) so up to 5 don't spawn stacked.
 	  5. Each drone: AI pilot puppet in its own isolated single-unit group, doMove + flyInHeight
 	     toward the fixed target position (re-issued every poll tick - doMove is a one-shot AI order
-	     on A2 OA), proximity-poll loop; on WFBE_C_AICOM_FPV_SWARM_HIT_RADIUS approach (or TTL
+	     on A2 OA). Inside a 120m horizontal run-in it drops to deck level and receives a short
+	     forward/downward velocity vector; the proximity poll uses an explicit horizontal calculation
+	     (A2 OA has no distance2D). On WFBE_C_AICOM_FPV_SWARM_HIT_RADIUS approach (or TTL
 	     timeout / shootdown) it detonates - createVehicle WFBE_C_FPV_DRONE_AMMO at its own current
 	     position, a NEW independent detonation path that does NOT touch Support_FPV_Detonate.sqf's
 	     player-purchase token registry - and scuttles.
@@ -48,7 +50,7 @@
 	cooldown keeps this an occasional strike tool rather than a spammable barrage.
 */
 
-private ["_side","_logik","_sideID","_interval","_enabled","_cmdTeam","_hq","_sideText",
+private ["_side","_sideID","_interval","_enabled","_cmdTeam","_hq","_sideText",
          "_jitter","_humanCmd","_skipAI","_swCool","_swKey","_swLast",
          "_maxActive","_activeKey","_activeArr",
          "_enemySide","_enemyID","_cands","_scanR","_bestTown","_bestScore","_bestDist","_bestObj",
@@ -56,10 +58,6 @@ private ["_side","_logik","_sideID","_interval","_enabled","_cmdTeam","_hq","_si
          "_perDroneCost","_swFunds","_swarmSize","_swarmMax","_totalCost"];
 
 _side    = _this;
-_logik   = (_side) Call WFBE_CO_FNC_GetSideLogic;
-if (isNil "_logik") exitWith {
-	["INFORMATION", Format ["AICOM_FPV_Swarm.sqf: worker exit for %1 - side logic nil at startup", str _side]] Call WFBE_CO_FNC_AICOMLog;
-};
 _sideID   = (_side) Call WFBE_CO_FNC_GetSideID;
 _sideText = str _side;
 
@@ -184,10 +182,12 @@ while {!gameOver} do {
 		_swarmMax     = missionNamespace getVariable ["WFBE_C_AICOM_FPV_SWARM_MAX", 5];
 		_perDroneCost = (missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST", 2500]) * (missionNamespace getVariable ["WFBE_C_AICOM_FPV_SWARM_COST_MULT", 2]);
 		_swFunds      = (_side) Call GetAICommanderFunds;
-		_swarmSize    = _swarmMax;
+		_swarmSize    = 0;
 		if (_perDroneCost > 0) then {
 			_swarmSize = floor (_swFunds / _perDroneCost);
 			if (_swarmSize > _swarmMax) then {_swarmSize = _swarmMax};
+		} else {
+			["WARNING", Format ["AICOM_FPV_Swarm.sqf: draw skipped for %1 - invalid per-drone cost %2.", _sideText, _perDroneCost]] Call WFBE_CO_FNC_AICOMLog;
 		};
 
 		if (_swarmSize < 1) then {
@@ -243,27 +243,40 @@ while {!gameOver} do {
 
 								[_drone, _grp, _pilot, _targetPos, _targetName, _sideText, _hitRadius, _ttl, _activeKey] spawn {
 									private ["_drone","_grp","_pilot","_targetPos","_targetName","_sideText","_hitRadius","_ttl","_activeKey",
-									         "_startT","_detonated","_curPos","_d","_ammoClass","_activeArr3"];
+									         "_startT","_detonated","_curPos","_d","_dx","_dy","_horizontalD2","_diveRange","_diveRange2","_dir","_ammoClass","_activeArr3"];
 									_drone     = _this select 0; _grp       = _this select 1; _pilot     = _this select 2;
 									_targetPos = _this select 3; _targetName = _this select 4; _sideText  = _this select 5;
 									_hitRadius = _this select 6; _ttl       = _this select 7; _activeKey = _this select 8;
 
-									_drone doMove _targetPos;
+									_pilot doMove _targetPos;
 									_startT    = time;
 									_detonated = false;
+									_diveRange = 120;
+									_diveRange2 = _diveRange * _diveRange;
 
 									while {alive _drone && {alive _pilot} && {(time - _startT) < _ttl}} do {
 										_curPos = getPos _drone;
-										_d = _curPos distance _targetPos;
-										if (_d < _hitRadius) exitWith {
+										_dx = (_targetPos select 0) - (_curPos select 0);
+										_dy = (_targetPos select 1) - (_curPos select 1);
+										_horizontalD2 = (_dx * _dx) + (_dy * _dy); //--- A2 OA-safe 2D-equivalent; distance is 3D.
+										_d = sqrt _horizontalD2;
+										if (_horizontalD2 < (_hitRadius * _hitRadius)) exitWith {
 											_ammoClass = missionNamespace getVariable ["WFBE_C_FPV_DRONE_AMMO", "R_57mm_HE"];
 											createVehicle [_ammoClass, _curPos, [], 0, "NONE"];
 											_detonated = true;
-											diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FPVSWARM_HIT|target=" + _targetName + "|dist=" + str (round _d));
+											diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FPVSWARM_HIT|target=" + _targetName + "|horizontalDist=" + str (round _d));
 										};
-										//--- doMove is a one-shot AI order on A2 OA - re-issue toward the same locked-in point every
-										//--- poll tick in case CARELESS/BLUE still lets the AI drift off course.
-										if (!_detonated) then {_drone doMove _targetPos};
+										//--- doMove is a one-shot AI order on A2 OA - re-issue it to the pilot every poll tick.
+										//--- The terminal vector forces an actual low run rather than holding at the 60m cruise floor.
+										if (!_detonated) then {
+											_pilot doMove _targetPos;
+											if (_horizontalD2 < _diveRange2) then {
+												_dir = if (_dx == 0 && {_dy == 0}) then {direction _drone} else {_dx atan2 _dy};
+												_drone flyInHeight 0;
+												_drone setDir _dir;
+												_drone setVelocity [20 * sin _dir, 20 * cos _dir, -8];
+											};
+										};
 										sleep 1;
 									};
 
