@@ -730,7 +730,18 @@ while {!gameOver} do {
 								//--- the snapshot default 0 back into the global. The level-3 override is now passed explicitly as
 								//--- the optional 5th Support_Paratroopers argument (race-free, no global state).
 								_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-								if (isNull _cmdTeam) then {_cmdTeam = [_side, "aicom-wildcard"] Call WFBE_CO_FNC_CreateGroup};
+								if (isNull _cmdTeam) then {
+									_cmdTeam = [_side, "aicom-wildcard"] Call WFBE_CO_FNC_CreateGroup;
+									//--- W4 GROUP-LEAK FIX (owner order 2026-07-17, round-2 bughunt item 1): this fallback group (taken
+									//--- when the side has no live HQ commander team yet) was created bare and never registered in
+									//--- wfbe_teams, unlike the standard AICOM founding path (Server_HandleSpecial.sqf "aicom-team-created",
+									//--- ~417-418; the path W6/W19/W23 use) - so the per-side 144-group-cap GC (server_groupsGC.sqf:93)
+									//--- never saw it and could never reap it: every AI-commanded W4 draw permanently leaked one live
+									//--- paratrooper group toward the cap. Register it the same way "aicom-team-created" does.
+									private ["_w4Teams"];
+									_w4Teams = _logik getVariable ["wfbe_teams", []];
+									_logik setVariable ["wfbe_teams", _w4Teams + [_cmdTeam], true];
+								};
 								[nil, _side, _destination, _cmdTeam, 3] Spawn (Compile preprocessFile "Server\Support\Support_Paratroopers.sqf");
 								_detail = Format ["target=%1 level=3 model=%2 humanCmd=%3", _bestTown getVariable ["name","?"], _w4Model, _humanCmd];
 							} else {
