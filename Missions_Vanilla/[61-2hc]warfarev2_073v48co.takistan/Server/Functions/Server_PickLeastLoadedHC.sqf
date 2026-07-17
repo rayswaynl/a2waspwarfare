@@ -34,7 +34,17 @@ _hcs = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
 //--- the delegation to a null leader and the AI would silently never spawn.
 _live = [];
 {
-	if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_live = _live + [_x]};
+	//--- BUGFIX (2026-07-17, HC-founding zombie-picker): a registered HC group whose leader has
+	//--- owner()==0 (disconnected, or its unit locality silently transferred to the server - see
+	//--- Common_SendToClient.sqf's own "owner()==0 => drop, no publicVariableClient" guard) is NOT
+	//--- a routable delegation target: any send to it is ALREADY silently dropped downstream. Such
+	//--- a zombie entry still passes the isNull/alive test below and tallies ZERO owned units, so
+	//--- the argmin picker would otherwise select it FOREVER once it appears (it always looks like
+	//--- the least-loaded HC). Single-shot callers (AI_Commander_Teams / AI_Commander_Wildcard
+	//--- delegate-aicom-team) have no fallback if that happens - unlike the townai/static-defence
+	//--- callers, which round-robin past a bad slot. Excluding owner<=0 here can never regress a
+	//--- delivery that used to work (Common_SendToClient already dropped it either way).
+	if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}) then {_live = _live + [_x]};
 } forEach _hcs;
 
 if (count _live == 0) exitWith {objNull};

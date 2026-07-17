@@ -22,6 +22,12 @@ _pvf set [1, Format["CLTFNC%1",_func]];
 if (!isHostedServer) then {
 	if (_id > 0) then {
 		Call Compile Format ["WFBE_PVF_%1 = _pvf; _id publicVariableClient 'WFBE_PVF_%1';", _func];
+	} else {
+		//--- OBSERVABILITY (2026-07-17, HC-founding zombie-picker): this drop was previously silent -
+		//--- no RPT trace on either the server or the (never-reached) target HC, which is why the
+		//--- delegate-aicom-team pipeline break was invisible to RPT archaeology. Correctness-neutral
+		//--- (still drops exactly as before); only adds a trace so a future zero-owner drop is provable.
+		diag_log (Format ["SENDTOCLIENT|v1|DROPPED|func=%1|owner=0-or-negative", _func]);
 	};
 } else {
 	_pvf Spawn WFBE_CL_FNC_HandlePVF;
