@@ -44,6 +44,24 @@ Assert ((Get-ExpectedBuildToken 'foo_cmdcon36aicom.chernarus')   -eq 'cmdcon36ai
 Assert ((Get-ExpectedBuildToken 'cmdcon42_extra')                -eq 'cmdcon42')      "cmdcon token sliced at _"
 Assert ((Get-ExpectedBuildToken 'b86')                           -eq 'b86')           "no cmdcon -> full tag (build= falls back to mission name)"
 
+Write-Host "== BUG 2 (2026-07-17): build= drops the terrain suffix (engine missionName has no .chernarus) =="
+# The live WASPSCALE build= is the engine missionName, which never carries the terrain suffix.
+# Our mission-name strings (from the PBO filename) DO. Get-ExpectedBuildToken must strip it so a
+# non-cmdcon deploy verifies against the token the server actually emits (else every healthy
+# deploy false-fails into a rollback - exactly the 2026-07-17 live-deploy symptom).
+Assert ((Get-ExpectedBuildToken '[55-2hc]warfarev2_073v48co_v2-20260716.chernarus') -eq '[55-2hc]warfarev2_073v48co_v2-20260716') "ch mission name -> build token WITHOUT .chernarus"
+Assert ((Get-ExpectedBuildToken '[61-2hc]warfarev2_073v48co_b86.takistan')          -eq '[61-2hc]warfarev2_073v48co_b86')          "tk mission name -> build token WITHOUT .takistan"
+Assert ((Get-ExpectedBuildToken '[61-2hc]warfarev2_073v48co_b86.zargabad')          -eq '[61-2hc]warfarev2_073v48co_b86')          "zg mission name -> build token WITHOUT .zargabad"
+Assert ((Get-ExpectedBuildToken 'foo_cmdcon36aicom.chernarus')                      -eq 'cmdcon36aicom')                           "cmdcon token still sliced after terrain strip"
+# a build TAG that itself contains no terrain suffix is untouched (regression guard for the strip anchor).
+Assert ((Get-ExpectedBuildToken 'v2-20260716')                                      -eq 'v2-20260716')                            "bare tag with a map-like word is left intact ($ anchor)"
+
+Write-Host "== BUG 3 (2026-07-17): deploy-lock staleness decision =="
+$now = Get-Date
+Assert ((Test-DeployLockIsStale ($now.AddMinutes(-45)) $now 30) -eq $true)  "45-min-old lock is stale at 30-min threshold (take over)"
+Assert ((Test-DeployLockIsStale ($now.AddMinutes(-5))  $now 30) -eq $false) "5-min-old lock is fresh (refuse to overlap)"
+Assert ((Test-DeployLockIsStale ($now.AddMinutes(-30)) $now 30) -eq $true)  "exactly-at-threshold lock counts as stale (>=)"
+
 Write-Host "== archive rotation (rollback retention) =="
 # names carry a sortable yyyyMMdd-HHmmss prefix; prune keeps the newest N.
 $names = @(

@@ -32,14 +32,28 @@
     into the staging dir also honours -Apply (they are skipped in a pure dry run unless
     -RunBuild/-RunPack force them) so a review dry-run is completely side-effect free.
 
-    2026-06-23 INCIDENT — must be structurally impossible here:
+    2026-06-23 INCIDENT — protection preserved (validate before stopping):
       A hand-copied cfg-repoint guard `throw`ed on a no-op AFTER the service was already
-      stopped, stranding the server DOWN. This pipeline never stops the server itself and
-      never repoints the cfg on a stopped server: the cfg repoint (step 4) runs while the
-      server is still UP and is the LAST thing before the restart. If the repoint fails, the
-      restart is never triggered and the server keeps running the old mission. The restart
-      task (step 5) is the single stop/start, triggered only after every file+cfg mutation
-      has already succeeded. (verify-before-stop, plus restore-on-failure via -Rollback.)
+      stopped, stranding the server DOWN. Guard here: step 4 first does a DRY-RUN repoint
+      while the server is still UP (verify-before-stop) and aborts untouched if the template
+      line isn't found. Only once that dry-run proves the real repoint will succeed do we
+      stop the chain and write the cfg — so a no-op/missing-line can never strand a stopped
+      server. Restore-on-failure via -Rollback covers a bad-but-valid deploy.
+
+    2026-07-17 LIVE-DEPLOY FIXES (this stacked PR):
+      BUG 1 (cfg lock): the running arma2oaserver holds an EXCLUSIVE lock on the server cfg,
+      so Set-MissionTemplate -Apply (WriteAllText) threw "being used by another process" when
+      it ran while UP. The REAL repoint now happens with the chain STOPPED (dry-run stays
+      up-front as verify-before-stop). Sequence: dry-run-while-up -> place PBO -> STOP service
+      + end HCs -> real repoint (cfg now unlocked) -> WaspServiceRestart -> verify.
+      BUG 2 (verify token): the live WASPSCALE `build=` surfaces the engine `missionName`,
+      which DROPS the terrain suffix; the pipeline's mission-name strings keep `.chernarus`.
+      Get-ExpectedBuildToken now strips a trailing `.chernarus/.takistan/.zargabad` so verify
+      compares against the token the server actually emits.
+      BUG 3 (stuck/overlapping restart): a single on-disk lock blocks overlapping deploy runs;
+      Invoke-WaspServiceRestart ends a still-Running task instance and kills orphan procs
+      before triggering, then guards for the service to come Running and surfaces the
+      ACR/desktop-session dependency instead of silently looping.
 
 .PARAMETER Build
     Build tag embedded in the deployed PBO filename, e.g. 'cmdcon48aicom' or 'b86'.
@@ -154,6 +168,8 @@ param(
     [string]$PboTool,
     [string]$RestartTask = 'WaspServiceRestart',
     [string]$ServiceName = 'Arma2OA-PR8',
+    [int]$RestartGuardSec = 180,
+    [int]$LockStaleMinutes = 30,
     [string]$RptPath     = 'C:\Users\Administrator\AppData\Local\ArmA 2 OA\arma2oaserver.RPT',
     [string]$ExpectBuild,
     [string]$TemplatePattern,
@@ -259,9 +275,15 @@ function Get-MissionName([hashtable]$map, [string]$build) {
 }
 function Get-PboName([hashtable]$map, [string]$build) { return (Get-MissionName $map $build) + '.pbo' }
 
-# Reduce a build tag to the WASPSCALE build= token it will surface as: the `cmdcon<...>`
-# slice if present (matching AI_Commander.sqf's parser), else the whole thing.
+# Reduce a build tag OR full mission name to the WASPSCALE build= token it will surface as:
+# the `cmdcon<...>` slice if present (matching AI_Commander.sqf's parser), else the whole
+# thing. BUG 2 (2026-07-17): the live emitter's fallback is the engine `missionName`, which
+# DROPS the terrain suffix (`missionName` never contains `.chernarus`). Our mission-name
+# strings carry that suffix (they come from the PBO filename), so strip it FIRST - otherwise
+# a non-cmdcon build verifies against '...chernarus' which the server never emits and every
+# healthy deploy false-fails into a rollback (exactly what happened on the 2026-07-17 deploy).
 function Get-ExpectedBuildToken([string]$build) {
+    $build = $build -replace '\.(chernarus|takistan|zargabad)$',''
     $i = $build.IndexOf('cmdcon')
     if ($i -lt 0) { return $build }
     $rest = $build.Substring($i)
@@ -299,6 +321,78 @@ function Get-ArchivesToPrune([string[]]$names, [int]$keep) {
     $excess = $sorted.Count - $keep
     if ($excess -le 0) { return @() }
     return @($sorted[0..($excess - 1)])
+}
+
+# Pure lock-staleness decision (exposed for tests): a deploy lock older than $staleMinutes may
+# be taken over; a fresher one means another deploy is genuinely in progress. BUG 3 helper.
+function Test-DeployLockIsStale([datetime]$writtenAt, [datetime]$now, [int]$staleMinutes) {
+    return ((($now - $writtenAt).TotalMinutes) -ge $staleMinutes)
+}
+
+# Stop the dedicated-server service and end both HCs so the server cfg is UNLOCKED for rewrite.
+# BUG 1 (2026-07-17): arma2oaserver holds an exclusive lock on the cfg while running, so
+# Set-MissionTemplate -Apply (WriteAllText) throws "being used by another process". The real
+# cfg repoint must therefore run with the chain stopped. Callers reach here ONLY after the
+# verify-before-stop dry-run proved the repoint will succeed (2026-06-23 protection preserved).
+function Stop-WaspChain {
+    param([string]$ServiceName, [int]$TimeoutSec = 60)
+    Write-Step "stop: stopping service '$ServiceName' + ending HCs (unlock cfg for repoint)"
+    try {
+        $svc = Get-Service $ServiceName -ErrorAction SilentlyContinue
+        if ($svc -and $svc.Status -ne 'Stopped') { Stop-Service $ServiceName -Force -ErrorAction Stop }
+    } catch { Write-Step "stop: Stop-Service '$ServiceName' failed ($($_.Exception.Message)); killing procs directly" }
+    # HCs are separate ArmA2OA client procs (not the service); kill them + any lingering server.
+    foreach ($pn in @('arma2oaserver','ArmA2OA')) {
+        @(Get-Process $pn -ErrorAction SilentlyContinue) | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
+    # Wait for the server proc to actually exit so the OS releases the cfg file handle.
+    $deadline = (Get-Date).AddSeconds($TimeoutSec)
+    while ((Get-Date) -lt $deadline) {
+        if ((@(Get-Process arma2oaserver -ErrorAction SilentlyContinue).Count) -eq 0) { break }
+        Start-Sleep 2
+    }
+    Start-Sleep 2   # small grace for the handle to be released after PID exit
+}
+
+# Safely (re)start the whole WASP chain via the EXISTING WaspServiceRestart scheduled task.
+# BUG 3 (2026-07-17): rapid repeated deploys stacked restarts; one task instance got stuck
+# (state=Running) and the box went DOWN with orphan procs. Before triggering: END the task if
+# it is already Running (a stuck instance never self-clears), then kill any orphan server/HC
+# procs so the fresh start isn't blocked by a half-dead chain. After triggering, poll for the
+# service to come Running; if it stays Stopped past the guard window, surface the likely
+# ACR-popup / desktop-session dependency and return $false instead of silently looping.
+function Invoke-WaspServiceRestart {
+    param([string]$RestartTask, [string]$ServiceName, [int]$GuardSec = 180)
+    $taskState = $null
+    try {
+        $q = schtasks /Query /TN $RestartTask /FO LIST /V 2>$null
+        $m = ($q | Select-String '^\s*Status:\s*(.+?)\s*$' | Select-Object -First 1)
+        if ($m) { $taskState = $m.Matches[0].Groups[1].Value.Trim() }
+    } catch { $taskState = $null }
+    if ($taskState -eq 'Running') {
+        Write-Step "restart: task '$RestartTask' already Running - ending stuck instance first"
+        schtasks /End /TN $RestartTask 2>$null | Out-Null
+        Start-Sleep 2
+    }
+    foreach ($pn in @('arma2oaserver','ArmA2OA')) {
+        $orphans = @(Get-Process $pn -ErrorAction SilentlyContinue)
+        if ($orphans.Count -gt 0) {
+            Write-Step "restart: killing $($orphans.Count) orphan '$pn' proc(s) before restart"
+            $orphans | Stop-Process -Force -ErrorAction SilentlyContinue
+        }
+    }
+    Start-Sleep 1
+    Write-Step "restart: trigger scheduled task '$RestartTask'"
+    schtasks /Run /TN $RestartTask | Out-Null
+    $deadline = (Get-Date).AddSeconds($GuardSec)
+    while ((Get-Date) -lt $deadline) {
+        $svc = Get-Service $ServiceName -ErrorAction SilentlyContinue
+        if ($svc -and $svc.Status -eq 'Running') { Write-Step "restart: service '$ServiceName' Running"; return $true }
+        Start-Sleep 5
+    }
+    Write-Step "restart GUARD: service '$ServiceName' still NOT Running after ${GuardSec}s"
+    Write-Warning ("WaspServiceRestart did not bring '{0}' up within {1}s. On this box the restart chain depends on an interactive desktop session (ACR / launcher popup); if no one is logged in at the console the service can stay Stopped. Check the console session and re-run the restart MANUALLY - this tool is not auto-looping." -f $ServiceName, $GuardSec)
+    return $false
 }
 
 if ($LoadFunctionsOnly) { return }   # tests dot-source to here and exercise the pure helpers
@@ -349,13 +443,14 @@ if ($Rollback) {
         return
     }
 
-    # verify-before-stop: confirm the cfg template line exists BEFORE any mutation.
+    # verify-before-stop: confirm the cfg template line exists BEFORE any mutation (2026-06-23).
     & $setTemplate -CfgPath $CfgPath -MissionName $restoreMissionName -Pattern $TemplatePattern | Out-Null
     Copy-Item -LiteralPath $newest.FullName -Destination (Join-Path $MissionsDir $restoreName) -Force
+    # BUG 1: stop the chain so the cfg is unlocked, THEN repoint, THEN safe restart (BUG 3).
+    Stop-WaspChain -ServiceName $ServiceName
     & $setTemplate -CfgPath $CfgPath -MissionName $restoreMissionName -Pattern $TemplatePattern -Apply | Out-Null
-    Write-Step "restart via scheduled task '$RestartTask'"
-    schtasks /Run /TN $RestartTask | Out-Null
-    Write-Output "WASP_DEPLOY_ROLLBACK_DONE restored=$restoreName"
+    $rbUp = Invoke-WaspServiceRestart -RestartTask $RestartTask -ServiceName $ServiceName -GuardSec $RestartGuardSec
+    Write-Output ("WASP_DEPLOY_ROLLBACK_DONE restored={0} restart={1}" -f $restoreName, ($(if($rbUp){'OK'}else{'STUCK'})))
     return
 }
 
@@ -460,8 +555,8 @@ if ($SkipPack) {
 if (-not $Apply) {
     Write-DryNote "phase 3 stage+copy: would archive current live '$($map.Ext)' PBO from $MissionsDir into $ArchiveRoot\$ActiveMap, keep newest $KeepArchives"
     Write-DryNote "phase 3 stage+copy: would place $pboName into $MissionsDir"
-    Write-DryNote "phase 4 repoint : would run Set-MissionTemplate -Apply -MissionName '$missionName' (dry-run first as verify-before-stop)"
-    Write-DryNote "phase 5 restart : would trigger scheduled task '$RestartTask' (the ONLY stop/start)"
+    Write-DryNote "phase 4 repoint : would dry-run cfg repoint while UP (verify-before-stop), then STOP service '$ServiceName' + end HCs, then real Set-MissionTemplate -Apply -MissionName '$missionName' (cfg unlocked only when stopped - BUG 1)"
+    Write-DryNote "phase 5 restart : would safely (re)start via '$RestartTask' - end stuck task, kill orphan procs, trigger, then guard ${RestartGuardSec}s for '$ServiceName' Running (BUG 3)"
     Write-DryNote "phase 6 verify  : would confirm service '$ServiceName' Running, 3 procs (server+2HC), and RPT 'WASPSCALE|v2|...|build=' contains '$ExpectBuild'"
     Write-Output "WASP_DEPLOY_DRYRUN map=$ActiveMap build=$Build mission=$missionName expectBuild=$ExpectBuild"
     return
@@ -472,80 +567,116 @@ if (-not $stagedPbo -or -not (Test-Path -LiteralPath $stagedPbo)) {
     throw "no staged PBO to deploy (pack phase produced nothing). Aborting before any live mutation."
 }
 
-$mapArchive = Join-Path $ArchiveRoot $ActiveMap
-if (-not (Test-Path -LiteralPath $mapArchive)) { New-Item -ItemType Directory -Path $mapArchive -Force | Out-Null }
-if (-not (Test-Path -LiteralPath $MissionsDir)) { throw "MissionsDir not found: $MissionsDir" }
-
-# Snapshot current live active-map PBO(s) BEFORE touching anything (rollback point).
-$liveOld = @(Get-ChildItem -LiteralPath $MissionsDir -Filter ("*.{0}.pbo" -f $map.Ext) -ErrorAction SilentlyContinue)
-$stamp   = Get-Date -Format 'yyyyMMdd-HHmmss'
-$prevMissionName = $null
-
-# ── VERIFY-BEFORE-STOP (2026-06-23 guard): confirm the cfg template line exists NOW,
-#    while the server is still running. If it doesn't, abort before any file/service change.
-Write-Step "verify-before-stop: dry-run cfg repoint (must find the template line)"
-$dry = & $setTemplate -CfgPath $CfgPath -MissionName $missionName -Pattern $TemplatePattern
-if ($dry.Matches -lt 1) { throw "cfg template line not found (pattern /$TemplatePattern/) - aborting; server untouched." }
-$prevRaw = [System.IO.File]::ReadAllText($CfgPath, [System.Text.Encoding]::GetEncoding(28591))
-$prevM = [regex]::Match($prevRaw, $TemplatePattern)
-if ($prevM.Success) {
-    $pm2 = [regex]::Match($prevM.Value, 'template\s*=\s*"([^"]*)"')
-    if ($pm2.Success) { $prevMissionName = $pm2.Groups[1].Value }
+# ── DEPLOY LOCK (BUG 3): block overlapping runs so rapid re-deploys can't stack restarts.
+#    A single on-disk lock guards the whole live phase; a fresh concurrent run aborts, a stale
+#    one (> -LockStaleMinutes) is taken over. Released in the finally below.
+$lockFile = Join-Path ([System.IO.Path]::GetTempPath()) 'deploy-wasp.lock'
+$lockAcquired = $false
+if (Test-Path -LiteralPath $lockFile) {
+    $lockWritten = (Get-Item -LiteralPath $lockFile).LastWriteTime
+    if (-not (Test-DeployLockIsStale $lockWritten (Get-Date) $LockStaleMinutes)) {
+        $holder = ((Get-Content -LiteralPath $lockFile -ErrorAction SilentlyContinue) -join ' ')
+        $ageMin = [int]((Get-Date) - $lockWritten).TotalMinutes
+        Write-Output "WASP_DEPLOY_ABORT_LOCKED another deploy is in progress (lock $lockFile age ${ageMin}m; $holder)"
+        throw "deploy lock held by another run ($lockFile) - refusing to overlap."
+    }
+    Write-Step "APPLY: taking over STALE deploy lock (older than $LockStaleMinutes min)"
 }
+Set-Content -LiteralPath $lockFile -Value ("pid=$PID started=$(Get-Date -Format o) map=$ActiveMap build=$Build") -Encoding ASCII
+$lockAcquired = $true
 
-# ── Phase 3: archive current live PBO, then place new PBO ─────────────────────
-foreach ($old in $liveOld) {
-    $dest = Join-Path $mapArchive ("{0}__{1}" -f $stamp, $old.Name)
-    Copy-Item -LiteralPath $old.FullName -Destination $dest -Force
-    Write-Step "phase 3: archived live $($old.Name) -> $dest"
-}
-# Prune archive to newest $KeepArchives.
-$toPrune = Get-ArchivesToPrune (@(Get-ChildItem -LiteralPath $mapArchive -Filter '*.pbo' | Select-Object -ExpandProperty Name)) $KeepArchives
-foreach ($p in $toPrune) { Remove-Item -LiteralPath (Join-Path $mapArchive $p) -Force; Write-Step "phase 3: pruned old archive $p" }
-
-$livePbo = Join-Path $MissionsDir $pboName
-Copy-Item -LiteralPath $stagedPbo -Destination $livePbo -Force
-Write-Step "phase 3: placed $pboName in MPMissions"
-
-# ── Phase 4: repoint cfg (server still UP - safe; last mutation before restart) ──
-Write-Step "phase 4: repoint cfg -> '$missionName' (Set-MissionTemplate -Apply)"
 try {
-    & $setTemplate -CfgPath $CfgPath -MissionName $missionName -Pattern $TemplatePattern -Apply | Out-Null
-} catch {
-    # cfg repoint failed while server still UP: undo the PBO placement, leave server as-is.
-    Write-Step "phase 4 FAILED before restart: $($_.Exception.Message) - reverting PBO, server left running old mission"
+    $mapArchive = Join-Path $ArchiveRoot $ActiveMap
+    if (-not (Test-Path -LiteralPath $mapArchive)) { New-Item -ItemType Directory -Path $mapArchive -Force | Out-Null }
+    if (-not (Test-Path -LiteralPath $MissionsDir)) { throw "MissionsDir not found: $MissionsDir" }
+
+    # Snapshot current live active-map PBO(s) BEFORE touching anything (rollback point).
+    $liveOld = @(Get-ChildItem -LiteralPath $MissionsDir -Filter ("*.{0}.pbo" -f $map.Ext) -ErrorAction SilentlyContinue)
+    $stamp   = Get-Date -Format 'yyyyMMdd-HHmmss'
+    $prevMissionName = $null
+
+    # ── VERIFY-BEFORE-STOP (2026-06-23 guard): confirm the cfg template line exists NOW,
+    #    while the server is still running. If it doesn't, abort before any file/service change.
+    #    This dry-run proves the REAL repoint (done stopped, phase 4) will succeed - so stopping
+    #    the chain to unlock the cfg can never strand a stopped server on a no-op/missing line.
+    Write-Step "verify-before-stop: dry-run cfg repoint (must find the template line)"
+    $dry = & $setTemplate -CfgPath $CfgPath -MissionName $missionName -Pattern $TemplatePattern
+    if ($dry.Matches -lt 1) { throw "cfg template line not found (pattern /$TemplatePattern/) - aborting; server untouched." }
+    $prevRaw = [System.IO.File]::ReadAllText($CfgPath, [System.Text.Encoding]::GetEncoding(28591))
+    $prevM = [regex]::Match($prevRaw, $TemplatePattern)
+    if ($prevM.Success) {
+        $pm2 = [regex]::Match($prevM.Value, 'template\s*=\s*"([^"]*)"')
+        if ($pm2.Success) { $prevMissionName = $pm2.Groups[1].Value }
+    }
+
+    # ── Phase 3: archive current live PBO, then place new PBO ─────────────────────
+    foreach ($old in $liveOld) {
+        $dest = Join-Path $mapArchive ("{0}__{1}" -f $stamp, $old.Name)
+        Copy-Item -LiteralPath $old.FullName -Destination $dest -Force
+        Write-Step "phase 3: archived live $($old.Name) -> $dest"
+    }
+    # Prune archive to newest $KeepArchives.
+    $toPrune = Get-ArchivesToPrune (@(Get-ChildItem -LiteralPath $mapArchive -Filter '*.pbo' | Select-Object -ExpandProperty Name)) $KeepArchives
+    foreach ($p in $toPrune) { Remove-Item -LiteralPath (Join-Path $mapArchive $p) -Force; Write-Step "phase 3: pruned old archive $p" }
+
+    $livePbo = Join-Path $MissionsDir $pboName
+    Copy-Item -LiteralPath $stagedPbo -Destination $livePbo -Force
+    Write-Step "phase 3: placed $pboName in MPMissions"
+
+    # ── Phase 4: STOP chain, THEN repoint cfg (BUG 1: cfg is lock-free only when server is down) ──
+    Stop-WaspChain -ServiceName $ServiceName
+    Write-Step "phase 4: repoint cfg -> '$missionName' (Set-MissionTemplate -Apply; server stopped)"
+    try {
+        & $setTemplate -CfgPath $CfgPath -MissionName $missionName -Pattern $TemplatePattern -Apply | Out-Null
+    } catch {
+        # Repoint failed with the chain stopped: the cfg still points at the previous mission
+        # (byte-preserving writer throws before writing), the old PBO is still present, so revert
+        # the new PBO and restart back onto the previous mission - never leave the box DOWN.
+        Write-Step "phase 4 FAILED: $($_.Exception.Message) - reverting PBO, restarting on previous mission '$prevMissionName'"
+        Remove-Item -LiteralPath $livePbo -Force -ErrorAction SilentlyContinue
+        Invoke-WaspServiceRestart -RestartTask $RestartTask -ServiceName $ServiceName -GuardSec $RestartGuardSec | Out-Null
+        Write-Output "WASP_DEPLOY_ABORT_CFG repoint failed; reverted PBO, restarted on previous mission '$prevMissionName'; $($_.Exception.Message)"
+        throw
+    }
+
+    # ── Phase 5: (re)start via the existing WaspServiceRestart task (BUG 3: safe restart) ─────
+    Write-Step "phase 5: (re)start the chain"
+    $restartUp = Invoke-WaspServiceRestart -RestartTask $RestartTask -ServiceName $ServiceName -GuardSec $RestartGuardSec
+    if (-not $restartUp) {
+        Write-Output "WASP_DEPLOY_RESTART_STUCK map=$ActiveMap build=$Build - service '$ServiceName' did not come Running within ${RestartGuardSec}s (see ACR/desktop-session warning above); NOT auto-looping."
+        throw "restart guard: service did not come up within ${RestartGuardSec}s"
+    }
+
+    # ── Phase 6: verify ───────────────────────────────────────────────────────────
+    $verifyOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath -ExpectBuild $ExpectBuild
+    if ($verifyOk) {
+        # prune any OTHER active-map PBOs so exactly one remains (park model + match-report dual-PBO guard).
+        Get-ChildItem -LiteralPath $MissionsDir -Filter ("*.{0}.pbo" -f $map.Ext) -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -ne $pboName } |
+            ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force; Write-Step "phase 6: removed stale live PBO $($_.Name)" }
+        Write-Output "WASP_DEPLOY_DONE map=$ActiveMap build=$Build mission=$missionName verify=OK"
+        return
+    }
+
+    # ── Restore-on-failure ────────────────────────────────────────────────────────
+    if ($NoAutoRollback) {
+        Write-Output "WASP_DEPLOY_VERIFY_FAILED map=$ActiveMap build=$Build (auto-rollback disabled) - run '-Rollback -Apply' to restore"
+        throw "verify failed and -NoAutoRollback set"
+    }
+    if (-not $prevMissionName) {
+        Write-Output "WASP_DEPLOY_VERIFY_FAILED map=$ActiveMap build=$Build - no prior mission name captured; run '-Rollback -Apply' manually"
+        throw "verify failed; manual rollback required"
+    }
+    Write-Step "verify FAILED - auto-rollback to '$prevMissionName'"
+    # BUG 1: the failed deploy's restart may have left the server Running (cfg locked); stop first.
+    Stop-WaspChain -ServiceName $ServiceName
+    & $setTemplate -CfgPath $CfgPath -MissionName $prevMissionName -Pattern $TemplatePattern -Apply | Out-Null
     Remove-Item -LiteralPath $livePbo -Force -ErrorAction SilentlyContinue
-    Write-Output "WASP_DEPLOY_ABORT_CFG server untouched (still running '$prevMissionName'); $($_.Exception.Message)"
-    throw
+    $rbUp = Invoke-WaspServiceRestart -RestartTask $RestartTask -ServiceName $ServiceName -GuardSec $RestartGuardSec
+    $rbOk = $false
+    if ($rbUp) { $rbOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath -ExpectBuild (Get-ExpectedBuildToken $prevMissionName) }
+    Write-Output ("WASP_DEPLOY_ROLLED_BACK map={0} failedBuild={1} restored={2} verify={3}" -f $ActiveMap, $Build, $prevMissionName, ($(if($rbOk){'OK'}else{'UNCONFIRMED'})))
 }
-
-# ── Phase 5: restart via the EXISTING scheduled task (the ONLY stop/start) ─────
-Write-Step "phase 5: trigger scheduled task '$RestartTask'"
-schtasks /Run /TN $RestartTask | Out-Null
-
-# ── Phase 6: verify ───────────────────────────────────────────────────────────
-$verifyOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath -ExpectBuild $ExpectBuild
-if ($verifyOk) {
-    # prune any OTHER active-map PBOs so exactly one remains (park model + match-report dual-PBO guard).
-    Get-ChildItem -LiteralPath $MissionsDir -Filter ("*.{0}.pbo" -f $map.Ext) -ErrorAction SilentlyContinue |
-        Where-Object { $_.Name -ne $pboName } |
-        ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force; Write-Step "phase 6: removed stale live PBO $($_.Name)" }
-    Write-Output "WASP_DEPLOY_DONE map=$ActiveMap build=$Build mission=$missionName verify=OK"
-    return
+finally {
+    if ($lockAcquired) { Remove-Item -LiteralPath $lockFile -Force -ErrorAction SilentlyContinue }
 }
-
-# ── Restore-on-failure ────────────────────────────────────────────────────────
-if ($NoAutoRollback) {
-    Write-Output "WASP_DEPLOY_VERIFY_FAILED map=$ActiveMap build=$Build (auto-rollback disabled) - run '-Rollback -Apply' to restore"
-    throw "verify failed and -NoAutoRollback set"
-}
-if (-not $prevMissionName) {
-    Write-Output "WASP_DEPLOY_VERIFY_FAILED map=$ActiveMap build=$Build - no prior mission name captured; run '-Rollback -Apply' manually"
-    throw "verify failed; manual rollback required"
-}
-Write-Step "verify FAILED - auto-rollback to '$prevMissionName'"
-& $setTemplate -CfgPath $CfgPath -MissionName $prevMissionName -Pattern $TemplatePattern -Apply | Out-Null
-Remove-Item -LiteralPath $livePbo -Force -ErrorAction SilentlyContinue
-schtasks /Run /TN $RestartTask | Out-Null
-$rbOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath -ExpectBuild (Get-ExpectedBuildToken $prevMissionName)
-Write-Output ("WASP_DEPLOY_ROLLED_BACK map={0} failedBuild={1} restored={2} verify={3}" -f $ActiveMap, $Build, $prevMissionName, ($(if($rbOk){'OK'}else{'UNCONFIRMED'})))
