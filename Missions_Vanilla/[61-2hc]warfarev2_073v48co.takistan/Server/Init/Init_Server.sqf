@@ -89,6 +89,7 @@ WFBE_SE_FNC_AI_Com_Paratroops = Compile preprocessFileLineNumbers "Server\AI\Com
 WFBE_SE_FNC_AI_Commander = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander.sqf";
 WFBE_SE_FNC_AI_Commander_Wildcard = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard.sqf";
 WFBE_SE_FNC_AI_Commander_Wildcard_GUER = Compile preprocessFileLineNumbers "Server\Functions\AI_Commander_Wildcard_GUER.sqf";
+WFBE_SE_FNC_AICOM_FPV_Swarm = Compile preprocessFileLineNumbers "Server\Functions\AICOM_FPV_Swarm.sqf"; //--- feat/aicom-fpv-swarm-20260717 (owner order 2026-07-17): AI-commander FPV drone swarm purchase, flag WFBE_C_AICOM_FPV_SWARM default 0.
 WFBE_SE_FNC_GetTownGroups = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroups.sqf";
 WFBE_SE_FNC_GetTownGroupsDefender = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownGroupsDefender.sqf";
 WFBE_SE_FNC_GetTownPatrol = Compile preprocessFileLineNumbers "Server\Functions\Server_GetTownPatrol.sqf";
@@ -1426,6 +1427,15 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG", 1]) > 0) then {
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD", 1]) == 1 && {(missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0}) then {
 	{_x Spawn WFBE_SE_FNC_AI_Commander_Wildcard} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER runs its OWN base-less deck below (AI_Commander_Wildcard_GUER), not this HQ/funds-based worker
 	["INITIALIZATION", Format ["Init_Server.sqf: AI Commander Wildcard workers started for %1 sides (interval=%2s).", count WFBE_PRESENTSIDES, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL", 1800]]] Call WFBE_CO_FNC_AICOMLog;
+};
+
+//--- AICOM FPV DRONE SWARM (feat/aicom-fpv-swarm-20260717, owner order 2026-07-17): AI commander purchases a
+//--- squad (1-5) of scripted-guidance kamikaze FPV drones and crashes them into a picked target. Independent
+//--- worker/gate from the wildcard deck above - does not consume a wildcard draw or touch its weight table.
+//--- GUER excluded (no AI commander/funds), mirrors the wildcard dispatch exclusion below.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_FPV_SWARM", 0]) > 0 && {(missionNamespace getVariable "WFBE_C_AI_COMMANDER_ENABLED") > 0}) then {
+	{_x Spawn WFBE_SE_FNC_AICOM_FPV_Swarm} forEach (WFBE_PRESENTSIDES - [resistance]);
+	["INITIALIZATION", Format ["Init_Server.sqf: AICOM FPV Swarm workers started for %1 sides (interval=%2s).", count WFBE_PRESENTSIDES, missionNamespace getVariable ["WFBE_C_AICOM_FPV_SWARM_INTERVAL", 120]]] Call WFBE_CO_FNC_AICOMLog;
 };
 
 //--- GUER (resistance) Wildcard events — base-less insurgent deck (Ray 2026-06-27). Independent of the

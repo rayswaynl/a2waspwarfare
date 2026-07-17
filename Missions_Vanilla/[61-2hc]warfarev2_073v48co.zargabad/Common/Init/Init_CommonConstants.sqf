@@ -2742,6 +2742,22 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 //--- 0 = no sampler VM, no diag_fps reads, no entity scan and no network traffic.
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY") then {WFBE_C_CLIENT_FRAME_TELEMETRY = 1};
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL") then {WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL = 60};
+//--- AICOM FPV DRONE SWARM (feat/aicom-fpv-swarm-20260717, owner order 2026-07-17): AI commander purchases
+//--- a squad (1-5) of scripted-guidance kamikaze FPV drones and crashes them into a picked target (armor
+//--- cluster / static defense / HVT). Distinct from the player-piloted Support_FPV.sqf path - these drones
+//--- are AI-crewed and guided via doMove/flyInHeight, never seat-controlled by a player. Flag-off (0,
+//--- default) = worker never spawns (see Init_Server.sqf dispatch), byte-identical to HEAD.
+	if (isNil "WFBE_C_AICOM_FPV_SWARM")            then {WFBE_C_AICOM_FPV_SWARM            = 0};      //--- Master gate: 0=off (default, SOAK), 1=on. No lobby param mirrors this (owner: soak before arming).
+	if (isNil "WFBE_C_AICOM_FPV_SWARM_MAX")         then {WFBE_C_AICOM_FPV_SWARM_MAX         = 5};     //--- Max drones purchased per swarm draw.
+	if (isNil "WFBE_C_AICOM_FPV_SWARM_COST_MULT")   then {WFBE_C_AICOM_FPV_SWARM_COST_MULT   = 2};     //--- Per-drone cost = WFBE_C_FPV_DRONE_COST * this multiplier (no player risk/seat = premium).
+	if (isNil "WFBE_C_AICOM_FPV_SWARM_COOLDOWN")    then {WFBE_C_AICOM_FPV_SWARM_COOLDOWN    = 900};   //--- s min gap between swarm purchases per side (15 min).
+	if (isNil "WFBE_C_AICOM_FPV_SWARM_INTERVAL")    then {WFBE_C_AICOM_FPV_SWARM_INTERVAL    = 120};   //--- s worker poll interval (does not itself gate purchases - cooldown does).
+	if (isNil "WFBE_C_AICOM_FPV_SWARM_MAX_ACTIVE")  then {WFBE_C_AICOM_FPV_SWARM_MAX_ACTIVE  = 5};     //--- Anti-runaway cap: max concurrently airborne AICOM swarm drones per side.
+	if (isNil "WFBE_C_AICOM_FPV_SWARM_SCAN_RADIUS") then {WFBE_C_AICOM_FPV_SWARM_SCAN_RADIUS = 300};   //--- m cluster-scan radius around an enemy town (mirrors W13 gunship strike).
+	if (isNil "WFBE_C_AICOM_FPV_SWARM_HIT_RADIUS")  then {WFBE_C_AICOM_FPV_SWARM_HIT_RADIUS  = 15};    //--- m proximity-to-target trigger distance for detonation.
+	if (isNil "WFBE_C_AICOM_FPV_SWARM_LAUNCH_GAP")  then {WFBE_C_AICOM_FPV_SWARM_LAUNCH_GAP  = 1.5};   //--- s stagger between each drone launch within one swarm.
+	if (isNil "WFBE_C_AICOM_FPV_SWARM_TTL")         then {WFBE_C_AICOM_FPV_SWARM_TTL         = 180};   //--- s guidance watchdog timeout (scuttle unarmed if it never reaches the target).
+
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
