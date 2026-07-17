@@ -2564,14 +2564,6 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- to 0 so AssignTowns does not re-issue the next order at a still-high tier. Investigation showed
 //--- STUCK_REPAIR fired 3x but averted 0 teleports because the counter kept escalating. Inert at 0.
 	if (isNil "WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER") then {WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER = 1};
-//--- HC CIVILIAN cosmetic reslot (fable/hc-civ-reslot, GR-2026-07-03a): when >0, the server publishes an
-//--- empty-server safe-window signal (WFBE_HC_RESLOT_SAFE) a box-side HC controller reads to bounce-reslot
-//--- the HCs onto CIVILIAN slots (browser shows CIV, not WEST) only while zero real players are connected.
-//--- Mission-side hook only; the CIV mission.sqm slots + the reslot itself are the remaining, rig-test-gated
-//--- steps (box lane). Delegation is owner-routed (side-independent), so a CIV-slotted HC still hosts AI.
-//--- Default 0 = byte-identical to HEAD (the PV loop below never spawns).
-	if (isNil "WFBE_C_HC_CIV_RESLOT") then {WFBE_C_HC_CIV_RESLOT = 1};
-
 
 //--- Aircraft spawn safety (fable/aircraft-spawn-safety, GR-2026-07-03a):
 //--- When >0, each aircraft purchase at an airfield/hangar attempts to find a clear

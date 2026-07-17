@@ -35,7 +35,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=148;
+		items=146;
 		class Item134
 		{
 			side="LOGIC";
@@ -3549,50 +3549,6 @@ class Mission
 					init="removeAllWeapons this; deleteVehicle this";
 					description="Support (Supply run)";
 					synchronizations[]={};
-				};
-			};
-		};
-		class Item64
-		{
-			side="CIV";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={2259.1614,512.45703,15296.355};
-					id=229;
-					side="CIV";
-					vehicle="Civilian";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="RESERVED -- HC / do not use";
-					synchronizations[]={255};
-				};
-			};
-		};
-		class Item65
-		{
-			side="CIV";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={2259.1116,512.63934,15297.525};
-					id=230;
-					side="CIV";
-					vehicle="Civilian";
-					player="PLAY CDG";
-					leader=1;
-					rank="LIEUTENANT";
-					skill=0.60000002;
-					init="removeAllWeapons this";
-					description="RESERVED -- HC / do not use";
-					synchronizations[]={255};
 				};
 			};
 		};
