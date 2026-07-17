@@ -159,16 +159,20 @@ switch (_request) do {
 			[sideJoinedText,'UnitsCreated',1] Call UpdateStatistics;
 			[sideJoinedText,'VehiclesCreated',1] Call UpdateStatistics;
 		} else {
-			if (typeName _fpvDrone == "OBJECT" && {_fpvDrone == playerFPV}) then {
+			//--- fix(fpv-handoff-race): the one-shot token compare-consume above already proved this
+			//--- deny belongs to THIS client's pending purchase, and playerFPV IS that purchase's drone.
+			//--- Gating teardown on the echoed drone reference leaked a still-armed drone whenever the
+			//--- purchase PV outran createVehicle replication (server bound objNull, deny "FPV drone no
+			//--- longer exists.") - the armed airframe then fell and self-detonated on ground impact.
+			if (!isNull playerFPV) then {
 				_fpvGroup = grpNull;
-				if (typeName _fpvDriver == "OBJECT" && {!isNull _fpvDriver} && {!isPlayer _fpvDriver} && {_fpvDriver == driver _fpvDrone}) then {
+				_fpvDriver = driver playerFPV;
+				if (!isNull _fpvDriver && {!isPlayer _fpvDriver}) then {
 					_fpvGroup = group _fpvDriver;
 					deleteVehicle _fpvDriver;
 				};
-				if (!isNull playerFPV) then {
-					playerFPV setVariable ["wfbe_fpv_armed", false];
-					deleteVehicle playerFPV;
-				};
+				playerFPV setVariable ["wfbe_fpv_armed", false];
+				deleteVehicle playerFPV;
 				playerFPV = objNull;
 				if (!isNull _fpvGroup && {count units _fpvGroup == 0}) then {deleteGroup _fpvGroup};
 			};

@@ -2603,7 +2603,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- FPV STRIKE DRONE (fable/fpv-strike-drone): player-piloted kamikaze mini-UAV bought from the
 //--- Tactical Center (sibling of the UAV support call). Client module: Client/Module/FPV/.
 //--- Flag-off (0) = no menu row, module exits on entry = byte-identical behavior.
-	if (isNil "WFBE_C_FPV_DRONE")      then {WFBE_C_FPV_DRONE      = 0};           //--- Master gate: 0=off (default), 1=on. Lobby param mirrors this. SAFE FALLBACK (tonight-20260717): was 1 (drifted from its own stale comment); flipped to match the Parameters.hpp lobby default while a purchase-authority race (control handoff + self-detonation on fall) is diagnosed.
+	if (isNil "WFBE_C_FPV_DRONE")      then {WFBE_C_FPV_DRONE      = 1};           //--- Master gate: 0=off, 1=on (default). Lobby param mirrors this. RE-ENABLED (fixwave-20260717): tonight-20260717 safe-fallback reverted alongside the purchase-authority race fix (Support_FPV.sqf seat-replication window 1s->10s + client deny teardown in Client/PVFunctions/HandleSpecial.sqf).
 	if (isNil "WFBE_C_FPV_DRONE_COST") then {WFBE_C_FPV_DRONE_COST = 2500};        //--- Purchase price (deducted client-side in fpv.sqf).
 	if (isNil "WFBE_C_FPV_DRONE_TTL")  then {WFBE_C_FPV_DRONE_TTL  = 240};         //--- s: battery life; expiry DISARMS then scuttles (no parked bomb).
 	if (isNil "WFBE_C_FPV_DRONE_AMMO") then {WFBE_C_FPV_DRONE_AMMO = "R_57mm_HE"}; //--- Warhead ammo class (RPG-warhead scale: hit 150 / indirect 40 / r 12).

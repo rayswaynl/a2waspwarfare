@@ -6,7 +6,8 @@
 	Proximity gate: player must be near a factory / depot (lightInRange / heavyInRange /
 	                depotInRange / aircraftInRange / hangarInRange).
 	Refund = round(QUERYUNITPRICE * WFBE_C_VEHICLE_SELL_FRACTION * max(0, 1 - getDammage)).
-	Refund credited via ChangePlayerFunds (same pool the vehicle was purchased from).
+	Refund shown here is DISPLAY-ONLY; the credit + delete are server-authoritative via the
+	RequestVehicleSell PVF (server recomputes price/fraction/damage; no client amount is trusted).
 	A2-OA-1.64 safe: no pushBack/isEqualType/findIf/params; getDammage double-m; private [] form.
 */
 private ["_vehicle","_cls","_data","_price","_fraction","_damage","_refund","_key","_msg"];
@@ -59,9 +60,9 @@ if (!([_key, _msg] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
 if (!alive _vehicle) exitWith {};
 if (count crew _vehicle > 0) exitWith {hint "Vehicle sell cancelled: crew boarded during confirm."};
 
-//--- Credit refund to player team funds and delete vehicle.
-if (_refund > 0) then {_refund call ChangePlayerFunds};
-diag_log format ["WFBE|VEHICLE_SELL|side=%1|class=%2|price=%3|frac=%4|dmg=%5|refund=%6",
-	str sideJoined, _cls, _price, _fraction, _damage, _refund
-];
-deleteVehicle _vehicle;
+//--- Server-authoritative sell (item #43 hardening): the server recomputes the refund from its
+//--- own price table / sell fraction / damage, revalidates crew, ownership and authorization,
+//--- credits the buying team and deletes the vehicle (Server\PVFunctions\RequestVehicleSell.sqf).
+//--- _refund above is DISPLAY-ONLY (confirm dialog); no client-computed amount crosses the wire.
+["RequestVehicleSell", [player, _vehicle]] Call WFBE_CO_FNC_SendToServer;
+diag_log format ["WFBE|VEHICLE_SELL_REQ|side=%1|class=%2|refund_est=%3", str sideJoined, _cls, _refund];

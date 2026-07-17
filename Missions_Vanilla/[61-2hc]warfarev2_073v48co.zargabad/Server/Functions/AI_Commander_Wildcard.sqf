@@ -229,7 +229,7 @@ while {!gameOver} do {
 				         "_existingTeams","_sideIDLocal","_crew1","_crew2",
 				         "_healed","_humanCmd","_skipAI","_w11Eligible","_w3Max",
 				         "_dAng","_spawnPos","_dp","_placed","_dPos",
-	         "_w13Eligible","_w13AirList","_w13AttackClasses","_w13TargetTown","_w13MaxCluster","_w13BestDist","_w13Class","_w13Ang","_w13SpawnPos","_w13Heli","_w13Pilot","_w13TargetPos","_w13Grp","_w13PilotClass","_clustTown","_nearEnemies",
+	         "_w13Eligible","_w13AirList","_w13AttackClasses","_w13TargetTown","_w13MaxCluster","_w13BestDist","_w13Class","_w13Ang","_w13SpawnPos","_w13Heli","_w13Pilot","_w13TargetPos","_w13Grp","_w13PilotClass","_clustTown","_nearEnemies","_w13Enemies",
 	         "_w14Eligible","_w14AAClass","_w14Target","_w14Pos","_w14Placed","_w14Ang","_w14DPos","_w14AA","_w14i","_w14Grp","_w14Gunner","_w14PilotClass",
 	         "_w15Eligible","_w15Exp",
 	         "_w16Eligible","_maxLevels","_raisableTiers","_chosenUpID","_newUpgrades","_tierName",
@@ -399,7 +399,10 @@ while {!gameOver} do {
 					_w13AttackClasses = [];
 					{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Mi24_D","Mi24_V","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su34"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
 					if (count _w13AttackClasses > 0) then {
-						{ _clustTown = _x; _nearEnemies = {alive _x && {(side _x) == _enemySide} && {(_x distance _clustTown) < 300}} count allUnits; if (_nearEnemies >= 3) exitWith {_w13Eligible = true} } forEach _cands;
+						//--- one allUnits pass: the alive/side filter is town-invariant, only the distance is per-town
+						_w13Enemies = [];
+						{ if (alive _x && {(side _x) == _enemySide}) then {_w13Enemies set [count _w13Enemies, _x]} } forEach allUnits;
+						{ _clustTown = _x; _nearEnemies = {(_x distance _clustTown) < 300} count _w13Enemies; if (_nearEnemies >= 3) exitWith {_w13Eligible = true} } forEach _cands;
 					};
 				};
 
@@ -866,7 +869,10 @@ while {!gameOver} do {
 							_w13AttackClasses = [];
 							{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Mi24_D","Mi24_V","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su34"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
 							_w13TargetTown = objNull; _w13MaxCluster = 0; _w13BestDist = 1e9;
-							{ _clustTown = _x; _nearEnemies = {alive _x && {(side _x) == _enemySide} && {(_x distance _clustTown) < 300}} count allUnits;
+							//--- one allUnits pass: the alive/side filter is town-invariant, only the distance is per-town
+							_w13Enemies = [];
+							{ if (alive _x && {(side _x) == _enemySide}) then {_w13Enemies set [count _w13Enemies, _x]} } forEach allUnits;
+							{ _clustTown = _x; _nearEnemies = {(_x distance _clustTown) < 300} count _w13Enemies;
 							  if (_nearEnemies > _w13MaxCluster || {_nearEnemies == _w13MaxCluster && {(_clustTown distance _hq) < _w13BestDist}}) then {_w13MaxCluster = _nearEnemies; _w13TargetTown = _clustTown; _w13BestDist = _clustTown distance _hq} } forEach _cands;
 							if (count _w13AttackClasses > 0 && {!isNull _w13TargetTown} && {_w13MaxCluster >= 3}) then {
 								_hqPos = getPos _hq;

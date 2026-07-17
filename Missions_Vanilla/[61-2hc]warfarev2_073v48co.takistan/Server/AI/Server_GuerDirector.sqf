@@ -142,7 +142,6 @@ while {!WFBE_GameOver} do {
         if (_str < _base) then {
             _regen = [_regenPerTick, 0, _base - _str] call _fnClamp;
             _rec set [2, _str + _regen];
-            _regenDebt = [_regenDebt - _regen, 0, 999] call _fnClamp;
         };
         //--- Tier-1: publish per-town strength ratio (current/baseline) to the town object so the V1
         //--- defender spawner (Server_GetTownGroupsDefender) can size the real garrison. >1 = reinforced.
@@ -445,11 +444,15 @@ while {!WFBE_GameOver} do {
                                 _cTownPos  = getPos _cTownObj;
                                 _spawnPos  = [_cTownPos select 0, _cTownPos select 1, 50];
 
-                                //--- Group-cap check before materializing.
-                                private ["_curGuerGrps"];
+                                //--- Group-cap check before materializing. qrfCombo creates TWO groups
+                                //--- (gunship + insert); reserve headroom for both or the single-slot
+                                //--- check lets the combo overshoot the cap by one group.
+                                private ["_curGuerGrps","_qrfSlots"];
                                 _curGuerGrps = 0;
                                 {if (side _x == resistance) then {_curGuerGrps = _curGuerGrps + 1}} forEach allGroups;
-                                if (_curGuerGrps < _grpBudgetMax) then {
+                                _qrfSlots = 1;
+                                if (_cKind == "qrfCombo") then {_qrfSlots = 2};
+                                if ((_curGuerGrps + _qrfSlots) <= _grpBudgetMax) then {
                                     //--- Authorized new air execution path for A1 panel (no V1 GUER air path existed).
                                     private ["_hClass","_h","_hGrp"];
                                     _hClass = "Ka137_MG_PMC"; //--- GUER insert: Ka-137 from Core_GUE.sqf.
@@ -610,12 +613,18 @@ while {!WFBE_GameOver} do {
     _totalStr     = 0;
     _totalBase    = 0;
     _totalTransit = 0;
+    //--- Spec (aicom-v2-800-guer-director.md): regenDebt = per-town (baseline - strength) still
+    //--- owed back. Recomputed each tick; was a decrement-only accumulator pinned at 0 since #800.
+    _regenDebt    = 0;
     {
         private ["_rec"];
         _rec          = _x;
         _totalStr     = _totalStr     + (_rec select 2);
         _totalBase    = _totalBase    + (_rec select 1);
         _totalTransit = _totalTransit + (_rec select 3);
+        if ((_rec select 2) < (_rec select 1)) then {
+            _regenDebt = _regenDebt + ((_rec select 1) - (_rec select 2));
+        };
     } forEach _ledger;
 
     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_LEDGER towns=%2 totalStr=%3 totalBase=%4 transit=%5 funded=%6 regenDebt=%7",
