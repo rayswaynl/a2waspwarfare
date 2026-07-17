@@ -1212,7 +1212,7 @@ if (_teamBarFirst || {_spawnBuddyDisband}) then {
 		diag_log "[WFBE|TEAMBAR] Init_Client: player rank set to COLONEL for command-bar slot 1.";
 	};
 	[_spawnBuddyDisband] spawn {
-		Private ["_spawnBuddyDisband","_slot1Others","_slot1Tmp"];
+		Private ["_spawnBuddyDisband","_slot1Others","_slot1Tmp","_isJip"];
 		_spawnBuddyDisband = _this select 0;
 		sleep 4;
 		if (alive player && {group player == WFBE_Client_Team} && {leader (group player) == player}) then {
@@ -1222,8 +1222,21 @@ if (_teamBarFirst || {_spawnBuddyDisband}) then {
 				if (_spawnBuddyDisband) then {
 					//--- INITIAL-spawn opt-in only: delete the unwanted player-assigned AI locally.
 					//--- Splitting it into a fresh group leaked that group and left idle AI at base.
-					{deleteVehicle _x} forEach _slot1Others;
-					diag_log Format ["[WFBE|SPAWNBUDDY] Init_Client: %1 initial AI squadmate(s) removed; player spawns solo.", count _slot1Others];
+					//--- FIRST-JOIN GUARD (wasp-aicom-idle-diagnosis-20260717 R2): only a genuine non-JIP
+					//--- initial spawn may delete. didJIP is false ONLY for a player present at mission
+					//--- start; it is TRUE for a late (in-progress) join AND for a reconnect, whose team is
+					//--- reclaimed WITH its bought/earned AI still in it (WFBE_C_AI_TEAMS_JIP_PRESERVE default
+					//--- 1) - that squad must never be deleted. The old group==WFBE_Client_Team check was
+					//--- tautological (both derive from group player earlier in THIS script) and gave zero JIP
+					//--- protection. Fail safe: _isJip defaults true so any uncertainty skips the delete.
+					_isJip = true;
+					_isJip = didJIP;
+					if (!_isJip) then {
+						{deleteVehicle _x} forEach _slot1Others;
+						diag_log Format ["[WFBE|SPAWNBUDDY] Init_Client: %1 initial AI squadmate(s) removed at first (non-JIP) spawn; player spawns solo.", count _slot1Others];
+					} else {
+						diag_log Format ["[WFBE|SPAWNBUDDY] Init_Client: JIP/reconnect spawn - %1 client-local AI left intact (bought/earned squad preserved).", count _slot1Others];
+					};
 				} else {
 					//--- Default path: preserve the existing AI but rejoin it behind the player for slot 1.
 					if (((units group player) select 0) != player) then {

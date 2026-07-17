@@ -2636,10 +2636,16 @@ WFBE_STATS_DIRTY_UIDS = [];
 
 //--- WFBE_C_SPAWN_BUDDY_DISBAND (wasp-aicom-idle-diagnosis-20260717, owner live report 2026-07-17: "I spawn
 //--- with another unit in my group" - AI-Teams pre-grouped squadmate at INITIAL spawn is by-design, but the
-//--- owner wants a clean solo spawn). 1 = at INITIAL spawn only (never on respawn - a bought/earned squad is
-//--- never touched), any client-local, non-player AI unit already in the fresh player group is deleted so the
-//--- player spawns solo. Deleted, NOT split into a spare group: splitting leaked one empty group per player
-//--- per round (against A2's ~144-per-side group cap) and left an orderless AI standing at base all match.
+//--- owner wants a clean solo spawn). 1 = at a genuine FIRST (non-JIP) spawn only: any client-local, non-player
+//--- AI unit already in the fresh player group is deleted so the player spawns solo. Gated on !didJIP in
+//--- Init_Client.sqf - didJIP is false ONLY for a player present at mission start, and TRUE for a late join OR a
+//--- reconnect. A reconnecting player's team is reclaimed WITH its bought/earned AI still in it
+//--- (WFBE_C_AI_TEAMS_JIP_PRESERVE default 1), so the removal is SKIPPED on every JIP/reconnect - a bought or
+//--- earned squad is never deleted. (The old "never on respawn" claim rested on a tautological group check that
+//--- gave no JIP protection; corrected R2 wasp-aicom-idle-diagnosis-20260717.) Consequence: on a persistent
+//--- dedicated server the buddy is only cleaned for round-start joiners, not mid-round first-joiners - a safe,
+//--- accepted trade for never touching paid AI. Deleted, NOT split into a spare group: splitting leaked one empty
+//--- group per player per round (against A2's ~144-per-side group cap) and left an orderless AI standing at base.
 //--- Armed from the lobby (Rsc\Parameters.hpp, last entry) or here; the isNil guard below lets the lobby win.
 //--- 0 = legacy behaviour (default; byte-identical to HEAD).
 	if (isNil "WFBE_C_SPAWN_BUDDY_DISBAND") then {WFBE_C_SPAWN_BUDDY_DISBAND = 0};

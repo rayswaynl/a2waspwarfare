@@ -32,6 +32,7 @@ $checks = @(
     @{ Name = "one delayed spawn-buddy decision point"; Pass = ([regex]::Matches($client, 'SPAWN-BUDDY-DISBAND')).Count -eq 1 },
     @{ Name = "slot ordering and removal are mutually exclusive"; Pass = $client -match '(?s)if\s*\(_spawnBuddyDisband\)\s*then\s*\{.*?deleteVehicle.*?\}\s*else\s*\{.*?_slot1Others\s+joinSilent' },
     @{ Name = "removal does not create a group"; Pass = $removePath -match 'deleteVehicle' -and $removePath -notmatch 'createGroup' },
+    @{ Name = "removal gated on a genuine first-join (!didJIP) signal, not the tautological group check"; Pass = ($removePath -match 'didJIP') -and ($removePath -match '!\s*_isJip') -and ($removePath -match '(?s)_isJip\s*=\s*didJIP\s*;.*?if\s*\(\s*!\s*_isJip\s*\)\s*then\s*\{[^}]*deleteVehicle') },
     @{ Name = "param is LAST in class Params (positional paramsArray safety)"; Pass = (([regex]::Matches($params, '(?m)^\s*class\s+(\w+)\s*\{') | Where-Object { $_.Groups[1].Value -ne 'Params' } | Select-Object -Last 1).Groups[1].Value -eq 'WFBE_C_SPAWN_BUDDY_DISBAND') }
 )
 
