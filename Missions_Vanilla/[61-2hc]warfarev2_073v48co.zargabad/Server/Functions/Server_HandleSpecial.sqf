@@ -1782,7 +1782,7 @@ if (isNull _base) exitWith {
 		_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
 		_caicomNew = [];
 		{
-			if (!isNull (_x select 0) && {(_x select 3) != _cteam}) then {_caicomNew = _caicomNew + [_x]};
+			if (!isNull (_x select 3) && {(_x select 3) != _cteam}) then {_caicomNew = _caicomNew + [_x]};
 		} forEach _caicomList;
 		missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomNew];
 		publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
