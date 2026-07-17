@@ -98,7 +98,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 			//--- server-local team onto a static gun / mortar emplacement / weapon team. Self-propelled arty (GRAD/MLRS)
 			//--- are vehicle hulls, not StaticWeapon, so they survive. GUARDRAIL: keep the original set if stripping would
 			//--- empty it (founding never starved). A2-OA-safe: string-form isKindOf on the template classnames.
-			private ["_eligNoStatic","_swEi","_swHas"];
+			private ["_eligNoStatic","_swEi","_swHas","_atStoredVal"];
 			_eligNoStatic = [];
 			{
 				_swEi = _x;
@@ -127,7 +127,16 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 					//--- 1=light,2=heavy,3=air) instead of the upgrade mask (which mis-buckets motorized
 					//--- templates as infantry). nil-guarded per template to the old upgrade-mask logic.
 					_bClass = -1;
-					if (!isNil "_storedTypes" && {_ti < count _storedTypes}) then {_bClass = _storedTypes select _ti};
+					//--- NIL-HOLE FIX (owner order 2026-07-17, round-2 bughunt item 2): the old guard checked
+					//--- array-exists + index-in-bounds but not element-non-nil - "_storedTypes select _ti" can
+					//--- itself be nil (a hole in the array), and the "_bClass < 0" comparison below then throws
+					//--- a type error (nil has no ordering), aborting typing for every remaining team this cycle.
+					//--- Mirrors the sibling _st4/_stX nil-guard idiom (AI_Commander_Teams.sqf:415/531/936):
+					//--- read the element into a local first, only assign when it is not nil.
+					if (!isNil "_storedTypes" && {_ti < count _storedTypes}) then {
+						_atStoredVal = _storedTypes select _ti;
+						if (!isNil "_atStoredVal") then {_bClass = _atStoredVal};
+					};
 					if (_bClass < 0) then {
 						_bClass = 0; //--- infantry (fallback to old upgrade-mask logic)
 						if ((_eu select WFBE_UP_AIR) > 0) then {_bClass = 3} else {

@@ -102,7 +102,7 @@ switch (_args select 0) do {
 	};
 
 	//--- fable/fpv-strike-drone: server-side warhead detonation (Killed EH -> server). SCUD pattern.
-	//--- Payload: ["fpv-detonate", [x,y,z]]. Flag gate inside KAT_FPVDetonate.
+	//--- Payload: ["fpv-detonate", [_drone, _privateCapability, [x,y,z]]]. Flag gate inside KAT_FPVDetonate.
 	case "fpv-detonate": {
 		if (!isNil "KAT_FPVDetonate") then {
 			_args spawn KAT_FPVDetonate;
@@ -173,7 +173,15 @@ switch (_args select 0) do {
 		//--- keys records the same way), so the message format needs no changes. Ground-only
 		//--- (wfbe_ctl_ground_wave, set alongside the wave in server_town_ai.sqf) and flag-gated:
 		//--- byte-identical to HEAD when AICOMV2_LANE_CMD_TOWN_LEDGER=0.
-		if ((count _teams > 0) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0} && {(_town getVariable ["wfbe_ctl_ground_wave", false])}) then {
+		//--- WAVE-SCOPED CREDIT FIX (owner order 2026-07-17, round-2 bughunt item 4): the gate below used to
+		//--- read the town's LIVE wfbe_ctl_ground_wave flag - HC/client delegation reports land async, so if the
+		//--- town's wave state flips (a newer wave dispatched, or the flag reset) between wave dispatch and this
+		//--- report arriving, an in-flight ground-wave report was silently dropped here (undercount), never credited
+		//--- to any record. Same fix shape as the New-Bug-A per-group stamp (server_town_ai.sqf:372-380): each group
+		//--- in _teams already carries its OWN wfbe_ctl_ground_wave snapshot from the wave that actually created it -
+		//--- check that per-group tag instead of the town-level flag, both for whether to run this block at all and
+		//--- for which individual groups in this report to credit.
+		if ((count _teams > 0) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
 			private ["_ctlSide7"];
 			//--- New-Bug-B fix (fable/ctl-survivor-bugs): read the side SNAPSHOTTED at wave-creation time
 			//--- (server_town_ai.sqf: wfbe_ctl_wave_side, set alongside wfbe_ctl_ground_wave), not the
@@ -189,7 +197,7 @@ switch (_args select 0) do {
 			if (_ctlSide7 == west || {_ctlSide7 == east}) then {
 				private ["_ctlUnits7"];
 				_ctlUnits7 = 0;
-				{_ctlUnits7 = _ctlUnits7 + (count units _x)} forEach _teams;
+				{ if (!isNull _x && {_x getVariable ["wfbe_ctl_ground_wave", false]}) then {_ctlUnits7 = _ctlUnits7 + (count units _x)} } forEach _teams;
 				//--- CTL single-writer (fable/ctl-readback-singlewriter): accumulate the HC/client-delegated
 				//--- Man-unit count into the per-town spawn scalar (per-town, so the wave-side snapshot only
 				//--- gates WHETHER to credit - no valid snapshot => skip - not which record to touch).
@@ -1189,6 +1197,7 @@ switch (_args select 0) do {
 		_cShare = round (_cPool / (_cCount max 1));
 
 		[_cSide, "BankPayout", [_cShare]] Call WFBE_CO_FNC_SendToClients;
+		[_cSide, _cShare] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (BankPayout keeps only the message).
 		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] convoy payout $%2 x %3 players at [%4].", str _cSide, _cShare, _cCount, if (!isNull _cTown) then {_cTown getVariable ["name","?"]} else {"?"}]] Call WFBE_CO_FNC_LogContent;
 	};
 	//--- HC SEATING TELEMETRY (task #34): pure RPT logging, no gameplay effect. Mirrors the HCSIDE|v1|connect
@@ -1596,6 +1605,7 @@ switch (_args select 0) do {
 				diag_log ("GUERVBIED|v1|drvUID=" + (str _drvUID) + "|victims=" + (str (count _victims)) + "|payout=" + (str _payout) + "|persBounty=" + (str _persBounty) + "|persScore=" + (str _persScore)); //--- Ray 2026-06-27: definitive trace of a GUER VBIED payout (always-on).
 					if (_drvUID != "" && {_persBounty > 0}) then {
 					[_drvUID, "GuerVbiedBounty", _persBounty] Call WFBE_CO_FNC_SendToClients;
+					if (!isNull _drvGrp) then { [_drvGrp, _persBounty] Call WFBE_CO_FNC_ChangeTeamFunds }; //--- J1 funds authority: credit the PRE-BLAST captured slot group (the suicide driver is guaranteed dead at settle, so any alive/UID-scan resolve would pay nobody; his client handler no longer writes the wallet).
 					["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED personal bounty [%1] + score [%2] paid to detonator UID [%3].", _persBounty, _persScore, _drvUID]] Call WFBE_CO_FNC_LogContent;
 				};
 				if (!isNull _driver && {_persScore > 0}) then {

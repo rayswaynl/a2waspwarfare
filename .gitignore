@@ -66,3 +66,11 @@ __pycache__/
 Tools/Soak/findings.jsonl
 Tools/Soak/recommendations.jsonl
 Tools/Soak/farm-state.json
+
+# pack_pbo.py output - build artifacts, never committed (see Tools/Pack/PBO-PACKING.md)
+Tools/Pack/*.pbo
+Tools/Pack/out/
+
+# Read-only scripts recovered from the Game PC build box during the PBO-packing
+# recovery investigation - local analysis material only, not part of the repo.
+_recovered-pack-scripts/

@@ -63,8 +63,12 @@ switch (_action) do {
 								//--- will bridge to a HC-local group keyed on this server group object.
 								_liveHCs = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 								if (_liveHCs > 0) then {
-									[_side, _groups, _positions, _team, _defense, true] Call WFBE_CO_FNC_DelegateAIStaticDefenceHeadless;
-									_use_server = false;
+									//--- Silent-drop fix: only skip the server-side create if the delegate actually
+									//--- dispatched to a live HC (its own liveness rebuild can come up empty mid-call,
+									//--- previously leaving this gun unmanned with no log until the next town cycle).
+									if (([_side, _groups, _positions, _team, _defense, true] Call WFBE_CO_FNC_DelegateAIStaticDefenceHeadless) > 0) then {
+										_use_server = false;
+									};
 								};
 							};
 						};

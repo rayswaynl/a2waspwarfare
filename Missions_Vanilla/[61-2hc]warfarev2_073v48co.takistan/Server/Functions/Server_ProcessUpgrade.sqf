@@ -89,6 +89,7 @@ if (_upgrade_id == WFBE_UP_PATROLS) then {
 				["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Patrol T3 cash reward pool %2 redirected to side supply (no alive players).", str _side, _patrolCashPool]] Call WFBE_CO_FNC_LogContent;
 			} else {
 				[_side, "BankPayout", [_patrolShare]] Call WFBE_CO_FNC_SendToClients;
+				[_side, _patrolShare] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (BankPayout keeps only the message).
 				["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Patrol T3 cash reward $%2 x %3 players (pool %4).", str _side, _patrolShare, _patrolPlayers, _patrolCashPool]] Call WFBE_CO_FNC_LogContent;
 			};
 		};

@@ -22,8 +22,8 @@ if (_isHeadless) then {
 		//---   delegate-ai-static-defence = Server_DelegateAIStaticDefenceHeadless (garrison posts)
 		//---   cleanup-townai             = server_town_ai (nil broadcast; tears down town AI on capture)
 		//---   cleanup-airfield-garrison  = server_town + server_town_ai (nil broadcast; clears airfield post)
-		//---   delegate-aicom-team        = AI_Commander_Teams:1206 + AI_Commander_Wildcard (team founding)
-		//---   delegate-sidepatrol        = server_side_patrols:276 + AI_Commander_Wildcard:663 (patrol founding)
+		//---   delegate-aicom-team        = AI_Commander_Teams + AI_Commander_Wildcard + Init_ZgKoth (team founding)
+		//---   delegate-sidepatrol        = server_side_patrols (patrol founding; Wildcard bonus-patrol sender culled 2026-07-08, owner pick B7)
 		//--- NOTE: aicom-team-merge is intentionally excluded (no active sender; WFBE_C_AICOM_HC_MERGE_ENABLE
 		//---        defaults to 0, no DRAFT worker registered, nil-guarded in AI_Commander.sqf).
 		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol"]);

@@ -9,7 +9,7 @@
 		- Move In Gunner immidietly or not
 */
 
-Private ["_hcUnit", "_groups", "_positions", "_side", "_team", "_defence", "_moveInGunner", "_live", "_x", "_seedIdx", "_rr", "_hcCount"];
+Private ["_hcUnit", "_groups", "_positions", "_side", "_team", "_defence", "_moveInGunner", "_live", "_x", "_seedIdx", "_rr", "_hcCount", "_delegated"];
 
 _side = _this select 0;
 _groups = +(_this select 1);
@@ -29,7 +29,11 @@ _hcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
 //--- Build the live-HC leader list locally (cheap: no allUnits scan; same liveness test the picker uses).
 _live = [];
 {
-	if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_live = _live + [leader _x]};
+	//--- BUGFIX (2026-07-17, HC-founding zombie-picker): keep this liveness test identical to
+	//--- Server_PickLeastLoadedHC.sqf's (owner<=0 = disconnected/locality-transferred zombie,
+	//--- never a routable Common_SendToClient target) - this comment block already claimed "same
+	//--- liveness test the picker uses"; it previously was not.
+	if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}) then {_live = _live + [leader _x]};
 } forEach (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 
 _hcCount = count _live;
@@ -38,11 +42,20 @@ _seedIdx = _live find _hcUnit;
 if (_seedIdx < 0) then {_seedIdx = 0};
 _rr = 0;
 
+_delegated = 0;
 for '_i' from 0 to count(_groups) -1 do {
 	if (_hcCount > 0) then {
 		//--- Cheap local round-robin across the live HCs, anchored at the lightest one (no per-group scan).
 		_hcUnit = _live select ((_seedIdx + _rr) mod _hcCount);
 		_rr = _rr + 1;
 		[_hcUnit, "HandleSpecial", ['delegate-ai-static-defence', _side, [_groups select _i], [_positions select _i], _team, _defence, _moveInGunner]] Call WFBE_CO_FNC_SendToClient;
+		_delegated = _delegated + 1;
+	} else {
+		//--- Silent-drop fix: this skip was wordless (the town sibling Server_DelegateAITownHeadless.sqf
+		//--- logs its drop). The caller's live-HC check can go stale before our own rebuild above.
+		["WARNING", Format["Server_DelegateAIStaticDefenceHeadless.sqf: No live headless client for [%1] static-defence group %2 - delegation dropped.", _side, _i]] Call WFBE_CO_FNC_LogContent;
 	};
 };
+
+//--- Return the dispatched count so callers can fall back server-side instead of losing the gunner.
+_delegated

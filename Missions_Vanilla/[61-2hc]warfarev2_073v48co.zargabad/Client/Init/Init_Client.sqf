@@ -73,7 +73,17 @@ player call Compile preprocessFileLineNumbers "WASP\rpg_dropping\DropRPG.sqf";
 //--- (set a few lines above in this file, cleared on WFBE_Client_DeadspawnEscaped or the
 //--- existing 120s failsafe) already covers this new position unmodified.
 if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_REDESIGN", 0]) > 0) then {
-	player setPos ([] call WFBE_CO_FNC_DeadspawnPenPos);
+	//--- fix(tonight-20260717): was `[] call WFBE_CO_FNC_DeadspawnPenPos` - a hard dependency on
+	//--- Init_Common.sqf (ExecVM'd, async, initJIPCompatible.sqf:350) having already registered that
+	//--- function var before THIS execVM'd script (initJIPCompatible.sqf:386, started ~36 lines later,
+	//--- no ordering guarantee between two independent execVM threads) reaches this line. When Init_Common
+	//--- loses the race, WFBE_CO_FNC_DeadspawnPenPos is still nil here -> `call` on a nil var throws an
+	//--- Undefined-variable script error, setPos gets no argument, and the player is left at whatever the
+	//--- default MP join position is (team HQ area) instead of the offshore pen - exactly matching the
+	//--- owner's live report ("deadspawn was at my team HQ"). Fixed the same way the ELSE branch two lines
+	//--- below already avoids this exact hazard (its own comment: "Common is not yet init'd so we call is
+	//--- straight away") - compile the function inline instead of depending on the async registration.
+	player setPos ([] call Compile preprocessFile "Common\Functions\Common_DeadspawnPenPos.sqf");
 } else {
 	player setPos ([getMarkerPos Format["%1TempRespawnMarker",sideJoinedText],1,10] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");
 };
@@ -1221,6 +1231,32 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 	};
 };
 
+//--- SPAWN-BUDDY-DISBAND (wasp-aicom-idle-diagnosis-20260717, owner live report 2026-07-17: "I spawn with
+//--- another unit in my group"). AI-Teams pre-groups a fresh player with a mission-start AI squadmate by
+//--- design (the TEAMBAR-FIRST block above only fixes slot ORDER, it does not remove the AI); this is a
+//--- separate opt-in that removes the AI entirely so the player spawns solo. Same INITIAL-spawn identity
+//--- check as TEAMBAR-FIRST above (group player == WFBE_Client_Team) so a respawn/skin-swap/earned squad is
+//--- NEVER touched - only the very first fresh-round grouping is affected. Client-local AI only (join needs
+//--- locality); the AI is NOT deleted, only split into its own fresh group and left standing, so it remains
+//--- a valid side asset (e.g. still countable by AI-cap/GC) - it simply stops riding the player's command bar.
+if ((missionNamespace getVariable ["WFBE_C_SPAWN_BUDDY_DISBAND", 0]) > 0) then {
+	[] spawn {
+		sleep 4;
+		if (alive player && {group player == WFBE_Client_Team} && {leader (group player) == player} && {(count units group player) > 1}) then {
+			Private ["_buddyOthers","_buddyTmp"];
+			_buddyOthers = [];
+			{if (alive _x && {!isPlayer _x} && {local _x}) then {_buddyOthers set [count _buddyOthers, _x]}} forEach ((units group player) - [player]);
+			if (count _buddyOthers > 0) then {
+				_buddyTmp = createGroup (side group player);
+				if (!isNull _buddyTmp) then {
+					_buddyOthers joinSilent _buddyTmp;
+					diag_log Format ["[WFBE|SPAWNBUDDY] Init_Client spawn-buddy-disband: %1 AI squadmate(s) split off the fresh player group at initial spawn.", count _buddyOthers];
+				};
+			};
+		};
+	};
+};
+
 /* Override player's Gear.*/
 // [player,Format ["WFBE_%1DEFAULTWEAPONS",sideJoinedText] Call GetNamespace,Format ["WFBE_%1DEFAULTAMMO",sideJoinedText] Call GetNamespace] Call EquipLoadout;
 /* Skill Module. */
@@ -1735,6 +1771,12 @@ publicVariableServer "CLIENT_INIT_READY";
 //--- Client FPS telemetry (staged-deploy day/night perf study, 2026-06-15). Self-gates on the
 //--- WFBE_C_CLIENT_FPS_REPORT lobby param; players only. Reports avg/min FPS to the server.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_FpsReport.sqf";
+
+//--- Client frame-pacing baseline (codex-gaming-lane-2, 2026-07-13). Self-gates on the
+//--- default-off WFBE_C_CLIENT_FRAME_TELEMETRY parameter; local CLIENTFRAME|v1| RPT only.
+if ((missionNamespace getVariable ["WFBE_C_CLIENT_FRAME_TELEMETRY", 0]) > 0) then {
+	[] execVM "Client\Functions\Client_FrameTelemetry.sqf";
+};
 
 //--- Ambulance / medic-redeploy range circles (Trello #76). Local map Ellipses around friendly
 //--- ambulances and redeploy trucks showing the mobile-respawn radius. Self-gates on WFBE_C_RESPAWN_MOBILE.

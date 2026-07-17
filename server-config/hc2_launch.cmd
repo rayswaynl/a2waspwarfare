@@ -11,5 +11,5 @@ timeout /t 30 /nobreak >nul
 
 REM 2) Launch the game inside the same box.
 cd /d "C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead"
-"%SBIE%" /box:HC2 "C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead\ArmA2OA.exe" -client -connect=127.0.0.1 -port=2302 -window -cfg="C:\WASP\hc-profile\hc-video.cfg" "-mod=C:\Program Files (x86)\Steam\steamapps\common\Arma 2;expansion;@CBA_CO;@adwasp;@admkswf" -name="HC-AI-Control-2" -exThreads=3 -cpuCount=2 -malloc=tbb4malloc_bi -maxMem=2047 -world=empty -nosplash -noPause -noSound
+"%SBIE%" /box:HC2 "C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead\ArmA2OA.exe" -client -connect=127.0.0.1 -port=2302 -window -cfg="C:\WASP\hc-profile\hc-video.cfg" "-mod=C:\Program Files (x86)\Steam\steamapps\common\Arma 2;expansion;ACR;@CBA_CO;@adwasp;@admkswf" -name="HC-AI-Control-2" -exThreads=3 -cpuCount=2 -malloc=tbb4malloc_bi -maxMem=2047 -world=empty -nosplash -noPause -noSound
 

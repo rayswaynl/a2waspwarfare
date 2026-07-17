@@ -344,6 +344,21 @@ while {!WFBE_GameOver} do {
 			//--- byte-identical to HEAD.
 			if ((_newSID == WFBE_C_WEST_ID || {_newSID == WFBE_C_EAST_ID}) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
 				_location setVariable ["wfbe_ctl_str", missionNamespace getVariable ["AICOMV2_CTL_CAPTURE_SEED", 0.25]];
+			} else {
+				//--- STALE-LEDGER-BLEED FIX (owner order 2026-07-17, round-2 bughunt item 3 / ledger-map W3+improvement
+				//--- #1): the reset above only ever fires on a W/E capture - a W/E-invested town later captured BY GUER
+				//--- (or any non-W/E regime) fell through here with its old wfbe_ctl_str (up to 1.5) still set, which
+				//--- Server_GetTownGroupsDefender.sqf then reads UNCLAMPED as a defender-garrison multiplier for the
+				//--- new GUER owner - one recaptured town could eat a disproportionate share of the GUER group cap.
+				//--- Clear the ledger scalars back to their neutral defaults on any non-W/E capture, mirroring the
+				//--- exact reset values Server_CmdTownLedger.sqf already uses when it drops a lost town (:120-121).
+				//--- Same flag gate as the seed branch above: with AICOMV2_LANE_CMD_TOWN_LEDGER=0 (current live state)
+				//--- this is a no-op, byte-identical to HEAD.
+				if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0) then {
+					_location setVariable ["wfbe_ctl_str", 1];
+					_location setVariable ["wfbe_ctl_pending_ratio", -1];
+					_location setVariable ["wfbe_ctl_pending_invest", 0];
+				};
 			};
 			//--- cmdcon45 (owner: "Rogovo captured but camps still GUER"): capturing the TOWN flips its
 			//--- remaining camps to the new owner. Camps flip individually during the fight (that IS the

@@ -654,6 +654,18 @@
 		texts[] = {"15 Seconds","30 Seconds","60 Seconds","2 Minutes","5 Minutes"};
 		default = 60;
 	};
+	class WFBE_C_CLIENT_FRAME_TELEMETRY {
+		title = "Client frame pacing telemetry";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 1;
+	};
+	class WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL {
+		title = "Client frame pacing interval";
+		values[] = {30,60,120,300};
+		texts[] = {"30 Seconds","60 Seconds","2 Minutes","5 Minutes"};
+		default = 60;
+	};
 
 	// GUER "Insurgents" playable faction (harass-only 3rd side). OFF = no GUER slots; mission plays exactly as today.
 	class WFBE_C_GUER_PLAYERSIDE {
@@ -725,6 +737,10 @@
 	};
 
 	// FPV strike drone: player-piloted kamikaze mini-UAV from the Tactical Center (enabled 2026-07-07 post #796 hardening).
+	// RE-ENABLED (fixwave-20260717): tonight-20260717 safe-fallback (1->0) reverted with the purchase-authority
+	// race fix - Support_FPV.sqf pilot-seating replication window 1s->10s, and the client deny path
+	// (Client/PVFunctions/HandleSpecial.sqf) now tears the pending drone down DISARMED even when the echoed
+	// drone reference deserialized as objNull on the server (purchase PV outran createVehicle replication).
 	class WFBE_C_FPV_DRONE {
 		title = "FPV strike drone (Tactical Center)";
 		values[] = {0,1};

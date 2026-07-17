@@ -16,5 +16,5 @@ if (isNil "_bounty") exitWith {};
 if (typeName _bounty != "SCALAR") exitWith {};
 if (_bounty <= 0) exitWith {};
 
-diag_log ("GUERVBIED|v1|CLIENT|received|bounty=" + (str _bounty) + "|uid=" + (getPlayerUID player) + "|crediting wallet"); //--- Ray 2026-06-27: confirm the wallet credit fires on the detonator's client (server+client round-trip trace).
-(_bounty) Call ChangePlayerFunds;
+diag_log ("GUERVBIED|v1|CLIENT|received|bounty=" + (str _bounty) + "|uid=" + (getPlayerUID player) + "|wallet server-credited"); //--- Ray 2026-06-27: confirm the wallet credit fires on the detonator's client (server+client round-trip trace).
+//--- J1 funds authority: wallet write removed - the server credits CP tolls/scavenge rewards via WFBE_SE_FNC_CreditSidePlayers and the personal VBIED bounty via the detonator's pre-blast captured group (Server_HandleSpecial.sqf).

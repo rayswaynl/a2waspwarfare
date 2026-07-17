@@ -127,6 +127,31 @@ if ((missionNamespace getVariable ["AICOMV2_CTL_GARRISON_LINK", 0]) > 0 && {(mis
 	_ctlEff  = _ctlStr max (missionNamespace getVariable ["AICOMV2_CTL_SPAWN_MIN_STR", 0.25]);
 	_groups_max = round (_groups_max * _ctlEff);
 	if (_groups_max < 1) then {_groups_max = 1};
+	//--- BUDGET-CLAMP FIX (owner order 2026-07-17, round-2 bughunt item 3 / ledger-map CTL-W2 + improvement #3):
+	//--- the attacker path (Server_GetTownGroups.sqf:152-165) clamps its CTL-scaled group count against the
+	//--- owning side's live groupsGC budget cache before returning it; this defender-path CTL block applied the
+	//--- SAME unbounded str multiplier with NO cap check at all - the only unclamped garrison multiplier in the
+	//--- whole ledger system, and the mechanism a stale/inflated wfbe_ctl_str (see item 3's server_town.sqf fix)
+	//--- could otherwise exploit without limit. Port the identical clamp, keyed off the town's ACTUAL current
+	//--- owning side (not the WFBE_DEFENDER pseudo-side this function receives as _side) - the CTL budget model
+	//--- is W/E-only (mirrors AICOMV2_CTL_GROUP_BUDGET_MAX's attacker-path scope), so a non-W/E owner (stale-bleed's
+	//--- own failure mode, now closed separately) is left unclamped here by design, same as the attacker path.
+	private ["_ctlBudgetMax","_ctlOwnerSID","_ctlOwnerSide","_ctlCacheVar","_ctlCached","_ctlFit"];
+	_ctlBudgetMax = missionNamespace getVariable ["AICOMV2_CTL_GROUP_BUDGET_MAX", 120];
+	_ctlOwnerSID  = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+	_ctlOwnerSide = (_ctlOwnerSID) Call WFBE_CO_FNC_GetSideFromID;
+	_ctlCacheVar  = "";
+	if (_ctlOwnerSide == west) then {_ctlCacheVar = "wfbe_grpcnt_west"};
+	if (_ctlOwnerSide == east) then {_ctlCacheVar = "wfbe_grpcnt_east"};
+	if (_ctlCacheVar != "") then {
+		_ctlCached = missionNamespace getVariable [_ctlCacheVar, -1];
+		if (_ctlCached >= 0 && {_ctlCached + _groups_max > _ctlBudgetMax}) then {
+			_ctlFit = _ctlBudgetMax - _ctlCached;
+			if (_ctlFit < 1) then {_ctlFit = 1};
+			_groups_max = _ctlFit;
+			diag_log Format ["CTLSTAT|v1|DEF|SPAWN|town=%1|str=%2|groups=%3|deny=groupBudgetExceeded", _town getVariable ["name", "?"], _ctlStr, _groups_max];
+		};
+	};
 	if (_groups_max != _ctlBase) then {
 		diag_log Format ["CTLSTAT|v1|DEF|GARRISON|town=%1|str=%2|groups=%3|base=%4", _town getVariable ["name", "?"], _ctlStr, _groups_max, _ctlBase];
 	};
