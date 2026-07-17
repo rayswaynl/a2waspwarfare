@@ -10,9 +10,9 @@ _uav = playerUAV;
 if (isnull _uav) exitwith {endLoadingScreen;hintc format [localize "strwfbasestructuredestroyed",localize "str_uav_action"]};
 
 //--- Switch view
-gunner _uav removeweapon "nvgoggles";
+if (!isNull (gunner _uav)) then {(gunner _uav) removeweapon "nvgoggles"};
 _uav switchcamera "internal";
-player remoteControl gunner _uav;
+if (!isNull (gunner _uav)) then {player remoteControl (gunner _uav)};
 _locked = locked _uav;
 _uav lock true;
 _uav selectweapon (weapons _uav select 0);
@@ -75,7 +75,7 @@ _newspeed = BIS_UAV_PLANE getvariable 'BIS_UAV_speed';
 if (isnil "_newspeed") then {
 	_speed = speed _uav;
 	_newspeed = (round (_speed / 50)) * 50;
-	if (_newalt < 200) then {_newalt = 200};
+	if (_newspeed < 200) then {_newspeed = 200};
 	driver _uav forcespeed _newspeed;;
 	_uav setvariable ['BIS_UAV_speed',_newspeed];
 };
@@ -282,7 +282,7 @@ titletext ["","black in"];
 bis_uav_terminate = nil;
 BIS_UAV_TIME = nil;
 BIS_UAV_PLANE = nil;
-objnull remoteControl gunner _uav;
+if (!isNull (gunner _uav)) then {objnull remoteControl (gunner _uav)};
 player switchcamera "internal";
 enableteamswitch _defaultTeamswitch;
 

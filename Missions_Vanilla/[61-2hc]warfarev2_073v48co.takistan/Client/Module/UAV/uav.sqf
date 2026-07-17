@@ -1,4 +1,4 @@
-Private ['_add','_buildings','_built','_checks','_closest','_cw','_d','_dir','_driver','_group','_gunner','_lastWP','_lastWPpos','_logic','_pos','_radius','_sorted','_spawn','_step','_uav','_waypoints','_wp','_wpcount'];
+Private ['_add','_buildings','_built','_cap','_capDeadline','_capKey','_capValid','_challenge','_challengeKey','_checks','_closest','_cost','_cw','_d','_dir','_driver','_funds','_group','_gunner','_lastWP','_lastWPpos','_logic','_pendingKey','_pos','_radius','_resultKey','_sendUavToServer','_spawn','_step','_uav','_waypoints','_wp','_wpcount'];
 _logic = WF_Logic;
 
 if (!isNull playerUAV) then {if (!alive playerUAV) then {playerUAV = objNull}};
@@ -23,6 +23,18 @@ if (count _checks > 0) then {
 };
 
 if (isNull _closest) exitWith {};
+_cost = 12500; _funds = Call GetPlayerFunds;
+if (isNil "_funds" || {typeName _funds != "SCALAR"}) then {_funds = 0};
+if (_funds < _cost) exitWith {hint Format ["UAV needs $%1.", _cost]};
+_pendingKey = Format ["wfbe_uav_purchase_pending_%1", getPlayerUID player];
+if (missionNamespace getVariable [_pendingKey, false]) exitWith {hint "UAV purchase authorization is already pending."};
+missionNamespace setVariable [_pendingKey, true];
+_sendUavToServer = {Private ["_pvf"]; _pvf = ["SRVFNCRequestSpecial", _this]; if (!isHostedServer) then {WFBE_PVF_RequestSpecial = _pvf; publicVariableServer "WFBE_PVF_RequestSpecial"} else {_pvf Spawn WFBE_SE_FNC_HandlePVF}};
+_capKey = Format ["wfbe_uav_cap_client_%1", getPlayerUID player]; _challengeKey = Format ["wfbe_uav_auth_challenge_%1", getPlayerUID player];
+_challenge = Format ["%1:%2:%3", getPlayerUID player, floor (diag_tickTime * 1000), floor (random 1000000000)]; missionNamespace setVariable [_challengeKey, _challenge];
+["uav","auth",player,_challenge] Call _sendUavToServer; _capDeadline = time + 5; _cap = []; _capValid = false;
+waitUntil {sleep 0.05; _cap = missionNamespace getVariable [_capKey, []]; _capValid = typeName _cap == "ARRAY" && {count _cap >= 2} && {typeName (_cap select 0) == "STRING"} && {typeName (_cap select 1) == "SCALAR"} && {(_cap select 0) != ""} && {(_cap select 1) > time}; _capValid || {time >= _capDeadline}};
+missionNamespace setVariable [_challengeKey, ""]; if (!_capValid) exitWith {missionNamespace setVariable [_pendingKey, false]; hint "UAV purchase authorization timed out. Nothing was charged."};
 
 _uav = createVehicle [missionNamespace getVariable Format ["WFBE_%1UAV",sideJoinedText],getPos _closest, [], 0, "FLY"];
 playerUAV = _uav;
@@ -44,12 +56,10 @@ if (sideJoined == west) then {
 	_gunner MoveInGunner _uav;
 	_built = _built + 1;
 };
-[sideJoinedText,'UnitsCreated',_built] Call UpdateStatistics;
-[sideJoinedText,'VehiclesCreated',1] Call UpdateStatistics;
-
--12500 Call ChangePlayerFunds;
-
-["RequestSpecial", ["uav",sideJoined,_uav,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+_resultKey = Format ["wfbe_uav_purchase_token_%1", getPlayerUID player]; missionNamespace setVariable [_resultKey, _cap select 0]; missionNamespace setVariable [Format ["wfbe_uav_purchase_status_%1", getPlayerUID player], 0];
+["uav","purchase",sideJoined,_uav,clientTeam,player,_driver,_gunner,_cap select 0] Call _sendUavToServer;
+waitUntil {sleep 0.05; (missionNamespace getVariable [Format ["wfbe_uav_purchase_status_%1", getPlayerUID player], 0]) != 0};
+missionNamespace setVariable [_pendingKey, false]; if ((missionNamespace getVariable [Format ["wfbe_uav_purchase_status_%1", getPlayerUID player], 0]) != 1) exitWith {};
 
 sleep 0.02;
 
