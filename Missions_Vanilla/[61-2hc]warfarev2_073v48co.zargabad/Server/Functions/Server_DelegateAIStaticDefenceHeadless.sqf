@@ -29,7 +29,11 @@ _hcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
 //--- Build the live-HC leader list locally (cheap: no allUnits scan; same liveness test the picker uses).
 _live = [];
 {
-	if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_live = _live + [leader _x]};
+	//--- BUGFIX (2026-07-17, HC-founding zombie-picker): keep this liveness test identical to
+	//--- Server_PickLeastLoadedHC.sqf's (owner<=0 = disconnected/locality-transferred zombie,
+	//--- never a routable Common_SendToClient target) - this comment block already claimed "same
+	//--- liveness test the picker uses"; it previously was not.
+	if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}) then {_live = _live + [leader _x]};
 } forEach (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 
 _hcCount = count _live;
