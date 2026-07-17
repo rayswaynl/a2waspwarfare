@@ -48,7 +48,7 @@ _fnGuerGroups = {
 
 //--- Constants (read once at startup).
 private ["_tickSec","_regenFullSec","_surgeCap","_surgeCapPaid","_grpBudgetMax",
-         "_minSpawnM","_ambushBubbleM","_suppressSec","_retakeEnabled","_playerSupport"];
+         "_minSpawnM","_ambushBubbleM","_retakeEnabled","_playerSupport"];
 
 _tickSec        = missionNamespace getVariable ["AICOMV2_GDIR_TICK_SEC",         30];
 _regenFullSec   = missionNamespace getVariable ["AICOMV2_GDIR_REGEN_FULL_SEC",   1800];
@@ -57,7 +57,6 @@ _surgeCapPaid   = missionNamespace getVariable ["AICOMV2_GDIR_PAID_SURGE_MAX",  
 _grpBudgetMax   = missionNamespace getVariable ["AICOMV2_GDIR_GROUP_BUDGET_MAX", 110];
 _minSpawnM      = missionNamespace getVariable ["AICOMV2_GDIR_MIN_SPAWN_M",      400];
 _ambushBubbleM  = missionNamespace getVariable ["AICOMV2_GDIR_AMBUSH_BUBBLE_M",  700];
-_suppressSec    = missionNamespace getVariable ["AICOMV2_GDIR_SUPPRESS_SEC",     600];
 _retakeEnabled  = missionNamespace getVariable ["AICOMV2_GDIR_RETAKE",           0];
 _playerSupport  = missionNamespace getVariable ["AICOMV2_GDIR_PLAYER_SUPPORT",   0];
 //--- P1/P2 hardening flags (fable/gdir-harden-shop).
@@ -75,8 +74,8 @@ _jipSnapLastT      = 0;
 //   1 = baseline strength (0.0..1.0) seeded from initial group count
 //   2 = current virtual strength (0.0..1.0)
 //   3 = in-transit strength (cells dispatched but not yet arrived)
-//   4 = suppress timer (diag_tickTime when last contact ended; 0 = not suppressed)
-//   5 = last observed group count (active contact + survivor read-back on deactivation)
+//   4 = last observed group count (active contact + survivor read-back on deactivation)
+//   5 = in-transit ETA (0 = none; hardening timeout only)
 //===================================================================================
 private ["_ledger","_ledgerCount","_fundedTotal","_regenDebt"];
 _ledger      = [];
@@ -94,7 +93,7 @@ _regenDebt   = 0;
         _baseline = 0.5;
         if (count _grps > 0) then {_baseline = 1.0};
         _curStr  = _baseline;
-        _rec = [_town, _baseline, _curStr, 0, 0, count _grps, 0];
+        _rec = [_town, _baseline, _curStr, 0, count _grps, 0];
         _ledger set [count _ledger, _rec];
         _ledgerCount = _ledgerCount + 1;
     };
@@ -156,7 +155,7 @@ while {!WFBE_GameOver} do {
         _rec          = _x;
         _town         = _rec select 0;
         _active       = _town getVariable ["wfbe_active", false];
-        _lastGrpCount = _rec select 5;
+        _lastGrpCount = _rec select 4;
         if (!_active && {_lastGrpCount > 0}) then {
             _grps        = [_town] call _fnGuerGroups;
             _nowGrpCount = count _grps;
@@ -172,7 +171,7 @@ while {!WFBE_GameOver} do {
                 //--- soak before merging/arming.
                 _rec set [2, ((_rec select 2) * _ratio) max 0];
             };
-            _rec set [5, 0];
+            _rec set [4, 0];
         };
         if (_active) then {
             _grps        = [_town] call _fnGuerGroups;
@@ -184,7 +183,7 @@ while {!WFBE_GameOver} do {
                 _ratio = [_ratio, 0, 1] call _fnClamp;
                 _rec set [2, ((_rec select 2) * _ratio) max 0];
             };
-            _rec set [5, _nowGrpCount];
+            _rec set [4, _nowGrpCount];
         };
     } forEach _ledger;
 
@@ -199,13 +198,11 @@ while {!WFBE_GameOver} do {
     _stateThr  = [];
 
     {
-        private ["_rec","_str","_base","_transit","_suppEnd","_now"];
+        private ["_rec","_str","_base","_transit"];
         _rec     = _x;
         _str     = _rec select 2;
         _base    = _rec select 1;
         _transit = _rec select 3;
-        _suppEnd = _rec select 4;
-        _now     = diag_tickTime;
 
         if (_str >= _base * 0.9) then {
             if (_str >= _base * 1.1 && {_transit < 0.2}) then {
@@ -217,7 +214,7 @@ while {!WFBE_GameOver} do {
             if (_str < _base * 0.25) then {
                 _stateThr set [count _stateThr, _rec];
             } else {
-                if (_str < _base * 0.5 && {_suppEnd < _now}) then {
+                if (_str < _base * 0.5) then {
                     _stateDep set [count _stateDep, _rec];
                 } else {
                     _stateSafe set [count _stateSafe, _rec];
@@ -260,10 +257,10 @@ while {!WFBE_GameOver} do {
                     _orderCount  = _orderCount + 1;
                     _fundedTotal = _fundedTotal + _send;
                     //--- P1: record ETA for stuck-cell detection (hardenOn only).
-                    if (_hardenOn && {(count _dst) > 6}) then {
+                    if (_hardenOn && {(count _dst) > 5}) then {
                         private ["_etaDist"];
                         _etaDist = (getPos (_src select 0)) distance (getPos (_dst select 0));
-                        _dst set [6, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor];
+                        _dst set [5, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor];
                     };
                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER moveCell from=%2 to=%3 str=%4",
                         _elmin, _src select 0, _dst select 0, _send];
@@ -294,10 +291,10 @@ while {!WFBE_GameOver} do {
                     _orderCount  = _orderCount + 1;
                     _fundedTotal = _fundedTotal + _send;
                     //--- P1: record ETA for stuck-cell detection (hardenOn only).
-                    if (_hardenOn && {(count _dst) > 6}) then {
+                    if (_hardenOn && {(count _dst) > 5}) then {
                         private ["_etaDist"];
                         _etaDist = (getPos (_src select 0)) distance (getPos (_dst select 0));
-                        _dst set [6, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor];
+                        _dst set [5, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor];
                     };
                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER moveCell from=%2 to=%3 str=%4 (threatened)",
                         _elmin, _src select 0, _dst select 0, _send];
@@ -573,20 +570,20 @@ while {!WFBE_GameOver} do {
         _transit = _rec select 3;
         _str     = _rec select 2;
         _base    = _rec select 1;
-        _eta     = if ((count _rec) > 6) then {_rec select 6} else {0};
+        _eta     = if ((count _rec) > 5) then {_rec select 5} else {0};
         if (_transit > 0) then {
             //--- P1: ETA-timeout force-merge. If past ETA, force arrival and emit GDIR_MOVE_TIMEOUT.
             if (_hardenOn && {_eta > 0} && {diag_tickTime > _eta}) then {
                 diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_MOVE_TIMEOUT town=%2 transit=%3 etaExpired=%4 nowT=%5",
                     _elmin, _rec select 0, _transit, _eta, diag_tickTime];
-                if ((count _rec) > 6) then {_rec set [6, 0]}; //--- clear ETA
+                if ((count _rec) > 5) then {_rec set [5, 0]}; //--- clear ETA
             };
             _str = [_str + _transit, 0, _surgeCapPaid * _base] call _fnClamp;
             _rec set [2, _str];
             _rec set [3, 0];
         } else {
             //--- No active transit: clear any stale ETA.
-            if (_hardenOn && {_eta > 0} && {(count _rec) > 6}) then {_rec set [6, 0]};
+            if (_hardenOn && {_eta > 0} && {(count _rec) > 5}) then {_rec set [5, 0]};
         };
     } forEach _ledger;
 

@@ -103,9 +103,10 @@ _groups_max = round(_groups_max * _defCoef);
 //--- Tier-1 (flag WFBE_C_GDIR_GARRISON_GAIN, default 0): a GUER town the Director judges REINFORCED
 //--- (ledger current/baseline ratio > 1, published as wfbe_gdir_str) wakes with a bigger real garrison.
 //--- Additive / no-nerf: the bonus is >= 0, so _groups_max is never reduced below the V1 count.
-private ["_gdirGain"];
+private ["_gdirGain","_townSideId"];
 _gdirGain = missionNamespace getVariable ["WFBE_C_GDIR_GARRISON_GAIN", 0];
-if (_gdirGain > 0 && {(missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0}) then {
+_townSideId = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+if (_gdirGain > 0 && {(missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0} && {_townSideId == WFBE_C_GUER_ID || {_townSideId == WFBE_C_UNKNOWN_ID}}) then {
 	private ["_gdRatio","_gdBonus"];
 	_gdRatio = _town getVariable ["wfbe_gdir_str", 1];
 	if (_gdRatio > 1) then {
@@ -120,7 +121,7 @@ if (_gdirGain > 0 && {(missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR
 //--- to 1 for non-CTL (GUER/neutral) towns, so those stay at their V1 count even when armed; a WEST/EAST town
 //--- garrisons in proportion to its ledger strength: fresh/depleted -> thin (floored at CTL_SPAWN_MIN_STR),
 //--- invested/regenerated -> up toward CTL_PAID_MAX. A2-OA-1.64-legal (getVariable / round / plain arithmetic).
-if ((missionNamespace getVariable ["AICOMV2_CTL_GARRISON_LINK", 0]) > 0 && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+if ((_townSideId == WFBE_C_WEST_ID || {_townSideId == WFBE_C_EAST_ID}) && {(missionNamespace getVariable ["AICOMV2_CTL_GARRISON_LINK", 0]) > 0} && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
 	private ["_ctlStr","_ctlEff","_ctlBase"];
 	_ctlBase = _groups_max;
 	_ctlStr  = _town getVariable ["wfbe_ctl_str", 1];

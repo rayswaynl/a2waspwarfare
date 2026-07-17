@@ -2083,7 +2083,6 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_MIN_SPAWN_M")           then {AICOMV2_GDIR_MIN_SPAWN_M = 400};        //--- Minimum distance from any player for materialisation.
 	if (isNil "AICOMV2_GDIR_AMBUSH_BUBBLE_M")       then {AICOMV2_GDIR_AMBUSH_BUBBLE_M = 700};   //--- Route-point bubble radius for ambush-cell materialisation.
 	if (isNil "AICOMV2_GDIR_CELL_SPEED_MS")         then {AICOMV2_GDIR_CELL_SPEED_MS = 8};        //--- Virtual ground speed for cell movement (m/s).
-	if (isNil "AICOMV2_GDIR_SUPPRESS_SEC")          then {AICOMV2_GDIR_SUPPRESS_SEC = 600};       //--- Post-wipe offensive-suppression window (s).
 	if (isNil "AICOMV2_GDIR_RETAKE")                then {AICOMV2_GDIR_RETAKE = 0};               //--- Retake-cell aggression: 0=off, 1=low. Default 0 CH; TK profile may set 1.
 	if (isNil "AICOMV2_GDIR_PLAYER_SUPPORT")        then {AICOMV2_GDIR_PLAYER_SUPPORT = 0};       //--- Bias cells toward human GUER players (0=off).
 //--- Amendment A2: Air-Contact Activation Tier dials (folded under AICOMV2_LANE_GUER_DIRECTOR gate).

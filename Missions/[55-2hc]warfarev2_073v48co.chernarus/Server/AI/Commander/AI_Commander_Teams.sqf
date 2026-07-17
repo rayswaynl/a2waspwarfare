@@ -1089,7 +1089,14 @@ if (count _live > 0) then {
 		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] W11 FieldHospital free-refound flag consumed.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 	};
 
-	if (_funds < _price) exitWith {};
+	if (_funds < _price) exitWith {
+		private ["_foundSkipWarnLast"];
+		_foundSkipWarnLast = _logik getVariable ["wfbe_aicom_foundskip_warn_t", -9999];
+		if ((time - _foundSkipWarnLast) >= 900) then {
+			_logik setVariable ["wfbe_aicom_foundskip_warn_t", time];
+			["WARNING", Format ["AI_Commander_Teams.sqf: [%1] AICOM founding skipped - funds %2 < template price %3 (template %4).", _sideText, _funds, _price, _template]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
 
 	//--- Spawn at the doctrine factory (fallback: Barracks, then the HQ).
 	_facNames = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideText];

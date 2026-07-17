@@ -61,6 +61,7 @@ _fnSeedSide = {
 			//--- clear any stale pending/counter scalars (restart hygiene - same reason as the tick seed)
 			_town setVariable ["wfbe_ctl_pending_ratio", -1];
 			_town setVariable ["wfbe_ctl_pending_invest", 0];
+			_town setVariable ["wfbe_ctl_pending_invest_cost", 0];
 			_town setVariable ["wfbe_ctl_lastspawn", 0];
 			_rec = [_town, _baseGroups, 1.0, 0, 0, diag_tickTime];
 			_ledger set [count _ledger, _rec];
@@ -118,22 +119,34 @@ while {!WFBE_GameOver} do {
 					_rec = [_town, _baseGroups, _captureSeed, 0, 0, diag_tickTime];
 					_ledger set [count _ledger, _rec];
 					_town setVariable ["wfbe_ctl_pending_ratio", -1];
-					_town setVariable ["wfbe_ctl_pending_invest", 0];
+					//--- Preserve a paid pre-capture investment for the new owner; the old-side
+					//--- record drops below and this tick's normal apply pass consumes it once.
+					if ((_town getVariable ["wfbe_ctl_pending_invest", 0]) <= 0) then {
+						_town setVariable ["wfbe_ctl_pending_invest", 0];
+						_town setVariable ["wfbe_ctl_pending_invest_cost", 0];
+					};
 					_town setVariable ["wfbe_ctl_lastspawn", 0];
 					diag_log Format ["CTLSTAT|v1|%1|SEED|town=%2|str=%3", str _side, _town getVariable ["name", "?"], _captureSeed];
 				};
 			};
 		} forEach towns;
 
-		//--- Drop records for towns no longer owned by this side.
+		//--- Drop records for towns no longer owned by this side. Snapshot a staged paid
+		//--- investment before dropping: the new owner's pickup above preserves it and the existing
+		//--- apply pass credits it exactly once, rather than silently deleting paid strength.
 		private ["_kept"];
 		_kept = [];
 		{
-			private ["_rec","_town","_tSide"];
+			private ["_rec","_town","_tSide","_pendingInvest"];
 			_rec   = _x;
 			_town  = _rec select 0;
 			_tSide = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
-			if (_tSide == _sideId) then {_kept set [count _kept, _rec]};
+			_pendingInvest = _town getVariable ["wfbe_ctl_pending_invest", 0];
+			if (_tSide == _sideId) then {
+				_kept set [count _kept, _rec];
+			} else {
+				if (_pendingInvest > 0) then {diag_log Format ["CTLSTAT|v1|%1|CTL_INVEST_TRANSFER|town=%2|invest=%3|newSideId=%4", str _side, _town getVariable ["name", "?"], _pendingInvest, _tSide]};
+			};
 		} forEach _ledger;
 		_ledger = _kept;
 		
@@ -156,6 +169,7 @@ while {!WFBE_GameOver} do {
 				_recP set [2, ((_recP select 2) + _pInvest) min (missionNamespace getVariable ["AICOMV2_CTL_PAID_MAX", 1.5])];
 				_recP set [4, time];
 				_pTown setVariable ["wfbe_ctl_pending_invest", 0];
+				_pTown setVariable ["wfbe_ctl_pending_invest_cost", 0];
 				diag_log Format ["CTLSTAT|v1|%1|INVEST_APPLY|town=%2|str=%3", str _side, _pTown getVariable ["name", "?"], _recP select 2];
 			};
 			_recP set [3, _pTown getVariable ["wfbe_ctl_lastspawn", 0]];
