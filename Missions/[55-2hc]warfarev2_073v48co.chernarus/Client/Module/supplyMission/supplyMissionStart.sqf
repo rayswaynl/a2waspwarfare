@@ -1,6 +1,9 @@
 private ['_sourceTown', '_associatedSupplyTruck', '_supplyAmount', '_supplyMissionAlreadyActiveInTown', '_cursorTarget', '_supplyUpgradeModifier', '_type', '_upgradeLevel', '_isTruck', '_isHeli', '_isHeliType', '_eligible', '_byHeli', '_airLevel', '_loadOk', '_t', '_loadedAmount', '_loadLock', '_cancelReason'];
 
 _sourceTown = call GetClosestFriendlyLocation;
+if (isNull _sourceTown) exitWith {
+	format ["No friendly town is available for a supply mission."] call GroupChatMessage;
+};
 WFBE_CL_VAR_ASSOCIATED_SUPPLY_TRUCK = objNull;
 
 missionNamespace setVariable ["WFBE_Client_PV_IsSupplyMissionActiveInTown", [player, _sourceTown]];
