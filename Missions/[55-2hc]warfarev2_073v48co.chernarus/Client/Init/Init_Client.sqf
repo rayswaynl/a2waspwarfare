@@ -73,7 +73,17 @@ player call Compile preprocessFileLineNumbers "WASP\rpg_dropping\DropRPG.sqf";
 //--- (set a few lines above in this file, cleared on WFBE_Client_DeadspawnEscaped or the
 //--- existing 120s failsafe) already covers this new position unmodified.
 if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_REDESIGN", 0]) > 0) then {
-	player setPos ([] call WFBE_CO_FNC_DeadspawnPenPos);
+	//--- fix(tonight-20260717): was `[] call WFBE_CO_FNC_DeadspawnPenPos` - a hard dependency on
+	//--- Init_Common.sqf (ExecVM'd, async, initJIPCompatible.sqf:350) having already registered that
+	//--- function var before THIS execVM'd script (initJIPCompatible.sqf:386, started ~36 lines later,
+	//--- no ordering guarantee between two independent execVM threads) reaches this line. When Init_Common
+	//--- loses the race, WFBE_CO_FNC_DeadspawnPenPos is still nil here -> `call` on a nil var throws an
+	//--- Undefined-variable script error, setPos gets no argument, and the player is left at whatever the
+	//--- default MP join position is (team HQ area) instead of the offshore pen - exactly matching the
+	//--- owner's live report ("deadspawn was at my team HQ"). Fixed the same way the ELSE branch two lines
+	//--- below already avoids this exact hazard (its own comment: "Common is not yet init'd so we call is
+	//--- straight away") - compile the function inline instead of depending on the async registration.
+	player setPos ([] call Compile preprocessFile "Common\Functions\Common_DeadspawnPenPos.sqf");
 } else {
 	player setPos ([getMarkerPos Format["%1TempRespawnMarker",sideJoinedText],1,10] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");
 };

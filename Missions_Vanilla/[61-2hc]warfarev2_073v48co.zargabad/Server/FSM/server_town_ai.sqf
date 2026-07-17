@@ -329,6 +329,12 @@ while {!WFBE_GameOver} do {
 						};
 						//// start of creation
 						["INFORMATION", Format ["server_town_ai.sqf: Town [%1] ACTIVATED for [%2] (episode_spawned latch set, groups=%3).", _town getVariable "name", _side, count _groups]] Call WFBE_CO_FNC_AICOMLog;
+						//--- fix(tonight-20260717): mirror the _activeTownCount live-increment pattern above (~line 279)
+						//--- for the GUER group-cap counter. _guerGroupCount was read once per sweep (top of loop) and
+						//--- never bumped in-sweep, so resistance groups spawned earlier in THIS sweep were invisible to
+						//--- the cap check (line ~260) for towns processed later in the same sweep - stale undercount that
+						//--- let the group budget overshoot within a single sweep before the next sweep's recount caught up.
+						if (_side == resistance) then { _guerGroupCount = _guerGroupCount + (count _groups) };
 
 						if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_side]) then {[_side,"HostilesDetectedNear",_town] Spawn SideMessage};
 

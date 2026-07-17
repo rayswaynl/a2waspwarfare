@@ -613,7 +613,7 @@ if (worldName == "Zargabad") then {
 	//--- V0.6: Wildcard events - one free random event per AI-commanded side per interval.
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD") then {WFBE_C_AI_COMMANDER_WILDCARD = 1};           //--- 0 disables wildcard events entirely.
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL") then {WFBE_C_AI_COMMANDER_WILDCARD_INTERVAL = 900}; //--- Seconds between wildcard events per side (15 min - faster testing cadence, claude-gaming 2026-06-14; was 1800/30min).
-	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD_COST") then {WFBE_C_AI_COMMANDER_WILDCARD_COST = 150000};       //--- funds the AI commander pays per wildcard draw. 0 = free/legacy (feature inert); >0 = purchase-gated (per-side afford check + cooldown). Intended live value 8000 (Ray 2026-07-07). claude-gaming.
+	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD_COST") then {WFBE_C_AI_COMMANDER_WILDCARD_COST = 8000};       //--- funds the AI commander pays per wildcard draw. 0 = free/legacy (feature inert); >0 = purchase-gated (per-side afford check + cooldown). Intended live value 8000 (Ray 2026-07-07). claude-gaming.
 	if (isNil "WFBE_C_AI_COMMANDER_WILDCARD_COOLDOWN") then {WFBE_C_AI_COMMANDER_WILDCARD_COOLDOWN = 1800}; //--- s min gap between purchased wildcard draws per side (30 min). Active only when WFBE_C_AI_COMMANDER_WILDCARD_COST > 0.
 	WFBE_C_AI_COMMANDER_SPEARHEAD_PER_TOWN = 3;   //--- V0.5: teams concentrated per spearhead town (legacy/fallback quota; per-tier quota below overrides).
 	//--- V0.8 COHERENT FRONT (claude-gaming 2026-06-14): the old spearhead scorer was
@@ -1359,8 +1359,8 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- HC depleted-team MERGE (default-OFF). Server picks a same-side pair of depleted HC teams (A keep, B donor)
 	//--- and broadcasts a HandleSpecial 'aicom-team-merge' [A,B] to every live HC; the HC consumer self-gates on
 	//--- both leaders LOCAL, then (units B) joinSilent A (empty B reaped by existing GC). Group-count DOWN.
-	if (isNil "WFBE_C_AICOM_HC_MERGE_ENABLE") then {WFBE_C_AICOM_HC_MERGE_ENABLE = 1};   //--- 1 = ON, 0 = off (default; ships dark).
-	if (isNil "WFBE_C_AICOM_HC_TOPUP_ENABLE") then {WFBE_C_AICOM_HC_TOPUP_ENABLE = 1};   //--- B74 (Ray 2026-06-22): refill attrited HC field teams - Produce skips live HC teams so they bleed to 1-2-man remnants and never recover. When on, the commander ships replacement bodies to under-strength HC teams (charged to AI funds). 1=on.
+	if (isNil "WFBE_C_AICOM_HC_MERGE_ENABLE") then {WFBE_C_AICOM_HC_MERGE_ENABLE = 0};   //--- 1 = ON, 0 = off (default; ships dark). fix(tonight-20260717): reverted 1->0 - both this and HC_TOPUP_ENABLE below only ever call WFBE_SE_FNC_AI_Com_HCTopUp (AI_Commander.sqf:572, nil-guarded), which is never compiled/registered anywhere in the tree, so arming either flag is a pure no-op. Do not re-arm until the DRAFT worker is actually implemented and registered.
+	if (isNil "WFBE_C_AICOM_HC_TOPUP_ENABLE") then {WFBE_C_AICOM_HC_TOPUP_ENABLE = 0};   //--- B74 (Ray 2026-06-22): refill attrited HC field teams - Produce skips live HC teams so they bleed to 1-2-man remnants and never recover. When on, the commander ships replacement bodies to under-strength HC teams (charged to AI funds). 1=on. fix(tonight-20260717): reverted 1->0 - inert no-op, see WFBE_C_AICOM_HC_MERGE_ENABLE comment above.
 	if (isNil "WFBE_C_AICOM_HC_TOPUP_FRAC")   then {WFBE_C_AICOM_HC_TOPUP_FRAC   = 0.6}; //--- B74: a live HC team at/below this fraction of its template size gets topped up.
 	if (isNil "WFBE_C_AICOM_HC_TOPUP_MAX")    then {WFBE_C_AICOM_HC_TOPUP_MAX    = 2};   //--- B74: max teams topped up per commander tick (rate-limit the spend + the spawn load).
 	if (isNil "WFBE_C_AICOM_HC_MERGE_FRAC")   then {WFBE_C_AICOM_HC_MERGE_FRAC   = 0.6}; //--- a team at/below this fraction of its template size is "depleted" (merge candidate).
@@ -2603,7 +2603,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- FPV STRIKE DRONE (fable/fpv-strike-drone): player-piloted kamikaze mini-UAV bought from the
 //--- Tactical Center (sibling of the UAV support call). Client module: Client/Module/FPV/.
 //--- Flag-off (0) = no menu row, module exits on entry = byte-identical behavior.
-	if (isNil "WFBE_C_FPV_DRONE")      then {WFBE_C_FPV_DRONE      = 1};           //--- Master gate: 0=off (default), 1=on. Lobby param mirrors this.
+	if (isNil "WFBE_C_FPV_DRONE")      then {WFBE_C_FPV_DRONE      = 0};           //--- Master gate: 0=off (default), 1=on. Lobby param mirrors this. SAFE FALLBACK (tonight-20260717): was 1 (drifted from its own stale comment); flipped to match the Parameters.hpp lobby default while a purchase-authority race (control handoff + self-detonation on fall) is diagnosed.
 	if (isNil "WFBE_C_FPV_DRONE_COST") then {WFBE_C_FPV_DRONE_COST = 2500};        //--- Purchase price (deducted client-side in fpv.sqf).
 	if (isNil "WFBE_C_FPV_DRONE_TTL")  then {WFBE_C_FPV_DRONE_TTL  = 240};         //--- s: battery life; expiry DISARMS then scuttles (no parked bomb).
 	if (isNil "WFBE_C_FPV_DRONE_AMMO") then {WFBE_C_FPV_DRONE_AMMO = "R_57mm_HE"}; //--- Warhead ammo class (RPG-warhead scale: hit 150 / indirect 40 / r 12).
