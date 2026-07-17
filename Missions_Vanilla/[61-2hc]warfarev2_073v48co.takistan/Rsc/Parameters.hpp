@@ -62,6 +62,12 @@
 		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
 		default = 1;
 	};
+	class WFBE_C_SPAWN_BUDDY_DISBAND {
+		title = "Spawn without AI squadmate";
+		values[] = {0,1};
+		texts[] = {"Disabled","Enabled"};
+		default = 0;
+	};
 	class WFBE_C_ARTILLERY {
 		title = "$STR_WF_PARAMETER_Arty";
 		values[] = {0,1,2,3};
