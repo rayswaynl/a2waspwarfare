@@ -57,8 +57,10 @@ _ownTownObjs = []; _tgtTownObjs = [];
 		_myTowns = _myTowns + 1;
 		_ownTownObjs set [count _ownTownObjs, _x];
 	} else {
-		//--- capturable (enemy- or neutral-held) - the allocator's CAPTURE candidate set.
-		_tgtTownObjs set [count _tgtTownObjs, _x];
+		//--- Naval HVTs remain in ownership counts but never enter any AICOM capture candidate set.
+		if (!(_x getVariable ["wfbe_is_naval_hvt", false])) then {
+			_tgtTownObjs set [count _tgtTownObjs, _x];
+		};
 		if ((_x getVariable "sideID") == _enemyID) then {_enemyTowns = _enemyTowns + 1} else {_neutTowns = _neutTowns + 1};
 	};
 } forEach towns;

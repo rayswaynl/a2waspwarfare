@@ -51,7 +51,9 @@ if (_snapOk) then {
 			_myTowns = _myTowns + 1;
 			_ownTownObjs set [count _ownTownObjs, _x];
 		} else {
-			_candTowns set [count _candTowns, _x];
+			if (!(_x getVariable ["wfbe_is_naval_hvt", false])) then {
+				_candTowns set [count _candTowns, _x];
+			};
 		};
 		if (_townSide == _enemyID) then {_enemyTowns = _enemyTowns + 1};
 	} forEach towns;
@@ -451,7 +453,7 @@ if (_fhDwell > 0 && {count _targets > 0}) then {
 		//--- town has no enemy affiliation and must not be kept as the active front priority.
 		//--- Review note (PR #530): cache sideID once to avoid double-read in the lazy-and expression.
 		private "_fhSID"; _fhSID = _fhPrim getVariable ["sideID", -1];
-		if (_fhSID != _sideID && {_fhSID != -1}) then {_fhValid = true};
+		if (_fhSID != _sideID && {_fhSID != -1} && {!(_fhPrim getVariable ["wfbe_is_naval_hvt", false])}) then {_fhValid = true};
 	};
 	if (_fhValid && {(time - _fhT0) < _fhDwell}) then {
 		//--- Dwell still active + pick still valid: keep it as primary. If it is not already the scored primary,
