@@ -112,17 +112,33 @@ if (_airMaxTotalP > 0) then {
 		//--- bypass, so the HC driver's own player-proximity + not-in-COMBAT veto still applies (never a
 		//--- player-visible vanish; founding replaces the slot naturally). Guards here are belt-and-braces so we
 		//--- never even REQUEST a disband while the team is fighting or a player is close.
-		private ["_wm_recycle","_wm_disbanding","_wm_playerNear"];
+		private ["_wm_recycle","_wm_disbanding","_wm_playerNear","_wm_term","_wm_ord","_wm_seq"];
 		_wm_recycle = _team getVariable "wfbe_aicom_recycle";
 		if (!isNil "_wm_recycle" && {_wm_recycle}) then {
-			_wm_disbanding = _team getVariable "wfbe_aicom_disband"; //--- already flagged? don't re-request
-			_wm_disbanding = (!isNil "_wm_disbanding" && {_wm_disbanding});
-			_wm_playerNear = false;
-			{ if (isPlayer _x && {alive _x} && {(_x distance _wm_ldr) < 500}) exitWith {_wm_playerNear = true} } forEach playableUnits;
-			if ((behaviour _wm_ldr != "COMBAT") && {!_wm_playerNear} && {!_wm_disbanding}) then {
-				_team setVariable ["wfbe_aicom_disband", true, true]; //--- NO _cmd bypass -> driver still vetoes on proximity/combat
-				_team setVariable ["wfbe_aicom_recycle", false, true]; //--- clear the request (one-shot)
-				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TEAM_RECYCLE requested (alive=%3, no player within 500m, not in combat) - disband flagged (proximity-vetoed, no _cmd bypass).", _sideText, _team, _wm_alive]] Call WFBE_CO_FNC_AICOMLog;
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_TERMINAL_SCUTTLE", 0]) > 0) then {
+				//--- TERMINAL LATCH (P1 stuck-lifecycle, owner matrix ruling 2026-07-18): NO proximity gate and NO
+				//--- silent loss. Latch once with the evidence snapshot [t0, orderSeq, leaderPos, reason]; the HC
+				//--- state machine in Common_RunCommanderTeam cancels ONLY on demonstrated recovery (fresh order /
+				//--- movement / combat) or executes the visible scuttle exactly once. Clearing the one-shot recycle
+				//--- request is safe here BECAUSE the latch persists in its place (the legacy path lost the request).
+				_wm_term = _team getVariable "wfbe_aicom_terminal";
+				if (isNil "_wm_term" || {typeName _wm_term != "ARRAY"} || {count _wm_term < 4}) then {
+					_wm_ord = _team getVariable "wfbe_aicom_order";
+					_wm_seq = if (!isNil "_wm_ord" && {count _wm_ord >= 1}) then {_wm_ord select 0} else {-1};
+					_team setVariable ["wfbe_aicom_terminal", [time, _wm_seq, getPos _wm_ldr, "recycle"], true];
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TERMINAL_LATCH|team=" + (str _team) + "|alive=" + str _wm_alive);
+				};
+				_team setVariable ["wfbe_aicom_recycle", false, true];
+			} else {
+				_wm_disbanding = _team getVariable "wfbe_aicom_disband"; //--- already flagged? don't re-request
+				_wm_disbanding = (!isNil "_wm_disbanding" && {_wm_disbanding});
+				_wm_playerNear = false;
+				{ if (isPlayer _x && {alive _x} && {(_x distance _wm_ldr) < 500}) exitWith {_wm_playerNear = true} } forEach playableUnits;
+				if ((behaviour _wm_ldr != "COMBAT") && {!_wm_playerNear} && {!_wm_disbanding}) then {
+					_team setVariable ["wfbe_aicom_disband", true, true]; //--- NO _cmd bypass -> driver still vetoes on proximity/combat
+					_team setVariable ["wfbe_aicom_recycle", false, true]; //--- clear the request (one-shot)
+					["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TEAM_RECYCLE requested (alive=%3, no player within 500m, not in combat) - disband flagged (proximity-vetoed, no _cmd bypass).", _sideText, _team, _wm_alive]] Call WFBE_CO_FNC_AICOMLog;
+				};
 			};
 		};
 

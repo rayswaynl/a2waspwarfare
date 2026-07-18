@@ -2749,5 +2749,18 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY") then {WFBE_C_CLIENT_FRAME_TELEMETRY = 1};
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL") then {WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL = 60};
 
+//--- TERMINAL SCUTTLE (P1 stuck-lifecycle, fable/terminal-scuttle-latch 2026-07-18, owner matrix ruling):
+//--- 1 = latched evidence-based terminal retirement with a VISIBLE scripted scuttle replaces the silent
+//--- proximity-gated recycle->disband path (which lost terminal requests at its 500m/900m gates). 0 (DEFAULT,
+//--- live) = fully dark, byte-identical legacy behaviour. Comments here tell the truth about the value below.
+if (isNil "WFBE_C_AICOM_TERMINAL_SCUTTLE") then {WFBE_C_AICOM_TERMINAL_SCUTTLE = 0};
+if (isNil "WFBE_C_AICOM_TERMINAL_GRACE") then {WFBE_C_AICOM_TERMINAL_GRACE = 90};          //--- seconds a latched team may still prove recovery before the scuttle fires
+if (isNil "WFBE_C_AICOM_TERMINAL_MOVE") then {WFBE_C_AICOM_TERMINAL_MOVE = 150};           //--- meters of leader movement since latch that counts as recovery (cancels the latch)
+if (isNil "WFBE_C_AICOM_TERMINAL_WRECK_TTL") then {WFBE_C_AICOM_TERMINAL_WRECK_TTL = 180}; //--- seconds scuttle wrecks/bodies persist before the bounded HC-local cleanup pass
+//--- Arm the evidence producer when the scuttle is on and the operator has not set a threshold themselves:
+//--- the five RECYCLE_FLAG sites in AI_Commander_AssignTowns read WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE with
+//--- inline default 0 (= producer dark, the current live state). 3 failed journeys is the P1 evidence bar.
+if (isNil "WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE" && {WFBE_C_AICOM_TERMINAL_SCUTTLE > 0}) then {WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE = 3};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
