@@ -14,6 +14,12 @@ _rings    = [];
 _known    = [];
 
 while {true} do {
+	//--- P2 map clarity: player-local opt-out deletes the local ring ledger so repeated toggles cannot leak markers.
+	if !(missionNamespace getVariable ["WFBE_CL_ShowRangeRings", true]) then {
+		{deleteMarkerLocal (_x select 1)} forEach (+_rings);
+		_rings = []; _known = [];
+		waitUntil {sleep 1; missionNamespace getVariable ["WFBE_CL_ShowRangeRings", true]};
+	};
 	//--- Re-read per tick: late-joiners resolve CLASSNAMES after their own init.
 	_artyNames  = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_CLASSNAMES",  _sideText], []];
 	_artyRanges = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_RANGES_MAX",   _sideText], []];

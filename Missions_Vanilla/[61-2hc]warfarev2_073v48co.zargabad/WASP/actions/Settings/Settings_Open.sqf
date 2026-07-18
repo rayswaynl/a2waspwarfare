@@ -26,7 +26,7 @@
 */
 
 disableSerialization;
-private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_autoOn","_target","_maxVD","_curVD","_sliderVD","_lastSliderVD","_chosenVD","_hc","_maxTG","_curTG","_sliderTG","_lastSliderTG","_chosenTG","_tags","_tagsAI"];
+private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_autoOn","_target","_maxVD","_curVD","_sliderVD","_lastSliderVD","_chosenVD","_hc","_maxTG","_curTG","_sliderTG","_lastSliderTG","_chosenTG","_tags","_tagsAI","_unitDots","_teamArrows","_rangeRings"];
 
 if (!alive player) exitWith {};
 if (dialog) exitWith {};
@@ -72,6 +72,9 @@ while {alive player && dialog} do {
 	_hc     = missionNamespace getVariable ["WFBE_HighClimbingDefaultEnabled", false];
 	_tags   = missionNamespace getVariable ["WFBE_NameTagsEnabled", false];
 	_tagsAI = missionNamespace getVariable ["WFBE_CL_ShowAITags", true];
+	_unitDots = missionNamespace getVariable ["WFBE_CL_ShowUnitDots", true];
+	_teamArrows = missionNamespace getVariable ["WFBE_CL_ShowTeamArrows", true];
+	_rangeRings = missionNamespace getVariable ["WFBE_CL_ShowRangeRings", true];
 
 	ctrlSetText [30020, if (_hud)  then {"HUD Overlay: ON"}         else {"HUD Overlay: OFF"}];
 	ctrlSetText [30021, if (_aar)  then {"AAR Markers: ON"}         else {"AAR Markers: OFF"}];
@@ -82,6 +85,9 @@ while {alive player && dialog} do {
 	ctrlSetText [30026, if (_bip)  then {"Auto Deploy Bipod: ON"}   else {"Auto Deploy Bipod: OFF"}];
 	ctrlSetText [30030, if (_acue) then {"Audio Cues: ON"}          else {"Audio Cues: OFF"}];
 	ctrlSetText [30012, if (_autoOn) then {"Auto View Distance: ON"} else {"Auto View Distance: OFF"}];
+	ctrlSetText [30033, if (_unitDots) then {"Unit Dots: ON"} else {"Unit Dots: OFF"}];
+	ctrlSetText [30034, if (_teamArrows) then {"Team Arrows: ON"} else {"Team Arrows: OFF"}];
+	ctrlSetText [30035, if (_rangeRings) then {"Range Rings: ON"} else {"Range Rings: OFF"}];
 	ctrlSetText [30010, format ["View Distance: %1 m", round viewDistance]];
 	ctrlSetText [30017, Format [localize "STR_WF_TEAM_TerrainGridLabel", round (missionNamespace getVariable ["currentTG", 25])]];
 	ctrlSetText [30027, if (_hc) then {localize "STR_WF_TEAM_HighClimbingDefaultOn"} else {localize "STR_WF_TEAM_HighClimbingDefaultOff"}];
@@ -154,6 +160,32 @@ while {alive player && dialog} do {
 		WFBE_CL_ShowAITags = !(missionNamespace getVariable ["WFBE_CL_ShowAITags", true]);
 		missionNamespace setVariable ["WFBE_CL_ShowAITags", WFBE_CL_ShowAITags];
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_SHOW_AI_TAGS", WFBE_CL_ShowAITags] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+
+	if (WFBE_MenuAction == 13) then {
+		WFBE_MenuAction = -1;
+		WFBE_CL_ShowUnitDots = !(missionNamespace getVariable ["WFBE_CL_ShowUnitDots", true]);
+		missionNamespace setVariable ["WFBE_CL_ShowUnitDots", WFBE_CL_ShowUnitDots];
+		if !(isNil "WFBE_CL_UnitMarkerRegistry") then {
+			{
+				if (typeName _x == "ARRAY" && {(_x select 10) == "man"}) then {
+					(_x select 1) setMarkerAlphaLocal (if (WFBE_CL_ShowUnitDots) then {1} else {0});
+				};
+			} forEach WFBE_CL_UnitMarkerRegistry;
+		};
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_SHOW_UNIT_DOTS", WFBE_CL_ShowUnitDots] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+	if (WFBE_MenuAction == 14) then {
+		WFBE_MenuAction = -1;
+		WFBE_CL_ShowTeamArrows = !(missionNamespace getVariable ["WFBE_CL_ShowTeamArrows", true]);
+		missionNamespace setVariable ["WFBE_CL_ShowTeamArrows", WFBE_CL_ShowTeamArrows];
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_SHOW_TEAM_ARROWS", WFBE_CL_ShowTeamArrows] Call WFBE_CO_FNC_SetProfileVariable};
+	};
+	if (WFBE_MenuAction == 15) then {
+		WFBE_MenuAction = -1;
+		WFBE_CL_ShowRangeRings = !(missionNamespace getVariable ["WFBE_CL_ShowRangeRings", true]);
+		missionNamespace setVariable ["WFBE_CL_ShowRangeRings", WFBE_CL_ShowRangeRings];
+		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_SHOW_RANGE_RINGS", WFBE_CL_ShowRangeRings] Call WFBE_CO_FNC_SetProfileVariable};
 	};
 
 	//--- AAR map markers: gate read live by Common_MarkerLoop.sqf. Hide currently-drawn markers at once when OFF.

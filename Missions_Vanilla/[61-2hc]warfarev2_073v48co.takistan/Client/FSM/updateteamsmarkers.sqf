@@ -175,9 +175,16 @@ while {!gameOver} do {
 				_ownMarker setMarkerDirLocal _ownDir;
 				_ownLastDir = _ownDir;
 			};
-			if (_ownLastAlpha != 1) then {
-				_ownMarker setMarkerAlphaLocal 1;
-				_ownLastAlpha = 1;
+			if (missionNamespace getVariable ["WFBE_CL_ShowTeamArrows", true]) then {
+				if (_ownLastAlpha != 1) then {
+					_ownMarker setMarkerAlphaLocal 1;
+					_ownLastAlpha = 1;
+				};
+			} else {
+				if (_ownLastAlpha != 0) then {
+					_ownMarker setMarkerAlphaLocal 0;
+					_ownLastAlpha = 0;
+				};
 			};
 			//--- fable/marker-ownlabel (owner 2026-07-09): the OWNMarker is the single visible self-arrow
 			//--- (see the RC29 note above ~L318) but was left textless -> respawn showed a blank orange arrow.
@@ -508,6 +515,7 @@ while {!gameOver} do {
 							_perfSkippedWrites = _perfSkippedWrites + 1;
 						};
 
+						if !(missionNamespace getVariable ["WFBE_CL_ShowTeamArrows", true]) then {_markerAlpha = 0};
 						if ((_lastAlphas select _markerIndex) != _markerAlpha) then {
 							_marker setMarkerAlphaLocal _markerAlpha;
 							_lastAlphas set [_markerIndex, _markerAlpha];

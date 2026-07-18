@@ -142,6 +142,7 @@ while {true} do {
 				_mk setMarkerSizeLocal [0.7,0.7];
 				_mk setMarkerTextLocal _label;
 				_mk setMarkerDirLocal _dir;
+				if !(missionNamespace getVariable ["WFBE_CL_ShowTeamArrows", true]) then {_mk setMarkerAlphaLocal 0};
 				//--- PERF4 - cache last pos/dir (slots 2/3) + the cached label (slot 4) so the follow pass skips no-op writes.
 				_tracked = _tracked + [[_team, _mk, _pos, _dir, _label]];
 			};
@@ -204,6 +205,7 @@ while {true} do {
 				_mk setMarkerTextLocal _label;
 				_entry set [4, _label];
 			};
+			if (missionNamespace getVariable ["WFBE_CL_ShowTeamArrows", true]) then {_mk setMarkerAlphaLocal 1} else {_mk setMarkerAlphaLocal 0};
 			_keep = _keep + [_entry];
 		} else {
 			deleteMarkerLocal _mk;

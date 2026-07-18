@@ -115,6 +115,22 @@ _profile_var = profileNamespace getVariable "WFBE_SHOW_AI_TAGS";
 if !(isNil '_profile_var') then {if (typeName _profile_var == "BOOL") then {WFBE_CL_ShowAITags = _profile_var}};
 missionNamespace setVariable ["WFBE_CL_ShowAITags", WFBE_CL_ShowAITags];
 
+//--- Map clarity controls. These are player-local defaults; no client can affect another client's map.
+WFBE_CL_ShowUnitDots = true;
+_profile_var = profileNamespace getVariable "WFBE_SHOW_UNIT_DOTS";
+if !(isNil "_profile_var") then {if (typeName _profile_var == "BOOL") then {WFBE_CL_ShowUnitDots = _profile_var}};
+missionNamespace setVariable ["WFBE_CL_ShowUnitDots", WFBE_CL_ShowUnitDots];
+
+WFBE_CL_ShowTeamArrows = true;
+_profile_var = profileNamespace getVariable "WFBE_SHOW_TEAM_ARROWS";
+if !(isNil "_profile_var") then {if (typeName _profile_var == "BOOL") then {WFBE_CL_ShowTeamArrows = _profile_var}};
+missionNamespace setVariable ["WFBE_CL_ShowTeamArrows", WFBE_CL_ShowTeamArrows];
+
+WFBE_CL_ShowRangeRings = true;
+_profile_var = profileNamespace getVariable "WFBE_SHOW_RANGE_RINGS";
+if !(isNil "_profile_var") then {if (typeName _profile_var == "BOOL") then {WFBE_CL_ShowRangeRings = _profile_var}};
+missionNamespace setVariable ["WFBE_CL_ShowRangeRings", WFBE_CL_ShowRangeRings];
+
 //--- TP-21: Team Menu V2 gear presets (4 slots, per-side, ARRAY of ARRAYs).
 //--- WFBE_PERSISTENT_TEAM_MENU_V2_PRESETS is side-keyed so each side has independent slots.
 //--- Format per slot: [] (empty/unset) or [weapons, magazines, backpack, bp_content, [p,s,l]] (wfbe_custom_gear shape).
