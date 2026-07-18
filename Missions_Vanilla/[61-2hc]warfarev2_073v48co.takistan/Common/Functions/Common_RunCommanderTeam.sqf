@@ -905,6 +905,42 @@ while {!WFBE_GameOver && _alive} do {
 
 	_alive = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
+	//--- TERMINAL STATE MACHINE (P1 stuck-lifecycle, flag WFBE_C_AICOM_TERMINAL_SCUTTLE, owner matrix ruling
+	//--- 2026-07-18): a latched wfbe_aicom_terminal [t0, seq, pos, reason] survives until the team DEMONSTRATES
+	//--- recovery (fresh order seq / leader moved > WFBE_C_AICOM_TERMINAL_MOVE / active COMBAT -> TERMINAL_CANCEL)
+	//--- or, after WFBE_C_AICOM_TERMINAL_GRACE seconds, the HC executes the visible scuttle EXACTLY ONCE (crew
+	//--- out, kneel cue, hull cook-off via engine damage only - no thrown-weapon entity; bounded TTL cleanup) and
+	//--- the team retires (TEAM_RETIRE_HC|reason=terminal-scuttle). Deliberately NO player-distance veto and NO
+	//--- age-only deletion. The legacy wfbe_aicom_disband path (PC-scale/console) below is untouched either way.
+	if (_alive && {!isNull _team} && {(missionNamespace getVariable ["WFBE_C_AICOM_TERMINAL_SCUTTLE", 0]) > 0}) then {
+		private ["_tmA","_tmLdr","_tmOrd","_tmSeq","_tmCancel","_tmWhy","_tmDone"];
+		_tmA = _team getVariable "wfbe_aicom_terminal";
+		if (!isNil "_tmA" && {typeName _tmA == "ARRAY"} && {count _tmA >= 4}) then {
+			_tmLdr = leader _team;
+			_tmCancel = false; _tmWhy = "";
+			_tmOrd = _team getVariable "wfbe_aicom_order";
+			_tmSeq = if (!isNil "_tmOrd" && {count _tmOrd >= 1}) then {_tmOrd select 0} else {-1};
+			if (_tmSeq != (_tmA select 1)) then {_tmCancel = true; _tmWhy = "fresh-order"};
+			if (!_tmCancel && {!isNull _tmLdr} && {(_tmLdr distance (_tmA select 2)) > (missionNamespace getVariable ["WFBE_C_AICOM_TERMINAL_MOVE", 150])}) then {_tmCancel = true; _tmWhy = "moved"};
+			if (!_tmCancel && {!isNull _tmLdr} && {behaviour _tmLdr == "COMBAT"}) then {_tmCancel = true; _tmWhy = "combat"};
+			if (_tmCancel) then {
+				_team setVariable ["wfbe_aicom_terminal", [], true];   //--- [] = broadcast-clear sentinel (nil cannot network on A2 OA)
+				_team setVariable ["wfbe_aicom_failedjourneys", 0];    //--- evidence consumed: a recovered team re-earns any future latch from zero
+				diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TERMINAL_CANCEL|team=" + (str _team) + "|why=" + _tmWhy);
+			} else {
+				if ((time - (_tmA select 0)) >= (missionNamespace getVariable ["WFBE_C_AICOM_TERMINAL_GRACE", 90])) then {
+					_tmDone = _team getVariable "wfbe_aicom_scuttled";
+					if (isNil "_tmDone") then {
+						_team setVariable ["wfbe_aicom_scuttled", true];   //--- HC-local exactly-once guard (this driver is the sole executor)
+						[_team, _vehicles, _sideID] Spawn WFBE_CO_FNC_AICOMTerminalScuttle;
+						_alive = false;
+						diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TEAM_RETIRE_HC|reason=terminal-scuttle");
+					};
+				};
+			};
+		};
+	};
+
 	//--- B36.1 (Ray 2026-06-15): PC-scale retirement. The server flags a REAR team (wfbe_aicom_disband)
 	//--- when the human player count rises - fewer HQ squads = server relief. Units are HC-LOCAL here, so
 	//--- the delete must happen on the HC. GUARDRAIL (hard): re-check on THIS machine that no player is
