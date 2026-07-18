@@ -7,10 +7,6 @@ _cpt = _this select 4;
 _currentCost = if (count _this > 5) then {_this select 5} else {0}; //--- FC2: client-paid crew component; SCUD hull cost is charged by the server on proof consumption.
 _scudProof = if (count _this > 6) then {_this select 6} else {""};
 
-_isMan = if (_unit isKindOf "Man") then {true} else {false};
-
-unitQueu = unitQueu + _cpt;
-
 _distance = 0;
 _direction = 0;
 _longest = 0;
@@ -20,13 +16,19 @@ _factoryType = "";
 _description = "";
 
 _currentUnit = missionNamespace getVariable _unit;
-//--- fable/fix-unit-purchase-nil-guards: guard nil _currentUnit (unregistered classname) before the select-chain below - matches a55605e10/#1003/Server_BuyUnit.sqf(#1001) shape. Nil = keep the safe pre-init defaults above (_waitTime=0, _description="").
-if !(isNil "_currentUnit") then {
+//--- Reject an unregistered classname before it can enter the queue or any select-chain.
+if (isNil "_currentUnit") exitWith {
+	["WARNING", Format ["Client_BuildUnit.sqf: unit classname [%1] not registered in missionNamespace; purchase aborted before queueing.", _unit]] Call WFBE_CO_FNC_LogContent;
+	missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_factory],((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_factory])-1) max 0];
+	if (_currentCost > 0) then {(_currentCost) Call ChangePlayerFunds};
+};
+
 _waitTime = _currentUnit select QUERYUNITTIME;
 _description = _currentUnit select QUERYUNITLABEL;
-} else {
-	["WARNING", Format ["Client_BuildUnit.sqf: unit classname [%1] not registered in missionNamespace; using safe defaults (waitTime=0, no description).", _unit]] Call WFBE_CO_FNC_LogContent;
-};
+
+_isMan = if (_unit isKindOf "Man") then {true} else {false};
+
+unitQueu = unitQueu + _cpt;
 	
 _spawnpaddir=2;
 
@@ -639,7 +641,7 @@ if (_isMan) then {
 		_clearRad = missionNamespace getVariable ["WFBE_C_AIR_SPAWN_CLEAR_RADIUS", 17];
 		//--- W2 (fable/east-c130): C-130J hull has ~40 m half-span; bump clearance to 22 m for this spawn only.
 		//--- Does not change the global default (17 m) used for all other airframes.
-		if (_unit == "C130J_US_EP1" && {WFBE_C_AIR_SPAWN_SAFETY > 0}) then {_clearRad = 22};
+		if (_unit == "C130J_US_EP1" && {(missionNamespace getVariable ["WFBE_C_AIR_SPAWN_SAFETY", 0]) > 0}) then {_clearRad = 22};
 		//--- Slope limit: surfaceNormal z=1.0 = flat; 0.97 ~= 14 deg max slope.
 		_slopeThresh = missionNamespace getVariable ["WFBE_C_AIR_SPAWN_SLOPE_MAX", 0.97];
 		//--- Build 9-candidate set: nominal (index 0) + 8-point ring at 1.5x clearance radius.
@@ -1135,7 +1137,7 @@ if ((typeOf _vehicle ) in ['MLRS','GRAD','GRAD_CDF','MLRS_DES_EP1','M1129_MC_EP1
 };
 
 // Could seperate the array here for modded vehicles
-if(typeOf _vehicle in ['F35B','AV8B','AV8B2','A10','A10_US_EP1','Su25_TK_EP1','Su34','Su39','An2_TK_EP1','L159_ACR','L39_TK_EP1','Su25_Ins','ibrPRACS_MiG21mol']) then {
+if(typeOf _vehicle in ["AV8B","AV8B2","A10","A10_US_EP1","Su25_TK_EP1","Su39","An2_TK_EP1","L159_ACR","L39_TK_EP1","Su25_Ins","ibrPRACS_MiG21mol"] || {((missionNamespace getVariable ["WFBE_C_SEAD", 0]) <= 0 && {typeOf _vehicle in ["F35B","Su34"]})}) then {
 	_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles}];
 };
 

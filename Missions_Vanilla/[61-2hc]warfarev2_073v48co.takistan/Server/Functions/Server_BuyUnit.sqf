@@ -235,7 +235,7 @@ if (_unitType isKindOf "Man") then {
 	//--- (Client_BuildUnit.sqf naval-air-spawn-easa): give the FLY-spawned fixed-wing the deck height so it
 	//--- air-starts with clearance instead of at sea level. wfbe_is_carrier_hvt / wfbe_naval_deckz are broadcast
 	//--- by Init_NavalHVT (public=true), so this reads correctly wherever the buy script runs.
-	if ((_unitType isKindOf "Plane") && {_building getVariable ["wfbe_is_carrier_hvt", false]}) then {
+	if ((_unitType isKindOf "Plane") && {_building getVariable ["wfbe_is_carrier_hvt", false]} && {surfaceIsWater _position}) then {
 		_position set [2, (_building getVariable ["wfbe_naval_deckz", 16])];
 	};
 	_vehicle = [_unitType, _position, _sideID, _dir, true, true, true, _special] Call WFBE_CO_FNC_CreateVehicle;
@@ -255,7 +255,7 @@ if (_unitType isKindOf "Man") then {
 	_vehicle addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
 
 	// Could seperate the array here for modded vehicles
-	if(typeOf _vehicle in ['F35B','AV8B','AV8B2','A10','A10_US_EP1','Su25_Ins','Su25_TK_EP1','Su34','Su39','An2_TK_EP1','L159_ACR','L39_TK_EP1','ibrPRACS_MiG21mol']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles}];};
+	if(typeOf _vehicle in ["AV8B","AV8B2","A10","A10_US_EP1","Su25_Ins","Su25_TK_EP1","Su39","An2_TK_EP1","L159_ACR","L39_TK_EP1","ibrPRACS_MiG21mol"] || {((missionNamespace getVariable ["WFBE_C_SEAD", 0]) <= 0 && {typeOf _vehicle in ["F35B","Su34"]})}) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles}];};
 	if (_vehicle isKindOf "Plane" && (missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) > 0) then {_vehicle addEventHandler ["HandleDamage", {_this Call HandleJetAADamage}];};
     if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];};
 	//--- B93 SEAD: tier-5 jets get anti-radar guidance EH when WFBE_C_SEAD > 0

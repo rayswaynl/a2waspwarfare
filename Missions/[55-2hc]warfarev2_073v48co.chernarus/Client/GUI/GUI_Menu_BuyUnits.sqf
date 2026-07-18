@@ -44,9 +44,11 @@ if (!isNil '_mbuByTier') then {
 //--- Patrols upgrade trades 1 max AI per player for the side's autonomous patrols.
 if (count ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) > WFBE_UP_PATROLS && {(((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_PATROLS) > 0}) then {_mbu = (_mbu - 1) max 1};
 
-_driverEnabledByDefault = true;
-profileNamespace setVariable ["wfbe_c_driver_enabled_by_default", true];
-profileNamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", true];
+if (isNil {profileNamespace getVariable "wfbe_c_driver_enabled_by_default"}) then {
+	profileNamespace setVariable ["wfbe_c_driver_enabled_by_default", true];
+	profileNamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", true];
+};
+_driverEnabledByDefault = profileNamespace getVariable "wfbe_c_driver_enabled_by_default";
 
 
 ctrlSetText[12025,localize 'STR_WF_UNITS_FactionChoiceLabel' + ":"]; // changed-MrNiceGuy
