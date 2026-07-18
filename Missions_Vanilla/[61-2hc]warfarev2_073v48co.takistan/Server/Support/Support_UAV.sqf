@@ -1,22 +1,16 @@
-Private["_args","_driver","_gunner","_playerTeam","_side","_timeStart","_timeout","_uav"];
-
-_args = _this;
-_side = _args select 1;
-
-_uav = (_args select 2);
-_driver = driver _uav;
-_gunner = gunner _uav;
-_playerTeam = (_args select 3);
-_timeStart = time;
-_timeout = missionNamespace getVariable ["WFBE_C_UNITS_EMPTY_TIMEOUT", 1800];
-
-["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Team [%2] [%3] called in an UAV.", str _side, _playerTeam, name (leader _playerTeam)]] Call WFBE_CO_FNC_LogContent;
-
-while {true} do {
-	sleep 5;
-	if (!(isPlayer (leader _playerTeam)) || !alive _uav || ((time - _timeStart) > _timeout)) exitWith {};
-};
-
-if (!isNull _driver) then {if (alive _driver) then {_driver setDammage 1};if (isNil {_driver getVariable "wfbe_trashed"}) then {_driver setVariable ["wfbe_trashed", true];_driver Spawn TrashObject}};
-if (!isNull _gunner) then {if (alive _gunner) then {_gunner setDammage 1};if (isNil {_gunner getVariable "wfbe_trashed"}) then {_gunner setVariable ["wfbe_trashed", true];_gunner Spawn TrashObject}};
-if (!isNull _uav) then {if (alive _uav) then {_uav setDammage 1};if (isNil {_uav getVariable "wfbe_trashed"}) then {_uav setVariable ["wfbe_trashed", true];_uav Spawn TrashObject}};
+Private ["_args","_cap","_capKey","_challenge","_driver","_expectedClass","_expectedSoldier","_funds","_gunner","_mode","_player","_playerTeam","_side","_token","_uav","_uid"];
+_args = _this; if (typeName _args != "ARRAY" || {count _args < 2}) exitWith {}; _mode = _args select 1;
+if (_mode == "auth") exitWith {if (count _args < 4) exitWith {}; _player = _args select 2; _challenge = _args select 3; if (typeName _player != "OBJECT" || {isNull _player} || {!alive _player} || {!isPlayer _player} || {typeName _challenge != "STRING"} || {_challenge == ""}) exitWith {}; _uid = getPlayerUID _player; if (_uid == "") exitWith {}; _token = Format ["%1:%2:%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000000)]; missionNamespace setVariable [Format ["wfbe_uav_cap_server_%1", _uid], [_token, time + 15]]; [_player, "HandleSpecial", ["uav-auth-token", _token, time + 15, _challenge]] Call WFBE_CO_FNC_SendToClient;};
+if (_mode != "purchase" || {count _args < 9}) exitWith {};
+_side = _args select 2; _uav = _args select 3; _playerTeam = _args select 4; _player = _args select 5; _driver = _args select 6; _gunner = _args select 7; _token = _args select 8;
+if (typeName _player != "OBJECT" || {isNull _player} || {!alive _player} || {!isPlayer _player}) exitWith {}; _uid = getPlayerUID _player; if (_uid == "") exitWith {}; _capKey = Format ["wfbe_uav_cap_server_%1", _uid]; _cap = missionNamespace getVariable [_capKey, []]; missionNamespace setVariable [_capKey, []]; _expectedClass = missionNamespace getVariable [Format ["WFBE_%1UAV", str _side], ""]; _expectedSoldier = missionNamespace getVariable [Format ["WFBE_%1SOLDIER", str _side], ""]; _funds = if (isNull _playerTeam) then {0} else {_playerTeam getVariable "wfbe_funds"}; if (isNil "_funds" || {typeName _funds != "SCALAR"}) then {_funds = 0};
+private ["_ok","_msg"]; _ok=true; _msg="";
+if (typeName _cap != "ARRAY" || {count _cap < 2} || {typeName _token != "STRING"} || {_token == ""} || {(_cap select 0) != _token} || {(_cap select 1) <= time}) then {_ok=false;_msg="UAV purchase capability expired."};
+if (_ok && {typeName _side != "SIDE" || {_side != side (group _player)} || {!(_side in [west,east,resistance])}}) then {_ok=false;_msg="UAV request carried an invalid side."};
+if (_ok && {typeName _uav != "OBJECT" || {isNull _uav} || {!alive _uav} || {typeOf _uav != _expectedClass}}) then {_ok=false;_msg="UAV request used the wrong airframe."};
+if (_ok && {typeName _playerTeam != "GROUP" || {isNull _playerTeam} || {_playerTeam != group _player}}) then {_ok=false;_msg="UAV request carried an invalid player team."};
+if (_ok && {typeName _driver != "OBJECT" || {isNull _driver} || {typeOf _driver != _expectedSoldier} || {vehicle _driver != _uav}}) then {_ok=false;_msg="UAV request carried an invalid pilot."};
+if (_ok && {typeName _gunner != "OBJECT" || {!isNull _gunner && {vehicle _gunner != _uav}}}) then {_ok=false;_msg="UAV request carried an invalid gunner."};
+if (_ok && {_funds < 12500}) then {_ok=false;_msg="UAV needs $12500."}; if (_ok) then {[_playerTeam, -12500] Call WFBE_CO_FNC_ChangeTeamFunds}; [_player,"HandleSpecial",["uav-purchase-result",_ok,_msg,_uav,_token]] Call WFBE_CO_FNC_SendToClient; if (!_ok) exitWith {["WARNING",Format ["Support_UAV.sqf: purchase denied for [%1]: %2",_uid,_msg]] Call WFBE_CO_FNC_LogContent};
+//--- Authorized lifecycle cleanup only.
+private ["_timeStart","_timeout"]; _timeStart=time; _timeout=missionNamespace getVariable ["WFBE_C_UNITS_EMPTY_TIMEOUT",1800]; while {true} do {sleep 5;if (!(isPlayer (leader _playerTeam)) || !alive _uav || ((time-_timeStart)>_timeout)) exitWith {}}; {if (!isNull _x) then {if (alive _x) then {_x setDammage 1};if (isNil {_x getVariable "wfbe_trashed"}) then {_x setVariable ["wfbe_trashed",true];_x Spawn TrashObject}}} forEach [_driver,_gunner,_uav];
