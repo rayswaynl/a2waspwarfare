@@ -439,6 +439,59 @@ switch (_args select 0) do {
 			};
 		};
 	};
+	case "aicom-team-order": {
+		//--- COMMAND QUEUE: validate client intent against the live server registry; the worker owns all HC writes.
+		private ["_coSide","_coType","_coIndex","_coTarget","_coIssuer","_coLogik","_coCmd","_coTeams","_coQueue","_coSeq","_coReject","_coTeam","_coQueued","_coPush","_coEnqueue"];
+		_coReject = "";
+		if (count _args < 6) then {_coReject = "short"};
+		if (_coReject == "") then {
+			_coSide = _args select 1; _coType = _args select 2; _coIndex = _args select 3; _coTarget = _args select 4; _coIssuer = _args select 5;
+			if (typeName _coSide != "SIDE") then {_coReject = "sideType"};
+			if (_coReject == "" && {typeName _coType != "STRING"}) then {_coReject = "typeType"};
+			if (_coReject == "" && {typeName _coIndex != "SCALAR"}) then {_coReject = "indexType"};
+			if (_coReject == "" && {typeName _coTarget != "ARRAY"}) then {_coReject = "targetType"};
+			if (_coReject == "" && {typeName _coIssuer != "OBJECT"}) then {_coReject = "issuerType"};
+			if (_coReject == "" && {!(_coSide in [west, east])}) then {_coReject = "side"};
+			if (_coReject == "" && {!(_coType in ["move","defense","patrol","release","all-push","all-hold"])}) then {_coReject = "orderType"};
+			if (_coReject == "" && {_coIndex < -1}) then {_coReject = "index"};
+			if (_coReject == "" && {_coType in ["move","defense","patrol"]}) then {if (count _coTarget < 2 || {typeName (_coTarget select 0) != "SCALAR"} || {typeName (_coTarget select 1) != "SCALAR"}) then {_coReject = "target"}};
+			if (_coReject == "" && {(isNull _coIssuer) || {!isPlayer _coIssuer} || {side (group _coIssuer) != _coSide}}) then {_coReject = "issuer"};
+		};
+		if (_coReject == "") then {
+			_coLogik = _coSide Call WFBE_CO_FNC_GetSideLogic; _coCmd = _coSide Call WFBE_CO_FNC_GetCommanderTeam;
+			if (isNull _coLogik || {isNull _coCmd} || {!isPlayer (leader _coCmd)} || {_coCmd != group _coIssuer}) then {_coReject = "notCommander"};
+		};
+		if (_coReject != "") exitWith {diag_log ("AICOM2|v1|ORDER|QUEUE|REJECT|reason=" + _coReject)};
+		_coTeams = _coLogik getVariable "wfbe_teams"; if (isNil "_coTeams" || {typeName _coTeams != "ARRAY"}) then {_coTeams = []};
+		_coQueue = _coLogik getVariable "wfbe_aicom_cmd_order_queue"; if (isNil "_coQueue" || {typeName _coQueue != "ARRAY"}) then {_coQueue = []};
+		_coSeq = _coLogik getVariable "wfbe_aicom_cmd_order_seq"; if (isNil "_coSeq" || {typeName _coSeq != "SCALAR"}) then {_coSeq = 0}; _coQueued = 0;
+		_coEnqueue = {
+			private ["_qeTeam","_qeType","_qeTarget","_qeNew"];
+			_qeTeam = _this select 0; _qeType = _this select 1; _qeTarget = _this select 2;
+			if (!isNull _qeTeam && {!isPlayer (leader _qeTeam)} && {({alive _x} count units _qeTeam) > 0}) then {
+				_coSeq = _coSeq + 1; _qeNew = [];
+				{if ((typeName _x != "ARRAY") || {count _x < 1} || {(_x select 0) != _qeTeam}) then {_qeNew = _qeNew + [_x]}} forEach _coQueue;
+				_coQueue = _qeNew + [[_qeTeam, _qeType, _qeTarget, _coIssuer, _coSeq, time]]; _coQueued = _coQueued + 1;
+			};
+		};
+		if (_coType == "all-push" || {_coType == "all-hold"}) then {
+			_coPush = _coType == "all-push";
+			{
+				if (_coPush) then {[_x, "release", []] Call _coEnqueue} else {
+					private ["_coHoldPos","_coRoads","_coRoad"]; _coHoldPos = getPos (leader _x); _coRoads = _coHoldPos nearRoads 200;
+					if (count _coRoads > 0) then {_coRoad = [_coHoldPos, _coRoads] Call WFBE_CO_FNC_GetClosestEntity; if (!isNull _coRoad) then {_coHoldPos = getPos _coRoad}};
+					[_x, "defense", _coHoldPos] Call _coEnqueue;
+				};
+			} forEach _coTeams;
+		} else {
+			_coTeam = grpNull; if (_coIndex < count _coTeams && {_coIndex >= 0}) then {_coTeam = _coTeams select _coIndex};
+			if (isNull _coTeam) then {_coReject = "team"} else {[_coTeam, _coType, _coTarget] Call _coEnqueue};
+		};
+		if (_coQueued > 0) then {
+			_coLogik setVariable ["wfbe_aicom_cmd_order_queue", _coQueue]; _coLogik setVariable ["wfbe_aicom_cmd_order_seq", _coSeq];
+			diag_log ("AICOM2|v1|ORDER|QUEUE|ENQUEUE|side=" + str _coSide + "|type=" + _coType + "|count=" + str _coQueued + "|issuer=" + str (getPlayerUID _coIssuer));
+		} else {diag_log ("AICOM2|v1|ORDER|QUEUE|REJECT|reason=" + _coReject + "|type=" + _coType)};
+	};
 	case "aicom-focus": {
 		//--- AICOM v2 M4: the human commander set a side FOCUS town from the command center ("Move All"
 		//--- doubles as the AI focus). Stamp it on the side logic; the Allocator reads it (TTL'd) and makes

@@ -45,7 +45,7 @@ if (isNil "mouseY") then {mouseY = 0.5};
 
 private ["_display","_map","_sid","_armed","_lastSend","_cool","_artyOn","_now","_position",
          "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastEcon","_lastIntent","_posture","_disbandArm",
-         "_disbandSelArm","_focusArmed","_lastDirect","_directCool"];
+         "_disbandSelArm","_focusArmed","_lastDirect","_directCool","_sendTeamOrder"];
 
 _display = _this select 0;
 _map = _display displayCtrl 14002;
@@ -102,6 +102,20 @@ private "_adviseCtrls";
 _adviseCtrls = [14606,14607,14608,14609,14612,14613,14614,14615,14616,14617];
 if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0) then {_adviseCtrls = _adviseCtrls + [14618]};
 
+//--- Command-menu crash guard: the client never writes HC-owned team variables directly. Every direct order becomes one validated server request; the server queue coalesces last-order-wins per team and emits a single authoritative update to the owning HC.
+_sendTeamOrder = {
+	private ["_orderType","_orderTeam","_orderTarget","_orderIndex","_orderLogic","_orderTeams"];
+	_orderType = _this select 0; _orderTeam = _this select 1; _orderTarget = _this select 2; _orderIndex = -1;
+	if !(_orderType in ["all-push","all-hold"]) then {
+		_orderLogic = sideJoined Call WFBE_CO_FNC_GetSideLogic; _orderTeams = [];
+		if (!isNull _orderLogic) then {_orderTeams = _orderLogic getVariable "wfbe_teams"; if (isNil "_orderTeams" || {typeName _orderTeams != "ARRAY"}) then {_orderTeams = []}};
+		{if (_x == _orderTeam) exitWith {_orderIndex = _forEachIndex}} forEach _orderTeams;
+		if (_orderIndex < 0) exitWith {false};
+	};
+	["RequestSpecial", ["aicom-team-order", sideJoined, _orderType, _orderIndex, _orderTarget, player]] Call WFBE_CO_FNC_SendToServer;
+	true
+};
+
 (_display displayCtrl 14650) ctrlSetStructuredText (parseText "Opening the war room...");
 
 while {alive player && dialog} do {
@@ -138,6 +152,7 @@ while {alive player && dialog} do {
 	ctrlEnable [14612, _postureBites];
 	{ctrlEnable [_x, _postureBites]} forEach [14613,14614,14615,14616]; //--- cmdcon27 THREAD C: field-order nudges bite only when the AI runs the side
 	ctrlEnable [14617, _postureBites];                               //--- Command Console v2: AI FOCUS-TOWN bites only when the AI runs the side (same gate as the nudges)
+	if (_isCmd) then {private "_directReady"; _directReady = (_now - _lastDirect) >= _directCool; {ctrlEnable [_x, _directReady]} forEach [14610,14611,14620,14621,14622,14624]};
 	if (_stateNow != _lastState) then {
 		_lastState = _stateNow;
 		diag_log (format ["CMDCON-DBG state=%1 isCmd=%2 | war660=%3 roster661=%4 | takecmd670=%5 intent606=%6 posture608=%7", _stateNow, _isCmd, ctrlShown (_display displayCtrl 14660), ctrlShown (_display displayCtrl 14661), ctrlShown (_display displayCtrl 14670), ctrlShown (_display displayCtrl 14606), ctrlShown (_display displayCtrl 14608)]); //--- CONSOLE PROBE: log real per-state control visibility so any overlap is diagnosable from the RPT.
@@ -510,18 +525,12 @@ while {alive player && dialog} do {
 		//--- gating (idc 14631/14632/14633) and their MenuAction 770/771/772 arm blocks were REMOVED. All SCUD/TEL fire
 		//--- now lives in the Tactical menu (GUI_Menu_Tactical.sqf). The carrier-ownership + TEL-alive gates moved there.
 
-		//--- ----- RELEASE selected team to autonomous (mode "towns"). -----
+		//--- ----- RELEASE selected team to autonomous (server queue; no client-to-HC broadcast). -----
 		if (MenuAction == 724) then {
 			MenuAction = -1;
 			if (!isNull _selTeam) then {
-				[_selTeam, "towns"] Call SetTeamMoveMode;
-				[_selTeam, true]    Call SetTeamAutonomous;          //--- let AssignTowns re-grab it
-				_selTeam setVariable ["wfbe_aicom_manualpin", nil, true]; //--- MANUAL-PIN (Build83): RELEASE clears the pin (broadcast) so AssignTowns is free to re-grab this team immediately.
-				_lastDirect = _now;                                  //--- DIRECT group-var order: stamp the short-cooldown clock (Build83 smoother-console).
-				hintSilent parseText ("<t color='#A0E060'>" + (name (leader _selTeam)) + " released to auto.</t>");
-			} else {
-				hintSilent parseText "<t color='#F8D664'>Select a team in the roster first.</t>";
-			};
+				if (["release", _selTeam, []] Call _sendTeamOrder) then {_lastDirect = _now; hintSilent parseText ("<t color='#A0E060'>Release queued for " + (name (leader _selTeam)) + ".</t>")} else {hintSilent parseText "<t color='#F8D664'>That team is not ready for an order yet.</t>"};
+			} else {hintSilent parseText "<t color='#F8D664'>Select a team in the roster first.</t>"};
 		};
 
 		//--- ----- MAP CLICK -> resolve the armed order (DIRECT team task; copied shape from the old controller). -----
@@ -569,16 +578,12 @@ while {alive player && dialog} do {
 								case "patrol":  {"ColorOrange"};
 								default {"ColorBlue"};
 							};
-							//--- THE working order path (copied verbatim from the old controller, lines 299-300/305-306):
-							//--- stamp mode+goto; AI_Commander_Execute turns it into waypoints (AIMoveTo for server-local
-							//--- teams, wfbe_aicom_order for HC teams) EVERY tick while you command.
-							[_team, _position] Call SetTeamMovePos;
-							[_team, _armed]    Call SetTeamMoveMode;
-							[_team, false]     Call SetTeamAutonomous; //--- pin under manual order (don't let AssignTowns re-grab it)
-							_team setVariable ["wfbe_aicom_manualpin", time, true]; //--- MANUAL-PIN (Build83): stamp the human order time so AssignTowns treats this team as explicit for WFBE_C_AICOM_MANUALPIN_TTL (600s) and does not re-grab it on the next 120s tick. Broadcast so the SERVER's AssignTowns reads it.
-							["TempAnim", _position, "selector_selectedMission", 1, _col, 1, 1.2] Spawn MarkerAnim;
-							hintSilent parseText ("<t color='#A0E060'>" + (name (leader _team)) + " -> " + (toUpper _armed) + ".</t>");
-							_lastDirect = _now; _armed = "";
+							//--- Server-authoritative direct task: queue, coalesce, then issue one HC-visible order update.
+							if ([_armed, _team, _position] Call _sendTeamOrder) then {
+								["TempAnim", _position, "selector_selectedMission", 1, _col, 1, 1.2] Spawn MarkerAnim;
+								hintSilent parseText ("<t color='#A0E060'>" + (name (leader _team)) + " -> " + (toUpper _armed) + " queued.</t>");
+								_lastDirect = _now; _armed = "";
+							} else {hintSilent parseText "<t color='#F8D664'>That team is not ready for an order yet.</t>"};
 						} else {
 							hintSilent parseText "<t color='#F8D664'>No AI team available to task.</t>";
 						};
@@ -587,44 +592,13 @@ while {alive player && dialog} do {
 			};
 		};
 
-		//--- ----- ALL PUSH / ALL HOLD (bulk; no allocator dependency). -----
-		//--- Build83 smoother-console (claude-gaming 2026-07-01): these are DIRECT group-var orders (pure local
-		//--- setVariable, no server load), so gate them on the SHORT _lastDirect / _directCool, not the 8s _lastSend.
+		//--- ----- ALL PUSH / ALL HOLD. One client request; the server expands it against its live registry. -----
 		if (MenuAction == 710 || MenuAction == 711) then {
 			private "_b"; _b = MenuAction; MenuAction = -1;
 			if ((_now - _lastDirect) >= _directCool) then {
-				private "_n"; _n = 0;
-				{
-					if (!isNull _x && {!isPlayer (leader _x)} && {({alive _x} count units _x) > 0}) then {  //--- FIX 1b: {alive _x} (count provides _x); FIX 1a: iterate _srcTeams below.
-						if (_b == 710) then {
-							[_x, "towns"] Call SetTeamMoveMode;
-							[_x, true]    Call SetTeamAutonomous;
-							_x setVariable ["wfbe_aicom_manualpin", nil, true]; //--- MANUAL-PIN (Build83): ALL-PUSH releases every team to auto, so clear each pin (broadcast) - AssignTowns re-grabs them freely.
-						} else {
-							//--- Build83 smoother-console CHANGE 2 (claude-gaming 2026-07-01): a bulk HOLD must not freeze a team
-							//--- off-road mid-march. Pull each team's hold point to the nearest road node before stamping defense
-							//--- (nearRoads / WFBE_CO_FNC_GetClosestEntity - the same A2-safe snap the AICOM route builder uses).
-							//--- The SINGLE-team Defend (exact map click) is left untouched.
-							private "_hp"; _hp = getPos (leader _x);
-							private "_rd"; _rd = _hp nearRoads 200;
-							if (count _rd > 0) then {
-								private "_rn"; _rn = [_hp, _rd] Call WFBE_CO_FNC_GetClosestEntity;
-								if (!isNull _rn) then {_hp = getPos _rn};
-							};
-							[_x, _hp]       Call SetTeamMovePos;
-							[_x, "defense"] Call SetTeamMoveMode;
-							[_x, false]     Call SetTeamAutonomous;
-							_x setVariable ["wfbe_aicom_manualpin", time, true]; //--- MANUAL-PIN (Build83): ALL-HOLD is a human DIRECT defense order, so pin each team (broadcast) - AssignTowns won't re-grab it for WFBE_C_AICOM_MANUALPIN_TTL (600s).
-						};
-						_n = _n + 1;
-					};
-				} forEach _srcTeams;
-				_lastDirect = _now;
-				hintSilent parseText (format ["<t color='#A0E060'>%1: %2 teams.</t>", (if (_b == 710) then {"ALL PUSH"} else {"ALL HOLD"}), _n]);
-			} else {
-				private "_bcd"; _bcd = _directCool - (_now - _lastDirect);
-				hintSilent parseText (format ["<t color='#F8D664'>Ready in %1s.</t>", (ceil _bcd)]);
-			};
+				private "_bulkType"; _bulkType = if (_b == 710) then {"all-push"} else {"all-hold"};
+				if ([_bulkType, grpNull, []] Call _sendTeamOrder) then {_lastDirect = _now; hintSilent parseText (format ["<t color='#A0E060'>%1 queued.</t>", if (_b == 710) then {"ALL PUSH"} else {"ALL HOLD"}])};
+			} else {private "_bcd"; _bcd = _directCool - (_now - _lastDirect); hintSilent parseText (format ["<t color='#F8D664'>Ready in %1s.</t>", (ceil _bcd)])};
 		};
 
 		//--- ----- REQUEST UNIT (HYBRID: the B67 refill block runs in assist-mode, so this bites). -----
