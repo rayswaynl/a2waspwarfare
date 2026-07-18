@@ -362,6 +362,7 @@ while {alive player && dialog} do {
 		MenuAction = -1;
 		if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 		WFBE_NameTagsEnabled = !WFBE_NameTagsEnabled;
+		missionNamespace setVariable ["WFBE_NameTagsEnabled", WFBE_NameTagsEnabled];
 		hint (Format ["Name tags: %1", if (WFBE_NameTagsEnabled) then {"ON"} else {"OFF"}]);
 		if !(isNil "WFBE_CO_FNC_SetProfileVariable") then {["WFBE_NAMETAGS_ENABLED", WFBE_NameTagsEnabled] Call WFBE_CO_FNC_SetProfileVariable};
 	};
