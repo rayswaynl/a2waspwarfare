@@ -1225,57 +1225,55 @@ waitUntil {!isNull group player};
 //--- Make sure that player is always the leader.
 if (leader(group player) != player) then {(group player) selectLeader player};
 
-//--- TEAMBAR-FIRST (fable/player-teambar-slot): A2 command bar ranks units by RANK then join-order.
-//--- Set the player to COLONEL so they always render at slot 1 regardless of AI subordinate rank.
-if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
-	player setRank "COLONEL";
-	diag_log "[WFBE|TEAMBAR] Init_Client: player rank set to COLONEL for command-bar slot 1.";
-	//--- fable/init-slot1-rejoin (owner live 2026-07-10, ZG-1.2.1: "once again I am #2 in my own group" on a
-	//--- FRESH round - never died). The #977 slot-renumber only ran in Client_OnKilled (RESPAWN); at INITIAL
-	//--- spawn the player gets COLONEL rank but the A2 command-bar SLOT number still follows join order, so a
-	//--- player whose own group already holds mission-start AI stays #2. Run the SAME rejoin here, on a short
-	//--- delay so any async group assembly has settled. Client-local AI only (join needs locality); createGroup-
-	//--- null / not-leader / already-#1 cases skip cleanly. Mirrors Client_OnKilled's slot1-rejoin exactly.
-	[] spawn {
+//--- TEAMBAR-FIRST + SPAWN-BUDDY-DISBAND: both behaviours settle the same INITIAL player group.
+//--- Keep them in ONE delayed worker: when the opt-in solo-spawn flag is armed, remove the
+//--- unwanted local AI and skip the slot-order rejoin entirely. This prevents two same-frame
+//--- workers from moving the same AI out and then back into the player group.
+_teamBarFirst = (missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0;
+_spawnBuddyDisband = (missionNamespace getVariable ["WFBE_C_SPAWN_BUDDY_DISBAND", 0]) > 0;
+if (_teamBarFirst || {_spawnBuddyDisband}) then {
+	if (_teamBarFirst) then {
+		player setRank "COLONEL";
+		diag_log "[WFBE|TEAMBAR] Init_Client: player rank set to COLONEL for command-bar slot 1.";
+	};
+	[_spawnBuddyDisband] spawn {
+		Private ["_spawnBuddyDisband","_slot1Others","_slot1Tmp","_isJip"];
+		_spawnBuddyDisband = _this select 0;
 		sleep 4;
-		if (alive player && {group player == WFBE_Client_Team} && {leader (group player) == player} && {((units group player) select 0) != player}) then {
-			Private ["_slot1Others","_slot1Tmp"];
+		if (alive player && {group player == WFBE_Client_Team} && {leader (group player) == player}) then {
 			_slot1Others = [];
 			{if (alive _x && {!isPlayer _x} && {local _x}) then {_slot1Others set [count _slot1Others, _x]}} forEach ((units group player) - [player]);
 			if (count _slot1Others > 0) then {
-				_slot1Tmp = createGroup (side group player);
-				if (!isNull _slot1Tmp) then {
-					_slot1Others joinSilent _slot1Tmp;
-					_slot1Others joinSilent (group player);
-					if (count units _slot1Tmp == 0) then {deleteGroup _slot1Tmp};
-					(group player) selectLeader player;
-					diag_log Format ["[WFBE|TEAMBAR] Init_Client slot1-rejoin: %1 AI squadmates re-joined behind the player.", count _slot1Others];
-				};
-			};
-		};
-	};
-};
-
-//--- SPAWN-BUDDY-DISBAND (wasp-aicom-idle-diagnosis-20260717, owner live report 2026-07-17: "I spawn with
-//--- another unit in my group"). AI-Teams pre-groups a fresh player with a mission-start AI squadmate by
-//--- design (the TEAMBAR-FIRST block above only fixes slot ORDER, it does not remove the AI); this is a
-//--- separate opt-in that removes the AI entirely so the player spawns solo. Same INITIAL-spawn identity
-//--- check as TEAMBAR-FIRST above (group player == WFBE_Client_Team) so a respawn/skin-swap/earned squad is
-//--- NEVER touched - only the very first fresh-round grouping is affected. Client-local AI only (join needs
-//--- locality); the AI is NOT deleted, only split into its own fresh group and left standing, so it remains
-//--- a valid side asset (e.g. still countable by AI-cap/GC) - it simply stops riding the player's command bar.
-if ((missionNamespace getVariable ["WFBE_C_SPAWN_BUDDY_DISBAND", 0]) > 0) then {
-	[] spawn {
-		sleep 4;
-		if (alive player && {group player == WFBE_Client_Team} && {leader (group player) == player} && {(count units group player) > 1}) then {
-			Private ["_buddyOthers","_buddyTmp"];
-			_buddyOthers = [];
-			{if (alive _x && {!isPlayer _x} && {local _x}) then {_buddyOthers set [count _buddyOthers, _x]}} forEach ((units group player) - [player]);
-			if (count _buddyOthers > 0) then {
-				_buddyTmp = createGroup (side group player);
-				if (!isNull _buddyTmp) then {
-					_buddyOthers joinSilent _buddyTmp;
-					diag_log Format ["[WFBE|SPAWNBUDDY] Init_Client spawn-buddy-disband: %1 AI squadmate(s) split off the fresh player group at initial spawn.", count _buddyOthers];
+				if (_spawnBuddyDisband) then {
+					//--- INITIAL-spawn opt-in only: delete the unwanted player-assigned AI locally.
+					//--- Splitting it into a fresh group leaked that group and left idle AI at base.
+					//--- FIRST-JOIN GUARD (wasp-aicom-idle-diagnosis-20260717 R2): only a genuine non-JIP
+					//--- initial spawn may delete. didJIP is false ONLY for a player present at mission
+					//--- start; it is TRUE for a late (in-progress) join AND for a reconnect, whose team is
+					//--- reclaimed WITH its bought/earned AI still in it (WFBE_C_AI_TEAMS_JIP_PRESERVE default
+					//--- 1) - that squad must never be deleted. The old group==WFBE_Client_Team check was
+					//--- tautological (both derive from group player earlier in THIS script) and gave zero JIP
+					//--- protection. Fail safe: _isJip defaults true so any uncertainty skips the delete.
+					_isJip = true;
+					_isJip = didJIP;
+					if (!_isJip) then {
+						{deleteVehicle _x} forEach _slot1Others;
+						diag_log Format ["[WFBE|SPAWNBUDDY] Init_Client: %1 initial AI squadmate(s) removed at first (non-JIP) spawn; player spawns solo.", count _slot1Others];
+					} else {
+						diag_log Format ["[WFBE|SPAWNBUDDY] Init_Client: JIP/reconnect spawn - %1 client-local AI left intact (bought/earned squad preserved).", count _slot1Others];
+					};
+				} else {
+					//--- Default path: preserve the existing AI but rejoin it behind the player for slot 1.
+					if (((units group player) select 0) != player) then {
+						_slot1Tmp = createGroup (side group player);
+						if (!isNull _slot1Tmp) then {
+							_slot1Others joinSilent _slot1Tmp;
+							_slot1Others joinSilent (group player);
+							if (count units _slot1Tmp == 0) then {deleteGroup _slot1Tmp};
+							(group player) selectLeader player;
+							diag_log Format ["[WFBE|TEAMBAR] Init_Client slot1-rejoin: %1 AI squadmates re-joined behind the player.", count _slot1Others];
+						};
+					};
 				};
 			};
 		};

@@ -811,5 +811,18 @@
 		texts[] = {"30s","60s","90s","120s"};
 		default = 60;
 	};
+	//--- MUST STAY LAST IN class Params. Init_Parameters.sqf reads paramsArray POSITIONALLY, and a
+	//--- dedicated server's cached per-mission lobby array can be stale/short (see the GUER_PLAYERSIDE
+	//--- and VIEW DISTANCE force blocks in initJIPCompatible.sqf - a stale cache once handed ZG a
+	//--- wrong-but-legal 3000m view distance). Inserted mid-list, this opt-in flag would read the
+	//--- NEXT param's cached value (e.g. WFBE_C_ARTILLERY {0,1,2,3}) and SILENTLY SELF-ARM, and every
+	//--- param after it would shift one slot. Last => out-of-range select -> nil -> Init_CommonConstants
+	//--- isNil guard restores the 0 default (inert). Append new params here; never insert above.
+	class WFBE_C_SPAWN_BUDDY_DISBAND {
+		title = "Spawn without AI squadmate";
+		values[] = {0,1};
+		texts[] = {"Disabled","Enabled"};
+		default = 0;
+	};
 
 };
