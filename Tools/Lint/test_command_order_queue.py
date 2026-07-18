@@ -51,7 +51,8 @@ class CommandOrderQueueTests(unittest.TestCase):
             'typeName _coIssuer != "OBJECT"',
             'wfbe_aicom_cmd_order_queue',
             '{(_x select 0) != _qeTeam}',
-            '_coQueue = _qeNew + [[_qeTeam, _qeType, _qeTarget, _coIssuer, _coSeq, time]]',
+            '_coDirect = !(_coLogik getVariable ["wfbe_aicom_player_delegate", true])',
+            '_coQueue = _qeNew + [[_qeTeam, _qeType, _qeTarget, _coIssuer, _coSeq, time, _coDirect]]',
             'AICOM2|v1|ORDER|QUEUE|REJECT',
         )
         for token in required:
