@@ -240,15 +240,25 @@ if (ARMA_VERSION >= 162 && ARMA_RELEASENUMBER >= 101334 || ARMA_VERSION > 162) t
 	};
 };
 
-// Marty: Receive authoritative day/night dates without calling setDate on every broadcast.
-if (!isDedicated && ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1)) then {
+// Receive authoritative server dates. Accelerated-cycle clients smooth drift; permanent-day clients correct meaningful drift from the clamp heartbeat.
+if (!isDedicated && !isHeadLessClient) then {
 	"WFBE_DAYNIGHT_DATE" addPublicVariableEventHandler {
-		Private ["_server_date"];
+		Private ["_server_date","_server_drift","_server_hour"];
 
 		_server_date = _this select 1;
 		if ((typeName _server_date) == "ARRAY" && (count _server_date >= 5)) then {
-			WFBE_DAYNIGHT_SERVER_DATE = _server_date;
-			WFBE_DAYNIGHT_PENDING_SYNC = true;
+			if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
+				WFBE_DAYNIGHT_SERVER_DATE = _server_date;
+				WFBE_DAYNIGHT_PENDING_SYNC = true;
+			} else {
+				if (((missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") == 1) || {(missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0]) > 0}) then {
+					_server_hour = (_server_date select 3) + ((_server_date select 4) / 60);
+					_server_drift = abs (daytime - _server_hour);
+					if (_server_drift > 12) then {_server_drift = 24 - _server_drift};
+					if (_server_drift > 0.05) then {setDate _server_date};
+					diag_log format ["PERMANENT_DAY| client sync daytime=%1 server=%2 drift=%3", round (daytime * 100) / 100, _server_hour, round (_server_drift * 100) / 100];
+				};
+			};
 		};
 	};
 };
@@ -299,6 +309,7 @@ if (!isDedicated && !isHeadLessClient) then {
 
 //--- Apply the time-environment (don't halt).
 [] Spawn {
+	private ["_permSync","_jipDate"];
 	waitUntil {time > 0}; //--- Await for the mission to start / JIP.
 
 	// Marty: Enabled cycle uses the server date for JIP; disabled cycle preserves the old mission-time skipTime sync.
@@ -310,11 +321,15 @@ if (!isDedicated && !isHeadLessClient) then {
 			setDate [(date select 0),(missionNamespace getVariable "WFBE_DAYNIGHT_FORCED_MONTH"),(missionNamespace getVariable "WFBE_DAYNIGHT_FORCED_DAY"),(missionNamespace getVariable "WFBE_C_ENVIRONMENT_STARTING_HOUR"),(date select 4)]; //--- Apply the date and time.
 		};
 	} else {
-		setDate [(date select 0),(missionNamespace getVariable "WFBE_C_ENVIRONMENT_STARTING_MONTH"),(date select 2),(missionNamespace getVariable "WFBE_C_ENVIRONMENT_STARTING_HOUR"),(date select 4)]; //--- Apply the date and time.
+		_permSync = ((missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") == 1) || {(missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0]) > 0};
+		setDate [(date select 0),(missionNamespace getVariable "WFBE_C_ENVIRONMENT_STARTING_MONTH"),(date select 2),(missionNamespace getVariable "WFBE_C_ENVIRONMENT_STARTING_HOUR"),(date select 4)]; //--- Safe fallback until the server date arrives.
+		if (_permSync) then {
+			_jipDate = missionNamespace getVariable "WFBE_DAYNIGHT_DATE";
+			if (!isNil "_jipDate" && {(typeName _jipDate) == "ARRAY"} && {(count _jipDate) >= 5}) then {setDate _jipDate};
+		};
+		if (!_permSync && {local player}) then {skipTime (time / 3600)}; //--- Legacy disabled-cycle JIP catch-up only; permanent day follows the server absolute date.
 
-		if (local player) then {skipTime (time / 3600)}; //--- If we're dealing with a client, he may have JIP half way through the game. Sync him via skipTime with the mission time.
-
-		// Ray 2026-06-24 (directive #2): PERMANENT DAYLIGHT. With the accelerated cycle OFF the engine clock still drifts toward night over a long round, so the server clamps daytime into the [START, END] band (08:00->17:00) and loops back to START. Server-authoritative; setDate replicates to all clients/HC. Disable with WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP=0.
+		// Ray 2026-06-24 (directive #2): PERMANENT DAYLIGHT. With the accelerated cycle OFF the engine clock still drifts toward night over a long round, so the server clamps daytime into the [START, END] band (08:00->17:00) and loops back to START. The server publishes its absolute date so remote clients and JIP converge on the same daylight. Disable with WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP=0.
 		// fable/permanent-daytime (Build84): WFBE_C_PERMANENT_DAY > 0 force-enables the clamp regardless of WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP.
 		if (isServer && {((missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") == 1) || {(missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0]) > 0}}) then {
 			[] Spawn {
@@ -332,6 +347,8 @@ if (!isDedicated && !isHeadLessClient) then {
 						setDate [(date select 0),(date select 1),(date select 2),_loStart,0];
 						["INFORMATION", format ["PERMANENT_DAY| reset to %1:00 (was daytime %2) PERMANENT_DAY=%3", _loStart, (round (daytime * 100) / 100), (missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0])]] Call WFBE_CO_FNC_LogContent;
 					};
+					WFBE_DAYNIGHT_DATE = date;
+					publicVariable "WFBE_DAYNIGHT_DATE";
 					sleep _check;
 				};
 			};
