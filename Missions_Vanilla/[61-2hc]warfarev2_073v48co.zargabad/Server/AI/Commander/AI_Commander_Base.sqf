@@ -685,6 +685,14 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 			};
 			//--- count LIVE structures of this type; use the already-computed _structures local (micro-opt).
 			_typeHave = {((_x getVariable ["wfbe_structure_type", ""]) == _otype) && {alive _x}} count _structures;
+			//--- P0 atomic cap: the skip gate ALSO counts active cross-path reservations (forward/rebase builds
+			//--- paid but not alive yet) so this early skip - and its BUILD_CAP_SKIP log - tell the truth.
+			private ["_capStore","_capTimes","_capResN"];
+			_capStore = _logik getVariable [Format ["wfbe_aicom_capres_%1", _otype], [0, []]];
+			_capTimes = _capStore select 1;
+			_capResN  = 0;
+			{ if (!isNil "_x" && {(time - _x) < 300}) then {_capResN = _capResN + 1} } forEach _capTimes;
+			_typeHave = _typeHave + _capResN;
 			if (_typeHave >= _typeLimit) then {
 				_capped = true;
 				//--- de-spam: only log when the quota-full state for this type CHANGES on the side logic.
@@ -716,7 +724,10 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 		};
 		if (!_have) exitWith {
 			_cost = _costs select _idx;
-			if (_supply >= _cost) then {
+			//--- P0 atomic cap: RESERVE before debit. The helper re-checks alive+reserved<cap and reserves in
+			//--- the same (non-preemptive) evaluation; lazy && means no reservation is taken when unaffordable.
+			//--- A deny here = another build path won the last slot inside the async construction window.
+			if (_supply >= _cost && {["admit", _logik, _x, _structures] Call WFBE_SE_FNC_StructureCapAdmit}) then {
 				//--- ServicePoint wants to sit ON a road (repair/refuel access); fall back to ring.
 				_pos = [0,0,0];
 				_placed = false;
@@ -1020,7 +1031,10 @@ if (_fwdEnable && {_dual}) then {
 		if (_supply >= _fwdSupplyGate) then {
 			_ccCount = {((_x getVariable ["wfbe_structure_type", ""]) == "CommandCenter") && {alive _x}} count _structures;
 			_basesMax = missionNamespace getVariable ["WFBE_C_AICOM_BASES_MAX", 2];
-			if (_ccCount >= 1 && {_ccCount < _basesMax}) then {
+			//--- P0 atomic cap: the under-cap side of this gate goes through the SAME admission helper the
+			//--- general builder uses (check mode: alive + active reservations < CC-clamped cap) - the raw
+			//--- _ccCount < _basesMax compare on the stale snapshot is exactly how the third CC got admitted.
+			if (_ccCount >= 1 && {["check", _logik, "CommandCenter", _structures] Call WFBE_SE_FNC_StructureCapAdmit}) then {
 				//--- FIND a forward owned town: own-held, >= MIN_DIST from the rear HQ, nearest the published front.
 				_frontF = objNull; _haveFront = false;
 				private "_tgF"; _tgF = _logik getVariable ["wfbe_aicom_targets", []];
@@ -1069,7 +1083,8 @@ if (_fwdEnable && {_dual}) then {
 									if (!_presentF) then {
 										_fwdHave = true;   //--- one-per-pass latch (consume the slot whether or not affordable).
 										_fwdCost = _costs select _fwdIdx;
-										if (_supply >= (_fwdCost + _fwdReserve)) then {
+										//--- P0 atomic cap: same reserve-before-debit admit as the general path.
+										if (_supply >= (_fwdCost + _fwdReserve) && {["admit", _logik, _ord, _structures] Call WFBE_SE_FNC_StructureCapAdmit}) then {
 											_fwdFacP = if (_ord in ["Light","Heavy","Aircraft"]) then {
 												[(missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_RING_MAX", 110]), 1] Call _findBuildPos
 											} else {
