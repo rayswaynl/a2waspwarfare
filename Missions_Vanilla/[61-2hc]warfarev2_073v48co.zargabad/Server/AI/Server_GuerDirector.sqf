@@ -78,8 +78,9 @@ _jipSnapLastT      = 0;
 //   4 = suppress timer (diag_tickTime when last contact ended; 0 = not suppressed)
 //   5 = last observed group count (active contact + survivor read-back on deactivation)
 //===================================================================================
-private ["_ledger","_ledgerCount","_fundedTotal","_regenDebt"];
+private ["_ledger","_ledgerCount","_fundedTotal","_regenDebt","_transfers"];
 _ledger      = [];
+_transfers   = []; //--- P0 conservation (fable/gdir-ledger-conservation): directional in-flight records [srcTown, dstTown, amount, etaTick] - the single source of truth for cell movement
 _ledgerCount = 0;
 _fundedTotal = 0;
 _regenDebt   = 0;
@@ -204,13 +205,14 @@ while {!WFBE_GameOver} do {
     _stateThr  = [];
 
     {
-        private ["_rec","_str","_base","_transit","_suppEnd","_now"];
+        private ["_rec","_str","_base","_transit"];
         _rec     = _x;
         _str     = _rec select 2;
         _base    = _rec select 1;
         _transit = _rec select 3;
-        _suppEnd = _rec select 4;
-        _now     = diag_tickTime;
+        //--- P0: removed the dead suppression contract read (_rec select 4 has NO writer anywhere in the
+        //--- mission; the _suppEnd < now guard below was vacuously true). Field kept for record-shape compat;
+        //--- a future suppression system must add BOTH writer and consumer deliberately.
 
         if (_str >= _base * 0.9) then {
             if (_str >= _base * 1.1 && {_transit < 0.2}) then {
@@ -222,7 +224,7 @@ while {!WFBE_GameOver} do {
             if (_str < _base * 0.25) then {
                 _stateThr set [count _stateThr, _rec];
             } else {
-                if (_str < _base * 0.5 && {_suppEnd < _now}) then {
+                if (_str < _base * 0.5) then {
                     _stateDep set [count _stateDep, _rec];
                 } else {
                     _stateSafe set [count _stateSafe, _rec];
@@ -259,17 +261,17 @@ while {!WFBE_GameOver} do {
                 _srcBase= _src select 1;
                 _send   = [_needed * 0.5, 0, _srcStr - (_srcBase * 0.5)] call _fnClamp;
                 if (_send > 0.05) then {
+                    //--- P0 conservation: the old double transit write (_src AND _dst select 3 += _send) let
+                    //--- Phase 5 credit BOTH records back - each transfer minted +_send virtual strength.
+                    //--- Now: debit the source ONCE, record ONE directional transfer with an uncondition ETA;
+                    //--- Phase 5 credits the DESTINATION only at/after that ETA. Record transit (select 3) is
+                    //--- now a derived inbound-display value recomputed each tick in Phase 5.
                     _src set [2, _srcStr - _send];
-                    _src set [3, (_src select 3) + _send];
-                    _dst set [3, (_dst select 3) + _send];
+                    private ["_etaDist"];
+                    _etaDist = (getPos (_src select 0)) distance (getPos (_dst select 0));
+                    _transfers set [count _transfers, [_src select 0, _dst select 0, _send, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor]];
                     _orderCount  = _orderCount + 1;
                     _fundedTotal = _fundedTotal + _send;
-                    //--- P1: record ETA for stuck-cell detection (hardenOn only).
-                    if (_hardenOn && {(count _dst) > 6}) then {
-                        private ["_etaDist"];
-                        _etaDist = (getPos (_src select 0)) distance (getPos (_dst select 0));
-                        _dst set [6, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor];
-                    };
                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER moveCell from=%2 to=%3 str=%4",
                         _elmin, _src select 0, _dst select 0, _send];
                 };
@@ -293,17 +295,13 @@ while {!WFBE_GameOver} do {
                 _srcBase= _src select 1;
                 _send   = [_needed * 0.3, 0, _srcStr - (_srcBase * 0.6)] call _fnClamp;
                 if (_send > 0.05) then {
+                    //--- P0 conservation: same single-record transfer idiom as the reinforcement site above.
                     _src set [2, _srcStr - _send];
-                    _src set [3, (_src select 3) + _send];
-                    _dst set [3, (_dst select 3) + _send];
+                    private ["_etaDist"];
+                    _etaDist = (getPos (_src select 0)) distance (getPos (_dst select 0));
+                    _transfers set [count _transfers, [_src select 0, _dst select 0, _send, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor]];
                     _orderCount  = _orderCount + 1;
                     _fundedTotal = _fundedTotal + _send;
-                    //--- P1: record ETA for stuck-cell detection (hardenOn only).
-                    if (_hardenOn && {(count _dst) > 6}) then {
-                        private ["_etaDist"];
-                        _etaDist = (getPos (_src select 0)) distance (getPos (_dst select 0));
-                        _dst set [6, diag_tickTime + (_etaDist / _cellSpeedMs) * _moveTimeoutFactor];
-                    };
                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER moveCell from=%2 to=%3 str=%4 (threatened)",
                         _elmin, _src select 0, _dst select 0, _send];
                 };
@@ -603,32 +601,99 @@ while {!WFBE_GameOver} do {
     };
 
     //--------------------------------------------------------------------
-    // PHASE 5: CELL ARRIVAL - clear in-transit balance each tick.
-    // Transit accumulated in phase 4 is credited back each tick.
-    // P1 harden: if ETA recorded and past due, force-credit (teleport-merge) and log.
+    // PHASE 4.5 (P0): LEDGER OWNERSHIP RECONCILE - membership follows the
+    // CURRENT town sideID every tick (was: seeded once, stale across flips).
+    // Dropped towns forfeit residual strength (the town fell; logged).
+    // Newly GUER/UNKNOWN towns get a conservative reseed. In-flight transfers
+    // to a dropped town refund their source in Phase 5's dead-destination path.
     //--------------------------------------------------------------------
     {
-        private ["_rec","_transit","_str","_base","_eta"];
-        _rec     = _x;
-        _transit = _rec select 3;
-        _str     = _rec select 2;
-        _base    = _rec select 1;
-        _eta     = if ((count _rec) > 6) then {_rec select 6} else {0};
-        if (_transit > 0) then {
-            //--- P1: ETA-timeout force-merge. If past ETA, force arrival and emit GDIR_MOVE_TIMEOUT.
-            if (_hardenOn && {_eta > 0} && {diag_tickTime > _eta}) then {
-                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_MOVE_TIMEOUT town=%2 transit=%3 etaExpired=%4 nowT=%5",
-                    _elmin, _rec select 0, _transit, _eta, diag_tickTime];
-                if ((count _rec) > 6) then {_rec set [6, 0]}; //--- clear ETA
-            };
-            _str = [_str + _transit, 0, _surgeCapPaid * _base] call _fnClamp;
-            _rec set [2, _str];
-            _rec set [3, 0];
-        } else {
-            //--- No active transit: clear any stale ETA.
-            if (_hardenOn && {_eta > 0} && {(count _rec) > 6}) then {_rec set [6, 0]};
+        private ["_ownRec","_ownSide"];
+        _ownRec  = _x;
+        _ownSide = (_ownRec select 0) getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+        if (!(_ownSide == WFBE_C_GUER_ID || {_ownSide == WFBE_C_UNKNOWN_ID})) then {
+            diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_LEDGER_DROP town=%2 residualStr=%3", _elmin, _ownRec select 0, _ownRec select 2];
         };
     } forEach _ledger;
+    private ["_ledgerKept"];
+    _ledgerKept = [];
+    {
+        private ["_okRec","_okSide"];
+        _okRec  = _x;
+        _okSide = (_okRec select 0) getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+        if (_okSide == WFBE_C_GUER_ID || {_okSide == WFBE_C_UNKNOWN_ID}) then {_ledgerKept set [count _ledgerKept, _okRec]};
+    } forEach _ledger;
+    _ledger = _ledgerKept;
+    _ledgerCount = count _ledger;
+    {
+        private ["_adTown","_adSide","_adHave"];
+        _adTown = _x;
+        _adSide = _adTown getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+        if (_adSide == WFBE_C_GUER_ID || {_adSide == WFBE_C_UNKNOWN_ID}) then {
+            _adHave = false;
+            { if (!_adHave && {(_x select 0) == _adTown}) then {_adHave = true} } forEach _ledger;
+            if (!_adHave) then {
+                //--- conservative reseed: half baseline, quarter strength - a re-taken town restarts weak.
+                _ledger set [count _ledger, [_adTown, 0.5, 0.25, 0, 0, 0, 0]];
+                _ledgerCount = _ledgerCount + 1;
+                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_LEDGER_ADD town=%2", _elmin, _adTown];
+            };
+        };
+    } forEach towns;
+
+    //--------------------------------------------------------------------
+    // PHASE 5 (P0 rewrite): TRANSFER ARRIVAL. _transfers is authoritative.
+    // (a) recompute per-record inbound transit display (select 3);
+    // (b) credit ONLY destinations whose transfer ETA has passed - once per
+    //     transfer (the pre-fix code credited source AND destination every
+    //     tick, minting +send per transfer);
+    // (c) surge-cap trim on arrival is an explicit sink, logged for the
+    //     conservation fixture; dead destinations refund their source.
+    //--------------------------------------------------------------------
+    { _x set [3, 0]; if ((count _x) > 6) then {_x set [6, 0]} } forEach _ledger;
+    private ["_stillMoving"];
+    _stillMoving = [];
+    {
+        private ["_tr","_trSrc","_trDst","_trAmt","_trEta","_trRecI","_trI"];
+        _tr = _x;
+        if (!isNil "_tr" && {count _tr >= 4}) then {
+            _trSrc = _tr select 0; _trDst = _tr select 1; _trAmt = _tr select 2; _trEta = _tr select 3;
+            _trRecI = -1; _trI = 0;
+            { if (_trRecI < 0 && {(_x select 0) == _trDst}) then {_trRecI = _trI}; _trI = _trI + 1 } forEach _ledger;
+            if (_trRecI < 0) then {
+                private ["_srI","_sI"];
+                _srI = -1; _sI = 0;
+                { if (_srI < 0 && {(_x select 0) == _trSrc}) then {_srI = _sI}; _sI = _sI + 1 } forEach _ledger;
+                if (_srI >= 0) then {
+                    private ["_srRec"];
+                    _srRec = _ledger select _srI;
+                    _srRec set [2, (_srRec select 2) + _trAmt];
+                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_XFER_REFUND town=%2 amt=%3", _elmin, _trSrc, _trAmt];
+                } else {
+                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_XFER_DROP dst=%2 amt=%3", _elmin, _trDst, _trAmt];
+                };
+            } else {
+                private ["_recD"];
+                _recD = _ledger select _trRecI;
+                if (diag_tickTime >= _trEta) then {
+                    private ["_newStr","_capD"];
+                    _capD   = _surgeCapPaid * (_recD select 1);
+                    _newStr = (_recD select 2) + _trAmt;
+                    if (_newStr > _capD) then {
+                        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ARRIVE_TRIM town=%2 trimmed=%3", _elmin, _trDst, _newStr - _capD];
+                        _newStr = _capD;
+                    };
+                    if (_newStr < 0) then {_newStr = 0};
+                    _recD set [2, _newStr];
+                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ARRIVE town=%2 amt=%3", _elmin, _trDst, _trAmt];
+                } else {
+                    _recD set [3, (_recD select 3) + _trAmt];
+                    _stillMoving set [count _stillMoving, _tr];
+                };
+            };
+        };
+    } forEach _transfers;
+    _transfers = _stillMoving;
 
     //--------------------------------------------------------------------
     // PHASE 6: MATERIALIZATION - GDIR_VOLUME telemetry for active towns.
