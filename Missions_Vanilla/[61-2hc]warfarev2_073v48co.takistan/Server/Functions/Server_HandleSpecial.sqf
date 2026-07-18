@@ -173,15 +173,7 @@ switch (_args select 0) do {
 		//--- keys records the same way), so the message format needs no changes. Ground-only
 		//--- (wfbe_ctl_ground_wave, set alongside the wave in server_town_ai.sqf) and flag-gated:
 		//--- byte-identical to HEAD when AICOMV2_LANE_CMD_TOWN_LEDGER=0.
-		//--- WAVE-SCOPED CREDIT FIX (owner order 2026-07-17, round-2 bughunt item 4): the gate below used to
-		//--- read the town's LIVE wfbe_ctl_ground_wave flag - HC/client delegation reports land async, so if the
-		//--- town's wave state flips (a newer wave dispatched, or the flag reset) between wave dispatch and this
-		//--- report arriving, an in-flight ground-wave report was silently dropped here (undercount), never credited
-		//--- to any record. Same fix shape as the New-Bug-A per-group stamp (server_town_ai.sqf:372-380): each group
-		//--- in _teams already carries its OWN wfbe_ctl_ground_wave snapshot from the wave that actually created it -
-		//--- check that per-group tag instead of the town-level flag, both for whether to run this block at all and
-		//--- for which individual groups in this report to credit.
-		if ((count _teams > 0) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+		if ((count _teams > 0) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0} && {(_town getVariable ["wfbe_ctl_ground_wave", false])}) then {
 			private ["_ctlSide7"];
 			//--- New-Bug-B fix (fable/ctl-survivor-bugs): read the side SNAPSHOTTED at wave-creation time
 			//--- (server_town_ai.sqf: wfbe_ctl_wave_side, set alongside wfbe_ctl_ground_wave), not the
@@ -197,7 +189,7 @@ switch (_args select 0) do {
 			if (_ctlSide7 == west || {_ctlSide7 == east}) then {
 				private ["_ctlUnits7"];
 				_ctlUnits7 = 0;
-				{ if (!isNull _x && {_x getVariable ["wfbe_ctl_ground_wave", false]}) then {_ctlUnits7 = _ctlUnits7 + (count units _x)} } forEach _teams;
+				{_ctlUnits7 = _ctlUnits7 + (count units _x)} forEach _teams;
 				//--- CTL single-writer (fable/ctl-readback-singlewriter): accumulate the HC/client-delegated
 				//--- Man-unit count into the per-town spawn scalar (per-town, so the wave-side snapshot only
 				//--- gates WHETHER to credit - no valid snapshot => skip - not which record to touch).
