@@ -39,6 +39,30 @@ if (!isNull _cmdTeam) then {
 //--- Owner policy: naval HVTs remain player objectives; AICOM never receives them through bootstrap, spearhead or fallback pools.
 _uncaptured = [];
 { if (((_x getVariable "sideID") != _sideID) && {!(_x getVariable ["wfbe_is_naval_hvt", false])}) then {_uncaptured set [count _uncaptured, _x]} } forEach towns;
+//--- NO_LEGAL_TOWN_SCRUB: even when no land capture candidate remains, neutralize any legacy AICOM carrier order before the early exit.
+if (count _uncaptured == 0) then {
+	{
+		_team = _x;
+		if (!isNull _team && {!isNull (leader _team)} && {!isPlayer (leader _team)} && {({alive _x} count (units _team)) > 0}) then {
+			_goto = [_team, "wfbe_teamgoto", objNull] Call WFBE_CO_FNC_GroupGetBool;
+			if (typeName _goto == "OBJECT" && {!isNull _goto} && {_goto getVariable ["wfbe_is_naval_hvt", false]}) then {
+				_team setVariable ["wfbe_teamgoto", objNull, true];
+				_team setVariable ["wfbe_aicom_townorder", [], false];
+				_team setVariable ["wfbe_aicom_dispatch_open", false];
+				_team setVariable ["wfbe_aicom_route", [], true];
+				_team setVariable ["wfbe_aicom_alloc_target", objNull];
+				_team setVariable ["wfbe_teammode", "towns", true];
+				_team setVariable ["wfbe_exec_sig", []];
+				if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+					_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos (leader _team)], true];
+				} else {
+					[_team, getPos (leader _team), "MOVE", 20] Call AIMoveTo;
+				};
+				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|NAVAL_TARGET_CLEAR_NO_LAND|team=" + (str _team) + "|town=" + (_goto getVariable ["name","town"]));
+			};
+		};
+	} forEach _teams;
+};
 if (count _uncaptured == 0) exitWith {};
 
 _useArc = (missionNamespace getVariable "WFBE_C_AI_COMMANDER_USE_ARC_APPROACH") > 0;

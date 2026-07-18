@@ -13,6 +13,27 @@ STRATEGY = MISSION / "Server/AI/Commander/AI_Commander_Strategy.sqf"
 
 
 class AicomCarrierTargetPolicyTests(unittest.TestCase):
+    def test_zero_legal_land_targets_scrubs_stale_carrier_orders_before_exit(self) -> None:
+        source = ASSIGN.read_text(encoding="utf-8")
+
+        scrub = source.index("NO_LEGAL_TOWN_SCRUB")
+        early_exit = source.index("if (count _uncaptured == 0) exitWith {};")
+        self.assertLess(
+            scrub,
+            early_exit,
+            "the no-land-target exit still runs before stale carrier orders are neutralized",
+        )
+        pre_exit = source[scrub:early_exit]
+        self.assertIn('[_team, "wfbe_teamgoto", objNull] Call WFBE_CO_FNC_GroupGetBool', pre_exit)
+        self.assertIn('_goto getVariable ["wfbe_is_naval_hvt", false]', pre_exit)
+        self.assertIn('_team setVariable ["wfbe_teamgoto", objNull, true];', pre_exit)
+        self.assertIn('_team setVariable ["wfbe_aicom_townorder", [], false];', pre_exit)
+        self.assertIn('_team setVariable ["wfbe_aicom_dispatch_open", false];', pre_exit)
+        self.assertIn('_team setVariable ["wfbe_aicom_route", [], true];', pre_exit)
+        self.assertIn('_team setVariable ["wfbe_teammode", "towns", true];', pre_exit)
+        self.assertIn('"towns", getPos (leader _team)], true];', pre_exit)
+        self.assertIn('[_team, getPos (leader _team), "MOVE", 20] Call AIMoveTo;', pre_exit)
+
     def test_assign_towns_filters_every_selection_and_repick_path(self) -> None:
         source = ASSIGN.read_text(encoding="utf-8")
 
