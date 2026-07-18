@@ -672,7 +672,7 @@ while {!gameOver} do {
 							if (!isNull _cmdTeam) then {
 								_curFunds = _cmdTeam getVariable "wfbe_funds";
 								if (isNil "_curFunds") then {_curFunds = 0};
-								_cmdTeam setVariable ["wfbe_funds", _curFunds + _bonus, true];
+								[_cmdTeam, _bonus] Call WFBE_CO_FNC_ChangeTeamFunds;
 								_detail = Format ["human_cmd_team_funds_bonus=%1 funds_before=%2", _bonus, _curFunds];
 							} else {
 								_detail = "human_cmd_no_team fallback skipped";

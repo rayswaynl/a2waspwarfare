@@ -355,9 +355,17 @@ while {!WFBE_GameOver} do {
 				//--- Same flag gate as the seed branch above: with AICOMV2_LANE_CMD_TOWN_LEDGER=0 (current live state)
 				//--- this is a no-op, byte-identical to HEAD.
 				if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0) then {
+					private ["_pendingInvest","_pendingCost"];
+					_pendingInvest = _location getVariable ["wfbe_ctl_pending_invest", 0];
+					_pendingCost = _location getVariable ["wfbe_ctl_pending_invest_cost", 0];
+					if (_pendingInvest > 0 && {_pendingCost > 0} && {_sideID == WFBE_C_WEST_ID || {_sideID == WFBE_C_EAST_ID}}) then {
+						[_side, _pendingCost] Call ChangeAICommanderFunds;
+						diag_log Format ["CTLSTAT|v1|%1|CTL_INVEST_REFUND|town=%2|invest=%3|cost=%4|newSideId=%5", str _side, _location getVariable ["name", "?"], _pendingInvest, _pendingCost, _newSID];
+					};
 					_location setVariable ["wfbe_ctl_str", 1];
 					_location setVariable ["wfbe_ctl_pending_ratio", -1];
 					_location setVariable ["wfbe_ctl_pending_invest", 0];
+					_location setVariable ["wfbe_ctl_pending_invest_cost", 0];
 				};
 			};
 			//--- cmdcon45 (owner: "Rogovo captured but camps still GUER"): capturing the TOWN flips its

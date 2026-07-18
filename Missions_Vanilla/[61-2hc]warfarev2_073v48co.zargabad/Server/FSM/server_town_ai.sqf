@@ -335,6 +335,15 @@ while {!WFBE_GameOver} do {
 						//--- the cap check (line ~260) for towns processed later in the same sweep - stale undercount that
 						//--- let the group budget overshoot within a single sweep before the next sweep's recount caught up.
 						if (_side == resistance) then { _guerGroupCount = _guerGroupCount + (count _groups) };
+						//--- CTL counterpart: mutate the W/E cache only after this activation has produced
+						//--- its real group plan, never from Server_GetTownGroups' baseline-only ledger calls.
+						if ((_side == west || {_side == east}) && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
+							private ["_ctlCacheVar","_ctlCached","_ctlWaveGroups"];
+							_ctlCacheVar = if (_side == west) then {"wfbe_grpcnt_west"} else {"wfbe_grpcnt_east"};
+							_ctlCached = missionNamespace getVariable [_ctlCacheVar, -1];
+							_ctlWaveGroups = count _groups;
+							if (_ctlCached >= 0) then {missionNamespace setVariable [_ctlCacheVar, _ctlCached + _ctlWaveGroups]};
+						};
 
 						if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_side]) then {[_side,"HostilesDetectedNear",_town] Spawn SideMessage};
 

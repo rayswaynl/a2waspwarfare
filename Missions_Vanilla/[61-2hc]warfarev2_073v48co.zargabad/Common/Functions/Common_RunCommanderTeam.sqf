@@ -24,12 +24,18 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
-         "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev"];
+         "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev","_refundToken"];
 
 _sideID = _this select 0;
 _template = _this select 1;
 _pos = _this select 2;
 _side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
+_refundToken = "";
+if (count _this > 9) then {
+	private ["_delegateRefundToken"];
+	_delegateRefundToken = _this select 9;
+	if (typeName _delegateRefundToken == "STRING") then {_refundToken = _delegateRefundToken};
+};
 
 //--- LAB QUIESCENCE PIN (perf proving-ground): when the lab sets WFBE_C_TEST_TEAM_CAP=0 the synthetic
 //--- benchmark wants ZERO AICOM-founded teams. AI_Commander_Teams.sqf gates its OWN founding path on
@@ -87,6 +93,22 @@ if (isNull _team || {((count _units) + (count _vehicles)) == 0}) exitWith {
 	};
 };
 
+//--- Server-local founding has no dispatch envelope, so mint and register its private capability here.
+//--- HC foundings already carry the server-issued token in delegate slot 9.
+if (isServer && {_refundToken == ""}) then {
+	private ["_refundSeq","_refundPending","_refundPendingLive"];
+	_refundSeq = (missionNamespace getVariable ["WFBE_AICOM_REFUND_SEQ", 0]) + 1;
+	missionNamespace setVariable ["WFBE_AICOM_REFUND_SEQ", _refundSeq];
+	_refundToken = "aicom-server|" + str _team + "|" + str _refundSeq + "|" + str (round (random 1000000000));
+	_refundPending = missionNamespace getVariable ["WFBE_AICOM_TEAM_REFUND_PENDING", []];
+	_refundPendingLive = [];
+	{
+		if (count _x >= 4 && {(time - (_x select 2)) < 300}) then {_refundPendingLive = _refundPendingLive + [_x]};
+	} forEach _refundPending;
+	_refundPending = _refundPendingLive + [[_sideID, owner (leader _team), time, _refundToken]];
+	missionNamespace setVariable ["WFBE_AICOM_TEAM_REFUND_PENDING", _refundPending];
+};
+
 _team allowFleeing 0;
 
 //--- W7 "Veteran Company" skill boost: optional 4th delegate arg (0/absent = default skill). Only the
@@ -121,9 +143,9 @@ _team setVariable ["wfbe_aicom_decap", [], true];   //--- stack-pass: A2 recycle
 _team setVariable ["wfbe_aicom_press_on", nil];      //--- stack-pass: same for the HC-local press latch
 
 if (isServer) then {
-	["aicom-team-created", _sideID, _team] Call HandleSpecial;
+	["aicom-team-created", _sideID, _team, _vehicles, _refundToken] Call HandleSpecial;
 } else {
-	["RequestSpecial", ["aicom-team-created", _sideID, _team]] Call WFBE_CO_FNC_SendToServer;
+	["RequestSpecial", ["aicom-team-created", _sideID, _team, _vehicles, _refundToken]] Call WFBE_CO_FNC_SendToServer;
 };
 
 ["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] commander team spawned (%2 units, %3 vehicles).", _side, count _units, count _vehicles]] Call WFBE_CO_FNC_AICOMLog;
@@ -595,8 +617,8 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 		//--- cmdcon42 HOT-LZ: force the para branch by handing the Spawn the OFFSET drop point as the LZ and an EMPTY
 		//--- flat-list, so the run-in halts short of the town and the existing (count _fl > 0) land-gate is false -> eject.
 		if (_forceDrop) then {_lzPos = _dropLz; _flat = []};
-		[_airVeh, _lzPos, _flat, _lifted, _team, _pos, _side, _sideID, _heliCost] Spawn {
-			private ["_h","_lz","_fl","_pax","_tm","_obj","_t0","_sd","_sID","_cost","_edge","_wsz","_ex","_ey","_offPos","_hcrew","_approachLimited"];
+		[_airVeh, _lzPos, _flat, _lifted, _team, _pos, _side, _sideID, _heliCost, _refundToken] Spawn {
+			private ["_h","_lz","_fl","_pax","_tm","_obj","_t0","_sd","_sID","_cost","_edge","_wsz","_ex","_ey","_offPos","_hcrew","_approachLimited","_refundToken"];
 			_h    = _this select 0;
 			_lz   = _this select 1;
 			_fl   = _this select 2;
@@ -606,6 +628,7 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			_sd   = _this select 6;
 			_sID  = _this select 7;
 			_cost = _this select 8;
+			_refundToken = if (count _this > 9) then {_this select 9} else {""};
 			//--- Let everyone board first.
 			_t0 = time + 30;
 			waitUntil {sleep 1; time > _t0 || {({alive _x && vehicle _x == _h} count _pax) >= ({alive _x} count _pax)}};
@@ -721,20 +744,14 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 				if (!isNull _h && {alive _h} && {(((getPos _h) select 0) < 0) || (((getPos _h) select 0) > _wsz) || (((getPos _h) select 1) < 0) || (((getPos _h) select 1) > _wsz)} && {_h getVariable ["wfbe_aicom_transport", false]}) then {
 						private ["_htype"];
 						_htype = typeOf _h;          //--- capture BEFORE delete (typeOf of a deleted obj is "").
+						//--- The server receipt watcher observes the live off-map hull and performs the one-shot
+						//--- treasury credit from server-owned state. Hold the hull briefly so the server can see
+						//--- the authenticated edge transition before this HC-local delete.
+						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team transport %2 reached the map edge; server receipt watcher owns refund $%3.", _sd, _htype, _cost]] Call WFBE_CO_FNC_AICOMLog;
+						sleep 20;
 					_hcrew = crew _h;
 					{deleteVehicle _x} forEach _hcrew;
 					deleteVehicle _h;
-					if (_cost > 0) then {
-						//--- D4-FIX(c): append the hull TYPE so the server re-derives the real build price itself (same
-						//--- QUERYUNITPRICE lookup this file used) instead of trusting the network _cost verbatim - closes a
-						//--- fund-mint hole where ANY client (not just the real HC) could forge this PVF with an arbitrary figure.
-						if (isServer) then {
-							["aicom-heli-refunded", _sID, _cost, _htype] Call HandleSpecial;
-						} else {
-							["RequestSpecial", ["aicom-heli-refunded", _sID, _cost, _htype]] Call WFBE_CO_FNC_SendToServer;
-						};
-						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team transport %2 flew off-map, deleted + refunded $%3.", _sd, _htype, _cost]] Call WFBE_CO_FNC_AICOMLog;
-					};
 				};
 			};
 		};
