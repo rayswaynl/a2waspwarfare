@@ -441,7 +441,7 @@ switch (_args select 0) do {
 	};
 	case "aicom-team-order": {
 		//--- COMMAND QUEUE: validate client intent against the live server registry; the worker owns all HC writes.
-		private ["_coSide","_coType","_coIndex","_coTarget","_coIssuer","_coLogik","_coCmd","_coTeams","_coQueue","_coSeq","_coReject","_coTeam","_coQueued","_coPush","_coEnqueue"];
+		private ["_coSide","_coType","_coIndex","_coTarget","_coIssuer","_coLogik","_coCmd","_coTeams","_coQueue","_coSeq","_coReject","_coTeam","_coQueued","_coPush","_coEnqueue","_coDirect"];
 		_coReject = "";
 		if (count _args < 6) then {_coReject = "short"};
 		if (_coReject == "") then {
@@ -465,13 +465,15 @@ switch (_args select 0) do {
 		_coTeams = _coLogik getVariable "wfbe_teams"; if (isNil "_coTeams" || {typeName _coTeams != "ARRAY"}) then {_coTeams = []};
 		_coQueue = _coLogik getVariable "wfbe_aicom_cmd_order_queue"; if (isNil "_coQueue" || {typeName _coQueue != "ARRAY"}) then {_coQueue = []};
 		_coSeq = _coLogik getVariable "wfbe_aicom_cmd_order_seq"; if (isNil "_coSeq" || {typeName _coSeq != "SCALAR"}) then {_coSeq = 0}; _coQueued = 0;
+		//--- C5: capture DIRECT authority at server acceptance; the async worker must not observe a later delegate flip.
+		_coDirect = !(_coLogik getVariable ["wfbe_aicom_player_delegate", true]);
 		_coEnqueue = {
 			private ["_qeTeam","_qeType","_qeTarget","_qeNew"];
 			_qeTeam = _this select 0; _qeType = _this select 1; _qeTarget = _this select 2;
 			if (!isNull _qeTeam && {!isPlayer (leader _qeTeam)} && {({alive _x} count units _qeTeam) > 0}) then {
 				_coSeq = _coSeq + 1; _qeNew = [];
 				{if ((typeName _x != "ARRAY") || {count _x < 1} || {(_x select 0) != _qeTeam}) then {_qeNew = _qeNew + [_x]}} forEach _coQueue;
-				_coQueue = _qeNew + [[_qeTeam, _qeType, _qeTarget, _coIssuer, _coSeq, time]]; _coQueued = _coQueued + 1;
+				_coQueue = _qeNew + [[_qeTeam, _qeType, _qeTarget, _coIssuer, _coSeq, time, _coDirect]]; _coQueued = _coQueued + 1;
 			};
 		};
 		if (_coType == "all-push" || {_coType == "all-hold"}) then {

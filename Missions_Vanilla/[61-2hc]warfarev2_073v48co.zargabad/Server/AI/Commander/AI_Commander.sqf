@@ -342,16 +342,30 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- so compare via 0/1 scalars.
 		_aiDelegate = _logik getVariable ["wfbe_aicom_player_delegate", true]; //--- cmdcon27 THREAD B: AI keeps running Strategy/Allocate BY DEFAULT when a human takes command; player flips war-room to DIRECT (false) to drive.
 		if ((if (_aiDelegate) then {1} else {0}) != (if (_prevDelegate) then {1} else {0})) then {
-			//--- cmdcon27 THREAD A: bump HC-team order seq on the delegate flip too (same stuck-teams root cause).
-			{ if (!isNull _x) then {
-				[_x, "towns"] Call SetTeamMoveMode;
-				_x setVariable ["wfbe_exec_sig", []];
-				if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then { //--- fix(hunt): G1 - raw 2-arg group read returns nil for server-local founded teams (wfbe_aicom_hc never stamped) and if (nil) threw, killing this supervisor loop; match the sibling loops (GroupGetBool).
-					_x setVariable ["wfbe_aicom_order",
-						[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
-						 "towns", getPos (leader _x)], true];
-				};
-			} } forEach (_logik getVariable ["wfbe_teams", []]);
+			if ((missionNamespace getVariable ["WFBE_C_CMD_HANDOFF_PRESERVE", 0]) > 0) then {
+				//--- C5: only a team with an accepted DIRECT command since the last edge loses its sticky order.
+				{ if (!isNull _x && {[_x, "wfbe_direct_owned", false] Call WFBE_CO_FNC_GroupGetBool}) then {
+					[_x, "towns"] Call SetTeamMoveMode;
+					_x setVariable ["wfbe_exec_sig", []];
+					if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+						_x setVariable ["wfbe_aicom_order",
+							[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
+							 "towns", getPos (leader _x)], true];
+					};
+					_x setVariable ["wfbe_direct_owned", nil, true];
+				} } forEach (_logik getVariable ["wfbe_teams", []]);
+			} else {
+				//--- cmdcon27 THREAD A: bump HC-team order seq on the delegate flip too (same stuck-teams root cause).
+				{ if (!isNull _x) then {
+					[_x, "towns"] Call SetTeamMoveMode;
+					_x setVariable ["wfbe_exec_sig", []];
+					if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then { //--- fix(hunt): G1 - raw 2-arg group read returns nil for server-local founded teams (wfbe_aicom_hc never stamped) and if (nil) threw, killing this supervisor loop; match the sibling loops (GroupGetBool).
+						_x setVariable ["wfbe_aicom_order",
+							[(if (isNil {_x getVariable "wfbe_aicom_order"}) then {-1} else {(_x getVariable "wfbe_aicom_order") select 0}) + 1,
+							 "towns", getPos (leader _x)], true];
+					};
+				} } forEach (_logik getVariable ["wfbe_teams", []]);
+			};
 			_logik setVariable ["wfbe_aicom_focus", objNull];
 			_logik setVariable ["wfbe_aicom_focus_t0", -1e9];
 			["INFORMATION", Format ["AI_Commander.sqf: [%1] squad-command mode flipped (AI-strategy delegate now %2) - teams reset to neutral.", str _side, if (_aiDelegate) then {"ON"} else {"OFF"}]] Call WFBE_CO_FNC_AICOMLog;
