@@ -44,4 +44,9 @@ uiSleep _ttl;
 	_rw = _x;
 	if (!isNil "_rw" && {!isNull _rw} && {local _rw} && {({isPlayer _x} count (crew _rw)) == 0}) then { deleteVehicle _rw };
 } forEach _wrecks;
+//--- (5) group reap (rev: reviewer #1142 MINOR): the driver's deleteGroup (Common_RunCommanderTeam.sqf ~2742)
+//--- fired at _alive=false while this async scuttle still held live units, so it no-opped on a non-empty group
+//--- and the empty group leaked (matters vs the per-side 144-group cap over a long match). Now that the units
+//--- above are deleted, reap the group HERE once it is genuinely empty. A2-OA: deleteGroup no-ops unless empty.
+if (!isNull _team && {count (units _team) == 0}) then { deleteGroup _team };
 diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TERMINAL_SCUTTLE_CLEAN|team=" + (str _team));
