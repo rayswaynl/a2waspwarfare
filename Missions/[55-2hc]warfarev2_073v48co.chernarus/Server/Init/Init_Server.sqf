@@ -77,6 +77,8 @@ WFBE_SE_FNC_AI_Com_AssignTowns = Compile preprocessFileLineNumbers "Server\AI\Co
 WFBE_SE_FNC_AI_Com_Produce = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Produce.sqf";
 WFBE_SE_FNC_AI_Com_DisbandLowTier = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_DisbandLowTier.sqf";
 WFBE_SE_FNC_AI_Com_Execute = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Execute.sqf";
+WFBE_SE_FNC_CommandOrderQueue = Compile preprocessFileLineNumbers "Server\Functions\Server_CommandOrderQueue.sqf"; //--- Command-menu spam guard.
+[] Spawn WFBE_SE_FNC_CommandOrderQueue;
 WFBE_SE_FNC_AI_Com_Base = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Base.sqf";
 WFBE_SE_FNC_AI_Com_Beacon = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Beacon.sqf"; //--- AICOM FORWARD SPAWN-BEACON (Approach A): forward ambulance as a mobile spawn point (flag WFBE_C_AICOM_SPAWNBEACON_ENABLE, default 0 = inert).
 WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Teams.sqf";
