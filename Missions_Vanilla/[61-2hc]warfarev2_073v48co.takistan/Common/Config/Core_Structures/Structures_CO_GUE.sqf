@@ -94,6 +94,17 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_ANTIAIRRADAR") > 0) then {
 	_dir = _dir	+ [90];
 };
 
+if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
+	_v = _v		+ ["CBRadar"];
+	_n = _n		+ ["Land_Antenna"];
+	_d = _d		+ ["Counter Battery Radar"];
+	_c = _c		+ [2400];
+	_t = _t		+ [if (WF_Debug) then {1} else {60}];
+	_s = _s		+ ["SmallSite"];
+	_dis = _dis	+ [16];
+	_dir = _dir	+ [90];
+};
+
 for [{_count = count _v - 1},{_count >= 0},{_count = _count - 1}] do {
 	missionNamespace setVariable [Format["WFBE_%1%2TYPE",_side,_v select _count],_count];
 };

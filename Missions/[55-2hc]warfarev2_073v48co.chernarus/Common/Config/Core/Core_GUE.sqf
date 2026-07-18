@@ -120,13 +120,9 @@ _i = _i + [['','',5200,35,-2,3,2,0,'Guerilla',[]]];
 //--- here only won the first-registration race with WRONG prices and spammed "Duplicated Element" in the
 //--- TK files - dropped so the canonical TK prices stand. hilux1_civil_2_covered / datsun1_civil_2_covered /
 //--- Mi17_Civilian are registered by Core_CIV (loads BEFORE Core_GUE -> Core_GUE copies were already dead
-//--- dups); their GUER-intended prices (400/400/6000) now live on the canonical Core_CIV entries. Ka137_MG_PMC
-//--- and Mi24_P are KEPT here on purpose: Core_GUE loads before Core_PMC/Core_RU, so these correctly win and
-//--- set the GUER-intended prices (6000 / 18000).
-_c = _c + ['Ka137_MG_PMC'];
-_i = _i + [['','',6000,40,-2,1,1,0,'Guerilla',[]]];   //--- B66 (Ray 2026-06-21): air-upgrade(idx5) 0->1. SAME registration-race as the B60 Mi24_P fix below: Core_GUE loads before Core_PMC, so this entry wins the Ka137_MG_PMC registration (keeps the GUER price 6000) but it ALSO stamped air-level 0 onto the GLOBAL Ka137_MG_PMC, which Squads_GetFactionGroups feeds to the AICOM founding/produce air-gate -> the classname read as air-level 0 (ungated/mis-gated). Price 6000 still wins; only the air-level is corrected to PMC's canonical 1 (Core_PMC.sqf: ['','',3500,35,-2,1,3,0,'PMC',[]]). GUER is base-less (no founding gate) so unaffected; the fix is for the global classname the air-gate keys on. Rollback: ...,0,1,0,...
-_c = _c + ['Mi24_P'];
-_i = _i + [['','',18000,60,-2,3,3,0,'Guerilla',[]]];   //--- B60 (Ray 2026-06-21): air-upgrade(idx5) 0->3. Core_GUE wins the Mi24_P registration race over Core_RU (load order) - the comment above keeps it to win the GUER PRICE (18000), but it also stamped air-level 0 onto the GLOBAL Mi24_P, which Squads_GetFactionGroups feeds to the AICOM founding/produce air-gate -> EAST/RU could field ungated Mi24_P (only B59's town-strip still blocked it). Price 18000 still wins; only the air-level is corrected to RU's canonical 3. GUER is base-less (no founding gate) so unaffected. Rollback: ...,0,3,0,...
+//--- dups); their GUER-intended prices (400/400/6000) now live on the canonical Core_CIV entries. Shared
+//--- Ka137_MG_PMC and Mi24_P are likewise registered only by Core_PMC/Core_RU: metadata is global per
+//--- classname, so a GUER copy would corrupt the canonical faction/price for simultaneous factions.
 
 //--- B75 (guer-tech) FOB delivery trucks: NOT registered here. The classnames (Ural_INS/UralOpen_INS/GAZ_Vodnik on CH,
 //--- TK_CIV/TKA on TK) are SHARED with active AI/EAST factions, and Core_GUE wins the first-write registration race,

@@ -174,7 +174,7 @@ _i = _i + [['','',2800,0,1,0,'Defense',0,'Insurgents',[]]];
 /* Service point */
 
 _c = _c + ['INS_WarfareBVehicleServicePoint'];
-_i = _i + [['','',5500,0,0,0,'Strategic',0,'US',[]]];
+_i = _i + [['','',5500,0,0,0,'Strategic',0,'Insurgents',[]]];
 
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {

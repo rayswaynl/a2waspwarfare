@@ -327,4 +327,10 @@ _o = _o + [30];
 _z = _z + [0];
 _m = _m + [-1];
 
+//--- Loadout_GUE exposes these weapons; retain the RU catalogue price and research tier.
+_u = _u + ["Pecheneg"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [200]; _z = _z + [3]; _m = _m + [-1];
+_u = _u + ["Saiga12K"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [80]; _z = _z + [0]; _m = _m + [-1];
+_u = _u + ["RPG18"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [50]; _z = _z + [0]; _m = _m + [-1];
+_u = _u + ["Igla"]; _p = _p + ['']; _n = _n + ['']; _o = _o + [250]; _z = _z + [3]; _m = _m + [-1];
+
 [_faction, _u, _p, _n, _o, _z, _m] Call Compile preprocessFile "Common\Config\Config_Weapons.sqf";
