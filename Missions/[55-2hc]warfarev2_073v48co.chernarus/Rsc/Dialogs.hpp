@@ -4779,10 +4779,14 @@ class WFBE_PlayerSettingsMenu {
 		//--- each session); calls the exact same toggle function the ']' KeyDown handler uses (Init_Client.sqf).)
 		class CA_TintLegend : CA_HUD {
 			idc = 30028;
-			x = 0.29; y = 0.135 + 0.726; w = 0.42;
-			text = "Vehicle Tint Legend";
+			x = 0.29; y = 0.135 + 0.726; w = 0.100;
+			sizeEx = 0.014;
+			text = "Tint";
 			action = "if (WFBE_CL_VAR_TintLegendEnabled) then {(!WFBE_CL_VAR_TintLegendVisible) call WFBE_CL_FNC_ShowTintLegend}";
 		};
+		class CA_UnitDots : CA_TintLegend { idc = 30033; x = 0.395; w = 0.100; text = "Unit Dots: ON"; action = "WFBE_MenuAction = 13"; };
+		class CA_TeamArrows : CA_TintLegend { idc = 30034; x = 0.500; w = 0.100; text = "Team Arrows: ON"; action = "WFBE_MenuAction = 14"; };
+		class CA_RangeRings : CA_TintLegend { idc = 30035; x = 0.605; w = 0.105; text = "Range Rings: ON"; action = "WFBE_MenuAction = 15"; };
 
 		//--- ===== Footer Close =====
 		class CA_Done : RscButton_Main {

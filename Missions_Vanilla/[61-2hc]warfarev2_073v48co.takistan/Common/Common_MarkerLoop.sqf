@@ -208,6 +208,10 @@ while {true} do {
 		if (typeName _x == "ARRAY") then {
 			_entry = _x;
 			_activeEntries = _activeEntries + 1;
+			//--- P2 map clarity: hide only friendly infantry dots locally; retain the registry so a re-enable is immediate.
+			if ((_entry select 10) == "man" && {!(missionNamespace getVariable ["WFBE_CL_ShowUnitDots", true])}) then {
+				(_entry select 1) setMarkerAlphaLocal 0;
+			};
 
 			call {
 
