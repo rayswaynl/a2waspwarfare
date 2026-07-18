@@ -2419,17 +2419,17 @@ WFBE_STATS_DIRTY_UIDS = [];
 //---   Derivation: 128m (Hull A stern-to-anchor) + 9m (Hull A stern overhang)
 //---               + 8m (Hull B bow overhang) + 120m (Hull B anchor-to-bow) = 265m.
 //---
-//--- WFBE_C_NAVAL_SEAM_BRIDGE  (default 0):
+//--- WFBE_C_NAVAL_SEAM_BRIDGE  (default 1):
 //---   When > 0, spawn 4x Land_nav_pier_m_1 bridge segments across the Hull A
 //---   stern / Hull B bow seam.  Placed at body-space Y offsets (-131,-134,-137,-140
-//---   from Hull A anchor) at the averaged deck-Z of both hulls.
+//---   from Hull A anchor) at the proven flight-deck Z shared by both hulls.
 //---   Escalation-ladder step 2: flush-butt geometry is tried first (inline=1,
 //---   seam=0); add piers only if the seam wheeled-vehicle test requires it.
 //---   Has no effect unless WFBE_C_NAVAL_INLINE_HULLS > 0.
 //======================================================================================
 	if (isNil "WFBE_C_NAVAL_INLINE_HULLS") then {WFBE_C_NAVAL_INLINE_HULLS  = 1};   //--- 0 = lateral HEAD behaviour; >0 = inline bow-to-stern axis
 	if (isNil "WFBE_C_NAVAL_INLINE_GAP")   then {WFBE_C_NAVAL_INLINE_GAP    = -265}; //--- Hull B aft offset metres (body Y); tune -258..-275 in-editor
-	if (isNil "WFBE_C_NAVAL_SEAM_BRIDGE")  then {WFBE_C_NAVAL_SEAM_BRIDGE   = 0};   //--- 0 = no bridge piers; >0 = 4x Land_nav_pier_m_1 at seam
+	if (isNil "WFBE_C_NAVAL_SEAM_BRIDGE")  then {WFBE_C_NAVAL_SEAM_BRIDGE   = 1};   //--- 1 = 4x Land_nav_pier_m_1 at seam; 0 = no bridge piers
 //--- fable/naval-camps-on-deck (Ray 2026-07-07):
 //--- WFBE_C_NAVAL_CAMPS_DECK: when 1 (default), re-seat Khe Sanh camp logics/models/flags +
 //---   depot to deckZ after Init_Town spawns them (owner-reported: camps appeared at sea level).

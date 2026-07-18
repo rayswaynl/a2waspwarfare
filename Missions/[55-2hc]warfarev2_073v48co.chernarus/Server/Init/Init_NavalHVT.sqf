@@ -611,7 +611,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 			//---   That is perpendicular to heading-90 — correct for lateral.
 			//---   Same rotation identity (cos/sin of the same _dir); only the axis changes.
 			//=============================================================================
-			private ["_inlineGap","_inlineAnchor","_inlineParts","_deckZB","_bridgeZ","_seam_Y_offsets","_bY","_bwX","_bwY","_seamPier"];
+			private ["_inlineGap","_inlineAnchor","_bridgeZ","_seam_Y_offsets","_bY","_bwX","_bwY","_seamPier"];
 			_inlineGap = abs (missionNamespace getVariable ["WFBE_C_NAVAL_INLINE_GAP", -265]);
 			//--- Tuner guard: a gap of 0 would place Hull B exactly on Hull A (silent overlap). Self-heal to the
 			//--- design default and warn in RPT so a bad lobby/constants value is diagnosable, not invisible.
@@ -624,26 +624,18 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 
 			//--- Hull B: same heading, same SpawnLHD call — no game logic attached.
 			//--- Hull B carries ZERO town logic / camp / SCUD (all game-logic stays on Hull A).
-			_inlineParts = [_inlineAnchor, _twinDir] Call WFBE_NavalHVT_SpawnLHD;
+			[_inlineAnchor, _twinDir] Call WFBE_NavalHVT_SpawnLHD;
 
 			//--- Seam-bridge piers (only when WFBE_C_NAVAL_SEAM_BRIDGE > 0).
 			//--- 4x Land_nav_pier_m_1 across the Hull A stern / Hull B bow join.
-			//--- Z = average of Hull A and Hull B deck heights (conservative floor to avoid float).
+			//--- Z = proven LHD flight-deck height stored on Hull A; Hull B uses the same assembly/origin.
 			//--- Body-space Y offsets from Hull A anchor: nominally -131,-134,-137,-140
 			//--- (i.e. 131-140m aft of the Hull A anchor, inside the seam zone).
 			//--- VERIFY in-editor: adjust these Y values until piers land in the gap centre.
 			if ((missionNamespace getVariable ["WFBE_C_NAVAL_SEAM_BRIDGE", 0]) > 0) then {
-				//--- Probe Hull B deckZ from part[3] (same pattern as Hull A above).
-				_deckZB = _ocDeckZ;
-				if (count _inlineParts > 3) then {
-					private ["_bbB","_partB"];
-					_partB = _inlineParts select 3;
-					if (!isNull _partB) then {
-						_bbB   = boundingBox _partB;
-						_deckZB = (getPosASL _partB select 2) + ((_bbB select 1) select 2);
-					};
-				};
-				_bridgeZ = (_ocDeckZ + _deckZB) / 2;
+				//--- Both inline hulls are identical sea-level assemblies. The model bounding-box top is
+				//--- not the flight deck; seat the patch on the proven Hull A deck plane instead.
+				_bridgeZ = _ocDeckZ;
 				_seam_Y_offsets = [-131, -134, -137, -140];
 				{
 					_bY  = _x;
