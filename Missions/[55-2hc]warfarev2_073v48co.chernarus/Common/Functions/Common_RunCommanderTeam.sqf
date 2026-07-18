@@ -942,7 +942,7 @@ while {!WFBE_GameOver && _alive} do {
 			if (!_tmCancel && {!isNull _tmLdr} && {behaviour _tmLdr == "COMBAT"}) then {_tmCancel = true; _tmWhy = "combat"};
 			if (_tmCancel) then {
 				_team setVariable ["wfbe_aicom_terminal", [], true];   //--- [] = broadcast-clear sentinel (nil cannot network on A2 OA)
-				_team setVariable ["wfbe_aicom_failedjourneys", 0];    //--- evidence consumed: a recovered team re-earns any future latch from zero
+				_team setVariable ["wfbe_aicom_failedjourneys", 0, true];    //--- evidence consumed: a recovered team re-earns any future latch from zero. PUBLIC broadcast (rev: reviewer #1142) - this driver runs HC-local but wfbe_aicom_failedjourneys is written+read SERVER-side (AssignTowns), so a 2-arg reset only cleared the HC copy and the server counter stayed >= threshold, re-latching forever. Mirrors sibling line 927 (wfbe_aicom_terminal ,true).
 				diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TERMINAL_CANCEL|team=" + (str _team) + "|why=" + _tmWhy);
 			} else {
 				if ((time - (_tmA select 0)) >= (missionNamespace getVariable ["WFBE_C_AICOM_TERMINAL_GRACE", 90])) then {
