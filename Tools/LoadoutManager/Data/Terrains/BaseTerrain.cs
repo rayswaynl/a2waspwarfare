@@ -9,7 +9,7 @@
 
 public abstract class BaseTerrain : InterfaceTerrain
 {
-    private const string ReleaseCandidateId = "build89-cmdcon44-20260703";
+    private const string ReleaseCandidateId = "wasp-rc2-20260719";
     private const string ChernarusHelpAirfieldsLine =
         "NWAF, NEAF and Balota are capturable (40 SV, PMC garrison). Taking one gives a repair point and an exclusive hangar with unique aircraft (L-39, An-2, Mi-17 variants). Aircraft buy at hangars (green map symbol) when an Air Factory exists.<br />\",";
     private const string GenericVanillaHelpAirfieldsLine =

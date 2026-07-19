@@ -44,6 +44,8 @@ Status: draft release candidate. No live deployment or master merge has occurred
 - Repairs shared-class metadata, malformed faction tuples, missing enabled-weapon prices, and GUER counter-battery-radar buildability.
 - Stops supply missions safely when no friendly town can be resolved.
 - Hardens rolling-average persistence, server defaults, terrain-size lookup, CTL bookkeeping, and stale mission paths.
+- Gives RC2 a unique generated release identity (`wasp-rc2-20260719`) and guards it in the release-template test.
+- Repairs the soak scenario runner so the boot-smoke gate receives the real server RPT and a missing SELFTEST correctly hard-fails the result instead of being swallowed as a tool error.
 - Mirrors maintained mission changes across Chernarus, Takistan, and Zargabad.
 
 ## Pending final folds

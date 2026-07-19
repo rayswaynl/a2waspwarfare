@@ -62,10 +62,14 @@ function Read-Template {
 $chernarus = Read-Template "Missions\[55-2hc]warfarev2_073v48co.chernarus\version.sqf.template"
 $takistan = Read-Template "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan\version.sqf.template"
 $zargabad = Read-Template "Missions_Vanilla\[61-2hc]warfarev2_073v48co.zargabad\version.sqf.template"
+$baseTerrain = Read-Template "Tools\LoadoutManager\Data\Terrains\BaseTerrain.cs"
 
 # Live convention: the tracked template carries a build-tagged WASPRELEASE marker.
 # We validate that the marker line is present and well-formed, not its exact build id.
 $markerPattern = '(?m)^#define WF_RELEASE_MARKER "WASPRELEASE\|v1\|candidate=[^"|]+\|git=[^"|]+\|terrain=[^"|]+"\r?$'
+
+Write-Host "Checking LoadoutManager release candidate identity"
+Assert-Match $baseTerrain 'private const string ReleaseCandidateId = "wasp-rc2-20260719";' "LoadoutManager stamps the RC2 candidate"
 
 Write-Host "Checking Chernarus version.sqf.template"
 Assert-Match $chernarus $markerPattern "Chernarus release marker line is present and well-formed"

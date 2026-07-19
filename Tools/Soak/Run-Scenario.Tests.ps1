@@ -27,27 +27,28 @@ try {
     Assert ($plan -match 'ASSERTS')                  "plan lists asserts"
     Assert (-not (Test-Path $ledger))                "DryRun wrote no ledger"
 
-    Write-Host "`n[2] -FromRpt grades the sample -> PASS (idle-soak: fps 42 >= 42)"
+    Write-Host "`n[2] -FromRpt grades the sample -> FAIL (boot-smoke SELFTEST evidence is absent)"
     $r = & $script -Name idle-soak -FromRpt $sample -LedgerPath $ledger -ResultsDir $results
-    Assert ($r.verdict -eq 'PASS')                   "idle-soak verdict PASS ($($r.verdict))"
+    Assert ($r.verdict -eq 'FAIL')                   "idle-soak boot-smoke verdict FAIL ($($r.verdict))"
     Assert ($r.metrics.serverFpsMedian -eq 42)       "metrics.serverFpsMedian = 42"
     Assert ($r.metrics.aiTotPeak -eq 105)            "metrics.aiTotPeak = 105"
     Assert (-not [string]::IsNullOrWhiteSpace($r.ledgerRowId)) "ledgerRowId set ($($r.ledgerRowId))"
     Assert (Test-Path (Join-Path $results "$($r.runId).json")) "Run-Result JSON written"
-    Assert ($r.bootSmoke.ran -eq $false)             "boot-smoke absent on this base (opportunistic)"
+    Assert ($r.bootSmoke.ran -eq $true)              "boot-smoke ran"
+    Assert ($r.bootSmoke.verdict -eq 'FAIL')         "boot-smoke FAIL propagated"
 
     Write-Host "`n[3] ledger row is well-formed + carries scenario notes"
     Assert (Test-Path $ledger)                       "ledger created"
     $row = ([System.IO.File]::ReadAllLines($ledger) | Where-Object { $_.Trim() -and -not $_.StartsWith('#') } | Select-Object -First 1) | ConvertFrom-Json
     Assert ($row.status -eq 'POSTED_LEDGER_ONLY')    "row status POSTED_LEDGER_ONLY"
     Assert (($row.notes -join ' ') -match 'scenario=idle-soak') "row notes record the scenario"
-    Assert ($row.lenses.overall -eq 'PASS')          "row lens overall PASS"
+    Assert ($row.lenses.overall -eq 'FAIL')          "row lens overall FAIL"
     $vout = & python $validate $ledger 2>&1 | Out-String
     Assert ($vout -match 'CONFORMANCE OK')           "ledger conforms to run_result.schema.json"
 
-    Write-Host "`n[4] -FromRpt WATCH when a watch-assert misses (big-assault: aiTotPeak 105 < 300)"
+    Write-Host "`n[4] boot-smoke hard FAIL outranks a missed watch assert"
     $r2 = & $script -Name big-assault -FromRpt $sample -LedgerPath $ledger -ResultsDir $results
-    Assert ($r2.verdict -eq 'WATCH')                 "big-assault verdict WATCH ($($r2.verdict))"
+    Assert ($r2.verdict -eq 'FAIL')                  "big-assault verdict FAIL ($($r2.verdict))"
     $missed = @($r2.asserts | Where-Object { $_.pass -eq $false })
     Assert ($missed.Count -ge 1)                      "at least one assert recorded as missed"
     $aiMiss = @($missed | Where-Object { $_.metric -eq 'aiTotPeak' })

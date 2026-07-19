@@ -229,7 +229,7 @@ $bootSmoke = $null
 $bootTool = Join-Path (Split-Path -Parent $soakDir) 'Smoke\Test-WaspBootSmoke.ps1'
 if (Test-Path -LiteralPath $bootTool) {
     try {
-        $bsJson = & $bootTool -RptPath $FromRpt -Json 2>$null
+        $bsJson = & $bootTool -ServerRpt $FromRpt -Json 2>$null
         if ($bsJson) {
             $bs = ($bsJson | ConvertFrom-Json)
             $bootSmoke = [ordered]@{ ran = $true; verdict = $bs.verdict; tool = $bootTool }
