@@ -16,9 +16,11 @@ private ["_secHardening","_facType","_pos","_dir","_truck","_player","_idx","_av
 _secHardening = (missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0;
 
 if (_secHardening && {!((typeName _this) in ["ARRAY"])}) exitWith {
+	diag_log Format ["GUERFOB|v1|reject|reason=malformed-payload|payloadType=%1", typeName _this];
 	["WARNING", Format ["RequestFOBStructure.sqf: malformed payload type [%1] - rejected.", typeName _this]] Call WFBE_CO_FNC_LogContent;
 };
 if (_secHardening && {!((count _this) > 4)}) exitWith {
+	diag_log Format ["GUERFOB|v1|reject|reason=short-payload|count=%1", count _this];
 	["WARNING", Format ["RequestFOBStructure.sqf: short payload [%1] - rejected.", _this]] Call WFBE_CO_FNC_LogContent;
 };
 
@@ -28,17 +30,28 @@ _dir     = _this select 2;
 _truck   = _this select 3;
 _player  = _this select 4;
 
-if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) < 1) exitWith {};
+//--- Always-on round evidence: WFBE_CO_FNC_LogContent is compiled out on normal release servers, so it cannot
+//--- distinguish a missing PV request from an authoritative reject. Keep this concise and avoid player identity.
+diag_log Format ["GUERFOB|v1|request|type=%1|pos=%2", _facType, _pos];
+
+if (!((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0)) exitWith {
+	diag_log Format ["GUERFOB|v1|reject|reason=guer-disabled|type=%1|pos=%2", _facType, _pos];
+};
 
 if (_secHardening && {!((typeName _player) in ["OBJECT"]) || {isNull _player} || {!isPlayer _player} || {!alive _player}}) exitWith {
+	diag_log Format ["GUERFOB|v1|reject|reason=invalid-player|type=%1|pos=%2", _facType, _pos];
 	["WARNING", Format ["RequestFOBStructure.sqf: caller [%1] is not a live player - rejected.", _player]] Call WFBE_CO_FNC_LogContent;
 };
 if (_secHardening && {!((side group _player) in [resistance])}) exitWith {
+	diag_log Format ["GUERFOB|v1|reject|reason=non-guer-player|type=%1|pos=%2", _facType, _pos];
 	["WARNING", Format ["RequestFOBStructure.sqf: caller [%1] is not GUER - rejected.", _player]] Call WFBE_CO_FNC_LogContent;
 };
 
 _idx = (missionNamespace getVariable ["WFBE_C_GUER_FOB_STRUCTS", ["Barracks","Light","Heavy"]]) find _facType;
-if (_idx < 0) exitWith {["WARNING", Format ["RequestFOBStructure.sqf: unknown FOB type [%1] - rejected.", _facType]] Call WFBE_CO_FNC_LogContent};
+if (_idx < 0) exitWith {
+	diag_log Format ["GUERFOB|v1|reject|reason=unknown-type|type=%1|pos=%2", _facType, _pos];
+	["WARNING", Format ["RequestFOBStructure.sqf: unknown FOB type [%1] - rejected.", _facType]] Call WFBE_CO_FNC_LogContent;
+};
 
 _avail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]]);
 _reject = false;
@@ -46,6 +59,10 @@ _reject = false;
 //--- (1) authoritative token check.
 if (_idx >= (count _avail) || {(_avail select _idx) <= 0}) then {
 	_reject = true;
+	diag_log Format ["GUERFOB|v1|reject|reason=no-token|type=%1|pos=%2|avail=%3", _facType, _pos, _avail];
+	if ((typeName _player) == "OBJECT" && {!isNull _player}) then {
+		[_player, "HandleSpecial", ["guer-fob-result", false, "FOB build rejected: no matching FOB token is available."]] Call WFBE_CO_FNC_SendToClient;
+	};
 	["WARNING", Format ["RequestFOBStructure.sqf: no FOB token for [%1] (avail %2) - rejected.", _facType, _avail]] Call WFBE_CO_FNC_LogContent;
 };
 
@@ -53,6 +70,10 @@ if (_idx >= (count _avail) || {(_avail select _idx) <= 0}) then {
 //--- server reject here is only a spoof/race - log it (no client message needed, the client already gave feedback).
 if (!_reject && {_pos call WFBE_FNC_GuerFobBlocked}) then {
 	_reject = true;
+	diag_log Format ["GUERFOB|v1|reject|reason=blocked-placement|type=%1|pos=%2", _facType, _pos];
+	if ((typeName _player) == "OBJECT" && {!isNull _player}) then {
+		[_player, "HandleSpecial", ["guer-fob-result", false, "FOB build rejected: choose dry, flat ground outside enemy town and base areas."]] Call WFBE_CO_FNC_SendToClient;
+	};
 	["WARNING", Format ["RequestFOBStructure.sqf: FOB [%1] placement in a restricted (enemy town/base) area - rejected.", _facType]] Call WFBE_CO_FNC_LogContent;
 };
 
@@ -72,6 +93,7 @@ if (!_reject) then {
 		//--- construction-started feedback (sound/marker), mirroring RequestStructure.sqf.
 		[resistance, "HandleSpecial", ['building-started', _facType, _pos]] Call WFBE_CO_FNC_SendToClients;
 		[_classname, resistance, _pos, _dir, _index] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
+		diag_log Format ["GUERFOB|v1|accept|type=%1|pos=%2|avail=%3", _facType, _pos, _avail];
 		["INFORMATION", Format ["RequestFOBStructure.sqf: GUER FOB [%1] (%2) building at %3. Avail now %4.", _facType, _classname, _pos, _avail]] Call WFBE_CO_FNC_LogContent;
 		//--- fable/fob-marker (owner 2026-07-07): resistance-only map marker while the FOB is active.
 		//--- Side-scoped via the WildcardMarker createMarkerLocal idiom - WEST/EAST never see it.
@@ -87,6 +109,10 @@ if (!_reject) then {
 		_avail set [_idx, (_avail select _idx) + 1];
 		missionNamespace setVariable ["WFBE_GUER_FOB_AVAIL", _avail];
 		publicVariable "WFBE_GUER_FOB_AVAIL";
+		diag_log Format ["GUERFOB|v1|reject|reason=missing-structure|type=%1|pos=%2", _facType, _pos];
+		if ((typeName _player) == "OBJECT" && {!isNull _player}) then {
+			[_player, "HandleSpecial", ["guer-fob-result", false, "FOB build rejected: this factory type is unavailable. Your token was restored."]] Call WFBE_CO_FNC_SendToClient;
+		};
 		["WARNING", Format ["RequestFOBStructure.sqf: GUER structure [%1] not found in WFBE_GUERSTRUCTURES - token refunded.", _facType]] Call WFBE_CO_FNC_LogContent;
 	};
 };
