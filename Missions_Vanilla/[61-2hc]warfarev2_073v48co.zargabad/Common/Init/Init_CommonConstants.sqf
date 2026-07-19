@@ -2820,6 +2820,26 @@ if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL") then {WFBE_C_CLIENT_FRAME_TE
 //--- airlift behaviour.
 	if (isNil "WFBE_C_AICOM_AIR_TELEMETRY") then {WFBE_C_AICOM_AIR_TELEMETRY = 0};
 	if (isNil "WFBE_C_AICOM_AIR_TELEMETRY_SEC") then {WFBE_C_AICOM_AIR_TELEMETRY_SEC = 30}; //--- min seconds between periodic at-target air snapshots per side (founding-decision + attempt events are not throttled).
+//--- AICOM ARTILLERY ECHELON (claude 2026-07-18): explicit per-side state machine for the BASE-built
+//--- self-propelled AICOM guns (AI_Commander_Base.sqf builds them in a 25-38m ring around HQ;
+//--- AI_Commander_Strategy.sqf block 4 fires them). LIVE evidence (wasp-aicom-live-20260718): EAST built
+//--- artillery 23x but fired only 8 missions, none after minute 583, because the fire block only ever
+//--- DISCOVERS pieces within 250m of HQ and the guns never move - so once the front advances past a gun's
+//--- max range it silently polls forever; WEST additionally spammed ~1330 ineligible base-build skip logs.
+//--- Flag ON: (a) each constructed gun is REGISTERED on an explicit per-side list (wfbe_aicom_arty_reg)
+//--- that also drives the self-heal cap count, so a gun that repositioned forward past WFBE_C_BASEGC_RANGE
+//--- is still tracked and NOT double-built; (b) a registered gun that cannot service the current target is
+//--- REPOSITIONED via PlaceSafe (the shipped relocation primitive - same as the tactical travel-with
+//--- teleport) to a SAFE owned-town anchor in range + behind the front, emitting ONE explicit REPOSITION
+//--- transition instead of silent polling; (c) the base build-skip log is debounced to one line per state
+//--- transition. Master 0 = every path keeps its ORIGINAL computation (near-HQ discovery, per-pass skip
+//--- log, no reposition) => runtime byte-identical to HEAD. Base guns are gunner-only emplacements (no
+//--- driver), so PlaceSafe redeploy is used rather than a road-march waypoint. Does NOT touch the separate
+//--- HC mobile battery (Common_RunCommanderTeam.sqf ~2567) - that path is unproven-absent, not disabled.
+	if (isNil "WFBE_C_AICOM_ARTY_ECHELON") then {WFBE_C_AICOM_ARTY_ECHELON = 0}; //--- master gate: 0=off (default, byte-identical to HEAD), 1=on (registry + forward reposition + debounced skip log).
+	if (isNil "WFBE_C_AICOM_ARTY_ECHELON_REPOS_CD") then {WFBE_C_AICOM_ARTY_ECHELON_REPOS_CD = 180}; //--- s: minimum seconds between reposition redeploys for ONE gun (anti-thrash / bounds the owned-town scan cadence).
+	if (isNil "WFBE_C_AICOM_ARTY_ECHELON_SAFE_DIST") then {WFBE_C_AICOM_ARTY_ECHELON_SAFE_DIST = 400}; //--- m: no enemy may be within this radius of the gun (never redeployed OUT of a firefight) or of a candidate anchor town (never INTO one).
+	if (isNil "WFBE_C_AICOM_ARTY_ECHELON_MIN_STANDOFF") then {WFBE_C_AICOM_ARTY_ECHELON_MIN_STANDOFF = 500}; //--- m: keep the anchor at least this far from the target (never redeploy the gun on top of the objective).
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
