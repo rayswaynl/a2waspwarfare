@@ -73,6 +73,26 @@ def dark_uav_order(text: str) -> list[list[str]]:
     return [["WFBE_UP_UAV", level] for level in levels]
 
 
+def enabled_ai_order(text: str) -> list[list[str]]:
+    """Read the enabled AI order in the sequence its construction executes."""
+    construction = re.search(r"(?:_uav2Order|_aiOrder)\s*=\s*\[", text)
+    if construction is None:
+        raise AssertionError("AI order construction was not found")
+    published = text.find(
+        'missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER"',
+        construction.start(),
+    )
+    if published < 0:
+        raise AssertionError("AI order publication was not found")
+    return [
+        [upgrade, level]
+        for upgrade, level in re.findall(
+            r"\[(WFBE_UP_[A-Z0-9_]+),(\d+)\]",
+            text[construction.start():published],
+        )
+    ]
+
+
 class Uav2ConfigurationTests(unittest.TestCase):
     def test_features_are_separate_and_armed_for_rc2(self) -> None:
         text = code(CONSTANTS)
@@ -136,6 +156,19 @@ class Uav2ConfigurationTests(unittest.TestCase):
                     ["WFBE_UP_UAV", "2"],
                     order,
                     "OA 1.64 nested-array subtraction retains UAV L2 in the dark AI order",
+                )
+
+    def test_enabled_ai_order_keeps_level_two_immediately_after_level_one(self) -> None:
+        paths = sorted((MAINTAINED_ROOTS[0] / UPGRADE_DIR).glob("Upgrades_*.sqf"))
+        paths = [path for path in paths if "WFBE_UP_UAV" in path.read_text(encoding="utf-8-sig")]
+        for path in paths:
+            with self.subTest(path=path.name):
+                order = enabled_ai_order(mask_comments(path.read_text(encoding="utf-8-sig")))
+                level_one = order.index(["WFBE_UP_UAV", "1"])
+                self.assertEqual(
+                    order[level_one + 1],
+                    ["WFBE_UP_UAV", "2"],
+                    "enabled UAV2 must retain its legacy priority immediately after UAV L1",
                 )
 
     def test_upgrade_files_match_all_maintained_terrains(self) -> None:
