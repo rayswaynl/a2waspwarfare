@@ -554,7 +554,7 @@ WFBE_FNC_OilfieldApplyPull = {
 //--- units/waypoints (no HC delegation needed; this whole file is server-side).
 //------------------------------------------------------------------------------------
 WFBE_FNC_OilfieldTryGuerRaid = {
-	private ["_last","_interval","_grpCap","_gcnt","_grp","_size","_cls","_i","_sp","_u"];
+	private ["_last","_interval","_grpCap","_gcnt","_grp","_size","_cls","_created","_i","_sp","_u"];
 	if ((missionNamespace getVariable ["WFBE_C_OILFIELD_GUER_RAID", 0]) != 1) exitWith {};
 	_last     = missionNamespace getVariable ["WFBE_OILFIELD_GUER_LAST", -1e9];
 	_interval = missionNamespace getVariable ["WFBE_C_OILFIELD_GUER_RAID_INTERVAL", 1500];
@@ -576,18 +576,30 @@ WFBE_FNC_OilfieldTryGuerRaid = {
 	private ["_ang","_r","_ringPos"];
 	_ang = random 360; _r = 180 + random 80;
 	_ringPos = [(_nodePos select 0) + _r * sin _ang, (_nodePos select 1) + _r * cos _ang, 0];
+	_created = 0;
 	for "_i" from 1 to _size do {
 		_sp = [(_ringPos select 0) + (random 20) - 10, (_ringPos select 1) + (random 20) - 10, 0];
 		_u = [_cls, _grp, _sp, resistance] Call WFBE_CO_FNC_CreateUnit;
-		if (!isNull _u) then { _u setVariable ["WFBE_IsTownDefenderAI", true, true] };
+		if (!isNull _u) then {
+			_u setVariable ["WFBE_IsTownDefenderAI", true, true];
+			_created = _created + 1;
+		};
+	};
+	//--- An engine/group-cap refusal can leave the newly created raid group empty. Do not
+	//--- patrol, cooldown, or report a requested raid as dispatched unless at least one
+	//--- actual raider exists.
+	if (_created < 1) exitWith {
+		deleteGroup _grp;
+		diag_log Format ["OILFIELD|v2|GUERRAID|t=%1|requested=%2|created=0|from=%3|deny=createUnit", round time, _size, _ringPos];
+		["WARNING", Format ["Server_Oilfields.sqf: GUER raid aborted - engine created 0/%1 raiders.", _size]] Call WFBE_CO_FNC_LogContent;
 	};
 	//--- Patrol AROUND the field (AIPatrol lays MOVE/CYCLE waypoints centred on the destination).
 	[_grp, _nodePos, 90] Call AIPatrol;
 	_grp setBehaviour "AWARE";
 	_grp setCombatMode "RED";
 	missionNamespace setVariable ["WFBE_OILFIELD_GUER_LAST", time];
-	diag_log Format ["OILFIELD|v2|GUERRAID|t=%1|size=%2|from=%3", round time, _size, _ringPos];
-	["INFORMATION", Format ["Server_Oilfields.sqf: GUER raid (%1 raiders) dispatched to the OILFIELD from %2.", _size, _ringPos]] Call WFBE_CO_FNC_LogContent;
+	diag_log Format ["OILFIELD|v2|GUERRAID|t=%1|requested=%2|created=%3|from=%4", round time, _size, _created, _ringPos];
+	["INFORMATION", Format ["Server_Oilfields.sqf: GUER raid (%1/%2 raiders) dispatched to the OILFIELD from %3.", _created, _size, _ringPos]] Call WFBE_CO_FNC_LogContent;
 };
 
 //------------------------------------------------------------------------------------
