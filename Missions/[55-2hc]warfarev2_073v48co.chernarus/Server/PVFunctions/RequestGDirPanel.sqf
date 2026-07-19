@@ -182,6 +182,13 @@ if (!_townFound || {isNull _townObj}) exitWith {
 	[_player, "GDirPanelResult", ["deny", "Town not found.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
 };
 
+//--- The current Director has no target-bound retake materializer. Refuse the exposed counter
+//--- contract before any cooldown, scarcity, wallet, pending-order, or contract state can change.
+if (_verb == "counter") exitWith {
+	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=counter|town=%2|deny=counterUnavailable|fundedBy=%3|pricePaid=0", _elmin, _townId, getPlayerUID _player];
+	[_player, "GDirPanelResult", ["deny", "Counter-attack contracts are unavailable until a retake unit is available.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
+};
+
 //--- P0 (fable/gdir-ledger-conservation): validate CURRENT permitted ownership BEFORE any debit. The panel
 //--- previously validated existence only - a paid order on a town GUER no longer holds debited the wallet,
 //--- then no-opped downstream. Same permitted set as the Director ledger (GUER or UNKNOWN). "counter" and
