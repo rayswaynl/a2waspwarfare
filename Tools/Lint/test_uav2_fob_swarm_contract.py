@@ -44,6 +44,35 @@ def code(relative: Path) -> str:
     return mask_comments(read(relative))
 
 
+def a2_oa_array_subtract(left: list[object], right: list[object]) -> list[object]:
+    """Model the OA 1.64 `-` behavior relevant to AI upgrade orders.
+
+    OA only removes scalar direct members. A nested array such as
+    `[WFBE_UP_UAV,2]` is not removed by `order - [[WFBE_UP_UAV,2]]`.
+    """
+    scalar_removals = [value for value in right if not isinstance(value, list)]
+    return [value for value in left if value not in scalar_removals]
+
+
+def dark_uav_order(text: str) -> list[list[str]]:
+    """Evaluate the default UAV slice as constructed by an upgrade config."""
+    old_order = [["WFBE_UP_UAV", "1"], ["WFBE_UP_UAV", "2"]]
+    if "_uav2Order = _uav2Order - [[WFBE_UP_UAV,2]]" in text:
+        return a2_oa_array_subtract(old_order, [["WFBE_UP_UAV", "2"]])
+
+    append = re.search(
+        r"if \(_uav2Enabled\) then \{\s*"
+        r"(?P<variable>_uav2Order|_aiOrder)\s*=\s*"
+        r"(?P=variable)\s*\+\s*\[\[WFBE_UP_UAV,2\]\];",
+        text,
+    )
+    if append is None:
+        raise AssertionError("AI order must be constructed without UAV L2 and append it only when enabled")
+    construction = text[:append.start()]
+    levels = re.findall(r"\[WFBE_UP_UAV,(\d)\]", construction)
+    return [["WFBE_UP_UAV", level] for level in levels]
+
+
 class Uav2ConfigurationTests(unittest.TestCase):
     def test_features_are_separate_and_armed_for_rc2(self) -> None:
         text = code(CONSTANTS)
@@ -81,7 +110,6 @@ class Uav2ConfigurationTests(unittest.TestCase):
                 self.assertIn("[WFBE_UP_UAV,2]", text)
                 self.assertIn('missionNamespace getVariable ["WFBE_C_UAV2_FOB", 0]', text)
                 self.assertIn('missionNamespace getVariable ["WFBE_C_UAV2_SWARM", 0]', text)
-                self.assertIn('_uav2Order = _uav2Order - [[WFBE_UP_UAV,2]]', text)
 
     def test_dark_consumers_hide_level_two_from_player_upgrade_data(self) -> None:
         paths = sorted((MAINTAINED_ROOTS[0] / UPGRADE_DIR).glob("Upgrades_*.sqf"))
@@ -97,6 +125,18 @@ class Uav2ConfigurationTests(unittest.TestCase):
                 self.assertIn('if (_uav2Enabled) then {2} else {1}', text)
                 self.assertIn('if (_uav2Enabled) then {[[WFBE_UP_AIR,2],[WFBE_UP_AIR,3]]} else {[[WFBE_UP_AIR,2]]}', text)
                 self.assertIn('if (_uav2Enabled) then {[60,120]} else {[60]}', text)
+
+    def test_dark_ai_order_omits_level_two_under_oa_nested_array_semantics(self) -> None:
+        paths = sorted((MAINTAINED_ROOTS[0] / UPGRADE_DIR).glob("Upgrades_*.sqf"))
+        paths = [path for path in paths if "WFBE_UP_UAV" in path.read_text(encoding="utf-8-sig")]
+        for path in paths:
+            with self.subTest(path=path.name):
+                order = dark_uav_order(mask_comments(path.read_text(encoding="utf-8-sig")))
+                self.assertNotIn(
+                    ["WFBE_UP_UAV", "2"],
+                    order,
+                    "OA 1.64 nested-array subtraction retains UAV L2 in the dark AI order",
+                )
 
     def test_upgrade_files_match_all_maintained_terrains(self) -> None:
         names = [path.name for path in sorted((MAINTAINED_ROOTS[0] / UPGRADE_DIR).glob("Upgrades_*.sqf")) if "WFBE_UP_UAV" in path.read_text(encoding="utf-8-sig")]

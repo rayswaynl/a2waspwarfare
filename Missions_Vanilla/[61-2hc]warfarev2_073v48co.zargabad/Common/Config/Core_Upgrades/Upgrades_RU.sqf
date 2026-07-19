@@ -151,7 +151,8 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
 ]];
 
 //todo, on commander missing link checkup, skip disabled upgrades.
-missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
+private ["_uav2Order"];
+_uav2Order = [
 	[WFBE_UP_BARRACKS,1],
 	[WFBE_UP_GEAR,1],
 	[WFBE_UP_LIGHT,1],
@@ -181,7 +182,6 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
 	[WFBE_UP_PARATROOPERS,2],
 	[WFBE_UP_AIR,3],
 	[WFBE_UP_UAV,1],
-	[WFBE_UP_UAV,2],
 	[WFBE_UP_PARATROOPERS,3],
 	[WFBE_UP_EASA,1],
 	[WFBE_UP_SUPPLYPARADROP,1],
@@ -190,18 +190,13 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], [
 	[WFBE_UP_PATROLS,2],
 	[WFBE_UP_PATROLS,3],
 	[WFBE_UP_PATROLS,4]
-]];
+];
 
-//--- Do not make the AI buy a useless level while both independently gated UAV2 consumers are dark.
-if (!_uav2Enabled) then {
-	private ["_uav2Order","_uav2OrderKey"];
-	_uav2OrderKey = Format ["WFBE_C_UPGRADES_%1_AI_ORDER", _side];
-	_uav2Order = missionNamespace getVariable _uav2OrderKey;
-	if (!isNil "_uav2Order") then {
-		_uav2Order = _uav2Order - [[WFBE_UP_UAV,2]];
-		missionNamespace setVariable [_uav2OrderKey, _uav2Order];
-	};
+if (_uav2Enabled) then {
+	_uav2Order = _uav2Order + [[WFBE_UP_UAV,2]];
 };
+
+missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], _uav2Order];
 
 //--- Check potential missing definition.
 (_side) Call Compile preprocessFileLineNumbers "Common\Config\Core_Upgrades\Check_Upgrades.sqf";
