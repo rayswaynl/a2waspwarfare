@@ -76,9 +76,9 @@ class AicomCommandHandoffPreserveTests(unittest.TestCase):
         self.assertEqual([team.reset_count for team in teams], [0, 0, 0, 0, 0, 1])
         self.assertEqual([team.sequence for team in teams], [20, 21, 22, 23, 24, 100])
 
-    def test_flag_default_is_off_and_all_generated_copies_match_source(self) -> None:
+    def test_flag_is_armed_and_all_generated_copies_match_source(self) -> None:
         constants = mask_comments(read(MAINTAINED_ROOTS[0], CONSTANTS))
-        self.assertIn('if (isNil "WFBE_C_CMD_HANDOFF_PRESERVE") then {WFBE_C_CMD_HANDOFF_PRESERVE = 0}', constants)
+        self.assertIn('if (isNil "WFBE_C_CMD_HANDOFF_PRESERVE") then {WFBE_C_CMD_HANDOFF_PRESERVE = 1}', constants)
         for relative in MIRRORED_FILES:
             with self.subTest(path=str(relative)):
                 copies = [(root / relative).read_bytes() for root in MAINTAINED_ROOTS]

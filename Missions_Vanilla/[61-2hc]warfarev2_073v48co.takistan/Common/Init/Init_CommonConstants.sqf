@@ -422,7 +422,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_ORDER_DELTA") then {WFBE_C_AICOM_ORDER_DELTA = 80};            //--- Build83 movement: console/HC order re-issue distance gate (m) - nearby re-clicks don't tear the march.
 	if (isNil "WFBE_C_AICOM_ORDER_MININT") then {WFBE_C_AICOM_ORDER_MININT = 6};           //--- Build83 movement: per-team min seconds between order re-lays (debounce).
 	if (isNil "WFBE_C_AICOM_DIRECT_COOLDOWN") then {WFBE_C_AICOM_DIRECT_COOLDOWN = 1.5};   //--- Build83 console: short cooldown for DIRECT map-click Move/Defend/Patrol (local setVariable) - separate from the 8s RequestSpecial brain-send gate so re-targeting feels responsive.
-	if (isNil "WFBE_C_CMD_HANDOFF_PRESERVE") then {WFBE_C_CMD_HANDOFF_PRESERVE = 0}; //--- C5: 1 = only DIRECT-stamped teams reset on delegate edge; 0 preserves legacy blanket reset.
+	if (isNil "WFBE_C_CMD_HANDOFF_PRESERVE") then {WFBE_C_CMD_HANDOFF_PRESERVE = 1}; //--- C5 armed for RC2 test: only DIRECT-stamped teams reset on delegate edge; set 0 for legacy blanket reset.
 	//--- === Build 83 OILFIELDS (Takistan-only neutral resource node, Ray 2026-07-01) ===
 	if (isNil "WFBE_C_OILFIELD_ENABLE") then {WFBE_C_OILFIELD_ENABLE = 1};                 //--- master on/off (Takistan only; inert on Chernarus).
 	if (isNil "WFBE_C_OILFIELD_UNLOCK_TIME") then {WFBE_C_OILFIELD_UNLOCK_TIME = 3600};    //--- ingame seconds before the node unlocks (marker+capture+income live, announced). 1 hour.
@@ -2606,11 +2606,11 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_FPV_DRONE_AMMO") then {WFBE_C_FPV_DRONE_AMMO = "R_57mm_HE"}; //--- Warhead ammo class (RPG-warhead scale: hit 150 / indirect 40 / r 12).
 
 //--- UAV UPGRADE LEVEL 2 (owner-approved unified wave, GR-2026-07-08a). Level 1 remains the existing
-//--- player Tactical UAV. The two level-2 consumers are independent and default OFF: a player Engineer
+//--- player Tactical UAV. The two level-2 consumers are independent and armed for the RC2 test build: a player Engineer
 //--- can deploy a main-side Forward FOB from a repair truck, while an AI commander can fund an occasional
 //--- bounded FPV swarm. Neither feature reads or mutates resistance drone state.
 	if (isNil "WFBE_C_UAV2_LEVEL") then {WFBE_C_UAV2_LEVEL = 2};
-	if (isNil "WFBE_C_UAV2_FOB") then {WFBE_C_UAV2_FOB = 0};
+	if (isNil "WFBE_C_UAV2_FOB") then {WFBE_C_UAV2_FOB = 1}; //--- Armed for RC2 test-server exercise; set 0 to hide/disable.
 	if (isNil "WFBE_C_UAV2_FOB_COST") then {WFBE_C_UAV2_FOB_COST = 25000};
 	if (isNil "WFBE_C_UAV2_FOB_CAP") then {WFBE_C_UAV2_FOB_CAP = 2};
 	if (isNil "WFBE_C_UAV2_FOB_TRUCK_RANGE") then {WFBE_C_UAV2_FOB_TRUCK_RANGE = 18};
@@ -2624,7 +2624,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_UAV2_FOB_CONSUME_TRUCK") then {WFBE_C_UAV2_FOB_CONSUME_TRUCK = 0};
 	if (isNil "WFBE_C_UAV2_FOB_ENGINEERS") then {WFBE_C_UAV2_FOB_ENGINEERS = ['USMC_SoldierS_Engineer','CDF_Soldier_Engineer','Ins_Soldier_Sapper','TK_Soldier_Engineer_EP1','Ins_Soldier_CO','US_Soldier_Engineer_EP1','US_Soldier_Officer_EP1','BAF_Soldier_SL_DDPM','MVD_Soldier_TL','USMC_Soldier_TL','TK_Soldier_Officer_EP1']};
 
-	if (isNil "WFBE_C_UAV2_SWARM") then {WFBE_C_UAV2_SWARM = 0};
+	if (isNil "WFBE_C_UAV2_SWARM") then {WFBE_C_UAV2_SWARM = 1}; //--- Armed for RC2 AI-commander test-server exercise; set 0 to disable.
 	if (isNil "WFBE_C_UAV2_SWARM_COST") then {WFBE_C_UAV2_SWARM_COST = 5000};
 	if (isNil "WFBE_C_UAV2_SWARM_MAX_ACTIVE") then {WFBE_C_UAV2_SWARM_MAX_ACTIVE = 3};
 	if (isNil "WFBE_C_UAV2_SWARM_MAX_PER_STRIKE") then {WFBE_C_UAV2_SWARM_MAX_PER_STRIKE = 3};
@@ -2676,7 +2676,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- group per player per round (against A2's ~144-per-side group cap) and left an orderless AI standing at base.
 //--- Armed from the lobby (Rsc\Parameters.hpp, last entry) or here; the isNil guard below lets the lobby win.
 //--- 0 = legacy behaviour (default; byte-identical to HEAD).
-	if (isNil "WFBE_C_SPAWN_BUDDY_DISBAND") then {WFBE_C_SPAWN_BUDDY_DISBAND = 0};
+	if (isNil "WFBE_C_SPAWN_BUDDY_DISBAND") then {WFBE_C_SPAWN_BUDDY_DISBAND = 1}; //--- Armed for RC2 test-server validation; lobby parameter can disable.
 //--- PLAYER BASE DEFENSE AUTO-MANNING (fable/player-defense-automan):
 //--- When >0 and a player builds a gunner-capable static inside a base area, the defense is
 //--- registered for AI manning via the same Construction_StationaryDefense path as AI-commander
@@ -2781,9 +2781,9 @@ if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL") then {WFBE_C_CLIENT_FRAME_TE
 
 //--- TERMINAL SCUTTLE (P1 stuck-lifecycle, fable/terminal-scuttle-latch 2026-07-18, owner matrix ruling):
 //--- 1 = latched evidence-based terminal retirement with a VISIBLE scripted scuttle replaces the silent
-//--- proximity-gated recycle->disband path (which lost terminal requests at its 500m/900m gates). 0 (DEFAULT,
-//--- live) = fully dark, byte-identical legacy behaviour. Comments here tell the truth about the value below.
-if (isNil "WFBE_C_AICOM_TERMINAL_SCUTTLE") then {WFBE_C_AICOM_TERMINAL_SCUTTLE = 0};
+//--- proximity-gated recycle->disband path (which lost terminal requests at its 500m/900m gates). RC2 arms
+//--- this for test-server evidence; operators may set 0 before constants initialization to restore legacy behaviour.
+if (isNil "WFBE_C_AICOM_TERMINAL_SCUTTLE") then {WFBE_C_AICOM_TERMINAL_SCUTTLE = 1}; //--- Armed for RC2 test-server evidence; set 0 for legacy retirement.
 if (isNil "WFBE_C_AICOM_TERMINAL_GRACE") then {WFBE_C_AICOM_TERMINAL_GRACE = 90};          //--- seconds a latched team may still prove recovery before the scuttle fires
 if (isNil "WFBE_C_AICOM_TERMINAL_MOVE") then {WFBE_C_AICOM_TERMINAL_MOVE = 150};           //--- meters of leader movement since latch that counts as recovery (cancels the latch)
 if (isNil "WFBE_C_AICOM_TERMINAL_WRECK_TTL") then {WFBE_C_AICOM_TERMINAL_WRECK_TTL = 180}; //--- seconds scuttle wrecks/bodies persist before the bounded HC-local cleanup pass

@@ -28,7 +28,7 @@ $removeEnd = if ($removeStart -ge 0) { $client.IndexOf("} else {", $removeStart)
 $removePath = if ($removeEnd -gt $removeStart) { $client.Substring($removeStart, $removeEnd - $removeStart) } else { "" }
 
 $checks = @(
-    @{ Name = "lobby parameter exists"; Pass = $params -match '(?s)class\s+WFBE_C_SPAWN_BUDDY_DISBAND\s*\{.*?default\s*=\s*0\s*;' },
+    @{ Name = "lobby parameter is armed for RC2"; Pass = $params -match '(?s)class\s+WFBE_C_SPAWN_BUDDY_DISBAND\s*\{.*?default\s*=\s*1\s*;' },
     @{ Name = "one delayed spawn-buddy decision point"; Pass = ([regex]::Matches($client, 'SPAWN-BUDDY-DISBAND')).Count -eq 1 },
     @{ Name = "slot ordering and removal are mutually exclusive"; Pass = $client -match '(?s)if\s*\(_spawnBuddyDisband\)\s*then\s*\{.*?deleteVehicle.*?\}\s*else\s*\{.*?_slot1Others\s+joinSilent' },
     @{ Name = "removal does not create a group"; Pass = $removePath -match 'deleteVehicle' -and $removePath -notmatch 'createGroup' },

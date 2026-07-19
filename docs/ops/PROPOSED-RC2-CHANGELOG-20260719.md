@@ -11,9 +11,9 @@ Status: draft release candidate. No live deployment or master merge has occurred
 - Binds transport-helicopter refunds to the exact server-owned failed dispatch and permits one verified refund only.
 - Preserves the exact charged amount on deferred reinforcement requests and refunds expired requests.
 - Credits delegated CTL forces from each group's own wave stamp.
-- Optionally preserves untouched AI orders during delegate handoff. Default: off.
-- Optionally removes only the unwanted first-spawn buddy without touching purchased squads or reconnecting players. Default: off.
-- Optionally replaces silent terminal-team deletion with a visible final lifecycle. Recovered teams clear their server-visible failure state; genuinely terminal teams dismount, their hulls cook off once, and the empty group is reaped after bounded cleanup. Default: off.
+- Preserves untouched AI orders during delegate handoff; armed for the RC2 test-server build.
+- Removes only the unwanted first-spawn buddy without touching purchased squads or reconnecting players; armed by default in the RC2 lobby.
+- Replaces silent terminal-team deletion with a visible final lifecycle. Recovered teams clear their server-visible failure state; genuinely terminal teams dismount, their hulls cook off once, and the empty group is reaped after bounded cleanup. Armed for test-server evidence.
 
 ## A-Life and GUER
 
@@ -39,7 +39,7 @@ Status: draft release candidate. No live deployment or master merge has occurred
 ## Reliability, economy, and configuration
 
 - Makes legacy tactical UAV purchases server-authoritative for side, team, hull, crew, funds, expiry, and request capability.
-- Adds independently gated UAV level-two consumers: Engineer/repair-truck Forward FOBs and an AI-commander-only bounded FPV swarm. Both default off; the level-two economy and UI remain absent while both gates are dark.
+- Adds independently gated UAV level-two consumers: Engineer/repair-truck Forward FOBs and an AI-commander-only bounded FPV swarm. Both are armed for the RC2 test-server build and remain individually disableable.
 - Binds Forward FOB construction to a private, challenge-bound, short-lived, one-shot server capability and refunds/cleans every partial creation failure before registration.
 - Repairs shared-class metadata, malformed faction tuples, missing enabled-weapon prices, and GUER counter-battery-radar buildability.
 - Stops supply missions safely when no friendly town can be resolved.

@@ -45,10 +45,10 @@ def code(relative: Path) -> str:
 
 
 class Uav2ConfigurationTests(unittest.TestCase):
-    def test_features_are_separate_and_default_off(self) -> None:
+    def test_features_are_separate_and_armed_for_rc2(self) -> None:
         text = code(CONSTANTS)
-        self.assertIn('WFBE_C_UAV2_FOB = 0', text)
-        self.assertIn('WFBE_C_UAV2_SWARM = 0', text)
+        self.assertIn('WFBE_C_UAV2_FOB = 1', text)
+        self.assertIn('WFBE_C_UAV2_SWARM = 1', text)
         self.assertIn('WFBE_C_UAV2_LEVEL = 2', text)
         for token in (
             "WFBE_C_UAV2_FOB_COST",
