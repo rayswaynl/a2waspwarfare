@@ -54,6 +54,10 @@ if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
 //--- Finally set the commander, null = ai, team = player.
 _logic setVariable ["wfbe_commander", _commander, true];
 
+if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
+	if (isNull _commander) then {[_side] Call WFBE_CO_FNC_InvalidateCommanderLease} else {[_side, _commander, "vote"] Call WFBE_CO_FNC_GrantCommanderLease};
+};
+
 //--- Notify the clients.
 [_side, "HandleSpecial", ["commander-vote", _commander]] Call WFBE_CO_FNC_SendToClients;
 

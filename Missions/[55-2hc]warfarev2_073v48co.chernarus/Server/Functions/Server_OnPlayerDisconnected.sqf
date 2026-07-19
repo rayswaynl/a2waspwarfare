@@ -5,10 +5,13 @@
 		- User Name
 */
 
-Private ['_buildings','_commander','_funds','_get','_hcGroup','_hq','_id','_isHCDisconnect','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik'];
+Private ['_buildings','_commander','_funds','_get','_hcGroup','_hq','_id','_isHCDisconnect','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik','_lease','_leaseExpires'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
+_lease = [];
+_leaseExpires = 0;
+_logik = objNull;
 
 sleep 0.5;
 
@@ -212,14 +215,28 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 1) then {
 _commander = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 if !(isNull (_commander)) then {
 	if (_team == _commander) then {
-		Private ["_logik"];
 		_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
-		_logik setVariable ["wfbe_commander", objNull, true];
+		if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
+			_lease = _logik getVariable ["wfbe_commander_lease", []];
+			if (typeName _lease == "ARRAY" && {count _lease >= 3} && {(_lease select 0) == _uid} && {(_lease select 1) == _side} && {(_lease select 2) == (groupId _team)}) then {
+				_leaseExpires = time + (missionNamespace getVariable ["WFBE_C_CMD_LEASE_GRACE", 90]);
+				_logik setVariable ["wfbe_commander_lease_expires", _leaseExpires];
+				[_side, _leaseExpires] Spawn WFBE_CO_FNC_CommanderLeaseGraceCheck;
+			} else {
+				_logik setVariable ["wfbe_commander", objNull, true];
+				[_side, "LocalizeMessage", ['CommanderDisconnected']] Call WFBE_CO_FNC_SendToClients;
+				{[_x,false] Call SetTeamAutonomous;[_x, ""] Call SetTeamRespawn} forEach (_logik getVariable "wfbe_teams");
+			};
+		} else {
+			Private ["_logik"];
+			_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+			_logik setVariable ["wfbe_commander", objNull, true];
 
-		[_side, "LocalizeMessage", ['CommanderDisconnected']] Call WFBE_CO_FNC_SendToClients;
+			[_side, "LocalizeMessage", ['CommanderDisconnected']] Call WFBE_CO_FNC_SendToClients;
 
-		//--- AI Can move freely now & respawn at the default location.
-		{[_x,false] Call SetTeamAutonomous;[_x, ""] Call SetTeamRespawn} forEach (_logik getVariable "wfbe_teams");
+			//--- AI Can move freely now & respawn at the default location.
+			{[_x,false] Call SetTeamAutonomous;[_x, ""] Call SetTeamRespawn} forEach (_logik getVariable "wfbe_teams");
+		};
 	};
 };
 

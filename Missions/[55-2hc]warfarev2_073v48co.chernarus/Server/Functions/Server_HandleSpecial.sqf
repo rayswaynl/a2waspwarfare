@@ -4,11 +4,36 @@ _args = _this;
 
 switch (_args select 0) do {
 	case "update-teamleader": {
-		Private ["_leader","_team"];
+		Private ["_leader","_team","_side","_logic","_lease"];
 		_team = _args select 1;
 		_leader = _args select 2;
+		_side = civilian;
+		_logic = objNull;
+		_lease = [];
 
 		_team setVariable ["wfbe_teamleader", _leader];
+
+		//--- C1 lease reclaim (WFBE_C_CMD_LEASE): a respawning/JIP-reconnecting client always pings
+		//--- update-teamleader (Init_Client / Client_OnKilled). If the pinged leader is the leased
+		//--- commander UID in the leased group, cancel any pending disconnect grace and refresh the
+		//--- derived wfbe_commander view. Deliberately does NOT touch per-team autonomous/respawn
+		//--- state: during grace the teams were never freed, so there is nothing to re-lock - and a
+		//--- blanket SetTeamAutonomous/SetTeamRespawn here would wipe the commander's own per-team
+		//--- choices on reconnect (the same blanket-reset anti-pattern C5 removed from AI_Commander).
+		if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
+			_side = _team getVariable "wfbe_side";
+			if (!isNil "_side" && {_side != civilian} && {isPlayer _leader}) then {
+				_logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _logic) then {
+					_lease = _logic getVariable ["wfbe_commander_lease", []];
+					if (typeName _lease == "ARRAY" && {count _lease >= 3} && {(getPlayerUID _leader) == (_lease select 0)} && {(groupId _team) == (_lease select 2)}) then {
+						_logic setVariable ["wfbe_commander_lease_expires", nil];
+						_logic setVariable ["wfbe_commander", _team, true];
+						[_side, "HandleSpecial", ["new-commander-assigned", _team]] Call WFBE_CO_FNC_SendToClients;
+					};
+				};
+			};
+		};
 	};
 	case "group-query": {
 		Private ["_group","_player","_side"];
