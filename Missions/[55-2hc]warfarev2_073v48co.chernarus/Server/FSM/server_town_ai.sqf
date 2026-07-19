@@ -538,7 +538,10 @@ while {!WFBE_GameOver} do {
 								_use_server = false;
 							};
 							case 2: { //--- Headless Client delegation.
-								_liveHCs = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
+								//--- Keep this preflight identical to Server_DelegateAITownHeadless: an alive leader
+								//--- with owner 0 is a disconnected/locality-transferred zombie, so preserve the
+								//--- existing server CreateTownUnits fallback instead of dispatching a dropped wave.
+								_liveHCs = {!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 								if (_liveHCs > 0) then {
 									[_town, _side, _groups, _positions, _teams] Call WFBE_CO_FNC_DelegateAITownHeadless;
 									// Marty: HC-local groups are reported back by update-town-delegation after creation.
