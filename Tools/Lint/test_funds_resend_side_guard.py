@@ -47,6 +47,32 @@ class FundsResendSideGuardTests(unittest.TestCase):
         self.assertIn('_team setVariable ["wfbe_funds", _funds, true]', self.text)
         self.assertIn("stamped START funds", self.text)
 
+    def test_entry_gate_requires_live_player_with_nonempty_uid(self) -> None:
+        """Round 3: a forged AI body (isPlayer false) or an empty engine UID must bail
+        BEFORE any resolution - an empty-UID scan could otherwise match a different
+        empty-UID playable AI and stamp a START wallet onto an AI group."""
+        gate_player = self.text.index("!(isPlayer _player)")
+        gate_uid = self.text.index('_uid == ""')
+        first_resolution = self.text.index("WFBE_JIP_BODY_%1")
+        self.assertLess(gate_player, first_resolution)
+        self.assertLess(gate_uid, first_resolution)
+
+    def test_scan_and_stored_body_are_player_validated(self) -> None:
+        # playableUnits includes playable AI - the scan must require isPlayer.
+        scan = self.text.index("forEach playableUnits")
+        window = self.text[scan - 300 : scan]
+        self.assertIn("isPlayer _x", window)
+        # The stored binding is revalidated: still a player, still this UID.
+        self.assertIn("{isPlayer _clientBody}", self.text)
+        self.assertIn("(getPlayerUID _clientBody) == _uid", self.text)
+
+    def test_record_recovery_precedes_start_stamp_and_no_adoption(self) -> None:
+        """Pins the actual branch order (JIP record before START) and that this handler
+        never adopts: no wfbe_teams append, no wfbe_side write."""
+        self.assertLess(self.text.index("_recCash > 0"), self.text.index("stamped START funds"))
+        self.assertNotIn('setVariable ["wfbe_side"', self.text)
+        self.assertNotIn("wfbe_teams", self.text)
+
     def test_server_known_bindings_resolve_before_the_client_passed_body(self) -> None:
         """Round-2 review: the PV bus has no sender identity, so the client-passed body is
         the LEAST trusted input. Server-known bindings (stored RequestJoin body, then a
