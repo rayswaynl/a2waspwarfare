@@ -29,6 +29,7 @@ _l = _l + ["RequestDequeue"];
 _l = _l + ["CounterBatteryFired"];
 _l = _l + ["RequestSiteClearance"];
 _l = _l + ["RequestAIComDonate"];
+_l = _l + ["RequestUAV2FOB"]; //--- UAV2 main-side Engineer + repair-truck FOB; server-authoritative.
 _l = _l + ["RequestFundsTransfer"]; //--- N1 fix (GR-2026-07-08a): player-to-player team-funds transfer - server-authoritative re-derivation + balance check (Server\PVFunctions\RequestFundsTransfer.sqf).
 _l = _l + ["HCStat"];
 _l = _l + ["RequestAFKKick"]; //--- SG14: client reports AFK threshold exceeded; server validates and issues the BE kick.
@@ -76,6 +77,12 @@ WFBE_SE_PVF_ALLOWED = [];
 //--- writers cannot cross-route private tokens through the shared transport variable.
 if (!isServer || local player) then {
 	"WFBE_PVF_FPVPrivate" addPublicVariableEventHandler {(_this select 1) Spawn WFBE_CL_FNC_HandlePVF};
+};
+
+//--- UAV2 FOB capabilities use a dedicated owner-targeted PV; the generic server bus
+//--- deliberately carries no sender identity and must never broadcast private tokens.
+if (!isServer || local player) then {
+	"WFBE_PVF_UAV2FOBPrivate" addPublicVariableEventHandler {(_this select 1) Spawn WFBE_CL_FNC_HandlePVF};
 };
 
 //--- ICBM/TEL capabilities use a dedicated targeted PV so no shared client bus can expose tokens.

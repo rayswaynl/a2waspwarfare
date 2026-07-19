@@ -2608,6 +2608,37 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_FPV_DRONE_TTL")  then {WFBE_C_FPV_DRONE_TTL  = 240};         //--- s: battery life; expiry DISARMS then scuttles (no parked bomb).
 	if (isNil "WFBE_C_FPV_DRONE_AMMO") then {WFBE_C_FPV_DRONE_AMMO = "R_57mm_HE"}; //--- Warhead ammo class (RPG-warhead scale: hit 150 / indirect 40 / r 12).
 
+//--- UAV UPGRADE LEVEL 2 (owner-approved unified wave, GR-2026-07-08a). Level 1 remains the existing
+//--- player Tactical UAV. The two level-2 consumers are independent and default OFF: a player Engineer
+//--- can deploy a main-side Forward FOB from a repair truck, while an AI commander can fund an occasional
+//--- bounded FPV swarm. Neither feature reads or mutates resistance drone state.
+	if (isNil "WFBE_C_UAV2_LEVEL") then {WFBE_C_UAV2_LEVEL = 2};
+	if (isNil "WFBE_C_UAV2_FOB") then {WFBE_C_UAV2_FOB = 0};
+	if (isNil "WFBE_C_UAV2_FOB_COST") then {WFBE_C_UAV2_FOB_COST = 25000};
+	if (isNil "WFBE_C_UAV2_FOB_CAP") then {WFBE_C_UAV2_FOB_CAP = 2};
+	if (isNil "WFBE_C_UAV2_FOB_TRUCK_RANGE") then {WFBE_C_UAV2_FOB_TRUCK_RANGE = 18};
+	if (isNil "WFBE_C_UAV2_FOB_BUILD_DIST") then {WFBE_C_UAV2_FOB_BUILD_DIST = 22};
+	if (isNil "WFBE_C_UAV2_FOB_BASE_EXCLUSION") then {WFBE_C_UAV2_FOB_BASE_EXCLUSION = 370};
+	if (isNil "WFBE_C_UAV2_FOB_SPACING") then {WFBE_C_UAV2_FOB_SPACING = 250};
+	if (isNil "WFBE_C_UAV2_FOB_REPAIR_RADIUS") then {WFBE_C_UAV2_FOB_REPAIR_RADIUS = 30};
+	if (isNil "WFBE_C_UAV2_FOB_REPAIR_STEP") then {WFBE_C_UAV2_FOB_REPAIR_STEP = 0.02};
+	if (isNil "WFBE_C_UAV2_FOB_PING_RADIUS") then {WFBE_C_UAV2_FOB_PING_RADIUS = 300};
+	if (isNil "WFBE_C_UAV2_FOB_WORKER_INTERVAL") then {WFBE_C_UAV2_FOB_WORKER_INTERVAL = 10};
+	if (isNil "WFBE_C_UAV2_FOB_CONSUME_TRUCK") then {WFBE_C_UAV2_FOB_CONSUME_TRUCK = 0};
+	if (isNil "WFBE_C_UAV2_FOB_ENGINEERS") then {WFBE_C_UAV2_FOB_ENGINEERS = ['USMC_SoldierS_Engineer','CDF_Soldier_Engineer','Ins_Soldier_Sapper','TK_Soldier_Engineer_EP1','Ins_Soldier_CO','US_Soldier_Engineer_EP1','US_Soldier_Officer_EP1','BAF_Soldier_SL_DDPM','MVD_Soldier_TL','USMC_Soldier_TL','TK_Soldier_Officer_EP1']};
+
+	if (isNil "WFBE_C_UAV2_SWARM") then {WFBE_C_UAV2_SWARM = 0};
+	if (isNil "WFBE_C_UAV2_SWARM_COST") then {WFBE_C_UAV2_SWARM_COST = 5000};
+	if (isNil "WFBE_C_UAV2_SWARM_MAX_ACTIVE") then {WFBE_C_UAV2_SWARM_MAX_ACTIVE = 3};
+	if (isNil "WFBE_C_UAV2_SWARM_MAX_PER_STRIKE") then {WFBE_C_UAV2_SWARM_MAX_PER_STRIKE = 3};
+	if (isNil "WFBE_C_UAV2_SWARM_INTERVAL") then {WFBE_C_UAV2_SWARM_INTERVAL = 180};
+	if (isNil "WFBE_C_UAV2_SWARM_COOLDOWN") then {WFBE_C_UAV2_SWARM_COOLDOWN = 1200};
+	if (isNil "WFBE_C_UAV2_SWARM_SCAN_RADIUS") then {WFBE_C_UAV2_SWARM_SCAN_RADIUS = 300};
+	if (isNil "WFBE_C_UAV2_SWARM_HIT_RADIUS") then {WFBE_C_UAV2_SWARM_HIT_RADIUS = 15};
+	if (isNil "WFBE_C_UAV2_SWARM_LAUNCH_GAP") then {WFBE_C_UAV2_SWARM_LAUNCH_GAP = 2};
+	if (isNil "WFBE_C_UAV2_SWARM_TTL") then {WFBE_C_UAV2_SWARM_TTL = 180};
+	if (isNil "WFBE_C_UAV2_SWARM_DIVE_RANGE") then {WFBE_C_UAV2_SWARM_DIVE_RANGE = 120};
+
 //--- AWACS PLATFORM RADAR (fable/awacs-radar, flag WFBE_C_AWACS default 0, lobby param):
 //--- while a CREWED friendly airframe from WFBE_C_AWACS_TYPES is airborne above MINALT the
 //--- owning side gets (a) the AAR air picture on the map WITHOUT being near an Anti-Air

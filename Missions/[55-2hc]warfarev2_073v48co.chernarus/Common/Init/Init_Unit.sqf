@@ -67,6 +67,11 @@ if (_unit_kind in (missionNamespace getVariable ["WFBE_REPAIRTRUCKS", []])) then
 	//--- Build action.
 	_unit addAction [localize 'STR_WF_BuildMenu_Repair','Client\Action\Action_BuildRepair.sqf', [], 99, false, true, '', Format['side group player == side _target && alive _target && player distance _target <= %1', missionNamespace getVariable 'WFBE_C_UNITS_REPAIR_TRUCK_RANGE']];
 
+	//--- UAV2 FOB: shown only when the feature is armed and the shared engineer/repair-truck/upgrade gate passes.
+	if ((missionNamespace getVariable ["WFBE_C_UAV2_FOB", 0]) > 0) then {
+		_unit addAction ["<t color='#76F563'>Build UAV2 Forward FOB</t>", "Client\Action\Action_BuildUAV2FOB.sqf", [], 96, false, true, "", "[player, _target] Call WFBE_CO_FNC_CanUseUAV2FOB"];
+	};
+
 	if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") > 0) then { //--- Repair camps.
 		// Marty: Only show Repair Camp when the repair truck is near a destroyed camp.
 		_unit addAction [localize 'STR_WF_Repair_Camp','Client\Action\Action_RepairCamp.sqf', [], 97, false, true, '', 'alive _target && !isNil "WFBE_CL_FNC_CanRepairCampNearby" && (_target Call WFBE_CL_FNC_CanRepairCampNearby)'];

@@ -1,6 +1,7 @@
-Private ["_side","_aiOrder"];
+Private ["_side","_aiOrder","_uav2Enabled"];
 
 _side = _this;
+_uav2Enabled = ((missionNamespace getVariable ["WFBE_C_UAV2_FOB", 0]) > 0) || ((missionNamespace getVariable ["WFBE_C_UAV2_SWARM", 0]) > 0);
 
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_ENABLED", _side], [
 	true, //--- Barracks
@@ -35,7 +36,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_COSTS", _side], [
 	[[1200,0],[4400,0],[9500,0],[10500,0]], //--- Heavy
 	[[1200,0],[4000,0],[9200,0],[10500,0],[17600,0]], //--- Air
 	[[1500,0],[2500,0],[3500,0]], //--- Paratroopers
-	[[2000,0]], //--- UAV
+	if (_uav2Enabled) then {[[2000,0],[6000,0]]} else {[[2000,0]]}, //--- UAV
 	[[2700,0],[4800,0],[8000,0]], //--- Supply
 	[[500,0],[1500,0]], //--- Respawn Range
 	[[1000,0]], //--- Airlift
@@ -63,7 +64,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LEVELS", _side], [
 	4, //--- Heavy
 	5, //--- Air
 	3, //--- Paratroopers
-	1, //--- UAV
+	if (_uav2Enabled) then {2} else {1}, //--- UAV
 	3, //--- Supply
 	2, //--- Respawn Range
 	1, //--- Airlift
@@ -95,7 +96,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_LINKS", _side], [
 		[[WFBE_UP_BARRACKS,2],[WFBE_UP_AIR,2],[WFBE_UP_GEAR,2]],
 		[[WFBE_UP_BARRACKS,3],[WFBE_UP_AIR,3],[WFBE_UP_GEAR,3]]
 	], //--- Paratroopers
-	[[WFBE_UP_AIR,2]], //--- UAV
+	if (_uav2Enabled) then {[[WFBE_UP_AIR,2],[WFBE_UP_AIR,3]]} else {[[WFBE_UP_AIR,2]]}, //--- UAV
 	[[],[],[]], //--- Supply
 	[[WFBE_UP_LIGHT,1],[],[]], //--- Respawn Range
 	[[WFBE_UP_AIR,1]], //--- Airlift
@@ -127,7 +128,7 @@ missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_TIMES", _side], [
 	[30,50,80,100], //--- Heavy
 	[60,80,100,120,140], //--- Air
 	[35,55,75], //--- Paratroopers
-	[60], //--- UAV
+	if (_uav2Enabled) then {[60,120]} else {[60]}, //--- UAV
 	[60,80,120], //--- Supply
 	[30,60,90], //--- Respawn Range
 	[30], //--- Airlift
@@ -183,6 +184,7 @@ _aiOrder = [
 	[WFBE_UP_AIR,4],
 	[WFBE_UP_AIR,5],
 	[WFBE_UP_UAV,1],
+	[WFBE_UP_UAV,2],
 	[WFBE_UP_PARATROOPERS,3],
 	[WFBE_UP_EASA,1],
 	[WFBE_UP_SUPPLYPARADROP,1],
@@ -206,6 +208,17 @@ _aiOrder = _aiOrder + [
 	[WFBE_UP_PATROLS,4]
 ];
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], _aiOrder];
+
+//--- Do not make the AI buy a useless level while both independently gated UAV2 consumers are dark.
+if (!_uav2Enabled) then {
+	private ["_uav2Order","_uav2OrderKey"];
+	_uav2OrderKey = Format ["WFBE_C_UPGRADES_%1_AI_ORDER", _side];
+	_uav2Order = missionNamespace getVariable _uav2OrderKey;
+	if (!isNil "_uav2Order") then {
+		_uav2Order = _uav2Order - [[WFBE_UP_UAV,2]];
+		missionNamespace setVariable [_uav2OrderKey, _uav2Order];
+	};
+};
 
 //--- Check potential missing definition.
 (_side) Call Compile preprocessFileLineNumbers "Common\Config\Core_Upgrades\Check_Upgrades.sqf";
