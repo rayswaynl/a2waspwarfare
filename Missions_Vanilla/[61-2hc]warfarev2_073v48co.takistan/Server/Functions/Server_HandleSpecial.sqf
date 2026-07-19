@@ -9,6 +9,16 @@ switch (_args select 0) do {
 		_leader = _args select 2;
 
 		_team setVariable ["wfbe_teamleader", _leader];
+
+		//--- TEAMBAR server probe (card wasp-player-group-rank-order-diagnosis-20260718): the client
+		//--- pings this at init + every respawn, so it is the server-side UID-resolved observation of
+		//--- the same transition the client-side probes cover. Telemetry-only; shared kill-switch.
+		if ((missionNamespace getVariable ["WFBE_C_TEAMBAR_PROBE", 1]) > 0) then {
+			if (!isNull _team && {!isNull _leader}) then {
+				diag_log Format ["TEAMBAR|v2|SVPROBE|evt=update-teamleader|t=%1|uid=%2|groupId=%3|leaderIsPlayer=%4|leaderIsGrpLeader=%5|leaderRankId=%6|units=%7",
+					round time, getPlayerUID _leader, groupId _team, isPlayer _leader, (leader _team == _leader), rankId _leader, count (units _team)];
+			};
+		};
 	};
 	case "group-query": {
 		Private ["_group","_player","_side"];

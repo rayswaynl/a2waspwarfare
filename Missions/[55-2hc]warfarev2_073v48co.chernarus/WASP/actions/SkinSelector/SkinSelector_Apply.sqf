@@ -273,6 +273,7 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 	_newUnit setRank "COLONEL";
 	diag_log "[WFBE|TEAMBAR] SkinSelector_Apply: new player body rank set to COLONEL for command-bar slot 1.";
 };
+["skinswap", "post-apply"] Call WFBE_CL_FNC_TeambarProbe; //--- TEAMBAR probe: skin-swap has NO slot1-rejoin - capture the resulting order
 
 //--- FALLBACK cleanup: the transient swap group is now empty (new unit moved to _oldGrp above); delete it.
 //--- Primary path never made a swap group (_swapGrp is grpNull), so this is a guarded no-op there.
