@@ -751,3 +751,35 @@ the owner.
   `WFBE_C_AI_COMMANDER_WILDCARD_COST` to `0` — conflicts with this PR's `150000 -> 8000` value if
   that branch is ever revived. Flagged in the PR body as a merge-collision risk; not blocking
   since it carries no open PR claim.
+
+## 2026-07-19 — unified UAV upgrade level 2 (draft successor to #1121/#1118)
+
+- Fleet card: `wasp-uav2-fob-ai-swarm-integration-20260718`; isolated branch
+  `codex/uav2-fob-swarm-unified-20260719` from `origin/master` `80c690257f`.
+- Evaluated exact predecessor heads #1121 `42cf04e1d9` and #1118 `5a3fc5b49f`; reimplemented
+  the useful slices instead of stacking either branch. UAV upgrade ID 5 exposes two levels in
+  all ten faction upgrade tables only while at least one UAV2 consumer is armed. While both are
+  dark, player max/cost/link/time data collapses to the existing level 1 Tactical UAV and the AI
+  order drops level 2, so the default-off state is hidden and cannot research an unusable level.
+- `WFBE_C_UAV2_FOB` (default 0): main-side Engineer action appears on a same-side repair truck.
+  Because the generic PV bus discards sender identity, the client first obtains an owner-targeted,
+  challenge-correlated one-shot capability bound on the server to the exact player and truck. The
+  build request carries only UID, token and advisory position; the server derives both objects,
+  then revalidates role, side, truck, range, UAV level, placement, water/base/FOB spacing, cap and
+  wallet. A bounded 10-second reservation serializes requests before the server debit. A successful FOB
+  is a faction FARP tent + mast + runtime `LocationLogicCamp`, with repair-only bubble, RPT threat
+  ping, cleanup, and `FOBCAMPPROBE` evidence. Any tent/mast/logic/group creation failure after
+  debit deletes every partial exactly once and refunds before registration. No client-side debit
+  or object creation.
+- `WFBE_C_UAV2_SWARM` (default 0): dedicated WEST/EAST workers only. Every low-frequency draw
+  hard-stops if a human leads the commander team, requires UAV level 2, uses one bounded scan at
+  the nearest enemy town, respects separate active/per-strike/cooldown/cost/TTL caps, and debits
+  the AI-commander treasury before launch. The worker uses no resistance/Ka-137/GuerAirDef state.
+- Added `Tools/Lint/test_uav2_fob_swarm_contract.py` (23 assertions spanning authority, flags,
+  upgrade continuity, OA safety, and CH/TK/ZG parity). Canonical LoadoutManager mirroring ran
+  with `A2WASP_SKIP_ZIP=1`; version templates remained clean.
+- Proof after exact-head review repair: UAV2 contract 23/23 PASS; FPV detonation authority 36/36 PASS; changed tracked SQF lint
+  0 findings; 12 new mirrored SQF files lint 0 findings; version-template test PASS; `git diff
+  --check` PASS. The required full-tree lint still exits 1 on the unchanged baseline of 204
+  `A3MARKER` findings. `test_fpv_purchase_authority.py` still has its independently observed
+  pre-existing 1/9 stale assertion (`_fpvDrone == playerFPV`) on untouched `origin/master`.

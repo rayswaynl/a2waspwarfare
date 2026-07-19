@@ -131,6 +131,22 @@ switch (_request) do {
 		if (typeName _fpvAuthChallenge != "STRING" || {_fpvAuthChallenge != (missionNamespace getVariable [_fpvChallengeKey, ""])}) exitWith {};
 		missionNamespace setVariable [Format ["wfbe_fpv_cap_client_%1", getPlayerUID player], [_fpvToken, _fpvExpires]];
 	};
+	//--- Accept a UAV2 FOB capability only when it echoes this client's private challenge.
+	//--- The exact repair truck is retained so a token cannot be replayed against another truck.
+	case "uav2-fob-auth-token": {
+		Private ["_uav2Challenge","_uav2ChallengeKey","_uav2Expires","_uav2Token","_uav2Truck"];
+		if (count _args < 4) exitWith {};
+		_uav2Token = _args select 0;
+		_uav2Expires = _args select 1;
+		_uav2Challenge = _args select 2;
+		_uav2Truck = _args select 3;
+		_uav2ChallengeKey = Format ["wfbe_uav2_fob_auth_challenge_%1", getPlayerUID player];
+		if (typeName _uav2Token != "STRING" || {_uav2Token == ""}) exitWith {};
+		if (typeName _uav2Expires != "SCALAR" || {_uav2Expires <= time}) exitWith {};
+		if (typeName _uav2Challenge != "STRING" || {_uav2Challenge != (missionNamespace getVariable [_uav2ChallengeKey, ""])}) exitWith {};
+		if (typeName _uav2Truck != "OBJECT" || {isNull _uav2Truck}) exitWith {};
+		missionNamespace setVariable [Format ["wfbe_uav2_fob_cap_client_%1", getPlayerUID player], [_uav2Token, _uav2Expires, _uav2Truck]];
+	};
 	//--- Purchase results carry the private capability and exact objects. Fake/stale client-bus
 	//--- packets cannot change stats, cooldown, or tear down a newer flight.
 	case "fpv-purchase-result": {

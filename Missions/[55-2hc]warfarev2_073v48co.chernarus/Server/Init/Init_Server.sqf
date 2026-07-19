@@ -36,6 +36,7 @@ ConstructDefense = Compile preprocessFile "Server\Construction\Construction_Stat
 CreateDefenseTemplate = Compile preprocessFile "Server\Functions\Server_CreateDefenseTemplate.sqf";
 Server_ConstructPosition = Compile preprocessFile "Server\Functions\Server_ConstructPosition.sqf";
 GetAICommanderFunds = Compile preprocessFile "Server\Functions\Server_GetAICommanderFunds.sqf";
+WFBE_SE_FNC_AICOM_UAV2_Swarm = Compile preprocessFileLineNumbers "Server\Functions\AICOM_UAV2_Swarm.sqf";
 //--- B74.2 (Ray 2026-06-24, directive #5): AI-commander structure-sell / recycle worker (dark by default, see WFBE_C_AICOM_BASE_SELL_ENABLE).
 WFBE_SE_FNC_AI_Com_BaseSell = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_BaseSell.sqf";
 //--- FUNDS-SINK (claude-gaming 2026-06-29, SYSTEM 1): drain a rich AICOM hoard into offense (dark by default, see WFBE_C_AICOM_FUNDS_SINK_ENABLE). Called from updateresources.sqf on the income cadence.
@@ -1367,6 +1368,12 @@ WFBE_Server_LogMatchWin = false;
 WFBE_SE_PLAYERLIST = [[objNull, "0"]];
 
 {_x Spawn WFBE_SE_FNC_VoteForCommander} forEach (WFBE_PRESENTSIDES - [resistance]); //--- GUER excluded: harass-only, no commander election
+
+//--- UAV2 AI-commander swarm: dedicated WEST/EAST workers only, independently default-off.
+if ((missionNamespace getVariable ["WFBE_C_UAV2_SWARM", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0}) then {
+	[west] Spawn WFBE_SE_FNC_AICOM_UAV2_Swarm;
+	[east] Spawn WFBE_SE_FNC_AICOM_UAV2_Swarm;
+};
 
 //--- feat/ai-commander: one always-running supervisor per side (self-gates on enabled + no player commander).
 {
