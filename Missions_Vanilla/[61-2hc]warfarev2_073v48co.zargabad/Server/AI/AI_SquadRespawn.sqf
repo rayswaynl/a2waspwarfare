@@ -1,4 +1,4 @@
-Private ["_availableSpawn","_autonomous","_buildings","_checks","_closestRespawn","_deathLoc","_enemySide","_hq","_isForcedRespawn","_leader","_loadout","_mobileRespawns","_moveMode","_pos","_ran","_range","_rcm","_rd","_respawn","_respawnLoc","_side","_sideID","_sideText","_team","_update","_upgrades"];
+Private ["_availableSpawn","_autonomous","_buildings","_checks","_closestRespawn","_deadspawnGuardApplied","_deathLoc","_enemySide","_hq","_isForcedRespawn","_leader","_loadout","_mobileRespawns","_moveMode","_pos","_ran","_range","_rcm","_rd","_respawn","_respawnLoc","_side","_sideID","_sideText","_team","_update","_upgrades"];
 _side = _this select 0;
 _team = _this select 1;
 _sideText = str _side;
@@ -25,6 +25,7 @@ while {!gameOver} do {
 	
 	//--- Place the AI.
 	_leader = leader _team;
+	_deadspawnGuardApplied = false;
 	_leader removeAllEventHandlers "Killed";
 	_leader addEventHandler ['Killed', Format["[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled", _sideID]];
 	_leader setPos getMarkerPos Format["%1TempRespawnMarker",_sideText];
@@ -40,6 +41,7 @@ while {!gameOver} do {
 	if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_GUARD", 1]) > 0 && {alive _leader}) then {
 		_leader setCaptive true;
 		_leader allowDamage false;
+		_deadspawnGuardApplied = true;
 		["INFORMATION", Format ["DEADSPAWN_GUARD|park|side=%1|unit=%2", _sideText, _leader]] Call WFBE_CO_FNC_LogContent;
 	};
 
@@ -65,6 +67,15 @@ while {!gameOver} do {
 	};
 	
 	sleep _rd;
+
+	//--- A player/death transition can land during the respawn sleep.
+	if (isPlayer _leader || !(alive _leader)) then {
+		if (_deadspawnGuardApplied && {alive _leader}) then {
+			_leader setCaptive false;
+			_leader allowDamage true;
+			["INFORMATION", Format ["DEADSPAWN_GUARD|release|side=%1|unit=%2|handoff=1", _sideText, _leader]] Call WFBE_CO_FNC_LogContent;
+		};
+	} else {
 
 	//--- Equip the AI.
 	//--- Guard: _upgrades may be [] for civilian/unknown sides (Common_GetSideUpgrades default branch returns []).
@@ -114,12 +125,11 @@ while {!gameOver} do {
 	};
 
 	["INFORMATION", Format ["AI_AdvancedRespawn.sqf: [%1] AI Team Leader [%2] [%3] has respawned at [%4].", _sideText, _team, leader _team, _respawnLoc]] Call WFBE_CO_FNC_LogContent;
-	//--- DEADSPAWN GUARD release (fable/deadspawn-guard): the leader is about to leave the deadspawn marker
-	//--- for its real respawn - restore its combat state (undo the park-time captive/allowDamage) so it
-	//--- fights normally again. Idempotent (safe if the guard was off / never applied).
-	if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_GUARD", 1]) > 0 && {alive _leader}) then {
+	//--- Normal AI remains guarded until immediately before it leaves the temp marker.
+	if (_deadspawnGuardApplied && {alive _leader}) then {
 		_leader setCaptive false;
 		_leader allowDamage true;
+		["INFORMATION", Format ["DEADSPAWN_GUARD|release|side=%1|unit=%2|handoff=0", _sideText, _leader]] Call WFBE_CO_FNC_LogContent;
 	};
 	_pos = [getPos _respawnLoc,20,30] Call GetRandomPosition;
 	_pos set [2,0];
@@ -133,5 +143,6 @@ while {!gameOver} do {
 		if (_moveMode == "move") then {[_team,"resetMove"] Call SetTeamMoveMode};
 		if (_moveMode == "patrol") then {[_team,"resetPatrol"] Call SetTeamMoveMode};
 		if (_moveMode == "defense") then {[_team,"resetDefense"] Call SetTeamMoveMode};
+	};
 	};
 };
