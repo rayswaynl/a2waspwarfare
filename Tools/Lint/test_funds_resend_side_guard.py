@@ -47,6 +47,16 @@ class FundsResendSideGuardTests(unittest.TestCase):
         self.assertIn('_team setVariable ["wfbe_funds", _funds, true]', self.text)
         self.assertIn("stamped START funds", self.text)
 
+    def test_server_known_bindings_resolve_before_the_client_passed_body(self) -> None:
+        """Round-2 review: the PV bus has no sender identity, so the client-passed body is
+        the LEAST trusted input. Server-known bindings (stored RequestJoin body, then a
+        playableUnits UID scan) must be consulted first; the client body is last resort."""
+        jip_body = self.text.index("WFBE_JIP_BODY_%1")
+        uid_scan = self.text.index("forEach playableUnits")
+        client_last = self.text.index('{group _player) getVariable "wfbe_side"}'.replace("{group", "(group"))
+        self.assertLess(jip_body, uid_scan)
+        self.assertLess(uid_scan, client_last)
+
 
 if __name__ == "__main__":
     unittest.main()

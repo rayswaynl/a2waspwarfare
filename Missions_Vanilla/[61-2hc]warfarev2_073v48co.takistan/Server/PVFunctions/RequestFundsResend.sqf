@@ -56,24 +56,31 @@ if (isNull _player) exitWith {
 _uid = getPlayerUID _player;
 _team = grpNull;
 
-//--- Resolve the player's slot group the same way Server_OnPlayerConnected does, preferring the
-//--- body the client just handed us, then the stored RequestJoin body, then a UID scan of the
-//--- side-logic team groups. We only accept a group that carries wfbe_side (a real warfare slot).
-if (!isNull _player && {alive _player} && {!isNil {(group _player) getVariable "wfbe_side"}}) then {
-	_team = group _player;
-};
-
-if (isNull _team) then {
-	_clientBody = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
-	if (!isNull _clientBody && {alive _clientBody} && {!isNil {(group _clientBody) getVariable "wfbe_side"}}) then {
-		_team = group _clientBody;
-	};
+//--- Resolve the player's slot group. fable/funds-resend-side-guard ROUND 2 (review 2026-07-19):
+//--- the generic PV bus carries NO sender identity, so the client-passed _player is the LEAST
+//--- trusted input here (a forger can only choose WHICH real networked body to pass; _uid always
+//--- derives from that body, so the worst a forgery achieves is triggering a heal FOR that body's
+//--- own UID - and every branch below is non-destructive for a healthy target: same-value
+//--- re-broadcast, lock-step record restore, or a first-join START stamp for a record-less
+//--- player). Resolution still prefers SERVER-KNOWN bindings first: (1) the stored RequestJoin
+//--- body for this UID, (2) a playableUnits scan whose engine-side getPlayerUID matches, and only
+//--- then (3) the client-passed body (first-join edge where no server binding exists yet). We
+//--- only accept a group that carries wfbe_side; non-playable sides are rejected right below.
+_clientBody = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
+if (!isNull _clientBody && {alive _clientBody} && {!isNil {(group _clientBody) getVariable "wfbe_side"}}) then {
+	_team = group _clientBody;
 };
 
 if (isNull _team) then {
 	{
 		if (!isNull _x && {(getPlayerUID _x) == _uid} && {!isNil {(group _x) getVariable "wfbe_side"}}) exitWith {_team = group _x};
 	} forEach playableUnits;
+};
+
+if (isNull _team) then {
+	if (!isNull _player && {alive _player} && {!isNil {(group _player) getVariable "wfbe_side"}}) then {
+		_team = group _player;
+	};
 };
 
 //--- If we still cannot resolve a real warfare team, do nothing. The connect handler / its
