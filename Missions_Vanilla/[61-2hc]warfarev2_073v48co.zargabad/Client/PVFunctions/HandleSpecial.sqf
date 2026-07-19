@@ -450,4 +450,13 @@ switch (_request) do {
 		};
 		if (typeName _msg == "STRING" && {_msg != ""}) then {hint _msg};
 	};
+	//--- GUER FOB build outcome (server -> caller). The client starts with an optimistic titleText, but the
+	//--- authoritative handler can reject a raced token or blocked placement. Keep the truck/token unchanged and
+	//--- tell only the caller why it did not become a FOB.
+	case "guer-fob-result": {
+		Private ["_fobOk","_fobMsg"];
+		_fobOk  = _args select 0;
+		_fobMsg = _args select 1;
+		if (!_fobOk && {typeName _fobMsg == "STRING"} && {_fobMsg != ""}) then {hint _fobMsg};
+	};
 };
