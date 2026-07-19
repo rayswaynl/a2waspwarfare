@@ -24,4 +24,19 @@ foreach ($contract in @(
 )) {
     if ($contract.Text -notmatch $contract.Gate) { throw "Missing local visibility gate in $($contract.Name): $($contract.Gate)" }
 }
+if ($unitLoop -notmatch [regex]::Escape('_unitDotVisibleLast = _entry select 19')) {
+    throw 'Unit-dot marker loop does not cache each marker visibility state.'
+}
+if ($unitLoop -notmatch [regex]::Escape('if ((count _entry) > 19) then {_unitDotVisibleLast = _entry select 19}')) {
+    throw 'Unit-dot marker loop reads its optional visibility cache without a safe entry-length guard.'
+}
+if ($unitLoop -notmatch [regex]::Escape('if (_showUnitDots != _unitDotVisibleLast)')) {
+    throw 'Unit-dot marker loop does not apply alpha only when local visibility changes.'
+}
+if ($unitLoop -notmatch [regex]::Escape('(_entry select 1) setMarkerAlphaLocal _showUnitDots')) {
+    throw 'Unit-dot marker loop does not restore the marker alpha from the local visibility state.'
+}
+if ($unitLoop -notmatch '(?s)deleteMarkerLocal _markerName;\s*createMarkerLocal \[_markerName, _currentPos\];\s*_entry set \[19, -1\];') {
+    throw 'Unit-dot marker loop does not invalidate cached visibility after rebuilding a marker.'
+}
 Write-Output 'Test-MapClarityToggleContract: PASS'

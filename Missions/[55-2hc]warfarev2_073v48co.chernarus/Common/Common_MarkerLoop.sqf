@@ -9,7 +9,7 @@
 // tombstone the slot (set to 0) and compaction only rebuilds the array once enough
 // tombstones accumulate, keeping the lost-append race window negligible. The marker
 // name ledger sweep below heals any marker that would slip through regardless.
-Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_dist","_ehHandle","_lowFpsSince","_mapWasClosed","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_heightTiers","_aarWarnLevel","_aarHeight","_budgetMax","_budgetServiced","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades","_moveInPlace","_labelCullEnabled","_labelCullThreshold","_labelCulled","_regCount","_mapperfDiag","_mapperfNext","_awacsEnabled","_awacsMinAlt","_awacsNextCheck","_awacsTypes","_awacsUp","_awacsWasUp"];
+Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_dist","_ehHandle","_lowFpsSince","_mapWasClosed","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_heightTiers","_aarWarnLevel","_aarHeight","_budgetMax","_budgetServiced","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_showUnitDots","_sleepRate","_speed","_sweepNext","_unitDotVisibleLast","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades","_moveInPlace","_labelCullEnabled","_labelCullThreshold","_labelCulled","_regCount","_mapperfDiag","_mapperfNext","_awacsEnabled","_awacsMinAlt","_awacsNextCheck","_awacsTypes","_awacsUp","_awacsWasUp"];
 
 if (isNil "WFBE_CL_UnitMarkerRegistry") then {WFBE_CL_UnitMarkerRegistry = []};
 if (isNil "WFBE_CL_AARMarkerRegistry") then {WFBE_CL_AARMarkerRegistry = []};
@@ -162,6 +162,7 @@ while {true} do {
 					} else {
 						deleteMarkerLocal _markerName;
 						createMarkerLocal [_markerName, _currentPos];
+						_entry set [19, -1];
 					};
 					// PERF4 - rebuild redraws at the live position (in place or via recreate), so resync the
 					// position-delta cache (slot 18) to match what was just drawn; otherwise a stale
@@ -208,9 +209,17 @@ while {true} do {
 		if (typeName _x == "ARRAY") then {
 			_entry = _x;
 			_activeEntries = _activeEntries + 1;
-			//--- P2 map clarity: hide only friendly infantry dots locally; retain the registry so a re-enable is immediate.
-			if ((_entry select 10) == "man" && {!(missionNamespace getVariable ["WFBE_CL_ShowUnitDots", true])}) then {
-				(_entry select 1) setMarkerAlphaLocal 0;
+			//--- P2 map clarity: cache each friendly infantry dot's local visibility so a preference change
+			//--- hides or restores it within this refresh without rewriting marker alpha every loop.
+			if ((_entry select 10) == "man") then {
+				_showUnitDots = missionNamespace getVariable ["WFBE_CL_ShowUnitDots", true];
+				if (_showUnitDots) then {_showUnitDots = 1} else {_showUnitDots = 0};
+				_unitDotVisibleLast = -1;
+				if ((count _entry) > 19) then {_unitDotVisibleLast = _entry select 19};
+				if (_showUnitDots != _unitDotVisibleLast) then {
+					(_entry select 1) setMarkerAlphaLocal _showUnitDots;
+					_entry set [19, _showUnitDots];
+				};
 			};
 
 			call {
