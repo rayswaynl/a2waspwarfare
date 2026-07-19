@@ -210,7 +210,7 @@ while {!WFBE_GameOver} do {
         _base    = _rec select 1;
         _transit = _rec select 3;
         //--- P0: removed the dead suppression contract read (_rec select 4 has NO writer anywhere in the
-        //--- mission; the _suppEnd < now guard below was vacuously true). Field kept for record-shape compat;
+        //--- mission; the removed time-window guard below was vacuously true). Field kept for record-shape compat;
         //--- a future suppression system must add BOTH writer and consumer deliberately.
 
         if (_str >= _base * 0.9) then {

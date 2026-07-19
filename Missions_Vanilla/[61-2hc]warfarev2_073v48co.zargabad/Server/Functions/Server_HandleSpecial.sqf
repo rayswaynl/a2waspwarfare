@@ -197,7 +197,7 @@ switch (_args select 0) do {
 			if (_ctlSide7 == west || {_ctlSide7 == east}) then {
 				private ["_ctlUnits7"];
 				_ctlUnits7 = 0;
-				{ if (!isNull _x && {_x getVariable ["wfbe_ctl_ground_wave", false]}) then {_ctlUnits7 = _ctlUnits7 + (count units _x)} } forEach _teams;
+				{ if (!isNull _x && {[_x, "wfbe_ctl_ground_wave", false] Call WFBE_CO_FNC_GroupGetBool}) then {_ctlUnits7 = _ctlUnits7 + (count units _x)} } forEach _teams;
 				//--- CTL single-writer (fable/ctl-readback-singlewriter): accumulate the HC/client-delegated
 				//--- Man-unit count into the per-town spawn scalar (per-town, so the wave-side snapshot only
 				//--- gates WHETHER to credit - no valid snapshot => skip - not which record to touch).

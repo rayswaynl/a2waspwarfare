@@ -39,6 +39,17 @@ class LedgerNextPatchTests(unittest.TestCase):
         text = source("Server/FSM/server_town_ai.sqf")
         self.assertIn("missionNamespace setVariable [_ctlCacheVar, _ctlCached + _ctlWaveGroups]", text)
 
+    def test_delegated_ctl_credit_uses_each_groups_wave_stamp(self):
+        text = source("Server/Functions/Server_HandleSpecial.sqf")
+        self.assertIn(
+            '[_x, "wfbe_ctl_ground_wave", false] Call WFBE_CO_FNC_GroupGetBool',
+            text,
+        )
+        self.assertNotIn(
+            '_x getVariable ["wfbe_ctl_ground_wave", false]',
+            text,
+        )
+
     def test_gdir_dead_suppression_field_is_removed(self):
         text = source("Server/AI/Server_GuerDirector.sqf")
         self.assertNotIn("_suppEnd", text)
