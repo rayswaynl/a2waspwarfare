@@ -20,7 +20,15 @@
 	data; live group reads per-team; GroupGetBool for the A2 group-bool trap; no A3 commands).
 */
 
-private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_expandWarnTown","_expandWarnDist","_myTowns","_engageMin","_expandFirst","_concentrate","_pfEnTowns","_pfMyEff","_pfEnEff","_pfDominant"];
+private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_expandWarnTown","_expandWarnDist","_myTowns","_engageMin","_expandFirst","_concentrate","_pfEnTowns","_pfMyEff","_pfEnEff","_pfDominant","_tnOn","_tnTeamOn","_tnRing","_tnWeight"];
+//--- review-fix (codex reject 2026-07-19): _tnOn/_tnTeamOn/_tnRing/_tnWeight hoisted to top-level
+//--- (were declared private INSIDE the if(!_fromFocus) scorer block below but _tnTeamOn/_tnRing are
+//--- read in the top-level ASSIGN team loop - OA private scoping destroys them when that block
+//--- closes, so the ASSIGN-loop read was an undefined-variable script error EVERY tick, including
+//--- all-flags-0 (broke the flag-off inertness contract). Default-initialize unconditionally here so
+//--- a fresh commander FOCUS (_fromFocus true, which skips the block below entirely) also leaves them
+//--- at safe, defined defaults.
+_tnOn = false; _tnTeamOn = false; _tnRing = []; _tnWeight = 0;
 _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) <= 0) exitWith {};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -217,7 +225,9 @@ if (!_fromFocus) then {
 	//--- the per-town scorer loop and never per frame. At the default flag-off nothing here is read at
 	//--- all: _tnOn/_tnTeamOn stay false, so both the scorer term below and the per-team redirect in the
 	//--- ASSIGN loop are skipped outright (behaviourally identical to HEAD).
-	private ["_tnOn","_tnTeamOn","_tnRing","_tnWeight"];
+	//--- _tnOn/_tnTeamOn/_tnRing/_tnWeight are top-level private (see file header) - this block only
+	//--- ASSIGNS them (never re-declares), so the outer scope the ASSIGN loop reads is always the one
+	//--- being written here.
 	_tnOn = false; _tnTeamOn = false; _tnRing = []; _tnWeight = 0;
 	if ((missionNamespace getVariable ["WFBE_C_CMD_TOWN_NUDGE", 0]) > 0) then {
 		_tnRing   = _logik getVariable ["wfbe_aicom_town_nudges", []];

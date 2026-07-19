@@ -585,6 +585,52 @@ class A2TrapTests(unittest.TestCase):
                         self.assertNotIn(token, text)
 
 
+class AllocatorScopeRegressionTests(unittest.TestCase):
+    """Codex review 2026-07-19 (PR #1156 round 1 rejection): _tnOn/_tnTeamOn/_tnRing/_tnWeight
+    were declared ``private`` INSIDE the ``if (!_fromFocus)`` scorer block but _tnTeamOn/_tnRing
+    are read in the top-level ASSIGN team loop. OA private scoping destroys a block-local var when
+    its block closes, so the ASSIGN-loop read was an undefined-variable script error EVERY tick -
+    including all-flags-0 (broke the flag-off inertness contract). Pins the hoist-to-top-level fix
+    so this cannot regress: the four names must appear in the file's TOP-LEVEL private list, and
+    must NOT be re-declared private anywhere else in the file (a re-declaration inside a nested
+    block would shadow the outer var and reintroduce the exact same bug)."""
+
+    NUDGE_LOCALS = ("_tnOn", "_tnTeamOn", "_tnRing", "_tnWeight")
+
+    def test_nudge_locals_are_declared_in_the_top_level_private_list(self) -> None:
+        for root in MAINTAINED_ROOTS:
+            text = read_code(root, ALLOCATE)
+            top_level_private_end = text.index("];")
+            top_level_private = text[: top_level_private_end + 2]
+            for name in self.NUDGE_LOCALS:
+                with self.subTest(root=root.name, name=name):
+                    self.assertIn(f'"{name}"', top_level_private)
+
+    def test_nudge_locals_have_exactly_one_private_declaration(self) -> None:
+        for root in MAINTAINED_ROOTS:
+            text = read_code(root, ALLOCATE)
+            for name in self.NUDGE_LOCALS:
+                # A second ``private [... "_tnOn" ...]`` anywhere in the file would shadow the
+                # top-level declaration inside whatever block it appears in - exactly the bug.
+                private_decls = [
+                    line for line in text.splitlines()
+                    if "private [" in line and f'"{name}"' in line
+                ]
+                with self.subTest(root=root.name, name=name):
+                    self.assertEqual(len(private_decls), 1, private_decls)
+
+    def test_nudge_locals_default_initialized_before_the_focus_branch(self) -> None:
+        for root in MAINTAINED_ROOTS:
+            text = read_code(root, ALLOCATE)
+            first_default = text.index("_tnOn = false; _tnTeamOn = false; _tnRing = []; _tnWeight = 0;")
+            focus_branch = text.index("if (!_fromFocus) then {")
+            with self.subTest(root=root.name):
+                self.assertLess(
+                    first_default, focus_branch,
+                    "nudge locals must be defaulted before the _fromFocus branch that may skip them",
+                )
+
+
 class MirrorParityTests(unittest.TestCase):
     """Chernarus is the source; TK and ZG are generated copies and must match byte-for-byte."""
 
