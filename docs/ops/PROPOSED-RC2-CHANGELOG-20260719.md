@@ -39,6 +39,8 @@ Status: draft release candidate. No live deployment or master merge has occurred
 ## Reliability, economy, and configuration
 
 - Makes legacy tactical UAV purchases server-authoritative for side, team, hull, crew, funds, expiry, and request capability.
+- Adds independently gated UAV level-two consumers: Engineer/repair-truck Forward FOBs and an AI-commander-only bounded FPV swarm. Both default off; the level-two economy and UI remain absent while both gates are dark.
+- Binds Forward FOB construction to a private, challenge-bound, short-lived, one-shot server capability and refunds/cleans every partial creation failure before registration.
 - Repairs shared-class metadata, malformed faction tuples, missing enabled-weapon prices, and GUER counter-battery-radar buildability.
 - Stops supply missions safely when no friendly town can be resolved.
 - Hardens rolling-average persistence, server defaults, terrain-size lookup, CTL bookkeeping, and stale mission paths.
@@ -46,7 +48,6 @@ Status: draft release candidate. No live deployment or master merge has occurred
 
 ## Pending final folds
 
-- UAV upgrade level 2: independently gated Forward FOB and AI-commander-only FPV swarm from PR #1148. Default: off. Awaiting independent exact-head acceptance before RC2 integration.
 - Complete removal of the custom Miksuu vehicle-radio system, Radio Tower, addon payload, BASS dependency, and extension handler. Native Arma chat and unrelated sounds remain.
 
 ## Explicit exclusions
@@ -58,5 +59,5 @@ Status: draft release candidate. No live deployment or master merge has occurred
 ## Release evidence
 
 - Successor branch: `codex/wasp-approved-matrix-rc2-20260719`
-- RC2 includes or supersedes the reviewed mission PR wave through #1147, with the #1142 reviewer follow-up folded at `cae4d99ea2`.
-- Final immutable head, package hashes, two-HC admission receipt, and full-match soak receipt will be appended only after the two pending folds pass review.
+- RC2 includes or supersedes the reviewed mission PR wave through #1148, with the #1142 reviewer follow-up folded at `cae4d99ea2` and independently approved UAV2 folded at `984581664a`.
+- Final immutable head, package hashes, two-HC admission receipt, and full-match soak receipt will be appended after the remaining radio removal passes review.
