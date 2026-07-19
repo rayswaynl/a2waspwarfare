@@ -61,7 +61,7 @@ Verify the restored values — do not propagate CH values to TK or ZG:
 
 | Field | CH | TK | ZG |
 |---|---|---|---|
-| `WF_MAXPLAYERS` | 34 (naval) | 61 | 61 |
+| `WF_MAXPLAYERS` | 36 | 36 | 36 |
 | `STARTING_DISTANCE` | 7500 | 7500 | 5000 |
 | `IS_CHERNARUS_MAP_DEPENDENT` | defined | NOT defined | NOT defined |
 | `IS_NAVAL_MAP` | defined | NOT defined | NOT defined |

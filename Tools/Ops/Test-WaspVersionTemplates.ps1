@@ -70,6 +70,7 @@ $markerPattern = '(?m)^#define WF_RELEASE_MARKER "WASPRELEASE\|v1\|candidate=[^"
 
 Write-Host "Checking LoadoutManager release candidate identity"
 Assert-Match $baseTerrain 'private const string ReleaseCandidateId = "wasp-rc2-20260719";' "LoadoutManager stamps the RC2 candidate"
+Assert-Match $baseTerrain 'private string DeterminePlayableSlotCount\(\)[\s\S]*?return "36";' "LoadoutManager emits the maintained 36-slot roster"
 
 Write-Host "Checking Chernarus version.sqf.template"
 Assert-Match $chernarus $markerPattern "Chernarus release marker line is present and well-formed"
@@ -82,16 +83,16 @@ Assert-Match $takistan $markerPattern "Takistan release marker line is present a
 Assert-NotMatch $takistan '(?m)^#define WF_DEBUG\b' "Takistan WF_DEBUG is not active"
 Assert-NotMatch $takistan '(?m)^#define IS_CHERNARUS_MAP_DEPENDENT\r?$' "Takistan map-dependent define is not active"
 Assert-NotMatch $takistan '(?m)^#define IS_NAVAL_MAP\r?$' "Takistan naval define is not active"
-Assert-Match $takistan '(?m)^#define WF_MAXPLAYERS 61\r?$' "Takistan max-player define is 61"
-Assert-Match $takistan '(?m)^#define WF_MISSIONNAME "\[61\] Warfare V48 Takistan"\r?$' "Takistan mission name is Takistan"
+Assert-Match $takistan '(?m)^#define WF_MAXPLAYERS 36\r?$' "Takistan max-player define matches its balanced 36-slot roster"
+Assert-Match $takistan '(?m)^#define WF_MISSIONNAME "\[36\] Warfare V48 Takistan"\r?$' "Takistan mission name carries the balanced roster"
 
 Write-Host "Checking Zargabad version.sqf.template"
 Assert-Match $zargabad $markerPattern "Zargabad release marker line is present and well-formed"
 Assert-NotMatch $zargabad '(?m)^#define WF_DEBUG\b' "Zargabad WF_DEBUG is not active"
 Assert-NotMatch $zargabad '(?m)^#define IS_CHERNARUS_MAP_DEPENDENT\r?$' "Zargabad map-dependent define is not active"
 Assert-NotMatch $zargabad '(?m)^#define IS_NAVAL_MAP\r?$' "Zargabad naval define is not active"
-Assert-Match $zargabad '(?m)^#define WF_MAXPLAYERS 61\r?$' "Zargabad max-player define is 61"
-Assert-Match $zargabad '(?m)^#define WF_MISSIONNAME "\[61\] Warfare V48 Zargabad"\r?$' "Zargabad mission name is Zargabad"
+Assert-Match $zargabad '(?m)^#define WF_MAXPLAYERS 36\r?$' "Zargabad max-player define matches its balanced 36-slot roster"
+Assert-Match $zargabad '(?m)^#define WF_MISSIONNAME "\[36\] Warfare V48 Zargabad"\r?$' "Zargabad mission name carries the balanced roster"
 Assert-Match $zargabad '(?m)^#define STARTING_DISTANCE 5000\r?$' "Zargabad starting distance matches its map size"
 
 Write-Host ""

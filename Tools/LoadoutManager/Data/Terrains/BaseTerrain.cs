@@ -221,6 +221,13 @@ class CfgSounds
         return TerrainType == TerrainType.FOREST ? "55" : "61";
     }
 
+    // The mission folder family names are historical; the maintained lobby
+    // rosters contain 36 playable entries in both source families.
+    private string DeterminePlayableSlotCount()
+    {
+        return "36";
+    }
+
     // Method to determine the mission camo based on the terrain type (Forest or Desert)
     // Return string for commenting the camo/map definition variable for Desert maps
     // Used for generation of the version.sqf file
@@ -478,7 +485,7 @@ class CfgSounds
         string terrainTypeCommentPrefix = DetermineIfTheMissionIsTakistanTypeAndReturnCommentStringIfThatIsTheCase();
         string isModMapDependant = DetermineIfTheTerrainIsNotModdedAndReturnCommentStringIfThatIsTheCase();
         string isNavalTerrain = DetermineIfTheTerrainIsNavalReturnCommentStringIfThatIsTheCase();
-        string maxPlayers = DetermineMissionTypeIfItsForestOrDesert();
+        string maxPlayers = DeterminePlayableSlotCount();
         string missionName = $@"[{maxPlayers}] Warfare V48 {EnumExtensions.GetEnumMemberAttrValue(terrainName)}";
         string isAirWarEvent = GenerateIsAirWarEvent();
         

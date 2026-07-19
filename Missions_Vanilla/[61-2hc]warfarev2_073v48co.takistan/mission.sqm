@@ -42,7 +42,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=98;
+		items=100;
 		class Item0
 		{
 			side="LOGIC";
@@ -596,7 +596,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_BLU";
-					synchronizations[]={7002,7003,7004,7005,7006,7007,7008,7009,7010,7011,7012,7013,7027};
+					synchronizations[]={7002,7003,7004,7005,7006,7007,7008,7009,7010,7011,7012,7013,7027,9007,9008};
 				};
 			};
 		}
@@ -3157,7 +3157,7 @@ class Mission
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="HC";
+					description="Soldier (Double team size, Camps restore)";
 					synchronizations[]={50};
 				};
 			};
@@ -3696,6 +3696,50 @@ class Mission
 					vehicle="Logic";
 					leader=1;
 					skill=0.60000002;
+				};
+			};
+		}
+		class Item98
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7184.2349,41.073147,12773.534};
+					id=9007;
+					side="WEST";
+					vehicle="US_Soldier_EP1";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		}
+		class Item99
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7186.2349,41.073147,12775.534};
+					id=9008;
+					side="WEST";
+					vehicle="US_Soldier_EP1";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={49};
 				};
 			};
 		}

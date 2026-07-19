@@ -46,11 +46,9 @@ Status: draft release candidate. No live deployment or master merge has occurred
 - Hardens rolling-average persistence, server defaults, terrain-size lookup, CTL bookkeeping, and stale mission paths.
 - Gives RC2 a unique generated release identity (`wasp-rc2-20260719`) and guards it in the release-template test.
 - Repairs the soak scenario runner so the boot-smoke gate receives the real server RPT and a missing SELFTEST correctly hard-fails the result instead of being swallowed as a tool error.
+- Restores balanced 15-vs-15 WEST/EAST lobby rosters on Takistan and Zargabad while retaining four GUER slots and two commander-only CIV HC parking seats; all maintained headers now truthfully expose 36 playable entries.
+- Removes the complete custom Miksuu vehicle-radio system: Radio Tower structures and economy hooks, mission UI/manager scripts, addon payload, BASS binaries, and the extension radio handler. Native Arma chat/audio and unrelated extension commands remain.
 - Mirrors maintained mission changes across Chernarus, Takistan, and Zargabad.
-
-## Pending final folds
-
-- Complete removal of the custom Miksuu vehicle-radio system, Radio Tower, addon payload, BASS dependency, and extension handler. Native Arma chat and unrelated sounds remain.
 
 ## Explicit exclusions
 
@@ -61,5 +59,5 @@ Status: draft release candidate. No live deployment or master merge has occurred
 ## Release evidence
 
 - Successor branch: `codex/wasp-approved-matrix-rc2-20260719`
-- RC2 includes or supersedes the reviewed mission PR wave through #1148, with the #1142 reviewer follow-up folded at `cae4d99ea2` and independently approved UAV2 folded at `984581664a`.
-- Final immutable head, package hashes, two-HC admission receipt, and full-match soak receipt will be appended after the remaining radio removal passes review.
+- RC2 includes or supersedes the reviewed mission PR wave through #1148, with the #1142 reviewer follow-up folded at `cae4d99ea2`, independently approved UAV2 folded at `984581664a`, and the full Miksuu radio removal folded at `867dcd5ede`.
+- Final immutable head and package hashes will be appended after combined-head static verification. Two-HC admission and full-match soak receipts remain runtime gates.
