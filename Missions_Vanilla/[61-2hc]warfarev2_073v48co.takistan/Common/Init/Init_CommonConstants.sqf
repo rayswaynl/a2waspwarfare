@@ -214,18 +214,24 @@ if (worldName == "Zargabad") then {
 		//--- 0 = restore buy-anywhere for GUER (pre-fix). WEST/EAST unaffected (they never hit this GUER-only branch).
 		if (isNil "WFBE_C_GUER_GEAR_PROXIMITY") then {WFBE_C_GUER_GEAR_PROXIMITY = 1};
 		//--- Shared placement gate (client preview + server authoritative): true if _pos (the world position passed as
-		//--- _this) is inside an enemy (WEST/EAST) build-restricted area - within WFBE_C_GUER_FOB_TOWN_BLOCK of an
-		//--- enemy-HELD town, or inside a WEST/EAST base area. Neutral / GUER-held towns are allowed (you can "extend"
-		//--- near a friendly GUE factory). No early-exit inside then{} (A2-OA gotcha) - plain flag accumulation.
+		//--- _this, or [_pos, flatRadius] for a factory-specific footprint) is inside an enemy (WEST/EAST) build-restricted
+		//--- area - within WFBE_C_GUER_FOB_TOWN_BLOCK of an enemy-HELD town, or inside a WEST/EAST base area. Neutral / GUER-
+		//--- held towns are allowed (you can "extend" near a friendly GUE factory). No early-exit inside then{} (A2-OA gotcha)
+		//--- - plain flag accumulation.
 		WFBE_FNC_GuerFobBlocked = {
-			private ["_pos","_blocked","_tSideID","_eLogik","_eArea","_blockDist","_townList"];
+			private ["_pos","_flatRadius","_blocked","_tSideID","_eLogik","_eArea","_blockDist","_townList"];
 			_pos = _this;
+			_flatRadius = missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_RADIUS", 10];
+			if ((count _this) > 1 && {(typeName (_this select 0)) == "ARRAY"} && {(typeName (_this select 1)) == "SCALAR"}) then {
+				_pos = _this select 0;
+				_flatRadius = _this select 1;
+			};
 			_blocked = false;
 			_blockDist = missionNamespace getVariable ["WFBE_C_GUER_FOB_TOWN_BLOCK", 600];
 			//--- never on water.
 			if (surfaceIsWater _pos) then {_blocked = true};
 			//--- qol-polish-pack: reject too-steep ground (FOB factory floats/tilts on slopes; mirrors the AI commander's isFlatEmpty gate).
-			if (!_blocked && {(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_CHECK", 1]) > 0} && {count (_pos isFlatEmpty [(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_RADIUS", 10]), 0, (missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_GRAD", 0.5]), 10, 0, false, objNull]) == 0}) then {_blocked = true};
+			if (!_blocked && {(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_CHECK", 1]) > 0} && {count (_pos isFlatEmpty [_flatRadius, 0, (missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_GRAD", 0.5]), 10, 0, false, objNull]) == 0}) then {_blocked = true};
 			//--- enemy-HELD (WEST/EAST) town within the block radius?
 			_townList = if (isNil "towns") then {[]} else {towns};
 			{
