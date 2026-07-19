@@ -37,6 +37,9 @@ if ((_logik getVariable "wfbe_votetime") <= 0) then {
 
 	//--- Set the commander
 	_logik setVariable ["wfbe_commander", _assigned_commander, true];
+	if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
+		if (isNull _assigned_commander) then {[_side] Call WFBE_CO_FNC_InvalidateCommanderLease} else {[_side, _assigned_commander, "assign"] Call WFBE_CO_FNC_GrantCommanderLease};
+	};
 	[_side, _assigned_commander] Spawn WFBE_SE_FNC_AssignForCommander; //--- wiki-wins: AssignForCommander (Server_AssignNewCommander.sqf:10) already notifies clients; removed the duplicate SendToClients
 
 };

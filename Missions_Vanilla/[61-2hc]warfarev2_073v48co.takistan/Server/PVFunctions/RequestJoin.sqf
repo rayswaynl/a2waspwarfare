@@ -1,4 +1,4 @@
-private ["_canJoin","_name","_player","_side","_uid","_skillBLUFOR","_skillOPFOR","_hasConnectedAtLaunchToSide","_teamJoinedConfirmed"];
+private ["_canJoin","_name","_player","_side","_uid","_skillBLUFOR","_skillOPFOR","_hasConnectedAtLaunchToSide","_teamJoinedConfirmed","_oldLogic","_oldLease"];
 
 _player = _this select 0;
 _side = _this select 1;
@@ -13,10 +13,20 @@ _hasConnectedAtLaunchToSide = missionNamespace getVariable format ["WFBE_PLAYER_
 _skillBLUFOR = 0;
 _skillOPFOR = 0;
 _reason = "";
+_oldLogic = objNull;
+_oldLease = [];
 
 if ( !(isNil "_teamJoinedConfirmed")) then { //--- Retrieve JIP Information if there's any.
 
 	if (_teamJoinedConfirmed != _side) then {
+
+		if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
+			_oldLogic = (_teamJoinedConfirmed) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _oldLogic) then {
+				_oldLease = _oldLogic getVariable ["wfbe_commander_lease", []];
+				if (typeName _oldLease == "ARRAY" && {count _oldLease >= 1} && {(_oldLease select 0) == _uid}) then {[_teamJoinedConfirmed] Call WFBE_CO_FNC_CommanderLeaseStandDown};
+			};
+		};
 
 		_canJoin = false;
 		[leader group _player, "LocalizeMessage", ['Teamswap',_name,_uid,_teamJoinedConfirmed,_side]] Call WFBE_CO_FNC_SendToClient; //--- Inform the client about the teamswap.

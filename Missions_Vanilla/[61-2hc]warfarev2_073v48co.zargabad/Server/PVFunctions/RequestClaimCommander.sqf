@@ -36,6 +36,7 @@ if (side _claimTeam != _side) exitWith {};
 
 //--- Promote EXACTLY like the elected path (RequestNewCommander.sqf:12-13).
 _logic setVariable ["wfbe_commander", _claimTeam, true];
+if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {[_side, _claimTeam, "claim"] Call WFBE_CO_FNC_GrantCommanderLease};
 [_side, _claimTeam] Spawn WFBE_SE_FNC_AssignForCommander;
 
 //--- Stand the AI down the SAME way Server_VoteForCommander.sqf:60-61 does.
