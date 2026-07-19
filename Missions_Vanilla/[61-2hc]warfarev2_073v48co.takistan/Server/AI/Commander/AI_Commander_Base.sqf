@@ -610,20 +610,6 @@ if (_resIdx >= 0) then {
 		_scaffoldActivated = true;
 	};
 };
-//--- RADIO TOWER (owner rig-test 2026-07-09): let the AI build it too so the vehicle-radio feature is
-//--- available without a human building the tower. `_names find "RadioTower" == -1` (flag
-//--- WFBE_C_STRUCTURES_RADIOTOWER off) is the natural no-op. Low priority; plain supply-multiple gate so it
-//--- never starves military builds. AI pays supply (STRUCTURECOSTS); the $2500 player-cash override is
-//--- coin-interface-only, so the AI supply path is unaffected.
-private ["_radioIdx","_radioCost"];
-_radioIdx = _names find "RadioTower";
-if (_radioIdx >= 0) then {
-	_radioCost = _costs select _radioIdx;
-	if (_econOpen && {_supply > _radioCost * 1.5}) then {
-		_order = _order + ["RadioTower"];
-		_scaffoldActivated = true;
-	};
-};
 //--- ARTILLERYRADAR: humans can always build it; the AI now defers it until the ENEMY actually
 //--- fields/fires artillery, re-using the SAME wfbe_aicom_arty_threat flag the CBRadar block above
 //--- armed (cond-a killed-by-arty, cond-b >=3 fire missions, cond-c enemy-arty-piece scan). The flag
