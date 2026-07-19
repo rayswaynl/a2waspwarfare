@@ -23,7 +23,8 @@ WFBE_CL_FNC_TeambarProbe = {
     Private ["_evt","_phase","_grp","_sameTeam","_ldr","_ldrIsP","_arr0","_arr0IsP","_o","_i","_u","_n"];
     _evt = _this select 0;
     _phase = _this select 1;
-    if ((missionNamespace getVariable ["WFBE_C_TEAMBAR_PROBE", 1]) <= 0) exitWith {};
+    //--- Round-2 review: DEFAULT 0 per repo feature-default policy; the capture round arms it.
+    if (!((missionNamespace getVariable ["WFBE_C_TEAMBAR_PROBE", 0]) > 0)) exitWith {};
 
     _grp = group player;
     _sameTeam = (_grp == (missionNamespace getVariable ["WFBE_Client_Team", grpNull]));
@@ -33,16 +34,18 @@ WFBE_CL_FNC_TeambarProbe = {
     if (count (units _grp) > 0) then {_arr0 = (units _grp) select 0};
     _arr0IsP = (_arr0 == player);
 
+    //--- Round-2 review: capture ALL members (the real _slot1Others filter inspects every one);
+    //--- the probe fires only on discrete lifecycle events, so a full-group walk is cheap.
     _o = "";
-    _n = (count (units _grp)) min 8;
+    _n = count (units _grp);
     for '_i' from 0 to (_n - 1) do {
         _u = (units _grp) select _i;
         _o = _o + Format ["%1:r%2/p%3/l%4/a%5 ", _i, rankId _u, isPlayer _u, local _u, alive _u];
     };
 
-    diag_log Format ["TEAMBAR|v2|PROBE|evt=%1|phase=%2|t=%3|flag=%4|alivePlayer=%5|sameTeam=%6|isLeader=%7|arr0IsPlayer=%8|playerRankId=%9|groupId=%10|units=%11|order=[ %12]",
-        _evt, _phase, round time,
-        (missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]),
+    diag_log Format ["TEAMBAR|v2|PROBE|evt=%1|phase=%2|t=%3|jip=%4|flag=%5|alivePlayer=%6|sameTeam=%7|isLeader=%8|arr0IsPlayer=%9|playerRankId=%10|groupId=%11|units=%12|order=[ %13]",
+        _evt, _phase, round time, didJIP,
+        (missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 1]), //--- raw value capture for the log (1 = the mitigation's real default), not a gate
         alive player, _sameTeam, _ldrIsP, _arr0IsP, rankId player,
         groupId _grp, count (units _grp), _o];
 };

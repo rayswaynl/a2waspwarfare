@@ -440,6 +440,7 @@ if (_isMan) then {
 	if (!isNull _soldier && {(missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0}) then {
 		_soldier setRank "PRIVATE";
 	};
+	["buyunit", "post-spawn"] Call WFBE_CL_FNC_TeambarProbe; //--- TEAMBAR probe: order after a bought AI joins the group
 	_spawnedUnits = [_soldier];
 	//--- UD-23: Unit designer -- apply active template to bought infantry (WFBE_C_UNIT_DESIGNER).
 	if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {

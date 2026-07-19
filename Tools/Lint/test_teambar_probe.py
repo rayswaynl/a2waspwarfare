@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Contract for the TEAMBAR reason-coded probe (fable/teambar-probe).
+"""Contract for the TEAMBAR reason-coded probe (fable/teambar-probe, round 2).
 
-Required by the independent review of wasp-player-group-rank-order-diagnosis-20260718:
-the #2-in-own-group instrumentation must capture EVERY guard input of the slot1-rejoin
-mitigation, at every lifecycle transition, client-side AND server-side (UID-resolved),
-so the first failing transition is named from the RPT.
+Round-2 review additions: buy-unit, generic group-transfer, JIP field, and heartbeat
+coverage; full-member capture (no 8-member truncation); skin-swap probe AFTER the final
+fallback join; server probe phase-stamped pre-client-rejoin; probe default 0 per repo
+feature-default policy.
 """
 
 from pathlib import Path
@@ -22,34 +22,54 @@ def code(relative: str) -> str:
 
 
 class TeambarProbeTests(unittest.TestCase):
-    def test_probe_captures_every_rejoin_guard_input(self) -> None:
+    def test_probe_captures_every_rejoin_guard_input_for_all_members(self) -> None:
         text = code("Client/Functions/Client_TeambarProbe.sqf")
         for token in (
-            "WFBE_C_TEAMBAR_PROBE",
-            "alivePlayer=",       # guard 1: alive player
-            "sameTeam=",          # guard 2: group player == WFBE_Client_Team
-            "isLeader=",          # guard 3: leader (group player) == player
-            "arr0IsPlayer=",      # guard 4: (units group player) select 0 != player
+            'WFBE_C_TEAMBAR_PROBE", 0]',   # round-2: default OFF
+            "alivePlayer=",
+            "sameTeam=",
+            "isLeader=",
+            "arr0IsPlayer=",
             "playerRankId=",
-            "rankId _u",          # per-unit rank
-            "isPlayer _u",        # per-unit isPlayer
-            "local _u",           # per-unit locality (the _slot1Others filter)
-            "alive _u",           # per-unit alive (the _slot1Others filter)
+            "jip=",                        # round-2: JIP discrimination
+            "didJIP",
+            "rankId _u",
+            "isPlayer _u",
+            "local _u",
+            "alive _u",
             "TEAMBAR|v2|PROBE",
         ):
             self.assertIn(token, text)
+        # Round-2: ALL members captured - the truncating `min 8` must be gone.
+        self.assertNotIn("min 8", text)
+        self.assertIn("_n = count (units _grp)", text)
 
     def test_all_lifecycle_transitions_are_probed_with_reason_codes(self) -> None:
         init = code("Client/Init/Init_Client.sqf")
         for phase in ('"init", "post-select"', '"init", "rejoin-check"', '"init", "rejoin-done"',
-                      '"init", "rejoin-creategroup-null"', '"init", "rejoin-no-local-others"'):
+                      '"init", "rejoin-creategroup-null"', '"init", "rejoin-no-local-others"',
+                      '"heartbeat", "periodic"'):
             self.assertIn(phase, init)
         killed = code("Client/Functions/Client_OnKilled.sqf")
         for phase in ('"respawn", "rejoin-check"', '"respawn", "rejoin-done"',
                       '"respawn", "rejoin-creategroup-null"', '"respawn", "rejoin-no-local-others"'):
             self.assertIn(phase, killed)
-        self.assertIn('"skinswap", "post-apply"', code("WASP/actions/SkinSelector/SkinSelector_Apply.sqf"))
+        self.assertIn('"buyunit", "post-spawn"', code("Client/Functions/Client_BuildUnit.sqf"))
+        self.assertIn('"group-transfer", "post-join"', code("Common/Functions/Common_ChangeUnitGroup.sqf"))
         self.assertIn('"kicked", "post-transfer"', code("Client/Functions/Client_FNC_Groups.sqf"))
+
+    def test_skinswap_probe_fires_after_the_final_fallback_join(self) -> None:
+        text = code("WASP/actions/SkinSelector/SkinSelector_Apply.sqf")
+        self.assertIn('"skinswap", "post-final"', text)
+        self.assertNotIn('"skinswap", "post-apply"', text)
+        # After the subordinate fallback join path, immediately before the B6 COMPLETE log.
+        self.assertLess(text.index("selectLeader player"), text.index('"skinswap", "post-final"'))
+        self.assertLess(text.index('"skinswap", "post-final"'), text.index("B6 COMPLETE"))
+
+    def test_group_transfer_probe_is_machine_safe(self) -> None:
+        # ChangeUnitGroup runs on server/HC too, where the client probe fn may be nil.
+        text = code("Common/Functions/Common_ChangeUnitGroup.sqf")
+        self.assertIn('_unit == player && {!isNil "WFBE_CL_FNC_TeambarProbe"}', text)
 
     def test_check_probe_precedes_the_guard_it_documents(self) -> None:
         init = code("Client/Init/Init_Client.sqf")
@@ -59,15 +79,16 @@ class TeambarProbeTests(unittest.TestCase):
         self.assertLess(killed.index('"respawn", "rejoin-check"'),
                         killed.index('((units group player) select 0) != player'))
 
-    def test_server_side_uid_resolved_probe_exists(self) -> None:
+    def test_server_side_probe_is_phase_stamped(self) -> None:
         text = code("Server/Functions/Server_HandleSpecial.sqf")
         self.assertIn("TEAMBAR|v2|SVPROBE", text)
-        for token in ("getPlayerUID _leader", "leaderIsGrpLeader=", "rankId _leader", "WFBE_C_TEAMBAR_PROBE"):
+        self.assertIn("phase=pre-client-rejoin", text)
+        for token in ("getPlayerUID _leader", "leaderIsGrpLeader=", "rankId _leader", 'WFBE_C_TEAMBAR_PROBE", 0]'):
             self.assertIn(token, text)
 
-    def test_registration_and_kill_switch(self) -> None:
+    def test_registration_and_default_off(self) -> None:
         self.assertIn("Client_TeambarProbe.sqf", code("Client/Init/Init_Client.sqf"))
-        self.assertIn('if (isNil "WFBE_C_TEAMBAR_PROBE") then {WFBE_C_TEAMBAR_PROBE = 1}',
+        self.assertIn('if (isNil "WFBE_C_TEAMBAR_PROBE") then {WFBE_C_TEAMBAR_PROBE = 0}',
                       code("Common/Init/Init_CommonConstants.sqf"))
 
 

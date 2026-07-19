@@ -1238,6 +1238,16 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 		};
 	};
 };
+//--- TEAMBAR probe heartbeat (round-2 review): a low-frequency periodic observation so drift
+//--- BETWEEN lifecycle events (an AI joining late, a promotion mid-mission) is still captured.
+if ((missionNamespace getVariable ["WFBE_C_TEAMBAR_PROBE", 0]) > 0) then {
+	[] spawn {
+		while {true} do {
+			sleep 60;
+			if (alive player) then {["heartbeat", "periodic"] Call WFBE_CL_FNC_TeambarProbe};
+		};
+	};
+};
 
 //--- SPAWN-BUDDY-DISBAND (wasp-aicom-idle-diagnosis-20260717, owner live report 2026-07-17: "I spawn with
 //--- another unit in my group"). AI-Teams pre-groups a fresh player with a mission-start AI squadmate by

@@ -2665,8 +2665,9 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- selectLeader sets the star but does not reorder slots). 1 = enabled (default); 0 = legacy layout.
 	if (isNil "WFBE_C_PLAYER_TEAMBAR_FIRST") then {WFBE_C_PLAYER_TEAMBAR_FIRST = 1};
 //--- TEAMBAR probe (card wasp-player-group-rank-order-diagnosis-20260718): reason-coded client+server
-//--- instrumentation of the #2-in-own-group mitigation guards. Telemetry-only; 1 = on, 0 = kill-switch.
-	if (isNil "WFBE_C_TEAMBAR_PROBE") then {WFBE_C_TEAMBAR_PROBE = 1};
+//--- instrumentation of the #2-in-own-group mitigation guards. Telemetry-only. Round-2 review:
+//--- DEFAULT 0 per feature-default policy - the capture round arms it explicitly.
+	if (isNil "WFBE_C_TEAMBAR_PROBE") then {WFBE_C_TEAMBAR_PROBE = 0};
 
 //--- WFBE_C_SPAWN_BUDDY_DISBAND (wasp-aicom-idle-diagnosis-20260717, owner live report 2026-07-17: "I spawn
 //--- with another unit in my group" - AI-Teams pre-grouped squadmate at INITIAL spawn is by-design, but the
