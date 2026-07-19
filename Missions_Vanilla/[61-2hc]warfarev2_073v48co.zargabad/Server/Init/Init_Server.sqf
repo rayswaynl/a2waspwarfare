@@ -750,6 +750,12 @@ emptyQueu = [];
 
 		//--- Logic init.
 		_logik setVariable ["wfbe_commander", objNull, true];
+		//--- C1 lease: spawn the ONE per-side stand-down executor (the only runner of lease
+		//--- stand-down effects - single-owner by construction, see Common_CommanderLease.sqf).
+		//--- Flag off = never spawned = byte-identical.
+		if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
+			[_side] Spawn WFBE_CO_FNC_CommanderLeaseStandDownExecutor;
+		};
 		_logik setVariable ["wfbe_hq", _hq, true];
 		_logik setVariable ["wfbe_hq_deployed", false, true];
 		_logik setVariable ["wfbe_hq_repair_count", 1, true];

@@ -24,7 +24,7 @@ if ( !(isNil "_teamJoinedConfirmed")) then { //--- Retrieve JIP Information if t
 			_oldLogic = (_teamJoinedConfirmed) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _oldLogic) then {
 				_oldLease = _oldLogic getVariable ["wfbe_commander_lease", []];
-				if (typeName _oldLease == "ARRAY" && {count _oldLease >= 1} && {(_oldLease select 0) == _uid}) then {[_teamJoinedConfirmed] Call WFBE_CO_FNC_CommanderLeaseStandDown};
+				if (typeName _oldLease == "ARRAY" && {count _oldLease >= 1} && {(_oldLease select 0) == _uid}) then {[_teamJoinedConfirmed] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown}; //--- request only; single per-side executor runs the effects
 			};
 		};
 

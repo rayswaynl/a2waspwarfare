@@ -66,24 +66,38 @@ class LeaseModel:
             self.derived = group
 
     def tick(self, seconds: int, units: list[tuple[str, str, bool]] | None = None) -> None:
+        """A grace checker reaching expiry REQUESTS a stand-down; it never runs effects."""
         self.now += seconds
         if self.expires is None or self.now < self.expires:
             return
         if self.lease is None or (units is not None and self.holder_present(units)):
             return
+        self.request_stand_down()
+
+    def request_stand_down(self) -> None:
+        """Mirrors WFBE_CO_FNC_CommanderLeaseRequestStandDown: callers only stamp a
+        request. Any number of racing callers collapse into one pending request."""
+        self.sd_request = True
+
+    def executor_tick(self, units: list[tuple[str, str, bool]] | None = None) -> None:
+        """Mirrors the ONE per-side executor: the only code path that performs the
+        stand-down effects. Single-owner by construction - interleaving callers can
+        only ever add requests, never run effects."""
+        if not getattr(self, "sd_request", False):
+            return
+        self.sd_request = False
+        if units is not None and self.holder_present(units):
+            return  # a reclaim between request and consumption wins
         self.stand_down()
 
     def stand_down(self) -> None:
-        """Mirrors the SQF ordering: ATOMIC claim (clear lease/expiry/derived) FIRST,
-        then the externally-visible effects. A second caller that arrives after the
-        claim sees nothing to stand down and produces zero effects."""
+        """Executor-internal: clear state before effects (guarded single-fire)."""
         if self.derived is None and self.lease is None:
-            return  # guard: already stood down - single-fire
+            return
         self.lease = None
         self.expires = None
         self.derived = None
         self.invalidations += 1
-        # external effects AFTER the claim
         self.ai_freed += 1
         self.messages += 1
 
@@ -116,6 +130,7 @@ class CommanderLeaseFixtures(unittest.TestCase):
         state.tick(30, units=[])
         state.reclaim("uid-1", "west", "grp-1")
         state.tick(90, units=[])
+        state.executor_tick(units=[("uid-1", "grp-1", True)])
         self.assertEqual(state.derived, "grp-1")
         self.assertEqual(state.ai_freed, 0)
 
@@ -125,6 +140,8 @@ class CommanderLeaseFixtures(unittest.TestCase):
         state.disconnect("uid-1", "west", "grp-1")
         state.tick(91, units=[])
         state.tick(91, units=[])
+        state.executor_tick(units=[])
+        state.executor_tick(units=[])
         self.assertIsNone(state.derived)
         self.assertEqual(state.ai_freed, 1)
         self.assertEqual(state.messages, 1)
@@ -183,31 +200,54 @@ class CommanderLeaseFixtures(unittest.TestCase):
             DISCONNECT.read_text(encoding="utf-8-sig"),
         )
 
-    def test_08_interleaved_double_stand_down_fires_effects_exactly_once(self) -> None:
-        """Two concurrent stand-down callers (grace checker + side-change racing an expiry):
-        the atomic-claim ordering means the second caller is a no-op."""
+    def test_08_racing_callers_can_only_request_never_run_effects(self) -> None:
+        """Round-2 review fix: ANY number of racing callers (grace checkers, side-change,
+        a caller interleaving at any statement boundary) only stamp requests. Effects run
+        exactly once because exactly one executor consumes them."""
         state = LeaseModel()
         state.grant("uid-1", "west", "grp-1", "vote")
         state.disconnect("uid-1", "west", "grp-1")
-        state.tick(91, units=[])   # first caller stands down
-        state.stand_down()         # interleaved second caller
-        state.stand_down()         # and a third
+        state.tick(91, units=[])          # caller A requests at expiry
+        state.request_stand_down()        # caller B interleaves - just another request
+        state.request_stand_down()        # caller C interleaves mid-anything - same
+        state.executor_tick(units=[])     # the single executor consumes
+        state.executor_tick(units=[])     # nothing left to consume
         self.assertEqual(state.ai_freed, 1)
         self.assertEqual(state.messages, 1)
         self.assertEqual(state.invalidations, 1)
 
-    def test_09_stand_down_source_clears_state_before_effects(self) -> None:
-        """SQF ordering pin: the lease/expiry/derived clears must appear BEFORE the
-        client message and team resets inside WFBE_CO_FNC_CommanderLeaseStandDown -
-        effects-then-invalidate is the double-fire-prone order the review rejected."""
+    def test_08b_reclaim_between_request_and_consumption_wins(self) -> None:
+        """A request is pending, then the commander reclaims before the executor runs:
+        the executor's consumption-time holder re-check absorbs the stale request."""
+        state = LeaseModel()
+        state.grant("uid-1", "west", "grp-1", "vote")
+        state.disconnect("uid-1", "west", "grp-1")
+        state.tick(91, units=[])                                   # request pending
+        state.reclaim("uid-1", "west", "grp-1")                    # holder returns
+        state.executor_tick(units=[("uid-1", "grp-1", True)])      # stale request absorbed
+        self.assertEqual(state.derived, "grp-1")
+        self.assertEqual(state.ai_freed, 0)
+        self.assertEqual(state.messages, 0)
+
+    def test_09_stand_down_effects_have_exactly_one_executor_call_site(self) -> None:
+        """Structural single-owner pin: WFBE_CO_FNC_CommanderLeaseStandDown is Called from
+        exactly ONE site - inside the per-side executor. Grace checker and side-change go
+        through RequestStandDown. Init_Server spawns the executor flag-gated."""
         code = LEASE.read_text(encoding="utf-8-sig")
-        body = code[code.index("WFBE_CO_FNC_CommanderLeaseStandDown"):code.index("WFBE_CO_FNC_CommanderLeaseGraceCheck")]
-        self.assertLess(
-            body.index('setVariable ["wfbe_commander_lease", nil, true]'),
-            body.index("LocalizeMessage"),
-        )
-        self.assertLess(body.index('setVariable ["wfbe_commander", objNull, true]'), body.index("LocalizeMessage"))
-        self.assertNotIn("WFBE_CO_FNC_InvalidateCommanderLease;", body.split("LocalizeMessage")[1])
+        self.assertEqual(code.count("Call WFBE_CO_FNC_CommanderLeaseStandDown;"), 1)
+        exec_body = code[code.index("WFBE_CO_FNC_CommanderLeaseStandDownExecutor"):]
+        self.assertIn("Call WFBE_CO_FNC_CommanderLeaseStandDown;", exec_body)
+        self.assertIn("Call WFBE_CO_FNC_CommanderLeaseRequestStandDown", code)  # grace checker requests
+        request_join = (CHERNARUS / "Server" / "PVFunctions" / "RequestJoin.sqf").read_text(encoding="utf-8-sig")
+        self.assertIn("Call WFBE_CO_FNC_CommanderLeaseRequestStandDown", request_join)
+        self.assertNotIn("Call WFBE_CO_FNC_CommanderLeaseStandDown}", request_join)
+        init_server = (CHERNARUS / "Server" / "Init" / "Init_Server.sqf").read_text(encoding="utf-8-sig")
+        self.assertIn("Spawn WFBE_CO_FNC_CommanderLeaseStandDownExecutor", init_server)
+        idx = init_server.index("Spawn WFBE_CO_FNC_CommanderLeaseStandDownExecutor")
+        self.assertIn('WFBE_C_CMD_LEASE", 0]) > 0', init_server[idx - 400 : idx])
+        # State still clears before effects inside the executor-internal stand-down (defense in depth).
+        body = code[code.index("WFBE_CO_FNC_CommanderLeaseStandDown = {"):code.index("WFBE_CO_FNC_CommanderLeaseStandDownExecutor")]
+        self.assertLess(body.index('setVariable ["wfbe_commander_lease", nil, true]'), body.index("LocalizeMessage"))
 
     def test_10_writers_fail_closed_behind_eligibility(self) -> None:
         """Flag-on seat writers must validate BEFORE publishing wfbe_commander, and the
