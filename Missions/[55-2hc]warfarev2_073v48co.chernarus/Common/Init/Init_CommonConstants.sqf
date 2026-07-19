@@ -2686,6 +2686,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- instrumentation of the #2-in-own-group mitigation guards. Telemetry-only. Round-2 review:
 //--- DEFAULT 0 per feature-default policy - the capture round arms it explicitly.
 	if (isNil "WFBE_C_TEAMBAR_PROBE") then {WFBE_C_TEAMBAR_PROBE = 0};
+//--- VEHDEL deletion probe (card wasp-vehicle-crew-fast-despawn-20260719): reason-coded telemetry
+//--- on every scripted cleanup deleteVehicle of hulls/crew + GetIn/GetOut player-use stamps.
+//--- Telemetry-only (no behavior); 1 = on (capture evidence next round), 0 = kill-switch.
+	if (isNil "WFBE_C_VEH_DELETE_PROBE") then {WFBE_C_VEH_DELETE_PROBE = 1};
 
 //--- WFBE_C_SPAWN_BUDDY_DISBAND (wasp-aicom-idle-diagnosis-20260717, owner live report 2026-07-17: "I spawn
 //--- with another unit in my group" - AI-Teams pre-grouped squadmate at INITIAL spawn is by-design, but the

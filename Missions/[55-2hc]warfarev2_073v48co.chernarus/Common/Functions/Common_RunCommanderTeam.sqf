@@ -922,12 +922,12 @@ while {!WFBE_GameOver && _alive} do {
 			_dCmd = _team getVariable "wfbe_aicom_disband_cmd"; _dCmd = (!isNil "_dCmd" && {_dCmd}); _dNear = if (_dCmd || {isNull _dLdr}) then {0} else {{isPlayer _x && {alive _x} && {(_x distance _dLdr) < _dSafe}} count allUnits}; //--- Build84: explicit console order bypasses player-proximity veto
 			_dCombat = if (isNull _dLdr) then {false} else {behaviour _dLdr == "COMBAT"};
 			if (_dNear == 0 && {!_dCombat}) then {
-				{ if (local _x) then {deleteVehicle _x} } forEach (units _team);
+				{ if (local _x) then {["aicom-retire-unit", _x, Format ["cmd=%1", _dCmd]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
 				//--- cmdcon44s (correctness): retirement must delete the team HULLS too, not just the crew (units _team above).
 				//--- A retired REAR team otherwise leaves crewless tanks/helis parked at base forever - no reaper catches an
 				//--- HC-local, group-less hull. HC-local delete only; skip any hull a player is aboard (belt-and-braces; the
 				//--- _dNear guard already cleared nearby players). Capture the outer _x before the inner count (A2 rebind trap).
-				{ private ["_rv"]; _rv = _x; if (!isNull _rv && {local _rv} && {({isPlayer _x} count (crew _rv)) == 0}) then {deleteVehicle _rv} } forEach _vehicles;
+				{ private ["_rv"]; _rv = _x; if (!isNull _rv && {local _rv} && {({isPlayer _x} count (crew _rv)) == 0}) then {["aicom-retire-hull", _rv, Format ["cmd=%1", _dCmd]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _rv} } forEach _vehicles;
 				_alive = false;
 				diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TEAM_RETIRE_HC|deleted-local-units|cmd=" + str _dCmd);
 			} else {

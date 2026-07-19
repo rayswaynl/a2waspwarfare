@@ -62,7 +62,7 @@ if ((count _town_teams) > 0 || (count _town_vehicles) > 0) then {["RequestSpecia
 			while {count (units _team) > 0 && time < _wDeadline} do {sleep 1};
 		if (!isNull _team) then {
 			_remaining = +units _team;
-			{deleteVehicle _x} forEach _remaining;
+			{["hc-townai-watch-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach _remaining;
 			deleteGroup _team;
 		};
 	};
