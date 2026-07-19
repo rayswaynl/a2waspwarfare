@@ -45,7 +45,7 @@ if (isNil "mouseY") then {mouseY = 0.5};
 
 private ["_display","_map","_sid","_armed","_lastSend","_cool","_artyOn","_now","_position",
          "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastEcon","_lastIntent","_posture","_disbandArm",
-         "_disbandSelArm","_focusArmed","_lastDirect","_directCool"];
+         "_disbandSelArm","_focusArmed","_lastDirect","_directCool","_tnArmed","_tdNext"];
 
 _display = _this select 0;
 _map = _display displayCtrl 14002;
@@ -77,6 +77,8 @@ _lastDirect = -1000;        //--- Build83 smoother-console: separate short-coold
 _disbandArm = -1000;        //--- player-commander DISBAND-ALL failsafe: 2-click-arm timestamp (claude-gaming 2026-06-30).
 _disbandSelArm = -1000;     //--- Command Console v2: per-team DISBAND-SELECTED 2-click-arm timestamp (claude-gaming 2026-07-01).
 _focusArmed = false;        //--- Command Console v2: STATE-A "AI: FOCUS TOWN" armed flag - next map click sets the AI focus (claude-gaming 2026-07-01).
+_tnArmed = false;           //--- COMMAND V2 (a): STATE-A "SUGGEST TOWN" armed flag - next map click sends a SOFT weighted town nudge (never a focus/pin).
+_tdNext  = "aggressive";    //--- COMMAND V2 (b): which stance the next TEAM DOCTRINE press sends; the button label mirrors it so the player always sees what they are about to send.
 _lastState = -1;        //--- 0 = take-command, 1 = war room, -1 = uninitialised (force first toggle).
 _lastRosterHash = "";
 _lastEcon = "";
@@ -101,6 +103,15 @@ private "_adviseCtrls";
 //--- cmdcon41-w3d COMMAND-MENU V2: +14618 REQUEST AI SUPPORT (non-commander nudge), shown in STATE A when the flag is on.
 _adviseCtrls = [14606,14607,14608,14609,14612,14613,14614,14615,14616,14617];
 if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0) then {_adviseCtrls = _adviseCtrls + [14618]};
+//--- COMMAND V2 (P4): each new STATE-A control is admitted to the ctrlShow set ONLY while its own
+//--- default-0 mechanic flag is on. The controls carry show = 0, so a flag left at 0 means ctrlShow
+//--- is never called for that idc and the button simply does not exist for the player - STATE A is
+//--- then pixel-identical to HEAD. The master WFBE_C_CMD_MENU_V2 gate still applies on top.
+if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0) then {
+	if ((missionNamespace getVariable ["WFBE_C_CMD_TOWN_NUDGE", 0]) > 0)    then {_adviseCtrls = _adviseCtrls + [14631]};
+	if ((missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR", 0]) > 0)   then {_adviseCtrls = _adviseCtrls + [14632, 14633]};
+	if ((missionNamespace getVariable ["WFBE_C_CMD_TEAM_DOCTRINE", 0]) > 0) then {_adviseCtrls = _adviseCtrls + [14634]};
+};
 
 (_display displayCtrl 14650) ctrlSetStructuredText (parseText "Opening the war room...");
 
@@ -143,6 +154,7 @@ while {alive player && dialog} do {
 		diag_log (format ["CMDCON-DBG state=%1 isCmd=%2 | war660=%3 roster661=%4 | takecmd670=%5 intent606=%6 posture608=%7", _stateNow, _isCmd, ctrlShown (_display displayCtrl 14660), ctrlShown (_display displayCtrl 14661), ctrlShown (_display displayCtrl 14670), ctrlShown (_display displayCtrl 14606), ctrlShown (_display displayCtrl 14608)]); //--- CONSOLE PROBE: log real per-state control visibility so any overlap is diagnosable from the RPT.
 		_armed = "";
 		_focusArmed = false;                                          //--- Command Console v2: clear any armed FOCUS on state entry
+		_tnArmed = false;                                             //--- COMMAND V2 (a): clear any armed TOWN SUGGESTION on state entry too
 		_lastRosterHash = ""; _lastEcon = "";                         //--- force a panel redraw on state entry
 		if (!_isCmd) then {lbClear 14661};
 	};
@@ -251,6 +263,28 @@ while {alive player && dialog} do {
 		//--- at arg[2], exactly what the server handler expects). towns is populated on every client (Init_Town.sqf).
 		if (mouseButtonUp == 0) then {
 			mouseButtonUp = -1;
+			//--- COMMAND V2 (a): an armed SOFT TOWN SUGGESTION consumes this click. Unlike FOCUS above this is
+			//--- NOT gated on the AI holding command - a suggestion is always allowed to be filed; it simply
+			//--- has no effect while a human runs the side, exactly like every other advisory input. Sends the
+			//--- town OBJECT (arg[2]) and the scope string (arg[4]); the server re-validates all of it.
+			if (_tnArmed) then {
+				_tnArmed = false;
+				if ((_now - _lastSend) < (_cool max (missionNamespace getVariable ["WFBE_C_CMD_TOWN_NUDGE_COOLDOWN", 90]))) then {
+					hintSilent parseText "<t color='#F8D664'>Town suggestion on cooldown - wait a moment.</t>";
+				} else {
+					_position = _map posScreenToWorld [mouseX, mouseY];
+					private "_tnT"; _tnT = objNull;
+					if (!isNil "towns" && {count towns > 0}) then {_tnT = [_position, towns] Call WFBE_CO_FNC_GetClosestEntity};
+					if (!isNull _tnT) then {
+						["RequestSpecial", ["aicom-town-nudge", sideJoined, _tnT, player, "side"]] Call WFBE_CO_FNC_SendToServer;
+						["TempAnim", getPos _tnT, "selector_selectedMission", 1, "ColorGreen", 1, 1.2] Spawn MarkerAnim;
+						_lastSend = _now;
+						hintSilent parseText (format ["<t color='#A0E060'>Suggested %1 to the AI commander.</t> <t color='#85B5FA'>It weighs your suggestion - it is not an order.</t>", _tnT getVariable ["name", "?"]]);
+					} else {
+						hintSilent parseText "<t color='#F8D664'>No town near that click - try again.</t>";
+					};
+				};
+			};
 			if (_focusArmed) then {
 				if (!(_seatEmpty || _lockOn)) then {
 					_focusArmed = false;
@@ -291,6 +325,79 @@ while {alive player && dialog} do {
 					hintSilent parseText "<t color='#A0E060'>Support requested - the nearest free AI team is inbound (if one is in range).</t>";
 				} else {
 					hintSilent parseText "<t color='#F8D664'>Support request on cooldown - wait a moment.</t>";
+				};
+			};
+		};
+
+		//--- ----- COMMAND V2 (P4 nudge system) STATE-A verbs -----
+		//--- Every one of these re-checks its own default-0 flag before sending, even though the button is
+		//--- hidden at flag-off: a stray/modified client press must never reach the server bus (and the
+		//--- server re-validates everything again anyway). Cooldowns mirror the server-side values so the
+		//--- client never shows a success hint for a request the server will silently reject.
+		if (MenuAction == 780) then {
+			MenuAction = -1;
+			if ((missionNamespace getVariable ["WFBE_C_CMD_TOWN_NUDGE", 0]) > 0) then {
+				_tnArmed = true;
+				hintSilent parseText "<t color='#85B5FA'>Town suggestion:</t> click the town on the map. The AI commander weighs it against its own plan.";
+			};
+		};
+		if (MenuAction == 781) then {
+			MenuAction = -1;
+			if ((missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR", 0]) > 0) then {
+				if ((_now - _lastSend) >= _cool) then {
+					["RequestSpecial", ["aicom-support-air", sideJoined, player, getPos player, "cas-heli"]] Call WFBE_CO_FNC_SendToServer;
+					_lastSend = _now;
+					hintSilent parseText "<t color='#A0E060'>Gunship support requested.</t> <t color='#85B5FA'>The AI lends one only if it has a free gunship.</t>";
+				} else {
+					hintSilent parseText "<t color='#F8D664'>Support request on cooldown - wait a moment.</t>";
+				};
+			};
+		};
+		if (MenuAction == 782) then {
+			MenuAction = -1;
+			if ((missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR", 0]) > 0) then {
+				["RequestSpecial", ["aicom-support-air-release", sideJoined, player]] Call WFBE_CO_FNC_SendToServer;
+				hintSilent parseText "<t color='#A0E060'>Releasing your support heli back to the AI commander.</t>";
+			};
+		};
+		if (MenuAction == 783) then {
+			MenuAction = -1;
+			if ((missionNamespace getVariable ["WFBE_C_CMD_TEAM_DOCTRINE", 0]) > 0) then {
+				if ((_now - _lastSend) < (_cool max (missionNamespace getVariable ["WFBE_C_CMD_TEAM_DOCTRINE_COOLDOWN", 90]))) then {
+					hintSilent parseText "<t color='#F8D664'>Doctrine suggestion on cooldown - wait a moment.</t>";
+				} else {
+					//--- Resolve the NEAREST AI-led team by INDEX into this side's wfbe_teams. That array is
+					//--- broadcast by the server, so client and server index the same list; the server still
+					//--- re-validates the index, the AI-led test and the proximity gate before it accepts.
+					private ["_tdLogik","_tdTeams","_tdBest","_tdIdx","_tdRange"];
+					_tdIdx = -1;
+					_tdLogik = (sideJoined) Call WFBE_CO_FNC_GetSideLogic;
+					if (!isNull _tdLogik) then {
+						_tdRange = missionNamespace getVariable ["WFBE_C_CMD_NUDGE_RANGE", 1500];
+						_tdBest  = _tdRange;
+						_tdTeams = _tdLogik getVariable ["wfbe_teams", []];
+						{
+							private ["_tm","_ldr","_d"];
+							_tm = _x;
+							if (!isNil "_tm" && {!isNull _tm}) then {
+								_ldr = leader _tm;
+								if (!isNull _ldr && {alive _ldr} && {!isPlayer _ldr}) then {
+									_d = player distance _ldr;
+									if (_d < _tdBest) then {_tdBest = _d; _tdIdx = _forEachIndex};
+								};
+							};
+						} forEach _tdTeams;
+					};
+					if (_tdIdx < 0) then {
+						hintSilent parseText "<t color='#F8D664'>No AI team close enough to take a doctrine suggestion.</t>";
+					} else {
+						["RequestSpecial", ["aicom-team-doctrine", sideJoined, _tdIdx, _tdNext, player]] Call WFBE_CO_FNC_SendToServer;
+						_lastSend = _now;
+						hintSilent parseText (format ["<t color='#A0E060'>Suggested %1 doctrine to the nearest AI team (%2m).</t>", _tdNext, round _tdBest]);
+						//--- flip the button to the OTHER stance so the label always shows what the next press sends.
+						if (_tdNext == "aggressive") then {_tdNext = "defensive"} else {_tdNext = "aggressive"};
+						ctrlSetText [14634, (if (_tdNext == "aggressive") then {"TEAM: ATTACK"} else {"TEAM: DEFEND"})];
+					};
 				};
 			};
 		};
