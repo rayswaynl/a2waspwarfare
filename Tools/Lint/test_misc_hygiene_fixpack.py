@@ -22,6 +22,20 @@ class MiscHygieneFixpackTests(unittest.TestCase):
     def test_topup_missing_classlist_is_observable(self):
         text = source("Server/AI/Commander/AI_Commander_Produce.sqf")
         self.assertIn("TOPUP_REQ skipped: no infantry class", text)
+        warning = (
+            '["WARNING", Format ["AI_Commander_Produce.sqf: [%1] team [%2] '
+            "TOPUP_REQ skipped: no infantry class resolved from barracks roster."
+        )
+        warning_index = text.index(warning)
+        warning_window = text[warning_index - 80 : warning_index + len(warning) + 240]
+        self.assertIn(
+            "\t\t\t\t\t\t} else {\n\t\t\t\t\t\t\t" + warning,
+            warning_window,
+        )
+        self.assertIn(
+            "Call WFBE_CO_FNC_AICOMLog;\n\t\t\t\t\t\t};\n\t\t\t\t\t};",
+            warning_window,
+        )
 
     def test_supply_mission_rejects_a_missing_friendly_town(self):
         text = source("Client/Module/supplyMission/supplyMissionStart.sqf")

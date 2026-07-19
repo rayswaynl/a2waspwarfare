@@ -219,9 +219,9 @@ if (_airMaxTotalP > 0) then {
 								_wm_humanTag = ""; if (_wm_humanSeated) then {_wm_humanTag = Format ["|human=1|mult=%1", _wm_mult]};
 								["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TOPUP_REQ (missing=%3, alive=%4, rally=%5, cost=%6, classes=%7)%8 - charged, broadcast to HC driver.", _sideText, _team, _wm_missing, _wm_alive, _wm_rally, _wm_charge, _wm_infCls, _wm_humanTag]] Call WFBE_CO_FNC_AICOMLog;
 							};
-						};
 						} else {
 							["WARNING", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TOPUP_REQ skipped: no infantry class resolved from barracks roster.", _sideText, _team]] Call WFBE_CO_FNC_AICOMLog;
+						};
 					};
 				};
 			};
