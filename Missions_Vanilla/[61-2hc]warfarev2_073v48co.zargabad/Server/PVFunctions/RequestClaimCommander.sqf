@@ -35,28 +35,19 @@ if (!isPlayer (leader _claimTeam)) exitWith {};
 if (side _claimTeam != _side) exitWith {};
 
 //--- Promote EXACTLY like the elected path (RequestNewCommander.sqf:12-13).
-//--- Review-fix (codex reject 2026-07-19, P1-1): flag-on validates eligibility (adds the aicom-hc
-//--- denial this path lacked) BEFORE publishing; ineligible claim = no seat change AND the AI
-//--- commander keeps running (fail closed). Latch pattern per cmdcon44-g: no exitWith inside the
-//--- then-block (it would fall through to the AI stand-down below and stop the AI on a DENIED
-//--- claim). Flag-off: legacy unconditional publish, byte-identical.
-Private ["_claimAccepted"];
-_claimAccepted = true;
+//--- Round-3 review (P1-1/P1-3): with the lease enabled the writer ONLY ENQUEUES a grant
+//--- request - the single per-side executor is now the sole writer of wfbe_commander/lease
+//--- state AND the sole caller of AssignForCommander (which stops the AI FSM), so a claim can
+//--- never publish/stand-AI-down synchronously here; eligibility (incl. the aicom-hc denial
+//--- this path used to lack) is re-validated at executor time. The round-2 accepted-claim
+//--- latch is gone: the flag-on branch enqueues unconditionally and never touches
+//--- wfbe_aicom_running itself, so there is no "stopped the AI on a denied claim" fallthrough
+//--- to guard against. Flag-off: legacy unconditional publish + immediate AI stand-down,
+//--- byte-identical to HEAD.
 if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
-	if ([_side, _claimTeam] Call WFBE_CO_FNC_CommanderLeaseEligible) then {
-		_logic setVariable ["wfbe_commander", _claimTeam, true];
-		[_side, _claimTeam, "claim"] Call WFBE_CO_FNC_GrantCommanderLease;
-		[_side, _claimTeam] Spawn WFBE_SE_FNC_AssignForCommander;
-	} else {
-		_claimAccepted = false;
-		["WARNING", Format ["RequestClaimCommander.sqf: [%1] DENIED ineligible seat claim (CIV/cross-side/HC/AI-led team %2) - seat unchanged, AI keeps command.", _side, _claimTeam]] Call WFBE_CO_FNC_LogContent;
-	};
+	[_side, _claimTeam, "claim"] Call WFBE_CO_FNC_CommanderLeaseRequestGrant;
 } else {
 	_logic setVariable ["wfbe_commander", _claimTeam, true];
 	[_side, _claimTeam] Spawn WFBE_SE_FNC_AssignForCommander;
-};
-
-//--- Stand the AI down the SAME way Server_VoteForCommander.sqf:60-61 does (only for an ACCEPTED claim).
-if (_claimAccepted && {!(isNull _claimTeam)}) then {
 	if (_logic getVariable "wfbe_aicom_running") then {_logic setVariable ["wfbe_aicom_running", false, _syncAicomState]};
 };
