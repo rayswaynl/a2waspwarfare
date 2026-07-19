@@ -31,8 +31,13 @@ _vehicle setVariable ["wfbe_side_id", _side, true];
 //--- times so the deletion probe can bind "a player just drove this" to the exact cleanup that
 //--- deletes it. EHs are local to this (creating) machine; the stamps broadcast so a server-side
 //--- delete probe can read HC/client-observed use. Telemetry-only; kill-switch shared with the probe.
-if ((missionNamespace getVariable ["WFBE_C_VEH_DELETE_PROBE", 1]) > 0) then {
-	_vehicle addEventHandler ["GetIn", {if (isPlayer (_this select 2)) then {(_this select 0) setVariable ["wfbe_player_used", round time, true]}}];
+if ((missionNamespace getVariable ["WFBE_C_VEH_DELETE_PROBE", 0]) > 0) then {
+	//--- Round-2 review: seat role + player identity captured too (driver-aware attribution).
+	//--- COVERAGE BOUNDARY (documented, accepted): assets created OUTSIDE this factory (editor-
+	//--- placed, direct createVehicle callers) carry no stamps - their VEHDEL lines simply show
+	//--- lastPlayerUse=-1, which is itself diagnostic (an unstamped hull a player reports driving
+	//--- means an off-factory creation path is involved).
+	_vehicle addEventHandler ["GetIn", {if (isPlayer (_this select 2)) then {(_this select 0) setVariable ["wfbe_player_used", round time, true]; (_this select 0) setVariable ["wfbe_player_used_role", _this select 1, true]; (_this select 0) setVariable ["wfbe_player_used_uid", getPlayerUID (_this select 2), true]}}];
 	_vehicle addEventHandler ["GetOut", {if (isPlayer (_this select 2)) then {(_this select 0) setVariable ["wfbe_player_exit", round time, true]}}];
 };
 
