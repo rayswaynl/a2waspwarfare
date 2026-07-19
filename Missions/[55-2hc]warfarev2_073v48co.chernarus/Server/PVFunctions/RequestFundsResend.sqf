@@ -53,27 +53,42 @@ if (isNull _player) exitWith {
 	diag_log "[WFBE][B76 FUNDS-RESEND] BAIL: null player in request.";
 };
 
+//--- fable/funds-resend-side-guard ROUND 3 (review 2026-07-19): the request body must be a REAL
+//--- PLAYER with a non-empty engine UID before anything resolves. Without this, a forged request
+//--- passing an AI body yields _uid="" - and an empty-UID playableUnits scan can then match a
+//--- DIFFERENT empty-UID playable AI and stamp a START wallet onto an AI group. Fail closed.
+if (!(isPlayer _player)) exitWith {
+	diag_log "[WFBE][B76 FUNDS-RESEND] BAIL: request body is not a player (forge/AI body) - deferring, never stamping.";
+};
 _uid = getPlayerUID _player;
+if (_uid == "") exitWith {
+	diag_log "[WFBE][B76 FUNDS-RESEND] BAIL: request body has an empty UID - deferring, never stamping.";
+};
 _team = grpNull;
 
-//--- Resolve the player's slot group. fable/funds-resend-side-guard ROUND 2 (review 2026-07-19):
-//--- the generic PV bus carries NO sender identity, so the client-passed _player is the LEAST
-//--- trusted input here (a forger can only choose WHICH real networked body to pass; _uid always
-//--- derives from that body, so the worst a forgery achieves is triggering a heal FOR that body's
-//--- own UID - and every branch below is non-destructive for a healthy target: same-value
-//--- re-broadcast, lock-step record restore, or a first-join START stamp for a record-less
-//--- player). Resolution still prefers SERVER-KNOWN bindings first: (1) the stored RequestJoin
-//--- body for this UID, (2) a playableUnits scan whose engine-side getPlayerUID matches, and only
-//--- then (3) the client-passed body (first-join edge where no server binding exists yet). We
-//--- only accept a group that carries wfbe_side; non-playable sides are rejected right below.
+//--- Resolve the player's slot group (rounds 2+3, review 2026-07-19): the generic PV bus carries
+//--- NO sender identity, so the client-passed _player is the LEAST trusted input. With the entry
+//--- gate above (live isPlayer + non-empty engine UID), a forger can only nominate a REAL PLAYER
+//--- body, and _uid always derives from that body - so the worst a forgery achieves is triggering
+//--- a heal FOR that player's own UID, and every branch below is non-destructive for a healthy
+//--- target (same-value re-broadcast, lock-step record restore, or a first-join START stamp for a
+//--- record-less player). Resolution prefers SERVER-KNOWN bindings first: (1) the stored
+//--- RequestJoin body for this UID (revalidated: still a player, still this UID), (2) an
+//--- isPlayer-filtered playableUnits scan by engine UID, and only then (3) the client-passed body
+//--- (first-join edge where no server binding exists yet). Only groups carrying wfbe_side are
+//--- accepted; non-playable sides are rejected right below. This handler NEVER adopts/side-stamps
+//--- a group or appends to wfbe_teams - re-siding is connect-path-owned (B762), by review ruling.
+//--- Round 3: the stored body is REVALIDATED (still a player, still this UID) - a stale/reaped
+//--- binding can never redirect the heal; the playableUnits scan requires isPlayer so playable AI
+//--- (GUER is playable) can never match.
 _clientBody = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
-if (!isNull _clientBody && {alive _clientBody} && {!isNil {(group _clientBody) getVariable "wfbe_side"}}) then {
+if (!isNull _clientBody && {alive _clientBody} && {isPlayer _clientBody} && {(getPlayerUID _clientBody) == _uid} && {!isNil {(group _clientBody) getVariable "wfbe_side"}}) then {
 	_team = group _clientBody;
 };
 
 if (isNull _team) then {
 	{
-		if (!isNull _x && {(getPlayerUID _x) == _uid} && {!isNil {(group _x) getVariable "wfbe_side"}}) exitWith {_team = group _x};
+		if (!isNull _x && {isPlayer _x} && {(getPlayerUID _x) == _uid} && {!isNil {(group _x) getVariable "wfbe_side"}}) exitWith {_team = group _x};
 	} forEach playableUnits;
 };
 
