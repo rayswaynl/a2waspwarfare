@@ -1475,10 +1475,34 @@ switch (_args select 0) do {
 	//--- GUER kill-bounty block (the blast shells have no instigator, so RequestOnUnitKilled never double-pays).
 	//--- Gate-guarded; the client only sends this for a GUER VBIED driver, so gate-OFF is a byte-for-byte no-op.
 	case "guer-vbied-detonate": {
-		Private ["_veh","_driver"];
-		_veh = _args select 1;
-		_driver = _args select 2;
-		if (!isNull _veh && {alive _veh} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {(typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || (typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) || (((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) && {typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])})}) then {  //--- B75: accept either VBIED type (hilux/datsun truck OR the kill-gated M113 APC). fable/guer-suicide-bike: OR the flag-gated suicide motorcycle -- SAME case body below, so it inherits the SAME wfbe_lasthitby/wfbe_lasthittime/wfbe_explosivesupportkill attribution stamping as fable/fix-vbied-attribution (#924) unchanged.
+		Private ["_driver","_requestToken","_vbiedMsg","_vbiedOK","_veh"];
+		_veh = objNull;
+		_driver = objNull;
+		_requestToken = "";
+		if ((count _args) > 1 && {typeName (_args select 1) == "OBJECT"}) then {_veh = _args select 1};
+		if ((count _args) > 2 && {typeName (_args select 2) == "OBJECT"}) then {_driver = _args select 2};
+		if ((count _args) > 3 && {typeName (_args select 3) == "STRING"}) then {_requestToken = _args select 3};
+		_vbiedOK = false;
+		_vbiedMsg = "VBIED detonation denied; you must still be driving a live GUER VBIED.";
+		if (_requestToken != "" && {!isNull _veh} && {alive _veh} && {!isNull _driver} && {isPlayer _driver} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {driver _veh == _driver} && {side _driver == resistance} && {(typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])) || (typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) || (((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) && {typeOf _veh == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])})}) then {  //--- B75: accept either VBIED type (hilux/datsun truck OR the kill-gated M113 APC). fable/guer-suicide-bike: OR the flag-gated suicide motorcycle -- SAME body below keeps the established attribution/reward flow.
+			if (_veh getVariable ["wfbe_vbied_server_fired", false]) then {
+				_vbiedMsg = "VBIED detonation was already accepted.";
+			} else {
+				//--- Server-local receipt closes the public-variable duplicate window before any scheduled blast work.
+				_veh setVariable ["wfbe_vbied_server_fired", true];
+				_vbiedOK = true;
+				_vbiedMsg = "VBIED detonation accepted.";
+			};
+		};
+		if (!isNull _driver && {isPlayer _driver}) then {
+			if (WF_A2_Vanilla) then {
+				[getPlayerUID _driver, "HandleSpecial", ["guer-vbied-result", [_vbiedOK, _vbiedMsg, _veh, _requestToken]]] Call WFBE_CO_FNC_SendToClients;
+			} else {
+				[_driver, "HandleSpecial", ["guer-vbied-result", [_vbiedOK, _vbiedMsg, _veh, _requestToken]]] Call WFBE_CO_FNC_SendToClient;
+			};
+		};
+		diag_log Format ["GUERVBIED|v2|request|result=%1|driver=%2", if (_vbiedOK) then {"accepted"} else {"denied"}, if (isNull _driver) then {"?"} else {name _driver}];
+		if (_vbiedOK) then {
 			[_veh, _driver] spawn {
 				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand","_structVictims","_sStructs","_struct","_facBounty","_facScore","_fobIdx","_fobAvail"];
 				_veh = _this select 0;
