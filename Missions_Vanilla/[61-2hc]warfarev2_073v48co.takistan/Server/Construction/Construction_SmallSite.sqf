@@ -1,7 +1,7 @@
 //*****************************************************************************************
 //Description: Creates a small construction site.
 //*****************************************************************************************
-Private ["_buildStage","_completion","_construct","_constructed","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_startResultKey","_rlType","_side","_sideID","_site","_siteName","_stage2Objects","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type"];
+Private ["_buildStage","_completion","_construct","_constructed","_constructionLogicLost","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_startResultKey","_completionResultKey","_rlType","_side","_sideID","_site","_siteName","_stage2Objects","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type"];
 _type = _this select 0;
 _side = _this select 1;
 _position = _this select 2;
@@ -9,6 +9,8 @@ _direction = _this select 3;
 _index = _this select 4;
 _startResultKey = if ((count _this) > 5) then {_this select 5} else {""};
 if ((typeName _startResultKey) != "STRING") then {_startResultKey = ""};
+_completionResultKey = if ((count _this) > 6) then {_this select 6} else {""};
+if ((typeName _completionResultKey) != "STRING") then {_completionResultKey = ""};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 
@@ -25,6 +27,7 @@ if (WF_Debug) then {["DEBUG (Construction_SmallSite.sqf)", Format ["Variables - 
 
 _startTime = time;
 _timeNextUpdate = _startTime + _time;
+_constructionLogicLost = false;
 
 _objects = [];
 if (WF_A2_Arrowhead) then {_objects = [[_siteName,[0,0,-0.000230789],359.997,1,0],["Paleta2",[0.416992,-5.62012,-0.305746],0.0130822,1,0],["Land_Barrel_sand",[-5.59448,3.26929,6.29425e-005],359.997,1,0],["Paleta1",[-2.62976,-6.04736,5.53131e-005],0.0130822,1,0],["Barrel4",[6.63696,0.694336,0.000753403],359.991,1,0],["Land_Barrel_sand",[-6.73267,2.06372,6.10352e-005],359.997,1,0],["Barrel5",[7.19604,2.8855,0.00028801],0.0135841,1,0],["Barrel1",[6.08984,5.5415,0.00028801],0.0135841,1,0],["Land_Barrel_sand",[-7.13452,4.40747,6.29425e-005],359.997,1,0],["Land_Ind_Timbers",[0.221924,-8.58496,0.00206566],0.0130822,1,0],["Land_Barrel_sand",[-8.27271,2.80054,6.10352e-005],359.997,1,0],["Barrels",[-7.91895,-4.09668,0.00037384],0.0128253,1,0],["RoadCone",[-10.4381,-8.94336,0.000131607],0.0119093,1,0],["RoadCone",[11.1655,-8.79932,0.00034523],359.991,1,0],["RoadCone",[-10.5692,12.6655,0.000509262],359.948,1,0],["RoadCone",[11.0276,12.3904,0.000509262],359.948,1,0]]};
@@ -51,8 +54,9 @@ if (_startResultKey != "") then {missionNamespace setVariable [_startResultKey, 
 if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) then {
 	_nearLogic setVariable ["WFBE_B_Type", _rlType];
 
-	waitUntil {time >= _timeNextUpdate};
+	waitUntil {time >= _timeNextUpdate || {isNull _nearLogic}};
 	_timeNextUpdate = _startTime + _time * 2;
+	if (isNull _nearLogic) then {_constructionLogicLost = true};
 } else {
 	//--- Instanciate the logic.
 	_nearLogic setVariable ["WFBE_B_Completion", 0];
@@ -67,10 +71,12 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) t
 };
 
 if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) then {
-	_constructed = _constructed + ([_position,_direction,_stage2Objects] Call _construct);
-	waitUntil {time >= _timeNextUpdate};
-	
-	if !(isNull _nearLogic) then {
+	if (!_constructionLogicLost) then {
+		_constructed = _constructed + ([_position,_direction,_stage2Objects] Call _construct);
+		waitUntil {time >= _timeNextUpdate || {isNull _nearLogic}};
+		if (isNull _nearLogic) then {_constructionLogicLost = true};
+	};
+	if (!_constructionLogicLost) then {
 		_group = group _nearLogic;
 		deleteVehicle _nearLogic;
 		deleteGroup _group;
@@ -78,24 +84,44 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) t
 } else {
 	//--- One completion watcher advances the staged site at the same thresholds as the old per-stage loops.
 	_buildStage = 1;
-	while {_buildStage < 3} do {
+	while {_buildStage < 3 && {!_constructionLogicLost}} do {
 		sleep 1;
-		_completion = _nearLogic getVariable "WFBE_B_Completion";
-		if ((_buildStage == 1) && {_completion >= 50}) then {
-			_constructed = _constructed + ([_position,_direction,_stage2Objects] Call _construct);
-			_buildStage = 2;
+		if (isNull _nearLogic) then {
+			_constructionLogicLost = true;
 		} else {
-			if ((_buildStage == 2) && {_completion >= 100}) then {_buildStage = 3};
+			_completion = _nearLogic getVariable "WFBE_B_Completion";
+			if ((_buildStage == 1) && {_completion >= 50}) then {
+				_constructed = _constructed + ([_position,_direction,_stage2Objects] Call _construct);
+				_buildStage = 2;
+			} else {
+				if ((_buildStage == 2) && {_completion >= 100}) then {_buildStage = 3};
+			};
 		};
 	};
 	
 	//--- Remove the logic from the list since it's built. Add it back if destroyed.
 	_logik setVariable ["wfbe_structures_logic", (_logik getVariable "wfbe_structures_logic") - [_nearLogic]]; //--- wiki-wins: was + (double-append); MediumSite uses -
 };
+
+if (_constructionLogicLost) exitWith {
+	{if !(isNull _x) then {DeleteVehicle _x}} ForEach _constructed;
+	if !(isNull _group) then {deleteGroup _group};
+	if (_completionResultKey != "") then {missionNamespace setVariable [_completionResultKey, [-1,"construction logic was destroyed"]]};
+	diag_log Format ["CONSTRUCTION|v1|reject|reason=construction-logic-destroyed|script=SmallSite|type=%1|pos=%2", _type, _position];
+};
 	
 {if !(isNull _x) then {DeleteVehicle _x}} ForEach _constructed;
 
 _site = createVehicle [_type, _position, [], 0, "NONE"];
+if (isNull _site) exitWith {
+	if !(isNull _nearLogic) then {
+		_group = group _nearLogic;
+		deleteVehicle _nearLogic;
+	};
+	if !(isNull _group) then {deleteGroup _group};
+	if (_completionResultKey != "") then {missionNamespace setVariable [_completionResultKey, [-1,"final factory could not be created"]]};
+	diag_log Format ["CONSTRUCTION|v1|reject|reason=final-site-create-failed|script=SmallSite|type=%1|pos=%2", _type, _position];
+};
 _site setDir _direction;
 _site setPos _position;
 _site setVariable ["wfbe_side", _side];
@@ -170,6 +196,7 @@ if (!isNull _site) then {
 	Call Compile Format ["_site AddEventHandler ['killed',{[_this select 0,_this select 1,'%1'] Spawn BuildingKilled}];",_type];
 	
 	["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] Structure [%2] has been constructed.", str _side, _type]] Call WFBE_CO_FNC_LogContent;
+	if (_completionResultKey != "") then {missionNamespace setVariable [_completionResultKey, [1,_site]]};
 
 	//--- B74.2: leaderboard STRUCTURE-built credit. The builder UID is not threaded through the
 	//--- RequestStructure->Construction path, so attribute to the nearest same-side player at the

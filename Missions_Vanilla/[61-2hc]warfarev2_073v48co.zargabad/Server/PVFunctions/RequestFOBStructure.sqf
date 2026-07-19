@@ -12,7 +12,7 @@
 
 	_this = [facType("Barracks"/"Light"/"Heavy"), pos, dir, truck, player]
 */
-private ["_secHardening","_facType","_pos","_dir","_truck","_player","_idx","_avail","_reject","_structures","_index","_classname","_script","_structureNames","_structureScripts","_structureDistances","_flatRadius","_startResultKey","_startResult","_startMessage","_buildHandle","_currentAvail"];
+private ["_secHardening","_facType","_pos","_dir","_truck","_player","_idx","_avail","_reject","_structures","_index","_classname","_script","_structureNames","_structureScripts","_structureDistances","_flatRadius","_fobTrucks","_startResultKey","_completionResultKey","_startResult","_startMessage","_buildHandle","_currentAvail"];
 _secHardening = (missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0;
 
 if (_secHardening && {!((typeName _this) in ["ARRAY"])}) exitWith {
@@ -51,6 +51,25 @@ _idx = (missionNamespace getVariable ["WFBE_C_GUER_FOB_STRUCTS", ["Barracks","Li
 if (_idx < 0) exitWith {
 	diag_log Format ["GUERFOB|v1|reject|reason=unknown-type|type=%1|pos=%2", _facType, _pos];
 	["WARNING", Format ["RequestFOBStructure.sqf: unknown FOB type [%1] - rejected.", _facType]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- A truck can be committed only once. The pending mark is server-visible before the constructor yields,
+//--- so a repeated action/PV cannot consume multiple tokens while the final factory is still building.
+if ((typeName _truck) != "OBJECT" || {isNull _truck} || {!alive _truck}) exitWith {
+	diag_log Format ["GUERFOB|v1|reject|reason=invalid-truck|type=%1|pos=%2", _facType, _pos];
+	if ((typeName _player) == "OBJECT" && {!isNull _player}) then {
+		[_player, "HandleSpecial", ["guer-fob-result", false, "FOB build rejected: the delivery truck is no longer available."]] Call WFBE_CO_FNC_SendToClient;
+	};
+};
+if !(_truck getVariable ["wfbe_is_guer_fob", false]) exitWith {
+	diag_log Format ["GUERFOB|v1|reject|reason=unflagged-truck|type=%1|pos=%2", _facType, _pos];
+};
+if (_truck getVariable ["wfbe_guer_fob_pending", false]) exitWith {
+	diag_log Format ["GUERFOB|v1|reject|reason=truck-pending|type=%1|pos=%2", _facType, _pos];
+};
+_fobTrucks = missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []];
+if (_idx >= (count _fobTrucks) || {typeOf _truck != (_fobTrucks select _idx)}) exitWith {
+	diag_log Format ["GUERFOB|v1|reject|reason=wrong-truck-type|type=%1|pos=%2", _facType, _pos];
 };
 
 //--- Resolve the configured factory before any token/truck mutation. All valid GUER FOB types map to SmallSite or
@@ -109,17 +128,21 @@ if (!_reject) then {
 	//--- Register a one-shot server-local result before reserving the token. Server_HandlePVF runs PVFs in a scheduled
 	//--- scope, so this can wait briefly for the constructor's pre-wait acknowledgement without stalling the PV bus.
 	_startResultKey = Format ["wfbe_guer_fob_start_%1_%2", floor (diag_tickTime * 1000), floor (random 1000000000)];
+	_completionResultKey = Format ["wfbe_guer_fob_complete_%1_%2", floor (diag_tickTime * 1000), floor (random 1000000000)];
 	missionNamespace setVariable [_startResultKey, [0, ""]];
+	missionNamespace setVariable [_completionResultKey, [0, ""]];
 
 	//--- Reserve the token + broadcast (depot FOB-truck pool + RHUD read this). A failed constructor refunds from the
 	//--- current shared array below, preserving concurrent deductions on other FOB types.
 	_avail set [_idx, (_avail select _idx) - 1];
 	missionNamespace setVariable ["WFBE_GUER_FOB_AVAIL", _avail];
 	publicVariable "WFBE_GUER_FOB_AVAIL";
+	_truck setVariable ["wfbe_guer_fob_pending", true, true];
+	_truck setVariable ["wfbe_is_guer_fob", false, true];
 
 	//--- The Small/Medium worker publishes [1, ""] before its first construction wait, or [-1, reason] on an
-	//--- unavailable LocationLogicStart. A script error before publication terminates the handle and rolls back too.
-	_buildHandle = [_classname, resistance, _pos, _dir, _index, _startResultKey] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
+	//--- unavailable LocationLogicStart. It later reports the final factory result through a second key.
+	_buildHandle = [_classname, resistance, _pos, _dir, _index, _startResultKey, _completionResultKey] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _script]);
 	_startResult = [0, ""];
 	waitUntil {
 		sleep 0.05;
@@ -129,19 +152,77 @@ if (!_reject) then {
 	if ((typeName _startResult) != "ARRAY" || {(count _startResult) < 1}) then {_startResult = [-1, "construction start did not report a result"]};
 
 	if ((_startResult select 0) == 1) then {
-		//--- Only a confirmed construction start is visible as an active FOB or consumes the delivery truck.
+		//--- A confirmed start hides the committed truck from the action/respawn path, but the real
+		//--- factory, marker, ledger, and truck deletion all wait for the worker's terminal receipt.
 		[resistance, "HandleSpecial", ['building-started', _facType, _pos]] Call WFBE_CO_FNC_SendToClients;
-		diag_log Format ["GUERFOB|v1|accept|type=%1|pos=%2|avail=%3", _facType, _pos, _avail];
-		["INFORMATION", Format ["RequestFOBStructure.sqf: GUER FOB [%1] (%2) building at %3. Avail now %4.", _facType, _classname, _pos, _avail]] Call WFBE_CO_FNC_LogContent;
-		//--- fable/fob-marker (owner 2026-07-07): resistance-only map marker while the FOB is active.
-		//--- Side-scoped via the WildcardMarker createMarkerLocal idiom - WEST/EAST never see it.
-		//--- Name is deterministic from position so the destroy path can delete without shared state.
-		[resistance, "WildcardMarker", ["create", Format ["guer_fob_%1_%2", floor (_pos select 0), floor (_pos select 1)], _pos, "ColorGreen", "mil_objective", Format ["FOB %1", _facType], "forward base active - spawn and resupply here"]] Call WFBE_CO_FNC_SendToClients;
-		//--- fable/fob-polish (2026-07-07): record the active FOB in the server-side ledger so
-		//--- Server_OnPlayerConnected can replay the marker to late joiners (#846 known gap).
-		missionNamespace setVariable ["WFBE_GUER_FOB_ACTIVE", (missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []]) + [[Format ["guer_fob_%1_%2", floor (_pos select 0), floor (_pos select 1)], _pos, _facType]]];
-		//--- Consume the delivery truck - it "became" the FOB.
-		if (!isNull _truck) then {deleteVehicle _truck};
+		diag_log Format ["GUERFOB|v1|start|type=%1|pos=%2|avail=%3", _facType, _pos, _avail];
+		["INFORMATION", Format ["RequestFOBStructure.sqf: GUER FOB [%1] (%2) construction started at %3. Avail now %4.", _facType, _classname, _pos, _avail]] Call WFBE_CO_FNC_LogContent;
+		[_completionResultKey, _buildHandle, _idx, _facType, _pos, _truck, _player] Spawn {
+		private ["_completionResultKey","_buildHandle","_idx","_facType","_pos","_truck","_player","_completionResult","_completionMessage","_currentAvail","_truckRestored","_completionSite","_completionLogic","_completionRegistered"];
+			_completionResultKey = _this select 0;
+			_buildHandle = _this select 1;
+			_idx = _this select 2;
+			_facType = _this select 3;
+			_pos = _this select 4;
+			_truck = _this select 5;
+			_player = _this select 6;
+			_completionResult = [0, ""];
+			waitUntil {
+				sleep 0.5;
+				_completionResult = missionNamespace getVariable [_completionResultKey, [0, ""]];
+				((typeName _completionResult) == "ARRAY" && {(count _completionResult) > 0} && {(_completionResult select 0) != 0}) || {scriptDone _buildHandle}
+			};
+			if ((typeName _completionResult) != "ARRAY" || {(count _completionResult) < 1} || {(_completionResult select 0) == 0}) then {_completionResult = [-1, "construction did not report a final result"]};
+			_completionSite = objNull;
+			_completionLogic = objNull;
+			_completionRegistered = false;
+			if ((_completionResult select 0) == 1) then {
+				if ((count _completionResult) > 1 && {(typeName (_completionResult select 1)) == "OBJECT"}) then {
+					_completionSite = _completionResult select 1;
+				};
+				if (!isNull _completionSite && {alive _completionSite}) then {
+					_completionLogic = resistance Call WFBE_CO_FNC_GetSideLogic;
+					if (!isNull _completionLogic && {!(isNil {_completionLogic getVariable "wfbe_structures"})}) then {
+						_completionRegistered = _completionSite in (_completionLogic getVariable "wfbe_structures");
+					};
+				};
+				if (isNull _completionSite || {!alive _completionSite} || {!_completionRegistered}) then {
+					_completionResult = [-1, "completed factory did not remain active"];
+				};
+			};
+			if ((_completionResult select 0) == 1) then {
+				//--- fable/fob-marker (owner 2026-07-07): resistance-only map marker once the real FOB is active.
+				//--- Side-scoped via the WildcardMarker createMarkerLocal idiom - WEST/EAST never see it.
+				//--- Name is deterministic from position so the destroy path can delete without shared state.
+				[resistance, "WildcardMarker", ["create", Format ["guer_fob_%1_%2", floor (_pos select 0), floor (_pos select 1)], _pos, "ColorGreen", "mil_objective", Format ["FOB %1", _facType], "forward base active - spawn and resupply here"]] Call WFBE_CO_FNC_SendToClients;
+				//--- fable/fob-polish (2026-07-07): record the active FOB in the server-side ledger so
+				//--- Server_OnPlayerConnected can replay the marker to late joiners (#846 known gap).
+				missionNamespace setVariable ["WFBE_GUER_FOB_ACTIVE", (missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []]) + [[Format ["guer_fob_%1_%2", floor (_pos select 0), floor (_pos select 1)], _pos, _facType]]];
+				if (!isNull _truck) then {deleteVehicle _truck};
+				diag_log Format ["GUERFOB|v1|accept|type=%1|pos=%2", _facType, _pos];
+			} else {
+				_completionMessage = "FOB construction failed; your token was restored.";
+				_currentAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", []]);
+				if (_idx < (count _currentAvail) && {(typeName (_currentAvail select _idx)) == "SCALAR"}) then {
+					_currentAvail set [_idx, (_currentAvail select _idx) + 1];
+					missionNamespace setVariable ["WFBE_GUER_FOB_AVAIL", _currentAvail];
+					publicVariable "WFBE_GUER_FOB_AVAIL";
+				};
+				_truckRestored = false;
+				if (!isNull _truck && {alive _truck}) then {
+					_truck setVariable ["wfbe_guer_fob_pending", false, true];
+					_truck setVariable ["wfbe_is_guer_fob", true, true];
+					_truckRestored = true;
+				};
+				if (_truckRestored) then {_completionMessage = "FOB construction failed; your token was restored and the delivery truck is available again."};
+				diag_log Format ["GUERFOB|v1|reject|reason=construction-completion-failed|type=%1|pos=%2", _facType, _pos];
+				if ((typeName _player) == "OBJECT" && {!isNull _player}) then {
+					[_player, "HandleSpecial", ["guer-fob-result", false, _completionMessage]] Call WFBE_CO_FNC_SendToClient;
+				};
+				["WARNING", Format ["RequestFOBStructure.sqf: GUER FOB [%1] final construction failed at %2 - token restored; truck restored=%3.", _facType, _pos, _truckRestored]] Call WFBE_CO_FNC_LogContent;
+			};
+			missionNamespace setVariable [_completionResultKey, []];
+		};
 	} else {
 		_startMessage = "construction start did not complete";
 		if ((count _startResult) > 1 && {(typeName (_startResult select 1)) == "STRING"} && {(_startResult select 1) != ""}) then {_startMessage = _startResult select 1};
@@ -150,6 +231,10 @@ if (!_reject) then {
 			_currentAvail set [_idx, (_currentAvail select _idx) + 1];
 			missionNamespace setVariable ["WFBE_GUER_FOB_AVAIL", _currentAvail];
 			publicVariable "WFBE_GUER_FOB_AVAIL";
+		};
+		if (!isNull _truck && {alive _truck}) then {
+			_truck setVariable ["wfbe_guer_fob_pending", false, true];
+			_truck setVariable ["wfbe_is_guer_fob", true, true];
 		};
 		if (_startMessage == "LocationLogicStart missing") then {
 			diag_log Format ["GUERFOB|v1|reject|reason=missing-start-logic|type=%1|pos=%2", _facType, _pos];
@@ -160,6 +245,7 @@ if (!_reject) then {
 			[_player, "HandleSpecial", ["guer-fob-result", false, "FOB build rejected: construction could not start; your token was restored and truck preserved."]] Call WFBE_CO_FNC_SendToClient;
 		};
 		["WARNING", Format ["RequestFOBStructure.sqf: GUER FOB [%1] construction start failed at %2 (%3) - token restored and truck preserved.", _facType, _pos, _startMessage]] Call WFBE_CO_FNC_LogContent;
+		missionNamespace setVariable [_completionResultKey, []];
 	};
 	missionNamespace setVariable [_startResultKey, []];
 };
