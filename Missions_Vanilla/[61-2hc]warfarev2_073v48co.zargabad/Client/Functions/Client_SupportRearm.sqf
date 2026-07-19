@@ -7,11 +7,12 @@
 	moment the player pressed Rearm, using the ammo fraction at that instant.
 	Firing during the rearm timer cannot alter the bill.
 */
-Private ['_airCoef','_artCoef','_cts','_distanceMin','_heaCoef','_i','_ligCoef','_name','_nearIsDP','_nearIsRT','_nearIsSP','_repairRange','_rearmTime','_spType','_supportRange','_supports','_typeRepair','_veh'];
+Private ['_airCoef','_artCoef','_cts','_distanceMin','_heaCoef','_i','_ligCoef','_name','_nearIsDP','_nearIsRT','_nearIsSP','_price','_repairRange','_rearmTime','_spType','_supportRange','_supports','_typeRepair','_veh'];
 _veh = _this select 0;
 _supports = _this select 1;
 _typeRepair = _this select 2;
 _spType = _this select 3;
+_price = if ((count _this) > 4) then {_this select 4} else {0};
 _supportRange = missionNamespace getVariable "WFBE_C_UNITS_SUPPORT_RANGE";
 _repairRange = missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE";
 
@@ -28,7 +29,7 @@ _nearIsRT = false;
 	if ((typeOf _x) == WFBE_Logic_Depot) then {_nearIsDP = true};
 	if ((typeOf _x) in _typeRepair) then {_nearIsRT = true};
 } forEach _supports;
-if ((typeOf _veh) iskindOf "Air" && _nearIsDP) exitWith {Hint "You can't rearm air in town"};
+if ((typeOf _veh) iskindOf "Air" && _nearIsDP) exitWith {if (_price > 0) then {_price Call ChangePlayerFunds;};Hint "You can't rearm air in town"};
 //--- Coefficient Vary depending on the support type.
 _airCoef = 1;
 _artCoef = 1;
@@ -81,6 +82,8 @@ while {true} do {
 	if (_cts == 0 || !(alive _veh) || (getPos _veh) select 2 > 2) exitWith {_cts = 0;hint parseText(Format[localize "STR_WF_INFO_Rearm_Failed",_name])};
 	if (_i >= _rearmTime) exitWith {hint parseText(Format[localize "STR_WF_INFO_Rearm_Success",_name])};
 };
+
+if (_cts == 0 && {_price > 0}) then {_price Call ChangePlayerFunds;};
 
 //--- Rearm?
 if (_cts != 0) then {

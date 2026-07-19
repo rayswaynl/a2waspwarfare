@@ -57,6 +57,8 @@ _martyServiceGetPrice = {
 
 	if (_veh isKindOf "Man") exitWith {0};
 
+	if (_action == "REFUEL" && {_veh getVariable ["stopped", false]}) exitWith {0};
+
 	_type = typeOf _veh;
 	_get = missionNamespace getVariable _type;
 
@@ -91,6 +93,18 @@ _martyServiceGetPrice = {
 	0
 };
 
+_martyServiceGetSnapshotPrice = {
+	Private ["_action","_entry","_price","_prices"];
+	_action = _this select 0;
+	_prices = _this select 1;
+	_price = 0;
+	{
+		_entry = _x;
+		if ((_entry select 0) == _action) exitWith {_price = _entry select 1};
+	} forEach _prices;
+	_price
+};
+
 // Marty: Short visible reason for disabled service controls.
 _martyServiceBlockReason = {
 	Private ["_veh"];
@@ -113,10 +127,11 @@ _martyServiceCanUse = {
 };
 
 _martyServiceBuildFull = {
-	Private ["_actions","_fullTypes","_price","_priceOne","_veh"];
+	Private ["_actions","_fullTypes","_price","_priceOne","_prices","_veh"];
 	_veh = _this select 0;
 	_actions = [];
 	_price = 0;
+	_prices = [];
 	_fullTypes = if (_veh isKindOf "Man") then {["HEAL"]} else {["REPAIR","REFUEL","REARM","HEAL"]};
 
 	{
@@ -125,11 +140,12 @@ _martyServiceBuildFull = {
 			if (_priceOne > 0) then {
 				_actions = _actions + [_x];
 				_price = _price + _priceOne;
+				_prices = _prices + [[_x,_priceOne]];
 			};
 		};
 	} forEach _fullTypes;
 
-	[_actions,_price]
+	[_actions,_price,_prices]
 };
 
 // Marty: Build an all-or-nothing batch from the current service list.
@@ -158,7 +174,7 @@ _martyServiceBuildBatch = {
 
 			if (_priceOne > 0) then {
 				_supports = _nearSupport select _i;
-				_batch = _batch + [[_veh,_supports]];
+				_batch = _batch + [[_veh,_supports,_priceOne]];
 				_price = _price + _priceOne;
 			};
 		};
@@ -186,7 +202,7 @@ _martyServiceStartBatch = {
 	hint Format ["%1 all queued: %2 units for $%3.", _label, (count _batch), _price];
 
 	[_batch,_action,_typeRepair,_spType] Spawn {
-		Private ["_action","_batch","_i","_item","_spType","_supports","_typeRepair","_veh"];
+		Private ["_action","_batch","_i","_item","_priceOne","_spType","_supports","_typeRepair","_veh"];
 		_batch = _this select 0;
 		_action = _this select 1;
 		_typeRepair = _this select 2;
@@ -196,11 +212,12 @@ _martyServiceStartBatch = {
 			_item = _batch select _i;
 			_veh = _item select 0;
 			_supports = _item select 1;
+			_priceOne = _item select 2;
 
-			if (_action == "REARM") then {[_veh,_supports,_typeRepair,_spType] Spawn SupportRearm};
-			if (_action == "REPAIR") then {[_veh,_supports,_typeRepair,_spType] Spawn SupportRepair};
-			if (_action == "REFUEL") then {[_veh,_supports,_typeRepair,_spType] Spawn SupportRefuel};
-			if (_action == "HEAL") then {[_veh,_supports,_typeRepair,_spType] Spawn SupportHeal};
+			if (_action == "REARM") then {[_veh,_supports,_typeRepair,_spType,_priceOne] Spawn SupportRearm};
+			if (_action == "REPAIR") then {[_veh,_supports,_typeRepair,_spType,_priceOne] Spawn SupportRepair};
+			if (_action == "REFUEL") then {[_veh,_supports,_typeRepair,_spType,_priceOne] Spawn SupportRefuel};
+			if (_action == "HEAL") then {[_veh,_supports,_typeRepair,_spType,_priceOne] Spawn SupportHeal};
 
 			sleep 0.35;
 		};
@@ -208,20 +225,23 @@ _martyServiceStartBatch = {
 };
 
 _martyServiceStartFull = {
-	Private ["_actions","_funds","_i","_label","_price","_spType","_supports","_typeRepair","_veh"];
+	Private ["_action","_actions","_funds","_i","_label","_price","_priceOne","_prices","_queue","_spType","_supports","_typeRepair","_veh"];
 	_veh = _this select 0;
 	_supports = _this select 1;
 	_actions = _this select 2;
 	_price = _this select 3;
-	_typeRepair = _this select 4;
-	_spType = _this select 5;
+	_prices = _this select 4;
+	_typeRepair = _this select 5;
+	_spType = _this select 6;
 	_label = [typeOf _veh, 'displayName'] Call GetConfigInfo;
 	
 	//--- fix(hunt): drop a doomed REARM leg (air near a town depot) BEFORE charging - SupportRearm hard-aborts
 	//--- that case after the bundled price was already taken (no refund path).
 	if (("REARM" in _actions) && {[_veh,_supports] Call _martyRearmBlockedAirDepot}) then {
+		_priceOne = ["REARM",_prices] Call _martyServiceGetSnapshotPrice;
 		_actions = _actions - ["REARM"];
-		_price = _price - ([_veh,"REARM"] Call _martyServiceGetPrice);
+		_prices = _prices - [["REARM",_priceOne]];
+		_price = _price - _priceOne;
 		if (_price < 0) then {_price = 0};
 	};
 
@@ -233,20 +253,29 @@ _martyServiceStartFull = {
 	-_price Call ChangePlayerFunds;
 	hint Format ["Full service queued for %1: $%2.", _label, _price];
 
-	[_veh,_supports,_actions,_typeRepair,_spType] Spawn {
-		Private ["_actions","_i","_spType","_supports","_typeRepair","_veh","_action"];
+	_queue = [];
+	{
+		_action = _x;
+		_priceOne = [_action,_prices] Call _martyServiceGetSnapshotPrice;
+		_queue = _queue + [[_action,_priceOne]];
+	} forEach _actions;
+
+	[_veh,_supports,_queue,_typeRepair,_spType] Spawn {
+		Private ["_action","_i","_item","_priceOne","_queue","_spType","_supports","_typeRepair","_veh"];
 		_veh = _this select 0;
 		_supports = _this select 1;
-		_actions = _this select 2;
+		_queue = _this select 2;
 		_typeRepair = _this select 3;
 		_spType = _this select 4;
 
-		for "_i" from 0 to ((count _actions) - 1) do {
-			_action = _actions select _i;
-			if (_action == "REARM") then {[_veh,_supports,_typeRepair,_spType] Spawn SupportRearm};
-			if (_action == "REPAIR") then {[_veh,_supports,_typeRepair,_spType] Spawn SupportRepair};
-			if (_action == "REFUEL") then {[_veh,_supports,_typeRepair,_spType] Spawn SupportRefuel};
-			if (_action == "HEAL") then {[_veh,_supports,_typeRepair,_spType] Spawn SupportHeal};
+		for "_i" from 0 to ((count _queue) - 1) do {
+			_item = _queue select _i;
+			_action = _item select 0;
+			_priceOne = _item select 1;
+			if (_action == "REARM") then {[_veh,_supports,_typeRepair,_spType,_priceOne] Spawn SupportRearm};
+			if (_action == "REPAIR") then {[_veh,_supports,_typeRepair,_spType,_priceOne] Spawn SupportRepair};
+			if (_action == "REFUEL") then {[_veh,_supports,_typeRepair,_spType,_priceOne] Spawn SupportRefuel};
+			if (_action == "HEAL") then {[_veh,_supports,_typeRepair,_spType,_priceOne] Spawn SupportHeal};
 			sleep 0.35;
 		};
 	};
@@ -394,9 +423,10 @@ while {true} do {
 	_desc = "";
 	_blockReason = "";
 	_canBeUsed = false;
-	_martyFullData = [[],0];
+	_martyFullData = [[],0,[]];
 	_martyFullActions = [];
 	_martyFullPrice = 0;
+	_martyFullPrices = [];
 	_martyFullEnabled = false;
 	if ((_curSel < 0) || (_curSel >= count _effective)) then {_curSel = -1};
 
@@ -453,9 +483,10 @@ while {true} do {
 			ctrlSetText [20013,"$0"];
 			ctrlSetText [20014,"$"+str(_healPrice)];
 			_martyFullData = [_veh] Call _martyServiceBuildFull;
-			if ((typeName _martyFullData == "ARRAY") && {(count _martyFullData) > 1}) then {
+			if ((typeName _martyFullData == "ARRAY") && {(count _martyFullData) > 2}) then {
 				_martyFullActions = _martyFullData select 0;
 				_martyFullPrice = _martyFullData select 1;
+				_martyFullPrices = _martyFullData select 2;
 			};
 		} else {
 			//--- Prevent on the air re-supply.
@@ -482,9 +513,10 @@ while {true} do {
 			_enabled = if (_canBeUsed && _healPrice > 0 && _funds >= _healPrice) then {true} else {false};
 			ctrlEnable [20008,_enabled];
 			_martyFullData = [_veh] Call _martyServiceBuildFull;
-			if ((typeName _martyFullData == "ARRAY") && {(count _martyFullData) > 1}) then {
+			if ((typeName _martyFullData == "ARRAY") && {(count _martyFullData) > 2}) then {
 				_martyFullActions = _martyFullData select 0;
 				_martyFullPrice = _martyFullData select 1;
+				_martyFullPrices = _martyFullData select 2;
 			};
 		};
 
@@ -517,7 +549,7 @@ while {true} do {
 				-_rearmPrice Call ChangePlayerFunds;
 
 				//--- Spawn a Rearm thread.
-				[_veh,_nearSupport select _curSel,_typeRepair,_spType] Spawn SupportRearm;
+				[_veh,_nearSupport select _curSel,_typeRepair,_spType,_rearmPrice] Spawn SupportRearm;
 				};
 			};
 		};	
@@ -530,7 +562,7 @@ while {true} do {
                 -_repairPrice Call ChangePlayerFunds;
 
                 //--- Spawn a Repair thread.
-                [_veh,_nearSupport select _curSel,_typeRepair,_spType] Spawn SupportRepair;
+				[_veh,_nearSupport select _curSel,_typeRepair,_spType,_repairPrice] Spawn SupportRepair;
 			};
 		};
 		
@@ -541,7 +573,7 @@ while {true} do {
 			-_refuelPrice Call ChangePlayerFunds;
 
 			//--- Spawn a Refuel thread.
-			[_veh,_nearSupport select _curSel,_typeRepair,_spType] Spawn SupportRefuel;
+			[_veh,_nearSupport select _curSel,_typeRepair,_spType,_refuelPrice] Spawn SupportRefuel;
 			};
 		};
 		
@@ -553,7 +585,7 @@ while {true} do {
 			    -_healPrice Call ChangePlayerFunds;
 
 			    //--- Spawn a Healing thread.
-			    [_veh,_nearSupport select _curSel,_typeRepair,_spType] Spawn SupportHeal;
+			    [_veh,_nearSupport select _curSel,_typeRepair,_spType,_healPrice] Spawn SupportHeal;
 			};
 		};
 	} else {
@@ -589,7 +621,7 @@ while {true} do {
 	if (MenuAction == 16) then {
 		MenuAction = -1;
 		if ((_curSel != -1) && {!isNull _veh}) then {
-			[_veh,_nearSupport select _curSel,_martyFullActions,_martyFullPrice,_typeRepair,_spType] Call _martyServiceStartFull;
+			[_veh,_nearSupport select _curSel,_martyFullActions,_martyFullPrice,_martyFullPrices,_typeRepair,_spType] Call _martyServiceStartFull;
 		};
 	};
 	

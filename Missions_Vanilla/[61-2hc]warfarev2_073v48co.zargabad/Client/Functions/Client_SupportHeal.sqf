@@ -1,8 +1,9 @@
-Private ['_airCoef','_artCoef','_cts','_distanceMin','_heaCoef','_healTime','_i','_ligCoef','_name','_nearIsDP','_nearIsRT','_nearIsSP','_repairRange','_spType','_supportRange','_supports','_typeRepair','_veh'];
+Private ['_airCoef','_artCoef','_cts','_distanceMin','_heaCoef','_healTime','_i','_ligCoef','_name','_nearIsDP','_nearIsRT','_nearIsSP','_price','_repairRange','_spType','_supportRange','_supports','_typeRepair','_veh'];
 _veh = _this select 0;
 _supports = _this select 1;
 _typeRepair = _this select 2;
 _spType = _this select 3;
+_price = if ((count _this) > 4) then {_this select 4} else {0};
 _supportRange = missionNamespace getVariable "WFBE_C_UNITS_SUPPORT_RANGE";
 _repairRange = missionNamespace getVariable "WFBE_C_UNITS_REPAIR_TRUCK_RANGE";
 
@@ -73,6 +74,8 @@ while {true} do {
 	if (_cts == 0 || !(alive _veh) || (getPos _veh) select 2 > 2) exitWith {_cts = 0;hint parseText(Format[localize "STR_WF_INFO_Heal_Failed",_name])};
 	if (_i >= _healTime) exitWith {hint parseText(Format[localize "STR_WF_INFO_Heal_Success",_name])};
 };
+
+if (_cts == 0 && {_price > 0}) then {_price Call ChangePlayerFunds;};
 
 //--- Heal the damages?
 if (_cts != 0) then {
