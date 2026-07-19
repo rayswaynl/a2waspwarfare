@@ -117,6 +117,7 @@ WFBE_CO_FNC_SpawnFactionSmoke = Compile preprocessFileLineNumbers "Common\Functi
 // Marty: Central createGroup wrapper (LEVER 2) - registered immediately after AICOMLog so the wrapper can call it.
 WFBE_CO_FNC_CreateGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateGroup.sqf";
 WFBE_CO_FNC_GroupGetBool = Compile preprocessFileLineNumbers "Common\Functions\Common_GroupGetBool.sqf"; //--- G1: safe bool getVariable for GROUP receivers (A2 OA unset->nil trap)
+WFBE_CO_FNC_TownNudgeWeight = Compile preprocessFileLineNumbers "Common\Functions\Common_TownNudgeWeight.sqf"; //--- COMMAND V2 (a): aggregated sqrt(n)+ceiling town-nudge weight. Only called while WFBE_C_CMD_TOWN_NUDGE > 0.
 WFBE_CO_FNC_CapLock = Compile preprocessFileLineNumbers "Common\Functions\Common_CapLock.sqf"; //--- capture-churn fix: is this AICOM team mid-capture-drain and thus IMMUNE to re-tasking (GR-2026-07-03a).
 WFBE_CO_FNC_SMLCampSplit = Compile preprocessFileLineNumbers "Common\Functions\Common_SMLCampSplit.sqf"; //--- SML-1 (GR-2026-07-03a): camp-split captures; per-unit doStop/doMove with TTL watchdog. Flag WFBE_C_SML_CAMP_SPLIT default 0.
 WFBE_CO_FNC_SMLDismounts = Compile preprocessFileLineNumbers "Common\Functions\Common_SMLDismounts.sqf"; //--- SML-2 (GR-2026-07-03a): real dismounts; cargo infantry dismount for foot assault, crew stays mounted for fire support. Flag WFBE_C_SML_DISMOUNTS default 0.

@@ -136,6 +136,7 @@ WFBE_SE_FNC_CounterBatteryCheck = Compile preprocessFileLineNumbers "Server\Func
 WFBE_SE_FNC_SpawnStructureDressing = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnStructureDressing.sqf";
 WFBE_SE_FNC_BankIncome = Compile preprocessFileLineNumbers "Server\Functions\Server_BankIncome.sqf";
 WFBE_SE_FNC_SiteClearance = Compile preprocessFileLineNumbers "Server\Functions\Server_SiteClearance.sqf";
+WFBE_SE_FNC_CmdSupportAir = Compile preprocessFileLineNumbers "Server\Functions\Server_CmdSupportAir.sqf"; //--- COMMAND V2 (c): granted heli-support escort lifecycle. Spawned only from the aicom-support-air case while WFBE_C_CMD_SUPPORT_AIR > 0.
 //--- CBR: per-side registries (populated as CBRs are built; pruned lazily during checks).
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
 	missionNamespace setVariable ["WFBE_CBR_WEST", []];

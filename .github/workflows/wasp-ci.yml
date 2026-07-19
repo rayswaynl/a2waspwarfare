@@ -35,6 +35,7 @@ jobs:
           python Tools\Lint\test_check_sqf.py
           python Tools\Lint\test_fpv_purchase_authority.py
           python Tools\Lint\test_icbm_tel_authority.py
+          python Tools\Lint\test_cmd_v2_nudge.py
           python Tools\Lint\test_check_stringtable_refs.py
           python Tools\Soak\test_analyze_soak.py
           python Tools\Pack\test_pack_pbo.py

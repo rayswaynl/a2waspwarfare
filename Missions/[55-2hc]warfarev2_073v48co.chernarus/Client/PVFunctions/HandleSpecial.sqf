@@ -423,6 +423,17 @@ switch (_request) do {
 	//--- case this originally mirrored was removed by fable/guer-mortar-dedup's owner de-dup
 	//--- decision - Action_GuerMortarStrike.sqf no longer exists - so only the barrel-bomb case
 	//--- survives the merge here.)
+	//--- COMMAND V2 (P4 nudge system) RECEIPT. Owner decision packet 2026-07-18 item 3 requires every
+	//--- nudge to come back with a receipt, so no server verb in the Command V2 set can be a silent
+	//--- drop: accept, reject, cooldown and lifecycle transitions all land here as one plain string.
+	//--- Payload is [ messageString ]. Deliberately dumb - it renders, it never acts.
+	case "cmdv2-receipt": {
+		Private ["_msg"];
+		_msg = _args select 0;
+		if (typeName _msg == "STRING" && {_msg != ""}) then {
+			hintSilent parseText ("<t color='#85B5FA'>" + _msg + "</t>");
+		};
+	};
 	case "guer-helibomb-result": {
 		Private ["_ok","_msg"];
 		_ok  = _args select 0;

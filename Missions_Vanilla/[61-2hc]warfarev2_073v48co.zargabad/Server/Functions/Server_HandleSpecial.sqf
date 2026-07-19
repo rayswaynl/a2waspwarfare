@@ -581,10 +581,19 @@ switch (_args select 0) do {
 		//--- consolidate). Stamp the string + a t0 on the side logic; the brain reads it (TTL WFBE_C_AICOM_POSTURE_TTL) and
 		//--- applies a SMALL bias only - it never hard-overrides the stance machine. AI-commander-run gate + west/east + a
 		//--- string whitelist so a malformed arg cannot poison the read.
-		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun","_pPlayer","_pUID","_pKey","_pCd","_pNow","_pLast"];
+		private ["_pSide","_pPos","_pLogik","_pCmd","_pHuman","_pRun","_pPlayer","_pUID","_pKey","_pCd","_pNow","_pLast","_pOk"];
 		_pSide = _args select 1;
 		_pPos  = _args select 2;
-		if ((typeName _pPos == "STRING") && {(_pPos == "PUSH") || (_pPos == "HOLD")} && {_pSide in [west, east]}) then {
+		//--- COMMAND V2 pillar (b), side scope: the whitelist gains a third value GARRISON behind
+		//--- WFBE_C_CMD_POSTURE_GARRISON (default 0). At flag-off the accepted set is exactly PUSH/HOLD,
+		//--- i.e. behaviourally identical to HEAD - a "GARRISON" payload is simply not accepted and the
+		//--- consumer in AI_Commander_Allocate.sqf can therefore never observe the new string.
+		_pOk = false;
+		if (typeName _pPos == "STRING") then {
+			_pOk = (_pPos == "PUSH") || {_pPos == "HOLD"};
+			if (!_pOk && {(missionNamespace getVariable ["WFBE_C_CMD_POSTURE_GARRISON", 0]) > 0}) then {_pOk = (_pPos == "GARRISON")};
+		};
+		if (_pOk && {_pSide in [west, east]}) then {
 			_pLogik = (_pSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _pLogik) then {
 				_pRun = false;
@@ -973,6 +982,358 @@ switch (_args select 0) do {
 						};
 					} else {
 						diag_log ("AICOM2|v1|ORDER|CMD_NUDGE|REJECT|" + str _spSide + "|uid=" + str _spUID + "|cdLeft=" + str (round (_spCd - (_spNow - _spLast))));
+					};
+				};
+			};
+		};
+	};
+	case "aicom-town-nudge": {
+		//--- COMMAND V2 pillar (a) - SOFT WEIGHTED TOWN SUGGESTION (design docs/design/COMMAND-V2-NUDGE-SYSTEM-DESIGN.md section 3).
+		//--- Deliberately NOT aicom-focus: focus is a commander-only HARD override that pins the fist every tick. This verb
+		//--- appends a TTL-decayed vote to a bounded per-side ring which AI_Commander_Allocate.sqf folds into its town score
+		//--- as one additive term. The AI commander stays the commander: the nudge can break a near-tie, never force a target.
+		//--- Payload ["aicom-town-nudge", side, town, player, scope] with scope in {"side","team"}.
+		//--- Per-case validation audit (design section 7): live player on the claimed side (1); per-UID cooldown key (2); never pins
+		//--- or overrides a commander order (3 - we only write our own ring); payload shape/type checked incl. town-registry
+		//--- membership (4); accept AND reject telemetry, no silent drop (5); whole case behind a default-0 flag (6).
+		private ["_tnSide","_tnTown","_tnPlayer","_tnScope","_tnLogik","_tnNow","_tnCd","_tnUID","_tnKey","_tnLast","_tnSID","_tnRing","_tnKeep","_tnTtl","_tnMax","_tnTeam","_tnRange","_tnBest","_tnScopeVal","_tnAgg","_tnDrop","_tnTrim","_tnRej"];
+		if ((missionNamespace getVariable ["WFBE_C_CMD_TOWN_NUDGE", 0]) > 0 && {count _args >= 5}) then {
+			_tnSide   = _args select 1;
+			_tnTown   = _args select 2;
+			_tnPlayer = _args select 3;
+			_tnScope  = _args select 4;
+			_tnRej = "";
+			if (!(_tnSide in [west, east])) then {_tnRej = "badside"};
+			if (_tnRej == "" && {isNil "_tnTown"}) then {_tnRej = "niltown"};
+			if (_tnRej == "" && {typeName _tnTown != "OBJECT"}) then {_tnRej = "badtown"};
+			if (_tnRej == "" && {isNull _tnTown}) then {_tnRej = "nulltown"};
+			//--- town-registry membership: the client may only nudge an object the mission actually registered as a town.
+			if (_tnRej == "" && {isNil "towns"}) then {_tnRej = "notownlist"};
+			if (_tnRej == "" && {!(_tnTown in towns)}) then {_tnRej = "unregistered"};
+			if (_tnRej == "" && {typeName _tnScope != "STRING"}) then {_tnRej = "badscope"};
+			if (_tnRej == "" && {!(_tnScope in ["side","team"])}) then {_tnRej = "badscope"};
+			if (_tnRej == "" && {isNil "_tnPlayer"}) then {_tnRej = "nilplayer"};
+			if (_tnRej == "" && {isNull _tnPlayer}) then {_tnRej = "nullplayer"};
+			if (_tnRej == "" && {!(alive _tnPlayer)}) then {_tnRej = "deadplayer"};
+			if (_tnRej == "" && {!(isPlayer _tnPlayer)}) then {_tnRej = "notaplayer"};
+			if (_tnRej == "" && {(side (group _tnPlayer)) != _tnSide}) then {_tnRej = "wrongside"};
+			if (_tnRej != "") then {
+				diag_log ("AICOM2|v1|ORDER|TOWN_NUDGE|reject|" + str _tnSide + "|why=" + _tnRej);
+			} else {
+				_tnLogik = (_tnSide) Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _tnLogik) then {
+					_tnSID = (_tnSide) Call WFBE_CO_FNC_GetSideID;
+					_tnNow = time;
+					_tnUID = getPlayerUID _tnPlayer; if (isNil "_tnUID" || {_tnUID == ""}) then {_tnUID = str _tnPlayer};
+					//--- you cannot suggest a town you already hold into the OFFENSIVE fist (it is not a capture candidate).
+					if ((_tnTown getVariable ["sideID", -1]) == _tnSID) then {
+						diag_log ("AICOM2|v1|ORDER|TOWN_NUDGE|reject|" + str _tnSide + "|uid=" + _tnUID + "|why=ownTown|town=" + (_tnTown getVariable ["name", "?"]));
+						[_tnPlayer, "HandleSpecial", ["cmdv2-receipt", ["We already hold " + (_tnTown getVariable ["name", "that town"]) + " - suggest an enemy or neutral town."]]] Call WFBE_CO_FNC_SendToClient;
+					} else {
+						_tnCd   = missionNamespace getVariable ["WFBE_C_CMD_TOWN_NUDGE_COOLDOWN", 90];
+						_tnKey  = "wfbe_cmd_townnudge_" + _tnUID;
+						_tnLast = _tnLogik getVariable [_tnKey, -1e9];
+						if (_tnCd > 0 && {(_tnNow - _tnLast) < _tnCd}) then {
+							diag_log ("AICOM2|v1|ORDER|TOWN_NUDGE|cooldown|" + str _tnSide + "|uid=" + _tnUID + "|cdLeft=" + str (round (_tnCd - (_tnNow - _tnLast))));
+							[_tnPlayer, "HandleSpecial", ["cmdv2-receipt", ["Town suggestion on cooldown - " + str (round (_tnCd - (_tnNow - _tnLast))) + "s left."]]] Call WFBE_CO_FNC_SendToClient;
+						} else {
+							//--- SCOPE. "side" biases the whole fist scorer. "team" resolves ONE nearby AI-led team and biases only
+							//--- that team's target pick, so a squad can pull THEIR attached team without redirecting the side.
+							_tnScopeVal = "side";
+							_tnTeam = grpNull;
+							if (_tnScope == "team") then {
+								_tnRange = missionNamespace getVariable ["WFBE_C_CMD_NUDGE_RANGE", 1500];
+								_tnBest  = _tnRange;
+								{
+									if (!isNil "_x" && {!isNull _x} && {!isPlayer (leader _x)}) then {
+										private ["_alv","_d"];
+										_alv = {alive _x} count (units _x);
+										if (_alv > 0 && {!isNull (leader _x)}) then {
+											_d = _tnPlayer distance (leader _x);
+											if (_d < _tnBest) then {_tnBest = _d; _tnTeam = _x};
+										};
+									};
+								} forEach (_tnLogik getVariable ["wfbe_teams", []]);
+								if (!isNull _tnTeam) then {_tnScopeVal = _tnTeam};
+							};
+							if (_tnScope == "team" && {isNull _tnTeam}) then {
+								diag_log ("AICOM2|v1|ORDER|TOWN_NUDGE|reject|" + str _tnSide + "|uid=" + _tnUID + "|why=noTeamInRange|range=" + str (missionNamespace getVariable ["WFBE_C_CMD_NUDGE_RANGE", 1500]));
+								[_tnPlayer, "HandleSpecial", ["cmdv2-receipt", ["No AI team close enough to take a team suggestion."]]] Call WFBE_CO_FNC_SendToClient;
+							} else {
+								//--- RING WRITE: prune expired records and this issuer's previous vote for the same town (refresh,
+								//--- never stack), append, then bound to WFBE_C_CMD_TOWN_NUDGE_RING by dropping the OLDEST entries.
+								_tnTtl  = missionNamespace getVariable ["WFBE_C_CMD_TOWN_NUDGE_TTL", 240];
+								_tnMax  = missionNamespace getVariable ["WFBE_C_CMD_TOWN_NUDGE_RING", 16];
+								_tnRing = _tnLogik getVariable ["wfbe_aicom_town_nudges", []];
+								_tnKeep = [];
+								{
+									if (!isNil "_x") then {
+										if ((typeName _x == "ARRAY") && {(count _x) >= 6}) then {
+											private ["_keep"];
+											_keep = ((_tnNow - (_x select 5)) < _tnTtl);
+											if (_keep && {(_x select 3) == _tnUID} && {(_x select 2) == _tnTown}) then {_keep = false};
+											if (_keep) then {_tnKeep set [count _tnKeep, _x]};
+										};
+									};
+								} forEach _tnRing;
+								//--- unified nudge record: [type, scope, target, issuerUID, priority, t0]. priority 1 = a normal soft
+								//--- player vote (the field is carried so a future commander-issued weighting needs no shape change).
+								_tnKeep set [count _tnKeep, ["town", _tnScopeVal, _tnTown, _tnUID, 1, _tnNow]];
+								if ((count _tnKeep) > _tnMax) then {
+									private ["_i"];
+									_tnDrop = (count _tnKeep) - _tnMax;
+									_tnTrim = [];
+									for "_i" from _tnDrop to ((count _tnKeep) - 1) do {_tnTrim set [count _tnTrim, _tnKeep select _i]};
+									_tnKeep = _tnTrim;
+								};
+								//--- server-local: the Allocator that consumes this runs on the SERVER, so no publicVariable and no
+								//--- extra net traffic (budget conservation). Same for the cooldown stamp below.
+								_tnLogik setVariable ["wfbe_aicom_town_nudges", _tnKeep];
+								_tnLogik setVariable [_tnKey, _tnNow];
+								_tnAgg = [_tnTown, _tnKeep, _tnScopeVal] Call WFBE_CO_FNC_TownNudgeWeight;
+								diag_log ("AICOM2|v1|ORDER|TOWN_NUDGE|accept|" + str _tnSide + "|" + str (round (time / 60)) + "|town=" + (_tnTown getVariable ["name", "?"]) + "|scope=" + _tnScope + "|uid=" + _tnUID + "|agg=" + str _tnAgg + "|ring=" + str (count _tnKeep));
+								[_tnPlayer, "HandleSpecial", ["cmdv2-receipt", ["Suggested " + (_tnTown getVariable ["name", "target"]) + " to the AI commander (" + _tnScope + " scope). It weighs your suggestion; it is not an order."]]] Call WFBE_CO_FNC_SendToClient;
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+	case "aicom-team-doctrine": {
+		//--- COMMAND V2 pillar (b), PER-TEAM scope (design section 4.2). Owner decision packet 2026-07-18 item 3: there is
+		//--- deliberately NO leader-only gate - ANY eligible nearby player may nudge a team's doctrine, held in check by
+		//--- an anti-spam per-UID cooldown, a proximity gate and a receipt back to the issuer. The stamp is ADVISORY and
+		//--- TTL'd: it never manual-pins, so relief / last-stand / HQ-strike allocator decisions still win.
+		//--- Payload ["aicom-team-doctrine", side, teamIndex, stance, player], stance in {aggressive,defensive,garrison}.
+		private ["_tdSide","_tdIdx","_tdStance","_tdPlayer","_tdLogik","_tdTeams","_tdTeam","_tdNow","_tdCd","_tdUID","_tdKey","_tdLast","_tdRange","_tdRej"];
+		if ((missionNamespace getVariable ["WFBE_C_CMD_TEAM_DOCTRINE", 0]) > 0 && {count _args >= 5}) then {
+			_tdSide   = _args select 1;
+			_tdIdx    = _args select 2;
+			_tdStance = _args select 3;
+			_tdPlayer = _args select 4;
+			_tdRej = "";
+			if (!(_tdSide in [west, east])) then {_tdRej = "badside"};
+			if (_tdRej == "" && {isNil "_tdIdx"}) then {_tdRej = "nilidx"};
+			if (_tdRej == "" && {typeName _tdIdx != "SCALAR"}) then {_tdRej = "badidx"};
+			if (_tdRej == "" && {typeName _tdStance != "STRING"}) then {_tdRej = "badstance"};
+			if (_tdRej == "" && {!(_tdStance in ["aggressive","defensive","garrison"])}) then {_tdRej = "badstance"};
+			if (_tdRej == "" && {isNil "_tdPlayer"}) then {_tdRej = "nilplayer"};
+			if (_tdRej == "" && {isNull _tdPlayer}) then {_tdRej = "nullplayer"};
+			if (_tdRej == "" && {!(alive _tdPlayer)}) then {_tdRej = "deadplayer"};
+			if (_tdRej == "" && {!(isPlayer _tdPlayer)}) then {_tdRej = "notaplayer"};
+			if (_tdRej == "" && {(side (group _tdPlayer)) != _tdSide}) then {_tdRej = "wrongside"};
+			if (_tdRej != "") then {
+				diag_log ("AICOM2|v1|ORDER|TEAM_DOCTRINE|reject|" + str _tdSide + "|why=" + _tdRej);
+			} else {
+				_tdLogik = (_tdSide) Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _tdLogik) then {
+					_tdTeams = _tdLogik getVariable ["wfbe_teams", []];
+					_tdNow   = time;
+					_tdUID   = getPlayerUID _tdPlayer; if (isNil "_tdUID" || {_tdUID == ""}) then {_tdUID = str _tdPlayer};
+					_tdTeam  = grpNull;
+					if (_tdIdx >= 0 && {_tdIdx < (count _tdTeams)}) then {_tdTeam = _tdTeams select _tdIdx};
+					_tdRange = missionNamespace getVariable ["WFBE_C_CMD_NUDGE_RANGE", 1500];
+					if (isNull _tdTeam) then {
+						diag_log ("AICOM2|v1|ORDER|TEAM_DOCTRINE|" + _tdStance + "|reject|" + str _tdSide + "|uid=" + _tdUID + "|why=badTeamIdx|idx=" + str _tdIdx + "|teams=" + str (count _tdTeams));
+					} else {
+						if (isPlayer (leader _tdTeam)) then {
+							//--- a player-led squad is not an AI team; never let a nudge write doctrine onto another human's group.
+							diag_log ("AICOM2|v1|ORDER|TEAM_DOCTRINE|" + _tdStance + "|reject|" + str _tdSide + "|uid=" + _tdUID + "|why=playerLedTeam|idx=" + str _tdIdx);
+						} else {
+							if (isNull (leader _tdTeam) || {(_tdPlayer distance (leader _tdTeam)) > _tdRange}) then {
+								//--- ELIGIBILITY (owner 2026-07-18): "any eligible NEARBY player" - eligibility is proximity, not rank.
+								diag_log ("AICOM2|v1|ORDER|TEAM_DOCTRINE|" + _tdStance + "|reject|" + str _tdSide + "|uid=" + _tdUID + "|why=tooFar|idx=" + str _tdIdx + "|range=" + str _tdRange);
+								[_tdPlayer, "HandleSpecial", ["cmdv2-receipt", ["That AI team is too far away to take a doctrine suggestion."]]] Call WFBE_CO_FNC_SendToClient;
+							} else {
+								_tdCd   = missionNamespace getVariable ["WFBE_C_CMD_TEAM_DOCTRINE_COOLDOWN", 90];
+								_tdKey  = "wfbe_cmd_doctrine_" + _tdUID;
+								_tdLast = _tdLogik getVariable [_tdKey, -1e9];
+								if (_tdCd > 0 && {(_tdNow - _tdLast) < _tdCd}) then {
+									diag_log ("AICOM2|v1|ORDER|TEAM_DOCTRINE|" + _tdStance + "|cooldown|" + str _tdSide + "|uid=" + _tdUID + "|cdLeft=" + str (round (_tdCd - (_tdNow - _tdLast))));
+									[_tdPlayer, "HandleSpecial", ["cmdv2-receipt", ["Doctrine suggestion on cooldown - " + str (round (_tdCd - (_tdNow - _tdLast))) + "s left."]]] Call WFBE_CO_FNC_SendToClient;
+								} else {
+									_tdLogik setVariable [_tdKey, _tdNow];
+									//--- [stance, t0, issuerUID]. Broadcast so an HC-delegated team sees the same stamp the server wrote
+									//--- (two-HC locality); this is one setVariable per accepted nudge, rate-limited by the cooldown above.
+									_tdTeam setVariable ["wfbe_aicom_team_doctrine", [_tdStance, _tdNow, _tdUID], true];
+									diag_log ("AICOM2|v1|ORDER|TEAM_DOCTRINE|" + _tdStance + "|accept|" + str _tdSide + "|" + str (round (time / 60)) + "|idx=" + str _tdIdx + "|uid=" + _tdUID + "|dist=" + str (round (_tdPlayer distance (leader _tdTeam))));
+									[_tdPlayer, "HandleSpecial", ["cmdv2-receipt", ["Suggested " + _tdStance + " doctrine to AI team " + str _tdIdx + ". Advisory only - the AI commander may still retask it."]]] Call WFBE_CO_FNC_SendToClient;
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+	case "aicom-support-air": {
+		//--- COMMAND V2 pillar (c) - REQUEST AN AI HELI TEAM AS SUPPORT (design section 5).
+		//--- Owner decision packet 2026-07-18 item 1: this is a FREE LOAN of an airframe the side ALREADY
+		//--- OWNS. No requisition fee is charged, so there is no refund path to audit; abuse is bounded by
+		//--- the per-UID cooldown, the side-wide concurrency cap, one-grant-per-UID, and full telemetry.
+		//--- Payload ["aicom-support-air", side, player, playerPos, kind].
+		//---   kind "transport" -> a troop-carrying heli (transportSoldier > 0) escorts/stands off.
+		//---   kind "cas-heli"  -> a gunship (transportSoldier == 0) orbits and answers DIRECT threats.
+		//---   kind "cas-jet"/"transport-jet" -> PARSED AND REJECTED. WFBE_C_CMD_SUPPORT_JET is reserved
+		//---   and there is NO jet grant path in this build; the explicit reject exists so the UI can grey
+		//---   the option instead of silently dropping the request (design section 5.1).
+		private ["_saSide","_saPlayer","_saPos","_saKind","_saLogik","_saNow","_saCd","_saUID","_saKey","_saLast","_saTeams","_saTeam","_saHull","_saMax","_saActive","_saRej","_saWantTrans","_saBestD","_saRange","_saRecallUntil","_saMine"];
+		if ((missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR", 0]) > 0 && {count _args >= 5}) then {
+			_saSide   = _args select 1;
+			_saPlayer = _args select 2;
+			_saPos    = _args select 3;
+			_saKind   = _args select 4;
+			_saRej = "";
+			if (!(_saSide in [west, east])) then {_saRej = "badside"};
+			if (_saRej == "" && {isNil "_saPlayer"}) then {_saRej = "nilplayer"};
+			if (_saRej == "" && {isNull _saPlayer}) then {_saRej = "nullplayer"};
+			if (_saRej == "" && {!(alive _saPlayer)}) then {_saRej = "deadplayer"};
+			if (_saRej == "" && {!(isPlayer _saPlayer)}) then {_saRej = "notaplayer"};
+			if (_saRej == "" && {(side (group _saPlayer)) != _saSide}) then {_saRej = "wrongside"};
+			if (_saRej == "" && {typeName _saPos != "ARRAY"}) then {_saRej = "badpos"};
+			if (_saRej == "" && {(count _saPos) < 2}) then {_saRej = "badpos"};
+			//--- server-side proximity sanity check: never trust a client-supplied position (same guard the
+			//--- ground aicom-support case applies).
+			if (_saRej == "" && {(_saPlayer distance _saPos) >= 200}) then {_saRej = "posmismatch"};
+			if (_saRej == "" && {typeName _saKind != "STRING"}) then {_saRej = "badkind"};
+			if (_saRej == "" && {_saKind in ["cas-jet","transport-jet"]}) then {_saRej = "jet-disabled"};
+			if (_saRej == "" && {!(_saKind in ["transport","cas-heli"])}) then {_saRej = "badkind"};
+			if (_saRej != "") then {
+				diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|REJECT|" + str _saSide + "|why=" + _saRej + "|kind=" + (if (typeName _saKind == "STRING") then {_saKind} else {"?"}));
+				if (_saRej == "jet-disabled" && {!isNil "_saPlayer"} && {!isNull _saPlayer} && {isPlayer _saPlayer}) then {
+					[_saPlayer, "HandleSpecial", ["cmdv2-receipt", ["Fixed-wing support is not implemented in this build."]]] Call WFBE_CO_FNC_SendToClient;
+				};
+			} else {
+				_saLogik = (_saSide) Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _saLogik) then {
+					_saNow = time;
+					_saUID = getPlayerUID _saPlayer; if (isNil "_saUID" || {_saUID == ""}) then {_saUID = str _saPlayer};
+					_saCd  = missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR_COOLDOWN", 180];
+					_saKey = "wfbe_cmd_supportair_" + _saUID;
+					_saLast = _saLogik getVariable [_saKey, -1e9];
+					diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|REQUEST|" + str _saSide + "|" + str (round (time / 60)) + "|kind=" + _saKind + "|uid=" + _saUID);
+					_saRecallUntil = _saLogik getVariable ["wfbe_cmd_support_recall_until", -1e9];
+					_saMax    = missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR_MAX_ACTIVE", 1];
+					_saActive = _saLogik getVariable ["wfbe_cmd_support_active", 0];
+					if (_saCd > 0 && {(_saNow - _saLast) < _saCd}) then {
+						diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|REJECT|" + str _saSide + "|uid=" + _saUID + "|why=cooldown|cdLeft=" + str (round (_saCd - (_saNow - _saLast))));
+						[_saPlayer, "HandleSpecial", ["cmdv2-receipt", ["Heli support on cooldown - " + str (round (_saCd - (_saNow - _saLast))) + "s left."]]] Call WFBE_CO_FNC_SendToClient;
+					} else {
+						if (_saNow < _saRecallUntil) then {
+							//--- HYSTERESIS (owner 2026-07-18 item 5): the AI just recalled an airframe for a
+							//--- last-stand / HQ emergency. Refuse to re-lend one until the dwell window closes.
+							diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|NONE|" + str _saSide + "|uid=" + _saUID + "|why=recall-hysteresis|left=" + str (round (_saRecallUntil - _saNow)));
+							_saLogik setVariable [_saKey, _saNow];
+							[_saPlayer, "HandleSpecial", ["cmdv2-receipt", ["The AI commander needs every airframe right now - no support available."]]] Call WFBE_CO_FNC_SendToClient;
+						} else {
+							if (_saActive >= _saMax) then {
+								diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|NONE|" + str _saSide + "|uid=" + _saUID + "|why=sideCapReached|active=" + str _saActive + "|max=" + str _saMax);
+								_saLogik setVariable [_saKey, _saNow];   //--- start the cooldown on NONE too, so a denied request cannot be re-spammed.
+								[_saPlayer, "HandleSpecial", ["cmdv2-receipt", ["No heli support free - another squad already has it."]]] Call WFBE_CO_FNC_SendToClient;
+							} else {
+								//--- SEARCH: this side's AI teams for an idle one flying a live, crewed, movable heli of
+								//--- the requested kind. transportSoldier is the codebase-wide transport-vs-gunship test.
+								//--- One grant per UID is enforced by rejecting any team already stamped with a holder,
+								//--- plus the explicit _saMine scan below.
+								_saWantTrans = (_saKind == "transport");
+								_saRange = missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR_RANGE", 6000];
+								_saTeams = _saLogik getVariable ["wfbe_teams", []];
+								_saTeam  = grpNull; _saHull = objNull; _saBestD = _saRange; _saMine = false;
+								{
+									//--- CAPTURE the outer _x FIRST: the inner units forEach below permanently rebinds it.
+									private ["_tm","_alv","_busy","_hol","_h","_str","_ral","_hld","_d"];
+									_tm = _x;
+									if (!isNil "_tm" && {!isNull _tm} && {!isPlayer (leader _tm)}) then {
+										_alv = {alive _x} count (units _tm);
+										if (_alv > 0) then {
+											_busy = false;
+											_hol = _tm getVariable "wfbe_aicom_support_holder";
+											if (!isNil "_hol") then {
+												_busy = true;
+												//--- already lent out: if it is lent to THIS player, remember that so we answer
+												//--- "you already have one" instead of a generic NONE.
+												if ((typeName _hol == "ARRAY") && {(count _hol) >= 1}) then {
+													if ((_hol select 0) == _saPlayer) then {_saMine = true};
+												};
+											};
+											if (!_busy) then {_str = _tm getVariable "wfbe_aicom_strike"; _busy = (!isNil "_str" && {_str})};
+											if (!_busy) then {_ral = _tm getVariable "wfbe_aicom_rallying"; _busy = (!isNil "_ral" && {_ral})};
+											if (!_busy) then {_hld = _tm getVariable "wfbe_aicom_holding_town"; _busy = (!isNil "_hld" && {!isNull _hld})};
+											if (!_busy) then {
+												_h = objNull;
+												{
+													if (isNull _h && {alive _x} && {(vehicle _x) != _x} && {(vehicle _x) isKindOf "Helicopter"} && {canMove (vehicle _x)}
+													    && {!isNull (driver (vehicle _x))} && {alive (driver (vehicle _x))}
+													    && {((getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0) == _saWantTrans}) then {
+														_h = vehicle _x;
+													};
+												} forEach (units _tm);
+												if (!isNull _h) then {
+													_d = _h distance _saPos;
+													if (_d < _saBestD) then {_saBestD = _d; _saTeam = _tm; _saHull = _h};
+												};
+											};
+										};
+									};
+								} forEach _saTeams;
+								if (_saMine) then {
+									diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|REJECT|" + str _saSide + "|uid=" + _saUID + "|why=alreadyHolding");
+									[_saPlayer, "HandleSpecial", ["cmdv2-receipt", ["You already have a support heli on station."]]] Call WFBE_CO_FNC_SendToClient;
+								} else {
+									if (isNull _saTeam) then {
+										diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|NONE|" + str _saSide + "|uid=" + _saUID + "|kind=" + _saKind + "|why=noEligibleHeli|range=" + str _saRange);
+										_saLogik setVariable [_saKey, _saNow];   //--- cooldown starts on NONE as well (design section 5.2 step 1).
+										[_saPlayer, "HandleSpecial", ["cmdv2-receipt", ["No " + (if (_saWantTrans) then {"transport"} else {"gunship"}) + " heli is available for support."]]] Call WFBE_CO_FNC_SendToClient;
+									} else {
+										//--- GRANT. Book the slot + cooldown, stamp the holder, and hand the lifecycle to the
+										//--- escort worker. No funds move in either direction: the loan is free by owner ruling.
+										_saLogik setVariable [_saKey, _saNow];
+										_saLogik setVariable ["wfbe_cmd_support_active", _saActive + 1];
+										_saTeam setVariable ["wfbe_aicom_support_holder", [_saPlayer, _saKind, _saNow], true];
+										_saTeam setVariable ["wfbe_aicom_support_release", nil, true];
+										diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|GRANT|" + str _saSide + "|" + str (round (time / 60)) + "|uid=" + _saUID + "|kind=" + _saKind + "|heli=" + (typeOf _saHull) + "|ferry=" + str (round _saBestD));
+										[_saTeam, _saHull, _saPlayer, _saKind, _saSide, _saUID] Spawn WFBE_SE_FNC_CmdSupportAir;
+										[_saPlayer, "HandleSpecial", ["cmdv2-receipt", ["Support heli inbound (" + _saKind + "). It stays on station for " + str (missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR_TTL", 300]) + "s or until you release it."]]] Call WFBE_CO_FNC_SendToClient;
+									};
+								};
+							};
+						};
+					};
+				};
+			};
+		};
+	};
+	case "aicom-support-air-release": {
+		//--- COMMAND V2 pillar (c): the holder hands the airframe back early. We only STAMP the request;
+		//--- the escort worker sees it on its next interval and runs the single shared RETURN path, so
+		//--- there is exactly one place that un-books the grant and flies the heli home (no duplicate
+		//--- teardown, no race with the worker). Only the actual holder may release their own grant.
+		private ["_srSide","_srPlayer","_srLogik","_srTeams","_srFound"];
+		if ((missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR", 0]) > 0 && {count _args >= 3}) then {
+			_srSide   = _args select 1;
+			_srPlayer = _args select 2;
+			if (_srSide in [west, east] && {!isNil "_srPlayer"} && {!isNull _srPlayer} && {isPlayer _srPlayer} && {(side (group _srPlayer)) == _srSide}) then {
+				_srLogik = (_srSide) Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _srLogik) then {
+					_srTeams = _srLogik getVariable ["wfbe_teams", []];
+					_srFound = false;
+					{
+						private ["_tm","_hol"];
+						_tm = _x;
+						if (!_srFound && {!isNil "_tm"} && {!isNull _tm}) then {
+							_hol = _tm getVariable "wfbe_aicom_support_holder";
+							if (!isNil "_hol" && {typeName _hol == "ARRAY"} && {(count _hol) >= 1} && {(_hol select 0) == _srPlayer}) then {
+								_tm setVariable ["wfbe_aicom_support_release", true, true];
+								_srFound = true;
+							};
+						};
+					} forEach _srTeams;
+					if (_srFound) then {
+						diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|RELEASE|" + str _srSide + "|" + str (round (time / 60)) + "|uid=" + (getPlayerUID _srPlayer) + "|reason=player-request");
+					} else {
+						diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|REJECT|" + str _srSide + "|uid=" + (getPlayerUID _srPlayer) + "|why=noGrantHeld");
+						[_srPlayer, "HandleSpecial", ["cmdv2-receipt", ["You have no support heli to release."]]] Call WFBE_CO_FNC_SendToClient;
 					};
 				};
 			};
