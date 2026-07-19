@@ -87,6 +87,21 @@ if (isNil "_sideJoined") exitWith {
 	diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1]: resolved team has nil wfbe_side - deferring.", _uid];
 };
 
+//--- fable/funds-resend-side-guard (owner live loss 2026-07-19, ZG): a CIV-drifted group (a swap/
+//--- transient group stamped wfbe_side=CIV, NOT a real warfare slot) used to sail through this
+//--- handler; with no group funds and no JIP record yet, branch (3) below then read the
+//--- NONEXISTENT WFBE_C_ECONOMY_FUNDS_START_CIV constant, defaulted to 0, and STAMPED+BROADCAST
+//--- wfbe_funds=0 onto the group - converting a transient nil into a latched zero that every later
+//--- self-heal poll "confirmed" via branch (2) (live RPT: 1x "side CIV: stamped START funds=0",
+//--- then 10x "side CIV: re-broadcast EXISTING group funds=0"; owner wallet read $0 until a
+//--- reconnect ran the B762 stable-group adoption). A heal must never be able to invent a zero:
+//--- treat a non-playable side EXACTLY like the nil-side case above - log + defer, stamp nothing.
+//--- The client will keep polling; enrollment/adoption (Server_OnPlayerConnected / B762) owns
+//--- re-siding the group. A2-OA-safe: side==side comparison, no isEqualType.
+if (_sideJoined == civilian || {!(_sideJoined in [west, east, resistance])}) exitWith {
+	diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1]: resolved team wfbe_side [%2] is not a playable faction (CIV-drift) - deferring, never stamping.", _uid, _sideJoined];
+};
+
 //--- Ray pick A (2026-07-03) ZERO-LATCH RECORD RESTORE: the per-player record is now kept in LOCK-STEP
 //--- with every wallet change (Common_ChangeTeamFunds / RequestFundsRecord / the ScudStrike direct write),
 //--- so WFBE_JIP_USER<uid> cash is the AUTHORITATIVE truth. That makes a record-first recovery provably
@@ -123,6 +138,13 @@ if (_recCash > -1) exitWith {
 
 //--- (3) No record yet -> stamp the side START funds (the value the connect handler WOULD set on
 //--- first join). We do NOT create WFBE_JIP_USER<uid> here; Server_OnPlayerConnected owns it.
-_funds = missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _sideJoined], 0];
+//--- fable/funds-resend-side-guard: belt-and-braces - if the START constant for this side does not
+//--- exist, DEFER instead of stamping the getVariable default (stamping an invented 0 is exactly
+//--- the CIV-drift zero-latch this guard exists to prevent; the side gate above already blocks
+//--- non-playable sides, this covers any future side/constant mismatch identically).
+_funds = missionNamespace getVariable Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _sideJoined];
+if (isNil "_funds" || {typeName _funds != "SCALAR"}) exitWith {
+	diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1] side %2: no START constant for this side - deferring, never stamping.", _uid, _sideJoined];
+};
 _team setVariable ["wfbe_funds", _funds, true];
 diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1] side %2: stamped START funds=%3 (no JIP record yet; connect handler will reconcile).", _uid, _sideJoined, _funds];
