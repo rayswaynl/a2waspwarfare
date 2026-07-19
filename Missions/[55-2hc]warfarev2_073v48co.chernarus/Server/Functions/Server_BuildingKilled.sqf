@@ -125,20 +125,6 @@ else
     ["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] Structure [%2] has been destroyed by [%3].", str _side, _type, _killer]] Call WFBE_CO_FNC_LogContent;
 };
 
-//--- Radio Tower special case: recompute the per-side alive-any registry + re-broadcast the public flag
-//--- the client-side WASP\Radio\Radio_Manager.sqf gate reads. No cleanup exists if the flag is off (matches CBR).
-if ((_structure getVariable ["wfbe_structure_type", ""]) == "RadioTower" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then {
-	private ["_rtKey","_rtAliveVar","_rtRegistry","_rtAnyAlive"];
-	_rtKey = if (_side == west) then {"WFBE_RADIOTOWER_WEST"} else {"WFBE_RADIOTOWER_EAST"};
-	_rtAliveVar = if (_side == west) then {"WFBE_RADIOTOWER_WEST_ALIVE"} else {"WFBE_RADIOTOWER_EAST_ALIVE"};
-	_rtRegistry = missionNamespace getVariable [_rtKey, []];
-	_rtAnyAlive = false;
-	{if (!isNull _x && {alive _x}) exitWith {_rtAnyAlive = true}} forEach _rtRegistry;
-	missionNamespace setVariable [_rtAliveVar, _rtAnyAlive];
-	publicVariable _rtAliveVar;
-	["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] RadioTower destroyed. Any-alive now %2.", str _side, _rtAnyAlive]] Call WFBE_CO_FNC_LogContent;
-};
-
 //--- Bank special case: raid reward split, global broadcast, registry cleanup + marker delete.
 if ((_structure getVariable ["wfbe_structure_type", ""]) == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	_bankKey = if (_side == west) then {"WFBE_BANK_WEST"} else {"WFBE_BANK_EAST"};

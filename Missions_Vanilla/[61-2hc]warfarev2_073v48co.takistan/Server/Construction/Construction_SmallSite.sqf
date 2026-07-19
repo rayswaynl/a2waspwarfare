@@ -126,19 +126,6 @@ if (_rlType == "CBRadar" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_CO
 	missionNamespace setVariable [Format ["WFBE_%1_CBRadar_PENDING", str _side], -1e11];
 };
 
-//--- Radio Tower: register in per-side registry + flip the public alive-flag the client-side radio manager gates on.
-if (_rlType == "RadioTower" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then {
-	private ["_rtRegistry","_rtKey","_rtAliveVar"];
-	_rtKey = if (_side == west) then {"WFBE_RADIOTOWER_WEST"} else {"WFBE_RADIOTOWER_EAST"};
-	_rtRegistry = missionNamespace getVariable [_rtKey, []];
-	_rtRegistry = _rtRegistry + [_site];
-	missionNamespace setVariable [_rtKey, _rtRegistry];
-	_rtAliveVar = if (_side == west) then {"WFBE_RADIOTOWER_WEST_ALIVE"} else {"WFBE_RADIOTOWER_EAST_ALIVE"};
-	missionNamespace setVariable [_rtAliveVar, true];
-	publicVariable _rtAliveVar;
-	["INFORMATION", Format ["Construction_SmallSite.sqf: [%1] RadioTower registered. Registry size: %2.", str _side, count _rtRegistry]] Call WFBE_CO_FNC_LogContent;
-};
-
 if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !(_rlType in ["AARadar","CBRadar"]))then{ //--- wiki-wins: per-side toggle (was the global isAutoWallConstructingEnabled, shared across sides)
 	//--- cmdcon43-c: WFBE_C_WALLS_V3 selects the "original walls + HQ-style concrete slabs" array
 	//--- (_WALLS_V3) over the plain legacy one at spawn time. Falls back to legacy if the _V3 var is
@@ -158,8 +145,7 @@ if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !
 		};
 	};
 	_wallTpl = missionNamespace getVariable _wallVarName;
-	//--- fable/fix-walltpl-nil-radiotower (bugrun BUGHUNT-4 / live 1.2.0 RPT): a structure type with no
-	//--- WFBE_NEURODEF_<type>_WALLS template (e.g. the AI-built RadioTower added in 1.2.0) leaves _wallTpl
+	//--- A structure type with no WFBE_NEURODEF_<type>_WALLS template leaves _wallTpl
 	//--- nil, and CreateDefenseTemplate then errored every build. Treat "no template" as "no auto-walls",
 	//--- exactly like the AUTOWALL-off else branch below.
 	if (isNil "_wallTpl") then {

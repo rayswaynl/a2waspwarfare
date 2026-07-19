@@ -107,17 +107,6 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) 
 	_dir = _dir	+ [90];
 };
 
-if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then { //--- Radio Tower: gates the vehicle-radio feature per side (see WASP/Radio). Land_Vysilac_FM (owner-chosen lattice broadcast tower 2026-07-10) - base-A2 CAStructures, all-map safe.
-	_v = _v		+ ["RadioTower"];
-	_n = _n		+ ["Land_Vysilac_FM"];
-	_d = _d		+ ["Radio Tower"];
-	_c = _c		+ [1800];
-	_t = _t		+ [if (WF_Debug) then {1} else {60}];
-	_s = _s		+ ["SmallSite"];
-	_dis = _dis	+ [16];
-	_dir = _dir	+ [90];
-};
-
 if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	_v = _v		+ ["Bank"];
 	//--- cmdcon42-g (part C): WFBE_C_BANK_MODEL_V2 swaps the Bank model to the office building

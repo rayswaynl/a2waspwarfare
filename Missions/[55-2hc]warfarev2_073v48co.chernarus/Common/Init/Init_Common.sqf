@@ -153,7 +153,6 @@ WFBE_CO_FNC_GetSideID = Compile preprocessFileLineNumbers "Common\Functions\Comm
 WFBE_CO_FNC_GetSideLogic = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideLogic.sqf";
 WFBE_CO_FNC_GetSideSupply = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideSupply.sqf";
 WFBE_CO_FNC_GetSideStructures = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideStructures.sqf";
-WFBE_CO_FNC_HasSideRadioTower = Compile preprocessFileLineNumbers "Common\Functions\Common_HasSideRadioTower.sqf";
 WFBE_CO_FNC_GetSideUpgrades = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideUpgrades.sqf";
 WFBE_CO_FNC_IsUnitUnlocked = Compile preprocessFileLineNumbers "Common\Functions\Common_IsUnitUnlocked.sqf"; //--- feat/common-isunitunlocked: shared per-unit facMap/QUERYUNITUPGRADE tier-unlock check (was duplicated across AI_Commander_Teams.sqf/Produce.sqf/Base.sqf); returns [unlocked,found].
 WFBE_CO_FNC_GetTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamFunds.sqf";

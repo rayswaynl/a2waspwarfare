@@ -1,5 +1,4 @@
-﻿public enum ExtensionName
+public enum ExtensionName
 {
     GLOBALGAMESTATS,
-    RADIO,
 }

@@ -39,9 +39,6 @@
     <OutputPath>bin\x86\Release\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ManagedBass, Version=4.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\ManagedBass.4.0.2\lib\net45\ManagedBass.dll</HintPath>
-    </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -71,7 +68,6 @@
     <Compile Include="src\BaseExtensionClass\InterfaceExtension.cs" />
     <Compile Include="src\BaseExtensionClass\BaseExtensionClass.cs" />
     <Compile Include="src\BaseExtensionClass\Implementations\GLOBALGAMESTATS.cs" />
-    <Compile Include="src\BaseExtensionClass\Implementations\RADIO.cs" />
     <Compile Include="src\ArrayTools.cs" />
     <Compile Include="src\EnumExtensions.cs" />
     <Compile Include="src\ExtensionMethods.cs" />
@@ -84,15 +80,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <!-- Native BASS audio engine (Un4seen Developments, free for non-commercial use - see
-         native\bass-LICENSE.txt). ManagedBass P/Invokes into this at runtime; it is not a
-         managed reference. Copied alongside Extension.dll here for local build/smoke-test
-         convenience - the deployed copy for players lives in Mods\mkswf_vehicle_radio\. -->
-    <Content Include="native\bass.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <!-- UnmanagedExports 1.2.7's DllExport step auto-detects ildasm/ilasm by parsing
        TargetFrameworkVersion against Microsoft.Build.Utilities.TargetDotNetFrameworkVersion,

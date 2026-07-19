@@ -1340,18 +1340,6 @@ class WF_Menu {
 			action = "MenuAction = 19";
 			tooltip = "Enable GPS / Mini Map";
 		};
-		// RADIO: vehicle radio menu (replaces the obsolete FPS/settings-duplicate button, sits between GPS and SKIN).
-		class CA_Radio_Button : RscButton_Main {
-			idc = 11023;
-			x = 0.503;
-			y = 0.767144;
-			w = 0.042;
-			h = 0.045;
-			text = "RADIO";
-			sizeEx = 0.026;
-			action = "MenuAction = 26";
-			tooltip = "Vehicle Radio (requires a vehicle + Radio Tower)";
-		};
 		//--- Command Deck: Skin Selector shortcut in footer strip.
 		class CA_Skin_Button : RscButton_Main {
 			idc = 11021;
