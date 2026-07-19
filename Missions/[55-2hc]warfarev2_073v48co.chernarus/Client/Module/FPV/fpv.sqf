@@ -1,4 +1,7 @@
-Private ['_buildings','_cap','_capDeadline','_capKey','_capValid','_challenge','_challengeKey','_checks','_class','_closest','_cost','_driver','_drone','_funds','_group','_next','_nextKey','_pendingKey','_purchaseStatus','_resultKey','_seatDeadline','_sendFpvToServer','_statusKey','_statusPollAt','_token'];
+Private ['_buildings','_cap','_capDeadline','_capKey','_capValid','_challenge','_challengeKey','_checks','_class','_closest','_cost','_driver','_drone','_funds','_group','_next','_nextKey','_pendingKey','_payload','_purchaseStatus','_resultKey','_seatDeadline','_sendFpvToServer','_statusKey','_statusPollAt','_token'];
+
+_payload = "fpv";
+if (count _this > 0 && {typeName (_this select 0) == "STRING"}) then {_payload = _this select 0};
 
 //--- fable/fpv-strike-drone: player-piloted kamikaze mini-UAV (Tactical Center support call,
 //--- sibling of Client\Module\UAV\uav.sqf). Inert unless WFBE_C_FPV_DRONE > 0.
@@ -8,6 +11,10 @@ if (!isNull playerFPV) then {if (!alive playerFPV) then {playerFPV = objNull}};
 if (!isNull playerFPV) exitWith {hint "You already have an FPV drone in the air."};
 
 _class = missionNamespace getVariable [Format ["WFBE_%1FPVDRONE",sideJoinedText], ""];
+if (_payload in ["mq9-cluster","mq9-at"]) then {
+	if (!((missionNamespace getVariable ["WFBE_C_UAV2_MQ9_FPV", 0]) > 0) || {!(sideJoined in [west,east])}) exitWith {};
+	_class = missionNamespace getVariable [Format ["WFBE_%1UAV",sideJoinedText], ""];
+};
 if (_class == "") exitWith {};
 
 _buildings = (sideJoined) Call WFBE_CO_FNC_GetSideStructures;
@@ -156,7 +163,11 @@ _statusKey = Format ["wfbe_fpv_purchase_status_%1", getPlayerUID player];
 missionNamespace setVariable [_resultKey, _token];
 missionNamespace setVariable [_statusKey, 0];
 missionNamespace setVariable [_capKey, []];
-["fpv","purchase",sideJoined,_drone,clientTeam,player,_driver,_token] Call _sendFpvToServer;
+if (_payload == "fpv") then {
+	["fpv","purchase",sideJoined,_drone,clientTeam,player,_driver,_token] Call _sendFpvToServer;
+} else {
+	["fpv","purchase",sideJoined,_drone,clientTeam,player,_driver,_token,_payload] Call _sendFpvToServer;
+};
 
 //--- A missing reply is an ambiguous server outcome. Never delete or unlock locally; poll
 //--- the server's idempotent token result until an authoritative outcome is replayed.

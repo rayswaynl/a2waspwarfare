@@ -127,6 +127,13 @@ if ((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) > 0) then {
 	_addToListFee = _addToListFee + [(missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST", 7500])];
 	_addToListInterval = _addToListInterval + [0];	//--- one live drone per player is the real gate (enable switch).
 };
+//--- UAV L2 only: the optional MQ-9 uses the same server-authoritative FPV launch path.
+if ((missionNamespace getVariable ["WFBE_C_UAV2_MQ9_FPV", 0]) > 0 && {(_currentUpgrades select WFBE_UP_UAV) >= (missionNamespace getVariable ["WFBE_C_UAV2_LEVEL", 2])} && {sideJoined in [west,east]}) then {
+	_addToList = _addToList + ["MQ-9 FPV - CLUSTER", "MQ-9 FPV - AT ROCKET"];
+	_addToListID = _addToListID + ["MQ9_FPV_CLUSTER", "MQ9_FPV_AT"];
+	_addToListFee = _addToListFee + [(missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST", 7500]), (missionNamespace getVariable ["WFBE_C_FPV_DRONE_COST", 7500])];
+	_addToListInterval = _addToListInterval + [0,0];
+};
 
 for '_i' from 0 to count(_addToList)-1 do {
 	lbAdd [_listBox,_addToList select _i];
@@ -422,6 +429,8 @@ while {alive player && dialog} do {
 				//--- fable/fix-fpv-cooldown: + rearm-cooldown parity with GUER (WFBE_C_FPV_COOLDOWN).
 				_controlEnable = if (_funds >= _currentFee && !(alive playerFPV) && (missionNamespace getVariable [Format ["wfbe_fpv_next_%1", getPlayerUID player], 0]) <= time) then {true} else {false};
 			};
+			case "MQ9_FPV_CLUSTER": {_controlEnable = if (_funds >= _currentFee && !(alive playerFPV)) then {true} else {false};};
+			case "MQ9_FPV_AT": {_controlEnable = if (_funds >= _currentFee && !(alive playerFPV)) then {true} else {false};};
 			case "Units_Camera": {
 				_controlEnable = commandInRange;
 			};
@@ -525,6 +534,8 @@ while {alive player && dialog} do {
 				closeDialog 0;
 				ExecVM "Client\Module\FPV\fpv.sqf";
 			};
+			case "MQ9_FPV_CLUSTER": {closeDialog 0; ["mq9-cluster"] ExecVM "Client\Module\FPV\fpv.sqf";};
+			case "MQ9_FPV_AT": {closeDialog 0; ["mq9-at"] ExecVM "Client\Module\FPV\fpv.sqf";};
 			case "Units_Camera": {
 				closeDialog 0;
 				createDialog "RscMenu_UnitCamera";

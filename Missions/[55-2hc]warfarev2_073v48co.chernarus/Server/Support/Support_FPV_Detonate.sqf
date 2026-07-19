@@ -161,7 +161,8 @@ if (_atomicState == 5) exitWith {
 	["WARNING", Format ["Support_FPV_Detonate.sqf: [%1] rate-limited - retry scheduled in %2s.", str _matchSide, round _retryDelay]] Call WFBE_CO_FNC_LogContent;
 };
 
-_ammoClass = missionNamespace getVariable ["WFBE_C_FPV_DRONE_AMMO", "R_57mm_HE"];
+_ammoClass = _matchDrone getVariable ["wfbe_fpv_ammo", ""];
+if (typeName _ammoClass != "STRING" || {_ammoClass == ""}) then {_ammoClass = missionNamespace getVariable ["WFBE_C_FPV_DRONE_AMMO", "R_57mm_HE"]};
 
 //--- FORENSICS: log accepted detonation with side and server-authoritative drone position.
 ["INFORMATION", Format ["Support_FPV_Detonate.sqf: [%1] side [%2] detonated at drone-pos %3 (client-pos %4).", _ammoClass, str _matchSide, _dronePos, _pos]] Call WFBE_CO_FNC_LogContent;

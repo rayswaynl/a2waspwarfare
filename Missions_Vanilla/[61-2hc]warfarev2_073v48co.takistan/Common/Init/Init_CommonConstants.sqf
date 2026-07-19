@@ -2610,6 +2610,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- can deploy a main-side Forward FOB from a repair truck, while an AI commander can fund an occasional
 //--- bounded FPV swarm. Neither feature reads or mutates resistance drone state.
 	if (isNil "WFBE_C_UAV2_LEVEL") then {WFBE_C_UAV2_LEVEL = 2};
+	//--- Optional player MQ-9 strike variants. Default-off: no menu row or authority path changes.
+	if (isNil "WFBE_C_UAV2_MQ9_FPV") then {WFBE_C_UAV2_MQ9_FPV = 0};
+	if (isNil "WFBE_C_UAV2_MQ9_FPV_CLUSTER_AMMO") then {WFBE_C_UAV2_MQ9_FPV_CLUSTER_AMMO = "Bo_Mk82"};
+	if (isNil "WFBE_C_UAV2_MQ9_FPV_AT_AMMO") then {WFBE_C_UAV2_MQ9_FPV_AT_AMMO = "M_TOW_AT"};
 	if (isNil "WFBE_C_UAV2_FOB") then {WFBE_C_UAV2_FOB = 1}; //--- Armed for RC2 test-server exercise; set 0 to hide/disable.
 	if (isNil "WFBE_C_UAV2_FOB_COST") then {WFBE_C_UAV2_FOB_COST = 25000};
 	if (isNil "WFBE_C_UAV2_FOB_CAP") then {WFBE_C_UAV2_FOB_CAP = 2};

@@ -1,4 +1,4 @@
-Private["_activeDrone","_activeKey","_atomicState","_argDriver","_argDrone","_argPlayer","_argTeam","_argToken","_args","_cap","_capExpired","_capExpires","_capKey","_clientSide","_cooldown","_cost","_deny","_detGrace","_driver","_drone","_existingFpvArr","_existingFpvKey","_expectedClass","_expectedPilot","_funds","_inflight","_inflightKey","_mode","_next","_nextKey","_player","_playerTeam","_replyId","_requestBound","_result","_resultKey","_slotReserved","_sendPrivate","_seatDeadline","_serverSide","_side","_timeStart","_timeout","_uid"];
+Private["_activeDrone","_activeKey","_ammoClass","_argDriver","_argDrone","_argPayload","_argPlayer","_argTeam","_argToken","_args","_cap","_capExpired","_capExpires","_capKey","_clientSide","_cooldown","_cost","_deny","_detGrace","_driver","_drone","_existingFpvArr","_existingFpvKey","_expectedClass","_expectedPilot","_funds","_inflight","_inflightKey","_mode","_next","_nextKey","_payload","_player","_playerTeam","_replyId","_requestBound","_result","_resultKey","_slotReserved","_sendPrivate","_seatDeadline","_serverSide","_side","_timeStart","_timeout","_uav2Level","_upgrades","_uid"];
 
 //--- OA 1.62+ targeted PVF sender. The shared RequestSpecial bus carries no sender identity, so
 //--- capability and purchase results must never use the legacy all-client vanilla broadcast.
@@ -196,6 +196,8 @@ _argTeam = _args select 4;
 _argPlayer = _args select 5;
 _argDriver = _args select 6;
 _argToken = _args select 7;
+_argPayload = "fpv";
+if (count _args > 8) then {_argPayload = _args select 8};
 
 if (typeName _argPlayer != "OBJECT") exitWith {
 	["WARNING", "Support_FPV.sqf: denied purchase with an invalid player binding."] Call WFBE_CO_FNC_LogContent;
@@ -290,9 +292,21 @@ if (_deny == "" && {!((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) > 0
 
 _expectedClass = "";
 _expectedPilot = "";
+_payload = _argPayload;
+_ammoClass = missionNamespace getVariable ["WFBE_C_FPV_DRONE_AMMO", "R_57mm_HE"];
+if (typeName _payload != "STRING") then {_deny = "FPV payload is invalid."};
 if (_deny == "") then {
 	_expectedClass = missionNamespace getVariable [Format ["WFBE_%1FPVDRONE", str _side], ""];
 	_expectedPilot = missionNamespace getVariable [Format ["WFBE_%1PILOT", str _side], ""];
+	if (_payload in ["mq9-cluster","mq9-at"]) then {
+		if (!((missionNamespace getVariable ["WFBE_C_UAV2_MQ9_FPV", 0]) > 0) || {!(_side in [west,east])}) then {_deny = "MQ-9 FPV is disabled for this side."};
+		_uav2Level = missionNamespace getVariable ["WFBE_C_UAV2_LEVEL", 2];
+		_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+		if (_deny == "" && {typeName _upgrades != "ARRAY" || {count _upgrades <= WFBE_UP_UAV} || {(_upgrades select WFBE_UP_UAV) < _uav2Level}}) then {_deny = "MQ-9 FPV requires UAV upgrade level 2."};
+		if (_deny == "") then {_expectedClass = missionNamespace getVariable [Format ["WFBE_%1UAV", str _side], ""]};
+		if (_payload == "mq9-cluster") then {_ammoClass = missionNamespace getVariable ["WFBE_C_UAV2_MQ9_FPV_CLUSTER_AMMO", "Bo_Mk82"]};
+		if (_payload == "mq9-at") then {_ammoClass = missionNamespace getVariable ["WFBE_C_UAV2_MQ9_FPV_AT_AMMO", "M_TOW_AT"]};
+	};
 	if (typeName _expectedClass != "STRING" || {_expectedClass == ""}) then {_deny = "FPV airframe configuration is invalid."};
 };
 if (_deny == "" && {typeOf _drone != _expectedClass}) then {_deny = "FPV request used the wrong airframe."};
@@ -426,6 +440,7 @@ missionNamespace setVariable [_fpvKey, _fpvArr];
 //--- client's local copy, and the server never trusts the request position.
 _drone setVariable ["wfbe_fpv_det_cap", _argToken];
 _drone setVariable ["wfbe_fpv_det_owner", _replyId];
+_drone setVariable ["wfbe_fpv_ammo", _ammoClass];
 
 while {true} do {
 	sleep 5;
