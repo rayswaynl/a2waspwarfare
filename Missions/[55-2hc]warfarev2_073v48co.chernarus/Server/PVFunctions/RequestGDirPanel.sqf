@@ -182,6 +182,24 @@ if (!_townFound || {isNull _townObj}) exitWith {
 	[_player, "GDirPanelResult", ["deny", "Town not found.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
 };
 
+//--- The current Director has no target-bound retake materializer. Refuse the exposed counter
+//--- contract before any cooldown, scarcity, wallet, pending-order, or contract state can change.
+if (_verb == "counter") exitWith {
+	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=counter|town=%2|deny=counterUnavailable|fundedBy=%3|pricePaid=0", _elmin, _townId, getPlayerUID _player];
+	[_player, "GDirPanelResult", ["deny", "Counter-attack contracts are unavailable until a retake unit is available.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
+};
+
+//--- P0 (fable/gdir-ledger-conservation): validate CURRENT permitted ownership BEFORE any debit. The panel
+//--- previously validated existence only - a paid order on a town GUER no longer holds debited the wallet,
+//--- then no-opped downstream. Same permitted set as the Director ledger (GUER or UNKNOWN). "counter" and
+//--- "mortar" are excluded by design: they legitimately target enemy-held towns. "quote" never debits.
+private ["_ownGateSide"];
+_ownGateSide = _townObj getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+if ((_verb == "buy" || {_verb == "qrf"} || {_verb == "cache"} || {_verb == "vehicle"} || {_verb == "relief"} || {_verb == "donate"}) && {!(_ownGateSide == WFBE_C_GUER_ID || {_ownGateSide == WFBE_C_UNKNOWN_ID})}) exitWith {
+	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=%2|town=%3|deny=notGuerOwned|fundedBy=%4|pricePaid=0", _elmin, _verb, _townId, getPlayerUID _player];
+	[_player, "GDirPanelResult", ["deny", "Town is no longer resistance-held.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
+};
+
 //--- Gate 4: anti-spam - per-town cooldown.
 private ["_cooldownSec","_panelCooldowns","_townCooldown","_nowT"];
 _cooldownSec    = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_COOLDOWN_SEC", 600];
