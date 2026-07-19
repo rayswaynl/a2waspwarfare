@@ -7,6 +7,19 @@ cause: base guns are built once near HQ and never move, and the fire block only
 discovers pieces within 250m of HQ - once the front advances past a gun's max range it
 polls forever, silently. This fix adds an explicit per-side registry (position-
 independent discovery), a safe-anchor forward reposition, and a debounced skip log.
+
+Round-2 review (2026-07-19) confirmed a HIGH safety defect: both the safe-anchor SAFE gate
+and the pre-PlaceSafe in-contact guard reduced "enemy" to the strategy loop's binary
+west<->east _enemySide, omitting hostile resistance/GUER entirely - a gun could be
+redeployed out of GUER contact, or onto a GUER-occupied "safe" town. Fixed by switching both
+guards to the repo-wide any-hostile idiom (side != own && side != civilian, the same pattern
+Common_RunCommanderTeam.sqf / AI_Commander_DisbandLowTier.sqf / AI_Commander_Teams.sqf
+already use) and pinned with GUER-specific fixtures below.
+
+HONEST SCOPE NOTE (round-2): this suite is static-source-only (no SQF interpreter in CI).
+The card's remaining runtime-acceptance item - a fire-mission/hour or explicit-reposition
+transition observed on a live/test server - is NOT satisfied by anything in this file and
+requires an authorized test-server RPT run; do not read the tests below as runtime proof.
 """
 
 from pathlib import Path
@@ -69,6 +82,24 @@ class EchelonModel:
             self.transition_emits += 1
 
 
+def any_hostile_count(own_side: str, units: list[tuple[str, bool]]) -> int:
+    """Mirrors the review-fixed SQF idiom `{alive _x && {side _x != _side} && {side _x !=
+    civilian}} count (...)` - ANY faction other than our own and civilian counts as hostile,
+    including resistance/GUER. Each unit is (side, alive)."""
+    return sum(1 for side, alive in units if alive and side != own_side and side != "civilian")
+
+
+def pick_safe_anchor(own_side, candidates, max_r, min_stand, margin=0.9):
+    """Mirrors Common_AICOMArtySafeAnchor.sqf's candidate loop at the review-fixed idiom.
+    candidates: list of (name, dist_to_target, is_water, units[(side, alive)])."""
+    best, best_d = None, float("inf")
+    for name, d_tgt, is_water, units in candidates:
+        if d_tgt <= max_r * margin and d_tgt >= min_stand and not is_water:
+            if any_hostile_count(own_side, units) == 0 and d_tgt < best_d:
+                best_d, best = d_tgt, name
+    return best
+
+
 class ArtilleryEchelonFixtures(unittest.TestCase):
     def test_01_registry_grows_on_build_and_survives_out_of_hq_range(self) -> None:
         m = EchelonModel()
@@ -115,6 +146,43 @@ class ArtilleryEchelonFixtures(unittest.TestCase):
         self.assertNotEqual(m.state.get("gun-1"), "repositioning")
         self.assertEqual(m.transition_emits, 0)
 
+    def test_06b_guer_unit_counts_as_hostile_for_the_in_contact_guard(self) -> None:
+        """Round-2 review (HIGH): a GUER unit standing next to the gun must block reposition
+        exactly like an EAST/WEST unit would - the old `side _x == _enemySide` binary compare
+        missed this entirely."""
+        self.assertEqual(any_hostile_count("west", [("guer", True)]), 1)
+        self.assertEqual(any_hostile_count("west", [("civilian", True)]), 0)
+        self.assertEqual(any_hostile_count("west", [("west", True)]), 0)
+        m = EchelonModel(repos_cd=10)
+        m.register("gun-1")
+        enemy_close = any_hostile_count("west", [("guer", True)]) > 0
+        m.try_reposition("gun-1", now=0, anchor_found=True, enemy_close=enemy_close)
+        self.assertNotEqual(m.state.get("gun-1"), "repositioning")
+        self.assertEqual(m.transition_emits, 0)
+
+    def test_06c_guer_occupied_candidate_town_is_never_picked_as_a_safe_anchor(self) -> None:
+        """Round-2 review (HIGH): the SAFE gate in Common_AICOMArtySafeAnchor.sqf used to
+        compare against the same binary _enemySide, so a GUER-held town in range/standoff/
+        no-water could be selected as a 'safe' anchor. It must now be rejected and the loop
+        must fall through to the next-best GUER-free candidate."""
+        candidates = [
+            ("TownA-guer-held", 2000, False, [("guer", True)]),
+            ("TownB-clear-but-farther", 2500, False, []),
+        ]
+        picked = pick_safe_anchor("west", candidates, max_r=3000, min_stand=500)
+        self.assertEqual(picked, "TownB-clear-but-farther")
+
+        # No GUER-free candidate exists at all -> no anchor (never silently pick the unsafe one).
+        candidates_all_guer = [("TownA-guer-held", 2000, False, [("guer", True)])]
+        self.assertIsNone(pick_safe_anchor("west", candidates_all_guer, max_r=3000, min_stand=500))
+
+        # An EAST unit still disqualifies a candidate too (fix must not have narrowed coverage).
+        candidates_east = [
+            ("TownA-east-held", 2000, False, [("east", True)]),
+            ("TownB-clear", 2500, False, []),
+        ]
+        self.assertEqual(pick_safe_anchor("west", candidates_east, max_r=3000, min_stand=500), "TownB-clear")
+
     def test_07_flag_off_source_paths_are_byte_identical_to_legacy(self) -> None:
         base = code(BASE)
         strat = code(STRATEGY)
@@ -148,6 +216,19 @@ class ArtilleryEchelonFixtures(unittest.TestCase):
         self.assertIn("_enemyClose", repos_block)
         self.assertIn("if (_enemyClose == 0) then", repos_block)
 
+    def test_09b_in_contact_guard_counts_every_hostile_side_not_just_enemySide(self) -> None:
+        """Round-2 review (HIGH, confirmed): the in-contact guard must use the repo-wide
+        any-hostile idiom (side != own && side != civilian), NOT the strategy-loop's binary
+        _enemySide (which is west<->east only and correctly stays untouched elsewhere in this
+        file for the main enemy-town-targeting logic)."""
+        strat = code(STRATEGY)
+        enemy_close_line = next(
+            line for line in strat.splitlines() if "_enemyClose = {alive _x" in line
+        )
+        self.assertIn("side _x != _side", enemy_close_line)
+        self.assertIn("side _x != civilian", enemy_close_line)
+        self.assertNotIn("_enemySide", enemy_close_line)
+
     def test_10_constants_default_off_and_registered(self) -> None:
         constants = code(CONSTANTS)
         common_init = code(COMMON_INIT)
@@ -168,6 +249,18 @@ class ArtilleryEchelonFixtures(unittest.TestCase):
         self.assertIn("_enemyNear == 0", anchor)
         # A2 trap guard: outer _x captured before the inner condition-count-forEach rebind.
         self.assertIn("_twn = _x;", anchor)
+
+    def test_11b_safe_gate_counts_every_hostile_side_not_a_binary_enemySide(self) -> None:
+        """Round-2 review (HIGH, confirmed): the SAFE gate must use the repo-wide any-hostile
+        idiom, and the old hardcoded binary _enemySide must be gone from this file entirely
+        (it has no legitimate use here - this helper serves all three sides)."""
+        anchor = code(ANCHOR)
+        enemy_near_line = next(
+            line for line in anchor.splitlines() if "_enemyNear = {alive _x" in line
+        )
+        self.assertIn("side _x != _side", enemy_near_line)
+        self.assertIn("side _x != civilian", enemy_near_line)
+        self.assertNotIn("_enemySide", anchor)
 
 
 if __name__ == "__main__":

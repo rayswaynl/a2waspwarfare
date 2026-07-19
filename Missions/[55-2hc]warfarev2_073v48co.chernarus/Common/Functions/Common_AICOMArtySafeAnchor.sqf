@@ -22,7 +22,7 @@
 	no A3 primitives (no params/pushBack/findIf); the outer _x is captured (_twn) BEFORE the inner
 	condition-count-forEach so the inner loop's _x rebind cannot corrupt the town iteration.
 */
-private ["_side","_piece","_tgt","_maxR","_ownTownObjs","_enemySide","_safeDist","_minStand","_margin","_best","_bestD","_tc","_dTgt"];
+private ["_side","_piece","_tgt","_maxR","_ownTownObjs","_safeDist","_minStand","_margin","_best","_bestD","_tc","_dTgt"];
 _side        = _this select 0;
 _piece       = _this select 1;
 _tgt         = _this select 2;
@@ -34,7 +34,12 @@ if (typeName _tgt != "ARRAY" || {count _tgt < 2}) exitWith {[]};
 if (typeName _ownTownObjs != "ARRAY" || {count _ownTownObjs == 0}) exitWith {[]};
 if (typeName _maxR != "SCALAR" || {_maxR <= 0}) exitWith {[]};
 
-_enemySide = if (_side == west) then {east} else {if (_side == east) then {west} else {east}};
+//--- review-fix (codex reject 2026-07-19, HIGH): the SAFE gate below used to compare against a
+//--- single hardcoded _enemySide (west<->east only, defaulting to east for GUER), so it could pick
+//--- a town that was actually GUER-occupied as a "safe" anchor. Now uses the repo-wide any-hostile
+//--- idiom (side != own && side != civilian - see Common_RunCommanderTeam.sqf threat checks,
+//--- AI_Commander_DisbandLowTier.sqf, AI_Commander_Teams.sqf) so EVERY hostile faction disqualifies
+//--- a candidate anchor, not just the strategy-designated binary enemy.
 _safeDist  = missionNamespace getVariable ["WFBE_C_AICOM_ARTY_ECHELON_SAFE_DIST", 400];
 _minStand  = missionNamespace getVariable ["WFBE_C_AICOM_ARTY_ECHELON_MIN_STANDOFF", 500];
 _margin    = 0.9; //--- keep the anchor comfortably inside max range so PlaceSafe drift cannot push the gun out of range.
@@ -49,7 +54,7 @@ _best = []; _bestD = 1e9;
 			_dTgt = _tc distance _tgt;
 			if ((_dTgt <= (_maxR * _margin)) && {_dTgt >= _minStand} && {!(surfaceIsWater _tc)}) then {
 				//--- SAFE gate: no live enemy man/vehicle within SAFE_DIST of the town centre.
-				_enemyNear = {alive _x && {side _x == _enemySide}} count (_tc nearEntities [["Man","LandVehicle"], _safeDist]);
+				_enemyNear = {alive _x && {side _x != _side} && {side _x != civilian}} count (_tc nearEntities [["Man","LandVehicle"], _safeDist]);
 				if (_enemyNear == 0 && {_dTgt < _bestD}) then {_bestD = _dTgt; _best = _tc};
 			};
 		};

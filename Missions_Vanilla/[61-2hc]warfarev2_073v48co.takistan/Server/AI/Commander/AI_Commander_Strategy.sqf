@@ -1338,7 +1338,13 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 										_anchor = [_side, _p, _artyTgt, _maxR, _ownTownObjs] Call WFBE_CO_FNC_AICOMArtySafeAnchor;
 										if (count _anchor > 0) then {
 											//--- never redeploy a gun that is in contact (mirror the ServiceTick never-out-of-fight guard).
-											_enemyClose = {alive _x && {side _x == _enemySide}} count ((getPos _p) nearEntities [["Man","LandVehicle"], (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_ECHELON_SAFE_DIST", 400])]);
+											//--- review-fix (codex reject 2026-07-19, HIGH): was `side _x == _enemySide` - _enemySide is the
+											//--- SINGLE strategy-target enemy (binary WEST/EAST, set at file top for the town-targeting loop -
+											//--- intentional there, NOT touched here), so a GUER unit standing next to the gun never counted
+											//--- as "in contact" and the gun could be redeployed OUT of a live GUER fight. Use the repo-wide
+											//--- any-hostile idiom (Common_RunCommanderTeam.sqf threat checks, AI_Commander_DisbandLowTier.sqf,
+											//--- AI_Commander_Teams.sqf: side!=own && side!=civilian) instead - counts EVERY hostile faction.
+											_enemyClose = {alive _x && {side _x != _side} && {side _x != civilian}} count ((getPos _p) nearEntities [["Man","LandVehicle"], (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_ECHELON_SAFE_DIST", 400])]);
 											if (_enemyClose == 0) then {
 												[_p, _anchor, 40] Call PlaceSafe;
 												if ((_p getVariable ["wfbe_arty_state", ""]) != "repositioning") then {
