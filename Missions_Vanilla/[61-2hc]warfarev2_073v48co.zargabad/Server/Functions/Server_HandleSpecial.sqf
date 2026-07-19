@@ -38,7 +38,10 @@ switch (_args select 0) do {
 				_logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
 				if (!isNull _logic) then {
 					_lease = _logic getVariable ["wfbe_commander_lease", []];
-					if (typeName _lease == "ARRAY" && {count _lease >= 3} && {(getPlayerUID _leader) == (_lease select 0)} && {(groupId _team) == (_lease select 2)}) then {
+					//--- Review-fix (codex reject 2026-07-19, P1-1): reclaim repeats the FULL eligibility
+					//--- test (side match, aicom-hc denial, player leader) on top of the UID+group binding -
+					//--- a drifted/HC-adopted group can never reclaim the seat.
+					if (typeName _lease == "ARRAY" && {count _lease >= 3} && {(getPlayerUID _leader) == (_lease select 0)} && {(groupId _team) == (_lease select 2)} && {[_side, _team] Call WFBE_CO_FNC_CommanderLeaseEligible}) then {
 						_logic setVariable ["wfbe_commander_lease_expires", nil];
 						_logic setVariable ["wfbe_commander", _team, true];
 						[_side, "HandleSpecial", ["new-commander-assigned", _team]] Call WFBE_CO_FNC_SendToClients;

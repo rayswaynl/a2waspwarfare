@@ -71,11 +71,21 @@ class LeaseModel:
             return
         if self.lease is None or (units is not None and self.holder_present(units)):
             return
+        self.stand_down()
+
+    def stand_down(self) -> None:
+        """Mirrors the SQF ordering: ATOMIC claim (clear lease/expiry/derived) FIRST,
+        then the externally-visible effects. A second caller that arrives after the
+        claim sees nothing to stand down and produces zero effects."""
+        if self.derived is None and self.lease is None:
+            return  # guard: already stood down - single-fire
+        self.lease = None
         self.expires = None
         self.derived = None
+        self.invalidations += 1
+        # external effects AFTER the claim
         self.ai_freed += 1
         self.messages += 1
-        self.invalidate()
 
     def invalidate(self) -> None:
         if self.lease is not None or self.derived is not None or self.expires is not None:
@@ -150,7 +160,9 @@ class CommanderLeaseFixtures(unittest.TestCase):
         code = LEASE.read_text(encoding="utf-8-sig")
         self.assertIn("if (_side == civilian) exitWith {}", code)
         self.assertIn("[_team, \"wfbe_aicom_hc\", false] Call WFBE_CO_FNC_GroupGetBool", code)
-        self.assertIn('if (!isPlayer _leader) exitWith {};', code)
+        # Grant delegates the player-leader test to the shared eligibility helper.
+        self.assertIn("{isPlayer _leader}", code)
+        self.assertIn("Call WFBE_CO_FNC_CommanderLeaseEligible)) exitWith {}", code)
 
     def test_source_contracts_are_flagged_and_registered(self) -> None:
         constants = CONSTANTS.read_text(encoding="utf-8-sig")
@@ -170,6 +182,49 @@ class CommanderLeaseFixtures(unittest.TestCase):
             'missionNamespace getVariable ["WFBE_C_CMD_LEASE_GRACE", 90]',
             DISCONNECT.read_text(encoding="utf-8-sig"),
         )
+
+    def test_08_interleaved_double_stand_down_fires_effects_exactly_once(self) -> None:
+        """Two concurrent stand-down callers (grace checker + side-change racing an expiry):
+        the atomic-claim ordering means the second caller is a no-op."""
+        state = LeaseModel()
+        state.grant("uid-1", "west", "grp-1", "vote")
+        state.disconnect("uid-1", "west", "grp-1")
+        state.tick(91, units=[])   # first caller stands down
+        state.stand_down()         # interleaved second caller
+        state.stand_down()         # and a third
+        self.assertEqual(state.ai_freed, 1)
+        self.assertEqual(state.messages, 1)
+        self.assertEqual(state.invalidations, 1)
+
+    def test_09_stand_down_source_clears_state_before_effects(self) -> None:
+        """SQF ordering pin: the lease/expiry/derived clears must appear BEFORE the
+        client message and team resets inside WFBE_CO_FNC_CommanderLeaseStandDown -
+        effects-then-invalidate is the double-fire-prone order the review rejected."""
+        code = LEASE.read_text(encoding="utf-8-sig")
+        body = code[code.index("WFBE_CO_FNC_CommanderLeaseStandDown"):code.index("WFBE_CO_FNC_CommanderLeaseGraceCheck")]
+        self.assertLess(
+            body.index('setVariable ["wfbe_commander_lease", nil, true]'),
+            body.index("LocalizeMessage"),
+        )
+        self.assertLess(body.index('setVariable ["wfbe_commander", objNull, true]'), body.index("LocalizeMessage"))
+        self.assertNotIn("WFBE_CO_FNC_InvalidateCommanderLease;", body.split("LocalizeMessage")[1])
+
+    def test_10_writers_fail_closed_behind_eligibility(self) -> None:
+        """Flag-on seat writers must validate BEFORE publishing wfbe_commander, and the
+        reclaim must repeat the eligibility test (incl. aicom-hc denial)."""
+        lease_code = LEASE.read_text(encoding="utf-8-sig")
+        self.assertIn("WFBE_CO_FNC_CommanderLeaseEligible", lease_code)
+        self.assertIn("side _team == _side", lease_code)
+        new_cmdr = (CHERNARUS / "Server" / "PVFunctions" / "RequestNewCommander.sqf").read_text(encoding="utf-8-sig")
+        claim_cmdr = (CHERNARUS / "Server" / "PVFunctions" / "RequestClaimCommander.sqf").read_text(encoding="utf-8-sig")
+        vote_cmdr = (CHERNARUS / "Server" / "Functions" / "Server_VoteForCommander.sqf").read_text(encoding="utf-8-sig")
+        for name, code in (("RequestNewCommander", new_cmdr), ("RequestClaimCommander", claim_cmdr), ("Server_VoteForCommander", vote_cmdr)):
+            self.assertIn("WFBE_CO_FNC_CommanderLeaseEligible", code, name)
+        # Deny on claim must not stop the AI commander (latch, no exitWith fallthrough).
+        self.assertIn("_claimAccepted", claim_cmdr)
+        handle = HANDLE_SPECIAL.read_text(encoding="utf-8-sig")
+        reclaim_block = handle[handle.index('case "update-teamleader"'):handle.index('case "group-query"')]
+        self.assertIn("WFBE_CO_FNC_CommanderLeaseEligible", reclaim_block)
 
     def test_reclaim_never_wipes_per_team_state(self) -> None:
         """During grace the AI teams are never freed, so the update-teamleader reclaim must not

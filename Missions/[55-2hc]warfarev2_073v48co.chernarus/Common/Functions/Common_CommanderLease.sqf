@@ -6,21 +6,32 @@
     stable across leader death, promotion, respawn and a short disconnect.
 */
 
+//--- Review-fix (codex reject 2026-07-19, P1-1): a single authoritative eligibility test the seat
+//--- WRITERS call BEFORE publishing wfbe_commander (fail closed), so a CIV / cross-side / HC /
+//--- AI-led team can never hold the seat while the lease is enabled. Grant re-runs the same test
+//--- (belt-and-braces) but eligibility is now enforced pre-publish, not post-hoc.
+WFBE_CO_FNC_CommanderLeaseEligible = {
+    Private ["_side","_team","_leader","_ok"];
+    _side = _this select 0;
+    _team = _this select 1;
+    _ok = false;
+    if (_side != civilian && {!isNull _team} && {side _team == _side} && {!([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+        _leader = leader _team;
+        if (!isNull _leader && {isPlayer _leader} && {(getPlayerUID _leader) != ""}) then {_ok = true};
+    };
+    _ok
+};
+
 WFBE_CO_FNC_GrantCommanderLease = {
     Private ["_side","_team","_source","_logic","_leader","_uid","_lease"];
     _side = _this select 0;
     _team = _this select 1;
     _source = _this select 2;
 
-    if (_side == civilian) exitWith {};
-    if (isNull _team) exitWith {};
-    if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) exitWith {};
+    if (!([_side, _team] Call WFBE_CO_FNC_CommanderLeaseEligible)) exitWith {};
 
     _leader = leader _team;
-    if (isNull _leader) exitWith {};
-    if (!isPlayer _leader) exitWith {};
     _uid = getPlayerUID _leader;
-    if (_uid == "") exitWith {};
 
     _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
     if (isNull _logic) exitWith {};
@@ -72,10 +83,17 @@ WFBE_CO_FNC_CommanderLeaseStandDown = {
     _lease = _logic getVariable ["wfbe_commander_lease", []];
     if (isNull _commander && {typeName _lease != "ARRAY" || {count _lease == 0}}) exitWith {};
 
+    //--- Review-fix (codex reject 2026-07-19, P1-2 single-fire): ATOMICALLY claim the stand-down by
+    //--- clearing lease + expiry + derived view FIRST, then run the externally-visible effects
+    //--- (message, team resets). A concurrent second caller (interleaved grace checker, side-change
+    //--- racing an expiry) now hits the null-commander/empty-lease guard above and exits - the
+    //--- effects can never run twice. SQF scheduled scripts interleave at statement boundaries, so
+    //--- effects-then-invalidate (the old order) was double-fire-prone.
+    _logic setVariable ["wfbe_commander_lease", nil, true];
+    _logic setVariable ["wfbe_commander_lease_expires", nil];
     _logic setVariable ["wfbe_commander", objNull, true];
     [_side, "LocalizeMessage", ['CommanderDisconnected']] Call WFBE_CO_FNC_SendToClients;
     {[_x,false] Call SetTeamAutonomous;[_x, ""] Call SetTeamRespawn} forEach (_logic getVariable "wfbe_teams");
-    [_side] Call WFBE_CO_FNC_InvalidateCommanderLease;
 };
 
 WFBE_CO_FNC_CommanderLeaseGraceCheck = {

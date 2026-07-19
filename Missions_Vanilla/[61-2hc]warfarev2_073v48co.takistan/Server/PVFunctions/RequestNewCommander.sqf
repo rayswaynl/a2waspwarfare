@@ -36,10 +36,28 @@ if ((_logik getVariable "wfbe_votetime") <= 0) then {
 	_team = -1;
 
 	//--- Set the commander
-	_logik setVariable ["wfbe_commander", _assigned_commander, true];
+	//--- Review-fix (codex reject 2026-07-19, P1-1): with the lease enabled, ELIGIBILITY IS CHECKED
+	//--- BEFORE PUBLISHING - an ineligible team (CIV / cross-side / aicom-hc / AI-led) is denied and
+	//--- the seat is left untouched (fail closed), instead of publish-then-maybe-grant. This closes
+	//--- the SEC_HARDENING-off hole where a forged/cross-side assignment could still seize the seat.
+	//--- Flag-off: the legacy unconditional publish below is byte-identical to HEAD.
 	if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
-		if (isNull _assigned_commander) then {[_side] Call WFBE_CO_FNC_InvalidateCommanderLease} else {[_side, _assigned_commander, "assign"] Call WFBE_CO_FNC_GrantCommanderLease};
+		if (isNull _assigned_commander) then {
+			_logik setVariable ["wfbe_commander", objNull, true];
+			[_side] Call WFBE_CO_FNC_InvalidateCommanderLease;
+			[_side, _assigned_commander] Spawn WFBE_SE_FNC_AssignForCommander;
+		} else {
+			if ([_side, _assigned_commander] Call WFBE_CO_FNC_CommanderLeaseEligible) then {
+				_logik setVariable ["wfbe_commander", _assigned_commander, true];
+				[_side, _assigned_commander, "assign"] Call WFBE_CO_FNC_GrantCommanderLease;
+				[_side, _assigned_commander] Spawn WFBE_SE_FNC_AssignForCommander;
+			} else {
+				["WARNING", Format ["RequestNewCommander.sqf: [%1] DENIED ineligible commander assignment (CIV/cross-side/HC/AI-led team %2) - seat unchanged.", _side, _assigned_commander]] Call WFBE_CO_FNC_LogContent;
+			};
+		};
+	} else {
+		_logik setVariable ["wfbe_commander", _assigned_commander, true];
+		[_side, _assigned_commander] Spawn WFBE_SE_FNC_AssignForCommander; //--- wiki-wins: AssignForCommander (Server_AssignNewCommander.sqf:10) already notifies clients; removed the duplicate SendToClients
 	};
-	[_side, _assigned_commander] Spawn WFBE_SE_FNC_AssignForCommander; //--- wiki-wins: AssignForCommander (Server_AssignNewCommander.sqf:10) already notifies clients; removed the duplicate SendToClients
 
 };

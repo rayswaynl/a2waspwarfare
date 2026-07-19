@@ -52,6 +52,16 @@ if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
 };
 
 //--- Finally set the commander, null = ai, team = player.
+//--- Review-fix (codex reject 2026-07-19, P1-1): with the lease enabled, an INELIGIBLE vote winner
+//--- (CIV/cross-side/HC/AI-led - structurally rare here since :47 already forces a player-led own
+//--- team, but fail closed uniformly) degrades to the AI commander (objNull) BEFORE publishing,
+//--- so the seat can never be published to a team the lease would refuse. Flag-off: byte-identical.
+if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
+	if (!isNull _commander && {!([_side, _commander] Call WFBE_CO_FNC_CommanderLeaseEligible)}) then {
+		["WARNING", Format ["Server_VoteForCommander.sqf: [%1] vote winner %2 ineligible under lease rules - degrading to AI commander.", _side, _commander]] Call WFBE_CO_FNC_LogContent;
+		_commander = objNull;
+	};
+};
 _logic setVariable ["wfbe_commander", _commander, true];
 
 if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
