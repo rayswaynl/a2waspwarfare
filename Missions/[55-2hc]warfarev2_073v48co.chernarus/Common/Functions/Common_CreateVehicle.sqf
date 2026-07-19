@@ -27,6 +27,15 @@ if (isNull _vehicle) exitWith {
 //--- Dead empty vehicles report engine side poorly, so salvage uses this numeric side id to block same-side farming.
 _vehicle setVariable ["wfbe_side_id", _side, true];
 
+//--- VEHDEL probe (card wasp-vehicle-crew-fast-despawn-20260719): stamp broadcast player-use/exit
+//--- times so the deletion probe can bind "a player just drove this" to the exact cleanup that
+//--- deletes it. EHs are local to this (creating) machine; the stamps broadcast so a server-side
+//--- delete probe can read HC/client-observed use. Telemetry-only; kill-switch shared with the probe.
+if ((missionNamespace getVariable ["WFBE_C_VEH_DELETE_PROBE", 1]) > 0) then {
+	_vehicle addEventHandler ["GetIn", {if (isPlayer (_this select 2)) then {(_this select 0) setVariable ["wfbe_player_used", round time, true]}}];
+	_vehicle addEventHandler ["GetOut", {if (isPlayer (_this select 2)) then {(_this select 0) setVariable ["wfbe_player_exit", round time, true]}}];
+};
+
 if(_vehicle isKindOf "Tank" || _vehicle isKindOf "APC")then{ [_vehicle] Call WFBE_CO_FNC_ModifyVehicle;}; //--- PERF: these six were per-spawn Call Compile preprocessFile (disk read + compile EVERY vehicle); now compiled once in Init_Common.sqf.
 
 //["DEBUG (Common_CreateVehicle)", Format ["Before calling"]] Call WFBE_CO_FNC_LogContent;

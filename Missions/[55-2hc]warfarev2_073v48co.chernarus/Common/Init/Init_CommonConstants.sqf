@@ -2633,6 +2633,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- at enrollment/respawn/skin-swap so the A2 command bar sorts them to slot 1 (rank drives bar order;
 //--- selectLeader sets the star but does not reorder slots). 1 = enabled (default); 0 = legacy layout.
 	if (isNil "WFBE_C_PLAYER_TEAMBAR_FIRST") then {WFBE_C_PLAYER_TEAMBAR_FIRST = 1};
+//--- VEHDEL deletion probe (card wasp-vehicle-crew-fast-despawn-20260719): reason-coded telemetry
+//--- on every scripted cleanup deleteVehicle of hulls/crew + GetIn/GetOut player-use stamps.
+//--- Telemetry-only (no behavior); 1 = on (capture evidence next round), 0 = kill-switch.
+	if (isNil "WFBE_C_VEH_DELETE_PROBE") then {WFBE_C_VEH_DELETE_PROBE = 1};
 
 //--- WFBE_C_SPAWN_BUDDY_DISBAND (wasp-aicom-idle-diagnosis-20260717, owner live report 2026-07-17: "I spawn
 //--- with another unit in my group" - AI-Teams pre-grouped squadmate at INITIAL spawn is by-design, but the

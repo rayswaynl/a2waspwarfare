@@ -84,7 +84,7 @@ _logGroupCount = {
 		};
 
 		_units = +units _group;
-		{deleteVehicle _x; _deletedUnits = _deletedUnits + 1} forEach _units;
+		{["hc-townai-cleanup-unit", _x, Format ["town=%1", _townName]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; _deletedUnits = _deletedUnits + 1} forEach _units;
 
 		_deadline = time + 5;
 		waitUntil {sleep 0.1; isNull _group || count (units _group) == 0 || time > _deadline};
