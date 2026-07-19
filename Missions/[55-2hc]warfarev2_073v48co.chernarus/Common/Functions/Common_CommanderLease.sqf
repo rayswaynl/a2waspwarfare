@@ -72,6 +72,25 @@ WFBE_CO_FNC_CommanderLeaseHolderPresent = {
     _present
 };
 
+//--- Review-fix round 2 (codex reject 2026-07-19, P1-2 interleaving): stand-down is now
+//--- SINGLE-OWNER BY CONSTRUCTION instead of clear-ordering-by-convention. Callers (grace expiry,
+//--- side-change) never run the effects themselves - they only set a request stamp. Exactly ONE
+//--- per-side executor loop (spawned once from Init_Server when WFBE_C_CMD_LEASE is on) consumes
+//--- requests and performs the stand-down, so two racing callers can never both reach the
+//--- message/team-reset effects: there is only one effects-runner per side, and a second request
+//--- arriving mid-execution is absorbed by the executor's own guard on its next iteration
+//--- (commander already null + lease already empty = nothing to do).
+WFBE_CO_FNC_CommanderLeaseRequestStandDown = {
+    Private ["_side","_logic"];
+    _side = _this select 0;
+    if (_side == civilian) exitWith {};
+    _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
+    if (isNull _logic) exitWith {};
+    _logic setVariable ["wfbe_commander_lease_sd_req", time]; // side-logic state key, not a classname // noqa: CLASSREF
+};
+
+//--- Executor-internal ONLY. The single legitimate Call site is the executor loop below; a source
+//--- contract test pins that no other file Calls this directly.
 WFBE_CO_FNC_CommanderLeaseStandDown = {
     Private ["_side","_logic","_commander","_lease"];
     _side = _this select 0;
@@ -83,17 +102,36 @@ WFBE_CO_FNC_CommanderLeaseStandDown = {
     _lease = _logic getVariable ["wfbe_commander_lease", []];
     if (isNull _commander && {typeName _lease != "ARRAY" || {count _lease == 0}}) exitWith {};
 
-    //--- Review-fix (codex reject 2026-07-19, P1-2 single-fire): ATOMICALLY claim the stand-down by
-    //--- clearing lease + expiry + derived view FIRST, then run the externally-visible effects
-    //--- (message, team resets). A concurrent second caller (interleaved grace checker, side-change
-    //--- racing an expiry) now hits the null-commander/empty-lease guard above and exits - the
-    //--- effects can never run twice. SQF scheduled scripts interleave at statement boundaries, so
-    //--- effects-then-invalidate (the old order) was double-fire-prone.
+    //--- Clear state before effects (defense in depth on top of the single-owner executor).
     _logic setVariable ["wfbe_commander_lease", nil, true];
     _logic setVariable ["wfbe_commander_lease_expires", nil];
     _logic setVariable ["wfbe_commander", objNull, true];
     [_side, "LocalizeMessage", ['CommanderDisconnected']] Call WFBE_CO_FNC_SendToClients;
     {[_x,false] Call SetTeamAutonomous;[_x, ""] Call SetTeamRespawn} forEach (_logic getVariable "wfbe_teams");
+};
+
+//--- The single per-side stand-down executor. Spawned ONCE per side from Init_Server when the
+//--- lease flag is on (flag off = never spawned = byte-identical). Consumes request stamps; a
+//--- reclaim that lands between request and consumption wins automatically because the reclaim
+//--- clears the expiry AND the executor re-validates holder-absence before acting.
+WFBE_CO_FNC_CommanderLeaseStandDownExecutor = {
+    Private ["_side","_logic","_req"];
+    _side = _this select 0;
+    if (_side == civilian) exitWith {};
+    _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
+    if (isNull _logic) exitWith {};
+    while {true} do {
+        sleep 2;
+        _req = _logic getVariable "wfbe_commander_lease_sd_req"; // side-logic state key, not a classname // noqa: CLASSREF
+        if (!isNil "_req") then {
+            _logic setVariable ["wfbe_commander_lease_sd_req", nil]; // side-logic state key, not a classname // noqa: CLASSREF
+            //--- Re-validate at consumption time: a reclaim since the request means the holder is
+            //--- back - do nothing. Only a still-absent holder stands the side down.
+            if (!([_side] Call WFBE_CO_FNC_CommanderLeaseHolderPresent)) then {
+                [_side] Call WFBE_CO_FNC_CommanderLeaseStandDown;
+            };
+        };
+    };
 };
 
 WFBE_CO_FNC_CommanderLeaseGraceCheck = {
@@ -109,5 +147,6 @@ WFBE_CO_FNC_CommanderLeaseGraceCheck = {
     if (isNil "_currentExpires") exitWith {};
     if (_currentExpires != _expires) exitWith {};
     if ([_side] Call WFBE_CO_FNC_CommanderLeaseHolderPresent) exitWith {};
-    [_side] Call WFBE_CO_FNC_CommanderLeaseStandDown;
+    [_side] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown; //--- request only; the single per-side executor performs the effects
 };
+
