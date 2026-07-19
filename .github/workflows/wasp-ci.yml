@@ -113,11 +113,18 @@ jobs:
         # Set-MissionTemplate.Tests, Set-WaspCpuAffinity.Tests, Get-WindowedRpt.Tests,
         # RptParsing.Tests: dependency-free unit-test wrappers. All confirmed PASS locally.
         run: |
-          pwsh Tools\Ops\Test-WaspVersionTemplates.ps1
-          pwsh Tools\Ops\Set-MissionTemplate.Tests.ps1
-          pwsh Tools\Ops\Set-WaspCpuAffinity.Tests.ps1
-          pwsh Tools\Monitor\Get-WindowedRpt.Tests.ps1
-          pwsh Tools\RptParsing\RptParsing.Tests.ps1
+          function Invoke-ToolTest {
+            param([string]$Path)
+            & pwsh $Path
+            $code = $LASTEXITCODE
+            if ($code -ne 0) { exit $code }
+          }
+          Invoke-ToolTest Tools\Ops\Test-WaspVersionTemplates.ps1
+          Invoke-ToolTest Tools\Ops\Test-GuerDefensiveCrewAtomic.ps1
+          Invoke-ToolTest Tools\Ops\Set-MissionTemplate.Tests.ps1
+          Invoke-ToolTest Tools\Ops\Set-WaspCpuAffinity.Tests.ps1
+          Invoke-ToolTest Tools\Monitor\Get-WindowedRpt.Tests.ps1
+          Invoke-ToolTest Tools\RptParsing\RptParsing.Tests.ps1
 
       - name: PowerShell tool tests (advisory)
         shell: pwsh

@@ -148,7 +148,7 @@ _applyKaFlares = {
 	_n
 };
 
-//--- Live registry of defenders. Each entry: [_town, _vehicle, _group, _spawnTime, _lastEnemyTime].
+//--- Live registry of defenders. Each entry: [_town, _vehicle, _group, _pilot, _gunner, _spawnTime, _lastEnemyTime].
 //--- Script-local (NOT wfbe_persistent) so it can't outlive a despawn / leak groups.
 _defenders = [];
 
@@ -182,19 +182,31 @@ while {!WFBE_GameOver} do {
 	_townsWithAir = [];
 	_prunedGroups = [];
 	{
-		private ["_entry","_eTown","_eVeh","_eGrp","_eSpawn","_eLastEnemy","_drop","_reason","_enemiesNow","_townSide","_townActive"];
+		private ["_entry","_eTown","_eVeh","_eGrp","_ePilot","_eGunner","_eSpawn","_eLastEnemy","_drop","_reason","_enemiesNow","_townSide","_townActive"];
 		_entry      = _x;
 		_eTown      = _entry select 0;
 		_eVeh       = _entry select 1;
 		_eGrp       = _entry select 2;
-		_eSpawn     = _entry select 3;
-		_eLastEnemy = _entry select 4;
+		_ePilot     = _entry select 3;
+		_eGunner    = _entry select 4;
+		_eSpawn     = _entry select 5;
+		_eLastEnemy = _entry select 6;
 
 		_drop   = false;
 		_reason = "";
 
 		//--- (1) Destroyed / despawned hull => prune (frees the slot).
 		if (isNull _eVeh || {!(alive _eVeh)}) then { _drop = true; _reason = "destroyed"; };
+
+		//--- A living hull is not a valid defender without its registered pilot and gunner in place.
+		if (!_drop && {isNull _ePilot || {!(alive _ePilot)} || {isNull _eGunner} || {!(alive _eGunner)}}) then {
+			_drop = true;
+			_reason = "crew_dead";
+		};
+		if (!_drop && {((driver _eVeh) != _ePilot) || {((gunner _eVeh) != _eGunner)}}) then {
+			_drop = true;
+			_reason = "crew_seat";
+		};
 
 		//--- (2) Town no longer GUER-held or no longer active => recall.
 		if (!_drop) then {
@@ -229,11 +241,13 @@ while {!WFBE_GameOver} do {
 			//--- ANY single prune - derelict hulls then sat in the registry (alive, crewless) for up to
 			//--- _lifetime (900s). Group teardown is deferred to the post-pass below, which only frees
 			//--- a group once no KEPT entry still references it.
+			if (!isNull _ePilot && {!(isPlayer _ePilot)}) then { ["guerairdef-pilot", _ePilot, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _ePilot; };
+			if (!isNull _eGunner && {!(isPlayer _eGunner)}) then { ["guerairdef-gunner", _eGunner, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eGunner; };
 			if (!isNull _eVeh && {({isPlayer _x} count (crew _eVeh)) == 0}) then { {["guerairdef-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _eVeh); ["guerairdef-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh; };
 			if (!isNull _eGrp) then { _prunedGroups = _prunedGroups + [_eGrp]; };
 			diag_log format ["GUERAIRDEF|DESPAWN|town=%1|reason=%2|alive=%3", (if (isNull _eTown) then {"?"} else {_eTown getVariable ["name","?"]}), _reason, (count _kept)];
 		} else {
-			_kept         = _kept + [[_eTown, _eVeh, _eGrp, _eSpawn, _eLastEnemy]];
+			_kept         = _kept + [[_eTown, _eVeh, _eGrp, _ePilot, _eGunner, _eSpawn, _eLastEnemy]];
 			_townsWithAir = _townsWithAir + [_eTown];
 		};
 	} forEach _defenders;
@@ -310,7 +324,7 @@ while {!WFBE_GameOver} do {
 
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
 	{
-		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_flareN","_eFlareN"];
+		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_airCrewReady","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_swarmCrewReady","_flareN","_eFlareN"];
 		_town = _x;
 
 		if (_aliveCount < _maxAir
@@ -383,10 +397,26 @@ while {!WFBE_GameOver} do {
 					_pilot = [_pilotClass, _grp, _spawnPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
 					if (!isNull _pilot) then {
 						_pilot moveInDriver _veh;
+						_gunner = objNull;
 						_gunner = [_crewClass, _grp, _spawnPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
 						if (!isNull _gunner) then { _gunner moveInGunner _veh; };
+						_airCrewReady = (!isNull _pilot) && {!isNull _gunner} && {((driver _veh) == _pilot)} && {((gunner _veh) == _gunner)};
+						if (!_airCrewReady) then {
+							sleep 1;
+							if ((driver _veh) != _pilot) then { _pilot moveInDriver _veh; };
+							if (!isNull _gunner && {(gunner _veh) != _gunner}) then { _gunner moveInGunner _veh; };
+							_airCrewReady = (!isNull _pilot) && {!isNull _gunner} && {((driver _veh) == _pilot)} && {((gunner _veh) == _gunner)};
+						};
+						if (!_airCrewReady) then {
+							if (!isNull _pilot && {!(isPlayer _pilot)}) then { ["guerairdef-spawn-pilot", _pilot, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _pilot; };
+							if (!isNull _gunner && {!(isPlayer _gunner)}) then { ["guerairdef-spawn-gunner", _gunner, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gunner; };
+							if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then { ["guerairdef-spawn-hull", _veh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _veh; };
+							if (!isNull _grp) then { deleteGroup _grp; };
+							diag_log format ["GUERAIRDEF|SPAWNFAIL|town=%1|class=%2|reason=crew_seat", (_town getVariable ["name","?"]), _class];
+						};
+						if (_airCrewReady) then {
 
-						//--- Apply the EASA AT loadout to the Ka-137 (server-side turret swap; see header).
+							//--- Apply the EASA AT loadout to the Ka-137 (server-side turret swap; see header).
 						//--- Strip the default recon MG (PKT/100Rnd_762x54_PKT) then add the AT-5 set, using the
 						//--- SAME turret-path [-1] remove/add commands EASA_RemoveLoadout.sqf uses for Ka137_MG_PMC.
 						_loadName = "default";
@@ -438,7 +468,7 @@ while {!WFBE_GameOver} do {
 						_grp setCombatMode "RED";
 						_grp setSpeedMode "NORMAL";
 
-						_defenders  = _defenders + [[_town, _veh, _grp, time, time]];
+						_defenders  = _defenders + [[_town, _veh, _grp, _pilot, _gunner, time, time]];
 						_townsWithAir = _townsWithAir + [_town];
 						_aliveCount = _aliveCount + 1;
 
@@ -479,10 +509,25 @@ while {!WFBE_GameOver} do {
 									_ePilot = [_pilotClass, _grp, _ePos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
 									if (!isNull _ePilot) then {
 										_ePilot moveInDriver _eVeh2;
+										_eGunner = objNull;
 										_eGunner = [_crewClass, _grp, _ePos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
 										if (!isNull _eGunner) then { _eGunner moveInGunner _eVeh2; };
+										_swarmCrewReady = (!isNull _ePilot) && {!isNull _eGunner} && {((driver _eVeh2) == _ePilot)} && {((gunner _eVeh2) == _eGunner)};
+										if (!_swarmCrewReady) then {
+											sleep 1;
+											if ((driver _eVeh2) != _ePilot) then { _ePilot moveInDriver _eVeh2; };
+											if (!isNull _eGunner && {(gunner _eVeh2) != _eGunner}) then { _eGunner moveInGunner _eVeh2; };
+											_swarmCrewReady = (!isNull _ePilot) && {!isNull _eGunner} && {((driver _eVeh2) == _ePilot)} && {((gunner _eVeh2) == _eGunner)};
+										};
+										if (!_swarmCrewReady) then {
+											if (!isNull _ePilot && {!(isPlayer _ePilot)}) then { ["guerairdef-swarm-pilot", _ePilot, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _ePilot; };
+											if (!isNull _eGunner && {!(isPlayer _eGunner)}) then { ["guerairdef-swarm-gunner", _eGunner, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eGunner; };
+											if (!isNull _eVeh2 && {({isPlayer _x} count (crew _eVeh2)) == 0}) then { ["guerairdef-swarm-hull", _eVeh2, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh2; };
+											diag_log format ["GUERAIRDEF|SWARMFAIL|town=%1|class=%2|reason=crew_seat", (_town getVariable ["name","?"]), _class];
+										};
+										if (_swarmCrewReady) then {
 
-										//--- Same loadout swap the leader got (kit parity): AT-5 set, or Igla AA set,
+											//--- Same loadout swap the leader got (kit parity): AT-5 set, or Igla AA set,
 										//--- else the default recon MG. SAME turret-path [-1] remove/add idiom as above.
 										if (_useAT) then {
 											{_eVeh2 removeMagazineTurret [_x, [-1]]} forEach ["100Rnd_762x54_PKT"];
@@ -512,9 +557,10 @@ while {!WFBE_GameOver} do {
 										};
 
 										//--- Own registry entry (shared group) so prune/self-clean handles each hull.
-										_defenders  = _defenders + [[_town, _eVeh2, _grp, time, time]];
+										_defenders  = _defenders + [[_town, _eVeh2, _grp, _ePilot, _eGunner, time, time]];
 										_aliveCount = _aliveCount + 1;
 										_swarmMade  = _swarmMade + 1;
+										};
 									} else {
 										//--- No pilot for the extra: tear down the empty hull so nothing leaks (freshly
 										//--- created, no player possible). Group is shared/leader-owned — do NOT delete it.
@@ -640,6 +686,7 @@ while {!WFBE_GameOver} do {
 						};
 
 						diag_log format ["GUERAIRDEF|SPAWN|town=%1|class=%2|load=%3|mi24=%4|drop=%5|enemies=%6|enemyAir=%7|large=%8|alive=%9|dropsAlive=%10", (_town getVariable ["name","?"]), _class, _loadName, _useMi24, _useDrop, _enemies, _enemyAir, _isLarge, _aliveCount, _dropAlive];
+						};
 					} else {
 						//--- No pilot: tear down the empty hull + group so nothing leaks.
 						//--- B66: player-safe teardown (hull is freshly created with no moveIn yet,
