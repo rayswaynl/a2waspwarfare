@@ -83,6 +83,12 @@ while {!WFBE_GameOver} do {
         //--- Gun destroyed or null.
         if (isNull _eGun || {!(alive _eGun)}) then { _drop = true; _reason = "gun_dead"; };
 
+        //--- A living static still is not a valid garrison asset after its registered gunner dies or leaves the seat.
+        if (!_drop) then {
+            if (isNull _eCrew || {!(alive _eCrew)}) then { _drop = true; _reason = "crew_dead"; };
+            if (!_drop && {((gunner _eGun) != _eCrew)}) then { _drop = true; _reason = "gunner_seat"; };
+        };
+
         //--- Town side changed or no longer active.
         if (!_drop) then {
             _townSide   = if (isNull _eTown) then {-1} else {_eTown getVariable ["sideID", -1]};
@@ -128,8 +134,8 @@ while {!WFBE_GameOver} do {
 
     //=== (2) MAINTAIN: dress one eligible active GUER town per cycle =========================
     {
-        private ["_town","_pos","_tRange","_enemies","_bear","_gunPos",
-                 "_tNameHash","_tIdx","_gun","_grp","_crew","_light","_isNight"];
+		private ["_town","_pos","_tRange","_enemies","_bear","_gunPos",
+		         "_tNameHash","_tIdx","_gun","_grp","_crew","_light","_isNight","_gunnerSeated"];
         _town = _x;
 
         if (_dressedCount < _maxDressed
@@ -183,27 +189,33 @@ while {!WFBE_GameOver} do {
                                 sleep 1;
                                 if ((gunner _gun) != _crew) then { _crew moveInGunner _gun; };
                             };
-                            if ((gunner _gun) == _crew) then {
+                            _gunnerSeated = ((gunner _gun) == _crew);
+                            if (_gunnerSeated) then {
                                 _crew disableAI "MOVE";  //--- HOTFIX 2026-07-06: disableMove is not a valid A2 OA 1.64 command (parse "Missing ;", live-burned build89 garrison dressing #771). disableAI "MOVE" is the A2-correct immobilizer.
                                 _crew allowFleeing 0;
+
+                                //--- Optional night searchlight.
+                                _isNight = ((date select 3) < 6) || {(date select 3) >= 20};
+                                if (_searchlightOn >= 1 && {_isNight}) then {
+                                    _light = _lightClass createVehicle
+                                        [(_gunPos select 0) + 10 * (sin (_bear + 90)),
+                                         (_gunPos select 1) + 10 * (cos (_bear + 90)),
+                                         0];
+                                    _light setDir (_bear + 180);
+                                };
+
+                                _registry     = _registry + [[_town, _gun, _light, _grp, _crew, time, time]];
+                                _townsWithGun = _townsWithGun + [_town];
+                                _dressedCount = _dressedCount + 1;
+
+                                diag_log format ["GARNDRESS|PLACE|town=%1|bear=%2|enemies=%3|night=%4|count=%5",
+                                    (_town getVariable ["name","?"]), _bear, _enemies, _isNight, _dressedCount];
+                            } else {
+                                if (!isNull _crew && {!(isPlayer _crew)}) then { ["garrison-gunner", _crew, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _crew; };
+                                if (!isNull _gun && {({isPlayer _x} count (crew _gun)) == 0}) then { ["garrison-gun-hull", _gun, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gun; };
+                                if (!isNull _grp) then { deleteGroup _grp; };
+                                diag_log format ["GARNDRESS|FAIL|town=%1|reason=gunner_unseated", (_town getVariable ["name","?"])];
                             };
-
-                            //--- Optional night searchlight.
-                            _isNight = ((date select 3) < 6) || {(date select 3) >= 20};
-                            if (_searchlightOn >= 1 && {_isNight}) then {
-                                _light = _lightClass createVehicle
-                                    [(_gunPos select 0) + 10 * (sin (_bear + 90)),
-                                     (_gunPos select 1) + 10 * (cos (_bear + 90)),
-                                     0];
-                                _light setDir (_bear + 180);
-                            };
-
-                            _registry     = _registry + [[_town, _gun, _light, _grp, _crew, time, time]];
-                            _townsWithGun = _townsWithGun + [_town];
-                            _dressedCount = _dressedCount + 1;
-
-                            diag_log format ["GARNDRESS|PLACE|town=%1|bear=%2|enemies=%3|night=%4|count=%5",
-                                (_town getVariable ["name","?"]), _bear, _enemies, _isNight, _dressedCount];
                         } else {
                             //--- Crew failed: clean gun + group.
                             if (!isNull _gun && {({isPlayer _x} count (crew _gun)) == 0}) then { deleteVehicle _gun; };
