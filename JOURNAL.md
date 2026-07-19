@@ -1,5 +1,13 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-19 — Purchase Units queue-cancel layout and parity guard [codex/main-unclog-20260719-1-dequeue-layout]
+
+Task: make the Purchase Units queue-cancel control readable across supported UI scales without changing its action, and make its client-only dequeue path safe when queue data is absent, malformed, or contains duplicate tokens.
+
+Implementation: IDC 12043 now uses the centered, localizable `STR_WF_UNITS_CancelOrder` label in the header band between the queue counter and cash total. `MenuAction = 501` is unchanged. The action exits before mutation when no factory is selected, any parallel queue value is not an array, the queue is empty, the parallel arrays have mismatched lengths, or the selected cost/count is not scalar. It rebuilds `queu` by the chosen index alongside `queu_costs`, `queu_cpts`, and `queu_labels`, so identical tokens no longer remove more than one entry; refund and counters remain tied to that same index.
+
+Verification: `test_purchase_queue_dequeue.py` covers localized layout bounds for 4:3/16:10/16:9/21:9 at small/normal/large scale plus the dequeue guard/index contract; focused purchase regression tests pass; LoadoutManager regenerated both mirrors and `--check` reported no drift; hashes match for GUI/Menu, Dialogs, and stringtable across CH/TK/ZG; mandatory SQF lint had no findings in edited GUI files (global pre-existing findings remain). TK/ZG templates were restored from `origin/master` to `WF_MAXPLAYERS 61` with 7500/5000 starting distances. An actual local Arma UI screenshot could not be captured because the pre-existing client window did not expose the mission UI; this is documented in the draft PR rather than treated as proof.
+
 ## 2026-07-07 — RC29 doubled player-arrow dedupe [fable/rc29-doubled-arrow]
 
 Task: FIX doubled player arrow on the map (two mil_arrow2 markers track the player).

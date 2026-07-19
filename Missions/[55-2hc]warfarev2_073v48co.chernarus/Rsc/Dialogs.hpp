@@ -2360,13 +2360,14 @@ class RscMenu_BuyUnits {
 		//--- Task 33: cancel-last-queue button, placed in header next to queue count.
 		class CA_Cancel_Queue : RscButton {
 			idc = 12043;
-			x = 0.578;
+			x = 0.545;
 			y = 0.00775906;
-			w = 0.07;
+			w = 0.14;
 			h = 0.037;
-			sizeEx = 0.022;
-			text = "Cancel Last";
-			tooltip = "Cancel and refund the most recent queued unit order";
+			sizeEx = 0.018;
+			style = ST_CENTER;
+			text = $STR_WF_UNITS_CancelOrder;
+			tooltip = $STR_WF_UNITS_CancelOrderTooltip;
 			colorBackground[] = {0.6, 0.1, 0.0, 0.8};
 			colorBackgroundActive[] = {0.8, 0.2, 0.0, 0.9};
 			colorText[] = {1, 1, 1, 1};

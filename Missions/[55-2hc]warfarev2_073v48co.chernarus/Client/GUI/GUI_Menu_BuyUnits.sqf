@@ -350,6 +350,7 @@ _IDCS = _IDCS - [_currentIDC];
 	if (MenuAction == 501) then {
 		MenuAction = -1;
 		private ["_uid33","_q33","_qc33","_qp33","_ql33","_idx33","_paidCost33","_cpt33","_basePrice33","_refund33","_maxRefund33","_newArr33","_i33","_uidPrefix33"];
+		if (isNull _closest) exitWith {hint parseText "<t color='#ff9900'>No factory is selected for queue cancellation.</t>"};
 		_uid33 = getPlayerUID player;
 		//--- A2-safe "token starts with UID" test. `string find string` is ARMA 3-only and
 		//--- throws "Type String, expected Array" on A2 OA; compare leading bytes via toArray.
@@ -370,20 +371,24 @@ _IDCS = _IDCS - [_currentIDC];
 		_qc33  = _closest getVariable ["queu_costs",  []];
 		_qp33  = _closest getVariable ["queu_cpts",   []];
 		_ql33  = _closest getVariable ["queu_labels",  []];
+		if (typeName _q33 != "ARRAY" || {typeName _qc33 != "ARRAY"} || {typeName _qp33 != "ARRAY"} || {typeName _ql33 != "ARRAY"}) exitWith {hint parseText "<t color='#ff9900'>Queue data is unavailable. No order was cancelled.</t>"};
+		if (count _q33 == 0) exitWith {hint parseText "<t color='#ff9900'>You have no unit queued in this factory.</t>"};
+		if ((count _q33) != (count _qc33) || {(count _q33) != (count _qp33)} || {(count _q33) != (count _ql33)}) exitWith {hint parseText "<t color='#ff9900'>Queue data is incomplete. No order was cancelled.</t>"};
 		//--- Find the LAST entry belonging to this player.
 		_idx33 = -1;
-		{if ([_x, _uid33] call _uidPrefix33) then {_idx33 = _forEachIndex}} forEach _q33;
+		{if (!isNil "_x") then {if (typeName _x == "STRING") then {if ([_x, _uid33] call _uidPrefix33) then {_idx33 = _forEachIndex}}}} forEach _q33;
 		if (_idx33 == -1) exitWith {hint parseText "<t color='#ff9900'>You have no unit queued in this factory.</t>"};
-		_paidCost33 = if (_idx33 < count _qc33) then {_qc33 select _idx33} else {0};
-		_cpt33      = if (_idx33 < count _qp33) then {_qp33 select _idx33} else {1};
+		_paidCost33 = _qc33 select _idx33;
+		_cpt33      = _qp33 select _idx33;
+		if (typeName _paidCost33 != "SCALAR" || {typeName _cpt33 != "SCALAR"}) exitWith {hint parseText "<t color='#ff9900'>Queue data is invalid. No order was cancelled.</t>"};
 		_refund33   = _paidCost33;
 		if (ATTACK_WAVE_PRICE_MODIFIER < 1.0 && UNIT_COST_MODIFIER > 0) then {
 			_basePrice33 = _paidCost33 / (ATTACK_WAVE_PRICE_MODIFIER * UNIT_COST_MODIFIER);
 			_maxRefund33 = round (_basePrice33 * 0.5);
 			if (_refund33 > _maxRefund33) then {_refund33 = _maxRefund33};
 		};
-		//--- Remove from all parallel arrays by index.
-		_q33 = _q33 - [_q33 select _idx33];
+		//--- Remove exactly one entry by index from every parallel queue array. Value-based subtraction would remove every equal token.
+		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _q33; _q33 = _newArr33;
 		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _qc33; _qc33 = _newArr33;
 		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _qp33; _qp33 = _newArr33;
 		_newArr33 = []; _i33 = 0; {if (_i33 != _idx33) then {_newArr33 = _newArr33 + [_x]}; _i33 = _i33 + 1} forEach _ql33; _ql33 = _newArr33;

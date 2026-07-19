@@ -2373,6 +2373,14 @@
         <English>Factory Queue: %1</English>
         <Russian>Очередь завода: %1</Russian>
       </Key>
+      <Key ID="STR_WF_UNITS_CancelOrder">
+        <English>Cancel order</English>
+        <Russian>Отменить заказ</Russian>
+      </Key>
+      <Key ID="STR_WF_UNITS_CancelOrderTooltip">
+        <English>Cancel and refund your most recent queued unit order</English>
+        <Russian>Отменить и вернуть средства за последний заказ в очереди</Russian>
+      </Key>
       <Key ID="STR_WF_UNITS_SkillLabel">
         <English>Skill/Suitability</English>
         <Russian>Навык/Пригодность</Russian>
