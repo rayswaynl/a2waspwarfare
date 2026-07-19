@@ -61,8 +61,11 @@ class ConfigPriceIntegrityTests(unittest.TestCase):
 
     def test_chernarus_template_matches_current_release_shape(self) -> None:
         template = read(MISSION / "version.sqf.template")
-        self.assertIn("candidate=build89-cmdcon44-20260703", template)
-        self.assertIn("#define WF_MAXPLAYERS 55", template)
+        self.assertRegex(
+            template,
+            r'#define WF_RELEASE_MARKER "WASPRELEASE\|v1\|candidate=[^"|]+\|git=[^"|]+\|terrain=[^"|]+"',
+        )
+        self.assertIn("#define WF_MAXPLAYERS 36", template)
 
     def test_config_fixes_are_mirrored_to_both_terrain_copies(self) -> None:
         relatives = (
