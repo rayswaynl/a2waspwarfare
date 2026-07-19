@@ -2,7 +2,9 @@
 //--- Mauled individual soldiers pull back ~80m from _townCenter while healthy units keep fighting.
 //--- Args: [_team, _footInf, _sideID, _side, _townCenter, _capSeq]
 //--- Stamp discipline: wfbe_sml_detach_at set on detach, cleared to nil on rejoin.
-//--- Flag-gated: WFBE_C_SML_RETREAT default 0.
+//--- Flag-gated: WFBE_C_SML_RETREAT default 1 (ON) - see Init_CommonConstants.sqf.
+//--- fix(docs): this header previously claimed "default 0", which never matched the shipped
+//--- default (1, live) in Init_CommonConstants.sqf. Comment-only correction; no behaviour change.
 private ["_team","_footInf","_sideID","_side","_townCenter","_capSeq",
          "_ttl","_thresh","_healthyMin","_stamp","_startTime",
          "_healthyCount","_mauledCount","_mauled","_u","_order","_ordN",

@@ -4,7 +4,9 @@
 //--- Args: [_uTeam, _uSide]
 //--- Returns: true if a nudge was fired, false if tier escalation should handle it.
 //--- Stamp discipline: wfbe_sml_detach_at set on detach, cleared to nil on rejoin.
-//--- Flag-gated: WFBE_C_SML_SURGICAL_UNSTUCK default 0.
+//--- Flag-gated: WFBE_C_SML_SURGICAL_UNSTUCK default 1 (ON) - see Init_CommonConstants.sqf.
+//--- fix(docs): this header previously claimed "default 0", which never matched the shipped
+//--- default (1, live) in Init_CommonConstants.sqf. Comment-only correction; no behaviour change.
 private ["_uTeam","_uSide","_maxUnits","_posDelta","_nudgeDist",
          "_liveFootUnits","_wedged","_nudged","_wedgedCount",
          "_uX","_prevPos","_curPos","_dx","_dy","_delta2",
