@@ -1,13 +1,24 @@
 #!/usr/bin/env python3
-"""Contract for the VEHDEL reason-coded deletion probe (fable/veh-delete-probe).
+"""Contract for the VEHDEL reason-coded deletion probe (fable/veh-delete-probe, round 2).
 
-Required by the independent review of wasp-vehicle-crew-fast-despawn-20260719:
-every scripted cleanup deletion of a hull/crewed unit must emit one structured
-line binding the deletion to its source, locality, crew composition,
-nearest-player distance, and player-use/exit stamps - so the live incident can
-be attributed deterministically instead of by leading-candidate reasoning.
+Round-2 review required an EXHAUSTIVE, MECHANICALLY CHECKED relevant-delete inventory
+instead of a curated site list. Two mechanisms provide it:
+
+1. RATCHET MANIFEST (vehdel_inventory.json): every .sqf file in the Chernarus mission
+   containing the token `deleteVehicle` is listed with its occurrence count (comment
+   mentions included) and its probe-call count. ANY new, moved, or removed deleteVehicle
+   anywhere in the tree fails this test until the manifest is deliberately regenerated
+   and re-reviewed - nothing changes unnoticed.
+2. FULL ADJACENCY in cleanup files: in every file that carries probes, EVERY non-comment
+   deleteVehicle statement must have its probe call on the same line or the line above.
+   There is no curated subset left to argue about.
+
+Probe policy (round-2): default 0 per repo feature-default policy; playableUnits scan
+(cost bound); GetIn stamps role + UID (driver-aware attribution).
 """
 
+import json
+import re
 from pathlib import Path
 import unittest
 
@@ -16,63 +27,73 @@ from check_sqf import mask_comments
 
 ROOT = Path(__file__).resolve().parents[2]
 MISSION = ROOT / "Missions" / "[55-2hc]warfarev2_073v48co.chernarus"
-
-# Every cleanup deleteVehicle site and the reason code its probe call must carry.
-PROBED_SITES = {
-    "Server/FSM/server_town_ai.sqf": ["town-sweep-unit", "town-sweep-hull"],
-    "Client/Functions/Client_CleanupDelegatedTownAI.sqf": ["hc-townai-cleanup-unit"],
-    "Client/Functions/Client_DelegateTownAI.sqf": ["hc-townai-watch-unit"],
-    "Common/Functions/Common_RunCommanderTeam.sqf": ["aicom-retire-unit", "aicom-retire-hull"],
-    "Server/AI/Commander/AI_Commander_Produce.sqf": ["produce-cull-unit"],
-    "Server/Functions/Server_HandleEmptyVehicle.sqf": ["empty-timeout-hull"],
-}
+MANIFEST = Path(__file__).resolve().parent / "vehdel_inventory.json"
 
 
-def code(relative: str) -> str:
-    return mask_comments((MISSION / relative).read_text(encoding="utf-8-sig"))
+def raw(relative: str) -> str:
+    return (MISSION / relative).read_text(encoding="utf-8-sig")
 
 
 class VehDeleteProbeTests(unittest.TestCase):
     def test_probe_function_captures_the_required_fields(self) -> None:
-        text = code("Common/Functions/Common_LogVehDelete.sqf")
+        text = mask_comments(raw("Common/Functions/Common_LogVehDelete.sqf"))
         for token in (
-            "WFBE_C_VEH_DELETE_PROBE",
+            'WFBE_C_VEH_DELETE_PROBE", 0]',   # round-2: default OFF
             "nearPlayerM",
             "lastPlayerUse",
             "lastPlayerExit",
+            "useRole=",
+            "useUid=",
             "local _veh",
             "crew _veh",
+            "forEach playableUnits",           # round-2: bounded scan, not allUnits
             "VEHDEL|v1|reason=",
         ):
             self.assertIn(token, text)
+        self.assertNotIn("forEach allUnits", text)
 
-    def test_every_cleanup_site_calls_the_probe_with_its_reason(self) -> None:
-        for relative, reasons in PROBED_SITES.items():
-            text = code(relative)
-            for reason in reasons:
-                self.assertIn(f'"{reason}"', text, f"{relative}: missing probe reason {reason}")
-                self.assertIn("WFBE_CO_FNC_LogVehDelete", text, relative)
+    def test_ratchet_manifest_matches_the_entire_tree(self) -> None:
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8-sig"))
+        actual = {}
+        for path in sorted(MISSION.rglob("*.sqf")):
+            text = path.read_text(encoding="utf-8-sig", errors="replace")
+            total = text.count("deleteVehicle")
+            if total:
+                rel = path.relative_to(MISSION).as_posix()
+                actual[rel] = {"total": total, "probed": text.count("WFBE_CO_FNC_LogVehDelete")}
+        self.assertEqual(actual, manifest,
+                         "deleteVehicle inventory drifted - reclassify and regenerate vehdel_inventory.json deliberately")
 
-    def test_probe_precedes_the_delete_at_each_site(self) -> None:
-        # The probe must run BEFORE deleteVehicle (a deleted object logs nothing useful).
-        for relative, reasons in PROBED_SITES.items():
-            text = code(relative)
-            for reason in reasons:
-                idx = text.index(f'"{reason}"')
-                self.assertIn("deleteVehicle", text[idx : idx + 260], f"{relative}: {reason} not adjacent to its delete")
+    def test_every_code_delete_in_probed_files_is_probe_adjacent(self) -> None:
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8-sig"))
+        probed_files = [p for p, c in manifest.items() if c["probed"] > 0]
+        self.assertGreaterEqual(len(probed_files), 10)
+        for rel in probed_files:
+            lines = raw(rel).splitlines()
+            for i, line in enumerate(lines):
+                stripped = line.strip()
+                if "deleteVehicle" not in stripped or stripped.startswith("//"):
+                    continue
+                if re.match(r"^deleteVehicle\b", stripped) or " deleteVehicle" in stripped or "{deleteVehicle" in stripped:
+                    prev = lines[i - 1] if i else ""
+                    self.assertTrue(
+                        "WFBE_CO_FNC_LogVehDelete" in line or "WFBE_CO_FNC_LogVehDelete" in prev,
+                        f"{rel}:{i + 1}: code deleteVehicle without adjacent probe",
+                    )
 
-    def test_player_use_stamps_are_written_at_the_factory(self) -> None:
-        text = code("Common/Functions/Common_CreateVehicle.sqf")
+    def test_player_use_stamps_are_role_and_identity_aware(self) -> None:
+        text = mask_comments(raw("Common/Functions/Common_CreateVehicle.sqf"))
         self.assertIn('"GetIn"', text)
         self.assertIn('"GetOut"', text)
-        self.assertIn("wfbe_player_used", text)
-        self.assertIn("wfbe_player_exit", text)
+        self.assertIn("wfbe_player_used_role", text)
+        self.assertIn("wfbe_player_used_uid", text)
+        self.assertIn('WFBE_C_VEH_DELETE_PROBE", 0]', text)  # default OFF here too
 
-    def test_probe_is_registered_and_kill_switch_declared(self) -> None:
-        self.assertIn("Common_LogVehDelete.sqf", code("Common/Init/Init_Common.sqf"))
+    def test_probe_is_registered_and_kill_switch_defaults_off(self) -> None:
+        self.assertIn("Common_LogVehDelete.sqf", mask_comments(raw("Common/Init/Init_Common.sqf")))
         self.assertIn(
-            'if (isNil "WFBE_C_VEH_DELETE_PROBE") then {WFBE_C_VEH_DELETE_PROBE = 1}',
-            code("Common/Init/Init_CommonConstants.sqf"),
+            'if (isNil "WFBE_C_VEH_DELETE_PROBE") then {WFBE_C_VEH_DELETE_PROBE = 0}',
+            mask_comments(raw("Common/Init/Init_CommonConstants.sqf")),
         )
 
 

@@ -260,8 +260,8 @@ while {!WFBE_GameOver} do {
 									} else {
 										if ((time - _baseSeen) >= _baseTimeout) then {
 											//--- DELETE: crew first, then hull (mirror Common_RunCommanderTeam.sqf:318-320).
-											{ if (!isPlayer _x) then {deleteVehicle _x} } forEach _baseVcrew;
-											deleteVehicle _baseVeh;
+											{ if (!isPlayer _x) then {["gc-baseair-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach _baseVcrew;
+											["gc-baseair-hull", _baseVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _baseVeh;
 											_baseDeletedAir = _baseDeletedAir + 1;
 											["INFORMATION", Format ["server_groupsGC.sqf: B61 BASE-GC deleted idle crewed %1 hull at base (%2).", str _baseSide, _baseVeh]] Call WFBE_CO_FNC_AICOMLog;
 										};
@@ -314,7 +314,8 @@ while {!WFBE_GameOver} do {
 					_reaped = 0;
 					{
 						if (!isPlayer _x && !(_x in playableUnits)) then {
-							deleteVehicle _x;
+							["gc-zombie-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete;
+							["gc-L318", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x;
 							_reaped = _reaped + 1;
 						};
 					} forEach _zombieUnits;

@@ -274,8 +274,8 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 										_rh setVariable ["wfbe_heli_baseidle_at", time];
 									} else {
 										if ((time - _rSeen) >= _reapTO) then {
-											{ if (!isPlayer _x) then {deleteVehicle _x} } forEach (crew _rh);
-											deleteVehicle _rh;
+											{ if (!isPlayer _x) then {["aicomteam-L276", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (crew _rh);
+											["aicomteam-L277", _rh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _rh;
 											["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] B74.2 base-reaped idle attack heli %2 (idle %3s at base).", _sd, typeOf _rh, _reapTO]] Call WFBE_CO_FNC_AICOMLog;
 										};
 									};
@@ -723,8 +723,8 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 						private ["_htype"];
 						_htype = typeOf _h;          //--- capture BEFORE delete (typeOf of a deleted obj is "").
 					_hcrew = crew _h;
-					{deleteVehicle _x} forEach _hcrew;
-					deleteVehicle _h;
+					{["aicomteam-L725", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach _hcrew;
+					["aicomteam-L726", _h, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _h;
 					if (_cost > 0) then {
 						//--- D4-FIX(c): append the hull TYPE so the server re-derives the real build price itself (same
 						//--- QUERYUNITPRICE lookup this file used) instead of trusting the network _cost verbatim - closes a
@@ -845,7 +845,7 @@ while {!WFBE_GameOver && _alive} do {
 				if (({alive _x} count (crew _x)) == 0) then {
 					private ["_us"]; _us = _x getVariable "wfbe_air_uncrewed_at";
 					if (isNil "_us") then {_x setVariable ["wfbe_air_uncrewed_at", time]} else {
-						if ((time - _us) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_REAP_GRACE", 45])) then {deleteVehicle _x};
+						if ((time - _us) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_REAP_GRACE", 45])) then {["aicomteam-L847", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x};
 					};
 				} else {
 					_x setVariable ["wfbe_air_uncrewed_at", nil];
