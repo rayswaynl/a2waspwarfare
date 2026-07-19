@@ -1681,7 +1681,7 @@ switch (_args select 0) do {
 	//--- (KAT_GuerHeliDrop) - flight, arrival, release, kill-credit, and return are ALL handled there
 	//--- (mirrors the "guer-mortar-strike" case's own shape: this case only owns validation, cost, dispatch).
 	case "guer-heli-bomb": {
-		Private ["_pos","_player","_team","_cost","_kills","_tier"];
+		Private ["_pos","_player","_team","_cost","_kills","_tier","_receiptKey"];
 		if (count _args < 3) exitWith {
 			["WARNING", Format ["Server_HandleSpecial.sqf: guer-heli-bomb received a short payload (%1 args), ignored.", count _args]] Call WFBE_CO_FNC_LogContent;
 		};
@@ -1714,10 +1714,14 @@ switch (_args select 0) do {
 				};
 				["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER heli-bomb DENIED (insufficient funds) for [%1] team [%2].", name _player, _team]] Call WFBE_CO_FNC_LogContent;
 			};
+			//--- Bind the debit to a server-local one-shot receipt before any funds move. The support worker may
+			//--- refund only this exact team/cost if transport setup or the inbound flight fails before a shell exists.
+			_receiptKey = Format ["wfbe_guer_helibomb_receipt_%1_%2", floor (diag_tickTime * 1000), floor (random 1000000000)];
+			missionNamespace setVariable [_receiptKey, [0, _team, _cost, _player]];
 			[_team, -_cost] Call WFBE_CO_FNC_ChangeTeamFunds;
 
 			["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER Barrel Bomb called by [%1] at %2 (cost %3).", name _player, _pos, _cost]] Call WFBE_CO_FNC_LogContent;
-			[nil, resistance, _pos, _team] Spawn KAT_GuerHeliDrop;
+			[nil, resistance, _pos, _team, _receiptKey] Spawn KAT_GuerHeliDrop;
 		};
 	};
 };
