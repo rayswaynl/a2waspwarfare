@@ -275,7 +275,7 @@ while {alive player && dialog} do {
 				_closest = [player,towns] Call WFBE_CO_FNC_GetClosestEntity;
 				_sideID = _closest getVariable "sideID";
 				_camps = [_closest,sideJoined] Call GetFriendlyCamps;
-				_allCamps = _closest getVariable "camps";
+				_allCamps = (_closest getVariable "camps") - [objNull]; //--- Deleted camp logics must not block Fast Travel.
 				if (_sideID == sideID && player distance _closest < _ftr && (count _camps == count _allCamps)) then {_canFT = true;_startPoint = _closest} else {
 					_buildings = (sideJoined) Call WFBE_CO_FNC_GetSideStructures;
 					_checks = [sideJoined,missionNamespace getVariable Format ["WFBE_%1COMMANDCENTERTYPE",sideJoinedText],_buildings] Call GetFactories;
@@ -304,7 +304,7 @@ while {alive player && dialog} do {
 						if (_x in towns) then {
 							_sideID = _x getVariable "sideID";
 							_camps = [_x,sideJoined] Call GetFriendlyCamps;
-							_allCamps = _x getVariable "camps";
+							_allCamps = (_x getVariable "camps") - [objNull]; //--- Deleted camp logics must not block Fast Travel.
 							if (_sideID != sideID || (count _camps != count _allCamps)) then {_skip = true};
 						};
 						//--- fold89 BUG1: compute the fee for EVERY destination type (town, factory, deployed HQ) and
@@ -637,7 +637,7 @@ while {alive player && dialog} do {
 							if (_ftRecheckOk && {_destination in towns}) then {
 								private ["_rCamps","_rAllCamps"];
 								_rCamps = [_destination,sideJoined] Call GetFriendlyCamps;
-								_rAllCamps = _destination getVariable "camps";
+								_rAllCamps = (_destination getVariable "camps") - [objNull]; //--- Deleted camp logics must not block Fast Travel.
 								if (count _rCamps != count _rAllCamps) then {_ftRecheckOk = false};
 							};
 						} else {
