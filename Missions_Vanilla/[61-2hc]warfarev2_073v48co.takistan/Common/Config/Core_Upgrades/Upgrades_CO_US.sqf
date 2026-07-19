@@ -183,7 +183,14 @@ _aiOrder = [
 	[WFBE_UP_AIR,3],
 	[WFBE_UP_AIR,4],
 	[WFBE_UP_AIR,5],
-	[WFBE_UP_UAV,1],
+	[WFBE_UP_UAV,1]
+];
+
+if (_uav2Enabled) then {
+	_aiOrder = _aiOrder + [[WFBE_UP_UAV,2]];
+};
+
+_aiOrder = _aiOrder + [
 	[WFBE_UP_PARATROOPERS,3],
 	[WFBE_UP_EASA,1],
 	[WFBE_UP_SUPPLYPARADROP,1],
@@ -206,11 +213,6 @@ _aiOrder = _aiOrder + [
 	[WFBE_UP_PATROLS,3],
 	[WFBE_UP_PATROLS,4]
 ];
-
-if (_uav2Enabled) then {
-	_aiOrder = _aiOrder + [[WFBE_UP_UAV,2]];
-};
-
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_%1_AI_ORDER", _side], _aiOrder];
 
 //--- Check potential missing definition.
