@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_built", "_builtveh", "_cacheTier", "_crews", "_groups", "_i", "_lock", "_logGroupCount", "_position", "_positions", "_retVal", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_strelaAssigned", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehClass", "_vehicles", "_vehPos", "_vehTier"];
+Private ["_built", "_builtveh", "_cacheTier", "_crews", "_gdirDelivery", "_gdirDeliveryActive", "_gdirDeliveryClass", "_gdirDeliveryDriver", "_gdirDeliveryIndex", "_gdirDeliveryOrderId", "_gdirDeliveryPos", "_gdirDeliveryResult", "_gdirDeliveryTeam", "_gdirDeliveryTier", "_gdirDeliveryVehicle", "_groups", "_i", "_lock", "_logGroupCount", "_position", "_positions", "_retVal", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_strelaAssigned", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehicles"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -21,6 +21,14 @@ _built = 0;
 _builtveh = 0;
 _town_teams = [];
 _town_vehicles = [];
+_gdirDelivery = if (count _this > 5) then {_this select 5} else {[]};
+_gdirDeliveryActive = false;
+_gdirDeliveryClass = "";
+_gdirDeliveryIndex = -1;
+_gdirDeliveryOrderId = -1;
+_gdirDeliveryResult = [];
+_gdirDeliveryTeam = grpNull;
+_gdirDeliveryTier = 0;
 
 //--- fable/gdir-cache-materializer (GR-2026-07-08a): read this town's purchased cache tier
 //--- once, up front, for the whole activation episode. Gate-checked here (not just at
@@ -32,45 +40,22 @@ if (_side == WFBE_DEFENDER && {(missionNamespace getVariable ["AICOMV2_GDIR_CACH
 	_cacheTier = _town getVariable ["AICOMV2_GDIR_CACHE_TIER", 0];
 };
 _strelaAssigned = false; //--- tier-3 Strela: ONE dedicated AA/AT defender per activation episode, not per-unit chance.
-//--- fable/gdir-vehicle-verb (GR-2026-07-08a): read this town's purchased vehicle-order tier
-//--- once, up front. Gate-checked here (not just at purchase time), same pattern as the
-//--- weapons-cache tier. _side==WFBE_DEFENDER guard: GUER-only economy feature.
-_vehTier = 0;
-if (_side == WFBE_DEFENDER && {(missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0}) then {
-	_vehTier = _town getVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0];
-	//--- [FIX-931/night-sweep] Consume the order HERE, immediately after the read and with
-	//--- NO yielding call in between - not after materialising below like the original code
-	//--- did. This function is invoked MULTIPLE TIMES per town per activation episode; the
-	//--- original only cleared the tier at the end of the materialize branch, AFTER calling
-	//--- WFBE_CO_FNC_GetRandomPosition / WFBE_CO_FNC_GetEmptyPosition (position-finders that
-	//--- can internally sleep/waitUntil and yield the SQF scheduler) - a second concurrent
-	//--- invocation could read the same still-unconsumed tier at that yield point and
-	//--- materialise a second vehicle from the SAME one-shot purchase (double-materialize).
-	//--- No yield point exists between this read and the write below, so this closes the
-	//--- race regardless of what runs afterward.
-	if (_vehTier > 0) then {
-		_town setVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0, true];
-	};
-};
-if (_vehTier > 0) then {
-	//--- ONE-SHOT delivery: ride the SAME CreateTeam pipeline as the rest of this activation
-	//--- episode (skill spread, patrol FSM, defender tagging, HandleEmptyVehicle taxi-lock
-	//--- below) instead of a bespoke spawn path - least-new-machinery route. Classnames
-	//--- verified in Common\Config\Groups\Groups_GUE.sqf (Motorized/Armored_Light/
-	//--- Armored_Heavy kinds - the SAME rosters already used for regular GUER garrison spawns).
-	_vehClass = "";
-	if (_vehTier == 1) then {_vehClass = "Offroad_DSHKM_Gue"};  //--- Groups_GUE.sqf Motorized kind.
-	if (_vehTier == 2) then {_vehClass = "BMP2_GUE"};           //--- Groups_GUE.sqf Armored_Light kind.
-	if (_vehTier >= 3) then {_vehClass = "T72_GUE"};            //--- Groups_GUE.sqf Armored_Heavy kind.
-	if (_vehClass != "") then {
-		_vehPos = ([getPos _town, 50, 300] call WFBE_CO_FNC_GetRandomPosition);
-		_vehPos = [_vehPos, 50] call WFBE_CO_FNC_GetEmptyPosition;
-		_groups    = _groups    + [[_vehClass]];
-		_positions = _positions + [_vehPos];
+//--- A GDIR vehicle is deliberately supplied only by the server-owned caller in
+//--- server_town_ai.sqf. Ordinary client/HC town batches omit the optional descriptor,
+//--- so they can never consume or race a paid one-shot order. Descriptor: [orderId,tier,class].
+if (_side == WFBE_DEFENDER && {typeName _gdirDelivery == "ARRAY"} && {count _gdirDelivery >= 3}) then {
+	_gdirDeliveryOrderId = _gdirDelivery select 0;
+	_gdirDeliveryTier = _gdirDelivery select 1;
+	_gdirDeliveryClass = _gdirDelivery select 2;
+	if (typeName _gdirDeliveryOrderId == "SCALAR" && {typeName _gdirDeliveryTier == "SCALAR"} && {typeName _gdirDeliveryClass == "STRING"} && {_gdirDeliveryTier > 0} && {_gdirDeliveryClass != ""}) then {
+		_gdirDeliveryActive = true;
+		_gdirDeliveryResult = [0, _gdirDeliveryOrderId];
+		_gdirDeliveryPos = ([getPos _town, 50, 300] call WFBE_CO_FNC_GetRandomPosition);
+		_gdirDeliveryPos = [_gdirDeliveryPos, 50] call WFBE_CO_FNC_GetEmptyPosition;
+		_gdirDeliveryIndex = count _groups;
+		_groups    = _groups    + [[_gdirDeliveryClass]];
+		_positions = _positions + [_gdirDeliveryPos];
 		_teams     = _teams     + [grpNull];
-		//--- Order already consumed above (read+clear atomic, before any yielding call) -
-		//--- FIX-931/night-sweep. (Was: setVariable here, post-yield - double-materialize risk.)
-		["INFORMATION", Format ["Common_CreateTownUnits.sqf: Town [%1] materialised a purchased tier-%2 defensive vehicle [%3].", _town, _vehTier, _vehClass]] Call WFBE_CO_FNC_LogContent;
 	};
 };
 
@@ -134,6 +119,34 @@ for '_i' from 0 to count(_groups)-1 do {
 	// Marty: Track the actual group returned by CreateTeam, because delegated HC creation may replace grpNull locally.
 	_team = _retVal select 2;
 	_crews = if (count _retVal > 3) then {_retVal select 3} else {[]};
+
+	//--- The optional server-owned delivery must prove its exact, living, driven hull.
+	//--- CreateTeam normally removes a no-crew vehicle itself, but a partial gunner-only
+	//--- result can still be returned; remove that entire isolated attempt before retrying.
+	if ((_i == _gdirDeliveryIndex) && {_gdirDeliveryActive}) then {
+		_gdirDeliveryVehicle = objNull;
+		_gdirDeliveryDriver = objNull;
+		if (!isNull _team && {count _vehicles == 1}) then {
+			_gdirDeliveryVehicle = _vehicles select 0;
+			if (alive _gdirDeliveryVehicle && {(typeOf _gdirDeliveryVehicle) == _gdirDeliveryClass}) then {
+				_gdirDeliveryDriver = driver _gdirDeliveryVehicle;
+				if (!isNull _gdirDeliveryDriver && {_gdirDeliveryDriver in _crews} && {(vehicle _gdirDeliveryDriver) == _gdirDeliveryVehicle}) then {
+					_gdirDeliveryTeam = _team;
+					_gdirDeliveryResult = [1, _gdirDeliveryOrderId];
+				};
+			};
+		};
+		if ((_gdirDeliveryResult select 0) == 0) then {
+			{if (!isNull _x) then {deleteVehicle _x}} forEach (_units + _crews + _vehicles);
+			if (!isNull _team) then {deleteGroup _team};
+			_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_HULL", objNull];
+			_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_TEAM", grpNull];
+			_units = [];
+			_vehicles = [];
+			_crews = [];
+			_team = grpNull;
+		};
+	};
 
 	//--- Defender classification: tag everything this town spawned. PUBLIC tag (3rd arg true) -
 	//--- town AI may be created on an HC while the activation scan that must ignore these runs
@@ -251,6 +264,17 @@ for '_i' from 0 to count(_groups)-1 do {
 	} forEach _vehicles;
 };
 
+//--- Persist this paid attempt only after its normal garrison setup is complete.
+//--- The driver/hull receipt above is necessary but not sufficient: defender tags, patrol metadata,
+//--- skill/loadout work, and the empty-vehicle/taxi hooks must all land before abnormal outer-loop
+//--- recovery is allowed to commit the returned assets. Server-local; only server_town_ai.sqf reads it.
+if (_gdirDeliveryActive && {count _gdirDeliveryResult >= 2} && {(_gdirDeliveryResult select 0) > 0} && {!isNull _gdirDeliveryVehicle} && {!isNull _gdirDeliveryTeam}) then {
+	_gdirDeliveryVehicle setVariable ["AICOMV2_GDIR_VEHICLE_ORDER_ID", _gdirDeliveryOrderId];
+	_gdirDeliveryTeam setVariable ["AICOMV2_GDIR_VEHICLE_ORDER_ID", _gdirDeliveryOrderId];
+	_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_HULL", _gdirDeliveryVehicle];
+	_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_TEAM", _gdirDeliveryTeam];
+};
+
 //--- B5: coalesced reveal — ONE nearEntities scan per activation episode (was one per
 //--- garrison group). Reveal the nearby entities to every town team created this episode.
 //--- Scan is town-centred with a radius that covers the union of the old per-group 400m
@@ -289,4 +313,4 @@ if ((_built + _builtveh) == 0) then {
 
 ["INFORMATION", Format["Common_CreateTownUnits.sqf: Town [%1] held by [%2] was activated witha total of [%3] units.", _town, _side, _built + _builtveh]] Call WFBE_CO_FNC_LogContent;
 
-[_town_teams, _town_vehicles]
+[_town_teams, _town_vehicles, _gdirDeliveryResult]

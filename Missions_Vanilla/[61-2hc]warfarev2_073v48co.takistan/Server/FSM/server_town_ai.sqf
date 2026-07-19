@@ -86,12 +86,94 @@ while {!WFBE_GameOver} do {
 		if (_popTier <= ((count _activeMaxByTier) - 1)) then { _activeTownsBudgetMax = _activeMaxByTier select _popTier };
 	};
 
+	//--- GDIR vehicle recovery: a prior server loop can only leave inflight after interruption.
+	//--- The paid classes are ground hulls and their direct CreateTownUnits path does not suspend;
+	//--- this single server loop cannot enter another sweep while that call is still live. Therefore
+	//--- recover only here (never on a wall-clock lease): commit a tagged live hull idempotently, or
+	//--- restore the SAME paid order to pending when no materialized hull survived the interruption.
+	if ((missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0) then {
+		{
+			private ["_gdirVehRecoveryCanRetry","_gdirVehRecoveryClass","_gdirVehRecoveryDriver","_gdirVehRecoveryHull","_gdirVehRecoveryHullOrderId","_gdirVehRecoveryOrder","_gdirVehRecoveryOrderId","_gdirVehRecoverySideId","_gdirVehRecoveryState","_gdirVehRecoveryTeam","_gdirVehRecoveryTeamOrderId","_gdirVehRecoveryTeams","_gdirVehRecoveryTier","_gdirVehRecoveryTown","_gdirVehRecoveryVehicles"];
+			_gdirVehRecoveryTown = _x;
+			_gdirVehRecoverySideId = _gdirVehRecoveryTown getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+			_gdirVehRecoveryOrder = _gdirVehRecoveryTown getVariable ["AICOMV2_GDIR_VEHICLE_ORDER", []];
+			if (typeName _gdirVehRecoveryOrder == "ARRAY" && {count _gdirVehRecoveryOrder >= 3}) then {
+				_gdirVehRecoveryOrderId = _gdirVehRecoveryOrder select 0;
+				_gdirVehRecoveryTier = _gdirVehRecoveryOrder select 1;
+				_gdirVehRecoveryState = _gdirVehRecoveryOrder select 2;
+				if (typeName _gdirVehRecoveryOrderId == "SCALAR" && {typeName _gdirVehRecoveryTier == "SCALAR"} && {typeName _gdirVehRecoveryState == "STRING"} && {_gdirVehRecoveryTier > 0}) then {
+					if (_gdirVehRecoveryState == "inflight") then {
+						_gdirVehRecoveryClass = "";
+						if (_gdirVehRecoveryTier == 1) then {_gdirVehRecoveryClass = "Offroad_DSHKM_Gue"};
+						if (_gdirVehRecoveryTier == 2) then {_gdirVehRecoveryClass = "BMP2_GUE"};
+						if (_gdirVehRecoveryTier >= 3) then {_gdirVehRecoveryClass = "T72_GUE"};
+						_gdirVehRecoveryHull = _gdirVehRecoveryTown getVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_HULL", objNull];
+						_gdirVehRecoveryTeam = _gdirVehRecoveryTown getVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_TEAM", grpNull];
+						if (typeName _gdirVehRecoveryHull != "OBJECT") then {_gdirVehRecoveryHull = objNull};
+						if (typeName _gdirVehRecoveryTeam != "GROUP") then {_gdirVehRecoveryTeam = grpNull};
+						_gdirVehRecoveryHullOrderId = -1;
+						if (!isNull _gdirVehRecoveryHull) then {_gdirVehRecoveryHullOrderId = _gdirVehRecoveryHull getVariable ["AICOMV2_GDIR_VEHICLE_ORDER_ID", -1]};
+						_gdirVehRecoveryTeamOrderId = -1;
+						if (!isNull _gdirVehRecoveryTeam) then {
+							_gdirVehRecoveryTeamOrderId = _gdirVehRecoveryTeam getVariable "AICOMV2_GDIR_VEHICLE_ORDER_ID";
+							if (isNil "_gdirVehRecoveryTeamOrderId") then {_gdirVehRecoveryTeamOrderId = -1};
+						};
+						_gdirVehRecoveryDriver = objNull;
+						if (!isNull _gdirVehRecoveryHull) then {_gdirVehRecoveryDriver = driver _gdirVehRecoveryHull};
+						if ((_gdirVehRecoverySideId == WFBE_C_GUER_ID || {_gdirVehRecoverySideId == WFBE_C_UNKNOWN_ID}) && {_gdirVehRecoveryClass != ""} && {!isNull _gdirVehRecoveryHull} && {!isNull _gdirVehRecoveryTeam} && {alive _gdirVehRecoveryHull} && {(typeOf _gdirVehRecoveryHull) == _gdirVehRecoveryClass} && {(_gdirVehRecoveryHull getVariable ["AICOMV2_GDIR_VEHICLE_ORDER_ID", -1]) == _gdirVehRecoveryOrderId} && {_gdirVehRecoveryTeamOrderId == _gdirVehRecoveryOrderId} && {!isNull _gdirVehRecoveryDriver} && {_gdirVehRecoveryDriver in (units _gdirVehRecoveryTeam)} && {(group _gdirVehRecoveryDriver) == _gdirVehRecoveryTeam} && {(vehicle _gdirVehRecoveryDriver) == _gdirVehRecoveryHull}) then {
+							_gdirVehRecoveryTeams = _gdirVehRecoveryTown getVariable ["wfbe_town_teams", []];
+							if (typeName _gdirVehRecoveryTeams != "ARRAY") then {_gdirVehRecoveryTeams = []};
+							if !(_gdirVehRecoveryTeam in _gdirVehRecoveryTeams) then {_gdirVehRecoveryTeams = _gdirVehRecoveryTeams + [_gdirVehRecoveryTeam]};
+							_gdirVehRecoveryVehicles = _gdirVehRecoveryTown getVariable ["wfbe_active_vehicles", []];
+							if (typeName _gdirVehRecoveryVehicles != "ARRAY") then {_gdirVehRecoveryVehicles = []};
+							if !(_gdirVehRecoveryHull in _gdirVehRecoveryVehicles) then {_gdirVehRecoveryVehicles = _gdirVehRecoveryVehicles + [_gdirVehRecoveryHull]};
+							_gdirVehRecoveryTown setVariable ["wfbe_town_teams", _gdirVehRecoveryTeams];
+							_gdirVehRecoveryTown setVariable ["wfbe_active_vehicles", _gdirVehRecoveryVehicles];
+							_gdirVehRecoveryTown setVariable ["AICOMV2_GDIR_VEHICLE_ORDER", []];
+							_gdirVehRecoveryTown setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_HULL", objNull];
+							_gdirVehRecoveryTown setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_TEAM", grpNull];
+							diag_log Format ["GDIR_VEHICLE_RECOVERED_COMMIT town:%1 tier:%2 order:%3", _gdirVehRecoveryTown getVariable "name", _gdirVehRecoveryTier, _gdirVehRecoveryOrderId];
+						} else {
+							//--- Recovery cannot retry while a tagged paid asset still survives.
+							//--- A player or a nonlocal object is never torn down from the server; preserve
+							//--- its inflight record for a later safe reconciliation rather than duplicate it.
+							_gdirVehRecoveryCanRetry = true;
+							if (!isNull _gdirVehRecoveryHull && {_gdirVehRecoveryHullOrderId == _gdirVehRecoveryOrderId || {_gdirVehRecoveryTeamOrderId == _gdirVehRecoveryOrderId}}) then {
+								if (!local _gdirVehRecoveryHull || {({isPlayer _x} count (crew _gdirVehRecoveryHull)) > 0}) then {
+									_gdirVehRecoveryCanRetry = false;
+								} else {
+									{if (!isPlayer _x && {local _x}) then {deleteVehicle _x}} forEach (crew _gdirVehRecoveryHull);
+									deleteVehicle _gdirVehRecoveryHull;
+								};
+							};
+							if (!isNull _gdirVehRecoveryTeam && {_gdirVehRecoveryTeamOrderId == _gdirVehRecoveryOrderId}) then {
+								if (({isPlayer _x} count (units _gdirVehRecoveryTeam)) > 0) then {
+									_gdirVehRecoveryCanRetry = false;
+								} else {
+									{if (local _x) then {deleteVehicle _x}} forEach (units _gdirVehRecoveryTeam);
+									if ((count (units _gdirVehRecoveryTeam)) == 0) then {deleteGroup _gdirVehRecoveryTeam} else {_gdirVehRecoveryCanRetry = false};
+								};
+							};
+							if (_gdirVehRecoveryCanRetry) then {
+								_gdirVehRecoveryTown setVariable ["AICOMV2_GDIR_VEHICLE_ORDER", [_gdirVehRecoveryOrderId, _gdirVehRecoveryTier, "pending"]];
+								_gdirVehRecoveryTown setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_HULL", objNull];
+								_gdirVehRecoveryTown setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_TEAM", grpNull];
+								diag_log Format ["GDIR_VEHICLE_RECOVERED_RETRY town:%1 tier:%2 order:%3 reason=invalid-hull-or-owner-changed", _gdirVehRecoveryTown getVariable "name", _gdirVehRecoveryTier, _gdirVehRecoveryOrderId];
+							} else {
+								diag_log Format ["GDIR_VEHICLE_RECOVERY_HELD town:%1 tier:%2 order:%3 reason=tagged-asset-not-safe-to-delete", _gdirVehRecoveryTown getVariable "name", _gdirVehRecoveryTier, _gdirVehRecoveryOrderId];
+							};
+						};
+					};
+				};
+			};
+		} forEach towns;
+	};
+
 	//--- GUER GROUP CAP: recount live resistance groups ONCE per sweep (not per town).
 	//--- server_groupsGC.sqf computes a GUER group count only as a local (_cntGuer) and never
 	//--- publishes a group count to missionNamespace, so use the allGroups fallback here,
 	//--- hoisted out of the per-town loop so it stays cheap.
 	_guerGroupCount = missionNamespace getVariable ["wfbe_grpcnt_guer", -1]; if (_guerGroupCount < 0) then { _guerGroupCount = {side _x == resistance} count allGroups; }; //--- B7: read groupsGC per-side count cache; live-scan fallback until the first GC sweep warms it
-
 	for "_i" from 0 to ((count towns) - 1) step 1 do
 	{
 		_position = [];
@@ -380,6 +462,68 @@ while {!WFBE_GameOver} do {
 								_ctlNewGrp setVariable ["wfbe_ctl_ground_wave", (_town getVariable ["wfbe_ctl_ground_wave", true])];
 							};
 							[_teams, _ctlNewGrp] call WFBE_CO_FNC_ArrayPush;
+						};
+
+						//--- Paid GDIR defensive vehicles are a server-owned supplement, never an item in
+						//--- the normal group batch below. Client/HC delegation fans each ordinary group out
+						//--- asynchronously, so it cannot safely provide exactly-once delivery for a paid order.
+						//--- The server transitions the per-town record pending -> inflight without yielding,
+						//--- runs one isolated Common_CreateTownUnits attempt, then commits or restores the
+						//--- SAME order only from that synchronous receipt.
+						private ["_gdirLegacyVehTier","_gdirVehClass","_gdirVehDelivery","_gdirVehOrder","_gdirVehOrderId","_gdirVehResult","_gdirVehSeq","_gdirVehState","_gdirVehTier"];
+						_gdirVehOrder = [];
+						if (_side == WFBE_DEFENDER && {(missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0}) then {
+							_gdirVehOrder = _town getVariable ["AICOMV2_GDIR_VEHICLE_ORDER", []];
+							if (typeName _gdirVehOrder != "ARRAY") then {_gdirVehOrder = []};
+							//--- Migrate one paid legacy scalar without dropping it. The scalar was public only
+							//--- because the old materializer ran on clients/HCs; the new record stays server-local.
+							if (count _gdirVehOrder < 2) then {
+								_gdirLegacyVehTier = _town getVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0];
+								if (typeName _gdirLegacyVehTier != "SCALAR") then {_gdirLegacyVehTier = 0};
+								if (_gdirLegacyVehTier > 0) then {
+									_gdirVehSeq = (missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE_ORDER_SEQ", 0]) + 1;
+									missionNamespace setVariable ["AICOMV2_GDIR_VEHICLE_ORDER_SEQ", _gdirVehSeq];
+									_gdirVehOrder = [_gdirVehSeq, _gdirLegacyVehTier, "pending"];
+									_town setVariable ["AICOMV2_GDIR_VEHICLE_ORDER", _gdirVehOrder];
+									_town setVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0, true];
+									diag_log Format ["GDIR_VEHICLE_MIGRATED town:%1 tier:%2 order:%3", _town getVariable "name", _gdirLegacyVehTier, _gdirVehSeq];
+								};
+							};
+							if (count _gdirVehOrder == 2) then {
+								_gdirVehOrder = [_gdirVehOrder select 0, _gdirVehOrder select 1, "pending"];
+								_town setVariable ["AICOMV2_GDIR_VEHICLE_ORDER", _gdirVehOrder];
+							};
+							if (count _gdirVehOrder >= 3) then {
+								_gdirVehOrderId = _gdirVehOrder select 0;
+								_gdirVehTier = _gdirVehOrder select 1;
+								_gdirVehState = _gdirVehOrder select 2;
+								_gdirVehClass = "";
+								if (_gdirVehTier == 1) then {_gdirVehClass = "Offroad_DSHKM_Gue"};
+								if (_gdirVehTier == 2) then {_gdirVehClass = "BMP2_GUE"};
+								if (_gdirVehTier >= 3) then {_gdirVehClass = "T72_GUE"};
+								if (typeName _gdirVehOrderId == "SCALAR" && {typeName _gdirVehTier == "SCALAR"} && {typeName _gdirVehState == "STRING"} && {_gdirVehState == "pending"} && {_gdirVehTier > 0} && {_gdirVehClass != ""}) then {
+									_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_HULL", objNull];
+									_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_TEAM", grpNull];
+									_town setVariable ["AICOMV2_GDIR_VEHICLE_ORDER", [_gdirVehOrderId, _gdirVehTier, "inflight"]];
+									_gdirVehResult = [_town, _side, [], [], [], [_gdirVehOrderId, _gdirVehTier, _gdirVehClass]] Call WFBE_CO_FNC_CreateTownUnits;
+									_gdirVehDelivery = if (count _gdirVehResult > 2) then {_gdirVehResult select 2} else {[]};
+									if (typeName _gdirVehDelivery == "ARRAY" && {count _gdirVehDelivery >= 2} && {(_gdirVehDelivery select 0) > 0} && {(_gdirVehDelivery select 1) == _gdirVehOrderId}) then {
+										_town_teams = _town_teams + (_gdirVehResult select 0);
+										_town setVariable ['wfbe_active_vehicles', (_town getVariable 'wfbe_active_vehicles') + (_gdirVehResult select 1)];
+										_town setVariable ['wfbe_town_teams', _town_teams];
+										_guerGroupCount = _guerGroupCount + (count (_gdirVehResult select 0));
+										_town setVariable ["AICOMV2_GDIR_VEHICLE_ORDER", []];
+										_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_HULL", objNull];
+										_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_TEAM", grpNull];
+										diag_log Format ["GDIR_VEHICLE_DELIVERED town:%1 tier:%2 order:%3", _town getVariable "name", _gdirVehTier, _gdirVehOrderId];
+									} else {
+										_town setVariable ["AICOMV2_GDIR_VEHICLE_ORDER", [_gdirVehOrderId, _gdirVehTier, "pending"]];
+										_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_HULL", objNull];
+										_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_TEAM", grpNull];
+										diag_log Format ["GDIR_VEHICLE_RETRY town:%1 tier:%2 order:%3 reason=delivery-not-proven", _town getVariable "name", _gdirVehTier, _gdirVehOrderId];
+									};
+								};
+							};
 						};
 
 						_use_server = true;
