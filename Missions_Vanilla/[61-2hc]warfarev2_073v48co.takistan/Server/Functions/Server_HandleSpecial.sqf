@@ -4,12 +4,10 @@ _args = _this;
 
 switch (_args select 0) do {
 	case "update-teamleader": {
-		Private ["_leader","_team","_side","_logic","_lease"];
+		Private ["_leader","_team","_side"];
 		_team = _args select 1;
 		_leader = _args select 2;
 		_side = civilian;
-		_logic = objNull;
-		_lease = [];
 
 		_team setVariable ["wfbe_teamleader", _leader];
 
@@ -26,27 +24,19 @@ switch (_args select 0) do {
 		};
 
 		//--- C1 lease reclaim (WFBE_C_CMD_LEASE): a respawning/JIP-reconnecting client always pings
-		//--- update-teamleader (Init_Client / Client_OnKilled). If the pinged leader is the leased
-		//--- commander UID in the leased group, cancel any pending disconnect grace and refresh the
-		//--- derived wfbe_commander view. Deliberately does NOT touch per-team autonomous/respawn
-		//--- state: during grace the teams were never freed, so there is nothing to re-lock - and a
-		//--- blanket SetTeamAutonomous/SetTeamRespawn here would wipe the commander's own per-team
-		//--- choices on reconnect (the same blanket-reset anti-pattern C5 removed from AI_Commander).
+		//--- update-teamleader (Init_Client / Client_OnKilled). Round-3 review (P1-1/P1-2): this
+		//--- receiver no longer mutates lease state itself - it only ENQUEUES a reclaim request; the
+		//--- single per-side executor re-validates UID+group+eligibility fresh at processing time and
+		//--- is the sole writer, closing the "writer publish and lease grant remain separate
+		//--- statements" and "reclaim can interleave with the stand-down executor" races. The executor
+		//--- path deliberately does not touch per-team autonomous/respawn state either: during grace
+		//--- the teams were never freed, so there is nothing to re-lock - a blanket
+		//--- SetTeamAutonomous/SetTeamRespawn here would wipe the commander's own per-team choices on
+		//--- reconnect (the same blanket-reset anti-pattern C5 removed from AI_Commander).
 		if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
 			_side = _team getVariable "wfbe_side";
 			if (!isNil "_side" && {_side != civilian} && {isPlayer _leader}) then {
-				_logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
-				if (!isNull _logic) then {
-					_lease = _logic getVariable ["wfbe_commander_lease", []];
-					//--- Review-fix (codex reject 2026-07-19, P1-1): reclaim repeats the FULL eligibility
-					//--- test (side match, aicom-hc denial, player leader) on top of the UID+group binding -
-					//--- a drifted/HC-adopted group can never reclaim the seat.
-					if (typeName _lease == "ARRAY" && {count _lease >= 3} && {(getPlayerUID _leader) == (_lease select 0)} && {(groupId _team) == (_lease select 2)} && {[_side, _team] Call WFBE_CO_FNC_CommanderLeaseEligible}) then {
-						_logic setVariable ["wfbe_commander_lease_expires", nil];
-						_logic setVariable ["wfbe_commander", _team, true];
-						[_side, "HandleSpecial", ["new-commander-assigned", _team]] Call WFBE_CO_FNC_SendToClients;
-					};
-				};
+				[_side, getPlayerUID _leader, _team] Call WFBE_CO_FNC_CommanderLeaseRequestReclaim;
 			};
 		};
 	};

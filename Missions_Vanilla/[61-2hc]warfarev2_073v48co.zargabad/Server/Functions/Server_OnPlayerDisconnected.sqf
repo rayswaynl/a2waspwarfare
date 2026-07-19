@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_buildings','_commander','_funds','_get','_hcGroup','_hq','_id','_isHCDisconnect','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik','_lease','_leaseExpires'];
+Private ['_buildings','_commander','_funds','_get','_hcGroup','_hq','_id','_isHCDisconnect','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik','_lease','_leaseExpires','_leaseGen'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -226,14 +226,17 @@ if !(isNull (_commander)) then {
 		_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 		if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
 			_lease = _logik getVariable ["wfbe_commander_lease", []];
-			if (typeName _lease == "ARRAY" && {count _lease >= 3} && {(_lease select 0) == _uid} && {(_lease select 1) == _side} && {(_lease select 2) == (groupId _team)}) then {
+			if (typeName _lease == "ARRAY" && {count _lease >= 6} && {(_lease select 0) == _uid} && {(_lease select 1) == _side} && {(_lease select 2) == (groupId _team)}) then {
+				_leaseGen = _lease select 5;
 				_leaseExpires = time + (missionNamespace getVariable ["WFBE_C_CMD_LEASE_GRACE", 90]);
 				_logik setVariable ["wfbe_commander_lease_expires", _leaseExpires];
-				[_side, _leaseExpires] Spawn WFBE_CO_FNC_CommanderLeaseGraceCheck;
+				[_side, _leaseExpires, _leaseGen] Spawn WFBE_CO_FNC_CommanderLeaseGraceCheck;
 			} else {
-				_logik setVariable ["wfbe_commander", objNull, true];
-				[_side, "LocalizeMessage", ['CommanderDisconnected']] Call WFBE_CO_FNC_SendToClients;
-				{[_x,false] Call SetTeamAutonomous;[_x, ""] Call SetTeamRespawn} forEach (_logik getVariable "wfbe_teams");
+				//--- Round-3 review (P1-3): the lease-mismatch case no longer nulls state directly here -
+				//--- it ENQUEUES a stand-down targeting the CURRENT generation so the single executor
+				//--- remains the sole effects writer. If something newer has already superseded this
+				//--- state by the time the executor processes it, the request is a safe no-op.
+				[_side, (_logik getVariable ["wfbe_commander_lease_gen", 0])] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown;
 			};
 		} else {
 			Private ["_logik"];

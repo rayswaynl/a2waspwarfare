@@ -24,7 +24,10 @@ if ( !(isNil "_teamJoinedConfirmed")) then { //--- Retrieve JIP Information if t
 			_oldLogic = (_teamJoinedConfirmed) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _oldLogic) then {
 				_oldLease = _oldLogic getVariable ["wfbe_commander_lease", []];
-				if (typeName _oldLease == "ARRAY" && {count _oldLease >= 1} && {(_oldLease select 0) == _uid}) then {[_teamJoinedConfirmed] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown}; //--- request only; single per-side executor runs the effects
+				//--- Round-3 review: the stand-down request is now VERSIONED - it carries the
+				//--- generation this lease was AT when the side-change was detected, so the
+				//--- executor discards it if anything newer (grant/reclaim) has since superseded it.
+				if (typeName _oldLease == "ARRAY" && {count _oldLease >= 6} && {(_oldLease select 0) == _uid}) then {[_teamJoinedConfirmed, (_oldLease select 5)] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown};
 			};
 		};
 
