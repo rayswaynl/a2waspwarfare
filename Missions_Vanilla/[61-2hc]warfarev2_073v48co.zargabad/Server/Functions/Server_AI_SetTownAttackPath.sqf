@@ -11,6 +11,12 @@ Private ["_distance_node","_select","_side","_team","_town_assigned","_wp_dest",
 _team = _this select 0;
 _town_assigned = _this select 1;
 
+//--- CULLED-DISPATCH GUARD: the commander can delete a team or town between dispatch and path planning.
+//--- Skip before leader/getPos dereferences and leave one always-on RPT attribution line.
+if (isNull _team || {isNull _town_assigned}) exitWith {
+	["WARNING", Format ["Server_AI_SetTownAttackPath: skipped culled dispatch team=%1 town=%2.", _team, _town_assigned]] Call WFBE_CO_FNC_LogContent;
+};
+
 _wp_origin = getPos (leader _team);
 _wp_dest = getPos _town_assigned;
 _select = _wp_origin;
@@ -19,6 +25,9 @@ _select = _wp_origin;
 (_team) Call WFBE_CO_FNC_WaypointsRemove;
 _distance_node = 700;
 _side = (_team getVariable "wfbe_side") Call WFBE_CO_FNC_GetSideID;
+if (isNil "_side") exitWith {
+	["WARNING", Format ["Server_AI_SetTownAttackPath: skipped dispatch with undefined side team=%1.", _team]] Call WFBE_CO_FNC_LogContent;
+};
 
 //--- cmdcon41-w2 (mhq-... yellow-march): behind WFBE_C_AICOM_MARCH_YELLOW>0, the TRANSIT MOVE nodes' combat
 //--- mode switches "RED"->"YELLOW" so a marching column returns fire but does NOT peel off to hunt every
