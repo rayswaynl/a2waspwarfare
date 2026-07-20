@@ -484,6 +484,35 @@ WFBE_SkinSelector_Applied = true;
 	};
 WFBE_SkinSelector_InProgress = false; //--- release re-entry guard on successful completion
 
+//--- fable/skinswap-slot1-rejoin (owner LIVE-CONFIRMED 2026-07-19 ZG, own client RPT): the swap
+//--- creates a NEW body that the engine seats at the group's join-order TAIL, and rank alone does
+//--- not renumber the A2 command bar - so after every skin swap the player rendered #2+ behind
+//--- their own AI. Init_Client and Client_OnKilled both already run this exact slot1-rejoin dance
+//--- (proven live: "slot1-rejoin: 1 AI squadmates re-joined behind the player" fired at respawn in
+//--- the same session where BOTH skin swaps left the player at the tail). This closes the G3 gap
+//--- from the approved diagnosis (WASP-PLAYER-TEAMBAR-SLOT-DIAGNOSIS-20260719 / card
+//--- wasp-player-group-rank-order-diagnosis): same guards, same flag, byte-identical when
+//--- WFBE_C_PLAYER_TEAMBAR_FIRST=0. Runs AFTER every path (primary + subordinate fallback) has
+//--- settled the final group membership. Client-local AI only (join needs locality);
+//--- createGroup-null / foreign-group / already-#1 cases skip cleanly.
+if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
+	if (alive player && {group player == WFBE_Client_Team} && {leader (group player) == player} && {((units group player) select 0) != player}) then {
+		Private ["_slot1Others","_slot1Tmp"];
+		_slot1Others = [];
+		{if (alive _x && {!isPlayer _x} && {local _x}) then {_slot1Others set [count _slot1Others, _x]}} forEach ((units group player) - [player]);
+		if (count _slot1Others > 0) then {
+			_slot1Tmp = createGroup (side group player);
+			if (!isNull _slot1Tmp) then {
+				_slot1Others joinSilent _slot1Tmp;
+				_slot1Others joinSilent (group player);
+				if (count units _slot1Tmp == 0) then {deleteGroup _slot1Tmp};
+				(group player) selectLeader player;
+				diag_log Format ["[WFBE|TEAMBAR] SkinSelector_Apply slot1-rejoin: %1 AI squadmates re-joined behind the player.", count _slot1Others];
+			};
+		};
+	};
+};
+
 diag_log format ["[WFBE (SKIN)] B6 COMPLETE: player='%1' class='%2' uid='%3'",
 	name player, typeOf player, _uid];
 hint format ["%1\nSkin applied.", _chosenClass];
