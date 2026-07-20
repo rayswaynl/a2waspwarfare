@@ -64,3 +64,38 @@ Tools/Lint/test_camp_null_count.py
 - `git diff --check origin/master..HEAD`: passed.
 - Chernarus/Takistan/Zargabad `git hash-object` comparison: 11 mirrored file classes, all byte-identical.
 - Merge conflict markers: none.
+
+
+## Roster-council expansion
+
+- Commit `12387970479d13b1c9f463c55305ff0fc4c8fdf7` - `roster-free-wins`: contractor/T-55/AA roster closures.
+- Commit `b4427c20d4c0d3ed0258e79d0669f2fb0108ebf4` - `groups-to-10`: larger registered infantry and mounted AICOM complements.
+- Commit `c51d379d689dc3faa866e5e6849c7d50ad525d25` - `garrison-variety`: additive US/TKA/TKGUE garrison variants.
+- Commit `1883a4989a38cb007ae22e61f0f738235841c02f` - `faction-rares`: map-branched TKA/NAPA rare rolls and no-artillery vehicle sprinkles.
+- Commit `943646728595a1038a8c4a474b32080d4c9c7cbd` - `air-pack`: dark-by-default council air templates, owner gunner flip retained, and lift-majority bucket guard.
+- Commit `2e19d707f1060f03962297d83215b5b493bcad60` - `patrol-sweep`: shared roster-key patrol entries and GUER wildcard foot-roster use.
+- Chat relay (`chat-tap`): SKIPPED. The OA 1.64 mission sources and verified command/event inventory provide no safe, documented server-side chat hook; `HandleChatMessage`/A3 mission-event forms are not used without OA proof. No flag or misleading partial relay was shipped.
+
+### Additional changed file classes in the roster expansion
+
+```text
+Common/Config/Core_Root/Root_GUE.sqf
+Common/Config/Core_Root/Root_RU.sqf
+Common/Config/Core_Root/Root_TKA.sqf
+Common/Config/Core_Root/Root_TKGUE.sqf
+Common/Config/Core_Root/Root_US.sqf
+Common/Config/Core_Squads/Squad_OA_US.sqf
+Common/Config/Core_Squads/Squad_RU.sqf
+Common/Config/Groups/Groups_TKA.sqf
+Common/Config/Groups/Groups_TKGUE.sqf
+Common/Config/Groups/Groups_US.sqf
+Common/Functions/Common_RunSidePatrol.sqf
+Common/Init/Init_CommonConstants.sqf
+Server/AI/Commander/AI_Commander_AssignTypes.sqf
+Server/AI/Commander/AI_Commander_Teams.sqf
+Server/Functions/AI_Commander_Wildcard_GUER.sqf
+Server/Functions/Server_GetTownGroups.sqf
+Server/Functions/Server_GetTownGroupsDefender.sqf
+```
+
+The 17 paths above are touched identically in Chernarus, Takistan, and Zargabad; the existing integrated-wave paths remain listed in the prior section.
