@@ -138,6 +138,34 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
 _aiTeamTypes            = _aiTeamTypes            + [2];
 _aiTeamUpgrades         = _aiTeamUpgrades         + [[0,0,3,0]];
 
+
+//--- B757 ROSTER COUNCIL AIR PACK (flagged dark by default): additive lift/escort/strike templates.
+if (missionNamespace getVariable ["WFBE_C_AICOM_AIR_COUNCIL_PACK", 0] > 0) then {
+	_u = ["MV22"]; _u = _u + ["US_Soldier_TL_EP1"]; _u = _u + ["US_Soldier_AR_EP1"]; _u = _u + ["US_Soldier_MG_EP1"]; _u = _u + ["US_Soldier_LAT_EP1"]; _u = _u + ["US_Soldier_LAT_EP1"]; _u = _u + ["US_Soldier_Medic_EP1"]; _u = _u + ["US_Soldier_EP1"]; _u = _u + ["US_Soldier_EP1"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - MV-22 Assault Lift"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,2]];
+
+	_u = ["UH1Y"]; _u = _u + ["AH1Z"]; _u = _u + ["US_Soldier_TL_EP1"]; _u = _u + ["US_Soldier_AR_EP1"]; _u = _u + ["US_Soldier_LAT_EP1"]; _u = _u + ["US_Soldier_Medic_EP1"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - UH-1Y + AH-1Z Escort"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+
+	_u = ["BAF_Merlin_HC3_D"]; _u = _u + ["BAF_Soldier_TL_DDPM"]; _u = _u + ["BAF_Soldier_AR_DDPM"]; _u = _u + ["BAF_Soldier_GL_DDPM"]; _u = _u + ["BAF_Soldier_HAT_DDPM"]; _u = _u + ["BAF_Soldier_Medic_DDPM"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - Merlin DDPM Assault"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,2]];
+
+	_u = ["CH_47F_EP1"]; _u = _u + ["AH64D_EP1"]; _u = _u + ["US_Soldier_TL_EP1"]; _u = _u + ["US_Soldier_AR_EP1"]; _u = _u + ["US_Soldier_AT_EP1"]; _u = _u + ["US_Soldier_LAT_EP1"]; _u = _u + ["US_Soldier_Medic_EP1"]; _u = _u + ["US_Soldier_EP1"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - CH-47 + AH-64 Assault Package"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+
+	_u = ["AH6X_EP1"]; _u = _u + ["AH6J_EP1"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - AH-6 Scout Flight"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,1]];
+
+	_u = ["AV8B2"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - AV-8B Strike"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+};
+
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTYPES", _side], _aiTeamTypes];

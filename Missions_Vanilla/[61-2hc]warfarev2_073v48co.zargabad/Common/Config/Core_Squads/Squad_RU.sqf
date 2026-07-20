@@ -516,6 +516,30 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,true,false,false]];
 _aiTeamTypes            = _aiTeamTypes            + [1];
 _aiTeamUpgrades         = _aiTeamUpgrades         + [[0,4,0,0]];
 
+
+//--- B757 ROSTER COUNCIL AIR PACK (flagged dark by default): RU remains EAST; TK-marked air is additive only.
+if (missionNamespace getVariable ["WFBE_C_AICOM_AIR_COUNCIL_PACK", 0] > 0) then {
+	_u = ["Mi24_P"]; _u = _u + ["Mi24_P"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - Mi-24P Attack Pair"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+
+	_u = ["Mi17_TK_EP1"]; _u = _u + ["Mi24_D_TK_EP1"]; _u = _u + ["TK_Soldier_TL_EP1"]; _u = _u + ["TK_Soldier_AR_EP1"]; _u = _u + ["TK_Soldier_MG_EP1"]; _u = _u + ["TK_Soldier_LAT_EP1"]; _u = _u + ["TK_Soldier_Medic_EP1"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - TK Mi-8 + Mi-24D Escort"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,2]];
+
+	_u = ["Su25_TK_EP1"]; _u = _u + ["Su25_TK_EP1"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - Su-25TK Strike Pair"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
+
+	_u = ["UH1H_TK_EP1"]; _u = _u + ["TK_Soldier_TL_EP1"]; _u = _u + ["TK_Soldier_AR_EP1"]; _u = _u + ["TK_Soldier_LAT_EP1"]; _u = _u + ["TK_Soldier_Medic_EP1"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - TK Huey Insertion"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,2]];
+
+	_u = ["An2_TK_EP1"]; _u = _u + ["TK_Soldier_TL_EP1"]; _u = _u + ["TK_Soldier_AR_EP1"]; _u = _u + ["TK_Soldier_LAT_EP1"]; _u = _u + ["TK_Soldier_AA_EP1"]; _u = _u + ["TK_Soldier_Medic_EP1"];
+	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - An-2 Paratroop Lift"];
+	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,1]];
+};
+
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTYPES", _side], _aiTeamTypes];
