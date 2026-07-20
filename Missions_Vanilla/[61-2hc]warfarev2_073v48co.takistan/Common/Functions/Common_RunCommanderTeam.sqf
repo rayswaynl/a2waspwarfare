@@ -1977,17 +1977,42 @@ while {!WFBE_GameOver && _alive} do {
 
 					//--- ALWAYS dismount: build the on-foot infantry list from EVERY alive non-crew
 					//--- unit, dismounting any that happen to still be in cargo. Crew (driver/gunner)
-					//--- stay in their hull (keeps armour ready + parked near center). This replaces
-					//--- the broken _hasCargo branch selection entirely.
+					//--- stay in their hull (keeps armour ready + parked near center), UNLESS this is a
+					//--- crew-only team (see CREW-AS-CAPTURE-BODIES below). This replaces the broken
+					//--- _hasCargo branch selection entirely.
 					_liveUnits = (units _team) Call WFBE_CO_FNC_GetLiveUnits;
 					_footInf   = [];
+					//--- CREW-AS-CAPTURE-BODIES (OWNER DESIGN DECISION 2026-07-20 07:52, wasp-takistan-aicom-capture-stall-20260720): a crew-ONLY team (every alive unit is
+					//--- the driver or gunner of some vehicle, no dismountable cargo infantry at all)
+					//--- previously NEVER got a foot presence into the camp "Man" scan (server_town_camp.sqf nearEntities['Man',range]) - the deliberation's "43 crew-led
+					//--- uncap-parked cappasses=0" population. Precompute whether the team has ANY
+					//--- non-crew unit; if it does, crew keep their normal fire-support role unchanged.
+					//--- Only when the team is genuinely crew-only does the crew ALSO dismount to work
+					//--- the camp, then remount for the next leg via the existing B755 long-leg re-mount
+					//--- idiom above (unchanged - it re-seats any on-foot non-crew unit regardless of why
+					//--- they are on foot).
+					private "_hasNonCrewInf"; _hasNonCrewInf = false;
+					{
+						if (alive _x) then {
+							if (vehicle _x == _x) then {_hasNonCrewInf = true} else {
+								private "_vehChk"; _vehChk = vehicle _x;
+								if !(_x == driver _vehChk || _x == gunner _vehChk) then {_hasNonCrewInf = true};
+							};
+						};
+					} forEach _liveUnits;
 					{
 						_u = _x;
 						if (alive _u) then {
 							if (vehicle _u != _u) then {
 								_veh = vehicle _u;
 								if (_u == driver _veh || _u == gunner _veh) then {
-									//--- Crew stays mounted: hull stays driveable + parked.
+									if (_hasNonCrewInf) then {
+										//--- Crew stays mounted: hull stays driveable + parked (infantry are working the camp).
+									} else {
+										unassignVehicle _u;
+										[_u] orderGetIn false;
+										_footInf = _footInf + [_u];
+									};
 								} else {
 									unassignVehicle _u;
 									[_u] orderGetIn false;
