@@ -72,7 +72,7 @@ while {!gameOver} do {
 	[_sideID] spawn {
 		private ["_sideID","_westID","_eastID","_occTowns","_owned","_gG1","_gG2","_gG5",
 		         "_weights","_cumSum","_roll",
-		         "_i","_chosen","_draw","_result","_detail","_soldierClass","_vbiedClass","_target","_nearD",
+		         "_i","_chosen","_draw","_result","_detail","_soldierClass","_vbiedClass","_guerRosters","_guerRoster","_target","_nearD",
 		         "_candTown","_dd","_targetPos","_ang","_spawnPos","_try","_roads","_truck","_grp","_drv",
 		         "_tier","_cpVeh","_cpLabel","_veh","_d1","_d2","_n","_footN","_u","_pos","_mk","_occSide",
 		         "_locMsg","_wName","_wDesc","_wMap","_g1Mk",
@@ -90,6 +90,9 @@ while {!gameOver} do {
 		{ if ((_x getVariable ["sideID","?"]) == _sideID) then {_owned = _owned + [_x]} } forEach towns;
 
 		_soldierClass = missionNamespace getVariable ["WFBE_GUERRESSOLDIER", ""];
+		//--- B757 shared-roster tap: wildcard foot bodies use the active GUER town roster.
+		_guerRosters = missionNamespace getVariable ["WFBE_GUER_GROUPS_Squad_Advanced", []];
+		_guerRoster = if (count _guerRosters > 0) then {_guerRosters select floor(random count _guerRosters)} else {[_soldierClass]};
 		_vbiedClass   = missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"];
 
 		//--- ELIGIBILITY -> weights (0 = ineligible).
@@ -417,7 +420,7 @@ while {!gameOver} do {
 									_gPos = [(_spawnPos select 0) + (_gOff select 0) * (cos _dir) + (_gOff select 1) * (sin _dir),
 									         (_spawnPos select 1) - (_gOff select 0) * (sin _dir) + (_gOff select 1) * (cos _dir),
 									         0];
-									_u = [_soldierClass, _grp, _gPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+									_u = [_guerRoster select ((_n - 1) mod (count _guerRoster)), _grp, _gPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 									if (!isNull _u) then {
 										_u setVariable ["WFBE_IsTownDefenderAI", true, true];
 										if (_tier > 0) then {_u setSkill ["general", ((skill _u) + (0.05 * _tier)) min 1]};
@@ -561,7 +564,7 @@ while {!gameOver} do {
 						_footN = 3 + _tier;
 						for "_n" from 1 to _footN do {
 							_pos = [(_spawnPos select 0) + (random 16) - 8, (_spawnPos select 1) + (random 16) - 8, 0];
-							_u = [_soldierClass, _grp, _pos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+							_u = [_guerRoster select ((_n - 1) mod (count _guerRoster)), _grp, _pos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 							if (!isNull _u) then {_u setVariable ["WFBE_IsTownDefenderAI", true, true]};
 						};
 						[_grp, _spawnPos, 60] Call AIPatrol;
@@ -665,7 +668,7 @@ while {!gameOver} do {
 							for "_n" from 1 to 4 do {
 								_scavPos = [(_spawnPos select 0) + (random 20) - 10,
 								            (_spawnPos select 1) + (random 20) - 10, 0];
-								_scavMember = [_soldierClass, _scavGrp, _scavPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+								_scavMember = [_guerRoster select ((_n - 1) mod (count _guerRoster)), _scavGrp, _scavPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 								if (!isNull _scavMember) then {
 									_scavMember setVariable ["WFBE_IsTownDefenderAI", true, true];
 								};

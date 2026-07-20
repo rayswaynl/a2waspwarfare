@@ -54,6 +54,8 @@ if (isServer) then {
 	//--- entries (GAZ_Vodnik_HMG+GAZ_Vodnik, BTR90+BTR90, T72_RU+BMP3, T72_RU+T72_RU)
 	//--- were crewless to Common_RunSidePatrol (vehicle crews are not counted) and never spawned.
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
+		//--- B757 shared-roster entry: Common_RunSidePatrol resolves this key to the active faction roster.
+		"Squad_0",
 		//--- recon-foot: sniper-led scout team.
 		['RU_Soldier_TL','RU_Soldier_MG','RU_Soldier_Sniper','RU_Soldier_Medic'],
 		//--- foot rifle squad.

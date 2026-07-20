@@ -43,6 +43,8 @@ if (isServer) then {
 	//--- mixed inf+vehicle, AA picket (Ural ZU-23 / Strela) at MEDIUM+HEAVY. Insurgent flavour: light technicals
 	//--- (DSHKM/SPG9/PK offroad+pickup) at LIGHT, BTR-40/BRDM at MEDIUM, T-34/T-55 armor at HEAVY.
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
+		//--- B757 shared-roster entry: Common_RunSidePatrol resolves this key to the active faction roster.
+		"Squad_Advanced",
 		//--- MG/sniper scout team (foot).
 		['TK_GUE_Soldier_EP1','TK_GUE_Soldier_MG_EP1','TK_GUE_Soldier_Sniper_EP1','TK_GUE_Bonesetter_EP1'],
 		//--- foot AT-hunter rifle squad.

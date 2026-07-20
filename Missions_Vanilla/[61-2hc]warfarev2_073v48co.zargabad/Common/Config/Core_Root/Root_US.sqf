@@ -54,6 +54,8 @@ missionNamespace setVariable [Format["WFBE_%1SUPPLYTRUCK", _side], 'MtvrSupply_D
 if (isServer) then {
 	//--- Patrols.
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
+		//--- B757 shared-roster entry: Common_RunSidePatrol resolves this key to the active faction roster.
+		"Squad_0",
 		['US_Soldier_TL_EP1','US_Soldier_MG_EP1','US_Soldier_Sniper_EP1','US_Soldier_Medic_EP1'],
 		['US_Soldier_TL_EP1','US_Soldier_AR_EP1','US_Soldier_GL_EP1','US_Soldier_AT_EP1','US_Soldier_EP1'],
 		['HMMWV_M1151_M2_DES_EP1','HMMWV_MK19_DES_EP1'],
