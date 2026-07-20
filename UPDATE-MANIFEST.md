@@ -106,3 +106,31 @@ The 17 paths above are touched identically in Chernarus, Takistan, and Zargabad;
 - Gated both lift-majority air rails with `WFBE_C_AICOM_AIR_COUNCIL_PACK` and corrected the manifest wording: templates and rail are both gated.
 - Replaced the unarmed AICOM `AH6X_EP1` Scout Flight entry with a second `AH6J_EP1` attack helicopter.
 - Cherry-picked only naval fallback commit `3816b82fa`; PR #1186 was not merged because its base included unrelated master changes.
+
+## Fable-cleared fold-in backlog
+
+- #1166 merged (master-based): `2b3a7c2a325edddb2bb181e18e895ded85175340`.
+- #1168 cherry-picked unique commit: `96d5bf6e38a46b3002bc509019a181e6c66e25d6`.
+- #1170 cherry-picked unique commit: `3cae7765a2806552c49d24ae2046dcaaff695818`.
+- #1171 cherry-picked unique commit: `abd1fce9d31add5a5dc54f0f98f9ea07e2807640`.
+- #1172 cherry-picked unique commit: `d66b3ee73bb8c608d62f83d27473cefe84ce0cde` (conflict resolved with existing refund logic retained).
+- #1173 cherry-picked unique commit: `abfa636763c735e93f9f76ebcc623e74b098c04c`.
+- #1174 cherry-picked unique commit: `3ffe48fdbc981d3a6c3d58457c411ec52d7ce6fd`.
+- #1175 cherry-picked unique commit: `62cad3e66f26f884d88e3af216314ec685141770`.
+- #1176 cherry-picked unique commit: `b299f3bb6e609771e9e034bd67b937c6201f81d9`.
+- #1177 cherry-picked unique commit: `3c5d16198a8a409d004b2dd3862921a7bb6f1467`.
+- #1178 cherry-picked unique commit: `ebf21ac741a83f3876b153ec81c98560d1cf6b27` (combined GDIR recovery with existing GUER group-cap logic).
+- #1179 cherry-picked unique commit: `1e13845be28271e673a09f694dd1b3bc3ee25800` (conflict resolved with existing teardown retained).
+- #1180 cherry-picked unique commit: `88929a9641a2ef810cd983da2648c559001a40f4`.
+- #1181 cherry-picked unique commit: `62a6a5acb1b16742cf203c17dfa60de7ff17a14c`.
+- #1182 cherry-picked unique commit: `a7255cf25a5d9ee7efab57d104bb749f55b0e84c`.
+- #1183 cherry-picked unique commit: `f3e2e506023d4a49c799fb5368cc1ebdd8868fa1`.
+- #1184 cherry-picked unique commit: `d705da4a2365e1af185ba23dacdcb16f73ebd50c`.
+- #1185 cherry-picked unique commit: `8eb08e939064b1b8722f5c7b5a391434e68981bb`.
+- #1187 cherry-picked unique commit: `40a22d8ee0ccb123999eb6fee2af3b5e9cab123c`.
+- #1188 merged (master-based): `6b172b41617446bbb367b100c4421f0dde5b969d`.
+- #1189 cherry-picked unique commit: `48d84ece4e2b27063bf2e6e896a437f726631f72`.
+- #1190 merged (master-based): `9854b70c24546186f383783b3aadf425dc21c60d`.
+- #1191 merged (master-based): `4bc43f55ece9574e3ab1bbb5e069cb9649de9bb7`.
+- Excluded #1186: already cherry-picked as `dd6d103914e72790a4cf6451483707c58bd41f2a`; its PR still needs rebase.
+- Excluded #1154-#1163: RC2 stack, intentionally not folded.
