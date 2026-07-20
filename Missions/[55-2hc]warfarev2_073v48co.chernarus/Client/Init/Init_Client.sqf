@@ -103,12 +103,12 @@ _rearmor = {
    				_result = 0;
 
    				switch (_ammo) do {
-                    case "B_20mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_23mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_25mm_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_25mm_HEI" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_30mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_30mm_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
+                    case "B_20mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_23mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_25mm_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_25mm_HEI" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_30mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_30mm_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
 					case "Sh_40_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
      				default {_result = _this select 2;};
     			};
@@ -126,6 +126,7 @@ UpdateMarker = Compile preprocessFile "Common\Functions\Common_UpdateMarker.sqf"
 //--- flags (WFBE_HAS_FX_MOD / WFBE_HAS_SOUND_MOD / WFBE_HAS_HUD_MOD) that the FX-suppression hooks read.
 //--- Whole feature gated by WFBE_C_MODHOOKS (default 1). Safe no-op for players without any mod.
 WFBE_CL_FNC_ModDetect = Compile preprocessFileLineNumbers "Client\Functions\Client_ModDetect.sqf";
+Call Compile preprocessFileLineNumbers "Client\Functions\Client_TeambarProbe.sqf"; //--- TEAMBAR probe (self-registering)
 BoundariesIsOnMap = Compile preprocessFile "Client\Functions\Client_IsOnMap.sqf";
 BoundariesHandleOnMap = Compile preprocessFile "Client\Functions\Client_HandleOnMap.sqf";
 BuildUnit = Compile preprocessFile "Client\Functions\Client_BuildUnit.sqf";
@@ -1199,6 +1200,7 @@ waitUntil {!isNull group player};
 
 //--- Make sure that player is always the leader.
 if (leader(group player) != player) then {(group player) selectLeader player};
+["init", "post-select"] Call WFBE_CL_FNC_TeambarProbe;
 
 //--- TEAMBAR-FIRST (fable/player-teambar-slot): A2 command bar ranks units by RANK then join-order.
 //--- Set the player to COLONEL so they always render at slot 1 regardless of AI subordinate rank.
@@ -1213,6 +1215,7 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 	//--- null / not-leader / already-#1 cases skip cleanly. Mirrors Client_OnKilled's slot1-rejoin exactly.
 	[] spawn {
 		sleep 4;
+		["init", "rejoin-check"] Call WFBE_CL_FNC_TeambarProbe; //--- TEAMBAR probe: every guard input the line below evaluates
 		if (alive player && {group player == WFBE_Client_Team} && {leader (group player) == player} && {((units group player) select 0) != player}) then {
 			Private ["_slot1Others","_slot1Tmp"];
 			_slot1Others = [];
@@ -1225,8 +1228,23 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 					if (count units _slot1Tmp == 0) then {deleteGroup _slot1Tmp};
 					(group player) selectLeader player;
 					diag_log Format ["[WFBE|TEAMBAR] Init_Client slot1-rejoin: %1 AI squadmates re-joined behind the player.", count _slot1Others];
+					["init", "rejoin-done"] Call WFBE_CL_FNC_TeambarProbe;
+				} else {
+					["init", "rejoin-creategroup-null"] Call WFBE_CL_FNC_TeambarProbe;
 				};
+			} else {
+				["init", "rejoin-no-local-others"] Call WFBE_CL_FNC_TeambarProbe;
 			};
+		};
+	};
+};
+//--- TEAMBAR probe heartbeat (round-2 review): a low-frequency periodic observation so drift
+//--- BETWEEN lifecycle events (an AI joining late, a promotion mid-mission) is still captured.
+if ((missionNamespace getVariable ["WFBE_C_TEAMBAR_PROBE", 0]) > 0) then {
+	[] spawn {
+		while {true} do {
+			sleep 60;
+			if (alive player) then {["heartbeat", "periodic"] Call WFBE_CL_FNC_TeambarProbe};
 		};
 	};
 };

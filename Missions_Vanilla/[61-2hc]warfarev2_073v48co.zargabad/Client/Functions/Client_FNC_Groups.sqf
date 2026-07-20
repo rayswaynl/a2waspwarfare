@@ -26,6 +26,7 @@ WFBE_CL_FNC_Groups_KickedOff = {
 	
 	[player, WFBE_Client_Team, WFBE_Client_SideJoined] Call WFBE_CO_FNC_ChangeUnitGroup;
 	if (leader WFBE_Client_Team != player) then {WFBE_Client_Team selectLeader player};
+	["kicked", "post-transfer"] Call WFBE_CL_FNC_TeambarProbe; //--- TEAMBAR probe: kicked-off path has neither COLONEL nor rejoin - capture the resulting order
 	hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>You were kicked from the group <t color='#BD63F5'>%1</t>, you have been transfered back to your <t color='#B6F563'>Original group</t>.</t>", _group];
 	["INFORMATION", Format ["WFBE_CL_FNC_Groups_KickedOff: I was kicked from the group [%1].", _group]] Call WFBE_CO_FNC_LogContent;
 };
