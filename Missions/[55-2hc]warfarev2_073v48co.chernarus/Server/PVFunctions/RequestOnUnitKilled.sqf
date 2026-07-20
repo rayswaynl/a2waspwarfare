@@ -6,7 +6,7 @@
 		- Killed side ID.
 */
 
-Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak","_tallyCount","_fbBonus","_srvBounty","_srvAssist","_srvPvp","_hcNames"];
+Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak","_tallyCount","_fbBonus","_srvBounty","_srvAssist","_srvPvp","_hcNames","_relayKiller"];
 
 if !((typeName _this) in ["ARRAY"]) exitWith {
 	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (non-array)."] Call WFBE_CO_FNC_LogContent;
@@ -28,6 +28,9 @@ _killed = _this select 0;
 _killer = _this select 1;
 _killed_side = (_this select 2) Call GetSideFromID;
 _type = typeOf _killed;
+_relayKiller = "AI";
+if (!isNull _killer && {isPlayer _killer}) then {_relayKiller = name _killer};
+["KILL", _relayKiller, Format ["victim=%1 killer=%2", _type, _relayKiller]] Call WFBE_SE_FNC_ChatRelayEvent;
 
 //--- Card #66 (killstreak bounty): server-authoritative killstreak tracking. Capture the VICTIM's
 //--- pre-reset streak (forwarded into the AwardBountyPlayer message below), then UNCONDITIONALLY clear

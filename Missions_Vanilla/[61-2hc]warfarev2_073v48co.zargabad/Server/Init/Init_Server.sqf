@@ -66,6 +66,8 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 
 //--- New Fnc.
 WFBE_SE_FNC_AI_SetTownAttackPath = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath.sqf";
+//--- CHAT RELAY REWORK: server-only, free chat blocked-pending-BE because display-24 semantics are not proven here.
+WFBE_SE_FNC_ChatRelayEvent = Compile preprocessFileLineNumbers "Server\Functions\Server_ChatRelayEvent.sqf";
 WFBE_SE_FNC_AI_SetTownAttackPath_PathIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PathIsSafe.sqf";
 WFBE_SE_FNC_AI_SetTownAttackPath_PosIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PosIsSafe.sqf";
 WFBE_SE_FNC_AI_Com_Upgrade = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_Com_Upgrade.sqf";
@@ -1349,7 +1351,8 @@ if (_antiStackEnabled) then {
 	// 0 = NONE
 	// 1 = CHERNARUS
 	// 2 = TAKISTAN
-	["SET_MAP", 3] call WFBE_SE_FNC_CallDatabaseSetMap;
+	// 3 = ZARGABAD; keep all terrain mirrors byte-identical and branch only at runtime.
+	["SET_MAP", if (toLower worldName == "takistan") then {2} else {if (toLower worldName == "zargabad") then {3} else {1}}] call WFBE_SE_FNC_CallDatabaseSetMap;
 };
 
 _logMatchWinPlayerCountThreshold = 10;

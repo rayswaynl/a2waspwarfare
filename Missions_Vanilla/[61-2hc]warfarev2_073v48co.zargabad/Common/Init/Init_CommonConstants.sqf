@@ -2780,6 +2780,11 @@ if (isNil "WFBE_C_CLIENT_AUTORUN") then {WFBE_C_CLIENT_AUTORUN = 1};
 //--- CLIENT FRAME-PACING TELEMETRY (codex-gaming-lane-2, 2026-07-13): local RPT-only baseline.
 //--- 0 = no sampler VM, no diag_fps reads, no entity scan and no network traffic.
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY") then {WFBE_C_CLIENT_FRAME_TELEMETRY = 1};
+//--- CHAT RELAY REWORK (server-observable fallback, 2026-07-21): the OA 1.64 display-24 client hook
+//--- is not proven by repository/config evidence, so free chat stays blocked-pending-BE. This dark flag
+//--- only permits server-observable event lines (kills, joins/leaves, town flips, and round end).
+if (isNil "WFBE_C_CHAT_RELAY") then {WFBE_C_CHAT_RELAY = 0};
+
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL") then {WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL = 60};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;

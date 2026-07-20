@@ -94,6 +94,8 @@ if (_isHCDisconnect) exitWith {};
 
 if (_uid == '') exitWith {};
 
+["LEAVE", _name, Format ["uid=%1", _uid]] Call WFBE_SE_FNC_ChatRelayEvent;
+
 ["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has left the game", _name, _uid]] Call WFBE_CO_FNC_LogContent;
 
 //--- Player had any objects created?
