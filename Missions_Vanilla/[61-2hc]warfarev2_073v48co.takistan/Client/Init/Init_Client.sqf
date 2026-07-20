@@ -278,6 +278,7 @@ Call Compile preprocessFileLineNumbers 'Client\Functions\Client_FNC_OnFired.sqf'
 Call Compile preprocessFileLineNumbers 'Client\Functions\Client_FNC_Special.sqf'; //--- FUNCTIONS: Specials.
 //--- QoL trio feat.3: advisor nudge function.
 WFBE_CL_FNC_QOL_Advisor = Compile preprocessFileLineNumbers 'Client\Functions\Client_QOL_Advisor.sqf';
+WFBE_CL_FNC_AutoRunAttach = Compile preprocessFileLineNumbers "Client\Functions\Client_AutoRun.sqf";
 
 
 
@@ -485,6 +486,7 @@ keyPressedForAdjustingViewDistance = compile preprocessFile "Common\Functions\Co
 _display = findDisplay 46;
 _display displayAddEventHandler ["KeyDown","_this call keyPressed"];
 _display displayAddEventHandler ["KeyDown","_this call keyPressedForAutoSendSpawnedUnitsToWaypoint"];
+if ((missionNamespace getVariable ["WFBE_C_CLIENT_AUTORUN", 1]) > 0) then {[] call WFBE_CL_FNC_AutoRunAttach};
 _display displayAddEventHandler ["KeyDown","_this call keyPressedForAdjustingViewDistance"];
 	//--- Debug teleport rebind: press "[" (DIK 0x1A=26) to ARM, then the next plain map-click teleports you (was: every click teleported under WF_Debug, which ate the sell/ICBM confirm clicks).
 	_display displayAddEventHandler ["KeyDown","if ((_this select 1) == 26 && WF_Debug) then {missionNamespace setVariable ['WFBE_DEBUG_TELEPORT_ARMED', true]; hintSilent 'Debug teleport ARMED - next map click teleports you.'; true} else {false}"];

@@ -6,6 +6,8 @@ _loadDefault = true;
 _typeof = typeOf _spawn;
 
 WFBE_Client_IsRespawning = false;
+if (!isNil "WFBE_CL_FNC_AutoRunCancel") then {[] call WFBE_CL_FNC_AutoRunCancel};
+if (!isNil "WFBE_CL_FNC_AutoRunAttach") then {[] call WFBE_CL_FNC_AutoRunAttach};
 _allowCustom = true;
 
 //--- cmdcon23 RHUD/funds respawn re-home. GROUP respawn (respawn=3) can drop the player into a
