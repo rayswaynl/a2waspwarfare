@@ -157,12 +157,16 @@ if (isServer) then {
 					_x setVariable ["supplyValue", _town getVariable "supplyValue", true];
 					_x setVariable ["wfbe_camp_bunker", _townModel, true];
 					_towns_camps = _towns_camps + [_x];
+					//--- kimi/bughunt-mission-core (2026-07-20): keep _town_camp_flags index-parallel with
+					//--- _towns_camps - it used to grow UNCONDITIONALLY below, so a camp that failed the SV
+					//--- sync (HANGGUARD path) left the flag list one element longer and server_town_camp.sqf
+					//--- paired every subsequent camp with the WRONG flag (capture re-textured the wrong pole).
+					_town_camp_flags = _town_camp_flags + [_flag];
 					//[_x, _town, _flag] execVM "Server\FSM\server_town_camp.sqf";
 				} else {
 					diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: town supplyValue was not ready after 30s - skipping camp supply sync (town=%1).", (_town getVariable ["name", "?"])];
 				};
 			};
-			_town_camp_flags = _town_camp_flags + [_flag];
 			["INITIALIZATION",Format ["Init_Town.sqf : Initialized Camp in [%1].", _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
 			_camp_counter = _camp_counter + 1;
 		} forEach _camps;
