@@ -2773,6 +2773,10 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 //--- PerformanceAudit A/B only - do not flip on live before that A/B + a gameplay-invariant
 //--- check confirm the cached and uncached paths pick identical targets.
 	if (isNil "WFBE_C_AICOM_STRATEGY_TOWNCACHE") then {WFBE_C_AICOM_STRATEGY_TOWNCACHE = 1}; //--- master gate: 0=off (default, byte-identical to HEAD), 1=on (memoize _dNear per candidate town for this Strategy call only - perf A/B test only).
+//--- CLIENT DOUBLE-TAP W AUTORUN (owner QoL, client-local): default ON; movement remains engine-owned and the
+//--- handler always returns false. The A2 OA 1.64 stock rifle-lowered run animation supplies root motion.
+if (isNil "WFBE_C_CLIENT_AUTORUN") then {WFBE_C_CLIENT_AUTORUN = 1};
+
 //--- CLIENT FRAME-PACING TELEMETRY (codex-gaming-lane-2, 2026-07-13): local RPT-only baseline.
 //--- 0 = no sampler VM, no diag_fps reads, no entity scan and no network traffic.
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY") then {WFBE_C_CLIENT_FRAME_TELEMETRY = 1};
