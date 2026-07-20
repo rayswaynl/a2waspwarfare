@@ -224,6 +224,12 @@ _u		= ["T34_TK_EP1"];
 _u = _u + ["T34_TK_EP1"];
 _l = _l + [_u];
 
+//--- Alternate museum-era mix: T-55 bridges the T-34/T-72 gap.
+_k = _k + ["Mechanized_0"];
+_u		= ["T55_TK_EP1"];
+_u = _u + ["T34_TK_EP1"];
+_l = _l + [_u];
+
 _k = _k + ["Mechanized_1"];
 _u		= ["T34_TK_EP1"];
 _u = _u + ["BMP2_TK_EP1"];
@@ -261,6 +267,12 @@ _l = _l + [_u];
 _k = _k + ["Armored_2"];
 _u		= ["T72_TK_EP1"];
 _u = _u + ["T72_TK_EP1"];
+_l = _l + [_u];
+
+//--- Alternate mixed-era armor column: T-72 with a T-55 companion.
+_k = _k + ["Armored_2"];
+_u		= ["T72_TK_EP1"];
+_u = _u + ["T55_TK_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["Armored_3"];

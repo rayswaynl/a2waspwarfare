@@ -63,6 +63,24 @@ _u = _u + ["TK_GUE_Soldier_Sniper_EP1"];
 
 _l = _l + [_u];
 
+//--- Roster free win: contractor squad is required by the GUER town picker on all maintained maps.
+_k = _k + ["Squad_Contractor"];
+_u        = ["Soldier_TL_PMC"];
+_u = _u + ["Soldier_MG_PMC"];
+_u = _u + ["Soldier_AT_PMC"];
+_u = _u + ["Soldier_Medic_PMC"];
+_u = _u + ["Soldier_M4A3_PMC"];
+_l = _l + [_u];
+
+//--- Roster free win: contractor squad is required by the GUER town picker on all maintained maps.
+_k = _k + ["Squad_Contractor"];
+_u        = ["Soldier_TL_PMC"];
+_u = _u + ["Soldier_MG_PMC"];
+_u = _u + ["Soldier_AT_PMC"];
+_u = _u + ["Soldier_Medic_PMC"];
+_u = _u + ["Soldier_M4A3_PMC"];
+_l = _l + [_u];
+
 _k = _k + ["Motorized"];
 
 _u =      ["Offroad_DSHKM_TK_GUE_EP1"];
@@ -110,8 +128,11 @@ _u = _u + ["Ural_ZU23_TK_GUE_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["AA_Heavy"];
-_u		= ["Ural_ZU23_TK_GUE_EP1"];
+//--- Captured Shilka + ZU-23 truck + MANPAD pair; all classes are verified build/spawn entries.
+_u		= ["ZSU_INS"];
 _u = _u + ["Ural_ZU23_TK_GUE_EP1"];
+_u = _u + ["TK_GUE_Soldier_AA_EP1"];
+_u = _u + ["TK_GUE_Soldier_AA_EP1"];
 
 _l = _l + [_u];
 
