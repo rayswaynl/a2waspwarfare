@@ -302,7 +302,22 @@ while {!WFBE_GameOver} do {
 				_gateFootMen = if (_gateSide == sideUnknown) then {-1} else {
 					{side (group _x) == _gateSide && {alive _x} && {vehicle _x == _x}} count ((getPos _location) nearEntities ["Man", 300])
 				};
-				diag_log (Format ["CAPGATE|v1|%1|mode2|side=%2|reason=%3|skip=%4|camps=%5/%6|footMen=%7", (_location getVariable ["name","?"]), str _gateSide, _gateReason, _skip, _gateCampsOnSide, _totalCamps, _gateFootMen]);
+				//--- Codex review MEDIUM (T0.3 follow-up, 2026-07-20): this fired unthrottled every ~5-6s per
+				//--- contested mode-2 town for the whole match (an extra 300m nearEntities scan each time) -
+				//--- fine for a bounded evidence-gathering pass, not for permanent live-server logging. Now logs
+				//--- immediately on a REASON state change (the actually-interesting diagnostic signal) and
+				//--- otherwise throttles to at most once per WFBE_C_CAPGATE_LOG_INTERVAL (default 30s) per town,
+				//--- same stamped-timestamp idiom this file already uses for wfbe_time_attacked above.
+				private ["_gateLastLog","_gateLastReason","_gateInterval","_gateShouldLog"];
+				_gateInterval   = missionNamespace getVariable ["WFBE_C_CAPGATE_LOG_INTERVAL", 30];
+				_gateLastLog    = _location getVariable ["wfbe_capgate_last_log", -999];
+				_gateLastReason = _location getVariable ["wfbe_capgate_last_reason", ""];
+				_gateShouldLog  = (_gateReason != _gateLastReason) || ((time - _gateLastLog) >= _gateInterval);
+				if (_gateShouldLog) then {
+					_location setVariable ["wfbe_capgate_last_log", time, false];
+					_location setVariable ["wfbe_capgate_last_reason", _gateReason, false];
+					diag_log (Format ["CAPGATE|v1|%1|mode2|side=%2|reason=%3|skip=%4|camps=%5/%6|footMen=%7", (_location getVariable ["name","?"]), str _gateSide, _gateReason, _skip, _gateCampsOnSide, _totalCamps, _gateFootMen]);
+				};
 			};
 		};
 

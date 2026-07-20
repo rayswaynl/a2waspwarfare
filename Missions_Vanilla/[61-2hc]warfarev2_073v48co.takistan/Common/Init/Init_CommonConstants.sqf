@@ -1452,6 +1452,8 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- "genuinely at capture range and still not converting". Does not feed any capture,
 	//--- abandon, or strike-ladder decision -- read-only in AI_Commander_AssignTowns.sqf.
 	if (isNil 'WFBE_C_AICOM_CAPTURE_READY_RADIUS') then {WFBE_C_AICOM_CAPTURE_READY_RADIUS = 60};
+	//--- Codex review MEDIUM fix: CAPGATE (server_town.sqf) throttle interval - see the diag_log call there.
+	if (isNil 'WFBE_C_CAPGATE_LOG_INTERVAL') then {WFBE_C_CAPGATE_LOG_INTERVAL = 30};
 	//--- P0 STRANDED FIX (task #48, claude-gaming 2026-06-15): foot/under-equipped ongoing teams were
 	//--- dispatched at far spearhead towns 6-12km away (256 DISPATCH vs 13 ARRIVED, 63% >6km) - they
 	//--- march cross-country and die. REACH_FOOT = max metres a non-mounted team is sent on the ONGOING
