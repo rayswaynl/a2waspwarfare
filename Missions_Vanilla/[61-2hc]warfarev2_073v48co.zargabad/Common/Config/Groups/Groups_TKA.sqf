@@ -16,6 +16,9 @@ _u = _u + ["TK_Soldier_LAT_EP1"];
 _u = _u + ["TK_Soldier_GL_EP1"];
 _u = _u + ["TK_Soldier_LAT_EP1"];
 _u = _u + ["TK_Soldier_Medic_EP1"];
+_u = _u + ["TK_Soldier_AMG_EP1"];
+_u = _u + ["TK_Soldier_AAT_EP1"];
+_u = _u + ["TK_Soldier_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["Squad_1"];
@@ -25,6 +28,9 @@ _u = _u + ["TK_Special_Forces_TL_EP1"];
 _u = _u + ["TK_Special_Forces_TL_EP1"];
 _u = _u + ["TK_Soldier_LAT_EP1"];
 _u = _u + ["TK_Soldier_Medic_EP1"];
+_u = _u + ["TK_Soldier_AMG_EP1"];
+_u = _u + ["TK_Soldier_AAT_EP1"];
+_u = _u + ["TK_Soldier_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["Squad_2"];
@@ -34,6 +40,9 @@ _u = _u + ["TK_Soldier_SL_EP1"];
 _u = _u + ["TK_Soldier_HAT_EP1"];
 _u = _u + ["TK_Soldier_AR_EP1"];
 _u = _u + ["TK_Soldier_Medic_EP1"];
+_u = _u + ["TK_Soldier_AMG_EP1"];
+_u = _u + ["TK_Soldier_AAT_EP1"];
+_u = _u + ["TK_Soldier_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["Squad_3"];
@@ -43,6 +52,9 @@ _u = _u + ["TK_Soldier_SL_EP1"];
 _u = _u + ["TK_Soldier_HAT_EP1"];
 _u = _u + ["TK_Soldier_AR_EP1"];
 _u = _u + ["TK_Soldier_Medic_EP1"];
+_u = _u + ["TK_Soldier_AMG_EP1"];
+_u = _u + ["TK_Soldier_AAT_EP1"];
+_u = _u + ["TK_Soldier_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["Squad_Advanced"];
@@ -51,6 +63,9 @@ _u = _u + ["TK_Special_Forces_EP1"];
 _u = _u + ["TK_Special_Forces_MG_EP1"];
 _u = _u + ["TK_Special_Forces_EP1"];
 _u = _u + ["TK_Special_Forces_MG_EP1"];
+_u = _u + ["TK_Soldier_AMG_EP1"];
+_u = _u + ["TK_Soldier_AAT_EP1"];
+_u = _u + ["TK_Soldier_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["Team_0"];
