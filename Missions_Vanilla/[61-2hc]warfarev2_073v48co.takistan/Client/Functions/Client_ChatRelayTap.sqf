@@ -15,13 +15,11 @@
 if (!hasInterface) exitWith {};
 if ((missionNamespace getVariable ["WFBE_C_CHATRELAY", 0]) == 0) exitWith {};
 
-private ["_lastText", "_lastTime", "_keyHandler"];
-
-_lastText = "";
-_lastTime = -10;
-
-_keyHandler = {
+//--- UI display event handlers execute by name in the UI context; they do not retain
+//--- locals from this watcher. Keep the callback global and its dedupe state in uiNamespace.
+WFBE_CL_FNC_ChatRelayKeyDown = {
 	private ["_dik", "_text"];
+	disableSerialization;
 	_dik = _this select 1;
 	//--- DIK_RETURN (28) / DIK_NUMPADENTER (156): the engine consumes the line right after
 	//--- this EH (we return false), so ctrlText still holds the submitted text here.
@@ -29,9 +27,9 @@ _keyHandler = {
 		_text = ctrlText ((findDisplay 24) displayCtrl 101);
 		if (_text != "") then {
 			//--- 2s same-text dedupe: a double-Enter bounce must not double-post to Discord.
-			if (!(_text == _lastText && (time - _lastTime) < 2)) then {
-				_lastText = _text;
-				_lastTime = time;
+			if (!(_text == (uiNamespace getVariable ["WFBE_CHATRELAY_LAST_TEXT", ""]) && {(time - (uiNamespace getVariable ["WFBE_CHATRELAY_LAST_TIME", -10])) < 2})) then {
+				uiNamespace setVariable ["WFBE_CHATRELAY_LAST_TEXT", _text];
+				uiNamespace setVariable ["WFBE_CHATRELAY_LAST_TIME", time];
 				WFBE_CHATRELAY = [getPlayerUID player, name player, str playerSide, _text];
 				publicVariableServer "WFBE_CHATRELAY";
 			};
@@ -43,6 +41,6 @@ _keyHandler = {
 //--- Re-attach on every chat-display open; the engine creates a fresh display each time.
 while {!(missionNamespace getVariable ["WFBE_GameOver", false])} do {
 	waitUntil {!isNull (findDisplay 24)};
-	(findDisplay 24) displayAddEventHandler ["KeyDown", _keyHandler];
+	(findDisplay 24) displayAddEventHandler ["KeyDown", "_this call WFBE_CL_FNC_ChatRelayKeyDown"];
 	waitUntil {isNull (findDisplay 24)};
 };

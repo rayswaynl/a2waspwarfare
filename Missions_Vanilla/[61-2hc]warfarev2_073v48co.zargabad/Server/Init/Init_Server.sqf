@@ -1210,9 +1210,9 @@ if ((missionNamespace getVariable ["WFBE_C_CHATRELAY", 0]) > 0) then {
 		_d = _this select 1;
 		if (typeName _d == "ARRAY") then {
 			if (count _d == 4) then {
-				if (typeName (_d select 1) == "STRING" && {typeName (_d select 3) == "STRING"}) then {
-					diag_log ("CHATRELAY|v1|uid=" + str (_d select 0)
-						+ "|side=" + str (_d select 2)
+				if (typeName (_d select 0) == "STRING" && {typeName (_d select 1) == "STRING"} && {typeName (_d select 2) == "STRING"} && {typeName (_d select 3) == "STRING"}) then {
+					diag_log ("CHATRELAY|v1|uid=" + (_d select 0)
+						+ "|side=" + (_d select 2)
 						+ "|t=" + str (round (time / 60))
 						+ "|name=" + (_d select 1)
 						+ "|text=" + (_d select 3));
