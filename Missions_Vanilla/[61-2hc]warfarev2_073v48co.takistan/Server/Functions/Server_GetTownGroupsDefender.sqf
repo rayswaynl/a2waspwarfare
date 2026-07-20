@@ -248,38 +248,31 @@ if (_mergeTarget > 0 && {count _contents > 1}) then {
 		_ci = _ci + 1;
 	} forEach _contents;
 
-	//--- GROUP-PACKING / LEADER-PRESERVING: selected infantry rosters are condensed without
-	//--- adding AI. When a roster crosses a target boundary, its tail fills the current group and
-	//--- its prefix (including that roster's original leader) starts the next one. This keeps each
-	//--- created group leader-capable; a source roster that is itself oversized remains atomic.
+	//--- PACKED-SEGMENTS: selected infantry rosters are condensed without adding AI. Preserve
+	//--- the source roster's forced-first spawn contract by retaining each roster fragment as a
+	//--- segment; Common_CreateTownUnits creates all segments in one shared engine group.
 	//--- Vehicle rosters remain atomic because CreateTeam must keep its vehicle/crew path intact.
+	private ["_forceFirst", "_packedCount", "_packedSegments", "_segment", "_segmentCount", "_segmentIndex", "_segmentStart"];
 	if (_mergeTarget > _mergeCap) then {_mergeTarget = _mergeCap};
 	_merged = [];
-	_acc = [];
+	_packedSegments = [];
+	_packedCount = 0;
 	{
 		_roster = _x;
-		if (count _acc == 0) then {
-			_acc = +_roster;
-		} else {
-			_space = _mergeTarget - count _acc;
-			if (_space >= count _roster) then {
-				_acc = _acc + _roster;
-			} else {
-				_splitAt = (count _roster) - _space;
-				_prefix = [];
-				_tail = [];
-				//--- A2/OA-safe split; ranged select [start,count] is A3-only.
-				for '_packIndex' from 0 to ((count _roster) - 1) do {
-					if (_packIndex < _splitAt) then {[_prefix, _roster select _packIndex] Call WFBE_CO_FNC_ArrayPush} else {[_tail, _roster select _packIndex] Call WFBE_CO_FNC_ArrayPush};
-				};
-				_acc = _acc + _tail;
-				[_merged, _acc] Call WFBE_CO_FNC_ArrayPush;
-				_acc = _prefix;
-			};
+		_segmentStart = 0;
+		_forceFirst = true;
+		while {_segmentStart < count _roster} do {
+			_segmentCount = (_mergeTarget - _packedCount) min ((count _roster) - _segmentStart);
+			_segment = [];
+			for '_segmentIndex' from _segmentStart to ((_segmentStart + _segmentCount) - 1) do {[_segment, _roster select _segmentIndex] Call WFBE_CO_FNC_ArrayPush};
+			[_packedSegments, [_segment, _forceFirst]] Call WFBE_CO_FNC_ArrayPush;
+			_packedCount = _packedCount + _segmentCount;
+			_segmentStart = _segmentStart + _segmentCount;
+			_forceFirst = false;
+			if (_packedCount >= _mergeTarget) then {[_merged, [_packedSegments, "WFBE_TOWN_PACKED_SEGMENTS"]] Call WFBE_CO_FNC_ArrayPush; _packedSegments = []; _packedCount = 0};
 		};
-		if ((count _acc) >= _mergeTarget) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
 	} forEach _infRosters;
-	if (count _acc > 0) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush};
+	if (_packedCount > 0) then {[_merged, [_packedSegments, "WFBE_TOWN_PACKED_SEGMENTS"]] Call WFBE_CO_FNC_ArrayPush};
 	{[_merged, _x] Call WFBE_CO_FNC_ArrayPush} forEach _vehRosters; //--- vehicles unchanged, appended
 
 	_contents = _merged;

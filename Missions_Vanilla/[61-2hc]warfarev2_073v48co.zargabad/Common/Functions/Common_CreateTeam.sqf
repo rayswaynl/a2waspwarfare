@@ -1,5 +1,5 @@
 // Marty: Crew placement uses explicit private locals because town AI may be created on server, client, or headless client.
-Private ['_airTeamDelay','_airTeamHulls','_airTeamMaxHulls','_airTeamNext','_airTeamStagger','_airTeamStaggerKey','_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_isAirHull','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor','_warnKey','_warnLast','_planeDir','_planeAirStart','_planeIdx'];
+Private ['_airTeamDelay','_airTeamHulls','_airTeamMaxHulls','_airTeamNext','_airTeamStagger','_airTeamStaggerKey','_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_forceFirst','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_isAirHull','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor','_warnKey','_warnLast','_planeDir','_planeAirStart','_planeIdx'];
 
 _list = _this select 0;
 _position = _this select 1;
@@ -18,6 +18,9 @@ _probability = if (count _this > 6) then {_this select 6} else {-1};
 //--- _planeIdx de-conflicts a multi-plane template: each successive Plane hull is nudged +N degrees so two hulls never spawn stacked.
 _planeDir = if (count _this > 7) then {_this select 7} else {-1};
 _planeAirStart = (typeName _planeDir == "SCALAR") && {_planeDir >= 0} && {(missionNamespace getVariable ["WFBE_C_AICOM_PLANE_AIRSTART", 1]) > 0};
+//--- TOWN-PACKED-SEGMENTS: a continuation shares an existing town group and must retain its
+//--- source roster's ordinary probability. Existing callers remain first-unit guaranteed.
+_forceFirst = if (count _this > 8) then {_this select 8} else {true};
 _planeIdx = 0;
 _airTeamHulls = 0;
 _airTeamMaxHulls = missionNamespace getVariable ["WFBE_C_AICOM_AIR_TEAM_MAX_HULLS", 0];
@@ -103,7 +106,7 @@ _rearmor = {
 {
 	_canCreate = true;
 	if (_probability != -1) then {
-		if (random 100 > _probability && _firstDone) then {_canCreate = false};
+		if (random 100 > _probability && {_firstDone || {!_forceFirst}}) then {_canCreate = false};
 		_firstDone = true;
 	};
 

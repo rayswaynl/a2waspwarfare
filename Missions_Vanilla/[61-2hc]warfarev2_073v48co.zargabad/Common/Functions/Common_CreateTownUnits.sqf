@@ -8,7 +8,7 @@
 		- Teams
 */
 
-Private ["_built", "_builtveh", "_cacheTier", "_crews", "_groups", "_i", "_lock", "_logGroupCount", "_position", "_positions", "_retVal", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_strelaAssigned", "_team", "_teams", "_town", "_town_teams", "_town_vehicles", "_units", "_vehClass", "_vehicles", "_vehPos", "_vehTier"];
+Private ["_built", "_builtveh", "_cacheTier", "_crews", "_forceFirst", "_groups", "_i", "_isPackedSegments", "_lock", "_logGroupCount", "_packedFailed", "_position", "_positions", "_retVal", "_segment", "_segmentRetVal", "_segments", "_side", "_sideID", "_skillAcc", "_skillCourage", "_skillScalar", "_skillSpeed", "_skillSpot", "_strelaAssigned", "_team", "_teams", "_template", "_town", "_town_teams", "_town_vehicles", "_units", "_vehClass", "_vehicles", "_vehPos", "_vehTier"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -125,15 +125,44 @@ _logGroupCount = {
 for '_i' from 0 to count(_groups)-1 do {
 	_position = _positions select _i;
 	_team = _teams select _i;
+	_template = _groups select _i;
+	_isPackedSegments = false;
+	if (typeName _template == "ARRAY" && {count _template == 2}) then {
+		if (typeName (_template select 0) == "ARRAY" && {(_template select 1) == "WFBE_TOWN_PACKED_SEGMENTS"}) then {_isPackedSegments = true};
+	};
 	
-	["INFORMATION", Format["Common_CreateTownUnits.sqf: Town [%1] [%2] will create a team template %3 at %4", _town, _side, _groups select _i,_position]] Call WFBE_CO_FNC_LogContent;
+	["INFORMATION", Format["Common_CreateTownUnits.sqf: Town [%1] [%2] will create a team template %3 at %4", _town, _side, _template,_position]] Call WFBE_CO_FNC_LogContent;
 	
-	_retVal = [_groups select _i, _position, _side, _lock, _team, true, 90] call WFBE_CO_FNC_CreateTeam;
-	_units = _retVal select 0;
-	_vehicles = _retVal select 1;
-	// Marty: Track the actual group returned by CreateTeam, because delegated HC creation may replace grpNull locally.
-	_team = _retVal select 2;
-	_crews = if (count _retVal > 3) then {_retVal select 3} else {[]};
+	if (_isPackedSegments) then {
+		//--- TOWN-PACKED-SEGMENTS: several original rosters share one engine group. CreateTeam is
+		//--- invoked once per source segment so every original roster head keeps its forced spawn;
+		//--- continuation fragments keep the original 90% probability. Tags and patrol setup below
+		//--- intentionally run once after all segments, never once per segment.
+		_segments = _template select 0;
+		_units = [];
+		_vehicles = [];
+		_crews = [];
+		_packedFailed = false;
+		{
+			if (!_packedFailed) then {
+				_segment = _x select 0;
+				_forceFirst = _x select 1;
+				_segmentRetVal = [_segment, _position, _side, _lock, _team, true, 90, -1, _forceFirst] call WFBE_CO_FNC_CreateTeam;
+				_team = _segmentRetVal select 2;
+				_units = _units + (_segmentRetVal select 0);
+				_vehicles = _vehicles + (_segmentRetVal select 1);
+				_crews = _crews + (if (count _segmentRetVal > 3) then {_segmentRetVal select 3} else {[]});
+				if (isNull _team) then {_packedFailed = true};
+			};
+		} forEach _segments;
+	} else {
+		_retVal = [_template, _position, _side, _lock, _team, true, 90] call WFBE_CO_FNC_CreateTeam;
+		_units = _retVal select 0;
+		_vehicles = _retVal select 1;
+		// Marty: Track the actual group returned by CreateTeam, because delegated HC creation may replace grpNull locally.
+		_team = _retVal select 2;
+		_crews = if (count _retVal > 3) then {_retVal select 3} else {[]};
+	};
 
 	//--- Defender classification: tag everything this town spawned. PUBLIC tag (3rd arg true) -
 	//--- town AI may be created on an HC while the activation scan that must ignore these runs
