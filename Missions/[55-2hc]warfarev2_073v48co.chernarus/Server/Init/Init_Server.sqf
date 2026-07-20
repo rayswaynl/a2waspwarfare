@@ -1196,6 +1196,33 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: Client FPS telemetry receiver armed (WFBE_C_CLIENT_FPS_REPORT=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- kimi/chatrelay-tap (owner 2026-07-20, fleet task wasp-discord-chat-bridge-20260720): CHATRELAY
+//--- receiver - the server half of the one-way game->Discord chat bridge (no BattlEye/RCon/DLLs).
+//--- Player clients running Client_ChatRelayTap.sqf publish [uid, name, side, text] here; each
+//--- line is diag_log'd as CHATRELAY|v1| for the Hetzner box RPT-tail producer (live-stats
+//--- pipeline pattern) to forward to Discord. name and text are logged LAST (free-form fields;
+//--- a '|' in a name can't corrupt the earlier pipe-delimited fields, text is rest-of-line).
+//--- Raw diag_log so it lands regardless of LOG_CONTENT_STATE. Forged-payload guards: shape +
+//--- string type checks. 0 = handler never armed, runtime byte-identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_CHATRELAY", 0]) > 0) then {
+	"WFBE_CHATRELAY" addPublicVariableEventHandler {
+		private ["_d"];
+		_d = _this select 1;
+		if (typeName _d == "ARRAY") then {
+			if (count _d == 4) then {
+				if (typeName (_d select 1) == "STRING" && {typeName (_d select 3) == "STRING"}) then {
+					diag_log ("CHATRELAY|v1|uid=" + str (_d select 0)
+						+ "|side=" + str (_d select 2)
+						+ "|t=" + str (round (time / 60))
+						+ "|name=" + (_d select 1)
+						+ "|text=" + (_d select 3));
+				};
+			};
+		};
+	};
+	["INITIALIZATION", "Init_Server.sqf: CHATRELAY receiver armed (WFBE_C_CHATRELAY=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- B74.2 (Ray 2026-06-23): OWN-SIDE MARKER FEED-GAP RECOVERY (the recurring "my player marker gone").
 //--- A publicVariable is NOT JIP-durable in A2-OA, and the B63 connect catch-up (Server_OnPlayerConnected
 //--- targeted publicVariableClient) can be MISSED on some joins (it races the connect/init path). When that

@@ -2743,5 +2743,12 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY") then {WFBE_C_CLIENT_FRAME_TELEMETRY = 1};
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL") then {WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL = 60};
 
+//--- kimi/chatrelay-tap (owner 2026-07-20, fleet task wasp-discord-chat-bridge-20260720): one-way
+//--- game->Discord chat bridge. 0=off (default - no client display-24 watcher spawn, no server
+//--- PVEH armed, runtime byte-identical to HEAD), 1=on (client taps submitted chat lines via the
+//--- engine chat display (IDD 24 / IDC 101, OA-1.64.144629-probed) -> publicVariableServer;
+//--- server diag_logs CHATRELAY|v1| lines for the box RPT-tail producer -> Discord).
+if (isNil "WFBE_C_CHATRELAY") then {WFBE_C_CHATRELAY = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

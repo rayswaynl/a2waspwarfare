@@ -1803,4 +1803,12 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FRAME_TELEMETRY", 0]) > 0) the
 //--- Late-join catch-up card. Self-gates on WFBE_C_JIP_CATCHUP_BRIEFING and reads only local or join-seeded state.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_JIPCatchupBriefing.sqf";
 
+//--- kimi/chatrelay-tap (owner 2026-07-20, fleet task wasp-discord-chat-bridge-20260720): one-way
+//--- game->Discord chat bridge, client tap. The function self-gates on the same flag; 0 = never
+//--- spawned, no display-24 watcher, runtime byte-identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_CHATRELAY", 0]) > 0) then {
+	[] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_ChatRelayTap.sqf";
+	["INITIALIZATION", "Init_Client.sqf: CHATRELAY client tap spawned (WFBE_C_CHATRELAY=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
