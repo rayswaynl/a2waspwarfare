@@ -1256,6 +1256,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
 					_cLogic setVariable ["town", _loc];
 					_cLogic setVariable ["sideID", _townSideID, true];
 					_cLogic setVariable ["supplyValue", _townSV, true];
+					_cLogic setVariable ["wfbe_camp_deckz", _deckZ]; //--- kimi/naval-deckcamp-repair (2026-07-20): server-local deck-height marker (writer here, reader Server_HandleSpecial "repair-camp") so a repaired deck-camp bunker is reseated ON the flight deck (setPosASL) instead of the ATL z=0 sea-surface bury inside the hull.
 					_cModel = createVehicle [missionNamespace getVariable "WFBE_C_CAMP", [_cXY select 0, _cXY select 1, 0], [], 0, "NONE"];
 					_cModel setDir ((getDir _cLogic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
 					_cModel setPosASL [_cXY select 0, _cXY select 1, _deckZ];

@@ -11,7 +11,13 @@ _range = missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_RANGE";
 _price = missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE";
 
 //--- Attempt to get a nearby camp.
-_camps = (_vehicle) nearEntities [WFBE_Logic_Camp, _range];
+//--- kimi/naval-deckcamp-repair (2026-07-20): naval deck camps are "HeliHEmpty" stand-in
+//--- logics (Init_NavalHVT.sqf), not LocationLogicCamp - a pure-class scan never finds them,
+//--- so a destroyed deck camp was UNREPAIRABLE: its sideID stayed frozen (server_town_camp.sqf
+//--- skips dead bunkers) and the mode-2 all-camps capture gate (server_town.sqf) deadlocked
+//--- the carrier town forever. Scan both classes; the sideID-nil filter below already drops
+//--- every non-camp HeliHEmpty (hangars, RadiusHold anchors, ICBM targets carry no sideID).
+_camps = (_vehicle) nearEntities [[WFBE_Logic_Camp, "HeliHEmpty"], _range];
 
 //--- Only get the "real" camps, remove the possible undefined ones.
 _temp = _camps;
