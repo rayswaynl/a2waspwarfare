@@ -10,18 +10,30 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_AUTORUN", 1]) <= 0) exitWith {
 
 if (isNil "WFBE_CL_FNC_AutoRunCancel") then {
 	WFBE_CL_FNC_AutoRunIsStandingRifle = {
-		Private ["_anim","_animChars","_prefixChars","_valid","_i"];
-		if (primaryWeapon player != "") then {
+		Private ["_anim","_animChars","_prefixChars","_rifleChars","_prefixValid","_rifleFound","_i","_j","_match"];
+		if ((currentWeapon player == primaryWeapon player) && {primaryWeapon player != ""}) then {
 			_anim = toLower (animationState player);
 			_animChars = toArray _anim;
 			_prefixChars = toArray "amovperc";
-			_valid = count _animChars >= count _prefixChars;
-			if (_valid) then {
+			_rifleChars = toArray "wrfl";
+			_prefixValid = count _animChars >= count _prefixChars;
+			if (_prefixValid) then {
 				for "_i" from 0 to ((count _prefixChars) - 1) do {
-					if ((_animChars select _i) != (_prefixChars select _i)) then {_valid = false};
+					if ((_animChars select _i) != (_prefixChars select _i)) then {_prefixValid = false};
 				};
 			};
-			_valid
+			if (!_prefixValid) exitWith {false};
+			_rifleFound = false;
+			if (count _animChars >= count _rifleChars) then {
+				for "_i" from 0 to ((count _animChars) - (count _rifleChars)) do {
+					_match = true;
+					for "_j" from 0 to ((count _rifleChars) - 1) do {
+						if ((_animChars select (_i + _j)) != (_rifleChars select _j)) then {_match = false};
+					};
+					if (_match) then {_rifleFound = true};
+				};
+			};
+			_rifleFound
 		} else {
 			false
 		};

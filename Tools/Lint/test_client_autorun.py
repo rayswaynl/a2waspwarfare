@@ -32,7 +32,9 @@ def test_autorun_contract():
     assert 'playMoveNow "AmovPercMstpSlowWrflDnon"' in autorun
     assert "animationState player" in autorun
     assert 'toArray "amovperc"' in autorun
+    assert 'currentWeapon player == primaryWeapon player' in autorun
     assert 'primaryWeapon player != ""' in autorun
+    assert 'toArray "wrfl"' in autorun
     assert "getPos player" in autorun
     assert "distance _progressAnchor" in autorun
     assert "0.5" in autorun
