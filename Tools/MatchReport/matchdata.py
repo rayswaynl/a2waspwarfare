@@ -112,7 +112,7 @@ def _support_event(raw):
 # fix (tiny, mission-side): log each town's real getPos once at boot and load it
 # here, which also yields Takistan for free. Towns with no entry are auto-placed
 # on a ring by _autoplace() so an unknown/new map still renders.
-WORLD_SIZE = {"chernarus": 15360, "takistan": 12800, "default": 15360}
+WORLD_SIZE = {"chernarus": 15360, "takistan": 12800, "zargabad": 8192, "default": 15360}
 
 TOWN_COORDS = {
  # Accurate Chernarus map positions (metres, 0..15360, y=north). Used until the boot
@@ -147,6 +147,17 @@ TOWN_COORDS = {
   "Rasman":(2853,9929),"Rasman AF":(8191,1960),"Ravanay":(3476,8356),"Sakhee":(1277,3354),
   "Shamali":(6115,10951),"Shukurkalay":(732,2949),"Sultansafee":(8355,2229),"Timurkalay":(4983,6052),
   "Zavarak":(1960,11749),
+ },
+ # Exact Zargabad positions (metres, 0..8192, y=north), from the alignment-
+ # verified campaign definition in docs/zargabad-campaign.json. Keep the full
+ # set so quiet towns and the airfield still render in sparse capture streams.
+ "zargabad": {
+  "Zargabad":(4071.37,4183.32),"Zargabad AF":(3386.26,4082.67),
+  "Yarum":(4154.24,3592.65),"The Villa":(4813.26,4645.28),
+  "Nango":(2823.53,5022.13),"Azizayt":(1929.89,4652.94),
+  "Hazar Bagh":(3943.51,5957.63),"Military Base":(4982.72,6207.94),
+  "Shahbaz":(3528.11,1932.74),"Firuz Baharv":(5059.49,1878.24),
+  "Shur Dam":(2889.65,3143.63),
  },
 }
 

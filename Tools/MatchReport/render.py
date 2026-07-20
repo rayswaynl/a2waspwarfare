@@ -59,11 +59,23 @@ def vasset(aid, seed=0):
     _acache[key] = img; return img
 
 _BLOGO = os.path.join(os.path.dirname(__file__), "brand", "logo")
+_BVEH = os.path.join(os.path.dirname(__file__), "brand", "veh")
+BRAND_VEHICLE_FALLBACKS = ("veh-hind", "veh-t90", "veh-a10", "veh-bmp3", "veh-grad", "veh-technical")
 def brand_logo(name):
     key = "__blogo_" + name
     if key in _acache: return _acache[key]
     img = None; p = os.path.join(_BLOGO, name + ".png")
     if os.path.exists(p):
+        try: img = Image.open(p).convert("RGBA")
+        except Exception: img = None
+    _acache[key] = img; return img
+
+def brand_vehicle(name):
+    """Load a committed, approved BrandKit blackout vehicle; never synthesize a substitute."""
+    key = "__bveh_" + name
+    if key in _acache: return _acache[key]
+    img = None; p = os.path.join(_BVEH, name + ".png")
+    if name in BRAND_VEHICLE_FALLBACKS and os.path.exists(p):
         try: img = Image.open(p).convert("RGBA")
         except Exception: img = None
     _acache[key] = img; return img
@@ -81,6 +93,13 @@ GUER=(122,134,72)   # olive #5c6536, lifted for legibility
 NEU=(111,118,128)   # #6f7680
 SIDE_COL={"west":WEST,"east":EAST,"guer":GUER,"neu":NEU}
 SIDE_NAME={"west":"BLUFOR","east":"OPFOR","guer":"GUER","neu":"NEUTRAL"}
+FACTION_LABEL={"west":"BLUFOR","east":"OPFOR","guer":"GUER","neu":"CIV / CONTESTED"}
+FACTION_ORDER=("west","east","guer","neu")
+
+def faction_ledger(owners):
+    """Return the fixed report treatment for every faction/status, including zeroes."""
+    return [(side, FACTION_LABEL[side], sum(owner == side for owner in owners.values()))
+            for side in FACTION_ORDER]
 
 # --- brand typography: Oswald (display) / Inter (sans) / JetBrains Mono (numbers) ---
 _FDIR=os.path.join(os.path.dirname(__file__),"brand","fonts")
@@ -130,7 +149,7 @@ def paste_emblem(im, aid, cx, cy, maxw, seed=None):
     im.paste(a2, (int(cx-a2.width/2), int(cy-a2.height/2)), a2); return True
 
 # Per-silhouette animated FX (easy to extend: map a new asset id to "rotor"/"jet").
-VEHICLE_FX = {"silhouette_hind": "rotor", "silhouette_jet": "jet"}
+VEHICLE_FX = {"silhouette_hind": "rotor", "silhouette_jet": "jet", "veh-hind": "rotor", "veh-a10": "jet"}
 
 def _rotor(d, x, y, w, h, i, opacity, flipped):
     """Subtle spinning-rotor tell. The static silhouette already has the blades, so this is just a
@@ -159,10 +178,15 @@ def drift_silhouette(im, idx, i, n, yfrac=0.60, wfrac=0.7, opacity=0.10, directi
     """Drifting vehicle 'blackout' across a scene. The PNGs are drawn facing LEFT, so the sprite is
     flipped to face its travel direction (never drives backwards). Helicopters get an animated rotor.
     hover=True keeps it on-screen with a gentle bob (showcases the spinning rotor)."""
-    if not SILHOUETTES: return
-    aid = SILHOUETTES[idx % len(SILHOUETTES)]
-    if aid == "silhouette_hind": return   # Hind pulled from the drift layer (too noisy)
-    a = asset(aid)
+    if SILHOUETTES:
+        aid = SILHOUETTES[idx % len(SILHOUETTES)]
+        a = asset(aid)
+    else:
+        aid = BRAND_VEHICLE_FALLBACKS[idx % len(BRAND_VEHICLE_FALLBACKS)]
+        a = brand_vehicle(aid)
+    if a is None and BRAND_VEHICLE_FALLBACKS:
+        aid = BRAND_VEHICLE_FALLBACKS[idx % len(BRAND_VEHICLE_FALLBACKS)]
+        a = brand_vehicle(aid)
     if a is None: return
     w = int(W*wfrac); h = max(1, int(a.height*w/a.width)); a2 = a.resize((w, h)).copy()
     flipped = direction > 0
@@ -232,6 +256,53 @@ WATER=(15,38,56); LAND_BASE=(22,30,28); COAST=(70,120,150)
 CHERNARUS_SEA=[(0,1850),(2100,1650),(4200,1700),(6600,1500),(9000,1450),(11000,1850),
                (12500,3100),(13750,5500),(14150,8500),(14450,11500),(14650,14200),
                (15360,15360),(15360,0),(0,0)]
+
+def layout_town_labels(draw, towns, world_size, x0, y0, size, font):
+    """Place every town name inside the map without silently dropping close neighbours."""
+    placed, labels = [], {}
+    pad = max(3, int(size / 250))
+    for town, (world_x, world_y) in sorted(towns.items(), key=lambda item: (-item[1][1], item[0])):
+        bx0, by0, bx1, by1 = draw.textbbox((0, 0), town, font=font)
+        text_w, text_h = bx1 - bx0, by1 - by0
+        cx = x0 + world_x / world_size * size
+        cy = y0 + (1 - world_y / world_size) * size
+
+        def box_at(left, top):
+            left = max(x0 + pad, min(x0 + size - pad - text_w, left))
+            top = max(y0 + pad, min(y0 + size - pad - text_h, top))
+            return left, top, left + text_w, top + text_h
+
+        def overlaps(box):
+            left, top, right, bottom = box
+            return any(max(left - pad, px0) < min(right + pad, px1) and
+                       max(top - pad, py0) < min(bottom + pad, py1)
+                       for px0, py0, px1, py1 in placed)
+
+        chosen = None
+        for ring in range(14):
+            shift = ring * (text_h + pad)
+            candidates = [
+                (cx + pad, cy - text_h / 2 - shift),
+                (cx - pad - text_w, cy - text_h / 2 + shift),
+                (cx + pad + shift, cy - pad - text_h),
+                (cx - pad - text_w - shift, cy + pad),
+                (cx - text_w / 2, cy - pad - text_h - shift),
+                (cx - text_w / 2, cy + pad + shift),
+            ]
+            for left, top in candidates:
+                candidate = box_at(left, top)
+                if not overlaps(candidate):
+                    chosen = candidate
+                    break
+            if chosen is not None:
+                break
+        if chosen is None:
+            raise RuntimeError("no collision-safe label position for " + town)
+        left, top, right, bottom = chosen
+        labels[town] = (left - bx0, top - by0)
+        placed.append(chosen)
+    return labels
+
 class Renderer:
     def __init__(self, m):
         self.m=m; S=m.world_size
@@ -309,15 +380,9 @@ class Renderer:
             d.ellipse([cx-rr-2,cy-rr-2,cx+rr+2,cy+rr+2],fill=(8,10,14))
             d.ellipse([cx-rr,cy-rr,cx+rr,cy+rr],fill=col)
         if labels:
-            placed=[]
-            for t,(x,y) in sorted(m.towns.items(), key=lambda kv:-kv[1][1]):  # north-first
-                cx=x0+x/S*size; cy=y0+(1-y/S)*size
-                if any(abs(cx-px)<104*sc and abs(cy-py)<18*sc for px,py in placed): continue
-                placed.append((cx,cy))
-                lw=d.textlength(t,font=f_xs); lx=cx+10*sc
-                if lx+lw>x0+size-4: lx=cx-10*sc-lw   # flip label left of the dot near the east edge
-                d.text((lx+1,cy-9*sc),t,font=f_xs,fill=(20,24,30))      # shadow for legibility
-                d.text((lx,cy-10*sc),t,font=f_xs,fill=(220,228,240))
+            for t, (lx, ly) in layout_town_labels(d, m.towns, S, x0, y0, size, f_xs).items():
+                d.text((lx + 1, ly + 1), t, font=f_xs, fill=(20,24,30))  # shadow for legibility
+                d.text((lx, ly), t, font=f_xs, fill=(220,228,240))
 
 def vignette(d): d.rectangle([0,0,W,8],fill=(0,0,0,120)); d.rectangle([0,H-8,W,H],fill=(0,0,0,120))
 def footer(im,d):
@@ -326,7 +391,9 @@ def footer(im,d):
     mkw=28 if mk else 0; total=mkw+(12 if mk else 0)+tw; x0=W/2-total/2
     if mk: m2=mk.resize((28,28)); im.paste(m2,(int(x0),H-55),m2); x0+=mkw+12
     tracked(d,(x0,H-41),txt,f,(146,146,134),anchor="lm",track=trk)
-def chip(d,x,y,side,fs=f_sm): c=SIDE_COL[side]; d.rectangle([x,y+4,x+12,y+30],fill=c); d.text((x+22,y),SIDE_NAME[side],font=fs,fill=c)
+def faction_chip(d,x,y,side,label=None,fs=f_sm):
+    c=SIDE_COL[side]; d.rectangle([x,y+4,x+12,y+30],fill=c); d.text((x+22,y),label or SIDE_NAME[side],font=fs,fill=c)
+def chip(d,x,y,side,fs=f_sm): faction_chip(d,x,y,side,fs=fs)
 def panel(d,x0,y0,x1,y1,fill=PANEL,outline=(46,54,66)): d.rounded_rectangle([x0,y0,x1,y1],radius=18,fill=fill,outline=outline,width=2)
 
 MARGIN = 72   # shared content margin / grid unit
@@ -347,10 +414,13 @@ def rule(d, cx, y, half=150, accent=True):
     if accent: d.line([(cx-7, y),(cx+7, y)], fill=GOLD, width=4)
 
 def header(d, title, sub=None):
-    """Editorial header: tracked uppercase title + tracked kicker + accent rule. Shared by all scenes."""
-    tracked(d, (W/2, 104), title.upper(), DISP(62), INK, anchor="mm", track=8)
-    if sub: tracked(d, (W/2, 156), sub.upper(), SANS(23, False), DIM, anchor="mm", track=4)
-    rule(d, W/2, 196, half=150)
+    """Field-dossier hierarchy shared by the data-heavy vertical scenes."""
+    d.rectangle([MARGIN, 58, MARGIN + 36, 62], fill=GOLD)
+    tracked(d, (MARGIN + 50, 52), "POST-MATCH DEBRIEF", MONO(16), GOLD, anchor="ls", track=2)
+    tracked(d, (W - MARGIN, 52), "VERTICAL RECAP", MONO(16), DIM, anchor="rs", track=2)
+    tracked(d, (W/2, 118), title.upper(), DISP(62), INK, anchor="mm", track=8)
+    if sub: tracked(d, (W/2, 170), sub.upper(), SANS(23, False), DIM, anchor="mm", track=4)
+    rule(d, W/2, 210, half=190)
 def donut(d,cx,cy,r,segs):
     a0=-90
     for frac,col in segs: a1=a0+frac*360; d.pieslice([cx-r,cy-r,cx+r,cy+r],a0,a1,fill=col); a0=a1
@@ -459,22 +529,27 @@ def render(m, out_path):
         for (t,town,s) in m.caps:
             if abs(ts-t)<(m.duration/n)*8: ft=town; fk=max(fk,1-abs(ts-t)/((m.duration/n)*8))
         header(d,"THE BATTLE","territory control over the match")
-        o=m.owners_at(ts); w=sum(v=="west" for v in o.values()); e=sum(v=="east" for v in o.values())
-        g=sum(v=="guer" for v in o.values()); tot=len(m.towns); nn=tot-w-e-g
-        d.text((60,300),"BLUFOR",font=f_h3,fill=WEST); d.text((60,346),str(w),font=f_num,fill=INK)
-        d.text((W-60,300),"OPFOR",font=f_h3,fill=EAST,anchor="ra"); d.text((W-60,346),str(e),font=f_num,fill=INK,anchor="ra")
-        _mid=f"{nn} contested" + (f"  ·  GUER {g}" if getattr(m,"guer_active",False) and g else "")
-        d.text((W/2,330),_mid,font=f_sm,fill=DIM,anchor="ma")
-        bx,by,bw=40,440,W-80; t2=max(1,tot)
-        d.rectangle([bx,by,bx+bw,by+12],fill=(40,46,56)); d.rectangle([bx,by,bx+int(bw*w/t2),by+12],fill=WEST)
-        d.rectangle([bx+bw-int(bw*e/t2),by,bx+bw,by+12],fill=EAST)
+        o=m.owners_at(ts); ledger=faction_ledger(o); total=max(1,len(m.towns))
+        card_w=(W-MARGIN*2-28)//2
+        for idx,(side,label,count) in enumerate(ledger):
+            x=MARGIN+(idx%2)*(card_w+28); y=258+(idx//2)*90; col=SIDE_COL[side]
+            panel(d,x,y,x+card_w,y+72,fill=mix(col,0.08),outline=col)
+            d.rectangle([x+14,y+14,x+24,y+58],fill=col)
+            d.text((x+42,y+12),label,font=f_xs,fill=DIM)
+            d.text((x+42,y+37),str(count),font=f_h3,fill=INK)
+        bx,by,bw=MARGIN,442,W-MARGIN*2; cursor=bx
+        d.rectangle([bx,by,bx+bw,by+12],fill=(40,46,56))
+        for idx,(side,_label,count) in enumerate(ledger):
+            width=bw-cursor+bx if idx==len(ledger)-1 else int(bw*count/total)
+            if width: d.rectangle([cursor,by,cursor+width,by+12],fill=SIDE_COL[side])
+            cursor+=width
         R.control_map(d,im,ts,ft,fk)
-        hh,mmn=divmod(int(ts)//60,60); d.text((W/2,1452),(f"{hh}:{mmn:02d}:{int(ts)%60:02d}" if hh else f"{mmn:02d}:{int(ts)%60:02d}"),font=f_h1,fill=INK,anchor="ma")
+        hh,mmn=divmod(int(ts)//60,60); d.text((W/2,1510),(f"{hh}:{mmn:02d}:{int(ts)%60:02d}" if hh else f"{mmn:02d}:{int(ts)%60:02d}"),font=f_h1,fill=INK,anchor="ma")
         # (fleet plan) the old RECENT CONTACTS kill-feed faked per-kill timing the data lacks — removed.
         # Honest real totals + per-side kill split (so GUER isn't invisible):
-        tracked(d,(W/2,1560),f"{len(m.caps)} TOWN CAPTURES    ·    {m.total_kills} KILLS (ALL FORCES)",SANS(23,False),(150,156,148),anchor="mm",track=4)
+        tracked(d,(W/2,1580),f"{len(m.caps)} TOWN CAPTURES    ·    {m.total_kills} KILLS (ALL FORCES)",SANS(23,False),(150,156,148),anchor="mm",track=4)
         _sp=_side_split_line(m)
-        if _sp: tracked(d,(W/2,1604),_sp.upper(),SANS(21,False),(150,156,148),anchor="mm",track=3)
+        if _sp: tracked(d,(W/2,1624),_sp.upper(),SANS(21,False),(150,156,148),anchor="mm",track=3)
         footer(im,d)
 
     def s_momentum(im,d,i,n):
@@ -486,10 +561,9 @@ def render(m, out_path):
         def pt(idx,val): return px0+m.ser_x[idx]/m.duration*pw, py0+ph-val/20*ph
         for g in range(0,21,5):
             yy=py0+ph-g/20*ph; d.line([(px0,yy),(px0+pw,yy)],fill=(46,54,66)); d.text((px0-14,yy),str(g),font=f_xs,fill=DIM,anchor="rm")
-        # draw GUER too when it holds ground / fights (real capturing side in this mission)
-        series=[(m.ser_w,WEST)]
-        if getattr(m,"guer_active",False) and getattr(m,"ser_g",None): series.append((m.ser_g,GUER))
-        series.append((m.ser_e,EAST))
+        # Every recap has the same three-faction legend; a zero-hold GUER trace is still
+        # visible at the floor instead of making the faction vanish from the treatment.
+        series=[(m.ser_w,WEST),(m.ser_e,EAST),(m.ser_g,GUER)]
         for ser,col in series:
             pts=[pt(j,ser[j]) for j in range(nshow)]
             if len(pts)>1:
@@ -498,8 +572,8 @@ def render(m, out_path):
         dt=m.decisive[0]
         if m.ser_x[nshow-1]>=dt:
             mxp=px0+dt/m.duration*pw; d.line([(mxp,py0),(mxp,py0+ph)],fill=GOLD+(150,),width=2); d.text((mxp,py0-8),"supremacy",font=f_xs,fill=GOLD,anchor="mb")
-        chip(d,px0,py0+ph+24,"west"); chip(d,px0+200,py0+ph+24,"east")
-        if getattr(m,"guer_active",False) and getattr(m,"ser_g",None): chip(d,px0+400,py0+ph+24,"guer")
+        for idx,(side,label,_count) in enumerate(faction_ledger(m.owners_at(m.duration))):
+            faction_chip(d,px0+(idx%2)*430,py0+ph+24+(idx//2)*42,side,label,SANS(20,False))
         # (fleet plan) replace the hardcoded subtitle (which sometimes lied) with the REAL arc.
         cb=m.comeback
         if cb.get("badge"):
@@ -661,13 +735,18 @@ def render(m, out_path):
         drift_silhouette(im, m.seed, i, n, yfrac=0.72, wfrac=0.60, opacity=0.10)  # seed picks the vehicle
         paste_emblem(im, emblem_id(m.winner), W/2, 320, 200, seed=m.seed)
         tracked(d,(W/2,522),SIDE_NAME[m.winner],DISP(100),INK,anchor="mm",track=8); tracked(d,(W/2,648),"VICTORY",DISP(100),col,anchor="mm",track=16)
-        o=m.owners_at(m.duration); w=sum(v=="west" for v in o.values()); e=sum(v=="east" for v in o.values()); g=sum(v=="guer" for v in o.values())
+        o=m.owners_at(m.duration); ledger=faction_ledger(o); card_w=(W-264)//2
+        for idx,(side,label,count) in enumerate(ledger):
+            x=120+(idx%2)*(card_w+24); y=730+(idx//2)*76; side_col=SIDE_COL[side]
+            panel(d,x,y,x+card_w,y+60,fill=mix(side_col,0.08),outline=side_col)
+            d.rectangle([x+14,y+12,x+24,y+48],fill=side_col)
+            d.text((x+40,y+8),label,font=SANS(19,False),fill=DIM)
+            d.text((x+card_w-22,y+8),str(count),font=f_h3,fill=INK,anchor="ra")
         how=getattr(m,"win_how",{}) or {}
-        finaltowns=f"{w} – {e}" + (f" – {g}" if getattr(m,"guer_active",False) and g else "")
-        rows=[("DURATION",m.fmt_duration(m.duration)),("FINAL TOWNS",finaltowns),("TOTAL KILLS",str(m.total_kills)),("HOW",how.get("mode","—")),("MAP",m.map_name)]
-        if m.mvp: rows.insert(3,("MVP",m.mvp["name"]+f' ({m.mvp["kills"]}K)'))
+        rows=[("DURATION",m.fmt_duration(m.duration)),("TOTAL KILLS",str(m.total_kills)),("HOW",how.get("mode","—")),("MAP",m.map_name)]
+        if m.mvp: rows.insert(2,("MVP",m.mvp["name"]+f' ({m.mvp["kills"]}K)'))
         if getattr(m,"support_total",0): rows.insert(-1,("SUPPORT",str(m.support_total)+" SCUD/TEL"))
-        y=920
+        y=1004
         for lab,val in rows:
             d.text((W/2-40,y),lab,font=f_md,fill=(225,231,240),anchor="ra"); d.text((W/2+40,y),val,font=f_md,fill=col,anchor="la"); y+=82
         # one-line "how they won" under the stat block
@@ -675,8 +754,9 @@ def render(m, out_path):
             tracked(d,(W/2,y+8),how["text"].upper(),SANS(21,False),(200,204,196),anchor="mm",track=2)
         mk=brand_logo("mark")
         if mk is not None:
-            m2=mk.resize((60,60)); im.paste(m2,(int(W/2-30),1498),m2)
-        d.text((W/2,1580),"MIKSUU'S WARFARE",font=f_sm,fill=INK,anchor="mm")
+            m2=mk.resize((60,60)); im.paste(m2,(int(W/2-30),1628),m2)
+        d.text((W/2,1710),"MIKSUU'S WARFARE",font=f_sm,fill=INK,anchor="mm")
+        footer(im,d)
 
     def s_outro(im,d,i,n):
         # closing call-to-action card — converts a view into a follow / a player.

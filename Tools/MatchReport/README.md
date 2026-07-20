@@ -114,13 +114,31 @@ accurate procedural map beats a hallucinated generated one.
 ## Known gaps -> production wiring
 
 See `PRODUCTION.md` for the source-anchored gap trace. Current Build84 already emits
-`t=<seconds>` on `CAPTURE` and `KILL`, and `matchdata.py` now has exact Chernarus and
-Takistan coordinates. The remaining small gaps are: document the optional `t=` fields in
-`docs/WASPSTAT-FORMAT.md`, add Zargabad `WORLD_SIZE`/`TOWN_COORDS`, wire a reliable
-UID-to-name TSV or confirm embedded `~name` coverage, and decide whether the scheduled
-runner is sufficient or if the `:3010` ingest should trigger it directly.
+`t=<seconds>` on `CAPTURE` and `KILL`, and `matchdata.py` has full static town sets for
+Chernarus, Takistan, and Zargabad. The remaining small gaps are: document the optional
+`t=` fields in `docs/WASPSTAT-FORMAT.md`, wire a reliable UID-to-name TSV or confirm
+embedded `~name` coverage, and decide whether the scheduled runner is sufficient or if
+the `:3010` ingest should trigger it directly. Future terrains still need boot-harvested
+coordinates before their control maps are trusted.
 
 ## Customisation knobs
 
 Colours / fonts / scene timings live at the top of `render.py`; scene order and lengths
 are the `scene(...)` calls at the bottom of `render()`. Re-renders in ~30 s.
+
+## Layout and BrandKit verification
+
+`BRANDKIT-ASSET-AUDIT.md` records the approved vehicle-blackout fallback assets,
+their source-of-truth hashes, and the deliberate exclusion of mirror-only draft
+art. The renderer uses these committed BrandKit files only when optional generated
+silhouette assets are absent.
+
+Run the focused verification from this directory:
+
+```bash
+python -m unittest -v test_matchdata.py test_render.py
+```
+
+The tests assert the complete Zargabad town set (including the airfield) receives
+non-overlapping map labels, the report treatment always includes BLUFOR, OPFOR,
+GUER, and CIV / CONTESTED, and each approved vehicle fallback loads successfully.
