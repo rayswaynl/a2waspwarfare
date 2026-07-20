@@ -104,6 +104,14 @@ _u = _u + ["TK_Soldier_AT_EP1"];
 _u = _u + ["TK_Soldier_GL_EP1"];
 _u = _u + ["TK_Soldier_SniperH_EP1"];
 _l = _l + [_u];
+//--- B757 garrison variety: TK officer guard.
+_k = _k + ["Team_3"];
+_u        = ["TK_Soldier_Officer_EP1"];
+_u = _u + ["TK_Soldier_AR_EP1"];
+_u = _u + ["TK_Soldier_GL_EP1"];
+_u = _u + ["TK_Soldier_Medic_EP1"];
+_l = _l + [_u];
+
 
 _k = _k + ["Team_MG_0"];
 _u		= ["TK_Soldier_MG_EP1"];
@@ -136,6 +144,14 @@ _u = _u + ["TK_Special_Forces_MG_EP1"];
 _u = _u + ["TK_Special_Forces_MG_EP1"];
 _u = _u + ["TK_Soldier_Medic_EP1"];
 _l = _l + [_u];
+//--- B757 garrison variety: paired PK team with assistants.
+_k = _k + ["Team_MG_3"];
+_u        = ["TK_Soldier_MG_EP1"];
+_u = _u + ["TK_Soldier_AMG_EP1"];
+_u = _u + ["TK_Soldier_MG_EP1"];
+_u = _u + ["TK_Soldier_AMG_EP1"];
+_l = _l + [_u];
+
 
 _k = _k + ["Team_AT_0"];
 _u		= ["TK_Soldier_LAT_EP1"];
@@ -164,6 +180,14 @@ _u = _u + ["TK_Soldier_AT_EP1"];
 _u = _u + ["TK_Soldier_AT_EP1"];
 _u = _u + ["TK_Soldier_Medic_EP1"];
 _l = _l + [_u];
+//--- B757 garrison variety: paired AT team with assistant.
+_k = _k + ["Team_AT_3"];
+_u        = ["TK_Soldier_HAT_EP1"];
+_u = _u + ["TK_Soldier_AAT_EP1"];
+_u = _u + ["TK_Soldier_AT_EP1"];
+_u = _u + ["TK_Soldier_Medic_EP1"];
+_l = _l + [_u];
+
 
 _k = _k + ["Team_AA"];
 _u =      ["TK_Soldier_AA_EP1"];
@@ -199,12 +223,24 @@ _k = _k + ["Motorized_0"];
 _u =      ["UAZ_MG_TK_EP1"];
 _u = _u + ["UAZ_AGS30_TK_EP1"];
 _l = _l + [_u];
+//--- B757 garrison variety: BTR-40 militia carrier pair.
+_k = _k + ["Motorized_0"];
+_u        = ["BTR40_MG_TK_INS_EP1"];
+_u = _u + ["UAZ_MG_TK_EP1"];
+_l = _l + [_u];
+
 
 _k = _k + ["Motorized_1"];
 _u =      ["LandRover_MG_TK_EP1"];
 _u = _u + ["UAZ_AGS30_TK_EP1"];
 _u = _u + ["UAZ_MG_TK_EP1"];
 _l = _l + [_u];
+//--- B757 garrison variety: SPG-9 rover pair.
+_k = _k + ["Motorized_1"];
+_u        = ["LandRover_SPG9_TK_EP1"];
+_u = _u + ["LandRover_MG_TK_EP1"];
+_l = _l + [_u];
+
 
 _k = _k + ["Motorized_2"];
 _u =      ["BRDM2_TK_EP1"];
