@@ -14,7 +14,10 @@ if (isNil "WFBE_Logic_Camp") exitWith {false};
 if (isNil {missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_RANGE"}) exitWith {false};
 
 _range = missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_RANGE";
-_camps = _entity nearEntities [WFBE_Logic_Camp, _range];
+//--- kimi/naval-deckcamp-repair (2026-07-20): include HeliHEmpty so naval deck camps
+//--- (HeliHEmpty stand-in logics, Init_NavalHVT.sqf) show the repair action; the sideID /
+//--- wfbe_camp_bunker variable checks below already exclude every non-camp HeliHEmpty.
+_camps = _entity nearEntities [[WFBE_Logic_Camp, "HeliHEmpty"], _range];
 
 {
 	_camp = _x;

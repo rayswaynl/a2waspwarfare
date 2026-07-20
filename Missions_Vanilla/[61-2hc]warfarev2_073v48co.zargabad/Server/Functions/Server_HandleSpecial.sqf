@@ -1446,7 +1446,15 @@ switch (_args select 0) do {
 		_campXY = getPos _logic;
 		_townModel = (missionNamespace getVariable "WFBE_C_CAMP") createVehicle [_campXY select 0, _campXY select 1, 0];
 		_townModel setDir ((getDir _logic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
-		_townModel setPos [_campXY select 0, _campXY select 1, 0];
+		//--- kimi/naval-deckcamp-repair (2026-07-20): naval deck camps (HeliHEmpty stand-in logics,
+		//--- Init_NavalHVT.sqf) carry wfbe_camp_deckz - reseat the revived bunker ON the deck
+		//--- (setPosASL), not at ATL z=0 (sea surface inside the hull = camp still unusable,
+		//--- capture still deadlocked). Land camps keep the proven ATL ground-snap.
+		if (!isNil {_logic getVariable "wfbe_camp_deckz"}) then {
+			_townModel setPosASL [_campXY select 0, _campXY select 1, _logic getVariable "wfbe_camp_deckz"];
+		} else {
+			_townModel setPos [_campXY select 0, _campXY select 1, 0];
+		};
 			/*--- wiki-wins: removed killed EH calling undefined WFBE_SE_FNC_OnBuildingKilled (threw a swallowed error on every bunker death); bunker dead-state is already polled via alive (_logic getVariable 'wfbe_camp_bunker') ---*/
 		_townModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
 		_logic setVariable ["wfbe_camp_bunker", _townModel, true];
