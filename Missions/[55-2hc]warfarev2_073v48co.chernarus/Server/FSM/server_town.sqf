@@ -244,9 +244,18 @@ while {!WFBE_GameOver} do {
 			_westDominion = if (_west > _east && _west > _resistance) then {true} else {false};
 			_eastDominion = if (_east > _west && _east > _resistance) then {true} else {false};
 
-			if (_sideID == RESISTANCEID && _resistanceDominion) then {_force = _resistance;_protected = true;_skip = true};
-			if (_sideID == EASTID && _eastDominion) then {_force = _east;_protected = true;_skip = true};
-			if (_sideID == WESTID && _westDominion) then {_force = _west;_protected = true;_skip = true};
+			//--- T0.3 ADD (R3-SYNTHESIS 2026-07-20): diagnostic-only mode-gate reason tracking. Pure
+			//--- telemetry -- does not read back into _force/_protected/_skip/_west/_east/_resistance,
+			//--- so this cannot change which side captures or how fast. _gateHadForce is captured NOW,
+			//--- before the dominion-resolution math below can zero _west/_east/_resistance, so a tie
+			//--- (multi-side contest that neutralised to nothing) is still distinguishable from a quiet
+			//--- town that never had any attacking force this tick.
+			_gateReason = "none";
+			_gateHadForce = (_west > 0) || (_east > 0) || (_resistance > 0);
+
+			if (_sideID == RESISTANCEID && _resistanceDominion) then {_force = _resistance;_protected = true;_skip = true;_gateReason = "self-protect";};
+			if (_sideID == EASTID && _eastDominion) then {_force = _east;_protected = true;_skip = true;_gateReason = "self-protect";};
+			if (_sideID == WESTID && _westDominion) then {_force = _west;_protected = true;_skip = true;_gateReason = "self-protect";};
 
 			if (_resistanceDominion) then {
 				_resistance = if (_east > _west) then {_resistance - _east} else {_resistance - _west};
@@ -272,13 +281,28 @@ while {!WFBE_GameOver} do {
 			_totalCamps = _location Call GetTotalCamps;
 
 			if (_west > 0 && west in WFBE_PRESENTSIDES) then {
-				if (_totalCamps != ([_location,west] Call GetTotalCampsOnSide)) then {_skip = true};
+				if (_totalCamps != ([_location,west] Call GetTotalCampsOnSide)) then {_skip = true;_gateReason = "allcamps";};
 			};
 			if (_east > 0 && east in WFBE_PRESENTSIDES) then {
-				if (_totalCamps != ([_location,east] Call GetTotalCampsOnSide)) then {_skip = true};
+				if (_totalCamps != ([_location,east] Call GetTotalCampsOnSide)) then {_skip = true;_gateReason = "allcamps";};
 			};
 			if (_resistance > 0 && resistance in WFBE_PRESENTSIDES) then {
-				if (_totalCamps != ([_location,resistance] Call GetTotalCampsOnSide)) then {_skip = true};
+				if (_totalCamps != ([_location,resistance] Call GetTotalCampsOnSide)) then {_skip = true;_gateReason = "allcamps";};
+			};
+
+			if (_gateHadForce) then {
+				private ["_gateSide","_gateCampsOnSide","_gateFootMen"];
+				if (!_resistanceDominion && !_westDominion && !_eastDominion) then {_gateReason = "tie";};
+				_gateSide = if (_west > 0) then {west} else {if (_east > 0) then {east} else {if (_resistance > 0) then {resistance} else {sideUnknown}}};
+				_gateCampsOnSide = if (_gateSide == sideUnknown) then {-1} else {[_location,_gateSide] Call GetTotalCampsOnSide};
+				//--- foot-Man count: alive Man-class units of the gate-relevant side, NOT embarked in a vehicle
+				//--- (vehicle _x == _x is the standard A2 dismounted-check idiom), within 300m of the town centre.
+				//--- Diagnoses the 05:44 owner-decision hypothesis: mounted/crew teams reach camps but no on-foot
+				//--- Man unit ever enters the capture bubble (server_town_camp.sqf nearEntities['Man',range] scan).
+				_gateFootMen = if (_gateSide == sideUnknown) then {-1} else {
+					{side (group _x) == _gateSide && {alive _x} && {vehicle _x == _x}} count ((getPos _location) nearEntities ["Man", 300])
+				};
+				diag_log (Format ["CAPGATE|v1|%1|mode2|side=%2|reason=%3|skip=%4|camps=%5/%6|footMen=%7", (_location getVariable ["name","?"]), str _gateSide, _gateReason, _skip, _gateCampsOnSide, _totalCamps, _gateFootMen]);
 			};
 		};
 

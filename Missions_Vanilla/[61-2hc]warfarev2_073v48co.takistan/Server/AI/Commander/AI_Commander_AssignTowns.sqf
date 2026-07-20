@@ -482,6 +482,16 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										_atTarget = (_ldr distance _goto) <= (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250]);
 										_uncapParked = _atTarget && {(_goto getVariable ["sideID", -1]) != _sideID};
 										if (_uncapParked) then {
+											//--- T0.2 ADD (R3-SYNTHESIS 2026-07-20): "uncap-parked" fires anywhere inside the
+											//--- 250m ARRIVE_RADIUS, so the STUCKSTAT line alone can't tell "still closing
+											//--- the last 150m" from "genuinely sitting at capture range and STILL not
+											//--- converting" - the exact ambiguity the capture-completion hypothesis needs
+											//--- resolved. CAPTURE_READY is a SEPARATE, tighter, diagnostic-only latch (does
+											//--- NOT feed _uncapParked/_atTarget or the strike ladder below - zero behaviour
+											//--- change) that is true only when the leader is close enough that a working
+											//--- capture SHOULD be progressing.
+											private "_captureReady";
+											_captureReady = (_ldr distance _goto) <= (missionNamespace getVariable ["WFBE_C_AICOM_CAPTURE_READY_RADIUS", 60]);
 											//--- Refresh the breadcrumb (so the position-stuck gate does NOT also fire and
 											//--- double-count) but do NOT zero strikes; bump the SAME strike counter the
 											//--- unstuck ladder uses so an uncapturable depot climbs to ABANDON.
@@ -489,7 +499,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											private ["_strk"];
 											_strk = ([_team, "wfbe_aicom_stuckstrikes", 0] Call WFBE_CO_FNC_GroupGetBool) + 1; //--- fix(hunt): G1-safe (nil+1 threw for stuck-since-spawn teams, so the unstick ladder never started)
 											_team setVariable ["wfbe_aicom_stuckstrikes", _strk];
-											diag_log (Format ["STUCKSTAT|v1|%1|%2|uncap-parked|leader=%3|distTgt=%4|cappasses=%5|strike=%6", _sideText, round (time / 60), typeOf _ldr, round (_ldr distance _goto), ([_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetBool), _strk]);
+											diag_log (Format ["STUCKSTAT|v1|%1|%2|uncap-parked|leader=%3|distTgt=%4|cappasses=%5|strike=%6|captureReady=%7", _sideText, round (time / 60), typeOf _ldr, round (_ldr distance _goto), ([_team, "wfbe_aicom_cappasses", 0] Call WFBE_CO_FNC_GroupGetBool), _strk, _captureReady]);
 											//--- STALL-ADVANCE FLOOR (Build84, claude-gaming 2026-07-02): the strike ladder above only
 											//--- reaches STUCK_ABANDON after several full 120s windows, and live RPT showed it almost never
 											//--- fires (each fresh order seq reset the phase bookkeeping before the counter accrued) -> a team
@@ -903,8 +913,15 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						//--- overwritten below and never logs ARRIVED/STRANDED - which is why ~84% of dispatches had no terminal
 						//--- outcome (mostly legitimate re-targeting, NOT failed attacks). Log RETARGET so the accounting closes:
 						//--- DISPATCH = ARRIVED + STRANDED + RETARGET + (in-flight). Pure telemetry, zero behaviour change.
-						if (_priorOpen && {!_sameTgt} && {count _priorOrd >= 1} && {(typeName (_priorOrd select 0)) == "OBJECT"} && {!isNull (_priorOrd select 0)}) then {
-							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_RETARGET|team=" + (str _team) + "|from=" + ((_priorOrd select 0) getVariable ["name","town"]) + "|to=" + (_target getVariable ["name","town"]) + "|elapsed=" + str (round (time - _dispT0)));
+						if (_priorOpen && {!_sameTgt} && {count _priorOrd >= 2} && {(typeName (_priorOrd select 0)) == "OBJECT"} && {!isNull (_priorOrd select 0)}) then {
+							//--- T0.1 FIX (R3-SYNTHESIS 2026-07-20): this branch only runs when !_sameTgt, which
+							//--- makes _dispT0 (above) ALWAYS resolve to the "else {time}" arm - so "elapsed=" +
+							//--- str (round (time - _dispT0)) was logging 0 on every single RETARGET line ever
+							//--- written (712 RPT lines uninterpretable). The prior booking's real start time is
+							//--- still sitting in _priorOrd select 1 (untouched by the _dispT0 ternary above) -
+							//--- read from there instead. Pure telemetry: does not change _dispT0 itself, so the
+							//--- fresh-booking write two lines below is byte-identical to before this fix.
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_RETARGET|team=" + (str _team) + "|from=" + ((_priorOrd select 0) getVariable ["name","town"]) + "|to=" + (_target getVariable ["name","town"]) + "|elapsed=" + str (round (time - (_priorOrd select 1))));
 						};
 						_team setVariable ["wfbe_aicom_townorder", [_target, _dispT0, getPos (leader _team), _asltToSecs]];
 						//--- ASSAULT TELEMETRY (task #48, #2): book a watcher latch on every (re)dispatch and
