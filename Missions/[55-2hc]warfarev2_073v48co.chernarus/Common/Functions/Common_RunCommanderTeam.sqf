@@ -2062,6 +2062,20 @@ while {!WFBE_GameOver && _alive} do {
 							};
 						};
 					} forEach _liveUnits;
+					//--- Codex review MEDIUM (threat-gate, adapted onto the owner's seat-restoring dismount
+					//--- above, 2026-07-20): do not send crew out of their protected hull straight into a
+					//--- defended camp's fire. If armed enemies are close, keep the crew mounted (fighting from
+					//--- the hull, which the sweep below already reveals+engages) this pass; DISMOUNT-CAPTURE
+					//--- PHASE re-runs every pass (RE-ARM, see the note above this phase) so once the immediate
+					//--- threat clears the very next pass dismounts normally - never a permanent block, matching
+					//--- the owner's intent that crew-only teams CAN complete a capture, just not by feeding
+					//--- kills into an active defender.
+					private ["_crewDismountThreatClear","_cdtR"];
+					_crewDismountThreatClear = true;
+					if (!_hasNonCrewInf) then {
+						_cdtR = missionNamespace getVariable ["WFBE_C_AICOM_CREW_DISMOUNT_THREAT_RADIUS", 100];
+						_crewDismountThreatClear = ({alive _x && {side _x != _side} && {side _x != civilian}} count ((getPos (leader _team)) nearEntities [["Man"], _cdtR])) <= 0;
+					};
 					{
 						_u = _x;
 						if (alive _u) then {
@@ -2069,7 +2083,7 @@ while {!WFBE_GameOver && _alive} do {
 								_veh = vehicle _u;
 								_seatRole = if (_u == driver _veh) then {"driver"} else {if (_u == gunner _veh) then {"gunner"} else {if (_u == commander _veh) then {"commander"} else {"cargo"}}};
 								if (_seatRole != "cargo") then {
-									if (_hasNonCrewInf) then {
+									if (_hasNonCrewInf || {!_crewDismountThreatClear}) then {
 										//--- Crew stays mounted: hull stays driveable + parked (infantry are working the camp).
 									} else {
 										//--- Review fix #1193: preserve the primary seat and the live
