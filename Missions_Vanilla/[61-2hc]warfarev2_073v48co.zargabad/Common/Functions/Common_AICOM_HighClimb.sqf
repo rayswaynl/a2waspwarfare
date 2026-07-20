@@ -205,6 +205,9 @@ WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 				if ((missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE", 1]) > 0) then {
 					if (_canAssist && {_speed <= _minBoostSpeed}) then {
 						private ["_pulseMax","_pulseCd","_pulseLast","_pulseStrikes","_pulseHead","_pulseSpd","_pulseVel"];
+						//--- Codex review HIGH: still genuinely stuck this tick, so any recovery timer that may have
+						//--- started (see the else branch below) was a false start - clear it.
+						_vehicle setVariable ["AICOM_HighClimb_PulseRecoverSince", -1, false];
 						_pulseMax  = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_MAX_STRIKES", 6];
 						_pulseCd   = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_COOLDOWN", 2];
 						_pulseLast = _vehicle getVariable ["AICOM_HighClimb_PulseLast", -999];
@@ -221,9 +224,29 @@ WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 							};
 						};
 					} else {
-						//--- Rolling again above the stuck threshold: reset the ladder so a future genuine re-stick
-						//--- starts a fresh escalation window instead of inheriting an exhausted strike count.
-						if (_speed > _minBoostSpeed) then {_vehicle setVariable ["AICOM_HighClimb_PulseStrikes", 0, false]};
+						//--- Codex review HIGH: a single elevated-speed SAMPLE is not proof of real recovery - our own
+						//--- pulse sets ~2.5 m/s (~9 km/h), well above the 3 km/h reset threshold, so the very next tick
+						//--- after a pulse fires used to read as "rolling again" and wipe the strike counter every single
+						//--- pulse - the escalation ceiling could never bite and a wedged hull got pulsed forever. Now
+						//--- require SUSTAINED motion above the threshold for WFBE_C_AICOM_HIGHCLIMB_PULSE_RECOVER_SECS
+						//--- (default 3s) before resetting - a transient pulse-induced bounce cannot sustain that long
+						//--- against genuine static friction, but real recovered motion (freed from the obstruction) can.
+						if (_speed > _minBoostSpeed) then {
+							private ["_pulseRecoverSince","_pulseRecoverSecs"];
+							_pulseRecoverSince = _vehicle getVariable ["AICOM_HighClimb_PulseRecoverSince", -1];
+							if (_pulseRecoverSince < 0) then {
+								_vehicle setVariable ["AICOM_HighClimb_PulseRecoverSince", diag_tickTime, false];
+							} else {
+								_pulseRecoverSecs = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_RECOVER_SECS", 3];
+								if ((diag_tickTime - _pulseRecoverSince) >= _pulseRecoverSecs) then {
+									_vehicle setVariable ["AICOM_HighClimb_PulseStrikes", 0, false];
+									_vehicle setVariable ["AICOM_HighClimb_PulseRecoverSince", -1, false];
+								};
+							};
+						} else {
+							//--- Dropped back under threshold before sustaining - not real recovery, clear the timer.
+							_vehicle setVariable ["AICOM_HighClimb_PulseRecoverSince", -1, false];
+						};
 					};
 				};
 			};

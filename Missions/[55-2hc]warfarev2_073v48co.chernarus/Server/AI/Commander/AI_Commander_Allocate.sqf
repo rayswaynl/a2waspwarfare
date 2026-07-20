@@ -469,8 +469,13 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 		    && {([_grp, "wfbe_aicom_feint_expiry", 0] Call WFBE_CO_FNC_GroupGetBool) <= 0}   //--- FIX(review CRITICAL): skip feint-tagged teams so the feint alloc_target survives across ticks
 		    && {([_grp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_grp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {
 			_ldrPos = getPos _ldr;
-			_hasVeh = false;
-			{ if (alive _x && {(vehicle _x) != _x} && {canMove (vehicle _x)} && {!((vehicle _x) isKindOf "Air")}) exitWith {_hasVeh = true} } forEach (units _grp);
+			//--- T1.2 FIX (R3-SYNTHESIS 2026-07-20; codex review CRITICAL): the old test flagged the WHOLE
+			//--- team mounted (9000m reach) the instant ANY single unit was embarked - this Allocator site
+			//--- runs its OWN target selection independently of AI_Commander_AssignTowns.sqf, so fixing the
+			//--- classifier there alone left this decisive site still granting 9km allocations off a single
+			//--- crew-driver. Both sites now share WFBE_CO_FNC_AICOMTeamMounted (leader-or-50pct embarked)
+			//--- so they cannot diverge again.
+			_hasVeh = [_grp] Call WFBE_CO_FNC_AICOMTeamMounted;
 			_reach = if (_hasVeh) then {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000]} else {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_FOOT", 3500]};
 			_tgt = objNull; _tgtD = 1e9;
 			//--- M2: the first few MOUNTED teams take the rear harass target (the long rear leg needs wheels).
