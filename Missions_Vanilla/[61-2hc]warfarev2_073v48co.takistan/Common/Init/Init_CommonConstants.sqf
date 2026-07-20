@@ -2020,8 +2020,8 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 //--- Apply a towns unit coeficient.
 	WFBE_C_TOWNS_UNITS_COEF = switch (WFBE_C_TOWNS_OCCUPATION) do {case 1: {1}; case 2: {1.5}; case 3: {2}; case 4: {2.5}; default {1}};
 	WFBE_C_TOWNS_UNITS_DEFENDER_COEF = switch (WFBE_C_TOWNS_DEFENDER) do {case 1: {1}; case 2: {1.5}; case 3: {2}; case 4: {2.5}; default {1}};
-	WFBE_C_TOWNS_MERGE_TARGET = 5;                //--- GROUP-COUNT REDUCTION (claude-gaming 2026-06-13): target units per CONSOLIDATED town-garrison infantry group. Server_GetTownGroups/Defender fuse the SAME infantry rosters into ~this-many-unit groups (hard cap 10) so a town spawns identical units in FEWER server group-brains (server-FPS win, gameplay-transparent). Vehicles never merged. Set to 0 to disable (instant rollback to one-group-per-template).
-	if (isNil 'WFBE_C_TOWNS_MERGE_TARGET_DEFENDER') then {WFBE_C_TOWNS_MERGE_TARGET_DEFENDER = 11}; //--- GUER condense A/B (task #12, claude-gaming 2026-06-14): raised 9->11 units/group to fuse GUER garrisons harder (fewer group-brains, SAME units). Measure GUER group count + fps vs Build 28. WEST/EAST untouched (global 5).
+	WFBE_C_TOWNS_MERGE_TARGET = 9;                //--- GROUP-COUNT REDUCTION: target units per consolidated WEST/EAST town-garrison infantry group. Server_GetTownGroups packs the SAME selected infantry classnames into ~9-unit groups (hard cap 10), so a town keeps its combat mass but uses fewer server group brains. Vehicles are never merged. Set 0 to disable.
+	if (isNil 'WFBE_C_TOWNS_MERGE_TARGET_DEFENDER') then {WFBE_C_TOWNS_MERGE_TARGET_DEFENDER = 10}; //--- GUER defender target: pack the same selected infantry into 10-man groups. The defender cap stays 12 for an explicit rollback/tuning headroom.
 	if (isNil 'WFBE_C_TOWNS_MERGE_CAP_DEFENDER') then {WFBE_C_TOWNS_MERGE_CAP_DEFENDER = 12};    //--- Defender-only merged-group size cap (raised from the global hardcoded 10 so the 11-target can actually flush at ~11-12; 12 = classic A2 squad max, safe for static garrison defenders).
 	if (isNil 'WFBE_C_SIDE_PATROLS_MAX_DEFENDER') then {WFBE_C_SIDE_PATROLS_MAX_DEFENDER = 3};      //--- Build83 (Ray 2026-07-01): GUER (defender) side-patrol cap RAISED +2 -> 3 (effective = min(this, GUER patrol level)). [B36 2026-06-15 had 2->1: fewer GUER patrols, the survivors made deadlier (skill boost in Common_RunSidePatrol). GUER condense.
 	if (isNil 'WFBE_C_GUER_PATROLS_LEVEL') then {WFBE_C_GUER_PATROLS_LEVEL = 2};                    //--- B67 (Ray 2026-06-21): fixed Patrols level for GUER (resistance has no upgrade system) so GUER side-patrols actually dispatch and show on GUER players' maps (server_side_patrols.sqf). Effective concurrent count = min(_maxSide, this). 0 = OFF (no GUER patrols, instant rollback); 1 = single; 2 = a pair; 4 adds the convoy supply truck.
@@ -2058,7 +2058,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 		//--- (was 5) so a defended town spawns the SAME units in FEWER server groups (fps win, gameplay-transparent;
 		//--- vehicles never merged; town DEFENSE strength unchanged). The GUER (defender) merge target + cap are the
 		//--- separate WFBE_C_TOWNS_MERGE_*_DEFENDER constants and are DELIBERATELY NOT touched (no GUER nerf).
-		WFBE_C_TOWNS_MERGE_TARGET = 9;                 //--- ZG (was 5, capped at the global 10 in Server_GetTownGroups). Rollback: 5.
+		WFBE_C_TOWNS_MERGE_TARGET = 10;                //--- ZG: small-map garrisons pack to the global 10-man ceiling. Rollback: 9.
 		//--- (5) ALIVE MANDATE - stale-team recycling. Halve the disband-pass interval so idle, REAR, foot-infantry
 		//--- teams (never in-view, never in combat - the existing safety re-checks in AI_Commander_DisbandLowTier.sqf
 		//--- + Common_RunCommanderTeam.sqf stand them back up if a player nears) are retired 2x faster; the freed

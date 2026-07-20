@@ -247,13 +247,21 @@ if (_mergeTarget > 0 && {count _contents > 1}) then {
 		_ci = _ci + 1;
 	} forEach _contents;
 
+	//--- GROUP-PACKING: flatten selected infantry rosters before forming groups.  The old
+	//--- whole-roster guard could not merge the normal 6-man roster at a 10-man target: 6+6
+	//--- exceeded the cap, so it emitted both groups unchanged.  This preserves every selected
+	//--- classname and its order, but lets target-sized defender groups reduce group brains without
+	//--- adding AI.  Vehicle rosters remain atomic because CreateTeam must keep its vehicle/crew path.
+	if (_mergeTarget > _mergeCap) then {_mergeTarget = _mergeCap};
 	_merged = [];
 	_acc = [];
 	{
 		_roster = _x;
-		if (((count _acc) + (count _roster)) > _mergeCap && {count _acc > 0}) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
-		_acc = _acc + _roster;
-		if (count _acc >= _mergeTarget) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
+		{
+			if ((count _acc) >= _mergeCap) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
+			_acc = _acc + [_x];
+			if ((count _acc) >= _mergeTarget) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
+		} forEach _roster;
 	} forEach _infRosters;
 	if (count _acc > 0) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush};
 	{[_merged, _x] Call WFBE_CO_FNC_ArrayPush} forEach _vehRosters; //--- vehicles unchanged, appended
