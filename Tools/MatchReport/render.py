@@ -463,7 +463,9 @@ def render(m, out_path):
         g=sum(v=="guer" for v in o.values()); tot=len(m.towns); nn=tot-w-e-g
         d.text((60,300),"BLUFOR",font=f_h3,fill=WEST); d.text((60,346),str(w),font=f_num,fill=INK)
         d.text((W-60,300),"OPFOR",font=f_h3,fill=EAST,anchor="ra"); d.text((W-60,346),str(e),font=f_num,fill=INK,anchor="ra")
-        _mid=f"{nn} contested" + (f"  ·  GUER {g}" if getattr(m,"guer_active",False) and g else "")
+        # CIV/neutral ground is a status label, never faction chrome; fighting
+        # factions retain their approved colours on the map and count bars.
+        _mid=f"{nn} CIV / CONTESTED" + (f"  ·  GUER {g}" if getattr(m,"guer_active",False) and g else "")
         d.text((W/2,330),_mid,font=f_sm,fill=DIM,anchor="ma")
         bx,by,bw=40,440,W-80; t2=max(1,tot)
         d.rectangle([bx,by,bx+bw,by+12],fill=(40,46,56)); d.rectangle([bx,by,bx+int(bw*w/t2),by+12],fill=WEST)

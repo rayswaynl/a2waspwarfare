@@ -114,11 +114,12 @@ accurate procedural map beats a hallucinated generated one.
 ## Known gaps -> production wiring
 
 See `PRODUCTION.md` for the source-anchored gap trace. Current Build84 already emits
-`t=<seconds>` on `CAPTURE` and `KILL`, and `matchdata.py` now has exact Chernarus and
-Takistan coordinates. The remaining small gaps are: document the optional `t=` fields in
-`docs/WASPSTAT-FORMAT.md`, add Zargabad `WORLD_SIZE`/`TOWN_COORDS`, wire a reliable
-UID-to-name TSV or confirm embedded `~name` coverage, and decide whether the scheduled
-runner is sufficient or if the `:3010` ingest should trigger it directly.
+`t=<seconds>` on `CAPTURE` and `KILL`, and `matchdata.py` has full static town sets for
+Chernarus, Takistan, and Zargabad. The remaining small gaps are: document the optional
+`t=` fields in `docs/WASPSTAT-FORMAT.md`, wire a reliable UID-to-name TSV or confirm
+embedded `~name` coverage, and decide whether the scheduled runner is sufficient or if
+the `:3010` ingest should trigger it directly. Future terrains still need boot-harvested
+coordinates before their control maps are trusted.
 
 ## Customisation knobs
 
