@@ -505,7 +505,14 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											_stallSecs = missionNamespace getVariable ["WFBE_C_AICOM_STALL_ADVANCE_SECS", 240];
 											_gotoSince = _team getVariable "wfbe_aicom_goto_since";
 											if (isNil "_gotoSince") then {_gotoSince = time; _team setVariable ["wfbe_aicom_goto_since", time]};
-											if (_stallSecs > 0 && {(time - _gotoSince) > _stallSecs}) then {
+											//--- T1.3b FIX (R3-SYNTHESIS 2026-07-20, grok S1): the CapLock check further down this file
+											//--- suppresses RE-TARGETING while a team is capture-locked, but this stall-advance floor runs
+											//--- BEFORE that check and unconditionally BLACKLISTS _goto below - so a locked team (genuinely
+											//--- mid-capture, not actually stalled) still poisons its own target town for every future team,
+											//--- even though _needs=true here gets silently overridden back to false moments later.
+											//--- Reordering the CHECK alone does not fix this (still races); the real fix is: never MUTATE
+											//--- the blacklist for a town this team is currently locked onto.
+											if (_stallSecs > 0 && {(time - _gotoSince) > _stallSecs} && {!([_team] Call WFBE_CO_FNC_CapLock)}) then {
 												private ["_saCd","_saBl","_saKeep"];
 												_saCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
 												_saBl = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetBool;
@@ -710,8 +717,24 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					//--- target (never idles). Bootstrap is exempt above (opening rush unchanged). Cheap: one
 					//--- leader pos, one units-scan for mount, distances on the existing town lists.
 					_ldrPos = getPos (leader _team);
-					_mounted = false;
-					{ if (!_mounted && {alive _x} && {(vehicle _x) != _x} && {(vehicle _x) isKindOf "LandVehicle"} && {canMove (vehicle _x)}) then {_mounted = true} } forEach (units _team);
+					//--- T1.2 FIX (R3-SYNTHESIS 2026-07-20): the old classifier flagged the WHOLE team "mounted"
+					//--- (9000m reach) the instant ANY single unit - even just a truck's driver - was embarked,
+					//--- so a lone crew-driver sent a whole walking squad on a 9km dispatch the infantry then
+					//--- REFUSE to complete on foot (86% of dispatches exceeded the real foot reach). "Mounted"
+					//--- now requires the LEADER to be embarked in a canMove LandVehicle, OR at least half the
+					//--- team's alive units to be. A2-OA-safe: plain boolean/count arithmetic, no A3 commands.
+					private ["_mcLdr","_mcLdrMounted","_mcTotal","_mcEmbarked","_mcFrac"];
+					_mcLdr = leader _team;
+					_mcLdrMounted = (!isNull _mcLdr) && {alive _mcLdr} && {(vehicle _mcLdr) != _mcLdr} && {(vehicle _mcLdr) isKindOf "LandVehicle"} && {canMove (vehicle _mcLdr)};
+					_mcTotal = 0; _mcEmbarked = 0;
+					{
+						if (alive _x) then {
+							_mcTotal = _mcTotal + 1;
+							if ((vehicle _x) != _x && {(vehicle _x) isKindOf "LandVehicle"} && {canMove (vehicle _x)}) then {_mcEmbarked = _mcEmbarked + 1};
+						};
+					} forEach (units _team);
+					_mcFrac = missionNamespace getVariable ["WFBE_C_AICOM_MOUNTED_FRAC", 0.5];
+					_mounted = _mcLdrMounted || {(_mcTotal > 0) && {_mcEmbarked >= (_mcTotal * _mcFrac)}};
 					_reachFoot    = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_FOOT", 3500];
 					_reachMounted = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000];
 					_teamReach = if (_mounted) then {_reachMounted} else {_reachFoot}; private "_teamAir"; _teamAir = false; { if (!_teamAir && {alive _x} && {(vehicle _x) isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0}) then {_teamAir = true} } forEach (units _team); //--- B756 (Ray 2026-06-26): does this team carry a TRANSPORT heli? gates naval-HVT targets to air teams only (no ground sea-stranding).

@@ -121,6 +121,13 @@ WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 		_dir = getDir _veh;
 		if (_dir < 0) then {_dir = _dir + 360};
 		_vdir = _vdir - _dir;
+		//--- T1.5 FIX (R3-SYNTHESIS 2026-07-20): the raw difference above ranges -360..360 with no
+		//--- wrap-around normalisation, so a hull driving essentially straight ahead near due-north
+		//--- (e.g. _vdir=5, _dir=355 - a true 10 degree turn) computed diff=-350, abs()=350, silently
+		//--- failing the <15 test and zeroing climb-assist for ~8% of all headings. Normalise the
+		//--- difference into (-180,180] before the magnitude test.
+		if (_vdir > 180) then {_vdir = _vdir - 360};
+		if (_vdir < -180) then {_vdir = _vdir + 360};
 		if (abs(_vdir) < 15) then {true} else {false};
 	};
 
@@ -183,6 +190,40 @@ WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 							_vehicle setVariable ["AICOM_HighClimb_LastLog", diag_tickTime, false];
 							diag_log (Format ["AICOMSTAT|v1|EVENT|%1|%2|HIGHCLIMB|boosted=%3|spd=%4|coef=%5", str isServer, round (time / 60), typeOf _vehicle, round _speed, round (_boostCoef * 100)]);
 						};
+					};
+				};
+
+				//--- T1.5 ADD (R3-SYNTHESIS 2026-07-20): the boost above only assists a hull ALREADY rolling
+				//--- (_speed > _minBoostSpeed) - a fully STOPPED/bogged hull gets ZERO help today, which is
+				//--- the one real gap in this manager (the seed claim "climb-assist is dead" was withdrawn -
+				//--- 2500+ boosts fire in the live evidence; its only gap is unsticking a STOPPED hull). Nudges
+				//--- along the HULL's own heading (getDir, NOT the velocity-derived heading above, which is
+				//--- unreliable at near-zero speed) so static friction breaks. Escalates a per-vehicle strike
+				//--- counter and STOPS pulsing after PULSE_MAX_STRIKES consecutive still-stuck attempts, so a
+				//--- genuinely wedged/flipped hull is handed back to the normal AssignTowns stuck/strand/abandon
+				//--- ladder instead of nudged forever. Gate WFBE_C_AICOM_HIGHCLIMB_PULSE (default 1).
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE", 1]) > 0) then {
+					if (_canAssist && {_speed <= _minBoostSpeed}) then {
+						private ["_pulseMax","_pulseCd","_pulseLast","_pulseStrikes","_pulseHead","_pulseSpd","_pulseVel"];
+						_pulseMax  = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_MAX_STRIKES", 6];
+						_pulseCd   = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_COOLDOWN", 2];
+						_pulseLast = _vehicle getVariable ["AICOM_HighClimb_PulseLast", -999];
+						if ((diag_tickTime - _pulseLast) > _pulseCd) then {
+							_pulseStrikes = _vehicle getVariable ["AICOM_HighClimb_PulseStrikes", 0];
+							if (_pulseStrikes < _pulseMax) then {
+								_pulseHead = getDir _vehicle;
+								_pulseSpd  = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_SPEED", 2.5];
+								_pulseVel  = [(sin _pulseHead) * _pulseSpd, (cos _pulseHead) * _pulseSpd, (_vel select 2)];
+								_vehicle setVelocity _pulseVel;
+								_vehicle setVariable ["AICOM_HighClimb_PulseLast", diag_tickTime, false];
+								_vehicle setVariable ["AICOM_HighClimb_PulseStrikes", _pulseStrikes + 1, false];
+								diag_log (Format ["AICOMSTAT|v1|EVENT|%1|%2|HIGHCLIMB_PULSE|veh=%3|spd=%4|strike=%5", str isServer, round (time / 60), typeOf _vehicle, round _speed, _pulseStrikes + 1]);
+							};
+						};
+					} else {
+						//--- Rolling again above the stuck threshold: reset the ladder so a future genuine re-stick
+						//--- starts a fresh escalation window instead of inheriting an exhausted strike count.
+						if (_speed > _minBoostSpeed) then {_vehicle setVariable ["AICOM_HighClimb_PulseStrikes", 0, false]};
 					};
 				};
 			};
