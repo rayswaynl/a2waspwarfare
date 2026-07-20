@@ -125,3 +125,20 @@ coordinates before their control maps are trusted.
 
 Colours / fonts / scene timings live at the top of `render.py`; scene order and lengths
 are the `scene(...)` calls at the bottom of `render()`. Re-renders in ~30 s.
+
+## Layout and BrandKit verification
+
+`BRANDKIT-ASSET-AUDIT.md` records the approved vehicle-blackout fallback assets,
+their source-of-truth hashes, and the deliberate exclusion of mirror-only draft
+art. The renderer uses these committed BrandKit files only when optional generated
+silhouette assets are absent.
+
+Run the focused verification from this directory:
+
+```bash
+python -m unittest -v test_matchdata.py test_render.py
+```
+
+The tests assert the complete Zargabad town set (including the airfield) receives
+non-overlapping map labels, the report treatment always includes BLUFOR, OPFOR,
+GUER, and CIV / CONTESTED, and each approved vehicle fallback loads successfully.
