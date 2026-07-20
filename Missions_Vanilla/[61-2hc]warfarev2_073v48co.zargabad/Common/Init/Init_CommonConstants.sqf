@@ -524,9 +524,9 @@ if (worldName == "Zargabad") then {
 	//--- opening land-grab), MID (armour/mech rising once factories exist), LATE (heavy+air heavy, an
 	//--- established war machine). MATURE_MID / MATURE_LATE are the own-town thresholds at/above which the
 	//--- MID / LATE tiers apply. Weights need not sum to 1 (normalised at pick time).
-	if (isNil "WFBE_C_AICOM_TYPE_MIX_EARLY") then {WFBE_C_AICOM_TYPE_MIX_EARLY = [0.45, 0.27, 0.25, 0.03]};   //--- Ray 2026-06-27: less foot, more light/heavy early (was [0.70,0.22,0.07,0.01]) so the AI fields armed vehicles sooner, not infantry-in-trucks. Self-gating: an empty bucket (no factory) still falls back to foot, so capture infantry is never starved.
-	if (isNil "WFBE_C_AICOM_TYPE_MIX_MID")   then {WFBE_C_AICOM_TYPE_MIX_MID   = [0.38, 0.24, 0.26, 0.12]};  //--- AICOM v2 (Ray): air 5%->12% mid so choppers start ramping in before the late tier.
-	if (isNil "WFBE_C_AICOM_TYPE_MIX_LATE")  then {WFBE_C_AICOM_TYPE_MIX_LATE  = [0.25, 0.15, 0.30, 0.30]};  //--- AICOM v2 (Ray): air 15%->30% late (inf/light/heavy/air) - choppers a defining late-game feature.
+	if (isNil "WFBE_C_AICOM_TYPE_MIX_EARLY") then {WFBE_C_AICOM_TYPE_MIX_EARLY = [0.32,0.31,0.31,0.06]}; //--- B757 (Ray 2026-07-20) ROSTER COUNCIL: mix-first inf reduction (45->32 early) instead of bias push (B756 overshoot guard).
+	if (isNil "WFBE_C_AICOM_TYPE_MIX_MID") then {WFBE_C_AICOM_TYPE_MIX_MID = [0.30,0.25,0.28,0.17]}; //--- B757 (Ray 2026-07-20) ROSTER COUNCIL: balanced mid roster; shift infantry reduction into the mix rather than multiplying biases.
+	if (isNil "WFBE_C_AICOM_TYPE_MIX_LATE") then {WFBE_C_AICOM_TYPE_MIX_LATE = [0.12,0.12,0.28,0.48]}; //--- B757 (Ray 2026-07-20) ROSTER COUNCIL: late game leans air 0.48 per owner pick - capture rail: air bucket must stay lift-majority.
 	if (isNil "WFBE_C_AICOM_TYPE_MIX_MATURE_MID")  then {WFBE_C_AICOM_TYPE_MIX_MATURE_MID  = 2}; //--- Ray 2026-06-27: 4->2 own-towns so the armour-heavier MID mix (43/25/20/12) kicks in sooner (debug-off captures are slow, so the AI was stuck in the foot-heavy EARLY mix too long). own-town count at/above which the MID tier applies.
 	if (isNil "WFBE_C_AICOM_TYPE_MIX_MATURE_LATE") then {WFBE_C_AICOM_TYPE_MIX_MATURE_LATE = 8}; //--- own-town count at/above which the LATE tier applies.
 	//--- B74 COST/TIER BIAS (Ray 2026-06-22) -> SUPERSEDED by the B750 effectiveness draw below. The B74 picker weighted
@@ -570,12 +570,14 @@ if (worldName == "Zargabad") then {
 		if (isNil "WFBE_C_AICOM_STALL_TOWN_RATIO")        then {WFBE_C_AICOM_STALL_TOWN_RATIO        = 2};
 		if (isNil "WFBE_C_AICOM_STALL_OVERRIDE_ENABLE")   then {WFBE_C_AICOM_STALL_OVERRIDE_ENABLE   = 1};
 		//--- B755 (Ray 2026-06-25) MECHANIZED-INFANTRY BIAS: seat infantry in ARMED vehicles rather than founding pure-foot teams. Multiplies the class-bucket roll toward mechanized/armor (bucket 2 = IFV/APC that carry their own dismounts) + motorized (bucket 1). 1.0 = no-op. Self-gating (empty buckets zero out, so foot is never starved when no factory exists).
-		if (isNil "WFBE_C_AICOM_MECH_BIAS")  then {WFBE_C_AICOM_MECH_BIAS  = 1.5}; //--- B756 (Ray 2026-06-26): trimmed 2.0->1.5 after the b755 soak (heavy OVERTOOK infantry 38% vs 32%; want mech prominent, not infantry suppressed). Pairs with WFBE_C_AICOM_DISMOUNT_BIAS to favour IFV/APC dismount-carriers over bare MBT within the heavy pick.
-		if (isNil "WFBE_C_AICOM_MOTOR_BIAS") then {WFBE_C_AICOM_MOTOR_BIAS = 1.4};
+		if (isNil "WFBE_C_AICOM_MECH_BIAS") then {WFBE_C_AICOM_MECH_BIAS = 1.55}; //--- B757 (Ray 2026-07-20) ROSTER COUNCIL: mix-first inf reduction (45->32 early) instead of bias push (B756 overshoot guard).
+		if (isNil "WFBE_C_AICOM_MOTOR_BIAS") then {WFBE_C_AICOM_MOTOR_BIAS = 1.5}; //--- B757 (Ray 2026-07-20) ROSTER COUNCIL: mix-first inf reduction instead of bias push (B756 overshoot guard).
 		//--- B755 RE-MOUNT FOR THE LONG LEG: a team re-tasked to a far town after a prior capture has its infantry ON FOOT (the capture dismount unassigned them). 1 = re-seat them into the team's drivable hulls before the road-march so they RIDE the long leg instead of foot-marching (no-op on the first march). 0 = old behaviour.
 		if (isNil "WFBE_C_AICOM_REMOUNT_LONG_LEG") then {WFBE_C_AICOM_REMOUNT_LONG_LEG = 1};
 		//--- B756 (Ray 2026-06-26) DISMOUNT-CARRIER bias: within the team-template draw, multiply a template's weight if it carries INFANTRY dismounts (so IFV/APC + squad beat bare MBTs in the heavy bucket = "infantry seated in armed vehicles" rather than gun-tanks). 1.0 = no-op.
-		if (isNil "WFBE_C_AICOM_DISMOUNT_BIAS") then {WFBE_C_AICOM_DISMOUNT_BIAS = 1.6};
+		if (isNil "WFBE_C_AICOM_DISMOUNT_BIAS") then {WFBE_C_AICOM_DISMOUNT_BIAS = 1.7}; //--- B757 (Ray 2026-07-20) ROSTER COUNCIL: mix-first inf reduction instead of bias push (B756 overshoot guard).
+	//--- Codex review MEDIUM fix: crew-only dismount (Common_RunCommanderTeam.sqf) threat-gate radius - see the dismount-decision block there.
+	if (isNil "WFBE_C_AICOM_CREW_DISMOUNT_THREAT_RADIUS") then {WFBE_C_AICOM_CREW_DISMOUNT_THREAT_RADIUS = 100};
 		//--- B756 MOUNT seat-capacity gate: only GROUND MOUNT-UP / re-mount a team if its ride pool can seat at least this FRACTION of the squad. A partial mount splits the team (the APC drives off, the foot element strands -> ASSAULT_STRANDED). Below this the team stays foot-cohesive (the hull paces the group road-march). 0 = old behaviour (always partial-mount).
 		if (isNil "WFBE_C_AICOM_MOUNT_MIN_SEAT_FRAC") then {WFBE_C_AICOM_MOUNT_MIN_SEAT_FRAC = 0.8};
 		//--- B756 NAVAL-RAID gate: naval-HVT (carrier) spearhead targets are only assigned to teams with a TRANSPORT HELI (they're offshore, only reachable by air-insertion). Ground teams never get tasked to the sea (no stranding). This makes the carriers a real - but air-only - assault objective. Gate lives in AI_Commander_AssignTowns.sqf.
@@ -1046,8 +1048,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_PATROL_UNSTUCK_MAX") then {WFBE_C_AICOM_PATROL_UNSTUCK_MAX = 5}; //--- Build84: after N consecutive side-patrol wedges, drop target + re-pick a different frontline town (anti-orbit).
 	if (isNil "WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS") then {WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS = 250}; //--- Build84: 'at target' radius (m) for assault-arrive / uncapturable-abandon logic (was getVariable-default-only).
 	if (isNil "WFBE_C_AICOM_AIR_LATE_MINS") then {WFBE_C_AICOM_AIR_LATE_MINS = 45};        //--- Build84 (Ray): mission minute at/after which 'late game' air scaling applies.
-	if (isNil "WFBE_C_AICOM_AIR_MAX_LATE") then {WFBE_C_AICOM_AIR_MAX_LATE = 7};           //--- Build84 (Ray): late-game total air cap (early game stays WFBE_C_AICOM_AIR_MAX_TOTAL=3).
-	if (isNil "WFBE_C_AICOM_HELI_SHARE_LATE") then {WFBE_C_AICOM_HELI_SHARE_LATE = 0.55};  //--- Build84 (Ray): late-game target helicopter share of AICOM air (~55% helis, rest planes). 0 = restore Build83.
+	if (isNil "WFBE_C_AICOM_AIR_MAX_LATE") then {WFBE_C_AICOM_AIR_MAX_LATE = 8}; //--- B757 (Ray 2026-07-20) ROSTER COUNCIL: late game leans air per owner pick; capture rail: air bucket must stay lift-majority.
+	if (isNil "WFBE_C_AICOM_HELI_SHARE_LATE") then {WFBE_C_AICOM_HELI_SHARE_LATE = 0.62}; //--- B757 (Ray 2026-07-20) ROSTER COUNCIL: late game leans air per owner pick; capture rail: air bucket must stay lift-majority.
 	//--- === cmdcon37 AI-behaviour fixes (claude-gaming overnight 2026-07-02) ===
 	if (isNil "WFBE_C_AICOM_CAMP_GATE_MODE2") then {WFBE_C_AICOM_CAMP_GATE_MODE2 = 1};        //--- cmdcon37 (afraid-of-camps): in AllCamps mode (WFBE_C_TOWNS_CAPTURE_MODE=2) hold + aggressively clear a town's camps instead of bailing to a depot that can't flip. 0 = old bail behaviour.
 	if (isNil "WFBE_C_AICOM_STALL_ADVANCE_SECS") then {WFBE_C_AICOM_STALL_ADVANCE_SECS = 420}; //--- cmdcon37 (never-stand floor): if a team is parked at a town > this many s with no flip/progress, blacklist it + retarget to the nearest OTHER enemy town same tick (bypasses the strike ladder that rarely accrues live). 0 = off. cmdcon38: 240 -> 420 so it no longer preempts a full travel(~60s)+drain-wait-hold(360s) capture attempt (the WAVE-2 DRAIN-WAIT fix in Common_RunCommanderTeam now holds up to _holdEnd to finish a slow drain); this stays the backstop for genuinely-stuck teams.
@@ -1427,7 +1429,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_CAMPS_CAPTURE_BOUNTY = 500; //--- Bounty received by player whenever he capture a camp.
 	WFBE_C_CAMPS_CAPTURE_RATE = 20;
 	WFBE_C_CAMPS_CAPTURE_RATE_MAX = 25;
-	WFBE_C_CAMPS_RANGE = 12.65;  //--- B74.2 (Ray 2026-06-23): 10 -> 11.5 (+15%). Widens the AI camp capture bubble so it registers the presence-based flip instead of orbiting the tight 10m ring (Ray: let the AI capture camps easier + not get stuck on them). PLAYERS are UNCHANGED - WFBE_C_CAMPS_RANGE_PLAYERS (below) still gates them at 5m (server_town_camp.sqf:29 filters players past that).
+	WFBE_C_CAMPS_RANGE = 13.915;  //--- OWNER DESIGN DECISION 2026-07-20 07:40 (wasp-takistan-aicom-capture-stall-20260720): 12.65 -> 13.915 (+10%), continuing the 10 -> 11.5 -> 12.65 Ray tuning history. Part of the capture-completion fix (paired with the dismount-near-camp change in Common_RunCommanderTeam.sqf): widens the AI camp scan bubble a further notch so an arriving on-foot Man has more margin to register inside nearEntities before the presence-based flip. PLAYERS are UNCHANGED - WFBE_C_CAMPS_RANGE_PLAYERS (below) still gates them at 5m (server_town_camp.sqf filters players past that).
 	WFBE_C_CAMPS_RANGE_PLAYERS = 5.5; //--- owner 2026-07-07: +10% capture bubble (5 -> 5.5) alongside CAMPS_RANGE 11.5 -> 12.65.
 	if (isNil "WFBE_C_TOWN_CAMP_SCAN_THROTTLE") then {WFBE_C_TOWN_CAMP_SCAN_THROTTLE = 0}; //--- Lane 107: default off; when 1, server_town_camp uses the slower scan sleeps below.
 	if (isNil "WFBE_C_TOWN_CAMP_ACTIVE_GATE") then {WFBE_C_TOWN_CAMP_ACTIVE_GATE = 1}; //--- Perf (2026-07-06): when 1, a town's camp-scan loop idles while the town is dormant (not active, no air tier, no enemy seen within IDLE_GRACE). Default off = V1 behaviour.

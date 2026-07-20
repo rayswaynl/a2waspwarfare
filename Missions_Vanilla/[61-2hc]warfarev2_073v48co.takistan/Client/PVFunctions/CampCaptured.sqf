@@ -34,7 +34,7 @@ if (WFBE_Client_SideID == _sideID_new) then {
 			_closest = [_camp, units group player] Call WFBE_CO_FNC_GetClosestEntity;
 
 			//--- If the closest unit is in range, then award the player's group.
-			if (_closest distance _camp < (missionNamespace getVariable "WFBE_C_CAMPS_RANGE")) then {
+			if (_closest distance _camp < (missionNamespace getVariable "WFBE_C_CAMPS_RANGE_PLAYERS")) then {
 				hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Your squad has captured a camp near <t color='#B6F563'>%1</t> and has been rewarded with <t color='#EAD267'>$%2.</t></t>",_town getVariable "name",missionNamespace getVariable "WFBE_C_CAMPS_CAPTURE_BOUNTY"];
 				["RequestChangeScore", [player,score player + (missionNamespace getVariable 'WFBE_C_PLAYERS_SCORE_CAPTURE_CAMP')]] Call WFBE_CO_FNC_SendToServer;
 				(missionNamespace getVariable "WFBE_C_CAMPS_CAPTURE_BOUNTY") Call WFBE_CL_FNC_ChangeClientFunds;
