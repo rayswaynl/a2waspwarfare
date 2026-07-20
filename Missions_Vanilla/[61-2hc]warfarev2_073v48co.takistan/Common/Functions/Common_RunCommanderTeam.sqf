@@ -1328,7 +1328,7 @@ while {!WFBE_GameOver && _alive} do {
 									//--- above at _uFootPlayerNear), same squad re-form. A2-OA-safe: getVariable+isNil order read (groups reject [name,default]), atan2
 									//--- position-delta bearing (binary getDir is A3-only), isFlatEmpty / surfaceIsWater / setPos. Flag 0 = inert (byte-identical to HEAD).
 									if ((missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP", 1]) > 0) then {
-										private ["_nrOrder","_nrDest","_nrBrg","_nrStep","_nrGuess","_nrFlat","_nrPos","_nrLp"];
+									private ["_nrOrder","_nrDest","_nrBrg","_nrStep","_nrGuess","_nrFlat","_nrLp"];
 										_nrOrder = _uTeam getVariable "wfbe_aicom_order";
 										_nrDest  = objNull;
 										if (!isNil "_nrOrder" && {count _nrOrder >= 3}) then {_nrDest = _nrOrder select 2};
@@ -1340,12 +1340,11 @@ while {!WFBE_GameOver && _alive} do {
 											if (_nrStep > ((_uLdr distance _nrDest) - 10)) then {_nrStep = ((_uLdr distance _nrDest) - 10) max 0};
 											if (_nrStep > 5) then {
 												_nrGuess = [(_nrLp select 0) + _nrStep * (sin _nrBrg), (_nrLp select 1) + _nrStep * (cos _nrBrg), 0];
-												//--- Snap to a nearby flat-empty spot so the squad is not dropped inside a rock/wall; fall back to the raw guess.
-												_nrFlat = _nrGuess isFlatEmpty [8, 0, 3, 10, 0, false, objNull];
-												_nrPos  = if (count _nrFlat > 0) then {_nrFlat} else {_nrGuess};
-												if (!surfaceIsWater _nrPos) then {
-													_uLdr setVelocity [0,0,0];
-													_uLdr setPos _nrPos;
+											//--- Only use a verified flat-empty pad; a raw goalward guess may be steep or occupied and re-wedge the team.
+											_nrFlat = _nrGuess isFlatEmpty [8, 0, 3, 10, 0, false, objNull];
+											if (count _nrFlat > 0 && {!surfaceIsWater _nrFlat}) then {
+												_uLdr setVelocity [0,0,0];
+												_uLdr setPos _nrFlat;
 													{ if (alive _x && {_x != _uLdr} && {vehicle _x == _x}) then {_x doFollow _uLdr} } forEach (units _uTeam);
 													missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
 													diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_NOROAD_STEP|team=" + (str _uTeam) + "|tier=" + str _uTier + "|map=" + worldName + "|step=" + str (round _nrStep));
