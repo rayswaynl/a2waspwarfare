@@ -280,19 +280,19 @@ while {!WFBE_GameOver} do {
 
 			_totalCamps = _location Call GetTotalCamps;
 
-			if (_west > 0 && west in WFBE_PRESENTSIDES) then {
+			if (_gateReason == "none" && {_west > 0 && {west in WFBE_PRESENTSIDES}}) then {
 				if (_totalCamps != ([_location,west] Call GetTotalCampsOnSide)) then {_skip = true;_gateReason = "allcamps";};
 			};
-			if (_east > 0 && east in WFBE_PRESENTSIDES) then {
+			if (_gateReason == "none" && {_east > 0 && {east in WFBE_PRESENTSIDES}}) then {
 				if (_totalCamps != ([_location,east] Call GetTotalCampsOnSide)) then {_skip = true;_gateReason = "allcamps";};
 			};
-			if (_resistance > 0 && resistance in WFBE_PRESENTSIDES) then {
+			if (_gateReason == "none" && {_resistance > 0 && {resistance in WFBE_PRESENTSIDES}}) then {
 				if (_totalCamps != ([_location,resistance] Call GetTotalCampsOnSide)) then {_skip = true;_gateReason = "allcamps";};
 			};
 
 			if (_gateHadForce) then {
 				private ["_gateSide","_gateCampsOnSide","_gateFootMen"];
-				if (!_resistanceDominion && !_westDominion && !_eastDominion) then {_gateReason = "tie";};
+				if (!_resistanceDominion && {!_westDominion} && {!_eastDominion} && {_gateReason == "none"}) then {_gateReason = "tie";};
 				_gateSide = if (_west > 0) then {west} else {if (_east > 0) then {east} else {if (_resistance > 0) then {resistance} else {sideUnknown}}};
 				_gateCampsOnSide = if (_gateSide == sideUnknown) then {-1} else {[_location,_gateSide] Call GetTotalCampsOnSide};
 				//--- foot-Man count: alive Man-class units of the gate-relevant side, NOT embarked in a vehicle
@@ -308,14 +308,17 @@ while {!WFBE_GameOver} do {
 				//--- immediately on a REASON state change (the actually-interesting diagnostic signal) and
 				//--- otherwise throttles to at most once per WFBE_C_CAPGATE_LOG_INTERVAL (default 30s) per town,
 				//--- same stamped-timestamp idiom this file already uses for wfbe_time_attacked above.
-				private ["_gateLastLog","_gateLastReason","_gateInterval","_gateShouldLog"];
-				_gateInterval   = missionNamespace getVariable ["WFBE_C_CAPGATE_LOG_INTERVAL", 30];
-				_gateLastLog    = _location getVariable ["wfbe_capgate_last_log", -999];
-				_gateLastReason = _location getVariable ["wfbe_capgate_last_reason", ""];
-				_gateShouldLog  = (_gateReason != _gateLastReason) || ((time - _gateLastLog) >= _gateInterval);
+				private ["_gateLastLog","_gateLastTuple","_gateInterval","_gateShouldLog","_gateTuple","_gateChanged"];
+				_gateInterval  = missionNamespace getVariable ["WFBE_C_CAPGATE_LOG_INTERVAL", 30];
+				_gateLastLog   = _location getVariable ["wfbe_capgate_last_log", -999];
+				_gateTuple     = [_gateReason, _gateCampsOnSide, _gateFootMen];
+				_gateLastTuple = _location getVariable ["wfbe_aicom_capgate_last", []];
+				_gateChanged   = true;
+				if ((typeName _gateLastTuple == "ARRAY") && {count _gateLastTuple >= 3} && {(_gateLastTuple select 0) == (_gateTuple select 0)} && {(_gateLastTuple select 1) == (_gateTuple select 1)} && {(_gateLastTuple select 2) == (_gateTuple select 2)}) then {_gateChanged = false};
+				_gateShouldLog = _gateChanged && {(time - _gateLastLog) >= _gateInterval};
 				if (_gateShouldLog) then {
 					_location setVariable ["wfbe_capgate_last_log", time, false];
-					_location setVariable ["wfbe_capgate_last_reason", _gateReason, false];
+					_location setVariable ["wfbe_aicom_capgate_last", _gateTuple, false];
 					diag_log (Format ["CAPGATE|v1|%1|mode2|side=%2|reason=%3|skip=%4|camps=%5/%6|footMen=%7", (_location getVariable ["name","?"]), str _gateSide, _gateReason, _skip, _gateCampsOnSide, _totalCamps, _gateFootMen]);
 				};
 			};
