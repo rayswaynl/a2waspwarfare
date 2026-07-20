@@ -1447,6 +1447,13 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- passes before being declared stranded; this is the dispatch->arrival budget, not the stuck-reissue.
 	if (isNil 'WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS') then {WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS = 250};
 	if (isNil 'WFBE_C_AICOM_ASSAULT_TIMEOUT')       then {WFBE_C_AICOM_ASSAULT_TIMEOUT       = 420};
+	//--- T0.2 ADD (R3-SYNTHESIS 2026-07-20): diagnostic-only, tighter than ARRIVE_RADIUS -
+	//--- lets the STUCKSTAT uncap-parked line distinguish "still closing the last 150m" from
+	//--- "genuinely at capture range and still not converting". Does not feed any capture,
+	//--- abandon, or strike-ladder decision -- read-only in AI_Commander_AssignTowns.sqf.
+	if (isNil 'WFBE_C_AICOM_CAPTURE_READY_RADIUS') then {WFBE_C_AICOM_CAPTURE_READY_RADIUS = 60};
+	//--- Codex review MEDIUM fix: CAPGATE (server_town.sqf) throttle interval - see the diag_log call there.
+	if (isNil 'WFBE_C_CAPGATE_LOG_INTERVAL') then {WFBE_C_CAPGATE_LOG_INTERVAL = 30};
 	//--- P0 STRANDED FIX (task #48, claude-gaming 2026-06-15): foot/under-equipped ongoing teams were
 	//--- dispatched at far spearhead towns 6-12km away (256 DISPATCH vs 13 ARRIVED, 63% >6km) - they
 	//--- march cross-country and die. REACH_FOOT = max metres a non-mounted team is sent on the ONGOING
