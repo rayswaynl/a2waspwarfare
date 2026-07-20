@@ -9,6 +9,24 @@ Private ["_display","_oldDisplay","_oldEH"];
 if ((missionNamespace getVariable ["WFBE_C_CLIENT_AUTORUN", 1]) <= 0) exitWith {};
 
 if (isNil "WFBE_CL_FNC_AutoRunCancel") then {
+	WFBE_CL_FNC_AutoRunIsStandingRifle = {
+		Private ["_anim","_animChars","_prefixChars","_valid","_i"];
+		if (primaryWeapon player != "") then {
+			_anim = toLower (animationState player);
+			_animChars = toArray _anim;
+			_prefixChars = toArray "amovperc";
+			_valid = count _animChars >= count _prefixChars;
+			if (_valid) then {
+				for "_i" from 0 to ((count _prefixChars) - 1) do {
+					if ((_animChars select _i) != (_prefixChars select _i)) then {_valid = false};
+				};
+			};
+			_valid
+		} else {
+			false
+		};
+	};
+
 	WFBE_CL_FNC_AutoRunCancel = {
 		Private ["_wasActive","_token"];
 		_wasActive = missionNamespace getVariable ["WFBE_CL_VAR_AutoRunActive", false];
@@ -16,25 +34,29 @@ if (isNil "WFBE_CL_FNC_AutoRunCancel") then {
 		missionNamespace setVariable ["WFBE_CL_VAR_AutoRunActive", false];
 		missionNamespace setVariable ["WFBE_CL_VAR_AutoRunToken", _token];
 		if (_wasActive) then {
-			if (alive player) then {player switchMove ""};
+			//--- Vehicle, unconscious, and dead states belong to the engine; do not reset their animation.
+			if (alive player && {(vehicle player) == player} && {lifeState player != "UNCONSCIOUS"}) then {
+				player playMoveNow "AmovPercMstpSlowWrflDnon";
+			};
 			hintSilent "Autorun: OFF";
 		};
 	};
 
 	WFBE_CL_FNC_AutoRunStart = {
-		Private ["_token","_stance"];
+		Private ["_token","_standingRifle"];
 		if (missionNamespace getVariable ["WFBE_CL_VAR_AutoRunActive", false]) exitWith {};
+		_standingRifle = call WFBE_CL_FNC_AutoRunIsStandingRifle;
+		if (!_standingRifle) exitWith {hintSilent "Autorun: stand up with a rifle first"};
 		if (!alive player || {(vehicle player) != player} || {getDammage player > 0} || {lifeState player == "UNCONSCIOUS"} || {surfaceIsWater (getPos player)} || {dialog}) exitWith {};
-		_stance = stance player;
 		_token = (missionNamespace getVariable ["WFBE_CL_VAR_AutoRunToken", 0]) + 1;
 		missionNamespace setVariable ["WFBE_CL_VAR_AutoRunActive", true];
 		missionNamespace setVariable ["WFBE_CL_VAR_AutoRunToken", _token];
-		missionNamespace setVariable ["WFBE_CL_VAR_AutoRunStance", _stance];
 		hintSilent "Autorun: ON";
 		[_token] spawn {
-			Private ["_runToken","_runStance"];
+			Private ["_runToken","_progressAnchor","_progressStarted","_currentPos"];
 			_runToken = _this select 0;
-			_runStance = missionNamespace getVariable ["WFBE_CL_VAR_AutoRunStance", stance player];
+			_progressAnchor = getPos player;
+			_progressStarted = diag_tickTime;
 			while {
 				missionNamespace getVariable ["WFBE_CL_VAR_AutoRunActive", false] &&
 				{(missionNamespace getVariable ["WFBE_CL_VAR_AutoRunToken", 0]) == _runToken} &&
@@ -43,11 +65,18 @@ if (isNil "WFBE_CL_FNC_AutoRunCancel") then {
 				{getDammage player <= 0} &&
 				{lifeState player != "UNCONSCIOUS"} &&
 				{!surfaceIsWater (getPos player)} &&
-				{stance player == _runStance} &&
 				{!dialog}
 			} do {
+				if !(call WFBE_CL_FNC_AutoRunIsStandingRifle) exitWith {};
+				_currentPos = getPos player;
+				if ((_currentPos distance _progressAnchor) >= 0.5) then {
+					_progressAnchor = _currentPos;
+					_progressStarted = diag_tickTime;
+				};
+				if ((diag_tickTime - _progressStarted) >= 1.5) exitWith {[] call WFBE_CL_FNC_AutoRunCancel};
 				//--- A2 OA 1.64 stock forward-run family; its root motion advances the player.
-				player playMoveNow "AmovPercMrunSlowWrflDf";
+				//--- Animation commands are globally visible by design; reissue only after drift.
+				if ((toLower (animationState player)) != "amovpercmrunslowwrfldf") then {player playMoveNow "AmovPercMrunSlowWrflDf"};
 				sleep 0.05;
 			};
 			if (missionNamespace getVariable ["WFBE_CL_VAR_AutoRunActive", false] && {(missionNamespace getVariable ["WFBE_CL_VAR_AutoRunToken", 0]) == _runToken}) then {

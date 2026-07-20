@@ -29,16 +29,30 @@ def test_autorun_contract():
     assert "_key == 17" in autorun
     assert "_key in [17,30,31,32]" in autorun
     assert 'playMoveNow "AmovPercMrunSlowWrflDf"' in autorun
-    assert "switchMove \"\"" in autorun
+    assert 'playMoveNow "AmovPercMstpSlowWrflDnon"' in autorun
+    assert "animationState player" in autorun
+    assert 'toArray "amovperc"' in autorun
+    assert 'primaryWeapon player != ""' in autorun
+    assert "getPos player" in autorun
+    assert "distance _progressAnchor" in autorun
+    assert "0.5" in autorun
+    assert "1.5" in autorun
     assert "vehicle player" in autorun
     assert "getDammage player" in autorun
     assert 'lifeState player == "UNCONSCIOUS"' in autorun
     assert "surfaceIsWater (getPos player)" in autorun
-    assert "stance player" in autorun
     assert "dialog" in autorun
     assert "alive player" in autorun
+    assert "stance player" not in autorun
+    assert "switchMove" not in autorun
+
+
+def test_stance_is_registered_as_an_a2_forbidden_command():
+    linter = (ROOT / "Tools/Lint/check_sqf.py").read_text(encoding="utf-8")
+    assert '"stance"' in linter
 
 
 if __name__ == "__main__":
     test_autorun_contract()
+    test_stance_is_registered_as_an_a2_forbidden_command()
     print("client autorun contract: PASS")
