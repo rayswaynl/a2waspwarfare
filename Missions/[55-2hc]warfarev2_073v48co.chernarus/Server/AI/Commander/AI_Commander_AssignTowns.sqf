@@ -473,7 +473,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										//--- uncapturable target gets abandoned + blacklisted for THIS team just like a
 										//--- position-stuck one. Real progress (team actually moved toward/away, town not
 										//--- reached yet) still resets, unchanged.
-										private ["_atTarget","_uncapParked"];
+										private ["_atTarget","_uncapParked","_capLocked"];
 										//--- AT the target: within the assault arrive radius of _goto (same radius the
 										//--- dispatch latch uses at the top of this file). Ties the abandon to the SAME
 										//--- "did not flip"/"RELEASED uncapturable depot" signal Common_RunCommanderTeam
@@ -482,10 +482,13 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										_atTarget = (_ldr distance _goto) <= (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250]);
 										_uncapParked = _atTarget && {(_goto getVariable ["sideID", -1]) != _sideID};
 										if (_uncapParked) then {
+											//--- Review reconciliation: read CapLock once before any uncap-parked mutation.
+											_capLocked = [_team] Call WFBE_CO_FNC_CapLock;
 											//--- Refresh the breadcrumb (so the position-stuck gate does NOT also fire and
 											//--- double-count) but do NOT zero strikes; bump the SAME strike counter the
 											//--- unstuck ladder uses so an uncapturable depot climbs to ABANDON.
 											if (count _ord >= 4) then {_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr, _ord select 3]]} else {_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]]};   //--- DEFECT-2 FIX (fable, GR-2026-07-08a, adversarial-verify): preserve the Fix-A 4th tuple element (dyn-timeout budget) across this breadcrumb refresh - a bare 3-element write here truncated it on the first >210s stuck-recheck after every dispatch, silently reverting long-haul teams to the flat 420s legacy timeout. _ord is the SAME fresh read from :308 (mutually-exclusive branches, no intervening write).
+											if (!_capLocked) then {
 											private ["_strk"];
 											_strk = ([_team, "wfbe_aicom_stuckstrikes", 0] Call WFBE_CO_FNC_GroupGetBool) + 1; //--- fix(hunt): G1-safe (nil+1 threw for stuck-since-spawn teams, so the unstick ladder never started)
 											_team setVariable ["wfbe_aicom_stuckstrikes", _strk];
@@ -512,7 +515,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											//--- even though _needs=true here gets silently overridden back to false moments later.
 											//--- Reordering the CHECK alone does not fix this (still races); the real fix is: never MUTATE
 											//--- the blacklist for a town this team is currently locked onto.
-											if (_stallSecs > 0 && {(time - _gotoSince) > _stallSecs} && {!([_team] Call WFBE_CO_FNC_CapLock)}) then {
+											if (_stallSecs > 0 && {(time - _gotoSince) > _stallSecs}) then {
 												private ["_saCd","_saBl","_saKeep"];
 												_saCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
 												_saBl = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetBool;
@@ -543,7 +546,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											//--- site earlier in this file, the en-route position-stuck ladder, is unaffected: a team there is
 											//--- by definition parked FAR from _goto and has not yet reached BEGIN_CAPTURE, so it cannot be
 											//--- CapLocked at that point - no guard needed there.)
-											if (_strk > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_ABANDON", 4]) && {!([_team] Call WFBE_CO_FNC_CapLock)}) then {
+											if (_strk > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_ABANDON", 4])) then {
 												//--- Same ABANDON + per-team blacklist + side-abandon tally as the position-stuck
 												//--- ladder below-left; factored to keep both paths identical.
 												private ["_abCd","_abBl","_abKeep"];
@@ -599,6 +602,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 														};
 													};
 												};
+											};
 											};
 										} else {
 											//--- Real progress (en-route, actually moving, town not yet reached): refresh the

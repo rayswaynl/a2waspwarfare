@@ -23,12 +23,27 @@
 	Params: [ group ]
 	Returns: BOOL (true = mounted / REACH_MOUNTED applies, false = foot / REACH_FOOT applies).
 */
-private ["_grp","_ldr","_ldrMounted","_total","_embarked","_frac","_veh"];
+private ["_grp","_ldr","_ldrMounted","_total","_embarked","_frac","_veh","_transportCaps","_transportKeep","_transportStamp","_transportVehicle","_transportLive"];
 _grp = _this select 0;
 if (isNull _grp) exitWith {false};
 _ldr = leader _grp;
 _ldrMounted = (!isNull _ldr) && {alive _ldr} && {(vehicle _ldr) != _ldr} && {(vehicle _ldr) isKindOf "LandVehicle"} && {canMove (vehicle _ldr)};
-if (_ldrMounted) exitWith {true};
+_transportCaps = _grp getVariable "wfbe_aicom_transport_capable";
+if (isNil "_transportCaps" || {typeName _transportCaps != "ARRAY"}) then {_transportCaps = []};
+_transportKeep = [];
+_transportLive = false;
+{
+	if (typeName _x == "ARRAY" && {count _x >= 2}) then {
+		_transportVehicle = _x select 0;
+		_transportStamp = _x select 1;
+		if (!isNull _transportVehicle && {alive _transportVehicle} && {canMove _transportVehicle} && {typeName _transportStamp == "SCALAR"} && {(time - _transportStamp) < 1200}) then {
+			_transportKeep set [count _transportKeep, [_transportVehicle, _transportStamp]];
+			if (canMove _transportVehicle && {!isNull _ldr} && {alive _ldr} && {(_transportVehicle distance _ldr) <= 300}) then {_transportLive = true};
+		};
+	};
+} forEach _transportCaps;
+_grp setVariable ["wfbe_aicom_transport_capable", _transportKeep];
+if (_ldrMounted || {_transportLive}) exitWith {true};
 _total = 0; _embarked = 0;
 {
 	if (alive _x) then {

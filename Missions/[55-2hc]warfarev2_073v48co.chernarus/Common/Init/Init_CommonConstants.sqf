@@ -1042,9 +1042,12 @@ if (worldName == "Zargabad") then {
 	//--- counter so a genuinely wedged/flipped hull is not nudged forever. See Common_AICOM_HighClimb.sqf.
 	if (isNil "WFBE_C_AICOM_HIGHCLIMB_PULSE") then {WFBE_C_AICOM_HIGHCLIMB_PULSE = 1}; //--- 0 = off (byte-identical to pre-T1.5 behaviour: only the existing rolling-hull boost applies).
 	if (isNil "WFBE_C_AICOM_HIGHCLIMB_PULSE_MAX_STRIKES") then {WFBE_C_AICOM_HIGHCLIMB_PULSE_MAX_STRIKES = 6}; //--- consecutive still-stuck pulses before this hull is handed back to the normal stuck/strand/abandon ladder.
-	if (isNil "WFBE_C_AICOM_HIGHCLIMB_PULSE_COOLDOWN") then {WFBE_C_AICOM_HIGHCLIMB_PULSE_COOLDOWN = 2}; //--- s between pulses on the same hull - lets it actually respond before the next nudge.
+	if (isNil "WFBE_C_AICOM_HIGHCLIMB_PULSE_COOLDOWN") then {WFBE_C_AICOM_HIGHCLIMB_PULSE_COOLDOWN = 15}; //--- s between from-zero pulses on the same hull; review minimum is 15s.
+	if (isNil "WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE") then {WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE = 0}; //--- Review fix #1194: master gate for the from-zero pulse; owner arms it explicitly.
+	if (isNil "WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE_EPSILON") then {WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE_EPSILON = 1}; //--- m: goal-distance change treated as no progress during dwell qualification.
+	if (isNil "WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE_DWELL") then {WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE_DWELL = 10}; //--- consecutive 0.1s observations before a from-zero pulse is eligible.
+	if (isNil "WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE_PROGRESS") then {WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE_PROGRESS = 25}; //--- m: genuine position progress that resets pulse strikes.
 	if (isNil "WFBE_C_AICOM_HIGHCLIMB_PULSE_SPEED") then {WFBE_C_AICOM_HIGHCLIMB_PULSE_SPEED = 2.5}; //--- m/s impulse magnitude along hull heading (deliberation spec: ~2-3 m/s).
-	if (isNil "WFBE_C_AICOM_HIGHCLIMB_PULSE_RECOVER_SECS") then {WFBE_C_AICOM_HIGHCLIMB_PULSE_RECOVER_SECS = 3}; //--- Codex review HIGH fix: s of SUSTAINED above-threshold speed required before the pulse strike ladder resets - a single sample right after our own pulse (which itself exceeds the reset threshold) is not proof of real recovery.
 	if (isNil "WFBE_C_AICOM_AUTOFLIP") then {WFBE_C_AICOM_AUTOFLIP = 1};                   //--- Build84 (Ray, ON): auto-right flipped AICOM ground vehicles on server/HC (Marty AutoFlip thresholds; only when flipped+stuck). 0 = off.
 	if (isNil "WFBE_C_AICOM_SPAWN_ON_ROADS") then {WFBE_C_AICOM_SPAWN_ON_ROADS = 1};       //--- Build84: snap AICOM factory-produced unit spawn to nearest road within SPAWN_ROAD_RADIUS of the factory pad. 0 = pre-Build84 pad behaviour.
 	if (isNil "WFBE_C_AICOM_SPAWN_ROAD_RADIUS") then {WFBE_C_AICOM_SPAWN_ROAD_RADIUS = 60};//--- Build84: nearRoads search radius (m) for the AICOM road-spawn snap.

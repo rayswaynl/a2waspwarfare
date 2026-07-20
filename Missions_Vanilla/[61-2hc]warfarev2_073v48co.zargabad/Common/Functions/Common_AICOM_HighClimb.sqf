@@ -98,7 +98,9 @@ WFBE_CO_FNC_AICOM_HighClimb_Eligible = {
 WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 	private ["_vehicle","_direction","_min","_minBoostSpeed","_baseBoostCoef","_maxBoostCoef",
 	         "_sleepDelay","_driver","_speed","_vel","_currentCommand","_canAssist","_isMovingForward","_boostCoef",
-	         "_lastLog"];
+	         "_lastLog","_pulseOrd","_pulseGoal","_pulseGoalValid","_pulseTrackedGoal","_pulseDist","_pulseLastDist",
+	         "_pulseDwell","_pulseMax","_pulseCd","_pulseLast","_pulseStrikes","_pulseHead","_pulseSpd","_pulseVel",
+	         "_pulsePos","_pulseStartPos","_pulseMoved","_pulseEpsilon","_pulseObs","_pulseProgress","_pulseUpZ","_pulseTeam"];
 
 	_vehicle = _this;
 
@@ -193,59 +195,77 @@ WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 					};
 				};
 
-				//--- T1.5 ADD (R3-SYNTHESIS 2026-07-20): the boost above only assists a hull ALREADY rolling
-				//--- (_speed > _minBoostSpeed) - a fully STOPPED/bogged hull gets ZERO help today, which is
-				//--- the one real gap in this manager (the seed claim "climb-assist is dead" was withdrawn -
-				//--- 2500+ boosts fire in the live evidence; its only gap is unsticking a STOPPED hull). Nudges
-				//--- along the HULL's own heading (getDir, NOT the velocity-derived heading above, which is
-				//--- unreliable at near-zero speed) so static friction breaks. Escalates a per-vehicle strike
-				//--- counter and STOPS pulsing after PULSE_MAX_STRIKES consecutive still-stuck attempts, so a
-				//--- genuinely wedged/flipped hull is handed back to the normal AssignTowns stuck/strand/abandon
-				//--- ladder instead of nudged forever. Gate WFBE_C_AICOM_HIGHCLIMB_PULSE (default 1).
-				if ((missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE", 1]) > 0) then {
-					if (_canAssist && {_speed <= _minBoostSpeed}) then {
-						private ["_pulseMax","_pulseCd","_pulseLast","_pulseStrikes","_pulseHead","_pulseSpd","_pulseVel"];
-						//--- Codex review HIGH: still genuinely stuck this tick, so any recovery timer that may have
-						//--- started (see the else branch below) was a false start - clear it.
-						_vehicle setVariable ["AICOM_HighClimb_PulseRecoverSince", -1, false];
-						_pulseMax  = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_MAX_STRIKES", 6];
-						_pulseCd   = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_COOLDOWN", 2];
-						_pulseLast = _vehicle getVariable ["AICOM_HighClimb_PulseLast", -999];
-						if ((diag_tickTime - _pulseLast) > _pulseCd) then {
-							_pulseStrikes = _vehicle getVariable ["AICOM_HighClimb_PulseStrikes", 0];
-							if (_pulseStrikes < _pulseMax) then {
-								_pulseHead = getDir _vehicle;
-								_pulseSpd  = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_SPEED", 2.5];
-								_pulseVel  = [(sin _pulseHead) * _pulseSpd, (cos _pulseHead) * _pulseSpd, (_vel select 2)];
-								_vehicle setVelocity _pulseVel;
-								_vehicle setVariable ["AICOM_HighClimb_PulseLast", diag_tickTime, false];
-								_vehicle setVariable ["AICOM_HighClimb_PulseStrikes", _pulseStrikes + 1, false];
-								diag_log (Format ["AICOMSTAT|v1|EVENT|%1|%2|HIGHCLIMB_PULSE|veh=%3|spd=%4|strike=%5", str isServer, round (time / 60), typeOf _vehicle, round _speed, _pulseStrikes + 1]);
-							};
-						};
+				//--- Review fix #1194: the from-zero pulse is a separately armed,
+				//--- progress-qualified recovery action. It needs a real current goal,
+				//--- consecutive low-speed/no-distance-change observations, and a
+				//--- level hull; AutoFlip owns rolled hulls.
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE", 1]) > 0}) then {
+					_pulseTeam = group _driver;
+					_pulseOrd = [_pulseTeam, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
+					_pulseGoal = objNull;
+					if (count _pulseOrd > 0) then {_pulseGoal = _pulseOrd select 0};
+					_pulseGoalValid = (typeName _pulseGoal == "OBJECT") && {!isNull _pulseGoal};
+					_pulsePos = getPos _vehicle;
+					_pulseStrikes = _vehicle getVariable ["AICOM_HighClimb_PulseStrikes", 0];
+					if (!_pulseGoalValid) then {
+						_vehicle setVariable ["AICOM_HighClimb_PulseGoal", objNull, false];
+						_vehicle setVariable ["AICOM_HighClimb_PulseDwell", 0, false];
+						_vehicle setVariable ["AICOM_HighClimb_PulseStrikes", 0, false];
 					} else {
-						//--- Codex review HIGH: a single elevated-speed SAMPLE is not proof of real recovery - our own
-						//--- pulse sets ~2.5 m/s (~9 km/h), well above the 3 km/h reset threshold, so the very next tick
-						//--- after a pulse fires used to read as "rolling again" and wipe the strike counter every single
-						//--- pulse - the escalation ceiling could never bite and a wedged hull got pulsed forever. Now
-						//--- require SUSTAINED motion above the threshold for WFBE_C_AICOM_HIGHCLIMB_PULSE_RECOVER_SECS
-						//--- (default 3s) before resetting - a transient pulse-induced bounce cannot sustain that long
-						//--- against genuine static friction, but real recovered motion (freed from the obstruction) can.
-						if (_speed > _minBoostSpeed) then {
-							private ["_pulseRecoverSince","_pulseRecoverSecs"];
-							_pulseRecoverSince = _vehicle getVariable ["AICOM_HighClimb_PulseRecoverSince", -1];
-							if (_pulseRecoverSince < 0) then {
-								_vehicle setVariable ["AICOM_HighClimb_PulseRecoverSince", diag_tickTime, false];
-							} else {
-								_pulseRecoverSecs = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_RECOVER_SECS", 3];
-								if ((diag_tickTime - _pulseRecoverSince) >= _pulseRecoverSecs) then {
-									_vehicle setVariable ["AICOM_HighClimb_PulseStrikes", 0, false];
-									_vehicle setVariable ["AICOM_HighClimb_PulseRecoverSince", -1, false];
-								};
-							};
+						_pulseDist = _vehicle distance _pulseGoal;
+						_pulseTrackedGoal = _vehicle getVariable ["AICOM_HighClimb_PulseGoal", objNull];
+						if (typeName _pulseTrackedGoal != "OBJECT" || {_pulseTrackedGoal != _pulseGoal}) then {
+							_vehicle setVariable ["AICOM_HighClimb_PulseGoal", _pulseGoal, false];
+							_vehicle setVariable ["AICOM_HighClimb_PulseStrikes", 0, false];
+							_vehicle setVariable ["AICOM_HighClimb_PulseDwell", 0, false];
+							_vehicle setVariable ["AICOM_HighClimb_PulseLastDist", _pulseDist, false];
+							_vehicle setVariable ["AICOM_HighClimb_PulseStartPos", _pulsePos, false];
+							_pulseStrikes = 0;
 						} else {
-							//--- Dropped back under threshold before sustaining - not real recovery, clear the timer.
-							_vehicle setVariable ["AICOM_HighClimb_PulseRecoverSince", -1, false];
+							_pulseLastDist = _vehicle getVariable ["AICOM_HighClimb_PulseLastDist", _pulseDist];
+							_pulseDwell = _vehicle getVariable ["AICOM_HighClimb_PulseDwell", 0];
+							_pulseEpsilon = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE_EPSILON", 1];
+							_pulseObs = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE_DWELL", 10];
+							if (_speed <= _minBoostSpeed && {abs (_pulseDist - _pulseLastDist) <= _pulseEpsilon}) then {_pulseDwell = _pulseDwell + 1} else {_pulseDwell = 0};
+							_vehicle setVariable ["AICOM_HighClimb_PulseLastDist", _pulseDist, false];
+							_vehicle setVariable ["AICOM_HighClimb_PulseDwell", _pulseDwell, false];
+							_pulseStartPos = _vehicle getVariable ["AICOM_HighClimb_PulseStartPos", _pulsePos];
+							_pulseProgress = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE_PROGRESS", 25];
+							if (typeName _pulseStartPos == "ARRAY" && {count _pulseStartPos >= 2}) then {
+								_pulseMoved = _pulsePos distance _pulseStartPos;
+								if (_pulseStrikes > 0 && {_pulseMoved > _pulseProgress}) then {
+									_pulseStrikes = 0;
+									_vehicle setVariable ["AICOM_HighClimb_PulseStrikes", 0, false];
+									_vehicle setVariable ["AICOM_HighClimb_PulseStartPos", _pulsePos, false];
+								};
+							} else {
+								_vehicle setVariable ["AICOM_HighClimb_PulseStartPos", _pulsePos, false];
+							};
+							_pulseMax = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_MAX_STRIKES", 6];
+							_pulseCd = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_COOLDOWN", 15];
+							_pulseLast = _vehicle getVariable ["AICOM_HighClimb_PulseLast", -999];
+							_pulseUpZ = (vectorUp _vehicle) select 2;
+							if (_canAssist && {_speed <= _minBoostSpeed} && {_pulseDwell >= _pulseObs} && {_pulseUpZ >= 0.5}) then {
+								if ((diag_tickTime - _pulseLast) >= _pulseCd && {_pulseStrikes < _pulseMax}) then {
+									_pulseHead = getDir _vehicle;
+									_pulseSpd = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_SPEED", 2.5];
+									if (_pulseSpd > 2.5) then {_pulseSpd = 2.5};
+									if (_pulseSpd < 0) then {_pulseSpd = 0};
+									_pulseVel = [(sin _pulseHead) * _pulseSpd, (cos _pulseHead) * _pulseSpd, (_vel select 2)];
+									_vehicle setVelocity _pulseVel;
+									_vehicle setVariable ["AICOM_HighClimb_PulseLast", diag_tickTime, false];
+									_vehicle setVariable ["wfbe_aicom_zeropulse_t", diag_tickTime, true];
+									_vehicle setVariable ["AICOM_HighClimb_PulseStrikes", _pulseStrikes + 1, false];
+									_vehicle setVariable ["AICOM_HighClimb_PulseStartPos", _pulsePos, false];
+									_vehicle setVariable ["AICOM_HighClimb_PulseDwell", 0, false];
+									diag_log (Format ["AICOMSTAT|v1|EVENT|%1|%2|HIGHCLIMB_PULSE|veh=%3|spd=%4|strike=%5", str isServer, round (time / 60), typeOf _vehicle, round _speed, _pulseStrikes + 1]);
+								};
+							} else {
+								//--- A brief post-pulse speed spike is not progress and
+								//--- must not reset the escalation counter. A tilted hull
+								//--- is left entirely to AutoFlip.
+								if (_pulseUpZ < 0.5) then {_vehicle setVariable ["AICOM_HighClimb_PulseDwell", 0, false]};
+							};
 						};
 					};
 				};
