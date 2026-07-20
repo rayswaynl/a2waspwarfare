@@ -238,6 +238,7 @@ _fi = 0;
 _mergeTarget = missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_TARGET_DEFENDER", 0];
 if (_mergeTarget <= 0) then {_mergeTarget = missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_TARGET", 5]};
 private "_mergeCap"; _mergeCap = missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_CAP_DEFENDER", 10]; //--- GUER condense A/B: defender-specific merged-group size cap (12); falls back to the historical 10.
+if (_mergeCap <= 0) then {_mergeTarget = 0}; //--- disabled cap must disable packing; never emit empty groups.
 if (_mergeTarget > 0 && {count _contents > 1}) then {
 	_infRosters = [];
 	_vehRosters = [];
@@ -247,21 +248,36 @@ if (_mergeTarget > 0 && {count _contents > 1}) then {
 		_ci = _ci + 1;
 	} forEach _contents;
 
-	//--- GROUP-PACKING: flatten selected infantry rosters before forming groups.  The old
-	//--- whole-roster guard could not merge the normal 6-man roster at a 10-man target: 6+6
-	//--- exceeded the cap, so it emitted both groups unchanged.  This preserves every selected
-	//--- classname and its order, but lets target-sized defender groups reduce group brains without
-	//--- adding AI.  Vehicle rosters remain atomic because CreateTeam must keep its vehicle/crew path.
+	//--- GROUP-PACKING / LEADER-PRESERVING: selected infantry rosters are condensed without
+	//--- adding AI. When a roster crosses a target boundary, its tail fills the current group and
+	//--- its prefix (including that roster's original leader) starts the next one. This keeps each
+	//--- created group leader-capable; a source roster that is itself oversized remains atomic.
+	//--- Vehicle rosters remain atomic because CreateTeam must keep its vehicle/crew path intact.
 	if (_mergeTarget > _mergeCap) then {_mergeTarget = _mergeCap};
 	_merged = [];
 	_acc = [];
 	{
 		_roster = _x;
-		{
-			if ((count _acc) >= _mergeCap) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
-			_acc = _acc + [_x];
-			if ((count _acc) >= _mergeTarget) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
-		} forEach _roster;
+		if (count _acc == 0) then {
+			_acc = +_roster;
+		} else {
+			_space = _mergeTarget - count _acc;
+			if (_space >= count _roster) then {
+				_acc = _acc + _roster;
+			} else {
+				_splitAt = (count _roster) - _space;
+				_prefix = [];
+				_tail = [];
+				//--- A2/OA-safe split; ranged select [start,count] is A3-only.
+				for '_packIndex' from 0 to ((count _roster) - 1) do {
+					if (_packIndex < _splitAt) then {[_prefix, _roster select _packIndex] Call WFBE_CO_FNC_ArrayPush} else {[_tail, _roster select _packIndex] Call WFBE_CO_FNC_ArrayPush};
+				};
+				_acc = _acc + _tail;
+				[_merged, _acc] Call WFBE_CO_FNC_ArrayPush;
+				_acc = _prefix;
+			};
+		};
+		if ((count _acc) >= _mergeTarget) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
 	} forEach _infRosters;
 	if (count _acc > 0) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush};
 	{[_merged, _x] Call WFBE_CO_FNC_ArrayPush} forEach _vehRosters; //--- vehicles unchanged, appended

@@ -17,8 +17,11 @@ The implementation changes the two town-garrison planners and their live knobs:
 
 The prior planner treated a selected roster as indivisible. With normal six-man rosters,
 `6 + 6` exceeded its cap, so a target change from 5 to 9 did not consolidate anything.
-The new packing pass preserves classname order and forms target-sized groups: three
-six-man selections become `9 + 9`, not `6 + 6 + 6`.
+The new packing pass preserves the selected classname multiset and each output group's
+leader-capable first entry. When a roster crosses a boundary, its tail fills the current
+group while its original leader stays at the start of the next group; an already-oversized
+source roster remains atomic. Three six-man selections can therefore become `9 + 9`, not
+`6 + 6 + 6`, without changing the selected force mass.
 
 ## Current local baseline
 
@@ -58,7 +61,9 @@ about 20%, then compare total AI, groups per side, capture rate and server FPS.
 ## Validation
 
 `Tools/Lint/test_town_group_packing.py` is a regression contract for both planners. It
-was run red against the old whole-roster behavior, then green after the packing change.
+covers roster-boundary leader preservation, classname-multiset preservation, and the
+defender's nonpositive-cap disable path. It was run red against the old behavior, then
+green after the packing change.
 
 Required before merge/review:
 
