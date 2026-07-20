@@ -1,6 +1,6 @@
 # Wave-next integration manifest
 
-Branch: `update/wave-next`  
+Branch: `update/wave-next`
 Base: `origin/master` (`b411d70004`)
 
 ## Pending items
