@@ -72,7 +72,7 @@ Tools/Lint/test_camp_null_count.py
 - Commit `b4427c20d4c0d3ed0258e79d0669f2fb0108ebf4` - `groups-to-10`: larger registered infantry and mounted AICOM complements.
 - Commit `c51d379d689dc3faa866e5e6849c7d50ad525d25` - `garrison-variety`: additive US/TKA/TKGUE garrison variants.
 - Commit `1883a4989a38cb007ae22e61f0f738235841c02f` - `faction-rares`: map-branched TKA/NAPA rare rolls and no-artillery vehicle sprinkles.
-- Commit `943646728595a1038a8c4a474b32080d4c9c7cbd` - `air-pack`: dark-by-default council air templates, owner gunner flip retained, and lift-majority bucket guard.
+- Commit `943646728595a1038a8c4a474b32080d4c9c7cbd` - `air-pack`: council air templates and lift-majority rail are both gated dark by default; owner gunner flip retained.
 - Commit `2e19d707f1060f03962297d83215b5b493bcad60` - `patrol-sweep`: shared roster-key patrol entries and GUER wildcard foot-roster use.
 - Chat relay (`chat-tap`): SKIPPED. The OA 1.64 mission sources and verified command/event inventory provide no safe, documented server-side chat hook; `HandleChatMessage`/A3 mission-event forms are not used without OA proof. No flag or misleading partial relay was shipped.
 
@@ -99,3 +99,10 @@ Server/Functions/Server_GetTownGroupsDefender.sqf
 ```
 
 The 17 paths above are touched identically in Chernarus, Takistan, and Zargabad; the existing integrated-wave paths remain listed in the prior section.
+
+## Fable review round
+
+- Fixed the patrol road-bias scanner to type-check and expand shared roster-key strings before iterating pool entries.
+- Gated both lift-majority air rails with `WFBE_C_AICOM_AIR_COUNCIL_PACK` and corrected the manifest wording: templates and rail are both gated.
+- Replaced the unarmed AICOM `AH6X_EP1` Scout Flight entry with a second `AH6J_EP1` attack helicopter.
+- Cherry-picked only naval fallback commit `3816b82fa`; PR #1186 was not merged because its base included unrelated master changes.

@@ -157,7 +157,7 @@ if (missionNamespace getVariable ["WFBE_C_AICOM_AIR_COUNCIL_PACK", 0] > 0) then 
 	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - CH-47 + AH-64 Assault Package"];
 	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
 
-	_u = ["AH6X_EP1"]; _u = _u + ["AH6J_EP1"];
+	_u = ["AH6J_EP1"]; _u = _u + ["AH6J_EP1"];
 	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - AH-6 Scout Flight"];
 	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,1]];
 

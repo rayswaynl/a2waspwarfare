@@ -12,7 +12,7 @@
 scriptName "Server\FSM\server_side_patrols.sqf";
 
 private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","_owned","_home","_tier","_pool","_template","_hcUnit","_delay","_max","_maxSide","_scrubLast","_kept","_changed","_entry","_removed","_aKept",
-	"_mpEnabled","_mpMotoPool","_mpEntry","_mpHasVeh","_mpC",
+	"_mpEnabled","_mpMotoPool","_mpEntry","_mpHasVeh","_mpC","_mpRosterChoices","_mpChoice",
 	"_escEnabled","_escScore","_escMins","_escPopMax","_escTierIdx","_escBaseIdx","_escTiers","_escVehCap","_escHadVeh","_escEscort","_escSideVeh",
 	"_homePool","_spSkipNaval","_hpX",
 	"_feedChangeOnly","_feedKeepAlive","_feedSig","_feedLastSig","_feedChanged","_feedDue","_feedLastBroadcast",
@@ -238,9 +238,23 @@ while {!WFBE_GameOver} do {
 								_mpMotoPool = [];
 								{
 									_mpEntry = _x;
-									_mpHasVeh = false;
-									{ _mpC = _x; if (!(_mpC isKindOf "Man")) exitWith {_mpHasVeh = true} } forEach _mpEntry;
-									if (_mpHasVeh) then {_mpMotoPool set [count _mpMotoPool, _mpEntry]};
+									if (typeName _mpEntry == "STRING") then {
+										_mpRosterChoices = missionNamespace getVariable [Format["WFBE_%1_GROUPS_%2", str _side, _mpEntry], []];
+										{
+											_mpChoice = _x;
+											if (typeName _mpChoice == "ARRAY") then {
+												_mpHasVeh = false;
+												{ _mpC = _x; if (!(_mpC isKindOf "Man")) exitWith {_mpHasVeh = true} } forEach _mpChoice;
+												if (_mpHasVeh) then {_mpMotoPool set [count _mpMotoPool, _mpChoice]};
+											};
+										} forEach _mpRosterChoices;
+									} else {
+										if (typeName _mpEntry == "ARRAY") then {
+											_mpHasVeh = false;
+											{ _mpC = _x; if (!(_mpC isKindOf "Man")) exitWith {_mpHasVeh = true} } forEach _mpEntry;
+											if (_mpHasVeh) then {_mpMotoPool set [count _mpMotoPool, _mpEntry]};
+										};
+									};
 								} forEach _pool;
 								if (count _mpMotoPool > 0) then {
 									_template = _mpMotoPool select floor(random count _mpMotoPool);

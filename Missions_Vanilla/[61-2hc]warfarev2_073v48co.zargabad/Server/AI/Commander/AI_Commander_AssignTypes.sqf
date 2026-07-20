@@ -156,6 +156,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 				} forEach _eligible;
 
 
+	if (missionNamespace getVariable ["WFBE_C_AICOM_AIR_COUNCIL_PACK", 0] > 0) then {
 	//--- B757 lift-majority rail: when air is available, retain at least 50% lift/dismount templates in the air draw.
 	//--- Pure gunships/planes remain registered, but do not crowd out capture-capable air teams.
 	private ["_airLift","_airSupport","_airGuard","_airI","_airTmpl"];
@@ -175,6 +176,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0)
 		_buckets set [3, _airGuard];
 	};
 
+	};
 				//--- B66 MATURITY-RAMPED MIX: select the [inf,light,heavy,air] weight tier by the side's OWN-TOWN
 				//--- count (_ownTowns): EARLY when towns < MATURE_MID, MID when towns < MATURE_LATE, else LATE.
 				//--- Fall back to the static WFBE_C_AICOM_TYPE_MIX if a tier const is nil. Copied below so the
