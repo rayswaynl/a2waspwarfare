@@ -12,4 +12,4 @@ if ((count _units) < 2) then {_entitie = [missionNamespace getVariable Format ["
 if !(isNull _entitie) then {deleteVehicle _entitie};
 //--- TEAMBAR probe (round-2 review: generic group-transfer coverage). Fires only on the machine
 //--- where the transferred unit IS the local player - inert everywhere else and when the probe is off.
-if (_unit == player && {!isNil "WFBE_CL_FNC_TeambarProbe"}) then {["group-transfer", "post-join"] Call WFBE_CL_FNC_TeambarProbe}; // function-name isNil guard, not a classname // noqa: CLASSREF
+if (_unit == player && {!isNil "WFBE_CL_FNC_TeambarProbe"}) then {["group-transfer", "post-join"] Call WFBE_CL_FNC_TeambarProbe};
