@@ -24,7 +24,8 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_airVeh","_grndVehs","_footPax","_cargoSeats","_lifted","_walkers","_lzPos","_flat","_pilot","_crewVeh","_pax","_abVeh","_left","_dropPos","_cv","_dismountDest","_cn","_ud","_heliCost","_truckSeq",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
-         "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev"];
+         "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev",
+         "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady"];
 
 _sideID = _this select 0;
 _template = _this select 1;
@@ -1275,7 +1276,7 @@ while {!WFBE_GameOver && _alive} do {
 									//--- above at _uFootPlayerNear), same squad re-form. A2-OA-safe: getVariable+isNil order read (groups reject [name,default]), atan2
 									//--- position-delta bearing (binary getDir is A3-only), isFlatEmpty / surfaceIsWater / setPos. Flag 0 = inert (byte-identical to HEAD).
 									if ((missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP", 1]) > 0) then {
-										private ["_nrOrder","_nrDest","_nrBrg","_nrStep","_nrGuess","_nrFlat","_nrPos","_nrLp"];
+									private ["_nrOrder","_nrDest","_nrBrg","_nrStep","_nrGuess","_nrFlat","_nrLp"];
 										_nrOrder = _uTeam getVariable "wfbe_aicom_order";
 										_nrDest  = objNull;
 										if (!isNil "_nrOrder" && {count _nrOrder >= 3}) then {_nrDest = _nrOrder select 2};
@@ -1287,12 +1288,11 @@ while {!WFBE_GameOver && _alive} do {
 											if (_nrStep > ((_uLdr distance _nrDest) - 10)) then {_nrStep = ((_uLdr distance _nrDest) - 10) max 0};
 											if (_nrStep > 5) then {
 												_nrGuess = [(_nrLp select 0) + _nrStep * (sin _nrBrg), (_nrLp select 1) + _nrStep * (cos _nrBrg), 0];
-												//--- Snap to a nearby flat-empty spot so the squad is not dropped inside a rock/wall; fall back to the raw guess.
-												_nrFlat = _nrGuess isFlatEmpty [8, 0, 3, 10, 0, false, objNull];
-												_nrPos  = if (count _nrFlat > 0) then {_nrFlat} else {_nrGuess};
-												if (!surfaceIsWater _nrPos) then {
-													_uLdr setVelocity [0,0,0];
-													_uLdr setPos _nrPos;
+											//--- Only use a verified flat-empty pad; a raw goalward guess may be steep or occupied and re-wedge the team.
+											_nrFlat = _nrGuess isFlatEmpty [8, 0, 3, 10, 0, false, objNull];
+											if (count _nrFlat > 0 && {!surfaceIsWater _nrFlat}) then {
+												_uLdr setVelocity [0,0,0];
+												_uLdr setPos _nrFlat;
 													{ if (alive _x && {_x != _uLdr} && {vehicle _x == _x}) then {_x doFollow _uLdr} } forEach (units _uTeam);
 													missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
 													diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_NOROAD_STEP|team=" + (str _uTeam) + "|tier=" + str _uTier + "|map=" + worldName + "|step=" + str (round _nrStep));
@@ -1405,8 +1405,69 @@ while {!WFBE_GameOver && _alive} do {
 				//--- and forceFollowRoad on each vehicle, so the convoy takes lanes the engine
 				//--- can drive; a final MOVE near the objective hands off to the arrival branch
 				//--- which flips to COMBAT/WEDGE SAD. Pure-infantry teams keep the simple MOVE.
+				//--- Review fix #1193: every next-leg start restores the exact crew/cargo
+				//--- role recorded by the capture dismount. This is deliberately before
+				//--- the 700m/cargo-capacity branch so short legs and crew hulls recover too.
+				_transportCaps = _team getVariable "wfbe_aicom_transport_capable";
+				if (isNil "_transportCaps" || {typeName _transportCaps != "ARRAY"}) then {_transportCaps = []};
+				_transportKeep = [];
+				{
+					if (typeName _x == "ARRAY" && {count _x >= 2}) then {
+						_transportVehicle = _x select 0;
+						_transportStamp = _x select 1;
+						if (!isNull _transportVehicle && {alive _transportVehicle} && {canMove _transportVehicle} && {typeName _transportStamp == "SCALAR"} && {time - _transportStamp < 1200}) then {
+							_transportKeep set [count _transportKeep, [_transportVehicle, _transportStamp]];
+						};
+					};
+				} forEach _transportCaps;
+				_team setVariable ["wfbe_aicom_transport_capable", _transportKeep, true];
+
+				{
+					_seatUnit = _x;
+					_seatState = _seatUnit getVariable "wfbe_aicom_dismount_seat";
+					if (!isNil "_seatState" && {typeName _seatState == "ARRAY"} && {count _seatState >= 2}) then {
+						_seatVehicle = _seatState select 0;
+						_seatRole = _seatState select 1;
+						if (isNull _seatVehicle || {!alive _seatVehicle}) then {
+							_seatUnit setVariable ["wfbe_aicom_dismount_seat", nil, true];
+						} else {
+							_seatSuccess = false;
+							if (_seatRole == "driver") then {
+								_seatUnit assignAsDriver _seatVehicle;
+								[_seatUnit] orderGetIn true;
+								_seatUnit moveInDriver _seatVehicle;
+								_seatSuccess = (driver _seatVehicle == _seatUnit);
+							} else {
+								if (_seatRole == "gunner") then {
+									_seatUnit assignAsGunner _seatVehicle;
+									[_seatUnit] orderGetIn true;
+									_seatUnit moveInGunner _seatVehicle;
+									_seatSuccess = (gunner _seatVehicle == _seatUnit);
+								} else {
+									if (_seatRole == "commander") then {
+										_seatUnit assignAsCommander _seatVehicle;
+										[_seatUnit] orderGetIn true;
+										_seatUnit moveInCommander _seatVehicle;
+										_seatSuccess = (commander _seatVehicle == _seatUnit);
+									} else {
+										_seatUnit assignAsCargo _seatVehicle;
+										[_seatUnit] orderGetIn true;
+										_seatSuccess = (vehicle _seatUnit == _seatVehicle);
+									};
+								};
+							};
+							if (_seatSuccess) then {
+								_seatUnit setVariable ["wfbe_aicom_dismount_seat", nil, true];
+							};
+						};
+					};
+				} forEach (units _team);
+
 				_rmHasVeh = false;
 				{ if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x}) then {_rmHasVeh = true} } forEach _vehicles;
+				_rmDriverReady = true;
+				{ if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x} && {(isNull (driver _x) || {!alive (driver _x)})}) then {_rmDriverReady = false} } forEach _vehicles;
+				if (!_rmDriverReady) then {_rmHasVeh = false};
 
 				if (_rmHasVeh && {(leader _team) distance _dest > 700}) then {
 					//--- B755 (Ray 2026-06-25) RE-MOUNT FOR THE LONG LEG: a team re-tasked to a far town after a prior capture has its
@@ -1977,17 +2038,66 @@ while {!WFBE_GameOver && _alive} do {
 
 					//--- ALWAYS dismount: build the on-foot infantry list from EVERY alive non-crew
 					//--- unit, dismounting any that happen to still be in cargo. Crew (driver/gunner)
-					//--- stay in their hull (keeps armour ready + parked near center). This replaces
-					//--- the broken _hasCargo branch selection entirely.
+					//--- stay in their hull (keeps armour ready + parked near center), UNLESS this is a
+					//--- crew-only team (see CREW-AS-CAPTURE-BODIES below). This replaces the broken
+					//--- _hasCargo branch selection entirely.
 					_liveUnits = (units _team) Call WFBE_CO_FNC_GetLiveUnits;
 					_footInf   = [];
+					//--- CREW-AS-CAPTURE-BODIES (OWNER DESIGN DECISION 2026-07-20 07:52, wasp-takistan-aicom-capture-stall-20260720): a crew-ONLY team (every alive unit is
+					//--- the driver or gunner of some vehicle, no dismountable cargo infantry at all)
+					//--- previously NEVER got a foot presence into the camp "Man" scan (server_town_camp.sqf nearEntities['Man',range]) - the deliberation's "43 crew-led
+					//--- uncap-parked cappasses=0" population. Precompute whether the team has ANY
+					//--- non-crew unit; if it does, crew keep their normal fire-support role unchanged.
+					//--- Only when the team is genuinely crew-only does the crew ALSO dismount to work
+					//--- the camp, then remount for the next leg via the existing B755 long-leg re-mount
+					//--- idiom above (unchanged - it re-seats any on-foot non-crew unit regardless of why
+					//--- they are on foot).
+					private "_hasNonCrewInf"; _hasNonCrewInf = false;
+					{
+						if (alive _x) then {
+							if (vehicle _x == _x) then {_hasNonCrewInf = true} else {
+								private "_vehChk"; _vehChk = vehicle _x;
+								if !(_x == driver _vehChk || _x == gunner _vehChk || _x == commander _vehChk) then {_hasNonCrewInf = true};
+							};
+						};
+					} forEach _liveUnits;
+					//--- Codex review MEDIUM (threat-gate, adapted onto the owner's seat-restoring dismount
+					//--- above, 2026-07-20): do not send crew out of their protected hull straight into a
+					//--- defended camp's fire. If armed enemies are close, keep the crew mounted (fighting from
+					//--- the hull, which the sweep below already reveals+engages) this pass; DISMOUNT-CAPTURE
+					//--- PHASE re-runs every pass (RE-ARM, see the note above this phase) so once the immediate
+					//--- threat clears the very next pass dismounts normally - never a permanent block, matching
+					//--- the owner's intent that crew-only teams CAN complete a capture, just not by feeding
+					//--- kills into an active defender.
+					private ["_crewDismountThreatClear","_cdtR"];
+					_crewDismountThreatClear = true;
+					if (!_hasNonCrewInf) then {
+						_cdtR = missionNamespace getVariable ["WFBE_C_AICOM_CREW_DISMOUNT_THREAT_RADIUS", 100];
+						_crewDismountThreatClear = ({alive _x && {side _x != _side} && {side _x != civilian}} count ((getPos (leader _team)) nearEntities [["Man"], _cdtR])) <= 0;
+					};
 					{
 						_u = _x;
 						if (alive _u) then {
 							if (vehicle _u != _u) then {
 								_veh = vehicle _u;
-								if (_u == driver _veh || _u == gunner _veh) then {
-									//--- Crew stays mounted: hull stays driveable + parked.
+								_seatRole = if (_u == driver _veh) then {"driver"} else {if (_u == gunner _veh) then {"gunner"} else {if (_u == commander _veh) then {"commander"} else {"cargo"}}};
+								if (_seatRole != "cargo") then {
+									if (_hasNonCrewInf || {!_crewDismountThreatClear}) then {
+										//--- Crew stays mounted: hull stays driveable + parked (infantry are working the camp).
+									} else {
+										//--- Review fix #1193: preserve the primary seat and the live
+										//--- transport capability across the intentional capture dismount.
+										_u setVariable ["wfbe_aicom_dismount_seat", [_veh, _seatRole], true];
+										_transportCaps = _team getVariable "wfbe_aicom_transport_capable";
+										if (isNil "_transportCaps" || {typeName _transportCaps != "ARRAY"}) then {_transportCaps = []};
+										_stampFound = false;
+										{if (typeName _x == "ARRAY" && {count _x >= 2} && {(_x select 0) == _veh}) then {_stampFound = true}} forEach _transportCaps;
+										if (!_stampFound && {alive _veh} && {canMove _veh}) then {_transportCaps set [count _transportCaps, [_veh, time]]};
+										_team setVariable ["wfbe_aicom_transport_capable", _transportCaps, true];
+										unassignVehicle _u;
+										[_u] orderGetIn false;
+										_footInf = _footInf + [_u];
+									};
 								} else {
 									unassignVehicle _u;
 									[_u] orderGetIn false;

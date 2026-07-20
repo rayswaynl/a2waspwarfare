@@ -241,6 +241,22 @@ _fi = 0;
 	_fi = _fi + 1;
 } forEach _final;
 
+//--- B757 cross-faction vehicle sprinkle: rare, one vehicle per wave, no artillery.
+//--- The shared planner remains side-owned; only the occasional hull crosses the roster boundary.
+private ["_rareVehicle"];
+if (!_aa_get && {(random 1) < 0.08}) then {
+    _rareVehicle = switch (true) do {
+        case (_side == west): {["BRDM2_TK_GUE_EP1"]};
+        case (_side == east): {["HMMWV_M1151_M2_DES_EP1"]};
+        case (_side == resistance): {if (worldName == "Chernarus") then {["Pickup_PK_GUE"]} else {["Pickup_PK_TK_GUE_EP1"]}};
+        default {[]};
+    };
+    if (count _rareVehicle > 0) then {
+        [_contents, _rareVehicle] Call WFBE_CO_FNC_ArrayPush;
+        [_contentsKind, 1] Call WFBE_CO_FNC_ArrayPush;
+    };
+};
+
 //--- GROUP-COUNT REDUCTION (claude-gaming 2026-06-13): spawn-time infantry consolidation.
 //--- Each _contents element is a flat classname roster; CreateTeam (Common_CreateTeam.sqf:23/85)
 //--- instantiates EVERY classname in one passed list into the ONE group it is given. So fusing

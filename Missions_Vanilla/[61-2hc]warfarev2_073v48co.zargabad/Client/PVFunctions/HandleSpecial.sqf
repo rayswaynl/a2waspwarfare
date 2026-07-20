@@ -432,4 +432,32 @@ switch (_request) do {
 		};
 		if (typeName _msg == "STRING" && {_msg != ""}) then {hint _msg};
 	};
+	//--- GUER FOB build outcome (server -> caller). The client starts with an optimistic titleText, but the
+	//--- authoritative handler can reject a raced token or blocked placement. Keep the truck/token unchanged and
+	//--- tell only the caller why it did not become a FOB.
+	case "guer-fob-result": {
+		Private ["_fobOk","_fobMsg"];
+		_fobOk  = _args select 0;
+		_fobMsg = _args select 1;
+		if (!_fobOk && {typeName _fobMsg == "STRING"} && {_fobMsg != ""}) then {hint _fobMsg};
+	};
+	//--- GUER VBIED result (server -> requesting driver). The detonation action remains retryable until the
+	//--- server accepts the exact pending receipt; stale/foreign replies cannot consume or clear a newer request.
+	case "guer-vbied-result": {
+		Private ["_vbiedExpected","_vbiedMsg","_vbiedOK","_vbiedToken","_vbiedVeh"];
+		if (count _args != 4) exitWith {};
+		_vbiedOK = _args select 0;
+		_vbiedMsg = _args select 1;
+		_vbiedVeh = _args select 2;
+		_vbiedToken = _args select 3;
+		if (typeName _vbiedOK != "BOOL" || {typeName _vbiedMsg != "STRING"} || {typeName _vbiedVeh != "OBJECT"} || {typeName _vbiedToken != "STRING"} || {isNull _vbiedVeh}) exitWith {};
+		_vbiedExpected = _vbiedVeh getVariable ["wfbe_vbied_pending_token", ""];
+		if (_vbiedExpected != _vbiedToken) exitWith {};
+		_vbiedVeh setVariable ["wfbe_vbied_pending_token", ""];
+		if (_vbiedOK) then {
+			_vbiedVeh setVariable ["wfbe_vbied_fired", true];
+		} else {
+			if (_vbiedMsg != "") then {hint _vbiedMsg};
+		};
+	};
 };

@@ -1,8 +1,9 @@
 /* Enhanced Respawn Management via Multiplayer Event Handler - Experimental */
-Private ['_autonomous','_availableSpawn','_buildings','_checks','_closestRespawn','_corpse','_deathLoc','_hq','_i','_isForcedRespawn','_mobileRespawns','_moveMode','_pos','_ran','_range','_rcm','_rd','_respawn','_respawnLoc','_respawnedUnit','_side','_sideID','_sideText','_skip','_team','_update','_upgrades'];
+Private ['_autonomous','_availableSpawn','_buildings','_checks','_closestRespawn','_corpse','_deadspawnGuardApplied','_deathLoc','_hq','_i','_isForcedRespawn','_mobileRespawns','_moveMode','_pos','_ran','_range','_rcm','_rd','_respawn','_respawnLoc','_respawnedUnit','_side','_sideID','_sideText','_skip','_team','_update','_upgrades'];
 
 _respawnedUnit = _this select 0;
 _corpse = _this select 1;
+_deadspawnGuardApplied = false;
 
 _deathLoc = getPos _corpse;
 _rd = missionNamespace getVariable "WFBE_C_RESPAWN_DELAY";
@@ -39,6 +40,7 @@ _respawnedUnit setPos getMarkerPos Format["%1TempRespawnMarker",_sideText];
 	if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_GUARD", 1]) > 0 && {alive _respawnedUnit}) then {
 		_respawnedUnit setCaptive true;
 		_respawnedUnit allowDamage false;
+		_deadspawnGuardApplied = true;
 		["INFORMATION", Format ["DEADSPAWN_GUARD|park|side=%1|unit=%2", _sideText, _respawnedUnit]] Call WFBE_CO_FNC_LogContent;
 	};
 
@@ -74,6 +76,16 @@ while {_i > 0} do {
 	
 	_i = _i - 1;	
 	sleep 1;
+};
+
+//--- A player/death transition can land during the final sleep, after the loop's last check.
+if (isPlayer(_respawnedUnit) || !(alive _respawnedUnit)) then {_skip = true};
+
+//--- A skipped player handoff bypasses normal AI movement, so restore the state here.
+if (_skip && _deadspawnGuardApplied && {alive _respawnedUnit}) then {
+	_respawnedUnit setCaptive false;
+	_respawnedUnit allowDamage true;
+	["INFORMATION", Format ["DEADSPAWN_GUARD|release|side=%1|unit=%2|skip=%3", _sideText, _respawnedUnit, _skip]] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- Make sure that the AI didn't die or that a player hasn't replaced him before going any further.
@@ -129,12 +141,11 @@ if !(_skip) then {
 
 	["INFORMATION", Format ["AI_AdvancedRespawn.sqf: [%1] AI Team Leader [%2] [%3] has respawned at [%4].", _sideText, _team, _respawnedUnit, _respawnLoc]] Call WFBE_CO_FNC_LogContent;
 	
-	//--- DEADSPAWN GUARD release (fable/deadspawn-guard): the leader is about to leave the deadspawn marker
-	//--- for its real respawn - restore its combat state (undo the park-time captive/allowDamage) so it
-	//--- fights normally again. Idempotent (safe if the guard was off / never applied).
-	if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_GUARD", 1]) > 0 && {alive _respawnedUnit}) then {
+	//--- Normal AI remains guarded until immediately before it leaves the temp marker.
+	if (_deadspawnGuardApplied && {alive _respawnedUnit}) then {
 		_respawnedUnit setCaptive false;
 		_respawnedUnit allowDamage true;
+		["INFORMATION", Format ["DEADSPAWN_GUARD|release|side=%1|unit=%2|skip=%3", _sideText, _respawnedUnit, _skip]] Call WFBE_CO_FNC_LogContent;
 	};
 	_pos = [getPos _respawnLoc,20,30] Call GetRandomPosition;
 	_pos set [2,0];

@@ -28,12 +28,20 @@ Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units
          "_driver","_cargo","_u","_settleTimeout","_lastLdrPos","_stuckTicks","_pLdr","_pPos","_pVeh","_pNear","_pRds","_pNode",
          "_pUnstuckStreak","_pUnstuckMax","_pWedgePos","_pAvoid","_pAvoidKeep","_pAvoidCd","_cIsAvoided",
          "_cIsNaval","_navSkipLogged",
+         "_rosterChoices","_rosterKey",
          "_perfProbe","_perfScope","_perfPickStart","_perfNavalSkipped","_perfAvoided"];  //--- cmdcon41-w3m: +_cIsNaval (naval-HVT skip test), _navSkipLogged (one-time-per-group INFO latch).
 
 _sideID   = _this select 0;
 _template = _this select 1;
 _homeTown = _this select 2;
 _side     = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
+
+//--- B757 patrol-sweep: resolve shared group roster keys before CreateTeam; inline pools remain compatible.
+if (typeName _template == "STRING") then {
+	_rosterKey = _template;
+	_rosterChoices = missionNamespace getVariable [Format["WFBE_%1_GROUPS_%2", str _side, _rosterKey], []];
+	if (count _rosterChoices > 0) then {_template = _rosterChoices select floor(random count _rosterChoices)} else {_template = []};
+};
 
 _position = ([getPos _homeTown, 100, 400] Call WFBE_CO_FNC_GetRandomPosition);
 _position = [_position, 50] Call WFBE_CO_FNC_GetEmptyPosition;

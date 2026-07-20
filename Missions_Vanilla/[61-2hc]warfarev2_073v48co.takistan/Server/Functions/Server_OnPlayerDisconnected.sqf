@@ -115,7 +115,11 @@ _team = grpNull;
 	{
 		if !(isNil {_x getVariable "wfbe_uid"}) then {if ((_x getVariable "wfbe_uid") == _uid) then {_team = _x}};
 		if !(isNull _team) exitWith {};
-	} forEach ((_x Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_teams");
+	//--- kimi/bughunt-mission-core (2026-07-20): 2-arg default - the resistance logic only gets
+	//--- wfbe_teams inside the WFBE_C_GUER_PLAYERSIDE gate (Init_Server.sqf:910), so with the faction
+	//--- gated off this read was nil and forEach nil errored before the graceful null-team bail
+	//--- below (mirrors the connect-side twin Server_OnPlayerConnected.sqf:63, already 2-arg).
+	} forEach ((_x Call WFBE_CO_FNC_GetSideLogic) getVariable ["wfbe_teams", []]);
 	if !(isNull _team) exitWith {};
 } forEach WFBE_PRESENTSIDES;
 

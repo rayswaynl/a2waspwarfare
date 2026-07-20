@@ -72,7 +72,7 @@ while {!gameOver} do {
 	[_sideID] spawn {
 		private ["_sideID","_westID","_eastID","_occTowns","_owned","_gG1","_gG2","_gG5",
 		         "_weights","_cumSum","_roll",
-		         "_i","_chosen","_draw","_result","_detail","_soldierClass","_vbiedClass","_target","_nearD",
+		         "_i","_chosen","_draw","_result","_detail","_soldierClass","_vbiedClass","_guerRosters","_guerRoster","_target","_nearD",
 		         "_candTown","_dd","_targetPos","_ang","_spawnPos","_try","_roads","_truck","_grp","_drv",
 		         "_tier","_cpVeh","_cpLabel","_veh","_d1","_d2","_n","_footN","_u","_pos","_mk","_occSide",
 		         "_locMsg","_wName","_wDesc","_wMap","_g1Mk",
@@ -90,6 +90,9 @@ while {!gameOver} do {
 		{ if ((_x getVariable ["sideID","?"]) == _sideID) then {_owned = _owned + [_x]} } forEach towns;
 
 		_soldierClass = missionNamespace getVariable ["WFBE_GUERRESSOLDIER", ""];
+		//--- B757 shared-roster tap: wildcard foot bodies use the active GUER town roster.
+		_guerRosters = missionNamespace getVariable ["WFBE_GUER_GROUPS_Squad_Advanced", []];
+		_guerRoster = if (count _guerRosters > 0) then {_guerRosters select floor(random count _guerRosters)} else {[_soldierClass]};
 		_vbiedClass   = missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"];
 
 		//--- ELIGIBILITY -> weights (0 = ineligible).
@@ -206,7 +209,9 @@ while {!gameOver} do {
 					         "_roadDist","_cpTmpl","_cpObjs","_statics","_tCls","_tRelPos","_tRelDir","_wPos","_obj",
 					         "_statCls","_statSpecs","_sOff","_sDir","_statPos","_stat","_sGunner","_gpOffs","_gOff",
 					         "_gPos","_vehPos",
-					         "_armExtra","_armN","_ax","_aLat","_aBack","_aPos","_aVeh","_ad1","_ad2"];
+					         "_armExtra","_armN","_ax","_aLat","_aBack","_aPos","_aVeh","_ad1","_ad2",
+					         "_cpVehicleSeats","_cpStaticSeats","_cpCrewReady","_seatVeh","_seatDriver","_seatGunner",
+					         "_seatStatic","_seatStaticGunner"];
 					if (!isNull _target) then {
 						_targetPos = getPos _target;
 						_cp2Radius   = missionNamespace getVariable ["WFBE_C_GUER_CP2_ROAD_RADIUS", 400];
@@ -327,6 +332,8 @@ while {!gameOver} do {
 								//--- (CncBlock_Stripes/fort_bagfence_long ARE on the WEST/EAST lists) near a removed base
 								//--- area; OUR watcher below owns the full teardown, so the tag would only invite that sweep.
 								_cpObjs = [];
+								_cpVehicleSeats = [];
+								_cpStaticSeats = [];
 								_cpTmpl = missionNamespace getVariable ["WFBE_NEURODEF_FORT_CHECKPOINT", []];
 								{
 									_tCls    = _x select 0;
@@ -346,12 +353,14 @@ while {!gameOver} do {
 								           (_spawnPos select 1) + (-8) * (cos _dir),
 								           0];
 								_veh = [_cpVeh, _vehPos, resistance, _dir, false, true] Call WFBE_CO_FNC_CreateVehicle;
+								_d1 = objNull; _d2 = objNull;
 								if (!isNull _veh) then {
 									_d1 = [_soldierClass, _grp, _vehPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 									if (!isNull _d1) then {_d1 moveInDriver _veh; _d1 setVariable ["WFBE_IsTownDefenderAI", true, true]};
 									_d2 = [_soldierClass, _grp, _vehPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 									if (!isNull _d2) then {_d2 moveInGunner _veh; _d2 setVariable ["WFBE_IsTownDefenderAI", true, true]};
 								};
+								_cpVehicleSeats set [count _cpVehicleSeats, [_veh, _d1, _d2]];
 
 								//--- (4) STATICS: two GUER-manned DShKM MGs behind the bagfence guard positions
 								//--- (composition-relative [-6,1] / [6,-1]; one covers each approach). Classnames are the
@@ -369,6 +378,7 @@ while {!gameOver} do {
 									            (_spawnPos select 1) - (_sOff select 0) * (sin _dir) + (_sOff select 1) * (cos _dir),
 									            0];
 									_stat = [_statCls, _statPos, resistance, _sDir, false, true] Call WFBE_CO_FNC_CreateVehicle;
+									_sGunner = objNull;
 									if (!isNull _stat) then {
 										_stat setPos _statPos;   //--- pin the exact composition spot (helper placement radius is 7m).
 										_sGunner = [_soldierClass, _grp, _statPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
@@ -378,6 +388,7 @@ while {!gameOver} do {
 										};
 										_statics set [count _statics, _stat];
 									};
+									_cpStaticSeats set [count _cpStaticSeats, [_stat, _sGunner]];
 								} forEach _statSpecs;
 
 								//--- (4b) EXTRA ARMOR (tier>=2, sub-tunable WFBE_C_GUER_CP2_ARMOR_EXTRA, default 1): additional
@@ -395,6 +406,7 @@ while {!gameOver} do {
 										         (_spawnPos select 1) - _aLat * (sin _dir) + _aBack * (cos _dir),
 										         0];
 										_aVeh = [_cpVeh, _aPos, resistance, _dir, false, true] Call WFBE_CO_FNC_CreateVehicle;
+										_ad1 = objNull; _ad2 = objNull;
 										if (!isNull _aVeh) then {
 											_aVeh setPos _aPos;   //--- pin the overwatch spot (helper placement radius is 7m).
 											_ad1 = [_soldierClass, _grp, _aPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
@@ -404,8 +416,22 @@ while {!gameOver} do {
 											_statics set [count _statics, _aVeh];
 											_armN = _armN + 1;
 										};
+										_cpVehicleSeats set [count _cpVehicleSeats, [_aVeh, _ad1, _ad2]];
 									};
 								};
+
+								//--- The event must not publish an uncrewed hull/static as a valid checkpoint.  A2/OA
+								//--- may settle moveIn* one scheduler turn later, so retry once before rejecting the fresh set.
+								sleep 1;
+								_cpCrewReady = true;
+								{
+									_seatVeh = _x select 0; _seatDriver = _x select 1; _seatGunner = _x select 2;
+									if (isNull _seatVeh || {isNull _seatDriver} || {isNull _seatGunner} || {!((driver _seatVeh) == _seatDriver)} || {!((gunner _seatVeh) == _seatGunner)}) then {_cpCrewReady = false};
+								} forEach _cpVehicleSeats;
+								{
+									_seatStatic = _x select 0; _seatStaticGunner = _x select 1;
+									if (isNull _seatStatic || {isNull _seatStaticGunner} || {!((gunner _seatStatic) == _seatStaticGunner)}) then {_cpCrewReady = false};
+								} forEach _cpStaticSeats;
 
 								//--- (5) GARRISON: posted at composition guard positions (fixed offsets rotated by _dir),
 								//--- not random scatter. doStop holds each man on his post; COMBAT/RED (below) keeps him
@@ -417,7 +443,7 @@ while {!gameOver} do {
 									_gPos = [(_spawnPos select 0) + (_gOff select 0) * (cos _dir) + (_gOff select 1) * (sin _dir),
 									         (_spawnPos select 1) - (_gOff select 0) * (sin _dir) + (_gOff select 1) * (cos _dir),
 									         0];
-									_u = [_soldierClass, _grp, _gPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+									_u = [_guerRoster select ((_n - 1) mod (count _guerRoster)), _grp, _gPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 									if (!isNull _u) then {
 										_u setVariable ["WFBE_IsTownDefenderAI", true, true];
 										if (_tier > 0) then {_u setSkill ["general", ((skill _u) + (0.05 * _tier)) min 1]};
@@ -425,6 +451,7 @@ while {!gameOver} do {
 										doStop _u;
 									};
 								};
+								if (_cpCrewReady) then {
 								_grp setBehaviour "COMBAT"; _grp setCombatMode "RED";
 
 								//--- Global map marker (enemy-visible ON PURPOSE - a contested objective, exactly as v1).
@@ -516,6 +543,27 @@ while {!gameOver} do {
 								};
 
 								_detail = Format ["G2v2 target=%1 tier=%2 veh=%3 foot=%4 roadD=%5m window=%6s", _target getVariable ["name","?"], _tier, _cpVeh, _footN, round _roadDist, missionNamespace getVariable ["WFBE_C_GUER_CP_WINDOW", 600]];
+								} else {
+									{if (!isNull _x) then {deleteVehicle _x}} forEach _cpObjs;
+									{
+										_seatStatic = _x;
+										if (!isNull _seatStatic && {({isPlayer _x} count (crew _seatStatic)) == 0}) then {
+											{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (crew _seatStatic);
+											deleteVehicle _seatStatic;
+										};
+									} forEach _statics;
+									if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then {
+										{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (crew _veh);
+										deleteVehicle _veh;
+									};
+									if (!isNull _grp) then {
+										{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _grp);
+										if (({isPlayer _x} count (units _grp)) == 0) then {deleteGroup _grp};
+									};
+									diag_log Format ["GUERCP|v2|spawnfail|target=%1|tier=%2|reason=crew_seat", _target getVariable ["name","?"], _tier];
+									_result = "partial";
+									_detail = Format ["G2v2 crew receipt failed target=%1 tier=%2", _target getVariable ["name","?"], _tier];
+								};
 							} else { _result = "partial"; _detail = "G2v2 group null at cap"; };
 						} else { _result = "ineligible"; _detail = "G2v2 no road candidate"; };
 					} else { _result = "ineligible"; _detail = "G2v2 no occupied town"; };
@@ -561,7 +609,7 @@ while {!gameOver} do {
 						_footN = 3 + _tier;
 						for "_n" from 1 to _footN do {
 							_pos = [(_spawnPos select 0) + (random 16) - 8, (_spawnPos select 1) + (random 16) - 8, 0];
-							_u = [_soldierClass, _grp, _pos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+							_u = [_guerRoster select ((_n - 1) mod (count _guerRoster)), _grp, _pos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 							if (!isNull _u) then {_u setVariable ["WFBE_IsTownDefenderAI", true, true]};
 						};
 						[_grp, _spawnPos, 60] Call AIPatrol;
@@ -665,7 +713,7 @@ while {!gameOver} do {
 							for "_n" from 1 to 4 do {
 								_scavPos = [(_spawnPos select 0) + (random 20) - 10,
 								            (_spawnPos select 1) + (random 20) - 10, 0];
-								_scavMember = [_soldierClass, _scavGrp, _scavPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
+								_scavMember = [_guerRoster select ((_n - 1) mod (count _guerRoster)), _scavGrp, _scavPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 								if (!isNull _scavMember) then {
 									_scavMember setVariable ["WFBE_IsTownDefenderAI", true, true];
 								};
@@ -742,17 +790,19 @@ while {!gameOver} do {
 		["INFORMATION", Format ["AI_Commander_Wildcard_GUER.sqf: [GUER-WILDCARD] draw=G%1 result=%2 detail=(%3)", _draw, _result, _detail]] Call WFBE_CO_FNC_AICOMLog;
 		diag_log ("AICOMSTAT|v2|EVENT|GUER|" + str (round (time / 60)) + "|GUERWILDCARD_G" + str _draw + "|" + _result + "|" + _detail);
 
-		//--- Announcement: broadcast the insurgent strike to ALL clients (telegraph). The checkpoint also posts its
-		//--- own resolution line from the watcher above; this is the initial "it appeared" beat.
-		_wMap = [
-			[1,"Car Bomb","a suicide car bomb rolls on an occupied town - destroy it for a bounty"],
-			[2,"Pop-up Checkpoint","a roadblock chokes an occupied supply road - clear it for supply, or it bleeds you"],
-			[5,"Scavenger Team","insurgent scavengers are stripping abandoned wrecks off the battlefield"]
-		];
-		_wName = Format ["G%1", _draw]; _wDesc = "";
-		{if ((_x select 0) == _draw) exitWith {_wName = _x select 1; _wDesc = _x select 2}} forEach _wMap;
-		_locMsg = Format ["[Wildcard] Insurgents (GUER) struck: %1 - %2.", _wName, _wDesc];
-		[nil, "LocalizeMessage", ["Wildcard", _locMsg]] Call WFBE_CO_FNC_SendToClients;
+		//--- Announcement: broadcast only a materialized insurgent strike.  A partial/ineligible draw has
+		//--- no marker, watcher, tax, or objective, so announcing it would lie to every client.
+		if (_result == "applied") then {
+			_wMap = [
+				[1,"Car Bomb","a suicide car bomb rolls on an occupied town - destroy it for a bounty"],
+				[2,"Pop-up Checkpoint","a roadblock chokes an occupied supply road - clear it for supply, or it bleeds you"],
+				[5,"Scavenger Team","insurgent scavengers are stripping abandoned wrecks off the battlefield"]
+			];
+			_wName = Format ["G%1", _draw]; _wDesc = "";
+			{if ((_x select 0) == _draw) exitWith {_wName = _x select 1; _wDesc = _x select 2}} forEach _wMap;
+			_locMsg = Format ["[Wildcard] Insurgents (GUER) struck: %1 - %2.", _wName, _wDesc];
+			[nil, "LocalizeMessage", ["Wildcard", _locMsg]] Call WFBE_CO_FNC_SendToClients;
+		};
 
 	}; //--- end isolation spawn
 

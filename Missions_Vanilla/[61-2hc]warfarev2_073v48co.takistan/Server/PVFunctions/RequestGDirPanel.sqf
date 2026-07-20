@@ -182,6 +182,60 @@ if (!_townFound || {isNull _townObj}) exitWith {
 	[_player, "GDirPanelResult", ["deny", "Town not found.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
 };
 
+//--- The current Director has no target-bound retake materializer. Refuse the exposed counter
+//--- contract before any cooldown, scarcity, wallet, pending-order, or contract state can change.
+if (_verb == "counter") exitWith {
+	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=counter|town=%2|deny=counterUnavailable|fundedBy=%3|pricePaid=0", _elmin, _townId, getPlayerUID _player];
+	[_player, "GDirPanelResult", ["deny", "Counter-attack contracts are unavailable until a retake unit is available.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
+};
+
+//--- P0 (fable/gdir-ledger-conservation): validate CURRENT permitted ownership BEFORE any debit. The panel
+//--- previously validated existence only - a paid order on a town GUER no longer holds debited the wallet,
+//--- then no-opped downstream. Same permitted set as the Director ledger (GUER or UNKNOWN). "counter" and
+//--- "mortar" are excluded by design: they legitimately target enemy-held towns. "quote" never debits.
+private ["_ownGateSide"];
+_ownGateSide = _townObj getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+if ((_verb == "buy" || {_verb == "qrf"} || {_verb == "cache"} || {_verb == "vehicle"} || {_verb == "relief"} || {_verb == "donate"}) && {!(_ownGateSide == WFBE_C_GUER_ID || {_ownGateSide == WFBE_C_UNKNOWN_ID})}) exitWith {
+	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=%2|town=%3|deny=notGuerOwned|fundedBy=%4|pricePaid=0", _elmin, _verb, _townId, getPlayerUID _player];
+	[_player, "GDirPanelResult", ["deny", "Town is no longer resistance-held.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
+};
+
+//--- GDIR vehicle preflight: validate before any debit.
+//--- The paid one-shot is now a server-owned order record consumed only by
+//--- server_town_ai.sqf.  These gates must precede cooldown/scarcity/wallet state:
+//--- the old handler debited first, then discovered feature-off, bad-tier, or duplicate orders.
+private ["_gdirVehExistingTier","_gdirVehLegacyTier","_gdirVehNewTier","_gdirVehOrder"];
+_gdirVehNewTier = 0;
+if (_verb == "vehicle") then {
+	if (!((missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0)) exitWith {
+		diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=vehicle|town=%2|deny=vehicleDisabled|fundedBy=%3|pricePaid=0", _elmin, _townId, getPlayerUID _player];
+		[_player, "GDirPanelResult", ["deny", "Defensive vehicle purchase not enabled this round.", "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
+	};
+	if (_product == "t1") then {_gdirVehNewTier = 1};
+	if (_product == "t2") then {_gdirVehNewTier = 2};
+	if (_product == "t3") then {_gdirVehNewTier = 3};
+	if (_gdirVehNewTier < 1) exitWith {
+		diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=vehicle|town=%2|deny=unknownVehicleTier|fundedBy=%3|pricePaid=0", _elmin, _townId, getPlayerUID _player];
+		[_player, "GDirPanelResult", ["deny", "Unknown vehicle tier.", "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
+	};
+	_gdirVehOrder = _townObj getVariable ["AICOMV2_GDIR_VEHICLE_ORDER", []];
+	if (typeName _gdirVehOrder != "ARRAY") then {_gdirVehOrder = []};
+	if (count _gdirVehOrder >= 2) exitWith {
+		_gdirVehExistingTier = _gdirVehOrder select 1;
+		if (typeName _gdirVehExistingTier != "SCALAR") then {_gdirVehExistingTier = 0};
+		diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=vehicle|town=%2|deny=vehiclePending|tier=%3|fundedBy=%4|pricePaid=0", _elmin, _townId, _gdirVehExistingTier, getPlayerUID _player];
+		[_player, "GDirPanelResult", ["deny", Format ["A vehicle order (tier %1) is already pending delivery on %2.", _gdirVehExistingTier, _townId], "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
+	};
+	//--- Migration guard: an order written by the retired public scalar is still paid
+	//--- and will be adopted by server_town_ai.sqf on the next eligible activation.
+	_gdirVehLegacyTier = _townObj getVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0];
+	if (typeName _gdirVehLegacyTier != "SCALAR") then {_gdirVehLegacyTier = 0};
+	if (_gdirVehLegacyTier > 0) exitWith {
+		diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=vehicle|town=%2|deny=legacyVehiclePending|tier=%3|fundedBy=%4|pricePaid=0", _elmin, _townId, _gdirVehLegacyTier, getPlayerUID _player];
+		[_player, "GDirPanelResult", ["deny", Format ["A vehicle order (tier %1) is already pending delivery on %2.", _gdirVehLegacyTier, _townId], "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
+	};
+};
+
 //--- Gate 4: anti-spam - per-town cooldown.
 private ["_cooldownSec","_panelCooldowns","_townCooldown","_nowT"];
 _cooldownSec    = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_COOLDOWN_SEC", 600];
@@ -433,33 +487,19 @@ if (_verb == "cache") exitWith {
     [_player, "GDirPanelResult", ["accept", Format ["Cache tier %1 purchased for %2. Defenders will spawn with enhanced loadouts.", _newTier, _townId], "cache", _townId]] Call WFBE_CO_FNC_SendToClient;
 };
 
-//--- P5: VEHICLE verb (fable/gdir-vehicle-verb, GR-2026-07-08a) - sibling of the cache verb
-//--- above: persist tier on town object, PUBLIC (broadcast=true, same cross-machine reason as
-//--- cache - see the cache verb's comment). ONE-SHOT unlike cache: consumed by the
-//--- materializer on the town's next garrison spawn/regrow (Common_CreateTownUnits.sqf), so
-//--- there is no "current tier" guard once delivered - the persisted value resets to 0 there.
+//--- P5: VEHICLE verb. Admission was completed before debit above; persist only a
+//--- server-local pending record.  server_town_ai.sqf owns its pending->inflight->commit/retry
+//--- transition so client/HC garrison delegation cannot double-materialize a paid order.
 if (_verb == "vehicle") exitWith {
-    if (!((missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE", 0]) > 0)) exitWith {  //--- FIX-931/night-sweep: fallback default was 1 (copy-pasted from the cache verb's own
-    //--- check), now matches AICOMV2_GDIR_VEHICLE's actual default of 0 in Init_CommonConstants.sqf.
-        [_player, "GDirPanelResult", ["deny", "Defensive vehicle purchase not enabled this round.", "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
-    };
-    private ["_newVehTier","_curVehTier"];
-    _newVehTier = 0;
-    if (_product == "t1") then {_newVehTier = 1};
-    if (_product == "t2") then {_newVehTier = 2};
-    if (_product == "t3") then {_newVehTier = 3};
-    if (_newVehTier < 1) exitWith {
-        [_player, "GDirPanelResult", ["deny", "Unknown vehicle tier.", "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
-    };
-    _curVehTier = _townObj getVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0];
-    if (_curVehTier > 0) exitWith {
-        [_player, "GDirPanelResult", ["deny", Format ["A vehicle order (tier %1) is already pending delivery on %2.", _curVehTier, _townId], "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
-    };
-    //--- Debit already done above. Persist tier on town object (PUBLIC - see header comment above).
-    _townObj setVariable ["AICOMV2_GDIR_VEHICLE_TIER", _newVehTier, true];
-    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=vehicle|town=%2|product=%3|tier=%4|price=%5|fundedBy=%6|deny=none",
-        _elmin, _townId, _product, _newVehTier, _price, getPlayerUID _player];
-    [_player, "GDirPanelResult", ["accept", Format ["Vehicle tier %1 ordered for %2. Delivered on next garrison spawn.", _newVehTier, _townId], "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
+	private ["_gdirVehOrderId"];
+	_gdirVehOrderId = (missionNamespace getVariable ["AICOMV2_GDIR_VEHICLE_ORDER_SEQ", 0]) + 1;
+	missionNamespace setVariable ["AICOMV2_GDIR_VEHICLE_ORDER_SEQ", _gdirVehOrderId];
+	_townObj setVariable ["AICOMV2_GDIR_VEHICLE_ORDER", [_gdirVehOrderId, _gdirVehNewTier, "pending"]];
+	//--- Clear the retired public scalar after the durable server-owned record is written.
+	_townObj setVariable ["AICOMV2_GDIR_VEHICLE_TIER", 0, true];
+	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=vehicle|town=%2|product=%3|tier=%4|order=%5|price=%6|fundedBy=%7|deny=none",
+		_elmin, _townId, _product, _gdirVehNewTier, _gdirVehOrderId, _price, getPlayerUID _player];
+	[_player, "GDirPanelResult", ["accept", Format ["Vehicle tier %1 ordered for %2. Delivered on next garrison spawn.", _gdirVehNewTier, _townId], "vehicle", _townId]] Call WFBE_CO_FNC_SendToClient;
 };
 
 //--- P4: RELIEF SQUAD verb - infantry-only fast variant of buy (conserves group cap).

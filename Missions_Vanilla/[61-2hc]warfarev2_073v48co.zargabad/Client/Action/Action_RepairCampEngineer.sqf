@@ -3,14 +3,21 @@
 	  todo, action can be reused after x time.
 */
 
-Private ["_camp","_camp_sideID","_camps","_delay","_range","_temp","_townModel","_vehicle"];
+Private ["_camp","_camp_sideID","_camps","_delay","_price","_range","_temp","_townModel","_vehicle"];
 
 _vehicle = _this select 0;
 
 _range = missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_RANGE";
+_price = missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE";
 
 //--- Attempt to get a nearby camp.
-_camps = (_vehicle) nearEntities [WFBE_Logic_Camp, _range];
+//--- kimi/naval-deckcamp-repair (2026-07-20): naval deck camps are "HeliHEmpty" stand-in
+//--- logics (Init_NavalHVT.sqf), not LocationLogicCamp - a pure-class scan never finds them,
+//--- so a destroyed deck camp was UNREPAIRABLE: its sideID stayed frozen (server_town_camp.sqf
+//--- skips dead bunkers) and the mode-2 all-camps capture gate (server_town.sqf) deadlocked
+//--- the carrier town forever. Scan both classes; the sideID-nil filter below already drops
+//--- every non-camp HeliHEmpty (hangars, RadiusHold anchors, ICBM targets carry no sideID).
+_camps = (_vehicle) nearEntities [[WFBE_Logic_Camp, "HeliHEmpty"], _range];
 
 //--- Only get the "real" camps, remove the possible undefined ones.
 _temp = _camps;
@@ -34,11 +41,11 @@ if (count _camps == 0) exitWith {hint (localize "STR_WF_Repair_Camp_None_Dead")}
 //--- fix(hunt): the NoFunds guard was an exitWith INSIDE the then{} - on A2-OA that exits only the block and
 //--- FALLS THROUGH, so a broke player skipped the charge yet still ran the full repair flow (free repair), and
 //--- the camp-alive race below then REFUNDED money that was never paid. Hoisted to top scope so it really aborts.
-if (((missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") > 0) && {(Call WFBE_CL_FNC_GetClientFunds) < (missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE")}) exitWith {hint Format [localize "STR_WF_Repair_Camp_NoFunds", (missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") - (Call WFBE_CL_FNC_GetClientFunds)]};
+if ((_price > 0) && {(Call WFBE_CL_FNC_GetClientFunds) < _price}) exitWith {hint Format [localize "STR_WF_Repair_Camp_NoFunds", _price - (Call WFBE_CL_FNC_GetClientFunds)]};
 
 //--- Purchase a repair (price 0 = free camps, nothing to charge).
-if ((missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") > 0) then {
-	-(missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") Call WFBE_CL_FNC_ChangeClientFunds;
+if (_price > 0) then {
+	(-_price) Call WFBE_CL_FNC_ChangeClientFunds;
 };
 	
 //--- Get the closest camp then.
@@ -57,12 +64,15 @@ while {_delay > 0} do {
 	_delay = _delay - 1;
 }; 
 
-if (!(alive _vehicle) || (_vehicle distance _camp > _range)) exitWith {hint (localize "STR_WF_Repair_TooFar")};
+if (!(alive _vehicle) || (_vehicle distance _camp > _range)) exitWith {
+	hint (localize "STR_WF_Repair_TooFar");
+	if (_price > 0) then {_price Call WFBE_CL_FNC_ChangeClientFunds;};
+};
 if (alive (_camp getVariable 'wfbe_camp_bunker')) exitWith {
 	hint (localize "STR_WF_Repair_Camp_IsAlive");
 	
 	//--- Refunds the player.
-	(missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_PRICE") Call WFBE_CL_FNC_ChangeClientFunds;
+	if (_price > 0) then {_price Call WFBE_CL_FNC_ChangeClientFunds;};
 };
 
 //--- Repair order is sent to the server.

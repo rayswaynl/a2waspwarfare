@@ -473,7 +473,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										//--- uncapturable target gets abandoned + blacklisted for THIS team just like a
 										//--- position-stuck one. Real progress (team actually moved toward/away, town not
 										//--- reached yet) still resets, unchanged.
-										private ["_atTarget","_uncapParked"];
+										private ["_atTarget","_uncapParked","_capLocked"];
 										//--- AT the target: within the assault arrive radius of _goto (same radius the
 										//--- dispatch latch uses at the top of this file). Ties the abandon to the SAME
 										//--- "did not flip"/"RELEASED uncapturable depot" signal Common_RunCommanderTeam
@@ -482,10 +482,13 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										_atTarget = (_ldr distance _goto) <= (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250]);
 										_uncapParked = _atTarget && {(_goto getVariable ["sideID", -1]) != _sideID};
 										if (_uncapParked) then {
+											//--- Review reconciliation: read CapLock once before any uncap-parked mutation.
+											_capLocked = [_team] Call WFBE_CO_FNC_CapLock;
 											//--- Refresh the breadcrumb (so the position-stuck gate does NOT also fire and
 											//--- double-count) but do NOT zero strikes; bump the SAME strike counter the
 											//--- unstuck ladder uses so an uncapturable depot climbs to ABANDON.
 											if (count _ord >= 4) then {_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr, _ord select 3]]} else {_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos _ldr]]};   //--- DEFECT-2 FIX (fable, GR-2026-07-08a, adversarial-verify): preserve the Fix-A 4th tuple element (dyn-timeout budget) across this breadcrumb refresh - a bare 3-element write here truncated it on the first >210s stuck-recheck after every dispatch, silently reverting long-haul teams to the flat 420s legacy timeout. _ord is the SAME fresh read from :308 (mutually-exclusive branches, no intervening write).
+											if (!_capLocked) then {
 											private ["_strk"];
 											_strk = ([_team, "wfbe_aicom_stuckstrikes", 0] Call WFBE_CO_FNC_GroupGetBool) + 1; //--- fix(hunt): G1-safe (nil+1 threw for stuck-since-spawn teams, so the unstick ladder never started)
 											_team setVariable ["wfbe_aicom_stuckstrikes", _strk];
@@ -505,6 +508,13 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											_stallSecs = missionNamespace getVariable ["WFBE_C_AICOM_STALL_ADVANCE_SECS", 240];
 											_gotoSince = _team getVariable "wfbe_aicom_goto_since";
 											if (isNil "_gotoSince") then {_gotoSince = time; _team setVariable ["wfbe_aicom_goto_since", time]};
+											//--- T1.3b FIX (R3-SYNTHESIS 2026-07-20, grok S1): the CapLock check further down this file
+											//--- suppresses RE-TARGETING while a team is capture-locked, but this stall-advance floor runs
+											//--- BEFORE that check and unconditionally BLACKLISTS _goto below - so a locked team (genuinely
+											//--- mid-capture, not actually stalled) still poisons its own target town for every future team,
+											//--- even though _needs=true here gets silently overridden back to false moments later.
+											//--- Reordering the CHECK alone does not fix this (still races); the real fix is: never MUTATE
+											//--- the blacklist for a town this team is currently locked onto.
 											if (_stallSecs > 0 && {(time - _gotoSince) > _stallSecs}) then {
 												private ["_saCd","_saBl","_saKeep"];
 												_saCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
@@ -527,6 +537,15 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 														diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjSA + "|reason=abandon");
 													};
 											};
+											//--- T1.3c FIX (R3-SYNTHESIS 2026-07-20; codex review HIGH follow-up): the T1.3b guard on the
+											//--- stall-advance floor above did NOT cover this SEPARATE strike-based abandon path (this is
+											//--- the uncap-parked-AT-target ladder, where a genuinely-locked mid-capture team CAN reach this
+											//--- point) - it was still reachable while CapLocked and could poison the blacklist + bump
+											//--- side-abandon state for a town this team is actually still draining. Same fix as T1.3b: never
+											//--- mutate the blacklist for a town this team is currently locked onto. (The OTHER STUCK_ABANDON
+											//--- site earlier in this file, the en-route position-stuck ladder, is unaffected: a team there is
+											//--- by definition parked FAR from _goto and has not yet reached BEGIN_CAPTURE, so it cannot be
+											//--- CapLocked at that point - no guard needed there.)
 											if (_strk > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_ABANDON", 4])) then {
 												//--- Same ABANDON + per-team blacklist + side-abandon tally as the position-stuck
 												//--- ladder below-left; factored to keep both paths identical.
@@ -583,6 +602,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 														};
 													};
 												};
+											};
 											};
 										} else {
 											//--- Real progress (en-route, actually moving, town not yet reached): refresh the
@@ -710,8 +730,15 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					//--- target (never idles). Bootstrap is exempt above (opening rush unchanged). Cheap: one
 					//--- leader pos, one units-scan for mount, distances on the existing town lists.
 					_ldrPos = getPos (leader _team);
-					_mounted = false;
-					{ if (!_mounted && {alive _x} && {(vehicle _x) != _x} && {(vehicle _x) isKindOf "LandVehicle"} && {canMove (vehicle _x)}) then {_mounted = true} } forEach (units _team);
+					//--- T1.2 FIX (R3-SYNTHESIS 2026-07-20; codex review CRITICAL follow-up): the old classifier
+					//--- flagged the WHOLE team "mounted" (9000m reach) the instant ANY single unit - even just a
+					//--- truck's driver - was embarked, so a lone crew-driver sent a whole walking squad on a 9km
+					//--- dispatch the infantry then REFUSE to complete on foot (86% of dispatches exceeded the
+					//--- real foot reach). Now delegates to WFBE_CO_FNC_AICOMTeamMounted (leader-or-50pct embarked)
+					//--- - the SAME shared helper AI_Commander_Allocate.sqf's target selection now also calls, so
+					//--- the two sites cannot silently diverge again (review found Allocate had its own unguarded
+					//--- copy of this exact bug at its OWN target-selection site).
+					_mounted = [_team] Call WFBE_CO_FNC_AICOMTeamMounted;
 					_reachFoot    = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_FOOT", 3500];
 					_reachMounted = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000];
 					_teamReach = if (_mounted) then {_reachMounted} else {_reachFoot}; private "_teamAir"; _teamAir = false; { if (!_teamAir && {alive _x} && {(vehicle _x) isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0}) then {_teamAir = true} } forEach (units _team); //--- B756 (Ray 2026-06-26): does this team carry a TRANSPORT heli? gates naval-HVT targets to air teams only (no ground sea-stranding).

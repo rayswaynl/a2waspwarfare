@@ -16,6 +16,10 @@ _u = _u + ["US_Soldier_LAT_EP1"];
 _u = _u + ["US_Soldier_GL_EP1"];
 _u = _u + ["US_Soldier_LAT_EP1"];
 _u = _u + ["US_Soldier_Medic_EP1"];
+_u = _u + ["US_Soldier_AMG_EP1"];
+_u = _u + ["US_Soldier_AAR_EP1"];
+_u = _u + ["US_Soldier_AAT_EP1"];
+_u = _u + ["US_Soldier_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["Squad_1"];
@@ -25,6 +29,10 @@ _u = _u + ["US_Soldier_TL_EP1"];
 _u = _u + ["US_Soldier_TL_EP1"];
 _u = _u + ["US_Soldier_LAT_EP1"];
 _u = _u + ["US_Soldier_Medic_EP1"];
+_u = _u + ["US_Soldier_AMG_EP1"];
+_u = _u + ["US_Soldier_AAR_EP1"];
+_u = _u + ["US_Soldier_AAT_EP1"];
+_u = _u + ["US_Soldier_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["Squad_2"];
@@ -34,7 +42,23 @@ _u = _u + ["US_Soldier_SL_EP1"];
 _u = _u + ["US_Soldier_HAT_EP1"];
 _u = _u + ["US_Soldier_AR_EP1"];
 _u = _u + ["US_Soldier_Medic_EP1"];
+_u = _u + ["US_Soldier_AMG_EP1"];
+_u = _u + ["US_Soldier_AAR_EP1"];
+_u = _u + ["US_Soldier_AAT_EP1"];
+_u = _u + ["US_Soldier_EP1"];
 _l = _l + [_u];
+//--- B757 garrison variety: BAF DDPM coalition contingent.
+_k = _k + ["Squad_2"];
+_u        = ["BAF_Soldier_TL_DDPM"];
+_u = _u + ["BAF_Soldier_AR_DDPM"];
+_u = _u + ["BAF_Soldier_GL_DDPM"];
+_u = _u + ["BAF_Soldier_HAT_DDPM"];
+_u = _u + ["BAF_Soldier_Medic_DDPM"];
+_u = _u + ["BAF_Soldier_MG_DDPM"];
+_u = _u + ["BAF_Soldier_AAR_DDPM"];
+_u = _u + ["BAF_Soldier_AAT_DDPM"];
+_l = _l + [_u];
+
 
 _k = _k + ["Squad_3"];
 _u		= ["US_Soldier_SL_EP1"];
@@ -43,7 +67,23 @@ _u = _u + ["US_Soldier_SL_EP1"];
 _u = _u + ["US_Soldier_AT_EP1"];
 _u = _u + ["US_Soldier_AR_EP1"];
 _u = _u + ["US_Soldier_Medic_EP1"];
+_u = _u + ["US_Soldier_AMG_EP1"];
+_u = _u + ["US_Soldier_AAR_EP1"];
+_u = _u + ["US_Soldier_AAT_EP1"];
+_u = _u + ["US_Soldier_EP1"];
 _l = _l + [_u];
+//--- B757 garrison variety: Delta night-stalker holdout.
+_k = _k + ["Squad_3"];
+_u        = ["US_Delta_Force_TL_EP1"];
+_u = _u + ["US_Delta_Force_SD_EP1"];
+_u = _u + ["US_Delta_Force_Night_EP1"];
+_u = _u + ["US_Delta_Force_Marksman_EP1"];
+_u = _u + ["US_Delta_Force_Medic_EP1"];
+_u = _u + ["US_Delta_Force_Assault_EP1"];
+_u = _u + ["US_Delta_Force_Assault_EP1"];
+_u = _u + ["US_Delta_Force_MG_EP1"];
+_l = _l + [_u];
+
 
 _k = _k + ["Squad_Advanced"];
 _u		= ["US_Delta_Force_TL_EP1"];
@@ -51,6 +91,10 @@ _u = _u + ["US_Delta_Force_Assault_EP1"];
 _u = _u + ["US_Delta_Force_MG_EP1"];
 _u = _u + ["US_Delta_Force_Assault_EP1"];
 _u = _u + ["US_Delta_Force_M14_EP1"];
+_u = _u + ["US_Soldier_AMG_EP1"];
+_u = _u + ["US_Soldier_AAR_EP1"];
+_u = _u + ["US_Soldier_AAT_EP1"];
+_u = _u + ["US_Soldier_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["Team_0"];
@@ -120,6 +164,14 @@ _u = _u + ["US_Soldier_MG_EP1"];
 _u = _u + ["US_Soldier_MG_EP1"];
 _u = _u + ["US_Soldier_MG_EP1"];
 _l = _l + [_u];
+//--- B757 garrison variety: paired gun team with assistants.
+_k = _k + ["Team_MG_3"];
+_u        = ["US_Soldier_MG_EP1"];
+_u = _u + ["US_Soldier_AMG_EP1"];
+_u = _u + ["US_Soldier_MG_EP1"];
+_u = _u + ["US_Soldier_AMG_EP1"];
+_l = _l + [_u];
+
 
 _k = _k + ["Team_AT_0"];
 _u		= ["US_Soldier_LAT_EP1"];
@@ -148,6 +200,14 @@ _u = _u + ["US_Soldier_HAT_EP1"];
 _u = _u + ["US_Soldier_HAT_EP1"];
 _u = _u + ["US_Soldier_Medic_EP1"];
 _l = _l + [_u];
+//--- B757 garrison variety: paired AT team with assistants.
+_k = _k + ["Team_AT_3"];
+_u        = ["US_Soldier_HAT_EP1"];
+_u = _u + ["US_Soldier_AHAT_EP1"];
+_u = _u + ["US_Soldier_AT_EP1"];
+_u = _u + ["US_Soldier_AAT_EP1"];
+_l = _l + [_u];
+
 
 _k = _k + ["Team_AA"];
 _u =      ["US_Soldier_AA_EP1"];
@@ -165,11 +225,23 @@ _k = _k + ["Team_Sniper_1"];
 _u		= ["US_Soldier_EP1"];
 _u = _u + ["US_Soldier_EP1"];
 _l = _l + [_u];
+//--- B757 garrison variety: spotter/sniper overwatch pair.
+_k = _k + ["Team_Sniper_1"];
+_u        = ["US_Soldier_Spotter_EP1"];
+_u = _u + ["US_Soldier_SniperH_EP1"];
+_l = _l + [_u];
+
 
 _k = _k + ["Team_Sniper_2"];
 _u		= ["US_Soldier_EP1"];
 _u = _u + ["US_Soldier_Marksman_EP1"];
 _l = _l + [_u];
+//--- B757 garrison variety: NV spotter/sniper overwatch pair.
+_k = _k + ["Team_Sniper_2"];
+_u        = ["US_Soldier_Spotter_EP1"];
+_u = _u + ["US_Soldier_Sniper_NV_EP1"];
+_l = _l + [_u];
+
 
 _k = _k + ["Team_Sniper_3"];
 _u		= ["US_Soldier_Spotter_EP1"];
@@ -192,6 +264,12 @@ _u =      ["HMMWV_M998_crows_M2_DES_EP1"];
 _u = _u + ["HMMWV_M998_crows_MK19_DES_EP1"];
 _u = _u + ["BAF_Jackal2_GMG_D"];
 _l = _l + [_u];
+//--- B757 garrison variety: SOV gun-truck pair.
+_k = _k + ["Motorized_2"];
+_u        = ["HMMWV_M998A2_SOV_DES_EP1"];
+_u = _u + ["HMMWV_M998A2_SOV_DES_EP1"];
+_l = _l + [_u];
+
 
 _k = _k + ["Motorized_3"];
 _u =      ["M1126_ICV_M2_EP1"];

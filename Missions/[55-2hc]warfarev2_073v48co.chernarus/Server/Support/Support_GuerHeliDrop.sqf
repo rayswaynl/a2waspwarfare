@@ -30,15 +30,61 @@
 	  5. Cleanup: delete crew + vehicle + group in all cases (mirrors Support_Paratroopers.sqf:150-157).
 
 	A2 OA 1.64 safe: array-form private only, `_arr + [x]` (no pushBack), no params/isEqualType.
-	_this = [kind(unused, calling-convention symmetry with Support_Paratroopers.sqf), side, destination, playerTeam]
+	_this = [kind(unused, calling-convention symmetry with Support_Paratroopers.sqf), side, destination, playerTeam, receiptKey(optional)]
 */
-Private ["_bd","_built","_cargoType","_coef","_destination","_get","_greenlight","_grp","_off2d","_payout","_pilot","_playerTeam","_positionCoord","_radius","_ran","_ranDir","_ranPos","_returnStart","_shells","_side","_sideID","_sp","_spread","_starttime","_vehicle","_vehicleCoord","_victims","_i"];
+Private ["_bd","_built","_cargoType","_coef","_destination","_failureReason","_get","_greenlight","_grp","_off2d","_payout","_pilot","_playerTeam","_positionCoord","_radius","_ran","_ranDir","_ranPos","_receiptKey","_released","_returnStart","_settleReceipt","_shells","_side","_sideID","_sp","_spread","_starttime","_vehicle","_vehicleCoord","_victims","_i"];
 
 _side = _this select 1;
 _destination = _this select 2;
 _playerTeam = _this select 3;
+_receiptKey = if ((count _this) > 4) then {_this select 4} else {""};
+if ((typeName _receiptKey) != "STRING") then {_receiptKey = ""};
 _sideID = _side Call GetSideID;
 _starttime = time;
+
+//--- The receipt belongs to the server request that actually debited this exact team/cost. Commit or refund it
+//--- at most once inside isNil (unscheduled in A2/OA), never from a client/HC completion message. A cleared or
+//--- committed receipt makes later cleanup/death paths harmless.
+_settleReceipt = {
+	Private ["_receiptKey","_commit","_reason","_receipt","_receiptCaller","_receiptCost","_receiptMessage","_receiptState","_receiptTeam","_settled"];
+	_receiptKey = _this select 0;
+	_commit = _this select 1;
+	_reason = _this select 2;
+	_settled = false;
+	_receipt = [];
+	if (_receiptKey != "") then {
+		isNil {
+			_receipt = missionNamespace getVariable [_receiptKey, []];
+			if ((typeName _receipt) == "ARRAY" && {(count _receipt) >= 4} && {(typeName (_receipt select 0)) == "SCALAR"} && {(_receipt select 0) == 0}) then {
+				_receipt set [0, if (_commit) then {1} else {-1}];
+				missionNamespace setVariable [_receiptKey, _receipt];
+				_settled = true;
+			};
+		};
+		if (_settled) then {
+			_receiptTeam = _receipt select 1;
+			_receiptCost = _receipt select 2;
+			_receiptCaller = _receipt select 3;
+			if (_commit) then {
+				diag_log Format ["GUERHELIBOMB|v1|commit|reason=%1", _reason];
+			} else {
+				if ((typeName _receiptTeam) == "GROUP" && {!isNull _receiptTeam} && {(typeName _receiptCost) == "SCALAR"} && {_receiptCost > 0}) then {
+					[_receiptTeam, _receiptCost] Call WFBE_CO_FNC_ChangeTeamFunds;
+				};
+				diag_log Format ["GUERHELIBOMB|v1|refund|reason=%1|cost=%2", _reason, _receiptCost];
+				if ((typeName _receiptCaller) == "OBJECT" && {!isNull _receiptCaller}) then {
+					_receiptMessage = Format ["Barrel Bomb transport failed before release (%1); your $%2 was refunded.", _reason, _receiptCost];
+					if (WF_A2_Vanilla) then {
+						[getPlayerUID _receiptCaller, "HandleSpecial", ["guer-helibomb-result", [false, _receiptMessage]]] Call WFBE_CO_FNC_SendToClients;
+					} else {
+						[_receiptCaller, "HandleSpecial", ["guer-helibomb-result", [false, _receiptMessage]]] Call WFBE_CO_FNC_SendToClient;
+					};
+				};
+			};
+			missionNamespace setVariable [_receiptKey, []];
+		};
+	};
+};
 
 ["INFORMATION", Format["Support_GuerHeliDrop.sqf : [%1] Team [%2] has called in a Barrel Bomb at %3.", _side, _playerTeam, _destination]] Call WFBE_CO_FNC_LogContent;
 
@@ -60,19 +106,23 @@ if !(isNil '_bd') then {
 };
 
 _cargoType = missionNamespace getVariable Format ["WFBE_%1PARACARGO", str _side];
-if (isNil '_cargoType') exitWith {["ERROR", Format["Support_GuerHeliDrop.sqf : [%1] Heli-drop cargo vehicle is not defined.", _side]] Call WFBE_CO_FNC_LogContent};
+if (isNil '_cargoType') exitWith {[_receiptKey, false, "undefined-cargo"] Call _settleReceipt; ["ERROR", Format["Support_GuerHeliDrop.sqf : [%1] Heli-drop cargo vehicle is not defined.", _side]] Call WFBE_CO_FNC_LogContent};
 
 _ran = floor(random count _ranPos);
 _grp = [_side, "helibomb"] Call WFBE_CO_FNC_CreateGroup;
+if (isNull _grp) exitWith {[_receiptKey, false, "group-create-failed"] Call _settleReceipt; diag_log "GUERHELIBOMB|v1|reject|reason=group-create-failed"};
 _built = 0;
 
 //--- Spawn the heli + single pilot.
 _vehicle = createVehicle [_cargoType, (_ranPos select _ran), [], (_ranDir select _ran), "FLY"];
+if (isNull _vehicle) exitWith {deleteGroup _grp; [_receiptKey, false, "transport-create-failed"] Call _settleReceipt; diag_log "GUERHELIBOMB|v1|reject|reason=transport-create-failed"};
 _vehicle addEventHandler ['killed', Format["[_this select 0, _this select 1, %1] Spawn WFBE_CO_FNC_OnUnitKilled", _sideID]];
 _vehicle setVehicleInit Format["[this, %1] ExecVM 'Common\Init\Init_Unit.sqf';", _sideID];
 
 _pilot = [missionNamespace getVariable Format ["WFBE_%1PILOT", str _side], _grp, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
+if (isNull _pilot) exitWith {deleteVehicle _vehicle; deleteGroup _grp; [_receiptKey, false, "pilot-create-failed"] Call _settleReceipt; diag_log "GUERHELIBOMB|v1|reject|reason=pilot-create-failed"};
 _pilot moveInDriver _vehicle;
+if (driver _vehicle != _pilot) exitWith {deleteVehicle _pilot; deleteVehicle _vehicle; deleteGroup _grp; [_receiptKey, false, "pilot-seat-failed"] Call _settleReceipt; diag_log "GUERHELIBOMB|v1|reject|reason=pilot-seat-failed"};
 _pilot doMove _destination;
 _grp setBehaviour 'CARELESS';
 _grp setCombatMode 'STEALTH';
@@ -93,20 +143,25 @@ processInitCommands;
 
 //--- Loop until death or arrival.
 _greenlight = false;
+_failureReason = "";
 while {true} do {
 	sleep 1;
 
-	if (!alive _vehicle) exitWith {};      //--- Vehicle destruction.
-	if (!alive _pilot) exitWith {};        //--- Pilot dead.
-	if (time - _starttime > 500) exitWith {};   //--- Hard transit timeout.
+	if (!alive _vehicle) exitWith {_failureReason = "transport-destroyed"};      //--- Vehicle destruction.
+	if (!alive _pilot) exitWith {_failureReason = "pilot-dead"};                  //--- Pilot dead.
+	if (time - _starttime > 500) exitWith {_failureReason = "transit-timeout"};   //--- Hard transit timeout.
 
 	_vehicleCoord = [(getPos _vehicle) select 0, (getPos _vehicle) select 1];
 	_positionCoord = [_destination select 0, _destination select 1];
 	if (_vehicleCoord distance _positionCoord < 300) exitWith {_greenlight = true};   //--- Destination reached.
 };
 
-//--- RELEASE.
-if (_greenlight) then {
+//--- RELEASE. A pre-release loss is a technical failed delivery, so restore the exact server receipt. Once one
+//--- valid shell exists, the paid strike is committed and return-leg combat/counterplay never refunds it.
+if (!_greenlight) then {
+	[_receiptKey, false, _failureReason] Call _settleReceipt;
+	diag_log Format ["GUERHELIBOMB|v1|reject|reason=%1", _failureReason];
+} else {
 	//--- INCOMING WARNING (counter-play + atmosphere): global marker at RELEASE time (not at call time),
 	//--- so the flight itself isn't a multi-minute spoiler. Mirrors Server_HandleSpecial.sqf:1474-1490.
 	Private "_mname";
@@ -146,14 +201,24 @@ if (_greenlight) then {
 		};
 	} forEach (nearestObjects [_destination, ["Man","LandVehicle","Air"], _radius]);
 
+	_released = false;
 	for "_i" from 1 to _shells do {
 		_off2d = [(_destination select 0) + (-_spread + random (2 * _spread)), (_destination select 1) + (-_spread + random (2 * _spread))];
 		_sp = "Sh_82_HE" createVehicle _off2d;
-		_sp setPosATL [(_off2d select 0), (_off2d select 1), 120];   //--- 120m ABOVE GROUND so it falls onto terrain.
+		if !(isNull _sp) then {
+			_sp setPosATL [(_off2d select 0), (_off2d select 1), 120];   //--- 120m ABOVE GROUND so it falls onto terrain.
+			if (!_released) then {
+				[_receiptKey, true, "shell-created"] Call _settleReceipt;
+				_released = true;
+			};
+		};
 		sleep (0.3 + random 0.4);
 	};
 
-	sleep 4;   //--- settle before scoring kills.
+	if (!_released) then {
+		[_receiptKey, false, "shell-create-failed"] Call _settleReceipt;
+	} else {
+		sleep 4;   //--- settle before scoring kills.
 
 	if (!isNull _playerTeam) then {
 		_payout = 0;
@@ -192,20 +257,21 @@ if (_greenlight) then {
 		};
 	};
 
-	//--- Fly home.
-	[_grp, (_ranPos select _ran), "MOVE", 10] Call AIMoveTo;
+		//--- Fly home. Death/timeout after a committed shell are cleanup-only; counter-play must not refund.
+		[_grp, (_ranPos select _ran), "MOVE", 10] Call AIMoveTo;
 
-	_returnStart = time;
-	while {true} do {
-		sleep 1;
+		_returnStart = time;
+		while {true} do {
+			sleep 1;
 
-		if (!alive _vehicle) exitWith {};
-		if (!alive _pilot) exitWith {};
-		if (time - _returnStart > 500) exitWith {};
+			if (!alive _vehicle) exitWith {};
+			if (!alive _pilot) exitWith {};
+			if (time - _returnStart > 500) exitWith {};
 
-		_vehicleCoord = [(getPos _vehicle) select 0, (getPos _vehicle) select 1];
-		_positionCoord = [(_ranPos select _ran) select 0, (_ranPos select _ran) select 1];
-		if (_vehicleCoord distance _positionCoord < 300) exitWith {};   //--- Destination reached.
+			_vehicleCoord = [(getPos _vehicle) select 0, (getPos _vehicle) select 1];
+			_positionCoord = [(_ranPos select _ran) select 0, (_ranPos select _ran) select 1];
+			if (_vehicleCoord distance _positionCoord < 300) exitWith {};   //--- Destination reached.
+		};
 	};
 };
 

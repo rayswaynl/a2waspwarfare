@@ -13,7 +13,7 @@
 
 	_this = [target(vehicle), caller(player), actionId, args]
 */
-private ["_veh","_player"];
+private ["_pending","_player","_requestToken","_veh"];
 _veh    = _this select 0;
 _player = _this select 1;
 
@@ -21,6 +21,23 @@ if (isNull _veh || {!alive _veh}) exitWith {};
 if (driver _veh != _player) exitWith {};                 //--- driver only (belt-and-braces vs the action condition).
 if (_veh getVariable ["wfbe_vbied_fired", false]) exitWith {};   //--- one-shot: ignore any re-select after the first click.
 
-//--- INSTANT blast on the single scroll-wheel click. Mark fired so a same-frame double-select can't double-send.
-_veh setVariable ["wfbe_vbied_fired", true];
-["RequestSpecial", ["guer-vbied-detonate", _veh, _player]] Call WFBE_CO_FNC_SendToServer;
+//--- Do not consume the client-visible one-shot latch until the authoritative server has accepted this exact
+//--- detonation. A dismount/death between this click and the server handler used to leave wfbe_vbied_fired set
+//--- locally even though no blast was scheduled. The pending receipt suppresses double-clicks while preserving a
+//--- bounded retry if the PV/result is lost.
+_pending = _veh getVariable ["wfbe_vbied_pending_token", ""];
+if (_pending != "") exitWith {titleText ["VBIED request pending server confirmation.", "PLAIN DOWN", 0.2]};
+_requestToken = Format ["vbied:%1:%2:%3", getPlayerUID _player, floor (time * 1000), floor (random 1000000)];
+_veh setVariable ["wfbe_vbied_pending_token", _requestToken];
+["RequestSpecial", ["guer-vbied-detonate", _veh, _player, _requestToken]] Call WFBE_CO_FNC_SendToServer;
+
+[_veh, _requestToken] Spawn {
+	private ["_pendingToken","_pendingVeh"];
+	_pendingVeh = _this select 0;
+	_pendingToken = _this select 1;
+	sleep 8;
+	if (!isNull _pendingVeh && {(_pendingVeh getVariable ["wfbe_vbied_pending_token", ""]) == _pendingToken}) then {
+		_pendingVeh setVariable ["wfbe_vbied_pending_token", ""];
+		titleText ["VBIED request timed out; detonation was not confirmed.", "PLAIN DOWN", 0.2];
+	};
+};

@@ -46,6 +46,8 @@ if (isServer) then {
 	//--- at least one Man-class soldier (Common_RunSidePatrol rejects crew-only teams).
 	//--- Archetypes per tier: recon-foot / motorized / technical / mechanized / AT-hunter.
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_LIGHT", _side], [
+		//--- B757 shared-roster entry: Common_RunSidePatrol resolves this key to the active faction roster.
+		"Squad_Advanced",
 		//--- recon-foot: scout-led raiders.
 		['GUE_Soldier_Scout','GUE_Soldier_1','GUE_Soldier_MG','GUE_Soldier_AT','GUE_Soldier_Medic'],
 		//--- foot AT-hunter: RPG ambush team.

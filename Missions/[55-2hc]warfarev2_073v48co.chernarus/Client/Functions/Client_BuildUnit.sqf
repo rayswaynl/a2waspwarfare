@@ -1,4 +1,4 @@
-Private ["_building","_buyFailed","_cpt","_commander","_crew","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta","_qTailFn","_qTail","_isTkvToken","_scudProof"];
+Private ["_building","_buyFailed","_cpt","_commander","_crew","_crewCostPerHead","_crewCreated","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta","_qTailFn","_qTail","_isTkvToken","_scudProof"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -552,6 +552,7 @@ if (_isMan) then {
 	_commander = _vehi select 2;
 	_extracrew = _vehi select 3;
 	_locked = _vehi select 4;
+	_crewCostPerHead = if ((count _vehi) > 5) then {_vehi select 5} else {0};
 
 	_factoryPosition = getPos _building;
 	
@@ -1204,7 +1205,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 	//--- player vehicle purchase) freed the slot TWICE and unitQueu / WFBE_C_QUEUE_<factory> drifted negative,
 	//--- quietly widening the factory queue cap. The June-2 "leak" fix #3 patched was actually the Title-case
 	//--- WFBE_LONGEST*BUILDTIME lookup bug (stuck queue head), properly fixed by the toUpper above (cmdcon44-f).
-	if (!_driver && !_gunner && !_commander) exitWith {};
+	if (!_driver && !_gunner && !_commander && !_extracrew) exitWith {};
 
 	//--- Crew Management.
 	_crew = missionNamespace getVariable Format ["WFBE_%1SOLDIER",sideJoinedText];
@@ -1236,52 +1237,66 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
    				_result = 0;
 
    				switch (_ammo) do {
-                    case "B_20mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_23mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_25mm_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_25mm_HEI" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_30mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_30mm_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
+                    case "B_20mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_23mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_25mm_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_25mm_HEI" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_30mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_30mm_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
 					case "Sh_40_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};   
      				default {_result = _this select 2;};
     			};
    				_result
   			};
 
+	_crewCreated = 0;
+
 	//--- Driver.
 	if (_driver) then {
 		_soldier = [_crew,_group,_position,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
-		//// add eventhandler
-
-		[_soldier] allowGetIn true;
-		_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
-		_soldier moveInDriver _vehicle;
-		if (vehicle _soldier != _vehicle) then {_soldier assignAsDriver _vehicle; [_soldier] orderGetIn true}; //--- cmdcon44s: moveIn can silently fail on a same-frame-created unit under client lag; walk-in fallback so the crew actually mans it
-		_spawnedUnits = _spawnedUnits + [_soldier];
+		if (isNull _soldier) then {
+			if (_crewCostPerHead > 0) then {_crewCostPerHead Call ChangePlayerFunds};
+			diag_log Format ["BUYFAIL|v1|crew|side=%1|factory=%2|class=%3|seat=driver|refund=%4|spawnPos=%5", sideJoinedText, _factory, _unit, _crewCostPerHead, _position];
+		} else {
+			[_soldier] allowGetIn true;
+			_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+			_soldier moveInDriver _vehicle;
+			if (vehicle _soldier != _vehicle) then {_soldier assignAsDriver _vehicle; [_soldier] orderGetIn true}; //--- cmdcon44s: moveIn can silently fail on a same-frame-created unit under client lag; walk-in fallback so the crew actually mans it
+			_spawnedUnits = _spawnedUnits + [_soldier];
+			_crewCreated = _crewCreated + 1;
+		};
 	};
 
 	//--- Gunner.
 	if (_gunner) then {
 		_soldier = [_crew,_group,_position,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
-		//// add eventhandler
-		_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
-
-		[_soldier] allowGetIn true;
-		_soldier moveInGunner _vehicle;
-		if (vehicle _soldier != _vehicle) then {_soldier assignAsGunner _vehicle; [_soldier] orderGetIn true}; //--- cmdcon44s seat-verify walk-in fallback
-		_spawnedUnits = _spawnedUnits + [_soldier];
+		if (isNull _soldier) then {
+			if (_crewCostPerHead > 0) then {_crewCostPerHead Call ChangePlayerFunds};
+			diag_log Format ["BUYFAIL|v1|crew|side=%1|factory=%2|class=%3|seat=gunner|refund=%4|spawnPos=%5", sideJoinedText, _factory, _unit, _crewCostPerHead, _position];
+		} else {
+			_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+			[_soldier] allowGetIn true;
+			_soldier moveInGunner _vehicle;
+			if (vehicle _soldier != _vehicle) then {_soldier assignAsGunner _vehicle; [_soldier] orderGetIn true}; //--- cmdcon44s seat-verify walk-in fallback
+			_spawnedUnits = _spawnedUnits + [_soldier];
+			_crewCreated = _crewCreated + 1;
+		};
 	};
 
 	//--- Commander.
 	if (_commander) then {
 		_soldier = [_crew,_group,_position,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
-		//// add eventhandler
-		_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
-
-		[_soldier] allowGetIn true;
-		_soldier moveInCommander _vehicle;
-		if (vehicle _soldier != _vehicle) then {_soldier assignAsCommander _vehicle; [_soldier] orderGetIn true}; //--- cmdcon44s seat-verify walk-in fallback
-		_spawnedUnits = _spawnedUnits + [_soldier];
+		if (isNull _soldier) then {
+			if (_crewCostPerHead > 0) then {_crewCostPerHead Call ChangePlayerFunds};
+			diag_log Format ["BUYFAIL|v1|crew|side=%1|factory=%2|class=%3|seat=commander|refund=%4|spawnPos=%5", sideJoinedText, _factory, _unit, _crewCostPerHead, _position];
+		} else {
+			_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+			[_soldier] allowGetIn true;
+			_soldier moveInCommander _vehicle;
+			if (vehicle _soldier != _vehicle) then {_soldier assignAsCommander _vehicle; [_soldier] orderGetIn true}; //--- cmdcon44s seat-verify walk-in fallback
+			_spawnedUnits = _spawnedUnits + [_soldier];
+			_crewCreated = _crewCreated + 1;
+		};
 	};
 
 	//--- Extra vehicle turrets.
@@ -1292,18 +1307,24 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 		{
 			if (isNull (_vehicle turretUnit _x)) then {
 				_soldier = [_crew,_group,_position,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
-				_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
-				[_soldier] allowGetIn true;
-				_soldier moveInTurret [_vehicle, _x];
-				if (vehicle _soldier != _vehicle) then {_soldier moveInTurret [_vehicle, _x]}; //--- cmdcon44t: retry moveInTurret (no A2-OA walk-in command exists for a turret seat)
-				_spawnedUnits = _spawnedUnits + [_soldier];
+				if (isNull _soldier) then {
+					if (_crewCostPerHead > 0) then {_crewCostPerHead Call ChangePlayerFunds};
+					diag_log Format ["BUYFAIL|v1|crew|side=%1|factory=%2|class=%3|seat=turret|refund=%4|spawnPos=%5", sideJoinedText, _factory, _unit, _crewCostPerHead, _position];
+				} else {
+					_soldier addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+					[_soldier] allowGetIn true;
+					_soldier moveInTurret [_vehicle, _x];
+					if (vehicle _soldier != _vehicle) then {_soldier moveInTurret [_vehicle, _x]}; //--- cmdcon44t: retry moveInTurret (no A2-OA walk-in command exists for a turret seat)
+					_spawnedUnits = _spawnedUnits + [_soldier];
+					_crewCreated = _crewCreated + 1;
+				};
 			};
 		} forEach _turrets;
 	};
 
 
 
-	[sideJoinedText,'UnitsCreated',_cpt] Call UpdateStatistics;
+	[sideJoinedText,'UnitsCreated',_crewCreated] Call UpdateStatistics;
 };
 
 //--- SHARED TAIL (cmdcon44-g) - the ONLY queue-slot release for every path that did not abort at top

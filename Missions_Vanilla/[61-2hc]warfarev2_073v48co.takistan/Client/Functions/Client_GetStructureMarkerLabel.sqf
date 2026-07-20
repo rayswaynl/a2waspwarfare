@@ -25,6 +25,7 @@ _label = switch (_rlType) do {
 	case "Bank": {"R"};			//--- Federal Reserve (economy bank) - 'R' next to its map marker (claude-gaming 2026-06-13)
 	case "AARadar": {"AAR"};
 	case "ArtilleryRadar": {"AR"};
+	case "CBRadar": {"CBR"};
 	case "Reserve": {"RES"};
 	default {""};
 };
