@@ -906,7 +906,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 								//--- A2-fix 2026-06-14 (owner: teams move INDIVIDUALLY to same town = better speed): base-egress road node so teams escape a boxed/corner base, + per-team lateral lane so concentrated teams don't funnel one road.
 								//--- Road-node chain extracted to WFBE_CO_FNC_BuildRoadRoute (shared with the war-room console path AI_Commander_Execute.sqf) - behaviour-identical to the prior inline builder; this keeps the per-team lane jitter here as the caller owns the persistent wfbe_aicom_lanejit var.
 								_laneJit = _team getVariable "wfbe_aicom_lanejit";
-								if (_strandRecovery && {_mounted}) then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]} else {if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]}};
+								if (_strandRecovery && {!isNil "_mounted"} && {_mounted}) then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]} else {if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]}};
 								_hcRoute = [_hcOrigin, _hcDest, _laneJit * (missionNamespace getVariable ["WFBE_C_AICOM_LANE_OFFSET", 120]), _rmHops] Call WFBE_CO_FNC_BuildRoadRoute; //--- cmdcon42-h: lane amplitude is worldName-aware (CH 120 / TK 60) via WFBE_C_AICOM_LANE_OFFSET.
 							};
 							_team setVariable ["wfbe_aicom_route", _hcRoute, true];
