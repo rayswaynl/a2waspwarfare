@@ -38,10 +38,29 @@ if (WF_A2_Vanilla || WF_A2_CombinedOps) then {_stage2Objects = [["Land_WoodenRam
 
 //--- Capture the exact created logic. The former nearEntities re-discovery could miss this object or select another
 //--- simultaneous construction. A top-level failure publishes an optional requester result before any site prop exists.
+//--- fix(construction): RELEASE the synchronous build reservation RequestStructure.sqf stamps at accept
+//--- time (WFBE_<side>_<type>_PENDING / WFBE_BANK_<SIDE>_PENDING). It was only ever cleared on the SUCCESS
+//--- tail below, so every abort path here (start logic missing, construction logic destroyed mid-build,
+//--- final createVehicle failure) left the reservation stamped - and RequestStructure.sqf then rejected the
+//--- next legitimate build of that type for the whole pending window (180s default) with nothing actually
+//--- under construction. Key derivation is copied from RequestStructure.sqf and the success clears below.
+private ["_releasePending"];
+_releasePending = {
+	if (_rlType == "CBRadar" || {_rlType == "AARadar"}) then {
+		missionNamespace setVariable [Format ["WFBE_%1_%2_PENDING", str _side, _rlType], -1e11];
+		diag_log Format ["CONSTRUCTION|v1|pending-released|type=%1|side=%2", _rlType, str _side];
+	};
+	if (_rlType == "Bank") then {
+		missionNamespace setVariable [(if (_side == west) then {"WFBE_BANK_WEST"} else {"WFBE_BANK_EAST"}) + "_PENDING", -1e11];
+		diag_log Format ["CONSTRUCTION|v1|pending-released|type=Bank|side=%1", str _side];
+	};
+};
+
 _group = createGroup sideLogic;
 _nearLogic = objNull;
 if !(isNull _group) then {_nearLogic = _group createUnit ["LocationLogicStart",_position,[],0,"NONE"]};
 if (isNull _nearLogic) exitWith {
+	Call _releasePending;
 	if (_startResultKey != "") then {missionNamespace setVariable [_startResultKey, [-1,"LocationLogicStart missing"]]};
 	if !(isNull _group) then {deleteGroup _group};
 	diag_log Format ["CONSTRUCTION|v1|reject|reason=missing-start-logic|script=SmallSite|type=%1|pos=%2", _type, _position];
@@ -104,6 +123,7 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) t
 };
 
 if (_constructionLogicLost) exitWith {
+	Call _releasePending;
 	{if !(isNull _x) then {DeleteVehicle _x}} ForEach _constructed;
 	if !(isNull _group) then {deleteGroup _group};
 	if (_completionResultKey != "") then {missionNamespace setVariable [_completionResultKey, [-1,"construction logic was destroyed"]]};
@@ -114,6 +134,7 @@ if (_constructionLogicLost) exitWith {
 
 _site = createVehicle [_type, _position, [], 0, "NONE"];
 if (isNull _site) exitWith {
+	Call _releasePending;
 	if !(isNull _nearLogic) then {
 		_group = group _nearLogic;
 		deleteVehicle _nearLogic;
