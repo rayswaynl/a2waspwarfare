@@ -270,6 +270,65 @@ if !(isNull _jipLogik) then {
 		diag_log format ["[WFBE][B63.2 JIP-UPGRADES] re-broadcast wfbe_upgrades (count %1) for side %2 to joiner %3", count (_jipLogik getVariable "wfbe_upgrades"), _sideJoined, _name];
 	};
 };
+
+//--- JIP-replay hardening, Finding #3 (HQ/base snapshot): wfbe_hq/wfbe_hq_deployed/wfbe_startpos/
+//--- wfbe_structures/wfbe_basearea are set once at boot (Init_Server.sqf ~762-790) and otherwise only
+//--- change on HQ deploy/kill/repair or base-area capture, so they never get an automatic connect-time
+//--- catch-up today (only wfbe_teams does, above/below). RequestTeamsResend.sqf's own header documents an
+//--- RPT-traced incident proving THIS SAME side-logic object slow-syncs to a late joiner under heavy AI
+//--- load - and Init_Client.sqf:1136-1188 waits unbounded on wfbe_startpos/wfbe_hq/wfbe_structures/
+//--- wfbe_hq_deployed, with an invalid spawn position as the worst case. Same same-value re-set idiom as
+//--- wfbe_upgrades above - re-set marks the object var dirty so the engine re-syncs it to this joiner.
+if !(isNull _jipLogik) then {
+	if !(isNil {_jipLogik getVariable "wfbe_hq"}) then {
+		_jipLogik setVariable ["wfbe_hq", (_jipLogik getVariable "wfbe_hq"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_hq_deployed"}) then {
+		_jipLogik setVariable ["wfbe_hq_deployed", (_jipLogik getVariable "wfbe_hq_deployed"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_startpos"}) then {
+		_jipLogik setVariable ["wfbe_startpos", (_jipLogik getVariable "wfbe_startpos"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_structures"}) then {
+		_jipLogik setVariable ["wfbe_structures", (_jipLogik getVariable "wfbe_structures"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_basearea"}) then {
+		_jipLogik setVariable ["wfbe_basearea", (_jipLogik getVariable "wfbe_basearea"), true];
+	};
+	diag_log format ["[WFBE][JIP-HQSNAP] re-broadcast HQ/base snapshot (hq_deployed=%1) for side %2 to joiner %3", (_jipLogik getVariable ["wfbe_hq_deployed", false]), _sideJoined, _name];
+};
+
+//--- JIP-replay hardening, Finding #2 (wfbe_votetime): Init_Client.sqf:1581 waits unbounded on this var;
+//--- Server_VoteForCommander.sqf only re-broadcasts it once per second WHILE a vote is actively counting
+//--- down, so a joiner arriving between votes (or mid-vote, if the broadcast slow-syncs under load per
+//--- the same RPT-traced side-logic replication gap as above) never receives it. Same same-value re-set.
+if !(isNull _jipLogik) then {
+	if !(isNil {_jipLogik getVariable "wfbe_votetime"}) then {
+		_jipLogik setVariable ["wfbe_votetime", (_jipLogik getVariable "wfbe_votetime"), true];
+		diag_log format ["[WFBE][JIP-VOTETIME] re-broadcast wfbe_votetime (%1) for side %2 to joiner %3", (_jipLogik getVariable "wfbe_votetime"), _sideJoined, _name];
+	};
+};
+
+//--- JIP-replay hardening, Finding #4 (upgrade-in-progress replay): wfbe_upgrades (unlocked tiers) is
+//--- already re-sent above, but the ACTIVE research/countdown fields are not, so a joiner mid-upgrade
+//--- sees "no upgrade running" (a safe default - GUI_UpgradeMenu.sqf/Client_UpdateRHUD.sqf both isNil-guard
+//--- these) until the next real upgrade event changes them. Re-sending closes that soft-staleness window.
+if !(isNull _jipLogik) then {
+	if !(isNil {_jipLogik getVariable "wfbe_upgrading"}) then {
+		_jipLogik setVariable ["wfbe_upgrading", (_jipLogik getVariable "wfbe_upgrading"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_upgrading_id"}) then {
+		_jipLogik setVariable ["wfbe_upgrading_id", (_jipLogik getVariable "wfbe_upgrading_id"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_upgrading_end_time"}) then {
+		_jipLogik setVariable ["wfbe_upgrading_end_time", (_jipLogik getVariable "wfbe_upgrading_end_time"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_upgrade_queue"}) then {
+		_jipLogik setVariable ["wfbe_upgrade_queue", (_jipLogik getVariable "wfbe_upgrade_queue"), true];
+	};
+	diag_log format ["[WFBE][JIP-UPGRADESTATE] re-broadcast in-progress upgrade state (upgrading=%1) for side %2 to joiner %3", (_jipLogik getVariable ["wfbe_upgrading", false]), _sideJoined, _name];
+};
+
 if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
 	_jipSupplyKey = Format ["wfbe_supply_%1", str _sideJoined];
 	if !(isNil {missionNamespace getVariable _jipSupplyKey}) then {
@@ -341,6 +400,16 @@ if (_sideJoined in [west, east]) then {
 	_id publicVariableClient _keyName;
 	diag_log format ["[WFBE][B74.2.5 ROSTER-PUSH] pushed %1 player-team rows to joiner %2 (key %3, side %4)", count _rows, _name, _keyName, _sideJoined];
 };
+
+//--- Finding #5 (town/camp ownership replay) REVERTED (review-1253): a per-connect re-dirty of every
+//--- town+camp sideID was measured against the actual Chernarus town count - 46 towns + 81 camps = ~127
+//--- synchronous global setVariable-broadcasts on EVERY connect. At a round-start burst of 20-40 joins
+//--- this is a ~5000-broadcast storm exactly when the server is busiest, and even spawn+throttled
+//--- (127 x sleep 0.5 = ~63s) it is SLOWER than the 60s HANGGUARD fallback Init_Markers.sqf already has -
+//--- strictly worse than doing nothing. Deferred proper fix: a TARGETED, BATCHED town-ownership snapshot
+//--- sent only to the joining client (one publicVariableClient carrying [town,sideID] pairs + a small
+//--- client-side applier), not a broadcast to everyone. The existing 60s HANGGUARD covers this window
+//--- meanwhile.
 
 //--- We attempt to get the player informations in case that he joined before.
 _get = missionNamespace getVariable format["WFBE_JIP_USER%1",_uid];
