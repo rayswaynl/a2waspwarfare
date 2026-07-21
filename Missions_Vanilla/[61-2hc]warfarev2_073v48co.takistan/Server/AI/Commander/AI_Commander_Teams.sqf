@@ -102,10 +102,15 @@ _emitFoundSkip = {
 	_last = _logik getVariable [Format ["wfbe_aicom_foundskip_%1_t", _reason], -9999];
 	_count = (_logik getVariable [Format ["wfbe_aicom_foundskip_%1_n", _reason], 0]) + 1;
 	_logik setVariable [Format ["wfbe_aicom_foundskip_%1_n", _reason], _count];
-	if ((time - _last) >= 300) then {
-		_logik setVariable [Format ["wfbe_aicom_foundskip_%1_t", _reason], time];
-		diag_log ("FOUND_SKIP|" + _sideText + "|reason=" + _reason + "|count=" + str _count + "|founded=" + str _foundedTeams + "|pending=" + str (_pending + _constructionPending) + "|target=" + str _target);
-		_logik setVariable [Format ["wfbe_aicom_foundskip_%1_n", _reason], 0];
+	//--- FLAG-DARK PARITY: FOUND_SKIP is a C3 consensus telemetry sibling of FIELDSPLIT (both
+	//--- introduced together, below) but was emitting unconditionally - gate the emission (not
+	//--- the debounce bookkeeping above) behind the same opt-in flag FIELDSPLIT already uses.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
+		if ((time - _last) >= 300) then {
+			_logik setVariable [Format ["wfbe_aicom_foundskip_%1_t", _reason], time];
+			diag_log ("FOUND_SKIP|" + _sideText + "|reason=" + _reason + "|count=" + str _count + "|founded=" + str _foundedTeams + "|pending=" + str (_pending + _constructionPending) + "|target=" + str _target);
+			_logik setVariable [Format ["wfbe_aicom_foundskip_%1_n", _reason], 0];
+		};
 	};
 };
 
