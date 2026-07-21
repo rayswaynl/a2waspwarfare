@@ -196,7 +196,8 @@ class RscTitles {
 	};
 
 	class OptionsAvailable {
-		idd = 10200;
+		//--- P2: reserved HUD ID; RscOverlay uses 10201.
+		idd = 10202;
 		movingEnable = 0;
 		objects[] = {};
 		duration = 15000;
