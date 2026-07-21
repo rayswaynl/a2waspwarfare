@@ -259,7 +259,26 @@ while {alive player && dialog} do {
 			_lastDash = time;
 			_pool = (sideJoined) Call GetTownsIncome;
 			_perMin = round(_pool * 60 / _econInterval);
-			_dash ctrlSetStructuredText (parseText Format ["<t color='#9fb0bc' shadow='1'>Side income pool: </t><t color='#e0b94f' shadow='1'>$%1/min</t><t color='#9fb0bc' shadow='1'>  ($%2/hr)</t><br/><t color='#9fb0bc' shadow='1'>Towns held: </t><t shadow='1'>%3 / %4</t><br/><t color='#9fb0bc' shadow='1'>Supply: </t><t shadow='1'>%5</t>", _perMin, (_perMin * 60), (sideJoined Call GetTownsHeld), _totalTowns, (missionNamespace getVariable [format ["wfbe_supply_%1", str sideJoined], "?"])]);	//--- FIX: non-blocking read (GetSideSupply does a publicVariableServer+waitUntil that can stall this loop)
+
+			//--- KA-14 (income breakdown ticker): read-only, on-request (this dashboard already only renders
+			//--- while the Economy menu is open, throttled to 1s). Answers "where does my money come from" by
+			//--- connecting the town pool above to the player's ACTUAL next-tick funds cut, using the exact
+			//--- same client-side formula the RHUD Money row already relies on (GetIncome -> GetTownsIncome,
+			//--- Client\Functions\Client_GetIncome.sqf), so this can never disagree with what the player is
+			//--- about to receive. No new server broadcast, no economy math touched - purely a display of
+			//--- values already computed elsewhere. Commander-system (3/4) note is annotated from the live
+			//--- wfbe_commander_percent (not the slider preview above), so it reflects the current split even
+			//--- if the commander never opened this menu.
+			_yourCut = (sideJoined) Call GetIncome;
+			_isSeatedCom = false;
+			if (!isNull commanderTeam) then {_isSeatedCom = commanderTeam == group player};
+			_cutSuffix = "";
+			if (_incomeSystem in [3,4]) then {
+				_comPct = WFBE_Client_Logic getVariable ["wfbe_commander_percent", 70];
+				_cutSuffix = if (_isSeatedCom) then {Format [" (you keep %1%2 as commander)", _comPct, "%"]} else {Format [" (commander keeps %1%2)", _comPct, "%"]};
+			};
+
+			_dash ctrlSetStructuredText (parseText Format ["<t color='#9fb0bc' shadow='1'>Side income pool: </t><t color='#e0b94f' shadow='1'>$%1/min</t><t color='#9fb0bc' shadow='1'>  ($%2/hr)</t><br/><t color='#9fb0bc' shadow='1'>Towns held: </t><t shadow='1'>%3 / %4</t><br/><t color='#9fb0bc' shadow='1'>Supply: </t><t shadow='1'>%5</t><br/><t color='#9fb0bc' shadow='1'>Your cut: </t><t color='#76f563' shadow='1'>$%6</t><t color='#9fb0bc' shadow='1'>/tick%7</t>", _perMin, (_perMin * 60), (sideJoined Call GetTownsHeld), _totalTowns, (missionNamespace getVariable [format ["wfbe_supply_%1", str sideJoined], "?"]), _yourCut, _cutSuffix]);	//--- FIX: non-blocking read (GetSideSupply does a publicVariableServer+waitUntil that can stall this loop)
 		};
 	};
 
