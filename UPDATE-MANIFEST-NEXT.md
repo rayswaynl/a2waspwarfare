@@ -26,3 +26,4 @@ Base: `origin/master` (`b411d70004`)
 - PR #1208: approved C3 consensus quick-wins (HC census/no-HC accounting and flag-dark telemetry); merged no-ff as `8cddb617cc` (feature head `dc6b9afd59`).
 - PR #1161: approved Zargabad small-map tune; merged no-ff as `7d857f06d9` (final reviewed head `d4ffe51adf`).
 - PR #1160: approved AICOM air founding telemetry; merged no-ff as `8a81ab3392` (final reviewed head `b7733e82e5`).
+- PR #1155: approved B76 funds-resend zero-wallet fix (never invent a zero wallet on CIV-drift, authority-safe resolution, no side-adoption); merged no-ff into wave-next as `c53cef8019` (drain head `ff631ee434`).
