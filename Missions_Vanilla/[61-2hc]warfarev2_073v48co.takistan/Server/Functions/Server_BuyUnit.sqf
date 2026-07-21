@@ -252,6 +252,17 @@ if (_unitType isKindOf "Man") then {
 		if (_price > 0) then {[_side, _price] Call ChangeAICommanderFunds};
 		["WARNING", Format ["Server_BuyUnit.sqf: buy of [%1] produced objNull (spawn failed) - refunded %2 to side [%3]; no crew spawned.", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent;
 	};
+	//--- fix/heli-husk-reaper: stamp a normal AICOM-team attack helicopter at production, mirroring
+	//--- Construction_StationaryDefense.sqf's WFBE_CommanderArtillery stamp at construction. Helis
+	//--- otherwise carry no tag beyond the numeric wfbe_side_id (Common_CreateVehicle.sqf:28), which
+	//--- every heli shares including the SELF-CLEANING kinds (AI_Commander_AirResp.sqf response-flights,
+	//--- AI_Commander_Wildcard.sqf W13 gunships) - this positive tag is what lets server_groupsGC.sqf's
+	//--- husk reaper target ONLY a real team-produced attack heli and never those two, which spawn via a
+	//--- direct WFBE_CO_FNC_CreateVehicle call and never pass through this factory/queue buy path.
+	if ((_unitType isKindOf "Helicopter") && {(getNumber (configFile >> "CfgVehicles" >> _unitType >> "transportSoldier")) == 0}) then {
+		_vehicle setVariable ["WFBE_CommanderAttackHeli", true, true];
+		_vehicle setVariable ["WFBE_CommanderAttackHeliSide", str _side, true];
+	};
 	_vehicle addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
 
 	// Could seperate the array here for modded vehicles

@@ -421,6 +421,68 @@ while {!WFBE_GameOver} do {
 		["INFORMATION", Format ["server_groupsGC.sqf: reaped %1 dead commander-artillery wreck(s).", _artyReaped]] Call WFBE_CO_FNC_AICOMLog;
 	};
 
+	//--- fix/heli-husk-reaper (mirrors fix/aicom-arty-lifecycle #1220 directly above): destroyed AICOM
+	//--- attack-helicopter husks leak the same way commander-artillery wrecks did before #1220. ROOT
+	//--- CAUSE (same class as #1220): attack-heli TEAMS are HC-delegated (Server_PickLeastLoadedHC via
+	//--- the delegate-aicom-team PVF channel, AI_Commander_Teams.sqf:1436), so a produced attack-heli
+	//--- hull is HC-LOCAL - Common_TrashObject.sqf's generic deleteVehicle (the cleanup path every other
+	//--- dead vehicle eventually falls through to) has NO locality check, so it silently no-ops on these
+	//--- exactly like the pre-#1220 arty case.
+	//---
+	//--- SCOPE (owner/codex recon): this reaper targets ONLY a normal team-produced attack helicopter,
+	//--- tagged WFBE_CommanderAttackHeli at production in Server_BuyUnit.sqf (see that file - helis carry
+	//--- no other tag beyond the numeric wfbe_side_id, which every heli shares). It deliberately does NOT
+	//--- touch AI_Commander_AirResp.sqf response-flight helis or AI_Commander_Wildcard.sqf W13 gunships -
+	//--- both spawn via a direct WFBE_CO_FNC_CreateVehicle call (never through the factory/queue buy path
+	//--- this reaper's tag hooks) and BOTH already self-delete on their own short watchdog (AirResp: 15s-
+	//--- poll teardown once the flight's heli is no longer alive; W13: unconditional 90s sleep-then-
+	//--- delete) - reaping them here would be a double-delete race against their own cleanup, not a fix
+	//--- for a leak that does not exist on those two paths.
+	//---
+	//--- AGE-GATE + DYNAMIC DELAY + LOCALITY DISPATCH: identical contract to the arty reaper directly
+	//--- above (wfbe_trashable/wfbe_trashed nil-gate so the generic path is never cut short; stamp-then-
+	//--- reap so a wreck is never age-gated against its OWN first-sight pass; (WFBE_C_UNITS_CLEAN_TIMEOUT
+	//--- + 180) max WFBE_C_HELI_WRECK_REAP_DELAY so a lobby-raised clean timeout is never raced; local
+	//--- delete when local, else dispatch to the owning HC via the SAME WFBE_CO_FNC_SendToClient ->
+	//--- HandleSpecial channel, tag-rechecked receiver-side against forged dispatches). See the arty
+	//--- reaper's comments above for the full round-by-round reasoning; not re-derived here.
+	private ["_heliWrecks","_heliReaped","_heliSeen","_heliDelay"];
+	_heliDelay = ((missionNamespace getVariable ["WFBE_C_UNITS_CLEAN_TIMEOUT", 120]) + 180) max (missionNamespace getVariable ["WFBE_C_HELI_WRECK_REAP_DELAY", 300]);
+	_heliWrecks = [];
+	{
+		if (!isNull _x && {!alive _x} && {(_x getVariable ["WFBE_CommanderAttackHeli", false])} && {isNil {_x getVariable "wfbe_trashable"}} && {isNil {_x getVariable "wfbe_trashed"}}) then {
+			_heliSeen = _x getVariable ["wfbe_heli_wreck_seen", -1];
+			if (_heliSeen < 0) then {
+				//--- First sight: stamp and defer - give the generic path its full window.
+				_x setVariable ["wfbe_heli_wreck_seen", time];
+			} else {
+				if ((time - _heliSeen) > _heliDelay) then {
+					_heliWrecks set [count _heliWrecks, _x];
+				};
+			};
+		};
+	} forEach allDead;
+	_heliReaped = 0;
+	{
+		if (local _x) then {
+			["gc-commander-heli-wreck", _x, (_x getVariable ["WFBE_CommanderAttackHeliSide", ""])] Call WFBE_CO_FNC_LogVehDelete;
+			deleteVehicle _x;
+			_heliReaped = _heliReaped + 1;
+		} else {
+			//--- Route the delete to the owning machine - same established server->HC dispatch channel
+			//--- as the arty reaper above (WFBE_CO_FNC_SendToClient -> "HandleSpecial", routed by the
+			//--- target object's own `owner`), a new "cleanup-commander-heli-wreck" case in
+			//--- Client/PVFunctions/HandleSpecial.sqf. Dispatch, not a confirmed delete - not counted in
+			//--- _heliReaped or logged under the local-delete reason code; the 60s re-scan naturally
+			//--- retries until it either transfers local or the HC actually deletes it.
+			["gc-commander-heli-wreck-remote-dispatch", _x, (_x getVariable ["WFBE_CommanderAttackHeliSide", ""])] Call WFBE_CO_FNC_LogVehDelete;
+			[_x, "HandleSpecial", ["cleanup-commander-heli-wreck", _x]] Call WFBE_CO_FNC_SendToClient;
+		};
+	} forEach _heliWrecks;
+	if (_heliReaped > 0) then {
+		["INFORMATION", Format ["server_groupsGC.sqf: reaped %1 dead commander-attack-heli wreck(s).", _heliReaped]] Call WFBE_CO_FNC_AICOMLog;
+	};
+
 	// --- Group-cap pre-warning ---
 	// Count groups per side (single pass; cheap at 60s cadence).
 	_cntWest = 0;
