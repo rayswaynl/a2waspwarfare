@@ -24,3 +24,5 @@ Base: `origin/master` (`b411d70004`)
 
 - PR #1162: approved CIV HC slots-only mission.sqm change; merged no-ff as `de7475e9d9` (rebased feature head `5d9ca7c052`).
 - PR #1208: approved C3 consensus quick-wins (HC census/no-HC accounting and flag-dark telemetry); merged no-ff as `8cddb617cc` (feature head `dc6b9afd59`).
+- PR #1161: approved Zargabad small-map tune; merged no-ff as `7d857f06d9` (final reviewed head `d4ffe51adf`).
+- PR #1160: approved AICOM air founding telemetry; merged no-ff as `8a81ab3392` (final reviewed head `b7733e82e5`).
