@@ -154,7 +154,7 @@ _dispatched = 0;
 if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_canDispatch}) then {
 	_airList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
 	_attackClasses = [];
-	{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Mi24_D","Mi24_V","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su34"]) then {_attackClasses = _attackClasses + [_x]} } forEach _airList;
+	{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Ka52","Ka52Black","Mi24_D","Mi24_D_TK_EP1","Mi24_V","Mi24_P","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]) then {_attackClasses = _attackClasses + [_x]} } forEach _airList;
 	_pilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];
 	if (count _attackClasses > 0 && {_pilotClass != ""}) then {
 		_lanePos = getPos _laneTown;

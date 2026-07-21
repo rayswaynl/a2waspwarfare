@@ -346,7 +346,7 @@ if (worldName == "Zargabad") then {
 	WFBE_C_AI_COMMANDER_MOVE_INTERVALS = 3600;
 	WFBE_C_AI_COMMANDER_SUPPLY_TRUCKS_MAX = 5;
 	//--- AI Commander revival (feat/ai-commander).
-	WFBE_C_AI_COMMANDER_TOTAL_AI_MAX = 140;    //--- B59 (Ray 2026-06-20): 130->190 so 15 teams/side actually fill (15*12 worst-case +10 buffer) and the side-gate (AI_Commander_Produce.sqf:28-30) doesn't starve the last teams below the 8-floor. Rollback: 130. Prior punchy-AICOM (Ray 2026-06-17): 72->130. Sized for 10 teams x [8,12] units: worst case 10*12=120, +10 buffer so the side-gate in AI_Commander_Produce.sqf (:28-30) does not fire at 119 and starve the last team back below the 8-floor. DELIBERATE commander-AI raise (testing trade-off Ray accepts). Rollback: 72.
+	WFBE_C_AI_COMMANDER_TOTAL_AI_MAX = 140;    //--- Symmetric per-side AI ceiling; tiered cap array below is authoritative for commander founding/produce.
 	WFBE_C_AI_COMMANDER_USE_ARC_APPROACH = 1;  //--- 1: SetTownAttackPath arc approach; 0: simple AIMoveTo fallback.
 	WFBE_C_AI_COMMANDER_UPGRADE_INTERVAL = 300; //--- B67 (Ray 2026-06-21): 120->300s. Tech pacing: ~37-entry AI research order x 300s ~= 185 min to walk the full tree (was ~20-30 min). Dominant lever for the "full tech over ~180 min" decision; early/cheap tiers still start in the first ~10-15 min off the untouched bootstrap supply. Rollback: 120.
 	WFBE_C_AI_COMMANDER_TOWN_INTERVAL = 120;
@@ -365,7 +365,7 @@ if (worldName == "Zargabad") then {
 	//--- with population: more players = more server pressure = FEWER HQ squads; low pop is efficient +
 	//--- boring, so flood it with many more AI teams. Buckets 0-2 / 3-5 / 6-9 / 10+. The 10+ value matches
 	//--- the old static target (2) = no high-pop regression. Consumed by AI_Commander_Teams.sqf.
-	WFBE_C_AICOM_TEAMS_PC_LOW  = 10;           //--- B59 (Ray 2026-06-20): 10->15 max HQ teams/side (low pop) to really push the load test, Ray's call. ~15*10 found-size = 150/side; TOTAL_AI_MAX raised 130->190 to fit so the side-gate doesn't starve the last teams. EXPECT lower server FPS (this IS the load test). Rollback: 10.  [historical B57 note follows] Pairs with the founding-pad (teams found at 8-12) for larger massed groups. ~10*8=80/side < TOTAL_AI_MAX 130 (watch server FPS). Prior B49 had cut 10->5: FEWER/BIGGER teams - the B48 soak gridlocked at ~2 captures with 10 thin (~5-unit) teams + banked funds; 5 teams fill to 8-12 each and CONCENTRATION=4 massed on the spearhead actually cracks garrisons. 5*12=60 units << TOTAL_AI_MAX 130 (FPS-safe). Rollback: 10.
+	WFBE_C_AICOM_TEAMS_PC_LOW  = 10;           //--- Low-population target before funds/engine caps; shared by WEST/EAST.
 	WFBE_C_AICOM_TEAMS_PC_MID  = 7;            //--- Build83 (Ray 2026-07-01): ~20% commander-team trim, 8->7. 3-5 players.
 	WFBE_C_AICOM_TEAMS_PC_HIGH = 4;            //--- Build83: ~20% trim, 5->4.
 	WFBE_C_AICOM_TEAMS_PC_FULL = 3;            //--- rollback the whole curve: set all four to 2.
@@ -1790,7 +1790,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 //--- Towns.
 	if (isNil "WFBE_C_TOWNS_AMOUNT") then {WFBE_C_TOWNS_AMOUNT = 4}; //--- Amount of towns (0: Very small, 1: Small, 2: Medium, 3: Large, 4: Full).
 	if (isNil "WFBE_C_TOWNS_BUILD_PROTECTION_RANGE") then {WFBE_C_TOWNS_BUILD_PROTECTION_RANGE = 450}; //--- Prevent construction in towns within that radius.
-	if (isNil "WFBE_C_TOWNS_CAPTURE_MODE") then {WFBE_C_TOWNS_CAPTURE_MODE = 2}; //--- A/B (claude-gaming 2026-06-14): 2->0 Classic. Mode 2 "All Camps" required an attacker to hold EVERY camp simultaneously with dismounted infantry (server_town.sqf:169-177) - AI commander teams arrive mounted + visit camps sequentially, so capDis=0 and only GUER (garrison stands on all camps) ever flipped towns. Mode 0 flips on defender-clear + presence within 40m; camps become a capture-SPEED bonus, not a gate. GUER unchanged (still defends/caps by presence). Reversible: revert to 2, or try 1 (Threshold/140m majority) if towns flip too fast. (0: Normal/Classic, 1: Threshold, 2: All Camps).
+	if (isNil "WFBE_C_TOWNS_CAPTURE_MODE") then {WFBE_C_TOWNS_CAPTURE_MODE = 2}; //--- All-Camps capture mode: attackers must hold every camp with dismounted infantry before the town flips. (0: Normal/Classic, 1: Threshold, 2: All Camps).
 	if (isNil "WFBE_C_TOWNS_DEFENDER") then {WFBE_C_TOWNS_DEFENDER = 2}; //--- Town defender Difficulty (0: Disabled, 1: Light, 2: Medium, 3: Hard, 4: Insane).
 	if (isNil "WFBE_C_TOWNS_OCCUPATION") then {WFBE_C_TOWNS_OCCUPATION = 2}; //--- Town occupation Difficulty (0: Disabled, 1: Light, 2: Medium, 3: Hard, 4: Insane).
 	if (isNil "WFBE_C_TOWNS_GEAR") then {WFBE_C_TOWNS_GEAR = 1}; //--- Buy Gear From (0: None, 1: Camps, 2: Depot, 3: Camps & Depot).
@@ -1801,7 +1801,8 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_TOWNS_REINFORCEMENT_OCCUPATION") then {WFBE_C_TOWNS_REINFORCEMENT_OCCUPATION = 0}; //--- Enable towns occupation reinforcement.
 	if (isNil "WFBE_C_TOWNS_STARTING_MODE") then {WFBE_C_TOWNS_STARTING_MODE = 0}; //--- Town starting mode (0: Resistance, 1: 50% blu, 50% red, 2: Nearby Towns, 3: Random).
 	if (isNil "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") then {WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER = 1}; //--- Lock the vehicles of the defender side.
-	if (isNil "WFBE_C_TOWNS_CAPTURE_BAR_DETAIL") then {WFBE_C_TOWNS_CAPTURE_BAR_DETAIL = 0}; //--- Lane 52: 1 adds observed SV trend text to the client capture bar; 0 keeps the legacy town/SV label.
+	if (isNil "WFBE_C_TOWNS_CAPTURE_BAR_DETAIL") then {WFBE_C_TOWNS_CAPTURE_BAR_DETAIL = 0}; //--- Lane 52: 1 adds SV trend, mode-2 Camps X/Y, and camp SV text to the client capture bar; 0 keeps the legacy label.
+	if (isNil "WFBE_C_TOWN_FLIP_BROADCAST") then {WFBE_C_TOWN_FLIP_BROADCAST = 0}; //--- Client-only optional enemy town-flip title/chat; marker recolor is always applied.
 
 	//--- Air units.
 	if (isNil "WFBE_C_JET_AA_SURVIVE") then {WFBE_C_JET_AA_SURVIVE = 1}; //--- Jets survive the 1st SPAAG (Tunguska/Linebacker) hit: fuel drained + slight damage for a landing attempt; a 2nd hit explodes. 0 disables.
@@ -1830,8 +1831,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_TOWNS_SUPPLY_LEVELS_TIME = [1, 2, 3, 4, 5];
 	WFBE_C_TOWNS_SUPPLY_LEVELS_TRUCK = [5, 6, 7, 8, 10];
 	WFBE_C_TOWNS_UNITS_INACTIVE = 90; //--- Remove units in town if no enemies are to be found within that time.
-	WFBE_C_TOWNS_UNITS_SPAWN_CAPTURE_DELAY = 1200; //--- If x seconds has elapsed since a town last capture, units may spawn again during that town capture.
-	WFBE_C_TOWNS_UNITS_WAYPOINTS = 9;
+		WFBE_C_TOWNS_UNITS_WAYPOINTS = 9;
 
 //--- Units.
 	if (isNil "WFBE_C_UNITS_BALANCING") then {WFBE_C_UNITS_BALANCING = 1}; //--- Enable Units weaponry balancing.
@@ -2618,9 +2618,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- TOWN GARRISON DRESSING (lane 241, fable/qol-recycle-pick): server-side ZU-23 dressing
 //--- on active GUER-held contested towns. One crew gunner per town, optional night searchlight.
 //--- Worker: Server/Server_TownGarrisonDressing.sqf. Flag-off (0) = worker not launched = byte-identical.
-	if (isNil "WFBE_C_GARRISON_DRESSING")          then {WFBE_C_GARRISON_DRESSING = 1};           //--- Master enable. 0 = off (default); >0 = dress active contested GUER towns.
+	if (isNil "WFBE_C_GARRISON_DRESSING")          then {WFBE_C_GARRISON_DRESSING = 1};           //--- Master enable. 0 = off; >0 = dress active contested GUER towns.
 	if (isNil "WFBE_C_GARRISON_DRESSING_INTERVAL") then {WFBE_C_GARRISON_DRESSING_INTERVAL = 45};  //--- Seconds between worker ticks.
-	if (isNil "WFBE_C_GARRISON_DRESSING_RADIUS")   then {WFBE_C_GARRISON_DRESSING_RADIUS = 900};   //--- m: enemy proximity gate + quiet-timeout radius.
+	if (isNil "WFBE_C_GARRISON_DRESSING_RADIUS")   then {WFBE_C_GARRISON_DRESSING_RADIUS = 900};   //--- m: enemy proximity gate.
+	if (isNil "WFBE_C_GARRISON_DRESSING_QUIET")    then {WFBE_C_GARRISON_DRESSING_QUIET = 300};   //--- s: remove dressed guns after this long without a nearby enemy.
 	if (isNil "WFBE_C_GARRISON_DRESSING_LIFETIME") then {WFBE_C_GARRISON_DRESSING_LIFETIME = 900}; //--- s: forced recycle age per gun (anti-accumulation).
 	if (isNil "WFBE_C_GARRISON_DRESSING_MAX")      then {WFBE_C_GARRISON_DRESSING_MAX = 6};        //--- Max simultaneous dressed towns across the map.
 	if (isNil "WFBE_C_GARRISON_DRESSING_SEARCHLIGHT") then {WFBE_C_GARRISON_DRESSING_SEARCHLIGHT = 1}; //--- 1: add SearchLight_RUS at night; 0: gun only.

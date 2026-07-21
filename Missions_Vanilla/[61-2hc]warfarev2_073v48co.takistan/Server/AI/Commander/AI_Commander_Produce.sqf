@@ -32,7 +32,18 @@ _capTierLast = (count _capTiers) - 1;
 if (_capTier > _capTierLast) then {_capTier = _capTierLast};
 _cap = _capTiers select _capTier;   //--- B74.2: tiered per-side AI ceiling (was flat WFBE_C_AI_COMMANDER_TOTAL_AI_MAX).
 _sideAI = {(side _x == _side) && !(isPlayer _x)} count allUnits;
-if (_sideAI >= _cap) exitWith {};
+if (_sideAI >= _cap) exitWith {
+	private "_produceCapCount";
+	private "_produceCapLast";
+	_produceCapCount = (_logik getVariable ["wfbe_aicom_producecap_count", 0]) + 1;
+	_produceCapLast = _logik getVariable ["wfbe_aicom_producecap_log_t", -9999];
+	_logik setVariable ["wfbe_aicom_producecap_count", _produceCapCount];
+	if ((time - _produceCapLast) >= 300) then {
+		_logik setVariable ["wfbe_aicom_producecap_log_t", time];
+		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|PRODUCE_SKIP|reason=side-cap|count=" + str _produceCapCount + "|sideAI=" + str _sideAI + "|tierCap=" + str _cap + "|tier=" + str _capTier);
+		_logik setVariable ["wfbe_aicom_producecap_count", 0];
+	};
+};
 
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};

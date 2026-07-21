@@ -17,7 +17,6 @@ _town_airactive = _town getVariable ["wfbe_active_air", false];
 _units = [];
 _percentage_inf = 50;
 _groups_max = 0;
-_randomize = 0;
 
 //--- Get the defender teams depending on the town type.
 switch (_town getVariable "wfbe_town_type") do { // _units = [[group type, force (chance multiplier), group kind (0 inf, 1 veh)]]
@@ -82,7 +81,6 @@ switch (_town getVariable "wfbe_town_type") do { // _units = [[group type, force
 	};
 };
 
-if (_randomize != 0) then {_groups_max = _groups_max + round(random _randomize - random _randomize)};
 //--- B74.2: re-derive the defender unit coef from the LIVE pop-tier instead of the static
 //--- WFBE_C_TOWNS_UNITS_DEFENDER_COEF (which was computed once at init from WFBE_C_TOWNS_DEFENDER).
 //--- WFBE_C_TOWNS_DEFENDER_BY_TIER is the tiered version of that same difficulty knob, so scaling the

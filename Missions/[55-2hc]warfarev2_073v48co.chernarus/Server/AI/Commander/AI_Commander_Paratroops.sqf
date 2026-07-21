@@ -15,7 +15,7 @@
 	No structure or no researched tier => no drop, ever (the worker early-exits).
 
 	Gates (all must pass):
-	  - WFBE_C_AICOM_PARATROOPS_ENABLE > 0 (opt-in; inline default 0 -> ships INERT for a soak before Ray flips it).
+	  - WFBE_C_AICOM_PARATROOPS_ENABLE > 0 (the live constant default is 1; set 0 to disable).
 	  - The AI actually COMMANDS this side now (no human commander, or LOCK on) - never spends a human's drop.
 	  - TIER:      (side upgrades) select WFBE_UP_PARATROOPERS > 0   (the unlock the player path checks).
 	  - STRUCTURE: at least one live CommandCenter (Tactical Center) of the side exists.
@@ -32,7 +32,7 @@ private ["_side","_logik","_sideID","_now","_cool","_last","_upgrades","_paraLvl
 
 _side = _this;
 
-//--- Opt-in flag (inline default 0): ships inert until Ray enables it after a soak.
+//--- Feature flag: the live constant defaults to 1; set 0 to keep this capability inert.
 if ((missionNamespace getVariable ["WFBE_C_AICOM_PARATROOPS_ENABLE", 0]) <= 0) exitWith {};
 
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;

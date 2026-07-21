@@ -21,4 +21,8 @@ while {_i < 1000} do {
 	_i = _i + 1;
 };
 
+if (_i >= 1000) then {
+	["WARNING", Format ["Common_GetEmptyPosition.sqf: no empty position after 1000 attempts near [%1,%2] radius %3; using fallback.", _object select 0, _object select 1, _radius]] Call WFBE_CO_FNC_AICOMLog;
+};
+
 _position
