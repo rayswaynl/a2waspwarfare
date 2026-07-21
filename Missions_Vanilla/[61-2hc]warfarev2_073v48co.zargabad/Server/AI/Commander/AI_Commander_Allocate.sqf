@@ -536,7 +536,7 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 					};
 				};
 			};
-			if (!isNull _tgt) then {
+			if (!isNull _tgt && {((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) <= 0) || {_hasVeh} || {(_ldrPos distance _tgt) <= _reach}}) then {
 				_grp setVariable ["wfbe_aicom_alloc_target", _tgt];
 				_grp setVariable ["wfbe_aicom_alloc_tick", time];
 				_assigned = _assigned + 1;

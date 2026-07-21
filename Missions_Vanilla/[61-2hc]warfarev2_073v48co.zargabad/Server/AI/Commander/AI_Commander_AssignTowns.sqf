@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage","_footStagePos","_stageGoto"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -194,6 +194,13 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	_autonomous = [_team, "wfbe_autonomous", false] Call WFBE_CO_FNC_GroupGetBool;
 	_modeNow = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 	_footStage = [_team, "wfbe_aicom_foot_stage", false] Call WFBE_CO_FNC_GroupGetBool;
+	_footStagePos = [_team, "wfbe_aicom_foot_stage_pos", []] Call WFBE_CO_FNC_GroupGetBool;
+	_stageGoto = [_team, "wfbe_teamgoto", []] Call WFBE_CO_FNC_GroupGetBool;
+	if (_footStage && {(_modeNow != "move") || {typeName _footStagePos != "ARRAY"} || {typeName _stageGoto != "ARRAY"} || {count _footStagePos < 2} || {count _stageGoto < 2} || {(_stageGoto distance _footStagePos) > 5}}) then {
+		_footStage = false;
+		_team setVariable ["wfbe_aicom_foot_stage", false];
+		_team setVariable ["wfbe_aicom_foot_stage_pos", []];
+	};
 	_canDrive = false;
 	_explicitMode = false;
 	//--- MANUAL-PIN (Build83, claude-gaming 2026-07-01): a team a HUMAN just ordered from the war-room console
@@ -292,7 +299,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					_htSide = _ht getVariable ["sideID", -1];
 					_htUntil = _ht getVariable ["wfbe_aicom_hold_until", 0];
 					_htEnemyDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
-					if (_htSide == _sideID && {time < _htUntil} && {(_ht getVariable ["wfbe_active", false])} && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _ht) nearEntities [["Man","LandVehicle","Air"], _htEnemyDist])) > 0}) then {_htLive = true};
+					if (_htSide == _sideID && {time < _htUntil} && {((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) <= 0) || {(_ht getVariable ["wfbe_active", false]) && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _ht) nearEntities [["Man","LandVehicle","Air"], _htEnemyDist])) > 0}}}) then {_htLive = true};
 				};
 			};
 			if (_htLive) then {
@@ -306,6 +313,17 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					};
 				};
 				_team setVariable ["wfbe_aicom_holding_town", objNull, true];
+				//--- Active-attack holds release immediately when hostile contact is gone, including under a human commander; respect a fresh manual pin.
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0 && {_modeNow == "defense"} && {isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool)} && {isNil "_pin" || {(time - _pin) >= (missionNamespace getVariable ["WFBE_C_AICOM_MANUALPIN_TTL", 600])}}) then {
+					[_team, "towns"] Call SetTeamMoveMode;
+					_team setVariable ["wfbe_teamgoto", objNull, true];
+					_team setVariable ["wfbe_aicom_townorder", [], false];
+					_explicitMode = false;
+					_modeNow = "towns";
+					if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+						_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos (leader _team)], true];
+					};
+				};
 			};
 		};
 		if (!_explicitMode) then {
@@ -694,6 +712,12 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					};
 				};
 			};
+			//--- FOOT_STAGE owns the next selection pass: discard journey bookkeeping before the cap-lock gate.
+			if (_footStage) then {
+				_needs = true;
+				_team setVariable ["wfbe_aicom_dispatch_open", false];
+				_team setVariable ["wfbe_aicom_townorder", [], false];
+			};
 
 			//--- CAPTURE LOCK (GR-2026-07-03a, capture-churn fix): a team that has fired BEGIN_CAPTURE and is draining a town is IMMUNE to
 			//--- re-targeting here (the single AssignTowns re-task choke-point). This is the site the behaviour data proved reaches in-drain
@@ -828,7 +852,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_allocTick = _team getVariable "wfbe_aicom_alloc_tick";
 						_allocTtl  = missionNamespace getVariable ["WFBE_C_AICOM2_ALLOC_TICK_TTL", 180];
 						if (!isNil "_allocTick") then {_allocAge = time - _allocTick} else {_allocAge = 1e9};
-						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)}) then { //--- wiki cross-check fix: respect this team's stuck-abandon blacklist (don't re-send it at a town it gave up on as unreachable).
+						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)} && {((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) <= 0) || {_mounted} || {(_ldrPos distance _allocT) <= _teamReach}}) then { //--- review fix: FOOT_STAGE must not accept an allocator target outside honest reach.
 							_target = _allocT;
 						} else {
 							if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge >= _allocTtl}) then {
@@ -899,6 +923,9 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 									[_team, "move"] Call SetTeamMoveMode;
 									[_team, getPos _footStageTown] Call SetTeamMovePos;
 									_team setVariable ["wfbe_aicom_foot_stage", true];
+									_team setVariable ["wfbe_aicom_foot_stage_pos", getPos _footStageTown];
+									_team setVariable ["wfbe_aicom_townorder", [], false];
+									_team setVariable ["wfbe_aicom_dispatch_open", false];
 									_target = objNull;
 									_explicitMode = false;
 									diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOOT_STAGE|team=" + (str _team) + "|town=" + (_footStageTown getVariable ["name","town"]));
@@ -914,6 +941,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 				if (!isNil "_target") then {
 					if (!isNull _target) then {
 						_team setVariable ["wfbe_aicom_foot_stage", false];
+						_team setVariable ["wfbe_aicom_foot_stage_pos", []];
 						[_team, "towns"] Call SetTeamMoveMode;
 						[_team, _target] Call SetTeamMovePos;
 						if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {

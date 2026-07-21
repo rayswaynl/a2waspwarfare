@@ -524,6 +524,11 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 		_relTown = [_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
 		if (!isNull _relTown) then {
 			_quiet = !(_relTown getVariable ["wfbe_active", false]);
+			private ["_relUnderAttack","_relEnemyDist"];
+			_relUnderAttack = false;
+			_relEnemyDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
+			if (!_quiet && {(_relTown getVariable ["sideID", -1]) == _sideID} && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _relTown) nearEntities [["Man","LandVehicle","Air"], _relEnemyDist])) > 0}) then {_relUnderAttack = true};
+			_quiet = !_relUnderAttack;
 			//--- punchy-AICOM RELIEF-TIMEOUT (Ray 2026-06-17): also release once the hold window
 			//--- has elapsed, so a diverted team returns to OFFENSE instead of idling on a town that
 			//--- is no longer actively contested. SetTeamMoveMode "towns" immediately re-tasks it
@@ -533,7 +538,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 			if (isNil "_relUntil") then {_relUntil = 0};
 			_relExpired = (_relUntil > 0) && {time > _relUntil};
 			_relLost = (_relTown getVariable "sideID") != _sideID;
-			if (_quiet || {_relLost} || _relExpired) then {
+			if (_quiet || {_relLost} || {_relExpired && {!_relUnderAttack}}) then {
 				//--- Town safe / lost / hold expired: release back to offense.
 				_team setVariable ["wfbe_aicom_relief", objNull];
 				_team setVariable ["wfbe_aicom_relief_until", 0];
@@ -558,6 +563,8 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 					};
 				};
 				[_team, "towns"] Call SetTeamMoveMode;
+			_team setVariable ["wfbe_aicom_foot_stage", false];
+			_team setVariable ["wfbe_aicom_foot_stage_pos", []];
 				_team setVariable ["wfbe_aicom_townorder", []];
 				//--- WAVE-1 A3 (c): an HC team reads ONLY wfbe_aicom_order, not wfbe_teammode, so flip its order
 				//--- back to a fresh "towns" seq here; AssignTowns then re-issues a real attack target next cycle.
@@ -708,6 +715,8 @@ _relieved = 0;
 							_wTeam setVariable ["wfbe_aicom_relief_until", 0];
 							_wTeam setVariable ["wfbe_aicom_strike", false];
 							[_wTeam, "towns"] Call SetTeamMoveMode;
+							_wTeam setVariable ["wfbe_aicom_foot_stage", false];
+							_wTeam setVariable ["wfbe_aicom_foot_stage_pos", []];
 							_wTeam setVariable ["wfbe_aicom_townorder", []];
 							_wTeam setVariable ["wfbe_aicom_wedge_bc", nil];
 							//--- cmdcon41-w2 (wedge-watchdog-resync-stuckstrikes): also clear the AssignTowns strike ladder.
@@ -923,6 +932,8 @@ if (_strikeOn) then {
 						_team = _x;
 						if (!isNull _team && {[_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool} && {({alive _x} count (units _team)) > 0}) then {
 							[_team, "move"] Call SetTeamMoveMode;
+							_team setVariable ["wfbe_aicom_foot_stage", false];
+							_team setVariable ["wfbe_aicom_foot_stage_pos", []];
 							[_team, getPos _enemyHQ] Call SetTeamMovePos;
 							if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 								_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "goto", getPos _enemyHQ], true];
@@ -1015,6 +1026,8 @@ if (_strikeOn) then {
 		private "_bestAlive"; _bestAlive = {alive _x} count (units _best);
 			_best setVariable ["wfbe_aicom_strike", true];
 		[_best, "move"] Call SetTeamMoveMode;
+		_best setVariable ["wfbe_aicom_foot_stage", false];
+		_best setVariable ["wfbe_aicom_foot_stage_pos", []];
 		//--- cmdcon41-w2 STAGING-MASS: while massing, point new strikers at the rally (_strikeDest = rally pos); once released it equals the enemy HQ.
 		[_best, _strikeDest] Call SetTeamMovePos;
 		if ([_best, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
@@ -1035,6 +1048,8 @@ if (_strikeOn) then {
 			if (!isNull _team && {[_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool}) then {
 				_team setVariable ["wfbe_aicom_strike", false];
 				[_team, "towns"] Call SetTeamMoveMode;
+			_team setVariable ["wfbe_aicom_foot_stage", false];
+			_team setVariable ["wfbe_aicom_foot_stage_pos", []];
 				_team setVariable ["wfbe_aicom_townorder", []];
 			};
 		} forEach _teams;

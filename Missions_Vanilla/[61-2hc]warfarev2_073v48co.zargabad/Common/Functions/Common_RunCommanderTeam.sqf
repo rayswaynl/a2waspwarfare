@@ -2443,7 +2443,7 @@ while {!WFBE_GameOver && _alive} do {
 							_holdUnderAttack = false;
 							_holdEnemyDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
 							if ((_townObj getVariable ["wfbe_active", false]) && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _townObj) nearEntities [["Man","LandVehicle","Air"], _holdEnemyDist])) > 0}) then {_holdUnderAttack = true};
-							if (_holdMode > 0 && {time > _holdUntil} && {_holdUnderAttack}) then {
+							if (_holdMode > 0 && {time > _holdUntil} && {((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) <= 0) || {_holdUnderAttack}}) then {
 								//--- Claim the hold: stamp the town's expiry, put THIS team on DEFEND at the
 								//--- town centre, flag which town it is holding, clear stale strike/relief, and
 								//--- do NOT null the goto (so AssignTowns' holder-skip keeps it here).
