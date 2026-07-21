@@ -898,8 +898,23 @@ if (_defCount < _defMax) then {
 if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable "WFBE_C_ARTILLERY") > 0}) then {
 	private "_artyMax"; _artyMax = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY_MAX", 2];
 	_artyBuilt = 0;
-	{ if (!isNull _x && {alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText}) then {_artyBuilt = _artyBuilt + 1} } forEach (_hqPos nearEntities [["Tank","Car","Wheeled_APC","Tracked_APC"], (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])]);
+	//--- fix/aicom-arty-cap (2026-07-21, owner-live report: OPFOR commander built roughly a dozen SPG pieces
+	//--- in one match). ROOT CAUSE: this cap-count was POSITION-SCOPED (nearEntities within
+	//--- WFBE_C_BASEGC_RANGE of the CURRENT _hqPos), but the side HQ is a MOBILE HQ that periodically
+	//--- relocates forward (AI_Commander_MHQReloc.sqf, default ON, triggers once the front outruns the HQ
+	//--- by WFBE_C_AICOM_MHQ_FRONT_DIST) while base-built guns stay exactly where ConstructDefense placed
+	//--- them. Every relocation re-centers the scan on the new HQ and orphans the earlier guns outside it,
+	//--- so the self-healing cap read a false low count and let the mission build _artyMax MORE - repeat
+	//--- relocations compound this well past the intended cap of 2. Fix: count LIVE commander-tagged
+	//--- pieces for this side GLOBALLY (same vehicles-snapshot idiom AI_Commander_Teams.sqf already uses
+	//--- for its own arty-alive cap, L43/570), never anchored to any HQ position, gated by the same
+	//--- IsMobileArtillery class test the mission already uses to define a self-propelled artillery hull
+	//--- (second guard against a stray/mistagged unit).
+	{ if (!isNull _x && {alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {[_x, _side] Call IsMobileArtillery}) then {_artyBuilt = _artyBuilt + 1} } forEach vehicles;
 	_logik setVariable ["wfbe_aicom_arty_built", _artyBuilt];
+	if (_artyBuilt >= _artyMax) then {
+		["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - at cap (%2/%3 live, side-wide).", _sideText, _artyBuilt, _artyMax]] Call WFBE_CO_FNC_AICOMLog;
+	};
 	if (_artyBuilt < _artyMax && {(_logik getVariable ["wfbe_aicom_defenses", 0]) >= _defMax}) then {
 		_have = false;
 		{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x}) exitWith {_have = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
