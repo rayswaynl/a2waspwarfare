@@ -115,7 +115,10 @@ while {!WFBE_GameOver} do {
 				_capObjects = [];
 				{
 					if (_x isKindOf "Man") then {
-						_capObjects = _capObjects + [_x];
+						//--- OWNER RULING (wreck filter, corpse follow-up): a dead Man does not vote either -
+						//--- matches this file's own alive-filtered idiom (CAPGATE _gateFootMen scan below,
+						//--- the B74.2 capture-credit loop on _objects further down).
+						if (alive _x) then {_capObjects = _capObjects + [_x]};
 					} else {
 						if (alive _x && {count crew _x > 0}) then {_capObjects = _capObjects + [_x]};
 					};
