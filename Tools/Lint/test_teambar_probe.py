@@ -3,8 +3,8 @@
 
 Round-2 review additions: buy-unit, generic group-transfer, JIP field, and heartbeat
 coverage; full-member capture (no 8-member truncation); skin-swap probe AFTER the final
-fallback join; server probe phase-stamped pre-client-rejoin; probe default 0 per repo
-feature-default policy.
+fallback join; server probe phase-stamped pre-client-rejoin; wave0721 arming ruling
+(2026-07-21) flipped the probe default 0->1.
 """
 
 from pathlib import Path
@@ -86,9 +86,13 @@ class TeambarProbeTests(unittest.TestCase):
         for token in ("getPlayerUID _leader", "leaderIsGrpLeader=", "rankId _leader", 'WFBE_C_TEAMBAR_PROBE", 0]'):
             self.assertIn(token, text)
 
-    def test_registration_and_default_off(self) -> None:
+    def test_registration_and_armed(self) -> None:
+        """wave0721 arming ruling (2026-07-21): WFBE_C_TEAMBAR_PROBE flipped 0->1. The getVariable
+        fallback default checked elsewhere in this file ('WFBE_C_TEAMBAR_PROBE", 0]') is the
+        2-arg getVariable's own defensive fallback, not the registered constant - unaffected by
+        the arming and unrelated to this test."""
         self.assertIn("Client_TeambarProbe.sqf", code("Client/Init/Init_Client.sqf"))
-        self.assertIn('if (isNil "WFBE_C_TEAMBAR_PROBE") then {WFBE_C_TEAMBAR_PROBE = 0}',
+        self.assertIn('if (isNil "WFBE_C_TEAMBAR_PROBE") then {WFBE_C_TEAMBAR_PROBE = 1}',
                       code("Common/Init/Init_CommonConstants.sqf"))
 
 
