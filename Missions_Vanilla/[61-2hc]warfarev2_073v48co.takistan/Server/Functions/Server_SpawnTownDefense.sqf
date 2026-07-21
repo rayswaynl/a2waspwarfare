@@ -44,5 +44,13 @@ if (_defense != "") then {
 	_entitie addEventHandler ['killed', Format ["[_this select 0, _this select 1, %1] Spawn WFBE_CO_FNC_OnUnitKilled;", _sideID]];
 	//--- Defender classification (public: the activation scan runs server-side).
 	_entitie setVariable ["WFBE_IsTownDefenderAI", true, true];
+	//--- OWNER RULING (statics lock): spawned unmanned - lock immediately so a player cannot
+	//--- mount/tow/steal the gun before the first "spawn" pass (Server_OperateTownDefensesUnits.sqf)
+	//--- arrives to assign an AI gunner. That pass briefly unlocks around moveInGunner and re-locks after.
+	_entitie lock true;
+	//--- OWNER RULING (statics lock): tag so BOTH salvage consumers (Client\FSM\updatesalvage.sqf
+	//--- truck auto-scavenge and Client\Module\Skill\Skill_Salvage.sqf manual engineer skill -
+	//--- both already read this exact variable) skip this static for cash even once destroyed.
+	_entitie setVariable ["keepAlive", true, true];
 	_defense_logic setVariable ["wfbe_defense", _entitie];
 };
