@@ -329,26 +329,15 @@ if (_sideJoined in [west, east]) then {
 	diag_log format ["[WFBE][B74.2.5 ROSTER-PUSH] pushed %1 player-team rows to joiner %2 (key %3, side %4)", count _rows, _name, _keyName, _sideJoined];
 };
 
-//--- JIP-replay hardening, Finding #5 (town/camp ownership replay): sideID is only broadcast at
-//--- capture-time (server_town.sqf/server_town_camp.sqf) and once at init-fill (Common/Init/Init_Town.sqf),
-//--- with no periodic re-broadcast, so a late joiner who missed those events rides Init_Markers.sqf's 60s
-//--- HANGGUARD down to a permanent gray/unknown marker until the next capture. Re-dirty every town + camp
-//--- sideID on this connect so the joiner's own Init_Markers.sqf pass (which runs after this handler
-//--- resolves) sees current ownership immediately, removing the 60s gray-marker window. Same-value re-set,
-//--- same nested-_x forEach idiom Init_Markers.sqf itself already uses for towns/camps; towns[] is the
-//--- same global array every realm builds locally from the shared mission content, always populated here
-//--- (this handler already waited on commonInitComplete && serverInitFull at the top of the file).
-{
-	if (!isNil {_x getVariable "sideID"}) then {
-		_x setVariable ["sideID", (_x getVariable "sideID"), true];
-	};
-	{
-		if (!isNil {_x getVariable "sideID"}) then {
-			_x setVariable ["sideID", (_x getVariable "sideID"), true];
-		};
-	} forEach (_x getVariable ["camps", []]);
-} forEach towns;
-diag_log format ["[WFBE][JIP-TOWNSNAP] re-broadcast town/camp sideID ownership (%1 towns) to joiner %2", count towns, _name];
+//--- Finding #5 (town/camp ownership replay) REVERTED (review-1253): a per-connect re-dirty of every
+//--- town+camp sideID was measured against the actual Chernarus town count - 46 towns + 81 camps = ~127
+//--- synchronous global setVariable-broadcasts on EVERY connect. At a round-start burst of 20-40 joins
+//--- this is a ~5000-broadcast storm exactly when the server is busiest, and even spawn+throttled
+//--- (127 x sleep 0.5 = ~63s) it is SLOWER than the 60s HANGGUARD fallback Init_Markers.sqf already has -
+//--- strictly worse than doing nothing. Deferred proper fix: a TARGETED, BATCHED town-ownership snapshot
+//--- sent only to the joining client (one publicVariableClient carrying [town,sideID] pairs + a small
+//--- client-side applier), not a broadcast to everyone. The existing 60s HANGGUARD covers this window
+//--- meanwhile.
 
 //--- We attempt to get the player informations in case that he joined before.
 _get = missionNamespace getVariable format["WFBE_JIP_USER%1",_uid];

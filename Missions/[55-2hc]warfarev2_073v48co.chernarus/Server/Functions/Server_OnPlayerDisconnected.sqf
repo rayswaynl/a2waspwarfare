@@ -188,6 +188,15 @@ if (vehicle _old_unit == _hq) then {_old_unit action ["EJECT", _hq]};
 //--- EXACT unit we are tearing down (_old_unit) - if a reconnect already landed and rebound it to a NEW
 //--- body, the stored reference no longer equals _old_unit and this leaves that newer binding untouched.
 //--- Pure addition; does not touch RequestJoin.sqf or the connect-side resolver.
+//--- REACH NOTE (review-1253): _old_unit is the CURRENT wfbe_teamleader, which is re-stamped on every
+//--- respawn (Server_HandleSpecial.sqf:12), but WFBE_JIP_BODY_<uid> is stamped ONLY once, at the initial
+//--- RequestJoin. So for any player who has respawned at least once (the normal case in a live match),
+//--- stored != _old_unit here and this clear is a no-op on their disconnect - not a regression (that
+//--- stale first-join body was already excluded by the connect resolver's alive-check), just a narrower
+//--- practical reach than the fix name implies: it only protects "disconnect while still on the
+//--- first-ever join body, before any respawn." Closing the general reconnect race for a
+//--- since-respawned player needs the generation/token variant, which requires stamping RequestJoin.sqf -
+//--- owner-locked, out of scope here.
 if ((missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull]) == _old_unit) then {
 	missionNamespace setVariable [Format ["WFBE_JIP_BODY_%1", _uid], nil];
 };
