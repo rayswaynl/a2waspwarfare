@@ -6,6 +6,7 @@ _setWFMenuState = {
 	_state = _this select 1;
 	ctrlEnable [_controlId, _state];
 	((findDisplay 11000) displayCtrl _controlId) ctrlSetFade (if (_state) then {0} else {0.55});
+	((findDisplay 11000) displayCtrl _controlId) ctrlCommit 0;
 };
 {[_x, false] call _setWFMenuState} forEach [11002, 11005, 11006, 11007, 11008];
 //--- GUER insurgents: commander/base/upgrade/economy/vote buttons are irrelevant (no HQ/commander/base). Grey them.
