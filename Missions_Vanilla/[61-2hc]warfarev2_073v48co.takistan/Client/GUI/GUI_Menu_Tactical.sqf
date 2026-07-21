@@ -601,7 +601,9 @@ while {alive player && dialog} do {
 					};
 					_ftConfirmMsg = _ftConfirmMsg + "<br/><t color='#ffe066'>Total (approx.): $" + str (_ftBaseFee + _ftVehFee) + "</t>"; //--- approx: only the per-km leg can still drift (current distance); the vehicle roster is captured into _ftQuoteVehList below and is exactly what the confirming click will bill.
 					//--- First click: hint shown, returns false, MenuAction stays 7 (not reset). Second click: returns true.
-					if (!(["wf_ft_confirm", _ftConfirmMsg] call WFBE_CL_FNC_ConfirmAction)) exitWith {
+					//--- Same static-key defect: clicking destination A then destination B within the 6s window travelled to
+					//--- B on A's confirm state. Scope the key to the destination object (GUI_Menu_Economy.sqf wf_sell_%1 idiom).
+					if (!([Format ["wf_ft_confirm_%1", _destination], _ftConfirmMsg] call WFBE_CL_FNC_ConfirmAction)) exitWith {
 						//--- fable/fasttravel-campflag round2: click-1 and click-2 are genuinely separate script
 						//--- re-entries (mouseButtonUp-gated) up to ~6s apart - persist exactly the snapshot just
 						//--- shown in _ftConfirmMsg so the confirming click can never bill a different (rescanned)
@@ -791,9 +793,31 @@ while {alive player && dialog} do {
 				};
 			};
 		};
+		//--- CONFIRM-KEY SCOPING (charge-what-you-quoted): the two-click confirm keys for the map-click strike
+		//--- orders below were STATIC per order type, so clicking target A (arming the confirm) then target B
+		//--- within the 6s window fired at B while carrying A's confirm state - no fresh confirm was ever shown
+		//--- for B. Scope the key to the aim point instead. The pending aim point is snapped back in when the
+		//--- confirming click lands within 150m of it, so a normal two-click on the same target still confirms
+		//--- (no grid-boundary re-arm), while a genuinely different target yields a different key and re-arms.
+		//--- A2-OA-1.64 safe: no distance on 2D arrays (PosScreenToWorld returns [x,y]) - squared delta instead.
+		private ["_mapAimKey"];
+		_mapAimKey = {
+			private ["_aim","_base","_dx","_dy","_pend","_pendKey"];
+			_base = _this select 0;
+			_aim = _this select 1;
+			_pendKey = Format ["wfbe_confirm_aim_%1", _base];
+			_pend = uiNamespace getVariable [_pendKey, []];
+			if (typeName _pend == "ARRAY" && {count _pend > 1}) then {
+				_dx = (_aim select 0) - (_pend select 0);
+				_dy = (_aim select 1) - (_pend select 1);
+				if (((_dx * _dx) + (_dy * _dy)) < 22500) then {_aim = _pend};
+			};
+			uiNamespace setVariable [_pendKey, _aim];
+			Format ["%1_%2_%3", _base, round (_aim select 0), round (_aim select 1)]
+		};
 		//--- ICBM Strike.
 		if (MenuAction == 8) then {
-			if (!(["wf_icbm", Format ["<t color='#ff5a5a' size='1.1'>Confirm ICBM strike?</t><br/>Cost $%1. Click the target on the map again to confirm.", _currentFee]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			if (!([["wf_icbm", _map PosScreenToWorld[mouseX,mouseY]] call _mapAimKey, Format ["<t color='#ff5a5a' size='1.1'>Confirm ICBM strike?</t><br/>Cost $%1. Click the target on the map again to confirm.", _currentFee]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
 			_forceReload = true;
 			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 			[17022] Call SetControlFadeAnimStop;
@@ -884,7 +908,7 @@ while {alive player && dialog} do {
 		//--- EXACT existing ScudStrike payload the deck addAction + old button used; server Support_ScudStrike re-validates carrier
 		//--- ownership + per-carrier cooldown + funds + charges (NO client deduction). Two-click map confirm.
 		if (MenuAction == 80) then {
-			if (!(["wf_scud_carrier", Format ["<t color='#ff5a5a' size='1.1'>Confirm SCUD strike?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_SCUD_COST", 25000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			if (!([["wf_scud_carrier", _map PosScreenToWorld[mouseX,mouseY]] call _mapAimKey, Format ["<t color='#ff5a5a' size='1.1'>Confirm SCUD strike?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_SCUD_COST", 25000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
 			_forceReload = true;
 			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 			[17022] Call SetControlFadeAnimStop;
@@ -896,7 +920,7 @@ while {alive player && dialog} do {
 		//--- cmdcon41-w3i (Ray 2026-07-02) TEL SATURATION fire. Two-click map confirm (ICBM idiom); NO client fund deduction
 		//--- (server WFBE_SE_FNC_IcbmTelFire re-validates TEL-alive + SCUD level >= 1 + shared cooldown + range + funds + charges).
 		if (MenuAction == 81) then {
-			if (!(["wf_tel_tel_sat", Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL saturation?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_SAT_COST", 12000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			if (!([["wf_tel_tel_sat", _map PosScreenToWorld[mouseX,mouseY]] call _mapAimKey, Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL saturation?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_SAT_COST", 12000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
 			_forceReload = true;
 			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 			[17022] Call SetControlFadeAnimStop;
@@ -908,7 +932,7 @@ while {alive player && dialog} do {
 		//--- cmdcon41-w3i (Ray 2026-07-02) TEL RECON fire. Two-click map confirm (ICBM idiom); NO client fund deduction
 		//--- (server WFBE_SE_FNC_IcbmTelFire re-validates TEL-alive + SCUD level >= 1 + shared cooldown + range + funds + charges).
 		if (MenuAction == 82) then {
-			if (!(["wf_tel_tel_recon", Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL recon flash?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_RECON_COST", 10000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			if (!([["wf_tel_tel_recon", _map PosScreenToWorld[mouseX,mouseY]] call _mapAimKey, Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL recon flash?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_RECON_COST", 10000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
 			_forceReload = true;
 			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 			[17022] Call SetControlFadeAnimStop;
