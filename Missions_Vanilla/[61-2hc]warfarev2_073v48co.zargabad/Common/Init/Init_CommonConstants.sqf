@@ -1863,6 +1863,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW") then {WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW = 60}; //--- Seconds where a damaged vehicle can still award its last valid hitter.
 	if (isNil "WFBE_C_UNITS_CLEAN_TIMEOUT") then {WFBE_C_UNITS_CLEAN_TIMEOUT = 60}; //--- Lifespan of a dead body.
 	if (isNil "WFBE_C_ARTY_WRECK_REAP_DELAY") then {WFBE_C_ARTY_WRECK_REAP_DELAY = 300}; //--- fix/aicom-arty-lifecycle (2026-07-21, codex round-4: FLOOR not the delay itself - a fixed delay alone would race a lobby-raised WFBE_C_UNITS_CLEAN_TIMEOUT): server_groupsGC.sqf's dedicated dead-commander-artillery reaper computes its actual age-gate as (WFBE_C_UNITS_CLEAN_TIMEOUT + 180) max WFBE_C_ARTY_WRECK_REAP_DELAY, so this constant only matters (as a minimum) when CLEAN_TIMEOUT is configured very low; at the 120s lobby default the +180 term already dominates.
+	if (isNil "WFBE_C_HELI_WRECK_REAP_DELAY") then {WFBE_C_HELI_WRECK_REAP_DELAY = 300}; //--- fix/heli-husk-reaper: same FLOOR-not-delay contract as WFBE_C_ARTY_WRECK_REAP_DELAY above, for server_groupsGC.sqf's dead-commander-attack-heli reaper: actual age-gate is (WFBE_C_UNITS_CLEAN_TIMEOUT + 180) max WFBE_C_HELI_WRECK_REAP_DELAY.
 	if (isNil "WFBE_C_UNITS_EMPTY_TIMEOUT") then {WFBE_C_UNITS_EMPTY_TIMEOUT = 1800}; //--- Lifespan of an empty vehicle (30 minutes).
 		WFBE_C_UNITS_BODIES_TIMEOUT = 60;
 	//--- qol-polish-pack tunables --------------------------------------------------------------------------------
