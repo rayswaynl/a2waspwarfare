@@ -298,8 +298,13 @@ waitUntil {commonInitComplete};
 if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 [] spawn {
 	disableSerialization; //--- cmdcon42 (Ray 2026-07-02): this scheduled loop holds display/control handles (_disp, _ctrl) across waitUntil/sleep suspensions. Without disableSerialization the scheduler tries to serialise _disp when the script suspends and throws "variable '_disp' does not support serialization" the moment the TAGS button (MenuAction 25) enables the overlay. Must live in THIS script body (same scope as the display var), not a parent.
-	private ["_max","_disp","_shown","_pp","_scr","_ctrl","_d","_sz"];
+	private ["_max","_disp","_shown","_shownPlayers","_shownAI","_shownVehicles","_shownTallies","_pp","_scr","_ctrl","_d","_sz","_nextCandidateScan","_playerCandidates","_aiCandidates","_vehicleCandidates","_tagStatCycles"];
 	_max = 18;
+	_nextCandidateScan = time;
+	_playerCandidates = [];
+	_aiCandidates = [];
+	_vehicleCandidates = [];
+	_tagStatCycles = 0;
 	while {!WFBE_gameover} do {
 		waitUntil {WFBE_NameTagsEnabled || WFBE_gameover};
 		if (WFBE_gameover) exitWith {};
@@ -308,6 +313,17 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 		_disp = uiNamespace getVariable ["wfbe_nametag_display", displayNull];
 		while {WFBE_NameTagsEnabled && {!WFBE_gameover} && {!isNull _disp}} do {
 			_shown = 0;
+			_shownPlayers = 0;
+			_shownAI = 0;
+			_shownVehicles = 0;
+			_shownTallies = 0;
+			// Candidate discovery is intentionally 2Hz; cached candidates still project at 10Hz below.
+			if (time >= _nextCandidateScan) then {
+				_playerCandidates = player nearEntities [["Man"], 120];
+				_aiCandidates = player nearEntities [["Man"], 150];
+				_vehicleCandidates = player nearEntities [["LandVehicle","Air","Ship"], 200];
+				_nextCandidateScan = time + 0.5;
+			};
 			{
 				if (_shown < _max && {isPlayer _x} && {_x != player} && {alive _x} && {side _x == side player}) then {
 					_pp = visiblePosition _x; //--- cmdcon30: getPosVisual is Arma-3-only (undefined in A2-OA 1.64); visiblePosition is the A2 equivalent.
@@ -321,9 +337,10 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 						_ctrl ctrlCommit 0;
 						_ctrl ctrlShow true;
 						_shown = _shown + 1;
+						_shownPlayers = _shownPlayers + 1;
 					};
 				};
-			} forEach (player nearEntities [["Man"], 120]);
+			} forEach _playerCandidates;
 			//--- WFBE_C_TAGS_AI: friendly AI infantry tags (same-side, within 150m, #b0ffb0 green).
 			//--- fable/tags-settings-integration: ANDed with the per-player Show-AI-Tags opt-out (Settings dialog, WFBE_MenuAction 12).
 			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0 && {missionNamespace getVariable ["WFBE_CL_ShowAITags", true]}) then {
@@ -342,9 +359,10 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 							_ctrl ctrlCommit 0;
 							_ctrl ctrlShow true;
 							_shown = _shown + 1;
+							_shownAI = _shownAI + 1;
 						};
 					};
-				} forEach (player nearEntities [["Man"], 150]);
+				} forEach _aiCandidates;
 			};
 			//--- WFBE_C_TAGS_AI: friendly AI vehicle tags (same-side, pure-AI crew, within 200m, #ffffa0 yellow). Height 3.0m separates from kill-tally tags at 2.6m.
 			//--- fable/tags-settings-integration: ANDed with the per-player Show-AI-Tags opt-out (Settings dialog, WFBE_MenuAction 12).
@@ -366,9 +384,10 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 							_ctrl ctrlCommit 0;
 							_ctrl ctrlShow true;
 							_shown = _shown + 1;
+							_shownVehicles = _shownVehicles + 1;
 						};
 					};
-				} forEach (player nearEntities [["LandVehicle","Air","Ship"], 200]);
+				} forEach _vehicleCandidates;
 			};
 			//--- cmdcon44m (Ray pick C 2026-07-04): vehicle kill tallies ride the same TAGS toggle and the same
 			//--- control pool - no lightpoint, no extra rsc. Friendly-crewed or EMPTY hulls within 200m that have
@@ -391,10 +410,16 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 						_ctrl ctrlCommit 0;
 						_ctrl ctrlShow true;
 						_shown = _shown + 1;
+						_shownTallies = _shownTallies + 1;
 					};
 				};
-			} forEach (player nearEntities [['LandVehicle','Air','Ship'], 200]);
+			} forEach _vehicleCandidates;
 			for "_i" from _shown to (_max - 1) do {(_disp displayCtrl (62000 + _i)) ctrlShow false};
+			_tagStatCycles = _tagStatCycles + 1;
+			if (_tagStatCycles >= 10) then {
+				diag_log Format ["TAGSTAT|v1|candPlayers=%1|candAI=%2|candVehicles=%3|shownPlayers=%4|shownAI=%5|shownVehicles=%6|shownTallies=%7|shownTotal=%8|pool=%9", count _playerCandidates, count _aiCandidates, count _vehicleCandidates, _shownPlayers, _shownAI, _shownVehicles, _shownTallies, _shown, _max];
+				_tagStatCycles = 0;
+			};
 			sleep 0.1;
 		};
 		12461 cutText ["","PLAIN",0];
