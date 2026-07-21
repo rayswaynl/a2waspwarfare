@@ -78,6 +78,17 @@ switch (_request) do {
 		_wreck = _args select 0;
 		if (!isNull _wreck && {local _wreck} && {!alive _wreck} && {(_wreck getVariable ["WFBE_CommanderArtillery", false])}) then {deleteVehicle _wreck};
 	};
+	//--- Owner-side half of the Common_TrashObject.sqf locality gate. Self-gated on the same flag as the
+	//--- sender, on the object being LOCAL here, on it being DEAD, and on the public reap stamp the server
+	//--- set before dispatching - so this channel can never delete a live object or anything TrashObject
+	//--- would not have deleted itself. Fails closed: no flag / no stamp / not local / alive -> no-op.
+	case "cleanup-trash-object": {
+		Private ["_trashObj"];
+		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
+		if (count _args < 1) exitWith {};
+		_trashObj = _args select 0;
+		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])}) then {deleteVehicle _trashObj};
+	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};
