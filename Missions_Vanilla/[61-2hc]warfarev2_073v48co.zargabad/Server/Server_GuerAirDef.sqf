@@ -273,7 +273,7 @@ while {!WFBE_GameOver} do {
 		private ["_pg"];
 		_pg = _x;
 		if (!isNull _pg && {!(_pg in _keptGroups)}) then {
-			{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _pg);
+			{if (!(isPlayer _x)) then {["guerairdef-L254", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _pg);
 			deleteGroup _pg;
 		};
 	} forEach _prunedGroups;
@@ -321,7 +321,7 @@ while {!WFBE_GameOver} do {
 
 		if (_dDrop) then {
 			//--- Player-safe teardown: only delete non-player bodies; then drop the group.
-			if (!isNull _dGrp) then { {if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _dGrp); deleteGroup _dGrp; };
+			if (!isNull _dGrp) then { {if (!(isPlayer _x)) then {["guerairdef-L302", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _dGrp); deleteGroup _dGrp; };
 			diag_log format ["GUERAIRDEF|DROPDESPAWN|town=%1|reason=%2|dropsAlive=%3", (if (isNull _dTown) then {"?"} else {_dTown getVariable ["name","?"]}), _dReason, (count _keptDrops)];
 		} else {
 			_keptDrops = _keptDrops + [[_dTown, _dGrp, _dSpawn, _dLastEnemy]];
@@ -353,7 +353,7 @@ while {!WFBE_GameOver} do {
 			};
 			if (_qrfDrop) then {
 				if (!isNull _qrfGrp) then {
-					{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _qrfGrp);
+					{if (!(isPlayer _x)) then {["guerairdef-qrf-cleanup", _x, Format ["town=%1", (if (isNull _qrfTown) then {"?"} else {_qrfTown getVariable ["name","?"]})]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _qrfGrp);
 					if (({isPlayer _x} count (units _qrfGrp)) == 0) then {deleteGroup _qrfGrp};
 				};
 				diag_log format ["GUERAIRDEF|GROUNDDESPAWN|town=%1|reason=%2|alive=%3", (if (isNull _qrfTown) then {"?"} else {_qrfTown getVariable ["name","?"]}), _qrfReason, count _keptGroundQrfs];
@@ -407,7 +407,7 @@ while {!WFBE_GameOver} do {
 									_diag = format ["GUERAIRDEF|GROUNDQRF|town=%1|units=%2|alive=%3", _town getVariable ["name","?"], _qrfBuilt, count _groundQrfs];
 									diag_log _diag;
 								} else {
-									{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _qrfGroup);
+									{if (!(isPlayer _x)) then {["guerairdef-qrf-buildfail", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _qrfGroup);
 									deleteGroup _qrfGroup;
 								};
 							};
@@ -657,7 +657,7 @@ while {!WFBE_GameOver} do {
 									} else {
 										//--- No pilot for the extra: tear down the empty hull so nothing leaks (freshly
 										//--- created, no player possible). Group is shared/leader-owned — do NOT delete it.
-										if (!isNull _eVeh2 && {({isPlayer _x} count (crew _eVeh2)) == 0}) then {deleteVehicle _eVeh2};
+										if (!isNull _eVeh2 && {({isPlayer _x} count (crew _eVeh2)) == 0}) then {["guerairdef-L521", _eVeh2, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh2};
 									};
 								};
 								_swarmI = _swarmI + 1;
@@ -757,7 +757,7 @@ while {!WFBE_GameOver} do {
 									{
 										_cu = _x select 0; _cc = _x select 1;
 										if (!isNull _cu && {alive _cu} && {!isNull _cc}) then { _cu action ["getOut", _cc]; };
-										if (!isNull _cc) then { deleteVehicle _cc; };
+										if (!isNull _cc) then { ["guerairdef-L621", _cc, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _cc; };
 									} forEach _chutes;
 
 									//--- Order the landed squad to hold/defend the town: patrol first (it re-sets AWARE/YELLOW),
@@ -784,13 +784,13 @@ while {!WFBE_GameOver} do {
 						//--- No pilot: tear down the empty hull + group so nothing leaks.
 						//--- B66: player-safe teardown (hull is freshly created with no moveIn yet,
 						//--- but guard anyway to never delete a player that somehow boarded).
-						if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then {deleteVehicle _veh};
+						if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then {["guerairdef-L647", _veh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _veh};
 						if (!isNull _grp) then {deleteGroup _grp};
 						diag_log format ["GUERAIRDEF|SPAWNFAIL|town=%1|class=%2|reason=no_pilot", (_town getVariable ["name","?"]), _class];
 					};
 				} else {
 					//--- B66: player-safe teardown (freshly created empty hull).
-					if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then {deleteVehicle _veh};
+					if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then {["guerairdef-L653", _veh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _veh};
 					diag_log format ["GUERAIRDEF|SPAWNFAIL|town=%1|class=%2|reason=no_group", (_town getVariable ["name","?"]), _class];
 				};
 			} else {

@@ -112,14 +112,14 @@ while {!WFBE_GameOver} do {
 
         if (_drop) then {
             //--- Player-safe teardown (GUER is playable): never delete a player-occupied hull.
-            if (!isNull _eCrew && {alive _eCrew} && {!(isPlayer _eCrew)}) then { deleteVehicle _eCrew; };
+            if (!isNull _eCrew && {alive _eCrew} && {!(isPlayer _eCrew)}) then { ["garrison-L109", _eCrew, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eCrew; };
             if (!isNull _eGrp) then {
-                { if (!(isPlayer _x)) then { deleteVehicle _x; }; } forEach (units _eGrp);
+                { if (!(isPlayer _x)) then { ["garrison-L111", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; }; } forEach (units _eGrp);
                 deleteGroup _eGrp;
             };
-            if (!isNull _eLight && {alive _eLight}) then { deleteVehicle _eLight; };
+            if (!isNull _eLight && {alive _eLight}) then { ["garrison-L114", _eLight, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eLight; };
             if (!isNull _eGun && {alive _eGun} && {({isPlayer _x} count (crew _eGun)) == 0}) then {
-                deleteVehicle _eGun;
+                ["garrison-egun-hull", _eGun, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eGun;
             };
             diag_log format ["GARNDRESS|REMOVE|town=%1|reason=%2|remaining=%3",
                 (if (isNull _eTown) then {"?"} else {_eTown getVariable ["name","?"]}),
@@ -218,13 +218,13 @@ while {!WFBE_GameOver} do {
                             };
                         } else {
                             //--- Crew failed: clean gun + group.
-                            if (!isNull _gun && {({isPlayer _x} count (crew _gun)) == 0}) then { deleteVehicle _gun; };
+                            if (!isNull _gun && {({isPlayer _x} count (crew _gun)) == 0}) then { ["garrison-L209", _gun, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gun; };
                             deleteGroup _grp;
                             diag_log format ["GARNDRESS|FAIL|town=%1|reason=crew_null", (_town getVariable ["name","?"])];
                         };
                     } else {
                         //--- Group failed: clean gun.
-                        if (!isNull _gun && {({isPlayer _x} count (crew _gun)) == 0}) then { deleteVehicle _gun; };
+                        if (!isNull _gun && {({isPlayer _x} count (crew _gun)) == 0}) then { ["garrison-L215", _gun, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gun; };
                         diag_log format ["GARNDRESS|FAIL|town=%1|reason=group_null", (_town getVariable ["name","?"])];
                     };
                 };

@@ -142,15 +142,15 @@ while {!WFBE_GameOver} do {
 								if (!local _gdirVehRecoveryHull || {({isPlayer _x} count (crew _gdirVehRecoveryHull)) > 0}) then {
 									_gdirVehRecoveryCanRetry = false;
 								} else {
-									{if (!isPlayer _x && {local _x}) then {deleteVehicle _x}} forEach (crew _gdirVehRecoveryHull);
-									deleteVehicle _gdirVehRecoveryHull;
+									{if (!isPlayer _x && {local _x}) then {["gdir-recover-crew", _x, Format ["town=%1", _gdirVehRecoveryTown getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (crew _gdirVehRecoveryHull);
+									["gdir-recover-hull", _gdirVehRecoveryHull, Format ["town=%1", _gdirVehRecoveryTown getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gdirVehRecoveryHull;
 								};
 							};
 							if (!isNull _gdirVehRecoveryTeam && {_gdirVehRecoveryTeamOrderId == _gdirVehRecoveryOrderId}) then {
 								if (({isPlayer _x} count (units _gdirVehRecoveryTeam)) > 0) then {
 									_gdirVehRecoveryCanRetry = false;
 								} else {
-									{if (local _x) then {deleteVehicle _x}} forEach (units _gdirVehRecoveryTeam);
+									{if (local _x) then {["gdir-recover-team", _x, Format ["town=%1", _gdirVehRecoveryTown getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _gdirVehRecoveryTeam);
 									if ((count (units _gdirVehRecoveryTeam)) == 0) then {deleteGroup _gdirVehRecoveryTeam} else {_gdirVehRecoveryCanRetry = false};
 								};
 							};
@@ -740,7 +740,7 @@ while {!WFBE_GameOver} do {
 								//--- B67 [wiki-wins]: never delete a player unit. The old loop deleted
 								//--- every server-local unit; a player whose unit is server-local (e.g. a
 								//--- JIP/HC-handoff edge) would be wiped on despawn. Guard with !isPlayer.
-								{if (local _x && !(isPlayer _x)) then {deleteVehicle _x}} forEach units _x;
+								{if (local _x && !(isPlayer _x)) then {["town-sweep-unit", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach units _x;
 								if (({!(local _x)} count units _x) == 0) then {deleteGroup _x};
 							};
 						};
@@ -773,7 +773,7 @@ while {!WFBE_GameOver} do {
 							//--- B67 [wiki-wins]: the old check tested only the group leader; a player
 							//--- riding as a non-leader passenger/gunner would have their vehicle deleted
 							//--- out from under them. Scan the whole crew: delete only if zero players aboard.
-							if (({isPlayer _x} count crew _x) == 0) then {deleteVehicle _x};
+							if (({isPlayer _x} count crew _x) == 0) then {["town-sweep-hull", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x};
 						};
 					} forEach (_town getVariable 'wfbe_active_vehicles');
 
