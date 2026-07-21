@@ -676,7 +676,17 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			_richThreshold = (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_FUNDS_PER_EXTRA_TEAM", 15000]) * 2;
 			_funds = (_side) Call GetAICommanderFunds;
 			_fundsRich = _funds > _richThreshold;
-			_dynTarget = _logik getVariable ["wfbe_aicom_dyntarget", missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TEAMS_TARGET", 4]];
+			//--- fable/aicom-dyntarget-unconditional-publish (Grok #1 root-cause, adversarial-review requested):
+			//--- AI_Commander_Teams.sqf now publishes wfbe_aicom_dyntarget UNCONDITIONALLY every founding pass
+			//--- (WFBE_C_AI_COMMANDER_TEAMS_INTERVAL, default 90s), so this getVariable-with-default only ever
+			//--- applies during the brief BOOT WINDOW before the first founding pass has run. The old fallback
+			//--- (WFBE_C_AI_COMMANDER_TEAMS_TARGET, live-configured to 2 - a stale B36 rollback constant) made
+			//--- _richFlag/REQDRAW below arm the instant _fTeams reached 2, far below the real 3-9 PC-curve
+			//--- target - see B752's comment below for the ~125x/round symptom this caused. Fall back to the
+			//--- team hard cap instead (the same constant/default AI_Commander_Teams.sqf uses as its own
+			//--- ceiling) so the transient boot-window value errs conservative (never-prematurely-rich) rather
+			//--- than permissive, until the real published value lands within one interval.
+			_dynTarget = _logik getVariable ["wfbe_aicom_dyntarget", missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 10]];
 			_fTeams = 0;
 			{
 				if (!isNull _x) then {
@@ -694,6 +704,16 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					//--- the commander hoards, this re-armed ~125x/round = 54% of foundings = the variety-killer (it spammed the
 					//--- single highest-tier template). Only RE-ARM past a COOLDOWN so the premium is rare again (~10-15%); the
 					//--- b750 effectiveness draw supplies the variety on every other founding.
+					//--- fable/aicom-dyntarget-unconditional-publish (2026-07-21): traced the ~125x/round symptom above to
+					//--- _dynTarget (feeding _richFlag) being permanently stuck at the stale fallback
+					//--- WFBE_C_AI_COMMANDER_TEAMS_TARGET=2 - wfbe_aicom_dyntarget was never published live, so _richFlag
+					//--- flipped true the instant _fTeams reached just 2, far below the real 3-9 PC-curve target, and the
+					//--- rich-transition itself fired constantly. Root-caused via AI_Commander_Teams.sqf's now-unconditional
+					//--- dyntarget publish + this file's _dynTarget fallback (now WFBE_C_AICOM_TEAMS_HARD_CAP, see above).
+					//--- This COOLDOWN is an ORTHOGONAL, independent pacing decision (how often the premium may re-stack
+					//--- even when correctly rich) and is KEPT UNCHANGED - it does not double-correct against the root
+					//--- fix: the root fix makes the rich-transition itself fire at the correct, much rarer cadence, and
+					//--- this cooldown still provides a sane minimum spacing floor under normal team-loss/refound churn.
 					if (time - (_logik getVariable ["wfbe_aicom_veteran_t0", -1e10]) > (missionNamespace getVariable ["WFBE_C_AICOM_VETERAN_COOLDOWN", 900])) then {
 						_logik setVariable ["wfbe_aicom_veteran_next", true];
 						_logik setVariable ["wfbe_aicom_veteran_t0", time];

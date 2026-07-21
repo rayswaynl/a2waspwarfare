@@ -106,11 +106,16 @@ _cands = [];
 
 //--- BOUNDED per-town nearEntities scan (not a global player scan) for enemy-side players; the candidate with
 //--- the most in-range enemy players becomes this tick's sense target.
+//--- fable/aicom-airresp-mounted-sense: ["Man"]-only nearEntities was blind to a mounted enemy (a player
+//--- riding in a LandVehicle/Air hull is never itself a "Man" entity). Widen the type list to match the
+//--- sibling detectors in this codebase (AI_Commander_Strategy.sqf/AssignTowns/Paratroops all scan
+//--- ["Man","LandVehicle","Air"]); unlike those siblings (which just check side _x), AIRRESP specifically
+//--- needs a PLAYER present, so a vehicle only counts if a live enemy player is in its crew.
 _bestTown = objNull; _bestCount = 0;
 {
 	_x2 = _x;
 	_lanePos = getPos _x2;
-	_nearCount = {isPlayer _x && {alive _x} && {(side _x) == _enemySide}} count (_lanePos nearEntities [["Man"], _senseRadius]);
+	_nearCount = {if (_x isKindOf "Man") then {isPlayer _x && {alive _x} && {(side _x) == _enemySide}} else {({isPlayer _x && {alive _x} && {(side _x) == _enemySide}} count (crew _x)) > 0}} count (_lanePos nearEntities [["Man","LandVehicle","Air"], _senseRadius]);
 	if (_nearCount > _bestCount) then {_bestCount = _nearCount; _bestTown = _x2};
 } forEach _cands;
 _inRange = _bestCount > 0;
