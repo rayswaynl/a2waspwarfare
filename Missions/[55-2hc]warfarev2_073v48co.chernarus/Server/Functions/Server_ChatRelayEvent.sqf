@@ -9,7 +9,7 @@
 private ["_channel","_player","_text","_sanitize","_safeChannel","_safePlayer","_safeText","_window","_lastWindow","_emitted","_dropped"];
 
 if (!isServer) exitWith {};
-if ((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) <= 0) exitWith {};
+if (!((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0)) exitWith {};
 if ((typeName _this) != "ARRAY") exitWith {};
 if ((count _this) < 3) exitWith {};
 

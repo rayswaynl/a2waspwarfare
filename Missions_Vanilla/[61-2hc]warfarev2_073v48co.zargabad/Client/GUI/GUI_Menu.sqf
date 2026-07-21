@@ -68,7 +68,7 @@ while {alive player && dialog} do {
 			{[_x, false] call _setWFMenuState} forEach [11004,11005]; //--- GUER: hold commander/base/vote disabled; 11008=Towns re-enabled pre-loop
 			if ((missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) <= 0) then {[11006, false] call _setWFMenuState}; //--- fable/drones-menu: keep Drones button live when flag on
 				[11007, true] call _setWFMenuState; //--- B75 (guer-tech): the Upgrade Center is a READ-ONLY kill-tech progression viewer for GUER (GUI_UpgradeMenu.sqf resistance branch).
-				if (((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) > time) then { {[_x, false] call _setWFMenuState} forEach [11001,11002,11008] }; //--- fable/guer-lockout: buy/gear/Town Actions held until activation
+				if ((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) > 0 && {((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) > time}) then { {[_x, false] call _setWFMenuState} forEach [11001,11002,11008] }; //--- fable/guer-lockout: buy/gear/Town Actions held until activation
 		} else {
 	_enable = false; //added-MrNiceGuy
 	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_enable = true}};

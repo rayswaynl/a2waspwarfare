@@ -23,7 +23,7 @@ _townMarker setMarkerColorLocal _color;
 
 //--- Make sure that the client is concerned by the capture either by capturing or having a town captured.
 //--- Optional title/chat broadcast is separate from the always-correct marker update.
-if (!(WFBE_Client_SideID in [_town_side_value,_town_side_value_new,WFBE_C_GUER_ID]) && {(missionNamespace getVariable ["WFBE_C_TOWN_FLIP_BROADCAST", 0]) <= 0}) exitWith {};
+if (!(WFBE_Client_SideID in [_town_side_value,_town_side_value_new,WFBE_C_GUER_ID]) && {!((missionNamespace getVariable ["WFBE_C_TOWN_FLIP_BROADCAST", 0]) > 0)}) exitWith {};
 
 //--- Display a title message.
 _side_label = switch (_side_captured) do {case west: {localize "STR_WF_PARAMETER_Side_West"}; case east: {localize "STR_WF_PARAMETER_Side_East"}; case resistance: {localize "STR_WF_Side_Resistance"};	default {"Civilian"}};
