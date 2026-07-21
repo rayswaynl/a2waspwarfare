@@ -26,7 +26,7 @@
 
 	_this = [target(player), caller(player), actionId, args] - target == caller, this is a Man-body action.
 */
-Private ["_cooldown","_last","_player","_range","_remain"];
+Private ["_cooldown","_last","_player","_range","_remain","_token"];
 _player = _this select 1;
 
 if (isNull _player || {!alive _player}) exitWith {};
@@ -48,6 +48,8 @@ if (_player getVariable ["wfbe_helibomb_designating", false]) exitWith {
 	titleText ["Designating drop point - click the map for impact.", "PLAIN"];
 };
 _player setVariable ["wfbe_helibomb_designating", true];
+_token = diag_tickTime;
+_player setVariable ["wfbe_helibomb_design_token", _token];
 
 //--- Stash the caller + range for the onMapSingleClick string to read (it runs in a different scope).
 WFBE_HeliBombDesignator = _player;
@@ -55,6 +57,26 @@ WFBE_HeliBombDesignRange = _range;
 
 titleText ["Click the map to mark the barrel bomb drop point.", "PLAIN"];
 openMap true;
+
+//--- fable/guer-client-startup-mapcancel: ESC / map-close cancel watcher. Without this, closing the
+//--- map (ESC, or any other UI path) before a completed click left "wfbe_helibomb_designating" latched
+//--- forever (the action was bricked until respawn - the :47 re-select guard above always exitWith) AND
+//--- left the armed onMapSingleClick string live, so the player's next unrelated map click silently
+//--- fired a paid barrel bomb strike. "_token" pins this watcher to THIS designation instance so a
+//--- later, unrelated designation cannot be clobbered by a stale watcher waking up late.
+[_player, _token] spawn {
+	private ["_p","_myToken"];
+	_p = _this select 0;
+	_myToken = _this select 1;
+	waitUntil {!visibleMap || {isNull _p} || {!(_p getVariable ["wfbe_helibomb_designating", false])}};
+	if ((_p getVariable ["wfbe_helibomb_designating", false]) && {(_p getVariable ["wfbe_helibomb_design_token", -1]) == _myToken}) then {
+		//--- Map closed without a completed/rejected click while THIS designation was still pending: treat
+		//--- as a cancel - clear the latch and restore the default team-order map-click handler (same
+		//--- install as Init_Client.sqf's onMapSingleClick) instead of leaving it armed or blank.
+		_p setVariable ["wfbe_helibomb_designating", false];
+		onMapSingleClick {[_pos, _shift, _alt, _units] call WFBE_CL_FNC_HandleMapSingleClick};
+	};
+};
 
 //--- One-shot map designation. The onMapSingleClick code is a STRING (compiled by the engine); inside it
 //--- the clicked world position is `_this select 1`. We validate range against the stashed caller; a
@@ -70,7 +92,7 @@ onMapSingleClick "
 	_p = WFBE_HeliBombDesignator;
 	_rng = WFBE_HeliBombDesignRange;
 	if (isNull _p || {!alive _p}) exitWith {
-		onMapSingleClick '';
+		onMapSingleClick {[_pos, _shift, _alt, _units] call WFBE_CL_FNC_HandleMapSingleClick};
 		openMap false;
 		_p setVariable ['wfbe_helibomb_designating', false];
 	};
@@ -78,7 +100,7 @@ onMapSingleClick "
 	if (_d > _rng) exitWith {
 		titleText [format ['Out of range (%1m of %2m). Click closer.', round _d, round _rng], 'PLAIN'];
 	};
-	onMapSingleClick '';
+	onMapSingleClick {[_pos, _shift, _alt, _units] call WFBE_CL_FNC_HandleMapSingleClick};
 	openMap false;
 	_p setVariable ['wfbe_helibomb_designating', false];
 	_cool = missionNamespace getVariable ['WFBE_C_GUER_HELIBOMB_COOLDOWN', 900];

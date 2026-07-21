@@ -916,6 +916,11 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 	private ["_guerLogic","_guerTeams","_group"];
 	_guerLogic = missionNamespace getVariable "WFBE_L_GUE";
 	if (!(isNull _guerLogic)) then {
+		//--- fable/guer-client-startup-mapcancel: mirror the WEST/EAST wfbe_commander init (Init_Server.sqf:754)
+		//--- so the client waiter (Init_Client.sqf waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_commander"}})
+		//--- resolves for playable GUER too - without this, GUER clients never start updateclient.sqf (no PV
+		//--- handlers, no AFK kick).
+		_guerLogic setVariable ["wfbe_commander", objNull, true];
 		_guerTeams = [];
 		{
 			if (!(isNull _x) && {_x isKindOf "Man"}) then {
