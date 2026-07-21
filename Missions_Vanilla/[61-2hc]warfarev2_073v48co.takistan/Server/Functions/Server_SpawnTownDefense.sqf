@@ -52,5 +52,12 @@ if (_defense != "") then {
 	//--- truck auto-scavenge and Client\Module\Skill\Skill_Salvage.sqf manual engineer skill -
 	//--- both already read this exact variable) skip this static for cash even once destroyed.
 	_entitie setVariable ["keepAlive", true, true];
+	//--- KA-02 (owner-accepted): players got silent nothing when trying to board a LOCKED
+	//--- town-defense static - the engine hides the default "Get In" action entirely for a
+	//--- locked object, so only a standing custom action can give feedback. Registered via
+	//--- setVehicleInit, the same idiom Common_CreateUnit.sqf/Support_Paratroopers.sqf/uav.sqf
+	//--- use for repair trucks, UAVs and paradropped vehicles, so every client (incl. JIP) gets
+	//--- it. Client\Init\Init_TownStaticReserved.sqf only adds the action; it never touches lock().
+	_entitie setVehicleInit "this ExecVM 'Client\Init\Init_TownStaticReserved.sqf';";
 	_defense_logic setVariable ["wfbe_defense", _entitie];
 };
