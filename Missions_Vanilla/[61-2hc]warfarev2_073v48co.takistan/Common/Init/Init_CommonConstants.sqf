@@ -973,7 +973,12 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_STR_LONE_FARHQ") then {WFBE_C_AICOM_STR_LONE_FARHQ = 1500};   //--- ...AND farther than this (m) from HQ is a stranded remnant, EXCLUDED from the _myStr maneuver-strength count so it does not deflate strength + trip the defensive gates. 0 disables the exclusion.
 	//--- B68 (Ray 2026-06-21) RETREAT-CULL hardening: the B67 progress-gated budget never culls a lone survivor
 	//--- that slowly crawls home from far away (re-issues retreat forever, milling at base, never assaulting).
-	if (isNil "WFBE_C_AICOM_RETREAT_MAX_ISSUES") then {WFBE_C_AICOM_RETREAT_MAX_ISSUES = 8}; //--- cull a lone survivor after this many retreat re-issues regardless of slow progress.
+	//--- SMALL-MAP AICOM TUNE (card wasp-zargabad-aicom-disband-near-base-20260719; live ZG evidence).
+	//--- The gate is defined before the first tuned constant; default 0 leaves legacy defaults intact.
+	if (isNil "WFBE_C_AICOM_SMALLMAP_TUNE") then {WFBE_C_AICOM_SMALLMAP_TUNE = 0};
+	WFBE_AICOM_SMALLMAP_ARMED = (WFBE_C_AICOM_SMALLMAP_TUNE > 0) && {(toLower worldName) == "zargabad"};
+	if (isNil "WFBE_C_AICOM_RETREAT_MAX_ISSUES") then {if (WFBE_AICOM_SMALLMAP_ARMED) then {WFBE_C_AICOM_RETREAT_MAX_ISSUES = 14} else {WFBE_C_AICOM_RETREAT_MAX_ISSUES = 8}}; //--- cull a lone survivor after this many retreat re-issues regardless of slow progress.
+	if (isNil "WFBE_C_AICOM_RETREAT_HOME_RANGE") then {if (WFBE_AICOM_SMALLMAP_ARMED) then {WFBE_C_AICOM_RETREAT_HOME_RANGE = 1600} else {WFBE_C_AICOM_RETREAT_HOME_RANGE = 800}};
 	if (isNil "WFBE_C_AICOM_RETREAT_MAX_DIST") then {WFBE_C_AICOM_RETREAT_MAX_DIST = 6000};  //--- cull a lone survivor immediately if farther than this (m) from HQ - not worth a multi-km walk home.
 	//--- B67 (Ray 2026-06-21) BUILD PLACEMENT (item #10): minimum centre-to-centre spacing between AI-built
 	//--- structures + a wider factory placement ring, so factories stop piling on top of each other.
@@ -1394,7 +1399,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- STRANDED-survivor merge (default-ON). A lone stranded remnant near another friendly team is folded in
 	//--- rather than walking home / being culled; same merge payload contract. Group-count DOWN.
 	if (isNil "WFBE_C_AICOM_STRANDED_MERGE")       then {WFBE_C_AICOM_STRANDED_MERGE       = 1};    //--- 1 = ON (default), 0 = off.
-	if (isNil "WFBE_C_AICOM_STRANDED_MERGE_RANGE") then {WFBE_C_AICOM_STRANDED_MERGE_RANGE = 1200}; //--- m: a stranded remnant within this of a friendly team is merged into it.
+	if (isNil "WFBE_C_AICOM_STRANDED_MERGE_RANGE") then {if (WFBE_AICOM_SMALLMAP_ARMED) then {WFBE_C_AICOM_STRANDED_MERGE_RANGE = 2000} else {WFBE_C_AICOM_STRANDED_MERGE_RANGE = 1200}}; //--- m: a stranded remnant within this of a friendly team is merged into it.
 	//--- ARMED-TRANSPORT-ONLY (default-ON, Ray 2026-06-22): in the road-march ride-pool only a hull WITH WEAPONS
 	//--- (count weapons > 0 -> APC/IFV/armed technical) may carry troops. Unarmed troop-trucks no longer ferry
 	//--- infantry into the town centre to be evaporated; unmounted infantry advance on foot. 0 = old behaviour.
@@ -2673,6 +2678,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- at enrollment/respawn/skin-swap so the A2 command bar sorts them to slot 1 (rank drives bar order;
 //--- selectLeader sets the star but does not reorder slots). 1 = enabled (default); 0 = legacy layout.
 	if (isNil "WFBE_C_PLAYER_TEAMBAR_FIRST") then {WFBE_C_PLAYER_TEAMBAR_FIRST = 1};
+	//--- SMALL-MAP TUNE A/B: conditional first-init defaults; explicit overrides always win.
+	if (isNil "WFBE_C_AICOM_COMMIT_COMBAT") then {if (WFBE_AICOM_SMALLMAP_ARMED) then {WFBE_C_AICOM_COMMIT_COMBAT = 1} else {WFBE_C_AICOM_COMMIT_COMBAT = 0}};
+	if (isNil "WFBE_C_AICOM_COMMIT_NEAR_DIST") then {WFBE_C_AICOM_COMMIT_NEAR_DIST = 500};
+	if (isNil "WFBE_C_AICOM_RETARGET_COOLDOWN") then {if (WFBE_AICOM_SMALLMAP_ARMED) then {WFBE_C_AICOM_RETARGET_COOLDOWN = 600} else {WFBE_C_AICOM_RETARGET_COOLDOWN = 0}};
 //--- TEAMBAR probe (card wasp-player-group-rank-order-diagnosis-20260718): reason-coded client+server
 //--- instrumentation of the #2-in-own-group mitigation guards. Telemetry-only. Round-2 review:
 //--- DEFAULT 0 per feature-default policy - the capture round arms it explicitly.
