@@ -76,6 +76,18 @@ MAGIC_VERS = 0x56657273  # ASCII "Vers" (big-endian reading) - properties-follow
 EXCLUDED_SUFFIXES = (".template", ".bak", ".orig")
 STRUCT5I = struct.Struct("<5I")
 
+# The Arma 2 OA engine auto-runs a mission-root file literally named `init.sqf` on
+# every machine (server, every client, every HC) - see `init.sqf`'s own header comment
+# in each mission folder. This exact line must appear in it, delegating to the real
+# bootstrap (`initJIPCompatible.sqf`, self-documented as "Global Init, first file
+# called"). Release-critical guard (wave0721 council finding C4): a machine-local
+# self-test/observer harness stub has been found sitting in this exact path on more
+# than one dev box, untracked and excluded only from `git status` (never from a raw
+# filesystem walk) - `collect_files()` above has no concept of git tracking and would
+# silently sweep such a stub into the PBO, producing a mission that never boots the
+# real game (no MISSINIT, ever). See `Tools/Pack/PBO-PACKING.md`.
+INIT_LAUNCH_MARKER = b'execVM "initJIPCompatible.sqf";'
+
 
 class PackError(RuntimeError):
     """Raised for any condition that should abort packing before a byte is written."""
@@ -120,6 +132,32 @@ def check_lowercase_collisions(files: List[Tuple[str, bytes]]) -> None:
                 "differ only by case; refusing to pack (would silently drop one)."
             )
         seen.add(rel)
+
+
+def check_init_launch_marker(files: List[Tuple[str, bytes]]) -> None:
+    """Release-critical guard (wave0721, council finding C4): abort the pack unless
+    the mission-root `init.sqf` entry contains the real launch marker.
+
+    `collect_files()` walks the raw filesystem, not `git ls-files` - it cannot tell a
+    legitimate tracked launcher from a stray local test stub sitting in the same
+    source folder. This is the only line of defense against packing a mission whose
+    engine-auto-run entry point never calls the real bootstrap."""
+    entries = [(rel, data) for rel, data in files if rel == "init.sqf"]
+    if not entries:
+        raise PackError(
+            "ABORT: no init.sqf found at the mission root. The Arma 2 OA engine "
+            "auto-runs this file at mission start on every machine; without it, "
+            "nothing calls initJIPCompatible.sqf and the mission never boots."
+        )
+    for _rel, data in entries:
+        if INIT_LAUNCH_MARKER not in data:
+            raise PackError(
+                "ABORT: init.sqf is missing the expected launch marker "
+                f"({INIT_LAUNCH_MARKER!r}). This looks like a stray/local test "
+                "stub, not the real launcher - refusing to pack. If this file was "
+                "legitimately rewritten, restore the "
+                "`execVM \"initJIPCompatible.sqf\";` delegation before packing."
+            )
 
 
 def ensure_version_sqf(
@@ -273,6 +311,7 @@ def pack(
     ensure_version_sqf(source, files, strict_version, quiet)
     check_lowercase_collisions(files)
     check_debug_guard(files, allow_debug, quiet)
+    check_init_launch_marker(files)
 
     files.sort(key=lambda x: x[0])
 

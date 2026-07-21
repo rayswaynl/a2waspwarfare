@@ -24,6 +24,9 @@ def make_mission(root: Path, extra_files: dict[str, bytes] | None = None) -> Pat
     (mission / "version.sqf.template").write_bytes(
         b"// #define WF_DEBUG 1\n#define WF_MISSIONNAME \"test\"\n"
     )
+    (mission / "init.sqf").write_bytes(
+        b'execVM "initJIPCompatible.sqf";\r\n'
+    )
     sub = mission / "Common" / "Functions"
     sub.mkdir(parents=True)
     (sub / "Common_Thing.sqf").write_bytes(b"hint 'hi';\r\n")
@@ -57,11 +60,17 @@ class PackPboTests(unittest.TestCase):
                 properties["prefix"],
                 "[55-2hc]warfarev2_073v48co_unittest.chernarus",
             )
-            # mission.sqm + version.sqf.template->excluded + version.sqf(synth) + Common\Functions\Common_Thing.sqf
+            # mission.sqm + init.sqf + version.sqf.template->excluded + version.sqf(synth)
+            # + Common\Functions\Common_Thing.sqf
             names = sorted(n for n, *_ in entries)
             self.assertEqual(
                 names,
-                ["common\\functions\\common_thing.sqf", "mission.sqm", "version.sqf"],
+                [
+                    "common\\functions\\common_thing.sqf",
+                    "init.sqf",
+                    "mission.sqm",
+                    "version.sqf",
+                ],
             )
             self.assertTrue(read_pbo.verify_checksum(buf, data_end, trailer))
 
@@ -143,6 +152,71 @@ class PackPboTests(unittest.TestCase):
             )
         # sanity: no collision, no error
         pack_pbo.check_lowercase_collisions([("a.sqf", b"a"), ("b.sqf", b"b")])
+
+    def test_init_launch_marker_present_packs_fine(self) -> None:
+        # make_mission() ships a valid init.sqf by default - this is the
+        # "guard passes" half of the both-ways proof.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mission = make_mission(root)
+            out = root / "out.pbo"
+            pack_pbo.pack(
+                source=mission,
+                output=out,
+                prefix=None,
+                build_tag=None,
+                allow_debug=False,
+                strict_version=False,
+                force=False,
+                quiet=True,
+            )
+            self.assertTrue(out.exists())
+
+    def test_init_launch_marker_missing_file_aborts(self) -> None:
+        # release-critical guard (wave0721, council finding C4): no init.sqf at
+        # all -> the engine never auto-runs anything -> abort the pack.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mission = make_mission(root)
+            (mission / "init.sqf").unlink()
+            out = root / "out.pbo"
+            with self.assertRaises(pack_pbo.PackError):
+                pack_pbo.pack(
+                    source=mission,
+                    output=out,
+                    prefix=None,
+                    build_tag=None,
+                    allow_debug=False,
+                    strict_version=False,
+                    force=False,
+                    quiet=True,
+                )
+
+    def test_init_launch_marker_gutted_with_selftest_stub_aborts(self) -> None:
+        # release-critical guard (wave0721, council finding C4): reproduce the
+        # exact stray local-test-harness stub found on real dev boxes - must
+        # abort, not silently pack a mission that never boots the real game.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mission = make_mission(root)
+            (mission / "init.sqf").write_bytes(
+                b"//--- LOCAL TESTING ONLY: spawn the WASP self-test/observer harness.\r\n"
+                b"if (isServer) then {\r\n"
+                b'    [] execVM "test\\wasp_selftest.sqf";\r\n'
+                b"};\r\n"
+            )
+            out = root / "out.pbo"
+            with self.assertRaises(pack_pbo.PackError):
+                pack_pbo.pack(
+                    source=mission,
+                    output=out,
+                    prefix=None,
+                    build_tag=None,
+                    allow_debug=False,
+                    strict_version=False,
+                    force=False,
+                    quiet=True,
+                )
 
     def test_refuses_to_overwrite_without_force(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
