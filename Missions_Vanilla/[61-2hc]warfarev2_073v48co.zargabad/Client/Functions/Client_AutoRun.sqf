@@ -1,10 +1,11 @@
 /*
     Client_AutoRun.sqf
-    Client-local double-tap W autorun for A2 OA 1.64.
+    Client-local User12-keybind autorun toggle for A2 OA 1.64.
     The standard rifle-lowered forward-run animation carries the translation;
     the token and cancel helper stop it without taking over normal movement.
+    The KeyDown handler is attached once in Client\Init\Init_Client.sqf
+    (display 46 persists across respawn); this file only defines the functions.
 */
-Private ["_display","_oldDisplay","_oldEH"];
 
 if ((missionNamespace getVariable ["WFBE_C_CLIENT_AUTORUN", 1]) <= 0) exitWith {};
 
@@ -98,39 +99,25 @@ if (isNil "WFBE_CL_FNC_AutoRunCancel") then {
 	};
 
 	WFBE_CL_FNC_AutoRunKeyDown = {
-		Private ["_key","_now","_lastW"];
+		Private ["_key","_now","_lastToggle"];
 		_key = _this select 1;
-		if (_key in [17,30,31,32]) then {
-			if (_key == 17) then {
-				_now = diag_tickTime;
-				_lastW = missionNamespace getVariable ["WFBE_CL_VAR_AutoRunLastW", -1];
+		if (_key in (actionKeys "User12")) then {
+			_now = diag_tickTime;
+			_lastToggle = missionNamespace getVariable ["WFBE_CL_VAR_AutoRunLastToggle", -1];
+			//--- Auto-repeat guard: A2 OA fires repeated KeyDown while User12 is HELD. Debounce so one
+			//--- physical press is one toggle; repeats within 0.4s of the last accepted toggle are ignored.
+			if ((_now - _lastToggle) >= 0.4) then {
+				missionNamespace setVariable ["WFBE_CL_VAR_AutoRunLastToggle", _now];
 				if (missionNamespace getVariable ["WFBE_CL_VAR_AutoRunActive", false]) then {
 					[] call WFBE_CL_FNC_AutoRunCancel;
-					missionNamespace setVariable ["WFBE_CL_VAR_AutoRunLastW", -1];
 				} else {
-					if ((_now - _lastW) <= 0.3) then {
-						[] call WFBE_CL_FNC_AutoRunStart;
-						missionNamespace setVariable ["WFBE_CL_VAR_AutoRunLastW", -1];
-					} else {
-						missionNamespace setVariable ["WFBE_CL_VAR_AutoRunLastW", _now];
-					};
+					[] call WFBE_CL_FNC_AutoRunStart;
 				};
-			} else {
-				if (missionNamespace getVariable ["WFBE_CL_VAR_AutoRunActive", false]) then {[] call WFBE_CL_FNC_AutoRunCancel};
 			};
+		};
+		if (_key in [17,30,31,32]) then {
+			if (missionNamespace getVariable ["WFBE_CL_VAR_AutoRunActive", false]) then {[] call WFBE_CL_FNC_AutoRunCancel};
 		};
 		false
 	};
 };
-
-_display = findDisplay 46;
-if (isNull _display) exitWith {};
-if (!isNil "WFBE_CL_VAR_AutoRunDisplay") then {
-	_oldDisplay = WFBE_CL_VAR_AutoRunDisplay;
-	if (!isNull _oldDisplay && {!isNil "WFBE_CL_VAR_AutoRunEH"}) then {
-		_oldEH = WFBE_CL_VAR_AutoRunEH;
-		_oldDisplay displayRemoveEventHandler ["KeyDown", _oldEH];
-	};
-};
-WFBE_CL_VAR_AutoRunDisplay = _display;
-WFBE_CL_VAR_AutoRunEH = _display displayAddEventHandler ["KeyDown", "_this call WFBE_CL_FNC_AutoRunKeyDown"];

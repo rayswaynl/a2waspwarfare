@@ -21,12 +21,24 @@ def test_autorun_contract():
     assert "WFBE_CL_FNC_AutoRunAttach" in client_init
     assert "WFBE_CL_FNC_AutoRunAttach" in respawn
 
-    assert "displayAddEventHandler [\"KeyDown\"" in autorun
-    assert "_this call WFBE_CL_FNC_AutoRunKeyDown" in autorun
+    # The KeyDown handler is attached ONCE in Init_Client.sqf (display 46 persists
+    # across respawn) rather than re-added by Client_AutoRun.sqf on every respawn.
+    assert "displayAddEventHandler [\"KeyDown\"" in client_init
+    assert "_this call WFBE_CL_FNC_AutoRunKeyDown" in client_init
+    assert "displayAddEventHandler [\"KeyDown\"" not in autorun
+    assert "WFBE_CL_VAR_AutoRunDisplay" not in autorun
+    assert "displayRemoveEventHandler" not in autorun
+
+    # Bindable custom keybind (engine-native User12 action slot) replaces the old
+    # hardcoded double-tap-W detection, which thrashed on A2's KeyDown auto-repeat.
+    assert 'actionKeys "User12"' in autorun
+    assert "WFBE_CL_VAR_AutoRunLastToggle" in autorun
+    assert ">= 0.4" in autorun
+    assert "_lastW" not in autorun
+    assert "_key == 17" not in autorun
+
     assert "false" in autorun
     assert "diag_tickTime" in autorun
-    assert "<= 0.3" in autorun
-    assert "_key == 17" in autorun
     assert "_key in [17,30,31,32]" in autorun
     assert 'playMoveNow "AmovPercMrunSlowWrflDf"' in autorun
     assert 'playMoveNow "AmovPercMstpSlowWrflDnon"' in autorun
