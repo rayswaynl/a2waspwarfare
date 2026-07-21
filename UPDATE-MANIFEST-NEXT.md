@@ -30,3 +30,4 @@ Base: `origin/master` (`b411d70004`)
 - PR #1157: VEHDEL probe proper - duplicate gc-zombie emission dropped, FLAGGATE-conform probe guard, truthful default-0 header; replaces the wave0720c shim path; merged no-ff into wave-next as `dfb9cd98e0` (drain head `fefacf451b`).
 - PR #1159: mobile-artillery echelon reposition decoupled from the single-fire gate - gun #2 no longer starved of repositioning; single-fire-per-cycle preserved; merged no-ff into wave-next as `a9d166c137` (drain head `81db315180`).
 - PR #1156: aicom-town-nudge _x rebinding fix w/ nil-guard-first capture; merged no-ff into wave-next as `526eacce65` (drain head `57461d1510`).
+- PR #1211: GUER client startup (wfbe_commander marker on GUER logic - client loop/AFK/chat now start) + Barrel-Bomb/SCUD designation cancel with default map-click handler restore; merged no-ff into wave-next as `377cb2b667` (feature head `fc53d364f7`).
