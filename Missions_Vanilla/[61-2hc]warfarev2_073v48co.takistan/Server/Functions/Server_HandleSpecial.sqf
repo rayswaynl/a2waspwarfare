@@ -1058,13 +1058,16 @@ switch (_args select 0) do {
 								_tnBest  = _tnRange;
 								{
 									//--- CAPTURE the outer _x FIRST: the inner units forEach below permanently rebinds it.
+									//--- Guard isNil "_x" BEFORE the bare read - a nil hole in wfbe_teams must never be dereferenced.
 									private ["_tnTm","_alv","_d"];
-									_tnTm = _x;
-									if (!isNil "_tnTm" && {!isNull _tnTm} && {!isPlayer (leader _tnTm)}) then {
-										_alv = {alive _x} count (units _tnTm);
-										if (_alv > 0 && {!isNull (leader _tnTm)}) then {
-											_d = _tnPlayer distance (leader _tnTm);
-											if (_d < _tnBest) then {_tnBest = _d; _tnTeam = _tnTm};
+									if (!isNil "_x") then {
+										_tnTm = _x;
+										if (!isNull _tnTm && {!isPlayer (leader _tnTm)}) then {
+											_alv = {alive _x} count (units _tnTm);
+											if (_alv > 0 && {!isNull (leader _tnTm)}) then {
+												_d = _tnPlayer distance (leader _tnTm);
+												if (_d < _tnBest) then {_tnBest = _d; _tnTeam = _tnTm};
+											};
 										};
 									};
 								} forEach (_tnLogik getVariable ["wfbe_teams", []]);
