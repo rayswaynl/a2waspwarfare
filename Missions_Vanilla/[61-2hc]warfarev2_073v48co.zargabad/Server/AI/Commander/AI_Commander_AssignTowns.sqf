@@ -702,9 +702,49 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 								//--- Still-enemy town only (a flipped-to-us target must be allowed to retarget).
 								if ((_jcTgt getVariable ["sideID", -1]) != _sideID) then {
 									_jcProg = (_jcBc distance _jcTgt) - ((leader _team) distance _jcTgt);
-									if (_jcProg >= 150) then {
+																		private ["_jcBlHit"];
+									_jcBlHit = false;
+									if ((missionNamespace getVariable ["WFBE_C_AICOM_SMALLMAP_TUNE", 0]) > 0 && {(toLower worldName) == "zargabad"}) then {
+										private ["_jcPreBl"];
+										_jcPreBl = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetBool;
+										if (typeName _jcPreBl == "ARRAY") then {
+											{if ((typeName (_x select 0) == "OBJECT") && {(_x select 0) == _jcTgt} && {(_x select 1) > time}) then {_jcBlHit = true}} forEach _jcPreBl;
+										};
+									};
+									if (_jcProg >= 150 && {!_jcBlHit}) then {
 										_needs = false; //--- committed + progressing: keep this journey, skip retarget this pass.
 										diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|JOURNEY_COMMIT|team=" + (str _team) + "|town=" + (_jcTgt getVariable ["name","town"]) + "|progress=" + str (round _jcProg));
+									};
+									//--- ZG small-map tune A+B (round-3). HARD-ABANDON EXCLUSION: if the CURRENT target has an
+									//--- unexpired entry on this team's abandon blacklist (the TARGET_ABANDON latch at ~L404-410),
+									//--- NEITHER suppression may hold the team on it - the terminal retarget away from an
+									//--- abandoned town always wins. A2-safe flag scan (no exitWith in forEach).
+									Private ["_jcBl","_jcTgtSince","_jcCd"];
+									if ((missionNamespace getVariable ["WFBE_C_AICOM_SMALLMAP_TUNE", 0]) > 0 && {(toLower worldName) == "zargabad"}) then {
+										_jcBl = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetBool;
+										if (typeName _jcBl == "ARRAY") then {
+										{ if ((typeName (_x select 0) == "OBJECT") && {(_x select 0) == _jcTgt} && {(_x select 1) > time}) then {_jcBlHit = true} } forEach _jcBl;
+							};
+									};
+									//--- A: a team STALLED at a chokepoint shows no 150m progress and lost its exemption - but
+									//--- being stuck in a FIREFIGHT en route, or already adjacent to the target, is not "not
+									//--- committed". Flag default 0 = byte-identical.
+									if (_needs && {!_jcBlHit} && {(missionNamespace getVariable ["WFBE_C_AICOM_COMMIT_COMBAT", 0]) > 0}) then {
+										if ((behaviour (leader _team)) == "COMBAT" || {((leader _team) distance _jcTgt) < (missionNamespace getVariable ["WFBE_C_AICOM_COMMIT_NEAR_DIST", 500])}) then {
+											_needs = false;
+											diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|JOURNEY_COMMIT|team=" + (str _team) + "|town=" + (_jcTgt getVariable ["name","town"]) + "|reason=combat-or-near");
+										};
+									};
+									//--- B: minimum seconds between retargets of the SAME team, measured from the DEDICATED
+									//--- target-change stamp wfbe_aicom_tgt_since (round-3: _dispT0 refreshes on same-target
+									//--- re-issues, so it is not a stable basis). Param default 0 = legacy = byte-identical.
+									_jcCd = missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_COOLDOWN", 0];
+									if (_needs && {!_jcBlHit} && {_jcCd > 0}) then {
+										_jcTgtSince = _team getVariable "wfbe_aicom_tgt_since"; //--- group var: 1-arg + isNil (G1) // group state key, not a classname
+										if (!isNil "_jcTgtSince" && {(time - _jcTgtSince) < _jcCd}) then {
+											_needs = false;
+											diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RETARGET_COOLDOWN_HOLD|team=" + (str _team) + "|town=" + (_jcTgt getVariable ["name","town"]) + "|age=" + str (round (time - _jcTgtSince)));
+										};
 									};
 								};
 							};
@@ -1037,6 +1077,11 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_RETARGET|team=" + (str _team) + "|from=" + ((_priorOrd select 0) getVariable ["name","town"]) + "|to=" + (_target getVariable ["name","town"]) + "|elapsed=" + str (round (time - _dispT0)));
 						};
 						_team setVariable ["wfbe_aicom_townorder", [_target, _dispT0, getPos (leader _team), _asltToSecs]];
+						//--- Round-3 review: dedicated TARGET-CHANGE timestamp. _dispT0 refreshes on same-target
+						//--- re-issues, so it is NOT a stable "how long has this team been aimed here" basis - the
+						//--- retarget cooldown reads wfbe_aicom_tgt_since instead, stamped ONLY when the target
+						//--- actually changes (first dispatch or a different town).
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_SMALLMAP_TUNE", 0]) > 0 && {(toLower worldName) == "zargabad"} && {!_priorOpen || {!_sameTgt}}) then {_team setVariable ["wfbe_aicom_tgt_since", time]}; // group state key, not a classname
 						//--- ASSAULT TELEMETRY (task #48, #2): book a watcher latch on every (re)dispatch and
 						//--- log the DISPATCH event. The OUTCOME watcher (Hook B, top of the per-team loop)
 						//--- resolves exactly one ARRIVED or STRANDED per dispatch. Logging only - no behaviour
