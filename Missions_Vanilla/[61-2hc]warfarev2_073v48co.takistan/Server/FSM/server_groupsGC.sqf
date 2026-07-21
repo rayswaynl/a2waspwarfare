@@ -10,12 +10,22 @@ if (!isServer) exitWith {};
 
 Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc","_baseSide","_baseEnable","_baseRange","_baseTimeout","_baseIdleSpeed","_basePlayerGuard","_basePlayers","_basePcN","_baseHcN","_baseHQ","_baseHQPos","_baseSideID","_baseLogik","_baseTeams","_baseCap","_baseFounded","_baseCandGrps","_baseG","_baseIsTownTeam","_baseIsPers","_baseLdr","_baseSeen","_baseDmgNow","_baseDmgPrev","_baseInCombat","_baseEnemyNear","_basePlayerNear","_baseFrontPos","_baseUncap","_baseFrontTown","_baseSeq","_baseVeh","_baseVcrew","_baseVside","_baseReadopted","_baseDeletedAir","_baseRetasked","_contestedTowns"];
 
+//--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation gate (see
+//--- server_town.sqf for the full note).
+private ["_clOwnerKey","_clOwnerSeq"];
+_clOwnerKey = "wfbe_coreloop_owner_groupsgc";
+_clOwnerSeq = if (typeName _this == "ARRAY" && {count _this > 0}) then {_this select 0} else {missionNamespace getVariable [_clOwnerKey, 0]};
+
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 _auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
 
 //--- Perf phase jitter (2026-07-06): see server_town.sqf. Default 0 = V1.
 if ((missionNamespace getVariable ["WFBE_C_LOOP_PHASE_JITTER", 0]) > 0) then {sleep (random 60)};
-while {!WFBE_GameOver} do {
+while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) == _clOwnerSeq}} do {
+
+	//--- HP-01 SUPERVISOR HEARTBEAT: first statement of every iteration (see server_town.sqf note).
+	missionNamespace setVariable ["wfbe_coreloop_hb_groupsgc", time];
+
 	sleep 60;
 
 	// --- Empty-group GC sweep ---
@@ -178,7 +188,18 @@ while {!WFBE_GameOver} do {
 												_baseSeq = (([_baseG, "wfbe_aicom_order", [-1]] Call WFBE_CO_FNC_GroupGetBool) select 0) + 1;
 												_baseG setVariable ["wfbe_aicom_order", [_baseSeq, "towns-target", _baseFrontPos], true];
 												//--- RE-ADOPT into the commander only while UNDER the side cap (else just re-task).
-												if (!isNull _baseLogik && {_baseFounded < _baseCap} && {!(_baseG in _baseTeams)}) then {
+												//--- HP-01 review fix (fable/loop-supervisor-hp01): _baseTeams above is a per-SIDE-PASS
+												//--- snapshot taken once ~90 lines up. server_groupsGC.sqf is the one loop this PR arms
+												//--- for auto-RESTART, so a false-stale restart can (near-negligibly, given the new
+												//--- instance's startup delay) leave two instances mid-pass at once; both would then
+												//--- check membership against their OWN stale snapshot and could double-append the SAME
+												//--- group into wfbe_teams. Re-read fresh right at the mutation point instead of trusting
+												//--- the cached _baseTeams, narrowing the race window to this one read-then-write instead
+												//--- of the whole pass. (_baseTeams itself is left as-is for the _baseFounded/_baseCap
+												//--- counting pass above - read-only there, not a mutation.)
+												private "_baseTeamsFresh";
+												_baseTeamsFresh = _baseLogik getVariable ["wfbe_teams", []];
+												if (!isNull _baseLogik && {_baseFounded < _baseCap} && {!(_baseG in _baseTeamsFresh)}) then {
 													_baseG setVariable ["wfbe_aicom_founded", true];
 													_baseG setVariable ["wfbe_persistent", true];
 													_baseG setVariable ["wfbe_side", _baseSide];
@@ -190,8 +211,8 @@ while {!WFBE_GameOver} do {
 													//--- town team (Strategy/AssignTowns default-read it as "towns").
 													_baseG setVariable ["wfbe_teammode", "towns"];
 													_baseG setVariable ["wfbe_teamtype", 0];
-													_baseLogik setVariable ["wfbe_teams", _baseTeams + [_baseG], true];
-													_baseTeams = _baseTeams + [_baseG];
+													_baseLogik setVariable ["wfbe_teams", _baseTeamsFresh + [_baseG], true];
+													_baseTeams = _baseTeamsFresh + [_baseG];
 													_baseFounded = _baseFounded + 1;
 													_baseReadopted = _baseReadopted + 1;
 													["INFORMATION", Format ["server_groupsGC.sqf: B61 BASE-GC re-adopted untracked %1 group %2 into the commander (founded->%3/%4), re-tasked to front.", str _baseSide, _baseG, _baseFounded, _baseCap]] Call WFBE_CO_FNC_AICOMLog;
