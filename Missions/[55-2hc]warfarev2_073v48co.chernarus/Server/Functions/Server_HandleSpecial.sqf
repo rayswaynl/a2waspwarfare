@@ -1057,12 +1057,14 @@ switch (_args select 0) do {
 								_tnRange = missionNamespace getVariable ["WFBE_C_CMD_NUDGE_RANGE", 1500];
 								_tnBest  = _tnRange;
 								{
-									if (!isNil "_x" && {!isNull _x} && {!isPlayer (leader _x)}) then {
-										private ["_alv","_d"];
-										_alv = {alive _x} count (units _x);
-										if (_alv > 0 && {!isNull (leader _x)}) then {
-											_d = _tnPlayer distance (leader _x);
-											if (_d < _tnBest) then {_tnBest = _d; _tnTeam = _x};
+									//--- CAPTURE the outer _x FIRST: the inner units forEach below permanently rebinds it.
+									private ["_tnTm","_alv","_d"];
+									_tnTm = _x;
+									if (!isNil "_tnTm" && {!isNull _tnTm} && {!isPlayer (leader _tnTm)}) then {
+										_alv = {alive _x} count (units _tnTm);
+										if (_alv > 0 && {!isNull (leader _tnTm)}) then {
+											_d = _tnPlayer distance (leader _tnTm);
+											if (_d < _tnBest) then {_tnBest = _d; _tnTeam = _tnTm};
 										};
 									};
 								} forEach (_tnLogik getVariable ["wfbe_teams", []]);
