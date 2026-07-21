@@ -46,6 +46,17 @@ switch (_request) do {
 			};
 		} forEach vehicles;
 	};
+	//--- fix/aicom-arty-lifecycle (2026-07-21, locality fix): delete a dead commander-artillery hull
+	//--- that is LOCAL TO THIS machine. server_groupsGC.sqf's reaper cannot delete a non-local wreck
+	//--- directly (HC-manned hulls are HC-local; a server-side deleteVehicle would silently no-op), so
+	//--- it routes here via WFBE_CO_FNC_SendToClient, keyed off the wreck object's own owner. Mirrors
+	//--- the cleanup-airfield-garrison pattern above: verify local + a genuine wreck before deleting -
+	//--- a wreck already reaped by some other path between dispatch and arrival here is simply null.
+	case "cleanup-commander-arty-wreck": {
+		Private ["_wreck"];
+		_wreck = _args select 0;
+		if (!isNull _wreck && {local _wreck} && {!alive _wreck}) then {deleteVehicle _wreck};
+	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};

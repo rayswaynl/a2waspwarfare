@@ -348,9 +348,30 @@ while {!WFBE_GameOver} do {
 		};
 	} forEach allDead;
 	_artyReaped = 0;
+	//--- fix/aicom-arty-lifecycle (2026-07-21, locality fix): commander artillery is manned via HC
+	//--- delegation (Server_HandleDefense.sqf:62 -> WFBE_CO_FNC_DelegateAIStaticDefenceHeadless), which
+	//--- makes the manned hull HC-LOCAL, not server-local. A server-side deleteVehicle on a non-local
+	//--- object SILENTLY NO-OPS in A2 OA - the exact defect the BASE-GC pass above already guards
+	//--- against via its own `local _baseVeh` checks (see L224/276) - so the unconditional deleteVehicle
+	//--- this reaper first shipped with would have no-op'd on every HC-local husk, i.e. most of them.
 	{
-		["gc-commander-arty-wreck", _x, (_x getVariable ["WFBE_CommanderArtillerySide", ""])] Call WFBE_CO_FNC_LogVehDelete;
-		deleteVehicle _x;
+		if (local _x) then {
+			["gc-commander-arty-wreck", _x, (_x getVariable ["WFBE_CommanderArtillerySide", ""])] Call WFBE_CO_FNC_LogVehDelete;
+			deleteVehicle _x;
+		} else {
+			//--- Route the delete to the owning machine via the SAME established server->HC dispatch
+			//--- channel Server_DelegateAIStaticDefenceHeadless.sqf itself uses (WFBE_CO_FNC_SendToClient
+			//--- -> "HandleSpecial", routed by the target object's own `owner` - passing _x directly works
+			//--- exactly like passing a live HC-owned unit does), reusing the existing
+			//--- cleanup-airfield-garrison-style pattern: a new "cleanup-commander-arty-wreck" case in
+			//--- Client/PVFunctions/HandleSpecial.sqf deletes the object IF it is alive/local THERE. VEHDEL
+			//--- logged HERE (server-side, at dispatch, distinct reason code) - LogVehDelete only reads
+			//--- replicated object state (position/crew/etc), so it does not need to run on the owning
+			//--- machine, only the deleteVehicle call does. The new action key is also added to the HC PVF
+			//--- allowlist in Client_HandlePVF.sqf (fails closed / silently dropped otherwise).
+			["gc-commander-arty-wreck-remote", _x, (_x getVariable ["WFBE_CommanderArtillerySide", ""])] Call WFBE_CO_FNC_LogVehDelete;
+			[_x, "HandleSpecial", ["cleanup-commander-arty-wreck", _x]] Call WFBE_CO_FNC_SendToClient;
+		};
 		_artyReaped = _artyReaped + 1;
 	} forEach _artyWrecks;
 	if (_artyReaped > 0) then {
