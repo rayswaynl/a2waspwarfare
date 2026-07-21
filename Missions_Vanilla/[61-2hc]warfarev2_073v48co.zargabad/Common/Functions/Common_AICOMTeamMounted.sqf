@@ -36,14 +36,14 @@ _transportLive = false;
 	if (typeName _x == "ARRAY" && {count _x >= 2}) then {
 		_transportVehicle = _x select 0;
 		_transportStamp = _x select 1;
-		if (!isNull _transportVehicle && {alive _transportVehicle} && {canMove _transportVehicle} && {typeName _transportStamp == "SCALAR"} && {(time - _transportStamp) < 1200}) then {
+		if (!isNull _transportVehicle && {alive _transportVehicle} && {_transportVehicle isKindOf "LandVehicle"} && {canMove _transportVehicle} && {typeName _transportStamp == "SCALAR"} && {(time - _transportStamp) < 1200}) then {
 			_transportKeep set [count _transportKeep, [_transportVehicle, _transportStamp]];
 			if (canMove _transportVehicle && {!isNull _ldr} && {alive _ldr} && {(_transportVehicle distance _ldr) <= 300}) then {_transportLive = true};
 		};
 	};
 } forEach _transportCaps;
 _grp setVariable ["wfbe_aicom_transport_capable", _transportKeep];
-if (_ldrMounted || {_transportLive}) exitWith {true};
+if (_transportLive) exitWith {true};
 _total = 0; _embarked = 0;
 {
 	if (alive _x) then {
@@ -53,5 +53,8 @@ _total = 0; _embarked = 0;
 	};
 } forEach (units _grp);
 if (_total <= 0) exitWith {false};
+//--- C3 consensus: a leader-only vehicle occupant is not by itself a convoy signal.
+//--- Let the normal fraction rule decide after requiring an additional embarked unit.
+if (_ldrMounted && {_embarked > 1}) exitWith {true};
 _frac = missionNamespace getVariable ["WFBE_C_AICOM_MOUNTED_FRAC", 0.5];
 _embarked >= (_total * _frac)

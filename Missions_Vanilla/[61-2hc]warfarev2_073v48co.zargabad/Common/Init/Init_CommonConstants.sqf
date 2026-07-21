@@ -329,8 +329,11 @@ if (worldName == "Zargabad") then {
 	//--- Protects eval/night sessions from accidental human takeover. Default 0 = normal play.
 	if (isNil "WFBE_C_AI_COMMANDER_LOCK") then {WFBE_C_AI_COMMANDER_LOCK = 0}; //--- B67 (Ray 2026-06-21): 1->0 to ENABLE the hybrid commander feature (#5). Players can now vote out the AI commander; the AI then keeps founding/refilling its teams (assist mode) while the player builds + can re-task all teams. Set back to 1 to relock (AI always commands - the eval/night-soak posture).
 	if (isNil "WFBE_C_AI_COMMANDER_GARRISON") then {WFBE_C_AI_COMMANDER_GARRISON = 0}; //--- AssignTowns base-garrison opt-in. 0 keeps all AI teams on the front.
+	if (isNil "WFBE_C_AICOM_ALWAYS_OFFENSE") then {WFBE_C_AICOM_ALWAYS_OFFENSE = 1}; //--- Owner ruling 2026-07-21: AICOM stays on offense; 0 restores legacy garrison/last-stand conversions, while active-attack relief remains available.
 	if (isNil "WFBE_C_AICOM_PUBLIC_STATE_SYNC") then {WFBE_C_AICOM_PUBLIC_STATE_SYNC = 0}; //--- Default OFF: keep wfbe_aicom_funds/running server-local. 1 = broadcast side-logic AICOM state writes for HC readers.
 	if (isNil "WFBE_C_AICOM_TELEPORT_ORDER_FLUSH") then {WFBE_C_AICOM_TELEPORT_ORDER_FLUSH = 1}; //--- Lane 377: after teleport-equivalent relocation, publish a fresh HC order from the new position.
+	//--- C3 consensus telemetry: periodic FIELDSPLIT/CAPTURE_TRACE diagnostics are opt-in and behavior-neutral.
+	if (isNil "WFBE_C_AICOM_C3_TELEMETRY") then {WFBE_C_AICOM_C3_TELEMETRY = 0};
 	//--- ACTIVE-TOWN BUDGET: max concurrently active towns. FPS lever; 12 for the legacy-vs-next A/B (Steff 2026-06-13).
 	if (isNil "WFBE_C_TOWNS_ACTIVE_MAX") then {WFBE_C_TOWNS_ACTIVE_MAX = 12}; //--- punchy-AICOM (Ray 2026-06-18): KEEP 12 for the next test - concentration comes from SPEARHEAD_TOWNS_MAX=1 + CONCENTRATION=4 (mass on one town of the full 12-town front), NOT from shrinking the active set.
 	if (isNil "WFBE_C_TOWNS_STARTUP_SLEEP") then {WFBE_C_TOWNS_STARTUP_SLEEP = 0}; //--- Fleet lane 115: optional startup pacing for server_town_ai's two town init passes. 0 = legacy 0.01s; try 0.05-0.10 to soften large-map startup spikes.
@@ -1299,7 +1302,7 @@ if (worldName == "Zargabad") then {
 	//--- average settles INSIDE the band. Clamped into [MIN,MAX]. Cheap stopgap; the real fix is a
 	//--- reinforcement/top-up pass (see B57-SOAK-PROPOSALS.md, AI Commander section). Economy tradeoff:
 	//--- bigger founds cost ~25% more supply under SUPPLY_INCOME_MULT=0.35 - review with Ray before deploy.
-	if (isNil "WFBE_C_AICOM_TEAM_FOUND_SIZE") then {WFBE_C_AICOM_TEAM_FOUND_SIZE = 10}; //--- DRAFT founding target (>=MIN, <=MAX).
+	if (isNil "WFBE_C_AICOM_TEAM_FOUND_SIZE") then {WFBE_C_AICOM_TEAM_FOUND_SIZE = 8}; //--- C3 consensus: effective founding target; MIN/MAX clamp is 8.
 	//--- RELIEF HOLD: a team diverted to defend a town holds for this long, then - if the town is
 	//--- still ours but no longer actively attacked OR the hold expires - it is released back to
 	//--- OFFENSE instead of idling on a quiet town (never a standing-still AI). AI_Commander_Strategy.sqf.
@@ -1488,8 +1491,8 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil 'WFBE_C_AICOM_ASSAULT_REACH_FOOT')    then {WFBE_C_AICOM_ASSAULT_REACH_FOOT    = if (worldName == "Takistan") then {1800} else {2500}};  //--- B66 (3000->2500m): tighten foot reach - keep thin foot teams on adjacent reachable towns (cut long death-marches; tighter contiguous front). [B57: 3500->3000.] cmdcon43-j (evidence-based, live TK RPT 2026-07-02): a foot team dispatched >~1800m to a Takistan mountain town GRINDS ridgelines and never arrives - every stranded foot team (RU_Soldier_LAT/AA, ASSAULT_STRANDED moved=2-11m over 8min) sat at distTgt 1819-2568m (median 2484), ZERO stuck below 1800m; on rolling Chernarus the same 2500m foot leg succeeds. TK-lower 1800 routes those teams to a nearer reachable town OR (INF_TRANSPORT, within REACH_MOUNTED 9km) hands them a truck for the mountain leg instead of a death-march. Same worldName idiom as ROAD_STANDOFF/LANE_OFFSET/RECOVERY_SLOPE_Z/RECOVERY_FOOT_ROAD_R just above. isNil guard keeps any pre-set param/global as the override.
 	if (isNil 'WFBE_C_AICOM_ASSAULT_REACH_MOUNTED') then {WFBE_C_AICOM_ASSAULT_REACH_MOUNTED = 9000};  //--- m: teams with a drivable vehicle may take the long leg to a far spearhead.
 	//--- T1.2 ADD (R3-SYNTHESIS 2026-07-20): fraction of a team's alive units that must be embarked
-	//--- (in a canMove LandVehicle) before the team classifies as "mounted" for reach purposes, UNLESS
-	//--- the leader alone is embarked (leader-mounted always counts). 0.5 = the deliberation's spec.
+	//--- (in a canMove LandVehicle) before the team classifies as "mounted" for reach purposes;
+	//--- the leader must have at least one additional embarked unit. 0.5 = the deliberation's spec.
 	if (isNil 'WFBE_C_AICOM_MOUNTED_FRAC') then {WFBE_C_AICOM_MOUNTED_FRAC = 0.5};
 	//--- FIX A: distance/mobility-aware assault timeout (fable, GR-2026-07-08a; design ASSAULT-DYNTIMEOUT-DESIGN.md
 	//--- + ADDENDUM 1). Flag WFBE_C_AICOM_ASSAULT_DYNTIMEOUT: 0 = legacy flat WFBE_C_AICOM_ASSAULT_TIMEOUT for every
@@ -1497,7 +1500,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- numeric defaults below are ENGINEERING DEFAULTS, NOT live-measured - re-derive via the design's Section 1.3
 	//--- calibration protocol from a confirmed-live ASSAULT_* RPT window before flipping this to 1 in production.
 	if (isNil 'WFBE_C_AICOM_ASSAULT_DYNTIMEOUT')    then {WFBE_C_AICOM_ASSAULT_DYNTIMEOUT    = 1};
-	if (isNil 'WFBE_C_AICOM_FOOT_HOLD') then {WFBE_C_AICOM_FOOT_HOLD = 0}; //--- TK arrivals pack M5: when owner arms this guardrail, foot teams with no honest reach hold at the nearest friendly town on DEFEND instead of death-marching to the absolute-nearest enemy.
+	if (isNil 'WFBE_C_AICOM_FOOT_STAGE') then {WFBE_C_AICOM_FOOT_STAGE = 0}; //--- TK arrivals pack M5: owner-armable offensive staging for foot teams with no honest reach; MOVE to the friendly town nearest the enemy front and re-evaluate targets each pass.
 	if (isNil 'WFBE_C_AICOM_STRAND_RECOVERY') then {WFBE_C_AICOM_STRAND_RECOVERY = 0}; //--- TK arrivals pack M3: one-shot recovery after a short-move ASSAULT_STRANDED verdict; owner arms after M6 soak.
 	if (isNil 'WFBE_C_AICOM_ASSAULT_SPEED_FOOT')    then {WFBE_C_AICOM_ASSAULT_SPEED_FOOT    = if (worldName == "Takistan") then {0.9} else {2.2}};  //--- m/s conservative cross-country foot pace. ENGINEERING DEFAULT.
 	if (isNil 'WFBE_C_AICOM_ASSAULT_SPEED_MOUNTED') then {WFBE_C_AICOM_ASSAULT_SPEED_MOUNTED = if (worldName == "Takistan") then {3.5} else {7.5}};  //--- m/s effective AI-driven road speed incl. hop-node deceleration. ENGINEERING DEFAULT.

@@ -84,6 +84,8 @@ _enStr = 0;
 //--- AICOM v2 M3 (Ray "almost never defensive"): gate last-stand on EFFECTIVE strength (maneuver + held-town credit), NOT raw maneuver _myStr - so a territory-leader that garrisons towns never trips the recall-all-to-HQ (the dominant-but-passive STALL the 18h soak showed). Last-stand now fires only at <=1 town AND genuinely effectively-crushed = base under real threat.
 private ["_lsTS","_lsMyEff","_lsEnEff"]; _lsTS = missionNamespace getVariable ["WFBE_C_AICOM_TOWN_STRENGTH", 2]; _lsMyEff = _myStr + (_myTowns * _lsTS); _lsEnEff = _enStr + (_enemyTowns * _lsTS);
 _lastStand = (_myTowns <= (missionNamespace getVariable [format ["WFBE_C_AICOM_LASTSTAND_TOWNS_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_TOWNS", 1]])) && (_lsMyEff < (_lsEnEff * (missionNamespace getVariable [format ["WFBE_C_AICOM_LASTSTAND_RATIO_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_LASTSTAND_RATIO", 0.45]]))); //--- B68 attack-bias (Ray 2026-06-21): last-stand only when <=1 town AND <45% of enemy maneuver strength (was <2 towns AND <70% = too eager). Defense rare; attack default.
+//--- Owner ruling: suppress the legacy last-stand/HQ-defend posture; AssignTowns keeps selecting enemy towns.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {_lastStand = false};
 _stratMode = "spearhead"; //--- default; overridden below
 _logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
 if (_lastStand) then {
@@ -522,6 +524,13 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 		_relTown = [_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
 		if (!isNull _relTown) then {
 			_quiet = !(_relTown getVariable ["wfbe_active", false]);
+			private ["_relUnderAttack","_relEnemyDist"];
+			_relUnderAttack = false;
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {
+				_relEnemyDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
+				if (!_quiet && {(_relTown getVariable ["sideID", -1]) == _sideID} && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _relTown) nearEntities [["Man","LandVehicle","Air"], _relEnemyDist])) > 0}) then {_relUnderAttack = true};
+				_quiet = !_relUnderAttack;
+			};
 			//--- punchy-AICOM RELIEF-TIMEOUT (Ray 2026-06-17): also release once the hold window
 			//--- has elapsed, so a diverted team returns to OFFENSE instead of idling on a town that
 			//--- is no longer actively contested. SetTeamMoveMode "towns" immediately re-tasks it
@@ -531,7 +540,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 			if (isNil "_relUntil") then {_relUntil = 0};
 			_relExpired = (_relUntil > 0) && {time > _relUntil};
 			_relLost = (_relTown getVariable "sideID") != _sideID;
-			if (_quiet || {_relLost} || _relExpired) then {
+			if (_quiet || {_relLost} || {_relExpired && {!_relUnderAttack}}) then {
 				//--- Town safe / lost / hold expired: release back to offense.
 				_team setVariable ["wfbe_aicom_relief", objNull];
 				_team setVariable ["wfbe_aicom_relief_until", 0];
@@ -556,6 +565,8 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 					};
 				};
 				[_team, "towns"] Call SetTeamMoveMode;
+			_team setVariable ["wfbe_aicom_foot_stage", false];
+			_team setVariable ["wfbe_aicom_foot_stage_pos", []];
 				_team setVariable ["wfbe_aicom_townorder", []];
 				//--- WAVE-1 A3 (c): an HC team reads ONLY wfbe_aicom_order, not wfbe_teammode, so flip its order
 				//--- back to a fresh "towns" seq here; AssignTowns then re-issues a real attack target next cycle.
@@ -589,7 +600,7 @@ private ["_atkTownCheck","_reliefEnemyDist","_reliefMax"];
 //--- "aicom-defend" stamps wfbe_aicom_defend_focus + _t0. A2-OA-safe: plain getVariable + isNil + time math, no A3 prims.
 _pdTown = _logik getVariable "wfbe_aicom_defend_focus";
 _pdT0   = _logik getVariable "wfbe_aicom_defend_focus_t0";
-if (!isNil "_pdTown" && {!isNull _pdTown} && {!isNil "_pdT0"}
+if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) <= 0 && {!isNil "_pdTown"} && {!isNull _pdTown} && {!isNil "_pdT0"}
     && {(time - _pdT0) < (missionNamespace getVariable ["WFBE_C_AICOM_DEFEND_TTL", 300])}
     && {(_pdTown getVariable ["sideID", -1]) == _sideID}) then {
 	if !(_pdTown in _attacked) then {_attacked = [_pdTown] + _attacked};
@@ -676,9 +687,11 @@ _relieved = 0;
 		_wMode = toLower ([_wTeam, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 		private "_wWatched";
 		_wWatched = false;
-		switch (_wMode) do {
-			case "defense": {_wWatched = true};
-			case "move": {_wWatched = true};
+		if (!([_wTeam, "wfbe_aicom_foot_stage", false] Call WFBE_CO_FNC_GroupGetBool)) then {
+			switch (_wMode) do {
+				case "defense": {_wWatched = true};
+				case "move": {_wWatched = true};
+			};
 		};
 		//--- Lane-325: last-stand recall deliberately parks defenders at HQ; do not let the
 		//--- wedge watchdog release them back to offense while that round-state is active.
@@ -706,6 +719,8 @@ _relieved = 0;
 							_wTeam setVariable ["wfbe_aicom_relief_until", 0];
 							_wTeam setVariable ["wfbe_aicom_strike", false];
 							[_wTeam, "towns"] Call SetTeamMoveMode;
+							_wTeam setVariable ["wfbe_aicom_foot_stage", false];
+							_wTeam setVariable ["wfbe_aicom_foot_stage_pos", []];
 							_wTeam setVariable ["wfbe_aicom_townorder", []];
 							_wTeam setVariable ["wfbe_aicom_wedge_bc", nil];
 							//--- cmdcon41-w2 (wedge-watchdog-resync-stuckstrikes): also clear the AssignTowns strike ladder.
@@ -921,6 +936,8 @@ if (_strikeOn) then {
 						_team = _x;
 						if (!isNull _team && {[_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool} && {({alive _x} count (units _team)) > 0}) then {
 							[_team, "move"] Call SetTeamMoveMode;
+							_team setVariable ["wfbe_aicom_foot_stage", false];
+							_team setVariable ["wfbe_aicom_foot_stage_pos", []];
 							[_team, getPos _enemyHQ] Call SetTeamMovePos;
 							if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 								_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "goto", getPos _enemyHQ], true];
@@ -1013,6 +1030,8 @@ if (_strikeOn) then {
 		private "_bestAlive"; _bestAlive = {alive _x} count (units _best);
 			_best setVariable ["wfbe_aicom_strike", true];
 		[_best, "move"] Call SetTeamMoveMode;
+		_best setVariable ["wfbe_aicom_foot_stage", false];
+		_best setVariable ["wfbe_aicom_foot_stage_pos", []];
 		//--- cmdcon41-w2 STAGING-MASS: while massing, point new strikers at the rally (_strikeDest = rally pos); once released it equals the enemy HQ.
 		[_best, _strikeDest] Call SetTeamMovePos;
 		if ([_best, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
@@ -1033,6 +1052,8 @@ if (_strikeOn) then {
 			if (!isNull _team && {[_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool}) then {
 				_team setVariable ["wfbe_aicom_strike", false];
 				[_team, "towns"] Call SetTeamMoveMode;
+			_team setVariable ["wfbe_aicom_foot_stage", false];
+			_team setVariable ["wfbe_aicom_foot_stage_pos", []];
 				_team setVariable ["wfbe_aicom_townorder", []];
 			};
 		} forEach _teams;
