@@ -581,8 +581,11 @@ while {alive player && dialog} do {
 					//--- Pre-compute vehicle list so confirm message shows the accurate surcharge.
 					_ftVehList = [];
 					{
-						if (_x distance _startPoint < _ftr && canMove (vehicle _x) && !(vehicle _x isKindOf "StaticWeapon") && !stopped (vehicle _x) && !((currentCommand _x) in ["WAIT","STOP"])) then {
-							if (!(vehicle _x in _ftVehList) && !(_x isKindOf "Man")) then {_ftVehList = _ftVehList + [vehicle _x]};
+						if (_x distance _startPoint < _ftr && canMove (vehicle _x) && !(vehicle _x isKindOf "StaticWeapon") && !stopped (vehicle _x) && !((currentCommand _x) in ["WAIT","STOP"]) && !((vehicle _x) isKindOf "Man")) then {
+							//--- fable/fasttravel-campflag: fixed dedupe/Man-check predicate (was always-false self-check on
+							//--- a Man unit) - this is now the single snapshot reused unchanged by the click-2 funds recheck
+							//--- and the final charge below, so the quote total can no longer diverge from the bill.
+							if (!(vehicle _x in _ftVehList)) then {_ftVehList = _ftVehList + [vehicle _x]};
 						};
 					} forEach units (group player);
 					_ftVehCount = count _ftVehList;
@@ -592,7 +595,7 @@ while {alive player && dialog} do {
 					if (_ftVehCount > 0) then {
 						_ftConfirmMsg = _ftConfirmMsg + "<br/>Vehicle surcharge: " + str _ftVehCount + " vehicle(s) x $" + str (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE") + " = $" + str _ftVehFee;
 					};
-					_ftConfirmMsg = _ftConfirmMsg + "<br/><t color='#ffe066'>Total (approx.): $" + str (_ftBaseFee + _ftVehFee) + "</t>"; //--- approx: vehicle scan repeats at click-2 (~6s later)
+					_ftConfirmMsg = _ftConfirmMsg + "<br/><t color='#ffe066'>Total (approx.): $" + str (_ftBaseFee + _ftVehFee) + "</t>"; //--- approx: only the per-km leg can still drift (current distance); _ftVehList itself is now frozen and reused unchanged through the click-2 funds recheck and charge.
 					//--- First click: hint shown, returns false, MenuAction stays 7 (not reset). Second click: returns true.
 					if (!(["wf_ft_confirm", _ftConfirmMsg] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
 					_doTravel = true;
@@ -642,15 +645,14 @@ while {alive player && dialog} do {
 				//--- full bill now (flat + per-km + the per-vehicle surcharge for the vehicles taken along) and
 				//--- deny via the menu's established ctrlSetText[17027] feedback rather than charge into the red.
 				if (_ftRecheckOk && _ft == 2) then {
-					private ["_ftConfirmFee","_ftConfirmVehFee","_ftConfirmVehSeen"];
+					private ["_ftConfirmFee"];
 					_ftConfirmFee = (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_FEE") + round(((player distance _destination)/1000) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM"));
-					_ftConfirmVehSeen = [];
-					{if (_x distance _startPoint < _ftr && !(_x in _ftConfirmVehSeen) && canMove _x && !(vehicle _x isKindOf "StaticWeapon") && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"]) && !((vehicle _x) isKindOf "Man")) then {_ftConfirmVehSeen set [count _ftConfirmVehSeen, vehicle _x]}} forEach units (group player);
-					_ftConfirmVehFee = (count _ftConfirmVehSeen) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE");
-					if ((Call GetPlayerFunds) < (_ftConfirmFee + _ftConfirmVehFee)) then {
+					//--- fable/fasttravel-campflag: bill the SAME _ftVehList/_ftVehFee quoted above instead of
+					//--- re-scanning the squad a second time - funds check and charge must agree on the vehicle set.
+					if ((Call GetPlayerFunds) < (_ftConfirmFee + _ftVehFee)) then {
 						_ftRecheckOk = false;
 						_ftFundsShort = true;
-						ctrlSetText [17027, Format ["Not enough funds - fast travel costs $%1.", (_ftConfirmFee + _ftConfirmVehFee)]];
+						ctrlSetText [17027, Format ["Not enough funds - fast travel costs $%1.", (_ftConfirmFee + _ftVehFee)]];
 						_lastUpdate = 0;
 					};
 				};
@@ -682,10 +684,18 @@ while {alive player && dialog} do {
 						-(_fee) Call ChangePlayerFunds;
 					};
 					
-					_travelingWith = [];
-					{if (_x distance _startPoint < _ftr && !(_x in _travelingWith) && canMove _x && !(vehicle _x isKindOf "StaticWeapon") && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"])) then {_travelingWith = _travelingWith + [vehicle _x]}} forEach units (group player);
-					//--- FAST TRAVEL per-vehicle surcharge (Ray 2026-06-28): charge WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE per DISTINCT real vehicle taken along (dedupe dup crew-seat handles + exclude foot units).
-					if (_ft == 2) then {private "_ftSeen"; _ftSeen = []; {if (!(_x in _ftSeen) && !(_x isKindOf "Man")) then {_ftSeen set [count _ftSeen, _x]; -(missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE") Call ChangePlayerFunds}} forEach _travelingWith;};
+					//--- fable/fasttravel-campflag: fee mode starts the roster from the exact _ftVehList snapshot
+					//--- quoted + funds-checked above (never re-scan vehicles a third time); other modes keep the
+					//--- original always-fresh scan (no fee snapshot was ever taken for them).
+					if (_ft == 2) then {
+						_travelingWith = +_ftVehList;
+					} else {
+						_travelingWith = [];
+						{if (_x distance _startPoint < _ftr && !(vehicle _x in _travelingWith) && canMove _x && !(vehicle _x isKindOf "StaticWeapon") && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"]) && !((vehicle _x) isKindOf "Man")) then {_travelingWith = _travelingWith + [vehicle _x]}} forEach units (group player);
+					};
+					{if (_x distance _startPoint < _ftr && (vehicle _x) isKindOf "Man" && !(_x in _travelingWith) && canMove _x && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"])) then {_travelingWith = _travelingWith + [_x]}} forEach units (group player);
+					//--- FAST TRAVEL per-vehicle surcharge (Ray 2026-06-28): charge WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE once per DISTINCT vehicle in _ftVehList (already deduped; same list quoted + funds-checked above).
+					if (_ft == 2) then {{-(missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE") Call ChangePlayerFunds} forEach _ftVehList;};
 					
 					ForceMap true;
 					_compass = shownCompass;
