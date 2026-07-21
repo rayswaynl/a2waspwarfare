@@ -748,7 +748,6 @@ class Mission
 					id=50;
 					side="CIV";
 					vehicle="Civilian";
-					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
@@ -770,7 +769,6 @@ class Mission
 					id=51;
 					side="CIV";
 					vehicle="Civilian";
-					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
@@ -1386,7 +1384,6 @@ class Mission
 					id=91;
 					side="EAST";
 					vehicle="TK_Soldier_EP1";
-					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
