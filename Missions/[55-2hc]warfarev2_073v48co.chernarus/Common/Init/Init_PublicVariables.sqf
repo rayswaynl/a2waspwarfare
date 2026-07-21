@@ -15,6 +15,7 @@ _l = _l + ["RequestClaimCommander"]; //--- mid-round "TAKE COMMAND" claim of an 
 _l = _l + ["RequestStructure"];
 _l = _l + ["RequestFOBStructure"]; //--- B75 (guer-tech): GUER FOB field-factory build (Server\PVFunctions\RequestFOBStructure.sqf).
 _l = _l + ["RequestDefense"];
+_l = _l + ["RequestStarFort"]; //--- Star Fortress Phase 1 (kimi/starfort-mvp): commander build request -> server 6-gate validation + staged construction (Server\PVFunctions\RequestStarFort.sqf). Inert while WFBE_C_STARFORT_ENABLE=0 (the only sender is the flag-gated commander action).
 _l = _l + ["RequestJoin"];
 _l = _l + ["RequestFundsResend"]; //--- B76 (Ray 2026-06-29): JIP funds self-heal - client asks the server to re-broadcast its own-group wfbe_funds when a slow team-sync left it with $0 (Server\PVFunctions\RequestFundsResend.sqf).
 _l = _l + ["RequestFundsRecord"]; //--- Ray pick A (2026-07-03): funds-record lock-step - after a CLIENT-side spend/credit the client asks the server to snapshot its own-group (broadcast, authoritative) wfbe_funds into WFBE_JIP_USER<uid> so a later record-based JIP zero-recovery is provably safe (Server\PVFunctions\RequestFundsRecord.sqf).

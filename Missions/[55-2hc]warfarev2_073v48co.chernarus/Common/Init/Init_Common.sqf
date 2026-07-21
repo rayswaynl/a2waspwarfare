@@ -165,6 +165,7 @@ WFBE_CO_FNC_GetUnitConfigGear = Compile preprocessFileLineNumbers "Common\Functi
 //--- wiki-wins: removed dead compile WFBE_CO_FNC_GetUnitsPerSide (zero call sites repo-wide)
 WFBE_CO_FNC_GetVehicleTurretsGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetVehicleTurretsGear.sqf";
 WFBE_CO_FNC_ValidateCampPos = Compile preprocessFileLineNumbers "Common\Functions\Common_ValidateCampPos.sqf"; //--- fable/fix-camp-placement: shared 6-gate position validator, ported from AI_Commander_Base.sqf (unwired new file, zero call sites yet).
+WFBE_CO_FNC_StarFortStatus = Compile preprocessFileLineNumbers "Common\Functions\Common_StarFortStatus.sqf"; //--- kimi/starfort-mvp: Star Fortress alive/breach/keepalive watcher (spawned server-side by Construction_StarFortSite.sqf at build completion; inert until then).
 WFBE_CO_FNC_HandleArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleArtillery.sqf";
 WFBE_CO_FNC_OnUnitHit = Compile preprocessFileLineNumbers "Common\Functions\Common_OnUnitHit.sqf";
 WFBE_CO_FNC_OnUnitKilled = Compile preprocessFileLineNumbers "Common\Functions\Common_OnUnitKilled.sqf";

@@ -2774,5 +2774,32 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY") then {WFBE_C_CLIENT_FRAME_TELEMETRY = 1};
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL") then {WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL = 60};
 
+
+
+//--- STAR FORTRESS Phase 1 (MVP, kimi/starfort-mvp): one commander-gated, single-instance-per-side
+//--- strategic forward keep for WEST/EAST (GUER already has the truck-deployed FOB forward-spawn -
+//--- no GUER variant in v1). Built in 3 staged supply payments (Foundation -> Walls -> Bastions) via
+//--- Server\PVFunctions\RequestStarFort.sqf (6-gate placement validator) +
+//--- Server\Construction\Construction_StarFortSite.sqf (staged watcher + programmatic composition).
+//--- Master flag default 0 = nothing is wired anywhere: no addAction, no loops, no registry seeds,
+//--- no PV senders - byte-identical behaviour to HEAD. Phase 2 (territorial-clock gate in
+//--- server_victory_threeway.sqf, AICOM assault hook in AI_Commander_Strategy.sqf) is DEFERRED to
+//--- owner sign-off; those shared files stay untouched.
+	if (isNil "WFBE_C_STARFORT_ENABLE") then {WFBE_C_STARFORT_ENABLE = 0}; //--- master flag-off gate.
+	if (isNil "WFBE_C_STARFORT_UNLOCK_BARRACKS_LVL") then {WFBE_C_STARFORT_UNLOCK_BARRACKS_LVL = 3}; //--- build unlocks at max barracks tier (reuses wfbe_upgrades select WFBE_UP_BARRACKS, the RequestDefense.sqf _barrackLvl idiom).
+	if (isNil "WFBE_C_STARFORT_MIN_ENEMY_TOWN_DIST") then {WFBE_C_STARFORT_MIN_ENEMY_TOWN_DIST = 800}; //--- m: anti-shortcut floor - min distance from the nearest town NOT owned by the builder's side (enemy/neutral/contested).
+	if (isNil "WFBE_C_STARFORT_MAX_FRONTLINE_DIST") then {WFBE_C_STARFORT_MAX_FRONTLINE_DIST = 1500}; //--- m: max tether to the nearest friendly-held town (no isolated deep-forward islands).
+	if (isNil "WFBE_C_STARFORT_MIN_ENEMY_HQ_DIST") then {WFBE_C_STARFORT_MIN_ENEMY_HQ_DIST = 1000}; //--- m: min distance from the enemy HQ (mirrors the WFBE_C_BASE_HQ_BUILD_RANGE idiom, applied to the enemy HQ).
+	if (isNil "WFBE_C_STARFORT_OBJ_CAP") then {WFBE_C_STARFORT_OBJ_CAP = 55}; //--- soft object budget; wall-ring panels are trimmed first when the computed layout would exceed it.
+	if (isNil "WFBE_C_STARFORT_OBJ_CAP_HARD") then {WFBE_C_STARFORT_OBJ_CAP_HARD = 60}; //--- absolute object ceiling, never exceeded.
+	if (isNil "WFBE_C_STARFORT_BASTIONS") then {WFBE_C_STARFORT_BASTIONS = 4}; //--- corner gun bastions on the ring/diamond trace.
+	if (isNil "WFBE_C_STARFORT_BREACH_BASTIONS_LOST") then {WFBE_C_STARFORT_BREACH_BASTIONS_LOST = 2}; //--- of WFBE_C_STARFORT_BASTIONS; gate segment lost + this many bastion guns dead flips wfbe_starfort_breached_<side>.
+	if (isNil "WFBE_C_STARFORT_COST_FOUNDATION") then {WFBE_C_STARFORT_COST_FOUNDATION = 6000}; //--- supply, Stage 1: keep/respawn core (charged at request acceptance).
+	if (isNil "WFBE_C_STARFORT_COST_WALLS") then {WFBE_C_STARFORT_COST_WALLS = 15000}; //--- supply, Stage 2: wall ring + obstacle apron (charged when the watcher crosses 33.33%).
+	if (isNil "WFBE_C_STARFORT_COST_BASTIONS") then {WFBE_C_STARFORT_COST_BASTIONS = 28000}; //--- supply, Stage 3: gun bastions + gate (charged when the watcher crosses 66.66%). Total ~49k, inside the 40-60k band.
+	if (isNil "WFBE_C_STARFORT_BUILD_TIME") then {WFBE_C_STARFORT_BUILD_TIME = 300}; //--- s: total staged build time (construction mode 0 = Time; mirrors MediumSite's per-stage pacing).
+	if (isNil "WFBE_C_STARFORT_RADIUS") then {WFBE_C_STARFORT_RADIUS = 25}; //--- m: bastion ring radius about the keep (wall ring is traced between bastions at the 2.2m panel pitch).
+	if (isNil "WFBE_C_STARFORT_SLOPE_MAX") then {WFBE_C_STARFORT_SLOPE_MAX = 0.97}; //--- surfaceNormal z-floor for the footprint-wide slope scan (mirrors WFBE_C_AIR_SPAWN_SLOPE_MAX).
+	if (isNil "WFBE_C_STARFORT_PENDING_WINDOW") then {WFBE_C_STARFORT_PENDING_WINDOW = 180}; //--- s: one-per-side reservation window closing the duplicate-build race (Bank _PENDING idiom).
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

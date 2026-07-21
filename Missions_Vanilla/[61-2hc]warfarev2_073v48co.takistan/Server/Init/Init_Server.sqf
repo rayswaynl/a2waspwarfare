@@ -45,6 +45,8 @@ HandleDefense = Compile preprocessFile "Server\Functions\Server_HandleDefense.sq
 HandleSpecial = Compile preprocessFile "Server\Functions\Server_HandleSpecial.sqf";
 MHQRepair = Compile preprocessFile "Server\Functions\Server_MHQRepair.sqf";
 SideMessage = Compile preprocessFile "Server\Functions\Server_SideMessage.sqf";
+//--- Star Fortress Phase 1 (kimi/starfort-mvp): staged construction watcher (spawned only by RequestStarFort.sqf after the 6-gate chain passes; inert while WFBE_C_STARFORT_ENABLE=0).
+WFBE_SE_FNC_StarFortSite = Compile preprocessFileLineNumbers "Server\Construction\Construction_StarFortSite.sqf";
 
 UpdateTeam = Compile preprocessFile "Server\Functions\Server_UpdateTeam.sqf";
 /* UpdateSupplyTruck = Compile preprocessFile "Server\AI\AI_UpdateSupplyTruck.sqf"; */
@@ -152,6 +154,20 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_RADIOTOWER", 0]) > 0) then
 	missionNamespace setVariable ["WFBE_RADIOTOWER_EAST", []];
 	WFBE_RADIOTOWER_WEST_ALIVE = false; publicVariable "WFBE_RADIOTOWER_WEST_ALIVE";
 	WFBE_RADIOTOWER_EAST_ALIVE = false; publicVariable "WFBE_RADIOTOWER_EAST_ALIVE";
+};
+
+//--- Star Fortress Phase 1 (kimi/starfort-mvp): per-side single-instance keep registries + public
+//--- keepalive/breach flags (Bank/RadioTower idiom above). Flag 0 (default) = nothing is seeded,
+//--- nothing is broadcast, no consumer runs - byte-identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_STARFORT_ENABLE", 0]) > 0) then {
+	missionNamespace setVariable ["WFBE_STARFORT_WEST", objNull];
+	publicVariable "WFBE_STARFORT_WEST";
+	missionNamespace setVariable ["WFBE_STARFORT_EAST", objNull];
+	publicVariable "WFBE_STARFORT_EAST";
+	wfbe_starfort_keepalive_west = false; publicVariable "wfbe_starfort_keepalive_west";
+	wfbe_starfort_keepalive_east = false; publicVariable "wfbe_starfort_keepalive_east";
+	wfbe_starfort_breached_west = false; publicVariable "wfbe_starfort_breached_west";
+	wfbe_starfort_breached_east = false; publicVariable "wfbe_starfort_breached_east";
 };
 
 //--- Least-loaded HC picker (single source of truth for delegation balance). Compiled

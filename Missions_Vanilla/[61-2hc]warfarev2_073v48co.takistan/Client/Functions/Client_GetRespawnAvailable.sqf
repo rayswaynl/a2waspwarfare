@@ -133,4 +133,17 @@ if (_side != resistance) then {
 	} forEach towns;
 };
 
+//--- Star Fortress Phase 1 (kimi/starfort-mvp, flag WFBE_C_STARFORT_ENABLE): the keep is a forward
+//--- hard-spawn for its side while it stands (the WEST/EAST answer to the GUER FOB truck above).
+//--- One more candidate OBJECT in the existing spawn list - no UI change needed (GUI_RespawnMenu
+//--- accepts any object). Gated on the broadcast keepalive flag so a razed fort drops off instantly.
+if ((missionNamespace getVariable ["WFBE_C_STARFORT_ENABLE", 0]) > 0 && {_side != resistance}) then {
+	private ["_sfKeep","_sfAliveKey"];
+	_sfKeep = missionNamespace getVariable [if (_side == west) then {"WFBE_STARFORT_WEST"} else {"WFBE_STARFORT_EAST"}, objNull];
+	_sfAliveKey = if (_side == west) then {"wfbe_starfort_keepalive_west"} else {"wfbe_starfort_keepalive_east"};
+	if (!isNull _sfKeep && {alive _sfKeep} && {missionNamespace getVariable [_sfAliveKey, false]}) then {
+		_availableSpawn = _availableSpawn + [_sfKeep];
+	};
+};
+
 _availableSpawn
