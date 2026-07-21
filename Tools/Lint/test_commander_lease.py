@@ -18,6 +18,13 @@ generation it targets at enqueue time and the executor discards it outright if t
 current generation no longer matches - no statement-adjacency assumption required.
 All lease-coupled mutation (grant, reclaim, stand-down) is modelled as a command
 consumed exclusively by a single per-side executor, matching the SQF source.
+
+Round 4 (owner ruling 2026-07-21): the side-change stand-down enqueue was relocated
+OFF RequestJoin.sqf - a JIP-flow file agents must never modify - onto the existing
+Server_OnPlayerConnected.sqf connect handler instead. That handler already tracks a
+player's previously-confirmed side for its own teamswap-funds check; the relocated
+code reuses that same detection to enqueue the identical versioned stand-down
+request. RequestJoin.sqf is now pinned byte-identical to its pre-C1 base.
 """
 
 from __future__ import annotations
@@ -31,6 +38,7 @@ CHERNARUS = ROOT / "Missions" / "[55-2hc]warfarev2_073v48co.chernarus"
 DISCONNECT = CHERNARUS / "Server" / "Functions" / "Server_OnPlayerDisconnected.sqf"
 HANDLE_SPECIAL = CHERNARUS / "Server" / "Functions" / "Server_HandleSpecial.sqf"
 REQUEST_JOIN = CHERNARUS / "Server" / "PVFunctions" / "RequestJoin.sqf"
+CONNECTED = CHERNARUS / "Server" / "Functions" / "Server_OnPlayerConnected.sqf"
 REQUEST_NEW_COMMANDER = CHERNARUS / "Server" / "PVFunctions" / "RequestNewCommander.sqf"
 REQUEST_CLAIM_COMMANDER = CHERNARUS / "Server" / "PVFunctions" / "RequestClaimCommander.sqf"
 VOTE_FOR_COMMANDER = CHERNARUS / "Server" / "Functions" / "Server_VoteForCommander.sqf"
@@ -271,7 +279,7 @@ class CommanderLeaseFixtures(unittest.TestCase):
         self.assertIn('if (isNil "WFBE_C_CMD_LEASE_GRACE") then {WFBE_C_CMD_LEASE_GRACE = 90};', constants)
         self.assertIn('Call Compile preprocessFileLineNumbers "Common\\Functions\\Common_CommanderLease.sqf";', common_init)
         flagged = 'missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]'
-        for path in (DISCONNECT, HANDLE_SPECIAL, REQUEST_JOIN, REQUEST_NEW_COMMANDER, REQUEST_CLAIM_COMMANDER, VOTE_FOR_COMMANDER):
+        for path in (DISCONNECT, HANDLE_SPECIAL, CONNECTED, REQUEST_NEW_COMMANDER, REQUEST_CLAIM_COMMANDER, VOTE_FOR_COMMANDER):
             code = path.read_text(encoding="utf-8-sig")
             self.assertIn(flagged, code, str(path))
             self.assertNotIn("(WFBE_C_CMD_LEASE > 0)", code, str(path))
@@ -279,6 +287,16 @@ class CommanderLeaseFixtures(unittest.TestCase):
             'missionNamespace getVariable ["WFBE_C_CMD_LEASE_GRACE", 90]',
             DISCONNECT.read_text(encoding="utf-8-sig"),
         )
+
+    def test_07b_requestjoin_is_untouched_jip_flow_file(self) -> None:
+        """Owner ruling 2026-07-21: RequestJoin.sqf is JIP-flow and agents must never modify
+        it. Pin that it carries no trace of the C1 lease feature at all - the relocated
+        detection lives in Server_OnPlayerConnected.sqf instead (see test_11/test_12)."""
+        code = REQUEST_JOIN.read_text(encoding="utf-8-sig")
+        self.assertNotIn("WFBE_C_CMD_LEASE", code)
+        self.assertNotIn("CommanderLease", code)
+        self.assertNotIn("_oldLogic", code)
+        self.assertNotIn("_oldLease", code)
 
     def test_08_racing_callers_can_only_request_never_run_effects(self) -> None:
         state = LeaseModel()
@@ -386,8 +404,8 @@ class CommanderLeaseFixtures(unittest.TestCase):
         self.assertIn("Call WFBE_CO_FNC_CommanderLeaseRequestReclaim", reclaim_block)
         self.assertNotIn("wfbe_commander\", _team", reclaim_block)
 
-        request_join = REQUEST_JOIN.read_text(encoding="utf-8-sig")
-        self.assertIn("Call WFBE_CO_FNC_CommanderLeaseRequestStandDown", request_join)
+        connected = CONNECTED.read_text(encoding="utf-8-sig")
+        self.assertIn("Call WFBE_CO_FNC_CommanderLeaseRequestStandDown", connected)
 
         init_server = INIT_SERVER.read_text(encoding="utf-8-sig")
         self.assertIn("Spawn WFBE_CO_FNC_CommanderLeaseStandDownExecutor", init_server)
@@ -402,8 +420,10 @@ class CommanderLeaseFixtures(unittest.TestCase):
         self.assertIn("[_side, _leaseExpires, _leaseGen] Spawn WFBE_CO_FNC_CommanderLeaseGraceCheck;", disconnect)
         self.assertIn("[_side, (_logik getVariable [\"wfbe_commander_lease_gen\", 0])] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown;", disconnect)
 
-        request_join = REQUEST_JOIN.read_text(encoding="utf-8-sig")
-        self.assertIn("(_oldLease select 5)] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown", request_join)
+        connected = CONNECTED.read_text(encoding="utf-8-sig")
+        self.assertIn("(_oldLease select 5)] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown", connected)
+        self.assertIn("_prevSideJoined = _get select 3;", connected)
+        self.assertIn("_prevSideJoined != _sideJoined", connected)
 
         lease_code = LEASE.read_text(encoding="utf-8-sig")
         grace_check = lease_code[lease_code.index("WFBE_CO_FNC_CommanderLeaseGraceCheck = {"):]

@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_sideJoined','_sideOrigin','_team','_uid','_units'];
+Private ['_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_sideJoined','_sideOrigin','_team','_uid','_units'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -331,6 +331,7 @@ if (isNil '_get') exitWith {
 };
 
 //--- The player has already joined the session previously, we just need to update the informations.
+_prevSideJoined = _get select 3;
 _get set [3, _sideJoined];
 
 //--- Get the previous informations.
@@ -343,6 +344,25 @@ missionNamespace setVariable [format["WFBE_JIP_USER%1",_uid], _get];
 //--- Make sure that the player didn't teamswap.
 if (_sideOrigin != _sideJoined) then {
 	_funds = missionNamespace getVariable Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _sideJoined];
+};
+
+//--- C1 stable commander lease (WFBE_C_CMD_LEASE). Owner ruling 2026-07-21: PR #1154's stand-down
+//--- enqueue was relocated OFF RequestJoin.sqf (JIP-flow file, never touched by agents) to this
+//--- existing connect handler instead. Reuses the side-change detection this handler already
+//--- performs for the teamswap-funds check above: _prevSideJoined is the side recorded as of the
+//--- player's PREVIOUS connect (captured before _get set [3, ...] overwrote it), so a mismatch here
+//--- means the reconnecting UID left the side it is recorded against. The call below only ENQUEUES
+//--- a versioned stand-down request - Common_CommanderLease.sqf's per-side executor is the sole
+//--- writer of lease state and discards the request if a grant/reclaim has since superseded it, so
+//--- this is safe to raise from any server-side file.
+if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0 && {!isNil "_prevSideJoined"} && {_prevSideJoined != _sideJoined}) then {
+	_oldLogic = (_prevSideJoined) Call WFBE_CO_FNC_GetSideLogic;
+	if (!isNull _oldLogic) then {
+		_oldLease = _oldLogic getVariable ["wfbe_commander_lease", []];
+		if (typeName _oldLease == "ARRAY" && {count _oldLease >= 6} && {(_oldLease select 0) == _uid}) then {
+			[_prevSideJoined, (_oldLease select 5)] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown;
+		};
+	};
 };
 
 //--- Set the current player funds. NO-CLOBBER (2026-07-04): never overwrite a positive group wallet with
