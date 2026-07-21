@@ -51,6 +51,8 @@ A3_TRAPS = (
     "disableMove",  # invented identifier; does not exist on A2 OA 1.64 (nor A3); use disableAI "MOVE"
     "ctrlSetTooltip",  # A3-only; parse-kills the whole script on A2 OA 1.64 (live-burned RC26/27 WF menu)
     "stance",  # A3-only, caught in PR 1202 review; unavailable on A2 OA 1.64.
+    "groupId",  # A3-only GETTER (setGroupId is A2-fine and unmatched by \b); parse "Missing ]" live-burned wave0721 (teambar probe + commander lease); use str <group>
+    "rankId",  # A3-only; A2 OA has string-returning `rank` only; shipped alongside groupId in wave0721
     # NOTE: bare "insert" excluded. A3_TRAPS matching uses word-boundary regex
     # on comment/string-masked text (safe), but "insert" appears in plain English
     # comments too frequently to avoid noise.

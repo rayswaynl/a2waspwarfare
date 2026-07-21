@@ -33,7 +33,7 @@ class TeambarProbeTests(unittest.TestCase):
             "playerRankId=",
             "jip=",                        # round-2: JIP discrimination
             "didJIP",
-            "rankId _u",
+            "rank _u",  # A2-safe: rankId is A3-only (wave0721 live burn)
             "isPlayer _u",
             "local _u",
             "alive _u",
@@ -83,7 +83,7 @@ class TeambarProbeTests(unittest.TestCase):
         text = code("Server/Functions/Server_HandleSpecial.sqf")
         self.assertIn("TEAMBAR|v2|SVPROBE", text)
         self.assertIn("phase=pre-client-rejoin", text)
-        for token in ("getPlayerUID _leader", "leaderIsGrpLeader=", "rankId _leader", 'WFBE_C_TEAMBAR_PROBE", 0]'):
+        for token in ("getPlayerUID _leader", "leaderIsGrpLeader=", "rank _leader", 'WFBE_C_TEAMBAR_PROBE", 0]'):
             self.assertIn(token, text)
 
     def test_registration_and_default_off(self) -> None:
