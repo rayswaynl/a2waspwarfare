@@ -17,12 +17,12 @@
 */
 
 private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_pending","_g","_hcs","_live","_templates","_tmplUpgrades","_upgrades","_eligible","_i","_u","_ok","_k","_doc","_track","_pref","_pick","_template","_price","_cn","_ud","_funds","_structures","_facClass","_facNames","_facIdx","_fac","_facObj","_real","_foundedTeams","_editorTeams","_totalGroups","_hcUnit","_base","_extra","_maxExtra","_fundsPerExtraTeam","_lastDynTarget",
-              "_allUnits","_allGroups","_allVehicles",
+              "_allUnits","_allGroups","_allVehicles","_liveCount",
               "_w7Flag","_w7BestIdx","_w7Idx","_w7U","_w7Score","_w7Best","_w7SkillSend",
               "_w11FreeFlag",
               "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
               "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger",
-              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart"]; //--- B66
+              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending"]; //--- B66
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -44,19 +44,32 @@ _allVehicles = vehicles;
 
 //--- V0.6 task 47: count FOUNDED teams (HC or server-local tag) and EDITOR-SLOT
 //--- teams separately so editor-slot population never blocks genuine army founding.
-//--- The founding gate uses only foundedTeams + pending vs the target.
+//--- The founding gate uses foundedTeams + HC pending + server-local construction reservations vs the target.
 _foundedTeams = 0;
 _editorTeams  = 0;
+_constructionPending = 0;
 {
 	if (!isNull _x) then {
 		_real = false;
 		if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {_real = true};
 		if (!_real && {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {_real = true};
+		_liveCount = {alive _x} count (units _x);
 		if (_real) then {
-			_foundedTeams = _foundedTeams + 1;
+			//--- C3 husk accounting: a deleted/wiped founded group is no longer a
+			//--- live slot. Keep the HC registry untouched; only the founding census
+			//--- stops treating a null-body group as satisfying the target.
+			if (_liveCount > 0) then {
+				_foundedTeams = _foundedTeams + 1;
+			} else {
+				//--- A server-local construction group is a reservation until Produce
+				//--- supplies its first live body; do not found another empty group.
+				if (!([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) && {[_x, "wfbe_persistent", false] Call WFBE_CO_FNC_GroupGetBool}) then {
+					_constructionPending = _constructionPending + 1;
+				};
+			};
 		} else {
-			//--- Editor-slot branch: alive AI leader with units present.
-			if ((count units _x) > 0 && {!isPlayer (leader _x)} && {alive (leader _x)}) then {
+			//--- Editor-slot branch: alive AI leader with live units present.
+			if (_liveCount > 0 && {!isPlayer (leader _x)} && {alive (leader _x)}) then {
 				_editorTeams = _editorTeams + 1;
 			};
 		};
@@ -64,6 +77,69 @@ _editorTeams  = 0;
 } forEach _teams;
 _aiTeams = _foundedTeams + _editorTeams; //--- legacy alias; used in server-local log below.
 _pending = _logik getVariable ["wfbe_aicom_pending", 0];
+
+//--- C3 consensus telemetry: keep founding-skip reasons debounced per side-logic so the
+//--- next soak can distinguish a target/cap/template/economy stall without RPT flooding.
+_emitFoundSkip = {
+	private ["_reason","_last","_count"];
+	_reason = _this select 0;
+	_last = _logik getVariable [Format ["wfbe_aicom_foundskip_%1_t", _reason], -9999];
+	_count = (_logik getVariable [Format ["wfbe_aicom_foundskip_%1_n", _reason], 0]) + 1;
+	_logik setVariable [Format ["wfbe_aicom_foundskip_%1_n", _reason], _count];
+	if ((time - _last) >= 300) then {
+		_logik setVariable [Format ["wfbe_aicom_foundskip_%1_t", _reason], time];
+		diag_log ("FOUND_SKIP|" + _sideText + "|reason=" + _reason + "|count=" + str _count + "|founded=" + str _foundedTeams + "|pending=" + str (_pending + _constructionPending) + "|target=" + str _target);
+		_logik setVariable [Format ["wfbe_aicom_foundskip_%1_n", _reason], 0];
+	};
+};
+
+//--- C3 consensus telemetry: count live bodies from founded/HC groups and unique live
+//--- patrol groups; registry-entry counts are not unit counts and must not be subtracted.
+_aicomTownDef = {alive _x && {side _x == _side} && {!isPlayer _x} && {_x getVariable ["WFBE_IsTownDefenderAI", false]}} count _allUnits;
+_aicomSideLive = {alive _x && {side _x == _side} && {!isPlayer _x}} count _allUnits;
+_aicomPatrol = 0;
+_aicomPatrolGroups = [];
+_aicomPatrolList = missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []];
+{
+	if (typeName _x == "ARRAY" && {count _x >= 2} && {(_x select 1) == _sideID}) then {
+		private ["_patLeader","_patGroup"];
+		_patLeader = _x select 0;
+		if (!isNull _patLeader) then {
+			_patGroup = group _patLeader;
+			//--- Keep the telemetry partition disjoint if a patrol registry ever points at an AICOM group.
+			if (!isNull _patGroup && {!(_patGroup in _aicomPatrolGroups)} && {!(_patGroup in _teams)}) then {
+				_aicomPatrolGroups set [count _aicomPatrolGroups, _patGroup];
+				_aicomPatrol = _aicomPatrol + ({alive _x && {side _x == _side} && {!isPlayer _x}} count (units _patGroup));
+			};
+		};
+	};
+} forEach _aicomPatrolList;
+_aicomTeams = _foundedTeams;
+_aicomTeamUnits = 0;
+_aicomHusk = 0;
+{
+	if (!isNull _x) then {
+		private ["_c3Live","_c3Real","_c3Hc"];
+		_c3Hc = [_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool;
+		_c3Real = _c3Hc || {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool};
+		if (_c3Real) then {
+			_c3Live = {alive _x} count (units _x);
+			_aicomTeamUnits = _aicomTeamUnits + _c3Live;
+			if (_c3Hc && {_c3Live < 4}) then {_aicomHusk = _aicomHusk + 1};
+		};
+	};
+} forEach _teams;
+_aicomLive = _aicomTeamUnits;
+_aicomOther = (_aicomSideLive - _aicomLive - _aicomPatrol) max 0;
+_aicomMean = if (_aicomTeams > 0) then {_aicomTeamUnits / _aicomTeams} else {0};
+_aicomFunds = (_side) Call GetAICommanderFunds;
+_aicomSkipLast = _logik getVariable ["wfbe_aicom_fieldsplit_t", -9999];
+if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
+	if ((time - _aicomSkipLast) >= 60) then {
+		_logik setVariable ["wfbe_aicom_fieldsplit_t", time];
+		diag_log ("FIELDSPLIT|" + _sideText + "|aicoms_live=" + str _aicomLive + "|aicoms_teams=" + str _aicomTeams + "|aicoms_mean_size=" + str (round (_aicomMean * 10) / 10) + "|townDef=" + str _aicomTownDef + "|patrol=" + str _aicomPatrol + "|other=" + str _aicomOther + "|funds=" + str _aicomFunds + "|ownTowns=" + str ({!isNull _x && {(_x getVariable ["sideID", -1]) == _sideID}} count towns) + "|huskTeams=" + str _aicomHusk);
+	};
+};
 
 //--- V0.6.6: dynamic target - banked funds scale the founding threshold so losing
 //--- AIs convert wealth into pressure instead of hoarding.
@@ -124,7 +200,7 @@ _base = switch (true) do {
 //--- (default -3) teams off the PC-scaled BASE founding target for EACH AI commander so the new Build-87 dynamic systems
 //--- (retained transports, patrol escalation, swarms) have per-team AI headroom. This is the SINGLE authoritative adjusted
 //--- read of the base target: _base drives the funds-extra sum, the banking valve, the hard-cap clamp, the econ-sink surge,
-//--- the (_foundedTeams+_pending)>=_target founding gate, the PC-cleanup retire AND the wfbe_aicom_dyntarget publish below,
+//--- the (_foundedTeams+_pending+_constructionPending)>=_target founding gate, the PC-cleanup retire AND the wfbe_aicom_dyntarget publish below,
 //--- so every consumer inherits the reduction from here. The FLOOR (WFBE_C_AICOM_TEAMS_FLOOR, default 3) prevents a config
 //--- accident from zeroing the army (a side founding 0 teams loses this fork by walkover). The funds-extra + econ-sink surge
 //--- (+2) stay RELATIVE to the reduced base; the hard cap is untouched. DELTA 0 => _base unchanged => EXACT old behaviour.
@@ -198,7 +274,7 @@ if (_pending > 0) then {
 	_pendTimeout = missionNamespace getVariable ["WFBE_C_AICOM_PENDING_TIMEOUT", 270];
 	if (_pendSince < 0) then {_pendSince = time; _logik setVariable ["wfbe_aicom_pending_since", _pendSince]};
 	diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH|pending=" + str _pending + "|founded=" + str _foundedTeams + "|target=" + str _target + "|pendingAgeSec=" + str (round (time - _pendSince)));
-	//--- B69 (pending-slot-timeout-reaper): a lost HC dispatch ack would pin _pending>0 forever, starving founding via the (_foundedTeams+_pending)>=_target guard below. After a timeout, reap the oldest still-pending slot so founding resumes. (_pending is a single per-side counter, so this ages the oldest pending slot, not a per-slot timer.)
+	//--- B69 (pending-slot-timeout-reaper): a lost HC dispatch ack would pin _pending>0 forever, starving founding via the (_foundedTeams+_pending+_constructionPending)>=_target guard below. After a timeout, reap the oldest still-pending slot so founding resumes. (_pending is a single per-side counter, so this ages the oldest pending slot, not a per-slot timer.)
 	if ((time - _pendSince) > _pendTimeout) then {
 		_pending = _pending - 1;
 		_logik setVariable ["wfbe_aicom_pending", _pending];
@@ -250,7 +326,7 @@ if ((_logik getVariable ["wfbe_aicom_veteran_next", false]) && {_logik getVariab
 
 if (_testTeamCap >= 0) then {_target = _target min _testTeamCap}; //--- WFBE_C_TEST_TEAM_CAP final ceiling (test-only, default off).
 
-if ((_foundedTeams + _pending) >= _target) exitWith {};
+if ((_foundedTeams + _pending + _constructionPending) >= _target) then { ["target_met"] Call _emitFoundSkip; exitWith {} };
 
 //--- B74.2 (Ray 2026-06-23): enforce the TIERED per-side TOTAL_AI ceiling AT FOUNDING. The HC founding path had NO
 //--- side-AI gate (only AI_Commander_Produce.sqf:28-30 did), so at low pop founding blew past the cap = the
@@ -262,8 +338,9 @@ _aiCapTierIndex = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
 _aiCapTierLast = (count _aiCapTiers) - 1;
 if (_aiCapTierIndex > _aiCapTierLast) then {_aiCapTierIndex = _aiCapTierLast};
 _aiCapTier = _aiCapTiers select _aiCapTierIndex;
-_sideAINow = {(side _x == _side) && !(isPlayer _x)} count _allUnits;
+_sideAINow = {alive _x && {side _x == _side} && {!isPlayer _x}} count _allUnits;
 if (_sideAINow >= _aiCapTier) exitWith {
+	["side_ai_cap"] Call _emitFoundSkip;
 	private "_foundCapCount";
 	private "_foundCapLast";
 	_foundCapCount = (_logik getVariable ["wfbe_aicom_foundcap_count", 0]) + 1;
@@ -281,6 +358,7 @@ if (_sideAINow >= _aiCapTier) exitWith {
 //--- too many groups in the field (prevents ArmA engine group-limit crashes).
 _totalGroups = {side _x == _side} count _allGroups;
 if (_totalGroups > (missionNamespace getVariable ["WFBE_C_AICOM_GROUP_CAP", 110])) exitWith {
+	["group_cap"] Call _emitFoundSkip;
 	private "_groupCapWarnLast";
 	_groupCapWarnLast = _logik getVariable ["wfbe_aicom_groupcap_warn_t", -9999];
 	if ((time - _groupCapWarnLast) >= 900) then {
@@ -439,7 +517,7 @@ if (count _live > 0) then {
 			};
 		};
 	};
-	if (count _eligible == 0) exitWith {};
+	if (count _eligible == 0) then { ["no_eligible"] Call _emitFoundSkip; exitWith {} };
 
 	//--- Ray 2026-06-29 NO STATICS / NO WEAPON TEAMS: strip every eligible template that contains a StaticWeapon
 	//--- (a towed gun, a mortar emplacement, or any crew-served static) so the AI NEVER founds a static gun or a
@@ -456,7 +534,7 @@ if (count _live > 0) then {
 		if (!_swHas) then {_eligNoStatic set [count _eligNoStatic, _swEi]};
 	} forEach _eligible;
 	if (count _eligNoStatic > 0) then {_eligible = _eligNoStatic};
-	if (count _eligible == 0) exitWith {};
+	if (count _eligible == 0) then { ["no_eligible"] Call _emitFoundSkip; exitWith {} };
 
 	//--- fable/aicom-no-bikes (WO-5, owner ruling "no ATVs/bikes"): strip every eligible template that contains an
 	//--- ATV/Motorcycle-hull unit from the AI commander roster. "Motorcycle" is the confirmed A2 OA CfgVehicles base
@@ -474,7 +552,7 @@ if (count _live > 0) then {
 		} forEach _eligible;
 		if (count _eligNoBike > 0) then {_eligible = _eligNoBike};
 	};
-	if (count _eligible == 0) exitWith {};
+	if (count _eligible == 0) then { ["no_eligible"] Call _emitFoundSkip; exitWith {} };
 
 	//--- B59 ROSTER AIR-GATE (Ray 2026-06-20): the FOUNDING path (this file) had NO air-established gate, so
 	//--- a heli template (cheapest helis carried QUERYUNITUPGRADE air=0) was eligible at air-research 0 with no
@@ -489,7 +567,7 @@ if (count _live > 0) then {
 		{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir set [count _eligNoAir, _x]} } forEach _eligible;
 		_eligible = _eligNoAir;
 	};
-	if (count _eligible == 0) exitWith {};
+	if (count _eligible == 0) then { ["no_eligible"] Call _emitFoundSkip; exitWith {} };
 
 	//--- Build83 FLAT AIR CAP (Ray cmdcon34, 2026-07-01): SUPERSEDES the old per-type attack-heli cap (WFBE_C_AICOM_ATTACKHELI_MAX
 	//--- + its time-bonus ramp) with a SINGLE per-side ceiling: at most WFBE_C_AICOM_AIR_MAX_TOTAL (default 3) AICOM air units
@@ -546,7 +624,7 @@ if (count _live > 0) then {
 			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] flat air cap hit (alive air %2 >= cap %3) - air templates stripped from founding this cycle.", _sideText, _airAlive, _airMaxTotal]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
-	if (count _eligible == 0) exitWith {};
+	if (count _eligible == 0) then { ["no_eligible"] Call _emitFoundSkip; exitWith {} };
 
 	//--- ARTY CAP (Ray 2026-06-27): at most WFBE_C_AICOM_ARTY_MAX artillery batteries ALIVE per AI commander. Mirror
 	//--- of the attack-heli cap above: count alive arty hulls this side; at/over cap, strip every arty template from
@@ -628,7 +706,7 @@ if (count _live > 0) then {
 		};
 	};
 
-	if (count _eligible == 0) exitWith {};
+	if (count _eligible == 0) then { ["no_eligible"] Call _emitFoundSkip; exitWith {} };
 
 	//--- FORCED-ARTY (Ray 2026-06-27, Issue 3 Part 2): GUARANTEE the 1 artillery battery is founded once eligible.
 	//--- The arty-cap strip above only stops OVER-building; the normal type-mix/eff-draw almost never PICKS the lone
@@ -1121,6 +1199,7 @@ if (count _live > 0) then {
 		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] W11 FieldHospital free-refound flag consumed.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 	};
 
+	["insufficient_funds"] Call _emitFoundSkip;
 	if (_funds < _price) exitWith {};
 
 	//--- Spawn at the doctrine factory (fallback: Barracks, then the HQ).

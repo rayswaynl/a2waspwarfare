@@ -31,7 +31,7 @@ _capTier = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
 _capTierLast = (count _capTiers) - 1;
 if (_capTier > _capTierLast) then {_capTier = _capTierLast};
 _cap = _capTiers select _capTier;   //--- B74.2: tiered per-side AI ceiling (was flat WFBE_C_AI_COMMANDER_TOTAL_AI_MAX).
-_sideAI = {(side _x == _side) && !(isPlayer _x)} count allUnits;
+_sideAI = {alive _x && {side _x == _side} && {!isPlayer _x}} count allUnits;
 if (_sideAI >= _cap) exitWith {
 	private "_produceCapCount";
 	private "_produceCapLast";
@@ -360,7 +360,8 @@ if (_airMaxTotalP > 0) then {
 					_retreatOrder = _team getVariable "wfbe_aicom_order";
 					if (isNil "_retreatOrder") then {_retreatOrder = [-1]};
 					_retreatSeq = (_retreatOrder select 0) + 1;
-					_retreatOrder = [_retreatSeq, "defense", getPosATL _hqP];
+					//--- Refit is a logistical MOVE under always-offense; legacy DEFEND remains a rollback only.
+					_retreatOrder = [_retreatSeq, if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {"move"} else {"defense"}, getPosATL _hqP];
 					_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
 					_team setVariable ["wfbe_aicom_refit", true, true]; //--- B61: mark for top-up-at-base once home.
 					if (!_refitWas) then {

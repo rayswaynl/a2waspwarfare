@@ -333,7 +333,7 @@ if (_harassN > 0) then {
 		private ["_hfMntPos","_hfMntReach","_hfGrp","_hfLdr","_hfMode","_hfRelief","_hfStrike","_hfHasVeh","_hfGar"];
 		_hfMntPos   = [];
 		_hfMntReach = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000];
-		_hfGar      = _logik getVariable ["wfbe_aicom_garrison", grpNull];
+		_hfGar      = if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {grpNull} else {_logik getVariable ["wfbe_aicom_garrison", grpNull]};
 		{
 			_hfGrp = _x;
 			if (!isNull _hfGrp) then {
@@ -419,7 +419,8 @@ _neutTowns = [];
 //--- ASSIGN every ELIGIBLE team: a light MOUNTED detachment to the rear harass target (M2), up to _expandN
 //--- teams to capture NEUTRAL towns (expansion lane), the rest concentrated on the fist (reach-aware; never idle).
 private ["_assigned","_harassAssigned","_expandClaimed","_dedupOn"];
-_garGrp = _logik getVariable ["wfbe_aicom_garrison", grpNull];
+_garGrp = if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {grpNull} else {_logik getVariable ["wfbe_aicom_garrison", grpNull]};
+if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {_logik setVariable ["wfbe_aicom_garrison", grpNull]};
 _assigned = 0; _harassAssigned = 0; _expandCount = 0;
 _expandWarnTown = objNull; _expandWarnDist = 1e9;
 _expandClaimed = [];   //--- DEDUP (block-m): neutral towns already claimed by an expand-lane team this tick

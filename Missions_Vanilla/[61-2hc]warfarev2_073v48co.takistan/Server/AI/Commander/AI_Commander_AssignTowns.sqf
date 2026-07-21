@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -193,6 +193,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	};
 	_autonomous = [_team, "wfbe_autonomous", false] Call WFBE_CO_FNC_GroupGetBool;
 	_modeNow = toLower ([_team, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
+	_footStage = [_team, "wfbe_aicom_foot_stage", false] Call WFBE_CO_FNC_GroupGetBool;
 	_canDrive = false;
 	_explicitMode = false;
 	//--- MANUAL-PIN (Build83, claude-gaming 2026-07-01): a team a HUMAN just ordered from the war-room console
@@ -203,9 +204,25 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	//--- never permanently idle). RELEASE / ALL-PUSH clear the pin client-side. A2-OA-safe (plain getVariable, time).
 	_pin = _team getVariable "wfbe_aicom_manualpin";
 	if (!isNil "_pin" && {(time - _pin) < (missionNamespace getVariable ["WFBE_C_AICOM_MANUALPIN_TTL", 600])}) then {_explicitMode = true};
-	if (_modeNow == "move") then {_explicitMode = true};
+	if (_modeNow == "move" && {!_footStage}) then {_explicitMode = true};
 	if (_modeNow == "patrol") then {_explicitMode = true};
 	if (_modeNow == "defense") then {_explicitMode = true};
+	//--- Owner ruling: clear legacy standing defense/garrison posture on each worker pass; active relief and an active capture hold remain explicit below.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0 && {_modeNow == "defense"} && {!_humanCmd}) then {
+		private ["_legacyRelief","_legacyHold"];
+		_legacyRelief = [_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
+		_legacyHold = _team getVariable "wfbe_aicom_holding_town";
+		if (isNull _legacyRelief && {isNil "_legacyHold" || {isNull _legacyHold}}) then {
+			[_team, "towns"] Call SetTeamMoveMode;
+			_team setVariable ["wfbe_teamgoto", objNull, true];
+			_team setVariable ["wfbe_aicom_townorder", [], false];
+			_modeNow = "towns";
+			_explicitMode = false;
+			if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+				_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos (leader _team)], true];
+			};
+		};
+	};
 
 	//--- CONSOLIDATE SKIP (per-team, Ray): during the post-capture hold window, a team that has ARRIVED at a FIST
 	//--- alloc_target is deliberately regrouping - preserve its current orders (treat as explicit) so it is NOT
@@ -235,7 +252,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 		//--- base must not be left open while every team marches at towns.
 		//--- Owner call 2026-06-11: OFF by default - everything goes to the front.
 		//--- Opt back in via WFBE_C_AI_COMMANDER_GARRISON = 1.
-		if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_GARRISON", 0]) > 0) && {!_humanCmd} && {!_explicitMode} && {_aliveCount > 0}) then {
+		if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_GARRISON", 0]) > 0) && {(missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) <= 0} && {!_humanCmd} && {!_explicitMode} && {_aliveCount > 0}) then {
 			_gar = _logik getVariable ["wfbe_aicom_garrison", grpNull];
 			_garDead = true;
 			_garAlive = 0;
@@ -267,14 +284,15 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 		//--- lapses, the latch is CLEARED and the team retargets normally next pass. A2-OA-safe (plain getVariable
 		//--- + isNil guard, typeName OBJECT test, numeric sideID compare, objNull broadcast clear).
 		if ((missionNamespace getVariable ["WFBE_C_AICOM_HOLD_MODE", 1]) > 0) then {
-			private ["_ht","_htLive","_htSide","_htUntil"];
+			private ["_ht","_htLive","_htSide","_htUntil","_htEnemyDist"];
 			_ht = _team getVariable "wfbe_aicom_holding_town";
 			_htLive = false;
 			if (!isNil "_ht") then {
 				if (typeName _ht == "OBJECT" && {!isNull _ht}) then {
 					_htSide = _ht getVariable ["sideID", -1];
 					_htUntil = _ht getVariable ["wfbe_aicom_hold_until", 0];
-					if (_htSide == _sideID && {time < _htUntil}) then {_htLive = true};
+					_htEnemyDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
+					if (_htSide == _sideID && {time < _htUntil} && {(_ht getVariable ["wfbe_active", false])} && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _ht) nearEntities [["Man","LandVehicle","Air"], _htEnemyDist])) > 0}) then {_htLive = true};
 				};
 			};
 			if (_htLive) then {
@@ -293,6 +311,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 		if (!_explicitMode) then {
 			_mode = [_team, "wfbe_teammode", ""] Call WFBE_CO_FNC_GroupGetBool;
 			_goto = [_team, "wfbe_teamgoto", objNull] Call WFBE_CO_FNC_GroupGetBool;
+			if (_footStage) then {_mode = "towns"; _goto = objNull};
 
 			//--- V0.4.2 churn fix: orders are STICKY. Retarget only when the team has no
 			//--- valid enemy-town target, the target resolved (we captured it), or the team
@@ -861,36 +880,40 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						if (!isNull _nearReach) then {
 							_target = _nearReach;
 						} else {
-							//--- GUARDRAIL: nothing in reach (isolated front / island target). Owner-armable M5
-							//--- foot hold keeps a dismounted team at a friendly town on DEFEND instead of
-							//--- sending it on an absolute-nearest enemy death-march. Flag 0 = legacy target.
-							if ((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_HOLD", 0]) > 0 && {!_mounted}) then {
-								private ["_footHoldTown","_footHoldD"];
-								_footHoldTown = objNull;
-								_footHoldD = 1e9;
+							//--- GUARDRAIL: nothing in reach. M5 offensive staging sends a foot team to the friendly town
+							//--- closest to the enemy front, with a MOVE waypoint; the marker makes the next worker pass
+							//--- re-enter target selection instead of treating staging as a permanent explicit order.
+							if ((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0 && {!_mounted}) then {
+								private ["_footStageTown","_footStageD","_footCandidate","_footFrontD"];
+								_footStageTown = objNull;
+								_footStageD = 1e9;
 								{
-									if (!isNull _x && {(_x getVariable ["sideID", -1]) == _sideID} && {(_x distance _ldrPos) < _footHoldD}) then {
-										_footHoldD = _x distance _ldrPos;
-										_footHoldTown = _x;
+									_footCandidate = _x;
+									if (!isNull _footCandidate && {(_footCandidate getVariable ["sideID", -1]) == _sideID}) then {
+										_footFrontD = 1e9;
+										{ if (!isNull _x && {(_x getVariable ["sideID", -1]) != _sideID} && {(_footCandidate distance _x) < _footFrontD}) then {_footFrontD = _footCandidate distance _x} } forEach _uncaptured;
+										if (_footFrontD < _footStageD) then {_footStageD = _footFrontD; _footStageTown = _footCandidate};
 									};
 								} forEach towns;
-								if (!isNull _footHoldTown) then {
-									[_team, "defense"] Call SetTeamMoveMode;
-									[_team, getPos _footHoldTown] Call SetTeamMovePos;
+								if (!isNull _footStageTown) then {
+									[_team, "move"] Call SetTeamMoveMode;
+									[_team, getPos _footStageTown] Call SetTeamMovePos;
+									_team setVariable ["wfbe_aicom_foot_stage", true];
 									_target = objNull;
-									_explicitMode = true;
-									diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOOT_HOLD|team=" + (str _team) + "|town=" + (_footHoldTown getVariable ["name","town"]));
+									_explicitMode = false;
+									diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOOT_STAGE|team=" + (str _team) + "|town=" + (_footStageTown getVariable ["name","town"]));
 								} else {
 									_target = [leader _team, _uncapturedF] Call WFBE_CO_FNC_GetClosestEntity;
 								};
 							} else {
-								_target = [leader _team, _uncapturedF] Call WFBE_CO_FNC_GetClosestEntity; //--- WAVE-1 CAUSE-2: _uncapturedF (blacklist-filtered; guardrail above guarantees non-empty). B36.1 (Ray 2026-06-15): FULL uncaptured list, NOT the _assigned-reduced _avail. A team that just captured its town has dismounted + abandoned its trucks, so it scans on-foot (3500m reach); on a sparse map no town is in reach, this guardrail fires, and the old _avail (minus teammates' targets) sent it to a FARTHER town -> it milled at the just-capped centre. Nearest-of-all advances it to the adjacent town (concentration is fine for an isolated foot team).
+							_target = [leader _team, _uncapturedF] Call WFBE_CO_FNC_GetClosestEntity; //--- WAVE-1 CAUSE-2: _uncapturedF (blacklist-filtered; guardrail above guarantees non-empty). B36.1 (Ray 2026-06-15): FULL uncaptured list, NOT the _assigned-reduced _avail. A team that just captured its town has dismounted + abandoned its trucks, so it scans on-foot (3500m reach); on a sparse map no town is in reach, this guardrail fires, and the old _avail (minus teammates' targets) sent it to a FARTHER town -> it milled at the just-capped centre. Nearest-of-all advances it to the adjacent town (concentration is fine for an isolated foot team).
 							};
 						};
 					};
 				};
 				if (!isNil "_target") then {
 					if (!isNull _target) then {
+						_team setVariable ["wfbe_aicom_foot_stage", false];
 						[_team, "towns"] Call SetTeamMoveMode;
 						[_team, _target] Call SetTeamMovePos;
 						if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
