@@ -2692,6 +2692,9 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- Telemetry-only (no behavior). Round-2 review: DEFAULT 0 per feature-default policy - the
 //--- capture round arms it explicitly (set 1 here or via lobby) for the evidence window.
 	if (isNil "WFBE_C_VEH_DELETE_PROBE") then {WFBE_C_VEH_DELETE_PROBE = 0};
+	//--- C1 stable commander UID/side lease. 0 = legacy instant commander disconnect.
+	if (isNil "WFBE_C_CMD_LEASE") then {WFBE_C_CMD_LEASE = 0};
+	if (isNil "WFBE_C_CMD_LEASE_GRACE") then {WFBE_C_CMD_LEASE_GRACE = 90};
 
 //--- WFBE_C_SPAWN_BUDDY_DISBAND (wasp-aicom-idle-diagnosis-20260717, owner live report 2026-07-17: "I spawn
 //--- with another unit in my group" - AI-Teams pre-grouped squadmate at INITIAL spawn is by-design, but the

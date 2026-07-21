@@ -4,9 +4,10 @@ _args = _this;
 
 switch (_args select 0) do {
 	case "update-teamleader": {
-		Private ["_leader","_team"];
+		Private ["_leader","_team","_side"];
 		_team = _args select 1;
 		_leader = _args select 2;
+		_side = civilian;
 
 		_team setVariable ["wfbe_teamleader", _leader];
 
@@ -19,6 +20,23 @@ switch (_args select 0) do {
 			if (!isNull _team && {!isNull _leader}) then {
 				diag_log Format ["TEAMBAR|v2|SVPROBE|evt=update-teamleader|phase=pre-client-rejoin|t=%1|uid=%2|groupId=%3|leaderIsPlayer=%4|leaderIsGrpLeader=%5|leaderRankId=%6|units=%7",
 					round time, getPlayerUID _leader, groupId _team, isPlayer _leader, (leader _team == _leader), rankId _leader, count (units _team)];
+			};
+		};
+
+		//--- C1 lease reclaim (WFBE_C_CMD_LEASE): a respawning/JIP-reconnecting client always pings
+		//--- update-teamleader (Init_Client / Client_OnKilled). Round-3 review (P1-1/P1-2): this
+		//--- receiver no longer mutates lease state itself - it only ENQUEUES a reclaim request; the
+		//--- single per-side executor re-validates UID+group+eligibility fresh at processing time and
+		//--- is the sole writer, closing the "writer publish and lease grant remain separate
+		//--- statements" and "reclaim can interleave with the stand-down executor" races. The executor
+		//--- path deliberately does not touch per-team autonomous/respawn state either: during grace
+		//--- the teams were never freed, so there is nothing to re-lock - a blanket
+		//--- SetTeamAutonomous/SetTeamRespawn here would wipe the commander's own per-team choices on
+		//--- reconnect (the same blanket-reset anti-pattern C5 removed from AI_Commander).
+		if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
+			_side = _team getVariable "wfbe_side";
+			if (!isNil "_side" && {_side != civilian} && {isPlayer _leader}) then {
+				[_side, getPlayerUID _leader, _team] Call WFBE_CO_FNC_CommanderLeaseRequestReclaim;
 			};
 		};
 	};

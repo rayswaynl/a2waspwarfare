@@ -168,6 +168,7 @@ WFBE_CO_FNC_GetSideHQ = Compile preprocessFileLineNumbers "Common\Functions\Comm
 WFBE_CO_FNC_GetSideID = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideID.sqf";
 WFBE_CO_FNC_GetSideLogic = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideLogic.sqf";
 Call Compile preprocessFileLineNumbers "Common\Functions\Common_LogVehDelete.sqf"; //--- VEHDEL deletion probe (self-registering)
+Call Compile preprocessFileLineNumbers "Common\Functions\Common_CommanderLease.sqf";
 WFBE_CO_FNC_GetSideSupply = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideSupply.sqf";
 WFBE_CO_FNC_GetSideStructures = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideStructures.sqf";
 WFBE_CO_FNC_HasSideRadioTower = Compile preprocessFileLineNumbers "Common\Functions\Common_HasSideRadioTower.sqf";

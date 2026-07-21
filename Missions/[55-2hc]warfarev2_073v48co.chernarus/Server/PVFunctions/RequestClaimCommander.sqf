@@ -35,10 +35,19 @@ if (!isPlayer (leader _claimTeam)) exitWith {};
 if (side _claimTeam != _side) exitWith {};
 
 //--- Promote EXACTLY like the elected path (RequestNewCommander.sqf:12-13).
-_logic setVariable ["wfbe_commander", _claimTeam, true];
-[_side, _claimTeam] Spawn WFBE_SE_FNC_AssignForCommander;
-
-//--- Stand the AI down the SAME way Server_VoteForCommander.sqf:60-61 does.
-if !(isNull _claimTeam) then {
+//--- Round-3 review (P1-1/P1-3): with the lease enabled the writer ONLY ENQUEUES a grant
+//--- request - the single per-side executor is now the sole writer of wfbe_commander/lease
+//--- state AND the sole caller of AssignForCommander (which stops the AI FSM), so a claim can
+//--- never publish/stand-AI-down synchronously here; eligibility (incl. the aicom-hc denial
+//--- this path used to lack) is re-validated at executor time. The round-2 accepted-claim
+//--- latch is gone: the flag-on branch enqueues unconditionally and never touches
+//--- wfbe_aicom_running itself, so there is no "stopped the AI on a denied claim" fallthrough
+//--- to guard against. Flag-off: legacy unconditional publish + immediate AI stand-down,
+//--- byte-identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
+	[_side, _claimTeam, "claim"] Call WFBE_CO_FNC_CommanderLeaseRequestGrant;
+} else {
+	_logic setVariable ["wfbe_commander", _claimTeam, true];
+	[_side, _claimTeam] Spawn WFBE_SE_FNC_AssignForCommander;
 	if (_logic getVariable "wfbe_aicom_running") then {_logic setVariable ["wfbe_aicom_running", false, _syncAicomState]};
 };

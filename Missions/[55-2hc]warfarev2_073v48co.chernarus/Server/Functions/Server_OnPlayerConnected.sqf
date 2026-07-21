@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_sideJoined','_sideOrigin','_team','_uid','_units'];
+Private ['_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_sideJoined','_sideOrigin','_team','_uid','_units'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -272,6 +272,42 @@ if (_sideJoined in [west, east]) then {
 
 //--- We attempt to get the player informations in case that he joined before.
 _get = missionNamespace getVariable format["WFBE_JIP_USER%1",_uid];
+
+//--- Scope (orchestrator ruling 2026-07-21, round-3 review): this whole handler - including the
+//--- block below - is dedicated-server-scoped by the `local player` exitWith at the top of this
+//--- file (line 19); it never runs on a hosted/listen server, same as every other pre-existing path
+//--- here. WASP only deploys on dedicated servers (live + test are both dedicated NSSM services;
+//--- hosted mode is unsupported), so this is accepted scope, documented rather than compensated for.
+//--- On an unsupported hosted/listen server the commander-lease stand-down would rely on the
+//--- disconnect-grace path (Server_OnPlayerDisconnected.sqf) only.
+//--- C1 stable commander lease (WFBE_C_CMD_LEASE). Owner ruling 2026-07-21: PR #1154's stand-down
+//--- enqueue was relocated OFF RequestJoin.sqf (JIP-flow file, never touched by agents) to this
+//--- existing connect handler instead. Round-2 adversarial review (2026-07-21, HIGH finding): this
+//--- MUST sit ABOVE the JIPFUNDS duplicate-connect latch below - this handler resolves TWICE per
+//--- join (see that guard's own comment) and a lease holder reconnecting quickly could have EITHER
+//--- resolve pass land inside the latch's 15s window, so a check placed below it could be skipped
+//--- entirely on the one connect event where a fast side-swap actually happens. _get (just fetched
+//--- above, not yet mutated) still holds the side recorded as of the player's PREVIOUS connect at
+//--- index 3; a mismatch against the just-resolved _sideJoined means the reconnecting UID left the
+//--- side it is recorded against. Sitting above the latch also means this no longer runs downstream
+//--- of the CIV-mid-sync guard further below, so the real-side check is done explicitly here instead
+//--- of inheriting it - a mid-sync CIV reading on a duplicate resolve pass must never look like a
+//--- side change. The call below only ENQUEUES a versioned stand-down request -
+//--- Common_CommanderLease.sqf's per-side executor is the sole writer of lease state and discards
+//--- the request if a grant/reclaim has since superseded it, so this is safe to raise unconditionally,
+//--- latched or not, duplicate resolve pass or not.
+if (!isNil "_get" && {(missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0} && {_sideJoined in [west, east, resistance]}) then {
+	_prevSideJoined = _get select 3;
+	if (!isNil "_prevSideJoined" && {_prevSideJoined != _sideJoined}) then {
+		_oldLogic = (_prevSideJoined) Call WFBE_CO_FNC_GetSideLogic;
+		if (!isNull _oldLogic) then {
+			_oldLease = _oldLogic getVariable ["wfbe_commander_lease", []];
+			if (typeName _oldLease == "ARRAY" && {count _oldLease >= 6} && {(_oldLease select 0) == _uid}) then {
+				[_prevSideJoined, (_oldLease select 5)] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown;
+			};
+		};
+	};
+};
 
 //--- We force the unit out of it's vehicle.
 if !(isNull(assignedVehicle (leader _team))) then {
