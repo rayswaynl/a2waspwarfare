@@ -176,7 +176,10 @@ while {!WFBE_GameOver} do {
 						_presenceSince = _camp getVariable ["wfbe_camp_repair_since", -1];
 						if (_presenceSince < 0) then {
 							_presenceSince = time;
-							_camp setVariable ["wfbe_camp_repair_since", _presenceSince];
+							//--- KA-01 (camp-repair-readout): broadcast+JIP so a client can compute its own
+							//--- progress readout locally (time - since) / WFBE_C_CAMP_REPAIR_PRESENCE_TIME -
+							//--- fires once per repair-cycle start, not every scan pass.
+							_camp setVariable ["wfbe_camp_repair_since", _presenceSince, true];
 						};
 						if ((time - _presenceSince) >= (missionNamespace getVariable ["WFBE_C_CAMP_REPAIR_PRESENCE_TIME", 150])) then {
 							//--- Threshold reached: whichever side is dominant in the presence set right now claims the
@@ -195,14 +198,14 @@ while {!WFBE_GameOver} do {
 							//--- which also re-enters this camp in server_town.sqf's C2 live-bunker dead-camp count
 							//--- on its very next pass - no separate CAPGATE wiring needed here.
 							["repair-camp", _camp, _repairSideID] call HandleSpecial;
-							_camp setVariable ["wfbe_camp_repair_since", -1];
+							_camp setVariable ["wfbe_camp_repair_since", -1, true]; //--- KA-01: broadcast the readout's own completion edge too.
 
 							diag_log Format ["CAPGATE|v1|%1|deadcamp-repair|camp=%2|side=%3|presence=%4s", (_town getVariable ["name","?"]), _camp, _repairSideID, round (time - _presenceSince)];
 						};
 					} else {
 						//--- Presence gap: full reset, no partial decay (simplest rule; documented per design).
 						if ((_camp getVariable ["wfbe_camp_repair_since", -1]) >= 0) then {
-							_camp setVariable ["wfbe_camp_repair_since", -1];
+							_camp setVariable ["wfbe_camp_repair_since", -1, true]; //--- KA-01: broadcast the presence-gap reset so a watching client's readout clears too.
 						};
 					};
 				};
