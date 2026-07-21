@@ -692,18 +692,24 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 			};
 
 			if ((missionNamespace getVariable ["WFBE_C_AICOM_STRAND_RECOVERY", 0]) > 0) then {
-				private ["_strandPending"];
+				private ["_strandPending","_strandLocked","_strandRecycle"];
 				_strandPending = _team getVariable "wfbe_aicom_strand_recovery_pending";
 				if (!isNil "_strandPending" && {_strandPending}) then {
-					_strandRecovery = true;
-					_strandTarget = _team getVariable "wfbe_aicom_strand_recovery_target";
-					_team setVariable ["wfbe_aicom_strand_recovery_pending", false];
-					_needs = true;
+					_strandLocked = [_team] Call WFBE_CO_FNC_CapLock;
+					_strandRecycle = [_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool;
+					if (!_strandLocked && {!_strandRecycle}) then {
+						_strandRecovery = true;
+						_strandTarget = _team getVariable "wfbe_aicom_strand_recovery_target";
+						_team setVariable ["wfbe_aicom_strand_recovery_pending", false];
+						_needs = true;
+					} else {
+						if (_strandRecycle) then {_team setVariable ["wfbe_aicom_strand_recovery_pending", false]};
+					};
 				};
 			};
 			if (_needs) then {
 				_target = objNull;
-				if (_bootstrap) then {
+				if (_bootstrap && {!_strandRecovery}) then {
 					//--- V0.7 BOOTSTRAP BIAS: side owns 0 towns - pick the nearest-to-HQ,
 					//--- lowest-supplyValue uncaptured town so we grab income as fast as possible.
 					//--- Score = -(distance to HQ) - (supplyValue * 10): small near towns win.
@@ -782,10 +788,17 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					};
 					_uncapturedF = _uncaptured - _blTowns;
 					if (count _uncapturedF == 0) then {
-						//--- every uncaptured town is blacklisted: clear it so this team is never left without a target.
-						_team setVariable ["wfbe_aicom_blacklist", []];
-						_blTowns = [];
-						_uncapturedF = _uncaptured;
+						if (_strandRecovery && {typeName _strandTarget == "OBJECT"} && {!isNull _strandTarget}) then {
+							//--- M3: do not restore the failed target merely to satisfy the legacy non-empty guard.
+							//--- With no alternate candidate, defer this one-shot recovery instead of re-dispatching a loop.
+							_blTowns = _uncaptured;
+							_uncapturedF = [];
+						} else {
+							//--- every uncaptured town is blacklisted: clear it so this team is never left without a target.
+							_team setVariable ["wfbe_aicom_blacklist", []];
+							_blTowns = [];
+							_uncapturedF = _uncaptured;
+						};
 					};
 					//--- AICOM v2 (M1): if the single-authority Allocator assigned THIS team a target this cycle,
 					//--- USE it (concentrate on the fist) and skip the legacy spearhead/nearest pick below. Fresh-gated
