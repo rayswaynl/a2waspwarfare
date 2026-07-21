@@ -72,13 +72,14 @@ Assert-Match $chernarus $markerPattern "Chernarus release marker line is present
 Assert-NotMatch $chernarus '(?m)^#define WF_DEBUG\b' "Chernarus WF_DEBUG is not active"
 Assert-Match $chernarus '(?m)^#define IS_CHERNARUS_MAP_DEPENDENT\r?$' "Chernarus map-dependent define is active"
 Assert-Match $chernarus '(?m)^#define IS_NAVAL_MAP\r?$' "Chernarus naval define is active"
+Assert-Match $chernarus '(?m)^#define WF_MAXPLAYERS 32\r?$' "Chernarus max-player define is 32"
 
 Write-Host "Checking Takistan version.sqf.template"
 Assert-Match $takistan $markerPattern "Takistan release marker line is present and well-formed"
 Assert-NotMatch $takistan '(?m)^#define WF_DEBUG\b' "Takistan WF_DEBUG is not active"
 Assert-NotMatch $takistan '(?m)^#define IS_CHERNARUS_MAP_DEPENDENT\r?$' "Takistan map-dependent define is not active"
 Assert-NotMatch $takistan '(?m)^#define IS_NAVAL_MAP\r?$' "Takistan naval define is not active"
-Assert-Match $takistan '(?m)^#define WF_MAXPLAYERS 61\r?$' "Takistan max-player define is 61"
+Assert-Match $takistan '(?m)^#define WF_MAXPLAYERS 31\r?$' "Takistan max-player define is 31"
 Assert-Match $takistan '(?m)^#define WF_MISSIONNAME "\[61\] Miksuu''s Warfare Takistan"\r?$' "Takistan mission name is Takistan"
 
 Write-Host "Checking Zargabad version.sqf.template"
@@ -86,7 +87,7 @@ Assert-Match $zargabad $markerPattern "Zargabad release marker line is present a
 Assert-NotMatch $zargabad '(?m)^#define WF_DEBUG\b' "Zargabad WF_DEBUG is not active"
 Assert-NotMatch $zargabad '(?m)^#define IS_CHERNARUS_MAP_DEPENDENT\r?$' "Zargabad map-dependent define is not active"
 Assert-NotMatch $zargabad '(?m)^#define IS_NAVAL_MAP\r?$' "Zargabad naval define is not active"
-Assert-Match $zargabad '(?m)^#define WF_MAXPLAYERS 61\r?$' "Zargabad max-player define is 61"
+Assert-Match $zargabad '(?m)^#define WF_MAXPLAYERS 33\r?$' "Zargabad max-player define is 33"
 Assert-Match $zargabad '(?m)^#define WF_MISSIONNAME "\[61\] Miksuu''s Warfare Zargabad"\r?$' "Zargabad mission name is Zargabad"
 Assert-Match $zargabad '(?m)^#define STARTING_DISTANCE 5000\r?$' "Zargabad starting distance matches its map size"
 

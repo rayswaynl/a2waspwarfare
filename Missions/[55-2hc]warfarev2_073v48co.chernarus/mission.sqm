@@ -3389,7 +3389,6 @@ class Mission
 					id=242;
 					side="WEST";
 					vehicle="FR_Corpsman";
-					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
@@ -3564,7 +3563,6 @@ class Mission
 					id=229;
 					side="CIV";
 					vehicle="Civilian";
-					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
@@ -3586,7 +3584,6 @@ class Mission
 					id=230;
 					side="CIV";
 					vehicle="Civilian";
-					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
@@ -3739,7 +3736,6 @@ class Mission
 					id=254;
 					side="EAST";
 					vehicle="RUS_Soldier_Medic";
-					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
