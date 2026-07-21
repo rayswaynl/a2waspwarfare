@@ -174,6 +174,22 @@ if (!isNull _team && {(missionNamespace getVariable ["WFBE_C_ENROLL_CIVDRIFT_HEA
 				if (isNil {_team getVariable "wfbe_funds"}) then {
 					_team setVariable ["wfbe_funds", missionNamespace getVariable Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _civd_real], true];
 				};
+				//--- WALLET-WIPE GUARD (round-2 adversarial review, 2026-07-21): a CIV-drifted player never
+				//--- passed the JIPFUNDS CIV-check (further below) on any prior connect, so WFBE_JIP_USER<uid>
+				//--- was NEVER created for them. Left alone, THIS SAME healing pass would read `_get` as nil
+				//--- and fall into the JIPFUNDS "first join" branch, which does an UNCONDITIONAL
+				//--- wfbe_funds = FUNDS_START reset with no no-clobber guard - silently wiping whatever this
+				//--- team actually earned while drifted (Common_ChangeTeamFunds.sqf credits funds with no
+				//--- wfbe_side check, so a CIV-stamped team keeps earning real money the whole time). Pre-seed
+				//--- the record ONLY if genuinely absent (never clobbers a real pre-drift record) so the
+				//--- JIPFUNDS section below instead takes its ordinary reconnect-update path: cash = the
+				//--- team's ACTUAL current wallet (not FUNDS_START) and sideOrigin == _civd_real so its own
+				//--- teamswap check (sideOrigin != sideJoined) can't ALSO reset the funds. Record shape
+				//--- matches the first-join write exactly: [uid, cash, sideOrigin, sideJoined, hasConnectedBefore-flag].
+				if (isNil {missionNamespace getVariable format ["WFBE_JIP_USER%1", _uid]}) then {
+					missionNamespace setVariable [format ["WFBE_JIP_USER%1", _uid], [_uid, (_team getVariable "wfbe_funds"), _civd_real, _civd_real, 1]];
+					diag_log Format ["[WFBE][CIVDRIFT HEAL] pre-seeded WFBE_JIP_USER%1 (wallet %2, side %3) so the JIPFUNDS first-join branch does not reset it.", _uid, (_team getVariable "wfbe_funds"), _civd_real];
+				};
 				_civd_logik = _civd_real Call WFBE_CO_FNC_GetSideLogic;
 				if (!isNull _civd_logik) then {
 					_civd_teams = _civd_logik getVariable ["wfbe_teams", []];
