@@ -102,8 +102,15 @@ sleep (_reloadTime + 20);
 
 if (alive (_gunner)) then {{_gunner enableAI _x} forEach ['MOVE','TARGET','AUTOTARGET']};
 
-[_artillery] Call ARTY_Finish; //--- Free the artillery unit from the fire mission submission.
-sleep 5;
-
-_artillery setVariable ["restricted",false];
+//--- fix(arty-lifecycle): the gun can be DELETED during the tail sleeps above - the server_groupsGC
+//--- commander-artillery wreck reaper, a base GC pass, or a player selling the hull. ARTY_Finish
+//--- dereferences the vehicle unconditionally (getPos / getDir / gunner lookAt) and setVariable on a
+//--- null object throws, so both tail statements errored whenever a fire mission outlived its gun.
+//--- Every other artillery touch in this file is already isNull/alive guarded (L73-85, L89, L96-99);
+//--- these two were the only unguarded ones. Re-checked after the 5s sleep - it can die in that window.
+if (!isNull _artillery) then {
+	[_artillery] Call ARTY_Finish; //--- Free the artillery unit from the fire mission submission.
+	sleep 5;
+	if (!isNull _artillery) then {_artillery setVariable ["restricted",false]};
+};
 

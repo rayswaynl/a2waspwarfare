@@ -75,9 +75,9 @@ _settleReceipt = {
 				if ((typeName _receiptCaller) == "OBJECT" && {!isNull _receiptCaller}) then {
 					_receiptMessage = Format ["Barrel Bomb transport failed before release (%1); your $%2 was refunded.", _reason, _receiptCost];
 					if (WF_A2_Vanilla) then {
-						[getPlayerUID _receiptCaller, "HandleSpecial", ["guer-helibomb-result", [false, _receiptMessage]]] Call WFBE_CO_FNC_SendToClients;
+						[getPlayerUID _receiptCaller, "HandleSpecial", ["guer-helibomb-result", false, _receiptMessage]] Call WFBE_CO_FNC_SendToClients;
 					} else {
-						[_receiptCaller, "HandleSpecial", ["guer-helibomb-result", [false, _receiptMessage]]] Call WFBE_CO_FNC_SendToClient;
+						[_receiptCaller, "HandleSpecial", ["guer-helibomb-result", false, _receiptMessage]] Call WFBE_CO_FNC_SendToClient;
 					};
 				};
 			};

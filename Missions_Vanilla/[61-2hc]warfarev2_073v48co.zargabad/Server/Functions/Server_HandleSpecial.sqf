@@ -1278,35 +1278,40 @@ switch (_args select 0) do {
 								{
 									//--- CAPTURE the outer _x FIRST: the inner units forEach below permanently rebinds it.
 									private ["_tm","_alv","_busy","_hol","_h","_str","_ral","_hld","_d"];
-									_tm = _x;
-									if (!isNil "_tm" && {!isNull _tm} && {!isPlayer (leader _tm)}) then {
-										_alv = {alive _x} count (units _tm);
-										if (_alv > 0) then {
-											_busy = false;
-											_hol = _tm getVariable "wfbe_aicom_support_holder";
-											if (!isNil "_hol") then {
-												_busy = true;
-												//--- already lent out: if it is lent to THIS player, remember that so we answer
-												//--- "you already have one" instead of a generic NONE.
-												if ((typeName _hol == "ARRAY") && {(count _hol) >= 1}) then {
-													if ((_hol select 0) == _saPlayer) then {_saMine = true};
-												};
-											};
-											if (!_busy) then {_str = _tm getVariable "wfbe_aicom_strike"; _busy = (!isNil "_str" && {_str})};
-											if (!_busy) then {_ral = _tm getVariable "wfbe_aicom_rallying"; _busy = (!isNil "_ral" && {_ral})};
-											if (!_busy) then {_hld = _tm getVariable "wfbe_aicom_holding_town"; _busy = (!isNil "_hld" && {!isNull _hld})};
-											if (!_busy) then {
-												_h = objNull;
-												{
-													if (isNull _h && {alive _x} && {(vehicle _x) != _x} && {(vehicle _x) isKindOf "Helicopter"} && {canMove (vehicle _x)}
-													    && {!isNull (driver (vehicle _x))} && {alive (driver (vehicle _x))}
-													    && {((getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0) == _saWantTrans}) then {
-														_h = vehicle _x;
+									//--- Guard isNil "_x" BEFORE the bare read - a nil hole in wfbe_teams must never be dereferenced.
+									//--- The old `_tm = _x` assignment threw on a nil slot itself, so the isNil "_tm" test below it was
+									//--- unreachable. Identical guard-first shape to the aicom-town-nudge team scan above.
+									if (!isNil "_x") then {
+										_tm = _x;
+										if (!isNull _tm && {!isPlayer (leader _tm)}) then {
+											_alv = {alive _x} count (units _tm);
+											if (_alv > 0) then {
+												_busy = false;
+												_hol = _tm getVariable "wfbe_aicom_support_holder";
+												if (!isNil "_hol") then {
+													_busy = true;
+													//--- already lent out: if it is lent to THIS player, remember that so we answer
+													//--- "you already have one" instead of a generic NONE.
+													if ((typeName _hol == "ARRAY") && {(count _hol) >= 1}) then {
+														if ((_hol select 0) == _saPlayer) then {_saMine = true};
 													};
-												} forEach (units _tm);
-												if (!isNull _h) then {
-													_d = _h distance _saPos;
-													if (_d < _saBestD) then {_saBestD = _d; _saTeam = _tm; _saHull = _h};
+												};
+												if (!_busy) then {_str = _tm getVariable "wfbe_aicom_strike"; _busy = (!isNil "_str" && {_str})};
+												if (!_busy) then {_ral = _tm getVariable "wfbe_aicom_rallying"; _busy = (!isNil "_ral" && {_ral})};
+												if (!_busy) then {_hld = _tm getVariable "wfbe_aicom_holding_town"; _busy = (!isNil "_hld" && {!isNull _hld})};
+												if (!_busy) then {
+													_h = objNull;
+													{
+														if (isNull _h && {alive _x} && {(vehicle _x) != _x} && {(vehicle _x) isKindOf "Helicopter"} && {canMove (vehicle _x)}
+														    && {!isNull (driver (vehicle _x))} && {alive (driver (vehicle _x))}
+														    && {((getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0) == _saWantTrans}) then {
+															_h = vehicle _x;
+														};
+													} forEach (units _tm);
+													if (!isNull _h) then {
+														_d = _h distance _saPos;
+														if (_d < _saBestD) then {_saBestD = _d; _saTeam = _tm; _saHull = _h};
+													};
 												};
 											};
 										};
@@ -1812,9 +1817,9 @@ switch (_args select 0) do {
 		};
 		if (!isNull _driver && {isPlayer _driver}) then {
 			if (WF_A2_Vanilla) then {
-				[getPlayerUID _driver, "HandleSpecial", ["guer-vbied-result", [_vbiedOK, _vbiedMsg, _veh, _requestToken]]] Call WFBE_CO_FNC_SendToClients;
+				[getPlayerUID _driver, "HandleSpecial", ["guer-vbied-result", _vbiedOK, _vbiedMsg, _veh, _requestToken]] Call WFBE_CO_FNC_SendToClients;
 			} else {
-				[_driver, "HandleSpecial", ["guer-vbied-result", [_vbiedOK, _vbiedMsg, _veh, _requestToken]]] Call WFBE_CO_FNC_SendToClient;
+				[_driver, "HandleSpecial", ["guer-vbied-result", _vbiedOK, _vbiedMsg, _veh, _requestToken]] Call WFBE_CO_FNC_SendToClient;
 			};
 		};
 		diag_log Format ["GUERVBIED|v2|request|result=%1|driver=%2", if (_vbiedOK) then {"accepted"} else {"denied"}, if (isNull _driver) then {"?"} else {name _driver}];
@@ -2035,9 +2040,9 @@ switch (_args select 0) do {
 			_tier  = missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_HELIBOMB", 60];
 			if (_kills < _tier) exitWith {
 				if (WF_A2_Vanilla) then {
-					[getPlayerUID _player, "HandleSpecial", ["guer-helibomb-result", [false, Format ["Barrel Bomb needs %1 GUER kills - the cell isn't ready.", _tier]]]] Call WFBE_CO_FNC_SendToClients;
+					[getPlayerUID _player, "HandleSpecial", ["guer-helibomb-result", false, Format ["Barrel Bomb needs %1 GUER kills - the cell isn't ready.", _tier]]] Call WFBE_CO_FNC_SendToClients;
 				} else {
-					[_player, "HandleSpecial", ["guer-helibomb-result", [false, Format ["Barrel Bomb needs %1 GUER kills - the cell isn't ready.", _tier]]]] Call WFBE_CO_FNC_SendToClient;
+					[_player, "HandleSpecial", ["guer-helibomb-result", false, Format ["Barrel Bomb needs %1 GUER kills - the cell isn't ready.", _tier]]] Call WFBE_CO_FNC_SendToClient;
 				};
 				["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER heli-bomb DENIED (kill-tier %1/%2) for [%3].", _kills, _tier, name _player]] Call WFBE_CO_FNC_LogContent;
 			};
@@ -2048,9 +2053,9 @@ switch (_args select 0) do {
 			_cost = missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_COST", 3000];
 			if (isNull _team || {(_team Call WFBE_CO_FNC_GetTeamFunds) < _cost}) exitWith {
 				if (WF_A2_Vanilla) then {
-					[getPlayerUID _player, "HandleSpecial", ["guer-helibomb-result", [false, Format ["Barrel Bomb needs $%1 - the cell is broke.", _cost]]]] Call WFBE_CO_FNC_SendToClients;
+					[getPlayerUID _player, "HandleSpecial", ["guer-helibomb-result", false, Format ["Barrel Bomb needs $%1 - the cell is broke.", _cost]]] Call WFBE_CO_FNC_SendToClients;
 				} else {
-					[_player, "HandleSpecial", ["guer-helibomb-result", [false, Format ["Barrel Bomb needs $%1 - the cell is broke.", _cost]]]] Call WFBE_CO_FNC_SendToClient;
+					[_player, "HandleSpecial", ["guer-helibomb-result", false, Format ["Barrel Bomb needs $%1 - the cell is broke.", _cost]]] Call WFBE_CO_FNC_SendToClient;
 				};
 				["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER heli-bomb DENIED (insufficient funds) for [%1] team [%2].", name _player, _team]] Call WFBE_CO_FNC_LogContent;
 			};
