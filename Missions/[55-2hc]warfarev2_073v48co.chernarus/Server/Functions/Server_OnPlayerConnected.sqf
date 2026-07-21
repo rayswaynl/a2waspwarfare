@@ -273,6 +273,13 @@ if (_sideJoined in [west, east]) then {
 //--- We attempt to get the player informations in case that he joined before.
 _get = missionNamespace getVariable format["WFBE_JIP_USER%1",_uid];
 
+//--- Scope (orchestrator ruling 2026-07-21, round-3 review): this whole handler - including the
+//--- block below - is dedicated-server-scoped by the `local player` exitWith at the top of this
+//--- file (line 19); it never runs on a hosted/listen server, same as every other pre-existing path
+//--- here. WASP only deploys on dedicated servers (live + test are both dedicated NSSM services;
+//--- hosted mode is unsupported), so this is accepted scope, documented rather than compensated for.
+//--- On an unsupported hosted/listen server the commander-lease stand-down would rely on the
+//--- disconnect-grace path (Server_OnPlayerDisconnected.sqf) only.
 //--- C1 stable commander lease (WFBE_C_CMD_LEASE). Owner ruling 2026-07-21: PR #1154's stand-down
 //--- enqueue was relocated OFF RequestJoin.sqf (JIP-flow file, never touched by agents) to this
 //--- existing connect handler instead. Round-2 adversarial review (2026-07-21, HIGH finding): this
