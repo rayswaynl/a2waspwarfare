@@ -925,8 +925,22 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 		{ if (!isNull _x && {alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {[_x, _side] Call IsMobileArtillery}) then {_artyBuilt = _artyBuilt + 1} } forEach vehicles;
 	};
 	_logik setVariable ["wfbe_aicom_arty_built", _artyBuilt];
+	//--- infra-sweep (2026-07-21): "at cap" is a STEADY-STATE outcome (the fix's intended result once
+	//--- the side hits its 2-gun cap) that could otherwise re-log every 60s tick for the rest of the
+	//--- round. Debounced with the same 300s per-side timestamp idiom PR #1208's FOUND_SKIP established
+	//--- in AI_Commander_Teams.sqf (time-gated re-emit, cumulative occurrence count folded into the
+	//--- message, counter reset after each emit) - independent of the echelon flag/latch above, which
+	//--- never covered this line.
 	if (_artyBuilt >= _artyMax) then {
-		["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - at cap (%2/%3 live).", _sideText, _artyBuilt, _artyMax]] Call WFBE_CO_FNC_AICOMLog;
+		private ["_capLast","_capCount"];
+		_capLast = _logik getVariable ["wfbe_aicom_artycap_log_t", -9999];
+		_capCount = (_logik getVariable ["wfbe_aicom_artycap_log_n", 0]) + 1;
+		_logik setVariable ["wfbe_aicom_artycap_log_n", _capCount];
+		if ((time - _capLast) >= 300) then {
+			_logik setVariable ["wfbe_aicom_artycap_log_t", time];
+			["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - at cap (%2/%3 live) x%4 since last log.", _sideText, _artyBuilt, _artyMax, _capCount]] Call WFBE_CO_FNC_AICOMLog;
+			_logik setVariable ["wfbe_aicom_artycap_log_n", 0];
+		};
 	};
 	if (_artyBuilt < _artyMax && {(_logik getVariable ["wfbe_aicom_defenses", 0]) >= _defMax}) then {
 		_have = false;
@@ -1013,7 +1027,22 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 				};
 				if (_defClass == "" && {!_artyPicked}) then { //--- fix/aicom-dependency-gates-followup: suppress this generic log when the picker DID find an SPG candidate but the research-tier/category gate above rejected it - that branch already logged its own reason.
 					if ((!_ech) || {(_logik getVariable ["wfbe_aicom_arty_skiplog", ""]) != "nospg"}) then {
-						["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - no SELF-PROPELLED (tracked/wheeled) arty class for this side (static towed/mortar excluded by design).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+						//--- infra-sweep (2026-07-21): the wfbe_aicom_arty_skiplog latch above already fully
+						//--- covers the ECHELON-ON steady-state (a persistent "nospg" reason keeps the outer
+						//--- condition false, so this inner block is unreachable there after the first tick).
+						//--- With echelon OFF (default), "(!_ech)" makes the outer condition always true, so
+						//--- this line - a STEADY-STATE outcome for any side lacking an SPG class for the whole
+						//--- round - could otherwise re-log every 60s tick indefinitely. Same 300s per-side
+						//--- timestamp debounce as the "at cap" line above (PR #1208 FOUND_SKIP idiom).
+						private ["_spgLast","_spgCount"];
+						_spgLast = _logik getVariable ["wfbe_aicom_nospg_log_t", -9999];
+						_spgCount = (_logik getVariable ["wfbe_aicom_nospg_log_n", 0]) + 1;
+						_logik setVariable ["wfbe_aicom_nospg_log_n", _spgCount];
+						if ((time - _spgLast) >= 300) then {
+							_logik setVariable ["wfbe_aicom_nospg_log_t", time];
+							["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - no SELF-PROPELLED (tracked/wheeled) arty class for this side (static towed/mortar excluded by design) x%2 since last log.", _sideText, _spgCount]] Call WFBE_CO_FNC_AICOMLog;
+							_logik setVariable ["wfbe_aicom_nospg_log_n", 0];
+						};
 						if (_ech) then {_logik setVariable ["wfbe_aicom_arty_skiplog", "nospg"]};
 					};
 				};
