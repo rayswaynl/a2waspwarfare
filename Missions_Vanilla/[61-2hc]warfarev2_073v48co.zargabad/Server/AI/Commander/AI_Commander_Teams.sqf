@@ -282,6 +282,19 @@ if (_target > _base && {_target != _lastDynTarget}) then {
 if (_target == _base && {_lastDynTarget > _base}) then {
 	_logik setVariable ["wfbe_aicom_dyntarget", _base];
 };
+//--- fable/aicom-dyntarget-unconditional-publish (Grok #1 root-cause, adversarial-review requested):
+//--- the two branches above only ever WROTE wfbe_aicom_dyntarget when _target > _base (funds-extra
+//--- active) or when dropping back down from a previously-elevated value - so a live config with
+//--- WFBE_C_AI_COMMANDER_TEAMS_MAX_EXTRA=0 (no funds-extra, _target == _base every single pass) NEVER
+//--- wrote the var at all. The supervisor (AI_Commander.sqf) reads wfbe_aicom_dyntarget as the single
+//--- source of truth for the REAL per-side team target; leaving it permanently unset made the supervisor
+//--- fall back to its own stale default (WFBE_C_AI_COMMANDER_TEAMS_TARGET=2, a B36 rollback constant)
+//--- instead of the real PC-curve target (3-9) - a split-brain that armed wealth-conversion/REQDRAW
+//--- prematurely at 2 teams while founding still legitimately wanted more (see B752's comment in
+//--- AI_Commander.sqf for the ~125x/round symptom this caused). Publish the EFFECTIVE _target
+//--- UNCONDITIONALLY every founding pass - the two branches above still own the RPT logging exactly as
+//--- before (avoiding spam on every 90s tick); this line only guarantees the var itself is never stale.
+_logik setVariable ["wfbe_aicom_dyntarget", _target];
 
 //--- B35 HC-dispatch probe (claude-gaming 2026-06-15): Ray deferred the full timeout-replan fix; this
 //--- cheap probe detects whether wfbe_aicom_pending STICKS. The counter is incremented on each HC
