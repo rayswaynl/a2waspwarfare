@@ -397,7 +397,7 @@ while {!gameOver} do {
 				if (!isNil "_upgrades" && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0} && {count _cands > 0}) then {
 					_w13AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
 					_w13AttackClasses = [];
-					{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Mi24_D","Mi24_V","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su34"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
+					{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Ka52","Ka52Black","Mi24_D","Mi24_V","Mi24_P","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
 					if (count _w13AttackClasses > 0) then {
 						//--- one allUnits pass: the alive/side filter is town-invariant, only the distance is per-town
 						_w13Enemies = [];
@@ -867,7 +867,7 @@ while {!gameOver} do {
 						case 13: {
 							_w13AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
 							_w13AttackClasses = [];
-							{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Mi24_D","Mi24_V","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su34"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
+							{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Ka52","Ka52Black","Mi24_D","Mi24_V","Mi24_P","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
 							_w13TargetTown = objNull; _w13MaxCluster = 0; _w13BestDist = 1e9;
 							//--- one allUnits pass: the alive/side filter is town-invariant, only the distance is per-town
 							_w13Enemies = [];

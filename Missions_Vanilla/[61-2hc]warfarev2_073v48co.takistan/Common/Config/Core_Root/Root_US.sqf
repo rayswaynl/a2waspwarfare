@@ -58,7 +58,7 @@ if (isServer) then {
 		"Squad_0",
 		['US_Soldier_TL_EP1','US_Soldier_MG_EP1','US_Soldier_Sniper_EP1','US_Soldier_Medic_EP1'],
 		['US_Soldier_TL_EP1','US_Soldier_AR_EP1','US_Soldier_GL_EP1','US_Soldier_AT_EP1','US_Soldier_EP1'],
-		['HMMWV_M1151_M2_DES_EP1','HMMWV_MK19_DES_EP1'],
+		['HMMWV_M1151_M2_DES_EP1','HMMWV_MK19_DES_EP1','US_Soldier_TL_EP1','US_Soldier_Medic_EP1'],
 		['US_Soldier_TL_EP1','US_Soldier_MG_EP1','US_Soldier_AT_EP1','US_Soldier_GL_EP1','US_Soldier_Medic_EP1']
 	]];
 
@@ -70,8 +70,8 @@ if (isServer) then {
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [
-		['M2A3_EP1','M2A3_EP1'],
-		['M1A1_US_DES_EP1','M1A1_US_DES_EP1'],
+		['M2A3_EP1','M2A3_EP1','US_Soldier_TL_EP1','US_Soldier_MG_EP1'],
+		['M1A1_US_DES_EP1','M1A1_US_DES_EP1','US_Soldier_TL_EP1','US_Soldier_MG_EP1','US_Soldier_AT_EP1'],
 		['M2A3_EP1','M2A3_EP1','US_Soldier_TL_EP1','US_Soldier_MG_EP1','US_Soldier_Marksman_EP1','US_Soldier_Medic_EP1','US_Soldier_HAT_EP1','US_Soldier_AHAT_EP1','US_Soldier_EP1'],
 		['M1126_ICV_M2_EP1','US_Soldier_TL_EP1','US_Soldier_Medic_EP1','US_Soldier_GL_EP1','US_Soldier_EP1','US_Soldier_AR_EP1'],
 		//--- AA picket (cmdcon41-w3e): M6 Linebacker SPAAG + Stinger dismounts - late-game air deterrent.
