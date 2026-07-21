@@ -138,6 +138,7 @@ NOQA_RE = re.compile(r"//\s*noqa(?:\s*:\s*([A-Za-z0-9_,\s]+))?\s*$", re.IGNORECA
 FINDING_CODES = (
     "A3BISFNC",
     "A3CMD",
+    "BAREEXIT",
     "A3HASH",
     "A3MARKER",
     "A3NUMGATE",
