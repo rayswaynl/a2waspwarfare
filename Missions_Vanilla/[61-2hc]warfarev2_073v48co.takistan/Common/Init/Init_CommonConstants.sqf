@@ -1459,7 +1459,11 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_CAMPS_CAPTURE_RATE = 20;
 	WFBE_C_CAMPS_CAPTURE_RATE_MAX = 25;
 	WFBE_C_CAMPS_RANGE = 13.915;  //--- OWNER DESIGN DECISION 2026-07-20 07:40 (wasp-takistan-aicom-capture-stall-20260720): 12.65 -> 13.915 (+10%), continuing the 10 -> 11.5 -> 12.65 Ray tuning history. Part of the capture-completion fix (paired with the dismount-near-camp change in Common_RunCommanderTeam.sqf): widens the AI camp scan bubble a further notch so an arriving on-foot Man has more margin to register inside nearEntities before the presence-based flip. PLAYERS are UNCHANGED - WFBE_C_CAMPS_RANGE_PLAYERS (below) still gates them at 5m (server_town_camp.sqf filters players past that).
-	WFBE_C_CAMPS_RANGE_PLAYERS = 5.5; //--- owner 2026-07-07: +10% capture bubble (5 -> 5.5) alongside CAMPS_RANGE 11.5 -> 12.65.
+	WFBE_C_CAMPS_RANGE_PLAYERS = 8; //--- fable/fasttravel-campflag (c2 council item #4): 5.5 -> 8. The visible flag
+	//--- mesh sits at WFBE_C_CAMP_FLAG_POS [-5,5] (~7.07m from the camp logic, Core_Models/CombinedOps.sqf) -
+	//--- at 5.5 a player standing ON the flag did not count for capture or the CampCaptured.sqf bounty check.
+	//--- 8m puts the flag inside the radius with margin; AI keep the separate, larger WFBE_C_CAMPS_RANGE
+	//--- (13.915) untouched. History: 5 -> 5.5 (2026-07-07) -> 8 (2026-07-21).
 	if (isNil "WFBE_C_TOWN_CAMP_SCAN_THROTTLE") then {WFBE_C_TOWN_CAMP_SCAN_THROTTLE = 0}; //--- Lane 107: default off; when 1, server_town_camp uses the slower scan sleeps below.
 	if (isNil "WFBE_C_TOWN_CAMP_ACTIVE_GATE") then {WFBE_C_TOWN_CAMP_ACTIVE_GATE = 1}; //--- Perf (2026-07-06): when 1, a town's camp-scan loop idles while the town is dormant (not active, no air tier, no enemy seen within IDLE_GRACE). Default off = V1 behaviour.
 	if (isNil "WFBE_C_TOWN_CAMP_IDLE_SLEEP") then {WFBE_C_TOWN_CAMP_IDLE_SLEEP = 3}; //--- s between dormancy re-checks while the camp gate idles.
