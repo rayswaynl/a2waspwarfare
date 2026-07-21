@@ -511,7 +511,12 @@ keyPressedForAdjustingViewDistance = compile preprocessFile "Common\Functions\Co
 _display = findDisplay 46;
 _display displayAddEventHandler ["KeyDown","_this call keyPressed"];
 _display displayAddEventHandler ["KeyDown","_this call keyPressedForAutoSendSpawnedUnitsToWaypoint"];
-if ((missionNamespace getVariable ["WFBE_C_CLIENT_AUTORUN", 1]) > 0) then {[] call WFBE_CL_FNC_AutoRunAttach};
+if ((missionNamespace getVariable ["WFBE_C_CLIENT_AUTORUN", 1]) > 0) then {
+	[] call WFBE_CL_FNC_AutoRunAttach;
+	//--- Autorun toggle keybind (User12, bindable in Configure Controls). Attached ONCE here
+	//--- (display 46 persists across respawn) rather than re-added by Client_AutoRun.sqf per respawn.
+	_display displayAddEventHandler ["KeyDown","_this call WFBE_CL_FNC_AutoRunKeyDown"];
+};
 _display displayAddEventHandler ["KeyDown","_this call keyPressedForAdjustingViewDistance"];
 	//--- Debug teleport rebind: press "[" (DIK 0x1A=26) to ARM, then the next plain map-click teleports you (was: every click teleported under WF_Debug, which ate the sell/ICBM confirm clicks).
 	_display displayAddEventHandler ["KeyDown","if ((_this select 1) == 26 && WF_Debug) then {missionNamespace setVariable ['WFBE_DEBUG_TELEPORT_ARMED', true]; hintSilent 'Debug teleport ARMED - next map click teleports you.'; true} else {false}"];
