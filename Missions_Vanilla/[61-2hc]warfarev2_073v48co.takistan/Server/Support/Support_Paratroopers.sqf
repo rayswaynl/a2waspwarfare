@@ -145,7 +145,7 @@ if (_greenlight) then {
 		_playerTeam setBehaviour "COMBAT";
 		_playerTeam setCombatMode "RED";
 	};
-	
+
 	//--- Once done, the air units can fly back to their source.
 	[_grp, (_ranPos select _ran), "MOVE", 10] Call AIMoveTo;
 	
