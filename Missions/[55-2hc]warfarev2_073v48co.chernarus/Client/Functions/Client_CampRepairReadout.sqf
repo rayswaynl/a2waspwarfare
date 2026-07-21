@@ -26,7 +26,14 @@ while {true} do {
 		_camps = (getPosATL player) nearEntities [[WFBE_Logic_Camp, "HeliHEmpty"], _rangePlayers];
 		{
 			_bunker = _x getVariable ["wfbe_camp_bunker", objNull];
-			if (isNull _camp && {!(isNull _bunker)} && {!(alive _bunker)}) then {_camp = _x};
+			//--- Ally-only (team-lead ruling, camp-repair-exploit concern from the day council): a
+			//--- side-agnostic bar hands an attacker a precise countdown ("42% -> interrupt at 2min"),
+			//--- free intel the mechanic shouldn't give away. Gate on the camp's OWN persistent owning-
+			//--- side field (sideID - the same field + default the repair-completion logic itself reads,
+			//--- server_town_camp.sqf line ~187) against WFBE_Client_SideID, the stable side captured
+			//--- once at client init - NOT `side player`, which can transiently resolve wrong during
+			//--- respawn/JIP/team-switch (same intel-leak-fix idiom as updateaicommarkers.sqf).
+			if (isNull _camp && {!(isNull _bunker)} && {!(alive _bunker)} && {(_x getVariable ["sideID", WFBE_DEFENDER_ID]) == WFBE_Client_SideID}) then {_camp = _x};
 		} forEach _camps;
 	};
 
