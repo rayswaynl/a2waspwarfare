@@ -142,15 +142,15 @@ while {!WFBE_GameOver} do {
 								if (!local _gdirVehRecoveryHull || {({isPlayer _x} count (crew _gdirVehRecoveryHull)) > 0}) then {
 									_gdirVehRecoveryCanRetry = false;
 								} else {
-									{if (!isPlayer _x && {local _x}) then {deleteVehicle _x}} forEach (crew _gdirVehRecoveryHull);
-									deleteVehicle _gdirVehRecoveryHull;
+									{if (!isPlayer _x && {local _x}) then {["gdir-recover-crew", _x, Format ["town=%1", _gdirVehRecoveryTown getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (crew _gdirVehRecoveryHull);
+									["gdir-recover-hull", _gdirVehRecoveryHull, Format ["town=%1", _gdirVehRecoveryTown getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gdirVehRecoveryHull;
 								};
 							};
 							if (!isNull _gdirVehRecoveryTeam && {_gdirVehRecoveryTeamOrderId == _gdirVehRecoveryOrderId}) then {
 								if (({isPlayer _x} count (units _gdirVehRecoveryTeam)) > 0) then {
 									_gdirVehRecoveryCanRetry = false;
 								} else {
-									{if (local _x) then {deleteVehicle _x}} forEach (units _gdirVehRecoveryTeam);
+									{if (local _x) then {["gdir-recover-team", _x, Format ["town=%1", _gdirVehRecoveryTown getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _gdirVehRecoveryTeam);
 									if ((count (units _gdirVehRecoveryTeam)) == 0) then {deleteGroup _gdirVehRecoveryTeam} else {_gdirVehRecoveryCanRetry = false};
 								};
 							};

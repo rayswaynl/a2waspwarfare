@@ -353,7 +353,7 @@ while {!WFBE_GameOver} do {
 			};
 			if (_qrfDrop) then {
 				if (!isNull _qrfGrp) then {
-					{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _qrfGrp);
+					{if (!(isPlayer _x)) then {["guerairdef-qrf-cleanup", _x, Format ["town=%1", (if (isNull _qrfTown) then {"?"} else {_qrfTown getVariable ["name","?"]})]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _qrfGrp);
 					if (({isPlayer _x} count (units _qrfGrp)) == 0) then {deleteGroup _qrfGrp};
 				};
 				diag_log format ["GUERAIRDEF|GROUNDDESPAWN|town=%1|reason=%2|alive=%3", (if (isNull _qrfTown) then {"?"} else {_qrfTown getVariable ["name","?"]}), _qrfReason, count _keptGroundQrfs];
@@ -407,7 +407,7 @@ while {!WFBE_GameOver} do {
 									_diag = format ["GUERAIRDEF|GROUNDQRF|town=%1|units=%2|alive=%3", _town getVariable ["name","?"], _qrfBuilt, count _groundQrfs];
 									diag_log _diag;
 								} else {
-									{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _qrfGroup);
+									{if (!(isPlayer _x)) then {["guerairdef-qrf-buildfail", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _qrfGroup);
 									deleteGroup _qrfGroup;
 								};
 							};
