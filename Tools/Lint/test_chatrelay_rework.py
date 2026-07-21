@@ -27,7 +27,9 @@ def main() -> None:
     assert 'WFBE_C_CHAT_RELAY", 0' in relay
     assert "blocked-pending-BE" in relay
     assert "WFBE_CHATRELAY_EMITTED" in relay
+    assert "WFBE_CHATRELAY_DROPPED" in relay
     assert "SUMMARY" in relay
+    assert "_lastWindow >= 0" in relay
     assert ">= 19" in relay
     assert 'addPublicVariableEventHandler' not in relay
     assert 'publicVariableServer' not in relay

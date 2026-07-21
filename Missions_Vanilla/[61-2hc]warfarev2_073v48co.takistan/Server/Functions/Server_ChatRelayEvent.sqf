@@ -6,7 +6,7 @@
 	its OA 1.64 semantics. This function therefore accepts only server-created event data; there is
 	no client ingress, inbound path, or JIP/respawn client handler.
 */
-private ["_channel","_player","_text","_sanitize","_safeChannel","_safePlayer","_safeText","_window","_lastWindow","_emitted","_dropped","_summary"];
+private ["_channel","_player","_text","_sanitize","_safeChannel","_safePlayer","_safeText","_window","_lastWindow","_emitted","_dropped"];
 
 if (!isServer) exitWith {};
 if ((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) <= 0) exitWith {};
@@ -21,25 +21,24 @@ if ((typeName _player) != "STRING") exitWith {};
 if ((typeName _text) != "STRING") exitWith {};
 
 //--- Global budget: reserve line 20 for one overflow summary, so total CHATRELAY lines stay <=20/minute.
+//--- The summary is emitted on the first event in the next window, after the prior window's
+//--- dropped counter is complete; this keeps the summary accurate while retaining one line only.
 _window = floor (time / 60);
 _lastWindow = missionNamespace getVariable ["WFBE_CHATRELAY_WINDOW", -1];
 if (_lastWindow != _window) then {
+	_dropped = missionNamespace getVariable ["WFBE_CHATRELAY_DROPPED", 0];
+	if (_lastWindow >= 0 && {_dropped > 0}) then {
+		diag_log Format ["CHATRELAY|v1|SUMMARY|SERVER|dropped=%1", _dropped];
+	};
 	missionNamespace setVariable ["WFBE_CHATRELAY_WINDOW", _window];
 	missionNamespace setVariable ["WFBE_CHATRELAY_EMITTED", 0];
 	missionNamespace setVariable ["WFBE_CHATRELAY_DROPPED", 0];
-	missionNamespace setVariable ["WFBE_CHATRELAY_SUMMARY", false];
 };
 _emitted = missionNamespace getVariable ["WFBE_CHATRELAY_EMITTED", 0];
 _dropped = missionNamespace getVariable ["WFBE_CHATRELAY_DROPPED", 0];
-_summary = missionNamespace getVariable ["WFBE_CHATRELAY_SUMMARY", false];
 if (_emitted >= 19) then {
 	_dropped = _dropped + 1;
 	missionNamespace setVariable ["WFBE_CHATRELAY_DROPPED", _dropped];
-	if (!_summary) then {
-		diag_log Format ["CHATRELAY|v1|SUMMARY|SERVER|dropped=%1", _dropped];
-		missionNamespace setVariable ["WFBE_CHATRELAY_EMITTED", _emitted + 1];
-		missionNamespace setVariable ["WFBE_CHATRELAY_SUMMARY", true];
-	};
 	exitWith {};
 };
 
