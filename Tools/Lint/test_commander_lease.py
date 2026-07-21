@@ -434,6 +434,23 @@ class CommanderLeaseFixtures(unittest.TestCase):
         self.assertIn("_curGen = _logic getVariable", exec_sd)
         self.assertIn("if (_targetGen != _curGen) exitWith {};", exec_sd)
 
+    def test_12b_standdown_enqueue_precedes_duplicate_connect_latch(self) -> None:
+        """Round-2 adversarial review (2026-07-21, HIGH finding): Server_OnPlayerConnected.sqf
+        resolves TWICE per join and has a 15s duplicate-connect latch that exitWith-skips
+        everything below it. A lease holder reconnecting quickly can have either resolve pass
+        land inside that window, so the stand-down enqueue must be textually ABOVE the latch's
+        exitWith or it can be silently skipped on the one connect event that matters. Also pin
+        that it sits above the CIV-mid-sync guard, since it can no longer rely on inheriting
+        that guard's protection and must carry its own explicit real-side check instead."""
+        connected = CONNECTED.read_text(encoding="utf-8-sig")
+        standdown_idx = connected.index("Call WFBE_CO_FNC_CommanderLeaseRequestStandDown")
+        latch_idx = connected.index('if (!isNil "_jipLatch" && {(time - _jipLatch) < 15}) exitWith {')
+        civ_guard_idx = connected.index('if (str _sideJoined == "CIV") exitWith {')
+        self.assertLess(standdown_idx, latch_idx, "stand-down enqueue must precede the duplicate-connect latch exitWith")
+        self.assertLess(standdown_idx, civ_guard_idx, "stand-down enqueue must precede the CIV-mid-sync guard exitWith")
+        # Since it no longer sits downstream of the CIV guard, it must carry its own real-side check.
+        self.assertIn('{_sideJoined in [west, east, resistance]}', connected)
+
     def test_13_reclaim_never_wipes_per_team_state(self) -> None:
         """During grace the AI teams are never freed, so the update-teamleader reclaim must not
         touch per-team autonomous/respawn state - a blanket SetTeamAutonomous/SetTeamRespawn on
