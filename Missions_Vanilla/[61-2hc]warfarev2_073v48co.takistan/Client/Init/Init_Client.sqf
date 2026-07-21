@@ -511,7 +511,12 @@ keyPressedForAdjustingViewDistance = compile preprocessFile "Common\Functions\Co
 _display = findDisplay 46;
 _display displayAddEventHandler ["KeyDown","_this call keyPressed"];
 _display displayAddEventHandler ["KeyDown","_this call keyPressedForAutoSendSpawnedUnitsToWaypoint"];
-if ((missionNamespace getVariable ["WFBE_C_CLIENT_AUTORUN", 1]) > 0) then {[] call WFBE_CL_FNC_AutoRunAttach};
+if ((missionNamespace getVariable ["WFBE_C_CLIENT_AUTORUN", 1]) > 0) then {
+	[] call WFBE_CL_FNC_AutoRunAttach;
+	//--- Autorun toggle keybind (User12, bindable in Configure Controls). Attached ONCE here
+	//--- (display 46 persists across respawn) rather than re-added by Client_AutoRun.sqf per respawn.
+	_display displayAddEventHandler ["KeyDown","_this call WFBE_CL_FNC_AutoRunKeyDown"];
+};
 _display displayAddEventHandler ["KeyDown","_this call keyPressedForAdjustingViewDistance"];
 	//--- Debug teleport rebind: press "[" (DIK 0x1A=26) to ARM, then the next plain map-click teleports you (was: every click teleported under WF_Debug, which ate the sell/ICBM confirm clicks).
 	_display displayAddEventHandler ["KeyDown","if ((_this select 1) == 26 && WF_Debug) then {missionNamespace setVariable ['WFBE_DEBUG_TELEPORT_ARMED', true]; hintSilent 'Debug teleport ARMED - next map click teleports you.'; true} else {false}"];
@@ -716,6 +721,7 @@ if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM") in [3,4]) then
 if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_LEADERS") > 0) then {[] execVM "Client\FSM\updateteamsmarkers.sqf"};
 if ((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) > 0) then {[] execVM "Client\Functions\Client_GuerLockout.sqf"}; //--- fable/guer-lockout: resistance activation delay
 if ((missionNamespace getVariable ["WFBE_C_GUER_PATROL_MARKERS", 1]) > 0) then {[] execVM "Client\Functions\Client_GuerPatrolMarkers.sqf"}; //--- fable/guer-patrol-markers: resistance-only friendly AI map dots
+if ((missionNamespace getVariable ["WFBE_C_CAMP_REPAIR_PRESENCE", 0]) > 0) then {[] execVM "Client\Functions\Client_CampRepairReadout.sqf"}; //--- KA-01/camp-repair-readout: ambient %-progress feedback while a dead camp's presence-repair timer is accumulating
 [] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
 [] execVM "Client\FSM\updateaicommarkers.sqf"; //--- AI-commander team direction arrows (task #3).
 if ((missionNamespace getVariable ["WFBE_C_AWACS", 0]) > 0) then {[] execVM "Client\Module\AWACS\awacs_pilot_watch.sqf"}; //--- fable/awacs-radar: AWACS pilot watch (ground MTI sweep). Flag default 0 = never launched.
