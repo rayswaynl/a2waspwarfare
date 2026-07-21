@@ -2816,6 +2816,56 @@ class RscMenu_Command {
 			colorBackground[] = {0.5, 0.35, 0, 0.85};
 			colorBackgroundActive[] = {0.7, 0.5, 0.05, 1};
 		};
+		/* =====================================================================================
+		   COMMAND V2 (P4 nudge system, design docs/design/COMMAND-V2-NUDGE-SYSTEM-DESIGN.md; owner
+		   decision packet 2026-07-18). Four STATE-A advisory controls on the bottom row at y 0.953825.
+		   That row is otherwise occupied ONLY by the STATE-B disband pair (14626/14627), which is hidden
+		   whenever these are shown and vice versa - the two states are mutually exclusive, so they can
+		   never overlap. show = 0 is a STRUCTURAL GUARD: each control is default-HIDDEN and is only ever
+		   passed to ctrlShow once GUI_Menu_Command.sqf has appended its idc to _adviseCtrls, which it does
+		   ONLY while that mechanic's own default-0 flag is on. At flag-off the buttons therefore never
+		   render at all and STATE A looks exactly like HEAD. MenuAction 780-783 (all previously unused).
+		   ===================================================================================== */
+		class CA_Cmd_TownNudge : CA_Cmd_PosturePush {
+			idc = 14631;
+			x = 0.00561695;
+			y = 0.953825;
+			w = 0.111000;
+			h = 0.040000;
+			show = 0;
+			text = "SUGGEST TOWN";
+			action = "MenuAction = 780";
+			tooltip = "Suggest a target town to the AI commander: arm this, then click the town on the map. This is a WEIGHTED SUGGESTION, not an order - the AI folds it into its own scoring and stays in command. Cooldown applies.";
+			colorBackground[] = {0.12, 0.35, 0.42, 0.85};
+			colorBackgroundActive[] = {0.18, 0.5, 0.58, 1};
+		};
+		class CA_Cmd_SupportCas : CA_Cmd_TownNudge {
+			idc = 14632;
+			x = 0.121617;
+			text = "CAS HELI";
+			action = "MenuAction = 781";
+			tooltip = "Ask the AI commander to lend you a gunship. It escorts and orbits you, and engages only threats close to you. Free, but capped and on a cooldown.";
+			colorBackground[] = {0.5, 0.35, 0, 0.85};
+			colorBackgroundActive[] = {0.7, 0.5, 0.05, 1};
+		};
+		class CA_Cmd_SupportRelease : CA_Cmd_TownNudge {
+			idc = 14633;
+			x = 0.237617;
+			text = "RELEASE HELI";
+			action = "MenuAction = 782";
+			tooltip = "Hand your support heli back to the AI commander now, before its time runs out.";
+			colorBackground[] = {0.35, 0.28, 0.05, 0.85};
+			colorBackgroundActive[] = {0.5, 0.4, 0.08, 1};
+		};
+		class CA_Cmd_TeamDoctrine : CA_Cmd_TownNudge {
+			idc = 14634;
+			x = 0.353617;
+			text = "TEAM: ATTACK";
+			action = "MenuAction = 783";
+			tooltip = "Suggest a doctrine to the NEAREST friendly AI team (any player may, if close enough). The label shows what the next press will send. Advisory only - the AI commander can still retask the team.";
+			colorBackground[] = {0.18, 0.32, 0.18, 0.85};
+			colorBackgroundActive[] = {0.26, 0.46, 0.26, 1};
+		};
 		/* ROSTER of your AI teams (commander state). Row = "Squad type | Target | Alive" (Command Console v2). Click to
 		   select; double-click opens the unit camera on that team's leader (VIEW TEAM, MenuAction 726). */
 		class CA_Cmd_RosterTitle : RscText_SubTitle {

@@ -2845,6 +2845,41 @@ if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL") then {WFBE_C_CLIENT_FRAME_TE
 	if (isNil "WFBE_C_AICOM_ARTY_ECHELON_REPOS_CD") then {WFBE_C_AICOM_ARTY_ECHELON_REPOS_CD = 180}; //--- s: minimum seconds between reposition redeploys for ONE gun (anti-thrash / bounds the owned-town scan cadence).
 	if (isNil "WFBE_C_AICOM_ARTY_ECHELON_SAFE_DIST") then {WFBE_C_AICOM_ARTY_ECHELON_SAFE_DIST = 400}; //--- m: no enemy may be within this radius of the gun (never redeployed OUT of a firefight) or of a candidate anchor town (never INTO one).
 	if (isNil "WFBE_C_AICOM_ARTY_ECHELON_MIN_STANDOFF") then {WFBE_C_AICOM_ARTY_ECHELON_MIN_STANDOFF = 500}; //--- m: keep the anchor at least this far from the target (never redeploy the gun on top of the objective).
+//--- ============================================================================================
+//--- COMMAND V2 nudge extensions (P4 design docs/design/COMMAND-V2-NUDGE-SYSTEM-DESIGN.md, owner
+//--- decision packet 2026-07-18). Three independent mechanics, each behind its OWN master flag at
+//--- default 0: with all three at 0 the mission is byte-identical to HEAD (every new read sits
+//--- INSIDE a "> 0" master-flag branch; no new per-frame scan, no new PVF top-level name - the new
+//--- verbs are sub-verbs of the already-allowlisted RequestSpecial bus). The sub-parameters below
+//--- carry non-zero tuning defaults but are only ever read once their master flag is on.
+//--- ============================================================================================
+//--- (a) TOWN NUDGE - soft, weighted, TTL-decayed town suggestion from any live player. Biases the
+//---     v2 fist scorer (AI_Commander_Allocate.sqf); it never sets wfbe_aicom_focus and never pins.
+if (isNil "WFBE_C_CMD_TOWN_NUDGE")             then {WFBE_C_CMD_TOWN_NUDGE = 0};              //--- master: 0 = verb rejected AND scorer term never read (byte-identical). 1 = on.
+if (isNil "WFBE_C_CMD_TOWN_NUDGE_WEIGHT")      then {WFBE_C_CMD_TOWN_NUDGE_WEIGHT = 120};     //--- scorer bonus at full aggregated weight. Owner 2026-07-18: start ~120 and soak-tune. Deliberately < WFBE_C_AICOM_GRUDGE_BONUS(400) so a nudge breaks a near-tie, never forces a bad target. Inert while _TOWN_NUDGE = 0.
+if (isNil "WFBE_C_CMD_TOWN_NUDGE_CAP")         then {WFBE_C_CMD_TOWN_NUDGE_CAP = 3};          //--- HARD SAFETY CEILING on aggregated nudge units per town (owner 2026-07-18: sqrt(n) AND a hard ceiling). sqrt() is applied first, then this clamp.
+if (isNil "WFBE_C_CMD_TOWN_NUDGE_TTL")         then {WFBE_C_CMD_TOWN_NUDGE_TTL = 240};        //--- s a town nudge stays live; its weight decays LINEARLY to 0 across this window.
+if (isNil "WFBE_C_CMD_TOWN_NUDGE_COOLDOWN")    then {WFBE_C_CMD_TOWN_NUDGE_COOLDOWN = 90};    //--- s per-UID anti-spam cooldown between town nudges.
+if (isNil "WFBE_C_CMD_TOWN_NUDGE_RING")        then {WFBE_C_CMD_TOWN_NUDGE_RING = 16};        //--- max live nudge records kept per side (bounded ring, oldest evicted) - caps both memory and the per-tick aggregation cost.
+//--- (b) TEAM DOCTRINE - per-team aggressive/defensive/garrison stance nudge. Owner 2026-07-18:
+//---     NO leader-only gate - any eligible nearby player may nudge, with anti-spam + receipts.
+if (isNil "WFBE_C_CMD_TEAM_DOCTRINE")          then {WFBE_C_CMD_TEAM_DOCTRINE = 0};           //--- master: 0 = verb rejected AND wfbe_aicom_team_doctrine is never stamped (byte-identical). 1 = on. HONEST SCOPE NOTE (review 2026-07-19): the per-team stamp (Server_HandleSpecial.sqf) has NO consumer anywhere in this tree yet - AssignTowns/Allocate do not read it. It is recorded for a future consumer; do not assume it currently biases allocator behavior.
+if (isNil "WFBE_C_CMD_TEAM_DOCTRINE_COOLDOWN") then {WFBE_C_CMD_TEAM_DOCTRINE_COOLDOWN = 90}; //--- s per-UID anti-spam cooldown between team-doctrine nudges.
+if (isNil "WFBE_C_CMD_TEAM_DOCTRINE_TTL")      then {WFBE_C_CMD_TEAM_DOCTRINE_TTL = 300};     //--- s a per-team doctrine stamp stays live before it expires back to normal allocator tasking.
+if (isNil "WFBE_C_CMD_POSTURE_GARRISON")       then {WFBE_C_CMD_POSTURE_GARRISON = 0};        //--- 0 = the side-posture verb keeps its PUSH/HOLD-only whitelist (byte-identical). 1 = also accept "GARRISON". TRUTHFUL SCOPE NOTE: GARRISON currently applies the HOLD engage-gate bias plus a defensive lean ONLY - the town-garrison SORTIE loop from docs/design/GARRISON-SORTIE-PATROL-DESIGN.md is NOT implemented anywhere in this tree (no WFBE_C_GARRISON_SORTIE* flag exists), so there is nothing to reuse yet.
+//--- (c) SUPPORT AIR - player requests an already-owned AI heli team as escort. Owner 2026-07-18:
+//---     FREE loan (no requisition fee, no refund path); anti-abuse is cooldown + caps + telemetry.
+if (isNil "WFBE_C_CMD_SUPPORT_AIR")            then {WFBE_C_CMD_SUPPORT_AIR = 0};             //--- master: 0 = verb rejected AND no escort loop is ever spawned (byte-identical). 1 = on.
+if (isNil "WFBE_C_CMD_SUPPORT_AIR_TTL")        then {WFBE_C_CMD_SUPPORT_AIR_TTL = 300};       //--- s max escort duration before the team auto-returns to autonomy.
+if (isNil "WFBE_C_CMD_SUPPORT_AIR_RANGE")      then {WFBE_C_CMD_SUPPORT_AIR_RANGE = 6000};    //--- m MAX FERRY distance: an eligible heli team further than this from the requester is not granted. Deliberately large (a heli flies in from base - unlike the ground WFBE_C_CMD_NUDGE_RANGE gate); the ferry distance of every grant is logged so a tighter cap can be set from soak telemetry.
+if (isNil "WFBE_C_CMD_SUPPORT_AIR_FOLLOW_INT") then {WFBE_C_CMD_SUPPORT_AIR_FOLLOW_INT = 20}; //--- s escort re-issue interval (periodic re-goto, NOT a per-frame attach or engine doFollow on a player).
+if (isNil "WFBE_C_CMD_SUPPORT_AIR_MAX_ACTIVE") then {WFBE_C_CMD_SUPPORT_AIR_MAX_ACTIVE = 1};  //--- side-wide cap on concurrently granted support-heli teams (protects the AICOM fist/economy). Additionally hard-capped at one active grant per player UID.
+if (isNil "WFBE_C_CMD_SUPPORT_AIR_COOLDOWN")   then {WFBE_C_CMD_SUPPORT_AIR_COOLDOWN = 180};  //--- s per-UID cooldown between heli support requests. Started on GRANT *and* on NONE so a denied request cannot be re-spammed.
+if (isNil "WFBE_C_CMD_SUPPORT_AIR_CAS_RANGE")  then {WFBE_C_CMD_SUPPORT_AIR_CAS_RANGE = 500}; //--- m DIRECT-THREAT radius around the holder for kind "cas-heli". Owner 2026-07-18 chose the SAFE ROE: escort/orbit + respond to threats this close to the holder; the heli does NOT free-hunt the map. Widen only from telemetry.
+if (isNil "WFBE_C_CMD_SUPPORT_AIR_RECALL")     then {WFBE_C_CMD_SUPPORT_AIR_RECALL = 1};      //--- owner 2026-07-18: AICOM MAY recall a granted heli for a last-stand / HQ emergency. 1 = recall allowed, 0 = a grant is inviolable for its TTL. Only read while _SUPPORT_AIR > 0.
+if (isNil "WFBE_C_CMD_SUPPORT_AIR_RECALL_HYST")then {WFBE_C_CMD_SUPPORT_AIR_RECALL_HYST = 60};//--- s HYSTERESIS: the emergency must have been continuously true for this long before a recall fires, and no new grant is issued on the side for this long after one. Prevents flapping grants on a blinking last-stand flag.
+if (isNil "WFBE_C_CMD_SUPPORT_AIR_MIN_ALT")    then {WFBE_C_CMD_SUPPORT_AIR_MIN_ALT = 120};   //--- m flyInHeight used for the escort orbit (transport stands off higher than a CAS pass).
+if (isNil "WFBE_C_CMD_SUPPORT_JET")            then {WFBE_C_CMD_SUPPORT_JET = 0};             //--- RESERVED, not implemented: 0 = the "cas-jet"/"transport-jet" request kinds are parsed and explicitly REJECTED with telemetry so the UI can grey them instead of silently dropping. There is no jet grant path in this build; setting this to 1 does NOT create one.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
