@@ -71,7 +71,7 @@
   "Server/PVFunctions/RequestOnUnitKilled.sqf": {"total": 1, "probed": 0},
   "Server/PVFunctions/RequestVehicleSell.sqf": {"total": 2, "probed": 0},
   "Server/Server_AmbientSkirmish.sqf": {"total": 2, "probed": 0},
-  "Server/Server_GuerAirDef.sqf": {"total": 20, "probed": 18},
+  "Server/Server_GuerAirDef.sqf": {"total": 21, "probed": 20},
   "Server/Server_Oilfields.sqf": {"total": 2, "probed": 0},
   "Server/Server_TownGarrisonDressing.sqf": {"total": 8, "probed": 8},
   "Server/Server_USVFlotilla.sqf": {"total": 5, "probed": 4},
