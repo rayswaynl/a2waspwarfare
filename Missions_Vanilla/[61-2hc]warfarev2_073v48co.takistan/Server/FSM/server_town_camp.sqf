@@ -127,7 +127,63 @@ while {!WFBE_GameOver} do {
 					[nil, "CampCaptured", [_camp,_newSID,_sideID]] Call WFBE_CO_FNC_SendToClients;
 				};
 			};
-		}else{};
+		}else{
+			//--- feat/deadcamp-presence-repair (owner redesign 2026-07-21, "AI soldiers repair a destroyed
+			//--- camp by standing in its bubble for a couple of minutes"): presence-based dead-camp
+			//--- self-repair. Flag-gated (WFBE_C_CAMP_REPAIR_PRESENCE, default 0) per the repo flag policy -
+			//--- flag off, this whole branch is a no-op and the mission stays byte-identical to HEAD.
+			if ((missionNamespace getVariable ["WFBE_C_CAMP_REPAIR_PRESENCE", 0]) > 0) then {
+				private ["_presentMen","_presentSnap","_presenceSince","_repairSideID","_wRC","_eRC","_rRC"];
+				//--- Same nearEntities["Man", _camp_range] idiom the alive-bunker branch above uses for its
+				//--- capture scan - this is its mutually-exclusive dead-bunker counterpart (a camp is never
+				//--- both alive and dead in the same pass), not a second/parallel scan mechanism.
+				_presentMen = _camp nearEntities ["Man", _camp_range];
+				_presentSnap = _presentMen;
+				{
+					if (!alive _x) then {_presentMen = _presentMen - [_x]};
+				} forEach _presentSnap;
+
+				if (count _presentMen > 0) then {
+					//--- Continuous presence by ANY side (AI or player) starts/keeps the clock - side-agnostic
+					//--- by design (see PR body): attackers need a way to reclaim a dead camp to satisfy an
+					//--- All-Camps capture, defenders benefit equally by being able to repair their own.
+					_presenceSince = _camp getVariable ["wfbe_camp_repair_since", -1];
+					if (_presenceSince < 0) then {
+						_presenceSince = time;
+						_camp setVariable ["wfbe_camp_repair_since", _presenceSince];
+					};
+					if ((time - _presenceSince) >= (missionNamespace getVariable ["WFBE_C_CAMP_REPAIR_PRESENCE_TIME", 150])) then {
+						//--- Threshold reached: whichever side is dominant in the presence set right now claims the
+						//--- repaired camp (mirrors the paid player repair contract in Server_HandleSpecial.sqf, where
+						//--- the repairing player's own side always becomes the new owner). Tie/mixed presence (no
+						//--- strict majority) keeps the camp's last-known sideID - same tie-keeps-owner rule the
+						//--- alive-bunker capture switch above already uses.
+						_repairSideID = _camp getVariable ["sideID", WFBE_DEFENDER_ID];
+						_wRC = west countSide _presentMen;
+						_eRC = east countSide _presentMen;
+						_rRC = resistance countSide _presentMen;
+						if (_wRC > _eRC && _wRC > _rRC) then {_repairSideID = WFBE_C_WEST_ID};
+						if (_eRC > _wRC && _eRC > _rRC) then {_repairSideID = WFBE_C_EAST_ID};
+						if (_rRC > _wRC && _rRC > _eRC) then {_repairSideID = WFBE_C_GUER_ID};
+
+						//--- Reuse the EXISTING repair-completion path (Server_HandleSpecial.sqf "repair-camp") instead
+						//--- of duplicating bunker-rebuild/flag/notify logic here - the same path the paid player
+						//--- repair (Action_RepairCamp.sqf) already drives. It rebuilds the bunker alive, which also
+						//--- re-enters this camp in server_town.sqf's C2 live-bunker dead-camp count on its very next
+						//--- pass - no separate CAPGATE wiring needed here.
+						["repair-camp", _camp, _repairSideID] call HandleSpecial;
+						_camp setVariable ["wfbe_camp_repair_since", -1];
+
+						diag_log Format ["CAPGATE|v1|%1|deadcamp-repair|camp=%2|side=%3|presence=%4s", (_town getVariable ["name","?"]), _camp, _repairSideID, round (time - _presenceSince)];
+					};
+				} else {
+					//--- Presence gap: full reset, no partial decay (simplest rule; documented per design).
+					if ((_camp getVariable ["wfbe_camp_repair_since", -1]) >= 0) then {
+						_camp setVariable ["wfbe_camp_repair_since", -1];
+					};
+				};
+			};
+		};
 
 		sleep _camp_step_sleep;
 	};

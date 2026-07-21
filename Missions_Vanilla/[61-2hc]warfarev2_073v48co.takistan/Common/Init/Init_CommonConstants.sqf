@@ -1535,6 +1535,12 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_CAMPS_REPAIR_DELAY = 15;
 	WFBE_C_CAMPS_REPAIR_PRICE = 500;
 	WFBE_C_CAMPS_REPAIR_RANGE = 15;
+	//--- feat/deadcamp-presence-repair (owner redesign 2026-07-21, "AI soldiers repair a destroyed camp
+	//--- by standing in its bubble for a couple of minutes"): presence-based dead-camp self-repair,
+	//--- consumed by server_town_camp.sqf's dead-bunker branch. Flag default 0 = feature off (repo flag
+	//--- policy); the tuning constant only matters once the flag is armed.
+	if (isNil "WFBE_C_CAMP_REPAIR_PRESENCE") then {WFBE_C_CAMP_REPAIR_PRESENCE = 0};
+	if (isNil "WFBE_C_CAMP_REPAIR_PRESENCE_TIME") then {WFBE_C_CAMP_REPAIR_PRESENCE_TIME = 150}; //--- s (2.5min) of continuous any-side presence in a dead camp's bubble before it self-repairs.
 
 //--- Economy.
 	if (isNil "WFBE_C_ECONOMY_CURRENCY_SYSTEM") then {WFBE_C_ECONOMY_CURRENCY_SYSTEM = 0}; //--- 0: Funds + Supply, 1: Funds.
