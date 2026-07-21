@@ -429,15 +429,20 @@ while {!WFBE_GameOver} do {
 	//--- dead vehicle eventually falls through to) has NO locality check, so it silently no-ops on these
 	//--- exactly like the pre-#1220 arty case.
 	//---
-	//--- SCOPE (owner/codex recon): this reaper targets ONLY a normal team-produced attack helicopter,
-	//--- tagged WFBE_CommanderAttackHeli at production in Server_BuyUnit.sqf (see that file - helis carry
-	//--- no other tag beyond the numeric wfbe_side_id, which every heli shares). It deliberately does NOT
+	//--- SCOPE (owner/codex recon, corrected after adversarial review caught a founding-path gap): this
+	//--- reaper targets ONLY a normal team-produced attack helicopter, tagged WFBE_CommanderAttackHeli at
+	//--- production. Two distinct production paths stamp this tag identically: the per-unit REFILL/top-up
+	//--- buy path (AI_Commander_Produce.sqf -> AIBuyUnit -> Server_BuyUnit.sqf) and the initial FOUNDING-
+	//--- roster path (Common_RunCommanderTeam.sqf -> Common_CreateTeam.sqf, which builds a team's whole
+	//--- starting squad template - e.g. a pure Ka-52 squadron - via its own direct WFBE_CO_FNC_CreateVehicle
+	//--- call, never through Server_BuyUnit.sqf - see Common_CreateTeam.sqf for its own stamp). Helis carry
+	//--- no other tag beyond the numeric wfbe_side_id, which every heli shares. It deliberately does NOT
 	//--- touch AI_Commander_AirResp.sqf response-flight helis or AI_Commander_Wildcard.sqf W13 gunships -
-	//--- both spawn via a direct WFBE_CO_FNC_CreateVehicle call (never through the factory/queue buy path
-	//--- this reaper's tag hooks) and BOTH already self-delete on their own short watchdog (AirResp: 15s-
-	//--- poll teardown once the flight's heli is no longer alive; W13: unconditional 90s sleep-then-
-	//--- delete) - reaping them here would be a double-delete race against their own cleanup, not a fix
-	//--- for a leak that does not exist on those two paths.
+	//--- both spawn via a direct WFBE_CO_FNC_CreateVehicle call outside BOTH tagging sites above, and BOTH
+	//--- already self-delete on their own short watchdog (AirResp: 15s-poll teardown once the flight's
+	//--- heli is no longer alive; W13: unconditional 90s sleep-then-delete) - reaping them here would be a
+	//--- double-delete race against their own cleanup, not a fix for a leak that does not exist on those
+	//--- two paths.
 	//---
 	//--- AGE-GATE + DYNAMIC DELAY + LOCALITY DISPATCH: identical contract to the arty reaper directly
 	//--- above (wfbe_trashable/wfbe_trashed nil-gate so the generic path is never cut short; stamp-then-

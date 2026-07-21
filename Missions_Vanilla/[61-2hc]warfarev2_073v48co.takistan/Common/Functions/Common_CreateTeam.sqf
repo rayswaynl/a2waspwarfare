@@ -167,6 +167,19 @@ _rearmor = {
 						_perfSkipped = _perfSkipped + 1;
 					};
 
+					//--- fix/heli-husk-reaper: same WFBE_CommanderAttackHeli/Side stamp as Server_BuyUnit.sqf's
+					//--- refill path, added HERE too because this founding-roster path (a team's initial squad
+					//--- template - e.g. Squad_RU.sqf's "Ka-52 Attack Squadron", Squad_USMC.sqf's "Apache +
+					//--- Osprey Air Assault") creates its hulls via a DIRECT WFBE_CO_FNC_CreateVehicle call
+					//--- above and never touches Server_BuyUnit.sqf - a founding attack heli was leaking
+					//--- untagged until this. AI_Commander_AirResp.sqf and AI_Commander_Wildcard.sqf's W13
+					//--- gunship never call Common_CreateTeam.sqf (both create their heli via their own direct
+					//--- CreateVehicle call outside this function entirely), so this stamp cannot reach them.
+					if ((_x isKindOf "Helicopter") && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) == 0}) then {
+						_vehicle setVariable ["WFBE_CommanderAttackHeli", true, true];
+						_vehicle setVariable ["WFBE_CommanderAttackHeliSide", str _side, true];
+					};
+
 					_type = if (_vehicle isKindOf 'Man') then {missionNamespace getVariable Format ['WFBE_%1SOLDIER',_side]} else {if (_vehicle isKindOf 'Air') then {missionNamespace getVariable Format ['WFBE_%1PILOT',_side]} else {missionNamespace getVariable Format ['WFBE_%1CREW',_side]}};
 					_vehicleCrews = [];
 					// Marty: Assign crew roles before moveIn so locked or delegated town vehicles keep their crews mounted.
