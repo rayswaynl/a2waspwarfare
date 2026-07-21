@@ -131,6 +131,7 @@ WFBE_CO_FNC_SpawnFactionSmoke = Compile preprocessFileLineNumbers "Common\Functi
 // Marty: Central createGroup wrapper (LEVER 2) - registered immediately after AICOMLog so the wrapper can call it.
 WFBE_CO_FNC_CreateGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateGroup.sqf";
 WFBE_CO_FNC_GroupGetBool = Compile preprocessFileLineNumbers "Common\Functions\Common_GroupGetBool.sqf"; //--- G1: safe bool getVariable for GROUP receivers (A2 OA unset->nil trap)
+WFBE_CO_FNC_LogVehDelete = Compile preprocessFileLineNumbers "Common\Functions\Common_LogVehDelete.sqf"; //--- compat shim until PR 1157 full probe rebases; cleanup-safe VEHDEL telemetry.
 WFBE_CO_FNC_CapLock = Compile preprocessFileLineNumbers "Common\Functions\Common_CapLock.sqf"; //--- capture-churn fix: is this AICOM team mid-capture-drain and thus IMMUNE to re-tasking (GR-2026-07-03a).
 WFBE_CO_FNC_AICOMTeamMounted = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMTeamMounted.sqf"; //--- T1.2 FIX (R3-SYNTHESIS 2026-07-20, codex review): shared mounted-classifier so AssignTowns and Allocate cannot diverge (leader-or-50pct embarked, not any-single-unit).
 WFBE_CO_FNC_SMLCampSplit = Compile preprocessFileLineNumbers "Common\Functions\Common_SMLCampSplit.sqf"; //--- SML-1 (GR-2026-07-03a): camp-split captures; per-unit doStop/doMove with TTL watchdog. Flag WFBE_C_SML_CAMP_SPLIT default 0.
