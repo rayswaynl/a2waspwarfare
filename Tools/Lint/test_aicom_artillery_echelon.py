@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Contract for the AICOM forward-artillery echelon (WFBE_C_AICOM_ARTY_ECHELON, default 0).
+"""Contract for the AICOM forward-artillery echelon (WFBE_C_AICOM_ARTY_ECHELON, wave0721-armed default 1).
 
 Live incident (wasp-aicom-live-20260718): EAST built artillery 23x but fired only 8
 missions (none after minute 583); WEST spammed ~1330 ineligible build-skip logs. Root
@@ -254,10 +254,11 @@ class ArtilleryEchelonFixtures(unittest.TestCase):
         self.assertIn("side _x != civilian", enemy_close_line)
         self.assertNotIn("_enemySide", enemy_close_line)
 
-    def test_10_constants_default_off_and_registered(self) -> None:
+    def test_10_constants_are_armed_and_registered(self) -> None:
+        """wave0721 arming ruling (2026-07-21): WFBE_C_AICOM_ARTY_ECHELON flipped 0->1."""
         constants = code(CONSTANTS)
         common_init = code(COMMON_INIT)
-        self.assertIn('if (isNil "WFBE_C_AICOM_ARTY_ECHELON") then {WFBE_C_AICOM_ARTY_ECHELON = 0};', constants)
+        self.assertIn('if (isNil "WFBE_C_AICOM_ARTY_ECHELON") then {WFBE_C_AICOM_ARTY_ECHELON = 1};', constants)
         self.assertIn("WFBE_C_AICOM_ARTY_ECHELON_REPOS_CD", constants)
         self.assertIn("WFBE_C_AICOM_ARTY_ECHELON_SAFE_DIST", constants)
         self.assertIn("WFBE_C_AICOM_ARTY_ECHELON_MIN_STANDOFF", constants)
