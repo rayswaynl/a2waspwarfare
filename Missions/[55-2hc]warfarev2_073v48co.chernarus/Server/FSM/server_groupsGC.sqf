@@ -314,7 +314,6 @@ while {!WFBE_GameOver} do {
 					_reaped = 0;
 					{
 						if (!isPlayer _x && !(_x in playableUnits)) then {
-							["gc-zombie-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete;
 							["gc-L318", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x;
 							_reaped = _reaped + 1;
 						};
