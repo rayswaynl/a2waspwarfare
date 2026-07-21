@@ -103,6 +103,25 @@ while {!WFBE_GameOver} do {
 				private "_capH"; _capH = 10; if (_location getVariable ["wfbe_is_naval_hvt", false]) then {_capH = (_location getVariable ["wfbe_naval_deckz", 22]) + 12}; //--- B755 (Ray 2026-06-25): carrier decks sit ~16-22m ASL, so on-deck attackers were EXCLUDED by the flat 10m height filter - the carrier town could never be captured by units standing on its deck (now relevant with the b754 deck-spawn). Naval-HVT towns scan up to deckZ+12; normal towns keep 10.
 				_objects = (_location nearEntities[["Man","Car","Motorcycle","Tank","Air","Ship"], _town_capture_range]) unitsBelowHeight _capH;
 
+				//--- OWNER RULING (wreck filter): a wrecked/abandoned vehicle must not hold or contest a
+				//--- town. `side` on a vehicle reflects its CREW while manned, but once the crew is gone
+				//--- (killed or bailed) it falls back to the vehicle CLASS's config-default faction and
+				//--- NEVER changes on death - so a dead, empty hull kept voting for its last side in the
+				//--- _west/_east/_resistance tally below forever. Filter the vehicle entries here (single
+				//--- pass over the list already collected above, no extra nearEntities) to alive-AND-crewed
+				//--- before the side tally; Man entries pass through untouched (a downed/dismounted
+				//--- player-controlled unit still legitimately holds ground).
+				private ["_capObjects"];
+				_capObjects = [];
+				{
+					if (_x isKindOf "Man") then {
+						_capObjects = _capObjects + [_x];
+					} else {
+						if (alive _x && {count crew _x > 0}) then {_capObjects = _capObjects + [_x]};
+					};
+				} forEach _objects;
+				_objects = _capObjects;
+
 				_west = west countSide _objects;
 				_east = east countSide _objects;
 				_resistance = resistance countSide _objects;
