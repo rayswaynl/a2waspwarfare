@@ -136,6 +136,62 @@ if (isNull _team) exitWith {
 	};
 };
 
+//--- CIV-DRIFT ENROLLMENT SELF-HEAL (fix/civ-drift-enroll-heal, Ray 2026-07-21, live RPT evidence -
+//--- player "Zwanon" fought AS WEST per kill log while his resolved team's wfbe_side read CIV, so the
+//--- funds guard below deferred forever: "[WFBE][JIPFUNDS] side unresolved (CIV) ... funds block
+//--- deferred"). The b761/b762 STAMP-ON-DEMAND above only fires when this WHOLE loop found NOTHING
+//--- (isNull _team) - it repairs an UNSTAMPED group. This is the other half of that gap: the loop DID
+//--- find a team (via B748.1/B746 above), but that team's GROUP was already EXPLICITLY wfbe_side-
+//--- stamped CIV. `side player` cannot be read here (server-side, no local player) and drifts anyway -
+//--- we read the player's REAL faction off the same networked body B748.1/b762 already trust
+//--- (WFBE_JIP_BODY_<uid>, never a scripted "player" global), via `side _civd_body`. Same 2-poll
+//--- stability idea as b762 (WFBE_CIVDRIFT_LASTG_<uid>): this file resolves TWICE per connect
+//--- (documented above the JIPFUNDS guard below), so the SECOND pass must reconfirm the SAME
+//--- (group, real-side) pair before we commit - a genuinely transient mid-sync CIV read (side not
+//--- yet replicated) will not match twice and is left alone for the existing tiers to resolve normally;
+//--- a persistent mis-stamp (the live case) matches and heals. Re-stamp mirrors the first-join stamp
+//--- (Init_Server.sqf ~883-884): wfbe_side + wfbe_persistent, funds seeded ONLY if nil (never clobbers
+//--- an existing wallet - same no-clobber spirit as the JIPFUNDS guard further below), and an append-
+//--- once addition to the real side's wfbe_teams (dedup-guarded, mirrors b762's own append exactly).
+//--- Idempotent: once healed, wfbe_side is no longer civilian so this whole block no-ops on every later
+//--- pass/reconnect. Touches nothing in RequestJoin.sqf, the JIP handshake, or funds math. A2-OA-1.64-
+//--- safe: plain single-arg getVariable on the GROUP (_team), array-default getVariable on the LOGIC
+//--- object only, 2-element missionNamespace setVariable, array + (no pushBack), private ["_x"] form.
+if (!isNull _team && {(missionNamespace getVariable ["WFBE_C_ENROLL_CIVDRIFT_HEAL", 1]) > 0}) then {
+	private ["_civd_wside","_civd_body","_civd_real","_civd_key","_civd_logik","_civd_teams"];
+	_civd_key = Format ["WFBE_CIVDRIFT_LASTG_%1", _uid];
+	_civd_wside = _team getVariable "wfbe_side";
+	if (isNil "_civd_wside" || {_civd_wside != civilian}) then {
+		missionNamespace setVariable [_civd_key, nil];
+	} else {
+		_civd_body = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
+		_civd_real = civilian;
+		if (!isNull _civd_body && {alive _civd_body} && {(getPlayerUID _civd_body) == _uid}) then {_civd_real = side _civd_body};
+		if (_civd_real in [west, east, resistance]) then {
+			if ((missionNamespace getVariable [_civd_key, grpNull]) == _team) then {
+				_team setVariable ["wfbe_side", _civd_real];
+				_team setVariable ["wfbe_persistent", true];
+				if (isNil {_team getVariable "wfbe_funds"}) then {
+					_team setVariable ["wfbe_funds", missionNamespace getVariable Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _civd_real], true];
+				};
+				_civd_logik = _civd_real Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _civd_logik) then {
+					_civd_teams = _civd_logik getVariable ["wfbe_teams", []];
+					if (!(_team in _civd_teams)) then {
+						_civd_teams = _civd_teams + [_team];
+						_civd_logik setVariable ["wfbe_teams", _civd_teams, true];
+					};
+				};
+				missionNamespace setVariable [_civd_key, nil];
+				diag_log Format ["[WFBE][CIVDRIFT HEAL] re-stamped [%1] [%2] team %3 CIV -> %4 (real body side, 2-poll confirmed).", _name, _uid, _team, _civd_real];
+			} else {
+				missionNamespace setVariable [_civd_key, _team];
+				diag_log Format ["[WFBE][CIVDRIFT HEAL] observed [%1] [%2] team %3 CIV-stamped while body plays %4 - awaiting stability confirm.", _name, _uid, _team, _civd_real];
+			};
+		};
+	};
+};
+
 //--- Make sure that our client is a warfare client, the side variable is only defined for warfare slots, otherwise we simply exit.
 _sideJoined = _team getVariable "wfbe_side";
 if (isNil '_sideJoined') exitWith {
