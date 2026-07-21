@@ -213,7 +213,10 @@ if (_airMaxTotalP > 0) then {
 							if (_wm_afford) then {
 								if (_wm_charge > 0) then {[_side, -_wm_charge] Call ChangeAICommanderFunds};
 								_wm_rallyPos = getPosATL _wm_ldr; //--- plain array = the rally pos the driver spawns at
-								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls, _wm_now], true];
+								//--- fable/aicom-topup-refund-on-stale: append the ACTUAL charged amount (_wm_charge,
+								//--- already 0 on the free/human-discount path) as element 4 so the consumer
+								//--- (Common_RunCommanderTeam.sqf) can refund it exactly if this request ages out unfilled.
+								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls, _wm_now, _wm_charge], true];
 								_team setVariable ["wfbe_aicom_topup_stamp", _wm_now, false]; //--- rate-limit stamp (local group var)
 								//--- VISIBILITY: UID-targeted command-chat line to the seated human commander ONLY (Client_HandlePVF
 								//--- STRING destination = exact player UID; LocalizeMessage "QuartermasterRefit" is a passthrough case).

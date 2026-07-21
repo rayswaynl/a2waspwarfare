@@ -1229,7 +1229,11 @@ if (count _live > 0) then {
 	_w11FreeFlag = _logik getVariable "wfbe_aicom_free_refound";
 	if (isNil "_w11FreeFlag") then {_w11FreeFlag = false};
 	if (_w11FreeFlag) then {
-		_logik setVariable ["wfbe_aicom_free_refound", false];
+		//--- fable/aicom-w11-freebie-consume-on-success: do NOT clear the PERSISTED flag here - founding
+		//--- can still abort below (owned-factory gate / no-spawn gate) AFTER this point, which used to
+		//--- burn the freebie with no team ever founded. Only satisfy the LOCAL funds-gate check here;
+		//--- the persisted wfbe_aicom_free_refound var is cleared further down, once founding is
+		//--- actually committed (past every remaining exitWith).
 		_funds = _price; //--- Satisfy the funds gate without deducting.
 		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] W11 FieldHospital free-refound flag consumed.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 	};
@@ -1347,9 +1351,13 @@ if (count _live > 0) then {
 		};
 	};
 
-	//--- W11 free-refound: do not deduct funds (founding is free this one time).
+	//--- W11 free-refound: do not deduct funds (founding is free this one time). Founding is committed
+	//--- past this point (every earlier exitWith - funds/owned-factory/no-spawn - has already been
+	//--- cleared), so this is where the persisted flag is actually consumed.
 	if (!_w11FreeFlag) then {
 		[_side, -_price] Call ChangeAICommanderFunds;
+	} else {
+		_logik setVariable ["wfbe_aicom_free_refound", false];
 	};
 	_logik setVariable ["wfbe_aicom_pending", _pending + 1];
 	if (_pending <= 0) then {_logik setVariable ["wfbe_aicom_pending_since", time]};
@@ -1474,11 +1482,20 @@ if (count _live > 0) then {
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founded server-local AI team (founded %2->%3 editor %4 target %5) [%6].", _sideText, _foundedTeams, _foundedTeams + 1, _editorTeams, _target, _g]] Call WFBE_CO_FNC_AICOMLog;
 	//--- L339: keep no-HC TEAM_FOUNDED telemetry on the same v2 schema as the HC founding path.
 	private ["_clsU","_cls"];
-	_clsU = _tmplUpgrades select _pick;
-	_cls = "infantry";
-	if ((_clsU select WFBE_UP_AIR) > 0) then {_cls = "air"} else {
-		if ((_clsU select WFBE_UP_HEAVY) > 0) then {_cls = "heavy"} else {
-			if ((_clsU select WFBE_UP_LIGHT) > 0) then {_cls = "light"};
+	_cls = "infantry"; //--- safe default - see the nil-guard below.
+	//--- fable/aicom-no-hc-nil-guard: _tmplUpgrades/_pick are ONLY assigned in the live-HC branch above
+	//--- (if (count _live > 0) ~L404+); the no-HC fallback never touches them, so the old unconditional
+	//--- _tmplUpgrades select _pick threw a script error here that aborted the REST OF THIS SCRIPT -
+	//--- silently skipping the TEAM_FOUNDED diag_log below AND the PerformanceAudit_Record call that
+	//--- closes the file (the founded group itself is unaffected - it was already created above; Produce
+	//--- and AssignTypes still pick it up untyped exactly as this branch's design intends).
+	//--- Same nil-safe _pick check already used at L1295/L1432 in this file.
+	if (!isNil "_pick" && {typeName _pick == "SCALAR"} && {_pick >= 0} && {!isNil "_tmplUpgrades"} && {_pick < count _tmplUpgrades}) then {
+		_clsU = _tmplUpgrades select _pick;
+		if ((_clsU select WFBE_UP_AIR) > 0) then {_cls = "air"} else {
+			if ((_clsU select WFBE_UP_HEAVY) > 0) then {_cls = "heavy"} else {
+				if ((_clsU select WFBE_UP_LIGHT) > 0) then {_cls = "light"};
+			};
 		};
 	};
 	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|via=server-local|template=" + str _pick + "|class=" + _cls + "|cost=" + str _price);
