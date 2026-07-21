@@ -183,20 +183,45 @@ class ArtilleryEchelonFixtures(unittest.TestCase):
         ]
         self.assertEqual(pick_safe_anchor("west", candidates_east, max_r=3000, min_stand=500), "TownB-clear")
 
-    def test_07_flag_off_source_paths_are_byte_identical_to_legacy(self) -> None:
+    def test_07_flag_off_source_path_pins_the_reconciled_global_scan(self) -> None:
+        """RECONCILED (fix/aicom-arty-cap-reconciled, 2026-07-21, orchestrator design ruling):
+        the echelon-OFF cap-count in Base.sqf no longer anchors on the CURRENT HQ position via
+        nearEntities - that was the actual root cause of an owner-observed artillery over-build
+        (the side HQ periodically relocates forward while built guns never move, so every
+        relocation orphaned earlier-built guns from the scan and let the self-healing cap
+        silently rebuild past the intended max). This test was PR #1212's original pin of the
+        legacy near-HQ form as an immutable flag-off invariant; #1221 was approved to replace
+        that legacy form specifically (the ECHELON-ON registry branch, which was already
+        position-independent by construction, is untouched - see test_08 for its wiring). Pin
+        the reconciled shape instead: a global forEach-vehicles scan gated by the same
+        WFBE_CommanderArtillery ownership tag and IsMobileArtillery class test the mission
+        already uses elsewhere, and assert the legacy HQ-radius form is gone."""
         base = code(BASE)
         strat = code(STRATEGY)
-        # The legacy near-HQ discovery call must still exist verbatim in the else-branch.
+        # The legacy near-HQ FIRING discovery call in the strategy worker is a SEPARATE concern
+        # (fire-mission discovery, not build/purchase cap-counting) and is untouched by the
+        # cap-counting reconciliation - it must still exist verbatim.
         self.assertIn(
             'nearEntities [["Tank","Car","Wheeled_APC","Tracked_APC"], 250]',
             strat,
         )
-        # The legacy unconditional artyBuilt-count-by-scan must still exist verbatim.
+        # RECONCILED: the echelon-OFF branch now counts LIVE commander-tagged,
+        # IsMobileArtillery-classed pieces for the side GLOBALLY via forEach vehicles - never
+        # anchored to any HQ position.
+        self.assertIn("forEach vehicles;", base)
+        self.assertIn('(_x getVariable ["WFBE_CommanderArtillery", false])', base)
+        self.assertIn("Call IsMobileArtillery", base)
         self.assertIn(
+            '&& {[_x, _side] Call IsMobileArtillery}) then {_artyBuilt = _artyBuilt + 1} } forEach vehicles;',
+            base,
+        )
+        # The legacy HQ-radius nearEntities scan must be GONE from Base.sqf's cap-count entirely -
+        # this is the exact bug the reconciliation fixed; its reappearance would be a regression.
+        self.assertNotIn(
             'forEach (_hqPos nearEntities [["Tank","Car","Wheeled_APC","Tracked_APC"], (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])]);',
             base,
         )
-        # Every new branch must be gated behind the echelon flag read.
+        # Every new branch must still be gated behind the echelon flag read.
         self.assertIn('WFBE_C_AICOM_ARTY_ECHELON", 0]', base)
         self.assertIn('WFBE_C_AICOM_ARTY_ECHELON", 0]', strat)
 
