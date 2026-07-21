@@ -17,7 +17,7 @@ private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","
 	"_homePool","_spSkipNaval","_hpX",
 	"_feedChangeOnly","_feedKeepAlive","_feedSig","_feedLastSig","_feedChanged","_feedDue","_feedLastBroadcast",
 	"_perfProbe","_perfCap","_perfReason","_perfPopTier",
-	"_rcSide","_rcSideID","_rcLogik","_rcCount","_rcOld"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler).
+	"_rcSide","_rcSideID","_rcLogik","_rcCount","_rcOld","_entryLdr","_entryGrp"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler); +_entryLdr/_entryGrp (B66-style any-live-member scrub test, review-1254 defect fix).
 
 waitUntil {townInitServer};
 sleep 30;
@@ -55,9 +55,23 @@ while {!WFBE_GameOver} do {
 	if (time - _scrubLast > 20) then {
 		_kept = [];
 		_changed = false;
+		//--- REVIEW FIX (review-1254 #2): the ORIGINAL scrub test here was leader-only (`alive
+		//--- (_entry select 0)`) - WFBE_ACTIVE_PATROLS entries only store the leader unit + sideID
+		//--- (no group slot, unlike WFBE_ACTIVE_AICOM_TEAMS below). If the ORIGINAL leader died but
+		//--- other patrol members are still alive, the patrol keeps running (Common_RunSidePatrol.sqf's
+		//--- own _alive test checks ANY live unit) but this scrub dropped its entry anyway - previously
+		//--- a cosmetic early-vanish of the map arrow (same bug class B66 already fixed below for
+		//--- WFBE_ACTIVE_AICOM_TEAMS), but now load-bearing: the fix/alife-leak-hardening #2 reconciler
+		//--- below counts straight off _kept, so an entry dropped while the patrol is still alive would
+		//--- UNDERCOUNT wfbe_side_patrols and let the side over-spawn past its concurrent-patrol cap.
+		//--- Derive the group from the (possibly dead) leader and key the keep-test on ANY live member,
+		//--- same B66 idiom as the AICOM-team scrub just below.
 		{
 			_entry = _x;
-			if (alive (_entry select 0)) then {
+			_entryLdr = _entry select 0;
+			_entryGrp = grpNull;
+			if (!isNull _entryLdr) then {_entryGrp = group _entryLdr};
+			if (!isNull _entryGrp && {{alive _x} count (units _entryGrp) > 0}) then {
 				_kept set [count _kept, _entry];
 			} else {
 				_changed = true;

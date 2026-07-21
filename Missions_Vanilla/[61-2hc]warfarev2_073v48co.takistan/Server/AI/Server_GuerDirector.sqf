@@ -489,8 +489,18 @@ while {!WFBE_GameOver} do {
                                             while {!isNull _veh && {alive _veh} && {({alive _x} count (units _grp)) > 0}} do {
                                                 sleep 20;
                                             };
+                                            //--- REVIEW FIX (review-1254 #4): A2 deleteGroup NO-OPS on a group still
+                                            //--- holding units, even dead ones (Common_CreateGroup.sqf:45) - corpses stay
+                                            //--- in `units _grp` until generic corpse cleanup (~WFBE_C_UNITS_CLEAN_TIMEOUT),
+                                            //--- long past this one-shot watcher, so the bare deleteGroup below used to
+                                            //--- silently no-op and re-leak the group in the majority (all-crew-died) case.
+                                            //--- Delete every unit first (dead or alive), same idiom as the crewless-spawn
+                                            //--- cleanup at Common_RunSidePatrol.sqf:60-62, so deleteGroup actually frees it.
                                             if (!isNull _veh && {!alive _veh}) then {deleteVehicle _veh};
-                                            if (!isNull _grp) then {deleteGroup _grp};
+                                            if (!isNull _grp) then {
+                                                {if (!isNull _x) then {deleteVehicle _x}} forEach (units _grp);
+                                                deleteGroup _grp;
+                                            };
                                         };
                                         diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=Mi24_P town=%3 fundedBy=%4",
                                             _elmin, _cId, _cTown, _cUid];
@@ -529,8 +539,14 @@ while {!WFBE_GameOver} do {
                                         while {!isNull _veh && {alive _veh} && {({alive _x} count (units _grp)) > 0}} do {
                                             sleep 20;
                                         };
+                                        //--- REVIEW FIX (review-1254 #4): see the combo-gunship block above for the
+                                        //--- full rationale - deleteGroup no-ops while corpses remain, so delete every
+                                        //--- unit first (Common_RunSidePatrol.sqf:60-62 idiom) or the group re-leaks.
                                         if (!isNull _veh && {!alive _veh}) then {deleteVehicle _veh};
-                                        if (!isNull _grp) then {deleteGroup _grp};
+                                        if (!isNull _grp) then {
+                                            {if (!isNull _x) then {deleteVehicle _x}} forEach (units _grp);
+                                            deleteGroup _grp;
+                                        };
                                     };
                                     _ctr set [6, _nowT];
                                     _ctr set [7, "fired"];
