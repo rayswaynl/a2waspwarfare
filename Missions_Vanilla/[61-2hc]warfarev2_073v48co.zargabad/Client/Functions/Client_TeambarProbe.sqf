@@ -40,12 +40,12 @@ WFBE_CL_FNC_TeambarProbe = {
     _n = count (units _grp);
     for '_i' from 0 to (_n - 1) do {
         _u = (units _grp) select _i;
-        _o = _o + Format ["%1:r%2/p%3/l%4/a%5 ", _i, rankId _u, isPlayer _u, local _u, alive _u];
+        _o = _o + Format ["%1:r%2/p%3/l%4/a%5 ", _i, rank _u, isPlayer _u, local _u, alive _u];
     };
 
     diag_log Format ["TEAMBAR|v2|PROBE|evt=%1|phase=%2|t=%3|jip=%4|flag=%5|alivePlayer=%6|sameTeam=%7|isLeader=%8|arr0IsPlayer=%9|playerRankId=%10|groupId=%11|units=%12|order=[ %13]",
         _evt, _phase, round time, didJIP,
         (missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 1]), //--- raw value capture for the log (1 = the mitigation's real default), not a gate
-        alive player, _sameTeam, _ldrIsP, _arr0IsP, rankId player,
-        groupId _grp, count (units _grp), _o];
+        alive player, _sameTeam, _ldrIsP, _arr0IsP, rank player,
+        str _grp, count (units _grp), _o];
 };
