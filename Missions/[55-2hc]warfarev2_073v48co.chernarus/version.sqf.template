@@ -9,7 +9,7 @@
 #define IS_NAVAL_MAP
 //#define IS_AIR_WAR_EVENT
 #define WF_MAXPLAYERS 36
-#define WF_MISSIONNAME "[55] Warfare V48 Chernarus"
+#define WF_MISSIONNAME "[55] Miksuu's Warfare Chernarus"
 #define STARTING_DISTANCE 7500
 #define COMBINEDOPS 1
 #define WF_RESPAWNDELAY 2

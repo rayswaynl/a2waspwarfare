@@ -87,6 +87,9 @@ A3_REVEAL_ARRAY_LEFT_RE = re.compile(r"\[[^\]\n;]*\]\s+reveal\b", re.IGNORECASE)
 A3_REVEAL_ARRAY_RIGHT_RE = re.compile(r"\breveal\s+\[[^\]\n;]*\]", re.IGNORECASE)
 A3_SELECT_SLICE_RE = re.compile(r"\bselect\s*\[", re.IGNORECASE)
 A3_SORT_CODE_RE = re.compile(r"\bsort\s*\{", re.IGNORECASE)
+# exitWith is only valid as `if (cond) exitWith {..}`; a statement-start bare exitWith parse-fails
+# the whole file on A2 OA 1.64 ("Error Missing ;") - live-burned wave0721b (chat relay + team founding)
+BARE_EXITWITH_RE = re.compile(r"(?m)^[ \t]*exitWith\b", re.IGNORECASE)
 A3_BIS_FNC_CALL_RE = re.compile(r"\bcall\s+BIS_fnc_\w+\b", re.IGNORECASE)
 STRING_LITERAL_RE = "\"(?:[^\"]|\"\")*\"|'(?:[^']|'')*'"
 A3_STRING_FIND_RE = re.compile(rf"(?:{STRING_LITERAL_RE})\s+find\s+(?:{STRING_LITERAL_RE})", re.IGNORECASE)
@@ -495,6 +498,7 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
         (A3_REVEAL_ARRAY_RIGHT_RE, "A3REVEAL", "Array-form reveal is an A3-era trap; reveal units one at a time"),
         (A3_SELECT_SLICE_RE, "A3SELECT", "select [start,count] syntax is not A2/OA 1.64-safe"),
         (A3_SORT_CODE_RE, "A3SORT", "sort-by-code syntax is not A2/OA 1.64-safe"),
+        (BARE_EXITWITH_RE, "BAREEXIT", "Bare statement-start exitWith parse-fails the whole file on A2 OA; use `if (cond) exitWith {..}`"),
         (A3_BIS_FNC_CALL_RE, "A3BISFNC", "BIS_fnc_* calls require the Arma 3 function library and are not A2/OA 1.64-safe"),
         (GROUP_GETVARIABLE_ARRAY_RE, "GROUPGETVAR", "Review two-argument getVariable on a group; use plain get + isNil for groups"),
     ):
