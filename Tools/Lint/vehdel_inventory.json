@@ -47,7 +47,7 @@
   "Server/FSM/cleaners/droppeditems_cleaner.sqf": {"total": 1, "probed": 0},
   "Server/FSM/cleaners/mines_cleaner.sqf": {"total": 1, "probed": 0},
   "Server/FSM/cleaners/ruins_cleaner.sqf": {"total": 1, "probed": 0},
-  "Server/FSM/server_groupsGC.sqf": {"total": 13, "probed": 6},
+  "Server/FSM/server_groupsGC.sqf": {"total": 13, "probed": 5},
   "Server/FSM/server_town.sqf": {"total": 10, "probed": 0},
   "Server/FSM/server_town_ai.sqf": {"total": 9, "probed": 5},
   "Server/Functions/AI_Commander_Wildcard.sqf": {"total": 9, "probed": 0},
