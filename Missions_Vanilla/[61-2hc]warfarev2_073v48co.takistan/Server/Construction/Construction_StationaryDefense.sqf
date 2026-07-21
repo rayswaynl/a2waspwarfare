@@ -93,6 +93,21 @@ _defense addEventHandler ['handleDamage',{if ((_this select 4) isKindOf "BulletB
 };*/
 
 Call Compile Format ["_defense addEventHandler ['Killed',{[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled}]",_sideID];
+//--- fix/aicom-arty-cap (2026-07-21, owner-live report: destroyed GRAD/artillery husks persist on the
+//--- map). ROOT CAUSE: Common_CreateVehicle.sqf wires BOTH a "Killed" AND a "hit" EH on every vehicle it
+//--- creates (the "hit" EH stamps wfbe_lasthitby/wfbe_lasthittime via Common_OnUnitHit.sqf); this raw
+//--- createVehicle construction path never went through that helper, so it wired ONLY the "Killed" EH
+//--- above and never the matching "hit" EH. RequestOnUnitKilled.sqf exits the whole kill handler -
+//--- including the wfbe_trashed/TrashObject cleanup enrollment further down - whenever the immediate
+//--- killer is already dead/null (L62), falling back to wfbe_lasthitby ONLY when that was stamped. A
+//--- real artillery shell has real flight time (Common_FireArtillery.sqf ARTY_Prep/fire/burst/reload),
+//--- so a base-built gun killed by incoming fire aimed at its own side's HQ - while its own side's gun is
+//--- ALSO trading fire with the enemy HQ at the same time - frequently outlives its own killer, and with
+//--- no wfbe_lasthitby fallback available the wreck never gets event-driven cleanup enrollment, leaving
+//--- it dependent entirely on the slower/independent allDead poll (server_collector_garbage.sqf). Wire
+//--- the SAME "hit" EH Common_CreateVehicle.sqf uses so every base-built defense (including artillery)
+//--- gets last-hit tracking too, closing the enrollment gap at its source.
+_defense addEventHandler ["hit", {_this Spawn WFBE_CO_FNC_OnUnitHit}];
 
 if (!isNull _area) then {
 	if (_defense emptyPositions "gunner" > 0 && (((missionNamespace getVariable "WFBE_C_BASE_DEFENSE_MAX_AI") > 0) || _isAIQuery)) then {

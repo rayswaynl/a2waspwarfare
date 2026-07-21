@@ -130,8 +130,18 @@ while {true} do {
 						private "_veh"; _veh = vehicle _x;
 						if (_veh != _x) then {
 							if (_veh isKindOf "Air") exitWith {_typeTag = "AIR"};
-							if (_veh isKindOf "Tank") then {if (_typeTag != "AIR") then {_typeTag = "HVY"}};
-							if ((_veh isKindOf "Wheeled_APC") || {_veh isKindOf "Car"}) then {if (_typeTag == "INF") then {_typeTag = "LGHT"}};
+							//--- fix/aicom-arty-cap (2026-07-21, owner-live report: HQ-team artillery batteries never show
+							//--- [ARTY] on the map). ROOT CAUSE: this classifier had no artillery branch at all - a
+							//--- GRAD/MLRS hull is Tank- or Car-classed, so it silently fell into the generic HVY/LGHT
+							//--- bucket below instead of a dedicated tag. Reuses the mission's own IsMobileArtillery
+							//--- self-propelled-hull classifier (same one AI_Commander_Base.sqf/Strategy.sqf use) so an
+							//--- artillery hull is tagged ARTY before the generic Tank/Car checks ever run on it.
+							if ([_veh, side _team] Call IsMobileArtillery) then {
+								if (_typeTag != "AIR") then {_typeTag = "ARTY"};
+							} else {
+								if (_veh isKindOf "Tank") then {if (_typeTag != "AIR" && {_typeTag != "ARTY"}) then {_typeTag = "HVY"}};
+								if ((_veh isKindOf "Wheeled_APC") || {_veh isKindOf "Car"}) then {if (_typeTag == "INF") then {_typeTag = "LGHT"}};
+							};
 						};
 					};
 				} forEach (units _team);
@@ -194,8 +204,15 @@ while {true} do {
 					private "_veh"; _veh = vehicle _x;
 					if (_veh != _x) then {
 						if (_veh isKindOf "Air") exitWith {_typeTag = "AIR"};
-						if (_veh isKindOf "Tank") then {if (_typeTag != "AIR") then {_typeTag = "HVY"}};
-						if ((_veh isKindOf "Wheeled_APC") || {_veh isKindOf "Car"}) then {if (_typeTag == "INF") then {_typeTag = "LGHT"}};
+						//--- fix/aicom-arty-cap (2026-07-21): same ARTY classifier fix as the create pass above -
+						//--- see that block's comment for the root cause. Kept identical here so the refresh pass
+						//--- agrees with the create pass on which teams read as ARTY.
+						if ([_veh, side _team] Call IsMobileArtillery) then {
+							if (_typeTag != "AIR") then {_typeTag = "ARTY"};
+						} else {
+							if (_veh isKindOf "Tank") then {if (_typeTag != "AIR" && {_typeTag != "ARTY"}) then {_typeTag = "HVY"}};
+							if ((_veh isKindOf "Wheeled_APC") || {_veh isKindOf "Car"}) then {if (_typeTag == "INF") then {_typeTag = "LGHT"}};
+						};
 					};
 				};
 			} forEach (units _team);
