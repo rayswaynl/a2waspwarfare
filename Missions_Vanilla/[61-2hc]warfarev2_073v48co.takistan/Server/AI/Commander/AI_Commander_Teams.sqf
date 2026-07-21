@@ -264,6 +264,16 @@ if (_aiCapTierIndex > _aiCapTierLast) then {_aiCapTierIndex = _aiCapTierLast};
 _aiCapTier = _aiCapTiers select _aiCapTierIndex;
 _sideAINow = {(side _x == _side) && !(isPlayer _x)} count _allUnits;
 if (_sideAINow >= _aiCapTier) exitWith {
+	private "_foundCapCount";
+	private "_foundCapLast";
+	_foundCapCount = (_logik getVariable ["wfbe_aicom_foundcap_count", 0]) + 1;
+	_foundCapLast = _logik getVariable ["wfbe_aicom_foundcap_log_t", -9999];
+	_logik setVariable ["wfbe_aicom_foundcap_count", _foundCapCount];
+	if ((time - _foundCapLast) >= 300) then {
+		_logik setVariable ["wfbe_aicom_foundcap_log_t", time];
+		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOUND_SKIP|reason=side-cap|count=" + str _foundCapCount + "|sideAI=" + str _sideAINow + "|tierCap=" + str _aiCapTier + "|pc=" + str _pcN);
+		_logik setVariable ["wfbe_aicom_foundcap_count", 0];
+	};
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founding skipped - side AI %2 >= tier cap %3 (tier %4, pc %5).", _sideText, _sideAINow, _aiCapTier, (missionNamespace getVariable ["WFBE_PopTier", 0]), _pcN]] Call WFBE_CO_FNC_AICOMLog;
 };
 
