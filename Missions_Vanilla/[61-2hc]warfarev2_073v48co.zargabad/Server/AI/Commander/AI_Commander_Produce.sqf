@@ -142,7 +142,7 @@ if (_airMaxTotalP > 0) then {
 		//--- gets an infantry top-up. We CHARGE the side up front (per-missing-unit flat cost) and broadcast a
 		//--- wfbe_aicom_topup_req [count,pos,classes,issuedTime] the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
 		//--- one top-up per team per COOLDOWN via a group stamp. Never fires in COMBAT (rallying/parked implies not) or while pending disband (PR #542).
-		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag"];
+		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag","_wm_costOn","_wm_afford"];
 		if (_wm_alive < 6 && {behaviour _wm_ldr != "COMBAT"}) then {
 			_wm_rally = _team getVariable "wfbe_aicom_rallying";
 			_wm_rally = (!isNil "_wm_rally" && {_wm_rally});
@@ -195,10 +195,23 @@ if (_airMaxTotalP > 0) then {
 							if (!isNull _wm_cmdTeam) then { if (isPlayer (leader _wm_cmdTeam)) then {_wm_humanSeated = true} };
 							_wm_mult = 1;
 							if (_wm_humanSeated) then {_wm_mult = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_HUMAN_MULT", 0.33]};
+							//--- QM REFIT FREE FOR PLAYER COMMANDER (Ray owner ruling, 2026-07-21): WFBE_C_AICOM_TOPUP_HUMAN_COST
+							//--- default 0 = FREE. Mirrors the WFBE_C_CMD_REFIT_COST toggle already used by the explicit REFIT verb
+							//--- (Server_HandleSpecial.sqf "aicom-refit"). When off (<= 0) the SEATED HUMAN commander's passive
+							//--- Quartermaster top-up (this block) charges nothing and is NEVER blocked by low funds: force the
+							//--- multiplier to 0 and bypass the affordability gate below. The human-seat test above (isPlayer leader
+							//--- of the commander team) is server-derived, never client-trusted; AI commander (test false -> mult
+							//--- stays 1) and non-commander behaviour are untouched. WFBE_C_AICOM_TOPUP_HUMAN_MULT's own default
+							//--- (0.25) is UNCHANGED and still governs the legacy discounted-charge path if WFBE_C_AICOM_TOPUP_HUMAN_COST
+							//--- is ever set > 0.
+							_wm_costOn = (missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_HUMAN_COST", 0]) > 0;
+							if (_wm_humanSeated && {!_wm_costOn}) then {_wm_mult = 0};
 							_wm_charge   = round (_wm_unitCost * _wm_missing * _wm_mult);
 							_wm_curFunds = (_side) Call GetAICommanderFunds;
-							if (_wm_curFunds >= _wm_charge) then {
-								[_side, -_wm_charge] Call ChangeAICommanderFunds;
+							_wm_afford   = (_wm_curFunds >= _wm_charge);
+							if (_wm_humanSeated && {!_wm_costOn}) then {_wm_afford = true}; //--- free path: never blocked by low funds
+							if (_wm_afford) then {
+								if (_wm_charge > 0) then {[_side, -_wm_charge] Call ChangeAICommanderFunds};
 								_wm_rallyPos = getPosATL _wm_ldr; //--- plain array = the rally pos the driver spawns at
 								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls, _wm_now], true];
 								_team setVariable ["wfbe_aicom_topup_stamp", _wm_now, false]; //--- rate-limit stamp (local group var)
