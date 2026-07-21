@@ -35,6 +35,14 @@ _u = _u + ["USMC_Soldier_HAT"];
 _u = _u + ["USMC_Soldier_AR"];
 _u = _u + ["USMC_Soldier_Medic"];
 _l = _l + [_u];
+//--- B757 garrison variety: light patrol squad.
+_k = _k + ["Squad_2"];
+_u        = ["USMC_Soldier_TL"];
+_u = _u + ["USMC_Soldier_AR"];
+_u = _u + ["USMC_Soldier"];
+_u = _u + ["USMC_Soldier"];
+_u = _u + ["USMC_Soldier_Medic"];
+_l = _l + [_u];
 
 _k = _k + ["Squad_3"];
 _u		= ["USMC_Soldier_SL"];
@@ -164,6 +172,11 @@ _l = _l + [_u];
 _k = _k + ["Team_Sniper_1"];
 _u		= ["USMC_Soldier2"];
 _u = _u + ["USMC_Soldier2"];
+_l = _l + [_u];
+//--- B757 garrison variety: spotter/sniper overwatch pair.
+_k = _k + ["Team_Sniper_1"];
+_u        = ["USMC_SoldierS_Spotter"];
+_u = _u + ["USMC_SoldierS_Sniper"];
 _l = _l + [_u];
 
 _k = _k + ["Team_Sniper_2"];
