@@ -1,7 +1,12 @@
-Private ['_bankBounty','_bankKey','_bankMarker','_current','_find','_killer','_logik','_structure','_structures','_side','_tked','_type','_killer_uid','_side_killer','_score','_bounty','_supplies','_teamkill'];
+Private ['_bankBounty','_bankKey','_bankMarker','_current','_find','_killer','_logik','_structure','_structures','_side','_tked','_type','_killer_uid','_side_killer','_score','_bounty','_supplies','_teamkill','_relayKiller'];
 _structure = _this select 0;
 _killer = _this select 1;
 _type = _this select 2;
+if (isServer && {(missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0}) then {
+	_relayKiller = "AI";
+	if (!isNull _killer && {isPlayer _killer}) then {_relayKiller = name _killer};
+	["KILL", _relayKiller, Format ["victim=%1 killer=%2", _type, _relayKiller]] Call WFBE_SE_FNC_ChatRelayEvent;
+};
 _side = _structure getVariable "wfbe_side";
 if(_side != resistance)then{
   _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;

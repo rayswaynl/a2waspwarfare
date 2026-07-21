@@ -30,7 +30,9 @@ if (!isNil {missionNamespace getVariable [Format ["WFBE_HEADLESS_%1", _uid], nil
 };
 
 //--- Server-observable fallback event. No client payload or chat hook is involved.
-if (_uid != "") then {["JOIN", _name, Format ["uid=%1", _uid]] Call WFBE_SE_FNC_ChatRelayEvent};
+if ((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0 && {_uid != ""}) then {
+	["JOIN", _name, "player joined"] Call WFBE_SE_FNC_ChatRelayEvent;
+};
 
 //--- We try to get the player and it's group from the playableUnits.
 //--- B74.2.2: was 10 (a 5s ceiling). Widened to 60 (30s) so a JIP seat under heavy-AI / low-server-FPS

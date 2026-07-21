@@ -1351,8 +1351,7 @@ if (_antiStackEnabled) then {
 	// 0 = NONE
 	// 1 = CHERNARUS
 	// 2 = TAKISTAN
-	// 3 = ZARGABAD; keep all terrain mirrors byte-identical and branch only at runtime.
-	["SET_MAP", if (toLower worldName == "takistan") then {2} else {if (toLower worldName == "zargabad") then {3} else {1}}] call WFBE_SE_FNC_CallDatabaseSetMap;
+	["SET_MAP", 1] call WFBE_SE_FNC_CallDatabaseSetMap;
 };
 
 _logMatchWinPlayerCountThreshold = 10;

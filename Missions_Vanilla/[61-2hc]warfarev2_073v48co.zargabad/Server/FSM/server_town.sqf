@@ -482,7 +482,9 @@ while {!WFBE_GameOver} do {
 			//--- Fires exactly once per real town/camp ownership flip - no loop, no PFH, no new scan.
 			diag_log ("AICOMSTAT|v2|EVENT|" + (str _newSide) + "|" + str (round (time / 60)) + "|TOWN_FLIP|town=" + (_location getVariable ["name","unknown"]) + "|from=" + (str _side) + "|to=" + (str _newSide) + "|fromID=" + str _sideID + "|toID=" + str _newSID);
 			// END AICOMSTAT TOWN_FLIP
-			["TOWN", "SERVER", Format ["town=%1 from=%2 to=%3", _location getVariable ["name", "unknown"], str _side, str _newSide]] Call WFBE_SE_FNC_ChatRelayEvent;
+			if ((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0) then {
+				["TOWN", "SERVER", Format ["town=%1 from=%2 to=%3", _location getVariable ["name", "unknown"], str _side, str _newSide]] Call WFBE_SE_FNC_ChatRelayEvent;
+			};
 
 			//--- FM-5: clear the old garrison's active flags on capture so the new owner re-garrisons immediately (prevents an up-to-WFBE_C_TOWNS_UNITS_INACTIVE undefended window on rapid recapture).
 			//--- Also clear episode latch so the new owner's activation episode is not blocked.

@@ -5,7 +5,7 @@
 		- Shooter
 */
 
-Private ["_wreckObject", "_building","_dammages","_dammages_current","_get","_killer","_logik","_origin","_structure","_structure_kind","_killerGroup"];
+Private ["_wreckObject", "_building","_dammages","_dammages_current","_get","_killer","_logik","_origin","_structure","_structure_kind","_killerGroup","_relayKiller"];
 
 _structure = _this select 0;
 _killer = _this select 1;
@@ -19,6 +19,11 @@ _structure setVariable ["wfbe_hq_killed_done", true, true];
 _wreckObject = _structure;
 
 _structure_kind = typeOf _structure;
+if (isServer && {(missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0}) then {
+	_relayKiller = "AI";
+	if (!isNull _killer && {isPlayer _killer}) then {_relayKiller = name _killer};
+	["KILL", _relayKiller, Format ["victim=%1 killer=%2", _structure_kind, _relayKiller]] Call WFBE_SE_FNC_ChatRelayEvent;
+};
 _side = _structure getVariable "wfbe_side";
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 _killerGroup = group _killer;
