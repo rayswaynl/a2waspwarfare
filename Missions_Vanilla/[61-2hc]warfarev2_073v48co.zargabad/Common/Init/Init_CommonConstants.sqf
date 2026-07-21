@@ -2796,5 +2796,21 @@ if (isNil "WFBE_C_CHAT_RELAY") then {WFBE_C_CHAT_RELAY = 0};
 
 if (isNil "WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL") then {WFBE_C_CLIENT_FRAME_TELEMETRY_INTERVAL = 60};
 
+//--- AICOM AIR-FOUNDING TELEMETRY (P1.1 diagnosis, claude 2026-07-19; wording corrected 2026-07-19 per
+//--- codex-main-sol-review-airpower-20260719 REJECT "not literal byte/execution identity"): reason-coded
+//--- founding/air-cap evidence so the live "zero AICOM air / zero VEHLIFT" blocker is identified BEFORE any air
+//--- tuning (instrument-first, per the independent AICOM audit synthesis SHA256 2D50EA13...). 0 = OFF (default)
+//--- => no probe, no vehicle scan, no AICOMAIR diag_log token anywhere (founding worker, air-mobile gate,
+//--- veh-lift) => behaviour-equivalent to HEAD (identical AI decisions, RNG draws, positions, gameplay outcomes).
+//--- NOT literal byte/execution identity: these two constants are still declared here unconditionally (the same
+//--- always-declare-default pattern every other WFBE_C_* flag in this file uses) and every call site still runs
+//--- one getVariable check per cycle even when off - kept live-toggleable via debug console (see Init_Common.sqf
+//--- WFBE_CO_FNC_AICOMAirFoundTelemetry comment) rather than compile-gated, which would be a truer no-op but would
+//--- break that testing workflow. 1 = emit AICOMAIR|v1| lines (founding terminal outcome + throttled at-target
+//--- snapshot + air-mobile/veh-lift lifecycle reasons). DIAGNOSTIC ONLY - changes NO founding, cap, bucket, or
+//--- airlift behaviour.
+	if (isNil "WFBE_C_AICOM_AIR_TELEMETRY") then {WFBE_C_AICOM_AIR_TELEMETRY = 0};
+	if (isNil "WFBE_C_AICOM_AIR_TELEMETRY_SEC") then {WFBE_C_AICOM_AIR_TELEMETRY_SEC = 30}; //--- min seconds between periodic at-target air snapshots per side (founding-decision + attempt events are not throttled).
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

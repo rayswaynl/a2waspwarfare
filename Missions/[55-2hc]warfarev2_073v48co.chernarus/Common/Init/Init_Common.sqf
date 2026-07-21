@@ -109,6 +109,20 @@ WFBE_CO_FNC_CreateTownUnits = Compile preprocessFileLineNumbers "Common\Function
 WFBE_CO_FNC_RunSidePatrol = Compile preprocessFileLineNumbers "Common\Functions\Common_RunSidePatrol.sqf";
 WFBE_CO_FNC_RunCommanderTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_RunCommanderTeam.sqf";
 WFBE_CO_FNC_AICOMAirLeg = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirLeg.sqf"; //--- cmdcon42-f AIR-MOBILE: fly an ORDERED leg with the team's own live transport heli + hot-LZ (cold=land, contested=paradrop); transport returns to base + persists. Gate WFBE_C_AICOM_AIRMOBILE.
+//--- P1.1 (claude 2026-07-19, reworked per codex-main-sol-review-airpower-20260719 REJECT "compiled helper always
+//--- running - not literal byte/execution identity"): considered gating this compile the same way
+//--- WFBE_CO_FNC_ClearVehicleCargo/EquipBackpack/RemoveCountermeasures/SendToClient conditionally compile on
+//--- WF_A2_Vanilla elsewhere in this file - REJECTED that approach: those pick between two BUILD-TIME-FIXED
+//--- implementations (vanilla vs OA), never toggled after init, whereas WFBE_C_AICOM_AIR_TELEMETRY is a normal
+//--- WFBE_C_* diagnostic flag, checked fresh via missionNamespace getVariable at every call site (same idiom as
+//--- every other default-0/default-ON flag in this codebase) so an admin CAN flip it live via debug console
+//--- mid-match to start capturing evidence without a restart - gating the compile on the flag's value AT INIT
+//--- TIME would permanently stub this function to {} for any match that boots with the flag off, breaking that
+//--- exact live-toggle workflow (the one this PR's own evidence-gathering plan depends on). Compile stays
+//--- unconditional like every other WFBE_CO_FNC_* in this file; every CALL site is flag-guarded (see the helper's
+//--- own header comment for the honest flag-off cost accounting). Reason-coded AICOM air founding/cap telemetry -
+//--- flag WFBE_C_AICOM_AIR_TELEMETRY default 0.
+WFBE_CO_FNC_AICOMAirFoundTelemetry = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirFoundTelemetry.sqf";
 WFBE_CO_FNC_AICOMAirReturn = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirReturn.sqf"; //--- cmdcon42-f shared post-drop RETURN-TO-BASE-AND-HOLD (the founding WFBE_C_AICOM_AIR_RETAIN path + air-mobile legs call this SAME code - no duplication). Scheduled-context only (it sleeps).
 WFBE_CO_FNC_AICOMServiceTick = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMServiceTick.sqf"; //--- B48 AICOM self-service (default OFF: WFBE_C_AICOM_SERVICE_ENABLED)
 WFBE_CO_FNC_AICOMLog = Compile preprocessFileLineNumbers "Common\Functions\Common_AICommanderLog.sqf";

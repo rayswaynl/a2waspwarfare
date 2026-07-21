@@ -326,7 +326,13 @@ if ((_logik getVariable ["wfbe_aicom_veteran_next", false]) && {_logik getVariab
 
 if (_testTeamCap >= 0) then {_target = _target min _testTeamCap}; //--- WFBE_C_TEST_TEAM_CAP final ceiling (test-only, default off).
 
-if ((_foundedTeams + _pending + _constructionPending) >= _target) then { ["target_met"] Call _emitFoundSkip; exitWith {} };
+if ((_foundedTeams + _pending + _constructionPending) >= _target) then {
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
+		[_side, "at-target", _foundedTeams, _pending, _target, -1, -1, -1, -1, _allVehicles] Call WFBE_CO_FNC_AICOMAirFoundTelemetry;
+	};
+	["target_met"] Call _emitFoundSkip;
+	exitWith {}
+};
 
 //--- B74.2 (Ray 2026-06-23): enforce the TIERED per-side TOTAL_AI ceiling AT FOUNDING. The HC founding path had NO
 //--- side-AI gate (only AI_Commander_Produce.sqf:28-30 did), so at low pop founding blew past the cap = the
@@ -1061,6 +1067,13 @@ if (count _live > 0) then {
 	};
 
 	_template = _templates select _pick;
+	//--- P1.1 AIR-FOUNDING TELEMETRY: final bucket after all draw/override decisions.
+	private ["_telemBucket"];
+	_telemBucket = _chosen;
+	if (!isNil "_storedTypes" && {_pick >= 0} && {_pick < count _storedTypes}) then {
+		private "_stTelem"; _stTelem = _storedTypes select _pick;
+		if (!isNil "_stTelem" && {_stTelem >= 0}) then {_telemBucket = _stTelem};
+	};
 	_logik setVariable ["wfbe_aicom_last_template", _pick]; //--- B74.1: record the actual founded template for the next founding's anti-repeat reroll.
 
 	//--- B57 LARGER-GROUPS (Ray 2026-06-20): live teams are HC-founded at raw template size (3-6) and are NEVER
@@ -1199,7 +1212,12 @@ if (count _live > 0) then {
 		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] W11 FieldHospital free-refound flag consumed.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 	};
 
-	if (_funds < _price) exitWith {["insufficient_funds"] Call _emitFoundSkip};
+	if (_funds < _price) exitWith {
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
+			[_side, "reject-funds", _foundedTeams, _pending, _target, (if (_hasAirfield) then {1} else {0}), (if (_hasAirFactory) then {1} else {0}), _telemBucket, (count (_buckets select 3)), _allVehicles] Call WFBE_CO_FNC_AICOMAirFoundTelemetry;
+		};
+		["insufficient_funds"] Call _emitFoundSkip;
+	};
 
 	//--- Spawn at the doctrine factory (fallback: Barracks, then the HQ).
 	_facNames = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideText];
@@ -1268,6 +1286,9 @@ if (count _live > 0) then {
 		//--- STARVATION-SAFE: owning a Barracks always permits infantry regardless of the picked type; and if the
 		//--- side owns ANY factory, only SKIP when it also owns a DIFFERENT factory (a real path remains next cycle).
 		if (!_typeOK && _ownAny) exitWith {
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
+				[_side, "reject-factory", _foundedTeams, _pending, _target, (if (_hasAirfield) then {1} else {0}), (if (_hasAirFactory) then {1} else {0}), _wantType, (count (_buckets select 3)), _allVehicles] Call WFBE_CO_FNC_AICOMAirFoundTelemetry;
+			};
 			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founding SKIPPED by owned-factory gate (picked type %2, ownBar %3 light %4 heavy %5 air %6) - no matching owned factory; no funds/pending claimed yet, re-picks next cycle.", _sideText, _wantType, _ownBarracks, _ownLight, _ownHeavy, _ownAircraft]] Call WFBE_CO_FNC_AICOMLog;
 			diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOUND_GATE_SKIP|type=" + str _wantType + "|ownAny=" + str _ownAny);
 			//--- No funds were deducted and no pending slot claimed yet (both happen below), so simply ending the
@@ -1298,7 +1319,11 @@ if (count _live > 0) then {
 	};
 
 	if (isNull _facObj) then {_facObj = (_side) Call WFBE_CO_FNC_GetSideHQ};
-	if (isNull _facObj) exitWith {};
+	if (isNull _facObj) exitWith {
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
+			[_side, "reject-no-spawn", _foundedTeams, _pending, _target, (if (_hasAirfield) then {1} else {0}), (if (_hasAirFactory) then {1} else {0}), _telemBucket, (count (_buckets select 3)), _allVehicles] Call WFBE_CO_FNC_AICOMAirFoundTelemetry;
+		};
+	};
 
 	//--- W11 free-refound: do not deduct funds (founding is free this one time).
 	if (!_w11FreeFlag) then {
@@ -1401,6 +1426,11 @@ if (count _live > 0) then {
 		};
 	};
 	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|via=HC|template=" + str _pick + "|class=" + _cls + "|cost=" + str _price);
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
+		private "_foundedBucket";
+		_foundedBucket = switch (_cls) do {case "air": {3}; case "heavy": {2}; case "light": {1}; default {0}};
+		[_side, "founded", _foundedTeams, _pending, _target, (if (_hasAirfield) then {1} else {0}), (if (_hasAirFactory) then {1} else {0}), _foundedBucket, (count (_buckets select 3)), _allVehicles] Call WFBE_CO_FNC_AICOMAirFoundTelemetry;
+	};
 } else {
 	//--- Fallback (no HC): found a server-local empty team; AssignTypes + Produce feed it.
 	_g = [_side, "aicom"] Call WFBE_CO_FNC_CreateGroup;
@@ -1430,6 +1460,11 @@ if (count _live > 0) then {
 		};
 	};
 	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|via=server-local|template=" + str _pick + "|class=" + _cls + "|cost=" + str _price);
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
+		private "_foundedBucket";
+		_foundedBucket = switch (_cls) do {case "air": {3}; case "heavy": {2}; case "light": {1}; default {0}};
+		[_side, "founded", _foundedTeams, _pending, _target, (if (_hasAirfield) then {1} else {0}), (if (_hasAirFactory) then {1} else {0}), _foundedBucket, (count (_buckets select 3)), _allVehicles] Call WFBE_CO_FNC_AICOMAirFoundTelemetry;
+	};
 };
 
 if !(isNil "PerformanceAudit_Record") then {
