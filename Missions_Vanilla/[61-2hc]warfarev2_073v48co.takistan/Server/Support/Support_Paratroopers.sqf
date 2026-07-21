@@ -1,4 +1,4 @@
-Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_destination','_greenlight','_grp','_index','_isAI','_lvlOverride','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
+Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_delay','_destination','_dropPos','_greenlight','_grp','_index','_isAI','_lvlOverride','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
 
 _side = _this select 1;
 _destination = _this select 2;
@@ -133,6 +133,19 @@ if (_greenlight) then {
 		} forEach ((crew _vehicle) - [driver _vehicle, gunner _vehicle, commander _vehicle]);
 	} forEach _vehicles;
 	
+	//--- AICOM PARATROOPS post-drop orders: an AI-commander-called drop hands
+	//--- _playerTeam a FRESH group with no player leader (AI_Commander_Paratroops.sqf) - the ejected
+	//--- stick previously got no waypoint/doMove/patrol at all and stood idle at the drop zone forever.
+	//--- A human-called drop already has the player commanding _playerTeam, so only the AI path needs this.
+	if (_isAI && {count units _playerTeam > 0}) then {
+		_dropPos = getPos (leader _playerTeam);
+		//--- AIPatrol resets behaviour to AWARE/YELLOW as its first act, so it MUST run BEFORE the engage
+		//--- posture is set or COMBAT/RED gets clobbered (same idiom as Server_GuerAirDef.sqf).
+		[_playerTeam, _dropPos, 200] Call AIPatrol;
+		_playerTeam setBehaviour "COMBAT";
+		_playerTeam setCombatMode "RED";
+	};
+
 	//--- Once done, the air units can fly back to their source.
 	[_grp, (_ranPos select _ran), "MOVE", 10] Call AIMoveTo;
 	
