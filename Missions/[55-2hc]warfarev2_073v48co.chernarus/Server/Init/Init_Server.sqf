@@ -1343,7 +1343,7 @@ if (_antiStackEnabled) then {
 	// 0 = NONE
 	// 1 = CHERNARUS
 	// 2 = TAKISTAN
-	["SET_MAP", 1] call WFBE_SE_FNC_CallDatabaseSetMap;
+	["SET_MAP", if (worldName == "Takistan") then {2} else {if (worldName == "Zargabad") then {3} else {1}}] call WFBE_SE_FNC_CallDatabaseSetMap;
 };
 
 _logMatchWinPlayerCountThreshold = 10;
