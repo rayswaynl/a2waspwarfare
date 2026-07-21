@@ -4876,7 +4876,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="NWAF";
-					init="nullReturn = [this,""NWAF"",""++"",10,40,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+					init="nullReturn = [this,""NWAF"",""+"",10,40,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
 					synchronizations[]={308};
 				};
 				class Item1
@@ -4910,7 +4910,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="NEAF";
-					init="nullReturn = [this,""NEAF"",""++"",10,40,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+					init="nullReturn = [this,""NEAF"",""+"",10,40,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
 					synchronizations[]={309};
 				};
 				class Item1
@@ -4944,7 +4944,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="Balota";
-					init="nullReturn = [this,""Balota"",""++"",10,40,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+					init="nullReturn = [this,""Balota"",""+"",10,40,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
 					synchronizations[]={310};
 				};
 				class Item1

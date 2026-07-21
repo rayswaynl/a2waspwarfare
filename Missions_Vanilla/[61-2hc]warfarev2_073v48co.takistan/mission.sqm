@@ -2762,7 +2762,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="Loy Manara AF";
-					init="nullReturn = [this,""Loy Manara AF"",""++"",10,40,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+					init="nullReturn = [this,""Loy Manara AF"",""+"",10,40,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
 					synchronizations[]={251};
 				};
 				class Item1
@@ -2796,7 +2796,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="Rasman AF";
-					init="nullReturn = [this,""Rasman AF"",""++"",10,40,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+					init="nullReturn = [this,""Rasman AF"",""+"",10,40,400,[""PMCAirfield""]] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
 					synchronizations[]={253};
 				};
 				class Item1
