@@ -662,8 +662,20 @@ while {alive player && dialog} do {
 					//--- silently add a vehicle the player never saw quoted) and drop any that died/departed since.
 					if (isNil "_ftQuoteVehList") then {_ftQuoteVehList = []};
 					_ftBilledVehList = [];
+					//--- fable/fasttravel-campflag round3: object-only checks are not enough - a quoted vehicle that
+					//--- was abandoned or commandeered since the quote must not survive revalidation either, so require
+					//--- the same crew-membership condition as the quote scan above (L588): at least one CURRENT group
+					//--- member must still be aboard it, in range, moving, and not WAIT/STOP. Late arrivals (a vehicle
+					//--- never in _ftQuoteVehList) are never added here - they ride neither billed nor teleported until
+					//--- the next quote cycle; on-foot units are untouched and keep their existing free-teleport path.
 					{
-						if (!isNull _x && alive _x && _x distance _startPoint < _ftr && canMove _x && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"])) then {_ftBilledVehList = _ftBilledVehList + [_x]};
+						private ["_ftQuotedVeh","_ftVehCrewed"];
+						_ftQuotedVeh = _x; //--- capture outer _x before the inner forEach rebinds it (A2 trap)
+						_ftVehCrewed = false;
+						{
+							if ((vehicle _x) == _ftQuotedVeh && _x distance _startPoint < _ftr && canMove (vehicle _x) && !(vehicle _x isKindOf "StaticWeapon") && !stopped (vehicle _x) && !((currentCommand _x) in ["WAIT","STOP"]) && !((vehicle _x) isKindOf "Man")) then {_ftVehCrewed = true};
+						} forEach units (group player);
+						if (!isNull _ftQuotedVeh && {alive _ftQuotedVeh && {_ftVehCrewed}}) then {_ftBilledVehList = _ftBilledVehList + [_ftQuotedVeh]};
 					} forEach _ftQuoteVehList;
 					if ((Call GetPlayerFunds) < (_ftConfirmFee + ((count _ftBilledVehList) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE")))) then {
 						_ftRecheckOk = false;
