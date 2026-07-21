@@ -342,12 +342,13 @@ if ((_logik getVariable ["wfbe_aicom_veteran_next", false]) && {_logik getVariab
 
 if (_testTeamCap >= 0) then {_target = _target min _testTeamCap}; //--- WFBE_C_TEST_TEAM_CAP final ceiling (test-only, default off).
 
-if ((_foundedTeams + _pending + _constructionPending) >= _target) then {
+if ((_foundedTeams + _pending + _constructionPending) >= _target) exitWith {
+	//--- target met: emit telemetry + found-skip, then return from the founding pass (bare
+	//--- exitWith inside then{} was a parse error that killed lines below - wave0721b live burn)
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
 		[_side, "at-target", _foundedTeams, _pending, _target, -1, -1, -1, -1, _allVehicles] Call WFBE_CO_FNC_AICOMAirFoundTelemetry;
 	};
 	["target_met"] Call _emitFoundSkip;
-	exitWith {}
 };
 
 //--- B74.2 (Ray 2026-06-23): enforce the TIERED per-side TOTAL_AI ceiling AT FOUNDING. The HC founding path had NO
