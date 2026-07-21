@@ -188,7 +188,18 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 												_baseSeq = (([_baseG, "wfbe_aicom_order", [-1]] Call WFBE_CO_FNC_GroupGetBool) select 0) + 1;
 												_baseG setVariable ["wfbe_aicom_order", [_baseSeq, "towns-target", _baseFrontPos], true];
 												//--- RE-ADOPT into the commander only while UNDER the side cap (else just re-task).
-												if (!isNull _baseLogik && {_baseFounded < _baseCap} && {!(_baseG in _baseTeams)}) then {
+												//--- HP-01 review fix (fable/loop-supervisor-hp01): _baseTeams above is a per-SIDE-PASS
+												//--- snapshot taken once ~90 lines up. server_groupsGC.sqf is the one loop this PR arms
+												//--- for auto-RESTART, so a false-stale restart can (near-negligibly, given the new
+												//--- instance's startup delay) leave two instances mid-pass at once; both would then
+												//--- check membership against their OWN stale snapshot and could double-append the SAME
+												//--- group into wfbe_teams. Re-read fresh right at the mutation point instead of trusting
+												//--- the cached _baseTeams, narrowing the race window to this one read-then-write instead
+												//--- of the whole pass. (_baseTeams itself is left as-is for the _baseFounded/_baseCap
+												//--- counting pass above - read-only there, not a mutation.)
+												private "_baseTeamsFresh";
+												_baseTeamsFresh = _baseLogik getVariable ["wfbe_teams", []];
+												if (!isNull _baseLogik && {_baseFounded < _baseCap} && {!(_baseG in _baseTeamsFresh)}) then {
 													_baseG setVariable ["wfbe_aicom_founded", true];
 													_baseG setVariable ["wfbe_persistent", true];
 													_baseG setVariable ["wfbe_side", _baseSide];
@@ -200,8 +211,8 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 													//--- town team (Strategy/AssignTowns default-read it as "towns").
 													_baseG setVariable ["wfbe_teammode", "towns"];
 													_baseG setVariable ["wfbe_teamtype", 0];
-													_baseLogik setVariable ["wfbe_teams", _baseTeams + [_baseG], true];
-													_baseTeams = _baseTeams + [_baseG];
+													_baseLogik setVariable ["wfbe_teams", _baseTeamsFresh + [_baseG], true];
+													_baseTeams = _baseTeamsFresh + [_baseG];
 													_baseFounded = _baseFounded + 1;
 													_baseReadopted = _baseReadopted + 1;
 													["INFORMATION", Format ["server_groupsGC.sqf: B61 BASE-GC re-adopted untracked %1 group %2 into the commander (founded->%3/%4), re-tasked to front.", str _baseSide, _baseG, _baseFounded, _baseCap]] Call WFBE_CO_FNC_AICOMLog;
