@@ -897,8 +897,21 @@ if (_defCount < _defMax) then {
 //--- Init_CommonConstants.sqf and ARTILLERY-DWELL-NOTES.md for the full two-systems writeup).
 if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) && {(missionNamespace getVariable "WFBE_C_ARTILLERY") > 0}) then {
 	private "_artyMax"; _artyMax = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY_MAX", 2];
+	private "_ech"; _ech = (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_ECHELON", 0]) > 0; //--- claude 2026-07-18 forward-arty echelon (registry + reposition + debounced skip log); 0 = every path below is byte-identical to HEAD.
 	_artyBuilt = 0;
-	{ if (!isNull _x && {alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText}) then {_artyBuilt = _artyBuilt + 1} } forEach (_hqPos nearEntities [["Tank","Car","Wheeled_APC","Tracked_APC"], (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])]);
+	if (_ech) then {
+		//--- ECHELON: count LIVE registered pieces (position-independent) so a gun that repositioned forward past
+		//--- WFBE_C_BASEGC_RANGE is still counted and NOT double-built; prune dead/foreign entries in place.
+		private ["_reg","_regLive"];
+		_reg = _logik getVariable ["wfbe_aicom_arty_reg", []];
+		if (typeName _reg != "ARRAY") then {_reg = []};
+		_regLive = [];
+		{ if (!isNull _x && {alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText}) then {_regLive set [count _regLive, _x]} } forEach _reg;
+		_logik setVariable ["wfbe_aicom_arty_reg", _regLive];
+		_artyBuilt = count _regLive;
+	} else {
+		{ if (!isNull _x && {alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText}) then {_artyBuilt = _artyBuilt + 1} } forEach (_hqPos nearEntities [["Tank","Car","Wheeled_APC","Tracked_APC"], (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])]);
+	};
 	_logik setVariable ["wfbe_aicom_arty_built", _artyBuilt];
 	if (_artyBuilt < _artyMax && {(_logik getVariable ["wfbe_aicom_defenses", 0]) >= _defMax}) then {
 		_have = false;
@@ -970,15 +983,24 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 					};
 					if (!_artyGateOk) then {
 						if (_artyCatFound) then {
-							["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - %2 not yet researched.", _sideText, _defClass]] Call WFBE_CO_FNC_AICOMLog;
+							if ((!_ech) || {(_logik getVariable ["wfbe_aicom_arty_skiplog", ""]) != ("notresearched:" + _defClass)}) then {
+								["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - %2 not yet researched.", _sideText, _defClass]] Call WFBE_CO_FNC_AICOMLog;
+								if (_ech) then {_logik setVariable ["wfbe_aicom_arty_skiplog", "notresearched:" + _defClass]};
+							};
 						} else {
-							["WARNING", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - %2 not found in any per-side unit-tier list (unlock-gate data gap for this faction; base artillery stays dark until fixed).", _sideText, _defClass]] Call WFBE_CO_FNC_AICOMLog;
+							if ((!_ech) || {(_logik getVariable ["wfbe_aicom_arty_skiplog", ""]) != ("datagap:" + _defClass)}) then {
+								["WARNING", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - %2 not found in any per-side unit-tier list (unlock-gate data gap for this faction; base artillery stays dark until fixed).", _sideText, _defClass]] Call WFBE_CO_FNC_AICOMLog;
+								if (_ech) then {_logik setVariable ["wfbe_aicom_arty_skiplog", "datagap:" + _defClass]};
+							};
 						};
 						_defClass = "";
 					};
 				};
 				if (_defClass == "" && {!_artyPicked}) then { //--- fix/aicom-dependency-gates-followup: suppress this generic log when the picker DID find an SPG candidate but the research-tier/category gate above rejected it - that branch already logged its own reason.
-					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - no SELF-PROPELLED (tracked/wheeled) arty class for this side (static towed/mortar excluded by design).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+					if ((!_ech) || {(_logik getVariable ["wfbe_aicom_arty_skiplog", ""]) != "nospg"}) then {
+						["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base-artillery build skipped - no SELF-PROPELLED (tracked/wheeled) arty class for this side (static towed/mortar excluded by design).", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+						if (_ech) then {_logik setVariable ["wfbe_aicom_arty_skiplog", "nospg"]};
+					};
 				};
 			};
 			if (_defClass != "") then {
@@ -988,8 +1010,20 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 				if (_funds >= _defPrice) then {
 					[_side, -_defPrice] Call ChangeAICommanderFunds;
 					_pos = [25, 38] Call _findBuildPos;
-					[_defClass, _side, _pos, random 360, true, true] Call ConstructDefense;
+					private "_artyObj"; _artyObj = [_defClass, _side, _pos, random 360, true, true] Call ConstructDefense;
 					_logik setVariable ["wfbe_aicom_arty_built", _artyBuilt + 1];
+					if (_ech) then {
+						//--- ECHELON: register the freshly-built gun on the explicit per-side list (drives both this cap count
+						//--- and Strategy fire/reposition discovery); clear the skip-log latch so a later block re-logs one line.
+						if (!isNull _artyObj) then {
+							private "_reg2"; _reg2 = _logik getVariable ["wfbe_aicom_arty_reg", []];
+							if (typeName _reg2 != "ARRAY") then {_reg2 = []};
+							_reg2 set [count _reg2, _artyObj];
+							_logik setVariable ["wfbe_aicom_arty_reg", _reg2];
+							_artyObj setVariable ["wfbe_arty_state", "registered"];
+						};
+						_logik setVariable ["wfbe_aicom_arty_skiplog", ""];
+					};
 					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base artillery %2/%3 [%4] (cost %5 funds).", _sideText, _artyBuilt + 1, _artyMax, _defClass, _defPrice]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};

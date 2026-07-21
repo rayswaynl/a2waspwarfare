@@ -48,6 +48,7 @@ WFBE_CO_FNC_GetArtilleryAmmoOptions = Compile preprocessFileLineNumbers "Common\
 WFBE_CO_FNC_LoadArtilleryAmmo = Compile preprocessFileLineNumbers "Common\Functions\Common_LoadArtilleryAmmo.sqf";
 // claude-gaming 2026-06-29: AICOM situational ammo-type selector (gated on WFBE_UP_ARTYAMMO; flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE, default OFF).
 WFBE_CO_FNC_AICOMArtyPickAmmo = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMArtyPickAmmo.sqf";
+WFBE_CO_FNC_AICOMArtySafeAnchor = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMArtySafeAnchor.sqf"; //--- claude 2026-07-18: safe owned-town anchor picker for AICOM base-arty forward reposition (flag WFBE_C_AICOM_ARTY_ECHELON, default 0).
 // Marty: Ammo-fraction helper (vehicle current / full complement). Used by proportional rearm pricing.
 WFBE_CO_FNC_GetAmmoFraction = Compile preprocessFileLineNumbers "Common\Functions\Common_GetAmmoFraction.sqf";
 GetTeamAutonomous = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamAutonomous.sqf";

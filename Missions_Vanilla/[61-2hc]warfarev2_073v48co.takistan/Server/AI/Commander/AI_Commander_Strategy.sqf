@@ -15,7 +15,7 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0","_perfStart"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_inRange","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0","_perfStart"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -1292,24 +1292,79 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 				//--- Our base guns (built by the Base worker, tagged by Construction_StationaryDefense).
 				//--- Ray 2026-06-29 SELF-PROPELLED-ONLY: scan only vehicle hulls (Tank/Car/Wheeled/Tracked APC), NOT
 				//--- StaticWeapon - the AI fires only tracked/wheeled self-propelled artillery, never a static gun.
-				_pieces = (getPos ((_side) Call WFBE_CO_FNC_GetSideHQ)) nearEntities [["Tank","Car","Wheeled_APC","Tracked_APC"], 250];
+				private "_ech2"; _ech2 = (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_ECHELON", 0]) > 0; //--- claude 2026-07-18 forward-arty echelon; 0 = original near-HQ discovery + no reposition (byte-identical to HEAD).
+				if (_ech2) then {
+					//--- ECHELON: discover via the explicit registry - a gun that repositioned forward is no longer within 250m
+					//--- of HQ, so the near-HQ scan would silently lose it. Prune to live / tagged / own-side pieces.
+					private ["_reg3","_regLive3"];
+					_reg3 = _logik getVariable ["wfbe_aicom_arty_reg", []];
+					if (typeName _reg3 != "ARRAY") then {_reg3 = []};
+					_regLive3 = [];
+					{ if (!isNull _x && {alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText}) then {_regLive3 set [count _regLive3, _x]} } forEach _reg3;
+					_logik setVariable ["wfbe_aicom_arty_reg", _regLive3];
+					_pieces = _regLive3;
+				} else {
+					_pieces = (getPos ((_side) Call WFBE_CO_FNC_GetSideHQ)) nearEntities [["Tank","Car","Wheeled_APC","Tracked_APC"], 250];
+				};
 				_fired = false;
 				{
 					_p = _x;
-					if (!_fired && {alive _p} && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p}) then {
+					if (alive _p && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p}) then {
 						_idx = [typeOf _p, _side] Call IsArtillery;
 						if (_idx >= 0) then {
 							_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / (missionNamespace getVariable "WFBE_C_ARTILLERY");
-							if ((_p distance _artyTgt <= _maxR) && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])} count _ownTownObjs) > 0}}) then { //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
-								//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):
-								//--- load a situational round (illum at night, cluster vs armour) chosen ONLY from the types the side has
-								//--- researched (helper gates on WFBE_UP_ARTYAMMO via GetArtilleryAmmoOptions). Off / HE-only -> default HE.
-								[_p, _side, _idx, _artyTgt] Call WFBE_CO_FNC_AICOMArtyPickAmmo;
-								[_p, _artyTgt, _side, 60] Spawn WFBE_CO_FNC_FireArtillery;
-								_logik setVariable ["wfbe_aicom_arty_last", time];
-								_fired = true;
-								["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] FIRE MISSION [%2] at %3 (cooldown %4s).", _sideText, typeOf _p, _artyTgt, _cd]] Call WFBE_CO_FNC_AICOMLog;
-						diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FIRE_MISSION|" + (typeOf _p));
+							_inRange = (_p distance _artyTgt <= _maxR) && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])} count _ownTownObjs) > 0}}; //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
+							if (_inRange) then { //--- review-fix (fable 2026-07-21, PR #1159 drain): reposition must be evaluated even when another gun already fired this cycle - only the FIRE action itself stays single-fire-gated.
+								if (!_fired) then {
+									//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):
+									//--- load a situational round (illum at night, cluster vs armour) chosen ONLY from the types the side has
+									//--- researched (helper gates on WFBE_UP_ARTYAMMO via GetArtilleryAmmoOptions). Off / HE-only -> default HE.
+									[_p, _side, _idx, _artyTgt] Call WFBE_CO_FNC_AICOMArtyPickAmmo;
+									[_p, _artyTgt, _side, 60] Spawn WFBE_CO_FNC_FireArtillery;
+									_logik setVariable ["wfbe_aicom_arty_last", time];
+									_fired = true;
+									if (_ech2) then {_p setVariable ["wfbe_arty_state", "firing"]};
+									["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] FIRE MISSION [%2] at %3 (cooldown %4s).", _sideText, typeOf _p, _artyTgt, _cd]] Call WFBE_CO_FNC_AICOMLog;
+							diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FIRE_MISSION|" + (typeOf _p));
+								};
+							} else {
+								//--- ECHELON REPOSITION: the gun cannot service this target from here (out of range or unsupported).
+								//--- Rather than silently poll, redeploy it via PlaceSafe (the shipped relocation primitive, same as the
+								//--- tactical travel-with teleport) to a SAFE owned-town anchor in range + behind the front, emitting ONE
+								//--- explicit transition. Base guns are gunner-only emplacements (no driver), so a road-march is unavailable.
+								if (_ech2) then {
+									private ["_reCd","_reLast","_anchor","_enemyClose"];
+									_reCd = missionNamespace getVariable ["WFBE_C_AICOM_ARTY_ECHELON_REPOS_CD", 180];
+									_reLast = _p getVariable ["wfbe_arty_repos_last", -1e9];
+									if ((time - _reLast) > _reCd) then {
+										_p setVariable ["wfbe_arty_repos_last", time]; //--- stamp regardless of outcome: bounds the owned-town scan to once per cooldown.
+										_anchor = [_side, _p, _artyTgt, _maxR, _ownTownObjs] Call WFBE_CO_FNC_AICOMArtySafeAnchor;
+										if (count _anchor > 0) then {
+											//--- never redeploy a gun that is in contact (mirror the ServiceTick never-out-of-fight guard).
+											//--- review-fix (codex reject 2026-07-19, HIGH): was `side _x == _enemySide` - _enemySide is the
+											//--- SINGLE strategy-target enemy (binary WEST/EAST, set at file top for the town-targeting loop -
+											//--- intentional there, NOT touched here), so a GUER unit standing next to the gun never counted
+											//--- as "in contact" and the gun could be redeployed OUT of a live GUER fight. Use the repo-wide
+											//--- any-hostile idiom (Common_RunCommanderTeam.sqf threat checks, AI_Commander_DisbandLowTier.sqf,
+											//--- AI_Commander_Teams.sqf: side!=own && side!=civilian) instead - counts EVERY hostile faction.
+											_enemyClose = {alive _x && {side _x != _side} && {side _x != civilian}} count ((getPos _p) nearEntities [["Man","LandVehicle"], (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_ECHELON_SAFE_DIST", 400])]);
+											if (_enemyClose == 0) then {
+												[_p, _anchor, 40] Call PlaceSafe;
+												if ((_p getVariable ["wfbe_arty_state", ""]) != "repositioning") then {
+													_p setVariable ["wfbe_arty_state", "repositioning"];
+													["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] ARTY REPOSITION [%2] to safe anchor %3 (target %4 out of range/support, maxR %5m).", _sideText, typeOf _p, _anchor, _artyTgt, round _maxR]] Call WFBE_CO_FNC_AICOMLog;
+													diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ARTY_REPOSITION|" + (typeOf _p) + "|d=" + str (round (_p distance _artyTgt)));
+												};
+											};
+										} else {
+											//--- no safe in-range owned-town anchor exists -> emit ONE no-anchor transition (debounced) so out-of-range is never silent.
+											if ((_p getVariable ["wfbe_arty_state", ""]) != "noanchor") then {
+												_p setVariable ["wfbe_arty_state", "noanchor"];
+												diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ARTY_NO_ANCHOR|" + (typeOf _p) + "|tgtd=" + str (round (_p distance _artyTgt)) + "|maxR=" + str (round _maxR));
+											};
+										};
+									};
+								};
 							};
 						};
 					};
