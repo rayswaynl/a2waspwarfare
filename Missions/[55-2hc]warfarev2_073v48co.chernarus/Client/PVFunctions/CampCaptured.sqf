@@ -25,11 +25,13 @@ if (WFBE_Client_SideID == _sideID_new) then {
 	//--- Skip the reset upon repair.
 	if (_is_repair) exitWith {};
 
-	//--- Client-local feedback copy; no server state or public variable is changed.
-	_feedbackLast = missionNamespace getVariable ["WFBE_Client_LastCampCaptureFeedback", -9999];
-	if ((time - _feedbackLast) >= 180) then {
-		missionNamespace setVariable ["WFBE_Client_LastCampCaptureFeedback", time];
-		hintSilent Format ["Camp captured near %1.", _town getVariable ["name", "town"]];
+	if ((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_BAR_DETAIL", 0]) > 0) then {
+		//--- Client-local feedback copy; no server state or public variable is changed.
+		_feedbackLast = missionNamespace getVariable ["WFBE_Client_LastCampCaptureFeedback", -9999];
+		if ((time - _feedbackLast) >= 180) then {
+			missionNamespace setVariable ["WFBE_Client_LastCampCaptureFeedback", time];
+			hintSilent Format ["Camp captured near %1.", _town getVariable ["name", "town"]];
+		};
 	};
 
 	//--- Attempt to award the client if his orders were to take a town.
