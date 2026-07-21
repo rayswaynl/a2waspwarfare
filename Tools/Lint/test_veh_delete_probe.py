@@ -89,10 +89,11 @@ class VehDeleteProbeTests(unittest.TestCase):
         self.assertIn("wfbe_player_used_uid", text)
         self.assertIn('WFBE_C_VEH_DELETE_PROBE", 0]', text)  # default OFF here too
 
-    def test_probe_is_registered_and_kill_switch_defaults_off(self) -> None:
+    def test_probe_is_registered_and_armed(self) -> None:
+        """wave0721 arming ruling (2026-07-21): WFBE_C_VEH_DELETE_PROBE flipped 0->1."""
         self.assertIn("Common_LogVehDelete.sqf", mask_comments(raw("Common/Init/Init_Common.sqf")))
         self.assertIn(
-            'if (isNil "WFBE_C_VEH_DELETE_PROBE") then {WFBE_C_VEH_DELETE_PROBE = 0}',
+            'if (isNil "WFBE_C_VEH_DELETE_PROBE") then {WFBE_C_VEH_DELETE_PROBE = 1}',
             mask_comments(raw("Common/Init/Init_CommonConstants.sqf")),
         )
 

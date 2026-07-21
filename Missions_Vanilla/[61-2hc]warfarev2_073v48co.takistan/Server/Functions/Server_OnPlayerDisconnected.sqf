@@ -226,7 +226,7 @@ if !(isNull (_commander)) then {
 		_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 		if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
 			_lease = _logik getVariable ["wfbe_commander_lease", []];
-			if (typeName _lease == "ARRAY" && {count _lease >= 6} && {(_lease select 0) == _uid} && {(_lease select 1) == _side} && {(_lease select 2) == (groupId _team)}) then {
+			if (typeName _lease == "ARRAY" && {count _lease >= 6} && {(_lease select 0) == _uid} && {(_lease select 1) == _side} && {(_lease select 2) == (str _team)}) then {
 				_leaseGen = _lease select 5;
 				_leaseExpires = time + (missionNamespace getVariable ["WFBE_C_CMD_LEASE_GRACE", 90]);
 				_logik setVariable ["wfbe_commander_lease_expires", _leaseExpires];

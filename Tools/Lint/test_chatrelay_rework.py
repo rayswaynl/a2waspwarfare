@@ -1,4 +1,7 @@
-"""Contract checks for the dark-by-default server-observable chat relay."""
+"""Contract checks for the server-observable chat relay.
+
+wave0721 arming ruling (2026-07-21): WFBE_C_CHAT_RELAY flipped 0->1 (was dark-by-default).
+"""
 
 from pathlib import Path
 
@@ -21,7 +24,7 @@ def main() -> None:
     server_init = read(SERVER_INIT)
     relay = read(RELAY)
 
-    assert 'WFBE_C_CHAT_RELAY = 0' in constants
+    assert 'WFBE_C_CHAT_RELAY = 1' in constants
     assert 'WFBE_SE_FNC_ChatRelayEvent = Compile preprocessFileLineNumbers "Server\\Functions\\Server_ChatRelayEvent.sqf";' in server_init
     assert 'diag_log Format ["CHATRELAY|v1|%1|%2|%3"' in relay
     assert 'WFBE_C_CHAT_RELAY", 0' in relay
@@ -65,10 +68,16 @@ def main() -> None:
         hashes = {(root / relative).read_bytes() for root in (CH, TK, ZG)}
         assert len(hashes) == 1, relative
 
-    for root, expected_map in ((CH, "1"), (TK, "2"), (ZG, "3")):
+    # fix(mirrors) 8ab2fcba77 unified the per-terrain SET_MAP literal into one shared
+    # worldName-conditional line, identical across CH/TK/ZG - pin the current shared form.
+    set_map_line = (
+        '["SET_MAP", if (worldName == "Takistan") then {2} else '
+        '{if (worldName == "Zargabad") then {3} else {1}}] call WFBE_SE_FNC_CallDatabaseSetMap;'
+    )
+    for root in (CH, TK, ZG):
         text = read(root / "Server/Init/Init_Server.sqf")
         assert 'WFBE_SE_FNC_ChatRelayEvent = Compile preprocessFileLineNumbers "Server\\Functions\\Server_ChatRelayEvent.sqf";' in text
-        assert '["SET_MAP", %s] call WFBE_SE_FNC_CallDatabaseSetMap;' % expected_map in text
+        assert set_map_line in text
 
 
 if __name__ == "__main__":
