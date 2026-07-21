@@ -466,8 +466,11 @@ while {!WFBE_GameOver} do {
 			if (!_useAA && {!_useDrop} && {_isLarge} && {_enemies > 0} && {(random 1) < _mi24Chance}) then { _useMi24 = true; };
 			if (!_useAA && {!_useDrop} && {!_useMi24} && {(random 1) < _atChance}) then { _useAT = true; };
 
-			//--- The paradrop variant uses the DEFAULT Ka-137 (drone recon-MG airframe) as the delivery bird.
+			//--- The paradrop variant normally uses the DEFAULT Ka-137 (drone recon-MG airframe).
+			//--- E5: once late-game air scaling begins, the dark-gated delivery bird is the registered
+			//--- crewed UH-1H; the existing pilot/gunner seat receipt and airdef lifecycle remain in force.
 			_class = if (_useMi24) then {_classMi24} else {_classKa};
+			if (_useDrop && {(missionNamespace getVariable ["WFBE_C_GUER_HUEY_QRF", 0]) > 0} && {(time / 60) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_LATE_MINS", 45])}) then {_class = "UH1H_TK_GUE_EP1"};
 
 			//--- Spawn the airframe airborne, a short way off the town so it flies in (FLY special, like W13).
 			_ang      = random 360;
