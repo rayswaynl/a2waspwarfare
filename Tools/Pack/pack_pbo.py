@@ -76,17 +76,20 @@ MAGIC_VERS = 0x56657273  # ASCII "Vers" (big-endian reading) - properties-follow
 EXCLUDED_SUFFIXES = (".template", ".bak", ".orig")
 STRUCT5I = struct.Struct("<5I")
 
-# The Arma 2 OA engine auto-runs a mission-root file literally named `init.sqf` on
-# every machine (server, every client, every HC) - see `init.sqf`'s own header comment
-# in each mission folder. This exact line must appear in it, delegating to the real
+# The canonical, proven-live mission tree never carries a mission-root `init.sqf`.
+# Structural extraction of the live wave0720b deploy PBO (938 entries) confirms this:
+# it contains `initjipcompatible.sqf` and nothing named `init.sqf` at all. The real
 # bootstrap (`initJIPCompatible.sqf`, self-documented as "Global Init, first file
-# called"). Release-critical guard (wave0721 council finding C4): a machine-local
-# self-test/observer harness stub has been found sitting in this exact path on more
-# than one dev box, untracked and excluded only from `git status` (never from a raw
-# filesystem walk) - `collect_files()` above has no concept of git tracking and would
-# silently sweep such a stub into the PBO, producing a mission that never boots the
-# real game (no MISSINIT, ever). See `Tools/Pack/PBO-PACKING.md`.
-INIT_LAUNCH_MARKER = b'execVM "initJIPCompatible.sqf";'
+# called") is what actually runs on that box, proven by the live server reaching
+# MISSINIT - `init.sqf` is not part of this mission's boot chain. Release-critical
+# guard (wave0721 council finding C4): a machine-local self-test/observer harness
+# stub named exactly `init.sqf` has been found sitting in this exact mission-root
+# path on more than one dev box, untracked and excluded only from `git status`
+# (never from a raw filesystem walk) - `collect_files()` above has no concept of
+# git tracking and would silently sweep such a stub into the PBO. Whether it's a
+# self-test stub or a well-intentioned delegating shim, ANY `init.sqf` at the
+# mission root is contamination that does not belong in a real pack. See
+# `Tools/Pack/PBO-PACKING.md`.
 
 
 class PackError(RuntimeError):
@@ -134,30 +137,28 @@ def check_lowercase_collisions(files: List[Tuple[str, bytes]]) -> None:
         seen.add(rel)
 
 
-def check_init_launch_marker(files: List[Tuple[str, bytes]]) -> None:
-    """Release-critical guard (wave0721, council finding C4): abort the pack unless
-    the mission-root `init.sqf` entry contains the real launch marker.
+def check_no_init_contamination(files: List[Tuple[str, bytes]]) -> None:
+    """Release-critical guard (wave0721, council finding C4): abort the pack if a
+    mission-root `init.sqf` entry exists at all, regardless of its content.
 
-    `collect_files()` walks the raw filesystem, not `git ls-files` - it cannot tell a
-    legitimate tracked launcher from a stray local test stub sitting in the same
-    source folder. This is the only line of defense against packing a mission whose
-    engine-auto-run entry point never calls the real bootstrap."""
-    entries = [(rel, data) for rel, data in files if rel == "init.sqf"]
-    if not entries:
+    The live, proven-working deploy PBO (wave0720b, structurally extracted) has no
+    `init.sqf` entry - only `initjipcompatible.sqf`, which is what the real, running
+    server actually boots from. `collect_files()` walks the raw filesystem, not
+    `git ls-files` - it cannot tell a "helpful" delegating shim from a stray local
+    self-test stub sitting in the same source folder, and either one would silently
+    double-execute or replace the real 414-line bootstrap if packed. There is no
+    content an `init.sqf` could legitimately carry here - its mere presence is
+    contamination."""
+    entries = [rel for rel, _data in files if rel == "init.sqf"]
+    if entries:
         raise PackError(
-            "ABORT: no init.sqf found at the mission root. The Arma 2 OA engine "
-            "auto-runs this file at mission start on every machine; without it, "
-            "nothing calls initJIPCompatible.sqf and the mission never boots."
+            "ABORT: init.sqf found at the mission root - this mission never uses "
+            "one (the live deploy PBO has none; initJIPCompatible.sqf is the real, "
+            "already-running bootstrap). An init.sqf here is contamination - most "
+            "likely a stray local self-test/observer harness stub, or a "
+            "well-intentioned delegating shim that would double-execute the real "
+            "bootstrap. Delete it from the source folder before packing."
         )
-    for _rel, data in entries:
-        if INIT_LAUNCH_MARKER not in data:
-            raise PackError(
-                "ABORT: init.sqf is missing the expected launch marker "
-                f"({INIT_LAUNCH_MARKER!r}). This looks like a stray/local test "
-                "stub, not the real launcher - refusing to pack. If this file was "
-                "legitimately rewritten, restore the "
-                "`execVM \"initJIPCompatible.sqf\";` delegation before packing."
-            )
 
 
 def ensure_version_sqf(
@@ -311,7 +312,7 @@ def pack(
     ensure_version_sqf(source, files, strict_version, quiet)
     check_lowercase_collisions(files)
     check_debug_guard(files, allow_debug, quiet)
-    check_init_launch_marker(files)
+    check_no_init_contamination(files)
 
     files.sort(key=lambda x: x[0])
 
