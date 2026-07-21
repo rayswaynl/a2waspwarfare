@@ -852,7 +852,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_allocTick = _team getVariable "wfbe_aicom_alloc_tick";
 						_allocTtl  = missionNamespace getVariable ["WFBE_C_AICOM2_ALLOC_TICK_TTL", 180];
 						if (!isNil "_allocTick") then {_allocAge = time - _allocTick} else {_allocAge = 1e9};
-						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)} && {((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) <= 0) || {_mounted} || {(_ldrPos distance _allocT) <= _teamReach}}) then { //--- review fix: FOOT_STAGE must not accept an allocator target outside honest reach.
+						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)} && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_mounted} || {(_ldrPos distance _allocT) <= _teamReach}}) then { //--- review fix: FOOT_STAGE must not accept an allocator target outside honest reach.
 							_target = _allocT;
 						} else {
 							if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge >= _allocTtl}) then {

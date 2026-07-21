@@ -526,9 +526,11 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 			_quiet = !(_relTown getVariable ["wfbe_active", false]);
 			private ["_relUnderAttack","_relEnemyDist"];
 			_relUnderAttack = false;
-			_relEnemyDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
-			if (!_quiet && {(_relTown getVariable ["sideID", -1]) == _sideID} && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _relTown) nearEntities [["Man","LandVehicle","Air"], _relEnemyDist])) > 0}) then {_relUnderAttack = true};
-			_quiet = !_relUnderAttack;
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {
+				_relEnemyDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
+				if (!_quiet && {(_relTown getVariable ["sideID", -1]) == _sideID} && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _relTown) nearEntities [["Man","LandVehicle","Air"], _relEnemyDist])) > 0}) then {_relUnderAttack = true};
+				_quiet = !_relUnderAttack;
+			};
 			//--- punchy-AICOM RELIEF-TIMEOUT (Ray 2026-06-17): also release once the hold window
 			//--- has elapsed, so a diverted team returns to OFFENSE instead of idling on a town that
 			//--- is no longer actively contested. SetTeamMoveMode "towns" immediately re-tasks it
@@ -685,9 +687,11 @@ _relieved = 0;
 		_wMode = toLower ([_wTeam, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
 		private "_wWatched";
 		_wWatched = false;
-		switch (_wMode) do {
-			case "defense": {_wWatched = true};
-			case "move": {_wWatched = true};
+		if (!([_wTeam, "wfbe_aicom_foot_stage", false] Call WFBE_CO_FNC_GroupGetBool)) then {
+			switch (_wMode) do {
+				case "defense": {_wWatched = true};
+				case "move": {_wWatched = true};
+			};
 		};
 		//--- Lane-325: last-stand recall deliberately parks defenders at HQ; do not let the
 		//--- wedge watchdog release them back to offense while that round-state is active.

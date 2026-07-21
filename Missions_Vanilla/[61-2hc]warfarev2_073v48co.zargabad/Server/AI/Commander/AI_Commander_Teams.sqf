@@ -1199,8 +1199,7 @@ if (count _live > 0) then {
 		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] W11 FieldHospital free-refound flag consumed.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 	};
 
-	["insufficient_funds"] Call _emitFoundSkip;
-	if (_funds < _price) exitWith {};
+	if (_funds < _price) exitWith {["insufficient_funds"] Call _emitFoundSkip};
 
 	//--- Spawn at the doctrine factory (fallback: Barracks, then the HQ).
 	_facNames = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideText];
