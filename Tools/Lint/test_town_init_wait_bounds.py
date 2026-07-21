@@ -57,7 +57,12 @@ def test_remaining_j6_wait_sites_are_bounded_and_diagnostic() -> None:
         assert old_wait not in source, f"{relative_path}: legacy wait remains"
         assert f"{guard_token} = 0;" in source, f"{relative_path}: missing counter {guard_token}"
         start = source.index(f"{guard_token} = 0;")
-        block = source[start : start + 700]
+        # Window widened 700 -> 1200 (2026-07-21). The guard shape is unchanged; the Init_Town.sqf
+        # _wSupplyValue site drifted out of the old window when kimi/bughunt-mission-core (2026-07-20)
+        # inserted a 5-line comment between the bounded while and its HANGGUARD diag_log, pushing the
+        # diagnostic to 938 chars past the counter. Largest current gap is 938, so 1200 keeps margin
+        # while still failing if a site loses its diagnostic entirely.
+        block = source[start : start + 1200]
         assert "while {" in block, f"{relative_path}: missing bounded while guard"
         assert "uiSleep 0.25" in block, f"{relative_path}: missing uiSleep yield"
         assert "HANGGUARD|" in block, f"{relative_path}: missing timeout diagnostic"
