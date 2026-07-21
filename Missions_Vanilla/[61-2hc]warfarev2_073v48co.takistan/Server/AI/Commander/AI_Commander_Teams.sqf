@@ -1428,7 +1428,7 @@ if (count _live > 0) then {
 	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|via=HC|template=" + str _pick + "|class=" + _cls + "|cost=" + str _price);
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
 		private "_foundedBucket";
-		_foundedBucket = switch (_cls) do {case "air": {3}; case "heavy": {2}; case "light": {1}; default {0}};
+		_foundedBucket = _telemBucket;
 		[_side, "founded", _foundedTeams, _pending, _target, (if (_hasAirfield) then {1} else {0}), (if (_hasAirFactory) then {1} else {0}), _foundedBucket, (count (_buckets select 3)), _allVehicles] Call WFBE_CO_FNC_AICOMAirFoundTelemetry;
 	};
 } else {
@@ -1460,11 +1460,6 @@ if (count _live > 0) then {
 		};
 	};
 	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAM_FOUNDED|via=server-local|template=" + str _pick + "|class=" + _cls + "|cost=" + str _price);
-	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
-		private "_foundedBucket";
-		_foundedBucket = switch (_cls) do {case "air": {3}; case "heavy": {2}; case "light": {1}; default {0}};
-		[_side, "founded", _foundedTeams, _pending, _target, (if (_hasAirfield) then {1} else {0}), (if (_hasAirFactory) then {1} else {0}), _foundedBucket, (count (_buckets select 3)), _allVehicles] Call WFBE_CO_FNC_AICOMAirFoundTelemetry;
-	};
 };
 
 if !(isNil "PerformanceAudit_Record") then {
