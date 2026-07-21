@@ -27,3 +27,4 @@ Base: `origin/master` (`b411d70004`)
 - PR #1161: approved Zargabad small-map tune; merged no-ff as `7d857f06d9` (final reviewed head `d4ffe51adf`).
 - PR #1160: approved AICOM air founding telemetry; merged no-ff as `8a81ab3392` (final reviewed head `b7733e82e5`).
 - PR #1155: approved B76 funds-resend zero-wallet fix (never invent a zero wallet on CIV-drift, authority-safe resolution, no side-adoption); merged no-ff into wave-next as `c53cef8019` (drain head `ff631ee434`).
+- PR #1157: VEHDEL probe proper - duplicate gc-zombie emission dropped, FLAGGATE-conform probe guard, truthful default-0 header; replaces the wave0720c shim path; merged no-ff into wave-next as `dfb9cd98e0` (drain head `fefacf451b`).
