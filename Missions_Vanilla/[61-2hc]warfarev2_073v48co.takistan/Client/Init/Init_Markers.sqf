@@ -5,11 +5,15 @@
 scriptName "Client\Init\Init_Markers.sqf";
 
 {
-	Private ["_townColor", "_townMarker", "_townSide"];
+	Private ["_townColor", "_townMarker", "_townSide", "_wSideID", "_wCamps"];
 
-	//--- Wait for the sideID to be initialized.
-	waitUntil {!isNil {_x getVariable "sideID"}};
-	_townSide = _x getVariable "sideID";
+	//--- J6 HANGGUARD: town sideID must not stall the client marker pass forever.
+	_wSideID = 0;
+	while {isNil {_x getVariable "sideID"} && (_wSideID < 240)} do { uiSleep 0.25; _wSideID = _wSideID + 1; };
+	if (isNil {_x getVariable "sideID"}) then {
+		diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Markers.sqf: town sideID was not ready after 60s - defaulting to unknown side (name=%1).", (_x getVariable ["name", "?"])];
+	};
+	_townSide = _x getVariable ["sideID", WFBE_C_UNKNOWN_ID];
 	
 	//--- Determine the coloration method.
 	_townColor = missionNamespace getVariable "WFBE_C_UNKNOWN_COLOR";
@@ -28,16 +32,24 @@ scriptName "Client\Init\Init_Markers.sqf";
 	_townMarker setMarkerTypeLocal "Depot";
 	_townMarker setMarkerColorLocal _townColor;
 	
-	//--- Wait for the camps to be initialized.
-	waitUntil {!isNil {_x getVariable "camps"}};
+	//--- J6 HANGGUARD: town camps must not stall the client marker pass forever.
+	_wCamps = 0;
+	while {isNil {_x getVariable "camps"} && (_wCamps < 240)} do { uiSleep 0.25; _wCamps = _wCamps + 1; };
+	if (isNil {_x getVariable "camps"}) then {
+		diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Markers.sqf: town camps were not ready after 60s - skipping camp markers (name=%1).", (_x getVariable ["name", "?"])];
+	};
 	
 	//--- The town may have some camps.
 	{
-		Private ["_campColor","_campMarker","_campSide"];
+		Private ["_campColor","_campMarker","_campSide","_wCampSideID"];
 		
-		//--- Wait for the sideID to be initialized.
-		waitUntil {!isNil {_x getVariable "sideID"}};
-		_campSide = _x getVariable "sideID";
+		//--- J6 HANGGUARD: camp sideID must not stall the client marker pass forever.
+		_wCampSideID = 0;
+		while {isNil {_x getVariable "sideID"} && (_wCampSideID < 240)} do { uiSleep 0.25; _wCampSideID = _wCampSideID + 1; };
+		if (isNil {_x getVariable "sideID"}) then {
+			diag_log "[WFBE (INIT)] HANGGUARD| Init_Markers.sqf: camp sideID was not ready after 60s - defaulting to unknown side.";
+		};
+		_campSide = _x getVariable ["sideID", WFBE_C_UNKNOWN_ID];
 		
 		// --- Determine the coloration method.
 		_campColor = missionNamespace getVariable "WFBE_C_UNKNOWN_COLOR";
@@ -56,7 +68,7 @@ scriptName "Client\Init\Init_Markers.sqf";
 		_campMarker setMarkerTypeLocal "Strongpoint";
 		_campMarker setMarkerColorLocal _campColor;
 		_campMarker setMarkerSizeLocal [0.5,0.5];
-	} forEach (_x getVariable "camps");
+	} forEach (_x getVariable ["camps", []]);
 } forEach towns;
 
 //--- ============================================================================

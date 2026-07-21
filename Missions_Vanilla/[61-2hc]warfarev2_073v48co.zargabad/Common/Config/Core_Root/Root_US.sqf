@@ -63,7 +63,7 @@ if (isServer) then {
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
-		['M1126_ICV_M2_EP1','M1135_ATGMV_EP1'],
+		['M1126_ICV_M2_EP1','M1135_ATGMV_EP1','US_Soldier_TL_EP1','US_Soldier_AT_EP1','US_Soldier_MG_EP1'],
 		['MTVR_DES_EP1','US_Soldier_TL_EP1','US_Soldier_AT_EP1','US_Soldier_MG_EP1','US_Soldier_AT_EP1'],
 		['M2A3_EP1','US_Soldier_AA_EP1','US_Soldier_AA_EP1','US_Soldier_Medic_EP1'],
 		['M2A3_EP1','US_Soldier_TL_EP1','US_Soldier_AT_EP1','US_Soldier_Medic_EP1']

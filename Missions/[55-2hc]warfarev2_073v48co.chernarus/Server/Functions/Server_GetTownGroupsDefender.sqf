@@ -225,19 +225,7 @@ _fi = 0;
 	_fi = _fi + 1;
 } forEach _final;
 
-//--- B757 faction-rares: one low-probability cross-faction infantry roster in GUER towns.
-//--- Chernarus keeps the NAPA/GUE identity; TK/ZG receive a rare TKA detachment. NO GRAD/artillery.
 private ["_rareRoll","_rareRoster","_rareVehicle"];
-_rareRoll = random 1;
-if (_rareRoll < 0.12) then {
-    _rareRoster = if (worldName == "Takistan" || {worldName == "Zargabad"}) then {
-        ["TK_Soldier_Officer_EP1","TK_Soldier_MG_EP1","TK_Soldier_AT_EP1","TK_Soldier_Medic_EP1","TK_Soldier_EP1"]
-    } else {
-        ["GUE_Soldier_1","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_Medic","GUE_Soldier_Sniper"]
-    };
-    [_contents, _rareRoster] Call WFBE_CO_FNC_ArrayPush;
-    [_contentsKind, 0] Call WFBE_CO_FNC_ArrayPush;
-};
 //--- B757 cross-faction vehicle sprinkle: rare, single hull, never artillery.
 if (!_aa_get && {(random 1) < 0.08}) then {
     _rareVehicle = if (worldName == "Chernarus") then {["HMMWV_M1151_M2_DES_EP1"]} else {["BRDM2_TK_EP1"]};
@@ -277,6 +265,20 @@ if (_mergeTarget > 0 && {count _contents > 1}) then {
 	{[_merged, _x] Call WFBE_CO_FNC_ArrayPush} forEach _vehRosters; //--- vehicles unchanged, appended
 
 	_contents = _merged;
+};
+
+//--- B757 faction-rares: one low-probability cross-faction infantry roster in GUER towns. Moved to
+//--- run AFTER the merge above (previously ran before it and got fused into the merged infantry
+//--- blob) - now survives as its own distinct group, matching the vehicle sprinkle above (vehicle
+//--- rosters are never merged). Chernarus keeps NAPA/GUE; TK/ZG get a rare TKA detachment. NO GRAD/artillery.
+_rareRoll = random 1;
+if (_rareRoll < 0.12) then {
+    _rareRoster = if (worldName == "Takistan" || {worldName == "Zargabad"}) then {
+        ["TK_Soldier_Officer_EP1","TK_Soldier_MG_EP1","TK_Soldier_AT_EP1","TK_Soldier_Medic_EP1","TK_Soldier_EP1"]
+    } else {
+        ["GUE_Soldier_1","GUE_Soldier_MG","GUE_Soldier_AT","GUE_Soldier_Medic","GUE_Soldier_Sniper"]
+    };
+    [_contents, _rareRoster] Call WFBE_CO_FNC_ArrayPush;
 };
 
 _contents
