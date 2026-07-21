@@ -28,6 +28,7 @@ Base: `origin/master` (`b411d70004`)
 - PR #1160: approved AICOM air founding telemetry; merged no-ff as `8a81ab3392` (final reviewed head `b7733e82e5`).
 - PR #1155: approved B76 funds-resend zero-wallet fix (never invent a zero wallet on CIV-drift, authority-safe resolution, no side-adoption); merged no-ff into wave-next as `c53cef8019` (drain head `ff631ee434`).
 - PR #1157: VEHDEL probe proper - duplicate gc-zombie emission dropped, FLAGGATE-conform probe guard, truthful default-0 header; replaces the wave0720c shim path; merged no-ff into wave-next as `dfb9cd98e0` (drain head `fefacf451b`).
+- CORRECTION (fix/vehdel-fold-corrective, 2026-07-21, fold-preservation audit): the merge above (`dfb9cd98e0`) actually folded iteration `71ef2feec1`, not the claimed drain head `fefacf451b` - missing the duplicate gc-zombie-unit VEHDEL emission drop and the truthful default-0 header comment. This PR restores both reviewed deltas.
 - PR #1159: mobile-artillery echelon reposition decoupled from the single-fire gate - gun #2 no longer starved of repositioning; single-fire-per-cycle preserved; merged no-ff into wave-next as `a9d166c137` (drain head `81db315180`).
 - PR #1156: aicom-town-nudge _x rebinding fix w/ nil-guard-first capture; merged no-ff into wave-next as `526eacce65` (drain head `57461d1510`).
 - PR #1211: GUER client startup (wfbe_commander marker on GUER logic - client loop/AFK/chat now start) + Barrel-Bomb/SCUD designation cancel with default map-click handler restore; merged no-ff into wave-next as `377cb2b667` (feature head `fc53d364f7`).
