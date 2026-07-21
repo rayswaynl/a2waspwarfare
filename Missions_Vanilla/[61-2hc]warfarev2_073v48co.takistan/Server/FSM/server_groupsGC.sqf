@@ -326,6 +326,97 @@ while {!WFBE_GameOver} do {
 		} forEach allGroups;
 	};
 
+	//--- fix/aicom-arty-lifecycle (2026-07-21, owner-live report: destroyed GRAD/artillery husks
+	//--- persist on the map forever). ROOT CAUSE: base-built commander artillery/defenses are tagged
+	//--- WFBE_CommanderArtillery/WFBE_CommanderArtillerySide at construction (Construction_
+	//--- StationaryDefense.sqf) but nothing in the existing cleanup pipeline specifically targets a
+	//--- dead commander-tagged hull once it stops moving/firing - it just sits on the map as a wreck
+	//--- indefinitely unless the generic allDead-based trash sweep (server_collector_garbage.sqf)
+	//--- happens to pick it up, which the owner's live report shows is not reliably happening for
+	//--- these specific objects. Explicit, dedicated reap on the SAME 60s cadence as the rest of
+	//--- this file.
+	//---
+	//--- AGE-GATE (codex round-3 review, HIGH): server_collector_garbage.sqf's OWN dedup is
+	//--- membership in the global gc_collector ARRAY (server_collector_garbage.sqf:20) - it never
+	//--- sets wfbe_trashable/wfbe_trashed on the object at all, so the nil-gate below cannot detect
+	//--- "the generic poller already spawned TrashObject on this and it is sleeping through the
+	//--- salvage window". Reaping on first sight would cut that window short AND race the sleeping
+	//--- thread's own eventual deleteVehicle. Fix: stamp wfbe_arty_wreck_seen on first sight and only
+	//--- actually reap once the DYNAMIC delay below has elapsed since.
+	//---
+	//--- DYNAMIC DELAY (codex round-4 review, MEDIUM: a fixed delay only clears the DEFAULT lobby
+	//--- window): WFBE_C_UNITS_CLEAN_TIMEOUT (Rsc/Parameters.hpp) is itself lobby-tunable from 60s up
+	//--- to 3600s, so a fixed reaper delay would race any server configured well above the default.
+	//--- Compute the effective delay at reap time instead: WFBE_C_ARTY_WRECK_REAP_DELAY is now a
+	//--- FLOOR (300s default), not the delay value itself - the reaper always waits at least
+	//--- WFBE_C_UNITS_CLEAN_TIMEOUT + 180s, so it is strictly later than whatever cleanup window is
+	//--- ACTUALLY configured, at any lobby setting, not just the default.
+	//---
+	//--- ORDERING VERIFIED (so this reaper never reads the pre-param script fallback instead of the
+	//--- real value): Init_Parameters.sqf (initJIPCompatible.sqf:138) writes the lobby-selected value
+	//--- into WFBE_C_UNITS_CLEAN_TIMEOUT from paramsArray BEFORE Init_CommonConstants.sqf runs
+	//--- (initJIPCompatible.sqf:140 - its own isNil guard on this same variable correctly no-ops once
+	//--- Init_Parameters.sqf already set it), and Init_Server.sqf (which ExecVMs this very file) does
+	//--- not run until initJIPCompatible.sqf:356 - long after both. This file's own while-loop also
+	//--- opens on a `sleep 60` before its first pass ever reads the variable, so every read here sees
+	//--- the final post-param value.
+	private ["_artyWrecks","_artyReaped","_artySeen","_artyDelay"];
+	_artyDelay = ((missionNamespace getVariable ["WFBE_C_UNITS_CLEAN_TIMEOUT", 120]) + 180) max (missionNamespace getVariable ["WFBE_C_ARTY_WRECK_REAP_DELAY", 300]);
+	_artyWrecks = [];
+	{
+		if (!isNull _x && {!alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {isNil {_x getVariable "wfbe_trashable"}} && {isNil {_x getVariable "wfbe_trashed"}}) then {
+			_artySeen = _x getVariable ["wfbe_arty_wreck_seen", -1];
+			if (_artySeen < 0) then {
+				//--- First sight: stamp and defer - give the generic path its full window.
+				_x setVariable ["wfbe_arty_wreck_seen", time];
+			} else {
+				if ((time - _artySeen) > _artyDelay) then {
+					_artyWrecks set [count _artyWrecks, _x];
+				};
+			};
+		};
+	} forEach allDead;
+	_artyReaped = 0;
+	//--- fix/aicom-arty-lifecycle (2026-07-21, locality fix): commander artillery is manned via HC
+	//--- delegation (Server_HandleDefense.sqf:62 -> WFBE_CO_FNC_DelegateAIStaticDefenceHeadless), which
+	//--- makes the manned hull HC-LOCAL, not server-local. A server-side deleteVehicle on a non-local
+	//--- object SILENTLY NO-OPS in A2 OA - the exact defect the BASE-GC pass above already guards
+	//--- against via its own `local _baseVeh` checks (see L224/276) - so the unconditional deleteVehicle
+	//--- this reaper first shipped with would have no-op'd on every HC-local husk, i.e. most of them.
+	{
+		if (local _x) then {
+			["gc-commander-arty-wreck", _x, (_x getVariable ["WFBE_CommanderArtillerySide", ""])] Call WFBE_CO_FNC_LogVehDelete;
+			deleteVehicle _x;
+			_artyReaped = _artyReaped + 1;
+		} else {
+			//--- Route the delete to the owning machine via the SAME established server->HC dispatch
+			//--- channel Server_DelegateAIStaticDefenceHeadless.sqf itself uses (WFBE_CO_FNC_SendToClient
+			//--- -> "HandleSpecial", routed by the target object's own `owner` - passing _x directly works
+			//--- exactly like passing a live HC-owned unit does), reusing the existing
+			//--- cleanup-airfield-garrison-style pattern: a new "cleanup-commander-arty-wreck" case in
+			//--- Client/PVFunctions/HandleSpecial.sqf deletes the object IF it is alive/local THERE (and,
+			//--- codex round-3 review HIGH: only if it is actually WFBE_CommanderArtillery-tagged - the
+			//--- shared HandleSpecial PVF channel has no sender authentication, so the receiver itself
+			//--- must refuse to delete anything this reaper would not have deleted anyway).
+			//---
+			//--- TELEMETRY (codex round-3 review, MEDIUM): this is a DISPATCH, not a confirmed delete -
+			//--- do not count it in _artyReaped or log it under the same reason code as an actual local
+			//--- delete. The 60s re-scan naturally retries (a dropped dispatch leaves the wreck in allDead
+			//--- with the same nil vars, so it is re-evaluated next pass - see the age-gate note above for
+			//--- why re-checking allDead every pass is safe here) until it either transfers local (falls
+			//--- into the branch above) or the HC actually deletes it (drops out of allDead next pass).
+			//--- VEHDEL logged HERE (server-side, at dispatch) since LogVehDelete only reads replicated
+			//--- object state (position/crew/etc), so it does not need to run on the owning machine, only
+			//--- the deleteVehicle call does. The new action key is also added to the HC PVF allowlist in
+			//--- Client_HandlePVF.sqf (fails closed / silently dropped otherwise).
+			["gc-commander-arty-wreck-remote-dispatch", _x, (_x getVariable ["WFBE_CommanderArtillerySide", ""])] Call WFBE_CO_FNC_LogVehDelete;
+			[_x, "HandleSpecial", ["cleanup-commander-arty-wreck", _x]] Call WFBE_CO_FNC_SendToClient;
+		};
+	} forEach _artyWrecks;
+	if (_artyReaped > 0) then {
+		["INFORMATION", Format ["server_groupsGC.sqf: reaped %1 dead commander-artillery wreck(s).", _artyReaped]] Call WFBE_CO_FNC_AICOMLog;
+	};
+
 	// --- Group-cap pre-warning ---
 	// Count groups per side (single pass; cheap at 60s cadence).
 	_cntWest = 0;

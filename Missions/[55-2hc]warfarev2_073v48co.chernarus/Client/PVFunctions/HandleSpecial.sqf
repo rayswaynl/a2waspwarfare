@@ -46,6 +46,38 @@ switch (_request) do {
 			};
 		} forEach vehicles;
 	};
+	//--- fix/aicom-arty-lifecycle (2026-07-21, locality fix): delete a dead commander-artillery hull
+	//--- that is LOCAL TO THIS machine. server_groupsGC.sqf's reaper cannot delete a non-local wreck
+	//--- directly (HC-manned hulls are HC-local; a server-side deleteVehicle would silently no-op), so
+	//--- it routes here via WFBE_CO_FNC_SendToClient, keyed off the wreck object's own owner. Mirrors
+	//--- the cleanup-airfield-garrison pattern above: verify local + a genuine wreck before deleting -
+	//--- a wreck already reaped by some other path between dispatch and arrival here is simply null.
+	//--- codex round-3 review (HIGH, forgeable delete primitive): the shared WFBE_PVF_HandleSpecial
+	//--- channel has no sender authentication (any client can broadcast this action key with an
+	//--- arbitrary dead local object), so the RECEIVER must be self-limiting: only ever delete an
+	//--- object that actually carries the WFBE_CommanderArtillery tag - the same object the server
+	//--- reaper would have deleted anyway. A forged dispatch can then never touch anything else
+	//--- (salvage/scavenger wrecks, player vehicles, etc).
+	//---
+	//--- DOCUMENTED RESIDUAL (codex round-4 review, HIGH, owner-posture ruling - no further code
+	//--- change here): with arbitrary-SQF clients and no PV sender identity, every receiver-side
+	//--- condition is itself forgeable - a malicious client can also broadcast the
+	//--- WFBE_CommanderArtillery tag onto an otherwise-unrelated dead object before dispatching the
+	//--- delete, so the tag check above narrows but does not fully close the primitive. This is the
+	//--- SAME residual class already accepted for other unauthenticated PVF handlers in this codebase
+	//--- (see docs/design/SEC-HARDENING-DEFAULT-AUDIT.md - WFBE_C_SEC_HARDENING stays a dark master
+	//--- flag until the token-auth infrastructure lands); the owner accepted the identical trade-off
+	//--- for the wallet handler the same day this card was worked (ruling: leave as is, token-auth
+	//--- carded next-wave). Blast radius here is bounded: this action key can only ever delete an
+	//--- object already dead (a live unit cannot be forged into this path - `!alive _wreck` still
+	//--- gates it) and local to the receiving machine, so the worst a forged dispatch can do is an
+	//--- early/unwanted despawn of some other wreck - denying its salvage/scavenger window - not an
+	//--- arbitrary live-object delete or any funds/score/structural effect.
+	case "cleanup-commander-arty-wreck": {
+		Private ["_wreck"];
+		_wreck = _args select 0;
+		if (!isNull _wreck && {local _wreck} && {!alive _wreck} && {(_wreck getVariable ["WFBE_CommanderArtillery", false])}) then {deleteVehicle _wreck};
+	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};
