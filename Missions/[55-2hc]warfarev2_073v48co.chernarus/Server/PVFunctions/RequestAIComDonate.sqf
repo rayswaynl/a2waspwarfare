@@ -60,7 +60,12 @@ if (_claimedTeam != _donorTeam) then {
 //--- fix(hunt): this rejection was an exitWith INSIDE the hardening then{} - on A2-OA that exits only the
 //--- block and FELL THROUGH to the full donate flow (a forged non-player donor still drained the team).
 //--- A single top-scope if+exitWith rejects for real.
-if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0 && {!isPlayer _donor || {!alive _donor}}) exitWith {
+//--- ALWAYS-ON (wave0721 hardening extras, owner-deferred C4/C2 ruling): the donor sender check is now
+//--- effective REGARDLESS of WFBE_C_SEC_HARDENING, matching the donor-team re-derivation directly above
+//--- (already unconditional). The sole honest caller is GUI_TransferMenu.sqf:101, which always sends the
+//--- live local `player`, so no real donation can trip this; a forged non-player donor could otherwise
+//--- still drain a team wallet with the switch dark.
+if (!isPlayer _donor || {!alive _donor}) exitWith {
 	["WARNING", Format ["RequestAIComDonate.sqf: [DONATION] rejected - donor [%1] is not a live player.", _donor]] Call WFBE_CO_FNC_AICOMLog;
 };
 
