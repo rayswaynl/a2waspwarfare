@@ -20,7 +20,7 @@ def between(text: str, start: str, end: str) -> str:
     return text[left:right]
 
 
-def main() -> None:
+def test_name_tag_overlay_uses_local_state_and_cached_candidates() -> None:
     init = INIT.read_text(encoding="utf-8")
     menu = MENU.read_text(encoding="utf-8")
     overlay = between(init, "//--- qol-polish-pack: friendly name-tag overlay", "// Marty: Show the test build marker")
@@ -39,11 +39,14 @@ def main() -> None:
     assert "TAGSTAT|v1|" in overlay, "smoke telemetry must emit TAGSTAT"
     assert "publicVariable" not in overlay, "name-tag overlay must remain client-local"
     assert "createMarker" not in overlay and "setMarker" not in overlay, "name-tag overlay must not enter marker families"
+    private_block = overlay[: overlay.index("_max = 18;")]
+    for local in ("_nextCandidateScan", "_playerCandidates", "_aiCandidates", "_vehicleCandidates", "_tagStatCycles", "_shownPlayers", "_shownAI", "_shownVehicles", "_shownTallies"):
+        assert local in private_block, f"{local} must be declared in the scheduler's private[] array"
     for mirror in MIRRORS:
         assert (mirror / "Client" / "Init" / "Init_Client.sqf").read_bytes() == INIT.read_bytes(), f"Init_Client mirror drift: {mirror.name}"
         assert (mirror / "Client" / "GUI" / "GUI_Menu.sqf").read_bytes() == MENU.read_bytes(), f"GUI_Menu mirror drift: {mirror.name}"
-    print("test_name_tag_contract: PASS")
 
 
 if __name__ == "__main__":
-    main()
+    test_name_tag_overlay_uses_local_state_and_cached_candidates()
+    print("test_name_tag_contract: PASS")
