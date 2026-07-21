@@ -1397,6 +1397,29 @@ while {!WFBE_GameOver && _alive} do {
 						if ([_amHeli, _team, _dest, _side, _sideID, _vehicles] Call WFBE_CO_FNC_AICOMAirLeg) then {_amDone = true};
 					};
 				};
+				//--- P1.1 AIR-MOBILE ATTEMPT TELEMETRY (claude 2026-07-19): reason-code why this ordered leg did or did not
+				//--- fly, so the existing default-ON airlift's real gating is visible in RPT (instrument-first per audit
+				//--- synthesis 2D50EA13...). Flag WFBE_C_AICOM_AIR_TELEMETRY default 0 => this diag_log never runs
+				//--- (behaviour-equivalent to HEAD; see Common_AICOMAirFoundTelemetry.sqf's header for the honest
+				//--- flag-off cost accounting - one getVariable check here still executes every cycle).
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
+					private ["_amReason","_amLeg","_amMin"];
+					_amLeg = (leader _team) distance _dest;
+					_amMin = missionNamespace getVariable ["WFBE_C_AICOM_AIRMOBILE_MIN_DIST", 1200];
+					_amReason = "committed";
+					if (!_amDone) then {
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_AIRMOBILE", 1]) <= 0) then {
+							_amReason = "airmobile-off";
+						} else {
+							if (_amLeg <= _amMin) then {
+								_amReason = "leg-short";
+							} else {
+								if (isNil "_amHeli" || {isNull _amHeli}) then {_amReason = "no-transport"} else {_amReason = "airleg-abort"};
+							};
+						};
+					};
+					diag_log ("AICOMAIR|v1|" + str (side _team) + "|" + str (round (time / 60)) + "|stage=airmobile|reason=" + _amReason + "|leg=" + str (round _amLeg) + "|minDist=" + str (round _amMin) + "|team=" + str _team);
+				};
 				if (!_amDone) then {
 
 				//--- ROAD-MARCH (task #14/#16): the old single bare 'MOVE' to the raw town
