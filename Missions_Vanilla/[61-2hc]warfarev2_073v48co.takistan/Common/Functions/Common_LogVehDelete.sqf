@@ -10,7 +10,10 @@
     player-use/exit stamps written by the Common_CreateVehicle GetIn/GetOut hooks.
 
     Telemetry-only: no behavior change (C2 authority-telemetry precedent). WFBE_C_VEH_DELETE_PROBE
-    default 1 acts as a kill-switch. Works for hulls AND men (crew of a man = []).
+    default 0 acts as a kill-switch (the constant is ARMED to 1 at runtime via Init_CommonConstants.sqf
+    per the wave0721 arming commit - this header describes this FUNCTION's own getVariable fallback,
+    not the currently-armed value; fix/vehdel-fold-corrective 2026-07-21, restoring text a stale fold
+    iteration had overwritten). Works for hulls AND men (crew of a man = []).
 */
 
 WFBE_CO_FNC_LogVehDelete = {
