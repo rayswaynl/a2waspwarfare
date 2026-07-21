@@ -58,6 +58,21 @@ switch (_request) do {
 	//--- object that actually carries the WFBE_CommanderArtillery tag - the same object the server
 	//--- reaper would have deleted anyway. A forged dispatch can then never touch anything else
 	//--- (salvage/scavenger wrecks, player vehicles, etc).
+	//---
+	//--- DOCUMENTED RESIDUAL (codex round-4 review, HIGH, owner-posture ruling - no further code
+	//--- change here): with arbitrary-SQF clients and no PV sender identity, every receiver-side
+	//--- condition is itself forgeable - a malicious client can also broadcast the
+	//--- WFBE_CommanderArtillery tag onto an otherwise-unrelated dead object before dispatching the
+	//--- delete, so the tag check above narrows but does not fully close the primitive. This is the
+	//--- SAME residual class already accepted for other unauthenticated PVF handlers in this codebase
+	//--- (see docs/design/SEC-HARDENING-DEFAULT-AUDIT.md - WFBE_C_SEC_HARDENING stays a dark master
+	//--- flag until the token-auth infrastructure lands); the owner accepted the identical trade-off
+	//--- for the wallet handler the same day this card was worked (ruling: leave as is, token-auth
+	//--- carded next-wave). Blast radius here is bounded: this action key can only ever delete an
+	//--- object already dead (a live unit cannot be forged into this path - `!alive _wreck` still
+	//--- gates it) and local to the receiving machine, so the worst a forged dispatch can do is an
+	//--- early/unwanted despawn of some other wreck - denying its salvage/scavenger window - not an
+	//--- arbitrary live-object delete or any funds/score/structural effect.
 	case "cleanup-commander-arty-wreck": {
 		Private ["_wreck"];
 		_wreck = _args select 0;

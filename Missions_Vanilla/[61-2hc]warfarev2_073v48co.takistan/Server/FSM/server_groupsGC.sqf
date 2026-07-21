@@ -342,15 +342,26 @@ while {!WFBE_GameOver} do {
 	//--- "the generic poller already spawned TrashObject on this and it is sleeping through the
 	//--- salvage window". Reaping on first sight would cut that window short AND race the sleeping
 	//--- thread's own eventual deleteVehicle. Fix: stamp wfbe_arty_wreck_seen on first sight and only
-	//--- actually reap once WFBE_C_ARTY_WRECK_REAP_DELAY has elapsed since - set well past the generic
-	//--- wreck timeout (WFBE_C_UNITS_CLEAN_TIMEOUT: script default 60s, but the LOBBY default in
-	//--- Rsc/Parameters.hpp is 120s, which wins per this repo's own documented default=-overrides-
-	//--- constants trap), so every wreck still gets its full intended cleanup/salvage window from
-	//--- whichever generic path is supposed to claim it, and this reaper only ever fires for pieces
-	//--- NO other path has claimed after a generous margin - the permanently-stuck HC-local hulls
-	//--- this whole fix exists for.
+	//--- actually reap once the DYNAMIC delay below has elapsed since.
+	//---
+	//--- DYNAMIC DELAY (codex round-4 review, MEDIUM: a fixed delay only clears the DEFAULT lobby
+	//--- window): WFBE_C_UNITS_CLEAN_TIMEOUT (Rsc/Parameters.hpp) is itself lobby-tunable from 60s up
+	//--- to 3600s, so a fixed reaper delay would race any server configured well above the default.
+	//--- Compute the effective delay at reap time instead: WFBE_C_ARTY_WRECK_REAP_DELAY is now a
+	//--- FLOOR (300s default), not the delay value itself - the reaper always waits at least
+	//--- WFBE_C_UNITS_CLEAN_TIMEOUT + 180s, so it is strictly later than whatever cleanup window is
+	//--- ACTUALLY configured, at any lobby setting, not just the default.
+	//---
+	//--- ORDERING VERIFIED (so this reaper never reads the pre-param script fallback instead of the
+	//--- real value): Init_Parameters.sqf (initJIPCompatible.sqf:138) writes the lobby-selected value
+	//--- into WFBE_C_UNITS_CLEAN_TIMEOUT from paramsArray BEFORE Init_CommonConstants.sqf runs
+	//--- (initJIPCompatible.sqf:140 - its own isNil guard on this same variable correctly no-ops once
+	//--- Init_Parameters.sqf already set it), and Init_Server.sqf (which ExecVMs this very file) does
+	//--- not run until initJIPCompatible.sqf:356 - long after both. This file's own while-loop also
+	//--- opens on a `sleep 60` before its first pass ever reads the variable, so every read here sees
+	//--- the final post-param value.
 	private ["_artyWrecks","_artyReaped","_artySeen","_artyDelay"];
-	_artyDelay = missionNamespace getVariable ["WFBE_C_ARTY_WRECK_REAP_DELAY", 300];
+	_artyDelay = ((missionNamespace getVariable ["WFBE_C_UNITS_CLEAN_TIMEOUT", 120]) + 180) max (missionNamespace getVariable ["WFBE_C_ARTY_WRECK_REAP_DELAY", 300]);
 	_artyWrecks = [];
 	{
 		if (!isNull _x && {!alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {isNil {_x getVariable "wfbe_trashable"}} && {isNil {_x getVariable "wfbe_trashed"}}) then {
