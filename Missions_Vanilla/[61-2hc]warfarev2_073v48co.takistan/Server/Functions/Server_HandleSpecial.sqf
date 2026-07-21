@@ -18,7 +18,7 @@ switch (_args select 0) do {
 		if ((missionNamespace getVariable ["WFBE_C_TEAMBAR_PROBE", 0]) > 0) then {
 			if (!isNull _team && {!isNull _leader}) then {
 				diag_log Format ["TEAMBAR|v2|SVPROBE|evt=update-teamleader|phase=pre-client-rejoin|t=%1|uid=%2|groupId=%3|leaderIsPlayer=%4|leaderIsGrpLeader=%5|leaderRankId=%6|units=%7",
-					round time, getPlayerUID _leader, groupId _team, isPlayer _leader, (leader _team == _leader), rankId _leader, count (units _team)];
+					round time, getPlayerUID _leader, str _team, isPlayer _leader, (leader _team == _leader), rank _leader, count (units _team)];
 			};
 		};
 	};
