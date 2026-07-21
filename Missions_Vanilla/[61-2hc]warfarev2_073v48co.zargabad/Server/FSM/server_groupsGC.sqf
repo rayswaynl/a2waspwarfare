@@ -334,17 +334,35 @@ while {!WFBE_GameOver} do {
 	//--- indefinitely unless the generic allDead-based trash sweep (server_collector_garbage.sqf)
 	//--- happens to pick it up, which the owner's live report shows is not reliably happening for
 	//--- these specific objects. Explicit, dedicated reap on the SAME 60s cadence as the rest of
-	//--- this file: scan allDead every pass for commander-tagged hulls not already claimed by that
-	//--- generic pipeline (wfbe_trashable/wfbe_trashed nil - the SAME gate server_collector_garbage.sqf
-	//--- itself uses, so this never double-deletes something already enrolled there), log + delete via
-	//--- the SAME VEHDEL emission-paired-with-delete pattern this file already uses above
-	//--- (gc-baseair-*, gc-zombie-unit). Two-pass collect-then-delete (mirrors the empty-group GC at
-	//--- the top of this file) so deleting mid-scan never touches the allDead snapshot being iterated.
-	private ["_artyWrecks","_artyReaped"];
+	//--- this file.
+	//---
+	//--- AGE-GATE (codex round-3 review, HIGH): server_collector_garbage.sqf's OWN dedup is
+	//--- membership in the global gc_collector ARRAY (server_collector_garbage.sqf:20) - it never
+	//--- sets wfbe_trashable/wfbe_trashed on the object at all, so the nil-gate below cannot detect
+	//--- "the generic poller already spawned TrashObject on this and it is sleeping through the
+	//--- salvage window". Reaping on first sight would cut that window short AND race the sleeping
+	//--- thread's own eventual deleteVehicle. Fix: stamp wfbe_arty_wreck_seen on first sight and only
+	//--- actually reap once WFBE_C_ARTY_WRECK_REAP_DELAY has elapsed since - set well past the generic
+	//--- wreck timeout (WFBE_C_UNITS_CLEAN_TIMEOUT: script default 60s, but the LOBBY default in
+	//--- Rsc/Parameters.hpp is 120s, which wins per this repo's own documented default=-overrides-
+	//--- constants trap), so every wreck still gets its full intended cleanup/salvage window from
+	//--- whichever generic path is supposed to claim it, and this reaper only ever fires for pieces
+	//--- NO other path has claimed after a generous margin - the permanently-stuck HC-local hulls
+	//--- this whole fix exists for.
+	private ["_artyWrecks","_artyReaped","_artySeen","_artyDelay"];
+	_artyDelay = missionNamespace getVariable ["WFBE_C_ARTY_WRECK_REAP_DELAY", 300];
 	_artyWrecks = [];
 	{
 		if (!isNull _x && {!alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {isNil {_x getVariable "wfbe_trashable"}} && {isNil {_x getVariable "wfbe_trashed"}}) then {
-			_artyWrecks set [count _artyWrecks, _x];
+			_artySeen = _x getVariable ["wfbe_arty_wreck_seen", -1];
+			if (_artySeen < 0) then {
+				//--- First sight: stamp and defer - give the generic path its full window.
+				_x setVariable ["wfbe_arty_wreck_seen", time];
+			} else {
+				if ((time - _artySeen) > _artyDelay) then {
+					_artyWrecks set [count _artyWrecks, _x];
+				};
+			};
 		};
 	} forEach allDead;
 	_artyReaped = 0;
@@ -358,21 +376,31 @@ while {!WFBE_GameOver} do {
 		if (local _x) then {
 			["gc-commander-arty-wreck", _x, (_x getVariable ["WFBE_CommanderArtillerySide", ""])] Call WFBE_CO_FNC_LogVehDelete;
 			deleteVehicle _x;
+			_artyReaped = _artyReaped + 1;
 		} else {
 			//--- Route the delete to the owning machine via the SAME established server->HC dispatch
 			//--- channel Server_DelegateAIStaticDefenceHeadless.sqf itself uses (WFBE_CO_FNC_SendToClient
 			//--- -> "HandleSpecial", routed by the target object's own `owner` - passing _x directly works
 			//--- exactly like passing a live HC-owned unit does), reusing the existing
 			//--- cleanup-airfield-garrison-style pattern: a new "cleanup-commander-arty-wreck" case in
-			//--- Client/PVFunctions/HandleSpecial.sqf deletes the object IF it is alive/local THERE. VEHDEL
-			//--- logged HERE (server-side, at dispatch, distinct reason code) - LogVehDelete only reads
-			//--- replicated object state (position/crew/etc), so it does not need to run on the owning
-			//--- machine, only the deleteVehicle call does. The new action key is also added to the HC PVF
-			//--- allowlist in Client_HandlePVF.sqf (fails closed / silently dropped otherwise).
-			["gc-commander-arty-wreck-remote", _x, (_x getVariable ["WFBE_CommanderArtillerySide", ""])] Call WFBE_CO_FNC_LogVehDelete;
+			//--- Client/PVFunctions/HandleSpecial.sqf deletes the object IF it is alive/local THERE (and,
+			//--- codex round-3 review HIGH: only if it is actually WFBE_CommanderArtillery-tagged - the
+			//--- shared HandleSpecial PVF channel has no sender authentication, so the receiver itself
+			//--- must refuse to delete anything this reaper would not have deleted anyway).
+			//---
+			//--- TELEMETRY (codex round-3 review, MEDIUM): this is a DISPATCH, not a confirmed delete -
+			//--- do not count it in _artyReaped or log it under the same reason code as an actual local
+			//--- delete. The 60s re-scan naturally retries (a dropped dispatch leaves the wreck in allDead
+			//--- with the same nil vars, so it is re-evaluated next pass - see the age-gate note above for
+			//--- why re-checking allDead every pass is safe here) until it either transfers local (falls
+			//--- into the branch above) or the HC actually deletes it (drops out of allDead next pass).
+			//--- VEHDEL logged HERE (server-side, at dispatch) since LogVehDelete only reads replicated
+			//--- object state (position/crew/etc), so it does not need to run on the owning machine, only
+			//--- the deleteVehicle call does. The new action key is also added to the HC PVF allowlist in
+			//--- Client_HandlePVF.sqf (fails closed / silently dropped otherwise).
+			["gc-commander-arty-wreck-remote-dispatch", _x, (_x getVariable ["WFBE_CommanderArtillerySide", ""])] Call WFBE_CO_FNC_LogVehDelete;
 			[_x, "HandleSpecial", ["cleanup-commander-arty-wreck", _x]] Call WFBE_CO_FNC_SendToClient;
 		};
-		_artyReaped = _artyReaped + 1;
 	} forEach _artyWrecks;
 	if (_artyReaped > 0) then {
 		["INFORMATION", Format ["server_groupsGC.sqf: reaped %1 dead commander-artillery wreck(s).", _artyReaped]] Call WFBE_CO_FNC_AICOMLog;

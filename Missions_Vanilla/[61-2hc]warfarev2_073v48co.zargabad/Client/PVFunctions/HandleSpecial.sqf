@@ -52,10 +52,16 @@ switch (_request) do {
 	//--- it routes here via WFBE_CO_FNC_SendToClient, keyed off the wreck object's own owner. Mirrors
 	//--- the cleanup-airfield-garrison pattern above: verify local + a genuine wreck before deleting -
 	//--- a wreck already reaped by some other path between dispatch and arrival here is simply null.
+	//--- codex round-3 review (HIGH, forgeable delete primitive): the shared WFBE_PVF_HandleSpecial
+	//--- channel has no sender authentication (any client can broadcast this action key with an
+	//--- arbitrary dead local object), so the RECEIVER must be self-limiting: only ever delete an
+	//--- object that actually carries the WFBE_CommanderArtillery tag - the same object the server
+	//--- reaper would have deleted anyway. A forged dispatch can then never touch anything else
+	//--- (salvage/scavenger wrecks, player vehicles, etc).
 	case "cleanup-commander-arty-wreck": {
 		Private ["_wreck"];
 		_wreck = _args select 0;
-		if (!isNull _wreck && {local _wreck} && {!alive _wreck}) then {deleteVehicle _wreck};
+		if (!isNull _wreck && {local _wreck} && {!alive _wreck} && {(_wreck getVariable ["WFBE_CommanderArtillery", false])}) then {deleteVehicle _wreck};
 	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};

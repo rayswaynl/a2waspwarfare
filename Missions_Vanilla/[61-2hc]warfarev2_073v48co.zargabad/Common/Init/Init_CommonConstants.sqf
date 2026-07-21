@@ -1851,6 +1851,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_FIRSTBLOOD_DONE") then {WFBE_FIRSTBLOOD_DONE = false}; //--- First-blood one-shot latch (runtime state, not a tunable); false each fresh mission instance.
 	if (isNil "WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW") then {WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW = 60}; //--- Seconds where a damaged vehicle can still award its last valid hitter.
 	if (isNil "WFBE_C_UNITS_CLEAN_TIMEOUT") then {WFBE_C_UNITS_CLEAN_TIMEOUT = 60}; //--- Lifespan of a dead body.
+	if (isNil "WFBE_C_ARTY_WRECK_REAP_DELAY") then {WFBE_C_ARTY_WRECK_REAP_DELAY = 300}; //--- fix/aicom-arty-lifecycle (2026-07-21): server_groupsGC.sqf's dedicated dead-commander-artillery reaper age-gates on this before acting, so the generic wreck-cleanup path (WFBE_C_UNITS_CLEAN_TIMEOUT, LOBBY default 120s per Rsc/Parameters.hpp - the script default above is only the pre-lobby-override fallback) always gets its full window first. 300s clears that lobby default with a comfortable margin.
 	if (isNil "WFBE_C_UNITS_EMPTY_TIMEOUT") then {WFBE_C_UNITS_EMPTY_TIMEOUT = 1800}; //--- Lifespan of an empty vehicle (30 minutes).
 		WFBE_C_UNITS_BODIES_TIMEOUT = 60;
 	//--- qol-polish-pack tunables --------------------------------------------------------------------------------
