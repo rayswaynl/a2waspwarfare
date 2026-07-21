@@ -36,10 +36,11 @@ if (_lastWindow != _window) then {
 };
 _emitted = missionNamespace getVariable ["WFBE_CHATRELAY_EMITTED", 0];
 _dropped = missionNamespace getVariable ["WFBE_CHATRELAY_DROPPED", 0];
-if (_emitted >= 19) then {
+if (_emitted >= 19) exitWith {
+	//--- rate-cap hit: count the drop and return without relaying (bare exitWith inside
+	//--- then{} was a parse error that killed this whole file on A2 - wave0721b live burn)
 	_dropped = _dropped + 1;
 	missionNamespace setVariable ["WFBE_CHATRELAY_DROPPED", _dropped];
-	exitWith {};
 };
 
 //--- Strip pipes and line breaks before the fixed pipe-delimited RPT contract; cap every field.
