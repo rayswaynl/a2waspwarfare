@@ -66,6 +66,8 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 
 //--- New Fnc.
 WFBE_SE_FNC_AI_SetTownAttackPath = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath.sqf";
+//--- CHAT RELAY REWORK: server-only, free chat blocked-pending-BE because display-24 semantics are not proven here.
+WFBE_SE_FNC_ChatRelayEvent = Compile preprocessFileLineNumbers "Server\Functions\Server_ChatRelayEvent.sqf";
 WFBE_SE_FNC_AI_SetTownAttackPath_PathIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PathIsSafe.sqf";
 WFBE_SE_FNC_AI_SetTownAttackPath_PosIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PosIsSafe.sqf";
 WFBE_SE_FNC_AI_Com_Upgrade = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_Com_Upgrade.sqf";
@@ -136,6 +138,7 @@ WFBE_SE_FNC_CounterBatteryCheck = Compile preprocessFileLineNumbers "Server\Func
 WFBE_SE_FNC_SpawnStructureDressing = Compile preprocessFileLineNumbers "Server\Functions\Server_SpawnStructureDressing.sqf";
 WFBE_SE_FNC_BankIncome = Compile preprocessFileLineNumbers "Server\Functions\Server_BankIncome.sqf";
 WFBE_SE_FNC_SiteClearance = Compile preprocessFileLineNumbers "Server\Functions\Server_SiteClearance.sqf";
+WFBE_SE_FNC_CmdSupportAir = Compile preprocessFileLineNumbers "Server\Functions\Server_CmdSupportAir.sqf"; //--- COMMAND V2 (c): granted heli-support escort lifecycle. Spawned only from the aicom-support-air case while WFBE_C_CMD_SUPPORT_AIR > 0.
 //--- CBR: per-side registries (populated as CBRs are built; pruned lazily during checks).
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
 	missionNamespace setVariable ["WFBE_CBR_WEST", []];
@@ -750,6 +753,12 @@ emptyQueu = [];
 
 		//--- Logic init.
 		_logik setVariable ["wfbe_commander", objNull, true];
+		//--- C1 lease: spawn the ONE per-side stand-down executor (the only runner of lease
+		//--- stand-down effects - single-owner by construction, see Common_CommanderLease.sqf).
+		//--- Flag off = never spawned = byte-identical.
+		if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
+			[_side] Spawn WFBE_CO_FNC_CommanderLeaseStandDownExecutor;
+		};
 		_logik setVariable ["wfbe_hq", _hq, true];
 		_logik setVariable ["wfbe_hq_deployed", false, true];
 		_logik setVariable ["wfbe_hq_repair_count", 1, true];
@@ -913,6 +922,11 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 	private ["_guerLogic","_guerTeams","_group"];
 	_guerLogic = missionNamespace getVariable "WFBE_L_GUE";
 	if (!(isNull _guerLogic)) then {
+		//--- fable/guer-client-startup-mapcancel: mirror the WEST/EAST wfbe_commander init (Init_Server.sqf:754)
+		//--- so the client waiter (Init_Client.sqf waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_commander"}})
+		//--- resolves for playable GUER too - without this, GUER clients never start updateclient.sqf (no PV
+		//--- handlers, no AFK kick).
+		_guerLogic setVariable ["wfbe_commander", objNull, true];
 		_guerTeams = [];
 		{
 			if (!(isNull _x) && {_x isKindOf "Man"}) then {
@@ -1265,14 +1279,6 @@ if ((missionNamespace getVariable "WFBE_C_BASE_AREA") > 0) then {[] execVM "Serv
 
 //if (LOG_CONTENT_STATE == "ACTIVATED") then {[] execVM "Server\FSM\groupsMonitor.sqf"};
 
-//--- ALICE Module.
-if ((missionNamespace getVariable "WFBE_C_MODULE_BIS_ALICE") > 0) then {
-	_type = if (WF_A2_Vanilla) then {'AliceManager'} else {'Alice2Manager'};
-	_alice = (createGroup sideLogic) createUnit [_type,[0,0,0],[],0,"NONE"];
-
-	["INITIALIZATION", "Init_Server.sqf: BIS ALICE is defined."] Call WFBE_CO_FNC_LogContent;
-};
-
 // Execute the server fps script on a seperate thread
 [] ExecVM "Server\GUI\serverFpsGUI.sqf";
 
@@ -1349,7 +1355,7 @@ if (_antiStackEnabled) then {
 	// 0 = NONE
 	// 1 = CHERNARUS
 	// 2 = TAKISTAN
-	["SET_MAP", 1] call WFBE_SE_FNC_CallDatabaseSetMap;
+	["SET_MAP", if (worldName == "Takistan") then {2} else {if (worldName == "Zargabad") then {3} else {1}}] call WFBE_SE_FNC_CallDatabaseSetMap;
 };
 
 _logMatchWinPlayerCountThreshold = 10;

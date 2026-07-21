@@ -45,7 +45,7 @@ if !(isServer) exitWith {};
 //--- run regardless of whether GUER is the playable side. Keep only isServer + AIRDEF_ENABLE.
 if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) < 1) exitWith {};
 
-private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares"];
+private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_groundQrfTTL","_groundQrfMax","_groundQrfs","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares"];
 
 _interval   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_INTERVAL", 120];
 _maxAir     = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MAX", 4];
@@ -58,6 +58,10 @@ _lifetime   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_LIFETIME", 900];
 _quiet      = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_QUIET_DESPAWN", 300];
 _largeSV    = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_LARGE_SV", 2500];
 _flyHeight  = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_HEIGHT", 120];
+//--- Reserve one maintain-sweep interval so the next poll cannot extend a QRF past 600s from spawn.
+_groundQrfTTL = 600 - _interval;
+if (_groundQrfTTL < 1) then {_groundQrfTTL = 1};
+_groundQrfMax = 2;
 
 //--- CARGO/PARADROP variant (build83). DROP_CHANCE: per-spawn roll for the Ka-137 to run a paradrop of
 //--- infantry over a town under GROUND attack. DROP_COUNT: troopers per stick. DROP_MAX: global alive cap
@@ -157,6 +161,10 @@ _defenders = [];
 //--- (NOT wfbe_persistent) so a dropped squad can never leak groups or outlive its despawn. Separate cap
 //--- (_dropMax) and separate prune pass below keep it from being spammed exactly like the air branches.
 _drops = [];
+
+//--- E3 GUER GROUND QRF registry. Each entry: [_town, _group, _spawnTime]. It is script-local,
+//--- capped independently from air/paradrop assets, and never marked persistent.
+_groundQrfs = [];
 
 ["INITIALIZATION", Format ["Server_GuerAirDef.sqf: GUER air defense started (interval=%1 cap=%2 atChance=%3 mi24Chance=%4).", _interval, _maxAir, _atChance, _mi24Chance]] Call WFBE_CO_FNC_LogContent;
 diag_log format ["GUERAIRDEF|START|interval=%1|cap=%2|atChance=%3|mi24Chance=%4|aaChance=%5|ka=%6|mi24=%7|dropChance=%8|dropCount=%9|dropMax=%10", _interval, _maxAir, _atChance, _mi24Chance, _aaChance, _classKa, _classMi24, _dropChance, _dropCount, _dropMax];
@@ -265,7 +273,7 @@ while {!WFBE_GameOver} do {
 		private ["_pg"];
 		_pg = _x;
 		if (!isNull _pg && {!(_pg in _keptGroups)}) then {
-			{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _pg);
+			{if (!(isPlayer _x)) then {["guerairdef-L254", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _pg);
 			deleteGroup _pg;
 		};
 	} forEach _prunedGroups;
@@ -313,7 +321,7 @@ while {!WFBE_GameOver} do {
 
 		if (_dDrop) then {
 			//--- Player-safe teardown: only delete non-player bodies; then drop the group.
-			if (!isNull _dGrp) then { {if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _dGrp); deleteGroup _dGrp; };
+			if (!isNull _dGrp) then { {if (!(isPlayer _x)) then {["guerairdef-L302", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _dGrp); deleteGroup _dGrp; };
 			diag_log format ["GUERAIRDEF|DROPDESPAWN|town=%1|reason=%2|dropsAlive=%3", (if (isNull _dTown) then {"?"} else {_dTown getVariable ["name","?"]}), _dReason, (count _keptDrops)];
 		} else {
 			_keptDrops = _keptDrops + [[_dTown, _dGrp, _dSpawn, _dLastEnemy]];
@@ -322,10 +330,92 @@ while {!WFBE_GameOver} do {
 	_drops     = _keptDrops;
 	_dropAlive = count _drops;
 
+	//=== (1c) PRUNE + SELF-CLEAN GUER GROUND QRFs (E3) ======================================
+	//--- One group per town, two groups globally, and a hard 600s lifetime. This follows the
+	//--- W13/G-card player-safe teardown idiom, while leaving the existing air/drop registries alone.
+	if ((missionNamespace getVariable ["WFBE_C_GUER_GROUND_QRF", 0]) > 0) then {
+		private ["_keptGroundQrfs","_qrfEntry","_qrfTown","_qrfGrp","_qrfSpawn","_qrfDrop","_qrfReason","_qrfTownSide","_qrfTownActive"];
+		_keptGroundQrfs = [];
+		{
+			_qrfEntry = _x;
+			_qrfTown = _qrfEntry select 0;
+			_qrfGrp = _qrfEntry select 1;
+			_qrfSpawn = _qrfEntry select 2;
+			_qrfDrop = false;
+			_qrfReason = "";
+			if (isNull _qrfGrp || {({alive _x} count (units _qrfGrp)) == 0}) then { _qrfDrop = true; _qrfReason = "wiped"; };
+			if (!_qrfDrop && {(time - _qrfSpawn) >= _groundQrfTTL}) then { _qrfDrop = true; _qrfReason = "lifetime"; };
+			if (!_qrfDrop) then {
+				_qrfTownSide = if (isNull _qrfTown) then {-1} else {_qrfTown getVariable ["sideID", -1]};
+				_qrfTownActive = if (isNull _qrfTown) then {false} else {_qrfTown getVariable ["wfbe_active", false]};
+				if (_qrfTownSide != WFBE_C_GUER_ID) then { _qrfDrop = true; _qrfReason = "town_lost"; };
+				if (!_qrfDrop && {!_qrfTownActive}) then { _qrfDrop = true; _qrfReason = "town_inactive"; };
+			};
+			if (_qrfDrop) then {
+				if (!isNull _qrfGrp) then {
+					{if (!(isPlayer _x)) then {["guerairdef-qrf-cleanup", _x, Format ["town=%1", (if (isNull _qrfTown) then {"?"} else {_qrfTown getVariable ["name","?"]})]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _qrfGrp);
+					if (({isPlayer _x} count (units _qrfGrp)) == 0) then {deleteGroup _qrfGrp};
+				};
+				diag_log format ["GUERAIRDEF|GROUNDDESPAWN|town=%1|reason=%2|alive=%3", (if (isNull _qrfTown) then {"?"} else {_qrfTown getVariable ["name","?"]}), _qrfReason, count _keptGroundQrfs];
+			} else {
+				_keptGroundQrfs = _keptGroundQrfs + [[_qrfTown, _qrfGrp, _qrfSpawn]];
+			};
+		} forEach _groundQrfs;
+		_groundQrfs = _keptGroundQrfs;
+	};
+
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
 	{
-		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_airCrewReady","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_swarmCrewReady","_flareN","_eFlareN"];
+		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_airCrewReady","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_swarmCrewReady","_flareN","_eFlareN","_qrfEnemies","_qrfTownHas","_qrfPool","_qrfTemplate","_qrfGroup","_qrfBuilt","_qrfUnit","_qrfAng","_qrfPos","_qrfRadius","_diag"];
 		_town = _x;
+
+		//--- E3: a GUER-held town under a genuine ground attack gets one edge-of-town defender
+		//--- group from the native dead-team pool. Defender tags keep it out of wake-up scans.
+		if ((missionNamespace getVariable ["WFBE_C_GUER_GROUND_QRF", 0]) > 0
+			&& {!(isNull _town)}
+			&& {(_town getVariable ["sideID", -1]) == WFBE_C_GUER_ID}
+			&& {_town getVariable ["wfbe_active", false]}
+			&& {(count _groundQrfs) < _groundQrfMax}) then {
+			_qrfTownHas = false;
+			{if ((_x select 0) == _town) then {_qrfTownHas = true}} forEach _groundQrfs;
+			if (!_qrfTownHas) then {
+				_qrfEnemies = {alive _x && {((side _x) == west) || {(side _x) == east}} && {!(_x isKindOf "Air")}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
+				if (_qrfEnemies > 0) then {
+					_qrfPool = missionNamespace getVariable ["WFBE_GUERRESTEAMTEMPLATES", []];
+					if (typeName _qrfPool == "ARRAY" && {(count _qrfPool) > 0}) then {
+						_qrfTemplate = _qrfPool select floor (random count _qrfPool);
+						if (typeName _qrfTemplate == "ARRAY" && {(count _qrfTemplate) > 0}) then {
+							_qrfRadius = (_town getVariable ["range", 600]) max 300;
+							_qrfAng = random 360;
+							_qrfPos = [((getPos _town) select 0) + (_qrfRadius * sin _qrfAng), ((getPos _town) select 1) + (_qrfRadius * cos _qrfAng), 0];
+							_qrfGroup = [resistance, "guer-ground-qrf"] Call WFBE_CO_FNC_CreateGroup;
+							_qrfBuilt = 0;
+							if (!isNull _qrfGroup) then {
+								{if (!isNil "_x" && {typeName _x == "STRING"}) then {
+									_qrfUnit = [_x, _qrfGroup, _qrfPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _qrfUnit) then {
+										_qrfUnit setVariable ["WFBE_IsTownDefenderAI", true, true];
+										_qrfBuilt = _qrfBuilt + 1;
+									};
+								}} forEach _qrfTemplate;
+								if (_qrfBuilt > 0) then {
+									[_qrfGroup, getPos _town, ((_town getVariable ["range", 600]) max 300)] Call AIPatrol;
+									_qrfGroup setBehaviour "COMBAT";
+									_qrfGroup setCombatMode "RED";
+									_qrfGroup setSpeedMode "NORMAL";
+									_groundQrfs = _groundQrfs + [[_town, _qrfGroup, time]];
+									_diag = format ["GUERAIRDEF|GROUNDQRF|town=%1|units=%2|alive=%3", _town getVariable ["name","?"], _qrfBuilt, count _groundQrfs];
+									diag_log _diag;
+								} else {
+									{if (!(isPlayer _x)) then {["guerairdef-qrf-buildfail", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _qrfGroup);
+									deleteGroup _qrfGroup;
+								};
+							};
+						};
+					};
+				};
+			};
+		};
 
 		if (_aliveCount < _maxAir
 			&& {!(isNull _town)}
@@ -378,8 +468,11 @@ while {!WFBE_GameOver} do {
 			if (!_useAA && {!_useDrop} && {_isLarge} && {_enemies > 0} && {(random 1) < _mi24Chance}) then { _useMi24 = true; };
 			if (!_useAA && {!_useDrop} && {!_useMi24} && {(random 1) < _atChance}) then { _useAT = true; };
 
-			//--- The paradrop variant uses the DEFAULT Ka-137 (drone recon-MG airframe) as the delivery bird.
+			//--- The paradrop variant normally uses the DEFAULT Ka-137 (drone recon-MG airframe).
+			//--- E5: once late-game air scaling begins, the dark-gated delivery bird is the registered
+			//--- crewed UH-1H; the existing pilot/gunner seat receipt and airdef lifecycle remain in force.
 			_class = if (_useMi24) then {_classMi24} else {_classKa};
+			if (_useDrop && {(missionNamespace getVariable ["WFBE_C_GUER_HUEY_QRF", 0]) > 0} && {(time / 60) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_LATE_MINS", 45])}) then {_class = "UH1H_TK_GUE_EP1"};
 
 			//--- Spawn the airframe airborne, a short way off the town so it flies in (FLY special, like W13).
 			_ang      = random 360;
@@ -564,7 +657,7 @@ while {!WFBE_GameOver} do {
 									} else {
 										//--- No pilot for the extra: tear down the empty hull so nothing leaks (freshly
 										//--- created, no player possible). Group is shared/leader-owned — do NOT delete it.
-										if (!isNull _eVeh2 && {({isPlayer _x} count (crew _eVeh2)) == 0}) then {deleteVehicle _eVeh2};
+										if (!isNull _eVeh2 && {({isPlayer _x} count (crew _eVeh2)) == 0}) then {["guerairdef-L521", _eVeh2, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh2};
 									};
 								};
 								_swarmI = _swarmI + 1;
@@ -664,7 +757,7 @@ while {!WFBE_GameOver} do {
 									{
 										_cu = _x select 0; _cc = _x select 1;
 										if (!isNull _cu && {alive _cu} && {!isNull _cc}) then { _cu action ["getOut", _cc]; };
-										if (!isNull _cc) then { deleteVehicle _cc; };
+										if (!isNull _cc) then { ["guerairdef-L621", _cc, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _cc; };
 									} forEach _chutes;
 
 									//--- Order the landed squad to hold/defend the town: patrol first (it re-sets AWARE/YELLOW),
@@ -691,13 +784,13 @@ while {!WFBE_GameOver} do {
 						//--- No pilot: tear down the empty hull + group so nothing leaks.
 						//--- B66: player-safe teardown (hull is freshly created with no moveIn yet,
 						//--- but guard anyway to never delete a player that somehow boarded).
-						if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then {deleteVehicle _veh};
+						if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then {["guerairdef-L647", _veh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _veh};
 						if (!isNull _grp) then {deleteGroup _grp};
 						diag_log format ["GUERAIRDEF|SPAWNFAIL|town=%1|class=%2|reason=no_pilot", (_town getVariable ["name","?"]), _class];
 					};
 				} else {
 					//--- B66: player-safe teardown (freshly created empty hull).
-					if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then {deleteVehicle _veh};
+					if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then {["guerairdef-L653", _veh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _veh};
 					diag_log format ["GUERAIRDEF|SPAWNFAIL|town=%1|class=%2|reason=no_group", (_town getVariable ["name","?"]), _class];
 				};
 			} else {

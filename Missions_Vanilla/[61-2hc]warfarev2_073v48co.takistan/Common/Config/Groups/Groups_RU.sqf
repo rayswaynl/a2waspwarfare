@@ -44,6 +44,14 @@ _u = _u + ["RU_Soldier_AT"];
 _u = _u + ["RU_Soldier_AR"];
 _u = _u + ["RU_Soldier_Medic"];
 _l = _l + [_u];
+//--- B757 garrison variety: designated-marksman squad.
+_k = _k + ["Squad_3"];
+_u        = ["RU_Soldier_SL"];
+_u = _u + ["RU_Soldier_AR"];
+_u = _u + ["RU_Soldier2"];
+_u = _u + ["RU_Soldier_Marksman"];
+_u = _u + ["RU_Soldier_Medic"];
+_l = _l + [_u];
 
 _k = _k + ["Squad_Advanced"];
 _u		= ["MVD_Soldier_TL"];
@@ -164,6 +172,11 @@ _l = _l + [_u];
 _k = _k + ["Team_Sniper_1"];
 _u		= ["RU_Soldier_Sniper"];
 _u = _u + ["RU_Soldier_Sniper"];
+_u = _u + ["RU_Soldier_Sniper"];
+_l = _l + [_u];
+//--- B757 garrison variety: spotter/sniper overwatch pair.
+_k = _k + ["Team_Sniper_1"];
+_u        = ["RU_Soldier_Spotter"];
 _u = _u + ["RU_Soldier_Sniper"];
 _l = _l + [_u];
 

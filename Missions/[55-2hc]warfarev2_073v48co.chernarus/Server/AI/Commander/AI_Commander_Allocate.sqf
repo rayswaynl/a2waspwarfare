@@ -20,7 +20,15 @@
 	data; live group reads per-team; GroupGetBool for the A2 group-bool trap; no A3 commands).
 */
 
-private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_expandWarnTown","_expandWarnDist","_myTowns","_engageMin","_expandFirst","_concentrate","_pfEnTowns","_pfMyEff","_pfEnEff","_pfDominant"];
+private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_expandWarnTown","_expandWarnDist","_myTowns","_engageMin","_expandFirst","_concentrate","_pfEnTowns","_pfMyEff","_pfEnEff","_pfDominant","_tnOn","_tnTeamOn","_tnRing","_tnWeight"];
+//--- review-fix (codex reject 2026-07-19): _tnOn/_tnTeamOn/_tnRing/_tnWeight hoisted to top-level
+//--- (were declared private INSIDE the if(!_fromFocus) scorer block below but _tnTeamOn/_tnRing are
+//--- read in the top-level ASSIGN team loop - OA private scoping destroys them when that block
+//--- closes, so the ASSIGN-loop read was an undefined-variable script error EVERY tick, including
+//--- all-flags-0 (broke the flag-off inertness contract). Default-initialize unconditionally here so
+//--- a fresh commander FOCUS (_fromFocus true, which skips the block below entirely) also leaves them
+//--- at safe, defined defaults.
+_tnOn = false; _tnTeamOn = false; _tnRing = []; _tnWeight = 0;
 _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) <= 0) exitWith {};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -92,6 +100,14 @@ if (!isNil "_psPair" && {typeName _psPair == "STRING"} && {!isNil "_psT0"} && {(
 	_psDelta = missionNamespace getVariable ["WFBE_C_AICOM_POSTURE_ENGAGE_DELTA", 4];
 	if (_psPair == "PUSH") then {_engageMin = (_engageMin - _psDelta) max 0};
 	if (_psPair == "HOLD") then {_engageMin = _engageMin + _psDelta};
+	//--- COMMAND V2 pillar (b), SIDE scope: GARRISON leans consolidate-ward exactly like HOLD (it is a
+	//--- posture FLAVOUR, not a second stance machine). Inert at flag-off without needing its own read:
+	//--- the stamp can only ever hold "GARRISON" if WFBE_C_CMD_POSTURE_GARRISON armed the verb whitelist
+	//--- in Server_HandleSpecial.sqf, so at default 0 this comparison is simply never true.
+	//--- TRUTHFUL SCOPE: the town-garrison SORTIE loop (docs/design/GARRISON-SORTIE-PATROL-DESIGN.md) is
+	//--- NOT implemented in this tree - no WFBE_C_GARRISON_SORTIE* flag exists - so GARRISON currently
+	//--- delivers the defensive lean ONLY. Wiring the sortie loop is a separate, still-unbuilt card.
+	if (_psPair == "GARRISON") then {_engageMin = _engageMin + _psDelta};
 };
 //--- cmdcon27 THREAD C FIELD-ORDER HOOK: read the ONE consolidated player field-order stamp once (string + t0),
 //--- fresh within WFBE_C_AICOM_POSTURE_TTL (reused). _foPos in SPLIT/MASS/HARASS/FALLBACK; levers applied in
@@ -205,6 +221,28 @@ if (!_fromFocus) then {
 			_grudgeBonus = missionNamespace getVariable ["WFBE_C_AICOM_GRUDGE_BONUS", 400];
 			{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_grudgeTowns set [count _grudgeTowns, (_x select 0)]} } forEach (_logik getVariable ["wfbe_aicom_grudge", []]);
 	};
+	//--- COMMAND V2 pillar (a): read the per-side town-nudge ring ONCE per allocator tick - never inside
+	//--- the per-town scorer loop and never per frame. At the default flag-off nothing here is read at
+	//--- all: _tnOn/_tnTeamOn stay false, so both the scorer term below and the per-team redirect in the
+	//--- ASSIGN loop are skipped outright (behaviourally identical to HEAD).
+	//--- _tnOn/_tnTeamOn/_tnRing/_tnWeight are top-level private (see file header) - this block only
+	//--- ASSIGNS them (never re-declares), so the outer scope the ASSIGN loop reads is always the one
+	//--- being written here.
+	_tnOn = false; _tnTeamOn = false; _tnRing = []; _tnWeight = 0;
+	if ((missionNamespace getVariable ["WFBE_C_CMD_TOWN_NUDGE", 0]) > 0) then {
+		_tnRing   = _logik getVariable ["wfbe_aicom_town_nudges", []];
+		_tnWeight = missionNamespace getVariable ["WFBE_C_CMD_TOWN_NUDGE_WEIGHT", 120];
+		_tnOn     = ((count _tnRing) > 0) && {_tnWeight > 0};
+		//--- team-scope records are rare; resolve once whether ANY exists so the ASSIGN loop can skip its
+		//--- per-team town scan entirely in the common (side-scope-only) case.
+		if (_tnOn) then {
+			{
+				if (!isNil "_x") then {
+					if ((typeName _x == "ARRAY") && {(count _x) >= 6} && {typeName (_x select 1) == "GROUP"}) then {_tnTeamOn = true};
+				};
+			} forEach _tnRing;
+		};
+	};
 	_scored = [];
 	{
 		private ["_tt","_dNear","_sc","_garTier"];
@@ -240,6 +278,16 @@ if (!_fromFocus) then {
 		if (_pfDominant) then {   //--- FIX C (fable, GR-2026-07-08a): enemy-held score bonus. Disjoint sideID filter vs WO-6 softlane above (never double-boosts the same town); placed after WO-6 per ADDENDUM 1 S3(c).
 			private "_pfBonus"; _pfBonus = missionNamespace getVariable ["WFBE_C_AICOM2_PRESS_ENEMY_BONUS", 400];
 			if (_pfBonus > 0 && {(_tt getVariable ["sideID", -1]) == _enemyID}) then {_sc = _sc + _pfBonus};
+		};
+		//--- COMMAND V2 pillar (a) SIDE-SCOPE TERM: one additive, TTL-decayed, sqrt(n)-aggregated and
+		//--- hard-ceilinged player suggestion (WFBE_CO_FNC_TownNudgeWeight). Sized deliberately below
+		//--- GRUDGE(400) and REPICK(500): at the default weight 120 a single suggestion moves a town by
+		//--- 120 and the ceiling at CAP 3 is ~208, so it breaks a near-tie and never forces a bad target.
+		//--- Placed last so it composes with, and cannot mask, any of the AI's own strategic terms above.
+		if (_tnOn) then {
+			private "_tnW";
+			_tnW = [_tt, _tnRing, "side"] Call WFBE_CO_FNC_TownNudgeWeight;
+			if (_tnW > 0) then {_sc = _sc + (_tnW * _tnWeight)};
 		};
 		if (isNil "_sc") then {
 		};
@@ -333,7 +381,7 @@ if (_harassN > 0) then {
 		private ["_hfMntPos","_hfMntReach","_hfGrp","_hfLdr","_hfMode","_hfRelief","_hfStrike","_hfHasVeh","_hfGar"];
 		_hfMntPos   = [];
 		_hfMntReach = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000];
-		_hfGar      = _logik getVariable ["wfbe_aicom_garrison", grpNull];
+		_hfGar      = if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {grpNull} else {_logik getVariable ["wfbe_aicom_garrison", grpNull]};
 		{
 			_hfGrp = _x;
 			if (!isNull _hfGrp) then {
@@ -419,7 +467,8 @@ _neutTowns = [];
 //--- ASSIGN every ELIGIBLE team: a light MOUNTED detachment to the rear harass target (M2), up to _expandN
 //--- teams to capture NEUTRAL towns (expansion lane), the rest concentrated on the fist (reach-aware; never idle).
 private ["_assigned","_harassAssigned","_expandClaimed","_dedupOn"];
-_garGrp = _logik getVariable ["wfbe_aicom_garrison", grpNull];
+_garGrp = if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {grpNull} else {_logik getVariable ["wfbe_aicom_garrison", grpNull]};
+if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {_logik setVariable ["wfbe_aicom_garrison", grpNull]};
 _assigned = 0; _harassAssigned = 0; _expandCount = 0;
 _expandWarnTown = objNull; _expandWarnDist = 1e9;
 _expandClaimed = [];   //--- DEDUP (block-m): neutral towns already claimed by an expand-lane team this tick
@@ -535,7 +584,24 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 					};
 				};
 			};
-			if (!isNull _tgt) then {
+			//--- COMMAND V2 pillar (a) TEAM-SCOPE REDIRECT: a nearby player suggested a town for THIS team.
+			//--- Only this team's own pick moves, only to a still-capturable town already inside its own
+			//--- _reach - the side fist, the harass/expand quotas and every other team are untouched. No
+			//--- manual pin is written, so the very next tick re-evaluates freely and the suggestion decays
+			//--- out of the ring on its own TTL: the AI commander can always retask the team.
+			if (_tnTeamOn) then {
+				private ["_tnBestT","_tnBestW","_tnW2"];
+				_tnBestT = objNull; _tnBestW = 0;
+				{
+					_tnW2 = [_x, _tnRing, _grp] Call WFBE_CO_FNC_TownNudgeWeight;
+					if (_tnW2 > _tnBestW && {(_ldrPos distance _x) <= _reach}) then {_tnBestW = _tnW2; _tnBestT = _x};
+				} forEach _tgtTowns;
+				if (!isNull _tnBestT) then {
+					_tgt = _tnBestT;
+					diag_log ("AICOM2|v1|ORDER|TOWN_NUDGE|team|" + str _side + "|" + str (round (time / 60)) + "|town=" + (_tnBestT getVariable ["name", "?"]) + "|w=" + str _tnBestW);
+				};
+			};
+			if (!isNull _tgt && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_hasVeh} || {(_ldrPos distance _tgt) <= _reach}}) then {
 				_grp setVariable ["wfbe_aicom_alloc_target", _tgt];
 				_grp setVariable ["wfbe_aicom_alloc_tick", time];
 				_assigned = _assigned + 1;

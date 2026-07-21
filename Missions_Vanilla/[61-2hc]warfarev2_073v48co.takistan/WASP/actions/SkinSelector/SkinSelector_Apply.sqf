@@ -513,6 +513,8 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 	};
 };
 
+//--- TEAMBAR probe (round-2 review): capture the final post-rejoin state on every skin-swap path.
+["skinswap", "post-final"] Call WFBE_CL_FNC_TeambarProbe;
 diag_log format ["[WFBE (SKIN)] B6 COMPLETE: player='%1' class='%2' uid='%3'",
 	name player, typeOf player, _uid];
 hint format ["%1\nSkin applied.", _chosenClass];

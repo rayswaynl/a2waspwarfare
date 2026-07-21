@@ -37,7 +37,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=62;
+		items=64;
 		class Item0
 		{
 			side="LOGIC";
@@ -128,7 +128,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="ZargabadAF";
-					init="nullReturn=[this,""Zargabad AF"",""++"",10,40,400,""PMCAirfield""] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
+					init="nullReturn=[this,""Zargabad AF"",""+"",10,40,400,""PMCAirfield""] execVM ""Common\Init\Init_Town.sqf"";this setVariable [""wfbe_is_airfield"",true,true];this enableSimulation false;";
 					synchronizations[]={7};
 				};
 				class Item1
@@ -1618,6 +1618,48 @@ class Mission
 				};
 			};
 		}
+		class Item62
+		{
+			side="CIV";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={10.0,0,10.0};
+					id=114;
+					side="CIV";
+					vehicle="Functionary1";
+					player="PLAY CDG";
+					forceHeadlessClient=1;
+					leader=1;
+					skill=0.60000002;
+					init="this allowdamage false;";
+					description="Headless Client 1";
+				};
+			};
+		};
+		class Item63
+		{
+			side="CIV";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={20.0,0,10.0};
+					id=115;
+					side="CIV";
+					vehicle="Functionary1";
+					player="PLAY CDG";
+					forceHeadlessClient=1;
+					leader=1;
+					skill=0.60000002;
+					init="this allowdamage false;";
+					description="Headless Client 2";
+				};
+			};
+		};
 	};
 	class Markers
 	{

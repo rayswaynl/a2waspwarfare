@@ -103,12 +103,12 @@ _rearmor = {
    				_result = 0;
 
    				switch (_ammo) do {
-                    case "B_20mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_23mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_25mm_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_25mm_HEI" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_30mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
-					case "B_30mm_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
+                    case "B_20mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_23mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_25mm_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_25mm_HEI" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_30mm_AA" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
+					case "B_30mm_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);}; // noqa: A3MARKER
 					case "Sh_40_HE" :{_dam=_this select 2; _p=12; _result=(_dam/100)*(100-_p);};
      				default {_result = _this select 2;};
     			};
@@ -126,6 +126,7 @@ UpdateMarker = Compile preprocessFile "Common\Functions\Common_UpdateMarker.sqf"
 //--- flags (WFBE_HAS_FX_MOD / WFBE_HAS_SOUND_MOD / WFBE_HAS_HUD_MOD) that the FX-suppression hooks read.
 //--- Whole feature gated by WFBE_C_MODHOOKS (default 1). Safe no-op for players without any mod.
 WFBE_CL_FNC_ModDetect = Compile preprocessFileLineNumbers "Client\Functions\Client_ModDetect.sqf";
+Call Compile preprocessFileLineNumbers "Client\Functions\Client_TeambarProbe.sqf"; //--- TEAMBAR probe (self-registering)
 BoundariesIsOnMap = Compile preprocessFile "Client\Functions\Client_IsOnMap.sqf";
 BoundariesHandleOnMap = Compile preprocessFile "Client\Functions\Client_HandleOnMap.sqf";
 BuildUnit = Compile preprocessFile "Client\Functions\Client_BuildUnit.sqf";
@@ -277,6 +278,7 @@ Call Compile preprocessFileLineNumbers 'Client\Functions\Client_FNC_OnFired.sqf'
 Call Compile preprocessFileLineNumbers 'Client\Functions\Client_FNC_Special.sqf'; //--- FUNCTIONS: Specials.
 //--- QoL trio feat.3: advisor nudge function.
 WFBE_CL_FNC_QOL_Advisor = Compile preprocessFileLineNumbers 'Client\Functions\Client_QOL_Advisor.sqf';
+WFBE_CL_FNC_AutoRunAttach = Compile preprocessFileLineNumbers "Client\Functions\Client_AutoRun.sqf";
 
 
 
@@ -296,8 +298,13 @@ waitUntil {commonInitComplete};
 if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 [] spawn {
 	disableSerialization; //--- cmdcon42 (Ray 2026-07-02): this scheduled loop holds display/control handles (_disp, _ctrl) across waitUntil/sleep suspensions. Without disableSerialization the scheduler tries to serialise _disp when the script suspends and throws "variable '_disp' does not support serialization" the moment the TAGS button (MenuAction 25) enables the overlay. Must live in THIS script body (same scope as the display var), not a parent.
-	private ["_max","_disp","_shown","_pp","_scr","_ctrl","_d","_sz"];
+	private ["_max","_disp","_shown","_shownPlayers","_shownAI","_shownVehicles","_shownTallies","_pp","_scr","_ctrl","_d","_sz","_nextCandidateScan","_playerCandidates","_aiCandidates","_vehicleCandidates","_tagStatCycles"];
 	_max = 18;
+	_nextCandidateScan = time;
+	_playerCandidates = [];
+	_aiCandidates = [];
+	_vehicleCandidates = [];
+	_tagStatCycles = 0;
 	while {!WFBE_gameover} do {
 		waitUntil {WFBE_NameTagsEnabled || WFBE_gameover};
 		if (WFBE_gameover) exitWith {};
@@ -306,6 +313,17 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 		_disp = uiNamespace getVariable ["wfbe_nametag_display", displayNull];
 		while {WFBE_NameTagsEnabled && {!WFBE_gameover} && {!isNull _disp}} do {
 			_shown = 0;
+			_shownPlayers = 0;
+			_shownAI = 0;
+			_shownVehicles = 0;
+			_shownTallies = 0;
+			// Candidate discovery is intentionally 2Hz; cached candidates still project at 10Hz below.
+			if (time >= _nextCandidateScan) then {
+				_playerCandidates = player nearEntities [["Man"], 120];
+				_aiCandidates = player nearEntities [["Man"], 150];
+				_vehicleCandidates = player nearEntities [["LandVehicle","Air","Ship"], 200];
+				_nextCandidateScan = time + 0.5;
+			};
 			{
 				if (_shown < _max && {isPlayer _x} && {_x != player} && {alive _x} && {side _x == side player}) then {
 					_pp = visiblePosition _x; //--- cmdcon30: getPosVisual is Arma-3-only (undefined in A2-OA 1.64); visiblePosition is the A2 equivalent.
@@ -319,9 +337,10 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 						_ctrl ctrlCommit 0;
 						_ctrl ctrlShow true;
 						_shown = _shown + 1;
+						_shownPlayers = _shownPlayers + 1;
 					};
 				};
-			} forEach (player nearEntities [["Man"], 120]);
+			} forEach _playerCandidates;
 			//--- WFBE_C_TAGS_AI: friendly AI infantry tags (same-side, within 150m, #b0ffb0 green).
 			//--- fable/tags-settings-integration: ANDed with the per-player Show-AI-Tags opt-out (Settings dialog, WFBE_MenuAction 12).
 			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0 && {missionNamespace getVariable ["WFBE_CL_ShowAITags", true]}) then {
@@ -340,9 +359,10 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 							_ctrl ctrlCommit 0;
 							_ctrl ctrlShow true;
 							_shown = _shown + 1;
+							_shownAI = _shownAI + 1;
 						};
 					};
-				} forEach (player nearEntities [["Man"], 150]);
+				} forEach _aiCandidates;
 			};
 			//--- WFBE_C_TAGS_AI: friendly AI vehicle tags (same-side, pure-AI crew, within 200m, #ffffa0 yellow). Height 3.0m separates from kill-tally tags at 2.6m.
 			//--- fable/tags-settings-integration: ANDed with the per-player Show-AI-Tags opt-out (Settings dialog, WFBE_MenuAction 12).
@@ -364,9 +384,10 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 							_ctrl ctrlCommit 0;
 							_ctrl ctrlShow true;
 							_shown = _shown + 1;
+							_shownVehicles = _shownVehicles + 1;
 						};
 					};
-				} forEach (player nearEntities [["LandVehicle","Air","Ship"], 200]);
+				} forEach _vehicleCandidates;
 			};
 			//--- cmdcon44m (Ray pick C 2026-07-04): vehicle kill tallies ride the same TAGS toggle and the same
 			//--- control pool - no lightpoint, no extra rsc. Friendly-crewed or EMPTY hulls within 200m that have
@@ -389,10 +410,16 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 						_ctrl ctrlCommit 0;
 						_ctrl ctrlShow true;
 						_shown = _shown + 1;
+						_shownTallies = _shownTallies + 1;
 					};
 				};
-			} forEach (player nearEntities [['LandVehicle','Air','Ship'], 200]);
+			} forEach _vehicleCandidates;
 			for "_i" from _shown to (_max - 1) do {(_disp displayCtrl (62000 + _i)) ctrlShow false};
+			_tagStatCycles = _tagStatCycles + 1;
+			if (_tagStatCycles >= 10) then {
+				diag_log Format ["TAGSTAT|v1|candPlayers=%1|candAI=%2|candVehicles=%3|shownPlayers=%4|shownAI=%5|shownVehicles=%6|shownTallies=%7|shownTotal=%8|pool=%9", count _playerCandidates, count _aiCandidates, count _vehicleCandidates, _shownPlayers, _shownAI, _shownVehicles, _shownTallies, _shown, _max];
+				_tagStatCycles = 0;
+			};
 			sleep 0.1;
 		};
 		12461 cutText ["","PLAIN",0];
@@ -484,6 +511,7 @@ keyPressedForAdjustingViewDistance = compile preprocessFile "Common\Functions\Co
 _display = findDisplay 46;
 _display displayAddEventHandler ["KeyDown","_this call keyPressed"];
 _display displayAddEventHandler ["KeyDown","_this call keyPressedForAutoSendSpawnedUnitsToWaypoint"];
+if ((missionNamespace getVariable ["WFBE_C_CLIENT_AUTORUN", 1]) > 0) then {[] call WFBE_CL_FNC_AutoRunAttach};
 _display displayAddEventHandler ["KeyDown","_this call keyPressedForAdjustingViewDistance"];
 	//--- Debug teleport rebind: press "[" (DIK 0x1A=26) to ARM, then the next plain map-click teleports you (was: every click teleported under WF_Debug, which ate the sell/ICBM confirm clicks).
 	_display displayAddEventHandler ["KeyDown","if ((_this select 1) == 26 && WF_Debug) then {missionNamespace setVariable ['WFBE_DEBUG_TELEPORT_ARMED', true]; hintSilent 'Debug teleport ARMED - next map click teleports you.'; true} else {false}"];
@@ -1199,6 +1227,7 @@ waitUntil {!isNull group player};
 
 //--- Make sure that player is always the leader.
 if (leader(group player) != player) then {(group player) selectLeader player};
+["init", "post-select"] Call WFBE_CL_FNC_TeambarProbe;
 
 //--- TEAMBAR-FIRST (fable/player-teambar-slot): A2 command bar ranks units by RANK then join-order.
 //--- Set the player to COLONEL so they always render at slot 1 regardless of AI subordinate rank.
@@ -1213,6 +1242,7 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 	//--- null / not-leader / already-#1 cases skip cleanly. Mirrors Client_OnKilled's slot1-rejoin exactly.
 	[] spawn {
 		sleep 4;
+		["init", "rejoin-check"] Call WFBE_CL_FNC_TeambarProbe; //--- TEAMBAR probe: every guard input the line below evaluates
 		if (alive player && {group player == WFBE_Client_Team} && {leader (group player) == player} && {((units group player) select 0) != player}) then {
 			Private ["_slot1Others","_slot1Tmp"];
 			_slot1Others = [];
@@ -1225,8 +1255,23 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 					if (count units _slot1Tmp == 0) then {deleteGroup _slot1Tmp};
 					(group player) selectLeader player;
 					diag_log Format ["[WFBE|TEAMBAR] Init_Client slot1-rejoin: %1 AI squadmates re-joined behind the player.", count _slot1Others];
+					["init", "rejoin-done"] Call WFBE_CL_FNC_TeambarProbe;
+				} else {
+					["init", "rejoin-creategroup-null"] Call WFBE_CL_FNC_TeambarProbe;
 				};
+			} else {
+				["init", "rejoin-no-local-others"] Call WFBE_CL_FNC_TeambarProbe;
 			};
+		};
+	};
+};
+//--- TEAMBAR probe heartbeat (round-2 review): a low-frequency periodic observation so drift
+//--- BETWEEN lifecycle events (an AI joining late, a promotion mid-mission) is still captured.
+if ((missionNamespace getVariable ["WFBE_C_TEAMBAR_PROBE", 0]) > 0) then {
+	[] spawn {
+		while {true} do {
+			sleep 60;
+			if (alive player) then {["heartbeat", "periodic"] Call WFBE_CL_FNC_TeambarProbe};
 		};
 	};
 };

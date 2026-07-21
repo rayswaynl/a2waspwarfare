@@ -216,14 +216,14 @@ _u = _u + ["US_Soldier_AA_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["Team_Sniper_0"];
-_u		= ["US_Soldier_EP1"];
-_u = _u + ["US_Soldier_EP1"];
-_u = _u + ["US_Soldier_EP1"];
+_u		= ["US_Soldier_Spotter_EP1"];
+_u = _u + ["US_Soldier_Sniper_EP1"];
+_u = _u + ["US_Soldier_SniperH_EP1"];
 _l = _l + [_u];
 
 _k = _k + ["Team_Sniper_1"];
-_u		= ["US_Soldier_EP1"];
-_u = _u + ["US_Soldier_EP1"];
+_u		= ["US_Soldier_Spotter_EP1"];
+_u = _u + ["US_Soldier_SniperH_EP1"];
 _l = _l + [_u];
 //--- B757 garrison variety: spotter/sniper overwatch pair.
 _k = _k + ["Team_Sniper_1"];
@@ -233,8 +233,8 @@ _l = _l + [_u];
 
 
 _k = _k + ["Team_Sniper_2"];
-_u		= ["US_Soldier_EP1"];
-_u = _u + ["US_Soldier_Marksman_EP1"];
+_u		= ["US_Soldier_Spotter_EP1"];
+_u = _u + ["US_Soldier_Sniper_NV_EP1"];
 _l = _l + [_u];
 //--- B757 garrison variety: NV spotter/sniper overwatch pair.
 _k = _k + ["Team_Sniper_2"];

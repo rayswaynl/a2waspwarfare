@@ -76,6 +76,21 @@ MAGIC_VERS = 0x56657273  # ASCII "Vers" (big-endian reading) - properties-follow
 EXCLUDED_SUFFIXES = (".template", ".bak", ".orig")
 STRUCT5I = struct.Struct("<5I")
 
+# The canonical, proven-live mission tree never carries a mission-root `init.sqf`.
+# Structural extraction of the live wave0720b deploy PBO (938 entries) confirms this:
+# it contains `initjipcompatible.sqf` and nothing named `init.sqf` at all. The real
+# bootstrap (`initJIPCompatible.sqf`, self-documented as "Global Init, first file
+# called") is what actually runs on that box, proven by the live server reaching
+# MISSINIT - `init.sqf` is not part of this mission's boot chain. Release-critical
+# guard (wave0721 council finding C4): a machine-local self-test/observer harness
+# stub named exactly `init.sqf` has been found sitting in this exact mission-root
+# path on more than one dev box, untracked and excluded only from `git status`
+# (never from a raw filesystem walk) - `collect_files()` above has no concept of
+# git tracking and would silently sweep such a stub into the PBO. Whether it's a
+# self-test stub or a well-intentioned delegating shim, ANY `init.sqf` at the
+# mission root is contamination that does not belong in a real pack. See
+# `Tools/Pack/PBO-PACKING.md`.
+
 
 class PackError(RuntimeError):
     """Raised for any condition that should abort packing before a byte is written."""
@@ -120,6 +135,30 @@ def check_lowercase_collisions(files: List[Tuple[str, bytes]]) -> None:
                 "differ only by case; refusing to pack (would silently drop one)."
             )
         seen.add(rel)
+
+
+def check_no_init_contamination(files: List[Tuple[str, bytes]]) -> None:
+    """Release-critical guard (wave0721, council finding C4): abort the pack if a
+    mission-root `init.sqf` entry exists at all, regardless of its content.
+
+    The live, proven-working deploy PBO (wave0720b, structurally extracted) has no
+    `init.sqf` entry - only `initjipcompatible.sqf`, which is what the real, running
+    server actually boots from. `collect_files()` walks the raw filesystem, not
+    `git ls-files` - it cannot tell a "helpful" delegating shim from a stray local
+    self-test stub sitting in the same source folder, and either one would silently
+    double-execute or replace the real 414-line bootstrap if packed. There is no
+    content an `init.sqf` could legitimately carry here - its mere presence is
+    contamination."""
+    entries = [rel for rel, _data in files if rel == "init.sqf"]
+    if entries:
+        raise PackError(
+            "ABORT: init.sqf found at the mission root - this mission never uses "
+            "one (the live deploy PBO has none; initJIPCompatible.sqf is the real, "
+            "already-running bootstrap). An init.sqf here is contamination - most "
+            "likely a stray local self-test/observer harness stub, or a "
+            "well-intentioned delegating shim that would double-execute the real "
+            "bootstrap. Delete it from the source folder before packing."
+        )
 
 
 def ensure_version_sqf(
@@ -273,6 +312,7 @@ def pack(
     ensure_version_sqf(source, files, strict_version, quiet)
     check_lowercase_collisions(files)
     check_debug_guard(files, allow_debug, quiet)
+    check_no_init_contamination(files)
 
     files.sort(key=lambda x: x[0])
 

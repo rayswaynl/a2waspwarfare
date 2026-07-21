@@ -4,10 +4,13 @@
 
 	Parameters (sent from GUI_TransferMenu.sqf via WFBE_CO_FNC_SendToServer):
 	  0 - donor unit (object)
-	  1 - donor team group (group)
+	  1 - claimed donor team group (group) - ADVISORY ONLY, never trusted; see C4-drain fix below
 	  2 - amount (number)
 
 	Validation (all server-authoritative):
+	  - donor team is ALWAYS derived server-side as `group _donor` (C4-drain fix,
+	    mirrors the RequestFundsTransfer N1 pattern) - the client-claimed team param
+	    is never used to pick which wallet is debited, only logged on mismatch
 	  - amount > 0
 	  - donor team has sufficient funds
 	  - player's side genuinely has an AI commander at execution time
@@ -21,20 +24,35 @@
 	  - AICOMSTAT EVENT line
 */
 
-private ["_donor","_donorTeam","_amount","_side","_logik","_teamFunds","_aicomRunning",
+private ["_donor","_donorTeam","_claimedTeam","_amount","_side","_logik","_teamFunds","_aicomRunning",
          "_cmdTeam","_humanCmd","_walletAfter","_donorName","_donorUID"];
 
-_donor     = _this select 0;
-_donorTeam = _this select 1;
-_amount    = _this select 2;
+_donor       = _this select 0;
+_claimedTeam = _this select 1;
+_amount      = _this select 2;
 
 //--- Basic nil guards.
-if (isNil "_donor")     exitWith {};
-if (isNil "_donorTeam") exitWith {};
-if (isNil "_amount")    exitWith {};
+if (isNil "_donor")       exitWith {};
+if (isNil "_claimedTeam") exitWith {};
+if (isNil "_amount")      exitWith {};
 
-if (isNull _donor)     exitWith {};
-if (isNull _donorTeam) exitWith {};
+if (isNull _donor) exitWith {};
+
+//--- fix(C4-drain): the donor team must NEVER be trusted from the client. A forged
+//--- PVF payload could previously name ANY group as _donorTeam (_this select 1) and
+//--- the server would debit THAT team's wallet regardless of who the donor actually
+//--- was - draining another team's funds into the AI commander wallet. The donor team
+//--- is now ALWAYS derived server-side as `group _donor` (mirrors the RequestFundsTransfer
+//--- N1 fix pattern); the client-claimed team is used only to detect + log a forged
+//--- mismatch, never to select which wallet gets debited or credited.
+_donorTeam = group _donor;
+if (isNull _donorTeam) exitWith {
+	["WARNING", Format ["RequestAIComDonate.sqf: [DONATION] rejected - donor [%1] has no group.", _donor]] Call WFBE_CO_FNC_AICOMLog;
+};
+
+if (_claimedTeam != _donorTeam) then {
+	["WARNING", Format ["RequestAIComDonate.sqf: [DONATION] forged-team violation - donor [%1] claimed team %2 but actually belongs to %3; real team used, no other team charged.", _donor, _claimedTeam, _donorTeam]] Call WFBE_CO_FNC_AICOMLog;
+};
 
 //--- DR-55 forged-PVF hardening (flag-gated; OFF = legacy behavior).
 //--- The PVEH carries no trusted sender. Honest callers donate from a live

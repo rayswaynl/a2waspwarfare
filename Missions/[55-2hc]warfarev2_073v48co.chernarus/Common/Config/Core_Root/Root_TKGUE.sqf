@@ -50,7 +50,7 @@ if (isServer) then {
 		//--- foot AT-hunter rifle squad.
 		['TK_GUE_Warlord_EP1','TK_GUE_Soldier_AR_EP1','TK_GUE_Soldier_3_EP1','TK_GUE_Soldier_AT_EP1','TK_GUE_Soldier_4_EP1'],
 		//--- technical pair: DSHKM offroad + SPG-9 offroad (mounted, road-capable).
-		['Offroad_DSHKM_TK_GUE_EP1','Offroad_SPG9_TK_GUE_EP1'],
+		['Offroad_DSHKM_TK_GUE_EP1','Offroad_SPG9_TK_GUE_EP1','TK_GUE_Soldier_TL_EP1','TK_GUE_Soldier_AT_EP1','TK_GUE_Soldier_MG_EP1'],
 		//--- mixed: PK pickup + dismounted AT/MG screen.
 		['Pickup_PK_TK_GUE_EP1','TK_GUE_Soldier_TL_EP1','TK_GUE_Soldier_AT_EP1','TK_GUE_Soldier_MG_EP1']
 	]];

@@ -52,12 +52,24 @@ if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {
 };
 
 //--- Finally set the commander, null = ai, team = player.
-_logic setVariable ["wfbe_commander", _commander, true];
+//--- Round-3 review (P1-1/P1-3): with the lease enabled the vote result is ONLY ENQUEUED as a
+//--- grant request (objNull team = explicit AI hand-back) - the single per-side executor is the
+//--- sole eligibility-decider and sole publisher, closing the "writer publish and lease grant
+//--- remain separate statements" race. Flag-off: legacy unconditional publish, byte-identical.
+if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
+	[_side, _commander, "vote"] Call WFBE_CO_FNC_CommanderLeaseRequestGrant;
+} else {
+	_logic setVariable ["wfbe_commander", _commander, true];
+};
 
 //--- Notify the clients.
 [_side, "HandleSpecial", ["commander-vote", _commander]] Call WFBE_CO_FNC_SendToClients;
 
-//--- Process the AI Commander FSM if it's not running.
-if !(isNull _commander) then {
-	if (_logic getVariable "wfbe_aicom_running") then {_logic setVariable ["wfbe_aicom_running", false, _syncAicomState]};
+//--- Process the AI Commander FSM if it's not running. Flag-on routes this through
+//--- AssignForCommander inside the executor's grant handling instead (same effect, single
+//--- writer); flag-off keeps the original synchronous path, byte-identical.
+if (!((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0)) then {
+	if !(isNull _commander) then {
+		if (_logic getVariable "wfbe_aicom_running") then {_logic setVariable ["wfbe_aicom_running", false, _syncAicomState]};
+	};
 };

@@ -49,6 +49,15 @@ while {!WFBE_GameOver} do {
 		_base = if (isNil "_base") then {objNull} else {_base};
 
 		if(alive _base) then {
+			//--- Codex adversarial review fix (PR #1217, finding 2 - STALE TIMESTAMP): a leftover
+			//--- wfbe_camp_repair_since from a PRIOR dead-camp accumulation must never survive into
+			//--- the bunker coming back alive (via this presence repair, the paid player repair, or
+			//--- any future path) - otherwise the NEXT destruction could insta-repair off stale
+			//--- elapsed time. Cheap unconditional reset every pass; same flag gate as the dead-
+			//--- branch consumer below, so this is a byte-identical no-op while the flag is off.
+			if ((missionNamespace getVariable ["WFBE_C_CAMP_REPAIR_PRESENCE", 0]) > 0) then {
+				_camp setVariable ["wfbe_camp_repair_since", -1];
+			};
 			//--- Filter players and ai.
 			_objects = _camp nearEntities["Man", _camp_range];
 			_in_range = _objects;
@@ -127,7 +136,78 @@ while {!WFBE_GameOver} do {
 					[nil, "CampCaptured", [_camp,_newSID,_sideID]] Call WFBE_CO_FNC_SendToClients;
 				};
 			};
-		}else{};
+		}else{
+			//--- feat/deadcamp-presence-repair (owner redesign 2026-07-21, "AI soldiers repair a destroyed
+			//--- camp by standing in its bubble for a couple of minutes"): presence-based dead-camp
+			//--- self-repair. Flag-gated (WFBE_C_CAMP_REPAIR_PRESENCE, default 0) per the repo flag policy -
+			//--- flag off, this whole branch is a no-op and the mission stays byte-identical to HEAD.
+			//--- NULL GUARD (Codex adversarial review, PR #1217 finding 3): a camp logic DELETED mid-match
+			//--- (same class of bug the _base heal above this branch exists for) now falls into this
+			//--- else instead of the skipped-alive path - objNull getVariable [..,default] can still yield
+			//--- nil on A2 OA, which would poison the time comparison below with a nil-to-number error
+			//--- every pass. Guard the WHOLE branch on !isNull _camp before touching it at all.
+			if (!isNull _camp) then {
+				if ((missionNamespace getVariable ["WFBE_C_CAMP_REPAIR_PRESENCE", 0]) > 0) then {
+					private ["_presentMen","_presentSnap","_dcWest","_dcEast","_dcResistance","_presenceSince","_repairSideID"];
+					//--- Same nearEntities["Man", _camp_range] scan + the SAME player/AI eligibility split the
+					//--- alive-bunker branch above uses (players narrowed to _camp_range_players; AI unrestricted
+					//--- within _camp_range) - this is that scan's mutually-exclusive dead-bunker counterpart, not
+					//--- a second/parallel scan mechanism. Codex review fix (finding 1): also drop corpses (a dead
+					//--- body isn't "a living soldier standing in the bubble" per the design ask), and never count
+					//--- CIVILIAN presence toward the clock - the gate below is countSide west/east/resistance,
+					//--- exactly like the alive branch's own gate, so a lone civilian bystander can neither start
+					//--- nor complete the repair (nor silently restore the previous owner).
+					_presentMen = _camp nearEntities ["Man", _camp_range];
+					_presentSnap = _presentMen;
+					{
+						if (!alive _x) then {_presentMen = _presentMen - [_x]};
+						if (isPlayer _x && {_x distance _camp > _camp_range_players}) then {_presentMen = _presentMen - [_x]};
+					} forEach _presentSnap;
+
+					_dcWest = west countSide _presentMen;
+					_dcEast = east countSide _presentMen;
+					_dcResistance = resistance countSide _presentMen;
+
+					if (_dcWest > 0 || _dcEast > 0 || _dcResistance > 0) then {
+						//--- Continuous presence by ANY of the three combat sides (AI or player) starts/keeps the
+						//--- clock - side-agnostic by design (see PR body): attackers need a way to reclaim a dead
+						//--- camp to satisfy an All-Camps capture, defenders benefit equally by being able to
+						//--- repair their own. CIVILIAN is never one of the three sides counted above.
+						_presenceSince = _camp getVariable ["wfbe_camp_repair_since", -1];
+						if (_presenceSince < 0) then {
+							_presenceSince = time;
+							_camp setVariable ["wfbe_camp_repair_since", _presenceSince];
+						};
+						if ((time - _presenceSince) >= (missionNamespace getVariable ["WFBE_C_CAMP_REPAIR_PRESENCE_TIME", 150])) then {
+							//--- Threshold reached: whichever side is dominant in the presence set right now claims the
+							//--- repaired camp (mirrors the paid player repair contract in Server_HandleSpecial.sqf,
+							//--- where the repairing player's own side always becomes the new owner). Tie/mixed
+							//--- presence (no strict majority) keeps the camp's last-known sideID - same tie-keeps-
+							//--- owner rule the alive-bunker capture switch above already uses.
+							_repairSideID = _camp getVariable ["sideID", WFBE_DEFENDER_ID];
+							if (_dcWest > _dcEast && _dcWest > _dcResistance) then {_repairSideID = WFBE_C_WEST_ID};
+							if (_dcEast > _dcWest && _dcEast > _dcResistance) then {_repairSideID = WFBE_C_EAST_ID};
+							if (_dcResistance > _dcWest && _dcResistance > _dcEast) then {_repairSideID = WFBE_C_GUER_ID};
+
+							//--- Reuse the EXISTING repair-completion path (Server_HandleSpecial.sqf "repair-camp")
+							//--- instead of duplicating bunker-rebuild/flag/notify logic here - the same path the paid
+							//--- player repair (Action_RepairCamp.sqf) already drives. It rebuilds the bunker alive,
+							//--- which also re-enters this camp in server_town.sqf's C2 live-bunker dead-camp count
+							//--- on its very next pass - no separate CAPGATE wiring needed here.
+							["repair-camp", _camp, _repairSideID] call HandleSpecial;
+							_camp setVariable ["wfbe_camp_repair_since", -1];
+
+							diag_log Format ["CAPGATE|v1|%1|deadcamp-repair|camp=%2|side=%3|presence=%4s", (_town getVariable ["name","?"]), _camp, _repairSideID, round (time - _presenceSince)];
+						};
+					} else {
+						//--- Presence gap: full reset, no partial decay (simplest rule; documented per design).
+						if ((_camp getVariable ["wfbe_camp_repair_since", -1]) >= 0) then {
+							_camp setVariable ["wfbe_camp_repair_since", -1];
+						};
+					};
+				};
+			};
+		};
 
 		sleep _camp_step_sleep;
 	};

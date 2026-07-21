@@ -53,13 +53,13 @@ if (isServer) then {
 		"Squad_0",
 		['TK_Soldier_SL_EP1','TK_Soldier_MG_EP1','TK_Soldier_Sniper_EP1','TK_Soldier_Medic_EP1'],
 		['TK_Soldier_SL_EP1','TK_Soldier_AR_EP1','TK_Soldier_GL_EP1','TK_Soldier_LAT_EP1','TK_Soldier_EP1'],
-		['LandRover_MG_TK_EP1','LandRover_SPG9_TK_EP1'],
+		['LandRover_MG_TK_EP1','LandRover_SPG9_TK_EP1','TK_Soldier_SL_EP1','TK_Soldier_AT_EP1','TK_Soldier_MG_EP1'],
 		//--- mixed technical (cmdcon41-w3e): LandRover MG + dismounted AT/MG screen (crewed + on foot).
 		['LandRover_MG_TK_EP1','TK_Soldier_SL_EP1','TK_Soldier_AT_EP1','TK_Soldier_MG_EP1']
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_MEDIUM", _side], [
-		['BRDM2_TK_EP1','BRDM2_ATGM_TK_EP1'],
+		['BRDM2_TK_EP1','BRDM2_ATGM_TK_EP1','TK_Soldier_SL_EP1','TK_Soldier_AT_EP1','TK_Soldier_Medic_EP1'],
 		['V3S_TK_EP1','TK_Soldier_SL_EP1','TK_Soldier_AT_EP1','TK_Soldier_MG_EP1','TK_Soldier_LAT_EP1'],
 		['BMP2_TK_EP1','TK_Soldier_AA_EP1','TK_Soldier_AA_EP1','TK_Soldier_Medic_EP1'],
 		//--- BRDM AT-hunter (cmdcon41-w3e): ATGM scout car + dismounted HAT/AT screen.
@@ -67,8 +67,8 @@ if (isServer) then {
 	]];
 
 	missionNamespace setVariable [Format["WFBE_%1_PATROL_HEAVY", _side], [
-		['T72_TK_EP1','BMP2_TK_EP1'],
-		['T55_TK_EP1','T72_TK_EP1'],
+		['T72_TK_EP1','BMP2_TK_EP1','TK_Soldier_SL_EP1','TK_Soldier_MG_EP1','TK_Soldier_AT_EP1','TK_Soldier_Medic_EP1'],
+		['T55_TK_EP1','T72_TK_EP1','TK_Soldier_SL_EP1','TK_Soldier_MG_EP1','TK_Soldier_AT_EP1'],
 		['BMP2_TK_EP1','BMP2_TK_EP1','TK_Soldier_SL_EP1','TK_Soldier_MG_EP1','TK_Soldier_Sniper_EP1','TK_Soldier_Medic_EP1','TK_Soldier_AT_EP1','TK_Soldier_HAT_EP1','TK_Soldier_EP1'],
 		['M113_TK_EP1','TK_Soldier_SL_EP1','TK_Soldier_Medic_EP1','TK_Soldier_GL_EP1','TK_Soldier_EP1','TK_Soldier_AR_EP1'],
 		//--- AA picket at HEAVY (cmdcon41-w3e): ZU-23 truck + BMP-2 + MANPADS dismounts - late-game air deterrent.

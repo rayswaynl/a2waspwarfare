@@ -9,6 +9,10 @@ private ["_winnerTeam","_loserTeam","_winnerWins","_loserWins"];
 _winnerTeam = _this select 0;
 _loserTeam = "";
 
+if ((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0) then {
+	["ROUND", "SERVER", Format ["winner=%1", str _winnerTeam]] Call WFBE_SE_FNC_ChatRelayEvent;
+};
+
 ["INFORMATION", Format ["LogGameEnd.sqf: Team [%1] has won the match! Log match win? [%2]", _winnerTeam, WFBE_Server_LogMatchWin]] Call WFBE_CO_FNC_LogContent;
 
 if (_winnerTeam == west) then {

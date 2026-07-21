@@ -151,6 +151,7 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 	//--- in the dead AI slot (#2+). Renumber by re-joining the AI squadmates behind the player: out to a temp
 	//--- group and straight back (same group, so group waypoints/identity survive). Client-local AI only (join
 	//--- needs locality); createGroup-null (side group cap) or a foreign group skips cleanly.
+	["respawn", "rejoin-check"] Call WFBE_CL_FNC_TeambarProbe; //--- TEAMBAR probe: every guard input the line below evaluates
 	if (group player == WFBE_Client_Team && {leader (group player) == player} && {((units group player) select 0) != player}) then {
 		Private ["_slot1Others","_slot1Tmp"];
 		_slot1Others = [];
@@ -163,7 +164,12 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 				if (count units _slot1Tmp == 0) then {deleteGroup _slot1Tmp};
 				(group player) selectLeader player;
 				diag_log Format ["[WFBE|TEAMBAR] slot1-rejoin: %1 AI squadmates re-joined behind the player.", count _slot1Others];
+				["respawn", "rejoin-done"] Call WFBE_CL_FNC_TeambarProbe;
+			} else {
+				["respawn", "rejoin-creategroup-null"] Call WFBE_CL_FNC_TeambarProbe;
 			};
+		} else {
+			["respawn", "rejoin-no-local-others"] Call WFBE_CL_FNC_TeambarProbe;
 		};
 	};
 };

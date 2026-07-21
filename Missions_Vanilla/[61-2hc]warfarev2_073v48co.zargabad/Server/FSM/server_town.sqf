@@ -1,4 +1,5 @@
 
+private ["_mode2TotalCamps","_mode2WestCamps","_mode2EastCamps","_mode2GuerCamps","_gateCampBunker","_gateCampSide","_rateCampsOnSide"];
 
 // "towns" use it to get all initiated towns on map
 
@@ -101,6 +102,28 @@ while {!WFBE_GameOver} do {
 				_perfT0PA = diag_tickTime; //--- FPS PROFILING (claude-gaming): bracket the uncached per-town capture scan (suspected #1 server frametime sink)
 				private "_capH"; _capH = 10; if (_location getVariable ["wfbe_is_naval_hvt", false]) then {_capH = (_location getVariable ["wfbe_naval_deckz", 22]) + 12}; //--- B755 (Ray 2026-06-25): carrier decks sit ~16-22m ASL, so on-deck attackers were EXCLUDED by the flat 10m height filter - the carrier town could never be captured by units standing on its deck (now relevant with the b754 deck-spawn). Naval-HVT towns scan up to deckZ+12; normal towns keep 10.
 				_objects = (_location nearEntities[["Man","Car","Motorcycle","Tank","Air","Ship"], _town_capture_range]) unitsBelowHeight _capH;
+
+				//--- OWNER RULING (wreck filter): a wrecked/abandoned vehicle must not hold or contest a
+				//--- town. `side` on a vehicle reflects its CREW while manned, but once the crew is gone
+				//--- (killed or bailed) it falls back to the vehicle CLASS's config-default faction and
+				//--- NEVER changes on death - so a dead, empty hull kept voting for its last side in the
+				//--- _west/_east/_resistance tally below forever. Filter the vehicle entries here (single
+				//--- pass over the list already collected above, no extra nearEntities) to alive-AND-crewed
+				//--- before the side tally; Man entries pass through untouched (a downed/dismounted
+				//--- player-controlled unit still legitimately holds ground).
+				private ["_capObjects"];
+				_capObjects = [];
+				{
+					if (_x isKindOf "Man") then {
+						//--- OWNER RULING (wreck filter, corpse follow-up): a dead Man does not vote either -
+						//--- matches this file's own alive-filtered idiom (CAPGATE _gateFootMen scan below,
+						//--- the B74.2 capture-credit loop on _objects further down).
+						if (alive _x) then {_capObjects = _capObjects + [_x]};
+					} else {
+						if (alive _x && {count crew _x > 0}) then {_capObjects = _capObjects + [_x]};
+					};
+				} forEach _objects;
+				_objects = _capObjects;
 
 				_west = west countSide _objects;
 				_east = east countSide _objects;
@@ -278,23 +301,42 @@ while {!WFBE_GameOver} do {
 
 			if (!_resistanceDominion && !_westDominion && !_eastDominion) then {_west = 0; _east = 0; _resistance = 0};
 
-			_totalCamps = _location Call GetTotalCamps;
+			//--- C2 dead-camp verification: mode-2 counts only camps with a live bunker. The camp logic
+			//--- can remain non-null after its bunker is destroyed, while server_town_camp.sqf skips it;
+			//--- treating that stale logic as an unsatisfied camp deadlocks the town permanently.
+			_mode2TotalCamps = 0;
+			_mode2WestCamps = 0;
+			_mode2EastCamps = 0;
+			_mode2GuerCamps = 0;
+			{
+				if (!isNull _x) then {
+					_gateCampBunker = _x getVariable ["wfbe_camp_bunker", objNull];
+					if (!isNull _gateCampBunker && {alive _gateCampBunker}) then {
+						_mode2TotalCamps = _mode2TotalCamps + 1;
+						_gateCampSide = _x getVariable ["sideID", -1];
+						if (_gateCampSide == WFBE_C_WEST_ID) then {_mode2WestCamps = _mode2WestCamps + 1};
+						if (_gateCampSide == WFBE_C_EAST_ID) then {_mode2EastCamps = _mode2EastCamps + 1};
+						if (_gateCampSide == WFBE_C_GUER_ID) then {_mode2GuerCamps = _mode2GuerCamps + 1};
+					};
+				};
+			} forEach (_location getVariable ["camps", []]);
+			_totalCamps = _mode2TotalCamps;
 
 			if (_gateReason == "none" && {_west > 0 && {west in WFBE_PRESENTSIDES}}) then {
-				if (_totalCamps != ([_location,west] Call GetTotalCampsOnSide)) then {_skip = true;_gateReason = "allcamps";};
+				if (_totalCamps != _mode2WestCamps) then {_skip = true;_gateReason = "allcamps";};
 			};
 			if (_gateReason == "none" && {_east > 0 && {east in WFBE_PRESENTSIDES}}) then {
-				if (_totalCamps != ([_location,east] Call GetTotalCampsOnSide)) then {_skip = true;_gateReason = "allcamps";};
+				if (_totalCamps != _mode2EastCamps) then {_skip = true;_gateReason = "allcamps";};
 			};
 			if (_gateReason == "none" && {_resistance > 0 && {resistance in WFBE_PRESENTSIDES}}) then {
-				if (_totalCamps != ([_location,resistance] Call GetTotalCampsOnSide)) then {_skip = true;_gateReason = "allcamps";};
+				if (_totalCamps != _mode2GuerCamps) then {_skip = true;_gateReason = "allcamps";};
 			};
 
 			if (_gateHadForce) then {
 				private ["_gateSide","_gateCampsOnSide","_gateFootMen"];
 				if (!_resistanceDominion && {!_westDominion} && {!_eastDominion} && {_gateReason == "none"}) then {_gateReason = "tie";};
 				_gateSide = if (_west > 0) then {west} else {if (_east > 0) then {east} else {if (_resistance > 0) then {resistance} else {sideUnknown}}};
-				_gateCampsOnSide = if (_gateSide == sideUnknown) then {-1} else {[_location,_gateSide] Call GetTotalCampsOnSide};
+				_gateCampsOnSide = switch (_gateSide) do {case west: {_mode2WestCamps}; case east: {_mode2EastCamps}; case resistance: {_mode2GuerCamps}; default {-1}};
 				//--- foot-Man count: alive Man-class units of the gate-relevant side, NOT embarked in a vehicle
 				//--- (vehicle _x == _x is the standard A2 dismounted-check idiom), within 300m of the town centre.
 				//--- Diagnoses the 05:44 owner-decision hypothesis: mounted/crew teams reach camps but no on-foot
@@ -325,7 +367,7 @@ while {!WFBE_GameOver} do {
 		};
 
 		if (!(_skip) && {!((_location getVariable ["wfbe_is_naval_hvt", false]) && {(missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0})}) then {
-			_totalCamps = _location Call WFBE_CO_FNC_GetTotalCamps;
+			_totalCamps = if (_town_capture_mode == 2) then {_mode2TotalCamps} else {_location Call WFBE_CO_FNC_GetTotalCamps};
 			//--- ROOT FIX (cmdcon44e, rig-verified XWT45): a no-match default-less switch returns the switch
 			//--- VALUE (boolean true) - the tie case (dominion logic zeroes all three counts) fed boolean into
 			//--- _newSID -> GetTotalCampsOnSide aborted on number==bool -> _rate Voided -> towncenters could
@@ -334,7 +376,10 @@ while {!WFBE_GameOver} do {
 			_newSide = (_newSID) Call WFBE_CO_FNC_GetSideFromID;
 			_rate = 1;
 			if (_totalCamps > 0) then {
-				_rate = _town_capture_rate * (([_location,_newSide] Call WFBE_CO_FNC_GetTotalCampsOnSide) / _totalCamps) * _town_camps_capture_rate;
+				_rateCampsOnSide = if (_town_capture_mode == 2) then {
+					switch (_newSide) do {case west: {_mode2WestCamps}; case east: {_mode2EastCamps}; case resistance: {_mode2GuerCamps}; default {0}}
+				} else {[_location,_newSide] Call WFBE_CO_FNC_GetTotalCampsOnSide};
+				_rate = _town_capture_rate * (_rateCampsOnSide / _totalCamps) * _town_camps_capture_rate;
 			} else {
 				_rate = _town_capture_rate * _town_camps_capture_rate;
 			};
@@ -482,6 +527,9 @@ while {!WFBE_GameOver} do {
 			//--- Fires exactly once per real town/camp ownership flip - no loop, no PFH, no new scan.
 			diag_log ("AICOMSTAT|v2|EVENT|" + (str _newSide) + "|" + str (round (time / 60)) + "|TOWN_FLIP|town=" + (_location getVariable ["name","unknown"]) + "|from=" + (str _side) + "|to=" + (str _newSide) + "|fromID=" + str _sideID + "|toID=" + str _newSID);
 			// END AICOMSTAT TOWN_FLIP
+			if ((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0) then {
+				["TOWN", "SERVER", Format ["town=%1 from=%2 to=%3", _location getVariable ["name", "unknown"], str _side, str _newSide]] Call WFBE_SE_FNC_ChatRelayEvent;
+			};
 
 			//--- FM-5: clear the old garrison's active flags on capture so the new owner re-garrisons immediately (prevents an up-to-WFBE_C_TOWNS_UNITS_INACTIVE undefended window on rapid recapture).
 			//--- Also clear episode latch so the new owner's activation episode is not blocked.

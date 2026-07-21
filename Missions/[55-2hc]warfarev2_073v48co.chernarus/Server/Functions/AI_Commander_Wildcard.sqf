@@ -229,7 +229,7 @@ while {!gameOver} do {
 				         "_existingTeams","_sideIDLocal","_crew1","_crew2",
 				         "_healed","_humanCmd","_skipAI","_w11Eligible","_w3Max",
 				         "_dAng","_spawnPos","_dp","_placed","_dPos",
-	         "_w13Eligible","_w13AirList","_w13AttackClasses","_w13TargetTown","_w13MaxCluster","_w13BestDist","_w13Class","_w13Ang","_w13SpawnPos","_w13Heli","_w13Pilot","_w13TargetPos","_w13Grp","_w13PilotClass","_clustTown","_nearEnemies","_w13Enemies",
+	         "_w13Eligible","_w13AirList","_w13AttackClasses","_w13TargetTown","_w13MaxCluster","_w13BestDist","_w13Class","_w13Special","_w13Ang","_w13SpawnPos","_w13Heli","_w13Pilot","_w13TargetPos","_w13Grp","_w13PilotClass","_clustTown","_nearEnemies","_w13Enemies",
 	         "_w14Eligible","_w14AAClass","_w14Target","_w14Pos","_w14Placed","_w14Ang","_w14DPos","_w14AA","_w14i","_w14Grp","_w14Gunner","_w14PilotClass",
 	         "_w15Eligible","_w15Exp",
 	         "_w16Eligible","_maxLevels","_raisableTiers","_chosenUpID","_newUpgrades","_tierName",
@@ -397,7 +397,7 @@ while {!gameOver} do {
 				if (!isNil "_upgrades" && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0} && {count _cands > 0}) then {
 					_w13AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
 					_w13AttackClasses = [];
-					{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Mi24_D","Mi24_V","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su34"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
+					{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Ka52","Ka52Black","Mi24_D","Mi24_D_TK_EP1","Mi24_V","Mi24_P","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
 					if (count _w13AttackClasses > 0) then {
 						//--- one allUnits pass: the alive/side filter is town-invariant, only the distance is per-town
 						_w13Enemies = [];
@@ -867,7 +867,7 @@ while {!gameOver} do {
 						case 13: {
 							_w13AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
 							_w13AttackClasses = [];
-							{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Mi24_D","Mi24_V","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su34"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
+							{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Ka52","Ka52Black","Mi24_D","Mi24_D_TK_EP1","Mi24_V","Mi24_P","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
 							_w13TargetTown = objNull; _w13MaxCluster = 0; _w13BestDist = 1e9;
 							//--- one allUnits pass: the alive/side filter is town-invariant, only the distance is per-town
 							_w13Enemies = [];
@@ -879,7 +879,10 @@ while {!gameOver} do {
 								_w13Ang = random 360;
 								_w13SpawnPos = [(_hqPos select 0) + 4000 * sin _w13Ang, (_hqPos select 1) + 4000 * cos _w13Ang, 1500];
 								_w13Class = _w13AttackClasses select floor(random count _w13AttackClasses);
-								_w13Heli = [_w13Class, _w13SpawnPos, _side, random 360, true, true] Call WFBE_CO_FNC_CreateVehicle;
+								//--- FIXED-WING FLY SPAWN: this pool is mixed heli/plane (same allowlist as AirResp) - a
+								//--- drawn Plane class needs the FLY special or it spawns near-stalled (setVelocity [0,0,-1]).
+								_w13Special = if (_w13Class isKindOf "Plane") then {"FLY"} else {"FORM"};
+								_w13Heli = [_w13Class, _w13SpawnPos, _side, random 360, true, true, true, _w13Special] Call WFBE_CO_FNC_CreateVehicle;
 								if (!isNull _w13Heli) then {
 									_w13Grp = [_side, "aicom-gunship"] Call WFBE_CO_FNC_CreateGroup;
 									_w13PilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];
@@ -1103,7 +1106,9 @@ while {!gameOver} do {
 							_hqPos       = getPos _hq;
 							_w22Ang      = random 360;
 							_w22SpawnPos = [(_hqPos select 0) + 4000 * sin _w22Ang, (_hqPos select 1) + 4000 * cos _w22Ang, 1000];
-							_w22Plane    = [_w22PlaneClass, _w22SpawnPos, _side, random 360, true, true] Call WFBE_CO_FNC_CreateVehicle;
+							//--- FIXED-WING FLY SPAWN: _w22PlaneClass is always a Plane by construction (filtered above),
+							//--- so pass "FLY" directly - otherwise it spawns near-stalled (setVelocity [0,0,-1]).
+							_w22Plane    = [_w22PlaneClass, _w22SpawnPos, _side, random 360, true, true, true, "FLY"] Call WFBE_CO_FNC_CreateVehicle;
 							if (!isNull _w22Plane) then {
 								_w22Grp        = [_side, "aicom-topgun"] Call WFBE_CO_FNC_CreateGroup;
 								_w22PilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];

@@ -50,6 +50,7 @@ A3_TRAPS = (
     "nearestTerrainObjects",  # A3-only; parse "Missing )" on A2 OA 1.64 (re-added: lost in a merge)
     "disableMove",  # invented identifier; does not exist on A2 OA 1.64 (nor A3); use disableAI "MOVE"
     "ctrlSetTooltip",  # A3-only; parse-kills the whole script on A2 OA 1.64 (live-burned RC26/27 WF menu)
+    "stance",  # A3-only, caught in PR 1202 review; unavailable on A2 OA 1.64.
     # NOTE: bare "insert" excluded. A3_TRAPS matching uses word-boundary regex
     # on comment/string-masked text (safe), but "insert" appears in plain English
     # comments too frequently to avoid noise.

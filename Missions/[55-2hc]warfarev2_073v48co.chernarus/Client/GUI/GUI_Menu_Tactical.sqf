@@ -1,4 +1,8 @@
-private ["_enemy_side"];
+private ["_enemy_side","_ftQuoteVehList"]; //--- _ftQuoteVehList (fable/fasttravel-campflag round2): the Fast
+//--- Travel quote's deduplicated vehicle snapshot, captured when the quote is shown and persisted here (top-
+//--- of-script scope) across the two-click confirm. MenuAction==7 only re-enters on a genuine mouseButtonUp
+//--- click (L540ish), so click-1 and click-2 are separate re-entries with their own private[] locals - this
+//--- is the one variable that must survive between them so the confirming click bills what was quoted.
 
 disableSerialization;
 
@@ -571,7 +575,7 @@ while {alive player && dialog} do {
 			//---       so the next map click re-enters and the second call returns true.
 			//---   C2: exitWith only exits its own block; gate the WHOLE travel sequence with _doTravel latch.
 			//---   C3: original surcharge loop below is the SOLE charger; never add another deduction above it.
-			private ["_doTravel","_ftRecheckOk","_ftConfirmMsg","_ftBaseFee","_ftVehFee","_ftVehCount","_ftVehList","_ftFundsShort"];
+			private ["_doTravel","_ftRecheckOk","_ftConfirmMsg","_ftBaseFee","_ftVehFee","_ftVehCount","_ftVehList","_ftFundsShort","_ftBilledVehList"];
 			_doTravel = false;
 			_ftFundsShort = false;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
@@ -581,8 +585,11 @@ while {alive player && dialog} do {
 					//--- Pre-compute vehicle list so confirm message shows the accurate surcharge.
 					_ftVehList = [];
 					{
-						if (_x distance _startPoint < _ftr && canMove (vehicle _x) && !(vehicle _x isKindOf "StaticWeapon") && !stopped (vehicle _x) && !((currentCommand _x) in ["WAIT","STOP"])) then {
-							if (!(vehicle _x in _ftVehList) && !(_x isKindOf "Man")) then {_ftVehList = _ftVehList + [vehicle _x]};
+						if (_x distance _startPoint < _ftr && canMove (vehicle _x) && !(vehicle _x isKindOf "StaticWeapon") && !stopped (vehicle _x) && !((currentCommand _x) in ["WAIT","STOP"]) && !((vehicle _x) isKindOf "Man")) then {
+							//--- fable/fasttravel-campflag: fixed dedupe/Man-check predicate (was always-false self-check on
+							//--- a Man unit) - this is now the single snapshot reused unchanged by the click-2 funds recheck
+							//--- and the final charge below, so the quote total can no longer diverge from the bill.
+							if (!(vehicle _x in _ftVehList)) then {_ftVehList = _ftVehList + [vehicle _x]};
 						};
 					} forEach units (group player);
 					_ftVehCount = count _ftVehList;
@@ -592,9 +599,15 @@ while {alive player && dialog} do {
 					if (_ftVehCount > 0) then {
 						_ftConfirmMsg = _ftConfirmMsg + "<br/>Vehicle surcharge: " + str _ftVehCount + " vehicle(s) x $" + str (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE") + " = $" + str _ftVehFee;
 					};
-					_ftConfirmMsg = _ftConfirmMsg + "<br/><t color='#ffe066'>Total (approx.): $" + str (_ftBaseFee + _ftVehFee) + "</t>"; //--- approx: vehicle scan repeats at click-2 (~6s later)
+					_ftConfirmMsg = _ftConfirmMsg + "<br/><t color='#ffe066'>Total (approx.): $" + str (_ftBaseFee + _ftVehFee) + "</t>"; //--- approx: only the per-km leg can still drift (current distance); the vehicle roster is captured into _ftQuoteVehList below and is exactly what the confirming click will bill.
 					//--- First click: hint shown, returns false, MenuAction stays 7 (not reset). Second click: returns true.
-					if (!(["wf_ft_confirm", _ftConfirmMsg] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+					if (!(["wf_ft_confirm", _ftConfirmMsg] call WFBE_CL_FNC_ConfirmAction)) exitWith {
+						//--- fable/fasttravel-campflag round2: click-1 and click-2 are genuinely separate script
+						//--- re-entries (mouseButtonUp-gated) up to ~6s apart - persist exactly the snapshot just
+						//--- shown in _ftConfirmMsg so the confirming click can never bill a different (rescanned)
+						//--- vehicle set than what the player actually saw and agreed to.
+						_ftQuoteVehList = +_ftVehList;
+					};
 					_doTravel = true;
 				} else {
 					_doTravel = true;
@@ -642,15 +655,32 @@ while {alive player && dialog} do {
 				//--- full bill now (flat + per-km + the per-vehicle surcharge for the vehicles taken along) and
 				//--- deny via the menu's established ctrlSetText[17027] feedback rather than charge into the red.
 				if (_ftRecheckOk && _ft == 2) then {
-					private ["_ftConfirmFee","_ftConfirmVehFee","_ftConfirmVehSeen"];
+					private ["_ftConfirmFee"];
 					_ftConfirmFee = (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_FEE") + round(((player distance _destination)/1000) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM"));
-					_ftConfirmVehSeen = [];
-					{if (_x distance _startPoint < _ftr && !(_x in _ftConfirmVehSeen) && canMove _x && !(vehicle _x isKindOf "StaticWeapon") && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"]) && !((vehicle _x) isKindOf "Man")) then {_ftConfirmVehSeen set [count _ftConfirmVehSeen, vehicle _x]}} forEach units (group player);
-					_ftConfirmVehFee = (count _ftConfirmVehSeen) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE");
-					if ((Call GetPlayerFunds) < (_ftConfirmFee + _ftConfirmVehFee)) then {
+					//--- fable/fasttravel-campflag round2: bill only the surviving members of the quoted
+					//--- _ftQuoteVehList snapshot (captured at click-1) - never re-scan the squad here (that would
+					//--- silently add a vehicle the player never saw quoted) and drop any that died/departed since.
+					if (isNil "_ftQuoteVehList") then {_ftQuoteVehList = []};
+					_ftBilledVehList = [];
+					//--- fable/fasttravel-campflag round3: object-only checks are not enough - a quoted vehicle that
+					//--- was abandoned or commandeered since the quote must not survive revalidation either, so require
+					//--- the same crew-membership condition as the quote scan above (L588): at least one CURRENT group
+					//--- member must still be aboard it, in range, moving, and not WAIT/STOP. Late arrivals (a vehicle
+					//--- never in _ftQuoteVehList) are never added here - they ride neither billed nor teleported until
+					//--- the next quote cycle; on-foot units are untouched and keep their existing free-teleport path.
+					{
+						private ["_ftQuotedVeh","_ftVehCrewed"];
+						_ftQuotedVeh = _x; //--- capture outer _x before the inner forEach rebinds it (A2 trap)
+						_ftVehCrewed = false;
+						{
+							if ((vehicle _x) == _ftQuotedVeh && _x distance _startPoint < _ftr && canMove (vehicle _x) && !(vehicle _x isKindOf "StaticWeapon") && !stopped (vehicle _x) && !((currentCommand _x) in ["WAIT","STOP"]) && !((vehicle _x) isKindOf "Man")) then {_ftVehCrewed = true};
+						} forEach units (group player);
+						if (!isNull _ftQuotedVeh && {alive _ftQuotedVeh && {_ftVehCrewed}}) then {_ftBilledVehList = _ftBilledVehList + [_ftQuotedVeh]};
+					} forEach _ftQuoteVehList;
+					if ((Call GetPlayerFunds) < (_ftConfirmFee + ((count _ftBilledVehList) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE")))) then {
 						_ftRecheckOk = false;
 						_ftFundsShort = true;
-						ctrlSetText [17027, Format ["Not enough funds - fast travel costs $%1.", (_ftConfirmFee + _ftConfirmVehFee)]];
+						ctrlSetText [17027, Format ["Not enough funds - fast travel costs $%1.", (_ftConfirmFee + ((count _ftBilledVehList) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE")))]];
 						_lastUpdate = 0;
 					};
 				};
@@ -682,10 +712,19 @@ while {alive player && dialog} do {
 						-(_fee) Call ChangePlayerFunds;
 					};
 					
-					_travelingWith = [];
-					{if (_x distance _startPoint < _ftr && !(_x in _travelingWith) && canMove _x && !(vehicle _x isKindOf "StaticWeapon") && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"])) then {_travelingWith = _travelingWith + [vehicle _x]}} forEach units (group player);
-					//--- FAST TRAVEL per-vehicle surcharge (Ray 2026-06-28): charge WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE per DISTINCT real vehicle taken along (dedupe dup crew-seat handles + exclude foot units).
-					if (_ft == 2) then {private "_ftSeen"; _ftSeen = []; {if (!(_x in _ftSeen) && !(_x isKindOf "Man")) then {_ftSeen set [count _ftSeen, _x]; -(missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE") Call ChangePlayerFunds}} forEach _travelingWith;};
+					if (_ft == 2) then {
+						//--- fable/fasttravel-campflag round2: fee mode travels with exactly the revalidated, quoted
+						//--- _ftBilledVehList snapshot (billed above) plus any foot units, never a fresh rescan.
+						_travelingWith = +_ftBilledVehList;
+						{if (_x distance _startPoint < _ftr && (vehicle _x) isKindOf "Man" && !(_x in _travelingWith) && canMove _x && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"])) then {_travelingWith = _travelingWith + [_x]}} forEach units (group player);
+					} else {
+						//--- fable/fasttravel-campflag round2: non-fee modes restored to the original always-fresh
+						//--- scan exactly (no fee snapshot is ever taken for them - out of this fix's scope).
+						_travelingWith = [];
+						{if (_x distance _startPoint < _ftr && !(_x in _travelingWith) && canMove _x && !(vehicle _x isKindOf "StaticWeapon") && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"])) then {_travelingWith = _travelingWith + [vehicle _x]}} forEach units (group player);
+					};
+					//--- FAST TRAVEL per-vehicle surcharge (Ray 2026-06-28): charge WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE once per DISTINCT vehicle in the revalidated _ftBilledVehList (same set funds-checked above; a vehicle that died/departed since the quote is silently not billed, one that arrived since the quote is never billed).
+					if (_ft == 2) then {{-(missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE") Call ChangePlayerFunds} forEach _ftBilledVehList;};
 					
 					ForceMap true;
 					_compass = shownCompass;

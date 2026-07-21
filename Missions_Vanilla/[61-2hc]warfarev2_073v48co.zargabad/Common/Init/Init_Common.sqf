@@ -48,6 +48,7 @@ WFBE_CO_FNC_GetArtilleryAmmoOptions = Compile preprocessFileLineNumbers "Common\
 WFBE_CO_FNC_LoadArtilleryAmmo = Compile preprocessFileLineNumbers "Common\Functions\Common_LoadArtilleryAmmo.sqf";
 // claude-gaming 2026-06-29: AICOM situational ammo-type selector (gated on WFBE_UP_ARTYAMMO; flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE, default OFF).
 WFBE_CO_FNC_AICOMArtyPickAmmo = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMArtyPickAmmo.sqf";
+WFBE_CO_FNC_AICOMArtySafeAnchor = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMArtySafeAnchor.sqf"; //--- claude 2026-07-18: safe owned-town anchor picker for AICOM base-arty forward reposition (flag WFBE_C_AICOM_ARTY_ECHELON, default 0).
 // Marty: Ammo-fraction helper (vehicle current / full complement). Used by proportional rearm pricing.
 WFBE_CO_FNC_GetAmmoFraction = Compile preprocessFileLineNumbers "Common\Functions\Common_GetAmmoFraction.sqf";
 GetTeamAutonomous = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamAutonomous.sqf";
@@ -109,6 +110,20 @@ WFBE_CO_FNC_CreateTownUnits = Compile preprocessFileLineNumbers "Common\Function
 WFBE_CO_FNC_RunSidePatrol = Compile preprocessFileLineNumbers "Common\Functions\Common_RunSidePatrol.sqf";
 WFBE_CO_FNC_RunCommanderTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_RunCommanderTeam.sqf";
 WFBE_CO_FNC_AICOMAirLeg = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirLeg.sqf"; //--- cmdcon42-f AIR-MOBILE: fly an ORDERED leg with the team's own live transport heli + hot-LZ (cold=land, contested=paradrop); transport returns to base + persists. Gate WFBE_C_AICOM_AIRMOBILE.
+//--- P1.1 (claude 2026-07-19, reworked per codex-main-sol-review-airpower-20260719 REJECT "compiled helper always
+//--- running - not literal byte/execution identity"): considered gating this compile the same way
+//--- WFBE_CO_FNC_ClearVehicleCargo/EquipBackpack/RemoveCountermeasures/SendToClient conditionally compile on
+//--- WF_A2_Vanilla elsewhere in this file - REJECTED that approach: those pick between two BUILD-TIME-FIXED
+//--- implementations (vanilla vs OA), never toggled after init, whereas WFBE_C_AICOM_AIR_TELEMETRY is a normal
+//--- WFBE_C_* diagnostic flag, checked fresh via missionNamespace getVariable at every call site (same idiom as
+//--- every other default-0/default-ON flag in this codebase) so an admin CAN flip it live via debug console
+//--- mid-match to start capturing evidence without a restart - gating the compile on the flag's value AT INIT
+//--- TIME would permanently stub this function to {} for any match that boots with the flag off, breaking that
+//--- exact live-toggle workflow (the one this PR's own evidence-gathering plan depends on). Compile stays
+//--- unconditional like every other WFBE_CO_FNC_* in this file; every CALL site is flag-guarded (see the helper's
+//--- own header comment for the honest flag-off cost accounting). Reason-coded AICOM air founding/cap telemetry -
+//--- flag WFBE_C_AICOM_AIR_TELEMETRY default 0.
+WFBE_CO_FNC_AICOMAirFoundTelemetry = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirFoundTelemetry.sqf";
 WFBE_CO_FNC_AICOMAirReturn = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirReturn.sqf"; //--- cmdcon42-f shared post-drop RETURN-TO-BASE-AND-HOLD (the founding WFBE_C_AICOM_AIR_RETAIN path + air-mobile legs call this SAME code - no duplication). Scheduled-context only (it sleeps).
 WFBE_CO_FNC_AICOMServiceTick = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMServiceTick.sqf"; //--- B48 AICOM self-service (default OFF: WFBE_C_AICOM_SERVICE_ENABLED)
 WFBE_CO_FNC_AICOMLog = Compile preprocessFileLineNumbers "Common\Functions\Common_AICommanderLog.sqf";
@@ -117,6 +132,7 @@ WFBE_CO_FNC_SpawnFactionSmoke = Compile preprocessFileLineNumbers "Common\Functi
 // Marty: Central createGroup wrapper (LEVER 2) - registered immediately after AICOMLog so the wrapper can call it.
 WFBE_CO_FNC_CreateGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateGroup.sqf";
 WFBE_CO_FNC_GroupGetBool = Compile preprocessFileLineNumbers "Common\Functions\Common_GroupGetBool.sqf"; //--- G1: safe bool getVariable for GROUP receivers (A2 OA unset->nil trap)
+WFBE_CO_FNC_TownNudgeWeight = Compile preprocessFileLineNumbers "Common\Functions\Common_TownNudgeWeight.sqf"; //--- COMMAND V2 (a): aggregated sqrt(n)+ceiling town-nudge weight. Only called while WFBE_C_CMD_TOWN_NUDGE > 0.
 WFBE_CO_FNC_CapLock = Compile preprocessFileLineNumbers "Common\Functions\Common_CapLock.sqf"; //--- capture-churn fix: is this AICOM team mid-capture-drain and thus IMMUNE to re-tasking (GR-2026-07-03a).
 WFBE_CO_FNC_AICOMTeamMounted = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMTeamMounted.sqf"; //--- T1.2 FIX (R3-SYNTHESIS 2026-07-20, codex review): shared mounted-classifier so AssignTowns and Allocate cannot diverge (leader-or-50pct embarked, not any-single-unit).
 WFBE_CO_FNC_SMLCampSplit = Compile preprocessFileLineNumbers "Common\Functions\Common_SMLCampSplit.sqf"; //--- SML-1 (GR-2026-07-03a): camp-split captures; per-unit doStop/doMove with TTL watchdog. Flag WFBE_C_SML_CAMP_SPLIT default 0.
@@ -151,6 +167,8 @@ WFBE_CO_FNC_GetSideHQDeployStatus = Compile preprocessFileLineNumbers "Common\Fu
 WFBE_CO_FNC_GetSideHQ = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideHQ.sqf";
 WFBE_CO_FNC_GetSideID = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideID.sqf";
 WFBE_CO_FNC_GetSideLogic = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideLogic.sqf";
+Call Compile preprocessFileLineNumbers "Common\Functions\Common_LogVehDelete.sqf"; //--- VEHDEL deletion probe (self-registering)
+Call Compile preprocessFileLineNumbers "Common\Functions\Common_CommanderLease.sqf";
 WFBE_CO_FNC_GetSideSupply = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideSupply.sqf";
 WFBE_CO_FNC_GetSideStructures = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideStructures.sqf";
 WFBE_CO_FNC_HasSideRadioTower = Compile preprocessFileLineNumbers "Common\Functions\Common_HasSideRadioTower.sqf";

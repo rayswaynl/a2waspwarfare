@@ -48,7 +48,7 @@ private ["_side","_logik","_snap","_sideID","_sideText","_enemySide","_enemyID",
 	"_senseTick","_sensed","_laneTown","_flightsIn","_flights","_f","_fg","_fh",
 	"_tgtTowns","_ownTowns","_cands","_x2","_lanePos","_nearCount","_bestTown","_bestCount","_inRange",
 	"_rollNow","_covered","_upgrades","_airOK","_townsOK","_canDispatch","_dispatched",
-	"_airList","_attackClasses","_pilotClass","_ang","_spawnPos","_class","_heli","_grp","_pilot",
+	"_airList","_attackClasses","_pilotClass","_ang","_spawnPos","_class","_special","_heli","_grp","_pilot",
 	"_elMin"];
 
 _side    = _this;
@@ -154,14 +154,19 @@ _dispatched = 0;
 if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_canDispatch}) then {
 	_airList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
 	_attackClasses = [];
-	{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Mi24_D","Mi24_V","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su34"]) then {_attackClasses = _attackClasses + [_x]} } forEach _airList;
+	{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Ka52","Ka52Black","Mi24_D","Mi24_D_TK_EP1","Mi24_V","Mi24_P","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]) then {_attackClasses = _attackClasses + [_x]} } forEach _airList;
 	_pilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];
 	if (count _attackClasses > 0 && {_pilotClass != ""}) then {
 		_lanePos = getPos _laneTown;
 		_ang = random 360;
 		_spawnPos = [(_lanePos select 0) + 2500 * sin _ang, (_lanePos select 1) + 2500 * cos _ang, 300];
 		_class = _attackClasses select floor(random count _attackClasses);
-		_heli = [_class, _spawnPos, _side, random 360, true, true] Call WFBE_CO_FNC_CreateVehicle;
+		//--- FIXED-WING FLY SPAWN: this call used to be 6-arg, leaving _special defaulted to "FORM", so
+		//--- Common_CreateVehicle.sqf falls into setVelocity [0,0,-1] - a drawn A10/Su34/AV8B/Su25
+		//--- spawns near-stalled at 300m. Helis are unaffected (FORM is correct for them); mirrors
+		//--- the "FLY" idiom already proven at Server_GuerAirDef.sqf.
+		_special = if (_class isKindOf "Plane") then {"FLY"} else {"FORM"};
+		_heli = [_class, _spawnPos, _side, random 360, true, true, true, _special] Call WFBE_CO_FNC_CreateVehicle;
 		if (!isNull _heli) then {
 			_grp = [_side, "aicom-airresp"] Call WFBE_CO_FNC_CreateGroup;
 			if (!isNull _grp) then {

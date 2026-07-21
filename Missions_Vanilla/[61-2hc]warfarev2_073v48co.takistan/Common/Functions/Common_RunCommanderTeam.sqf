@@ -25,7 +25,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
          "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev",
-         "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady"];
+         "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady","_capMounted","_capClass"];
 
 _sideID = _this select 0;
 _template = _this select 1;
@@ -274,8 +274,8 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 										_rh setVariable ["wfbe_heli_baseidle_at", time];
 									} else {
 										if ((time - _rSeen) >= _reapTO) then {
-											{ if (!isPlayer _x) then {deleteVehicle _x} } forEach (crew _rh);
-											deleteVehicle _rh;
+											{ if (!isPlayer _x) then {["aicomteam-L276", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (crew _rh);
+											["aicomteam-L277", _rh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _rh;
 											["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] B74.2 base-reaped idle attack heli %2 (idle %3s at base).", _sd, typeOf _rh, _reapTO]] Call WFBE_CO_FNC_AICOMLog;
 										};
 									};
@@ -723,8 +723,8 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 						private ["_htype"];
 						_htype = typeOf _h;          //--- capture BEFORE delete (typeOf of a deleted obj is "").
 					_hcrew = crew _h;
-					{deleteVehicle _x} forEach _hcrew;
-					deleteVehicle _h;
+					{["aicomteam-L725", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach _hcrew;
+					["aicomteam-L726", _h, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _h;
 					if (_cost > 0) then {
 						//--- D4-FIX(c): append the hull TYPE so the server re-derives the real build price itself (same
 						//--- QUERYUNITPRICE lookup this file used) instead of trusting the network _cost verbatim - closes a
@@ -845,7 +845,7 @@ while {!WFBE_GameOver && _alive} do {
 				if (({alive _x} count (crew _x)) == 0) then {
 					private ["_us"]; _us = _x getVariable "wfbe_air_uncrewed_at";
 					if (isNil "_us") then {_x setVariable ["wfbe_air_uncrewed_at", time]} else {
-						if ((time - _us) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_REAP_GRACE", 45])) then {deleteVehicle _x};
+						if ((time - _us) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_REAP_GRACE", 45])) then {["aicomteam-L847", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x};
 					};
 				} else {
 					_x setVariable ["wfbe_air_uncrewed_at", nil];
@@ -922,12 +922,12 @@ while {!WFBE_GameOver && _alive} do {
 			_dCmd = _team getVariable "wfbe_aicom_disband_cmd"; _dCmd = (!isNil "_dCmd" && {_dCmd}); _dNear = if (_dCmd || {isNull _dLdr}) then {0} else {{isPlayer _x && {alive _x} && {(_x distance _dLdr) < _dSafe}} count allUnits}; //--- Build84: explicit console order bypasses player-proximity veto
 			_dCombat = if (isNull _dLdr) then {false} else {behaviour _dLdr == "COMBAT"};
 			if (_dNear == 0 && {!_dCombat}) then {
-				{ if (local _x) then {deleteVehicle _x} } forEach (units _team);
+				{ if (local _x) then {["aicom-retire-unit", _x, Format ["cmd=%1", _dCmd]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
 				//--- cmdcon44s (correctness): retirement must delete the team HULLS too, not just the crew (units _team above).
 				//--- A retired REAR team otherwise leaves crewless tanks/helis parked at base forever - no reaper catches an
 				//--- HC-local, group-less hull. HC-local delete only; skip any hull a player is aboard (belt-and-braces; the
 				//--- _dNear guard already cleared nearby players). Capture the outer _x before the inner count (A2 rebind trap).
-				{ private ["_rv"]; _rv = _x; if (!isNull _rv && {local _rv} && {({isPlayer _x} count (crew _rv)) == 0}) then {deleteVehicle _rv} } forEach _vehicles;
+				{ private ["_rv"]; _rv = _x; if (!isNull _rv && {local _rv} && {({isPlayer _x} count (crew _rv)) == 0}) then {["aicom-retire-hull", _rv, Format ["cmd=%1", _dCmd]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _rv} } forEach _vehicles;
 				_alive = false;
 				diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TEAM_RETIRE_HC|deleted-local-units|cmd=" + str _dCmd);
 			} else {
@@ -997,7 +997,9 @@ while {!WFBE_GameOver && _alive} do {
 				_arrived = false;
 				_captureDone = false;
 				_team setVariable ["wfbe_aicom_arrival_trace_at", time + 60];
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
 				diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_ACCEPT|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round ((leader _team) distance _dest)));
+				};
 				//--- AI-BEHAVIOR-LOOP-DESIGN.md sec1.2 (MARCH): brand-new GROUP var wfbe_aicom_phase, zero prior writers (grepped whole tree this pass). Flag default 0 = fully inert. Only stamped for the real towns-target order (goto/defense/rally siblings at this same fresh-order block stay phase "").
 				if ((missionNamespace getVariable ["WFBE_C_AICOM_PHASE_ENABLE", 0]) > 0 && {_mode == "towns-target"}) then {
 					private ["_phPrev"];
@@ -1395,6 +1397,29 @@ while {!WFBE_GameOver && _alive} do {
 						if ([_amHeli, _team, _dest, _side, _sideID, _vehicles] Call WFBE_CO_FNC_AICOMAirLeg) then {_amDone = true};
 					};
 				};
+				//--- P1.1 AIR-MOBILE ATTEMPT TELEMETRY (claude 2026-07-19): reason-code why this ordered leg did or did not
+				//--- fly, so the existing default-ON airlift's real gating is visible in RPT (instrument-first per audit
+				//--- synthesis 2D50EA13...). Flag WFBE_C_AICOM_AIR_TELEMETRY default 0 => this diag_log never runs
+				//--- (behaviour-equivalent to HEAD; see Common_AICOMAirFoundTelemetry.sqf's header for the honest
+				//--- flag-off cost accounting - one getVariable check here still executes every cycle).
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
+					private ["_amReason","_amLeg","_amMin"];
+					_amLeg = (leader _team) distance _dest;
+					_amMin = missionNamespace getVariable ["WFBE_C_AICOM_AIRMOBILE_MIN_DIST", 1200];
+					_amReason = "committed";
+					if (!_amDone) then {
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_AIRMOBILE", 1]) <= 0) then {
+							_amReason = "airmobile-off";
+						} else {
+							if (_amLeg <= _amMin) then {
+								_amReason = "leg-short";
+							} else {
+								if (isNil "_amHeli" || {isNull _amHeli}) then {_amReason = "no-transport"} else {_amReason = "airleg-abort"};
+							};
+						};
+					};
+					diag_log ("AICOMAIR|v1|" + str (side _team) + "|" + str (round (time / 60)) + "|stage=airmobile|reason=" + _amReason + "|leg=" + str (round _amLeg) + "|minDist=" + str (round _amMin) + "|team=" + str _team);
+				};
 				if (!_amDone) then {
 
 				//--- ROAD-MARCH (task #14/#16): the old single bare 'MOVE' to the raw town
@@ -1415,7 +1440,7 @@ while {!WFBE_GameOver && _alive} do {
 					if (typeName _x == "ARRAY" && {count _x >= 2}) then {
 						_transportVehicle = _x select 0;
 						_transportStamp = _x select 1;
-						if (!isNull _transportVehicle && {alive _transportVehicle} && {canMove _transportVehicle} && {typeName _transportStamp == "SCALAR"} && {time - _transportStamp < 1200}) then {
+						if (!isNull _transportVehicle && {alive _transportVehicle} && {_transportVehicle isKindOf "LandVehicle"} && {canMove _transportVehicle} && {typeName _transportStamp == "SCALAR"} && {time - _transportStamp < 1200}) then {
 							_transportKeep set [count _transportKeep, [_transportVehicle, _transportStamp]];
 						};
 					};
@@ -1651,7 +1676,9 @@ while {!WFBE_GameOver && _alive} do {
 					_arrivalDist = (leader _team) distance _dest;
 					if (_arrivalDist < _arrivalGate) then {
 						_arrived = true;
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
 						diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ARRIVAL_GATE|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round _arrivalDist) + "|gate=" + str (round _arrivalGate));
+				};
 						//--- Cosmetic: faction smoke at assault onset (fires once per team via the _arrived latch). Server-only, gated + capped + cooldown.
 						[getPosATL (leader _team), side _team] call WFBE_CO_FNC_SpawnFactionSmoke;
 						//--- cmdcon41-w2 F1: RE-ASSERT team-level RED at the arrival latch. Transit may have run YELLOW
@@ -1934,7 +1961,9 @@ while {!WFBE_GameOver && _alive} do {
 						_arrivalTraceAt = _team getVariable "wfbe_aicom_arrival_trace_at";
 						if (isNil "_arrivalTraceAt") then {_arrivalTraceAt = time};
 						if (time >= _arrivalTraceAt) then {
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
 							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ARRIVAL_WAIT|team=" + (str _team) + "|seq=" + str _seq + "|mode=" + str _mode + "|dist=" + str (round _arrivalDist) + "|gate=" + str (round _arrivalGate));
+				};
 							_team setVariable ["wfbe_aicom_arrival_trace_at", time + 60];
 						};
 					};
@@ -1967,7 +1996,9 @@ while {!WFBE_GameOver && _alive} do {
 				//--- 20s loop re-runs this phase next tick (units keep fighting at the center) so
 				//--- a single failed pass is never a dead end.
 				if (_arrived && !_captureDone && _mode == "towns-target") then {
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
 					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|BEGIN_CAPTURE|team=" + (str _team) + "|seq=" + str _seq + "|dist=" + str (round ((leader _team) distance _dest)));
+				};
 					//--- AI-BEHAVIOR-LOOP-DESIGN.md sec1.2 (CAMP_SWEEP): single choke-point every arrival already funnels through (_arrived && !_captureDone && _mode=="towns-target" guaranteed by the enclosing if above); no new gating logic needed.
 					if ((missionNamespace getVariable ["WFBE_C_AICOM_PHASE_ENABLE", 0]) > 0) then {
 						private ["_phPrev"];
@@ -2042,6 +2073,7 @@ while {!WFBE_GameOver && _alive} do {
 					//--- crew-only team (see CREW-AS-CAPTURE-BODIES below). This replaces the broken
 					//--- _hasCargo branch selection entirely.
 					_liveUnits = (units _team) Call WFBE_CO_FNC_GetLiveUnits;
+					_capMounted = ({vehicle _x != _x} count _liveUnits) > 0;
 					_footInf   = [];
 					//--- CREW-AS-CAPTURE-BODIES (OWNER DESIGN DECISION 2026-07-20 07:52, wasp-takistan-aicom-capture-stall-20260720): a crew-ONLY team (every alive unit is
 					//--- the driver or gunner of some vehicle, no dismountable cargo infantry at all)
@@ -2092,7 +2124,7 @@ while {!WFBE_GameOver && _alive} do {
 										if (isNil "_transportCaps" || {typeName _transportCaps != "ARRAY"}) then {_transportCaps = []};
 										_stampFound = false;
 										{if (typeName _x == "ARRAY" && {count _x >= 2} && {(_x select 0) == _veh}) then {_stampFound = true}} forEach _transportCaps;
-										if (!_stampFound && {alive _veh} && {canMove _veh}) then {_transportCaps set [count _transportCaps, [_veh, time]]};
+										if (!_stampFound && {alive _veh} && {_veh isKindOf "LandVehicle"} && {canMove _veh}) then {_transportCaps set [count _transportCaps, [_veh, time]]};
 										_team setVariable ["wfbe_aicom_transport_capable", _transportCaps, true];
 										unassignVehicle _u;
 										[_u] orderGetIn false;
@@ -2109,6 +2141,11 @@ while {!WFBE_GameOver && _alive} do {
 							};
 						};
 					} forEach _liveUnits;
+
+					_capClass = if (_hasNonCrewInf) then {"mixed"} else {"crew_only"};
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|CLASS=" + _capClass + "|mounted=" + str _capMounted + "|foot_inf=" + str (count _footInf) + "|team=" + (str _team) + "|seq=" + str _seq);
+				};
 
 					if (count _footInf > 0) then {
 						//--- ===== PER-CAMP SWEEP (drain-speed bonus + defender soften) =====
@@ -2422,11 +2459,14 @@ while {!WFBE_GameOver && _alive} do {
 							//--- captors (or the same team past expiry) fall through to the verbatim release.
 							//--- A2-OA-safe: object getVariable [name,default] is fine (object, not a group);
 							//--- SetTeamMoveMode/SetTeamMovePos are the codebase-standard broadcast setters.
-							private ["_holdMode","_holdUntil","_holdClaimed"];
+							private ["_holdMode","_holdUntil","_holdClaimed","_holdUnderAttack","_holdEnemyDist"];
 							_holdMode  = missionNamespace getVariable ["WFBE_C_AICOM_HOLD_MODE", 1];
 							_holdUntil = _townObj getVariable ["wfbe_aicom_hold_until", 0];
 							_holdClaimed = false;
-							if (_holdMode > 0 && {time > _holdUntil}) then {
+							_holdUnderAttack = false;
+							_holdEnemyDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
+							if ((_townObj getVariable ["wfbe_active", false]) && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _townObj) nearEntities [["Man","LandVehicle","Air"], _holdEnemyDist])) > 0}) then {_holdUnderAttack = true};
+							if (_holdMode > 0 && {time > _holdUntil} && {((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) <= 0) || {_holdUnderAttack}}) then {
 								//--- Claim the hold: stamp the town's expiry, put THIS team on DEFEND at the
 								//--- town centre, flag which town it is holding, clear stale strike/relief, and
 								//--- do NOT null the goto (so AssignTowns' holder-skip keeps it here).

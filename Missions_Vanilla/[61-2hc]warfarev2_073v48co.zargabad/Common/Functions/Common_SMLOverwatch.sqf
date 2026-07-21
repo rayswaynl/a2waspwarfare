@@ -2,7 +2,9 @@
 //--- Pre-positions the team's launcher soldier on the armor approach vector before the depot assault.
 //--- Args: [_team, _footInf, _sideID, _side, _townCenter, _dest, _capSeq]
 //--- Stamp discipline: wfbe_sml_detach_at set on detach, cleared to nil on rejoin.
-//--- Flag-gated: WFBE_C_SML_AT_OVERWATCH default 0.
+//--- Flag-gated: WFBE_C_SML_AT_OVERWATCH default 1 (ON) - see Init_CommonConstants.sqf.
+//--- fix(docs): this header previously claimed "default 0", which never matched the shipped
+//--- default (1, live) in Init_CommonConstants.sqf. Comment-only correction; no behaviour change.
 private ["_team","_footInf","_sideID","_side","_townCenter","_dest","_capSeq",
          "_ttl","_armorR","_offset","_startTime","_launcher","_found",
          "_nearEntities","_hostile","_hostileArmor","_armorTank",

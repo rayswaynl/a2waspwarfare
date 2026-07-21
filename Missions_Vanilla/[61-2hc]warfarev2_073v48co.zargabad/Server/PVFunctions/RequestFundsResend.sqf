@@ -53,27 +53,49 @@ if (isNull _player) exitWith {
 	diag_log "[WFBE][B76 FUNDS-RESEND] BAIL: null player in request.";
 };
 
+//--- fable/funds-resend-side-guard ROUND 3 (review 2026-07-19): the request body must be a REAL
+//--- PLAYER with a non-empty engine UID before anything resolves. Without this, a forged request
+//--- passing an AI body yields _uid="" - and an empty-UID playableUnits scan can then match a
+//--- DIFFERENT empty-UID playable AI and stamp a START wallet onto an AI group. Fail closed.
+if (!(isPlayer _player)) exitWith {
+	diag_log "[WFBE][B76 FUNDS-RESEND] BAIL: request body is not a player (forge/AI body) - deferring, never stamping.";
+};
 _uid = getPlayerUID _player;
+if (_uid == "") exitWith {
+	diag_log "[WFBE][B76 FUNDS-RESEND] BAIL: request body has an empty UID - deferring, never stamping.";
+};
 _team = grpNull;
 
-//--- Resolve the player's slot group the same way Server_OnPlayerConnected does, preferring the
-//--- body the client just handed us, then the stored RequestJoin body, then a UID scan of the
-//--- side-logic team groups. We only accept a group that carries wfbe_side (a real warfare slot).
-if (!isNull _player && {alive _player} && {!isNil {(group _player) getVariable "wfbe_side"}}) then {
-	_team = group _player;
-};
-
-if (isNull _team) then {
-	_clientBody = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
-	if (!isNull _clientBody && {alive _clientBody} && {!isNil {(group _clientBody) getVariable "wfbe_side"}}) then {
-		_team = group _clientBody;
-	};
+//--- Resolve the player's slot group (rounds 2+3, review 2026-07-19): the generic PV bus carries
+//--- NO sender identity, so the client-passed _player is the LEAST trusted input. With the entry
+//--- gate above (live isPlayer + non-empty engine UID), a forger can only nominate a REAL PLAYER
+//--- body, and _uid always derives from that body - so the worst a forgery achieves is triggering
+//--- a heal FOR that player's own UID, and every branch below is non-destructive for a healthy
+//--- target (same-value re-broadcast, lock-step record restore, or a first-join START stamp for a
+//--- record-less player). Resolution prefers SERVER-KNOWN bindings first: (1) the stored
+//--- RequestJoin body for this UID (revalidated: still a player, still this UID), (2) an
+//--- isPlayer-filtered playableUnits scan by engine UID, and only then (3) the client-passed body
+//--- (first-join edge where no server binding exists yet). Only groups carrying wfbe_side are
+//--- accepted; non-playable sides are rejected right below. This handler NEVER adopts/side-stamps
+//--- a group or appends to wfbe_teams - re-siding is connect-path-owned (B762), by review ruling.
+//--- Round 3: the stored body is REVALIDATED (still a player, still this UID) - a stale/reaped
+//--- binding can never redirect the heal; the playableUnits scan requires isPlayer so playable AI
+//--- (GUER is playable) can never match.
+_clientBody = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
+if (!isNull _clientBody && {alive _clientBody} && {isPlayer _clientBody} && {(getPlayerUID _clientBody) == _uid} && {!isNil {(group _clientBody) getVariable "wfbe_side"}}) then {
+	_team = group _clientBody;
 };
 
 if (isNull _team) then {
 	{
-		if (!isNull _x && {(getPlayerUID _x) == _uid} && {!isNil {(group _x) getVariable "wfbe_side"}}) exitWith {_team = group _x};
+		if (!isNull _x && {isPlayer _x} && {(getPlayerUID _x) == _uid} && {!isNil {(group _x) getVariable "wfbe_side"}}) exitWith {_team = group _x};
 	} forEach playableUnits;
+};
+
+if (isNull _team) then {
+	if (!isNull _player && {alive _player} && {!isNil {(group _player) getVariable "wfbe_side"}}) then {
+		_team = group _player;
+	};
 };
 
 //--- If we still cannot resolve a real warfare team, do nothing. The connect handler / its
@@ -85,6 +107,21 @@ if (isNull _team) exitWith {
 _sideJoined = _team getVariable "wfbe_side";
 if (isNil "_sideJoined") exitWith {
 	diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1]: resolved team has nil wfbe_side - deferring.", _uid];
+};
+
+//--- fable/funds-resend-side-guard (owner live loss 2026-07-19, ZG): a CIV-drifted group (a swap/
+//--- transient group stamped wfbe_side=CIV, NOT a real warfare slot) used to sail through this
+//--- handler; with no group funds and no JIP record yet, branch (3) below then read the
+//--- NONEXISTENT WFBE_C_ECONOMY_FUNDS_START_CIV constant, defaulted to 0, and STAMPED+BROADCAST
+//--- wfbe_funds=0 onto the group - converting a transient nil into a latched zero that every later
+//--- self-heal poll "confirmed" via branch (2) (live RPT: 1x "side CIV: stamped START funds=0",
+//--- then 10x "side CIV: re-broadcast EXISTING group funds=0"; owner wallet read $0 until a
+//--- reconnect ran the B762 stable-group adoption). A heal must never be able to invent a zero:
+//--- treat a non-playable side EXACTLY like the nil-side case above - log + defer, stamp nothing.
+//--- The client will keep polling; enrollment/adoption (Server_OnPlayerConnected / B762) owns
+//--- re-siding the group. A2-OA-safe: side==side comparison, no isEqualType.
+if (_sideJoined == civilian || {!(_sideJoined in [west, east, resistance])}) exitWith {
+	diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1]: resolved team wfbe_side [%2] is not a playable faction (CIV-drift) - deferring, never stamping.", _uid, _sideJoined];
 };
 
 //--- Ray pick A (2026-07-03) ZERO-LATCH RECORD RESTORE: the per-player record is now kept in LOCK-STEP
@@ -123,6 +160,13 @@ if (_recCash > -1) exitWith {
 
 //--- (3) No record yet -> stamp the side START funds (the value the connect handler WOULD set on
 //--- first join). We do NOT create WFBE_JIP_USER<uid> here; Server_OnPlayerConnected owns it.
-_funds = missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _sideJoined], 0];
+//--- fable/funds-resend-side-guard: belt-and-braces - if the START constant for this side does not
+//--- exist, DEFER instead of stamping the getVariable default (stamping an invented 0 is exactly
+//--- the CIV-drift zero-latch this guard exists to prevent; the side gate above already blocks
+//--- non-playable sides, this covers any future side/constant mismatch identically).
+_funds = missionNamespace getVariable Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _sideJoined];
+if (isNil "_funds" || {typeName _funds != "SCALAR"}) exitWith {
+	diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1] side %2: no START constant for this side - deferring, never stamping.", _uid, _sideJoined];
+};
 _team setVariable ["wfbe_funds", _funds, true];
 diag_log Format ["[WFBE][B76 FUNDS-RESEND] [%1] side %2: stamped START funds=%3 (no JIP record yet; connect handler will reconcile).", _uid, _sideJoined, _funds];

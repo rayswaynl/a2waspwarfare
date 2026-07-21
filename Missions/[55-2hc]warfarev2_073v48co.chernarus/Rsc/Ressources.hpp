@@ -150,6 +150,16 @@ class RscButton_Main : RscButton {
 	colorFocused[] = WFBE_Menu_Button_Focused_Color;
 	colorText[] = WFBE_Menu_Button_Text_Color;
 };
+//--- P2 shared legacy action geometry: preserves RscButton's existing gold/olive palette while
+//--- giving standard action controls one OA-safe height, text size, and padding baseline.
+class RscButton_WFBE_Action : RscButton {
+	h = 0.035;
+	sizeEx = 0.028;
+	offsetX = 0.002;
+	offsetY = 0.002;
+	offsetPressedX = 0.001;
+	offsetPressedY = 0.001;
+};
 class RscButton_Back : RscButton {
 	w = 0.04;
 	h = 0.04;

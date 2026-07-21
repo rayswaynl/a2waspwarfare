@@ -17,7 +17,6 @@ _town_airactive = _town getVariable ["wfbe_active_air", false];
 _units = [];
 _percentage_inf = 50;
 _groups_max = 0;
-_randomize = 0;
 
 _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 
@@ -137,7 +136,28 @@ switch (true) do {
 	};
 };
 
-if (_randomize != 0) then {_groups_max = _groups_max + round(random _randomize - random _randomize)};
+//--- Roster phase-2 town-type overlays (dark by default): apply only to the WEST/EAST garrison
+//--- picker after the supply-value band is selected. No aircraft are parked here; only shared roster
+//--- request keys are appended and the normal resolver/AA filters remain authoritative.
+if ((missionNamespace getVariable ["WFBE_C_TOWN_TYPE_OVERLAYS", 0]) > 0 && {(_side == west) || {_side == east}}) then {
+	private ["_overlayHasAirfield","_overlayAfNames","_overlaySideID"];
+	_overlayHasAirfield = false;
+	_overlaySideID = (_side) Call WFBE_CO_FNC_GetSideID;
+	_overlayAfNames = ["NWAF","NEAF","Balota","Rasman AF"];
+	{
+		if (!((_x select 1) in _overlayAfNames)) then {_overlayAfNames = _overlayAfNames + [_x select 1]};
+	} forEach (missionNamespace getVariable [Format ["WFBE_%1_CAPTURE_UNLOCKS", str _side], []]);
+	//--- Evaluate the requesting town only. A side-owned airfield must not make every town an airfield town.
+	_overlayHasAirfield = ((_town getVariable ["sideID", -1]) == _overlaySideID)
+		&& {(_town getVariable ["wfbe_is_airfield", false]) || {(_town getVariable ["name", ""] in _overlayAfNames)} || {!(isNull (_town getVariable ["wfbe_airfield_hangar_obj", objNull]))}};
+	if (_overlayHasAirfield) then {
+		_units = _units + [["AA_Light", 1, 1], ["Team_AA", 1, 0]];
+	};
+	if (_sv >= 80) then {
+		_units = _units + [[Format ["Team_Sniper_%1", _current_infantry_upgrade], 1, 0], [Format ["Team_AT_%1", _current_infantry_upgrade], 1, 0]];
+	};
+};
+
 _groups_max = round(_groups_max * (missionNamespace getVariable "WFBE_C_TOWNS_UNITS_COEF"));
 
 //--- Commander Town Ledger (fable/ctl-impl-v1) materialization overlay (B2). Flag-off

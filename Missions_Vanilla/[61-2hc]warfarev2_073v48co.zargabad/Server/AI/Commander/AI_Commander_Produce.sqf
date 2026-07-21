@@ -31,8 +31,19 @@ _capTier = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
 _capTierLast = (count _capTiers) - 1;
 if (_capTier > _capTierLast) then {_capTier = _capTierLast};
 _cap = _capTiers select _capTier;   //--- B74.2: tiered per-side AI ceiling (was flat WFBE_C_AI_COMMANDER_TOTAL_AI_MAX).
-_sideAI = {(side _x == _side) && !(isPlayer _x)} count allUnits;
-if (_sideAI >= _cap) exitWith {};
+_sideAI = {alive _x && {side _x == _side} && {!isPlayer _x}} count allUnits;
+if (_sideAI >= _cap) exitWith {
+	private "_produceCapCount";
+	private "_produceCapLast";
+	_produceCapCount = (_logik getVariable ["wfbe_aicom_producecap_count", 0]) + 1;
+	_produceCapLast = _logik getVariable ["wfbe_aicom_producecap_log_t", -9999];
+	_logik setVariable ["wfbe_aicom_producecap_count", _produceCapCount];
+	if ((time - _produceCapLast) >= 300) then {
+		_logik setVariable ["wfbe_aicom_producecap_log_t", time];
+		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|PRODUCE_SKIP|reason=side-cap|count=" + str _produceCapCount + "|sideAI=" + str _sideAI + "|tierCap=" + str _cap + "|tier=" + str _capTier);
+		_logik setVariable ["wfbe_aicom_producecap_count", 0];
+	};
+};
 
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
@@ -131,7 +142,7 @@ if (_airMaxTotalP > 0) then {
 		//--- gets an infantry top-up. We CHARGE the side up front (per-missing-unit flat cost) and broadcast a
 		//--- wfbe_aicom_topup_req [count,pos,classes,issuedTime] the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
 		//--- one top-up per team per COOLDOWN via a group stamp. Never fires in COMBAT (rallying/parked implies not) or while pending disband (PR #542).
-		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag"];
+		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag","_wm_costOn","_wm_afford"];
 		if (_wm_alive < 6 && {behaviour _wm_ldr != "COMBAT"}) then {
 			_wm_rally = _team getVariable "wfbe_aicom_rallying";
 			_wm_rally = (!isNil "_wm_rally" && {_wm_rally});
@@ -184,10 +195,23 @@ if (_airMaxTotalP > 0) then {
 							if (!isNull _wm_cmdTeam) then { if (isPlayer (leader _wm_cmdTeam)) then {_wm_humanSeated = true} };
 							_wm_mult = 1;
 							if (_wm_humanSeated) then {_wm_mult = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_HUMAN_MULT", 0.33]};
+							//--- QM REFIT FREE FOR PLAYER COMMANDER (Ray owner ruling, 2026-07-21): WFBE_C_AICOM_TOPUP_HUMAN_COST
+							//--- default 0 = FREE. Mirrors the WFBE_C_CMD_REFIT_COST toggle already used by the explicit REFIT verb
+							//--- (Server_HandleSpecial.sqf "aicom-refit"). When off (<= 0) the SEATED HUMAN commander's passive
+							//--- Quartermaster top-up (this block) charges nothing and is NEVER blocked by low funds: force the
+							//--- multiplier to 0 and bypass the affordability gate below. The human-seat test above (isPlayer leader
+							//--- of the commander team) is server-derived, never client-trusted; AI commander (test false -> mult
+							//--- stays 1) and non-commander behaviour are untouched. WFBE_C_AICOM_TOPUP_HUMAN_MULT's own default
+							//--- (0.25) is UNCHANGED and still governs the legacy discounted-charge path if WFBE_C_AICOM_TOPUP_HUMAN_COST
+							//--- is ever set > 0.
+							_wm_costOn = (missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_HUMAN_COST", 0]) > 0;
+							if (_wm_humanSeated && {!_wm_costOn}) then {_wm_mult = 0};
 							_wm_charge   = round (_wm_unitCost * _wm_missing * _wm_mult);
 							_wm_curFunds = (_side) Call GetAICommanderFunds;
-							if (_wm_curFunds >= _wm_charge) then {
-								[_side, -_wm_charge] Call ChangeAICommanderFunds;
+							_wm_afford   = (_wm_curFunds >= _wm_charge);
+							if (_wm_humanSeated && {!_wm_costOn}) then {_wm_afford = true}; //--- free path: never blocked by low funds
+							if (_wm_afford) then {
+								if (_wm_charge > 0) then {[_side, -_wm_charge] Call ChangeAICommanderFunds};
 								_wm_rallyPos = getPosATL _wm_ldr; //--- plain array = the rally pos the driver spawns at
 								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls, _wm_now], true];
 								_team setVariable ["wfbe_aicom_topup_stamp", _wm_now, false]; //--- rate-limit stamp (local group var)
@@ -334,7 +358,7 @@ if (_airMaxTotalP > 0) then {
 					} else {
 						//--- No eligible nearby team: existing cull, unchanged (guardrail = never strands the survivor).
 						//--- Non-player guard is belt-and-braces (this branch is already server-local non-HC, non-player-led).
-						{ if (!(isPlayer _x)) then {deleteVehicle _x} } forEach (units _team);
+						{ if (!(isPlayer _x)) then {["produce-cull-unit", _x, Format ["tries=%1 issues=%2", _rTries, _rIssues]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5, issues=%6) - recycled (no-progress OR issue-cap OR too-far).", _sideText, _team, _aliveNow, _curDist, _rTries, _rIssues]] Call WFBE_CO_FNC_AICOMLog;
 						deleteGroup _team;
 						_canProduce = false;
@@ -349,7 +373,8 @@ if (_airMaxTotalP > 0) then {
 					_retreatOrder = _team getVariable "wfbe_aicom_order";
 					if (isNil "_retreatOrder") then {_retreatOrder = [-1]};
 					_retreatSeq = (_retreatOrder select 0) + 1;
-					_retreatOrder = [_retreatSeq, "defense", getPosATL _hqP];
+					//--- Refit is a logistical MOVE under always-offense; legacy DEFEND remains a rollback only.
+					_retreatOrder = [_retreatSeq, if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {"move"} else {"defense"}, getPosATL _hqP];
 					_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
 					_team setVariable ["wfbe_aicom_refit", true, true]; //--- B61: mark for top-up-at-base once home.
 					if (!_refitWas) then {

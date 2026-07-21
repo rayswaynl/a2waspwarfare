@@ -440,6 +440,7 @@ if (_isMan) then {
 	if (!isNull _soldier && {(missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0}) then {
 		_soldier setRank "PRIVATE";
 	};
+	["buyunit", "post-spawn"] Call WFBE_CL_FNC_TeambarProbe; //--- TEAMBAR probe: order after a bought AI joins the group
 	_spawnedUnits = [_soldier];
 	//--- UD-23: Unit designer -- apply active template to bought infantry (WFBE_C_UNIT_DESIGNER).
 	if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
@@ -827,18 +828,39 @@ if (_isMan) then {
 			_aid = _v addAction [
 				"<t color='#ff9900'>SCUD Fire Mission (map-click)</t>",
 				{
-					private ["_v","_caller","_cost"];
+					private ["_v","_caller","_cost","_token"];
 					_v = _this select 0;
 					_caller = _this select 1;
+					//--- fable/scudtel-mapcancel: re-select guard, mirrors the Barrel Bomb / carrier-SCUD pattern
+					//--- from PR #1211 - do not stack a second onMapSingleClick while a designation is pending.
+					if (player getVariable ["wfbe_tk_scud_designating", false]) exitWith { hintSilent parseText "<t color='#F89060'>SCUD: click the target on the map.</t>"; };
 					_cost = missionNamespace getVariable ["WFBE_C_ICBM_TEL_SAT_COST", 12000];
 					if (((group _caller) Call WFBE_CO_FNC_GetTeamFunds) < _cost) exitWith { hintSilent parseText Format ["<t color='#F8D664'>Not enough funds for a SCUD saturation strike ($%1).</t>", _cost]; };
 					hintSilent parseText "<t color='#F89060'>SCUD: click the target on the map.</t>";
 					openMap true;
 					//--- capture the firing hull so onMapSingleClick can hint it as the platform.
 					wfbe_tk_scud_fire_veh = _v;
+					player setVariable ["wfbe_tk_scud_designating", true];
+					_token = diag_tickTime;
+					player setVariable ["wfbe_tk_scud_design_token", _token];
+					//--- fable/scudtel-mapcancel: ESC / map-close cancel watcher (PR #1211 pattern) - without it,
+					//--- ESCing out of SCUD-TEL targeting left the armed onMapSingleClick live, so the player's next
+					//--- unrelated map click silently fired a SCUD saturation strike. "_token" pins the watcher to
+					//--- THIS designation instance so a later, unrelated designation cannot be clobbered.
+					[player, _token] spawn {
+						private ["_p","_myToken"];
+						_p = _this select 0;
+						_myToken = _this select 1;
+						waitUntil {!visibleMap || {isNull _p} || {!(_p getVariable ["wfbe_tk_scud_designating", false])}};
+						if ((_p getVariable ["wfbe_tk_scud_designating", false]) && {(_p getVariable ["wfbe_tk_scud_design_token", -1]) == _myToken}) then {
+							_p setVariable ["wfbe_tk_scud_designating", false];
+							onMapSingleClick {[_pos, _shift, _alt, _units] call WFBE_CL_FNC_HandleMapSingleClick};
+						};
+					};
 					onMapSingleClick {
-						onMapSingleClick {};
+						onMapSingleClick {[_pos, _shift, _alt, _units] call WFBE_CL_FNC_HandleMapSingleClick};
 						openMap false;
+						player setVariable ["wfbe_tk_scud_designating", false];
 						private ["_veh"];
 						_veh = wfbe_tk_scud_fire_veh;
 						if (isNull _veh || {!alive _veh}) exitWith { hintSilent parseText "<t color='#ff5a5a'>That SCUD is gone.</t>"; };
