@@ -66,7 +66,7 @@ WFBE_CO_FNC_CommanderLeaseHolderPresent = {
     _groupKey = _lease select 2;
 
     {
-        if (!isNull _x && {alive _x} && {isPlayer _x} && {(getPlayerUID _x) == _uid} && {(groupId (group _x)) == _groupKey}) then {_present = true};
+        if (!isNull _x && {alive _x} && {isPlayer _x} && {(getPlayerUID _x) == _uid} && {(str (group _x)) == _groupKey}) then {_present = true};
     } forEach allUnits;
     _present
 };
@@ -143,7 +143,7 @@ WFBE_CO_FNC_CommanderLeaseExecGrant = {
     _uid = getPlayerUID _leader;
     _gen = (_logic getVariable ["wfbe_commander_lease_gen", 0]) + 1;
     _logic setVariable ["wfbe_commander_lease_gen", _gen];
-    _logic setVariable ["wfbe_commander_lease", [_uid, _side, groupId _team, time, _source, _gen]];
+    _logic setVariable ["wfbe_commander_lease", [_uid, _side, str _team, time, _source, _gen]];
     _logic setVariable ["wfbe_commander_lease_expires", nil];
     _logic setVariable ["wfbe_commander", _team, true];
     [_side, _team] Spawn WFBE_SE_FNC_AssignForCommander;
@@ -160,7 +160,7 @@ WFBE_CO_FNC_CommanderLeaseExecReclaim = {
     if (isNull _team) exitWith {};
     _lease = _logic getVariable ["wfbe_commander_lease", []];
     if (typeName _lease != "ARRAY" || {count _lease < 6}) exitWith {};
-    if ((_lease select 0) != _uid || {(_lease select 2) != (groupId _team)}) exitWith {};
+    if ((_lease select 0) != _uid || {(_lease select 2) != (str _team)}) exitWith {};
     if (!([_side, _team] Call WFBE_CO_FNC_CommanderLeaseEligible)) exitWith {};
 
     //--- Reclaim bumps generation too, even though it is "the same lease continuing": this is
@@ -170,7 +170,7 @@ WFBE_CO_FNC_CommanderLeaseExecReclaim = {
     _gen = (_logic getVariable ["wfbe_commander_lease_gen", 0]) + 1;
     _logic setVariable ["wfbe_commander_lease_gen", _gen];
     _logic setVariable ["wfbe_commander_lease_expires", nil];
-    _logic setVariable ["wfbe_commander_lease", [_uid, _side, groupId _team, time, "reclaim", _gen]];
+    _logic setVariable ["wfbe_commander_lease", [_uid, _side, str _team, time, "reclaim", _gen]];
     _logic setVariable ["wfbe_commander", _team, true];
     [_side, "HandleSpecial", ["new-commander-assigned", _team]] Call WFBE_CO_FNC_SendToClients;
 };

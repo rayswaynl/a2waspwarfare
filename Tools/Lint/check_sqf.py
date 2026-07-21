@@ -51,6 +51,8 @@ A3_TRAPS = (
     "disableMove",  # invented identifier; does not exist on A2 OA 1.64 (nor A3); use disableAI "MOVE"
     "ctrlSetTooltip",  # A3-only; parse-kills the whole script on A2 OA 1.64 (live-burned RC26/27 WF menu)
     "stance",  # A3-only, caught in PR 1202 review; unavailable on A2 OA 1.64.
+    "groupId",  # A3-only GETTER (setGroupId is A2-fine and unmatched by \b); parse "Missing ]" live-burned wave0721 (teambar probe + commander lease); use str <group>
+    "rankId",  # A3-only; A2 OA has string-returning `rank` only; shipped alongside groupId in wave0721
     # NOTE: bare "insert" excluded. A3_TRAPS matching uses word-boundary regex
     # on comment/string-masked text (safe), but "insert" appears in plain English
     # comments too frequently to avoid noise.
@@ -85,6 +87,11 @@ A3_REVEAL_ARRAY_LEFT_RE = re.compile(r"\[[^\]\n;]*\]\s+reveal\b", re.IGNORECASE)
 A3_REVEAL_ARRAY_RIGHT_RE = re.compile(r"\breveal\s+\[[^\]\n;]*\]", re.IGNORECASE)
 A3_SELECT_SLICE_RE = re.compile(r"\bselect\s*\[", re.IGNORECASE)
 A3_SORT_CODE_RE = re.compile(r"\bsort\s*\{", re.IGNORECASE)
+# exitWith is only valid as `if (cond) exitWith {..}`; any other placement (statement-start OR
+# inline after `;`/`{`) parse-fails the whole file on A2 OA 1.64 ("Error Missing ;") - live-burned
+# wave0721b/c (chat relay + 8 team-founding sites). Detection is positional (previous non-space
+# char must be `)`), implemented as a custom scan in check_text, not a regex table entry.
+BARE_EXITWITH_WORD_RE = re.compile(r"\bexitWith\b", re.IGNORECASE)
 A3_BIS_FNC_CALL_RE = re.compile(r"\bcall\s+BIS_fnc_\w+\b", re.IGNORECASE)
 STRING_LITERAL_RE = "\"(?:[^\"]|\"\")*\"|'(?:[^']|'')*'"
 A3_STRING_FIND_RE = re.compile(rf"(?:{STRING_LITERAL_RE})\s+find\s+(?:{STRING_LITERAL_RE})", re.IGNORECASE)
@@ -133,6 +140,7 @@ NOQA_RE = re.compile(r"//\s*noqa(?:\s*:\s*([A-Za-z0-9_,\s]+))?\s*$", re.IGNORECA
 FINDING_CODES = (
     "A3BISFNC",
     "A3CMD",
+    "BAREEXIT",
     "A3HASH",
     "A3MARKER",
     "A3NUMGATE",
@@ -487,6 +495,16 @@ def lint_text(path: Path, text: str, root: Path, token_index: dict[str, set[Path
         for match in re.finditer(rf"\b{re.escape(trap)}\b", masked, re.IGNORECASE):
             line, col = line_col(starts, match.start())
             findings.append(Finding(path, line, col, "A3CMD", f"Arma 3-only command or prompt trap: {trap}"))
+
+    # BAREEXIT: exitWith is a binary command (`if (cond) exitWith {..}`); anywhere else the engine
+    # parse-fails the whole file. Positional check: previous non-whitespace char must be `)`.
+    for match in BARE_EXITWITH_WORD_RE.finditer(masked):
+        j = match.start() - 1
+        while j >= 0 and masked[j] in " \t\r\n":
+            j -= 1
+        if j < 0 or masked[j] != ")":
+            line, col = line_col(starts, match.start())
+            findings.append(Finding(path, line, col, "BAREEXIT", "exitWith not directly preceded by `if (..)` parse-fails the whole file on A2 OA; use `if (cond) exitWith {..}`"))
 
     for regex, code, message in (
         (A3_REVEAL_ARRAY_LEFT_RE, "A3REVEAL", "Array-form reveal is an A3-era trap; reveal units one at a time"),

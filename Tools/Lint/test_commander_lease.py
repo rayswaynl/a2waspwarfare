@@ -273,9 +273,10 @@ class CommanderLeaseFixtures(unittest.TestCase):
         self.assertIn("Call WFBE_CO_FNC_CommanderLeaseEligible)) exitWith {}", code)
 
     def test_source_contracts_are_flagged_and_registered(self) -> None:
+        """wave0721 arming ruling (2026-07-21): WFBE_C_CMD_LEASE flipped 0->1."""
         constants = CONSTANTS.read_text(encoding="utf-8-sig")
         common_init = COMMON_INIT.read_text(encoding="utf-8-sig")
-        self.assertIn('if (isNil "WFBE_C_CMD_LEASE") then {WFBE_C_CMD_LEASE = 0};', constants)
+        self.assertIn('if (isNil "WFBE_C_CMD_LEASE") then {WFBE_C_CMD_LEASE = 1};', constants)
         self.assertIn('if (isNil "WFBE_C_CMD_LEASE_GRACE") then {WFBE_C_CMD_LEASE_GRACE = 90};', constants)
         self.assertIn('Call Compile preprocessFileLineNumbers "Common\\Functions\\Common_CommanderLease.sqf";', common_init)
         flagged = 'missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]'

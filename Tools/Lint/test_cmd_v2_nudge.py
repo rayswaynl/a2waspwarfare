@@ -46,14 +46,22 @@ ALL_TOUCHED = (
     INIT_COMMON, MENU, CLIENT_HANDLE, DIALOGS,
 )
 
-#: Every mechanic master flag MUST default to 0 — flag-off is the shipped state.
-MASTER_FLAGS = (
+#: wave0721 arming ruling (owner, 2026-07-21: "everything flags on, no dark new stuff") -
+#: every master flag flipped 0->1 EXCEPT WFBE_C_CMD_SUPPORT_JET, deliberately left dark
+#: (reserved, no code path yet - see Init_CommonConstants.sqf's own comment on that line).
+ARMED_MASTER_FLAGS = (
     "WFBE_C_CMD_TOWN_NUDGE",
     "WFBE_C_CMD_TEAM_DOCTRINE",
     "WFBE_C_CMD_POSTURE_GARRISON",
     "WFBE_C_CMD_SUPPORT_AIR",
+)
+
+#: Excluded from the arming ruling on purpose - stays at its pre-arming default.
+DARK_MASTER_FLAGS = (
     "WFBE_C_CMD_SUPPORT_JET",
 )
+
+MASTER_FLAGS = ARMED_MASTER_FLAGS + DARK_MASTER_FLAGS
 
 #: Tunables. These carry non-zero defaults but are only read once a master flag is on.
 TUNABLE_FLAGS = (
@@ -100,10 +108,19 @@ def read_code(root: Path, relative: Path) -> str:
 class FlagContractTests(unittest.TestCase):
     """Flag policy: append-only, masters default 0, tunables present."""
 
-    def test_every_master_flag_is_registered_default_zero(self) -> None:
+    def test_every_master_flag_is_registered_at_its_armed_default(self) -> None:
+        """wave0721 arming ruling (2026-07-21) flipped ARMED_MASTER_FLAGS 0->1; this was
+        originally pinned as "every master flag defaults to 0" before that ruling landed -
+        DARK_MASTER_FLAGS (just WFBE_C_CMD_SUPPORT_JET) is the sole deliberate holdout still
+        pinned at 0."""
         for root in MAINTAINED_ROOTS:
             text = read(root, CONSTANTS)
-            for flag in MASTER_FLAGS:
+            for flag in ARMED_MASTER_FLAGS:
+                needle = 'if (isNil "%s")' % flag
+                with self.subTest(root=root.name, flag=flag):
+                    self.assertIn(needle, text)
+                    self.assertIn("{%s = 1}" % flag, text)
+            for flag in DARK_MASTER_FLAGS:
                 needle = 'if (isNil "%s")' % flag
                 with self.subTest(root=root.name, flag=flag):
                     self.assertIn(needle, text)

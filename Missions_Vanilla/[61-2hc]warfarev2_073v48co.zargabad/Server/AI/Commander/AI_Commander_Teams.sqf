@@ -347,12 +347,13 @@ if ((_logik getVariable ["wfbe_aicom_veteran_next", false]) && {_logik getVariab
 
 if (_testTeamCap >= 0) then {_target = _target min _testTeamCap}; //--- WFBE_C_TEST_TEAM_CAP final ceiling (test-only, default off).
 
-if ((_foundedTeams + _pending + _constructionPending) >= _target) then {
+if ((_foundedTeams + _pending + _constructionPending) >= _target) exitWith {
+	//--- target met: emit telemetry + found-skip, then return from the founding pass (bare
+	//--- exitWith inside then{} was a parse error that killed lines below - wave0721b live burn)
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
 		[_side, "at-target", _foundedTeams, _pending, _target, -1, -1, -1, -1, _allVehicles] Call WFBE_CO_FNC_AICOMAirFoundTelemetry;
 	};
 	["target_met"] Call _emitFoundSkip;
-	exitWith {}
 };
 
 //--- B74.2 (Ray 2026-06-23): enforce the TIERED per-side TOTAL_AI ceiling AT FOUNDING. The HC founding path had NO
@@ -544,7 +545,7 @@ if (count _live > 0) then {
 			};
 		};
 	};
-	if (count _eligible == 0) then { ["no_eligible"] Call _emitFoundSkip; exitWith {} };
+	if (count _eligible == 0) exitWith { ["no_eligible"] Call _emitFoundSkip; };
 
 	//--- Ray 2026-06-29 NO STATICS / NO WEAPON TEAMS: strip every eligible template that contains a StaticWeapon
 	//--- (a towed gun, a mortar emplacement, or any crew-served static) so the AI NEVER founds a static gun or a
@@ -561,7 +562,7 @@ if (count _live > 0) then {
 		if (!_swHas) then {_eligNoStatic set [count _eligNoStatic, _swEi]};
 	} forEach _eligible;
 	if (count _eligNoStatic > 0) then {_eligible = _eligNoStatic};
-	if (count _eligible == 0) then { ["no_eligible"] Call _emitFoundSkip; exitWith {} };
+	if (count _eligible == 0) exitWith { ["no_eligible"] Call _emitFoundSkip; };
 
 	//--- fable/aicom-no-bikes (WO-5, owner ruling "no ATVs/bikes"): strip every eligible template that contains an
 	//--- ATV/Motorcycle-hull unit from the AI commander roster. "Motorcycle" is the confirmed A2 OA CfgVehicles base
@@ -579,7 +580,7 @@ if (count _live > 0) then {
 		} forEach _eligible;
 		if (count _eligNoBike > 0) then {_eligible = _eligNoBike};
 	};
-	if (count _eligible == 0) then { ["no_eligible"] Call _emitFoundSkip; exitWith {} };
+	if (count _eligible == 0) exitWith { ["no_eligible"] Call _emitFoundSkip; };
 
 	//--- B59 ROSTER AIR-GATE (Ray 2026-06-20): the FOUNDING path (this file) had NO air-established gate, so
 	//--- a heli template (cheapest helis carried QUERYUNITUPGRADE air=0) was eligible at air-research 0 with no
@@ -594,7 +595,7 @@ if (count _live > 0) then {
 		{ if (((_tmplUpgrades select _x) select WFBE_UP_AIR) <= 0) then {_eligNoAir set [count _eligNoAir, _x]} } forEach _eligible;
 		_eligible = _eligNoAir;
 	};
-	if (count _eligible == 0) then { ["no_eligible"] Call _emitFoundSkip; exitWith {} };
+	if (count _eligible == 0) exitWith { ["no_eligible"] Call _emitFoundSkip; };
 
 	//--- Build83 FLAT AIR CAP (Ray cmdcon34, 2026-07-01): SUPERSEDES the old per-type attack-heli cap (WFBE_C_AICOM_ATTACKHELI_MAX
 	//--- + its time-bonus ramp) with a SINGLE per-side ceiling: at most WFBE_C_AICOM_AIR_MAX_TOTAL (default 3) AICOM air units
@@ -651,7 +652,7 @@ if (count _live > 0) then {
 			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] flat air cap hit (alive air %2 >= cap %3) - air templates stripped from founding this cycle.", _sideText, _airAlive, _airMaxTotal]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
-	if (count _eligible == 0) then { ["no_eligible"] Call _emitFoundSkip; exitWith {} };
+	if (count _eligible == 0) exitWith { ["no_eligible"] Call _emitFoundSkip; };
 
 	//--- ARTY CAP (Ray 2026-06-27): at most WFBE_C_AICOM_ARTY_MAX artillery batteries ALIVE per AI commander. Mirror
 	//--- of the attack-heli cap above: count alive arty hulls this side; at/over cap, strip every arty template from
@@ -733,7 +734,7 @@ if (count _live > 0) then {
 		};
 	};
 
-	if (count _eligible == 0) then { ["no_eligible"] Call _emitFoundSkip; exitWith {} };
+	if (count _eligible == 0) exitWith { ["no_eligible"] Call _emitFoundSkip; };
 
 	//--- FORCED-ARTY (Ray 2026-06-27, Issue 3 Part 2): GUARANTEE the 1 artillery battery is founded once eligible.
 	//--- The arty-cap strip above only stops OVER-building; the normal type-mix/eff-draw almost never PICKS the lone

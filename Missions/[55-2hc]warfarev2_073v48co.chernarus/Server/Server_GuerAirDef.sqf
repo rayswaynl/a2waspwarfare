@@ -176,6 +176,19 @@ WFBE_ACTIVE_GUER_AIR = [];
 publicVariable "WFBE_ACTIVE_GUER_AIR";
 
 while {!WFBE_GameOver} do {
+	//--- wave0721e live-burn guard (2026-07-21): this SERVER-only loop hit 'Undefined variable
+	//--- wfbe_co_fnc_logvehdelete' MID-MATCH even though Init_Common.sqf compiles the probe
+	//--- unconditionally and server_groupsGC used it successfully in the same session. The probe
+	//--- call and deleteVehicle share statements below, so the abort LEAKED whole despawns
+	//--- (hull+crew never deleted). Until the nil-er is found: re-stub per tick so cleanup NEVER
+	//--- depends on telemetry, and log each occurrence (latched) as root-cause data.
+	if (isNil "WFBE_CO_FNC_LogVehDelete") then {
+		WFBE_CO_FNC_LogVehDelete = {};
+		if (isNil "wfbe_guerairdef_probestub_logged") then {
+			wfbe_guerairdef_probestub_logged = true;
+			diag_log "GUERAIRDEF|PROBE-STUBBED|LogVehDelete was nil at maintain tick - despawn probe stubbed, cleanup preserved";
+		};
+	};
 	sleep _interval;
 
 	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore","_prunedGroups"];

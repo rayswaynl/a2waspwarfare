@@ -314,7 +314,11 @@ while {!WFBE_GameOver} do {
 					_reaped = 0;
 					{
 						if (!isPlayer _x && !(_x in playableUnits)) then {
-							["gc-zombie-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete;
+							//--- fix/vehdel-fold-corrective (2026-07-21): fold-preservation audit found the #1157
+							//--- manifest entry claimed "duplicate gc-zombie emission dropped" at drain head
+							//--- fefacf451b, but the actual merge (dfb9cd98e0) pulled in an earlier iteration
+							//--- (71ef2feec1) that still had both calls. Restoring the reviewed fix here: one
+							//--- VEHDEL emission per zombie delete, not two.
 							["gc-L318", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x;
 							_reaped = _reaped + 1;
 						};
