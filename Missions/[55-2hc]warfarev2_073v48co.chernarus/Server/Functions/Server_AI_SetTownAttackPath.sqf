@@ -6,7 +6,7 @@
 		- Town Assigned.
 */
 
-Private ["_distance_node","_select","_side","_team","_town_assigned","_wp_dest","_wp_origin","_wp_sel","_marchCombat"];  //--- cmdcon41-w2: +_marchCombat (yellow-march transit combat-mode token).
+Private ["_distance_node","_select","_side","_team","_town_assigned","_wp_dest","_wp_origin","_wp_sel","_marchCombat","_fallbackLeader"];  //--- cmdcon41-w2: +_marchCombat (yellow-march transit combat-mode token) + nil-side recovery.
 
 _team = _this select 0;
 _town_assigned = _this select 1;
@@ -25,6 +25,11 @@ _select = _wp_origin;
 (_team) Call WFBE_CO_FNC_WaypointsRemove;
 _distance_node = 700;
 _side = (_team getVariable "wfbe_side") Call WFBE_CO_FNC_GetSideID;
+if (isNil "_side") then {
+	_fallbackLeader = objNull;
+	if (!isNull _team) then {_fallbackLeader = leader _team};
+	if (!isNull _fallbackLeader && {alive _fallbackLeader}) then {_side = (side _fallbackLeader) Call WFBE_CO_FNC_GetSideID};
+};
 if (isNil "_side") exitWith {
 	["WARNING", Format ["Server_AI_SetTownAttackPath: skipped dispatch with undefined side team=%1.", _team]] Call WFBE_CO_FNC_LogContent;
 };
