@@ -144,6 +144,78 @@ class PackPboTests(unittest.TestCase):
         # sanity: no collision, no error
         pack_pbo.check_lowercase_collisions([("a.sqf", b"a"), ("b.sqf", b"b")])
 
+    def test_no_init_sqf_packs_fine(self) -> None:
+        # make_mission() ships no init.sqf by default, matching the proven-live
+        # mission tree (wave0720b extraction: 938 entries, no init.sqf, only
+        # initjipcompatible.sqf) - this is the "guard passes" half of the
+        # both-ways proof.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mission = make_mission(root)
+            out = root / "out.pbo"
+            pack_pbo.pack(
+                source=mission,
+                output=out,
+                prefix=None,
+                build_tag=None,
+                allow_debug=False,
+                strict_version=False,
+                force=False,
+                quiet=True,
+            )
+            self.assertTrue(out.exists())
+
+    def test_init_sqf_selftest_stub_contamination_aborts(self) -> None:
+        # release-critical guard (wave0721, council finding C4): reproduce the
+        # exact stray local-test-harness stub found on real dev boxes - must
+        # abort, not silently pack a mission that never boots the real game.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mission = make_mission(root)
+            (mission / "init.sqf").write_bytes(
+                b"//--- LOCAL TESTING ONLY: spawn the WASP self-test/observer harness.\r\n"
+                b"if (isServer) then {\r\n"
+                b'    [] execVM "test\\wasp_selftest.sqf";\r\n'
+                b"};\r\n"
+            )
+            out = root / "out.pbo"
+            with self.assertRaises(pack_pbo.PackError):
+                pack_pbo.pack(
+                    source=mission,
+                    output=out,
+                    prefix=None,
+                    build_tag=None,
+                    allow_debug=False,
+                    strict_version=False,
+                    force=False,
+                    quiet=True,
+                )
+
+    def test_init_sqf_delegating_shim_contamination_aborts(self) -> None:
+        # a "helpful" delegating shim is ALSO contamination, not just the
+        # self-test stub: the live tree has no init.sqf at all, so anything
+        # named init.sqf would double-execute initJIPCompatible.sqf's 414-line
+        # bootstrap (duplicate PV handler registrations, doubled loops, etc.)
+        # on top of the engine's own native run of it. Any content aborts.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            mission = make_mission(root)
+            (mission / "init.sqf").write_bytes(
+                b'execVM "initJIPCompatible.sqf";\r\n'
+            )
+            out = root / "out.pbo"
+            with self.assertRaises(pack_pbo.PackError):
+                pack_pbo.pack(
+                    source=mission,
+                    output=out,
+                    prefix=None,
+                    build_tag=None,
+                    allow_debug=False,
+                    strict_version=False,
+                    force=False,
+                    quiet=True,
+                )
+
     def test_refuses_to_overwrite_without_force(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
