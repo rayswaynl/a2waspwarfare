@@ -191,17 +191,38 @@ switch (_request) do {
 		player addAction [
 			localize "STR_WF_SCUD_ACTION",
 			{
-				private ["_caller","_cost","_funds"];
+				private ["_caller","_cost","_funds","_token"];
 				_caller = _this select 1;
+				//--- fable/guer-client-startup-mapcancel: re-select guard, mirrors Action_GuerHeliBombCall.sqf - do
+				//--- not stack a second onMapSingleClick while a designation is already pending on this player.
+				if (player getVariable ["wfbe_scud_designating", false]) exitWith { hint localize "STR_WF_SCUD_SELECT_TARGET"; };
 				_cost   = WFBE_C_SCUD_COST;
 				_funds  = (group _caller) getVariable "wfbe_funds"; //--- fix(hunt): G1 trap - the 2-arg [name,default] form returns nil (NOT the default) on a GROUP receiver when unset; nil < cost threw and silently killed this action
 				if (isNil "_funds") then {_funds = 0};
 				if (_funds < _cost) exitWith { hint localize "STR_WF_SCUD_NO_FUNDS"; };
 				hint localize "STR_WF_SCUD_SELECT_TARGET";
+				player setVariable ["wfbe_scud_designating", true];
+				_token = diag_tickTime;
+				player setVariable ["wfbe_scud_design_token", _token];
 				openMap true;
+				//--- fable/guer-client-startup-mapcancel: ESC / map-close cancel watcher (same pattern as the
+				//--- barrel-bomb designator) - without it, ESCing out of SCUD targeting left the latch set and
+				//--- the armed onMapSingleClick live, so the player's next unrelated map click fired a live SCUD
+				//--- strike. "_token" pins the watcher to THIS designation instance.
+				[player, _token] spawn {
+					private ["_p","_myToken"];
+					_p = _this select 0;
+					_myToken = _this select 1;
+					waitUntil {!visibleMap || {isNull _p} || {!(_p getVariable ["wfbe_scud_designating", false])}};
+					if ((_p getVariable ["wfbe_scud_designating", false]) && {(_p getVariable ["wfbe_scud_design_token", -1]) == _myToken}) then {
+						_p setVariable ["wfbe_scud_designating", false];
+						onMapSingleClick {[_pos, _shift, _alt, _units] call WFBE_CL_FNC_HandleMapSingleClick};
+					};
+				};
 				onMapSingleClick {
-					onMapSingleClick {};
+					onMapSingleClick {[_pos, _shift, _alt, _units] call WFBE_CL_FNC_HandleMapSingleClick};
 					openMap false;
+					player setVariable ["wfbe_scud_designating", false];
 					["RequestSpecial", ["ScudStrike", playerSide, _pos, group player]] Call WFBE_CO_FNC_SendToServer;
 					hint localize "STR_WF_SCUD_LAUNCHED";
 					false
