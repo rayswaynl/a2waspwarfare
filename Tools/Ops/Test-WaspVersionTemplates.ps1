@@ -79,7 +79,7 @@ Assert-NotMatch $takistan '(?m)^#define WF_DEBUG\b' "Takistan WF_DEBUG is not ac
 Assert-NotMatch $takistan '(?m)^#define IS_CHERNARUS_MAP_DEPENDENT\r?$' "Takistan map-dependent define is not active"
 Assert-NotMatch $takistan '(?m)^#define IS_NAVAL_MAP\r?$' "Takistan naval define is not active"
 Assert-Match $takistan '(?m)^#define WF_MAXPLAYERS 61\r?$' "Takistan max-player define is 61"
-Assert-Match $takistan '(?m)^#define WF_MISSIONNAME "\[61\] Warfare V48 Takistan"\r?$' "Takistan mission name is Takistan"
+Assert-Match $takistan '(?m)^#define WF_MISSIONNAME "\[61\] Miksuu''s Warfare Takistan"\r?$' "Takistan mission name is Takistan"
 
 Write-Host "Checking Zargabad version.sqf.template"
 Assert-Match $zargabad $markerPattern "Zargabad release marker line is present and well-formed"
@@ -87,7 +87,7 @@ Assert-NotMatch $zargabad '(?m)^#define WF_DEBUG\b' "Zargabad WF_DEBUG is not ac
 Assert-NotMatch $zargabad '(?m)^#define IS_CHERNARUS_MAP_DEPENDENT\r?$' "Zargabad map-dependent define is not active"
 Assert-NotMatch $zargabad '(?m)^#define IS_NAVAL_MAP\r?$' "Zargabad naval define is not active"
 Assert-Match $zargabad '(?m)^#define WF_MAXPLAYERS 61\r?$' "Zargabad max-player define is 61"
-Assert-Match $zargabad '(?m)^#define WF_MISSIONNAME "\[61\] Warfare V48 Zargabad"\r?$' "Zargabad mission name is Zargabad"
+Assert-Match $zargabad '(?m)^#define WF_MISSIONNAME "\[61\] Miksuu''s Warfare Zargabad"\r?$' "Zargabad mission name is Zargabad"
 Assert-Match $zargabad '(?m)^#define STARTING_DISTANCE 5000\r?$' "Zargabad starting distance matches its map size"
 
 Write-Host ""
