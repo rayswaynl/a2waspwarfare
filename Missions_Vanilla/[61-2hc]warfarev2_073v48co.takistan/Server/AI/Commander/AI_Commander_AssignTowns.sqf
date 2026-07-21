@@ -831,9 +831,31 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						if (!isNull _nearReach) then {
 							_target = _nearReach;
 						} else {
-							//--- GUARDRAIL: nothing in reach (isolated front / island target) - fall back to
-							//--- the absolute nearest so the team always has a valid order and never idles.
-							_target = [leader _team, _uncapturedF] Call WFBE_CO_FNC_GetClosestEntity; //--- WAVE-1 CAUSE-2: _uncapturedF (blacklist-filtered; guardrail above guarantees non-empty). B36.1 (Ray 2026-06-15): FULL uncaptured list, NOT the _assigned-reduced _avail. A team that just captured its town has dismounted + abandoned its trucks, so it scans on-foot (3500m reach); on a sparse map no town is in reach, this guardrail fires, and the old _avail (minus teammates' targets) sent it to a FARTHER town -> it milled at the just-capped centre. Nearest-of-all advances it to the adjacent town (concentration is fine for an isolated foot team).
+							//--- GUARDRAIL: nothing in reach (isolated front / island target). Owner-armable M5
+							//--- foot hold keeps a dismounted team at a friendly town on DEFEND instead of
+							//--- sending it on an absolute-nearest enemy death-march. Flag 0 = legacy target.
+							if ((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_HOLD", 0]) > 0 && {!_mounted}) then {
+								private ["_footHoldTown","_footHoldD"];
+								_footHoldTown = objNull;
+								_footHoldD = 1e9;
+								{
+									if (!isNull _x && {(_x getVariable ["sideID", -1]) == _sideID} && {(_x distance _ldrPos) < _footHoldD}) then {
+										_footHoldD = _x distance _ldrPos;
+										_footHoldTown = _x;
+									};
+								} forEach towns;
+								if (!isNull _footHoldTown) then {
+									[_team, "defense"] Call SetTeamMoveMode;
+									[_team, getPos _footHoldTown] Call SetTeamMovePos;
+									_target = objNull;
+									_explicitMode = true;
+									diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOOT_HOLD|team=" + (str _team) + "|town=" + (_footHoldTown getVariable ["name","town"]));
+								} else {
+									_target = [leader _team, _uncapturedF] Call WFBE_CO_FNC_GetClosestEntity;
+								};
+							} else {
+								_target = [leader _team, _uncapturedF] Call WFBE_CO_FNC_GetClosestEntity; //--- WAVE-1 CAUSE-2: _uncapturedF (blacklist-filtered; guardrail above guarantees non-empty). B36.1 (Ray 2026-06-15): FULL uncaptured list, NOT the _assigned-reduced _avail. A team that just captured its town has dismounted + abandoned its trucks, so it scans on-foot (3500m reach); on a sparse map no town is in reach, this guardrail fires, and the old _avail (minus teammates' targets) sent it to a FARTHER town -> it milled at the just-capped centre. Nearest-of-all advances it to the adjacent town (concentration is fine for an isolated foot team).
+							};
 						};
 					};
 				};
