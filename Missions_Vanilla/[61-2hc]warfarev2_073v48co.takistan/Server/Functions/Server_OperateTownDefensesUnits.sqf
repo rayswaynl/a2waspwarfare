@@ -83,12 +83,18 @@ switch (_action) do {
 							_unit setVariable ["WFBE_IsTownDefenderAI", true, true];
 							_unit assignAsGunner _defense;
 							[_unit] orderGetIn true;
+							//--- OWNER RULING (statics lock): brief unlock so the assigned AI can be seated;
+							//--- re-locked immediately below once manned so no player can board a free seat.
+							_defense lock false;
 							_unit moveInGunner _defense;
 							//--- B5: per-gunner 175m reveal dropped — the town-wide reveal at the end of
 							//--- this "spawn" case (range = town range, covers every defense position) already
 							//--- reveals the same enemies to the gunner group, so this per-gunner pass was
 							//--- redundant RevealArea spam. Enemies are still revealed (just once, town-wide).
 							_x setVariable ["wfbe_defense_operator", _unit]; //--- Track the original gunner.
+							//--- OWNER RULING (statics lock): manned - re-lock so a player cannot board any
+							//--- other free seat on this static while our AI holds the gunner position.
+							_defense lock true;
 						};
 					};
 				};
@@ -130,6 +136,9 @@ switch (_action) do {
 						_unit setPos (getPos _x); deleteVehicle _unit;
 					};
 				};
+				//--- OWNER RULING (statics lock): de-manned (or already empty) - lock so a player
+				//--- cannot board/steal the gun until the next "spawn" pass re-mans it.
+				_defense lock true;
 			};
 			if !(isNil {_x getVariable "wfbe_defense_operator"}) then { //--- Delete the original gunner if he's still around.
 				if (alive(_x getVariable "wfbe_defense_operator")) then {deleteVehicle (_x getVariable "wfbe_defense_operator")};
