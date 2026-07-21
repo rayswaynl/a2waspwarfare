@@ -1,4 +1,4 @@
-private["_delay","_lastCheck","_lastSID","_lastUpdate","_txt","_colorBlue","_colorGreen","_colorRed","_colorBlack","_colorFriendly","_colorEnemy","_colorResistance","_ui_bg","_town_capture_mode","_captureDetail","_lastEntity","_lastSV","_nearest","_update","_sideID","_curSV","_maxSV","_safeMaxSV","_camp","_baseText","_trendText","_trendSecs","_trendDelta","_trendPerMin","_barColor","_control","_backgroundControl","_textControl","_maxWidth","_position"];
+private["_delay","_lastCheck","_lastSID","_lastUpdate","_txt","_colorBlue","_colorGreen","_colorRed","_colorBlack","_colorFriendly","_colorEnemy","_colorResistance","_ui_bg","_town_capture_mode","_captureDetail","_lastEntity","_lastSV","_nearest","_update","_sideID","_curSV","_maxSV","_safeMaxSV","_camp","_baseText","_trendText","_trendSecs","_trendDelta","_trendPerMin","_barColor","_control","_backgroundControl","_textControl","_maxWidth","_position","_campTotal","_campHeld","_captureSide","_campStartSV"];
 
 disableSerialization;
 _delay = 4;
@@ -27,20 +27,26 @@ while {!WFBE_GameOver} do {
 	_update = if (!isNull _nearest && {player distance _nearest < (_nearest getVariable "range")} && {alive player}) then {true} else {false};
 	
 	if(_update && !WFBE_GameOver)then{
-		_sideID = _nearest getVariable "sideID";
-		_curSV = _nearest getVariable "supplyValue";
-		_maxSV = _nearest getVariable "maxSupplyValue";
+		_sideID = _nearest getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+		_curSV = _nearest getVariable ["supplyValue", 0];
+		_maxSV = _nearest getVariable ["maxSupplyValue", 30];
 		_safeMaxSV = _maxSV;
 		if (_safeMaxSV < 1) then {_safeMaxSV = 1};
 
 		_camp = [vehicle player, 12, true] Call WFBE_CL_FNC_GetClosestCamp;
+		_campTotal = _nearest Call WFBE_CO_FNC_GetTotalCamps;
+		_captureSide = (WFBE_Client_SideID) Call WFBE_CO_FNC_GetSideFromID;
+		_campHeld = [_nearest, _captureSide] Call WFBE_CO_FNC_GetTotalCampsOnSide;
 
 		if (_town_capture_mode != 0 && !isNull _camp) then {
-			if (alive (_camp getVariable "wfbe_camp_bunker")) then {
-				_sideID = _camp getVariable "sideID";
-				_curSV = _camp getVariable "supplyValue";
+			if (alive (_camp getVariable ["wfbe_camp_bunker", objNull])) then {
+				_sideID = _camp getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+				_curSV = _camp getVariable ["supplyValue", 0];
+				_campStartSV = _nearest getVariable ["startingSupplyValue", _safeMaxSV];
+				_baseText = Format ["%1  -  Camp SV %2/%3", (_nearest getVariable ["name", ""]), _curSV, _campStartSV];
+				_txt = _baseText;
+				if (_captureDetail && {_town_capture_mode == 2}) then {_txt = Format ["%1  |  Camps %2/%3", _baseText, _campHeld, _campTotal]};
 				if (_lastCheck == "Town") then {_delay = 0};
-				_txt = "";
 				_lastCheck = "Camp";
 				_lastEntity = objNull;
 				_lastSV = -1;
@@ -69,6 +75,7 @@ while {!WFBE_GameOver} do {
 					};
 				};
 				_txt = Format ["%1  |  %2", _baseText, _trendText];
+				if (_town_capture_mode == 2) then {_txt = Format ["%1  |  Camps %2/%3", _txt, _campHeld, _campTotal]};
 			};
 			_lastEntity = _nearest;
 			_lastSV = _curSV;
