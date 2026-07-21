@@ -1,13 +1,21 @@
 disableSerialization;
-{ctrlEnable [_x, false]} forEach [11002, 11005, 11006, 11007, 11008];
+private ["_setWFMenuState"];
+_setWFMenuState = {
+	private ["_controlId","_state"];
+	_controlId = _this select 0;
+	_state = _this select 1;
+	ctrlEnable [_controlId, _state];
+	((findDisplay 11000) displayCtrl _controlId) ctrlSetFade (if (_state) then {0} else {0.55});
+};
+{[_x, false] call _setWFMenuState} forEach [11002, 11005, 11006, 11007, 11008];
 //--- GUER insurgents: commander/base/upgrade/economy/vote buttons are irrelevant (no HQ/commander/base). Grey them.
-if (sideJoined == resistance) then { {ctrlEnable [_x, false]} forEach [11004,11005,11006,11007,11008] };
+if (sideJoined == resistance) then { {[_x, false] call _setWFMenuState} forEach [11004,11005,11006,11007,11008] };
 //--- A1 Commissar Panel (owner 2026-07-07): for GUER, REPURPOSE the (GUER-dead) Economy button as the
 //--- panel entry instead of the cramped corner button - re-enable it and relabel. MenuAction 8 branches
 //--- by side below. The corner 11030 button is retired (hidden for all sides); its MenuAction 30 path
 //--- stays as a harmless no-op fallback.
 if (sideJoined == resistance) then {
-	ctrlEnable [11008, true];
+	[11008, true] call _setWFMenuState;
 	private ["_gvisTeam","_gvisWallet","_gvisLabel"];
 	if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
 		_gvisTeam = group player;
@@ -22,7 +30,7 @@ if (sideJoined == resistance) then {
 ctrlShow [11030, false];
 //--- fable/drones-menu: for GUER, repurpose the (GUER-dead) Tactical Center button as the Drones entry.
 if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {
-	ctrlEnable [11006, true];
+	[11006, true] call _setWFMenuState;
 	ctrlSetText [11006, "Drone"];
 };
 //--- fable/guer-tabs-menu-declutter: for GUER, relabel the (GUER read-only kill-tech viewer) Factory Upgrade tab as Base unlocks.
@@ -32,9 +40,9 @@ if (sideJoined == resistance) then {
 
 _enable = false;
 if ((barracksInRange || lightInRange || heavyInRange || aircraftInRange || hangarInRange || depotInRange) && (player == leader WFBE_Client_Team)) then {_enable = true};
-ctrlEnable [11001,_enable];
-ctrlEnable [11006,commandInRange && (player == leader WFBE_Client_Team)]; //--- Special Menu
-if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {ctrlEnable [11006, true]}; //--- fable/drones-menu: restore DRONES enable overridden by line above
+[11001, _enable] call _setWFMenuState;
+[11006, commandInRange && (player == leader WFBE_Client_Team)] call _setWFMenuState; //--- Special Menu
+if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) > 0}) then {[11006, true] call _setWFMenuState}; //--- fable/drones-menu: restore DRONES enable overridden by line above
 
 MenuAction = -1;
 WFBE_ForceUpdate = true;
@@ -46,27 +54,27 @@ while {alive player && dialog} do {
 	//--- Build Units.
 	_enable = false;
 	if ((barracksInRange || lightInRange || heavyInRange || aircraftInRange || hangarInRange || depotInRange) && (player == leader WFBE_Client_Team)) then {_enable = true};
-	ctrlEnable [11001,_enable];
-		if (sideJoined == resistance) then { ctrlEnable [11001, true] }; //--- GUER: base-less, buy always available (funds-only)
-	ctrlEnable [11002,gearInRange];
+	[11001, _enable] call _setWFMenuState;
+		if (sideJoined == resistance) then { [11001, true] call _setWFMenuState }; //--- GUER: base-less, buy always available (funds-only)
+	[11002, gearInRange] call _setWFMenuState;
 		//--- Ray 3B (GR-2026-07-03a): the old GUER unconditional gear-buy enable is GATED. With WFBE_C_GUER_GEAR_PROXIMITY
 		//--- default 1, the button follows gearInRange (line above), which now goes true for GUER only near a friendly
 		//--- town-center depot / GUER-held camp / deployed FOB barracks (Client\FSM\updateavailableactions.fsm,
 		//--- WFBE_C_UNITS_PURCHASE_GEAR_RANGE = 150m). Flag 0 restores the pre-fix buy-anywhere behaviour for GUER.
-		if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_GEAR_PROXIMITY", 1]) < 1}) then { ctrlEnable [11002, true] };
+		if (sideJoined == resistance && {(missionNamespace getVariable ["WFBE_C_GUER_GEAR_PROXIMITY", 1]) < 1}) then { [11002, true] call _setWFMenuState };
 
 		if (sideJoined == resistance) then {
-			{ctrlEnable [_x, false]} forEach [11004,11005]; //--- GUER: hold commander/base/vote disabled; 11008=Towns re-enabled pre-loop
-			if ((missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) <= 0) then {ctrlEnable [11006, false]}; //--- fable/drones-menu: keep Drones button live when flag on
-				ctrlEnable [11007, true]; //--- B75 (guer-tech): the Upgrade Center is a READ-ONLY kill-tech progression viewer for GUER (GUI_UpgradeMenu.sqf resistance branch).
-				if (((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) > time) then { {ctrlEnable [_x, false]} forEach [11001,11002,11008] }; //--- fable/guer-lockout: buy/gear/Town Actions held until activation
+			{[_x, false] call _setWFMenuState} forEach [11004,11005]; //--- GUER: hold commander/base/vote disabled; 11008=Towns re-enabled pre-loop
+			if ((missionNamespace getVariable ["WFBE_C_GUER_DRONES_MENU", 1]) <= 0) then {[11006, false] call _setWFMenuState}; //--- fable/drones-menu: keep Drones button live when flag on
+				[11007, true] call _setWFMenuState; //--- B75 (guer-tech): the Upgrade Center is a READ-ONLY kill-tech progression viewer for GUER (GUI_UpgradeMenu.sqf resistance branch).
+				if (((missionNamespace getVariable ["WFBE_C_GUER_LOCKOUT_MIN", 0]) * 60) > time) then { {[_x, false] call _setWFMenuState} forEach [11001,11002,11008] }; //--- fable/guer-lockout: buy/gear/Town Actions held until activation
 		} else {
 	_enable = false; //added-MrNiceGuy
 	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_enable = true}};
-	ctrlEnable [11005,true]; //--- Command war-room: always openable on WEST/EAST; the dialog gates internally (Take Command vs war room). JIP-safe.
-	ctrlEnable [11008,_enable]; //--- Commander Menu
-	ctrlEnable [11006,commandInRange && (player == leader WFBE_Client_Team)]; //--- Special Menu
-	ctrlEnable [11007,commandInRange]; //--- Upgrade Menu
+	[11005, true] call _setWFMenuState; //--- Command war-room: always openable on WEST/EAST; the dialog gates internally (Take Command vs war room). JIP-safe.
+	[11008, _enable] call _setWFMenuState; //--- Commander Menu
+	[11006, commandInRange && (player == leader WFBE_Client_Team)] call _setWFMenuState; //--- Special Menu
+	[11007, commandInRange] call _setWFMenuState; //--- Upgrade Menu
 		};
 
 	//--- Uptime.
@@ -88,7 +96,7 @@ while {alive player && dialog} do {
 	if (sideJoined == EAST) then {_compensation = SUPPLY_COMPENSATION_AMOUNT_EAST};
 	_svPlusText = Format ["+%1", _totalSupplyValue];
 	if (_compensation > 0) then {_svPlusText = Format ["+%1 (+%2)", _totalSupplyValue, _compensation]};
-	ctrlSetText [11015, format ["Uptime: %1h %2m | Time %3:%4 | Players %5/%6 | Towns %7/%8 | SV %9", (_uptime select 0) * 24 + (_uptime select 1), _uptime select 2, _clkH, _clkM, _playerCount, _playerSlots, _townsHeld, _townsTotal, _svPlusText]];	//--- QoL: compact top-strip status
+	ctrlSetText [11015, format ["WF HUB | %1h %2m | Time %3:%4 | Players %5/%6 | Towns %7/%8 | SV %9", (_uptime select 0) * 24 + (_uptime select 1), _uptime select 2, _clkH, _clkM, _playerCount, _playerSlots, _townsHeld, _townsTotal, _svPlusText]];	//--- QoL: compact top-strip status
 
 	//--- Buy Units.
 	if (MenuAction == 1) exitWith {

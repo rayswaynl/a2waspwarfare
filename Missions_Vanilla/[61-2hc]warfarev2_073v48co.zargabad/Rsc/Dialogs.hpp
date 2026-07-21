@@ -1174,13 +1174,42 @@ class WF_Menu {
 		//--- UX Pass 1: TOOLS label above footer strip (decorative).
 	};
 	class controls {
+		//--- UX P1: the hub keeps the original WFBE palette and shortcut controls, while labels make the two-column
+		//--- purchase/general/command grouping readable at a glance.
+		class Section_Purchase : RscText_SubTitle {
+			idc = -1;
+			x = 0.184;
+			y = 0.241;
+			w = 0.30;
+			h = 0.020;
+			sizeEx = 0.020;
+			text = "PURCHASE";
+		};
+		class Section_Command : RscText_SubTitle {
+			idc = -1;
+			x = 0.519;
+			y = 0.241;
+			w = 0.30;
+			h = 0.020;
+			sizeEx = 0.020;
+			text = "COMMAND";
+		};
+		class Section_General : RscText_SubTitle {
+			idc = -1;
+			x = 0.184;
+			y = 0.443;
+			w = 0.30;
+			h = 0.020;
+			sizeEx = 0.020;
+			text = "GENERAL";
+		};
 		//--- === PURCHASE ===
 		class Button_A : RscShortcutButtonMain {
 			idc = 11001;
 			x = 0.17598;
-			y = 0.250358;
+			y = 0.264;
 			w = 0.313727;
-			h = 0.104575;
+			h = 0.084;
 			text = $STR_WF_MAIN_Purchase_Units;
 			tooltip = $STR_WF_TOOLTIP_MainMenu_Purchase_Units;
 			action = "MenuAction = 1";
@@ -1188,9 +1217,9 @@ class WF_Menu {
 		class Button_B : RscShortcutButtonMain {
 			idc = 11002;
 			x = 0.17598;
-			y = 0.35116;
+			y = 0.354;
 			w = 0.313727;
-			h = 0.104575;
+			h = 0.084;
 			text = $STR_WF_MAIN_Purchase_Gear;
 			tooltip = $STR_WF_TOOLTIP_MainMenu_Purchase_Gear;
 			action = "MenuAction = 2";
@@ -1199,9 +1228,9 @@ class WF_Menu {
 		class Button_C : RscShortcutButtonMain {
 			idc = 11003;
 			x = 0.17598;
-			y = 0.451959;
+			y = 0.466;
 			w = 0.313727;
-			h = 0.104575;
+			h = 0.084;
 			text = $STR_WF_MAIN_TeamMenu;
 			tooltip = $STR_WF_TOOLTIP_MainMenu_TeamMenu;
 			action = "MenuAction = 3";
@@ -1209,9 +1238,9 @@ class WF_Menu {
 		class Button_F : RscShortcutButtonMain {
 			idc = 11006;
 			x = 0.17598;
-			y = 0.55276;
+			y = 0.557;
 			w = 0.313727;
-			h = 0.104575;
+			h = 0.084;
 			text = $STR_WF_MAIN_TacticalMenu;
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_SpecialMenu;
 			action = "MenuAction = 6";
@@ -1219,9 +1248,9 @@ class WF_Menu {
 		class Button_I : RscShortcutButtonMain {
 			idc = 11009;
 			x = 0.17598;
-			y = 0.65356;
+			y = 0.648;
 			w = 0.313727;
-			h = 0.104575;
+			h = 0.084;
 			text = $STR_WF_SupportMenu;
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_SupportMenu;
 			action = "MenuAction = 9";
@@ -1230,9 +1259,9 @@ class WF_Menu {
 		class Button_E : RscShortcutButtonMain {
 			idc = 11005;
 			x = 0.510943;
-			y = 0.250358;
+			y = 0.264;
 			w = 0.313727;
-			h = 0.104575;
+			h = 0.084;
 			text = $STR_WF_MAIN_CommandMenu;
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_Commandteam;
 			action = "MenuAction = 5";
@@ -1240,9 +1269,9 @@ class WF_Menu {
 		class Button_H : RscShortcutButtonMain {
 			idc = 11008;
 			x = 0.510943;
-			y = 0.35116;
+			y = 0.354;
 			w = 0.313727;
-			h = 0.104575;
+			h = 0.084;
 			text = $STR_WF_MAIN_EconomyMenu;
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_Commander_Menu;
 			action = "MenuAction = 8";
@@ -1250,9 +1279,9 @@ class WF_Menu {
 		class Button_G : RscShortcutButtonMain {
 			idc = 11007;
 			x = 0.510943;
-			y = 0.451959;
+			y = 0.466;
 			w = 0.313727;
-			h = 0.104575;
+			h = 0.084;
 			text = $STR_WF_MAIN_UpgradeMenu;
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_Upgrade_Menu;
 			action = "MenuAction = 7";
@@ -1260,9 +1289,9 @@ class WF_Menu {
 		class Button_J : RscShortcutButtonMain {
 			idc = 11010;
 			x = 0.510943;
-			y = 0.55276;
+			y = 0.557;
 			w = 0.313727;
-			h = 0.104575;
+			h = 0.084;
 			text = $STR_WF_HelpMenu;
 			tooltip = $STR_WF_TOOLTIP_CommandMenu_Help;
 			action = "MenuAction = 13";
@@ -1270,9 +1299,9 @@ class WF_Menu {
 		class Button_D : RscShortcutButtonMain {
 			idc = 11004;
 			x = 0.510943;
-			y = 0.65356;
+			y = 0.648;
 			w = 0.313727;
-			h = 0.104575;
+			h = 0.084;
 			text = $STR_WF_MAIN_VotingMenu;
 			tooltip = $STR_WF_TOOLTIP_MainMenu_VoteForCommander;
 			action = "MenuAction = 4";
