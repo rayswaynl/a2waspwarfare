@@ -17,7 +17,6 @@ _town_airactive = _town getVariable ["wfbe_active_air", false];
 _units = [];
 _percentage_inf = 50;
 _groups_max = 0;
-_randomize = 0;
 
 _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 
@@ -159,7 +158,6 @@ if ((missionNamespace getVariable ["WFBE_C_TOWN_TYPE_OVERLAYS", 0]) > 0 && {(_si
 	};
 };
 
-if (_randomize != 0) then {_groups_max = _groups_max + round(random _randomize - random _randomize)};
 _groups_max = round(_groups_max * (missionNamespace getVariable "WFBE_C_TOWNS_UNITS_COEF"));
 
 //--- Commander Town Ledger (fable/ctl-impl-v1) materialization overlay (B2). Flag-off

@@ -1,7 +1,7 @@
 // Server_GuerDirector.sqf
 // AICOM V2 Lane 800 - GUER Director
 // Invisible A-Life for the resistance side: per-town strength ledger + virtual cells.
-// Flag gate: AICOMV2_LANE_GUER_DIRECTOR (default 0 = inert; flag-off = byte-identical to HEAD).
+// Flag gate: AICOMV2_LANE_GUER_DIRECTOR (default 1 = active; set 0 for the V1-compatible path).
 // See docs/design/v2/aicom-v2-800-guer-director.md for full spec.
 //
 // A2 OA 1.64 compliant: array-append via set[count,v], private ["x"] declarations,

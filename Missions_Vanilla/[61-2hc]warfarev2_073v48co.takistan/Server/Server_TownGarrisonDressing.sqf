@@ -31,7 +31,7 @@ _interval      = missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING_INTERVA
 _maxDressed    = missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING_MAX", 6];
 _radius        = missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING_RADIUS", 900];
 _lifetime      = missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING_LIFETIME", 900];
-_quiet         = _radius; //--- initial quiet threshold = proximity radius; re-read each tick below.
+_quiet         = missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING_QUIET", 300];
 _searchlightOn = missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING_SEARCHLIGHT", 1];
 _gunClass      = "ZU23_Gue";
 _lightClass    = "SearchLight_RUS";
@@ -233,7 +233,7 @@ while {!WFBE_GameOver} do {
     } forEach towns;
 
     //--- Re-read quiet window each cycle (allows host tuning without restart).
-    _quiet = missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING_RADIUS", 900];
+    _quiet = missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING_QUIET", 300];
 
     diag_log format ["GARNDRESS|TICK|dressed=%1|towns=%2|tickMs=%3",
         _dressedCount, (count towns), round((diag_tickTime - _perfStart) * 1000)];

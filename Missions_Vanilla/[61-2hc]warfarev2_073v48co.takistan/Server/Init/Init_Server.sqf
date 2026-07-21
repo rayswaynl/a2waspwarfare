@@ -1267,14 +1267,6 @@ if ((missionNamespace getVariable "WFBE_C_BASE_AREA") > 0) then {[] execVM "Serv
 
 //if (LOG_CONTENT_STATE == "ACTIVATED") then {[] execVM "Server\FSM\groupsMonitor.sqf"};
 
-//--- ALICE Module.
-if ((missionNamespace getVariable "WFBE_C_MODULE_BIS_ALICE") > 0) then {
-	_type = if (WF_A2_Vanilla) then {'AliceManager'} else {'Alice2Manager'};
-	_alice = (createGroup sideLogic) createUnit [_type,[0,0,0],[],0,"NONE"];
-
-	["INITIALIZATION", "Init_Server.sqf: BIS ALICE is defined."] Call WFBE_CO_FNC_LogContent;
-};
-
 // Execute the server fps script on a seperate thread
 [] ExecVM "Server\GUI\serverFpsGUI.sqf";
 

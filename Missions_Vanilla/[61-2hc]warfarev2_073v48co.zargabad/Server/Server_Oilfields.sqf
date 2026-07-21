@@ -28,11 +28,11 @@
          Contested (both present) or empty (neither present) leaves ownership unchanged. On a real flip
          the marker recolours to the new owner and a capture line is announced to all clients.
 
-     (5) cmdcon42 STAKES VISIBILITY (WFBE_C_OILFIELD_MARKER_LIVE, default ON): the marker LABEL is kept
+     (5) cmdcon42 STAKES VISIBILITY (WFBE_C_OILFIELD_MARKER_LIVE, default 1): the marker LABEL is kept
          live — owner tag + supply/tick + a "SABOTAGED" flag — so the map itself tells the story. The
          WASPSCALE emitter also publishes oilOwn/oilInc (server telemetry; keys chosen collision-free).
 
-     (6) cmdcon42 SABOTAGE + REPAIR LOOP (WFBE_C_OILFIELD_SABOTAGE, default ON): an ENEMY of the current
+     (6) cmdcon42 SABOTAGE + REPAIR LOOP (WFBE_C_OILFIELD_SABOTAGE, default 1): an ENEMY of the current
          holder who dwells in the radius (with the holder cleared out) for WFBE_C_OILFIELD_SABOTAGE_SECS
          SABOTAGES the field: income halts and a server-global BURNING FIRE (inflame — the exact
          Init_IcbmTel.sqf:482 idiom) + a periodically re-spawned BLACK SMOKE COLUMN (the
@@ -41,7 +41,7 @@
          WFBE_C_OILFIELD_REPAIR_SECS (halved when an engineer/repair-truck is present) -> fire out,
          income resumes. Counterplay both ways. Folded into the SAME scan loop (no new worker loop).
 
-     (7) cmdcon42 AI CONTESTS (WFBE_C_OILFIELD_AICOM_PULL, default ON): while the field is NOT held by an
+     (7) cmdcon42 AI CONTESTS (WFBE_C_OILFIELD_AICOM_PULL, default 1): while the field is NOT held by an
          AI side, that side's NEAREST real town gets a spearhead-weight bonus (wfbe_aicom_town_weight),
          so the AI commander's existing town scorer pulls assaulting teams toward the field's area; they
          pass through the radius and capture the field organically. The field is NEVER added to the towns
