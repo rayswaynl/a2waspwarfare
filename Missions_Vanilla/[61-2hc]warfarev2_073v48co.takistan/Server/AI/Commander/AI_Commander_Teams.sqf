@@ -22,7 +22,7 @@ private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_
               "_w11FreeFlag",
               "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
               "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger",
-              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending"]; //--- B66
+              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending","_constructionExpired","_constructionSince","_constructionTTL"]; //--- B66
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -48,12 +48,14 @@ _allVehicles = vehicles;
 _foundedTeams = 0;
 _editorTeams  = 0;
 _constructionPending = 0;
+_constructionExpired = [];
+_constructionTTL = 300; //--- A failed no-HC reservation gets one production window, then is retired for a clean retry.
 {
 	if (!isNull _x) then {
 		_real = false;
 		if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {_real = true};
 		if (!_real && {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {_real = true};
-		_liveCount = {alive _x} count (units _x);
+		_liveCount = {alive _x && {side _x == _side} && {!isPlayer _x}} count (units _x);
 		if (_real) then {
 			//--- C3 husk accounting: a deleted/wiped founded group is no longer a
 			//--- live slot. Keep the HC registry untouched; only the founding census
@@ -64,7 +66,13 @@ _constructionPending = 0;
 				//--- A server-local construction group is a reservation until Produce
 				//--- supplies its first live body; do not found another empty group.
 				if (!([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) && {[_x, "wfbe_persistent", false] Call WFBE_CO_FNC_GroupGetBool}) then {
-					_constructionPending = _constructionPending + 1;
+					_constructionSince = _x getVariable "wfbe_aicom_construction_since";
+					if (isNil "_constructionSince") then {_constructionSince = time; _x setVariable ["wfbe_aicom_construction_since", _constructionSince]};
+					if ((time - _constructionSince) <= _constructionTTL) then {
+						_constructionPending = _constructionPending + 1;
+					} else {
+						_constructionExpired set [count _constructionExpired, _x];
+					};
 				};
 			};
 		} else {
@@ -75,6 +83,14 @@ _constructionPending = 0;
 		};
 	};
 } forEach _teams;
+if (count _constructionExpired > 0) then {
+	{
+		_x setVariable ["wfbe_persistent", false];
+		_x setVariable ["wfbe_aicom_founded", false];
+	} forEach _constructionExpired;
+	_teams = _teams - _constructionExpired;
+	_logik setVariable ["wfbe_teams", _teams, true];
+};
 _aiTeams = _foundedTeams + _editorTeams; //--- legacy alias; used in server-local log below.
 _pending = _logik getVariable ["wfbe_aicom_pending", 0];
 
@@ -123,7 +139,7 @@ _aicomHusk = 0;
 		_c3Hc = [_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool;
 		_c3Real = _c3Hc || {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool};
 		if (_c3Real) then {
-			_c3Live = {alive _x} count (units _x);
+			_c3Live = {alive _x && {side _x == _side} && {!isPlayer _x}} count (units _x);
 			_aicomTeamUnits = _aicomTeamUnits + _c3Live;
 			if (_c3Hc && {_c3Live < 4}) then {_aicomHusk = _aicomHusk + 1};
 		};
