@@ -326,6 +326,37 @@ while {!WFBE_GameOver} do {
 		} forEach allGroups;
 	};
 
+	//--- fix/aicom-arty-lifecycle (2026-07-21, owner-live report: destroyed GRAD/artillery husks
+	//--- persist on the map forever). ROOT CAUSE: base-built commander artillery/defenses are tagged
+	//--- WFBE_CommanderArtillery/WFBE_CommanderArtillerySide at construction (Construction_
+	//--- StationaryDefense.sqf) but nothing in the existing cleanup pipeline specifically targets a
+	//--- dead commander-tagged hull once it stops moving/firing - it just sits on the map as a wreck
+	//--- indefinitely unless the generic allDead-based trash sweep (server_collector_garbage.sqf)
+	//--- happens to pick it up, which the owner's live report shows is not reliably happening for
+	//--- these specific objects. Explicit, dedicated reap on the SAME 60s cadence as the rest of
+	//--- this file: scan allDead every pass for commander-tagged hulls not already claimed by that
+	//--- generic pipeline (wfbe_trashable/wfbe_trashed nil - the SAME gate server_collector_garbage.sqf
+	//--- itself uses, so this never double-deletes something already enrolled there), log + delete via
+	//--- the SAME VEHDEL emission-paired-with-delete pattern this file already uses above
+	//--- (gc-baseair-*, gc-zombie-unit). Two-pass collect-then-delete (mirrors the empty-group GC at
+	//--- the top of this file) so deleting mid-scan never touches the allDead snapshot being iterated.
+	private ["_artyWrecks","_artyReaped"];
+	_artyWrecks = [];
+	{
+		if (!isNull _x && {!alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {isNil {_x getVariable "wfbe_trashable"}} && {isNil {_x getVariable "wfbe_trashed"}}) then {
+			_artyWrecks set [count _artyWrecks, _x];
+		};
+	} forEach allDead;
+	_artyReaped = 0;
+	{
+		["gc-commander-arty-wreck", _x, (_x getVariable ["WFBE_CommanderArtillerySide", ""])] Call WFBE_CO_FNC_LogVehDelete;
+		deleteVehicle _x;
+		_artyReaped = _artyReaped + 1;
+	} forEach _artyWrecks;
+	if (_artyReaped > 0) then {
+		["INFORMATION", Format ["server_groupsGC.sqf: reaped %1 dead commander-artillery wreck(s).", _artyReaped]] Call WFBE_CO_FNC_AICOMLog;
+	};
+
 	// --- Group-cap pre-warning ---
 	// Count groups per side (single pass; cheap at 60s cadence).
 	_cntWest = 0;
