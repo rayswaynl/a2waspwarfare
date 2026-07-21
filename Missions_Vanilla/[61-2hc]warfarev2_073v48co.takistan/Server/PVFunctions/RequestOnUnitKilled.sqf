@@ -220,6 +220,13 @@ if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 	private ["_wsk_killerUID","_wsk_victimUID","_wsk_killerSide","_wsk_victimSide","_wsk_weapon","_wsk_dist","_wsk_cat","_wsk_line","_wsk_hw"];
 	_wsk_killerUID = if (_killer_isplayer) then {getPlayerUID _killer} else {""};
 	_wsk_victimUID = if (_killed_isplayer) then {getPlayerUID _killed} else {""};
+	//--- HC-UID EXCLUSION (card wasp-zg-civ-hc-slots-20260719): an HC is an isPlayer unit and can
+	//--- report a non-empty UID, so isPlayer alone lets an HC uid into the KILL record. Blank it -
+	//--- the same field shape a non-player killer already emits - so RPT parsers need no change.
+	if (!isNil "WFBE_SE_FNC_IsHeadlessUid") then {
+		if (_wsk_killerUID call WFBE_SE_FNC_IsHeadlessUid) then {_wsk_killerUID = ""};
+		if (_wsk_victimUID call WFBE_SE_FNC_IsHeadlessUid) then {_wsk_victimUID = ""};
+	};
 	_wsk_killerSide = str _killer_side;
 	_wsk_victimSide = str _killed_side;
 	// Weapon/vehicle class: what killed. Use typeOf the killing vehicle (may differ from killer's unit class).
