@@ -1,6 +1,14 @@
 
 private ["_mode2TotalCamps","_mode2WestCamps","_mode2EastCamps","_mode2GuerCamps","_gateCampBunker","_gateCampSide","_rateCampsOnSide"];
 
+//--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation gate, mirrors
+//--- AI_Commander.sqf's _passedOwner idiom (see Init_Server.sqf B69 watchdog block). _this =
+//--- [ownerGeneration] when launched/restarted by Init_Server.sqf / server_coreloop_supervisor.sqf;
+//--- nil-safe fallback for any other launch path (e.g. a manual debug execVM with no args).
+private ["_clOwnerKey","_clOwnerSeq"];
+_clOwnerKey = "wfbe_coreloop_owner_town";
+_clOwnerSeq = if (typeName _this == "ARRAY" && {count _this > 0}) then {_this select 0} else {missionNamespace getVariable [_clOwnerKey, 0]};
+
 // "towns" use it to get all initiated towns on map
 
 //--- N4 fix (MORE-FIXES-AND-IDEAS): _timeAttacked used to be a single local shared across
@@ -48,7 +56,12 @@ if ((missionNamespace getVariable ["WFBE_C_LOOP_PHASE_JITTER", 0]) > 0) then {
 	["INFORMATION", Format ["server_town.sqf: startup phase jitter %1s (WFBE_C_LOOP_PHASE_JITTER=1).", _phaseJitter]] Call WFBE_CO_FNC_AICOMLog;
 	sleep _phaseJitter;
 };
-while {!WFBE_GameOver} do {
+while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) == _clOwnerSeq}} do {
+
+	//--- HP-01 SUPERVISOR HEARTBEAT: unconditional per-tick liveness beat, FIRST statement in
+	//--- the loop (mirrors AI_Commander.sqf B69) so even a worker that throws mid-iteration
+	//--- leaves this tick's stamp behind; the supervisor treats a frozen stamp as DEAD.
+	missionNamespace setVariable ["wfbe_coreloop_hb_town", time];
 
 	for "_i" from 0 to ((count towns) - 1) step 1 do
 	{

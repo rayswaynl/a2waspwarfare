@@ -1133,7 +1133,17 @@ if (isServer && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 
 };
 
 // run one global server town script to process supply updates in each town
-[] Spawn {[] execVM 'Server\FSM\server_town.sqf'};
+//--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation + stored
+//--- handle so server_coreloop_supervisor.sqf can detect a silently-dead loop (stale
+//--- heartbeat) and restart it - same owner-generation/handle-store idiom as the proven
+//--- AICOM supervisor below (B69 block). Least-invasive: server_town.sqf itself only
+//--- gained a heartbeat stamp + owner-gate, the loop body is untouched. Drops the old
+//--- redundant outer Spawn wrapper - execVM alone is already async (every other loop
+//--- launch in this file already uses a bare ExecVM with no Spawn wrapper).
+private ["_clTownOwner"];
+_clTownOwner = (missionNamespace getVariable ["wfbe_coreloop_owner_town", 0]) + 1;
+missionNamespace setVariable ["wfbe_coreloop_owner_town", _clTownOwner];
+missionNamespace setVariable ["wfbe_coreloop_handle_town", [_clTownOwner] execVM "Server\FSM\server_town.sqf"];
 
 [] Spawn {
 	if ((missionNamespace getVariable "WFBE_C_TOWNS_DEFENDER") > 0 || (missionNamespace getVariable "WFBE_C_TOWNS_OCCUPATION") > 0) then {
@@ -1154,8 +1164,15 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 		[] execVM "Server\FSM\server_victory_threeway.sqf";
 		["INITIALIZATION", "Init_Server.sqf: Victory Condition FSM is initialized."] Call WFBE_CO_FNC_LogContent;
 
-	[] ExecVM "Server\FSM\updateresources.sqf";
-	[] ExecVM "Server\FSM\upgradeQueue.sqf";
+	//--- HP-01 CORE-LOOP SUPERVISOR: same owner-generation/handle-store idiom as the
+	//--- server_town launch above - registers economy + upgrade-queue for restart detection.
+	private ["_clEconOwner","_clUpgOwner"];
+	_clEconOwner = (missionNamespace getVariable ["wfbe_coreloop_owner_economy", 0]) + 1;
+	missionNamespace setVariable ["wfbe_coreloop_owner_economy", _clEconOwner];
+	missionNamespace setVariable ["wfbe_coreloop_handle_economy", [_clEconOwner] ExecVM "Server\FSM\updateresources.sqf"];
+	_clUpgOwner = (missionNamespace getVariable ["wfbe_coreloop_owner_upgrade", 0]) + 1;
+	missionNamespace setVariable ["wfbe_coreloop_owner_upgrade", _clUpgOwner];
+	missionNamespace setVariable ["wfbe_coreloop_handle_upgrade", [_clUpgOwner] ExecVM "Server\FSM\upgradeQueue.sqf"];
 	[] ExecVM "Server\FSM\server_side_patrols.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Resources FSM is initialized."] Call WFBE_CO_FNC_LogContent;
 };
@@ -1164,7 +1181,11 @@ WF_Logic setVariable ["emptyVehicles",[],true];
 ["INITIALIZATION", "Init_Server.sqf: Garbage Collector is defined."] Call WFBE_CO_FNC_LogContent;
 [] ExecVM "Server\FSM\emptyvehiclescollector.sqf";
 ["INITIALIZATION", "Init_Server.sqf: Empty Vehicle Collector is defined."] Call WFBE_CO_FNC_LogContent;
-[] ExecVM "Server\FSM\server_groupsGC.sqf";
+//--- HP-01 CORE-LOOP SUPERVISOR: same owner-generation/handle-store idiom (see server_town above).
+private ["_clGCOwner"];
+_clGCOwner = (missionNamespace getVariable ["wfbe_coreloop_owner_groupsgc", 0]) + 1;
+missionNamespace setVariable ["wfbe_coreloop_owner_groupsgc", _clGCOwner];
+missionNamespace setVariable ["wfbe_coreloop_handle_groupsgc", [_clGCOwner] ExecVM "Server\FSM\server_groupsGC.sqf"];
 ["INITIALIZATION", "Init_Server.sqf: Group GC is defined."] Call WFBE_CO_FNC_LogContent;
 [] ExecVM "Server\server_heli_terrain_guard.sqf"; //--- qol-polish-pack: AI-heli terrain look-ahead climb (self-gates on WFBE_C_AIHELI_TERRAIN_GUARD, default ON) - SERVER-LOCAL air incl. non-team paradrop/supply/GUER/W13.
 //--- AICOM HELI TERRAIN-GUARD twin (cmdcon41-w3j 2026-07-02): the bounded wfbe_teams-scoped guard covering AICOM
@@ -1426,6 +1447,16 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG", 1]) > 0) then {
 		};
 	};
 	["INITIALIZATION", "Init_Server.sqf: AICOM supervisor watchdog started (B69)."] Call WFBE_CO_FNC_AICOMLog;
+};
+
+//--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): generalizes the AICOM watchdog
+//--- pattern above to the four core FSM loops that have no self-healing today (town/economy/
+//--- upgrade-queue/group-GC - council finding C-a). Runs standalone; the four loops themselves
+//--- only gained a heartbeat stamp + owner-generation gate (see each file) plus the
+//--- owner-generation/handle-store registration at their launch sites above.
+if ((missionNamespace getVariable ["WFBE_C_CORELOOP_SUPERVISOR_ENABLE", 1]) > 0) then {
+	[] execVM "Server\FSM\server_coreloop_supervisor.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Core-loop supervisor started (HP-01)."] Call WFBE_CO_FNC_AICOMLog;
 };
 
 //--- V0.6: AI Commander Wildcard events (one free random event per AI side per interval).

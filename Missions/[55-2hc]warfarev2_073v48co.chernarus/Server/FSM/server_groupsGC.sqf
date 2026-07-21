@@ -10,12 +10,22 @@ if (!isServer) exitWith {};
 
 Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc","_baseSide","_baseEnable","_baseRange","_baseTimeout","_baseIdleSpeed","_basePlayerGuard","_basePlayers","_basePcN","_baseHcN","_baseHQ","_baseHQPos","_baseSideID","_baseLogik","_baseTeams","_baseCap","_baseFounded","_baseCandGrps","_baseG","_baseIsTownTeam","_baseIsPers","_baseLdr","_baseSeen","_baseDmgNow","_baseDmgPrev","_baseInCombat","_baseEnemyNear","_basePlayerNear","_baseFrontPos","_baseUncap","_baseFrontTown","_baseSeq","_baseVeh","_baseVcrew","_baseVside","_baseReadopted","_baseDeletedAir","_baseRetasked","_contestedTowns"];
 
+//--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation gate (see
+//--- server_town.sqf for the full note).
+private ["_clOwnerKey","_clOwnerSeq"];
+_clOwnerKey = "wfbe_coreloop_owner_groupsgc";
+_clOwnerSeq = if (typeName _this == "ARRAY" && {count _this > 0}) then {_this select 0} else {missionNamespace getVariable [_clOwnerKey, 0]};
+
 _warnInterval = 300; // 5 minutes between repeated warnings for same side/threshold.
 _auditN = 0; // D2 (claude-gaming 2026-06-14): counts elapsed 5-min audit windows; the expensive classification+dump fires only every WFBE_C_GROUPAUDIT_EVERY-th window. Husk-reap GC below is untouched and runs every 60s cycle.
 
 //--- Perf phase jitter (2026-07-06): see server_town.sqf. Default 0 = V1.
 if ((missionNamespace getVariable ["WFBE_C_LOOP_PHASE_JITTER", 0]) > 0) then {sleep (random 60)};
-while {!WFBE_GameOver} do {
+while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) == _clOwnerSeq}} do {
+
+	//--- HP-01 SUPERVISOR HEARTBEAT: first statement of every iteration (see server_town.sqf note).
+	missionNamespace setVariable ["wfbe_coreloop_hb_groupsgc", time];
+
 	sleep 60;
 
 	// --- Empty-group GC sweep ---

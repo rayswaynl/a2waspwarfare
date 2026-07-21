@@ -1,5 +1,11 @@
 private["_is","_ii","_awaits","_incomeCoef","_divisor","_commander_enabled","_currency_system","_logik","_playerOldScore","_playerNewScore","_scoreDiff","_income","_income_player","_income_commander","_supply","_comTeam","_paycheck", "_supply_max_limit"];
 
+//--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation gate (see
+//--- server_town.sqf for the full note).
+private ["_clOwnerKey","_clOwnerSeq"];
+_clOwnerKey = "wfbe_coreloop_owner_economy";
+_clOwnerSeq = if (typeName _this == "ARRAY" && {count _this > 0}) then {_this select 0} else {missionNamespace getVariable [_clOwnerKey, 0]};
+
 _is = missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM";
 _ii = missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_INTERVAL";
 
@@ -17,7 +23,10 @@ if (_is == 3) then {
 	_divisor = missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_DIVIDED";
 };
 
-while {!gameOver} do {
+while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) == _clOwnerSeq}} do {
+
+	//--- HP-01 SUPERVISOR HEARTBEAT: first statement of every iteration (see server_town.sqf note).
+	missionNamespace setVariable ["wfbe_coreloop_hb_economy", time];
 
 	//--- B36.1 (Ray 2026-06-15): scale AI-commander CASH income INVERSELY to HUMAN player count. The team
 	//--- curve in AI_Commander_Teams.sqf fields the MOST teams at LOW pop, so the funding need is HIGHEST on
