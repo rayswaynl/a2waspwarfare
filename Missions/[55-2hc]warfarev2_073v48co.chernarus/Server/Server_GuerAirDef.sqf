@@ -58,7 +58,9 @@ _lifetime   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_LIFETIME", 900];
 _quiet      = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_QUIET_DESPAWN", 300];
 _largeSV    = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_LARGE_SV", 2500];
 _flyHeight  = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_HEIGHT", 120];
-_groundQrfTTL = 600;
+//--- Reserve one maintain-sweep interval so the next poll cannot extend a QRF past 600s from spawn.
+_groundQrfTTL = 600 - _interval;
+if (_groundQrfTTL < 1) then {_groundQrfTTL = 1};
 _groundQrfMax = 2;
 
 //--- CARGO/PARADROP variant (build83). DROP_CHANCE: per-spawn roll for the Ka-137 to run a paradrop of
@@ -342,7 +344,7 @@ while {!WFBE_GameOver} do {
 			_qrfDrop = false;
 			_qrfReason = "";
 			if (isNull _qrfGrp || {({alive _x} count (units _qrfGrp)) == 0}) then { _qrfDrop = true; _qrfReason = "wiped"; };
-			if (!_qrfDrop && {(time - _qrfSpawn) > _groundQrfTTL}) then { _qrfDrop = true; _qrfReason = "lifetime"; };
+			if (!_qrfDrop && {(time - _qrfSpawn) >= _groundQrfTTL}) then { _qrfDrop = true; _qrfReason = "lifetime"; };
 			if (!_qrfDrop) then {
 				_qrfTownSide = if (isNull _qrfTown) then {-1} else {_qrfTown getVariable ["sideID", -1]};
 				_qrfTownActive = if (isNull _qrfTown) then {false} else {_qrfTown getVariable ["wfbe_active", false]};

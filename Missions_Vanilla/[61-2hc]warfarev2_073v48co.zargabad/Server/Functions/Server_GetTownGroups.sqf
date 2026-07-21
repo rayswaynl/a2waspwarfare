@@ -148,9 +148,9 @@ if ((missionNamespace getVariable ["WFBE_C_TOWN_TYPE_OVERLAYS", 0]) > 0 && {(_si
 	{
 		if (!((_x select 1) in _overlayAfNames)) then {_overlayAfNames = _overlayAfNames + [_x select 1]};
 	} forEach (missionNamespace getVariable [Format ["WFBE_%1_CAPTURE_UNLOCKS", str _side], []]);
-	{
-		if (((_x getVariable ["sideID", -1]) == _overlaySideID) && {(_x getVariable ["wfbe_is_airfield", false]) || {(_x getVariable ["name", ""] in _overlayAfNames)} || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_overlayHasAirfield = true};
-	} forEach towns;
+	//--- Evaluate the requesting town only. A side-owned airfield must not make every town an airfield town.
+	_overlayHasAirfield = ((_town getVariable ["sideID", -1]) == _overlaySideID)
+		&& {(_town getVariable ["wfbe_is_airfield", false]) || {(_town getVariable ["name", ""] in _overlayAfNames)} || {!(isNull (_town getVariable ["wfbe_airfield_hangar_obj", objNull]))}};
 	if (_overlayHasAirfield) then {
 		_units = _units + [["AA_Light", 1, 1], ["Team_AA", 1, 0]];
 	};
