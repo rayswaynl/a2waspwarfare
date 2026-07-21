@@ -412,7 +412,7 @@ class WFBE_RespawnMenu {
 			w = 0.49;
 			h = 0.13;
 		};
-		class CA_Gear_Button : RscButton {
+		class CA_Gear_Button : RscButton_WFBE_Action {
 			idc = 511004;
 			x = 0.68;
 			y = 0.00940119;
@@ -445,7 +445,7 @@ class WFBE_RespawnMenu {
 		//--- existing Team Menu (RscMenu_TeamV2, idd 13050). Hidden by default (show=0,
 		//--- WFBE_C_RESPAWN_SHORTCUTS=0); revealed + minimap trimmed at runtime by
 		//--- GUI_RespawnMenu.sqf only when the flag is armed.
-		class CA_CustomiseAI_Button : RscButton {
+		class CA_CustomiseAI_Button : RscButton_WFBE_Action {
 			idc = 511006;
 			show = 0;
 			x = 0.01;
@@ -468,7 +468,7 @@ class WFBE_RespawnMenu {
 			//--- auto-reopen branch that the CA_Quit_Button closeDialog path deliberately uses.
 			onButtonClick = "WFBE_TM2_OpenToUD = true; createDialog 'RscMenu_TeamV2';";
 		};
-		class CA_SavedKits_Button : RscButton {
+		class CA_SavedKits_Button : RscButton_WFBE_Action {
 			idc = 511007;
 			show = 0;
 			x = 0.505;
@@ -1539,7 +1539,7 @@ class RscMenu_Team {
 			w = 0.279999;
 			h = 0.035;
 		};
-		class CA_TM_Button : RscButton {
+		class CA_TM_Button : RscButton_WFBE_Action {
 			idc = 13009;
 			x = 0.513949;
 			y = 0.572956;
@@ -1564,7 +1564,7 @@ class RscMenu_Team {
 		};
 		//--- Unit designer tab buttons (IDC 13080-13081; WFBE_C_UNIT_DESIGNER).
 		//--- GUI_Menu_TeamV2.sqf hides both on open; shows when flag > 0.
-		class CA_TAB_Presets : RscButton {
+		class CA_TAB_Presets : RscButton_WFBE_Action {
 			idc = 13080;
 			x = 0.502;
 			y = 0.207;
@@ -1574,7 +1574,7 @@ class RscMenu_Team {
 			action = "MenuAction = 1100";
 			tooltip = "Gear presets and squad actions";
 		};
-		class CA_TAB_Units : RscButton {
+		class CA_TAB_Units : RscButton_WFBE_Action {
 			idc = 13081;
 			x = 0.584;
 			y = 0.207;
@@ -1599,7 +1599,7 @@ class RscMenu_Team {
 			w = 0.279999;
 			h = 0.035;
 		};
-		class CA_DB_Button : RscButton {
+		class CA_DB_Button : RscButton_WFBE_Action {
 			idc = 13014;
 			x = 0.513951;
 			y = 0.691511;
@@ -1624,7 +1624,7 @@ class RscMenu_Team {
 			onLBSelChanged = "MenuAction = 6";
 		};
 			/* High climbing preference */
-			class CA_HighClimbing_Default_Button : RscButton {
+			class CA_HighClimbing_Default_Button : RscButton_WFBE_Action {
 				idc = 13020;
 				x = 0.203;
 				y = 0.733;
@@ -1634,7 +1634,7 @@ class RscMenu_Team {
 				action = "MenuAction = 14";
 			};
 			/* Vote PopUp */
-			class VPOPON_Button : RscButton {
+			class VPOPON_Button : RscButton_WFBE_Action {
 				idc = 13019;
 				x = 0.203;
 				y = 0.772;
@@ -1754,7 +1754,7 @@ class RscMenu_TeamV2 {
 			style = ST_CENTER;
 			text = "---";
 		};
-		class CA_GP1_Save : RscButton {
+		class CA_GP1_Save : RscButton_WFBE_Action {
 			idc = 13052;
 			x = 0.252;
 			y = 0.296;
@@ -1763,7 +1763,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 1001";
 			tooltip = "Save current loadout to preset slot 1";
 		};
-		class CA_GP1_Apply : RscButton {
+		class CA_GP1_Apply : RscButton_WFBE_Action {
 			idc = 13053;
 			x = 0.398;
 			y = 0.296;
@@ -1772,7 +1772,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 1011";
 			tooltip = "Equip preset slot 1 now";
 		};
-		class CA_GP1_Rebuy : RscButton {
+		class CA_GP1_Rebuy : RscButton_WFBE_Action {
 			idc = 13054;
 			x = 0.544;
 			y = 0.296;
@@ -1790,7 +1790,7 @@ class RscMenu_TeamV2 {
 			style = ST_CENTER;
 			text = "---";
 		};
-		class CA_GP2_Save : RscButton {
+		class CA_GP2_Save : RscButton_WFBE_Action {
 			idc = 13056;
 			x = 0.252;
 			y = 0.334;
@@ -1799,7 +1799,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 1002";
 			tooltip = "Save current loadout to preset slot 2";
 		};
-		class CA_GP2_Apply : RscButton {
+		class CA_GP2_Apply : RscButton_WFBE_Action {
 			idc = 13057;
 			x = 0.398;
 			y = 0.334;
@@ -1808,7 +1808,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 1012";
 			tooltip = "Equip preset slot 2 now";
 		};
-		class CA_GP2_Rebuy : RscButton {
+		class CA_GP2_Rebuy : RscButton_WFBE_Action {
 			idc = 13058;
 			x = 0.544;
 			y = 0.334;
@@ -1826,7 +1826,7 @@ class RscMenu_TeamV2 {
 			style = ST_CENTER;
 			text = "---";
 		};
-		class CA_GP3_Save : RscButton {
+		class CA_GP3_Save : RscButton_WFBE_Action {
 			idc = 13060;
 			x = 0.252;
 			y = 0.372;
@@ -1835,7 +1835,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 1003";
 			tooltip = "Save current loadout to preset slot 3";
 		};
-		class CA_GP3_Apply : RscButton {
+		class CA_GP3_Apply : RscButton_WFBE_Action {
 			idc = 13061;
 			x = 0.398;
 			y = 0.372;
@@ -1844,7 +1844,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 1013";
 			tooltip = "Equip preset slot 3 now";
 		};
-		class CA_GP3_Rebuy : RscButton {
+		class CA_GP3_Rebuy : RscButton_WFBE_Action {
 			idc = 13062;
 			x = 0.544;
 			y = 0.372;
@@ -1862,7 +1862,7 @@ class RscMenu_TeamV2 {
 			style = ST_CENTER;
 			text = "---";
 		};
-		class CA_GP4_Save : RscButton {
+		class CA_GP4_Save : RscButton_WFBE_Action {
 			idc = 13064;
 			x = 0.252;
 			y = 0.410;
@@ -1871,7 +1871,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 1004";
 			tooltip = "Save current loadout to preset slot 4";
 		};
-		class CA_GP4_Apply : RscButton {
+		class CA_GP4_Apply : RscButton_WFBE_Action {
 			idc = 13065;
 			x = 0.398;
 			y = 0.410;
@@ -1880,7 +1880,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 1014";
 			tooltip = "Equip preset slot 4 now";
 		};
-		class CA_GP4_Rebuy : RscButton {
+		class CA_GP4_Rebuy : RscButton_WFBE_Action {
 			idc = 13066;
 			x = 0.544;
 			y = 0.410;
@@ -1914,7 +1914,7 @@ class RscMenu_TeamV2 {
 			h = 0.035;
 		};
 		/* Disband button */
-		class CA_SQ_Disband : RscButton {
+		class CA_SQ_Disband : RscButton_WFBE_Action {
 			idc = 13072;
 			x = 0.482;
 			y = 0.493;
@@ -1924,7 +1924,7 @@ class RscMenu_TeamV2 {
 			tooltip = "Disband selected AI from your squad";
 		};
 		/* Eject button */
-		class CA_SQ_Eject : RscButton {
+		class CA_SQ_Eject : RscButton_WFBE_Action {
 			idc = 13073;
 			x = 0.628;
 			y = 0.493;
@@ -1934,7 +1934,7 @@ class RscMenu_TeamV2 {
 			tooltip = "Eject selected AI out of its vehicle";
 		};
 		/* Get-out-and-repair button */
-		class CA_SQ_Repair : RscButton {
+		class CA_SQ_Repair : RscButton_WFBE_Action {
 			idc = 13074;
 			x = 0.482;
 			y = 0.535;
@@ -1967,7 +1967,7 @@ class RscMenu_TeamV2 {
 			h = 0.035;
 			onLBSelChanged = "MenuAction = 6";
 		};
-		class CA_HighClimbing_Default_Button : RscButton {
+		class CA_HighClimbing_Default_Button : RscButton_WFBE_Action {
 			idc = 13020;
 			x = 0.203;
 			y = 0.626;
@@ -1976,7 +1976,7 @@ class RscMenu_TeamV2 {
 			tooltip = "Toggle whether newly bought vehicles start with high climbing enabled";
 			action = "MenuAction = 14";
 		};
-		class CA_TransferFunds_Button : RscButton {
+		class CA_TransferFunds_Button : RscButton_WFBE_Action {
 			idc = 13012;
 			x = 0.514313;
 			y = 0.626;
@@ -1985,7 +1985,7 @@ class RscMenu_TeamV2 {
 			tooltip = "Open the advanced funds transfer menu (send cash to a teammate)";
 			action = "MenuAction = 101";
 		};
-		class VPOPON_Button : RscButton {
+		class VPOPON_Button : RscButton_WFBE_Action {
 			idc = 13019;
 			x = 0.203;
 			y = 0.668;
@@ -2019,7 +2019,7 @@ class RscMenu_TeamV2 {
 			h = 0.031;
 			text = "--- Slot 1 empty ---";
 		};
-		class CA_UD1_Save : RscButton {
+		class CA_UD1_Save : RscButton_WFBE_Action {
 			idc = 13103;
 			x = 0.397;
 			y = 0.306;
@@ -2029,7 +2029,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 2101";
 			tooltip = "Save current player loadout to unit template slot 1";
 		};
-		class CA_UD1_Activate : RscButton {
+		class CA_UD1_Activate : RscButton_WFBE_Action {
 			idc = 13104;
 			x = 0.516;
 			y = 0.306;
@@ -2039,7 +2039,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 2111";
 			tooltip = "Toggle: apply this template to next AI infantry buy";
 		};
-		class CA_UD1_Delete : RscButton {
+		class CA_UD1_Delete : RscButton_WFBE_Action {
 			idc = 13105;
 			x = 0.666;
 			y = 0.306;
@@ -2057,7 +2057,7 @@ class RscMenu_TeamV2 {
 			h = 0.031;
 			text = "--- Slot 2 empty ---";
 		};
-		class CA_UD2_Save : RscButton {
+		class CA_UD2_Save : RscButton_WFBE_Action {
 			idc = 13107;
 			x = 0.397;
 			y = 0.344;
@@ -2067,7 +2067,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 2102";
 			tooltip = "Save current player loadout to unit template slot 2";
 		};
-		class CA_UD2_Activate : RscButton {
+		class CA_UD2_Activate : RscButton_WFBE_Action {
 			idc = 13108;
 			x = 0.516;
 			y = 0.344;
@@ -2077,7 +2077,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 2112";
 			tooltip = "Toggle: apply this template to next AI infantry buy";
 		};
-		class CA_UD2_Delete : RscButton {
+		class CA_UD2_Delete : RscButton_WFBE_Action {
 			idc = 13109;
 			x = 0.666;
 			y = 0.344;
@@ -2095,7 +2095,7 @@ class RscMenu_TeamV2 {
 			h = 0.031;
 			text = "--- Slot 3 empty ---";
 		};
-		class CA_UD3_Save : RscButton {
+		class CA_UD3_Save : RscButton_WFBE_Action {
 			idc = 13111;
 			x = 0.397;
 			y = 0.382;
@@ -2105,7 +2105,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 2103";
 			tooltip = "Save current player loadout to unit template slot 3";
 		};
-		class CA_UD3_Activate : RscButton {
+		class CA_UD3_Activate : RscButton_WFBE_Action {
 			idc = 13112;
 			x = 0.516;
 			y = 0.382;
@@ -2115,7 +2115,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 2113";
 			tooltip = "Toggle: apply this template to next AI infantry buy";
 		};
-		class CA_UD3_Delete : RscButton {
+		class CA_UD3_Delete : RscButton_WFBE_Action {
 			idc = 13113;
 			x = 0.666;
 			y = 0.382;
@@ -2133,7 +2133,7 @@ class RscMenu_TeamV2 {
 			h = 0.031;
 			text = "--- Slot 4 empty ---";
 		};
-		class CA_UD4_Save : RscButton {
+		class CA_UD4_Save : RscButton_WFBE_Action {
 			idc = 13115;
 			x = 0.397;
 			y = 0.420;
@@ -2143,7 +2143,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 2104";
 			tooltip = "Save current player loadout to unit template slot 4";
 		};
-		class CA_UD4_Activate : RscButton {
+		class CA_UD4_Activate : RscButton_WFBE_Action {
 			idc = 13116;
 			x = 0.516;
 			y = 0.420;
@@ -2153,7 +2153,7 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 2114";
 			tooltip = "Toggle: apply this template to next AI infantry buy";
 		};
-		class CA_UD4_Delete : RscButton {
+		class CA_UD4_Delete : RscButton_WFBE_Action {
 			idc = 13117;
 			x = 0.666;
 			y = 0.420;
@@ -2242,7 +2242,7 @@ class RscMenu_BuyUnits {
 			onLBSelChanged = "MenuAction = 302";
 			onLBDblClick = "MenuAction = 1";
 		};
-		class CA_Purchase : RscButton {
+		class CA_Purchase : RscButton_WFBE_Action {
 			idc = 12002;
 			x = 0.688983;
 			y = 0.956626;
@@ -2399,7 +2399,7 @@ class RscMenu_BuyUnits {
 			style = ST_LEFT;
 		};
 		//--- Task 33: cancel-last-queue button, placed in header next to queue count.
-		class CA_Cancel_Queue : RscButton {
+		class CA_Cancel_Queue : RscButton_WFBE_Action {
 			idc = 12043;
 			x = 0.578;
 			y = 0.00775906;
@@ -3178,7 +3178,7 @@ class RscMenu_Tactical {
 			w = 0.224033;
 			h = 0.029412;
 		};
-		class CA_SetFMission_Button : RscButton {
+		class CA_SetFMission_Button : RscButton_WFBE_Action {
 			idc = 17006;
 			x = 0.12047;
 			y = 0.507631;
@@ -3190,7 +3190,7 @@ class RscMenu_Tactical {
 			colorBackgroundActive[] = {0.5882, 0.5882, 0.3529, 1};
 			colorFocused[] = {0.5882, 0.5882, 0.3529, 1};
 		};
-		class CA_FireMission_Button : RscButton {
+		class CA_FireMission_Button : RscButton_WFBE_Action {
 			idc = 17007;
 			x = 0.12047;
 			y = 0.551631;
@@ -3208,7 +3208,7 @@ class RscMenu_Tactical {
 		};
 		// Card #113: one-click crew-all-artillery. Mounts available group AI into the empty
 		// driver/gunner seats of the player's own artillery pieces.
-		class CA_CrewArtillery_Button : RscButton {
+		class CA_CrewArtillery_Button : RscButton_WFBE_Action {
 			idc = 17040;
 			x = 0.12047;
 			y = 0.595631;
@@ -3264,7 +3264,7 @@ class RscMenu_Tactical {
 			rowHeight = 0.01;
 			sizeEx = 0.026;
 		};
-		class CA_Button_Use : RscButton {
+		class CA_Button_Use : RscButton_WFBE_Action {
 			idc = 17020;
 			x = 0.22021;
 			y = 0.905171;
@@ -3448,7 +3448,7 @@ class RscMenu_Service {
 			size = 0.021;
 			colorBackground[] = WFBE_Background_Color_Footer;
 		};
-		class CA_Rearm_Button : RscButton {
+		class CA_Rearm_Button : RscButton_WFBE_Action {
 			idc = 20003;
 			x = 0.161261;
 			y = 0.686391;
@@ -3456,7 +3456,7 @@ class RscMenu_Service {
 			text = $STR_WF_SERVICE_Rearm;
 			action = "MenuAction = 1";
 		};
-		class CA_Repair_Button : RscButton {
+		class CA_Repair_Button : RscButton_WFBE_Action {
 			idc = 20004;
 			x = 0.50748;
 			y = 0.686391;
@@ -3464,7 +3464,7 @@ class RscMenu_Service {
 			text = $STR_WF_SERVICE_Repair;
 			action = "MenuAction = 2";
 		};
-		class CA_Refuel_Button : RscButton {
+		class CA_Refuel_Button : RscButton_WFBE_Action {
 			idc = 20005;
 			x = 0.161261;
 			y = 0.733899;
@@ -3472,7 +3472,7 @@ class RscMenu_Service {
 			text = $STR_WF_SERVICE_Refuel;
 			action = "MenuAction = 3";
 		};
-		class CA_Heal_Button : RscButton {
+		class CA_Heal_Button : RscButton_WFBE_Action {
 			idc = 20008;
 			x = 0.50748;
 			y = 0.733899;
@@ -3481,7 +3481,7 @@ class RscMenu_Service {
 			action = "MenuAction = 5";
 		};
 		// Marty: Compact all-unit buttons sit inside the old single-action button width.
-		class CA_RearmAll_Button : RscButton {
+		class CA_RearmAll_Button : RscButton_WFBE_Action {
 			idc = 20015;
 			x = 0.329261;
 			y = 0.686391;
@@ -3489,7 +3489,7 @@ class RscMenu_Service {
 			text = "All";
 			action = "MenuAction = 11";
 		};
-		class CA_RepairAll_Button : RscButton {
+		class CA_RepairAll_Button : RscButton_WFBE_Action {
 			idc = 20017;
 			x = 0.675480;
 			y = 0.686391;
@@ -3497,7 +3497,7 @@ class RscMenu_Service {
 			text = "All";
 			action = "MenuAction = 12";
 		};
-		class CA_RefuelAll_Button : RscButton {
+		class CA_RefuelAll_Button : RscButton_WFBE_Action {
 			idc = 20022;
 			x = 0.329261;
 			y = 0.733899;
@@ -3505,7 +3505,7 @@ class RscMenu_Service {
 			text = "All";
 			action = "MenuAction = 13";
 		};
-		class CA_HealAll_Button : RscButton {
+		class CA_HealAll_Button : RscButton_WFBE_Action {
 			idc = 20019;
 			x = 0.675480;
 			y = 0.733899;
@@ -3555,7 +3555,7 @@ class RscMenu_Service {
 		class CA_LabelRefuelAll : CA_LabelRearmAll {
 			idc = 20025;
 		};
-		class CA_FullService_Button : RscButton {
+		class CA_FullService_Button : RscButton_WFBE_Action {
 			idc = 20023;
 			x = 0.161261;
 			y = 0.767311;
@@ -3570,7 +3570,7 @@ class RscMenu_Service {
 			w = 0.12;
 		};
 		// Marty: Keep EASA visible as a loadout/configuration action, not a generic service action.
-		class CA_EASA_Button : RscButton {
+		class CA_EASA_Button : RscButton_WFBE_Action {
 			idc = 20010;
 			x = 0.50748;
 			y = 0.767311;
@@ -3802,7 +3802,8 @@ class RscDisplay_Parameters {
 //--- EASA Menu. | ALL DONE!
 class RscMenu_EASA {
 	movingEnable = 1;
-	idd = 24000;
+	//--- P2: reserved display ID; 23000 belongs to Economy.
+	idd = 24100;
 	onLoad = "_this ExecVM ""Client\GUI\GUI_Menu_EASA.sqf""";
 	
 	class controlsBackground {
@@ -3859,7 +3860,7 @@ class RscMenu_EASA {
 			h = 0.476481;
 			onLBDblClick = "MenuAction = 101";
 		};
-		class CA_Purchase : RscButton {
+		class CA_Purchase : RscButton_WFBE_Action {
 			idc = 22004;
 			x = 0.613615;
 			y = 0.758018;
@@ -3980,7 +3981,7 @@ class RscMenu_Economy {
 			y = 0.512032;
 			w = 0.15;
 		};
-		class CA_IncomeSet_Button : RscButton {
+		class CA_IncomeSet_Button : RscButton_WFBE_Action {
 			idc = 23012;
 			x = 0.0372772;
 			y = 0.567717;
@@ -4001,7 +4002,7 @@ class RscMenu_Economy {
 			w = 0.399999;
 		};
 		/* Selling Structures */
-		class CA_Sell : RscButton {
+		class CA_Sell : RscButton_WFBE_Action {
 			idc = 23015;
 			x = 0.501454;
 			y = 0.757255;
