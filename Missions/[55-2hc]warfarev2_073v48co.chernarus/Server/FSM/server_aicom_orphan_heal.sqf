@@ -15,7 +15,12 @@
    WHAT: Common_RunCommanderTeam (armed by the same flag) publishes a driver-liveness heartbeat on its
    group (wfbe_aicom_hb_t, ~60s cadence). Every 60s this sweep walks wfbe_teams of WEST/EAST for
    wfbe_aicom_hc groups whose heartbeat is OLDER than WFBE_C_AICOM_ORPHAN_STALE s (default 180 = 3
-   missed beats): that founding thread is dead - no driver, no consumers. Healing, server-side:
+   missed beats) on TWO CONSECUTIVE sweeps (per-team confirmation counter, review 187997f170
+   finding 1: one lost/late PV must never retire a team): that founding machine is dead - no
+   driver, no consumers. The publisher runs in its OWN 60s spawn on the founding machine because
+   the main order loop blocks for minutes inside ordinary capture/hold phases; an HC drop kills
+   publisher and driver together (script-error-only driver death with a live HC keeps heartbeating
+   and is out of scope). Healing, server-side:
      1. STALE TOPUP REFUND: a pending wfbe_aicom_topup_req older than its TTL on an orphan can never
         be consumed; refund the stored charge (element 4) via ChangeAICommanderFunds (this loop IS the
         server) and clear the request ([] sentinel, exactly like the in-thread consumer).
@@ -46,7 +51,7 @@
      recycle|team=..|reason=stale-thread|units=..      player-safe retired field orphan
      defer|team=..|why=player-near / why=combat        retirement postponed (throttled 600s/team)
      skip-remote|team=..                               stale thread but units not server-local (throttled)
-     sweep|checked=..|stale=..|healed=..|deferred=..|unknownHb=..   summary (only on ticks with stale or unknown)
+     sweep|checked=..|stale=..|confirmed=..|healed=..|deferred=..|unknownHb=..   summary (only on ticks with stale or unknown)
 
    Cost: one wfbe_teams walk per side per 60s + per-orphan playableUnits proximity scans. Spawned from
    Server\Init\Init_Server.sqf only when WFBE_C_AICOM_ORPHAN_HEAL > 0 (default 0 = this file never
@@ -58,7 +63,7 @@ scriptName "Server\FSM\server_aicom_orphan_heal.sqf";
 if (!isServer) exitWith {};
 if ((missionNamespace getVariable ["WFBE_C_AICOM_ORPHAN_HEAL", 0]) <= 0) exitWith {};
 
-private ["_stale","_homeR","_safeD","_ttl","_checked","_staleN","_healed","_deferred","_unknown","_side","_sideID","_logik","_teams","_g","_hb","_req","_issued","_charge","_liveN","_ldr","_moved","_tord","_sp","_never","_pNear","_combat","_delN","_hulls","_h","_reason","_dlast","_why"];
+private ["_stale","_homeR","_safeD","_ttl","_checked","_staleN","_confirmedN","_staleSeen","_healed","_deferred","_unknown","_side","_sideID","_logik","_teams","_g","_hb","_req","_issued","_charge","_liveN","_ldr","_moved","_tord","_sp","_never","_pNear","_combat","_delN","_hulls","_h","_reason","_dlast","_why"];
 
 ["INITIALIZATION", "server_aicom_orphan_heal.sqf: Armed. Orphaned AICOM-team sweep every 60s."] Call WFBE_CO_FNC_LogContent;
 
@@ -71,7 +76,7 @@ while {!WFBE_GameOver} do {
 		_safeD = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
 		_ttl = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_REQ_TTL", 300];
 		if ((typeName _ttl) != "SCALAR") then {_ttl = 300};
-		_checked = 0; _staleN = 0; _healed = 0; _deferred = 0; _unknown = 0;
+		_checked = 0; _staleN = 0; _confirmedN = 0; _healed = 0; _deferred = 0; _unknown = 0;
 		{
 			_side = _x; //--- capture before the inner forEach rebinds _x.
 			_sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -89,6 +94,17 @@ while {!WFBE_GameOver} do {
 						} else {
 							if ((time - _hb) > _stale) then {
 								_staleN = _staleN + 1;
+								//--- CONFIRMATION GATE (review 187997f170 finding 1, defense-in-depth): act only on the
+								//--- 2nd CONSECUTIVE stale sweep. The publisher runs in its own 60s spawn so a live team
+								//--- should never look stale, but one lost/late PV must not be enough to retire a team -
+								//--- the deleghealth hysteresis precedent applied to an ACTING loop. Server-local counter
+								//--- (never broadcast); a fresh beat resets it in the else-branch below.
+								_staleSeen = _g getVariable "wfbe_hcheal_stale_n";
+								if (isNil "_staleSeen") then {_staleSeen = 0};
+								_staleSeen = _staleSeen + 1;
+								_g setVariable ["wfbe_hcheal_stale_n", _staleSeen];
+								if (_staleSeen >= 2) then {
+								_confirmedN = _confirmedN + 1;
 
 								//--- (1) STALE TOPUP REFUND - the dead thread can neither consume nor TTL-refund it.
 								_req = _g getVariable "wfbe_aicom_topup_req";
@@ -159,6 +175,11 @@ while {!WFBE_GameOver} do {
 										};
 									};
 								};
+								};
+							} else {
+								//--- Fresh beat: clear any partial stale confirmation (only write when set).
+								_staleSeen = _g getVariable "wfbe_hcheal_stale_n";
+								if (!isNil "_staleSeen") then {_g setVariable ["wfbe_hcheal_stale_n", nil]};
 							};
 						};
 					};
@@ -166,7 +187,7 @@ while {!WFBE_GameOver} do {
 			};
 		} forEach [west, east];
 		if ((_staleN > 0) || {_unknown > 0}) then {
-			diag_log ("HCHEAL|v1|sweep|checked=" + str _checked + "|stale=" + str _staleN + "|healed=" + str _healed + "|deferred=" + str _deferred + "|unknownHb=" + str _unknown + "|t=" + str (round (time / 60)));
+			diag_log ("HCHEAL|v1|sweep|checked=" + str _checked + "|stale=" + str _staleN + "|confirmed=" + str _confirmedN + "|healed=" + str _healed + "|deferred=" + str _deferred + "|unknownHb=" + str _unknown + "|t=" + str (round (time / 60)));
 		};
 	};
 };
