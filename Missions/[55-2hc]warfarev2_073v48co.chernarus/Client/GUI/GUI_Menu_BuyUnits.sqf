@@ -207,7 +207,10 @@ _IDCS = _IDCS - [_currentIDC];
 				if (_totalCamps != _campsSide) then {_skip = true; hint parseText(localize 'STR_WF_INFO_Camps_Purchase')};
 			};
 			if !(_skip) then {
-				_size = Count ((Units (group player)) Call GetLiveUnits);
+				_size = 0;
+				{if (alive _x) then {
+					if (!(_x getVariable ["wasp_skinswap_ghost", false])) then {_size = _size + 1};
+				}} forEach (units (group player));
 				//--- Get the infantry limit based off the infantry upgrade.
 				//--- B750 (Ray 2026-06-24): RESTORE the infantry squad-cap regression. round(_mbu/4) gave only 4 at barracks
 				//--- lvl 0 once _mbu (GroupSizePlayer) was pop-tiered down to 16 -> player capped at 4 AI ("max 4/10, can't
@@ -417,7 +420,10 @@ _IDCS = _IDCS - [_currentIDC];
 		_capGC = (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_BASE", 4]) + floor (_capGK / (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_PER_KILLS", 10]));
 		_capSize = _capGC min (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_MAX", 12]);
 	};
-	_capAlive = count ((units (group player)) Call GetLiveUnits);
+	_capAlive = 0;
+	{if (alive _x) then {
+		if (!(_x getVariable ["wasp_skinswap_ghost", false])) then {_capAlive = _capAlive + 1};
+	}} forEach (units (group player));
 	_capUsed = unitQueu + _capAlive;
 	ctrlSetText [12019, Format [localize 'STR_WF_UNITS_Cash', Call GetPlayerFunds] + "   Squad: " + str _capUsed + "/" + str _capSize];
 
