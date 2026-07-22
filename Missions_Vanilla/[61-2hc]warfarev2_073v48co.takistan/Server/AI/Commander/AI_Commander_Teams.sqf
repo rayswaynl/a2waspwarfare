@@ -607,12 +607,10 @@ if (count _live > 0) then {
 	};
 	if (count _eligible == 0) exitWith { ["no_eligible"] Call _emitFoundSkip; };
 
-	//--- Build83 FLAT AIR CAP (Ray cmdcon34, 2026-07-01): SUPERSEDES the old per-type attack-heli cap (WFBE_C_AICOM_ATTACKHELI_MAX
-	//--- + its time-bonus ramp) with a SINGLE per-side ceiling: at most WFBE_C_AICOM_AIR_MAX_TOTAL (default 3) AICOM air units
-	//--- ALIVE at once, counting PLANES + ATTACK HELIS + TRANSPORT HELIS TOGETHER. Ray: "just limit AI commander air to max 3
-	//--- planes/attack/transport helicopters IN TOTAL at once" (per side). The old ATTACKHELI_MAX const is LEFT DEFINED but is no
-	//--- longer the gate. At/over the cap, strip EVERY air template from _eligible; the bucket picker below degrade-walks to a
-	//--- buildable ground class so founding continues normally. 0 = no cap.
+	//--- Build83 FLAT AIR CAP (Ray cmdcon34, 2026-07-01): one per-side ceiling, at most
+	//--- WFBE_C_AICOM_AIR_MAX_TOTAL (default 3) AICOM air units ALIVE, counting planes + attack
+	//--- helis + transport helis together. At/over the cap, strip every air template from _eligible;
+	//--- the bucket picker degrade-walks to a buildable ground class so founding continues normally. 0 = no cap.
 	//---
 	//--- COUNT = all ALIVE isKindOf "Air" on this side - non-transport (attack/plane) AND transport, crewed or not. To avoid
 	//--- double-counting TOWN/GARRISON air, a hull counts only when its SIDE resolves to _side (crewed -> side of (crew select 0);
