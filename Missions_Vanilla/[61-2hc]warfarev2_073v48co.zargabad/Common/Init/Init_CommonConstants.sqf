@@ -872,8 +872,12 @@ if (worldName == "Zargabad") then {
 	//--- alongside the front press. 0 = no bonus (byte-identical to pre-fix while dominant); only ever read while
 	//--- WFBE_C_AICOM_PRESS_FLOOR_V2 is armed AND dominant AND EXPAND_FRAC > 0 (see EXPAND_FRAC comment above for why
 	//--- the FRAC gate on this bonus is required for a true EXPAND_FRAC=0 rollback). AI_Commander_Allocate.sqf also
-	//--- clamps the combined _expandN (same EXPAND_FRAC > 0 gate) so at least WFBE_C_AICOM2_FIST_PERTOWN teams are
-	//--- always reserved for the fist once the scaling feature is active.
+	//--- clamps the combined _expandN (same EXPAND_FRAC > 0 gate) so at least (count _fist) * WFBE_C_AICOM2_FIST_PERTOWN
+	//--- teams are always reserved for the fist once the scaling feature is active (sized off the LIVE active fist
+	//--- town count, not a flat single-town reservation - WFBE_C_AICOM2_FIST_TOWNS's registered default is 2, not the
+	//--- 1 the AI_Commander_Allocate.sqf header docstring claims), then RE-APPLIES the EXPAND_TEAMS floor (bounded by
+	//--- what the roster can afford after harass) so that fist-floor clamp can never itself trim _expandN below the
+	//--- flat EXPAND_TEAMS cap on a small-to-mid roster at default settings - adversarial re-review, 2026-07-22.
 	if (isNil "WFBE_C_AICOM2_PRESS_EXPAND_BONUS") then {WFBE_C_AICOM2_PRESS_EXPAND_BONUS = 2}; //--- extra teams added to the expand-lane cap while dominant (_pfDominant, AI_Commander_Allocate.sqf). Small vs the FIST/ENEMY press bonuses above (400) - a headcount lever, not a score lever.
 	if (isNil "WFBE_C_AICOM_EXPAND_DEDUP")     then {WFBE_C_AICOM_EXPAND_DEDUP     = 1};  //--- Ray 2026-07-04: ON for live testing. block-m: 0=off legacy (multiple expand teams may dogpile one neutral town); 1=each expand team claims a distinct neutral town per tick (DEDUP).
 	if (isNil "WFBE_C_AICOM_HARASS_FALLBACK")  then {WFBE_C_AICOM_HARASS_FALLBACK  = 1};  //--- Ray 2026-07-04: ON for live testing. block-m: 0=off legacy (harass picks deepest town regardless of reach); 1=walk depth-sorted candidates and pick deepest reachable by >=1 mounted team (emits AICOMSTAT|v2|EVENT|HARASS_SKIP when first candidate is unreachable).
