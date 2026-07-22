@@ -38,7 +38,7 @@
 private ["_side","_logik","_snap","_myEff","_enEff","_enTowns","_myTowns","_enHQ","_enHQPos","_enHQAlive",
 	"_domRatio","_abortRatio","_maxEnTowns","_armTicks","_minCommit","_dominant","_streak","_committed",
 	"_t0","_state","_tgtTowns","_teams","_nearTown","_bestD","_d","_t","_stamped","_sideText","_elMin",
-	"_senseRadius","_senseInterval","_senseChance","_commitRadius","_senseTick","_sensed","_inRange","_rollNow","_ldr","_garTeam","_holdT","_isHolding","_capLk","_capLocked","_dHQ","_decV","_stallStreak"];
+	"_senseRadius","_senseInterval","_senseChance","_commitRadius","_senseTick","_sensed","_inRange","_rollNow","_ldr","_garTeam","_holdT","_isHolding","_capLk","_capLocked","_dHQ","_decV","_stallStreak","_gateReason"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -139,6 +139,22 @@ _dominant = _enHQAlive
 	&& {_inRange > 0}
 	&& {_enTowns <= _maxEnTowns}
 	&& {(_enEff <= 0 && {_myEff > 0}) || {_enEff > 0 && {_myEff >= (_enEff * _domRatio)}}};
+
+//--- Liveness telemetry: name the first ARM gate that holds this closer idle without changing its policy.
+_gateReason = "ready";
+if (!_enHQAlive) then {_gateReason = "hq-dead"} else {
+	if (_inRange <= 0) then {_gateReason = "no-proximity"} else {
+		if (!_sensed) then {_gateReason = "not-sensed"} else {
+			if (_enTowns > _maxEnTowns) then {_gateReason = "enemy-towns"} else {
+				if (!((_enEff <= 0 && {_myEff > 0}) || {_enEff > 0 && {_myEff >= (_enEff * _domRatio)}})) then {_gateReason = "not-dominant"} else {
+					if (_committed) then {_gateReason = "committed"} else {
+						if ((_streak + 1) < _armTicks) then {_gateReason = "arming"};
+					};
+				};
+			};
+		};
+	};
+};
 
 if (_committed) then {
 	if (!_enHQAlive) then {
@@ -256,5 +272,8 @@ diag_log ("AICOM2|v1|DECAP|" + _sideText + "|" + str _elMin
 	+ "|inRange=" + str _inRange
 	+ "|roll=" + str _rollNow
 	+ "|sensed=" + (if (_sensed) then {"1"} else {"0"})
+	+ "|gate=" + _gateReason
+	+ "|domRatio=" + str _domRatio
+	+ "|maxEnTowns=" + str _maxEnTowns
 	+ "|stamped=" + str _stamped
 	+ "|flag=" + str (missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_ENABLE", 0]));

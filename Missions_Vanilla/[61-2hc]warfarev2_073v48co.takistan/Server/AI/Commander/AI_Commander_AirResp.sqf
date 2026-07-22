@@ -47,7 +47,7 @@ private ["_side","_logik","_snap","_sideID","_sideText","_enemySide","_enemyID",
 	"_enable","_senseRadius","_senseInterval","_senseChance","_maxAir","_loiterTime","_minTowns",
 	"_senseTick","_sensed","_laneTown","_flightsIn","_flights","_f","_fg","_fh",
 	"_tgtTowns","_ownTowns","_cands","_x2","_lanePos","_nearCount","_bestTown","_bestCount","_inRange",
-	"_rollNow","_covered","_upgrades","_airOK","_townsOK","_canDispatch","_dispatched",
+	"_rollNow","_covered","_airAlive","_airSideOK","_hasAirFactory","_afStructNames","_afStructs","_afStructIdx","_afStructClass","_upgrades","_airOK","_townsOK","_canDispatch","_dispatched","_skipReason",
 	"_airList","_attackClasses","_pilotClass","_ang","_spawnPos","_class","_special","_heli","_grp","_pilot",
 	"_elMin"];
 
@@ -143,10 +143,32 @@ if (!_inRange) then {
 	};
 };
 
-//--- AIRFRAME AVAILABLE (spec condition 3): same air-research + established-towns gate W6/W13 already use.
+//--- AIRFRAME AVAILABLE: AICOM air founding intentionally waives the AIR research tier when a side holds
+//--- a live Aircraft Factory (AI_Commander_Teams.sqf:456-477). Use that same durable capability signal here;
+//--- live airframes remain telemetry, while a factory or researched AIR level proves the closer can field a flight.
+_airAlive = 0;
+{
+	if (alive _x && {_x isKindOf "Air"}) then {
+		_airSideOK = false;
+		if ((count crew _x) > 0) then {
+			if (side ((crew _x) select 0) == _side) then {_airSideOK = true};
+		} else {
+			if ((_x getVariable ["wfbe_side", sideUnknown]) == _side) then {_airSideOK = true};
+		};
+		if (_airSideOK) then {_airAlive = _airAlive + 1};
+	};
+} forEach vehicles;
+_hasAirFactory = false;
+_afStructNames = missionNamespace getVariable [Format ["WFBE_%1STRUCTURENAMES", _sideText], []];
+_afStructIdx = (missionNamespace getVariable [Format ["WFBE_%1STRUCTURES", _sideText], []]) find "Aircraft";
+if (_afStructIdx >= 0 && {_afStructIdx < count _afStructNames}) then {
+	_afStructClass = _afStructNames select _afStructIdx;
+	_afStructs = (_side) Call WFBE_CO_FNC_GetSideStructures;
+	{ if (typeOf _x == _afStructClass && {alive _x}) exitWith {_hasAirFactory = true} } forEach _afStructs;
+};
 _upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
-_airOK    = !isNil "_upgrades" && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0};
-_townsOK  = _myTowns >= _minTowns;
+_airOK = _hasAirFactory || {!isNil "_upgrades" && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0}};
+_townsOK = _myTowns >= _minTowns;
 
 //--- BUDGET + one-flight-per-lane de-dup (spec condition 4 + SS2.3/Q7 overlap policy, resolved by construction:
 //--- see file header). A lane already covered by a living flight never gets a second dispatch.
@@ -154,6 +176,24 @@ _covered = false;
 { if ((_x select 2) == _laneTown) then {_covered = true} } forEach _flights;
 
 _canDispatch = _sensed && {_inRange} && {_airOK} && {_townsOK} && {!_covered} && {(count _flights) < _maxAir} && {!isNull _laneTown};
+
+//--- Liveness telemetry: report the first gate that prevented a flight, not merely dispatched=0.
+_skipReason = "ready";
+if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) <= 0) then {_skipReason = "disabled"} else {
+	if (!_inRange) then {_skipReason = "no-contact"} else {
+		if (!_sensed) then {_skipReason = "not-sensed"} else {
+			if (!_airOK) then {_skipReason = "air-unavailable"} else {
+				if (!_townsOK) then {_skipReason = "not-established"} else {
+					if (_covered) then {_skipReason = "lane-covered"} else {
+						if ((count _flights) >= _maxAir) then {_skipReason = "flight-cap"} else {
+							if (isNull _laneTown) then {_skipReason = "no-lane"};
+						};
+					};
+				};
+			};
+		};
+	};
+};
 
 _dispatched = 0;
 if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_canDispatch}) then {
@@ -196,6 +236,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_
 					_grp setBehaviour "COMBAT"; _grp setCombatMode "RED";
 					_flights = _flights + [[_grp, _heli, _laneTown, time]];
 					_dispatched = 1;
+					_skipReason = "fired";
 					//--- WATCHDOG (owner Q7 default + spec SS2.1 'flexible, re-orderable' behaviour): polls the side's
 					//--- CURRENT sensed lane every 15s; keeps patrolling while this flight's lane stays the live sense
 					//--- target, self-despawns the moment the lane goes cold or AIRRESP_LOITER_TIME elapses - whichever
@@ -218,12 +259,16 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_
 						if (!isNull _g) then {deleteGroup _g};
 					};
 				} else {
+					_skipReason = "pilot-create-failed";
 					deleteVehicle _heli; deleteGroup _grp;
 				};
 			} else {
+				_skipReason = "group-create-failed";
 				deleteVehicle _heli;
 			};
-		};
+		} else {_skipReason = "vehicle-create-failed"};
+	} else {
+		if (count _attackClasses <= 0) then {_skipReason = "no-attack-class"} else {_skipReason = "no-pilot-class"};
 	};
 };
 
@@ -242,4 +287,6 @@ diag_log ("AICOM2|v1|AIRRESP|" + _sideText + "|" + str _elMin
 	+ "|dispatched=" + str _dispatched
 	+ "|myTowns=" + str _myTowns
 	+ "|airOK=" + (if (_airOK) then {"1"} else {"0"})
+	+ "|airAlive=" + str _airAlive
+	+ "|skip=" + _skipReason
 	+ "|flag=" + str (missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]));
