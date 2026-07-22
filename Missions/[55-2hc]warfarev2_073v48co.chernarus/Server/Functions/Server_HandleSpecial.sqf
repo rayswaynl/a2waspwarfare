@@ -1325,7 +1325,7 @@ switch (_args select 0) do {
 													{
 														if (isNull _h && {alive _x} && {(vehicle _x) != _x} && {(vehicle _x) isKindOf "Helicopter"} && {canMove (vehicle _x)}
 														    && {!isNull (driver (vehicle _x))} && {alive (driver (vehicle _x))}
-														    && {((getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0) == _saWantTrans}) then {
+														    && {if (_saWantTrans) then {(getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0} else {(getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) <= 0}}) then {   //--- BOOLCMP fix: boolean == is an A2 runtime error, was live-firing (wave0722g)
 															_h = vehicle _x;
 														};
 													} forEach (units _tm);

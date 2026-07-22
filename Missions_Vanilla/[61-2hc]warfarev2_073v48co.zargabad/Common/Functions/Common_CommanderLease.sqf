@@ -59,7 +59,7 @@ WFBE_CO_FNC_CommanderLeaseHolderPresent = {
 
     _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
     if (isNull _logic) exitWith {_present};
-    _lease = _logic getVariable ["wfbe_commander_lease", []];
+    _lease = _logic getVariable "wfbe_commander_lease"; if (isNil "_lease") then {_lease = []};   //--- G1: side logic can be a Group/objNull - the 2-arg default form returns nil there (live wave0722g RPT error)
     if (typeName _lease != "ARRAY") then {_lease = []};
     if (count _lease < 6) exitWith {_present};
     _uid = _lease select 0;
@@ -127,7 +127,7 @@ WFBE_CO_FNC_CommanderLeaseExecGrant = {
 
     if (isNull _team) exitWith {
         //--- Explicit AI hand-back (vote resolved to AI, or an assign cleared the seat).
-        _gen = (_logic getVariable ["wfbe_commander_lease_gen", 0]) + 1;
+        _gen = _logic getVariable "wfbe_commander_lease_gen"; if (isNil "_gen") then {_gen = 0}; _gen = _gen + 1;
         _logic setVariable ["wfbe_commander_lease_gen", _gen];
         _logic setVariable ["wfbe_commander_lease", nil];
         _logic setVariable ["wfbe_commander_lease_expires", nil];
@@ -141,7 +141,7 @@ WFBE_CO_FNC_CommanderLeaseExecGrant = {
 
     _leader = leader _team;
     _uid = getPlayerUID _leader;
-    _gen = (_logic getVariable ["wfbe_commander_lease_gen", 0]) + 1;
+    _gen = _logic getVariable "wfbe_commander_lease_gen"; if (isNil "_gen") then {_gen = 0}; _gen = _gen + 1;
     _logic setVariable ["wfbe_commander_lease_gen", _gen];
     _logic setVariable ["wfbe_commander_lease", [_uid, _side, str _team, time, _source, _gen]];
     _logic setVariable ["wfbe_commander_lease_expires", nil];
@@ -158,7 +158,7 @@ WFBE_CO_FNC_CommanderLeaseExecReclaim = {
     _team = _cmd select 1;
 
     if (isNull _team) exitWith {};
-    _lease = _logic getVariable ["wfbe_commander_lease", []];
+    _lease = _logic getVariable "wfbe_commander_lease"; if (isNil "_lease") then {_lease = []};   //--- G1: side logic can be a Group/objNull - the 2-arg default form returns nil there (live wave0722g RPT error)
     if (typeName _lease != "ARRAY" || {count _lease < 6}) exitWith {};
     if ((_lease select 0) != _uid || {(_lease select 2) != (str _team)}) exitWith {};
     if (!([_side, _team] Call WFBE_CO_FNC_CommanderLeaseEligible)) exitWith {};
@@ -167,7 +167,7 @@ WFBE_CO_FNC_CommanderLeaseExecReclaim = {
     //--- what makes a stand-down request queued BEFORE the reclaim provably stale afterwards -
     //--- the generation-mismatch gate in ExecStandDown below needs no separate holder-timing
     //--- assumption to be correct.
-    _gen = (_logic getVariable ["wfbe_commander_lease_gen", 0]) + 1;
+    _gen = _logic getVariable "wfbe_commander_lease_gen"; if (isNil "_gen") then {_gen = 0}; _gen = _gen + 1;
     _logic setVariable ["wfbe_commander_lease_gen", _gen];
     _logic setVariable ["wfbe_commander_lease_expires", nil];
     _logic setVariable ["wfbe_commander_lease", [_uid, _side, str _team, time, "reclaim", _gen]];
@@ -182,7 +182,7 @@ WFBE_CO_FNC_CommanderLeaseExecStandDown = {
     _cmd = _this select 2;
     _targetGen = _cmd select 0;
 
-    _curGen = _logic getVariable ["wfbe_commander_lease_gen", 0];
+    _curGen = _logic getVariable "wfbe_commander_lease_gen"; if (isNil "_curGen") then {_curGen = 0};
     //--- THE generation gate: a stand-down request only ever fires against the EXACT lease
     //--- generation it was raised for. Any grant or reclaim since - by definition, from ANY
     //--- source, at ANY interleaving point - has already bumped the generation, so this
@@ -191,8 +191,8 @@ WFBE_CO_FNC_CommanderLeaseExecStandDown = {
     //--- request captured either still matches reality or it categorically does not.
     if (_targetGen != _curGen) exitWith {};
 
-    _commander = _logic getVariable ["wfbe_commander", objNull];
-    _lease = _logic getVariable ["wfbe_commander_lease", []];
+    _commander = _logic getVariable "wfbe_commander"; if (isNil "_commander") then {_commander = objNull};
+    _lease = _logic getVariable "wfbe_commander_lease"; if (isNil "_lease") then {_lease = []};   //--- G1: side logic can be a Group/objNull - the 2-arg default form returns nil there (live wave0722g RPT error)
     if (isNull _commander && {typeName _lease != "ARRAY" || {count _lease == 0}}) exitWith {};
 
     //--- Defense-in-depth on top of the generation gate (belt-and-braces, matches the style
