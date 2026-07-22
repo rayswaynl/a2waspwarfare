@@ -1,0 +1,462 @@
+{
+  "task": "wasp-restart-safety-harness-20260722",
+  "harness": "Tools/RestartSafety/restart_safety_harness.py",
+  "supervisor_static": [
+    {
+      "name": "supervisor_file_exists",
+      "ok": true,
+      "detail": "Missions\\[55-2hc]warfarev2_073v48co.chernarus\\Server\\FSM\\server_coreloop_supervisor.sqf"
+    },
+    {
+      "name": "descriptor_four_loops",
+      "ok": true,
+      "detail": "descriptor table covers town/economy/upgrade/groupsgc"
+    },
+    {
+      "name": "groupsgc_default_restart",
+      "ok": true,
+      "detail": "groupsgc default mode 2 (restart)"
+    },
+    {
+      "name": "others_default_observe",
+      "ok": true,
+      "detail": "town/economy/upgrade default mode 1 (observe)"
+    },
+    {
+      "name": "init_server_launches_supervisor",
+      "ok": true,
+      "detail": "Init_Server launches supervisor behind enable flag"
+    },
+    {
+      "name": "restart_mode_read_per_loop",
+      "ok": true,
+      "detail": "per-loop WFBE_C_CORELOOP_RESTART_<ID> arming"
+    }
+  ],
+  "loops": [
+    {
+      "loop_id": "groupsgc",
+      "default_mode": 2,
+      "default_mode_label": "auto-restart",
+      "verdict": "GREEN",
+      "reason": "all crash points idempotent under live re-check; default already auto-restart",
+      "crash_cases": [
+        {
+          "step": "hb",
+          "outcome": "pass",
+          "detail": "deleted=[1] mid=[] attempts=1 (mid_attempts=0)",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 0,
+          "deletes": 1
+        },
+        {
+          "step": "collect",
+          "outcome": "pass",
+          "detail": "deleted=[1] mid=[] attempts=1 (mid_attempts=0)",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 0,
+          "deletes": 1
+        },
+        {
+          "step": "delete_pass",
+          "outcome": "pass",
+          "detail": "deleted=[1] mid=[1] attempts=1 (mid_attempts=1)",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 0,
+          "deletes": 1
+        },
+        {
+          "step": "basegc",
+          "outcome": "pass",
+          "detail": "deleted=[1] mid=[1] attempts=1 (mid_attempts=1)",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 0,
+          "deletes": 1
+        },
+        {
+          "step": "sleep",
+          "outcome": "pass",
+          "detail": "deleted=[1] mid=[1] attempts=1 (mid_attempts=1)",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 0,
+          "deletes": 1
+        }
+      ],
+      "static_checks": [
+        {
+          "name": "owner_generation_gate",
+          "ok": true,
+          "detail": "owner key wfbe_coreloop_owner_groupsgc + while-gate present"
+        },
+        {
+          "name": "heartbeat_stamp",
+          "ok": true,
+          "detail": "hb stamp wfbe_coreloop_hb_groupsgc"
+        },
+        {
+          "name": "two_pass_collect_then_delete",
+          "ok": true,
+          "detail": "two-pass empty-group reap"
+        },
+        {
+          "name": "live_state_recheck",
+          "ok": true,
+          "detail": "live unit-count recheck before reap"
+        }
+      ],
+      "arm_recommendation": "keep-auto-restart",
+      "confidence": "high",
+      "not_verified": [
+        "BASE-GC re-adopt cap races under concurrent commander founding"
+      ]
+    },
+    {
+      "loop_id": "town",
+      "default_mode": 1,
+      "default_mode_label": "observe/watch-only",
+      "verdict": "GREEN",
+      "reason": "all modeled crash points recovered without double-credit/corruption",
+      "crash_cases": [
+        {
+          "step": "hb",
+          "outcome": "pass",
+          "detail": "side=1 supply=30 flips=1 camps=True",
+          "funds_delta": 0,
+          "flips": 1,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "scan",
+          "outcome": "pass",
+          "detail": "side=1 supply=30 flips=1 camps=True",
+          "funds_delta": 0,
+          "flips": 1,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "drain",
+          "outcome": "pass",
+          "detail": "side=1 supply=30 flips=1 camps=True",
+          "funds_delta": 0,
+          "flips": 1,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "maybe_flip",
+          "outcome": "pass",
+          "detail": "side=1 supply=30 flips=1 camps=True",
+          "funds_delta": 0,
+          "flips": 1,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "camps",
+          "outcome": "pass",
+          "detail": "side=1 supply=30 flips=1 camps=True",
+          "funds_delta": 0,
+          "flips": 1,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "rewards",
+          "outcome": "pass",
+          "detail": "side=1 supply=30 flips=1 camps=True",
+          "funds_delta": 0,
+          "flips": 1,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "sleep",
+          "outcome": "pass",
+          "detail": "side=1 supply=30 flips=1 camps=True",
+          "funds_delta": 0,
+          "flips": 1,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "post_flip_reward_restart",
+          "outcome": "pass",
+          "detail": "reward stable at 1, flips=1",
+          "funds_delta": 0,
+          "flips": 1,
+          "upgrade_starts": 0,
+          "deletes": 0
+        }
+      ],
+      "static_checks": [
+        {
+          "name": "owner_generation_gate",
+          "ok": true,
+          "detail": "owner key wfbe_coreloop_owner_town + while-gate present"
+        },
+        {
+          "name": "heartbeat_stamp",
+          "ok": true,
+          "detail": "hb stamp wfbe_coreloop_hb_town"
+        },
+        {
+          "name": "sideid_write_present",
+          "ok": true,
+          "detail": "sideID capture flip write present"
+        },
+        {
+          "name": "write_on_change_contested",
+          "ok": true,
+          "detail": "contested write-on-change path"
+        }
+      ],
+      "arm_recommendation": "arm-auto-restart",
+      "confidence": "medium",
+      "not_verified": [
+        "full server_town.sqf side-effect chains (hangar, naval HVT, leaderboard) under restart",
+        "mode-2 all-camps capture edge cases"
+      ]
+    },
+    {
+      "loop_id": "economy",
+      "default_mode": 1,
+      "default_mode_label": "observe/watch-only",
+      "verdict": "RED",
+      "reason": "3 crash-point invariant breach(es); first: partial={'WEST': 100, 'EAST': 0} final={'WEST': 200, 'EAST': 100} overpay={'WEST': 100} (no last-tick idempotency stamp in updateresources.sqf) | Source confirms heartbeat-first then multi-side charge then sleep, with no last-income-tick idempotency key.",
+      "crash_cases": [
+        {
+          "step": "hb",
+          "outcome": "pass",
+          "detail": "partial={'WEST': 0, 'EAST': 0} final={'WEST': 100, 'EAST': 100}",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "pay_WEST",
+          "outcome": "fail",
+          "detail": "partial={'WEST': 100, 'EAST': 0} final={'WEST': 200, 'EAST': 100} overpay={'WEST': 100} (no last-tick idempotency stamp in updateresources.sqf)",
+          "funds_delta": 100,
+          "flips": 0,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "pay_EAST",
+          "outcome": "fail",
+          "detail": "partial={'WEST': 100, 'EAST': 100} final={'WEST': 200, 'EAST': 200} overpay={'WEST': 100, 'EAST': 100} (no last-tick idempotency stamp in updateresources.sqf)",
+          "funds_delta": 200,
+          "flips": 0,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "sleep",
+          "outcome": "fail",
+          "detail": "partial={'WEST': 100, 'EAST': 100} final={'WEST': 200, 'EAST': 200} overpay={'WEST': 100, 'EAST': 100} (no last-tick idempotency stamp in updateresources.sqf)",
+          "funds_delta": 200,
+          "flips": 0,
+          "upgrade_starts": 0,
+          "deletes": 0
+        }
+      ],
+      "static_checks": [
+        {
+          "name": "owner_generation_gate",
+          "ok": true,
+          "detail": "owner key wfbe_coreloop_owner_economy + while-gate present"
+        },
+        {
+          "name": "heartbeat_stamp",
+          "ok": true,
+          "detail": "hb stamp wfbe_coreloop_hb_economy"
+        },
+        {
+          "name": "has_charge_sites",
+          "ok": true,
+          "detail": "income charge sites present"
+        },
+        {
+          "name": "last_tick_idempotency_stamp",
+          "ok": false,
+          "detail": "no wfbe_coreloop_last_pay_* (or similar) gate \u2014 mid-tick restart can re-pay",
+          "informational": true
+        }
+      ],
+      "arm_recommendation": "stay-watch-only",
+      "confidence": "high",
+      "not_verified": [
+        "live RPT CORELOOP|v1|RESTART under production income interval",
+        "multi-side partial forEach kill timing on real SQF scheduler"
+      ]
+    },
+    {
+      "loop_id": "upgrade",
+      "default_mode": 1,
+      "default_mode_label": "observe/watch-only",
+      "verdict": "AMBER",
+      "reason": "no double-credit but 2 stuck/incomplete intermediate path(s); first: possible stuck upgrade: upgrading=True process_spawned=False funds=1000 queue=[]",
+      "crash_cases": [
+        {
+          "step": "hb",
+          "outcome": "pass",
+          "detail": "starts=1 funds=800 level={7: 1} upgrading=False queue=[]",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 1,
+          "deletes": 0
+        },
+        {
+          "step": "gate_check",
+          "outcome": "pass",
+          "detail": "starts=1 funds=800 level={7: 1} upgrading=False queue=[]",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 1,
+          "deletes": 0
+        },
+        {
+          "step": "select",
+          "outcome": "pass",
+          "detail": "starts=1 funds=800 level={7: 1} upgrading=False queue=[]",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 1,
+          "deletes": 0
+        },
+        {
+          "step": "pop_queue",
+          "outcome": "pass",
+          "detail": "starts=0 funds=1000 level={7: 0} upgrading=False queue=[]",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "set_upgrading",
+          "outcome": "stuck",
+          "detail": "possible stuck upgrade: upgrading=True process_spawned=False funds=1000 queue=[]",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "deduct",
+          "outcome": "stuck",
+          "detail": "possible stuck upgrade: upgrading=True process_spawned=False funds=800 queue=[]",
+          "funds_delta": 200,
+          "flips": 0,
+          "upgrade_starts": 0,
+          "deletes": 0
+        },
+        {
+          "step": "spawn_process",
+          "outcome": "pass",
+          "detail": "starts=1 funds=800 level={7: 1} upgrading=False queue=[]",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 1,
+          "deletes": 0
+        },
+        {
+          "step": "sleep",
+          "outcome": "pass",
+          "detail": "starts=1 funds=800 level={7: 1} upgrading=False queue=[]",
+          "funds_delta": 0,
+          "flips": 0,
+          "upgrade_starts": 1,
+          "deletes": 0
+        }
+      ],
+      "static_checks": [
+        {
+          "name": "owner_generation_gate",
+          "ok": true,
+          "detail": "owner key wfbe_coreloop_owner_upgrade + while-gate present"
+        },
+        {
+          "name": "heartbeat_stamp",
+          "ok": true,
+          "detail": "hb stamp wfbe_coreloop_hb_upgrade"
+        },
+        {
+          "name": "upgrading_gate_before_start",
+          "ok": true,
+          "detail": "queue + wfbe_upgrading gate present"
+        },
+        {
+          "name": "start_order_queue_flag_deduct",
+          "ok": true,
+          "detail": "indices queue=4990 upgrading=5163 deduct=5547"
+        }
+      ],
+      "arm_recommendation": "stay-watch-only-until-stuck-paths-cleared",
+      "confidence": "medium",
+      "not_verified": [
+        "ProcessUpgrade timer completion races with queue restart on real engine",
+        "dual-currency edge when supply deduct fails mid-path"
+      ]
+    }
+  ],
+  "flip_table": [
+    {
+      "loop": "groupsgc",
+      "current_default_mode": "auto-restart",
+      "verdict": "GREEN",
+      "arm_recommendation": "keep-auto-restart",
+      "flag": "WFBE_C_CORELOOP_RESTART_GROUPSGC",
+      "proposed_value_if_green": 2,
+      "confidence": "high"
+    },
+    {
+      "loop": "town",
+      "current_default_mode": "observe/watch-only",
+      "verdict": "GREEN",
+      "arm_recommendation": "arm-auto-restart",
+      "flag": "WFBE_C_CORELOOP_RESTART_TOWN",
+      "proposed_value_if_green": 2,
+      "confidence": "medium"
+    },
+    {
+      "loop": "economy",
+      "current_default_mode": "observe/watch-only",
+      "verdict": "RED",
+      "arm_recommendation": "stay-watch-only",
+      "flag": "WFBE_C_CORELOOP_RESTART_ECONOMY",
+      "proposed_value_if_green": 1,
+      "confidence": "high"
+    },
+    {
+      "loop": "upgrade",
+      "current_default_mode": "observe/watch-only",
+      "verdict": "AMBER",
+      "arm_recommendation": "stay-watch-only-until-stuck-paths-cleared",
+      "flag": "WFBE_C_CORELOOP_RESTART_UPGRADE",
+      "proposed_value_if_green": 1,
+      "confidence": "medium"
+    }
+  ],
+  "summary": {
+    "green_to_arm": [
+      "town"
+    ],
+    "already_armed": [
+      "groupsgc"
+    ],
+    "stay_watch_only": [
+      "economy",
+      "upgrade"
+    ],
+    "supervisor_static_ok": true
+  }
+}
