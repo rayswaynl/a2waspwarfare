@@ -2797,7 +2797,16 @@ while {!WFBE_GameOver && _alive} do {
 					if ((count _topReq) > 4) then {
 						_topCharge = _topReq select 4;
 						if ((typeName _topCharge) == "SCALAR" && {_topCharge > 0}) then {
-							[_side, _topCharge] Call ChangeAICommanderFunds;
+							//--- fix (PR #1251 bounce): ChangeAICommanderFunds is compiled ONLY on the server (Init_Server.sqf:34);
+							//--- this consumer runs wherever the team is LOCAL (HC in the common case), where a direct Call threw
+							//--- undefined and aborted the tick. Server: call directly (PUBVARSV trap: pubVarServer never fires the
+							//--- server's own PVEH). HC: route over the RequestSpecial bus to the validated landing case.
+							if (isServer) then {
+								[_side, _topCharge] Call ChangeAICommanderFunds;
+							} else {
+								WFBE_PVF_RequestSpecial = ["SRVFNCRequestSpecial", ["aicom-topup-refund", _sideID, _topCharge]];
+								publicVariableServer "WFBE_PVF_RequestSpecial";
+							};
 							diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_REQ_STALE_REFUND|team=" + (str _team) + "|refund=" + str _topCharge);
 						};
 					};
@@ -2827,7 +2836,13 @@ while {!WFBE_GameOver && _alive} do {
 								_topPerUnit = _topCharge / _topN;
 								_topRefund = round (_topPerUnit * _topFail);
 								if (_topRefund > 0) then {
-									[_side, _topRefund] Call ChangeAICommanderFunds;
+									//--- fix (PR #1251 bounce): locality-safe refund - see the TTL-stale site above for the full note.
+									if (isServer) then {
+										[_side, _topRefund] Call ChangeAICommanderFunds;
+									} else {
+										WFBE_PVF_RequestSpecial = ["SRVFNCRequestSpecial", ["aicom-topup-refund", _sideID, _topRefund]];
+										publicVariableServer "WFBE_PVF_RequestSpecial";
+									};
 									diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_PARTIAL_REFUND|team=" + (str _team) + "|failed=" + str _topFail + "|refund=" + str _topRefund);
 								};
 							};

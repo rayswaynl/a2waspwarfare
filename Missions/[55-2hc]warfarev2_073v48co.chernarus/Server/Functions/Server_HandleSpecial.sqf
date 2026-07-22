@@ -842,6 +842,23 @@ switch (_args select 0) do {
 			};
 		};
 	};
+	//--- fix (PR #1251 bounce): server-side landing for HC-originated AI top-up refunds
+	//--- (Common_RunCommanderTeam.sqf stale-TTL + partial-spawn refunds; ChangeAICommanderFunds only exists
+	//--- on the server). Forgeable-bus residual matches the documented cleanup-* precedent; mitigations:
+	//--- side index validated, amount clamped to the maximum legitimate charge (4 units x TOPUP_UNIT_COST,
+	//--- +50% slack), never negative or non-scalar.
+	case "aicom-topup-refund": {
+		private ["_trSideID","_trAmt","_trCap"];
+		if ((count _args) < 3) exitWith {};
+		_trSideID = _args select 1;
+		_trAmt = _args select 2;
+		if ((typeName _trSideID) != "SCALAR" || {(typeName _trAmt) != "SCALAR"}) exitWith {};
+		if (!(_trSideID in [0,1]) || {_trAmt <= 0}) exitWith {};
+		_trCap = 4 * (missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_UNIT_COST", 1000]) * 1.5;
+		if (_trAmt > _trCap) then {_trAmt = _trCap};
+		[([west, east] select _trSideID), _trAmt] Call ChangeAICommanderFunds;
+		diag_log ("AICOMSTAT|v1|EVENT|" + str _trSideID + "|" + str (round (time / 60)) + "|TOPUP_REFUND_LANDED|amount=" + str _trAmt);
+	};
 	case "aicom-refit": {
 		//--- cmdcon41-w3d COMMAND-MENU V2 (REFIT): the human commander requested a funds-charged infantry TOP-UP for ONE
 		//--- team - the exact same consumer path Produce's auto top-up uses (wfbe_aicom_topup_req [count,pos,classes,issuedTime] on the
