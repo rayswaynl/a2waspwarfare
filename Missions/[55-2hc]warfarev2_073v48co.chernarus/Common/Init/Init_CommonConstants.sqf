@@ -1393,10 +1393,10 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- both leaders LOCAL, then (units B) joinSilent A (empty B reaped by existing GC). Group-count DOWN.
 	if (isNil "WFBE_C_AICOM_HC_MERGE_ENABLE") then {WFBE_C_AICOM_HC_MERGE_ENABLE = 0};   //--- 1 = ON, 0 = off (default; ships dark). fix(tonight-20260717): reverted 1->0 - both this and HC_TOPUP_ENABLE below only ever call WFBE_SE_FNC_AI_Com_HCTopUp (AI_Commander.sqf:572, nil-guarded), which is never compiled/registered anywhere in the tree, so arming either flag is a pure no-op. Do not re-arm until the DRAFT worker is actually implemented and registered.
 	if (isNil "WFBE_C_AICOM_HC_TOPUP_ENABLE") then {WFBE_C_AICOM_HC_TOPUP_ENABLE = 0};   //--- B74 (Ray 2026-06-22): refill attrited HC field teams - Produce skips live HC teams so they bleed to 1-2-man remnants and never recover. When on, the commander ships replacement bodies to under-strength HC teams (charged to AI funds). 1=on. fix(tonight-20260717): reverted 1->0 - inert no-op, see WFBE_C_AICOM_HC_MERGE_ENABLE comment above.
-	if (isNil "WFBE_C_AICOM_HC_TOPUP_FRAC")   then {WFBE_C_AICOM_HC_TOPUP_FRAC   = 0.6}; //--- B74: a live HC team at/below this fraction of its template size gets topped up.
-	if (isNil "WFBE_C_AICOM_HC_TOPUP_MAX")    then {WFBE_C_AICOM_HC_TOPUP_MAX    = 2};   //--- B74: max teams topped up per commander tick (rate-limit the spend + the spawn load).
-	if (isNil "WFBE_C_AICOM_HC_MERGE_FRAC")   then {WFBE_C_AICOM_HC_MERGE_FRAC   = 0.6}; //--- a team at/below this fraction of its template size is "depleted" (merge candidate).
-	if (isNil "WFBE_C_AICOM_HC_MERGE_RANGE")  then {WFBE_C_AICOM_HC_MERGE_RANGE  = 300}; //--- m: only merge a depleted pair whose leaders are within this of each other.
+	//--- deadcode-sweep 2026-07-21 (DC-08): removed unconsumed HC merge/top-up tunables
+	//--- (WFBE_C_AICOM_HC_TOPUP_FRAC/_MAX, _MERGE_FRAC/_MERGE_RANGE) - zero reads repo-wide;
+	//--- their only would-be consumer WFBE_SE_FNC_AI_Com_HCTopUp is never compiled/registered
+	//--- (AI_Commander.sqf:572 call is nil-guarded, permanent no-op).
 	//--- STRANDED-survivor merge (default-ON). A lone stranded remnant near another friendly team is folded in
 	//--- rather than walking home / being culled; same merge payload contract. Group-count DOWN.
 	if (isNil "WFBE_C_AICOM_STRANDED_MERGE")       then {WFBE_C_AICOM_STRANDED_MERGE       = 1};    //--- 1 = ON (default), 0 = off.
@@ -1840,13 +1840,10 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_TOWN_SCAN_DICE") then {WFBE_C_TOWN_SCAN_DICE = 1}; //--- Perf (2026-07-06): when 1, DORMANT towns (not active, no air tier, no enemy seen within DICE_GRACE) roll per side per sweep whether to run the 600 m activation nearEntities scan. Active towns always scan. Default off = V1 behaviour.
 	if (isNil "WFBE_C_TOWN_SCAN_DICE_P") then {WFBE_C_TOWN_SCAN_DICE_P = 0.5}; //--- Probability a dormant town DOES scan on a given sweep (per side).
 	if (isNil "WFBE_C_TOWN_SCAN_DICE_GRACE") then {WFBE_C_TOWN_SCAN_DICE_GRACE = 30}; //--- s after the last enemy seen before a town counts as dormant for the dice.
-	WFBE_C_TOWNS_MORTARS_SCAN = 60; //--- Scan the area around a target for friends and enemies.
-	WFBE_C_TOWNS_MORTARS_INTERVAL = 200; //--- AI Mortars may fire each x seconds.
-	WFBE_C_TOWNS_MORTARS_PRECOGNITION = 25; //--- AI Mortars may fire at a target by precognition. This value is a percentage.
-	WFBE_C_TOWNS_MORTARS_RANGE_MAX = 750; //--- AI Mortars may not fire at target further than that range (Cannot be higher than artillery core values).
-	WFBE_C_TOWNS_MORTARS_RANGE_MIN = 125; //--- AI Mortars may not fire at targets within that range (Cannot be lower than artillery core values).
-	WFBE_C_TOWNS_MORTARS_SPLASH_RANGE = 60; //--- AI Mortar firing area of effect.
-	WFBE_C_TOWNS_PATROL_HOPS = 5; //--- Amount of Waypoints given to the AI Patrol in towns (Higher is wider).
+	//--- deadcode-sweep 2026-07-21 (DC-06): removed orphaned town mortar/patrol tuning
+	//--- constants (WFBE_C_TOWNS_MORTARS_SCAN/_INTERVAL/_PRECOGNITION/_RANGE_MAX/_RANGE_MIN/
+	//--- _SPLASH_RANGE, WFBE_C_TOWNS_PATROL_HOPS) - zero reads repo-wide; live patrol/artillery
+	//--- paths are server_side_patrols.sqf and AI_Patrol.sqf.
 	WFBE_C_TOWNS_PATROL_RANGE = 500;
 	WFBE_C_TOWNS_PURCHASE_RANGE = 60;
 	WFBE_C_TOWNS_SUPPLY_LEVELS_TIME = [1, 2, 3, 4, 5];
