@@ -164,7 +164,10 @@ while {!WFBE_GameOver} do {
 		{
 			private "_cPos";
 			_cPos = getPos _x;
-			if ({isPlayer _x && {alive _x} && {(_x distance _cPos) < _approachRadius}} count playableUnits > 0) exitWith {
+			//--- wasp-navalcap-playableunits: same HC hardening as the Init_NavalHVT.sqf CAP arm gate -
+			//--- a sea-parked headless-client body (isPlayer TRUE, alive, CIV) inside the approach
+			//--- radius would hold this flotilla gate open forever. Side + known-HC-name filter.
+			if ({isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in ["HC-AI-Control-1", "HC-AI-Control-2", "HC"])} && {(_x distance _cPos) < _approachRadius}} count playableUnits > 0) exitWith {
 				_gateActive = true;
 				_gateReason = format ["carrier_approach:%1", _x getVariable ["name","?"]];
 			};
@@ -236,7 +239,10 @@ while {!WFBE_GameOver} do {
 					_eLastPos = _curPos;
 					if (_eStuck >= 3) then {
 						_eStuck = 0;
-						if ({isPlayer _x && {(_x distance _eBoat) < 100}} count playableUnits > 0) then {
+						//--- wasp-navalcap-playableunits: alive was MISSING here (a dead body 100m away kept a
+						//--- wedged boat on the gentle velocity-hop path forever), and the same HC edge case
+						//--- applies - a sea-parked HC body near the route must not count as a player.
+						if ({isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in ["HC-AI-Control-1", "HC-AI-Control-2", "HC"])} && {(_x distance _eBoat) < 100}} count playableUnits > 0) then {
 							//--- Player-near velocity hop (Common_RunSidePatrol.sqf:358-359), generalizes to water.
 							_eBoat setVelocity [(velocity _eBoat) select 0, (velocity _eBoat) select 1, 4];
 						} else {
