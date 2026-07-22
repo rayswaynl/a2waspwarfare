@@ -465,6 +465,38 @@ if ((missionNamespace getVariable "WFBE_C_AI_TEAMS_JIP_PRESERVE") == 0) then {
 	{if (!isPlayer _x && !(_x in playableUnits)) then {deleteVehicle _x}} forEach _units;
 };
 
+//--- TEAMBAR-FIRST SERVER-SIDE MIRROR (fable/player-teambar-slot, server heal 2026-07-22): the
+//--- CLIENT-side slot1-rejoin (Init_Client.sqf ~1249 / Client_OnKilled.sqf ~154) only re-joins
+//--- CLIENT-LOCAL AI (join needs locality). A mission-start AI Teams squadmate created at server init
+//--- is SERVER-local, so on a fresh connect the client-side reorder finds zero local others and
+//--- collapses into its "rejoin-no-local-others" no-op, leaving the AI at array index 0 - the player
+//--- renders as #2 in their own command bar (owner live report). Run the SAME rejoin here, server-side,
+//--- where every unit of _team is guaranteed local, and only after the AI-preserve-or-remove block
+//--- above has settled the team's final membership for this connect. Gated on the SAME
+//--- WFBE_C_PLAYER_TEAMBAR_FIRST flag so it respects the existing toggle. A2-OA-1.64-safe: array-form
+//--- Private, no inline private, no pushBack/findIf/params, no array-form select/sort/reveal.
+if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
+	private ["_tbHuman","_tbOthers","_tbTmp"];
+	_tbHuman = objNull;
+	{if ((getPlayerUID _x) == _uid) exitWith {_tbHuman = _x}} forEach (units _team);
+	if (!isNull _tbHuman && {(leader _team) == _tbHuman} && {((units _team) select 0) != _tbHuman}) then {
+		_tbOthers = [];
+		{if (alive _x && {!isPlayer _x} && {_x != _tbHuman}) then {_tbOthers set [count _tbOthers, _x]}} forEach (units _team);
+		if (count _tbOthers > 0) then {
+			_tbTmp = createGroup (side _team);
+			if (!isNull _tbTmp) then {
+				_tbOthers joinSilent _tbTmp;
+				_tbOthers joinSilent _team;
+				if (count units _tbTmp == 0) then {deleteGroup _tbTmp};
+				_team selectLeader _tbHuman;
+				diag_log Format ["[WFBE][TEAMBAR-SRV] Server_OnPlayerConnected slot1-rejoin: %1 AI squadmate(s) re-joined behind [%2] [%3].", count _tbOthers, _name, _uid];
+			} else {
+				diag_log Format ["[WFBE][TEAMBAR-SRV] Server_OnPlayerConnected slot1-rejoin: createGroup null for [%1] [%2] - skipped.", _name, _uid];
+			};
+		};
+	};
+};
+
 //--- We 'Sanitize' the player, we remove the waypoints and we heal him.
 _team Call WFBE_CO_FNC_WaypointsRemove;
 (leader _team) setDammage 0;
