@@ -835,7 +835,24 @@ if (isNull _airVeh) then {
 };
 //--- ===================================================================
 
+//--- THREAD HEARTBEAT (wasp-hc-delegation-collapse-20260722, gate WFBE_C_AICOM_ORPHAN_HEAL default 0):
+//--- publish a driver-liveness stamp on the group (~60s cadence) so the server orphan sweep
+//--- (Server\FSM\server_aicom_orphan_heal.sqf) can tell a live driver from a dead one. An HC drop
+//--- kills this WHOLE thread - orders, TOPUP consumer and disband executor die with it - and the
+//--- sweep is the only healer; this stamp is its liveness signal (the heading feed cannot serve:
+//--- its sender-side dedup means a team holding a bearing legitimately sends nothing for hours).
+//--- PUBLIC setVariable so the SERVER can read it; throttled to one PV per team per ~60s (the
+//--- HC_StatLoop cadence class - keep HC->server PV volume low, per the cmdcon41-w3c precedent).
+//--- Flag 0 = one getVariable test per 8s pass (same class as the per-pass feature-flag reads
+//--- below), no setVariable, no PV - behaviour identical to HEAD.
+private "_hbLastPub"; _hbLastPub = -1e9;
+
 while {!WFBE_GameOver && _alive} do {
+	if (((missionNamespace getVariable ["WFBE_C_AICOM_ORPHAN_HEAL", 0]) > 0) && {!isNull _team} && {(time - _hbLastPub) >= 60}) then {
+		_team setVariable ["wfbe_aicom_hb_t", time, true];
+		_hbLastPub = time;
+	};
+
 	//--- AICOM v2 (Ray): reap UNCREWED/bugged aircraft. An airframe (heli OR plane) alive with NO alive crew is
 	//--- orphaned (crew killed/bailed/bugged) - it crashes, sits, or piles up over a long round. Delete it after a
 	//--- short grace so it can't accumulate. Stamp-on-first-seen avoids deleting a transient bail/reseat. HC-local.
