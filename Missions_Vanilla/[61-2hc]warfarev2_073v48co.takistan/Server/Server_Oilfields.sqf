@@ -434,6 +434,22 @@ WFBE_FNC_OilfieldRefreshLabel = {
 //--- Paint the initial (neutral) label immediately.
 Call WFBE_FNC_OilfieldRefreshLabel;
 
+//--- (JIP FIX) FORCE FULL MARKER RE-BROADCAST. A2-OA 1.64 does NOT auto-synchronise a
+//--- createMarker'd marker to join-in-progress clients (they connect after the create and never
+//--- receive it - forums.bohemia.net/forums/topic/118233-jip-and-createmarkers). Re-issuing GLOBAL
+//--- setMarker* commands re-sends the marker's FULL current state to every currently-connected
+//--- machine, so a periodic call keeps the marker present for anyone who JIPed since the last sync.
+//--- Colour is recomputed from the live owner (side-absolute), so a re-sync never desyncs colour.
+WFBE_FNC_OilfieldForceMarkerSync = {
+	private ["_ownerS"];
+	_ownerS = missionNamespace getVariable ["WFBE_OILFIELD_OWNER", sideLogic];
+	_mkr setMarkerType (missionNamespace getVariable ["WFBE_C_OILFIELD_MARKER_TYPE", "mil_circle"]);
+	_mkr setMarkerColor (_ownerS Call WFBE_FNC_OilfieldColor);
+	_mkr setMarkerSize [1, 1];
+	_mkr setMarkerPos _nodePos;
+	_mkr setMarkerText (markerText _mkr);
+};
+
 //------------------------------------------------------------------------------------
 //--- (6) FIRE / SMOKE FX. Server-global spectacle for a SABOTAGED field, daylight-friendly (fire glow +
 //--- towering black smoke), reusing the two PROVEN server-side global idioms already in this mission:
@@ -521,6 +537,8 @@ WFBE_FNC_OilfieldClearPull = {
 		//--- leaves the var UNSET. This record is only read via server-local missionNamespace getVariable,
 		//--- so the broadcast was both pointless and fatal. Strip it.
 		missionNamespace setVariable [_key, []];
+		//--- (this task) emit the clear so AICOM PULL lifecycle is visible in RPT (was silent).
+		diag_log Format ["OILFIELD|v2|PULLCLR|t=%1|side=%2|amt=%3", round time, str _side, _amt];
 	};
 };
 
@@ -544,6 +562,8 @@ WFBE_FNC_OilfieldApplyPull = {
 	_t setVariable ["wfbe_aicom_town_weight", _cur + _amt, true];
 	//--- (cmdcon43-m) 2-arg namespace setVariable (NSSETVAR3 trap; server-local record, see ClearPull note).
 	missionNamespace setVariable [_key, [_t, _amt]];
+	//--- (this task) AICOM PULL was previously silent - emit the apply/move so the pull is visible in RPT.
+	diag_log Format ["OILFIELD|v2|PULL|t=%1|side=%2|town=%3|amt=%4", round time, str _side, (_t getVariable ["name", str _t]), _amt];
 };
 
 //------------------------------------------------------------------------------------
@@ -633,7 +653,26 @@ _lastIncomeT   = time;   //--- last pay timestamp
 _sabProg       = 0;      //--- accumulated enemy-dwell seconds toward sabotage
 _repProg       = 0;      //--- accumulated owner-dwell seconds toward repair
 
+//--- (this task) post-unlock observability: heartbeat + object-survival beat + a JIP marker re-sync
+//--- cadence, so a silently-dead loop / reaped derrick / missing marker can never again be diagnosable
+//--- only by ABSENCE. All read via getVariable so the Constants owner can retune without a code edit.
+private ["_lastMarkerSync","_lastHb","_hbEvery","_markerSyncEvery"];
+_hbEvery         = missionNamespace getVariable ["WFBE_C_OILFIELD_HB_INTERVAL", 300];
+if (_hbEvery < 60) then {_hbEvery = 60};
+_markerSyncEvery = missionNamespace getVariable ["WFBE_C_OILFIELD_MARKER_RESYNC", 30];
+if (_markerSyncEvery < _scanTick) then {_markerSyncEvery = _scanTick};
+_lastMarkerSync  = -1e9;   //--- force a JIP marker re-broadcast on the first live tick
+_lastHb          = -1e9;   //--- force an OILFIELD|HB heartbeat on the first live tick
+
+diag_log Format ["OILFIELD|v2|LOOPSTART|t=%1|pos=%2|scan=%3|hbEvery=%4|mkrSync=%5", round time, _nodePos, _scanTick, _hbEvery, _markerSyncEvery];
+["INFORMATION", Format ["Server_Oilfields.sqf: OILFIELD live loop entered at t=%1s (scan=%2s, heartbeat=%3s). Post-unlock telemetry active.", round time, _scanTick, _hbEvery]] Call WFBE_CO_FNC_LogContent;
+
 while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
+	//--- HP-01 SUPERVISOR HEARTBEAT: unconditional per-tick liveness beat, FIRST statement of the
+	//--- iteration (mirrors server_town.sqf) so server_coreloop_supervisor.sqf sees a silently-dead
+	//--- post-unlock loop as a frozen stamp. TK-only + post-unlock, so it never fires on CH/ZG or
+	//--- during the pre-unlock dormant phase (the stamp stays <=0 there).
+	missionNamespace setVariable ["wfbe_coreloop_hb_oilfield", time];
 	sleep _scanTick;
 
 	private ["_owner","_westNear","_eastNear","_guerNear","_repairNear","_u","_ut","_flip","_newOwner","_sab"];
@@ -781,6 +820,27 @@ while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
 	//--- Publish telemetry state the WASPSCALE emitter reads (oilOwn / oilInc). Cheap setVariables.
 	missionNamespace setVariable ["WFBE_OILFIELD_OWNER", _owner];
 	missionNamespace setVariable ["WFBE_OILFIELD_INCOME_ACCRUED", _incomeAccrued];
+
+	//--- JIP MARKER RE-SYNC (this task, PRIMARY FIX): A2-OA does NOT auto-deliver a createMarker'd
+	//--- marker to join-in-progress clients (forums.bohemia.net/forums/topic/118233); post-unlock the
+	//--- marker was only re-touched on a label change, so a player joining an idle/neutral field never
+	//--- received it ("oilfield has no map marker"). Re-broadcast the full marker on a coarse cadence.
+	if ((time - _lastMarkerSync) >= _markerSyncEvery) then {
+		_lastMarkerSync = time;
+		Call WFBE_FNC_OilfieldForceMarkerSync;
+	};
+
+	//--- LOOP HEARTBEAT + OBJECT-SURVIVAL telemetry (5-min cadence, always-on even on an idle field)
+	//--- so a silently-dead loop (HB absence) or a reaped derrick (objs<expected) is visible in RPT.
+	if ((time - _lastHb) >= _hbEvery) then {
+		_lastHb = time;
+		private ["_objsHb","_aliveHb","_oHb"];
+		_objsHb = missionNamespace getVariable ["WFBE_OILFIELD_OBJS", []];
+		_aliveHb = 0;
+		{ _oHb = _x; if (!isNull _oHb && {alive _oHb}) then {_aliveHb = _aliveHb + 1} } forEach _objsHb;
+		diag_log Format ["OILFIELD|v2|HB|t=%1|owner=%2|sab=%3|accrued=%4|cap=%5|objs=%6", round time, str _owner, _sab, _incomeAccrued, _incomeCap, _aliveHb];
+		diag_log Format ["OILFIELD|v2|ALIVE|t=%1|objs=%2|expected=%3", round time, _aliveHb, count _objsHb];
+	};
 };
 
 //--- Game over: undo any AICOM town-weight bumps so nothing leaks into a re-init, and stop FX.
