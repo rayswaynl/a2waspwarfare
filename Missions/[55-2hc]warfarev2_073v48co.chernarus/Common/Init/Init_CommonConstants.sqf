@@ -857,13 +857,23 @@ if (worldName == "Zargabad") then {
 	//--- (fraction of `count _teams`) instead of staying flat-capped at WFBE_C_AICOM2_EXPAND_TEAMS forever, so a
 	//--- grown army actually spends more teams annexing neutral towns instead of piling everyone onto the fist.
 	//--- WFBE_C_AICOM2_EXPAND_TEAMS above still applies as a FLOOR (max) so a small roster is never worse off.
-	//--- 0 = _expandN collapses to exactly the old flat WFBE_C_AICOM2_EXPAND_TEAMS cap = instant rollback.
+	//--- 0 = _expandN collapses to exactly the old flat WFBE_C_AICOM2_EXPAND_TEAMS cap - a TRUE instant rollback,
+	//--- dominant or not, because BOTH WFBE_C_AICOM2_PRESS_EXPAND_BONUS below AND the fist-floor clamp in
+	//--- AI_Commander_Allocate.sqf are ALSO gated on this being >0 (adversarial review fix, 2026-07-22: the press
+	//--- bonus originally gated only on _pfDominant, so EXPAND_FRAC=0 while dominant still added the bonus on top
+	//--- of the flat cap; the fist-floor clamp, if left unconditional, independently trims a small roster's flat
+	//--- cap below WFBE_C_AICOM2_EXPAND_TEAMS too - neither is a true rollback. Fixed so all three terms share the
+	//--- one FRAC>0 gate: at EXPAND_FRAC=0 the flat cap passes through completely untouched.
 	if (isNil "WFBE_C_AICOM2_EXPAND_FRAC")     then {WFBE_C_AICOM2_EXPAND_FRAC     = 0.4}; //--- fraction of `count _teams` that may peel off to the expansion lane (before the EXPAND_TEAMS floor is applied).
 	//--- FIX AICOM-TOWN-EXPANSION-2 (aicom-fixes, 2026-07-22): decouple "press while dominant" (WFBE_C_AICOM_PRESS_FLOOR_V2,
 	//--- registered above) from "stop expanding" - a dominant side's PRESS bonuses only pulled force toward the
 	//--- fist/enemy towns, leaving the expansion lane flat while the side was winning hardest. Small additive bonus to
-	//--- _expandN while _pfDominant so neutral-town conquest keeps snowballing alongside the front press. 0 = no bonus
-	//--- (byte-identical to pre-fix while dominant); only ever read while WFBE_C_AICOM_PRESS_FLOOR_V2 is armed AND dominant.
+	//--- _expandN while _pfDominant AND WFBE_C_AICOM2_EXPAND_FRAC > 0 so neutral-town conquest keeps snowballing
+	//--- alongside the front press. 0 = no bonus (byte-identical to pre-fix while dominant); only ever read while
+	//--- WFBE_C_AICOM_PRESS_FLOOR_V2 is armed AND dominant AND EXPAND_FRAC > 0 (see EXPAND_FRAC comment above for why
+	//--- the FRAC gate on this bonus is required for a true EXPAND_FRAC=0 rollback). AI_Commander_Allocate.sqf also
+	//--- clamps the combined _expandN (same EXPAND_FRAC > 0 gate) so at least WFBE_C_AICOM2_FIST_PERTOWN teams are
+	//--- always reserved for the fist once the scaling feature is active.
 	if (isNil "WFBE_C_AICOM2_PRESS_EXPAND_BONUS") then {WFBE_C_AICOM2_PRESS_EXPAND_BONUS = 2}; //--- extra teams added to the expand-lane cap while dominant (_pfDominant, AI_Commander_Allocate.sqf). Small vs the FIST/ENEMY press bonuses above (400) - a headcount lever, not a score lever.
 	if (isNil "WFBE_C_AICOM_EXPAND_DEDUP")     then {WFBE_C_AICOM_EXPAND_DEDUP     = 1};  //--- Ray 2026-07-04: ON for live testing. block-m: 0=off legacy (multiple expand teams may dogpile one neutral town); 1=each expand team claims a distinct neutral town per tick (DEDUP).
 	if (isNil "WFBE_C_AICOM_HARASS_FALLBACK")  then {WFBE_C_AICOM_HARASS_FALLBACK  = 1};  //--- Ray 2026-07-04: ON for live testing. block-m: 0=off legacy (harass picks deepest town regardless of reach); 1=walk depth-sorted candidates and pick deepest reachable by >=1 mounted team (emits AICOMSTAT|v2|EVENT|HARASS_SKIP when first candidate is unreachable).
