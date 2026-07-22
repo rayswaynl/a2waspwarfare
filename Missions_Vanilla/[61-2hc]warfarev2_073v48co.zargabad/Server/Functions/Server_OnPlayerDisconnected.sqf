@@ -248,7 +248,7 @@ if !(isNull (_commander)) then {
 	if (_team == _commander) then {
 		_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 		if ((missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0) then {
-			_lease = _logik getVariable ["wfbe_commander_lease", []];
+			_lease = _logik getVariable "wfbe_commander_lease"; if (isNil "_lease") then {_lease = []};   //--- G1 guard, matches Common_CommanderLease
 			if (typeName _lease == "ARRAY" && {count _lease >= 6} && {(_lease select 0) == _uid} && {(_lease select 1) == _side} && {(_lease select 2) == (str _team)}) then {
 				_leaseGen = _lease select 5;
 				_leaseExpires = time + (missionNamespace getVariable ["WFBE_C_CMD_LEASE_GRACE", 90]);
@@ -259,7 +259,7 @@ if !(isNull (_commander)) then {
 				//--- it ENQUEUES a stand-down targeting the CURRENT generation so the single executor
 				//--- remains the sole effects writer. If something newer has already superseded this
 				//--- state by the time the executor processes it, the request is a safe no-op.
-				[_side, (_logik getVariable ["wfbe_commander_lease_gen", 0])] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown;
+				[_side, (if (isNil {_logik getVariable "wfbe_commander_lease_gen"}) then {0} else {_logik getVariable "wfbe_commander_lease_gen"})] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown;
 			};
 		} else {
 			Private ["_logik"];

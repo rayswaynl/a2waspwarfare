@@ -442,7 +442,7 @@ if (!isNil "_get" && {(missionNamespace getVariable ["WFBE_C_CMD_LEASE", 0]) > 0
 	if (!isNil "_prevSideJoined" && {_prevSideJoined != _sideJoined}) then {
 		_oldLogic = (_prevSideJoined) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _oldLogic) then {
-			_oldLease = _oldLogic getVariable ["wfbe_commander_lease", []];
+			_oldLease = _oldLogic getVariable "wfbe_commander_lease"; if (isNil "_oldLease") then {_oldLease = []};   //--- G1 guard, matches Common_CommanderLease
 			if (typeName _oldLease == "ARRAY" && {count _oldLease >= 6} && {(_oldLease select 0) == _uid}) then {
 				[_prevSideJoined, (_oldLease select 5)] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown;
 			};
