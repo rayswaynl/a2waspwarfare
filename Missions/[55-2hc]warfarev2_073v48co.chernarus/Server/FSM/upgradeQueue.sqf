@@ -19,10 +19,20 @@ scriptName "Server\FSM\upgradeQueue.sqf";
 
 private ["_interval","_logik","_queue","_id","_upgrades","_current","_levels","_costs","_cost","_comTeam","_lnk","_li","_clink","_linkNeeded","_canStart","_dual","_seen","_startIdx","_stop","_dirty","_k"];
 
+//--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation gate (see
+//--- server_town.sqf for the full note).
+private ["_clOwnerKey","_clOwnerSeq"];
+_clOwnerKey = "wfbe_coreloop_owner_upgrade";
+_clOwnerSeq = if (typeName _this == "ARRAY" && {count _this > 0}) then {_this select 0} else {missionNamespace getVariable [_clOwnerKey, 0]};
+
 _interval = 5;
 _dual = (missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0;
 
-while {!gameOver} do {
+while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) == _clOwnerSeq}} do {
+
+	//--- HP-01 SUPERVISOR HEARTBEAT: first statement of every iteration (see server_town.sqf note).
+	missionNamespace setVariable ["wfbe_coreloop_hb_upgrade", time];
+
 	{
 		_logik = (_x) Call WFBE_CO_FNC_GetSideLogic;
 		//--- getVariable defaults guard a present-but-uninitialized side (e.g. resistance in a future
