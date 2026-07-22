@@ -515,13 +515,13 @@ if (_airMaxTotalP > 0) then {
 				};
 
 				_funds = (_side) Call GetAICommanderFunds;
-				if (_funds < _price) exitWith {}; //--- Cannot afford next unit; stop batch.
 
 				//--- W15 BLACK MARKET (claude-gaming 2026-06-13): honor a live 50% discount flag set by the wildcard deck.
 					private ["_w15Key","_w15Exp","_priceCharged"];
 					_w15Key = Format ["wfbe_aicom_discount_%1", _sideText];
 					_w15Exp = missionNamespace getVariable _w15Key;
 					_priceCharged = if (!isNil "_w15Exp" && {_w15Exp > time}) then {round (_price * 0.5)} else {_price};
+					if (_funds < _priceCharged) exitWith {}; //--- Cannot afford the actual discounted charge; stop batch.
 					[_side, -_priceCharged] Call ChangeAICommanderFunds;
 					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|UNIT_PRODUCED|class=" + _toBuild + "|factory=" + _typeName + "|cost=" + str _priceCharged + "|listCost=" + str _price + "|batch=" + str (_batchOrdered + 1));
 				_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true,true,true,true]};
