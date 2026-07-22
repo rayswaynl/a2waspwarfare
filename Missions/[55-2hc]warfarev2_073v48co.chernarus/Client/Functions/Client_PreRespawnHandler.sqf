@@ -24,8 +24,23 @@ _unit Call WFBE_CL_FNC_AddWFMenuAction;
 _unit Call WFBE_CL_FNC_AddPlayerAIActions;
 [] execVM "WASP\actions\OnKilled.sqf";
 player call Compile preprocessFileLineNumbers "WASP\rpg_dropping\DropRPG.sqf";
-(vehicle player) addEventHandler ["Fired",{_this Spawn HandleAT}];
-(vehicle player) addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
+//--- DEDUPE (idle-bughunt 20260722; mirrors the HandleDamage stored-handle pattern below and the
+//--- SkinSelector_Apply.sqf Fired dedupe): this ran on every respawn with no matching remove, so a
+//--- GROUP-respawn reused body or a redeploy-truck spawn accumulated one extra HandleAT +
+//--- HandleRocketTraccer thread per shot per death. Remove the previously tracked pair first
+//--- (descending index - removing an EH shifts later indices down), then re-add and re-track.
+if (!isNil "WFBE_PLAYERFEH_UNIT") then {
+	if (!isNull WFBE_PLAYERFEH_UNIT) then {
+		Private ["_fehHi","_fehLo"];
+		_fehHi = (WFBE_PLAYERFEH_UNIT getVariable ["WFBE_PLAYERFEH_AT", -1]) max (WFBE_PLAYERFEH_UNIT getVariable ["WFBE_PLAYERFEH_TRACER", -1]);
+		_fehLo = (WFBE_PLAYERFEH_UNIT getVariable ["WFBE_PLAYERFEH_AT", -1]) min (WFBE_PLAYERFEH_UNIT getVariable ["WFBE_PLAYERFEH_TRACER", -1]);
+		if (_fehHi >= 0) then {WFBE_PLAYERFEH_UNIT removeEventHandler ["Fired", _fehHi]};
+		if (_fehLo >= 0) then {WFBE_PLAYERFEH_UNIT removeEventHandler ["Fired", _fehLo]};
+	};
+};
+WFBE_PLAYERFEH_UNIT = vehicle player;
+WFBE_PLAYERFEH_UNIT setVariable ["WFBE_PLAYERFEH_AT", WFBE_PLAYERFEH_UNIT addEventHandler ["Fired",{_this Spawn HandleAT}]];
+WFBE_PLAYERFEH_UNIT setVariable ["WFBE_PLAYERFEH_TRACER", WFBE_PLAYERFEH_UNIT addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}]];
 
 _rearmor = {
    				_ammo = _this select 4;

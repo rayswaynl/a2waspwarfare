@@ -179,6 +179,12 @@ titleText [_deathText, "PLAIN DOWN", 5];
 
 
 //--- Re-add the killed event handler to the new player unit.
+//--- DEDUPE (idle-bughunt 20260722; mirrors the SkinSelector_Apply.sqf Killed dedupe): a GROUP
+//--- respawn can hand this client a reused squad-AI body that still carries the client-local
+//--- WFBE_CO_FNC_CreateUnit 'Killed' EH from its buy (Common_CreateUnit.sqf) - re-adding below
+//--- without clearing fires OnUnitKilled TWICE per death (double kill credit/payout). The only
+//--- client-local 'Killed' EHs on the player body are that one and ours, so removeAll is safe.
+player removeAllEventHandlers "Killed";
 WFBE_PLAYERKEH = player addEventHandler [
 	"Killed",
 	{
