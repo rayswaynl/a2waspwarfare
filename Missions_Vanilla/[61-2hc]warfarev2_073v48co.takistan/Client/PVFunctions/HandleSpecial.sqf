@@ -78,6 +78,18 @@ switch (_request) do {
 		_wreck = _args select 0;
 		if (!isNull _wreck && {local _wreck} && {!alive _wreck} && {(_wreck getVariable ["WFBE_CommanderArtillery", false])}) then {deleteVehicle _wreck};
 	};
+	//--- fix/heli-husk-reaper (mirrors cleanup-commander-arty-wreck directly above): delete a dead
+	//--- commander-attack-helicopter hull that is LOCAL TO THIS machine. server_groupsGC.sqf's heli
+	//--- reaper cannot delete a non-local wreck directly (HC-manned hulls are HC-local; a server-side
+	//--- deleteVehicle would silently no-op), so it routes here the same way. SAME forgeable-PVF
+	//--- residual as the arty case above (no sender auth on this channel) - narrowed the same way: the
+	//--- receiver only ever deletes an object that is dead, local, and carries the WFBE_CommanderAttackHeli
+	//--- tag, so the worst a forged dispatch can do is an early/unwanted despawn of some other wreck.
+	case "cleanup-commander-heli-wreck": {
+		Private ["_wreck"];
+		_wreck = _args select 0;
+		if (!isNull _wreck && {local _wreck} && {!alive _wreck} && {(_wreck getVariable ["WFBE_CommanderAttackHeli", false])}) then {deleteVehicle _wreck};
+	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};
