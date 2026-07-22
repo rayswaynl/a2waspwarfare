@@ -462,7 +462,7 @@ while {!WFBE_GameOver} do {
                                         //--- here, so combo fired two Ka-137s and the telemetry lied).
                                         _hClass = "Mi24_P";
                                         _h    = _hClass createVehicle _spawnPos;
-                                        _hGrp = createGroup resistance;
+                                        _hGrp = [resistance, "qrf-air"] Call WFBE_CO_FNC_CreateGroup;
                                         //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64). Crew via the
                                         //--- proven wildcard-GUER pattern: CreateUnit into the group + moveIn*.
                                         private ["_uPilot","_uGun"];
@@ -472,6 +472,44 @@ while {!WFBE_GameOver} do {
                                         if (!isNull _uGun) then {_uGun moveInGunner _h};
                                         _h setPos _spawnPos;
                                         _hGrp addWaypoint [_cTownPos, 200];
+                                        //--- LEAK FIX (fix/alife-leak-hardening #4): raw createGroup above bypassed
+                                        //--- WFBE_CO_FNC_CreateGroup entirely (no 140-cap emergency GC, no wfbe_group_src
+                                        //--- tag) and the hull/group had no cleanup lifecycle at all - each fired QRF left
+                                        //--- a resistance group (and often a wreck) parked until incidental generic GC
+                                        //--- eventually noticed it. Register the hull with the standard empty-vehicle
+                                        //--- timeout reaper (same pipeline every other spawned vehicle uses -
+                                        //--- Common_CreateTownUnits.sqf ~258-264) and add a one-shot watcher that deletes
+                                        //--- the group (and any wreck) once combat is over. Purely additive cleanup -
+                                        //--- does not change what/when the QRF spawns.
+                                        [_h] spawn WFBE_SE_FNC_HandleEmptyVehicle;
+                                        [_h, _hGrp] spawn {
+                                            private ["_veh","_grp","_units"];
+                                            _veh = _this select 0;
+                                            _grp = _this select 1;
+                                            while {!isNull _veh && {alive _veh} && {({alive _x} count (units _grp)) > 0}} do {
+                                                sleep 20;
+                                            };
+                                            //--- REVIEW FIX (review-1254 #4): A2 deleteGroup NO-OPS on a group still
+                                            //--- holding units, even dead ones (Common_CreateGroup.sqf:45) - corpses stay
+                                            //--- in `units _grp` until generic corpse cleanup (~WFBE_C_UNITS_CLEAN_TIMEOUT),
+                                            //--- long past this one-shot watcher, so a bare deleteGroup can silently no-op
+                                            //--- and re-leak the group in the majority (all-crew-died) case.
+                                            //--- REVIEW FIX (review-1254 #4 regression): the while loop above also exits
+                                            //--- on the VEHICLE branch (isNull/!alive _veh) while crew can still be ALIVE
+                                            //--- (e.g. this PR's own WFBE_SE_FNC_HandleEmptyVehicle registration deletes an
+                                            //--- empty-but-undamaged hull after WFBE_C_UNITS_EMPTY_TIMEOUT, nulling _veh
+                                            //--- while dismounted crew are still alive elsewhere) - an unconditional
+                                            //--- deleteVehicle over every unit here would vaporize those survivors. Only
+                                            //--- reap DEAD units (same idiom as Common_RunSidePatrol.sqf:60-62's crewless-
+                                            //--- spawn cleanup, restricted to corpses), then only deleteGroup once the
+                                            //--- group is confirmed to have zero alive members left.
+                                            if (!isNull _veh && {!alive _veh}) then {deleteVehicle _veh};
+                                            if (!isNull _grp) then {
+                                                _units = units _grp;
+                                                {if (!isNull _x && {!alive _x}) then {deleteVehicle _x}} forEach _units;
+                                                if (({alive _x} count (units _grp)) == 0) then {deleteGroup _grp};
+                                            };
+                                        };
                                         diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=Mi24_P town=%3 fundedBy=%4",
                                             _elmin, _cId, _cTown, _cUid];
                                         _hClass = "Ka137_MG_PMC";
@@ -488,7 +526,7 @@ while {!WFBE_GameOver} do {
                                             (_this select 2) / _hdMult
                                         }];
                                     };
-                                    _hGrp = createGroup resistance;
+                                    _hGrp = [resistance, "qrf-air"] Call WFBE_CO_FNC_CreateGroup;
                                     //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64).
                                     private ["_uPilot2","_uGun2"];
                                     _uPilot2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
@@ -499,6 +537,26 @@ while {!WFBE_GameOver} do {
                                     };
                                     _h setPos _spawnPos;
                                     _hGrp addWaypoint [_cTownPos, 200];
+                                    //--- LEAK FIX (fix/alife-leak-hardening #4): same hull/group lifecycle registration
+                                    //--- as the combo-gunship block above - see that comment for the full rationale.
+                                    [_h] spawn WFBE_SE_FNC_HandleEmptyVehicle;
+                                    [_h, _hGrp] spawn {
+                                        private ["_veh","_grp","_units"];
+                                        _veh = _this select 0;
+                                        _grp = _this select 1;
+                                        while {!isNull _veh && {alive _veh} && {({alive _x} count (units _grp)) > 0}} do {
+                                            sleep 20;
+                                        };
+                                        //--- REVIEW FIX (review-1254 #4 + regression): see the combo-gunship block above
+                                        //--- for the full rationale - reap DEAD units only (never a live, e.g. dismounted-
+                                        //--- and-survived, crew member), then deleteGroup only once zero alive remain.
+                                        if (!isNull _veh && {!alive _veh}) then {deleteVehicle _veh};
+                                        if (!isNull _grp) then {
+                                            _units = units _grp;
+                                            {if (!isNull _x && {!alive _x}) then {deleteVehicle _x}} forEach _units;
+                                            if (({alive _x} count (units _grp)) == 0) then {deleteGroup _grp};
+                                        };
+                                    };
                                     _ctr set [6, _nowT];
                                     _ctr set [7, "fired"];
                                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=%3 town=%4 fundedBy=%5",

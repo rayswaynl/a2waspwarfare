@@ -16,7 +16,8 @@ private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","
 	"_escEnabled","_escScore","_escMins","_escPopMax","_escTierIdx","_escBaseIdx","_escTiers","_escVehCap","_escHadVeh","_escEscort","_escSideVeh",
 	"_homePool","_spSkipNaval","_hpX",
 	"_feedChangeOnly","_feedKeepAlive","_feedSig","_feedLastSig","_feedChanged","_feedDue","_feedLastBroadcast",
-	"_perfProbe","_perfCap","_perfReason","_perfPopTier"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool).
+	"_perfProbe","_perfCap","_perfReason","_perfPopTier",
+	"_rcSide","_rcSideID","_rcLogik","_rcCount","_rcOld","_entryLdr","_entryGrp"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler); +_entryLdr/_entryGrp (B66-style any-live-member scrub test, review-1254 defect fix).
 
 waitUntil {townInitServer};
 sleep 30;
@@ -54,9 +55,23 @@ while {!WFBE_GameOver} do {
 	if (time - _scrubLast > 20) then {
 		_kept = [];
 		_changed = false;
+		//--- REVIEW FIX (review-1254 #2): the ORIGINAL scrub test here was leader-only (`alive
+		//--- (_entry select 0)`) - WFBE_ACTIVE_PATROLS entries only store the leader unit + sideID
+		//--- (no group slot, unlike WFBE_ACTIVE_AICOM_TEAMS below). If the ORIGINAL leader died but
+		//--- other patrol members are still alive, the patrol keeps running (Common_RunSidePatrol.sqf's
+		//--- own _alive test checks ANY live unit) but this scrub dropped its entry anyway - previously
+		//--- a cosmetic early-vanish of the map arrow (same bug class B66 already fixed below for
+		//--- WFBE_ACTIVE_AICOM_TEAMS), but now load-bearing: the fix/alife-leak-hardening #2 reconciler
+		//--- below counts straight off _kept, so an entry dropped while the patrol is still alive would
+		//--- UNDERCOUNT wfbe_side_patrols and let the side over-spawn past its concurrent-patrol cap.
+		//--- Derive the group from the (possibly dead) leader and key the keep-test on ANY live member,
+		//--- same B66 idiom as the AICOM-team scrub just below.
 		{
 			_entry = _x;
-			if (alive (_entry select 0)) then {
+			_entryLdr = _entry select 0;
+			_entryGrp = grpNull;
+			if (!isNull _entryLdr) then {_entryGrp = group _entryLdr};
+			if (!isNull _entryGrp && {{alive _x} count (units _entryGrp) > 0}) then {
 				_kept set [count _kept, _entry];
 			} else {
 				_changed = true;
@@ -67,6 +82,29 @@ while {!WFBE_GameOver} do {
 			WFBE_ACTIVE_PATROLS = _kept;
 			["INFORMATION", Format["server_side_patrols.sqf: scrub removed %1 dead-unit patrol entries from WFBE_ACTIVE_PATROLS.", _removed]] Call WFBE_CO_FNC_AICOMLog;
 		};
+
+		//--- LEAK FIX (fix/alife-leak-hardening #2): wfbe_side_patrols is booked at DISPATCH
+		//--- (below, ~L285) and released ONLY by the "sidepatrol-ended" HandleSpecial case, which
+		//--- is only ever sent from Common_RunSidePatrol.sqf's own exit code. An HC disconnect, HC
+		//--- freeze, or runner-abort mid-patrol never reaches that exit code, so the counter can
+		//--- permanently outlive the patrol it was counting - the side then sits at cap and stops
+		//--- getting new patrols for the rest of the match. _kept (just above) is the freshly-
+		//--- scrubbed, alive-leader-only WFBE_ACTIVE_PATROLS; reconcile each present side's counter
+		//--- to that LIVE count every ~20s so a leaked slot self-heals no matter how it leaked,
+		//--- instead of depending on catching every individual disconnect/abort path.
+		{
+			_rcSide = _x;
+			_rcSideID = (_rcSide) Call WFBE_CO_FNC_GetSideID;
+			_rcLogik = (_rcSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _rcLogik) then {
+				_rcCount = {(_x select 1) == _rcSideID} count _kept;
+				_rcOld = _rcLogik getVariable ["wfbe_side_patrols", 0];
+				if (_rcOld != _rcCount) then {
+					_rcLogik setVariable ["wfbe_side_patrols", _rcCount];
+					["WARNING", Format["server_side_patrols.sqf: reconciled wfbe_side_patrols for [%1] %2 -> %3 (live patrol count).", _rcSide, _rcOld, _rcCount]] Call WFBE_CO_FNC_AICOMLog;
+				};
+			};
+		} forEach WFBE_PRESENTSIDES;
 
 		//--- B63 (Ray 2026-06-21): also scrub dead-leader AICOM-team entries. Previously these were
 		//--- dropped ONLY on the aicom-team-ended event; a leader killed without that event left a
