@@ -39,11 +39,20 @@ _tbEvt = _this select 4;
 _tbSkip = "";
 if (isNull _tbTeam) then {_tbSkip = "team-null"};
 if (_tbSkip == "" && {isNull _tbHuman}) then {_tbSkip = "human-null"};
-if (_tbSkip == "" && {(leader _tbTeam) != _tbHuman}) then {_tbSkip = "not-leader"};
-if (_tbSkip == "" && {((units _tbTeam) select 0) == _tbHuman}) then {_tbSkip = "already-index-0"};
 
 if (_tbSkip != "") exitWith {
 	diag_log Format ["[WFBE][TEAMBAR-SRV] %1 slot1-rejoin: skipped (%2) for [%3] [%4].", _tbEvt, _tbSkip, _tbName, _tbUid];
+};
+
+//--- ASSERT LEADER FIRST (round-3 review 2026-07-22, fix/teambar-slot1-ship): match the CLIENT pattern
+//--- (Init_Client.sqf ~1234 / Client_OnKilled.sqf ~138-141) which selectLeader-s the human BEFORE its
+//--- rejoin. At a FRESH CONNECT the mission-start AI squadmate is still the engine leader of the
+//--- pre-grouped team (the client selectLeader assert at Init_Client.sqf ~1234 runs AFTER the ~688
+//--- update-teamleader ping that reaches this function), so the previous "not-leader" skip no-op-ed the
+//--- heal EXACTLY when it was needed. Assert leadership here first, then let the index-0 check decide.
+if ((leader _tbTeam) != _tbHuman) then {_tbTeam selectLeader _tbHuman};
+if (((units _tbTeam) select 0) == _tbHuman) exitWith {
+	diag_log Format ["[WFBE][TEAMBAR-SRV] %1 slot1-rejoin: skipped (already-index-0) for [%2] [%3].", _tbEvt, _tbName, _tbUid];
 };
 
 _tbOthers = [];
