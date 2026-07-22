@@ -125,10 +125,6 @@ switch (_request) do {
 	/*--- wiki-wins: removed dead "delegate-ai" case (no server sender repo-wide; superseded by delegate-townai / delegate-ai-static-defence) ---*/
 	case "delegate-ai-static-defence": {_args spawn WFBE_CL_FNC_DelegateAIStaticDefence};
 	case "endgame": {if !(isNil "WFBE_CL_FNC_EndGame") then {_args spawn WFBE_CL_FNC_EndGame}};
-	case "group-join-accept": {_args call WFBE_CL_FNC_Groups_JoinAccepted};
-	case "group-join-deny": {_args call WFBE_CL_FNC_Groups_JoinDenied};
-	case "group-kick": {_args call WFBE_CL_FNC_Groups_KickedOff};
-	case "group-join-request": {_args call WFBE_CL_FNC_Groups_ReceiveRequest};
 	case "hq-setstatus": {_args spawn WFBE_CL_FNC_HQ_SetStatus};
 	case "icbm-display": {_args spawn WFBE_CL_FNC_Display_ICBM};
 	case "irsmoke-createfx": {{_x spawn WFBE_CO_MOD_IRS_CreateSmoke} forEach (_args select 0)};
