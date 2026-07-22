@@ -69,7 +69,7 @@ class TownGroupPackingContractTests(unittest.TestCase):
             "_vehRosters = []",
             "_acc = _acc + _roster",
             "if (count _acc >= _mergeTarget)",
-            "((count _acc) + (count _roster)) > 10",
+            "((count _acc) + (count _roster)) > _mergeCap",
             "forEach _vehRosters",
             'missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_TARGET", 5]',
         ):

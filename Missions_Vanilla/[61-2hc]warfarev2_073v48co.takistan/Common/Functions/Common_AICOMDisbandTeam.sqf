@@ -51,6 +51,7 @@ _uCount = 0;
 
 diag_log ("DISBAND|v1|exec|mode=destructive|side=" + str _sideID + "|team=" + str _team + "|inf=" + str _uCount + "|hulls=" + str _vCount + "|cmd=" + str _cmd + "|t=" + str (round (time / 60)));
 diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TEAM_RETIRE_LOCAL|destructive");
+_team setVariable ["wfbe_aicom_ended_fired", true];   //--- night-fold review fix: driver-loop tail checks this stamp so team-ended never double-fires
 if (isServer) then {
 	["aicom-team-ended", _sideID, _team] Call HandleSpecial;
 } else {

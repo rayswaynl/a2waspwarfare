@@ -2881,11 +2881,15 @@ while {!WFBE_GameOver && _alive} do {
 	sleep 8;
 };
 
-//--- Team wiped: release the brain's slot.
-if (isServer) then {
-	["aicom-team-ended", _sideID, _team] Call HandleSpecial;
-} else {
-	["RequestSpecial", ["aicom-team-ended", _sideID, _team]] Call WFBE_CO_FNC_SendToServer;
+//--- Team wiped: release the brain's slot. (night-fold review fix 2026-07-22: the destructive
+//--- disband executor already fired team-ended and stamped wfbe_aicom_ended_fired; skip the
+//--- refire so pending-slot accounting is never double-decremented. Every other exit fires as before.)
+if (isNull _team || {!([_team, "wfbe_aicom_ended_fired", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+	if (isServer) then {
+		["aicom-team-ended", _sideID, _team] Call HandleSpecial;
+	} else {
+		["RequestSpecial", ["aicom-team-ended", _sideID, _team]] Call WFBE_CO_FNC_SendToServer;
+	};
 };
 
 if (!isNull _team) then {deleteGroup _team};

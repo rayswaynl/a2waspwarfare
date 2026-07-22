@@ -419,7 +419,7 @@ class CommanderLeaseFixtures(unittest.TestCase):
         disconnect = DISCONNECT.read_text(encoding="utf-8-sig")
         self.assertIn("_leaseGen = _lease select 5;", disconnect)
         self.assertIn("[_side, _leaseExpires, _leaseGen] Spawn WFBE_CO_FNC_CommanderLeaseGraceCheck;", disconnect)
-        self.assertIn("[_side, (_logik getVariable [\"wfbe_commander_lease_gen\", 0])] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown;", disconnect)
+        self.assertIn("[_side, (if (isNil {_logik getVariable \"wfbe_commander_lease_gen\"}) then {0} else {_logik getVariable \"wfbe_commander_lease_gen\"})] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown;", disconnect)
 
         connected = CONNECTED.read_text(encoding="utf-8-sig")
         self.assertIn("(_oldLease select 5)] Call WFBE_CO_FNC_CommanderLeaseRequestStandDown", connected)

@@ -123,7 +123,8 @@ if (_ctrlPressed) exitWith {
 	};
 
 	if (_disbandNow) then {
-		deleteVehicle _target;
+		//--- owner ruling 2026-07-22 20:06 (destructive retire): visible death, never a silent vanish.
+		_target setDamage 1;
 		_message = Format ["Disbanded AI %1.", _aiId];
 		hintSilent _message; //--- fix(hunt): Ray order - disband feedback stays OFF center screen (matches the eight hintSilent exits above; center-screen titleText regressed in the disband-confirm merge)
 	};

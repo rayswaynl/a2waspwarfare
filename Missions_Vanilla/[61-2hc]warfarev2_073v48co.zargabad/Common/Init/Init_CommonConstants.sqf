@@ -634,7 +634,7 @@ if (worldName == "Zargabad") then {
 	};
 	_wfbeAICOMMapRadius = _wfbeAICOMMapSize / 2;
 	if (isNil "WFBE_C_AICOM_FRONTIER_RADIUS") then {WFBE_C_AICOM_FRONTIER_RADIUS = ((_wfbeAICOMMapRadius * 0.20) max 1500)};   //--- m: a candidate town is "on the front" if it is within this distance of one of OUR owned towns (fallback: our HQ). Towns past this are deprioritised, not banned (guardrail: still targetable if the front is empty). Scales to small maps via CfgWorlds mapSize while preserving pre-set overrides.
-	if (isNil "WFBE_C_AICOM_DISTANCE_DIVISOR") then {WFBE_C_AICOM_DISTANCE_DIVISOR = 50};   //--- score divisor on distance-to-front: one supply point is worth this many metres of march. Was effectively 150 (too weak); 50 makes distance dominate so the nearest contestable town wins.
+	if (isNil "WFBE_C_AICOM_DISTANCE_DIVISOR") then {WFBE_C_AICOM_DISTANCE_DIVISOR = 30};   //--- C6 pick 1 (owner GO 2026-07-22 19:08): 50->30, stronger near-front preference so hauls shorten. Rollback: 50.   //--- score divisor on distance-to-front: one supply point is worth this many metres of march. Was effectively 150 (too weak); 50 makes distance dominate so the nearest contestable town wins.
 	if (isNil "WFBE_C_AICOM_HQ_PULL_DIVISOR") then {WFBE_C_AICOM_HQ_PULL_DIVISOR = 250};    //--- score divisor on distance-to-ENEMY-HQ: adds a small spearhead bias toward the enemy capital so the front advances in one direction instead of wandering. Larger = weaker pull. 0 disables the pull.
 	if (isNil "WFBE_C_AICOM_FAR_PENALTY") then {WFBE_C_AICOM_FAR_PENALTY = 1000};           //--- flat score penalty applied to any candidate OUTSIDE the frontier radius, so a rich deep city can no longer buy its way over a near contestable town. Large enough to swamp supply spread.
 	if (isNil "WFBE_C_AICOM_SOFT_WEIGHT")  then {WFBE_C_AICOM_SOFT_WEIGHT  = 12};            //--- A8: score points SUBTRACTED per garrison hardness tier (wfbe_town_type Tiny=0..Huge=4) so at comparable distance the AI prefers SOFTER towns. Full swing ~48pts (~2.4 town-spacings at DISTANCE_DIVISOR=50); under FAR_PENALTY so front-contiguity is unaffected. 0 = rollback to distance-only.
@@ -1501,7 +1501,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil 'WFBE_C_AICOM_ASSAULT_ROUTE_FACTOR')  then {WFBE_C_AICOM_ASSAULT_ROUTE_FACTOR  = if (worldName == "Takistan") then {2.5} else {if (worldName == "Zargabad") then {1.35} else {1.25}}};
 	if (isNil 'WFBE_C_AICOM_ASSAULT_SLACK')         then {WFBE_C_AICOM_ASSAULT_SLACK         = 120};  //--- s, one extra WFBE_C_AI_COMMANDER_TOWN_INTERVAL (120s) worker-pass margin.
 	if (isNil 'WFBE_C_AICOM_ASSAULT_TIMEOUT_MIN')   then {WFBE_C_AICOM_ASSAULT_TIMEOUT_MIN   = 420};  //--- s, floor = today's flat value - short legs are byte-identical to current behaviour.
-	if (isNil 'WFBE_C_AICOM_ASSAULT_TIMEOUT_MAX')   then {WFBE_C_AICOM_ASSAULT_TIMEOUT_MAX   = if (worldName == "Takistan") then {2700} else {1500}}; //--- s, hard ceiling - beyond this a team is genuinely stuck (existing Recovery-V2 ladder applies), not just far.
+	if (isNil 'WFBE_C_AICOM_ASSAULT_TIMEOUT_MAX')   then {WFBE_C_AICOM_ASSAULT_TIMEOUT_MAX   = 1200};   //--- C6 pick 1 (owner GO 2026-07-22 19:08): was 2700 TK / 1500 other. Live evidence: only 1/39 arrivals ever exceeded 1200s; all strands burned the full 2700. Rollback: worldName conditional 2700/1500. //--- s, hard ceiling - beyond this a team is genuinely stuck (existing Recovery-V2 ladder applies), not just far.
 	//--- B66 INF-TRANSPORT: when 1, a pure-infantry AI team on a long approach (beyond REACH_FOOT but within
 	//--- REACH_MOUNTED) is given a faction troop-truck so foot teams can still cover the long leg instead of
 	//--- being skipped. The consumer resolves the per-side transport classname from the Core_USMC / Core_RU /
@@ -2908,7 +2908,7 @@ if (isNil "WFBE_C_TRASH_REMOTE_DELETE") then {WFBE_C_TRASH_REMOTE_DELETE = 0};
 //--- command bus. 1 = diag_log request type + argc at each dispatch into Server_HandleSpecial
 //--- (RPT attribution for the next mid-match burn); 0 = INERT, no logging, dispatch byte-identical.
 //--- Ships default 0.
-if (isNil "WFBE_C_HS_DISPATCH_LOG") then {WFBE_C_HS_DISPATCH_LOG = 0};
+if (isNil "WFBE_C_HS_DISPATCH_LOG") then {WFBE_C_HS_DISPATCH_LOG = 1}; //--- ARMED (owner ruling 2026-07-22 22:04: ship flagged on).
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

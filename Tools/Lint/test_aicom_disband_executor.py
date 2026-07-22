@@ -35,7 +35,8 @@ def test_team_owner_has_a_destructive_local_disband_executor() -> None:
         assert 'deleteVehicle' not in executor
 
 
-def test_map_click_disband_does_not_kill_the_selected_ai() -> None:
+def test_map_click_disband_destroys_the_selected_ai() -> None:
     for mission in MISSIONS:
         source = _source(mission, "Client/Functions/Client_HandleMapSingleClick.sqf")
-        assert '_target setDamage 1' not in source
+        assert '_target setDamage 1' in source
+        assert 'deleteVehicle _target' not in source
