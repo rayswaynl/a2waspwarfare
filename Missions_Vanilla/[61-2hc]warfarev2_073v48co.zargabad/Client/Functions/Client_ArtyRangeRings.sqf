@@ -4,7 +4,7 @@
 //--- pure createMarkerLocal, no PV, no server authority. 8-second poll; markers reposition on move,
 //--- auto-delete on kill/null. Self-gates on WFBE_C_ARTY_RING > 0 (default 1, owner-ordered ON).
 
-Private ["_side","_sideText","_artyNames","_artyRanges","_rings","_known","_v","_artIdx","_range","_mk","_artyCooldownActive","_artyIntervals","_artyUps","_artyFireTime","_artyLastFire","_artyLogik","_artySharedLast","_artyElapsed"];
+Private ["_side","_sideText","_artyNames","_artyRanges","_rings","_known","_v","_artIdx","_range","_mk","_artyCooldownActive","_artyIntervals","_artyUps","_artyFireTime","_artyLastFire","_artyLogik","_artySharedLast","_artyElapsed","_visualCap","_drawRange"];
 
 if ((missionNamespace getVariable ["WFBE_C_ARTY_RING", 1]) <= 0) exitWith {};
 
@@ -12,6 +12,11 @@ _side     = sideJoined;
 _sideText = str _side;
 _rings    = [];
 _known    = [];
+
+//--- Owner ruling 2026-07-22 19:08: cap the DRAWN ellipse radius (metres) so max-range guns
+//--- (ARTILLERY_RANGES_MAX 8000-9000 on TK tuning) no longer blanket the whole map.
+//--- 0 = legacy uncapped. The REAL range survives in the marker label when capped.
+_visualCap = missionNamespace getVariable ["WFBE_C_ARTY_RING_VISUAL_CAP", 2000];
 
 while {true} do {
 	//--- Re-read per tick: late-joiners resolve CLASSNAMES after their own init.
@@ -54,12 +59,17 @@ while {true} do {
 				_range = 0;
 				if (_artIdx < count _artyRanges) then {_range = _artyRanges select _artIdx};
 				if (_range > 0) then {
+					_drawRange = _range;
+					if ((_visualCap > 0) && {_range > _visualCap}) then {_drawRange = _visualCap};
 					_mk = Format ["ArtyRing_%1", _v];
 					createMarkerLocal [_mk, getPos _v];
 					_mk setMarkerShapeLocal "Ellipse";
 					_mk setMarkerBrushLocal "Border";
 					_mk setMarkerColorLocal "ColorOrange";
-					_mk setMarkerSizeLocal [_range, _range];
+					_mk setMarkerSizeLocal [_drawRange, _drawRange];
+					if (_drawRange < _range) then {
+						_mk setMarkerTextLocal Format ["ARTY - RNG %1km", (round (_range / 100)) / 10];
+					};
 					_rings = _rings + [[_v, _mk]];
 					_known = _known + [_v];
 				};
