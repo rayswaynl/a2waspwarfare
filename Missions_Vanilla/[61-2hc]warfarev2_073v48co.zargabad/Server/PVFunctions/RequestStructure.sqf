@@ -1,9 +1,10 @@
-Private ['_dir','_index','_pos','_script','_side','_structure','_structureType','_structures','_structuresNames','_rlType','_reject']; //--- B66: added _reject
+Private ['_dir','_index','_pos','_script','_side','_structure','_structureType','_structures','_structuresNames','_rlType','_reject','_reqPlayer','_rejectMsg']; //--- B66: added _reject; refund-sweep: added _reqPlayer,_rejectMsg
 
 _side = _this select 0;
 _structureType = _this select 1;
 _pos = _this select 2;
 _dir = _this select 3;
+_reqPlayer = if (count _this > 4) then {_this select 4} else {objNull}; //--- refund-sweep: placing player for targeted server-reject refund (mirrors RequestDefense.sqf)
 
 _structures = missionNamespace getVariable Format ['WFBE_%1STRUCTURES',str _side];
 _structuresNames = missionNamespace getVariable Format ['WFBE_%1STRUCTURENAMES',str _side];
@@ -13,13 +14,13 @@ _rlType = _structures select _index;
 
 if (WF_Debug) then {["DEBUG (RequestStructure.sqf)", Format ["Building: %1", _rlType]] Call WFBE_CO_FNC_LogContent};
 
-if (_rlType in ["Barracks", "Light", "CommandCenter", "Heavy", "Aircraft", "ServicePoint", "AARadar", "CBRadar", "Bank", "ArtilleryRadar", "Reserve"]) then {
-    [_side, "HandleSpecial", ['building-started', _rlType, _pos]] Call WFBE_CO_FNC_SendToClients;
-};
+//--- refund-sweep MED: the side-wide 'building-started' broadcast MOVED to after reject resolution
+//--- (was here, pre-veto) so a refused CBR/AAR/Bank build no longer announces construction started.
 
 //--- B66: validation now sets a _reject flag instead of exitWith-inside-then{} (which only
 //--- escaped the then{} block, so the structure ExecVM-built anyway). Build is gated on !_reject.
 _reject = false;
+_rejectMsg = ""; //--- refund-sweep: LocalizeMessage case for a rejected build (sent once, post-gating)
 
 //--- CBR requires an alive AAR on the same side.
 if (_rlType == "CBRadar") then {
@@ -32,7 +33,7 @@ if (_rlType == "CBRadar") then {
 	};
 	if (!_aarAlive) then {
 		_reject = true; //--- B66: was exitWith (escaped only the then{}).
-		[_side, "LocalizeMessage", ["CBRadarNeedsAAR"]] Call WFBE_CO_FNC_SendToClients;
+		_rejectMsg = "CBRadarNeedsAAR";
 		["WARNING", Format ["RequestStructure.sqf: [%1] CBRadar build rejected — no alive AAR.", str _side]] Call WFBE_CO_FNC_LogContent;
 	};
 };
@@ -60,12 +61,12 @@ if (_rlType in ["CBRadar","AARadar"]) then {
 	_rrMsg = if (_rlType == "AARadar") then {"AARadarAlreadyBuilt"} else {"CBRadarAlreadyBuilt"};
 	if (!_reject && _rrAlive) then {
 		_reject = true; //--- B66 idiom: was exitWith (escaped only the then{}).
-		[_side, "LocalizeMessage", [_rrMsg]] Call WFBE_CO_FNC_SendToClients;
+		_rejectMsg = _rrMsg;
 		["WARNING", Format ["RequestStructure.sqf: [%1] %2 build rejected - one already alive.", str _side, _rlType]] Call WFBE_CO_FNC_LogContent;
 	};
 	if (!_reject && (time - _rrPendingTime) < _rrPendingWindow) then {
 		_reject = true; //--- duplicate-click race: a reservation for this side+type is already in flight.
-		[_side, "LocalizeMessage", [_rrMsg]] Call WFBE_CO_FNC_SendToClients;
+		_rejectMsg = _rrMsg;
 		["WARNING", Format ["RequestStructure.sqf: [%1] %2 build rejected - reservation already pending (%3s ago).", str _side, _rlType, (time - _rrPendingTime)]] Call WFBE_CO_FNC_LogContent;
 	};
 	//--- Reserve the slot synchronously at accept time. Construction_SmallSite.sqf (CBRadar) /
@@ -87,12 +88,12 @@ if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0
 	_existingBank = missionNamespace getVariable [_bankKey, objNull];
 	if (!(isNull _existingBank) && alive _existingBank) then {
 		_reject = true; //--- B66: was exitWith (escaped only the then{}).
-		[_side, "LocalizeMessage", ["BankAlreadyBuilt"]] Call WFBE_CO_FNC_SendToClients;
+		_rejectMsg = "BankAlreadyBuilt";
 		["WARNING", Format ["RequestStructure.sqf: [%1] Bank build rejected — bank already alive.", str _side]] Call WFBE_CO_FNC_LogContent;
 	};
 	if (!_reject && (time - _pendingTime) < _pendingWindow) then {
 		_reject = true; //--- B66: a bank reservation is already in flight (duplicate-click race).
-		[_side, "LocalizeMessage", ["BankAlreadyBuilt"]] Call WFBE_CO_FNC_SendToClients;
+		_rejectMsg = "BankAlreadyBuilt";
 		["WARNING", Format ["RequestStructure.sqf: [%1] Bank build rejected — reservation already pending (%2s ago).", str _side, (time - _pendingTime)]] Call WFBE_CO_FNC_LogContent;
 	};
 	if (!_reject) then {
@@ -106,7 +107,7 @@ if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0
 		{if (_pos distance _x < _protRange) exitWith {_tooClose = true}} forEach _checkCenters;
 		if (_tooClose) then {
 			_reject = true; //--- B66: was exitWith (escaped only the then{}).
-			[_side, "LocalizeMessage", ["BankTooCloseToBase"]] Call WFBE_CO_FNC_SendToClients;
+			_rejectMsg = "BankTooCloseToBase";
 			["WARNING", Format ["RequestStructure.sqf: [%1] Bank build rejected — placement too close to base (< %2 m).", str _side, _protRange]] Call WFBE_CO_FNC_LogContent;
 		};
 	};
@@ -117,8 +118,28 @@ if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0
 	};
 };
 
+//--- refund-sweep: a rejected build refunds the placing player (targeted) then skips broadcast + build.
+//--- Mirrors RequestDefense.sqf B5 (targeted SendToClient + client-side pool refund). Non-player callers
+//--- (objNull _reqPlayer, e.g. HQ redeploy) fall back to the legacy side-wide notify with NO refund.
+if (_reject) exitWith {
+	if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {
+		private ["_costsArr","_refundPrice"];
+		_refundPrice = 0;
+		_costsArr = missionNamespace getVariable [Format ["WFBE_%1STRUCTURECOSTS", str _side], []];
+		if (_index >= 0 && {_index < count _costsArr}) then {_refundPrice = _costsArr select _index};
+		[_reqPlayer, "LocalizeMessage", [_rejectMsg, _refundPrice]] Call WFBE_CO_FNC_SendToClient;
+	} else {
+		[_side, "LocalizeMessage", [_rejectMsg]] Call WFBE_CO_FNC_SendToClients;
+	};
+};
+
+//--- refund-sweep MED: broadcast construction-started only after the build is accepted (moved from top).
+if (_rlType in ["Barracks", "Light", "CommandCenter", "Heavy", "Aircraft", "ServicePoint", "AARadar", "CBRadar", "Bank", "ArtilleryRadar", "Reserve"]) then {
+	[_side, "HandleSpecial", ['building-started', _rlType, _pos]] Call WFBE_CO_FNC_SendToClients;
+};
+
 _index = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",str _side]) find _structureType;
-if (!_reject && _index != -1) then { //--- B66: gate build on !_reject so rejected requests no longer build.
+if (_index != -1) then { //--- refund-sweep: reject already exited above; build the accepted structure.
 	_script = (missionNamespace getVariable Format ["WFBE_%1STRUCTURESCRIPTS",str _side]) select _index;
 	[_structureType,_side,_pos,_dir,_index] ExecVM (Format["Server\Construction\Construction_%1.sqf",_script]);
 };

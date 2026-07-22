@@ -788,7 +788,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 								WFBE_Client_Logic setVariable ["wfbe_structures_live", _current, true];
 							};
 
-							["RequestStructure", [sideJoined,_class,_pos,_dir]] Call WFBE_CO_FNC_SendToServer;
+							["RequestStructure", [sideJoined,_class,_pos,_dir,player]] Call WFBE_CO_FNC_SendToServer; //--- refund-sweep: pass placer so server refunds them on reject (mirrors RequestDefense player arg)
 						};
 
 						if (_class in _defenses) then {

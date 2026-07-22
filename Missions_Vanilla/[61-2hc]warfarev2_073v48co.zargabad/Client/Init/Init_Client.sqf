@@ -152,6 +152,22 @@ WFBE_CMD_DEF_SUPPLY_REFUND = {
 	};
 };
 if (isNil "WFBE_LastDefenseChargeSupply") then {WFBE_LastDefenseChargeSupply = false};
+
+//--- refund-sweep: structure-build refund helper. A server-side RequestStructure reject (CBR/AAR/Bank)
+//--- returns the pool the client charged (coin_interface.sqf structure block): side SUPPLY under
+//--- WFBE_C_ECONOMY_CURRENCY_SYSTEM == 0, else player FUNDS - same pool expression as the charge so
+//--- refund == charge exactly. _this = amount (>0). A2-OA-safe: getVariable / == / ChangeSideSupply|
+//--- ChangePlayerFunds only. (RadioTower charges cash but is never in the reject set.)
+WFBE_STRUCT_REFUND = {
+	private ["_amt"];
+	_amt = _this;
+	if (isNil "_amt" || {typeName _amt != "SCALAR"} || {_amt <= 0}) exitWith {};
+	if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
+		[sideJoined, _amt, "Structure build refund.", false] Call ChangeSideSupply;
+	} else {
+		_amt Call ChangePlayerFunds;
+	};
+};
 CommandChatMessage = Compile preprocessFile "Client\Functions\Client_CommandChatMessage.sqf";
 FX = Compile preprocessFile "Client\Functions\Client_FX.sqf";
 GetIncome = Compile preprocessFile "Client\Functions\Client_GetIncome.sqf";
