@@ -322,21 +322,18 @@ if (_pending > 0) then {
 
 //--- B36.1 on-join CLEANUP (Ray 2026-06-15): when players join, the curve lowers _target; if the
 //--- side now holds MORE founded teams than target, retire the excess for immediate server relief.
-//--- GUARDRAIL (hard): only retire REAR teams - far from ALL players AND not in combat - so a player
-//--- never watches an AI vanish. The HC owns the units, so we only FLAG the team (wfbe_aicom_disband);
+//--- Owner ruling 2026-07-22 20:06: retirement is DESTRUCTIVE (vehicles explode, infantry
+//--- grenade-drop) and always allowed - the old rear/no-combat guardrail is deliberately gone. The HC owns the units, so we only FLAG the team (wfbe_aicom_disband);
 //--- its own loop re-checks proximity and deletes locally (server-side deleteVehicle on HC-local units
 //--- ghosts the group sync). Staggered: at most one retirement flagged per cycle (smallest rear team).
 if (_foundedTeams > _target) then {
-	private ["_safeDist","_pick","_pickN","_ldr","_nearP","_inCombat"];
-	_safeDist = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
+	private ["_pick","_pickN","_ldr"];
 	_pick = grpNull; _pickN = 1e9;
 	{
 		if (!isNull _x && {[_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool} && {!([_x, "wfbe_aicom_disband", false] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- fix(hunt): G1-safe - never-flagged teams returned nil for wfbe_aicom_disband, !nil threw, so the PC-cleanup retire pass never flagged anything
 			_ldr = leader _x;
 			if (!isNull _ldr && {alive _ldr}) then {
-				_nearP = {isPlayer _x && {alive _x} && {(_x distance _ldr) < _safeDist}} count _allUnits;
-				_inCombat = (behaviour _ldr == "COMBAT") || ({alive _x && {side _x != _side} && {(_x distance _ldr) < _safeDist}} count _allUnits > 0);
-				if (_nearP == 0 && {!_inCombat} && {(count units _x) < _pickN}) then {
+				if ((count units _x) < _pickN) then {   //--- owner ruling 2026-07-22: rear/combat vetoes removed (destructive retire)
 					_pickN = count units _x; _pick = _x;
 				};
 			};

@@ -702,9 +702,8 @@ switch (_args select 0) do {
 		//--- COMMAND CONSOLE (claude-gaming 2026-06-30, Ray): player-commander FAILSAFE - disband the side's AI field
 		//--- teams. Unlike the posture/fieldorder NUDGES (which gate on !_pHuman = AI-runs), this is a DIRECT action FOR
 		//--- the human commander, so it REQUIRES a human commander on the side. We only FLAG each team (wfbe_aicom_disband,
-		//--- the proven retire path); the HC-local executor in Common_RunCommanderTeam.sqf deletes a team's units ONLY when
-		//--- no player is within DISBAND_SAFE_DIST and it is not in COMBAT - so nothing vanishes in a player's view (honours
-		//--- the no-vanish-in-view rule). A2-OA-safe: object getVariable [k,d] (side logic), group setVariable [k,v,true]
+		//--- the proven retire path); the HC-local executor in Common_RunCommanderTeam.sqf destroys a team's units
+		//--- unconditionally (owner ruling 2026-07-22: destructive retire - vehicles explode, infantry grenade-drop). A2-OA-safe: object getVariable [k,d] (side logic), group setVariable [k,v,true]
 		//--- (no A3-only group getVariable [k,d]); count _args / typeName for the optional arg (no params / isEqualType).
 		//--- Command Console v2 (claude-gaming 2026-07-01): OPTIONAL arg[2] = a team INDEX into this side's wfbe_teams. When
 		//--- present + valid -> disband ONLY that team (a precision action; NO 15-min cooldown, and it does NOT stamp the

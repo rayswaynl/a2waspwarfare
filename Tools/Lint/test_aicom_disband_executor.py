@@ -23,14 +23,16 @@ def test_commander_disband_is_dispatched_to_the_team_owner() -> None:
         assert '["aicom-team-disband-execute", _dTeam]' in source
 
 
-def test_team_owner_has_a_quiet_local_disband_executor() -> None:
+def test_team_owner_has_a_destructive_local_disband_executor() -> None:
     for mission in MISSIONS:
         source = _source(mission, "Client/PVFunctions/HandleSpecial.sqf")
         assert 'case "aicom-team-disband-execute"' in source
         assert 'Call WFBE_CO_FNC_AICOMDisbandTeam' in source
         executor = _source(mission, "Common/Functions/Common_AICOMDisbandTeam.sqf")
-        assert 'deleteVehicle' in executor
-        assert 'setDamage' not in executor
+        assert 'setDamage 1' in executor
+        assert 'GrenadeHandTimedWest' in executor
+        assert 'DISBAND|v1|exec|mode=destructive' in executor
+        assert 'deleteVehicle' not in executor
 
 
 def test_map_click_disband_does_not_kill_the_selected_ai() -> None:
