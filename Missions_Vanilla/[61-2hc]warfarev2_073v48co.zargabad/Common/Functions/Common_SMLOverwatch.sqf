@@ -8,7 +8,7 @@
 private ["_team","_footInf","_sideID","_side","_townCenter","_dest","_capSeq",
          "_ttl","_armorR","_offset","_startTime","_launcher","_found",
          "_nearEntities","_hostile","_hostileArmor","_armorTank",
-         "_bearing","_overwatchPos","_elapsed","_reason",
+         "_armorPos","_dx","_dy","_bearing","_overwatchPos","_elapsed","_reason",
          "_disbanded","_disbandFlag","_retasked","_ordN",
          "_leaderDead","_launcherDead","_groupChanged","_noArmor",
          "_scanResult","_hostileCount","_uX"];
@@ -56,16 +56,21 @@ if (count _hostileArmor == 0) exitWith {
 
 _armorTank = _hostileArmor select 0;
 
-//--- Step 3: Compute overwatch position on the armor approach vector from _dest.
-_bearing = ((getPos _armorTank) select 0 - (_dest select 0)) atan2 ((getPos _armorTank) select 1 - (_dest select 1));
-_overwatchPos = [(_dest select 0) + _offset * (sin _bearing), (_dest select 1) + _offset * (cos _bearing), 0];
-
-//--- fable/sml-overwatch-nan: degenerate geometry NaN'd the bearing chain in live play
-//--- (RPT: overwatchPos=[scalar NaN,scalar NaN,0] x3; detached launcher died within 3s every time).
-//--- Validate the computed position and skip the overwatch gracefully instead of detaching into NaN.
-if (!(finite (_overwatchPos select 0)) || {!(finite (_overwatchPos select 1))}) exitWith {
-	diag_log Format ["SML|v1|OVERWATCH_SKIP|side=%1 team=%2 reason=nan_pos dest=%3 armor=%4", _side, _team, _dest, getPos _armorTank];
+//--- Step 3: Validate the armor/destination geometry before calculating the bearing.
+//--- A dying/deleted armor target can return scalar NaN from getPos; A2's atan2 also errors for [0,0].
+_armorPos = getPos _armorTank;
+if (!((_armorPos select 0) == (_armorPos select 0)) || {!((_armorPos select 1) == (_armorPos select 1))} || {!((_dest select 0) == (_dest select 0))} || {!((_dest select 1) == (_dest select 1))}) exitWith {
+	diag_log Format ["SML|v1|OVERWATCH_SKIP|side=%1 team=%2 reason=nan_pos dest=%3 armor=%4", _side, _team, _dest, _armorPos];
 };
+
+_dx = (_armorPos select 0) - (_dest select 0);
+_dy = (_armorPos select 1) - (_dest select 1);
+if (_dx == 0 && {_dy == 0}) exitWith {
+	diag_log Format ["SML|v1|OVERWATCH_SKIP|side=%1 team=%2 reason=zero_delta dest=%3 armor=%4", _side, _team, _dest, _armorPos];
+};
+
+_bearing = _dx atan2 _dy;
+_overwatchPos = [(_dest select 0) + _offset * (sin _bearing), (_dest select 1) + _offset * (cos _bearing), 0];
 
 //--- Step 4: Stamp and detach the launcher.
 _launcher setVariable ["wfbe_sml_detach_at", time];
