@@ -191,8 +191,8 @@ if (_verb == "counter") exitWith {
 
 //--- P0 (fable/gdir-ledger-conservation): validate CURRENT permitted ownership BEFORE any debit. The panel
 //--- previously validated existence only - a paid order on a town GUER no longer holds debited the wallet,
-//--- then no-opped downstream. Same permitted set as the Director ledger (GUER or UNKNOWN). "counter" and
-//--- "mortar" are excluded by design: they legitimately target enemy-held towns. "quote" never debits.
+//--- then no-opped downstream. Same permitted set as the Director ledger (GUER or UNKNOWN). "counter" is
+//--- excluded by design: it legitimately targets enemy-held towns. "quote" never debits.
 private ["_ownGateSide"];
 _ownGateSide = _townObj getVariable ["sideID", WFBE_C_UNKNOWN_ID];
 if ((_verb == "buy" || {_verb == "qrf"} || {_verb == "cache"} || {_verb == "vehicle"} || {_verb == "relief"} || {_verb == "donate"}) && {!(_ownGateSide == WFBE_C_GUER_ID || {_ownGateSide == WFBE_C_UNKNOWN_ID})}) exitWith {
@@ -276,8 +276,8 @@ _guerGrpCount = 0;
 {
 	if (side _x == resistance) then {_guerGrpCount = _guerGrpCount + 1};
 } forEach allGroups;
-//--- donate/cache/mortar are pure economy - never materialise units, always safe.
-if (!(_verb == "donate") && {!(_verb == "cache")} && {!(_verb == "mortar")} && {_guerGrpCount >= _grpBudgetMax}) exitWith {
+//--- donate/cache are pure economy - never materialise units, always safe.
+if (!(_verb == "donate") && {!(_verb == "cache")} && {_guerGrpCount >= _grpBudgetMax}) exitWith {
 	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=%2|town=%3|deny=groupBudgetExceeded|fundedBy=%4|pricePaid=0|budget=%5/%6", _elmin, _verb, _townId, getPlayerUID _player, _guerGrpCount, _grpBudgetMax];
 	[_player, "GDirPanelResult", ["deny", "Group cap reached. Try again when units despawn.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
 };
@@ -346,31 +346,18 @@ if (_verb == "vehicle") then {
     if (_product == "t2") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T2", 9600]};
     if (_product == "t3") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T3", 14400]};
 };
-//--- P4 MORTAR (relocated cmdcon45): pure pass-through to the existing guer-mortar-strike call-in,
-//--- which charges its OWN cost (WFBE_C_GUER_MORTAR_COST) + cooldown + range in Server_HandleSpecial.
-//--- Placed ABOVE the panel pricing/debit block so the panel NEVER debits for mortar (was a double-charge:
-//--- panel price + HandleSpecial cost). A short panel cooldown still gates spam-clicking for UI feedback.
+//--- MORTAR verb RETIRED (owner de-dup decision, commit 7a33e78892 "keep VS-35": Action_GuerMortarStrike.sqf
+//--- + the "guer-mortar-strike" Server_HandleSpecial case were removed, but this panel pass-through was added
+//--- on a parallel branch (gdir shop P4, #827) and survived the merge - it stamped a cooldown and reported
+//--- "Mortar strike called" while dispatching a verb no server case handles, so nothing ever landed).
+//--- Explicit deny (not silent removal) so a modified client sending "mortar" cannot fall through to the
+//--- generic price-0 debit/cooldown/order path below and emit a free reinforce order.
 if (_verb == "mortar") exitWith {
-    private ["_mortarCdKey","_mortarCdSec","_lastMortarT"];
-    _mortarCdKey = Format ["AICOMV2_GDIR_MORTAR_CD_%1", _townId];
-    _mortarCdSec = missionNamespace getVariable ["AICOMV2_GDIR_MORTAR_COOLDOWN_SEC", 900];
-    _lastMortarT = missionNamespace getVariable [_mortarCdKey, -9999];
-    if ((_nowT - _lastMortarT) < _mortarCdSec) exitWith {
-        private ["_mRem"];
-        _mRem = round (_mortarCdSec - (_nowT - _lastMortarT));
-        [_player, "GDirPanelResult", ["deny", Format ["Mortar cooling down. %1s remaining.", _mRem], "mortar", _townId]] Call WFBE_CO_FNC_SendToClient;
-    };
-    private ["_mortarPos"];
-    _mortarPos = getPos _townObj;
-    missionNamespace setVariable [_mortarCdKey, _nowT];
-    //--- HandleSpecial does the funds check/charge; if the team cannot afford it, it refuses + refunds its own cooldown.
-    ["guer-mortar-strike", _mortarPos, _player] call HandleSpecial;
-    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=mortar|town=%2|fundedBy=%3|deny=none|cost=viaHandleSpecial",
-        _elmin, _townId, getPlayerUID _player];
-    [_player, "GDirPanelResult", ["accept", Format ["Mortar strike called on %1.", _townId], "mortar", _townId]] Call WFBE_CO_FNC_SendToClient;
+    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=mortar|town=%2|deny=verbRetired|fundedBy=%3|pricePaid=0", _elmin, _townId, getPlayerUID _player];
+    [_player, "GDirPanelResult", ["deny", "Mortar strike is no longer available.", "mortar", _townId]] Call WFBE_CO_FNC_SendToClient;
 };
 
-//--- P4 relief squad + mortar harassment verbs (fable/gdir-harden-shop).
+//--- P4 relief squad verb (fable/gdir-harden-shop).
 if (_verb == "relief") then {_basePrice = missionNamespace getVariable ["AICOMV2_GDIR_PANEL_PRICE_RELIEF", 800]};
 //--- donate handled separately below.
 

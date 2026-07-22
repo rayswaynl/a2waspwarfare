@@ -110,14 +110,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_GUER_KILL_BOUNTY_COEF") then {WFBE_C_GUER_KILL_BOUNTY_COEF = 0.4};
 	if (isNil "WFBE_C_GUER_IED_KILL_COEF") then {WFBE_C_GUER_IED_KILL_COEF = 0.30}; //--- B67 (Ray 2026-06-21) item #8: an IED kill pays only 30% of the normal vehicle/unit bounty (anti-farm) so spamming IEDs for cash is not worthwhile. Applied in RequestOnUnitKilled when the kill is tagged as an IED kill.
 
-	//--- GUER improvised mortar strike (V3S_Gue driver call-in barrage; Action_GuerMortarStrike.sqf -> RequestSpecial -> Server_HandleSpecial "guer-mortar-strike").
-	if (isNil "WFBE_C_GUER_MORTAR_COOLDOWN") then {WFBE_C_GUER_MORTAR_COOLDOWN = 240};	//--- seconds between GUER mortar strikes (per player).
-	if (isNil "WFBE_C_GUER_MORTAR_RANGE")    then {WFBE_C_GUER_MORTAR_RANGE    = 1200};	//--- max designation range from the calling player (m).
-	if (isNil "WFBE_C_GUER_MORTAR_SHELLS")   then {WFBE_C_GUER_MORTAR_SHELLS   = 6};	//--- shells per barrage.
-	if (isNil "WFBE_C_GUER_MORTAR_COST")     then {WFBE_C_GUER_MORTAR_COST     = 200};	//--- funds debited from the caller's GUER team per strike (0 = free).
-	if (isNil "WFBE_C_GUER_MORTAR_SPREAD")          then {WFBE_C_GUER_MORTAR_SPREAD          = 25};	//--- base +/- impact spread (m) at tier 0.
-	if (isNil "WFBE_C_GUER_MORTAR_SPREAD_TIERSTEP") then {WFBE_C_GUER_MORTAR_SPREAD_TIERSTEP = 4};	//--- spread tightens by this many m per GUER vehicle tier.
-	if (isNil "WFBE_C_GUER_MORTAR_SPREAD_MIN")      then {WFBE_C_GUER_MORTAR_SPREAD_MIN      = 8};	//--- floor on the +/- spread (m), however high the tier.
+	//--- GUER improvised mortar strike constants REMOVED (owner de-dup decision 7a33e78892: Action_GuerMortarStrike
+	//--- + the "guer-mortar-strike" server case are gone; the GDir panel mortar verb is retired in RequestGDirPanel.sqf).
 
 	//--- GUER BARREL BOMB (fable/guer-barrelbomb): kill-gated, heli-delivered call-in triggered by a WF-scroll
 	//--- action at a friendly town center (NOT the Commissar Panel, NOT a Tactical Center - see
@@ -2195,10 +2189,8 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T1") then {AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T1 = 4800}; //--- Base price: vehicle tier 1 (Offroad_DSHKM_Gue technical). 1.5x cache T1 (unilateral pricing call - see PR body).
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T2") then {AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T2 = 9600}; //--- Base price: vehicle tier 2 (BMP2_GUE). 1.5x cache T2.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T3") then {AICOMV2_GDIR_PANEL_PRICE_VEHICLE_T3 = 14400}; //--- Base price: vehicle tier 3 (T72_GUE). 1.5x cache T3.
-//--- P4 - Relief squad (AICOMV2_GDIR_PANEL gate) + mortar harassment.
+//--- P4 - Relief squad (AICOMV2_GDIR_PANEL gate). Mortar price/cooldown constants REMOVED (verb retired - see RequestGDirPanel.sqf).
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_RELIEF")     then {AICOMV2_GDIR_PANEL_PRICE_RELIEF = 800};  //--- Base price: relief squad (infantry-only fast buy). 1/2x of REINF base.
-	if (isNil "AICOMV2_GDIR_PANEL_PRICE_MORTAR")     then {AICOMV2_GDIR_PANEL_PRICE_MORTAR = 1200}; //--- Base price: mortar harassment action.
-	if (isNil "AICOMV2_GDIR_MORTAR_COOLDOWN_SEC")    then {AICOMV2_GDIR_MORTAR_COOLDOWN_SEC = 900}; //--- Per-town mortar action cooldown (s); separate from action cooldown.
 	if (isNil "WFBE_C_GDIR_GARRISON_GAIN") then {WFBE_C_GDIR_GARRISON_GAIN = 1}; //--- owner 2026-07-07: ARMED at 1.0 (Director-reinforced GUER towns wake with +~50% real garrison at max funded surge; floored at V1).
 	if (isNil "WFBE_C_TOWNS_PERIMETER") then {WFBE_C_TOWNS_PERIMETER = 1}; //--- owner 2026-07-07: town defenders spawn in a bearing-even ring at the town EDGE (0.70-0.95x range) instead of camp/center clusters. 0 = legacy. //--- Tier-1 ledger->real-garrison gain: 0=off (byte-identical). >0 = a Director-reinforced GUER town (wfbe_gdir_str ratio>1) wakes with +min(groups, round(groups*(ratio-1)*GAIN)) real defender groups, floored at V1 (no-nerf). ~1.0 => +50% at max funded surge (ratio 1.5).
 //--- End AICOM V2 Lane 800 constants.
