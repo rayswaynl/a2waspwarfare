@@ -2915,5 +2915,23 @@ if (isNil "WFBE_C_CMD_SUPPORT_JET")            then {WFBE_C_CMD_SUPPORT_JET = 0}
 //--- 0 = INERT, the unconditional legacy deleteVehicle (byte-identical current behaviour). Ships default 0.
 if (isNil "WFBE_C_TRASH_REMOTE_DELETE") then {WFBE_C_TRASH_REMOTE_DELETE = 0};
 
+//--- C6 pick 1 (owner GO 2026-07-22 19:08): assault-journey tempo. TIMEOUT_MAX was inline-defaulted
+//--- (AI_Commander_AssignTowns.sqf:1066) to 2700s on Takistan / 1500s elsewhere - a dispatched platoon
+//--- could hold one of the 10 hard-capped AICOM team slots for up to 45min in transit, paying AI budget
+//--- for units that produce nothing. Live evidence (wave0722g Takistan, 4.9h, 426 dispatches): arrivals
+//--- p50=243s p90=367s, only 1/39 arrivals took longer than 1200s, and all 3 STRANDED events burned the
+//--- full 2700s before recycling. 1200 keeps 97% of legitimate arrivals and frees stuck slots 25min
+//--- earlier. Applies to ALL maps (also tightens the non-TK 1500 default). Coordinates with the
+//--- stranded fast-track in PR #1269 (that acts AFTER timeout; this shortens time-to-timeout - disjoint
+//--- constants). ROLLBACK: delete this line to restore the inline defaults (2700 TK / 1500 other).
+if (isNil "WFBE_C_AICOM_ASSAULT_TIMEOUT_MAX") then {WFBE_C_AICOM_ASSAULT_TIMEOUT_MAX = 1200}; //--- s; upper clamp on per-dispatch journey timeout (dyn estimate still floors at TIMEOUT_MIN 420).
+//--- C6 pick 1(b): strengthen the allocator front-distance term (AI_Commander_Allocate.sqf AUTO scorer:
+//--- score = supplyValue - distToFront/DIVISOR, inline default 50) so side-level target picking prefers
+//--- closer-to-front towns harder and hauls shorten structurally; per-team matching is already
+//--- nearest-based (AssignTowns). 50 -> 30 = 1.67x distance weight, deliberately moderate: supplyValue
+//--- spread stays decisive inside the frontier band, FAR_PENALTY(1000)/FRONTIER_RADIUS(3000) untouched.
+//--- ROLLBACK: delete this line (restores inline 50).
+if (isNil "WFBE_C_AICOM_DISTANCE_DIVISOR") then {WFBE_C_AICOM_DISTANCE_DIVISOR = 30}; //--- score -= distToFront/this; lower = stronger near-front preference.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
