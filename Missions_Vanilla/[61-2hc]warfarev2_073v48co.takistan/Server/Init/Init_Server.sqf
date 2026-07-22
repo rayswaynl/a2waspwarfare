@@ -225,6 +225,7 @@ if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 		+ "|guer=" + str _mtGuer
 		+ "|naval=" + str _mtNaval
 		+ "|oilfield=" + str _mtOilfield);
+	diag_log ("GARRISON|v1|scale=" + str (missionNamespace getVariable ["WFBE_C_TOWN_GARRISON_SCALE", 1])); //--- task wasp-town-garrison-minus20: soak-attributable one-shot stamp of the live GUER town-defender garrison scale.
 	["INITIALIZATION", "Init_Server.sqf: MATCH|v1|START| emitted (WFBE_C_MATCH_TELEMETRY=1)."] Call WFBE_CO_FNC_LogContent;
 };
 

@@ -98,6 +98,19 @@ if (!isNil "_defByTier") then {
 };
 _groups_max = round(_groups_max * _defCoef);
 
+//--- TOWN GARRISON SCALE (task wasp-town-garrison-minus20-20260722, owner 2026-07-22 18:52): flag-gated -20%
+//--- to the BASE GUER town-defender garrison, to entice player reinforcement and free AI budget for A-life.
+//--- Applied to the post-difficulty-coef base group count, BEFORE the GDIR gain (below) and CTL-link blocks,
+//--- so both stack on / derive from the scaled base (owner intent: base -20%; GDIR surge stays additive vs the
+//--- new base; CTL ledger draws already multiply this same _groups_max so they scale with it). Floor of 1 keeps
+//--- the smallest towns from spawning empty. WFBE_C_TOWN_GARRISON_SCALE default 0.8; 1.0 = legacy (byte-identical).
+private ["_garrScale"];
+_garrScale = missionNamespace getVariable ["WFBE_C_TOWN_GARRISON_SCALE", 1];
+if (_garrScale != 1) then {
+	_groups_max = round (_groups_max * _garrScale);
+	if (_groups_max < 1) then {_groups_max = 1};
+};
+
 //--- Tier-1 (flag WFBE_C_GDIR_GARRISON_GAIN, default 0): a GUER town the Director judges REINFORCED
 //--- (ledger current/baseline ratio > 1, published as wfbe_gdir_str) wakes with a bigger real garrison.
 //--- Additive / no-nerf: the bonus is >= 0, so _groups_max is never reduced below the V1 count.
