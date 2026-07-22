@@ -1672,6 +1672,48 @@ while {!WFBE_GameOver && _alive} do {
 
 				//--- On arrival, switch to the mode's local behaviour once.
 				if (!_arrived) then {
+					//--- FIX AICOM-ENROUTE-ENGAGE (aicom-fixes, 2026-07-22), gate WFBE_C_AICOM_ENROUTE_ENGAGE default 0 (0 = never
+					//--- read past this line = fully inert, exact legacy transit behaviour). cmdcon41-w2 F1 above (WFBE_C_AICOM_MARCH_YELLOW)
+					//--- puts road-march transit under YELLOW (return-fire only, no pursuit) so a column rolls past insurgent
+					//--- pot-shots instead of dissolving into a firefight - but that also means the team can roll PAST a live
+					//--- enemy squad it "comes across" without ever engaging it (owner directive: keep targeting towns, AND enemy
+					//--- units when the team comes across them). This governor tick (fires every ~8s of transit, see the sleep 8
+					//--- closing the order loop) re-derives the SAME _marchCM this order dispatched under - out of scope here,
+					//--- mirrors the foot-branch's own "recompute _marchCM" idiom above - and, only while that mode is YELLOW,
+					//--- scans for a live hostile within WFBE_C_AICOM_ENROUTE_ENGAGE_DIST (default 350m) of the team leader. A
+					//--- live contact flips the team to RED and stamps wfbe_aicom_enroute_engage_until so RED holds for
+					//--- WFBE_C_AICOM_ENROUTE_ENGAGE_DUR (default 90s) past the LAST contact tick (refreshed every tick contact
+					//--- persists) - this is what keeps the team fighting even though the road-march waypoint's own baked YELLOW
+					//--- prop would otherwise reassert the instant the column crosses to the next road node. Once the stamp
+					//--- lapses with no fresh contact the team reverts to the order's own _marchCM (YELLOW) - never a return to
+					//--- roving/loitering: no new waypoints, no route change, bounded radius + timeout only. A2-OA-safe: array-form
+					//--- private, single-arg getVariable + isNil on the GROUP stamp (2-arg [name,default] getVariable is nil-unsafe
+					//--- on GROUPs), nearEntities + getFriend (same idiom as the B60 heli cannon-nudge scan above), exitWith only
+					//--- directly after if(...).
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_ENROUTE_ENGAGE", 0]) > 0) then {
+						private ["_eeCM","_eeLdr","_eeDist","_eeHostile","_eeUntil"];
+						_eeCM = if ((missionNamespace getVariable ["WFBE_C_AICOM_MARCH_YELLOW", 1]) > 0) then {"YELLOW"} else {"RED"};
+						if (_eeCM == "YELLOW") then {
+							_eeLdr = leader _team;
+							if (!isNull _eeLdr && {alive _eeLdr}) then {
+								_eeDist = missionNamespace getVariable ["WFBE_C_AICOM_ENROUTE_ENGAGE_DIST", 350];
+								_eeHostile = objNull;
+								{ if (alive _x && {(side _x) != civilian} && {(_side getFriend (side _x)) < 0.6}) exitWith {_eeHostile = _x} } forEach ((getPos _eeLdr) nearEntities [["Man","LandVehicle","Air"], _eeDist]);
+								if (!isNull _eeHostile) then {
+									_team setCombatMode "RED";
+									_team setVariable ["wfbe_aicom_enroute_engage_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_ENROUTE_ENGAGE_DUR", 90])];
+								} else {
+									_eeUntil = _team getVariable "wfbe_aicom_enroute_engage_until";
+									if (isNil "_eeUntil") then {_eeUntil = -1};
+									//--- stamp still live (a recent contact's DUR window has not lapsed) - skip reverting to YELLOW
+									//--- this tick so the team keeps fighting a contact that just broke line-of-sight.
+									if (time >= _eeUntil) then {
+										_team setCombatMode _eeCM;
+									};
+								};
+							};
+						};
+					};
 					_arrivalGate = (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250]) max (((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_RANGE", 40]) max (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_SAD", 80])) + 20); //--- WAVE-3 250m arrival-gate (fleet wln6wj9cn) kept through the #138 CAPTURE_TRACE locals restructure (the #138 hunk carried the stale 100m math).
 					_arrivalDist = (leader _team) distance _dest;
 					if (_arrivalDist < _arrivalGate) then {

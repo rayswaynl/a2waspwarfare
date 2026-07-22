@@ -852,7 +852,33 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_FEINT_INTERVAL") then {WFBE_C_AICOM_FEINT_INTERVAL = 600}; //--- s between feint dispatches per side (per-side cooldown).
 	if (isNil "WFBE_C_AICOM_FEINT_DUR")      then {WFBE_C_AICOM_FEINT_DUR      = 120}; //--- s a feint team holds at the feint town before recall to the fist.
 	if (isNil "WFBE_C_AICOM_FEINT_COOLDOWN") then {WFBE_C_AICOM_FEINT_COOLDOWN = 120}; //--- reserved: per-side anti-double-dispatch stamp (used by wfbe_aicom_feint_t0 in the Allocator).
-	if (isNil "WFBE_C_AICOM2_EXPAND_TEAMS")    then {WFBE_C_AICOM2_EXPAND_TEAMS    = 3};  //--- Ray 2026-06-28: up to N teams divert to capture the nearest reachable NEUTRAL town instead of all-in on the fist (issue: 42/46 towns sat neutral). 0 = off (restores fist-only).
+	if (isNil "WFBE_C_AICOM2_EXPAND_TEAMS")    then {WFBE_C_AICOM2_EXPAND_TEAMS    = 3};  //--- Ray 2026-06-28: up to N teams divert to capture the nearest reachable NEUTRAL town instead of all-in on the fist (issue: 42/46 towns sat neutral). 0 = off (restores fist-only). FIX AICOM-TOWN-EXPANSION-1: now a FLOOR (max), not a ceiling - see WFBE_C_AICOM2_EXPAND_FRAC below.
+	//--- FIX AICOM-TOWN-EXPANSION-1 (aicom-fixes, 2026-07-22): the expand lane above scales off the LIVE team count
+	//--- (fraction of `count _teams`) instead of staying flat-capped at WFBE_C_AICOM2_EXPAND_TEAMS forever, so a
+	//--- grown army actually spends more teams annexing neutral towns instead of piling everyone onto the fist.
+	//--- WFBE_C_AICOM2_EXPAND_TEAMS above still applies as a FLOOR (max) so a small roster is never worse off.
+	//--- 0 = _expandN collapses to exactly the old flat WFBE_C_AICOM2_EXPAND_TEAMS cap - a TRUE instant rollback,
+	//--- dominant or not, because BOTH WFBE_C_AICOM2_PRESS_EXPAND_BONUS below AND the fist-floor clamp in
+	//--- AI_Commander_Allocate.sqf are ALSO gated on this being >0 (adversarial review fix, 2026-07-22: the press
+	//--- bonus originally gated only on _pfDominant, so EXPAND_FRAC=0 while dominant still added the bonus on top
+	//--- of the flat cap; the fist-floor clamp, if left unconditional, independently trims a small roster's flat
+	//--- cap below WFBE_C_AICOM2_EXPAND_TEAMS too - neither is a true rollback. Fixed so all three terms share the
+	//--- one FRAC>0 gate: at EXPAND_FRAC=0 the flat cap passes through completely untouched.
+	if (isNil "WFBE_C_AICOM2_EXPAND_FRAC")     then {WFBE_C_AICOM2_EXPAND_FRAC     = 0.4}; //--- fraction of `count _teams` that may peel off to the expansion lane (before the EXPAND_TEAMS floor is applied).
+	//--- FIX AICOM-TOWN-EXPANSION-2 (aicom-fixes, 2026-07-22): decouple "press while dominant" (WFBE_C_AICOM_PRESS_FLOOR_V2,
+	//--- registered above) from "stop expanding" - a dominant side's PRESS bonuses only pulled force toward the
+	//--- fist/enemy towns, leaving the expansion lane flat while the side was winning hardest. Small additive bonus to
+	//--- _expandN while _pfDominant AND WFBE_C_AICOM2_EXPAND_FRAC > 0 so neutral-town conquest keeps snowballing
+	//--- alongside the front press. 0 = no bonus (byte-identical to pre-fix while dominant); only ever read while
+	//--- WFBE_C_AICOM_PRESS_FLOOR_V2 is armed AND dominant AND EXPAND_FRAC > 0 (see EXPAND_FRAC comment above for why
+	//--- the FRAC gate on this bonus is required for a true EXPAND_FRAC=0 rollback). AI_Commander_Allocate.sqf also
+	//--- clamps the combined _expandN (same EXPAND_FRAC > 0 gate) so at least (count _fist) * WFBE_C_AICOM2_FIST_PERTOWN
+	//--- teams are always reserved for the fist once the scaling feature is active (sized off the LIVE active fist
+	//--- town count, not a flat single-town reservation - WFBE_C_AICOM2_FIST_TOWNS's registered default is 2, not the
+	//--- 1 the AI_Commander_Allocate.sqf header docstring claims), then RE-APPLIES the EXPAND_TEAMS floor (bounded by
+	//--- what the roster can afford after harass) so that fist-floor clamp can never itself trim _expandN below the
+	//--- flat EXPAND_TEAMS cap on a small-to-mid roster at default settings - adversarial re-review, 2026-07-22.
+	if (isNil "WFBE_C_AICOM2_PRESS_EXPAND_BONUS") then {WFBE_C_AICOM2_PRESS_EXPAND_BONUS = 2}; //--- extra teams added to the expand-lane cap while dominant (_pfDominant, AI_Commander_Allocate.sqf). Small vs the FIST/ENEMY press bonuses above (400) - a headcount lever, not a score lever.
 	if (isNil "WFBE_C_AICOM_EXPAND_DEDUP")     then {WFBE_C_AICOM_EXPAND_DEDUP     = 1};  //--- Ray 2026-07-04: ON for live testing. block-m: 0=off legacy (multiple expand teams may dogpile one neutral town); 1=each expand team claims a distinct neutral town per tick (DEDUP).
 	if (isNil "WFBE_C_AICOM_HARASS_FALLBACK")  then {WFBE_C_AICOM_HARASS_FALLBACK  = 1};  //--- Ray 2026-07-04: ON for live testing. block-m: 0=off legacy (harass picks deepest town regardless of reach); 1=walk depth-sorted candidates and pick deepest reachable by >=1 mounted team (emits AICOMSTAT|v2|EVENT|HARASS_SKIP when first candidate is unreachable).
 	if (isNil "WFBE_C_AICOM_ENGAGE_MIN_TOWNS") then {WFBE_C_AICOM_ENGAGE_MIN_TOWNS = 10};//--- Ray 2026-06-28 EXPANSION-FIRST: a commander captures NEUTRAL towns only (fist+harass) until it OWNS this many towns, THEN it attacks the enemy - so both sides build an empire before they clash (no early enemy-rush that ends matches premature). ANTI-STALL: if no neutral town remains reachable it engages the enemy anyway. Round-ender HQ-strike keeps its own higher gate (WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS). 0 = disable (engage from turn one).
@@ -1097,6 +1123,16 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_REMNANT_CAUTION")        then {WFBE_C_AICOM_REMNANT_CAUTION = 1};        //--- mauled remnant teams (<3 live) assault at AWARE/YELLOW instead of banzai COMBAT/RED.
 	//--- === cmdcon41 wave-2 (Ray-approved 2026-07-02): YELLOW march, journey-commit, retreat+town-refit lane, econ sink, MHQ revival ===
 	if (isNil "WFBE_C_AICOM_MARCH_YELLOW")            then {WFBE_C_AICOM_MARCH_YELLOW = 1};            //--- Ray F1: YELLOW on the march (return fire, keep rolling), RED at the objective. 0 = legacy RED everywhere.
+	//--- FIX AICOM-ENROUTE-ENGAGE (aicom-fixes, 2026-07-22, owner directive "target enemy units as well when it comes across
+	//--- them"): WFBE_C_AICOM_MARCH_YELLOW above puts road-march transit under YELLOW (return-fire only, no pursuit) so a
+	//--- column rolls past insurgent pot-shots instead of stopping to fight - but that also means a team can roll past a
+	//--- live enemy squad it "comes across" without ever engaging it. Governor tick in Common_RunCommanderTeam.sqf (the
+	//--- !_arrived branch, alongside the arrival-gate check) flips a YELLOW-transit team to RED for a short bounded window
+	//--- when a live hostile is within DIST of the team leader. FLAG-GATED, default OFF for soak (0 = never read past the
+	//--- gate check = fully inert transit, byte-identical to pre-fix).
+	if (isNil "WFBE_C_AICOM_ENROUTE_ENGAGE")      then {WFBE_C_AICOM_ENROUTE_ENGAGE      = 0};   //--- master switch. 0 = off (default, soak first); 1 = armed.
+	if (isNil "WFBE_C_AICOM_ENROUTE_ENGAGE_DIST") then {WFBE_C_AICOM_ENROUTE_ENGAGE_DIST = 350};  //--- m: live-hostile detection radius around the team leader while in YELLOW transit. Short by design - opportunistic, not a roving hunt.
+	if (isNil "WFBE_C_AICOM_ENROUTE_ENGAGE_DUR")  then {WFBE_C_AICOM_ENROUTE_ENGAGE_DUR  = 90};   //--- s the team holds RED past the LAST contact tick before reverting to the order's own YELLOW march mode (refreshed on each tick contact persists).
 	if (isNil "WFBE_C_AICOM_BREAKOFF_MIN")            then {WFBE_C_AICOM_BREAKOFF_MIN = 3};            //--- depot-hold break-off: below this many live units under fire -> withdraw to rally instead of grinding to zero.
 	if (isNil "WFBE_C_AICOM_FRONT_DWELL")             then {WFBE_C_AICOM_FRONT_DWELL = 480};           //--- spearhead hysteresis: the primary front target holds this long before re-scoring may flip it.
 	//--- fable/alife-arty-dwell (2026-07-08) DWELL-AGED ARTILLERY SOFTENING: the AICOM arty cooldown (AI_Commander_Strategy.sqf

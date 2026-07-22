@@ -346,7 +346,54 @@ if (count _fist > 0) then {
 //--- neutral, excluding the fist. A light mounted detachment raids it to pressure their rear / supply hub.
 _harassN  = missionNamespace getVariable ["WFBE_C_AICOM2_HARASS_TEAMS", 1];
 if (_expandFirst) then {_harassN = 0};   //--- expansion-first: no enemy-rear raid until the engage threshold
-_expandN  = missionNamespace getVariable ["WFBE_C_AICOM2_EXPAND_TEAMS", 3];
+//--- FIX AICOM-TOWN-EXPANSION-1 (aicom-fixes, 2026-07-22, owner directive "keep targeting towns"): WFBE_C_AICOM2_EXPAND_TEAMS
+//--- was a HARD FLAT CAP on teams peeling off to NEUTRAL towns (owner's own code comment above: "issue: 42/46 towns sat
+//--- neutral") - it never grew with the army, so a large roster still only ever expanded EXPAND_TEAMS teams at a time while
+//--- the rest piled onto the FIST_TOWNS fist. Scale the expand lane off the live team count instead; EXPAND_TEAMS becomes a
+//--- FLOOR (max), not a ceiling, so a small roster is never worse off than the old flat cap. EXPAND_FRAC=0 -> _expandN =
+//--- max(0, EXPAND_TEAMS) = the exact old flat-cap value BEFORE the dominant-press bonus below, which is itself now gated
+//--- on EXPAND_FRAC>0 (see FIX-2) - so EXPAND_FRAC=0 is a true, full instant rollback, dominant or not.
+_expandN  = (missionNamespace getVariable ["WFBE_C_AICOM2_EXPAND_FRAC", 0.4]) * (count _teams);
+_expandN  = _expandN max (missionNamespace getVariable ["WFBE_C_AICOM2_EXPAND_TEAMS", 3]);
+//--- FIX AICOM-TOWN-EXPANSION-2 (aicom-fixes, 2026-07-22): decouple "press while dominant" from "stop expanding".
+//--- WFBE_C_AICOM_PRESS_FLOOR_V2 (_pfDominant above) already pulls force toward the fist/harass targets via the
+//--- FIST/ENEMY score bonuses, but left the expansion lane untouched - so a dominant side stopped snowballing neutral
+//--- conquest at exactly the moment it was winning. Small additive bonus so the expand lane keeps annexing neutral
+//--- towns WHILE the fist/harass bonuses above keep pressing the front; deliberately small (does not overwhelm the
+//--- fist/harass split). Read only when _pfDominant (already gated at flag-off/non-dominant - see its own definition
+//--- above) AND WFBE_C_AICOM2_EXPAND_FRAC > 0 - the FRAC gate is REQUIRED (adversarial review fix, 2026-07-22): without
+//--- it, EXPAND_FRAC=0 while dominant still added this bonus on top of the flat EXPAND_TEAMS cap (e.g. 3+2=5), silently
+//--- breaking the "EXPAND_FRAC=0 = instant rollback" contract in exactly the scenario an operator reaches for that lever
+//--- mid-incident (PRESS_FLOOR_V2 on + side dominant). Gating both terms on the same FRAC read means EXPAND_FRAC=0 is
+//--- now a TRUE rollback to the flat cap regardless of dominance.
+if (_pfDominant && {(missionNamespace getVariable ["WFBE_C_AICOM2_EXPAND_FRAC", 0.4]) > 0}) then { _expandN = _expandN + (missionNamespace getVariable ["WFBE_C_AICOM2_PRESS_EXPAND_BONUS", 2]) };
+//--- FIX AICOM-TOWN-EXPANSION-3 (adversarial review fix, 2026-07-22, SHOULD-FIX + re-review fix): reserve a fist floor.
+//--- Teams below are consumed harass -> expand -> fist (whatever remains), so an uncapped scaled _expandN can starve
+//--- the fist below its own minimum footprint at exactly the moment the side is dominant and pressing hardest. The
+//--- fist can hold MULTIPLE towns (re-review note: WFBE_C_AICOM2_FIST_TOWNS - the file header docstring above claims
+//--- "default 1" but the LIVE registered default in Init_CommonConstants.sqf is 2, and PRESS_FIST_BONUS / field-order
+//--- SPLIT can widen it further), each wanting up to WFBE_C_AICOM2_FIST_PERTOWN teams - so the reservation is sized
+//--- off the ACTUAL active fist town count this tick (count _fist, resolved above; the count _fist==0 exitWith
+//--- earlier in this script guarantees count _fist >= 1 here), not a flat single-town FIST_PERTOWN.
+//---
+//--- GATED on WFBE_C_AICOM2_EXPAND_FRAC > 0 - same gate as FIX-2 and for the same reason: an unconditional clamp can
+//--- trim _expandN BELOW the flat WFBE_C_AICOM2_EXPAND_TEAMS floor FIX-1 promises. Adversarial RE-REVIEW (2026-07-22)
+//--- caught a regression in the first cut of this clamp: at DEFAULT settings (FRAC=0.4, NON-dominant), a small-to-mid
+//--- roster hit the fist-floor bound BEFORE the EXPAND_TEAMS floor - e.g. 6 teams, harass 1, 2 fist towns x 4/town = 8
+//--- reserved -> bound = (6-1-8) max 0 = 0, clamping _expandN to 0 (WORSE than the promised flat cap of 3, silently
+//--- reintroducing the "towns sit neutral" bug at SHIPPED DEFAULTS, no misconfig needed). The RE-FLOOR line below
+//--- re-applies the EXPAND_TEAMS guarantee AFTER the fist-floor min-clamp so neither floor unconditionally beats the
+//--- other: the fist-floor clamp runs first (protects the fist when there is genuine surplus), then the expand floor
+//--- is re-asserted up to whatever the roster can still afford after harass (bounded by availability, so a truly tiny
+//--- roster never gets assigned more expand teams than exist). At EXPAND_FRAC=0 this whole block is skipped outright
+//--- (both floors are no-ops there), so the legacy flat-cap value from FIX-1 passes through completely untouched.
+if ((missionNamespace getVariable ["WFBE_C_AICOM2_EXPAND_FRAC", 0.4]) > 0) then {
+	private ["_fistPerTown","_fistFloorBound"];
+	_fistPerTown = missionNamespace getVariable ["WFBE_C_AICOM2_FIST_PERTOWN", 4];
+	_fistFloorBound = ((count _teams) - _harassN - ((count _fist) * _fistPerTown)) max 0;
+	_expandN = _expandN min _fistFloorBound;
+	_expandN = _expandN max ((missionNamespace getVariable ["WFBE_C_AICOM2_EXPAND_TEAMS", 3]) min (((count _teams) - _harassN) max 0));
+};
 //--- CONCENTRATE-FIRST (Ray 2026-06-28): until we own WFBE_C_AICOM_CONCENTRATE_TOWNS towns, put FULL strength on the ONE fist
 //--- town - no expand/harass split (opening steamroller). After that the normal spread resumes. Layered under the engage gate.
 _concentrate = (_myTowns < (missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATE_TOWNS", 4]));
