@@ -14,7 +14,6 @@ if ((count _this) > 6) then {
 	_town_type = if ((count _this) > 5) then {_this select 5} else {""};
 };
 _townRange = 600;
-townModeSet = false;
 
 if(isNil "WFBE_Parameters_Ready")then{
 	WFBE_Parameters_Ready = false;

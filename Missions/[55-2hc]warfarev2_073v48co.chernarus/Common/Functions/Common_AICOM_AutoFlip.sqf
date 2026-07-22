@@ -45,6 +45,11 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_AUTOFLIP", 1]) == 0) exitWith {
 //--- Only the server and headless clients host AICOM-local vehicles.
 if (!isServer && {!isHeadLessClient}) exitWith {};
 
+private "_aicomInitDeadline"; _aicomInitDeadline = diag_tickTime + 20;
+waitUntil { uiSleep 0.25; ((!isNil "WFBE_CO_FNC_AICOMLog") && {!isNil "WFBE_CO_FNC_GetSideLogic"}) || (diag_tickTime > _aicomInitDeadline) };
+if (isNil "WFBE_CO_FNC_AICOMLog" || {isNil "WFBE_CO_FNC_GetSideLogic"}) exitWith { diag_log "[WFBE][AICOM-INIT-RACE] Common_AICOM_AutoFlip.sqf: required Init_Common functions still nil after 20s - auto-unflip manager not started."; };
+if (isNil "WFBE_CO_FNC_AICOMLog") exitWith { diag_log "[WFBE][AICOM-LOG-INIT-RACE] Common_AICOM_AutoFlip.sqf: WFBE_CO_FNC_AICOMLog still nil after 20s - Init_Common not finished; auto-unflip manager not started."; };
+
 private ["_machineTag"];
 _machineTag = if (isServer) then {"SERVER"} else {"HC"};
 ["INFORMATION", Format ["Common_AICOM_AutoFlip.sqf: AICOM auto-unflip manager started (%1).", _machineTag]] Call WFBE_CO_FNC_AICOMLog;
