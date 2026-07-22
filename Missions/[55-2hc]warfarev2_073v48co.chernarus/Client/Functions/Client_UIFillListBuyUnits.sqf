@@ -170,11 +170,6 @@ _wlSupply   = missionNamespace getVariable [Format ["WFBE_%1SUPPLYTRUCKS", sideJ
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.2, 0.2, 1.0]];
 		lnbSetText  [_listBox,[_i,1],_description + " [VBIED - Suicide Truck]"];
 	};
-	//--- GUER improvised mortar truck (V3S_Gue): cyan name + [MORTAR] tag. V3S_Gue is ALSO the GUER ambulance class, so this must run AFTER the ambulance block to win the row colour.
-	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_x == "V3S_Gue"}) then {
-		lnbSetColor [_listBox,[_i,1],[0.3, 0.8, 1.0, 1.0]];
-		lnbSetText  [_listBox,[_i,1],_description + " [MORTAR - Call-in Strike]"];
-	};
 	//--- B75 (guer-tech): SECOND VBIED — the kill-gated unarmed M113 (~2x speed). Same red weapon styling as the hilux, distinct tag.
 	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_x == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])} && {(side group player) == resistance}) then {
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.2, 0.2, 1.0]];
