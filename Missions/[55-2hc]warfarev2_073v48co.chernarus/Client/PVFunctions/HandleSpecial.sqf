@@ -89,6 +89,7 @@ switch (_request) do {
 		Private ["_wreck"];
 		_wreck = _args select 0;
 		if (!isNull _wreck && {local _wreck} && {!alive _wreck} && {(_wreck getVariable ["WFBE_CommanderAttackHeli", false])}) then {deleteVehicle _wreck};
+	};
 	//--- Owner-side half of the Common_TrashObject.sqf locality gate. Self-gated on the same flag as the
 	//--- sender, on the object being LOCAL here, on it being DEAD, and on the public reap stamp the server
 	//--- set before dispatching - so this channel can never delete a live object or anything TrashObject
