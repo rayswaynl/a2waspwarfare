@@ -104,77 +104,77 @@ while {!WFBE_GameOver} do {
 								_staleSeen = _staleSeen + 1;
 								_g setVariable ["wfbe_hcheal_stale_n", _staleSeen];
 								if (_staleSeen >= 2) then {
-								_confirmedN = _confirmedN + 1;
+									_confirmedN = _confirmedN + 1;
 
-								//--- (1) STALE TOPUP REFUND - the dead thread can neither consume nor TTL-refund it.
-								_req = _g getVariable "wfbe_aicom_topup_req";
-								if (!isNil "_req" && {(typeName _req) == "ARRAY"} && {(count _req) >= 4}) then {
-									_issued = _req select 3;
-									if ((typeName _issued) == "SCALAR" && {_ttl > 0} && {(time - _issued) > _ttl}) then {
-										if ((count _req) > 4) then {
-											_charge = _req select 4;
-											if ((typeName _charge) == "SCALAR" && {_charge > 0}) then {
-												[_side, _charge] Call ChangeAICommanderFunds;
-												diag_log ("HCHEAL|v1|topup-refund|team=" + (str _g) + "|refund=" + str _charge + "|t=" + str (round (time / 60)));
+									//--- (1) STALE TOPUP REFUND - the dead thread can neither consume nor TTL-refund it.
+									_req = _g getVariable "wfbe_aicom_topup_req";
+									if (!isNil "_req" && {(typeName _req) == "ARRAY"} && {(count _req) >= 4}) then {
+										_issued = _req select 3;
+										if ((typeName _issued) == "SCALAR" && {_ttl > 0} && {(time - _issued) > _ttl}) then {
+											if ((count _req) > 4) then {
+												_charge = _req select 4;
+												if ((typeName _charge) == "SCALAR" && {_charge > 0}) then {
+													[_side, _charge] Call ChangeAICommanderFunds;
+													diag_log ("HCHEAL|v1|topup-refund|team=" + (str _g) + "|refund=" + str _charge + "|t=" + str (round (time / 60)));
+												};
 											};
+											_g setVariable ["wfbe_aicom_topup_req", [], true];
 										};
-										_g setVariable ["wfbe_aicom_topup_req", [], true];
 									};
-								};
 
-								//--- (2)-(4) retire ladder.
-								_liveN = count ((units _g) Call WFBE_CO_FNC_GetLiveUnits);
-								if (_liveN == 0) then {
-									["aicom-team-ended", _sideID, _g] Call HandleSpecial;
-									_healed = _healed + 1;
-									diag_log ("HCHEAL|v1|release-wiped|team=" + (str _g) + "|t=" + str (round (time / 60)));
-								} else {
-									_ldr = leader _g;
-									if (!isNull _ldr && {local _ldr}) then {
-										//--- moved-from-journey-start (the STUCKSTAT distStart source): townorder slot 2.
-										_moved = -1;
-										_tord = _g getVariable "wfbe_aicom_townorder";
-										if (!isNil "_tord" && {(typeName _tord) == "ARRAY"} && {(count _tord) >= 3}) then {
-											_sp = _tord select 2;
-											if ((typeName _sp) == "ARRAY" && {(count _sp) >= 2}) then {_moved = _ldr distance _sp};
-										};
-										_never = (_moved >= 0) && {_moved < _homeR};
-										_pNear = false;
-										if (!_never) then {
-											{ if (isPlayer _x && {alive _x} && {(_x distance _ldr) < _safeD}) exitWith {_pNear = true} } forEach playableUnits;
-										};
-										_combat = (behaviour _ldr == "COMBAT");
-										if (_never || {(!_pNear) && {!_combat}}) then {
-											_delN = 0;
-											{ if (!isNull _x && {local _x}) then {["hcheal-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; _delN = _delN + 1} } forEach (units _g);
-											_hulls = [_g, false] Call GetTeamVehicles;
-											{ _h = _x; if (!isNull _h && {local _h} && {({isPlayer _x} count (crew _h)) == 0}) then {["hcheal-hull", _h, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _h; _delN = _delN + 1} } forEach _hulls;
-											["aicom-team-ended", _sideID, _g] Call HandleSpecial;
-											_healed = _healed + 1;
-											_reason = "stale-thread"; if (_never) then {_reason = "never-moved"};
-											diag_log ("HCHEAL|v1|recycle|team=" + (str _g) + "|reason=" + _reason + "|units=" + str _delN + "|moved=" + str (round _moved) + "|t=" + str (round (time / 60)));
+									//--- (2)-(4) retire ladder.
+									_liveN = count ((units _g) Call WFBE_CO_FNC_GetLiveUnits);
+									if (_liveN == 0) then {
+										["aicom-team-ended", _sideID, _g] Call HandleSpecial;
+										_healed = _healed + 1;
+										diag_log ("HCHEAL|v1|release-wiped|team=" + (str _g) + "|t=" + str (round (time / 60)));
+									} else {
+										_ldr = leader _g;
+										if (!isNull _ldr && {local _ldr}) then {
+											//--- moved-from-journey-start (the STUCKSTAT distStart source): townorder slot 2.
+											_moved = -1;
+											_tord = _g getVariable "wfbe_aicom_townorder";
+											if (!isNil "_tord" && {(typeName _tord) == "ARRAY"} && {(count _tord) >= 3}) then {
+												_sp = _tord select 2;
+												if ((typeName _sp) == "ARRAY" && {(count _sp) >= 2}) then {_moved = _ldr distance _sp};
+											};
+											_never = (_moved >= 0) && {_moved < _homeR};
+											_pNear = false;
+											if (!_never) then {
+												{ if (isPlayer _x && {alive _x} && {(_x distance _ldr) < _safeD}) exitWith {_pNear = true} } forEach playableUnits;
+											};
+											_combat = (behaviour _ldr == "COMBAT");
+											if (_never || {(!_pNear) && {!_combat}}) then {
+												_delN = 0;
+												{ if (!isNull _x && {local _x}) then {["hcheal-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; _delN = _delN + 1} } forEach (units _g);
+												_hulls = [_g, false] Call GetTeamVehicles;
+												{ _h = _x; if (!isNull _h && {local _h} && {({isPlayer _x} count (crew _h)) == 0}) then {["hcheal-hull", _h, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _h; _delN = _delN + 1} } forEach _hulls;
+												["aicom-team-ended", _sideID, _g] Call HandleSpecial;
+												_healed = _healed + 1;
+												_reason = "stale-thread"; if (_never) then {_reason = "never-moved"};
+												diag_log ("HCHEAL|v1|recycle|team=" + (str _g) + "|reason=" + _reason + "|units=" + str _delN + "|moved=" + str (round _moved) + "|t=" + str (round (time / 60)));
+											} else {
+												_deferred = _deferred + 1;
+												_dlast = _g getVariable "wfbe_hcheal_defer_t";
+												if (isNil "_dlast") then {_dlast = -1e9};
+												if ((time - _dlast) >= 600) then {
+													_g setVariable ["wfbe_hcheal_defer_t", time];
+													_why = "combat"; if (_pNear) then {_why = "player-near"};
+													diag_log ("HCHEAL|v1|defer|team=" + (str _g) + "|why=" + _why + "|t=" + str (round (time / 60)));
+												};
+											};
 										} else {
+											//--- Units not server-local: the HC still owns them (thread dead, machine alive).
+											//--- A2 deleteVehicle is locality-bound - report only, never remote-delete.
 											_deferred = _deferred + 1;
-											_dlast = _g getVariable "wfbe_hcheal_defer_t";
+											_dlast = _g getVariable "wfbe_hcheal_remote_t";
 											if (isNil "_dlast") then {_dlast = -1e9};
 											if ((time - _dlast) >= 600) then {
-												_g setVariable ["wfbe_hcheal_defer_t", time];
-												_why = "combat"; if (_pNear) then {_why = "player-near"};
-												diag_log ("HCHEAL|v1|defer|team=" + (str _g) + "|why=" + _why + "|t=" + str (round (time / 60)));
+												_g setVariable ["wfbe_hcheal_remote_t", time];
+												diag_log ("HCHEAL|v1|skip-remote|team=" + (str _g) + "|t=" + str (round (time / 60)));
 											};
 										};
-									} else {
-										//--- Units not server-local: the HC still owns them (thread dead, machine alive).
-										//--- A2 deleteVehicle is locality-bound - report only, never remote-delete.
-										_deferred = _deferred + 1;
-										_dlast = _g getVariable "wfbe_hcheal_remote_t";
-										if (isNil "_dlast") then {_dlast = -1e9};
-										if ((time - _dlast) >= 600) then {
-											_g setVariable ["wfbe_hcheal_remote_t", time];
-											diag_log ("HCHEAL|v1|skip-remote|team=" + (str _g) + "|t=" + str (round (time / 60)));
-										};
 									};
-								};
 								};
 							} else {
 								//--- Fresh beat: clear any partial stale confirmation (only write when set).
