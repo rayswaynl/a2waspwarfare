@@ -217,14 +217,27 @@ while {!WFBE_GameOver} do {
 				if (_doScan) then {
 				_dynRange = if (_town getVariable "wfbe_active" || _town getVariable "wfbe_active_air") then {_range_detect_active} else {_range_detect};
 				_scanStart = diag_tickTime;
-								//--- A2 air-tier (lane 800): scan includes all Air; split into ground vs high-air lists.
+								//--- A2 air-tier (lane 800): scan includes all Air; split into ground vs air lists.
 				private ["_detectedAll","_detectedGround","_detectedAir"];
 				_detectedAll = (_town nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"],_dynRange]);
-				_detectedGround = _detectedAll unitsBelowHeight 20;
+				//--- Ground contact excludes every Air vehicle at every altitude: Amendment A2
+				//--- routes crewed aircraft to the AA tier; ground vehicles and dismounted troops
+				//--- retain the legacy full-garrison activation behaviour.
+				_detectedGround = [];
+				{
+					if (!(_x isKindOf "Air")) then {[_detectedGround, _x] call WFBE_CO_FNC_ArrayPush};
+				} forEach (_detectedAll unitsBelowHeight 20);
 				_detectedAir = [];
 				if ((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0) then {
+					//--- Hostile-only split (fix 2026-07-22): design doc A2 covers ENEMY air vehicles;
+					//--- unfiltered, every own/friendly-side overflight would raise the AA picket once
+					//--- the (previously dead) air tier fires. Mirror the ground hostile-side rule incl.
+					//--- the GUER condense: resistance air never wakes GUER/UNKNOWN towns.
+					private ["_airHostileSides"];
+					_airHostileSides = [west, east, resistance] - [_side];
+					if (_sideID == WFBE_C_GUER_ID || _sideID == WFBE_C_UNKNOWN_ID) then {_airHostileSides = _airHostileSides - [resistance]};
 					{
-						if ((_x isKindOf "Air") && {((getPos _x) select 2) > 20} && {({alive _x} count crew _x) > 0}) then {
+						if ((_x isKindOf "Air") && {(side _x) in _airHostileSides} && {({alive _x} count crew _x) > 0}) then {
 							[_detectedAir, _x] call WFBE_CO_FNC_ArrayPush;
 						};
 					} forEach _detectedAll;
@@ -266,6 +279,48 @@ while {!WFBE_GameOver} do {
 						["town_activation_scan", diag_tickTime - _scanStart, Format["town:%1;detected:%2;defendersIgnored:%3;enemies:%4", _town getVariable "name", count _detected, _defendersIgnored, _enemies], "SERVER"] Call PerformanceAudit_Record;
 					};
 				};
+				//--- A2 air-contact check (lane 800 AICOMV2_LANE_GUER_DIRECTOR) - hoisted out of the
+				//--- episode block below (fix 2026-07-22, owner review): it sat inside the _enemies>0
+				//--- gate with an _enemies==0 arm, unsatisfiable by construction, so the air tier of
+				//--- town activation never fired. If only air contacts exist (no ground enemies),
+				//--- gate with the dice-roll ceiling: air below AIR_CEILING_MIN_M always counts; above
+				//--- AIR_CEILING_MAX_M never; in between, roll per sweep to accumulate activation risk
+				//--- over loiter time. On contact, fold the hostile air count into _enemies so the
+				//--- activation gate below opens; _enemies_ground (seeded in the episode block from
+				//--- _currentEnemies, still 0 here) routes to the air-only AA-tier branch. A town whose
+				//--- air tier is already active treats remaining air contact as presence (refreshes
+				//--- wfbe_inactivity, no re-roll), so the picket lives while the aircraft loiters and
+				//--- dematerializes through the normal inactivity path once it leaves (design doc A2 T2).
+				if ((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0 && {_enemies == 0} && {count _detectedAir > 0}) then {
+					if (_town getVariable "wfbe_active_air") then {
+						_enemies = count _detectedAir;
+					} else {
+						private ["_airMinM","_airMaxM","_airAlt","_airRoll","_airContact"];
+						_airMinM = missionNamespace getVariable ["AICOMV2_GDIR_AIR_CEILING_MIN_M", 100];
+						_airMaxM = missionNamespace getVariable ["AICOMV2_GDIR_AIR_CEILING_MAX_M", 600];
+						//--- Take the lowest altitude of all detected air vehicles.
+						_airAlt = 99999;
+						{
+							private ["_alt"];
+							_alt = (getPos _x) select 2;
+							if (_alt < _airAlt) then {_airAlt = _alt};
+						} forEach _detectedAir;
+						_airContact = false;
+						if (_airAlt <= _airMinM) then {
+							_airContact = true;
+						} else {
+							if (_airAlt < _airMaxM) then {
+								//--- In the band: roll per sweep. Low alt = high probability.
+								_airRoll = random 1;
+								if (_airRoll < ((_airMaxM - _airAlt) / (_airMaxM - _airMinM))) then {_airContact = true};
+							};
+						};
+						if (_airContact) then {
+							//--- Air contact only: fold the count in; the episode block routes it to AA tier.
+							_enemies = count _detectedAir;
+						};
+					};
+				};
 				} else {_currentEnemies = 0; _enemies = 0;};
 				if(_enemies > 0)then{
 					///
@@ -282,43 +337,21 @@ while {!WFBE_GameOver} do {
 					//--- Episode latch: only spawn if this activation episode hasn't already
 					//--- spawned units. wfbe_episode_spawned is cleared only when deactivation
 					//--- cleanup fully completes, preventing double-spawn on the same episode.
-					if(!(_town getVariable "wfbe_active") && !(_town getVariable ["wfbe_episode_spawned", false])) then {
+					//--- Escalation arm (fix 2026-07-22, design doc A2): ground contact while ONLY the
+					//--- air tier is active supersedes the AA picket - re-enter the episode so the full
+					//--- garrison spawns; Server_GetTownGroups*.sqf strip AA classes while wfbe_active_air
+					//--- is set, so the picket is absorbed rather than double-spawned.
+					if(!(_town getVariable "wfbe_active") && {(!(_town getVariable ["wfbe_episode_spawned", false])) || {(_town getVariable "wfbe_active_air") && {_currentEnemies > 0}}}) then {
 						_below = 1;
-						_enemies_ground = 1;
-						//--- A2 air-contact check (lane 800 AICOMV2_LANE_GUER_DIRECTOR).
-						//--- If only high-air contacts exist (no ground), gate with dice-roll ceiling.
-						//--- Air below AIR_CEILING_MIN_M always activates; above AIR_CEILING_MAX_M never;
-						//--- in between, roll per sweep to accumulate activation risk over loiter time.
-						if ((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0 && {_enemies == 0} && {count _detectedAir > 0}) then {
-							private ["_airMinM","_airMaxM","_airAlt","_airRoll","_airContact"];
-							_airMinM = missionNamespace getVariable ["AICOMV2_GDIR_AIR_CEILING_MIN_M", 100];
-							_airMaxM = missionNamespace getVariable ["AICOMV2_GDIR_AIR_CEILING_MAX_M", 600];
-							//--- Take the lowest altitude of all detected high-air vehicles.
-							_airAlt = 99999;
-							{
-								private ["_alt"];
-								_alt = (getPos _x) select 2;
-								if (_alt < _airAlt) then {_airAlt = _alt};
-							} forEach _detectedAir;
-							_airContact = false;
-							if (_airAlt <= _airMinM) then {
-								_airContact = true;
-							} else {
-								if (_airAlt < _airMaxM) then {
-									//--- In the band: roll per sweep. Low alt = high probability.
-									_airRoll = random 1;
-									if (_airRoll < ((_airMaxM - _airAlt) / (_airMaxM - _airMinM))) then {_airContact = true};
-								};
-							};
-							if (_airContact) then {
-								//--- Air contact only: clear ground flag to route to AA-tier branch.
-								_enemies_ground = 0;
-								_enemies = count _detectedAir;
-							};
-						};
+						//--- Ground component of the activation decision (fix 2026-07-22): seed from the
+						//--- pure ground count instead of constant 1. Ground contact opened the gate -> this
+						//--- is > 0 exactly like the old seed; air-only contact (hoisted check above folded
+						//--- hostile air into _enemies while _currentEnemies stayed 0) -> 0, which routes to
+						//--- the AA-tier branch below (previously dead: the check lived here inside the
+						//--- _enemies>0 gate with an _enemies==0 arm, unsatisfiable by construction).
+						_enemies_ground = _currentEnemies;
 
 						_activationDeferred = false;
-
 						//--- ACTIVE-TOWN BUDGET: skip activation if cap is reached.
 						//--- B4: use the incremental _activeTownCount (seeded from the top-of-sweep
 						//--- full count at L52-56 and +1 per town activated this sweep below) instead
@@ -392,6 +425,9 @@ while {!WFBE_GameOver} do {
 							if(!(_town getVariable "wfbe_active_air")) then {
 								_town setVariable ["wfbe_active_air", true];
 								_town setVariable ["wfbe_episode_spawned", true];
+								//--- Always-on liveness line (owner review 2026-07-22): the AIR-TIER token in RPT
+								//--- proves the resurrected air tier actually fires on live rounds.
+								["INFORMATION", Format ["server_town_ai.sqf: Town [%1] AIR-TIER ACTIVATED for [%2] (airContacts=%3).", _town getVariable "name", _side, _enemies]] Call WFBE_CO_FNC_AICOMLog;
 
 								//--- Commander Town Ledger (fable/ctl-impl-v1) unit-count fix v2: air-only
 								//--- waves stay OUT of ledger field [3] (matches the {!_aa_get} exclusion the
@@ -424,7 +460,9 @@ while {!WFBE_GameOver} do {
 						//--- let the group budget overshoot within a single sweep before the next sweep's recount caught up.
 						if (_side == resistance) then { _guerGroupCount = _guerGroupCount + (count _groups) };
 
-						if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_side]) then {[_side,"HostilesDetectedNear",_town] Spawn SideMessage};
+						if (_enemies_ground > 0) then {
+							if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_side]) then {[_side,"HostilesDetectedNear",_town] Spawn SideMessage};
+						};
 
 
 
@@ -588,11 +626,12 @@ while {!WFBE_GameOver} do {
 							};
 						};
 
-						//--- Man the defenses.
-						[_town, _side, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
-
-						//--- Cosmetic: faction smoke once per activation episode (guarded by the wfbe_episode_spawned latch above). Server-only, gated + capped + cooldown.
-						[getPos _town, _side] Call WFBE_CO_FNC_SpawnFactionSmoke;
+						//--- A2 air-only activation creates an AA picket but does not man statics or
+						//--- emit full-garrison cosmetics; those remain ground-contact effects only.
+						if (_enemies_ground > 0) then {
+							[_town, _side, "spawn"] Call WFBE_SE_FNC_OperateTownDefensesUnits;
+							[getPos _town, _side] Call WFBE_CO_FNC_SpawnFactionSmoke;
+						};
 
 						//// end of creating
 						};
