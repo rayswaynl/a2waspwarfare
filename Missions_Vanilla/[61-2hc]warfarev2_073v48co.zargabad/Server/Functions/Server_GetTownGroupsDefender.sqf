@@ -240,7 +240,7 @@ if (!_aa_get && {(random 1) < 0.08}) then {
 //--- fragmentation drives the FPS cliff), IDENTICAL defenders a player sees & fights. Vehicle rosters
 //--- (kind 1) are NEVER merged (preserves the CreateTeam addVehicle/crew path). Cap merged groups at 10
 //--- classnames. WFBE_C_TOWNS_MERGE_TARGET <= 0 disables (instant rollback).
-//--- GUER GROUP-CONDENSE (task #12): defender-specific target (9) > WEST/EAST (5). Fallback to global if unset/<=0.
+//--- GUER GROUP-CONDENSE (task #12): defender-specific target (10) > WEST/EAST (9). Fallback to global if unset/<=0.
 _mergeTarget = missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_TARGET_DEFENDER", 0];
 if (_mergeTarget <= 0) then {_mergeTarget = missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_TARGET", 5]};
 private "_mergeCap"; _mergeCap = missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_CAP_DEFENDER", 10]; //--- GUER condense A/B: defender-specific merged-group size cap (12); falls back to the historical 10.

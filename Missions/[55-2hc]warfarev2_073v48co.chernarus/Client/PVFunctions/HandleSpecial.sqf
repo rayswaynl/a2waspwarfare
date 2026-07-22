@@ -78,6 +78,29 @@ switch (_request) do {
 		_wreck = _args select 0;
 		if (!isNull _wreck && {local _wreck} && {!alive _wreck} && {(_wreck getVariable ["WFBE_CommanderArtillery", false])}) then {deleteVehicle _wreck};
 	};
+	//--- fix/heli-husk-reaper (mirrors cleanup-commander-arty-wreck directly above): delete a dead
+	//--- commander-attack-helicopter hull that is LOCAL TO THIS machine. server_groupsGC.sqf's heli
+	//--- reaper cannot delete a non-local wreck directly (HC-manned hulls are HC-local; a server-side
+	//--- deleteVehicle would silently no-op), so it routes here the same way. SAME forgeable-PVF
+	//--- residual as the arty case above (no sender auth on this channel) - narrowed the same way: the
+	//--- receiver only ever deletes an object that is dead, local, and carries the WFBE_CommanderAttackHeli
+	//--- tag, so the worst a forged dispatch can do is an early/unwanted despawn of some other wreck.
+	case "cleanup-commander-heli-wreck": {
+		Private ["_wreck"];
+		_wreck = _args select 0;
+		if (!isNull _wreck && {local _wreck} && {!alive _wreck} && {(_wreck getVariable ["WFBE_CommanderAttackHeli", false])}) then {deleteVehicle _wreck};
+	};
+	//--- Owner-side half of the Common_TrashObject.sqf locality gate. Self-gated on the same flag as the
+	//--- sender, on the object being LOCAL here, on it being DEAD, and on the public reap stamp the server
+	//--- set before dispatching - so this channel can never delete a live object or anything TrashObject
+	//--- would not have deleted itself. Fails closed: no flag / no stamp / not local / alive -> no-op.
+	case "cleanup-trash-object": {
+		Private ["_trashObj"];
+		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
+		if (count _args < 1) exitWith {};
+		_trashObj = _args select 0;
+		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])}) then {deleteVehicle _trashObj};
+	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};

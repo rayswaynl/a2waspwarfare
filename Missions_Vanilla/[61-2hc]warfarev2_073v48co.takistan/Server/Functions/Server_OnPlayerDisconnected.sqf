@@ -178,6 +178,29 @@ if !(isNull(assignedVehicle _old_unit)) then {
 //--- Eject the unit if it's in the HQ.
 _hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
 if (vehicle _old_unit == _hq) then {_old_unit action ["EJECT", _hq]};
+
+//--- JIP-replay hardening, Finding #1 (stale WFBE_JIP_BODY_<uid> on rapid reconnect): RequestJoin.sqf
+//--- stores this binding on join but never clears it on disconnect, and this handler's own 0.5s sleep at
+//--- the top of the file (before commonInitComplete/serverInitFull) leaves a ~0.5-1s window where a fast
+//--- same-UID reconnect can resolve into (and re-stamp) this about-to-be-deleted body via
+//--- Server_OnPlayerConnected.sqf's PRIMARY resolver tier, only to have it deleted out from under the
+//--- reconnected player a moment later. IDENTITY-GATED: only clear the binding if it still points at the
+//--- EXACT unit we are tearing down (_old_unit) - if a reconnect already landed and rebound it to a NEW
+//--- body, the stored reference no longer equals _old_unit and this leaves that newer binding untouched.
+//--- Pure addition; does not touch RequestJoin.sqf or the connect-side resolver.
+//--- REACH NOTE (review-1253): _old_unit is the CURRENT wfbe_teamleader, which is re-stamped on every
+//--- respawn (Server_HandleSpecial.sqf:12), but WFBE_JIP_BODY_<uid> is stamped ONLY once, at the initial
+//--- RequestJoin. So for any player who has respawned at least once (the normal case in a live match),
+//--- stored != _old_unit here and this clear is a no-op on their disconnect - not a regression (that
+//--- stale first-join body was already excluded by the connect resolver's alive-check), just a narrower
+//--- practical reach than the fix name implies: it only protects "disconnect while still on the
+//--- first-ever join body, before any respawn." Closing the general reconnect race for a
+//--- since-respawned player needs the generation/token variant, which requires stamping RequestJoin.sqf -
+//--- owner-locked, out of scope here.
+if ((missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull]) == _old_unit) then {
+	missionNamespace setVariable [Format ["WFBE_JIP_BODY_%1", _uid], nil];
+};
+
 deleteVehicle _old_unit;
 
 //--- If we choose not to keep the current units during this session, then we simply remove them.

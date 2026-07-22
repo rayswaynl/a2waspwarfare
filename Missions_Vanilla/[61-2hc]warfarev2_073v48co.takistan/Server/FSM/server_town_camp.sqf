@@ -62,6 +62,11 @@ while {!WFBE_GameOver} do {
 			_objects = _camp nearEntities["Man", _camp_range];
 			_in_range = _objects;
 			{
+				//--- OWNER RULING (corpse filter): a DEAD Man must not vote in the camp tally below. Identical
+				//--- defect class to the server_town.sqf capture-scan corpse filter (see its _capObjects pass) -
+				//--- countSide counts bodies, so a pile of corpses could hold or contest a camp forever. Folded
+				//--- into the existing single filter pass (no extra loop, no extra nearEntities).
+				if (!alive _x) then {_objects = _objects - [_x]};
 				if (isPlayer _x) then {if (_x distance _camp > _camp_range_players) then {_objects = _objects - [_x]}};
 			} forEach _in_range;
 

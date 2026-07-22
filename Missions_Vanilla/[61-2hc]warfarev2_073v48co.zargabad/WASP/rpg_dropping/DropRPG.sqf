@@ -64,7 +64,13 @@ _this addeventhandler ["Fired", {
 
 	if( _ammo == "Mine" || _ammo == "MineE") then{
 		_mines_arr = [_bomb, time];
-		mines set [count mines, _mines_arr];
+		//--- nil-guard: the `mines` global is defined ONLY in Server\FSM\cleaners\mines_cleaner.sqf
+		//--- (ExecVM'd only from Init_Server.sqf, server-only). This Fired EH runs on the placing
+		//--- player's CLIENT (DropRPG is player-call'd from Init_Client.sqf + Client_PreRespawnHandler.sqf),
+		//--- so on a dedicated server `mines` is undefined here -> "Undefined variable: mines" on every
+		//--- player Mine/MineE placement. Server mine tracking/cleanup is unaffected (Construction_
+		//--- StationaryDefense.sqf writes `mines` server-side). Guard so the client no-ops instead of erroring.
+		if (!isNil "mines") then { mines set [count mines, _mines_arr]; };
 	};
 
 

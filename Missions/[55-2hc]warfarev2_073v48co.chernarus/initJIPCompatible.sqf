@@ -230,28 +230,15 @@ if (WF_Debug) then { //--- Debug.
 //--- real deploy (debug ON = 999999 funds/supply + all tiers unlocked = a misleading soak/economy).
 if (isServer) then {diag_log ("[WFBE (INIT)] WF_DEBUG_STATE WF_Debug=" + str WF_Debug + " upgradesClearance=" + str (missionNamespace getVariable ["WFBE_C_GAMEPLAY_UPGRADES_CLEARANCE", -1]));};
 
-//--- Disable headless client if it is not supported.
-if (ARMA_VERSION >= 162 && ARMA_RELEASENUMBER >= 101334 || ARMA_VERSION > 162) then {
-	["INITIALIZATION", "initJIPCompatible.sqf: Headless client is supported."] Call WFBE_CO_FNC_LogContent
-} else {
-	if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
-		missionNamespace setVariable ["WFBE_C_AI_DELEGATION", 0];
-		["INITIALIZATION", "initJIPCompatible.sqf: Headless client is not supported."] Call WFBE_CO_FNC_LogContent
-	};
-};
+//--- deadcode-sweep 2026-07-21 (DC-10): removed the pre-1.62 headless-client fallback branch.
+//--- ARMA_VERSION/ARMA_RELEASENUMBER are resolved by Init_Version.sqf before this point; on the
+//--- supported OA 1.64 target the condition is always true, so the WFBE_C_AI_DELEGATION downgrade
+//--- fallback was unreachable. Kept the "supported" log unconditional (it always ran on real deploys).
+["INITIALIZATION", "initJIPCompatible.sqf: Headless client is supported."] Call WFBE_CO_FNC_LogContent;
 
-// Marty: Receive authoritative day/night dates without calling setDate on every broadcast.
-if (!isDedicated && ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1)) then {
-	"WFBE_DAYNIGHT_DATE" addPublicVariableEventHandler {
-		Private ["_server_date"];
-
-		_server_date = _this select 1;
-		if ((typeName _server_date) == "ARRAY" && (count _server_date >= 5)) then {
-			WFBE_DAYNIGHT_SERVER_DATE = _server_date;
-			WFBE_DAYNIGHT_PENDING_SYNC = true;
-		};
-	};
-};
+//--- deadcode-sweep 2026-07-21 (DC-04): removed the accelerated day/night PV date receiver
+//--- (WFBE_DAYNIGHT_DATE addPublicVariableEventHandler). WFBE_DAYNIGHT_ENABLED is hard-set 0
+//--- (Init_CommonConstants.sqf), so this branch never ran.
 
 //--- B74.2.5 (Ray 2026-06-24, P0): PRIMITIVE ROSTER RECEIVER. Installed in Part I (BEFORE the B56 wfbe_teams
 //--- wait and BEFORE Init_Client) so the server's on-connect publicVariableClient roster push is NEVER dropped
@@ -301,15 +288,9 @@ if (!isDedicated && !isHeadLessClient) then {
 [] Spawn {
 	waitUntil {time > 0}; //--- Await for the mission to start / JIP.
 
-	// Marty: Enabled cycle uses the server date for JIP; disabled cycle preserves the old mission-time skipTime sync.
-	if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
-		if (!isNil "WFBE_DAYNIGHT_DATE") then {
-			setDate WFBE_DAYNIGHT_DATE;
-		} else {
-			// Marty: The accelerated cycle phase boundaries are calibrated for Chernarus on 28 June.
-			setDate [(date select 0),(missionNamespace getVariable "WFBE_DAYNIGHT_FORCED_MONTH"),(missionNamespace getVariable "WFBE_DAYNIGHT_FORCED_DAY"),(missionNamespace getVariable "WFBE_C_ENVIRONMENT_STARTING_HOUR"),(date select 4)]; //--- Apply the date and time.
-		};
-	} else {
+	//--- deadcode-sweep 2026-07-21 (DC-04): removed the accelerated-cycle "enabled" date branch
+	//--- (setDate WFBE_DAYNIGHT_DATE / forced-month-day path). WFBE_DAYNIGHT_ENABLED is hard-set 0,
+	//--- so this branch never ran; the permanent-daylight path below now runs unconditionally.
 		setDate [(date select 0),(missionNamespace getVariable "WFBE_C_ENVIRONMENT_STARTING_MONTH"),(date select 2),(missionNamespace getVariable "WFBE_C_ENVIRONMENT_STARTING_HOUR"),(date select 4)]; //--- Apply the date and time.
 
 		if (local player) then {skipTime (time / 3600)}; //--- If we're dealing with a client, he may have JIP half way through the game. Sync him via skipTime with the mission time.
@@ -336,14 +317,12 @@ if (!isDedicated && !isHeadLessClient) then {
 				};
 			};
 		};
-	};
 	sleep 2;
 };
 
-// Marty: Remote clients animate day/night locally with small skipTime steps and only use server dates for drift correction.
-if (!isDedicated && !isServer && !isHeadLessClient && ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1)) then {
-	[] execVM "Client\Functions\Client_DayNightCycle.sqf";
-};
+//--- deadcode-sweep 2026-07-21 (DC-04): removed the client day/night cycle launcher (execVM
+//--- Client_DayNightCycle.sqf). WFBE_DAYNIGHT_ENABLED is hard-set 0, so this branch never ran;
+//--- Client_DayNightCycle.sqf itself is a follow-up orphan candidate (out of this sweep's scope).
 
 WFBE_Parameters_Ready = true; //--- All parameters are set and ready.
 

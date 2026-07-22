@@ -812,4 +812,15 @@
 		default = 60;
 	};
 
+	// fix(supplyfix): staged rollout control for the isServer direct-call repair in
+	// Common\Functions\Common_ChangeSideSupply.sqf (see Common\Init\Init_CommonConstants.sqf for the
+	// full 0/1/2 semantics). Lobby-settable per session so one terrain can run a SHADOW round, then
+	// APPLY, without a redeploy and without breaking CH/TK/ZG mirror parity on the constants file.
+	class WFBE_C_SUPPLY_SERVER_FIX {
+		title = "Server-side supply-change fix (rollout stage)";
+		values[] = {0,1,2};
+		texts[] = {"Off (default)","Shadow (log only)","Apply"};
+		default = 0;
+	};
+
 };

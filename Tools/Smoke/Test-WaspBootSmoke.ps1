@@ -17,6 +17,9 @@
                       no DELEGATION-DEAD tripwire  [catches the "founded 0 teams" regression]
     HCSEAT          - HCSIDE|v1|reseat sideNow=CIV for >= ExpectHcCount HCs, and NO HC seated
                       into a player side (the "lobby seat magnet")  [HC-slotting check]
+    HCPRESEAT       - HCSIDE|v1|preseat engineSide=CIV, i.e. the ENGINE seated the HCs into the
+                      dedicated forceHeadlessClient slots instead of grabbing a faction slot.
+                      Advisory: reports WARN (never fails the verdict) unless RequireHcPreseat.
     WASPSTAT_SEQ    - WASPSTAT|v1|<seq> sequence is gap-free (no dropped stat events)
     ERRORS          - error lines in the window under MaxErrors
 
@@ -55,6 +58,7 @@ $DefaultConfig = [ordered]@{
     RequireHcSeat    = $true
     ExpectHcCount    = 2
     HcSeatSide       = 'CIV'
+    RequireHcPreseat = $false  # HCPRESEAT advisory (WARN) until a boot proves engineSide=CIV; then flip to true
     RequireWaspSeq   = $true
     MaxErrors        = 40
 }
@@ -128,6 +132,30 @@ function Invoke-BootSmokeChecks {
             }
             else { Add-Res 'HCSEAT' 'PASS' "$($good.Count) HC(s) seated to $($Cfg.HcSeatSide)" }
         }
+    }
+
+    # HCPRESEAT: did the ENGINE put each HC straight into a dedicated CIV forceHeadlessClient
+    # slot, or did it grab a faction slot first? HCSIDE|v1|preseat|..|engineSide= is emitted
+    # BEFORE the script reseat runs, so it is the only direct evidence of whether the
+    # mission.sqm forceHeadlessClient=1 slots (PR #1162) actually take effect on this build.
+    # Card wasp-zg-civ-hc-slots-20260719 / owner live report: HC visible in a GUER lobby slot.
+    # Advisory by default: HCSEAT above already gates the outcome that matters (side ends CIV),
+    # and the script reseat repairs a faction preseat either way - so a WARN here never trips
+    # the verdict. Set RequireHcPreseat=true once a boot has shown engineSide=CIV, to lock it in.
+    $pre = @($L | Where-Object { $_ -match 'HCSIDE\|v1\|preseat\|.*engineSide=' })
+    if ($pre.Count -lt 1) { Add-Res 'HCPRESEAT' 'SKIP' 'no HCSIDE preseat lines in window' }
+    else {
+        $civPre = @($pre | Where-Object { $_ -match "engineSide=$($Cfg.HcSeatSide)\b" })
+        $factionPre = @($pre | Where-Object { $_ -notmatch "engineSide=$($Cfg.HcSeatSide)\b" })
+        if ($factionPre.Count -gt 0) {
+            $sides = (($factionPre | ForEach-Object { if ($_ -match 'engineSide=(\w+)') { $Matches[1] } }) | Sort-Object -Unique) -join ','
+            $status = if ($Cfg.RequireHcPreseat) { 'FAIL' } else { 'WARN' }
+            Add-Res 'HCPRESEAT' $status "engine seated $($factionPre.Count) HC(s) into $sides, not $($Cfg.HcSeatSide) - forceHeadlessClient=1 did NOT take effect (HC occupies a faction lobby slot until the reseat)"
+        }
+        elseif ($civPre.Count -lt $Cfg.ExpectHcCount) {
+            Add-Res 'HCPRESEAT' 'SKIP' "only $($civPre.Count)/$($Cfg.ExpectHcCount) HC(s) reported a preseat line"
+        }
+        else { Add-Res 'HCPRESEAT' 'PASS' "engine seated $($civPre.Count) HC(s) directly into $($Cfg.HcSeatSide) - forceHeadlessClient=1 honoured" }
     }
 
     # WASPSTAT sequence gap-free
@@ -212,6 +240,27 @@ function Invoke-SelfTest {
     # 3) DELEGATION-DEAD tripwire
     $rr = Invoke-BootSmokeChecks -Lines (@($pass) + 'x DELEGATION-DEAD x') -Cfg $cfg
     Expect "DELEGATION-DEAD tripwire -> FAIL" ((($rr | Where-Object { $_.check -eq 'DELEGATION' }).status) -eq 'FAIL')
+
+    # 4) HCPRESEAT: the PASS fixture predates the dedicated CIV slots and records
+    #    engineSide=WEST, so it must WARN - and a WARN must NOT fail the verdict.
+    $pw = ($r | Where-Object { $_.check -eq 'HCPRESEAT' })
+    Expect "PASS fixture -> HCPRESEAT WARN (engineSide=WEST)" ($pw.status -eq 'WARN')
+    Expect "HCPRESEAT WARN does not fail the verdict" (@($r | Where-Object { $_.status -eq 'FAIL' }).Count -eq 0)
+
+    #    engineSide=CIV is the evidence the card asks for: forceHeadlessClient=1 took effect.
+    $civLines = $pass -replace 'preseat\|name=(HC-AI-Control-\d)\|engineSide=WEST', 'preseat|name=$1|engineSide=CIV'
+    $rc = Invoke-BootSmokeChecks -Lines $civLines -Cfg $cfg
+    Expect "engineSide=CIV -> HCPRESEAT PASS" ((($rc | Where-Object { $_.check -eq 'HCPRESEAT' }).status) -eq 'PASS')
+
+    #    with RequireHcPreseat, a faction preseat becomes a hard FAIL.
+    $cfgStrict = Get-Config
+    $cfgStrict.RequireHcPreseat = $true
+    $rs = Invoke-BootSmokeChecks -Lines $pass -Cfg $cfgStrict
+    Expect "RequireHcPreseat -> HCPRESEAT FAIL" ((($rs | Where-Object { $_.check -eq 'HCPRESEAT' }).status) -eq 'FAIL')
+
+    #    no preseat lines at all -> SKIP, not a false PASS.
+    $rn = Invoke-BootSmokeChecks -Lines (@($pass | Where-Object { $_ -notmatch 'preseat' })) -Cfg $cfg
+    Expect "no preseat lines -> HCPRESEAT SKIP" ((($rn | Where-Object { $_.check -eq 'HCPRESEAT' }).status) -eq 'SKIP')
 
     if ($script:__stFail -eq 0) { Write-Host "SELFTEST: PASS" -ForegroundColor Green; return 0 }
     else { Write-Host "SELFTEST: FAIL ($script:__stFail)" -ForegroundColor Red; return 1 }

@@ -136,6 +136,78 @@ if (isNull _team) exitWith {
 	};
 };
 
+//--- CIV-DRIFT ENROLLMENT SELF-HEAL (fix/civ-drift-enroll-heal, Ray 2026-07-21, live RPT evidence -
+//--- player "Zwanon" fought AS WEST per kill log while his resolved team's wfbe_side read CIV, so the
+//--- funds guard below deferred forever: "[WFBE][JIPFUNDS] side unresolved (CIV) ... funds block
+//--- deferred"). The b761/b762 STAMP-ON-DEMAND above only fires when this WHOLE loop found NOTHING
+//--- (isNull _team) - it repairs an UNSTAMPED group. This is the other half of that gap: the loop DID
+//--- find a team (via B748.1/B746 above), but that team's GROUP was already EXPLICITLY wfbe_side-
+//--- stamped CIV. `side player` cannot be read here (server-side, no local player) and drifts anyway -
+//--- we read the player's REAL faction off the same networked body B748.1/b762 already trust
+//--- (WFBE_JIP_BODY_<uid>, never a scripted "player" global), via `side _civd_body`. Same 2-poll
+//--- stability idea as b762 (WFBE_CIVDRIFT_LASTG_<uid>): this file resolves TWICE per connect
+//--- (documented above the JIPFUNDS guard below), so the SECOND pass must reconfirm the SAME
+//--- (group, real-side) pair before we commit - a genuinely transient mid-sync CIV read (side not
+//--- yet replicated) will not match twice and is left alone for the existing tiers to resolve normally;
+//--- a persistent mis-stamp (the live case) matches and heals. Re-stamp mirrors the first-join stamp
+//--- (Init_Server.sqf ~883-884): wfbe_side + wfbe_persistent, funds seeded ONLY if nil (never clobbers
+//--- an existing wallet - same no-clobber spirit as the JIPFUNDS guard further below), and an append-
+//--- once addition to the real side's wfbe_teams (dedup-guarded, mirrors b762's own append exactly).
+//--- Idempotent: once healed, wfbe_side is no longer civilian so this whole block no-ops on every later
+//--- pass/reconnect. Touches nothing in RequestJoin.sqf, the JIP handshake, or funds math. A2-OA-1.64-
+//--- safe: plain single-arg getVariable on the GROUP (_team), array-default getVariable on the LOGIC
+//--- object only, 2-element missionNamespace setVariable, array + (no pushBack), private ["_x"] form.
+if (!isNull _team && {(missionNamespace getVariable ["WFBE_C_ENROLL_CIVDRIFT_HEAL", 1]) > 0}) then {
+	private ["_civd_wside","_civd_body","_civd_real","_civd_key","_civd_logik","_civd_teams"];
+	_civd_key = Format ["WFBE_CIVDRIFT_LASTG_%1", _uid];
+	_civd_wside = _team getVariable "wfbe_side";
+	if (isNil "_civd_wside" || {_civd_wside != civilian}) then {
+		missionNamespace setVariable [_civd_key, nil];
+	} else {
+		_civd_body = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
+		_civd_real = civilian;
+		if (!isNull _civd_body && {alive _civd_body} && {(getPlayerUID _civd_body) == _uid}) then {_civd_real = side _civd_body};
+		if (_civd_real in [west, east, resistance]) then {
+			if ((missionNamespace getVariable [_civd_key, grpNull]) == _team) then {
+				_team setVariable ["wfbe_side", _civd_real];
+				_team setVariable ["wfbe_persistent", true];
+				if (isNil {_team getVariable "wfbe_funds"}) then {
+					_team setVariable ["wfbe_funds", missionNamespace getVariable Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _civd_real], true];
+				};
+				//--- WALLET-WIPE GUARD (round-2 adversarial review, 2026-07-21): a CIV-drifted player never
+				//--- passed the JIPFUNDS CIV-check (further below) on any prior connect, so WFBE_JIP_USER<uid>
+				//--- was NEVER created for them. Left alone, THIS SAME healing pass would read `_get` as nil
+				//--- and fall into the JIPFUNDS "first join" branch, which does an UNCONDITIONAL
+				//--- wfbe_funds = FUNDS_START reset with no no-clobber guard - silently wiping whatever this
+				//--- team actually earned while drifted (Common_ChangeTeamFunds.sqf credits funds with no
+				//--- wfbe_side check, so a CIV-stamped team keeps earning real money the whole time). Pre-seed
+				//--- the record ONLY if genuinely absent (never clobbers a real pre-drift record) so the
+				//--- JIPFUNDS section below instead takes its ordinary reconnect-update path: cash = the
+				//--- team's ACTUAL current wallet (not FUNDS_START) and sideOrigin == _civd_real so its own
+				//--- teamswap check (sideOrigin != sideJoined) can't ALSO reset the funds. Record shape
+				//--- matches the first-join write exactly: [uid, cash, sideOrigin, sideJoined, hasConnectedBefore-flag].
+				if (isNil {missionNamespace getVariable format ["WFBE_JIP_USER%1", _uid]}) then {
+					missionNamespace setVariable [format ["WFBE_JIP_USER%1", _uid], [_uid, (_team getVariable "wfbe_funds"), _civd_real, _civd_real, 1]];
+					diag_log Format ["[WFBE][CIVDRIFT HEAL] pre-seeded WFBE_JIP_USER%1 (wallet %2, side %3) so the JIPFUNDS first-join branch does not reset it.", _uid, (_team getVariable "wfbe_funds"), _civd_real];
+				};
+				_civd_logik = _civd_real Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _civd_logik) then {
+					_civd_teams = _civd_logik getVariable ["wfbe_teams", []];
+					if (!(_team in _civd_teams)) then {
+						_civd_teams = _civd_teams + [_team];
+						_civd_logik setVariable ["wfbe_teams", _civd_teams, true];
+					};
+				};
+				missionNamespace setVariable [_civd_key, nil];
+				diag_log Format ["[WFBE][CIVDRIFT HEAL] re-stamped [%1] [%2] team %3 CIV -> %4 (real body side, 2-poll confirmed).", _name, _uid, _team, _civd_real];
+			} else {
+				missionNamespace setVariable [_civd_key, _team];
+				diag_log Format ["[WFBE][CIVDRIFT HEAL] observed [%1] [%2] team %3 CIV-stamped while body plays %4 - awaiting stability confirm.", _name, _uid, _team, _civd_real];
+			};
+		};
+	};
+};
+
 //--- Make sure that our client is a warfare client, the side variable is only defined for warfare slots, otherwise we simply exit.
 _sideJoined = _team getVariable "wfbe_side";
 if (isNil '_sideJoined') exitWith {
@@ -198,6 +270,65 @@ if !(isNull _jipLogik) then {
 		diag_log format ["[WFBE][B63.2 JIP-UPGRADES] re-broadcast wfbe_upgrades (count %1) for side %2 to joiner %3", count (_jipLogik getVariable "wfbe_upgrades"), _sideJoined, _name];
 	};
 };
+
+//--- JIP-replay hardening, Finding #3 (HQ/base snapshot): wfbe_hq/wfbe_hq_deployed/wfbe_startpos/
+//--- wfbe_structures/wfbe_basearea are set once at boot (Init_Server.sqf ~762-790) and otherwise only
+//--- change on HQ deploy/kill/repair or base-area capture, so they never get an automatic connect-time
+//--- catch-up today (only wfbe_teams does, above/below). RequestTeamsResend.sqf's own header documents an
+//--- RPT-traced incident proving THIS SAME side-logic object slow-syncs to a late joiner under heavy AI
+//--- load - and Init_Client.sqf:1136-1188 waits unbounded on wfbe_startpos/wfbe_hq/wfbe_structures/
+//--- wfbe_hq_deployed, with an invalid spawn position as the worst case. Same same-value re-set idiom as
+//--- wfbe_upgrades above - re-set marks the object var dirty so the engine re-syncs it to this joiner.
+if !(isNull _jipLogik) then {
+	if !(isNil {_jipLogik getVariable "wfbe_hq"}) then {
+		_jipLogik setVariable ["wfbe_hq", (_jipLogik getVariable "wfbe_hq"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_hq_deployed"}) then {
+		_jipLogik setVariable ["wfbe_hq_deployed", (_jipLogik getVariable "wfbe_hq_deployed"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_startpos"}) then {
+		_jipLogik setVariable ["wfbe_startpos", (_jipLogik getVariable "wfbe_startpos"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_structures"}) then {
+		_jipLogik setVariable ["wfbe_structures", (_jipLogik getVariable "wfbe_structures"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_basearea"}) then {
+		_jipLogik setVariable ["wfbe_basearea", (_jipLogik getVariable "wfbe_basearea"), true];
+	};
+	diag_log format ["[WFBE][JIP-HQSNAP] re-broadcast HQ/base snapshot (hq_deployed=%1) for side %2 to joiner %3", (_jipLogik getVariable ["wfbe_hq_deployed", false]), _sideJoined, _name];
+};
+
+//--- JIP-replay hardening, Finding #2 (wfbe_votetime): Init_Client.sqf:1581 waits unbounded on this var;
+//--- Server_VoteForCommander.sqf only re-broadcasts it once per second WHILE a vote is actively counting
+//--- down, so a joiner arriving between votes (or mid-vote, if the broadcast slow-syncs under load per
+//--- the same RPT-traced side-logic replication gap as above) never receives it. Same same-value re-set.
+if !(isNull _jipLogik) then {
+	if !(isNil {_jipLogik getVariable "wfbe_votetime"}) then {
+		_jipLogik setVariable ["wfbe_votetime", (_jipLogik getVariable "wfbe_votetime"), true];
+		diag_log format ["[WFBE][JIP-VOTETIME] re-broadcast wfbe_votetime (%1) for side %2 to joiner %3", (_jipLogik getVariable "wfbe_votetime"), _sideJoined, _name];
+	};
+};
+
+//--- JIP-replay hardening, Finding #4 (upgrade-in-progress replay): wfbe_upgrades (unlocked tiers) is
+//--- already re-sent above, but the ACTIVE research/countdown fields are not, so a joiner mid-upgrade
+//--- sees "no upgrade running" (a safe default - GUI_UpgradeMenu.sqf/Client_UpdateRHUD.sqf both isNil-guard
+//--- these) until the next real upgrade event changes them. Re-sending closes that soft-staleness window.
+if !(isNull _jipLogik) then {
+	if !(isNil {_jipLogik getVariable "wfbe_upgrading"}) then {
+		_jipLogik setVariable ["wfbe_upgrading", (_jipLogik getVariable "wfbe_upgrading"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_upgrading_id"}) then {
+		_jipLogik setVariable ["wfbe_upgrading_id", (_jipLogik getVariable "wfbe_upgrading_id"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_upgrading_end_time"}) then {
+		_jipLogik setVariable ["wfbe_upgrading_end_time", (_jipLogik getVariable "wfbe_upgrading_end_time"), true];
+	};
+	if !(isNil {_jipLogik getVariable "wfbe_upgrade_queue"}) then {
+		_jipLogik setVariable ["wfbe_upgrade_queue", (_jipLogik getVariable "wfbe_upgrade_queue"), true];
+	};
+	diag_log format ["[WFBE][JIP-UPGRADESTATE] re-broadcast in-progress upgrade state (upgrading=%1) for side %2 to joiner %3", (_jipLogik getVariable ["wfbe_upgrading", false]), _sideJoined, _name];
+};
+
 if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {
 	_jipSupplyKey = Format ["wfbe_supply_%1", str _sideJoined];
 	if !(isNil {missionNamespace getVariable _jipSupplyKey}) then {
@@ -269,6 +400,16 @@ if (_sideJoined in [west, east]) then {
 	_id publicVariableClient _keyName;
 	diag_log format ["[WFBE][B74.2.5 ROSTER-PUSH] pushed %1 player-team rows to joiner %2 (key %3, side %4)", count _rows, _name, _keyName, _sideJoined];
 };
+
+//--- Finding #5 (town/camp ownership replay) REVERTED (review-1253): a per-connect re-dirty of every
+//--- town+camp sideID was measured against the actual Chernarus town count - 46 towns + 81 camps = ~127
+//--- synchronous global setVariable-broadcasts on EVERY connect. At a round-start burst of 20-40 joins
+//--- this is a ~5000-broadcast storm exactly when the server is busiest, and even spawn+throttled
+//--- (127 x sleep 0.5 = ~63s) it is SLOWER than the 60s HANGGUARD fallback Init_Markers.sqf already has -
+//--- strictly worse than doing nothing. Deferred proper fix: a TARGETED, BATCHED town-ownership snapshot
+//--- sent only to the joining client (one publicVariableClient carrying [town,sideID] pairs + a small
+//--- client-side applier), not a broadcast to everyone. The existing 60s HANGGUARD covers this window
+//--- meanwhile.
 
 //--- We attempt to get the player informations in case that he joined before.
 _get = missionNamespace getVariable format["WFBE_JIP_USER%1",_uid];

@@ -1393,10 +1393,10 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- both leaders LOCAL, then (units B) joinSilent A (empty B reaped by existing GC). Group-count DOWN.
 	if (isNil "WFBE_C_AICOM_HC_MERGE_ENABLE") then {WFBE_C_AICOM_HC_MERGE_ENABLE = 0};   //--- 1 = ON, 0 = off (default; ships dark). fix(tonight-20260717): reverted 1->0 - both this and HC_TOPUP_ENABLE below only ever call WFBE_SE_FNC_AI_Com_HCTopUp (AI_Commander.sqf:572, nil-guarded), which is never compiled/registered anywhere in the tree, so arming either flag is a pure no-op. Do not re-arm until the DRAFT worker is actually implemented and registered.
 	if (isNil "WFBE_C_AICOM_HC_TOPUP_ENABLE") then {WFBE_C_AICOM_HC_TOPUP_ENABLE = 0};   //--- B74 (Ray 2026-06-22): refill attrited HC field teams - Produce skips live HC teams so they bleed to 1-2-man remnants and never recover. When on, the commander ships replacement bodies to under-strength HC teams (charged to AI funds). 1=on. fix(tonight-20260717): reverted 1->0 - inert no-op, see WFBE_C_AICOM_HC_MERGE_ENABLE comment above.
-	if (isNil "WFBE_C_AICOM_HC_TOPUP_FRAC")   then {WFBE_C_AICOM_HC_TOPUP_FRAC   = 0.6}; //--- B74: a live HC team at/below this fraction of its template size gets topped up.
-	if (isNil "WFBE_C_AICOM_HC_TOPUP_MAX")    then {WFBE_C_AICOM_HC_TOPUP_MAX    = 2};   //--- B74: max teams topped up per commander tick (rate-limit the spend + the spawn load).
-	if (isNil "WFBE_C_AICOM_HC_MERGE_FRAC")   then {WFBE_C_AICOM_HC_MERGE_FRAC   = 0.6}; //--- a team at/below this fraction of its template size is "depleted" (merge candidate).
-	if (isNil "WFBE_C_AICOM_HC_MERGE_RANGE")  then {WFBE_C_AICOM_HC_MERGE_RANGE  = 300}; //--- m: only merge a depleted pair whose leaders are within this of each other.
+	//--- deadcode-sweep 2026-07-21 (DC-08): removed unconsumed HC merge/top-up tunables
+	//--- (WFBE_C_AICOM_HC_TOPUP_FRAC/_MAX, _MERGE_FRAC/_MERGE_RANGE) - zero reads repo-wide;
+	//--- their only would-be consumer WFBE_SE_FNC_AI_Com_HCTopUp is never compiled/registered
+	//--- (AI_Commander.sqf:572 call is nil-guarded, permanent no-op).
 	//--- STRANDED-survivor merge (default-ON). A lone stranded remnant near another friendly team is folded in
 	//--- rather than walking home / being culled; same merge payload contract. Group-count DOWN.
 	if (isNil "WFBE_C_AICOM_STRANDED_MERGE")       then {WFBE_C_AICOM_STRANDED_MERGE       = 1};    //--- 1 = ON (default), 0 = off.
@@ -1585,6 +1585,16 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- TO RAISE THE LIVE CAP: edit Rsc\Parameters.hpp 'WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT' default/values[]; changing this 40000 does nothing in prod.
 	if (isNil "WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT") then {WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT = if (WF_Debug) then {900000} else {40000}};
 	if (isNil "WFBE_C_ECONOMY_SUPPLY_SYSTEM") then {WFBE_C_ECONOMY_SUPPLY_SYSTEM = 1}; //--- Supply System (0: Trucks, 1: Automatic with time).
+	//--- fix(supplyfix, 2026-07-21): Common\Functions\Common_ChangeSideSupply.sqf relays every side-supply change via
+	//--- publicVariableServer, which never fires the SENDING machine's own PVEH — so on a dedicated server every
+	//--- server/AI-originated call (28 call sites: town income, AICOM research/base costs, supply-mission payouts, etc.)
+	//--- is a silent no-op today. Client-originated calls are unaffected (client publish -> server PVEH fires normally).
+	//--- Three states, default OFF: 0 = OFF — today's exact behavior, server-side no-op preserved, clients unchanged;
+	//--- 1 = SHADOW — server diag_logs the would-be pre/post delta (SUPPLYFIX|v1|SHADOW|...) without applying it;
+	//--- 2 = APPLY — server calls WFBE_SE_FNC_HandleSideSupplyChange directly with the full event envelope, the same
+	//--- shape already proven at Server\PVFunctions\AttackWave.sqf:73. Rollout: shadow one round, then Chernarus first,
+	//--- then Takistan, Zargabad last (its 5x town-income multiplier makes it the highest-risk map to arm).
+	if (isNil "WFBE_C_SUPPLY_SERVER_FIX") then {WFBE_C_SUPPLY_SERVER_FIX = 0};
 	WFBE_C_FIX_INCOME_SYSTEM4_DISPLAY = 0; //--- 1 makes Client_GetIncome mirror the server's income-system 4 x1.5 payout display.
 	WFBE_C_ECONOMY_INCOME_COEF = if (worldName == "Zargabad") then {42} else {14}; //--- cmdcon44r (Ray 2026-07-04): ZG CASH x3 (14*3=42) - Ray: "cash stays at 3x". NOTE cash had never been multiplied on ZG (44p only tripled the SUPPLY stream), so this SETS the ZG cash stream to the x3 Ray specified; CH/TK unchanged at 14. Consumers: updateresources.sqf:16 + Common_GetTownsIncome.sqf:7 (both read this constant, both scale together). B67 (Ray 2026-06-21): 8->14. Boost town-driven CASH income ~1.75x (CASH path only: updateresources.sqf:60->95; the SUPPLY credit at :76 uses WFBE_C_ECONOMY_SUPPLY_INCOME_MULT and is UNCHANGED). Town Multiplicator Coefficient (SV * x).
 	WFBE_C_ECONOMY_SUPPLY_INCOME_MULT = if (worldName == "Zargabad") then {5.0} else {1.0}; //--- cmdcon44r (Ray 2026-07-04): ZG supply x3 -> x5 ("push ZG to 5x, cash stays at 3x"; cash stream split off to x3 via INCOME_COEF on the line above). 44p note: TRIPLE supply income on Zargabad only - the 11-town map generates too little SV for its pacing (CH/TK have 30-40 towns feeding the same economy). Side-wide credit (updateresources.sqf:96): players, human+AI commanders and GUER all x3 on ZG. CH/TK stay 1.0. Original 2026-06-29 parity note: un-throttle ongoing town SUPPLY income to stock 1.0. The credit is SIDE-WIDE (updateresources.sqf:87; funds AI + human commanders + GUER equally - see L420), so 1.0 gives AI commanders the same full supply SV income a human commander's economy gets (there was never an AI-specific handicap - the throttle hit everyone). Supersedes the B57 progression-throttle (0.35->0.5): the funds->supply bridge that made throttling safe is gone, research + factory-rebuild are now SUPPLY-ONLY, and 0.35/0.5 was starving the AI (live no-affordable-upgrade RPT: needed 9500 supply with ~1650 banked). NOTE: founding/research/structure costs were tuned against 0.35 (see L593) -> economy now runs ~2-3x faster; review costs if the AI over-builds. Cash/funds + starting-supply seed UNCHANGED (Ray: cash=units, supply=buildings+upgrades).
@@ -1840,13 +1850,10 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_TOWN_SCAN_DICE") then {WFBE_C_TOWN_SCAN_DICE = 1}; //--- Perf (2026-07-06): when 1, DORMANT towns (not active, no air tier, no enemy seen within DICE_GRACE) roll per side per sweep whether to run the 600 m activation nearEntities scan. Active towns always scan. Default off = V1 behaviour.
 	if (isNil "WFBE_C_TOWN_SCAN_DICE_P") then {WFBE_C_TOWN_SCAN_DICE_P = 0.5}; //--- Probability a dormant town DOES scan on a given sweep (per side).
 	if (isNil "WFBE_C_TOWN_SCAN_DICE_GRACE") then {WFBE_C_TOWN_SCAN_DICE_GRACE = 30}; //--- s after the last enemy seen before a town counts as dormant for the dice.
-	WFBE_C_TOWNS_MORTARS_SCAN = 60; //--- Scan the area around a target for friends and enemies.
-	WFBE_C_TOWNS_MORTARS_INTERVAL = 200; //--- AI Mortars may fire each x seconds.
-	WFBE_C_TOWNS_MORTARS_PRECOGNITION = 25; //--- AI Mortars may fire at a target by precognition. This value is a percentage.
-	WFBE_C_TOWNS_MORTARS_RANGE_MAX = 750; //--- AI Mortars may not fire at target further than that range (Cannot be higher than artillery core values).
-	WFBE_C_TOWNS_MORTARS_RANGE_MIN = 125; //--- AI Mortars may not fire at targets within that range (Cannot be lower than artillery core values).
-	WFBE_C_TOWNS_MORTARS_SPLASH_RANGE = 60; //--- AI Mortar firing area of effect.
-	WFBE_C_TOWNS_PATROL_HOPS = 5; //--- Amount of Waypoints given to the AI Patrol in towns (Higher is wider).
+	//--- deadcode-sweep 2026-07-21 (DC-06): removed orphaned town mortar/patrol tuning
+	//--- constants (WFBE_C_TOWNS_MORTARS_SCAN/_INTERVAL/_PRECOGNITION/_RANGE_MAX/_RANGE_MIN/
+	//--- _SPLASH_RANGE, WFBE_C_TOWNS_PATROL_HOPS) - zero reads repo-wide; live patrol/artillery
+	//--- paths are server_side_patrols.sqf and AI_Patrol.sqf.
 	WFBE_C_TOWNS_PATROL_RANGE = 500;
 	WFBE_C_TOWNS_PURCHASE_RANGE = 60;
 	WFBE_C_TOWNS_SUPPLY_LEVELS_TIME = [1, 2, 3, 4, 5];
@@ -1863,6 +1870,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW") then {WFBE_C_UNITS_LAST_HIT_REWARD_WINDOW = 60}; //--- Seconds where a damaged vehicle can still award its last valid hitter.
 	if (isNil "WFBE_C_UNITS_CLEAN_TIMEOUT") then {WFBE_C_UNITS_CLEAN_TIMEOUT = 60}; //--- Lifespan of a dead body.
 	if (isNil "WFBE_C_ARTY_WRECK_REAP_DELAY") then {WFBE_C_ARTY_WRECK_REAP_DELAY = 300}; //--- fix/aicom-arty-lifecycle (2026-07-21, codex round-4: FLOOR not the delay itself - a fixed delay alone would race a lobby-raised WFBE_C_UNITS_CLEAN_TIMEOUT): server_groupsGC.sqf's dedicated dead-commander-artillery reaper computes its actual age-gate as (WFBE_C_UNITS_CLEAN_TIMEOUT + 180) max WFBE_C_ARTY_WRECK_REAP_DELAY, so this constant only matters (as a minimum) when CLEAN_TIMEOUT is configured very low; at the 120s lobby default the +180 term already dominates.
+	if (isNil "WFBE_C_HELI_WRECK_REAP_DELAY") then {WFBE_C_HELI_WRECK_REAP_DELAY = 300}; //--- fix/heli-husk-reaper: same FLOOR-not-delay contract as WFBE_C_ARTY_WRECK_REAP_DELAY above, for server_groupsGC.sqf's dead-commander-attack-heli reaper: actual age-gate is (WFBE_C_UNITS_CLEAN_TIMEOUT + 180) max WFBE_C_HELI_WRECK_REAP_DELAY.
 	if (isNil "WFBE_C_UNITS_EMPTY_TIMEOUT") then {WFBE_C_UNITS_EMPTY_TIMEOUT = 1800}; //--- Lifespan of an empty vehicle (30 minutes).
 		WFBE_C_UNITS_BODIES_TIMEOUT = 60;
 	//--- qol-polish-pack tunables --------------------------------------------------------------------------------
@@ -2070,8 +2078,8 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	WFBE_C_TOWNS_UNITS_COEF = switch (WFBE_C_TOWNS_OCCUPATION) do {case 1: {1}; case 2: {1.5}; case 3: {2}; case 4: {2.5}; default {1}};
 	WFBE_C_TOWNS_UNITS_DEFENDER_COEF = switch (WFBE_C_TOWNS_DEFENDER) do {case 1: {1}; case 2: {1.5}; case 3: {2}; case 4: {2.5}; default {1}};
 	WFBE_C_TOWNS_MERGE_TARGET = 9;                //--- GROUP-COUNT REDUCTION (claude-gaming 2026-06-13): target units per CONSOLIDATED town-garrison infantry group. Server_GetTownGroups/Defender fuse the SAME infantry rosters into ~this-many-unit groups (hard cap 10) so a town spawns identical units in FEWER server group-brains (server-FPS win, gameplay-transparent). Vehicles never merged. Set to 0 to disable (instant rollback to one-group-per-template).
-	if (isNil 'WFBE_C_TOWNS_MERGE_TARGET_DEFENDER') then {WFBE_C_TOWNS_MERGE_TARGET_DEFENDER = 10}; //--- GUER condense A/B (task #12, claude-gaming 2026-06-14): raised 9->11 units/group to fuse GUER garrisons harder (fewer group-brains, SAME units). Measure GUER group count + fps vs Build 28. WEST/EAST untouched (global 5).
-	if (isNil 'WFBE_C_TOWNS_MERGE_CAP_DEFENDER') then {WFBE_C_TOWNS_MERGE_CAP_DEFENDER = 12};    //--- Defender-only merged-group size cap (raised from the global hardcoded 10 so the 11-target can actually flush at ~11-12; 12 = classic A2 squad max, safe for static garrison defenders).
+	if (isNil 'WFBE_C_TOWNS_MERGE_TARGET_DEFENDER') then {WFBE_C_TOWNS_MERGE_TARGET_DEFENDER = 10}; //--- GUER condense A/B (task #12, claude-gaming 2026-06-14): fuse GUER garrisons into ~10-unit groups (fewer group-brains, SAME units). Measure GUER group count + fps vs Build 28. WEST/EAST use the global target (9).
+	if (isNil 'WFBE_C_TOWNS_MERGE_CAP_DEFENDER') then {WFBE_C_TOWNS_MERGE_CAP_DEFENDER = 12};    //--- Defender-only merged-group size cap (raised from the global hardcoded 10 so the 10-target can flush at ~10-12; 12 = classic A2 squad max, safe for static garrison defenders).
 	if (isNil 'WFBE_C_SIDE_PATROLS_MAX_DEFENDER') then {WFBE_C_SIDE_PATROLS_MAX_DEFENDER = 3};      //--- Build83 (Ray 2026-07-01): GUER (defender) side-patrol cap RAISED +2 -> 3 (effective = min(this, GUER patrol level)). [B36 2026-06-15 had 2->1: fewer GUER patrols, the survivors made deadlier (skill boost in Common_RunSidePatrol). GUER condense.
 	if (isNil 'WFBE_C_GUER_PATROLS_LEVEL') then {WFBE_C_GUER_PATROLS_LEVEL = 2};                    //--- B67 (Ray 2026-06-21): fixed Patrols level for GUER (resistance has no upgrade system) so GUER side-patrols actually dispatch and show on GUER players' maps (server_side_patrols.sqf). Effective concurrent count = min(_maxSide, this). 0 = OFF (no GUER patrols, instant rollback); 1 = single; 2 = a pair; 4 adds the convoy supply truck.
 	WFBE_C_GROUP_BUDGET_WARN = 120;               //--- GROUP-BUDGET ALARM (claude-gaming 2026-06-13): per-side group-count WARN threshold (GRPBUDGET line in AI_Commander.sqf). Arma 2 OA hard cap is 144/side; crossing this logs a GRPBUDGET|WARN so the watchdog/dashboard flags it before the AI can no longer found teams. (120, not 125: with the persistent-husk leak fixed, steady state should drop below 120, making the WARN a true leading indicator rather than always-on.)
@@ -2757,7 +2765,7 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 //--- + paid AI investment for WEST/EAST towns. Mirrors GUER Director (Lane 800). Flag-off
 //--- (0) = brain never launches, every overlay read site short-circuits = byte-identical.
 //--- See docs/design/v2/aicom-v2-commander-town-ledger.md for the full spec.
-	if (isNil "AICOMV2_LANE_CMD_TOWN_LEDGER") then {AICOMV2_LANE_CMD_TOWN_LEDGER = 0}; //--- Lane master switch: 0=off (default, byte-identical). owner 2026-07-09: DISARMED for this patch (reconcile flip armed it, but its spec ships it dark) - CTL was never soak-tested + has 2 open survivor-tracking defects (New-Bug-A/B, CTL-ARMING-SPEC.md). Queued to next patch: fix both, then arm after a real soak.
+	if (isNil "AICOMV2_LANE_CMD_TOWN_LEDGER") then {AICOMV2_LANE_CMD_TOWN_LEDGER = 1}; //--- Lane master switch: 0=off (default, byte-identical). owner 2026-07-22: ARMED for soak (live chat ruling) - both 07-09 blockers (New-Bug-A/B) fixed on master via fable/ctl-survivor-bugs; garrison-link pre-armed 07-12. Soak watch = CTLSTAT|v1 telemetry; rollback = this flag back to 0.
 	if (isNil "AICOMV2_CTL_TICK_SEC") then {AICOMV2_CTL_TICK_SEC = 30}; //--- Brain tick interval, seconds.
 	if (isNil "AICOMV2_CTL_REGEN_FULL_SEC") then {AICOMV2_CTL_REGEN_FULL_SEC = 1800}; //--- Zero-to-baseline regen duration, seconds.
 	if (isNil "AICOMV2_CTL_CAPTURE_SEED") then {AICOMV2_CTL_CAPTURE_SEED = 0.25}; //--- Strength at record creation (fresh capture).
@@ -2895,6 +2903,15 @@ if (isNil "WFBE_C_CMD_SUPPORT_AIR_RECALL")     then {WFBE_C_CMD_SUPPORT_AIR_RECA
 if (isNil "WFBE_C_CMD_SUPPORT_AIR_RECALL_HYST")then {WFBE_C_CMD_SUPPORT_AIR_RECALL_HYST = 60};//--- s HYSTERESIS: the emergency must have been continuously true for this long before a recall fires, and no new grant is issued on the side for this long after one. Prevents flapping grants on a blinking last-stand flag.
 if (isNil "WFBE_C_CMD_SUPPORT_AIR_MIN_ALT")    then {WFBE_C_CMD_SUPPORT_AIR_MIN_ALT = 120};   //--- m flyInHeight used for the escort orbit (transport stands off higher than a CAS pass).
 if (isNil "WFBE_C_CMD_SUPPORT_JET")            then {WFBE_C_CMD_SUPPORT_JET = 0};             //--- RESERVED, not implemented: 0 = the "cas-jet"/"transport-jet" request kinds are parsed and explicitly REJECTED with telemetry so the UI can grey them instead of silently dropping. There is no jet grant path in this build; setting this to 1 does NOT create one.
+
+//--- TRASH-OBJECT LOCALITY (2026-07-21 hardening extras): Common_TrashObject.sqf ends in an unconditional
+//--- deleteVehicle, which SILENTLY NO-OPS on an object that is not local to the machine running it - the same
+//--- documented A2-OA fact the BASE-GC and the commander-artillery wreck reaper already guard against with
+//--- their own `local` checks (server_groupsGC.sqf L224/L276/L391). Every TrashObject caller runs server-side,
+//--- so any HC-local body or hull it is handed is never actually removed and persists for the match. 1 = gate
+//--- on locality and route non-local deletes to the owning machine over the existing HandleSpecial channel;
+//--- 0 = INERT, the unconditional legacy deleteVehicle (byte-identical current behaviour). Ships default 0.
+if (isNil "WFBE_C_TRASH_REMOTE_DELETE") then {WFBE_C_TRASH_REMOTE_DELETE = 0};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

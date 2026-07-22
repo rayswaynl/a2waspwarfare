@@ -1,6 +1,14 @@
 
 private ["_mode2TotalCamps","_mode2WestCamps","_mode2EastCamps","_mode2GuerCamps","_gateCampBunker","_gateCampSide","_rateCampsOnSide"];
 
+//--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation gate, mirrors
+//--- AI_Commander.sqf's _passedOwner idiom (see Init_Server.sqf B69 watchdog block). _this =
+//--- [ownerGeneration] when launched/restarted by Init_Server.sqf / server_coreloop_supervisor.sqf;
+//--- nil-safe fallback for any other launch path (e.g. a manual debug execVM with no args).
+private ["_clOwnerKey","_clOwnerSeq"];
+_clOwnerKey = "wfbe_coreloop_owner_town";
+_clOwnerSeq = if (typeName _this == "ARRAY" && {count _this > 0}) then {_this select 0} else {missionNamespace getVariable [_clOwnerKey, 0]};
+
 // "towns" use it to get all initiated towns on map
 
 //--- N4 fix (MORE-FIXES-AND-IDEAS): _timeAttacked used to be a single local shared across
@@ -48,7 +56,12 @@ if ((missionNamespace getVariable ["WFBE_C_LOOP_PHASE_JITTER", 0]) > 0) then {
 	["INFORMATION", Format ["server_town.sqf: startup phase jitter %1s (WFBE_C_LOOP_PHASE_JITTER=1).", _phaseJitter]] Call WFBE_CO_FNC_AICOMLog;
 	sleep _phaseJitter;
 };
-while {!WFBE_GameOver} do {
+while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) == _clOwnerSeq}} do {
+
+	//--- HP-01 SUPERVISOR HEARTBEAT: unconditional per-tick liveness beat, FIRST statement in
+	//--- the loop (mirrors AI_Commander.sqf B69) so even a worker that throws mid-iteration
+	//--- leaves this tick's stamp behind; the supervisor treats a frozen stamp as DEAD.
+	missionNamespace setVariable ["wfbe_coreloop_hb_town", time];
 
 	for "_i" from 0 to ((count towns) - 1) step 1 do
 	{
@@ -714,7 +727,7 @@ while {!WFBE_GameOver} do {
 					[_location, _newSide, _newSID] spawn {
 						Private ["_loc","_side","_newSIDAtCapture","_squadGrp","_squadUnits","_squadVehicles",
 						         "_clearCount","_detected","_squadTeam","_upgLvl","_tplName","_spawnPos",
-						         "_retVal","_scanActive","_townRange","_guerCount","_mopupEnd","_squadRoster","_tplRosters"];
+						         "_retVal","_scanActive","_townRange","_guerCount","_mopupEnd","_squadRoster","_tplRosters","_squadFormed"];
 						_loc             = _this select 0;
 						_side            = _this select 1;
 						_newSIDAtCapture = _this select 2;
@@ -736,6 +749,12 @@ while {!WFBE_GameOver} do {
 						_tplRosters = missionNamespace getVariable Format ["WFBE_%1_GROUPS_%2", _side, _tplName];
 						if (!(isNil "_tplRosters") && {count _tplRosters > 0}) then {
 							_squadRoster = _tplRosters select floor(random count _tplRosters);
+						} else {
+							//--- TIER-ROSTER FALLBACK (was silent): an unregistered or empty WFBE_<side>_GROUPS_<tier> roster
+							//--- left _squadRoster at its [] default and the miss only ever surfaced later as the generic
+							//--- "template unavailable" line below, which conflates a roster miss with a CreateTeam/group-cap
+							//--- failure. Name the real cause at the lookup site so a bad tier key is greppable on its own.
+							["INFORMATION", Format ["server_town.sqf: mop-up tier roster miss for %1 - key WFBE_%2_GROUPS_%3 is %4; squad cannot form at this tier.", _loc getVariable ["name","unknown"], _side, _tplName, (if (isNil "_tplRosters") then {"unregistered"} else {"empty"})]] Call WFBE_CO_FNC_LogContent;
 						};
 
 						//--- Spawn position near town centre.
@@ -750,6 +769,16 @@ while {!WFBE_GameOver} do {
 
 						if (isNull _squadGrp || {(count _squadUnits + count _squadVehicles) == 0}) exitWith {
 							["INFORMATION", Format ["server_town.sqf: mop-up squad for %1 (%2) failed to create - template %3 unavailable.", _loc getVariable ["name","unknown"], _side, _tplName]] Call WFBE_CO_FNC_LogContent;
+						};
+
+						//--- FORMATION VERIFICATION (was absent): the guard above only catches a TOTAL failure, so a squad
+						//--- that came back materially short of the roster it was handed (blocked/occupied spawn position,
+						//--- a per-side group/unit cap, or a roster classname missing from this build) shipped silently as
+						//--- a "spawned" mop-up detail. Read the formed strength back and name the shortfall. Log-only.
+						_squadFormed = 0;
+						{if (!isNull _x && {alive _x}) then {_squadFormed = _squadFormed + 1}} forEach (_squadUnits + _squadVehicles);
+						if (_squadFormed < (count _squadRoster)) then {
+							["INFORMATION", Format ["server_town.sqf: mop-up squad for %1 formed SHORT - %2 of %3 rostered units alive (template %4).", _loc getVariable ["name","unknown"], _squadFormed, count _squadRoster, _tplName]] Call WFBE_CO_FNC_LogContent;
 						};
 
 						//--- Tag squad units as town defender AI so they don't re-trigger activation scans.

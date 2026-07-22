@@ -52,7 +52,7 @@ _machineTag = if (isServer) then {"SERVER"} else {"HC"};
 //--- Per-vehicle righting check (mirrors Marty AutoFlip _processVehicle; server/HC-safe, no systemChat).
 //--- _this = [vehicle, now].
 WFBE_CO_FNC_AICOM_AutoFlip_Check = {
-	private ["_vehicle","_now","_tilt","_maxSpeed","_stuckDelay","_cooldown","_upZ","_vel","_speed","_lastFlip","_since","_pos"];
+	private ["_vehicle","_now","_tilt","_maxSpeed","_stuckDelay","_cooldown","_upZ","_vel","_speed","_lastFlip","_since","_pos","_playerNear"];
 	_vehicle = _this select 0;
 	_now     = _this select 1;
 
@@ -93,7 +93,10 @@ WFBE_CO_FNC_AICOM_AutoFlip_Check = {
 	_vehicle setVariable ["WFBE_AICOM_AutoFlip_StuckSince", -1, false];
 	//--- WASPSCALE recov counter (cmdcon42): same shared cumulative recovery-action counter as the unstuck site (recov= on the WASPSCALE line). Auto-flip righting is a recovery action; bumped in this machine's missionNamespace (server or HC, wherever the hull is local). Server emit reports its server-local share. Monotonic.
 	missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
-	diag_log (Format ["AICOMSTAT|v1|EVENT|%1|%2|AUTOFLIP|righted=%3", str isServer, round (time / 60), typeOf _vehicle]);
+	//--- Owner directive: recover even in player view, but expose nearby-player context for RPT tuning.
+	_playerNear = 0;
+	{if (isPlayer _x && {alive _x} && {(_x distance _vehicle) < 200}) then {_playerNear = _playerNear + 1}} forEach playableUnits;
+	diag_log (Format ["AICOMSTAT|v1|EVENT|%1|%2|AUTOFLIP|righted=%3|playersNear=%4", str isServer, round (time / 60), typeOf _vehicle, _playerNear]);
 };
 
 //--- Manager loop: bounded enumeration over the side-logic wfbe_teams group arrays.
@@ -129,6 +132,18 @@ while {!gameOver} do {
 					} forEach (units _team);
 				};
 			} forEach _teams;
+
+			//--- A mobilized side HQ is stored separately from wfbe_teams, yet remains server-local.
+			//--- The deployed HQ is a static structure and must never enter vehicle recovery.
+			if (!(_logik getVariable ["wfbe_hq_deployed", true])) then {
+				_veh = _logik getVariable ["wfbe_hq", objNull];
+				if (!isNull _veh && {local _veh} && {!(_veh in _seen)}) then {
+					_seen set [count _seen, _veh];
+					_localVeh = _localVeh + 1;
+					if (alive _veh && {((vectorUp _veh) select 2) < 0.35}) then {_tilted = _tilted + 1};
+					[_veh, _now] Call WFBE_CO_FNC_AICOM_AutoFlip_Check;
+				};
+			};
 		};
 	} forEach _sides;
 

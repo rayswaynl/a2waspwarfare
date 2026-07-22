@@ -36,6 +36,7 @@ jobs:
         shell: pwsh
         run: |
           python Tools\Lint\test_check_sqf.py
+          python Tools\Lint\test_aicom_autoflip.py
           python Tools\Lint\test_fpv_purchase_authority.py
           python Tools\Lint\test_icbm_tel_authority.py
           python Tools\Lint\test_cmd_v2_nudge.py

@@ -104,6 +104,22 @@ if (_unit_kind in (missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []]))
 		"",
 		Format ["(_target getVariable ['wfbe_is_guer_fob', false]) && side group player == resistance && alive _target && player distance _target <= %1", missionNamespace getVariable ["WFBE_C_GUER_FOB_BUILD_RANGE", 30]]
 	];
+	//--- fable/fob-wrong-truck-feedback: unflagged-truck hint. wfbe_is_guer_fob is set ONLY when this truck was
+	//--- bought from the GUER Depot (Client_BuildUnit.sqf), but a battlefield-captured EAST truck can share the
+	//--- exact same classname (WFBE_C_GUER_FOB_TRUCKS, e.g. GAZ_Vodnik/Ural_INS/UralOpen_INS on Chernarus) without
+	//--- ever getting that flag - so the real Build FOB action above never shows, and the player got zero
+	//--- feedback. Gated on the OPPOSITE of the same flag/range/side/alive checks, so exactly one of the two
+	//--- actions is ever visible on a given truck.
+	_unit addAction [
+		"<t color='#FF6B6B'>Build FOB</t>",
+		"Client\Action\Action_BuildFOB_Unavailable.sqf",
+		[],
+		99,
+		false,
+		true,
+		"",
+		Format ["!(_target getVariable ['wfbe_is_guer_fob', false]) && side group player == resistance && alive _target && player distance _target <= %1", missionNamespace getVariable ["WFBE_C_GUER_FOB_BUILD_RANGE", 30]]
+	];
 	//--- PR #846 follow-up (fable/fob-polish): one-shot driver-seat deploy hint. Each client attaches its own
 	//--- EH instance (this file runs on every client); the _fobWho == player guard picks the driver's machine
 	//--- and the LOCAL-ONLY wfbe_fob_seat_hinted flag (setVariable WITHOUT broadcast) keeps it one-shot per
