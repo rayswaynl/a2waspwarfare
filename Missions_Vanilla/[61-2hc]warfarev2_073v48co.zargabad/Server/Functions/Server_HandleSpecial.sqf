@@ -1240,6 +1240,7 @@ switch (_args select 0) do {
 			_saPlayer = _args select 2;
 			_saPos    = _args select 3;
 			_saKind   = _args select 4;
+			_saWantTrans = false; //--- A2/OA: keep the nested team/unit scan comparison type-safe before kind derivation.
 			_saRej = "";
 			if (!(_saSide in [west, east])) then {_saRej = "badside"};
 			if (_saRej == "" && {isNil "_saPlayer"}) then {_saRej = "nilplayer"};
@@ -1293,6 +1294,8 @@ switch (_args select 0) do {
 								//--- One grant per UID is enforced by rejecting any team already stamped with a holder,
 								//--- plus the explicit _saMine scan below.
 								_saWantTrans = (_saKind == "transport");
+								//--- Defensive recovery: a nested forEach must never compare transportSoldier to an undefined value.
+								if (isNil "_saWantTrans") then {_saWantTrans = false; diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|WARNING|" + str _saSide + "|uid=" + _saUID + "|why=wantTransportUndefined|kind=" + _saKind)};
 								_saRange = missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR_RANGE", 6000];
 								_saTeams = _saLogik getVariable ["wfbe_teams", []];
 								_saTeam  = grpNull; _saHull = objNull; _saBestD = _saRange; _saMine = false;
@@ -1355,6 +1358,7 @@ switch (_args select 0) do {
 										_saTeam setVariable ["wfbe_aicom_support_release", nil, true];
 										diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|GRANT|" + str _saSide + "|" + str (round (time / 60)) + "|uid=" + _saUID + "|kind=" + _saKind + "|heli=" + (typeOf _saHull) + "|ferry=" + str (round _saBestD));
 										[_saTeam, _saHull, _saPlayer, _saKind, _saSide, _saUID] Spawn WFBE_SE_FNC_CmdSupportAir;
+											diag_log ("AICOM2|v1|ORDER|CMD_SUPPORT|FULFIL|" + str _saSide + "|uid=" + _saUID + "|kind=" + _saKind + "|heli=" + (typeOf _saHull) + "|state=worker-spawned");
 										[_saPlayer, "HandleSpecial", ["cmdv2-receipt", ["Support heli inbound (" + _saKind + "). It stays on station for " + str (missionNamespace getVariable ["WFBE_C_CMD_SUPPORT_AIR_TTL", 300]) + "s or until you release it."]]] Call WFBE_CO_FNC_SendToClient;
 									};
 								};
