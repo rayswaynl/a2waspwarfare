@@ -1,4 +1,4 @@
-Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
+Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
 
 _townInitSleep = missionNamespace getVariable ["WFBE_C_TOWNS_STARTUP_SLEEP", 0];
 if (_townInitSleep <= 0) then {_townInitSleep = 0.01};
@@ -317,6 +317,8 @@ while {!WFBE_GameOver} do {
 							};
 						};
 
+						_activationDeferred = false;
+
 						//--- ACTIVE-TOWN BUDGET: skip activation if cap is reached.
 						//--- B4: use the incremental _activeTownCount (seeded from the top-of-sweep
 						//--- full count at L52-56 and +1 per town activated this sweep below) instead
@@ -331,6 +333,7 @@ while {!WFBE_GameOver} do {
 								["INFORMATION", Format ["server_town_ai.sqf: activation deferred for %1 - active-town budget %2/%3", _town getVariable "name", _activeTownCount, _activeTownsBudgetMax]] Call WFBE_CO_FNC_AICOMLog;
 							};
 							//--- Zero both flags to skip ground AND air activation branches below.
+							_activationDeferred = true;
 							_enemies_ground = 0;
 							_enemies = 0;
 						};
@@ -347,6 +350,7 @@ while {!WFBE_GameOver} do {
 								["INFORMATION", Format ["server_town_ai.sqf: GUER garrison deferred for %1 - resistance group budget %2/%3", _town getVariable "name", _guerGroupCount, _guerGroupsMax]] Call WFBE_CO_FNC_AICOMLog;
 							};
 							//--- Zero both flags to skip ground AND air activation branches below.
+							_activationDeferred = true;
 							_enemies_ground = 0;
 							_enemies = 0;
 						};
@@ -409,6 +413,8 @@ while {!WFBE_GameOver} do {
 								};
 							};
 						};
+						//--- Budget/GUER-cap deferrals must not fall through into creation side effects.
+						if (!_activationDeferred) then {
 						//// start of creation
 						["INFORMATION", Format ["server_town_ai.sqf: Town [%1] ACTIVATED for [%2] (episode_spawned latch set, groups=%3).", _town getVariable "name", _side, count _groups]] Call WFBE_CO_FNC_AICOMLog;
 						//--- fix(tonight-20260717): mirror the _activeTownCount live-increment pattern above (~line 279)
@@ -433,10 +439,10 @@ while {!WFBE_GameOver} do {
 						_grpTotalP   = count _groups; if (_grpTotalP < 1) then {_grpTotalP = 1};
 						_townRangeP  = _town getVariable ["range", 300]; if (_townRangeP < 120) then {_townRangeP = 120};
 						_townCenP    = getPos _town;
-						for '_i' from 0 to count(_groups)-1 do {
+						for "_groupIndex" from 0 to count(_groups)-1 do {
 							_position = [];
 							if (_perimeterOn) then {
-								_bearingP = (360 / _grpTotalP) * _i + (random 40) - 20;
+								_bearingP = (360 / _grpTotalP) * _groupIndex + (random 40) - 20;
 								_distP    = _townRangeP * (0.70 + (random 0.25));
 								_position = [(_townCenP select 0) + _distP * (sin _bearingP), (_townCenP select 1) + _distP * (cos _bearingP), 0];
 							} else {
@@ -589,6 +595,7 @@ while {!WFBE_GameOver} do {
 						[getPos _town, _side] Call WFBE_CO_FNC_SpawnFactionSmoke;
 
 						//// end of creating
+						};
 					};
 					///
 				};
