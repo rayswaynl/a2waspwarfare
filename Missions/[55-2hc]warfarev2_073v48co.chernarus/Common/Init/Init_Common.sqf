@@ -94,7 +94,7 @@ ARTY_Finish = Compile preprocessFile "Common\Module\Arty\ARTY_mobileMissionFinis
 
 //--- New Fnc.
 WFBE_CO_FNC_ArrayPush = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayPush.sqf";
-WFBE_CO_FNC_ArrayRemoveIndex = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayRemoveIndex.sqf";
+//--- deadcode-sweep 2026-07-21 (DC-05): removed dead compile WFBE_CO_FNC_ArrayRemoveIndex (zero call sites repo-wide; file deleted)
 WFBE_CO_FNC_ArrayShift = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayShift.sqf";
 WFBE_CO_FNC_ArrayShuffle = Compile preprocessFileLineNumbers "Common\Functions\Common_ArrayShuffle.sqf";
 WFBE_CO_FNC_GetTeamMarkerDestPos = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamMarkerDestPos.sqf"; //--- fix/own-marker-dest-dir-split (owner 2026-07-09): shared TP-17 3-source destination lookup for updateteamsmarkers.sqf OWNMarker + per-team leader blocks.
@@ -141,7 +141,7 @@ WFBE_CO_FNC_SMLRetreat   = Compile preprocessFileLineNumbers "Common\Functions\C
 WFBE_CO_FNC_SMLOverwatch = Compile preprocessFileLineNumbers "Common\Functions\Common_SMLOverwatch.sqf"; //--- SML-4 (GR-2026-07-03a): AT overwatch; launcher pre-positions on armor approach before assault. Flag WFBE_C_SML_AT_OVERWATCH default 0.
 WFBE_CO_FNC_SMLUnstuck   = Compile preprocessFileLineNumbers "Common\Functions\Common_SMLUnstuck.sqf";   //--- SML-5 (GR-2026-07-03a): surgical unstuck; nudge only individually-wedged units (pre-tier). Flag WFBE_C_SML_SURGICAL_UNSTUCK default 0.
 WFBE_CO_FNC_CreateUnitForStaticDefence = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateUnitForStaticDefence.sqf";
-WFBE_CO_FNC_CreateUnitsForResBases = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateUnitsForResBases.sqf";
+//--- deadcode-sweep 2026-07-21 (DC-02): removed dead compile WFBE_CO_FNC_CreateUnitsForResBases (zero call sites repo-wide; file deleted)
 WFBE_CO_FNC_CreateVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateVehicle.sqf";
 WFBE_CO_FNC_CreateUnit = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateUnit.sqf";
 WFBE_CO_FNC_EquipBackpack = if !(WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_EquipBackpack.sqf"} else {{}};
@@ -182,7 +182,7 @@ WFBE_CO_FNC_GetTownsSupply = Compile preprocessFileLineNumbers "Common\Functions
 WFBE_CO_FNC_GetUnitConfigGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitConfigGear.sqf";
 //--- wiki-wins: removed dead compile WFBE_CO_FNC_GetUnitsPerSide (zero call sites repo-wide)
 WFBE_CO_FNC_GetVehicleTurretsGear = Compile preprocessFileLineNumbers "Common\Functions\Common_GetVehicleTurretsGear.sqf";
-WFBE_CO_FNC_ValidateCampPos = Compile preprocessFileLineNumbers "Common\Functions\Common_ValidateCampPos.sqf"; //--- fable/fix-camp-placement: shared 6-gate position validator, ported from AI_Commander_Base.sqf (unwired new file, zero call sites yet).
+//--- deadcode-sweep 2026-07-21 (DC-01): removed dead compile WFBE_CO_FNC_ValidateCampPos (zero call sites repo-wide; file deleted)
 WFBE_CO_FNC_HandleArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleArtillery.sqf";
 WFBE_CO_FNC_OnUnitHit = Compile preprocessFileLineNumbers "Common\Functions\Common_OnUnitHit.sqf";
 WFBE_CO_FNC_OnUnitKilled = Compile preprocessFileLineNumbers "Common\Functions\Common_OnUnitKilled.sqf";
