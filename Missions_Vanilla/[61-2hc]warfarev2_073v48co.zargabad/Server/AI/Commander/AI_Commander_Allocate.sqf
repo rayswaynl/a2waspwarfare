@@ -346,7 +346,22 @@ if (count _fist > 0) then {
 //--- neutral, excluding the fist. A light mounted detachment raids it to pressure their rear / supply hub.
 _harassN  = missionNamespace getVariable ["WFBE_C_AICOM2_HARASS_TEAMS", 1];
 if (_expandFirst) then {_harassN = 0};   //--- expansion-first: no enemy-rear raid until the engage threshold
-_expandN  = missionNamespace getVariable ["WFBE_C_AICOM2_EXPAND_TEAMS", 3];
+//--- FIX AICOM-TOWN-EXPANSION-1 (aicom-fixes, 2026-07-22, owner directive "keep targeting towns"): WFBE_C_AICOM2_EXPAND_TEAMS
+//--- was a HARD FLAT CAP on teams peeling off to NEUTRAL towns (owner's own code comment above: "issue: 42/46 towns sat
+//--- neutral") - it never grew with the army, so a large roster still only ever expanded EXPAND_TEAMS teams at a time while
+//--- the rest piled onto the FIST_TOWNS fist. Scale the expand lane off the live team count instead; EXPAND_TEAMS becomes a
+//--- FLOOR (max), not a ceiling, so a small roster is never worse off than the old flat cap. EXPAND_FRAC=0 -> _expandN =
+//--- max(0, EXPAND_TEAMS) = the exact old flat-cap value = instant rollback.
+_expandN  = (missionNamespace getVariable ["WFBE_C_AICOM2_EXPAND_FRAC", 0.4]) * (count _teams);
+_expandN  = _expandN max (missionNamespace getVariable ["WFBE_C_AICOM2_EXPAND_TEAMS", 3]);
+//--- FIX AICOM-TOWN-EXPANSION-2 (aicom-fixes, 2026-07-22): decouple "press while dominant" from "stop expanding".
+//--- WFBE_C_AICOM_PRESS_FLOOR_V2 (_pfDominant above) already pulls force toward the fist/harass targets via the
+//--- FIST/ENEMY score bonuses, but left the expansion lane untouched - so a dominant side stopped snowballing neutral
+//--- conquest at exactly the moment it was winning. Small additive bonus so the expand lane keeps annexing neutral
+//--- towns WHILE the fist/harass bonuses above keep pressing the front; deliberately small (does not overwhelm the
+//--- fist/harass split). Read only when _pfDominant (already gated at flag-off/non-dominant - see its own definition
+//--- above), so this never fires at WFBE_C_AICOM_PRESS_FLOOR_V2=0 (inertness preserved).
+if (_pfDominant) then { _expandN = _expandN + (missionNamespace getVariable ["WFBE_C_AICOM2_PRESS_EXPAND_BONUS", 2]) };
 //--- CONCENTRATE-FIRST (Ray 2026-06-28): until we own WFBE_C_AICOM_CONCENTRATE_TOWNS towns, put FULL strength on the ONE fist
 //--- town - no expand/harass split (opening steamroller). After that the normal spread resumes. Layered under the engage gate.
 _concentrate = (_myTowns < (missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATE_TOWNS", 4]));
