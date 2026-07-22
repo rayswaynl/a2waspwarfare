@@ -1,3 +1,6 @@
+
+//--- Malformed-payload guard: ensure _this is ARRAY with >= 2 elements (player, newScore).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 2}) exitWith {};
 Private ["_newScore","_playerChanged","_oldScore"];
 
 _playerChanged = _this select 0;

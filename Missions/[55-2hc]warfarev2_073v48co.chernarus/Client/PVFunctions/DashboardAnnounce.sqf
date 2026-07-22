@@ -11,6 +11,9 @@
    titleText takeover (non-intrusive on a recurring 5-minute cadence). Headless clients / the
    dedicated server have no interface and bail.
 */
+
+//--- Malformed-payload guard: ensure _this is ARRAY with >= 1 element (message).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 1}) exitWith {};
 if (!hasInterface) exitWith {};
 
 Private ["_msg"];

@@ -7,6 +7,9 @@
    The PVF is addressed to the owning side (WFBE_CO_FNC_SendToClients side parameter),
    so only clients on the bank-owning side receive it.
 */
+
+//--- Malformed-payload guard: ensure _this is ARRAY with >= 1 element (amount).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 1}) exitWith {};
 Private ["_amount"];
 
 if (isNil "WFBE_Client_SideID") exitWith {};

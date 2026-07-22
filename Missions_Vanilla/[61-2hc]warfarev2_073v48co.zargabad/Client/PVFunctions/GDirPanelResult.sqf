@@ -18,6 +18,9 @@
 	A2-OA-1.64 safe.
 */
 
+
+//--- Malformed-payload guard: ensure _this is ARRAY (all accesses below use count checks).
+if (!((typeName _this) in ["ARRAY"])) exitWith {};
 private ["_status","_msg","_verb","_townId"];
 
 _status = if (count _this > 0) then {_this select 0} else {"deny"};

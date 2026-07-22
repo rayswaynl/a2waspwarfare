@@ -3,6 +3,9 @@ Private["_assist","_bounty","_get","_name","_type","_faction","_srvBounty"];
 if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}};
 if (isNull player) exitWith {};
 
+//--- Malformed-payload guard: ensure _this is ARRAY with >= 1 element (type).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 1}) exitWith {};
+
 _type = _this select 0;
 _assist = _this select 1;
 _ai = if (count _this > 2) then {_this select 2} else {objNull};

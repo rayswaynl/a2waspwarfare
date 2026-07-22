@@ -1,5 +1,8 @@
 Private["_localize","_txt","_totalSkillBLUFOR","_totalSkillOPFOR","_attempts", "_commandChat","_object"];
 
+//--- Malformed-payload guard: ensure _this is ARRAY with >= 1 element (localize key).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 1}) exitWith {};
+
 _localize = _this select 0;
 _object = if (_localize == "StructureSell") then {_this select 3} else {if (_localize == "StructureSold") then {_this select 2}};
 _commandChat = true;

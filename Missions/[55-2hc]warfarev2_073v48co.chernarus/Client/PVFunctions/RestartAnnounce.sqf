@@ -8,6 +8,9 @@
    so every client — every side — sees the warning. Headless clients / the dedicated
    server have no interface and bail immediately.
 */
+
+//--- Malformed-payload guard: ensure _this is ARRAY with >= 1 element (message).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 1}) exitWith {};
 if (!hasInterface) exitWith {};
 
 Private ["_msg"];

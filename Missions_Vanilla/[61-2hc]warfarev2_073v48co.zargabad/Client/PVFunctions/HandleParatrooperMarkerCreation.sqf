@@ -1,3 +1,6 @@
+
+//--- Malformed-payload guard: ensure _this is ARRAY with >= 2 elements (unit, sideID).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 2}) exitWith {};
 Private ["_side","_sideID","_unit","_unit_kind"];
 
 _unit 				= _this select 0;
