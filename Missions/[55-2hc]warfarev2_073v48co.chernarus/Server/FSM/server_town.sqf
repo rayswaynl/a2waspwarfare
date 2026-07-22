@@ -845,7 +845,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			//--- Task 13: Airfield built-in Counter Battery Radar (2000 m, follows owner).
 			if ((missionNamespace getVariable ["WFBE_C_AIRFIELDS", 0]) > 0 && (_location getVariable ["wfbe_is_airfield", false])) then {
 				Private ["_airfieldLogic","_airfieldLogicChecks","_oldSP","_logik","_sp","_spClass","_spPos",
-				         "_oldRadar","_oldDressing","_radarClass","_radarPos","_radar","_cbrKey","_cbrReg","_dressTpl",
+				         "_oldRadar","_oldDressing","_radarClass","_radarPos","_radar","_cbrKey","_cbrReg",
 				         "_oldGarrison","_garUnit"];
 
 				//--- ITEM 1: Airfield garrison despawn on capture.
@@ -956,10 +956,11 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 
 					//--- 2. SPAWN new radar (only for WEST/EAST — resistance has no CBR registry).
 					if (_newSide == west || _newSide == east) then {
-						//--- b760: airfield CBR radar model is now the GUER game-file artillery radar (was a Land_Antenna placeholder).
-						//---   as likely absent at runtime for this content set — using Land_Antenna for both.
-						//---   Visual distinctness is provided by the side-specific dressing template.
-						_radarClass = if (IS_chernarus_map_dependent) then {"Gue_WarfareBArtilleryRadar"} else {"TK_GUE_WarfareBArtilleryRadar_EP1"}; //--- Ray 2026-06-26: airfield CBR uses the GUER game-file artillery radar for BOTH sides (owning-side identity is carried by the WFBE_NEURODEF_CBRADAR_<SIDE> dressing below).
+						//--- Permanent airfield CBRs use the proven neutral static anchor on every terrain.
+						//--- The prior GUER Warfare radar stayed hostile to BOTH sides despite setCaptive, so AI
+						//--- kept firing into its indestructible HandleDamage guard. Airfield-only faction props are omitted.
+						//--- Buildable team CBRs keep their faction radar classes and remain valid targets.
+						_radarClass = "Land_Antenna";
 
 						//--- Position: 60 m east of airfield logic (off the runway centerline).
 						_radarPos = if !(isNull _airfieldLogic) then {
@@ -974,14 +975,9 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 						_radar setVariable ["wfbe_cbr_radius", 2000, true]; //--- AF2: broadcast so clients read the fixed 2000 (Init_BaseStructure uses it for BOTH the circle radius AND the "_fixed" flag; un-broadcast -> client drew the 750/1500 upgrade tier and live-resized it)
 						//--- Indestructible: HandleDamage returning 0 prevents any damage being applied.
 						_radar addEventHandler ["HandleDamage", {0}];
-						//--- cmdcon45 (owner report): the GUER-classed radar building is a valid AI TARGET hostile to
-						//--- BOTH sides, so W/E AI dumped ammo into an indestructible object forever. Captive = treated
-						//--- as civilian by AI target selection; nobody engages it (it cannot be destroyed anyway).
-						_radar setCaptive true;
 
-						//--- Spawn side-matched dressing for visual identity (reuses buildable CBRADAR templates).
-						_dressTpl = Format ["WFBE_NEURODEF_CBRADAR_%1", if (_newSide == west) then {"WEST"} else {"EAST"}];
-						[_radar, _dressTpl, 0] Call WFBE_SE_FNC_SpawnStructureDressing;
+						//--- Airfield-only: no faction dressing or ammunition props. The neutral mast must not
+						//--- leave a nearby side-classed object for AI to engage; buildable CBRs keep their dressing.
 
 						//--- Task D: trigger Init_BaseStructure on clients so the CBR range circle is drawn.
 						//--- Mirrors the SP pattern (server_town.sqf ~line 313) and Construction_SmallSite.sqf ~line 138.
