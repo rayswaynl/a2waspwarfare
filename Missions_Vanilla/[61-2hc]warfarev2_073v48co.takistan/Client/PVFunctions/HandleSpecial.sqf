@@ -104,6 +104,25 @@ switch (_request) do {
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};
+	//--- Explicit commander disband is delivered to the leader owner instead of depending only on the
+	//--- original founding driver still being alive. Keep the combat veto; the public command stamp is
+	//--- server-written and prevents this shared PV handler from acting on an arbitrary group.
+	case "aicom-team-disband-execute": {
+		_args spawn {
+			Private ["_dTeam","_dCmd","_dLeader","_dWait"];
+			if (count _this < 1) exitWith {};
+			_dTeam = _this select 0;
+			if (isNull _dTeam) exitWith {};
+			_dCmd = _dTeam getVariable "wfbe_aicom_disband_cmd";
+			if (isNil "_dCmd" || {!_dCmd}) exitWith {};
+			for "_dWait" from 0 to 149 do {
+				_dLeader = leader _dTeam;
+				if (isNull _dLeader || {!local _dLeader} || {behaviour _dLeader != "COMBAT"}) exitWith {};
+				sleep 2;
+			};
+			[_dTeam] Call WFBE_CO_FNC_AICOMDisbandTeam;
+		};
+	};
 	// B69 AICOM HC top-up: merge a depleted donor team (B) into a keeper team (A) of the same side.
 	// Contract: _args = [A, B] (two GROUPS). Self-gate on BOTH leaders being local to THIS machine
 	// (joinSilent is locality-sensitive). If both local -> (units B) joinSilent A; the now-empty B is
