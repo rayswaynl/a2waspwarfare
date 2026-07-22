@@ -191,8 +191,24 @@ startingLocations = [0,0,0] nearEntities ["LocationLogicStart", 100000];
 
 ["INITIALIZATION", "Init_Server.sqf: Initializing starting locations."] Call WFBE_CO_FNC_LogContent;
 
-//--- Waiting for the common part to be executed.
-waitUntil {commonInitComplete && townInit};
+//--- Waiting for the common and town parts to be executed. Do not start a partially initialized match if either asynchronous initializer fails.
+private ["_initGateDeadline","_initGateNextReport","_initGateStarted"];
+_initGateStarted = diag_tickTime;
+_initGateDeadline = diag_tickTime + 120;
+_initGateNextReport = diag_tickTime + 30;
+waitUntil {
+	uiSleep 0.25;
+	if ((diag_tickTime >= _initGateNextReport) && {!(commonInitComplete && townInit)}) then {
+		diag_log ("INITWAIT|v1|COMMON_TOWN|elapsed=" + str (round (diag_tickTime - _initGateStarted)) + "|common=" + str commonInitComplete + "|town=" + str townInit + "|commonHandleDone=" + str (scriptDone WFBE_INIT_HANDLE_COMMON) + "|townsHandleDone=" + str (scriptDone WFBE_INIT_HANDLE_TOWNS));
+		_initGateNextReport = diag_tickTime + 30;
+	};
+	(commonInitComplete && townInit) || {diag_tickTime > _initGateDeadline}
+};
+if (!(commonInitComplete && townInit)) exitWith {
+	WFBE_INIT_FAILURE = ["COMMON_TOWN_TIMEOUT", commonInitComplete, townInit, scriptDone WFBE_INIT_HANDLE_COMMON, scriptDone WFBE_INIT_HANDLE_TOWNS, time];
+	publicVariable "WFBE_INIT_FAILURE";
+	diag_log ("INITFAIL|v1|COMMON_TOWN_TIMEOUT|common=" + str commonInitComplete + "|town=" + str townInit + "|commonHandleDone=" + str (scriptDone WFBE_INIT_HANDLE_COMMON) + "|townsHandleDone=" + str (scriptDone WFBE_INIT_HANDLE_TOWNS));
+};
 
 //--- SELFTEST: one-line proof of live tunables, read AFTER params/constants are final (deploy verification).
 diag_log ("SELFTEST|v1|townsMax=" + str (missionNamespace getVariable ["WFBE_C_TOWNS_ACTIVE_MAX", -1]) + "|delegation=" + str (missionNamespace getVariable ["WFBE_C_AI_DELEGATION", -1]) + "|aicomLock=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", -1]) + "|aicomEnabled=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", -1]) + "|totalAiMax=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", -1]) + "|wildcardAlways=" + str (missionNamespace getVariable ["WFBE_C_WILDCARD_ALWAYS", 1]) + "|statlog=" + str (missionNamespace getVariable ["WFBE_C_STATLOG", -1]) + "|arm=" + (missionNamespace getVariable ["WFBE_C_AB_ARM", "LEGACY"]) + "|simGating=" + str (missionNamespace getVariable ["WFBE_C_SIM_GATING", 0]));
