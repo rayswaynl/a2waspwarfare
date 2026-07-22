@@ -381,7 +381,7 @@ if (worldName == "Zargabad") then {
 	//--- army (a side that founds 0 teams loses this fork by walkover). DELTA 0 => EXACT current behaviour (easy revert).
 	WFBE_C_AICOM_TEAMS_DELTA = -1;             //--- cmdcon42-k: teams dropped from the base founding target per AI commander (both maps). 0 = no change (rollback).
 	WFBE_C_AICOM_TEAMS_FLOOR = 3;              //--- cmdcon42-k: minimum effective base target after the delta - never let a config accident starve the army below this.
-	WFBE_C_AICOM_DISBAND_SAFE_DIST = 1200;     //--- punchy-AICOM (Ray 2026-06-17): 600->1200 - wider no-retire radius so rear teams are kept (more standing army), only retiring when truly far from any player. Rollback: 600.
+	WFBE_C_AICOM_DISBAND_SAFE_DIST = 1200;     //--- REPURPOSED (owner ruling 2026-07-22): disband paths no longer read this (vetoes removed, destructive retire); still gates the AI_Commander_MHQReloc teleport-step stealth check.
 	WFBE_C_AICOM_INCOME_PC_BONUS = 0.06;       //--- B36.1 income: +6% AI-commander CASH income per human player UNDER the REF pop (INVERTED - highest at LOW pop to fund the team-curve flood; 0 disables -> flat INCOME_MULT).
 	WFBE_C_AICOM_INCOME_PC_REF = 10;           //--- B36.1: player count at/above which the inverted income boost is ZERO (base income). Below it, AI-commander cash income rises +BONUS per player under REF. Mirrors the team curve's high-pop end (10+ = 2 teams).
 	//--- B37 BANKING VALVE (Ray 2026-06-16): convert low-pop banked funds into squads + a gentle income trim. Toggle to A/B.
@@ -889,8 +889,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_DWELL_ENABLE") then {WFBE_C_AICOM_DWELL_ENABLE = 1}; //--- AI-BEHAVIOR-LOOP-DESIGN.md sec2: cumulative per-team-per-town dwell clock (wfbe_aicom_dwell_town0), surviving a RELEASE->repick-same-town cycle, consumed as a 4th sibling abandon trigger in AI_Commander_AssignTowns.sqf. 0 = off: var never stamped, existing 3-trigger abandon ladder untouched.
 	if (isNil "WFBE_C_AICOM_DWELL_MAX_SECS") then {WFBE_C_AICOM_DWELL_MAX_SECS = 900}; //--- AI-BEHAVIOR-LOOP-DESIGN.md sec2.3: OWNER-TUNABLE. Cumulative dwell ceiling (s) before DWELL_ABANDON fires - engineering default = 2x WFBE_C_AICOM_ASSAULT_HOLD (720s worst-case camp-first+depot-hold) + headroom, NOT soak-calibrated. Only consulted when WFBE_C_AICOM_DWELL_ENABLE=1.
 	if (isNil "WFBE_C_AICOM_WEAKTEAM_ENABLE") then {WFBE_C_AICOM_WEAKTEAM_ENABLE = 1}; //--- AI-BEHAVIOR-LOOP-DESIGN.md sec3: widens AI_Commander_DisbandLowTier.sqf's idle-candidate test to also catch an attrited (<=WFBE_C_AICOM_BREAKOFF_MIN live units) mobile-team remnant of ANY type for disband-refund. 0 = off: candidate test stays exactly _typeIdx==0 (byte-identical foot-only culling).
-	if (isNil "WFBE_C_AICOM_DISBAND_VIEW_DIST") then {WFBE_C_AICOM_DISBAND_VIEW_DIST = 1500};//--- Ray 2026-06-28: NEVER retire a foot team with a human player within this many m (immersion - no team vanishing in a player's view). Proximity proxy for line-of-sight.
-	if (isNil "WFBE_C_AICOM_DISBAND_COOLDOWN") then {WFBE_C_AICOM_DISBAND_COOLDOWN = 900};//--- claude-gaming 2026-06-30 (Ray): PLAYER-COMMANDER disband-ALL failsafe (Command Console button) - min seconds between full AI-field-team disbands, per side. Reuses the wfbe_aicom_disband path; the HC deletes each team only when no player is within DISBAND_SAFE_DIST and it is not in combat (no vanish-in-view).
+	if (isNil "WFBE_C_AICOM_DISBAND_COOLDOWN") then {WFBE_C_AICOM_DISBAND_COOLDOWN = 900};//--- claude-gaming 2026-06-30 (Ray): PLAYER-COMMANDER disband-ALL failsafe (Command Console button) - min seconds between full AI-field-team disbands, per side. Reuses the wfbe_aicom_disband path; the HC destroys each team unconditionally (owner ruling 2026-07-22: destructive retire, vetoes removed).
 	if (isNil "WFBE_C_AICOM2_SUPPORT_PUSH")    then {WFBE_C_AICOM2_SUPPORT_PUSH    = 1};  //--- M5: 1 = when humans are on the side, bias the fist toward where they're massed (support their push). 0 = always auto-pick the front.
 	if (isNil "WFBE_C_AICOM2_SUPPORT_DIVISOR") then {WFBE_C_AICOM2_SUPPORT_DIVISOR = 50}; //--- M5: strength of the pull toward the human axis (smaller = stronger pull).
 	if (isNil "WFBE_C_AICOM2_FOCUS_TTL")       then {WFBE_C_AICOM2_FOCUS_TTL       = 600};//--- M4: s a commander FOCUS town stays in force before it auto-clears (so a forgotten focus doesn't tunnel-vision the AI forever).
@@ -2914,6 +2913,12 @@ if (isNil "WFBE_C_CMD_SUPPORT_JET")            then {WFBE_C_CMD_SUPPORT_JET = 0}
 //--- on locality and route non-local deletes to the owning machine over the existing HandleSpecial channel;
 //--- 0 = INERT, the unconditional legacy deleteVehicle (byte-identical current behaviour). Ships default 0.
 if (isNil "WFBE_C_TRASH_REMOTE_DELETE") then {WFBE_C_TRASH_REMOTE_DELETE = 0};
+
+//--- HS-TRACE (picklist 4 phase 1, 2026-07-22): dispatch-entry breadcrumb for the RequestSpecial
+//--- command bus. 1 = diag_log request type + argc at each dispatch into Server_HandleSpecial
+//--- (RPT attribution for the next mid-match burn); 0 = INERT, no logging, dispatch byte-identical.
+//--- Ships default 0.
+if (isNil "WFBE_C_HS_DISPATCH_LOG") then {WFBE_C_HS_DISPATCH_LOG = 0};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

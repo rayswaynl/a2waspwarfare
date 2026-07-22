@@ -123,7 +123,7 @@ if (_ctrlPressed) exitWith {
 	};
 
 	if (_disbandNow) then {
-		_target setDamage 1;
+		deleteVehicle _target;
 		_message = Format ["Disbanded AI %1.", _aiId];
 		hintSilent _message; //--- fix(hunt): Ray order - disband feedback stays OFF center screen (matches the eight hintSilent exits above; center-screen titleText regressed in the disband-confirm merge)
 	};

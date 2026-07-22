@@ -6,8 +6,8 @@
 //--- only when mobile force is actually fielded.
 //---
 //--- SELECTOR ONLY. It sets the proven wfbe_aicom_disband flag (publicVariable'd); the HC-LOCAL executor
-//--- in Common_RunCommanderTeam.sqf (~L530-547) does the actual deleteVehicle with its OWN final
-//--- proximity/combat re-check (and stands the team back down if a player wandered near), then the
+//--- in Common_RunCommanderTeam.sqf (~L530-547) does the actual deleteVehicle DESTRUCTIVELY (owner ruling
+//--- 2026-07-22: vehicles explode, infantry grenade-drop; no proximity/combat vetoes), then the
 //--- existing aicom-team-ended path deregisters it from wfbe_teams. NEVER deleteGroup an HC-local team
 //--- from the server - teams are HC-local for their whole life.
 //---
@@ -22,15 +22,13 @@ if (isNil "_logik") exitWith {};
 _teams = _logik getVariable ["wfbe_teams", []];
 if (count _teams < 1) exitWith {};
 
-private ["_sideText","_types","_safeDist","_floor","_viewDist"];
+private ["_sideText","_types","_floor"];
 _sideText = str _side;
 //--- authoritative per-template type (0=inf/foot, 1=light, 2=heavy, 3=air) - the bucket-classifier source,
 //--- correct for motorized (counts as light=mobile, NOT foot) unlike the upgrade-mask telemetry cascade.
 _types    = missionNamespace getVariable Format ["WFBE_%1AITEAMTYPES", _sideText];
 if (isNil "_types") exitWith {};
-_safeDist = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
 _floor    = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_INFANTRY_FLOOR", 3];
-_viewDist = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_VIEW_DIST", 1500];
 
 //--- single sweep: detect mobile force, count foot teams, pick the SMALLEST rear/idle foot candidate.
 private ["_hasMobile","_footCount","_best","_bestN","_bestType"];
@@ -65,13 +63,9 @@ _bestType = -1;
 			_open    = [_team,"wfbe_aicom_dispatch_open",false]   Call WFBE_CO_FNC_GroupGetBool;
 			//--- candidate = HC-owned, not player-led, idle (auto town-mode, no open dispatch), not flagged.
 			if (_hc && {!_flagged} && {!isPlayer (leader _team)} && {_md == "towns"} && {!_open}) then {
-				private ["_ldr","_inView","_threat"];
-				_ldr = leader _team;
-				_inView = ({alive _x && {isPlayer _x} && {_x distance _ldr < _viewDist}} count allUnits) > 0;  //--- NEVER retire a team a human can SEE (Ray 2026-06-28)
-				//--- also skip a CONTESTED team (in combat, or an enemy within safeDist); the in-view gate above handles players.
-				_threat = (behaviour _ldr == "COMBAT")
-				       || {({alive _x && {side _x != _side} && {_x distance _ldr < _safeDist}} count allUnits) > 0};
-				if (!_inView && {!_threat}) then {
+				//--- Owner ruling 2026-07-22 20:06: in-view/contested vetoes REMOVED - retire is destructive
+				//--- (grenade-drop/explosion) and always allowed; brace shape of the old gate preserved.
+				if (true) then {
 					private "_n"; _n = count ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 					if (_n < _bestN) then {_bestN = _n; _best = _team; _bestType = _typeIdx};   //--- smallest rear foot/weak squad first
 				};

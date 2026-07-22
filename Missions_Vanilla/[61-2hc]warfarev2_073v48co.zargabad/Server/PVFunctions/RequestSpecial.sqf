@@ -16,4 +16,11 @@ if !((typeName _requestType) in ["STRING"]) exitWith {
 	["WARNING", Format ["RequestSpecial.sqf: rejected non-string request type [%1].", typeName _requestType]] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- HS-TRACE dispatch breadcrumb (picklist 4 phase 1): last-dispatched case attribution for
+//--- the next mid-match burn. Verbose (fires per request, incl. update-clientfps), so gated
+//--- behind WFBE_C_HS_DISPATCH_LOG (default 0 = INERT; registered in Init_CommonConstants.sqf).
+if ((missionNamespace getVariable ["WFBE_C_HS_DISPATCH_LOG", 0]) > 0) then {
+	diag_log Format ["HSDISPATCH|t=%1|type=%2|argc=%3", round time, _requestType, count _this];
+};
+
 _this Spawn HandleSpecial;

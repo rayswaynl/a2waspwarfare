@@ -722,9 +722,12 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 				if (!isNull _h && {alive _h} && {(((getPos _h) select 0) < 0) || (((getPos _h) select 0) > _wsz) || (((getPos _h) select 1) < 0) || (((getPos _h) select 1) > _wsz)} && {_h getVariable ["wfbe_aicom_transport", false]}) then {
 						private ["_htype"];
 						_htype = typeOf _h;          //--- capture BEFORE delete (typeOf of a deleted obj is "").
+					//--- Owner ruling 2026-07-22: destructive retire - the hull cooks at the map edge (crew dies
+					//--- with it, ordinary deaths); wreck flows the standard cleanup. Refund below is unchanged
+					//--- (uses _htype captured above; edge-arrival already verified alive).
 					_hcrew = crew _h;
-					{["aicomteam-L725", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach _hcrew;
-					["aicomteam-L726", _h, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _h;
+					{if (!isNull _x && {alive _x}) then {_x setDamage 1}} forEach _hcrew;
+					_h setDamage 1;
 					if (_cost > 0) then {
 						//--- D4-FIX(c): append the hull TYPE so the server re-derives the real build price itself (same
 						//--- QUERYUNITPRICE lookup this file used) instead of trusting the network _cost verbatim - closes a
@@ -845,7 +848,7 @@ while {!WFBE_GameOver && _alive} do {
 				if (({alive _x} count (crew _x)) == 0) then {
 					private ["_us"]; _us = _x getVariable "wfbe_air_uncrewed_at";
 					if (isNil "_us") then {_x setVariable ["wfbe_air_uncrewed_at", time]} else {
-						if ((time - _us) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_REAP_GRACE", 45])) then {["aicomteam-L847", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x};
+						if ((time - _us) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_REAP_GRACE", 45])) then {_x setDamage 1};   //--- owner ruling 2026-07-22: destructive retire - abandoned hull cooks, wreck flows standard cleanup
 					};
 				} else {
 					_x setVariable ["wfbe_air_uncrewed_at", nil];
@@ -916,23 +919,10 @@ while {!WFBE_GameOver && _alive} do {
 		private ["_dis"];
 		_dis = _team getVariable "wfbe_aicom_disband";
 		if (!isNil "_dis" && {_dis}) then {
-			private ["_dLdr","_dSafe","_dNear","_dCombat","_dCmd"];
-			_dLdr  = leader _team;
-			_dSafe = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
-			_dCmd = _team getVariable "wfbe_aicom_disband_cmd"; _dCmd = (!isNil "_dCmd" && {_dCmd}); _dNear = if (_dCmd || {isNull _dLdr}) then {0} else {{isPlayer _x && {alive _x} && {(_x distance _dLdr) < _dSafe}} count allUnits}; //--- Build84: explicit console order bypasses player-proximity veto
-			_dCombat = if (isNull _dLdr) then {false} else {behaviour _dLdr == "COMBAT"};
-			if (_dNear == 0 && {!_dCombat}) then {
-				{ if (local _x) then {["aicom-retire-unit", _x, Format ["cmd=%1", _dCmd]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
-				//--- cmdcon44s (correctness): retirement must delete the team HULLS too, not just the crew (units _team above).
-				//--- A retired REAR team otherwise leaves crewless tanks/helis parked at base forever - no reaper catches an
-				//--- HC-local, group-less hull. HC-local delete only; skip any hull a player is aboard (belt-and-braces; the
-				//--- _dNear guard already cleared nearby players). Capture the outer _x before the inner count (A2 rebind trap).
-				{ private ["_rv"]; _rv = _x; if (!isNull _rv && {local _rv} && {({isPlayer _x} count (crew _rv)) == 0}) then {["aicom-retire-hull", _rv, Format ["cmd=%1", _dCmd]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _rv} } forEach _vehicles;
-				_alive = false;
-				diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TEAM_RETIRE_HC|deleted-local-units|cmd=" + str _dCmd);
-			} else {
-				if (!_dCmd) then {_team setVariable ["wfbe_aicom_disband", false, true]}; //--- Build84: latch explicit console orders (fire when combat ends); only the automatic sweep clears on player-proximity
-			};
+			//--- Owner ruling 2026-07-22 20:06: proximity/combat vetoes REMOVED - a flagged disband
+			//--- ALWAYS executes, destructively (vehicles explode, infantry grenade-drop; see
+			//--- Common_AICOMDisbandTeam.sqf). The Build84 latch/stand-down dance went with the vetoes.
+			if ([_team] Call WFBE_CO_FNC_AICOMDisbandTeam) then {_alive = false};
 		};
 	};
 

@@ -702,14 +702,27 @@ switch (_args select 0) do {
 		//--- COMMAND CONSOLE (claude-gaming 2026-06-30, Ray): player-commander FAILSAFE - disband the side's AI field
 		//--- teams. Unlike the posture/fieldorder NUDGES (which gate on !_pHuman = AI-runs), this is a DIRECT action FOR
 		//--- the human commander, so it REQUIRES a human commander on the side. We only FLAG each team (wfbe_aicom_disband,
-		//--- the proven retire path); the HC-local executor in Common_RunCommanderTeam.sqf deletes a team's units ONLY when
-		//--- no player is within DISBAND_SAFE_DIST and it is not in COMBAT - so nothing vanishes in a player's view (honours
-		//--- the no-vanish-in-view rule). A2-OA-safe: object getVariable [k,d] (side logic), group setVariable [k,v,true]
+		//--- the proven retire path); the HC-local executor in Common_RunCommanderTeam.sqf destroys a team's units
+		//--- unconditionally (owner ruling 2026-07-22: destructive retire - vehicles explode, infantry grenade-drop). A2-OA-safe: object getVariable [k,d] (side logic), group setVariable [k,v,true]
 		//--- (no A3-only group getVariable [k,d]); count _args / typeName for the optional arg (no params / isEqualType).
 		//--- Command Console v2 (claude-gaming 2026-07-01): OPTIONAL arg[2] = a team INDEX into this side's wfbe_teams. When
 		//--- present + valid -> disband ONLY that team (a precision action; NO 15-min cooldown, and it does NOT stamp the
 		//--- per-side cooldown clock). When ABSENT -> the original ALL-teams sweep (15-min per-side cooldown, unchanged).
-		private ["_dSide","_dLogik","_dCmd","_dHuman","_dTeams","_dN","_dHasIdx","_dIdx"];
+		private ["_dSide","_dLogik","_dCmd","_dHuman","_dTeams","_dN","_dHasIdx","_dIdx","_dDispatch"];
+		_dDispatch = {
+			private ["_dTeam","_dLeader"];
+			_dTeam = _this select 0;
+			if (!isNull _dTeam) then {
+				_dLeader = leader _dTeam;
+				if (!isNull _dLeader) then {
+					if (local _dLeader) then {
+						[_dTeam] Spawn WFBE_CO_FNC_AICOMDisbandTeam;
+					} else {
+						[_dLeader, "HandleSpecial", ["aicom-team-disband-execute", _dTeam]] Call WFBE_CO_FNC_SendToClient;
+					};
+				};
+			};
+		};
 		_dSide = _args select 1;
 		_dHasIdx = false; _dIdx = -1;
 		if (count _args >= 3) then {
@@ -729,6 +742,7 @@ switch (_args select 0) do {
 						if (!isNull _dTeam && {!isPlayer (leader _dTeam)}) then {
 							_dTeam setVariable ["wfbe_aicom_disband", true, true];
 							_dTeam setVariable ["wfbe_aicom_disband_cmd", true, true]; //--- Build84: explicit human console order -> bypass the player-proximity veto in the HC executor
+							[_dTeam] Call _dDispatch;
 							diag_log ("AICOM2|v1|ORDER|aicom-team-disband|" + str _dSide + "|" + str (round (time / 60)) + "|specific=" + str _dIdx + "|team=" + str _dTeam);
 						} else {
 							diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT-SPECIFIC|" + str _dSide + "|idx=" + str _dIdx + "|nullOrPlayer");
@@ -744,7 +758,7 @@ switch (_args select 0) do {
 					if (_dHuman && {(time - _dLast) >= _dCool}) then {
 						_dLogik setVariable ["wfbe_aicom_last_disband", time, true];
 						_dN = 0;
-						{ if (!isNull _x && {!isPlayer (leader _x)}) then {_x setVariable ["wfbe_aicom_disband", true, true]; _x setVariable ["wfbe_aicom_disband_cmd", true, true]; _dN = _dN + 1} } forEach _dTeams;
+						{ if (!isNull _x && {!isPlayer (leader _x)}) then {_x setVariable ["wfbe_aicom_disband", true, true]; _x setVariable ["wfbe_aicom_disband_cmd", true, true]; [_x] Call _dDispatch; _dN = _dN + 1} } forEach _dTeams;
 						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|" + str _dSide + "|" + str (round (time / 60)) + "|flagged=" + str _dN + "|teams=" + str (count _dTeams));
 					} else {
 						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT|" + str _dSide + "|human=" + str _dHuman + "|cdLeft=" + str (_dCool - (time - _dLast)));
@@ -2089,5 +2103,11 @@ switch (_args select 0) do {
 			["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER Barrel Bomb called by [%1] at %2 (cost %3).", name _player, _pos, _cost]] Call WFBE_CO_FNC_LogContent;
 			[nil, resistance, _pos, _team, _receiptKey] Spawn KAT_GuerHeliDrop;
 		};
+	};
+	default {
+		//--- HS-TRACE (picklist 4 phase 1): an unknown request type previously fell through this
+		//--- switch with zero trace. Always-on WARNING, same envelope idiom as the RequestSpecial
+		//--- Block E guards; healthy cases never reach here.
+		["WARNING", Format ["Server_HandleSpecial.sqf: unknown request type [%1] (argc %2) - dispatch ignored.", _args select 0, count _args]] Call WFBE_CO_FNC_LogContent;
 	};
 };

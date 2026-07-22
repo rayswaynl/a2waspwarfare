@@ -122,18 +122,16 @@ if (_airMaxTotalP > 0) then {
 		//--- Retire it at a player-SAFE moment by routing it through the existing disband idiom WITHOUT the _cmd
 		//--- bypass, so the HC driver's own player-proximity + not-in-COMBAT veto still applies (never a
 		//--- player-visible vanish; founding replaces the slot naturally). Guards here are belt-and-braces so we
-		//--- never even REQUEST a disband while the team is fighting or a player is close.
+		//--- Owner ruling 2026-07-22: recycle converts to disband unconditionally (destructive retire).
 		private ["_wm_recycle","_wm_disbanding","_wm_playerNear"];
 		_wm_recycle = _team getVariable "wfbe_aicom_recycle";
 		if (!isNil "_wm_recycle" && {_wm_recycle}) then {
 			_wm_disbanding = _team getVariable "wfbe_aicom_disband"; //--- already flagged? don't re-request
 			_wm_disbanding = (!isNil "_wm_disbanding" && {_wm_disbanding});
-			_wm_playerNear = false;
-			{ if (isPlayer _x && {alive _x} && {(_x distance _wm_ldr) < 500}) exitWith {_wm_playerNear = true} } forEach playableUnits;
-			if ((behaviour _wm_ldr != "COMBAT") && {!_wm_playerNear} && {!_wm_disbanding}) then {
-				_team setVariable ["wfbe_aicom_disband", true, true]; //--- NO _cmd bypass -> driver still vetoes on proximity/combat
+			if (!_wm_disbanding) then {   //--- owner ruling 2026-07-22: proximity/combat vetoes removed
+				_team setVariable ["wfbe_aicom_disband", true, true]; //--- executor is unconditional now (destructive retire)
 				_team setVariable ["wfbe_aicom_recycle", false, true]; //--- clear the request (one-shot)
-				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TEAM_RECYCLE requested (alive=%3, no player within 500m, not in combat) - disband flagged (proximity-vetoed, no _cmd bypass).", _sideText, _team, _wm_alive]] Call WFBE_CO_FNC_AICOMLog;
+				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TEAM_RECYCLE requested (alive=%3) - disband flagged (destructive, unconditional).", _sideText, _team, _wm_alive]] Call WFBE_CO_FNC_AICOMLog;
 			};
 		};
 
