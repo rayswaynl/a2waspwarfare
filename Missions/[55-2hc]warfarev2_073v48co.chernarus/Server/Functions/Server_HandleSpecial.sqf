@@ -23,6 +23,21 @@ switch (_args select 0) do {
 			};
 		};
 
+		//--- TEAMBAR-FIRST SERVER-SIDE MIRROR, RESPAWN COVERAGE (fable/player-teambar-slot, server heal
+		//--- 2026-07-22, round-2 review): Server_OnPlayerConnected.sqf's own slot1-rejoin only runs at
+		//--- connect - a mission-start AI squadmate that survives a later player death is SERVER-local,
+		//--- so the CLIENT's respawn-time rejoin (Client_OnKilled.sqf ~154, which filters `local _x`)
+		//--- still no-ops on it and #2 recurs after the first death. This "update-teamleader" ping fires
+		//--- on BOTH the connect flow (Init_Client.sqf ~688) and every respawn (Client_OnKilled.sqf
+		//--- ~134), and already hands us the human's OWN networked body directly as _leader - no UID
+		//--- rescan needed here, unlike the connect-handler call site. Shared WFBE_SE_FNC_TeambarSlot1Rejoin
+		//--- keeps both call sites' reorder mechanics identical; the connect-time invocation of this ping
+		//--- is a harmless idempotent re-check (skips "already-index-0" once Server_OnPlayerConnected.sqf's
+		//--- own call already fixed the order).
+		if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0 && {!isNull _team} && {!isNull _leader} && {isPlayer _leader}) then {
+			[_team, _leader, getPlayerUID _leader, name _leader, "teamleader-update"] Call WFBE_SE_FNC_TeambarSlot1Rejoin;
+		};
+
 		//--- C1 lease reclaim (WFBE_C_CMD_LEASE): a respawning/JIP-reconnecting client always pings
 		//--- update-teamleader (Init_Client / Client_OnKilled). Round-3 review (P1-1/P1-2): this
 		//--- receiver no longer mutates lease state itself - it only ENQUEUES a reclaim request; the
