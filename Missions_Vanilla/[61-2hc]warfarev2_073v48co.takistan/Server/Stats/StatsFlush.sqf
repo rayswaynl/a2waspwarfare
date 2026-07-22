@@ -23,7 +23,10 @@ while {true} do {
 		if ((isPlayer _x) && {!((name _x) in ["HC-AI-Control-1", "HC-AI-Control-2", "HC"])}) then {
 			private ["_uid","_sideNum"];
 			_uid = getPlayerUID _x;
-			if (_uid != "") then {
+			//--- Stamp check in addition to the name list above: the tree carries three disagreeing HC
+			//--- name arrays and this one does not know "HC-AI-Control-3". WFBE_HEADLESS_<uid> is set by
+			//--- connected-hc registration and does not depend on the HC's profile name.
+			if ((_uid != "") && {!(_uid call WFBE_SE_FNC_IsHeadlessUid)}) then {
 				[_uid, WFBE_STAT_PLAYTIME, WFBE_C_STATS_FLUSH_INTERVAL] call WFBE_SE_FNC_RecordStat;
 				_sideNum = switch (side _x) do { case west: {1}; case east: {2}; case resistance: {3}; default {0} };
 				[_uid, _sideNum] call WFBE_SE_FNC_RecordStatSide;
@@ -41,6 +44,18 @@ while {true} do {
 			private ["_uid","_buf","_sideNum","_csv"];
 			_uid = _x;
 			_buf = missionNamespace getVariable ["WFBE_STAT_BUF_" + _uid, []];
+			//--- HC RETROACTIVE PURGE: RecordStat now refuses stamped HC uids, but rows can still be
+			//--- buffered during the transient window between an HC connecting and connected-hc
+			//--- registration stamping it (card: transient EAST player-team enrollment window).
+			//--- Emptying _buf here drops the uid: the emit block below needs WFBE_STAT_FIELD_COUNT
+			//--- entries and skips it. No exitWith - that would abort the whole forEach, not one pass.
+			if (_uid call WFBE_SE_FNC_IsHeadlessUid) then {
+				_buf = [];
+				missionNamespace setVariable ["WFBE_STAT_BUF_" + _uid, nil];
+				missionNamespace setVariable ["WFBE_STAT_SIDE_" + _uid, nil];
+				missionNamespace setVariable ["WFBE_STAT_NAME_" + _uid, nil];
+				diag_log ("HCSTAT|v1|PURGE|" + _uid + "|buffered rows dropped: uid is a registered headless client");
+			};
 			if (count _buf >= WFBE_STAT_FIELD_COUNT) then {
 				_sideNum = missionNamespace getVariable ["WFBE_STAT_SIDE_" + _uid, 0];
 				_csv = "";

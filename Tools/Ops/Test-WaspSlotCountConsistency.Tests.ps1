@@ -19,7 +19,8 @@ function New-TerrainFixture {
         [Parameter(Mandatory)] [string]$RepoRoot,
         [Parameter(Mandatory)] [string]$MissionRoot,
         [Parameter(Mandatory)] [int]$MaxPlayers,
-        [Parameter(Mandatory)] [int]$SlotCount
+        [Parameter(Mandatory)] [int]$SlotCount,
+        [int]$HeadlessSlots = 0
     )
 
     $root = Join-Path $RepoRoot $MissionRoot
@@ -31,20 +32,34 @@ function New-TerrainFixture {
 
     $slotBlocks = New-Object System.Collections.Generic.List[string]
     for ($i = 0; $i -lt $SlotCount; $i++) {
+        # An init= string containing braces proves the brace scanner is not derailed by
+        # SQF code inside a quoted attribute.
         $slotBlocks.Add(@"
         class Item$i
         {
+            init="if (true) then { hint ""x"" };";
             player="PLAY CDG";
         };
 "@)
     }
+    for ($i = 0; $i -lt $HeadlessSlots; $i++) {
+        $slotBlocks.Add(@"
+        class HcItem$i
+        {
+            player="PLAY CDG";
+            forceHeadlessClient=1;
+            description="Headless Client $i";
+        };
+"@)
+    }
 
+    $totalDeclared = $SlotCount + $HeadlessSlots
     $sqm = @"
 class Mission
 {
     class Groups
     {
-        items=$SlotCount;
+        items=$totalDeclared;
         // player="PLAY CDG";
         class NonSlot
         {
@@ -69,15 +84,18 @@ function New-SlotFixtureRepo {
         [int]$TakistanSlots,
         [int]$TakistanMax,
         [int]$ZargabadSlots,
-        [int]$ZargabadMax
+        [int]$ZargabadMax,
+        [int]$ChernarusHeadless = 0,
+        [int]$TakistanHeadless = 0,
+        [int]$ZargabadHeadless = 0
     )
 
     $repoRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("wasp-slot-fixture-" + [guid]::NewGuid().ToString("N"))
     New-Item -ItemType Directory -Force -Path $repoRoot | Out-Null
 
-    New-TerrainFixture $repoRoot "Missions\[55-2hc]warfarev2_073v48co.chernarus" $ChernarusMax $ChernarusSlots
-    New-TerrainFixture $repoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan" $TakistanMax $TakistanSlots
-    New-TerrainFixture $repoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.zargabad" $ZargabadMax $ZargabadSlots
+    New-TerrainFixture $repoRoot "Missions\[55-2hc]warfarev2_073v48co.chernarus" $ChernarusMax $ChernarusSlots $ChernarusHeadless
+    New-TerrainFixture $repoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.takistan" $TakistanMax $TakistanSlots $TakistanHeadless
+    New-TerrainFixture $repoRoot "Missions_Vanilla\[61-2hc]warfarev2_073v48co.zargabad" $ZargabadMax $ZargabadSlots $ZargabadHeadless
 
     return $repoRoot
 }
@@ -111,6 +129,29 @@ try {
     Assert ($result.ExitCode -eq 1) "T2 exits with mismatch"
     Assert ($result.Output -match 'FAIL\s+Zargabad: WF_MAXPLAYERS=5, playable slots=3') "T2 reports Zargabad drift"
     Assert ($result.Output -match 'Test-WaspSlotCountConsistency: 1 mismatch') "T2 reports mismatch total"
+} finally {
+    Remove-Item -LiteralPath $repo -Recurse -Force
+}
+
+Write-Host "TEST 3: forceHeadlessClient slots are counted separately, not as human capacity"
+# Chernarus mirrors live master after PR #1162: 36 human slots + 2 dedicated HC slots, template 36.
+$repo = New-SlotFixtureRepo 36 36 1 1 3 3 -ChernarusHeadless 2
+try {
+    $result = Invoke-SlotCheck $repo
+    Assert ($result.ExitCode -eq 0) "T3 exits successfully"
+    Assert ($result.Output -match 'PASS\s+Chernarus: WF_MAXPLAYERS=36, playable slots=36 \(38 declared - 2 headless-client slot\(s\)\)') "T3 Chernarus reports human/declared split"
+    Assert ($result.Output -notmatch 'FAIL') "T3 no terrain fails"
+} finally {
+    Remove-Item -LiteralPath $repo -Recurse -Force
+}
+
+Write-Host "TEST 4: a HUMAN slot added alongside HC slots still trips the gate"
+# Guards against the exclusion being used to hide real drift: 37 human + 2 HC vs template 36.
+$repo = New-SlotFixtureRepo 37 36 1 1 3 3 -ChernarusHeadless 2
+try {
+    $result = Invoke-SlotCheck $repo
+    Assert ($result.ExitCode -eq 1) "T4 exits with mismatch"
+    Assert ($result.Output -match 'FAIL\s+Chernarus: WF_MAXPLAYERS=36, playable slots=37 \(39 declared - 2 headless-client slot\(s\)\)') "T4 reports Chernarus human drift"
 } finally {
     Remove-Item -LiteralPath $repo -Recurse -Force
 }
