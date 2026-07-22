@@ -408,13 +408,6 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_AIR_MIN_TOWNS") then {WFBE_C_AICOM_AIR_MIN_TOWNS = 3}; //--- B66: 4->3 - bring air online a town sooner. Aircraft are deferred until the AI holds this many towns (it flies poorly; air is a late, established-only asset). 0 = no gate.
 	if (isNil "WFBE_C_AIR_ATTACK_GUNNER") then {WFBE_C_AIR_ATTACK_GUNNER = 1}; //--- ARMED (owner pick, 2026-07-17; was default-0/soak-gated). Mounts a GUNNER on AICOM attack helicopters (AI_Commander_AirResp/Wildcard W13) so AH64/AH1Z/Mi24 actually fire their gunner-seat armament (Hellfire/TOW/Vikhr) instead of flying pilot-only + never engaging. Mirrors the shipped B62 gunner-mount (Server_GuerAirDef.sqf:378-387). Gunner mounted only if the airframe has an empty gunner seat. Set 0 to revert to the pre-arm, pilot-only, byte-identical behavior.
 	if (isNil "WFBE_C_AICOM_AIR_COUNCIL_PACK") then {WFBE_C_AICOM_AIR_COUNCIL_PACK = 0}; //--- B757 roster council air templates: 0 = registered but dark; owner can arm the additive air pack explicitly.
-	//--- B74.2 EMPTY-HELI FIX (Ray 2026-06-24, AH1Z piling at base): hard per-side cap on how many attack-heli
-	//--- (non-transport Helicopter) airframes the commander may have ALIVE at once. Once at/over the cap the
-	//--- founding path strips air templates from _eligible (it degrade-walks to a buildable ground class), so it
-	//--- stops founding more premium AH1Z teams that the cost-weighted draw keeps picking and that nothing retires.
-	//--- 0 = no cap (old behaviour). Counts ALL alive non-transport helis on the side (founded teams + any others),
-	//--- so it is self-limiting regardless of where the airframe came from.
-	if (isNil "WFBE_C_AICOM_ATTACKHELI_MAX") then {WFBE_C_AICOM_ATTACKHELI_MAX = 4};
 	//--- === Build 83 / cmdcon35 constants (claude-gaming 2026-07-01) ===
 	if (isNil "WFBE_C_AICOM_HQ_NUDGE_MAX_R") then {WFBE_C_AICOM_HQ_NUDGE_MAX_R = 200};  //--- AI HQ off-road nudge: max expanding-ring radius (m) before using best off-road candidate.
 	if (isNil "WFBE_C_AICOM_HQ_NUDGE_STEP") then {WFBE_C_AICOM_HQ_NUDGE_STEP = 25};     //--- AI HQ off-road nudge: ring radius growth per step (m).
@@ -484,7 +477,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_AIR_TEAM_MAX_HULLS") then {WFBE_C_AICOM_AIR_TEAM_MAX_HULLS = 0}; //--- Lane 179: 0 = off. >0 caps retained Air hulls created by one CreateTeam pass; intended for AICOM air founding templates.
 	if (isNil "WFBE_C_AICOM_AIR_TEAM_STAGGER") then {WFBE_C_AICOM_AIR_TEAM_STAGGER = 0};    //--- Lane 179: seconds to wait between retained Air hull spawns for this side. 0 = no delay.
 	if (isNil "WFBE_C_AIRLIFT_OWN_HQ") then {WFBE_C_AIRLIFT_OWN_HQ = 1};                    //--- Build83 (Ray 2026-07-01): re-enable airlifting your OWN HQ (Zeta_Hook; was disabled by Trello #87). 0 = restore the old exclusion.
-	if (isNil "WFBE_C_AICOM_AIR_MAX_TOTAL") then {WFBE_C_AICOM_AIR_MAX_TOTAL = 3};          //--- Build83 (Ray): flat per-side cap on TOTAL alive AICOM air (planes + attack + transport helis together). Supersedes WFBE_C_AICOM_ATTACKHELI_MAX. 0 = no cap.
+	if (isNil "WFBE_C_AICOM_AIR_MAX_TOTAL") then {WFBE_C_AICOM_AIR_MAX_TOTAL = 3};          //--- Build83 (Ray): flat per-side cap on TOTAL alive AICOM air (planes + attack + transport helis together). Replaces the retired per-type attack-heli cap. 0 = no cap.
 	if (isNil "WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI") then {WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI = 1}; //--- Build83 (Ray): a held Aircraft-Factory structure lets the AI build HELIS without the (never-rushed) air-research tier; planes still need a held airfield. 0 = old (helis need researched air tier).
 	if (isNil "WFBE_C_AICOM_MANUALPIN_TTL") then {WFBE_C_AICOM_MANUALPIN_TTL = 600};        //--- Build83 (Ray): seconds a human console order "pins" a team so the AI (AssignTowns) won't re-grab it; TTL-bounded so a stale pin from a disconnected commander expires. 0 = off.
 	//--- B74.2 HELI BASE-REAP: let the HC team-runner self-delete an attack heli that has idled crewed at its OWN
@@ -569,8 +562,6 @@ if (worldName == "Zargabad") then {
 		if (isNil "WFBE_C_AICOM_SELFREPAIR_SAFE_DIST") then {WFBE_C_AICOM_SELFREPAIR_SAFE_DIST = 250}; //--- m: no non-friendly Man/LandVehicle within this radius before a repair starts or completes.
 		if (isNil "WFBE_C_AICOM_SELFREPAIR_DELAY")     then {WFBE_C_AICOM_SELFREPAIR_DELAY     = 30};  //--- s the crew must hold a safe window before the field repair completes.
 		if (isNil "WFBE_C_AICOM_STUCK_REPAIR")         then {WFBE_C_AICOM_STUCK_REPAIR         = 1};  //--- TP-15: 1 = at a tier-2/3 UNSTUCK event, restore+rearm the stuck lead hull IN PLACE (no town detour), reusing the SELFREPAIR safe-dist gate. 0 = off (byte-identical).
-		//--- B754: also GROW the attack-heli cap (WFBE_C_AICOM_ATTACKHELI_MAX) over the match so the late air push isn't throttled at the early cap. Only when a base cap > 0 exists (0 still = no cap). Effective cap = base + floor(timeRatio * BONUS).
-		if (isNil "WFBE_C_AICOM_ATTACKHELI_MAX_TIME_BONUS") then {WFBE_C_AICOM_ATTACKHELI_MAX_TIME_BONUS = 4};
 		//--- B754 (Ray 2026-06-25) RELATIVE ROUND-CLOSER GATE: the absolute 12-town HQ-strike gate is unreachable in a lopsided game (b753 soak: WEST held 11 vs EAST's dug-in 2, myEff 70 vs 53, never hit 12 -> 8.4h with no winner). Let a runaway leader close BELOW the absolute gate when dominant on EFFECTIVE strength AND (enemy collapsed to <= ENEMY_MAX towns OR own >= TOWN_RATIO town lead), plus a STALL_OVERRIDE after N dominant-but-passive stall ticks. Never fires while behind on towns/strength.
 		if (isNil "WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX")      then {WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX      = 2};
 		if (isNil "WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO")     then {WFBE_C_AICOM_HQSTRIKE_TOWN_RATIO     = 3};
@@ -828,8 +819,6 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_GRUDGE_DECAY")          then {WFBE_C_AICOM_GRUDGE_DECAY          = 2400};  //--- seconds a grudge site stays live before pruning (same prune-on-read idiom as SIDE_BLACKLIST_COOLDOWN).
 	if (isNil "WFBE_C_AICOM_GRUDGE_MAX_SITES")      then {WFBE_C_AICOM_GRUDGE_MAX_SITES      = 3};     //--- cap on concurrent live grudge sites per side; oldest dropped first.
 	if (isNil "WFBE_C_AICOM_GRUDGE_RELIEF_TRIGGER") then {WFBE_C_AICOM_GRUDGE_RELIEF_TRIGGER = 0};     //--- 0 = only offensive failures (SIDE_BLACKLIST, DECAP ABORT) stamp a grudge; 1 = also RELIEF_TOWN_LOST (defensive loss, opt-in).
-	if (isNil "WFBE_C_AICOM_GRUDGE_ARM_SHORTCUT")   then {WFBE_C_AICOM_GRUDGE_ARM_SHORTCUT   = 0};     //--- SUB-OPTION, own flag. 1 = shortcut Decapitate's ARM streak at a grudge-site HQ (min() of the two tick counts, never raises it).
-	if (isNil "WFBE_C_AICOM_GRUDGE_ARM_TICKS")      then {WFBE_C_AICOM_GRUDGE_ARM_TICKS      = 1};     //--- reduced ARM streak length used only when GRUDGE_ARM_SHORTCUT fires.
 	if (isNil "WFBE_C_AICOM_GRUDGE_BARRAGE")        then {WFBE_C_AICOM_GRUDGE_BARRAGE        = 0};     //--- SUB-OPTION, own flag. 1 = one-shot prep barrage on first return-dispatch to a grudge town via the existing AICOM arty pipeline. Still requires WFBE_C_AI_COMMANDER_ARTILLERY>0 and WFBE_C_ARTILLERY>0.
 
 	//--- M6 AIRRESP (AI_Commander_AirResp.sqf): organic W/E air-response closer, sibling to M5 DECAPITATE. Dispatches
@@ -847,11 +836,10 @@ if (worldName == "Zargabad") then {
 
 	//--- D7 AICOM FEINT: AI commander occasionally dispatches a small feint team toward a
 	//--- NON-target enemy town, then recalls it, to pressure the enemy rear and split attention.
-	//--- All four constants are inert while FEINT_ENABLE=0 (default). No gameplay effect at 0.
+	//--- All three constants are inert while FEINT_ENABLE=0 (default). No gameplay effect at 0.
 	if (isNil "WFBE_C_AICOM_FEINT_ENABLE")   then {WFBE_C_AICOM_FEINT_ENABLE   = 0};   //--- 0 = off (dark). Set to 1 to arm feint dispatch.
 	if (isNil "WFBE_C_AICOM_FEINT_INTERVAL") then {WFBE_C_AICOM_FEINT_INTERVAL = 600}; //--- s between feint dispatches per side (per-side cooldown).
 	if (isNil "WFBE_C_AICOM_FEINT_DUR")      then {WFBE_C_AICOM_FEINT_DUR      = 120}; //--- s a feint team holds at the feint town before recall to the fist.
-	if (isNil "WFBE_C_AICOM_FEINT_COOLDOWN") then {WFBE_C_AICOM_FEINT_COOLDOWN = 120}; //--- reserved: per-side anti-double-dispatch stamp (used by wfbe_aicom_feint_t0 in the Allocator).
 	if (isNil "WFBE_C_AICOM2_EXPAND_TEAMS")    then {WFBE_C_AICOM2_EXPAND_TEAMS    = 3};  //--- Ray 2026-06-28: up to N teams divert to capture the nearest reachable NEUTRAL town instead of all-in on the fist (issue: 42/46 towns sat neutral). 0 = off (restores fist-only).
 	if (isNil "WFBE_C_AICOM_EXPAND_DEDUP")     then {WFBE_C_AICOM_EXPAND_DEDUP     = 1};  //--- Ray 2026-07-04: ON for live testing. block-m: 0=off legacy (multiple expand teams may dogpile one neutral town); 1=each expand team claims a distinct neutral town per tick (DEDUP).
 	if (isNil "WFBE_C_AICOM_HARASS_FALLBACK")  then {WFBE_C_AICOM_HARASS_FALLBACK  = 1};  //--- Ray 2026-07-04: ON for live testing. block-m: 0=off legacy (harass picks deepest town regardless of reach); 1=walk depth-sorted candidates and pick deepest reachable by >=1 mounted team (emits AICOMSTAT|v2|EVENT|HARASS_SKIP when first candidate is unreachable).
@@ -899,8 +887,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_ORDER_COOLDOWN")   then {WFBE_C_AICOM_ORDER_COOLDOWN   = 8};   //--- s client cooldown between AI-commander instructions (anti-spam; stamped client-side in the menu loop).
 	if (isNil "WFBE_C_AICOM_DEFEND_TTL")       then {WFBE_C_AICOM_DEFEND_TTL       = 300}; //--- s a player-set DEFEND-town order stays fresh; the Strategy relief block biases a reliever to it while fresh, then it auto-clears.
 	if (isNil "WFBE_C_AICOM_ARTY_REQUEST_TTL") then {WFBE_C_AICOM_ARTY_REQUEST_TTL = 120}; //--- s a player-set ARTILLERY-HERE request stays fresh for the brain's artillery block to consume (then ignored).
-	//--- COMMAND CONSOLE (full rework): extra TTL/amount knobs the new "Command" console orders ride. Backend (Server_HandleSpecial)
-	//--- reads these for the aicom-reinforce / aicom-posture / aicom-request-unit stamps + the aicom-donate amount. isNil-guarded.
+	//--- COMMAND CONSOLE (full rework): extra TTL knobs the new "Command" console orders ride. Backend (Server_HandleSpecial)
+	//--- reads these for the aicom-reinforce / aicom-posture / aicom-request-unit stamps. Donate amounts are client-supplied and server-validated.
 	if (isNil "WFBE_C_AICOM_REINFORCE_TTL")    then {WFBE_C_AICOM_REINFORCE_TTL    = 300}; //--- s a player-set REINFORCE-HERE order stays fresh; Strategy biases a fresh team toward that town while live, then it auto-clears.
 	if (isNil "WFBE_C_AICOM_POSTURE_TTL")      then {WFBE_C_AICOM_POSTURE_TTL      = 300}; //--- s a player PUSH/HOLD posture (and a request-unit hint) stays in force before it auto-clears back to the AI's own judgement.
 
@@ -914,7 +902,6 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_COMP_OPEN_SV")        then {WFBE_C_AICOM_COMP_OPEN_SV        = 50}; //--- supplyValue at or below which a target is an "open village" -> mech-infantry boost.
 	if (isNil "WFBE_C_AICOM_COMP_ATMG_MULT")      then {WFBE_C_AICOM_COMP_ATMG_MULT      = 3.0};//--- weight multiplier applied to templates that contain an AT/MG hull or unit when garrison-heavy.
 	if (isNil "WFBE_C_AICOM_COMP_MECH_MULT")      then {WFBE_C_AICOM_COMP_MECH_MULT      = 2.5};//--- weight multiplier applied to light/heavy (mech-infantry) templates when the target is an open village.
-	if (isNil "WFBE_C_AICOM_DONATE_AMOUNT")    then {WFBE_C_AICOM_DONATE_AMOUNT    = 10000};//--- funds moved from the player's team wallet to the AI commander's treasury per Donate press (affordability checked client-side, re-validated server-side).
 	if (isNil "WFBE_C_AICOM_POSTURE_ENGAGE_DELTA") then {WFBE_C_AICOM_POSTURE_ENGAGE_DELTA = 4}; //--- COMMAND CONSOLE: how many towns a PUSH posture shaves off (HOLD adds to) the expansion-first ENGAGE gate in the Allocator. SMALL bias; the stance machine is untouched.
 	if (isNil "WFBE_C_AICOM_REQUEST_TYPE_MULT") then {WFBE_C_AICOM_REQUEST_TYPE_MULT = 3}; //--- COMMAND CONSOLE: weight multiplier the request-unit hook applies to the requested bucket (armor/air/infantry) in AssignTypes + Teams. SOFT nudge; the empty-bucket zero-out still guarantees a buildable pick.
 		//--- cmdcon27 THREAD C: FIELD-ORDER nudge knobs (SPLIT UP / PUSH TOGETHER / HARASS / FALL BACK). One consolidated
@@ -1308,7 +1295,7 @@ if (worldName == "Zargabad") then {
 	//--- average settles INSIDE the band. Clamped into [MIN,MAX]. Cheap stopgap; the real fix is a
 	//--- reinforcement/top-up pass (see B57-SOAK-PROPOSALS.md, AI Commander section). Economy tradeoff:
 	//--- bigger founds cost ~25% more supply under SUPPLY_INCOME_MULT=0.35 - review with Ray before deploy.
-	if (isNil "WFBE_C_AICOM_TEAM_FOUND_SIZE") then {WFBE_C_AICOM_TEAM_FOUND_SIZE = 10}; //--- Owner ruling 2026-07-21 supersedes the prior C3 consensus: effective founding target is 10; MIN/MAX clamp is 10.
+	if (isNil "WFBE_C_AICOM_TEAM_FOUND_SIZE") then {WFBE_C_AICOM_TEAM_FOUND_SIZE = 10}; //--- WARNING: MIN/MAX are both 10 by owner ruling (2026-07-21), so the founding clamp forces 10; changing FOUND_SIZE alone has no effect.
 	//--- RELIEF HOLD: a team diverted to defend a town holds for this long, then - if the town is
 	//--- still ours but no longer actively attacked OR the hold expires - it is released back to
 	//--- OFFENSE instead of idling on a quiet town (never a standing-still AI). AI_Commander_Strategy.sqf.
@@ -1423,7 +1410,6 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 
 	//--- Base
 	if (isNil "WFBE_C_BASE_AREA") then {WFBE_C_BASE_AREA = 2}; //--- Force the bases to be grouped by areas.
-	if (isNil "WFBE_C_BASE_RES") then {WFBE_C_BASE_RES = 0}; //--- RES Parameters (0 Disabled, 1 West, 2 East, 3 both).
 	if (isNil "WFBE_C_BASE_DEFENSE_MAX_AI") then {WFBE_C_BASE_DEFENSE_MAX_AI = 40}; //--- Maximum AIs that will be able to man defense within the barracks area.
 	if (isNil "WFBE_C_BASE_DEFENSE_MANNING_RANGE") then {WFBE_C_BASE_DEFENSE_MANNING_RANGE = 250}; //--- Within x meters, defenses may be manned.
 	if (isNil "WFBE_C_BASE_START_TOWN") then {WFBE_C_BASE_START_TOWN = 1}; //--- Remove the spawn locations which are too far away from the towns.
@@ -1481,13 +1467,11 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- ARRIVE_RADIUS 250m ~= town SAD radius (AIMoveTo uses 200) + leader margin to count "at the town".
 	//--- TIMEOUT 420s = ~2x the 120s worker interval beyond STUCK_SECS(210) so a team gets ~3 watcher
 	//--- passes before being declared stranded; this is the dispatch->arrival budget, not the stuck-reissue.
-	if (isNil 'WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS') then {WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS = 250};
 	if (isNil 'WFBE_C_AICOM_ASSAULT_TIMEOUT')       then {WFBE_C_AICOM_ASSAULT_TIMEOUT       = 420};
 	//--- T0.2 ADD (R3-SYNTHESIS 2026-07-20): diagnostic-only, tighter than ARRIVE_RADIUS -
 	//--- lets the STUCKSTAT uncap-parked line distinguish "still closing the last 150m" from
 	//--- "genuinely at capture range and still not converting". Does not feed any capture,
 	//--- abandon, or strike-ladder decision -- read-only in AI_Commander_AssignTowns.sqf.
-	if (isNil 'WFBE_C_AICOM_CAPTURE_READY_RADIUS') then {WFBE_C_AICOM_CAPTURE_READY_RADIUS = 60};
 	//--- Codex review MEDIUM fix: CAPGATE (server_town.sqf) throttle interval - see the diag_log call there.
 	if (isNil 'WFBE_C_CAPGATE_LOG_INTERVAL') then {WFBE_C_CAPGATE_LOG_INTERVAL = 30};
 	//--- P0 STRANDED FIX (task #48, claude-gaming 2026-06-15): foot/under-equipped ongoing teams were
@@ -1576,7 +1560,6 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_ECONOMY_INCOME_SYSTEM") then {WFBE_C_ECONOMY_INCOME_SYSTEM = 3}; //--- Income System (1:Full, 2:Half (Half -> 120 SV Town = 60$ / 60SV), 3: Commander System, 4: Commander System: Full)
 	if (isNil "WFBE_C_ECONOMY_SUPPLY_START_WEST") then {WFBE_C_ECONOMY_SUPPLY_START_WEST = if (WF_Debug) then {900000} else {12800}};
 	if (isNil "WFBE_C_ECONOMY_SUPPLY_START_EAST") then {WFBE_C_ECONOMY_SUPPLY_START_EAST = if (WF_Debug) then {900000} else {12800}};
-	if (isNil "WFBE_C_ECONOMY_SUPPLY_START_GUER") then {WFBE_C_ECONOMY_SUPPLY_START_GUER = if (WF_Debug) then {900000} else {30000}};
 	//--- PRODUCTION SUPPLY CAP LIVES IN THE MISSION PARAMETER, NOT IN THIS LINE. On a dedicated server, Init_Parameters.sqf
 	//--- sets WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT from paramsArray (Rsc\Parameters.hpp class default = 50000) BEFORE this file runs,
 	//--- so this isNil fallback is DEAD in MP - the 40000 only applies to non-MP/local (editor) runs. The supply clamp in
@@ -1818,8 +1801,6 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_TOWNS_PATROLS") then {WFBE_C_TOWNS_PATROLS = 6}; //--- Town-to-town patrols ON by default (up to 6 towns); set 0 in the lobby to disable. DR-57 fix makes them work.
 	if (isNil "WFBE_C_TOWNS_PATROL_CONTESTED_ONLY") then {WFBE_C_TOWNS_PATROL_CONTESTED_ONLY = 0}; //--- Lane 190: 0 keeps legacy supply-drop defense flips; 1 only pulls town patrols into defense while the town is stamped contested.
 	if (isNil "WFBE_C_WAYPOINT_WATER_RETRY_CAP") then {WFBE_C_WAYPOINT_WATER_RETRY_CAP = 0}; //--- Max random waypoint water rerolls before falling back to the patrol center; 0 keeps legacy uncapped retries.
-	if (isNil "WFBE_C_TOWNS_REINFORCEMENT_DEFENDER") then {WFBE_C_TOWNS_REINFORCEMENT_DEFENDER = 0}; //--- Enable towns defender reinforcement.
-	if (isNil "WFBE_C_TOWNS_REINFORCEMENT_OCCUPATION") then {WFBE_C_TOWNS_REINFORCEMENT_OCCUPATION = 0}; //--- Enable towns occupation reinforcement.
 	if (isNil "WFBE_C_TOWNS_STARTING_MODE") then {WFBE_C_TOWNS_STARTING_MODE = 0}; //--- Town starting mode (0: Resistance, 1: 50% blu, 50% red, 2: Nearby Towns, 3: Random).
 	if (isNil "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") then {WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER = 1}; //--- Lock the vehicles of the defender side.
 	if (isNil "WFBE_C_TOWNS_CAPTURE_BAR_DETAIL") then {WFBE_C_TOWNS_CAPTURE_BAR_DETAIL = 0}; //--- Lane 52: 1 adds SV trend, mode-2 Camps X/Y, and camp SV text to the client capture bar; 0 keeps the legacy label.
@@ -2156,7 +2137,6 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_PANEL_SCARCITY_DECAY")  then {AICOMV2_GDIR_PANEL_SCARCITY_DECAY = 120}; //--- Seconds for scarcity to decay one step back toward 1.0.
 	if (isNil "AICOMV2_GDIR_PANEL_LF_MIN")          then {AICOMV2_GDIR_PANEL_LF_MIN = 1.0};          //--- loadFactor floor (healthy server).
 	if (isNil "AICOMV2_GDIR_PANEL_LF_MAX")          then {AICOMV2_GDIR_PANEL_LF_MAX = 2.5};          //--- loadFactor ceiling (stressed server).
-	if (isNil "AICOMV2_GDIR_QRF_CAS_SEC")           then {AICOMV2_GDIR_QRF_CAS_SEC = 180};          //--- Gunship on-station duration (s).
 //--- Amendment: Hardening + Shop (fable/gdir-harden-shop).
 //--- P1 - Movement ETA-timeout: cells stuck past ETA teleport-merge into destination town.
 	if (isNil "AICOMV2_GDIR_HARDEN")                 then {AICOMV2_GDIR_HARDEN = 1};                //--- Master switch: 0=off (P1/P2 inert), 1=hardening active.
@@ -2563,7 +2543,6 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_SML_WATCHDOG_TTL") then {WFBE_C_SML_WATCHDOG_TTL = 240};  //--- s: per-unit TTL before the watchdog forces doFollow back (covers all exit paths).
 //--- SML-2: real dismounts (cargo infantry advance on foot; driver/gunner stay mounted for fire support). Flag-gated default 0.
 	if (isNil "WFBE_C_SML_DISMOUNTS")              then {WFBE_C_SML_DISMOUNTS              = 1};   //--- 1=enable real dismounts; 0=byte-identical legacy behaviour.
-	if (isNil "WFBE_C_SML_DISMOUNTS_RANGE")        then {WFBE_C_SML_DISMOUNTS_RANGE        = 150}; //--- m: dismount is triggered only when the team leader is within this range of the objective (reserved; caller already at capture site).
 //--- SML-3: graceful retreats (mauled individuals pull back while healthy units keep fighting). Flag default 0.
 	if (isNil "WFBE_C_SML_RETREAT")                   then {WFBE_C_SML_RETREAT                   = 1};
 	if (isNil "WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD")  then {WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD  = 0.5};  //--- getDammage >= this -> unit is mauled and pulls back.
@@ -2877,7 +2856,6 @@ if (isNil "WFBE_C_CMD_TOWN_NUDGE_RING")        then {WFBE_C_CMD_TOWN_NUDGE_RING 
 //---     NO leader-only gate - any eligible nearby player may nudge, with anti-spam + receipts.
 if (isNil "WFBE_C_CMD_TEAM_DOCTRINE")          then {WFBE_C_CMD_TEAM_DOCTRINE = 1};           //--- ARMED (owner ruling 2026-07-21: everything flags on). master: 1 = on; 0 reverts to verb-rejected/stamp-never-written (byte-identical). HONEST SCOPE NOTE (review 2026-07-19, still true post-arming): the per-team stamp (Server_HandleSpecial.sqf) has NO consumer anywhere in this tree yet - AssignTowns/Allocate do not read it. Arming this flag only turns on the stamping side-effect; it does not yet bias allocator behavior.
 if (isNil "WFBE_C_CMD_TEAM_DOCTRINE_COOLDOWN") then {WFBE_C_CMD_TEAM_DOCTRINE_COOLDOWN = 90}; //--- s per-UID anti-spam cooldown between team-doctrine nudges.
-if (isNil "WFBE_C_CMD_TEAM_DOCTRINE_TTL")      then {WFBE_C_CMD_TEAM_DOCTRINE_TTL = 300};     //--- s a per-team doctrine stamp stays live before it expires back to normal allocator tasking.
 if (isNil "WFBE_C_CMD_POSTURE_GARRISON")       then {WFBE_C_CMD_POSTURE_GARRISON = 1};        //--- ARMED (owner ruling 2026-07-21: everything flags on). 1 = the side-posture verb also accepts "GARRISON"; 0 reverts to the PUSH/HOLD-only whitelist (byte-identical). TRUTHFUL SCOPE NOTE (still true post-arming): GARRISON currently applies the HOLD engage-gate bias plus a defensive lean ONLY - the town-garrison SORTIE loop from docs/design/GARRISON-SORTIE-PATROL-DESIGN.md is NOT implemented anywhere in this tree (no WFBE_C_GARRISON_SORTIE* flag exists), so there is nothing to reuse yet.
 //--- (c) SUPPORT AIR - player requests an already-owned AI heli team as escort. Owner 2026-07-18:
 //---     FREE loan (no requisition fee, no refund path); anti-abuse is cooldown + caps + telemetry.
