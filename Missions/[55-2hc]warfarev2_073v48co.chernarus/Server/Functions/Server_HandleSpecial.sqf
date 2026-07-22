@@ -2090,4 +2090,10 @@ switch (_args select 0) do {
 			[nil, resistance, _pos, _team, _receiptKey] Spawn KAT_GuerHeliDrop;
 		};
 	};
+	default {
+		//--- HS-TRACE (picklist 4 phase 1): an unknown request type previously fell through this
+		//--- switch with zero trace. Always-on WARNING, same envelope idiom as the RequestSpecial
+		//--- Block E guards; healthy cases never reach here.
+		["WARNING", Format ["Server_HandleSpecial.sqf: unknown request type [%1] (argc %2) - dispatch ignored.", _args select 0, count _args]] Call WFBE_CO_FNC_LogContent;
+	};
 };

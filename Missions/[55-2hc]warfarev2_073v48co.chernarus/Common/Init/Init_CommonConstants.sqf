@@ -2915,5 +2915,11 @@ if (isNil "WFBE_C_CMD_SUPPORT_JET")            then {WFBE_C_CMD_SUPPORT_JET = 0}
 //--- 0 = INERT, the unconditional legacy deleteVehicle (byte-identical current behaviour). Ships default 0.
 if (isNil "WFBE_C_TRASH_REMOTE_DELETE") then {WFBE_C_TRASH_REMOTE_DELETE = 0};
 
+//--- HS-TRACE (picklist 4 phase 1, 2026-07-22): dispatch-entry breadcrumb for the RequestSpecial
+//--- command bus. 1 = diag_log request type + argc at each dispatch into Server_HandleSpecial
+//--- (RPT attribution for the next mid-match burn); 0 = INERT, no logging, dispatch byte-identical.
+//--- Ships default 0.
+if (isNil "WFBE_C_HS_DISPATCH_LOG") then {WFBE_C_HS_DISPATCH_LOG = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

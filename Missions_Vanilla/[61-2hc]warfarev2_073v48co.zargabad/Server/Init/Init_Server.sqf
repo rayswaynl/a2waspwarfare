@@ -42,7 +42,9 @@ WFBE_SE_FNC_AI_Com_BaseSell = Compile preprocessFileLineNumbers "Server\AI\Comma
 WFBE_SE_FNC_AI_Com_FundsSink = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_FundsSink.sqf";
 HandleBuildingDamage = Compile preprocessFile "Server\Functions\Server_HandleBuildingDamage.sqf";
 HandleDefense = Compile preprocessFile "Server\Functions\Server_HandleDefense.sqf";
-HandleSpecial = Compile preprocessFile "Server\Functions\Server_HandleSpecial.sqf";
+//--- HS-TRACE (picklist 4 phase 1, 2026-07-22): LineNumbers so a parse failure in the
+//--- 55-case switch names file:line in the RPT instead of an anonymous error.
+HandleSpecial = Compile preprocessFileLineNumbers "Server\Functions\Server_HandleSpecial.sqf";
 MHQRepair = Compile preprocessFile "Server\Functions\Server_MHQRepair.sqf";
 SideMessage = Compile preprocessFile "Server\Functions\Server_SideMessage.sqf";
 
