@@ -39,6 +39,14 @@ _tbEvt = _this select 4;
 _tbSkip = "";
 if (isNull _tbTeam) then {_tbSkip = "team-null"};
 if (_tbSkip == "" && {isNull _tbHuman}) then {_tbSkip = "human-null"};
+//--- NOT-MEMBER guard (round-3 adversarial review 2026-07-22): the update-teamleader call site passes the
+//--- client-cached WFBE_Client_Team + player straight from the network ping (Init_Client.sqf ~688 /
+//--- Client_OnKilled.sqf ~134 / SkinSelector_Apply.sqf), which can go stale versus the human's real group.
+//--- A2 OA 1.64 selectLeader has no implicit-join safety net (added only in A3 v2.21), so selecting a
+//--- non-member leader would leave (leader _tbTeam) pointing at a dangling unit and can crash if that unit
+//--- is later deleted. The client guards this with its own group-identity check; mirror it here so we only
+//--- ever selectLeader a confirmed member. (The connect call site already restricts _tbHuman to units _tbTeam.)
+if (_tbSkip == "" && {!(_tbHuman in (units _tbTeam))}) then {_tbSkip = "not-member"};
 
 if (_tbSkip != "") exitWith {
 	diag_log Format ["[WFBE][TEAMBAR-SRV] %1 slot1-rejoin: skipped (%2) for [%3] [%4].", _tbEvt, _tbSkip, _tbName, _tbUid];
@@ -49,7 +57,8 @@ if (_tbSkip != "") exitWith {
 //--- rejoin. At a FRESH CONNECT the mission-start AI squadmate is still the engine leader of the
 //--- pre-grouped team (the client selectLeader assert at Init_Client.sqf ~1234 runs AFTER the ~688
 //--- update-teamleader ping that reaches this function), so the previous "not-leader" skip no-op-ed the
-//--- heal EXACTLY when it was needed. Assert leadership here first, then let the index-0 check decide.
+//--- heal EXACTLY when it was needed. Membership is confirmed above, so this selectLeader is safe; then
+//--- let the index-0 check decide whether a slot renumber is still required.
 if ((leader _tbTeam) != _tbHuman) then {_tbTeam selectLeader _tbHuman};
 if (((units _tbTeam) select 0) == _tbHuman) exitWith {
 	diag_log Format ["[WFBE][TEAMBAR-SRV] %1 slot1-rejoin: skipped (already-index-0) for [%2] [%3].", _tbEvt, _tbName, _tbUid];

@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[2]
 MISSIONS = {
     "chernarus": ROOT / "Missions" / "[55-2hc]warfarev2_073v48co.chernarus",
     "takistan": ROOT / "Missions_Vanilla" / "[61-2hc]warfarev2_073v48co.takistan",
+    "zargabad": ROOT / "Missions_Vanilla" / "[61-2hc]warfarev2_073v48co.zargabad",
 }
 
 
@@ -84,6 +85,7 @@ class SkinswapRejoinTests(unittest.TestCase):
                 self.assertIn('_tbSkip = "team-null"', fn)
                 self.assertIn('_tbSkip = "human-null"', fn)
                 self.assertIn("((units _tbTeam) select 0) == _tbHuman) exitWith", fn)
+                self.assertIn('!(_tbHuman in (units _tbTeam))}) then {_tbSkip = "not-member"}', fn)
 
     def test_server_heal_is_wired_to_both_call_sites(self) -> None:
         # Registered once and invoked from the connect handler AND the respawn/connect ping receiver.

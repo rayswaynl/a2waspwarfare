@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[2]
 MISSIONS = {
     "chernarus": ROOT / "Missions" / "[55-2hc]warfarev2_073v48co.chernarus",
     "takistan": ROOT / "Missions_Vanilla" / "[61-2hc]warfarev2_073v48co.takistan",
+    "zargabad": ROOT / "Missions_Vanilla" / "[61-2hc]warfarev2_073v48co.zargabad",
 }
 
 
