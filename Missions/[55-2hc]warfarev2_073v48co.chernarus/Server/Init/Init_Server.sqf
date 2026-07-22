@@ -1204,7 +1204,7 @@ missionNamespace setVariable ["wfbe_coreloop_handle_groupsgc", [_clGCOwner] Exec
 [] spawn Compile preprocessFileLineNumbers "Common\Functions\Common_AICOM_SmallArmsAirEnvelope.sqf";
 
 //--- Client FPS telemetry receiver (2026-06-15, Net_2 request).
-//--- Each PLAYER client publishes [uid, name, avgFps, minFps] every WFBE_C_CLIENT_FPS_REPORT_INTERVAL s
+//--- Each PLAYER client publishes [uid, name, avgFps, minFps, viewDistance, nearAI300, nearAI1000, nearMs] every WFBE_C_CLIENT_FPS_REPORT_INTERVAL s
 //--- when the WFBE_C_CLIENT_FPS_REPORT lobby param is ON. We stamp it server-side with what the client
 //--- can't cheaply know - live player count + HC count - so the RPT can be bucketed. Raw diag_log so it
 //--- lands regardless of LOG_CONTENT_STATE; the lobby param is the single on/off gate. Name is logged
@@ -1213,6 +1213,8 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 	"WFBE_FPS_REPORT" addPublicVariableEventHandler {
 		private ["_d", "_players", "_hc"];
 		_d = _this select 1;
+		if ((typeName _d) != "ARRAY") exitWith {};
+		if ((count _d) < 8) exitWith {};
 		_players = { isPlayer _x } count playableUnits;
 		//--- hc= the live headless-client count (registry filtered to non-null, alive-leader HCs), so the
 		//--- planned 0-HC / 1-HC / 2-HC comparison days bucket cleanly even when an RPT spans several launches.
@@ -1220,6 +1222,10 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 		diag_log ("FPSREPORT|v1|uid=" + str (_d select 0)
 			+ "|fps=" + str (_d select 2)
 			+ "|fpsMin=" + str (_d select 3)
+			+ "|vd=" + str (_d select 4)
+			+ "|nearAI300=" + str (_d select 5)
+			+ "|nearAI1000=" + str (_d select 6)
+			+ "|nearMs=" + str (_d select 7)
 			+ "|players=" + str _players
 			+ "|hc=" + str _hc
 			+ "|dnMode=" + str (missionNamespace getVariable ["WFBE_DAYNIGHT_ENABLED", 1])
