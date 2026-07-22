@@ -531,6 +531,8 @@ if (worldName == "Zargabad") then {
 	//--- but armour/mech rise to a meaningful ~25-35% once the heavy/light factory + tier exist. Weights
 	//--- need not sum to 1 (they are normalised at pick time). Was effectively ~70% infantry from the old
 	//--- doctrine-only weighting; this defaults to ~65/20/12/3 of the achievable mix.
+	//--- HF-MAIN DOCTRINE (owner ruling 2026-07-22): default ON; flag-off restores the legacy doctrine/temperament pick and founding mix.
+	if (isNil "WFBE_C_AICOM_DOCTRINE_HF_MAIN") then {WFBE_C_AICOM_DOCTRINE_HF_MAIN = 1};
 	if (isNil "WFBE_C_AICOM_TYPE_MIX") then {WFBE_C_AICOM_TYPE_MIX = [0.65, 0.20, 0.12, 0.03]};
 	//--- B66 combined-arms RAMP: the static TYPE_MIX above stays the fallback. The type picker selects an
 	//--- [inf,light,heavy,air] weight tier by the AI commander's OWN-TOWN count: EARLY (mostly foot, the
