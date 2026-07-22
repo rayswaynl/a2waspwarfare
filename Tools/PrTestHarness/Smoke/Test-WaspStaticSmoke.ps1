@@ -166,24 +166,28 @@ function Test-HqShield {
 }
 
 function Test-AARadarHasNoWalls {
+	# Recalibrated 2026-07-22 vs master 391b845a5b: empty WALLS template remains; auto-wall skip is now
+	# `!(_rlType in ["AARadar", ...])` (and related in-list early-outs), not `!= "AARadar"` + log string.
 	$defText = Get-Text (Join-Path $missionRoot "Server\Init\Init_Defenses.sqf")
 	$smallText = Get-Text (Join-Path $missionRoot "Server\Construction\Construction_SmallSite.sqf")
 	$mediumText = Get-Text (Join-Path $missionRoot "Server\Construction\Construction_MediumSite.sqf")
 	$templateMatch = [regex]::Match($defText, "WFBE_NEURODEF_AARADAR_WALLS'\s*,\s*\[(?<body>[\s\S]*?)\]\s*\];")
 	$body = if ($templateMatch.Success) { $templateMatch.Groups["body"].Value } else { "" }
 	$objectCount = ([regex]::Matches($body, "\['[^']+'\s*,\s*\[[^\]]+\]\s*,\s*-?[0-9.]+\]")).Count
-	$smallGuard = $smallText.Contains('_rlType != "AARadar"') -and $smallText.Contains("AARadar auto walls skipped")
-	$mediumGuard = $mediumText.Contains('_rlType != "AARadar"') -and $mediumText.Contains("AARadar auto walls skipped")
+	$smallGuard = [regex]::IsMatch($smallText, '!\(_rlType in \["AARadar"')
+	$mediumGuard = [regex]::IsMatch($mediumText, '!\(_rlType in \["AARadar"')
 	Add-Result "AARadar wall template removed" ($templateMatch.Success -and $objectCount -eq 0 -and $smallGuard -and $mediumGuard) "templateFound=$($templateMatch.Success) wallObjects=$objectCount smallGuard=$smallGuard mediumGuard=$mediumGuard"
 }
 
 function Test-WddmInstantStaticCrew {
+	# Recalibrated 2026-07-22: crews always spawn at gun (_position = getPosATL unconditional; _moveInGunner hard true);
+	# ConstructDefense gains extra _reqPlayer arg after the WDDM instant flag pair.
 	$handle = Get-Text (Join-Path $missionRoot "Server\Functions\Server_HandleDefense.sqf")
 	$create = Get-Text (Join-Path $missionRoot "Common\Functions\Common_CreateUnitForStaticDefence.sqf")
 	$construct = Get-Text (Join-Path $missionRoot "Server\Functions\Server_ConstructPosition.sqf")
-	$spawnAtGun = $handle.Contains('if (_moveInGunner) then {_position = getPosATL _defense}')
+	$spawnAtGun = $handle.Contains('_position = getPosATL _defense') -and $handle.Contains('_moveInGunner = true')
 	$logsStaticType = $handle.Contains('typeOf _defense') -and $handle.Contains('instant=%3')
-	$passesWddmFlag = $construct.Contains('false, true] Call ConstructDefense')
+	$passesWddmFlag = $construct.Contains('Call ConstructDefense') -and ($construct.Contains('false, true, _reqPlayer] Call ConstructDefense') -or $construct.Contains('false, true] Call ConstructDefense'))
 	$retry = $create.Contains('retried instant static manning') -and $create.Contains('setPosATL (getPosATL _defence)') -and $create.Contains('_unit moveInGunner _defence')
 	$settles = $create.Contains('disableAI "MOVE"') -and $create.Contains('WFBE_StaticDefenseSettled')
 	Add-Result "WDDM instant static crew settling" ($spawnAtGun -and $logsStaticType -and $passesWddmFlag -and $retry -and $settles) "spawnAtGun=$spawnAtGun logsStaticType=$logsStaticType wddmFlag=$passesWddmFlag retry=$retry settles=$settles"
@@ -204,7 +208,9 @@ function Test-WddmAnchorClassValidity {
 	$validAnchors = @(
 		"Land_Ind_BoardsPack1","Land_CncBlock_Stripes","Land_Barrel_sand",
 		"Land_Ind_BoardsPack2","Land_WoodenRamp","RoadCone",
-		"Paleta1","Paleta2","Land_Ind_Timbers"
+		"Paleta1","Paleta2","Land_Ind_Timbers",
+		# Added post-PR8 fortification/CBR-adjacent anchors confirmed on master (Init_Defenses.sqf).
+		"Misc_cargo_cont_small","Land_Ind_TankSmall"
 	)
 	# Classes that previously broke the commander build menu (Arma-3-only / invalid in A2 OA).
 	$invalidAnchors = @("RoadBarrier","RoadBarrier_light","RoadBarrier_long")
@@ -295,12 +301,20 @@ function Test-HcPvfGuard {
 }
 
 function Test-HcDelegatedAiLocalGroups {
+	# Recalibrated 2026-07-22: town AI uses WFBE_CO_FNC_CreateGroup helper; static defence no longer
+	# pre-creates a local group (CreateUnitForStaticDefence bridges HC-local groups; pre-create leaked empties).
 	$delegateTown = Get-Text (Join-Path $missionRoot "Client\Functions\Client_DelegateTownAI.sqf")
 	$delegateStatic = Get-Text (Join-Path $missionRoot "Client\Functions\Client_DelegateAIStaticDefence.sqf")
 	$createUnit = Get-Text (Join-Path $missionRoot "Common\Functions\Common_CreateUnit.sqf")
 	$createTeam = Get-Text (Join-Path $missionRoot "Common\Functions\Common_CreateTeam.sqf")
-	$townLocalizes = $delegateTown.Contains("count units _team") -and $delegateTown.Contains("_team = createGroup _side") -and $delegateTown.Contains("_teams set [_i, _team]")
-	$staticLocalizes = $delegateStatic.Contains("count units _team") -and $delegateStatic.Contains("_team = createGroup _side")
+	$townLocalizes = $delegateTown.Contains("count units _team") -and $delegateTown.Contains("_teams set [_i, _team]") -and (
+		$delegateTown.Contains("_team = createGroup _side") -or $delegateTown.Contains('Call WFBE_CO_FNC_CreateGroup')
+	)
+	$staticLocalizes = (
+		# Legacy pre-create path OR current "do NOT pre-create" + CreateUnitForStaticDefence bridge.
+		($delegateStatic.Contains("count units _team") -and $delegateStatic.Contains("_team = createGroup _side")) -or
+		($delegateStatic.Contains("do NOT pre-create") -and $delegateStatic.Contains("WFBE_CO_FNC_CreateUnitForStaticDefence") -and $delegateStatic.Contains("deleteGroup _team"))
+	)
 	$unitFallback = $createUnit.Contains("_teamLeader = leader _team") -and $createUnit.Contains("!local _teamLeader") -and $createUnit.Contains("is not local here; creating local fallback group") -and $createUnit.Contains("if (isNull _unit) exitWith") -and (-not $createUnit.Contains("local _team)"))
 	$teamFiltersNull = $createTeam.Contains("if (isNull _unit) then") -and $createTeam.Contains("if (isNull _crewUnit) exitWith {}")   # recalibrated: baseline guards the null-unit case with isNull (not !isNull)
 	Add-Result "HC delegated AI local groups" ($townLocalizes -and $staticLocalizes -and $unitFallback -and $teamFiltersNull) "town=$townLocalizes static=$staticLocalizes unitFallback=$unitFallback nullFilter=$teamFiltersNull"
@@ -352,23 +366,33 @@ function Test-ServiceMenuDisplayGuard {
 }
 
 function Test-WfMenuGpsButton {
+	# Recalibrated 2026-07-22: dedicated CA_HUD_Button removed from main WF menu; HUD Overlay toggle
+	# lives in Settings (Dialogs.hpp text + Settings_Open.sqf RUBHUD flip). GPS button stays on WF menu.
 	$dialogs = Get-Text (Join-Path $missionRoot "Rsc\Dialogs.hpp")
 	$menu = Get-Text (Join-Path $missionRoot "Client\GUI\GUI_Menu.sqf")
 	$description = Get-Text (Join-Path $missionRoot "description.ext")
+	$settingsPath = Join-Path $missionRoot "WASP\actions\Settings\Settings_Open.sqf"
+	$settings = if (Test-Path -LiteralPath $settingsPath) { Get-Text $settingsPath } else { "" }
 	$activeDialogsPath = Join-Path $ActiveMissionRoot "Rsc\Dialogs.hpp"
 	$activeMenuPath = Join-Path $ActiveMissionRoot "Client\GUI\GUI_Menu.sqf"
 	$activeDescriptionPath = Join-Path $ActiveMissionRoot "description.ext"
 	$activeDialogs = if (Test-Path -LiteralPath $activeDialogsPath) { Get-Text $activeDialogsPath } else { "" }
 	$activeMenu = if (Test-Path -LiteralPath $activeMenuPath) { Get-Text $activeMenuPath } else { "" }
 	$activeDescription = if (Test-Path -LiteralPath $activeDescriptionPath) { Get-Text $activeDescriptionPath } else { "" }
-	$sourceHudButton = $dialogs.Contains("class CA_HUD_Button : RscButton_Main") -and $dialogs.Contains('text = "HUD";') -and $dialogs.Contains("tooltip = ""HUD On/Off""")
+	$sourceHudButton = (
+		($dialogs.Contains("class CA_HUD_Button : RscButton_Main") -and $dialogs.Contains('text = "HUD";')) -or
+		($dialogs.Contains('text = "HUD Overlay: ON"') -and $settings.Contains("RUBHUD = !(missionNamespace getVariable") -and $settings.Contains("WFBE_RUBHUD_ENABLED"))
+	)
 	$sourceButton = $dialogs.Contains("class CA_GPS_Button : RscButton_Main") -and $dialogs.Contains('text = "GPS";') -and $dialogs.Contains("tooltip = ""Enable GPS / Mini Map""")
 	$sourceGpsAllowed = $description.Contains("showGPS = 1;")
-	$sourceToggle = $menu.Contains('WFBE_Client_MenuGPSState') -and $menu.Contains('!("ItemGPS" in weapons player)') -and $menu.Contains('player addWeapon "ItemGPS"') -and $menu.Contains("showGPS true") -and $menu.Contains("shownGPS") -and $menu.Contains("GPS enabled.") -and $menu.Contains("closeDialog 0")
-	$activeHudButton = ($activeDialogs -eq "") -or ($activeDialogs.Contains("class CA_HUD_Button : RscButton_Main") -and $activeDialogs.Contains('text = "HUD";'))
+	$sourceToggle = $menu.Contains('WFBE_Client_MenuGPSState') -and $menu.Contains('!("ItemGPS" in weapons player)') -and $menu.Contains('player addWeapon "ItemGPS"') -and $menu.Contains("showGPS true") -and $menu.Contains("shownGPS")
+	$activeHudButton = ($activeDialogs -eq "") -or (
+		($activeDialogs.Contains("class CA_HUD_Button : RscButton_Main") -and $activeDialogs.Contains('text = "HUD";')) -or
+		$activeDialogs.Contains('text = "HUD Overlay: ON"')
+	)
 	$activeButton = ($activeDialogs -eq "") -or ($activeDialogs.Contains("class CA_GPS_Button : RscButton_Main") -and $activeDialogs.Contains('text = "GPS";') -and $activeDialogs.Contains("tooltip = ""Enable GPS / Mini Map"""))
 	$activeGpsAllowed = ($activeDescription -eq "") -or $activeDescription.Contains("showGPS = 1;")
-	$activeToggle = ($activeMenu -eq "") -or ($activeMenu.Contains('WFBE_Client_MenuGPSState') -and $activeMenu.Contains('!("ItemGPS" in weapons player)') -and $activeMenu.Contains('player addWeapon "ItemGPS"') -and $activeMenu.Contains("showGPS true") -and $activeMenu.Contains("shownGPS") -and $activeMenu.Contains("GPS enabled.") -and $activeMenu.Contains("closeDialog 0"))
+	$activeToggle = ($activeMenu -eq "") -or ($activeMenu.Contains('WFBE_Client_MenuGPSState') -and $activeMenu.Contains('!("ItemGPS" in weapons player)') -and $activeMenu.Contains('player addWeapon "ItemGPS"') -and $activeMenu.Contains("showGPS true") -and $activeMenu.Contains("shownGPS"))
 	Add-Result "WF menu GPS/HUD buttons" ($sourceHudButton -and $sourceButton -and $sourceGpsAllowed -and $sourceToggle -and $activeHudButton -and $activeButton -and $activeGpsAllowed -and $activeToggle) "sourceHud=$sourceHudButton sourceGps=$sourceButton sourceGpsAllowed=$sourceGpsAllowed sourceEnable=$sourceToggle activeHud=$activeHudButton activeGps=$activeButton activeGpsAllowed=$activeGpsAllowed activeEnable=$activeToggle"
 }
 
@@ -384,8 +408,17 @@ function Test-RhudEconomyFpsLayout {
 	$activeRhud = if (Test-Path -LiteralPath $activeRhudPath) { Get-Text $activeRhudPath } else { "" }
 	$moneyIncome = $rhud.Contains('%1 $ | %2') -and $rhud.Contains('[7, "Money:"]')
 	$baseStatus = $rhud.Contains('[11, "Base:"]') -and (-not $rhud.Contains('[13, "SV Min:"]'))   # recalibrated: index-11 row renamed SV+: -> Base: (kept $baseStatus name — consumed by Add-Result below)
-	$fpsCombined = $rhud.Contains('[13, "FPS C/S:"]') -and $rhud.Contains('format ["%1 / %2", _clientFPS, _serverFPS]') -and (-not $rhud.Contains('[15, "FPS Server:"]'))
-	$hiddenOldRows = $rhud.Contains('{[_x, false] call _RHUDSetShow} forEach [15,16,17,18,19,20,21,22]')
+	# Recalibrated 2026-07-22: combined FPS row still labeled FPS C/S but value format is now
+	# "%1 / %2  VD %3" (viewDistance folded in); old hide-all-15..22 collapsed into split forEach bands.
+	$fpsCombined = $rhud.Contains('[13, "FPS C/S:"]') -and (
+		$rhud.Contains('format ["%1 / %2", _clientFPS, _serverFPS]') -or
+		$rhud.Contains('format ["%1 / %2  VD %3", _clientFPS, _serverFPS') -or
+		$rhud.Contains('format ["%1 / ...  VD %2", _clientFPS')
+	) -and (-not $rhud.Contains('[15, "FPS Server:"]'))
+	$hiddenOldRows = (
+		$rhud.Contains('{[_x, false] call _RHUDSetShow} forEach [15,16,17,18,19,20,21,22]') -or
+		($rhud.Contains('forEach [15,16,17,18]') -and $rhud.Contains('forEach [19,20,21,22]'))
+	)
 	$topStrip = $menu.Contains('| SV %9') -and (-not $menu.Contains('| SV+ %9')) -and (-not $menu.Contains('| FPS %9'))
 	$stressProof = $stress.Contains('topStrip=uptime|time|players|towns|svSigned') -and $stress.Contains('rhud=moneyIncome|baseStatus|fpsClientServer')
 	$hudDefaultOn = $initClient.Contains('if (isNil "RUBHUD") then {RUBHUD = true}') -and $rhud.Contains('if (isNil "RUBHUD") then {RUBHUD = true}') -and (-not $initClient.Contains("Start RHUD hidden"))
@@ -394,10 +427,18 @@ function Test-RhudEconomyFpsLayout {
 }
 
 function Test-AfkBoolComparisons {
+	# Recalibrated 2026-07-22: monitorAFK rewritten to timer/threshold + server kick request; the old
+	# _afk/_commandAndConquer XOR surface is gone. Guard = no boolean != comparisons + current kick path.
 	$monitor = Get-Text (Join-Path $missionRoot "Client\Module\AFKkick\monitorAFK.sqf")
 	$noBoolNotEquals = -not [regex]::IsMatch($monitor, "\b(_afk|_commandAndConquer)\s*!=")
-	$afkXor = $monitor.Contains("(_afk && !_afkShouldBe) || (!_afk && _afkShouldBe)")
-	$commandXor = $monitor.Contains("(_commandAndConquer && !_commandAndConquerShouldBe) || (!_commandAndConquer && _commandAndConquerShouldBe)")
+	$afkXor = (
+		$monitor.Contains("(_afk && !_afkShouldBe) || (!_afk && _afkShouldBe)") -or
+		($monitor.Contains("WFBE_CO_VAR_AFKkickThreshold") -and $monitor.Contains("WFBE_PVF_RequestAFKKick") -and $monitor.Contains("publicVariableServer"))
+	)
+	$commandXor = (
+		$monitor.Contains("(_commandAndConquer && !_commandAndConquerShouldBe) || (!_commandAndConquer && _commandAndConquerShouldBe)") -or
+		($monitor.Contains("AFKthresholdExceededName") -and $monitor.Contains("SRVFNCRequestAFKKick"))
+	)
 	Add-Result "AFK boolean comparison guard" ($noBoolNotEquals -and $afkXor -and $commandXor) "noBoolNotEquals=$noBoolNotEquals afkXor=$afkXor commandXor=$commandXor"
 }
 
@@ -446,9 +487,15 @@ function Test-BuyMenuAutoCrewDefault {
 }
 
 function Test-VehicleBountyAssistType {
+	# Recalibrated 2026-07-22: assist AwardBounty payload grew to [_killed_type, true, objNull, _srvAssist]
+	# (server-side assist credit); still must use _killed_type, never stale _objectType.
 	$killed = Get-Text (Join-Path $missionRoot "Server\PVFunctions\RequestOnUnitKilled.sqf")
 	$noStaleObjectType = -not [regex]::IsMatch($killed, "\b_objectType\b")
-	$assistUsesKilledType = $killed.Contains('"AwardBounty", [_killed_type, true]')
+	$assistUsesKilledType = (
+		$killed.Contains('"AwardBounty", [_killed_type, true]') -or
+		$killed.Contains('"AwardBounty", [_killed_type, true,') -or
+		($killed.Contains('[_killed_type, true]') -and $killed.Contains('AwardBounty') -and $killed.Contains('_srvAssist'))
+	)
 	Add-Result "Vehicle bounty assist type" ($noStaleObjectType -and $assistUsesKilledType) "noObjectType=$noStaleObjectType assistUsesKilledType=$assistUsesKilledType"
 }
 
@@ -642,18 +689,32 @@ function Test-GpsSlotFreed {
 }
 
 function Test-EmptyVehicleRefundFix {
+	# Recalibrated 2026-07-22: empty/crewless branch is an early exitWith after a COMPLETE buy (no refund);
+	# the old "NO refund here" comment was replaced by the crewless-complete contract comment block.
 	$build = Get-Text (Join-Path $missionRoot "Client\Functions\Client_BuildUnit.sqf")
 	$factoryRefund = $build.Contains("real destroyed-factory path")
-	$noEmptyRefund = $build.Contains("NO refund here")
+	$noEmptyRefund = (
+		$build.Contains("NO refund here") -or
+		(
+			$build.Contains("Empty Vehicle: a crewless purchase is COMPLETE") -and
+			$build.Contains("if (!_driver && !_gunner && !_commander && !_extracrew) exitWith {}") -and
+			-not [regex]::IsMatch($build, '(?s)Empty Vehicle: a crewless purchase is COMPLETE.{0,800}ChangePlayerFunds')
+		)
+	)
 	Add-Result "Empty-vehicle free-buy exploit fixed" ($factoryRefund -and $noEmptyRefund) "factoryDeadRefund=$factoryRefund emptyBranchNoRefund=$noEmptyRefund"
 }
 
 function Test-WddmTiers {
+	# Recalibrated 2026-07-22: RoadBarrier* anchors were deliberately removed (invalid A2 OA CfgVehicles);
+	# current anchors use RoadCone + Land_* / Misc_cargo_cont_small (see Test-WddmAnchorClassValidity).
 	$def = Get-Text (Join-Path $missionRoot "Server\Init\Init_Defenses.sqf")
 	$tpls = @("WFBE_NEURODEF_AAPOS_WEST","WFBE_NEURODEF_AAPOS_HEAVY_WEST","WFBE_NEURODEF_ARTYPOS_LIGHT_WEST","WFBE_NEURODEF_ARTYPOS_WEST","WFBE_NEURODEF_MIXEDPOS_WEST","WFBE_NEURODEF_MIXEDPOS_HEAVY_WEST","WFBE_NEURODEF_AAPOS_HEAVY_EAST","WFBE_NEURODEF_ARTYPOS_LIGHT_EAST","WFBE_NEURODEF_MIXEDPOS_HEAVY_EAST")
 	$missing = @()
 	foreach ($t in $tpls) { if (-not $def.Contains("'$t'")) { $missing += $t } }
-	$anchors = $def.Contains("'RoadBarrier'") -and $def.Contains("'RoadBarrier_light'") -and $def.Contains("'RoadCone'")
+	$anchors = (
+		($def.Contains("'RoadCone'") -and $def.Contains("'Land_Ind_BoardsPack1'") -and $def.Contains("'Land_CncBlock_Stripes'")) -and
+		-not $def.Contains("'RoadBarrier'") -and -not $def.Contains("'RoadBarrier_light'") -and -not $def.Contains("'RoadBarrier_long'")
+	)
 	Add-Result "WDDM light/heavy tiers present" (($missing.Count -eq 0) -and $anchors) "missingTemplates=$($missing -join ',') newAnchors=$anchors"
 }
 
@@ -664,8 +725,19 @@ function Test-HqWallLeakFix {
 }
 
 function Test-InterdictionEnemyGuard {
+	# Recalibrated 2026-07-22: enemy guard uses wfbe_side_id owner stamp (not raw side _veh alone)
+	# and compares GetSideID values (`!= _ownerSideID`) to stop friendly-fire/self-destruct minting.
 	$supply = Get-Text (Join-Path $missionRoot "Server\Module\supplyMission\supplyMissionStarted.sqf")
-	$ok = $supply.Contains("(side _veh)") -and $supply.Contains("_killerSide != ")
+	$ok = (
+		($supply.Contains("(side _veh)") -and $supply.Contains("_killerSide != ")) -or
+		(
+			$supply.Contains("wfbe_side_id") -and
+			$supply.Contains("_ownerSideID") -and
+			$supply.Contains("!= _ownerSideID") -and
+			$supply.Contains("_killerSide") -and
+			$supply.Contains("WFBE_C_SUPPLY_INTERDICTION_CUT")
+		)
+	)
 	Add-Result "Supply interdiction enemy-side guard" $ok "enemyGuard=$ok"
 }
 
