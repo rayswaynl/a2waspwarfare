@@ -2057,6 +2057,29 @@ foreach ($l in @($win | Where-Object { $_ -match 'NAME=cleaner_droppeditems\b' }
 }
 $maintenance = [ordered]@{ lastSweep=$mtLast; sweeps=$mtSweeps; totalDeleted=$mtTotalDeleted }
 
+# ---- 4b4. SIDESCORE honest side-activity (wasp-score-dashboard-build-20260722) ----
+# Additive dual-field public battle score. SCORE|v1 uses engine scoreSide (player-driven only), so an
+# AI-only side reads 0 despite real combat. The mission's flag-gated SIDESCORE|v1 line (flag WFBE_C_SIDESCORE)
+# carries per-side engine playerScore PLUS AI-inclusive kill/capture running counters. Parse the LAST
+# SIDESCORE line in the post-MISSINIT window (cumulative snapshot). All three fields stay $null when the
+# flag is off / no line present, in which case the web normalizer already leaves the score tile empty.
+$ssScore = $null; $ssPlayer = $null; $ssActivity = $null
+$ssLine = @($win | Where-Object { $_ -match 'SIDESCORE\|v1\|' }) | Select-Object -Last 1
+if ($ssLine -and $ssLine -match 'SIDESCORE\|v1\|playerWest=(-?\d+)\|playerEast=(-?\d+)\|killWest=(\d+)\|killEast=(\d+)\|killGuer=(\d+)\|capWest=(\d+)\|capEast=(\d+)\|capGuer=(\d+)\|') {
+    $ssPW=[int]$Matches[1]; $ssPE=[int]$Matches[2]
+    $ssKW=[int]$Matches[3]; $ssKE=[int]$Matches[4]; $ssKG=[int]$Matches[5]
+    $ssCW=[int]$Matches[6]; $ssCE=[int]$Matches[7]; $ssCG=[int]$Matches[8]
+    # Honest public battle score = AI-inclusive side kills (blueprint Option A). Engine scoreboard kept
+    # separately as playerScore; sideActivity exposes raw kills/captures per side for honest UI labels.
+    $ssScore    = [ordered]@{ west = $ssKW; east = $ssKE }
+    $ssPlayer   = [ordered]@{ west = $ssPW; east = $ssPE }
+    $ssActivity = [ordered]@{
+        west = [ordered]@{ kills = $ssKW; captures = $ssCW }
+        east = [ordered]@{ kills = $ssKE; captures = $ssCE }
+        guer = [ordered]@{ kills = $ssKG; captures = $ssCG }
+    }
+}
+
 $out = [ordered]@{
     generatedAt = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
     server = [ordered]@{
@@ -2067,6 +2090,10 @@ $out = [ordered]@{
         elapsedMin = $null; sides = $sides; doctrine = $doctrine
         captures = $capturesTotal; recentCaptures = $recentCaps
         kills = $kills.Count; wildcardsDrawn = $wildLines.Count; lastWildcard = $lastWild
+        # SIDESCORE honest dual-field (wasp-score-dashboard-build-20260722): score = AI-inclusive side kills
+        # (fixes the AI-only side reading 0 that engine scoreSide causes); playerScore = engine scoreSide;
+        # sideActivity = raw kills/captures per side. All $null until the mission emits SIDESCORE|v1 (flag on).
+        score = $ssScore; playerScore = $ssPlayer; sideActivity = $ssActivity
         battle = $battleCounts; townControl = $townControl; orbat = $orbat
         commanderIntel = $commanderIntel
         # B74.2: AI population tier (renderAicom reads currentRound.popTier) + MHQ relocations.

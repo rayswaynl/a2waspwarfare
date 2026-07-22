@@ -276,6 +276,17 @@ if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 	diag_log _wsk_line;
 };
 
+// --- SIDESCORE per-side kill tally (wasp-score-dashboard-build-20260722). Flag WFBE_C_SIDESCORE default 0.
+// Running per-side kill counter feeding the honest public SIDESCORE|v1 side-activity line (60s cadence in
+// server_groupsGC.sqf). AI kills reach this path via every unit's Killed EH, so an AI-only side is counted too.
+// Keyed by killer side (west/east/resistance already resolved above; civilian exited at the top), matching the
+// WASPSTAT|KILL killerSide field the dashboard generator folds. Flag-off: no counter, byte-identical to HEAD.
+if ((missionNamespace getVariable ["WFBE_C_SIDESCORE", 0]) > 0) then {
+	if (_killer_side == west)       then { missionNamespace setVariable ["WFBE_SIDESCORE_KW", (missionNamespace getVariable ["WFBE_SIDESCORE_KW", 0]) + 1] };
+	if (_killer_side == east)       then { missionNamespace setVariable ["WFBE_SIDESCORE_KE", (missionNamespace getVariable ["WFBE_SIDESCORE_KE", 0]) + 1] };
+	if (_killer_side == resistance) then { missionNamespace setVariable ["WFBE_SIDESCORE_KG", (missionNamespace getVariable ["WFBE_SIDESCORE_KG", 0]) + 1] };
+};
+
 //--- team-intel-pack NOTABLE-KILL FEED (WFBE_C_NOTABLE_KILL_FEED, default 0).
 //--- Broadcasts a side-wide SideMessage for high-value kills.
 //--- Runs server-side only (SideMessage is server-compiled).

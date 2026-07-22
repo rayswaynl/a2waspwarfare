@@ -1951,6 +1951,15 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_PLAYERSTAT_ENABLED") then {WFBE_C_PLAYERSTAT_ENABLED = 1};   //--- 0 disables the per-player leaderboard emit entirely.
 	if (isNil "WFBE_C_PLAYERSTAT_INTERVAL") then {WFBE_C_PLAYERSTAT_INTERVAL = 60}; //--- Seconds between PLAYERSTAT snapshot bursts (floored at 30s in the loop).
 
+	// === SIDESCORE honest side-activity telemetry (wasp-score-dashboard-build-20260722) - additive dual-field ===
+	// SCORE|v1 (server_groupsGC.sqf) uses engine scoreSide, which credits player-driven score only, so an AI-only
+	// side reads 0 on the public dashboard despite real WASPSTAT kill/capture activity. When >0, server_groupsGC.sqf
+	// emits an ADDITIVE SIDESCORE|v1 line (playerWest/East from scoreSide UNCHANGED, plus per-side kill/capture
+	// running counters from RequestOnUnitKilled.sqf + server_town.sqf). SCORE|v1 itself stays untouched. Kills and
+	// captures are mutual-knowledge combat record (both sides already see them), not base/town-ownership intel -
+	// within the 2026-06-21 competitive-integrity rule. Default 0 = flag-off, byte-identical to HEAD (no emit).
+	if (isNil "WFBE_C_SIDESCORE") then {WFBE_C_SIDESCORE = 0};
+
 	// === EXPERITAL FEATURES (experimental branch ??? each feature individually toggleable) ===
 	WFBE_C_STRUCTURES_COUNTERBATTERY = 1; // Counter Battery Radar structure (mid-game, requires own AAR)
 	WFBE_C_ECONOMY_BANK = 1;              // Federal Reserve / Bank Rossii endgame objective building

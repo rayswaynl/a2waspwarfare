@@ -557,6 +557,16 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 	{ if (_x getVariable ["wfbe_contested", false]) then {_contestedTowns = _contestedTowns + 1} } forEach towns;
 	diag_log ("CONTESTED|v1|count=" + str _contestedTowns + "|t=" + str (round (time / 60)));
 
+	// --- SIDESCORE (wasp-score-dashboard-build-20260722). Flag WFBE_C_SIDESCORE default 0 (flag-off: no emit, byte-identical).
+	// ADDITIVE honest side-activity line next to SCORE|v1. SCORE|v1 uses engine scoreSide (player-driven only), so an
+	// AI-only side reads 0 despite real combat; this publishes playerScore (engine scoreSide, meaning UNCHANGED) PLUS
+	// per-side kill/capture running counters (WASPSTAT KILL/CAPTURE aggregates, AI-inclusive) for the honest battle.
+	// Counts are mutual-knowledge combat record (kills/captures both sides already see), not base/town intel - within
+	// the 2026-06-21 competitive-integrity rule. Counters live in RequestOnUnitKilled.sqf (kills) + server_town.sqf (caps).
+	if ((missionNamespace getVariable ["WFBE_C_SIDESCORE", 0]) > 0) then {
+		diag_log ("SIDESCORE|v1|playerWest=" + str (scoreSide west) + "|playerEast=" + str (scoreSide east) + "|killWest=" + str (missionNamespace getVariable ["WFBE_SIDESCORE_KW", 0]) + "|killEast=" + str (missionNamespace getVariable ["WFBE_SIDESCORE_KE", 0]) + "|killGuer=" + str (missionNamespace getVariable ["WFBE_SIDESCORE_KG", 0]) + "|capWest=" + str (missionNamespace getVariable ["WFBE_SIDESCORE_CW", 0]) + "|capEast=" + str (missionNamespace getVariable ["WFBE_SIDESCORE_CE", 0]) + "|capGuer=" + str (missionNamespace getVariable ["WFBE_SIDESCORE_CG", 0]) + "|t=" + str (round (time / 60)));
+	};
+
 	// --- GUER soft-cap monitor (claude-gaming 2026-06-15) ---
 	// GUER's real ceiling is the SOFT cap WFBE_C_GUER_GROUPS_MAX (=80, raised 60->80), NOT the 144
 	// engine cap. At the soft cap, server_town_ai.sqf:62 DEFERS new resistance garrisons, so town
