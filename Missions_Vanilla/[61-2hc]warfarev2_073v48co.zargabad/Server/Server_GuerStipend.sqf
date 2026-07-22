@@ -14,7 +14,7 @@
 if !(isServer) exitWith {};
 if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) < 1) exitWith {};
 
-private ["_interval","_baseRate","_townBonus","_startTownCount","_curTowns","_deficit","_rate","_tier","_kills"];
+private ["_interval","_baseRate","_townBonus","_startTownCount","_curTowns","_deficit","_rate","_tier","_kills","_fallbackTier","_paidGroups","_g","_sampleFunds"];
 
 _interval  = 60;
 _baseRate  = 150;
@@ -52,14 +52,30 @@ diag_log format ["GUERSTIPEND|TIERSEED|tier=%1|kills=%2|t=%3", _tier, _kills, ro
 while {!WFBE_GameOver} do {
 	sleep _interval;
 
-	//--- (1) Vehicle tier broadcast — buy menu reads WFBE_GUER_VEHICLE_TIER.
-	//--- B75.5 (guer-tech): tier is now PURELY cumulative GUER kills (the elapsed-time ladder is removed).
-	//--- BRDM/T-34 @ killtier1, T-55 @ killtier2, T-72/BMP2 @ killtier3.
+	//--- First collect the eligible recipient groups. This list also tells the tier logic whether a human
+	//--- GUER economy exists; AI-only rounds have no such group and must retain the original time escalation.
+	_paidGroups = [];
+	{
+		if ((alive _x) && {side _x == resistance} && {isPlayer _x}) then {
+			_g = group _x;
+			if !(_g in _paidGroups) then {_paidGroups = _paidGroups + [_g]};
+		};
+	} forEach playableUnits;
+
+	//--- (1) Vehicle tier broadcast — players progress by kills; an AI-only GUER round falls back to
+	//--- the legacy 30/90/180-minute ladder so its resistance force cannot remain technicals-only.
 	_kills = missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0];
 	_tier = 0;
 	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 30])) then {_tier = 1};
 	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 80])) then {_tier = 2};
 	if (_kills >= (missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 160])) then {_tier = 3};
+	if ((count _paidGroups) == 0) then {
+		_fallbackTier = 0;
+		if (time >= 1800) then {_fallbackTier = 1};
+		if (time >= 5400) then {_fallbackTier = 2};
+		if (time >= 10800) then {_fallbackTier = 3};
+		if (_fallbackTier > _tier) then {_tier = _fallbackTier};
+	};
 	//--- B74.2 JIP DURABILITY: re-broadcast EVERY loop, not just on change. publicVariable is NOT JIP-replayed in
 	//--- A2-OA, and the GUER buy overlay (Root_GUE_PlayerOverlay.sqf) reads WFBE_GUER_VEHICLE_TIER with a default
 	//--- of 0 - so a GUER player who JIPs after a tier transition was silently stuck at tier 0 (no BRDM/T-55/T-72).
@@ -67,42 +83,31 @@ while {!WFBE_GameOver} do {
 	//--- cycle. setVariable is unconditional so the server-side value always tracks the live tier.
 	missionNamespace setVariable ["WFBE_GUER_VEHICLE_TIER", _tier];
 	publicVariable "WFBE_GUER_VEHICLE_TIER";
-	//--- B75 (guer-tech): re-broadcast the kill counter too (same A2-OA non-JIP-replay reason) so a JIP joiner's buy
-	//--- overlay + barracks cap + RHUD converge within one cycle even if they missed the per-kill broadcast.
 	if (!isNil "WFBE_GUER_PLAYER_KILLS") then {publicVariable "WFBE_GUER_PLAYER_KILLS"};
-	//--- B75 (guer-tech FOB): likewise re-broadcast the FOB availability counter so the depot FOB-truck pool + RHUD
-	//--- "B n | LF n | HF n" row stay correct for joiners who missed the per-factory-kill broadcast.
 	if (!isNil "WFBE_GUER_FOB_AVAIL") then {publicVariable "WFBE_GUER_FOB_AVAIL"};
 
-	//--- (2) Stipend, scaled by GUER town deficit.
+	//--- (2) Stipend, scaled by GUER town deficit. Do not mutate funds when no living GUER player group exists.
 	_curTowns = {(_x getVariable ["sideID", -1]) == WFBE_C_GUER_ID} count towns;
 	_deficit  = (_startTownCount - _curTowns) max 0;
 	_rate     = (_baseRate + (_deficit * _townBonus)) min (_baseRate * 3);
-
-	//--- C3 (double-pay fix): pay per UNIQUE GUER group, not per player. Two GUER players in one group
-	//--- share a single team treasury (wfbe_funds), so the old per-playableUnits loop credited that
-	//--- group's funds once for EACH member. Dedupe to distinct living-GUER-player groups and pay once.
-	private "_paidGroups";
-	_paidGroups = [];
-	{
-		if ((alive _x) && {side _x == resistance} && {isPlayer _x}) then {
-			private "_g";
-			_g = group _x;
-			if !(_g in _paidGroups) then {
-				_paidGroups = _paidGroups + [_g];
-				if (isNil {_g getVariable "wfbe_funds"}) then {_g setVariable ["wfbe_funds", 0, true]};
-				[_g, _rate] Call WFBE_CO_FNC_ChangeTeamFunds;
-			};
-		};
-	} forEach playableUnits;
+	if ((count _paidGroups) == 0) then {
+		diag_log format ["GUERSTIPEND|SKIP|rate=%1|deficit=%2|paidGroups=0|tier=%3|kills=%4|t=%5", _rate, _deficit, _tier, _kills, round time];
+	} else {
+		{
+			_g = _x;
+			if (isNil {_g getVariable "wfbe_funds"}) then {_g setVariable ["wfbe_funds", 0, true]};
+			[_g, _rate] Call WFBE_CO_FNC_ChangeTeamFunds;
+		} forEach _paidGroups;
+	};
 
 	//--- B74.2 observability: one compact line per tick so the economy is verifiable from the RPT. Shows the
 	//--- pay rate, town deficit, how many distinct GUER player groups were credited this tick, the live tier, and
 	//--- a sample treasury (first paid group's wfbe_funds) so a flat/zero funds trend is immediately visible.
 	//--- A2-OA gotcha: getVariable[name,default] is unreliable on GROUPS, so use the single-arg form (the just-paid
 	//--- group is guaranteed to carry wfbe_funds - the pay loop's nil-guard + ChangeTeamFunds both set it above).
-	private "_sampleFunds";
 	_sampleFunds = -1;
-	if ((count _paidGroups) > 0) then {_sampleFunds = (_paidGroups select 0) getVariable "wfbe_funds"};
-	diag_log format ["GUERSTIPEND|PAY|rate=%1|deficit=%2|paidGroups=%3|tier=%4|kills=%5|sampleFunds=%6|t=%7", _rate, _deficit, count _paidGroups, _tier, _kills, _sampleFunds, round time];
+	if ((count _paidGroups) > 0) then {
+		_sampleFunds = (_paidGroups select 0) getVariable "wfbe_funds";
+		diag_log format ["GUERSTIPEND|PAY|rate=%1|deficit=%2|paidGroups=%3|tier=%4|kills=%5|sampleFunds=%6|t=%7", _rate, _deficit, count _paidGroups, _tier, _kills, _sampleFunds, round time];
+	};
 };
