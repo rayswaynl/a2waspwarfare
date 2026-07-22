@@ -18,8 +18,10 @@ _refunded = false;
 
 _sideText = str _side;
 
-if (!(alive _building)||(isPlayer (leader _team))) exitWith {
-	_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+if (!(alive _building)||{isNull _team}||{isPlayer (leader _team)}) exitWith {
+	if (!isNull _team) then {
+		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+	};
 	//--- fable/aicom-treasury-refund-on-abort: this early abort (before the build queue is even
 	//--- entered) still runs AFTER AI_Commander_Produce.sqf pre-charged _price - refund it, same
 	//--- idiom as the createVehicle->objNull guard further down.
@@ -181,8 +183,10 @@ while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--
 	//--- aborts the script for real before anything spawns, and (b) the wfbe_queue release is an ARRAY
 	//--- subtraction (removing the same token twice is a no-op), so the double pass cannot double-count.
 	//--- Client_BuildUnit.sqf's NUMERIC counters were not safe this way - see its cmdcon44-g comments.
-	if (!(alive _building)||(isNull _building)||(isPlayer (leader _team))) exitWith {
-		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+	if (!(alive _building)||(isNull _building)||{isNull _team}||{isPlayer (leader _team)}) exitWith {
+		if (!isNull _team) then {
+			_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+		};
 		_queu = _building getVariable "queu";
 		if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]};
 		_building setVariable ["queu",_queu,true];
@@ -223,8 +227,10 @@ _building setVariable ["queu",_queu,true];
 //--- double-value; for a vehicle that then hits the objNull guard below, a second full refund on top of
 //--- that). Once ANY earlier abort has paid a refund, this exitWith is now TERMINAL regardless of whether
 //--- the original abort condition still holds - the build must never happen after a refund fired.
-if (_refunded || {!(alive _building)} || {isPlayer (leader _team)}) exitWith {
-	_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+if (_refunded || {!(alive _building)} || {isNull _team} || {isPlayer (leader _team)}) exitWith {
+	if (!isNull _team) then {
+		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+	};
 	//--- fable/aicom-treasury-refund-on-abort: catches the abort when it first manifests here (no
 	//--- earlier mid-loop abort fired) - the flag guard is a no-op if the block above already refunded.
 	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted post-wait - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
@@ -445,4 +451,6 @@ _vehicle allowCrewInImmobile true;
 	[_sideText,'UnitsCreated',_built] Call UpdateStatistics;
 };
 
-_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+if (!isNull _team) then {
+	_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+};

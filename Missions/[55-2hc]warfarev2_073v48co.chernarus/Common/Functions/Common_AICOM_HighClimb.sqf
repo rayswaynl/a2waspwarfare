@@ -67,6 +67,11 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB", 0]) == 0) exitWith 
 //--- Which machine am I? Only the server and headless clients host AICOM-local vehicles.
 if (!isServer && {!isHeadLessClient}) exitWith {};
 
+private "_aicomInitDeadline"; _aicomInitDeadline = diag_tickTime + 20;
+waitUntil { uiSleep 0.25; ((!isNil "WFBE_CO_FNC_AICOMLog") && {!isNil "WFBE_CO_FNC_GetSideLogic"}) || (diag_tickTime > _aicomInitDeadline) };
+if (isNil "WFBE_CO_FNC_AICOMLog" || {isNil "WFBE_CO_FNC_GetSideLogic"}) exitWith { diag_log "[WFBE][AICOM-INIT-RACE] Common_AICOM_HighClimb.sqf: required Init_Common functions still nil after 20s - high-climb manager not started."; };
+if (isNil "WFBE_CO_FNC_AICOMLog") exitWith { diag_log "[WFBE][AICOM-LOG-INIT-RACE] Common_AICOM_HighClimb.sqf: WFBE_CO_FNC_AICOMLog still nil after 20s - Init_Common not finished; high-climb manager not started."; };
+
 private ["_machineTag"];
 _machineTag = if (isServer) then {"SERVER"} else {"HC"};
 
