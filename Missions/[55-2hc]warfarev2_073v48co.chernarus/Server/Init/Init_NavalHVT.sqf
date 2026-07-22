@@ -797,10 +797,19 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 			_sideID = _loc getVariable ["sideID", WFBE_C_GUER_ID];
 			_pos    = getPosASL _loc;
 
-			//--- Check for any player within arming radius (1800m).
+			//--- Check for any HUMAN player within arming radius (1800m).
+			//--- wasp-navalcap-playableunits (owner review note 19:2x): playableUnits INCLUDES the two
+			//--- headless-client CIV bodies - isPlayer is TRUE for an HC on A2 OA - and ParkSeaHC
+			//--- (Init_HC.sqf) parks those bodies AT SEA, so an HC drifting inside 1800m of a carrier
+			//--- would arm and hold this CAP forever with no human around. Filter side - HCs seat
+			//--- CIVILIAN, and no human playable slot is CIV - plus the known HC name list, the
+			//--- StatsFlush.sqf P0-5 idiom, which also covers the mission-restart re-grab window where
+			//--- an HC briefly lands on a WEST slot before its reseat watcher recovers it. Dead-but-
+			//--- unrespawned players are already excluded by alive; JIP-transition bodies read
+			//--- isPlayer false. A2-OA-safe: side compare, name, string-list in, lazy and-braces.
 			_anyNear = false;
 			{
-				if (isPlayer _x && {alive _x} && {(_x distance [_pos select 0, _pos select 1, 0]) < 1800}) then {
+				if (isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in ["HC-AI-Control-1", "HC-AI-Control-2", "HC"])} && {(_x distance [_pos select 0, _pos select 1, 0]) < 1800}) then {
 					_anyNear = true;
 				};
 			} forEach playableUnits;
