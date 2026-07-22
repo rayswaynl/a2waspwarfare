@@ -2757,7 +2757,7 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 //--- + paid AI investment for WEST/EAST towns. Mirrors GUER Director (Lane 800). Flag-off
 //--- (0) = brain never launches, every overlay read site short-circuits = byte-identical.
 //--- See docs/design/v2/aicom-v2-commander-town-ledger.md for the full spec.
-	if (isNil "AICOMV2_LANE_CMD_TOWN_LEDGER") then {AICOMV2_LANE_CMD_TOWN_LEDGER = 0}; //--- Lane master switch: 0=off (default, byte-identical). owner 2026-07-09: DISARMED for this patch (reconcile flip armed it, but its spec ships it dark) - CTL was never soak-tested + has 2 open survivor-tracking defects (New-Bug-A/B, CTL-ARMING-SPEC.md). Queued to next patch: fix both, then arm after a real soak.
+	if (isNil "AICOMV2_LANE_CMD_TOWN_LEDGER") then {AICOMV2_LANE_CMD_TOWN_LEDGER = 1}; //--- Lane master switch: 0=off (default, byte-identical). owner 2026-07-22: ARMED for soak (live chat ruling) - both 07-09 blockers (New-Bug-A/B) fixed on master via fable/ctl-survivor-bugs; garrison-link pre-armed 07-12. Soak watch = CTLSTAT|v1 telemetry; rollback = this flag back to 0.
 	if (isNil "AICOMV2_CTL_TICK_SEC") then {AICOMV2_CTL_TICK_SEC = 30}; //--- Brain tick interval, seconds.
 	if (isNil "AICOMV2_CTL_REGEN_FULL_SEC") then {AICOMV2_CTL_REGEN_FULL_SEC = 1800}; //--- Zero-to-baseline regen duration, seconds.
 	if (isNil "AICOMV2_CTL_CAPTURE_SEED") then {AICOMV2_CTL_CAPTURE_SEED = 0.25}; //--- Strength at record creation (fresh capture).
