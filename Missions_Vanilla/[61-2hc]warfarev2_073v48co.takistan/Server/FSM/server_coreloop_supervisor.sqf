@@ -41,7 +41,12 @@ _descriptors = [
 	["town",     "Server\FSM\server_town.sqf",      5, 1],
 	["economy",  "Server\FSM\updateresources.sqf", -1, 1],
 	["upgrade",  "Server\FSM\upgradeQueue.sqf",      5, 1],
-	["groupsgc", "Server\FSM\server_groupsGC.sqf",  60, 2]
+	["groupsgc", "Server\FSM\server_groupsGC.sqf",  60, 2],
+	//--- OILFIELD post-unlock live loop (TK-only; wasp-oilfield-postunlock-dead-20260722). OBSERVE (1)
+	//--- ONLY: the script is NOT replay-safe - a restart re-runs from the top and re-spawns the derrick
+	//--- composition, so we detect+log a silently-dead loop rather than auto-restart it. The stamp only
+	//--- exists on TK post-unlock, so _hb stays <=0 (no fire) on CH/ZG and during the pre-unlock phase.
+	["oilfield", "Server\Server_Oilfields.sqf",     -2, 1]
 ];
 
 ["INITIALIZATION", "Server_coreloop_supervisor.sqf: HP-01 core-loop supervisor started."] Call WFBE_CO_FNC_AICOMLog;
@@ -61,7 +66,14 @@ while {!WFBE_GameOver} do {
 		_giveupKey  = Format ["wfbe_coreloop_giveup_%1", _id];
 		_lastRKey   = Format ["wfbe_coreloop_wd_restart_%1", _id];
 
-		_cadence = if ((_x select 2) > 0) then {_x select 2} else {missionNamespace getVariable ["WFBE_C_ECONOMY_INCOME_INTERVAL", 60]};
+		//--- Nominal cadence feeds the stale threshold. >0 = literal; -2 = live oilfield scan interval
+		//--- (WFBE_C_OILFIELD_SCAN_INTERVAL, admin-retunable with no ceiling) so a retuned oilfield scan
+		//--- never false-trips the OBSERVE alert (this task); any other non-positive = live economy interval.
+		_cadence = if ((_x select 2) > 0) then {
+			_x select 2
+		} else {
+			if ((_x select 2) == -2) then {missionNamespace getVariable ["WFBE_C_OILFIELD_SCAN_INTERVAL", 15]} else {missionNamespace getVariable ["WFBE_C_ECONOMY_INCOME_INTERVAL", 60]}
+		};
 		//--- generous threshold: 3 healthy ticks + 30s margin (matches the AICOM watchdog
 		//--- formula exactly). No healthy tick blocks longer than its own cadence, so this
 		//--- never false-trips on a normal slow tick.
