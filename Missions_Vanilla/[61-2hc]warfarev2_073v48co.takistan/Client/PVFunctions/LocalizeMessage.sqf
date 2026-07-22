@@ -48,11 +48,11 @@ switch (_localize) do {
     };
 	case "CommanderDisconnected": {_txt = Localize "strwfcommanderdisconnected"};
 	case "TacticalLaunch": {_txt = Localize "STR_WF_CHAT_ICBM_Launch"};
-	case "CBRadarNeedsAAR": {_txt = Localize "CBRadarNeedsAAR"};
-	case "AARadarAlreadyBuilt": {_txt = Localize "AARadarAlreadyBuilt"}; //--- fable/ew-economy
-	case "CBRadarAlreadyBuilt": {_txt = Localize "CBRadarAlreadyBuilt"}; //--- fable/ew-economy
-	case "BankAlreadyBuilt": {_txt = Localize "BankAlreadyBuilt"};
-	case "BankTooCloseToBase": {_txt = Localize "BankTooCloseToBase"};
+	case "CBRadarNeedsAAR": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; _txt = Localize "CBRadarNeedsAAR"};
+	case "AARadarAlreadyBuilt": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; _txt = Localize "AARadarAlreadyBuilt"}; //--- fable/ew-economy
+	case "CBRadarAlreadyBuilt": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; _txt = Localize "CBRadarAlreadyBuilt"}; //--- fable/ew-economy
+	case "BankAlreadyBuilt": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; _txt = Localize "BankAlreadyBuilt"};
+	case "BankTooCloseToBase": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; _txt = Localize "BankTooCloseToBase"};
 	case "BankDestroyed": {
 		//--- _this: [1]=killerName, [2]=sideName — broadcast to all (both sides hear it).
 		_txt = Format [Localize "BankDestroyed", _this select 1, _this select 2];
