@@ -2774,7 +2774,7 @@ while {!WFBE_GameOver && _alive} do {
 	//--- groups); typeName guards (no A3 isEqualType); clear the var by setting [] and testing count>0 (A2 setVariable
 	//--- nil on groups is unreliable). Never create if _team is null. Never-frozen: additions inherit the team order.
 	if (_alive && {!isNull _team}) then {
-		private ["_topReq","_topN","_topPos","_topCls","_topIssued","_topTtl","_topMade","_topDefer","_topClass","_topUnit"];
+		private ["_topReq","_topN","_topPos","_topCls","_topIssued","_topTtl","_topMade","_topFail","_topDefer","_topClass","_topUnit","_topCharge","_topPerUnit","_topRefund"];
 		_topReq = _team getVariable "wfbe_aicom_topup_req";
 		if (!isNil "_topReq" && {(typeName _topReq) == "ARRAY"} && {count _topReq >= 3}) then {
 			_topN   = _topReq select 0;
@@ -2788,6 +2788,28 @@ while {!WFBE_GameOver && _alive} do {
 				if ((typeName _topIssued) != "SCALAR") then {_topIssued = time};
 				if ((count _topReq) < 4) then {_team setVariable ["wfbe_aicom_topup_req", [_topN, _topPos, _topCls, _topIssued], true]}; //--- legacy 3-slot request: stamp once so it can age out.
 				if ((_topTtl > 0) && {(time - _topIssued) > _topTtl}) then {
+					//--- fable/aicom-topup-refund-on-stale: the request was charged up front (Produce.sqf /
+					//--- Server_HandleSpecial.sqf "aicom-refit") and stores that charge as element 4 when
+					//--- present; refund it here so a request that ages out (no units ever spawned) does not
+					//--- burn AI treasury funds for nothing. Legacy in-flight requests from before this fix
+					//--- (count <= 4) carry no charge info and are left un-refunded (graceful degrade, not a
+					//--- regression - they age out of the TTL window shortly after deploy).
+					if ((count _topReq) > 4) then {
+						_topCharge = _topReq select 4;
+						if ((typeName _topCharge) == "SCALAR" && {_topCharge > 0}) then {
+							//--- fix (PR #1251 bounce): ChangeAICommanderFunds is compiled ONLY on the server (Init_Server.sqf:34);
+							//--- this consumer runs wherever the team is LOCAL (HC in the common case), where a direct Call threw
+							//--- undefined and aborted the tick. Server: call directly (PUBVARSV trap: pubVarServer never fires the
+							//--- server's own PVEH). HC: route over the RequestSpecial bus to the validated landing case.
+							if (isServer) then {
+								[_side, _topCharge] Call ChangeAICommanderFunds;
+							} else {
+								WFBE_PVF_RequestSpecial = ["SRVFNCRequestSpecial", ["aicom-topup-refund", _sideID, _topCharge]];
+								publicVariableServer "WFBE_PVF_RequestSpecial";
+							};
+							diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_REQ_STALE_REFUND|team=" + (str _team) + "|refund=" + str _topCharge);
+						};
+					};
 					_team setVariable ["wfbe_aicom_topup_req", [], true];
 					diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_REQ_STALE|team=" + (str _team) + "|age=" + str (round (time - _topIssued)) + "|ttl=" + str _topTtl);
 				} else {
@@ -2796,11 +2818,34 @@ while {!WFBE_GameOver && _alive} do {
 					{ if (isPlayer _x && {alive _x} && {(_x distance _topPos) < 300}) exitWith {_topDefer = true} } forEach playableUnits;
 					if (!_topDefer) then {
 						_topMade = 0;
-						//--- create up to _topN classes, hard-capped at 4 this tick (cycle the class list by index).
-						while {_topMade < _topN && {_topMade < 4}} do {
-							_topClass = _topCls select (_topMade mod (count _topCls));
+						_topFail = 0;
+						//--- fable/aicom-topup-null-check: WFBE_CO_FNC_CreateUnit can return objNull (spawn failure);
+						//--- the old loop counted _topMade on every attempt regardless, so a failed create was
+						//--- reported/cleared as a success with no refund. Track successes and failures separately -
+						//--- _topMade+_topFail still bounds the loop the same way (at most _topN, hard-capped at 4).
+						while {(_topMade + _topFail) < _topN && {(_topMade + _topFail) < 4}} do {
+							_topClass = _topCls select ((_topMade + _topFail) mod (count _topCls));
 							_topUnit = [_topClass, _team, _topPos, _sideID] Call WFBE_CO_FNC_CreateUnit; //--- canonical mission createUnit-in-group idiom (Common_RunSidePatrol.sqf:113).
-							_topMade = _topMade + 1;
+							if (!isNull _topUnit) then {_topMade = _topMade + 1} else {_topFail = _topFail + 1};
+						};
+						//--- REFUND the unfilled share: proportional slice of the request's stored charge (element
+						//--- 4, if present - see the TTL-stale refund above for the same graceful-degrade note).
+						if (_topFail > 0 && {(count _topReq) > 4}) then {
+							_topCharge = _topReq select 4;
+							if ((typeName _topCharge) == "SCALAR" && {_topCharge > 0} && {_topN > 0}) then {
+								_topPerUnit = _topCharge / _topN;
+								_topRefund = round (_topPerUnit * _topFail);
+								if (_topRefund > 0) then {
+									//--- fix (PR #1251 bounce): locality-safe refund - see the TTL-stale site above for the full note.
+									if (isServer) then {
+										[_side, _topRefund] Call ChangeAICommanderFunds;
+									} else {
+										WFBE_PVF_RequestSpecial = ["SRVFNCRequestSpecial", ["aicom-topup-refund", _sideID, _topRefund]];
+										publicVariableServer "WFBE_PVF_RequestSpecial";
+									};
+									diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_PARTIAL_REFUND|team=" + (str _team) + "|failed=" + str _topFail + "|refund=" + str _topRefund);
+								};
+							};
 						};
 						//--- clear the request (A2: set [] and test count>0 next tick, NOT nil).
 						_team setVariable ["wfbe_aicom_topup_req", [], true];

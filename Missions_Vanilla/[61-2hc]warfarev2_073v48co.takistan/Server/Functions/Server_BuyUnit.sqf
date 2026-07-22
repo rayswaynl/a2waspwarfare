@@ -1,4 +1,4 @@
-Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_unitTypeGet","_vehicle","_waitTime"];
+Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_refunded","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_unitTypeGet","_vehicle","_waitTime"];
 _id = _this select 0;
 _building = _this select 1;
 _unitType = _this select 2;
@@ -10,11 +10,20 @@ _isVehicle = _this select 5;
 //--- Spawn AIBuyUnit call so a live W15 Black Market discount refunds at the SAME rate it was charged,
 //--- not re-derived from list price). Defaults to 0 for any other/older caller (defensive, back-compat).
 _price = if (count _this > 6) then {_this select 6} else {0};
+//--- fable/aicom-treasury-refund-on-abort: track whether the pre-charged _price has already been
+//--- refunded, so the mid-loop exitWith further below (which - per the ENGINE-VERIFIED note there -
+//--- only breaks the while loop and always falls through to the post-wait re-check) cannot pay out
+//--- the same refund twice for one abort.
+_refunded = false;
 
 _sideText = str _side;
 
 if (!(alive _building)||(isPlayer (leader _team))) exitWith {
 	_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+	//--- fable/aicom-treasury-refund-on-abort: this early abort (before the build queue is even
+	//--- entered) still runs AFTER AI_Commander_Produce.sqf pre-charged _price - refund it, same
+	//--- idiom as the createVehicle->objNull guard further down.
+	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted pre-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
 	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 };
@@ -177,6 +186,10 @@ while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--
 		_queu = _building getVariable "queu";
 		if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]};
 		_building setVariable ["queu",_queu,true];
+		//--- fable/aicom-treasury-refund-on-abort: refund the pre-charged _price here (the flag guards
+		//--- against the post-wait re-check below also paying out for this same abort, since - per the
+		//--- ENGINE-VERIFIED note above - this exitWith only breaks the loop and always falls through).
+		if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted mid-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 		if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
 		if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 	};
@@ -202,10 +215,25 @@ _queu = _building getVariable "queu";
 _queu = _queu - [_id select 0];
 _building setVariable ["queu",_queu,true];
 
-if (!(alive _building)||(isPlayer (leader _team))) exitWith {
+//--- fable/aicom-refund-then-build-fix (adversarial review catch, 2026-07-21): isPlayer(leader _team) is
+//--- NOT monotonic like alive _building - a human can take over the squad (triggering the mid-loop refund
+//--- above), then leave/die during the sleep _waitTime gap, letting an AI leader reclaim it. Without
+//--- `_refunded ||` here, THIS check would then see building-alive + AI-led -> both disjuncts false -> fall
+//--- through into unit/vehicle creation AFTER the treasury was already refunded (a refund-then-build
+//--- double-value; for a vehicle that then hits the objNull guard below, a second full refund on top of
+//--- that). Once ANY earlier abort has paid a refund, this exitWith is now TERMINAL regardless of whether
+//--- the original abort condition still holds - the build must never happen after a refund fired.
+if (_refunded || {!(alive _building)} || {isPlayer (leader _team)}) exitWith {
 	_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+	//--- fable/aicom-treasury-refund-on-abort: catches the abort when it first manifests here (no
+	//--- earlier mid-loop abort fired) - the flag guard is a no-op if the block above already refunded.
+	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted post-wait - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
 	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
+	//--- fable/aicom-refund-then-build-fix: reached solely because _refunded was already true (the abort
+	//--- condition itself reverted during the sleep) - neither log line above fired, so make the RPT read
+	//--- clearly instead of silently looking like a no-op exit.
+	if (_refunded && {alive _building} && {!(isPlayer (leader _team))}) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] build skipped - treasury already refunded earlier this cycle (abort condition reverted during wait; no double-value).", _unitType]] Call WFBE_CO_FNC_LogContent};
 };
 
 if (_unitType isKindOf "Man") then {
@@ -249,7 +277,11 @@ if (_unitType isKindOf "Man") then {
 	//--- block (the Man/Vehicle branch), not the whole script - the shared queue-release tail below
 	//--- (wfbe_queue) still runs exactly once, same contract as the player-side guard.
 	if (isNull _vehicle) exitWith {
-		if (_price > 0) then {[_side, _price] Call ChangeAICommanderFunds};
+		//--- fable/aicom-refund-then-build-fix (adversarial review, belt-and-suspenders): gate on !_refunded
+		//--- and latch it here too. Structurally unreachable with _refunded already true (the post-wait check
+		//--- above is now terminal the instant _refunded flips, so every path that sets it also ends the
+		//--- script at or before that point) - this is defense in depth, not the primary fix.
+		if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
 		["WARNING", Format ["Server_BuyUnit.sqf: buy of [%1] produced objNull (spawn failed) - refunded %2 to side [%3]; no crew spawned.", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent;
 	};
 	//--- fix/heli-husk-reaper: stamp a normal AICOM-team attack helicopter at production, mirroring

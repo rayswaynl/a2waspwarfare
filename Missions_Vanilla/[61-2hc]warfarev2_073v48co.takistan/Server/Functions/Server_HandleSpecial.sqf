@@ -842,6 +842,23 @@ switch (_args select 0) do {
 			};
 		};
 	};
+	//--- fix (PR #1251 bounce): server-side landing for HC-originated AI top-up refunds
+	//--- (Common_RunCommanderTeam.sqf stale-TTL + partial-spawn refunds; ChangeAICommanderFunds only exists
+	//--- on the server). Forgeable-bus residual matches the documented cleanup-* precedent; mitigations:
+	//--- side index validated, amount clamped to the maximum legitimate charge (4 units x TOPUP_UNIT_COST,
+	//--- +50% slack), never negative or non-scalar.
+	case "aicom-topup-refund": {
+		private ["_trSideID","_trAmt","_trCap"];
+		if ((count _args) < 3) exitWith {};
+		_trSideID = _args select 1;
+		_trAmt = _args select 2;
+		if ((typeName _trSideID) != "SCALAR" || {(typeName _trAmt) != "SCALAR"}) exitWith {};
+		if (!(_trSideID in [0,1]) || {_trAmt <= 0}) exitWith {};
+		_trCap = 4 * (missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_UNIT_COST", 1000]) * 1.5;
+		if (_trAmt > _trCap) then {_trAmt = _trCap};
+		[([west, east] select _trSideID), _trAmt] Call ChangeAICommanderFunds;
+		diag_log ("AICOMSTAT|v1|EVENT|" + str _trSideID + "|" + str (round (time / 60)) + "|TOPUP_REFUND_LANDED|amount=" + str _trAmt);
+	};
 	case "aicom-refit": {
 		//--- cmdcon41-w3d COMMAND-MENU V2 (REFIT): the human commander requested a funds-charged infantry TOP-UP for ONE
 		//--- team - the exact same consumer path Produce's auto top-up uses (wfbe_aicom_topup_req [count,pos,classes,issuedTime] on the
@@ -849,7 +866,7 @@ switch (_args select 0) do {
 		//--- rate-limit gates: flat WFBE_C_AICOM_TOPUP_UNIT_COST per missing man toward 6 (cap 4), charged from the AI
 		//--- commander treasury up front; one refit per team per WFBE_C_AICOM_TOPUP_COOLDOWN via the SAME wfbe_aicom_topup_stamp
 		//--- Produce stamps. NEVER trust the client: human commander required, side + team validated, funds re-checked here.
-		private ["_rfEnabled","_rfSide","_rfIdx","_rfLogik","_rfCmd","_rfHuman","_rfTeams","_rfTeam","_rfAlive","_rfNow","_rfLast","_rfCd","_rfMissing","_rfSText","_rfBarr","_rfCls","_rfCost","_rfCharge","_rfFunds","_rfCostOn","_rfAfford"];
+		private ["_rfEnabled","_rfSide","_rfIdx","_rfLogik","_rfCmd","_rfHuman","_rfTeams","_rfTeam","_rfAlive","_rfNow","_rfLast","_rfCd","_rfMissing","_rfSText","_rfBarr","_rfCls","_rfCost","_rfCharge","_rfFunds","_rfCostOn","_rfAfford","_rfChargedAmt"];
 		_rfEnabled = (missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0;
 		_rfSide = _args select 1;
 		_rfIdx  = -1;
@@ -888,10 +905,14 @@ switch (_args select 0) do {
 									_rfAfford = true;
 									if (_rfCostOn) then {_rfAfford = (_rfFunds >= _rfCharge)};
 									if (_rfAfford) then {
-										if (_rfCostOn) then {[_rfSide, -_rfCharge] Call ChangeAICommanderFunds};
-										_rfTeam setVariable ["wfbe_aicom_topup_req", [_rfMissing, getPosATL (leader _rfTeam), _rfCls, _rfNow], true];
+										_rfChargedAmt = 0;
+										if (_rfCostOn) then {[_rfSide, -_rfCharge] Call ChangeAICommanderFunds; _rfChargedAmt = _rfCharge};
+										//--- fable/aicom-topup-refund-on-stale: store the ACTUAL charged amount (0 on the
+										//--- free/cost-off path) as element 4 so the consumer (Common_RunCommanderTeam.sqf)
+										//--- can refund it exactly if this request ages out unfilled, mirroring Produce.sqf.
+										_rfTeam setVariable ["wfbe_aicom_topup_req", [_rfMissing, getPosATL (leader _rfTeam), _rfCls, _rfNow, _rfChargedAmt], true];
 										_rfTeam setVariable ["wfbe_aicom_topup_stamp", _rfNow, false];
-										diag_log ("AICOM2|v1|ORDER|aicom-refit|" + str _rfSide + "|" + str (round (time / 60)) + "|idx=" + str _rfIdx + "|missing=" + str _rfMissing + "|cost=" + str (if (_rfCostOn) then {_rfCharge} else {0}));
+										diag_log ("AICOM2|v1|ORDER|aicom-refit|" + str _rfSide + "|" + str (round (time / 60)) + "|idx=" + str _rfIdx + "|missing=" + str _rfMissing + "|cost=" + str _rfChargedAmt);
 									} else {
 										diag_log ("AICOM2|v1|ORDER|aicom-refit|REJECT|" + str _rfSide + "|idx=" + str _rfIdx + "|funds=" + str (round _rfFunds) + "|need=" + str _rfCharge);
 									};
