@@ -588,6 +588,25 @@ class A2TrapTests(unittest.TestCase):
                 tail = block[inner:block.index("} forEach _saTeams;")]
                 self.assertNotIn("_x", tail.replace("forEach", ""))
 
+    def test_support_air_kind_flag_is_boolean_initialized_and_guarded_before_unit_scan(self) -> None:
+        """A nested forEach must never compare transportSoldier against an undefined type flag.
+
+        OA reports this as ``Type Bool, expected Number`` and terminates the request handler.
+        Keep a Boolean default at case scope plus a defensive pre-scan recovery guard.
+        """
+        for root in MAINTAINED_ROOTS:
+            text = read_code(root, HANDLE)
+            block = text.split('case "aicom-support-air":')[1].split('case "aicom-support-air-release":')[0]
+            with self.subTest(root=root.name):
+                default_at = block.index("_saWantTrans = false;")
+                derive_at = block.index('_saWantTrans = (_saKind == "transport");')
+                guard_at = block.index('if (isNil "_saWantTrans") then {_saWantTrans = false;')
+                scan_at = block.index("} forEach (units _tm);")
+                self.assertLess(default_at, derive_at)
+                self.assertLess(derive_at, guard_at)
+                self.assertLess(guard_at, scan_at)
+                self.assertIn("AICOM2|v1|ORDER|CMD_SUPPORT|FULFIL|", block)
+
     def test_no_banned_a3_commands_in_new_files(self) -> None:
         banned = (
             "isEqualType", "isEqualTo", "pushBack", "findIf", "selectRandom",
