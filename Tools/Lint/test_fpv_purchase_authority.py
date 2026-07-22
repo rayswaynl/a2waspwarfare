@@ -360,7 +360,19 @@ class FpvPurchaseAuthorityTests(unittest.TestCase):
         self.assertIn("!isPlayer _fpvDriver", code)
         self.assertIn("deleteVehicle playerFPV", code)
         self.assertIn("playerFPV = objNull", code)
-        self.assertIn("_fpvDrone == playerFPV", code)
+        # Re-pinned 2026-07-21. fix(fpv-handoff-race) DELIBERATELY removed the echoed-drone identity
+        # gate (`_fpvDrone == playerFPV`): the one-shot token compare-consume already proves the result
+        # belongs to this client's pending purchase, and gating teardown on the echoed reference leaked a
+        # still-armed drone whenever the purchase PV outran createVehicle replication (the server bound
+        # objNull, denied, and the armed airframe then fell and self-detonated). Pin the replacement
+        # contract instead: teardown keys on the client-local playerFPV and runs only after the token gate.
+        self.assertNotIn("_fpvDrone == playerFPV", code)
+        self.assertIn("if (!isNull playerFPV) then {", code)
+        self.assertIn("_fpvDriver = driver playerFPV", code)
+        token_gate = code.find("if (!_fpvTokenAccepted) exitWith {};")
+        teardown = code.find("if (!isNull playerFPV) then {", token_gate)
+        self.assertGreaterEqual(token_gate, 0)
+        self.assertGreater(teardown, token_gate)
         self.assertIn("_fpvToken == _fpvExpectedToken", code)
         self.assertIn("deleteGroup _fpvGroup", code)
         self.assertIn("_fpvTokenAccepted = false", code)

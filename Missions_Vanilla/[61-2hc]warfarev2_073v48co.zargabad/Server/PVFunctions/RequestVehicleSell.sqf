@@ -84,6 +84,12 @@ if (!_vsellLatched) exitWith {};
 _cls  = typeOf _vehicle;
 _data = missionNamespace getVariable _cls;
 if (isNil "_data" || {typeName _data != "ARRAY"} || {count _data <= QUERYUNITPRICE} || {typeName (_data select QUERYUNITPRICE) != "SCALAR"}) exitWith {
+	//--- RELEASE the one-shot latch: this exit REFUSES the sale, so the hull survives and must stay
+	//--- sellable. Nothing in the tree ever clears wfbe_vsell_done, so leaving it stamped bricked this
+	//--- specific vehicle object forever - every later attempt failed the check-and-set above and exited
+	//--- silently, even once a valid price entry existed for its class. No double-credit risk: no funds
+	//--- moved and the hull was not deleted on this path.
+	_vehicle setVariable ["wfbe_vsell_done", nil];
 	["WARNING", Format ["RequestVehicleSell.sqf: [VSELL] rejected for %1 - no price data for [%2].", name _seller, _cls]] Call WFBE_CO_FNC_LogContent;
 };
 _price    = _data select QUERYUNITPRICE;

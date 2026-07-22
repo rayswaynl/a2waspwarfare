@@ -2904,5 +2904,14 @@ if (isNil "WFBE_C_CMD_SUPPORT_AIR_RECALL_HYST")then {WFBE_C_CMD_SUPPORT_AIR_RECA
 if (isNil "WFBE_C_CMD_SUPPORT_AIR_MIN_ALT")    then {WFBE_C_CMD_SUPPORT_AIR_MIN_ALT = 120};   //--- m flyInHeight used for the escort orbit (transport stands off higher than a CAS pass).
 if (isNil "WFBE_C_CMD_SUPPORT_JET")            then {WFBE_C_CMD_SUPPORT_JET = 0};             //--- RESERVED, not implemented: 0 = the "cas-jet"/"transport-jet" request kinds are parsed and explicitly REJECTED with telemetry so the UI can grey them instead of silently dropping. There is no jet grant path in this build; setting this to 1 does NOT create one.
 
+//--- TRASH-OBJECT LOCALITY (2026-07-21 hardening extras): Common_TrashObject.sqf ends in an unconditional
+//--- deleteVehicle, which SILENTLY NO-OPS on an object that is not local to the machine running it - the same
+//--- documented A2-OA fact the BASE-GC and the commander-artillery wreck reaper already guard against with
+//--- their own `local` checks (server_groupsGC.sqf L224/L276/L391). Every TrashObject caller runs server-side,
+//--- so any HC-local body or hull it is handed is never actually removed and persists for the match. 1 = gate
+//--- on locality and route non-local deletes to the owning machine over the existing HandleSpecial channel;
+//--- 0 = INERT, the unconditional legacy deleteVehicle (byte-identical current behaviour). Ships default 0.
+if (isNil "WFBE_C_TRASH_REMOTE_DELETE") then {WFBE_C_TRASH_REMOTE_DELETE = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

@@ -727,7 +727,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 					[_location, _newSide, _newSID] spawn {
 						Private ["_loc","_side","_newSIDAtCapture","_squadGrp","_squadUnits","_squadVehicles",
 						         "_clearCount","_detected","_squadTeam","_upgLvl","_tplName","_spawnPos",
-						         "_retVal","_scanActive","_townRange","_guerCount","_mopupEnd","_squadRoster","_tplRosters"];
+						         "_retVal","_scanActive","_townRange","_guerCount","_mopupEnd","_squadRoster","_tplRosters","_squadFormed"];
 						_loc             = _this select 0;
 						_side            = _this select 1;
 						_newSIDAtCapture = _this select 2;
@@ -749,6 +749,12 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 						_tplRosters = missionNamespace getVariable Format ["WFBE_%1_GROUPS_%2", _side, _tplName];
 						if (!(isNil "_tplRosters") && {count _tplRosters > 0}) then {
 							_squadRoster = _tplRosters select floor(random count _tplRosters);
+						} else {
+							//--- TIER-ROSTER FALLBACK (was silent): an unregistered or empty WFBE_<side>_GROUPS_<tier> roster
+							//--- left _squadRoster at its [] default and the miss only ever surfaced later as the generic
+							//--- "template unavailable" line below, which conflates a roster miss with a CreateTeam/group-cap
+							//--- failure. Name the real cause at the lookup site so a bad tier key is greppable on its own.
+							["INFORMATION", Format ["server_town.sqf: mop-up tier roster miss for %1 - key WFBE_%2_GROUPS_%3 is %4; squad cannot form at this tier.", _loc getVariable ["name","unknown"], _side, _tplName, (if (isNil "_tplRosters") then {"unregistered"} else {"empty"})]] Call WFBE_CO_FNC_LogContent;
 						};
 
 						//--- Spawn position near town centre.
@@ -763,6 +769,16 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 
 						if (isNull _squadGrp || {(count _squadUnits + count _squadVehicles) == 0}) exitWith {
 							["INFORMATION", Format ["server_town.sqf: mop-up squad for %1 (%2) failed to create - template %3 unavailable.", _loc getVariable ["name","unknown"], _side, _tplName]] Call WFBE_CO_FNC_LogContent;
+						};
+
+						//--- FORMATION VERIFICATION (was absent): the guard above only catches a TOTAL failure, so a squad
+						//--- that came back materially short of the roster it was handed (blocked/occupied spawn position,
+						//--- a per-side group/unit cap, or a roster classname missing from this build) shipped silently as
+						//--- a "spawned" mop-up detail. Read the formed strength back and name the shortfall. Log-only.
+						_squadFormed = 0;
+						{if (!isNull _x && {alive _x}) then {_squadFormed = _squadFormed + 1}} forEach (_squadUnits + _squadVehicles);
+						if (_squadFormed < (count _squadRoster)) then {
+							["INFORMATION", Format ["server_town.sqf: mop-up squad for %1 formed SHORT - %2 of %3 rostered units alive (template %4).", _loc getVariable ["name","unknown"], _squadFormed, count _squadRoster, _tplName]] Call WFBE_CO_FNC_LogContent;
 						};
 
 						//--- Tag squad units as town defender AI so they don't re-trigger activation scans.
