@@ -226,6 +226,12 @@ if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 	["INITIALIZATION", "Init_Server.sqf: MATCH|v1|START| emitted (WFBE_C_MATCH_TELEMETRY=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- AICAP MID/HIGH TRIM (2026-07-22): armed-run attribution for paired soak reading with the
+//--- garrison-scale and merge-up cards. Default-off emits nothing, preserving the legacy RPT stream.
+if ((missionNamespace getVariable ["WFBE_C_AICAP_MIDHIGH_TRIM", 0]) > 0) then {
+	diag_log ("AICAP|v1|tiers=" + str (missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", []]));
+};
+
 //--- Side logics.
 _present_west = missionNamespace getVariable "WFBE_WEST_PRESENT";
 _present_east = missionNamespace getVariable "WFBE_EAST_PRESENT";
