@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_artyScanRadius","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen","_roadClearOK","_slopeOK","_treeClearOK","_tp19RoadClearOK"];  //--- cmdcon41-w3k: +_roadClearOK (road-clear placement gate helper).
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_artyScanRadius","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen","_roadClearOK","_slopeOK","_treeClearOK","_tp19RoadClearOK","_defense","_artyObj","_fwdDefObj"];  //--- cmdcon41-w3k: +_roadClearOK (road-clear placement gate helper).
 
 _side = _this;
 _sideText = str _side;
@@ -875,9 +875,14 @@ if (_defCount < _defMax) then {
 				//--- so manned statics engage outward threats and never fire across the base into friendly
 				//--- defenses/structures.
 				private ["_defDx","_defDy"]; _defDx = (_pos select 0) - (_hqPos select 0); _defDy = (_pos select 1) - (_hqPos select 1); _defDir = if (abs _defDx < 0.01 && {abs _defDy < 0.01}) then {random 360} else {_defDx atan2 _defDy}; //--- BUG-FIX 2026-06-14: guard atan2(0,0) zero-divisor when build pos == HQ (left _defDir unset -> garbage heading).
-				[_defClass, _side, _pos, _defDir, true, true] Call ConstructDefense;
-				_logik setVariable ["wfbe_aicom_defenses", _defCount + 1];
-				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base defense %2/%3 [%4].", _sideText, _defCount + 1, _defMax, _defClass]] Call WFBE_CO_FNC_AICOMLog;
+				_defense = [_defClass, _side, _pos, _defDir, true, true] Call ConstructDefense;
+				if (isNull _defense) then {
+					[_side, _defPrice] Call ChangeAICommanderFunds;
+					["WARNING", Format ["AI_Commander_Base.sqf: [%1] base defense [%2] failed to construct; refunded %3 funds.", _sideText, _defClass, _defPrice]] Call WFBE_CO_FNC_AICOMLog;
+				} else {
+					_logik setVariable ["wfbe_aicom_defenses", _defCount + 1];
+					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base defense %2/%3 [%4].", _sideText, _defCount + 1, _defMax, _defClass]] Call WFBE_CO_FNC_AICOMLog;
+				};
 			};
 		};
 	};
@@ -1054,8 +1059,12 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 				if (_funds >= _defPrice) then {
 					[_side, -_defPrice] Call ChangeAICommanderFunds;
 					_pos = [25, 38] Call _findBuildPos;
-					private "_artyObj"; _artyObj = [_defClass, _side, _pos, random 360, true, true] Call ConstructDefense;
-					_logik setVariable ["wfbe_aicom_arty_built", _artyBuilt + 1];
+					_artyObj = [_defClass, _side, _pos, random 360, true, true] Call ConstructDefense;
+					if (isNull _artyObj) then {
+						[_side, _defPrice] Call ChangeAICommanderFunds;
+						["WARNING", Format ["AI_Commander_Base.sqf: [%1] base artillery [%2] failed to construct; refunded %3 funds.", _sideText, _defClass, _defPrice]] Call WFBE_CO_FNC_AICOMLog;
+					} else {
+						_logik setVariable ["wfbe_aicom_arty_built", _artyBuilt + 1];
 					if (_ech) then {
 						//--- ECHELON: register the freshly-built gun on the explicit per-side list (drives both this cap count
 						//--- and Strategy fire/reposition discovery); clear the skip-log latch so a later block re-logs one line.
@@ -1068,7 +1077,8 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 						};
 						_logik setVariable ["wfbe_aicom_arty_skiplog", ""];
 					};
-					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base artillery %2/%3 [%4] (cost %5 funds).", _sideText, _artyBuilt + 1, _artyMax, _defClass, _defPrice]] Call WFBE_CO_FNC_AICOMLog;
+						["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base artillery %2/%3 [%4] (cost %5 funds).", _sideText, _artyBuilt + 1, _artyMax, _defClass, _defPrice]] Call WFBE_CO_FNC_AICOMLog;
+					};
 				};
 			};
 		};
@@ -1184,9 +1194,14 @@ if (_fwdEnable && {_dual}) then {
 										_fwdDefPos = [22, 40] Call _findBuildPos;
 										_fwdDx2 = (_fwdDefPos select 0) - (_fwdPos select 0); _fwdDy2 = (_fwdDefPos select 1) - (_fwdPos select 1);
 										_fwdDefDir = if (abs _fwdDx2 < 0.01 && {abs _fwdDy2 < 0.01}) then {random 360} else {_fwdDx2 atan2 _fwdDy2};
-										[_fwdDefClass, _side, _fwdDefPos, _fwdDefDir, true, true] Call ConstructDefense;
-										["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FORWARD OUTPOST defense %2/%3 [%4].", _sideText, _fwdDefCount + 1, _fwdDefMax, _fwdDefClass]] Call WFBE_CO_FNC_AICOMLog;
-										diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FWDBASE_DEFENSE|n=" + str (_fwdDefCount + 1) + "|max=" + str _fwdDefMax);
+										_fwdDefObj = [_fwdDefClass, _side, _fwdDefPos, _fwdDefDir, true, true] Call ConstructDefense;
+										if (isNull _fwdDefObj) then {
+											[_side, _fwdDefPrice] Call ChangeAICommanderFunds;
+											["WARNING", Format ["AI_Commander_Base.sqf: [%1] forward-outpost defense [%2] failed to construct; refunded %3 funds.", _sideText, _fwdDefClass, _fwdDefPrice]] Call WFBE_CO_FNC_AICOMLog;
+										} else {
+											["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FORWARD OUTPOST defense %2/%3 [%4].", _sideText, _fwdDefCount + 1, _fwdDefMax, _fwdDefClass]] Call WFBE_CO_FNC_AICOMLog;
+											diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FWDBASE_DEFENSE|n=" + str (_fwdDefCount + 1) + "|max=" + str _fwdDefMax);
+										};
 									};
 								};
 							};

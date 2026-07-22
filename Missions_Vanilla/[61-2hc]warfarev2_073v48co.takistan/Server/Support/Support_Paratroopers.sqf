@@ -1,4 +1,4 @@
-Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_delay','_destination','_dropPos','_greenlight','_grp','_index','_isAI','_lvlOverride','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles'];
+Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_delay','_destination','_dropPos','_greenlight','_grp','_index','_isAI','_lvlOverride','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles','_transporter'];
 
 _side = _this select 1;
 _destination = _this select 2;
@@ -96,7 +96,7 @@ _paratroopers = [];
 	_built_inf = _built_inf + 1;
 	[_paratroopers, _unit] Call WFBE_CO_FNC_ArrayPush;
 	//--- If the unit amount exceed the cargo cap, swap to the next vehicle then.
-	if (_built_inf >= _vehicle_cargo) then {_built = _built + _built_inf; _built_inf = 0; _index = _index + 1; _vehicle = _vehicles select _index};
+	if (_built_inf >= _vehicle_cargo && {_index < ((count _vehicles) - 1)}) then {_built = _built + _built_inf; _built_inf = 0; _index = _index + 1; _vehicle = _vehicles select _index};
 } forEach _units;
 
 [str _side,'UnitsCreated', _built] Call UpdateStatistics;
@@ -169,8 +169,9 @@ if (_greenlight) then {
 
 //--- In any case, cleanup the transporters.
 {
-	{deleteVehicle _x} forEach crew _x;//--- Remove the crew.
-	deleteVehicle _x;//--- Remove the vehicle.
+	_transporter = _x;
+	{deleteVehicle _x} forEach crew _transporter;//--- Remove the crew.
+	deleteVehicle _transporter;//--- Remove the vehicle.
 } forEach _vehicles;
 
 //---- Clear the group.
