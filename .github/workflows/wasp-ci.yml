@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -36,6 +38,7 @@ jobs:
         shell: pwsh
         run: |
           python Tools\Lint\test_check_sqf.py
+          python Tools\Lint\test_faction_reachability.py
           python Tools\Lint\test_aicom_autoflip.py
           python Tools\Lint\test_fpv_purchase_authority.py
           python Tools\Lint\test_icbm_tel_authority.py
@@ -72,6 +75,11 @@ jobs:
         continue-on-error: true
         run: |
           python Tools\Lint\check_sqf.py --no-classname-index
+
+      - name: Faction configuration reachability gate
+        shell: pwsh
+        run: |
+          python Tools\Lint\check_faction_reachability.py --diff-from HEAD^
 
       - name: SQF lint gate (blocking)
         shell: pwsh
