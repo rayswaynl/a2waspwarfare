@@ -2061,6 +2061,23 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	WFBE_C_GROUP_BUDGET_WARN = 120;               //--- GROUP-BUDGET ALARM (claude-gaming 2026-06-13): per-side group-count WARN threshold (GRPBUDGET line in AI_Commander.sqf). Arma 2 OA hard cap is 144/side; crossing this logs a GRPBUDGET|WARN so the watchdog/dashboard flags it before the AI can no longer found teams. (120, not 125: with the persistent-husk leak fixed, steady state should drop below 120, making the WARN a true leading indicator rather than always-on.)
 	if (isNil 'WFBE_C_GROUPAUDIT_EVERY') then {WFBE_C_GROUPAUDIT_EVERY = 5}; //--- D2 server-FPS (claude-gaming 2026-06-14): run the EXPENSIVE per-faction group-classification AUDIT DUMP (server_groupsGC.sqf; auditMs ~2100ms on 276 groups) only every Nth 5-min audit window. The husk-reap GC + zombie-reap + cap-warning still run EVERY 60s cycle (they live outside the audit branch) - this throttles only diagnostic telemetry. 5 = full dump ~every 25 min instead of every 5 min. 1 = dump every window (old behavior); values < 1 are clamped to 1. Pure diagnostic throttle, no gameplay effect; instant rollback by setting to 1.
 
+	if (isNil 'WFBE_C_TOWNS_MERGE_CAP') then {WFBE_C_TOWNS_MERGE_CAP = 10};    //--- WEST/EAST merged town-garrison group SIZE cap. Was the hardcoded 10 in Server_GetTownGroups; now a first-class tunable (symmetric with WFBE_C_TOWNS_MERGE_CAP_DEFENDER). Default 10 = byte-identical to the historical hard cap.
+	//--- GARRISON GROUP-CAP HEADROOM (task wasp-garrison-mergeup-20260722, C6 pick 2, owner GO 2026-07-22 19:08): flag-gated raise
+	//--- of the merged town-garrison group SIZE (target + cap) from ~9-10 (WEST/EAST) / ~10-12 (GUER defender) up to ~12-14, so a
+	//--- town spawns the SAME defenders in FEWER server group-brains (~-20-30% garrison group count) -> more headroom under the
+	//--- 144/side engine cap + WFBE_C_GUER_GROUPS_MAX(80) / WFBE_C_AICOM_GROUP_CAP(110) gates, smaller allGroups scans per
+	//--- GC/telemetry pass, and fewer per-group FSMs. SAME units a player sees & fights (merge is group-brain consolidation only;
+	//--- vehicles are never merged). Orthogonal to wasp-town-garrison-minus20 (#1266, WFBE_C_TOWN_GARRISON_SCALE): that lever
+	//--- changes garrison SIZE, this one changes group GRANULARITY; the two are sequence-safe. 0 = OFF (byte-identical to HEAD;
+	//--- instant rollback). The Zargabad WEST/EAST merge override (ZG-FIX block below) still wins for ZG WEST/EAST.
+	if (isNil 'WFBE_C_TOWNS_MERGE_HEADROOM') then {WFBE_C_TOWNS_MERGE_HEADROOM = 0};
+	if (WFBE_C_TOWNS_MERGE_HEADROOM > 0) then {
+		WFBE_C_TOWNS_MERGE_TARGET = 12;              //--- WEST/EAST flush threshold (was 9). Paired with WFBE_C_TOWNS_MERGE_CAP (14).
+		WFBE_C_TOWNS_MERGE_TARGET_DEFENDER = 12;     //--- GUER defender flush threshold (was 10).
+		WFBE_C_TOWNS_MERGE_CAP_DEFENDER = 14;        //--- GUER defender max merged-group size (was 12).
+		WFBE_C_TOWNS_MERGE_CAP = 14;                 //--- WEST/EAST max merged-group size (was the hardcoded 10).
+	};
+
 //--- ZG-FIX (zg-alive-population, claude-gaming 2026-07-03): Zargabad-scoped AI-POPULATION governor overrides.
 //--- WHY: the 2026-07-02 Zargabad soak glaciated - AI grew to ~440 units / 120+ groups (WEST ~140 + EAST ~140
 //--- + GUER ~150 at the tier-0 per-side cap of 140), server fps 47->8 by hour 3, 0 captures. ~440 sits AT the
@@ -2105,6 +2122,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 		diag_log ("AICOMSTAT|v2|EVENT|ZG|0|ALIVEPOP_INIT|capAI=" + str WFBE_C_TOTAL_AI_MAX_BY_TIER + "|capTeams=" + str WFBE_C_AICOM_TEAMS_HARD_CAP + "|pcLow=" + str WFBE_C_AICOM_TEAMS_PC_LOW + "|pcMid=" + str WFBE_C_AICOM_TEAMS_PC_MID + "|merge=" + str WFBE_C_TOWNS_MERGE_TARGET + "|disbandInt=" + str WFBE_C_AICOM_DISBAND_INTERVAL + "|infFloor=" + str WFBE_C_AICOM_DISBAND_INFANTRY_FLOOR);
 	};
 //--- End ZG-FIX zg-alive-population Zargabad-scoped governor overrides.
+	if (isServer) then { diag_log ("GARRISON|v1|merge=" + str WFBE_C_TOWNS_MERGE_TARGET + "|mergeCap=" + str WFBE_C_TOWNS_MERGE_CAP + "|mergeDef=" + str WFBE_C_TOWNS_MERGE_TARGET_DEFENDER + "|mergeCapDef=" + str WFBE_C_TOWNS_MERGE_CAP_DEFENDER + "|headroom=" + str WFBE_C_TOWNS_MERGE_HEADROOM + "|map=" + worldName); }; //--- task wasp-garrison-mergeup-20260722: soak-attributable one-shot stamp of the live merged town-garrison group target/cap (joint GARRISON|v1| family with #1266 scale= stamp).
 };
 
 // --- Player stats (feature-flagged) ---

@@ -283,9 +283,10 @@ if (!_aa_get && {(random 1) < 0.08}) then {
 //--- several infantry rosters into one flat array makes the town spawn the SAME units/classes in
 //--- FEWER groups -> fewer server group-brains (the ~2.1 units/group fragmentation is the FPS
 //--- cliff), with IDENTICAL defenders a player sees & fights. Vehicle rosters (kind 1) are NEVER
-//--- merged (preserves the CreateTeam addVehicle/crew path). Cap each merged group at 10 classnames
+//--- merged (preserves the CreateTeam addVehicle/crew path). Cap each merged group at WFBE_C_TOWNS_MERGE_CAP (default 10) classnames
 //--- so no single squad is unnaturally large. WFBE_C_TOWNS_MERGE_TARGET <= 0 disables (instant rollback).
 _mergeTarget = missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_TARGET", 5];
+_mergeCap = missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_CAP", 10];
 if (_mergeTarget > 0 && {count _contents > 1}) then {
 	_infRosters = [];
 	_vehRosters = [];
@@ -299,7 +300,7 @@ if (_mergeTarget > 0 && {count _contents > 1}) then {
 	_acc = [];
 	{
 		_roster = _x;
-		if (((count _acc) + (count _roster)) > 10 && {count _acc > 0}) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
+		if (((count _acc) + (count _roster)) > _mergeCap && {count _acc > 0}) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
 		_acc = _acc + _roster;
 		if (count _acc >= _mergeTarget) then {[_merged, _acc] Call WFBE_CO_FNC_ArrayPush; _acc = []};
 	} forEach _infRosters;
