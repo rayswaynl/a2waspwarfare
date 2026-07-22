@@ -28,7 +28,7 @@ if !(isNull _object) then {
 		private ["_prox","_held"];
 		_prox = missionNamespace getVariable ["WFBE_C_UNITS_BODIES_PROX", 0];
 		_held = 0;
-		while {_held < _delay && {({isPlayer _x && {alive _x} && {_x distance _object < _prox}} count playableUnits) > 0}} do {
+		while {_held < _delay && {([getPos _object, _prox] Call WFBE_CO_FNC_RealPlayersNear) > 0}} do {
 			sleep 3; _held = _held + 3;
 		};
 	};

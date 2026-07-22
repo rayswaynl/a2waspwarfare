@@ -334,7 +334,7 @@ if (_foundedTeams > _target) then {
 		if (!isNull _x && {[_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool} && {!([_x, "wfbe_aicom_disband", false] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- fix(hunt): G1-safe - never-flagged teams returned nil for wfbe_aicom_disband, !nil threw, so the PC-cleanup retire pass never flagged anything
 			_ldr = leader _x;
 			if (!isNull _ldr && {alive _ldr}) then {
-				_nearP = {isPlayer _x && {alive _x} && {(_x distance _ldr) < _safeDist}} count _allUnits;
+				_nearP = [getPos _ldr, _safeDist] Call WFBE_CO_FNC_RealPlayersNear;
 				_inCombat = (behaviour _ldr == "COMBAT") || ({alive _x && {side _x != _side} && {(_x distance _ldr) < _safeDist}} count _allUnits > 0);
 				if (_nearP == 0 && {!_inCombat} && {(count units _x) < _pickN}) then {
 					_pickN = count units _x; _pick = _x;
