@@ -25,7 +25,7 @@ WFBE_GC_IsHC = isMultiplayer && {!isServer} && {!hasInterface};
 if (!hasInterface && {!WFBE_GC_IsHC}) exitWith {}; // run on player clients + HCs; skip the dedicated server (server has server_groupsGC.sqf)
 waitUntil {commonInitComplete};
 
-Private ["_cliId","_dbN","_scanned","_emptyLocal","_reaped","_confirmedGone","_skipPers","_skipTracked","_cands","_grp","_ldr","_p","_since","_reg","_tracked"];
+Private ["_cliId","_dbN","_scanned","_emptyLocal","_reaped","_prevConfirmedGone","_skipPers","_reapedThisCycle","_lastReaped","_skipTracked","_cands","_grp","_ldr","_p","_since","_reg","_tracked"];
 
 // On an HC, mirror HC_StatLoop.sqf's "HC-<netId>" so its reaped lines line up with HCSTAT.
 // On a player client, keep the original "CL-<netId>" tag. Either way it is a stable per-process id.
@@ -34,10 +34,17 @@ _dbN   = missionNamespace getVariable ["WFBE_C_CLIENT_GROUPGC_DEBOUNCE", 10]; //
 
 ["INFORMATION", Format ["Client_GroupsGC.sqf: %1 empty-group reaper started (%2)", (if (WFBE_GC_IsHC) then {"headless-client"} else {"client"}), _cliId]] Call WFBE_CO_FNC_LogContent;
 
+_lastReaped = [];   // group refs deleteGroup'd last cycle; verified null (engine-collected) next cycle -> prevConfirmedGone
 while {!WFBE_GameOver} do {
     sleep 60;
 
-    _scanned = 0; _emptyLocal = 0; _reaped = 0; _confirmedGone = 0; _skipPers = 0; _skipTracked = 0;
+    _scanned = 0; _emptyLocal = 0; _reaped = 0; _prevConfirmedGone = 0; _skipPers = 0; _skipTracked = 0;
+    _reapedThisCycle = [];
+    // Verify LAST cycle's deletions: a stored group ref reads isNull only AFTER the engine
+    // actually collects the deleted group - never observable in the same un-yielded tick as
+    // deleteGroup (why the old same-tick check was 0 in 100% of samples). By now (>=60s later,
+    // via the sleep 60 above) genuinely-gone husks read isNull = real reap proof.
+    { if (isNull _x) then {_prevConfirmedGone = _prevConfirmedGone + 1} } forEach _lastReaped;
     _cands = [];
     _reg = missionNamespace getVariable ["WFBE_CL_TownAI_Groups", []]; // delegated-town groups: handled elsewhere
 
@@ -79,11 +86,13 @@ while {!WFBE_GameOver} do {
     {
         // re-confirm immediately before deleting (ownership/fill could have changed during pass 1)
         if (!isNull _x && {_x != group player} && {(count units _x) == 0} && {local (leader _x) || isNull (leader _x)}) then {
+            _reapedThisCycle = _reapedThisCycle + [_x];   // stash ref; verified null (gone) on the NEXT cycle
             deleteGroup _x;
             _reaped = _reaped + 1;
-            if (isNull _x) then {_confirmedGone = _confirmedGone + 1};   // confirmedGone proof: husk actually gone
         };
     } forEach _cands;
+
+    _lastReaped = _reapedThisCycle;   // carry this cycle's deletions forward for next-cycle isNull verification
 
     if (_reaped > 0) then {
         // Machine-parsed wire line (distinct tag from the server's EMPTYGRP|v1|). t = round minutes (house style).
@@ -91,11 +100,11 @@ while {!WFBE_GameOver} do {
             + "|scanned=" + str _scanned
             + "|emptyLocal=" + str _emptyLocal
             + "|reaped=" + str _reaped
-            + "|confirmedGone=" + str _confirmedGone
+            + "|prevConfirmedGone=" + str _prevConfirmedGone
             + "|skippedPersistent=" + str _skipPers
             + "|skippedTracked=" + str _skipTracked
             + "|t=" + str (round (time / 60)));
         // Human-readable companion line (LogContent is the client-flavored channel).
-        ["INFORMATION", Format ["CLIENT_EMPTY_GROUP_CLEANUP cli:%1 reaped:%2 confirmedGone:%3 emptyLocal:%4 scanned:%5", _cliId, _reaped, _confirmedGone, _emptyLocal, _scanned]] Call WFBE_CO_FNC_LogContent;
+        ["INFORMATION", Format ["CLIENT_EMPTY_GROUP_CLEANUP cli:%1 reaped:%2 prevConfirmedGone:%3 emptyLocal:%4 scanned:%5", _cliId, _reaped, _prevConfirmedGone, _emptyLocal, _scanned]] Call WFBE_CO_FNC_LogContent;
     };
 };
