@@ -1211,7 +1211,7 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 	"WFBE_FPS_REPORT" addPublicVariableEventHandler {
 		private ["_d", "_players", "_hc"];
 		_d = _this select 1;
-		_players = { isPlayer _x } count playableUnits;
+		_players = count ([] call WFBE_CO_FNC_RealPlayers);
 		//--- hc= the live headless-client count (registry filtered to non-null, alive-leader HCs), so the
 		//--- planned 0-HC / 1-HC / 2-HC comparison days bucket cleanly even when an RPT spans several launches.
 		_hc = { !isNull _x && {!isNull leader _x} && {alive leader _x} } count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);

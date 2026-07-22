@@ -30,11 +30,11 @@ WFBE_CO_FNC_LogVehDelete = {
     //--- units, and the playable set is 1-2 orders of magnitude smaller than the AI population.
     _nearD = -1;
     {
-        if (isPlayer _x && {alive _x}) then {
+		if (!isNull _x) then {
             _d = _x distance _veh;
             if (_nearD < 0 || {_d < _nearD}) then {_nearD = _d};
         };
-    } forEach playableUnits;
+	} forEach ([] call WFBE_CO_FNC_RealPlayers);
 
     _crewStr = "";
     {_crewStr = _crewStr + Format ["%1/p:%2 ", typeOf _x, isPlayer _x]} forEach (crew _veh);
