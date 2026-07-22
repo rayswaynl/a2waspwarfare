@@ -1142,6 +1142,79 @@ if (count _live > 0) then {
 		};
 	};
 
+	//--- HF-MAIN MANNED LIGHT MIX (owner ruling 2026-07-22): when HF-main is armed, the
+	//--- final infantry/light founding template must carry enough existing armed light-Car
+	//--- cargo seats for its infantry. The class is resolved only from this side's existing
+	//--- type-1 AICOM templates; no classname is invented here. Common_CreateTeam creates
+	//--- the hull and its side crew, then Common_RunCommanderTeam performs the bounded
+	//--- cargo mount-up on the HC. GUER is explicitly excluded.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_DOCTRINE_HF_MAIN", 0]) > 0 && {_side != resistance}) then {
+		private ["_mountType","_mountTemplateType","_mountEntry","_mountClass","_mountClassSeats","_mountSeats","_mountRiders","_mountNeed","_mountAdded","_mountIdx"];
+		_mountType = 0;
+		if (!isNil "_storedTypes" && {_pick < count _storedTypes}) then {
+			_mountType = _storedTypes select _pick;
+			if (isNil "_mountType") then {_mountType = 0};
+		} else {
+			_mountEntry = _tmplUpgrades select _pick;
+			if ((_mountEntry select WFBE_UP_AIR) > 0) then {_mountType = 3} else {
+				if ((_mountEntry select WFBE_UP_HEAVY) > 0) then {_mountType = 2} else {
+					if ((_mountEntry select WFBE_UP_LIGHT) > 0) then {_mountType = 1};
+				};
+			};
+		};
+		if (_mountType <= 1) then {
+			_mountClass = "";
+			_mountClassSeats = 0;
+			_mountSeats = 0;
+			_mountRiders = {_x isKindOf "Man"} count _template;
+			{
+				if ((typeName _x == "STRING") && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) > 0} && {(count (getArray (configFile >> "CfgVehicles" >> _x >> "weapons"))) > 0}) then {
+					_mountSeats = _mountSeats + (getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier"));
+					if (_mountClass == "") then {
+						_mountClass = _x;
+						_mountClassSeats = getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier");
+					};
+				};
+			} forEach _template;
+			if (_mountClass == "") then {
+				if (count _templates > 0) then {
+					for "_mountIdx" from 0 to ((count _templates) - 1) do {
+						_mountTemplateType = -1;
+						if (!isNil "_storedTypes" && {_mountIdx < count _storedTypes}) then {
+							_mountTemplateType = _storedTypes select _mountIdx;
+							if (isNil "_mountTemplateType") then {_mountTemplateType = -1};
+						} else {
+							_mountEntry = _tmplUpgrades select _mountIdx;
+							if ((_mountEntry select WFBE_UP_AIR) == 0 && {(_mountEntry select WFBE_UP_HEAVY) == 0} && {(_mountEntry select WFBE_UP_LIGHT) > 0}) then {_mountTemplateType = 1};
+						};
+						if (_mountTemplateType == 1) then {
+							{
+								if (_mountClass == "" && {(typeName _x == "STRING")} && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) > 0} && {(count (getArray (configFile >> "CfgVehicles" >> _x >> "weapons"))) > 0}) then {
+									_mountClass = _x;
+									_mountClassSeats = getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier");
+								};
+							} forEach (_templates select _mountIdx);
+						};
+					};
+				};
+			};
+			_mountNeed = _mountRiders * (missionNamespace getVariable ["WFBE_C_AICOM_MOUNT_MIN_SEAT_FRAC", 0.8]);
+			_mountAdded = 0;
+			if (_mountClass != "" && {_mountClassSeats > 0} && {_mountNeed > _mountSeats}) then {
+				while {_mountSeats < _mountNeed} do {
+					_template = _template + [_mountClass];
+					_mountSeats = _mountSeats + _mountClassSeats;
+					_mountAdded = _mountAdded + 1;
+				};
+				["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HF-main mounted-light mix: template %2 added %3 existing light vehicle(s) [%4] for %5 infantry riders (cargo seats %6/%7).", _sideText, _pick, _mountAdded, _mountClass, _mountRiders, _mountSeats, _mountNeed]] Call WFBE_CO_FNC_AICOMLog;
+			} else {
+				if (_mountClass == "" && {_mountRiders > 0}) then {
+					["WARNING", Format ["AI_Commander_Teams.sqf: [%1] HF-main mounted-light mix found no existing armed light-Car transport template for infantry template %2; founding remains unchanged.", _sideText, _pick]] Call WFBE_CO_FNC_AICOMLog;
+				};
+			};
+		};
+	};
+
 	//--- Build83 INF-TRANSPORT-TRUCK WIRE (Ray 2026-07-01, fixes the live WEST-10km STRANDED/recall churn):
 	//--- teams are founded AT THE HQ; a PURE-INFANTRY team (every template entry is Man-class) can only
 	//--- reach REACH_FOOT (WFBE_C_AICOM_ASSAULT_REACH_FOOT, ~2500-3500m) from its leader - AssignTowns

@@ -61,7 +61,7 @@ if (count (WFBE_PRESENTSIDES - [resistance]) > 1) then {
 	//--- AI_Commander_Strategy.sqf / AI_Commander_Decapitate.sqf check the side-suffixed key FIRST,
 	//--- falling back to the existing global default when unset - flag off or side not yet drawn =
 	//--- byte-identical to HEAD.
-	if ((missionNamespace getVariable ["WFBE_C_AICOM_TEMPERAMENT", 0]) > 0 && {isNil {_logik getVariable "wfbe_aicom_temperament"}}) then {
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_DOCTRINE_HF_MAIN", 0]) <= 0 && {(missionNamespace getVariable ["WFBE_C_AICOM_TEMPERAMENT", 0]) > 0} && {isNil {_logik getVariable "wfbe_aicom_temperament"}}) then {
 		private ["_eSideT","_eLogikT","_eTempD","_tempPool","_temperament","_tArch","_tKey","_tMult","_tIsInt","_tFloor","_tLit","_tBase","_tVal","_tSideKey"];
 		_eSideT  = if (_side == west) then {east} else {west};
 		_eLogikT = (_eSideT) Call WFBE_CO_FNC_GetSideLogic;
@@ -149,6 +149,11 @@ if (count (WFBE_PRESENTSIDES - [resistance]) > 1) then {
 
 //--- V0.2: pick a doctrine once - the primary factory path this AI builds around.
 if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_DOCTRINE_HF_MAIN", 0]) > 0) then {
+		_doctrine = "HF";
+		_logik setVariable ["wfbe_aicom_doctrine", _doctrine];
+		["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine picked: %2 (HF-main (owner ruling)).", str _side, _doctrine]] Call WFBE_CO_FNC_AICOMLog;
+	} else {
 	//--- AICOM v2 (wiki + Miksuu strategy): de-correlate the doctrine from the ENEMY's for varied matches (was a
 		//--- blind coin flip - both sides could roll identical plans). If the enemy already picked, take the OTHER route.
 		private ["_eSideD","_eLogikD","_eDocD"];
@@ -166,6 +171,7 @@ if (isNil {_logik getVariable "wfbe_aicom_doctrine"}) then {
 		}};
 	_logik setVariable ["wfbe_aicom_doctrine", _doctrine];
 	["INFORMATION", Format ["AI_Commander.sqf: [%1] doctrine picked: %2 (primary factory path).", str _side, _doctrine]] Call WFBE_CO_FNC_AICOMLog;
+	};
 
 	//--- V0.4: doctrine research PROGRAM. The upgrade worker always takes the FIRST entry
 	//--- whose level is not yet reached, so a prepended program IS the strategy: rush the
