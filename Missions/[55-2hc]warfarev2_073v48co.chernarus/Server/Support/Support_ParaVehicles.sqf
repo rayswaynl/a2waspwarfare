@@ -1,4 +1,4 @@
-Private['_args','_bd','_cargo','_cargoVehicle','_grp','_pilot','_playerTeam','_positionCoord','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_timeStart','_vehicle','_vehicleCoord'];
+Private['_args','_bd','_cargo','_cargoVehicle','_grp','_pilot','_playerTeam','_positionCoord','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_timeStart','_vehicle','_vehicleCoord','_dropReady'];
 
 _args = _this;
 _side = _args select 1;
@@ -48,18 +48,20 @@ _cargoVehicle attachTo [_vehicle,[0,0,-3]];
 emptyQueu = emptyQueu + [_cargoVehicle];
 [_cargoVehicle] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
 
+_dropReady = false;
 while {true} do {
 	sleep 1;
 	if (!alive _pilot || !alive _vehicle || isNull _vehicle || isNull _pilot || !alive _cargoVehicle) exitWith {};
 	if (!(isPlayer (leader _playerTeam)) || time - _timeStart > 500) exitWith {{_x setDammage 1} forEach (_cargo+[_pilot,_vehicle,_cargoVehicle]);deleteGroup _grp};
 	_vehicleCoord = [getPos _pilot select 0,getpos _pilot select 1];
 	_positionCoord = [(_args select 2) select 0,(_args select 2) select 1];
-	if (_vehicleCoord distance _positionCoord < 100) exitWith {};
+	if (_vehicleCoord distance _positionCoord < 100) exitWith {_dropReady = true};
 };
 
-detach _cargoVehicle;
+if (_dropReady) then {
+	detach _cargoVehicle;
 
-[_cargoVehicle,_side] Spawn {
+	[_cargoVehicle,_side] Spawn {
 	Private ['_chute','_dropStart','_side','_vehicle'];
 	_vehicle = _this select 0;
 	_side = _this select 1;
@@ -73,10 +75,10 @@ detach _cargoVehicle;
 	while {!isNull _vehicle && alive _vehicle && ((getPos _vehicle select 2) >= 10) && ((time - _dropStart) < 120)} do {sleep 1};
 	if (!isNull _vehicle) then {detach _vehicle};
 	sleep 10;
-	deleteVehicle _chute;
-};
+		deleteVehicle _chute;
+	};
 
-[_grp,(_ranPos select _ran),"MOVE",10] Call AIMoveTo;
+	[_grp,(_ranPos select _ran),"MOVE",10] Call AIMoveTo;
 
 _returnStart = time;
 while {true} do {
@@ -86,7 +88,9 @@ while {true} do {
 	_vehicleCoord = [getPos _pilot select 0,getpos _pilot select 1];
 	_positionCoord = [(_ranPos select _ran) select 0,(_ranPos select _ran) select 1];
 	if (_vehicleCoord distance _positionCoord < 200) exitWith {};
+	};
 };
+if (!_dropReady && {!isNull _cargoVehicle}) then {deleteVehicle _cargoVehicle};
 
 deleteVehicle _pilot;
 deleteVehicle _vehicle;

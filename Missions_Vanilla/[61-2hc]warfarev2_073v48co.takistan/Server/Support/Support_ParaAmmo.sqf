@@ -1,4 +1,4 @@
-Private['_args','_bd','_cargo','_grp','_pilot','_playerTeam','_positionCoord','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_timeStart','_vehicle','_vehicleCoord'];
+Private['_args','_bd','_cargo','_grp','_pilot','_playerTeam','_positionCoord','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_timeStart','_vehicle','_vehicleCoord','_dropReady'];
 
 _args = _this;
 _side = _args select 1;
@@ -42,19 +42,22 @@ processInitCommands;
 _vehicle flyInHeight (200 + random(20));
 _cargo = (crew _vehicle) - [driver _vehicle, gunner _vehicle, commander _vehicle];
 
+_dropReady = false;
 while {true} do {
 	sleep 1;
 	if (!alive _pilot || !alive _vehicle || isNull _vehicle || isNull _pilot) exitWith {};
 	if (!(isPlayer (leader _playerTeam)) || time - _timeStart > 500) exitWith {{_x setDammage 1} forEach (_cargo+[_pilot,_vehicle]);deleteGroup _grp};
 	_vehicleCoord = [getPos _pilot select 0,getpos _pilot select 1];
 	_positionCoord = [(_args select 2) select 0,(_args select 2) select 1];
-	if (_vehicleCoord distance _positionCoord < 100) exitWith {};
+	if (_vehicleCoord distance _positionCoord < 100) exitWith {_dropReady = true};
 };
 
-[_vehicle,_side] Spawn {
-	Private ['_ammo','_ammos','_chopper','_chute','_side'];
+if (_dropReady) then {
+	[_vehicle,_side,_sideID] Spawn {
+	Private ['_ammo','_ammos','_chopper','_chute','_side','_sideID'];
 	_chopper = _this select 0;
 	_side = _this select 1;
+	_sideID = _this select 2;
 	
 	_ammos = missionNamespace getVariable Format["WFBE_%1PARAAMMO",_side];
 	if (typeName _ammos != 'ARRAY') exitWith {["WARNING", Format ["Server_HandleSpecial.sqf: Expected array, given [%1] for ammunitions", typeName _ammos]] Call WFBE_CO_FNC_LogContent};
@@ -62,11 +65,12 @@ while {true} do {
 	{
 		_ammo = _x createVehicle [0,0,0];
 		
-		[_chopper,_ammo,_side] Spawn {
-			Private ['_ammo','_chopper','_chute','_dropStart','_pos','_side','_type'];
+		[_chopper,_ammo,_side,_sideID] Spawn {
+			Private ['_ammo','_chopper','_chute','_dropStart','_pos','_side','_sideID','_type'];
 			_chopper = _this select 0;
 			_ammo = _this select 1;
 			_side = _this select 2;
+			_sideID = _this select 3;
 			
 			_chute = (missionNamespace getVariable Format['WFBE_%1PARACHUTE',str _side]) createVehicle [0,0,20];
 			_chute setPos [getPos _chopper select 0, getPos _chopper select 1, (getPos _chopper select 2) - 11];
@@ -88,14 +92,14 @@ while {true} do {
 			
 			sleep 5;
 			
-			deleteVehicle _chute;
+					deleteVehicle _chute;
 		};
 		
 		sleep 0.8;
 	} forEach _ammos;
-};
+	};
 
-[_grp,(_ranPos select _ran),"MOVE",10] Call AIMoveTo;
+	[_grp,(_ranPos select _ran),"MOVE",10] Call AIMoveTo;
 
 _returnStart = time;
 while {true} do {
@@ -105,6 +109,7 @@ while {true} do {
 	_vehicleCoord = [getPos _pilot select 0,getpos _pilot select 1];
 	_positionCoord = [(_ranPos select _ran) select 0,(_ranPos select _ran) select 1];
 	if (_vehicleCoord distance _positionCoord < 200) exitWith {};
+	};
 };
 
 deleteVehicle _pilot;
