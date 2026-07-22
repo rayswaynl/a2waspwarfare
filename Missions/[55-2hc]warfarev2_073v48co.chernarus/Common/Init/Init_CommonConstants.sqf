@@ -2737,6 +2737,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_VEHICLE_SELL") then {WFBE_C_VEHICLE_SELL = 1}; //--- #43: sell-back action on purchased vehicles at base. 0 = no action shown.
 	if (isNil "WFBE_C_VEHICLE_SELL_FRACTION") then {WFBE_C_VEHICLE_SELL_FRACTION = 0.5}; //--- #43: refund fraction of purchase price, scaled by hull health.
 	if (isNil "WFBE_C_ARTY_RING") then {WFBE_C_ARTY_RING = 1}; //--- #90: client-local range ellipse per friendly artillery piece.
+	if (isNil "WFBE_C_ARTY_RING_VISUAL_CAP") then {WFBE_C_ARTY_RING_VISUAL_CAP = 2000}; //--- #90 owner 2026-07-22: cap the DRAWN ring radius (m); real range survives in the marker label. 0 = legacy uncapped.
 	if (isNil "WFBE_C_TAGS_AI") then {WFBE_C_TAGS_AI = 1}; //--- TAGS: nametags above friendly AI infantry + vehicles (shares the 18-slot pool).
 	if (isNil "WFBE_C_GDIR_VIS") then {WFBE_C_GDIR_VIS = 1}; //--- Commissar visibility pack: wallet label, heatmap, order broadcasts, QRF feedback.
 	if (isNil "WFBE_C_ICBM_COUNTDOWN") then {WFBE_C_ICBM_COUNTDOWN = 1}; //--- #78/#455: both-sides HUD countdown to ICBM impact.
