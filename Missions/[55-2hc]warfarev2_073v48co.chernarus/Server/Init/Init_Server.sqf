@@ -202,7 +202,7 @@ diag_log ("SELFTEST|v1|townsMax=" + str (missionNamespace getVariable ["WFBE_C_T
 //--- is readable. Gated on WFBE_C_MATCH_TELEMETRY (default 1 = additive telemetry ON).
 if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 	private ["_mtStartTowns","_mtDelegation","_mtMaxPlayers","_mtAiEnabled","_mtStatlog","_mtGuer","_mtNaval","_mtOilfield","_mtBuild"];
-	_mtStartTowns  = missionNamespace getVariable ["WFBE_C_TOWNS_ACTIVE_MAX", -1];
+	_mtStartTowns  = if (!isNil "towns") then { count towns } else { -1 };  // count actual towns after Init_Towns completes
 	_mtDelegation  = missionNamespace getVariable ["WFBE_C_AI_DELEGATION", -1];
 	_mtMaxPlayers  = getNumber (missionConfigFile >> "Header" >> "maxPlayers"); //--- A2-OA runtime read: WF_MAXPLAYERS is a preprocessor define (version.sqf) not included in Init_Server.sqf; missionConfigFile>>Header>>maxPlayers is compiled from Rsc/Header.hpp at preprocess time and yields the real slot count.
 	_mtAiEnabled   = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", -1];
@@ -212,11 +212,11 @@ if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 	_mtOilfield    = missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 0];
 	//--- Build id: pipe-free short token (same token WASPSCALE uses); avoids the full
 	//--- WF_RELEASE_MARKER string which contains pipe chars that would shatter pipe-split parsers.
-	_mtBuild       = "build89-cmdcon44";
+	_mtBuild       = WF_BUILD_TOKEN;  // extracted from version.sqf WF_RELEASE_MARKER git= portion
 	diag_log ("MATCH|v1|START|world=" + worldName
 		+ "|build=" + _mtBuild
 		+ "|towns=" + str _mtStartTowns
-		+ "|maxPlayers=" + str _mtMaxPlayers
+		+ "|missionSlots=" + str _mtMaxPlayers
 		+ "|aiEnabled=" + str _mtAiEnabled
 		+ "|delegation=" + str _mtDelegation
 		+ "|statlog=" + str _mtStatlog
