@@ -128,6 +128,12 @@ WFBE_SE_FNC_ChangeSideSupply = Call Compile preprocessFileLineNumbers "Server\Fu
 WFBE_SE_FNC_AwardScorePlayer = Compile preprocessFileLineNumbers "Server\Functions\Server_AwardScorePlayer.sqf";
 WFBE_SE_PV_RequestSupplyValue = Call Compile preprocessFileLineNumbers "Server\Functions\Server_PV_RequestSupplyValue.sqf";
 WFBE_SE_FNC_CallDatabaseRequestSideTotalSkill = Compile preprocessFileLineNumbers "Server\Module\AntiStack\callDatabaseRequestSideTotalSkill.sqf";
+
+//--- DBEXT v1: probe the read-only retrieve procedure once at server init so a missing/unreachable AntiStack extension is visible before persistence calls begin.
+private ["_dbExtProbe","_dbExtPresent"];
+_dbExtProbe = "A2WaspDatabase" callExtension "101,DBEXT_PROBE";
+_dbExtPresent = if (_dbExtProbe == "") then {0} else {1};
+diag_log format ["DBEXT|v1|present=%1", _dbExtPresent];
 WFBE_SE_FNC_CallDatabaseFlushPlayerList = Compile preprocessFileLineNumbers "Server\Module\AntiStack\callDatabaseFlushPlayerList.sqf";
 WFBE_SE_FNC_CallDatabaseSetMap = Compile preprocessFileLineNumbers "Server\Module\AntiStack\callDatabaseSetMap.sqf";
 //WFBE_CO_FNC_InitAFKkickHandler = Compile preprocessFileLineNumbers "Server\Module\afkKick\initAFKkickHandler.sqf";
