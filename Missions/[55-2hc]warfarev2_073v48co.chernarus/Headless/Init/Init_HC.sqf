@@ -86,38 +86,6 @@ WFBE_HC_FNC_ReseatCivilian = {
 	if (side group player == civilian) then {"done"} else {"failed"}
 };
 
-//--- DEADSPAWN PARK (Steff: "make sure second HC also spawns in deadspawns"): the engine auto-seats
-//--- each HC onto a playable slot's spawn position out in the base/playable area; Init_Client.sqf (which
-//--- parks joiners onto the side TempRespawnMarker holding area and then escapes them to base via Task-35)
-//--- is SKIPPED for HCs (initJIPCompatible.sqf:255 vs :268), so an un-parked HC body just sits visibly at
-//--- its old slot. AI-slot bots, by contrast, live inside the ringed deadspawn enclosure
-//--- (Server\Init\Init_DeadspawnWall.sqf rings West/East/GuerTempRespawnMarker). We are now CIVILIAN side
-//--- with no own TempRespawnMarker, so park the HC body in the GuerTempRespawnMarker holding point - the
-//--- centre-most of the three deadspawn markers, inside the H-barrier ring. This is keyed on `player`
-//--- (NOT name=="HC"), so BOTH HC1 and HC2 run it identically. Idempotent + harmless if the marker is
-//--- missing (getMarkerPos returns [0,0,0] -> Common_GetRandomPosition keeps it off-water). A2-OA-safe:
-//--- plain setPos on the local HC body, no respawn/slot edits, touches no protected file. Factored to a fn
-//--- so the persistent watcher re-parks after any re-reseat. ORDER INVARIANT: the caller ALWAYS reseats to
-//--- civilian FIRST and only parks while civilian, so the park never runs against a WEST/EAST grouping and
-//--- thus can never knock the HC off civilian (setPos moves the body only, it does not change side/group).
-WFBE_HC_FNC_ParkDeadspawn = {
-	if (side group player != civilian) exitWith {}; //--- guard: only park a civilian-seated HC.
-	//--- B36.1 (Ray 2026-06-15): PROTECT the HC body. Init_Client.sqf's `player allowDamage false` (:18) is
-	//--- SKIPPED for HCs (initJIPCompatible gates client init on !isHeadLessClient), so the HC avatar was the
-	//--- LONE unprotected body in the deadspawn ring and was killed by friendly fire. allowDamage false +
-	//--- setCaptive true = unkillable + non-hostile. Sticky + idempotent (safe to re-run on every re-park);
-	//--- touches ONLY `player`, never the delegated AI groups the HC hosts (they keep their own damage state).
-	player allowDamage false;
-	player setCaptive true;
-	private "_dsPos"; _dsPos = getMarkerPos "GuerTempRespawnMarker";
-	if (!((_dsPos select 0) == 0 && (_dsPos select 1) == 0)) then {
-		player setPos ([_dsPos, 1, 8] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");
-		["INFORMATION", Format ["Init_HC.sqf: HC %1 parked in deadspawn (GuerTempRespawnMarker) at %2.", name player, getPos player]] Call WFBE_CO_FNC_LogContent;
-	} else {
-		["WARNING", "Init_HC.sqf: GuerTempRespawnMarker did not resolve; HC deadspawn park skipped."] Call WFBE_CO_FNC_LogContent;
-	};
-};
-
 //--- HC WEAPONS-STRIP + SEA-PARK (cmdcon41, Ray 2026-07-02): a stronger "hide the HC body" than the deadspawn
 //--- park above. Ray wants the HC-occupied avatar disarmed and moved FAR OUT (at sea on water maps), so it can
 //--- never appear as a stray armed body near play and can never fire. Keyed on `player` (this whole file only
