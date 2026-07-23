@@ -334,7 +334,7 @@ if (worldName == "Zargabad") then {
 	//--- GUER GROUP CAP: hard ceiling on total resistance groups. Bounds runaway GUER growth toward the engine's ~144-groups/side
 	//--- limit over long stalled AI-vs-AI runs (garrisons + W9 uprising + side-patrols, none of which had a global cap).
 	//--- 90 is far above any single-front GUER force, well under the 144 ceiling; raise to 999 for an instant rollback.
-	if (isNil "WFBE_C_GUER_GROUPS_MAX") then {WFBE_C_GUER_GROUPS_MAX = 80}; //--- 60->80 (Ray 2026-06-15, fold from fleet group-budget tuning): 60 choked GUER garrisons above the observed ~73 peak; 80 restores headroom, still well under the 144 engine cap. Was 90; raise to 999 for instant rollback.
+	if (isNil "WFBE_C_GUER_GROUPS_MAX") then {WFBE_C_GUER_GROUPS_MAX = 40}; //--- 80->40 (owner doctrine change 2026-07-23: baseline GUER defense too strong now the Director can reinforce - halve total standing groups, dynamic events/QRF/contracts carry the fight instead). //--- 60->80 (Ray 2026-06-15, fold from fleet group-budget tuning): 60 choked GUER garrisons above the observed ~73 peak; 80 restores headroom, still well under the 144 engine cap. Was 90; raise to 999 for instant rollback.
 	if (isNil "WFBE_C_AI_MAX") then {WFBE_C_AI_MAX = 12}; //--- Max AI allowed on each AI groups.
 	if (isNil "WFBE_C_AI_DELEGATION") then {WFBE_C_AI_DELEGATION = 0}; //--- Enable AI delegation (0: Disabled, 1: creation of ai on the client, 2: Headless Client).
 	if (isNil "WFBE_C_STATIC_DEF_COMBAT") then {WFBE_C_STATIC_DEF_COMBAT = 1}; //--- D10#4: 1 = manned static town-defence gunners get an explicit combat posture (setBehaviour AWARE + setCombatMode RED) so they engage; 0 = legacy passive. AWARE (not COMBAT) keeps them on the gun. Balance change (defended towns harder); ships inert.
@@ -2079,7 +2079,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	//--- vehicles are never merged). Orthogonal to wasp-town-garrison-minus20 (#1266, WFBE_C_TOWN_GARRISON_SCALE): that lever
 	//--- changes garrison SIZE, this one changes group GRANULARITY; the two are sequence-safe. 0 = OFF (byte-identical to HEAD;
 	//--- instant rollback). The Zargabad WEST/EAST merge override (ZG-FIX block below) still wins for ZG WEST/EAST.
-	if (isNil 'WFBE_C_TOWNS_MERGE_HEADROOM') then {WFBE_C_TOWNS_MERGE_HEADROOM = 0};
+	if (isNil 'WFBE_C_TOWNS_MERGE_HEADROOM') then {WFBE_C_TOWNS_MERGE_HEADROOM = 1}; //--- ARMED (owner 2026-07-23: GUER has too many groups - this consolidation had owner GO 2026-07-22 19:08 but shipped dark).
 	if (WFBE_C_TOWNS_MERGE_HEADROOM > 0) then {
 		WFBE_C_TOWNS_MERGE_TARGET = 12;              //--- WEST/EAST flush threshold (was 9). Paired with WFBE_C_TOWNS_MERGE_CAP (14).
 		WFBE_C_TOWNS_MERGE_TARGET_DEFENDER = 12;     //--- GUER defender flush threshold (was 10).
