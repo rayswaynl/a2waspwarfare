@@ -2105,14 +2105,14 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 		//--- founding gate (AI_Commander_Teams.sqf ~L235) and the produce/refill gate (AI_Commander_Produce.sqf ~L28);
 		//--- counts {side==_side && !isPlayer} ALL side AI incl. WEST/EAST town garrisons. CH/TK stays [140,130,100,80].
 		//--- ZG low-pop 80/side: WEST 80 + EAST 80 + GUER ~150 = ~310 total (target 280-320, ~150 below the knee).
-		WFBE_C_TOTAL_AI_MAX_BY_TIER = [80,80,70,60];   //--- ZG (was [140,130,100,80]). Rollback: restore the CH/TK array.
+		WFBE_C_TOTAL_AI_MAX_BY_TIER = [110,100,85,70]; //--- ZG raise (owner 2026-07-23: map felt dead; the [80,80,70,60] tune was measured under the shared-HC bug with ALL AI on one HC - the 2-HC split restores headroom). Rollback: [80,80,70,60]. CH/TK stay [140,130,100,80].
 		//--- (2) per-side COMMANDER-TEAM hard ceiling. Fewer teams, each still founds at 8 units (TEAM_SIZE untouched)
 		//--- = concentration, not sprawl. 5 x 8 = ~40 core + garrisons stays under the 80 AI cap above.
-		WFBE_C_AICOM_TEAMS_HARD_CAP = 5;               //--- ZG (was 10). Rollback: 10.
+		WFBE_C_AICOM_TEAMS_HARD_CAP = 8;               //--- ZG raise (owner 2026-07-23, was 5; CH/TK 10). Rollback: 5.
 		//--- (3) low/mid-pop PC-scaled base founding target (DELTA -1 then FLOOR/hard-cap clamp still apply): keep the
 		//--- base under the new hard cap so the curve, not just the clamp, sets team count. LOW 6-1=5, MID 5-1=4.
-		WFBE_C_AICOM_TEAMS_PC_LOW  = 6;                //--- ZG (was 10). Rollback: 10.
-		WFBE_C_AICOM_TEAMS_PC_MID  = 5;                //--- ZG (was 7).  Rollback: 7.
+		WFBE_C_AICOM_TEAMS_PC_LOW  = 9;                //--- ZG raise (owner 2026-07-23, was 6 -> founding target LOW 9-1=8). Rollback: 6.
+		WFBE_C_AICOM_TEAMS_PC_MID  = 7;                //--- ZG raise (owner 2026-07-23, was 5 -> founding target MID 7-1=6). Rollback: 5.
 		//--- (4) GARRISON CONSOLIDATION (WEST/EAST only): fuse town-garrison infantry into ~9-unit group-brains
 		//--- (was 5) so a defended town spawns the SAME units in FEWER server groups (fps win, gameplay-transparent;
 		//--- vehicles never merged; town DEFENSE strength unchanged). The GUER (defender) merge target + cap are the
