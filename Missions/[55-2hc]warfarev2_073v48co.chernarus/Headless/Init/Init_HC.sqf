@@ -62,7 +62,7 @@ if (side group player != civilian) then {
 WFBE_HC_FNC_ReseatCivilian = {
 	private "_budget"; _budget = _this;
 	private "_deadline"; _deadline = diag_tickTime + _budget;
-	while {side group player != civilian && {diag_tickTime < _deadline}} do {
+	while {!((side group player == civilian) && {(count units group player) == 1}) && {diag_tickTime < _deadline}} do { //--- solo-group required: a SHARED civ group collapses both HCs to one registry entry (live 2026-07-23 starvation).
 		private "_g"; _g = grpNull;
 		private "_tries"; _tries = 0;
 		while {isNull _g && {_tries < 5}} do {
@@ -83,7 +83,7 @@ WFBE_HC_FNC_ReseatCivilian = {
 			uiSleep 3; //--- back off before the next poll so we don't spin the CIV-cap retry block tight.
 		};
 	};
-	if (side group player == civilian) then {"done"} else {"failed"}
+	if ((side group player == civilian) && {(count units group player) == 1}) then {"done"} else {"failed"}
 };
 
 //--- HC WEAPONS-STRIP + SEA-PARK (cmdcon41, Ray 2026-07-02): a stronger "hide the HC body" than the deadspawn
@@ -150,7 +150,7 @@ WFBE_HC_FNC_ParkSeaHC = {
 //--- BOUNDED POLLING LOOP (task #29 follow-up): the single-shot fixed-sleep attempt missed whenever the
 //--- engine seated the HC late or locality hadn't transferred at the guard. We wait for the player object
 //--- (above), then poll for up to ~60s, retrying the reseat until `side group player == civilian`.
-private "_reseatResult"; _reseatResult = if (side group player == civilian) then {"skipped"} else {60 Call WFBE_HC_FNC_ReseatCivilian};
+private "_reseatResult"; _reseatResult = if ((side group player == civilian) && {(count units group player) == 1}) then {"skipped"} else {60 Call WFBE_HC_FNC_ReseatCivilian}; //--- solo-group gate: CIV-but-shared must still reseat (live 2026-07-23: both HCs auto-seated into ONE civ group -> one registry entry -> all foundings on one HC).
 //--- TELEMETRY (task #34): report whether the reseat converged (done / skipped / failed).
 ["RequestSpecial", ["hc-reseat-result", [name player, _reseatResult, str (side group player)]]] Call WFBE_CO_FNC_SendToServer;
 //--- Park AFTER the reseat has converged (park is a no-op unless we are civilian).
@@ -170,7 +170,7 @@ private "_reseatResult"; _reseatResult = if (side group player == civilian) then
 [] Spawn {
 	while {true} do {
 		uiSleep 15;
-		if (!isNull player && {side group player != civilian}) then {
+		if (!isNull player && {!((side group player == civilian) && {(count units group player) == 1})}) then {
 			["WARNING", Format ["Init_HC.sqf: HC %1 was re-grabbed onto %2 after reseat (mission-restart re-slot?) - re-reseating.", name player, str (side group player)]] Call WFBE_CO_FNC_LogContent;
 			private "_r"; _r = 30 Call WFBE_HC_FNC_ReseatCivilian;
 			["RequestSpecial", ["hc-reseat-result", [name player, "rewatch:" + _r, str (side group player)]]] Call WFBE_CO_FNC_SendToServer;
