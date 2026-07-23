@@ -532,6 +532,16 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			};
 			// END WASPSTAT CAPTURE (Task 10)
 
+			// --- SIDESCORE per-side capture tally (wasp-score-dashboard-build-20260722). Flag WFBE_C_SIDESCORE default 0.
+			// Running per-side town-capture counter for the honest public SIDESCORE|v1 side-activity line (60s cadence in
+			// server_groupsGC.sqf). Credited to the capturing side; fires once per real flip like the WASPSTAT|CAPTURE emit
+			// above (same scope), so it matches the newSideID the dashboard generator folds. Flag-off: no counter, byte-identical.
+			if ((missionNamespace getVariable ["WFBE_C_SIDESCORE", 0]) > 0) then {
+				if (_newSide == west)       then { missionNamespace setVariable ["WFBE_SIDESCORE_CW", (missionNamespace getVariable ["WFBE_SIDESCORE_CW", 0]) + 1] };
+				if (_newSide == east)       then { missionNamespace setVariable ["WFBE_SIDESCORE_CE", (missionNamespace getVariable ["WFBE_SIDESCORE_CE", 0]) + 1] };
+				if (_newSide == resistance) then { missionNamespace setVariable ["WFBE_SIDESCORE_CG", (missionNamespace getVariable ["WFBE_SIDESCORE_CG", 0]) + 1] };
+			};
+
 			//--- AICOMSTAT TOWN_FLIP (claude-gaming 2026-06-15): the war-narrative capture line on the
 			//--- AICOMSTAT war ledger - "at minute M, <newSide> took <town> from <oldSide>". Distinct from
 			//--- WASPSTAT|CAPTURE above (that is gated on WFBE_C_STATLOG, lives on the player-stats seq
