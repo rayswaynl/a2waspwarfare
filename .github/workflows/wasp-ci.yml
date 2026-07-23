@@ -19,7 +19,9 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          # Full history so the faction-reachability gate can diff against origin/master
+          # (the repo-wide convention); a shallow HEAD^ is not vs-master under workflow_dispatch.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -79,7 +81,7 @@ jobs:
       - name: Faction configuration reachability gate
         shell: pwsh
         run: |
-          python Tools\Lint\check_faction_reachability.py --diff-from HEAD^
+          python Tools\Lint\check_faction_reachability.py --diff-from origin/master
 
       - name: SQF lint gate (blocking)
         shell: pwsh
