@@ -10,6 +10,7 @@ python Tools\Lint\check_sqf.py --no-classname-index Missions\[55-2hc]warfarev2_0
 python Tools\Lint\test_check_sqf.py
 python Tools\Lint\check_sqf.py --select A3CMD,BRACKET --no-classname-index
 python Tools\Lint\check_sqf.py --diff-from origin/master --select A3CMD,A3MARKER,A3REVEAL,A3SELECT,A3SORT,A3STRING,BOOLCMP,BRACKET,GROUPGETVAR,NSSETVAR3 --no-classname-index
+python Tools\Lint\check_faction_reachability.py --diff-from origin/master
 python Tools\Lint\check_sqf.py --ignore BOOLCMP,CLASSREF Missions\[55-2hc]warfarev2_073v48co.chernarus
 python Tools\Lint\check_stringtable_refs.py
 python Tools\Lint\check_stringtable_refs.py --orphans
@@ -29,6 +30,8 @@ Use `--exit-zero` for report-only CI jobs that should print findings without fai
 Use `--select` for focused gates, such as an Arma 3 command-trap pass that should not fail on broad legacy `BOOLCMP` review findings. Use `--ignore` when you want the normal checker minus one or more noisy codes. Both options take comma-separated finding codes.
 
 Use `--diff-from <ref>` to report only findings whose primary line was added since that Git ref. This is useful for fleet PR self-checks where the full mission still has legacy review findings, but the new diff must be clean. With no paths, diff mode scans changed files under the maintained default mission roots; pass explicit SQF/HPP/EXT/FSM/SQM files or directories for narrower mission checks.
+
+`check_faction_reachability.py` rejects changed Root, Defenses, Groups, and Artillery faction configuration files that the target terrain's fixed faction switch cannot load. Use `--diff-from origin/master` in a PR to catch terrain-divergent dead-file edits; explicit repository-relative paths can also be passed for a focused check.
 
 ## Checks
 
