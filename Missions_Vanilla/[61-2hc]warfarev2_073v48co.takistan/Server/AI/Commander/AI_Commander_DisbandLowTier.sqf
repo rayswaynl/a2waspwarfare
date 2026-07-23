@@ -67,7 +67,7 @@ _bestType = -1;
 			if (_hc && {!_flagged} && {!isPlayer (leader _team)} && {_md == "towns"} && {!_open}) then {
 				private ["_ldr","_inView","_threat"];
 				_ldr = leader _team;
-				_inView = ({alive _x && {isPlayer _x} && {_x distance _ldr < _viewDist}} count allUnits) > 0;  //--- NEVER retire a team a human can SEE (Ray 2026-06-28)
+				_inView = ([getPos _ldr, _viewDist] Call WFBE_CO_FNC_RealPlayersNear) > 0;  //--- NEVER retire a team a human can SEE (Ray 2026-06-28)
 				//--- also skip a CONTESTED team (in combat, or an enemy within safeDist); the in-view gate above handles players.
 				_threat = (behaviour _ldr == "COMBAT")
 				       || {({alive _x && {side _x != _side} && {_x distance _ldr < _safeDist}} count allUnits) > 0};

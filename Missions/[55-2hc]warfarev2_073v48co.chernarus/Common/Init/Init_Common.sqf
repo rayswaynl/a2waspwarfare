@@ -103,6 +103,7 @@ WFBE_SE_FNC_SyncFundsRecord = Compile preprocessFileLineNumbers "Common\Function
 WFBE_CO_FNC_ComputeKillBounty = Compile preprocessFileLineNumbers "Common\Functions\Common_ComputeKillBounty.sqf"; //--- J1 funds authority: kill/assist bounty math extracted verbatim from AwardBounty.sqf so the server computes what it credits.
 WFBE_CO_FNC_ComputePvpBounty = Compile preprocessFileLineNumbers "Common\Functions\Common_ComputePvpBounty.sqf"; //--- J1 funds authority: PvP killstreak bounty math extracted verbatim from AwardBountyPlayer.sqf.
 WFBE_SE_FNC_CreditSidePlayers = Compile preprocessFileLineNumbers "Common\Functions\Common_CreditSidePlayers.sqf"; //--- J1 funds authority: server-side per-player side credit (SyncFundsRecord precedent: Common home, internal !isServer bail).
+WFBE_CO_FNC_RealPlayersNear = Compile preprocessFileLineNumbers "Common/Functions/Common_RealPlayersNear.sqf";
 WFBE_CO_FNC_ChangeUnitGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_ChangeUnitGroup.sqf";
 WFBE_CO_FNC_ClearVehicleCargo = if (WF_A2_Vanilla) then {Compile preprocessFileLineNumbers "Common\Functions\Common_ClearVehicleCargo.sqf"} else {Compile preprocessFileLineNumbers "Common\Functions\Common_ClearVehicleCargoOA.sqf"};
 WFBE_CO_FNC_CreateTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateTeam.sqf";

@@ -360,9 +360,7 @@ while {!WFBE_GameOver && _alive} do {
 						_pVeh = vehicle _pLdr;
 						_pNear = false;
 						if (!isNull _pVeh && {!(_pVeh in [_pLdr])} && {alive _pVeh} && {canMove _pVeh}) then {
-							{
-								if (isPlayer _x && {(_x distance _pVeh) < 100}) then {_pNear = true};
-							} forEach playableUnits;
+							_pNear = ([getPos _pVeh, 100] Call WFBE_CO_FNC_RealPlayersNear) > 0;
 							if (_pNear) then {
 								_pVeh setVelocity [(velocity _pVeh) select 0, (velocity _pVeh) select 1, 4];
 							} else {
