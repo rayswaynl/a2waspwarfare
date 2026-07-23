@@ -289,7 +289,6 @@ WFBE_CL_FNC_BlinkMapIcon = Compile preprocessFileLineNumbers "Client\Functions\C
 	};
 
 
-Call Compile preprocessFileLineNumbers 'Client\Functions\Client_FNC_Groups.sqf'; //--- FUNCTIONS: Groups.
 Call Compile preprocessFileLineNumbers 'Client\Functions\Client_FNC_OnFired.sqf'; //--- FUNCTIONS: onFired EH.
 Call Compile preprocessFileLineNumbers 'Client\Functions\Client_FNC_Special.sqf'; //--- FUNCTIONS: Specials.
 //--- QoL trio feat.3: advisor nudge function.
@@ -643,9 +642,6 @@ WFBE_Client_Team = clientTeam;
 WFBE_Client_Teams = clientTeams;
 WFBE_Client_Teams_Count = count WFBE_Client_Teams;
 WFBE_Client_IsRespawning = false;
-WFBE_Client_LastGroupJoinRequest = -5000;
-WFBE_Client_PendingRequests = [];
-WFBE_Client_PendingRequests_Accepted = [];
 //--- SM9: removed dead WFBE_Client_SupplyMissionActive (set, never read).
 WFBE_C_VAR_FRIENDLYCOMMANDCENTERINPROXIMITY = false;
 

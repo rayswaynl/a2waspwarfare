@@ -40,68 +40,6 @@ switch (_args select 0) do {
 			};
 		};
 	};
-	case "group-query": {
-		Private ["_group","_player","_side"];
-		//--- GUARD (claude-gaming): a malformed/short request (count _args <= 3) used to crash here at
-		//--- "_args select 2/3" ("Error in expression <[_player = _args select 2"). A console action that
-		//--- mis-built its RequestSpecial payload was observed firing this. Bail safely on a short payload
-		//--- rather than select-crash; the valid 4-arg [_,grp,player,side] path is unchanged below.
-		if (count _args < 4) exitWith {
-			["WARNING", Format ["Server_HandleSpecial.sqf: group-query received a short payload (%1 args), ignored.", count _args]] Call WFBE_CO_FNC_LogContent;
-		};
-		_group = _args select 1;
-		_player = _args select 2;
-		_side = _args select 3;
-
-		if (alive _player) then {
-			if (alive leader _group) then {
-				if (isPlayer leader _group) then {
-					//--- Player, forward the request.
-					if (WF_A2_Vanilla) then {
-						[getPlayerUID (leader _group), "HandleSpecial", ["group-join-request", _player]] Call WFBE_CO_FNC_SendToClients;
-					} else {
-						[leader _group, "HandleSpecial", ["group-join-request", _player]] Call WFBE_CO_FNC_SendToClient;
-					};
-				} else {
-					//--- fable/no-player-into-aicom (owner 2026-07-09): the ONLY existing gate here was "isNil
-					//--- wfbe_uid" ("is this NOT a specific player's own squad") - that test is TRUE for a
-					//--- generic pooled/AI-founded squad, but it is ALSO TRUE for an AI-COMMANDER (HC-owned)
-					//--- team, since aicom-hc teams are founded by the commander system, not stamped with any
-					//--- player's wfbe_uid (see Common_RunCommanderTeam.sqf:98, which stamps wfbe_aicom_hc, never
-					//--- wfbe_uid). So a client-supplied _group pointing at a live aicom-hc formation used to sail
-					//--- straight through into WFBE_CO_FNC_ChangeUnitGroup, silently folding the requesting player
-					//--- in as just another body - matching the report ("member #N of an AI-commander team, can't
-					//--- unlock the team's vehicle, ghost groups"): the vehicle-unlock/ownership logic downstream
-					//--- keys off wfbe_aicom_hc-team semantics a rank-and-file human was never meant to satisfy,
-					//--- and the player's own prior squad is left behind as an orphaned/empty leftover.
-					//--- GUARD: require the SAME wfbe_aicom_hc query every other AICOM consumer in this codebase
-					//--- uses to test "is this an AI-commander team" (AI_Commander*.sqf, server_groupsGC.sqf,
-					//--- Server_OnPlayerDisconnected.sqf all gate on the identical
-					//--- `[_grp,"wfbe_aicom_hc",false] Call WFBE_CO_FNC_GroupGetBool` idiom - GroupGetBool is the
-					//--- established nil-safe reader for a Group variable on A2 OA 1.64, where a raw 2-arg
-					//--- `_grp getVariable "wfbe_aicom_hc"` throws for a team that was never stamped). Excluding
-					//--- aicom-hc targets makes the merged unit set here provably player-free of aicom membership
-					//--- (the only unit ever merged through this branch is `_player`, so blocking aicom-hc
-					//--- destinations outright is equivalent to "never merge a player into an AI-commander team").
-					//--- Legitimate AI-commander team behaviour is unaffected: HC teams are never populated via
-					//--- this player-initiated join-request flow (they are founded/crewed exclusively by
-					//--- AI_Commander_Teams.sqf / Common_RunCommanderTeam.sqf), so removing them as a valid
-					//--- "join this AI squad" target does not change how the AI commander fills, moves, or fights
-					//--- with its own teams - it only removes a target class this feature was never meant to offer.
-					if (isNil {_group getVariable "wfbe_uid"} && {!([_group, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- Ensure that the group is ai-controlled AND not an AI-commander (HC-owned) team.
-						[_player, _group, _side] Call WFBE_CO_FNC_ChangeUnitGroup;
-
-						//--- Tell the player that his request is granted.
-						if (WF_A2_Vanilla) then {
-							[getPlayerUID (_player), "HandleSpecial", ["group-join-accept", _group]] Call WFBE_CO_FNC_SendToClients;
-						} else {
-							[_player, "HandleSpecial", ["group-join-accept", _group]] Call WFBE_CO_FNC_SendToClient;
-						};
-					};
-				};
-			};
-		};
-	};
 	case "Paratroops": {
 		_args spawn KAT_Paratroopers;
 	};
