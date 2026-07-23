@@ -2932,6 +2932,15 @@ if (isNil "WFBE_C_HS_DISPATCH_LOG") then {WFBE_C_HS_DISPATCH_LOG = 1}; //--- ARM
 	if (isNil "WFBE_C_AICOM_ORPHAN_NEVERMOVED") then {WFBE_C_AICOM_ORPHAN_NEVERMOVED = 50}; //--- m max leader distance from the journey-start pos under which an orphan counts as never-moved (pad-frozen) and may be force-recycled bypassing the proximity/combat vetoes. Only read while WFBE_C_AICOM_ORPHAN_HEAL > 0.
 	if (isNil "WFBE_C_AICOM_STRAND_FASTRECYCLE") then {WFBE_C_AICOM_STRAND_FASTRECYCLE = 0}; //--- SLICE 3 master: 0=off (default - byte-identical +1 failed-journey path), 1=on (a STRANDED closure that moved < WFBE_C_AICOM_STRAND_FAST_MOVED m from journey start counts DOUBLE toward WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE; AI_Commander_AssignTowns.sqf).
 	if (isNil "WFBE_C_AICOM_STRAND_FAST_MOVED") then {WFBE_C_AICOM_STRAND_FAST_MOVED = 50}; //--- m moved-from-start threshold for the double count. Only read while WFBE_C_AICOM_STRAND_FASTRECYCLE > 0.
+//--- AICAP MID/HIGH TRIM (2026-07-22): default-off conservative cap trim derived from the 282-sample
+//--- WASPSCALE AI_TOT-vs-FPS scatter knee. 0 retains the legacy CH/TK [140,130,100,80] cap array
+//--- verbatim; 1 applies MID 130->115 and HIGH 100->90. Zargabad keeps its dedicated governor array.
+if (isNil "WFBE_C_AICAP_MIDHIGH_TRIM") then {WFBE_C_AICAP_MIDHIGH_TRIM = 0};
+if (WFBE_C_AICAP_MIDHIGH_TRIM > 0) then {
+	if (worldName != "Zargabad") then {
+		WFBE_C_TOTAL_AI_MAX_BY_TIER = [140,115,90,80];
+	};
+};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
