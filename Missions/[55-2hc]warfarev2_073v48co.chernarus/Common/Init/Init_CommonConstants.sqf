@@ -2105,7 +2105,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 		//--- founding gate (AI_Commander_Teams.sqf ~L235) and the produce/refill gate (AI_Commander_Produce.sqf ~L28);
 		//--- counts {side==_side && !isPlayer} ALL side AI incl. WEST/EAST town garrisons. CH/TK stays [140,130,100,80].
 		//--- ZG low-pop 80/side: WEST 80 + EAST 80 + GUER ~150 = ~310 total (target 280-320, ~150 below the knee).
-		WFBE_C_TOTAL_AI_MAX_BY_TIER = [110,100,85,70]; //--- ZG raise (owner 2026-07-23: map felt dead; the [80,80,70,60] tune was measured under the shared-HC bug with ALL AI on one HC - the 2-HC split restores headroom). Rollback: [80,80,70,60]. CH/TK stay [140,130,100,80].
+		WFBE_C_TOTAL_AI_MAX_BY_TIER = [90,85,75,60];  //--- ZG re-tune (2026-07-23 live: 110 overshot - fps 15 at AI_TOT 383 with garrisons spawning above the founding cap; current ZG knee ~300-350 with GDIR/airdef/CTL overhead). Teams stay 8 - team COUNT is the aliveness lever, body count is the fps lever. Rollback: [80,80,70,60] original.
 		//--- (2) per-side COMMANDER-TEAM hard ceiling. Fewer teams, each still founds at 8 units (TEAM_SIZE untouched)
 		//--- = concentration, not sprawl. 5 x 8 = ~40 core + garrisons stays under the 80 AI cap above.
 		WFBE_C_AICOM_TEAMS_HARD_CAP = 8;               //--- ZG raise (owner 2026-07-23, was 5; CH/TK 10). Rollback: 5.
