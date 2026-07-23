@@ -1179,7 +1179,7 @@ if (count _live > 0) then {
 			_mountSeats = 0;
 			_mountRiders = {_x isKindOf "Man"} count _template;
 			{
-				if ((typeName _x == "STRING") && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) > 0} && {((missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0) || {(count (getArray (configFile >> "CfgVehicles" >> _x >> "Turrets" >> "MainTurret" >> "weapons"))) > 0}}) then {
+				if ((typeName _x == "STRING") && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) >= 3} && {((missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0) || {(count (getArray (configFile >> "CfgVehicles" >> _x >> "Turrets" >> "MainTurret" >> "weapons"))) > 0}}) then {
 					_mountSeats = _mountSeats + (getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier"));
 					if (_mountClass == "") then {
 						_mountClass = _x;
@@ -1200,7 +1200,7 @@ if (count _live > 0) then {
 						};
 						if (_mountTemplateType == 1) then {
 							{
-								if (_mountClass == "" && {(typeName _x == "STRING")} && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) > 0} && {((missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0) || {(count (getArray (configFile >> "CfgVehicles" >> _x >> "Turrets" >> "MainTurret" >> "weapons"))) > 0}}) then {
+								if (_mountClass == "" && {(typeName _x == "STRING")} && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) >= 3} && {((missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0) || {(count (getArray (configFile >> "CfgVehicles" >> _x >> "Turrets" >> "MainTurret" >> "weapons"))) > 0}}) then {
 									_mountClass = _x;
 									_mountClassSeats = getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier");
 								};
@@ -1212,7 +1212,7 @@ if (count _live > 0) then {
 			_mountNeed = _mountRiders * (missionNamespace getVariable ["WFBE_C_AICOM_MOUNT_MIN_SEAT_FRAC", 0.8]);
 			_mountAdded = 0;
 			if (_mountClass != "" && {_mountClassSeats > 0} && {_mountNeed > _mountSeats}) then {
-				while {_mountSeats < _mountNeed} do {
+				while {_mountSeats < _mountNeed && {_mountAdded < 3}} do { //--- owner 2026-07-23: cap mix at 3 vehicles (1-seat armed cars produced 8-10 UAZ convoys)
 					_template = _template + [_mountClass];
 					_mountSeats = _mountSeats + _mountClassSeats;
 					_mountAdded = _mountAdded + 1;
