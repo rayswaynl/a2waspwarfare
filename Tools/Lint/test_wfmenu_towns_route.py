@@ -34,6 +34,12 @@ class WFMenuTownsRouteTests(unittest.TestCase):
         self.assertIn("if (MenuAction == 26) exitWith {", menu)
         self.assertIn('createDialog "WFBE_GDirCommissarMenu";', menu)
         self.assertNotIn('execVM "WASP\\Radio\\Radio_Menu.sqf";', menu)
+        # Regression guard (#1271 night-fold bounce): the Towns route must side-gate so WEST/EAST
+        # players do not dead-end in the GUER-only commissar panel (its onLoad hard-guards
+        # sideJoined==resistance and self-closes). The GUER dialog must open only inside that gate.
+        towns_block = menu[menu.index("if (MenuAction == 26) exitWith {"):][:500]
+        self.assertIn("if (sideJoined == resistance) then {", towns_block)
+        self.assertIn('createDialog "WFBE_GDirCommissarMenu";', towns_block)
         for key in ("STR_WF_MAIN_TownsMenu", "STR_WF_TOOLTIP_MainMenu_Towns"):
             self.assertIn(key, strings)
             self.assertEqual(LANGUAGES, set(strings[key]))
