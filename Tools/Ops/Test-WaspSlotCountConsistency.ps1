@@ -11,7 +11,7 @@
 
     WF_MAXPLAYERS reaches the engine as Rsc/Header.hpp `maxPlayers`, i.e. the
     mission's HUMAN capacity: it is what the server browser advertises and what
-    Server/Init/Init_Server.sqf reads back into the MATCH|v1|START|maxPlayers=
+    Server/Init/Init_Server.sqf reads back into the MATCH|v1|START|missionSlots=
     telemetry field. Slots carrying `forceHeadlessClient=1` are reserved for
     headless clients and are not human capacity, so they are counted separately
     and excluded from the comparison. The mission-folder prefix convention

@@ -212,7 +212,7 @@ if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 	_mtOilfield    = missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 0];
 	//--- Build id: pipe-free short token (same token WASPSCALE uses); avoids the full
 	//--- WF_RELEASE_MARKER string which contains pipe chars that would shatter pipe-split parsers.
-	_mtBuild       = WF_BUILD_TOKEN;  // extracted from version.sqf WF_RELEASE_MARKER git= portion
+	_mtBuild       = missionNamespace getVariable ["wfbe_buildtag", ""]; if (_mtBuild == "") then {_mtBuild = missionName}; //--- #1299 fix: version.sqf WF_BUILD_TOKEN #define is NOT visible in Init_Server.sqf (same reason as _mtMaxPlayers above) - was undefined on every terrain, not just TK/ZG. Derive at runtime like WASPSCALE: cached wfbe_buildtag short token if set, else missionName (pipe-free, carries the cmdcon build token).
 	diag_log ("MATCH|v1|START|world=" + worldName
 		+ "|build=" + _mtBuild
 		+ "|towns=" + str _mtStartTowns

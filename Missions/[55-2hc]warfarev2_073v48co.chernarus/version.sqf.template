@@ -4,7 +4,6 @@
 // #define WF_DEBUG 1
 #define WF_LOG_CONTENT
 #define WF_RELEASE_MARKER "WASPRELEASE|v1|candidate=build89-cmdcon44t-20260704|git=build89-cmdcon44t|terrain=manual"
-#define WF_BUILD_TOKEN "build89-cmdcon44t"
 #define IS_CHERNARUS_MAP_DEPENDENT
 //#define IS_MOD_MAP_DEPENDENT
 #define IS_NAVAL_MAP
