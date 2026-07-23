@@ -442,10 +442,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_RICH_GEAR", 1]) > 0) then {
 	if (_rgTier > 5) then {_rgTier = 5};
 	_rgMin = missionNamespace getVariable ["WFBE_C_AICOM_RICH_GEAR_MIN_TIER", 2];
 	if (_rgTier >= _rgMin) then {
-		private ["_rgExtra","_rgAtMag"];
+		private ["_rgExtra","_rgAtMag","_rgAtOwner"];
 		//--- tier>=4 -> +2 mags each; tier 2-3 -> +1 mag each.
 		_rgExtra = if (_rgTier >= 4) then {2} else {1};
-		_rgAtMag = ""; //--- resolved below (an AT soldier's launcher magazine), only used at tier>=4 for the leader.
+		_rgAtMag = ""; _rgAtOwner = objNull; //--- resolved below (an AT soldier's launcher magazine + its owner), only used at tier>=4.
 		{
 			private ["_ru"];
 			_ru = _x;
@@ -466,16 +466,30 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_RICH_GEAR", 1]) > 0) then {
 					_rsw = secondaryWeapon _ru;
 					if (!(_rsw == "")) then {
 						_rsmags = getArray (configFile >> "CfgWeapons" >> _rsw >> "magazines");
-						if (count _rsmags > 0) then {_rgAtMag = _rsmags select 0};
+						if (count _rsmags > 0) then {_rgAtMag = _rsmags select 0; _rgAtOwner = _ru};
 					};
 				};
 			};
 		} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 		//--- tier>=4: the LEADER gets ONE extra AT round of the team's own AT class (copied above), IF the team fields an AT soldier.
+		//--- Compat guard (C6 council #5): grant it to the leader ONLY when the leader's own launcher
+		//--- accepts that magazine - an unusable AT round makes OA flood the RPT with "Cannot use
+		//--- magazine X in muzzle Y" (MAAWS_HEAT in M249_m145_EP1, NLAW in m8_SAW) on every reload
+		//--- evaluation. Otherwise the round goes to the AT soldier it was copied from - the team
+		//--- still gains one usable AT round either way.
 		if (_rgTier >= 4 && {!(_rgAtMag == "")}) then {
-			private ["_rgLdr"];
+			private ["_rgLdr","_rgLdrSW","_rgLdrOk"];
 			_rgLdr = leader _team;
-			if (!isNull _rgLdr && {alive _rgLdr} && {local _rgLdr}) then {_rgLdr addMagazine _rgAtMag};
+			if (!isNull _rgLdr && {alive _rgLdr} && {local _rgLdr}) then {
+				_rgLdrOk = false;
+				_rgLdrSW = secondaryWeapon _rgLdr;
+				if (!(_rgLdrSW == "")) then {
+					_rgLdrOk = ({_x == _rgAtMag} count (getArray (configFile >> "CfgWeapons" >> _rgLdrSW >> "magazines"))) > 0;
+				};
+				if (_rgLdrOk) then {_rgLdr addMagazine _rgAtMag} else {
+					if (!isNull _rgAtOwner && {alive _rgAtOwner} && {local _rgAtOwner}) then {_rgAtOwner addMagazine _rgAtMag};
+				};
+			};
 		};
 		diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|RICH_GEAR|tier=" + str _rgTier + "|extraMags=" + str _rgExtra + "|atMag=" + _rgAtMag);
 		["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] RICH_GEAR applied (tier %2, +%3 mag/unit, atMag=%4).", _side, _rgTier, _rgExtra, _rgAtMag]] Call WFBE_CO_FNC_AICOMLog;

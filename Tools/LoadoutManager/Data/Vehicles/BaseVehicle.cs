@@ -146,11 +146,20 @@ public abstract class BaseVehicle : InterfaceVehicle
             facTypeVariable = "WFBE_UP_LIGHT";
         }
 
-        //     _this removeWeaponTurret ["ATKMK44_ACR", [0]];
+        WeaponType weaponTypeToRemove = weaponsToRemoveUntilFactoryLevelOnAVehicle.First().Key;
+
+        // Turret-aware removal (C6 council #5): the removed weapon sits on the vehicle's main turret,
+        // and a vehicle-level removeWeapon on a turret weapon desyncs the turret's weapon<->magazine
+        // binding on A2 OA. Strip the weapon's own magazines with it - a magazine left aboard with no
+        // weapon able to use it makes OA flood the RPT with "Cannot use magazine X in muzzle Y" on
+        // every reload evaluation and every rearm cycle.
         sb.AppendLine($"{facLevelVariable} = ((_this getVariable [\"wfbe_balance_side\", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select {facTypeVariable}; ");
         sb.AppendLine($"if ({facLevelVariable} < {weaponsToRemoveUntilFactoryLevelOnAVehicle.First().Value}) then {{");
-        sb.AppendLine($"    _this removeWeapon \"{EnumExtensions.GetEnumMemberAttrValue(
-            weaponsToRemoveUntilFactoryLevelOnAVehicle.First().Key)}\";");
+        sb.AppendLine($"    _this removeWeaponTurret [\"{EnumExtensions.GetEnumMemberAttrValue(weaponTypeToRemove)}\", [{turretPos}]];");
+        foreach (string magazineClassname in GetMagazineClassnamesForWeaponType(weaponTypeToRemove))
+        {
+            sb.AppendLine($"    _this removeMagazineTurret [\"{magazineClassname}\", [{turretPos}]];");
+        }
         sb.AppendLine("};");
 
         return sb.ToString();
@@ -171,14 +180,49 @@ public abstract class BaseVehicle : InterfaceVehicle
             facTypeVariable = "WFBE_UP_LIGHT";
         }
 
-        //     _this removeWeaponTurret ["ATKMK44_ACR", [0]];
+        WeaponType turretWeaponTypeToRemove = weaponsOnTheTurretToRemoveUntilFactoryLevelOnAVehicle.First().Key;
+
+        // Strip the removed turret weapon's own magazines with it (C6 council #5) - see
+        // GenerateSQFCodeForWeaponRemoval above for the RPT-flood rationale.
         sb.AppendLine($"{facLevelVariable} = ((_this getVariable [\"wfbe_balance_side\", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select {facTypeVariable}; ");
         sb.AppendLine($"if ({facLevelVariable} < {weaponsOnTheTurretToRemoveUntilFactoryLevelOnAVehicle.First().Value}) then {{");
-        sb.AppendLine($"    _this removeWeaponTurret [\"{EnumExtensions.GetEnumMemberAttrValue(
-            weaponsOnTheTurretToRemoveUntilFactoryLevelOnAVehicle.First().Key)}\", [{turretPos}]];");
+        sb.AppendLine($"    _this removeWeaponTurret [\"{EnumExtensions.GetEnumMemberAttrValue(turretWeaponTypeToRemove)}\", [{turretPos}]];");
+        foreach (string magazineClassname in GetMagazineClassnamesForWeaponType(turretWeaponTypeToRemove))
+        {
+            sb.AppendLine($"    _this removeMagazineTurret [\"{magazineClassname}\", [{turretPos}]];");
+        }
         sb.AppendLine("};");
 
         return sb.ToString();
+    }
+
+    // Collects the magazine classnames belonging to a weapon type (via the ammunition definitions'
+    // weaponDefinition links), so a factory-level weapon removal can strip the now-unusable
+    // magazines together with the weapon (C6 council #5).
+    private static List<string> GetMagazineClassnamesForWeaponType(WeaponType _weaponTypeToRemove)
+    {
+        List<string> magazineClassnames = new();
+
+        foreach (AmmunitionType item in Enum.GetValues(typeof(AmmunitionType)))
+        {
+            var ammunitionType = (InterfaceAmmunition)EnumExtensions.GetInstance(item.ToString());
+            var weaponDefinition = ammunitionType.weaponDefinition;
+            if (weaponDefinition == null || weaponDefinition.WeaponType != _weaponTypeToRemove)
+            {
+                continue;
+            }
+
+            foreach (var ammoTypes in ammunitionType.AmmunitionTypes)
+            {
+                var ammoTypesString = EnumExtensions.GetEnumMemberAttrValue(ammoTypes);
+                if (!magazineClassnames.Contains(ammoTypesString))
+                {
+                    magazineClassnames.Add(ammoTypesString);
+                }
+            }
+        }
+
+        return magazineClassnames;
     }
 
     // Generates Arma 2 SQF (Scripting language) code for initializing the balance of a vehicle's loadout.

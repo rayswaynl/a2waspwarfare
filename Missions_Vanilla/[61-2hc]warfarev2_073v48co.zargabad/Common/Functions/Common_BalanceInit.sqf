@@ -307,7 +307,8 @@ case "AH6J_EP1": {
 case "BMP2_INS": {
 _currentFactoryLevel = ((_this getVariable ["wfbe_balance_side", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_HEAVY; 
 if (_currentFactoryLevel < 2) then {
-    _this removeWeapon "AT5LauncherSingle";
+    _this removeWeaponTurret ["AT5LauncherSingle", [0]];
+    _this removeMagazineTurret ["8Rnd_AT5_BMP2", [0]];
 };
 };
 
@@ -315,7 +316,8 @@ if (_currentFactoryLevel < 2) then {
 case "BMP2_TK_EP1": {
 _currentFactoryLevel = ((_this getVariable ["wfbe_balance_side", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_HEAVY; 
 if (_currentFactoryLevel < 2) then {
-    _this removeWeapon "AT5LauncherSingle";
+    _this removeWeaponTurret ["AT5LauncherSingle", [0]];
+    _this removeMagazineTurret ["8Rnd_AT5_BMP2", [0]];
 };
 };
 
@@ -337,7 +339,8 @@ case "BRDM2_ATGM_INS": {
 case "BTR90": {
 _currentFactoryLevel = ((_this getVariable ["wfbe_balance_side", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_LIGHT; 
 if (_currentFactoryLevel < 4) then {
-    _this removeWeapon "AT5LauncherSingle";
+    _this removeWeaponTurret ["AT5LauncherSingle", [0]];
+    _this removeMagazineTurret ["8Rnd_AT5_BMP2", [0]];
 };
 };
 
@@ -352,6 +355,7 @@ case "Pandur2_ACR": {
 _currentFactoryLevel = ((_this getVariable ["wfbe_balance_side", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_LIGHT; 
 if (_currentFactoryLevel < 4) then {
     _this removeWeaponTurret ["SpikeLauncher_ACR", [0]];
+    _this removeMagazineTurret ["2Rnd_Spike_ACR", [0]];
 };
 };
 
