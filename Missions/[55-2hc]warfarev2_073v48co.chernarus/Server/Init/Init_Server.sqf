@@ -1343,6 +1343,21 @@ if ((missionNamespace getVariable ["WFBE_C_DELEGHEALTH", 0]) > 0) then {
 	["INITIALIZATION", "Init_Server.sqf: Delegation-health telemetry FSM is initialized."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- HC-DELEGATION SELF-HEAL (wasp-hc-delegation-collapse-20260722): two healer loops, each dark by
+//--- default. (1) HCREG: connected-but-unregistered HC detection + server-side registration retry
+//--- (the "registration deferred until reannounce" path has no server-side retry and the HC-side
+//--- cold-start insurance window is only ~90s - live hit wave0722g). (2) HCHEAL: orphaned AICOM-team
+//--- sweep - dead founding-thread detection via the Common_RunCommanderTeam heartbeat, stale-topup
+//--- refund, wiped-slot release, never-moved force-recycle and player-safe field retire.
+if ((missionNamespace getVariable ["WFBE_C_HCREG_HEAL", 0]) > 0) then {
+	[] execVM "Server\FSM\server_hcreg_heal.sqf";
+	["INITIALIZATION", "Init_Server.sqf: HC registration self-heal FSM is initialized."] Call WFBE_CO_FNC_LogContent;
+};
+if ((missionNamespace getVariable ["WFBE_C_AICOM_ORPHAN_HEAL", 0]) > 0) then {
+	[] execVM "Server\FSM\server_aicom_orphan_heal.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Orphaned AICOM-team healer FSM is initialized."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- FPS PROFILING (claude-gaming 2026-06-13): enable the PerformanceAudit framework SERVER-SIDE ONLY so we
 //--- MEASURE where server frametime goes (uncached per-town capture scans suspected). Marty kept the GLOBAL
 //--- param off due to CLIENT-side AFK/commander regressions, so we force it here on the server only - clients

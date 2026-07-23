@@ -178,6 +178,17 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						private ["_fjS","_fjThrS"];
 						_fjS = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
 						_team setVariable ["wfbe_aicom_failedjourneys", _fjS];
+						//--- STRAND FAST-TRACK (wasp-hc-delegation-collapse-20260722, gate WFBE_C_AICOM_STRAND_FASTRECYCLE
+						//--- default 0): a team that burned the WHOLE (dyn)timeout while moving under
+						//--- WFBE_C_AICOM_STRAND_FAST_MOVED m from its journey start is not slow, it is wedged (live
+						//--- wave0722g: distStart=0 teams held slots for hours at up to 2700s DYNTIMEOUT x 6 journeys).
+						//--- Count the STRANDED closure DOUBLE so WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE latches in half
+						//--- the journeys. _moved is computed above in this same closure. Flag 0 = byte-identical +1 path.
+						if (((missionNamespace getVariable ["WFBE_C_AICOM_STRAND_FASTRECYCLE", 0]) > 0) && {_moved >= 0} && {_moved < (missionNamespace getVariable ["WFBE_C_AICOM_STRAND_FAST_MOVED", 50])}) then {
+							_fjS = _fjS + 1;
+							_team setVariable ["wfbe_aicom_failedjourneys", _fjS];
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRAND_FASTTRACK|team=" + (str _team) + "|moved=" + str (round _moved) + "|failedjourneys=" + str _fjS);
+						};
 						_fjThrS = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
 						if (_fjThrS > 0 && {_fjS >= _fjThrS} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 							_team setVariable ["wfbe_aicom_recycle", true, true];

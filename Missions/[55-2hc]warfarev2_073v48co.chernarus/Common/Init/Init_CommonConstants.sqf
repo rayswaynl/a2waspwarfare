@@ -2909,6 +2909,20 @@ if (isNil "WFBE_C_TRASH_REMOTE_DELETE") then {WFBE_C_TRASH_REMOTE_DELETE = 0};
 //--- (RPT attribution for the next mid-match burn); 0 = INERT, no logging, dispatch byte-identical.
 //--- Ships default 0.
 if (isNil "WFBE_C_HS_DISPATCH_LOG") then {WFBE_C_HS_DISPATCH_LOG = 1}; //--- ARMED (owner ruling 2026-07-22 22:04: ship flagged on).
+//--- HC-DELEGATION SELF-HEAL (wasp-hc-delegation-collapse-20260722; live hit wave0722g: one HC out of
+//--- the registry for a whole round - HCSTAT 1u/0g flat vs 185u/32g on the survivor - while its
+//--- orphaned AICOM teams froze forever and charged TOPUP requests were never spawned or refunded).
+//--- Three independent slices, each behind its OWN master flag at default 0: with all three at 0 no
+//--- healer loop spawns, no heartbeat publishes and every touched path keeps its original
+//--- computation (the constants below are declared unconditionally like every other WFBE_C_* flag;
+//--- sub-tunables are only read while their master is on).
+	if (isNil "WFBE_C_HCREG_HEAL") then {WFBE_C_HCREG_HEAL = 1}; //--- ARMED (owner 2026-07-23: re-register the starved HC so foundings balance across both HCs - the live AFK-teams root cause). //--- SLICE 1 master: 0=off (default - Init_Server never spawns Server\FSM\server_hcreg_heal.sqf), 1=on (60s sweep: a connected HC with a fresh HCSTAT heartbeat that is missing from WFBE_HEADLESSCLIENTS_ID for > WFBE_C_HCREG_HEAL_WAIT s gets the connected-hc registration re-run server-side; HCREG|v1 lines).
+	if (isNil "WFBE_C_HCREG_HEAL_WAIT") then {WFBE_C_HCREG_HEAL_WAIT = 120}; //--- s an HC must be continuously unregistered before a heal fires; also the per-owner retry cooldown. Only read while WFBE_C_HCREG_HEAL > 0.
+	if (isNil "WFBE_C_AICOM_ORPHAN_HEAL") then {WFBE_C_AICOM_ORPHAN_HEAL = 1}; //--- ARMED (owner 2026-07-23: sweep+re-drive teams orphaned when an HC drops). //--- SLICE 2 master: 0=off (default - no sweep loop, no heartbeat publish), 1=on (Common_RunCommanderTeam publishes wfbe_aicom_hb_t ~60s; Server\FSM\server_aicom_orphan_heal.sqf sweeps 60s for dead-thread wfbe_aicom_hc teams: stale-topup refund + wiped-slot release + never-moved force-recycle + player-safe field retire; HCHEAL|v1 lines).
+	if (isNil "WFBE_C_AICOM_ORPHAN_STALE") then {WFBE_C_AICOM_ORPHAN_STALE = 180}; //--- s heartbeat age that marks a founding thread dead (3 missed ~60s beats). Only read while WFBE_C_AICOM_ORPHAN_HEAL > 0.
+	if (isNil "WFBE_C_AICOM_ORPHAN_NEVERMOVED") then {WFBE_C_AICOM_ORPHAN_NEVERMOVED = 50}; //--- m max leader distance from the journey-start pos under which an orphan counts as never-moved (pad-frozen) and may be force-recycled bypassing the proximity/combat vetoes. Only read while WFBE_C_AICOM_ORPHAN_HEAL > 0.
+	if (isNil "WFBE_C_AICOM_STRAND_FASTRECYCLE") then {WFBE_C_AICOM_STRAND_FASTRECYCLE = 0}; //--- SLICE 3 master: 0=off (default - byte-identical +1 failed-journey path), 1=on (a STRANDED closure that moved < WFBE_C_AICOM_STRAND_FAST_MOVED m from journey start counts DOUBLE toward WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE; AI_Commander_AssignTowns.sqf).
+	if (isNil "WFBE_C_AICOM_STRAND_FAST_MOVED") then {WFBE_C_AICOM_STRAND_FAST_MOVED = 50}; //--- m moved-from-start threshold for the double count. Only read while WFBE_C_AICOM_STRAND_FASTRECYCLE > 0.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

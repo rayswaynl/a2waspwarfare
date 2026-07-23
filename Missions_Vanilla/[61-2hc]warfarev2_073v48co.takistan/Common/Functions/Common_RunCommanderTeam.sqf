@@ -838,7 +838,37 @@ if (isNull _airVeh) then {
 };
 //--- ===================================================================
 
+//--- THREAD HEARTBEAT (wasp-hc-delegation-collapse-20260722, gate WFBE_C_AICOM_ORPHAN_HEAL default 0):
+//--- publish a machine-liveness stamp on the group every ~60s so the server orphan sweep
+//--- (Server\FSM\server_aicom_orphan_heal.sqf) can tell a live founding machine from a dead one. An
+//--- HC drop kills EVERY spawn of this script - order driver, TOPUP consumer, disband executor AND
+//--- this publisher - so the stamp goes stale exactly when the team is orphaned. It runs in its OWN
+//--- small spawn (the arrow-heading-feed pattern, L133) because the MAIN order loop below blocks for
+//--- minutes inside ordinary capture/hold phases (sleep 35+random 20 per camp, 360s camp-first /
+//--- drain-wait / fire-phase holds) - a loop-top stamp would go falsely stale mid-capture and the
+//--- sweep would retire healthy teams (review 187997f170 finding 1). SCOPE (honest): this detects
+//--- dead-MACHINE orphans (the live wave0722g incident class). A driver that script-errors while its
+//--- HC stays connected keeps heartbeating through this publisher and is NOT detected. The heading
+//--- feed cannot serve as the liveness signal: its sender-side dedup means a team holding a bearing
+//--- legitimately sends nothing for hours. PUBLIC setVariable so the SERVER can read it; one PV per
+//--- team per ~60s (HC_StatLoop cadence class - PV-thrift per the cmdcon41-w3c precedent). Flag 0 at
+//--- founding = no spawn at all (behaviour identical to HEAD); disarming mid-round stops the PVs on
+//--- the next tick. Exits with the team (null/wiped), mirroring the heading-feed lifecycle.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_ORPHAN_HEAL", 0]) > 0) then {
+	[_team] Spawn {
+		Private ["_hbTeam"];
+		_hbTeam = _this select 0;
+		while {!WFBE_GameOver && !isNull _hbTeam && {(count ((units _hbTeam) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_ORPHAN_HEAL", 0]) > 0) then {
+				_hbTeam setVariable ["wfbe_aicom_hb_t", time, true];
+			};
+			sleep 60;
+		};
+	};
+};
+
 while {!WFBE_GameOver && _alive} do {
+
 	//--- AICOM v2 (Ray): reap UNCREWED/bugged aircraft. An airframe (heli OR plane) alive with NO alive crew is
 	//--- orphaned (crew killed/bailed/bugged) - it crashes, sits, or piles up over a long round. Delete it after a
 	//--- short grace so it can't accumulate. Stamp-on-first-seen avoids deleting a transient bail/reseat. HC-local.
