@@ -300,6 +300,16 @@ _n = _n + [''];
 _o = _o + [15];
 _z = _z + [2];
 
+//--- RPG-18 rocket (fable 2026-07-23, player report: disposable launcher sold with no
+//--- rocket and no way to buy one - the magazine classname was never registered here, so
+//--- Mag_<class> stayed nil: unbuyable + gear-swap deref errors. Same fix class as the
+//--- Gear_BAF NLAW ammo registration.
+_u = _u + ["RPG18"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [75];
+_z = _z + [0];
+
 [_faction, _u, _p, _n, _o, _z] Call Compile preprocessFile "Common\Config\Config_Magazines.sqf";
 
 _u = [];//--- Weapon
