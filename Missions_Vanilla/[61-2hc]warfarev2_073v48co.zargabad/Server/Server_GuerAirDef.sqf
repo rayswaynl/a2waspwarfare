@@ -377,6 +377,18 @@ while {!WFBE_GameOver} do {
 		_groundQrfs = _keptGroundQrfs;
 	};
 
+	//--- ITEM2 perf (wave0723c): pre-filter enemy AIR (west/east, alive) ONCE per cycle instead of rescanning
+	//--- the global `vehicles` list inside every per-town iteration below (was O(towns * allVehicles);
+	//--- guer_airdef_cycle measured 12,855ms/cycle at towns:11). Built unconditionally (cheap, ~120s cadence);
+	//--- only USED when WFBE_C_AIRDEF_CHUNKED is on (see the per-town read below) so flag-off is a true
+	//--- rollback to the original per-town live rescan, not just a timing rollback.
+	//--- _chunkSleepTotal accumulates the CHUNKED per-town sleep time (below) so the cycle's perf-audit
+	//--- record can subtract intentional yields and keep reporting real compute cost, not wall time.
+	private ["_enemyAirVehicles", "_chunkSleepTotal"];
+	_enemyAirVehicles = [];
+	{if (alive _x && {_x isKindOf "Air"} && {((side _x) == west) || {(side _x) == east}}) then {_enemyAirVehicles set [count _enemyAirVehicles, _x]}} forEach vehicles;
+	_chunkSleepTotal = 0;
+
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
 	{
 		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_airCrewReady","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_swarmCrewReady","_flareN","_eFlareN","_qrfEnemies","_qrfTownHas","_qrfPool","_qrfTemplate","_qrfGroup","_qrfBuilt","_qrfUnit","_qrfAng","_qrfPos","_qrfRadius","_diag"];
@@ -445,7 +457,15 @@ while {!WFBE_GameOver} do {
 			//--- Enemy AIR near the town (crewed west/east aircraft) - the counter-air trigger. Scanned over
 			//--- `vehicles` (hull objects); side comes from the crewed hull, so an empty parked heli reads CIV
 			//--- and is ignored (only manned attackers pull a SAM-heli response).
-			_enemyAir = {alive _x && {_x isKindOf "Air"} && {((side _x) == west) || {(side _x) == east}} && {(_x distance _town) < ((_town getVariable ["range", 600]) max 600)}} count vehicles;
+			//--- CHUNKED (wave0723c, flag WFBE_C_AIRDEF_CHUNKED, default 1 per owner ruling 2026-07-23): use the
+			//--- cycle-start _enemyAirVehicles snapshot (built once above) instead of rescanning `vehicles` per
+			//--- town. Flag OFF reproduces the exact original per-town live rescan, so the flag is a TRUE full
+			//--- rollback (not just a timing rollback) for live triage.
+			_enemyAir = if ((missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNKED", 1]) > 0) then {
+				{(_x distance _town) < ((_town getVariable ["range", 600]) max 600)} count _enemyAirVehicles
+			} else {
+				{alive _x && {_x isKindOf "Air"} && {((side _x) == west) || {(side _x) == east}} && {(_x distance _town) < ((_town getVariable ["range", 600]) max 600)}} count vehicles
+			};
 
 			//--- LARGE-town test: by maxSupplyValue threshold OR by town_type tier (Large/Huge).
 			_maxSV    = _town getVariable ["maxSupplyValue", 0];
@@ -810,6 +830,16 @@ while {!WFBE_GameOver} do {
 				diag_log format ["GUERAIRDEF|SPAWNFAIL|town=%1|class=%2|reason=createVehicle_null", (_town getVariable ["name","?"]), _class];
 			};
 		};
+
+		//--- ITEM2 perf (wave0723c): chunk the per-town sweep so its nearEntities/vehicles scan cost spreads
+		//--- across scheduler frames instead of stalling in one 12s+ synchronous burst (measured
+		//--- guer_airdef_cycle EXTRA=towns:11). GUER output/spawn logic above is UNCHANGED - this only
+		//--- delays moving to the NEXT town by WFBE_C_AIRDEF_CHUNK_SLEEP seconds. Behavior-change flag
+		//--- (spawn-decision timing across the sweep) -> default ON per owner ruling 2026-07-23.
+		if ((missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNKED", 1]) > 0) then {
+			_chunkSleepTotal = _chunkSleepTotal + (missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNK_SLEEP", 0.4]);
+			sleep (missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNK_SLEEP", 0.4]);
+		};
 	} forEach towns;
 
 	//--- B67 (Ray 2026-06-21): rebuild + broadcast the GUER-air marker feed from the live registry (alive hulls
@@ -823,6 +853,6 @@ while {!WFBE_GameOver} do {
 	WFBE_ACTIVE_GUER_AIR = _airList;
 	publicVariable "WFBE_ACTIVE_GUER_AIR";
 	if !(isNil "PerformanceAudit_Record") then {
-		["guer_airdef_cycle", diag_tickTime - _perfStart, Format["towns:%1;airBefore:%2;airAfter:%3;dropsBefore:%4;dropsAfter:%5;markers:%6;cap:%7;dropCap:%8", count towns, _perfAirBefore, count _defenders, _perfDropsBefore, count _drops, count _airList, _maxAir, _dropMax], "SERVER"] Call PerformanceAudit_Record;
+		["guer_airdef_cycle", (diag_tickTime - _perfStart) - _chunkSleepTotal, Format["towns:%1;airBefore:%2;airAfter:%3;dropsBefore:%4;dropsAfter:%5;markers:%6;cap:%7;dropCap:%8;chunkSleep:%9", count towns, _perfAirBefore, count _defenders, _perfDropsBefore, count _drops, count _airList, _maxAir, _dropMax, _chunkSleepTotal], "SERVER"] Call PerformanceAudit_Record;
 	};
 };

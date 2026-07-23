@@ -528,7 +528,19 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 				if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 				WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
-				diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|CAPTURE|" + (_location getVariable ["name","unknown"]) + "|" + str _sideID + "|" + str _newSID + "|t=" + str (round time));
+				//--- captor attribution (owner 2026-07-23): player vs AI takeover, read from the same _objects
+				//--- capture scan the B74.2 credit loop uses. Fields appended so existing parsers keep working.
+				private ["_wsSideCap","_wsPn","_wsAn","_wsWho"];
+				_wsSideCap = _newSide; _wsPn = 0; _wsAn = 0; _wsWho = "";
+				{
+					if (!isNull _x && {alive _x} && {side _x == _wsSideCap} && {_x isKindOf "Man"}) then {
+						if (isPlayer _x) then {
+							_wsPn = _wsPn + 1;
+							if (_wsWho == "") then {_wsWho = name _x} else {_wsWho = _wsWho + "," + name _x};
+						} else {_wsAn = _wsAn + 1};
+					};
+				} forEach _objects;
+				diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|CAPTURE|" + (_location getVariable ["name","unknown"]) + "|" + str _sideID + "|" + str _newSID + "|t=" + str (round time) + "|by=" + (if (_wsPn > 0) then {"player"} else {"ai"}) + "|pN=" + str _wsPn + "|aiN=" + str _wsAn + "|who=" + _wsWho);
 			};
 			// END WASPSTAT CAPTURE (Task 10)
 

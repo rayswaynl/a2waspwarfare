@@ -2949,5 +2949,45 @@ if (WFBE_C_AICAP_MIDHIGH_TRIM > 0) then {
 //--- behaviour. OWNER CALL: flip to 1 to enable, or delete Client_FNC_OnFired.sqf wholesale. Ships default 0.
 if (isNil "WFBE_C_SATCHEL_TK_DETECT") then {WFBE_C_SATCHEL_TK_DETECT = 0};
 
+//--- ITEM2 perf (wave0723c, owner ruling 2026-07-23 - behavior-change flags ship default ON): chunk
+//--- Server_GuerAirDef.sqf's per-town MAINTAIN sweep (guer_airdef_cycle measured 12,855ms/cycle at
+//--- towns:11, vs 1,381ms on a light sample) by sleeping between towns so the same nearEntities/
+//--- vehicles scan work spreads across scheduler frames instead of stalling in one synchronous burst.
+//--- GUER output/spawn logic is UNCHANGED (owner rule: cycle-cost only, no caps/nerfs). 0 = OFF,
+//--- original single-pass sweep AND original per-town live vehicles rescan (live rollback is a
+//--- constant flip - both the timing change and the caching change revert together).
+if (isNil "WFBE_C_AIRDEF_CHUNKED") then {WFBE_C_AIRDEF_CHUNKED = 1};
+//--- Per-town sleep (seconds) inside the chunked sweep above; tunable without a code change.
+if (isNil "WFBE_C_AIRDEF_CHUNK_SLEEP") then {WFBE_C_AIRDEF_CHUNK_SLEEP = 0.4};
+//--- Same technique for Common_AICOM_SmallArmsAirEnvelope.sqf's manager loop (aicom_airenvelope
+//--- measured chronic 423-1,076ms/cycle scaling with population, EXTRA=groups:52-62;units:268-321):
+//--- one yield point between its two heavy phases (AICOM per-side teams, then town-AI/HC groups).
+//--- Steering logic/output is UNCHANGED. 0 = OFF, original single-pass sweep.
+if (isNil "WFBE_C_AIRENV_CHUNKED") then {WFBE_C_AIRENV_CHUNKED = 1};
+//--- Yield sleep (seconds) between the two phases above; tunable without a code change.
+if (isNil "WFBE_C_AIRENV_CHUNK_SLEEP") then {WFBE_C_AIRENV_CHUNK_SLEEP = 0.1};
+
+//--- ITEM 3 (owner ruling 2026-07-23): town-garrison activation spawn (server_town_ai.sqf) had NO
+//--- side-AI-cap check - EAST hit AI_E=140 vs tier cap 110 live while WEST complied, because
+//--- WFBE_C_TOTAL_AI_MAX_BY_TIER is only enforced at the founding gate (AI_Commander_Teams.sqf) and
+//--- the produce/refill gate (AI_Commander_Produce.sqf), never at town-garrison activation spawn.
+//--- Scales DOWN (never hard-skips) the WEST/EAST garrison roster when the side is at/over its tier
+//--- cap so an over-cap side still gets SOME town defense. GUER/resistance spawn paths are never
+//--- touched (owner hard rule: no GUER caps). Behavior-change flag: ships DEFAULT ON per the ruling,
+//--- so live rollback is a constant flip to 0.
+if (isNil "WFBE_C_GARRISON_CAP_GATE") then {WFBE_C_GARRISON_CAP_GATE = 1};
+
+//--- GDIR-CONTRACTS-FIX (ITEM 4, owner ruling 2026-07-23): live RC (95 min, Zargabad wave0723b)
+//--- showed Server_GuerDirector.sqf issuing 65/65 GDIR_ORDER events as kind=moveCell and ZERO
+//--- kind=reinforce/qrf/counterAttack while GUER collapsed 11 towns -> 3. Root cause: the
+//--- counter-attack contract verb was UNCONDITIONALLY refused in RequestGDirPanel.sqf on a stale
+//--- premise ("no target-bound retake materializer") even though the button is live in
+//--- GUI_Menu_GuerCommissar.sqf, and the Director's own PHASE 3 assessment never autonomously
+//--- arms a contract either. 1 = let counter-attack panel requests through + auto-arm a
+//--- DIRECTOR-funded qrfGunship contract per severely threatened town each tick
+//--- (Server_GuerDirector.sqf); 0 = restore both to prior (always-refused / never-autonomous)
+//--- behaviour for instant live rollback. Behavior-change flag per owner ruling: ships default ON.
+if (isNil "WFBE_C_GDIR_CONTRACTS_FIX") then {WFBE_C_GDIR_CONTRACTS_FIX = 1}; //--- ARMED (owner ruling 2026-07-23).
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

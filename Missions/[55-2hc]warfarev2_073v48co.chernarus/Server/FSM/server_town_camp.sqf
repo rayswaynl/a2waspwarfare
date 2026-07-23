@@ -139,6 +139,25 @@ while {!WFBE_GameOver} do {
 					_flag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG",str _newSide]); _flag setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG",str _newSide]]); processInitCommands; //--- qol-polish-pack: JIP-safe flag (bare setFlagTexture is local-only; bake into object init so late joiners replay it)
 
 					[nil, "CampCaptured", [_camp,_newSID,_sideID]] Call WFBE_CO_FNC_SendToClients;
+
+					//--- WASPSTAT CAMP capture telemetry (owner 2026-07-23): individual camp flip with player-vs-AI
+					//--- attribution from the same Man-filtered _objects range list as the B74.2 credit loop above.
+					//--- Same WFBE_C_STATLOG gate + shared sequence as the town CAPTURE line (server_town.sqf).
+					if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
+						if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
+						WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
+						private ["_wcSideCap","_wcPn","_wcAn","_wcWho"];
+						_wcSideCap = _newSide; _wcPn = 0; _wcAn = 0; _wcWho = "";
+						{
+							if (!isNull _x && {alive _x} && {side _x == _wcSideCap} && {_x isKindOf "Man"}) then {
+								if (isPlayer _x) then {
+									_wcPn = _wcPn + 1;
+									if (_wcWho == "") then {_wcWho = name _x} else {_wcWho = _wcWho + "," + name _x};
+								} else {_wcAn = _wcAn + 1};
+							};
+						} forEach _objects;
+						diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|CAMP|" + (_town getVariable ["name","unknown"]) + "|" + str _sideID + "|" + str _newSID + "|t=" + str (round time) + "|by=" + (if (_wcPn > 0) then {"player"} else {"ai"}) + "|pN=" + str _wcPn + "|aiN=" + str _wcAn + "|who=" + _wcWho);
+					};
 				};
 			};
 		}else{

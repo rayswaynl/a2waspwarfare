@@ -377,6 +377,23 @@ if (_airMaxTotalP > 0) then {
 					//--- Refit is a logistical MOVE under always-offense; legacy DEFEND remains a rollback only.
 					_retreatOrder = [_retreatSeq, if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {"move"} else {"defense"}, getPosATL _hqP];
 					_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
+					//--- REFIT-PIPELINE FIX (traceability wave0723c, flag WFBE_C_AICOM_RETREAT_WALKHOME default 1, live 95-min match: REFIT_START x21 v REFIT_END x1):
+					//--- wfbe_aicom_order is the HC-driver channel ONLY - Common_RunCommanderTeam.sqf order loop reads
+					//--- it, and that file only ever runs for wfbe_aicom_hc-delegated teams. This branch is reached
+					//--- ONLY for the opposite case (the !wfbe_aicom_hc guard on the outer team loop above), so the
+					//--- setVariable above was a pure no-op for the team it targets - confirmed by AI_Commander.sqf own
+					//--- comment ("Server-local teams ignore the order var."). Server-local movement is driven ONLY by
+					//--- wfbe_teammode/wfbe_teamgoto through AI_Commander_Execute.sqf, and AssignTowns _explicitMode gate
+					//--- also keys off wfbe_teammode - so without the two calls below the lone survivor kept its last
+					//--- real "towns" order, AssignTowns kept re-tasking it at fresh objectives every ~120s instead of
+					//--- letting it walk home, it never closed to within _homeR, and the retreat-thrash budget (B67/B68
+					//--- above) culled it before REFIT_END could ever fire. Mirrors the identical SetTeamMoveMode/
+					//--- SetTeamMovePos pairing already used by the LAST-STAND recall (AI_Commander_Strategy.sqf) and
+					//--- the GARRISON reassign (AI_Commander_AssignTowns.sqf). Flag-gated per owner ruling 2026-07-23.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_WALKHOME", 1]) > 0) then {
+						[_team, (_retreatOrder select 1)] Call SetTeamMoveMode;
+						[_team, (_retreatOrder select 2)] Call SetTeamMovePos;
+					};
 					_team setVariable ["wfbe_aicom_refit", true, true]; //--- B61: mark for top-up-at-base once home.
 					if (!_refitWas) then {
 						_team setVariable ["wfbe_aicom_refit_start", time];
@@ -547,6 +564,17 @@ if (_airMaxTotalP > 0) then {
 			_refitStart = _team getVariable "wfbe_aicom_refit_start";
 			if (isNil "_refitStart") then {_refitStart = time};
 			_team setVariable ["wfbe_aicom_refit", false, true];
+			//--- REFIT-PIPELINE FIX (traceability wave0723c, flag WFBE_C_AICOM_RETREAT_WALKHOME default 1): release the wfbe_teammode="move" hold the retreat
+			//--- order above now sets (see the SetTeamMoveMode/SetTeamMovePos pairing added at the retreat-and-
+			//--- reform order site). Without this, AssignTowns _explicitMode gate (modeNow=="move") would treat
+			//--- the now-refit-complete team as permanently under an explicit order and never redispatch it -
+			//--- exactly the "strategy layer (wfbe_teammode) re-dispatches it" behaviour the comment above already
+			//--- promises. "towns" is the same idle/redispatchable default AssignTowns/Execute use elsewhere
+			//--- (e.g. AI_Commander_AssignTowns.sqf HOLD-release, AI_Commander.sqf human-left reset). Flag-gated
+			//--- per owner ruling 2026-07-23 (same flag as the retreat-move fix above; off = nothing to release).
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_WALKHOME", 1]) > 0) then {
+				[_team, "towns"] Call SetTeamMoveMode;
+			};
 			_refitDur = round (time - _refitStart);
 			if (_refitDur < 0) then {_refitDur = 0};
 			if (_refitWas) then {

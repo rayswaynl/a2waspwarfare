@@ -134,7 +134,7 @@ WFBE_CO_FNC_AICOM_AirEnvelope_WalkTeam = {
 //--- Enumerates AICOM wfbe_teams (both machines, local-only via the Steer guard) + the
 //--- town-AI registries (server: towns' wfbe_town_teams; HC: WFBE_CL_TownAI_Groups).
 //--- ============================================================================
-private ["_perfStart", "_perfGroups", "_perfSteers", "_seen", "_anyEnemyAir", "_side", "_logik", "_team"];
+private ["_perfStart", "_perfGroups", "_perfSteers", "_seen", "_anyEnemyAir", "_side", "_logik", "_team", "_chunkSleepTotal"];
 
 while {!WFBE_gameover} do {
 
@@ -148,6 +148,7 @@ while {!WFBE_gameover} do {
 		_perfGroups = 0;
 		_perfSteers = 0;
 		_seen       = [];
+		_chunkSleepTotal = 0;
 
 		//--- AICOM commander teams (per side wfbe_teams). Runs on both machines; the Steer
 		//--- helper no-ops on any unit not local here, so each machine touches only its own.
@@ -164,6 +165,16 @@ while {!WFBE_gameover} do {
 				} forEach (_logik getVariable ["wfbe_teams", []]);
 			};
 		} forEach [west, east, resistance];
+
+		//--- ITEM2 perf (wave0723c): chunk this loop's two heavy phases (AICOM per-side teams above vs
+		//--- town-AI/HC groups below) with a yield point between them, so aicom_airenvelope's cost
+		//--- (measured 423-1,076ms/cycle, EXTRA=groups:52..62;units:268..321) spreads across scheduler
+		//--- frames instead of one synchronous burst. Steering logic/output above and below is UNCHANGED.
+		//--- Behavior-change flag (steer timing across the sweep) -> default ON per owner ruling 2026-07-23.
+		if ((missionNamespace getVariable ["WFBE_C_AIRENV_CHUNKED", 1]) > 0) then {
+			_chunkSleepTotal = _chunkSleepTotal + (missionNamespace getVariable ["WFBE_C_AIRENV_CHUNK_SLEEP", 0.1]);
+			sleep (missionNamespace getVariable ["WFBE_C_AIRENV_CHUNK_SLEEP", 0.1]);
+		};
 
 		//--- Town-defence AI. Server owns the no-HC fallback set in each town's wfbe_town_teams;
 		//--- each HC owns its delegated town groups in WFBE_CL_TownAI_Groups ([town, side, group]).
@@ -195,7 +206,7 @@ while {!WFBE_gameover} do {
 		//--- Performance Audit record (tag "aicom_airenvelope"), same guard idiom as the sibling managers.
 		if !(isNil "PerformanceAudit_Record") then {
 			if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-				["aicom_airenvelope", diag_tickTime - _perfStart, Format["groups:%1;units:%2;steers:%3", _perfGroups, count _seen, _perfSteers], _machineTag] Call PerformanceAudit_Record;
+				["aicom_airenvelope", (diag_tickTime - _perfStart) - _chunkSleepTotal, Format["groups:%1;units:%2;steers:%3;chunkSleep:%4", _perfGroups, count _seen, _perfSteers, _chunkSleepTotal], _machineTag] Call PerformanceAudit_Record;
 			};
 		};
 

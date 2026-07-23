@@ -182,9 +182,13 @@ if (!_townFound || {isNull _townObj}) exitWith {
 	[_player, "GDirPanelResult", ["deny", "Town not found.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
 };
 
-//--- The current Director has no target-bound retake materializer. Refuse the exposed counter
-//--- contract before any cooldown, scarcity, wallet, pending-order, or contract state can change.
-if (_verb == "counter") exitWith {
+//--- fable/gdir-contracts-fix (ITEM 4, owner ruling 2026-07-23, flag WFBE_C_GDIR_CONTRACTS_FIX
+//--- default 1): the "no target-bound retake materializer" premise below is stale -
+//--- Server_GuerDirector.sqf's COUNTER-ATTACK contract poll (kind=counterAttack) is fully
+//--- implemented and fires COUNTER_FIRE. Flag ON (default) lets counter-attack requests reach
+//--- the existing pending-order/contract-record write below; flag OFF restores the unconditional
+//--- refusal for instant live rollback.
+if (_verb == "counter" && {!((missionNamespace getVariable ["WFBE_C_GDIR_CONTRACTS_FIX", 1]) > 0)}) exitWith {
 	diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PANEL|verb=counter|town=%2|deny=counterUnavailable|fundedBy=%3|pricePaid=0", _elmin, _townId, getPlayerUID _player];
 	[_player, "GDirPanelResult", ["deny", "Counter-attack contracts are unavailable until a retake unit is available.", _verb, _townId]] Call WFBE_CO_FNC_SendToClient;
 };

@@ -617,6 +617,37 @@ while {!WFBE_GameOver} do {
             };
             _updContracts set [count _updContracts, _ctr];
         } forEach _contracts;
+        //--- fable/gdir-contracts-fix (ITEM 4, owner ruling 2026-07-23, flag WFBE_C_GDIR_CONTRACTS_FIX
+        //--- default 1): the ladder above only ever arms contracts from a PAID player panel request -
+        //--- live RC (95 min, Zargabad wave0723b) showed 65/65 GDIR_ORDER events as kind=moveCell and
+        //--- ZERO kind=reinforce/qrf/counterAttack while GUER collapsed 11 towns -> 3, because nothing
+        //--- in the Director's own PHASE 3 assessment ever spends on the contract ladder. Auto-arm one
+        //--- DIRECTOR-funded qrfGunship contract per severely threatened town (_stateThr), deduped
+        //--- against any already-armed contract on that town so this cannot spam per-tick. Appended
+        //--- AFTER the poll/fire pass above (not before it, and scanning/writing _updContracts, not the
+        //--- pre-tick _contracts) so a contract armed this tick is only eligible to fire starting NEXT
+        //--- tick - arming it earlier let the same-tick forEach immediately fire it for any town already
+        //--- under contact, flipping it to state=fired before the dedup scan ever saw it as armed, so a
+        //--- town under continuous contact would re-arm and re-fire a fresh gunship every single tick.
+        if ((missionNamespace getVariable ["WFBE_C_GDIR_CONTRACTS_FIX", 1]) > 0) then {
+            {
+                private ["_thrRec","_thrTown","_thrName","_thrArmed"];
+                _thrRec   = _x;
+                _thrTown  = _thrRec select 0;
+                _thrName  = _thrTown getVariable ["name", ""];
+                _thrArmed = false;
+                {
+                    if ((_x select 2) == _thrName && {(_x select 7) == "armed"}) then {_thrArmed = true};
+                } forEach _updContracts;
+                if (!_thrArmed) then {
+                    private ["_thrCid"];
+                    _thrCid = Format ["ctr_auto_%1_%2", _thrName, round (_nowT * 1000)];
+                    _updContracts set [count _updContracts, [_thrCid, "qrfGunship", _thrName, "DIRECTOR", 0, _nowT, 0, "armed"]];
+                    diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 kind=qrfGunship town=%3 armed fundedBy=DIRECTOR pricePaid=0",
+                        _elmin, _thrCid, _thrName];
+                };
+            } forEach _stateThr;
+        };
         missionNamespace setVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", _updContracts];
     };
 
