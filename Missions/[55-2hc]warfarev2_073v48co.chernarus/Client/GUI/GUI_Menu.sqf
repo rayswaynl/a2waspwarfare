@@ -292,19 +292,18 @@ while {alive player && dialog} do {
 		};
 	};
 
-	//--- RADIO: vehicle radio menu (replaces the obsolete FPS button, which duplicated the SETUP/GEAR
-	//--- Settings entry point at MenuAction 24). Gate at click time: needs the player in a vehicle AND
-	//--- a side Radio Tower, matching the vehicle addAction gate in Init_Unit.sqf.
+	//--- Towns: open the GUER town-garrison panel (GUER Director feature; resistance-only).
+	//--- The commissar/town-actions panel onLoad hard-guards sideJoined==resistance, so routing
+	//--- every side here left WEST/EAST at a dead-end (menu flashed open then self-closed). Gate
+	//--- at click time like the MenuAction==8 Economy split and the MenuAction==30 Director self-guard.
 	if (MenuAction == 26) exitWith {
 		MenuAction = -1;
-		if (vehicle player == player) exitWith {
-			hint "Radio requires a vehicle.";
+		if (sideJoined == resistance) then {
+			closeDialog 0;
+			createDialog "WFBE_GDirCommissarMenu";
+		} else {
+			hint "Town garrison actions are for resistance (GUER) players.";
 		};
-		if !((side player) call WFBE_CO_FNC_HasSideRadioTower) exitWith {
-			hint "Requires a Radio Tower.";
-		};
-		closeDialog 0;
-		[vehicle player, player] execVM "WASP\Radio\Radio_Menu.sqf";
 	};
 
 	//--- B748: Settings menu (GEAR button = revived skins slot, idc 11021).

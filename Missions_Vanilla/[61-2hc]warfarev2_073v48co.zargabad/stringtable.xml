@@ -781,6 +781,14 @@
         <English>Economy</English>
         <Russian>Экономика</Russian>
       </Key>
+      <Key ID="STR_WF_MAIN_TownsMenu">
+        <English>Towns</English>
+        <French>Villes</French>
+        <German>Städte</German>
+        <Italian>Città</Italian>
+        <Russian>Города</Russian>
+        <Spanish>Pueblos</Spanish>
+      </Key>
 	  <Key ID="STR_WF_MAIN_FundsMenu">
         <English>Funds Transfer Menu :</English>
         <Russian>Меню перевода бабла :</Russian>
@@ -2238,6 +2246,14 @@
 	  <Key ID="STR_WF_TOOLTIP_MainMenu_Purchase_Units">
         <English>Infantry, Vehicles and Aircraft</English>
         <Russian>Пехота, Техника и Авиация</Russian>
+      </Key>
+	  <Key ID="STR_WF_TOOLTIP_MainMenu_Towns">
+        <English>Town actions and garrisons</English>
+        <French>Actions et garnisons des villes</French>
+        <German>Stadtaktionen und Garnisonen</German>
+        <Italian>Azioni e guarnigioni delle città</Italian>
+        <Russian>Действия и гарнизоны городов</Russian>
+        <Spanish>Acciones y guarniciones de pueblos</Spanish>
       </Key>
 	  <Key ID="STR_WF_TOOLTIP_MainMenu_TeamMenu">
         <English>Distance View/Details, Money Transfer and KI-Member</English>
