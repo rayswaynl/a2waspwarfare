@@ -549,7 +549,7 @@ if (_airMaxTotalP > 0) then {
 			_team setVariable ["wfbe_aicom_refit", false, true];
 			_refitDur = round (time - _refitStart);
 			if (_refitDur < 0) then {_refitDur = 0};
-			if (_refitWas) then {
+			if ([_team, "wfbe_aicom_refit_prev", false] Call WFBE_CO_FNC_GroupGetBool) then { //--- read the persisted per-team flag: script-scoped _refitWas is never assigned when the aliveNow>0 init path was skipped (freshly wiped team)
 				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|REFIT_END|team=" + str _team + "|alive=" + str _cur + "|durationSec=" + str _refitDur);
 			};
 			_team setVariable ["wfbe_aicom_refit_prev", false];
