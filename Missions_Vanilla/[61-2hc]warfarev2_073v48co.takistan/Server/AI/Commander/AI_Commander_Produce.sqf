@@ -129,7 +129,7 @@ if (_airMaxTotalP > 0) then {
 			_wm_disbanding = _team getVariable "wfbe_aicom_disband"; //--- already flagged? don't re-request
 			_wm_disbanding = (!isNil "_wm_disbanding" && {_wm_disbanding});
 			_wm_playerNear = false;
-			{ if (isPlayer _x && {alive _x} && {(_x distance _wm_ldr) < 500}) exitWith {_wm_playerNear = true} } forEach playableUnits;
+			_wm_playerNear = ([getPos _wm_ldr, 500] Call WFBE_CO_FNC_RealPlayersNear) > 0;
 			if ((behaviour _wm_ldr != "COMBAT") && {!_wm_playerNear} && {!_wm_disbanding}) then {
 				_team setVariable ["wfbe_aicom_disband", true, true]; //--- NO _cmd bypass -> driver still vetoes on proximity/combat
 				_team setVariable ["wfbe_aicom_recycle", false, true]; //--- clear the request (one-shot)

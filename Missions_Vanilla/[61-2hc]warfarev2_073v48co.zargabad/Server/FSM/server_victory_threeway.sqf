@@ -247,7 +247,7 @@ while {!gameOver} do {
 					_meECas    = WF_Logic getVariable ["EASTCasualties",  0];
 					_meWVeh    = WF_Logic getVariable ["WESTVehiclesLost", 0];
 					_meEVeh    = WF_Logic getVariable ["EASTVehiclesLost", 0];
-					_mePlayers = { isPlayer _x } count playableUnits;
+					_mePlayers = count ([] call WFBE_CO_FNC_RealPlayers);
 					diag_log ("MATCH|v1|END|winner=" + str _winSide
 						+ "|durationSec=" + str _meDurationSec
 						+ "|world=" + worldName
