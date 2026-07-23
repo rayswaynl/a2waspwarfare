@@ -60,7 +60,7 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 	//--- cmdcon41-w3 GARRISON SORTIES: per-town sortie state seeded here so the manager never reads nil.
 	//--- wfbe_sortie_grp = the ONE group currently out on patrol (grpNull = none); wfbe_sortie_started = its
 	//--- launch time (drives the WFBE_C_TOWNS_SORTIE_MINS rotation). HARD bound: max 1 sortie per town (Ray).
-	_town setVariable ["wfbe_sortie_grp", grpNull];
+	_town setVariable ["wfbe_sortie_grp", grpNull, true];
 	_town setVariable ["wfbe_sortie_started", 0];
 	sleep _townInitSleep;
 };
@@ -690,7 +690,7 @@ while {!WFBE_GameOver} do {
 							[_sortieGrp, _townPos, "MOVE", 40] Call AIMoveTo;
 							["INFORMATION", Format ["server_town_ai.sqf: sortie RECALLED (contested) for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
 						};
-						_town setVariable ["wfbe_sortie_grp", grpNull];
+						_town setVariable ["wfbe_sortie_grp", grpNull, true];
 						_town setVariable ["wfbe_sortie_started", 0];
 					} else {
 						if (_sortieValid) then {
@@ -698,7 +698,7 @@ while {!WFBE_GameOver} do {
 							//--- so a different group takes the next turn on the following eligible sweep.
 							if ((time - _sortieStarted) >= (_sortieMins * 60)) then {
 								[_sortieGrp, _townPos, "MOVE", 50] Call AIMoveTo;
-								_town setVariable ["wfbe_sortie_grp", grpNull];
+								_town setVariable ["wfbe_sortie_grp", grpNull, true];
 								_town setVariable ["wfbe_sortie_started", 0];
 								["INFORMATION", Format ["server_town_ai.sqf: sortie rotated home for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
 							};
@@ -717,7 +717,7 @@ while {!WFBE_GameOver} do {
 								if (!isNull _bestGrp) then {
 									_ringR = 300 + (random 500); //--- 300-800m ring around the town.
 									[_bestGrp, _townPos, _ringR] Call AIPatrol; //--- CYCLE waypoint ring (never idle).
-									_town setVariable ["wfbe_sortie_grp", _bestGrp];
+									_town setVariable ["wfbe_sortie_grp", _bestGrp, true];
 									_town setVariable ["wfbe_sortie_started", time];
 									["INFORMATION", Format ["server_town_ai.sqf: sortie LAUNCHED for %1 (ring %2m).", _town getVariable "name", floor _ringR]] Call WFBE_CO_FNC_AICOMLog;
 								};
@@ -837,7 +837,7 @@ while {!WFBE_GameOver} do {
 					//--- cmdcon41-w3 GARRISON SORTIES: sorties END on deactivation. The sortie group was one of
 					//--- wfbe_town_teams and is already deleted by the cleanup above; just clear the pointers so
 					//--- no stale group reference survives into the next activation episode.
-					_town setVariable ["wfbe_sortie_grp", grpNull];
+					_town setVariable ["wfbe_sortie_grp", grpNull, true];
 					_town setVariable ["wfbe_sortie_started", 0];
 					//// end of inner block
 				};
