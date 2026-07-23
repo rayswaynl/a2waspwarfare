@@ -197,7 +197,7 @@ Emitted once per match from `Server/Init/Init_Server.sqf`, immediately after the
 line (params + constants are final, before side-init).
 
 ```
-MATCH|v1|START|world=<worldName>|build=<buildId>|towns=<townsActiveMax>|maxPlayers=<WF_MAXPLAYERS>|aiEnabled=<aicomEnabled>|delegation=<delegation>|statlog=<statlog>|guer=<guerPlayerside>|naval=<navalHVT>|oilfield=<oilfieldEnable>
+MATCH|v1|START|world=<worldName>|build=<buildId>|towns=<townsActiveMax>|missionSlots=<missionSlots>|aiEnabled=<aicomEnabled>|delegation=<delegation>|statlog=<statlog>|guer=<guerPlayerside>|naval=<navalHVT>|oilfield=<oilfieldEnable>
 ```
 
 | Field | Source | Notes |
@@ -205,7 +205,7 @@ MATCH|v1|START|world=<worldName>|build=<buildId>|towns=<townsActiveMax>|maxPlaye
 | `world` | `worldName` | Terrain string, e.g. `chernarus`, `takistan`, `zargabad`. |
 | `build` | `"build89-cmdcon44"` (pipe-free literal) | Short build-id token; the full `WF_RELEASE_MARKER` string is not used here because it contains pipe characters that would shatter pipe-split parsers. |
 | `towns` | `WFBE_C_TOWNS_ACTIVE_MAX` | Configured max active towns for this match. |
-| `maxPlayers` | `WF_MAXPLAYERS` | Lobby player slot count. |
+| `missionSlots` | `missionConfigFile >> Header >> maxPlayers` | Compiled mission slot count (renamed from `maxPlayers` in the dynamic-identity update; consumers must read `missionSlots=`). |
 | `aiEnabled` | `WFBE_C_AI_COMMANDER_ENABLED` | Whether AI commander is enabled. |
 | `delegation` | `WFBE_C_AI_DELEGATION` | HC delegation mode. |
 | `statlog` | `WFBE_C_STATLOG` | Whether WASPSTAT pipeline is active. |
@@ -312,7 +312,7 @@ each carrier ownership flip when `WFBE_C_NAVAL_HVT = 1`.
 ## Example MATCH lines
 
 ```
-MATCH|v1|START|world=chernarus|build=build89-cmdcon44|towns=20|maxPlayers=55|aiEnabled=1|delegation=2|statlog=1|guer=0|naval=0|oilfield=0
+MATCH|v1|START|world=chernarus|build=build89-cmdcon44|towns=20|missionSlots=55|aiEnabled=1|delegation=2|statlog=1|guer=0|naval=0|oilfield=0
 MATCH|v1|MILESTONE|FIRST_TOWN|side=WEST|town=Elektrozavodsk|tMin=4
 MATCH|v1|MILESTONE|FIRST_TOWN|side=EAST|town=Berezino|tMin=5
 MATCH|v1|MILESTONE|HQ_DESTROYED|side=EAST|tMin=82
