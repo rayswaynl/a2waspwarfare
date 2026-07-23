@@ -738,7 +738,7 @@ class Mission
 		}
 		class Item21
 		{
-			side="CIV";
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -746,21 +746,20 @@ class Mission
 				{
 					position[]={1203.4164999999998,512.457,8158.522946666667};
 					id=50;
-					side="CIV";
-					vehicle="Civilian";
+					side="WEST";
+					vehicle="US_Soldier_EP1";
 					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="RESERVED -- HC / do not use";
-					synchronizations[]={48};
+					description="Rifleman";
 				};
 			};
 		}
 		class Item22
 		{
-			side="CIV";
+			side="WEST";
 			class Vehicles
 			{
 				items=1;
@@ -768,15 +767,14 @@ class Mission
 				{
 					position[]={1203.3666999999998,512.6393,8159.692946666667};
 					id=51;
-					side="CIV";
-					vehicle="Civilian";
+					side="WEST";
+					vehicle="US_Soldier_EP1";
 					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="RESERVED -- HC / do not use";
-					synchronizations[]={48};
+					description="Rifleman";
 				};
 			};
 		}
@@ -1083,7 +1081,7 @@ class Mission
 					rank="LIEUTENANT";
 					skill=0.60000002;
 					init="removeAllWeapons this";
-					description="HC";
+					description="Rifleman";
 					synchronizations[]={49};
 				};
 			};
