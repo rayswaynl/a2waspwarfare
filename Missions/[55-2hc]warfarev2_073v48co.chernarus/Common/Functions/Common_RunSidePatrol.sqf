@@ -26,7 +26,7 @@ Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units
          "_townCamps","_campObj","_sweepStart","_allOurs","_ups",
          "_campRange","_liveUnits","_inVehicle","_dismounted","_veh",
          "_driver","_cargo","_u","_settleTimeout","_lastLdrPos","_stuckTicks","_pLdr","_pPos","_pVeh","_pNear","_pRds","_pNode",
-         "_pUnstuckStreak","_pUnstuckMax","_pWedgePos","_pAvoid","_pAvoidKeep","_pAvoidCd","_cIsAvoided",
+         "_pUnstuckStreak","_pUnstuckMax","_pBridgeTier","_pWedgePos","_pAvoid","_pAvoidKeep","_pAvoidCd","_cIsAvoided",
          "_cIsNaval","_navSkipLogged",
          "_rosterChoices","_rosterKey",
          "_perfProbe","_perfScope","_perfPickStart","_perfNavalSkipped","_perfAvoided"];  //--- cmdcon41-w3m: +_cIsNaval (naval-HVT skip test), _navSkipLogged (one-time-per-group INFO latch).
@@ -138,6 +138,7 @@ _paidThisVisit = false;
 //--- the target + avoid that town for a cooldown so the nearest-town pick below chooses a DIFFERENT
 //--- frontline town. _pAvoid holds [town, expiry] pairs (A2-safe plain array on a local).
 _pUnstuckStreak = 0;
+_pBridgeTier = 0;
 _pAvoid         = [];
 //--- cmdcon41-w3m (ground-patrol-skip-naval-hvt, HIGH behavioral): a GROUND patrol can NEVER path to an
 //--- OFFSHORE carrier town (Khe Sanh Alpha/Bravo/Charlie, stamped wfbe_is_naval_hvt in Init_NavalHVT.sqf).
@@ -346,8 +347,9 @@ while {!WFBE_GameOver && _alive} do {
 						//--- progress when the team is genuinely clear of the wedge area (>300m from last wedge site).
 						if (isNil "_pWedgePos") then {
 							_pUnstuckStreak = 0;
+							_pBridgeTier = 0;
 						} else {
-							if ((_pPos distance _pWedgePos) > 300) then {_pUnstuckStreak = 0};
+							if ((_pPos distance _pWedgePos) > 300) then {_pUnstuckStreak = 0; _pBridgeTier = 0};
 						};
 					};
 					_lastLdrPos = _pPos;
@@ -389,7 +391,10 @@ while {!WFBE_GameOver && _alive} do {
 						};
 						if (_pUnstuckStreak >= _pUnstuckMax) then {
 							_pUnstuckStreak = 0;
+							if (_pBridgeTier < 3) then {_pBridgeTier = _pBridgeTier + 1};
 							if (!isNull _target) then {
+								diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time/60)) + "|PATROL_UNSTUCK_BRIDGE|team=" + (str _team) + "|tier=" + str _pBridgeTier + "|town=" + (_target getVariable ["name","town"]));
+								[_team, _pBridgeTier, _side, getPos _target, "patrol"] Spawn WFBE_CO_FNC_RunUnstuckRecovery;
 								_pAvoidCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
 								_pAvoid set [count _pAvoid, [_target, time + _pAvoidCd]];
 								diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time/60)) + "|PATROL_RETARGET|" + (str _team) + "|town=" + (_target getVariable ["name","town"]) + "|wedges=" + str _pUnstuckMax);
