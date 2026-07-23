@@ -919,7 +919,7 @@ while {!WFBE_GameOver && _alive} do {
 			private ["_dLdr","_dSafe","_dNear","_dCombat","_dCmd"];
 			_dLdr  = leader _team;
 			_dSafe = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_SAFE_DIST", 900];
-			_dCmd = _team getVariable "wfbe_aicom_disband_cmd"; _dCmd = (!isNil "_dCmd" && {_dCmd}); _dNear = if (_dCmd || {isNull _dLdr}) then {0} else [getPos _dLdr, _dSafe] Call WFBE_CO_FNC_RealPlayersNear; //--- Build84: explicit console order bypasses player-proximity veto
+			_dCmd = _team getVariable "wfbe_aicom_disband_cmd"; _dCmd = (!isNil "_dCmd" && {_dCmd}); _dNear = if (_dCmd || {isNull _dLdr}) then {0} else {[getPos _dLdr, _dSafe] Call WFBE_CO_FNC_RealPlayersNear}; //--- Build84: explicit console order bypasses player-proximity veto
 			_dCombat = if (isNull _dLdr) then {false} else {behaviour _dLdr == "COMBAT"};
 			if (_dNear == 0 && {!_dCombat}) then {
 				{ if (local _x) then {["aicom-retire-unit", _x, Format ["cmd=%1", _dCmd]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
