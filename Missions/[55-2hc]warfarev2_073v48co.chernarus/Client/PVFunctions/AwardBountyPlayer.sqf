@@ -3,8 +3,8 @@ Private["_assist","_bounty","_get","_name","_type", "_killed","_coef","_streak",
 if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}};
 if (isNull player) exitWith {};
 
-//--- Malformed-payload guard: if ARRAY, ensure >= 1 element (killedUnit or [killedUnit, streak]).
-if ((typeName _this) == "ARRAY" && {count _this < 1}) exitWith {};
+//--- Malformed-payload guard: if ARRAY, ensure >= 2 elements ([killedUnit, streak]; _this select 1 read unconditionally below). Bare-object legacy form still accepted.
+if ((typeName _this) == "ARRAY" && {count _this < 2}) exitWith {};
 
 //--- Card #66 (killstreak bounty): the server now forwards [killedUnit, victimPreResetStreak].
 //--- Accept both the new array form and the legacy bare-object form (backward-compatible).

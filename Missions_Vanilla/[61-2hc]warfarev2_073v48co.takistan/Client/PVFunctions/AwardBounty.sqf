@@ -3,8 +3,8 @@ Private["_assist","_bounty","_get","_name","_type","_faction","_srvBounty"];
 if (!isNil "isHeadLessClient") then {if (isHeadLessClient) exitWith {}};
 if (isNull player) exitWith {};
 
-//--- Malformed-payload guard: ensure _this is ARRAY with >= 1 element (type).
-if (!((typeName _this) in ["ARRAY"]) || {count _this < 1}) exitWith {};
+//--- Malformed-payload guard: ensure _this is ARRAY with >= 2 elements ([type, assist] indexed unconditionally below).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 2}) exitWith {};
 
 _type = _this select 0;
 _assist = _this select 1;
