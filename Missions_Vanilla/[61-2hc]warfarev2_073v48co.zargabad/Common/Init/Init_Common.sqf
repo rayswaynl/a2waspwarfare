@@ -108,6 +108,7 @@ WFBE_CO_FNC_ClearVehicleCargo = if (WF_A2_Vanilla) then {Compile preprocessFileL
 WFBE_CO_FNC_CreateTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateTeam.sqf";
 WFBE_CO_FNC_CreateTownUnits = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateTownUnits.sqf";
 WFBE_CO_FNC_RunSidePatrol = Compile preprocessFileLineNumbers "Common\Functions\Common_RunSidePatrol.sqf";
+WFBE_CO_FNC_RunUnstuckRecovery = Compile preprocessFileLineNumbers "Common\Functions\Common_RunUnstuckRecovery.sqf";
 WFBE_CO_FNC_RunCommanderTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_RunCommanderTeam.sqf";
 WFBE_CO_FNC_AICOMDisbandTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMDisbandTeam.sqf";
 WFBE_CO_FNC_AICOMAirLeg = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirLeg.sqf"; //--- cmdcon42-f AIR-MOBILE: fly an ORDERED leg with the team's own live transport heli + hot-LZ (cold=land, contested=paradrop); transport returns to base + persists. Gate WFBE_C_AICOM_AIRMOBILE.
