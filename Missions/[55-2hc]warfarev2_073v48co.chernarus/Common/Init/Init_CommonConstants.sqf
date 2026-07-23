@@ -260,8 +260,8 @@ if (worldName == "Zargabad") then {
 //--- self-cleaning so it can't blow up FPS. Only relevant when the GUER playable faction is enabled.
 	if (isNil "WFBE_C_GUER_AIRDEF_ENABLE") then {WFBE_C_GUER_AIRDEF_ENABLE = 1};        //--- master switch (set 0 to disable the loop entirely).
 	if (isNil "WFBE_C_GUER_AIRDEF_INTERVAL") then {WFBE_C_GUER_AIRDEF_INTERVAL = 120};  //--- seconds between maintain sweeps.
-	if (isNil "WFBE_C_GUER_AIRDEF_MAX") then {WFBE_C_GUER_AIRDEF_MAX = 4};              //--- global alive cap on GUER air defenders (hard FPS bound).
-	if (isNil "WFBE_C_GUER_AIRDEF_AT_CHANCE") then {WFBE_C_GUER_AIRDEF_AT_CHANCE = 0.20}; //--- chance a spawned Ka-137 carries the EASA AT (Konkurs/AT-5) loadout.
+	if (isNil "WFBE_C_GUER_AIRDEF_MAX") then {WFBE_C_GUER_AIRDEF_MAX = 3};              //--- owner design 2026-07-23 06:03: 4->3 (fewer drones, better payloads; drops to 2 when the GUER ground-raider ships - see wasp-guer-harassment-unit card). Rollback: 4.
+	if (isNil "WFBE_C_GUER_AIRDEF_AT_CHANCE") then {WFBE_C_GUER_AIRDEF_AT_CHANCE = 0.45}; //--- owner design 2026-07-23 06:03: 0.20->0.45 - fewer drones, each likelier to carry the EASA AT (Konkurs/AT-5) punch. Rollback: 0.20.
 	if (isNil "WFBE_C_GUER_AIRDEF_MI24_CHANCE") then {WFBE_C_GUER_AIRDEF_MI24_CHANCE = 0.25}; //--- chance a LARGE GUER town under attack fields a Mi-24 gunship instead.
 	if (isNil "WFBE_C_GUER_AIRDEF_AA_CHANCE") then {WFBE_C_GUER_AIRDEF_AA_CHANCE = 0.75}; //--- chance a Ka-137 fields the EASA Igla AA loadout when ENEMY AIR is near the town (counter-air; takes priority over Mi-24/AT roll).
 	if (isNil "WFBE_C_GUER_AIRDEF_CLASS_KA") then {WFBE_C_GUER_AIRDEF_CLASS_KA = "Ka137_MG_PMC"}; //--- default light air defender (recon/strike).
