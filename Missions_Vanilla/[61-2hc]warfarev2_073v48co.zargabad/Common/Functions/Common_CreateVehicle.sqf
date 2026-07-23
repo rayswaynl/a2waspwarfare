@@ -109,7 +109,7 @@ if (_global) then {
 if (_global && (missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {
 	_vehicle addEventHandler ["Fired", {
 		_u = _this select 0;                 // unit that fired
-		_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
+		if (!isNil "WFBE_CL_FNC_SetMapIconStatusInCombat") then {_u Call WFBE_CL_FNC_SetMapIconStatusInCombat}; //--- wiring-sweep 2026-07-22: Common-scope EH also runs on the HC/server, which never compile Client\Init (PR1258 class); isNil guard idiom per Common_ChangeUnitGroup.sqf
 	}];
 };
 

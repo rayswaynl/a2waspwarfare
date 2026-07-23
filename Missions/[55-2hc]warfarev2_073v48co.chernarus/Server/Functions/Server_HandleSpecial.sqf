@@ -1710,20 +1710,9 @@ switch (_args select 0) do {
 			} forEach [west, east];
 		};
 	};
-	case "track-playerobject": {
-		Private ["_get","_object","_uid"];
-		_uid = _args select 1;
-		_object = _args select 2;
-
-		_get = missionNamespace getVariable Format ["WFBE_CLIENT_%1_OBJECTS", _uid];
-
-		if (isNil '_get') then {
-			missionNamespace setVariable [Format ["WFBE_CLIENT_%1_OBJECTS", _uid], [_object]];
-		} else {
-			_get = _get - [objNull] + [_object];
-			missionNamespace setVariable [Format ["WFBE_CLIENT_%1_OBJECTS", _uid], _get];
-		};
-	};
+	//--- wiring-sweep 2026-07-22: dead "track-playerobject" case removed - zero senders anywhere in the
+	//--- tree, so its only consumer (the WFBE_CLIENT_%1_OBJECTS disconnect cleanup in
+	//--- Server_OnPlayerDisconnected.sqf) could never run either; removed together.
 	case "repair-camp": {
 		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY"];
 		_logic = _args select 1;

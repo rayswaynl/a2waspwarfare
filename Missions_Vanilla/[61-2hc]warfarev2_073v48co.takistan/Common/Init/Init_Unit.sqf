@@ -330,7 +330,7 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 	// Marty: Store the EH handle so the consolidated marker loop can remove it on death (EH hygiene).
 	_unit setVariable ["WFBE_BlinkFiredEH", _unit addEventHandler ["Fired", {
 		_u = _this select 0;                 // unit that fired
-		_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
+		if (!isNil "WFBE_CL_FNC_SetMapIconStatusInCombat") then {_u Call WFBE_CL_FNC_SetMapIconStatusInCombat}; //--- wiring-sweep 2026-07-22: Common-scope EH also runs on the HC/server, which never compile Client\Init (PR1258 class); isNil guard idiom per Common_ChangeUnitGroup.sqf
 	}], false];
 	//--- fable/marker-combat-flash-fixes (owner 2026-07-09) BEING-SHOT-AT TRIGGER: also flash when
 	//--- the unit TAKES fire from an enemy, not just when they fire. Hit stacks safely (unlike
@@ -342,7 +342,7 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 	_unit setVariable ["WFBE_BlinkHitEH", _unit addEventHandler ["Hit", {
 		_u = _this select 0;
 		_causedBy = _this select 1;
-		if (!isNull _causedBy && {side _causedBy != side _u}) then {
+		if (!isNull _causedBy && {side _causedBy != side _u} && {!isNil "WFBE_CL_FNC_SetMapIconStatusInCombat"}) then { //--- wiring-sweep 2026-07-22: isNil guard - HC also runs this EH
 			_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
 		};
 	}], false];

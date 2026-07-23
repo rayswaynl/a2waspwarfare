@@ -96,6 +96,13 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 	}];
 };
 
+//--- wiring-sweep 2026-07-22: satchel TK-near-structure detection (Client_FNC_OnFired.sqf, compiled
+//--- below but never attached anywhere until now) - flag-gated attach, ships default 0 (owner call).
+//--- isNil guard: the compile at the bottom of this file runs a moment after this line.
+if ((missionNamespace getVariable ["WFBE_C_SATCHEL_TK_DETECT", 0]) > 0) then {
+	(vehicle player) addEventHandler ["Fired", {if (!isNil "WFBE_CL_FNC_OnFired") then {_this Call WFBE_CL_FNC_OnFired}}];
+};
+
 (vehicle player) setVariable ["OriginalMarkerColor", "ColorOrange", false];
 
 _rearmor = {

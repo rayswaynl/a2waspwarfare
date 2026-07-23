@@ -2941,6 +2941,13 @@ if (WFBE_C_AICAP_MIDHIGH_TRIM > 0) then {
 		WFBE_C_TOTAL_AI_MAX_BY_TIER = [140,115,90,80];
 	};
 };
+//--- SATCHEL-TK (wiring-sweep 2026-07-22): Client_FNC_OnFired.sqf (satchel team-kill-near-structure
+//--- detection: deletes a satchel placed within 30m of a friendly structure/HQ + broadcasts the
+//--- StructureTK chat callout) has been compiled since the original import but was never attached to
+//--- any Fired EH, so the feature silently never worked. 1 = attach WFBE_CL_FNC_OnFired to the player
+//--- body Fired EH (initial spawn + respawn); 0 = INERT, no EH attached, byte-identical current
+//--- behaviour. OWNER CALL: flip to 1 to enable, or delete Client_FNC_OnFired.sqf wholesale. Ships default 0.
+if (isNil "WFBE_C_SATCHEL_TK_DETECT") then {WFBE_C_SATCHEL_TK_DETECT = 0};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

@@ -103,12 +103,8 @@ if ((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0) then {
 
 ["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has left the game", _name, _uid]] Call WFBE_CO_FNC_LogContent;
 
-//--- Player had any objects created?
-_get = missionNamespace getVariable Format ["WFBE_CLIENT_%1_OBJECTS", _uid];
-if !(isNil '_get') then {
-	{if !(isNil '_x') then {deleteVehicle _x}} forEach _get;
-	missionNamespace setVariable [Format ["WFBE_CLIENT_%1_OBJECTS", _uid], nil];
-};
+//--- wiring-sweep 2026-07-22: WFBE_CLIENT_%1_OBJECTS cleanup removed - the only writer (the dead
+//--- "track-playerobject" HandleSpecial case, zero senders) was removed with it; _get was always nil here.
 
 //--- We attempt to get the player information in case that he joined before.
 _get = missionNamespace getVariable format["WFBE_JIP_USER%1",_uid];

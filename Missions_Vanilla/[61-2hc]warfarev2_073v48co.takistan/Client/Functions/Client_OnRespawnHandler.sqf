@@ -198,6 +198,16 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 	};
 };
 
+//--- wiring-sweep 2026-07-22: re-attach the satchel TK-near-structure Fired EH on the fresh respawn
+//--- body (same reasoning as the blink EH re-attach above - Init_Client.sqf only runs once);
+//--- idempotent per-object flag mirrors the IED/blink guards above.
+if ((missionNamespace getVariable ["WFBE_C_SATCHEL_TK_DETECT", 0]) > 0) then {
+	if !(_unit getVariable ["wfbe_satcheltk_eh_added", false]) then {
+		_unit setVariable ["wfbe_satcheltk_eh_added", true];
+		_unit addEventHandler ["Fired", {if (!isNil "WFBE_CL_FNC_OnFired") then {_this Call WFBE_CL_FNC_OnFired}}];
+	};
+};
+
 //--- Loadout.
 if (!isNil {_unit getVariable "wfbe_custom_gear"} && !WFBE_RespawnDefaultGear && _allowCustom) then {
 	_mode = missionNamespace getVariable "WFBE_C_RESPAWN_PENALTY";

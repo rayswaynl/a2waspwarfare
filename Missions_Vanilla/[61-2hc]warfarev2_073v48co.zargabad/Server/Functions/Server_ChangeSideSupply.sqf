@@ -54,8 +54,9 @@ WFBE_SE_FNC_HandleSideSupplyChange = {
 	[_this, west] Call WFBE_SE_FNC_HandleSideSupplyChange;
 };
 
-"wfbe_supply_temp_resistance" addPublicVariableEventHandler {
+"wfbe_supply_temp_GUER" addPublicVariableEventHandler {
 	//--- B67 [guer-side-supply]: wire GUER (resistance) side-supply; mirrors west/east. Additive plumbing, no-op until something credits GUER supply, does not touch west/east behavior.
+	//--- wiring-sweep 2026-07-22: handler renamed _resistance -> _GUER; the sender (Common_ChangeSideSupply.sqf) formats "wfbe_supply_temp_%1" with the SIDE, and str resistance is "GUER" - the _resistance name could never fire.
 	[_this, resistance] Call WFBE_SE_FNC_HandleSideSupplyChange;
 };
 
