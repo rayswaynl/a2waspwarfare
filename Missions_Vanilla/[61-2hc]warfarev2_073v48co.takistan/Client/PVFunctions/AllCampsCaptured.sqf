@@ -6,6 +6,9 @@
 		- New Side.
 */
 
+
+//--- Malformed-payload guard: ensure _this is ARRAY with >= 3 elements (town, oldSide, newSide).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 3}) exitWith {};
 Private ["_camps","_side_old","_side_new","_town"];
 
 _town = _this select 0;

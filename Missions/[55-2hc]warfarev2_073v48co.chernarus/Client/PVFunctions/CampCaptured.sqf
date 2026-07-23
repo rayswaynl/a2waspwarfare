@@ -7,6 +7,9 @@
 		- {Is repaired}.
 */
 
+
+//--- Malformed-payload guard: ensure _this is ARRAY with >= 3 elements (camp, newSide, oldSide).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 3}) exitWith {};
 Private ["_camps","_is_repair","_side","_side_new","_sideID_new","_sideID_old","_town","_feedbackLast"];
 
 _camp = _this select 0;

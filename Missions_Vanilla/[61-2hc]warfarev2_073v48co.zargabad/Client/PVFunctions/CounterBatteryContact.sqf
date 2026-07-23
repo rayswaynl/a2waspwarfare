@@ -8,6 +8,9 @@
    The PVF is addressed to a specific side (WFBE_CO_FNC_SendToClients side parameter),
    so only clients on the detecting side receive it.
 */
+
+//--- Malformed-payload guard: ensure _this is ARRAY with >= 2 elements (position, timeString).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 2}) exitWith {};
 Private ["_pos","_tStr","_markerName","_markerText"];
 
 if (isNil "WFBE_Client_SideID") exitWith {};

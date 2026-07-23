@@ -6,6 +6,9 @@
 		- New side ID.
 */
 
+
+//--- Malformed-payload guard: ensure _this is ARRAY with >= 3 elements (town, oldSide, newSide).
+if (!((typeName _this) in ["ARRAY"]) || {count _this < 3}) exitWith {};
 Private ["_captureText","_color","_musicCooldown","_musicLast","_musicNow","_musicTrack","_town","_townMarker","_town_side_value","_town_side_value_new","_sv"];
 
 _town = _this select 0;
