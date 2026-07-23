@@ -1157,13 +1157,29 @@ if (count _live > 0) then {
 				};
 			};
 		};
-		if (_mountType <= 1) then {
+		//--- LF GATE (owner 2026-07-23: no light vehicles in foundings unless the side actually
+		//--- fields a Light+ factory - mirror of the Build83 INF-TRANSPORT gate below).
+		private ["_mixHasLF","_mixFacNames","_mixStructs","_mixFacIdx","_mixFacClass"];
+		_mixHasLF = false;
+		_mixFacNames = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideText];
+		_mixStructs  = (_side) Call WFBE_CO_FNC_GetSideStructures;
+		if (!isNil "_mixFacNames") then {
+			{
+				_mixFacIdx = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES", _sideText]) find _x;
+				if (_mixFacIdx >= 0) then {
+					_mixFacClass = _mixFacNames select _mixFacIdx;
+					{ if (typeOf _x == _mixFacClass && {alive _x}) exitWith {_mixHasLF = true} } forEach _mixStructs;
+				};
+				if (_mixHasLF) exitWith {};
+			} forEach ["Light","Heavy","Aircraft"];
+		};
+		if (_mountType <= 1 && {_mixHasLF}) then {
 			_mountClass = "";
 			_mountClassSeats = 0;
 			_mountSeats = 0;
 			_mountRiders = {_x isKindOf "Man"} count _template;
 			{
-				if ((typeName _x == "STRING") && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) > 0} && {(count (getArray (configFile >> "CfgVehicles" >> _x >> "weapons"))) > 0}) then {
+				if ((typeName _x == "STRING") && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) > 0} && {((missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0) || {(count (getArray (configFile >> "CfgVehicles" >> _x >> "Turrets" >> "MainTurret" >> "weapons"))) > 0}}) then {
 					_mountSeats = _mountSeats + (getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier"));
 					if (_mountClass == "") then {
 						_mountClass = _x;
@@ -1184,7 +1200,7 @@ if (count _live > 0) then {
 						};
 						if (_mountTemplateType == 1) then {
 							{
-								if (_mountClass == "" && {(typeName _x == "STRING")} && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) > 0} && {(count (getArray (configFile >> "CfgVehicles" >> _x >> "weapons"))) > 0}) then {
+								if (_mountClass == "" && {(typeName _x == "STRING")} && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) > 0} && {((missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0) || {(count (getArray (configFile >> "CfgVehicles" >> _x >> "Turrets" >> "MainTurret" >> "weapons"))) > 0}}) then {
 									_mountClass = _x;
 									_mountClassSeats = getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier");
 								};
