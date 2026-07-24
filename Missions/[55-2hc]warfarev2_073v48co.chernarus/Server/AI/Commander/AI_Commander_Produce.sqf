@@ -302,7 +302,7 @@ if (_airMaxTotalP > 0) then {
 				} else {
 					_rTries = _rTries + 1;
 				};
-				if (_rTries >= _rBudget || {_rIssues >= _rMaxIssues} || {_curDist > _rMaxDist}) then {
+				if (_rTries >= _rBudget || {_rIssues >= _rMaxIssues} || {_rIssues >= 1 && {_curDist > _rMaxDist}}) then {
 					//--- cmdcon36 lane342: if an AICOM air leg is currently slinging this team's vehicle,
 					//--- do NOT merge/cull the group out from under the attached hull. AirLeg clears the marker
 					//--- on detach/drop/fail, so the next Produce pass can re-evaluate normally.
