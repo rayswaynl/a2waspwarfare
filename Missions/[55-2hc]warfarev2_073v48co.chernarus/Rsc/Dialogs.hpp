@@ -5204,3 +5204,77 @@ class WFBE_GuerDronesMenu {
 		};
 	};
 };
+//--- Towns garrison view (flag WFBE_C_TOWNS_TAB_GARRISON; read-only, own-side intel only).
+class WFBE_TownsGarrisonMenu {
+	movingEnable = 1;
+	idd = 31100;
+	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_TownsGarrison.sqf'";
+
+	class controlsBackground {
+		class BG : RscText {
+			x = 0.170; y = 0.170; w = 0.660; h = 0.660;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class Header : RscText {
+			x = 0.170; y = 0.170; w = 0.660; h = 0.055;
+			colorBackground[] = WFBE_Background_Color_Header;
+			moving = 1;
+		};
+		class Footer : RscText {
+			x = 0.170; y = 0.775; w = 0.660; h = 0.055;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
+	};
+
+	class controls {
+		class Title : RscText_Title {
+			x = 0.185; y = 0.178; w = 0.560; h = 0.040;
+			text = "TOWNS | GARRISON";
+		};
+		class Btn_X : RscButton_Main {
+			x = 0.785; y = 0.178; w = 0.032; h = 0.040;
+			text = "X";
+			shadow = 2;
+			action = "closeDialog 0;";
+		};
+		class Lbl_Info : RscText {
+			x = 0.190; y = 0.240; w = 0.610; h = 0.045;
+			text = "OWN-SIDE INTEL | live tagged town defenders in range";
+			sizeEx = 0.020;
+			colorText[] = {0.2588, 0.7137, 1, 0.85};
+			shadow = 2;
+		};
+		class LB_Towns : RscListBox {
+			idc = 31110;
+			x = 0.190; y = 0.295; w = 0.610; h = 0.280;
+			rowHeight = 0.045;
+		};
+		class Detail : RscText {
+			idc = 31111;
+			x = 0.190; y = 0.600; w = 0.610; h = 0.055;
+			text = "Select an owned town to inspect its live garrison.";
+			sizeEx = 0.020;
+			colorText[] = {1, 1, 1, 0.85};
+			shadow = 2;
+		};
+		class Status : RscText {
+			idc = 31112;
+			x = 0.190; y = 0.690; w = 0.610; h = 0.035;
+			text = "OWNED TOWNS: 0  |  LIVE GARRISON: 0 units";
+			sizeEx = 0.019;
+			colorText[] = {0.8, 0.9, 1, 0.8};
+			shadow = 2;
+		};
+		class Btn_Refresh : RscButton_Main {
+			x = 0.190; y = 0.785; w = 0.180; h = 0.035;
+			text = "REFRESH";
+			action = "MenuAction = 91;";
+		};
+		class Btn_Back : RscButton_Main {
+			x = 0.610; y = 0.785; w = 0.190; h = 0.035;
+			text = "< BACK";
+			action = "MenuAction = 90;";
+		};
+	};
+};
