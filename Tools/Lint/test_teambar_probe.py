@@ -31,8 +31,7 @@ class TeambarProbeTests(unittest.TestCase):
             "isLeader=",
             "arr0IsPlayer=",
             "playerRankId=",
-            "jip=",                        # round-2: JIP discrimination
-            "didJIP",
+            "jip=",                        # round-2: field kept for format stability
             "rank _u",  # A2-safe: rankId is A3-only (wave0721 live burn)
             "isPlayer _u",
             "local _u",
@@ -42,6 +41,10 @@ class TeambarProbeTests(unittest.TestCase):
             self.assertIn(token, text)
         # Round-2: ALL members captured - the truncating `min 8` must be gone.
         self.assertNotIn("min 8", text)
+        # didJIP is A3-only: on A2OA 1.64 it resolved as an undefined VARIABLE
+        # (error spam on every probe call, live RPT 2026-07-24); jip= now logs a
+        # stable "na" placeholder.
+        self.assertNotIn("didJIP", text)
         self.assertIn("_n = count (units _grp)", text)
 
     def test_all_lifecycle_transitions_are_probed_with_reason_codes(self) -> None:
@@ -56,7 +59,17 @@ class TeambarProbeTests(unittest.TestCase):
             self.assertIn(phase, killed)
         self.assertIn('"buyunit", "post-spawn"', code("Client/Functions/Client_BuildUnit.sqf"))
         self.assertIn('"group-transfer", "post-join"', code("Common/Functions/Common_ChangeUnitGroup.sqf"))
-        self.assertIn('"kicked", "post-transfer"', code("Client/Functions/Client_FNC_Groups.sqf"))
+        # "kicked"/"post-transfer" probe retired WITH its host file: Client_FNC_Groups.sqf was
+        # deleted by the squadjoin-subsystem removal (b80050e298); assertion removed 2026-07-24
+        # (this test was failing on master since that fold).
+        # ensure-slot1 (council fix 2026-07-24): shared idempotent renumber primitive + call sites.
+        ensure = code("Client/Functions/Client_TeambarEnsureSlot1.sqf")
+        for token in ('"ensure-check"', '"ensure-done"', '"ensure-creategroup-null"',
+                      '"ensure-no-local-others"', 'WFBE_C_PLAYER_TEAMBAR_FIRST", 0]'):
+            self.assertIn(token, ensure)
+        self.assertIn('["buyunit"] Call WFBE_CL_FNC_TeambarEnsureSlot1',
+                      code("Client/Functions/Client_BuildUnit.sqf"))
+        self.assertIn('["heartbeat"] Call WFBE_CL_FNC_TeambarEnsureSlot1', init)
 
     def test_skinswap_probe_fires_after_the_final_fallback_join(self) -> None:
         text = code("WASP/actions/SkinSelector/SkinSelector_Apply.sqf")

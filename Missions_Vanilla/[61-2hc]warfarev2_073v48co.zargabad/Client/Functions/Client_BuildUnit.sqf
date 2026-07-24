@@ -1355,6 +1355,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 //--- releases to block-level exits and do NOT gate these two counter lines on _buyFailed.
 if (!_buyFailed && {_factory in ["Barracks","Light","Heavy","Aircraft","Depot","Airport"]}) then {
 	[_group, _spawnedUnits] call WFBE_CL_FNC_SendSpawnedUnitsToLeaderWaypoint;
+	["buyunit"] Call WFBE_CL_FNC_TeambarEnsureSlot1; //--- TEAMBAR ensure-slot1 (council fix 2026-07-24): heal roster order after bought units land - live probe proved the rank-only treatment cannot keep the player at slot 1, and no pre-existing rejoin covers the buy path.
 };
 
 unitQueu = (unitQueu - _cpt) max 0;  //--- salvage-522: clamp so an in-flight coroutine firing after a respawn-reset (WFBE_C_FIX_RESPAWN_UNITQUEU_RESET) cannot drive the group-cap counter negative.
