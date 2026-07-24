@@ -465,6 +465,33 @@ if ((missionNamespace getVariable "WFBE_C_AI_TEAMS_JIP_PRESERVE") == 0) then {
 	{if (!isPlayer _x && !(_x in playableUnits)) then {deleteVehicle _x}} forEach _units;
 };
 
+//--- TEAMBAR-FIRST SERVER-SIDE MIRROR (fable/player-teambar-slot, server heal 2026-07-22): the
+//--- CLIENT-side slot1-rejoin (Init_Client.sqf ~1249 / Client_OnKilled.sqf ~154) only re-joins
+//--- CLIENT-LOCAL AI (join needs locality). A mission-start AI Teams squadmate created at server init
+//--- is SERVER-local, so on a fresh connect the client-side reorder finds zero local others and
+//--- collapses into its "rejoin-no-local-others" no-op, leaving the AI at array index 0 - the player
+//--- renders as #2 in their own command bar (owner live report). Run the SAME rejoin here, server-side,
+//--- where every unit of _team is guaranteed local, and only after the AI-preserve-or-remove block
+//--- above has settled the team's final membership for this connect. Gated on the SAME
+//--- WFBE_C_PLAYER_TEAMBAR_FIRST flag so it respects the existing toggle.
+//--- IDENTITY (round-2 review): a getPlayerUID scan alone silently misses THIS FILE'S OWN primary
+//--- connect path - _clientBody (set above at ~line 48 from WFBE_JIP_BODY_<uid>) is the exact reason
+//--- that path exists: getPlayerUID is known-flaky this early after connect. _clientBody is still in
+//--- scope here (SQF script-level scoping; the while loop above does not open a nested scope), so
+//--- prefer it - guarded by membership in _team's own units so a stale value from an earlier loop
+//--- iteration/fallback tier is never trusted blindly - and only fall back to the UID scan if it is
+//--- null or not actually in this team. A2-OA-1.64-safe: array-form Private, no inline private,
+//--- no pushBack/findIf/params, no array-form select/sort/reveal.
+if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
+	private ["_tbHuman"];
+	_tbHuman = objNull;
+	if (!isNull _clientBody && {_clientBody in (units _team)}) then {_tbHuman = _clientBody};
+	if (isNull _tbHuman) then {
+		{if ((getPlayerUID _x) == _uid) exitWith {_tbHuman = _x}} forEach (units _team);
+	};
+	[_team, _tbHuman, _uid, _name, "connect"] Call WFBE_SE_FNC_TeambarSlot1Rejoin;
+};
+
 //--- We 'Sanitize' the player, we remove the waypoints and we heal him.
 _team Call WFBE_CO_FNC_WaypointsRemove;
 (leader _team) setDammage 0;

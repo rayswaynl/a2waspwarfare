@@ -511,6 +511,13 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 			};
 		};
 	};
+	//--- fix/teambar-slot1-ship-20260722 (round-3 review): the client-side rejoin above filters
+	//--- `local _x`, so a mission-start / HC-owned AI squadmate (SERVER-local) is never moved by the swap
+	//--- and the player recurs at #2 after a mid-session skin change. Ping the server heal too -
+	//--- Server_HandleSpecial.sqf's "update-teamleader" case runs the (guard-fixed) shared
+	//--- WFBE_SE_FNC_TeambarSlot1Rejoin where those units ARE local. Same ping Init_Client.sqf ~688 /
+	//--- Client_OnKilled.sqf ~134 already send; inside the flag gate so flag-off stays byte-identical.
+	["RequestSpecial", ["update-teamleader", WFBE_Client_Team, player]] Call WFBE_CO_FNC_SendToServer;
 };
 
 //--- TEAMBAR probe (round-2 review): capture the final post-rejoin state on every skin-swap path.
