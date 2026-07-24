@@ -8,7 +8,7 @@
 //#define IS_MOD_MAP_DEPENDENT
 //#define IS_NAVAL_MAP
 //#define IS_AIR_WAR_EVENT
-#define WF_MAXPLAYERS 61
+#define WF_MAXPLAYERS 31
 #define WF_MISSIONNAME "[61] Miksuu's Warfare Takistan"
 #define STARTING_DISTANCE 7500
 #define COMBINEDOPS 1
