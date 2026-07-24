@@ -22,6 +22,7 @@ _contested = false;
 _sidesPresent = 0;
 _force = 0;
 _lastUp = 0;
+_townScanPass = 0;
 _skipTimeSupply = false;
 _newSID = -1;
 _newSide = civilian;
@@ -62,6 +63,9 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 	//--- the loop (mirrors AI_Commander.sqf B69) so even a worker that throws mid-iteration
 	//--- leaves this tick's stamp behind; the supervisor treats a frozen stamp as DEAD.
 	missionNamespace setVariable ["wfbe_coreloop_hb_town", time];
+
+	_staggerN = missionNamespace getVariable ["WFBE_C_TOWN_CAPTURE_STAGGER_N", 1];
+	if (_staggerN < 1) then {_staggerN = 1};
 
 	for "_i" from 0 to ((count towns) - 1) step 1 do
 	{
@@ -110,6 +114,8 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 					};
 				};
 
+		_shouldScan = (_staggerN <= 1) || {(((_i + _townScanPass) mod _staggerN) == 0)};
+		if (_shouldScan) then {
 				//--- PERF dedupe REVERTED (caused capture-detection wedges twice); back to the proven
 				//--- direct scan. The server_town_ai cache-write remains but is simply unread now.
 				_perfT0PA = diag_tickTime; //--- FPS PROFILING (claude-gaming): bracket the uncached per-town capture scan (suspected #1 server frametime sink)
@@ -412,14 +418,14 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 				};
 			};
 
-			_supplyValue = round(_supplyValue - (_resistance + _east + _west) * _rate);
+			_supplyValue = round(_supplyValue - (_resistance + _east + _west) * (_rate * _staggerN));
 			if (_supplyValue < 1) then {_supplyValue = _startingSupplyValue; _captured = true};
 			_location setVariable ["supplyValue",_supplyValue,true];
 		};
 
 		if (_protected) then {
 			if (_supplyValue < _startingSupplyValue) then {
-				_supplyValue = _supplyValue + _force * _town_capture_rate;
+				_supplyValue = _supplyValue + _force * (_town_capture_rate * _staggerN);
 				if (_supplyValue > _startingSupplyValue) then {_supplyValue = _startingSupplyValue};
 				_location setVariable ["supplyValue",_supplyValue,true];
 			};
@@ -1019,9 +1025,11 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			};
 		};
 		};
+		};
 		sleep 0.05;
 	};
 	_isTimeToUpdateSuppluys = false;
+	_townScanPass = _townScanPass + 1;
 	sleep 5;
 	if (time >= _lastUp) then {
 		_isTimeToUpdateSuppluys = true;
