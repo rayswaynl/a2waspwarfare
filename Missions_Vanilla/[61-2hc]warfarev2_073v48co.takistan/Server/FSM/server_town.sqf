@@ -435,6 +435,9 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_newSide]) then {[_newSide, "Captured", _location] Spawn SideMessage};
 
 			_location setVariable ["sideID",_newSID,true];
+			//--- A delegated HC batch can finish after this flip. Advance the town lifecycle token so
+			//--- its stale acknowledgment is rejected and cleaned on the owning machine.
+			_location setVariable ["wfbe_town_ai_epoch", (_location getVariable ["wfbe_town_ai_epoch", 0]) + 1];
 			//--- Commander Town Ledger (fable/ctl-impl-v1) capture seed (fix: capture-race). Publish
 			//--- wfbe_ctl_str immediately at the capture hook so a freshly captured W/E town reads its
 			//--- 0.25 seed on the very next materialization, instead of the getVariable default (1.0)
