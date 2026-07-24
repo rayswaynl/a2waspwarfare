@@ -260,21 +260,125 @@ switch (_args select 0) do {
 			[_args select 1, _args select 2, _args select 3, _args select 4, _args select 5] Call WFBE_SE_FNC_TkScudRegister;
 		};
 	};
+	//--- icbmlegacy SECURITY (kimi 2026-07-24, fleet wasp-icbm-legacy-handler-unvalidated-20260724, audit
+	//--- SEC-PVF-2): the legacy ICBM case ran with ZERO validation - any client could broadcast
+	//--- ["RequestSpecial",["ICBM",...]] and get a free, repeatable, unlimited-range area-wipe. Flag
+	//--- WFBE_C_ICBM_LEGACY_SERVER_AUTH (default 0): at 0 the ORIGINAL unvalidated block runs, byte-identical
+	//--- to HEAD - the exploit stays OPEN until the owner arms this (same posture as the sibling
+	//--- WFBE_C_SUPPORT_SERVER_AUTH gate). At 1 the case becomes server-authoritative, mirroring
+	//--- Support_ScudStrike.sqf + WFBE_SE_FNC_IcbmTelFire:
+	//---   * TEL-mode refuse: with WFBE_C_ICBM_TEL=1 (default) NO legit classic sender exists (the tactical
+	//---     menu routes NUKE fire through the hardened icbm-tel-fire path), so every request is refused.
+	//---   * payload shape: exactly ["ICBM", SIDE, OBJECT, OBJECT, GROUP].
+	//---   * module gate (WFBE_C_MODULE_WFBE_ICBM) + playable side + team-side match.
+	//---   * commander role: the requesting team must BE the side wfbe_commander team (the SEC-PVF-2 fix).
+	//---   * SCUD research >= 2 (the NUKE tier - same gate as the client enable + the TEL NUKE path).
+	//---   * per-side shared cooldown, stamped BEFORE the cruise-death wait (anti machine-gun race).
+	//---   * server-authoritative funds: while armed the classic client no longer debits at click
+	//---     (GUI_Menu_Tactical.sqf MenuAction 8) - the WFBE_C_ICBM_COST fee is charged HERE at launch.
+	//---   NUKE range stays unlimited by design (parity with the TEL NUKE); refusal reasons are WARNING-logged.
 	case "ICBM": {
-		Private ["_base","_playerTeam","_side","_target"];
+		if ((missionNamespace getVariable ["WFBE_C_ICBM_LEGACY_SERVER_AUTH", 0]) <= 0) then {
+			Private ["_base","_playerTeam","_side","_target"];
 
-		_side = _args select 1;
-		_base = _args select 2;
-		_target = _args select 3;
-		_playerTeam = _args select 4;
+			_side = _args select 1;
+			_base = _args select 2;
+			_target = _args select 3;
+			_playerTeam = _args select 4;
 
-		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Team [%2] [%3] called in an ICBM Nuke.", str _side, _playerTeam, name (leader _playerTeam)]] Call WFBE_CO_FNC_LogContent;
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Team [%2] [%3] called in an ICBM Nuke.", str _side, _playerTeam, name (leader _playerTeam)]] Call WFBE_CO_FNC_LogContent;
 
-		if (isNull _target || !alive _target) exitWith {};
+			if (isNull _target || !alive _target) exitWith {};
 
-		waitUntil {!alive _target || isNull _target};
+			waitUntil {!alive _target || isNull _target};
 
-		[_base] Spawn NukeDammage;
+			[_base] Spawn NukeDammage;
+		} else {
+			Private ["_base","_cdKey","_cool","_cost","_funds","_last","_lvl","_playerTeam","_side","_target","_upg"];
+
+			//--- TEL mode (default): no classic-path sender can be legitimate.
+			if ((missionNamespace getVariable ["WFBE_C_ICBM_TEL", 1]) > 0) exitWith {
+				["WARNING", "Server_HandleSpecial.sqf: ICBM refused - WFBE_C_ICBM_TEL=1 routes NUKE fire via icbm-tel-fire; no legit classic sender exists."] Call WFBE_CO_FNC_LogContent;
+			};
+			if (count _args != 5) exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM refused - malformed payload (%1 fields).", count _args]] Call WFBE_CO_FNC_LogContent;
+			};
+
+			_side = _args select 1;
+			_base = _args select 2;
+			_target = _args select 3;
+			_playerTeam = _args select 4;
+
+			if (typeName _side != "SIDE") exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM refused - side has type [%1].", typeName _side]] Call WFBE_CO_FNC_LogContent;
+			};
+			if (typeName _base != "OBJECT") exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM refused - target anchor has type [%1].", typeName _base]] Call WFBE_CO_FNC_LogContent;
+			};
+			if (typeName _target != "OBJECT") exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM refused - cruise has type [%1].", typeName _target]] Call WFBE_CO_FNC_LogContent;
+			};
+			if (typeName _playerTeam != "GROUP") exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM refused - team has type [%1].", typeName _playerTeam]] Call WFBE_CO_FNC_LogContent;
+			};
+			if ((missionNamespace getVariable ["WFBE_C_MODULE_WFBE_ICBM", 1]) <= 0) exitWith {
+				["WARNING", "Server_HandleSpecial.sqf: ICBM refused - ICBM module disabled (WFBE_C_MODULE_WFBE_ICBM=0)."] Call WFBE_CO_FNC_LogContent;
+			};
+			if !(_side in [west, east, resistance]) exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM refused - non-playable side [%1].", str _side]] Call WFBE_CO_FNC_LogContent;
+			};
+			if (isNull _playerTeam || {(side _playerTeam) != _side}) exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM refused - null team or team/side mismatch (side %1).", str _side]] Call WFBE_CO_FNC_LogContent;
+			};
+			//--- SEC-PVF-2 recommended check: the requesting team must hold the side commander role.
+			if (_playerTeam != (_side Call WFBE_CO_FNC_GetCommanderTeam)) exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM refused - team [%1] is not the [%2] commander team.", _playerTeam, str _side]] Call WFBE_CO_FNC_LogContent;
+			};
+
+			//--- SCUD research >= 2 (NUKE tier). Flat guard AFTER the read (an exitWith nested inside a then{}
+			//--- would only exit that block), same pattern WFBE_SE_FNC_IcbmTelFire uses for its own level gate.
+			_lvl = 0;
+			if (!isNil "WFBE_UP_ICBM") then {
+				_upg = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
+				if (typeName _upg == "ARRAY" && {WFBE_UP_ICBM < count _upg}) then {_lvl = _upg select WFBE_UP_ICBM};
+			};
+			if (_lvl < 2) exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM refused - [%1] SCUD level %2 < 2.", str _side, _lvl]] Call WFBE_CO_FNC_LogContent;
+			};
+
+			//--- Per-side shared cooldown (the stamp is written at the last AUTHORISED launch, below).
+			_cool = missionNamespace getVariable ["WFBE_C_ICBM_LEGACY_COOLDOWN", 300];
+			_cdKey = Format ["WFBE_ICBM_LEGACY_LASTFIRE_%1", str _side];
+			_last = missionNamespace getVariable [_cdKey, -99999];
+			if ((time - _last) < _cool) exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM refused - [%1] cooldown (%2s left).", str _side, round (_cool - (time - _last))]] Call WFBE_CO_FNC_LogContent;
+			};
+
+			//--- Server-authoritative funds (G1-safe group read: 1-arg getVariable + isNil/typeName guard).
+			_cost = missionNamespace getVariable ["WFBE_C_ICBM_COST", 75000];
+			_funds = _playerTeam getVariable "wfbe_funds";
+			if (isNil "_funds" || {typeName _funds != "SCALAR"}) then {_funds = 0};
+			if (_funds < _cost) exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM refused - [%1] insufficient funds (%2 < %3).", str _side, _funds, _cost]] Call WFBE_CO_FNC_LogContent;
+			};
+
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Team [%2] [%3] called in an ICBM Nuke.", str _side, _playerTeam, name (leader _playerTeam)]] Call WFBE_CO_FNC_LogContent;
+
+			if (isNull _target || !alive _target) exitWith {};
+
+			//--- All gates passed: charge + stamp BEFORE the cruise-death wait (anti double-fire race, same
+			//--- ordering as Support_ScudStrike.sqf). Funds-record lock-step mirrors Common_ChangeTeamFunds pick A.
+			_playerTeam setVariable ["wfbe_funds", (_funds - _cost), true];
+			[_playerTeam] Call WFBE_SE_FNC_SyncFundsRecord;
+			missionNamespace setVariable [_cdKey, time];
+
+			waitUntil {!alive _target || isNull _target};
+
+			//--- The HeliHEmpty anchor can be deleted mid-flight (GC); never nuke a null position.
+			if (isNull _base) exitWith {};
+
+			[_base] Spawn NukeDammage;
+		};
 	};
 
 	//--- Marty (Trello #171): Server-side timed removal of the player-called artillery barrage markers.

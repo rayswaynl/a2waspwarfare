@@ -2966,5 +2966,17 @@ if (isNil "WFBE_C_ACR_CONTENT_GAP") then {WFBE_C_ACR_CONTENT_GAP = 0};
 //--- mirroring the pattern Support_ScudStrike.sqf already uses for the carrier SCUD.
 if (isNil "WFBE_C_SUPPORT_SERVER_AUTH") then {WFBE_C_SUPPORT_SERVER_AUTH = 0};
 
+//--- icbmlegacy SECURITY (kimi 2026-07-24, fleet wasp-icbm-legacy-handler-unvalidated-20260724, audit SEC-PVF-2):
+//--- Server_HandleSpecial.sqf case "ICBM" (the legacy/classic nuke, only reachable with WFBE_C_ICBM_TEL=0) ran with
+//--- NO validation - any client could broadcast the request and get a free, repeatable, unlimited-range area-wipe.
+//--- 0 (default) = ORIGINAL unvalidated case, byte-identical to HEAD - the exploit stays OPEN until the owner arms
+//--- this (same posture as WFBE_C_SUPPORT_SERVER_AUTH above). 1 = server-authoritative validation: TEL-mode refuse,
+//--- payload shape, module gate, playable side, team-side match, commander-team binding (wfbe_commander), SCUD
+//--- research >= 2, per-side shared cooldown, and the WFBE_C_ICBM_COST fee charged server-side at launch (the
+//--- classic client stops debiting at click while armed - see GUI_Menu_Tactical.sqf MenuAction 8).
+if (isNil "WFBE_C_ICBM_LEGACY_SERVER_AUTH") then {WFBE_C_ICBM_LEGACY_SERVER_AUTH = 0};
+if (isNil "WFBE_C_ICBM_COST") then {WFBE_C_ICBM_COST = 75000};               //--- classic ICBM (NUKE) fee; GUI_Menu_Tactical.sqf's fee row reads this same constant (lock-step).
+if (isNil "WFBE_C_ICBM_LEGACY_COOLDOWN") then {WFBE_C_ICBM_LEGACY_COOLDOWN = 300}; //--- s: per-side shared legacy-ICBM cooldown (parity with WFBE_C_ICBM_TEL_COOLDOWN).
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
