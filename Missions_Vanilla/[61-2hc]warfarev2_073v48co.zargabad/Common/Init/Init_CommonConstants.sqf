@@ -1824,7 +1824,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_TOWNS_DETECTION_RANGE_COEF = 1; //--- Town activation range while idling (town range * coef)
 	WFBE_C_TOWNS_DETECTION_RANGE_AIR = 50; //--- Detect Air if > x
 	if (isNil "WFBE_C_TOWN_SCAN_DICE") then {WFBE_C_TOWN_SCAN_DICE = 1}; //--- Perf (2026-07-06): when 1, DORMANT towns (not active, no air tier, no enemy seen within DICE_GRACE) roll per side per sweep whether to run the 600 m activation nearEntities scan. Active towns always scan. Default off = V1 behaviour.
-	if (isNil "WFBE_C_TOWN_SCAN_DICE_P") then {WFBE_C_TOWN_SCAN_DICE_P = 0.5}; //--- Probability a dormant town DOES scan on a given sweep (per side).
+	if (isNil "WFBE_C_TOWN_SCAN_DICE_P") then {WFBE_C_TOWN_SCAN_DICE_P = 0.3}; //--- Probability a dormant town DOES scan on a given sweep (per side). [Ray-dir 2026-07-24 FPS: 0.5->0.3 - dormant towns scan the 600m activation nearEntities less often (profiler: town_activation_scan avg 8.9ms, spikes 1.4s); active towns + DICE_GRACE unaffected; rollback 0.5.]
 	if (isNil "WFBE_C_TOWN_SCAN_DICE_GRACE") then {WFBE_C_TOWN_SCAN_DICE_GRACE = 30}; //--- s after the last enemy seen before a town counts as dormant for the dice.
 	//--- deadcode-sweep 2026-07-21 (DC-06): removed orphaned town mortar/patrol tuning
 	//--- constants (WFBE_C_TOWNS_MORTARS_SCAN/_INTERVAL/_PRECOGNITION/_RANGE_MAX/_RANGE_MIN/
