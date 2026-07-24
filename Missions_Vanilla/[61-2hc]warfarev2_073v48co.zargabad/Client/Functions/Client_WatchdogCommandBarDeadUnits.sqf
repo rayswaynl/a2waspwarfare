@@ -146,6 +146,10 @@ while {!gameOver} do {
 				// Marty: Keep this cleanup silent; production MP can leak or loop custom radio speech across clients.
 				player groupSelectUnit [_unit, false];
 				[_unit] joinSilent grpNull;
+				//--- TEAMBAR probe (wasp-squad-renumber-on-death-20260724): the corpse-eject compacts
+				//--- the roster - the exact transition that visibly renumbers subordinates after a
+				//--- death; capture the post-eject order so the RPT names it.
+				if (!isNil "WFBE_CL_FNC_TeambarProbe") then {["deadunit-eject", "post-eject"] Call WFBE_CL_FNC_TeambarProbe};
 			};
 
 			_knownUnits = _knownUnits - [_unit];

@@ -11,7 +11,8 @@
     One structured TEAMBAR|v2|PROBE line per call into the CLIENT RPT (probe runs client-side,
     where the command bar lives; ship the RPT via the existing client-RPT push). Logs, per
     guard: alive, team-binding equality, leadership, array slot 0, per-unit rank/isPlayer/
-    locality for the first 8 group members, and the mitigation flag - every input of
+    locality/alive plus a stable client-local unit id (round-3) for EVERY group member, and
+    the mitigation flag - every input of
     Init_Client's init-slot1-rejoin and Client_OnKilled's respawn-slot1-rejoin, so a skipped
     rejoin is attributable to its exact guard.
 
@@ -20,7 +21,7 @@
 */
 
 WFBE_CL_FNC_TeambarProbe = {
-    Private ["_evt","_phase","_grp","_sameTeam","_ldr","_ldrIsP","_arr0","_arr0IsP","_o","_i","_u","_n"];
+    Private ["_evt","_phase","_grp","_sameTeam","_ldr","_ldrIsP","_arr0","_arr0IsP","_o","_i","_u","_n","_uid"];
     _evt = _this select 0;
     _phase = _this select 1;
     //--- Round-2 review: DEFAULT 0 per repo feature-default policy; the capture round arms it.
@@ -36,11 +37,23 @@ WFBE_CL_FNC_TeambarProbe = {
 
     //--- Round-2 review: capture ALL members (the real _slot1Others filter inspects every one);
     //--- the probe fires only on discrete lifecycle events, so a full-group walk is cheap.
+    //--- Round-3 (wasp-squad-renumber-on-death-20260724): stamp every member with a client-local
+    //--- stable identity (WFBE_TB_UID, lazy counter) so before/after lines across a death/respawn
+    //--- cycle show the ACTUAL permutation - rank/isPlayer/local/alive cannot tell two PRIVATE AI
+    //--- apart. A respawned body is a new object and draws a new id; the corpse keeps the old one
+    //--- while it lingers, so the engine tail-seating and the watchdog compaction are both
+    //--- attributable in the RPT. Stamps ride on the unit object (survive rejoins), never broadcast.
     _o = "";
     _n = count (units _grp);
     for '_i' from 0 to (_n - 1) do {
         _u = (units _grp) select _i;
-        _o = _o + Format ["%1:r%2/p%3/l%4/a%5 ", _i, rank _u, isPlayer _u, local _u, alive _u];
+        _uid = _u getVariable ["WFBE_TB_UID", -1];
+        if (_uid < 0) then {
+            _uid = missionNamespace getVariable ["WFBE_TB_UIDNext", 1];
+            missionNamespace setVariable ["WFBE_TB_UIDNext", _uid + 1];
+            _u setVariable ["WFBE_TB_UID", _uid, false];
+        };
+        _o = _o + Format ["%1:r%2/p%3/l%4/a%5/u%6 ", _i, rank _u, isPlayer _u, local _u, alive _u, _uid];
     };
 
     diag_log Format ["TEAMBAR|v2|PROBE|evt=%1|phase=%2|t=%3|jip=%4|flag=%5|alivePlayer=%6|sameTeam=%7|isLeader=%8|arr0IsPlayer=%9|playerRankId=%10|groupId=%11|units=%12|order=[ %13]",
