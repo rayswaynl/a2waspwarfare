@@ -45,6 +45,11 @@ HandleDefense = Compile preprocessFile "Server\Functions\Server_HandleDefense.sq
 //--- HS-TRACE (picklist 4 phase 1, 2026-07-22): LineNumbers so a parse failure in the
 //--- 55-case switch names file:line in the RPT instead of an anonymous error.
 HandleSpecial = Compile preprocessFileLineNumbers "Server\Functions\Server_HandleSpecial.sqf";
+//--- supportgate SECURITY (2026-07-24): server-authoritative funds + rate gate for the Paratroops/
+//--- ParaVehi/ParaAmmo/uav call-ins (see Server_AuthorizeSupportCallin.sqf header). Flag-gated
+//--- (WFBE_C_SUPPORT_SERVER_AUTH, default 0) inside Server_HandleSpecial.sqf; always compiled here
+//--- (cheap, no behavior at flag-off since the gated cases never Call it).
+WFBE_SE_FNC_AuthorizeSupportCallin = Compile preprocessFileLineNumbers "Server\Functions\Server_AuthorizeSupportCallin.sqf";
 MHQRepair = Compile preprocessFile "Server\Functions\Server_MHQRepair.sqf";
 SideMessage = Compile preprocessFile "Server\Functions\Server_SideMessage.sqf";
 

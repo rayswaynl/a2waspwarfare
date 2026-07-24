@@ -41,15 +41,32 @@ switch (_args select 0) do {
 		};
 	};
 	case "Paratroops": {
-		_args spawn KAT_Paratroopers;
+		//--- supportgate SECURITY (2026-07-24): server-authoritative cost + rate gate, mirroring
+		//--- Support_ScudStrike.sqf's funds/cooldown pattern. Flag WFBE_C_SUPPORT_SERVER_AUTH (default 0):
+		//--- at 0 this is the ORIGINAL unconditional spawn (byte-identical to HEAD) - the client-side debit
+		//--- in GUI_Menu_Tactical.sqf:564 stays the only fee gate, so the exploit remains open until armed.
+		//--- Cost 8500 / cooldown mirror GUI_Menu_Tactical.sqf:119-121 (Paratroopers fee + WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY).
+		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0 || {["Paratroops", _args, 8500, missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY", 1200]] Call WFBE_SE_FNC_AuthorizeSupportCallin}) then {
+			_args spawn KAT_Paratroopers;
+		};
 	};
 
 	case "ParaVehi": {
-		_args spawn KAT_ParaVehicles;
+		//--- supportgate SECURITY: same server-authoritative gate as "Paratroops" above (flag
+		//--- WFBE_C_SUPPORT_SERVER_AUTH, default 0 = byte-identical unconditional spawn). Cost 3500 /
+		//--- cooldown 600 mirror GUI_Menu_Tactical.sqf:119-121 (Paradrop_Vehicle fee + interval).
+		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0 || {["ParaVehi", _args, 3500, 600] Call WFBE_SE_FNC_AuthorizeSupportCallin}) then {
+			_args spawn KAT_ParaVehicles;
+		};
 	};
 
 	case "ParaAmmo": {
-		_args spawn KAT_ParaAmmo;
+		//--- supportgate SECURITY: same server-authoritative gate as "Paratroops" above (flag
+		//--- WFBE_C_SUPPORT_SERVER_AUTH, default 0 = byte-identical unconditional spawn). Cost 9500 /
+		//--- cooldown 800 mirror GUI_Menu_Tactical.sqf:119-121 (Paradrop_Ammo fee + interval).
+		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0 || {["ParaAmmo", _args, 9500, 800] Call WFBE_SE_FNC_AuthorizeSupportCallin}) then {
+			_args spawn KAT_ParaAmmo;
+		};
 	};
 
 	case "RespawnST": {
@@ -61,7 +78,14 @@ switch (_args select 0) do {
 	};
 
 	case "uav": {
-		_args spawn KAT_UAV;
+		//--- supportgate SECURITY: same server-authoritative gate as "Paratroops" above (flag
+		//--- WFBE_C_SUPPORT_SERVER_AUTH, default 0 = byte-identical unconditional spawn). Cost 12500
+		//--- mirrors Client\Module\UAV\uav.sqf:50. No client-side call interval exists (the client only
+		//--- gates on "!(alive playerUAV)", itself spoofable) - 60s is a flood-prevention floor only,
+		//--- independent of live-UAV timing.
+		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0 || {["uav", _args, 12500, 60] Call WFBE_SE_FNC_AuthorizeSupportCallin}) then {
+			_args spawn KAT_UAV;
+		};
 	};
 
 	//--- fable/fpv-strike-drone: lifecycle watchdog for the player-piloted FPV drone.

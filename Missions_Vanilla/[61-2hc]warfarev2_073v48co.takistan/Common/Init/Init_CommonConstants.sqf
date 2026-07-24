@@ -2957,5 +2957,14 @@ if (isNil "WFBE_C_SATCHEL_TK_DETECT") then {WFBE_C_SATCHEL_TK_DETECT = 0};
 //--- 0 keeps the pre-existing catalog and gear lists unchanged.
 if (isNil "WFBE_C_ACR_CONTENT_GAP") then {WFBE_C_ACR_CONTENT_GAP = 0};
 
+//--- supportgate SECURITY (2026-07-24): Server_HandleSpecial.sqf Paratroops/ParaVehi/ParaAmmo/uav
+//--- call-ins used to spawn on request with NO server-side cost or rate check - only a client-side
+//--- debit (GUI_Menu_Tactical.sqf / Client\Module\UAV\uav.sqf) that a modified client can skip or
+//--- spoof, then loop to flood free vehicles/troops/UAVs. 0 (default) = ORIGINAL unconditional spawn,
+//--- byte-identical to HEAD - the exploit stays OPEN until the owner arms this. 1 = server-authoritative
+//--- funds + per-team cooldown gate via WFBE_SE_FNC_AuthorizeSupportCallin (Server_AuthorizeSupportCallin.sqf),
+//--- mirroring the pattern Support_ScudStrike.sqf already uses for the carrier SCUD.
+if (isNil "WFBE_C_SUPPORT_SERVER_AUTH") then {WFBE_C_SUPPORT_SERVER_AUTH = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
