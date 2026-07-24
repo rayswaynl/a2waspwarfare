@@ -318,13 +318,17 @@ waitUntil {commonInitComplete};
 if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 [] spawn {
 	disableSerialization; //--- cmdcon42 (Ray 2026-07-02): this scheduled loop holds display/control handles (_disp, _ctrl) across waitUntil/sleep suspensions. Without disableSerialization the scheduler tries to serialise _disp when the script suspends and throws "variable '_disp' does not support serialization" the moment the TAGS button (MenuAction 25) enables the overlay. Must live in THIS script body (same scope as the display var), not a parent.
-	private ["_max","_disp","_shown","_shownPlayers","_shownAI","_shownVehicles","_shownTallies","_pp","_scr","_ctrl","_d","_sz","_nextCandidateScan","_playerCandidates","_aiCandidates","_vehicleCandidates","_tagStatCycles"];
+	private ["_max","_disp","_shown","_shownPlayers","_shownAI","_shownVehicles","_shownTallies","_pp","_scr","_ctrl","_d","_sz","_nextCandidateScan","_playerCandidates","_aiCandidates","_vehicleCandidates","_crewPlayerCandidates","_tagStatCycles","_veh","_isPlayerCand","_sideFail","_offscreen","_tcnt","_tclr","_tpp","_tscr","_td","_tsz"];
 	_max = 18;
 	_nextCandidateScan = time;
 	_playerCandidates = [];
 	_aiCandidates = [];
 	_vehicleCandidates = [];
+	_crewPlayerCandidates = [];
 	_tagStatCycles = 0;
+	_isPlayerCand = 0;
+	_sideFail = 0;
+	_offscreen = 0;
 	while {!WFBE_gameover} do {
 		waitUntil {WFBE_NameTagsEnabled || WFBE_gameover};
 		if (WFBE_gameover) exitWith {};
@@ -342,10 +346,30 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 				_playerCandidates = player nearEntities [["Man"], 120];
 				_aiCandidates = player nearEntities [["Man"], 150];
 				_vehicleCandidates = player nearEntities [["LandVehicle","Air","Ship"], 200];
+				//--- tags-fix-20260724 (council GapA): nearEntities "Man" never returns MOUNTED humans, so walk
+				//--- vehicle crews for friendly players. Own vehicle skipped (its crew tags would sit mid-screen).
+				_crewPlayerCandidates = [];
+				_sideFail = 0;
+				{
+					_veh = _x; //--- A2: capture outer _x before the inner forEach permanently rebinds it.
+					if (alive _veh && {_veh != vehicle player}) then {
+						{
+							if (isPlayer _x && {_x != player} && {alive _x}) then {
+								if (side _x == sideJoined) then {
+									_crewPlayerCandidates = _crewPlayerCandidates + [_x];
+								} else {
+									_sideFail = _sideFail + 1;
+								};
+							};
+						} forEach (crew _veh);
+					};
+				} forEach _vehicleCandidates;
+				_isPlayerCand = {isPlayer _x && {_x != player}} count _playerCandidates;
+				_sideFail = _sideFail + ({isPlayer _x && {_x != player} && {alive _x} && {side _x != sideJoined}} count _playerCandidates);
 				_nextCandidateScan = time + 0.5;
 			};
 			{
-				if (_shown < _max && {isPlayer _x} && {_x != player} && {alive _x} && {side _x == side player}) then {
+				if (_shown < _max && {isPlayer _x} && {_x != player} && {alive _x} && {side _x == sideJoined}) then {
 					_pp = visiblePosition _x; //--- cmdcon30: getPosVisual is Arma-3-only (undefined in A2-OA 1.64); visiblePosition is the A2 equivalent.
 					_scr = worldToScreen [_pp select 0, _pp select 1, (_pp select 2) + 1.9];
 					if (count _scr == 2 && {(_scr select 0) > 0} && {(_scr select 0) < 1} && {(_scr select 1) > 0} && {(_scr select 1) < 1}) then {
@@ -358,16 +382,41 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 						_ctrl ctrlShow true;
 						_shown = _shown + 1;
 						_shownPlayers = _shownPlayers + 1;
+					} else {
+						_offscreen = _offscreen + 1;
 					};
 				};
 			} forEach _playerCandidates;
+			//--- tags-fix-20260724 (council GapA/B): mounted friendly players, discovered by the 2Hz crew walk above.
+			//--- Name rides 2.4m above the hull (dismount names 1.9m, kill tallies 2.6m, AI vehicle labels 3.0m),
+			//--- same cyan as on-foot player tags. The "still mounted" re-check stops a just-dismounted player
+			//--- from double-tagging out of both caches inside one scan window.
+			{
+				if (_shown < _max && {alive _x} && {vehicle _x != _x}) then {
+					_pp = visiblePosition _x;
+					_scr = worldToScreen [_pp select 0, _pp select 1, (_pp select 2) + 2.4];
+					if (count _scr == 2 && {(_scr select 0) > 0} && {(_scr select 0) < 1} && {(_scr select 1) > 0} && {(_scr select 1) < 1}) then {
+						_d = _x distance player;
+						_sz = 0.018 + (0.016 * (1 - (_d / 200)));
+						_ctrl = _disp displayCtrl (62000 + _shown);
+						_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='#d6ecff'>%1</t>", name _x, _sz]));
+						_ctrl ctrlSetPosition [(_scr select 0) - 0.1, (_scr select 1) - 0.025, 0.2, 0.03];
+						_ctrl ctrlCommit 0;
+						_ctrl ctrlShow true;
+						_shown = _shown + 1;
+						_shownPlayers = _shownPlayers + 1;
+					} else {
+						_offscreen = _offscreen + 1;
+					};
+				};
+			} forEach _crewPlayerCandidates;
 			//--- WFBE_C_TAGS_AI: friendly AI infantry tags (same-side, within 150m, #b0ffb0 green).
 			//--- fable/tags-settings-integration: ANDed with the per-player Show-AI-Tags opt-out (Settings dialog, WFBE_MenuAction 12).
 			if ((missionNamespace getVariable ["WFBE_C_TAGS_AI", 0]) > 0 && {missionNamespace getVariable ["WFBE_CL_ShowAITags", true]}) then {
 				{
 					private ["_aiunit","_aipp","_aiscr","_aid","_aisz"];
 					_aiunit = _x;
-					if (_shown < _max && {!isPlayer _aiunit} && {alive _aiunit} && {side _aiunit == side player}) then {
+					if (_shown < _max && {!isPlayer _aiunit} && {alive _aiunit} && {side _aiunit == sideJoined}) then {
 						_aipp = visiblePosition _aiunit;
 						_aiscr = worldToScreen [_aipp select 0, _aipp select 1, (_aipp select 2) + 1.9];
 						if (count _aiscr == 2 && {(_aiscr select 0) > 0} && {(_aiscr select 0) < 1} && {(_aiscr select 1) > 0} && {(_aiscr select 1) < 1}) then {
@@ -391,7 +440,7 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 					private ["_vhc","_vcnt","_vtxt","_vpp","_vscr","_vd","_vsz"];
 					_vhc = _x;
 					_vcnt = count crew _vhc;
-					if (_shown < _max && {alive _vhc} && {_vhc != vehicle player} && {_vcnt > 0} && {side _vhc == side player} && {({isPlayer _x} count (crew _vhc)) == 0}) then {
+					if (_shown < _max && {alive _vhc} && {_vhc != vehicle player} && {_vcnt > 0} && {side _vhc == sideJoined} && {({isPlayer _x} count (crew _vhc)) == 0}) then {
 						_vtxt = format ["%1 [%2]", getText (configFile >> "CfgVehicles" >> (typeOf _vhc) >> "displayName"), _vcnt];
 						_vpp = visiblePosition _vhc;
 						_vscr = worldToScreen [_vpp select 0, _vpp select 1, (_vpp select 2) + 3.0];
@@ -414,31 +463,39 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 			//--- scored kills show a heat-coloured 'N KILLS' tag (amber -> orange -> red -> white-hot, the retired
 			//--- glow's ramp). Crewless side resolves to CIV in A2, so empty hulls pass by crew-count, NOT side;
 			//--- enemy CREWED vehicles never tag (no intel leak). Own vehicle excluded (tag would sit mid-screen).
+			//--- tags-fix-20260724 (council Patch B): tally locals live in the OUTER private[] and the gate reads
+			//--- _tcnt plainly after assignment (if-nesting, not lazy && {_tcnt > 0}) - kills the live
+			//--- "Error Undefined variable in expression: _tcnt" RPT spam that pinned shownTallies at 0.
 			{
-				private ['_tcnt','_tclr','_tpp','_tscr','_td','_tsz'];
-				_tcnt = _x getVariable ['wfbe_kill_tally', 0];
-				if (_shown < _max && {_tcnt > 0} && {alive _x} && {_x != vehicle player} && {(count crew _x == 0) || {side _x == side player}}) then {
-					_tpp = visiblePosition _x;
-					_tscr = worldToScreen [_tpp select 0, _tpp select 1, (_tpp select 2) + 2.6];
-					if (count _tscr == 2 && {(_tscr select 0) > 0} && {(_tscr select 0) < 1} && {(_tscr select 1) > 0} && {(_tscr select 1) < 1}) then {
-						_td = _x distance player;
-						_tsz = 0.016 + (0.014 * (1 - (_td / 200)));
-						_tclr = '#ffb040'; if (_tcnt >= 3) then {_tclr = '#ff7a20'}; if (_tcnt >= 6) then {_tclr = '#ff2a10'}; if (_tcnt >= 10) then {_tclr = '#ffe8c0'};
-						_ctrl = _disp displayCtrl (62000 + _shown);
-						_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='%3'>%1 %4</t>", _tcnt, _tsz, _tclr, if (_tcnt == 1) then {'KILL'} else {'KILLS'}]));
-						_ctrl ctrlSetPosition [(_tscr select 0) - 0.1, (_tscr select 1) - 0.025, 0.2, 0.03];
-						_ctrl ctrlCommit 0;
-						_ctrl ctrlShow true;
-						_shown = _shown + 1;
-						_shownTallies = _shownTallies + 1;
+				_tcnt = _x getVariable ["wfbe_kill_tally", 0];
+				if (_shown < _max && _tcnt > 0 && alive _x && _x != vehicle player) then {
+					if ((count crew _x == 0) || {side _x == sideJoined}) then {
+						_tpp = visiblePosition _x;
+						_tscr = worldToScreen [_tpp select 0, _tpp select 1, (_tpp select 2) + 2.6];
+						if (count _tscr == 2 && {(_tscr select 0) > 0} && {(_tscr select 0) < 1} && {(_tscr select 1) > 0} && {(_tscr select 1) < 1}) then {
+							_td = _x distance player;
+							_tsz = 0.016 + (0.014 * (1 - (_td / 200)));
+							_tclr = '#ffb040'; if (_tcnt >= 3) then {_tclr = '#ff7a20'}; if (_tcnt >= 6) then {_tclr = '#ff2a10'}; if (_tcnt >= 10) then {_tclr = '#ffe8c0'};
+							_ctrl = _disp displayCtrl (62000 + _shown);
+							_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='%3'>%1 %4</t>", _tcnt, _tsz, _tclr, if (_tcnt == 1) then {'KILL'} else {'KILLS'}]));
+							_ctrl ctrlSetPosition [(_tscr select 0) - 0.1, (_tscr select 1) - 0.025, 0.2, 0.03];
+							_ctrl ctrlCommit 0;
+							_ctrl ctrlShow true;
+							_shown = _shown + 1;
+							_shownTallies = _shownTallies + 1;
+						};
 					};
 				};
 			} forEach _vehicleCandidates;
 			for "_i" from _shown to (_max - 1) do {(_disp displayCtrl (62000 + _i)) ctrlShow false};
 			_tagStatCycles = _tagStatCycles + 1;
 			if (_tagStatCycles >= 10) then {
-				diag_log Format ["TAGSTAT|v1|candPlayers=%1|candAI=%2|candVehicles=%3|shownPlayers=%4|shownAI=%5|shownVehicles=%6|shownTallies=%7|shownTotal=%8|pool=%9", count _playerCandidates, count _aiCandidates, count _vehicleCandidates, _shownPlayers, _shownAI, _shownVehicles, _shownTallies, _shown, _max];
+				//--- tags-fix-20260724 (council Patch C): v2 adds discovery counters that discriminate the gaps -
+				//--- isPlayerCand/crewPlayerCand/sideFail are the latest 2Hz scan; offscreen accumulates projection
+				//--- rejects across the 10-cycle window and resets here.
+				diag_log Format ["TAGSTAT|v2|candPlayers=%1|candAI=%2|candVehicles=%3|isPlayerCand=%4|crewPlayerCand=%5|sideFail=%6|offscreen=%7|shownPlayers=%8|shownAI=%9|shownVehicles=%10|shownTallies=%11|shownTotal=%12|pool=%13", count _playerCandidates, count _aiCandidates, count _vehicleCandidates, _isPlayerCand, count _crewPlayerCandidates, _sideFail, _offscreen, _shownPlayers, _shownAI, _shownVehicles, _shownTallies, _shown, _max];
 				_tagStatCycles = 0;
+				_offscreen = 0;
 			};
 			sleep 0.1;
 		};
