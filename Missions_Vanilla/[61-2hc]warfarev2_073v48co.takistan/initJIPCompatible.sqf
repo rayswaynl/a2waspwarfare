@@ -56,10 +56,14 @@ WFBE_LogLevel = 0; //--- Logging level (0: Trivial, 1: Information, 2: Warnnings
 ARMA_VERSION = 1;
 ARMA_RELEASENUMBER = 0;
 
-execVM "Common\Init\Init_Version.sqf";
+WFBE_INIT_HANDLE_VERSION = execVM "Common\Init\Init_Version.sqf";
 
-//--- As we handle the error in the file scope, we wait for the returned value
-waitUntil {!isNil 'VERSION_SET'};
+//--- Version discovery normally completes immediately. Preserve the seeded fallback after a bounded wait so a broken version script cannot hang startup forever.
+private "_versionInitDeadline"; _versionInitDeadline = diag_tickTime + 15;
+waitUntil {uiSleep 0.25; (!isNil "VERSION_SET") || {diag_tickTime > _versionInitDeadline}};
+if (isNil "VERSION_SET") then {
+	diag_log ("INITFAIL|v1|VERSION_SET_TIMEOUT|handleDone=" + str (scriptDone WFBE_INIT_HANDLE_VERSION) + "|fallbackArmaVersion=" + str ARMA_VERSION + "|fallbackRelease=" + str ARMA_RELEASENUMBER);
+};
 VERSION_SET = nil;
 
 isHostedServer = if (!isMultiplayer || (isServer && !isDedicated)) then {true} else {false};
@@ -326,8 +330,8 @@ if (!isDedicated && !isHeadLessClient) then {
 
 WFBE_Parameters_Ready = true; //--- All parameters are set and ready.
 
-ExecVM "Common\Init\Init_Common.sqf"; //--- Execute the common files.
-ExecVM "Common\Init\Init_Towns.sqf"; //--- Execute the towns file.
+WFBE_INIT_HANDLE_COMMON = ExecVM "Common\Init\Init_Common.sqf"; //--- Execute the common files.
+WFBE_INIT_HANDLE_TOWNS = ExecVM "Common\Init\Init_Towns.sqf"; //--- Execute the towns file.
 
 //--- Server initialization.
 if (isHostedServer || isDedicated) then { //--- Run the server's part.
