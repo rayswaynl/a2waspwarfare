@@ -134,6 +134,7 @@ UpdateMarker = Compile preprocessFile "Common\Functions\Common_UpdateMarker.sqf"
 //--- Whole feature gated by WFBE_C_MODHOOKS (default 1). Safe no-op for players without any mod.
 WFBE_CL_FNC_ModDetect = Compile preprocessFileLineNumbers "Client\Functions\Client_ModDetect.sqf";
 Call Compile preprocessFileLineNumbers "Client\Functions\Client_TeambarProbe.sqf"; //--- TEAMBAR probe (self-registering)
+Call Compile preprocessFileLineNumbers "Client\Functions\Client_TeambarEnsureSlot1.sqf"; //--- TEAMBAR ensure-slot1 (self-registering; council fix 2026-07-24)
 BoundariesIsOnMap = Compile preprocessFile "Client\Functions\Client_IsOnMap.sqf";
 BoundariesHandleOnMap = Compile preprocessFile "Client\Functions\Client_HandleOnMap.sqf";
 BuildUnit = Compile preprocessFile "Client\Functions\Client_BuildUnit.sqf";
@@ -1295,6 +1296,18 @@ if ((missionNamespace getVariable ["WFBE_C_TEAMBAR_PROBE", 0]) > 0) then {
 		while {true} do {
 			sleep 60;
 			if (alive player) then {["heartbeat", "periodic"] Call WFBE_CL_FNC_TeambarProbe};
+		};
+	};
+};
+
+//--- TEAMBAR ensure-slot1 heartbeat backstop (council fix 2026-07-24, card wasp-teambar-buy-fix-20260724):
+//--- lifecycle one-shots provably miss membership changes (the buy path shipped rank-only); this heals ANY
+//--- missed path within ~60s. Idempotent and O(1) when the player is already slot 1; same product flag.
+if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then {
+	[] spawn {
+		while {true} do {
+			sleep 61;
+			if (alive player) then {["heartbeat"] Call WFBE_CL_FNC_TeambarEnsureSlot1};
 		};
 	};
 };
