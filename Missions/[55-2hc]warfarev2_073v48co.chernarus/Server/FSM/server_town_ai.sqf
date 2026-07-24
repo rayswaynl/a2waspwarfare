@@ -50,6 +50,7 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 	_town = towns select _k;
 	_town setVariable ["wfbe_active", false];
 	_town setVariable ["wfbe_active_air", false];
+	_town setVariable ["wfbe_town_ai_epoch", 0, true];
 	_town setVariable ["wfbe_inactivity", 0];
 	_town setVariable ["wfbe_active_override", false];
 	_town setVariable ['wfbe_active_vehicles', []];
@@ -330,6 +331,7 @@ while {!WFBE_GameOver} do {
 					if (_town getVariable "wfbe_active_override") then {
 						_town setVariable ["wfbe_active_override", false];
 						_town setVariable ["wfbe_active", false];
+						_town setVariable ["wfbe_town_ai_epoch", (_town getVariable ["wfbe_town_ai_epoch", 0]) + 1, true];
 						//--- Also clear episode latch so the town re-garrisons on next tick.
 						_town setVariable ["wfbe_episode_spawned", false];
 					};
@@ -391,6 +393,7 @@ while {!WFBE_GameOver} do {
 						if(_enemies_ground > 0) then {
 							////
 							_town setVariable ["wfbe_active", true];
+							_town setVariable ["wfbe_town_ai_epoch", (_town getVariable ["wfbe_town_ai_epoch", 0]) + 1, true];
 							_town setVariable ["wfbe_episode_spawned", true];
 							//--- B4: keep the incremental active-town counter in step with the
 							//--- top-of-sweep seed (only wfbe_active towns are counted, matching
@@ -424,6 +427,7 @@ while {!WFBE_GameOver} do {
 						if(_enemies_ground == 0 && _enemies > 0) then {
 							if(!(_town getVariable "wfbe_active_air")) then {
 								_town setVariable ["wfbe_active_air", true];
+								_town setVariable ["wfbe_town_ai_epoch", (_town getVariable ["wfbe_town_ai_epoch", 0]) + 1, true];
 								_town setVariable ["wfbe_episode_spawned", true];
 								//--- Always-on liveness line (owner review 2026-07-22): the AIR-TIER token in RPT
 								//--- proves the resurrected air tier actually fires on live rounds.
@@ -742,6 +746,7 @@ while {!WFBE_GameOver} do {
 					if (_town getVariable ["wfbe_active", false]) then { _activeTownCount = _activeTownCount - 1 };
 					_town setVariable ["wfbe_active", false];
 					_town setVariable ["wfbe_active_air", false];
+					_town setVariable ["wfbe_town_ai_epoch", (_town getVariable ["wfbe_town_ai_epoch", 0]) + 1, true];
 
 					["INFORMATION", Format ["server_town_ai.sqf: Town [%1] DEACTIVATED for [%2] (inactivity, teams=%3).", _town getVariable "name", _side, count _town_teams]] Call WFBE_CO_FNC_AICOMLog;
 

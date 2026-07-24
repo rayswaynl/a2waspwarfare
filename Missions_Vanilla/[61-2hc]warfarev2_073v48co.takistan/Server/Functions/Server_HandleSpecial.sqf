@@ -109,7 +109,7 @@ switch (_args select 0) do {
 		};
 	};
 	case "update-town-delegation": {
-		Private ["_teams","_town","_vehicles"];
+		Private ["_episode","_teams","_town","_vehicles"];
 		_town = _args select 1;
 		_teams = [];
 		_vehicles = [];
@@ -120,6 +120,10 @@ switch (_args select 0) do {
 			_vehicles = _args select 3;
 		} else {
 			_vehicles = _args select 2;
+		};
+		_episode = if (count _args > 4) then {_args select 4} else {-1};
+		if ((typeName _episode) != "SCALAR" || {(_town getVariable ["wfbe_town_ai_epoch", -1]) != _episode}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: Town delegation stale for [%1]; expected epoch %2, received %3.", _town getVariable ["name", "?"], _town getVariable ["wfbe_town_ai_epoch", -1], _episode]] Call WFBE_CO_FNC_LogContent;
 		};
 
 		// Marty: Track the real delegated groups so server-side state and cleanup requests reference the same town assets.

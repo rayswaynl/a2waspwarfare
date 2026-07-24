@@ -8,13 +8,14 @@
 		- Teams
 */
 
-Private ["_groups", "_i", "_perfStart", "_positions", "_registry", "_retVal", "_side", "_team", "_teams", "_town", "_town_teams", "_town_vehicles"];
+Private ["_episode", "_groups", "_i", "_perfStart", "_positions", "_registry", "_retVal", "_side", "_team", "_teams", "_town", "_town_teams", "_town_vehicles"];
 
 _town = _this select 0;
 _side = _this select 1;
 _groups = _this select 2;
 _positions = _this select 3;
 _teams = _this select 4;
+_episode = if (count _this > 5) then {_this select 5} else {-1};
 
 ["INFORMATION", Format["Client_DelegateTownAI.sqf: Received a town delegation request from the server for [%1] [%2].", _side, _town]] Call WFBE_CO_FNC_LogContent;
 
@@ -27,6 +28,9 @@ _teams = _this select 4;
 //--- heavy body; released at end-of-file. Counter is per-HC (missionNamespace is machine-local).
 private "_qWait"; _qWait = 0;
 while {((missionNamespace getVariable ["WFBE_HC_DELEG_INFLIGHT", 0]) >= 3) && {_qWait < 100}} do {sleep 0.1; _qWait = _qWait + 1};
+if ((typeName _episode) != "SCALAR" || {(_town getVariable ["wfbe_town_ai_epoch", -1]) != _episode}) exitWith {
+	["WARNING", Format ["Client_DelegateTownAI.sqf: Town delegation stale for [%1]; expected epoch %2, received %3.", _town getVariable ["name", "?"], _town getVariable ["wfbe_town_ai_epoch", -1], _episode]] Call WFBE_CO_FNC_LogContent;
+};
 missionNamespace setVariable ["WFBE_HC_DELEG_INFLIGHT", ((missionNamespace getVariable ["WFBE_HC_DELEG_INFLIGHT", 0]) + 1)];
 
 for "_i" from 0 to ((count _teams) - 1) do {
@@ -50,7 +54,7 @@ missionNamespace setVariable ["WFBE_CL_TownAI_Groups", _registry];
 ["INFORMATION", Format ["TOWN_AI_HC_CLEANUP registered town:%1 side:%2 groups:%3 vehicles:%4 registry:%5", _town getVariable "name", _side, count _town_teams, count _town_vehicles, count _registry]] Call WFBE_CO_FNC_LogContent;
 
 // Marty: Send both local groups and vehicles back so the server can track delegated town assets.
-if ((count _town_teams) > 0 || (count _town_vehicles) > 0) then {["RequestSpecial", ["update-town-delegation", _town, _town_teams, _town_vehicles]] Call WFBE_CO_FNC_SendToServer};
+if ((count _town_teams) > 0 || (count _town_vehicles) > 0) then {["RequestSpecial", ["update-town-delegation", _town, _town_teams, _town_vehicles, _episode]] Call WFBE_CO_FNC_SendToServer};
 
 {
 	_x Spawn {

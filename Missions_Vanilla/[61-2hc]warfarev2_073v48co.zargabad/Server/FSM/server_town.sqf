@@ -559,6 +559,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			_location setVariable ["wfbe_active", false];
 			_location setVariable ["wfbe_active_air", false];
 			_location setVariable ["wfbe_episode_spawned", false];
+			_location setVariable ["wfbe_town_ai_epoch", (_location getVariable ["wfbe_town_ai_epoch", 0]) + 1, true];
 
 			[nil, "TownCaptured", [_location, _sideID, _newSID]] Call WFBE_CO_FNC_SendToClients;
 			if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") > 0 && {!(((missionNamespace getVariable ["WFBE_C_TOWN_CAPTURE_FLIPS_CAMPS", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_CAMPS_LEGACY_SKIP_ON_PERCAMP_FLIP", 0]) > 0})}) then {[_location, _sideID, _newSID] Spawn WFBE_SE_FNC_SetCampsToSide};
