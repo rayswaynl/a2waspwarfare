@@ -35,7 +35,7 @@ if !(isNull _object) then {
 
 	["INFORMATION", Format["Server_TrashObject.sqf: Deleting [%1], it has been [%2] seconds.", _object, _delay]] Call WFBE_CO_FNC_LogContent;
 
-	//--- LOCALITY GATE (WFBE_C_TRASH_REMOTE_DELETE, default 0 = exact legacy behaviour). A server-side
+	//--- LOCALITY GATE (WFBE_C_TRASH_REMOTE_DELETE, default 1 = locality-aware cleanup). A server-side
 	//--- deleteVehicle on a NON-LOCAL object silently no-ops in A2 OA, so every HC-local body/hull handed
 	//--- to this shared path survived the whole match. When the flag is on, route the delete to the owning
 	//--- machine over the SAME server->HC channel server_groupsGC.sqf uses for commander-artillery wrecks
