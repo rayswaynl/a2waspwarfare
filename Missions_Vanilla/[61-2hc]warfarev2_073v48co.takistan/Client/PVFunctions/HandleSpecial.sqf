@@ -457,8 +457,13 @@ switch (_request) do {
 		_navName   = _args select 2;
 		if (isNull _navLoc) exitWith {};
 		_navSide  = _navNewSID Call WFBE_CO_FNC_GetSideFromID;
-		//--- Recolor the carrier's city marker to the new owner (same lookup TownCaptured uses).
-		_navColor = missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _navSide], "ColorGreen"];
+		//--- Match TownCaptured / Init_Markers fog-of-war: foreign carrier ownership stays neutral.
+		_navColor = missionNamespace getVariable ["WFBE_C_UNKNOWN_COLOR", "ColorGreen"];
+		if (!isNil "WFBE_Client_SideID") then {
+			if (_navNewSID == WFBE_Client_SideID || _navNewSID == WFBE_C_GUER_ID) then {
+				_navColor = missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _navSide], "ColorGreen"];
+			};
+		};
 		_navMkr   = Format ["WFBE_%1_CityMarker", _navLoc];
 		_navMkr setMarkerColorLocal _navColor;
 		//--- Flip notification hint (localized). Prefix the carrier name so players know which one flipped.

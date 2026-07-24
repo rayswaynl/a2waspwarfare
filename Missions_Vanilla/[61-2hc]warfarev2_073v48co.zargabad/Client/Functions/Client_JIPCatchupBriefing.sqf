@@ -1,7 +1,8 @@
 /*
 	Lane 181 late-join catch-up briefing (visual pass + DEFAULT ON, Ray pick 2026-07-04).
-	One side-coloured hint card for true late joiners: round age, towns per side, own team +
-	funds, researched tech, nearest non-friendly town, AI commander order and CO name.
+	One side-coloured hint card for true late joiners: round age, own/GUER/free town counts,
+	own team + funds, researched tech, AI commander order and CO name. Enemy ownership is never
+	enumerated: the card preserves the same fog-of-war policy as the map markers.
 	Reads ONLY already-replicated state: the towns array, the group's broadcast wfbe_funds,
 	the side logic's wfbe_upgrades, and the WFBE_AICOM_* PVs seeded to JIP clients by
 	Server_OnPlayerConnected.sqf. Auto-clears after WFBE_C_JIP_CATCHUP_DURATION seconds.
@@ -11,7 +12,7 @@
 	on the GROUP receiver, no isEqualType/findIf/pushBack/selectRandom.
 */
 
-Private ["_enable","_delay","_minAge","_duration","_myID","_west","_east","_guer","_neutral","_frontName","_frontSide","_frontDist","_townSide","_townSideText","_d","_mins","_hours","_rem","_ageText","_intent","_aiObj","_aiFocus","_axis","_commander","_cmdTeam","_cmdLead","_msg","_sideColor","_sideName","_funds","_teamName","_upg","_tech","_frontText"];
+Private ["_enable","_delay","_minAge","_duration","_myID","_owned","_guer","_neutral","_townSide","_mins","_hours","_rem","_ageText","_intent","_aiObj","_aiFocus","_axis","_commander","_cmdTeam","_cmdLead","_msg","_sideColor","_sideName","_funds","_teamName","_upg","_tech"];
 
 _enable = missionNamespace getVariable ["WFBE_C_JIP_CATCHUP_BRIEFING", 0];
 if (_enable < 1) exitWith {};
@@ -44,37 +45,18 @@ switch (sideJoined) do {
 	case resistance: {_sideColor = "#7ed37e"; _sideName = "GUER"};
 };
 
-_west = 0;
-_east = 0;
+_owned = 0;
 _guer = 0;
 _neutral = 0;
-_frontName = "";
-_frontSide = "";
-_frontDist = 1000000;
 
+//--- Fog-of-war: count only ownership the joining side is entitled to see. Do not derive
+//--- per-enemy totals, town names, distances, or owner labels from replicated town state.
 {
 	if !(isNull _x) then {
 		_townSide = _x getVariable ["sideID", WFBE_C_UNKNOWN_ID];
-		_townSideText = switch (_townSide) do {
-			case WFBE_C_WEST_ID: {"WEST"};
-			case WFBE_C_EAST_ID: {"EAST"};
-			case WFBE_C_GUER_ID: {"GUER"};
-			default {"Neutral"};
-		};
-		switch (_townSide) do {
-			case WFBE_C_WEST_ID: {_west = _west + 1};
-			case WFBE_C_EAST_ID: {_east = _east + 1};
-			case WFBE_C_GUER_ID: {_guer = _guer + 1};
-			default {_neutral = _neutral + 1};
-		};
-		if !(_townSide in [_myID]) then {
-			_d = player distance _x;
-			if (_d < _frontDist) then {
-				_frontDist = _d;
-				_frontName = _x getVariable ["name", "Unknown town"];
-				_frontSide = _townSideText;
-			};
-		};
+		if (_townSide == _myID) then {_owned = _owned + 1};
+		if (_townSide == WFBE_C_GUER_ID) then {_guer = _guer + 1};
+		if (_townSide == WFBE_C_UNKNOWN_ID) then {_neutral = _neutral + 1};
 	};
 } forEach towns;
 
@@ -98,12 +80,6 @@ if (!isNil "WFBE_Client_Logic") then {
 	if (!isNil "_upg") then {
 		{if (_x > 0) then {_tech = _tech + 1}} forEach _upg;
 	};
-};
-
-//--- Nearest non-friendly town: the practical "where do I go" pointer.
-_frontText = "none in range";
-if (_frontDist < 900000) then {
-	_frontText = Format ["%1 (%2) - %3 km", _frontName, _frontSide, (round (_frontDist / 100)) / 10];
 };
 
 //--- AI commander order + axis (JIP-seeded PVs; graceful wording when no order broadcast yet).
@@ -132,12 +108,11 @@ if !(isNil "WFBE_Client_Logic") then {
 	};
 };
 
-//--- Card: side-coloured header, grey label column, per-side coloured town counts.
+//--- Card: side-coloured header, grey label column, and only fog-safe town counts.
 _msg = Format ["<t color='%1' size='1.25'>CATCH-UP BRIEFING</t><br/><t color='#9aa7b0' size='0.9'>Joined %2 - round %3 in progress</t><br/><br/>", _sideColor, _sideName, _ageText];
-_msg = _msg + Format ["<t color='#9aa7b0'>Towns  </t><t color='#4d9bff'>WEST %1</t>  <t color='#ff6a5e'>EAST %2</t>  <t color='#7ed37e'>GUER %3</t>  <t color='#b8b8b8'>Free %4</t><br/>", _west, _east, _guer, _neutral];
+_msg = _msg + Format ["<t color='#9aa7b0'>Towns  </t><t color='#b8c4cc'>Own %1</t>  <t color='#7ed37e'>GUER %2</t>  <t color='#b8b8b8'>Free %3</t><br/>", _owned, _guer, _neutral];
 _msg = _msg + Format ["<t color='#9aa7b0'>Team   </t>%1  <t color='#e0b94f'>$%2</t><br/>", _teamName, _funds];
 _msg = _msg + Format ["<t color='#9aa7b0'>Tech   </t>%1 upgrades researched<br/>", _tech];
-_msg = _msg + Format ["<t color='#9aa7b0'>Front  </t>%1<br/>", _frontText];
 _msg = _msg + Format ["<t color='#9aa7b0'>Order  </t>%1<br/>", _intent];
 _msg = _msg + Format ["<t color='#9aa7b0'>CO     </t>%1<br/>", _commander];
 
