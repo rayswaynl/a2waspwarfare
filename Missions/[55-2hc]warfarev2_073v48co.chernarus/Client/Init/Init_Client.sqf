@@ -318,8 +318,9 @@ waitUntil {commonInitComplete};
 if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 [] spawn {
 	disableSerialization; //--- cmdcon42 (Ray 2026-07-02): this scheduled loop holds display/control handles (_disp, _ctrl) across waitUntil/sleep suspensions. Without disableSerialization the scheduler tries to serialise _disp when the script suspends and throws "variable '_disp' does not support serialization" the moment the TAGS button (MenuAction 25) enables the overlay. Must live in THIS script body (same scope as the display var), not a parent.
-	private ["_max","_disp","_shown","_shownPlayers","_shownAI","_shownVehicles","_shownTallies","_pp","_scr","_ctrl","_d","_sz","_nextCandidateScan","_playerCandidates","_aiCandidates","_vehicleCandidates","_tagStatCycles"];
+	private ["_max","_disp","_shown","_shownPlayers","_shownAI","_shownVehicles","_shownTallies","_pp","_scr","_ctrl","_d","_sz","_ntBase","_nextCandidateScan","_playerCandidates","_aiCandidates","_vehicleCandidates","_tagStatCycles"];
 	_max = 18;
+	_ntBase = 0.024; //--- fix(tags 07-24): inline <t size> is a MULTIPLIER of the NT0 base font size in Rsc/Titles.hpp; the absolute px targets below are divided by it (raw absolute values rendered sub-pixel since cmdcon29).
 	_nextCandidateScan = time;
 	_playerCandidates = [];
 	_aiCandidates = [];
@@ -350,10 +351,10 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 					_scr = worldToScreen [_pp select 0, _pp select 1, (_pp select 2) + 1.9];
 					if (count _scr == 2 && {(_scr select 0) > 0} && {(_scr select 0) < 1} && {(_scr select 1) > 0} && {(_scr select 1) < 1}) then {
 						_d = _x distance player;
-						_sz = 0.018 + (0.016 * (1 - (_d / 120)));
+						_sz = (0.018 + (0.016 * (1 - (_d / 120)))) / _ntBase;
 						_ctrl = _disp displayCtrl (62000 + _shown);
 						_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='#d6ecff'>%1</t>", name _x, _sz]));
-						_ctrl ctrlSetPosition [(_scr select 0) - 0.1, (_scr select 1) - 0.025, 0.2, 0.03];
+						_ctrl ctrlSetPosition [(_scr select 0) - 0.1, (_scr select 1) - 0.025, 0.2, 0.05];
 						_ctrl ctrlCommit 0;
 						_ctrl ctrlShow true;
 						_shown = _shown + 1;
@@ -372,10 +373,10 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 						_aiscr = worldToScreen [_aipp select 0, _aipp select 1, (_aipp select 2) + 1.9];
 						if (count _aiscr == 2 && {(_aiscr select 0) > 0} && {(_aiscr select 0) < 1} && {(_aiscr select 1) > 0} && {(_aiscr select 1) < 1}) then {
 							_aid = _aiunit distance player;
-							_aisz = 0.016 + (0.012 * (1 - (_aid / 150)));
+							_aisz = (0.016 + (0.012 * (1 - (_aid / 150)))) / _ntBase;
 							_ctrl = _disp displayCtrl (62000 + _shown);
 							_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='#b0ffb0'>%1</t>", name _aiunit, _aisz]));
-							_ctrl ctrlSetPosition [(_aiscr select 0) - 0.1, (_aiscr select 1) - 0.025, 0.2, 0.03];
+							_ctrl ctrlSetPosition [(_aiscr select 0) - 0.1, (_aiscr select 1) - 0.025, 0.2, 0.05];
 							_ctrl ctrlCommit 0;
 							_ctrl ctrlShow true;
 							_shown = _shown + 1;
@@ -397,10 +398,10 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 						_vscr = worldToScreen [_vpp select 0, _vpp select 1, (_vpp select 2) + 3.0];
 						if (count _vscr == 2 && {(_vscr select 0) > 0} && {(_vscr select 0) < 1} && {(_vscr select 1) > 0} && {(_vscr select 1) < 1}) then {
 							_vd = _vhc distance player;
-							_vsz = 0.015 + (0.012 * (1 - (_vd / 200)));
+							_vsz = (0.015 + (0.012 * (1 - (_vd / 200)))) / _ntBase;
 							_ctrl = _disp displayCtrl (62000 + _shown);
 							_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='#ffffa0'>%1</t>", _vtxt, _vsz]));
-							_ctrl ctrlSetPosition [(_vscr select 0) - 0.1, (_vscr select 1) - 0.025, 0.2, 0.03];
+							_ctrl ctrlSetPosition [(_vscr select 0) - 0.1, (_vscr select 1) - 0.025, 0.2, 0.05];
 							_ctrl ctrlCommit 0;
 							_ctrl ctrlShow true;
 							_shown = _shown + 1;
@@ -422,11 +423,11 @@ if (isNil "WFBE_NameTagsEnabled") then {WFBE_NameTagsEnabled = false};
 					_tscr = worldToScreen [_tpp select 0, _tpp select 1, (_tpp select 2) + 2.6];
 					if (count _tscr == 2 && {(_tscr select 0) > 0} && {(_tscr select 0) < 1} && {(_tscr select 1) > 0} && {(_tscr select 1) < 1}) then {
 						_td = _x distance player;
-						_tsz = 0.016 + (0.014 * (1 - (_td / 200)));
+						_tsz = (0.016 + (0.014 * (1 - (_td / 200)))) / _ntBase;
 						_tclr = '#ffb040'; if (_tcnt >= 3) then {_tclr = '#ff7a20'}; if (_tcnt >= 6) then {_tclr = '#ff2a10'}; if (_tcnt >= 10) then {_tclr = '#ffe8c0'};
 						_ctrl = _disp displayCtrl (62000 + _shown);
 						_ctrl ctrlSetStructuredText (parseText (Format ["<t align='center' shadow='1' size='%2' color='%3'>%1 %4</t>", _tcnt, _tsz, _tclr, if (_tcnt == 1) then {'KILL'} else {'KILLS'}]));
-						_ctrl ctrlSetPosition [(_tscr select 0) - 0.1, (_tscr select 1) - 0.025, 0.2, 0.03];
+						_ctrl ctrlSetPosition [(_tscr select 0) - 0.1, (_tscr select 1) - 0.025, 0.2, 0.05];
 						_ctrl ctrlCommit 0;
 						_ctrl ctrlShow true;
 						_shown = _shown + 1;
