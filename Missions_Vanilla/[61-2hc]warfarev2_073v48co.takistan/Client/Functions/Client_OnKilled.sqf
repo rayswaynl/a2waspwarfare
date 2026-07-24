@@ -129,6 +129,17 @@ titleCut ["", "BLACK OUT", 1];
 
 waitUntil {alive player};
 
+//--- fable/onkilled-team-resync (owner report "units kept renumbering themselves after I die",
+//--- correctness fix): resync WFBE_Client_Team to the player's POST-RESPAWN group BEFORE the
+//--- leader-reassert and TEAMBAR slot-1 guards below evaluate it. GROUP respawn (respawn=3) can
+//--- seat the player in a different group object than the one WFBE_Client_Team was last pointed
+//--- at (Init_Client.sqf / a prior sync), so without this the guards below compare against a STALE
+//--- pre-death reference and silently skip both the selectLeader reassert and the slot-1 rejoin,
+//--- leaving the roster in whatever order the engine produced (PR #1323's 61s heartbeat then
+//--- self-heals it, which is why the symptom is intermittent rather than permanent). Mirrors the
+//--- identical resync SkinSelector_Apply.sqf:392 and Client_OnRespawnHandler.sqf:26 already perform.
+if (!isNull (group player)) then {WFBE_Client_Team = group player};
+
 
 //--- Update the player.
 ["RequestSpecial", ["update-teamleader", WFBE_Client_Team, player]] Call WFBE_CO_FNC_SendToServer;
