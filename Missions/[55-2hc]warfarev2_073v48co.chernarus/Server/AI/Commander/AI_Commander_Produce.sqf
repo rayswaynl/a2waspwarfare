@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
+private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_factoryTargetOn","_factoryOrder","_factoryAnchor","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
 
 _side = _this;
 _sideText = str _side;
@@ -512,6 +512,19 @@ if (_airMaxTotalP > 0) then {
 				_ldr = leader _team;
 				if (!isNull _ldr) then {
 					{ if ((_x distance _ldr) < (_facObj distance _ldr)) then {_facObj = _x} } forEach _factories;
+				};
+
+				//--- OPTIONAL FORWARD FACTORY TARGETING: player-placed additional factories are already
+				//--- in _factories. When armed, prefer the one closest to this team's assigned AICOM
+				//--- objective instead of its current leader position. Invalid/missing orders retain the
+				//--- leader-selected result above; flag 0 is byte-identical to the legacy selection.
+				_factoryTargetOn = (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_TARGET_ENABLE", 0]) > 0;
+				if (_factoryTargetOn) then {
+					_factoryOrder = _team getVariable "wfbe_aicom_order";
+					if (!isNil "_factoryOrder" && {count _factoryOrder > 2} && {typeName (_factoryOrder select 2) == "ARRAY"}) then {
+						_factoryAnchor = _factoryOrder select 2;
+						{ if ((_x distance _factoryAnchor) < (_facObj distance _factoryAnchor)) then {_facObj = _x} } forEach _factories;
+					};
 				};
 
 				_funds = (_side) Call GetAICommanderFunds;
