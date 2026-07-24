@@ -2950,5 +2950,10 @@ if (WFBE_C_AICAP_MIDHIGH_TRIM > 0) then {
 //--- behaviour. OWNER CALL: flip to 1 to enable, or delete Client_FNC_OnFired.sqf wholesale. Ships default 0.
 if (isNil "WFBE_C_SATCHEL_TK_DETECT") then {WFBE_C_SATCHEL_TK_DETECT = 0};
 
+//--- ACR CONTENT GAP (owner 2026-07-24): opt-in registration of the Czech static-defense
+//--- trio and player gear-menu exposure. Full ACR must first be unlocked on the live host;
+//--- 0 keeps the pre-existing catalog and gear lists unchanged.
+if (isNil "WFBE_C_ACR_CONTENT_GAP") then {WFBE_C_ACR_CONTENT_GAP = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

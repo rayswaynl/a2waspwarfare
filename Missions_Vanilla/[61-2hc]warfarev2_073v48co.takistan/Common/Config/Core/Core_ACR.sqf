@@ -109,6 +109,18 @@ _i = _i + [['','',39620,45,-2,4,3,0,'Czech',[]]];
 _c = _c + ['Mi171Sh_rockets_CZ_EP1'];
 _i = _i + [['','',24000,40,-2,3,3,0,'Czech',[]]]; //--- owner 2026-06-12: pricier (was 16500) - airfield-exclusive gunship
 
+//--- Owner 2026-07-24: ACR static-defense catalog. L159_ACR and Mi24_D_CZ_ACR are
+//--- already registered by Core_US/Core_USMC and already have EASA rows, so do not
+//--- duplicate them here. These three Czech statics had no Core metadata anywhere.
+if ((missionNamespace getVariable ["WFBE_C_ACR_CONTENT_GAP", 0]) > 0) then {
+	_c = _c + ['DSHKM_CZ_EP1'];
+	_i = _i + [['','',200,0,1,0,'Defense',0,'Czech',[]]];
+	_c = _c + ['AGS_CZ_EP1'];
+	_i = _i + [['','',600,0,1,0,'Defense',0,'Czech',[]]];
+	_c = _c + ['2b14_82mm_CZ_EP1'];
+	_i = _i + [['','',1150,0,1,0,'Defense',0,'Czech',[]]];
+};
+
 for '_z' from 0 to (count _c)-1 do {
 	if (isClass (configFile >> 'CfgVehicles' >> (_c select _z))) then {
 		_get = missionNamespace getVariable (_c select _z);
