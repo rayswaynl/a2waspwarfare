@@ -57,6 +57,10 @@ _m = _m + ['1Rnd_SmokeYellow_M203'];
 _m = _m + ['Mine'];
 _m = _m + ['PipeBomb'];
 
+if ((missionNamespace getVariable ["WFBE_C_ACR_CONTENT_GAP", 0]) > 0) then {
+	_m = _m + ['10Rnd_762x51_CZ750'];
+};
+
 _m = [_m, _side] Call Compile preprocessFile "Common\Config\Config_SortMagazines.sqf";
 
 //--- Loadout - Weapons.
@@ -133,6 +137,10 @@ _u = _u + ['M2StaticMG_US_Bag_EP1'];
 _u = _u + ['MK19_TriPod_US_Bag_EP1'];
 _u = _u + ['TOW_TriPod_US_Bag_EP1'];
 _u = _u + ['M252_US_Bag_EP1'];
+
+if ((missionNamespace getVariable ["WFBE_C_ACR_CONTENT_GAP", 0]) > 0) then {
+	_u = _u + ['CZ805_A1_ACR','CZ805_A1_GL_ACR','CZ805_A2_ACR','CZ805_B_GL_ACR','CZ_750_S1_ACR'];
+};
 
 [_u, _m, _side] Call Compile preprocessFile "Common\Config\Config_SortWeapons.sqf";
 

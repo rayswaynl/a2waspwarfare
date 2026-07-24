@@ -760,7 +760,16 @@ _n = _n + [''];
 _o = _o + [210];
 _z = _z + [2];
 _m = _m + [-1];
-_u = _u + ["CZ805_A2_ACR"]; //--- BREN A2 carbine
+  if ((missionNamespace getVariable ["WFBE_C_ACR_CONTENT_GAP", 0]) > 0) then {
+  _u = _u + ["CZ805_B_GL_ACR"]; //--- verified ACR 7.62mm BREN GL; uses existing SCAR/M203 shop magazines
+  _p = _p + [''];
+  _n = _n + [''];
+  _o = _o + [225];
+  _z = _z + [2];
+  _m = _m + [-1];
+  };
+
+  _u = _u + ["CZ805_A2_ACR"]; //--- BREN A2 carbine
 _p = _p + [''];
 _n = _n + [''];
 _o = _o + [100];

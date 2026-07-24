@@ -53,6 +53,10 @@ _m = _m + ['1Rnd_SMOKEYELLOW_GP25'];
 _m = _m + ['MineE'];
 _m = _m + ['PipeBomb'];
 
+if ((missionNamespace getVariable ["WFBE_C_ACR_CONTENT_GAP", 0]) > 0) then {
+	_m = _m + ['30Rnd_556x45_Stanag','20Rnd_9x19_EVO','20Rnd_9x19_EVOSD','18Rnd_9x19_PhantomSD'];
+};
+
 _m = [_m, _side] Call Compile preprocessFile "Common\Config\Config_SortMagazines.sqf";
 
 //--- Loadout - Weapons.
@@ -107,6 +111,10 @@ _u = _u + ['ItemGPS'];
 _u = _u + ['ItemMap'];
 _u = _u + ['ItemRadio'];
 _u = _u + ['ItemWatch'];
+
+if ((missionNamespace getVariable ["WFBE_C_ACR_CONTENT_GAP", 0]) > 0) then {
+	_u = _u + ['CZ805_A2_SD_ACR','evo_sd_ACR','Evo_mrad_ACR','CZ_75_SP_01_PHANTOM_SD'];
+};
 
 [_u, _m, _side] Call Compile preprocessFile "Common\Config\Config_SortWeapons.sqf";
 
