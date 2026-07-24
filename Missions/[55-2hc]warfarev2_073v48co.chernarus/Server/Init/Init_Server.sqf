@@ -1279,6 +1279,36 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 };
 ["INITIALIZATION", "Init_Server.sqf: fable classtag-jip WFBE_ReqPlayerClasses handler armed (marker class-tag JIP recovery)."] Call WFBE_CO_FNC_LogContent;
 
+//--- SkinSelector old-body fallback: clients only request deletion of a body they have
+//--- already ghost-tagged and neutralised. A stale server isPlayer flag is given 30 seconds
+//--- to settle; the worker then deletes only a tagged object that is no longer player-owned.
+WFBE_SE_FNC_DeleteSkinSwapGhost = {
+	Private ["_ghost"];
+	_ghost = _this select 0;
+	if (typeName _ghost != "OBJECT") exitWith {};
+	if (isNull _ghost) exitWith {};
+	if (!(_ghost getVariable ["wasp_skinswap_ghost", false])) exitWith {};
+	[_ghost] spawn {
+		Private ["_ghost","_serverRetries"];
+		_ghost = _this select 0;
+		_serverRetries = 0;
+		while {!isNull _ghost && {isPlayer _ghost} && {_serverRetries < 15}} do {
+			sleep 2;
+			_serverRetries = _serverRetries + 1;
+		};
+		if (isNull _ghost) exitWith {};
+		if (!(_ghost getVariable ["wasp_skinswap_ghost", false])) exitWith {};
+		if (isPlayer _ghost) exitWith {
+			diag_log format ["[WFBE (SKIN)] server ghost cleanup abandoned after %1s: tagged object is still player-owned %2", _serverRetries * 2, _ghost];
+		};
+		diag_log format ["[WFBE (SKIN)] server deleting tagged residual body %1", _ghost];
+		deleteVehicle _ghost;
+	};
+};
+"WFBE_SkinSwapGhostDeleteRequest" addPublicVariableEventHandler {
+	[_this select 1] call WFBE_SE_FNC_DeleteSkinSwapGhost;
+};
+
 /////////////////////////////////////////////////////////////////////////////////// map cleaners
 
 // weaponholder cleaner

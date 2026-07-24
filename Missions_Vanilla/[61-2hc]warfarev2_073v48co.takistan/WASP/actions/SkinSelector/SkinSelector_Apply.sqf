@@ -278,44 +278,35 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 //--- Primary path never made a swap group (_swapGrp is grpNull), so this is a guarded no-op there.
 if (_usedSwapGrp && {!isNull _swapGrp}) then {if (count units _swapGrp == 0) then {deleteGroup _swapGrp}};
 
-//--- DUPLICATE-SOLDIER FIX 2026-06-15:
-//--- In A2/OA, selectPlayer does NOT destroy the previous body — _oldUnit becomes a
-//--- LIVING AI unit standing where the player was. The previous code deleteVehicle'd
-//--- it in the SAME frame as selectPlayer, before the engine finished detaching the
-//--- player from _oldUnit; that delete is unreliable mid-transition, so the old body
-//--- survived as the duplicate soldier next to the player. Fix:
-//---   1) Immediately neutralise the old body so it can never be seen/acted-on during
-//---      the settle window: hideObject (invisible), enableSimulation false (can't
-//---      shoot/move and won't ragdoll or fire a Killed EH chain), disableAI (belt),
-//---      and sink it far below ground so it is gone visually the instant we swap.
-//---   2) Pause to let selectPlayer fully complete BEFORE deleting (settle moved to the
-//---      correct side of the delete).
-//---   3) deleteVehicle, then re-check and re-delete if the engine deferred the first
-//---      delete — guarantees a single active body remains.
+//--- GHOST-BODY CLEANUP 2026-07-22:
+//--- selectPlayer can leave the prior player body alive when the transition and a
+//--- deleteVehicle happen on the same scheduler edge. Mark and neutralise it first,
+//--- then retry local deletion every two seconds for two minutes. The tag lets the
+//--- buy menu ignore the body immediately if locality keeps it alive. If it still
+//--- survives, ask the server to perform one final, tag-checked deletion.
 if (!isNull _oldUnit) then {
+	_oldUnit setVariable ["wasp_skinswap_ghost", true, true];
 	_oldUnit hideObject true;
 	_oldUnit enableSimulation false;
 	{_oldUnit disableAI _x} forEach ["MOVE","ANIM","FSM","TARGET","AUTOTARGET"];
-	_oldUnit setPosATL [(_pos select 0), (_pos select 1), -500]; //--- sink out of sight as a belt-and-braces measure
-};
-
-//--- Brief pause to let the engine settle the player transition BEFORE deleting.
-sleep 0.5;
-
-//--- Delete old unit (now safely detached from the player).
-diag_log format ["[WFBE (SKIN)] B5 deleteVehicle old unit %1 (alive=%2)", _oldUnit, alive _oldUnit];
-if (!isNull _oldUnit) then {deleteVehicle _oldUnit};
-
-//--- Safety net: if the engine deferred the delete (A2/OA mid-transition quirk), the
-//--- body can survive the first deleteVehicle. Re-check next frame and force-delete.
-if (!isNull _oldUnit) then {
+	_oldUnit setPosATL [(_pos select 0), (_pos select 1), -500];
 	[_oldUnit] spawn {
-		Private ["_o"];
+		Private ["_o","_ghostRetries"];
 		_o = _this select 0;
-		sleep 0.5;
-		if (!isNull _o && {_o != player}) then {
-			diag_log format ["[WFBE (SKIN)] B5b residual old body survived first delete — force deleteVehicle %1", _o];
+		_ghostRetries = 0;
+		while {!isNull _o && {_o != player} && {_ghostRetries < 60}} do {
 			deleteVehicle _o;
+			_ghostRetries = _ghostRetries + 1;
+			if (!isNull _o) then {sleep 2;};
+		};
+		if (!isNull _o && {_o != player}) then {
+			diag_log format ["[WFBE (SKIN)] B5_GHOST server cleanup requested after %1 local delete attempts for %2", _ghostRetries, _o];
+			if (isServer) then {
+				[_o] call WFBE_SE_FNC_DeleteSkinSwapGhost;
+			} else {
+				WFBE_SkinSwapGhostDeleteRequest = _o;
+				publicVariableServer "WFBE_SkinSwapGhostDeleteRequest";
+			};
 		};
 	};
 };
