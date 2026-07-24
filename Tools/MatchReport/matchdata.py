@@ -187,6 +187,7 @@ class MatchData:
         self.world_size = 15360
         self.duration = 0
         self.winner = "west"
+        self.victory_cause = ""
         self.seed = 0              # deterministic per-match variety seed (set in finalize)
         self.towns = {}            # name -> (x,y)
         self.init_owners = {}      # name -> side
@@ -332,15 +333,19 @@ class MatchData:
         self.hw_veh = self.catcount.get("VEH", 0); self.hw_air = self.catcount.get("AIR", 0)
         self.hq_kills = self.catcount.get("HQ", 0)
 
-        # --- WINNER: how did they win? supremacy (last side standing on the town map) vs a raw
-        # town-count edge vs base destruction. We only have CAPTURE + ROUNDEND, so infer from the
-        # final ownership: if the loser holds 0 towns at ROUNDEND it reads as SUPREMACY/base-wipe;
-        # otherwise it was decided on the town count. ---
+        # --- WINNER: MATCH|v1|END carries the authoritative mission trigger when available.
+        # Older RPTs lack it, so retain ownership inference as a compatibility fallback. ---
         fo = self.owners_at(self.duration)
         held = Counter(fo.values())
         wt = held.get(self.winner, 0)
         others = sum(v for k, v in held.items() if k not in (self.winner, "neu"))
-        if others == 0 and wt > 0:
+        if self.victory_cause == "ANNIHILATION":
+            self.win_how = {"mode": "ANNIHILATION", "text": "enemy HQ and factories destroyed"}
+        elif self.victory_cause == "TERRITORIAL":
+            self.win_how = {"mode": "TERRITORIAL", "text": "held the territorial victory threshold"}
+        elif self.victory_cause == "SUPREMACY":
+            self.win_how = {"mode": "SUPREMACY", "text": "captured every town"}
+        elif others == 0 and wt > 0:
             self.win_how = {"mode": "SUPREMACY", "text": f"held {wt} towns — enemy wiped off the map"}
         elif wt > 0:
             runner = max(((k, v) for k, v in held.items() if k not in (self.winner, "neu")),
@@ -408,12 +413,20 @@ def parse_waspstat(lines, names=None, line_times=None):
     """
     names = names or {}
     caps_raw, kills_raw, support_raw, pstats = [], [], [], {}
-    winner, duration, map_name = "west", 0, "chernarus"
+    winner, duration, map_name, victory_cause = "west", 0, "chernarus", ""
 
     for line_no, raw in enumerate(lines):
         # Peel the diag_log '"..."' wrapper FIRST so the final field (map name) and any embedded
         # name tokens don't carry stray quotes. Without this, map parsed as 'chernarus"'.
         raw = _dequote(raw)
+        if "MATCH|v1|END|" in raw:
+            match_parts = raw[raw.find("MATCH|v1|END|"):].split("|")
+            match_fields = {}
+            for field in match_parts[3:]:
+                key, sep, value = field.partition("=")
+                if sep:
+                    match_fields[key] = _clean(value)
+            victory_cause = match_fields.get("victory", victory_cause).upper()
         support = _support_event(raw)
         if support:
             support_raw.append((line_no, support["t"], support["kind"], support["label"]))
@@ -462,7 +475,7 @@ def parse_waspstat(lines, names=None, line_times=None):
                 for j in range(15): acc["d"][j] += d[j]
 
     m = MatchData()
-    m.winner = winner; m.duration = duration or 1; m.map_name = map_name.upper()
+    m.winner = winner; m.duration = duration or 1; m.map_name = map_name.upper(); m.victory_cause = victory_cause
 
     # towns + coords — plot the FULL map (every known town logic), not only captured towns,
     # so airfields and quiet towns still appear. Falls back to captured names on an unknown map.

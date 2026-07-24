@@ -26,5 +26,23 @@ class ZargabadControlMapTests(unittest.TestCase):
         self.assertIn("Yarum", report.towns)
 
 
+class VictoryCauseTests(unittest.TestCase):
+    def test_match_end_cause_overrides_town_count_inference(self):
+        for cause, expected_text in (
+            ("ANNIHILATION", "enemy HQ and factories destroyed"),
+            ("SUPREMACY", "captured every town"),
+            ("TERRITORIAL", "held the territorial victory threshold"),
+        ):
+            with self.subTest(cause=cause):
+                report = parse_waspstat([
+                    '"WASPSTAT|v1|1|CAPTURE|Zargabad|4|0|t=60"',
+                    '"WASPSTAT|v1|2|ROUNDEND|WEST|600|zargabad"',
+                    f'"MATCH|v1|END|winner=WEST|durationSec=600|world=zargabad|townsW=6|townsE=4|townsG=1|victory={cause}"',
+                ])
+
+                self.assertEqual(cause, report.win_how["mode"])
+                self.assertEqual(expected_text, report.win_how["text"])
+
+
 if __name__ == "__main__":
     unittest.main()
