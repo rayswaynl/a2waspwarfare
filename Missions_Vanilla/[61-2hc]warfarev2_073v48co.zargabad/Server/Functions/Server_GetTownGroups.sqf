@@ -160,6 +160,19 @@ if ((missionNamespace getVariable ["WFBE_C_TOWN_TYPE_OVERLAYS", 0]) > 0 && {(_si
 
 _groups_max = round(_groups_max * (missionNamespace getVariable "WFBE_C_TOWNS_UNITS_COEF"));
 
+//--- WEST/EAST TOWN-GARRISON SCALE (Ray-dir 2026-07-24): extend the GUER town-defender cut to the
+//--- conventional sides. Applied to the post-units-coef base BEFORE the CTL overlay (below), gated to
+//--- WEST/EAST so it never double-scales the GUER defender path (which owns WFBE_C_TOWN_GARRISON_SCALE).
+//--- Floor of 1 keeps a captured town from garrisoning empty. 1.0 = byte-identical to HEAD.
+if ((_side == west) || {_side == east}) then {
+	private ["_weScale"];
+	_weScale = missionNamespace getVariable ["WFBE_C_TOWN_GARRISON_SCALE_WE", 1];
+	if (_weScale != 1) then {
+		_groups_max = round (_groups_max * _weScale);
+		if (_groups_max < 1) then {_groups_max = 1};
+	};
+};
+
 //--- Commander Town Ledger (fable/ctl-impl-v1) materialization overlay (B2). Flag-off
 //--- (AICOMV2_LANE_CMD_TOWN_LEDGER=0) => this whole block is skipped, byte-identical to HEAD.
 if ((_side == west || {_side == east}) && {!_aa_get} && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0}) then {
