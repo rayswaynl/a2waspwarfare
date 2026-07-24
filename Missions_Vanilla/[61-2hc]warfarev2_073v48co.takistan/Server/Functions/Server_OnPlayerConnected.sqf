@@ -221,6 +221,42 @@ if (isNil '_sideJoined') exitWith {
 missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], nil];
 missionNamespace setVariable [Format ["WFBE_SOD_LASTG_%1", _uid], nil]; //--- b762: clear the stamp-on-demand stability tracker on enrollment success.
 
+//--- ROSTER-REG self-heal (kimi/bughunt JIP-session 2026-07-25): a resolved human team is NOT
+//--- guaranteed to be in the side's wfbe_teams. The b763 HC-magnet prune (Server_HandleSpecial.sqf
+//--- connected-hc) removes a boot-magnet slot group from the roster; when that HC later disconnects,
+//--- its body is deleted, the slot frees, and a human joining it resolves above via B748.1 (the group
+//--- still carries wfbe_side) - and NOTHING re-adds it: RequestTeamsResend is explicitly non-mutating,
+//--- b762 only fires on the isNull _team path, and the CIV-drift heal only covers CIV stamps. An
+//--- unregistered human team is invisible to the B74.2.5 commander-vote roster-push (built from
+//--- wfbe_teams), and - worse - Server_OnPlayerDisconnected's team scan iterates wfbe_teams, so it
+//--- bails "team is null": no funds save (the JIP record keeps its first-join FUNDS_START), no uid
+//--- release, no commander release. The next reconnect then reads that stale POSITIVE record and
+//--- clobbers the team's real wallet (the JIPFUNDS no-clobber guard only covers nil/<=0). Re-append
+//--- the resolved team (dedup-guarded, single broadcast) so enrollment always restores roster
+//--- membership. Also clear a stale wfbe_hc_magnet mark: it is write-once/read-once (Init_HC -> b763)
+//--- and means "an HC vacated this slot" - a human-occupied team must not keep it, or a later HC
+//--- reconnect re-prunes this team in a `magnet && !isPlayer leader` window (e.g. mid-respawn).
+//--- Side-gated: a CIV-transient resolve pass is left for the existing tiers (CIV-drift heal /
+//--- re-arm) exactly as the JIPFUNDS CIV guard below leaves it. A2-OA-1.64-safe: 2-arg getVariable
+//--- on the logic OBJECT only (never on the group), single-arg group read + isNil, array + append
+//--- (no pushBack), setVariable nil clear (mirrors the wfbe_uid / wfbe_orphaned_at clears).
+if (_sideJoined in [west, east, resistance]) then {
+	private ["_rrLogik","_rrTeams"];
+	_rrLogik = _sideJoined Call WFBE_CO_FNC_GetSideLogic;
+	if (!isNull _rrLogik) then {
+		_rrTeams = _rrLogik getVariable ["wfbe_teams", []];
+		if (!(_team in _rrTeams)) then {
+			_rrTeams = _rrTeams + [_team];
+			_rrLogik setVariable ["wfbe_teams", _rrTeams, true];
+			diag_log Format ["[WFBE][ROSTER-REG] re-registered resolved team %1 for [%2] [%3] into side %4 wfbe_teams (now %5) - slot was deregistered before this human joined.", _team, _name, _uid, _sideJoined, count _rrTeams];
+		};
+	};
+	if (!isNil {_team getVariable "wfbe_hc_magnet"}) then {
+		_team setVariable ["wfbe_hc_magnet", nil];
+		diag_log Format ["[WFBE][ROSTER-REG] cleared stale wfbe_hc_magnet on human-occupied team %1 ([%2] [%3]).", _team, _name, _uid];
+	};
+};
+
 //--- B63 (Ray 2026-06-21): INSTANT JIP catch-up for the own-side MARKER feeds. In A2-OA a
 //--- publicVariable is not replayed to a client that joined after the broadcast, so a fresh
 //--- joiner's WFBE_ACTIVE_AICOM_TEAMS / WFBE_ACTIVE_PATROLS are empty and their own commander-team

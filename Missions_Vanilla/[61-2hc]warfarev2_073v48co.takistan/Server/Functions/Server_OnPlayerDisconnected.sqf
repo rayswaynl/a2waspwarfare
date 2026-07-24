@@ -149,10 +149,19 @@ _old_unit_group = group _old_unit;
 //--- Make sure that our disconnected player group was the same as the original, we simply set him back to his group otherwise).
 if (_old_unit_group != _team) then {
 	//todo, check if we have at least 1 unit in the old squad.
-	Private ["_entitie"];
+	Private ["_entitie","_fillerClass"];
 	_entitie = objNull;
-	if ((count (units _old_unit_group)) < 2) then {
-		_entitie = [missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side], _old_unit_group, [0,0,0], _side] Call WFBE_CO_FNC_CreateUnit;
+	//--- kimi/bughunt JIP-session 2026-07-25: the WFBE_<side>SOLDIER variable family is never assigned
+	//--- anywhere in the mission tree (grep-verified: only reads exist, in legacy Units_*.sqf pools), so
+	//--- this read always returned nil - Common_CreateUnit then errored twice (getVariable nil at its
+	//--- own line 47, createUnit [nil,...] at line 49) and returned nil, after which `isNull _entitie`
+	//--- below errored a third time (isNull on nil). Live behavior today is "no filler + 3 RPT errors";
+	//--- keep that behavior (the filler only keeps the borrowed group alive across the joinSilent) but
+	//--- skip the doomed call unless the classname actually resolves to a string. Lazy && {} ordering:
+	//--- isNil first so typeName never evaluates on an undefined value.
+	_fillerClass = missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side];
+	if ((count (units _old_unit_group)) < 2 && {!isNil "_fillerClass"} && {typeName _fillerClass == "STRING"}) then {
+		_entitie = [_fillerClass, _old_unit_group, [0,0,0], _side] Call WFBE_CO_FNC_CreateUnit;
 	};
 
 	[_old_unit] joinSilent _team;
