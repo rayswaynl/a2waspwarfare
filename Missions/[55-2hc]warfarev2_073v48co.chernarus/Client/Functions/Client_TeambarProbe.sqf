@@ -44,7 +44,7 @@ WFBE_CL_FNC_TeambarProbe = {
     };
 
     diag_log Format ["TEAMBAR|v2|PROBE|evt=%1|phase=%2|t=%3|jip=%4|flag=%5|alivePlayer=%6|sameTeam=%7|isLeader=%8|arr0IsPlayer=%9|playerRankId=%10|groupId=%11|units=%12|order=[ %13]",
-        _evt, _phase, round time, didJIP,
+        _evt, _phase, round time, "na", //--- was didJIP: A3-only, resolves as an undefined VARIABLE on A2OA 1.64 (error spam every probe call, live RPT 2026-07-24) and always printed jip=any; no JIP primitive exists on 1.64, placeholder keeps the line format stable.
         (missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 1]), //--- raw value capture for the log (1 = the mitigation's real default), not a gate
         alive player, _sameTeam, _ldrIsP, _arr0IsP, rank player,
         str _grp, count (units _grp), _o];

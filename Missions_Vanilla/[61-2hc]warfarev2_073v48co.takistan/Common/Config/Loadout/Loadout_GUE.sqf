@@ -47,6 +47,10 @@ _m = _m + ['BAF_ied_v2'];
 _m = _m + ['BAF_ied_v3'];
 _m = _m + ['BAF_ied_v4'];
 
+if ((missionNamespace getVariable ["WFBE_C_ACR_CONTENT_GAP", 0]) > 0) then {
+	_m = _m + ['20Rnd_9x19_EVO','18Rnd_9x19_Phantom'];
+};
+
 _m = [_m, _side] Call Compile preprocessFile "Common\Config\Config_SortMagazines.sqf";
 
 //--- Loadout - Weapons.
@@ -79,6 +83,10 @@ _u = _u + ['ItemGPS'];
 _u = _u + ['ItemMap'];
 _u = _u + ['ItemRadio'];
 _u = _u + ['ItemWatch'];
+
+if ((missionNamespace getVariable ["WFBE_C_ACR_CONTENT_GAP", 0]) > 0) then {
+	_u = _u + ['Evo_ACR','CZ_75_SP_01_PHANTOM'];
+};
 
 [_u, _m, _side] Call Compile preprocessFile "Common\Config\Config_SortWeapons.sqf";
 
