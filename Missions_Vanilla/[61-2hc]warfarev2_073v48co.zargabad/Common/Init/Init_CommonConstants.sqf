@@ -1655,6 +1655,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- brief forbids a zoom hack. No flag is registered (an inert never-read constant is just dead code); to
 	//--- revive, first find/confirm an A2-OA zoom source, then add WFBE_C_MARKER_GROUP_AGG here + a read path.
 	if (isNil "WFBE_C_MARKER_MAPPERF_DIAG") then {WFBE_C_MARKER_MAPPERF_DIAG = 1};      //--- 1: emit a throttled MAPPERF|v1 RPT line (<=1/30s while the big map is open) so a live soak can verify the fix. 0: silent.
+	if (isNil "WFBE_C_MARKER_SLOT_DIGIT") then {WFBE_C_MARKER_SLOT_DIGIT = 0};           //--- 0: own-squad unit-marker number = engine creation-order id (legacy, byte-identical). >0: marker number = live command-bar slot (1-based index among alive group members in `units` order) so the map number matches the F-key bar after death/buy/rejoin. See Common_GetUnitSlotDigit.sqf.
 
 // Attack wave.
 	ATTACK_WAVE_PRICE_MODIFIER = 1;

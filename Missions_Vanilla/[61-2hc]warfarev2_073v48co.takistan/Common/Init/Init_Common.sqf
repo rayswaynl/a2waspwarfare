@@ -20,6 +20,7 @@ ChangeTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_Cha
 EquipArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_EquipArtillery.sqf";
 EquipLoadout = Compile preprocessFileLineNumbers "Common\Functions\Common_EquipLoadout.sqf";
 GetAIDigit = Compile preprocessFileLineNumbers "Common\Functions\Common_GetAIDigit.sqf";
+WFBE_CO_FNC_GetUnitSlotDigit = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitSlotDigit.sqf";
 GetClosestLocation = Compile preprocessFileLineNumbers "Common\Functions\Common_GetClosestLocation.sqf";
 GetClosestFriendlyLocation = Compile preprocessFileLineNumbers "Common\Functions\Common_GetClosestFriendlyTown.sqf";
 GetCommanderTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_GetCommanderTeam.sqf";

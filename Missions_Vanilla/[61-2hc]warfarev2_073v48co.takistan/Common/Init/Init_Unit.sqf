@@ -290,7 +290,7 @@ if (_isMan) then { //--- Man.
 	_size = [0.5,0.5];
 	if (group _unit == group player) then {
 		_color = "ColorOrange";
-		_txt = (_unit) Call GetAIDigit;
+		_txt = (_unit) Call WFBE_CO_FNC_GetUnitSlotDigit;
 	};
 	_params = [_type,_color,_size,_txt,_markerName,_unit,1,true,"DestroyedVehicle",_color,false,_side,[1,1]];
 } else { //--- Vehicle.
