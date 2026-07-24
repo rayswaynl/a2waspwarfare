@@ -273,8 +273,8 @@ if (worldName == "Zargabad") then {
 //--- they formation-fly as a drone flock. Extras COUNT toward WFBE_C_GUER_AIRDEF_MAX; the roll is skipped once the
 //--- cap is reached, so a swarm never exceeds the air budget. Only relevant when the GUER AIRDEF loop is enabled.
 	if (isNil "WFBE_C_GUER_KA137_SWARM") then {WFBE_C_GUER_KA137_SWARM = 1};                //--- master switch (1 = swarm rolls enabled, 0 = single drone only).
-	if (isNil "WFBE_C_GUER_KA137_SWARM_CHANCE") then {WFBE_C_GUER_KA137_SWARM_CHANCE = 0.25}; //--- chance a combat Ka-137 spawn also fields a 2nd drone in the same group.
-	if (isNil "WFBE_C_GUER_KA137_SWARM_CHANCE3") then {WFBE_C_GUER_KA137_SWARM_CHANCE3 = 0.15}; //--- chance (only if the 2nd rolled) for a 3rd drone in the same group.
+	if (isNil "WFBE_C_GUER_KA137_SWARM_CHANCE") then {WFBE_C_GUER_KA137_SWARM_CHANCE = 0.15}; //--- chance a combat Ka-137 spawn also fields a 2nd drone in the same group. [Ray-dir 2026-07-24 CHURN: 0.25->0.15 (fewer multi-drone spawns per event; aligns with the 4->3 MAX "fewer drones" intent); rollback 0.25.]
+	if (isNil "WFBE_C_GUER_KA137_SWARM_CHANCE3") then {WFBE_C_GUER_KA137_SWARM_CHANCE3 = 0.10}; //--- chance (only if the 2nd rolled) for a 3rd drone in the same group. [Ray-dir 2026-07-24 CHURN: 0.15->0.10 (fewer 3-drone flocks); rollback 0.15.]
 
 //--- KA-137 FLARE STOCK (cmdcon42 item2, Ray 2026-07-02; retuned 5-20 same day): AI-spawned Ka-137s (leader +
 //--- swarm extras) get a chance-based MIN-MAX countermeasure budget (variance-nerf vs the flat CM_Set default 32).
@@ -2649,9 +2649,9 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- on active GUER-held contested towns. One crew gunner per town, optional night searchlight.
 //--- Worker: Server/Server_TownGarrisonDressing.sqf. Flag-off (0) = worker not launched = byte-identical.
 	if (isNil "WFBE_C_GARRISON_DRESSING")          then {WFBE_C_GARRISON_DRESSING = 1};           //--- Master enable. 0 = off; >0 = dress active contested GUER towns.
-	if (isNil "WFBE_C_GARRISON_DRESSING_INTERVAL") then {WFBE_C_GARRISON_DRESSING_INTERVAL = 45};  //--- Seconds between worker ticks.
+	if (isNil "WFBE_C_GARRISON_DRESSING_INTERVAL") then {WFBE_C_GARRISON_DRESSING_INTERVAL = 90};  //--- Seconds between worker ticks. [Ray-dir 2026-07-24 CHURN: 45->90s (halve garrison-gun spawn/despawn churn, ~630 VEHDEL/session); rollback 45.]
 	if (isNil "WFBE_C_GARRISON_DRESSING_RADIUS")   then {WFBE_C_GARRISON_DRESSING_RADIUS = 900};   //--- m: enemy proximity gate.
-	if (isNil "WFBE_C_GARRISON_DRESSING_QUIET")    then {WFBE_C_GARRISON_DRESSING_QUIET = 300};   //--- s: remove dressed guns after this long without a nearby enemy.
+	if (isNil "WFBE_C_GARRISON_DRESSING_QUIET")    then {WFBE_C_GARRISON_DRESSING_QUIET = 240};   //--- s: remove dressed guns after this long without a nearby enemy. [Ray-dir 2026-07-24 CHURN: 300->240s (retire dressed guns sooner once the enemy leaves); rollback 300.]
 	if (isNil "WFBE_C_GARRISON_DRESSING_LIFETIME") then {WFBE_C_GARRISON_DRESSING_LIFETIME = 900}; //--- s: forced recycle age per gun (anti-accumulation).
 	if (isNil "WFBE_C_GARRISON_DRESSING_MAX")      then {WFBE_C_GARRISON_DRESSING_MAX = 6};        //--- Max simultaneous dressed towns across the map.
 	if (isNil "WFBE_C_GARRISON_DRESSING_SEARCHLIGHT") then {WFBE_C_GARRISON_DRESSING_SEARCHLIGHT = 1}; //--- 1: add SearchLight_RUS at night; 0: gun only.
