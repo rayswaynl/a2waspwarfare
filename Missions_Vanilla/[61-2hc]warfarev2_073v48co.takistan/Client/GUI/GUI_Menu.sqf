@@ -292,17 +292,20 @@ while {alive player && dialog} do {
 		};
 	};
 
-	//--- Towns: open the GUER town-garrison panel (GUER Director feature; resistance-only).
-	//--- The commissar/town-actions panel onLoad hard-guards sideJoined==resistance, so routing
-	//--- every side here left WEST/EAST at a dead-end (menu flashed open then self-closed). Gate
-	//--- at click time like the MenuAction==8 Economy split and the MenuAction==30 Director self-guard.
+	//--- Towns: optional read-only own-side garrison view; flag-off preserves the existing
+	//--- GUER Director route and its WEST/EAST hint from PR #1271.
 	if (MenuAction == 26) exitWith {
 		MenuAction = -1;
-		if (sideJoined == resistance) then {
+		if ((missionNamespace getVariable ["WFBE_C_TOWNS_TAB_GARRISON", 0]) > 0) then {
 			closeDialog 0;
-			createDialog "WFBE_GDirCommissarMenu";
+			createDialog "WFBE_TownsGarrisonMenu";
 		} else {
-			hint "Town garrison actions are for resistance (GUER) players.";
+			if (sideJoined == resistance) then {
+				closeDialog 0;
+				createDialog "WFBE_GDirCommissarMenu";
+			} else {
+				hint "Town garrison actions are for resistance (GUER) players.";
+			};
 		};
 	};
 
