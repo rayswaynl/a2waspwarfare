@@ -18,10 +18,13 @@ _sv = _town getVariable "supplyValue";
 if (isNil "WFBE_Client_SideID") exitWith {};
 _side_captured = (_town_side_value_new) Call WFBE_CO_FNC_GetSideFromID;
 
-//--- Color the town depending on the side which captured. This is client-local and must not be
-//--- hidden behind the information/fog-of-war gate, otherwise the Depot marker lies forever.
-_color = missionNamespace getVariable (Format ["WFBE_C_%1_COLOR", _side_captured]);
+//--- Keep enemy ownership unknown. Init_Markers uses this same policy: only the owning
+//--- client side (and GUER) gets the owner colour; all other clients retain a neutral Depot marker.
 _townMarker = Format ["WFBE_%1_CityMarker", _town];
+_color = missionNamespace getVariable ["WFBE_C_UNKNOWN_COLOR", "ColorGreen"];
+if (_town_side_value_new == WFBE_Client_SideID || _town_side_value_new == WFBE_C_GUER_ID) then {
+	_color = missionNamespace getVariable (Format ["WFBE_C_%1_COLOR", _side_captured]);
+};
 _townMarker setMarkerColorLocal _color;
 
 //--- Make sure that the client is concerned by the capture either by capturing or having a town captured.
