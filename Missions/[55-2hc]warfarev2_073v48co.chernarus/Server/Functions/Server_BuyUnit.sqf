@@ -347,10 +347,16 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 	(_vehicle) call WFBE_CO_FNC_ClearVehicleCargo;
 
 	_soldier = [_crew,_team,_position,_sideID] Call WFBE_CO_FNC_CreateUnit;
-
-
-	[_soldier] allowGetIn true;
-	[_soldier] orderGetIn true;
+	if (isNull _soldier) then {
+		diag_log Format ["BUYFAIL|v1|aicom-crew|side=%1|class=%2|seat=driver|spawnPos=%3", _sideText, _unitType, _position];
+		["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL AI crew [%1] for [%2] was objNull at driver seat; driver remains empty.", _crew, _unitType]] Call WFBE_CO_FNC_LogContent;
+	} else {
+		[_soldier] allowGetIn true;
+		[_soldier] orderGetIn true;
+		_soldier assignAsDriver _vehicle;
+		_soldier moveInDriver _vehicle;
+		_built = _built + 1;
+	};
 	if ((missionNamespace getVariable "WFBE_C_UNITS_BALANCING") > 0) then {_vehicle setVariable ["wfbe_balance_side", _side]; (_vehicle) Call BalanceInit};
 
 	if (_unitType isKindOf "Air") then {
@@ -378,17 +384,19 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 		};
 	};
 
-	_soldier assignAsDriver _vehicle;
-	_soldier moveInDriver _vehicle;
 	[_sideText,'VehiclesCreated',1] Call UpdateStatistics;
-	_built = 1;
 	if (_isVehicle select 1) then {
 		_soldier = [_crew,_team,_position,_sideID] Call WFBE_CO_FNC_CreateUnit;
-		[_soldier] allowGetIn true;
-		[_soldier] orderGetIn true;
-		_soldier assignAsGunner _vehicle;
-		_soldier moveInGunner _vehicle;
-		_built = _built + 1;
+		if (isNull _soldier) then {
+			diag_log Format ["BUYFAIL|v1|aicom-crew|side=%1|class=%2|seat=gunner|spawnPos=%3", _sideText, _unitType, _position];
+			["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL AI crew [%1] for [%2] was objNull at gunner seat; gunner remains empty.", _crew, _unitType]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			[_soldier] allowGetIn true;
+			[_soldier] orderGetIn true;
+			_soldier assignAsGunner _vehicle;
+			_soldier moveInGunner _vehicle;
+			_built = _built + 1;
+		};
 	};
 	if (_isVehicle select 2) then {
 		if (vehicle leader _team == leader _team && leader _team distance _vehicle < 200 && alive leader _team) then {
@@ -396,14 +404,20 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 			[leader _team] orderGetIn true;
 			(leader _team) assignAsCommander _vehicle;
 			(leader _team) moveInCommander _vehicle;
+			_built = _built + 1;
 		} else {
 			_soldier = [_crew,_team,_position,_sideID] Call WFBE_CO_FNC_CreateUnit;
-			[_soldier] allowGetIn true;
-			[_soldier] orderGetIn true;
-			_soldier assignAsCommander _vehicle;
-			_soldier moveInCommander _vehicle;
+			if (isNull _soldier) then {
+				diag_log Format ["BUYFAIL|v1|aicom-crew|side=%1|class=%2|seat=commander|spawnPos=%3", _sideText, _unitType, _position];
+				["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL AI crew [%1] for [%2] was objNull at commander seat; commander remains empty.", _crew, _unitType]] Call WFBE_CO_FNC_LogContent;
+			} else {
+				[_soldier] allowGetIn true;
+				[_soldier] orderGetIn true;
+				_soldier assignAsCommander _vehicle;
+				_soldier moveInCommander _vehicle;
+				_built = _built + 1;
+			};
 		};
-		_built = _built + 1;
 	};
 
 	if (_isVehicle select 3) then {
@@ -414,9 +428,14 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 		{
 			if (isNull (_vehicle turretUnit _x)) then {
 				_soldier = [_crew,_team,_position,_sideID] Call WFBE_CO_FNC_CreateUnit;
-				[_soldier] allowGetIn true;
-				_soldier moveInTurret [_vehicle, _x];
-				_built = _built + 1;
+				if (isNull _soldier) then {
+					diag_log Format ["BUYFAIL|v1|aicom-crew|side=%1|class=%2|seat=turret|spawnPos=%3", _sideText, _unitType, _position];
+					["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL AI crew [%1] for [%2] was objNull at turret seat; turret remains empty.", _crew, _unitType]] Call WFBE_CO_FNC_LogContent;
+				} else {
+					[_soldier] allowGetIn true;
+					_soldier moveInTurret [_vehicle, _x];
+					_built = _built + 1;
+				};
 			};
 		} forEach _turrets;
 	};
