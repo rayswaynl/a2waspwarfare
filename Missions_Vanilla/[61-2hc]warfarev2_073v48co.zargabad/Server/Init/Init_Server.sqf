@@ -885,7 +885,9 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 			if !(isNil '_x') then {
 				if (_x isKindOf "Man") then {
 					Private ["_group"];
+					Private ["_playerSide"];
 					_group = group _x;
+					_playerSide = _side;
 					[_teams, _group] Call WFBE_CO_FNC_ArrayPush;
 
 					if (isNil {_group getVariable "wfbe_funds"}) then {_group setVariable ["wfbe_funds", missionNamespace getVariable Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side], true]};
@@ -904,11 +906,11 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 						_procedureName = "INSERT_PLAYER";
 						_nickname = name (leader (group _x));
 						_game_guid = getPlayerUID (leader (group _x));
-						_side = side (leader (group _x));
+						_playerSide = side (leader (group _x));
 						_money = _group getVariable "wfbe_funds";
 					};
 
-					["INITIALIZATION", Format["Init_Server.sqf: [%1] Team [%2] was initialized.", _side, _group]] Call WFBE_CO_FNC_LogContent;
+					["INITIALIZATION", Format["Init_Server.sqf: [%1] Team [%2] was initialized.", _playerSide, _group]] Call WFBE_CO_FNC_LogContent;
 				};
 
 			};
