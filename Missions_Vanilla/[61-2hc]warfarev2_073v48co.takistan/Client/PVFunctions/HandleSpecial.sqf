@@ -154,6 +154,14 @@ switch (_request) do {
 		missionNamespace setVariable ['WFBE_OPFOR_SCORE_JOIN', (_args select 2)]
 	};
 	case "uav-reveal": {_args spawn WFBE_CL_FNC_Reveal_UAV};
+	case "uav-created": {
+		Private ["_uav","_uid"];
+		if (count _args != 2) exitWith {};
+		_uid = _args select 0;
+		_uav = _args select 1;
+		if (typeName _uid != "STRING" || {_uid != getPlayerUID player} || {isNull _uav}) exitWith {};
+		[_uav] ExecVM "Client\Module\UAV\uav.sqf";
+	};
 	//--- Accept the ICBM/TEL token only when it echoes this client's private challenge.
 	case "icbm-tel-auth-token": {
 		Private ["_telChallenge","_telChallengeKey","_telExpires","_telPurpose","_telToken"];
