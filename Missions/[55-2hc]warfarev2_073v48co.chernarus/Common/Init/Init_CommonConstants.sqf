@@ -830,6 +830,22 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM2_AIRRESP_LOITER_TIME")    then {WFBE_C_AICOM2_AIRRESP_LOITER_TIME    = 240};  //--- s a response flight stays on its lane before self-despawn/recycle; also the watchdog's hard ceiling even while the lane stays hot.
 	//--- WFBE_C_AICOM_AIR_MIN_TOWNS is already registered above (Init_CommonConstants.sqf:370, default 3) and shared with W6/W13 Wildcard eligibility - AIRRESP reuses it as-is, no re-registration.
 
+	//--- M7 AICOM2 AIRSTRIKE (AI_Commander_AirStrike.sqf): owner directive 2026-07-25 ("make sure ai commander
+	//--- jets / helicopters may target factories") - new, additive AICOM2 closer, NOT a flag flip of anything
+	//--- dormant (both diag-air-vs-factories.md and diag-decap-idle.md confirmed no existing mechanism lets air
+	//--- target a structure at all; DECAP is ground-only and hard-gated on the ENEMY HQ being alive, so it
+	//--- structurally cannot raze a survivor's factories once that HQ is already dead). SHADOW-FIRST default 0
+	//--- (opposite of AIRRESP's owner-armed default) - this is a new HIGH-RISK core-AICOM lane and needs a soak
+	//--- before the owner arms it, same convention as DECAP.
+	if (isNil "WFBE_C_AICOM2_AIRSTRIKE_ENABLE")   then {WFBE_C_AICOM2_AIRSTRIKE_ENABLE   = 0};    //--- master switch. 0 = shadow (telemetry only, no dispatch) - DEFAULT. 1 = armed.
+	if (isNil "WFBE_C_AICOM2_AIRSTRIKE_COOLDOWN") then {WFBE_C_AICOM2_AIRSTRIKE_COOLDOWN = 900};  //--- s: per-side minimum gap between AI-initiated factory-strike dispatch attempts (cannot spam). Stamped only on an actual successful dispatch.
+	if (isNil "WFBE_C_AICOM2_AIRSTRIKE_MAX_AIR")  then {WFBE_C_AICOM2_AIRSTRIKE_MAX_AIR  = 1};    //--- global alive-cap on AICOM2 factory-strike flights per side - deliberately smaller/separate from AIRRESP_MAX_AIR(2) so a factory hunt never crowds out AIRRESP's player-response role. Still bounded by the side-wide AIR_MAX_TOTAL/AIR_MAX_LATE headroom check on top of this.
+	if (isNil "WFBE_C_AICOM2_AIRSTRIKE_HOLD")     then {WFBE_C_AICOM2_AIRSTRIKE_HOLD     = 360};  //--- s a dispatched strike flight keeps re-picking + reveal/doTarget/doFire-ing the nearest live enemy factory before self-despawn; mirrors WFBE_C_AICOM_ASSAULT_HOLD (the ground BASE-ASSAULT fire phase's own hold ceiling).
+	if (isNil "WFBE_C_AICOM2_AIRSTRIKE_SAD")      then {WFBE_C_AICOM2_AIRSTRIKE_SAD      = 150};  //--- m: SAD waypoint radius laid under the current strike target each tick so the flight is never idle (mirrors WFBE_C_AICOM_ASSAULT_SAD, widened for an airborne SAD).
+	//--- WFBE_C_AICOM_AIR_MAX_TOTAL / _AIR_MAX_LATE / _AIR_LATE_MINS (Init_CommonConstants.sqf:474,1061,1062) and
+	//--- WFBE_C_AIR_ATTACK_GUNNER are already registered elsewhere and reused as-is by AIRSTRIKE - no re-registration.
+
+
 	//--- D7 AICOM FEINT: AI commander occasionally dispatches a small feint team toward a
 	//--- NON-target enemy town, then recalls it, to pressure the enemy rear and split attention.
 	//--- All three constants are inert while FEINT_ENABLE=0 (default). No gameplay effect at 0.

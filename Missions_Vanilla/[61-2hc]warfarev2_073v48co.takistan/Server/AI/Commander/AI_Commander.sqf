@@ -628,6 +628,8 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				if (!isNil "WFBE_SE_FNC_AICOM2_Decapitate") then {(_side) Call WFBE_SE_FNC_AICOM2_Decapitate};
 				//--- M6 AIRRESP closer runs AFTER DECAP each tick; it NEVER founds a ground team or touches wfbe_aicom_decap/wfbe_aicom_targets/wfbe_aicom_alloc_target - it only dispatches its own tracked air response flights onto an organically-sensed W/E lane. Inert unless WFBE_C_AICOM2_AIRRESP_ENABLE > 0 (ARMED, default 1, owner 2026-07-08).
 				if (!isNil "WFBE_SE_FNC_AICOM2_AirResp") then {(_side) Call WFBE_SE_FNC_AICOM2_AirResp};
+				//--- M7 AIRSTRIKE closer runs AFTER AIRRESP each tick; owner directive 2026-07-25 ("make sure ai commander jets / helicopters may target factories"). NEVER writes wfbe_aicom_decap/wfbe_aicom_targets/wfbe_aicom_alloc_target - ground authority is untouched. Inert unless WFBE_C_AICOM2_AIRSTRIKE_ENABLE > 0 (default 0, shadow-first).
+				if (!isNil "WFBE_SE_FNC_AICOM2_AirStrike") then {(_side) Call WFBE_SE_FNC_AICOM2_AirStrike};
 				//--- NOTE (claude-gaming 2026-06-28): the AI-INTENT publish block was MOVED OUT of this gate
 				//--- (it used to live here) to the _active-gated block just below the Executor, so the command-console
 				//--- intent readout refreshes + reaches JIP/assist clients even when the AI is not in full-build mode.
