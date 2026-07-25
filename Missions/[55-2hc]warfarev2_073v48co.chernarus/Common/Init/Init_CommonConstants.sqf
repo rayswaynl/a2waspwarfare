@@ -1155,6 +1155,8 @@ if (worldName == "Zargabad") then {
 	//--- === cmdcon41 wave-3 (Ray picks 2026-07-02): a-life encounter layer + smoke + carriers + territorial win + EASA/gear ===
 	if (isNil "WFBE_C_TOWNS_SORTIES")                 then {WFBE_C_TOWNS_SORTIES = 1};                 //--- active-town garrisons rotate a 4-man sortie on a 300-800m loop (existing teams, no new groups; instant recall on contested).
 	if (isNil "WFBE_C_TOWNS_SORTIE_MINS")             then {WFBE_C_TOWNS_SORTIE_MINS = 8};             //--- minutes per sortie rotation.
+	if (isNil "WFBE_C_TOWNS_SORTIES_RTB")             then {WFBE_C_TOWNS_SORTIES_RTB = 0};             //--- u3-sortie-despawn: rotation-end gets a bounded return-to-town-centre leg instead of an abrupt end-state clear; 0 = INERT (legacy instant clear, unchanged).
+	if (isNil "WFBE_C_TOWNS_SORTIE_RTB_TIMEOUT")      then {WFBE_C_TOWNS_SORTIE_RTB_TIMEOUT = 180};    //--- s cap on the RTB leg above (never an unbounded wait even if the group gets stuck short of the town).
 	if (isNil "WFBE_C_PATROLS_ROADBIAS")              then {WFBE_C_PATROLS_ROADBIAS = 1};              //--- upgrade-tier patrols route along ROADS between owned towns/HQ (players drive roads -> encounters); legacy random fallback.
 	if (isNil "WFBE_C_PATROLS_ROADBIAS_MOTORIZED")    then {WFBE_C_PATROLS_ROADBIAS_MOTORIZED = 1};    //--- road patrols prefer vehicle-containing pool entries (full-pool fallback for foot-only pools e.g. TKGUE).
 	if (isNil "WFBE_C_AICOM_SMOKE")                   then {WFBE_C_AICOM_SMOKE = 1};                   //--- smoke discipline: shells on the assault approach axis + covering smoke on break-off.
