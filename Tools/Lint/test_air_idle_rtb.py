@@ -50,3 +50,39 @@ def test_idle_rtb_keeps_delete_order_local_and_crew_first():
     crew_delete = block.index("deleteVehicle _x")
     hull_delete = block.index("deleteVehicle _rh")
     assert crew_delete < hull_delete
+
+
+def test_idle_rtb_timer_resets_when_a_veto_interrupts_the_idle_streak():
+    """Regression test for the PR #1452 review defect: the idle-RTB
+    if-statement's own then-block closed with no else, so a veto (busy /
+    airborne / engaged / en-route-to-order / player-crewed) that interrupted
+    an in-progress idle streak never cleared wfbe_aicom_air_idle_at. Once the
+    veto lifted, the stale timestamp let RTB fire immediately instead of only
+    after a fresh WFBE_C_AICOM_AIR_IDLE_MINUTES of genuinely uninterrupted
+    idleness. The fix mirrors the legacy reap timer's own else, which already
+    resets wfbe_heli_baseidle_at the same way."""
+    source = RUNNER.read_text(encoding="utf-8")
+    start = source.index("//--- B74.2 HELI BASE-REAP")
+    end = source.index("}; //--- B66 end if (_hasAttackHeli)", start)
+    block = source[start:end]
+
+    idle_if = (
+        "if (_idleRtbEnabled && {!_rAtBase} && {!_rPlayerCrew} && {!_rBusy} "
+        "&& {!_rAirborne} && {!_rEngaged} && {!_rEnRoute}) then {"
+    )
+    assert idle_if in block
+
+    # This exact, deeply-indented else belongs to the idle-RTB if itself (its
+    # indentation matches the if, not the shallower outer wrapper's own
+    # differently-indented else a few lines further down that resets the same
+    # variable for an unrelated, pre-existing reason).
+    reset_else = (
+        "} else {\n"
+        '\t\t\t\t\t\t\t\t\t\t\t_rh setVariable ["wfbe_aicom_air_idle_at", nil];\n'
+        "\t\t\t\t\t\t\t\t\t\t};"
+    )
+    assert reset_else in block, (
+        "idle-RTB if-statement has no else resetting wfbe_aicom_air_idle_at "
+        "on veto interruption (mirror the legacy wfbe_heli_baseidle_at reset)"
+    )
+    assert block.index(reset_else) > block.index(idle_if)

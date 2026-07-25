@@ -355,6 +355,8 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 													};
 												};
 											};
+										} else {
+											_rh setVariable ["wfbe_aicom_air_idle_at", nil];
 										};
 							} else {
 								_rh setVariable ["wfbe_aicom_air_idle_at", nil];
