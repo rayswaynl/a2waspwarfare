@@ -1052,14 +1052,20 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							//--- spawn+sleep so this team's march starts later than the team(s) already aimed at the same
 							//--- town. Everything above (route build, strike instrumentation) stays synchronous/unchanged.
 							if (_waveDelay > 0) then {
-								[_team, _hcRoute, _hcStrk, _hcDest, _sideText, _waveDelay] spawn {
-									private ["_wsTeam","_wsRoute","_wsStrk","_wsDest","_wsSideText","_wsDelay"];
-									_wsTeam = _this select 0; _wsRoute = _this select 1; _wsStrk = _this select 2; _wsDest = _this select 3; _wsSideText = _this select 4; _wsDelay = _this select 5;
+								private "_wsSeqSnap0";
+								_wsSeqSnap0 = if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0};
+								[_team, _hcRoute, _hcStrk, _hcDest, _sideText, _waveDelay, _wsSeqSnap0] spawn {
+									private ["_wsTeam","_wsRoute","_wsStrk","_wsDest","_wsSideText","_wsDelay","_wsSeqSnap","_wsSeqNow"];
+									_wsTeam = _this select 0; _wsRoute = _this select 1; _wsStrk = _this select 2; _wsDest = _this select 3; _wsSideText = _this select 4; _wsDelay = _this select 5; _wsSeqSnap = _this select 6;
 									sleep _wsDelay;
-									if (!isNull _wsTeam && {({alive _x} count (units _wsTeam)) > 0}) then {
+									_wsSeqNow = if (isNil {_wsTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_wsTeam getVariable "wfbe_aicom_order") select 0};
+									//--- ORDER-GENERATION GUARD (codex hold remediation): if a newer order was published for this
+									//--- team while this wave-stagger thread slept (seq bumped by a fresher retask), drop this
+									//--- stale order silently - the newer order wins. Only publish when the seq is unchanged.
+									if (!isNull _wsTeam && {({alive _x} count (units _wsTeam)) > 0} && {_wsSeqNow == _wsSeqSnap}) then {
 										_wsTeam setVariable ["wfbe_aicom_route", _wsRoute, true];
 										_wsTeam setVariable ["wfbe_aicom_unstuck", _wsStrk, true];
-										_wsTeam setVariable ["wfbe_aicom_order", [(if (isNil {_wsTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_wsTeam getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", _wsDest, _wsStrk], true]; //--- feat/aicom-wave-stagger: same order-broadcast statement as the synchronous else-branch, just deferred; seq read happens at spawn-fire time so it stays correct even if interleaved with other order changes.
+										_wsTeam setVariable ["wfbe_aicom_order", [_wsSeqSnap + 1, "towns-target", _wsDest, _wsStrk], true]; //--- feat/aicom-wave-stagger: same order-broadcast statement as the synchronous else-branch, just deferred; seq guarded above so a stale wave never clobbers a fresher retask.
 										diag_log ("AICOMSTAT|v2|EVENT|" + _wsSideText + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_PUBLISHED|team=" + (str _wsTeam) + "|mode=towns-target|wave=1|delay=" + str (round _wsDelay));
 									};
 								};
