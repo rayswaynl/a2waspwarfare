@@ -1762,6 +1762,8 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_PLAYERS_UAV_SPOTTING_DELAY = 20; //--- Interval between each uav spotting routine.
 	WFBE_C_PLAYERS_UAV_SPOTTING_DETECTION = 0.21; //--- UAV will reveal each targets that it knows about this value (0-4)
 	WFBE_C_PLAYERS_UAV_SPOTTING_RANGE = 1100; //--- Max Range of the UAV spotting.
+	if (isNil "WFBE_C_PLAYERS_UAV_COST") then {WFBE_C_PLAYERS_UAV_COST = 12500}; //--- Server-authoritative UAV support charge.
+	if (isNil "WFBE_C_PLAYERS_UAV_COOLDOWN") then {WFBE_C_PLAYERS_UAV_COOLDOWN = 1800}; //--- Per-team seconds between authorised UAV hulls.
 
 //--- Respawn.
 	if (isNil "WFBE_C_RESPAWN_CAMPS_MODE") then {WFBE_C_RESPAWN_CAMPS_MODE = 2}; //--- Respawn Camps (0: Disabled, 1: Classic [from town center], 2: Enhanced [from nearby camps]).

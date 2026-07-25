@@ -12,23 +12,30 @@ if (!isNull playerUAV) exitWith {
 	};
 };
 
-if (isNil {missionNamespace getVariable Format ["WFBE_%1UAV",sideJoinedText]}) exitWith {};
-if ((missionNamespace getVariable Format ["WFBE_%1UAV",sideJoinedText]) == "") exitWith {};
+//--- Server-authoritative handoff: a normal terminal use requests an airframe only.
+//--- The returned server-created object is passed back into this script so the existing client-local
+//--- crew/group and terminal controls retain their OA locality semantics.
+if (count _this > 0) then {
+	_uav = _this select 0;
+} else {
+	if (isNil {missionNamespace getVariable Format ["WFBE_%1UAV",sideJoinedText]}) exitWith {};
+	if ((missionNamespace getVariable Format ["WFBE_%1UAV",sideJoinedText]) == "") exitWith {};
 
-_buildings = (sideJoined) Call WFBE_CO_FNC_GetSideStructures;
-_checks = [sideJoined,missionNamespace getVariable Format ["WFBE_%1COMMANDCENTERTYPE",sideJoinedText],_buildings] Call GetFactories;
-_closest = objNull;
-if (count _checks > 0) then {
-	_closest = [player,_checks] Call WFBE_CO_FNC_GetClosestEntity;
+	_buildings = (sideJoined) Call WFBE_CO_FNC_GetSideStructures;
+	_checks = [sideJoined,missionNamespace getVariable Format ["WFBE_%1COMMANDCENTERTYPE",sideJoinedText],_buildings] Call GetFactories;
+	_closest = objNull;
+	if (count _checks > 0) then {
+		_closest = [player,_checks] Call WFBE_CO_FNC_GetClosestEntity;
+	};
+
+	if (isNull _closest) exitWith {};
+	["RequestSpecial", ["uav",sideJoined,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+	exitWith {};
 };
 
-if (isNull _closest) exitWith {};
-
-_uav = createVehicle [missionNamespace getVariable Format ["WFBE_%1UAV",sideJoinedText],getPos _closest, [], 0, "FLY"];
+if (isNull _uav) exitWith {};
 playerUAV = _uav;
-Call Compile Format ["_uav addEventHandler ['Killed',{[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled}]",sideID];
-_uav setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';",sideID];
-processInitCommands;
+
 
 _group = [sideJoined, "misc"] Call WFBE_CO_FNC_CreateGroup;
 _driver = [missionNamespace getVariable Format ["WFBE_%1SOLDIER",sideJoinedText],_group,getPos _uav,WFBE_Client_SideID] Call WFBE_CO_FNC_CreateUnit;
@@ -46,10 +53,6 @@ if (sideJoined == west) then {
 };
 [sideJoinedText,'UnitsCreated',_built] Call UpdateStatistics;
 [sideJoinedText,'VehiclesCreated',1] Call UpdateStatistics;
-
--12500 Call ChangePlayerFunds;
-
-["RequestSpecial", ["uav",sideJoined,_uav,clientTeam]] Call WFBE_CO_FNC_SendToServer;
 
 sleep 0.02;
 
