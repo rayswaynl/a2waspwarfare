@@ -24,7 +24,7 @@ _pool     = 6000;  //--- FIXED dividend pool per tick, split among living side p
 
 ["INFORMATION", Format ["Server_BankIncome.sqf: [%1] Income drip started for bank [%2].", str _side, _bank]] Call WFBE_CO_FNC_LogContent;
 
-while {alive _bank} do {
+while {alive _bank && {!WFBE_GameOver}} do {
 	sleep _interval;
 
 	if !(alive _bank) exitWith {};

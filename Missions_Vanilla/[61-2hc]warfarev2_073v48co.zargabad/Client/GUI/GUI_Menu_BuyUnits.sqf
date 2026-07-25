@@ -264,13 +264,13 @@ _IDCS = _IDCS - [_currentIDC];
 				private ["_depotQueueBlocked"];
 				_depotQueueBlocked = false;
 				if ((_type == "Depot" || _countAlive == 1) && {!isNull _closest}) then {
-					if ((count (_closest getVariable ["queu", []])) >= (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type])) then {
+					if ((count (_closest getVariable ["queu", []])) >= (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",toUpper _type])) then {
 						_depotQueueBlocked = true;
-						if (WF_Debug) then {["INFORMATION", Format ["GUI_Menu_BuyUnits.sqf: DEPOT buy blocked - shared queue full (%1/%2).", count (_closest getVariable ["queu", []]), missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type]]] Call WFBE_CO_FNC_LogContent};
+						if (WF_Debug) then {["INFORMATION", Format ["GUI_Menu_BuyUnits.sqf: DEPOT buy blocked - shared queue full (%1/%2).", count (_closest getVariable ["queu", []]), missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",toUpper _type]]] Call WFBE_CO_FNC_LogContent};
 					};
 				};
-				if (((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_type]) < (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type])) && {!_depotQueueBlocked}) then {
-					missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_type],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_type])+1];
+				if (((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",toUpper _type]) < (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",toUpper _type])) && {!_depotQueueBlocked}) then {
+					missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",toUpper _type],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",toUpper _type])+1];
 					Private ["_currentUnitLabel"];
                     _currentUnitLabel = _currentUnit select QUERYUNITLABEL;
 
@@ -298,8 +298,8 @@ _IDCS = _IDCS - [_currentIDC];
 					_updateDetails = true; //--- Task 33: refresh queue list panel after purchase.
 				} else {
 					private ["_queueCap","_queueCount"];
-					_queueCap = missionNamespace getVariable [Format["WFBE_C_QUEUE_%1_MAX",_type], 0];
-					_queueCount = missionNamespace getVariable [Format["WFBE_C_QUEUE_%1",_type], 0];
+					_queueCap = missionNamespace getVariable [Format["WFBE_C_QUEUE_%1_MAX",toUpper _type], 0];
+					_queueCount = missionNamespace getVariable [Format["WFBE_C_QUEUE_%1",toUpper _type], 0];
 					if (_depotQueueBlocked && {!isNull _closest}) then {
 						_queueCount = count (_closest getVariable ["queu", []]);
 					};
