@@ -215,6 +215,59 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 		_team setVariable ["wfbe_aicom_foot_stage", false];
 		_team setVariable ["wfbe_aicom_foot_stage_pos", []];
 	};
+
+	//--- COMBAT-LOSS RETREAT LATCH (Grok #1, claude/u3-loss-retreat-20260725, gate WFBE_C_AICOM_LOSS_RETREAT
+	//--- default 0): an AICOM team grinding an ASSAULT-type order ("towns" mode - the SAME exact-case lowercase
+	//--- mode string this file's own sticky-order check reads a few lines below) that bleeds out fast, losing
+	//--- >= a configurable FRACTION of its living strength within a sliding sample window, is thrashing the
+	//--- same target instead of withdrawing. Piggybacks the alive-count THIS worker pass already computed
+	//--- (_aliveCount, L84) against a single stored [count,time] snapshot on the team - no new nearEntities/unit
+	//--- scan, one extra getVariable read + one setVariable write per team per pass. On latch: stamp
+	//--- wfbe_aicom_wantrally - the SAME broadcast flag Common_RunCommanderTeam's depot-hold BREAKOFF already
+	//--- raises (cmdcon41-w2) - so the EXISTING GRACEFUL WITHDRAWAL EVALUATOR in AI_Commander_Strategy.sqf
+	//--- (L751-822) picks it up, resolves the nearest friendly HQ/town, and issues the proven "rally" bounding-
+	//--- withdrawal order; we do not duplicate that town-selection or the SML retreat/rally machinery. A
+	//--- dedicated cooldown stamp (WFBE_C_AICOM_LOSS_RETREAT_COOLDOWN, default 180s) gates RE-arming this
+	//--- SPECIFIC trigger per team so a team that just rallied cannot immediately re-latch next pass while still
+	//--- under-strength; the consumer's OWN cooldown (WFBE_C_AICOM_WITHDRAW_COOLDOWN, 240s) separately gates
+	//--- its shared understrength auto-trigger - the two stamps are independent by design, same pattern as the
+	//--- existing wantrally/rallying pair. wfbe_aicom_lossretreat_prevcount/prevtime/cooldown_until are reset to
+	//--- nil at team founding in Common_RunCommanderTeam.sqf (A2 recycles group slots - same stack-pass idiom as
+	//--- wfbe_aicom_decap/press_on there) so a re-founded team never inherits a stale snapshot.
+	//--- Self-gates: flag on, team not player-led, ASSAULT-type ("towns") order only, not already mid-rally or
+	//--- already wanting one, cooldown elapsed. Same-scope caveat as the existing BREAKOFF producer: the
+	//--- consumer only reads wantrally for HC-resident teams (Strategy.sqf L769 _gwHc gate) - non-HC
+	//--- (Produce-driven) teams still stamp the flag (harmless, matches the BREAKOFF contract) but rely on the
+	//--- separate Produce retreat/cull path for their own withdrawal, unchanged by this feature.
+	//--- A2-OA-safe: plain 1-arg getVariable + isNil (GROUP vars never use the 2-arg [name,default] form here),
+	//--- numeric compares only, no A3 commands, no sleeps, no loops beyond the per-team forEach this already
+	//--- sits inside. Flag 0 = one cheap missionNamespace getVariable+compare per team per pass (same negligible
+	//--- gate idiom every other flag check in this file already pays, e.g. the HELI_CANNON_NUDGE gate in
+	//--- Common_RunCommanderTeam.sqf) - no team-var reads/writes, no state mutation, behaviourally inert.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_LOSS_RETREAT", 0]) > 0 && {!isPlayer (leader _team)} && {_modeNow == "towns"}) then {
+		private ["_lrPrev","_lrPrevT","_lrWindow","_lrThresh","_lrCoolUntil","_lrRallying","_lrWant","_lrFrac"];
+		_lrWindow = missionNamespace getVariable ["WFBE_C_AICOM_LOSS_RETREAT_WINDOW", 120];
+		_lrThresh = missionNamespace getVariable ["WFBE_C_AICOM_LOSS_RETREAT_FRACTION", 0.5];
+		_lrPrev  = _team getVariable "wfbe_aicom_lossretreat_prevcount";
+		_lrPrevT = _team getVariable "wfbe_aicom_lossretreat_prevtime";
+		if (!isNil "_lrPrev" && {!isNil "_lrPrevT"} && {(time - _lrPrevT) <= _lrWindow} && {_lrPrev > 0} && {_aliveCount < _lrPrev}) then {
+			_lrRallying = _team getVariable "wfbe_aicom_rallying"; if (isNil "_lrRallying") then {_lrRallying = false};
+			_lrWant = _team getVariable "wfbe_aicom_wantrally"; if (isNil "_lrWant") then {_lrWant = false};
+			_lrCoolUntil = _team getVariable "wfbe_aicom_lossretreat_cooldown_until"; if (isNil "_lrCoolUntil") then {_lrCoolUntil = 0};
+			_lrFrac = (_lrPrev - _aliveCount) / _lrPrev;
+			if (!_lrRallying && {!_lrWant} && {time >= _lrCoolUntil} && {_lrFrac >= _lrThresh}) then {
+				_team setVariable ["wfbe_aicom_wantrally", true, true];
+				_team setVariable ["wfbe_aicom_lossretreat_cooldown_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_LOSS_RETREAT_COOLDOWN", 180])];
+				//--- wfbe_waspscale_aband-style cumulative counter (cmdcon42 pattern, mirrors wfbe_waspscale_arrv at L105): trivially reachable via the same broadcast-namespace idiom the arrival counter already uses.
+				missionNamespace setVariable ["wfbe_waspscale_lossretreat", (missionNamespace getVariable ["wfbe_waspscale_lossretreat", 0]) + 1];
+				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|LOSS_RETREAT_LATCH|team=" + (str _team) + "|prev=" + str _lrPrev + "|now=" + str _aliveCount + "|frac=" + str (round (_lrFrac * 100)) + "|window=" + str _lrWindow);
+				["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] team [%2] LOSS_RETREAT latch (%3 -> %4 alive within %5s) - requesting rally.", _sideText, _team, _lrPrev, _aliveCount, _lrWindow]] Call WFBE_CO_FNC_AICOMLog;
+			};
+		};
+		_team setVariable ["wfbe_aicom_lossretreat_prevcount", _aliveCount];
+		_team setVariable ["wfbe_aicom_lossretreat_prevtime", time];
+	};
+
 	_canDrive = false;
 	_explicitMode = false;
 	//--- MANUAL-PIN (Build83, claude-gaming 2026-07-01): a team a HUMAN just ordered from the war-room console

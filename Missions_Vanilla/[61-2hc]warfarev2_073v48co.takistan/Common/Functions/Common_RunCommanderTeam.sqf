@@ -120,6 +120,13 @@ if (count _this > 6) then {
 _team setVariable ["wfbe_queue", [], false];
 _team setVariable ["wfbe_aicom_decap", [], true];   //--- stack-pass: A2 recycles group slots - a re-founded team must never inherit a stale press stamp ([] = cleared sentinel)
 _team setVariable ["wfbe_aicom_press_on", nil];      //--- stack-pass: same for the HC-local press latch
+//--- stack-pass (claude/u3-loss-retreat-20260725): same slot-recycle hazard for the combat-loss retreat latch's
+//--- strength snapshot + its own cooldown stamp (AI_Commander_AssignTowns.sqf, gate WFBE_C_AICOM_LOSS_RETREAT) -
+//--- a re-founded team must not read a stale alive-count from the PREVIOUS occupant of this group slot and
+//--- falsely compute a loss fraction against it.
+_team setVariable ["wfbe_aicom_lossretreat_prevcount", nil];
+_team setVariable ["wfbe_aicom_lossretreat_prevtime", nil];
+_team setVariable ["wfbe_aicom_lossretreat_cooldown_until", nil];
 
 if (isServer) then {
 	["aicom-team-created", _sideID, _team] Call HandleSpecial;
