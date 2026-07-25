@@ -90,6 +90,48 @@ switch (_request) do {
 		_wreck = _args select 0;
 		if (!isNull _wreck && {local _wreck} && {!alive _wreck} && {(_wreck getVariable ["WFBE_CommanderAttackHeli", false])}) then {deleteVehicle _wreck};
 	};
+	//--- sidepatrol-watchdog (Grok idea #8, WFBE_C_SIDE_PATROL_UNSTUCK): server_side_patrols.sqf's
+	//--- external stuck watchdog routes here when the wedged patrol's leader is NOT server-local
+	//--- (HC-delegated) - RunUnstuckRecovery's own contract requires the caller to run where the
+	//--- group is local, so this mirrors the arty/heli locality-dispatch pattern above.
+	//--- _args (request already stripped) = [leader, tier, sideID, destPos]. tier 2/3 reuse
+	//--- Common_RunUnstuckRecovery's own ladder (re-issue waypoint / setPos-nudge-to-road, its own
+	//--- player-near guard still applies); tier 4 recycles the patrol using the SAME crewless-
+	//--- cleanup idiom Common_RunSidePatrol.sqf already uses on a failed spawn (delete vehicles,
+	//--- delete units, deleteGroup) - no new despawn mechanism. Fails closed: only ever acts on a
+	//--- leader that is LOCAL HERE, ALIVE, and whose group carries the WFBE_SidePatrol tag (same
+	//--- forgeable-PVF residual as the arty/heli cases above - narrowed the same way: the worst a
+	//--- forged dispatch can do is nudge/recycle an actual live side-patrol group, never an arbitrary object).
+	case "sidepatrol-watchdog": {
+		Private ["_wLdr","_wTier","_wSideID","_wDest","_wGrp","_wSide","_wUnits","_wVehicles","_wV","_wFound"];
+		_wLdr    = _args select 0;
+		_wTier   = _args select 1;
+		_wSideID = _args select 2;
+		_wDest   = _args select 3;
+		if (isNull _wLdr || {!local _wLdr} || {!alive _wLdr}) exitWith {};
+		_wGrp = group _wLdr;
+		if (isNull _wGrp) exitWith {};
+		//--- G1: use the safe GROUP bool helper, not a raw 2-arg getVariable (unreliable on groups).
+		if !([_wGrp, "WFBE_SidePatrol", false] Call WFBE_CO_FNC_GroupGetBool) exitWith {};
+		if (_wTier in [2,3]) then {
+			_wSide = (_wSideID) Call WFBE_CO_FNC_GetSideFromID;
+			[_wGrp, _wTier, _wSide, _wDest, "sidepatrol-watchdog"] Spawn WFBE_CO_FNC_RunUnstuckRecovery;
+		} else {
+			_wUnits = units _wGrp;
+			_wVehicles = [];
+			{
+				_wV = vehicle _x;
+				if (_wV != _x) then {
+					_wFound = false;
+					{if (_x == _wV) then {_wFound = true}} forEach _wVehicles;
+					if (!_wFound) then {_wVehicles = _wVehicles + [_wV]};
+				};
+			} forEach _wUnits;
+			{if (!isNull _x) then {deleteVehicle _x}} forEach _wVehicles;
+			{if (!isNull _x) then {deleteVehicle _x}} forEach _wUnits;
+			if (!isNull _wGrp) then {deleteGroup _wGrp};
+		};
+	};
 	//--- Owner-side half of the Common_TrashObject.sqf locality gate. Self-gated on the same flag as the
 	//--- sender, on the object being LOCAL here, on it being DEAD, and on the public reap stamp the server
 	//--- set before dispatching - so this channel can never delete a live object or anything TrashObject

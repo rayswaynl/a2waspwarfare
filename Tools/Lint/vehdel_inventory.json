@@ -69,7 +69,7 @@
   },
   "Client/PVFunctions/HandleSpecial.sqf": {
     "probed": 0,
-    "total": 10
+    "total": 12
   },
   "Common/Functions/Common_AddVehicleMarking.sqf": {
     "probed": 0,
@@ -206,6 +206,10 @@
   "Server/FSM/server_groupsGC.sqf": {
     "probed": 7,
     "total": 15
+  },
+  "Server/FSM/server_side_patrols.sqf": {
+    "probed": 2,
+    "total": 2
   },
   "Server/FSM/server_town.sqf": {
     "probed": 0,

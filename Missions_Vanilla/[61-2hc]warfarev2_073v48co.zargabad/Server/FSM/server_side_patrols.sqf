@@ -17,7 +17,8 @@ private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","
 	"_homePool","_spSkipNaval","_hpX",
 	"_feedChangeOnly","_feedKeepAlive","_feedSig","_feedLastSig","_feedChanged","_feedDue","_feedLastBroadcast",
 	"_perfProbe","_perfCap","_perfReason","_perfPopTier",
-	"_rcSide","_rcSideID","_rcLogik","_rcCount","_rcOld","_entryLdr","_entryGrp"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler); +_entryLdr/_entryGrp (B66-style any-live-member scrub test, review-1254 defect fix).
+	"_rcSide","_rcSideID","_rcLogik","_rcCount","_rcOld","_entryLdr","_entryGrp",
+	"_pwEnabled","_pwLastSample","_pwMins","_pwDist","_pwWpDist","_pwMaxStrikes","_pwEntry","_pwLdr","_pwSideID","_pwGrp","_pwVeh","_pwPos","_pwWpPos","_pwLastPos","_pwStrikes","_pwSide","_pwTier","_pwUnits","_pwVehicles","_pwV","_pwFound"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler); +_entryLdr/_entryGrp (B66-style any-live-member scrub test, review-1254 defect fix). Grok idea #8 (side-patrol stuck watchdog): +_pw* (see WFBE_C_SIDE_PATROL_UNSTUCK block below).
 
 waitUntil {townInitServer};
 sleep 30;
@@ -39,6 +40,7 @@ _delay = missionNamespace getVariable ["WFBE_C_PATROLS_DELAY_SPAWN", 360];  //--
 //--- (re)assigned at the top of every loop cycle below. A2-OA-safe (plain getVariable+select, `max 0`).
 _max = (missionNamespace getVariable ["WFBE_C_SIDE_PATROLS_MAX_BY_TIER", [2,2,2,1]]) select (((missionNamespace getVariable ["WFBE_PopTier", 0]) max 0) min 3);
 _scrubLast = -999;
+_pwLastSample = -999;
 _feedLastSig = "";
 _feedLastBroadcast = -999;
 _perfProbe = (missionNamespace getVariable ["WFBE_C_PERFORMANCE_AUDIT_SIDE_PATROL_PROBES", 0]) > 0;
@@ -158,6 +160,108 @@ while {!WFBE_GameOver} do {
 		};
 
 		_scrubLast = time;
+	};
+
+	//--- SIDE-PATROL STUCK WATCHDOG (Grok idea #8, 2026-07-25): side patrols run their OWN waypoint
+	//--- loop and never receive AICOM's global unstuck care (see Common_RunUnstuckRecovery.sqf's own
+	//--- header). Common_RunSidePatrol.sqf already carries an INTERNAL en-route stuck detector
+	//--- (~90s cadence) - but it lives in the patrol's OWN thread, so it goes silent along with the
+	//--- rest of that thread if the owning machine (a delegated HC) hangs or freezes. This is a
+	//--- SEPARATE, EXTERNAL backstop: it samples each active patrol's lead-vehicle POSITION ONLY (no
+	//--- nearEntities - stays trivial-cost) at a slower ~WFBE_C_SIDE_PATROL_UNSTUCK_MINS-minute
+	//--- interval, so it keeps working even if the patrol's own thread stalls. Flag-gated, default OFF.
+	_pwEnabled = (missionNamespace getVariable ["WFBE_C_SIDE_PATROL_UNSTUCK", 0]) > 0;
+	if (_pwEnabled) then {
+		_pwMins = missionNamespace getVariable ["WFBE_C_SIDE_PATROL_UNSTUCK_MINS", 3];
+		if (_pwMins < 1) then {_pwMins = 3};
+		if (time - _pwLastSample > (_pwMins * 60)) then {
+			_pwLastSample = time;
+			_pwDist       = missionNamespace getVariable ["WFBE_C_SIDE_PATROL_UNSTUCK_DIST", 20];
+			_pwWpDist     = missionNamespace getVariable ["WFBE_C_SIDE_PATROL_UNSTUCK_WP_DIST", 150];
+			_pwMaxStrikes = missionNamespace getVariable ["WFBE_C_SIDE_PATROL_UNSTUCK_MAX_STRIKES", 3];
+			{
+				_pwEntry  = _x;
+				_pwLdr    = _pwEntry select 0;
+				_pwSideID = _pwEntry select 1;
+				if (!isNull _pwLdr && {alive _pwLdr}) then {
+					_pwGrp = group _pwLdr;
+					if (!isNull _pwGrp) then {
+						_pwVeh   = vehicle _pwLdr;
+						_pwPos   = getPos _pwVeh;
+						_pwWpPos = currentWaypointPosition _pwGrp;
+						//--- Only a patrol with a genuinely DISTANT live waypoint can be "stuck" - a patrol
+						//--- that already arrived (camp sweep, town-center hold, convoy payout) sits close
+						//--- to its last-laid waypoint and is correctly SKIPPED here, never mistaken for wedged.
+						if (!((_pwWpPos select 0) == 0 && {(_pwWpPos select 1) == 0}) && {(_pwPos distance _pwWpPos) > _pwWpDist}) then {
+							_pwLastPos = _pwGrp getVariable "wfbe_patrol_watch_pos"; //--- G1: 1-arg + isNil on a GROUP (2-arg [name,default] is unreliable here).
+							if (isNil "_pwLastPos") then {_pwLastPos = _pwPos};
+							if ((_pwPos distance _pwLastPos) < _pwDist) then {
+								_pwStrikes = _pwGrp getVariable "wfbe_patrol_watch_strikes";
+								if (isNil "_pwStrikes") then {_pwStrikes = 0};
+								_pwStrikes = _pwStrikes + 1;
+								_pwGrp setVariable ["wfbe_patrol_watch_strikes", _pwStrikes];
+								_pwSide = (_pwSideID) Call WFBE_CO_FNC_GetSideFromID;
+								if (_pwStrikes < _pwMaxStrikes) then {
+									//--- Strike ladder REUSES Common_RunUnstuckRecovery's own tiers instead of
+									//--- duplicating recovery logic: tier2 = re-issue/rebuild the waypoint,
+									//--- tier3 = setPos nudge onto the nearest road (its own player-near guard
+									//--- still applies). Only escalate to tier3 once tier2 alone has failed once.
+									_pwTier = if (_pwStrikes <= 1) then {2} else {3};
+									//--- RunUnstuckRecovery's OWN contract: "the caller must run this where the
+									//--- group is local" - this FSM runs server-only, so a delegated (HC-local)
+									//--- patrol must be routed to its owning machine via the same established
+									//--- SendToClient->HandleSpecial channel the rest of this codebase uses for
+									//--- locality-sensitive dispatch (see server_groupsGC.sqf's arty/heli reapers).
+									if (local _pwLdr) then {
+										[_pwGrp, _pwTier, _pwSide, _pwWpPos, "sidepatrol-watchdog"] Spawn WFBE_CO_FNC_RunUnstuckRecovery;
+									} else {
+										[_pwLdr, "HandleSpecial", ["sidepatrol-watchdog", _pwLdr, _pwTier, _pwSideID, _pwWpPos]] Call WFBE_CO_FNC_SendToClient;
+									};
+									diag_log ("AICOMSTAT|v1|EVENT|" + (str _pwSide) + "|" + str (round (time / 60)) + "|SIDEPATROL_WATCHDOG_STRIKE|team=" + (str _pwGrp) + "|strike=" + str _pwStrikes + "|tier=" + str _pwTier);
+								} else {
+									//--- FINAL STRIKE: recycle the patrol via the SAME crewless-cleanup idiom
+									//--- Common_RunSidePatrol.sqf already uses on a failed spawn (delete vehicles,
+									//--- delete units, deleteGroup) - no new despawn mechanism. No manual slot
+									//--- bookkeeping here either: the scrub block just above (this SAME ~20s pass
+									//--- of this loop) already purges the dead-unit WFBE_ACTIVE_PATROLS entry and
+									//--- reconciles wfbe_side_patrols to the live count on its very next pass.
+									if (local _pwLdr) then {
+										_pwUnits = units _pwGrp;
+										_pwVehicles = [];
+										{
+											_pwV = vehicle _x;
+											if (_pwV != _x) then {
+												_pwFound = false;
+												{if (_x == _pwV) then {_pwFound = true}} forEach _pwVehicles;
+												if (!_pwFound) then {_pwVehicles = _pwVehicles + [_pwV]};
+											};
+										} forEach _pwUnits;
+										//--- VEHDEL probe (fable/veh-delete-probe convention): every server-local
+										//--- cleanup delete call below carries a reason-coded probe, same idiom as
+										//--- server_groupsGC.sqf's zombie/wreck reapers.
+										{if (!isNull _x) then {["sidepatrol-watchdog-vehicle", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach _pwVehicles;
+										{if (!isNull _x) then {["sidepatrol-watchdog-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach _pwUnits;
+										if (!isNull _pwGrp) then {deleteGroup _pwGrp};
+									} else {
+										//--- tier4 = recycle sentinel (not a RunUnstuckRecovery tier).
+										[_pwLdr, "HandleSpecial", ["sidepatrol-watchdog", _pwLdr, 4, _pwSideID, _pwWpPos]] Call WFBE_CO_FNC_SendToClient;
+									};
+									diag_log ("AICOMSTAT|v1|EVENT|" + (str _pwSide) + "|" + str (round (time / 60)) + "|SIDEPATROL_WATCHDOG_RECYCLE|team=" + (str _pwGrp));
+								};
+							} else {
+								//--- moved enough since last sample: clear the streak.
+								_pwGrp setVariable ["wfbe_patrol_watch_strikes", 0];
+							};
+							_pwGrp setVariable ["wfbe_patrol_watch_pos", _pwPos];
+						} else {
+							//--- arrived / no live waypoint yet: not a wedge candidate - reset baseline+streak.
+							_pwGrp setVariable ["wfbe_patrol_watch_strikes", 0];
+							_pwGrp setVariable ["wfbe_patrol_watch_pos", _pwPos];
+						};
+					};
+				};
+			} forEach WFBE_ACTIVE_PATROLS;
+		};
 	};
 
 	{

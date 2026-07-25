@@ -1180,6 +1180,17 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_SERVER_FPS_GUI_ACTIVE_PLAYERS_ONLY") then {WFBE_C_SERVER_FPS_GUI_ACTIVE_PLAYERS_ONLY = 0}; //--- Lane 112: 1 = publish SERVER_FPS_GUI only while a non-HC human player is connected. Default 0 preserves legacy every-8s broadcasts.
 	if (isNil "WFBE_C_SIDE_PATROL_FEED_CHANGE_ONLY")  then {WFBE_C_SIDE_PATROL_FEED_CHANGE_ONLY = 0};  //--- Lane 111: default 0 keeps the legacy 20s marker-feed rebroadcast; 1 publishes only on feed change or keepalive.
 	if (isNil "WFBE_C_SIDE_PATROL_FEED_KEEPALIVE")    then {WFBE_C_SIDE_PATROL_FEED_KEEPALIVE = 60};   //--- Seconds between change-aware marker-feed keepalive broadcasts; floored to 20s in server_side_patrols.sqf.
+	//--- Grok idea #8 (2026-07-25): side patrols run their OWN waypoint loop and never receive AICOM's
+	//--- global unstuck care (see Common_RunUnstuckRecovery.sqf's own header note). This arms
+	//--- server_side_patrols.sqf's EXTERNAL lead-vehicle-position watchdog - independent of the patrol's
+	//--- own script thread, so it keeps working even if a delegated HC hangs/freezes (unlike
+	//--- Common_RunSidePatrol.sqf's existing internal ~90s en-route guard, which dies with its thread).
+	//--- Default 0 = byte-identical legacy behaviour.
+	if (isNil "WFBE_C_SIDE_PATROL_UNSTUCK")            then {WFBE_C_SIDE_PATROL_UNSTUCK = 0};
+	if (isNil "WFBE_C_SIDE_PATROL_UNSTUCK_MINS")        then {WFBE_C_SIDE_PATROL_UNSTUCK_MINS = 3};        //--- minutes between watchdog samples per active patrol.
+	if (isNil "WFBE_C_SIDE_PATROL_UNSTUCK_DIST")        then {WFBE_C_SIDE_PATROL_UNSTUCK_DIST = 20};       //--- m; lead-vehicle displacement below this since the last sample counts as "not moving".
+	if (isNil "WFBE_C_SIDE_PATROL_UNSTUCK_WP_DIST")     then {WFBE_C_SIDE_PATROL_UNSTUCK_WP_DIST = 150};   //--- m; only escalate while the patrol's current waypoint is still this far away (arrived/sweeping patrols never qualify).
+	if (isNil "WFBE_C_SIDE_PATROL_UNSTUCK_MAX_STRIKES") then {WFBE_C_SIDE_PATROL_UNSTUCK_MAX_STRIKES = 3}; //--- strike ladder length: re-issue waypoint (Common_RunUnstuckRecovery tier2) -> setPos nudge to nearest road (tier3) -> recycle the patrol.
 	if (isNil "WFBE_C_AICOM_RECOVERY_V2")             then {WFBE_C_AICOM_RECOVERY_V2 = 1};             //--- unstuck v2: vehicle unflip, reverse+lane-flip repath, dead-driver swap, slope-aware foot nodes, water guard.
 	if (isNil "WFBE_C_AICOM_RECOVERY_REVERSE_SPEED")  then {WFBE_C_AICOM_RECOVERY_REVERSE_SPEED = 6};  //--- m/s of the brief reverse pulse before re-pathing a stuck vehicle.
 	if (isNil "WFBE_C_AICOM_RECOVERY_SLOPE_Z")        then {WFBE_C_AICOM_RECOVERY_SLOPE_Z = if (worldName == "Takistan") then {0.80} else {0.85}};     //--- surfaceNormal z below this = too steep for a foot waypoint node -> snap to nearest road. TK ridge grades hit 0.85 (~32deg) far more than rolling Chernarus, so a lower TK threshold (0.80, ~37deg) snaps only genuinely-too-steep foot nodes instead of constantly. isNil guard keeps any pre-set (flag/param) global as the override.
