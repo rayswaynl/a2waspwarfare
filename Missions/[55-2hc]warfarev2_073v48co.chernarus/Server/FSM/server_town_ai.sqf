@@ -1,7 +1,28 @@
-Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
+Private["_town","_range","_range_detect","_range_detect_active","_scanRange","_position","_groups","_town_camps","_town_camps_count","_town_teams","_airHeight","_unitsInactiveMax","_patrol_delay","_patrol_enabled","_ai_delegation_enabled","_town_defender_enabled","_town_occupation_enabled","_scanStart","_detectedFiltered","_defendersIgnored","_hostileSides","_detectedEnemyOnly","_currentEnemies","_activeTownsBudgetMax","_activeTownCount","_budgetDeferLast","_now","_guerGroupsMax","_guerGroupCount","_guerDeferLast","_popTier","_activeMaxByTier","_liveHCs","_townInitSleep","_doScan","_ctlLaneOn","_ctlSurviving","_activationDeferred","_tstOn","_tstScansRun","_tstScansSkipped","_tstActivations","_tstMissed","_tstScanMsSum","_tstScanMsN","_tstScanMsMean","_tstWindowStart","_tstWindowSec","_tstScanEnemy","_tstMissedSince"]; //--- B74.2: _popTier/_activeMaxByTier added for per-sweep pop-tier active-town budget; #252 _scanRange (AI scan-range override); #233 _townInitSleep (startup throttle)
 
 _townInitSleep = missionNamespace getVariable ["WFBE_C_TOWNS_STARTUP_SLEEP", 0];
 if (_townInitSleep <= 0) then {_townInitSleep = 0.01};
+
+//--- TOWNSCAN TELEMETRY (WFBE_C_TOWNSCAN_TELEMETRY, default 0 = INERT): additive 60s-window
+//--- counters for the dormant-town scan dice (one TOWNSCAN|v1 RPT line per window). Measurement
+//--- only - it never changes when a scan runs, when a town activates, or any activation rule.
+//--- Flag-off: no timer reads, no per-town setVariable, no counter work beyond this init.
+_tstOn = (missionNamespace getVariable ["WFBE_C_TOWNSCAN_TELEMETRY", 0]) > 0;
+_tstScansRun = 0;
+_tstScansSkipped = 0;
+_tstActivations = 0;
+_tstMissed = 0;
+_tstScanMsSum = 0;
+_tstScanMsN = 0;
+_tstScanMsMean = 0;
+_tstWindowStart = -1;
+_tstWindowSec = 0;
+_tstScanEnemy = false;
+_tstMissedSince = -1;
+if (_tstOn) then {
+	_tstWindowStart = diag_tickTime;
+	["INFORMATION", "server_town_ai.sqf: town-scan dice telemetry ENABLED (WFBE_C_TOWNSCAN_TELEMETRY=1) - one TOWNSCAN|v1 line per 60s window."] Call WFBE_CO_FNC_AICOMLog;
+};
 
 for "_j" from 0 to ((count towns) - 1) step 1 do
 {
@@ -72,6 +93,24 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 //--- Perf phase jitter (2026-07-06): see server_town.sqf. Default 0 = V1.
 if ((missionNamespace getVariable ["WFBE_C_LOOP_PHASE_JITTER", 0]) > 0) then {sleep (random 5)};
 while {!WFBE_GameOver} do {
+
+	//--- TOWNSCAN TELEMETRY: flush + reset the 60s window. One diag_log per window; nothing per scan.
+	if (_tstOn) then {
+		if (_tstWindowStart < 0) then {_tstWindowStart = diag_tickTime};
+		_tstWindowSec = diag_tickTime - _tstWindowStart;
+		if (_tstWindowSec >= 60) then {
+			_tstScanMsMean = 0;
+			if (_tstScanMsN > 0) then {_tstScanMsMean = round (((_tstScanMsSum / _tstScanMsN) * 1000) * 100) / 100};
+			diag_log ("TOWNSCAN|v1|" + str (round (time/60)) + "|scans_run=" + str _tstScansRun + "|scans_skipped=" + str _tstScansSkipped + "|activations_from_scan=" + str _tstActivations + "|missed_activation_suspect=" + str _tstMissed + "|scan_avg_ms=" + str _tstScanMsMean + "|window_s=" + str (round _tstWindowSec));
+			_tstScansRun = 0;
+			_tstScansSkipped = 0;
+			_tstActivations = 0;
+			_tstMissed = 0;
+			_tstScanMsSum = 0;
+			_tstScanMsN = 0;
+			_tstWindowStart = diag_tickTime;
+		};
+	};
 
 	//--- Count currently active towns once per sweep; publish for groupsGC audit line.
 	_activeTownCount = 0;
@@ -218,6 +257,8 @@ while {!WFBE_GameOver} do {
 						if ((random 1) >= (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_P", 0.5])) then {_doScan = false};
 					};
 				};
+				//--- TOWNSCAN TELEMETRY: the dice skipped this dormant town's scan this sweep.
+				if (_tstOn && {!_doScan}) then {_tstScansSkipped = _tstScansSkipped + 1};
 				if (_doScan) then {
 				_dynRange = if (_town getVariable "wfbe_active" || _town getVariable "wfbe_active_air") then {_range_detect_active} else {_range_detect};
 				_scanStart = diag_tickTime;
@@ -325,6 +366,16 @@ while {!WFBE_GameOver} do {
 						};
 					};
 				};
+				//--- TOWNSCAN TELEMETRY: one scan ran - count it, accumulate the nearEntities-branch
+				//--- span (same _scanStart anchor as the town_activation_scan audit probe above, so the
+				//--- numbers compare) and latch whether the scan saw any enemy (ground or air) BEFORE the
+				//--- budget/GUER deferrals below can zero _enemies.
+				if (_tstOn) then {
+					_tstScansRun = _tstScansRun + 1;
+					_tstScanMsSum = _tstScanMsSum + (diag_tickTime - _scanStart);
+					_tstScanMsN = _tstScanMsN + 1;
+					_tstScanEnemy = _enemies > 0;
+				};
 				} else {_currentEnemies = 0; _enemies = 0;};
 				if(_enemies > 0)then{
 					///
@@ -396,6 +447,8 @@ while {!WFBE_GameOver} do {
 							////
 							_town setVariable ["wfbe_active", true];
 							_town setVariable ["wfbe_episode_spawned", true];
+							//--- TOWNSCAN TELEMETRY: ground activation as a result of this scan.
+							if (_tstOn) then {_tstActivations = _tstActivations + 1};
 							//--- B4: keep the incremental active-town counter in step with the
 							//--- top-of-sweep seed (only wfbe_active towns are counted, matching
 							//--- the old `forEach towns` recount and the top-of-sweep count above).
@@ -429,6 +482,8 @@ while {!WFBE_GameOver} do {
 							if(!(_town getVariable "wfbe_active_air")) then {
 								_town setVariable ["wfbe_active_air", true];
 								_town setVariable ["wfbe_episode_spawned", true];
+								//--- TOWNSCAN TELEMETRY: air-tier activation as a result of this scan.
+								if (_tstOn) then {_tstActivations = _tstActivations + 1};
 								//--- Always-on liveness line (owner review 2026-07-22): the AIR-TIER token in RPT
 								//--- proves the resurrected air tier actually fires on live rounds.
 								["INFORMATION", Format ["server_town_ai.sqf: Town [%1] AIR-TIER ACTIVATED for [%2] (airContacts=%3).", _town getVariable "name", _side, _enemies]] Call WFBE_CO_FNC_AICOMLog;
@@ -641,6 +696,26 @@ while {!WFBE_GameOver} do {
 						};
 					};
 					///
+				};
+				//--- TOWNSCAN TELEMETRY: missed-activation suspect - this sweep's scan saw an enemy
+				//--- inside the radius but the town is STILL dormant (active-town budget or GUER group cap
+				//--- deferral). Per-town latch: the first such sweep starts the clock; dormancy-with-enemy
+				//--- persisting past WFBE_C_TOWNSCAN_TELEMETRY_MISSED_SECS counts one suspect and re-arms
+				//--- the clock. Dice-skipped sweeps carry no enemy info, so they neither start nor clear it.
+				if (_tstOn && {_doScan}) then {
+					if (_tstScanEnemy && {!(_town getVariable "wfbe_active")} && {!(_town getVariable "wfbe_active_air")}) then {
+						_tstMissedSince = _town getVariable ["wfbe_tst_enemy_since", -1];
+						if (_tstMissedSince < 0) then {
+							_town setVariable ["wfbe_tst_enemy_since", time];
+						} else {
+							if ((time - _tstMissedSince) > (missionNamespace getVariable ["WFBE_C_TOWNSCAN_TELEMETRY_MISSED_SECS", 60])) then {
+								_tstMissed = _tstMissed + 1;
+								_town setVariable ["wfbe_tst_enemy_since", time];
+							};
+						};
+					} else {
+						if ((_town getVariable ["wfbe_tst_enemy_since", -1]) >= 0) then {_town setVariable ["wfbe_tst_enemy_since", -1]};
+					};
 				};
 
 			};//// end of side_enabled
