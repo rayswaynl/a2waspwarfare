@@ -2983,5 +2983,14 @@ if (isNil "WFBE_C_ICBM_LEGACY_SERVER_AUTH") then {WFBE_C_ICBM_LEGACY_SERVER_AUTH
 if (isNil "WFBE_C_ICBM_COST") then {WFBE_C_ICBM_COST = 75000};               //--- classic ICBM (NUKE) fee; GUI_Menu_Tactical.sqf's fee row reads this same constant (lock-step).
 if (isNil "WFBE_C_ICBM_LEGACY_COOLDOWN") then {WFBE_C_ICBM_LEGACY_COOLDOWN = 300}; //--- s: per-side shared legacy-ICBM cooldown (parity with WFBE_C_ICBM_TEL_COOLDOWN).
 
+//--- TOWN-SCAN DICE TELEMETRY (kimi townscan-tel lane, 2026-07-25; update #2 evidence): additive
+//--- measurement for the server_town_ai.sqf dormant-town scan dice (WFBE_C_TOWN_SCAN_DICE_P tuning).
+//--- 0 (default) = INERT: no window timers, no counters, no per-town latch setVariable and no
+//--- TOWNSCAN lines - the scan/activation path stays byte-identical to HEAD. 1 = server_town_ai.sqf
+//--- accumulates per-60s-window counters and emits one TOWNSCAN|v1 RPT line per window (server-local
+//--- RPT only, zero network traffic).
+if (isNil "WFBE_C_TOWNSCAN_TELEMETRY") then {WFBE_C_TOWNSCAN_TELEMETRY = 0};
+if (isNil "WFBE_C_TOWNSCAN_TELEMETRY_MISSED_SECS") then {WFBE_C_TOWNSCAN_TELEMETRY_MISSED_SECS = 60}; //--- s: an enemy seen by a scan while its town stays dormant longer than this counts one missed_activation_suspect (clock then re-arms). Only read while WFBE_C_TOWNSCAN_TELEMETRY > 0.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
