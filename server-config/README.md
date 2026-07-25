@@ -17,6 +17,8 @@ Arma 2 OA defaults.
 | `server-pr8.cfg` | `C:\WASP\profiles-pr8\server-pr8.cfg` | Server config (`-config`) — **passwordAdmin redacted** |
 | `hc_launch.cmd` | `C:\WASP\hc_launch.cmd` | Headless client 1 launcher |
 | `hc2_launch.cmd` | `C:\WASP\hc2_launch.cmd` | Headless client 2 launcher (Sandboxie-isolated 2nd Steam) |
+| `hc3_launch.cmd` | `C:\WASP\hc3_launch.cmd` | Headless client 3 launcher (Sandboxie-isolated 3rd Steam) |
+| `hc4_launch.cmd` | `C:\WASP\hc4_launch.cmd` | Headless client 4 launcher (Sandboxie-isolated 4th Steam) |
 
 ## Why this matters — the load-bearing settings
 
@@ -32,13 +34,13 @@ Arma 2 OA defaults.
   HC mod line includes it. Do not drop `@adwasp` from the HC line. CBA must precede `@adwasp`.
 - HC allocator: `-malloc=tbb4malloc_bi` (the DLL is present in `…\Arma 2 OA\Dll\`); the dedicated
   server itself runs `-malloc=mimalloc`. Both custom allocators are engaged.
-- `headlessClients[] = {"127.0.0.1"}` + `localClient[] = {"127.0.0.1"}` register the two local
-  HCs. `verifySignatures = 0` and `BattlEye = 0` are intentional (optional client mods permitted).
+- `headlessClients[] = {"127.0.0.1"}` + `localClient[] = {"127.0.0.1"}` register the local
+  HCs (all four connect from 127.0.0.1; the IP-based lists need no per-HC entries). `verifySignatures = 0` and `BattlEye = 0` are intentional (optional client mods permitted).
 - **Hardening caveat — this file is the box-rebuild source of truth (see top).** `verifySignatures = 0`, `BattlEye = 0`, and `kickDuplicate = 0` are scoped to this optional-mods **test** box. Before reusing this config for any **public / competitive / hardened** deployment, restore `verifySignatures = 2` and `BattlEye = 1` (as in the secure `Configs/serverconfig.cfg` sample). The `passwordAdmin` redaction policy above still applies.
 
 ## Not versioned here (box-only)
 
-`hc-profile\hc-video.cfg`, the Sandboxie box definition for HC2, Steam credentials, and the
+`hc-profile\hc-video.cfg`, the Sandboxie box definitions for HC2-HC4, Steam credentials, and the
 `min*_launch.cmd` variants. The mission PBOs are produced by `Tools/LoadoutManager`, not stored here.
 
 ## ACR asymmetric / client-HC-only mount (terrain test path)
