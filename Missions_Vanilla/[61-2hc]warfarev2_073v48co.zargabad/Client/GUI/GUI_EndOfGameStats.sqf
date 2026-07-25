@@ -15,14 +15,14 @@ TitleText["","PLAIN"];
 sleep 0.5;
 CutRsc["EndOfGameStats","PLAIN",0];
 
-_eastUnitsCreated = WF_Logic getVariable "EASTUnitsCreated";
-_eastCasualties = WF_Logic getVariable "EASTCasualties";
-_eastVehiclesCreated = WF_Logic getVariable "EASTVehiclesCreated";
-_eastVehiclesLost = WF_Logic getVariable "EASTVehiclesLost";
-_westUnitsCreated = WF_Logic getVariable "WESTUnitsCreated";
-_westCasualties = WF_Logic getVariable "WESTCasualties";
-_westVehiclesCreated = WF_Logic getVariable "WESTVehiclesCreated";
-_westVehiclesLost = WF_Logic getVariable "WESTVehiclesLost";
+_eastUnitsCreated = WF_Logic getVariable ["EASTUnitsCreated",0];
+_eastCasualties = WF_Logic getVariable ["EASTCasualties",0];
+_eastVehiclesCreated = WF_Logic getVariable ["EASTVehiclesCreated",0];
+_eastVehiclesLost = WF_Logic getVariable ["EASTVehiclesLost",0];
+_westUnitsCreated = WF_Logic getVariable ["WESTUnitsCreated",0];
+_westCasualties = WF_Logic getVariable ["WESTCasualties",0];
+_westVehiclesCreated = WF_Logic getVariable ["WESTVehiclesCreated",0];
+_westVehiclesLost = WF_Logic getVariable ["WESTVehiclesLost",0];
 
 if (_guerPanel) then {
 	_guerUnitsCreated = WF_Logic getVariable ["GUERUnitsCreated",0];
