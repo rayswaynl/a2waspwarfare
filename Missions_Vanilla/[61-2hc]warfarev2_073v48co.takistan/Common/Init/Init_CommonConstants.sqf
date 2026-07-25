@@ -1602,6 +1602,11 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_SUPPLY_HELI_ENABLED") then {WFBE_C_SUPPLY_HELI_ENABLED = 1};
 	if (WFBE_C_SUPPLY_HELI_ENABLED != 1) then {WFBE_C_SUPPLY_HELI_TYPES = [];}; //--- lobby toggle: shelve the heli feature without a repack.
 	WFBE_C_SUPPLY_VEHICLE_TYPES = WFBE_C_SUPPLY_TRUCK_TYPES + WFBE_C_SUPPLY_HELI_TYPES;  //--- All supply-capable (used for buy-menu highlight).
+	//--- SECURITY (harden-supplymission, DR-55/WFBE_C_SEC_HARDENING family): per-player concurrent
+	//--- active-supply-mission watcher cap, enforced only when WFBE_C_SEC_HARDENING > 0
+	//--- (Server/Module/supplyMission/supplyMissionStarted.sqf). Generous default so a legitimate
+	//--- multi-truck convoy (one loader starting several trucks for teammates to drive) is not rejected.
+	if (isNil "WFBE_C_SUPPLY_MAX_ACTIVE_PER_PLAYER") then {WFBE_C_SUPPLY_MAX_ACTIVE_PER_PLAYER = 3};
 
 //--- Anti-stack.
 	// Marty: Default to enabled when older mission parameter sets do not define the AntiStack switch.
