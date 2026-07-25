@@ -34,5 +34,7 @@ while {!WFBE_GameOver} do {
 
 	// Marty: PERF1 bonus - corpses/wrecks do not need a 2Hz sweep; 5s keeps cleanup
 	// timely while cutting the allDead scan and array-diff cost by 10x on busy servers.
-	sleep 5;
+	//--- Perf (2026-07-25, Grok idea #24): lengthen the pass interval under server load when armed;
+	//--- inert (returns 5 unchanged, no diag_fps read) while WFBE_C_COLLECTOR_LOAD_SCALE stays 0.
+	sleep (5 Call GetCollectorLoadScale);
 };
