@@ -646,7 +646,7 @@ switch (_args select 0) do {
 		//--- Command Console v2 (claude-gaming 2026-07-01): OPTIONAL arg[2] = a team INDEX into this side's wfbe_teams. When
 		//--- present + valid -> disband ONLY that team (a precision action; NO 15-min cooldown, and it does NOT stamp the
 		//--- per-side cooldown clock). When ABSENT -> the original ALL-teams sweep (15-min per-side cooldown, unchanged).
-		private ["_dSide","_dLogik","_dCmd","_dHuman","_dTeams","_dN","_dHasIdx","_dIdx","_dDispatch"];
+		private ["_dSide","_dLogik","_dCmd","_dHuman","_dTeams","_dN","_dHasIdx","_dIdx","_dDispatch","_dPlayer","_dAuth"];
 		_dDispatch = {
 			private ["_dTeam","_dLeader"];
 			_dTeam = _this select 0;
@@ -667,15 +667,24 @@ switch (_args select 0) do {
 			private "_dRaw"; _dRaw = _args select 2;
 			if (!isNil "_dRaw" && {typeName _dRaw == "SCALAR"}) then {_dHasIdx = true; _dIdx = _dRaw};
 		};
+		//--- SENDER IDENTITY (card wasp-aicom-disband-no-sender-identity-20260725): the client appends the acting player -
+		//--- select 3 when a team index is present, else select 2. ALWAYS-ON per the owner C4/C2 ruling (RequestAIComDonate.sqf):
+		//--- the sole honest caller GUI_Menu_Command.sqf always sends the live local player, so a real order never trips it; a
+		//--- forged or legacy RequestSpecial that omits or spoofs the player is rejected by the authority bind below.
+		_dPlayer = objNull;
+		if (_dHasIdx) then {if (count _args >= 4) then {_dPlayer = _args select 3}} else {if (count _args >= 3) then {_dPlayer = _args select 2}};
 		if (_dSide in [west, east]) then {
 			_dLogik = (_dSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _dLogik) then {
 				_dCmd = (_dSide) Call WFBE_CO_FNC_GetCommanderTeam; _dHuman = false;
 				if (!isNull _dCmd) then {if (isPlayer (leader _dCmd)) then {_dHuman = true}};
 				_dTeams = _dLogik getVariable ["wfbe_teams", []];
+				//--- Authority bind (same card): the acting player must be alive, a real player, on _dSide, and IN this side
+				//--- commander team (group == wfbe_commander). Mirrors the aicom-support side-membership gate; cross-side or spoofed callers fail.
+				_dAuth = (!isNull _dPlayer) && {alive _dPlayer} && {isPlayer _dPlayer} && {!isNull _dCmd} && {side (group _dPlayer) == _dSide} && {group _dPlayer == _dCmd};
 				if (_dHasIdx) then {
 					//--- SPECIFIC-TEAM disband: human commander required, but no side cooldown (single, deliberate stand-down).
-					if (_dHuman && {_dIdx >= 0} && {_dIdx < (count _dTeams)}) then {
+					if (_dHuman && {_dAuth} && {_dIdx >= 0} && {_dIdx < (count _dTeams)}) then {
 						private "_dTeam"; _dTeam = _dTeams select _dIdx;
 						if (!isNull _dTeam && {!isPlayer (leader _dTeam)}) then {
 							_dTeam setVariable ["wfbe_aicom_disband", true, true];
@@ -686,20 +695,20 @@ switch (_args select 0) do {
 							diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT-SPECIFIC|" + str _dSide + "|idx=" + str _dIdx + "|nullOrPlayer");
 						};
 					} else {
-						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT-SPECIFIC|" + str _dSide + "|human=" + str _dHuman + "|idx=" + str _dIdx + "|teams=" + str (count _dTeams));
+						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT-SPECIFIC|" + str _dSide + "|human=" + str _dHuman + "|auth=" + str _dAuth + "|idx=" + str _dIdx + "|teams=" + str (count _dTeams));
 					};
 				} else {
 					//--- ALL-teams sweep (original behaviour): human commander + 15-min per-side cooldown.
 					private ["_dLast","_dCool"];
 					_dLast = _dLogik getVariable ["wfbe_aicom_last_disband", -1e10];
 					_dCool = missionNamespace getVariable ["WFBE_C_AICOM_DISBAND_COOLDOWN", 900];
-					if (_dHuman && {(time - _dLast) >= _dCool}) then {
+					if (_dHuman && {_dAuth} && {(time - _dLast) >= _dCool}) then {
 						_dLogik setVariable ["wfbe_aicom_last_disband", time, true];
 						_dN = 0;
 						{ if (!isNull _x && {!isPlayer (leader _x)}) then {_x setVariable ["wfbe_aicom_disband", true, true]; _x setVariable ["wfbe_aicom_disband_cmd", true, true]; [_x] Call _dDispatch; _dN = _dN + 1} } forEach _dTeams;
 						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|" + str _dSide + "|" + str (round (time / 60)) + "|flagged=" + str _dN + "|teams=" + str (count _dTeams));
 					} else {
-						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT|" + str _dSide + "|human=" + str _dHuman + "|cdLeft=" + str (_dCool - (time - _dLast)));
+						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT|" + str _dSide + "|human=" + str _dHuman + "|auth=" + str _dAuth + "|cdLeft=" + str (_dCool - (time - _dLast)));
 					};
 				};
 			};
@@ -760,18 +769,20 @@ switch (_args select 0) do {
 		//--- waypoints (server-local) or re-publishes wfbe_aicom_order (HC) every tick, exactly like the console's own
 		//--- map-click Move. A short manualpin keeps AssignTowns off it until it arrives; the pin TTL-expires so it is
 		//--- re-taskable afterwards (normal towns re-entry). Flag-gated (WFBE_C_CMD_MENU_V2).
-		private ["_ryEnabled","_rySide","_ryIdx","_ryLogik","_ryCmd","_ryHuman","_ryTeams","_ryTeam","_ryHQ","_ryPos","_ryBest","_rySID"];
+		private ["_ryEnabled","_rySide","_ryIdx","_ryLogik","_ryCmd","_ryHuman","_ryTeams","_ryTeam","_ryHQ","_ryPos","_ryBest","_rySID","_ryPlayer","_ryAuth"];
 		_ryEnabled = (missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0;
 		_rySide = _args select 1;
 		_ryIdx  = -1;
 		if (count _args >= 3) then {private "_ryRaw"; _ryRaw = _args select 2; if (!isNil "_ryRaw" && {typeName _ryRaw == "SCALAR"}) then {_ryIdx = _ryRaw}};
+		_ryPlayer = objNull; if (count _args >= 4) then {_ryPlayer = _args select 3}; //--- card wasp-aicom-disband-no-sender-identity: acting player appended by GUI_Menu_Command.sqf
 		if (_ryEnabled && {_rySide in [west, east]} && {_ryIdx >= 0}) then {
 			_ryLogik = (_rySide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _ryLogik) then {
 				_ryCmd = (_rySide) Call WFBE_CO_FNC_GetCommanderTeam; _ryHuman = false;
 				if (!isNull _ryCmd) then {if (isPlayer (leader _ryCmd)) then {_ryHuman = true}};
 				_ryTeams = _ryLogik getVariable ["wfbe_teams", []];
-				if (_ryHuman && {_ryIdx < (count _ryTeams)}) then {
+				_ryAuth = (!isNull _ryPlayer) && {alive _ryPlayer} && {isPlayer _ryPlayer} && {!isNull _ryCmd} && {side (group _ryPlayer) == _rySide} && {group _ryPlayer == _ryCmd}; //--- caller must be IN this side commander team
+				if (_ryHuman && {_ryAuth} && {_ryIdx < (count _ryTeams)}) then {
 					_ryTeam = _ryTeams select _ryIdx;
 					if (!isNull _ryTeam && {({alive _x} count units _ryTeam) > 0} && {!isPlayer (leader _ryTeam)}) then {
 						//--- Nearest own rally point: own HQ, else nearest OWN-side town centre (fall back to HQ).
@@ -789,7 +800,7 @@ switch (_args select 0) do {
 						diag_log ("AICOM2|v1|ORDER|aicom-rally|REJECT|" + str _rySide + "|idx=" + str _ryIdx + "|nullOrPlayer");
 					};
 				} else {
-					diag_log ("AICOM2|v1|ORDER|aicom-rally|REJECT|" + str _rySide + "|human=" + str _ryHuman + "|idx=" + str _ryIdx + "|teams=" + str (count _ryTeams));
+					diag_log ("AICOM2|v1|ORDER|aicom-rally|REJECT|" + str _rySide + "|human=" + str _ryHuman + "|auth=" + str _ryAuth + "|idx=" + str _ryIdx + "|teams=" + str (count _ryTeams));
 				};
 			};
 		};
@@ -818,18 +829,20 @@ switch (_args select 0) do {
 		//--- rate-limit gates: flat WFBE_C_AICOM_TOPUP_UNIT_COST per missing man toward 6 (cap 4), charged from the AI
 		//--- commander treasury up front; one refit per team per WFBE_C_AICOM_TOPUP_COOLDOWN via the SAME wfbe_aicom_topup_stamp
 		//--- Produce stamps. NEVER trust the client: human commander required, side + team validated, funds re-checked here.
-		private ["_rfEnabled","_rfSide","_rfIdx","_rfLogik","_rfCmd","_rfHuman","_rfTeams","_rfTeam","_rfAlive","_rfNow","_rfLast","_rfCd","_rfMissing","_rfSText","_rfBarr","_rfCls","_rfCost","_rfCharge","_rfFunds","_rfCostOn","_rfAfford","_rfChargedAmt"];
+		private ["_rfEnabled","_rfSide","_rfIdx","_rfLogik","_rfCmd","_rfHuman","_rfTeams","_rfTeam","_rfAlive","_rfNow","_rfLast","_rfCd","_rfMissing","_rfSText","_rfBarr","_rfCls","_rfCost","_rfCharge","_rfFunds","_rfCostOn","_rfAfford","_rfChargedAmt","_rfPlayer","_rfAuth"];
 		_rfEnabled = (missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0;
 		_rfSide = _args select 1;
 		_rfIdx  = -1;
 		if (count _args >= 3) then {private "_rfRaw"; _rfRaw = _args select 2; if (!isNil "_rfRaw" && {typeName _rfRaw == "SCALAR"}) then {_rfIdx = _rfRaw}};
+		_rfPlayer = objNull; if (count _args >= 4) then {_rfPlayer = _args select 3}; //--- card wasp-aicom-disband-no-sender-identity: acting player appended by GUI_Menu_Command.sqf
 		if (_rfEnabled && {_rfSide in [west, east]} && {_rfIdx >= 0}) then {
 			_rfLogik = (_rfSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _rfLogik) then {
 				_rfCmd = (_rfSide) Call WFBE_CO_FNC_GetCommanderTeam; _rfHuman = false;
 				if (!isNull _rfCmd) then {if (isPlayer (leader _rfCmd)) then {_rfHuman = true}};
 				_rfTeams = _rfLogik getVariable ["wfbe_teams", []];
-				if (_rfHuman && {_rfIdx < (count _rfTeams)}) then {
+				_rfAuth = (!isNull _rfPlayer) && {alive _rfPlayer} && {isPlayer _rfPlayer} && {!isNull _rfCmd} && {side (group _rfPlayer) == _rfSide} && {group _rfPlayer == _rfCmd}; //--- caller must be IN this side commander team
+				if (_rfHuman && {_rfAuth} && {_rfIdx < (count _rfTeams)}) then {
 					_rfTeam = _rfTeams select _rfIdx;
 					if (!isNull _rfTeam && {!isPlayer (leader _rfTeam)}) then {
 						_rfAlive = {alive _x} count (units _rfTeam);
@@ -879,7 +892,7 @@ switch (_args select 0) do {
 						diag_log ("AICOM2|v1|ORDER|aicom-refit|REJECT|" + str _rfSide + "|idx=" + str _rfIdx + "|nullOrPlayer");
 					};
 				} else {
-					diag_log ("AICOM2|v1|ORDER|aicom-refit|REJECT|" + str _rfSide + "|human=" + str _rfHuman + "|idx=" + str _rfIdx + "|teams=" + str (count _rfTeams));
+					diag_log ("AICOM2|v1|ORDER|aicom-refit|REJECT|" + str _rfSide + "|human=" + str _rfHuman + "|auth=" + str _rfAuth + "|idx=" + str _rfIdx + "|teams=" + str (count _rfTeams));
 				};
 			};
 		};
@@ -891,18 +904,20 @@ switch (_args select 0) do {
 		//--- town) so AssignTowns' holder-skip (AI_Commander_AssignTowns.sqf:253-263) leaves the team garrisoning it, plus
 		//--- a "defense" order at the town centre via the broadcast setters (Execute HOLDs it). NEVER trust the client:
 		//--- human commander required, side + team validated, and the held town must currently be OURS. Flag-gated.
-		private ["_hdEnabled","_hdSide","_hdIdx","_hdLogik","_hdCmd","_hdHuman","_hdTeams","_hdTeam","_hdSID","_hdTown","_hdBest","_hdSecs"];
+		private ["_hdEnabled","_hdSide","_hdIdx","_hdLogik","_hdCmd","_hdHuman","_hdTeams","_hdTeam","_hdSID","_hdTown","_hdBest","_hdSecs","_hdPlayer","_hdAuth"];
 		_hdEnabled = (missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0;
 		_hdSide = _args select 1;
 		_hdIdx  = -1;
 		if (count _args >= 3) then {private "_hdRaw"; _hdRaw = _args select 2; if (!isNil "_hdRaw" && {typeName _hdRaw == "SCALAR"}) then {_hdIdx = _hdRaw}};
+		_hdPlayer = objNull; if (count _args >= 4) then {_hdPlayer = _args select 3}; //--- card wasp-aicom-disband-no-sender-identity: acting player appended by GUI_Menu_Command.sqf
 		if (_hdEnabled && {_hdSide in [west, east]} && {_hdIdx >= 0}) then {
 			_hdLogik = (_hdSide) Call WFBE_CO_FNC_GetSideLogic;
 			if (!isNull _hdLogik) then {
 				_hdCmd = (_hdSide) Call WFBE_CO_FNC_GetCommanderTeam; _hdHuman = false;
 				if (!isNull _hdCmd) then {if (isPlayer (leader _hdCmd)) then {_hdHuman = true}};
 				_hdTeams = _hdLogik getVariable ["wfbe_teams", []];
-				if (_hdHuman && {_hdIdx < (count _hdTeams)}) then {
+				_hdAuth = (!isNull _hdPlayer) && {alive _hdPlayer} && {isPlayer _hdPlayer} && {!isNull _hdCmd} && {side (group _hdPlayer) == _hdSide} && {group _hdPlayer == _hdCmd}; //--- caller must be IN this side commander team
+				if (_hdHuman && {_hdAuth} && {_hdIdx < (count _hdTeams)}) then {
 					_hdTeam = _hdTeams select _hdIdx;
 					if (!isNull _hdTeam && {({alive _x} count units _hdTeam) > 0} && {!isPlayer (leader _hdTeam)}) then {
 						_hdSID = (_hdSide) Call WFBE_CO_FNC_GetSideID;
@@ -924,7 +939,7 @@ switch (_args select 0) do {
 						diag_log ("AICOM2|v1|ORDER|aicom-hold|REJECT|" + str _hdSide + "|idx=" + str _hdIdx + "|nullOrPlayer");
 					};
 				} else {
-					diag_log ("AICOM2|v1|ORDER|aicom-hold|REJECT|" + str _hdSide + "|human=" + str _hdHuman + "|idx=" + str _hdIdx + "|teams=" + str (count _hdTeams));
+					diag_log ("AICOM2|v1|ORDER|aicom-hold|REJECT|" + str _hdSide + "|human=" + str _hdHuman + "|auth=" + str _hdAuth + "|idx=" + str _hdIdx + "|teams=" + str (count _hdTeams));
 				};
 			};
 		};
