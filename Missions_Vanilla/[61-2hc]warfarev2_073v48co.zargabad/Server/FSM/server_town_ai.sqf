@@ -118,6 +118,12 @@ while {!WFBE_GameOver} do {
 		if (_x getVariable ["wfbe_active", false]) then { _activeTownCount = _activeTownCount + 1 };
 	} forEach towns;
 	missionNamespace setVariable ["wfbe_active_town_count", _activeTownCount];
+	//--- CTL garrison-link episode telemetry (kimi/ctl-telemetry-20260725, flag
+	//--- WFBE_C_CTL_TELEMETRY default 0): per-sweep cache of the telemetry flag so the
+	//--- per-town episode checks below read a script-local instead of a missionNamespace
+	//--- hash on every contested sweep. Default 0 => every episode block below is skipped.
+	private ["_ctlTelOn"];
+	_ctlTelOn = (missionNamespace getVariable ["WFBE_C_CTL_TELEMETRY", 0]) > 0;
 
 	//--- B74.2: re-read the active-town budget from the live pop-tier EVERY sweep (was cached once
 	//--- at FSM start above). WFBE_PopTier is publicVariable'd by the server and shifts ~every 90s;
@@ -381,6 +387,14 @@ while {!WFBE_GameOver} do {
 					///
 					//--- Keep the inactivity timer alive while enemies are present.
 					_town setVariable ["wfbe_inactivity", time];
+					//--- CTL episode telemetry (WFBE_C_CTL_TELEMETRY): peak-enemy accumulator for the
+					//--- open episode. REUSES this sweep's already-computed _enemies (the town's own
+					//--- nearEntities scan above - zero new scans, zero per-unit work): at most one
+					//--- scalar write per contested sweep. wfbe_ctl_ep_t0>0 marks a tracked ground
+					//--- episode (set only by the ACT site below, which applies the W/E + LANE gates).
+					if (_ctlTelOn && {(_town getVariable ["wfbe_ctl_ep_t0", 0]) > 0} && {_enemies > (_town getVariable ["wfbe_ctl_ep_enemax", 0])}) then {
+						_town setVariable ["wfbe_ctl_ep_enemax", _enemies];
+					};
 
 					if (_town getVariable "wfbe_active_override") then {
 						_town setVariable ["wfbe_active_override", false];
@@ -473,6 +487,38 @@ while {!WFBE_GameOver} do {
 								_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroupsDefender
 							} else {
 								_groups = [_town, _side] Call WFBE_SE_FNC_GetTownGroups;
+							};
+							//--- CTL garrison-link episode telemetry (kimi/ctl-telemetry-20260725, flag
+							//--- WFBE_C_CTL_TELEMETRY default 0): one ACT line per WEST/EAST GROUND activation
+							//--- episode. TELEMETRY ONLY - no spawn/activation/ledger rule is touched; every
+							//--- value is read from state this activation already produced. Double-gated on
+							//--- AICOMV2_LANE_CMD_TOWN_LEDGER (the system under measurement); flag-off =>
+							//--- skipped, byte-identical to HEAD. Air-only episodes are out of scope: the
+							//--- ledger overlay in Server_GetTownGroups*.sqf is ground-only ({!_aa_get}), so
+							//--- an AA picket carries no ledger signal. groups=/units= are the PLANNED roster
+							//--- counts (one _groups element = one group spawned below); the crew-inclusive
+							//--- realized count is already surfaced per episode by the existing
+							//--- wfbe_ctl_lastspawn / READBACK lines at deactivation.
+							if (_ctlTelOn && {(missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0} && {(_side == west || {_side == east})}) then {
+								private ["_ctlTelInv","_ctlTelLedger","_ctlTelStr","_ctlTelUnits"];
+								//--- str_at_act: the tick-published wfbe_ctl_str - the same value the planner
+								//--- just scaled this wave by (Server_GetTownGroups.sqf CTL overlay).
+								_ctlTelStr = _town getVariable ["wfbe_ctl_str", 1];
+								//--- invested_flag: the ledger distinguishes paid investment from free accrual
+								//--- via record field [4] (investT0, stamped by the tick's INVEST_APPLY).
+								//--- >0 = this record received at least one paid investment since seed.
+								//--- Read-only walk (same pattern as the invest arm in AI_Commander.sqf) -
+								//--- the CTL tick remains the sole ledger WRITER. Once per episode.
+								_ctlTelInv = 0;
+								_ctlTelLedger = ((_side) Call WFBE_CO_FNC_GetSideLogic) getVariable ["WFBE_CTL_LEDGER", []];
+								{
+									if ((_x select 0) == _town && {(_x select 4) > 0}) then {_ctlTelInv = 1};
+								} forEach _ctlTelLedger;
+								_ctlTelUnits = 0;
+								{_ctlTelUnits = _ctlTelUnits + (count _x)} forEach _groups;
+								_town setVariable ["wfbe_ctl_ep_t0", time];
+								_town setVariable ["wfbe_ctl_ep_enemax", _enemies];
+								diag_log Format ["CTLSTAT|v1|%1|ACT|town=%2|str=%3|groups=%4|units=%5|inv=%6", str _side, _town getVariable ["name", "?"], _ctlTelStr, count _groups, _ctlTelUnits, _ctlTelInv];
 							};
 
 							////
@@ -943,6 +989,22 @@ while {!WFBE_GameOver} do {
 							diag_log Format ["CTLSTAT|v1|%1|READBACK|town=%2|ratio=%3", str _side, _town getVariable ["name", "?"], _ctlRatio];
 						};
 						_town setVariable ["wfbe_ctl_lastspawn", 0];
+					};
+					//--- CTL garrison-link episode telemetry (WFBE_C_CTL_TELEMETRY): one DEACT line per
+					//--- tracked ground episode, next to the survivor read-back so an episode reads as
+					//--- ACT -> READBACK -> DEACT in RPT. hold= episode wall seconds (time base, same
+					//--- clock as wfbe_inactivity); str= the last tick-published wfbe_ctl_str, i.e.
+					//--- PRE-attrition - the tick's own READBACK line one pass later carries the
+					//--- post-attrition value; enemax= peak of the town's own per-sweep enemy count.
+					//--- ep_t0>0 means the ACT site tracked this episode (all gates applied there).
+					//--- Mid-episode capture note: _side is the owner at deactivation, which can differ
+					//--- from the owner at ACT if the town changed hands while active.
+					if (_ctlTelOn && {(_town getVariable ["wfbe_ctl_ep_t0", 0]) > 0}) then {
+						private ["_ctlTelHold"];
+						_ctlTelHold = round (time - (_town getVariable ["wfbe_ctl_ep_t0", 0]));
+						diag_log Format ["CTLSTAT|v1|%1|DEACT|town=%2|hold=%3|str=%4|enemax=%5", str _side, _town getVariable ["name", "?"], _ctlTelHold, _town getVariable ["wfbe_ctl_str", 1], _town getVariable ["wfbe_ctl_ep_enemax", 0]];
+						_town setVariable ["wfbe_ctl_ep_t0", 0];
+						_town setVariable ["wfbe_ctl_ep_enemax", 0];
 					};
 
 					//--- Teams vehicles.
