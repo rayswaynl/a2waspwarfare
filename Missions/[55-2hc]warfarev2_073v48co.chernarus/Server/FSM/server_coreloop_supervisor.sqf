@@ -26,7 +26,7 @@
 	possible. The owner can flip any loop's mode without touching this file.
 */
 
-waitUntil {sleep 1; !(isNil "serverInitFull")};
+waitUntil {sleep 1; serverInitFull};
 
 private ["_scan","_cool","_maxRestarts","_descriptors"];
 _scan        = missionNamespace getVariable ["WFBE_C_CORELOOP_SCAN", 15];

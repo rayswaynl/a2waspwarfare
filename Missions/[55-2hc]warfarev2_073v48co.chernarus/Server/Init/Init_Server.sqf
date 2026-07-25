@@ -1433,7 +1433,7 @@ WFBE_SE_PLAYERLIST = [[objNull, "0"]];
 if ((missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG", 1]) > 0) then {
 	[] Spawn {
 		private ["_scan","_cool","_stale","_x","_myID","_hb","_lastR","_thresh","_age","_ownerKey","_ownerSeq","_hKey","_oldHandle","_newHandle"];
-		waitUntil {sleep 1; !(isNil "serverInitFull")};
+		waitUntil {sleep 1; serverInitFull};
 		_scan = missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG_SCAN", 30];
 		_cool = missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG_COOLDOWN", 120];
 		//--- generous threshold: 3 healthy ticks + 30s margin (75s at default TICK=15). No
