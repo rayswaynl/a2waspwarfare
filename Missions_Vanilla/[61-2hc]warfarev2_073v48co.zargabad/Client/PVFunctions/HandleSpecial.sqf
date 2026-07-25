@@ -90,6 +90,40 @@ switch (_request) do {
 		_wreck = _args select 0;
 		if (!isNull _wreck && {local _wreck} && {!alive _wreck} && {(_wreck getVariable ["WFBE_CommanderAttackHeli", false])}) then {deleteVehicle _wreck};
 	};
+	//--- fix(alife) proper #1370: delete a town-defense static gunner that is LOCAL TO THIS machine.
+	//--- server_town.sqf's GUER-capture teardown and Server_OperateTownDefensesUnits.sqf's "remove" case
+	//--- cannot delete an HC-local gunner directly (HC-delegated town statics are HC-local; a server-side
+	//--- deleteVehicle would silently no-op), so they route here the same way the arty/heli wreck reapers
+	//--- above do. UNLIKE those two wreck cases, this gunner may still be ALIVE (de-manning removes a
+	//--- still-fighting AI, not just a corpse), so this case is deliberately NOT gated on !alive. SAME
+	//--- forgeable-PVF residual as the wreck cases (no sender auth on this channel) - narrowed the same
+	//--- way: the receiver only ever deletes an object that is local, NOT a player, and carries the public
+	//--- WFBE_IsTownDefenderAI tag every town-defense gunner is stamped with at creation (both the
+	//--- server-created path, Server_OperateTownDefensesUnits.sqf:83, and the HC-delegated path,
+	//--- Client_DelegateAIStaticDefence.sqf:36) - so the worst a forged dispatch can do is an early
+	//--- despawn of some other town-defender AI, not an arbitrary live-object delete.
+	//---
+	//--- codex hold remediation (2026-07-25): this receiver ran with NO flag check, so a forged PV
+	//--- could delete a live HC-local defender even while WFBE_C_TOWN_GUER_GUNNER_REAP = 0 - i.e. the
+	//--- delete endpoint stayed live with the feature "off". Server_OperateTownDefensesUnits.sqf's
+	//--- unflagged "remove" case dispatch is an existing-behaviour restoration and must keep working
+	//--- unconditionally, so the two send sites are distinguished by a third arg (reason token) rather
+	//--- than gated identically: "remove-case" deletes unconditionally (matches pre-#1370 behaviour);
+	//--- any other/missing reason (including the capture-teardown site) requires the flag. This does not
+	//--- add sender authentication (still none on this channel - see residual note above), but it does
+	//--- make "flag off" actually mean the capture-teardown delete cannot fire, and fails closed (flag
+	//--- required) for any reason string this receiver does not recognise.
+	case "cleanup-town-defense-gunner": {
+		Private ["_gunner","_reason"];
+		_gunner = _args select 0;
+		_reason = "capture-teardown";
+		if (count _args > 1) then {_reason = _args select 1};
+		if (!isNull _gunner && {local _gunner} && {!isPlayer _gunner} && {(_gunner getVariable ["WFBE_IsTownDefenderAI", false])}) then {
+			if (_reason == "remove-case" || {(missionNamespace getVariable ["WFBE_C_TOWN_GUER_GUNNER_REAP", 0]) > 0}) then {
+				deleteVehicle _gunner;
+			};
+		};
+	};
 	//--- Owner-side half of the Common_TrashObject.sqf locality gate. Self-gated on the same flag as the
 	//--- sender, on the object being LOCAL here, on it being DEAD, and on the public reap stamp the server
 	//--- set before dispatching - so this channel can never delete a live object or anything TrashObject

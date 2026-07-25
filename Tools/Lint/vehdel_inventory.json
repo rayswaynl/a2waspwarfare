@@ -69,7 +69,7 @@
   },
   "Client/PVFunctions/HandleSpecial.sqf": {
     "probed": 0,
-    "total": 10
+    "total": 12
   },
   "Common/Functions/Common_AddVehicleMarking.sqf": {
     "probed": 0,
@@ -209,7 +209,7 @@
   },
   "Server/FSM/server_town.sqf": {
     "probed": 0,
-    "total": 10
+    "total": 12
   },
   "Server/FSM/server_town_ai.sqf": {
     "probed": 5,
@@ -257,7 +257,7 @@
   },
   "Server/Functions/Server_OperateTownDefensesUnits.sqf": {
     "probed": 0,
-    "total": 3
+    "total": 4
   },
   "Server/Functions/Server_ProvisionAirfieldHangar.sqf": {
     "probed": 0,

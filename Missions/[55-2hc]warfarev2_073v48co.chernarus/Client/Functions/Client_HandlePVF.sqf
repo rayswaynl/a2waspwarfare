@@ -35,7 +35,10 @@ if (_isHeadless) then {
 		//---        default 1; deletes a DEAD, reap-stamped body/hull that is local to this HC - the server cannot)
 		//---   cleanup-empty-vehicle      = Server_HandleEmptyVehicle.sqf (locality-aware empty-hull reaper; the server cannot
 		//---        delete a HC-local alive hull directly, so the owner re-checks the empty/idle state before deleting)
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle"]);
+		//---   cleanup-town-defense-gunner = server_town.sqf (fix/alife proper #1370) + Server_OperateTownDefensesUnits.sqf
+		//---        "remove" case; deletes a town-defense static gunner (dead OR alive) that is local to this HC -
+		//---        the equivalent server-side deletion call on an HC-delegated gunner would silently no-op
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };

@@ -740,8 +740,34 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 				//--- statics (recapture re-spawns them via ManageTownDefenses; the WEST/EAST path never calls it).
 				if (_sideID == WFBE_C_GUER_ID) then {
 					{
-						private "_def"; _def = _x getVariable "wfbe_defense";
-						if (!isNil "_def" && {!isNull _def}) then {deleteVehicle _def};
+						private ["_def","_oldGunner"];
+						_def = _x getVariable "wfbe_defense";
+						if (!isNil "_def" && {!isNull _def}) then {
+							//--- fix(alife) proper #1370 (default OFF, WFBE_C_TOWN_GUER_GUNNER_REAP): reap the
+							//--- AI gunner manning this GUER static BEFORE deleting the static itself. GUER
+							//--- town statics are manned via the HC-delegated path, so wfbe_defense_operator
+							//--- (only set on the non-HC "spawn" branch in Server_OperateTownDefensesUnits.sqf)
+							//--- is routinely nil here - the gunner was previously left orphaned (untracked,
+							//--- never deleted) on every WEST/EAST capture of a GUER town. A server-side
+							//--- deleteVehicle on that gunner silently NO-OPS when it is HC-local (A2 OA
+							//--- locality; same class of bug already fixed for commander arty/heli wrecks in
+							//--- server_groupsGC.sqf ~L405-410) - route non-local deletes to the owning machine
+							//--- via the same established WFBE_CO_FNC_SendToClient -> HandleSpecial dispatch
+							//--- channel those reapers use (new "cleanup-town-defense-gunner" HandleSpecial
+							//--- case, gated receiver-side on local + !isPlayer + the public
+							//--- WFBE_IsTownDefenderAI tag every town-defense gunner carries).
+							if ((missionNamespace getVariable ["WFBE_C_TOWN_GUER_GUNNER_REAP", 0]) > 0 && {isNil {_x getVariable "wfbe_defense_operator"}}) then {
+								_oldGunner = gunner _def;
+								if (!isNull _oldGunner && {!isPlayer _oldGunner}) then {
+									if (local _oldGunner) then {
+										deleteVehicle _oldGunner;
+									} else {
+										[_oldGunner, "HandleSpecial", ["cleanup-town-defense-gunner", _oldGunner, "capture-teardown"]] Call WFBE_CO_FNC_SendToClient;
+									};
+								};
+							};
+							deleteVehicle _def;
+						};
 						_x setVariable ["wfbe_defense", nil];
 					} forEach (_location getVariable ["wfbe_town_defenses", []]);
 				};
