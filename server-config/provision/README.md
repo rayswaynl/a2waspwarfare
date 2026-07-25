@@ -10,6 +10,7 @@ parameters at run time. Never commit them here (public repo).
 
 | Step | Command | What it does |
 | --- | --- | --- |
+| 0 | **`.\00-Bootstrap-SSH.ps1 -PubKey 'ssh-ed25519 AAAA...'`** | **MANUAL, once, pasted into the activation RDP session: installs sshd + authorizes the operator key. Everything after this runs remotely.** |
 | 1 | `powershell -ExecutionPolicy Bypass -File .\01-Base-OS.ps1` | High Performance power plan, firewall openings (UDP 2302-2306), reports VBS/HVCI + SMT state |
 | 2 | `powershell -ExecutionPolicy Bypass -File .\02-Install-Apps.ps1` | Installs Steam + Sandboxie-Plus via winget (fallback URLs printed if winget is missing) |
 | 3 | `powershell -ExecutionPolicy Bypass -File .\03-Sync-GameFiles.ps1 -SourceHost <old-box> -SourceUser <user>` | Pulls the game install (incl. `Dll\` allocators + mods) and `C:\WASP\` from the old box over scp |
@@ -47,9 +48,12 @@ the 2-HC baseline so soak numbers stay comparable; affinity is layered on top.
   `../README.md`. Step 3 copies the old box's `C:\WASP\` first; then overwrite with the
   repo versions of these files so the 4-HC config wins. Restore `passwordAdmin` on the
   box copy by hand (never commit it).
-- The mission PBO for the 4-HC test is packed on the dev PC by `Tools/LoadoutManager`
+- The mission PBOs for the 4-HC test are packed on the dev PC by `Tools/Pack/pack_pbo.py`
   from the PR #1456 branch and copied to `C:\WASP\MPMissions\` (scp). Set the
-  `template =` line in `server-pr8.cfg` to the packed name.
+  `template =` line in `server-pr8.cfg` to the packed name (folder-name prefix with
+  `_<BUILDTAG>` before the terrain suffix). Note: pre-release packs fall back to
+  `version.sqf.template` (WF_DEBUG off, logging on) — fine for the soak box, not for a
+  public wave ship.
 
 ## Gotchas
 
