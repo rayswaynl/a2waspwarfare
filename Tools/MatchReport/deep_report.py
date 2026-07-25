@@ -244,18 +244,23 @@ def _result(dm):
     f = dm.facts
     mode, how = dm.win_how
     tiles = [
-        chip("Winner", '<span style="color:var(--c-%s)">%s</span>' % (dm.winner, _e(side_label(dm.winner)))),
-        chip("Duration", MatchData.fmt_duration(dm.duration)),
+        chip("Status", "In progress") if dm.in_progress else
+        chip("Winner", '<span style="color:var(--c-%s)">%s</span>'
+             % (dm.winner, _e(side_label(dm.winner)))),
+        chip("Elapsed" if dm.in_progress else "Duration", MatchData.fmt_duration(dm.duration)),
         chip("Total kills", _n(dm.total_kills)),
         chip("Town captures", _n(len(dm.caps))),
     ]
     if f and f.end:
         tiles.append(chip("Players connected", _n(f.end.get("players", 0))))
         tiles.append(chip("Towns on map", _n(f.end.get("totalTowns", len(dm.towns)))))
+    #--- a running match has no winner; showing one (or a neutral "CIV / CONTESTED wins")
+    #--- would be the single most misleading thing this page could say.
+    headline = "MATCH IN PROGRESS" if dm.in_progress else side_label(dm.winner)
     hero = ('<div class="hero"><div class="herolab">%s</div>'
             '<div class="heronum" style="color:var(--c-%s)">%s</div>'
             '<div class="herosub">%s</div></div>'
-            % (_e(mode), dm.winner, _e(side_label(dm.winner)), _e(how)))
+            % (_e(mode), dm.winner, _e(headline), _e(how)))
 
     arc = []
     if dm.max_deficit >= 3:
@@ -732,7 +737,7 @@ def render_html(dm, title=None):
     head = ('<header><div class="wrap"><div class="eyebrow">WASP Warfare · in-depth match report</div>'
             '<h1>%s</h1><p class="subtitle">%s · %s · %s</p><div class="chips">%s</div></div></header>'
             % (_e(dm.map_name.title()),
-               _e("%s victory" % side_label(dm.winner)),
+               _e("in progress" if dm.in_progress else "%s victory" % side_label(dm.winner)),
                _e(MatchData.fmt_duration(dm.duration)),
                _e("%s kills · %s captures" % (_n(dm.total_kills), _n(len(dm.caps)))),
                chiphtml))
@@ -785,9 +790,9 @@ def render_md(dm):
     L = []
     L.append("# WASP in-depth match report — %s" % dm.map_name.title())
     L.append("")
-    L.append("**%s victory** · %s · %s kills · %s captures"
-             % (side_label(dm.winner), MatchData.fmt_duration(dm.duration),
-                _n(dm.total_kills), _n(len(dm.caps))))
+    L.append("**%s** · %s · %s kills · %s captures"
+             % ("MATCH IN PROGRESS" if dm.in_progress else "%s victory" % side_label(dm.winner),
+                MatchData.fmt_duration(dm.duration), _n(dm.total_kills), _n(len(dm.caps))))
     mode, how = dm.win_how
     L.append("")
     L.append("%s — %s" % (mode, how))

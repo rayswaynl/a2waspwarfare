@@ -171,6 +171,37 @@ class CoverageHonestyTests(unittest.TestCase):
         self.assertIn("No human operators", " ".join(dm.warnings))
         self.assertIn("AI-only", deep_report.render_html(dm))
 
+    def test_live_match_clock_falls_back_to_the_latest_observed_event(self):
+        #--- a running match has neither ROUNDEND nor MATCH|v1|END, so the clock has to come
+        #--- from the log itself; without this the duration collapses to 1 s and every
+        #--- time-based surface (momentum, tempo, territory-seconds) degenerates.
+        dm = parse_deep([
+            '"MATCH|v1|START|world=chernarus|build=b|towns=20|missionSlots=55|aiEnabled=1'
+            '|delegation=2|statlog=1|guer=1|naval=0|oilfield=0"',
+            _w(1, "CAPTURE|Msta|4|0|t=600"),
+            _w(2, "KILL|||WEST|EAST|M16A2|100|INF|t=1800"),
+        ])
+        self.assertTrue(dm.in_progress)
+        self.assertEqual(dm.duration, 1800)
+        self.assertGreater(dm.town_seconds["west"], 0)
+        self.assertEqual(len(dm.ser_x), len(dm.series["west"]))
+        self.assertIn("still in progress", " ".join(dm.warnings))
+
+    def test_live_match_never_announces_a_winner(self):
+        dm = parse_deep([_w(1, "CAPTURE|Msta|4|0|t=600")])
+        self.assertTrue(dm.in_progress)
+        self.assertEqual(dm.winner, "neu")
+        self.assertEqual(dm.win_how[0], "IN PROGRESS")
+        self.assertNotIn("END", [e["kind"] for e in dm.timeline])
+        for out in (deep_report.render_html(dm), deep_report.render_md(dm)):
+            self.assertIn("IN PROGRESS", out)
+            self.assertNotIn("wins", out)
+            self.assertNotIn("victory", out)
+
+    def test_finished_match_is_not_flagged_in_progress(self):
+        dm = parse_deep([_w(1, "ROUNDEND|WEST|600|chernarus")])
+        self.assertFalse(dm.in_progress)
+
     def test_empty_log_still_produces_a_report(self):
         dm = parse_deep([])
         html = deep_report.render_html(dm)

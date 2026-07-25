@@ -86,6 +86,7 @@ class DeepMatch(object):
         self.seqs = []
         self.record_counts = Counter()
         self.unresolved_uids = 0
+        self.in_progress = False
 
     # ---- ownership ------------------------------------------------------
     def owners_at(self, ts):
@@ -378,6 +379,9 @@ class DeepMatch(object):
                     MatchData.fmt_duration(self.duration),
                     f.end.get("townsW", 0), f.end.get("townsE", 0), f.end.get("townsG", 0),
                     f.end.get("players", 0)))
+        elif self.in_progress:
+            add(self.duration, "LIVE", "neu", "Match still running — log ends here",
+                detail="latest observed event; no result recorded yet")
         elif self.caps or self.kills:
             add(self.duration, "END", self.winner,
                 "%s wins" % FACTION_LABEL.get(self.winner, self.winner.upper()),
@@ -391,7 +395,15 @@ class DeepMatch(object):
         held = self.final_town_counts()
         wt = held.get(self.winner, 0)
         rivals = [(s, n) for s, n in held.items() if s not in (self.winner, "neu") and n > 0]
-        if wt > 0 and not rivals:
+        if self.in_progress:
+            leader = max(held.items(), key=lambda kv: kv[1], default=("neu", 0))
+            self.win_how = ("IN PROGRESS",
+                            ("%s leads on towns %d–%d as of %s"
+                             % (FACTION_LABEL.get(leader[0], "?"), leader[1],
+                                max([n for s, n in held.items() if s != leader[0]] or [0]),
+                                fmt_clock(self.duration)))
+                            if leader[1] else "no side holds a town yet")
+        elif wt > 0 and not rivals:
             self.win_how = ("SUPREMACY", "%d towns held — every rival wiped off the map" % wt)
         elif wt > 0:
             runner = max(rivals, key=lambda kv: kv[1])
@@ -421,17 +433,23 @@ class DeepMatch(object):
             "dist_measured": self.dist_measured, "dist_total": len(self.kills),
             "unresolved_uids": self.unresolved_uids,
             "excluded_rows": len(self.excluded_players),
+            "in_progress": self.in_progress,
             "has_start": bool(f and f.start),
             "has_end": bool(f and f.end),
             "towns_known": bool(TOWN_COORDS.get(self.map_name.lower())),
         }
 
         warns = []
+        if self.in_progress:
+            warns.append("Match still in progress: no ROUNDEND and no MATCH|v1|END in this log. "
+                         "The clock runs to the latest observed event (%s), there is no winner, "
+                         "and every total below is a snapshot that will keep moving."
+                         % fmt_clock(self.duration))
         if not self.coverage["has_start"]:
             warns.append("No MATCH|v1|START line — match configuration (build, town/slot counts, "
                          "feature flags) is unknown. Check WFBE_C_MATCH_TELEMETRY and that the "
                          "log window starts before mission init.")
-        if not self.coverage["has_end"]:
+        if not self.coverage["has_end"] and not self.in_progress:
             warns.append("No MATCH|v1|END line — casualties, vehicles lost and the connected-player "
                          "count are unavailable, and the result is inferred from WASPSTAT ROUNDEND.")
         if self.caps and cap_exact < len(self.caps):
@@ -545,6 +563,21 @@ def parse_deep(lines, names=None):
     if f and f.end:
         dm.duration = f.end.get("durationSec", 0) or duration
         dm.winner = f.winner or winner
+
+    #--- A live match has no ROUNDEND and no MATCH|v1|END, because neither is written until the
+    #--- victory FSM fires. Without a fallback the clock collapses to 1 s and every time-based
+    #--- surface (momentum sampling, tempo bins, territory-seconds) degenerates. Fall back to the
+    #--- latest event the log actually observed, and mark the report as in-progress so nothing
+    #--- downstream presents a running match as a finished one.
+    dm.in_progress = not (dm.record_counts.get("ROUNDEND") or (f and f.end))
+    if dm.in_progress:
+        observed = [t for t in
+                    [r[4] for r in caps_raw] + [r[8] for r in kills_raw]
+                    + [s["t"] for (_ln, s) in support_raw]
+                    + [m["t"] for m in (f.milestones if f else [])]
+                    if t is not None]
+        dm.duration = max(observed) if observed else 0
+        dm.winner = "neu"
     dm.duration = max(1, dm.duration)
     dm.world_size = WORLD_SIZE.get(dm.map_name.lower(), WORLD_SIZE["default"])
 
