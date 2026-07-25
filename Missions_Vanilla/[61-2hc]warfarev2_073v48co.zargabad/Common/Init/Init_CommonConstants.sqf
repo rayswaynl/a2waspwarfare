@@ -2983,5 +2983,27 @@ if (isNil "WFBE_C_ICBM_LEGACY_SERVER_AUTH") then {WFBE_C_ICBM_LEGACY_SERVER_AUTH
 if (isNil "WFBE_C_ICBM_COST") then {WFBE_C_ICBM_COST = 75000};               //--- classic ICBM (NUKE) fee; GUI_Menu_Tactical.sqf's fee row reads this same constant (lock-step).
 if (isNil "WFBE_C_ICBM_LEGACY_COOLDOWN") then {WFBE_C_ICBM_LEGACY_COOLDOWN = 300}; //--- s: per-side shared legacy-ICBM cooldown (parity with WFBE_C_ICBM_TEL_COOLDOWN).
 
+//--- ENDGAME TELEPORT (owner ask 2026-07-25): base-idle AICOM teams (WEST/EAST only, fully-AI,
+//--- zero human riders) get short-hopped to a friendly frontline town late in a round instead of
+//--- spending 20+ minutes marching - attacks the zombie-round problem from the logistics side.
+//--- Decision made in AI_Commander_EndgameTeleport.sqf (called from AI_Commander_Strategy.sqf's
+//--- existing per-team pass, zero new per-tick scans); physical relocation executed in
+//--- Common_RunCommanderTeam.sqf (the already-running per-team driver, correct locality by
+//--- construction - no new PVF/HandleSpecial dispatch, no HC-allowlist edit).
+//--- ALL five defaults are 0 - ENABLE=0 alone makes the whole feature byte-identical to HEAD (the
+//--- callee's first line exits before reading any of the other four). Those four are also
+//--- conservatively 0 so an arm-without-tuning mistake still cannot behave worse than "teleport is
+//--- possible immediately with no cooldown/cap/floor" rather than something unbounded. Arm together:
+//---   WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE = 1                (master switch)
+//---   WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_TIME = 21600          (s; ~6h match age, owner's ask)
+//---   WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN = 900            (s; per-team re-eligibility)
+//---   WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK = 2          (per side per Strategy tick, ~60s)
+//---   WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST = 1200           (m; skip teams already close enough to walk)
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE") then {WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_TIME") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_TIME = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN") then {WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

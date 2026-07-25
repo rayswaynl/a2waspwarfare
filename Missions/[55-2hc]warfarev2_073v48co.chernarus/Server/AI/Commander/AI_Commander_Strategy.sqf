@@ -822,6 +822,13 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 	} forEach _teams;
 };
 
+//--- END-GAME TELEPORT (owner ask 2026-07-25): hand off to a dedicated worker so this file's own
+//--- edit stays a single call - see AI_Commander_EndgameTeleport.sqf for the full decision logic.
+//--- Reuses _teams/_attacked/_ownTownObjs/_myHQ already resident this tick (zero new scans). Flag
+//--- WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE, default 0 - the callee's own first line exits
+//--- immediately when off, so this call is a byte-identical no-op at flag 0.
+[_side, _teams, _attacked, _ownTownObjs, _myHQ] Call WFBE_SE_FNC_AI_Com_EndgameTeleport;
+
 //--- 3) HQ HUNT: strike when clearly winning; stand down when the edge is gone.
 _enemyHQ = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;
 _wasStrike = _logik getVariable ["wfbe_aicom_strike_on", false];

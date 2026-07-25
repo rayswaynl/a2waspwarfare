@@ -25,7 +25,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
          "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev",
-         "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady","_capMounted","_capClass"];
+         "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady","_capMounted","_capClass","_egtLastTp"];
 
 _sideID = _this select 0;
 _template = _this select 1;
@@ -294,6 +294,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 
 //--- Order-execution loop: apply each new order seq from the server brain.
 _lastSeq = -1;
+_egtLastTp = -1;   //--- ENDGAME TELEPORT: last-applied wfbe_aicom_endgame_tp stamp for THIS driver instance (see below).
 _arrived = false;
 _captureDone = false;     //--- guard: run dismount-capture phase only once per order
 _alive = true;
@@ -974,6 +975,68 @@ while {!WFBE_GameOver && _alive} do {
 		//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
 		_order = _team getVariable "wfbe_aicom_order";
 		if (isNil "_order") then {_order = []};
+
+		//--- END-GAME TELEPORT EXECUTOR (owner ask 2026-07-25, flag WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE
+		//--- default 0). AI_Commander_EndgameTeleport.sqf makes the DECISION server-side and stamps a
+		//--- broadcast sibling group var (wfbe_aicom_endgame_tp = [destPos, stampTime], deliberately NOT
+		//--- part of the wfbe_aicom_order array - element 3 there is already the unstuck tier, _usTier
+		//--- below). THIS driver instance is already running on whichever machine owns this team
+		//--- (HC-resident, or the server-local no-HC fallback - the same locality "delegate-aicom-team"
+		//--- established once at founding), so the physical relocation belongs HERE - never a new
+		//--- PVF/HandleSpecial dispatch. At flag 0 the decision side never stamps the var, so _egtSig
+		//--- below is always nil and this whole block is a provably byte-inert no-op.
+		private ["_egtSig","_egtPos","_egtStamp","_egtLdr","_egtGuardR","_egtPlayerNear","_egtHulls","_egtH","_egtScat","_egtFlushOrder","_egtFlushSeq","_egtFlushMode","_egtFlushDest","_egtFromDist"];
+		_egtSig = _team getVariable "wfbe_aicom_endgame_tp";
+		if (!isNil "_egtSig" && {typeName _egtSig == "ARRAY"} && {count _egtSig >= 2}) then {
+			_egtPos = _egtSig select 0;
+			_egtStamp = _egtSig select 1;
+			if (_egtStamp != _egtLastTp) then {
+				_egtLdr = leader _team;
+				if (!isNull _egtLdr && {alive _egtLdr} && {typeName _egtPos == "ARRAY"} && {count _egtPos >= 2}) then {
+					_egtGuardR = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R", 300];
+					_egtPlayerNear = false;
+					{ if (isPlayer _x && {(_x distance _egtLdr) < _egtGuardR}) then {_egtPlayerNear = true} } forEach playableUnits;
+					if (!_egtPlayerNear) then {
+						{ if (isPlayer _x && {(_x distance _egtPos) < _egtGuardR}) then {_egtPlayerNear = true} } forEach playableUnits;
+					};
+					if (!_egtPlayerNear && {!surfaceIsWater _egtPos}) then {
+						_egtFromDist = round (_egtLdr distance _egtPos);
+						//--- Scatter every LOCAL hull onto its own empty-checked point near the destination -
+						//--- mirrors the founding scatter idiom (GetRandomPosition + GetEmptyPosition, L65-67
+						//--- above) so a multi-vehicle team does not stack on arrival. A mounted passenger
+						//--- travels with its hull (no ejection - same guarantee as the MHQReloc precedent);
+						//--- an on-foot unit with no hull gets its own scattered point.
+						_egtHulls = [];
+						{ if (!isNull _x && {alive _x} && {local _x}) then {_egtHulls set [count _egtHulls, _x]} } forEach _vehicles;
+						{ if (alive _x && {vehicle _x == _x} && {local _x}) then {_egtHulls set [count _egtHulls, _x]} } forEach (units _team);
+						{
+							_egtH = _x;
+							_egtScat = [_egtPos, 30, 120] Call WFBE_CO_FNC_GetRandomPosition;
+							_egtScat = [_egtScat, 40] Call WFBE_CO_FNC_GetEmptyPosition;
+							if (!surfaceIsWater _egtScat) then {
+								_egtH setVelocity [0,0,0];
+								_egtH setPos _egtScat;
+							};
+						} forEach _egtHulls;
+						_egtLastTp = _egtStamp;
+						//--- TELEPORT_ORDER_FLUSH-style seq bump (mirrors the Tier-3 unstuck idiom below) so
+						//--- the fresh-order block re-lays movement from the NEW position immediately -
+						//--- without this a teleported team sits on stale route geometry (the "patrols
+						//--- chilling" bug class the task brief warns about).
+						_egtFlushOrder = _team getVariable "wfbe_aicom_order";
+						if (!isNil "_egtFlushOrder" && {count _egtFlushOrder >= 3}) then {
+							_egtFlushSeq = _egtFlushOrder select 0;
+							_egtFlushMode = _egtFlushOrder select 1;
+							_egtFlushDest = _egtFlushOrder select 2;
+							_team setVariable ["wfbe_aicom_order", [_egtFlushSeq + 1, _egtFlushMode, _egtFlushDest], true];
+						};
+						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] ENDGAME_TELEPORT %3m -> frontline (map=%4).", _sideID, _team, _egtFromDist, worldName]] Call WFBE_CO_FNC_AICOMLog;
+						diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|ENDGAME_TELEPORT_EXEC|team=" + (str _team) + "|fromDist=" + str _egtFromDist);
+					};
+				};
+			};
+		};
+
 		if (count _order >= 3) then {
 			_seq = _order select 0;
 			_mode = _order select 1;
