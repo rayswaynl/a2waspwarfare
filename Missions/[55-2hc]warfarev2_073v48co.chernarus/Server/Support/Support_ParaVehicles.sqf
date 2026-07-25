@@ -1,4 +1,4 @@
-Private['_args','_bd','_cargo','_cargoVehicle','_grp','_pilot','_playerTeam','_positionCoord','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_timeStart','_vehicle','_vehicleCoord','_dropReady'];
+Private['_args','_bd','_cargo','_cargoVehicle','_grp','_isAI','_pilot','_playerTeam','_positionCoord','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_timeStart','_vehicle','_vehicleCoord','_dropReady'];
 
 _args = _this;
 _side = _args select 1;
@@ -24,6 +24,8 @@ if !(isNil '_bd') then {
 };
 
 _timeStart = time;
+//--- AICOM PARAVEHI: AI-owned groups have no player leader, so keep the 500s transit cap but do not abort immediately.
+_isAI = !(isPlayer (leader _playerTeam));
 _ran = round(random((count _ranPos)-1));
 _grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
 _vehicle = createVehicle [missionNamespace getVariable Format ["WFBE_%1PARAVEHI",str _side],(_ranPos select _ran), [], (_ranDir select _ran), "FLY"];
@@ -52,7 +54,7 @@ _dropReady = false;
 while {true} do {
 	sleep 1;
 	if (!alive _pilot || !alive _vehicle || isNull _vehicle || isNull _pilot || !alive _cargoVehicle) exitWith {};
-	if (!(isPlayer (leader _playerTeam)) || time - _timeStart > 500) exitWith {{_x setDammage 1} forEach (_cargo+[_pilot,_vehicle,_cargoVehicle]);deleteGroup _grp};
+	if ((!_isAI && {!(isPlayer (leader _playerTeam))}) || time - _timeStart > 500) exitWith {{deleteVehicle _x} forEach (_cargo+[_pilot,_vehicle,_cargoVehicle]); if (!isNull _grp) then {deleteGroup _grp};};
 	_vehicleCoord = [getPos _pilot select 0,getpos _pilot select 1];
 	_positionCoord = [(_args select 2) select 0,(_args select 2) select 1];
 	if (_vehicleCoord distance _positionCoord < 100) exitWith {_dropReady = true};
