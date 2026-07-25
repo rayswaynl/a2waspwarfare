@@ -109,6 +109,7 @@ WFBE_CO_FNC_CreateTownUnits = Compile preprocessFileLineNumbers "Common\Function
 WFBE_CO_FNC_RunSidePatrol = Compile preprocessFileLineNumbers "Common\Functions\Common_RunSidePatrol.sqf";
 WFBE_CO_FNC_RunUnstuckRecovery = Compile preprocessFileLineNumbers "Common\Functions\Common_RunUnstuckRecovery.sqf";
 WFBE_CO_FNC_RunCommanderTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_RunCommanderTeam.sqf";
+WFBE_CO_FNC_AICOMRecoveryNotify = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMRecoveryNotify.sqf"; //--- Grok idea #28: tell the seated human commander when the stuck-recovery ladder fires tier 2+ on their team. Gate WFBE_C_AICOM_RECOVERY_NOTIFY default 0.
 WFBE_CO_FNC_AICOMDisbandTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMDisbandTeam.sqf";
 WFBE_CO_FNC_AICOMAirLeg = Compile preprocessFileLineNumbers "Common\Functions\Common_AICOMAirLeg.sqf"; //--- cmdcon42-f AIR-MOBILE: fly an ORDERED leg with the team's own live transport heli + hot-LZ (cold=land, contested=paradrop); transport returns to base + persists. Gate WFBE_C_AICOM_AIRMOBILE.
 //--- P1.1 (claude 2026-07-19, reworked per codex-main-sol-review-airpower-20260719 REJECT "compiled helper always

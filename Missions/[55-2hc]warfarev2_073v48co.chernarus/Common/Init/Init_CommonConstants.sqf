@@ -1212,6 +1212,9 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_RECOVERY_FOOT_ROAD_R")    then {WFBE_C_AICOM_RECOVERY_FOOT_ROAD_R = if (worldName == "Takistan") then {300} else {200}};  //--- m search radius for that road snap. Wider on TK's sparse mountain road net so the snap actually finds a track.
 	if (isNil "WFBE_C_AICOM_RECOVERY_NOROAD_STEP")     then {WFBE_C_AICOM_RECOVERY_NOROAD_STEP = 1};      //--- cmdcon44i: when the tier-3 road-snap finds NO road (roadless mountain shelf - the ZG SE spawn shelf that pinned EAST foot teams at match start), step the leader/hull toward the objective instead of leaving it wedged forever. 0 = old behaviour (do nothing when no road).
 	if (isNil "WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST") then {WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST = 90};//--- m the no-road recovery step moves toward the order destination (clamped so it never overshoots past the dest; snapped to nearest isFlatEmpty non-water ground).
+	if (isNil "WFBE_C_AICOM_RECOVERY_NOTIFY")          then {WFBE_C_AICOM_RECOVERY_NOTIFY = 0};            //--- Grok idea #28: 1 = tell the seated human commander (only) when the stuck-recovery ladder fires tier 2+ on one of their AI teams. 0 = off (byte-identical - see Common_AICOMRecoveryNotify.sqf).
+	if (isNil "WFBE_C_AICOM_RECOVERY_NOTIFY_MIN_TIER") then {WFBE_C_AICOM_RECOVERY_NOTIFY_MIN_TIER = 2};   //--- only tier >= this fires the notify (tier-1 wedge-breaks are common/minor; tier 2/3 are the ones worth a commander's attention).
+	if (isNil "WFBE_C_AICOM_RECOVERY_NOTIFY_COOLDOWN") then {WFBE_C_AICOM_RECOVERY_NOTIFY_COOLDOWN = 300}; //--- seconds - at most one notify per TEAM in this window.
 
 	//--- === cmdcon41 wave-3g/3h (Ray 2026-07-02): SCUD arc - carrier theatrics, TEL platform, autofuel ===
 	if (isNil "WFBE_C_AICOM_AUTOFUEL")                then {WFBE_C_AICOM_AUTOFUEL = 1};                //--- Ray: AICOM vehicles + relocating MHQ never run dry (silent top-off below the threshold).
