@@ -9,19 +9,34 @@ WFBE_SE_FNC_HandleSupplyMissionCompleted = {
 
     private ['_namePlayer', '_associatedSupplyTruck', '_supplyAmount', '_sourceTown', '_sourceTownStr', '_sidePlayer', '_logMessage', '_byHeli', '_cashRun', '_comTeam', '_airLevel'];
     private ['_secHardened', '_hardenReject', '_hardenReason', '_regArr', '_regIdx', '_regEntry', '_i', '_consumed'];
+    private ['_upgLvl', '_modAmt'];
 
     _playerObject = _this select 0;
     _namePlayer = name (_this select 0);
     _associatedSupplyTruck = (_this select 1);
 
-    //--- SECURITY (harden-supplymission, DR-55/WFBE_C_SEC_HARDENING family, Finding 1): flagged.
-    //--- OFF (default) = byte-identical legacy behaviour (amount/town read straight off the client-stamped
-    //--- truck variables). ON = the truck must be a mission THIS server instance started and is still
-    //--- watching (supplyMissionStarted.sqf's registry), for a player whose current side matches the side
-    //--- that mission was registered under; amount/town/byHeli come from the server-minted registry row,
-    //--- never the client-stamped object variables. Atomic find+remove inside isNil (A2/OA runs isNil
-    //--- bodies unscheduled) so a replayed/duplicated completion PV cannot consume the same row twice -
-    //--- same one-shot compare-and-consume idiom as Support_FPV.sqf's capability handling.
+    //--- SECURITY (harden-supplymission, DR-55/WFBE_C_SEC_HARDENING family, Finding 1) - split 2026-07-25
+    //--- after the fold-collision review found the original flag-off fallback was byte-identical to the
+    //--- unhardened hole (arbitrary client-stamped SupplyAmount -> unbounded funds mint). The finding is
+    //--- now two independently-justified pieces:
+    //---   (a) UNFLAGGED, always on, below: the payout amount is re-derived server-side from the source
+    //---       town's own supplyValue (same formula supplyMissionStart.sqf/the registry path use) instead
+    //---       of trusted off the client-stamped truck variable. An honest completion produces the exact
+    //---       same number (provably a no-op for legitimate play), while a forged one is now bounded to a
+    //---       real town's current (capped) supply value instead of an arbitrary attacker-chosen integer.
+    //---       This does NOT close repeat/replay farming of the same real town via repeated forged
+    //---       completions - only the registry below does that - but it closes the single-shot unbounded
+    //---       mint unconditionally, which is the hole this file is named for.
+    //---   (b) STILL FLAG-GATED below: the mission registry with atomic one-shot consumption is a genuine
+    //---       behavioural change (a completion is only accepted if THIS server instance's
+    //---       supplyMissionStarted.sqf registered it, and the row is consumed exactly once) with real
+    //---       edge-case risk around multi-truck convoys and JIP timing, so it stays opt-in.
+    //--- ON: the truck must be a mission THIS server instance started and is still watching
+    //--- (supplyMissionStarted.sqf's registry), for a player whose current side matches the side that
+    //--- mission was registered under; amount/town/byHeli come from the server-minted registry row, never
+    //--- the client-stamped object variables. Atomic find+remove inside isNil (A2/OA runs isNil bodies
+    //--- unscheduled) so a replayed/duplicated completion PV cannot consume the same row twice - same
+    //--- one-shot compare-and-consume idiom as Support_FPV.sqf's capability handling.
     _secHardened = (missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0;
     _hardenReject = false;
     _hardenReason = "";
@@ -72,13 +87,13 @@ WFBE_SE_FNC_HandleSupplyMissionCompleted = {
         _sourceTown = _regEntry select 5;
         _sidePlayer = _regEntry select 2;
     } else {
-        _supplyAmount = _associatedSupplyTruck getVariable "SupplyAmount";
+        //--- (a) above: town/side/byHeli identity is still taken off the client-stamped truck variables
+        //--- (unchanged trust level from before this fix - narrowing that further is the registry's job in
+        //--- (b)), but the PAYOUT AMOUNT is no longer read off the truck at all. It is recomputed here from
+        //--- the source town's own server-owned supplyValue, clamped the same way the hardened registry
+        //--- entry is clamped at mission-start time (min against maxSupplyValue-derived ceiling, floor 0).
         _sourceTown = _associatedSupplyTruck getVariable "SupplyFromTown";
         _sidePlayer = (_this select 2);
-
-        if (isNil "_supplyAmount") then {
-            _supplyAmount = 0;
-        };
 
         if (isNil "_sourceTown") then {
             _sourceTown = objNull;
@@ -86,6 +101,19 @@ WFBE_SE_FNC_HandleSupplyMissionCompleted = {
 
         _byHeli = _associatedSupplyTruck getVariable "SupplyByHeli";
         if (isNil "_byHeli") then { _byHeli = false; };
+
+        if (isNull _sourceTown) then {
+            _supplyAmount = 0;
+        } else {
+            _upgLvl = ((_sidePlayer) call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_SUPPLYRATE;
+            _modAmt = 1;
+            if (_upgLvl >= 3) then { _modAmt = 2; };
+            if (_upgLvl == 2) then { _modAmt = 1.5; };
+            _supplyAmount = floor ((_sourceTown getVariable ["supplyValue", 0]) * WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER * _modAmt);
+            //--- Defence in depth: never exceed what the town's own registered max could ever produce
+            //--- (identical ceiling formula to the hardened registry entry above).
+            _supplyAmount = (_supplyAmount min (floor ((_sourceTown getVariable ["maxSupplyValue", _supplyAmount]) * WFBE_C_ECONOMY_SUPPLY_MISSION_MULTIPLIER * 2))) max 0;
+        };
     };
 
     _sourceTownStr = str (_sourceTown);
