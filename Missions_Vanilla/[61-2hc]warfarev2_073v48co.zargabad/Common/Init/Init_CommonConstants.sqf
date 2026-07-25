@@ -2791,6 +2791,7 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 	if (isNil "AICOMV2_CTL_INVEST_COOLDOWN") then {AICOMV2_CTL_INVEST_COOLDOWN = 480}; //--- Global seconds between buys per side.
 	if (isNil "AICOMV2_CTL_INVEST_TOWN_COOLDOWN") then {AICOMV2_CTL_INVEST_TOWN_COOLDOWN = 1200}; //--- Per-town seconds between buys.
 	if (isNil "AICOMV2_CTL_INVEST_HUMAN_OFF") then {AICOMV2_CTL_INVEST_HUMAN_OFF = 1}; //--- Pause AI spend while a human is seated (inert while lane=0).
+	if (isNil "WFBE_C_CTL_TELEMETRY") then {WFBE_C_CTL_TELEMETRY = 0}; //--- kimi/ctl-telemetry-20260725: CTL garrison-link EPISODE telemetry (emission sites: Server/FSM/server_town_ai.sqf). 0=off (default - no episode state, no lines, byte-identical to HEAD). 1=on: one CTLSTAT|v1|<side>|ACT line per WEST/EAST ground town-activation episode (town, str at activation, planned groups/units, invest flag) + one CTLSTAT|v1|<side>|DEACT line per deactivation (hold secs, str at deactivation, peak enemy count sampled from the town's own existing per-sweep scan). TELEMETRY ONLY - no ledger/spawn/activation rule changes. Double-gated on AICOMV2_LANE_CMD_TOWN_LEDGER>0 (the system under measurement): silent wherever the lane is off.
 
 //--- P5 CREW-COST TIER-SCALE (fable/crew-cost-tierscale, owner economy pick GR-2026-07-08a): crew-replacement cost
 //--- (charged in GUI_Menu_BuyUnits.sqf at all 3 crew-cost points) scales with the crewed vehicle's own buy-price
