@@ -19,6 +19,18 @@ if(isNil "WFBE_Parameters_Ready")then{
 	WFBE_Parameters_Ready = false;
 };
 
+//--- fable/townmodeset-nil-guard (2026-07-25): townModeSet is written by initJIPCompatible.sqf:48 and
+//--- Common\Init\Init_TownMode.sqf:30, but the town threads are spawned from the mission.sqm depot-logic
+//--- init lines, which run BEFORE either. On an HC that left it undefined, so the gate below threw
+//--- "Undefined variable in expression: townmodeset" twice per town (live wave0725a HC1: 230 hits at
+//--- line 25 + 229 at line 26). An errored while-condition is Nothing, so the loop body never ran and
+//--- the errored if never logged HANGGUARD - the gate silently degraded to a zero-length wait instead
+//--- of the bounded one it is written to be. isNil-guarded (NOT an unconditional reset): a townModeSet
+//--- already set true by Init_TownMode.sqf must survive, or every later town thread waits again.
+if(isNil "townModeSet")then{
+	townModeSet = false;
+};
+
 
 //--- J6 HANGGUARD: mode/parameter readiness must not leave a town thread parked forever.
 _wTownMode = 0;
