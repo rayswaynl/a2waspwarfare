@@ -101,12 +101,15 @@ if (!isNil "_psPair" && {typeName _psPair == "STRING"} && {!isNil "_psT0"} && {(
 	if (_psPair == "PUSH") then {_engageMin = (_engageMin - _psDelta) max 0};
 	if (_psPair == "HOLD") then {_engageMin = _engageMin + _psDelta};
 	//--- COMMAND V2 pillar (b), SIDE scope: GARRISON leans consolidate-ward exactly like HOLD (it is a
-	//--- posture FLAVOUR, not a second stance machine). Inert at flag-off without needing its own read:
-	//--- the stamp can only ever hold "GARRISON" if WFBE_C_CMD_POSTURE_GARRISON armed the verb whitelist
-	//--- in Server_HandleSpecial.sqf, so at default 0 this comparison is simply never true.
-	//--- TRUTHFUL SCOPE: the town-garrison SORTIE loop (docs/design/GARRISON-SORTIE-PATROL-DESIGN.md) is
-	//--- NOT implemented in this tree - no WFBE_C_GARRISON_SORTIE* flag exists - so GARRISON currently
-	//--- delivers the defensive lean ONLY. Wiring the sortie loop is a separate, still-unbuilt card.
+	//--- posture FLAVOUR, not a second stance machine). WFBE_C_CMD_POSTURE_GARRISON (default 1, owner
+	//--- ruling 2026-07-21) arms the verb whitelist in Server_HandleSpecial.sqf so the stamp can hold
+	//--- "GARRISON"; at flag-off (0) this comparison is simply never true.
+	//--- CORRECTED 2026-07-25 (was stale): the town-garrison SORTIE loop IS implemented and LIVE by
+	//--- default - flag WFBE_C_TOWNS_SORTIES (default 1) in Server/FSM/server_town_ai.sqf (~646-727,
+	//--- tag cmdcon41-w3) rotates one of the town's OWN groups onto a 300-800m patrol ring per active
+	//--- town, no new AI created. It is a fully autonomous per-town loop and is NOT wired to this
+	//--- COMMAND POSTURE GARRISON lever at all: pushing "GARRISON" here only adds _psDelta to
+	//--- _engageMin (the same consolidate-ward lean as HOLD) - it neither starts nor stops a sortie.
 	if (_psPair == "GARRISON") then {_engageMin = _engageMin + _psDelta};
 };
 //--- cmdcon27 THREAD C FIELD-ORDER HOOK: read the ONE consolidated player field-order stamp once (string + t0),
