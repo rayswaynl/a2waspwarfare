@@ -26,7 +26,11 @@ _delegated = 0;
 //--- Groups STILL spread across both HCs (same anti-pile-up goal), but allUnits is walked once,
 //--- not once per group. Same groups delegated, same SendToClient payload/format, same routing
 //--- (owner(leader) per Common_SendToClient), and the same no-live-HC drop/log fallback.
-_hcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
+//--- STICKY (WFBE_C_HC_DELEGATE_STICKY, feat-hc-sticky-delegation 2026-07-25): pass _town so the
+//--- picker can reuse this town's previously-delegated HC as the round-robin seed below instead of
+//--- re-argmin-ing every wave (see Server_PickLeastLoadedHC.sqf header). Flag off = same call as
+//--- before (the extra array argument is read only when the flag is on).
+_hcUnit = [_town] Call WFBE_CO_FNC_PickLeastLoadedHC;
 
 //--- Build the live-HC leader list locally (cheap: no allUnits scan, same liveness test the
 //--- picker uses). The picker already told us the LIGHTEST leader; we round-robin starting from
