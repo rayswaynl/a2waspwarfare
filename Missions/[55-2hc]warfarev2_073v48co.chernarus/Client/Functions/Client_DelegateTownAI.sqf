@@ -8,13 +8,18 @@
 		- Teams
 */
 
-Private ["_groups", "_i", "_perfStart", "_positions", "_registry", "_retVal", "_side", "_team", "_teams", "_town", "_town_teams", "_town_vehicles"];
+Private ["_epoch", "_groups", "_i", "_perfStart", "_positions", "_registry", "_retVal", "_side", "_team", "_teams", "_town", "_town_teams", "_town_vehicles"];
 
 _town = _this select 0;
 _side = _this select 1;
 _groups = _this select 2;
 _positions = _this select 3;
 _teams = _this select 4;
+//--- fix-1342-1343 (reconciles #1342+#1343): the town-lifecycle epoch snapshotted at delegation
+//--- send time (mode 2: Server_DelegateAITownHeadless.sqf; mode 1: Server_FNC_Delegation.sqf).
+//--- Older senders that predate this field omit it; treat that as epoch -1 (never matches a real
+//--- town epoch, which starts at 0) so legacy payloads don't silently pass validation.
+_epoch = if (count _this > 5) then {_this select 5} else {-1};
 
 ["INFORMATION", Format["Client_DelegateTownAI.sqf: Received a town delegation request from the server for [%1] [%2].", _side, _town]] Call WFBE_CO_FNC_LogContent;
 
@@ -40,17 +45,21 @@ _retVal = [_town, _side, _groups, _positions, _teams] call WFBE_CO_FNC_CreateTow
 _town_teams = _retVal select 0;
 _town_vehicles = _retVal select 1;
 _registry = missionNamespace getVariable ["WFBE_CL_TownAI_Groups", []];
+//--- fix-1375 (codex hold a): append the epoch this batch was delegated under (index 3, after the
+//--- existing [town, side, group] shape) so Client_CleanupDelegatedTownAI.sqf can tell THIS batch
+//--- apart from an older, genuinely-stale one when a same-side cleanup-townai broadcast arrives
+//--- carrying the town's current epoch.
 {
 	_team = _x;
 	if !(isNull _team) then {
-		_registry set [count _registry, [_town, _side, _team]];
+		_registry set [count _registry, [_town, _side, _team, _epoch]];
 	};
 } forEach _town_teams;
 missionNamespace setVariable ["WFBE_CL_TownAI_Groups", _registry];
 ["INFORMATION", Format ["TOWN_AI_HC_CLEANUP registered town:%1 side:%2 groups:%3 vehicles:%4 registry:%5", _town getVariable "name", _side, count _town_teams, count _town_vehicles, count _registry]] Call WFBE_CO_FNC_LogContent;
 
 // Marty: Send both local groups and vehicles back so the server can track delegated town assets.
-if ((count _town_teams) > 0 || (count _town_vehicles) > 0) then {["RequestSpecial", ["update-town-delegation", _town, _town_teams, _town_vehicles]] Call WFBE_CO_FNC_SendToServer};
+if ((count _town_teams) > 0 || (count _town_vehicles) > 0) then {["RequestSpecial", ["update-town-delegation", _town, _town_teams, _town_vehicles, _side, _epoch]] Call WFBE_CO_FNC_SendToServer};
 
 {
 	_x Spawn {

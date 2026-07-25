@@ -133,10 +133,12 @@ switch (_args select 0) do {
 		};
 	};
 	case "update-town-delegation": {
-		Private ["_teams","_town","_vehicles"];
+		Private ["_currentEpoch","_currentSide","_delegatedSide","_isCurrent","_reportedEpoch","_reportedSide","_teams","_town","_vehicles"];
 		_town = _args select 1;
 		_teams = [];
 		_vehicles = [];
+		_reportedSide = sideUnknown;
+		_reportedEpoch = -1;
 
 		// Marty: New delegated town AI reports include local HC/client groups before vehicles; keep old vehicle-only format compatible.
 		if (count _args > 3) then {
@@ -146,6 +148,26 @@ switch (_args select 0) do {
 			_vehicles = _args select 2;
 		};
 
+		//--- fix-1342-1343 (reconciles #1342+#1343): both mode-1 (Server_FNC_Delegation.sqf) and mode-2
+		//--- (Server_DelegateAITownHeadless.sqf) senders now append [side, epoch] as elements 4/5.
+		//--- Legacy 4-element payloads (pre-fix senders, should not exist post-mirror-sync but guarded
+		//--- for safety) fall through to sideUnknown/-1, which never equals a real current epoch/side
+		//--- and is therefore treated as stale rather than silently trusted.
+		if (count _args > 5) then {
+			_reportedSide = _args select 4;
+			_reportedEpoch = _args select 5;
+		};
+		_currentSide = (_town getVariable ["sideID", WFBE_C_UNKNOWN_ID]) Call WFBE_CO_FNC_GetSideFromID;
+		_currentEpoch = _town getVariable ["wfbe_town_ai_epoch", 0];
+		//--- fix-1375 (codex hold b): do not trust the reported side/epoch as self-certifying just because
+		//--- they happen to match the town's live state - cross-check against the server's OWN record of
+		//--- which side it last delegated this town to (stamped at dispatch time by
+		//--- Server_DelegateAITownHeadless.sqf / Server_FNC_Delegation.sqf), not only the args the
+		//--- ack itself carries.
+		_delegatedSide = _town getVariable ["wfbe_town_ai_delegated_side", sideUnknown];
+		_isCurrent = (_reportedSide == _currentSide) && {_reportedEpoch == _currentEpoch} && {_reportedSide == _delegatedSide};
+
+		if (_isCurrent) then {
 		// Marty: Track the real delegated groups so server-side state and cleanup requests reference the same town assets.
 		{
 			if !(isNull _x) then {
@@ -204,6 +226,24 @@ switch (_args select 0) do {
 			[_x] spawn WFBE_SE_FNC_HandleEmptyVehicle;
 			_x setVariable ["WFBE_Taxi_Prohib", true];
 		} forEach _vehicles;
+		} else {
+			//--- Stale ack: the town changed owner (or completed another lifecycle) before this HC/client
+			//--- batch reported back. Do not append its groups/vehicles into the current owner's registry.
+			//--- Only the reporting machine can safely delete units that are local to it, so broadcast the
+			//--- existing cleanup-townai path (same mechanism server_town_ai.sqf/server_town.sqf already use
+			//--- for HC-local teardown) scoped to the REPORTED side, not the new current side.
+			//--- fix-1375 (codex hold a): pass the town's CURRENT epoch along with the cleanup dispatch.
+			//--- Without it, an A->B->A recapture where this stale ack is from an old side-A batch (epoch N-2)
+			//--- broadcasts a side-scoped cleanup that a receiving HC/client would otherwise match against
+			//--- EVERY locally-registered side-A batch it holds - including a freshly delegated, fully current
+			//--- side-A batch from epoch N if the town has already flipped back to A again. Client_CleanupDelegatedTownAI.sqf
+			//--- now only deletes entries whose OWN epoch differs from the one carried here, so the current
+			//--- batch is left alone (stale epoch relative to itself = no-op).
+			if (_reportedSide != sideUnknown) then {
+				[nil, "HandleSpecial", ["cleanup-townai", _town, _reportedSide, _currentEpoch]] Call WFBE_CO_FNC_SendToClients;
+			};
+			["WARNING", Format ["Server_HandleSpecial.sqf: TOWN_AI_HC_CLEANUP stale_ack town:%1 reportedSide:%2 reportedEpoch:%3 currentSide:%4 currentEpoch:%5 groups:%6 vehicles:%7", _town getVariable ["name","?"], _reportedSide, _reportedEpoch, _currentSide, _currentEpoch, count _teams, count _vehicles]] Call WFBE_CO_FNC_LogContent;
+		};
 	};
 	//--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): the commander's ICBM fire, intercepted client-side
 	//--- (GUI_Menu_Tactical.sqf when WFBE_C_ICBM_TEL=1) and routed here. Server-authoritative gate lives in

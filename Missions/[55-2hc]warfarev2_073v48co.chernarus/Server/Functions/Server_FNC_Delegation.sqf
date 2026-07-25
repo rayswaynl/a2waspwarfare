@@ -13,13 +13,28 @@
 		- Groups
 */
 WFBE_SE_FNC_DelegateAITown = {
-	Private ["_groups", "_positions", "_side", "_teams", "_town", "_town_teams", "_town_vehicles"];
+	Private ["_epoch", "_groups", "_positions", "_side", "_teams", "_town", "_town_teams", "_town_vehicles"];
 
 	_town = _this select 0;
 	_side = _this select 1;
 	_groups = +(_this select 2);
 	_positions = +(_this select 3);
 	_teams = +(_this select 4);
+	//--- fix-1342-1343 (reconciles #1342+#1343): this is the WFBE_C_AI_DELEGATION=1 (client, non-HC)
+	//--- delegation sender. Both PRs added the epoch-guard contract to the mode-2 (Headless Client)
+	//--- path - Server_DelegateAITownHeadless.sqf - and to Client_DelegateTownAI.sqf's receive side,
+	//--- but neither touched this mode-1 sender. Client_DelegateTownAI.sqf now always reads epoch at
+	//--- _this select 5 (defaulting to -1 when absent); leaving this call un-updated would have sent
+	//--- every mode-1 delegation with no epoch element, which the client legitimately forwards back to
+	//--- the server as -1 - a real town epoch starts at 0 the moment it activates, so under mode 1 EVERY
+	//--- ack would mismatch and be treated as stale (rejected + broadcast owner-local cleanup on units
+	//--- the current owner actually wants). Live currently runs mode 2, so this was latent, not active.
+	//--- Snapshot exactly like the HC path does.
+	_epoch = _town getVariable ["wfbe_town_ai_epoch", 0];
+	//--- fix-1375 (codex hold b): record which side this delegation batch was actually FOR, server-side,
+	//--- mirroring Server_DelegateAITownHeadless.sqf, so the ack handler can cross-check against a
+	//--- server-set record rather than trusting the ack's self-reported side/epoch alone.
+	_town setVariable ["wfbe_town_ai_delegated_side", _side];
 
 	_town_teams = [];
 	_town_vehicles = [];
@@ -34,9 +49,9 @@ WFBE_SE_FNC_DelegateAITown = {
 			Private ["_uid"];
 			_uid = getPlayerUID(_delegators select _i);
 			if !(WF_A2_Vanilla) then {
-			[_delegators select _i, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i]]] Call WFBE_CO_FNC_SendToClient;
+			[_delegators select _i, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i], _epoch]] Call WFBE_CO_FNC_SendToClient;
 			} else {
-				[_uid, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i]]] Call WFBE_CO_FNC_SendToClients;
+				[_uid, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i], _epoch]] Call WFBE_CO_FNC_SendToClients;
 			};
 			[_uid, "increment"] Call WFBE_SE_FNC_DelegationOperate; //--- Increment the group count for that client.
 			[_uid, _teams select _i] Spawn WFBE_SE_FNC_DelegationTracker; //--- Track a group until it's nullification.
