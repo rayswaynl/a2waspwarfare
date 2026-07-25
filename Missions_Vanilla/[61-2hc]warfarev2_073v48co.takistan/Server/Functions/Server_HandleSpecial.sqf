@@ -1574,8 +1574,12 @@ switch (_args select 0) do {
 						_hchanged = true;
 					};
 					_hold = _hentry select 2;
-					//--- Smallest signed angle between old and new heading (handles 0/360 wrap).
-					_hdelta = abs (((_hdir - _hold) + 180) % 360 - 180);
+					//--- Smallest angular distance old<->new heading (0..180). SQF % keeps the
+					//--- dividend sign, so normalise into 0..360 BEFORE the 180 fold or a small
+					//--- change across the 0/360 (north) boundary reads as ~360 and PV-spams.
+					_hdelta = (_hdir - _hold) % 360;
+					if (_hdelta < 0) then {_hdelta = _hdelta + 360};
+					if (_hdelta > 180) then {_hdelta = 360 - _hdelta};
 					if (_hdelta > 7) then {
 						_hentry set [2, _hdir];
 						_haicomList set [_hi, _hentry];
