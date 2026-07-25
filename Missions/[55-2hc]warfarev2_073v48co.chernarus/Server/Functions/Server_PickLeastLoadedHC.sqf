@@ -21,12 +21,34 @@
 	Ties (e.g. both HCs empty at warm-up) are broken RANDOMLY so the picker degrades
 	gracefully to uniform-random when loads are genuinely equal, and never lock-steps.
 
-	Parameters: none.
-	Returns: leader of the least-loaded live HC, or objNull if there is no live HC
+	STICKY DELEGATION (WFBE_C_HC_DELEGATE_STICKY, default 0, feat-hc-sticky-delegation 2026-07-25):
+	optional - pass the town object as the sole argument ([_town] Call ...) and, while the flag is
+	armed, a still-live/still-healthy sticky HC recorded on that town (within the sticky window and
+	under the load-balance guard ratio) is returned directly, WITHOUT re-running the argmin below.
+	Flag off, or called with no argument (the other 7 call sites, unchanged unary `Call ...`), is
+	byte-identical to the original always-argmin behaviour. See Init_CommonConstants.sqf for the
+	full flag doc.
+
+	Parameters: optional [_town] - town object whose sticky HC assignment to honour/update.
+	            Omit (unary Call, as before) for callers with no per-town delegation concept.
+	Returns: leader of the least-loaded (or sticky) live HC, or objNull if there is no live HC
 	         (callers MUST check isNull and fall back / drop, exactly like before).
 */
 
-private ["_hcs", "_live", "_owners", "_counts", "_o", "_idx", "_bestLoad", "_ties", "_pick", "_x"];
+private ["_hcs", "_live", "_owners", "_counts", "_o", "_idx", "_bestLoad", "_ties", "_pick", "_x",
+	"_town", "_stickyOn", "_stickyOwner", "_stickyTs", "_stickyWindow", "_stickyIdx",
+	"_stickyLoad", "_totalLoad", "_maxRatio"];
+
+//--- Optional town argument: safe against BOTH the existing unary `Call ...` sites (where _this is
+//--- undefined - isNil "_this" catches that without erroring) and the new `[_town] Call ...` site.
+//--- All callers pass either nothing (unary) or a 1-element array, so `count _this` never needs an
+//--- A3-only isEqualType type-check to stay safe here.
+_town = objNull;
+if !(isNil "_this") then {
+	if (count _this > 0) then {
+		if (!isNull (_this select 0)) then {_town = _this select 0};
+	};
+};
 
 _hcs = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
 
@@ -65,6 +87,36 @@ _counts = []; //--- parallel array: current owned-unit count for that owner id
 	if (_idx >= 0) then {_counts set [_idx, (_counts select _idx) + 1]};
 } forEach allUnits;
 
+//--- STICKY: reuse the tally just taken above (no extra allUnits scan) to see whether this town's
+//--- previously-delegated HC is still a valid pick. Byte-identical no-op when the flag is 0 or no
+//--- town was passed in (_stickyIdx stays -1, both `if`s below never enter their then-block).
+_stickyOn = (missionNamespace getVariable ["WFBE_C_HC_DELEGATE_STICKY", 0]) > 0;
+_stickyIdx = -1;
+if (_stickyOn && {!isNull _town}) then {
+	_stickyOwner = _town getVariable ["wfbe_town_hc_owner", -1];
+	_stickyTs = _town getVariable ["wfbe_town_hc_owner_ts", -1];
+	_stickyWindow = missionNamespace getVariable ["WFBE_C_HC_DELEGATE_STICKY_WINDOW", 300];
+	//--- Window check only; liveness ("gone/unhealthy") is the _owners find below - the sticky owner
+	//--- can only be found there if it survived the SAME liveness filter _live was built with above.
+	if (_stickyOwner > 0 && {(diag_tickTime - _stickyTs) < _stickyWindow}) then {
+		_stickyIdx = _owners find _stickyOwner;
+	};
+};
+
+if (_stickyIdx >= 0) then {
+	//--- LOAD-BALANCE GUARD: never let stickiness concentrate load onto one HC over a long match.
+	//--- Sticky HC's share of ALL currently-tallied HC-owned units must stay under the ceiling, or
+	//--- stickiness is broken here and execution falls through to the normal argmin re-pick below.
+	_stickyLoad = _counts select _stickyIdx;
+	_totalLoad = 0;
+	{_totalLoad = _totalLoad + _x} forEach _counts;
+	_maxRatio = missionNamespace getVariable ["WFBE_C_HC_DELEGATE_STICKY_MAXRATIO", 0.65];
+	if (_totalLoad == 0 || {(_stickyLoad / _totalLoad) <= _maxRatio}) exitWith {
+		_town setVariable ["wfbe_town_hc_owner_ts", diag_tickTime];
+		leader (_live select _stickyIdx)
+	};
+};
+
 //--- argmin: find the minimum load, then collect ALL HC indices that tie at it.
 _bestLoad = 1e10;
 {
@@ -79,4 +131,13 @@ _ties = [];
 //--- RANDOM tie-break among the equally-lightest HCs so that equal loads (warm-up) spread
 //--- instead of always favouring the first registered HC, and so the picker never lock-steps.
 _pick = _ties select (floor (random (count _ties)));
+
+//--- STICKY: record this fresh pick as the town's new sticky HC (first delegation, expired window,
+//--- dead sticky HC, or guard break all fall through to here). No-op write when the flag is off or
+//--- no town was passed - harmless (matches the original zero-arg call sites, which never read it).
+if (_stickyOn && {!isNull _town}) then {
+	_town setVariable ["wfbe_town_hc_owner", _owners select _pick];
+	_town setVariable ["wfbe_town_hc_owner_ts", diag_tickTime];
+};
+
 leader (_live select _pick)

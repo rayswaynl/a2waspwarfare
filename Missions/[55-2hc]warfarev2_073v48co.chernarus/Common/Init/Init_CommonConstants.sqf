@@ -3127,6 +3127,24 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX") then {WFBE_C_AICOM_CARGO_AI
 //--- is still fast. Pure waypoint-parameter change - no new units, no scans, no PV.
 if (isNil "WFBE_C_AICOM_CONVOY_COHESION") then {WFBE_C_AICOM_CONVOY_COHESION = 0};
 if (isNil "WFBE_C_AICOM_CONVOY_COMPLETION") then {WFBE_C_AICOM_CONVOY_COMPLETION = 100}; //--- m: LIMITED-hop completionRadius while convoy cohesion is engaged (vs the normal WFBE_C_AICOM_ROUTE_COMPLETION 70). Only read while WFBE_C_AICOM_CONVOY_COHESION > 0.
+//--- HC STICKY TOWN DELEGATION (Grok idea #23, feat-hc-sticky-delegation 2026-07-25): Server_PickLeastLoadedHC.sqf
+//--- re-argmins the least-loaded headless client on EVERY town-AI delegation call, so a town whose AI is
+//--- re-delegated across multiple waves (reinforcement/reactivation) can flip HC owner back and forth whenever
+//--- the two HCs' loads flicker near-equal, even though nothing about the town changed. 0 (default) = ORIGINAL
+//--- unconditional argmin re-pick every call, byte-identical to HEAD. 1 = once a town's AI batch is delegated to
+//--- an HC, Server_PickLeastLoadedHC.sqf remembers that HC (stored ON the town object, alongside the town's other
+//--- delegation state - wfbe_active_vehicles/wfbe_town_teams - not a parallel registry) and keeps returning it as
+//--- the seed HC for WFBE_C_HC_DELEGATE_STICKY_WINDOW seconds, instead of re-picking. Broken early (falls straight
+//--- through to the normal fresh argmin pick) if: the sticky HC is no longer live/healthy (same liveness test the
+//--- picker already uses - dead/disconnected HC always re-picks immediately, sticky or not), the window has
+//--- expired, or the LOAD-BALANCE GUARD trips (sticky HC's already-tallied share of all HC-owned units exceeds
+//--- WFBE_C_HC_DELEGATE_STICKY_MAXRATIO) - this guard is why long-match stickiness cannot let one HC's founding
+//--- split (currently ~54/46 live) drift further: it can only smooth OUT near-equal flicker, never hold a town on
+//--- an HC that is already carrying a disproportionate share. Only changes WHICH HC is used as the round-robin
+//--- SEED for a town's batch; the existing intra-batch round-robin spread across all live HCs is untouched.
+if (isNil "WFBE_C_HC_DELEGATE_STICKY") then {WFBE_C_HC_DELEGATE_STICKY = 0}; //--- Master gate: 0=off (byte-identical), 1=on.
+if (isNil "WFBE_C_HC_DELEGATE_STICKY_WINDOW") then {WFBE_C_HC_DELEGATE_STICKY_WINDOW = 300}; //--- s: how long a town stays pinned to its delegated HC before a fresh pick is allowed.
+if (isNil "WFBE_C_HC_DELEGATE_STICKY_MAXRATIO") then {WFBE_C_HC_DELEGATE_STICKY_MAXRATIO = 0.65}; //--- Load-balance guard ceiling: sticky HC's share of all HC-owned units (0..1) above which stickiness is broken and a fresh argmin pick is forced.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
