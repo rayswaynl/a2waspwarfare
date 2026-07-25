@@ -296,6 +296,14 @@ if (_deny == "") then {
 	if (typeName _expectedClass != "STRING" || {_expectedClass == ""}) then {_deny = "FPV airframe configuration is invalid."};
 };
 if (_deny == "" && {typeOf _drone != _expectedClass}) then {_deny = "FPV request used the wrong airframe."};
+//--- OWNER 07-24: a factory-bought AH6 must NEVER count as an FPV drone. The FPV airframe
+//--- (AH6X_EP1) is ALSO a normal purchasable littlebird (AH-6X Scout row + AH-6X (M134) token,
+//--- Units_CO_US.sqf), so exact typeOf alone cannot tell a fresh fpv.sqf drone from a
+//--- player-owned factory hull. Client_BuildUnit.sqf tags every factory buy with wfbe_buyteam
+//--- (broadcast, server-visible); fpv.sqf drones never pass through Client_BuildUnit and never
+//--- carry the tag. Rejecting tagged hulls here keeps the exact-class predicate (never
+//--- isKindOf / CfgVehicles-walk) while closing the normal-AH6 -> FPV-drone conversion path.
+if (_deny == "" && {!isNil {_drone getVariable "wfbe_buyteam"}}) then {_deny = "FPV request used a factory-bought airframe."};
 if (_deny == "" && {typeName _expectedPilot != "STRING" || {_expectedPilot == ""}}) then {_deny = "FPV pilot configuration is invalid."};
 if (_deny == "" && {typeOf _driver != _expectedPilot}) then {_deny = "FPV request used the wrong pilot."};
 if (_deny == "" && {owner _drone != _replyId}) then {_deny = "FPV drone/player network ownership does not match."};
