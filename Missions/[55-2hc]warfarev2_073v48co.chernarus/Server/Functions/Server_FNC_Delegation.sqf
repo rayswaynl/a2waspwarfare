@@ -31,6 +31,10 @@ WFBE_SE_FNC_DelegateAITown = {
 	//--- the current owner actually wants). Live currently runs mode 2, so this was latent, not active.
 	//--- Snapshot exactly like the HC path does.
 	_epoch = _town getVariable ["wfbe_town_ai_epoch", 0];
+	//--- fix-1375 (codex hold b): record which side this delegation batch was actually FOR, server-side,
+	//--- mirroring Server_DelegateAITownHeadless.sqf, so the ack handler can cross-check against a
+	//--- server-set record rather than trusting the ack's self-reported side/epoch alone.
+	_town setVariable ["wfbe_town_ai_delegated_side", _side];
 
 	_town_teams = [];
 	_town_vehicles = [];

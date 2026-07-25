@@ -18,6 +18,11 @@ _teams = +(_this select 4);
 //--- fix-1342-1343: snapshot the town's current lifecycle epoch at send time so a late-arriving
 //--- ack can be told apart from a fresh one after the town changes owner.
 _epoch = _town getVariable ["wfbe_town_ai_epoch", 0];
+//--- fix-1375 (codex hold b): record which side this delegation batch was actually FOR, server-side,
+//--- so Server_HandleSpecial.sqf's update-town-delegation ack handler can cross-check the ack's
+//--- self-reported side against a value the server itself set, not just against the two args the
+//--- ack payload carries.
+_town setVariable ["wfbe_town_ai_delegated_side", _side];
 // Marty: Performance Audit counts town AI groups handed to headless clients.
 _perfStart = diag_tickTime;
 _delegated = 0;

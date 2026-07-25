@@ -4,12 +4,21 @@
 	Parameters:
 		- Town
 		- Side
+		- Epoch gate (optional; the town's current epoch at the moment cleanup was requested).
+		  When present, only registry entries whose OWN recorded epoch differs from this value are
+		  torn down - an entry that matches IS the current, live batch and is left alone (a same-side
+		  cleanup broadcast is only ever "stale" relative to an older epoch, never to itself). When
+		  absent (legacy senders / real deactivation teardown in server_town_ai.sqf), every matching
+		  town+side entry is torn down as before.
 */
 
-Private ["_deadline","_deletedGroups","_deletedUnits","_entry","_entryGroup","_entrySide","_entryTown","_group","_groups","_keptGroups","_logGroupCount","_registry","_registryNew","_side","_town","_townName","_units"];
+Private ["_deadline","_deletedGroups","_deletedUnits","_entry","_entryEpoch","_entryGroup","_entrySide","_entryTown","_epochGate","_group","_groups","_keptGroups","_logGroupCount","_registry","_registryNew","_side","_town","_townName","_units"];
 
 _town = _this select 0;
 _side = _this select 1;
+//--- fix-1375 (codex hold a): -1 means "no epoch gate" (legacy/deactivation callers) - delete every
+//--- matching town+side entry as before.
+_epochGate = if (count _this > 2) then {_this select 2} else {-1};
 _registry = missionNamespace getVariable ["WFBE_CL_TownAI_Groups", []];
 _groups = [];
 
@@ -19,7 +28,8 @@ _groups = [];
 		_entryTown = _entry select 0;
 		_entrySide = _entry select 1;
 		_entryGroup = _entry select 2;
-		if (_entryTown == _town && _entrySide == _side) then {
+		_entryEpoch = if (count _entry >= 4) then {_entry select 3} else {-1};
+		if (_entryTown == _town && _entrySide == _side && {(_epochGate == -1) || {_entryEpoch != _epochGate}}) then {
 			if !(isNull _entryGroup) then {
 				if !(_entryGroup in _groups) then {_groups set [count _groups, _entryGroup]};
 			};
@@ -108,8 +118,12 @@ _registryNew = [];
 		_entryTown = _entry select 0;
 		_entrySide = _entry select 1;
 		_entryGroup = _entry select 2;
+		_entryEpoch = if (count _entry >= 4) then {_entry select 3} else {-1};
 		if (isNull _entryGroup) exitWith {};
-		if (_entryTown == _town && _entrySide == _side) exitWith {};
+		//--- fix-1375: only drop this entry from the registry if it was actually torn down above
+		//--- (same town+side+epoch-gate condition as the delete pass) - an entry protected by the
+		//--- epoch gate (the current, live batch) must survive into _registryNew unchanged.
+		if (_entryTown == _town && _entrySide == _side && {(_epochGate == -1) || {_entryEpoch != _epochGate}}) exitWith {};
 		_registryNew set [count _registryNew, _entry];
 	};
 } forEach _registry;

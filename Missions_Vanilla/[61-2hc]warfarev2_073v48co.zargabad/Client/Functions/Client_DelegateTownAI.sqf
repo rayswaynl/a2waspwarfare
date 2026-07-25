@@ -45,10 +45,14 @@ _retVal = [_town, _side, _groups, _positions, _teams] call WFBE_CO_FNC_CreateTow
 _town_teams = _retVal select 0;
 _town_vehicles = _retVal select 1;
 _registry = missionNamespace getVariable ["WFBE_CL_TownAI_Groups", []];
+//--- fix-1375 (codex hold a): append the epoch this batch was delegated under (index 3, after the
+//--- existing [town, side, group] shape) so Client_CleanupDelegatedTownAI.sqf can tell THIS batch
+//--- apart from an older, genuinely-stale one when a same-side cleanup-townai broadcast arrives
+//--- carrying the town's current epoch.
 {
 	_team = _x;
 	if !(isNull _team) then {
-		_registry set [count _registry, [_town, _side, _team]];
+		_registry set [count _registry, [_town, _side, _team, _epoch]];
 	};
 } forEach _town_teams;
 missionNamespace setVariable ["WFBE_CL_TownAI_Groups", _registry];
