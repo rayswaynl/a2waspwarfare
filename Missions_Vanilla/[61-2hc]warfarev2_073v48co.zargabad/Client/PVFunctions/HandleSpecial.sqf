@@ -101,6 +101,17 @@ switch (_request) do {
 		_trashObj = _args select 0;
 		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])}) then {deleteVehicle _trashObj};
 	};
+	//--- Owner-side half of Server_HandleEmptyVehicle.sqf's locality gate. The server has already held this
+	//--- hull past the empty timeout, but it cannot delete a HC-local alive object directly. Re-check local
+	//--- ownership, no alive crew, and the existing airlift/FOB exemptions here so a delayed or forged dispatch
+	//--- cannot delete a hull that became occupied or protected while the PVF was in flight.
+	case "cleanup-empty-vehicle": {
+		Private ["_emptyVehicle"];
+		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
+		if (count _args < 1) exitWith {};
+		_emptyVehicle = _args select 0;
+		if (!isNull _emptyVehicle && {local _emptyVehicle} && {alive _emptyVehicle} && {({alive _x} count crew _emptyVehicle) == 0} && {!(_emptyVehicle getVariable ["wfbe_airlifted", false])} && {!(_emptyVehicle getVariable ["wfbe_is_guer_fob", false])} && {(_emptyVehicle getVariable ["wfbe_empty_vehicle_reap", false])}) then {deleteVehicle _emptyVehicle};
+	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};
