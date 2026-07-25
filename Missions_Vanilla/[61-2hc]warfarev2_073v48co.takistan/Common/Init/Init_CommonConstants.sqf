@@ -3073,6 +3073,13 @@ if (isNil "WFBE_C_ICBM_LEGACY_COOLDOWN") then {WFBE_C_ICBM_LEGACY_COOLDOWN = 300
 //--- RPT only, zero network traffic).
 if (isNil "WFBE_C_TOWNSCAN_TELEMETRY") then {WFBE_C_TOWNSCAN_TELEMETRY = 0};
 if (isNil "WFBE_C_TOWNSCAN_TELEMETRY_MISSED_SECS") then {WFBE_C_TOWNSCAN_TELEMETRY_MISSED_SECS = 60}; //--- s: an enemy seen by a scan while its town stays dormant longer than this counts one missed_activation_suspect (clock then re-arms). Only read while WFBE_C_TOWNSCAN_TELEMETRY > 0.
+//--- ASSAULT RETARGET CHURN (2026-07-25): default 0 keeps current targeting/recycle behavior.
+//--- Positive grace value re-issues the current enemy town for that many stuck worker passes before a different-town retarget.
+if (isNil "WFBE_C_AICOM_RETARGET_GRACE_DISPATCHES") then {WFBE_C_AICOM_RETARGET_GRACE_DISPATCHES = 0};
+//--- Positive value widens the allocator freshness window to at least 300s (the worker cadence is 120s); default 0 keeps 180s.
+if (isNil "WFBE_C_AICOM2_ALLOC_TTL_HARDEN") then {WFBE_C_AICOM2_ALLOC_TTL_HARDEN = 0};
+//--- Positive value counts uncommitted RETARGET/FOOT_STAGE closures toward WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE; default 0 is inert.
+if (isNil "WFBE_C_AICOM_RETARGET_RECYCLE") then {WFBE_C_AICOM_RETARGET_RECYCLE = 0};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
