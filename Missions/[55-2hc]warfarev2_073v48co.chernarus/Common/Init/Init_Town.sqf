@@ -22,13 +22,24 @@ if(isNil "WFBE_Parameters_Ready")then{
 
 //--- J6 HANGGUARD: mode/parameter readiness must not leave a town thread parked forever.
 _wTownMode = 0;
-while {(!townModeSet || !WFBE_Parameters_Ready) && (_wTownMode < 240)} do { uiSleep 0.25; _wTownMode = _wTownMode + 1; };
-if (!townModeSet || !WFBE_Parameters_Ready) then {
+while {(!townModeSet || !WFBE_Parameters_Ready || isNil "TownTemplate") && (_wTownMode < 240)} do { uiSleep 0.25; _wTownMode = _wTownMode + 1; };
+if (!townModeSet || !WFBE_Parameters_Ready || isNil "TownTemplate") then {
 	diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: town mode/parameters were not ready after 60s - proceeding (town=%1).", (_town getVariable ["name", "?"])];
 };
 
 //--- Prevent the isServer bug on the client.
 sleep (1.2 + random 0.2);
+
+//--- fable/towntemplate-nil-guard (2026-07-25): the readiness gate above keys on townModeSet, which
+//--- Common\Init\Init_TownMode.sqf sets AFTER TownTemplate (Init_TownMode.sqf:14 vs :30) and which can
+//--- already be truthy on an HC re-init before TownTemplate is (re)assigned. Reading it nil threw
+//--- "Undefined variable in expression: towntemplate" 39-45x per HC mission-init on live wave0725a and
+//--- swallowed the whole if/exitWith. Only reachable if the bounded wait above already gave up; the []
+//--- default reproduces the erroring path's effective behaviour (town stays active) without the error.
+if (isNil "TownTemplate") then {
+	TownTemplate = [];
+	diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: TownTemplate was still undefined after the readiness wait - defaulting to [] (town=%1).", (_town getVariable ["name", "?"])];
+};
 
 //todo, opposite system.
 if ((str _town) in TownTemplate) exitWith {
