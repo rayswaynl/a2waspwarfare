@@ -29,7 +29,10 @@ function Get-Section {
 }
 
 $hc2 = Get-Section -Text $raw -Name 'HC2'
-$minimal = $nl + 'Enabled=y' + $nl + 'ConfigLevel=10' + $nl + 'AutoRecover=n' + $nl + 'BlockNetworkFiles=n' + $nl
+# Minimal section matches the PROVEN live [HC2] on the old box byte-for-byte
+# (read 2026-07-25: Enabled=y / ConfigLevel=10 / AutoRecover=n - nothing else needed
+# for a sandboxed Steam + A2OA HC).
+$minimal = $nl + 'Enabled=y' + $nl + 'ConfigLevel=10' + $nl + 'AutoRecover=n' + $nl
 
 $changed = $false
 foreach ($box in @('HC2', 'HC3', 'HC4')) {
