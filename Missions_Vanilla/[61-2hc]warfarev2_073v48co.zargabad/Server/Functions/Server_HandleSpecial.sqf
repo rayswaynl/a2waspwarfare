@@ -70,8 +70,55 @@ switch (_args select 0) do {
 	};
 
 	case "RespawnST": {
-		Private ["_side","_st"];
+		//--- DR-55 forged-PVF hardening (flag-gated; OFF = byte-equivalent legacy behavior).
+		//--- FINDING (101-endpoint PV audit): unguarded, this force-kills (setDammage 1) EVERY AI supply
+		//--- truck + driver for a client-named side - no type/side/requester/cooldown check at all. Trace:
+		//--- the ONLY legitimate caller is the commander's "Respawn Supply Trucks" button
+		//--- (GUI_Menu_Economy.sqf, MenuAction 4), which only ENABLES client-side for that side's own
+		//--- seated commander (ctrlEnable gated on `commanderTeam == group player`, 5s throttle) - cosmetic
+		//--- only, since the server never re-checked it and the PVEH carries no trusted sender. The client
+		//--- now also sends `player` as element 2; bind the request to a real, living player who is
+		//--- actually seated as commander for the named side (mirrors RequestVehicleLock.sqf's `_actor`
+		//--- idiom + the `[_side] Call WFBE_CO_FNC_GetCommanderTeam` membership test RequestNewCommander.sqf
+		//--- uses for cross-side forge rejection), plus a per-side cooldown as defence in depth (the
+		//--- client's 5s ctrlEnable throttle is not authoritative - a forger skips it entirely).
+		Private ["_side","_st","_rSTRejected","_rSTRequester"];
 		_side = _args select 1;
+		_rSTRejected = false;
+		if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
+			_rSTRequester = objNull;
+			if (count _args > 2) then {_rSTRequester = _args select 2};
+			if (isNull _rSTRequester || {!isPlayer _rSTRequester} || {!alive _rSTRequester}) then {
+				_rSTRejected = true;
+				["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - missing/invalid requester for side [%1].", str _side]] Call WFBE_CO_FNC_LogContent;
+			};
+			if (!_rSTRejected && {side (group _rSTRequester) != _side}) then {
+				_rSTRejected = true;
+				["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - requester [%1] side does not match requested side [%2].", name _rSTRequester, str _side]] Call WFBE_CO_FNC_LogContent;
+			};
+			if (!_rSTRejected && {(group _rSTRequester) != ((_side) Call WFBE_CO_FNC_GetCommanderTeam)}) then {
+				_rSTRejected = true;
+				["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - requester [%1] is not the seated commander for side [%2].", name _rSTRequester, str _side]] Call WFBE_CO_FNC_LogContent;
+			};
+			if (!_rSTRejected) then {
+				Private ["_rSTLogik","_rSTCd","_rSTNow","_rSTLast"];
+				_rSTLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+				if (isNull _rSTLogik) then {
+					_rSTRejected = true;
+				} else {
+					_rSTCd = missionNamespace getVariable ["WFBE_C_RESPAWNST_COOLDOWN", 30];
+					_rSTNow = time;
+					_rSTLast = _rSTLogik getVariable ["wfbe_respawnst_last", -1e9];
+					if (_rSTCd > 0 && {(_rSTNow - _rSTLast) < _rSTCd}) then {
+						_rSTRejected = true;
+						["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - cooldown active for side [%1] (%2s remaining).", str _side, round (_rSTCd - (_rSTNow - _rSTLast))]] Call WFBE_CO_FNC_LogContent;
+					} else {
+						_rSTLogik setVariable ["wfbe_respawnst_last", _rSTNow];
+					};
+				};
+			};
+		};
+		if (_rSTRejected) exitWith {};
 		_st = (_side call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_ai_supplytrucks";
 		{if (!isNull (driver _x)) then {driver _x setDammage 1};_x setDammage 1} forEach _st;
 		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Supply Trucks were forced respawn.", str _side]] Call WFBE_CO_FNC_LogContent;

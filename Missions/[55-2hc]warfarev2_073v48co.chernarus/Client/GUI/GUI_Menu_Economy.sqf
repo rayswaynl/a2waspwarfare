@@ -100,7 +100,9 @@ while {alive player && dialog} do {
 		// WFBE_RequestSpecial = ['SRVFNCREQUESTSPECIAL',["RespawnST",sideJoined]];
 		// publicVariable 'WFBE_RequestSpecial';
 		// if (isHostedServer) then {['SRVFNCREQUESTSPECIAL',["RespawnST",sideJoined]] Spawn HandleSPVF};
-		["RequestSpecial", ["RespawnST",sideJoined]] Call WFBE_CO_FNC_SendToServer;
+		//--- DR-55 hardening: pass the acting player so the server can bind this to the seated commander
+		//--- (see Server_HandleSpecial.sqf "RespawnST"). Harmless when WFBE_C_SEC_HARDENING=0.
+		["RequestSpecial", ["RespawnST",sideJoined,player]] Call WFBE_CO_FNC_SendToServer;
 		_lastUse = time;
 	};
 	
