@@ -264,7 +264,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_GUER_AIRDEF_QUIET_DESPAWN") then {WFBE_C_GUER_AIRDEF_QUIET_DESPAWN = 300}; //--- despawn after this many seconds with no enemies near the town.
 	if (isNil "WFBE_C_GUER_AIRDEF_LARGE_SV") then {WFBE_C_GUER_AIRDEF_LARGE_SV = 2500}; //--- maxSupplyValue at/above which a town counts as LARGE (Mi-24 eligible); town_type Large/Huge also qualifies.
 	if (isNil "WFBE_C_GUER_AIRDEF_HEIGHT") then {WFBE_C_GUER_AIRDEF_HEIGHT = 120};      //--- flyInHeight for spawned GUER air.
-	if (isNil "WFBE_C_GUER_AIRDEF_FLYAWAY") then {WFBE_C_GUER_AIRDEF_FLYAWAY = 0};      //--- NEW (Grok idea #12, default 0): on a "quiet" recall, fly the defender ~2km away from the town + climb, THEN despawn, instead of an instant mid-skyline delete. Bounded by FLYAWAY_TIMEOUT.
+	if (isNil "WFBE_C_GUER_AIRDEF_FLYAWAY") then {WFBE_C_GUER_AIRDEF_FLYAWAY = 1};      //--- NEW (Grok idea #12, default 0): on a "quiet" recall, fly the defender ~2km away from the town + climb, THEN despawn, instead of an instant mid-skyline delete. Bounded by FLYAWAY_TIMEOUT.
 	if (isNil "WFBE_C_GUER_AIRDEF_FLYAWAY_TIMEOUT") then {WFBE_C_GUER_AIRDEF_FLYAWAY_TIMEOUT = 60}; //--- max seconds to wait for the fly-away (or >1500m clear) before despawning anyway; hard-clamped to <=60 in-code so the wait can never be unbounded.
 	if (isNil "WFBE_C_GUER_GROUND_QRF") then {WFBE_C_GUER_GROUND_QRF = 1};              //--- ARMED (owner ruling 2026-07-21: everything flags on). E3 roster-phase-2: GUER ground QRF.
 	if (isNil "WFBE_C_GUER_HUEY_QRF") then {WFBE_C_GUER_HUEY_QRF = 1};              //--- ARMED (owner ruling 2026-07-21: everything flags on). E5 roster-phase-2: late-game GUER Huey QRF delivery bird.
@@ -420,7 +420,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_ROUTE_HOP_MAX") then {WFBE_C_AICOM_ROUTE_HOP_MAX = 24};           //--- Build84: hard cap on road-march node count per leg (bounds the builder loop on very long legs).
 	if (isNil "WFBE_C_AICOM_ROUTE_SNAP_RADIUS") then {WFBE_C_AICOM_ROUTE_SNAP_RADIUS = 250};  //--- Build84: nearRoads snap radius (m) for an intermediate road-march node (was 120); wider so long-leg hops find a road instead of being dropped into a beeline gap.
 	if (isNil "WFBE_C_AICOM_LANE_OFFSET") then {WFBE_C_AICOM_LANE_OFFSET = if (worldName == "Takistan") then {60} else {120}};  //--- cmdcon42-h: max perpendicular lane-jitter amplitude (m) multiplied by the team's persistent wfbe_aicom_lanejit (-1..1) in WFBE_CO_FNC_BuildRoadRoute, so concentrated teams diverge into their own lane mid-route. TK-branch: on Takistan's narrow switchback valley roads a 120m sideways guess leaves the road entirely (the snap then misses -> cross-country beeline over a ridge), so TK halves it to 60m. isNil guard keeps any pre-set global as the override.
-	if (isNil "WFBE_C_AICOM_WAVE_STAGGER") then {WFBE_C_AICOM_WAVE_STAGGER = 0};           //--- feat/aicom-wave-stagger (Grok idea #3, 2026-07-25): 0=off (byte-identical - orders re-issue immediately as before). 1=on: when a 2nd+ team converges on the SAME spearhead/assault town in one AssignTowns pass, delay that team's order re-issue (HC order broadcast / direct AIMoveTo) by a deterministic per-team offset so convoys stagger their arrival instead of piling up on one road. Reuses the existing persistent wfbe_aicom_lanejit var (same seed idiom as WFBE_C_AICOM_LANE_OFFSET above) for the offset - no new per-team state. Same value on all 3 maps (not map-tuned like LANE_OFFSET).
+	if (isNil "WFBE_C_AICOM_WAVE_STAGGER") then {WFBE_C_AICOM_WAVE_STAGGER = 1};           //--- feat/aicom-wave-stagger (Grok idea #3, 2026-07-25): 0=off (byte-identical - orders re-issue immediately as before). 1=on: when a 2nd+ team converges on the SAME spearhead/assault town in one AssignTowns pass, delay that team's order re-issue (HC order broadcast / direct AIMoveTo) by a deterministic per-team offset so convoys stagger their arrival instead of piling up on one road. Reuses the existing persistent wfbe_aicom_lanejit var (same seed idiom as WFBE_C_AICOM_LANE_OFFSET above) for the offset - no new per-team state. Same value on all 3 maps (not map-tuned like LANE_OFFSET).
 	if (isNil "WFBE_C_AICOM_WAVE_STAGGER_MIN") then {WFBE_C_AICOM_WAVE_STAGGER_MIN = 30}; //--- feat/aicom-wave-stagger: min seconds a converging team's re-issue is delayed (only used when WFBE_C_AICOM_WAVE_STAGGER=1).
 	if (isNil "WFBE_C_AICOM_WAVE_STAGGER_MAX") then {WFBE_C_AICOM_WAVE_STAGGER_MAX = 90}; //--- feat/aicom-wave-stagger: max seconds a converging team's re-issue is delayed; both bounds sit comfortably inside the WFBE_C_AICOM_ASSAULT_SLACK (120s) budget so the assault timeout clock (which starts synchronously, unaffected by this delay) never false-positives from the stagger alone.
 	if (isNil "WFBE_C_AICOM_GRADE_DWELL") then {WFBE_C_AICOM_GRADE_DWELL = 6};             //--- Build83 movement: seconds a steep grade must persist before the careful-gear governor downshifts a convoy to LIMITED (anti-pulse). Stuck-strike LIMITED stays immediate.
@@ -690,7 +690,7 @@ if (worldName == "Zargabad") then {
 		//--- taken from the side's own HQ, reused via distance-math for every candidate at/under the
 		//--- clamped radius; a candidate beyond the clamp still falls back to a fresh per-candidate scan
 		//--- (never a missed enemy, only a smaller cost reduction for that one candidate).
-		if (isNil "WFBE_C_BASEGC_SCAN_TIGHTEN")     then {WFBE_C_BASEGC_SCAN_TIGHTEN     = 0};    //--- 1 = armed (snapshot+distance path), 0 = inert (default; original per-candidate nearEntities).
+		if (isNil "WFBE_C_BASEGC_SCAN_TIGHTEN")     then {WFBE_C_BASEGC_SCAN_TIGHTEN     = 1};    //--- 1 = armed (snapshot+distance path), 0 = inert (default; original per-candidate nearEntities).
 		if (isNil "WFBE_C_BASEGC_SCAN_RADIUS_CEIL") then {WFBE_C_BASEGC_SCAN_RADIUS_CEIL = 1100}; //--- m: hard ceiling on the per-side snapshot's candidate-range component (min'd against WFBE_C_BASEGC_RANGE, then +300 detection buffer). >= the shipped BASEGC_RANGE(800)+300 so armed results match the per-candidate scan exactly at defaults; only a WFBE_C_BASEGC_RANGE raised above this ceiling trades exact coverage for bounded scan cost on the out-of-envelope candidates (see server_groupsGC.sqf fallback).
 	//--- B60 MHQ RELOCATION (Ray 2026-06-21, DEFAULT-ON): the commander mobilizes its static HQ into the MHQ,
 	//--- an AI driver DRIVES it forward to a standoff behind the front town, then it re-deploys. Safety rails:
@@ -1151,7 +1151,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_WITHDRAW_EVAL")           then {WFBE_C_AICOM_WITHDRAW_EVAL = 1};           //--- graceful-withdrawal evaluator: bleeding HC teams get a "rally" order to the nearest own HQ/town (Ray: reinforce at friendly towns).
 	if (isNil "WFBE_C_AICOM_WITHDRAW_MIN_ALIVE")      then {WFBE_C_AICOM_WITHDRAW_MIN_ALIVE = 3};      //--- alive-count floor that triggers the withdrawal (MBT/attack-heli teams exempt).
 	if (isNil "WFBE_C_AICOM_WITHDRAW_COOLDOWN")       then {WFBE_C_AICOM_WITHDRAW_COOLDOWN = 240};     //--- claude/aicom-west-stuck (bug M): min seconds between auto-rally re-arms for the SAME understrength team - ends the rally-arrive-rally livelock, gives a bounded assault window between withdrawal episodes. Explicit driver wantrally requests bypass this.
-	if (isNil "WFBE_C_AICOM_LOSS_RETREAT")            then {WFBE_C_AICOM_LOSS_RETREAT = 0};            //--- claude/u3-loss-retreat-20260725 (Grok #1): combat-loss retreat latch master flag - default OFF, fully inert. See AI_Commander_AssignTowns.sqf.
+	if (isNil "WFBE_C_AICOM_LOSS_RETREAT")            then {WFBE_C_AICOM_LOSS_RETREAT = 1};            //--- claude/u3-loss-retreat-20260725 (Grok #1): combat-loss retreat latch master flag - default OFF, fully inert. See AI_Commander_AssignTowns.sqf.
 	if (isNil "WFBE_C_AICOM_LOSS_RETREAT_FRACTION")   then {WFBE_C_AICOM_LOSS_RETREAT_FRACTION = 0.5}; //--- fraction of a team's living strength lost within the sample window that latches the retreat (0.5 = half the team wiped).
 	if (isNil "WFBE_C_AICOM_LOSS_RETREAT_WINDOW")     then {WFBE_C_AICOM_LOSS_RETREAT_WINDOW = 120};   //--- s: sliding sample window for the loss-fraction check (matches WFBE_C_AI_COMMANDER_TOWN_INTERVAL, the worker's own tick cadence).
 	if (isNil "WFBE_C_AICOM_LOSS_RETREAT_COOLDOWN")   then {WFBE_C_AICOM_LOSS_RETREAT_COOLDOWN = 180}; //--- s: min time before this SAME latch can re-arm for a team (separate from WFBE_C_AICOM_WITHDRAW_COOLDOWN, the shared rally consumer's own re-arm gate).
@@ -1230,7 +1230,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL")           then {WFBE_C_VICTORY_TERRITORIAL = 1};           //--- Ray: hold >= FRAC of all towns for MINS unbroken -> win (announced start/milestones/broken; existing win path).
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL_FRAC")      then {WFBE_C_VICTORY_TERRITORIAL_FRAC = 0.8};    //--- town share required to run the clock.
 	if (isNil "WFBE_C_VICTORY_TERRITORIAL_MINS")      then {WFBE_C_VICTORY_TERRITORIAL_MINS = 30};     //--- unbroken minutes at/above FRAC to win.
-	if (isNil "WFBE_C_TERRITORIAL_HUD")              then {WFBE_C_TERRITORIAL_HUD = 0};              //--- default-off countdown chip; reads the server-authored WFBE_TERRITORIAL_HUD snapshot only.
+	if (isNil "WFBE_C_TERRITORIAL_HUD")              then {WFBE_C_TERRITORIAL_HUD = 1};              //--- default-off countdown chip; reads the server-authored WFBE_TERRITORIAL_HUD snapshot only.
 	if (isNil "WFBE_C_AICOM_EASA_AI")                 then {WFBE_C_AICOM_EASA_AI = 1};                 //--- AICOM air hulls get EASA kits at founding - ONLY when WFBE_UP_EASA is genuinely researched (>=1, no shortcuts).
 	if (isNil "WFBE_C_AICOM_RICH_GEAR")               then {WFBE_C_AICOM_RICH_GEAR = 1};               //--- AI squads draw richer gear per the ACTUAL researched WFBE_UP_GEAR level (ammo-safe magazine deltas only).
 	if (isNil "WFBE_C_AICOM_RICH_GEAR_MIN_TIER")      then {WFBE_C_AICOM_RICH_GEAR_MIN_TIER = 2};      //--- below this researched gear tier the pass does nothing (+1 virtual tier while econ-surge, capped 5).
@@ -1243,7 +1243,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_SERVER_FPS_GUI_ACTIVE_PLAYERS_ONLY") then {WFBE_C_SERVER_FPS_GUI_ACTIVE_PLAYERS_ONLY = 0}; //--- Lane 112: 1 = publish SERVER_FPS_GUI only while a non-HC human player is connected. Default 0 preserves legacy every-8s broadcasts.
 	if (isNil "WFBE_C_SIDE_PATROL_FEED_CHANGE_ONLY")  then {WFBE_C_SIDE_PATROL_FEED_CHANGE_ONLY = 0};  //--- Lane 111: default 0 keeps the legacy 20s marker-feed rebroadcast; 1 publishes only on feed change or keepalive.
 	if (isNil "WFBE_C_SIDE_PATROL_FEED_KEEPALIVE")    then {WFBE_C_SIDE_PATROL_FEED_KEEPALIVE = 60};   //--- Seconds between change-aware marker-feed keepalive broadcasts; floored to 20s in server_side_patrols.sqf.
-	if (isNil "WFBE_C_SIDE_PATROL_RTB")               then {WFBE_C_SIDE_PATROL_RTB = 0};               //--- Grok #16 A-Life polish: default 0 preserves legacy fight-to-the-death patrols. At 1, a patrol under 50% living strength cancels its frontline gravitation/camp-sweep and MOVEs to the nearest owned town, then despawns via the existing wipe/cleanup path on arrival or after a 10-min bounded timeout (Common_RunSidePatrol.sqf). Self-contained in the patrol runner script - no new PV endpoint, HC-delegation-safe (runs wherever the patrol already executes).
+	if (isNil "WFBE_C_SIDE_PATROL_RTB")               then {WFBE_C_SIDE_PATROL_RTB = 1};               //--- Grok #16 A-Life polish: default 0 preserves legacy fight-to-the-death patrols. At 1, a patrol under 50% living strength cancels its frontline gravitation/camp-sweep and MOVEs to the nearest owned town, then despawns via the existing wipe/cleanup path on arrival or after a 10-min bounded timeout (Common_RunSidePatrol.sqf). Self-contained in the patrol runner script - no new PV endpoint, HC-delegation-safe (runs wherever the patrol already executes).
 	//--- Grok idea #8 (2026-07-25): side patrols run their OWN waypoint loop and never receive AICOM's
 	//--- global unstuck care (see Common_RunUnstuckRecovery.sqf's own header note). This arms
 	//--- server_side_patrols.sqf's EXTERNAL lead-vehicle-position watchdog - independent of the patrol's
@@ -1261,7 +1261,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_RECOVERY_FOOT_ROAD_R")    then {WFBE_C_AICOM_RECOVERY_FOOT_ROAD_R = if (worldName == "Takistan") then {300} else {200}};  //--- m search radius for that road snap. Wider on TK's sparse mountain road net so the snap actually finds a track.
 	if (isNil "WFBE_C_AICOM_RECOVERY_NOROAD_STEP")     then {WFBE_C_AICOM_RECOVERY_NOROAD_STEP = 1};      //--- cmdcon44i: when the tier-3 road-snap finds NO road (roadless mountain shelf - the ZG SE spawn shelf that pinned EAST foot teams at match start), step the leader/hull toward the objective instead of leaving it wedged forever. 0 = old behaviour (do nothing when no road).
 	if (isNil "WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST") then {WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST = 90};//--- m the no-road recovery step moves toward the order destination (clamped so it never overshoots past the dest; snapped to nearest isFlatEmpty non-water ground).
-	if (isNil "WFBE_C_AICOM_RECOVERY_NOTIFY")          then {WFBE_C_AICOM_RECOVERY_NOTIFY = 0};            //--- Grok idea #28: 1 = tell the seated human commander (only) when the stuck-recovery ladder fires tier 2+ on one of their AI teams. 0 = off (byte-identical - see Common_AICOMRecoveryNotify.sqf).
+	if (isNil "WFBE_C_AICOM_RECOVERY_NOTIFY")          then {WFBE_C_AICOM_RECOVERY_NOTIFY = 1};            //--- Grok idea #28: 1 = tell the seated human commander (only) when the stuck-recovery ladder fires tier 2+ on one of their AI teams. 0 = off (byte-identical - see Common_AICOMRecoveryNotify.sqf).
 	if (isNil "WFBE_C_AICOM_RECOVERY_NOTIFY_MIN_TIER") then {WFBE_C_AICOM_RECOVERY_NOTIFY_MIN_TIER = 2};   //--- only tier >= this fires the notify (tier-1 wedge-breaks are common/minor; tier 2/3 are the ones worth a commander's attention).
 	if (isNil "WFBE_C_AICOM_RECOVERY_NOTIFY_COOLDOWN") then {WFBE_C_AICOM_RECOVERY_NOTIFY_COOLDOWN = 300}; //--- seconds - at most one notify per TEAM in this window.
 
@@ -1455,7 +1455,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- restore the base cadence once fps recovers. Both collectors fully drain their current snapshot every pass,
 	//--- so a longer sleep only delays the NEXT sweep - it cannot grow an unbounded backlog. Default 0 = V1
 	//--- behaviour (fixed 1s / 5s sleeps, helper never reads diag_fps when disarmed).
-	if (isNil "WFBE_C_COLLECTOR_LOAD_SCALE") then {WFBE_C_COLLECTOR_LOAD_SCALE = 0};
+	if (isNil "WFBE_C_COLLECTOR_LOAD_SCALE") then {WFBE_C_COLLECTOR_LOAD_SCALE = 1};
 	//--- Patch F: pending-slot timeout reaper. A reserved (pending) team-build slot that never materialises is
 	//--- reaped after this many s so it can't permanently occupy the team budget (3 * TEAMS_INTERVAL[=90]).
 	if (isNil "WFBE_C_AICOM_PENDING_TIMEOUT") then {WFBE_C_AICOM_PENDING_TIMEOUT = 270}; //--- s before a never-filled pending team slot is reaped.
@@ -1758,7 +1758,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 //--- instead: a client already struggling culls the bulk marker pool harder, a healthy client keeps
 //--- the full fixed budget - so one player's weak PC no longer forces the same thin budget onto
 //--- everyone else's smooth client (client-local, no server change, no new network traffic).
-	if (isNil "WFBE_C_MARKER_BUDGET_ADAPT") then {WFBE_C_MARKER_BUDGET_ADAPT = 0};       //--- 0: legacy fixed-budget behavior (byte-identical). 1: scale the per-tick budget by this client's own diag_fps (see the 3 constants below).
+	if (isNil "WFBE_C_MARKER_BUDGET_ADAPT") then {WFBE_C_MARKER_BUDGET_ADAPT = 1};       //--- 0: legacy fixed-budget behavior (byte-identical). 1: scale the per-tick budget by this client's own diag_fps (see the 3 constants below).
 	if (isNil "WFBE_C_MARKER_BUDGET_ADAPT_FLOOR") then {WFBE_C_MARKER_BUDGET_ADAPT_FLOOR = 8}; //--- Lowest the adaptive budget is ever allowed to shrink to, however low fps gets. Never exceeds WFBE_C_MARKER_BUDGET_PER_TICK (clamped in the loop).
 	if (isNil "WFBE_C_MARKER_BUDGET_ADAPT_FPS_FLOOR") then {WFBE_C_MARKER_BUDGET_ADAPT_FPS_FLOOR = 15}; //--- diag_fps at/below which the adaptive budget clamps to the floor above.
 	if (isNil "WFBE_C_MARKER_BUDGET_ADAPT_FPS_CEIL") then {WFBE_C_MARKER_BUDGET_ADAPT_FPS_CEIL = 40}; //--- diag_fps at/above which the adaptive budget equals the full fixed WFBE_C_MARKER_BUDGET_PER_TICK (no thinning). Linear-scaled between floor and ceil.
@@ -2065,7 +2065,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_STATLOG = 1;                   // [WASPSTAT] structured telemetry RPT lines
 	WFBE_C_LOG_TOWN_COORDS = 1;           // One-shot: dump every town's map position (TOWNPOS|... RPT lines) for the post-match report's TOWN_COORDS. Flip to 1 for a single boot per map, harvest, flip back. Off = zero effect.
 	if (isNil "WFBE_C_TOWNS_GUNNERS_ON_CAPTURE") then {WFBE_C_TOWNS_GUNNERS_ON_CAPTURE = true}; // Immediately man static defenses at capture (all sides); false = reactive only
-	if (isNil "WFBE_C_TOWN_GUER_GUNNER_REAP") then {WFBE_C_TOWN_GUER_GUNNER_REAP = 0}; //--- fix(alife) proper #1370 (default OFF): when a WEST/EAST side captures a GUER town, also reap the AI gunner still manning the deleted GUER static. GUER's town statics are manned via the HC-delegated path (Server_HandleDefense.sqf -> WFBE_CO_FNC_DelegateAIStaticDefenceHeadless), so wfbe_defense_operator (only set on the non-HC "spawn" branch in Server_OperateTownDefensesUnits.sqf) is routinely nil here - the gunner is untracked and was previously left orphaned when only the static hull itself got deleted. 0 = legacy (hull-only delete). 1 = also delete the untracked gunner, routed to its owning machine when HC-local (server_town.sqf capture teardown) via the same WFBE_CO_FNC_SendToClient dispatch server_groupsGC.sqf uses for commander arty/heli wrecks.
+	if (isNil "WFBE_C_TOWN_GUER_GUNNER_REAP") then {WFBE_C_TOWN_GUER_GUNNER_REAP = 1}; //--- fix(alife) proper #1370 (default OFF): when a WEST/EAST side captures a GUER town, also reap the AI gunner still manning the deleted GUER static. GUER's town statics are manned via the HC-delegated path (Server_HandleDefense.sqf -> WFBE_CO_FNC_DelegateAIStaticDefenceHeadless), so wfbe_defense_operator (only set on the non-HC "spawn" branch in Server_OperateTownDefensesUnits.sqf) is routinely nil here - the gunner is untracked and was previously left orphaned when only the static hull itself got deleted. 0 = legacy (hull-only delete). 1 = also delete the untracked gunner, routed to its owning machine when HC-local (server_town.sqf capture teardown) via the same WFBE_CO_FNC_SendToClient dispatch server_groupsGC.sqf uses for commander arty/heli wrecks.
 	//--- Task 32: capture grace periods.
 	//--- Delay (seconds) before the new owner's static defenses and defense teams spawn after capture.
 	//--- A fire-time ownership guard aborts the spawn if the town changed hands again in the interim.
@@ -2904,7 +2904,7 @@ if (isNil "WFBE_C_ZG_KOTH_COOLDOWN") then {WFBE_C_ZG_KOTH_COOLDOWN = 180}; //---
 	if (isNil "AICOMV2_CTL_INVEST_COOLDOWN") then {AICOMV2_CTL_INVEST_COOLDOWN = 480}; //--- Global seconds between buys per side.
 	if (isNil "AICOMV2_CTL_INVEST_TOWN_COOLDOWN") then {AICOMV2_CTL_INVEST_TOWN_COOLDOWN = 1200}; //--- Per-town seconds between buys.
 	if (isNil "AICOMV2_CTL_INVEST_HUMAN_OFF") then {AICOMV2_CTL_INVEST_HUMAN_OFF = 1}; //--- Pause AI spend while a human is seated (inert while lane=0).
-	if (isNil "WFBE_C_CTL_TELEMETRY") then {WFBE_C_CTL_TELEMETRY = 0}; //--- kimi/ctl-telemetry-20260725: CTL garrison-link EPISODE telemetry (emission sites: Server/FSM/server_town_ai.sqf). 0=off (default - no episode state, no lines, byte-identical to HEAD). 1=on: one CTLSTAT|v1|<side>|ACT line per WEST/EAST ground town-activation episode (town, str at activation, planned groups/units, invest flag) + one CTLSTAT|v1|<side>|DEACT line per deactivation (hold secs, str at deactivation, peak enemy count sampled from the town's own existing per-sweep scan). TELEMETRY ONLY - no ledger/spawn/activation rule changes. Double-gated on AICOMV2_LANE_CMD_TOWN_LEDGER>0 (the system under measurement): silent wherever the lane is off.
+	if (isNil "WFBE_C_CTL_TELEMETRY") then {WFBE_C_CTL_TELEMETRY = 1}; //--- kimi/ctl-telemetry-20260725: CTL garrison-link EPISODE telemetry (emission sites: Server/FSM/server_town_ai.sqf). 0=off (default - no episode state, no lines, byte-identical to HEAD). 1=on: one CTLSTAT|v1|<side>|ACT line per WEST/EAST ground town-activation episode (town, str at activation, planned groups/units, invest flag) + one CTLSTAT|v1|<side>|DEACT line per deactivation (hold secs, str at deactivation, peak enemy count sampled from the town's own existing per-sweep scan). TELEMETRY ONLY - no ledger/spawn/activation rule changes. Double-gated on AICOMV2_LANE_CMD_TOWN_LEDGER>0 (the system under measurement): silent wherever the lane is off.
 
 //--- P5 CREW-COST TIER-SCALE (fable/crew-cost-tierscale, owner economy pick GR-2026-07-08a): crew-replacement cost
 //--- (charged in GUI_Menu_BuyUnits.sqf at all 3 crew-cost points) scales with the crewed vehicle's own buy-price
@@ -3029,7 +3029,7 @@ if (isNil "WFBE_C_CMD_SUPPORT_JET")            then {WFBE_C_CMD_SUPPORT_JET = 0}
 //---     readout for the SELECTED war-room roster team onto the 14600 economy header (GUI_Menu_Command.sqf).
 //---     Pure client read of already-broadcast AICOM vars - zero server changes. Default 0 = the read block is
 //---     skipped entirely and the header is byte-identical to pre-feature HEAD.
-if (isNil "WFBE_C_CMD_TEAM_STATUS")            then {WFBE_C_CMD_TEAM_STATUS = 0};              //--- master flag: 1 = on. 0 reverts GUI_Menu_Command.sqf's 14600 repaint to byte-identical pre-feature output.
+if (isNil "WFBE_C_CMD_TEAM_STATUS")            then {WFBE_C_CMD_TEAM_STATUS = 1};              //--- master flag: 1 = on. 0 reverts GUI_Menu_Command.sqf's 14600 repaint to byte-identical pre-feature output.
 
 //--- TRASH-OBJECT LOCALITY (2026-07-21 hardening extras): Common_TrashObject.sqf ends in an unconditional
 //--- deleteVehicle, which SILENTLY NO-OPS on an object that is not local to the machine running it - the same
@@ -3115,7 +3115,7 @@ if (isNil "WFBE_C_ICBM_LEGACY_COOLDOWN") then {WFBE_C_ICBM_LEGACY_COOLDOWN = 300
 //--- TOWNSCAN lines - the scan/activation path stays byte-identical to HEAD. 1 = server_town_ai.sqf
 //--- accumulates per-60s-window counters and emits one TOWNSCAN|v1 RPT line per window (server-local
 //--- RPT only, zero network traffic).
-if (isNil "WFBE_C_TOWNSCAN_TELEMETRY") then {WFBE_C_TOWNSCAN_TELEMETRY = 0};
+if (isNil "WFBE_C_TOWNSCAN_TELEMETRY") then {WFBE_C_TOWNSCAN_TELEMETRY = 1};
 if (isNil "WFBE_C_TOWNSCAN_TELEMETRY_MISSED_SECS") then {WFBE_C_TOWNSCAN_TELEMETRY_MISSED_SECS = 60}; //--- s: an enemy seen by a scan while its town stays dormant longer than this counts one missed_activation_suspect (clock then re-arms). Only read while WFBE_C_TOWNSCAN_TELEMETRY > 0.
 //--- ASSAULT RETARGET CHURN (2026-07-25): default 0 keeps current targeting/recycle behavior.
 //--- Positive grace value re-issues the current enemy town for that many stuck worker passes before a different-town retarget.
@@ -3132,7 +3132,7 @@ if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_ENABLE") then {WFBE_C_AICOM_OVERRUN_MOPUP_
 if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_RATIO")  then {WFBE_C_AICOM_OVERRUN_MOPUP_RATIO  = 1.1}; //--- dominance bar (myEff >= enEff * ratio) to arm the post-HQ-death mop-up dispatch.
 if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_TEAMS")  then {WFBE_C_AICOM_OVERRUN_MOPUP_TEAMS  = 2};   //--- max concurrent field teams pressed onto live enemy factories by the mop-up closer.
 //--- AICOM CARGO AIRDROP (Stage A): registered dark by default; the worker is AI-only and adds no escort jet.
-if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_ENABLE = 0};
+if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_ENABLE = 1};
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN") then {WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN = 1800};
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_COST = 60000};
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX") then {WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX = 2};
@@ -3144,7 +3144,7 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX") then {WFBE_C_AICOM_CARGO_AI
 //--- completionRadius, so slower/rear hulls hold formation instead of leapfrogging ahead alone into
 //--- combat; the last road node (final approach) and the _dest waypoint stay FULL/tight so the assault-in
 //--- is still fast. Pure waypoint-parameter change - no new units, no scans, no PV.
-if (isNil "WFBE_C_AICOM_CONVOY_COHESION") then {WFBE_C_AICOM_CONVOY_COHESION = 0};
+if (isNil "WFBE_C_AICOM_CONVOY_COHESION") then {WFBE_C_AICOM_CONVOY_COHESION = 1};
 if (isNil "WFBE_C_AICOM_CONVOY_COMPLETION") then {WFBE_C_AICOM_CONVOY_COMPLETION = 100}; //--- m: LIMITED-hop completionRadius while convoy cohesion is engaged (vs the normal WFBE_C_AICOM_ROUTE_COMPLETION 70). Only read while WFBE_C_AICOM_CONVOY_COHESION > 0.
 //--- HC STICKY TOWN DELEGATION (Grok idea #23, feat-hc-sticky-delegation 2026-07-25): Server_PickLeastLoadedHC.sqf
 //--- re-argmins the least-loaded headless client on EVERY town-AI delegation call, so a town whose AI is
@@ -3166,9 +3166,9 @@ if (isNil "WFBE_C_HC_DELEGATE_STICKY_WINDOW") then {WFBE_C_HC_DELEGATE_STICKY_WI
 if (isNil "WFBE_C_HC_DELEGATE_STICKY_MAXRATIO") then {WFBE_C_HC_DELEGATE_STICKY_MAXRATIO = 0.65}; //--- Load-balance guard ceiling: sticky HC's share of all HC-owned units (0..1) above which stickiness is broken and a fresh argmin pick is forced.
 
 //--- AICOM CARGO AIRDROP (Stage B): manned vehicles, extra paratroops, fighter escort - all dark by default; flag-off leaves Stage A byte-identical.
-if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_CREW_VEHICLES") then {WFBE_C_AICOM_CARGO_AIRDROP_CREW_VEHICLES = 0}; //--- 1 = mount-on-landing crew for each delivered para-vehicle (driver, plus gunner/commander only if the hull actually has that seat); 0 = Stage A empty-hull behaviour, unchanged.
+if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_CREW_VEHICLES") then {WFBE_C_AICOM_CARGO_AIRDROP_CREW_VEHICLES = 1}; //--- 1 = mount-on-landing crew for each delivered para-vehicle (driver, plus gunner/commander only if the hull actually has that seat); 0 = Stage A empty-hull behaviour, unchanged.
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_PARATROOP_EXTRA") then {WFBE_C_AICOM_CARGO_AIRDROP_PARATROOP_EXTRA = 0}; //--- extra paratroopers beyond the tiered stick Stage A already drops (cycles the same tiered roster classes); clamped to the plane's remaining transportSoldier capacity, never aborts a call. 0 = Stage A roster unchanged.
-if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE = 0}; //--- 1 = attempt a single fighter-jet escort in the SAME group as the cargo transport pilot (no extra group cost); the trigger degrades to no-escort-this-call under tight shared air-cap headroom rather than skipping the whole drop.
+if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE = 1}; //--- 1 = attempt a single fighter-jet escort in the SAME group as the cargo transport pilot (no extra group cost); the trigger degrades to no-escort-this-call under tight shared air-cap headroom rather than skipping the whole drop.
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST = 35000}; //--- AICOM-treasury $ added on top of WFBE_C_AICOM_CARGO_AIRDROP_COST only on a call that actually spawns the escort this time; anchored near A10_US_EP1's registered 32,320 unit price plus a pilot.
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES = ["A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]}; //--- fixed-wing attack-jet candidates only (Plane-kind subset of AI_Commander_AirResp.sqf's allowlist); intersected against the side's own WFBE_<SIDE>AIRCRAFTUNITS roster at dispatch so the pick is always side-safe/reachable, never hardcoded to one faction.
 
