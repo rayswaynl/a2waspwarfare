@@ -227,7 +227,7 @@ while {!gameOver} do {
 				         "_cmdTeam","_liveHC",
 				         "_cumSum2","_reDraw","_drawn","_needRedraw","_tmpActiveUpr","_targets",
 				         "_existingTeams","_sideIDLocal","_crew1","_crew2",
-				         "_healed","_humanCmd","_skipAI","_w11Eligible","_w3Max",
+				         "_healed","_fieldHospitalUnits","_humanCmd","_skipAI","_w11Eligible","_w3Max",
 				         "_dAng","_spawnPos","_dp","_placed","_dPos",
 	         "_w13Eligible","_w13AirList","_w13AttackClasses","_w13TargetTown","_w13MaxCluster","_w13BestDist","_w13Class","_w13Special","_w13Ang","_w13SpawnPos","_w13Heli","_w13Pilot","_w13TargetPos","_w13Grp","_w13PilotClass","_clustTown","_nearEnemies","_w13Enemies",
 	         "_w14Eligible","_w14AAClass","_w14Target","_w14Pos","_w14Placed","_w14Ang","_w14DPos","_w14AA","_w14i","_w14Grp","_w14Gunner","_w14PilotClass",
@@ -853,16 +853,17 @@ while {!gameOver} do {
 					//--- W8 (MOTOR POOL DELIVERY) RETIRED 2026-06-15: case handler removed. Draw 8 can no longer be
 					//--- selected (absent from the weights table), so no switch case is needed and none is defined here.
 
-					//--- W11: FIELD HOSPITAL — heal all wounded AI infantry side-wide (setDamage 0).
-					//--- Also sets a one-shot free re-founding flag on the side logic.
+					//--- W11: FIELD HOSPITAL — heal all wounded AI infantry side-wide on their owning machines.
+					//--- AICOM teams may be HC-local, so server-side setDamage would silently miss them.
 					case 11: {
-						_healed = 0;
+						_fieldHospitalUnits = [];
 						{
 							if (alive _x && {!isPlayer _x} && {_x isKindOf "Man"} && {damage _x > 0.05} && {side _x == _side}) then {
-								_x setDamage 0;
-								_healed = _healed + 1;
+								_fieldHospitalUnits set [count _fieldHospitalUnits, _x];
 							};
 						} forEach allUnits;
+						_healed = count _fieldHospitalUnits;
+						if (_healed > 0) then {[nil, "HandleSpecial", ["aicom-field-hospital", _side, _fieldHospitalUnits]] Call WFBE_CO_FNC_SendToClients};
 						//--- One-shot free re-founding flag: consumed by AI_Commander_Teams.
 						_logik setVariable ["wfbe_aicom_free_refound", true];
 						_detail = Format ["healed=%1 free_refound_flag=set", _healed];
