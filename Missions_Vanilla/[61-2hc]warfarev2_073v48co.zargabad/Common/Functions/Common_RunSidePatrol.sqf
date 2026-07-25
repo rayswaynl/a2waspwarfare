@@ -464,4 +464,15 @@ if (isServer) then {
 	["RequestSpecial", ["sidepatrol-ended", _sideID, _ldr]] Call WFBE_CO_FNC_SendToServer;
 };
 
+//--- Fix (review, group-leak): A2 deleteGroup SILENTLY NO-OPS on a non-empty group. RTB-arrival
+//--- and RTB-timeout above both set _alive=false while the group can still hold LIVE units -
+//--- unlike the legacy combat-wipe exit, which only ever reaches here once the group is already
+//--- empty. Because this group carries WFBE_SidePatrol=true (BASE-GC skips it), a deleteGroup on
+//--- a non-empty group here would leak the group + its surviving AI for the rest of the round even
+//--- though the slot was just released above. Mirror the crewless-spawn cleanup near the top of
+//--- this script: delete surviving units BEFORE deleteGroup. Player-safe - never delete a player
+//--- (a real player in the group legitimately keeps it non-empty, so it is left alone).
+{
+	if (!isNull _x && {alive _x} && {!isPlayer _x}) then {deleteVehicle _x};
+} forEach (units _team);
 if (!isNull _team) then {deleteGroup _team};
