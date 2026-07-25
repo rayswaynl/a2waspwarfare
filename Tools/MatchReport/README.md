@@ -1,5 +1,20 @@
 # WASP Post-Match Report
 
+Two reports come out of this directory, from the same telemetry:
+
+| | **Video report** (`render_report.py`) | **In-depth report** (`deep_report.py`) |
+|---|---|---|
+| Output | 1080×1920 MP4, ~48 s | one self-contained HTML file (or Markdown) |
+| Audience | TikTok / Shorts / Discord | anyone asking what actually happened |
+| Reads | `WASPSTAT\|v1\|` | `WASPSTAT\|v1\|` **and** `MATCH\|v1\|` |
+| Needs | numpy + Pillow + ffmpeg | **stdlib only** — runs on the server box |
+
+Jump to [the in-depth report](#in-depth-report) for the second one.
+
+---
+
+## Video report
+
 Generates a vertical (1080×1920) **post-match report video** for TikTok / Shorts /
 Discord — entirely from the telemetry the mission already emits. **No game capture,
 no GPU, no OBS, no Arma client.** It's a batch job: feed it a finished match's
@@ -125,6 +140,80 @@ coordinates before their control maps are trusted.
 
 Colours / fonts / scene timings live at the top of `render.py`; scene order and lengths
 are the `scene(...)` calls at the bottom of `render()`. Re-renders in ~30 s.
+
+---
+
+## In-depth report
+
+`deep_report.py` is the read-through companion to the video: same telemetry, opposite
+goal. The video shows eight numbers to a scrolling audience; this shows **every number
+the log carries**, to someone asking what actually happened in the round.
+
+```bash
+python deep_report.py --sample -o report.html        # deterministic demo, no data needed
+python deep_report.py --rpt arma2oaserver.RPT -o report.html
+grep -E "WASPSTAT\|v1\||MATCH\|v1\|" server.rpt | python deep_report.py --rpt - -o report.html
+python deep_report.py --rpt match.log --format md    # Markdown/plain text to stdout
+python deep_report.py --rpt match.log --names players.tsv -o report.html
+```
+
+**Stdlib only** — no numpy, no Pillow, no ffmpeg, no CDN, no build step. That is
+deliberate: it runs on the box that already has the RPT, and the output is one
+self-contained HTML file you can drop in Discord or open offline.
+
+### What it adds over the video path
+
+It reads the **`MATCH|v1|` family**, which `matchdata.parse_waspstat` ignores entirely —
+so match configuration (`START`: build, town/slot counts, AI-commander and delegation
+settings, GUER/naval/oilfield flags), the authoritative result (`END`: casualties,
+vehicles lost, towns held, connected players) and the narrative beats (`MILESTONE`:
+first town per side, HQ destroyed, oilfield and carrier flips) reach a report for the
+first time. See `matchfacts.py`.
+
+### Sections
+
+**Result** (hero + how the win landed) · **Faction ledger** (every faction, including
+zeroes) · **Momentum** (towns held over time) · **Territory** (share of contested
+territory, per-town flip history, capture streaks) · **Combat** (kill tempo, target
+class, engagement range, top weapons, longest kill) · **Operators** (MVP, superlatives,
+the full 15-field PLAYERSTATS table) · **Head-to-head** (PvP duels) · **Match timeline**
+(all three telemetry families merged chronologically) · **Telemetry coverage**.
+
+### Two rules the report is built on
+
+**Never invent a number.** Anything the log did not carry is reported as absent, not
+estimated. Event times the emitter did not measure are marked `~` in the timeline and
+counted in Telemetry coverage, so an interpolated capture is never presented as a
+measured one. The coverage section exists so a thin report is never mistaken for a thin
+match — it reports record counts, sequence gaps, timestamp and distance coverage,
+unresolved UIDs and the count of excluded headless/AI rows.
+
+**Headless clients and AI controllers are not operators.** They carry UIDs and stat rows
+but are removed before any MVP, leaderboard or duel table is built (shared
+`matchdata.is_excluded_name`), and surface only as a count in coverage.
+
+### Charts
+
+Inline SVG, no library. The faction hues are stepped from the brand tokens until the
+categorical palette passes a colour-vision-deficiency and contrast audit on both
+surfaces (the raw tokens do not — `guer↔east` collapse to ΔE 5.2 under deuteranopia);
+the exact validated values and their surfaces are recorded in `PALETTE` at the top of
+`deep_report.py`. CIV / CONTESTED stays neutral grey chrome rather than becoming a
+fourth faction hue. Every chart ships a table-view twin, so no value is reachable by
+colour or hover alone, and the page renders in both light and dark mode.
+
+### Tests
+
+```bash
+python -m unittest -v test_deep_report.py
+```
+
+25 stdlib-only tests covering the `MATCH|v1|` parser (including absent families and
+unknown milestone subtypes), territory-seconds and flip history, HC/AI exclusion,
+distance and timestamp honesty, coverage warnings, DOM-id uniqueness, CSS-variable
+definition, HTML escaping of operator names, and the no-external-requests guarantee.
+
+---
 
 ## Layout and BrandKit verification
 
