@@ -1379,6 +1379,15 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- so a momentarily-wedged MHQ tries to free itself first (never left frozen).
 	if (isNil "WFBE_C_AICOM_MHQ_NUDGE_SECS") then {WFBE_C_AICOM_MHQ_NUDGE_SECS = 45}; //--- s of no >25m progress before a steering nudge.
 	if (isNil "WFBE_C_AICOM_MHQ_NUDGE_TURN") then {WFBE_C_AICOM_MHQ_NUDGE_TURN = 25}; //--- degrees to swing the heading on a nudge.
+	//--- cmdcon-mhqstuck (2026-07-25, anti-livelock): a stuck-recovery redeploy that lands within
+	//--- STUCK_MIN_DISP of the pre-mobilize HQ position does not count as resolved; after
+	//--- STUCK_MAX_CYCLES consecutive trivial-displacement stuck cycles the worker backs off for
+	//--- STUCK_BACKOFF seconds (see AI_Commander_MHQReloc.sqf). Master gate default 0 = fully inert
+	//--- (identical to today: unbounded in-place stuck-redeploy cycling).
+	if (isNil "WFBE_C_AICOM_MHQ_STUCK_ESCALATE")   then {WFBE_C_AICOM_MHQ_STUCK_ESCALATE   = 0};   //--- 1 = on, 0 = off (default; no behaviour change).
+	if (isNil "WFBE_C_AICOM_MHQ_STUCK_MIN_DISP")   then {WFBE_C_AICOM_MHQ_STUCK_MIN_DISP   = 300}; //--- m: a stuck-redeploy under this from the pre-mobilize HQ pos is "trivial", not a resolution.
+	if (isNil "WFBE_C_AICOM_MHQ_STUCK_MAX_CYCLES") then {WFBE_C_AICOM_MHQ_STUCK_MAX_CYCLES = 3};   //--- consecutive trivial-displacement stuck cycles allowed before backoff.
+	if (isNil "WFBE_C_AICOM_MHQ_STUCK_BACKOFF")    then {WFBE_C_AICOM_MHQ_STUCK_BACKOFF    = 300}; //--- s the worker sits out once the cycle cap is hit (bounds the retry).
 	//--- Patch E: AICOM supervisor watchdog restart loop. A standalone watchdog re-spawns a side's commander
 	//--- supervisor PFM if its heartbeat goes stale, with a per-side cooldown (restart-storm guard).
 	if (isNil "WFBE_C_AICOM_WATCHDOG") then {WFBE_C_AICOM_WATCHDOG = 1};                 //--- 1 = watchdog on (default); 0 = inert (instant rollback).

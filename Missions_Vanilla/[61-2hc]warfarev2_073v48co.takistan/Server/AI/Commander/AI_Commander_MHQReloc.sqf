@@ -48,6 +48,20 @@ private "_abortUntil";
 _abortUntil = _logik getVariable ["wfbe_mhqreloc_abort_until", 0];
 if ((missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ABORT_COOLDOWN", 0]) > 0 && {time < _abortUntil}) exitWith {};
 
+//--- cmdcon-mhqstuck (2026-07-25, anti-livelock): a stuck-recovery redeploy that lands the MHQ a
+//--- trivial distance from where it started is not a resolved relocation - it just re-triggers next
+//--- interval, remobilizes, and gets stuck at the same physical obstruction again (live WEST: SIX
+//--- "stuck" redeploys inside a 6m circle over 32 minutes). When WFBE_C_AICOM_MHQ_STUCK_ESCALATE is
+//--- on, the Spawn below (near the final deploy) counts consecutive trivial-displacement stuck cycles
+//--- and stamps wfbe_mhqreloc_stuck_until with a cooldown once the cap is hit - forcing a pause so
+//--- match state (front/town ownership/blocking player) has time to change before the next attempt.
+//--- INDEPENDENT of the B74.2 abort-cooldown above (that one only guards the pre-flight advance-
+//--- below-min / no-buffer-clear-standoff aborts). Inert when WFBE_C_AICOM_MHQ_STUCK_ESCALATE <= 0
+//--- (default): wfbe_mhqreloc_stuck_until is then never stamped (see the Spawn tail), so this never trips.
+private "_stuckUntil";
+_stuckUntil = _logik getVariable ["wfbe_mhqreloc_stuck_until", 0];
+if ((missionNamespace getVariable ["WFBE_C_AICOM_MHQ_STUCK_ESCALATE", 0]) > 0 && {time < _stuckUntil}) exitWith {};
+
 //--- Need a DEPLOYED static HQ to relocate.
 _deployed = (_side) Call WFBE_CO_FNC_GetSideHQDeployStatus;
 if (typeName _deployed != "BOOL") exitWith {};
@@ -414,6 +428,10 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 						_reason = "stuck-teleport";
 					} else {
 						_reason = "stuck";
+						//--- cmdcon-mhqstuck: always-on - surface WHY the teleport-to-dest recovery was skipped
+						//--- (player too close to the MHQ/dest, or the dest is water) so a repeat is diagnosable
+						//--- from the RPT alone, without inference. Pure diag_log - no state/behaviour change.
+						diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|STUCK_INPLACE|blocked=" + (if (_pNear) then {"player-near"} else {"water-dest"}) + "|pos=" + str _cur);
 					};
 					_done = true;
 				};
@@ -547,6 +565,40 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 	waitUntil {sleep 1; time > _t0 || {(_side) Call WFBE_CO_FNC_GetSideHQDeployStatus}};
 
 	_logik setVariable ["wfbe_mhqreloc_active", false];
+	//--- cmdcon-mhqstuck (2026-07-25): livelock-guard bookkeeping. Gated entirely by
+	//--- WFBE_C_AICOM_MHQ_STUCK_ESCALATE (default 0) - with it off this block reads/writes no new
+	//--- variable and emits no diag_log, so the mission is byte-identical to today flag-off. A
+	//--- "stuck"/"stuck-teleport" redeploy that lands within WFBE_C_AICOM_MHQ_STUCK_MIN_DISP metres of
+	//--- _hqPos (the position this relocation attempt MOBILIZED from) is not a resolved relocation -
+	//--- bump a per-side consecutive-trivial-stuck counter; once it reaches
+	//--- WFBE_C_AICOM_MHQ_STUCK_MAX_CYCLES, stamp wfbe_mhqreloc_stuck_until WFBE_C_AICOM_MHQ_STUCK_BACKOFF
+	//--- seconds out (read by the independent gate near the top of the outer script) and reset the
+	//--- counter - a bounded pause instead of an immediate re-trigger onto the same obstruction. Any
+	//--- redeploy that clears the min-displacement bar (incl. every genuine "arrive") resets the
+	//--- counter to 0. A2-OA-safe: plain scalar geometry + getVariable/setVariable, no A3 ops.
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_MHQ_STUCK_ESCALATE", 0]) > 0) then {
+		private ["_stuckMinDisp","_stuckMaxCycles","_stuckBackoff","_stuckDX","_stuckDY","_stuckDisp","_stuckCyc","_stuckTrivial"];
+		_stuckMinDisp   = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_STUCK_MIN_DISP", 300];
+		_stuckMaxCycles = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_STUCK_MAX_CYCLES", 3];
+		_stuckBackoff   = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_STUCK_BACKOFF", 300];
+		_stuckDX = (_finPos select 0) - (_hqPos select 0);
+		_stuckDY = (_finPos select 1) - (_hqPos select 1);
+		_stuckDisp = sqrt (_stuckDX*_stuckDX + _stuckDY*_stuckDY);
+		_stuckTrivial = ((_reason == "stuck") || {_reason == "stuck-teleport"}) && {_stuckDisp < _stuckMinDisp};
+		if (_stuckTrivial) then {
+			_stuckCyc = (_logik getVariable ["wfbe_mhqreloc_stuck_cycles", 0]) + 1;
+			_logik setVariable ["wfbe_mhqreloc_stuck_cycles", _stuckCyc];
+			if (_stuckCyc >= _stuckMaxCycles) then {
+				_logik setVariable ["wfbe_mhqreloc_stuck_until", time + _stuckBackoff];
+				_logik setVariable ["wfbe_mhqreloc_stuck_cycles", 0];
+				diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|STUCK_LIVELOCK_BACKOFF|cycles=" + str _stuckCyc + "|disp=" + str (round _stuckDisp) + "|min=" + str (round _stuckMinDisp) + "|backoff=" + str _stuckBackoff);
+			} else {
+				diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|STUCK_LIVELOCK_CYCLE|cycles=" + str _stuckCyc + "|disp=" + str (round _stuckDisp) + "|min=" + str (round _stuckMinDisp));
+			};
+		} else {
+			if ((_logik getVariable ["wfbe_mhqreloc_stuck_cycles", 0]) != 0) then {_logik setVariable ["wfbe_mhqreloc_stuck_cycles", 0]};
+		};
+	};
 	//--- WASPSCALE mhqrel counter (cmdcon42): bump the cumulative successful-MHQ-relocation counter the server-side WASPSCALE emit reads (mhqrel=). This DEPLOYED site fires once per successful AI relocation for BOTH AI sides (server-side supervisor). Monotonic.
 	missionNamespace setVariable ["wfbe_waspscale_mhqrel", (missionNamespace getVariable ["wfbe_waspscale_mhqrel", 0]) + 1];
 	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|DEPLOYED|reason=" + _reason + "|pos=" + str _finPos);
