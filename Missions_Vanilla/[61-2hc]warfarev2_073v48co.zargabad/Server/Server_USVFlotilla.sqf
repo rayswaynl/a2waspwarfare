@@ -59,7 +59,7 @@ waitUntil { !isNil "towns" };
 private ["_coastalRadius","_coastalSamples","_coastalCount","_tPos","_isCoastal","_s","_ang","_probe",
          "_wps","_wpIdx","_wpVar","_wpLogic","_route","_count","_side","_hull","_roles","_loadouts",
          "_mountOffset","_approachRadius","_quietDespawn","_unstuckMax","_arriveRadius","_tickInterval",
-         "_flotilla","_gateInactiveTime","_gateWasActive"];
+         "_flotilla","_gateInactiveTime","_gateWasActive","_rumorLast"];
 
 //------------------------------------------------------------------------------------
 //--- ONE-TIME: tag every town wfbe_is_coastal by ring-sampling surfaceIsWater around its position.
@@ -138,6 +138,7 @@ _tickInterval   = 10; //--- matches Init_NavalHVT.sqf's CAP tick cadence (Init_N
 _flotilla = [];
 _gateInactiveTime = 0;
 _gateWasActive = false;
+_rumorLast = -1;
 
 while {!WFBE_GameOver} do {
 	sleep _tickInterval;
@@ -174,7 +175,15 @@ while {!WFBE_GameOver} do {
 		} forEach _carrierLogics;
 	};
 
-	if (_gateActive && {!_gateWasActive}) then { diag_log format ["USVFLOTILLA|GATE|OPEN|reason=%1", _gateReason]; };
+	if (_gateActive && {!_gateWasActive}) then {
+		diag_log format ["USVFLOTILLA|GATE|OPEN|reason=%1", _gateReason];
+		if ((missionNamespace getVariable ["WFBE_C_NAVAL_THEATER_RUMOR", 0]) > 0) then {
+			if ((time - _rumorLast) >= (missionNamespace getVariable ["WFBE_C_NAVAL_THEATER_RUMOR_INTERVAL", 120])) then {
+				[nil, "DashboardAnnounce", ["Hostile small craft are active on the coast."]] Call WFBE_CO_FNC_SendToClients;
+				_rumorLast = time;
+			};
+		};
+	};
 	if (!_gateActive && _gateWasActive) then { diag_log "USVFLOTILLA|GATE|CLOSE"; };
 	_gateWasActive = _gateActive;
 
