@@ -19,8 +19,8 @@
      (3) INCOME while HELD (and NOT sabotaged). On each income tick the owning side (if any) is credited
          a small, capped supply amount via the existing side-income path: [_side, _amount, _reason,
          _includeStagnation] Call ChangeSideSupply — the SAME call town supply income uses in
-         Server\FSM\updateresources.sqf. includeStagnation=true so it applies the no-players stagnation
-         coefficient exactly like town income (never a synthetic windfall on an empty server). Neutral
+         Server\FSM\updateresources.sqf. includeStagnation=true by default, with the #1449 AI-commander
+         exemption applied per income tick just like town income (never a synthetic windfall on an empty server). Neutral
          (unheld) node pays nobody; a SABOTAGED node pays nobody until repaired.
 
      (4) CAPTURE = proximity + cleared-of-enemy. A side "holds" the node when it has >=1 alive unit
@@ -797,9 +797,11 @@ while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
 				if ((_incomeAccrued + _pay) > _incomeCap) then {_pay = _incomeCap - _incomeAccrued};
 				if (_pay > 0) then {
 					_incomeAccrued = _incomeAccrued + _pay;
-					//--- Existing side-income path (same call town supply income uses in updateresources.sqf).
-					//--- includeStagnation=true -> applies the no-players stagnation coefficient like town income.
-					[_owner, _pay, Format ["OILFIELD passive income (held by %1).", str _owner], true] Call ChangeSideSupply;
+					//--- Default true preserves legacy stagnation; the #1449 flag exempts an active AICOM side.
+					private ["_supplyStagnation"];
+					_supplyStagnation = true;
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_SUPPLY_STAGNATION_EXEMPT", 0]) > 0 && {((isNull(_owner Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) && {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", 0]) > 0})}) then {_supplyStagnation = false};
+					[_owner, _pay, Format ["OILFIELD passive income (held by %1).", str _owner], _supplyStagnation] Call ChangeSideSupply;
 					diag_log Format ["OILFIELD|v1|INCOME|t=%1|owner=%2|pay=%3|accrued=%4|cap=%5", round time, str _owner, _pay, _incomeAccrued, _incomeCap];
 				};
 			};
