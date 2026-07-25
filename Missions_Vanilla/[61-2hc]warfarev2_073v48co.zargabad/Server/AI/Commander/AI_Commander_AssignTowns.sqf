@@ -1077,11 +1077,17 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							};
 						} else {
 							if (_waveDelay > 0) then {
-								[_team, _target, _useArc, _waveDelay] spawn {
-									private ["_wsTeam","_wsTarget","_wsArc","_wsDelay"];
-									_wsTeam = _this select 0; _wsTarget = _this select 1; _wsArc = _this select 2; _wsDelay = _this select 3;
+								private "_wsSeqSnap0";
+								_wsSeqSnap0 = if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0};
+								[_team, _target, _useArc, _waveDelay, _wsSeqSnap0] spawn {
+									private ["_wsTeam","_wsTarget","_wsArc","_wsDelay","_wsSeqSnap","_wsSeqNow"];
+									_wsTeam = _this select 0; _wsTarget = _this select 1; _wsArc = _this select 2; _wsDelay = _this select 3; _wsSeqSnap = _this select 4;
 									sleep _wsDelay;
-									if (!isNull _wsTeam && {!isNull _wsTarget} && {({alive _x} count (units _wsTeam)) > 0}) then {
+									_wsSeqNow = if (isNil {_wsTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_wsTeam getVariable "wfbe_aicom_order") select 0};
+									//--- ORDER-GENERATION GUARD (codex delta remediation): if a newer order was published for this
+									//--- team while this wave-stagger thread slept (seq bumped by a fresher retask), drop this
+									//--- stale direct move silently - the newer order wins. Only issue when the seq is unchanged.
+									if (!isNull _wsTeam && {!isNull _wsTarget} && {({alive _x} count (units _wsTeam)) > 0} && {_wsSeqNow == _wsSeqSnap}) then {
 										if (_wsArc) then {
 											[_wsTeam, _wsTarget] Call WFBE_SE_FNC_AI_SetTownAttackPath;
 										} else {
