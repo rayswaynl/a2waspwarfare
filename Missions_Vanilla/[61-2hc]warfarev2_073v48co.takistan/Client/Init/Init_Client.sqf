@@ -562,6 +562,7 @@ Call {
 		case 2: {_oc = 1};
 	};
 	60 setOvercast _oc;
+	if (_weat == 2) then {60 setRain 0.5}; //--- Keep rainy lobby weather consistent with the server-local path.
 };
 
 // Marty: Volumetric clouds are disabled globally; never start the BIS cloud system on clients.
