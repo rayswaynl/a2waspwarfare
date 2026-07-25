@@ -25,7 +25,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
          "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev",
-         "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady","_capMounted","_capClass"];
+         "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady","_capMounted","_capClass","_hasIdleTransport","_idleRtbEnabled"];
 
 _sideID = _this select 0;
 _template = _this select 1;
@@ -205,15 +205,21 @@ if (isServer) then {
 //--- live gunner and a revealed enemy within cannon band, drop to a low gun-run altitude and one-shot force
 //--- the gunner onto a NON-guided (cannon/gun) muzzle. HC-local, self-exits on team wipe; no disableAI, no
 //--- sim-gating - the heli stays fully active and re-engages on proximity.
-if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) then {
-	//--- B66: the nudge Spawn used to start for EVERY team (an endless ~7s sleep-loop per team, even
+private ["_idleRtbEnabled"];
+_idleRtbEnabled = (missionNamespace getVariable ["WFBE_C_AICOM_AIR_IDLE_RTB", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_IDLE_MINUTES", 0]) > 0} && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_IDLE_SENSE_R", 0]) > 0};
+if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || {_idleRtbEnabled}) then {
+	//--- B66: the shared 7s watcher starts for an attack heli, or for an opt-in retained transport. Cannon action stays separately gated.
 	//--- pure-infantry/armour teams with no aircraft). Gate it: only spawn the loop when this team
 	//--- actually HAS a NON-transport attack helicopter in its vehicles. A2-OA-safe: classname-literal
 	//--- isKindOf "Helicopter" + getNumber transportSoldier==0 (mirrors the per-tick test below).
 	private ["_hasAttackHeli"]; //--- B66
 	_hasAttackHeli = false;     //--- B66
+	_hasIdleTransport = false;
 	{ if (!isNull _x && {_x isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) == 0}) exitWith {_hasAttackHeli = true} } forEach _vehicles; //--- B66
-	if (_hasAttackHeli) then { //--- B66 only run the cannon-nudge loop for teams that own an attack heli
+	if (_idleRtbEnabled) then {
+		{ if (!isNull _x && {_x isKindOf "Helicopter"} && {_x getVariable ["wfbe_aicom_transport", false]}) exitWith {_hasIdleTransport = true} } forEach _vehicles;
+	};
+	if (_hasAttackHeli || {_hasIdleTransport}) then { //--- B66 only run the cannon-nudge loop for teams that own an attack heli or an opt-in retained transport
 	[_team, _side, _vehicles] Spawn {
 		private ["_tm","_sd","_vehs","_liveVehs","_h","_tgt","_cannon","_cannonMuzzle","_muzzles","_isGuided","_ammo","_band"]; //--- B66 +_cannonMuzzle/_muzzles; lane341 hostile filter uses getFriend
 		_tm = _this select 0; _sd = _this select 1; _vehs = _this select 2;
@@ -221,6 +227,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 			_liveVehs = [];
 			{ if (!isNull _x && {alive _x}) then {_liveVehs = _liveVehs + [_x]} } forEach _vehs;
 			_vehs = _liveVehs;
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) then {
 			{
 				_h = _x;
 				if (!isNull _h && {alive _h} && {_h isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _h) >> "transportSoldier")) == 0} && {!isNull (gunner _h)} && {alive (gunner _h)}) then {
@@ -254,48 +261,122 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0) th
 					};
 				};
 			} forEach _vehs;
+			};
 			sleep (missionNamespace getVariable ["WFBE_C_AICOM_HELI_NUDGE_PERIOD", 7]);
-			//--- B74.2 HELI BASE-REAP (Ray 2026-06-24): the server-side BASE-GC cannot reap these hulls (HC-local +
-			//--- ownership-exempt at server_groupsGC.sqf:209), so do it HERE on the HC where the heli IS local. Any
-			//--- alive attack heli that has sat crewed-idle (speed < idle band, no enemy near) at its OWN base for
-			//--- WFBE_C_AICOM_HELI_BASE_REAP_TIMEOUT continuous seconds is deleted (crew first, then hull) so empties
-			//--- stop piling. First-seen stamp resets the moment it moves/engages. 0 = off. A2-OA-safe: getPos guarded
-			//--- by !isNull, nearEntities side-compare (no getFriend), deleteVehicle on HC-local crew+hull.
-			//--- FLAW-FIX: use _vehs (the Spawn-local rebind of _vehicles at L134), NOT _vehicles (not inherited).
-			private ["_reapTO"]; _reapTO = missionNamespace getVariable ["WFBE_C_AICOM_HELI_BASE_REAP_TIMEOUT", 0];
-			if (_reapTO > 0) then {
+			//--- B74.2 HELI BASE-REAP + Grok U6 IDLE-AIR RTB (2026-07-25): reuse this
+			//--- existing 7-second HC-local air watcher and its ONE hostile-proximity scan. The opt-in
+			//--- path only considers retained attack/transport helicopters, requires a genuinely quiet,
+			//--- non-engaged hull (base recycle additionally requires stationary), and never touches a player-occupied
+			//--- or team-carrying hull.
+			//--- AIR_IDLE_RTB + MINUTES + SENSE_R must all be >0; with the defaults at 0 this adds no loop.
+			private ["_reapTO","_idleSecs","_idleSenseR"];
+			_reapTO = missionNamespace getVariable ["WFBE_C_AICOM_HELI_BASE_REAP_TIMEOUT", 0];
+			_idleSecs = (missionNamespace getVariable ["WFBE_C_AICOM_AIR_IDLE_MINUTES", 0]) * 60;
+			_idleSenseR = missionNamespace getVariable ["WFBE_C_AICOM_AIR_IDLE_SENSE_R", 400];
+			if (_idleRtbEnabled) then {_reapTO = _idleSecs};
+			if (_reapTO > 0 || {_idleRtbEnabled}) then {
 				private ["_reapHQ","_reapVehs"];
 				_reapHQ = (_sd) Call WFBE_CO_FNC_GetSideHQ;
 				if (!isNull _reapHQ) then {
 					_reapVehs = _vehs;
 					{
-						private ["_rh","_rEnemy","_rSeen"];
+						private ["_rh","_rEnemy","_rSeen","_rIdleAt","_rAirborneAt","_rOrder","_rDest","_rAction","_rSenseR","_rAtBase","_rAttack","_rTransport","_rMoving","_rPlayerCrew","_rBusy","_rAirborne","_rEngaged","_rEnRoute"];
 						_rh = _x;
-						if (!isNull _rh && {alive _rh} && {local _rh} && {_rh isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _rh) >> "transportSoldier")) == 0}) then {
-							if (((_rh distance _reapHQ) <= (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800])) && {(abs (speed _rh)) < (missionNamespace getVariable ["WFBE_C_BASEGC_IDLE_SPEED", 5])}) then {
-								_rEnemy = {alive _x && {(side _x) != _sd} && {(side _x) != civilian}} count ((getPos _rh) nearEntities [["Man","LandVehicle","Air"], 400]);
-								if (_rEnemy > 0) then {
-									_rh setVariable ["wfbe_heli_baseidle_at", nil];
-								} else {
-									_rSeen = _rh getVariable "wfbe_heli_baseidle_at";
-									if (isNil "_rSeen") then {
-										_rh setVariable ["wfbe_heli_baseidle_at", time];
-									} else {
-										if ((time - _rSeen) >= _reapTO) then {
-											{ if (!isPlayer _x) then {["aicomteam-L276", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (crew _rh);
-											["aicomteam-L277", _rh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _rh;
-											["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] B74.2 base-reaped idle attack heli %2 (idle %3s at base).", _sd, typeOf _rh, _reapTO]] Call WFBE_CO_FNC_AICOMLog;
-										};
+						if (!isNull _rh && {alive _rh} && {local _rh} && {_rh isKindOf "Helicopter"}) then {
+							_rTransport = _rh getVariable ["wfbe_aicom_transport", false];
+							_rAttack = (getNumber (configFile >> "CfgVehicles" >> (typeOf _rh) >> "transportSoldier")) == 0;
+							if (_rAttack || {_idleRtbEnabled && {_rTransport}}) then {
+								_rAtBase = (_rh distance _reapHQ) <= (missionNamespace getVariable ["WFBE_C_BASEGC_RANGE", 800]);
+								_rMoving = (abs (speed _rh)) >= (missionNamespace getVariable ["WFBE_C_BASEGC_IDLE_SPEED", 5]);
+								_rPlayerCrew = ({alive _x && {isPlayer _x}} count (crew _rh)) > 0;
+								_rBusy = false;
+								if (_idleRtbEnabled && {_rTransport}) then {
+									{if (alive _x && {(vehicle _x) == _rh} && {_x != (driver _rh)} && {_x != (gunner _rh)} && {_x != (commander _rh)}) then {_rBusy = true}} forEach (units _team);
+								};
+								_rAirborne = false;
+								_rAirborneAt = _team getVariable "wfbe_aicom_airborne_until";
+								if (!isNil "_rAirborneAt" && {_rAirborneAt > time}) then {_rAirborne = true};
+								_rEngaged = false;
+								{if (alive _x && {behaviour _x == "COMBAT"}) then {_rEngaged = true}} forEach (crew _rh);
+								_rEnRoute = false;
+								if (_idleRtbEnabled && {(count (crew _rh)) > 0}) then {
+									_rOrder = _team getVariable "wfbe_aicom_order";
+									if (!isNil "_rOrder" && {count _rOrder >= 3}) then {
+										_rDest = _rOrder select 2;
+										if (typeName _rDest == "ARRAY" && {(_rh distance _rDest) > (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250])}) then {_rEnRoute = true};
 									};
 								};
+								if ((!_rMoving && {_rAtBase}) || {_idleRtbEnabled}) then {
+									_rSenseR = if (_idleRtbEnabled) then {_idleSenseR} else {400};
+									_rEnemy = {alive _x && {(side _x) != _sd} && {(side _x) != civilian}} count ((getPos _rh) nearEntities [["Man","LandVehicle","Air"], _rSenseR]);
+									if (_rEnemy > 0) then {
+										_rh setVariable ["wfbe_heli_baseidle_at", nil];
+										_rh setVariable ["wfbe_aicom_air_idle_at", nil];
+									} else {
+										if (_rAttack && {_rAtBase} && {_reapTO > 0} && {!_idleRtbEnabled || {!_rPlayerCrew && {!_rBusy} && {!_rAirborne} && {!_rEngaged} && {!_rEnRoute}}}) then {
+											_rSeen = _rh getVariable "wfbe_heli_baseidle_at";
+											if (isNil "_rSeen") then {
+												_rh setVariable ["wfbe_heli_baseidle_at", time];
+											} else {
+												if ((time - _rSeen) >= _reapTO) then {
+													{ if (!isPlayer _x) then {["aicomteam-L276", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (crew _rh);
+													["aicomteam-L277", _rh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _rh;
+													["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] B74.2 base-reaped idle attack heli %2 (idle %3s at base).", _sd, typeOf _rh, _reapTO]] Call WFBE_CO_FNC_AICOMLog;
+												};
+											};
+										} else {
+											_rh setVariable ["wfbe_heli_baseidle_at", nil];
+										};
+										if (_idleRtbEnabled && {!_rAtBase} && {!_rPlayerCrew} && {!_rBusy} && {!_rAirborne} && {!_rEngaged} && {!_rEnRoute}) then {
+											_rAction = _rh getVariable ["wfbe_aicom_air_idle_action", false];
+											if (!_rAction) then {
+												_rIdleAt = _rh getVariable "wfbe_aicom_air_idle_at";
+												if (isNil "_rIdleAt") then {
+													_rh setVariable ["wfbe_aicom_air_idle_at", time];
+												} else {
+													if ((time - _rIdleAt) >= _idleSecs) then {
+														_rh setVariable ["wfbe_aicom_air_idle_action", true];
+														_rh setVariable ["wfbe_aicom_air_idle_at", nil];
+														[_rh, _team, _sd] Spawn {
+															private ["_h","_tm","_sd","_recheckBusy","_recheckAirborne","_recheckEngaged","_recheckEnRoute","_recheckOrder","_recheckDest"];
+															_h = _this select 0; _tm = _this select 1; _sd = _this select 2;
+															_recheckBusy = false;
+															_recheckAirborne = false;
+															_recheckEngaged = false;
+															_recheckEnRoute = false;
+															if (!isNull _h && {alive _h} && {!isNull _tm}) then {
+																if (_h getVariable ["wfbe_aicom_transport", false]) then {
+																	{if (alive _x && {(vehicle _x) == _h} && {_x != (driver _h)} && {_x != (gunner _h)} && {_x != (commander _h)}) then {_recheckBusy = true}} forEach (units _tm);
+																};
+																_recheckAirborne = !isNil {_tm getVariable "wfbe_aicom_airborne_until"} && {(_tm getVariable "wfbe_aicom_airborne_until") > time};
+																_recheckEngaged = ({alive _x && {behaviour _x == "COMBAT"}} count (crew _h)) > 0;
+																_recheckOrder = _tm getVariable "wfbe_aicom_order";
+																if (!isNil "_recheckOrder" && {count _recheckOrder >= 3}) then {
+																	_recheckDest = _recheckOrder select 2;
+																	if (typeName _recheckDest == "ARRAY" && {(_h distance _recheckDest) > (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250])}) then {_recheckEnRoute = true};
+																};
+																if (!_recheckBusy && {!_recheckAirborne} && {!_recheckEngaged} && {!_recheckEnRoute} && {({alive _x && {isPlayer _x}} count (crew _h)) == 0}) then {[_h, _tm, _sd] Call WFBE_CO_FNC_AICOMAirReturn};
+																_h setVariable ["wfbe_aicom_air_idle_at", nil];
+															};
+															if (!isNull _h) then {_h setVariable ["wfbe_aicom_air_idle_action", nil]};
+														};
+													};
+												};
+											};
+										};
 							} else {
-								_rh setVariable ["wfbe_heli_baseidle_at", nil];
+								_rh setVariable ["wfbe_aicom_air_idle_at", nil];
 							};
 						};
-					} forEach _reapVehs;
+					} else {
+						_rh setVariable ["wfbe_heli_baseidle_at", nil];
+						_rh setVariable ["wfbe_aicom_air_idle_at", nil];
+					};
 				};
-			};
+			} forEach _reapVehs;
 		};
+	};
+	};
 	};
 	}; //--- B66 end if (_hasAttackHeli)
 };
