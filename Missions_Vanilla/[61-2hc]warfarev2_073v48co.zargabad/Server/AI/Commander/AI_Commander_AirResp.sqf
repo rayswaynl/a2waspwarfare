@@ -38,6 +38,17 @@
 	wfbe_aicom2_airresp_lane (current sensed lane town), wfbe_aicom2_airresp_flights (array of [grp, heli,
 	laneTown, t0] for each live response flight; server-local, no broadcast needed - the watchdog thread that reads
 	it runs server-side same as this script). Telemetry AICOM2|v1|AIRRESP.
+
+	PERF: POS-CACHE (Grok idea #7, claude/u2-airresp-poscache, flag WFBE_C_AICOM_AIRRESP_POS_CACHE default 0):
+	the sense pass below (SS2.2) issues one nearEntities spatial query per candidate lane town, every strategy
+	tick, per side. Flag off = that path runs verbatim (byte-identical to HEAD). Flag on = this closer snapshots
+	the enemy side's qualifying entity positions ONCE at entry (this script itself already runs exactly once per
+	strategy tick) and every candidate distance-tests against that cached array instead of re-querying the
+	engine per candidate. Same qualifying-entity definition (dismounted enemy Man = its own entity; a crewed
+	LandVehicle/Air = one entity, deduped by vehicle) and the same SENSE_RADIUS cutoff as the nearEntities path,
+	so engagement rules/target selection are unchanged - only the scan mechanism differs. Staleness within one
+	tick (<100m of player movement at the ~60s cadence) is accepted by design.
+
 	A2-OA-safe: private string-array only; no inline private _x=; no GROUP 2-arg getVariable; no NSSETVAR3; no A3
 	commands; >0 numeric-flag guards; if/else booleans (no ==/!= on Bool); outer _x captured into a named local
 	before every inner forEach/count block.
@@ -47,6 +58,7 @@ private ["_side","_logik","_snap","_sideID","_sideText","_enemySide","_enemyID",
 	"_enable","_senseRadius","_senseInterval","_senseChance","_maxAir","_loiterTime","_minTowns",
 	"_senseTick","_sensed","_laneTown","_flightsIn","_flights","_f","_fg","_fh",
 	"_tgtTowns","_ownTowns","_cands","_x2","_lanePos","_nearCount","_bestTown","_bestCount","_inRange",
+	"_posCacheOn","_entPositions","_seenVeh","_ePlayer","_eVeh",
 	"_rollNow","_covered","_airAlive","_airSideOK","_hasAirFactory","_afStructNames","_afStructs","_afStructIdx","_afStructClass","_upgrades","_airOK","_townsOK","_canDispatch","_dispatched","_skipReason",
 	"_airList","_attackClasses","_pilotClass","_ang","_spawnPos","_class","_special","_heli","_grp","_pilot",
 	"_elMin"];
@@ -111,11 +123,46 @@ _cands = [];
 //--- sibling detectors in this codebase (AI_Commander_Strategy.sqf/AssignTowns/Paratroops all scan
 //--- ["Man","LandVehicle","Air"]); unlike those siblings (which just check side _x), AIRRESP specifically
 //--- needs a PLAYER present, so a vehicle only counts if a live enemy player is in its crew.
+//--- claude/u2-airresp-poscache (flag WFBE_C_AICOM_AIRRESP_POS_CACHE, default 0 = byte-identical to HEAD, the
+//--- nearEntities branch below runs verbatim): AirResp runs exactly ONCE per commander strategy tick (the
+//--- _ltStrat gate in AI_Commander.sqf calls this closer a single time each pass), so when armed this builds
+//--- ONE snapshot of the enemy side's qualifying entity positions right here at closer entry, then every
+//--- candidate in the loop below distance-tests against that cached array instead of issuing its own
+//--- nearEntities spatial query. SAME qualifying-entity definition as the nearEntities path: a dismounted
+//--- enemy Man is its own entity; a LandVehicle/Air with >=1 live enemy player in its crew is ONE entity
+//--- (deduped by vehicle so a multi-player crew still counts once, matching the nearEntities branch's
+//--- entity-count semantics exactly) - and the SAME _senseRadius cutoff, so target selection (which candidate
+//--- has the most in-range qualifying entities) is unchanged; only the scan mechanism differs. The cache is
+//--- built once per tick, so up to one tick's worth of player movement (<100m at the ~60s strategy cadence)
+//--- can go unrefreshed within that tick - acceptable staleness by design (spec).
+_posCacheOn = (missionNamespace getVariable ["WFBE_C_AICOM_AIRRESP_POS_CACHE", 0]) > 0;
+_entPositions = [];
+if (_posCacheOn) then {
+	_seenVeh = [];
+	{
+		if (isPlayer _x && {alive _x} && {(side _x) == _enemySide}) then {
+			_ePlayer = _x;
+			_eVeh = vehicle _ePlayer;
+			if (_eVeh == _ePlayer) then {
+				_entPositions = _entPositions + [getPos _ePlayer];
+			} else {
+				if (!(_eVeh in _seenVeh)) then {
+					_seenVeh = _seenVeh + [_eVeh];
+					_entPositions = _entPositions + [getPos _eVeh];
+				};
+			};
+		};
+	} forEach playableUnits;
+};
 _bestTown = objNull; _bestCount = 0;
 {
 	_x2 = _x;
 	_lanePos = getPos _x2;
-	_nearCount = {if (_x isKindOf "Man") then {isPlayer _x && {alive _x} && {(side _x) == _enemySide}} else {({isPlayer _x && {alive _x} && {(side _x) == _enemySide}} count (crew _x)) > 0}} count (_lanePos nearEntities [["Man","LandVehicle","Air"], _senseRadius]);
+	_nearCount = if (_posCacheOn) then {
+		{(_lanePos distance _x) < _senseRadius} count _entPositions
+	} else {
+		{if (_x isKindOf "Man") then {isPlayer _x && {alive _x} && {(side _x) == _enemySide}} else {({isPlayer _x && {alive _x} && {(side _x) == _enemySide}} count (crew _x)) > 0}} count (_lanePos nearEntities [["Man","LandVehicle","Air"], _senseRadius])
+	};
 	if (_nearCount > _bestCount) then {_bestCount = _nearCount; _bestTown = _x2};
 } forEach _cands;
 _inRange = _bestCount > 0;
