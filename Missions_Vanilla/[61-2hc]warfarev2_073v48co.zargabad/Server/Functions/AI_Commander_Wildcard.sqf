@@ -79,7 +79,7 @@
 */
 
 private ["_side","_logik","_sideID","_interval","_enabled","_humanCmdWEST","_humanCmdEAST",
-         "_bothHuman","_cmdTeam","_hq","_sideText","_jitter","_humanCmd","_skipAI","_wcCost","_wcCool","_wcKey","_wcLast","_wcFunds"];
+         "_bothHuman","_cmdTeam","_hq","_sideText","_jitter","_humanCmd","_skipAI","_humanWildcardBuy","_wcCost","_wcCool","_wcKey","_wcLast","_wcFunds"];
 
 _side    = _this;
 _logik   = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -159,12 +159,14 @@ while {!gameOver} do {
 		//--- PURCHASE GATE (WFBE_C_AI_COMMANDER_WILDCARD_COST > 0, claude-gaming 2026-07-07):
 		//--- wildcards become a paid AI-commander action - the side spends wfbe_aicom_funds per draw
 		//--- and may draw at most once per WFBE_C_AI_COMMANDER_WILDCARD_COOLDOWN seconds (30 min).
-		//--- AI-commander only for now: a HUMAN-commanded side has no buy path yet, so under the
-		//--- purchase model it gets NO auto-draw (the old free human-side draw is gated off here).
+		//--- Human-commanded sides remain on the legacy skip when WFBE_C_AI_COMMANDER_WILDCARD_HUMAN_BUY=0.
+		//--- When that opt-in flag is armed, they reuse this same server-side purchase/cooldown path
+		//--- and pay from the separate AICOM treasury used by hybrid quartermaster refills.
 		//--- COST == 0 (default) leaves every branch below inert -> behaviour identical to legacy.
 		_wcCost = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_COST", 0];
+		_humanWildcardBuy = (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_WILDCARD_HUMAN_BUY", 0]) > 0;
 		if (!_skipAI && {_wcCost > 0}) then {
-			if (_humanCmd) then {
+			if (_humanCmd && {!_humanWildcardBuy}) then {
 				["INFORMATION", Format ["AI_Commander_Wildcard.sqf: draw skipped for %1 - purchase model (COST=%2), human commander has no buy path yet", _sideText, _wcCost]] Call WFBE_CO_FNC_AICOMLog;
 				_skipAI = true;
 			} else {
