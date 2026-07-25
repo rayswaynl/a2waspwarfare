@@ -176,6 +176,25 @@ WFBE_STRUCT_REFUND = {
 		_amt Call ChangePlayerFunds;
 	};
 };
+WFBE_STRUCT_LIVE_ROLLBACK = {
+	//--- base-building bughunt (mission-core r11): roll back the OPTIMISTIC client-side
+	//--- wfbe_structures_live increment (coin_interface.sqf On-Construct) when the server
+	//--- REJECTS the build (CBR-needs-AAR / CBR/AAR/Bank already-built / pending-race /
+	//--- Bank-too-close). Without this the per-type live count stays inflated forever, so a
+	//--- single rejected CBRadar/AARadar/Bank permanently trips the client CanBuild limit gate
+	//--- and the type becomes unbuildable side-wide. _this = STRUCTURENAMES index (server _index);
+	//--- the live array is stored at (index - 1), mirroring the increment/kill/base-sell idiom.
+	private ["_i","_slot","_live"];
+	_i = _this;
+	if (isNil "_i" || {typeName _i != "SCALAR"}) exitWith {};
+	_slot = _i - 1;
+	if (_slot < 0) exitWith {};
+	if (isNil "WFBE_Client_Logic" || {isNull WFBE_Client_Logic}) exitWith {};
+	_live = WFBE_Client_Logic getVariable "wfbe_structures_live";
+	if (isNil "_live" || {typeName _live != "ARRAY"} || {_slot >= count _live}) exitWith {};
+	_live set [_slot, ((_live select _slot) - 1) max 0];
+	WFBE_Client_Logic setVariable ["wfbe_structures_live", _live, true];
+};
 CommandChatMessage = Compile preprocessFile "Client\Functions\Client_CommandChatMessage.sqf";
 FX = Compile preprocessFile "Client\Functions\Client_FX.sqf";
 GetIncome = Compile preprocessFile "Client\Functions\Client_GetIncome.sqf";
