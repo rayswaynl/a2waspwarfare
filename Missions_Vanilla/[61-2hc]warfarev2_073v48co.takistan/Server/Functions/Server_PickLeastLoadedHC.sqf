@@ -39,15 +39,25 @@ private ["_hcs", "_live", "_owners", "_counts", "_o", "_idx", "_bestLoad", "_tie
 	"_town", "_stickyOn", "_stickyOwner", "_stickyTs", "_stickyWindow", "_stickyIdx",
 	"_stickyLoad", "_totalLoad", "_maxRatio"];
 
-//--- Optional town argument: safe against BOTH the existing unary `Call ...` sites (where _this is
-//--- undefined - isNil "_this" catches that without erroring) and the new `[_town] Call ...` site.
-//--- All callers pass either nothing (unary) or a 1-element array, so `count _this` never needs an
-//--- A3-only isEqualType type-check to stay safe here.
+//--- Optional town argument. A unary `Call ...` does NOT clear _this: the called scope INHERITS
+//--- the CALLER's _this. AI_Commander_Teams.sqf's own _this IS the side, and the town / static-
+//--- defence / side-patrol callers hold arrays whose element 0 is a side - so `isNil "_this"` is
+//--- FALSE at every unary call site and the reads below threw there (`count _this` -> "Type Side,
+//--- expected Array,Config entry"; `isNull (_this select 0)` -> "Type Side, expected Object,..."),
+//--- aborting this picker before it ever selected an HC. It then returned nil, and
+//--- Common_SendToClient.sqf's `owner (_pvf select 0)` read 0 for that nil target and DROPPED the
+//--- delegation. Live wave0725c 2026-07-26: 121/121 SendToClient HandleSpecial sends dropped, zero
+//--- `delegate-aicom-team` ever reached an HC, every HCDISPATCH aged out to ack-timeout and both
+//--- commanders sat at foundedTeams=0 with ~520k unspent funds for the whole match.
+//--- Guard on typeName (A2-OA-safe; the A3-only isEqualType is banned in this fork) AND only parse
+//--- the argument when the sticky feature is actually armed, so flag-off is genuinely byte-
+//--- identical to the pre-sticky always-argmin behaviour the header above promises.
+_stickyOn = (missionNamespace getVariable ["WFBE_C_HC_DELEGATE_STICKY", 0]) > 0;
 _town = objNull;
-if !(isNil "_this") then {
-	if (count _this > 0) then {
-		if (!isNull (_this select 0)) then {_town = _this select 0};
-	};
+if (_stickyOn && {!isNil "_this"} && {typeName _this == "ARRAY"} && {count _this > 0}) then {
+	private ["_t0"];
+	_t0 = _this select 0;
+	if (typeName _t0 == "OBJECT" && {!isNull _t0}) then {_town = _t0};
 };
 
 _hcs = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
@@ -90,7 +100,8 @@ _counts = []; //--- parallel array: current owned-unit count for that owner id
 //--- STICKY: reuse the tally just taken above (no extra allUnits scan) to see whether this town's
 //--- previously-delegated HC is still a valid pick. Byte-identical no-op when the flag is 0 or no
 //--- town was passed in (_stickyIdx stays -1, both `if`s below never enter their then-block).
-_stickyOn = (missionNamespace getVariable ["WFBE_C_HC_DELEGATE_STICKY", 0]) > 0;
+//--- _stickyOn is resolved in the argument prologue at the top of this file (it now gates the
+//--- optional-argument parse as well), so it is not re-read here.
 _stickyIdx = -1;
 if (_stickyOn && {!isNull _town}) then {
 	_stickyOwner = _town getVariable ["wfbe_town_hc_owner", -1];
