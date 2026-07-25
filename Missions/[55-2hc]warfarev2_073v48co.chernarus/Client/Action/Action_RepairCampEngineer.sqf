@@ -76,7 +76,9 @@ if (alive (_camp getVariable 'wfbe_camp_bunker')) exitWith {
 };
 
 //--- Repair order is sent to the server.
-["RequestSpecial", ["repair-camp", _camp, WFBE_Client_SideID]] Call WFBE_CO_FNC_SendToServer;
+//--- harden-repair-camp (2026-07-25): now sends `player` too so the server can verify the requester
+//--- is a live player, near the camp, and actually of the claimed repair side (RequestSpecial.sqf).
+["RequestSpecial", ["repair-camp", _camp, WFBE_Client_SideID, player]] Call WFBE_CO_FNC_SendToServer;
 
 sleep 4;
 
