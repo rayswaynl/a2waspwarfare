@@ -661,6 +661,12 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 	_idx = _names find _x;
 	if (_idx >= 0) then {
 		_class = _classes select _idx;
+		//--- fix(aicom-econ-buildorder): capture the order TYPE-KEY. The OBEY_BUILD_LIMITS count and the _have forEach below
+		//--- rebind _x to STRUCTURE OBJECTS (shared script scope), so every _x read after them saw the last structure, not the
+		//--- type string: ServicePoint road placement, mode-2 road-spaced factory placement and the factory-rally stamp never fired,
+		//--- and the wfbe_aicom_built_ pending guard keyed on str(object) - a duplicate supply charge whenever two builds overlapped.
+		//--- Same trap the FWDBASE pass already guards against below (_ord = _x capture). A2-OA trap: inner forEach/count rebinds _x.
+		private "_ordType"; _ordType = _x;
 		//--- BUILD-LIMIT + BASE CAP (Ray 2026-06-24, directives #1 + #4): obey the SAME per-type structure caps as
 		//--- human players. _x here is the TYPE KEY (the order list + _names = WFBE_%1STRUCTURES are type keys, not
 		//--- model names), and wfbe_structure_type on each built site == that same type key (set as _rlType in
@@ -712,7 +718,7 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 		_baseR = missionNamespace getVariable ["WFBE_C_AICOM_BASE_RADIUS", 450];
 		{ if (typeOf _x == _class && {alive _x} && {(!_rebaseLocal) || {((getPos _x) distance _hqPos) <= _baseR}}) exitWith {_have = true} } forEach _structures;
 		if (!_have) then {
-			if (time - (_logik getVariable [Format ["wfbe_aicom_built_%1", _x], -1e6]) < 300) then {_have = true};
+			if (time - (_logik getVariable [Format ["wfbe_aicom_built_%1", _ordType], -1e6]) < 300) then {_have = true};
 		};
 		if (!_have) exitWith {
 			_cost = _costs select _idx;
@@ -720,7 +726,7 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				//--- ServicePoint wants to sit ON a road (repair/refuel access); fall back to ring.
 				_pos = [0,0,0];
 				_placed = false;
-				if (_x == "ServicePoint") then {
+				if (_ordType == "ServicePoint") then {
 					//--- AICOM v2 (Ray 2026-06-27): place the Service Point BESIDE a road (near-road mode: offset off
 					//--- the carriageway + road-rejected), NOT ON a road node. The old code set _pos = getPos roadNode,
 					//--- so the SP sat ON the road (Ray report). Vehicles still reach it; it no longer blocks the lane.
@@ -733,7 +739,7 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				//--- points don't stack at one HQ angle. Everything else (CC/Bank/CBR) keeps OFF-road placement.
 				//--- Barracks was previously OFF-road; it is now road-spaced too (it IS a respawn point).
 				if (!_placed) then {
-					if (_x in ["Barracks","Light","Heavy","Aircraft"]) then {
+					if (_ordType in ["Barracks","Light","Heavy","Aircraft"]) then {
 						//--- B67 + req #2: widen the outer ring as the side accumulates spawn-point factories so each
 						//--- successive one has fresh road frontage to step onto (the FULL 45m spacing gate clears
 						//--- far more often -> the no-overlap floor stays a rare last resort). +35m per existing
@@ -746,8 +752,8 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 						_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110])] Call _findBuildPos;
 					};
 				};
-				if (_dual) then {[_side, -_cost, Format ["AI commander base construction (%1).", _x], false] Call ChangeSideSupply};
-				_logik setVariable [Format ["wfbe_aicom_built_%1", _x], time];
+				if (_dual) then {[_side, -_cost, Format ["AI commander base construction (%1).", _ordType], false] Call ChangeSideSupply};
+				_logik setVariable [Format ["wfbe_aicom_built_%1", _ordType], time];
 				_script = _scripts select _idx;
 				//--- AICOM v2 (Ray, deliberate layout): face structures toward the FRONT (HQ->spearhead bearing) so
 				//--- spawn pads / doors point at the egress instead of a random spin. Falls back to random if no front.
@@ -766,7 +772,7 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 				//--- the not-yet-alive factory object now; a short watcher waits for the built
 				//--- _site to register at _pos, then writes wfbe_aicom_factory_rally onto it for
 				//--- the server buy path (Server_BuyUnit) to commandMove new units toward.
-				if (_x in ["Light","Heavy","Aircraft"]) then {
+				if (_ordType in ["Light","Heavy","Aircraft"]) then {
 					_factoryRally = [_side, _logik, _pos] Spawn {
 						private ["_side","_logik","_pos","_targets","_target","_tgtPos","_rally","_dx","_dy","_dist","_egX","_egY","_egN","_site","_wait"];
 						_side = _this select 0; _logik = _this select 1; _pos = _this select 2;
@@ -830,12 +836,12 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 						};
 					};
 				};
-				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] building %2 at %3 (cost %4 supply, doctrine %5, branch-out %6).", _sideText, _x, _pos, _cost, _doctrine, _coreDone]] Call WFBE_CO_FNC_AICOMLog;
+				["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] building %2 at %3 (cost %4 supply, doctrine %5, branch-out %6).", _sideText, _ordType, _pos, _cost, _doctrine, _coreDone]] Call WFBE_CO_FNC_AICOMLog;
 				//--- STRUCTURE cost/currency telemetry (claude-gaming 2026-06-15): Steff saw "the AI
 				//--- comms upgraded buildings and such" - surface the base-building SPEND. Structures
 				//--- are paid from supply when the dual-currency economy is on (_dual); otherwise the
 				//--- supply deduction is skipped (free). Rides the existing per-structure build event.
-				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRUCTURE_BUILT|struct=" + _x + "|cost=" + str _cost + "|paidBy=" + (if (_dual) then {"supply"} else {"free"}) + "|branchOut=" + str _coreDone);
+				diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|STRUCTURE_BUILT|struct=" + _ordType + "|cost=" + str _cost + "|paidBy=" + (if (_dual) then {"supply"} else {"free"}) + "|branchOut=" + str _coreDone);
 			};
 		};
 		}; //--- end if (!_capped)
