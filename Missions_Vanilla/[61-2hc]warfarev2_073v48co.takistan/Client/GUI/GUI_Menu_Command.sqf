@@ -757,7 +757,7 @@ while {alive player && dialog} do {
 			} else {
 				if ((_now - _disbandArm) <= 5) then {
 					_disbandArm = -1000;
-					["RequestSpecial", ["aicom-team-disband", sideJoined]] Call WFBE_CO_FNC_SendToServer;
+					["RequestSpecial", ["aicom-team-disband", sideJoined, player]] Call WFBE_CO_FNC_SendToServer;
 					hintSilent parseText "<t color='#F89060'>Disband order sent - all AI field teams will stand down where safe.</t>";
 				} else {
 					_disbandArm = _now;
@@ -795,7 +795,7 @@ while {alive player && dialog} do {
 					} else {
 						if ((_now - _disbandSelArm) <= 5) then {
 							_disbandSelArm = -1000;
-							["RequestSpecial", ["aicom-team-disband", sideJoined, _tIdx]] Call WFBE_CO_FNC_SendToServer;
+							["RequestSpecial", ["aicom-team-disband", sideJoined, _tIdx, player]] Call WFBE_CO_FNC_SendToServer;
 							hintSilent parseText (format ["<t color='#F89060'>Disband order sent - %1 will stand down where safe.</t>", (name (leader _selTeam))]);
 						} else {
 							_disbandSelArm = _now;
@@ -839,7 +839,7 @@ while {alive player && dialog} do {
 							private ["_vSpecial","_vLabel"];
 							_vSpecial = switch (_vb) do {case 727:{"aicom-rally"};case 728:{"aicom-refit"};default{"aicom-hold"}};
 							_vLabel   = switch (_vb) do {case 727:{"Rally"};case 728:{"Refit"};default{"Hold"}};
-							["RequestSpecial", [_vSpecial, sideJoined, _vIdx]] Call WFBE_CO_FNC_SendToServer;
+							["RequestSpecial", [_vSpecial, sideJoined, _vIdx, player]] Call WFBE_CO_FNC_SendToServer;
 							_lastSend = _now;      //--- still stamp _lastSend (brain send costs server work)
 							_lastDirect = _now;    //--- also stamp _lastDirect so rapid re-press is throttled
 							hintSilent parseText (format ["<t color='#A0E060'>%1 order sent - %2.</t>", _vLabel, (name (leader _selTeam))]);
