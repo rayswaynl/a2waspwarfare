@@ -296,7 +296,20 @@ while {!WFBE_GameOver} do {
 					_p = _this select 3;
 					_gu = _this select 4;
 					_h = _this select 5;
-					if (isNull _v || {!(alive _v)}) exitWith {};
+					//--- fix(codex-hold 2026-07-25): the registry slot for this hull was already freed THIS
+					//--- tick by the caller (identical to the immediate-delete path), so if the hull died
+					//--- between being scheduled and this thread actually starting, bailing out with a bare
+					//--- exitWith left crew+group untracked by BOTH this thread and the maintain sweep -
+					//--- untracked survivors / an empty-group leak. Run the SAME player-safe teardown the
+					//--- full path uses below (pilot/gunner by direct reference, hull crew + hull if no
+					//--- player aboard, group only once it holds no living unit), THEN exit.
+					if (isNull _v || {!(alive _v)}) exitWith {
+						if (!isNull _p && {!(isPlayer _p)}) then { ["guerairdef-flyaway-pilot-earlydead", _p, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _p; };
+						if (!isNull _gu && {!(isPlayer _gu)}) then { ["guerairdef-flyaway-gunner-earlydead", _gu, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gu; };
+						if (!isNull _v && {({isPlayer _x} count (crew _v)) == 0}) then { {["guerairdef-flyaway-unit-earlydead", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _v); ["guerairdef-flyaway-hull-earlydead", _v, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _v; };
+						if (!isNull _g && {({alive _x} count (units _g)) == 0}) then { deleteGroup _g; };
+						diag_log format ["GUERAIRDEF|FLYAWAYDESPAWN-EARLYDEAD|town=%1", (if (isNull _t) then {"?"} else {_t getVariable ["name","?"]})];
+					};
 
 					//--- Bearing AWAY from the town = the hull's current bearing FROM the town center,
 					//--- extended ~2km outward (a stable outward heading, not a moving target). Falls
