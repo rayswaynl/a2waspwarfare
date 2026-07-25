@@ -119,6 +119,29 @@ while {!gameOver} do {
 		} forEach WFBE_PRESENTSIDES - [WFBE_DEFENDER];
 	};
 
+	//--- Territorial victory HUD (default-off): publish one small server-authored snapshot on
+	//--- the existing victory tick. publicVariable is repeated so A2-OA joiners converge despite
+	//--- publicVariable not being JIP-replayed. Payload = [leading side ID, authoritative end time].
+	if ((missionNamespace getVariable ["WFBE_C_TERRITORIAL_HUD", 0]) > 0) then {
+		private ["_terrHud","_terrHudSid","_terrHudStart","_terrHudEnd","_terrHudMins"];
+		_terrHud = [];
+		_terrHudMins = missionNamespace getVariable ["WFBE_C_VICTORY_TERRITORIAL_MINS", 30];
+		if ((missionNamespace getVariable ["WFBE_C_VICTORY_TERRITORIAL", 1]) > 0 && {_total > 0}) then {
+			{
+				_terrHudSid = (_x) Call WFBE_CO_FNC_GetSideID;
+				_terrHudStart = missionNamespace getVariable [Format ["WFBE_TERRITORIAL_CLOCK_%1", _terrHudSid], -1];
+				if (_terrHudStart >= 0) then {
+					_terrHudEnd = _terrHudStart + (_terrHudMins * 60);
+					if (_terrHudEnd > time && {(count _terrHud == 0 || {_terrHudEnd < (_terrHud select 1)})}) then {
+						_terrHud = [_terrHudSid, _terrHudEnd];
+					};
+				};
+			} forEach WFBE_PRESENTSIDES - [WFBE_DEFENDER];
+		};
+		WFBE_TERRITORIAL_HUD = _terrHud;
+		publicVariable "WFBE_TERRITORIAL_HUD";
+	};
+
 	if (!gameOver) then {
 		{
 			_side = _x;
