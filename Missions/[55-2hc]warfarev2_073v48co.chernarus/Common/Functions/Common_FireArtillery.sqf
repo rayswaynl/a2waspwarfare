@@ -72,8 +72,10 @@ sleep (10 + random 4);
 
 if !(alive _gunner) exitWith {
 	if !(isNull _artillery) then {
-		_artillery removeEventHandler ['Fired',_FEH];
+		//--- Remove the higher-index CBR EH FIRST: A2 removeEventHandler re-indexes later EHs
+		//--- down, so pulling _FEH first shifts _CBREH's stored index and leaks the CBR handler.
 		if (_CBREH >= 0) then {_artillery removeEventHandler ['Fired',_CBREH]};
+		_artillery removeEventHandler ['Fired',_FEH];
 		if (alive _artillery) then {
 			if (alive (driver _artillery)) then {{(driver _artillery) enableAI _x} forEach ['MOVE','TARGET','AUTOTARGET']};
 			_artillery setVariable ["restricted",false];
@@ -94,8 +96,9 @@ for '_i' from 1 to _burst do {
 sleep 1;
 
 if !(isNull _artillery) then {
-	_artillery removeEventHandler ['Fired',_FEH];
+	//--- Remove _CBREH (higher index) before _FEH; A2 re-indexes EHs on removal (see teardown note above).
 	if (_CBREH >= 0) then {_artillery removeEventHandler ['Fired',_CBREH]};
+	_artillery removeEventHandler ['Fired',_FEH];
 };
 
 sleep (_reloadTime + 20);
