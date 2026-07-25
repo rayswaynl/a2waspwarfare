@@ -366,7 +366,7 @@ while {true} do {
 
 					_crewText = "";
 					{
-						_unitText = _x Call GetAIDigit;
+						_unitText = _x Call WFBE_CO_FNC_GetUnitSlotDigit;
 						if (_crewText == "") then {
 							_crewText = _unitText;
 						} else {
@@ -376,7 +376,7 @@ while {true} do {
 
 					_cargoText = "";
 					{
-						_unitText = _x Call GetAIDigit;
+						_unitText = _x Call WFBE_CO_FNC_GetUnitSlotDigit;
 						if (_cargoText == "") then {
 							_cargoText = _unitText;
 						} else {
