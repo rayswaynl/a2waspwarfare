@@ -115,6 +115,17 @@ switch (_request) do {
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};
+	//--- Field Hospital is broadcast by the server, but each locality owner applies only its own AI.
+	case "aicom-field-hospital": {
+		Private ["_fhSide","_fhUnits"];
+		if (count _args < 2) exitWith {};
+		_fhSide = _args select 0;
+		_fhUnits = _args select 1;
+		if (typeName _fhUnits != "ARRAY") exitWith {};
+		{
+			if (!isNull _x && {local _x} && {alive _x} && {!isPlayer _x} && {_x isKindOf "Man"} && {side _x == _fhSide} && {damage _x > 0.05}) then {_x setDamage 0};
+		} forEach _fhUnits;
+	};
 	//--- Explicit commander disband is delivered to the leader owner instead of depending only on the
 	//--- original founding driver still being alive. Keep the combat veto; the public command stamp is
 	//--- server-written and prevents this shared PV handler from acting on an arbitrary group.
