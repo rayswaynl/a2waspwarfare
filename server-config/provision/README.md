@@ -57,9 +57,23 @@ the 2-HC baseline so soak numbers stay comparable; affinity is layered on top.
 
 ## Gotchas
 
-- **Do not start these scripts over a bare SSH session** — Windows sshd kills detached
-  children when the session closes. Use the RDP console, or register a one-shot
-  scheduled task: `schtasks /create /tn WASP-Start4HC /sc once /st 23:59 /tr "powershell -ExecutionPolicy Bypass -File C:\WASP\provision\Start-Wasp-4HC.ps1" /rl highest /f` then `schtasks /run /tn WASP-Start4HC`.
+- **HCs are GUI game clients — they need an interactive desktop session.** Two failure
+  modes to avoid (wiki: HC-Scaling field notes): (a) a bare SSH session — sshd kills
+  detached children on disconnect; (b) a non-interactive (Session-0) scheduled task —
+  the HC process may start but **never register** (`connected-hc` never fires; task may
+  error `0x80070520`). Start `Start-Wasp-4HC.ps1` from the RDP console, or use an
+  interactive-only task while the console user is logged on:
+  `schtasks /create /tn WASP-Start4HC /sc once /st 23:59 /it /rl highest /f /tr "powershell -ExecutionPolicy Bypass -File C:\WASP\provision\Start-Wasp-4HC.ps1"`
+  then `schtasks /run /tn WASP-Start4HC` (keep the RDP session connected until HCs register).
+- **Health truth = registration telemetry, not process count.** A live process can be
+  unregistered. `Verify-4HC.ps1` checks HCSIDE owner registrations; once towns activate,
+  the `[Performance Audit] delegate_townai_headless ... headless:N` RPT rows are the
+  authoritative pool count. Registration lags process start by ~1-3 min (Init_HC sleeps
+  20 s after mission load) — do not judge earlier.
+- **Known log-spam bug to watch at 4 HCs**: ~20k "Message not sent - error 0
+  ID=ffffffff" lines per round to stale HC handles are a known server bug on 2 HCs.
+  Watch server RPT growth rate during the soak; if it scales with HC count, cap soak
+  length or rotate the RPT between runs.
 - Steam Guard: have the e-mail/authenticator for each HC account ready at step 5 —
   that is the whole manual step.
 - The server runs `-malloc=mimalloc`, HCs `-malloc=tbb4malloc_bi`; both DLLs ride along

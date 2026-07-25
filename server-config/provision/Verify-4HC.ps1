@@ -81,6 +81,16 @@ if ($null -eq $rpt) {
     $owners = @($connects | ForEach-Object { if ($_ -match 'owner=(\d+)') { $matches[1] } } | Sort-Object -Unique)
     Check ($owners.Count -ge 4) ("4 distinct HC owner ids registered after last MISSINIT") ("(distinct owners: {0}; connect lines: {1}; failed/deferred: {2})" -f $owners.Count, $connects.Count, $deferred.Count)
     if ($deferred.Count -gt 0) { Write-Host ("NOTE: {0} failed/deferred HC registration line(s) - re-check after the HC reannounce." -f $deferred.Count) }
+    # Soft check: once towns activate, delegate_townai_headless perf-audit rows carry the
+    # authoritative live-pool size (headless:N). Informational until a delegation fires.
+    $deleg = @($window | Where-Object { $_ -match 'delegate_townai_headless' }) | Select-Object -Last 1
+    if ($null -ne $deleg -and $deleg -match 'headless:(\d+)') {
+        $poolN = [Int]$matches[1]
+        if ($poolN -ge 4) { Write-Host ("INFO: delegation pool headless:{0} - all HCs live at last town delegation." -f $poolN) }
+        else { Write-Host ("WARN: last town delegation saw headless:{0} (<4) - an HC was out of the pool at that moment." -f $poolN) }
+    } else {
+        Write-Host 'INFO: no delegate_townai_headless row yet (no town delegated in window) - pool-size check pending.'
+    }
 }
 
 Write-Host ''
