@@ -1144,7 +1144,7 @@ if (count _live > 0) then {
 	//--- the hull and its side crew, then Common_RunCommanderTeam performs the bounded
 	//--- cargo mount-up on the HC. GUER is explicitly excluded.
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_DOCTRINE_HF_MAIN", 0]) > 0 && {_side != resistance}) then {
-		private ["_mountType","_mountTemplateType","_mountEntry","_mountClass","_mountClassSeats","_mountSeats","_mountRiders","_mountNeed","_mountAdded","_mountIdx"];
+		private ["_mountType","_mountTemplateType","_mountEntry","_mountClass","_mountClassSeats","_mountSeats","_mountRiders","_mountNeed","_mountAdded","_mountIdx","_mountPool","_mountPoolIdx","_mountAddedClasses"];
 		_mountType = 0;
 		if (!isNil "_storedTypes" && {_pick < count _storedTypes}) then {
 			_mountType = _storedTypes select _pick;
@@ -1177,18 +1177,17 @@ if (count _live > 0) then {
 			_mountClass = "";
 			_mountClassSeats = 0;
 			_mountSeats = 0;
+			_mountPool = [];
 			_mountRiders = {_x isKindOf "Man"} count _template;
 			{
 				if ((typeName _x == "STRING") && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) > 0} && {((missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0) || {(count (getArray (configFile >> "CfgVehicles" >> _x >> "Turrets" >> "MainTurret" >> "weapons"))) > 0}}) then {
 					_mountSeats = _mountSeats + (getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier"));
-					if (_mountClass == "") then {
-						_mountClass = _x;
-						_mountClassSeats = getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier");
+					if !(_x in _mountPool) then {
+						_mountPool set [count _mountPool, _x];
 					};
 				};
 			} forEach _template;
-			if (_mountClass == "") then {
-				if (count _templates > 0) then {
+			if (count _templates > 0) then {
 					for "_mountIdx" from 0 to ((count _templates) - 1) do {
 						_mountTemplateType = -1;
 						if (!isNil "_storedTypes" && {_mountIdx < count _storedTypes}) then {
@@ -1200,26 +1199,32 @@ if (count _live > 0) then {
 						};
 						if (_mountTemplateType == 1) then {
 							{
-								if (_mountClass == "" && {(typeName _x == "STRING")} && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) > 0} && {((missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0) || {(count (getArray (configFile >> "CfgVehicles" >> _x >> "Turrets" >> "MainTurret" >> "weapons"))) > 0}}) then {
-									_mountClass = _x;
-									_mountClassSeats = getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier");
+								if ((typeName _x == "STRING") && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Car"} && {!(_x isKindOf "Wheeled_APC")} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) > 0} && {((missionNamespace getVariable ["WFBE_C_AICOM_ARMED_TRANSPORT_ONLY", 1]) <= 0) || {(count (getArray (configFile >> "CfgVehicles" >> _x >> "Turrets" >> "MainTurret" >> "weapons"))) > 0}}) then {
+								if !(_x in _mountPool) then {
+									_mountPool set [count _mountPool, _x];
 								};
+							};
 							} forEach (_templates select _mountIdx);
 						};
 					};
-				};
 			};
 			_mountNeed = _mountRiders * (missionNamespace getVariable ["WFBE_C_AICOM_MOUNT_MIN_SEAT_FRAC", 0.8]);
 			_mountAdded = 0;
-			if (_mountClass != "" && {_mountClassSeats > 0} && {_mountNeed > _mountSeats}) then {
+			_mountPoolIdx = 0;
+			_mountAddedClasses = [];
+			if (count _mountPool > 0 && {_mountNeed > _mountSeats}) then {
 				while {_mountSeats < _mountNeed} do {
+					_mountClass = _mountPool select (_mountPoolIdx mod (count _mountPool));
+					_mountClassSeats = getNumber (configFile >> "CfgVehicles" >> _mountClass >> "transportSoldier");
 					_template = _template + [_mountClass];
 					_mountSeats = _mountSeats + _mountClassSeats;
 					_mountAdded = _mountAdded + 1;
+					_mountAddedClasses set [count _mountAddedClasses, _mountClass];
+					_mountPoolIdx = _mountPoolIdx + 1;
 				};
-				["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HF-main mounted-light mix: template %2 added %3 existing light vehicle(s) [%4] for %5 infantry riders (cargo seats %6/%7).", _sideText, _pick, _mountAdded, _mountClass, _mountRiders, _mountSeats, _mountNeed]] Call WFBE_CO_FNC_AICOMLog;
+				["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HF-main mounted-light mix: template %2 added %3 existing light vehicle(s) %4 from %5 eligible class(es) for %6 infantry riders (cargo seats %7/%8).", _sideText, _pick, _mountAdded, _mountAddedClasses, count _mountPool, _mountRiders, _mountSeats, _mountNeed]] Call WFBE_CO_FNC_AICOMLog;
 			} else {
-				if (_mountClass == "" && {_mountRiders > 0}) then {
+				if (count _mountPool == 0 && {_mountRiders > 0}) then {
 					["WARNING", Format ["AI_Commander_Teams.sqf: [%1] HF-main mounted-light mix found no existing armed light-Car transport template for infantry template %2; founding remains unchanged.", _sideText, _pick]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
