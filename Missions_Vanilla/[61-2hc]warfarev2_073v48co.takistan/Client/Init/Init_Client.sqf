@@ -165,7 +165,6 @@ if (isNil "WFBE_LastDefenseChargeSupply") then {WFBE_LastDefenseChargeSupply = f
 //--- returns the pool the client charged (coin_interface.sqf structure block): side SUPPLY under
 //--- WFBE_C_ECONOMY_CURRENCY_SYSTEM == 0, else player FUNDS - same pool expression as the charge so
 //--- refund == charge exactly. _this = amount (>0). A2-OA-safe: getVariable / == / ChangeSideSupply|
-//--- ChangePlayerFunds only. (RadioTower charges cash but is never in the reject set.)
 WFBE_STRUCT_REFUND = {
 	private ["_amt"];
 	_amt = _this;
