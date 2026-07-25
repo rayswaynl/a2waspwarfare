@@ -426,7 +426,8 @@ while {alive player && dialog} do {
 		      + "   <t color='#85B5FA'>Supply:</t> " + str (round _supply)
 		      + "<br/><t color='#85B5FA'>Income:</t> $" + str (round _income) + "/tick"
 		      + "   <t color='#85B5FA'>Towns:</t> " + str _held + "/" + str _total;
-		if (_econ != _lastEcon) then {(_display displayCtrl 14600) ctrlSetStructuredText (parseText _econ); _lastEcon = _econ};
+		//--- ctrlSetStructuredText 14600 is DEFERRED to below the roster block: the WFBE_C_CMD_TEAM_STATUS
+		//--- strip (Grok idea #26) appends onto _econ once _selTeam is resolved, then does the single repaint.
 
 		//--- ----- ROSTER (14661): one row per AI-led team: "Squad type | Target | Alive" (Command Console v2,
 		//--- claude-gaming 2026-07-01, was "leader | role | town | order"). Squad type = the SAME INF/LGHT/HVY/AIR
@@ -555,6 +556,71 @@ while {alive player && dialog} do {
 		_selTeam = objNull;
 		private "_sel"; _sel = lbCurSel 14661;
 		if (_sel >= 0 && _sel < (count _cmdTeams)) then {_selTeam = _cmdTeams select _sel};
+
+		//--- ----- SELECTED-TEAM STATUS STRIP (Grok idea #26, flag WFBE_C_CMD_TEAM_STATUS default 0): one line
+		//--- appended to the economy header (14600, generous spare height below the 2-line econ text) showing
+		//--- the SELECTED roster team's current order type + target town, both from data the AI commander
+		//--- ALREADY broadcasts (wfbe_teammode/wfbe_teamgoto/wfbe_teamgoto_disp/wfbe_aicom_holding_town/
+		//--- wfbe_aicom_rallying are all set with the broadcast=true arg in Common_SetTeamMoveMode.sqf,
+		//--- Common_SetTeamMovePos.sqf and Common_RunCommanderTeam.sqf - the SAME vars the roster row label
+		//--- above already reads at lines ~471-522). wfbe_aicom_stuckstrikes is the ONE exception: its
+		//--- INCREMENTS (AI_Commander_AssignTowns.sqf, AI_Commander_Strategy.sqf) are plain LOCAL
+		//--- setVariable (no third `true` arg) - server-only, never synced to clients; the sole broadcast
+		//--- site is a reset-to-0 that is itself gated behind the separate default-0
+		//--- WFBE_C_AICOM_STUCK_REPAIR_RESETS_TIER flag. Per this round's scope (no new publicVariable
+		//--- traffic), this strip reads it anyway via the doctrinal GroupGetBool helper and shows WHATEVER IS
+		//--- available rather than adding a new broadcast: on a live server this will almost always read 0 -
+		//--- an honest "not currently escalated per available data" reading, not a fabricated live counter.
+		//--- Self-gates on its own flag: the WHOLE block is skipped at flag-off, so _econ (and therefore the
+		//--- 14600 repaint) is BYTE-IDENTICAL to pre-feature HEAD. Pure client read - zero server changes.
+		if ((missionNamespace getVariable ["WFBE_C_CMD_TEAM_STATUS", 0]) > 0 && {!isNull _selTeam}) then {
+			private ["_tsVerb","_tsTarget","_tsDisp","_tsGoto","_tsHold","_tsRally","_tsStrike","_tsMode","_tsStuck"];
+			//--- TARGET: same wfbe_teamgoto(_disp) resolve as the roster row above, scoped to _selTeam only.
+			//--- The inner nearest-town forEach rebinds _x to TOWN objects; _selTeam itself is never touched
+			//--- by that rebind (same clobber-avoidance the roster loop's _grp capture documents at line ~451).
+			_tsTarget = "auto";
+			_tsDisp = _selTeam getVariable "wfbe_teamgoto_disp";
+			if (!isNil "_tsDisp" && {typeName _tsDisp == "ARRAY"} && {count _tsDisp >= 2}) then {
+				_tsTarget = (_tsDisp select 1) + " (advancing)";
+			} else {
+				_tsGoto = _selTeam getVariable "wfbe_teamgoto"; if (isNil "_tsGoto") then {_tsGoto = objNull};
+				if (!isNil "_tsGoto") then {
+					if (typeName _tsGoto == "OBJECT") then {
+						if (!isNull _tsGoto) then {_tsTarget = _tsGoto getVariable ["name", "?"]};
+					} else {
+						if (typeName _tsGoto == "ARRAY" && {count _tsGoto >= 2} && {!isNil "towns"} && {count towns > 0}) then {
+							private ["_tsNearT","_tsNearD"]; _tsNearT = objNull; _tsNearD = 1e9;
+							{
+								private "_d"; _d = _tsGoto distance _x;
+								if (_d < _tsNearD) then {_tsNearD = _d; _tsNearT = _x};
+							} forEach towns;
+							if (!isNull _tsNearT) then {_tsTarget = _tsNearT getVariable ["name", "?"]};
+						};
+					};
+				};
+			};
+			//--- ORDER TYPE: same holding/rallying/strike/teammode priority as the roster row's _verb above,
+			//--- scoped to _selTeam. Plain single-arg getVariable + isNil on the GROUP receiver (the 2-arg
+			//--- [name,default] form is the G1 trap on groups - see WFBE_CO_FNC_GroupGetBool's own header).
+			_tsVerb = "towns";
+			_tsHold = _selTeam getVariable "wfbe_aicom_holding_town";
+			_tsRally = _selTeam getVariable "wfbe_aicom_rallying";
+			_tsStrike = _selTeam getVariable "wfbe_aicom_strike";
+			_tsMode = _selTeam getVariable "wfbe_teammode";
+			if (!isNil "_tsMode" && {typeName _tsMode == "STRING"}) then {
+				private "_tsModeL"; _tsModeL = toLower _tsMode;
+				if (_tsModeL == "move" || _tsModeL == "patrol" || _tsModeL == "defense") then {_tsVerb = _tsModeL};
+			};
+			if (!isNil "_tsStrike" && {_tsStrike}) then {_tsVerb = "strike"};
+			if (!isNil "_tsRally" && {_tsRally}) then {_tsVerb = "rally"};
+			if (!isNil "_tsHold" && {!isNull _tsHold}) then {_tsVerb = "hold"};
+			//--- STUCK-STRIKE COUNT: best-effort read-only (see the block comment above - almost always 0 live,
+			//--- by design, since we add no new broadcast to make it accurate).
+			_tsStuck = [_selTeam, "wfbe_aicom_stuckstrikes", 0] Call WFBE_CO_FNC_GroupGetBool;
+			_econ = _econ + "<br/><br/><t color='#F8D664'>Selected:</t> Order: " + _tsVerb
+			      + "   Target: " + _tsTarget + "   Stuck: " + str _tsStuck;
+		};
+		if (_econ != _lastEcon) then {(_display displayCtrl 14600) ctrlSetStructuredText (parseText _econ); _lastEcon = _econ};
 
 		//--- ----- VIEW TEAM camera (Command Console v2, claude-gaming 2026-07-01): double-click a roster row (onLBDblClick
 		//--- -> MenuAction 726) opens the EXISTING unit camera (RscMenu_UnitCamera / GUI_Menu_UnitCamera.sqf) focused on the
