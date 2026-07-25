@@ -441,6 +441,16 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			if (missionNamespace getVariable Format ["WFBE_%1_PRESENT",_newSide]) then {[_newSide, "Captured", _location] Spawn SideMessage};
 
 			_location setVariable ["sideID",_newSID,true];
+			//--- fix-1342-1343 (reconciles #1342+#1343): advance the town AI lifecycle epoch exactly here,
+			//--- at ownership change, and nowhere else. A delegated HC/client batch queued before this flip
+			//--- can finish creating units after it; the epoch it carries (snapshotted at send time) will
+			//--- now mismatch, so Server_HandleSpecial.sqf's update-town-delegation handler rejects it into
+			//--- the new owner's registry and instead broadcasts owner-local cleanup. Deliberately NOT
+			//--- bumped on activate/deactivate/air-tier transitions (server_town_ai.sqf) - PR #1342's review
+			//--- flagged that a ground->air activation bump over-rejects an in-flight ground batch that is
+			//--- still perfectly valid for the current town owner. Scoping the bump to real ownership change
+			//--- avoids that over-reject by construction.
+			_location setVariable ["wfbe_town_ai_epoch", (_location getVariable ["wfbe_town_ai_epoch", 0]) + 1];
 			//--- Commander Town Ledger (fable/ctl-impl-v1) capture seed (fix: capture-race). Publish
 			//--- wfbe_ctl_str immediately at the capture hook so a freshly captured W/E town reads its
 			//--- 0.25 seed on the very next materialization, instead of the getVariable default (1.0)

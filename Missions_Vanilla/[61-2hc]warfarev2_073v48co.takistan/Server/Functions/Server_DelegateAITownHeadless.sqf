@@ -8,13 +8,16 @@
 		- Teams
 */
 
-Private ["_hcUnit", "_delegated", "_groups", "_perfStart", "_positions", "_side", "_teams", "_town", "_live", "_x", "_seedIdx", "_rr", "_hcCount"];
+Private ["_epoch", "_hcUnit", "_delegated", "_groups", "_perfStart", "_positions", "_side", "_teams", "_town", "_live", "_x", "_seedIdx", "_rr", "_hcCount"];
 
 _town = _this select 0;
 _side = _this select 1;
 _groups = +(_this select 2);
 _positions = +(_this select 3);
 _teams = +(_this select 4);
+//--- fix-1342-1343: snapshot the town's current lifecycle epoch at send time so a late-arriving
+//--- ack can be told apart from a fresh one after the town changes owner.
+_epoch = _town getVariable ["wfbe_town_ai_epoch", 0];
 // Marty: Performance Audit counts town AI groups handed to headless clients.
 _perfStart = diag_tickTime;
 _delegated = 0;
@@ -55,7 +58,7 @@ for '_i' from 0 to count(_groups) -1 do {
 		//--- Cheap local round-robin across the live HCs, anchored at the lightest one.
 		_hcUnit = _live select ((_seedIdx + _rr) mod _hcCount);
 		_rr = _rr + 1;
-		[_hcUnit, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i]]] Call WFBE_CO_FNC_SendToClient;
+		[_hcUnit, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i], _epoch]] Call WFBE_CO_FNC_SendToClient;
 		_delegated = _delegated + 1;
 	};
 };
