@@ -44,7 +44,7 @@ if (isNil "mouseX") then {mouseX = 0.5};
 if (isNil "mouseY") then {mouseY = 0.5};
 
 private ["_display","_map","_sid","_armed","_lastSend","_cool","_artyOn","_now","_position",
-         "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastEcon","_lastIntent","_posture","_disbandArm",
+         "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastCmdTeams","_lastEcon","_lastIntent","_posture","_disbandArm",
          "_disbandSelArm","_focusArmed","_lastDirect","_directCool","_tnArmed","_tdNext"];
 
 _display = _this select 0;
@@ -81,6 +81,7 @@ _tnArmed = false;           //--- COMMAND V2 (a): STATE-A "SUGGEST TOWN" armed f
 _tdNext  = "aggressive";    //--- COMMAND V2 (b): which stance the next TEAM DOCTRINE press sends; the button label mirrors it so the player always sees what they are about to send.
 _lastState = -1;        //--- 0 = take-command, 1 = war room, -1 = uninitialised (force first toggle).
 _lastRosterHash = "";
+_lastCmdTeams = [];
 _lastEcon = "";
 _lastIntent = "";           //--- change-hash for the AI-intent readout (control 14600 in STATE A / 14606 reused), so it updates live without churn.
 _posture = "";              //--- last posture the player nudged this session ("PUSH"/"HOLD"/""); reflected in the STATE-A advisory line.
@@ -537,7 +538,7 @@ while {alive player && dialog} do {
 			private ["_keepTeam","_keepIdx"];
 			_keepTeam = objNull;
 			private "_oldSel"; _oldSel = lbCurSel 14661;
-			if (_oldSel >= 0 && _oldSel < (count _cmdTeams)) then {_keepTeam = _cmdTeams select _oldSel};
+			if (_oldSel >= 0 && _oldSel < (count _lastCmdTeams)) then {_keepTeam = _lastCmdTeams select _oldSel};
 			lbClear 14661;
 			{lbAdd [14661, _x]} forEach _rows;
 			//--- Re-find the kept team in the freshly-built _cmdTeams; restore its new index, or clear if it died.
@@ -547,6 +548,7 @@ while {alive player && dialog} do {
 				{ if (_x == _keepTeam) exitWith {_keepIdx = _ci}; _ci = _ci + 1 } forEach _cmdTeams;
 			};
 			if (_keepIdx >= 0) then {lbSetCurSel [14661, _keepIdx]};
+			_lastCmdTeams = +_cmdTeams;
 		};
 
 		//--- Resolve the currently selected team (roster row -> _cmdTeams), else objNull.

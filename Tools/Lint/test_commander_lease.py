@@ -401,7 +401,7 @@ class CommanderLeaseFixtures(unittest.TestCase):
             self.assertNotIn('setVariable ["wfbe_commander",', flag_on_branch, str(path))
 
         handle_special = HANDLE_SPECIAL.read_text(encoding="utf-8-sig")
-        reclaim_block = handle_special[handle_special.index('case "update-teamleader"'):handle_special.index('case "group-query"')]
+        reclaim_block = handle_special[handle_special.index('case "update-teamleader"'):handle_special.index('case "Paratroops"')]
         self.assertIn("Call WFBE_CO_FNC_CommanderLeaseRequestReclaim", reclaim_block)
         self.assertNotIn("wfbe_commander\", _team", reclaim_block)
 
@@ -458,7 +458,7 @@ class CommanderLeaseFixtures(unittest.TestCase):
         reconnect would wipe the commander's own per-team choices (the C5 anti-pattern)."""
         code = HANDLE_SPECIAL.read_text(encoding="utf-8-sig")
         start = code.index('case "update-teamleader"')
-        end = code.index('case "group-query"')
+        end = code.index('case "Paratroops"')
         reclaim_block = code[start:end]
         self.assertNotIn("Call SetTeamAutonomous", reclaim_block)
         self.assertNotIn("Call SetTeamRespawn", reclaim_block)
@@ -478,6 +478,21 @@ class CommanderLeaseFixtures(unittest.TestCase):
         # (every guard above already guarantees _claimTeam is non-null at this point).
         flag_off = claim[claim.index("} else {"):]
         self.assertIn('wfbe_aicom_running', flag_off)
+
+    def test_15_standdown_releases_direct_orders_for_ai_retasking(self) -> None:
+        """A commander hand-back must not leave an explicit Move/Patrol/Defend
+        order pinning a team forever.  In particular, HC teams require a fresh
+        sequence so their local driver aborts the previous human order."""
+        code = LEASE.read_text(encoding="utf-8-sig")
+        start = code.index("WFBE_CO_FNC_CommanderLeaseExecStandDown = {")
+        end = code.index("WFBE_CO_FNC_CommanderLeaseStandDownExecutor = {")
+        standdown = code[start:end]
+        self.assertIn('setVariable ["wfbe_teamgoto", objNull, true]', standdown)
+        self.assertIn('Call SetTeamMoveMode', standdown)
+        self.assertIn('setVariable ["wfbe_aicom_manualpin", nil, true]', standdown)
+        self.assertIn('setVariable ["wfbe_aicom_route", [], true]', standdown)
+        self.assertIn('setVariable ["wfbe_aicom_order",', standdown)
+        self.assertIn('"rally"', standdown)
 
 
 if __name__ == "__main__":
