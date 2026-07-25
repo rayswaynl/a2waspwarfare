@@ -6,7 +6,7 @@
 	malformed payload must never throw inside a PVF handler.
 */
 
-private ["_name", "_fps", "_units", "_groups"];
+private ["_name", "_fps", "_units", "_groups", "_who"];
 
 if ((typeName _this) != "ARRAY") exitWith {};
 if ((count _this) < 4) exitWith {};
@@ -16,6 +16,8 @@ _fps = _this select 1;
 _units = _this select 2;
 _groups = _this select 3;
 if ((typeName _name) != "STRING") exitWith {};
+_who = "";
+if (((count _this) >= 5) && {(typeName (_this select 4)) == "STRING"}) then {_who = "|who=" + (_this select 4)};
 
 //--- WASPSCALE hc_fps feed (claude-gaming 2026-07-01): cache THIS HC's reported diag_fps (already carried
 //--- in every 60s HCStat report) so the server-side WASPSCALE emitter (AI_Commander.sqf) can publish an
@@ -33,4 +35,4 @@ if ((typeName _fps) == "SCALAR") then {
 	missionNamespace setVariable ["WFBE_HCFPS_REG", _reg];
 };
 
-diag_log ("HCSTAT|v1|" + _name + "|fps=" + str _fps + "|units=" + str _units + "|groups=" + str _groups + "|t=" + str (round (time / 60)));
+diag_log ("HCSTAT|v1|" + _name + "|fps=" + str _fps + "|units=" + str _units + "|groups=" + str _groups + _who + "|t=" + str (round (time / 60)));

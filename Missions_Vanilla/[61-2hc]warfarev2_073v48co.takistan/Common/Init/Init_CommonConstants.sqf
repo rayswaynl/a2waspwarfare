@@ -2956,6 +2956,13 @@ if (WFBE_C_AICAP_MIDHIGH_TRIM > 0) then {
 //--- body Fired EH (initial spawn + respawn); 0 = INERT, no EH attached, byte-identical current
 //--- behaviour. OWNER CALL: flip to 1 to enable, or delete Client_FNC_OnFired.sqf wholesale. Ships default 0.
 if (isNil "WFBE_C_SATCHEL_TK_DETECT") then {WFBE_C_SATCHEL_TK_DETECT = 0};
+//--- wave0723c casualty recovery: owner-approved performance and garrison/GDIR fixes.
+if (isNil "WFBE_C_AIRDEF_CHUNKED") then {WFBE_C_AIRDEF_CHUNKED = 1};
+if (isNil "WFBE_C_AIRDEF_CHUNK_SLEEP") then {WFBE_C_AIRDEF_CHUNK_SLEEP = 0.4};
+if (isNil "WFBE_C_AIRENV_CHUNKED") then {WFBE_C_AIRENV_CHUNKED = 1};
+if (isNil "WFBE_C_AIRENV_CHUNK_SLEEP") then {WFBE_C_AIRENV_CHUNK_SLEEP = 0.1};
+if (isNil "WFBE_C_GARRISON_CAP_GATE") then {WFBE_C_GARRISON_CAP_GATE = 1};
+if (isNil "WFBE_C_GDIR_CONTRACTS_FIX") then {WFBE_C_GDIR_CONTRACTS_FIX = 1};
 
 //--- ACR CONTENT GAP (owner 2026-07-24): opt-in registration of the Czech static-defense
 //--- trio and player gear-menu exposure. Full ACR must first be unlocked on the live host;

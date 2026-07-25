@@ -379,6 +379,10 @@ if (_airMaxTotalP > 0) then {
 					//--- Refit is a logistical MOVE under always-offense; legacy DEFEND remains a rollback only.
 					_retreatOrder = [_retreatSeq, if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {"move"} else {"defense"}, getPosATL _hqP];
 					_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_WALKHOME", 1]) > 0) then {
+						[_team, (_retreatOrder select 1)] Call SetTeamMoveMode;
+						[_team, (_retreatOrder select 2)] Call SetTeamMovePos;
+					};
 					_team setVariable ["wfbe_aicom_refit", true, true]; //--- B61: mark for top-up-at-base once home.
 					if (!_refitWas) then {
 						_team setVariable ["wfbe_aicom_refit_start", time];
@@ -568,6 +572,9 @@ if (_airMaxTotalP > 0) then {
 			_refitStart = _team getVariable "wfbe_aicom_refit_start";
 			if (isNil "_refitStart") then {_refitStart = time};
 			_team setVariable ["wfbe_aicom_refit", false, true];
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_WALKHOME", 1]) > 0) then {
+				[_team, "towns"] Call SetTeamMoveMode;
+			};
 			_refitDur = round (time - _refitStart);
 			if (_refitDur < 0) then {_refitDur = 0};
 			if ([_team, "wfbe_aicom_refit_prev", false] Call WFBE_CO_FNC_GroupGetBool) then { //--- read the persisted per-team flag: script-scoped _refitWas is never assigned when the aliveNow>0 init path was skipped (freshly wiped team)
