@@ -730,18 +730,8 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 				//--- statics (recapture re-spawns them via ManageTownDefenses; the WEST/EAST path never calls it).
 				if (_sideID == WFBE_C_GUER_ID) then {
 					{
-						private ["_def","_oldGunner"];
-						_def = _x getVariable "wfbe_defense";
-						if (!isNil "_def" && {!isNull _def}) then {
-							//--- HC-delegated town gunners are not stored in wfbe_defense_operator.
-							//--- Reap that untracked AI before clearing the only static reference; the
-							//--- normal server gunner remains on the delayed defender-linger cleanup.
-							if (isNil { _x getVariable "wfbe_defense_operator" }) then {
-								_oldGunner = gunner _def;
-								if (!isNull _oldGunner && {!isPlayer _oldGunner}) then {deleteVehicle _oldGunner};
-							};
-							deleteVehicle _def;
-						};
+						private "_def"; _def = _x getVariable "wfbe_defense";
+						if (!isNil "_def" && {!isNull _def}) then {deleteVehicle _def};
 						_x setVariable ["wfbe_defense", nil];
 					} forEach (_location getVariable ["wfbe_town_defenses", []]);
 				};
