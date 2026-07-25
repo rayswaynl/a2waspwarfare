@@ -127,7 +127,7 @@ if (_reject) exitWith {
 		_refundPrice = 0;
 		_costsArr = missionNamespace getVariable [Format ["WFBE_%1STRUCTURECOSTS", str _side], []];
 		if (_index >= 0 && {_index < count _costsArr}) then {_refundPrice = _costsArr select _index};
-		[_reqPlayer, "LocalizeMessage", [_rejectMsg, _refundPrice]] Call WFBE_CO_FNC_SendToClient;
+		[_reqPlayer, "LocalizeMessage", [_rejectMsg, _refundPrice, _index]] Call WFBE_CO_FNC_SendToClient; //--- base-build r11: pass STRUCTURENAMES index so the client rolls back its optimistic wfbe_structures_live increment on reject.
 	} else {
 		[_side, "LocalizeMessage", [_rejectMsg]] Call WFBE_CO_FNC_SendToClients;
 	};
