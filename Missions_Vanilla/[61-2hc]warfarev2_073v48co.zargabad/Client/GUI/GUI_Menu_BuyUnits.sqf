@@ -207,7 +207,10 @@ _IDCS = _IDCS - [_currentIDC];
 				if (_totalCamps != _campsSide) then {_skip = true; hint parseText(localize 'STR_WF_INFO_Camps_Purchase')};
 			};
 			if !(_skip) then {
-				_size = Count ((Units (group player)) Call GetLiveUnits);
+				_size = 0;
+				{if (alive _x) then {
+					if (!(_x getVariable ["wasp_skinswap_ghost", false])) then {_size = _size + 1};
+				}} forEach (units (group player));
 				//--- Get the infantry limit based off the infantry upgrade.
 				//--- B750 (Ray 2026-06-24): RESTORE the infantry squad-cap regression. round(_mbu/4) gave only 4 at barracks
 				//--- lvl 0 once _mbu (GroupSizePlayer) was pop-tiered down to 16 -> player capped at 4 AI ("max 4/10, can't
@@ -261,13 +264,13 @@ _IDCS = _IDCS - [_currentIDC];
 				private ["_depotQueueBlocked"];
 				_depotQueueBlocked = false;
 				if ((_type == "Depot" || _countAlive == 1) && {!isNull _closest}) then {
-					if ((count (_closest getVariable ["queu", []])) >= (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type])) then {
+					if ((count (_closest getVariable ["queu", []])) >= (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",toUpper _type])) then {
 						_depotQueueBlocked = true;
-						if (WF_Debug) then {["INFORMATION", Format ["GUI_Menu_BuyUnits.sqf: DEPOT buy blocked - shared queue full (%1/%2).", count (_closest getVariable ["queu", []]), missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type]]] Call WFBE_CO_FNC_LogContent};
+						if (WF_Debug) then {["INFORMATION", Format ["GUI_Menu_BuyUnits.sqf: DEPOT buy blocked - shared queue full (%1/%2).", count (_closest getVariable ["queu", []]), missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",toUpper _type]]] Call WFBE_CO_FNC_LogContent};
 					};
 				};
-				if (((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_type]) < (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",_type])) && {!_depotQueueBlocked}) then {
-					missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",_type],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",_type])+1];
+				if (((missionNamespace getVariable Format["WFBE_C_QUEUE_%1",toUpper _type]) < (missionNamespace getVariable Format["WFBE_C_QUEUE_%1_MAX",toUpper _type])) && {!_depotQueueBlocked}) then {
+					missionNamespace setVariable [Format["WFBE_C_QUEUE_%1",toUpper _type],(missionNamespace getVariable Format["WFBE_C_QUEUE_%1",toUpper _type])+1];
 					Private ["_currentUnitLabel"];
                     _currentUnitLabel = _currentUnit select QUERYUNITLABEL;
 
@@ -295,8 +298,8 @@ _IDCS = _IDCS - [_currentIDC];
 					_updateDetails = true; //--- Task 33: refresh queue list panel after purchase.
 				} else {
 					private ["_queueCap","_queueCount"];
-					_queueCap = missionNamespace getVariable [Format["WFBE_C_QUEUE_%1_MAX",_type], 0];
-					_queueCount = missionNamespace getVariable [Format["WFBE_C_QUEUE_%1",_type], 0];
+					_queueCap = missionNamespace getVariable [Format["WFBE_C_QUEUE_%1_MAX",toUpper _type], 0];
+					_queueCount = missionNamespace getVariable [Format["WFBE_C_QUEUE_%1",toUpper _type], 0];
 					if (_depotQueueBlocked && {!isNull _closest}) then {
 						_queueCount = count (_closest getVariable ["queu", []]);
 					};
@@ -417,7 +420,10 @@ _IDCS = _IDCS - [_currentIDC];
 		_capGC = (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_BASE", 4]) + floor (_capGK / (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_PER_KILLS", 10]));
 		_capSize = _capGC min (missionNamespace getVariable ["WFBE_C_GUER_BARRACKS_AI_MAX", 12]);
 	};
-	_capAlive = count ((units (group player)) Call GetLiveUnits);
+	_capAlive = 0;
+	{if (alive _x) then {
+		if (!(_x getVariable ["wasp_skinswap_ghost", false])) then {_capAlive = _capAlive + 1};
+	}} forEach (units (group player));
 	_capUsed = unitQueu + _capAlive;
 	ctrlSetText [12019, Format [localize 'STR_WF_UNITS_Cash', Call GetPlayerFunds] + "   Squad: " + str _capUsed + "/" + str _capSize];
 
