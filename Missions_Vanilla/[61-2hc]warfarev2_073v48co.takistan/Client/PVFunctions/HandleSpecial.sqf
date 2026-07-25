@@ -102,10 +102,27 @@ switch (_request) do {
 	//--- server-created path, Server_OperateTownDefensesUnits.sqf:83, and the HC-delegated path,
 	//--- Client_DelegateAIStaticDefence.sqf:36) - so the worst a forged dispatch can do is an early
 	//--- despawn of some other town-defender AI, not an arbitrary live-object delete.
+	//---
+	//--- codex hold remediation (2026-07-25): this receiver ran with NO flag check, so a forged PV
+	//--- could delete a live HC-local defender even while WFBE_C_TOWN_GUER_GUNNER_REAP = 0 - i.e. the
+	//--- delete endpoint stayed live with the feature "off". Server_OperateTownDefensesUnits.sqf's
+	//--- unflagged "remove" case dispatch is an existing-behaviour restoration and must keep working
+	//--- unconditionally, so the two send sites are distinguished by a third arg (reason token) rather
+	//--- than gated identically: "remove-case" deletes unconditionally (matches pre-#1370 behaviour);
+	//--- any other/missing reason (including the capture-teardown site) requires the flag. This does not
+	//--- add sender authentication (still none on this channel - see residual note above), but it does
+	//--- make "flag off" actually mean the capture-teardown delete cannot fire, and fails closed (flag
+	//--- required) for any reason string this receiver does not recognise.
 	case "cleanup-town-defense-gunner": {
-		Private ["_gunner"];
+		Private ["_gunner","_reason"];
 		_gunner = _args select 0;
-		if (!isNull _gunner && {local _gunner} && {!isPlayer _gunner} && {(_gunner getVariable ["WFBE_IsTownDefenderAI", false])}) then {deleteVehicle _gunner};
+		_reason = "capture-teardown";
+		if (count _args > 1) then {_reason = _args select 1};
+		if (!isNull _gunner && {local _gunner} && {!isPlayer _gunner} && {(_gunner getVariable ["WFBE_IsTownDefenderAI", false])}) then {
+			if (_reason == "remove-case" || {(missionNamespace getVariable ["WFBE_C_TOWN_GUER_GUNNER_REAP", 0]) > 0}) then {
+				deleteVehicle _gunner;
+			};
+		};
 	};
 	//--- Owner-side half of the Common_TrashObject.sqf locality gate. Self-gated on the same flag as the
 	//--- sender, on the object being LOCAL here, on it being DEAD, and on the public reap stamp the server

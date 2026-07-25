@@ -752,7 +752,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 									if (local _oldGunner) then {
 										deleteVehicle _oldGunner;
 									} else {
-										[_oldGunner, "HandleSpecial", ["cleanup-town-defense-gunner", _oldGunner]] Call WFBE_CO_FNC_SendToClient;
+										[_oldGunner, "HandleSpecial", ["cleanup-town-defense-gunner", _oldGunner, "capture-teardown"]] Call WFBE_CO_FNC_SendToClient;
 									};
 								};
 							};

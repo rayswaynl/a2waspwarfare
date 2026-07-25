@@ -142,11 +142,11 @@ switch (_action) do {
 					if (alive _unit) then {
 						if (isNil {(group _unit) getVariable "wfbe_funds"}) then {
 							_unit setPos (getPos _x);
-							if (local _unit) then {deleteVehicle _unit} else {[_unit, "HandleSpecial", ["cleanup-town-defense-gunner", _unit]] Call WFBE_CO_FNC_SendToClient};
+							if (local _unit) then {deleteVehicle _unit} else {[_unit, "HandleSpecial", ["cleanup-town-defense-gunner", _unit, "remove-case"]] Call WFBE_CO_FNC_SendToClient};
 						};
 					} else {
 						_unit setPos (getPos _x);
-						if (local _unit) then {deleteVehicle _unit} else {[_unit, "HandleSpecial", ["cleanup-town-defense-gunner", _unit]] Call WFBE_CO_FNC_SendToClient};
+						if (local _unit) then {deleteVehicle _unit} else {[_unit, "HandleSpecial", ["cleanup-town-defense-gunner", _unit, "remove-case"]] Call WFBE_CO_FNC_SendToClient};
 					};
 				};
 				//--- OWNER RULING (statics lock): de-manned (or already empty) - lock so a player
