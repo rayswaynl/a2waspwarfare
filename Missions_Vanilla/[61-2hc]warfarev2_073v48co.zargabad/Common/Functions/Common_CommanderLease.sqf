@@ -176,7 +176,7 @@ WFBE_CO_FNC_CommanderLeaseExecReclaim = {
 };
 
 WFBE_CO_FNC_CommanderLeaseExecStandDown = {
-    Private ["_side","_logic","_cmd","_targetGen","_curGen","_commander","_lease"];
+    Private ["_side","_logic","_cmd","_targetGen","_curGen","_commander","_lease","_leaseOrder","_leaseSeq","_leaseLeader"];
     _side = _this select 0;
     _logic = _this select 1;
     _cmd = _this select 2;
@@ -203,7 +203,22 @@ WFBE_CO_FNC_CommanderLeaseExecStandDown = {
     _logic setVariable ["wfbe_commander_lease_expires", nil];
     _logic setVariable ["wfbe_commander", objNull, true];
     [_side, "LocalizeMessage", ['CommanderDisconnected']] Call WFBE_CO_FNC_SendToClients;
-    {[_x,false] Call SetTeamAutonomous;[_x, ""] Call SetTeamRespawn} forEach (_logic getVariable "wfbe_teams");
+    {
+        if (!isNull _x) then {
+            [_x,false] Call SetTeamAutonomous;
+            [_x, ""] Call SetTeamRespawn;
+            _x setVariable ["wfbe_teamgoto", objNull, true];
+            [_x, "towns"] Call SetTeamMoveMode;
+            _x setVariable ["wfbe_aicom_manualpin", nil, true];
+            if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+                _x setVariable ["wfbe_aicom_route", [], true];
+                _leaseOrder = _x getVariable "wfbe_aicom_order";
+                _leaseSeq = if (isNil "_leaseOrder" || {count _leaseOrder < 1}) then {0} else {(_leaseOrder select 0) + 1};
+                _leaseLeader = leader _x;
+                if (!isNull _leaseLeader) then {_x setVariable ["wfbe_aicom_order", [_leaseSeq, "rally", getPos _leaseLeader], true]};
+            };
+        };
+    } forEach (_logic getVariable "wfbe_teams");
 };
 
 //--- The single per-side executor. Spawned ONCE per side from Init_Server when the lease flag
