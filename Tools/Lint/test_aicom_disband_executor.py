@@ -23,6 +23,12 @@ def test_commander_disband_is_dispatched_to_the_team_owner() -> None:
         assert '["aicom-team-disband-execute", _dTeam]' in source
 
 
+def test_commander_disband_is_admitted_on_headless_clients() -> None:
+    for mission in MISSIONS:
+        source = _source(mission, "Client/Functions/Client_HandlePVF.sqf")
+        assert '"aicom-team-disband-execute"' in source
+
+
 def test_team_owner_has_a_destructive_local_disband_executor() -> None:
     for mission in MISSIONS:
         source = _source(mission, "Client/PVFunctions/HandleSpecial.sqf")
