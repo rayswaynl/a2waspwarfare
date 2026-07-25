@@ -255,6 +255,40 @@ function Get-LastMatch([object[]]$lines, [string]$pattern) {
     return $null
 }
 
+# Roster rows are emitted by StatsFlush as per-UID delta buffers, then the mission
+# clears each buffer. The numeric payload is uid:<15 fields>,<side>~<name>; the
+# first six fields are the kill categories and field 6 is player deaths.
+function Get-PlayerRosterCounts([object[]]$lines) {
+    $counts = @{}
+    foreach ($l in @($lines | Where-Object { $_ -match 'WASPSTAT\|v1\|' })) {
+        $parts = (([string]$l -replace '^.*WASPSTAT\|', 'WASPSTAT|').Trim('"')) -split '\|'
+        if ($parts.Count -lt 4) { continue }
+        foreach ($entry in @($parts | Select-Object -Skip 3)) {
+            if ($entry -notmatch '^([^:|]+):([^~|]+)') { continue }
+            $uid = $Matches[1].Trim('"').Trim()
+            if ($uid -eq '') { continue }
+            $fields = $Matches[2].Trim('"').Split(',')
+            if ($fields.Count -lt 16) { continue }
+
+            $killTotal = 0
+            for ($i = 0; $i -le 5; $i++) {
+                $value = 0
+                [void][int]::TryParse($fields[$i].Trim('"'), [ref]$value)
+                $killTotal += $value
+            }
+            $deathTotal = 0
+            [void][int]::TryParse($fields[6].Trim('"'), [ref]$deathTotal)
+
+            if (-not $counts.ContainsKey($uid)) {
+                $counts[$uid] = [ordered]@{ kills = 0; deaths = 0 }
+            }
+            $counts[$uid].kills += $killTotal
+            $counts[$uid].deaths += $deathTotal
+        }
+    }
+    return $counts
+}
+
 $kills      = @($win | Where-Object { $_ -match '\|KILL\|' })
 # KILL fields: 0 WASPSTAT 1 v1 2 seq 3 KILL 4 kUID 5 vUID 6 kSide 7 vSide 8 weapon 9 dist 10 cat [11 hw=X]
 # Parse cat positionally (cat is no longer the last field since the b18 hw= suffix) and
@@ -1288,8 +1322,7 @@ foreach ($mk in @($mapStoreOut.Keys)) {
 #   PLAYERSTAT|v1|<seq>|<name>|<uid>|<side>|<score>|<kills>|<deaths>|t=<roundMin>
 # PLAYERSTAT carries the display NAME + engine score (cumulative within a round, only grows),
 # so the LAST row per UID in the window = that UID's round-total score. Kills/deaths are emitted
-# as 0 by the mission and are folded HERE from the existing WASPSTAT|...|KILL stream (a KILL with
-# a non-empty killer UID = a player kill; non-empty victim UID = a player death).
+# as 0 by the mission and are folded HERE from the RecordStat roster deltas.
 #
 # Accumulation mirrors alltime.json: each per-player file stores a per-UID `base` (sum of all
 # COMPLETED rounds) plus the in-progress `window` (keyed by $windowId). When $windowId changes,
@@ -1312,9 +1345,16 @@ foreach ($l in @($win | Where-Object { $_ -match 'PLAYERSTAT\|v1\|' })) {
     $psWin[$uid] = [ordered]@{ name = $nm; side = $sd; score = $sc }
 }
 
-# Fold the KILL stream into per-UID kills/deaths for THIS window (player UIDs only).
-$pKills = @{}   # uid -> kills (any victim)
-$pDeaths = @{}  # uid -> deaths (killed by anyone)
+# Fold the authoritative RecordStat roster deltas into per-UID kills/deaths for THIS
+# window. Do not sum running snapshots: StatsFlush clears each emitted UID buffer.
+$rosterCounts = Get-PlayerRosterCounts $win
+$pKills = @{}   # uid -> kills (all six RecordStat kill categories)
+$pDeaths = @{}  # uid -> deaths (RecordStat player deaths)
+foreach ($u in $rosterCounts.Keys) {
+    $pKills[$u] = [int]$rosterCounts[$u].kills
+    $pDeaths[$u] = [int]$rosterCounts[$u].deaths
+}
+
 # PvP-ONLY tally: a kill counts as player-vs-player ONLY when BOTH the killer UID and the
 # victim UID are non-empty real player UIDs (i.e. a human killed another human; AI victims -
 # which log an EMPTY victim UID - are excluded). Same KILL stream, stricter both-UID gate.
@@ -1327,8 +1367,6 @@ foreach ($k in $kills) {
     if ($kp.Count -lt 6) { continue }
     $kU = ([string]$kp[4]).Trim()
     $vU = ([string]$kp[5]).Trim()
-    if ($kU -ne '') { if ($pKills.ContainsKey($kU)) { $pKills[$kU]++ } else { $pKills[$kU] = 1 } }
-    if ($vU -ne '') { if ($pDeaths.ContainsKey($vU)) { $pDeaths[$vU]++ } else { $pDeaths[$vU] = 1 } }
     # PvP gate: BOTH ends are real players (and not a self-kill artifact).
     if ($kU -ne '' -and $vU -ne '' -and $kU -ne $vU) {
         if ($pvpKills.ContainsKey($kU))  { $pvpKills[$kU]++ }  else { $pvpKills[$kU] = 1 }
@@ -1350,7 +1388,8 @@ foreach ($u in @($pvpUids.Keys)) {
     $winPvp[$u] = [ordered]@{ name = $nm; side = $sd; pvpKills = $pk; pvpDeaths = $pd }
 }
 
-# Current-window per-UID rows: union of UIDs seen in PLAYERSTAT (for name/score) and KILL (for k/d).
+# Current-window per-UID rows: union of UIDs seen in PLAYERSTAT (for name/score) and
+# the RecordStat roster (for authoritative k/d).
 $winPlayers = @{}   # uid -> @{ name; side; score; kills; deaths }
 $allUids = @{}
 foreach ($u in $psWin.Keys)   { $allUids[$u] = $true }
@@ -2148,7 +2187,7 @@ $out = [ordered]@{
         monthly = @($topMonthly)
         weekKey = $weekKey
         monthKey = $monthKey
-        note = 'ranked by engine score; kills/deaths folded from the KILL stream by UID'
+        note = 'ranked by engine score; kills/deaths folded from the authoritative RecordStat roster stream'
     }
     topPvp = [ordered]@{
         alltime = @($pvpAlltime)
