@@ -711,7 +711,9 @@ while {!gameOver} do {
 						_targets   = _logik getVariable "wfbe_aicom_targets";
 						if (!isNil "_targets" && {count _targets > 0}) then {
 							_bestTown = _targets select 0;
-						} else {
+						};
+						if (!isNull _bestTown && {(_bestTown getVariable ["sideID", -1]) == _sideID}) then {_bestTown = objNull};
+						if (isNull _bestTown) then {
 							{
 								_t4Town = _x;
 								_dNear = 1e9;
@@ -804,7 +806,9 @@ while {!gameOver} do {
 							_w6Targets   = _logik getVariable "wfbe_aicom_targets";
 							if (!isNil "_w6Targets" && {count _w6Targets > 0}) then {
 								_w6BestTown = _w6Targets select 0;
-							} else {
+							};
+							if (!isNull _w6BestTown && {(_w6BestTown getVariable ["sideID", -1]) == _sideID}) then {_w6BestTown = objNull};
+							if (isNull _w6BestTown) then {
 								{
 									_w6T4   = _x;
 									_w6DNear = 1e9;
@@ -1101,6 +1105,7 @@ while {!gameOver} do {
 						_w22Target  = objNull;
 						_w22Targets = _logik getVariable "wfbe_aicom_targets";
 						if (!isNil "_w22Targets" && {count _w22Targets > 0}) then {_w22Target = _w22Targets select 0};
+						if (!isNull _w22Target && {(_w22Target getVariable ["sideID", -1]) == _sideID}) then {_w22Target = objNull};
 						if (isNull _w22Target && {count _cands > 0}) then {_w22Target = _cands select floor(random count _cands)};
 						if (_w22PlaneClass != "" && {!isNull _hq}) then {
 							_hqPos       = getPos _hq;
