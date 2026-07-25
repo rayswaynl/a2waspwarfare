@@ -62,6 +62,10 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 	//--- launch time (drives the WFBE_C_TOWNS_SORTIE_MINS rotation). HARD bound: max 1 sortie per town (Ray).
 	_town setVariable ["wfbe_sortie_grp", grpNull, true];
 	_town setVariable ["wfbe_sortie_started", 0];
+	//--- u3-sortie-despawn: true while the current sortie group is on its bounded return-to-town-centre
+	//--- leg (WFBE_C_TOWNS_SORTIES_RTB); seeded here purely for clarity - the manager already defaults
+	//--- this to false via getVariable, so flag-off behaviour is unaffected either way.
+	_town setVariable ["wfbe_sortie_rtb", false];
 	sleep _townInitSleep;
 };
 
@@ -694,13 +698,48 @@ while {!WFBE_GameOver} do {
 						_town setVariable ["wfbe_sortie_started", 0];
 					} else {
 						if (_sortieValid) then {
-							//--- Rotation: after WFBE_C_TOWNS_SORTIE_MINS, bring this group home and free the slot
-							//--- so a different group takes the next turn on the following eligible sweep.
-							if ((time - _sortieStarted) >= (_sortieMins * 60)) then {
-								[_sortieGrp, _townPos, "MOVE", 50] Call AIMoveTo;
-								_town setVariable ["wfbe_sortie_grp", grpNull, true];
-								_town setVariable ["wfbe_sortie_started", 0];
-								["INFORMATION", Format ["server_town_ai.sqf: sortie rotated home for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
+							//--- u3-sortie-despawn: WFBE_C_TOWNS_SORTIES_RTB (default 0) gives the group a bounded
+							//--- return-to-town-centre leg instead of ending the sortie the instant the rotation
+							//--- timer fires. Flag OFF => _sortieRtbOn is false => the branch below always takes
+							//--- the `else` path, which is the ORIGINAL 3-line rotation body verbatim: byte-identical
+							//--- end-state to pre-RTB behaviour (immediate clear + same log line).
+							_sortieRtbOn = (missionNamespace getVariable ["WFBE_C_TOWNS_SORTIES_RTB", 0]) > 0;
+							_sortieInRtb = _town getVariable ["wfbe_sortie_rtb", false];
+							if (_sortieRtbOn && _sortieInRtb) then {
+								//--- RETURN LEG in progress: the MOVE-home order was already issued when this leg
+								//--- started (below). Poll non-blocking each sweep (no waitUntil - this loop covers
+								//--- every town per sweep, a blocking wait here would stall the whole FSM) for either
+								//--- arrival at the town centre or the bounded timeout, THEN fall through to the
+								//--- EXACT SAME end-state as the flag-off path: clear the slot, same log line. A2-safe
+								//--- group-distance: `distance` takes Object, not Group (BUG-6 family) - use the
+								//--- group leader, same pattern as the locality checks above.
+								_sortieRtbCap = missionNamespace getVariable ["WFBE_C_TOWNS_SORTIE_RTB_TIMEOUT", 180];
+								if (_sortieRtbCap < 15) then {_sortieRtbCap = 15};
+								if (((leader _sortieGrp) distance _townPos) <= 60 || {(time - _sortieStarted) >= _sortieRtbCap}) then {
+									_town setVariable ["wfbe_sortie_grp", grpNull, true];
+									_town setVariable ["wfbe_sortie_started", 0];
+									_town setVariable ["wfbe_sortie_rtb", false];
+									["INFORMATION", Format ["server_town_ai.sqf: sortie rotated home for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
+								};
+							} else {
+								//--- Rotation: after WFBE_C_TOWNS_SORTIE_MINS, bring this group home and free the slot
+								//--- so a different group takes the next turn on the following eligible sweep.
+								if ((time - _sortieStarted) >= (_sortieMins * 60)) then {
+									[_sortieGrp, _townPos, "MOVE", 50] Call AIMoveTo;
+									if (_sortieRtbOn) then {
+										//--- Return leg armed: keep the group tracked (so no new sortie launches while
+										//--- it walks home, and so the RTB poll above picks it up next sweep). Reuse
+										//--- wfbe_sortie_started as the return-leg clock (its rotation-timer job for
+										//--- THIS leg is already done) - no new registry, same per-town state vars.
+										_town setVariable ["wfbe_sortie_started", time];
+										_town setVariable ["wfbe_sortie_rtb", true];
+										["INFORMATION", Format ["server_town_ai.sqf: sortie RTB started for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
+									} else {
+										_town setVariable ["wfbe_sortie_grp", grpNull, true];
+										_town setVariable ["wfbe_sortie_started", 0];
+										["INFORMATION", Format ["server_town_ai.sqf: sortie rotated home for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
+									};
+								};
 							};
 						} else {
 							//--- cmdcon41-w3p (proximity gate, default OFF/legacy): WFBE_C_TOWNS_SORTIES_PROXIMITY gates a
@@ -734,6 +773,10 @@ while {!WFBE_GameOver} do {
 									[_bestGrp, _townPos, _ringR] Call AIPatrol; //--- CYCLE waypoint ring (never idle).
 									_town setVariable ["wfbe_sortie_grp", _bestGrp, true];
 									_town setVariable ["wfbe_sortie_started", time];
+									//--- u3-sortie-despawn: reset any stale RTB latch from a PREVIOUS sortie group on
+									//--- this town (e.g. one that died mid-return-leg) so the freshly-picked group is
+									//--- never misread as "already returning" on the next sweep.
+									_town setVariable ["wfbe_sortie_rtb", false];
 									["INFORMATION", Format ["server_town_ai.sqf: sortie LAUNCHED for %1 (ring %2m).", _town getVariable "name", floor _ringR]] Call WFBE_CO_FNC_AICOMLog;
 								};
 							};
