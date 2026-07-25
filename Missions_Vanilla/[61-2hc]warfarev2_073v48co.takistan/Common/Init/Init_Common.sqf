@@ -23,6 +23,7 @@ GetAIDigit = Compile preprocessFileLineNumbers "Common\Functions\Common_GetAIDig
 WFBE_CO_FNC_GetUnitSlotDigit = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitSlotDigit.sqf";
 GetClosestLocation = Compile preprocessFileLineNumbers "Common\Functions\Common_GetClosestLocation.sqf";
 GetClosestFriendlyLocation = Compile preprocessFileLineNumbers "Common\Functions\Common_GetClosestFriendlyTown.sqf";
+GetCollectorLoadScale = Compile preprocessFileLineNumbers "Common\Functions\Common_GetCollectorLoadScale.sqf";
 GetCommanderTeam = Compile preprocessFileLineNumbers "Common\Functions\Common_GetCommanderTeam.sqf";
 GetConfigInfo = Compile preprocessFileLineNumbers "Common\Functions\Common_GetConfigInfo.sqf";
 GetFactories = Compile preprocessFileLineNumbers "Common\Functions\Common_GetFactories.sqf";

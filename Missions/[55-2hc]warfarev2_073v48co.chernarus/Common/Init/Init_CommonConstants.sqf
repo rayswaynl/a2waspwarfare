@@ -1362,6 +1362,13 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- sides' heavy worker passes don't land on the same frame (smooths the server-FPS sawtooth).
 	if (isNil "WFBE_C_AICOM_SUPERVISOR_JITTER") then {WFBE_C_AICOM_SUPERVISOR_JITTER = 7}; //--- s max random spawn-phase stagger.
 	if (isNil "WFBE_C_LOOP_PHASE_JITTER") then {WFBE_C_LOOP_PHASE_JITTER = 1}; //--- Perf (2026-07-06): when 1, the heavy server loops (town capture + activation sweeps, groupsGC, dead collector, side patrols) each sleep a one-time random offset (up to one own period) at startup so their ticks stop landing on the same frames. Default off = V1 behaviour.
+	//--- Perf (2026-07-25, Grok idea #24): when 1, the empty-vehicle collector (Server\FSM\emptyvehiclescollector.sqf)
+	//--- and dead-object garbage collector (Server\FSM\server_collector_garbage.sqf) lengthen their between-pass
+	//--- sleep under server load via Common_GetCollectorLoadScale.sqf (diag_fps tiers, ceiling 2.5x base delay) and
+	//--- restore the base cadence once fps recovers. Both collectors fully drain their current snapshot every pass,
+	//--- so a longer sleep only delays the NEXT sweep - it cannot grow an unbounded backlog. Default 0 = V1
+	//--- behaviour (fixed 1s / 5s sleeps, helper never reads diag_fps when disarmed).
+	if (isNil "WFBE_C_COLLECTOR_LOAD_SCALE") then {WFBE_C_COLLECTOR_LOAD_SCALE = 0};
 	//--- Patch F: pending-slot timeout reaper. A reserved (pending) team-build slot that never materialises is
 	//--- reaped after this many s so it can't permanently occupy the team budget (3 * TEAMS_INTERVAL[=90]).
 	if (isNil "WFBE_C_AICOM_PENDING_TIMEOUT") then {WFBE_C_AICOM_PENDING_TIMEOUT = 270}; //--- s before a never-filled pending team slot is reaped.
