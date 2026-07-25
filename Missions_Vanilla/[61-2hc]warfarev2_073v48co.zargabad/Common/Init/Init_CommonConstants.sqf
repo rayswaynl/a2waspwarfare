@@ -1935,7 +1935,9 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	// SCORE|v1 (server_groupsGC.sqf) uses engine scoreSide, which credits player-driven score only, so an AI-only
 	// side reads 0 on the public dashboard despite real WASPSTAT kill/capture activity. When >0, server_groupsGC.sqf
 	// emits an ADDITIVE SIDESCORE|v1 line (playerWest/East from scoreSide UNCHANGED, plus per-side kill/capture
-	// running counters from RequestOnUnitKilled.sqf + server_town.sqf). SCORE|v1 itself stays untouched. Kills and
+	// running counters from RequestOnUnitKilled.sqf + server_town.sqf). playerWest/East stay west/east-only by
+	// design (continuity with the pre-existing engine number); SCORE|v1 separately gained a |guer= field (see
+	// server_groupsGC.sqf) so GUER side score is no longer missing from that line. Kills and
 	// captures are mutual-knowledge combat record (both sides already see them), not base/town-ownership intel -
 	// within the 2026-06-21 competitive-integrity rule. Default 0 = flag-off, byte-identical to HEAD (no emit).
 	if (isNil "WFBE_C_SIDESCORE") then {WFBE_C_SIDESCORE = 0};
