@@ -3117,6 +3117,16 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN") then {WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN = 1800};
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_COST = 60000};
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX") then {WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX = 2};
+//--- CONVOY COHESION (Grok #5, update wave 2026-07-25): Common_RunCommanderTeam.sqf ground road-march.
+//--- 0 (default) = ORIGINAL behaviour, byte-identical to HEAD - every road-march node keeps FULL speed
+//--- and WFBE_C_AICOM_ROUTE_COMPLETION's completionRadius exactly as today. 1 = when a road-marching
+//--- team has >=2 alive/canMove ground vehicles, every intermediate road node EXCEPT the last one before
+//--- the final destination waypoint downshifts to LIMITED speed + WFBE_C_AICOM_CONVOY_COMPLETION's wider
+//--- completionRadius, so slower/rear hulls hold formation instead of leapfrogging ahead alone into
+//--- combat; the last road node (final approach) and the _dest waypoint stay FULL/tight so the assault-in
+//--- is still fast. Pure waypoint-parameter change - no new units, no scans, no PV.
+if (isNil "WFBE_C_AICOM_CONVOY_COHESION") then {WFBE_C_AICOM_CONVOY_COHESION = 0};
+if (isNil "WFBE_C_AICOM_CONVOY_COMPLETION") then {WFBE_C_AICOM_CONVOY_COMPLETION = 100}; //--- m: LIMITED-hop completionRadius while convoy cohesion is engaged (vs the normal WFBE_C_AICOM_ROUTE_COMPLETION 70). Only read while WFBE_C_AICOM_CONVOY_COHESION > 0.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

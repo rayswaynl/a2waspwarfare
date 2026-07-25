@@ -1660,12 +1660,44 @@ while {!WFBE_GameOver && _alive} do {
 					_rmRoute = _team getVariable "wfbe_aicom_route";
 					if (isNil "_rmRoute") then {_rmRoute = []};
 
+					//--- CONVOY COHESION (Grok #5, gate WFBE_C_AICOM_CONVOY_COHESION default 0, update wave 2026-07-25):
+					//--- pure waypoint-parameter tuning, no new units/scans/PV. Engages only when the flag is on, this
+					//--- team has >=2 alive/canMove GROUND vehicles (reuses the same isKindOf "Air" + canMove test as
+					//--- _rmHasVeh above), and the route actually has a distinct intermediate hop (>=2 road nodes, so
+					//--- there is at least one node besides the "last road node before _dest" that stays FULL). Flag-off
+					//--- (default) leaves _ccCohesion false, so every hop below takes the ORIGINAL FULL/_rmInterCR path -
+					//--- byte-identical to before this change.
+					private ["_ccVehCount","_ccCohesion","_ccCompletion"];
+					_ccVehCount = 0;
+					{ if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x}) then {_ccVehCount = _ccVehCount + 1} } forEach _vehicles;
+					_ccCohesion = ((missionNamespace getVariable ["WFBE_C_AICOM_CONVOY_COHESION", 0]) > 0) && {_ccVehCount >= 2} && {count _rmRoute >= 2};
+					_ccCompletion = missionNamespace getVariable ["WFBE_C_AICOM_CONVOY_COMPLETION", 100];
+					if (_ccCohesion) then {
+						//--- One diag_log line the FIRST time the governor engages per team per ORDER (not per hop).
+						//--- A2: groups do not support the [name,default] getVariable form; plain get + isNil.
+						private "_ccLastSeq"; _ccLastSeq = _team getVariable "wfbe_aicom_convoy_seq";
+						if (isNil "_ccLastSeq" || {_ccLastSeq != _seq}) then {
+							_team setVariable ["wfbe_aicom_convoy_seq", _seq];
+							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CONVOY_COHESION|team=" + (str _team) + "|seq=" + str _seq + "|vehicles=" + str _ccVehCount + "|nodes=" + str (count _rmRoute));
+						};
+					};
+
 					//--- Build the waypoint list: each road node as a COLUMN/NORMAL MOVE, then a
 					//--- final MOVE on the destination so the arrival branch (leader<200m) trips.
 					_rmWPs = [];
 					private "_rmInterCR"; _rmInterCR = missionNamespace getVariable ["WFBE_C_AICOM_ROUTE_COMPLETION", 70]; //--- SMOOTHNESS (B): intermediate road-node completionRadius widened 30 -> WFBE_C_AICOM_ROUTE_COMPLETION (70) so the convoy latches each node from further out and stops braking/backtracking to hit a tight 30m ring; the FINAL _dest node below stays tight (30) so the arrival branch still trips.
 					{
-						_rmWPs = _rmWPs + [[_x, 'MOVE', 40, _rmInterCR, [], [], ["AWARE",_marchCM,"","FULL"]]];  //--- cmdcon41-w2 F1: intermediate road-node transit uses _marchCM (YELLOW when flagged, else RED). STANCE (task #1): FULL advance (was YELLOW/NORMAL). A2-fix 2026-06-14: inherit-formation (was COLUMN-locked). SMOOTHNESS (B): completion 30 -> _rmInterCR (WFBE_C_AICOM_ROUTE_COMPLETION 70) so columns open through chokepoints instead of bunching + braking to hit each node.
+						private ["_rmSpeed","_rmCR"];
+						_rmSpeed = "FULL"; _rmCR = _rmInterCR;
+						//--- CONVOY COHESION: every road node EXCEPT the LAST one (the final approach hop right
+						//--- before the separate _dest waypoint below) downshifts to LIMITED + the wider
+						//--- _ccCompletion ring while engaged. A2-safe: _forEachIndex is a valid A2 command
+						//--- (same primitive Common_WaypointsAdd.sqf already uses).
+						if (_ccCohesion && {_forEachIndex < ((count _rmRoute) - 1)}) then {
+							_rmSpeed = "LIMITED";
+							_rmCR = _ccCompletion;
+						};
+						_rmWPs = _rmWPs + [[_x, 'MOVE', 40, _rmCR, [], [], ["AWARE",_marchCM,"",_rmSpeed]]];  //--- cmdcon41-w2 F1: intermediate road-node transit uses _marchCM (YELLOW when flagged, else RED). STANCE (task #1): FULL advance (was YELLOW/NORMAL). A2-fix 2026-06-14: inherit-formation (was COLUMN-locked). SMOOTHNESS (B): completion 30 -> _rmInterCR (WFBE_C_AICOM_ROUTE_COMPLETION 70) so columns open through chokepoints instead of bunching + braking to hit each node. CONVOY COHESION: _rmSpeed/_rmCR downshift on non-final hops only when WFBE_C_AICOM_CONVOY_COHESION engages (see above).
 					} forEach _rmRoute;
 					_rmWPs = _rmWPs + [[_dest, 'MOVE', 50, 30, [], [], ["AWARE","RED","COLUMN","FULL"]]];  //--- cmdcon41-w2 F1: FINAL MOVE node on _dest STAYS RED (advance-and-engage on the objective, unaffected by the march flag). STANCE (task #1): RED/FULL final-approach (was YELLOW/NORMAL). FINAL node kept tight (30) so the arrival branch (leader<capRange) still latches.
 					[_team, true, _rmWPs] Spawn WFBE_CO_FNC_WaypointsAdd;
