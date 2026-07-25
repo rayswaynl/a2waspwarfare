@@ -2668,6 +2668,10 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- (never-frozen guardrail). The 100 m velocity-hop fallback is a separate, intentional guard and
 //--- is unaffected by this constant.
 	if (isNil "WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R") then {WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R = 300};
+	//--- Patrol tier-3 player-block termination: after this many consecutive guarded fires,
+	//--- default behavior quietly recycles the AI group; the force-teleport option remains owner-gated.
+	if (isNil "WFBE_C_AICOM_RECOVERY_PLAYER_BLOCKED_MAX") then {WFBE_C_AICOM_RECOVERY_PLAYER_BLOCKED_MAX = 3};
+	if (isNil "WFBE_C_AICOM_RECOVERY_FORCE_PLAYER_TELEPORT") then {WFBE_C_AICOM_RECOVERY_FORCE_PLAYER_TELEPORT = 0};
 //--- STUCK_REPAIR_RESETS_TIER (2026-07-06, flag-gated default 0): when STUCK_REPAIR fires and the
 //--- hull canMove after in-place restoration, reset the team tier counter (wfbe_aicom_stuckstrikes)
 //--- to 0 so AssignTowns does not re-issue the next order at a still-high tier. Investigation showed
