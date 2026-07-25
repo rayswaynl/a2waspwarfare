@@ -157,6 +157,17 @@ while {!gameOver} do {
 			//--- WFBE_GameOver also short-circuits any later side in the same forEach pass.
 			//--- cmdcon41-w3b: the territorial clock (_terrWin) is OR-ed in as a third win trigger.
 			if ( !WFBE_GameOver && ( (!(alive _hq) && _factories == 0) || (_towns == _total) || _terrWin ) ) then {
+				//--- Preserve the exact trigger for downstream telemetry/reporting; town counts alone cannot distinguish a base wipe from territorial control.
+				private ["_victoryCause"];
+				if (_terrWin) then {
+					_victoryCause = "TERRITORIAL";
+				} else {
+					if (_towns == _total) then {
+						_victoryCause = "SUPREMACY";
+					} else {
+						_victoryCause = "ANNIHILATION";
+					};
+				};
 				//--- FIX D (winner backwards): the award block fires for the evaluated side _x.
 				//--- If the towns-supremacy sub-condition is true, _x is the WINNER. Otherwise the
 				//--- HQ-loss branch fired - _x is the side whose own HQ was razed = the LOSER, so the
@@ -259,7 +270,8 @@ while {!gameOver} do {
 						+ "|vehLostW=" + str _meWVeh
 						+ "|vehLostE=" + str _meEVeh
 						+ "|players=" + str _mePlayers
-						+ "|totalTowns=" + str _total);
+						+ "|totalTowns=" + str _total
+						+ "|victory=" + _victoryCause);
 					["INFORMATION", Format ["server_victory_threeway.sqf: MATCH|v1|END| emitted - winner=%1 duration=%2s.", str _winSide, _meDurationSec]] Call WFBE_CO_FNC_LogContent;
 				};
 

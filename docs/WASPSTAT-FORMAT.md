@@ -224,7 +224,7 @@ town counts are recomputed independently so `END` is always correct regardless o
 `WFBE_C_STATLOG`.
 
 ```
-MATCH|v1|END|winner=<winSide>|durationSec=<durationSec>|world=<worldName>|townsW=<townsW>|townsE=<townsE>|townsG=<townsG>|casW=<casW>|casE=<casE>|vehLostW=<vehLostW>|vehLostE=<vehLostE>|players=<players>|totalTowns=<totalTowns>
+MATCH|v1|END|winner=<winSide>|durationSec=<durationSec>|world=<worldName>|townsW=<townsW>|townsE=<townsE>|townsG=<townsG>|casW=<casW>|casE=<casE>|vehLostW=<vehLostW>|vehLostE=<vehLostE>|players=<players>|totalTowns=<totalTowns>|victory=<cause>
 ```
 
 | Field | Source | Notes |
@@ -241,6 +241,7 @@ MATCH|v1|END|winner=<winSide>|durationSec=<durationSec>|world=<worldName>|townsW
 | `vehLostE` | `WF_Logic getVariable "EASTVehiclesLost"` | EAST vehicles destroyed. |
 | `players` | `{ isPlayer _x } count playableUnits` | Peak connected player count at round end. |
 | `totalTowns` | `totalTowns` (local var in victory loop) | Total towns on the map. |
+| `victory` | Victory award branch | `ANNIHILATION` (enemy HQ plus factories destroyed), `SUPREMACY` (all towns captured), or `TERRITORIAL` (configured territorial hold completed). This is authoritative; consumers must not infer a win label from final town ownership. |
 
 ---
 
