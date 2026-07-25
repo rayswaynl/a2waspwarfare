@@ -2911,6 +2911,11 @@ if (isNil "WFBE_C_CMD_SUPPORT_AIR_RECALL")     then {WFBE_C_CMD_SUPPORT_AIR_RECA
 if (isNil "WFBE_C_CMD_SUPPORT_AIR_RECALL_HYST")then {WFBE_C_CMD_SUPPORT_AIR_RECALL_HYST = 60};//--- s HYSTERESIS: the emergency must have been continuously true for this long before a recall fires, and no new grant is issued on the side for this long after one. Prevents flapping grants on a blinking last-stand flag.
 if (isNil "WFBE_C_CMD_SUPPORT_AIR_MIN_ALT")    then {WFBE_C_CMD_SUPPORT_AIR_MIN_ALT = 120};   //--- m flyInHeight used for the escort orbit (transport stands off higher than a CAS pass).
 if (isNil "WFBE_C_CMD_SUPPORT_JET")            then {WFBE_C_CMD_SUPPORT_JET = 0};             //--- RESERVED, not implemented: 0 = the "cas-jet"/"transport-jet" request kinds are parsed and explicitly REJECTED with telemetry so the UI can grey them instead of silently dropping. There is no jet grant path in this build; setting this to 1 does NOT create one.
+//--- (d) TEAM STATUS STRIP (Grok idea #26, build round 2 2026-07-25): appends a one-line "Order/Target/Stuck"
+//---     readout for the SELECTED war-room roster team onto the 14600 economy header (GUI_Menu_Command.sqf).
+//---     Pure client read of already-broadcast AICOM vars - zero server changes. Default 0 = the read block is
+//---     skipped entirely and the header is byte-identical to pre-feature HEAD.
+if (isNil "WFBE_C_CMD_TEAM_STATUS")            then {WFBE_C_CMD_TEAM_STATUS = 0};              //--- master flag: 1 = on. 0 reverts GUI_Menu_Command.sqf's 14600 repaint to byte-identical pre-feature output.
 
 //--- TRASH-OBJECT LOCALITY (2026-07-21 hardening extras): Common_TrashObject.sqf ends in an unconditional
 //--- deleteVehicle, which SILENTLY NO-OPS on an object that is not local to the machine running it - the same
