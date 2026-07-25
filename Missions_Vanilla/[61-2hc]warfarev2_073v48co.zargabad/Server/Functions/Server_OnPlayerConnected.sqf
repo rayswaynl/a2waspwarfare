@@ -221,6 +221,26 @@ if (isNil '_sideJoined') exitWith {
 missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], nil];
 missionNamespace setVariable [Format ["WFBE_SOD_LASTG_%1", _uid], nil]; //--- b762: clear the stamp-on-demand stability tracker on enrollment success.
 
+//--- Re-register a resolved human team that may have been pruned by the HC boot-magnet cleanup.
+//--- This is deliberately after side validation: the normal resolver path must repair roster membership,
+//--- while the existing stamp-on-demand path remains responsible for unresolved transient groups.
+if (_sideJoined in [west, east, resistance]) then {
+	private ["_rrLogik","_rrTeams"];
+	_rrLogik = _sideJoined Call WFBE_CO_FNC_GetSideLogic;
+	if (!isNull _rrLogik) then {
+		_rrTeams = _rrLogik getVariable ["wfbe_teams", []];
+		if (!(_team in _rrTeams)) then {
+			_rrTeams = _rrTeams + [_team];
+			_rrLogik setVariable ["wfbe_teams", _rrTeams, true];
+			diag_log Format ["[WFBE][ROSTER-REG] re-registered resolved team %1 for [%2] [%3] into side %4 wfbe_teams (now %5)", _team, _name, _uid, _sideJoined, count _rrTeams];
+		};
+	};
+	if (!isNil {_team getVariable "wfbe_hc_magnet"}) then {
+		_team setVariable ["wfbe_hc_magnet", nil];
+		diag_log Format ["[WFBE][ROSTER-REG] cleared stale wfbe_hc_magnet on human-occupied team %1 ([%2] [%3]).", _team, _name, _uid];
+	};
+};
+
 //--- B63 (Ray 2026-06-21): INSTANT JIP catch-up for the own-side MARKER feeds. In A2-OA a
 //--- publicVariable is not replayed to a client that joined after the broadcast, so a fresh
 //--- joiner's WFBE_ACTIVE_AICOM_TEAMS / WFBE_ACTIVE_PATROLS are empty and their own commander-team

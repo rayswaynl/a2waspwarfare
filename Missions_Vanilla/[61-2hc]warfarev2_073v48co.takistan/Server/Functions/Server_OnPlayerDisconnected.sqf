@@ -145,10 +145,11 @@ _old_unit_group = group _old_unit;
 //--- Make sure that our disconnected player group was the same as the original, we simply set him back to his group otherwise).
 if (_old_unit_group != _team) then {
 	//todo, check if we have at least 1 unit in the old squad.
-	Private ["_entitie"];
+	Private ["_entitie","_fillerClass"];
 	_entitie = objNull;
-	if ((count (units _old_unit_group)) < 2) then {
-		_entitie = [missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side], _old_unit_group, [0,0,0], _side] Call WFBE_CO_FNC_CreateUnit;
+	_fillerClass = missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side];
+	if ((count (units _old_unit_group)) < 2 && {!isNil "_fillerClass"} && {typeName _fillerClass == "STRING"}) then {
+		_entitie = [_fillerClass, _old_unit_group, [0,0,0], _side] Call WFBE_CO_FNC_CreateUnit;
 	};
 
 	[_old_unit] joinSilent _team;
