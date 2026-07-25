@@ -195,6 +195,10 @@
     "probed": 0,
     "total": 1
   },
+  "Server/FSM/server_aicom_orphan_heal.sqf": {
+    "probed": 2,
+    "total": 4
+  },
   "Server/FSM/server_groupsGC.sqf": {
     "probed": 7,
     "total": 15
@@ -245,7 +249,7 @@
   },
   "Server/Functions/Server_OnPlayerDisconnected.sqf": {
     "probed": 0,
-    "total": 5
+    "total": 4
   },
   "Server/Functions/Server_OperateTownDefensesUnits.sqf": {
     "probed": 0,
