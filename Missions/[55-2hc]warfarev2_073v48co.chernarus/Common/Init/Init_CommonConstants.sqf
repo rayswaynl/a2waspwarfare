@@ -2986,5 +2986,13 @@ if (isNil "WFBE_C_ICBM_LEGACY_SERVER_AUTH") then {WFBE_C_ICBM_LEGACY_SERVER_AUTH
 if (isNil "WFBE_C_ICBM_COST") then {WFBE_C_ICBM_COST = 75000};               //--- classic ICBM (NUKE) fee; GUI_Menu_Tactical.sqf's fee row reads this same constant (lock-step).
 if (isNil "WFBE_C_ICBM_LEGACY_COOLDOWN") then {WFBE_C_ICBM_LEGACY_COOLDOWN = 300}; //--- s: per-side shared legacy-ICBM cooldown (parity with WFBE_C_ICBM_TEL_COOLDOWN).
 
+//--- ASSAULT RETARGET CHURN (2026-07-25): default 0 keeps current targeting/recycle behavior.
+//--- Positive grace value re-issues the current enemy town for that many stuck worker passes before a different-town retarget.
+if (isNil "WFBE_C_AICOM_RETARGET_GRACE_DISPATCHES") then {WFBE_C_AICOM_RETARGET_GRACE_DISPATCHES = 0};
+//--- Positive value widens the allocator freshness window to at least 300s (the worker cadence is 120s); default 0 keeps 180s.
+if (isNil "WFBE_C_AICOM2_ALLOC_TTL_HARDEN") then {WFBE_C_AICOM2_ALLOC_TTL_HARDEN = 0};
+//--- Positive value counts uncommitted RETARGET/FOOT_STAGE closures toward WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE; default 0 is inert.
+if (isNil "WFBE_C_AICOM_RETARGET_RECYCLE") then {WFBE_C_AICOM_RETARGET_RECYCLE = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

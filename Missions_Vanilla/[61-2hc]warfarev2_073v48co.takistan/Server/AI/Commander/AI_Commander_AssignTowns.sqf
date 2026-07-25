@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage","_footStagePos","_stageGoto","_waveDelay"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state; +_waveDelay: feat/aicom-wave-stagger
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage","_footStagePos","_stageGoto","_waveDelay","_priorDispT0"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state; +_waveDelay: feat/aicom-wave-stagger
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -178,6 +178,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						private ["_fjS","_fjThrS"];
 						_fjS = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
 						_team setVariable ["wfbe_aicom_failedjourneys", _fjS];
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_RECYCLE", 0]) > 0) then {_team setVariable ["wfbe_aicom_journey_failed_counted", true]};
 						//--- STRAND FAST-TRACK (wasp-hc-delegation-collapse-20260722, gate WFBE_C_AICOM_STRAND_FASTRECYCLE
 						//--- default 0): a team that burned the WHOLE (dyn)timeout while moving under
 						//--- WFBE_C_AICOM_STRAND_FAST_MOVED m from its journey start is not slow, it is wedged (live
@@ -373,6 +374,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							private ["_fjD","_fjThrD"];
 							_fjD = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
 							_team setVariable ["wfbe_aicom_failedjourneys", _fjD];
+							if ((missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_RECYCLE", 0]) > 0) then {_team setVariable ["wfbe_aicom_journey_failed_counted", true]};
 							_fjThrD = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
 							if (_fjThrD > 0 && {_fjD >= _fjThrD} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 								_team setVariable ["wfbe_aicom_recycle", true, true];
@@ -469,6 +471,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 												private ["_fjA","_fjThrA"];
 												_fjA = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
 												_team setVariable ["wfbe_aicom_failedjourneys", _fjA];
+												if ((missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_RECYCLE", 0]) > 0) then {_team setVariable ["wfbe_aicom_journey_failed_counted", true]};
 												_fjThrA = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
 												if (_fjThrA > 0 && {_fjA >= _fjThrA} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 													_team setVariable ["wfbe_aicom_recycle", true, true];
@@ -585,6 +588,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 													private ["_fjSA","_fjThrSA"];
 													_fjSA = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
 													_team setVariable ["wfbe_aicom_failedjourneys", _fjSA];
+													if ((missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_RECYCLE", 0]) > 0) then {_team setVariable ["wfbe_aicom_journey_failed_counted", true]};
 													_fjThrSA = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
 													if (_fjThrSA > 0 && {_fjSA >= _fjThrSA} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 														_team setVariable ["wfbe_aicom_recycle", true, true];
@@ -616,6 +620,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 													private ["_fjUC","_fjThrUC"];
 													_fjUC = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
 													_team setVariable ["wfbe_aicom_failedjourneys", _fjUC];
+													if ((missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_RECYCLE", 0]) > 0) then {_team setVariable ["wfbe_aicom_journey_failed_counted", true]};
 													_fjThrUC = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
 													if (_fjThrUC > 0 && {_fjUC >= _fjThrUC} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 														_team setVariable ["wfbe_aicom_recycle", true, true];
@@ -723,6 +728,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 										};
 									};
 									if (_jcProg >= 150 && {!_jcBlHit}) then {
+										if (((missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_GRACE_DISPATCHES", 0]) > 0) || {(missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_RECYCLE", 0]) > 0}) then {_team setVariable ["wfbe_aicom_journey_commit_seen", true]};
 										_needs = false; //--- committed + progressing: keep this journey, skip retarget this pass.
 										diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|JOURNEY_COMMIT|team=" + (str _team) + "|town=" + (_jcTgt getVariable ["name","town"]) + "|progress=" + str (round _jcProg));
 									};
@@ -894,6 +900,20 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							_uncapturedF = _uncaptured;
 						};
 					};
+					//--- RETARGET GRACE (assault-retarget-churn, default 0): a slow team that has not yet earned
+					//--- JOURNEY_COMMIT may re-issue its current live enemy town for a bounded number of worker
+					//--- passes before a DIFFERENT town is selected. Same-town re-issues preserve the existing
+					//--- dispatch clock; the guard is state-only and does not scan units or towns.
+					if (isNull _target && {(missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_GRACE_DISPATCHES", 0]) > 0} && {!_bootstrap} && {!_strandRecovery} && {!_footStage} && {typeName _goto == "OBJECT"} && {!isNull _goto} && {(_goto getVariable ["sideID", -1]) != _sideID} && {!(_goto in _blTowns)} && {[_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool} && {!([_team, "wfbe_aicom_journey_commit_seen", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+						private ["_graceLimit","_graceCount"];
+						_graceLimit = missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_GRACE_DISPATCHES", 0];
+						_graceCount = [_team, "wfbe_aicom_retarget_grace", 0] Call WFBE_CO_FNC_GroupGetBool;
+						if (_graceCount < _graceLimit) then {
+							_target = _goto;
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RETARGET_GRACE_HOLD|team=" + (str _team) + "|town=" + (_goto getVariable ["name","town"]) + "|count=" + str _graceCount + "|limit=" + str _graceLimit);
+						};
+					};
+
 					//--- AICOM v2 (M1): if the single-authority Allocator assigned THIS team a target this cycle,
 					//--- USE it (concentrate on the fist) and skip the legacy spearhead/nearest pick below. Fresh-gated
 					//--- (WFBE_C_AICOM2_ALLOC_TICK_TTL, default 180s) so a stale assignment (Allocator off / not run) falls through to legacy = instant rollback.
@@ -902,6 +922,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_allocT    = _team getVariable "wfbe_aicom_alloc_target";
 						_allocTick = _team getVariable "wfbe_aicom_alloc_tick";
 						_allocTtl  = missionNamespace getVariable ["WFBE_C_AICOM2_ALLOC_TICK_TTL", 180];
+						if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOC_TTL_HARDEN", 0]) > 0) then {if (_allocTtl < 300) then {_allocTtl = 300}};
 						if (!isNil "_allocTick") then {_allocAge = time - _allocTick} else {_allocAge = 1e9};
 						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)} && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_mounted} || {(_ldrPos distance _allocT) <= _teamReach}}) then { //--- review fix: FOOT_STAGE must not accept an allocator target outside honest reach.
 							_target = _allocT;
@@ -971,6 +992,26 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 									};
 								} forEach towns;
 								if (!isNull _footStageTown) then {
+									if ((missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_RECYCLE", 0]) > 0) then {
+										private ["_fsOrd","_fsTgt","_fsCommit","_fsCounted","_fjR","_fjThrR"];
+										_fsOrd = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
+										_fsTgt = if (count _fsOrd >= 1) then {_fsOrd select 0} else {objNull};
+										_fsCommit = [_team, "wfbe_aicom_journey_commit_seen", false] Call WFBE_CO_FNC_GroupGetBool;
+										_fsCounted = [_team, "wfbe_aicom_journey_failed_counted", false] Call WFBE_CO_FNC_GroupGetBool;
+										if ([_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool) then {
+											if (count _fsOrd >= 3 && {typeName _fsTgt == "OBJECT"} && {!isNull _fsTgt} && {(_fsTgt getVariable ["sideID", -1]) != _sideID} && {!_fsCommit} && {!_fsCounted} && {!(_fsTgt in _blTowns)}) then {
+												_fjR = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
+												_team setVariable ["wfbe_aicom_failedjourneys", _fjR];
+												_team setVariable ["wfbe_aicom_journey_failed_counted", true];
+												_fjThrR = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
+												if (_fjThrR > 0 && {_fjR >= _fjThrR} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+													_team setVariable ["wfbe_aicom_recycle", true, true];
+													diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjR + "|reason=foot-stage");
+												};
+												diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOOT_STAGE_RECYCLE|team=" + (str _team) + "|failedjourneys=" + str _fjR);
+											};
+										};
+									};
 									[_team, "move"] Call SetTeamMoveMode;
 									[_team, getPos _footStageTown] Call SetTeamMovePos;
 									_team setVariable ["wfbe_aicom_foot_stage", true];
@@ -1112,11 +1153,12 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						//--- the original dispatch start-time (_dt0) so the strand watcher fires on schedule and the
 						//--- failure is logged + the team deliberately re-tasked. A NEW target (front rolled, target
 						//--- captured) legitimately resets the clock. The unstuck strike ladder still rides along.
-						private ["_priorOrd","_priorOpen","_dispT0","_sameTgt"];
+						private ["_priorOrd","_priorOpen","_dispT0","_priorDispT0","_sameTgt"];
 						_priorOrd  = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
 						_priorOpen = [_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool;
 						_sameTgt   = (count _priorOrd >= 1) && {(typeName (_priorOrd select 0)) == "OBJECT"} && {(_priorOrd select 0) == _target};
-						_dispT0    = if (_priorOpen && _sameTgt && {count _priorOrd >= 2}) then {_priorOrd select 1} else {time};
+						_priorDispT0 = if (count _priorOrd >= 2) then {_priorOrd select 1} else {time};
+						_dispT0    = if (_priorOpen && _sameTgt && {count _priorOrd >= 2}) then {_priorDispT0} else {time};
 						//--- FIX A: distance/mobility-aware assault timeout (fable, GR-2026-07-08a; design ASSAULT-DYNTIMEOUT-DESIGN.md
 						//--- S2.5). _asltSpeed/_asltDist/_asltToSecs are in the top-of-file private list. _mounted/_teamAir are the
 						//--- SAME locals the reach gate above already computed this iteration (no re-scan of units _team).
@@ -1143,14 +1185,39 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						} else {
 							_asltToSecs = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT", 420];   //--- flag-off: legacy flat value: tuple still gets a 4th element for schema consistency but its VALUE equals the pre-patch default, so the outcome watcher decision is byte-identical.
 						};
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_RECYCLE", 0]) > 0 && {_priorOpen} && {!_sameTgt} && {count _priorOrd >= 3} && {(typeName (_priorOrd select 0)) == "OBJECT"} && {!isNull (_priorOrd select 0)} && {((_priorOrd select 0) getVariable ["sideID", -1]) != _sideID}) then {
+							private ["_priorCommit","_priorCounted","_fjR","_fjThrR"];
+							_priorCommit = [_team, "wfbe_aicom_journey_commit_seen", false] Call WFBE_CO_FNC_GroupGetBool;
+							_priorCounted = [_team, "wfbe_aicom_journey_failed_counted", false] Call WFBE_CO_FNC_GroupGetBool;
+							if (!_priorCommit && {!_priorCounted}) then {
+								_fjR = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
+								_team setVariable ["wfbe_aicom_failedjourneys", _fjR];
+								_team setVariable ["wfbe_aicom_journey_failed_counted", true];
+								_fjThrR = missionNamespace getVariable ["WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE", 0];
+								if (_fjThrR > 0 && {_fjR >= _fjThrR} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+									_team setVariable ["wfbe_aicom_recycle", true, true];
+									diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjR + "|reason=retarget");
+								};
+								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RETARGET_RECYCLE|team=" + (str _team) + "|failedjourneys=" + str _fjR + "|committed=false");
+							};
+						};
 						//--- fable/assault-retarget-telemetry (2026-07-10): when a team with an OPEN dispatch is re-aimed at a
 						//--- DIFFERENT town (_priorOpen && !_sameTgt), the old dispatch's outcome-watcher (Hook B) is silently
 						//--- overwritten below and never logs ARRIVED/STRANDED - which is why ~84% of dispatches had no terminal
 						//--- outcome (mostly legitimate re-targeting, NOT failed attacks). Log RETARGET so the accounting closes:
 						//--- DISPATCH = ARRIVED + STRANDED + RETARGET + (in-flight). Pure telemetry, zero behaviour change.
 						if (_priorOpen && {!_sameTgt} && {count _priorOrd >= 1} && {(typeName (_priorOrd select 0)) == "OBJECT"} && {!isNull (_priorOrd select 0)}) then {
-							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_RETARGET|team=" + (str _team) + "|from=" + ((_priorOrd select 0) getVariable ["name","town"]) + "|to=" + (_target getVariable ["name","town"]) + "|elapsed=" + str (round (time - _dispT0)));
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_RETARGET|team=" + (str _team) + "|from=" + ((_priorOrd select 0) getVariable ["name","town"]) + "|to=" + (_target getVariable ["name","town"]) + "|elapsed=" + str (round (time - _priorDispT0)));
 						};
+						if (((missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_GRACE_DISPATCHES", 0]) > 0) || {(missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_RECYCLE", 0]) > 0}) then {
+							if (!_priorOpen || {!_sameTgt}) then {_team setVariable ["wfbe_aicom_journey_commit_seen", false]};
+						};
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_GRACE_DISPATCHES", 0]) > 0) then {
+							private "_nextGraceCount";
+							if (_priorOpen && _sameTgt) then {_nextGraceCount = ([_team, "wfbe_aicom_retarget_grace", 0] Call WFBE_CO_FNC_GroupGetBool) + 1} else {_nextGraceCount = 0};
+							_team setVariable ["wfbe_aicom_retarget_grace", _nextGraceCount];
+						};
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_RETARGET_RECYCLE", 0]) > 0) then {_team setVariable ["wfbe_aicom_journey_failed_counted", false]};
 						_team setVariable ["wfbe_aicom_townorder", [_target, _dispT0, getPos (leader _team), _asltToSecs]];
 						//--- Round-3 review: dedicated TARGET-CHANGE timestamp. _dispT0 refreshes on same-target
 						//--- re-issues, so it is NOT a stable "how long has this team been aimed here" basis - the
