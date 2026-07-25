@@ -2,13 +2,13 @@
 
 One command to grade a soak against the **cmdcon41 fix-package KPIs**.
 
-After a soak match ends, pull the two RPTs and run the analyzer. It prints a
+After a soak match ends, pull the server RPT and every HC RPT, then run the analyzer. It prints a
 compact scorecard with `PASS` / `WATCH` / `FAIL` per KPI and an overall verdict.
 
 - **Python 3.6+, standard library only.** No install, no deps.
-- Reads a **server RPT** (required) and an optional **HC RPT** (the AICOM
-  *team-driver* logs — including `CAPTURED [` capture lines — live on the
-  Headless Client, not the server; see "Why two RPTs" below).
+- Reads a **server RPT** (required) and optional repeated **HC RPTs**. The
+  analyzer routes each token to its emitting context; missing expected inputs
+  are reported as `not measured`, never as a real zero.
 
 ---
 
@@ -18,13 +18,11 @@ compact scorecard with `PASS` / `WATCH` / `FAIL` per KPI and an overall verdict.
 # server RPT only
 python analyze_soak.py arma2oaserver.RPT
 
-# server + HC RPT (recommended — adds capture-driver / dogpile detail)
-python analyze_soak.py arma2oaserver.RPT ArmA2OA.RPT
-#   ...or explicitly:
-python analyze_soak.py arma2oaserver.RPT --hc ArmA2OA.RPT
+# server + HC RPTs (recommended — adds capture-driver / dogpile detail)
+python analyze_soak.py arma2oaserver.RPT --hc HC1-ArmA2OA.RPT --hc HC2-ArmA2OA.RPT
 
 # machine-readable dump (for dashboards / diffing runs)
-python analyze_soak.py arma2oaserver.RPT --hc ArmA2OA.RPT --json
+python analyze_soak.py arma2oaserver.RPT --hc HC1-ArmA2OA.RPT --hc HC2-ArmA2OA.RPT --json
 
 # compare the current run against a saved JSON run from an older build
 python analyze_soak.py arma2oaserver.RPT --hc ArmA2OA.RPT --compare-json build85.json
@@ -38,7 +36,7 @@ python analyze_soak.py C:/Users/Game/wasp-westwin-20260701.rpt
 | flag | meaning |
 |------|---------|
 | `<server.rpt>` | **required** — `arma2oaserver.RPT` from the box |
-| `[hc.rpt]` or `--hc <path>` | optional Headless-Client RPT (`ArmA2OA.RPT`) |
+| `[hc.rpt ...]` or repeated `--hc <path>` | optional Headless-Client RPTs (`ArmA2OA.RPT`) |
 | `--zombie-min N` | dispatches threshold for the "zombie" definition (default **3**, which reproduces the documented baseline of 13; `2` → 15, `1` → 20) |
 | `--json` | emit JSON instead of the text scorecard |
 | `--compare-json <path>` | compare headline KPIs against a previous analyzer JSON file |
@@ -71,7 +69,7 @@ scp "Administrator@78.46.107.142:C:/Users/Administrator/AppData/Local/ArmA 2 OA/
 Then:
 
 ```bash
-python analyze_soak.py ./arma2oaserver.RPT --hc ./ArmA2OA.RPT
+python analyze_soak.py ./arma2oaserver.RPT --hc ./HC1-ArmA2OA.RPT --hc ./HC2-ArmA2OA.RPT
 ```
 
 ### MISSINIT scoping (important)
@@ -91,18 +89,25 @@ You do **not** need to trim the RPTs by hand.
 
 ---
 
-## Why two RPTs
+## Why multiple RPTs
 
-Per the mission architecture, **AICOM teams run on the Headless Client**, so the
-team-level telemetry — `begin_capture`, `CAPTURED [ ... ]`, driver stall/errors
-— is written to the **HC** RPT (`ArmA2OA.RPT`), *not* the server RPT
-(`arma2oaserver.RPT`). The server RPT carries the commander-level lines
-(`AICOMSTAT|v1/v2`, `WASPSTAT|v1`, `WASPSCALE|v2`).
+The centralized per-side workers (`AI_Commander_AssignTowns.sqf` and
+`AI_Commander_Strategy.sqf`) write `ASSAULT_*`, `TARGET_ABANDON`,
+`RALLY_ORDER`, `STUCKSTAT`, and related server-worker telemetry to
+`arma2oaserver.RPT`. The local `Common_RunCommanderTeam.sqf` driver writes
+`RALLY_ARRIVED`, `BREAKOFF`, `TOPUP_*`, `UNSTUCK_*`, and driver-side
+`CAPTURE_TRACE` on the machine that owns each team — normally an HC, but
+server-local teams can appear in the server RPT. `CAPTURED [` is emitted by
+the local capture driver and can therefore be in either source.
 
-If you pass only the server RPT you still get every KPI that matters for the
-fix-package (arrival, zombies, army-vs-army, churn, MHQ, perf, new events);
-adding the HC RPT unlocks the **capture-driver / per-town dogpile** detail in
-section 6.
+The analyzer therefore accepts multiple `--hc` inputs, counts each expected
+source once, and keeps a token found in the wrong RPT as a routing diagnostic
+instead of inflating the score. `TEAM_RECYCLE` and `TARGET_ESCALATE` have no
+maintained mission emitter and are reported as `no source`.
+
+If an expected HC RPT is not supplied, HC-only or both-source metrics are
+`not measured`; they are never rendered as zero. Adding all HC RPTs unlocks
+the **capture-driver / per-town dogpile** detail in section 6.
 
 ---
 
@@ -120,9 +125,10 @@ section 6.
    E 122 over ~7h), TARGET_ABANDON (with reasons), SPEARHEAD_REPICK, and the
    reissue share of dispatches.
 5. **NEW cmdcon41 events** — count + last-3 samples for each of:
-   `TARGET_ESCALATE, RALLY_ORDER, RALLY_ARRIVED, BREAKOFF, TOPUP_REQ,
-   TOPUP_DONE, TEAM_RECYCLE, RECYCLE_FLAG, ORBITER_STUCK, ECON_SINK,
-   CAPTURE_TRACE, STAGE`; the `CAPTURE_TRACE` **ARRIVAL_GATE vs ARRIVAL_WAIT**
+   `ASSAULT_STRANDED, ASSAULT_RETARGET, TARGET_ESCALATE, RALLY_ORDER,
+   RALLY_ARRIVED, BREAKOFF, TOPUP_REQ, TOPUP_DONE, TEAM_RECYCLE,
+   RECYCLE_FLAG, ORBITER_STUCK, ECON_SINK, CAPTURE_TRACE, STAGE,
+   UNSTUCK_FIRED, UNSTUCK_STRIKE, STUCKSTAT`; the `CAPTURE_TRACE` **ARRIVAL_GATE vs ARRIVAL_WAIT**
    ratio; `BASE-ASSAULT` fire-phase lines; and **MHQRELOC DEPLOYED vs ABORT**
    with abort-reason breakdown (baseline **43/43 aborts, 0 deployed**).
 6. **HOLD / SEE-SAW** — max simultaneous towns held per side (from POSTURE

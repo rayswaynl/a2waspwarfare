@@ -3,15 +3,15 @@
 """
 analyze_soak.py -- WASP soak-KPI analyzer (cmdcon41 + AICOM2 soak-gate grader)
 
-Reads a server RPT (required) and an optional HC RPT (team-driver logs live
-there; the capture pattern is `CAPTURED [`). Emits a compact scorecard grading
+Reads a server RPT (required) and one or more optional HC RPTs (team-driver
+logs live there; the capture pattern is `CAPTURED [`). Emits a compact scorecard grading
 the soak against the cmdcon41 fix-package KPIs, with PASS/WATCH/FAIL verdicts.
 
 stdlib only, Python 3.6+.
 
 Usage:
     python analyze_soak.py <server.rpt> [hc.rpt]
-    python analyze_soak.py <server.rpt> --hc <hc.rpt>
+    python analyze_soak.py <server.rpt> --hc <hc1.rpt> --hc <hc2.rpt>
     python analyze_soak.py <server.rpt> --json          # machine-readable dump
     python analyze_soak.py <server.rpt> --compare-json previous.json
     python analyze_soak.py <server.rpt> --no-color
@@ -52,10 +52,15 @@ AICOM2 telemetry (V2 commander lines, section 10 of this scorecard):
         hc2fps is the 2nd HC's fps (hc_fps stays the min across HCs, unchanged).
 
 IMPORTANT (per project memory):
-  * AICOM TEAMS run on the HC -> driver / CAPTURED logs go to the HC RPT
-    (ArmA2OA.RPT), NOT the server RPT. Pass the HC RPT to get dogpile/capture
-    driver telemetry. Only the LAST MISSINIT block of the HC RPT is scoped
-    (the HC RPT is not archived on deploy, so it accumulates old matches).
+  * Centralized per-side workers (`AI_Commander_AssignTowns.sqf` and
+    `AI_Commander_Strategy.sqf`) log to `arma2oaserver.RPT`.
+  * The local `Common_RunCommanderTeam.sqf` driver logs to whichever process
+    owns the team: normally an HC RPT, but server-local teams can appear in the
+    server RPT. The analyzer therefore routes by token and accepts both files
+    only for tokens emitted by that driver.
+  * Pass every HC RPT with repeated `--hc`; only the expected source is counted.
+    A token in an unexpected RPT is retained as a routing diagnostic, not added
+    to the score. Missing expected RPTs are `not measured`, never zero.
   * AICOM tick (the integer after the SIDE in v1/v2 lines) == 1 minute of
     wall-clock. tick/60 == hours. Used for per-hour churn rates.
   * The archived reference full-match RPT is wasp-westwin-20260701.rpt; running
@@ -97,6 +102,8 @@ TH_WE_SHARE_PASS = 5.0    # W<->E share of kills >5% -> PASS
 
 # cmdcon41 NEW event types to surface (count + last-3 samples each).
 NEW_EVENT_TYPES = [
+    "ASSAULT_STRANDED",
+    "ASSAULT_RETARGET",
     "TARGET_ESCALATE",
     "RALLY_ORDER",
     "RALLY_ARRIVED",
@@ -109,7 +116,45 @@ NEW_EVENT_TYPES = [
     "ECON_SINK",
     "CAPTURE_TRACE",
     "STAGE",
+    "UNSTUCK_FIRED",
+    "UNSTUCK_STRIKE",
+    "STUCKSTAT",
 ]
+
+# Source-of-truth routing for the telemetry vocabulary.  ``both`` is
+# intentional: Common_RunCommanderTeam.sqf runs where the team is local, so
+# its driver events can be server-local or HC-local.  We count each supplied
+# RPT once and retain events found in an unexpected file as a diagnostic.
+EVENT_SOURCE_POLICY = {
+    "ASSAULT_DISPATCH": {"server"},
+    "ASSAULT_ARRIVED": {"server"},
+    "ASSAULT_STRANDED": {"server"},
+    "ASSAULT_RETARGET": {"server"},
+    "TARGET_ABANDON": {"server"},
+    "RALLY_ORDER": {"server"},
+    "RALLY_ARRIVED": {"server", "hc"},
+    "BREAKOFF": {"server", "hc"},
+    "TOPUP_REQ": {"server", "hc"},
+    "TOPUP_DONE": {"server", "hc"},
+    "TEAM_RECYCLE": set(),  # no emitter in the maintained mission tree
+    "RECYCLE_FLAG": {"server"},
+    "ORBITER_STUCK": {"server"},
+    "ECON_SINK": {"server"},
+    "CAPTURE_TRACE": {"server", "hc"},
+    "CAPTURED": {"server", "hc"},
+    "UNSTUCK_FIRED": {"server", "hc"},
+    "UNSTUCK_STRIKE": {"server"},
+    "STUCKSTAT": {"server"},
+    "MHQRELOC": {"server"},
+    "TARGET_ESCALATE": set(),  # no emitter in the maintained mission tree
+    "STAGE": {"server"},
+}
+
+EVENT_FAMILY_ALIASES = {
+    "TOPUP_REQ": lambda event: event.startswith("TOPUP_REQ"),
+    "ECON_SINK": lambda event: event.startswith("ECON_SINK_"),
+    "STAGE": lambda event: event in ("FOOT_STAGE", "STRIKE_STAGE_SKIP"),
+}
 
 # ---------------------------------------------------------------------------
 # Terminal color helpers (respect --no-color and non-tty)
@@ -237,6 +282,9 @@ def strip_line(ln):
 RE_V2_EVENT = re.compile(
     r"AICOMSTAT\|v2\|EVENT\|([A-Z]+)\|(\d+)\|([A-Z_][A-Z0-9_]*)\|?(.*)$"
 )
+RE_V1_EVENT = re.compile(
+    r"AICOMSTAT\|v1\|EVENT\|([A-Z]+)\|(\d+)\|([A-Z_][A-Z0-9_]*)\|?(.*)$"
+)
 RE_POSTURE = re.compile(
     r"AICOMSTAT\|v1\|POSTURE\|([A-Z]+)\|(\d+)\|([A-Z_]+)\|(.*)$"
 )
@@ -273,6 +321,7 @@ RE_EASA = re.compile(r"\b(EASA|GUI_Menu_EASA|EASA_Equip)\b")
 RE_GEAR = re.compile(r"\b(GEAR|Gear|gear|GUI_BuyGearMenu)\b")
 RE_BASE_ASSAULT = re.compile(r"BASE-ASSAULT")
 RE_CAPTURED = re.compile(r"CAPTURED \[")
+RE_STUCKSTAT = re.compile(r"STUCKSTAT\|v1\|([A-Z]+)\|(\d+)\|")
 
 # ---------------------------------------------------------------------------
 # AICOM2 telemetry line matchers (V2 commander grammar introduced with the
@@ -306,6 +355,13 @@ class Soak(object):
     def __init__(self):
         # v2 events: type -> list of (side, tick, kv-dict, raw)
         self.events = defaultdict(list)
+        # Accepted events indexed by their canonical family.  ``events`` keeps
+        # the raw event name for backwards-compatible consumers; this index is
+        # what source-aware scorecard fields use.
+        self.routed_events = defaultdict(list)
+        self.event_sources = defaultdict(Counter)
+        self.unexpected_events = defaultdict(Counter)
+        self.sources_read = {"server": False, "hc": False}
         # dispatches / arrivals keyed by team name
         self.dispatch = defaultdict(list)   # team -> list of dict(tick,town,dist,reissue)
         self.arrive = defaultdict(list)     # team -> list of dict(tick,town,dist,elapsed)
@@ -360,8 +416,11 @@ class Soak(object):
         # HC side
         self.hc_captured = []               # raw CAPTURED [ lines
         self.hc_capture_by_town = Counter()
+        self.driver_captured = []
+        self.driver_capture_by_town = Counter()
         self.hc_scoped = False
         self.hc_present = False
+        self.hc_rpt_count = 0
         # base-assault phase
         self.base_assault_lines = []
         # duration
@@ -384,44 +443,141 @@ class Soak(object):
         # PRESS ticks per side (AICOMSTAT|v1|POSTURE|<side>|<tick>|PRESS)
         self.a2_press = defaultdict(list)   # side -> list of tick
 
+        self.stuckstat_count = 0
+        self.stuckstat_lines = []
+
     # -- ingestion -------------------------------------------------------
     def _note_tick(self, tick):
         if tick > self.max_tick:
             self.max_tick = tick
 
+    @staticmethod
+    def _event_family(etype):
+        if etype in EVENT_SOURCE_POLICY:
+            return etype
+        for family, matcher in EVENT_FAMILY_ALIASES.items():
+            if matcher(etype):
+                return family
+        return etype
+
+    def _accept_routed(self, family, source, record):
+        expected = EVENT_SOURCE_POLICY.get(family, {"server"})
+        if source not in expected:
+            self.unexpected_events[family][source] += 1
+            return False
+        self.routed_events[family].append(record)
+        self.event_sources[family][source] += 1
+        return True
+
+    def event_records(self, family):
+        return list(self.routed_events.get(family, []))
+
+    def routing_status(self, family):
+        expected = EVENT_SOURCE_POLICY.get(family)
+        if expected is None or not expected:
+            return {
+                "count": None,
+                "status": "no source",
+                "expected_sources": [],
+                "sources_read": [],
+                "missing_sources": [],
+                "available_count": 0,
+                "unexpected": dict(self.unexpected_events.get(family, {})),
+            }
+        sources_read = sorted(source for source in expected if self.sources_read.get(source, False))
+        missing = sorted(expected - set(sources_read))
+        if missing:
+            status = "not measured"
+            count = None
+        else:
+            status = "measured"
+            count = len(self.routed_events.get(family, []))
+        return {
+            "count": count,
+            "status": status,
+            "expected_sources": sorted(expected),
+            "sources_read": sources_read,
+            "missing_sources": missing,
+            "available_count": len(self.routed_events.get(family, [])),
+            "unexpected": dict(self.unexpected_events.get(family, {})),
+        }
+
+    def _ingest_event(self, match, source, raw):
+        if not match:
+            return False
+        side = match.group(1)
+        tick = _to_int(match.group(2), 0)
+        etype = match.group(3)
+        rest = match.group(4)
+        family = self._event_family(etype)
+        kv = parse_kvs(rest)
+        record = (side, tick, kv, raw)
+        if not self._accept_routed(family, source, record):
+            return True
+        self._note_tick(tick)
+        self.events[etype].append(record)
+        if family != etype:
+            self.events[family].append(record)
+        if etype == "ASSAULT_DISPATCH":
+            self.dispatch_count += 1
+            team = kv.get("team", "?")
+            reissue = kv.get("reissue", "false").lower() == "true"
+            if reissue:
+                self.reissue_count += 1
+            self.dispatch[team].append({
+                "tick": tick, "town": kv.get("town", "?"),
+                "dist": _to_float(kv.get("dist"), None),
+                "reissue": reissue, "side": side,
+            })
+        elif etype == "ASSAULT_ARRIVED":
+            self.arrive_count += 1
+            team = kv.get("team", "?")
+            self.arrive[team].append({
+                "tick": tick, "town": kv.get("town", "?"),
+                "dist": _to_float(kv.get("dist"), None),
+                "elapsed": _to_float(kv.get("elapsed"), None),
+                "side": side,
+            })
+        elif etype == "TARGET_ABANDON":
+            self.abandon[side] += 1
+            self.abandon_reasons[kv.get("reason", "unspecified")] += 1
+        return True
+
+    def _ingest_driver_capture(self, ln, source):
+        if not RE_CAPTURED.search(ln):
+            return False
+        if not self._accept_routed("CAPTURED", source, (source, 0, {}, ln)):
+            return True
+        self.driver_captured.append(ln.strip())
+        mt = re.search(r"CAPTURED \[([^\]]+)\]", ln)
+        if mt:
+            self.driver_capture_by_town[mt.group(1)] += 1
+            if source == "hc":
+                self.hc_capture_by_town[mt.group(1)] += 1
+        if source == "hc":
+            self.hc_captured.append(ln.strip())
+        return True
+
     def ingest_server(self, lines):
+        self.sources_read["server"] = True
         for raw in lines:
             ln = strip_line(raw)
 
-            m = RE_V2_EVENT.search(ln)
+            if self._ingest_event(RE_V2_EVENT.search(ln), "server", ln):
+                continue
+            if self._ingest_event(RE_V1_EVENT.search(ln), "server", ln):
+                continue
+            if self._ingest_driver_capture(ln, "server"):
+                continue
+
+            m = RE_STUCKSTAT.search(ln)
             if m:
-                side, tick, etype, rest = m.group(1), _to_int(m.group(2), 0), m.group(3), m.group(4)
-                kv = parse_kvs(rest)
-                self._note_tick(tick)
-                self.events[etype].append((side, tick, kv, ln))
-                if etype == "ASSAULT_DISPATCH":
-                    self.dispatch_count += 1
-                    team = kv.get("team", "?")
-                    reissue = kv.get("reissue", "false").lower() == "true"
-                    if reissue:
-                        self.reissue_count += 1
-                    self.dispatch[team].append({
-                        "tick": tick, "town": kv.get("town", "?"),
-                        "dist": _to_float(kv.get("dist"), None),
-                        "reissue": reissue, "side": side,
-                    })
-                elif etype == "ASSAULT_ARRIVED":
-                    self.arrive_count += 1
-                    team = kv.get("team", "?")
-                    self.arrive[team].append({
-                        "tick": tick, "town": kv.get("town", "?"),
-                        "dist": _to_float(kv.get("dist"), None),
-                        "elapsed": _to_float(kv.get("elapsed"), None),
-                        "side": side,
-                    })
-                elif etype == "TARGET_ABANDON":
-                    self.abandon[side] += 1
-                    self.abandon_reasons[kv.get("reason", "unspecified")] += 1
+                side, tick = m.group(1), _to_int(m.group(2), 0)
+                record = (side, tick, {}, ln)
+                if self._accept_routed("STUCKSTAT", "server", record):
+                    self.stuckstat_count += 1
+                    self.stuckstat_lines.append(ln.strip())
+                    self._note_tick(tick)
                 continue
 
             m = RE_POSTURE.search(ln)
@@ -449,6 +605,7 @@ class Soak(object):
             m = RE_MHQ.search(ln)
             if m:
                 side, tick, verb, rest = m.group(1), _to_int(m.group(2), 0), m.group(3), m.group(4)
+                self._accept_routed("MHQRELOC", "server", (side, tick, {"verb": verb.upper()}, ln))
                 self._note_tick(tick)
                 self.mhq_total += 1
                 verb_u = verb.upper()
@@ -728,17 +885,48 @@ class Soak(object):
 
     def ingest_hc(self, lines):
         self.hc_present = True
+        self.hc_rpt_count += 1
+        self.sources_read["hc"] = True
         scoped, ok = scope_last_missinit(lines)
-        self.hc_scoped = ok
+        self.hc_scoped = self.hc_scoped or ok
         for raw in scoped:
             ln = strip_line(raw)
-            if RE_CAPTURED.search(ln):
-                self.hc_captured.append(ln.strip())
-                # try to pull a town-ish token for dogpile counting.
-                # HC CAPTURED lines look like: ... CAPTURED [<town>] by <team> ...
-                mt = re.search(r"CAPTURED \[([^\]]+)\]", ln)
-                if mt:
-                    self.hc_capture_by_town[mt.group(1)] += 1
+            if self._ingest_event(RE_V2_EVENT.search(ln), "hc", ln):
+                continue
+            if self._ingest_event(RE_V1_EVENT.search(ln), "hc", ln):
+                continue
+
+            # The DECAP closer runs on the server, but its PRESS handoff is
+            # emitted by Common_RunCommanderTeam on the local driver.  Keep
+            # the HC PRESS samples without admitting a server-only DECAP line.
+            m = RE_A2_DECAP.search(ln)
+            if m:
+                side = m.group(1).upper()
+                tick = _to_int(m.group(2), 0)
+                rest = m.group(3)
+                if rest.startswith("PRESS|"):
+                    self.a2_press[side].append(tick)
+                else:
+                    self.unexpected_events["AICOM2_DECAP"]["hc"] += 1
+                continue
+            for family, matcher in (("SNAP", RE_A2_SNAP), ("ALLOC", RE_A2_ALLOC),
+                                    ("FISTPOOL", RE_A2_FISTPOOL), ("ORDER", RE_A2_ORDER)):
+                if matcher.search(ln):
+                    self.unexpected_events["AICOM2_" + family]["hc"] += 1
+                    break
+            else:
+                # Preserve obvious server-only lines found in an HC RPT as a
+                # routing diagnostic instead of silently treating them as zero.
+                m = RE_MHQ.search(ln)
+                if m:
+                    self.unexpected_events["MHQRELOC"]["hc"] += 1
+                    continue
+                m = RE_STUCKSTAT.search(ln)
+                if m:
+                    self.unexpected_events["STUCKSTAT"]["hc"] += 1
+                    continue
+            if self._ingest_driver_capture(ln, "hc"):
+                continue
 
     # -- derived metrics -------------------------------------------------
     def hours(self):
@@ -1230,9 +1418,10 @@ def render(soak, args):
 
     ap(hdr("WASP SOAK SCORECARD"))
     ap("  server RPT : %s" % args.server)
-    ap("  hc RPT     : %s%s" % (
-        args.hc if args.hc else _c("(none - HC-only telemetry unavailable)", C.YEL),
-        (_c("  [scoped to last MISSINIT]", C.DIM) if (args.hc and soak.hc_scoped) else "")))
+    hc_label = ", ".join(args.hcs) if args.hcs else _c("(none - HC-only telemetry unavailable)", C.YEL)
+    ap("  hc RPTs    : %s%s" % (
+        hc_label,
+        (_c("  [scoped to last MISSINIT]", C.DIM) if (args.hcs and soak.hc_scoped) else "")))
     ap("  build      : %s   map: %s" % (_c(build, C.BOLD), mapname))
     ap("  duration   : %.2f h  (%s)" % (
         hours,
@@ -1333,9 +1522,14 @@ def render(soak, args):
     ap(hdr("5. NEW cmdcon41 EVENTS  (count + last 3 samples)"))
     any_new = False
     for et in NEW_EVENT_TYPES:
-        evs = soak.events.get(et, [])
-        if not evs:
-            ap("  %-16s : %s" % (et, _c("0", C.DIM)))
+        evs = soak.event_records(et)
+        routing = soak.routing_status(et)
+        if routing["status"] != "measured":
+            if routing["status"] == "no source":
+                note = "not measured (no source)"
+            else:
+                note = "not measured (missing %s)" % ", ".join(routing["missing_sources"])
+            ap("  %-16s : %s" % (et, _c(note, C.YEL)))
             continue
         any_new = True
         ap("  %-16s : %s" % (et, _c(str(len(evs)), C.BOLD + C.GRN)))
@@ -1343,16 +1537,21 @@ def render(soak, args):
             payload = "|".join("%s=%s" % (k, v) for k, v in kv.items())
             ap("       [t%-4d %s] %s" % (tick, side, payload[:90]))
     # CAPTURE_TRACE gate/wait ratio
-    ct = soak.events.get("CAPTURE_TRACE", [])
+    ct = soak.event_records("CAPTURE_TRACE")
     if ct:
-        gate = sum(1 for (_, _, kv, raw) in ct
-                   if "ARRIVAL_GATE" in raw or kv.get("phase") == "ARRIVAL_GATE"
-                   or kv.get("gate") == "true")
-        wait = sum(1 for (_, _, kv, raw) in ct
-                   if "ARRIVAL_WAIT" in raw or kv.get("phase") == "ARRIVAL_WAIT"
-                   or kv.get("wait") == "true")
-        ratio = ("%.2f" % (gate / wait)) if wait else ("inf" if gate else "0")
-        ap("  CAPTURE_TRACE gate/wait: GATE=%d WAIT=%d ratio=%s" % (gate, wait, ratio))
+        capture_status = soak.routing_status("CAPTURE_TRACE")
+        if capture_status["status"] != "measured":
+            ap("  CAPTURE_TRACE gate/wait: %s" % _c(
+                "not measured (missing %s)" % ", ".join(capture_status["missing_sources"]), C.YEL))
+        else:
+            gate = sum(1 for (_, _, kv, raw) in ct
+                       if "ARRIVAL_GATE" in raw or kv.get("phase") == "ARRIVAL_GATE"
+                       or kv.get("gate") == "true")
+            wait = sum(1 for (_, _, kv, raw) in ct
+                       if "ARRIVAL_WAIT" in raw or kv.get("phase") == "ARRIVAL_WAIT"
+                       or kv.get("wait") == "true")
+            ratio = ("%.2f" % (gate / wait)) if wait else ("inf" if gate else "0")
+            ap("  CAPTURE_TRACE gate/wait: GATE=%d WAIT=%d ratio=%s" % (gate, wait, ratio))
     # BASE-ASSAULT fire phase
     ap("  BASE-ASSAULT lines : %s" % (
         _c(str(len(soak.base_assault_lines)), C.BOLD + C.GRN) if soak.base_assault_lines
@@ -1374,6 +1573,12 @@ def render(soak, args):
             ap("       abort reason: %-32s %d" % (r, n))
     if not any_new and not soak.base_assault_lines and not soak.mhq_verbs:
         ap("  %s" % _c("(no v2 cmdcon41 events present -- pre-fix RPT or events not wired)", C.YEL))
+    if soak.unexpected_events:
+        ap("  " + sub("RPT routing diagnostics (unexpected-file hits excluded)"))
+        for family, counts in sorted(soak.unexpected_events.items()):
+            details = ", ".join("%s=%d" % (source, count)
+                                for source, count in sorted(counts.items()))
+            ap("     %-20s %s" % (family, details))
 
     # 6. HOLD / SEE-SAW -------------------------------------------------
     ap(hdr("6. HOLD / SEE-SAW  (town control)"))
@@ -1396,6 +1601,12 @@ def render(soak, args):
                 ap("     %-16s %d%s" % (town, n, flag))
     else:
         ap("  %s" % _c("(no HC RPT -> capture-driver / dogpile detail unavailable)", C.DIM))
+    capture_status = soak.routing_status("CAPTURED")
+    if capture_status["status"] == "measured":
+        ap("  all local-driver CAPTURED [ lines: %d" % len(soak.driver_captured))
+    else:
+        ap("  all local-driver CAPTURED [ lines: %s" % _c(
+            "not measured (missing %s)" % ", ".join(capture_status["missing_sources"]), C.YEL))
 
     # 7. PERF -----------------------------------------------------------
     ap(hdr("7. PERF  (WASPSCALE fps vs AI load)"))
@@ -1639,6 +1850,7 @@ def build_json_data(soak, args):
     data = {
         "server_rpt": args.server,
         "hc_rpt": args.hc,
+        "hc_rpts": list(args.hcs),
         "build": build,
         "map": mapname,
         "hours": soak.hours(),
@@ -1673,7 +1885,23 @@ def build_json_data(soak, args):
             "spearhead_repick": dict(soak.repick),
             "reissue_count": soak.reissue_count,
         },
-        "new_events": {et: len(soak.events.get(et, [])) for et in NEW_EVENT_TYPES},
+        # ``None`` is deliberate when an expected source was not supplied;
+        # dashboards must not render an unmeasured token as a real zero.
+        "new_events": {et: soak.routing_status(et)["count"] for et in NEW_EVENT_TYPES},
+        "new_event_status": {et: soak.routing_status(et) for et in NEW_EVENT_TYPES},
+        "routing": {
+            "sources_read": dict(soak.sources_read),
+            "events": {
+                family: soak.routing_status(family)
+                for family in sorted(EVENT_SOURCE_POLICY)
+            },
+            "unexpected_events": {
+                family: dict(counts)
+                for family, counts in soak.unexpected_events.items()
+            },
+            "stuckstat": soak.routing_status("STUCKSTAT"),
+            "mhqreloc": soak.routing_status("MHQRELOC"),
+        },
         "base_assault_lines": len(soak.base_assault_lines),
         "mhq": {
             "deployed": sum(c.get("DEPLOYED", 0) for c in soak.mhq.values()),
@@ -1690,6 +1918,8 @@ def build_json_data(soak, args):
             "capture_by_town": dict(soak.capture_by_town),
             "hc_captured": len(soak.hc_captured),
             "hc_capture_by_town": dict(soak.hc_capture_by_town),
+            "driver_captured": len(soak.driver_captured),
+            "driver_capture_by_town": dict(soak.driver_capture_by_town),
         },
         "perf": {
             "fps": p["fps"], "hc_fps": p["hc_fps"],
@@ -1807,6 +2037,7 @@ def render_compare(cur, base):
 class Args(object):
     server = None
     hc = None
+    hcs = []
     json = False
     no_color = False
     compare_json = None
@@ -1816,13 +2047,15 @@ class Args(object):
 
 def parse_args(argv):
     a = Args()
+    a.hcs = []
     pos = []
     i = 0
     while i < len(argv):
         tok = argv[i]
         if tok == "--hc":
             i += 1
-            a.hc = argv[i] if i < len(argv) else None
+            if i < len(argv):
+                a.hcs.append(argv[i])
         elif tok == "--json":
             a.json = True
         elif tok in ("--compare-json", "--compare"):
@@ -1848,8 +2081,9 @@ def parse_args(argv):
             "[--zombie-min N] [--json] [--compare-json previous.json] [--no-color]\n")
         sys.exit(2)
     a.server = pos[0]
-    if len(pos) > 1 and not a.hc:
-        a.hc = pos[1]
+    if len(pos) > 1:
+        a.hcs.extend(pos[1:])
+    a.hc = a.hcs[0] if a.hcs else None
     return a
 
 
@@ -1876,12 +2110,17 @@ def main(argv):
     scoped_srv, ok = scope_last_missinit(srv_lines)
     soak.ingest_server(scoped_srv)
 
-    if args.hc:
-        if not os.path.isfile(args.hc):
-            sys.stderr.write("WARNING: HC RPT not found, skipping: %s\n" % args.hc)
-            args.hc = None
-        else:
-            soak.ingest_hc(read_lines(args.hc))
+    valid_hcs = []
+    for hc_path in args.hcs:
+        if not os.path.isfile(hc_path):
+            sys.stderr.write("WARNING: HC RPT not found, skipping: %s\n" % hc_path)
+            continue
+        if hc_path in valid_hcs:
+            continue
+        valid_hcs.append(hc_path)
+        soak.ingest_hc(read_lines(hc_path))
+    args.hcs = valid_hcs
+    args.hc = valid_hcs[0] if valid_hcs else None
 
     if args.json:
         print(render_json(soak, args))
