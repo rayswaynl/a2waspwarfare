@@ -8,8 +8,10 @@
 	descending loops with no negative step, un-yielded busy loops, missing compiled
 	files, and per-file bracket imbalance) and reports suspects with file:line.
 
-	Unlike Test-WaspStaticSmoke.ps1 (a pass/fail gate on specific claims), this is an
-	open-ended HUNTER: it surfaces *candidates* to eyeball, not guaranteed bugs.
+	Unlike Test-WaspBootSmoke.ps1 (a runtime, RPT-based boot-smoke gate that asserts
+	pass/fail invariants from a live server log), this is a heuristic STATIC bug hunter
+	over the mission source tree: an open-ended HUNTER that surfaces *candidates* to
+	eyeball, not guaranteed bugs.
 
 	"Random" mode (-Random N [-Seed S]) scans a random sample of N files each run, so
 	repeated runs hunt different corners of the mission instead of the same diff. Omit
