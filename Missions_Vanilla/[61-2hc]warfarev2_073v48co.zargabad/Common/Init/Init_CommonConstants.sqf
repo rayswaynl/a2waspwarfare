@@ -674,6 +674,14 @@ if (worldName == "Zargabad") then {
 		if (isNil "WFBE_C_BASEGC_RANGE")        then {WFBE_C_BASEGC_RANGE        = 800}; //--- m from a side's own HQ within which untracked groups / idle crewed vehicles are candidates.
 		if (isNil "WFBE_C_BASEGC_PLAYER_GUARD") then {WFBE_C_BASEGC_PLAYER_GUARD = 0};   //--- m player-proximity guard (Ray's call: 0 = proximity does NOT block cleanup; if >0, skip a candidate with a player within this many metres).
 		if (isNil "WFBE_C_BASEGC_IDLE_SPEED")   then {WFBE_C_BASEGC_IDLE_SPEED   = 5};   //--- a crewed heli/armor moving slower than this (km/h, the 'speed' command) counts as idle-at-base.
+		//--- perf-basegc-clamp (2026-07-25, docs/design/SERVER-GROUPSGC-SCAN-COST-AUDIT-2026-07-03.md):
+		//--- the BASE-GC combat guard above fires one nearEntities call PER CANDIDATE; default 0 = old
+		//--- per-candidate behaviour (fully inert). Armed: one nearEntities snapshot per side per pass,
+		//--- taken from the side's own HQ, reused via distance-math for every candidate at/under the
+		//--- clamped radius; a candidate beyond the clamp still falls back to a fresh per-candidate scan
+		//--- (never a missed enemy, only a smaller cost reduction for that one candidate).
+		if (isNil "WFBE_C_BASEGC_SCAN_TIGHTEN")     then {WFBE_C_BASEGC_SCAN_TIGHTEN     = 0};    //--- 1 = armed (snapshot+distance path), 0 = inert (default; original per-candidate nearEntities).
+		if (isNil "WFBE_C_BASEGC_SCAN_RADIUS_CEIL") then {WFBE_C_BASEGC_SCAN_RADIUS_CEIL = 1100}; //--- m: hard ceiling on the per-side snapshot's candidate-range component (min'd against WFBE_C_BASEGC_RANGE, then +300 detection buffer). >= the shipped BASEGC_RANGE(800)+300 so armed results match the per-candidate scan exactly at defaults; only a WFBE_C_BASEGC_RANGE raised above this ceiling trades exact coverage for bounded scan cost on the out-of-envelope candidates (see server_groupsGC.sqf fallback).
 	//--- B60 MHQ RELOCATION (Ray 2026-06-21, DEFAULT-ON): the commander mobilizes its static HQ into the MHQ,
 	//--- an AI driver DRIVES it forward to a standoff behind the front town, then it re-deploys. Safety rails:
 	//--- stuck-timer, deadline (player-safe teleport-step fallback), enemy-standoff, always re-deploys (never idle/frozen).

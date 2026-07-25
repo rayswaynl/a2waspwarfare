@@ -8,7 +8,7 @@
 // after 5 minutes per side per threshold so the RPT is not spammed.
 if (!isServer) exitWith {};
 
-Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc","_baseSide","_baseEnable","_baseRange","_baseTimeout","_baseIdleSpeed","_basePlayerGuard","_basePlayers","_basePcN","_baseHcN","_baseHQ","_baseHQPos","_baseSideID","_baseLogik","_baseTeams","_baseCap","_baseFounded","_baseCandGrps","_baseG","_baseIsTownTeam","_baseIsPers","_baseLdr","_baseSeen","_baseDmgNow","_baseDmgPrev","_baseInCombat","_baseEnemyNear","_basePlayerNear","_baseFrontPos","_baseUncap","_baseFrontTown","_baseSeq","_baseVeh","_baseVcrew","_baseVside","_baseReadopted","_baseDeletedAir","_baseRetasked","_contestedTowns"];
+Private ["_grp","_cntWest","_cntEast","_cntGuer","_now","_warnInterval","_lastWest130","_lastWest144","_lastEast130","_lastEast144","_lastGuer130","_lastGuer144","_zombieTimeout","_orphanedAt","_uidVal","_zombieUnits","_zombieVehicles","_zombieHQ","_reaped","_auditInterval","_lastAudit","_src","_srcCounts","_srcKeys","_srcKey","_srcIdx","_auditSide","_auditCnt","_auditStr","_pair","_isPersistent","_activeTowns","_uniWest","_uniEast","_uniGuer","_auditT0","_auditMs","_auditLines","_auditLine","_auditUniCnt","_emptyW","_emptyE","_emptyG","_persEmptyW","_persEmptyE","_persEmptyG","_auditN","_every","_gcReaped","_gcEmptyFound","_guerMax","_guerPct","_guerSoftThreshold","_lastGuerSoft","_leakW","_leakE","_leakG","_leakSamples","_leakStr","_uc","_lastUntagLeak","_untW","_untE","_untG","_gsrc","_baseSide","_baseEnable","_baseRange","_baseTimeout","_baseIdleSpeed","_basePlayerGuard","_basePlayers","_basePcN","_baseHcN","_baseHQ","_baseHQPos","_baseSideID","_baseLogik","_baseTeams","_baseCap","_baseFounded","_baseCandGrps","_baseG","_baseIsTownTeam","_baseIsPers","_baseLdr","_baseSeen","_baseDmgNow","_baseDmgPrev","_baseInCombat","_baseEnemyNear","_basePlayerNear","_baseFrontPos","_baseUncap","_baseFrontTown","_baseSeq","_baseVeh","_baseVcrew","_baseVside","_baseReadopted","_baseDeletedAir","_baseRetasked","_contestedTowns","_baseScanTighten","_baseScanCeil","_baseScanSafeR","_baseEnemySnap","_baseGcT0","_baseGcMs"];
 
 //--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation gate (see
 //--- server_town.sqf for the full note).
@@ -67,12 +67,27 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 	// Common_RunCommanderTeam.sqf:318-320). NEVER deleteVehicle infantry. The combat guard + idle-timer
 	// ALWAYS apply; the player-proximity guard is tunable (default 0 = does NOT block cleanup).
 	_baseEnable = missionNamespace getVariable ["WFBE_C_BASEGC_ENABLE", 1];
+	_baseGcMs = 0; //--- perf-basegc-clamp: 0 when the whole BASE-GC branch is disabled/skipped this pass.
 	if (_baseEnable > 0) then {
+		_baseGcT0 = diag_tickTime; //--- perf-basegc-clamp: measures the FULL BASE-GC branch, same diag_tickTime pattern as the GROUPAUDIT auditMs below.
 		_baseRange       = missionNamespace getVariable ["WFBE_C_BASEGC_RANGE",        800];
 		_baseTimeout     = missionNamespace getVariable ["WFBE_C_BASEGC_IDLE_TIMEOUT", 300];
 		_baseIdleSpeed   = missionNamespace getVariable ["WFBE_C_BASEGC_IDLE_SPEED",   5];
 		_basePlayerGuard = missionNamespace getVariable ["WFBE_C_BASEGC_PLAYER_GUARD", 0];
 		_baseReadopted = 0; _baseRetasked = 0; _baseDeletedAir = 0;
+		//--- WFBE_C_BASEGC_SCAN_TIGHTEN (perf-basegc-clamp, 2026-07-25; see
+		//--- docs/design/SERVER-GROUPSGC-SCAN-COST-AUDIT-2026-07-03.md). The two combat-guard checks
+		//--- below (untracked-group pass + idle-crewed-vehicle pass) each fire ONE `nearEntities` call
+		//--- PER CANDIDATE reaching the check, so cost scales with candidate count, not with a fixed
+		//--- per-tick budget. Default 0 = fully inert: _baseScanTighten stays 0, the per-side snapshot
+		//--- built below stays [] and unused, and every candidate falls through the UNTOUCHED original
+		//--- per-candidate nearEntities call - byte-identical to pre-flag behaviour. When armed, one
+		//--- nearEntities snapshot is taken from each side's own HQ ONCE per side per pass (radius =
+		//--- the clamped candidate range + the original 300m detection buffer) and reused for every
+		//--- candidate at or under that clamped radius via plain `distance` math instead of a fresh
+		//--- per-candidate engine scan.
+		_baseScanTighten = missionNamespace getVariable ["WFBE_C_BASEGC_SCAN_TIGHTEN", 0];
+		_baseScanCeil    = missionNamespace getVariable ["WFBE_C_BASEGC_SCAN_RADIUS_CEIL", 1100];
 		//--- Build one live-player snapshot for the BASE-GC pass; reuse it for cap math and optional guards.
 		_basePcN = 0;
 		_basePlayers = [];
@@ -93,6 +108,21 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 				_baseHQPos = getPos _baseHQ;
 				_baseSideID = _baseSide Call WFBE_CO_FNC_GetSideID;
 				_baseLogik  = _baseSide Call WFBE_CO_FNC_GetSideLogic;
+
+				//--- WFBE_C_BASEGC_SCAN_TIGHTEN per-side enemy-proximity snapshot (see flag comment
+				//--- above _baseScanTighten). SAFETY: only candidates within _baseScanSafeR of THIS
+				//--- side's own HQ are covered by the snapshot - both candidate loops below fall back
+				//--- to a fresh per-candidate nearEntities call for anything farther out, so the clamp
+				//--- can only ever fail to CHEAPEN a distant candidate's scan, never cause it to be
+				//--- evaluated with a smaller effective detection radius than the original per-candidate
+				//--- call used. At the shipped defaults (_baseRange=800, ceiling=1100) every candidate is
+				//--- inside the safe radius, so armed results are identical to the per-candidate scan.
+				_baseEnemySnap = [];
+				_baseScanSafeR = 0;
+				if (_baseScanTighten > 0) then {
+					_baseScanSafeR = _baseRange min _baseScanCeil;
+					_baseEnemySnap = (_baseHQPos) nearEntities [["Man","LandVehicle","Air"], (_baseScanSafeR + 300)];
+				};
 
 				//--- Live side TEAM CAP (mirror AI_Commander_Teams' PC-bucket base). Re-adopt only while
 				//--- UNDER cap; at/over cap we still re-task the group toward the front (never idle), but do
@@ -162,7 +192,13 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 									_baseInCombat = (behaviour _baseLdr == "COMBAT");
 									//--- enemy = any near entity whose side is NEITHER ours NOR civilian (explicit side
 									//--- compare, same A2-safe idiom as Common_AICOMServiceTick.sqf:95 - no getFriend).
-									_baseEnemyNear = {alive _x && {(side _x) != _baseSide} && {(side _x) != civilian}} count ((getPos _baseLdr) nearEntities [["Man","LandVehicle","Air"], 300]);
+									if (_baseScanTighten > 0 && {(_baseLdr distance _baseHQPos) <= _baseScanSafeR}) then {
+										//--- tightened path: distance-only test against the once-per-side snapshot.
+										_baseEnemyNear = {alive _x && {(side _x) != _baseSide} && {(side _x) != civilian} && {(_x distance _baseLdr) <= 300}} count _baseEnemySnap;
+									} else {
+										//--- default / out-of-envelope path: unchanged per-candidate scan.
+										_baseEnemyNear = {alive _x && {(side _x) != _baseSide} && {(side _x) != civilian}} count ((getPos _baseLdr) nearEntities [["Man","LandVehicle","Air"], 300]);
+									};
 									_baseDmgNow = 0; { _baseDmgNow = _baseDmgNow + (damage _x) } forEach (units _baseG);
 									_baseDmgPrev = _baseG getVariable "wfbe_basegc_dmg";
 									if (isNil "_baseDmgPrev") then {_baseDmgPrev = _baseDmgNow};
@@ -261,7 +297,13 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 								//--- last pass OR enemies are near.
 								_baseLdr = _baseVcrew select 0;
 								_baseInCombat  = (behaviour _baseLdr == "COMBAT");
-								_baseEnemyNear = {alive _x && {(side _x) != _baseSide} && {(side _x) != civilian}} count ((getPos _baseVeh) nearEntities [["Man","LandVehicle","Air"], 300]);
+								if (_baseScanTighten > 0 && {(_baseVeh distance _baseHQPos) <= _baseScanSafeR}) then {
+									//--- tightened path: distance-only test against the once-per-side snapshot.
+									_baseEnemyNear = {alive _x && {(side _x) != _baseSide} && {(side _x) != civilian} && {(_x distance _baseVeh) <= 300}} count _baseEnemySnap;
+								} else {
+									//--- default / out-of-envelope path: unchanged per-candidate scan.
+									_baseEnemyNear = {alive _x && {(side _x) != _baseSide} && {(side _x) != civilian}} count ((getPos _baseVeh) nearEntities [["Man","LandVehicle","Air"], 300]);
+								};
 								_baseDmgNow  = damage _baseVeh;
 								_baseDmgPrev = _baseVeh getVariable "wfbe_basegc_dmg";
 								if (isNil "_baseDmgPrev") then {_baseDmgPrev = _baseDmgNow};
@@ -306,6 +348,11 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 		if ((_baseReadopted + _baseRetasked + _baseDeletedAir) > 0) then {
 			diag_log ("BASEGC|v1|readopted=" + str _baseReadopted + "|retasked=" + str _baseRetasked + "|deletedHulls=" + str _baseDeletedAir + "|t=" + str (round (time / 60)));
 		};
+
+		//--- perf-basegc-clamp: full BASE-GC branch elapsed ms, folded into the existing GCSTAT|v1|
+		//--- line below (NOT a new telemetry family) - unconditional (always measured, tighten flag
+		//--- or not) so operators can compare on/off cost from the same dashboard field.
+		_baseGcMs = round ((diag_tickTime - _baseGcT0) * 1000);
 	};
 
 	// --- Orphaned-team zombie reaper ---
@@ -540,7 +587,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 	// cadence. groups reaped THIS pass (non-persistent empties), empties found (incl. persistent),
 	// and current per-side group counts incl. GUER. Single cheap diag_log; all values already in
 	// hand (counters from the sweep above, per-side counts from the cap-warning pass). t = round min.
-	diag_log ("GCSTAT|v1|reaped=" + str _gcReaped + "|emptyFound=" + str _gcEmptyFound + "|west=" + str _cntWest + "|east=" + str _cntEast + "|guer=" + str _cntGuer + "|untW=" + str _untW + "|untE=" + str _untE + "|untG=" + str _untG + "|t=" + str (round (time / 60)));
+	diag_log ("GCSTAT|v1|reaped=" + str _gcReaped + "|emptyFound=" + str _gcEmptyFound + "|west=" + str _cntWest + "|east=" + str _cntEast + "|guer=" + str _cntGuer + "|untW=" + str _untW + "|untE=" + str _untE + "|untG=" + str _untG + "|baseGcMs=" + str _baseGcMs + "|t=" + str (round (time / 60)));
 
 	// --- Public /wasp dashboard - SAFE live telemetry (wasp-dash-safe-telemetry, claude-gaming 2026-06-21).
 	// Competitive-integrity rule (Steff 2026-06-21): the public dashboard/JSON must NEVER expose
