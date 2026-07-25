@@ -25,7 +25,7 @@ if ((missionNamespace getVariable ["WFBE_C_HQ_REPAIR_SCALING", 1]) > 0) exitWith
 	} else {
 		-(_repairCost185) Call ChangePlayerFunds;
 	};
-	["RequestMHQRepair", sideJoined] Call WFBE_CO_FNC_SendToServer;
+	["RequestMHQRepair", [sideJoined, player]] Call WFBE_CO_FNC_SendToServer;
 	WF_Logic setVariable [Format ["%1MHQRepair", sideJoinedText], true, true];
 	_counter = missionNamespace getVariable Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined];
 	missionNamespace setVariable [Format ['WFBE_C_BASE_HQ_REPAIR_COUNT_%1', sideJoined], _counter + 1];
@@ -55,7 +55,7 @@ if (_currency_system == 0) then {
 	-(_repairPrice) Call ChangePlayerFunds;
 };
 
-["RequestMHQRepair", sideJoined] Call WFBE_CO_FNC_SendToServer;
+["RequestMHQRepair", [sideJoined, player]] Call WFBE_CO_FNC_SendToServer;
 
 WF_Logic setVariable [Format ["%1MHQRepair",sideJoinedText],true,true];
 

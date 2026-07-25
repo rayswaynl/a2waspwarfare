@@ -18,7 +18,7 @@ if (_currency < _repairPrice) exitWith {hint Format [localize "STR_WF_INFO_Repai
 
 -(_repairPrice) Call ChangePlayerFunds;
 
-["RequestMHQRepair", sideJoined] Call WFBE_CO_FNC_SendToServer;
+["RequestMHQRepair", [sideJoined, player]] Call WFBE_CO_FNC_SendToServer;
 
 WF_Logic setVariable [Format ["%1MHQRepair",sideJoinedText],true,true];
 _logik setVariable ['cashrepaired',true,true];
