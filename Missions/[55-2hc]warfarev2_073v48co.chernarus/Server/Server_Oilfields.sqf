@@ -646,7 +646,7 @@ _repairTypes = [];
 private ["_rtList"];
 _rtList = missionNamespace getVariable ["WFBE_REPAIRTRUCKS", []];
 if (typeName _rtList == "ARRAY") then { { if (!(_x in _repairTypes)) then {_repairTypes = _repairTypes + [_x]} } forEach _rtList };
-{ if (!(_x in _repairTypes)) then {_repairTypes = _repairTypes + [_x]} } forEach ["US_Soldier_Engineer_EP1","TK_Soldier_Engineer_EP1","GUE_Soldier_Crew"];
+{ if (!(_x in _repairTypes)) then {_repairTypes = _repairTypes + [_x]} } forEach ["US_Soldier_Engineer_EP1","TK_Soldier_Engineer_EP1","TK_GUE_Soldier_EP1"];
 
 _incomeAccrued = 0;      //--- total supply this node has paid (against the cap)
 _lastIncomeT   = time;   //--- last pay timestamp

@@ -751,3 +751,13 @@ the owner.
   `WFBE_C_AI_COMMANDER_WILDCARD_COST` to `0` — conflicts with this PR's `150000 -> 8000` value if
   that branch is ever revived. Flagged in the PR body as a merge-collision risk; not blocking
   since it carries no open PR claim.
+
+## 2026-07-25 - classgaps lane: GUER classname-list repairs
+
+- Branch `codex/guer-classname-gaps-20260725` is based on the contested-file stack
+  #1429 -> #1440 -> #1447 (`07756d4e23`).
+- Confirmed and fixed G3 (GUER ambulances in the 2x empty-vehicle exemption), G4
+  (map-specific `WFBE_GUERAMMOTRUCKS` registration), and G5 (Takistan oilfield
+  engineer class). No audit item was skipped; dormant-root-only classes stayed out.
+- Mirrors regenerated and checked clean; version-template invariants passed
+  (CH 32, TK 31, ZG 33). `RESULT.md` is intentionally untracked.
