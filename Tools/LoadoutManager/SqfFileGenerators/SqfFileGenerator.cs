@@ -20,8 +20,8 @@ public class SqfFileGenerator
     public static string GenerateStartOfTheEasaFile()
     {
         string startOfTheEasaFile = string.Empty;
-        startOfTheEasaFile += "Private [\"_ammo\",\"_easaDefault\",\"_easaLoadout\",\"_easaVehi" +
-            "\",\"_is_AAMissile\",\"_loadout\",\"_loadout_line\",\"_vehicle\"];";
+        startOfTheEasaFile += "Private [\"_ammo\",\"_ammoCfg\",\"_easaDefault\",\"_easaLoadout\",\"_easaVehi" +
+            "\",\"_is_AAMissile\",\"_isMissile\",\"_loadout\",\"_loadout_line\",\"_vehicle\"];";
         startOfTheEasaFile += "\n";
         startOfTheEasaFile += "EASA_Equip = Compile preprocessFileLineNumbers " +
             "'Client\\Module\\EASA\\EASA_Equip.sqf';";
@@ -59,9 +59,11 @@ public class SqfFileGenerator
         endOfTheEasaFile += "\t\t\t_ammo = getText(configFile >> \"CfgMagazines\" >> _x >> \"ammo\");";
         endOfTheEasaFile += "\t\t\t";
         endOfTheEasaFile += "\t\t\tif (_ammo != \"\") then {";
-        endOfTheEasaFile += "\t\t\t\tif (getNumber(configFile >> \"CfgAmmo\" >> _ammo >> \"airLock\") == 1 &&" +
-            " configName(inheritsFrom(configFile >> \"CfgAmmo\" >> _ammo)) ==" +
-            " \"MissileBase\") exitWith {_is_AAMissile = true};";
+        endOfTheEasaFile += "\t\t\t\t_ammoCfg = configFile >> \"CfgAmmo\" >> _ammo;";
+        endOfTheEasaFile += " _isMissile = false;";
+        endOfTheEasaFile += " while {isClass _ammoCfg && {configName _ammoCfg != \"CfgAmmo\"} && {!_isMissile}} do {";
+        endOfTheEasaFile += "if (configName _ammoCfg == \"MissileBase\") then {_isMissile = true} else {_ammoCfg = inheritsFrom _ammoCfg}};";
+        endOfTheEasaFile += " if (getNumber(configFile >> \"CfgAmmo\" >> _ammo >> \"airLock\") == 1 && _isMissile) exitWith {_is_AAMissile = true};";
         endOfTheEasaFile += "\t\t\t};";
         endOfTheEasaFile += "\t\t} forEach ((_loadout_line select 2) select 1);";
         endOfTheEasaFile += "\t\t";
