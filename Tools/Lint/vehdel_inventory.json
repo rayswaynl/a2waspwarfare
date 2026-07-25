@@ -300,8 +300,8 @@
     "total": 2
   },
   "Server/Server_GuerAirDef.sqf": {
-    "probed": 20,
-    "total": 21
+    "probed": 24,
+    "total": 25
   },
   "Server/Server_Oilfields.sqf": {
     "probed": 0,

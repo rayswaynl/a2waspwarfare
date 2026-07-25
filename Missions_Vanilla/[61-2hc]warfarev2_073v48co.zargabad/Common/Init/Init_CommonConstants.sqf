@@ -264,6 +264,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_GUER_AIRDEF_QUIET_DESPAWN") then {WFBE_C_GUER_AIRDEF_QUIET_DESPAWN = 300}; //--- despawn after this many seconds with no enemies near the town.
 	if (isNil "WFBE_C_GUER_AIRDEF_LARGE_SV") then {WFBE_C_GUER_AIRDEF_LARGE_SV = 2500}; //--- maxSupplyValue at/above which a town counts as LARGE (Mi-24 eligible); town_type Large/Huge also qualifies.
 	if (isNil "WFBE_C_GUER_AIRDEF_HEIGHT") then {WFBE_C_GUER_AIRDEF_HEIGHT = 120};      //--- flyInHeight for spawned GUER air.
+	if (isNil "WFBE_C_GUER_AIRDEF_FLYAWAY") then {WFBE_C_GUER_AIRDEF_FLYAWAY = 0};      //--- NEW (Grok idea #12, default 0): on a "quiet" recall, fly the defender ~2km away from the town + climb, THEN despawn, instead of an instant mid-skyline delete. Bounded by FLYAWAY_TIMEOUT.
+	if (isNil "WFBE_C_GUER_AIRDEF_FLYAWAY_TIMEOUT") then {WFBE_C_GUER_AIRDEF_FLYAWAY_TIMEOUT = 60}; //--- max seconds to wait for the fly-away (or >1500m clear) before despawning anyway; hard-clamped to <=60 in-code so the wait can never be unbounded.
 	if (isNil "WFBE_C_GUER_GROUND_QRF") then {WFBE_C_GUER_GROUND_QRF = 1};              //--- ARMED (owner ruling 2026-07-21: everything flags on). E3 roster-phase-2: GUER ground QRF.
 	if (isNil "WFBE_C_GUER_HUEY_QRF") then {WFBE_C_GUER_HUEY_QRF = 1};              //--- ARMED (owner ruling 2026-07-21: everything flags on). E5 roster-phase-2: late-game GUER Huey QRF delivery bird.
 	if (isNil "WFBE_C_TOWN_TYPE_OVERLAYS") then {WFBE_C_TOWN_TYPE_OVERLAYS = 1};          //--- ARMED (owner ruling 2026-07-21: everything flags on). roster-phase-2: airfield/high-SV garrison flavor overlays.
