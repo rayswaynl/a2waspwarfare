@@ -7,15 +7,25 @@
 //--- bottom still relays the client (helicopter) sender supplyMissionUnload.sqf.
 WFBE_SE_FNC_HandleSupplyMissionCompleted = {
 
-    private ['_namePlayer', '_associatedSupplyTruck', '_supplyAmount', '_sourceTown', '_sourceTownStr', '_sidePlayer', '_logMessage', '_byHeli', '_cashRun', '_comTeam', '_airLevel'];
+    private ['_namePlayer', '_associatedSupplyTruck', '_supplyAmount', '_sourceTown', '_sourceTownStr', '_sidePlayer', '_logMessage', '_byHeli', '_cashRun', '_comTeam', '_airLevel', '_cc', '_cp', '_dx', '_dy', '_nearCommandCenter', '_playerObject'];
+
+    //--- This handler is also called directly by the server-side ground-truck detector.
+    //--- The PV relay is only used for helicopter unloads, so reject malformed/unrelated
+    //--- client payloads here while preserving the server-originated ground path.
+    if ((typeName _this) != "ARRAY") exitWith {};
+    if (count _this < 3) exitWith {};
 
     _playerObject = _this select 0;
-    _namePlayer = name (_this select 0);
-    _associatedSupplyTruck = (_this select 1);
+    _associatedSupplyTruck = _this select 1;
+    if ((typeName _playerObject) != "OBJECT" || {(typeName _associatedSupplyTruck) != "OBJECT"}) exitWith {};
+    if (isNull _playerObject || {isNull _associatedSupplyTruck} || {!isPlayer _playerObject}) exitWith {};
+
+    _namePlayer = name _playerObject;
     _supplyAmount = _associatedSupplyTruck getVariable "SupplyAmount";
     _sourceTown = _associatedSupplyTruck getVariable "SupplyFromTown";
     _sourceTownStr = str (_sourceTown);
-    _sidePlayer = (_this select 2);
+    //--- Never trust the client-provided side slot: derive it from the credited player.
+    _sidePlayer = side _playerObject;
 
     if (isNil "_supplyAmount") then {
         _supplyAmount = 0;
@@ -34,6 +44,23 @@ WFBE_SE_FNC_HandleSupplyMissionCompleted = {
 
     _byHeli = _associatedSupplyTruck getVariable "SupplyByHeli";
     if (isNil "_byHeli") then { _byHeli = false; };
+
+    //--- A helicopter unload is client-requested. Revalidate the authoritative world state
+    //--- server-side so a forged PV cannot credit another side, a remote hull, or a non-heli.
+    if (_byHeli) then {
+        if !((typeOf _associatedSupplyTruck) in WFBE_C_SUPPLY_HELI_TYPES) exitWith {};
+        if (driver _associatedSupplyTruck != _playerObject) exitWith {};
+        _nearCommandCenter = false;
+        {
+            _cc = _x;
+            _cp = getPos _cc;
+            _dx = ((getPos _associatedSupplyTruck) select 0) - (_cp select 0);
+            _dy = ((getPos _associatedSupplyTruck) select 1) - (_cp select 1);
+            if (((_dx * _dx) + (_dy * _dy)) < 6400) then {_nearCommandCenter = true};
+        } forEach (nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], 400]);
+        if (!_nearCommandCenter) exitWith {};
+    };
+
     _airLevel = ((_sidePlayer) call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_AIR;
     _cashRun = (_byHeli && (_airLevel >= 4));
 
