@@ -3084,6 +3084,13 @@ if (isNil "WFBE_C_AICOM_RETARGET_GRACE_DISPATCHES") then {WFBE_C_AICOM_RETARGET_
 if (isNil "WFBE_C_AICOM2_ALLOC_TTL_HARDEN") then {WFBE_C_AICOM2_ALLOC_TTL_HARDEN = 0};
 //--- Positive value counts uncommitted RETARGET/FOOT_STAGE closures toward WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE; default 0 is inert.
 if (isNil "WFBE_C_AICOM_RETARGET_RECYCLE") then {WFBE_C_AICOM_RETARGET_RECYCLE = 0};
+//--- overrunrazer REPAIR (owner-directed, GR-2026-07-08a): rewires the orphaned B74.1 OVERRUN razer for the
+//--- post-HQ-death case (see AI_Commander_Strategy.sqf "OVERRUN MOP-UP" + Common_RunCommanderTeam.sqf
+//--- "OVERRUN MOP-UP companion patch"). 0 (default) = fully inert, byte-identical to HEAD - neither the
+//--- new dispatch closer nor the engage-gate patch ever execute their bodies.
+if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_ENABLE") then {WFBE_C_AICOM_OVERRUN_MOPUP_ENABLE = 0};
+if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_RATIO")  then {WFBE_C_AICOM_OVERRUN_MOPUP_RATIO  = 1.1}; //--- dominance bar (myEff >= enEff * ratio) to arm the post-HQ-death mop-up dispatch.
+if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_TEAMS")  then {WFBE_C_AICOM_OVERRUN_MOPUP_TEAMS  = 2};   //--- max concurrent field teams pressed onto live enemy factories by the mop-up closer.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
