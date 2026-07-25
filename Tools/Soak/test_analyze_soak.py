@@ -123,6 +123,65 @@ class AnalyzeSoakCanonicalTests(unittest.TestCase):
         self.assertIsNotNone(self.soak.roundend)
 
 
+class AnalyzeSoakRoutingTests(unittest.TestCase):
+    """Routing regressions for server workers versus local team drivers."""
+
+    SERVER = """\
+MISSINIT: server
+AICOMSTAT|v2|EVENT|EAST|10|ASSAULT_DISPATCH|team=O 1-1-H|town=Vybor|dist=900|reissue=false
+AICOMSTAT|v2|EVENT|EAST|11|RALLY_ORDER|team=O 1-1-H|alive=2|want=false
+STUCKSTAT|v1|EAST|12|stuck|leader=O_Soldier|distStart=100|distTgt=900|reissue|strike=1
+Common_RunCommanderTeam.sqf: team CAPTURED [ServerTown] - holding center.
+"""
+
+    HC1 = """\
+MISSINIT: hc1
+AICOMSTAT|v2|EVENT|EAST|12|RALLY_ARRIVED|team=O 1-1-H|seq=1|dist=12
+AICOMSTAT|v1|EVENT|EAST|13|TOPUP_DONE|team=O 1-1-H|count=4
+"""
+
+    HC2 = """\
+MISSINIT: hc2
+AICOMSTAT|v2|EVENT|EAST|14|BREAKOFF|team=O 1-1-H|live=2|resNear=1
+AICOMSTAT|v2|EVENT|EAST|15|RALLY_ORDER|team=O 1-1-H|alive=2|want=false
+Common_RunCommanderTeam.sqf: team CAPTURED [HCTown] - holding center.
+"""
+
+    def test_each_token_is_counted_from_its_declared_source(self):
+        soak = analyze_soak.Soak()
+        soak.ingest_server(self.SERVER.splitlines(True))
+        soak.ingest_hc(self.HC1.splitlines(True))
+        soak.ingest_hc(self.HC2.splitlines(True))
+
+        self.assertEqual(soak.dispatch_count, 1)
+        self.assertEqual(len(soak.event_records("RALLY_ORDER")), 1)
+        self.assertEqual(len(soak.event_records("RALLY_ARRIVED")), 1)
+        self.assertEqual(len(soak.event_records("TOPUP_DONE")), 1)
+        self.assertEqual(len(soak.event_records("BREAKOFF")), 1)
+        self.assertEqual(soak.routing_status("RALLY_ARRIVED")["status"], "measured")
+        self.assertEqual(soak.routing_status("TOPUP_DONE")["count"], 1)
+        self.assertEqual(soak.stuckstat_count, 1)
+        self.assertEqual(len(soak.driver_captured), 2)
+        self.assertEqual(soak.routing_status("CAPTURED")["status"], "measured")
+
+    def test_wrong_file_is_preserved_but_not_counted(self):
+        soak = analyze_soak.Soak()
+        soak.ingest_server(self.SERVER.splitlines(True))
+        soak.ingest_hc(self.HC2.splitlines(True))
+
+        self.assertEqual(len(soak.event_records("RALLY_ORDER")), 1)
+        self.assertEqual(soak.unexpected_events["RALLY_ORDER"]["hc"], 1)
+
+    def test_missing_hc_is_not_measured_and_no_source_is_explicit(self):
+        soak = analyze_soak.Soak()
+        soak.ingest_server(self.SERVER.splitlines(True))
+
+        self.assertEqual(soak.routing_status("RALLY_ARRIVED")["count"], None)
+        self.assertEqual(soak.routing_status("RALLY_ARRIVED")["status"], "not measured")
+        self.assertEqual(soak.routing_status("TEAM_RECYCLE")["count"], None)
+        self.assertEqual(soak.routing_status("TEAM_RECYCLE")["status"], "no source")
+
+
 class AnalyzeSoakAicom2Tests(unittest.TestCase):
     """Regression tests for the AICOM2 section (soak-gate tooling, cc44u fixture).
 
