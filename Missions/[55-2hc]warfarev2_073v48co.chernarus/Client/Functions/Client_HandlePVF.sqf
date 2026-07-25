@@ -32,7 +32,10 @@ if (_isHeadless) then {
 		//---        defaults to 0, no DRAFT worker registered, nil-guarded in AI_Commander.sqf).
 		//---   cleanup-trash-object      = Common_TrashObject.sqf (2026-07-21 locality gate, WFBE_C_TRASH_REMOTE_DELETE
 		//---        default 1; deletes a DEAD, reap-stamped body/hull that is local to this HC - the server cannot)
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object"]);
+		//---   cleanup-town-defense-gunner = server_town.sqf (fix/alife proper #1370) + Server_OperateTownDefensesUnits.sqf
+		//---        "remove" case; deletes a town-defense static gunner (dead OR alive) that is local to this HC -
+		//---        the equivalent server-side deletion call on an HC-delegated gunner would silently no-op
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-town-defense-gunner"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };

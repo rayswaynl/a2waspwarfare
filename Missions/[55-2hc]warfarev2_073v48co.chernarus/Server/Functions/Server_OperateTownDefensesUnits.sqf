@@ -130,10 +130,23 @@ switch (_action) do {
 			if !(isNil '_defense') then {
 				_unit = gunner _defense;
 				if !(isNull _unit) then { //--- Make sure that we do not remove a player's unit.
+					//--- fix(alife) proper #1370 audit: the bare deleteVehicle below silently no-ops when
+					//--- _unit is HC-local (HC-delegated town statics, Common_CreateUnitForStaticDefence.sqf
+					//--- via Server_DelegateAIStaticDefenceHeadless.sqf) - same latent locality hole already
+					//--- fixed for commander arty/heli wrecks in server_groupsGC.sqf (~L405-410). Route
+					//--- non-local deletes to the owning machine via the same established
+					//--- WFBE_CO_FNC_SendToClient -> HandleSpecial dispatch channel those reapers use (new
+					//--- "cleanup-town-defense-gunner" HandleSpecial case). This is a locality-correctness fix
+					//--- to already-shipped de-man behaviour, not new behaviour - unconditional, no flag. The
+					//--- setPos calls below are pre-existing and out of scope for this fix.
 					if (alive _unit) then {
-						if (isNil {(group _unit) getVariable "wfbe_funds"}) then {_unit setPos (getPos _x);	deleteVehicle _unit};
+						if (isNil {(group _unit) getVariable "wfbe_funds"}) then {
+							_unit setPos (getPos _x);
+							if (local _unit) then {deleteVehicle _unit} else {[_unit, "HandleSpecial", ["cleanup-town-defense-gunner", _unit]] Call WFBE_CO_FNC_SendToClient};
+						};
 					} else {
-						_unit setPos (getPos _x); deleteVehicle _unit;
+						_unit setPos (getPos _x);
+						if (local _unit) then {deleteVehicle _unit} else {[_unit, "HandleSpecial", ["cleanup-town-defense-gunner", _unit]] Call WFBE_CO_FNC_SendToClient};
 					};
 				};
 				//--- OWNER RULING (statics lock): de-manned (or already empty) - lock so a player
