@@ -69,10 +69,12 @@ class VehDeleteProbeTests(unittest.TestCase):
         probed_files = [p for p, c in manifest.items() if c["probed"] > 0]
         self.assertGreaterEqual(len(probed_files), 10)
         for rel in probed_files:
-            lines = raw(rel).splitlines()
+            # mask_comments blanks // AND /* */ bodies (line structure preserved), so a
+            # deleteVehicle mentioned in a file header block never reads as a code delete.
+            lines = mask_comments(raw(rel)).splitlines()
             for i, line in enumerate(lines):
                 stripped = line.strip()
-                if "deleteVehicle" not in stripped or stripped.startswith("//"):
+                if "deleteVehicle" not in stripped:
                     continue
                 if re.match(r"^deleteVehicle\b", stripped) or " deleteVehicle" in stripped or "{deleteVehicle" in stripped:
                     prev = lines[i - 1] if i else ""
