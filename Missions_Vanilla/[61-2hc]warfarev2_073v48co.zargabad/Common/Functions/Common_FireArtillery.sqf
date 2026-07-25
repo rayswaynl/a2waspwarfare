@@ -4,14 +4,15 @@ _artillery = _this select 0;
 _destination = _this select 1;
 _side = _this select 2;
 _radius = _this select 3;
-_artillery setVariable ["restricted",true];
-{if(isPlayer _x) then {_x action  ["getOut", _artillery]};} forEach (crew _artillery);
 _index = [typeOf _artillery, _side] Call IsArtillery;
 
 _gunner = gunner _artillery;
 if (_index == -1) exitWith {["WARNING", Format ["Common_FireArtillery.sqf: No artillery types were found for [%1].", _artillery]] Call WFBE_CO_FNC_LogContent};
 if (isNull _gunner) exitWith {["WARNING", Format ["Common_FireArtillery.sqf: Artillery [%1] gunner is null.", _artillery]] Call WFBE_CO_FNC_LogContent};
 if (isPlayer _gunner) exitWith {["WARNING", Format ["Common_FireArtillery.sqf: Artillery [%1] gunner is a player", _artillery]] Call WFBE_CO_FNC_LogContent};
+
+_artillery setVariable ["restricted",true];
+{if(isPlayer _x) then {_x action  ["getOut", _artillery]};} forEach (crew _artillery);
 
 _minRange 	= (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",_side]) select _index;
 _maxRange 	= round(((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",_side]) select _index) / (missionNamespace getVariable "WFBE_C_ARTILLERY"));

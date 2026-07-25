@@ -40,7 +40,9 @@ if (!isNil "_riArtyReq" && {typeName _riArtyReq == "ARRAY"} && {count _riArtyReq
 		if ((typeName _riArtyX == "SCALAR") && {typeName _riArtyY == "SCALAR"} && {(time - _riArtyT0) < (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUEST_TTL", 120])}) then {_riArtyFresh = true};
 	};
 };
-if (!_riArtyFresh) exitWith {};
+if (!_riArtyFresh) exitWith {
+	_logik setVariable ["wfbe_aicom_arty_request", []];
+};
 
 _sideText = str _side;
 _artyTgt = _riArtyPos;
