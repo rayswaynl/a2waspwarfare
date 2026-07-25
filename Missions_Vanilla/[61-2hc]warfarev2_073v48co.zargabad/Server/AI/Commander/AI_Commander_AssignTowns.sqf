@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage","_footStagePos","_stageGoto"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage","_footStagePos","_stageGoto","_waveDelay"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state; +_waveDelay: feat/aicom-wave-stagger
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -995,6 +995,25 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_team setVariable ["wfbe_aicom_foot_stage_pos", []];
 						[_team, "towns"] Call SetTeamMoveMode;
 						[_team, _target] Call SetTeamMovePos;
+						//--- WAVE STAGGER (feat/aicom-wave-stagger, gate WFBE_C_AICOM_WAVE_STAGGER default 0): when
+						//--- multiple teams converge on the SAME spearhead/assault town in THIS pass (this team's
+						//--- fresh _target is already present in _assigned - an earlier team in this SAME forEach,
+						//--- or a pre-seeded en-route team, already claimed it), stagger the actual order re-issue
+						//--- by a per-team offset so arrivals spread out instead of piling onto one road at once.
+						//--- REUSES the existing persistent lane-jitter var (wfbe_aicom_lanejit, same seed idiom
+						//--- the HC road-route builder below already uses) rather than inventing new per-team
+						//--- state. Pure order-timing: only the final order broadcast / movement command below is
+						//--- delayed via a short spawn+sleep; concentration bookkeeping (_assigned, just below),
+						//--- telemetry and dispatch latching stay synchronous and unchanged. Flag 0, or no
+						//--- convergence (first team on a target), => _waveDelay stays 0 => both branches below
+						//--- run inline exactly as before (byte-identical).
+						_waveDelay = 0;
+						if (((missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER", 0]) > 0) && {({_x == _target} count _assigned) > 0}) then {
+							private "_waveJit";
+							_waveJit = _team getVariable "wfbe_aicom_lanejit";
+							if (isNil "_waveJit") then {_waveJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _waveJit, true]};
+							_waveDelay = (missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MIN", 30]) + (((_waveJit + 1) / 2) * ((missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MAX", 90]) - (missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MIN", 30])));
+						};
 						if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 							//--- V0.3: HC-resident team - the HC driver issues the local waypoints;
 							//--- server-side waypoint commands on remote groups are unreliable.
@@ -1024,19 +1043,52 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 								if (_strandRecovery && {!isNil "_mounted"} && {_mounted}) then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]} else {if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]}};
 								_hcRoute = [_hcOrigin, _hcDest, _laneJit * (missionNamespace getVariable ["WFBE_C_AICOM_LANE_OFFSET", 120]), _rmHops] Call WFBE_CO_FNC_BuildRoadRoute; //--- cmdcon42-h: lane amplitude is worldName-aware (CH 120 / TK 60) via WFBE_C_AICOM_LANE_OFFSET.
 							};
-							_team setVariable ["wfbe_aicom_route", _hcRoute, true];
-							_team setVariable ["wfbe_aicom_unstuck", _hcStrk, true];
 							//--- B37 (Ray 2026-06-16): INSTRUMENT the unstuck strike so we can VERIFY it triggers + at which
 							//--- tier. Pairs with UNSTUCK_FIRED (Common_RunCommanderTeam) + the existing ASSAULT_STRANDED
 							//--- moved/stuck line, giving the full strike -> fire -> recover lifecycle in the RPT.
 							if (_hcStrk > 0) then { diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|UNSTUCK_STRIKE|team=" + (str _team) + "|tier=" + str _hcStrk); };
-							_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", _hcDest, _hcStrk], true]; //--- UNSTUCK FIX (Ray 2026-06-16): carry the strike tier as order element 3 so it stays in sync with the seq it belongs to (reader: Common_RunCommanderTeam). The wfbe_aicom_unstuck flag (line ~367) is kept for the gear-slow governor + logging.
-							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_PUBLISHED|team=" + (str _team) + "|mode=towns-target|town=" + (_target getVariable ["name","town"]) + "|dist=" + str (round (_hcOrigin distance _hcDest)) + "|route=" + str (count _hcRoute) + "|strike=" + str _hcStrk);
-						} else {
-							if (_useArc) then {
-								[_team, _target] Call WFBE_SE_FNC_AI_SetTownAttackPath;
+							//--- WAVE STAGGER: when converging on a shared target (_waveDelay > 0, computed above), defer
+							//--- ONLY the final order broadcast (route/unstuck/order + its ORDER_PUBLISHED log) via a short
+							//--- spawn+sleep so this team's march starts later than the team(s) already aimed at the same
+							//--- town. Everything above (route build, strike instrumentation) stays synchronous/unchanged.
+							if (_waveDelay > 0) then {
+								[_team, _hcRoute, _hcStrk, _hcDest, _sideText, _waveDelay] spawn {
+									private ["_wsTeam","_wsRoute","_wsStrk","_wsDest","_wsSideText","_wsDelay"];
+									_wsTeam = _this select 0; _wsRoute = _this select 1; _wsStrk = _this select 2; _wsDest = _this select 3; _wsSideText = _this select 4; _wsDelay = _this select 5;
+									sleep _wsDelay;
+									if (!isNull _wsTeam && {({alive _x} count (units _wsTeam)) > 0}) then {
+										_wsTeam setVariable ["wfbe_aicom_route", _wsRoute, true];
+										_wsTeam setVariable ["wfbe_aicom_unstuck", _wsStrk, true];
+										_wsTeam setVariable ["wfbe_aicom_order", [(if (isNil {_wsTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_wsTeam getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", _wsDest, _wsStrk], true]; //--- feat/aicom-wave-stagger: same order-broadcast statement as the synchronous else-branch, just deferred; seq read happens at spawn-fire time so it stays correct even if interleaved with other order changes.
+										diag_log ("AICOMSTAT|v2|EVENT|" + _wsSideText + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_PUBLISHED|team=" + (str _wsTeam) + "|mode=towns-target|wave=1|delay=" + str (round _wsDelay));
+									};
+								};
 							} else {
-								[_team, getPos _target, "SAD", 200] Call AIMoveTo;
+								_team setVariable ["wfbe_aicom_route", _hcRoute, true];
+								_team setVariable ["wfbe_aicom_unstuck", _hcStrk, true];
+								_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", _hcDest, _hcStrk], true]; //--- UNSTUCK FIX (Ray 2026-06-16): carry the strike tier as order element 3 so it stays in sync with the seq it belongs to (reader: Common_RunCommanderTeam). The wfbe_aicom_unstuck flag (line ~367) is kept for the gear-slow governor + logging.
+								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_PUBLISHED|team=" + (str _team) + "|mode=towns-target|town=" + (_target getVariable ["name","town"]) + "|dist=" + str (round (_hcOrigin distance _hcDest)) + "|route=" + str (count _hcRoute) + "|strike=" + str _hcStrk);
+							};
+						} else {
+							if (_waveDelay > 0) then {
+								[_team, _target, _useArc, _waveDelay] spawn {
+									private ["_wsTeam","_wsTarget","_wsArc","_wsDelay"];
+									_wsTeam = _this select 0; _wsTarget = _this select 1; _wsArc = _this select 2; _wsDelay = _this select 3;
+									sleep _wsDelay;
+									if (!isNull _wsTeam && {!isNull _wsTarget} && {({alive _x} count (units _wsTeam)) > 0}) then {
+										if (_wsArc) then {
+											[_wsTeam, _wsTarget] Call WFBE_SE_FNC_AI_SetTownAttackPath;
+										} else {
+											[_wsTeam, getPos _wsTarget, "SAD", 200] Call AIMoveTo;
+										};
+									};
+								};
+							} else {
+								if (_useArc) then {
+									[_team, _target] Call WFBE_SE_FNC_AI_SetTownAttackPath;
+								} else {
+									[_team, getPos _target, "SAD", 200] Call AIMoveTo;
+								};
 							};
 						};
 						_assigned set [count _assigned, _target];
