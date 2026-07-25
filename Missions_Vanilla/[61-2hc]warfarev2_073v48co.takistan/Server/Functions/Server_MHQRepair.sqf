@@ -1,10 +1,28 @@
-Private ["_commanderTeam","_direction","_hq","_HQName","_logik","_MHQ","_position","_side","_sideID","_sideText"];
+Private ["_commanderTeam","_direction","_hq","_HQName","_logik","_MHQ","_position","_reqPlayer","_side","_sideID","_sideText"];
 
 _side = _this select 0;
+_reqPlayer = if (count _this > 1) then {_this select 1} else {objNull};
 _sideText = str _side;
 _sideID = (_side) Call GetSideID;
+_logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+
+//--- Reentrancy guard (idempotency): check+set the repair flag BEFORE _hq/_position are
+//--- read, so two near-simultaneous requests cannot both capture the old HQ and orphan a
+//--- freshly built MHQ (the old client-only flag was set mid-script, after capture).
+if (_logik getVariable ['wfbe_hq_repairing', false]) exitWith {
+	["WARNING", Format ["Server_MHQRepair.sqf: [%1] rejected - repair already in progress.", _sideText]] Call WFBE_CO_FNC_LogContent;
+};
+_logik setVariable ['wfbe_hq_repairing', true, true];
 
 _hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
+
+//--- Aliveness guard: only a DESTROYED HQ is repairable. The client (Action_RepairMHQ.sqf:6)
+//--- already refuses when the HQ is alive, but the server must not trust the client - without
+//--- this, any client could force-delete a living, fully deployed HQ. Release the flag we took.
+if (alive _hq) exitWith {
+	_logik setVariable ['wfbe_hq_repairing', false, true];
+	["WARNING", Format ["Server_MHQRepair.sqf: [%1] rejected - HQ is alive; repair only rebuilds a destroyed HQ.", _sideText]] Call WFBE_CO_FNC_LogContent;
+};
 _position = getPos _hq;
 _direction = getDir _hq;
 
@@ -20,7 +38,6 @@ if !(isNull _commanderTeam) then {
 	};
 };
 
-_logik setVariable ['wfbe_hq_repairing',true, true];
 
 
 _MHQ = [missionNamespace getVariable Format["WFBE_%1MHQNAME", _sideText], _position, _sideID, _direction, true, false] Call WFBE_CO_FNC_CreateVehicle;
@@ -77,4 +94,4 @@ if (_side == east) then
 };
 // Marty : end.
 
-["INFORMATION", Format ["Server_MHQRepair.sqf: [%1] MHQ has been repaired.", _sideText]] Call WFBE_CO_FNC_LogContent;
+["INFORMATION", Format ["Server_MHQRepair.sqf: [%1] MHQ has been repaired (requested by %2).", _sideText, name _reqPlayer]] Call WFBE_CO_FNC_LogContent;
