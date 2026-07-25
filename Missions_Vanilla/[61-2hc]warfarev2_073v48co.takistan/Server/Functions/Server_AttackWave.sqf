@@ -10,6 +10,16 @@
         _supply = _this select 0;
         _side = _this select 1;
 
+        //--- fix(harden): re-derive from server-authoritative supply state rather than trusting the
+        //--- client-supplied _supply figure carried in ATTACK_WAVE_INIT (docs/design/ATTACK-WAVE-PRICE-
+        //--- MODIFIER-AUDIT-2026-07-03.md flagged "forged supply input" as an open gap). GetSideSupply
+        //--- reads the live missionNamespace wfbe_supply_<side> value - the same source AttackWave.sqf's
+        //--- own full-supply debit already trusts (Server/PVFunctions/AttackWave.sqf) - so a forged
+        //--- client _supply can no longer skew the wave's discount percentage or duration. Overwrites
+        //--- the client-sent value in place; nothing downstream still reads the untrusted figure. Not a
+        //--- rejection guard (nothing exits here), so WFBE_C_SEC_HARDENING does not apply - see PR body.
+        _supply = _side call GetSideSupply;
+
         _discountPercentage = 0;
 
         _discountPercentage = 0.4 + ((WFBE_C_ECONOMY_SUPPLY_MAX_TEAM_LIMIT - _supply) * (1/50000));
