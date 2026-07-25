@@ -297,12 +297,12 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 		//--- HOLD SKIP-RETARGET (cmdcon41, claude-gaming 2026-07-02): the FIRST captor of a town claims a short
 		//--- DEFEND hold (latched in Common_RunCommanderTeam on capture: team var wfbe_aicom_holding_town = the
 		//--- town, town var wfbe_aicom_hold_until = expiry). While that latch is LIVE - the held town is still
-		//--- ours and the window has not lapsed - treat the team as explicitly ordered so this tick does NOT
-		//--- retarget it off the just-taken centre (stops the see-saw). Once the town flips back, or the window
-		//--- lapses, the latch is CLEARED and the team retargets normally next pass. A2-OA-safe (plain getVariable
-		//--- + isNil guard, typeName OBJECT test, numeric sideID compare, objNull broadcast clear).
+		//--- ours and either the original timer/gate remains live or hostile [active attack] contact persists - treat the team as explicitly
+		//--- ordered so this tick does NOT retarget it off the centre mid-fight (stops the see-saw). Once the town flips back, or the quiet
+		//--- timer expires, the latch is CLEARED and the team retargets normally. A2-OA-safe (plain getVariable + isNil guard, typeName
+		//--- OBJECT test, numeric sideID compare, objNull broadcast clear).
 		if ((missionNamespace getVariable ["WFBE_C_AICOM_HOLD_MODE", 1]) > 0) then {
-			private ["_ht","_htLive","_htSide","_htUntil","_htEnemyDist"];
+			private ["_ht","_htLive","_htSide","_htUntil","_htEnemyDist","_htUnderAttack"];
 			_ht = _team getVariable "wfbe_aicom_holding_town";
 			_htLive = false;
 			if (!isNil "_ht") then {
@@ -310,7 +310,9 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					_htSide = _ht getVariable ["sideID", -1];
 					_htUntil = _ht getVariable ["wfbe_aicom_hold_until", 0];
 					_htEnemyDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
-					if (_htSide == _sideID && {time < _htUntil} && {((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) <= 0) || {(_ht getVariable ["wfbe_active", false]) && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _ht) nearEntities [["Man","LandVehicle","Air"], _htEnemyDist])) > 0}}}) then {_htLive = true};
+					_htUnderAttack = false;
+					if ((_ht getVariable ["wfbe_active", false]) && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _ht) nearEntities [["Man","LandVehicle","Air"], _htEnemyDist])) > 0}) then {_htUnderAttack = true};
+					if (_htSide == _sideID && {((time < _htUntil) && {((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) <= 0) || {_htUnderAttack}}) || {_htUnderAttack}}) then {_htLive = true};
 				};
 			};
 			if (_htLive) then {
