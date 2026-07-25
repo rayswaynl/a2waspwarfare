@@ -207,6 +207,10 @@
     "probed": 7,
     "total": 15
   },
+  "Server/FSM/server_side_patrols.sqf": {
+    "probed": 2,
+    "total": 2
+  },
   "Server/FSM/server_town.sqf": {
     "probed": 0,
     "total": 12
