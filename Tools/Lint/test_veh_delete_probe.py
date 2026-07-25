@@ -13,8 +13,9 @@ instead of a curated site list. Two mechanisms provide it:
    deleteVehicle statement must have its probe call on the same line or the line above.
    There is no curated subset left to argue about.
 
-Probe policy (round-2): default 0 per repo feature-default policy; playableUnits scan
-(cost bound); GetIn stamps role + UID (driver-aware attribution).
+Probe policy (round-2): default 0 per repo feature-default policy; bounded human-player scan
+via WFBE_CO_FNC_RealPlayers (cost bound, HC bodies excluded - rebase-1293); GetIn stamps
+role + UID (driver-aware attribution).
 """
 
 import json
@@ -46,11 +47,12 @@ class VehDeleteProbeTests(unittest.TestCase):
             "useUid=",
             "local _veh",
             "crew _veh",
-            "forEach playableUnits",           # round-2: bounded scan, not allUnits
+            "forEach ([] call WFBE_CO_FNC_RealPlayers)",  # rebase-1293: bounded human-player scan, HC bodies excluded
             "VEHDEL|v1|reason=",
         ):
             self.assertIn(token, text)
         self.assertNotIn("forEach allUnits", text)
+        self.assertNotIn("forEach playableUnits", text)
 
     def test_ratchet_manifest_matches_the_entire_tree(self) -> None:
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8-sig"))

@@ -24,7 +24,7 @@ while { !WFBE_GameOver } do {
 
 	_playersOnServer = [];
 	{
-		if (isPlayer _x) then {
+		if (!isNull _x) then {
 			// Marty: Performance Audit player counter for AntiStack player list flush.
 			_perfPlayers = _perfPlayers + 1;
 			uiSleep _miniSleep;
@@ -40,8 +40,8 @@ while { !WFBE_GameOver } do {
 				};
 			};
 		};
-	// Marty: PERF - iterate the player slot list, not allUnits (avoids scanning hundreds of AI per tick). isPlayer guard above keeps behaviour identical.
-	} forEach playableUnits;
+	// Marty: PERF - helper returns only living human player slots, excluding headless-client bodies.
+	} forEach ([] call WFBE_CO_FNC_RealPlayers);
 	// ["TEST", format ["CountPlayerScores.sqf: DEBUG: Contents of _playersOnServer ('SEND_PLAYERLIST'): %1", _playersOnServer]] Call WFBE_CO_FNC_LogContent;
 	["SEND_PLAYERLIST", _playersOnServer] call WFBE_SE_FNC_CallDatabaseSendPlayerList;
 	_perfDbCalls = _perfDbCalls + 1;

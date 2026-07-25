@@ -18,12 +18,12 @@ while { !WFBE_GameOver } do { //--- wiki-wins: stop at game over, matching sibli
 	_perfAllUnits = count allUnits;
 
 	{
-		if (isPlayer _x) then {
+		if (!isNull _x) then {
 			// Marty: Performance Audit player counter for AntiStack score sampling.
 			_perfPlayers = _perfPlayers + 1;
 			missionNamespace setVariable [format ["WFBE_CO_CURRENT_SCORE_PLAYER_%1", getPlayerUID _x], score _x];
 		};
-	} forEach playableUnits; //--- PERF: player slots not 300+ AI (isPlayer guard keeps behaviour identical; see mainLoop.sqf)
+	} forEach ([] call WFBE_CO_FNC_RealPlayers); //--- PERF: helper returns real player slots, not 300+ AI or headless-client bodies.
 
 	// Marty: Performance Audit record for AntiStack score sampling.
 	if !(isNil "PerformanceAudit_Record") then {

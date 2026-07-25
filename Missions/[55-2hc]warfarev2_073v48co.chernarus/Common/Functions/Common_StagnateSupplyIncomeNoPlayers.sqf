@@ -30,7 +30,7 @@ private ["_skillExempt"];
 _skillExempt = ((_side == west) && {_teamSkillWest > 0}) || ((_side == east) && {_teamSkillEast > 0});
 if (_skillExempt) exitWith {_amount};
 
-_sidePlayerCount = {isPlayer _x && {side _x == _side}} count playableUnits;
+_sidePlayerCount = count ([_side] call WFBE_CO_FNC_RealPlayers);
 
 if (_side == west) then {
     _teamWestPlayers = _sidePlayerCount;
