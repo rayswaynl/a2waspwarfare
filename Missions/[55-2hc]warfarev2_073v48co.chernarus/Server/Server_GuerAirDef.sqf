@@ -474,6 +474,11 @@ while {!WFBE_GameOver} do {
 		_groundQrfs = _keptGroundQrfs;
 	};
 
+	private ["_enemyAirVehicles", "_chunkSleepTotal"];
+	_enemyAirVehicles = [];
+	{if (alive _x && {_x isKindOf "Air"} && {((side _x) == west) || {(side _x) == east}}) then {_enemyAirVehicles set [count _enemyAirVehicles, _x]}} forEach vehicles;
+	_chunkSleepTotal = 0;
+
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
 	{
 		private ["_town","_pos","_enemies","_enemyAir","_isLarge","_townType","_maxSV","_useMi24","_useAA","_class","_useAT","_useDrop","_townHasDrop","_grp","_veh","_pilot","_gunner","_airCrewReady","_spawnPos","_ang","_loadName","_swarmN","_swarmI","_swarmMade","_eAng","_ePos","_eVeh2","_ePilot","_eGunner","_swarmCrewReady","_flareN","_eFlareN","_qrfEnemies","_qrfTownHas","_qrfPool","_qrfTemplate","_qrfGroup","_qrfBuilt","_qrfUnit","_qrfAng","_qrfPos","_qrfRadius","_diag"];
@@ -542,7 +547,11 @@ while {!WFBE_GameOver} do {
 			//--- Enemy AIR near the town (crewed west/east aircraft) - the counter-air trigger. Scanned over
 			//--- `vehicles` (hull objects); side comes from the crewed hull, so an empty parked heli reads CIV
 			//--- and is ignored (only manned attackers pull a SAM-heli response).
-			_enemyAir = {alive _x && {_x isKindOf "Air"} && {((side _x) == west) || {(side _x) == east}} && {(_x distance _town) < ((_town getVariable ["range", 600]) max 600)}} count vehicles;
+			_enemyAir = if ((missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNKED", 1]) > 0) then {
+				{(_x distance _town) < ((_town getVariable ["range", 600]) max 600)} count _enemyAirVehicles
+			} else {
+				{alive _x && {_x isKindOf "Air"} && {((side _x) == west) || {(side _x) == east}} && {(_x distance _town) < ((_town getVariable ["range", 600]) max 600)}} count vehicles
+			};
 
 			//--- LARGE-town test: by maxSupplyValue threshold OR by town_type tier (Large/Huge).
 			_maxSV    = _town getVariable ["maxSupplyValue", 0];
@@ -907,6 +916,10 @@ while {!WFBE_GameOver} do {
 				diag_log format ["GUERAIRDEF|SPAWNFAIL|town=%1|class=%2|reason=createVehicle_null", (_town getVariable ["name","?"]), _class];
 			};
 		};
+		if ((missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNKED", 1]) > 0) then {
+			_chunkSleepTotal = _chunkSleepTotal + (missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNK_SLEEP", 0.4]);
+			sleep (missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNK_SLEEP", 0.4]);
+		};
 	} forEach towns;
 
 	//--- B67 (Ray 2026-06-21): rebuild + broadcast the GUER-air marker feed from the live registry (alive hulls
@@ -920,6 +933,6 @@ while {!WFBE_GameOver} do {
 	WFBE_ACTIVE_GUER_AIR = _airList;
 	publicVariable "WFBE_ACTIVE_GUER_AIR";
 	if !(isNil "PerformanceAudit_Record") then {
-		["guer_airdef_cycle", diag_tickTime - _perfStart, Format["towns:%1;airBefore:%2;airAfter:%3;dropsBefore:%4;dropsAfter:%5;markers:%6;cap:%7;dropCap:%8", count towns, _perfAirBefore, count _defenders, _perfDropsBefore, count _drops, count _airList, _maxAir, _dropMax], "SERVER"] Call PerformanceAudit_Record;
+		["guer_airdef_cycle", (diag_tickTime - _perfStart) - _chunkSleepTotal, Format["towns:%1;airBefore:%2;airAfter:%3;dropsBefore:%4;dropsAfter:%5;markers:%6;cap:%7;dropCap:%8;chunkSleep:%9", count towns, _perfAirBefore, count _defenders, _perfDropsBefore, count _drops, count _airList, _maxAir, _dropMax, _chunkSleepTotal], "SERVER"] Call PerformanceAudit_Record;
 	};
 };

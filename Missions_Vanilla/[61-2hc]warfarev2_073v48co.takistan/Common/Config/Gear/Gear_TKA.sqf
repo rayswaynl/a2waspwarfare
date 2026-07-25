@@ -343,6 +343,13 @@ _n = _n + [''];
 _o = _o + [50];
 _z = _z + [1];
 
+//--- wave0723c casualty recovery: register the disposable launcher rocket in the gear shop.
+_u = _u + ["RPG18"];
+_p = _p + [''];
+_n = _n + [''];
+_o = _o + [75];
+_z = _z + [0];
+
 [_faction, _u, _p, _n, _o, _z] Call Compile preprocessFile "Common\Config\Config_Magazines.sqf";
 
 _u = [];//--- Weapon
