@@ -18,6 +18,14 @@
 	    ground reinforcement drop). The dropped squad is tracked in a SEPARATE registry that obeys the
 	    SAME alive-cap / lifetime / quiet-despawn / tag / marker rules as the air, so it can't be spammed.
 
+	FLY-AWAY DESPAWN (WFBE_C_GUER_AIRDEF_FLYAWAY, Grok idea #12, default 0): when armed, a "quiet"
+	recall (no enemies near the town for WFBE_C_GUER_AIRDEF_QUIET_DESPAWN seconds) no longer deletes
+	the live, unengaged hull in place mid-skyline. Instead a bounded background thread gives it a
+	move-away waypoint (~2km outward from the town) plus a climb, waits <=WFBE_C_GUER_AIRDEF_FLYAWAY_
+	TIMEOUT seconds (default 60, hard-clamped to <=60) or until it clears 1500m from the town —
+	whichever first — then despawns it with the same player-safe teardown. Registry slot frees THIS
+	tick either way. Off by default; destroyed/crew-dead/town-lost/lifetime recalls are unaffected.
+
 	MAINTAIN (not one-shot): every WFBE_C_GUER_AIRDEF_INTERVAL (~120s) it
 	  1. prunes dead/destroyed defenders (decrementing the alive count),
 	  2. despawns a town's air when the town is no longer GUER-held / no longer active /
@@ -203,7 +211,7 @@ while {!WFBE_GameOver} do {
 	_townsWithAir = [];
 	_prunedGroups = [];
 	{
-		private ["_entry","_eTown","_eVeh","_eGrp","_ePilot","_eGunner","_eSpawn","_eLastEnemy","_drop","_reason","_enemiesNow","_townSide","_townActive"];
+		private ["_entry","_eTown","_eVeh","_eGrp","_ePilot","_eGunner","_eSpawn","_eLastEnemy","_drop","_reason","_enemiesNow","_townSide","_townActive","_flyAway"];
 		_entry      = _x;
 		_eTown      = _entry select 0;
 		_eVeh       = _entry select 1;
@@ -262,11 +270,100 @@ while {!WFBE_GameOver} do {
 			//--- ANY single prune - derelict hulls then sat in the registry (alive, crewless) for up to
 			//--- _lifetime (900s). Group teardown is deferred to the post-pass below, which only frees
 			//--- a group once no KEPT entry still references it.
-			if (!isNull _ePilot && {!(isPlayer _ePilot)}) then { ["guerairdef-pilot", _ePilot, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _ePilot; };
-			if (!isNull _eGunner && {!(isPlayer _eGunner)}) then { ["guerairdef-gunner", _eGunner, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eGunner; };
-			if (!isNull _eVeh && {({isPlayer _x} count (crew _eVeh)) == 0}) then { {["guerairdef-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _eVeh); ["guerairdef-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh; };
-			if (!isNull _eGrp) then { _prunedGroups = _prunedGroups + [_eGrp]; };
-			diag_log format ["GUERAIRDEF|DESPAWN|town=%1|reason=%2|alive=%3", (if (isNull _eTown) then {"?"} else {_eTown getVariable ["name","?"]}), _reason, (count _kept)];
+
+			//--- FLY-AWAY DESPAWN (WFBE_C_GUER_AIRDEF_FLYAWAY, Grok idea #12, default 0): only for a
+			//--- "quiet" recall on a LIVE, non-player-crewed hull (never re-route a destroyed/crew-dead
+			//--- hull or a player's air). Instead of an instant delete, hand the whole detach off to a
+			//--- self-contained background thread (below) that gives it a move-away waypoint + a climb,
+			//--- waits a BOUNDED time, then tears itself down with the SAME player-safe teardown idiom
+			//--- used here. The registry slot is freed THIS tick regardless (identical to the immediate
+			//--- path), so a replacement can spawn while the old hull is still flying off-screen.
+			_flyAway = (_reason == "quiet")
+				&& {(missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_FLYAWAY", 0]) > 0}
+				&& {!isNull _eVeh} && {alive _eVeh}
+				&& {({isPlayer _x} count (crew _eVeh)) == 0};
+
+			if (_flyAway) then {
+				//--- Self-contained: this thread does its OWN player-safe teardown and only frees the
+				//--- group once it is empty (alive-unit count == 0), so it never races the deferred
+				//--- group-teardown post-pass below for a swarm-shared group. _eGrp is deliberately NOT
+				//--- added to _prunedGroups on this path.
+				[_eTown, _eVeh, _eGrp, _ePilot, _eGunner, _flyHeight] Spawn {
+					private ["_t","_v","_g","_p","_gu","_h","_tPos","_vPos","_dx","_dy","_ang","_flyPos","_climbH","_timeout","_tick","_done","_finalDist"];
+					_t = _this select 0;
+					_v = _this select 1;
+					_g = _this select 2;
+					_p = _this select 3;
+					_gu = _this select 4;
+					_h = _this select 5;
+					//--- fix(codex-hold 2026-07-25): the registry slot for this hull was already freed THIS
+					//--- tick by the caller (identical to the immediate-delete path), so if the hull died
+					//--- between being scheduled and this thread actually starting, bailing out with a bare
+					//--- exitWith left crew+group untracked by BOTH this thread and the maintain sweep -
+					//--- untracked survivors / an empty-group leak. Run the SAME player-safe teardown the
+					//--- full path uses below (pilot/gunner by direct reference, hull crew + hull if no
+					//--- player aboard, group only once it holds no living unit), THEN exit.
+					if (isNull _v || {!(alive _v)}) exitWith {
+						if (!isNull _p && {!(isPlayer _p)}) then { ["guerairdef-flyaway-pilot-earlydead", _p, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _p; };
+						if (!isNull _gu && {!(isPlayer _gu)}) then { ["guerairdef-flyaway-gunner-earlydead", _gu, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gu; };
+						if (!isNull _v && {({isPlayer _x} count (crew _v)) == 0}) then { {["guerairdef-flyaway-unit-earlydead", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _v); ["guerairdef-flyaway-hull-earlydead", _v, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _v; };
+						if (!isNull _g && {({alive _x} count (units _g)) == 0}) then { deleteGroup _g; };
+						diag_log format ["GUERAIRDEF|FLYAWAYDESPAWN-EARLYDEAD|town=%1", (if (isNull _t) then {"?"} else {_t getVariable ["name","?"]})];
+					};
+
+					//--- Bearing AWAY from the town = the hull's current bearing FROM the town center,
+					//--- extended ~2km outward (a stable outward heading, not a moving target). Falls
+					//--- back to a random heading in the (practically unreachable) case the hull spawned
+					//--- exactly on the town center.
+					_vPos = getPos _v;
+					_tPos = if (isNull _t) then {_vPos} else {getPos _t};
+					_dx = (_vPos select 0) - (_tPos select 0);
+					_dy = (_vPos select 1) - (_tPos select 1);
+					_ang = if (abs _dx < 1 && {abs _dy < 1}) then {random 360} else {_dx atan2 _dy};
+					_flyPos = [(_tPos select 0) + 2000 * sin _ang, (_tPos select 1) + 2000 * cos _ang, 0];
+
+					if (!isNull _g) then {
+						_g move _flyPos;
+						_g setBehaviour "AWARE";
+						_g setSpeedMode "FULL";
+					};
+					_climbH = _h + 150;
+					if (!isNull _v && {alive _v}) then { _v flyInHeight _climbH; };
+
+					//--- Bounded wait: <=WFBE_C_GUER_AIRDEF_FLYAWAY_TIMEOUT seconds (hard-clamped to
+					//--- <=60 here regardless of config), OR until the hull clears 1500m from the town,
+					//--- whichever comes first. If the move fails/stalls the timeout still fires, so this
+					//--- can never hang.
+					_timeout = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_FLYAWAY_TIMEOUT", 60];
+					if (_timeout > 60) then { _timeout = 60; };
+					if (_timeout < 5) then { _timeout = 5; };
+					_tick = 0;
+					_done = false;
+					waitUntil {
+						sleep 1;
+						_tick = _tick + 1;
+						_done = (isNull _v) || {!(alive _v)} || {(_v distance _tPos) > 1500} || {_tick >= _timeout};
+						_done
+					};
+
+					_finalDist = if (isNull _v) then {-1} else {_v distance _tPos};
+
+					//--- Despawn now: SAME player-safe teardown idiom as the immediate path (re-checked
+					//--- here since a player could have boarded during the wait).
+					if (!isNull _p && {!(isPlayer _p)}) then { ["guerairdef-flyaway-pilot", _p, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _p; };
+					if (!isNull _gu && {!(isPlayer _gu)}) then { ["guerairdef-flyaway-gunner", _gu, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gu; };
+					if (!isNull _v && {({isPlayer _x} count (crew _v)) == 0}) then { {["guerairdef-flyaway-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _v); ["guerairdef-flyaway-hull", _v, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _v; };
+					if (!isNull _g && {({alive _x} count (units _g)) == 0}) then { deleteGroup _g; };
+					diag_log format ["GUERAIRDEF|FLYAWAYDESPAWN|town=%1|dist=%2|ticks=%3", (if (isNull _t) then {"?"} else {_t getVariable ["name","?"]}), _finalDist, _tick];
+				};
+				diag_log format ["GUERAIRDEF|DESPAWN|town=%1|reason=%2|alive=%3|flyaway=1", (if (isNull _eTown) then {"?"} else {_eTown getVariable ["name","?"]}), _reason, (count _kept)];
+			} else {
+				if (!isNull _ePilot && {!(isPlayer _ePilot)}) then { ["guerairdef-pilot", _ePilot, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _ePilot; };
+				if (!isNull _eGunner && {!(isPlayer _eGunner)}) then { ["guerairdef-gunner", _eGunner, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eGunner; };
+				if (!isNull _eVeh && {({isPlayer _x} count (crew _eVeh)) == 0}) then { {["guerairdef-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _eVeh); ["guerairdef-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh; };
+				if (!isNull _eGrp) then { _prunedGroups = _prunedGroups + [_eGrp]; };
+				diag_log format ["GUERAIRDEF|DESPAWN|town=%1|reason=%2|alive=%3", (if (isNull _eTown) then {"?"} else {_eTown getVariable ["name","?"]}), _reason, (count _kept)];
+			};
 		} else {
 			_kept         = _kept + [[_eTown, _eVeh, _eGrp, _ePilot, _eGunner, _eSpawn, _eLastEnemy]];
 			_townsWithAir = _townsWithAir + [_eTown];
