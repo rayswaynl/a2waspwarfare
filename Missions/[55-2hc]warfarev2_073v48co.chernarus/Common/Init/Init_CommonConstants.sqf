@@ -961,7 +961,7 @@ if (worldName == "Zargabad") then {
 	WFBE_AICOM_SMALLMAP_ARMED = (WFBE_C_AICOM_SMALLMAP_TUNE > 0) && {(toLower worldName) == "zargabad"};
 	if (isNil "WFBE_C_AICOM_RETREAT_MAX_ISSUES") then {if (WFBE_AICOM_SMALLMAP_ARMED) then {WFBE_C_AICOM_RETREAT_MAX_ISSUES = 14} else {WFBE_C_AICOM_RETREAT_MAX_ISSUES = 8}}; //--- cull a lone survivor after this many retreat re-issues regardless of slow progress.
 	if (isNil "WFBE_C_AICOM_RETREAT_HOME_RANGE") then {if (WFBE_AICOM_SMALLMAP_ARMED) then {WFBE_C_AICOM_RETREAT_HOME_RANGE = 1600} else {WFBE_C_AICOM_RETREAT_HOME_RANGE = 800}};
-	if (isNil "WFBE_C_AICOM_RETREAT_MAX_DIST") then {WFBE_C_AICOM_RETREAT_MAX_DIST = 6000};  //--- cull a lone survivor immediately if farther than this (m) from HQ - not worth a multi-km walk home.
+	if (isNil "WFBE_C_AICOM_RETREAT_MAX_DIST") then {WFBE_C_AICOM_RETREAT_MAX_DIST = 6000};  //--- cull a lone survivor after a retreat re-issue if farther than this (m) from HQ - not worth a multi-km walk home.
 	//--- B67 (Ray 2026-06-21) BUILD PLACEMENT (item #10): minimum centre-to-centre spacing between AI-built
 	//--- structures + a wider factory placement ring, so factories stop piling on top of each other.
 	if (isNil "WFBE_C_AICOM_STRUCT_SPACING") then {WFBE_C_AICOM_STRUCT_SPACING = 45};       //--- m between AI structures (big hangars reach ~30m). SOFT preference enforced by the primary placement path.
