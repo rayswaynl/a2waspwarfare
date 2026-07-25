@@ -1,4 +1,4 @@
-Private["_actor","_actorSideID","_challenge","_consumeResult","_locked","_minted","_ownerSideID","_rejected","_token","_vehicle","_vehicleSideID"];
+Private["_actor","_challenge","_consumeResult","_locked","_minted","_rejected","_token","_vehicle"];
 
 _vehicle = _this select 0;
 _locked = _this select 1;
@@ -39,19 +39,6 @@ if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
 	if (!_rejected && {(_actor distance _vehicle) > 12}) then {
 		_rejected = true;
 		["WARNING", Format ["RequestVehicleLock.sqf: rejected out-of-range unlock on [%1] by [%2] (dist=%3).", _vehicle, _actor, _actor distance _vehicle]] Call WFBE_CO_FNC_LogContent;
-	};
-	//--- Empty hulls report their engine side poorly. Common_CreateVehicle stamps the authoritative
-	//--- numeric owner side on every mission-created vehicle before any client can use it.
-	if (!_rejected) then {
-		_actorSideID = (side (group _actor)) Call WFBE_CO_FNC_GetSideID;
-		_vehicleSideID = _vehicle getVariable ["wfbe_side_id", -1];
-		if (typeName _vehicleSideID != "SCALAR") then {_vehicleSideID = -1};
-		if (_vehicleSideID < 0) then {_vehicleSideID = (side _vehicle) Call WFBE_CO_FNC_GetSideID};
-		_ownerSideID = _actorSideID;
-		if (_vehicleSideID != _ownerSideID) then {
-			_rejected = true;
-			["WARNING", Format ["RequestVehicleLock.sqf: rejected cross-side unlock on [%1] by [%2] (vehicleSide=%3 actorSide=%4).", _vehicle, _actor, _vehicleSideID, _ownerSideID]] Call WFBE_CO_FNC_LogContent;
-		};
 	};
 	if (count _this > 3) then {_token = _this select 3};
 	if (count _this > 4) then {_challenge = _this select 4};
