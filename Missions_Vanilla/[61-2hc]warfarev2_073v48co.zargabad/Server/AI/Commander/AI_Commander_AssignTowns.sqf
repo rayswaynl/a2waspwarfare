@@ -193,6 +193,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						if (_fjThrS > 0 && {_fjS >= _fjThrS} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 							_team setVariable ["wfbe_aicom_recycle", true, true];
 							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjS + "|reason=stranded");
+							//--- WASPSCALE aband counter (feat/abandon-telemetry): cumulative abandon/recycle events this match, read by the AI_Commander.sqf WASPSCALE emit (aband=). Counter-only, no behaviour change.
+							missionNamespace setVariable ["wfbe_waspscale_aband", (missionNamespace getVariable ["wfbe_waspscale_aband", 0]) + 1];
 						};
 					};
 				};
@@ -369,6 +371,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							_team setVariable ["wfbe_aicom_stuckstrikes", 0];
 							_team setVariable ["wfbe_aicom_dwell_town0", nil];
 							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|DWELL_ABANDON|team=" + (str _team) + "|town=" + (_dwTgt getVariable ["name","town"]) + "|cumDwell=" + str (round _dwCum));
+							//--- WASPSCALE aband counter (feat/abandon-telemetry): cumulative abandon/recycle events this match, read by the AI_Commander.sqf WASPSCALE emit (aband=). Counter-only, no behaviour change.
+							missionNamespace setVariable ["wfbe_waspscale_aband", (missionNamespace getVariable ["wfbe_waspscale_aband", 0]) + 1];
 							//--- FAILED-JOURNEY RECYCLE: same tally+latch idiom already copy-pasted in this file (STUCK_ABANDON/stall-advance/uncapturable blocks) - 5th copy, not a new pipeline. Also closes the design doc's own finding that capture-side releases were previously invisible to this counter.
 							private ["_fjD","_fjThrD"];
 							_fjD = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
@@ -377,6 +381,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							if (_fjThrD > 0 && {_fjD >= _fjThrD} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 								_team setVariable ["wfbe_aicom_recycle", true, true];
 								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjD + "|reason=dwell");
+								//--- WASPSCALE aband counter (feat/abandon-telemetry): cumulative abandon/recycle events this match, read by the AI_Commander.sqf WASPSCALE emit (aband=). Counter-only, no behaviour change.
+								missionNamespace setVariable ["wfbe_waspscale_aband", (missionNamespace getVariable ["wfbe_waspscale_aband", 0]) + 1];
 							};
 						};
 					} else {
@@ -464,6 +470,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 											_team setVariable ["wfbe_aicom_blacklist", _abKeep];
 											_team setVariable ["wfbe_aicom_stuckstrikes", 0];
 											diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TARGET_ABANDON|team=" + (str _team) + "|town=" + (_goto getVariable ["name","town"]) + "|cooldown=" + str _abCd);
+											//--- WASPSCALE aband counter (feat/abandon-telemetry): cumulative abandon/recycle events this match, read by the AI_Commander.sqf WASPSCALE emit (aband=). Counter-only, no behaviour change.
+											missionNamespace setVariable ["wfbe_waspscale_aband", (missionNamespace getVariable ["wfbe_waspscale_aband", 0]) + 1];
 											//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, F4b): a TARGET_ABANDON is a failed journey - tally + latch.
 											if (true) then {
 												private ["_fjA","_fjThrA"];
@@ -473,6 +481,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 												if (_fjThrA > 0 && {_fjA >= _fjThrA} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 													_team setVariable ["wfbe_aicom_recycle", true, true];
 													diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjA + "|reason=abandon");
+													//--- WASPSCALE aband counter (feat/abandon-telemetry): cumulative abandon/recycle events this match, read by the AI_Commander.sqf WASPSCALE emit (aband=). Counter-only, no behaviour change.
+													missionNamespace setVariable ["wfbe_waspscale_aband", (missionNamespace getVariable ["wfbe_waspscale_aband", 0]) + 1];
 												};
 											};
 											//--- D1 (cmdcon28): tally this abandon SIDE-WIDE. After WFBE_C_AICOM_SIDE_ABANDON different-team
@@ -581,6 +591,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 												_team setVariable ["wfbe_aicom_goto_since", time]; //--- clock reset so the fresh target starts a clean stall window.
 												_needs = true; //--- retarget THIS tick via the nearest-reachable selector (empty-pool guard protects the last enemy town).
 												diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TARGET_ABANDON|team=" + (str _team) + "|town=" + (_goto getVariable ["name","town"]) + "|reason=stall-advance|onGoto=" + str (round (time - _gotoSince)) + "|cooldown=" + str _saCd);
+												//--- WASPSCALE aband counter (feat/abandon-telemetry): cumulative abandon/recycle events this match, read by the AI_Commander.sqf WASPSCALE emit (aband=). Counter-only, no behaviour change.
+												missionNamespace setVariable ["wfbe_waspscale_aband", (missionNamespace getVariable ["wfbe_waspscale_aband", 0]) + 1];
 													//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, F4b): stall-advance abandon is a failed journey - tally + latch.
 													private ["_fjSA","_fjThrSA"];
 													_fjSA = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
@@ -589,6 +601,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 													if (_fjThrSA > 0 && {_fjSA >= _fjThrSA} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 														_team setVariable ["wfbe_aicom_recycle", true, true];
 														diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjSA + "|reason=abandon");
+														//--- WASPSCALE aband counter (feat/abandon-telemetry): cumulative abandon/recycle events this match, read by the AI_Commander.sqf WASPSCALE emit (aband=). Counter-only, no behaviour change.
+														missionNamespace setVariable ["wfbe_waspscale_aband", (missionNamespace getVariable ["wfbe_waspscale_aband", 0]) + 1];
 													};
 											};
 											//--- T1.3c FIX (R3-SYNTHESIS 2026-07-20; codex review HIGH follow-up): the T1.3b guard on the
@@ -612,6 +626,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 												_team setVariable ["wfbe_aicom_blacklist", _abKeep];
 												_team setVariable ["wfbe_aicom_stuckstrikes", 0];
 												diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TARGET_ABANDON|team=" + (str _team) + "|town=" + (_goto getVariable ["name","town"]) + "|reason=uncapturable|cooldown=" + str _abCd);
+												//--- WASPSCALE aband counter (feat/abandon-telemetry): cumulative abandon/recycle events this match, read by the AI_Commander.sqf WASPSCALE emit (aband=). Counter-only, no behaviour change.
+												missionNamespace setVariable ["wfbe_waspscale_aband", (missionNamespace getVariable ["wfbe_waspscale_aband", 0]) + 1];
 													//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, F4b): uncapturable abandon is a failed journey - tally + latch.
 													private ["_fjUC","_fjThrUC"];
 													_fjUC = ([_team, "wfbe_aicom_failedjourneys", 0] Call WFBE_CO_FNC_GroupGetBool) + 1;
@@ -620,6 +636,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 													if (_fjThrUC > 0 && {_fjUC >= _fjThrUC} && {!([_team, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 														_team setVariable ["wfbe_aicom_recycle", true, true];
 														diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RECYCLE_FLAG|team=" + (str _team) + "|failedjourneys=" + str _fjUC + "|reason=abandon");
+														//--- WASPSCALE aband counter (feat/abandon-telemetry): cumulative abandon/recycle events this match, read by the AI_Commander.sqf WASPSCALE emit (aband=). Counter-only, no behaviour change.
+														missionNamespace setVariable ["wfbe_waspscale_aband", (missionNamespace getVariable ["wfbe_waspscale_aband", 0]) + 1];
 													};
 												if ((missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST", 1]) > 0) then {
 													private ["_sba","_newSba","_sFound","_sCnt"];

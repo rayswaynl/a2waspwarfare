@@ -1220,7 +1220,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//---   terr        territorial-victory clock: none | <W|E>:<mins-remaining> from WFBE_TERRITORIAL_CLOCK_<sid>.
 		//---   fpsmin      LOWEST server fps sampled since the previous emit (the tiny sampler below feeds wfbe_fpsmin_acc).
 		//---   grpW/E      per-side group counts from the wfbe_grpcnt_* cache server_groupsGC already maintains (its walk, not ours).
-		private ["_townsW","_townsE","_townsG","_sortN","_tn","_postW","_postE","_lw","_le","_disp","_arrv","_recov","_mhqrel","_patrN","_telW","_telE","_terr","_fpsMin","_grpW","_grpE","_terrSid","_terrMinsC","_terrRem","_telObjW","_telObjE"];
+		private ["_townsW","_townsE","_townsG","_sortN","_tn","_postW","_postE","_lw","_le","_disp","_arrv","_recov","_mhqrel","_patrN","_telW","_telE","_terr","_fpsMin","_grpW","_grpE","_terrSid","_terrMinsC","_terrRem","_telObjW","_telObjE","_aband"];
 		_townsW = 0; _townsE = 0; _townsG = 0; _sortN = 0;
 		{ _tn = _x getVariable ["sideID", -1]; if (_tn == 0) then {_townsW = _townsW + 1}; if (_tn == 1) then {_townsE = _townsE + 1}; if (_tn == 2) then {_townsG = _townsG + 1}; if (!isNull (_x getVariable ["wfbe_sortie_grp", grpNull])) then {_sortN = _sortN + 1} } forEach towns;
 		_lw = west Call WFBE_CO_FNC_GetSideLogic; _le = east Call WFBE_CO_FNC_GetSideLogic;   //--- returns objNull (never nil) when a side logic is absent -> guard with isNull.
@@ -1230,6 +1230,10 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		_arrv   = missionNamespace getVariable ["wfbe_waspscale_arrv", 0];
 		_recov  = missionNamespace getVariable ["wfbe_waspscale_recov", 0];
 		_mhqrel = missionNamespace getVariable ["wfbe_waspscale_mhqrel", 0];
+		//--- WASPSCALE aband counter (feat/abandon-telemetry, 2026-07-25): cumulative TARGET_ABANDON/DWELL_ABANDON/
+		//--- RECYCLE_FLAG events this match (counters bumped at the AI_Commander_AssignTowns.sqf log sites, same
+		//--- idiom as disp/arrv/recov/mhqrel above). Counter-only - no behaviour change, telemetry visibility only.
+		_aband  = missionNamespace getVariable ["wfbe_waspscale_aband", 0];
 		_patrN  = count (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []]);
 		//--- TEL state: alive=1; a stored-but-dead ref or (killed-EH null) with a live TEL feature = 2 (awaiting respawn); no feature/never-spawned = 0.
 		_telObjW = missionNamespace getVariable ["WFBE_ICBM_TEL_west", objNull];
@@ -1263,7 +1267,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			if (missionNamespace getVariable ["WFBE_OILFIELD_SABOTAGED", false]) then {_oilOwnKV = _oilOwnKV + "!"};
 			_oilIncKV = str (missionNamespace getVariable ["WFBE_OILFIELD_INCOME_ACCRUED", 0]);
 		};
-		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps) + "|townsW=" + str _townsW + "|townsE=" + str _townsE + "|townsG=" + str _townsG + "|postW=" + _postW + "|postE=" + _postE + "|disp=" + str _disp + "|arrv=" + str _arrv + "|recov=" + str _recov + "|mhqrel=" + str _mhqrel + "|patr=" + str _patrN + "|sort=" + str _sortN + "|telW=" + str _telW + "|telE=" + str _telE + "|terr=" + _terr + "|fpsmin=" + str (round _fpsMin) + "|hc2fps=" + str (round _hc2Fps) + "|grpW=" + str _grpW + "|grpE=" + str _grpE + "|oilOwn=" + _oilOwnKV + "|oilInc=" + _oilIncKV + "|capAI=" + str (([(missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]]), _tier] call { private ["_arr","_ti"]; _arr = (_this select 0); _ti = (_this select 1) max 0; if (_ti > ((count _arr) - 1)) then {_ti = (count _arr) - 1}; if ((count _arr) < 1) then {-1} else {_arr select _ti} })) + "|capTeams=" + str (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 10]) + "|capMerge=" + str (missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_TARGET", 5]));
+		diag_log ("WASPSCALE|v2|" + str (round (time/60)) + "|tier=" + str _tier + "|players=" + str _humN + "|AI_W=" + str _aiW + "|AI_E=" + str _aiE + "|AI_GUER=" + str _aiG + "|AI_TOT=" + str (_aiW+_aiE+_aiG) + "|groups=" + str (count allGroups) + "|fps=" + str (round diag_fps) + "|map=" + worldName + "|build=" + _bt + "|hc_fps=" + str (round _hcFps) + "|townsW=" + str _townsW + "|townsE=" + str _townsE + "|townsG=" + str _townsG + "|postW=" + _postW + "|postE=" + _postE + "|disp=" + str _disp + "|arrv=" + str _arrv + "|recov=" + str _recov + "|mhqrel=" + str _mhqrel + "|patr=" + str _patrN + "|sort=" + str _sortN + "|telW=" + str _telW + "|telE=" + str _telE + "|terr=" + _terr + "|fpsmin=" + str (round _fpsMin) + "|hc2fps=" + str (round _hc2Fps) + "|grpW=" + str _grpW + "|grpE=" + str _grpE + "|oilOwn=" + _oilOwnKV + "|oilInc=" + _oilIncKV + "|capAI=" + str (([(missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]]), _tier] call { private ["_arr","_ti"]; _arr = (_this select 0); _ti = (_this select 1) max 0; if (_ti > ((count _arr) - 1)) then {_ti = (count _arr) - 1}; if ((count _arr) < 1) then {-1} else {_arr select _ti} })) + "|capTeams=" + str (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 10]) + "|capMerge=" + str (missionNamespace getVariable ["WFBE_C_TOWNS_MERGE_TARGET", 5]) + "|aband=" + str _aband);
 
 		//--- TELEM HOST V2 (tp4): when flag=1 this emitter is suppressed; groupsGC is the host.
 		if ((missionNamespace getVariable ["WFBE_C_TELEM_HOST_V2", 0]) < 1) then {
