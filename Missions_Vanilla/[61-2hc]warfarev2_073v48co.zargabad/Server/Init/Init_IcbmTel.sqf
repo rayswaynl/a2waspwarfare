@@ -1541,7 +1541,7 @@ if (worldName == "Takistan" && {(missionNamespace getVariable ["WFBE_C_TK_SCUD_A
 	[] spawn {
 		private ["_tick","_sides","_s"];
 		//--- let the AI commanders + platform registry warm up before the first evaluation.
-		waitUntil {sleep 5; (!isNil "serverInitFull") || WFBE_GameOver};
+		waitUntil {sleep 5; serverInitFull || WFBE_GameOver};
 		sleep 60;
 		["INITIALIZATION", "Init_IcbmTel.sqf : AI SCUD evaluator loop ONLINE (Takistan, WFBE_C_TK_SCUD_AI=1)."] Call WFBE_CO_FNC_LogContent;
 		diag_log ("AICOMSTAT|v2|EVENT|all|" + str (round (time / 60)) + "|AI_SCUD_LOOP|online");

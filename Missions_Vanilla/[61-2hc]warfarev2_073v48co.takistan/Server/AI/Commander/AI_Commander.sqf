@@ -32,7 +32,7 @@ if (_passedOwner >= 0) then {
 };
 
 //--- Wait for full server init before commanding.
-waitUntil {sleep 1; !(isNil "serverInitFull")};
+waitUntil {sleep 1; serverInitFull};
 
 //--- SUPERVISOR HEARTBEAT (B69): seed the per-side liveness beat BEFORE the loop so the
 //--- variable exists the moment the loop starts (closes the 'never stamped yet' ambiguity).
