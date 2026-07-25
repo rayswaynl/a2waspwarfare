@@ -2844,7 +2844,6 @@ class Mission
 					id=7000;
 					side="CIV";
 					vehicle="Civilian";
-					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
@@ -2866,7 +2865,6 @@ class Mission
 					id=7001;
 					side="CIV";
 					vehicle="Civilian";
-					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
@@ -3482,7 +3480,6 @@ class Mission
 					id=7029;
 					side="EAST";
 					vehicle="RUS_Soldier1";
-					player="PLAY CDG";
 					leader=1;
 					rank="LIEUTENANT";
 					skill=0.60000002;
