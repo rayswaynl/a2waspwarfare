@@ -194,7 +194,13 @@ while {!WFBE_GameOver} do {
 						//--- to its last-laid waypoint and is correctly SKIPPED here, never mistaken for wedged.
 						if (!((_pwWpPos select 0) == 0 && {(_pwWpPos select 1) == 0}) && {(_pwPos distance _pwWpPos) > _pwWpDist}) then {
 							_pwLastPos = _pwGrp getVariable "wfbe_patrol_watch_pos"; //--- G1: 1-arg + isNil on a GROUP (2-arg [name,default] is unreliable here).
-							if (isNil "_pwLastPos") then {_pwLastPos = _pwPos};
+							//--- codex-hold fix: a patrol observed for the FIRST time has no baseline yet. Defaulting
+							//--- the baseline to the CURRENT position and then immediately measuring displacement in
+							//--- the SAME iteration always read as zero movement, giving every newly-observed distant
+							//--- patrol an instant strike. Record the baseline and skip evaluation until the NEXT sample.
+							if (isNil "_pwLastPos") then {
+								_pwGrp setVariable ["wfbe_patrol_watch_pos", _pwPos];
+							} else {
 							if ((_pwPos distance _pwLastPos) < _pwDist) then {
 								_pwStrikes = _pwGrp getVariable "wfbe_patrol_watch_strikes";
 								if (isNil "_pwStrikes") then {_pwStrikes = 0};
@@ -253,7 +259,8 @@ while {!WFBE_GameOver} do {
 								_pwGrp setVariable ["wfbe_patrol_watch_strikes", 0];
 							};
 							_pwGrp setVariable ["wfbe_patrol_watch_pos", _pwPos];
-						} else {
+						};
+					} else {
 							//--- arrived / no live waypoint yet: not a wedge candidate - reset baseline+streak.
 							_pwGrp setVariable ["wfbe_patrol_watch_strikes", 0];
 							_pwGrp setVariable ["wfbe_patrol_watch_pos", _pwPos];

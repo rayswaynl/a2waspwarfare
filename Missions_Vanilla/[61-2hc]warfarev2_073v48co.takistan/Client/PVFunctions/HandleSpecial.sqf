@@ -104,6 +104,11 @@ switch (_request) do {
 	//--- forged dispatch can do is nudge/recycle an actual live side-patrol group, never an arbitrary object).
 	case "sidepatrol-watchdog": {
 		Private ["_wLdr","_wTier","_wSideID","_wDest","_wGrp","_wSide","_wUnits","_wVehicles","_wV","_wFound"];
+		//--- codex-hold fix: self-gate on the SAME flag the sender (server_side_patrols.sqf) requires
+		//--- before dispatching, mirroring the cleanup-trash-object receiver above. Without this the
+		//--- receiver executed unconditionally even at flag 0, making it a forgeable patrol-control
+		//--- endpoint on a mission that never opted into this feature.
+		if ((missionNamespace getVariable ["WFBE_C_SIDE_PATROL_UNSTUCK", 0]) <= 0) exitWith {};
 		_wLdr    = _args select 0;
 		_wTier   = _args select 1;
 		_wSideID = _args select 2;
@@ -113,23 +118,30 @@ switch (_request) do {
 		if (isNull _wGrp) exitWith {};
 		//--- G1: use the safe GROUP bool helper, not a raw 2-arg getVariable (unreliable on groups).
 		if !([_wGrp, "WFBE_SidePatrol", false] Call WFBE_CO_FNC_GroupGetBool) exitWith {};
+		//--- codex-hold fix: strict allowlist on the tier value instead of an else-catches-everything
+		//--- switch. A forged/malformed tier (anything other than the values the sender actually ever
+		//--- emits) previously fell through into the delete branch below - log and no-op instead.
 		if (_wTier in [2,3]) then {
 			_wSide = (_wSideID) Call WFBE_CO_FNC_GetSideFromID;
 			[_wGrp, _wTier, _wSide, _wDest, "sidepatrol-watchdog"] Spawn WFBE_CO_FNC_RunUnstuckRecovery;
 		} else {
-			_wUnits = units _wGrp;
-			_wVehicles = [];
-			{
-				_wV = vehicle _x;
-				if (_wV != _x) then {
-					_wFound = false;
-					{if (_x == _wV) then {_wFound = true}} forEach _wVehicles;
-					if (!_wFound) then {_wVehicles = _wVehicles + [_wV]};
-				};
-			} forEach _wUnits;
-			{if (!isNull _x) then {deleteVehicle _x}} forEach _wVehicles;
-			{if (!isNull _x) then {deleteVehicle _x}} forEach _wUnits;
-			if (!isNull _wGrp) then {deleteGroup _wGrp};
+			if (_wTier == 4) then {
+				_wUnits = units _wGrp;
+				_wVehicles = [];
+				{
+					_wV = vehicle _x;
+					if (_wV != _x) then {
+						_wFound = false;
+						{if (_x == _wV) then {_wFound = true}} forEach _wVehicles;
+						if (!_wFound) then {_wVehicles = _wVehicles + [_wV]};
+					};
+				} forEach _wUnits;
+				{if (!isNull _x) then {deleteVehicle _x}} forEach _wVehicles;
+				{if (!isNull _x) then {deleteVehicle _x}} forEach _wUnits;
+				if (!isNull _wGrp) then {deleteGroup _wGrp};
+			} else {
+				diag_log Format ["WARNING sidepatrol-watchdog HandleSpecial received unknown tier %1 - no-op", _wTier];
+			};
 		};
 	};
 	//--- Owner-side half of the Common_TrashObject.sqf locality gate. Self-gated on the same flag as the
