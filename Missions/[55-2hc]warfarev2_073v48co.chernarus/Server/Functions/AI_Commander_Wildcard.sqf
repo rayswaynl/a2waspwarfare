@@ -857,13 +857,14 @@ while {!gameOver} do {
 					//--- AICOM teams may be HC-local, so server-side setDamage would silently miss them.
 					case 11: {
 						_fieldHospitalUnits = [];
+						_healed = 0;
 						{
 							if (alive _x && {!isPlayer _x} && {_x isKindOf "Man"} && {damage _x > 0.05} && {side _x == _side}) then {
-								_fieldHospitalUnits set [count _fieldHospitalUnits, _x];
+								_healed = _healed + 1;
+								if (local _x) then {_x setDamage 0} else {_fieldHospitalUnits set [count _fieldHospitalUnits, _x]};
 							};
 						} forEach allUnits;
-						_healed = count _fieldHospitalUnits;
-						if (_healed > 0) then {[nil, "HandleSpecial", ["aicom-field-hospital", _side, _fieldHospitalUnits]] Call WFBE_CO_FNC_SendToClients};
+						if ((count _fieldHospitalUnits) > 0) then {[nil, "HandleSpecial", ["aicom-field-hospital", _side, _fieldHospitalUnits]] Call WFBE_CO_FNC_SendToClients};
 						//--- One-shot free re-founding flag: consumed by AI_Commander_Teams.
 						_logik setVariable ["wfbe_aicom_free_refound", true];
 						_detail = Format ["healed=%1 free_refound_flag=set", _healed];

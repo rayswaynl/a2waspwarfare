@@ -24,6 +24,7 @@ if (_isHeadless) then {
 		//---   cleanup-airfield-garrison  = server_town + server_town_ai (nil broadcast; clears airfield post)
 		//---   delegate-aicom-team        = AI_Commander_Teams + AI_Commander_Wildcard + Init_ZgKoth (team founding)
 		//---   delegate-sidepatrol        = server_side_patrols (patrol founding; Wildcard bonus-patrol sender culled 2026-07-08, owner pick B7)
+		//---   aicom-field-hospital      = AI_Commander_Wildcard (server-local + owner-local healing)
 		//---   cleanup-commander-arty-wreck = server_groupsGC.sqf (fix/aicom-arty-lifecycle 2026-07-21; deletes a
 		//---        dead commander-artillery hull that is local to this HC - the reaper cannot delete it directly)
 		//---   cleanup-commander-heli-wreck = server_groupsGC.sqf (fix/heli-husk-reaper; deletes a dead
@@ -32,7 +33,7 @@ if (_isHeadless) then {
 		//---        defaults to 0, no DRAFT worker registered, nil-guarded in AI_Commander.sqf).
 		//---   cleanup-trash-object      = Common_TrashObject.sqf (2026-07-21 locality gate, WFBE_C_TRASH_REMOTE_DELETE
 		//---        default 1; deletes a DEAD, reap-stamped body/hull that is local to this HC - the server cannot)
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object"]);
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };

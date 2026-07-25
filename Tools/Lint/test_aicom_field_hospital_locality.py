@@ -22,7 +22,16 @@ def test_field_hospital_dispatches_healing_to_unit_owners() -> None:
         source = _source(mission, "Server/Functions/AI_Commander_Wildcard.sqf")
         assert '"aicom-field-hospital"' in source
         assert "Call WFBE_CO_FNC_SendToClients" in source
-        assert "_x setDamage 0" not in source[source.index('case 11:'):source.index('case 13:')]
+        case = source[source.index('case 11:'):source.index('case 13:')]
+        assert "_healed = _healed + 1" in case
+        assert "if (local _x) then {_x setDamage 0}" in case
+        assert "if ((count _fieldHospitalUnits) > 0) then" in case
+
+
+def test_field_hospital_is_admitted_on_headless_clients() -> None:
+    for mission in MISSIONS:
+        source = _source(mission, "Client/Functions/Client_HandlePVF.sqf")
+        assert '"aicom-field-hospital"' in source
 
 
 def test_field_hospital_receiver_filters_for_local_eligible_units() -> None:
