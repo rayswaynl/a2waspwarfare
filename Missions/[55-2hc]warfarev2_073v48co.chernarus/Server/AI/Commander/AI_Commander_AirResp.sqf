@@ -146,7 +146,12 @@ if (_posCacheOn) then {
 			if (_eVeh == _ePlayer) then {
 				_entPositions = _entPositions + [getPos _ePlayer];
 			} else {
-				if (!(_eVeh in _seenVeh)) then {
+				//--- REVIEW HOLD fix (PR #1383, ship drift): the reference path below filters nearEntities
+				//--- to [["Man","LandVehicle","Air"]], which EXCLUDES "Ship" - a player crewing a purchasable
+				//--- navy hull (Zodiac/RHIB/RHIB2Turret in Units_CO_US.sqf, PBX in Units_CO_RU.sqf) must NOT
+				//--- qualify here either. Gate the mounted branch on the same two vehicle types so a Ship
+				//--- (or any other out-of-list type) is never added to the cache.
+				if ((_eVeh isKindOf "LandVehicle" || {_eVeh isKindOf "Air"}) && {!(_eVeh in _seenVeh)}) then {
 					_seenVeh = _seenVeh + [_eVeh];
 					_entPositions = _entPositions + [getPos _eVeh];
 				};
