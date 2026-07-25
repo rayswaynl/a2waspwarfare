@@ -255,6 +255,14 @@ if (_unitType isKindOf "Man") then {
 		_soldier commandMove _aiRally;
 	};
 } else {
+	//--- fix/1339-built-init: PR #1339 replaced the unconditional `_built = 1;` with success-only
+	//--- `_built = _built + 1;` at each crew-seat spawn below, but `_built` is only Private-declared
+	//--- at the top of this script (line 1), never assigned a starting value - the first successful
+	//--- driver spawn evaluated nil+1, a type error that aborted the script before the queue-release
+	//--- tail (line ~474) ran, permanently leaking that team's wfbe_queue slot. Initialize here, at
+	//--- the top of the vehicle branch, before any of the four increment sites (driver/gunner/
+	//--- commander/turret) can run.
+	_built = 0;
 	_factoryPosition = getPos _building;
 	_dir = -((((_position select 1) - (_factoryPosition select 1)) atan2 ((_position select 0) - (_factoryPosition select 0))) - 90);
 
