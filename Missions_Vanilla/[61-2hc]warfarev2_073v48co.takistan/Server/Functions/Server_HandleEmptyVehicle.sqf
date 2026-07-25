@@ -15,7 +15,7 @@ _vehicle = _this select 0;
 // without a vehicle reference, and silently defaulting to objNull would let typeOf/alive
 // run against a null object and produce wrong results rather than a clean no-op.
 if (isNil "_vehicle") exitWith {};
-if (isNull _vehicle) exitWith {};
+if (isNull _vehicle) exitWith {emptyQueu = emptyQueu - [_vehicle];};
 
 _delay = if (count _this > 1) then {_this select 1} else {if (typeOf _vehicle in ['HMMWV_Ambulance','HMMWV_Ambulance_DES_EP1','UH60M_MEV_EP1','M1133_MEV_EP1','GAZ_Vodnik_MedEvac','Mi17_medevac_RU','M113Ambul_TK_EP1']) then {(missionNamespace getVariable "WFBE_C_UNITS_EMPTY_TIMEOUT")*2} else {missionNamespace getVariable "WFBE_C_UNITS_EMPTY_TIMEOUT"};};
 
@@ -39,10 +39,10 @@ while {alive _vehicle} do {
 	//--- 118fcda4a) - the wfbe_airlifted read below would come up nil, undefining _timer at the next line's
 	//--- '> _delay' check (live RPT: Undefined variable in expression: _timer, ~6x/window after MISSINIT).
 	//--- Block-exit falls through to the while condition, which ends the loop cleanly on the dead/deleted vehicle.
-	if (isNull _vehicle) exitWith {};
+	if (isNull _vehicle) exitWith {emptyQueu = emptyQueu - [_vehicle];};
 	
 	_timer = if (({alive _x} count crew _vehicle) > 0 || {_vehicle getVariable ["wfbe_airlifted", false]}) then {0} else {_timer + 20}; //--- fable/airlift-gc-exempt: an airlifted hull is crewless by design - do not run down the empty-vehicle fuse while slung
-	if (_timer > _delay) exitWith {["empty-timeout-hull", _vehicle, Format ["delay=%1", _delay]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _vehicle};
+	if (_timer > _delay) exitWith {emptyQueu = emptyQueu - [_vehicle]; ["empty-timeout-hull", _vehicle, Format ["delay=%1", _delay]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _vehicle};
 };
 
 emptyQueu = emptyQueu - [_vehicle];
