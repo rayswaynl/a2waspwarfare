@@ -18,6 +18,22 @@ if ($null -eq $existing) {
     Write-Host 'OK: rule already present.'
 }
 
+Write-Host '== Defender exclusions: game + WASP trees (keeps real-time protection ON) =='
+# A2OA writes RPT/profile files constantly and loads thousands of pbo/paa files;
+# real-time scanning of those trees costs measurable IO. Exclude the trees, not Defender.
+$exclusions = @(
+    'C:\Program Files (x86)\Steam\steamapps\common\Arma 2',
+    'C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead',
+    'C:\WASP'
+)
+try {
+    $current = @((Get-MpPreference -ErrorAction Stop).ExclusionPath)
+    foreach ($e in $exclusions) {
+        if ($current -notcontains $e) { Add-MpPreference -ExclusionPath $e; Write-Host ("Excluded: {0}" -f $e) }
+        else { Write-Host ("Already excluded: {0}" -f $e) }
+    }
+} catch { Write-Warning 'Defender preference cmdlets unavailable - add the exclusions manually if Defender is active.' }
+
 Write-Host '== Report (no changes): VBS / HVCI state =='
 # Report-only per procurement brief; disabling VBS is an owner decision recorded elsewhere.
 try {
