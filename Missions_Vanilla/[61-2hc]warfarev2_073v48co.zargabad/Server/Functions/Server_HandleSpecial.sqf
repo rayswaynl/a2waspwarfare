@@ -76,29 +76,51 @@ switch (_args select 0) do {
 		//--- the ONLY legitimate caller is the commander's "Respawn Supply Trucks" button
 		//--- (GUI_Menu_Economy.sqf, MenuAction 4), which only ENABLES client-side for that side's own
 		//--- seated commander (ctrlEnable gated on `commanderTeam == group player`, 5s throttle) - cosmetic
-		//--- only, since the server never re-checked it and the PVEH carries no trusted sender. The client
-		//--- now also sends `player` as element 2; bind the request to a real, living player who is
-		//--- actually seated as commander for the named side (mirrors RequestVehicleLock.sqf's `_actor`
-		//--- idiom + the `[_side] Call WFBE_CO_FNC_GetCommanderTeam` membership test RequestNewCommander.sqf
-		//--- uses for cross-side forge rejection), plus a per-side cooldown as defence in depth (the
-		//--- client's 5s ctrlEnable throttle is not authoritative - a forger skips it entirely).
+		//--- only, since the server never re-checked it and the PVEH carries no trusted sender.
+		//---
+		//--- HONEST SCOPE (review 2026-07-25, see memory a2-pvf-fake-identity-binding): the requester
+		//--- check below is NOT identity binding. `WFBE_CO_FNC_GetCommanderTeam` is a Common function -
+		//--- callable client-side for ANY side - so it returns the publicly-broadcast commander group. A
+		//--- forger reads `leader ([_side] Call WFBE_CO_FNC_GetCommanderTeam)` and passes that object as
+		//--- element 2; it satisfies isPlayer/alive/side/group without the forger ever controlling that
+		//--- seat. This guard genuinely closes only two cases: (a) AI-commanded or uncommandered sides,
+		//--- where no isPlayer object exists at that group to borrow, so the isPlayer check itself
+		//--- rejects; (b) cross-side forgery (naming a side the requester isn't even a member of). It does
+		//--- NOT close the case of a forger impersonating a real human-commanded side's commander - that
+		//--- requires a value the client cannot compute or observe (a server-minted one-shot capability
+		//--- token, per the Init_IcbmTel/Support_FPV pattern), tracked as branch
+		//--- claude/u3-capability-helper-20260725. Until that lands, treat this as identity-narrowing +
+		//--- rate limiting, not authentication.
+		//---
+		//--- What IS real here: explicit side-type validation (below - a malformed/non-SIDE payload used
+		//--- to fall through to an implicit type-mismatch compare instead of an explicit, logged reject),
+		//--- the per-side cooldown as genuine repeat-abuse mitigation (raised 30s -> 120s: this force-kills
+		//--- a side's ENTIRE supply-truck fleet, and legitimate use of the button is rare/deliberate, not a
+		//--- 30s-cadence action), and UID capture in the rejection log for post-hoc abuse identification
+		//--- even though UID is not itself checked against anything (spoofable, so not a gate).
 		Private ["_side","_st","_rSTRejected","_rSTRequester"];
 		_side = _args select 1;
 		_rSTRejected = false;
 		if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
-			_rSTRequester = objNull;
-			if (count _args > 2) then {_rSTRequester = _args select 2};
-			if (isNull _rSTRequester || {!isPlayer _rSTRequester} || {!alive _rSTRequester}) then {
+			if (typeName _side != "SIDE" || {!(_side in [west, east, resistance])}) then {
 				_rSTRejected = true;
-				["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - missing/invalid requester for side [%1].", str _side]] Call WFBE_CO_FNC_LogContent;
+				["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - side has type [%1] or is not playable.", typeName _side]] Call WFBE_CO_FNC_LogContent;
+			};
+			_rSTRequester = objNull;
+			if (!_rSTRejected) then {
+				if (count _args > 2) then {_rSTRequester = _args select 2};
+				if (isNull _rSTRequester || {!isPlayer _rSTRequester} || {!alive _rSTRequester}) then {
+					_rSTRejected = true;
+					["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - missing/invalid requester for side [%1].", str _side]] Call WFBE_CO_FNC_LogContent;
+				};
 			};
 			if (!_rSTRejected && {side (group _rSTRequester) != _side}) then {
 				_rSTRejected = true;
-				["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - requester [%1] side does not match requested side [%2].", name _rSTRequester, str _side]] Call WFBE_CO_FNC_LogContent;
+				["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - requester [%1|%2] side does not match requested side [%3].", name _rSTRequester, getPlayerUID _rSTRequester, str _side]] Call WFBE_CO_FNC_LogContent;
 			};
 			if (!_rSTRejected && {(group _rSTRequester) != ((_side) Call WFBE_CO_FNC_GetCommanderTeam)}) then {
 				_rSTRejected = true;
-				["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - requester [%1] is not the seated commander for side [%2].", name _rSTRequester, str _side]] Call WFBE_CO_FNC_LogContent;
+				["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - requester [%1|%2] is not the publicly-broadcast commander for side [%3] (identity NOT cryptographically bound - see capability-helper lane).", name _rSTRequester, getPlayerUID _rSTRequester, str _side]] Call WFBE_CO_FNC_LogContent;
 			};
 			if (!_rSTRejected) then {
 				Private ["_rSTLogik","_rSTCd","_rSTNow","_rSTLast"];
@@ -106,7 +128,7 @@ switch (_args select 0) do {
 				if (isNull _rSTLogik) then {
 					_rSTRejected = true;
 				} else {
-					_rSTCd = missionNamespace getVariable ["WFBE_C_RESPAWNST_COOLDOWN", 30];
+					_rSTCd = missionNamespace getVariable ["WFBE_C_RESPAWNST_COOLDOWN", 120];
 					_rSTNow = time;
 					_rSTLast = _rSTLogik getVariable ["wfbe_respawnst_last", -1e9];
 					if (_rSTCd > 0 && {(_rSTNow - _rSTLast) < _rSTCd}) then {
