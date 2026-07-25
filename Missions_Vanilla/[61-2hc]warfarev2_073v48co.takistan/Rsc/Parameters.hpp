@@ -412,7 +412,7 @@
 		title = "Territorial Victory Town Share";
 		values[] = {0.6,0.7,0.75,0.8,0.85,0.9};
 		texts[] = {"60%","70%","75%","80%","85%","90%"};
-		default = 0.8;
+		default = 0.6;
 	};
 	class WFBE_C_VICTORY_TERRITORIAL_MINS {
 		title = "Territorial Victory Hold Time";

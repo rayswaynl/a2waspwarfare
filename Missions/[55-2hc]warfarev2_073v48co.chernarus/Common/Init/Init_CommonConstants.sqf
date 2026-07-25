@@ -874,7 +874,7 @@ if (worldName == "Zargabad") then {
 	//--- structurally cannot raze a survivor's factories once that HQ is already dead). SHADOW-FIRST default 0
 	//--- (opposite of AIRRESP's owner-armed default) - this is a new HIGH-RISK core-AICOM lane and needs a soak
 	//--- before the owner arms it, same convention as DECAP.
-	if (isNil "WFBE_C_AICOM2_AIRSTRIKE_ENABLE")   then {WFBE_C_AICOM2_AIRSTRIKE_ENABLE   = 0};    //--- master switch. 0 = shadow (telemetry only, no dispatch) - DEFAULT. 1 = armed.
+	if (isNil "WFBE_C_AICOM2_AIRSTRIKE_ENABLE")   then {WFBE_C_AICOM2_AIRSTRIKE_ENABLE   = 1};    //--- master switch. 0 = shadow (telemetry only, no dispatch) - DEFAULT. 1 = armed.
 	if (isNil "WFBE_C_AICOM2_AIRSTRIKE_COOLDOWN") then {WFBE_C_AICOM2_AIRSTRIKE_COOLDOWN = 900};  //--- s: per-side minimum gap between AI-initiated factory-strike dispatch attempts (cannot spam). Stamped only on an actual successful dispatch.
 	if (isNil "WFBE_C_AICOM2_AIRSTRIKE_MAX_AIR")  then {WFBE_C_AICOM2_AIRSTRIKE_MAX_AIR  = 1};    //--- global alive-cap on AICOM2 factory-strike flights per side - deliberately smaller/separate from AIRRESP_MAX_AIR(2) so a factory hunt never crowds out AIRRESP's player-response role. Still bounded by the side-wide AIR_MAX_TOTAL/AIR_MAX_LATE headroom check on top of this.
 	if (isNil "WFBE_C_AICOM2_AIRSTRIKE_HOLD")     then {WFBE_C_AICOM2_AIRSTRIKE_HOLD     = 360};  //--- s a dispatched strike flight keeps re-picking + reveal/doTarget/doFire-ing the nearest live enemy factory before self-despawn; mirrors WFBE_C_AICOM_ASSAULT_HOLD (the ground BASE-ASSAULT fire phase's own hold ceiling).
@@ -1078,7 +1078,7 @@ if (worldName == "Zargabad") then {
 	//--- B67 (Ray 2026-06-21) HYBRID COMMANDER (item #5, FULL SEND): when a player votes out the AI commander,
 	//--- the AI keeps founding/refilling its teams (assist mode) while the player builds + can re-task all teams.
 	if (isNil "WFBE_C_AI_COMMANDER_HYBRID_REFILL") then {WFBE_C_AI_COMMANDER_HYBRID_REFILL = 1}; //--- 1=AI keeps refilling teams under a player commander; 0=legacy (AI idle under human).
-	if (isNil "WFBE_C_AICOM_SUPPLY_STAGNATION_EXEMPT") then {WFBE_C_AICOM_SUPPLY_STAGNATION_EXEMPT = 0}; //--- 1=AI-commanded sides keep earned town supply while no human is seated; 0=legacy no-players stagnation.
+	if (isNil "WFBE_C_AICOM_SUPPLY_STAGNATION_EXEMPT") then {WFBE_C_AICOM_SUPPLY_STAGNATION_EXEMPT = 1}; //--- 1=AI-commanded sides keep earned town supply while no human is seated; 0=legacy no-players stagnation.
 	//--- punchy-AICOM (Ray 2026-06-17): NEW tunables.
 	//--- TIME-CURVE income boost: a gentle smoothstep multiplier on the commander's recurring
 	//--- funds income (updateresources.sqf _pcMult). FLAT (=FLOOR) until START, then S-curve ramp
@@ -1250,7 +1250,7 @@ if (worldName == "Zargabad") then {
 	//--- own script thread, so it keeps working even if a delegated HC hangs/freezes (unlike
 	//--- Common_RunSidePatrol.sqf's existing internal ~90s en-route guard, which dies with its thread).
 	//--- Default 0 = byte-identical legacy behaviour.
-	if (isNil "WFBE_C_SIDE_PATROL_UNSTUCK")            then {WFBE_C_SIDE_PATROL_UNSTUCK = 0};
+	if (isNil "WFBE_C_SIDE_PATROL_UNSTUCK")            then {WFBE_C_SIDE_PATROL_UNSTUCK = 1};
 	if (isNil "WFBE_C_SIDE_PATROL_UNSTUCK_MINS")        then {WFBE_C_SIDE_PATROL_UNSTUCK_MINS = 3};        //--- minutes between watchdog samples per active patrol.
 	if (isNil "WFBE_C_SIDE_PATROL_UNSTUCK_DIST")        then {WFBE_C_SIDE_PATROL_UNSTUCK_DIST = 20};       //--- m; lead-vehicle displacement below this since the last sample counts as "not moving".
 	if (isNil "WFBE_C_SIDE_PATROL_UNSTUCK_WP_DIST")     then {WFBE_C_SIDE_PATROL_UNSTUCK_WP_DIST = 150};   //--- m; only escalate while the patrol's current waypoint is still this far away (arrived/sweeping patrols never qualify).
@@ -1436,7 +1436,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- STUCK_MAX_CYCLES consecutive trivial-displacement stuck cycles the worker backs off for
 	//--- STUCK_BACKOFF seconds (see AI_Commander_MHQReloc.sqf). Master gate default 0 = fully inert
 	//--- (identical to today: unbounded in-place stuck-redeploy cycling).
-	if (isNil "WFBE_C_AICOM_MHQ_STUCK_ESCALATE")   then {WFBE_C_AICOM_MHQ_STUCK_ESCALATE   = 0};   //--- 1 = on, 0 = off (default; no behaviour change).
+	if (isNil "WFBE_C_AICOM_MHQ_STUCK_ESCALATE")   then {WFBE_C_AICOM_MHQ_STUCK_ESCALATE   = 1};   //--- 1 = on, 0 = off (default; no behaviour change).
 	if (isNil "WFBE_C_AICOM_MHQ_STUCK_MIN_DISP")   then {WFBE_C_AICOM_MHQ_STUCK_MIN_DISP   = 300}; //--- m: a stuck-redeploy under this from the pre-mobilize HQ pos is "trivial", not a resolution.
 	if (isNil "WFBE_C_AICOM_MHQ_STUCK_MAX_CYCLES") then {WFBE_C_AICOM_MHQ_STUCK_MAX_CYCLES = 3};   //--- consecutive trivial-displacement stuck cycles allowed before backoff.
 	if (isNil "WFBE_C_AICOM_MHQ_STUCK_BACKOFF")    then {WFBE_C_AICOM_MHQ_STUCK_BACKOFF    = 300}; //--- s the worker sits out once the cycle cap is hit (bounds the retry).
@@ -3128,7 +3128,7 @@ if (isNil "WFBE_C_AICOM_RETARGET_RECYCLE") then {WFBE_C_AICOM_RETARGET_RECYCLE =
 //--- post-HQ-death case (see AI_Commander_Strategy.sqf "OVERRUN MOP-UP" + Common_RunCommanderTeam.sqf
 //--- "OVERRUN MOP-UP companion patch"). 0 (default) = fully inert, byte-identical to HEAD - neither the
 //--- new dispatch closer nor the engage-gate patch ever execute their bodies.
-if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_ENABLE") then {WFBE_C_AICOM_OVERRUN_MOPUP_ENABLE = 0};
+if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_ENABLE") then {WFBE_C_AICOM_OVERRUN_MOPUP_ENABLE = 1};
 if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_RATIO")  then {WFBE_C_AICOM_OVERRUN_MOPUP_RATIO  = 1.1}; //--- dominance bar (myEff >= enEff * ratio) to arm the post-HQ-death mop-up dispatch.
 if (isNil "WFBE_C_AICOM_OVERRUN_MOPUP_TEAMS")  then {WFBE_C_AICOM_OVERRUN_MOPUP_TEAMS  = 2};   //--- max concurrent field teams pressed onto live enemy factories by the mop-up closer.
 //--- AICOM CARGO AIRDROP (Stage A): registered dark by default; the worker is AI-only and adds no escort jet.
