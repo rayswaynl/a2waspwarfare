@@ -117,9 +117,12 @@ _target = _this select 0;
         the delete delay should be 0 here in order to remove marker immediately after
         the elapsed time.
     */
-    [_RADZONE_marker_name_west, 0] call WFBE_CL_FNC_Delete_Marker;
-    [_RADZONE_marker_elipse_name_west, 0] call WFBE_CL_FNC_Delete_Marker;
+    //--- markersync-20260725 (Trello #171 class): radzone runs SERVER-side and these RADZONE markers are
+    //--- GLOBAL (WF_createMarker uses createMarker), so deleteMarkerLocal (WFBE_CL_FNC_Delete_Marker)
+    //--- removed them only on the server and orphaned them on every client. Delete globally instead.
+    deleteMarker _RADZONE_marker_name_west;
+    deleteMarker _RADZONE_marker_elipse_name_west;
 
-    [_RADZONE_marker_name_east, 0] call WFBE_CL_FNC_Delete_Marker;
-    [_RADZONE_marker_elipse_name_east, 0] call WFBE_CL_FNC_Delete_Marker;
+    deleteMarker _RADZONE_marker_name_east;
+    deleteMarker _RADZONE_marker_elipse_name_east;
 };

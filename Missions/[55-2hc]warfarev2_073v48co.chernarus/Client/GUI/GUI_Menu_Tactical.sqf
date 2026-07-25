@@ -324,7 +324,7 @@ while {alive player && dialog} do {
 							_markerName setMarkerSizeLocal [1,1];
 							//--- Fee, Cheap marker stuff, TBD: Add prompt or something.
 							if (_ft == 2) then {
-								_markerName = Format ["FTMarker%1%1",_i];
+								_markerName = Format ["FTFeeMarker%1",_i]; //--- markersync-20260725: distinct prefix; FTMarker%1%1 collided with the FTMarker%1 circle at destination index >=11
 								_markers = _markers + [_markerName];
 								createMarkerLocal [_markerName,[(getPos _x select 0)-5,(getPos _x select 1)+75]];
 								_markerName setMarkerTypeLocal "mil_circle";
