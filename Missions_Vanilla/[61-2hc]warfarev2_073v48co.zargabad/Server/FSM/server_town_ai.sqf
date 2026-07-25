@@ -703,10 +703,25 @@ while {!WFBE_GameOver} do {
 								["INFORMATION", Format ["server_town_ai.sqf: sortie rotated home for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
 							};
 						} else {
+							//--- cmdcon41-w3p (proximity gate, default OFF/legacy): WFBE_C_TOWNS_SORTIES_PROXIMITY gates a
+							//--- NEW sortie launch on at least one real player being within WFBE_C_TOWNS_SORTIES_PROXIMITY_RANGE
+							//--- of the town - no point rotating an existing patrol ring around a town nobody is near enough
+							//--- to see or hear. Flag-off (default 0): _sortieProximityOk stays true unconditionally and the
+							//--- playableUnits scan below never runs, so the launch branch is byte-identical to legacy.
+							private ["_sortieProximityOk","_sortieProximityRange"];
+							_sortieProximityOk = true;
+							if ((missionNamespace getVariable ["WFBE_C_TOWNS_SORTIES_PROXIMITY", 0]) > 0) then {
+								_sortieProximityRange = missionNamespace getVariable ["WFBE_C_TOWNS_SORTIES_PROXIMITY_RANGE", 1500];
+								_sortieProximityOk = false;
+								{
+									if (isPlayer _x && {alive _x} && {(_x distance _town) < _sortieProximityRange}) exitWith { _sortieProximityOk = true; };
+								} forEach playableUnits;
+							};
+
 							//--- No live sortie: pick the LEAST-ENGAGED local group (fewest units currently in
 							//--- combat) and send it out on a 300-800m patrol ring. Bounded scan over the town's
 							//--- own (typically <=6) groups; no allUnits, no per-frame work.
-							if (count _localTeams > 0) then {
+							if (_sortieProximityOk && {count _localTeams > 0}) then {
 								_bestGrp = grpNull;
 								_bestScore = 999999;
 								{
