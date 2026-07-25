@@ -1198,8 +1198,7 @@ while {!WFBE_GameOver && _alive} do {
 						private "_uPGR";
 						_uPGR = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R", 300];
 						if ((_uTier >= 3 || {_recV2 && _uForceRoad}) && {!isNull _uVeh} && {alive _uVeh}) then {
-							_uPlayerNear = false;
-							{ if (isPlayer _x && {(_x distance _uVeh) < _uPGR}) then {_uPlayerNear = true} } forEach playableUnits;
+							_uPlayerNear = ([getPos _uVeh, _uPGR] Call WFBE_CO_FNC_RealPlayersNear) > 0;
 							if (!_uPlayerNear) then {
 								_uRds = (getPos _uVeh) nearRoads 150;
 								if (count _uRds > 0) then {
@@ -1254,7 +1253,7 @@ while {!WFBE_GameOver && _alive} do {
 							};
 						};
 						//--- B (Ray 2026-06-29 A/B, guard widened 2026-07-06): a player within _uPGR (same snap-exclusion zone) blocks the teleport-snap; un-wedge the lead hull with a small upward velocity hop instead - it breaks terrain friction and visibly bumps the hull free (never-frozen guardrail). Result matrix: player < _uPGR -> hop; player >= _uPGR -> snap; no gap. The fresh MOVE route below re-applies the order.
-						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then { private "_bNear"; _bNear = false; { if (isPlayer _x && {(_x distance _uVeh) < _uPGR}) then {_bNear = true} } forEach playableUnits; if (_bNear) then { _uVeh setVelocity [(velocity _uVeh) select 0, (velocity _uVeh) select 1, 4] } };
+						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then { private "_bNear"; _bNear = ([getPos _uVeh, _uPGR] Call WFBE_CO_FNC_RealPlayersNear) > 0; if (_bNear) then { _uVeh setVelocity [(velocity _uVeh) select 0, (velocity _uVeh) select 1, 4] } };
 						//--- WAVE-1 CAUSE-1 FOOT/DEAD-HULL UNSTUCK (2026-06-19): the vehicle Tier-3 above gates on
 						//--- !isNull _uVeh && alive _uVeh, so a wedged FOOT team (leader on foot) or a team whose hull
 						//--- is null/dead/immobile NEVER recovers (live: distStart=0, strikes climbed to ~43). Add a
@@ -1267,8 +1266,7 @@ while {!WFBE_GameOver && _alive} do {
 						_uOnFoot   = (vehicle _uLdr) == _uLdr;
 						//--- cmdcon41-w3e (e) WATER GUARD: fire the foot road-snap at ANY tier when water-stuck (_uForceRoad).
 						if ((_uTier >= 3 || {_recV2 && _uForceRoad}) && {_uOnFoot || _uHullDead || {_recV2 && _uForceRoad}}) then {
-							_uFootPlayerNear = false;
-							{ if (isPlayer _x && {(_x distance _uLdr) < _uPGR}) then {_uFootPlayerNear = true} } forEach playableUnits;
+							_uFootPlayerNear = ([getPos _uLdr, _uPGR] Call WFBE_CO_FNC_RealPlayersNear) > 0;
 							if (!_uFootPlayerNear) then {
 								//--- cmdcon41-w3e (d) SLOPE-AWARE FOOT SNAP: a foot team grinding a steep Takistan slope (surfaceNormal
 								//--- z below WFBE_C_AICOM_RECOVERY_SLOPE_Z, default 0.85) is exactly the hill-grind case - widen the road
@@ -2848,8 +2846,7 @@ while {!WFBE_GameOver && _alive} do {
 					diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_REQ_STALE|team=" + (str _team) + "|age=" + str (round (time - _topIssued)) + "|ttl=" + str _topTtl);
 				} else {
 					//--- DEFER if any player is within 300m of the spawn pos (keep the request untouched for a later tick).
-					_topDefer = false;
-					{ if (isPlayer _x && {alive _x} && {(_x distance _topPos) < 300}) exitWith {_topDefer = true} } forEach playableUnits;
+					_topDefer = ([_topPos, 300] Call WFBE_CO_FNC_RealPlayersNear) > 0;
 					if (!_topDefer) then {
 						_topMade = 0;
 						_topFail = 0;

@@ -85,7 +85,7 @@ while {alive player && dialog} do {
 	_clkH = date select 3; _clkM = date select 4;
 	_clkH = if (_clkH < 10) then {"0" + str _clkH} else {str _clkH};
 	_clkM = if (_clkM < 10) then {"0" + str _clkM} else {str _clkM};
-	_playerCount = {isPlayer _x} count playableUnits;
+	_playerCount = count ([] call WFBE_CO_FNC_RealPlayers);
 	if (_playerCount == 0 && (isPlayer player)) then {_playerCount = 1};
 	_playerSlots = count playableUnits;
 	if (_playerSlots < _playerCount) then {_playerSlots = _playerCount};

@@ -405,8 +405,8 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 					//--- Teleport to _destPos instead (player-clear-gated, the same accepted step the deadline path uses) so a
 					//--- stuck relocation still lands FORWARD. Falls back to deploy-in-place only if a player blocks the dest.
 					_pNear = false;
-					{ if (isPlayer _x && {alive _x} && {!isNull _mhq} && {(_x distance _mhq) < _safeDist}) then {_pNear = true} } forEach playableUnits;
-					{ if (isPlayer _x && {alive _x} && {(_x distance _destPos) < _safeDist}) then {_pNear = true} } forEach playableUnits;
+					if (!isNull _mhq && {([getPos _mhq, _safeDist] Call WFBE_CO_FNC_RealPlayersNear) > 0}) then {_pNear = true};
+					if (([_destPos, _safeDist] Call WFBE_CO_FNC_RealPlayersNear) > 0) then {_pNear = true};
 					if (!_pNear && {!surfaceIsWater _destPos}) then {
 						_mhq setVelocity [0,0,0];
 						_mhq setPos _destPos;
@@ -424,8 +424,8 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 			//--- the CURRENT _mhq (the source) - a player standing AT the destination would have an MHQ
 			//--- materialise on top of them. Require BOTH the current MHQ and the destination clear of players.
 			_pNear = false;
-			{ if (isPlayer _x && {alive _x} && {!isNull _mhq} && {(_x distance _mhq) < _safeDist}) then {_pNear = true} } forEach playableUnits;
-			{ if (isPlayer _x && {alive _x} && {(_x distance _destPos) < _safeDist}) then {_pNear = true} } forEach playableUnits; //--- B66: dest-clear too
+			if (!isNull _mhq && {([getPos _mhq, _safeDist] Call WFBE_CO_FNC_RealPlayersNear) > 0}) then {_pNear = true};
+			if (([_destPos, _safeDist] Call WFBE_CO_FNC_RealPlayersNear) > 0) then {_pNear = true}; //--- B66: dest-clear too
 			if (!_pNear && {!surfaceIsWater _destPos}) then {
 				if (!isNull (driver _mhq)) then {(driver _mhq) doMove _destPos};
 				_mhq setVelocity [0,0,0];
