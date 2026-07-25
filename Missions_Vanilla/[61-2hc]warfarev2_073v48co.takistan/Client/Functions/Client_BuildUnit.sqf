@@ -226,7 +226,7 @@ _cancelActionID = _building addAction [
 	false,
 	true,
 	"",
-	"cursorObject == _target && player distance _target < 25"
+	"cursorTarget == _target && player distance _target < 25"
 ];
 _building setVariable [Format ["wfbe_cancel_action_%1", getPlayerUID player], _cancelActionID];
 
