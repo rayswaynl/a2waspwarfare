@@ -101,6 +101,24 @@ switch (_request) do {
 		_trashObj = _args select 0;
 		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])}) then {deleteVehicle _trashObj};
 	};
+	case "sidepatrol-capability": {
+		Private ["_spPurpose","_spToken","_spExpires","_spChallenge","_spExpected"];
+		if (count _args != 4) exitWith {};
+		_spPurpose = _args select 0; _spToken = _args select 1; _spExpires = _args select 2; _spChallenge = _args select 3;
+		if (typeName _spPurpose != "STRING" || {typeName _spToken != "STRING"} || {_spToken == ""} || {typeName _spExpires != "SCALAR"} || {typeName _spChallenge != "STRING"} || {_spChallenge == ""}) exitWith {};
+		_spExpected = Format ["sidepatrol-start-%1", _spChallenge];
+		if (_spPurpose != _spExpected || {_spExpires <= time}) exitWith {};
+		missionNamespace setVariable [Format ["wfbe_sidepatrol_cap_client_%1", _spChallenge], [_spToken, _spExpires]];
+	};
+	case "sidepatrol-convoy-capability": {
+		Private ["_cpPurpose","_cpToken","_cpExpires","_cpChallenge","_cpExpected"];
+		if ((count _args) != 4) exitWith {};
+		_cpPurpose = _args select 0; _cpToken = _args select 1; _cpExpires = _args select 2; _cpChallenge = _args select 3;
+		if (typeName _cpPurpose != "STRING" || {typeName _cpToken != "STRING"} || {_cpToken == ""} || {typeName _cpExpires != "SCALAR"} || {typeName _cpChallenge != "STRING"} || {_cpChallenge == ""}) exitWith {};
+		_cpExpected = Format ["sidepatrol-convoy-%1", _cpChallenge];
+		if (_cpPurpose != _cpExpected || {_cpExpires <= time}) exitWith {};
+		missionNamespace setVariable [Format ["wfbe_sidepatrol_convoy_cap_client_%1", _cpChallenge], [_cpToken, _cpExpires]];
+	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};

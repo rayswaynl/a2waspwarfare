@@ -29,12 +29,29 @@ Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units
          "_pUnstuckStreak","_pUnstuckMax","_pBridgeTier","_pWedgePos","_pAvoid","_pAvoidKeep","_pAvoidCd","_cIsAvoided",
          "_cIsNaval","_navSkipLogged",
          "_rosterChoices","_rosterKey",
-         "_perfProbe","_perfScope","_perfPickStart","_perfNavalSkipped","_perfAvoided"];  //--- cmdcon41-w3m: +_cIsNaval (naval-HVT skip test), _navSkipLogged (one-time-per-group INFO latch).
+         "_perfProbe","_perfScope","_perfPickStart","_perfNavalSkipped","_perfAvoided","_dispatchID","_capKey","_capPurpose","_capDeadline","_cap","_authToken","_authPlayer","_convoyChallenge","_convoyCapKey","_convoyCapDeadline","_convoyCap","_convoyToken"];  //--- cmdcon41-w3m: +_cIsNaval (naval-HVT skip test), _navSkipLogged (one-time-per-group INFO latch).
 
 _sideID   = _this select 0;
 _template = _this select 1;
 _homeTown = _this select 2;
 _side     = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
+_dispatchID = if (count _this > 3) then {_this select 3} else {""};
+_authToken = "";
+_authPlayer = objNull;
+if (!isServer && {typeName _dispatchID == "STRING"} && {_dispatchID != ""}) then {
+    _capKey = Format ["wfbe_sidepatrol_cap_client_%1", _dispatchID];
+    _capPurpose = Format ["sidepatrol-start-%1", _dispatchID];
+    _capDeadline = time + 15;
+    waitUntil {
+        sleep 0.1;
+        _cap = missionNamespace getVariable [_capKey, []];
+        (typeName _cap == "ARRAY" && {count _cap >= 2} && {typeName (_cap select 0) == "STRING"} && {typeName (_cap select 1) == "SCALAR"} && {(_cap select 1) > time}) || {time >= _capDeadline}
+    };
+    if (typeName _cap == "ARRAY" && {count _cap >= 2} && {(_cap select 1) > time} && {(_cap select 0) != ""}) then {_authToken = _cap select 0; if (!isNil "player" && {!isNull player}) then {_authPlayer = player};};
+};
+if (!isServer && {_authToken == ""}) exitWith {
+    ["WARNING", Format ["Common_RunSidePatrol.sqf: HC patrol dispatch [%1] lacked its private startup capability; aborting before group creation.", _dispatchID]] Call WFBE_CO_FNC_LogContent;
+};
 
 //--- B757 patrol-sweep: resolve shared group roster keys before CreateTeam; inline pools remain compatible.
 if (typeName _template == "STRING") then {
@@ -61,11 +78,6 @@ if (isNull _team || {count _units == 0}) exitWith {
 	{if (!isNull _x) then {deleteVehicle _x}} forEach _units;
 	if (!isNull _team) then {deleteGroup _team};
 	["WARNING", Format["Common_RunSidePatrol.sqf: [%1] patrol creation failed/crewless at [%2] (units %3, vehicles %4, template %5) - cleaned up, releasing the slot.", _side, _homeTown getVariable "name", count _units, count _vehicles, _template]] Call WFBE_CO_FNC_LogContent;
-	if (isServer) then {
-		["sidepatrol-ended", _sideID, objNull] Call HandleSpecial;
-	} else {
-		["RequestSpecial", ["sidepatrol-ended", _sideID, objNull]] Call WFBE_CO_FNC_SendToServer;
-	};
 };
 
 _team allowFleeing 0;
@@ -92,9 +104,9 @@ if (_side == resistance) then {
 
 _ldr = leader _team;
 if (isServer) then {
-	["sidepatrol-started", _sideID, _ldr] Call HandleSpecial;
+	[_sideID, _ldr, _dispatchID] Call WFBE_SE_FNC_RegisterSidePatrol;
 } else {
-	["RequestSpecial", ["sidepatrol-started", _sideID, _ldr]] Call WFBE_CO_FNC_SendToServer;
+	["RequestSpecial", ["sidepatrol-started", _sideID, _ldr, _authPlayer, _dispatchID, _authToken]] Call WFBE_CO_FNC_SendToServer;
 };
 
 ["INFORMATION", Format["Common_RunSidePatrol.sqf: [%1] patrol spawned at [%2] (%3 units, %4 vehicles).", _side, _homeTown getVariable "name", count _units, count _vehicles]] Call WFBE_CO_FNC_LogContent;
@@ -319,11 +331,21 @@ while {!WFBE_GameOver && _alive} do {
 				//--- Task 41: convoy payout on arrival (at most once per town visit).
 				if (!_paidThisVisit && {!isNull _truckVeh} && {alive _truckVeh}
 				    && {(leader _team) distance _truckVeh < 150}) then {
-					_paidThisVisit = true;
 					if (isServer) then {
-						["sidepatrol-convoy-stop", _sideID, _target] Call HandleSpecial;
+						_paidThisVisit = [_sideID, _target, _dispatchID, _ldr, _truckVeh] Call WFBE_SE_FNC_SettleSidePatrolConvoy;
 					} else {
-						["RequestSpecial", ["sidepatrol-convoy-stop", _sideID, _target]] Call WFBE_CO_FNC_SendToServer;
+						_convoyChallenge = Format ["%1:%2:%3", _dispatchID, floor (diag_tickTime * 1000), floor (random 1000000000)];
+						_convoyCapKey = Format ["wfbe_sidepatrol_convoy_cap_client_%1", _convoyChallenge];
+						["RequestSpecial", ["sidepatrol-convoy-challenge", _sideID, _target, _dispatchID, _ldr, _truckVeh, _convoyChallenge]] Call WFBE_CO_FNC_SendToServer;
+						_convoyCapDeadline = time + 5;
+						waitUntil {sleep 0.1; _convoyCap = missionNamespace getVariable [_convoyCapKey, []]; (typeName _convoyCap == "ARRAY" && {count _convoyCap >= 2} && {typeName (_convoyCap select 0) == "STRING"} && {typeName (_convoyCap select 1) == "SCALAR"} && {(_convoyCap select 1) > time}) || {time >= _convoyCapDeadline}};
+						if (typeName _convoyCap == "ARRAY" && {count _convoyCap >= 2} && {(_convoyCap select 1) > time} && {(_convoyCap select 0) != ""}) then {
+							_convoyToken = _convoyCap select 0;
+							_paidThisVisit = true;
+							["RequestSpecial", ["sidepatrol-convoy-stop", _sideID, _target, _dispatchID, _ldr, _truckVeh, _authPlayer, _convoyChallenge, _convoyToken]] Call WFBE_CO_FNC_SendToServer;
+						} else {
+							["WARNING", Format ["Common_RunSidePatrol.sqf: no private convoy capability for [%1]; payout will retry.", _target getVariable ["name", "?"]]] Call WFBE_CO_FNC_LogContent;
+						};
 					};
 				};
 
@@ -418,10 +440,5 @@ while {!WFBE_GameOver && _alive} do {
 };
 
 //--- Patrol wiped: release the slot (the server also re-arms the spawn cooldown).
-if (isServer) then {
-	["sidepatrol-ended", _sideID, _ldr] Call HandleSpecial;
-} else {
-	["RequestSpecial", ["sidepatrol-ended", _sideID, _ldr]] Call WFBE_CO_FNC_SendToServer;
-};
 
 if (!isNull _team) then {deleteGroup _team};

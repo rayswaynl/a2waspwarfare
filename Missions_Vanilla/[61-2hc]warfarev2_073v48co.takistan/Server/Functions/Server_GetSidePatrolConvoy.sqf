@@ -1,0 +1,25 @@
+Private ["_cSideID","_cTown","_cDispatchID","_cLdr","_cTruck","_cSide","_cRegistry","_cEntry","_cEntryIndex","_cScan","_cGroup","_cLiveLdr","_cTruckList","_cTruckType","_cTruckFound","_cUnit","_cVeh","_cPaid","_cCd","_cCdKey","_cLast","_cMaxRound","_cCountVar","_cRoundCount"];
+if (!isServer) exitWith {[]};
+if (typeName _this != "ARRAY" || {count _this != 5}) exitWith {[]};
+_cSideID = _this select 0; _cTown = _this select 1; _cDispatchID = _this select 2; _cLdr = _this select 3; _cTruck = _this select 4;
+if (typeName _cSideID != "SCALAR" || {typeName _cTown != "OBJECT"} || {isNull _cTown} || {typeName _cDispatchID != "STRING"} || {_cDispatchID == ""} || {typeName _cLdr != "OBJECT"} || {typeName _cTruck != "OBJECT"} || {isNull _cTruck}) exitWith {[]};
+if (isNil "towns" || {!(_cTown in towns)}) exitWith {[]};
+_cSide = (_cSideID) Call WFBE_CO_FNC_GetSideFromID;
+if (!(_cSide in [west, east, resistance])) exitWith {[]};
+_cRegistry = missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []]; _cEntry = []; _cEntryIndex = -1; _cScan = 0;
+{if (typeName _x == "ARRAY" && {count _x >= 2}) then {if (count _x > 4 && {typeName (_x select 4) == "STRING"} && {(_x select 4) == _cDispatchID} && {(_x select 1) == _cSideID}) then {_cEntry = _x; _cEntryIndex = _cScan}; if (count _x < 5 && {!isNull _cLdr} && {(_x select 0) == _cLdr} && {(_x select 1) == _cSideID}) then {_cEntry = _x; _cEntryIndex = _cScan};}; _cScan = _cScan + 1} forEach _cRegistry;
+if (_cEntryIndex < 0) exitWith {[]};
+_cGroup = if (count _cEntry > 2 && {typeName (_cEntry select 2) == "GROUP"}) then {_cEntry select 2} else {if (!isNull _cLdr) then {group _cLdr} else {grpNull}};
+if (isNull _cGroup) exitWith {[]};
+_cLiveLdr = leader _cGroup;
+if (isNull _cLiveLdr || {!alive _cLiveLdr} || {_cLiveLdr distance _cTown > 200}) exitWith {[]};
+_cTruckList = missionNamespace getVariable [Format ["WFBE_%1SUPPLYTRUCKS", str _cSide], []]; _cTruckType = typeOf _cTruck; _cTruckFound = false;
+{if (!_cTruckFound) then {_cUnit = _x; _cVeh = vehicle _cUnit; if (_cVeh == _cTruck && {_cVeh != _cUnit} && {alive _cVeh} && {(_cTruckType in _cTruckList) || {_cTruckType == "T810_CZ_EP1"}}) then {_cTruckFound = true}}} forEach units _cGroup;
+if (!_cTruckFound) exitWith {[]};
+_cPaid = if (count _cEntry > 3 && {typeName (_cEntry select 3) == "ARRAY"}) then {_cEntry select 3} else {[]};
+if (_cTown in _cPaid) exitWith {[]};
+_cCd = missionNamespace getVariable ["WFBE_C_PATROL_CONVOY_COOLDOWN", 60]; _cCdKey = Format ["wfbe_convoy_pay_%1", _cDispatchID]; _cLast = _cTown getVariable [_cCdKey, -1e9]; _cNow = time;
+if (_cCd > 0 && {(_cNow - _cLast) < _cCd}) exitWith {[]};
+_cMaxRound = missionNamespace getVariable ["WFBE_C_PATROL_CONVOY_MAX_PER_ROUND", 300]; _cCountVar = Format ["WFBE_CONVOY_PAY_COUNT_%1", _cSideID]; _cRoundCount = missionNamespace getVariable [_cCountVar, 0];
+if (_cMaxRound > 0 && {_cRoundCount >= _cMaxRound}) exitWith {[]};
+[true, _cSide, _cRegistry, _cEntryIndex, _cEntry, _cGroup, _cLiveLdr, _cPaid, _cCdKey, _cNow, _cCountVar, _cRoundCount]

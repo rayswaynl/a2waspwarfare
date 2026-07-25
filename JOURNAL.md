@@ -1,5 +1,29 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-07-25 — Server-authoritative side-patrol registry [codex/sidepatrol-registry-authority-20260725]
+
+Task: replacement for #1395. Closed the unvalidated `sidepatrol-started` and
+`sidepatrol-ended` registry/counter mutation paths and added the missing town-proximity
+guard to convoy payout.
+
+Implementation: server-only `Server_RegisterSidePatrol.sqf`; HC dispatch now mints a
+private, one-shot capability through the #1409 helper before the client may announce a
+patrol; the registry stores a stable dispatch identity, group reference, and paid-town
+state. Convoy challenge is validated server-side, then a second private one-shot
+capability is minted only to the HC that owns the live patrol; payout consumes it and
+settles through server-only code. The runner carries one captured leader and truck;
+ended events are ignored; the server FSM scrubs/reconciles the public registry and
+re-arms cooldown after dead-row removal. Startup registration retries for 10 seconds.
+No feature flags were added or armed.
+
+Verification: targeted authority tests PASS; capability-helper tests PASS; diff-only SQF
+lint PASS with 0 findings across 24 changed files; bracket deltas are zero; CH/TK/ZG
+mirror hashes match; LoadoutManager mirror check and version-template test PASS;
+`git diff --check` PASS. Full `pytest Tools/Lint -q` is 365 passed with one unchanged
+baseline failure because `test_handlespecial_cases.py` still demands 56 cases while
+`origin/master` and this branch both contain the identical 54-case list. Static-only
+verification; no live deployment, merge, or server restart.
+
 ## 2026-07-07 — RC29 doubled player-arrow dedupe [fable/rc29-doubled-arrow]
 
 Task: FIX doubled player arrow on the map (two mil_arrow2 markers track the player).

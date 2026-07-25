@@ -56,6 +56,9 @@ WFBE_SE_FNC_AuthorizeSupportCallin = Compile preprocessFileLineNumbers "Server\F
 //--- threat model. Always compiled here (cheap, no behavior until a caller actually invokes it).
 WFBE_SE_FNC_MintCapability = Compile preprocessFileLineNumbers "Server\Functions\Server_MintCapability.sqf";
 WFBE_SE_FNC_ConsumeCapability = Compile preprocessFileLineNumbers "Server\Functions\Server_ConsumeCapability.sqf";
+WFBE_SE_FNC_RegisterSidePatrol = Compile preprocessFileLineNumbers "Server\Functions\Server_RegisterSidePatrol.sqf";
+WFBE_SE_FNC_GetSidePatrolConvoy = Compile preprocessFileLineNumbers "Server\Functions\Server_GetSidePatrolConvoy.sqf";
+WFBE_SE_FNC_SettleSidePatrolConvoy = Compile preprocessFileLineNumbers "Server\Functions\Server_SettleSidePatrolConvoy.sqf";
 MHQRepair = Compile preprocessFile "Server\Functions\Server_MHQRepair.sqf";
 SideMessage = Compile preprocessFile "Server\Functions\Server_SideMessage.sqf";
 

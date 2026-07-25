@@ -1648,54 +1648,63 @@ switch (_args select 0) do {
 		};
 	};
 	case "sidepatrol-started": {
-		Private ["_psideID","_punit","_plist"];
-		_psideID = _args select 1;
-		_punit = _args select 2;
-		if (!isNull _punit) then {
-			_plist = missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []];
-			missionNamespace setVariable ["WFBE_ACTIVE_PATROLS", _plist + [[_punit, _psideID]]];
-			publicVariable "WFBE_ACTIVE_PATROLS";
+		Private ["_psideID","_punit","_pAuth","_pDispatchID","_pToken","_pSide","_pResult","_pRegistered"];
+		if ((count _args) != 6) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-started rejected - malformed payload."] Call WFBE_CO_FNC_LogContent; };
+		_psideID = _args select 1; _punit = _args select 2; _pAuth = _args select 3; _pDispatchID = _args select 4; _pToken = _args select 5;
+		if (typeName _psideID != "SCALAR" || {typeName _punit != "OBJECT"} || {isNull _punit} || {typeName _pAuth != "OBJECT"} || {isNull _pAuth} || {typeName _pDispatchID != "STRING"} || {_pDispatchID == ""} || {typeName _pToken != "STRING"} || {_pToken == ""}) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-started rejected - malformed capability fields."] Call WFBE_CO_FNC_LogContent; };
+		if (!isPlayer _pAuth || {getPlayerUID _pAuth == ""} || {owner _punit != owner _pAuth}) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-started rejected - presenter does not own patrol leader."] Call WFBE_CO_FNC_LogContent; };
+		_pSide = (_psideID) Call WFBE_CO_FNC_GetSideFromID;
+		if (!(_pSide in [west, east, resistance]) || {side _punit != _pSide}) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-started rejected - invalid side/leader."] Call WFBE_CO_FNC_LogContent; };
+		_pResult = [(Format ["sidepatrol-start-%1", _pDispatchID]), _pAuth, _pToken] Call WFBE_SE_FNC_ConsumeCapability;
+		if (typeName _pResult != "ARRAY" || {count _pResult < 1} || {!(_pResult select 0)}) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-started rejected - capability consume failed."] Call WFBE_CO_FNC_LogContent; };
+		[_psideID, _punit, _pDispatchID] Spawn {
+			Private ["_rSideID","_rUnit","_rDispatchID","_rDeadline","_rRegistered"];
+			_rSideID = _this select 0; _rUnit = _this select 1; _rDispatchID = _this select 2; _rDeadline = time + 10; _rRegistered = false;
+			waitUntil {
+				_rRegistered = [_rSideID, _rUnit, _rDispatchID] Call WFBE_SE_FNC_RegisterSidePatrol;
+				if (!_rRegistered) then {sleep 0.2};
+				_rRegistered || {time >= _rDeadline}
+			};
+			if (!_rRegistered) then { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-started capability consumed but registry insert failed after retry window."] Call WFBE_CO_FNC_LogContent; };
 		};
 	};
 	case "sidepatrol-ended": {
-		Private ["_psideID","_punit","_plogik","_plist","_pnew"];
-		_psideID = _args select 1;
-		_punit = _args select 2;
-		_plogik = ((_psideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
-		if (!isNull _plogik) then {
-			//--- Release the slot and re-arm the spawn cooldown.
-			_plogik setVariable ["wfbe_side_patrols", ((_plogik getVariable ["wfbe_side_patrols", 1]) - 1) max 0];
-			_plogik setVariable ["wfbe_side_patrol_last", time];
-		};
-		_plist = missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []];
-		_pnew = [];
-		{
-			//--- Drop the ended patrol's entry and any null leftovers while we're here.
-			if (!isNull (_x select 0) && {(_x select 0) != _punit}) then {_pnew = _pnew + [_x]};
-		} forEach _plist;
-		missionNamespace setVariable ["WFBE_ACTIVE_PATROLS", _pnew];
-		publicVariable "WFBE_ACTIVE_PATROLS";
+		//--- Client-bus ended packets cannot erase server-owned registry rows.
+		["WARNING", "Server_HandleSpecial.sqf: sidepatrol-ended ignored - registry is server-owned and reconciled from live groups."] Call WFBE_CO_FNC_LogContent;
 	};
-	//--- Task 41: convoy reached a town — pay the owning side.
+	case "sidepatrol-convoy-challenge": {
+		Private ["_qSideID","_qTown","_qDispatchID","_qLdr","_qTruck","_qChallenge","_qState","_qLiveLdr","_qHc","_qHcList","_qMinted"];
+		if ((count _args) != 7) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-challenge rejected - malformed payload."] Call WFBE_CO_FNC_LogContent; };
+		_qSideID = _args select 1; _qTown = _args select 2; _qDispatchID = _args select 3; _qLdr = _args select 4; _qTruck = _args select 5; _qChallenge = _args select 6;
+		if (typeName _qChallenge != "STRING" || {_qChallenge == ""}) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-challenge rejected - malformed challenge."] Call WFBE_CO_FNC_LogContent; };
+		_qState = [_qSideID, _qTown, _qDispatchID, _qLdr, _qTruck] Call WFBE_SE_FNC_GetSidePatrolConvoy;
+		if (typeName _qState != "ARRAY" || {count _qState < 12} || {!(_qState select 0)}) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-challenge rejected - patrol state is not eligible."] Call WFBE_CO_FNC_LogContent; };
+		_qLiveLdr = _qState select 6;
+		_qHc = objNull; _qHcList = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
+		{if (isNull _qHc && {!isNull _x} && {!isNull leader _x} && {owner (leader _x) == owner _qLiveLdr}) then {_qHc = leader _x}} forEach _qHcList;
+		if (isNull _qHc || {!isPlayer _qHc} || {getPlayerUID _qHc == ""}) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-challenge rejected - patrol owner HC is unavailable."] Call WFBE_CO_FNC_LogContent; };
+		_qMinted = [(Format ["sidepatrol-convoy-%1", _qChallenge]), _qHc, "sidepatrol-convoy-capability", _qChallenge, 30, 0] Call WFBE_SE_FNC_MintCapability;
+		if (!_qMinted) then { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-challenge could not mint private payout capability."] Call WFBE_CO_FNC_LogContent; };
+	};
+	//--- Task 41: convoy reached a town - pay the owning side.
 	case "sidepatrol-convoy-stop": {
-		Private ["_cSideID","_cTown","_cSide","_cPool","_cShare","_cCount"];
-		_cSideID = _args select 1;
-		_cTown   = _args select 2;
-		_cSide   = (_cSideID) Call WFBE_CO_FNC_GetSideFromID;
-		_cPool   = if (isNil "WFBE_C_PATROL_CONVOY_PAY") then {750} else {WFBE_C_PATROL_CONVOY_PAY};
-
-		_cCount = 0;
-		{if ((isPlayer _x) && (alive _x) && (side _x == _cSide)) then {_cCount = _cCount + 1}} forEach playableUnits;
-		_cShare = round (_cPool / (_cCount max 1));
-
-		[_cSide, "BankPayout", [_cShare]] Call WFBE_CO_FNC_SendToClients;
-		[_cSide, _cShare] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (BankPayout keeps only the message).
-		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] convoy payout $%2 x %3 players at [%4].", str _cSide, _cShare, _cCount, if (!isNull _cTown) then {_cTown getVariable ["name","?"]} else {"?"}]] Call WFBE_CO_FNC_LogContent;
+		Private ["_cSideID","_cTown","_cDispatchID","_cLdr","_cTruck","_cAuth","_cChallenge","_cToken","_cState","_cLiveLdr","_cResult","_cSettled"];
+		if ((count _args) != 9) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - malformed capability payload."] Call WFBE_CO_FNC_LogContent; };
+		_cSideID = _args select 1; _cTown = _args select 2; _cDispatchID = _args select 3; _cLdr = _args select 4; _cTruck = _args select 5; _cAuth = _args select 6; _cChallenge = _args select 7; _cToken = _args select 8;
+		if (typeName _cSideID != "SCALAR" || {typeName _cTown != "OBJECT"} || {typeName _cDispatchID != "STRING"} || {_cDispatchID == ""} || {typeName _cLdr != "OBJECT"} || {typeName _cTruck != "OBJECT"} || {isNull _cTruck} || {typeName _cAuth != "OBJECT"} || {isNull _cAuth} || {typeName _cChallenge != "STRING"} || {_cChallenge == ""} || {typeName _cToken != "STRING"} || {_cToken == ""}) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - malformed capability fields."] Call WFBE_CO_FNC_LogContent; };
+		if (!isPlayer _cAuth || {getPlayerUID _cAuth == ""}) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - invalid presenter."] Call WFBE_CO_FNC_LogContent; };
+		_cState = [_cSideID, _cTown, _cDispatchID, _cLdr, _cTruck] Call WFBE_SE_FNC_GetSidePatrolConvoy;
+		if (typeName _cState != "ARRAY" || {count _cState < 12} || {!(_cState select 0)}) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - patrol state is not eligible."] Call WFBE_CO_FNC_LogContent; };
+		_cLiveLdr = _cState select 6;
+		if (owner _cLiveLdr != owner _cAuth) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - presenter does not own live patrol leader."] Call WFBE_CO_FNC_LogContent; };
+		_cResult = [(Format ["sidepatrol-convoy-%1", _cChallenge]), _cAuth, _cToken] Call WFBE_SE_FNC_ConsumeCapability;
+		if (typeName _cResult != "ARRAY" || {count _cResult < 1} || {!(_cResult select 0)}) exitWith { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - payout capability consume failed."] Call WFBE_CO_FNC_LogContent; };
+		_cSettled = [_cSideID, _cTown, _cDispatchID, _cLdr, _cTruck] Call WFBE_SE_FNC_SettleSidePatrolConvoy;
+		if (!_cSettled) then { ["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-stop capability consumed but settlement failed."] Call WFBE_CO_FNC_LogContent; };
 	};
 	//--- HC SEATING TELEMETRY (task #34): pure RPT logging, no gameplay effect. Mirrors the HCSIDE|v1|connect
-	//--- line below so "did an HC land on WEST this boot, and did the script reseat fix it" is directly
-	//--- observable on the server RPT instead of inferred. _args select 1 is a 2/3-element sub-array packed
-	//--- by Init_HC.sqf (same shape as update-town-delegation / aicom-team-heading pack their payloads).
+	//--- line below so "did an HC land on WEST this boot, and did the server-side seat path see it" remains directly
+	//--- observable in the RPT. _args select 1 is a 2/3-element sub-array packed by Init_HC.sqf.
 	case "hc-preseat": {
 		Private ["_pName","_engineSide"];
 		_pName = (_args select 1) select 0;

@@ -17,7 +17,7 @@ private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","
 	"_homePool","_spSkipNaval","_hpX",
 	"_feedChangeOnly","_feedKeepAlive","_feedSig","_feedLastSig","_feedChanged","_feedDue","_feedLastBroadcast",
 	"_perfProbe","_perfCap","_perfReason","_perfPopTier",
-	"_rcSide","_rcSideID","_rcLogik","_rcCount","_rcOld","_entryLdr","_entryGrp"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler); +_entryLdr/_entryGrp (B66-style any-live-member scrub test, review-1254 defect fix).
+	"_rcSide","_rcSideID","_rcLogik","_rcCount","_rcOld","_entryLdr","_entryGrp","_entryLiveLdr","_entryPaid","_entryPaidKeep","_entryPaidChanged","_entryTown","_dispatchID","_minted"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler); +_entryLdr/_entryGrp (B66-style any-live-member scrub test, review-1254 defect fix).
 
 waitUntil {townInitServer};
 sleep 30;
@@ -55,23 +55,23 @@ while {!WFBE_GameOver} do {
 	if (time - _scrubLast > 20) then {
 		_kept = [];
 		_changed = false;
-		//--- REVIEW FIX (review-1254 #2): the ORIGINAL scrub test here was leader-only (`alive
-		//--- (_entry select 0)`) - WFBE_ACTIVE_PATROLS entries only store the leader unit + sideID
-		//--- (no group slot, unlike WFBE_ACTIVE_AICOM_TEAMS below). If the ORIGINAL leader died but
-		//--- other patrol members are still alive, the patrol keeps running (Common_RunSidePatrol.sqf's
-		//--- own _alive test checks ANY live unit) but this scrub dropped its entry anyway - previously
-		//--- a cosmetic early-vanish of the map arrow (same bug class B66 already fixed below for
-		//--- WFBE_ACTIVE_AICOM_TEAMS), but now load-bearing: the fix/alife-leak-hardening #2 reconciler
-		//--- below counts straight off _kept, so an entry dropped while the patrol is still alive would
-		//--- UNDERCOUNT wfbe_side_patrols and let the side over-spawn past its concurrent-patrol cap.
-		//--- Derive the group from the (possibly dead) leader and key the keep-test on ANY live member,
-		//--- same B66 idiom as the AICOM-team scrub just below.
+		//--- Keep the server-owned group reference authoritative: the original leader may die
+		//--- while the patrol group remains live and elects a replacement leader.
 		{
 			_entry = _x;
 			_entryLdr = _entry select 0;
 			_entryGrp = grpNull;
-			if (!isNull _entryLdr) then {_entryGrp = group _entryLdr};
-			if (!isNull _entryGrp && {{alive _x} count (units _entryGrp) > 0}) then {
+			if (count _entry > 2 && {typeName (_entry select 2) == "GROUP"}) then {_entryGrp = _entry select 2};
+			if (isNull _entryGrp && {!isNull _entryLdr}) then {_entryGrp = group _entryLdr};
+			_entryLiveLdr = objNull;
+			if (!isNull _entryGrp) then {{if (isNull _entryLiveLdr && {alive _x}) then {_entryLiveLdr = _x}} forEach units _entryGrp};
+			if (!isNull _entryLiveLdr) then {
+				if (count _entry > 3 && {typeName (_entry select 3) == "ARRAY"}) then {
+					_entryPaid = _entry select 3;
+					_entryPaidKeep = [];
+					{_entryTown = _x; if (typeName _entryTown == "OBJECT" && {!isNull _entryTown} && {_entryLiveLdr distance _entryTown <= 300}) then {_entryPaidKeep set [count _entryPaidKeep, _entryTown]}} forEach _entryPaid;
+					_entry set [3, _entryPaidKeep];
+				};
 				_kept set [count _kept, _entry];
 			} else {
 				_changed = true;
@@ -80,18 +80,14 @@ while {!WFBE_GameOver} do {
 		if (_changed) then {
 			_removed = (count WFBE_ACTIVE_PATROLS) - (count _kept);
 			WFBE_ACTIVE_PATROLS = _kept;
+			publicVariable "WFBE_ACTIVE_PATROLS";
 			["INFORMATION", Format["server_side_patrols.sqf: scrub removed %1 dead-unit patrol entries from WFBE_ACTIVE_PATROLS.", _removed]] Call WFBE_CO_FNC_AICOMLog;
 		};
 
-		//--- LEAK FIX (fix/alife-leak-hardening #2): wfbe_side_patrols is booked at DISPATCH
-		//--- (below, ~L285) and released ONLY by the "sidepatrol-ended" HandleSpecial case, which
-		//--- is only ever sent from Common_RunSidePatrol.sqf's own exit code. An HC disconnect, HC
-		//--- freeze, or runner-abort mid-patrol never reaches that exit code, so the counter can
-		//--- permanently outlive the patrol it was counting - the side then sits at cap and stops
-		//--- getting new patrols for the rest of the match. _kept (just above) is the freshly-
-		//--- scrubbed, alive-leader-only WFBE_ACTIVE_PATROLS; reconcile each present side's counter
-		//--- to that LIVE count every ~20s so a leaked slot self-heals no matter how it leaked,
-		//--- instead of depending on catching every individual disconnect/abort path.
+		//--- LEAK FIX (fix/alife-leak-hardening #2): reconcile wfbe_side_patrols from the
+		//--- server-owned WFBE_ACTIVE_PATROLS rows every ~20s. The client-bus ended event is ignored,
+		//--- so an HC disconnect, freeze, runner abort, or forged packet cannot erase a live row or
+		//--- leave the side counter inconsistent. The freshly scrubbed live-group count is authoritative.
 		{
 			_rcSide = _x;
 			_rcSideID = (_rcSide) Call WFBE_CO_FNC_GetSideID;
@@ -101,6 +97,9 @@ while {!WFBE_GameOver} do {
 				_rcOld = _rcLogik getVariable ["wfbe_side_patrols", 0];
 				if (_rcOld != _rcCount) then {
 					_rcLogik setVariable ["wfbe_side_patrols", _rcCount];
+					if (_rcCount < _rcOld) then {
+						_rcLogik setVariable ["wfbe_side_patrol_last", time];
+					};
 					["WARNING", Format["server_side_patrols.sqf: reconciled wfbe_side_patrols for [%1] %2 -> %3 (live patrol count).", _rcSide, _rcOld, _rcCount]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
@@ -318,16 +317,23 @@ while {!WFBE_GameOver} do {
 									_template = _escEscort;
 								};
 							};
-							//--- Book the slot synchronously; the started/ended events keep the
-							//--- public marker list, the ended event re-arms the cooldown.
+							//--- Book the slot synchronously; server-owned reconciliation
+							//--- re-arms the cooldown after patrol death.
 							_logik setVariable ["wfbe_side_patrols", _active + 1];
 							_logik setVariable ["wfbe_side_patrol_last", time];
 							//--- Run on the LEAST-LOADED live HC when available (server FPS ~ 0), else locally.
 							_hcUnit = Call WFBE_CO_FNC_PickLeastLoadedHC;
+							_dispatchID = Format ["%1:%2:%3", _sideID, floor (diag_tickTime * 1000), floor (random 1000000000)];
 							if (!isNull _hcUnit) then {
-								[_hcUnit, "HandleSpecial", ['delegate-sidepatrol', _sideID, _template, _home]] Call WFBE_CO_FNC_SendToClient;
+								_minted = [(Format ["sidepatrol-start-%1", _dispatchID]), _hcUnit, "sidepatrol-capability", _dispatchID, 120, 0] Call WFBE_SE_FNC_MintCapability;
+								if (_minted) then {
+									[_hcUnit, "HandleSpecial", ['delegate-sidepatrol', _sideID, _template, _home, _dispatchID]] Call WFBE_CO_FNC_SendToClient;
+								} else {
+									["WARNING", Format ["server_side_patrols.sqf: capability mint failed for HC sidepatrol [%1]; falling back to server runner.", _side]] Call WFBE_CO_FNC_AICOMLog;
+									[_sideID, _template, _home, _dispatchID] Spawn WFBE_CO_FNC_RunSidePatrol;
+								};
 							} else {
-								[_sideID, _template, _home] Spawn WFBE_CO_FNC_RunSidePatrol;
+								[_sideID, _template, _home, _dispatchID] Spawn WFBE_CO_FNC_RunSidePatrol;
 							};
 							_logik setVariable ["wfbe_patrol_waitlog", false];
 							["INFORMATION", Format["server_side_patrols.sqf: [%1] %2 patrol dispatched from [%3] (active %4/%5, HC:%6).", _side, _tier, _home getVariable "name", _active + 1, (_maxSide min _lvl), !isNull _hcUnit]] Call WFBE_CO_FNC_AICOMLog;
