@@ -4,7 +4,7 @@
 		- Unit
 */
 
-Private ["_cms","_magazines","_unit","_weapons"];
+Private ["_cms","_magazines","_unit","_weapons","_ammoCfg","_isMissile"];
 
 _unit = _this;
 
@@ -22,8 +22,13 @@ _magazines_remove = [];
 		_ammo = getText(configFile >> "CfgMagazines" >> _x >> "ammo"); //--- We grab the ammo used by the magazine.
 		
 		if (_ammo != "") then {
-			//--- We check if the ammo is air-lock based and that in inherits from the missile class.
-			if (getNumber(configFile >> "CfgAmmo" >> _ammo >> "airLock") == 1 && configName(inheritsFrom(configFile >> "CfgAmmo" >> _ammo)) == "MissileBase") then {_remove = true; _magazines_remove = _magazines_remove + [_x]};
+			//--- Modded ammo may inherit through an intermediate class below MissileBase.
+			_ammoCfg = configFile >> "CfgAmmo" >> _ammo;
+			_isMissile = false;
+			while {isClass _ammoCfg && {configName _ammoCfg != "CfgAmmo"} && {!_isMissile}} do {
+				if (configName _ammoCfg == "MissileBase") then {_isMissile = true} else {_ammoCfg = inheritsFrom _ammoCfg};
+			};
+			if (getNumber(configFile >> "CfgAmmo" >> _ammo >> "airLock") == 1 && _isMissile) then {_remove = true; _magazines_remove = _magazines_remove + [_x]};
 		};
 	} forEach getArray(configFile >> "CfgWeapons" >> _x >> "magazines"); //--- We check the magazines array of the weapon.
 	
