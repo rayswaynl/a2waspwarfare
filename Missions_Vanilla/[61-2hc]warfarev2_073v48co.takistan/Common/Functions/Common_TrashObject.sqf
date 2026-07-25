@@ -22,6 +22,12 @@ if !(isNull _object) then {
 
 	sleep _delay;
 
+	//--- A slung wreck is intentionally crewless; release the queued deletion so it can be reconsidered after unhook.
+	if (_object getVariable ["wfbe_airlifted", false]) exitWith {
+		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
+		["INFORMATION", Format["Common_TrashObject.sqf: retaining airlifted wreck [%1].", _object]] Call WFBE_CO_FNC_LogContent;
+	};
+
 	//--- qol-polish-pack: optional player-proximity guard for bodies — never pop a corpse in a player's face. Holds deletion while a player
 	//--- is within WFBE_C_UNITS_BODIES_PROX m, capped at one extra _delay so a camper can't pin a body forever. 0 = off (vanilla behaviour).
 	if (_isMan && {(missionNamespace getVariable ["WFBE_C_UNITS_BODIES_PROX", 0]) > 0}) then {
