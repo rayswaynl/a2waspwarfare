@@ -10,22 +10,53 @@ Param(
     [String]$SourceWaspDir = 'C:/WASP',
     [String]$DestGameDir   = 'C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead',
     [String]$DestA2Dir     = 'C:\Program Files (x86)\Steam\steamapps\common\Arma 2',
-    [String]$DestWaspDir   = 'C:\WASP'
+    [String]$DestWaspDir   = 'C:\WASP',
+    [String]$IdentityFile  = ''
 )
 $ErrorActionPreference = 'Stop'
 
 $scp = Get-Command scp -ErrorAction SilentlyContinue
 if ($null -eq $scp) { throw 'scp not found - install the OpenSSH client Windows capability first.' }
 
+# Non-interactive SSH options are MANDATORY for an unattended run. Without them, scp under a
+# scheduled task or detached process blocks forever on the host-key prompt with no stdin to
+# answer it - which looks exactly like a slow transfer while copying nothing (hit 2026-07-25).
+#   BatchMode=yes                     -> fail instead of prompting for a password
+#   StrictHostKeyChecking=accept-new  -> trust a first-seen host, still refuse a CHANGED key
+# Pass -IdentityFile when the invoking account is not the one holding the key (e.g. SYSTEM).
+$sshOpts = @('-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=accept-new', '-o', 'ConnectTimeout=20')
+if ($IdentityFile) {
+    if (-not (Test-Path -LiteralPath $IdentityFile)) { throw ("IdentityFile not found: {0}" -f $IdentityFile) }
+    $sshOpts += @('-i', $IdentityFile)
+}
+
 function Get-RemoteTreeSize {
     Param([String]$RemotePath)
-    # Windows-target ssh: remote default shell may be cmd, so invoke powershell explicitly.
-    $psCmd = "powershell -NoProfile -Command `"(Get-ChildItem -LiteralPath '$RemotePath' -Recurse -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum`""
-    $out = & ssh ("{0}@{1}" -f $SourceUser, $SourceHost) $psCmd 2>$null
-    if ($LASTEXITCODE -ne 0) { return -1 }
-    $n = 0L
-    if ([Int64]::TryParse((($out | Select-Object -Last 1) -replace '\s', ''), [ref]$n)) { return $n }
-    return -1
+    # Best-effort completeness probe. NEVER fatal: any failure returns -1 and the caller
+    # re-syncs, which is the safe direction.
+    #
+    # Two quoting traps make this fiddly, both hit for real on 2026-07-25:
+    #  1. PowerShell strips embedded double quotes when building native-command arguments.
+    #  2. The remote Windows default shell is cmd, which then splits the unquoted command
+    #     at any '|' - producing "'Measure-Object' is not recognized".
+    # So the remote expression contains NO pipes and NO double quotes, and each token is
+    # passed as its own argument.
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $expr = "`$s=0;foreach(`$f in [IO.Directory]::EnumerateFiles('$RemotePath','*',1)){`$s+=(New-Object IO.FileInfo `$f).Length};`$s"
+        $out = & ssh @sshOpts ("{0}@{1}" -f $SourceUser, $SourceHost) powershell -NoProfile -Command $expr 2>&1
+        if ($LASTEXITCODE -ne 0) { return -1 }
+        foreach ($line in @($out)) {
+            $n = 0L
+            if ([Int64]::TryParse((("$line") -replace '\s', ''), [ref]$n) -and $n -gt 0) { return $n }
+        }
+        return -1
+    } catch {
+        return -1
+    } finally {
+        $ErrorActionPreference = $prev
+    }
 }
 
 function Sync-Tree {
@@ -49,7 +80,7 @@ function Sync-Tree {
     # scp -r creates/fills the top folder under the destination parent. No embedded
     # quote characters: PowerShell auto-quotes the single argument (spaces included),
     # matching the proven Windows-to-Windows scp pattern used elsewhere in this repo.
-    & scp -r ("{0}@{1}:{2}" -f $SourceUser, $SourceHost, $Src) $parent
+    & scp @sshOpts -r ("{0}@{1}:{2}" -f $SourceUser, $SourceHost, $Src) $parent
     if ($LASTEXITCODE -ne 0) { throw ("scp failed for {0} (exit {1})" -f $Label, $LASTEXITCODE) }
     Write-Host ("OK: {0}" -f $Label)
 }

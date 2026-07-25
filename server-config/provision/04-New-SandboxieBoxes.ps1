@@ -12,7 +12,26 @@ $iniCandidates = @(
 )
 $ini = $null
 foreach ($c in $iniCandidates) { if ((Test-Path $c) -and ($null -eq $ini)) { $ini = $c } }
-if ($null -eq $ini) { throw 'Sandboxie.ini not found - run 02-Install-Apps.ps1 and start Sandboxie-Plus once.' }
+if ($null -eq $ini) {
+    # A fresh install does not write Sandboxie.ini until the GUI runs once, which is not
+    # possible over a service session. Seed it with the same minimal structure the proven
+    # live box uses (verified 2026-07-25: UTF-16 LE + BOM, template list + per-box sections).
+    $ini = 'C:\Windows\Sandboxie.ini'
+    Write-Host ("Sandboxie.ini absent - seeding {0}" -f $ini)
+    $seed = @(
+        '#',
+        '# Sandboxie configuration file',
+        '#',
+        '',
+        '[GlobalSettings]',
+        'Template=WindowsRasMan',
+        'Template=WindowsLive',
+        'Template=Edge_Fix',
+        'Template=OfficeLicensing',
+        ''
+    ) -join "`r`n"
+    [System.IO.File]::WriteAllText($ini, $seed + "`r`n", [System.Text.Encoding]::Unicode)
+}
 Write-Host ("Using ini: {0}" -f $ini)
 
 $raw = Get-Content -LiteralPath $ini -Raw

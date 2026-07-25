@@ -51,7 +51,10 @@ if (Test-Path $sbieExe) {
             -UseBasicParsing -Headers @{ 'User-Agent' = 'wasp-provision' }
         $asset = $rel.assets | Where-Object { $_.name -match '^Sandboxie-Plus-x64-v.*\.exe$' } | Select-Object -First 1
         if ($null -eq $asset) { throw 'no Sandboxie-Plus x64 installer asset found in the latest release' }
-        Install-FromUrl -Url $asset.browser_download_url -FileName $asset.name -SilentArgs '/S' -Name ('Sandboxie-Plus ' + $rel.tag_name)
+        # Inno Setup installer, NOT NSIS: '/S' is silently ignored and the GUI wizard opens.
+        # Under a service/SSH session nothing can dismiss it and the process hangs forever.
+        Install-FromUrl -Url $asset.browser_download_url -FileName $asset.name `
+            -SilentArgs '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART' -Name ('Sandboxie-Plus ' + $rel.tag_name)
     }
 }
 
