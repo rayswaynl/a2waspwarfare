@@ -7,10 +7,16 @@
 
     //--- Reserve the side before spawning: a second client activation can otherwise arrive before
     //--- the spawned worker marks the wave active, creating a second debit/timer that ends early.
-    if (_side == west && {ATTACK_WAVE_ACTIVE_WEST}) exitWith {};
-    if (_side == east && {ATTACK_WAVE_ACTIVE_EAST}) exitWith {};
+    //--- fix(aicom) [#1350 rework]: the guard also expires after WFBE_C_ATTACK_WAVE_STALE_MINUTES even
+    //--- while ATTACK_WAVE_ACTIVE_* is still true, so a worker that dies before reaching its own reset
+    //--- below (exception, JIP/save-load edge, mission end) cannot latch the side forever and
+    //--- permanently suppress future attack waves on that side.
+    if (_side == west && {ATTACK_WAVE_ACTIVE_WEST} && {(time - ATTACK_WAVE_ACTIVE_WEST_SET_TIME) < (WFBE_C_ATTACK_WAVE_STALE_MINUTES * 60)}) exitWith {};
+    if (_side == east && {ATTACK_WAVE_ACTIVE_EAST} && {(time - ATTACK_WAVE_ACTIVE_EAST_SET_TIME) < (WFBE_C_ATTACK_WAVE_STALE_MINUTES * 60)}) exitWith {};
     if (_side == west) then {ATTACK_WAVE_ACTIVE_WEST = true};
     if (_side == east) then {ATTACK_WAVE_ACTIVE_EAST = true};
+    if (_side == west) then {ATTACK_WAVE_ACTIVE_WEST_SET_TIME = time};
+    if (_side == east) then {ATTACK_WAVE_ACTIVE_EAST_SET_TIME = time};
 
     [_supply, _side] spawn {
 
@@ -46,5 +52,11 @@
         // Return to normal units' pricing after the wave (per-side value carried in the array; no shared global).
         //--- Fix: call handler directly; publicVariableServer from server never fires own PVEH.
         [_side, 1, _attackWaveLength] Call WFBE_SE_FNC_HandleAttackWaveDetails;
+
+        //--- fix(aicom) [#1350 rework]: release the per-side overlap latch directly here (not only as a
+        //--- side effect of HandleAttackWaveDetails above) so the guard's normal-completion reset is
+        //--- visible and auditable right next to where the guard is set, above.
+        if (_side == west) then {ATTACK_WAVE_ACTIVE_WEST = false};
+        if (_side == east) then {ATTACK_WAVE_ACTIVE_EAST = false};
     };
 };

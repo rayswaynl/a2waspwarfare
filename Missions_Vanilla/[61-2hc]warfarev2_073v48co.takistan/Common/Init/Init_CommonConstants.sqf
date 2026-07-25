@@ -1660,6 +1660,15 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	ATTACK_WAVE_PRICE_MODIFIER = 1;
 	ATTACK_WAVE_ACTIVE_WEST = false;
 	ATTACK_WAVE_ACTIVE_EAST = false;
+	ATTACK_WAVE_ACTIVE_WEST_SET_TIME = -1;
+	ATTACK_WAVE_ACTIVE_EAST_SET_TIME = -1;
+	//--- fix(aicom) [#1350 rework]: PR #1350's ATTACK_WAVE_ACTIVE_WEST/EAST overlap guard is set true in
+	//--- Server_AttackWave.sqf's PVEH but a worker that dies before reaching its own reset (exception,
+	//--- JIP/save-load edge, mission end) would otherwise latch the side and permanently suppress every
+	//--- future attack wave. This is the staleness ceiling the guard checks alongside the ACTIVE flag -
+	//--- bugfix restoring the intended non-latching behavior, so it's default-on (no separate toggle).
+	//--- 30 min gives headroom above the longest legitimate wave (<=1500s/25min at 0% discount).
+	if (isNil "WFBE_C_ATTACK_WAVE_STALE_MINUTES") then {WFBE_C_ATTACK_WAVE_STALE_MINUTES = 30};
 
 // Unit cost modifier based on the related upgrade.
 
