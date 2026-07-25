@@ -594,12 +594,15 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 	// win-advantage intel (base/town ownership, positions, per-side force/economy, AICOM targets). Only
 	// MUTUAL-KNOWLEDGE that both sides already see in-game is allowed live. Two such extras on the 60s
 	// cadence, next to GCSTAT:
-	//   1) SCORE     - the mutual kill-score both sides read off the in-game scoreboard (scoreSide).
+	//   1) SCORE     - the mutual kill-score all three sides read off the in-game scoreboard (scoreSide),
+	//                  west+east+guer (fix(stats): GUER previously missing entirely from this line - a
+	//                  hardcoded two-side hangover from before GUER went playable; scoreSide is side-
+	//                  agnostic and already sums GUER addScore the same way, see RequestChangeScore.sqf).
 	//   2) CONTESTED - an ANONYMIZED aggregate COUNT of towns in conflict (no names/sides/positions);
 	//                  stamped per-town by server_town.sqf's existing capture scan (wfbe_contested).
 	// A2 OA 1.64: build strings with + / str only (no joinString); towns are Locations so the [name,
 	// default] getVariable form is valid (the nil-default trap is GROUPS only).
-	diag_log ("SCORE|v1|west=" + str (scoreSide west) + "|east=" + str (scoreSide east) + "|t=" + str (round (time / 60)));
+	diag_log ("SCORE|v1|west=" + str (scoreSide west) + "|east=" + str (scoreSide east) + "|guer=" + str (scoreSide resistance) + "|t=" + str (round (time / 60)));
 	_contestedTowns = 0;
 	{ if (_x getVariable ["wfbe_contested", false]) then {_contestedTowns = _contestedTowns + 1} } forEach towns;
 	diag_log ("CONTESTED|v1|count=" + str _contestedTowns + "|t=" + str (round (time / 60)));
