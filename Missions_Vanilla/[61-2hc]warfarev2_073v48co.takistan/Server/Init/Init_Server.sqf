@@ -1,4 +1,4 @@
-if (!isServer || time > 30) exitWith {diag_log Format["[WFBE (WARNING)][frameno:%1 | ticktime:%2] Init_Server: The server initialization cannot be called more than once.",diag_frameno,diag_tickTime]};
+﻿if (!isServer || time > 30) exitWith {diag_log Format["[WFBE (WARNING)][frameno:%1 | ticktime:%2] Init_Server: The server initialization cannot be called more than once.",diag_frameno,diag_tickTime]};
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization begins at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
@@ -228,7 +228,7 @@ if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
 	_mtOilfield    = missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 0];
 	//--- Build id: pipe-free short token (same token WASPSCALE uses); avoids the full
 	//--- WF_RELEASE_MARKER string which contains pipe chars that would shatter pipe-split parsers.
-	_mtBuild       = "build89-cmdcon44";
+	_mtBuild       = "build91-cmdcon44";
 	diag_log ("MATCH|v1|START|world=" + worldName
 		+ "|build=" + _mtBuild
 		+ "|towns=" + str _mtStartTowns

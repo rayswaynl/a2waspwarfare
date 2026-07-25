@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Handle a vehicle emptiness.
 	 Parameters:
 		- Vehicle.
@@ -39,10 +39,10 @@ while {alive _vehicle} do {
 	//--- 118fcda4a) - the wfbe_airlifted read below would come up nil, undefining _timer at the next line's
 	//--- '> _delay' check (live RPT: Undefined variable in expression: _timer, ~6x/window after MISSINIT).
 	//--- Block-exit falls through to the while condition, which ends the loop cleanly on the dead/deleted vehicle.
-	if (isNull _vehicle) exitWith {};
+	if (isNull _vehicle) exitWith {emptyQueu = emptyQueu - [_vehicle];};
 	
 	_timer = if (({alive _x} count crew _vehicle) > 0 || {_vehicle getVariable ["wfbe_airlifted", false]}) then {0} else {_timer + 20}; //--- fable/airlift-gc-exempt: an airlifted hull is crewless by design - do not run down the empty-vehicle fuse while slung
-	if (_timer > _delay) exitWith {["empty-timeout-hull", _vehicle, Format ["delay=%1", _delay]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _vehicle};
+	if (_timer > _delay) exitWith {emptyQueu = emptyQueu - [_vehicle]; ["empty-timeout-hull", _vehicle, Format ["delay=%1", _delay]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _vehicle};
 };
 
 emptyQueu = emptyQueu - [_vehicle];

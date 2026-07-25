@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Oeprate the defenses in a town, spawn or despawn.
 	 Parameters:
 		- Town.
@@ -6,7 +6,7 @@
 		- Action ("spawn"/"remove").
 */
 
-Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
+Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_positions","_remove","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -129,11 +129,28 @@ switch (_action) do {
 
 			if !(isNil '_defense') then {
 				_unit = gunner _defense;
-				if !(isNull _unit) then { //--- Make sure that we do not remove a player's unit.
-					if (alive _unit) then {
-						if (isNil {(group _unit) getVariable "wfbe_funds"}) then {_unit setPos (getPos _x);	deleteVehicle _unit};
-					} else {
-						_unit setPos (getPos _x); deleteVehicle _unit;
+				if !(isNull _unit) then { //--- Never remove a player-controlled gunner.
+					_remove = false;
+					if (!isPlayer _unit) then {
+						if (alive _unit) then {
+							if (isNil {(group _unit) getVariable "wfbe_funds"}) then {_remove = true};
+						} else {
+							_remove = true;
+						};
+					};
+					if (_remove) then {
+						if (local _unit) then {
+							_unit setPos (getPos _x);
+							deleteVehicle _unit;
+						} else {
+							//--- HC-delegated static gunners are HC-local; A2 OA silently ignores a server-side delete.
+							if (_unit getVariable ["WFBE_IsTownDefenderAI", false]) then {
+								[_unit, "HandleSpecial", ["cleanup-town-defense-gunner", _unit, _x]] Call WFBE_CO_FNC_SendToClient;
+							};
+						};
+						if ((_defense getVariable ["WFBE_StaticDefenseAssignedUnit", objNull]) == _unit) then {
+							_defense setVariable ["WFBE_StaticDefenseAssignedUnit", objNull, true];
+						};
 					};
 				};
 				//--- OWNER RULING (statics lock): de-manned (or already empty) - lock so a player

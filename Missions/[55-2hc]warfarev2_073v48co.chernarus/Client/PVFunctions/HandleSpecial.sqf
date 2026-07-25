@@ -1,4 +1,4 @@
-Private['_args', '_request'];
+﻿Private['_args', '_request'];
 
 _request = _this select 0;
 _args = +_this;
@@ -89,6 +89,20 @@ switch (_request) do {
 		Private ["_wreck"];
 		_wreck = _args select 0;
 		if (!isNull _wreck && {local _wreck} && {!alive _wreck} && {(_wreck getVariable ["WFBE_CommanderAttackHeli", false])}) then {deleteVehicle _wreck};
+	};
+	//--- Owner-side town-capture cleanup: the server routes an HC-local static gunner here because
+	//--- deleteVehicle silently no-ops across locality in A2 OA. The receiver only accepts a local,
+	//--- non-player AI carrying the public town-defender tag, so this shared PVF action cannot delete
+	//--- unrelated units. The logic position preserves the legacy pre-delete dismount placement.
+	case "cleanup-town-defense-gunner": {
+		Private ["_gunner","_logic"];
+		if (count _args < 2) exitWith {};
+		_gunner = _args select 0;
+		_logic = _args select 1;
+		if (!isNull _gunner && {!isPlayer _gunner} && {local _gunner} && {(_gunner getVariable ["WFBE_IsTownDefenderAI", false])}) then {
+			if !(isNull _logic) then {_gunner setPos (getPos _logic)};
+			deleteVehicle _gunner;
+		};
 	};
 	//--- Owner-side half of the Common_TrashObject.sqf locality gate. Self-gated on the same flag as the
 	//--- sender, on the object being LOCAL here, on it being DEAD, and on the public reap stamp the server

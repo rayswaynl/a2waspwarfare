@@ -1,4 +1,4 @@
-/*
+﻿/*
 	Client receives PVF Here.
 	 Parameters:
 		- Client PVF
@@ -30,9 +30,10 @@ if (_isHeadless) then {
 		//---        commander-attack-heli hull that is local to this HC - the reaper cannot delete it directly)
 		//--- NOTE: aicom-team-merge is intentionally excluded (no active sender; WFBE_C_AICOM_HC_MERGE_ENABLE
 		//---        defaults to 0, no DRAFT worker registered, nil-guarded in AI_Commander.sqf).
-		//---   cleanup-trash-object      = Common_TrashObject.sqf (2026-07-21 locality gate, WFBE_C_TRASH_REMOTE_DELETE
+		//---   cleanup-town-defense-gunner = Server_OperateTownDefensesUnits.sqf (capture cleanup for an HC-local static gunner)
+//---   cleanup-trash-object      = Common_TrashObject.sqf (2026-07-21 locality gate, WFBE_C_TRASH_REMOTE_DELETE
 		//---        default 0; deletes a DEAD, reap-stamped body/hull that is local to this HC - the server cannot)
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object"]);
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-town-defense-gunner"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };

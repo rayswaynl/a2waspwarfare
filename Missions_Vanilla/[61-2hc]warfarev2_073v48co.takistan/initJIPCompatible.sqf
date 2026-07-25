@@ -1,4 +1,4 @@
-//--- Global Init, first file called.
+﻿//--- Global Init, first file called.
 
 //--- Define which 'part' of the game to run.
 #include "version.sqf"
@@ -37,7 +37,7 @@ diag_log "## Build: WASP Warfare Build 91 / cmdcon44";
 #ifdef WF_RELEASE_MARKER
 diag_log WF_RELEASE_MARKER;
 #else
-diag_log format ["WASPRELEASE|v1|candidate=build89-cmdcon44-20260703|git=build89-cmdcon44|terrain=%1", worldName];
+diag_log format ["WASPRELEASE|v1|candidate=build91-cmdcon44|git=build91-cmdcon44|terrain=%1", worldName];
 #endif
 diag_log format ["MISSINIT: missionName=%1, worldName=%2, isMultiplayer=%3, isServer=%4, isDedicated=%5", WF_MISSIONNAME, worldName, isMultiplayer, isServer, isDedicated];
 diag_log format ["## Starting Distance: [%1]", startingDistance];
