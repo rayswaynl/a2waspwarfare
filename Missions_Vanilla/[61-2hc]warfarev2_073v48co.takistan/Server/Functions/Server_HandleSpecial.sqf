@@ -1677,11 +1677,76 @@ switch (_args select 0) do {
 		publicVariable "WFBE_ACTIVE_PATROLS";
 	};
 	//--- Task 41: convoy reached a town — pay the owning side.
+	//--- SEC-HARDEN 2026-07-25 (endpoint-inventory finding): this case paid a side's connected
+	//--- players from WFBE_C_PATROL_CONVOY_PAY with ZERO validation - reachable via the shared
+	//--- RequestSpecial PVF bus (Common_SendToServer.sqf -> plain publicVariable, no sender auth
+	//--- under this repo's PVF trust model), so any forged sender could replay this case in a tight
+	//--- loop for an unbounded money-printer. Whole-tree trace: the ONLY legitimate caller is
+	//--- Common_RunSidePatrol.sqf (direct Call when isServer, RequestSpecial from the owning HC
+	//--- otherwise) - task 41's convoy-truck-arrival payout, at most once per town visit.
+	//--- Hardening (all reject ONLY inputs a legitimate call could never produce - every legitimate
+	//--- trigger stays byte-identical, ships unflagged per the exploit-closure precedent #1361/#1364):
+	//---   1) exact payload shape/type (now carries _ldr, the patrol's leader unit).
+	//---   2) _cTown must be a real, registered Town object (in `towns`).
+	//---   3) _cSideID must resolve to a real combatant side (west/east/resistance).
+	//---   4) [_cLdr, _cSideID] must be an EXACT match in the server's own WFBE_ACTIVE_PATROLS
+	//---      registry (stamped by "sidepatrol-started" before the while-loop that can ever reach
+	//---      this payout, cleared only by "sidepatrol-ended") - ties the payout to a real, currently
+	//---      -running patrol instance, not just "some patrol exists for this side".
+	//---   5) defense in depth: per (leader-unit, town) cooldown - distinct leaders key distinctly, so
+	//---      two concurrent same-side patrols converging on one town never collide - plus an absolute
+	//---      per-side per-round payout cap.
 	case "sidepatrol-convoy-stop": {
-		Private ["_cSideID","_cTown","_cSide","_cPool","_cShare","_cCount"];
+		Private ["_cSideID","_cTown","_cLdr","_cSide","_cPool","_cShare","_cCount","_cActive","_cNow","_cCd","_cCdKey","_cLast","_cMaxRound","_cCountVar","_cRoundCount"];
+		if ((count _args) != 4) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - malformed payload (%1 fields).", count _args]] Call WFBE_CO_FNC_LogContent;
+		};
 		_cSideID = _args select 1;
 		_cTown   = _args select 2;
-		_cSide   = (_cSideID) Call WFBE_CO_FNC_GetSideFromID;
+		_cLdr    = _args select 3;
+		if (typeName _cSideID != "SCALAR") exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - non-scalar sideID."] Call WFBE_CO_FNC_LogContent;
+		};
+		if (isNil "_cTown" || {typeName _cTown != "OBJECT"} || {isNull _cTown}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - bad/null town."] Call WFBE_CO_FNC_LogContent;
+		};
+		if (isNil "towns" || {!(_cTown in towns)}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - unregistered town [%1].", _cTown getVariable ["name","?"]]] Call WFBE_CO_FNC_LogContent;
+		};
+		if (isNil "_cLdr" || {typeName _cLdr != "OBJECT"} || {isNull _cLdr}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - bad/null patrol leader."] Call WFBE_CO_FNC_LogContent;
+		};
+		_cSide = (_cSideID) Call WFBE_CO_FNC_GetSideFromID;
+		if (!(_cSide in [west, east, resistance])) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - bad sideID [%1].", _cSideID]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- Correlate against the server's OWN patrol-lifecycle registry: the exact [leader,sideID]
+		//--- tuple must already be a live entry (see comment block above) - a forged sender must
+		//--- reference a real, currently-active patrol's leader object, not merely a plausible side.
+		_cActive = false;
+		{if ((_x select 0) == _cLdr && {(_x select 1) == _cSideID}) then {_cActive = true}} forEach (missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []]);
+		if (!_cActive) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - no matching active-patrol record for side [%1] (forged sender?).", _cSideID]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- Defense in depth: per (leader,town) cooldown - a genuine revisit needs THIS patrol to
+		//--- leave (only possible once the town flips to its side) and come back, always minutes away
+		//--- (see Common_RunSidePatrol.sqf) - plus a generous per-side per-round cap as an absolute backstop.
+		_cNow   = time;
+		_cCd    = missionNamespace getVariable ["WFBE_C_PATROL_CONVOY_COOLDOWN", 60];
+		_cCdKey = Format ["wfbe_convoy_pay_%1", str _cLdr];
+		_cLast  = _cTown getVariable [_cCdKey, -1e9];
+		if (_cCd > 0 && {(_cNow - _cLast) < _cCd}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - cooldown (%1s left) side [%2] town [%3].", round (_cCd - (_cNow - _cLast)), _cSideID, _cTown getVariable ["name","?"]]] Call WFBE_CO_FNC_LogContent;
+		};
+		_cMaxRound   = missionNamespace getVariable ["WFBE_C_PATROL_CONVOY_MAX_PER_ROUND", 300];
+		_cCountVar   = Format ["WFBE_CONVOY_PAY_COUNT_%1", _cSideID];
+		_cRoundCount = missionNamespace getVariable [_cCountVar, 0];
+		if (_cMaxRound > 0 && {_cRoundCount >= _cMaxRound}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: sidepatrol-convoy-stop rejected - per-round payout cap (%1) reached for side [%2].", _cMaxRound, _cSideID]] Call WFBE_CO_FNC_LogContent;
+		};
+		_cTown setVariable [_cCdKey, _cNow, false];
+		missionNamespace setVariable [_cCountVar, _cRoundCount + 1];
+
 		_cPool   = if (isNil "WFBE_C_PATROL_CONVOY_PAY") then {750} else {WFBE_C_PATROL_CONVOY_PAY};
 
 		_cCount = 0;

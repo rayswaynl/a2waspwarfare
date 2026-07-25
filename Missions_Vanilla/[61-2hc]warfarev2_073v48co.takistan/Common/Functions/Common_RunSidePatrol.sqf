@@ -17,6 +17,10 @@
 	         Each time the patrol arrives at a town and the convoy truck is alive within
 	         150 m of the leader, the server pays the team WFBE_C_PATROL_CONVOY_PAY
 	         cash via the BankPayout channel (at most once per town visit).
+	         SEC-HARDEN 2026-07-25: the "sidepatrol-convoy-stop" payload now carries _ldr (this
+	         patrol's leader unit, same identity already registered in WFBE_ACTIVE_PATROLS by
+	         "sidepatrol-started") so the server can require a matching active-patrol record
+	         before paying out - see Server_HandleSpecial.sqf.
 */
 
 Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units","_vehicles",
@@ -320,10 +324,13 @@ while {!WFBE_GameOver && _alive} do {
 				if (!_paidThisVisit && {!isNull _truckVeh} && {alive _truckVeh}
 				    && {(leader _team) distance _truckVeh < 150}) then {
 					_paidThisVisit = true;
+					//--- SEC-HARDEN 2026-07-25: _ldr is this patrol's registered leader (WFBE_ACTIVE_PATROLS
+					//--- identity from "sidepatrol-started") so the server can match the payout to a real,
+					//--- currently-active patrol record instead of trusting the side/town alone.
 					if (isServer) then {
-						["sidepatrol-convoy-stop", _sideID, _target] Call HandleSpecial;
+						["sidepatrol-convoy-stop", _sideID, _target, _ldr] Call HandleSpecial;
 					} else {
-						["RequestSpecial", ["sidepatrol-convoy-stop", _sideID, _target]] Call WFBE_CO_FNC_SendToServer;
+						["RequestSpecial", ["sidepatrol-convoy-stop", _sideID, _target, _ldr]] Call WFBE_CO_FNC_SendToServer;
 					};
 				};
 
