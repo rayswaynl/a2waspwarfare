@@ -853,6 +853,15 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM2_AIRRESP_MAX_AIR")        then {WFBE_C_AICOM2_AIRRESP_MAX_AIR        = 2};    //--- global alive-cap on AICOM2-maneuver response flights per side. Separate budget from Wildcard's one-shots (W6/W13/W19/W22) and from WFBE_C_GUER_AIRDEF_MAX (a different side's economy).
 	if (isNil "WFBE_C_AICOM2_AIRRESP_LOITER_TIME")    then {WFBE_C_AICOM2_AIRRESP_LOITER_TIME    = 240};  //--- s a response flight stays on its lane before self-despawn/recycle; also the watchdog's hard ceiling even while the lane stays hot.
 	//--- WFBE_C_AICOM_AIR_MIN_TOWNS is already registered above (Init_CommonConstants.sqf:370, default 3) and shared with W6/W13 Wildcard eligibility - AIRRESP reuses it as-is, no re-registration.
+	//--- claude/u2-airresp-poscache (Grok idea #7, PERF): AIRRESP's per-tick sense pass issues one nearEntities
+	//--- spatial query per candidate lane town (Allocator fist target(s) + activated own towns), every strategy
+	//--- tick, per side. 0 = off (default, byte-identical to HEAD: the nearEntities path runs verbatim). 1 =
+	//--- AIRRESP snapshots the enemy side's qualifying entity positions ONCE at closer entry (AirResp already
+	//--- runs exactly once per commander strategy tick) and distance-tests every candidate against that cached
+	//--- array instead - same qualifying-entity definition + same SENSE_RADIUS cutoff, so target selection is
+	//--- unchanged; only the scan mechanism differs. Cache staleness within one tick is acceptable by design
+	//--- (players move <100m/tick at the ~60s strategy cadence). Read in AI_Commander_AirResp.sqf.
+	if (isNil "WFBE_C_AICOM_AIRRESP_POS_CACHE") then {WFBE_C_AICOM_AIRRESP_POS_CACHE = 0};
 
 	//--- D7 AICOM FEINT: AI commander occasionally dispatches a small feint team toward a
 	//--- NON-target enemy town, then recalls it, to pressure the enemy rear and split attention.
