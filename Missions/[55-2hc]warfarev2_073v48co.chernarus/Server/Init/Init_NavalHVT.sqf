@@ -759,10 +759,11 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 		         "_inactiveTime","_now","_detected","_players","_anyNear","_orbitAng","_dummy","_x",
 		         "_threeHinds","_hind2","_hind3","_hindPilot2","_hindPilot3","_capL39","_jet1","_jet2","_jetPilot1","_jetPilot2",
 		         "_routeI","_route","_lap","_circuitTimeout","_circuitPts","_cMid","_cOuter","_airfieldPts","_legPt",
-		         "_navMode","_wMi24","_wL39","_wSux","_wSkr","_wTotal","_navRoll","_capMode",
+		         "_navMode","_wMi24","_wL39","_wSux","_wSkr","_wTotal","_navRoll","_capMode","_rumorLast",
 		         "_navSkirmishBase","_navSkirmishMax","_navSkirmishActive"];
 		_loc  = _this select 0;
 		_armed = false;
+		_rumorLast = -1;
 		_inactiveTime = 0;
 		_jet1 = objNull; _jet2 = objNull; _jetPilot1 = objNull; _jetPilot2 = objNull; //--- fable/naval-deck-fixes: were block-scoped in the arming branch, orbit/despawn ticks read them undefined (live RPT :767/:794)
 
@@ -821,6 +822,12 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 					//--- Only arm CAP while GUER still owns this HVT (they may have been captured).
 					if (_sideID == WFBE_C_GUER_ID) then {
 						_armed = true;
+						if ((missionNamespace getVariable ["WFBE_C_NAVAL_THEATER_RUMOR", 0]) > 0) then {
+							if ((time - _rumorLast) >= (missionNamespace getVariable ["WFBE_C_NAVAL_THEATER_RUMOR_INTERVAL", 120])) then {
+								[nil, "DashboardAnnounce", [Format ["Carrier CAP airborne near %1.", _loc getVariable ["name", "the carrier"]]]] Call WFBE_CO_FNC_SendToClients;
+								_rumorLast = time;
+							};
+						};
 						_capGrp = createGroup resistance;
 
 						_navMode = missionNamespace getVariable ["WFBE_C_NAVAL_CAP_MODE", 1]; //--- fable/naval-cap-variety: 0=legacy CAP_L39/THREE_HINDS chain, >0=weighted roll (default).

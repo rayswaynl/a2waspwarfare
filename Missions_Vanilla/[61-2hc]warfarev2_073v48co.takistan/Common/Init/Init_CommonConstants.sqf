@@ -2481,6 +2481,8 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- attachTo static per boat (AA/ROCKET/HMG). Master gate default 0 = byte-identical to HEAD.
 //--- Piggybacks on IS_naval_map (see Server_USVFlotilla.sqf header) - no new map define needed.
 	if (isNil "WFBE_C_USV_FLOTILLA_ENABLE")   then {WFBE_C_USV_FLOTILLA_ENABLE = 1};   //--- master flag. 0 = OFF, byte-identical to HEAD.
+	if (isNil "WFBE_C_NAVAL_THEATER_RUMOR")  then {WFBE_C_NAVAL_THEATER_RUMOR = 0};    //--- 0 = no naval theatre activity announcements; >0 = announce existing gate flips.
+	if (isNil "WFBE_C_NAVAL_THEATER_RUMOR_INTERVAL") then {WFBE_C_NAVAL_THEATER_RUMOR_INTERVAL = 120}; //--- seconds between announcements for the same gate.
 	if (isNil "WFBE_C_USV_FLOTILLA_COUNT")    then {WFBE_C_USV_FLOTILLA_COUNT = 3};    //--- boats roaming at once (owner: 3). Bumping this is a one-line tune; roles cycle round-robin.
 	if (isNil "WFBE_C_USV_FLOTILLA_ROLES")    then {WFBE_C_USV_FLOTILLA_ROLES = ["AA","ROCKET","HMG"]}; //--- role cycle order; default = one-of-each at COUNT=3.
 	if (isNil "WFBE_C_USV_FLOTILLA_SIDE")     then {WFBE_C_USV_FLOTILLA_SIDE = "GUER"}; //--- GUER-only per owner (matches every other asymmetric-GUER-asset precedent: naval CAP, air-def).
