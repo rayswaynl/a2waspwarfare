@@ -18,9 +18,9 @@ _missile_range = missionNamespace getVariable "WFBE_IRS_AUTO_DETECT_RANGE";
 _get = missionNamespace getVariable Format ["%1_IRS", typeOf _vehicle];
 
 //--- Wait until that the missile enter the operative area of the tank.
-waitUntil {_missile distance _vehicle < _missile_range};
+waitUntil {!alive _missile || {!alive _vehicle} || {_missile distance _vehicle < _missile_range}};
 
-if !(alive _missile) exitWith {};
+if (!alive _missile || {!alive _vehicle}) exitWith {};
 
 //--- Attempt to get the IR Smoke grenade models deployed by the tank within the IR Smoke operative area.
 _smokeshells = (getPos _vehicle) nearObjects ["SmokeShellVehicle", missionNamespace getVariable "WFBE_IRS_AREA_OPERATING"];
