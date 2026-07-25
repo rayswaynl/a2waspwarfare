@@ -35,3 +35,19 @@ def test_patrol_bridge_uses_registered_tiered_recovery() -> None:
         assert "UNSTUCK_FIRED" in recovery
         assert "origin=" in recovery
         assert "if (_uTier >= 3) then {" in recovery
+
+
+def test_player_blocked_tier_three_has_a_bounded_terminal_path() -> None:
+    for root in MISSION_ROOTS:
+        constants = (ROOT / root / "Common/Init/Init_CommonConstants.sqf").read_text(encoding="utf-8-sig")
+        recovery = (ROOT / root / "Common/Functions/Common_RunUnstuckRecovery.sqf").read_text(encoding="utf-8-sig")
+
+        assert 'WFBE_C_AICOM_RECOVERY_PLAYER_BLOCKED_MAX = 3' in constants
+        assert 'WFBE_C_AICOM_RECOVERY_FORCE_PLAYER_TELEPORT = 0' in constants
+        assert "wfbe_aicom_recovery_player_blocked" in recovery
+        assert "UNSTUCK_PLAYER_GUARD" in recovery
+        assert "PATROL_RECYCLE_PLAYER_BLOCKED" in recovery
+        assert "WFBE_C_AICOM_RECOVERY_FORCE_PLAYER_TELEPORT" in recovery
+        assert "if (!_uTerminal) then {" in recovery
+        assert "!isPlayer _x" in recovery
+        assert "deleteVehicle _x" in recovery
