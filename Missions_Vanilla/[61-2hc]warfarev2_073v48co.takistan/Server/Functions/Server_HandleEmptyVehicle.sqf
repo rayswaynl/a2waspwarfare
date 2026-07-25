@@ -41,7 +41,7 @@ while {alive _vehicle} do {
 	//--- Block-exit falls through to the while condition, which ends the loop cleanly on the dead/deleted vehicle.
 	if (isNull _vehicle) exitWith {emptyQueu = emptyQueu - [_vehicle];};
 	
-	_timer = if (({alive _x} count crew _vehicle) > 0 || {_vehicle getVariable ["wfbe_airlifted", false]}) then {0} else {_timer + 20}; //--- fable/airlift-gc-exempt: an airlifted hull is crewless by design - do not run down the empty-vehicle fuse while slung
+	_timer = if (({alive _x} count crew _vehicle) > 0 || {_vehicle getVariable ["wfbe_airlifted", false]} || {_vehicle getVariable ["wfbe_is_guer_fob", false]}) then {0} else {_timer + 20}; //--- fable/airlift-gc-exempt: an airlifted hull is crewless by design - do not run down the empty-vehicle fuse while slung
 	if (_timer > _delay) exitWith {emptyQueu = emptyQueu - [_vehicle]; ["empty-timeout-hull", _vehicle, Format ["delay=%1", _delay]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _vehicle};
 };
 
