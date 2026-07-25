@@ -444,6 +444,55 @@ while {!WFBE_GameOver} do {
                                 _cTownPos  = getPos _cTownObj;
                                 _spawnPos  = [_cTownPos select 0, _cTownPos select 1, 50];
 
+                                //--- WFBE_C_GUER_PRESENCE_PULSE (default 0, Grok idea #15): today the QRF
+                                //--- materializes directly over the town center, which is exactly where the
+                                //--- contact is fresh (<120s) - i.e. on top of the players who triggered it.
+                                //--- Armed, bias the spawn onto the RING between the contact town (proxy for
+                                //--- the player cluster - contact is fresh, so players are physically there)
+                                //--- and the nearest OTHER GUER/unknown town already in the ledger (a believable
+                                //--- "reinforcements are coming from home turf" origin). Reuses the ledger's own
+                                //--- town-position data (already resident, no new nearEntities/allUnits/allGroups
+                                //--- scan) and the two dead AICOMV2_GDIR_MIN_SPAWN_M / AICOMV2_GDIR_AMBUSH_BUBBLE_M
+                                //--- constants (declared at startup, never previously consumed in this file) as the
+                                //--- ring's inner/outer radius. WHEN/HOW MANY (contact-freshness gate, group-cap
+                                //--- check, cooldown/contract machinery) are untouched - this only moves WHERE the
+                                //--- already-decided QRF spawns. Flag-off: identical to the two lines above.
+                                if ((missionNamespace getVariable ["WFBE_C_GUER_PRESENCE_PULSE", 0]) > 0) then {
+                                    private ["_ppSrcTown","_ppSrcDist","_ppLedgerRec","_ppLedgerTown","_ppLedgerSide","_ppD"];
+                                    _ppSrcTown = objNull;
+                                    _ppSrcDist = 1e9;
+                                    {
+                                        _ppLedgerRec  = _x;
+                                        _ppLedgerTown = _ppLedgerRec select 0;
+                                        if (_ppLedgerTown != _cTownObj) then {
+                                            _ppLedgerSide = _ppLedgerTown getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+                                            if (_ppLedgerSide == WFBE_C_GUER_ID || {_ppLedgerSide == WFBE_C_UNKNOWN_ID}) then {
+                                                _ppD = _cTownPos distance (getPos _ppLedgerTown);
+                                                if (_ppD < _ppSrcDist) then {
+                                                    _ppSrcDist = _ppD;
+                                                    _ppSrcTown = _ppLedgerTown;
+                                                };
+                                            };
+                                        };
+                                    } forEach _ledger;
+
+                                    if (!isNull _ppSrcTown) then {
+                                        private ["_ppSrcPos","_ppDirX","_ppDirY","_ppDirLen","_ppRingM","_ppBx","_ppBy"];
+                                        _ppSrcPos = getPos _ppSrcTown;
+                                        _ppDirX   = (_cTownPos select 0) - (_ppSrcPos select 0);
+                                        _ppDirY   = (_cTownPos select 1) - (_ppSrcPos select 1);
+                                        _ppDirLen = sqrt ((_ppDirX * _ppDirX) + (_ppDirY * _ppDirY));
+                                        if (_ppDirLen > 1) then {
+                                            _ppDirX  = _ppDirX / _ppDirLen;
+                                            _ppDirY  = _ppDirY / _ppDirLen;
+                                            _ppRingM = _minSpawnM + (random (_ambushBubbleM - _minSpawnM));
+                                            _ppBx    = (_cTownPos select 0) - (_ppDirX * _ppRingM);
+                                            _ppBy    = (_cTownPos select 1) - (_ppDirY * _ppRingM);
+                                            _spawnPos = [_ppBx, _ppBy, 50];
+                                        };
+                                    };
+                                };
+
                                 //--- Group-cap check before materializing. qrfCombo creates TWO groups
                                 //--- (gunship + insert); reserve headroom for both or the single-slot
                                 //--- check lets the combo overshoot the cap by one group.
