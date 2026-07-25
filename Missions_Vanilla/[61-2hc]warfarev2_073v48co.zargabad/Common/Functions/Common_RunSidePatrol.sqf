@@ -29,7 +29,8 @@ Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units
          "_pUnstuckStreak","_pUnstuckMax","_pBridgeTier","_pWedgePos","_pAvoid","_pAvoidKeep","_pAvoidCd","_cIsAvoided",
          "_cIsNaval","_navSkipLogged",
          "_rosterChoices","_rosterKey",
-         "_perfProbe","_perfScope","_perfPickStart","_perfNavalSkipped","_perfAvoided"];  //--- cmdcon41-w3m: +_cIsNaval (naval-HVT skip test), _navSkipLogged (one-time-per-group INFO latch).
+         "_perfProbe","_perfScope","_perfPickStart","_perfNavalSkipped","_perfAvoided",
+         "_rtbFlag","_rtbActive","_rtbInitial","_rtbHome","_rtbDeadline","_rtbOwned"];  //--- cmdcon41-w3m: +_cIsNaval (naval-HVT skip test), _navSkipLogged (one-time-per-group INFO latch). Grok #16 RTB-when-understrength: +_rtb* (see WFBE_C_SIDE_PATROL_RTB, flag-gated, default-off).
 
 _sideID   = _this select 0;
 _template = _this select 1;
@@ -72,6 +73,17 @@ _team allowFleeing 0;
 //--- B66: broadcast=true so the server/GC can SEE the patrol flag and skip these groups
 //--- (was false=client/HC-local only -> server-invisible -> BASE-GC could mis-adopt/delete).
 _team setVariable ["WFBE_SidePatrol", true, true];
+
+//--- Grok #16 A-Life polish: RTB-when-understrength. Flag-gated (WFBE_C_SIDE_PATROL_RTB, default
+//--- 0 = INERT, legacy fight-to-the-death behaviour unchanged). _rtbInitial is the patrol's starting
+//--- living headcount (infantry+crew at spawn, matches _units above); the trigger check below fires
+//--- once the LIVE count drops under half of it. Runs identically on the server or a delegated HC
+//--- (this whole script already runs wherever the patrol lives - no new PV endpoint needed).
+_rtbFlag    = (missionNamespace getVariable ["WFBE_C_SIDE_PATROL_RTB", 0]) > 0;
+_rtbActive  = false;
+_rtbInitial = count _units;
+_rtbHome    = objNull;
+_rtbDeadline = 0;
 
 //--- B36 (Ray 2026-06-15): fewer GUER patrols, but the ones that DO move are MORE DANGEROUS.
 //--- Max the combat skill of GUER (resistance) patrol units - sharper aim, spots farther, never
@@ -154,7 +166,34 @@ _perfScope = if (isServer && !hasInterface) then {"SERVER"} else {"CLIENT"};
 while {!WFBE_GameOver && _alive} do {
 	_alive = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
+	//--- Grok #16 RTB-when-understrength trigger (WFBE_C_SIDE_PATROL_RTB, default 0 = INERT). Fires
+	//--- once per group, the first cycle the LIVE headcount drops under half the starting strength.
+	//--- Cancels frontline gravitation/camp-sweep (branch below) in favour of a single MOVE to the
+	//--- nearest OWNED town; falls back to the spawn town if the side currently owns nothing. A2-safe:
+	//--- plain getVariable, forEach, GetClosestEntity (same primitive _home/_target already use above).
+	if (_alive && {_rtbFlag} && {!_rtbActive} && {_rtbInitial > 0} && {(count ((units _team) Call WFBE_CO_FNC_GetLiveUnits)) < (_rtbInitial * 0.5)}) then {
+		_rtbActive = true;
+		_rtbDeadline = time + 600; //--- bounded timeout: never let an RTB patrol linger past 10 min.
+		_target = objNull;
+		_rtbOwned = [];
+		{if ((_x getVariable "sideID") == _sideID) then {_rtbOwned = _rtbOwned + [_x]}} forEach towns;
+		_rtbHome = if (count _rtbOwned > 0) then {[leader _team, _rtbOwned] Call WFBE_CO_FNC_GetClosestEntity} else {_homeTown};
+		if (!isNull _rtbHome) then {[_team, getPos _rtbHome, 'MOVE', 25] Spawn WFBE_CO_FNC_WaypointSimple};
+		["INFORMATION", Format["Common_RunSidePatrol.sqf: [%1] patrol RTB (understrength %2/%3) heading to [%4].", _side, count ((units _team) Call WFBE_CO_FNC_GetLiveUnits), _rtbInitial, if (isNull _rtbHome) then {"?"} else {_rtbHome getVariable ["name","?"]}]] Call WFBE_CO_FNC_LogContent;
+	};
+
 	if (_alive) then {
+		if (_rtbActive) then {
+			//--- RTB IN PROGRESS: skip frontline target-pick/camp-sweep/unstuck entirely. Reap on
+			//--- arrival at the chosen friendly town or the bounded timeout - either way _alive goes
+			//--- false, which hands off to the EXISTING wipe/despawn/cleanup path at the bottom of
+			//--- this script (HandleSpecial "sidepatrol-ended" + deleteGroup), same as a combat wipe.
+			if (!isNull _rtbHome && {(leader _team) distance _rtbHome < 100}) then {
+				_alive = false;
+			} else {
+				if (time > _rtbDeadline) then {_alive = false};
+			};
+		} else {
 		if (isNull _target) then {
 			_paidThisVisit = false; //--- new objective: reset convoy-pay guard
 			_perfPickStart = diag_tickTime;
@@ -412,6 +451,7 @@ while {!WFBE_GameOver && _alive} do {
 				};
 			};
 		};
+		};
 	};
 
 	sleep 30;
@@ -424,4 +464,15 @@ if (isServer) then {
 	["RequestSpecial", ["sidepatrol-ended", _sideID, _ldr]] Call WFBE_CO_FNC_SendToServer;
 };
 
+//--- Fix (review, group-leak): A2 deleteGroup SILENTLY NO-OPS on a non-empty group. RTB-arrival
+//--- and RTB-timeout above both set _alive=false while the group can still hold LIVE units -
+//--- unlike the legacy combat-wipe exit, which only ever reaches here once the group is already
+//--- empty. Because this group carries WFBE_SidePatrol=true (BASE-GC skips it), a deleteGroup on
+//--- a non-empty group here would leak the group + its surviving AI for the rest of the round even
+//--- though the slot was just released above. Mirror the crewless-spawn cleanup near the top of
+//--- this script: delete surviving units BEFORE deleteGroup. Player-safe - never delete a player
+//--- (a real player in the group legitimately keeps it non-empty, so it is left alone).
+{
+	if (!isNull _x && {alive _x} && {!isPlayer _x}) then {deleteVehicle _x};
+} forEach (units _team);
 if (!isNull _team) then {deleteGroup _team};
