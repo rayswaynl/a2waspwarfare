@@ -10,6 +10,28 @@ switch (_request) do {
 	case "commander-vote": {_args spawn WFBE_CL_FNC_Commander_VoteEnd};
 	case "commander-vote-start": {_args spawn WFBE_CL_FNC_Commander_VoteStart};
 	case "new-commander-assigned": {_args spawn WFBE_CL_FNC_Commander_Assigned};
+	//--- Accept a RequestTeamUpdate capability only when the private reply matches this client's
+	//--- outstanding menu challenge, then spend it by resubmitting the exact pending request.
+	case "team-update-capability": {
+		Private ["_teamChallenge","_teamExpectedChallenge","_teamExpires","_teamPending","_teamPendingKey","_teamPurpose","_teamToken"];
+		if (count _args != 4) exitWith {};
+		_teamPurpose = _args select 0;
+		_teamToken = _args select 1;
+		_teamExpires = _args select 2;
+		_teamChallenge = _args select 3;
+		if (_teamPurpose != "team-update") exitWith {};
+		if (typeName _teamToken != "STRING" || {_teamToken == ""}) exitWith {};
+		if (typeName _teamExpires != "SCALAR" || {_teamExpires <= time}) exitWith {};
+		if (typeName _teamChallenge != "STRING" || {_teamChallenge == ""}) exitWith {};
+		_teamPendingKey = Format ["wfbe_team_update_pending_%1", getPlayerUID player];
+		_teamPending = missionNamespace getVariable [_teamPendingKey, []];
+		if (typeName _teamPending != "ARRAY" || {count _teamPending != 7}) exitWith {};
+		_teamExpectedChallenge = _teamPending select 6;
+		if (typeName _teamExpectedChallenge != "STRING" || {_teamChallenge != _teamExpectedChallenge}) exitWith {};
+		missionNamespace setVariable [_teamPendingKey, []];
+		_teamPending set [6, _teamToken];
+		["RequestTeamUpdate", _teamPending] Call WFBE_CO_FNC_SendToServer;
+	};
 	// Marty: Run delegated town AI cleanup on the machine that owns the local groups.
 	case "cleanup-townai": {_args spawn WFBE_CL_FNC_CleanupDelegatedTownAI};
 	// Item 1: Delete airfield garrison units that are local to this machine.
