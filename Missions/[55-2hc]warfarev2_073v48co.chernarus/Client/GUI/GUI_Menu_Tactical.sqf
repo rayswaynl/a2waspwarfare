@@ -117,7 +117,10 @@ _currentFee = -1;
 _lastSel = -1;
 _addToList = [localize 'STR_WF_TACTICAL_FastTravel',localize 'STR_WF_ICBM',localize 'STR_WF_TACTICAL_ParadropAmmo',localize 'STR_WF_TACTICAL_ParadropVehicle',localize 'STR_WF_TACTICAL_Paratroop',localize 'STR_WF_TACTICAL_UnitCam',localize 'STR_WF_TACTICAL_UAV',localize 'STR_WF_TACTICAL_UAVDestroy',localize 'STR_WF_TACTICAL_UAVRemoteControl'];
 _addToListID = ["Fast_Travel","ICBM","Paradrop_Ammo","Paradrop_Vehicle","Paratroopers","Units_Camera","UAV","UAV_Destroy","UAV_Remote_Control"];
-_addToListFee = [0,75000,9500,3500,8500,0,12500,0,0];
+//--- icbmlegacy SECURITY: the ICBM fee reads the shared WFBE_C_ICBM_COST constant (value unchanged:
+//--- 75000) so the menu display/enable and the server-side launch charge (Server_HandleSpecial case "ICBM")
+//--- can never drift apart.
+_addToListFee = [0,(missionNamespace getVariable ["WFBE_C_ICBM_COST", 75000]),9500,3500,8500,0,12500,0,0];
 _addToListInterval = [0,1000,800,600,_pard,0,0,0,0];	//--- QoL fix: paratrooper cooldown now respects WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY (was hardcoded 900, silently ignoring the mission param)
 
 //--- fable/scud-chernarus-artillery (owner 2026-07-08): SCUD/TEL fire moved OUT of this flat support
@@ -845,7 +848,12 @@ while {alive player && dialog} do {
 				hintSilent parseText "<t color='#F89060'>ICBM launch order sent to your land TEL. Protect it - if it is destroyed before impact, the strike aborts.</t>";
 			};
 			//--- CLASSIC path (WFBE_C_ICBM_TEL=0): fire immediately from the commander's client as before.
-			-_currentFee Call ChangePlayerFunds;
+			//--- icbmlegacy SECURITY (flag WFBE_C_ICBM_LEGACY_SERVER_AUTH, default 0): while armed the SERVER charges
+			//--- the fee at launch inside Server_HandleSpecial case "ICBM" - the client must NOT debit here or the
+			//--- commander pays twice. At flag 0 the original client-side debit below runs unchanged.
+			if ((missionNamespace getVariable ["WFBE_C_ICBM_LEGACY_SERVER_AUTH", 0]) <= 0) then {
+				-_currentFee Call ChangePlayerFunds;
+			};
 			_obj = "HeliHEmpty" createVehicle _callPos;
 			
 			//--- Marty : Creating the ICBM marker on map for the commander who give the order:
