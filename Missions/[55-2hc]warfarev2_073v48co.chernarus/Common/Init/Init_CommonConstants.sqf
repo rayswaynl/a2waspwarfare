@@ -334,7 +334,7 @@ if (worldName == "Zargabad") then {
 	//--- GUER GROUP CAP: hard ceiling on total resistance groups. Bounds runaway GUER growth toward the engine's ~144-groups/side
 	//--- limit over long stalled AI-vs-AI runs (garrisons + W9 uprising + side-patrols, none of which had a global cap).
 	//--- 90 is far above any single-front GUER force, well under the 144 ceiling; raise to 999 for an instant rollback.
-	if (isNil "WFBE_C_GUER_GROUPS_MAX") then {WFBE_C_GUER_GROUPS_MAX = 80}; //--- 60->80 (Ray 2026-06-15, fold from fleet group-budget tuning): 60 choked GUER garrisons above the observed ~73 peak; 80 restores headroom, still well under the 144 engine cap. Was 90; raise to 999 for instant rollback.
+	if (isNil "WFBE_C_GUER_GROUPS_MAX") then {WFBE_C_GUER_GROUPS_MAX = 40}; //--- 80->40 (owner doctrine ruling 2026-07-23: standing GUER baseline halved; GUER Director V2 dynamic layer now carries reinforcement above baseline). Was 60->80 (Ray 2026-06-15); raise to 999 for instant rollback.
 	if (isNil "WFBE_C_AI_MAX") then {WFBE_C_AI_MAX = 12}; //--- Max AI allowed on each AI groups.
 	if (isNil "WFBE_C_AI_DELEGATION") then {WFBE_C_AI_DELEGATION = 0}; //--- Enable AI delegation (0: Disabled, 1: creation of ai on the client, 2: Headless Client).
 	if (isNil "WFBE_C_STATIC_DEF_COMBAT") then {WFBE_C_STATIC_DEF_COMBAT = 1}; //--- D10#4: 1 = manned static town-defence gunners get an explicit combat posture (setBehaviour AWARE + setCombatMode RED) so they engage; 0 = legacy passive. AWARE (not COMBAT) keeps them on the gun. Balance change (defended towns harder); ships inert.
@@ -2085,7 +2085,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	//--- vehicles are never merged). Orthogonal to wasp-town-garrison-minus20 (#1266, WFBE_C_TOWN_GARRISON_SCALE): that lever
 	//--- changes garrison SIZE, this one changes group GRANULARITY; the two are sequence-safe. 0 = OFF (byte-identical to HEAD;
 	//--- instant rollback). The Zargabad WEST/EAST merge override (ZG-FIX block below) still wins for ZG WEST/EAST.
-	if (isNil 'WFBE_C_TOWNS_MERGE_HEADROOM') then {WFBE_C_TOWNS_MERGE_HEADROOM = 0};
+	if (isNil 'WFBE_C_TOWNS_MERGE_HEADROOM') then {WFBE_C_TOWNS_MERGE_HEADROOM = 1}; //--- 0->1 (owner GO 2026-07-22 19:08: arm garrison-merge headroom; infra pre-existing).
 	if (WFBE_C_TOWNS_MERGE_HEADROOM > 0) then {
 		WFBE_C_TOWNS_MERGE_TARGET = 12;              //--- WEST/EAST flush threshold (was 9). Paired with WFBE_C_TOWNS_MERGE_CAP (14).
 		WFBE_C_TOWNS_MERGE_TARGET_DEFENDER = 12;     //--- GUER defender flush threshold (was 10).
@@ -2111,7 +2111,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 		//--- founding gate (AI_Commander_Teams.sqf ~L235) and the produce/refill gate (AI_Commander_Produce.sqf ~L28);
 		//--- counts {side==_side && !isPlayer} ALL side AI incl. WEST/EAST town garrisons. CH/TK stays [140,130,100,80].
 		//--- ZG low-pop 80/side: WEST 80 + EAST 80 + GUER ~150 = ~310 total (target 280-320, ~150 below the knee).
-		WFBE_C_TOTAL_AI_MAX_BY_TIER = [110,100,85,70]; //--- ZG raise (owner 2026-07-23: map felt dead; the [80,80,70,60] tune was measured under the shared-HC bug with ALL AI on one HC - the 2-HC split restores headroom). Rollback: [80,80,70,60]. CH/TK stay [140,130,100,80].
+		WFBE_C_TOTAL_AI_MAX_BY_TIER = [90,85,75,60]; //--- ZG pullback (owner live-tune final 2026-07-23, after [110,100,85,70]: FPS 15 at AI_TOT 383). Prior: [80,80,70,60] pre-2-HC-split raise, then [110,100,85,70]. Rollback: [110,100,85,70]. CH/TK stay [140,130,100,80].
 		//--- (2) per-side COMMANDER-TEAM hard ceiling. Fewer teams, each still founds at 8 units (TEAM_SIZE untouched)
 		//--- = concentration, not sprawl. 5 x 8 = ~40 core + garrisons stays under the 80 AI cap above.
 		WFBE_C_AICOM_TEAMS_HARD_CAP = 8;               //--- ZG raise (owner 2026-07-23, was 5; CH/TK 10). Rollback: 5.
