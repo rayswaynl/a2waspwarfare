@@ -1,14 +1,19 @@
 "ATTACK_WAVE_INIT" addPublicVariableEventHandler {
 
-    private ["_supply", "_side"];
+    private ["_supply", "_side", "_requester"];
 
     _supply = _this select 1 select 0;
     _side = _this select 1 select 1;
+    //--- fix(harden): carry the requester through so AttackWave.sqf's WFBE_SE_FNC_HandleAttackWaveDetails
+    //--- can bind the activation to the requester's own side. objNull for legacy/forged 2-element
+    //--- payloads - the requester-bind guard in AttackWave.sqf rejects those on the activation branch.
+    _requester = if (count (_this select 1) > 2) then {(_this select 1) select 2} else {objNull};
 
-    [_supply, _side] spawn {
+    [_supply, _side, _requester] spawn {
 
         _supply = _this select 0;
         _side = _this select 1;
+        _requester = _this select 2;
 
         _discountPercentage = 0;
 
@@ -30,7 +35,7 @@
         //--- No bare ATTACK_WAVE_DETAILS global needed: array is passed directly, per cmdcon41-w3f comment.
         diag_log [_side, _discountPercentage, _attackWaveLength];
 
-        [_side, _discountPercentage, _attackWaveLength] Call WFBE_SE_FNC_HandleAttackWaveDetails;
+        [_side, _discountPercentage, _attackWaveLength, _requester] Call WFBE_SE_FNC_HandleAttackWaveDetails;
 
         sleep _attackWaveLength;
 
@@ -38,6 +43,6 @@
 
         // Return to normal units' pricing after the wave (per-side value carried in the array; no shared global).
         //--- Fix: call handler directly; publicVariableServer from server never fires own PVEH.
-        [_side, 1, _attackWaveLength] Call WFBE_SE_FNC_HandleAttackWaveDetails;
+        [_side, 1, _attackWaveLength, _requester] Call WFBE_SE_FNC_HandleAttackWaveDetails;
     };
 };

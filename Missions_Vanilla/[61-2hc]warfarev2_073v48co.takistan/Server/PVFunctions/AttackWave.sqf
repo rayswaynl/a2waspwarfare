@@ -23,7 +23,7 @@
 //--- Calling convention: _this IS the payload array [side, priceModifier, attackLength].
 //--- (Server_AttackWave.sqf calls directly; PVEH relay strips the varname with (_this select 1) Call.)
 WFBE_SE_FNC_HandleAttackWaveDetails = {
-	private ["_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage"];
+	private ["_priceModifier", "_side", "_attackLength", "_attackLengthMinutes", "_priceModifierPercentage", "_requester"];
 
     if (typeName _this != "ARRAY") exitWith {
         ["WARNING", Format["AttackWave.sqf: rejected malformed ATTACK_WAVE_DETAILS payload type [%1].", typeName _this]] Call WFBE_CO_FNC_LogContent;
@@ -36,6 +36,10 @@ WFBE_SE_FNC_HandleAttackWaveDetails = {
 	_side = _this select 0;
 	_priceModifier = _this select 1;
     _attackLength = _this select 2;
+    //--- fix(harden): optional 4th element - the acting player, threaded by Server_AttackWave.sqf
+    //--- from Common_AttackWaveActivate.sqf. objNull when absent (legacy/forged short payload); the
+    //--- requester-bind guard below rejects the activation branch for any non-side-matched requester.
+    _requester = if (count _this > 3) then {_this select 3} else {objNull};
 
     if (typeName _side != "SIDE") exitWith {
         ["WARNING", Format["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS with invalid side type [%1].", typeName _side]] Call WFBE_CO_FNC_LogContent;
@@ -57,6 +61,23 @@ WFBE_SE_FNC_HandleAttackWaveDetails = {
 
     if (_attackLength > 0) then {
         _attackLengthMinutes = floor (_attackLength / 60);
+
+        //--- fix(harden): DR-55 requester-bind (ALWAYS-ON, C4/C2 ruling - same idiom as
+        //--- RequestAIComDonate.sqf:63-70 and the aicom-team-disband/rally/refit/hold binds, PR #1364).
+        //--- This branch is the ONLY economy mutation in this handler (the full-supply debit a few
+        //--- lines below), so only this branch is gated - a forged ATTACK_WAVE_INIT/ATTACK_WAVE_DETAILS
+        //--- payload could otherwise assert any _side and wipe that side's entire supply as "activation
+        //--- cost" regardless of the forger's own side. The sole honest caller is Server_AttackWave.sqf,
+        //--- itself fed only by Common_AttackWaveActivate.sqf's addAction, which always threads the
+        //--- clicking player's own live `player` object - no honest activation can trip this. The
+        //--- wave-END/reset branch below performs no mutation and stays UNGATED so it composes cleanly
+        //--- with PR #1373's latch-release/staleness rework in Server_AttackWave.sqf: that reset call
+        //--- must keep landing even if the original requester later disconnects, dies, or changes side
+        //--- mid-wave, or the side would latch ATTACK_WAVE_ACTIVE_* permanently active (the exact class
+        //--- of bug #1373 is already patching for the non-forgery case).
+        if (isNull _requester || {!isPlayer _requester} || {!alive _requester} || {side _requester != _side}) exitWith {
+            ["WARNING", Format["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS activation for side [%1] - requester [%2] invalid, dead, not a player, or side-mismatched.", _side, _requester]] Call WFBE_CO_FNC_LogContent;
+        };
 
         if (_side == west) then {
             ATTACK_WAVE_ACTIVE_WEST = true;
@@ -96,5 +117,9 @@ WFBE_SE_FNC_HandleAttackWaveDetails = {
 
 "ATTACK_WAVE_DETAILS" addPublicVariableEventHandler {
     //--- Relay any client->server ATTACK_WAVE_DETAILS publish through the extracted function.
+    //--- No in-tree caller currently publishes this variable (Server_AttackWave.sqf calls
+    //--- WFBE_SE_FNC_HandleAttackWaveDetails directly, and the name is not in the BE-allowlist
+    //--- at BattlEyeFilter/publicvariable.txt), so a raw publish here still lands on the same
+    //--- requester-bind guard above and cannot bypass it.
     (_this select 1) Call WFBE_SE_FNC_HandleAttackWaveDetails;
 };
