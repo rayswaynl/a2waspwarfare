@@ -17,7 +17,7 @@ private[
 	"_serverFPS", "_serverFPSColor", "_hudFPSColor", "_hudMode", "_lastHudMode", "_RHUDUpdateFPS", "_RHUDUpdateServerFPSRow", "_RHUDSetFPSPosition", "_RHUDSetFullPosition", "_clientLabel", "_serverLabel", "_showMissingServer",
 	"_labelX", "_valueX", "_startY", "_rowH", "_labelW", "_valueW", "_lineH", "_rowY", "_layoutPairs",
 	"_RHUDUpdateUpgrade", "_RHUD_upgId", "_RHUD_upgEnd", "_cachedEnd",
-	"_RHUDUpdateArty", "_RHUDGetGuerProgressText",
+	"_RHUDUpdateArty", "_RHUDUpdateTerritorial", "_RHUDGetGuerProgressText",
 	"_lastQueueHud", "_queueHudTxt", "_queueHudTs", "_queueHudCtrl"	//--- Ray B89: build-queue RHUD line cache
 ];
 
@@ -250,6 +250,10 @@ _RHUDSetFullPosition = {
 	//--- ABOVE the FOB row. Positioned for everyone here; shown + filled only for resistance (hidden otherwise).
 	//--- b757 (Trello #219): + artillery-cooldown row pair 27/28 appended after master's GUER rows.
 	_layoutPairs = [[1,2],[3,4],[5,6],[7,8],[9,10],[11,12],[13,14],[15,16],[17,18],[23,24],[25,26]];	//--- b760: arty pair [27,28] removed; the cooldown is now folded into the FPS C/S line (13/14).
+	if ((missionNamespace getVariable ["WFBE_C_TERRITORIAL_HUD", 0]) > 0) then {
+		(_controls select 27) ctrlSetPosition [_labelX, _startY + (13 * _rowH), _labelW, _lineH];
+		(_controls select 28) ctrlSetPosition [_valueX, _startY + (13 * _rowH), _valueW, _lineH];
+	};
 	for "_idx" from 0 to ((count _layoutPairs) - 1) do {
 		_rowY = _startY + (_idx * _rowH);
 		(_controls select ((_layoutPairs select _idx) select 0)) ctrlSetPosition [_labelX, _rowY, _labelW, _lineH];
@@ -292,6 +296,48 @@ _RHUDUpdateArty = {
 	_remain = round (_fireTime - _elapsed);
 	if (_remain < 0) then {_remain = 0};
 	Format ["  Arty %1s", _remain]
+};
+
+_RHUDUpdateTerritorial = {
+	private ["_terrHud","_terrHudSid","_terrHudEnd","_terrHudRemain","_terrHudName"];
+	if !((missionNamespace getVariable ["WFBE_C_TERRITORIAL_HUD", 0]) > 0) exitWith {};
+
+	_terrHud = missionNamespace getVariable ["WFBE_TERRITORIAL_HUD", []];
+	if ((typeName _terrHud) != "ARRAY" || {(count _terrHud) < 2}) exitWith {
+		[27, false] call _RHUDSetShow;
+		[28, false] call _RHUDSetShow;
+	};
+
+	_terrHudSid = _terrHud select 0;
+	_terrHudEnd = _terrHud select 1;
+	if ((typeName _terrHudSid) != "SCALAR" || {(typeName _terrHudEnd) != "SCALAR"}) exitWith {
+		[27, false] call _RHUDSetShow;
+		[28, false] call _RHUDSetShow;
+	};
+
+	_terrHudName = "";
+	switch (_terrHudSid) do {
+		case WFBE_C_WEST_ID: {_terrHudName = "WEST"};
+		case WFBE_C_EAST_ID: {_terrHudName = "EAST"};
+		case WFBE_C_GUER_ID: {_terrHudName = "GUER"};
+	};
+	if (_terrHudName == "") exitWith {
+		[27, false] call _RHUDSetShow;
+		[28, false] call _RHUDSetShow;
+	};
+
+	_terrHudRemain = ceil (_terrHudEnd - time);
+	if (_terrHudRemain <= 0) exitWith {
+		[27, false] call _RHUDSetShow;
+		[28, false] call _RHUDSetShow;
+	};
+
+	[27, "Territory:"] call _RHUDSetText;
+	[28, Format ["%1m %2", ceil (_terrHudRemain / 60), _terrHudName]] call _RHUDSetText;
+	[27, [1, 1, 1, 1]] call _RHUDSetColor;
+	[28, [1, 0.8431, 0, 1]] call _RHUDSetColor;
+	[27, true] call _RHUDSetShow;
+	[28, true] call _RHUDSetShow;
 };
 
 _RHUDGetGuerProgressText = {
@@ -398,7 +444,13 @@ while {true} do {
 					} else {
 						{[_x, false] call _RHUDSetShow} forEach [15,16,17,18];
 					};
-				{[_x, false] call _RHUDSetShow} forEach [27,28];	//--- b760: arty box folded into the FPS C/S line; keep its now-unused controls hidden.
+				if ((missionNamespace getVariable ["WFBE_C_TERRITORIAL_HUD", 0]) > 0) then {
+					[27, "Territory:"] call _RHUDSetText;
+					[27, true] call _RHUDSetShow;
+					[28, true] call _RHUDSetShow;
+				} else {
+					{[_x, false] call _RHUDSetShow} forEach [27,28];	//--- b760: arty box folded into the FPS C/S line; keep its now-unused controls hidden.
+				};
 				_labelsApplied = true;
 				_hiddenApplied = false;
 			};
@@ -572,6 +624,9 @@ while {true} do {
 
 				call _RHUDUpdateServerFPSRow;
 			call _RHUDUpdateUpgrade;
+			if ((missionNamespace getVariable ["WFBE_C_TERRITORIAL_HUD", 0]) > 0) then {
+				call _RHUDUpdateTerritorial;
+			};
 			/* b760: arty cooldown is folded into the FPS C/S line via _RHUDUpdateServerFPSRow; no standalone row. */
 
 			};
