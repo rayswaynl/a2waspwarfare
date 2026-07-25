@@ -1118,6 +1118,79 @@ if (_strikeOn && {!isNull _enemyHQ} && {alive _enemyHQ}) then {
 	};
 };
 
+//--- OVERRUN MOP-UP (owner-directed repair, GR-2026-07-08a): the B74.1 razer above requires _strikeOn, and
+//--- _strikeOn's only setter (the DECAP GATE block above) is permanently suppressed on the live cutover
+//--- build (WFBE_C_AICOM2_DECAP_ENABLE effective default 1, no lobby override) - so that razer can never
+//--- fire. DECAP itself is an equally dead end for THIS scenario: its own COMMIT/press path requires the
+//--- enemy HQ to be ALIVE (AI_Commander_Decapitate.sqf _dominant test), so once the enemy HQ actually dies
+//--- neither V1 nor DECAP can ever raze the remaining factories - exactly the reported failure (enemy HQ
+//--- dead at minute 281, factories untouched for the remaining ~330 ticks of a 9h round). This is a NEW,
+//--- separate closer - the COMPLEMENT of DECAP's gate (fires ONLY once the enemy HQ is already dead, so the
+//--- two can never compete for the same team in the same tick) - that presses a small capped number of
+//--- dominant-side field teams onto the nearest LIVE enemy factory with the ordinary "goto" order (same
+//--- SetTeamMoveMode/SetTeamMovePos + HC order-seq-bump idiom as the V1 HQ-strike issue above). A "goto"
+//--- order alone is NOT sufficient - see the companion engage-gate patch in Common_RunCommanderTeam.sqf
+//--- (same flag): that fire phase's engage-gate is unconditionally HQ-anchored, so without that patch a
+//--- mop-up team would arrive and simply idle in the arrival SAD forever - same failure, different
+//--- unreachable trigger. Flag WFBE_C_AICOM_OVERRUN_MOPUP_ENABLE (default 0) gates BOTH halves - flag off
+//--- is fully byte-identical (this block never stamps a team var; the engage-gate branch is itself gated
+//--- on the same flag, so BASE-ASSAULT is untouched at 0). Does NOT touch _strikeOn, WFBE_C_AICOM_OVERRUN_RAZE,
+//--- or WFBE_C_AICOM_OVERRUN_SCRIPTRAZE defaults - separate flag, separate team var (wfbe_aicom_overrun_mopup),
+//--- separate dispatch loop, zero file/state overlap with #1459 (an independent air closer on the same factories).
+if ((missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_MOPUP_ENABLE", 0]) > 0) then {
+	private ["_moOn","_moTownStr","_moMyEff","_moEnEff","_moRatio","_moStructs","_moLive","_moCap","_moActive","_moChkTeam","_moSlots","_moPicked","_moTeam","_moHoldT","_moIsHolding","_moLdr","_moTgt"];
+	_moOn = false;
+	if (!isNull _enemyHQ && {!alive _enemyHQ}) then {
+		_moTownStr = missionNamespace getVariable ["WFBE_C_AICOM_TOWN_STRENGTH", 2];
+		_moMyEff = _myStr + (_myTowns * _moTownStr);
+		_moEnEff = _enStr + (_enemyTowns * _moTownStr);
+		_moRatio = missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_MOPUP_RATIO", 1.1];
+		if ((_moEnEff <= 0 && {_moMyEff > 0}) || {_moEnEff > 0 && {_moMyEff >= (_moEnEff * _moRatio)}}) then {_moOn = true};
+	};
+	if (_moOn) then {
+		_moStructs = (_enemySide) Call WFBE_CO_FNC_GetSideStructures;
+		if (isNil "_moStructs" || {typeName _moStructs != "ARRAY"}) then {_moStructs = []};
+		_moLive = [];
+		{ if (!isNil "_x" && {!isNull _x} && {alive _x} && {_x != _enemyHQ}) then {_moLive = _moLive + [_x]} } forEach _moStructs;
+		if (count _moLive > 0) then {
+			_moCap = missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_MOPUP_TEAMS", 2];
+			_moActive = 0;
+			{
+				_moChkTeam = _x;
+				if (!isNull _moChkTeam && {[_moChkTeam, "wfbe_aicom_overrun_mopup", false] Call WFBE_CO_FNC_GroupGetBool} && {({alive _x} count (units _moChkTeam)) > 0}) then {_moActive = _moActive + 1};
+			} forEach _teams;
+			_moSlots = (_moCap - _moActive) max 0;
+			_moPicked = 0;
+			{
+				_moTeam = _x;
+				if (_moPicked < _moSlots && {!isNull _moTeam} && {!isPlayer (leader _moTeam)} && {({alive _x} count (units _moTeam)) > 0} && {!([_moTeam, "wfbe_aicom_overrun_mopup", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+					_moHoldT = _moTeam getVariable "wfbe_aicom_holding_town";
+					_moIsHolding = false;
+					if (!isNil "_moHoldT") then {if (typeName _moHoldT == "OBJECT" && {!isNull _moHoldT}) then {_moIsHolding = true}};
+					if (!_moIsHolding && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _moTeam} && {!([_moTeam] Call WFBE_CO_FNC_CapLock)}) then {
+						_moLdr = leader _moTeam;
+						if (!isNull _moLdr && {alive _moLdr}) then {
+							_moTgt = [_moLdr, _moLive] Call WFBE_CO_FNC_GetClosestEntity;
+							if (!isNull _moTgt) then {
+								_moTeam setVariable ["wfbe_aicom_overrun_mopup", true];
+								[_moTeam, "move"] Call SetTeamMoveMode;
+								[_moTeam, getPos _moTgt] Call SetTeamMovePos;
+								if ([_moTeam, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+									_moTeam setVariable ["wfbe_aicom_order", [(if (isNil {_moTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_moTeam getVariable "wfbe_aicom_order") select 0}) + 1, "goto", getPos _moTgt], true];
+								};
+								_moPicked = _moPicked + 1;
+								diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|OVERRUN_MOPUP_DISPATCH|team=" + (str _moTeam) + "|target=" + (str _moTgt));
+							};
+						};
+					};
+				};
+			} forEach _teams;
+		};
+	} else {
+		{ if (!isNull _x && {[_x, "wfbe_aicom_overrun_mopup", false] Call WFBE_CO_FNC_GroupGetBool}) then { _x setVariable ["wfbe_aicom_overrun_mopup", false]; [_x, "towns"] Call SetTeamMoveMode; }; } forEach _teams;
+	};
+};
+
 //--- POSTURE + FRONT telemetry (claude-gaming 2026-06-15): the commander's strategic STANCE and
 //--- the war-state numbers that drive it. All metrics (_myTowns/_enemyTowns/_myStr/_enStr/_strikeOn/
 //--- _attacked/_anyFront/_targets) are already computed this tick, so these are pure string builds -

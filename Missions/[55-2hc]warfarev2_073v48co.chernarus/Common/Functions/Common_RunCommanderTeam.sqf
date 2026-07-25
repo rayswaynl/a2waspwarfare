@@ -120,6 +120,7 @@ if (count _this > 6) then {
 _team setVariable ["wfbe_queue", [], false];
 _team setVariable ["wfbe_aicom_decap", [], true];   //--- stack-pass: A2 recycles group slots - a re-founded team must never inherit a stale press stamp ([] = cleared sentinel)
 _team setVariable ["wfbe_aicom_press_on", nil];      //--- stack-pass: same for the HC-local press latch
+_team setVariable ["wfbe_aicom_overrun_mopup", false, true];   //--- overrunrazer: same group-slot-recycle hazard - a re-founded team must never inherit a stale mop-up stamp from its slot's previous occupant
 
 if (isServer) then {
 	["aicom-team-created", _sideID, _team] Call HandleSpecial;
@@ -1912,12 +1913,30 @@ while {!WFBE_GameOver && _alive} do {
 					//--- enemy HQ pos - so a team still road-marching a long "goto" leg is NOT pulled into
 					//--- the fire loop (ordinary goto moves untouched). If the HQ is null/mobilizing we
 					//--- cannot range-gate, so skip (the arrival SAD keeps the team fighting meanwhile).
+					//--- OVERRUN MOP-UP companion patch (WFBE_C_AICOM_OVERRUN_MOPUP_ENABLE - same flag as the new
+					//--- AI_Commander_Strategy.sqf dispatch closer): once the enemy HQ is dead, `alive _eHQ` below is
+					//--- PERMANENTLY false, so no presser - V1, DECAP, or the new mop-up closer - could ever engage
+					//--- again; a mop-up team would arrive at its factory destination and idle in the arrival SAD
+					//--- forever, the exact same failure with a different unreachable trigger. When the flag is on
+					//--- AND the enemy HQ is confirmed dead, anchor _inRange on the nearest LIVE enemy structure to
+					//--- the leader instead (same ENGAGE_RANGE range-gate). Flag off -> this else-branch never runs,
+					//--- _inRange stays exactly as before (byte-identical to HEAD).
 					private ["_engageRange","_hqPos","_inRange"];
 					_engageRange = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ENGAGE_RANGE", 400];
 					_inRange = false;
 					if (!isNull _eHQ && {alive _eHQ}) then {
 						_hqPos = getPos _eHQ;
 						if (!isNull leader _team && {alive leader _team} && {((leader _team) distance _hqPos) < _engageRange}) then {_inRange = true};
+					} else {
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_OVERRUN_MOPUP_ENABLE", 0]) > 0 && {!isNull leader _team} && {alive leader _team}) then {
+							private ["_moGateLive","_moGateNear"];
+							_moGateLive = [];
+							{ if (!isNil "_x" && {!isNull _x} && {alive _x}) then {_moGateLive = _moGateLive + [_x]} } forEach _eStructs;
+							if (count _moGateLive > 0) then {
+								_moGateNear = [(leader _team), _moGateLive] Call WFBE_CO_FNC_GetClosestEntity;
+								if (!isNull _moGateNear && {((leader _team) distance _moGateNear) < _engageRange}) then {_inRange = true};
+							};
+						};
 					};
 
 					if (_inRange) then {
