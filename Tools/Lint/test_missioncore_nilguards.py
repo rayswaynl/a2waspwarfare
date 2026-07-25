@@ -56,8 +56,49 @@ def test_disconnect_team_scan_nil_safe() -> None:
         assert 'GetSideLogic) getVariable "wfbe_teams");' not in source, f"{terrain}: 1-arg wfbe_teams read remains"
 
 
+def test_connect_re_registers_resolved_team() -> None:
+    for terrain in TERRAINS:
+        source = (ROOT / terrain / "Server/Functions/Server_OnPlayerConnected.sqf").read_text(encoding="utf-8")
+        start = source.index('missionNamespace setVariable [Format ["WFBE_SOD_LASTG_')
+        end = source.index("//--- B63", start)
+        enrollment = source[start:end]
+        assert "if (_sideJoined in [west, east, resistance]) then {" in enrollment, (
+            f"{terrain}: missing side-gated roster repair"
+        )
+        assert '_rrTeams = _rrLogik getVariable ["wfbe_teams", []];' in enrollment, (
+            f"{terrain}: missing logic-object roster read"
+        )
+        assert "_rrTeams = _rrTeams + [_team];" in enrollment, f"{terrain}: missing deduplicated roster append"
+        assert '_rrLogik setVariable ["wfbe_teams", _rrTeams, true];' in enrollment, (
+            f"{terrain}: missing roster broadcast"
+        )
+        assert 'if (!isNil {_team getVariable "wfbe_hc_magnet"}) then {' in enrollment, (
+            f"{terrain}: missing stale HC-magnet cleanup"
+        )
+
+
+def test_disconnect_filler_classname_guard() -> None:
+    for terrain in TERRAINS:
+        source = (ROOT / terrain / "Server/Functions/Server_OnPlayerDisconnected.sqf").read_text(encoding="utf-8")
+        start = source.index("if (_old_unit_group != _team) then {")
+        end = source.index("[_old_unit] joinSilent _team;", start)
+        transfer = source[start:end]
+        assert '_fillerClass = missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side];' in transfer, (
+            f"{terrain}: missing filler classname capture"
+        )
+        assert '&& {!isNil "_fillerClass"} && {typeName _fillerClass == "STRING"}' in transfer, (
+            f"{terrain}: missing nil/string guard before filler creation"
+        )
+        assert "[_fillerClass, _old_unit_group" in transfer, f"{terrain}: filler create does not use guarded classname"
+        assert '[_old_unit_group, [0,0,0], _side] Call WFBE_CO_FNC_CreateUnit' not in transfer, (
+            f"{terrain}: direct unguarded filler creation remains"
+        )
+
+
 if __name__ == "__main__":
     test_friendlycamps_null_and_nil_guards()
     test_init_town_flag_list_stays_parallel()
     test_disconnect_team_scan_nil_safe()
+    test_connect_re_registers_resolved_team()
+    test_disconnect_filler_classname_guard()
     print("mission-core nil-guard regression checks passed")
