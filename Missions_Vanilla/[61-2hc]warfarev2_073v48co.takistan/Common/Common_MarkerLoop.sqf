@@ -9,7 +9,7 @@
 // tombstone the slot (set to 0) and compaction only rebuilds the array once enough
 // tombstones accumulate, keeping the lost-append race window negligible. The marker
 // name ledger sweep below heals any marker that would slip through regardless.
-Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_dist","_ehHandle","_lowFpsSince","_mapWasClosed","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_heightTiers","_aarWarnLevel","_aarHeight","_budgetMax","_budgetServiced","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades","_moveInPlace","_labelCullEnabled","_labelCullThreshold","_labelCulled","_regCount","_mapperfDiag","_mapperfNext","_awacsEnabled","_awacsMinAlt","_awacsNextCheck","_awacsTypes","_awacsUp","_awacsWasUp"];
+Private ["_aarEntry","_aarUpgradeCache","_actionPlayer","_dist","_ehHandle","_lowFpsSince","_mapWasClosed","_rebuildCooldownUntil","_rebuildFps","_activeEntries","_aircraftName","_altitude","_aarLevel","_heightTiers","_aarWarnLevel","_aarHeight","_budgetMax","_budgetServiced","_canMoveTracked","_cargoText","_cargoUnitsInVehicle","_compactNeeded","_crewText","_crewUnitsInVehicle","_currentDir","_currentPos","_deadDelay","_dirDiff","_entry","_forceRefresh","_groupUnitsInVehicle","_height","_kind","_knownNames","_lastDir","_lastPos","_lastSize","_lastText","_lastType","_lastVisible","_ledger","_mapVisible","_markerName","_markerText","_member","_memberVehicle","_now","_object","_oppositeSide","_perfStart","_perfTick","_refreshRate","_roleUnit","_sizeChanged","_sleepRate","_speed","_sweepNext","_targetMarkerSize","_targetMarkerText","_targetMarkerType","_tombstones","_tracked","_trackedVehicle","_typeOfObject","_unitText","_upgrades","_moveInPlace","_labelCullEnabled","_labelCullThreshold","_labelCulled","_regCount","_mapperfDiag","_mapperfNext","_awacsEnabled","_awacsMinAlt","_awacsNextCheck","_awacsTypes","_awacsUp","_awacsWasUp","_budgetAdaptEnabled","_budgetAdaptFloor","_budgetAdaptFpsFloor","_budgetAdaptFpsCeil","_budgetFixed","_budgetFpsSpan","_budgetFpsRatio","_isPriorityEntry"];
 
 if (isNil "WFBE_CL_UnitMarkerRegistry") then {WFBE_CL_UnitMarkerRegistry = []};
 if (isNil "WFBE_CL_AARMarkerRegistry") then {WFBE_CL_AARMarkerRegistry = []};
@@ -62,6 +62,14 @@ _mapperfDiag        = (missionNamespace getVariable ["WFBE_C_MARKER_MAPPERF_DIAG
 _labelCulled        = false; //--- current cull state (hysteresis-latched below)
 _mapperfNext        = 0;     //--- next diag_tickTime the MAPPERF line may fire (>=30s apart)
 
+// Grok idea #22 (WFBE_C_MARKER_BUDGET_ADAPT, default 0): read the adaptive-budget levers once at
+// loop start, same pattern as the cmdcon43-b block above. Client-local only (diag_fps); no server
+// change, no new network traffic. See Init_CommonConstants.sqf for what each does.
+_budgetAdaptEnabled  = (missionNamespace getVariable ["WFBE_C_MARKER_BUDGET_ADAPT", 0]) > 0;
+_budgetAdaptFloor    = missionNamespace getVariable ["WFBE_C_MARKER_BUDGET_ADAPT_FLOOR", 8];
+_budgetAdaptFpsFloor = missionNamespace getVariable ["WFBE_C_MARKER_BUDGET_ADAPT_FPS_FLOOR", 15];
+_budgetAdaptFpsCeil  = missionNamespace getVariable ["WFBE_C_MARKER_BUDGET_ADAPT_FPS_CEIL", 40];
+
 _mapWasClosed = false;
 
 while {true} do {
@@ -72,7 +80,21 @@ while {true} do {
 	_mapVisible = visibleMap;
 	// Marty: PERF3 token-bucket - cap visual-refresh work per tick to avoid map-FPS halving
 	// under large AI wars. Default 30 = 150 markers/sec at 5 Hz; override via missionNamespace.
-	_budgetMax = missionNamespace getVariable ["WFBE_C_MARKER_BUDGET_PER_TICK", 30];
+	_budgetFixed = missionNamespace getVariable ["WFBE_C_MARKER_BUDGET_PER_TICK", 30];
+	_budgetMax = _budgetFixed;
+	// Grok idea #22 ADAPTIVE BUDGET (WFBE_C_MARKER_BUDGET_ADAPT=1): scale the per-tick budget by
+	// THIS client's own diag_fps instead of always using the fixed ceiling above. Linear ramp from
+	// _budgetAdaptFloor at/below _budgetAdaptFpsFloor fps up to the full _budgetFixed at/above
+	// _budgetAdaptFpsCeil fps. The final clamp guarantees the adaptive value can only ever SHRINK
+	// the fixed budget, never exceed it, whatever the configured floor/fps constants are. Flag off
+	// (default): this whole block is skipped and _budgetMax stays byte-identical to _budgetFixed,
+	// i.e. the pre-existing fixed-budget behavior.
+	if (_budgetAdaptEnabled) then {
+		_budgetFpsSpan = (_budgetAdaptFpsCeil - _budgetAdaptFpsFloor) max 1;
+		_budgetFpsRatio = (((diag_fps - _budgetAdaptFpsFloor) max 0) min _budgetFpsSpan) / _budgetFpsSpan;
+		_budgetMax = round (_budgetAdaptFloor + ((_budgetFixed - _budgetAdaptFloor) max 0) * _budgetFpsRatio);
+		_budgetMax = (_budgetMax max (_budgetAdaptFloor min _budgetFixed)) min _budgetFixed;
+	};
 	_budgetServiced = 0;
 
 	// cmdcon43-b (Build 88) LABEL CULLING (WFBE_C_MARKER_LABEL_CULL=1): decide once per tick whether the
@@ -278,7 +300,13 @@ while {true} do {
 				// is re-tried next tick (rolling stagger, no starvation). Only fires when map is
 				// open (map-closed entries already exited above), so the budget is shared across
 				// the visible-refresh path only.
-				if (_budgetServiced >= _budgetMax) exitWith {};
+				// Grok idea #22: while adaptive budgeting is armed, priority entries (HQ + the
+				// player's own squad - the same set the label-cull above keeps text on) bypass the
+				// budget gate entirely, so a low-fps client's shrunk budget only thins the bulk
+				// anonymous pool and never delays the markers that matter. Flag off: _isPriorityEntry
+				// is always false here, so the gate is byte-identical to the pre-existing check.
+				_isPriorityEntry = _budgetAdaptEnabled && {((_entry select 11) == 1) || {((_entry select 10) == "man") && {group _tracked == group player}}};
+				if (!_isPriorityEntry && {_budgetServiced >= _budgetMax}) exitWith {};
 				_budgetServiced = _budgetServiced + 1;
 
 				_perfStart = diag_tickTime;
@@ -659,7 +687,11 @@ while {true} do {
 	// label culling is currently engaged. A2-OA-1.64-safe (diag_fps / diag_tickTime / diag_log / format).
 	if (_mapperfDiag && _mapVisible && {diag_tickTime >= _mapperfNext}) then {
 		_mapperfNext = diag_tickTime + 30;
-		diag_log format ["MAPPERF|v1|fps=%1|reg=%2|culled=%3", round diag_fps, _regCount, (if (_labelCulled) then {1} else {0})];
+		// Grok idea #22: budget=%4 is the EFFECTIVE per-tick budget this pass used (== the fixed
+		// WFBE_C_MARKER_BUDGET_PER_TICK when adaptive is off or fps is healthy; shrinks toward the
+		// floor as diag_fps drops when WFBE_C_MARKER_BUDGET_ADAPT is armed) - folded into the
+		// existing MAPPERF line rather than a new telemetry family.
+		diag_log format ["MAPPERF|v1|fps=%1|reg=%2|culled=%3|budget=%4", round diag_fps, _regCount, (if (_labelCulled) then {1} else {0}), _budgetMax];
 	};
 
 	if !(isNil "PerformanceAudit_Record") then {

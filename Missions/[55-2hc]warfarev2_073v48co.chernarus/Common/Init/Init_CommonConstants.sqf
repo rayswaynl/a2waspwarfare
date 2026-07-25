@@ -1658,6 +1658,17 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_MARKER_MAPPERF_DIAG") then {WFBE_C_MARKER_MAPPERF_DIAG = 1};      //--- 1: emit a throttled MAPPERF|v1 RPT line (<=1/30s while the big map is open) so a live soak can verify the fix. 0: silent.
 	if (isNil "WFBE_C_MARKER_SLOT_DIGIT") then {WFBE_C_MARKER_SLOT_DIGIT = 0};           //--- 0: own-squad unit-marker number = engine creation-order id (legacy, byte-identical). >0: marker number = live command-bar slot (1-based index among alive group members in `units` order) so the map number matches the F-key bar after death/buy/rejoin. See Common_GetUnitSlotDigit.sqf.
 
+//--- Grok idea #22 (client perf): ADAPTIVE marker budget. WFBE_C_MARKER_BUDGET_PER_TICK above is a
+//--- fixed per-tick ceiling shared by every client regardless of their own performance. When armed,
+//--- Common_MarkerLoop.sqf derives the EFFECTIVE per-tick budget from the LOCAL client's own diag_fps
+//--- instead: a client already struggling culls the bulk marker pool harder, a healthy client keeps
+//--- the full fixed budget - so one player's weak PC no longer forces the same thin budget onto
+//--- everyone else's smooth client (client-local, no server change, no new network traffic).
+	if (isNil "WFBE_C_MARKER_BUDGET_ADAPT") then {WFBE_C_MARKER_BUDGET_ADAPT = 0};       //--- 0: legacy fixed-budget behavior (byte-identical). 1: scale the per-tick budget by this client's own diag_fps (see the 3 constants below).
+	if (isNil "WFBE_C_MARKER_BUDGET_ADAPT_FLOOR") then {WFBE_C_MARKER_BUDGET_ADAPT_FLOOR = 8}; //--- Lowest the adaptive budget is ever allowed to shrink to, however low fps gets. Never exceeds WFBE_C_MARKER_BUDGET_PER_TICK (clamped in the loop).
+	if (isNil "WFBE_C_MARKER_BUDGET_ADAPT_FPS_FLOOR") then {WFBE_C_MARKER_BUDGET_ADAPT_FPS_FLOOR = 15}; //--- diag_fps at/below which the adaptive budget clamps to the floor above.
+	if (isNil "WFBE_C_MARKER_BUDGET_ADAPT_FPS_CEIL") then {WFBE_C_MARKER_BUDGET_ADAPT_FPS_CEIL = 40}; //--- diag_fps at/above which the adaptive budget equals the full fixed WFBE_C_MARKER_BUDGET_PER_TICK (no thinning). Linear-scaled between floor and ceil.
+
 // Attack wave.
 	ATTACK_WAVE_PRICE_MODIFIER = 1;
 	ATTACK_WAVE_ACTIVE_WEST = false;
