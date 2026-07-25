@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_factoryTargetOn","_factoryOrder","_factoryAnchor","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
+private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_capRemaining","_capCost","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_factoryTargetOn","_factoryOrder","_factoryAnchor","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
 
 _side = _this;
 _sideText = str _side;
@@ -44,6 +44,7 @@ if (_sideAI >= _cap) exitWith {
 		_logik setVariable ["wfbe_aicom_producecap_count", 0];
 	};
 };
+_capRemaining = (_cap - _sideAI) max 0;
 
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
@@ -160,7 +161,7 @@ if (_airMaxTotalP > 0) then {
 				_wm_lastTU = _team getVariable "wfbe_aicom_topup_stamp"; if (isNil "_wm_lastTU") then {_wm_lastTU = -1e9};
 				_wm_cd    = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_COOLDOWN", 240];
 				if ((_wm_now - _wm_lastTU) >= _wm_cd) then {
-					_wm_missing = (6 - _wm_alive) min 4; //--- top up toward 6, at most 4 bodies per request
+					_wm_missing = ((6 - _wm_alive) min 4) min _capRemaining; //--- top up toward 6, bounded by remaining side cap
 					if (_wm_missing > 0) then {
 						//--- Resolve the side's BASIC infantry classnames the founding templates use: the barracks unit
 						//--- roster (WFBE_%1BARRACKSUNITS), whose [0] is the basic rifleman (same source Produce's
@@ -215,6 +216,7 @@ if (_airMaxTotalP > 0) then {
 								//--- already 0 on the free/human-discount path) as element 4 so the consumer
 								//--- (Common_RunCommanderTeam.sqf) can refund it exactly if this request ages out unfilled.
 								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls, _wm_now, _wm_charge], true];
+								_capRemaining = _capRemaining - _wm_missing;
 								_team setVariable ["wfbe_aicom_topup_stamp", _wm_now, false]; //--- rate-limit stamp (local group var)
 								//--- VISIBILITY: UID-targeted command-chat line to the seated human commander ONLY (Client_HandlePVF
 								//--- STRING destination = exact player UID; LocalizeMessage "QuartermasterRefit" is a passthrough case).
@@ -457,7 +459,7 @@ if (_airMaxTotalP > 0) then {
 			//--- V0.6.7: order up to batch cap units per team this cycle (deficit-capped; RANK-2 raises it for weak teams).
 			_batchOrdered = 0;
 			_ordered = []; //--- E7: per-class pending-order tally (reset per team)
-			while {_cur < _want && _batchOrdered < _effBatch} do {
+			while {_cur < _want && _batchOrdered < _effBatch && _capRemaining > 0} do {
 				//--- First template classname the team is still short on.
 				_toBuild = "";
 				{
@@ -489,6 +491,11 @@ if (_airMaxTotalP > 0) then {
 
 				_ud = missionNamespace getVariable _toBuild;
 				if (isNil "_ud") exitWith {};
+				//--- Reserve the maximum bodies Server_BuyUnit can materialize from this async order.
+				//--- Vehicle orders request driver, gunner, commander, and every configured turret crew.
+				_capCost = 1;
+				if (!(_toBuild isKindOf "Man")) then {_capCost = 3 + count (_ud select QUERYUNITTURRETS)};
+				if (_capRemaining < _capCost) exitWith {};
 
 				_typeName = _fac select 0;
 				_price    = _ud select QUERYUNITPRICE;
@@ -546,6 +553,7 @@ if (_airMaxTotalP > 0) then {
 				//--- N8 fix: pass the exact _priceCharged (post W15-discount) so Server_BuyUnit.sqf can refund
 				//--- the SAME amount on a createVehicle spawn failure instead of re-deriving list price.
 				[_id, _facObj, _toBuild, _side, _team, _isVeh, _priceCharged] Spawn AIBuyUnit;
+				_capRemaining = _capRemaining - _capCost;
 				_ordered = _ordered + [_toBuild]; //--- E7: record in-flight order so the selector counts it
 				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5, batch %6/%7 rich=%8).", _sideText, _team, _toBuild, _typeName, _price, _batchOrdered + 1, _batchCap, _richFlag]] Call WFBE_CO_FNC_AICOMLog;
 
