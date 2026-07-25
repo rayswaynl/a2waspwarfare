@@ -1,4 +1,4 @@
-private["_is","_ii","_awaits","_incomeCoef","_divisor","_commander_enabled","_currency_system","_logik","_playerOldScore","_playerNewScore","_scoreDiff","_income","_income_player","_income_commander","_supply","_comTeam","_paycheck", "_supply_max_limit"];
+private["_is","_ii","_awaits","_incomeCoef","_divisor","_commander_enabled","_currency_system","_logik","_playerOldScore","_playerNewScore","_scoreDiff","_income","_income_player","_income_commander","_supply","_comTeam","_paycheck", "_supply_max_limit", "_supplyStagnation"];
 
 //--- HP-01 CORE-LOOP SUPERVISOR (fable/loop-supervisor-hp01): owner-generation gate (see
 //--- server_town.sqf for the full note).
@@ -107,7 +107,11 @@ while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) =
 			//--- killing the AI stipend/stall-refill for that side. Capture the side BEFORE the branch.
 			if (_income > 0) then {
 				// diag_log format ["Calling update tick (town supply income) for team %1, supply addition: %2",_x, _supply];
-				if (_currency_system == 0) then {[_x, round(_supply * (missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_INCOME_MULT", 1])), format ["Update tick (town supply income) for team %1.",_x], true] Call ChangeSideSupply};
+				if (_currency_system == 0) then {
+					_supplyStagnation = true;
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_SUPPLY_STAGNATION_EXEMPT", 0]) > 0 && {((isNull(_sideNow Call WFBE_CO_FNC_GetCommanderTeam) || {(missionNamespace getVariable ["WFBE_C_AI_COMMANDER_HYBRID_REFILL", 1]) > 0}) && _commander_enabled)}) then {_supplyStagnation = false};
+					[_x, round(_supply * (missionNamespace getVariable ["WFBE_C_ECONOMY_SUPPLY_INCOME_MULT", 1])), format ["Update tick (town supply income) for team %1.",_x], _supplyStagnation] Call ChangeSideSupply
+				};
 
 				_comTeam = (_x) Call WFBE_CO_FNC_GetCommanderTeam;
 				if (isNull _comTeam) then {_comTeam = grpNull};

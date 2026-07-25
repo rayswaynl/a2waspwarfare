@@ -1058,6 +1058,7 @@ if (worldName == "Zargabad") then {
 	//--- B67 (Ray 2026-06-21) HYBRID COMMANDER (item #5, FULL SEND): when a player votes out the AI commander,
 	//--- the AI keeps founding/refilling its teams (assist mode) while the player builds + can re-task all teams.
 	if (isNil "WFBE_C_AI_COMMANDER_HYBRID_REFILL") then {WFBE_C_AI_COMMANDER_HYBRID_REFILL = 1}; //--- 1=AI keeps refilling teams under a player commander; 0=legacy (AI idle under human).
+	if (isNil "WFBE_C_AICOM_SUPPLY_STAGNATION_EXEMPT") then {WFBE_C_AICOM_SUPPLY_STAGNATION_EXEMPT = 0}; //--- 1=AI-commanded sides keep earned town supply while no human is seated; 0=legacy no-players stagnation.
 	//--- punchy-AICOM (Ray 2026-06-17): NEW tunables.
 	//--- TIME-CURVE income boost: a gentle smoothstep multiplier on the commander's recurring
 	//--- funds income (updateresources.sqf _pcMult). FLAT (=FLOOR) until START, then S-curve ramp
