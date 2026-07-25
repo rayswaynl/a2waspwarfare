@@ -3165,5 +3165,12 @@ if (isNil "WFBE_C_HC_DELEGATE_STICKY") then {WFBE_C_HC_DELEGATE_STICKY = 0}; //-
 if (isNil "WFBE_C_HC_DELEGATE_STICKY_WINDOW") then {WFBE_C_HC_DELEGATE_STICKY_WINDOW = 300}; //--- s: how long a town stays pinned to its delegated HC before a fresh pick is allowed.
 if (isNil "WFBE_C_HC_DELEGATE_STICKY_MAXRATIO") then {WFBE_C_HC_DELEGATE_STICKY_MAXRATIO = 0.65}; //--- Load-balance guard ceiling: sticky HC's share of all HC-owned units (0..1) above which stickiness is broken and a fresh argmin pick is forced.
 
+//--- AICOM CARGO AIRDROP (Stage B): manned vehicles, extra paratroops, fighter escort - all dark by default; flag-off leaves Stage A byte-identical.
+if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_CREW_VEHICLES") then {WFBE_C_AICOM_CARGO_AIRDROP_CREW_VEHICLES = 0}; //--- 1 = mount-on-landing crew for each delivered para-vehicle (driver, plus gunner/commander only if the hull actually has that seat); 0 = Stage A empty-hull behaviour, unchanged.
+if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_PARATROOP_EXTRA") then {WFBE_C_AICOM_CARGO_AIRDROP_PARATROOP_EXTRA = 0}; //--- extra paratroopers beyond the tiered stick Stage A already drops (cycles the same tiered roster classes); clamped to the plane's remaining transportSoldier capacity, never aborts a call. 0 = Stage A roster unchanged.
+if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE = 0}; //--- 1 = attempt a single fighter-jet escort in the SAME group as the cargo transport pilot (no extra group cost); the trigger degrades to no-escort-this-call under tight shared air-cap headroom rather than skipping the whole drop.
+if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST = 35000}; //--- AICOM-treasury $ added on top of WFBE_C_AICOM_CARGO_AIRDROP_COST only on a call that actually spawns the escort this time; anchored near A10_US_EP1's registered 32,320 unit price plus a pilot.
+if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES = ["A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]}; //--- fixed-wing attack-jet candidates only (Plane-kind subset of AI_Commander_AirResp.sqf's allowlist); intersected against the side's own WFBE_<SIDE>AIRCRAFTUNITS roster at dispatch so the pick is always side-safe/reachable, never hardcoded to one faction.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

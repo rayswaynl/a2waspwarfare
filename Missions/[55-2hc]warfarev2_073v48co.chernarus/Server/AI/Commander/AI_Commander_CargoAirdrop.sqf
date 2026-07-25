@@ -9,7 +9,7 @@
     are deliberately not part of this worker.
 */
 
-private ["_side","_logik","_sideID","_now","_cool","_last","_humanCmd","_cmdTeam","_upgrades","_paraLvl","_factoryNames","_factoryTypes","_factoryIdx","_factoryClass","_structures","_hasAirFactory","_target","_attacked","_atkTown","_targets","_reliefDist","_sideText","_airMax","_airAlive","_airSideOK","_funds","_cost","_grp","_objName"];
+private ["_side","_logik","_sideID","_now","_cool","_last","_humanCmd","_cmdTeam","_upgrades","_paraLvl","_factoryNames","_factoryTypes","_factoryIdx","_factoryClass","_structures","_hasAirFactory","_target","_attacked","_atkTown","_targets","_reliefDist","_sideText","_airMax","_airAlive","_airSideOK","_funds","_cost","_grp","_objName","_escortEnable","_escortCost","_spawnEscort"];
 
 _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_ENABLE", 0]) <= 0) exitWith {};
@@ -96,11 +96,35 @@ if (_airMax > 0 && {_airAlive + 1 > _airMax}) exitWith {
 	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (_now / 60)) + "|CARGO_AIRDROP_SKIP|air-headroom|alive=" + str _airAlive + "|cap=" + str _airMax);
 };
 
+//--- Stage B: an escort is a SECOND air hull for this call. Reserve room for cargo+escort together;
+//--- if that doesn't fit but cargo ALONE still does (already proven true by the exitWith above), degrade
+//--- to no-escort-this-call rather than skip the whole drop - the escort is a "should probably have",
+//--- the delivery is the actual payload (design SS3.5).
+_escortEnable = missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE", 0];
+_spawnEscort = false;
+if (_escortEnable > 0) then {
+	if (_airMax <= 0 || {_airAlive + 2 <= _airMax}) then {
+		_spawnEscort = true;
+	} else {
+		["INFORMATION", Format ["AI_Commander_CargoAirdrop.sqf: [%1] cargo drop escort dropped this call at shared air cap (alive %2, cap %3, needs 2).", _sideText, _airAlive, _airMax]] Call WFBE_CO_FNC_AICOMLog;
+		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (_now / 60)) + "|CARGO_AIRDROP_ESCORT_SKIP|air-headroom|alive=" + str _airAlive + "|cap=" + str _airMax);
+	};
+};
+
 //--- Server-side AICOM treasury gate. No yield occurs between this check, the stamp, debit, and dispatch.
 _cost = missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_COST", 60000];
+_escortCost = missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST", 35000];
 _funds = (_side) Call GetAICommanderFunds;
 if (_funds < _cost) exitWith {
 	["INFORMATION", Format ["AI_Commander_CargoAirdrop.sqf: [%1] cargo drop skipped for funds (%2 < %3).", _sideText, _funds, _cost]] Call WFBE_CO_FNC_AICOMLog;
+};
+if (_spawnEscort) then {
+	if (_funds >= (_cost + _escortCost)) then {
+		_cost = _cost + _escortCost;
+	} else {
+		_spawnEscort = false;
+		["INFORMATION", Format ["AI_Commander_CargoAirdrop.sqf: [%1] cargo drop escort dropped this call for funds (%2 < %3).", _sideText, _funds, _cost + _escortCost]] Call WFBE_CO_FNC_AICOMLog;
+	};
 };
 if (isNil "KAT_CargoAirdrop") exitWith {};
 
@@ -115,7 +139,15 @@ if (isNull _grp) then {
 	["WARNING", Format ["AI_Commander_CargoAirdrop.sqf: [%1] cargo drop aborted because the infantry group could not be created; funds refunded.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
 } else {
 	_objName = _target getVariable ["name", "?"];
-	["INFORMATION", Format ["AI_Commander_CargoAirdrop.sqf: [%1] cargo drop called to [%2] (para level %3, cost %4, air %5/%6).", _sideText, _objName, _paraLvl, _cost, _airAlive + 1, _airMax]] Call WFBE_CO_FNC_AICOMLog;
-	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (_now / 60)) + "|CARGO_AIRDROP|" + _objName + "|para=" + str _paraLvl + "|cost=" + str _cost + "|air=" + str (_airAlive + 1) + "/" + str _airMax);
-	["CargoAirdrop", _side, getPos _target, _grp] Spawn KAT_CargoAirdrop;
+	//--- Flag-off (no escort this call) keeps the EXACT Stage A log text; the extended escort/air
+	//--- fields only appear on a call that actually spawns one, so a Stage-B-armed-but-escort-off
+	//--- run stays byte-identical in its RPT/AICOMLog output as well as its gameplay effect.
+	if (!_spawnEscort) then {
+		["INFORMATION", Format ["AI_Commander_CargoAirdrop.sqf: [%1] cargo drop called to [%2] (para level %3, cost %4, air %5/%6).", _sideText, _objName, _paraLvl, _cost, _airAlive + 1, _airMax]] Call WFBE_CO_FNC_AICOMLog;
+		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (_now / 60)) + "|CARGO_AIRDROP|" + _objName + "|para=" + str _paraLvl + "|cost=" + str _cost + "|air=" + str (_airAlive + 1) + "/" + str _airMax);
+	} else {
+		["INFORMATION", Format ["AI_Commander_CargoAirdrop.sqf: [%1] cargo drop called to [%2] (para level %3, cost %4, escort %5, air %6/%7).", _sideText, _objName, _paraLvl, _cost, _spawnEscort, _airAlive + 2, _airMax]] Call WFBE_CO_FNC_AICOMLog;
+		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (_now / 60)) + "|CARGO_AIRDROP|" + _objName + "|para=" + str _paraLvl + "|cost=" + str _cost + "|escort=" + str _spawnEscort + "|air=" + str (_airAlive + 2) + "/" + str _airMax);
+	};
+	["CargoAirdrop", _side, getPos _target, _grp, _spawnEscort] Spawn KAT_CargoAirdrop;
 };

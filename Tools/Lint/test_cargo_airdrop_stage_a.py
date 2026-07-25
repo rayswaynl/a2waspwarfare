@@ -18,15 +18,18 @@ def test_stage_a_constants_are_present_and_inert_by_default():
     assert 'WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX") then {WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX = 2}' in source
 
 
-def test_stage_a_worker_is_registered_and_triggered_without_stage_b_escort():
+def test_stage_a_worker_is_registered_and_triggered():
+    # NOTE: this test originally also asserted 'ESCORT not in trigger' as proof Stage A
+    # shipped with no escort code. Stage B (test_cargo_airdrop_stage_b.py) intentionally
+    # adds escort logic to AI_Commander_CargoAirdrop.sqf behind its own default-0 flag, so
+    # that assertion is now retired here and re-asserted (as "escort is flag-gated, not
+    # unconditional") in the Stage B test file instead.
     init_server = read("Server/Init/Init_Server.sqf")
     commander = read("Server/AI/Commander/AI_Commander.sqf")
-    trigger = read("Server/AI/Commander/AI_Commander_CargoAirdrop.sqf")
 
     assert "KAT_CargoAirdrop = Compile preprocessFile" in init_server
     assert "WFBE_SE_FNC_AI_Com_CargoAirdrop = Compile preprocessFileLineNumbers" in init_server
     assert "WFBE_SE_FNC_AI_Com_CargoAirdrop" in commander
-    assert "ESCORT" not in trigger
     assert "ESCORT" not in init_server
 
 

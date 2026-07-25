@@ -1,21 +1,37 @@
 /*
-    AICOM CARGO AIRDROP Stage A.
-    Parameter: _this = ["CargoAirdrop", side, destination, infantryGroup].
+    AICOM CARGO AIRDROP Stage A + Stage B.
+    Parameter: _this = ["CargoAirdrop", side, destination, infantryGroup, spawnEscort(optional, Stage B)].
 
     This is an AI-only composition: one existing side-configured paratroop
-    transport plane, its infantry stick, and up to two empty side-configured
-    para-vehicles. The vehicle attach/detach/chute block follows the shipping
-    Support_ParaVehicles.sqf mechanism. The vehicle releases are staggered by
-    three seconds, derived from Support_ParaAmmo.sqf's multi-payload cadence.
-    There is intentionally no escort jet in Stage A.
+    transport plane, its infantry stick (optionally padded with extra tiered
+    troops, Stage B), and up to two side-configured para-vehicles. The vehicle
+    attach/detach/chute block follows the shipping Support_ParaVehicles.sqf
+    mechanism. The vehicle releases are staggered by three seconds, derived
+    from Support_ParaAmmo.sqf's multi-payload cadence.
+
+    Stage B (all gated, default OFF - see Init_CommonConstants.sqf):
+      - WFBE_C_AICOM_CARGO_AIRDROP_CREW_VEHICLES: mount-on-landing crew for
+        each delivered vehicle once it has demonstrably settled (near-ground,
+        near-zero vertical speed) - never seats crew into a vehicle still
+        under canopy, so a lost settle-check just leaves that hull empty
+        (Stage A behaviour), instead of ever risking a mid-air crew loss.
+      - WFBE_C_AICOM_CARGO_AIRDROP_PARATROOP_EXTRA: extra troops cycling the
+        same tiered roster classes, clamped to the plane's remaining
+        transportSoldier capacity.
+      - spawnEscort (5th call arg, decided + costed atomically by
+        AI_Commander_CargoAirdrop.sqf before dispatch): one fixed-wing jet in
+        the SAME group as the transport pilot (no new group cost), autotarget
+        left on, sharing the group's waypoints/return leg/cleanup.
 */
 
-private ["_args","_bd","_cargoClass","_cargoVehicle","_cargoVehicles","_chuteClass","_currentLevel","_currentUpgrades","_destination","_dropReady","_i","_isAI","_offset","_origin","_paratroopers","_pilot","_pilotClass","_planeClass","_playerTeam","_ran","_ranDir","_ranPos","_releasedCargo","_returnStart","_side","_sideID","_starttime","_units","_unit","_vehicle","_vehicleCargo","_vehicleCount","_vehicleIndex","_vehicleCoord","_positionCoord","_builtInf","_transportGroup","_pendingCargo","_delay"];
+private ["_args","_bd","_cargoClass","_cargoVehicle","_cargoVehicles","_chuteClass","_currentLevel","_currentUpgrades","_destination","_dropReady","_i","_isAI","_offset","_origin","_paratroopers","_pilot","_pilotClass","_planeClass","_playerTeam","_ran","_ranDir","_ranPos","_releasedCargo","_returnStart","_side","_sideID","_starttime","_units","_unit","_vehicle","_vehicleCargo","_vehicleCount","_vehicleIndex","_vehicleCoord","_positionCoord","_builtInf","_transportGroup","_pendingCargo","_delay","_spawnEscort","_crewVehicles","_paratroopExtra","_extraCount","_escortJet","_escortPilot","_escortGunner","_escortClasses","_escortAirList","_escortCandidates","_escortClass","_escortOrigin"];
 
 _args = _this;
 _side = _args select 1;
 _destination = _args select 2;
 _playerTeam = _args select 3;
+_spawnEscort = if (count _args > 4) then {_args select 4} else {false};
+if (typeName _spawnEscort != "BOOL") then {_spawnEscort = false};
 _sideID = _side Call GetSideID;
 _isAI = !(isPlayer (leader _playerTeam));
 _starttime = time;
@@ -44,13 +60,32 @@ _vehicleCount = missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_VEHICL
 if (typeName _vehicleCount != "SCALAR") then {_vehicleCount = 2};
 if (_vehicleCount < 0) then {_vehicleCount = 0};
 if (_vehicleCount > 2) then {_vehicleCount = 2};
+_crewVehicles = (missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_CREW_VEHICLES", 0]) > 0;
+_paratroopExtra = missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_PARATROOP_EXTRA", 0];
+if (typeName _paratroopExtra != "SCALAR") then {_paratroopExtra = 0};
+if (_paratroopExtra < 0) then {_paratroopExtra = 0};
 
 if (isNil "_units" || {isNil "_planeClass"} || {isNil "_pilotClass"} || {(_vehicleCount > 0) && {isNil "_cargoClass"}} || {(_vehicleCount > 0) && {isNil "_chuteClass"}}) exitWith {
 	["ERROR", Format ["Support_CargoAirdrop.sqf: [%1] required cargo configuration is missing.", str _side]] Call WFBE_CO_FNC_LogContent;
 };
 if (typeName _units != "ARRAY") exitWith {};
 _vehicleCargo = getNumber(configFile >> "CfgVehicles" >> _planeClass >> "transportSoldier");
-if (_vehicleCargo <= 0 || {_vehicleCargo < count _units}) exitWith {
+if (_vehicleCargo <= 0) exitWith {
+	["ERROR", Format ["Support_CargoAirdrop.sqf: [%1] cargo plane [%2] cannot carry the infantry roster (%3/%4).", str _side, _planeClass, count _units, _vehicleCargo]] Call WFBE_CO_FNC_LogContent;
+};
+//--- Stage B: extra paratroopers beyond the tiered stick, cycling the SAME tiered classes (no new
+//--- config surface). Clamped to whatever headroom the plane's own transportSoldier capacity leaves -
+//--- this never aborts a call solely because the extra-troop setting is too generous.
+if (_paratroopExtra > 0 && {count _units > 0}) then {
+	_extraCount = _vehicleCargo - count _units;
+	if (_extraCount > _paratroopExtra) then {_extraCount = _paratroopExtra};
+	if (_extraCount > 0) then {
+		for "_i" from 1 to _extraCount do {
+			_units set [count _units, (_units select ((_i - 1) mod (count _units)))];
+		};
+	};
+};
+if (_vehicleCargo < count _units) exitWith {
 	["ERROR", Format ["Support_CargoAirdrop.sqf: [%1] cargo plane [%2] cannot carry the infantry roster (%3/%4).", str _side, _planeClass, count _units, _vehicleCargo]] Call WFBE_CO_FNC_LogContent;
 };
 
@@ -97,6 +132,54 @@ if (_builtInf <= 0) exitWith {
 	if (!isNull _pilot) then {deleteVehicle _pilot};
 	if (!isNull _vehicle) then {deleteVehicle _vehicle};
 	if (!isNull _transportGroup) then {deleteGroup _transportGroup};
+};
+
+//--- Stage B fighter escort: single fixed-wing jet, SAME group as the transport pilot (no new group
+//--- cost). Autotarget is left ON (the transport pilot two blocks above explicitly disables it; the
+//--- escort never gets that call) so it actually fights. Side-safe: only
+//--- WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES entries that are ALSO in this side's own registered
+//--- WFBE_<SIDE>AIRCRAFTUNITS roster are eligible (same idiom AI_Commander_AirResp.sqf uses), so the
+//--- pick is never hardcoded to one faction. _spawnEscort was already decided (and its cost already
+//--- debited) atomically by AI_Commander_CargoAirdrop.sqf before this worker was dispatched - this
+//--- block only ever ATTEMPTS the spawn; any failure here just means no escort this call, the cargo
+//--- delivery itself is unaffected.
+_escortJet = objNull;
+_escortPilot = objNull;
+_escortGunner = objNull;
+if (_spawnEscort) then {
+	_escortAirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", str _side], []];
+	_escortClasses = missionNamespace getVariable ["WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES", []];
+	_escortCandidates = [];
+	{ if (_x in _escortClasses) then {_escortCandidates set [count _escortCandidates, _x]} } forEach _escortAirList;
+	if (count _escortCandidates > 0) then {
+		_escortClass = _escortCandidates select floor (random count _escortCandidates);
+		//--- Offset spawn point so the escort never materialises exactly on top of the transport plane.
+		_escortOrigin = [(_origin select 0) + 100, (_origin select 1) + 100, _origin select 2];
+		_escortJet = createVehicle [_escortClass, _escortOrigin, [], (_ranDir select _ran), "FLY"];
+		if (!isNull _escortJet) then {
+			_escortPilot = [_pilotClass, _transportGroup, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
+			if (!isNull _escortPilot) then {
+				_escortPilot moveInDriver _escortJet;
+				_escortPilot setBehaviour "COMBAT";
+				_escortPilot setCombatMode "RED";
+				_escortPilot doMove _destination;
+				if ((missionNamespace getVariable ["WFBE_C_AIR_ATTACK_GUNNER", 0]) > 0 && {(_escortJet emptyPositions "gunner") > 0}) then {
+					_escortGunner = [_pilotClass, _transportGroup, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
+					if (!isNull _escortGunner) then {_escortGunner moveInGunner _escortJet};
+				};
+				_escortJet flyInHeight (300 + random(75));
+				Call Compile Format ["_escortJet addEventHandler ['Killed',{[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled}]", _sideID];
+				_escortJet setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';", _sideID];
+				processInitCommands;
+				["INFORMATION", Format ["Support_CargoAirdrop.sqf: [%1] cargo drop escort [%2] launched.", str _side, _escortClass]] Call WFBE_CO_FNC_LogContent;
+			} else {
+				deleteVehicle _escortJet;
+				_escortJet = objNull;
+			};
+		};
+	} else {
+		["INFORMATION", Format ["Support_CargoAirdrop.sqf: [%1] cargo drop escort requested but no configured jet class is registered on this side's aircraft roster.", str _side]] Call WFBE_CO_FNC_LogContent;
+	};
 };
 
 _cargoVehicles = [];
@@ -148,11 +231,14 @@ if (_dropReady) then {
 			if (!isNull _x && {alive _x}) then {
 				detach _x;
 				_releasedCargo set [count _releasedCargo, _x];
-				[_x, _side, _chuteClass] Spawn {
-					private ["_cargo","_chute","_chuteClass","_dropStart","_side"];
+				[_x, _side, _chuteClass, _crewVehicles, _cargoClass, _playerTeam] Spawn {
+					private ["_cargo","_chute","_chuteClass","_dropStart","_side","_crewVehicles","_cargoClass","_team","_settled","_settleTries","_crewClass","_driver","_gunner","_commander","_sideID2"];
 					_cargo = _this select 0;
 					_side = _this select 1;
 					_chuteClass = _this select 2;
+					_crewVehicles = _this select 3;
+					_cargoClass = _this select 4;
+					_team = _this select 5;
 					sleep 2;
 					if (isNull _cargo || {!alive _cargo}) exitWith {};
 					_chute = _chuteClass createVehicle [0,0,20];
@@ -164,6 +250,43 @@ if (_dropReady) then {
 					if (!isNull _cargo) then {detach _cargo};
 					sleep 10;
 					if (!isNull _chute) then {deleteVehicle _chute};
+					//--- Stage B mount-on-landing: never crew a vehicle that has not demonstrably settled. Poll
+					//--- (bounded) until it is near-ground with near-zero vertical speed; if it never settles,
+					//--- leave it EMPTY (Stage A behaviour) rather than risk seating crew mid-air/mid-descent.
+					if (_crewVehicles && {!isNull _cargo} && {alive _cargo}) then {
+						_settled = false;
+						_settleTries = 0;
+						while {!_settled && {_settleTries < 15} && {!isNull _cargo} && {alive _cargo}} do {
+							if (((getPosATL _cargo) select 2) < 2 && {abs ((velocity _cargo) select 2) < 0.5}) then {
+								_settled = true;
+							} else {
+								sleep 1;
+								_settleTries = _settleTries + 1;
+							};
+						};
+						if (_settled && {!isNull _cargo} && {alive _cargo} && {!isNull _team}) then {
+							_sideID2 = _side Call GetSideID;
+							_crewClass = missionNamespace getVariable Format ["WFBE_%1SOLDIER", str _side];
+							if (_cargo isKindOf "Tank") then {_crewClass = missionNamespace getVariable Format ["WFBE_%1CREW", str _side]};
+							if (!isNil "_crewClass") then {
+								if ((_cargo emptyPositions "driver") > 0) then {
+									_driver = [_crewClass, _team, [100,12000,0], _sideID2] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _driver) then {_driver moveInDriver _cargo};
+								};
+								if ((_cargo emptyPositions "gunner") > 0) then {
+									_gunner = [_crewClass, _team, [100,12000,0], _sideID2] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _gunner) then {_gunner moveInGunner _cargo};
+								};
+								if ((_cargo emptyPositions "commander") > 0) then {
+									_commander = [_crewClass, _team, [100,12000,0], _sideID2] Call WFBE_CO_FNC_CreateUnit;
+									if (!isNull _commander) then {_commander moveInCommander _cargo};
+								};
+								["INFORMATION", Format ["Support_CargoAirdrop.sqf: [%1] cargo drop mounted crew into landed vehicle [%2].", str _side, typeOf _cargo]] Call WFBE_CO_FNC_LogContent;
+							};
+						} else {
+							["INFORMATION", Format ["Support_CargoAirdrop.sqf: [%1] cargo drop vehicle [%2] never settled; delivered empty (Stage A behaviour).", str _side, typeOf _cargo]] Call WFBE_CO_FNC_LogContent;
+						};
+					};
 				};
 				sleep 3;
 			};
@@ -196,4 +319,12 @@ if (!isNull _vehicle) then {
 	deleteVehicle _vehicle;
 };
 if (!isNull _pilot) then {deleteVehicle _pilot};
+//--- Stage B escort cleanup: members deleted BEFORE the shared group (deleteGroup silently no-ops
+//--- on a non-empty group - the same trap already fixed in Support_ParaVehicles.sqf).
+if (!isNull _escortJet) then {
+	{deleteVehicle _x} forEach crew _escortJet;
+	deleteVehicle _escortJet;
+};
+if (!isNull _escortPilot) then {deleteVehicle _escortPilot};
+if (!isNull _escortGunner) then {deleteVehicle _escortGunner};
 if (!isNull _transportGroup) then {deleteGroup _transportGroup};
