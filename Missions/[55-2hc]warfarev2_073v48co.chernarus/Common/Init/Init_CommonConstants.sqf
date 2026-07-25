@@ -2918,8 +2918,8 @@ if (isNil "WFBE_C_CMD_SUPPORT_JET")            then {WFBE_C_CMD_SUPPORT_JET = 0}
 //--- their own `local` checks (server_groupsGC.sqf L224/L276/L391). Every TrashObject caller runs server-side,
 //--- so any HC-local body or hull it is handed is never actually removed and persists for the match. 1 = gate
 //--- on locality and route non-local deletes to the owning machine over the existing HandleSpecial channel;
-//--- 0 = INERT, the unconditional legacy deleteVehicle (byte-identical current behaviour). Ships default 0.
-if (isNil "WFBE_C_TRASH_REMOTE_DELETE") then {WFBE_C_TRASH_REMOTE_DELETE = 0};
+//--- 0 retains the unconditional legacy deleteVehicle for emergency rollback. Ships default 1.
+if (isNil "WFBE_C_TRASH_REMOTE_DELETE") then {WFBE_C_TRASH_REMOTE_DELETE = 1};
 
 //--- HS-TRACE (picklist 4 phase 1, 2026-07-22): dispatch-entry breadcrumb for the RequestSpecial
 //--- command bus. 1 = diag_log request type + argc at each dispatch into Server_HandleSpecial
