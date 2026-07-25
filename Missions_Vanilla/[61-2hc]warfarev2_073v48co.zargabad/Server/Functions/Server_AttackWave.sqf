@@ -5,6 +5,13 @@
     _supply = _this select 1 select 0;
     _side = _this select 1 select 1;
 
+    //--- Reserve the side before spawning: a second client activation can otherwise arrive before
+    //--- the spawned worker marks the wave active, creating a second debit/timer that ends early.
+    if (_side == west && {ATTACK_WAVE_ACTIVE_WEST}) exitWith {};
+    if (_side == east && {ATTACK_WAVE_ACTIVE_EAST}) exitWith {};
+    if (_side == west) then {ATTACK_WAVE_ACTIVE_WEST = true};
+    if (_side == east) then {ATTACK_WAVE_ACTIVE_EAST = true};
+
     [_supply, _side] spawn {
 
         _supply = _this select 0;
