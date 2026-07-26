@@ -22,7 +22,7 @@ private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_
               "_w11FreeFlag",
               "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
               "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger",
-              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending","_constructionExpired","_constructionSince","_constructionTTL"]; //--- B66
+              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending","_constructionExpired","_constructionSince","_constructionTTL","_grp","_censusOn","_censusLast","_censusRows","_censusKind","_censusLdr","_censusLdrTxt"]; //--- B66
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -50,12 +50,50 @@ _editorTeams  = 0;
 _constructionPending = 0;
 _constructionExpired = [];
 _constructionTTL = 300; //--- A failed no-HC reservation gets one production window, then is retired for a clean retry.
+//--- TEAMCENSUS (2026-07-26 ZG soak triage): the "editor N" figure in the founding logs is LOG-ONLY - the
+//--- founding gate further down reads (_foundedTeams + _pending + _constructionPending) and never reads
+//--- _editorTeams - so an editor count that looks wrong cannot by itself starve founding. What DOES matter
+//--- is a per-side registry that DIVERGES (ZG 4-HC soak 2026-07-26: WEST editor 12 vs EAST editor 0, while
+//--- that terrain's mission.sqm registers 13 WEST and 15 EAST one-man player-slot groups into wfbe_teams):
+//--- the two commanders then reason over non-comparable rosters. Dump every wfbe_teams entry's class,
+//--- unit/live counts and leader validity so the next soak NAMES the divergence instead of inferring it.
+//--- Rides the existing WFBE_C_AICOM_C3_TELEMETRY opt-in plus a 300s per-side debounce (the same budget the
+//--- FOUND_SKIP emitter uses), so it costs one boolean read per founding pass when nothing is due.
+_censusOn = (missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0;
+if (_censusOn) then {
+	_censusLast = _logik getVariable ["wfbe_aicom_teamcensus_t", -9999];
+	if ((time - _censusLast) < 300) then {_censusOn = false};
+};
+_censusRows = "";
+//--- _x-CAPTURE FIX (2026-07-26): the inner `count (units _x)` below REBINDS _x to the last enumerated UNIT
+//--- for the remainder of this iteration (documented A2-OA trap). Every later _x read in the construction-
+//--- reservation branch therefore addressed a UNIT, not the GROUP: wfbe_aicom_hc / wfbe_persistent read back
+//--- unset (default false), the branch never fired, and a wiped server-local reservation was neither counted
+//--- as pending nor ever retired - it lingered in wfbe_teams for the rest of the match. Capture the group in
+//--- _grp up front and address _grp everywhere; _x is left to the inner counts. The editor branch was
+//--- accidentally immune (leader <unit> resolves to the same group leader), so its count is unchanged.
 {
 	if (!isNull _x) then {
+		_grp = _x;
 		_real = false;
-		if ([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {_real = true};
-		if (!_real && {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {_real = true};
-		_liveCount = {alive _x && {side _x == _side} && {!isPlayer _x}} count (units _x);
+		if ([_grp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {_real = true};
+		if (!_real && {[_grp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {_real = true};
+		_liveCount = {alive _x && {side _x == _side} && {!isPlayer _x}} count (units _grp);
+		if (_censusOn) then {
+			_censusKind = "editor";
+			if (_real) then {
+				_censusKind = "srv";
+				if ([_grp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {_censusKind = "hc"};
+			};
+			_censusLdr = leader _grp;
+			_censusLdrTxt = "ldrNull";
+			if (!isNull _censusLdr) then {
+				_censusLdrTxt = str (side _censusLdr);
+				if (!alive _censusLdr) then {_censusLdrTxt = _censusLdrTxt + "+dead"};
+				if (isPlayer _censusLdr) then {_censusLdrTxt = _censusLdrTxt + "+human"};
+			};
+			_censusRows = _censusRows + ";" + _censusKind + "," + str (count (units _grp)) + "," + str _liveCount + "," + _censusLdrTxt;
+		};
 		if (_real) then {
 			//--- C3 husk accounting: a deleted/wiped founded group is no longer a
 			//--- live slot. Keep the HC registry untouched; only the founding census
@@ -65,19 +103,19 @@ _constructionTTL = 300; //--- A failed no-HC reservation gets one production win
 			} else {
 				//--- A server-local construction group is a reservation until Produce
 				//--- supplies its first live body; do not found another empty group.
-				if (!([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) && {[_x, "wfbe_persistent", false] Call WFBE_CO_FNC_GroupGetBool}) then {
-					_constructionSince = _x getVariable "wfbe_aicom_construction_since";
-					if (isNil "_constructionSince") then {_constructionSince = time; _x setVariable ["wfbe_aicom_construction_since", _constructionSince]};
+				if (!([_grp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) && {[_grp, "wfbe_persistent", false] Call WFBE_CO_FNC_GroupGetBool}) then {
+					_constructionSince = _grp getVariable "wfbe_aicom_construction_since";
+					if (isNil "_constructionSince") then {_constructionSince = time; _grp setVariable ["wfbe_aicom_construction_since", _constructionSince]};
 					if ((time - _constructionSince) <= _constructionTTL) then {
 						_constructionPending = _constructionPending + 1;
 					} else {
-						_constructionExpired set [count _constructionExpired, _x];
+						_constructionExpired set [count _constructionExpired, _grp];
 					};
 				};
 			};
 		} else {
 			//--- Editor-slot branch: alive AI leader with live units present.
-			if (_liveCount > 0 && {!isPlayer (leader _x)} && {alive (leader _x)}) then {
+			if (_liveCount > 0 && {!isPlayer (leader _grp)} && {alive (leader _grp)}) then {
 				_editorTeams = _editorTeams + 1;
 			};
 		};
@@ -90,6 +128,10 @@ if (count _constructionExpired > 0) then {
 	} forEach _constructionExpired;
 	_teams = _teams - _constructionExpired;
 	_logik setVariable ["wfbe_teams", _teams, true];
+};
+if (_censusOn) then {
+	_logik setVariable ["wfbe_aicom_teamcensus_t", time];
+	diag_log ("TEAMCENSUS|" + _sideText + "|entries=" + str (count _teams) + "|founded=" + str _foundedTeams + "|editor=" + str _editorTeams + "|construction=" + str _constructionPending + "|rows=" + _censusRows);
 };
 _aiTeams = _foundedTeams + _editorTeams; //--- legacy alias; used in server-local log below.
 _pending = _logik getVariable ["wfbe_aicom_pending", 0];
