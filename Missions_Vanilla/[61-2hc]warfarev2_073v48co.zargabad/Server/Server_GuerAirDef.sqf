@@ -53,7 +53,7 @@ if !(isServer) exitWith {};
 //--- run regardless of whether GUER is the playable side. Keep only isServer + AIRDEF_ENABLE.
 if ((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1]) < 1) exitWith {};
 
-private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_groundQrfTTL","_groundQrfMax","_groundQrfs","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares"];
+private ["_interval","_maxAir","_atChance","_mi24Chance","_aaChance","_classKa","_classMi24","_lifetime","_quiet","_largeSV","_flyHeight","_pilotClass","_crewClass","_defenders","_dropChance","_dropCount","_dropMax","_drops","_groundQrfTTL","_groundQrfMax","_groundQrfs","_swarmOn","_swarmChance","_swarmChance3","_flareOn","_flareMin","_flareMax","_flareLauncher","_flareMag","_applyKaFlares","_sliceCut","_sliceYield"];
 
 _interval   = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_INTERVAL", 120];
 _maxAir     = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_MAX", 4];
@@ -183,6 +183,37 @@ diag_log format ["GUERAIRDEF|START|interval=%1|cap=%2|atChance=%3|mi24Chance=%4|
 WFBE_ACTIVE_GUER_AIR = [];
 publicVariable "WFBE_ACTIVE_GUER_AIR";
 
+//--- perf-slice (2026-07-26): slice accounting for the maintain sweep. guer_airdef_cycle used to be
+//--- one wall-clock block per sweep; the sweep now yields between work items (per pruned registry
+//--- entry, after the enemy-air cache build, and per town - the towns yield replaces the inline
+//--- WFBE_C_AIRDEF_CHUNKED block, same switch + same WFBE_C_AIRDEF_CHUNK_SLEEP pacing) and the cycle
+//--- record reports MEASURED active ms: every suspension is excluded, where the old number subtracted
+//--- only the INTENDED chunk sleep, not actual suspension time. _sliceCut closes the current active
+//--- segment into the per-pass totals; _sliceYield additionally emits one guer_airdef_slice audit
+//--- sample and (CHUNKED>0 only) sleeps. With WFBE_C_AIRDEF_CHUNKED at 0 nothing sleeps (pre-chunking
+//--- scheduling) and slice records still accrue. Accounting locals are pass-scope and resolve
+//--- dynamically at Call time.
+_sliceCut = {
+	_sliceDt = diag_tickTime - _sliceT0;
+	_perfActive = _perfActive + _sliceDt;
+	if (_sliceDt > _perfSliceMax) then { _perfSliceMax = _sliceDt; };
+	_sliceT0 = diag_tickTime;
+};
+_sliceYield = {
+	Call _sliceCut;
+	_perfSlices = _perfSlices + 1;
+	if (!isNil "PerformanceAudit_Record") then {
+		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
+			["guer_airdef_slice", _sliceDt, "", "SERVER"] Call PerformanceAudit_Record;
+		};
+	};
+	if ((missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNKED", 1]) > 0) then {
+		_chunkSleepTotal = _chunkSleepTotal + (missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNK_SLEEP", 0.4]);
+		sleep (missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNK_SLEEP", 0.4]);
+	};
+	_sliceT0 = diag_tickTime;
+};
+
 while {!WFBE_GameOver} do {
 	//--- wave0721e live-burn guard (2026-07-21): this SERVER-only loop hit 'Undefined variable
 	//--- wfbe_co_fnc_logvehdelete' MID-MATCH even though Init_Common.sqf compiles the probe
@@ -199,11 +230,17 @@ while {!WFBE_GameOver} do {
 	};
 	sleep _interval;
 
-	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore","_prunedGroups"];
+	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore","_prunedGroups","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal"];
 	_perfStart = diag_tickTime;
 	_perfAirBefore = count _defenders;
 	_perfDropsBefore = count _drops;
 	_now = time;
+	_perfActive = 0;
+	_perfSliceMax = 0;
+	_perfSlices = 0;
+	_sliceDt = 0;
+	_chunkSleepTotal = 0;
+	_sliceT0 = _perfStart;
 
 	//=== (1) PRUNE + (2) SELF-CLEAN ==========================================================
 	//--- Rebuild the registry, dropping anything that is dead/destroyed or should be despawned.
@@ -368,6 +405,7 @@ while {!WFBE_GameOver} do {
 			_kept         = _kept + [[_eTown, _eVeh, _eGrp, _ePilot, _eGunner, _eSpawn, _eLastEnemy]];
 			_townsWithAir = _townsWithAir + [_eTown];
 		};
+		Call _sliceYield;
 	} forEach _defenders;
 	_defenders  = _kept;
 	_aliveCount = count _defenders;
@@ -436,6 +474,7 @@ while {!WFBE_GameOver} do {
 		} else {
 			_keptDrops = _keptDrops + [[_dTown, _dGrp, _dSpawn, _dLastEnemy]];
 		};
+		Call _sliceYield;
 	} forEach _drops;
 	_drops     = _keptDrops;
 	_dropAlive = count _drops;
@@ -474,10 +513,10 @@ while {!WFBE_GameOver} do {
 		_groundQrfs = _keptGroundQrfs;
 	};
 
-	private ["_enemyAirVehicles", "_chunkSleepTotal"];
+	private ["_enemyAirVehicles"];
 	_enemyAirVehicles = [];
 	{if (alive _x && {_x isKindOf "Air"} && {((side _x) == west) || {(side _x) == east}}) then {_enemyAirVehicles set [count _enemyAirVehicles, _x]}} forEach vehicles;
-	_chunkSleepTotal = 0;
+	Call _sliceYield;
 
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
 	{
@@ -614,7 +653,7 @@ while {!WFBE_GameOver} do {
 						if (!isNull _gunner) then { _gunner moveInGunner _veh; };
 						_airCrewReady = (!isNull _pilot) && {!isNull _gunner} && {((driver _veh) == _pilot)} && {((gunner _veh) == _gunner)};
 						if (!_airCrewReady) then {
-							sleep 1;
+							Call _sliceCut; sleep 1; _sliceT0 = diag_tickTime;
 							if ((driver _veh) != _pilot) then { _pilot moveInDriver _veh; };
 							if (!isNull _gunner && {(gunner _veh) != _gunner}) then { _gunner moveInGunner _veh; };
 							_airCrewReady = (!isNull _pilot) && {!isNull _gunner} && {((driver _veh) == _pilot)} && {((gunner _veh) == _gunner)};
@@ -726,7 +765,7 @@ while {!WFBE_GameOver} do {
 										if (!isNull _eGunner) then { _eGunner moveInGunner _eVeh2; };
 										_swarmCrewReady = (!isNull _ePilot) && {!isNull _eGunner} && {((driver _eVeh2) == _ePilot)} && {((gunner _eVeh2) == _eGunner)};
 										if (!_swarmCrewReady) then {
-											sleep 1;
+											Call _sliceCut; sleep 1; _sliceT0 = diag_tickTime;
 											if ((driver _eVeh2) != _ePilot) then { _ePilot moveInDriver _eVeh2; };
 											if (!isNull _eGunner && {(gunner _eVeh2) != _eGunner}) then { _eGunner moveInGunner _eVeh2; };
 											_swarmCrewReady = (!isNull _ePilot) && {!isNull _eGunner} && {((driver _eVeh2) == _ePilot)} && {((gunner _eVeh2) == _eGunner)};
@@ -916,10 +955,7 @@ while {!WFBE_GameOver} do {
 				diag_log format ["GUERAIRDEF|SPAWNFAIL|town=%1|class=%2|reason=createVehicle_null", (_town getVariable ["name","?"]), _class];
 			};
 		};
-		if ((missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNKED", 1]) > 0) then {
-			_chunkSleepTotal = _chunkSleepTotal + (missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNK_SLEEP", 0.4]);
-			sleep (missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNK_SLEEP", 0.4]);
-		};
+		Call _sliceYield;
 	} forEach towns;
 
 	//--- B67 (Ray 2026-06-21): rebuild + broadcast the GUER-air marker feed from the live registry (alive hulls
@@ -932,7 +968,8 @@ while {!WFBE_GameOver} do {
 	{ if (!isNull (_x select 1) && {alive (_x select 1)}) then { _airList = _airList + [[(_x select 1), WFBE_C_GUER_ID]] } } forEach _defenders;
 	WFBE_ACTIVE_GUER_AIR = _airList;
 	publicVariable "WFBE_ACTIVE_GUER_AIR";
+	Call _sliceCut;
 	if !(isNil "PerformanceAudit_Record") then {
-		["guer_airdef_cycle", (diag_tickTime - _perfStart) - _chunkSleepTotal, Format["towns:%1;airBefore:%2;airAfter:%3;dropsBefore:%4;dropsAfter:%5;markers:%6;cap:%7;dropCap:%8;chunkSleep:%9", count towns, _perfAirBefore, count _defenders, _perfDropsBefore, count _drops, count _airList, _maxAir, _dropMax, _chunkSleepTotal], "SERVER"] Call PerformanceAudit_Record;
+		["guer_airdef_cycle", _perfActive, Format["towns:%1;airBefore:%2;airAfter:%3;dropsBefore:%4;dropsAfter:%5;markers:%6;cap:%7;dropCap:%8;chunkSleep:%9;slices:%10;sliceMaxMs:%11;wallMs:%12", count towns, _perfAirBefore, count _defenders, _perfDropsBefore, count _drops, count _airList, _maxAir, _dropMax, _chunkSleepTotal, _perfSlices, (_perfSliceMax * 1000) call PerformanceAudit_Round2, ((diag_tickTime - _perfStart) * 1000) call PerformanceAudit_Round2], "SERVER"] Call PerformanceAudit_Record;
 	};
 };
