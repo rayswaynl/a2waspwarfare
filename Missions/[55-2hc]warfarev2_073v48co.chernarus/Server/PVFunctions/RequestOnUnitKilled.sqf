@@ -75,9 +75,9 @@ _killer_vehicle = vehicle _killer;
 _killer_uid = getPlayerUID (leader _killer_group);
 //--- J1 funds authority: HC-seated bodies are isPlayer on WEST/EAST but never run the client wallet
 //--- handlers (Client_HandlePVF.sqf:37 hard-exits non-allowlisted PVFs on headless clients) - the
-//--- server-side credits below must skip HC-led recipients for exact parity (union of both in-tree HC
-//--- name lists: StatsFlush.sqf:23 + Init_Server.sqf:1457).
-_hcNames = ["HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC"];
+//--- server-side credits below must skip HC-led recipients for exact parity. Shared list from
+//--- Init_CommonConstants.sqf (WFBE_C_HC_NAMES, derived from WFBE_C_HC_SLOTS).
+_hcNames = WFBE_C_HC_NAMES;
 
 
 if (_killer_side == sideEnemy) then { //--- Make sure the killer is not renegade, if so, get the side from the config.

@@ -3181,6 +3181,24 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE") then {WFBE_C_AICOM_CARGO_A
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST = 35000}; //--- AICOM-treasury $ added on top of WFBE_C_AICOM_CARGO_AIRDROP_COST only on a call that actually spawns the escort this time; anchored near A10_US_EP1's registered 32,320 unit price plus a pilot.
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES = ["A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]}; //--- fixed-wing attack-jet candidates only (Plane-kind subset of AI_Commander_AirResp.sqf's allowlist); intersected against the side's own WFBE_<SIDE>AIRCRAFTUNITS roster at dispatch so the pick is always side-safe/reachable, never hardcoded to one faction.
 
+//--- HEADLESS-CLIENT NAME REGISTRY (fix 2026-07-26). The 4-HC rollout (#1456) added a fourth HC, but every
+//--- "is this a real human player" test carried its OWN hardcoded HC name list and they drifted - the
+//--- proximity helper still listed only HC-AI-Control-1..3, so HC4's body counted as a player and vetoed
+//--- any spawn near wherever HC4 happened to be standing. Note the group registry WFBE_HEADLESSCLIENTS_ID
+//--- cannot cover this: it is only ever written server-side (Init_Server.sqf / Server_HandleSpecial.sqf,
+//--- no public third arg - NSSETVAR3 is banned), so on a HEADLESS CLIENT it always reads back [] and the
+//--- name list is the sole working exclusion there. Derive the list from a slot count so adding HC5 is one
+//--- number rather than a repo-wide grep. Runs before Init_Common.sqf (initJIPCompatible.sqf:140 Call vs
+//--- :329 ExecVM), so WFBE_C_HC_NAMES is always defined before any consumer compiles.
+if (isNil "WFBE_C_HC_SLOTS") then {WFBE_C_HC_SLOTS = 4}; //--- HC-AI-Control-<n> slots the mission ships (PR #1456 added 3 and 4). Bump this alone for HC5.
+if (isNil "WFBE_C_HC_NAMES") then {
+	private ["_hcNameList"];
+	_hcNameList = ["HC"]; //--- legacy single-HC profile name, still present in older box configs.
+	if ((typeName WFBE_C_HC_SLOTS) != "SCALAR") then {WFBE_C_HC_SLOTS = 4}; //--- a mistyped override must not throw inside the for below.
+	for "_hcSlot" from 1 to WFBE_C_HC_SLOTS do {_hcNameList set [count _hcNameList, Format ["HC-AI-Control-%1", _hcSlot]]};
+	WFBE_C_HC_NAMES = _hcNameList;
+};
+
 //--- HC LOBBY LOCK (feat/hc-lobby-lock, owner request 2026-07-26): hold joining PLAYERS out of play
 //--- until every expected headless client has actually seated, then open automatically. Observed on the
 //--- 4-HC soak box: on a cold start the HCs race the mission load, HC1 lands in a BLUFOR player slot and
@@ -3195,7 +3213,7 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_
 //--- (Init_Server.sqf) and the client-side hold is never entered (Init_Client.sqf).
 if (isNil "WFBE_C_HC_LOBBY_LOCK") then {WFBE_C_HC_LOBBY_LOCK = 0}; //--- Master gate: 0=off (byte-identical), 1=on.
 if (isNil "WFBE_C_HC_LOBBY_TIMEOUT") then {WFBE_C_HC_LOBBY_TIMEOUT = 90}; //--- s of mission time: hard fail-open. A permanently missing HC opens the server anyway (logged loudly) instead of locking it out forever. Also the window in which the client-side gate is armed at all, so an ordinary mid-match JIP joiner never sees it. Keep it under the ~120s deadspawn-transit invulnerability budget in Init_Client.sqf.
-if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = 4}; //--- Expected seated-HC count. 4 (owner default 2026-07-26): the box runs 4 headless clients and all three terrains carry exactly 4 forceHeadlessClient CIV slots today (CH/TK/ZG mission.sqm, post-#1456). 0 disables the lock. -1 opts in to RUNTIME DERIVATION from the mission's own playable CIV slot count instead, which self-adjusts if a terrain's slot layout ever diverges from this constant.
+if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = if (!isNil "WFBE_C_HC_SLOTS" && {(typeName WFBE_C_HC_SLOTS) == "SCALAR"}) then {WFBE_C_HC_SLOTS} else {4}}; //--- Expected seated-HC count. Defaults to WFBE_C_HC_SLOTS (4 today, defined just above by the HC-name registry) so the repo keeps ONE number for how many headless clients this mission ships - bumping WFBE_C_HC_SLOTS to 5 carries here automatically, which is exactly the hardcoded-list drift that registry was added to end. Falls back to a literal 4 only if that constant is absent or mistyped. 0 disables the lock. -1 opts in to RUNTIME DERIVATION from the mission's own playable CIV slot count instead.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

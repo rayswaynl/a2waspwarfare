@@ -914,9 +914,17 @@ while {!gameOver} do {
 												private ["_heli","_grp"];
 												_heli = _this select 0; _grp = _this select 1;
 												sleep 90;
-												{deleteVehicle _x} forEach (crew _heli);
-												if (!isNull _heli) then {deleteVehicle _heli};
-												if (!isNull _grp) then {deleteGroup _grp};
+												//--- DESPAWN vs DESTROYED (same fix as AI_Commander_AirResp.sqf's watchdog, 2026-07-26): this fixed
+												//--- window deleted the airframe unconditionally, so a gunship shot down at t+10s still had its WRECK
+												//--- removed when the 90s timer expired. Despawn only a still-live airframe; a destroyed one is left to
+												//--- the generic pipeline (killed EH -> RequestOnUnitKilled.sqf -> wfbe_trashed + TrashObject; hull is
+												//--- SERVER-LOCAL because W13 spawns directly here and is never delegate-aicom-team'd). deleteGroup is
+												//--- skipped on that branch too - the dead crew are still in the group; TrashObject reaps it once empty.
+												if (alive _heli) then {
+													{deleteVehicle _x} forEach (crew _heli);
+													if (!isNull _heli) then {deleteVehicle _heli};
+													if (!isNull _grp) then {deleteGroup _grp};
+												};
 											};
 											_detail = Format ["class=%1 target=%2 cluster=%3", _w13Class, _w13TargetTown getVariable ["name","?"], _w13MaxCluster];
 										} else {
@@ -1145,9 +1153,14 @@ while {!gameOver} do {
 											private ["_pl","_grp"];
 											_pl = _this select 0; _grp = _this select 1;
 											sleep 180;
-											{deleteVehicle _x} forEach (crew _pl);
-											if (!isNull _pl) then {deleteVehicle _pl};
-											if (!isNull _grp) then {deleteGroup _grp};
+											//--- DESPAWN vs DESTROYED (same fix as the W13 block above): the 180s window deleted the plane
+											//--- unconditionally, reaping the WRECK of a top-gun plane that was shot down inside the window.
+											//--- Despawn only a still-live airframe; a destroyed one is left to the generic pipeline.
+											if (alive _pl) then {
+												{deleteVehicle _x} forEach (crew _pl);
+												if (!isNull _pl) then {deleteVehicle _pl};
+												if (!isNull _grp) then {deleteGroup _grp};
+											};
 										};
 										_detail = Format ["class=%1 loiter=%2 window=180s", _w22PlaneClass, if (!isNull _w22Target) then {_w22Target getVariable ["name","?"]} else {"HQ"}];
 									} else {
