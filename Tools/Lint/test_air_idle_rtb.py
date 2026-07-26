@@ -34,7 +34,9 @@ def test_idle_rtb_reuses_the_existing_hc_air_watcher_and_safety_guards():
     assert "isPlayer" in block
     assert "(vehicle _x) == _rh" in block
     assert 'if (alive _x && {behaviour _x == "COMBAT"}) then {_rEngaged = true}' in block
-    assert 'private ["_h","_tm","_sd","_recheckBusy"' in block
+    assert 'private ["_h","_tm","_sd","_recheckCrew","_recheckBusy"' in block
+    assert "_recheckCrew = [];" in block
+    assert "_recheckCrew = crew _h;" in block
     assert "_recheckEnRoute" in block
     assert "_recheckAirborne" in block
     assert "local _rh" in block
