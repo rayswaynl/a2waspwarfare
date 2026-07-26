@@ -810,7 +810,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 			//--- isPlayer false. A2-OA-safe: side compare, name, string-list in, lazy and-braces.
 			_anyNear = false;
 			{
-				if (isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in ["HC-AI-Control-1", "HC-AI-Control-2", "HC"])} && {(_x distance [_pos select 0, _pos select 1, 0]) < 1800}) then {
+				if (isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance [_pos select 0, _pos select 1, 0]) < 1800}) then {
 					_anyNear = true;
 				};
 			} forEach playableUnits;

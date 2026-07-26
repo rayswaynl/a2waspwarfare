@@ -20,12 +20,13 @@ while {true} do {
 		// cmdcon41 (P0-5): HC-FILTER AT SOURCE. A headless client is an isPlayer unit but is NOT a human
 		// participant - crediting it here leaks a phantom "HC" entry into WASPSTAT -> leaderboard/report.
 		// Skip any unit whose name is a known HC name (A2-OA-safe exact `in` check - no A3 string find/substring).
-		if ((isPlayer _x) && {!((name _x) in ["HC-AI-Control-1", "HC-AI-Control-2", "HC"])}) then {
+		if ((isPlayer _x) && {!((name _x) in WFBE_C_HC_NAMES)}) then {
 			private ["_uid","_sideNum"];
 			_uid = getPlayerUID _x;
-			//--- Stamp check in addition to the name list above: the tree carries three disagreeing HC
-			//--- name arrays and this one does not know "HC-AI-Control-3". WFBE_HEADLESS_<uid> is set by
-			//--- connected-hc registration and does not depend on the HC's profile name.
+			//--- Stamp check in addition to the name list above. The name list is now the single shared
+			//--- WFBE_C_HC_NAMES (Init_CommonConstants.sqf) rather than one of several drifting literals,
+			//--- but this stays as defence in depth: WFBE_HEADLESS_<uid> is set by connected-hc
+			//--- registration and does not depend on the HC's profile name at all.
 			if ((_uid != "") && {!(_uid call WFBE_SE_FNC_IsHeadlessUid)}) then {
 				[_uid, WFBE_STAT_PLAYTIME, WFBE_C_STATS_FLUSH_INTERVAL] call WFBE_SE_FNC_RecordStat;
 				_sideNum = switch (side _x) do { case west: {1}; case east: {2}; case resistance: {3}; default {0} };
