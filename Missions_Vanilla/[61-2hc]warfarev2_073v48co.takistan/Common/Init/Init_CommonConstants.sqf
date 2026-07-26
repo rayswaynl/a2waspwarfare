@@ -368,7 +368,7 @@ if (worldName == "Zargabad") then {
 	WFBE_C_AICOM_TEAMS_PC_MID  = 7;            //--- Build83 (Ray 2026-07-01): ~20% commander-team trim, 8->7. 3-5 players.
 	WFBE_C_AICOM_TEAMS_PC_HIGH = 4;            //--- Build83: ~20% trim, 5->4.
 	WFBE_C_AICOM_TEAMS_PC_FULL = 3;            //--- rollback the whole curve: set all four to 2.
-	WFBE_C_AICOM_TEAMS_HARD_CAP = 10;          //--- Ray 2026-06-29: 8 -> 10 max teams/side (Ray: low-pop fielding; reverts the 2026-06-28 10->8). [prior B752 2026-06-25: back to 8 max teams (13 over-throttled the per-side TOTAL_AI cap + fed the hoard in the 12h TK soak). Shared CH+TK via LoadoutManager. HARD ceiling on the AI-commander founding target regardless of the PC curve + banking valve (was fielding ~15 at low pop = base 12 + valve 3). Clamped in AI_Commander_Teams.sqf. Rollback: 99 (effectively off).
+	WFBE_C_AICOM_TEAMS_HARD_CAP = 16;          //--- Ray 2026-07-26: 10 -> 16 max teams/side ALL MAPS (owner). NOTE the PC curve still gates the real target (PC_LOW 9 - delta 1 = 8 effective); this only lifts the ceiling above it. Prior Ray 2026-06-29: 8 -> 10 max teams/side (Ray: low-pop fielding; reverts the 2026-06-28 10->8). [prior B752 2026-06-25: back to 8 max teams (13 over-throttled the per-side TOTAL_AI cap + fed the hoard in the 12h TK soak). Shared CH+TK via LoadoutManager. HARD ceiling on the AI-commander founding target regardless of the PC curve + banking valve (was fielding ~15 at low pop = base 12 + valve 3). Clamped in AI_Commander_Teams.sqf. Rollback: 99 (effectively off).
 	//--- cmdcon42-k (Ray 2026-07-02): DROP N teams off EACH AI commander's BASE founding target on BOTH maps (the new
 	//--- dynamic transport/patrol/swarm systems in Build 87 add per-team AI; HQ teams now hand the server too much AI to
 	//--- handle). DELTA is applied to the PC-scaled base team target (WFBE_C_AICOM_TEAMS_PC_* after the curve overwrites
@@ -2229,7 +2229,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 		WFBE_C_TOTAL_AI_MAX_BY_TIER = [90,85,75,60]; //--- ZG pullback (owner live-tune final 2026-07-23, after [110,100,85,70]: FPS 15 at AI_TOT 383). Prior: [80,80,70,60] pre-2-HC-split raise, then [110,100,85,70]. Rollback: [110,100,85,70]. CH/TK stay [140,130,100,80].
 		//--- (2) per-side COMMANDER-TEAM hard ceiling. Fewer teams, each still founds at 8 units (TEAM_SIZE untouched)
 		//--- = concentration, not sprawl. 5 x 8 = ~40 core + garrisons stays under the 80 AI cap above.
-		WFBE_C_AICOM_TEAMS_HARD_CAP = 16;              //--- ZG raise (owner 2026-07-26, was 8; CH/TK 10). 4-HC soak box: 8 was the clamp pinning effective team target to 8 despite PC_LOW=9. Real ceiling is now WFBE_C_TOTAL_AI_MAX_BY_TIER (90/side low-pop), not the team count. Rollback: 8.
+		WFBE_C_AICOM_TEAMS_HARD_CAP = 16;              //--- ZG (owner 2026-07-26, was 8). Now MATCHES the global 16 - kept explicit so a global rollback does not silently re-clamp ZG. 4-HC soak box: 8 was the clamp pinning effective team target to 8 despite PC_LOW=9. Real ceiling is now WFBE_C_TOTAL_AI_MAX_BY_TIER (90/side low-pop), not the team count. Rollback: 8.
 		//--- (3) low/mid-pop PC-scaled base founding target (DELTA -1 then FLOOR/hard-cap clamp still apply): keep the
 		//--- base under the new hard cap so the curve, not just the clamp, sets team count. LOW 6-1=5, MID 5-1=4.
 		WFBE_C_AICOM_TEAMS_PC_LOW  = 9;                //--- ZG raise (owner 2026-07-23, was 6 -> founding target LOW 9-1=8). Rollback: 6.
