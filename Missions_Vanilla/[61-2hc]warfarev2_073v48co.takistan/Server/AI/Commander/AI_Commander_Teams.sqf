@@ -221,10 +221,11 @@ _target           = _base + _extra;
 //--- WFBE_C_AICOM_TEAMS_PC_*), keeping a small funds-extra that is throttled as pop rises so a rich
 //--- AI can't bloat back past the curve when the server is busiest (income->quality is handled by
 //--- the separate income scaler). Human count mirrors MonitorPlayerCount.sqf (isPlayer minus live HCs).
-private ["_pcN","_hcN","_pcExtraCap"];
-_pcN = {isPlayer _x} count _allUnits;
-_hcN = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
-_pcN = (_pcN - _hcN) max 0;
+private ["_pcN","_pcExtraCap"];
+//--- Single canonical human count: excludes seated/registered HCs by name and registry, unlike the
+//--- transient allUnits-minus-HC-registry estimate below. The same _pcN feeds both the PC curve and
+//--- every FOUND_SKIP row, so their RPT evidence is directly comparable.
+_pcN = count ([] Call WFBE_CO_FNC_RealPlayers);
 
 //--- TEST-ONLY scale pin (WFBE_C_TEST_POPTIER_PIN, default -1 = off): force the effective human
 //--- count so WFBE_PopTier + the AI-team curve build full-scale load on an EMPTY box for stress
@@ -280,10 +281,14 @@ _logik setVariable ["wfbe_aicom_pc", _pcN];
 //--- cmdcon42-k STARTUP LOG (once per side, latched on the logic): emit the base/delta/effective triple in the AICOMSTAT
 //--- format so soak analysis can correlate the founded-team count with the applied reduction. Latched so it prints once at
 //--- boot and again only if the reduced base changes (e.g. a pop-tier shift moves the PC-scaled base), never every 90s tick.
-private ["_tgtLogPrev"];
+private ["_tgtLogPrev","_tgtPcPrev"];
 _tgtLogPrev = _logik getVariable ["wfbe_aicom_teamstgt_log", -9999];
-if (_base != _tgtLogPrev) then {
+_tgtPcPrev = _logik getVariable ["wfbe_aicom_teamstgt_pc", -9999];
+//--- Keep the evidence live on joins/leaves even when both counts land in the same PC tier.
+//--- The target may stay unchanged, but the TEAMS_TARGET pc must remain comparable to FOUND_SKIP.
+if (_base != _tgtLogPrev || {_pcN != _tgtPcPrev}) then {
 	_logik setVariable ["wfbe_aicom_teamstgt_log", _base];
+	_logik setVariable ["wfbe_aicom_teamstgt_pc", _pcN];
 	diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|TEAMS_TARGET|base=" + str _baseRaw + "|delta=" + str _teamsDelta + "|effective=" + str _base + "|floor=" + str (missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_FLOOR", 3]) + "|pc=" + str _pcN);
 };
 
