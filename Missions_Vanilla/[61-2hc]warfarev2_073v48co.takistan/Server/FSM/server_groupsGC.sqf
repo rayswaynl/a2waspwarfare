@@ -505,12 +505,19 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 	//--- starting squad template - e.g. a pure Ka-52 squadron - via its own direct WFBE_CO_FNC_CreateVehicle
 	//--- call, never through Server_BuyUnit.sqf - see Common_CreateTeam.sqf for its own stamp). Helis carry
 	//--- no other tag beyond the numeric wfbe_side_id, which every heli shares. It deliberately does NOT
-	//--- touch AI_Commander_AirResp.sqf response-flight helis or AI_Commander_Wildcard.sqf W13 gunships -
-	//--- both spawn via a direct WFBE_CO_FNC_CreateVehicle call outside BOTH tagging sites above, and BOTH
-	//--- already self-delete on their own short watchdog (AirResp: 15s-poll teardown once the flight's
-	//--- heli is no longer alive; W13: unconditional 90s sleep-then-delete) - reaping them here would be a
-	//--- double-delete race against their own cleanup, not a fix for a leak that does not exist on those
-	//--- two paths.
+	//--- touch AI_Commander_AirResp.sqf response-flight helis, AI_Commander_Wildcard.sqf W13 gunships or
+	//--- W22 top-gun planes - all three spawn via a direct WFBE_CO_FNC_CreateVehicle call outside BOTH
+	//--- tagging sites above, and all three are SERVER-LOCAL (spawned by a server-side AICOM worker, never
+	//--- handed off via delegate-aicom-team the way produced attack-heli TEAMS are - which is exactly the
+	//--- HC-locality leak this reaper exists for). The generic path therefore already reaches them: the
+	//--- killed EH -> RequestOnUnitKilled.sqf sets wfbe_trashed + spawns TrashObject, whose locality-free
+	//--- deleteVehicle DOES land on a server-local hull. Tagging them here could never fire anyway - this
+	//--- reaper nil-gates on wfbe_trashed, which the killed EH sets at the instant of death.
+	//--- CORRECTED 2026-07-26: the sentence that used to sit here cited those three self-despawn watchdogs
+	//--- as proof no wreck could leak. They were in fact deleting the hull UNCONDITIONALLY (AirResp exits
+	//--- its poll loop on `alive _h`, so a shot-down flight was reaped instantly; W13/W22 deleted on a fixed
+	//--- timer) - an owner-visible bug, not a clean handoff. All three now branch on `alive` and despawn only
+	//--- a still-live airframe, leaving destroyed hulls to the generic pipeline described above.
 	//---
 	//--- AGE-GATE + DYNAMIC DELAY + LOCALITY DISPATCH: identical contract to the arty reaper directly
 	//--- above (wfbe_trashable/wfbe_trashed nil-gate so the generic path is never cut short; stamp-then-

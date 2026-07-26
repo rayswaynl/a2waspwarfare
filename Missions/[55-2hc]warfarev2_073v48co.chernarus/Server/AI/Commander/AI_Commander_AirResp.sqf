@@ -306,9 +306,32 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_
 							if (!isNil "_logikW") then {_curLane = _logikW getVariable ["wfbe_aicom2_airresp_lane", objNull]};
 							if (isNull _curLane || {_curLane != _lane}) then {_hot = false};
 						};
-						{deleteVehicle _x} forEach (crew _h);
-						if (!isNull _h) then {deleteVehicle _h};
-						if (!isNull _g) then {deleteGroup _g};
+						//--- DESPAWN vs DESTROYED (owner-reported live 2026-07-26, Zargabad): `alive _h` is one of the WHILE
+						//--- conditions above, so a SHOT-DOWN flight exits the loop instantly and fell straight into this
+						//--- teardown - deleting the hull AND the dead crew the moment it hit the ground, so a killed response
+						//--- heli left no wreck at all. The teardown is only correct for the DESPAWN case (lane went cold /
+						//--- loiter expired / flight no longer needed), where removing a still-LIVE airframe is the whole point.
+						//--- Branch the two apart: despawn only what is still alive.
+						//---
+						//--- A destroyed hull is left ENTIRELY to the generic pipeline, which already owns it end-to-end here:
+						//--- the killed EH added at Common_CreateVehicle.sqf:81 -> WFBE_CO_FNC_OnUnitKilled ->
+						//--- RequestOnUnitKilled.sqf sets wfbe_trashed and spawns TrashObject (hull after
+						//--- WFBE_C_UNITS_CLEAN_TIMEOUT, crew bodies after WFBE_C_UNITS_BODIES_TIMEOUT), and the emptied group
+						//--- is reaped by the empty-group sweep at server_groupsGC.sqf. deleteGroup is therefore NOT called on
+						//--- this branch: at loop-exit the dead crew are still in the group, so it would fail on a non-empty
+						//--- group; TrashObject deletes the group itself once the last body goes.
+						//---
+						//--- Deliberately NOT stamped WFBE_CommanderAttackHeli: server_groupsGC.sqf's husk reaper nil-gates on
+						//--- wfbe_trashed, which the killed EH sets at the instant of death, so the tag could never fire here -
+						//--- it would be dead code, not a double-reap. It is also unnecessary: an AIRRESP flight is spawned by
+						//--- this server-side worker and is never handed off via delegate-aicom-team (unlike produced attack-heli
+						//--- TEAMS, the leak that reaper exists for), so the hull is SERVER-LOCAL and Common_TrashObject.sqf's
+						//--- locality-free deleteVehicle does land on it.
+						if (alive _h) then {
+							{deleteVehicle _x} forEach (crew _h);
+							if (!isNull _h) then {deleteVehicle _h};
+							if (!isNull _g) then {deleteGroup _g};
+						};
 					};
 				} else {
 					_skipReason = "pilot-create-failed";
