@@ -98,7 +98,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tic
 				"datsun1_civil_2_covered",   //--- VBIED: driver-detonated suicide truck (TK covered civilian pickup). Mirrors the Chernarus hilux. Always available (tier 0).
 				"Ka137_MG_PMC"
 			];
-			if (_civDepotOn) then {_pool = _pool + ["Old_bike_TK_CIV_EP1","Old_moto_TK_Civ_EP1","Volha_1_TK_CIV_EP1","LandRover_TK_CIV_EP1","Ural_TK_CIV_EP1"]};
+			if (_civDepotOn) then {_pool = _pool + ["Old_bike_TK_CIV_EP1","Old_moto_TK_Civ_EP1","Volha_1_TK_CIV_EP1","LandRover_TK_CIV_EP1","S1203_TK_CIV_EP1"]};
 			if ((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) then {_pool = _pool + [missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_TK_CIV_EP1"]]}; //--- fable/guer-suicide-bike.
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_TK_GUE_EP1","T34_TK_GUE_EP1"]};
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1"]}; //--- BTR-40 (MG) moved to the tier-0 base pool (2026-07-01); T-55 stays tier-2.
@@ -112,6 +112,13 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tic
 			//--- available (earned by destroying enemy factories, spent when a FOB is built). Depot-only - this pool IS
 			//--- the GUER depot. The map-correct truck trio comes from WFBE_C_GUER_FOB_TRUCKS (worldName-branched).
 			_fobTrucks = missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []];
+			//--- fable/guer-fob-civdepot-collision: strip FOB-truck classes appended by ANOTHER path before the token
+			//--- gate below runs. On TK/ZG "Ural_TK_CIV_EP1" is BOTH the FOB Barracks truck (Init_CommonConstants.sqf
+			//--- :192-197) and the last WFBE_C_GUER_CIVILIAN_DEPOT entry, so a 0-token depot still listed a green
+			//--- "FOB (Barracks)" row (Client_UIFillListBuyUnits.sqf relabels purely by classname) and a 1-token depot
+			//--- listed the truck twice. The FOB trucks are documented as NOT in the GUER roster - only the token gate
+			//--- may add them. Subtract-then-add keeps that invariant at every reseed site. Correctness fix - no flag.
+			_pool = _pool - _fobTrucks;
 			for "_fi" from 0 to ((count _fobTrucks) - 1) do {
 				if (_fi < (count _fobAvail) && {(_fobAvail select _fi) > 0}) then {_pool = _pool + [_fobTrucks select _fi]};
 			};

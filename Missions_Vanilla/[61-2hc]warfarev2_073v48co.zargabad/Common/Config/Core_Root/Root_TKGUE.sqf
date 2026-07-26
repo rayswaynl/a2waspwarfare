@@ -172,7 +172,7 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {local p
 	WFBE_C_GUER_VBIED_TYPE = "datsun1_civil_2_covered";
 	WFBE_C_GUER_SUICIDE_BIKE_TYPE = "TT650_TK_CIV_EP1"; //--- fable/guer-suicide-bike: TK/ZG repoint (mirrors the VBIED_TYPE repoint above).
 	_pool = ["TK_GUE_Soldier_EP1","TK_GUE_Bonesetter_EP1","TK_GUE_Soldier_MG_EP1","TK_GUE_Soldier_AT_EP1","TK_GUE_Soldier_AA_EP1","TK_GUE_Soldier_Sniper_EP1","Offroad_DSHKM_TK_GUE_EP1","Pickup_PK_TK_GUE_EP1","V3S_TK_GUE_EP1","BTR40_MG_TK_GUE_EP1","datsun1_civil_2_covered","Ka137_MG_PMC"]; //--- BTR-40 (MG) tier-0 (2026-07-01).
-	if ((missionNamespace getVariable ["WFBE_C_GUER_CIVILIAN_DEPOT", 0]) > 0) then {_pool = _pool + ["Old_bike_TK_CIV_EP1","Old_moto_TK_Civ_EP1","Volha_1_TK_CIV_EP1","LandRover_TK_CIV_EP1","Ural_TK_CIV_EP1"]};
+	if ((missionNamespace getVariable ["WFBE_C_GUER_CIVILIAN_DEPOT", 0]) > 0) then {_pool = _pool + ["Old_bike_TK_CIV_EP1","Old_moto_TK_Civ_EP1","Volha_1_TK_CIV_EP1","LandRover_TK_CIV_EP1","S1203_TK_CIV_EP1"]};
 	//--- fable/fix-guer-fob: C6 reseed clobbers WFBE_GUERDEPOTUNITS without the overlay's FOB-truck / M113-VBIED
 	//--- gating (Root_GUE_PlayerOverlay.sqf:63-65,101-111) - re-apply the same gating here so a FOB truck earned via
 	//--- WFBE_GUER_FOB_AVAIL (and the kill-gated M113 VBIED) survive this reseed instead of vanishing until the next
@@ -183,6 +183,13 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {local p
 	if (_c6M113On) then {_pool = _pool + [missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"]]};
 	_c6FobAvail = missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]];
 	_c6FobTrucks = missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []];
+	//--- fable/guer-fob-civdepot-collision: strip FOB-truck classes appended by ANOTHER path before the token
+	//--- gate below runs. On TK/ZG "Ural_TK_CIV_EP1" is BOTH the FOB Barracks truck (Init_CommonConstants.sqf
+	//--- :192-197) and the last WFBE_C_GUER_CIVILIAN_DEPOT entry, so a 0-token depot still listed a green
+	//--- "FOB (Barracks)" row (Client_UIFillListBuyUnits.sqf relabels purely by classname) and a 1-token depot
+	//--- listed the truck twice. The FOB trucks are documented as NOT in the GUER roster - only the token gate
+	//--- may add them. Subtract-then-add keeps that invariant at every reseed site. Correctness fix - no flag.
+	_pool = _pool - _c6FobTrucks;
 	for "_c6Fi" from 0 to ((count _c6FobTrucks) - 1) do {
 		if (_c6Fi < (count _c6FobAvail) && {(_c6FobAvail select _c6Fi) > 0}) then {_pool = _pool + [_c6FobTrucks select _c6Fi]};
 	};
