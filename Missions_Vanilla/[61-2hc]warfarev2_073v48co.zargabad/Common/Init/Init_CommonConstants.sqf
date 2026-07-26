@@ -2229,7 +2229,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 		WFBE_C_TOTAL_AI_MAX_BY_TIER = [90,85,75,60]; //--- ZG pullback (owner live-tune final 2026-07-23, after [110,100,85,70]: FPS 15 at AI_TOT 383). Prior: [80,80,70,60] pre-2-HC-split raise, then [110,100,85,70]. Rollback: [110,100,85,70]. CH/TK stay [140,130,100,80].
 		//--- (2) per-side COMMANDER-TEAM hard ceiling. Fewer teams, each still founds at 8 units (TEAM_SIZE untouched)
 		//--- = concentration, not sprawl. 5 x 8 = ~40 core + garrisons stays under the 80 AI cap above.
-		WFBE_C_AICOM_TEAMS_HARD_CAP = 8;               //--- ZG raise (owner 2026-07-23, was 5; CH/TK 10). Rollback: 5.
+		WFBE_C_AICOM_TEAMS_HARD_CAP = 16;              //--- ZG raise (owner 2026-07-26, was 8; CH/TK 10). 4-HC soak box: 8 was the clamp pinning effective team target to 8 despite PC_LOW=9. Real ceiling is now WFBE_C_TOTAL_AI_MAX_BY_TIER (90/side low-pop), not the team count. Rollback: 8.
 		//--- (3) low/mid-pop PC-scaled base founding target (DELTA -1 then FLOOR/hard-cap clamp still apply): keep the
 		//--- base under the new hard cap so the curve, not just the clamp, sets team count. LOW 6-1=5, MID 5-1=4.
 		WFBE_C_AICOM_TEAMS_PC_LOW  = 9;                //--- ZG raise (owner 2026-07-23, was 6 -> founding target LOW 9-1=8). Rollback: 6.
