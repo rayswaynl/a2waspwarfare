@@ -31,9 +31,9 @@ The visible fixes from #1476, #1478 and #1483 are present in their exercised pat
 
 **Impact:** HC2--4 have live undefined-variable errors in movement/near-player guards.  The same missing-file warning is on server and HC1, so this is deployment-wide and can invalidate several safety checks.
 
-**Evidence:** RPT locations above; HC2 examples L24631-L24634 and L24812-L24903; HC3 L25355-L25358; HC4 L26179-L26182.  `Common/Init/Init_Common.sqf:104` registers the function with forward slashes while adjacent registrations use backslashes.  The source file exists at `Common/Functions/Common_RealPlayersNear.sqf` in the tested `master` tree (SHA-256 `E0A611B527205D517F049F60A27024D73DDE8A6F072C35A18ED9B7FEAB30599A`).
+**Root cause and evidence:** RPT locations above; HC2 examples L24631-L24634 and L24812-L24903; HC3 L25355-L25358; HC4 L26179-L26182.  The deployed release reports `git=733f07ce34` immediately before `MISSINIT`.  That exact tree contains the registration (`Common/Init/Init_Common.sqf:104`) and consumers (`Common_RunCommanderTeam.sqf:3014-3015`, `Common_RunSidePatrol.sqf:404`) but **does not contain** `Common_RealPlayersNear.sqf`; `git ls-tree -r 733f07ce34` confirms the absence.  The later master source does contain the 44-line file (SHA-256 `E0A611B527205D517F049F60A27024D73DDE8A6F072C35A18ED9B7FEAB30599A`).  This is a merge-content/version failure, not merely a slash-style or box packaging hypothesis.
 
-**Proposed fix:** change that registration to the established `Common\Functions\...` path form, mirror all terrains, then package a fresh debug build.  Acceptance: five final-MISSINIT windows have zero missing-script warnings and zero consequent `_topnear`/`_pnear` expression errors.  Confirm the packed mission tree contains the file before deployment; do not assume source-tree presence proves package parity.
+**Proposed fix:** restore/cherry-pick the missing `Common_RealPlayersNear.sqf` addition into the source line that carries the #1473 registration and consumers, propagate through LoadoutManager, then package a fresh debug build.  Acceptance: the release commit's `git ls-tree` contains the function for all terrains, and five final-MISSINIT windows have zero missing-script warnings and zero consequent `_topnear`/`_pnear` expression errors.
 
 ### P1 -- make AICOM team founding cooperative at the 16-team cap
 
