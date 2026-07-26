@@ -2948,7 +2948,7 @@ while {!WFBE_GameOver && _alive} do {
 	//--- groups); typeName guards (no A3 isEqualType); clear the var by setting [] and testing count>0 (A2 setVariable
 	//--- nil on groups is unreliable). Never create if _team is null. Never-frozen: additions inherit the team order.
 	if (_alive && {!isNull _team}) then {
-		private ["_topReq","_topN","_topPos","_topCls","_topIssued","_topTtl","_topMade","_topFail","_topDefer","_topClass","_topUnit","_topCharge","_topPerUnit","_topRefund"];
+		private ["_topReq","_topN","_topPos","_topCls","_topIssued","_topTtl","_topMade","_topFail","_topDefer","_topNear","_topClass","_topUnit","_topCharge","_topPerUnit","_topRefund"];
 		_topReq = _team getVariable "wfbe_aicom_topup_req";
 		if (!isNil "_topReq" && {(typeName _topReq) == "ARRAY"} && {count _topReq >= 3}) then {
 			_topN   = _topReq select 0;
@@ -2988,7 +2988,16 @@ while {!WFBE_GameOver && _alive} do {
 					diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TOPUP_REQ_STALE|team=" + (str _team) + "|age=" + str (round (time - _topIssued)) + "|ttl=" + str _topTtl);
 				} else {
 					//--- DEFER if any player is within 300m of the spawn pos (keep the request untouched for a later tick).
-					_topDefer = ([_topPos, 300] Call WFBE_CO_FNC_RealPlayersNear) > 0;
+					//--- fix 2026-07-26: seed BOTH locals before the Call. A2 OA logs a failed statement and then keeps
+					//--- running the next one, so the old single-expression form left _topDefer undefined whenever the
+					//--- Call yielded Nothing, and the very next line threw "Undefined variable in expression: _topdefer"
+					//--- - killing the whole top-up consumer on every tick instead of just that one proximity probe.
+					//--- Seeded _topNear survives a throwing assignment, so the guard below is always evaluable and the
+					//--- consumer degrades to "no player nearby" (spawn) rather than aborting the tick.
+					_topDefer = false;
+					_topNear = -1;
+					_topNear = [_topPos, 300] Call WFBE_CO_FNC_RealPlayersNear;
+					if ((typeName _topNear) == "SCALAR" && {_topNear > 0}) then {_topDefer = true};
 					if (!_topDefer) then {
 						_topMade = 0;
 						_topFail = 0;

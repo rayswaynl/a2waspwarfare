@@ -9,7 +9,7 @@
 	Returns: SCALAR
 	A2-OA-1.64 safe: playableUnits / isPlayer / alive / side / name / lazy && {} and || {} only.
 */
-Private ["_position","_radius","_side","_filter","_useSide","_excludeCivilian","_hcUnits","_count"];
+Private ["_position","_radius","_side","_filter","_useSide","_excludeCivilian","_hcUnits","_hcGroup","_hcNames","_count"];
 
 if (count _this < 2) exitWith {0};
 _position = _this select 0;
@@ -27,16 +27,26 @@ if (count _this > 2) then {
 	};
 };
 
+//--- WFBE_HEADLESSCLIENTS_ID holds GROUPS, not ids (Server_HandleSpecial.sqf:1798 stores `group _hc`;
+//--- Server_OnPlayerDisconnected.sqf:45 removes the same group), so isNull/units are the right operators.
+//--- It is SERVER-ONLY state though: on a headless client this always reads back [] and _hcNames below is
+//--- the only HC exclusion that actually fires. Capture the outer _x first - the inner forEach rebinds it.
 _hcUnits = [];
 {
-	if (!isNull _x) then {
-		{_hcUnits set [count _hcUnits, _x]} forEach (units _x);
+	_hcGroup = _x;
+	if (!isNull _hcGroup) then {
+		{_hcUnits set [count _hcUnits, _x]} forEach (units _hcGroup);
 	};
 } forEach (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 
+//--- Single source of truth (Init_CommonConstants.sqf). The literal fallback is kept complete-for-4-HCs so
+//--- a stripped-down constants file can never silently reintroduce the missing-HC4 veto bug.
+_hcNames = missionNamespace getVariable ["WFBE_C_HC_NAMES", ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]];
+if ((typeName _hcNames) != "ARRAY") then {_hcNames = ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]};
+
 _count = 0;
 {
-	if (alive _x && {isPlayer _x} && {!(_x in _hcUnits)} && {!_excludeCivilian || {(side _x) != civilian}} && {!((name _x) in ["HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC"])} && {(_x distance _position) < _radius} && {!_useSide || {side _x == _side}}) then {
+	if (alive _x && {isPlayer _x} && {!(_x in _hcUnits)} && {!_excludeCivilian || {(side _x) != civilian}} && {!((name _x) in _hcNames)} && {(_x distance _position) < _radius} && {!_useSide || {side _x == _side}}) then {
 		_count = _count + 1;
 	};
 } forEach playableUnits;
