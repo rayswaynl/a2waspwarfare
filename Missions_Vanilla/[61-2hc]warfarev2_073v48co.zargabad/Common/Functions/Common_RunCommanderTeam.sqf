@@ -489,6 +489,28 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_EASA_AI", 1]) > 0) then {
 			//--- AV-8B II [WEST]: stock Maverick+Sidewinder -> AGM-114(8)+AGM-65(2)+AIM-9L(2) (row L485).
 			["AV8B2", ["MaverickLauncher","SidewinderLaucher_AH1Z"], ["2Rnd_Maverick_A10","2Rnd_Maverick_A10","2Rnd_Maverick_A10","2Rnd_Sidewinder_AH1Z"], ["HellfireLauncher","MaverickLauncher","SidewinderLaucher_AH1Z"], ["8Rnd_Hellfire","2Rnd_Maverick_A10","2Rnd_Sidewinder_AH1Z"], false]
 		];
+		//--- AIR BOMBS (owner request 2026-07-26, "make sure AI commander aircraft can also use FABs", gate
+		//--- WFBE_C_AICOM_AIR_BOMBS default 0): the A10 and Mi24_P rows above REPLACE rather than extend their stock
+		//--- kit, so applying the kit STRIPS the airframe's own ground-attack bomb (AV8B2's kit never had one to begin
+		//--- with). Flag>0 appends the SAME airframe's verbatim EASA bomb launcher+magazine back onto its kitW/kitM
+		//--- (source cited per row below) so the kit no longer loses it; Su34/Su25_TK_EP1 already gain bombs from
+		//--- their own rows above and are left untouched. Flag=0 (default) never runs this loop - _easaKits stays
+		//--- exactly as built above, byte-identical to HEAD.
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_BOMBS", 0]) > 0) then {
+			{
+				private ["_abType"];
+				_abType = _x select 0;
+				if (_abType == "A10") then { //--- A10 bomb-preserve: EASA_Init.sqf L378 stock row (Mk82BombLauncher_6/6Rnd_Mk82, same as this row's own stockW/stockM at L488 above).
+					_easaKits set [_forEachIndex, ["A10", ["FFARLauncher","Mk82BombLauncher_6"], ["38Rnd_FFAR","6Rnd_Mk82"], ["MaverickLauncher","StingerLauncher_twice","Mk82BombLauncher_6"], ["2Rnd_Maverick_A10","2Rnd_Stinger","6Rnd_Mk82"], false]];
+				};
+				if (_abType == "Mi24_P") then { //--- Mi24_P bomb-preserve: EASA_Init.sqf L641 stock row (HeliBombLauncher/2Rnd_FAB_250, same as this row's own stockW/stockM at L477 above).
+					_easaKits set [_forEachIndex, ["Mi24_P", ["AT9Launcher","HeliBombLauncher"], ["4Rnd_AT9_Mi24P","2Rnd_FAB_250"], ["AT9Launcher","Igla_twice","HeliBombLauncher"], ["4Rnd_AT9_Mi24P","2Rnd_Igla","2Rnd_FAB_250"], false]];
+				};
+				if (_abType == "AV8B2") then { //--- AV8B2 bomb-grant: EASA_Init.sqf L505 loadout row (Mk82BombLauncher_6/6Rnd_Mk82 alongside Maverick+Sidewinder; AV8B2 has no stock bomb).
+					_easaKits set [_forEachIndex, ["AV8B2", ["MaverickLauncher","SidewinderLaucher_AH1Z"], ["2Rnd_Maverick_A10","2Rnd_Maverick_A10","2Rnd_Maverick_A10","2Rnd_Sidewinder_AH1Z"], ["HellfireLauncher","MaverickLauncher","SidewinderLaucher_AH1Z","Mk82BombLauncher_6"], ["8Rnd_Hellfire","2Rnd_Maverick_A10","2Rnd_Sidewinder_AH1Z","6Rnd_Mk82"], false]];
+				};
+			} forEach _easaKits;
+		};
 		{
 			private ["_kh"];
 			_kh = _x;
@@ -519,6 +541,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_EASA_AI", 1]) > 0) then {
 						};
 						diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|EASA_AI_KIT|type=" + _khType + "|turret=" + str _kTur);
 						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] EASA_AI_KIT applied to %2 (turret=%3, EASA researched).", _side, _khType, _kTur]] Call WFBE_CO_FNC_AICOMLog;
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_BOMBS", 0]) > 0 && {_khType in ["A10","Mi24_P","AV8B2"]}) then { //--- confirms the bomb-preserve/-grant path above actually reached this hull.
+							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|EASA_AI_KIT_BOMBS|type=" + _khType);
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] EASA_AI_KIT_BOMBS preserved/granted bomb capability on %2 (WFBE_C_AICOM_AIR_BOMBS armed).", _side, _khType]] Call WFBE_CO_FNC_AICOMLog;
+						};
 					};
 				} forEach _easaKits;
 			};

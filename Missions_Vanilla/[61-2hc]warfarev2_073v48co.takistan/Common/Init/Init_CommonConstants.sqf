@@ -3215,5 +3215,13 @@ if (isNil "WFBE_C_HC_LOBBY_LOCK") then {WFBE_C_HC_LOBBY_LOCK = 0}; //--- Master 
 if (isNil "WFBE_C_HC_LOBBY_TIMEOUT") then {WFBE_C_HC_LOBBY_TIMEOUT = 90}; //--- s of mission time: hard fail-open. A permanently missing HC opens the server anyway (logged loudly) instead of locking it out forever. Also the window in which the client-side gate is armed at all, so an ordinary mid-match JIP joiner never sees it. Keep it under the ~120s deadspawn-transit invulnerability budget in Init_Client.sqf.
 if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = if (!isNil "WFBE_C_HC_SLOTS" && {(typeName WFBE_C_HC_SLOTS) == "SCALAR"}) then {WFBE_C_HC_SLOTS} else {4}}; //--- Expected seated-HC count. Defaults to WFBE_C_HC_SLOTS (4 today, defined just above by the HC-name registry) so the repo keeps ONE number for how many headless clients this mission ships - bumping WFBE_C_HC_SLOTS to 5 carries here automatically, which is exactly the hardcoded-list drift that registry was added to end. Falls back to a literal 4 only if that constant is absent or mistyped. 0 disables the lock. -1 opts in to RUNTIME DERIVATION from the mission's own playable CIV slot count instead.
 
+//--- AICOM AIR BOMBS (owner request 2026-07-26, "make sure AI commander aircraft can also use FABs"): the
+//--- EASA-on-AI kit table in Common_RunCommanderTeam.sqf (~L462-513) REPLACES rather than extends the A10 and
+//--- Mi24_P kit arrays, so applying the kit STRIPS the airframe's own ground-attack bomb (AV8B2 never had one).
+//--- 0 (default) = byte-identical to HEAD - the existing kit rows apply exactly as before. >0 = the same kit
+//--- rows additionally preserve/grant the airframe's own verbatim EASA bomb launcher+magazine instead of losing
+//--- it (classnames cited per row at Common_RunCommanderTeam.sqf where this flag is read).
+if (isNil "WFBE_C_AICOM_AIR_BOMBS") then {WFBE_C_AICOM_AIR_BOMBS = 0}; //--- 0=off (byte-identical to HEAD); >0 = EASA-on-AI kit table preserves/grants FAB-250/Mk-82 bomb capability on A10/Mi24_P/AV8B2 instead of stripping it.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
