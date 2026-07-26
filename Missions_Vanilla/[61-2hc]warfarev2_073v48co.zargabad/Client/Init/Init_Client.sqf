@@ -1225,6 +1225,84 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 	};
 };
 
+//--- HC LOBBY LOCK (feat/hc-lobby-lock 2026-07-26, WFBE_C_HC_LOBBY_LOCK default 0): hold a joining player
+//--- HERE - after the existing join / anti-teamswap gate above, still parked in the deadspawn holding area,
+//--- and BEFORE the base placement below - until the server reports every expected headless client seated.
+//--- WHAT THIS IS NOT: A2 OA exposes no mission hook on the engine's own role/slot screen, so this does not
+//--- stop a player PICKING a slot; it stops them entering play. That is the only mission-side hold available
+//--- (server.cfg `password` is startup-only and the running server holds the cfg open; `#lock`/serverCommand
+//--- needs a logged-in admin or BattlEye, and BattlEye is off on this box).
+//--- HEADLESS CLIENTS CAN NEVER DEADLOCK ON THIS GATE: an HC never runs Init_Client.sqf at all -
+//--- initJIPCompatible.sqf gates the client-init launch on `!isHeadLessClient` and hands the HC
+//--- Headless\Init\Init_HC.sqf instead - so this code is physically absent from the HC boot path and the
+//--- HCs seat through their normal reseat while players are held.
+//--- Server authority: Server\Init\Init_HcLobbyLock.sqf publishes WFBE_HC_LOBBY_READY (+ WFBE_HC_LOBBY_STATE
+//--- = [seated, expected], for the on-screen count) on a 2s heartbeat, because a publicVariable is NOT
+//--- JIP-durable in A2-OA and a client connecting mid-lock would otherwise never see a one-shot broadcast.
+//--- ARMED ONLY IN THE COLD-START WINDOW (time < WFBE_C_HC_LOBBY_TIMEOUT) - the same mission-time join-age
+//--- test this file already uses at the RequestJoin gate above and the spawn-location branch below - so an
+//--- ordinary mid-match JIP joiner skips the whole block and is byte-identical to HEAD.
+//--- Every exit is bounded: server-ready, the mission-time deadline, or a local wall-clock backstop.
+if ((missionNamespace getVariable ["WFBE_C_HC_LOBBY_LOCK", 0]) > 0) then {
+	private ["_hcllTimeout","_hcllReady","_hcllState","_hcllSeated","_hcllExpected","_hcllHeld","_hcllWaited","_hcllMsgAt"];
+	_hcllTimeout = missionNamespace getVariable ["WFBE_C_HC_LOBBY_TIMEOUT", 90];
+	if (_hcllTimeout < 10) then {_hcllTimeout = 10};
+	if (time < _hcllTimeout) then {
+		_hcllHeld = false;
+		_hcllWaited = 0;
+		_hcllMsgAt = -10;
+		while {true} do {
+			_hcllReady = missionNamespace getVariable "WFBE_HC_LOBBY_READY";
+			if (!isNil "_hcllReady" && {_hcllReady}) exitWith {};
+			if (time >= _hcllTimeout) exitWith {
+				["WARNING", Format ["Init_Client.sqf: HC lobby lock released on the mission-time deadline (%1s) - the server never reported ready.", _hcllTimeout]] Call WFBE_CO_FNC_LogContent;
+			};
+			//--- Local backstop: if mission `time` ever stalls (paused sim / stuck load) the deadline above
+			//--- can never fire, so count our own sleeps as well and bail on the same budget either way.
+			if (_hcllWaited > (_hcllTimeout + 15)) exitWith {
+				["WARNING", Format ["Init_Client.sqf: HC lobby lock released on the local %1s backstop (mission time stalled at %2).", _hcllWaited, round time]] Call WFBE_CO_FNC_LogContent;
+			};
+			if (!_hcllHeld) then {
+				_hcllHeld = true;
+				diag_log Format ["HCLOBBY|v1|CLIENT-HOLD|name=%1|at=%2", name player, round time];
+			};
+			//--- Keep the deadspawn transit invulnerability alive for the whole hold. This file's own watchdog
+			//--- (near the top: allowDamage false + a 120s failsafe) drops protection 120s after client init
+			//--- started, which a long hold could outlast - and a vulnerable player parked among the holding-area
+			//--- bots is the known "AI killed <player> in the deadspawn" bug. Re-armed on release below.
+			if (!isNull player) then {player allowDamage false};
+			if ((_hcllWaited - _hcllMsgAt) >= 2) then {
+				_hcllMsgAt = _hcllWaited;
+				_hcllSeated = 0;
+				_hcllExpected = 0;
+				_hcllState = missionNamespace getVariable "WFBE_HC_LOBBY_STATE";
+				if (!isNil "_hcllState" && {(typeName _hcllState) == "ARRAY"} && {(count _hcllState) >= 2}) then {
+					_hcllSeated = _hcllState select 0;
+					_hcllExpected = _hcllState select 1;
+				};
+				12454 cutText [Format ["Server initialising - headless clients seating, %1 of %2...", _hcllSeated, _hcllExpected], "PLAIN DOWN", 3];
+			};
+			sleep 0.5;
+			_hcllWaited = _hcllWaited + 0.5;
+		};
+		if (_hcllHeld) then {
+			12454 cutText ["", "PLAIN", 0];
+			diag_log Format ["HCLOBBY|v1|CLIENT-RELEASE|name=%1|heldFor=%2|at=%3", name player, _hcllWaited, round time];
+			//--- Re-arm the deadspawn damage restore: the original watchdog near the top of this file may
+			//--- already have expired during the hold, and nothing else re-enables damage once the code below
+			//--- sets WFBE_Client_DeadspawnEscaped. Same shape and 120s budget as that watchdog; both firing
+			//--- is harmless (allowDamage true is idempotent).
+			[] spawn {
+				private ["_t0"];
+				_t0 = time;
+				waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
+				sleep 3;
+				if (alive player) then { player allowDamage true };
+			};
+		};
+	};
+};
+
 /* Get the client starting location */
 //--- Task 35: escape the deadspawn holding area IMMEDIATELY after the join gate. The final
 //--- position is refined below (newest live factory / HQ); this interim move covers any

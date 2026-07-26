@@ -3199,5 +3199,21 @@ if (isNil "WFBE_C_HC_NAMES") then {
 	WFBE_C_HC_NAMES = _hcNameList;
 };
 
+//--- HC LOBBY LOCK (feat/hc-lobby-lock, owner request 2026-07-26): hold joining PLAYERS out of play
+//--- until every expected headless client has actually seated, then open automatically. Observed on the
+//--- 4-HC soak box: on a cold start the HCs race the mission load, HC1 lands in a BLUFOR player slot and
+//--- the others grey out with no slot, and the only remedy so far is a manual post-start bounce (an HC
+//--- that JIPs into a LIVE mission seats correctly; one that connects during mission load does not).
+//--- A2 OA gives the mission NO hook on the engine's own role/slot screen, and the two engine-level locks
+//--- are both unavailable here (server.cfg `password` is read at STARTUP only and the running server holds
+//--- an exclusive lock on the cfg; `#lock`/serverCommand needs a logged-in admin or BattlEye, and BattlEye
+//--- is deliberately disabled on this box) - so the lock is mission-side and holds the joiner AFTER slot
+//--- selection, in the deadspawn holding area, before base placement.
+//--- 0 (default) = OFF, byte-identical to HEAD: the server-side authority is never launched
+//--- (Init_Server.sqf) and the client-side hold is never entered (Init_Client.sqf).
+if (isNil "WFBE_C_HC_LOBBY_LOCK") then {WFBE_C_HC_LOBBY_LOCK = 0}; //--- Master gate: 0=off (byte-identical), 1=on.
+if (isNil "WFBE_C_HC_LOBBY_TIMEOUT") then {WFBE_C_HC_LOBBY_TIMEOUT = 90}; //--- s of mission time: hard fail-open. A permanently missing HC opens the server anyway (logged loudly) instead of locking it out forever. Also the window in which the client-side gate is armed at all, so an ordinary mid-match JIP joiner never sees it. Keep it under the ~120s deadspawn-transit invulnerability budget in Init_Client.sqf.
+if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = if (!isNil "WFBE_C_HC_SLOTS" && {(typeName WFBE_C_HC_SLOTS) == "SCALAR"}) then {WFBE_C_HC_SLOTS} else {4}}; //--- Expected seated-HC count. Defaults to WFBE_C_HC_SLOTS (4 today, defined just above by the HC-name registry) so the repo keeps ONE number for how many headless clients this mission ships - bumping WFBE_C_HC_SLOTS to 5 carries here automatically, which is exactly the hardcoded-list drift that registry was added to end. Falls back to a literal 4 only if that constant is absent or mistyped. 0 disables the lock. -1 opts in to RUNTIME DERIVATION from the mission's own playable CIV slot count instead.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
