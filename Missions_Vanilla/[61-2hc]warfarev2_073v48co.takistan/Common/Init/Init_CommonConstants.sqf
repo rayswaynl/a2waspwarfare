@@ -3181,5 +3181,23 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE") then {WFBE_C_AICOM_CARGO_A
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST = 35000}; //--- AICOM-treasury $ added on top of WFBE_C_AICOM_CARGO_AIRDROP_COST only on a call that actually spawns the escort this time; anchored near A10_US_EP1's registered 32,320 unit price plus a pilot.
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES = ["A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]}; //--- fixed-wing attack-jet candidates only (Plane-kind subset of AI_Commander_AirResp.sqf's allowlist); intersected against the side's own WFBE_<SIDE>AIRCRAFTUNITS roster at dispatch so the pick is always side-safe/reachable, never hardcoded to one faction.
 
+//--- HEADLESS-CLIENT NAME REGISTRY (fix 2026-07-26). The 4-HC rollout (#1456) added a fourth HC, but every
+//--- "is this a real human player" test carried its OWN hardcoded HC name list and they drifted - the
+//--- proximity helper still listed only HC-AI-Control-1..3, so HC4's body counted as a player and vetoed
+//--- any spawn near wherever HC4 happened to be standing. Note the group registry WFBE_HEADLESSCLIENTS_ID
+//--- cannot cover this: it is only ever written server-side (Init_Server.sqf / Server_HandleSpecial.sqf,
+//--- no public third arg - NSSETVAR3 is banned), so on a HEADLESS CLIENT it always reads back [] and the
+//--- name list is the sole working exclusion there. Derive the list from a slot count so adding HC5 is one
+//--- number rather than a repo-wide grep. Runs before Init_Common.sqf (initJIPCompatible.sqf:140 Call vs
+//--- :329 ExecVM), so WFBE_C_HC_NAMES is always defined before any consumer compiles.
+if (isNil "WFBE_C_HC_SLOTS") then {WFBE_C_HC_SLOTS = 4}; //--- HC-AI-Control-<n> slots the mission ships (PR #1456 added 3 and 4). Bump this alone for HC5.
+if (isNil "WFBE_C_HC_NAMES") then {
+	private ["_hcNameList"];
+	_hcNameList = ["HC"]; //--- legacy single-HC profile name, still present in older box configs.
+	if ((typeName WFBE_C_HC_SLOTS) != "SCALAR") then {WFBE_C_HC_SLOTS = 4}; //--- a mistyped override must not throw inside the for below.
+	for "_hcSlot" from 1 to WFBE_C_HC_SLOTS do {_hcNameList set [count _hcNameList, Format ["HC-AI-Control-%1", _hcSlot]]};
+	WFBE_C_HC_NAMES = _hcNameList;
+};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

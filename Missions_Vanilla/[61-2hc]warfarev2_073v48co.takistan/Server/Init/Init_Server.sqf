@@ -1552,7 +1552,9 @@ if ((missionNamespace getVariable ["WFBE_C_HC_CIV_RESLOT", 0]) > 0) then {
 	publicVariable "WFBE_HC_RESLOT_SAFE";
 	[] Spawn {
 		private ["_hcNames"];
-		_hcNames = ["HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3"];
+		_hcNames = WFBE_C_HC_NAMES; //--- shared list (Init_CommonConstants.sqf). The old literal omitted both
+		//--- HC-AI-Control-4 and the legacy "HC" name, so either one connected kept _real above 0 forever and
+		//--- the reslot safe-window never opened.
 		while {true} do {
 			private ["_real"];
 			_real = { (isPlayer _x) && {!((name _x) in _hcNames)} } count allUnits;
