@@ -98,7 +98,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tic
 				"datsun1_civil_2_covered",   //--- VBIED: driver-detonated suicide truck (TK covered civilian pickup). Mirrors the Chernarus hilux. Always available (tier 0).
 				"Ka137_MG_PMC"
 			];
-			if (_civDepotOn) then {_pool = _pool + ["Old_bike_TK_CIV_EP1","Old_moto_TK_Civ_EP1","Volha_1_TK_CIV_EP1","LandRover_TK_CIV_EP1","Ural_TK_CIV_EP1"]};
+			if (_civDepotOn) then {_pool = _pool + ["Old_bike_TK_CIV_EP1","Old_moto_TK_Civ_EP1","Volha_1_TK_CIV_EP1","LandRover_TK_CIV_EP1","S1203_TK_CIV_EP1"]};
 			if ((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) then {_pool = _pool + [missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_TK_CIV_EP1"]]}; //--- fable/guer-suicide-bike.
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_TK_GUE_EP1","T34_TK_GUE_EP1"]};
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1"]}; //--- BTR-40 (MG) moved to the tier-0 base pool (2026-07-01); T-55 stays tier-2.
