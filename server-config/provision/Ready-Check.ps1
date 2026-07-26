@@ -1,3 +1,6 @@
+Param(
+    [ValidateRange(1, 4)][Int]$HcCount = 4
+)
 $oa = 'C:\Program Files (x86)\Steam\steamapps\common\Arma 2 Operation Arrowhead'
 $script:pass = 0
 $script:fail = 0
@@ -18,13 +21,20 @@ C (TP (Join-Path $oa 'MPMissions\[61-2hc]warfarev2_073v48co_wave0725c4hc.zargaba
 C (Test-Path 'C:\WASP\profiles-pr8\server-pr8.cfg') 'server config'
 C (Test-Path 'C:\WASP\profiles-pr8\basic.cfg') 'basic.cfg (network tuning)'
 C (Test-Path 'C:\WASP\hc-profile\hc-video.cfg') 'hc-video.cfg'
-foreach ($l in @('server_launch.cmd', 'hc_launch.cmd', 'hc2_launch.cmd', 'hc3_launch.cmd', 'hc4_launch.cmd')) {
+# Only the launchers for the configured HC count are required (HC1 = hc_launch.cmd).
+$launchers = @('server_launch.cmd', 'hc_launch.cmd')
+foreach ($n in 2..4) { if ($n -le $HcCount) { $launchers += ('hc{0}_launch.cmd' -f $n) } }
+foreach ($l in $launchers) {
     C (Test-Path (Join-Path 'C:\WASP' $l)) "launcher $l"
 }
 C (Test-Path 'C:\Program Files (x86)\Steam\steam.exe') 'Steam'
-C (Test-Path 'C:\Program Files\Sandboxie-Plus\Start.exe') 'Sandboxie-Plus'
-foreach ($b in @('HC2', 'HC3', 'HC4')) {
-    C ([bool](Select-String -LiteralPath 'C:\Windows\Sandboxie.ini' -Pattern ("^\[" + $b + "\]") -Quiet)) "sandbox [$b]"
+# Sandboxie (and the HC2..HCN boxes) are only needed when more than one HC runs.
+if ($HcCount -ge 2) {
+    C (Test-Path 'C:\Program Files\Sandboxie-Plus\Start.exe') 'Sandboxie-Plus'
+    foreach ($n in 2..$HcCount) {
+        $b = ('HC{0}' -f $n)
+        C ([bool](Select-String -LiteralPath 'C:\Windows\Sandboxie.ini' -Pattern ("^\[" + $b + "\]") -Quiet)) "sandbox [$b]"
+    }
 }
 C (Test-Path 'C:\WASP\provision\Login-Steams.cmd') 'Login-Steams.cmd (your step)'
 

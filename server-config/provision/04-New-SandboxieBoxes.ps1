@@ -1,10 +1,16 @@
-# 04-New-SandboxieBoxes.ps1 - ensure Sandboxie boxes HC2/HC3/HC4 exist (idempotent)
+# 04-New-SandboxieBoxes.ps1 - ensure Sandboxie boxes HC2..HC<N> exist (idempotent)
+# -HcCount 1..4 (default 4): only boxes up to the configured HC count are created
+# (HC1 runs on the real Steam and needs no box; -HcCount 1 makes this a no-op).
 # If the synced C:\WASP carried an old Sandboxie.ini with a proven [HC2] section it is
 # NOT read automatically - this script edits the LIVE ini of the local install.
-# Clones the local [HC2] for HC3/HC4 when present, else writes a minimal section
+# Clones the local [HC2] for the higher boxes when present, else writes a minimal section
 # (defaults + templates from GlobalSettings apply; verify once in the Plus UI).
 # PowerShell 5.1 compatible. Run elevated.
+Param(
+    [ValidateRange(1, 4)][Int]$HcCount = 4
+)
 $ErrorActionPreference = 'Stop'
+if ($HcCount -lt 2) { Write-Host 'HcCount 1: HC1 uses the real Steam - no Sandboxie boxes needed.'; exit 0 }
 
 $iniCandidates = @(
     'C:\ProgramData\Sandboxie-Plus\Sandboxie.ini',
@@ -53,8 +59,10 @@ $hc2 = Get-Section -Text $raw -Name 'HC2'
 # for a sandboxed Steam + A2OA HC).
 $minimal = $nl + 'Enabled=y' + $nl + 'ConfigLevel=10' + $nl + 'AutoRecover=n' + $nl
 
+$boxes = @()
+foreach ($n in 2..$HcCount) { $boxes += ('HC{0}' -f $n) }
 $changed = $false
-foreach ($box in @('HC2', 'HC3', 'HC4')) {
+foreach ($box in $boxes) {
     $existing = Get-Section -Text $raw -Name $box
     if ($null -ne $existing) { Write-Host ("OK: [{0}] already present." -f $box); continue }
     if (($null -ne $hc2) -and ($box -ne 'HC2')) { $body = $hc2 } else { $body = $minimal }
