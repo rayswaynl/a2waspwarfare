@@ -53,6 +53,7 @@ A3_TRAPS = (
     "stance",  # A3-only, caught in PR 1202 review; unavailable on A2 OA 1.64.
     "groupId",  # A3-only GETTER (setGroupId is A2-fine and unmatched by \b); parse "Missing ]" live-burned wave0721 (teambar probe + commander lease); use str <group>
     "rankId",  # A3-only; A2 OA has string-returning `rank` only; shipped alongside groupId in wave0721
+    "currentWaypointPosition",  # invented identifier (exists in NO Arma); parse "Missing ;" killed server_side_patrols.sqf whole-file on the dbg0726e ZG soak; use waypointPosition [grp, currentWaypoint grp]
     # NOTE: bare "insert" excluded. A3_TRAPS matching uses word-boundary regex
     # on comment/string-masked text (safe), but "insert" appears in plain English
     # comments too frequently to avoid noise.

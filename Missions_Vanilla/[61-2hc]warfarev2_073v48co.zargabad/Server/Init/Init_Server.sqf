@@ -780,6 +780,8 @@ emptyQueu = [];
 		//--- Funds seed = commander start funds x FUNDS_MULT; supply spending stays 100% real.
 		_logik setVariable ["wfbe_aicom_funds", (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_START_FUNDS", 200000]), _syncAicomState]; //--- B36 hotfix (Ray): flat 200k AI-commander start cash (was FUNDS_START x FUNDS_MULT)
 		_logik setVariable ["wfbe_upgrades", _upgrades, true];
+		//--- Debug-visibility probe (owner ask 2026-07-26): log the seeded grant so a debug soak can grep it.
+		if (WF_Debug) then {diag_log Format ["[WFBE (INIT)] WF_DEBUG_UPGSEED side=%1 wfbe_upgrades=%2", _side, _upgrades]};
 		_logik setVariable ["wfbe_upgrading", false, true];
 		// Marty: Track the running upgrade ID so clients can display the upgrade name in the menu.
 		_logik setVariable ["wfbe_upgrading_id", -1, true];
