@@ -112,6 +112,13 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tic
 			//--- available (earned by destroying enemy factories, spent when a FOB is built). Depot-only - this pool IS
 			//--- the GUER depot. The map-correct truck trio comes from WFBE_C_GUER_FOB_TRUCKS (worldName-branched).
 			_fobTrucks = missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []];
+			//--- fable/guer-fob-civdepot-collision: strip FOB-truck classes appended by ANOTHER path before the token
+			//--- gate below runs. On TK/ZG "Ural_TK_CIV_EP1" is BOTH the FOB Barracks truck (Init_CommonConstants.sqf
+			//--- :192-197) and the last WFBE_C_GUER_CIVILIAN_DEPOT entry, so a 0-token depot still listed a green
+			//--- "FOB (Barracks)" row (Client_UIFillListBuyUnits.sqf relabels purely by classname) and a 1-token depot
+			//--- listed the truck twice. The FOB trucks are documented as NOT in the GUER roster - only the token gate
+			//--- may add them. Subtract-then-add keeps that invariant at every reseed site. Correctness fix - no flag.
+			_pool = _pool - _fobTrucks;
 			for "_fi" from 0 to ((count _fobTrucks) - 1) do {
 				if (_fi < (count _fobAvail) && {(_fobAvail select _fi) > 0}) then {_pool = _pool + [_fobTrucks select _fi]};
 			};
