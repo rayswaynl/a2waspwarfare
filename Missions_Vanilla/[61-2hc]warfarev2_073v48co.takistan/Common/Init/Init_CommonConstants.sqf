@@ -3195,7 +3195,7 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_
 //--- (Init_Server.sqf) and the client-side hold is never entered (Init_Client.sqf).
 if (isNil "WFBE_C_HC_LOBBY_LOCK") then {WFBE_C_HC_LOBBY_LOCK = 0}; //--- Master gate: 0=off (byte-identical), 1=on.
 if (isNil "WFBE_C_HC_LOBBY_TIMEOUT") then {WFBE_C_HC_LOBBY_TIMEOUT = 90}; //--- s of mission time: hard fail-open. A permanently missing HC opens the server anyway (logged loudly) instead of locking it out forever. Also the window in which the client-side gate is armed at all, so an ordinary mid-match JIP joiner never sees it. Keep it under the ~120s deadspawn-transit invulnerability budget in Init_Client.sqf.
-if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = -1}; //--- Expected seated-HC count. -1 (default) = DERIVE at runtime from the mission's own playable CIV (forceHeadlessClient) slot count, so CH/TK/ZG each get their own number and a future slot-layout change carries automatically. >=0 = explicit override (0 disables the lock).
+if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = 4}; //--- Expected seated-HC count. 4 (owner default 2026-07-26): the box runs 4 headless clients and all three terrains carry exactly 4 forceHeadlessClient CIV slots today (CH/TK/ZG mission.sqm, post-#1456). 0 disables the lock. -1 opts in to RUNTIME DERIVATION from the mission's own playable CIV slot count instead, which self-adjusts if a terrain's slot layout ever diverges from this constant.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

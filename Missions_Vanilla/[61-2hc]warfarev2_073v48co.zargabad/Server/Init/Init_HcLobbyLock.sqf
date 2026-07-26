@@ -35,18 +35,20 @@ private ["_timeout","_expected","_override","_source","_probe","_tries","_seated
 _timeout = missionNamespace getVariable ["WFBE_C_HC_LOBBY_TIMEOUT", 90];
 if (_timeout < 10) then {_timeout = 10}; //--- floor: a sub-10s window cannot cover any real HC seat.
 
-//--- EXPECTED SEATED-HC COUNT. Nothing in A2 OA can parse mission.sqm at runtime, so the mission's own
-//--- forceHeadlessClient slot count is derived from its runtime equivalent: the playable CIV units. Every
-//--- HC slot in this mission is a playable civilian (Functionary1, side CIV, forceHeadlessClient=1) and no
-//--- other playable civilian slot exists on any of the three terrains, so this yields the per-terrain slot
-//--- count without hardcoding 4 - CH/TK/ZG each get their own number and a future slot-layout change
-//--- carries automatically. Bounded retry rides out an empty first read during mission load.
-_override = missionNamespace getVariable ["WFBE_C_HC_LOBBY_EXPECTED", -1];
+//--- EXPECTED SEATED-HC COUNT. WFBE_C_HC_LOBBY_EXPECTED is the source of truth and ships at the owner's
+//--- default of 4 (2026-07-26): the box runs 4 headless clients, and all three terrains carry exactly 4
+//--- forceHeadlessClient CIV slots today (mission.sqm, post-#1456). Setting it to -1 opts in to the RUNTIME
+//--- DERIVATION below instead: nothing in A2 OA can parse mission.sqm at runtime, so the slot count is read
+//--- from its runtime equivalent, the playable CIV units. Every HC slot on every terrain is a playable
+//--- civilian (Functionary1, side CIV, forceHeadlessClient=1) and no other playable civilian slot exists, so
+//--- the derivation yields the per-terrain count and self-adjusts if a future slot layout ever diverges from
+//--- the constant. Bounded retry rides out an empty first read during mission load.
+_override = missionNamespace getVariable ["WFBE_C_HC_LOBBY_EXPECTED", 4];
 _expected = 0;
 _source = "derived";
 if (_override >= 0) then {
 	_expected = _override;
-	_source = "override";
+	_source = "flag";
 } else {
 	_tries = 0;
 	while {_expected <= 0 && {_tries < 20}} do {
@@ -67,7 +69,7 @@ if ((missionNamespace getVariable ["WFBE_C_AI_DELEGATION", -1]) != 2) then {
 	_expected = 0;
 };
 if (_expected <= 0 && {_source == "derived"}) then {
-	["WARNING", "Init_HcLobbyLock.sqf: could not derive an expected headless-client count from the playable CIV slots - the lobby lock stays OPEN (set WFBE_C_HC_LOBBY_EXPECTED to force a count)."] Call WFBE_CO_FNC_LogContent;
+	["WARNING", "Init_HcLobbyLock.sqf: could not derive an expected headless-client count from the playable CIV slots - the lobby lock stays OPEN (set WFBE_C_HC_LOBBY_EXPECTED to a positive count instead of -1)."] Call WFBE_CO_FNC_LogContent;
 };
 
 WFBE_HC_LOBBY_READY = (_expected <= 0);
