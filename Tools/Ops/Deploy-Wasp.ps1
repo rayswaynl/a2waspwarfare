@@ -187,6 +187,7 @@ param(
     [int]$LockStaleMinutes = 30,
     [string]$RptPath     = 'C:\Users\Administrator\AppData\Local\ArmA 2 OA\arma2oaserver.RPT',
     [string]$ExpectBuild,
+    [ValidateRange(1,4)][int]$HcCount = 2,   # HCs the box is configured to run (verify floor); live box default 2
     [int]$VerifyTimeoutSec = 480,
     [string]$TemplatePattern,
     [switch]$RunBuild,
@@ -246,7 +247,8 @@ function Test-WaspLive {
         [string]$ServiceName,
         [string]$RptPath,
         [string]$ExpectBuild,
-        [int]$TimeoutSec = 480
+        [int]$TimeoutSec = 480,
+        [int]$HcMin = 2
     )
     $deadline = (Get-Date).AddSeconds($TimeoutSec)
     $svcOk = $false; $procOk = $false; $buildOk = $false
@@ -258,7 +260,7 @@ function Test-WaspLive {
 
         $srv = @(Get-Process arma2oaserver -ErrorAction SilentlyContinue).Count
         $hc  = @(Get-Process ArmA2OA -ErrorAction SilentlyContinue).Count
-        $procOk = ($srv -ge 1 -and $hc -ge 2)   # dedicated server + both HCs
+        $procOk = ($srv -ge 1 -and $hc -ge $HcMin)   # dedicated server + the configured HC count
 
         if ($svcOk -and (Test-Path -LiteralPath $RptPath)) {
             $lines = @(Get-Content -LiteralPath $RptPath -ErrorAction SilentlyContinue)
@@ -577,7 +579,7 @@ if (-not $Apply) {
     Write-DryNote "phase 3 stage+copy: would place $pboName into $MissionsDir"
     Write-DryNote "phase 4 repoint : would dry-run cfg repoint while UP (verify-before-stop), then STOP service '$ServiceName' + end HCs, then real Set-MissionTemplate -Apply -MissionName '$missionName' (cfg unlocked only when stopped - BUG 1)"
     Write-DryNote "phase 5 restart : would safely (re)start via '$RestartTask' - end stuck task, kill orphan procs, trigger, then guard ${RestartGuardSec}s for '$ServiceName' Running (BUG 3)"
-    Write-DryNote "phase 6 verify  : would confirm service '$ServiceName' Running, 3 procs (server+2HC), and RPT 'WASPSCALE|v2|...|build=' contains '$ExpectBuild' - polling up to ${VerifyTimeoutSec}s (box surfaces build= ~5-6min post-restart; BUG 4)"
+    Write-DryNote "phase 6 verify  : would confirm service '$ServiceName' Running, $(1 + $HcCount) procs (server+${HcCount}HC), and RPT 'WASPSCALE|v2|...|build=' contains '$ExpectBuild' - polling up to ${VerifyTimeoutSec}s (box surfaces build= ~5-6min post-restart; BUG 4)"
     Write-Output "WASP_DEPLOY_DRYRUN map=$ActiveMap build=$Build mission=$missionName expectBuild=$ExpectBuild"
     return
 }
@@ -668,7 +670,7 @@ try {
     }
 
     # ── Phase 6: verify ───────────────────────────────────────────────────────────
-    $verifyOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath -ExpectBuild $ExpectBuild -TimeoutSec $VerifyTimeoutSec
+    $verifyOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath -ExpectBuild $ExpectBuild -TimeoutSec $VerifyTimeoutSec -HcMin $HcCount
     if ($verifyOk) {
         # prune any OTHER active-map PBOs so exactly one remains (park model + match-report dual-PBO guard).
         Get-ChildItem -LiteralPath $MissionsDir -Filter ("*.{0}.pbo" -f $map.Ext) -ErrorAction SilentlyContinue |
@@ -694,7 +696,7 @@ try {
     Remove-Item -LiteralPath $livePbo -Force -ErrorAction SilentlyContinue
     $rbUp = Invoke-WaspServiceRestart -RestartTask $RestartTask -ServiceName $ServiceName -GuardSec $RestartGuardSec
     $rbOk = $false
-    if ($rbUp) { $rbOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath -ExpectBuild (Get-ExpectedBuildToken $prevMissionName) -TimeoutSec $VerifyTimeoutSec }
+    if ($rbUp) { $rbOk = Test-WaspLive -ServiceName $ServiceName -RptPath $RptPath -ExpectBuild (Get-ExpectedBuildToken $prevMissionName) -TimeoutSec $VerifyTimeoutSec -HcMin $HcCount }
     Write-Output ("WASP_DEPLOY_ROLLED_BACK map={0} failedBuild={1} restored={2} verify={3}" -f $ActiveMap, $Build, $prevMissionName, ($(if($rbOk){'OK'}else{'UNCONFIRMED'})))
 }
 finally {

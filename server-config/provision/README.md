@@ -1,6 +1,9 @@
-# provision/ — new 4-HC box deployment runbook
+# provision/ — new WASP box deployment runbook (1-4 headless clients)
 
-Turn a freshly activated Windows Server box into the WASP 4-HC soak host.
+Turn a freshly activated Windows Server box into a WASP soak host running 1, 2, 3 or 4
+headless clients. **HC count is a parameter, not a different script set**: every script
+below takes `-HcCount 1..4` (default 4) — `Login-Steams.cmd` takes it as its first
+argument — so a 1-HC or 2-HC box runs this exact runbook with `-HcCount 1|2`.
 **The only manual step is `Login-Steams.cmd` (step 5).** Everything else is scripted.
 
 No hostnames, IPs, usernames, or credentials live in this folder — pass them as
@@ -14,10 +17,10 @@ parameters at run time. Never commit them here (public repo).
 | 1 | `powershell -ExecutionPolicy Bypass -File .\01-Base-OS.ps1` | High Performance power plan, firewall openings (UDP 2302-2306), reports VBS/HVCI + SMT state |
 | 2 | `powershell -ExecutionPolicy Bypass -File .\02-Install-Apps.ps1` | Installs Steam + Sandboxie-Plus via winget (fallback URLs printed if winget is missing) |
 | 3 | `powershell -ExecutionPolicy Bypass -File .\03-Sync-GameFiles.ps1 -SourceHost <old-box> -SourceUser <user>` | Pulls the game install (incl. `Dll\` allocators + mods) and `C:\WASP\` from the old box over scp |
-| 4 | `powershell -ExecutionPolicy Bypass -File .\04-New-SandboxieBoxes.ps1` | Creates Sandboxie boxes `HC2`/`HC3`/`HC4` (clones `[HC2]` if the synced ini has one) |
-| 5 | **`Login-Steams.cmd`** | **MANUAL: log the 4 HC Steam accounts in, one guided prompt at a time. One-time; sessions persist per sandbox.** |
-| 6 | `powershell -ExecutionPolicy Bypass -File .\Start-Wasp-4HC.ps1` | Starts server + HC1-HC4 staggered, then applies the affinity map |
-| 7 | `powershell -ExecutionPolicy Bypass -File .\Verify-4HC.ps1` | PASS/FAIL: 5 processes, affinity map, 4x `HCSIDE\|v1\|connect` in the server RPT |
+| 4 | `powershell -ExecutionPolicy Bypass -File .\04-New-SandboxieBoxes.ps1 -HcCount 4` | Creates Sandboxie boxes `HC2`..`HC<N>` (clones `[HC2]` if the synced ini has one; no-op at `-HcCount 1`) |
+| 5 | **`Login-Steams.cmd <N>`** | **MANUAL: log the first N HC Steam accounts in, one guided prompt at a time. One-time; sessions persist per sandbox.** |
+| 6 | `powershell -ExecutionPolicy Bypass -File .\Start-Wasp-4HC.ps1 -HcCount 4` | Starts server + HC1..HC<N> staggered, then applies the affinity map |
+| 7 | `powershell -ExecutionPolicy Bypass -File .\Verify-4HC.ps1 -HcCount 4` | PASS/FAIL: 1+N processes, affinity map, Nx `HCSIDE\|v1\|connect` in the server RPT |
 
 Steps 1-4 are idempotent — re-run freely. Step 3 can resume (scp per-directory).
 
@@ -36,7 +39,8 @@ Applied by `Set-WaspAffinity.ps1` (called from `Start-Wasp-4HC.ps1`; safe to re-
 
 If SMT is off (8 logical CPUs) the script detects it and pins 1 logical CPU per HC,
 2 for the server. HC processes are told apart by their `-name=HC-AI-Control-N`
-command line, not window title.
+command line, not window title. With `-HcCount <N>` only rows up to HC<N> apply and
+the map needs `2 + N` physical cores — so 2 HCs fit a 4-core box, 1 HC a 3-core one.
 
 Launch parameters (`-exThreads=3 -cpuCount=2` on HCs) are deliberately unchanged from
 the 2-HC baseline so soak numbers stay comparable; affinity is layered on top.
@@ -76,6 +80,12 @@ the 2-HC baseline so soak numbers stay comparable; affinity is layered on top.
   length or rotate the RPT between runs.
 - Steam Guard: have the e-mail/authenticator for each HC account ready at step 5 —
   that is the whole manual step.
+- **HC start order**: `hc_launch.cmd` (HC1) opens with `taskkill /f /im ArmA2OA.exe`,
+  which kills every HC — HC1 must always start first, at any `-HcCount`.
+  `Start-Wasp-4HC.ps1` guarantees the order; keep it if you hand-fire launchers. The
+  kill stays in `hc_launch.cmd` deliberately: counts are contiguous (1..N) so HC1 is
+  always in the set, and scheduled tasks that fire `hc_launch.cmd` standalone rely on
+  it to clear a stuck HC before relaunching.
 - The server runs `-malloc=mimalloc`, HCs `-malloc=tbb4malloc_bi`; both DLLs ride along
   in the game `Dll\` folder synced in step 3. If the server RPT logs an allocator
   fallback, the sync missed `Dll\`.

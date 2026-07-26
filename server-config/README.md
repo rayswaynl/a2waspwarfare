@@ -20,6 +20,12 @@ Arma 2 OA defaults.
 | `hc3_launch.cmd` | `C:\WASP\hc3_launch.cmd` | Headless client 3 launcher (Sandboxie-isolated 3rd Steam) |
 | `hc4_launch.cmd` | `C:\WASP\hc4_launch.cmd` | Headless client 4 launcher (Sandboxie-isolated 4th Steam) |
 
+The box's HC count is a deployment choice (1-4): copy and fire only the launchers up
+to the configured count (HC1 = `hc_launch.cmd`; counts are contiguous, HC1 always runs
+and must start FIRST - its opening `taskkill` clears every HC). The provisioning and
+start/verify scripts under `provision/` take `-HcCount 1..4` (default 4); the mission
+itself needs no rebuild - it follows the live connected-HC set at any count.
+
 ## Why this matters — the load-bearing settings
 
 - **`MaxSizeGuaranteed = 512`** in `basic.cfg` is the fix for the permanent-black
