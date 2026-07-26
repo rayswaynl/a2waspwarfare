@@ -101,7 +101,11 @@ WFBE_HC_FNC_ParkSeaHC = {
 	//--- belt+suspenders identity check: `player` on this file is always the HC, but also accept the known
 	//--- HC unit names (A2-safe `in` on a string list - no A3 find/select-substring). If somehow neither, we
 	//--- still proceed because this file only executes on a headless client (the whole run is HC-scoped).
-	private "_isHC"; _isHC = (name _u) in ["HC-AI-Control-1", "HC-AI-Control-2", "HC"];
+	//--- DIAGNOSTIC ONLY - _isHC gates nothing, it is just the isHC=%2 token in the two log lines below.
+	//--- Shared list from Init_CommonConstants.sqf (Call'd at initJIPCompatible.sqf:140, long before this
+	//--- file is execVM'd at :370, so WFBE_C_HC_NAMES is always defined here). The old literal stopped at
+	//--- HC-AI-Control-2, so on the 4-HC box HC3 and HC4 parked correctly but logged a misleading isHC=false.
+	private "_isHC"; _isHC = (name _u) in WFBE_C_HC_NAMES;
 	//--- PROTECT + DISARM the body (same rationale as ParkDeadspawn's allowDamage/setCaptive): the HC avatar is
 	//--- the lone client-init-skipped body; keep it unkillable + non-hostile, and now fully disarmed.
 	_u allowDamage false;
