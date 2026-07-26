@@ -7,6 +7,7 @@ import argparse
 import re
 import subprocess
 from collections.abc import Iterable
+from pathlib import Path
 
 
 TERRAIN_FACTIONS = {
@@ -45,12 +46,64 @@ CHAIN_LOADED_FACTIONS = {
     "GUE_PlayerOverlay": {"GUE", "TKGUE"},
 }
 
+CANONICAL_SOURCE_TERRAIN = "Missions/[55-2hc]warfarev2_073v48co.chernarus/"
 
-def find_unreachable_paths(paths: Iterable[str]) -> list[str]:
+
+def synced_generated_root_paths(paths: Iterable[str]) -> set[str]:
+    """Return changed Core_Root files proved identical to their source/mirror peer.
+
+    LoadoutManager copies the Chernarus source tree to the Takistan and Zargabad
+    trees.  A source-and-mirror change can therefore legitimately touch a Root
+    whose filename is not selected on one of those terrains.  Keep the audit
+    strict for independent edits: the exemption requires both counterpart paths
+    to be in the diff and their bytes to be identical at HEAD.
+    """
+    normalized_paths = {path.replace("\\", "/") for path in paths}
+    exempt = set()
+    root_prefix = "Common/Config/Core_Root/Root_"
+
+    for path in normalized_paths:
+        if root_prefix not in path or not path.endswith(".sqf"):
+            continue
+
+        if path.startswith(CANONICAL_SOURCE_TERRAIN):
+            relative = path[len(CANONICAL_SOURCE_TERRAIN) :]
+            peers = [
+                candidate
+                for candidate in normalized_paths
+                if candidate != path
+                and candidate.endswith(relative)
+                and candidate.startswith("Missions_Vanilla/")
+            ]
+        else:
+            terrain_end = path.find("/Common/Config/")
+            if terrain_end < 0:
+                continue
+            relative = path[terrain_end + 1 :]
+            peers = [CANONICAL_SOURCE_TERRAIN + relative]
+
+        for peer in peers:
+            if peer not in normalized_paths:
+                continue
+            try:
+                if Path(path).read_bytes() == Path(peer).read_bytes():
+                    exempt.add(path)
+                    exempt.add(peer)
+            except OSError:
+                continue
+    return exempt
+
+
+def find_unreachable_paths(
+    paths: Iterable[str], *, exempt_paths: Iterable[str] = ()
+) -> list[str]:
     """Return changed faction config paths whose fixed terrain cannot load them."""
+    exempt = {path.replace("\\", "/") for path in exempt_paths}
     unreachable = []
     for path in paths:
         normalized = path.replace("\\", "/")
+        if normalized in exempt:
+            continue
         match = FACTION_CONFIG_PATTERN.search(normalized)
         if match is None:
             continue
@@ -90,7 +143,7 @@ def main() -> int:
     if args.diff_from and args.paths:
         parser.error("pass explicit paths or --diff-from, not both")
     paths = changed_paths(args.diff_from) if args.diff_from else args.paths
-    unreachable = find_unreachable_paths(paths)
+    unreachable = find_unreachable_paths(paths, exempt_paths=synced_generated_root_paths(paths))
 
     for path in unreachable:
         print(f"{path}: FAREACH: faction configuration is unreachable on this terrain")

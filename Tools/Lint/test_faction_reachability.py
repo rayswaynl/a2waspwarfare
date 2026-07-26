@@ -70,6 +70,26 @@ class FactionReachabilityTests(unittest.TestCase):
         self.assertEqual(check_faction_reachability.find_unreachable_paths([live_path]), [])
         self.assertEqual(check_faction_reachability.find_unreachable_paths([dead_path]), [dead_path])
 
+    def test_canonical_root_configs_and_their_generated_mirrors_are_allowed(self) -> None:
+        # LoadoutManager copies the Chernarus source tree to TK/ZG.  Root_TKGUE is
+        # canonical source for the live Takistan-family Root_TKGUE files, while
+        # Root_GUE is its generated mirror on those terrain trees.  The audit must
+        # not reject a source-and-mirror update solely because the filename reflects
+        # the terrain where that copy is not selected at runtime.
+        paths = [
+            "Missions/[55-2hc]warfarev2_073v48co.chernarus/"
+            "Common/Config/Core_Root/Root_TKGUE.sqf",
+            "Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/"
+            "Common/Config/Core_Root/Root_GUE.sqf",
+            "Missions_Vanilla/[61-2hc]warfarev2_073v48co.zargabad/"
+            "Common/Config/Core_Root/Root_GUE.sqf",
+        ]
+
+        self.assertEqual(
+            check_faction_reachability.find_unreachable_paths(paths, exempt_paths=paths),
+            [],
+        )
+
     def test_chain_loaded_second_layer_configs_are_reachable_via_their_loader_faction(self) -> None:
         # Regression guard (#1297 night-fold bounce): CombinedOps artillery (Artillery_CO_*,
         # Artillery_OA_*) and Root_GUE_PlayerOverlay are chain-loaded from a live faction Root,
