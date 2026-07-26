@@ -69,6 +69,13 @@ WFBE_CL_UnitMarkerRegistry = WFBE_CL_UnitMarkerRegistry + [_entry];
 WFBE_CL_UnitMarkerLedger = WFBE_CL_UnitMarkerLedger + [_markerName];
 
 // Marty: First registration starts the consolidated loop; exactly one per client.
-if (isNil "WFBE_CL_MarkerLoopHandle") then {
+//--- fix/marker-loop-boolcmp (owner-live 2026-07-26): also RESPAWN the loop if its script has DIED -
+//--- a single runtime error inside Common_MarkerLoop.sqf terminates it (proven live: the armed
+//--- WFBE_C_MARKER_BUDGET_ADAPT BOOLCMP at its L308 killed it ~2min in), and with no watchdog every
+//--- registered marker then froze on the map for the rest of the mission (phantom unit markers).
+//--- Registrations are constant on this mission, so the next unit/AAR registration revives upkeep
+//--- and the loop's own null/dead cleanup + 60s ledger sweep clear any stale markers within a pass.
+//--- Lazy {} keeps scriptDone unevaluated while the handle is still nil (first registration).
+if (isNil "WFBE_CL_MarkerLoopHandle" || {scriptDone WFBE_CL_MarkerLoopHandle}) then {
 	WFBE_CL_MarkerLoopHandle = [] Spawn WFBE_CL_MarkerLoop;
 };

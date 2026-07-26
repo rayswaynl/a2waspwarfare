@@ -305,7 +305,13 @@ while {true} do {
 				// budget gate entirely, so a low-fps client's shrunk budget only thins the bulk
 				// anonymous pool and never delays the markers that matter. Flag off: _isPriorityEntry
 				// is always false here, so the gate is byte-identical to the pre-existing check.
-				_isPriorityEntry = _budgetAdaptEnabled && {((_entry select 11) == 1) || {((_entry select 10) == "man") && {group _tracked == group player}}};
+				//--- fix/marker-loop-boolcmp (owner-live 2026-07-26, 4-HC Zargabad soak dbg0726e): slot 11 is the
+				//--- registrar's _isHQ BOOLEAN (Common_MarkerUpdate.sqf entry layout), so == 1 on it is the A2-OA
+				//--- BOOLCMP trap: with WFBE_C_MARKER_BUDGET_ADAPT armed the first serviced entry threw
+				//--- "Error ==: Type Bool" (client RPT, Common_MarkerLoop.sqf line 308) and KILLED this whole loop -
+				//--- every unit/AAR marker froze at its creation position forever ("phantom unit markers").
+				//--- Use the Bool directly, same idiom as the existing if !(_entry select 11) below (~L321).
+				_isPriorityEntry = _budgetAdaptEnabled && {(_entry select 11) || {((_entry select 10) == "man") && {group _tracked == group player}}};
 				if (!_isPriorityEntry && {_budgetServiced >= _budgetMax}) exitWith {};
 				_budgetServiced = _budgetServiced + 1;
 
