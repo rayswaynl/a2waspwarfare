@@ -18,7 +18,7 @@ private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","
 	"_feedChangeOnly","_feedKeepAlive","_feedSig","_feedLastSig","_feedChanged","_feedDue","_feedLastBroadcast",
 	"_perfProbe","_perfCap","_perfReason","_perfPopTier",
 	"_rcSide","_rcSideID","_rcLogik","_rcCount","_rcOld","_entryLdr","_entryGrp",
-	"_pwEnabled","_pwLastSample","_pwMins","_pwDist","_pwWpDist","_pwMaxStrikes","_pwEntry","_pwLdr","_pwSideID","_pwGrp","_pwVeh","_pwPos","_pwWpPos","_pwLastPos","_pwStrikes","_pwSide","_pwTier","_pwUnits","_pwVehicles","_pwV","_pwFound"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler); +_entryLdr/_entryGrp (B66-style any-live-member scrub test, review-1254 defect fix). Grok idea #8 (side-patrol stuck watchdog): +_pw* (see WFBE_C_SIDE_PATROL_UNSTUCK block below).
+	"_pwEnabled","_pwLastSample","_pwMins","_pwDist","_pwWpDist","_pwMaxStrikes","_pwEntry","_pwLdr","_pwSideID","_pwGrp","_pwVeh","_pwPos","_pwWpPos","_pwLastPos","_pwStrikes","_pwSide","_pwTier","_pwUnits","_pwVehicles","_pwV","_pwFound","_pwWpIdx"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler); +_entryLdr/_entryGrp (B66-style any-live-member scrub test, review-1254 defect fix). Grok idea #8 (side-patrol stuck watchdog): +_pw* (see WFBE_C_SIDE_PATROL_UNSTUCK block below).
 
 waitUntil {townInitServer};
 sleep 30;
@@ -188,7 +188,13 @@ while {!WFBE_GameOver} do {
 					if (!isNull _pwGrp) then {
 						_pwVeh   = vehicle _pwLdr;
 						_pwPos   = getPos _pwVeh;
-						_pwWpPos = currentWaypointPosition _pwGrp;
+						//--- currentWaypointPosition is not a real A2-OA command; the resulting parse error ("Error
+						//--- Missing ;") killed this WHOLE file at ExecVM compile - no patrol logic ran all match
+						//--- (dbg0726e ZG soak). Guarded A2 idiom per Common_GetTeamMarkerDestPos.sqf: currentWaypoint
+						//--- returns lastIndex+1 once all waypoints are complete; [0,0,0] = the existing skip path below.
+						_pwWpIdx = currentWaypoint _pwGrp;
+						_pwWpPos = [0,0,0];
+						if (_pwWpIdx < count (waypoints _pwGrp)) then {_pwWpPos = waypointPosition [_pwGrp, _pwWpIdx]};
 						//--- Only a patrol with a genuinely DISTANT live waypoint can be "stuck" - a patrol
 						//--- that already arrived (camp sweep, town-center hold, convoy payout) sits close
 						//--- to its last-laid waypoint and is correctly SKIPPED here, never mistaken for wedged.
@@ -280,6 +286,11 @@ while {!WFBE_GameOver} do {
 		if (!isNull _logik) then {
 			_upgrades = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 			_lvl = if (count _upgrades > WFBE_UP_PATROLS) then {_upgrades select WFBE_UP_PATROLS} else {0};
+			//--- Debug-visibility probe (owner ask 2026-07-26): one-shot proof the clearance-7 grant reaches this read.
+			if (WF_Debug && {isNil {_logik getVariable "wfbe_patrol_dbgread"}}) then {
+				_logik setVariable ["wfbe_patrol_dbgread", true];
+				diag_log Format ["[WFBE (DEBUG)] server_side_patrols.sqf: first upgrades read side=%1 lvl=%2 wfbe_upgrades=%3", _side, _lvl, _upgrades];
+			};
 			//--- B67 (Ray 2026-06-21): GUER players should SEE GUER patrols on the map. Root cause: GUER (resistance,
 			//--- = WFBE_DEFENDER) has NO upgrade/HQ system, so _lvl was ALWAYS 0 here -> the dispatch below never ran
 			//--- for GUER -> WFBE_ACTIVE_PATROLS never held a resistance entry -> updatepatrolmarkers.sqf (which already
