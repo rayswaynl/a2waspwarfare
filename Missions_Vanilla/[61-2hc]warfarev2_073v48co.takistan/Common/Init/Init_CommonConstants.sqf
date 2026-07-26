@@ -3181,5 +3181,21 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE") then {WFBE_C_AICOM_CARGO_A
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST = 35000}; //--- AICOM-treasury $ added on top of WFBE_C_AICOM_CARGO_AIRDROP_COST only on a call that actually spawns the escort this time; anchored near A10_US_EP1's registered 32,320 unit price plus a pilot.
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES = ["A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]}; //--- fixed-wing attack-jet candidates only (Plane-kind subset of AI_Commander_AirResp.sqf's allowlist); intersected against the side's own WFBE_<SIDE>AIRCRAFTUNITS roster at dispatch so the pick is always side-safe/reachable, never hardcoded to one faction.
 
+//--- HC LOBBY LOCK (feat/hc-lobby-lock, owner request 2026-07-26): hold joining PLAYERS out of play
+//--- until every expected headless client has actually seated, then open automatically. Observed on the
+//--- 4-HC soak box: on a cold start the HCs race the mission load, HC1 lands in a BLUFOR player slot and
+//--- the others grey out with no slot, and the only remedy so far is a manual post-start bounce (an HC
+//--- that JIPs into a LIVE mission seats correctly; one that connects during mission load does not).
+//--- A2 OA gives the mission NO hook on the engine's own role/slot screen, and the two engine-level locks
+//--- are both unavailable here (server.cfg `password` is read at STARTUP only and the running server holds
+//--- an exclusive lock on the cfg; `#lock`/serverCommand needs a logged-in admin or BattlEye, and BattlEye
+//--- is deliberately disabled on this box) - so the lock is mission-side and holds the joiner AFTER slot
+//--- selection, in the deadspawn holding area, before base placement.
+//--- 0 (default) = OFF, byte-identical to HEAD: the server-side authority is never launched
+//--- (Init_Server.sqf) and the client-side hold is never entered (Init_Client.sqf).
+if (isNil "WFBE_C_HC_LOBBY_LOCK") then {WFBE_C_HC_LOBBY_LOCK = 0}; //--- Master gate: 0=off (byte-identical), 1=on.
+if (isNil "WFBE_C_HC_LOBBY_TIMEOUT") then {WFBE_C_HC_LOBBY_TIMEOUT = 90}; //--- s of mission time: hard fail-open. A permanently missing HC opens the server anyway (logged loudly) instead of locking it out forever. Also the window in which the client-side gate is armed at all, so an ordinary mid-match JIP joiner never sees it. Keep it under the ~120s deadspawn-transit invulnerability budget in Init_Client.sqf.
+if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = -1}; //--- Expected seated-HC count. -1 (default) = DERIVE at runtime from the mission's own playable CIV (forceHeadlessClient) slot count, so CH/TK/ZG each get their own number and a future slot-layout change carries automatically. >=0 = explicit override (0 disables the lock).
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

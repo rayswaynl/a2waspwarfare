@@ -179,6 +179,16 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
 	missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", []];
 };
 
+//--- HC LOBBY LOCK (feat/hc-lobby-lock 2026-07-26): server-side readiness authority + heartbeat. Launched
+//--- HERE (immediately after the HC registry is created, well before serverInitFull) so the readiness state
+//--- exists as early as possible - a client that reaches the gate before the first heartbeat simply keeps
+//--- waiting on its own bounded budget. Same launch idiom as the Init_NavalHVT / Init_IcbmTel / Init_ZgKoth
+//--- blocks further down. Flag off (default) = never launched.
+if ((missionNamespace getVariable ["WFBE_C_HC_LOBBY_LOCK", 0]) > 0) then {
+	[] execVM "Server\Init\Init_HcLobbyLock.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Init_HcLobbyLock.sqf launched (WFBE_C_HC_LOBBY_LOCK>0)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- NEURO: Special Condition.
 missionNamespace setVariable["NEURO_TAXI_CONDITION", "isNil {_x getVariable 'WFBE_Taxi_Prohib'} && local _x"];
 
