@@ -228,6 +228,41 @@ _rearmor = {
 					_vehicles = _vehicles + [_vehicle];
 					_perfVehicles = _perfVehicles + 1;
 					if (_isAirHull) then {_airTeamHulls = _airTeamHulls + 1};
+					//--- carrier-air-deckspawn (claude 2026-07-27): CORRECTNESS FIX for the OWNER-REPORTED "units stuck on the
+					//--- carriers". AICOM founds AIR teams on a captured carrier via AI_Commander_Teams.sqf cmdcon41 (_spawnPos =
+					//--- getPos of the deck hangar) -> Common_RunCommanderTeam -> here. WFBE_CO_FNC_CreateVehicle's createVehicle
+					//--- over open water re-seats the hull at the WATER SURFACE despite _position Z (the exact quirk the PLAYER
+					//--- path documents + corrects at Client_BuildUnit.sqf:719-730), so a founded carrier aircraft dropped to the
+					//--- waterline and sat stuck / drowned. Nothing on the AICOM founding path (Common_CreateTeam/RunCommanderTeam,
+					//--- AI_Commander_Teams) had any deck-Z reseat. Mirror the proven player post-create reseat, scoped to an AIR
+					//--- hull spawned OVER WATER on a carrier: read the authoritative deck height (wfbe_naval_deckz) off the
+					//--- nearest wfbe_is_carrier_hvt town logic (Init_NavalHVT.sqf:742/311 - the SAME logic object carries both),
+					//--- and if the hull sank below the deck, setPosASL it back up. Helis (FORM [0,0,-1] kick) settle with zeroed
+					//--- velocity; planes (FLY horizontal launch) keep velocity so a sunk edge-case still flies off. Inert
+					//--- off-carrier (surfaceIsWater false on land airfields -> no scan) and when no carrier logic is within range.
+					//--- A2-OA-safe: surfaceIsWater (Common_RunCommanderTeam.sqf:1216), setPosASL/getPosASL (Client_BuildUnit.sqf:
+					//--- 725-727), object isKindOf (Common_CreateVehicle.sqf:47), distance, forEach.
+					if (_isAirHull && {!isNull _vehicle} && {surfaceIsWater _position}) then {
+						private ["_deckZ","_navD","_vp"];
+						_deckZ = -1;
+						_navD  = 1e9;
+						if (!isNil "towns") then {
+							{
+								if ((_x getVariable ["wfbe_is_carrier_hvt", false]) && {(_x distance _position) < _navD}) then {
+									_navD  = _x distance _position;
+									_deckZ = _x getVariable ["wfbe_naval_deckz", 15.9];
+								};
+							} forEach towns;
+						};
+						if ((_deckZ >= 0) && {_navD < 600}) then {
+							_vp = getPosASL _vehicle;
+							if ((_vp select 2) < (_deckZ - 3)) then {
+								_vehicle setPosASL [_vp select 0, _vp select 1, _deckZ];
+								if (_vehicle isKindOf "Helicopter") then {_vehicle setVelocity [0, 0, 0]};
+								["INFORMATION", Format ["Common_CreateTeam.sqf: carrier deck reseat applied to air hull [%1] (side %2, deckZ %3, wasZ %4).", typeOf _vehicle, _side, _deckZ, _vp select 2]] Call WFBE_CO_FNC_LogContent;
+							};
+						};
+					};
 				};
 			};
 		};
