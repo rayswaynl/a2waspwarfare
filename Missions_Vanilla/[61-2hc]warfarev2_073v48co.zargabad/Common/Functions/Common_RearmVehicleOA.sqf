@@ -1,4 +1,4 @@
-Private['_amount','_get','_isArtillery','_magazines','_side','_turrets','_type','_vehicle','_sam','_weapons'];
+Private['_amount','_get','_isArtillery','_side','_type','_vehicle','_sam'];
 
 _vehicle = _this select 0;
 _side = _this select 1;
@@ -6,18 +6,9 @@ _type = typeOf _vehicle;
 _sam =['2S6M_Tunguska','M6_EP1'];
 if ((typeOf _vehicle) in _sam || (typeOf _vehicle) isKindof "StaticATWeapon") then {_vehicle setVehicleAmmo 1}else{
 
-//--- Clear the vehicle first.
-_vehicle setVehicleAmmo 0;
-//--- Get all weapons on the vehicles (Turrets) & reload.
-_turrets = (_vehicle) Call WFBE_CO_FNC_GetVehicleTurretsGear;
-[_vehicle, _turrets] Call WFBE_CO_FNC_SetTurretsMagazines;
-
-//--- Driver specific loadout.
-_magazines = getArray(configFile >> "CfgVehicles" >> typeOf _vehicle >> "magazines");
-{_vehicle addMagazineTurret [_x, [-1]]} forEach _magazines;
-
-//--- Reload the vehicle.
-
+//--- Let OA restore each configured weapon/magazine binding. Replaying a combined turret
+//--- magazine list by path lets a multi-muzzle turret bind an ATGM to its coaxial MG.
+_vehicle setVehicleAmmo 1;
 reload _vehicle;};
 
 //--- IR Smoke
