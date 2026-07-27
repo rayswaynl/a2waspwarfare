@@ -20,7 +20,7 @@
 	data; live group reads per-team; GroupGetBool for the A2 group-bool trap; no A3 commands).
 */
 
-private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_expandWarnTown","_expandWarnDist","_myTowns","_engageMin","_expandFirst","_concentrate","_pfEnTowns","_pfMyEff","_pfEnEff","_pfDominant","_tnOn","_tnTeamOn","_tnRing","_tnWeight"];
+private ["_side","_sideID","_enemyID","_logik","_snap","_tgtTowns","_ownTowns","_myHQ","_teams","_fist","_garGrp","_harassTgt","_harassFar","_harassN","_frontDist","_expandN","_neutTowns","_expandCount","_expandWarnTown","_expandWarnDist","_myTowns","_engageMin","_expandFirst","_concentrate","_pfEnTowns","_pfMyEff","_pfEnEff","_pfDominant","_tnOn","_tnTeamOn","_tnRing","_tnWeight","_syncAicomState"];
 //--- review-fix (codex reject 2026-07-19): _tnOn/_tnTeamOn/_tnRing/_tnWeight hoisted to top-level
 //--- (were declared private INSIDE the if(!_fromFocus) scorer block below but _tnTeamOn/_tnRing are
 //--- read in the top-level ASSIGN team loop - OA private scoping destroys them when that block
@@ -33,6 +33,11 @@ _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOCATE_ENABLE", 0]) <= 0) exitWith {};
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
+//--- fable/sidepatrol-front-bias-20260727: reuse the EXISTING WFBE_C_AICOM_PUBLIC_STATE_SYNC flag (same
+//--- pattern as wfbe_aicom_running/funds in AI_Commander.sqf) to optionally broadcast wfbe_aicom_targets so an
+//--- HC-hosted reader (e.g. a delegated side patrol) can see it too. Default 0 = local-only setVariable, byte-
+//--- identical to before this change.
+_syncAicomState = (missionNamespace getVariable ["WFBE_C_AICOM_PUBLIC_STATE_SYNC", 0]) > 0;
 _snap = _logik getVariable ["wfbe_aicom2_snap", []];
 if (count _snap < 26) exitWith {};   //--- no / short snapshot yet (26 fields, indices 0..25)
 _sideID   = _snap select WFBE_SNAP_SIDEID;
@@ -41,7 +46,7 @@ _tgtTowns = _snap select WFBE_SNAP_TGTTOWNOBJS;   //--- capturable enemy/neutral
 _ownTowns = _snap select WFBE_SNAP_OWNTOWNOBJS;
 _myHQ     = _snap select WFBE_SNAP_MYHQ;
 _teams    = _logik getVariable ["wfbe_teams", []];
-if (count _tgtTowns == 0) exitWith { _logik setVariable ["wfbe_aicom_targets", []] };   //--- nothing to take
+if (count _tgtTowns == 0) exitWith { _logik setVariable ["wfbe_aicom_targets", [], _syncAicomState] };   //--- nothing to take
 
 //--- EXPANSION-FIRST GATE (Ray 2026-06-28): until this side OWNS >= WFBE_C_AICOM_ENGAGE_MIN_TOWNS towns it does NOT
 //--- attack the enemy - the fist + rear-harass target NEUTRAL towns only, so both commanders build an empire before
@@ -361,7 +366,7 @@ if (!_fromFocus) then {
 	_logik setVariable ["wfbe_aicom_auto_primary", _autoPrim];
 };
 
-_logik setVariable ["wfbe_aicom_targets", _fist];   //--- the fist is the side's published main effort
+_logik setVariable ["wfbe_aicom_targets", _fist, _syncAicomState];   //--- the fist is the side's published main effort
 //--- BUG-2 REPICK-MEMORY STAMP (fable, GR-2026-07-03a): remember this tick's fist primary for WFBE_C_AICOM_REPICK_MEMORY_MIN
 //--- minutes so the anti-dogpile penalty above deprioritises it on the next picks. Append-and-dedup on the side logic.
 if ((missionNamespace getVariable ["WFBE_C_AICOM_REPICK_PENALTY", 500]) > 0 && {count _fist > 0}) then {
