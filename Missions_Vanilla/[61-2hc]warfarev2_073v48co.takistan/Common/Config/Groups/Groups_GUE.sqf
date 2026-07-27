@@ -182,4 +182,80 @@ _u = _u + ["T72_GUE"];
 
 _l = _l + [_u];
 
+//--- fable/roster-expansion (c8-unit-rosters/r2/r2-guer-rosters.md R1-R7, owner-approved 2026-07-27):
+//--- 7 new distinctly-roled GUER garrison keys, additive only - no existing key or weight touched.
+//--- Every classname verified against Core_GUE.sqf. Vehicle crew is NOT listed explicitly - ground
+//--- hulls auto-crew via WFBE_GUERCREW (GUE_Soldier_Crew, Root_GUE.sqf:6) inside Common_CreateTeam.sqf.
+//--- Any additional Man classname in a roster below spawns standing at the group position (this
+//--- consumer has no cargo-seat step), matching R6's "posted, not carried" design; this also means the
+//--- paper's own R2/R3/R4/R7 seat-capacity caveat does not apply to THIS file (garrison rosters are
+//--- seat-exempt, OWNER-RULINGS.md ruling 2). R8 (Dug-In Mortars) is intentionally SKIPPED - see
+//--- impl/guer-manifest.md.
+
+//--- R1 Technical_Pair ("Desert Wolves"): DShKM suppression + SPG-9 AT/anti-structure technical,
+//--- crew-only raid pair. Core_GUE.sqf:84,87.
+_k = _k + ["Technical_Pair"];
+_u		= ["Offroad_DSHKM_Gue"];
+_u = _u + ["Offroad_SPG9_Gue"];
+
+_l = _l + [_u];
+
+//--- R2 AT_Ambush ("Widowmaker Team"): BRDM-2 + 2x AT specialist, a mounted hunter-killer pair distinct
+//--- from the foot-only Team_AT. Core_GUE.sqf:101,20.
+_k = _k + ["AT_Ambush"];
+_u		= ["BRDM2_GUE"];
+_u = _u + ["GUE_Soldier_AT"];
+_u = _u + ["GUE_Soldier_AT"];
+
+_l = _l + [_u];
+
+//--- R3 MANPADS_Screen ("Skywatch Cell"): BRDM-2 + 2x MANPADS gunner - GUER's mobile counter to
+//--- WEST/EAST air mobility, distinct from the static AA_Light/AA_Heavy truck. Core_GUE.sqf:101,23.
+_k = _k + ["MANPADS_Screen"];
+_u		= ["BRDM2_GUE"];
+_u = _u + ["GUE_Soldier_AA"];
+_u = _u + ["GUE_Soldier_AA"];
+
+_l = _l + [_u];
+
+//--- R4 Mechanized_QRF ("Rapid Reserve"): BMP-2 + Commander/AT/MG/Medic - GUER's first mechanized
+//--- garrison WITH riders (existing Mechanized/Mechanized_Heavy are vehicle-only, no dismounts).
+//--- Core_GUE.sqf:111,53,20,29,35.
+_k = _k + ["Mechanized_QRF"];
+_u		= ["BMP2_GUE"];
+_u = _u + ["GUE_Commander"];
+_u = _u + ["GUE_Soldier_AT"];
+_u = _u + ["GUE_Soldier_MG"];
+_u = _u + ["GUE_Soldier_Medic"];
+
+_l = _l + [_u];
+
+//--- R5 Armored_Captured ("Trophy Crew"): single crew-only T-72 - kept to ONE hull (vs. Armored_Heavy's
+//--- two) so it stays the rarer "inherited/captured materiel" option. Core_GUE.sqf:114.
+_k = _k + ["Armored_Captured"];
+_u		= ["T72_GUE"];
+
+_l = _l + [_u];
+
+//--- R6 Roadblock ("Roadblock Cell"): DShKM technical + 3 posted infantry (GL/rifleman/medic) manning a
+//--- checkpoint. A plain roster entry, distinct from the scripted G2 Pop-up Checkpoint wildcard event
+//--- (no timer/tax mechanic here). Core_GUE.sqf:84,17,8,35.
+_k = _k + ["Roadblock"];
+_u		= ["Offroad_DSHKM_Gue"];
+_u = _u + ["GUE_Soldier_GL"];
+_u = _u + ["GUE_Soldier_1"];
+_u = _u + ["GUE_Soldier_Medic"];
+
+_l = _l + [_u];
+
+//--- R7 Sleeper_Cell ("Ghost Cell"): armed technical + disguised civilian-skin dismount + saboteur - the
+//--- first Groups_GUE.sqf use of the GUE_Worker2 civilian-skin roster (Core_GUE.sqf:56-72, 6 skins
+//--- previously unused by any roster in this file). Core_GUE.sqf:81,56,50.
+_k = _k + ["Sleeper_Cell"];
+_u		= ["Pickup_PK_GUE"];
+_u = _u + ["GUE_Worker2"];
+_u = _u + ["GUE_Soldier_Sab"];
+
+_l = _l + [_u];
+
 [_k,_l,_side,_faction] Call Compile preprocessFile "Common\Config\Config_Groups.sqf";
