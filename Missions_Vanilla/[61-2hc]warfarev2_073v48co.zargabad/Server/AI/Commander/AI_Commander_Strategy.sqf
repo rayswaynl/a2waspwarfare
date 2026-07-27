@@ -15,13 +15,19 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_inRange","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0","_perfStart"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_inRange","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0","_perfStart","_syncAicomState"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 _sideText = str _side;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
+
+//--- fable/sidepatrol-front-bias-20260727: reuse the EXISTING WFBE_C_AICOM_PUBLIC_STATE_SYNC flag (same
+//--- pattern as wfbe_aicom_running/funds in AI_Commander.sqf) to optionally broadcast wfbe_aicom_targets so an
+//--- HC-hosted reader (e.g. a delegated side patrol) can see it too. Default 0 = local-only setVariable, byte-
+//--- identical to before this change.
+_syncAicomState = (missionNamespace getVariable ["WFBE_C_AICOM_PUBLIC_STATE_SYNC", 0]) > 0;
 
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
@@ -515,7 +521,7 @@ private ["_tDbg", "_dDbg", "_dd"];
 	diag_log ("AICOMDBG|v1|SPEARHEAD|" + (str _side) + "|" + str (round (time / 60)) + "|town=" + (_tDbg getVariable ["name", "?"]) + "|supply=" + str (_tDbg getVariable ["supplyValue", 0]) + "|distFront=" + str (round _dDbg) + "|onFront=" + str (_dDbg <= _frontRad) + "|teams=" + str (count _teams) + "|want=" + str _want + "|conc=" + str (missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATION", 3]));
 } forEach _targets;
 
-_logik setVariable ["wfbe_aicom_targets", _targets];
+_logik setVariable ["wfbe_aicom_targets", _targets, _syncAicomState];
 
 //--- 2) REACTIVE DEFENSE: relieve own towns under attack; release quiet reliefs.
 {

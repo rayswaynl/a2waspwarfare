@@ -3237,5 +3237,13 @@ if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = if (!isNi
 //--- it (classnames cited per row at Common_RunCommanderTeam.sqf where this flag is read).
 if (isNil "WFBE_C_AICOM_AIR_BOMBS") then {WFBE_C_AICOM_AIR_BOMBS = 0}; //--- 0=off (byte-identical to HEAD); >0 = EASA-on-AI kit table preserves/grants FAB-250/Mk-82 bomb capability on A10/Mi24_P/AV8B2 instead of stripping it.
 
+//--- fable/sidepatrol-front-bias-20260727: side-patrol destination picker prefers the AI Commander's
+//--- published spearhead town(s) (wfbe_aicom_targets) over pure nearest-to-self when set. Default 0 =
+//--- OFF, mission byte-identical to legacy behaviour (Common_RunSidePatrol.sqf). NOTE: wfbe_aicom_targets
+//--- itself is only visible off-server when WFBE_C_AICOM_PUBLIC_STATE_SYNC is ALSO armed (see that flag
+//--- and AI_Commander_Strategy.sqf/AI_Commander_Allocate.sqf) - arming ONLY this flag on a server with a
+//--- connected HC is a silent no-op (the mandatory empty-list fallback keeps nearest-to-self behaviour).
+if (isNil "WFBE_C_SIDE_PATROL_FRONT_BIAS") then {WFBE_C_SIDE_PATROL_FRONT_BIAS = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
