@@ -1203,7 +1203,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0) the
 			missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_RADIUS", 180],
 			missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_HOLDSECS", 120],
 			[west, east, resistance],
-			0,
+			2,  //--- contest mode 2 = BEAT-DOWN (owner ruling 2026-07-27): clear the garrison, then hold.
 			0,
 			"WFBE_SE_FNC_NavalHVT_BubbleComplete"
 		] call WFBE_CO_FNC_RadiusHold_Register;
