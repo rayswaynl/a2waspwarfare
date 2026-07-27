@@ -3125,6 +3125,12 @@ if (isNil "WFBE_C_SATCHEL_TK_DETECT") then {WFBE_C_SATCHEL_TK_DETECT = 0};
 //--- wave0723c casualty recovery: owner-approved performance and garrison/GDIR fixes.
 if (isNil "WFBE_C_AIRDEF_CHUNKED") then {WFBE_C_AIRDEF_CHUNKED = 1};
 if (isNil "WFBE_C_AIRDEF_CHUNK_SLEEP") then {WFBE_C_AIRDEF_CHUNK_SLEEP = 0.4};
+//--- perf/aicom-scan-chunking (2026-07-27): flag-gate the guer_airdef_cycle chunkSleep/slice pattern for the
+//--- AI_Commander_Strategy.sqf + AI_Commander_Teams.sqf commander-tick scans. Default 0 = OFF = byte-identical
+//--- to HEAD (no yields, no slice telemetry, wall-clock record unchanged). Flip to 1 for the matched
+//--- before/after PerformanceAudit A/B; SLEEP is the per-section yield in seconds (mirror of WFBE_C_AIRDEF_*).
+if (isNil "WFBE_C_AICOM_SCAN_CHUNKED") then {WFBE_C_AICOM_SCAN_CHUNKED = 0};
+if (isNil "WFBE_C_AICOM_SCAN_CHUNK_SLEEP") then {WFBE_C_AICOM_SCAN_CHUNK_SLEEP = 0.4};
 if (isNil "WFBE_C_AIRENV_CHUNKED") then {WFBE_C_AIRENV_CHUNKED = 1};
 if (isNil "WFBE_C_AIRENV_CHUNK_SLEEP") then {WFBE_C_AIRENV_CHUNK_SLEEP = 0.1};
 if (isNil "WFBE_C_GARRISON_CAP_GATE") then {WFBE_C_GARRISON_CAP_GATE = 1};

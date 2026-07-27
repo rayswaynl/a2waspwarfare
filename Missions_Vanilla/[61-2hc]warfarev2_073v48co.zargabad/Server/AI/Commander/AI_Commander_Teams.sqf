@@ -22,7 +22,7 @@ private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_
               "_w11FreeFlag",
               "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
               "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger",
-              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending","_constructionExpired","_constructionSince","_constructionTTL","_grp","_censusOn","_censusLast","_censusRows","_censusKind","_censusLdr","_censusLdrTxt"]; //--- B66
+              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending","_constructionExpired","_constructionSince","_constructionTTL","_grp","_censusOn","_censusLast","_censusRows","_censusKind","_censusLdr","_censusLdrTxt","_scanChunkOn","_scanChunkSleep","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_sliceCut","_sliceYield"]; //--- B66
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -33,6 +33,43 @@ if (isNil "_logik") exitWith {};
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") then {_teams = []};
 _perfStart = diag_tickTime;
+//--- perf/aicom-scan-chunking (draft PR, flag WFBE_C_AICOM_SCAN_CHUNKED default 0): apply the
+//--- Server_GuerAirDef.sqf guer_airdef_cycle chunkSleep/slice pattern to this commander-tick scan.
+//--- Flag OFF (default) is byte-identical to HEAD: _sliceYield is inert (no telemetry sample, no
+//--- sleep), _perfActive stays 0, and the record below reports the untouched wall-clock
+//--- diag_tickTime - _perfStart. Flag ON splits the single-frame scan into frames by yielding
+//--- WFBE_C_AICOM_SCAN_CHUNK_SLEEP between work sections, reports MEASURED-active ms (every
+//--- suspension excluded) and emits one aicom_teams_slice audit sample per yield - for the
+//--- matched before/after PerformanceAudit A/B only (see PR body). Accounting locals are pass-scope
+//--- and resolve dynamically at Call time (mirror of Server_GuerAirDef.sqf _sliceCut/_sliceYield).
+_scanChunkOn    = (missionNamespace getVariable ["WFBE_C_AICOM_SCAN_CHUNKED", 0]) > 0;
+_scanChunkSleep = missionNamespace getVariable ["WFBE_C_AICOM_SCAN_CHUNK_SLEEP", 0.4];
+_perfActive = 0;
+_perfSliceMax = 0;
+_perfSlices = 0;
+_sliceDt = 0;
+_chunkSleepTotal = 0;
+_sliceT0 = _perfStart;
+_sliceCut = {
+	_sliceDt = diag_tickTime - _sliceT0;
+	_perfActive = _perfActive + _sliceDt;
+	if (_sliceDt > _perfSliceMax) then { _perfSliceMax = _sliceDt; };
+	_sliceT0 = diag_tickTime;
+};
+_sliceYield = {
+	if (_scanChunkOn) then {
+		Call _sliceCut;
+		_perfSlices = _perfSlices + 1;
+		if (!isNil "PerformanceAudit_Record") then {
+			if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
+				["aicom_teams_slice", _sliceDt, "", "SERVER"] Call PerformanceAudit_Record;
+			};
+		};
+		_chunkSleepTotal = _chunkSleepTotal + _scanChunkSleep;
+		sleep _scanChunkSleep;
+		_sliceT0 = diag_tickTime;
+	};
+};
 
 //--- Snapshot the engine-global arrays once for this founding decision. The same worker pass
 //--- uses them for player scaling, safe retire checks, total-AI cap, group cap and vehicle caps;
@@ -135,6 +172,7 @@ if (_censusOn) then {
 };
 _aiTeams = _foundedTeams + _editorTeams; //--- legacy alias; used in server-local log below.
 _pending = _logik getVariable ["wfbe_aicom_pending", 0];
+Call _sliceYield;
 
 //--- C3 consensus telemetry: keep founding-skip reasons debounced per side-logic so the
 //--- next soak can distinguish a target/cap/template/economy stall without RPT flooding.
@@ -203,6 +241,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
 		diag_log ("FIELDSPLIT|" + _sideText + "|aicoms_live=" + str _aicomLive + "|aicoms_teams=" + str _aicomTeams + "|aicoms_mean_size=" + str (round (_aicomMean * 10) / 10) + "|townDef=" + str _aicomTownDef + "|patrol=" + str _aicomPatrol + "|other=" + str _aicomOther + "|funds=" + str _aicomFunds + "|ownTowns=" + str ({!isNull _x && {(_x getVariable ["sideID", -1]) == _sideID}} count towns) + "|huskTeams=" + str _aicomHusk);
 	};
 };
+Call _sliceYield;
 
 //--- V0.6.6: dynamic target - banked funds scale the founding threshold so losing
 //--- AIs convert wealth into pressure instead of hoarding.
@@ -1656,5 +1695,10 @@ if (count _live > 0) then {
 };
 
 if !(isNil "PerformanceAudit_Record") then {
-	["aicom_teams_found", diag_tickTime - _perfStart, Format["side:%1;founded:%2;editor:%3;pending:%4;target:%5;eligible:%6;template:%7;price:%8;hc:%9;groups:%10;allUnits:%11;vehicles:%12", _sideText, _foundedTeams, _editorTeams, _pending, _target, count _eligible, _pick, _price, count _live > 0, _totalGroups, count _allUnits, count _allVehicles], "SERVER"] Call PerformanceAudit_Record;
+	if (_scanChunkOn) then {
+		Call _sliceCut;
+		["aicom_teams_found", _perfActive, Format["side:%1;founded:%2;editor:%3;pending:%4;target:%5;eligible:%6;template:%7;price:%8;hc:%9;groups:%10;allUnits:%11;vehicles:%12;chunkSleep:%13;slices:%14;sliceMaxMs:%15;wallMs:%16", _sideText, _foundedTeams, _editorTeams, _pending, _target, count _eligible, _pick, _price, count _live > 0, _totalGroups, count _allUnits, count _allVehicles, _chunkSleepTotal, _perfSlices, round (_perfSliceMax * 1000), round ((diag_tickTime - _perfStart) * 1000)], "SERVER"] Call PerformanceAudit_Record;
+	} else {
+		["aicom_teams_found", diag_tickTime - _perfStart, Format["side:%1;founded:%2;editor:%3;pending:%4;target:%5;eligible:%6;template:%7;price:%8;hc:%9;groups:%10;allUnits:%11;vehicles:%12", _sideText, _foundedTeams, _editorTeams, _pending, _target, count _eligible, _pick, _price, count _live > 0, _totalGroups, count _allUnits, count _allVehicles], "SERVER"] Call PerformanceAudit_Record;
+	};
 };
