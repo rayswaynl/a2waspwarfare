@@ -303,6 +303,10 @@
     "probed": 0,
     "total": 2
   },
+  "Server/Server_GarrisonSortie.sqf": {
+    "probed": 3,
+    "total": 2
+  },
   "Server/Server_GuerAirDef.sqf": {
     "probed": 28,
     "total": 29

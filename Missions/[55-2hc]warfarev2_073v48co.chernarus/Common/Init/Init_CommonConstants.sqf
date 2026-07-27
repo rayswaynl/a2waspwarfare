@@ -2786,6 +2786,21 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_GARRISON_DRESSING_LIFETIME") then {WFBE_C_GARRISON_DRESSING_LIFETIME = 900}; //--- s: forced recycle age per gun (anti-accumulation).
 	if (isNil "WFBE_C_GARRISON_DRESSING_MAX")      then {WFBE_C_GARRISON_DRESSING_MAX = 6};        //--- Max simultaneous dressed towns across the map.
 	if (isNil "WFBE_C_GARRISON_DRESSING_SEARCHLIGHT") then {WFBE_C_GARRISON_DRESSING_SEARCHLIGHT = 1}; //--- 1: add SearchLight_RUS at night; 0: gun only.
+
+//--- GARRISON SORTIE PATROL (lane 237, docs/design/GARRISON-SORTIE-PATROL-DESIGN.md): short-lived
+//--- foot/light patrol sorties dispatched from OWNED, active towns (WEST/EAST/GUER) whenever a
+//--- human player is within range - moving contact near towns without standing AI at empty map
+//--- locations. Worker: Server/Server_GarrisonSortie.sqf. Flag-off (0) = worker not launched =
+//--- byte-identical to HEAD.
+	if (isNil "WFBE_C_GARRISON_SORTIE")               then {WFBE_C_GARRISON_SORTIE = 0};               //--- Master enable. 0 = off (default); >0 = dispatch sorties from active owned towns.
+	if (isNil "WFBE_C_GARRISON_SORTIE_INTERVAL")      then {WFBE_C_GARRISON_SORTIE_INTERVAL = 120};     //--- Seconds between worker ticks.
+	if (isNil "WFBE_C_GARRISON_SORTIE_TTL")           then {WFBE_C_GARRISON_SORTIE_TTL = 300};          //--- s: forced recycle age per sortie (no "quiet" despawn - deliberately short-lived).
+	if (isNil "WFBE_C_GARRISON_SORTIE_PLAYER_RANGE")  then {WFBE_C_GARRISON_SORTIE_PLAYER_RANGE = 1500}; //--- m: a human player must be within this range of the town for a sortie to spawn.
+	if (isNil "WFBE_C_GARRISON_SORTIE_PATROL_MIN")    then {WFBE_C_GARRISON_SORTIE_PATROL_MIN = 300};   //--- m: minimum patrol radius around the home town.
+	if (isNil "WFBE_C_GARRISON_SORTIE_PATROL_MAX")    then {WFBE_C_GARRISON_SORTIE_PATROL_MAX = 800};   //--- m: maximum patrol radius around the home town.
+	if (isNil "WFBE_C_GARRISON_SORTIE_SIZE")          then {WFBE_C_GARRISON_SORTIE_SIZE = 4};           //--- Infantry per sortie group.
+	if (isNil "WFBE_C_GARRISON_SORTIE_MAX_ACTIVE")    then {WFBE_C_GARRISON_SORTIE_MAX_ACTIVE = 4};     //--- Hard global cap on concurrently active sorties across the whole map.
+
 //--- AIRFIELD-OWNERSHIP GATE (fable/airfield-ownership-gate, GR-2026-07-06a):
 //--- When >0, players may only purchase/spawn aircraft at an airfield the player's own side holds.
 //--- Ownership proxy: WFBE_CO_FNC_GetAirfieldOwnerSideID finds the nearest entry in the towns array
