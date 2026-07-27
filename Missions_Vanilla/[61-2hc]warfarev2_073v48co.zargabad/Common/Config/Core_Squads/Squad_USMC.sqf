@@ -417,6 +417,144 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,true]];
 _aiTeamTypes = _aiTeamTypes + [3];
 _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,3]];
 
+//--- ===== C8 ROSTER EXPANSION (owner-approved 2026-07-27) =====
+
+//--- Infantry - Urban Assault / CQB Squad [type0]
+_u		= ["US_Soldier_SL_EP1"];
+_u = _u + ["US_Soldier_AR_EP1"];
+_u = _u + ["US_Soldier_AR_EP1"];
+_u = _u + ["US_Soldier_GL_EP1"];
+_u = _u + ["US_Soldier_GL_EP1"];
+_u = _u + ["US_Soldier_Medic_EP1"];
+_u = _u + ["US_Soldier_EP1"];
+_u = _u + ["US_Soldier_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Infantry - Urban Assault / CQB Squad"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
+_aiTeamTypes = _aiTeamTypes + [0];
+_aiTeamUpgrades = _aiTeamUpgrades + [[2,0,0,0]];
+
+//--- Motorized - HMMWV SOV Raider [type1]
+_u		= ["HMMWV_M998A2_SOV_DES_EP1"];
+_u = _u + ["US_Soldier_TL_EP1"];
+_u = _u + ["US_Soldier_AT_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Motorized - HMMWV SOV Raider"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,true,false,false]];
+_aiTeamTypes = _aiTeamTypes + [1];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,1,0,0]];
+
+//--- Motorized - RHIB Coastal Scout [type1]
+_u		= ["RHIB"];
+_u = _u + ["US_Soldier_TL_EP1"];
+_u = _u + ["US_Soldier_Spotter_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Motorized - RHIB Coastal Scout"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,true,false,false]];
+_aiTeamTypes = _aiTeamTypes + [1];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,1,0,0]];
+
+//--- Motorized - HMMWV M2 QRF Pair [type1]
+_u		= ["HMMWV_M2"];
+_u = _u + ["US_Soldier_TL_EP1"];
+_u = _u + ["US_Soldier_AR_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Motorized - HMMWV M2 QRF Pair"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,true,false,false]];
+_aiTeamTypes = _aiTeamTypes + [1];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,1,0,0]];
+
+//--- Motorized - TOW HMMWV AT Section [type1]
+_u		= ["HMMWV_TOW_DES_EP1"];
+_u = _u + ["US_Soldier_TL_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Motorized - TOW HMMWV AT Section"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,true,false,false]];
+_aiTeamTypes = _aiTeamTypes + [1];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,3,0,0]];
+
+//--- Mechanized - LAV-25 Scout-Strike Section [type2]
+_u		= ["LAV25"];
+_u = _u + ["US_Soldier_TL_EP1"];
+_u = _u + ["US_Soldier_Spotter_EP1"];
+_u = _u + ["US_Soldier_AT_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Mechanized - LAV-25 Scout-Strike Section"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,1,0]];
+
+//--- Mechanized - RHIB2Turret Coastal Raider [type2]
+_u		= ["RHIB2Turret"];
+_u = _u + ["US_Soldier_TL_EP1"];
+_u = _u + ["US_Soldier_MG_EP1"];
+_u = _u + ["US_Soldier_AT_EP1"];
+_u = _u + ["US_Soldier_Medic_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Mechanized - RHIB2Turret Coastal Raider"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,1,0]];
+
+//--- Mechanized - M1135 ATGM Ambush Team [type2]
+_u		= ["M1135_ATGMV_EP1"];
+_u = _u + ["HMMWV_M1151_M2_DES_EP1"];
+_u = _u + ["US_Soldier_TL_EP1"];
+_u = _u + ["US_Soldier_AT_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Mechanized - M1135 ATGM Ambush Team"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,1,0]];
+
+//--- Mechanized - Stryker Engineer Breach Section [type2]
+_u		= ["M1126_ICV_M2_EP1"];
+_u = _u + ["US_Soldier_SL_EP1"];
+_u = _u + ["US_Soldier_Engineer_EP1"];
+_u = _u + ["US_Soldier_Engineer_EP1"];
+_u = _u + ["US_Soldier_AT_EP1"];
+_u = _u + ["US_Soldier_Medic_EP1"];
+_u = _u + ["US_Soldier_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Mechanized - Stryker Engineer Breach Section"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,1,0]];
+
+//--- Mechanized - M6 Linebacker AA Section [type2] (escort carrier added for capture-capable dismounts, C8 doctrine)
+_u		= ["M6_EP1"];
+_u = _u + ["HMMWV_M1151_M2_DES_EP1"];
+_u = _u + ["US_Soldier_TL_EP1"];
+_u = _u + ["US_Soldier_AA_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Mechanized - M6 Linebacker AA Section"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,4,0]];
+
+//--- Mechanized - Stryker MGS Breakthrough Section [type2]
+_u		= ["M1128_MGS_EP1"];
+_u = _u + ["M1126_ICV_M2_EP1"];
+_u = _u + ["US_Soldier_TL_EP1"];
+_u = _u + ["US_Soldier_AT_EP1"];
+_u = _u + ["US_Soldier_Medic_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Mechanized - Stryker MGS Breakthrough Section"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,4,0]];
+
+//--- Infantry - Fire Team (Rapid Response) [type0]
+_u		= ["US_Soldier_TL_EP1"];
+_u = _u + ["US_Soldier_AR_EP1"];
+_u = _u + ["US_Soldier_LAT_EP1"];
+_u = _u + ["US_Soldier_EP1"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Infantry - Fire Team (Rapid Response)"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
+_aiTeamTypes = _aiTeamTypes + [0];
+_aiTeamUpgrades = _aiTeamUpgrades + [[1,0,0,0]];
+
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTYPES", _side], _aiTeamTypes];
