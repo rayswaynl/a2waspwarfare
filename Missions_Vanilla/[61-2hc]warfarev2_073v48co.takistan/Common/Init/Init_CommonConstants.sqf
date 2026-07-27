@@ -3253,5 +3253,9 @@ if (isNil "WFBE_C_AICOM_AIR_BOMBS") then {WFBE_C_AICOM_AIR_BOMBS = 0}; //--- 0=o
 //--- connected HC is a silent no-op (the mandatory empty-list fallback keeps nearest-to-self behaviour).
 if (isNil "WFBE_C_SIDE_PATROL_FRONT_BIAS") then {WFBE_C_SIDE_PATROL_FRONT_BIAS = 0};
 
+//--- AI HQ REPURCHASE: dark by default. The HQ-loss hook records only full-AICOM losses; the worker delays then uses the nearest owned town centre and charges the AI treasury the live human HQ-deploy price.
+if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_ENABLE") then {WFBE_C_AICOM_HQ_REPURCHASE_ENABLE = 0};
+if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_DELAY") then {WFBE_C_AICOM_HQ_REPURCHASE_DELAY = 1200};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

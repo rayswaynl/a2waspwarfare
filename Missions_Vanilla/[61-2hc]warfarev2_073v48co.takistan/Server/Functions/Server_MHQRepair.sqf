@@ -1,4 +1,4 @@
-Private ["_commanderTeam","_direction","_hq","_HQName","_logik","_MHQ","_position","_reqPlayer","_side","_sideID","_sideText"];
+Private ["_commanderTeam","_direction","_hq","_HQName","_logik","_MHQ","_position","_replacementPosition","_reqPlayer","_side","_sideID","_sideText"];
 
 _side = _this select 0;
 _reqPlayer = if (count _this > 1) then {_this select 1} else {objNull};
@@ -24,6 +24,10 @@ if (alive _hq) exitWith {
 	["WARNING", Format ["Server_MHQRepair.sqf: [%1] rejected - HQ is alive; repair only rebuilds a destroyed HQ.", _sideText]] Call WFBE_CO_FNC_LogContent;
 };
 _position = getPos _hq;
+if (count _this > 2) then {
+	_replacementPosition = _this select 2;
+	if (typeName _replacementPosition == "ARRAY" && {count _replacementPosition >= 2}) then {_position = _replacementPosition};
+};
 _direction = getDir _hq;
 
 _commanderTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
@@ -41,6 +45,10 @@ if !(isNull _commanderTeam) then {
 
 
 _MHQ = [missionNamespace getVariable Format["WFBE_%1MHQNAME", _sideText], _position, _sideID, _direction, true, false] Call WFBE_CO_FNC_CreateVehicle;
+if (isNull _MHQ) exitWith {
+	_logik setVariable ['wfbe_hq_repairing', false, true];
+	["WARNING", Format ["Server_MHQRepair.sqf: [%1] replacement MHQ creation failed.", _sideText]] Call WFBE_CO_FNC_LogContent;
+};
 if (_side == west && !(IS_chernarus_map_dependent)) then {
 	_MHQ setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]";
 	_MHQ setVehicleInit "this setObjectTexture [1,""Textures\lavbody2_coD.paa""]";
