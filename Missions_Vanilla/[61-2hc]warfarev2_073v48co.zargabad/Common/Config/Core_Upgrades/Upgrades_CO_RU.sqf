@@ -164,6 +164,16 @@ _aiOrder = [
 	[WFBE_UP_SUPPLYRATE,2],
 	[WFBE_UP_HEAVY,1],
 	[WFBE_UP_HEAVY,2],
+	//--- armed 2026-07-27 owner go ("nudge ai commander to get it before arty upgrades"): the AIR line
+	//--- moved AHEAD of the artillery upgrades - 99 observed live minutes ended with ZERO air research
+	//--- on either side while both commanders bought arty perks. Safe placement: V0.6.8 SKIP-UNAFFORDABLE
+	//--- researches the first AFFORDABLE unmet entry, so an early expensive item is skipped, never a stall.
+	//--- AIRLIFT,1 rides with AIR,1 as it did at the old position; AIR,3 included so the supply-helicopter
+	//--- LOAD gate (WFBE_UP_AIR >= 3) becomes reachable in a normal-length match.
+	[WFBE_UP_AIR,1],
+	[WFBE_UP_AIRLIFT,1],
+	[WFBE_UP_AIR,2],
+	[WFBE_UP_AIR,3],
 	//--- ARTYTIMEOUT research RE-ADDED (Ray 2026-06-27): the AI now fields a Grad artillery battery whose fire
 	//--- cooldown + Service-Point reload size scale with this upgrade, so it must research it to earn the perks.
 	[WFBE_UP_ARTYTIMEOUT,1],
@@ -173,13 +183,9 @@ _aiOrder = [
 	[WFBE_UP_HEAVY,3],
 	[WFBE_UP_GEAR,3],
 	[WFBE_UP_RESPAWNRANGE,2],
-	[WFBE_UP_AIR,1],
-	[WFBE_UP_AIRLIFT,1],
-	[WFBE_UP_AIR,2],
 	[WFBE_UP_FLARESCM,1],
 	[WFBE_UP_PARATROOPERS,1],
 	[WFBE_UP_PARATROOPERS,2],
-	[WFBE_UP_AIR,3],
 	[WFBE_UP_AIR,4],
 	[WFBE_UP_AIR,5],
 	[WFBE_UP_UAV,1],
