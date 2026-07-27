@@ -1002,6 +1002,8 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						} else {
 							if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge >= _allocTtl}) then {
 								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ALLOC_TICK_STALE|team=" + (str _team) + "|town=" + (_allocT getVariable ["name","town"]) + "|age=" + str (round _allocAge) + "|ttl=" + str (round _allocTtl));
+								_team setVariable ["wfbe_aicom_alloc_target", nil];
+								_team setVariable ["wfbe_aicom_alloc_tick", nil];
 							};
 						};
 					};

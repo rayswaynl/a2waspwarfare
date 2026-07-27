@@ -52,6 +52,17 @@ class AssaultRetargetChurnContracts(unittest.TestCase):
             self.assign,
         )
 
+    def test_stale_allocator_record_is_cleared_after_its_single_diagnostic(self):
+        stale = self.assign.index("|ALLOC_TICK_STALE|")
+        release = self.assign.index(
+            '_team setVariable ["wfbe_aicom_alloc_target", nil];', stale
+        )
+        self.assertLess(stale, release)
+        self.assertIn(
+            '_team setVariable ["wfbe_aicom_alloc_tick", nil];',
+            self.assign[release:],
+        )
+
     def test_retarget_elapsed_uses_the_prior_dispatch_timestamp(self):
         self.assertIn("_priorDispT0", self.assign)
         self.assertIn("_priorDispT0 = if (count _priorOrd >= 2)", self.assign)
