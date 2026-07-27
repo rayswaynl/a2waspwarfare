@@ -14,7 +14,8 @@ def test_real_players_near_helper_is_registered_and_filters_hcs():
     helper = read("Common/Functions/Common_RealPlayersNear.sqf")
     common_init = read("Common/Init/Init_Common.sqf")
 
-    assert 'WFBE_CO_FNC_RealPlayersNear = Compile preprocessFileLineNumbers "Common/Functions/Common_RealPlayersNear.sqf";' in common_init
+    #--- #1493: forward slashes break preprocessFileLineNumbers inside a PBO; the backslash path IS the fix.
+    assert 'WFBE_CO_FNC_RealPlayersNear = Compile preprocessFileLineNumbers "Common\\Functions\\Common_RealPlayersNear.sqf";' in common_init
     assert "alive _x" in helper
     assert "isPlayer _x" in helper
     assert 'if ((typeName _this) != "ARRAY") exitWith {0};' in helper
