@@ -555,7 +555,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_SHOWPIECE", 0]) > 0) then 
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 	private ["_twinDir","_twinGap","_bridgeClass","_bridgeCount"];
 	_twinDir     = 90;			//--- same heading as the original hulls (SpawnLHD dir above)
-	_twinGap     = 42;			//--- lateral (perpendicular) offset to the twin hull, metres
+	_twinGap     = missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_GAP", 32];	//--- fable/air-cluster (owner 2026-07-27 "decks do not touch"): was hard-coded 42. LHD beam is ~32 m (the deck-spawn fix in Client_BuildUnit measured the ~16 m port half-beam), so 42 centre-to-centre left a ~10 m water strip between the decks. Constant-ised for per-restart tuning; default 32 = deck edges meet.
 	_bridgeClass = "Land_nav_pier_m_1";	//--- confirmed A2 Chernarus flat walkable pier (damage.sqf preserve list)
 	_bridgeCount = 3;			//--- pier segments spanning the gap
 

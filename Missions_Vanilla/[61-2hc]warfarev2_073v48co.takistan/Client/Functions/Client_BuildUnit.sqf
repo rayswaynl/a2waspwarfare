@@ -683,6 +683,21 @@ if (_isMan) then {
 			diag_log Format ["AIRSPAWN|v2|pre-create-ok|side=%1|class=%2|pos=%3", sideJoinedText, _unit, _safePos];
 		};
 	};
+	//--- fable/air-cluster RUNWAY SPAWN (owner 2026-07-27 "planes dont even spawn on the runway"):
+	//--- relocate PLAYER-bought fixed-wing from the factory apron to the nearest OWNED land runway,
+	//--- parked on the strip aligned to its heading (LocationLogicAirport logics carry it -
+	//--- Init_Airports.sqf seats the hangars on them). Carrier buys keep their deck path below; AI
+	//--- buys already air-start via _special="FLY" in Server_BuyUnit and are untouched. No owned
+	//--- land airfield -> [] -> fall through byte-identical.
+	if ((missionNamespace getVariable ["WFBE_C_AIR_RUNWAY_SPAWN", 0]) > 0 && {_unit isKindOf "Plane"} && {!(_building getVariable ["wfbe_is_carrier_hvt", false])}) then {
+		private ["_rwRes"];
+		_rwRes = [sideID, _position] Call WFBE_CO_FNC_GetRunwaySpawn;
+		if ((count _rwRes) > 0) then {
+			_position  = _rwRes select 0;
+			_direction = _rwRes select 1;
+			diag_log Format ["AIRSPAWN|v3|runway|side=%1|class=%2|pos=%3|dir=%4", sideJoinedText, _unit, _position, round _direction];
+		};
+	};
 	//--- carrier-deck-spawn-xy (fable/tonight-hotfixes2): ROOT CAUSE FIX. The Depot buy path
 	//--- uses WFBE_C_DEPOT_BUY_DIR=0 (absolute north) + distance 21m; carriers face east
 	//--- (SpawnLHD dir=90) and their town logics keep getDir 0, so the spawn point lands 5m
@@ -728,11 +743,19 @@ if (_isMan) then {
 		if (_vehicle isKindOf "Helicopter") then {
 			_vehicle setVelocity [0, 0, 0];
 		};
-		//--- Fixed-wing velocity fix: override the downward kick from FORM spawn.
+		//--- fable/air-cluster (owner P0 2026-07-27 "sea side jets still crashing into sea"): the old
+		//--- "velocity fix" CATAPULTED an UNMANNED hull at 80 m/s on a random-360 heading. An empty jet
+		//--- launched off the deck ditches by construction - nobody is aboard to fly it - and half the
+		//--- headings point into the twin hull or the superstructure anyway. A player-bought plane must
+		//--- PARK: zero velocity (the deck reseat above already replaced the FORM downward kick), aligned
+		//--- to the bow so the player boards and launches. Bow heading comes from wfbe_naval_deckpart -
+		//--- the town logic carries dir 0 while the deck part carries the true ship heading.
 		if (_vehicle isKindOf "Plane") then {
-			_carrierDir = random 360;
-			_vehicle setDir _carrierDir;
-			_vehicle setVelocity [(sin _carrierDir) * 80, (cos _carrierDir) * 80, 0];
+			private ["_bowPart","_bowDir"];
+			_bowPart = _building getVariable ["wfbe_naval_deckpart", objNull];
+			_bowDir  = if (!isNull _bowPart) then {getDir _bowPart} else {getDir _vehicle};
+			_vehicle setDir _bowDir;
+			_vehicle setVelocity [0, 0, 0];
 		};
 		//--- EASA random preset.
 		if ((missionNamespace getVariable ["WFBE_C_NAVAL_EASA_RANDOM", 0]) > 0) then {
