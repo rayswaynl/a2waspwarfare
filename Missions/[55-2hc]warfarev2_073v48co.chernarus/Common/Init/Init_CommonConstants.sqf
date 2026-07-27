@@ -3213,5 +3213,9 @@ if (isNil "WFBE_C_HC_LOBBY_LOCK") then {WFBE_C_HC_LOBBY_LOCK = 0}; //--- Master 
 if (isNil "WFBE_C_HC_LOBBY_TIMEOUT") then {WFBE_C_HC_LOBBY_TIMEOUT = 90}; //--- s of mission time: hard fail-open. A permanently missing HC opens the server anyway (logged loudly) instead of locking it out forever. Also the window in which the client-side gate is armed at all, so an ordinary mid-match JIP joiner never sees it. Keep it under the ~120s deadspawn-transit invulnerability budget in Init_Client.sqf.
 if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = if (!isNil "WFBE_C_HC_SLOTS" && {(typeName WFBE_C_HC_SLOTS) == "SCALAR"}) then {WFBE_C_HC_SLOTS} else {4}}; //--- Expected seated-HC count. Defaults to WFBE_C_HC_SLOTS (4 today, defined just above by the HC-name registry) so the repo keeps ONE number for how many headless clients this mission ships - bumping WFBE_C_HC_SLOTS to 5 carries here automatically, which is exactly the hardcoded-list drift that registry was added to end. Falls back to a literal 4 only if that constant is absent or mistyped. 0 disables the lock. -1 opts in to RUNTIME DERIVATION from the mission's own playable CIV slot count instead.
 
+//--- AI HQ REPURCHASE: dark by default. The HQ-loss hook records only full-AICOM losses; the worker delays then uses the nearest owned town centre and charges the AI treasury the live human HQ-deploy price.
+if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_ENABLE") then {WFBE_C_AICOM_HQ_REPURCHASE_ENABLE = 0};
+if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_DELAY") then {WFBE_C_AICOM_HQ_REPURCHASE_DELAY = 1200};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

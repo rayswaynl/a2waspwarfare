@@ -169,8 +169,13 @@ while {!gameOver} do {
 			//--- for THIS side. When 1, this side held >= FRAC of towns for the full duration -> it is the
 			//--- WINNER, and we route through the SAME award path so ROUNDEND / WASPSTAT / rotation match.
 			//--- Default-0 via the blessed 2-arg get (no A3 ops) so this is inert until a clock completes.
-			private ["_terrWin"];
+			private ["_terrWin","_hqRecoveryPending","_hqRecoveryLogic"];
 			_terrWin = (missionNamespace getVariable [Format ["WFBE_TERRITORIAL_WIN_%1", ((_x) Call WFBE_CO_FNC_GetSideID)], 0]) > 0;
+			_hqRecoveryPending = false;
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_HQ_REPURCHASE_ENABLE", 0]) > 0) then {
+				_hqRecoveryLogic = (_side) Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _hqRecoveryLogic) then {_hqRecoveryPending = _hqRecoveryLogic getVariable ["wfbe_aicom_hq_recovery_pending", false]};
+			};
 
 			//--- B67 [wiki-wins]: explicit parenthesisation. The old expression
 			//---   !(alive _hq) && _factories==0 || _towns==_total && !WFBE_GameOver
@@ -179,7 +184,7 @@ while {!gameOver} do {
 			//--- Now: fire only while NOT already over, for a clear supremacy/HQ-loss win;
 			//--- WFBE_GameOver also short-circuits any later side in the same forEach pass.
 			//--- cmdcon41-w3b: the territorial clock (_terrWin) is OR-ed in as a third win trigger.
-			if ( !WFBE_GameOver && ( (!(alive _hq) && _factories == 0) || (_towns == _total) || _terrWin ) ) then {
+			if ( !WFBE_GameOver && ( (!(alive _hq) && _factories == 0 && !_hqRecoveryPending) || (_towns == _total) || _terrWin ) ) then {
 				//--- Preserve the exact trigger for downstream telemetry/reporting; town counts alone cannot distinguish a base wipe from territorial control.
 				private ["_victoryCause"];
 				if (_terrWin) then {
