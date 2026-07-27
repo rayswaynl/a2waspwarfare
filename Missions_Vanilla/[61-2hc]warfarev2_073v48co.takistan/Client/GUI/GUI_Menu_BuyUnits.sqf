@@ -281,6 +281,9 @@ _IDCS = _IDCS - [_currentIDC];
 					_isScudPurchase = ((missionNamespace getVariable ["WFBE_C_TK_SCUD_HF", 1]) > 0 && {worldName == "Takistan" || {(missionNamespace getVariable ["WFBE_C_SCUD_DRIVABLE_ALLMAPS", 1]) > 0}} && {_unit == (missionNamespace getVariable ["WFBE_C_TK_SCUD_HF_TYPE", "MAZ_543_SCUD_TK_EP1"])});
 					_clientPaidCost = _currentCost;
 					if (_isScudPurchase) then {_clientPaidCost = (_currentCost - _baseHullCost) max 0};
+					if (!_isInfantry && {isNil "_crewCostPerHead"}) then {
+						_crewCostPerHead = missionNamespace getVariable "WFBE_C_UNITS_CREW_COST";
+					};
 					_params = if (_isInfantry) then {[_closest,_unit,[],_type,_cpt,_clientPaidCost]} else {[_closest,_unit,[profilenamespace getvariable "wfbe_c_driver_enabled_by_default" ,_gunner,_commander,_extracrew,_isLocked,_crewCostPerHead],_type,_cpt,_clientPaidCost]};
 					//--- depot-buy-round3 (diagnostic, ALWAYS-ON): charge-time trace. Pairs with the spawn-position
 					//--- BUYTRACE in Client_BuildUnit so the next failed buy's client RPT pinpoints where the flow died.
