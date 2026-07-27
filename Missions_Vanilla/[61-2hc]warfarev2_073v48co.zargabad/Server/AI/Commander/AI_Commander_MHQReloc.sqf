@@ -615,6 +615,7 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 	};
 	//--- WASPSCALE mhqrel counter (cmdcon42): bump the cumulative successful-MHQ-relocation counter the server-side WASPSCALE emit reads (mhqrel=). This DEPLOYED site fires once per successful AI relocation for BOTH AI sides (server-side supervisor). Monotonic.
 	missionNamespace setVariable ["wfbe_waspscale_mhqrel", (missionNamespace getVariable ["wfbe_waspscale_mhqrel", 0]) + 1];
+	if (!isServer) then {["RequestSpecial", ["waspscale-counter-delta", "wfbe_waspscale_mhqrel"]] Call WFBE_CO_FNC_SendToServer};
 	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|DEPLOYED|reason=" + _reason + "|pos=" + str _finPos);
 	["INFORMATION", Format ["AI_Commander_MHQReloc.sqf: [%1] HQ RE-DEPLOYED at %2 (reason: %3).", _sideText, _finPos, _reason]] Call WFBE_CO_FNC_AICOMLog;
 };
