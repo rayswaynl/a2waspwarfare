@@ -271,6 +271,23 @@ _nearestFactoryDist = {
 	{ if (((_x getVariable ["wfbe_structure_type", ""]) in ["Barracks","Light","Heavy","Aircraft"]) && {alive _x}) then {_d = _cpos distance _x; if (_d < _best) then {_best = _d}} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
 	_best
 };
+//--- HQ-RANGE gate (fable 2026-07-27, owner: 200m). Reject a build candidate further than
+//--- WFBE_C_AICOM_BUILD_HQ_RANGE from the CURRENT build anchor _hqPos. Same flag-gated per-candidate
+//--- shape as _slopeOK / _treeClearOK / _tp19RoadClearOK: 0 = OFF (byte-identical to pre-PR behaviour).
+//--- _hqPos is read from the caller scope on purpose - AI_Commander_Base.sqf:1136 re-points it at a
+//--- FORWARD centre for forward-basing, and the leash must follow that anchor rather than the literal
+//--- HQ object, or forward bases would be silently blocked. Defensive: if _hqPos is missing or malformed
+//--- the gate passes rather than blocking every candidate. _this = candidate pos -> bool.
+_hqRangeOK = {
+	private ["_cpos","_hr"];
+	_cpos = _this;
+	_hr = missionNamespace getVariable ["WFBE_C_AICOM_BUILD_HQ_RANGE", 0];
+	if (_hr <= 0) exitWith {true};   //--- 0 disables the gate -> old behaviour (unleashed).
+	if (isNil "_hqPos") exitWith {true};
+	if (typeName _hqPos != "ARRAY") exitWith {true};
+	if (count _hqPos < 2) exitWith {true};
+	(_cpos distance _hqPos) <= _hr
+};
 _findBuildPos = {
 	private ["_rmin","_rmax","_nearRoad","_p","_ok","_try","_ang","_best","_haveDry","_rd","_rp","_hd","_ox","_oy","_cand","_blocked","_sx","_sy","_tries","_bestClear","_haveClear","_bestBC","_haveBC","_isRoadMode","_stepBest","_haveStep","_stepTarget","_nf","_stepErr","_bestStepErr","_floor","_roadRejLogged"];  //--- cmdcon41-w3k: +_roadRejLogged (rate-limit the road-reject log to first per placement attempt).
 	_roadRejLogged = false; //--- cmdcon41-w3k: one always-on INFORMATION line per rejected-for-road cluster (first reject only, not per nudge/try).
@@ -364,6 +381,7 @@ _findBuildPos = {
 					if (!_blocked && {!(_cand call _slopeOK)}) then {_blocked = true};           //--- TP-19 slope gate (flag-off = no-op)
 					if (!_blocked && {!(_cand call _treeClearOK)}) then {_blocked = true};       //--- TP-19 tree gate (flag-off = no-op)
 					if (!_blocked && {!(_cand call _tp19RoadClearOK)}) then {_blocked = true};  //--- TP-19 road-clear gate (flag-off = no-op)
+					if (!_blocked && {!(_cand call _hqRangeOK)}) then {_blocked = true};      //--- AICOM BUILD LEASH (0 = no-op)
 					if (!_blocked && {!_haveClear}) then {_bestClear = _cand; _haveClear = true};
 					//--- Ray 2026-06-29 req #2 (SPACED-along-road, mode 2): a fully-clear candidate is a valid
 					//--- step. Instead of accepting the FIRST one (which clusters factory N+1 right next to factory
@@ -423,6 +441,7 @@ _findBuildPos = {
 					if (_ok && {!(_p call _slopeOK)}) then {_ok = false};           //--- TP-19 slope gate (flag-off = no-op)
 					if (_ok && {!(_p call _treeClearOK)}) then {_ok = false};       //--- TP-19 tree gate (flag-off = no-op)
 					if (_ok && {!(_p call _tp19RoadClearOK)}) then {_ok = false};  //--- TP-19 road-clear gate (flag-off = no-op)
+					if (_ok && {!(_p call _hqRangeOK)}) then {_ok = false};           //--- AICOM BUILD LEASH (0 = no-op)
 					//--- FIX6 (Ray): record the ROAD-CLEAR fallback only once the candidate is BOTH road-clear AND
 					//--- spacing-OK (_ok survives the STRUCT_SPACING forEach above) - prevents a crowded fallback.
 					if (_ok && {!_haveClear}) then {_bestClear = _p; _haveClear = true};

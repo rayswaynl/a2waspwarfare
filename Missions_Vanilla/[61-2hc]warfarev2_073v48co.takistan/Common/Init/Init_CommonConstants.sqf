@@ -1333,6 +1333,22 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_BUILD_ROAD_BUFFER")       then {WFBE_C_AICOM_BUILD_ROAD_BUFFER = 14};       //--- m minimum clearance from the nearest road segment (<=0 disables).
 	if (isNil "WFBE_C_AICOM_BUILD_MIN_FLAT_Z") then {WFBE_C_AICOM_BUILD_MIN_FLAT_Z = 0.90};  //--- TP-19: min surfaceNormal z (0..1) to accept a build spot; higher = flatter required (~0.90 = reject >26deg). 0 = OFF (no slope gate).
 	if (isNil "WFBE_C_AICOM_BUILD_TREE_CLEAR") then {WFBE_C_AICOM_BUILD_TREE_CLEAR = 10};  //--- TP-19: m radius that must be clear of map TREE/SMALL TREE for a build spot (~10 = no trees under the footprint). 0 = OFF (no tree gate).
+	//--- AICOM BUILD LEASH (fable 2026-07-27, owner: 200m). Players are hard-limited to
+	//--- WFBE_C_BASE_HQ_BUILD_RANGE (120m) from the HQ by coin_interface.sqf:18, but the AI commander's
+	//--- placement routine (AI_Commander_Base.sqf) never referenced that constant at all - its gates are
+	//--- purely LOCAL suitability (STRUCT_SPACING, road standoff, ground/slope/tree clearance), none of
+	//--- which anchors the result to the base. So a factory could land arbitrarily far from HQ, which is
+	//--- what the owner observed live. This bounds the drift.
+	//--- Measured against _hqPos, the CURRENT build anchor - NOT the literal HQ object - because
+	//--- AI_Commander_Base.sqf:1136 deliberately re-points _hqPos at a forward centre for forward-basing.
+	//--- Leashing to the HQ object would silently disable that feature; leashing to _hqPos bounds drift
+	//--- around whichever centre the AI actually intended.
+	//--- SAFE BY CONSTRUCTION: the gate joins the same accept chain as _slopeOK/_treeClearOK, and the
+	//--- raw-DRY last-resort fallback in _findBuildPos is deliberately ungated (see its header) - so a
+	//--- tight leash can never leave the AI unable to place a structure, only push it to the fallback.
+	//--- 0 = disabled (pre-2026-07-27 unleashed behaviour). Rollback: 0.
+	if (isNil "WFBE_C_AICOM_BUILD_HQ_RANGE") then {WFBE_C_AICOM_BUILD_HQ_RANGE = 200}; //--- metres: max candidate distance from the current build anchor. Owner-set 200 (player limit is 120; WFBE_C_AICOM_BASE_RADIUS is 450 but only counts existing structures, it never constrained placement).
+
 	if (isNil "WFBE_C_AICOM_BUILD_ROAD_CLEAR") then {WFBE_C_AICOM_BUILD_ROAD_CLEAR = 6};   //--- TP-19 (owner report 2026-07-06: AI built on dirt roads): metres radius around a build candidate that must be clear of any road segment (paved OR dirt, via nearRoads - A2-OA-safe). 0 = OFF (default, gate inert). Suggested live value 6-8 m; complement to WFBE_C_AICOM_BUILD_ROADCLEAR (the primary ON-by-default road gate).
 	if (isNil "WFBE_C_SKINSEL")                       then {WFBE_C_SKINSEL = 1};                       //--- cmdcon41-w3l: skin selector master (WF-menu SKIN button + first-spawn dialog + respawn restore). Legacy WFBE_C_SKIN_SELECTOR still honored as an OR.
 	if (isNil "WFBE_C_SKINSWAP_FUNDS_CARRY")          then {WFBE_C_SKINSWAP_FUNDS_CARRY = 1};          //--- cmdcon43-h: carry the player's wfbe_funds + wfbe_side across a skin swap so a failed rejoin (fresh/diverted/CIV group) never orphans his wallet to $0 (LIVE-confirmed cmdcon42b). 1 on, 0 off.
