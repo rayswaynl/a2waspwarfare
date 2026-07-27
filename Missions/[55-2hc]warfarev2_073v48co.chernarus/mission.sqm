@@ -35,7 +35,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=152;
+		items=153;
 		class Item134
 		{
 			side="LOGIC";
@@ -5364,6 +5364,63 @@ class Mission
 					skill=0.60000002;
 					init="this allowdamage false;";
 					description="Headless Client 4";
+				};
+			};
+		};
+		class Item152
+		{
+			side="LOGIC";
+			class Vehicles
+			{
+				items=4;
+				class Item0
+				{
+					position[]={14700,0,3200};
+					azimut=0;
+					special="NONE";
+					id=9101;
+					side="LOGIC";
+					vehicle="Logic";
+					leader=1;
+					skill=0.60000002;
+					name="WFBE_USV_WP_CH_1";
+					init="WFBE_USV_WP_CH_1 = this; this enableSimulation false;";
+				};
+				class Item1
+				{
+					position[]={14700,0,5000};
+					azimut=0;
+					special="NONE";
+					id=9102;
+					side="LOGIC";
+					vehicle="Logic";
+					skill=0.60000002;
+					name="WFBE_USV_WP_CH_2";
+					init="WFBE_USV_WP_CH_2 = this; this enableSimulation false;";
+				};
+				class Item2
+				{
+					position[]={14700,0,6800};
+					azimut=0;
+					special="NONE";
+					id=9103;
+					side="LOGIC";
+					vehicle="Logic";
+					skill=0.60000002;
+					name="WFBE_USV_WP_CH_3";
+					init="WFBE_USV_WP_CH_3 = this; this enableSimulation false;";
+				};
+				class Item3
+				{
+					position[]={14700,0,8200};
+					azimut=0;
+					special="NONE";
+					id=9104;
+					side="LOGIC";
+					vehicle="Logic";
+					skill=0.60000002;
+					name="WFBE_USV_WP_CH_4";
+					init="WFBE_USV_WP_CH_4 = this; this enableSimulation false;";
 				};
 			};
 		};
