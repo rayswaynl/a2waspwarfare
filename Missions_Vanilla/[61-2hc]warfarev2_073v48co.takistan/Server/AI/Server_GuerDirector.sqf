@@ -433,12 +433,10 @@ while {!WFBE_GameOver} do {
                         private ["_cTownSide"];
                         _cTownSide = _cTownObj getVariable ["sideID", WFBE_C_UNKNOWN_ID]; //--- #815: numeric sideID
 
-                        //--- QRF: fire when town is actively under attack (wfbe_contact_time fresh).
+                        //--- QRF: fire when town is actively under attack (wfbe_active live signal;
+                        //--- repoints the dead wfbe_contact_time trigger - that var is never written).
                         if (_cKind == "qrfInsert" || {_cKind == "qrfGunship"} || {_cKind == "qrfCombo"}) then {
-                            private ["_contactAge","_contactTime"];
-                            _contactTime = _cTownObj getVariable ["wfbe_contact_time", 0];
-                            _contactAge  = _nowT - _contactTime;
-                            if (_contactTime > 0 && {_contactAge < 120}) then {
+                            if (_cTownObj getVariable ["wfbe_active", false]) then {
                                 //--- Town under attack - fire QRF.
                                 private ["_spawnPos","_cTownPos"];
                                 _cTownPos  = getPos _cTownObj;
