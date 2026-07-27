@@ -771,6 +771,23 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_FUNDS_SINK_ENABLE")     then {WFBE_C_AICOM_FUNDS_SINK_ENABLE     = 1};       //--- 1 = arm the funds-sink worker; 0 = inert (worker early-exits). Ray 2026-07-27: 0 -> 1 (owner). Was dark since 2026-06-29 and, with the old 1M threshold, had never fired in ANY match - see THRESHOLD below.
 	if (isNil "WFBE_C_AICOM_FUNDS_SINK_THRESHOLD")  then {WFBE_C_AICOM_FUNDS_SINK_THRESHOLD  = 1000000}; //--- funds: only drain a commander's hoard ABOVE this (well under the 1.5M WEALTH_CAP, so the drip bites before the cap pins it). Ray 2026-07-27: reverted a proposed 150000 after live data - on the soak box both sides plateau at 180k-330k and EAST was FALLING (299k -> 184k) once the 16-team cap was reached, so 150000 would have drained funds the commander was actively spending. 1M remains correct for the long AI-vs-AI soak this worker targets.
 	if (isNil "WFBE_C_AICOM_FUNDS_SINK_DRAIN_PCT")  then {WFBE_C_AICOM_FUNDS_SINK_DRAIN_PCT  = 0.25};    //--- per-tick discounted drain = this fraction of the OVER-THRESHOLD surplus (0.25 = bleed a quarter of the excess each ~60s income tick).
+	//--- GUER GUIDED-AT TECHNICAL (fable 2026-07-27, owner request). The SPG-9 technical fires a DUMB
+	//--- recoilless round and is AI-patrol-only - it has never been in the GUER player depot. Armed, this
+	//--- adds it as a tier-gated depot row AND gives its existing gunner turret a GUIDED AT-5/Konkurs
+	//--- launcher alongside the stock tube, so a guerrilla pickup becomes a real tank-killer.
+	//--- WHY an ADD and not a swap: the SPG-9 turret WEAPON classname does not appear anywhere in the
+	//--- mission tree (only the static/vehicle classes SPG9_Gue etc. do), so a removeWeaponTurret call
+	//--- could not be proven and would silently no-op. Both classnames below ARE in-tree (EASA_Init.sqf
+	//--- and Server_GuerAirDef.sqf), satisfying the config-proof rule.
+	//--- The missile launches from the recoilless tube's existing muzzle memory point - script cannot
+	//--- reposition a muzzle, and that origin reads correctly as an improvised launcher.
+	if (isNil "WFBE_C_GUER_ATGM_TECHNICAL")        then {WFBE_C_GUER_ATGM_TECHNICAL        = 0};              //--- 1 = arm the guided-AT technical (depot row + ATGM); 0 = inert. Default 0 (dark).
+	if (isNil "WFBE_C_GUER_ATGM_TECH_TYPES")       then {WFBE_C_GUER_ATGM_TECH_TYPES       = ["Offroad_SPG9_Gue","Offroad_SPG9_TK_GUE_EP1"]}; //--- both terrains' hulls in one list; each map only ever spawns its own, so no worldName branch is needed.
+	if (isNil "WFBE_C_GUER_ATGM_TECH_WEAPON")      then {WFBE_C_GUER_ATGM_TECH_WEAPON      = "AT5Launcher"};  //--- proven pairing with the magazine below (EASA_Init.sqf AT-Strike row).
+	if (isNil "WFBE_C_GUER_ATGM_TECH_MAG")         then {WFBE_C_GUER_ATGM_TECH_MAG         = "5Rnd_AT5_BRDM2"};
+	if (isNil "WFBE_C_GUER_ATGM_TECH_MAGS")        then {WFBE_C_GUER_ATGM_TECH_MAGS        = 2};              //--- 2 x 5 = 10 missiles. Finite by design: reammo at a service point.
+	if (isNil "WFBE_C_GUER_ATGM_TECH_TIER")        then {WFBE_C_GUER_ATGM_TECH_TIER        = 1};              //--- depot tier gate (tier 1 = alongside BRDM-2/T-34, below the T-55).
+
 	if (isNil "WFBE_C_AICOM_FUNDS_SINK_DRAIN_MAX")  then {WFBE_C_AICOM_FUNDS_SINK_DRAIN_MAX  = 120000};  //--- hard ceiling on a single tick's drain so a huge hoard bleeds steadily into push waves, never a one-shot dump.
 
 	//--- ENDGAME SOFT-FORCING (claude-gaming 2026-06-29, SYSTEM 2): after WFBE_C_ENDGAME_FORCE_TIMER minutes of an
