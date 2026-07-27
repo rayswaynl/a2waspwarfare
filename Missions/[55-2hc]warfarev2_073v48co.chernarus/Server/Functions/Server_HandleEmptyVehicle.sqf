@@ -5,7 +5,7 @@
 		- {Delay override}.
 */
 
-Private ["_delay", "_maxReapAttempts", "_reapAttempts", "_timer", "_vehicle"];
+Private ["_delay", "_maxReapAttempts", "_maxReapRounds", "_reapAttempts", "_reapRounds", "_timer", "_vehicle"];
 
 _vehicle = _this select 0;
 
@@ -22,6 +22,13 @@ _delay = if (count _this > 1) then {_this select 1} else {if (typeOf _vehicle in
 _timer = 0;
 _reapAttempts = 0;
 _maxReapAttempts = 3;
+_reapRounds = 0;
+//--- fable/gc-remote-hull-retry-20260727: outer retry-round cap. A non-local (HC-owned) hull whose delete
+//--- dispatch is fire-and-forget (Common_SendToClient, no ack) previously got 3 attempts total, then was
+//--- UNCONDITIONALLY dropped from emptyQueu even if still alive - a permanent leak (soak evidence:
+//--- VEHDEL attempt=1/3,2/3,3/3 then never again, hull confirmed alive hours later). Bounded to 5 rounds
+//--- of 3 attempts each (15 dispatch attempts max) so a genuinely unreachable HC cannot retry forever.
+_maxReapRounds = 5;
 
 // Added double timer for the repair trucks too
 if (typeOf _vehicle in ['MtvrRepair','WarfareRepairTruck_Gue','V3S_Repair_TK_GUE_EP1','UralRepair_CDF','UralRepair_INS','KamazRepair','UralRepair_TK_EP1','MtvrRepair_DES_EP1']) then {
@@ -33,7 +40,7 @@ if (typeOf _vehicle in ['V3S_Supply_TK_GUE_EP1','WarfareSupplyTruck_RU', 'Warfar
     _delay = 86400;
 };
 
-while {alive _vehicle && {_reapAttempts < _maxReapAttempts}} do {
+while {alive _vehicle && {_reapRounds < _maxReapRounds}} do {
 	sleep 20;
 	
 	//--- fable/watch-timer-undefined: the vehicle can be DELETED during the 20s sleep - a null object's 2-arg
@@ -46,7 +53,7 @@ while {alive _vehicle && {_reapAttempts < _maxReapAttempts}} do {
 	_timer = if (({alive _x} count crew _vehicle) > 0 || {_vehicle getVariable ["wfbe_airlifted", false]} || {_vehicle getVariable ["wfbe_is_guer_fob", false]}) then {0} else {_timer + 20}; //--- fable/airlift-gc-exempt: an airlifted hull is crewless by design - do not run down the empty-vehicle fuse while slung. guer-fob-empty-exempt: a GUER FOB truck is a dismount-by-design base/spawn structure - never reap it as an abandoned empty hull
 	if (_timer > _delay) then {
 		_reapAttempts = _reapAttempts + 1;
-		["empty-timeout-hull", _vehicle, Format ["delay=%1 attempt=%2/%3", _delay, _reapAttempts, _maxReapAttempts]] Call WFBE_CO_FNC_LogVehDelete;
+		["empty-timeout-hull", _vehicle, Format ["delay=%1 attempt=%2/%3 round=%4/%5", _delay, _reapAttempts, _maxReapAttempts, _reapRounds + 1, _maxReapRounds]] Call WFBE_CO_FNC_LogVehDelete;
 		if (local _vehicle) then {
 			deleteVehicle _vehicle;
 		} else {
@@ -55,7 +62,28 @@ while {alive _vehicle && {_reapAttempts < _maxReapAttempts}} do {
 				[_vehicle, "HandleSpecial", ["cleanup-empty-vehicle", _vehicle]] Call WFBE_CO_FNC_SendToClient;
 			};
 		};
+		//--- fable/gc-remote-hull-retry-20260727: this round of 3 attempts is used up. If the vehicle is already
+		//--- gone (the local deleteVehicle above, or a remote receiver that caught up on a prior round) the
+		//--- outer while condition's `alive _vehicle` ends the loop on the next check, no extra action needed.
+		//--- If it is STILL alive - the observed HC-owned failure mode, a fire-and-forget SendToClient with no
+		//--- ack - start a fresh round instead of permanently dropping it: reset the attempt counter AND
+		//--- _timer, which reuses _delay itself as the inter-round backoff (the next attempt cannot fire until
+		//--- the hull has been empty past _delay again). Bounded by _maxReapRounds so an unreachable HC cannot
+		//--- retry forever.
+		if (_reapAttempts >= _maxReapAttempts) then {
+			_reapAttempts = 0;
+			_timer = 0;
+			_reapRounds = _reapRounds + 1;
+		};
 	};
+};
+
+//--- fable/gc-remote-hull-retry-20260727: every retry round is spent and the hull is STILL alive - a
+//--- genuinely undeletable (or unreachable-HC) hull. Stop spending work on it, but do not let it vanish
+//--- from accounting the way the old unconditional drop below used to: log it once, under its own reason
+//--- code, so a future soak can see it was abandoned rather than mistaking it for a normal successful reap.
+if (alive _vehicle) then {
+	["empty-timeout-hull-abandoned", _vehicle, Format ["delay=%1 rounds=%2/%3", _delay, _reapRounds, _maxReapRounds]] Call WFBE_CO_FNC_LogVehDelete;
 };
 
 emptyQueu = emptyQueu - [_vehicle];
