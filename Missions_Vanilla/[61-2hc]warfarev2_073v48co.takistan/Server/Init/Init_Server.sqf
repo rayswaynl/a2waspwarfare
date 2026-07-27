@@ -50,6 +50,12 @@ HandleSpecial = Compile preprocessFileLineNumbers "Server\Functions\Server_Handl
 //--- (WFBE_C_SUPPORT_SERVER_AUTH, default 0) inside Server_HandleSpecial.sqf; always compiled here
 //--- (cheap, no behavior at flag-off since the gated cases never Call it).
 WFBE_SE_FNC_AuthorizeSupportCallin = Compile preprocessFileLineNumbers "Server\Functions\Server_AuthorizeSupportCallin.sqf";
+//--- capability-helper (2026-07-25): reusable server-minted, purpose-bound, one-shot capability
+//--- token pair generalising the Init_IcbmTel.sqf / Support_FPV.sqf mint+consume idiom. Infra only --
+//--- no endpoint is converted to use it in this change; see the doc comments on both files for the
+//--- threat model. Always compiled here (cheap, no behavior until a caller actually invokes it).
+WFBE_SE_FNC_MintCapability = Compile preprocessFileLineNumbers "Server\Functions\Server_MintCapability.sqf";
+WFBE_SE_FNC_ConsumeCapability = Compile preprocessFileLineNumbers "Server\Functions\Server_ConsumeCapability.sqf";
 MHQRepair = Compile preprocessFile "Server\Functions\Server_MHQRepair.sqf";
 SideMessage = Compile preprocessFile "Server\Functions\Server_SideMessage.sqf";
 
