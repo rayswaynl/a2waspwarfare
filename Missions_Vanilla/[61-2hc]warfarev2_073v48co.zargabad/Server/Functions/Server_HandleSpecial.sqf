@@ -2119,7 +2119,7 @@ switch (_args select 0) do {
 		diag_log Format ["GUERVBIED|v2|request|result=%1|driver=%2", if (_vbiedOK) then {"accepted"} else {"denied"}, if (isNull _driver) then {"?"} else {name _driver}];
 		if (_vbiedOK) then {
 			[_veh, _driver] spawn {
-				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand","_structVictims","_sStructs","_struct","_facBounty","_facScore","_fobIdx","_fobAvail"];
+				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand","_structVictims","_sStructs","_struct","_facBounty","_facScore","_fobIdx","_fobAvail","_vbClass","_wsk_victimUID","_wsk_sideNum","_wsk_victimSide","_wsk_dist","_wsk_cat","_wsk_hw","_wsk_kUID"];
 				_veh = _this select 0;
 				_driver = _this select 1;
 				_drvGrp = group _driver;   //--- capture before the blast: the suicide driver dies in it.
@@ -2127,6 +2127,7 @@ switch (_args select 0) do {
 				//--- team payout below. Capture the driver object + its UID NOW, while still alive, because the
 				//--- suicide driver is gone by the time we settle (getPlayerUID on a dead/deleted unit is unreliable).
 				_drvUID = getPlayerUID _driver;
+				_vbClass = typeOf _veh; //--- fable/vbied-kill-visibility: capture PRE-blast - the hull is a wreck (typeOf can go "") or deleted by settle time.
 				_p = getPosATL _veh;
 				_radius = missionNamespace getVariable ["WFBE_C_GUER_VBIED_BLAST_RADIUS", 30];
 				_coef = missionNamespace getVariable ["WFBE_C_GUER_KILL_BOUNTY_COEF", 0.5];
@@ -2213,6 +2214,49 @@ switch (_args select 0) do {
 							//--- WFBE_C_GUER_HELIDROP_CREDIT_KILLS block for the identical "instigator dies with the ordnance"
 							//--- shape) is what actually gates the M113/BRDM/T-tier depot unlocks - GUI_UpgradeMenu.sqf,
 							//--- Root_GUE_PlayerOverlay.sqf and Client_UpdateRHUD.sqf all read WFBE_GUER_PLAYER_KILLS directly.
+							//--- fable/vbied-kill-visibility (owner 2026-07-27 "add vbied to the same concept"): the FPV
+							//--- blast-ledger route is IMPOSSIBLE here by design - the detonation gate above requires the
+							//--- detonator to be DRIVING the live hull, and _veh setDamage 1 kills them the same instant as
+							//--- their victims, so any alive-killer path (stamp OR ledger) can never fire (#924 proved and
+							//--- reverted the stamp for exactly this). Credit is already paid death-proof below; what VBIED
+							//--- kills lacked was VISIBILITY - no WASPSTAT|KILL row, so no dashboard/leaderboard/recap entry.
+							//--- Emit the row here from the settled snapshot, replicating RequestOnUnitKilled.sqf:241-300
+							//--- field-for-field (fixed field count - box parser folds killerSide; no extra fields).
+							//--- Traps handled: a DEAD unit's side collapses to CIV, so victimSide comes from config side
+							//--- (same idiom as the renegade fallback at RequestOnUnitKilled.sqf:107); victim UID is left
+							//--- blank because getPlayerUID on a dead/deleted unit is unreliable (this file's own _drvUID
+							//--- comment); killer weapon is the pre-blast _vbClass. Gated on WFBE_C_STATLOG like every
+							//--- other WASPSTAT emit; telemetry only, independent of the CREDIT_KILLS reward gate below.
+							if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
+								_wsk_kUID = _drvUID;
+								if (!isNil "WFBE_SE_FNC_IsHeadlessUid") then {
+									if (_wsk_kUID call WFBE_SE_FNC_IsHeadlessUid) then {_wsk_kUID = ""};
+								};
+								_wsk_sideNum = getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "side");
+								_wsk_victimSide = switch (_wsk_sideNum) do {case 0: {"EAST"}; case 1: {"WEST"}; case 2: {"GUER"}; default {"CIV"}};
+								_wsk_dist = round (_x distance _p);
+								_wsk_cat = "INF";
+								if (!(_x isKindOf "Man")) then {
+									if (_x isKindOf "Air") then {_wsk_cat = "AIR"} else {
+										if (_x isKindOf "StaticWeapon") then {_wsk_cat = "STATIC"} else {_wsk_cat = "VEH"};
+									};
+								};
+								_wsk_hw = "";
+								if (!(_x isKindOf "Man")) then {
+									_wsk_hw = if (_x isKindOf "Helicopter") then {"HELI"} else {
+										if (_x isKindOf "Plane") then {"JET"} else {
+											if (_x isKindOf "Tank") then {"ARMOR"} else {
+												if (_x isKindOf "Ship") then {"SHIP"} else {
+													if (_x isKindOf "Car") then {"CAR"} else {"OTHER"}
+												}
+											}
+										}
+									};
+								};
+								if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
+								WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
+								diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|KILL|" + _wsk_kUID + "||GUER|" + _wsk_victimSide + "|" + _vbClass + "|" + str _wsk_dist + "|" + _wsk_cat + "|hw=" + _wsk_hw + "|vc=" + (typeOf _x) + "|t=" + str (round time));
+							};
 							if ((missionNamespace getVariable ["WFBE_C_GUER_VBIED_CREDIT_KILLS", 1]) > 0) then {
 								//--- Driver dies with the VBIED before RequestOnUnitKilled reaches its stats path, so mirror its category-aware stat credit here.
 								if (_drvUID != "") then {
