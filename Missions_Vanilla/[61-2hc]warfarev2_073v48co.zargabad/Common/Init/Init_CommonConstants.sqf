@@ -1469,12 +1469,10 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- HC depleted-team MERGE (default-OFF). Server picks a same-side pair of depleted HC teams (A keep, B donor)
 	//--- and broadcasts a HandleSpecial 'aicom-team-merge' [A,B] to every live HC; the HC consumer self-gates on
 	//--- both leaders LOCAL, then (units B) joinSilent A (empty B reaped by existing GC). Group-count DOWN.
-	if (isNil "WFBE_C_AICOM_HC_MERGE_ENABLE") then {WFBE_C_AICOM_HC_MERGE_ENABLE = 0};   //--- 1 = ON, 0 = off (default; ships dark). fix(tonight-20260717): reverted 1->0 - both this and HC_TOPUP_ENABLE below only ever call WFBE_SE_FNC_AI_Com_HCTopUp (AI_Commander.sqf:572, nil-guarded), which is never compiled/registered anywhere in the tree, so arming either flag is a pure no-op. Do not re-arm until the DRAFT worker is actually implemented and registered.
-	if (isNil "WFBE_C_AICOM_HC_TOPUP_ENABLE") then {WFBE_C_AICOM_HC_TOPUP_ENABLE = 0};   //--- B74 (Ray 2026-06-22): refill attrited HC field teams - Produce skips live HC teams so they bleed to 1-2-man remnants and never recover. When on, the commander ships replacement bodies to under-strength HC teams (charged to AI funds). 1=on. fix(tonight-20260717): reverted 1->0 - inert no-op, see WFBE_C_AICOM_HC_MERGE_ENABLE comment above.
-	//--- deadcode-sweep 2026-07-21 (DC-08): removed unconsumed HC merge/top-up tunables
-	//--- (WFBE_C_AICOM_HC_TOPUP_FRAC/_MAX, _MERGE_FRAC/_MERGE_RANGE) - zero reads repo-wide;
-	//--- their only would-be consumer WFBE_SE_FNC_AI_Com_HCTopUp is never compiled/registered
-	//--- (AI_Commander.sqf:572 call is nil-guarded, permanent no-op).
+	if (isNil "WFBE_C_AICOM_HC_MERGE_ENABLE") then {WFBE_C_AICOM_HC_MERGE_ENABLE = 0};   //--- 1 = ON, 0 = off (default; ships dark until a controlled soak).
+	if (isNil "WFBE_C_AICOM_HC_TOPUP_ENABLE") then {WFBE_C_AICOM_HC_TOPUP_ENABLE = 0};   //--- B74: refill attrited HC field teams; 1 = ON after controlled soak, 0 = off by default.
+	//--- The worker has deliberate fallback values for its threshold/range tunables, so existing
+	//--- server configs need no new parameter surface. Keep both switches default-off until soak evidence.
 	//--- STRANDED-survivor merge (default-ON). A lone stranded remnant near another friendly team is folded in
 	//--- rather than walking home / being culled; same merge payload contract. Group-count DOWN.
 	if (isNil "WFBE_C_AICOM_STRANDED_MERGE")       then {WFBE_C_AICOM_STRANDED_MERGE       = 1};    //--- 1 = ON (default), 0 = off.

@@ -239,7 +239,7 @@ switch (_request) do {
 	// reaped by existing GC. If not both local -> no-op (another HC owns it / self-heals next cadence).
 	// Default-OFF via WFBE_C_AICOM_HC_MERGE_ENABLE (no-op until the constant is defined).
 	case "aicom-team-merge": {
-		Private ["_grpA","_grpB","_moved"];
+		Private ["_grpA","_grpB","_moved","_mSideID"];
 		if ((missionNamespace getVariable ["WFBE_C_AICOM_HC_MERGE_ENABLE", 0]) <= 0) exitWith {}; //--- B69 fix: flag ships as Number 0/1; !(Number) is an A2-OA type error.
 		_grpA = _args select 0;
 		_grpB = _args select 1;
@@ -247,7 +247,10 @@ switch (_request) do {
 		if (isNull _grpB) exitWith {};
 		if ((local (leader _grpA)) && (local (leader _grpB))) then {
 			_moved = count (units _grpB); //--- capture donor size BEFORE the join empties B.
+			_mSideID = (side (leader _grpB)) Call WFBE_CO_FNC_GetSideID;
 			(units _grpB) joinSilent _grpA;
+			_grpB setVariable ["wfbe_persistent", false, true];
+			["RequestSpecial", ["aicom-team-ended", _mSideID, _grpB]] Call WFBE_CO_FNC_SendToServer;
 			diag_log Format ["AICOMHCMERGE keeperA:%1 donorB:%2 movedUnits:%3 keeperSize:%4", _grpA, _grpB, _moved, count (units _grpA)];
 		};
 	};
