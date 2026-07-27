@@ -85,6 +85,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tic
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_Gue","T34_TK_GUE_EP1"]};
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1"]}; //--- BTR-40 moved to the tier-0 base pool (2026-07-01); T-55 stays tier-2.
 			if (_tier >= 3) then {_pool = _pool + ["T72_Gue","BMP2_Gue"]};
+			if (((missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECHNICAL", 0]) > 0) && {_tier >= (missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECH_TIER", 1])}) then {_pool = _pool + ["Offroad_SPG9_Gue"]}; //--- fable/guer-atgm-tech: guided-AT technical (SPG-9 hull + AT-5). Flag-gated; dark by default.
 			} else {
 			//--- Takistan GUER roster (TK_GUE_*_EP1 classnames; no T72/BMP2 GUE on TK).
 			//--- TK VBIED uses the datsun covered civilian pickup; repoint WFBE_C_GUER_VBIED_TYPE so the
@@ -103,6 +104,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tic
 			if (_tier >= 1) then {_pool = _pool + ["BRDM2_TK_GUE_EP1","T34_TK_GUE_EP1"]};
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1"]}; //--- BTR-40 (MG) moved to the tier-0 base pool (2026-07-01); T-55 stays tier-2.
 			if (_tier >= 3) then {_pool = _pool + ["Ural_ZU23_TK_GUE_EP1"]};
+			if (((missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECHNICAL", 0]) > 0) && {_tier >= (missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECH_TIER", 1])}) then {_pool = _pool + ["Offroad_SPG9_TK_GUE_EP1"]}; //--- fable/guer-atgm-tech: guided-AT technical (SPG-9 hull + AT-5). Flag-gated; dark by default.
 			};
 			//--- B75 (guer-tech): kill-gated SECOND VBIED — an unarmed M113 with ~2x speed (driver-local boost loop in
 			//--- Client_BuildUnit.sqf). Map-independent class (M113_UN_EP1 on both maps), appended after the map branch;

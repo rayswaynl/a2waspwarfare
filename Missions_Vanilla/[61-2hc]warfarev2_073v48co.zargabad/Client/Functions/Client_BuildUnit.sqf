@@ -1057,6 +1057,47 @@ if (_isMan) then {
 		_vehicle setVariable ["wfbe_is_guer_fob", true, true];
 	};
 
+	//--- fable/guer-atgm-tech: GUIDED-AT TECHNICAL. Give the bought SPG-9 technical a guided AT-5 on its
+	//--- EXISTING gunner turret [0], alongside the stock recoilless tube. addWeaponTurret is LOCAL-effect and
+	//--- is not JIP-persistent, so this mirrors the VBIED persistence pattern above exactly: broadcast an
+	//--- object flag any machine can recognise, arm immediately for the buyer, and re-arm on GetIn for
+	//--- whichever client later becomes local crew. Idempotent per machine via wfbe_atgm_tech_armed so a
+	//--- get-out/get-in cycle cannot stack duplicate launchers or magazines.
+	//--- Flag-off: no flag write, no EH, no weapon - byte-for-byte current behaviour.
+	if ((missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECHNICAL", 0]) > 0 && {(typeOf _vehicle) in (missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECH_TYPES", []])} && {(side group player) == resistance}) then {
+		_vehicle setVariable ["wfbe_is_guer_atgm_tech", true, true];
+
+		//--- Local helper: arm once per local vehicle instance.
+		WFBE_CL_FNC_ArmGuerAtgmTech = {
+			private ["_v","_wep","_mag","_nmags","_i"];
+			_v = _this;
+			if (isNull _v) exitWith {};
+			if (!(_v getVariable ["wfbe_is_guer_atgm_tech", false])) exitWith {};
+			if (_v getVariable ["wfbe_atgm_tech_armed", false]) exitWith {};   //--- already armed on this machine.
+			_wep   = missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECH_WEAPON", "AT5Launcher"];
+			_mag   = missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECH_MAG", "5Rnd_AT5_BRDM2"];
+			_nmags = missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECH_MAGS", 2];
+			for "_i" from 1 to _nmags do {
+				_v addMagazineTurret [_mag, [0]];
+			};
+			_v addWeaponTurret [_wep, [0]];
+			_v setVariable ["wfbe_atgm_tech_armed", true];
+			["INFORMATION", Format ["Client_BuildUnit.sqf: guided-AT technical armed (%1) - added %2 + %3 x %4 on turret [0].", typeOf _v, _wep, _nmags, _mag]] Call WFBE_CO_FNC_LogContent;
+		};
+
+		//--- Immediate buyer-local arm + GetIn re-arm for persistence (crew seat, not driver-only: the
+		//--- launcher lives on the GUNNER turret, so the gunner is who needs it armed locally).
+		_vehicle call WFBE_CL_FNC_ArmGuerAtgmTech;
+		_vehicle addEventHandler ["GetIn", {
+			private ["_v","_u"];
+			_v = _this select 0;
+			_u = _this select 2;
+			if (_u == player && {side _u == resistance}) then {
+				_v call WFBE_CL_FNC_ArmGuerAtgmTech;
+			};
+		}];
+	};
+
 	//--- B76 (guer-depot climb): GUER buys EVERY vehicle from the Depot (GUI_Menu_BuyUnits forces _type='Depot'),
 	//--- and their technicals need to scale the steep Takistan/Chernarus terrain to be useful. Only the VBIED truck
 	//--- (line ~357) had Valhalla High Climbing forced on; every other Depot car spawned with it OFF (default
