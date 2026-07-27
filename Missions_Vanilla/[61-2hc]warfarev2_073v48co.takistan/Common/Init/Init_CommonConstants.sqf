@@ -2322,7 +2322,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_AIR_CEILING_MAX_M")     then {AICOMV2_GDIR_AIR_CEILING_MAX_M = 600}; //--- Air above this m NEVER activates the AA tier.
 //--- Amendment A1: Player Commissar Panel dials (panel switch AICOMV2_GDIR_PANEL default 0).
 	if (isNil "AICOMV2_GDIR_PANEL")                 then {AICOMV2_GDIR_PANEL = 1};               //--- A1 Commissar Panel gate: 0=off (byte-identical). Requires AICOMV2_LANE_GUER_DIRECTOR=1.
-	if (isNil "AICOMV2_GDIR_PANEL_COOLDOWN_SEC")    then {AICOMV2_GDIR_PANEL_COOLDOWN_SEC = 600};//--- Per-town action cooldown (s) between panel buys.
+	if (isNil "AICOMV2_GDIR_PANEL_COOLDOWN_SEC")    then {AICOMV2_GDIR_PANEL_COOLDOWN_SEC = 180};//--- Per-town action cooldown (s) between panel buys. 600 -> 180 owner ruling 2026-07-27 (GUER town-defence purchases were too slow to matter). Read by BOTH the client display (GUI_Menu_GuerCommissar.sqf:354) and the server-authoritative check (RequestGDirPanel.sqf:241), so one value covers both. Rollback: 600.
 	if (isNil "AICOMV2_GDIR_PANEL_CONTRACTS_MAX")   then {AICOMV2_GDIR_PANEL_CONTRACTS_MAX = 2}; //--- Max active contracts per town simultaneously.
 	if (isNil "AICOMV2_GDIR_PANEL_INSTANT_MULT")    then {AICOMV2_GDIR_PANEL_INSTANT_MULT = 1.5};//--- Price multiplier for instant delivery vs convoy.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_REINF")     then {AICOMV2_GDIR_PANEL_PRICE_REINF = 1600}; //--- Base price: Action 1 convoy reinforcement.
