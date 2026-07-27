@@ -418,9 +418,16 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 					//--- relocation AND #9's forward-factory rebuild (the b74 soak saw 14/14 relocations deploy stuck near base).
 					//--- Teleport to _destPos instead (player-clear-gated, the same accepted step the deadline path uses) so a
 					//--- stuck relocation still lands FORWARD. Falls back to deploy-in-place only if a player blocks the dest.
+					private ["_pNearResult"];
 					_pNear = false;
-					if (!isNull _mhq && {([getPos _mhq, _safeDist] Call WFBE_CO_FNC_RealPlayersNear) > 0}) then {_pNear = true};
-					if (([_destPos, _safeDist] Call WFBE_CO_FNC_RealPlayersNear) > 0) then {_pNear = true};
+					_pNearResult = 0;
+					if (!isNull _mhq) then {
+						_pNearResult = [getPos _mhq, _safeDist] Call WFBE_CO_FNC_RealPlayersNear;
+						if ((typeName _pNearResult) == "SCALAR" && {_pNearResult > 0}) then {_pNear = true};
+					};
+					_pNearResult = 0;
+					_pNearResult = [_destPos, _safeDist] Call WFBE_CO_FNC_RealPlayersNear;
+					if ((typeName _pNearResult) == "SCALAR" && {_pNearResult > 0}) then {_pNear = true};
 					if (!_pNear && {!surfaceIsWater _destPos}) then {
 						_mhq setVelocity [0,0,0];
 						_mhq setPos _destPos;
@@ -441,9 +448,16 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 			//--- B66: the teleport STEP lands the MHQ on _destPos, but the old gate only checked players near
 			//--- the CURRENT _mhq (the source) - a player standing AT the destination would have an MHQ
 			//--- materialise on top of them. Require BOTH the current MHQ and the destination clear of players.
+			private ["_pNearResult"];
 			_pNear = false;
-			if (!isNull _mhq && {([getPos _mhq, _safeDist] Call WFBE_CO_FNC_RealPlayersNear) > 0}) then {_pNear = true};
-			if (([_destPos, _safeDist] Call WFBE_CO_FNC_RealPlayersNear) > 0) then {_pNear = true}; //--- B66: dest-clear too
+			_pNearResult = 0;
+			if (!isNull _mhq) then {
+				_pNearResult = [getPos _mhq, _safeDist] Call WFBE_CO_FNC_RealPlayersNear;
+				if ((typeName _pNearResult) == "SCALAR" && {_pNearResult > 0}) then {_pNear = true};
+			};
+			_pNearResult = 0;
+			_pNearResult = [_destPos, _safeDist] Call WFBE_CO_FNC_RealPlayersNear;
+			if ((typeName _pNearResult) == "SCALAR" && {_pNearResult > 0}) then {_pNear = true}; //--- B66: dest-clear too
 			if (!_pNear && {!surfaceIsWater _destPos}) then {
 				if (!isNull (driver _mhq)) then {(driver _mhq) doMove _destPos};
 				_mhq setVelocity [0,0,0];

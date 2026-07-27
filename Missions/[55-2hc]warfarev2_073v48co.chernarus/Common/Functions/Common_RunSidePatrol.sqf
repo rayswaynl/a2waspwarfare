@@ -401,7 +401,10 @@ while {!WFBE_GameOver && _alive} do {
 						_pVeh = vehicle _pLdr;
 						_pNear = false;
 						if (!isNull _pVeh && {!(_pVeh in [_pLdr])} && {alive _pVeh} && {canMove _pVeh}) then {
-							_pNear = ([getPos _pVeh, 100] Call WFBE_CO_FNC_RealPlayersNear) > 0;
+							private ["_pNearResult"];
+							_pNearResult = 0;
+							_pNearResult = [getPos _pVeh, 100] Call WFBE_CO_FNC_RealPlayersNear;
+							if ((typeName _pNearResult) == "SCALAR" && {_pNearResult > 0}) then {_pNear = true};
 							if (_pNear) then {
 								_pVeh setVelocity [(velocity _pVeh) select 0, (velocity _pVeh) select 1, 4];
 							} else {
