@@ -1042,13 +1042,20 @@ while {!WFBE_GameOver && _alive} do {
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_VEHICLE_SELFREPAIR", 1]) > 0) then {
 		private ["_srVeh","_srSafe","_srDelay"];
 		_srSafe  = missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_SAFE_DIST", 250];
+		//--- WFBE_C_AICOM_SELFREPAIR_AIRSHIP (default 0 = OFF, byte-identical): when >0, immobilised AIR and
+		//--- SHIP hulls become eligible for the same field repair as LandVehicle, and the threat scan also
+		//--- looks for enemy AIR (a grounded helicopter is most threatened by aircraft, which the LandVehicle-
+		//--- only scan cannot see). At 0 both the class gate and the scan types are exactly as before.
+		private ["_srAirShip","_srScanTypes"];
+		_srAirShip   = (missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_AIRSHIP", 0]) > 0;
+		_srScanTypes = if (_srAirShip) then {["Man","LandVehicle","Air"]} else {["Man","LandVehicle"]};
 		_srDelay = missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_DELAY", 30];
 		{
 			_srVeh = _x;
-			if (!isNull _srVeh && {alive _srVeh} && {local _srVeh} && {_srVeh isKindOf "LandVehicle"} && {!(canMove _srVeh)} && {({alive _x} count (crew _srVeh)) > 0}) then {
+			if (!isNull _srVeh && {alive _srVeh} && {local _srVeh} && {(_srVeh isKindOf "LandVehicle") || {_srAirShip && {(_srVeh isKindOf "Air") || {_srVeh isKindOf "Ship"}}}} && {!(canMove _srVeh)} && {({alive _x} count (crew _srVeh)) > 0}) then {
 				//--- threat present (enemy/neutral-hostile within the safe radius) or the team is fighting? stand down.
 				private ["_srThreat","_srStamp"];
-				_srThreat = {!isNull _x && {alive _x} && {((side _team) getFriend (side _x)) < 0.6}} count (_srVeh nearEntities [["Man","LandVehicle"], _srSafe]);
+				_srThreat = {!isNull _x && {alive _x} && {((side _team) getFriend (side _x)) < 0.6}} count (_srVeh nearEntities [_srScanTypes, _srSafe]);
 				if (_srThreat == 0 && {behaviour (leader _team) != "COMBAT"}) then {
 					_srStamp = _srVeh getVariable "wfbe_aicom_repair_at";
 					if (isNil "_srStamp") then {
@@ -1056,6 +1063,26 @@ while {!WFBE_GameOver && _alive} do {
 					} else {
 						if ((time - _srStamp) >= _srDelay) then {
 							_srVeh setDamage 0;
+							//--- CORRECTNESS FIX: setDamage 0 clears ONLY the overall damage scalar. Engine-verified
+							//--- (BI wiki setHit, "Introduced with Arma 2 version 1.00", OA category): "Damaging specific
+							//--- parts of the vehicle will not update its overall damage value" - and the converse holds, so
+							//--- a destroyed wheel/track/engine/rotor HITPOINT survives setDamage 0 and the hull stays
+							//--- !canMove. This block therefore logged VEHICLE_SELFREPAIR while leaving the vehicle immobile;
+							//--- see the STUCK_REPAIR_RESETS_TIER note at Init_CommonConstants.sqf:2797 ("STUCK_REPAIR fired
+							//--- 3x but averted 0 teleports"). Mirrors the proven player path Client_SupportRepair.sqf:83-92.
+							//--- Part names MUST come from config, never hardcoded: they are model selection names, several
+							//--- are Czech ("mala vrtule"), and they vary per addon (BI wiki note). 2-ARG setHit ONLY - the
+							//--- optional useEffects argument is 1.68+, above this engine. setHit needs a LOCAL object,
+							//--- guaranteed by the {local _srVeh} gate above.
+							private ["_srHp","_srHpCfg","_srHpName"];
+							_srHp = configFile >> "CfgVehicles" >> (typeOf _srVeh) >> "HitPoints";
+							if (isClass _srHp && {(count _srHp) > 0}) then {
+								for "_srI" from 0 to ((count _srHp) - 1) do {
+									_srHpCfg  = _srHp select _srI;
+									_srHpName = getText (_srHpCfg >> "name");
+									if (!(_srHpName in [""])) then {_srVeh setHit [_srHpName, 0]};
+								};
+							};
 							_srVeh setVariable ["wfbe_aicom_repair_at", nil];
 							diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|VEHICLE_SELFREPAIR|veh=" + (typeOf _srVeh));
 						};
