@@ -17,7 +17,7 @@ if ((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) <= 0) exitWith {
 	["INFORMATION", "Support_FPV_Detonate.sqf: WFBE_C_FPV_DRONE=0, ignoring detonation request."] Call WFBE_CO_FNC_LogContent;
 };
 
-private ["_args","_request","_requestedDrone","_detCap","_pos","_ammoClass","_sides","_matchSide","_matchDrone","_matchCount","_token","_sKey","_sStr","_sArr","_sideVal","_tok","_dronePos","_dist","_lastKey","_lastFire","_now","_driver","_stampRadius","_enemySides","_cand","_bestDist","_atomicState","_serverCap","_ownerStamp","_cArr","_retryArgs","_retryDelay","_retryPending","_retryDrone"];
+private ["_args","_request","_requestedDrone","_detCap","_pos","_ammoClass","_sides","_matchSide","_matchDrone","_matchCount","_token","_sKey","_sStr","_sArr","_sideVal","_tok","_dronePos","_dist","_lastKey","_lastFire","_now","_driver","_stampRadius","_enemySides","_cand","_bestDist","_atomicState","_serverCap","_ownerStamp","_cArr","_retryArgs","_retryDelay","_retryPending","_retryDrone","_ledgerR","_ledger","_ledgerPruned"];
 _args = _this;
 
 if (count _args < 2) exitWith {
@@ -199,4 +199,24 @@ if (!isNull _driver) then {
 //--- FIX (fable/fpv-auth-hardening): spawn warhead at the drone's actual server position,
 //--- NOT the client-supplied _pos. This eliminates the ~200m free-aim exploit where an
 //--- attacker could supply any _pos within the proximity gate and get a remote warhead.
+//--- FPV BLAST LEDGER (fable/fpv-blast-ledger, live-evidenced 2026-07-27): radius-independent
+//--- attribution backstop. The pre-blast per-victim stamp above misses fast-drift kills (the scan
+//--- runs at _dronePos BEFORE the warhead spawns, and the drone carries residual velocity into the
+//--- impact) plus anything just outside indirectHitRange that the blast still kills - observed live
+//--- as an FPV kill paying the flat GUERVBIED wallet bounty while producing NO attributed KILL row,
+//--- no score and no killfeed (the victim reached RequestOnUnitKilled.sqf with no live killer and
+//--- died at line 85). Record the detonation server-side; RequestOnUnitKilled.sqf reads the ledger
+//--- as a fallback when no live killer resolves. Both files run on the server, so a plain global
+//--- with 2-arg setVariable suffices (no broadcast). Bounded: entries older than 20s pruned each
+//--- write, hard cap 12 with drop-oldest (array-minus idiom, A2-safe).
+if (!isNull _driver) then {
+	_ledgerR = ((getNumber (configFile >> "CfgAmmo" >> _ammoClass >> "indirectHitRange")) * 2) max 30;
+	_ledger = missionNamespace getVariable ["WFBE_FPV_BLAST_LEDGER", []];
+	_ledgerPruned = [];
+	{ if ((time - (_x select 0)) <= 20) then { _ledgerPruned set [count _ledgerPruned, _x]; }; } forEach _ledger;
+	if ((count _ledgerPruned) >= 12) then { _ledgerPruned set [0, -1]; _ledgerPruned = _ledgerPruned - [-1]; };
+	_ledgerPruned set [count _ledgerPruned, [time, _dronePos, _driver, _matchSide, _ledgerR]];
+	missionNamespace setVariable ["WFBE_FPV_BLAST_LEDGER", _ledgerPruned];
+	diag_log Format ["FPVLEDGER|v1|record|pilot=%1|side=%2|pos=%3|r=%4|entries=%5", name _driver, _matchSide, _dronePos, _ledgerR, count _ledgerPruned];
+};
 createVehicle [_ammoClass, _dronePos, [], 0, "NONE"];

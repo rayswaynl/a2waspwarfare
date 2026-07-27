@@ -78,6 +78,31 @@ if ((!(_killed isKindOf "Man") || (_killed getVariable ["wfbe_explosivesupportki
 			["INFORMATION", Format ["RequestOnUnitKilled.sqf: [%1] Vehicle [%2] delayed kill attributed to last hitter [%3] after [%4] seconds.", _killed_side, _killed, _killer, round(time - _last_hit_time)]] Call WFBE_CO_FNC_LogContent;
 		};
 	};
+	//--- FPV BLAST-LEDGER FALLBACK (fable/fpv-blast-ledger, live-evidenced 2026-07-27): the per-victim
+	//--- wfbe_lasthitby stamp is radius-bound to the PRE-BLAST drone position, so a fast drone drifts
+	//--- its kills outside the stamp between scan and impact - the victim arrives here with no live
+	//--- killer and the exit below eats the kill (no score, no killfeed, no per-kill reward; only the
+	//--- flat wallet bounty survived). If the stamp did not resolve, scan the server-side detonation
+	//--- ledger Support_FPV_Detonate.sqf writes at each blast: newest-first, 12s window, per-entry
+	//--- radius, enemy-side only, pilot must still be alive. Same trust level as the existing stamp -
+	//--- both derive from the server-validated detonation, not from client input.
+	if (isNull _killer || {!alive _killer} || {_killer == _killed}) then {
+		private ["_fpvLedger","_fpvE","_fpvI","_fpvPilot"];
+		_fpvLedger = missionNamespace getVariable ["WFBE_FPV_BLAST_LEDGER", []];
+		_fpvI = (count _fpvLedger) - 1;
+		while {_fpvI >= 0} do {
+			_fpvE = _fpvLedger select _fpvI;
+			if ((time - (_fpvE select 0)) <= 12 && {(_killed distance (_fpvE select 1)) <= (_fpvE select 4)} && {(_fpvE select 3) != _killed_side}) then {
+				_fpvPilot = _fpvE select 2;
+				if (!isNull _fpvPilot && {alive _fpvPilot}) then {
+					_killer = _fpvPilot;
+					["INFORMATION", Format ["RequestOnUnitKilled.sqf: [%1] [%2] FPV blast-ledger attributed to pilot [%3] (%4m, %5s after blast).", _killed_side, _killed, _killer, round (_killed distance (_fpvE select 1)), round (time - (_fpvE select 0))]] Call WFBE_CO_FNC_LogContent;
+					_fpvI = -1; //--- resolved: loop condition ends it (no exitWith inside a loop body - engine trap)
+				};
+			};
+			_fpvI = _fpvI - 1;
+		};
+	};
 };
 
 ["INFORMATION", Format ["RequestOnUnitKilled.sqf: [%1] [%2] has been killed by [%3].", _killed_side, _killed, _killer]] Call WFBE_CO_FNC_LogContent;
