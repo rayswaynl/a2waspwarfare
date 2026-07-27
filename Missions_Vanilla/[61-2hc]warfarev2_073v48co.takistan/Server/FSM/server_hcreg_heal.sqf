@@ -40,7 +40,7 @@ scriptName "Server\FSM\server_hcreg_heal.sqf";
 if (!isServer) exitWith {};
 if ((missionNamespace getVariable ["WFBE_C_HCREG_HEAL", 0]) <= 0) exitWith {};
 
-private ["_wait","_tracked","_next","_cands","_hcList","_fpsReg","_u","_grp","_key","_fidx","_row","_id","_uid","_entry","_tidx","_first","_last","_stillIds","_tid","_reg"];
+private ["_wait","_tracked","_next","_cands","_hcList","_fpsReg","_u","_grp","_key","_fidx","_row","_id","_uid","_entry","_tidx","_first","_last","_stillIds","_tid","_reg","_isRegLeader"];
 
 ["INITIALIZATION", "server_hcreg_heal.sqf: Armed. HC registration self-heal sweep every 60s."] Call WFBE_CO_FNC_LogContent;
 
@@ -56,9 +56,19 @@ while {!WFBE_GameOver} do {
 		_cands = [];
 		{
 			_u = _x; //--- capture before any inner forEach rebinds _x.
-			if (!isNull _u && {alive _u} && {isPlayer _u} && {(owner _u) > 2} && {side (group _u) == civilian}) then {
+			//--- v2 (fable/hc-registry-heal-v2, live 2026-07-27: HCDELEG liveHC=1 for 2h while 4 HCs
+			//--- heartbeated and this loop stayed SILENT): candidacy is by OWNER IDENTITY, not group
+			//--- membership. The old `side==civilian` + `!(group in list)` pair was blind to every
+			//--- observed failure mode: a shared-group member's group IS the hot HC's registered entry,
+			//--- and a WEST/EAST re-grabbed HC failed the civ gate before the list test even ran. An HC
+			//--- is broken iff NO registry entry's leader carries its owner id - side and group shape
+			//--- irrelevant. Human safety unchanged: the HCSTAT heartbeat join below is the identity
+			//--- test (humans never emit HCStat), the civ gate was only ever belt-and-braces.
+			if (!isNull _u && {alive _u} && {isPlayer _u} && {(owner _u) > 2}) then {
 				_grp = group _u;
-				if (!(_grp in _hcList)) then {
+				_isRegLeader = false;
+				{ if (!isNull _x && {!isNull leader _x} && {(owner (leader _x)) == (owner _u)}) exitWith {_isRegLeader = true} } forEach _hcList;
+				if (!_isRegLeader) then {
 					//--- Heartbeat freshness join (deleghealth idiom): only a body with a live HCSTAT
 					//--- feed keyed to ITS OWN netId is an HC - a human never emits HCStat.
 					_key = Format ["HC-%1", netId _u];
@@ -89,12 +99,22 @@ while {!WFBE_GameOver} do {
 				_first = _entry select 1;
 				_last  = _entry select 2;
 			} else {
-				diag_log ("HCREG|v1|detect|owner=" + str _id + "|netid=" + netId _u + "|uid=" + _uid + "|t=" + str (round (time / 60)));
+				diag_log ("HCREG|v1|detect|owner=" + str _id + "|netid=" + netId _u + "|uid=" + _uid + "|side=" + str (side (group _u)) + "|grpsize=" + str (count units (group _u)) + "|t=" + str (round (time / 60)));
 			};
 			if (((time - _first) >= _wait) && {(time - _last) >= _wait}) then {
 				_last = time;
-				diag_log ("HCREG|v1|heal-attempt|owner=" + str _id + "|netid=" + netId _u + "|uid=" + _uid + "|waited=" + str (round (time - _first)) + "|t=" + str (round (time / 60)));
-				["connected-hc", _u] Call HandleSpecial;
+				if ((side (group _u) == civilian) && {(count units (group _u)) == 1}) then {
+					//--- solo CIV, merely unregistered: re-run the registration path directly (v1 behaviour).
+					diag_log ("HCREG|v1|heal-attempt|mode=register|owner=" + str _id + "|netid=" + netId _u + "|uid=" + _uid + "|waited=" + str (round (time - _first)) + "|t=" + str (round (time / 60)));
+					["connected-hc", _u] Call HandleSpecial;
+				} else {
+					//--- shared group or wrong side: registration cannot help until the HC re-seats into a
+					//--- fresh solo CIV group, and group joins are locality-bound - order the HC to do it
+					//--- (Client\PVFunctions\HandleSpecial.sqf "hc-force-reseat": ReseatCivilian + park +
+					//--- connected-hc re-announce, all existing HC-side machinery).
+					diag_log ("HCREG|v1|heal-attempt|mode=reseat-order|owner=" + str _id + "|netid=" + netId _u + "|uid=" + _uid + "|side=" + str (side (group _u)) + "|grpsize=" + str (count units (group _u)) + "|waited=" + str (round (time - _first)) + "|t=" + str (round (time / 60)));
+					[_u, "HandleSpecial", ["hc-force-reseat"]] Call WFBE_CO_FNC_SendToClient;
+				};
 			};
 			_next = _next + [[_id, _first, _last]];
 			_stillIds = _stillIds + [_id];
