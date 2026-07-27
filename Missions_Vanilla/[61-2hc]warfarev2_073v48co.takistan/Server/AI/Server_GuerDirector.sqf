@@ -433,28 +433,25 @@ while {!WFBE_GameOver} do {
                         private ["_cTownSide"];
                         _cTownSide = _cTownObj getVariable ["sideID", WFBE_C_UNKNOWN_ID]; //--- #815: numeric sideID
 
-                        //--- QRF: fire when town is actively under attack (wfbe_contact_time fresh).
+                        //--- QRF: fire when town is actively under attack (town FSM's live wfbe_active latch).
                         if (_cKind == "qrfInsert" || {_cKind == "qrfGunship"} || {_cKind == "qrfCombo"}) then {
-                            private ["_contactAge","_contactTime"];
-                            _contactTime = _cTownObj getVariable ["wfbe_contact_time", 0];
-                            _contactAge  = _nowT - _contactTime;
-                            if (_contactTime > 0 && {_contactAge < 120}) then {
+                            if (_cTownObj getVariable ["wfbe_active", false]) then {
                                 //--- Town under attack - fire QRF.
                                 private ["_spawnPos","_cTownPos"];
                                 _cTownPos  = getPos _cTownObj;
                                 _spawnPos  = [_cTownPos select 0, _cTownPos select 1, 50];
 
                                 //--- WFBE_C_GUER_PRESENCE_PULSE (default 0, Grok idea #15): today the QRF
-                                //--- materializes directly over the town center, which is exactly where the
-                                //--- contact is fresh (<120s) - i.e. on top of the players who triggered it.
+                                //--- materializes directly over the town center, which is where the active
+                                //--- attack is happening - i.e. on top of the players who triggered it.
                                 //--- Armed, bias the spawn onto the RING between the contact town (proxy for
-                                //--- the player cluster - contact is fresh, so players are physically there)
+                                //--- the player cluster - the town remains actively contested)
                                 //--- and the nearest OTHER GUER/unknown town already in the ledger (a believable
                                 //--- "reinforcements are coming from home turf" origin). Reuses the ledger's own
                                 //--- town-position data (already resident, no new nearEntities/allUnits/allGroups
                                 //--- scan) and the two dead AICOMV2_GDIR_MIN_SPAWN_M / AICOMV2_GDIR_AMBUSH_BUBBLE_M
                                 //--- constants (declared at startup, never previously consumed in this file) as the
-                                //--- ring's inner/outer radius. WHEN/HOW MANY (contact-freshness gate, group-cap
+                                //--- ring's inner/outer radius. WHEN/HOW MANY (active-town gate, group-cap
                                 //--- check, cooldown/contract machinery) are untouched - this only moves WHERE the
                                 //--- already-decided QRF spawns. Flag-off: identical to the two lines above.
                                 if ((missionNamespace getVariable ["WFBE_C_GUER_PRESENCE_PULSE", 0]) > 0) then {
