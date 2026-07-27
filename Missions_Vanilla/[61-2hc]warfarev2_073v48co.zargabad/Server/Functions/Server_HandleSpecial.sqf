@@ -2214,6 +2214,18 @@ switch (_args select 0) do {
 							//--- shape) is what actually gates the M113/BRDM/T-tier depot unlocks - GUI_UpgradeMenu.sqf,
 							//--- Root_GUE_PlayerOverlay.sqf and Client_UpdateRHUD.sqf all read WFBE_GUER_PLAYER_KILLS directly.
 							if ((missionNamespace getVariable ["WFBE_C_GUER_VBIED_CREDIT_KILLS", 1]) > 0) then {
+								//--- Driver dies with the VBIED before RequestOnUnitKilled reaches its stats path, so mirror its category-aware stat credit here.
+								if (_drvUID != "") then {
+									private ["_vStat"];
+									_vStat = WFBE_STAT_KILLS_INFANTRY;
+									if !(_x isKindOf "Man") then {
+										if (_x isKindOf "Air") then {_vStat = WFBE_STAT_KILLS_AIR} else {
+											if (_x isKindOf "StaticWeapon") then {_vStat = WFBE_STAT_KILLS_STATIC} else {_vStat = WFBE_STAT_KILLS_VEHICLE};
+										};
+									};
+									[_drvUID, _vStat, 1] Call WFBE_SE_FNC_RecordStat;
+									if (isPlayer _x) then {[_drvUID, WFBE_STAT_PVP_KILLS, 1] Call WFBE_SE_FNC_RecordStat};
+								};
 								WFBE_GUER_PLAYER_KILLS = (missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0]) + 1;
 								publicVariable "WFBE_GUER_PLAYER_KILLS";
 								//--- Same milestone/unlock table RequestOnUnitKilled.sqf:152-157 uses - keep in sync manually if
