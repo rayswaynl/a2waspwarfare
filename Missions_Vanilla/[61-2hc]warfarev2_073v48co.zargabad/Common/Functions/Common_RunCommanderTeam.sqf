@@ -1579,6 +1579,21 @@ while {!WFBE_GameOver && _alive} do {
 						//--- ground vehicle to SLING + deep-drop behind the lines (WFBE_C_AICOM_VEHLIFT).
 						if ([_amHeli, _team, _dest, _side, _sideID, _vehicles] Call WFBE_CO_FNC_AICOMAirLeg) then {_amDone = true};
 					};
+					//--- TRANSPORT-HELI REQUISITION: HC teams cannot call server-only AIBuyUnit. A long
+					//--- airmobile leg with no usable transport publishes one idempotent request; the server
+					//--- authorises roster/unlock/factory/funds/caps and this locality owner consumes the grant.
+					if (isNull _amHeli) then {
+						private ["_alReq","_alGrant","_alReqPending","_alGrantPending"];
+						_alReq = _team getVariable "wfbe_aicom_airlift_req";
+						_alGrant = _team getVariable "wfbe_aicom_airlift_grant";
+						_alReqPending = !isNil "_alReq" && {(typeName _alReq) == "ARRAY"} && {count _alReq > 0};
+						_alGrantPending = !isNil "_alGrant" && {(typeName _alGrant) == "ARRAY"} && {count _alGrant > 0};
+						if (!_alReqPending && {!_alGrantPending}) then {
+							_team setVariable ["wfbe_aicom_airlift_req", [time, getPosATL (leader _team)], true];
+							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_REQ|team=" + str _team + "|dist=" + str (round ((leader _team) distance _dest)));
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] has no transport heli for a long airmobile leg - requisition requested.", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
+						};
+					};
 				};
 				//--- P1.1 AIR-MOBILE ATTEMPT TELEMETRY (claude 2026-07-19): reason-code why this ordered leg did or did not
 				//--- fly, so the existing default-ON airlift's real gating is visible in RPT (instrument-first per audit
@@ -3101,6 +3116,40 @@ while {!WFBE_GameOver && _alive} do {
 		};
 	};
 
+	//--- AIRMOBILE TRANSPORT GRANT CONSUMER: server selected and charged [class, factoryPos,
+	//--- charge, issuedTime]; the team-local HC builds it with CreateTeam, preserving locality and
+	//--- standard crew/init behavior. Failed creation refunds the exact prepaid charge server-side.
+	if (_alive && {!isNull _team}) then {
+		private ["_alGrant","_alClass","_alPos","_alCharge","_alSpawnPos","_alRet","_alNewVehicles","_alRefund"];
+		_alGrant = _team getVariable "wfbe_aicom_airlift_grant";
+		if (!isNil "_alGrant" && {(typeName _alGrant) == "ARRAY"} && {count _alGrant >= 3}) then {
+			_alClass = _alGrant select 0;
+			_alPos = _alGrant select 1;
+			_alCharge = _alGrant select 2;
+			if ((typeName _alClass) == "STRING" && {_alClass != ""} && {(typeName _alPos) == "ARRAY"} && {count _alPos >= 2}) then {
+				_alSpawnPos = [_alPos, 25, 80] Call WFBE_CO_FNC_GetRandomPosition;
+				_alSpawnPos = [_alSpawnPos, 35] Call WFBE_CO_FNC_GetEmptyPosition;
+				_alRet = [[_alClass], _alSpawnPos, _side, true, _team, true] Call WFBE_CO_FNC_CreateTeam;
+				_alNewVehicles = _alRet select 1;
+				if (count _alNewVehicles > 0) then {
+					{if (!isNull _x && {_x isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0}) then {_x setVariable ["wfbe_aicom_transport", true, true]}} forEach _alNewVehicles;
+					_vehicles = _vehicles + _alNewVehicles;
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_DELIVERED|team=" + str _team + "|class=" + _alClass);
+					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] received paid transport %3 at factory.", _side, _team, _alClass]] Call WFBE_CO_FNC_AICOMLog;
+				} else {
+					_alRefund = if ((typeName _alCharge) == "SCALAR") then {_alCharge} else {0};
+					if (_alRefund > 0) then {
+						if (isServer) then {[_side, _alRefund] Call ChangeAICommanderFunds} else {
+							WFBE_PVF_RequestSpecial = ["SRVFNCRequestSpecial", ["aicom-topup-refund", _sideID, _alRefund]];
+							publicVariableServer "WFBE_PVF_RequestSpecial";
+						};
+					};
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_REFUND|team=" + str _team + "|class=" + _alClass + "|refund=" + str _alRefund);
+				};
+			};
+			_team setVariable ["wfbe_aicom_airlift_grant", [], true];
+		};
+	};
 	//--- ECON-SURGE ARTY TOP-UP CONSUMER (owner-modified econ-surge win, 2026-07-08): mirrors the TOP-UP CONSUMER
 	//--- above but for the single-gun request AI_Commander_Teams.sqf stamps on THIS team as wfbe_aicom_arty_surge_req
 	//--- = [classname, posArray, issuedTime] when wfbe_aicom_econ_surge fires and this team already owns the side's

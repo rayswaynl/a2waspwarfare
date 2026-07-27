@@ -136,7 +136,50 @@ if (_airMaxTotalP > 0) then {
 			};
 		};
 
-		//--- (3) TOWN-CENTER TOP-UP DISPATCHER (Ray: reinforce at friendly towns): an HC team that is RALLYING or
+		//--- (3) AIRMOBILE TRANSPORT REQUISITION: the local driver requests a transport only
+		//--- for a long airmobile leg without one. Server owns class/unlock/factory/treasury/cap
+		//--- validation, then publishes a paid grant for the HC-local CreateTeam consumer.
+		private ["_alReq","_alGrant","_alUnits","_alClass","_alData","_alTryData","_alKind","_alFactories","_alFactory","_alPrice","_alFunds","_alCapCost","_alAirOK","_alGrantPending"];
+		_alReq = _team getVariable "wfbe_aicom_airlift_req";
+		_alGrant = _team getVariable "wfbe_aicom_airlift_grant";
+		_alGrantPending = !isNil "_alGrant" && {(typeName _alGrant) == "ARRAY"} && {count _alGrant > 0};
+		if (!isNil "_alReq" && {(typeName _alReq) == "ARRAY"} && {count _alReq > 0} && {!_alGrantPending}) then {
+			_alUnits = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
+			_alClass = "";
+			_alData = [];
+			{
+				if (_alClass == "" && {isClass (configFile >> "CfgVehicles" >> _x)} && {_x isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) > 0}) then {
+					_alTryData = missionNamespace getVariable _x;
+					if (!isNil "_alTryData" && {(typeName _alTryData) == "ARRAY"} && {(([_x, _sideText, _upgrades] Call WFBE_CO_FNC_IsUnitUnlocked) select 0)}) then {
+						_alClass = _x;
+						_alData = _alTryData;
+					};
+				};
+			} forEach _alUnits;
+			_alKind = _structTypes find "Aircraft";
+			_alFactories = [];
+			if (_alKind >= 0) then {_alFactories = [_side, _alKind, _buildings] Call GetFactories};
+			_alAirOK = (_airMaxTotalP <= 0) || {_airAliveP < _airMaxTotalP};
+			if (_alClass != "" && {count _alFactories > 0} && {_alAirOK}) then {
+				_alFactory = _alFactories select 0;
+				{ if ((_x distance _wm_ldr) < (_alFactory distance _wm_ldr)) then {_alFactory = _x} } forEach _alFactories;
+				_alPrice = _alData select QUERYUNITPRICE;
+				_alCapCost = 3 + count (_alData select QUERYUNITTURRETS);
+				_alFunds = (_side) Call GetAICommanderFunds;
+				if (_capRemaining >= _alCapCost) then {
+					if (_alFunds >= _alPrice) then {
+						[_side, -_alPrice] Call ChangeAICommanderFunds;
+						_team setVariable ["wfbe_aicom_airlift_grant", [_alClass, getPosATL _alFactory, _alPrice, time], true];
+						_team setVariable ["wfbe_aicom_airlift_req", [], true];
+						_capRemaining = _capRemaining - _alCapCost;
+						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_GRANT|team=" + str _team + "|class=" + _alClass + "|cost=" + str _alPrice);
+						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] transport requisition approved (%3 at aircraft factory, cost %4).", _sideText, _team, _alClass, _alPrice]] Call WFBE_CO_FNC_AICOMLog;
+					};
+				};
+			};
+		};
+
+		//--- (4) TOWN-CENTER TOP-UP DISPATCHER (Ray: reinforce at friendly towns): an HC team that is RALLYING or
 		//--- PARKED (leader within 400m of its own HQ or an OWN-side town centre) and understrength (alive < 6)
 		//--- gets an infantry top-up. We CHARGE the side up front (per-missing-unit flat cost) and broadcast a
 		//--- wfbe_aicom_topup_req [count,pos,classes,issuedTime] the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
