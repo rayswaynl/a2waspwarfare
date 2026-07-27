@@ -15,7 +15,7 @@
 //---   receipt uses the shared wfbe_sml_detach_at stamp.
 //---   All exit paths issue doFollow to clear the sticky doStop:
 //---     (a) camp captured / sub-TTL passed
-//---     (b) TTL expiry (WFBE_C_SML_WATCHDOG_TTL, default 240s)
+//---     (b) TTL expiry (WFBE_C_SML_CAPTURE_TTL, tracks WFBE_C_AICOM_ASSAULT_HOLD = 360s)
 //---     (c) leader death or unit group change
 //---     (d) new commander order (_capSeq changed) / team left town mode
 //---     (e) team disband (wfbe_aicom_disband on group)
@@ -41,7 +41,12 @@ _townCenter   = _this select 5;  //--- already a position array [x,y,z]
 _capSeq       = _this select 6;
 _campFirstEnd = _this select 7;
 
+private ["_ttlCapture"];
 _ttl = missionNamespace getVariable ["WFBE_C_SML_WATCHDOG_TTL", 240];
+//--- Capture-phase TTL override (WFBE_C_SML_CAPTURE_TTL, default 0 = OFF/legacy). While OFF this
+//--- block is inert and _ttl keeps the shared watchdog value above, byte-identical to HEAD.
+_ttlCapture = missionNamespace getVariable ["WFBE_C_SML_CAPTURE_TTL", 0];
+if (_ttlCapture > 0) then {_ttl = _ttlCapture};
 
 //--- Need 2+ unheld camps and 3+ foot infantry for a meaningful split.
 if (count _unheldCamps < 2) exitWith {};

@@ -27,7 +27,7 @@
 //---       re-board on its own, matching SML-1/3/4/5 rejoin pattern.
 //---
 //--- TTL watchdog exit paths:
-//---   ttl           -- WFBE_C_SML_WATCHDOG_TTL expired (shared constant, default 240s)
+//---   ttl           -- WFBE_C_SML_CAPTURE_TTL expired (capture-phase constant, tracks WFBE_C_AICOM_ASSAULT_HOLD = 360s)
 //---   campfirst_end -- camp-first window closed (_campFirstEnd passed)
 //---   leader_dead   -- leader is null or dead
 //---   disband       -- wfbe_aicom_disband set on _team
@@ -49,7 +49,12 @@ _side         = _this select 3;
 _capSeq       = _this select 4;
 _campFirstEnd = _this select 5;
 
+private ["_ttlCapture"];
 _ttl = missionNamespace getVariable ["WFBE_C_SML_WATCHDOG_TTL", 240];
+//--- Capture-phase TTL override (WFBE_C_SML_CAPTURE_TTL, default 0 = OFF/legacy). While OFF this
+//--- block is inert and _ttl keeps the shared watchdog value above, byte-identical to HEAD.
+_ttlCapture = missionNamespace getVariable ["WFBE_C_SML_CAPTURE_TTL", 0];
+if (_ttlCapture > 0) then {_ttl = _ttlCapture};
 
 //--- Need at least one foot soldier to act on.
 if (count _footInf < 1) exitWith {};
