@@ -2,7 +2,7 @@
 	Script: Spec Ops Skill System by Benny.
 	Description: Add special skills to the defined spec ops unit.
 */
-Private ['_min','_ran','_skip','_vehicle','_vehicles','_z'];
+Private ['_lockChallenge','_lockPendingKey','_min','_ran','_skip','_vehicle','_vehicles','_z'];
 
 _vehicles = player nearEntities [["Car","Motorcycle","Tank","Ship","Air"],5];
 if (count _vehicles < 1) exitWith {};
@@ -49,9 +49,17 @@ if (!_skip) then {
 		// WFBE_RequestVehicleLock = ['SRVFNCREQUESTVEHICLELOCK',[_vehicle,false]];
 		// publicVariable 'WFBE_RequestVehicleLock';
 		// if (isHostedServer) then {['SRVFNCREQUESTVEHICLELOCK',[_vehicle,false]] Spawn HandleSPVF};
-		//--- DR-55: include the acting player so the server can bind the unlock to a real,
-		//--- nearby lockpicker (forged [vehicle,lock] requests are rejected when hardening is ON).
-		["RequestVehicleLock", [_vehicle, false, player]] Call WFBE_CO_FNC_SendToServer;
+		//--- DR-55: with hardening enabled, the server first returns a private one-shot capability
+		//--- to this player's owning client. The receiver completes the unlock only after the server
+		//--- has revalidated the same nearby, side-authorized vehicle.
+		if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
+			_lockPendingKey = Format ["wfbe_vehicle_lock_pending_%1", getPlayerUID player];
+			_lockChallenge = Format ["%1:%2:%3", getPlayerUID player, floor (diag_tickTime * 1000), floor (random 1000000000)];
+			missionNamespace setVariable [_lockPendingKey, [_vehicle, _lockChallenge]];
+			["RequestVehicleLock", [_vehicle, false, player, "", _lockChallenge]] Call WFBE_CO_FNC_SendToServer;
+		} else {
+			["RequestVehicleLock", [_vehicle, false, player]] Call WFBE_CO_FNC_SendToServer;
+		};
 		hint (localize "STR_WF_INFO_Lockpick_Succeed");
 	} else {
 		hint (localize "STR_WF_INFO_Lockpick_Failed");

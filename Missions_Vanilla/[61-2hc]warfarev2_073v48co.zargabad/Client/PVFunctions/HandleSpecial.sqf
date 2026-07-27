@@ -272,6 +272,29 @@ switch (_request) do {
 		if (typeName _uid != "STRING" || {_uid != getPlayerUID player} || {isNull _uav}) exitWith {};
 		[_uav] ExecVM "Client\Module\UAV\uav.sqf";
 	};
+	//--- Accept the RequestVehicleLock capability only when the private reply echoes this client's
+	//--- outstanding challenge, then spend it by resubmitting the exact pending vehicle.
+	case "vehicle-lock-capability": {
+		Private ["_lockChallenge","_lockExpectedChallenge","_lockPending","_lockPendingKey","_lockToken","_lockVehicle","_lockExpires","_lockPurpose"];
+		if (count _args != 4) exitWith {};
+		_lockPurpose = _args select 0;
+		_lockToken = _args select 1;
+		_lockExpires = _args select 2;
+		_lockChallenge = _args select 3;
+		if (_lockPurpose != "vehicle-lock") exitWith {};
+		if (typeName _lockToken != "STRING" || {_lockToken == ""}) exitWith {};
+		if (typeName _lockExpires != "SCALAR" || {_lockExpires <= time}) exitWith {};
+		if (typeName _lockChallenge != "STRING" || {_lockChallenge == ""}) exitWith {};
+		_lockPendingKey = Format ["wfbe_vehicle_lock_pending_%1", getPlayerUID player];
+		_lockPending = missionNamespace getVariable [_lockPendingKey, []];
+		if (typeName _lockPending != "ARRAY" || {count _lockPending != 2}) exitWith {};
+		_lockVehicle = _lockPending select 0;
+		_lockExpectedChallenge = _lockPending select 1;
+		if (typeName _lockVehicle != "OBJECT" || {isNull _lockVehicle}) exitWith {};
+		if (typeName _lockExpectedChallenge != "STRING" || {_lockChallenge != _lockExpectedChallenge}) exitWith {};
+		missionNamespace setVariable [_lockPendingKey, []];
+		["RequestVehicleLock", [_lockVehicle, false, player, _lockToken]] Call WFBE_CO_FNC_SendToServer;
+	};
 	//--- Accept the ICBM/TEL token only when it echoes this client's private challenge.
 	case "icbm-tel-auth-token": {
 		Private ["_telChallenge","_telChallengeKey","_telExpires","_telPurpose","_telToken"];
