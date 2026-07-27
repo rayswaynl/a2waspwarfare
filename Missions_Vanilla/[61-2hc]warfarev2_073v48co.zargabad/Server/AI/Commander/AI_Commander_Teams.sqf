@@ -57,12 +57,15 @@ _sliceCut = {
 	_sliceT0 = diag_tickTime;
 };
 _sliceYield = {
+	private ["_sliceLabel"];
+	_sliceLabel = "";
+	if (typeName _this == "STRING") then {_sliceLabel = _this};
 	if (_scanChunkOn) then {
 		Call _sliceCut;
 		_perfSlices = _perfSlices + 1;
 		if (!isNil "PerformanceAudit_Record") then {
 			if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-				["aicom_teams_slice", _sliceDt, "", "SERVER"] Call PerformanceAudit_Record;
+				["aicom_teams_slice", _sliceDt, Format["phase:%1", _sliceLabel], "SERVER"] Call PerformanceAudit_Record;
 			};
 		};
 		_chunkSleepTotal = _chunkSleepTotal + _scanChunkSleep;
@@ -172,7 +175,7 @@ if (_censusOn) then {
 };
 _aiTeams = _foundedTeams + _editorTeams; //--- legacy alias; used in server-local log below.
 _pending = _logik getVariable ["wfbe_aicom_pending", 0];
-Call _sliceYield;
+["teams-census"] Call _sliceYield;
 
 //--- C3 consensus telemetry: keep founding-skip reasons debounced per side-logic so the
 //--- next soak can distinguish a target/cap/template/economy stall without RPT flooding.
@@ -241,7 +244,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
 		diag_log ("FIELDSPLIT|" + _sideText + "|aicoms_live=" + str _aicomLive + "|aicoms_teams=" + str _aicomTeams + "|aicoms_mean_size=" + str (round (_aicomMean * 10) / 10) + "|townDef=" + str _aicomTownDef + "|patrol=" + str _aicomPatrol + "|other=" + str _aicomOther + "|funds=" + str _aicomFunds + "|ownTowns=" + str ({!isNull _x && {(_x getVariable ["sideID", -1]) == _sideID}} count towns) + "|huskTeams=" + str _aicomHusk);
 	};
 };
-Call _sliceYield;
+["teams-fieldsplit"] Call _sliceYield;
 
 //--- V0.6.6: dynamic target - banked funds scale the founding threshold so losing
 //--- AIs convert wealth into pressure instead of hoarding.
@@ -677,6 +680,7 @@ if (count _live > 0) then {
 		if (count _eligNoBike > 0) then {_eligible = _eligNoBike};
 	};
 	if (count _eligible == 0) exitWith { ["no_eligible"] Call _emitFoundSkip; };
+	["teams-eligibility"] Call _sliceYield;
 
 	//--- B59 ROSTER AIR-GATE (Ray 2026-06-20): the FOUNDING path (this file) had NO air-established gate, so
 	//--- a heli template (cheapest helis carried QUERYUNITUPGRADE air=0) was eligible at air-research 0 with no
@@ -852,6 +856,7 @@ if (count _live > 0) then {
 			["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] FORCED-ARTY: under cap (alive %2 < cap %3), forcing founding draw onto arty template %4 this cycle.", _sideText, _artyAlive, _artyCap, _forcedArtyPick]] Call WFBE_CO_FNC_AICOMLog;
 		};
 	};
+	["teams-vehicle-caps"] Call _sliceYield;
 
 	//--- P1 combined-arms picker (claude-gaming 2026-06-15). Mirror of AI_Commander_AssignTypes.sqf:
 	//--- the old doctrine-only weighting (70% one vehicle track, 30% UNIFORM over all eligible) averaged
@@ -1107,6 +1112,7 @@ if (count _live > 0) then {
 	//--- this cycle and the lone artillery battery is GUARANTEED to found. _template/_price/factory/HC dispatch below
 	//--- all read _pick, so no further wiring is needed. Inert (no-op) when _forcedArtyPick < 0 (normal cycles).
 	if (_forcedArtyPick >= 0) then {_pick = _forcedArtyPick};
+	["teams-buckets"] Call _sliceYield;
 
 	//--- D4 TARGET-AWARE COMPOSITIONS (flag WFBE_C_AICOM_TARGET_AWARE_COMP, default 0):
 	//--- read the current target town's camp/garrison composition and re-weight the _cwBucket draw when
@@ -1410,6 +1416,7 @@ if (count _live > 0) then {
 		_ud = missionNamespace getVariable _cn;
 		if (!isNil "_ud") then {_price = _price + (_ud select QUERYUNITPRICE)};
 	} forEach _template;
+	["teams-compose"] Call _sliceYield;
 	_funds = (_side) Call GetAICommanderFunds;
 
 	//--- W11 Field Hospital: one-shot free re-founding flag - waive the price check once.
