@@ -22,7 +22,11 @@
 		                             Does NOT affect who counts toward CONTEST - every side always
 		                             counts for contest purposes (design doc S3.4/S4).
 		5: _contestMode               NUMBER  0 = pause progress on multi-side presence (default),
-		                               1 = decay progress at WFBE_C_RADIUSHOLD_CONTEST_DECAY sec/tick.
+		                               1 = decay progress at WFBE_C_RADIUSHOLD_CONTEST_DECAY sec/tick,
+		                               2 = BEAT-DOWN: the anchor's current owner (sideID) stops counting
+		                               toward contest once reduced to WFBE_C_RADIUSHOLD_BEATDOWN_FLOOR
+		                               bodies or fewer, so an attacker must clear the garrison before it
+		                               can accrue. A third side still contests normally.
 		6: _cooldownSecs               NUMBER  re-arm cooldown after completion; 0 = none.
 		7: _onCompleteFnName             STRING  name of a global compiled function, called as
 		                                 [_holdId, _anchor, _winningSide] call (missionNamespace getVariable _onCompleteFnName)
@@ -137,6 +141,29 @@ if (isNil "WFBE_RADIUSHOLD_DISPATCHER_STARTED") then {
 			if (_westN > 0) then { _presentSides set [count _presentSides, west]; };
 			if (_eastN > 0) then { _presentSides set [count _presentSides, east]; };
 			if (_guerN > 0) then { _presentSides set [count _presentSides, resistance]; };
+
+			//--- CONTEST MODE 2 "BEAT-DOWN" (owner ruling 2026-07-27, carrier consumer). The objective's
+			//--- CURRENT OWNER stops counting toward contest once its presence is beaten down to
+			//--- WFBE_C_RADIUSHOLD_BEATDOWN_FLOOR bodies or fewer. ABOVE that floor the owner still counts,
+			//--- so an attacker standing on a defended deck reads CONTESTED and accrues nothing - it must
+			//--- clear the garrison first. A THIRD side always still contests, so this is not a free pass.
+			//--- WHY: plain sole-presence contest made the carriers UNCAPTURABLE - a LargeTown1 carrier
+			//--- always carries a GUER garrison, so a boarder was permanently contested and progress never
+			//--- accrued. That is the 2026-07-10 "bubbles do not grant deck capture" regression which
+			//--- disarmed WFBE_C_NAVALHVT_BUBBLE_ENABLE (commit 7ec25d16f5). Modes 0/1 are UNTOUCHED -
+			//--- Init_ZgKoth.sqf registers mode 0 and is unaffected.
+			if (_contestMode == 2 && {(count _presentSides) > 1}) then {
+				private ["_ownSID","_ownSide","_ownN","_bdFloor"];
+				_ownSID  = _anchor getVariable ["sideID", -1];
+				_bdFloor = missionNamespace getVariable ["WFBE_C_RADIUSHOLD_BEATDOWN_FLOOR", 2];
+				if (_ownSID >= 0) then {
+					_ownSide = (_ownSID) Call WFBE_CO_FNC_GetSideFromID;
+					_ownN = switch (_ownSide) do {case west: {_westN}; case east: {_eastN}; case resistance: {_guerN}; default {-1}};
+					if (_ownN >= 0 && {_ownN <= _bdFloor} && {_ownSide in _presentSides}) then {
+						_presentSides = _presentSides - [_ownSide];
+					};
+				};
+			};
 
 			_holderSideNum = -1;
 
