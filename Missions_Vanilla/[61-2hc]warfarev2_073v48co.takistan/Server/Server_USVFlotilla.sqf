@@ -187,6 +187,11 @@ while {!WFBE_GameOver} do {
 	if (!_gateActive && _gateWasActive) then { diag_log "USVFLOTILLA|GATE|CLOSE"; };
 	_gateWasActive = _gateActive;
 
+	//--- Reset immediately on an open gate, before the terminal quiet-despawn prune can consume
+	//--- stale elapsed time. An inactive tick advances the shared countdown toward the configured
+	//--- quiet-despawn threshold.
+	if (_gateActive) then { _gateInactiveTime = 0; } else { _gateInactiveTime = _gateInactiveTime + _tickInterval; };
+
 	//=== (2) PRUNE + SELF-CLEAN + MOVEMENT TICK ================================================
 	_kept = [];
 	{
@@ -277,8 +282,6 @@ while {!WFBE_GameOver} do {
 		};
 	} forEach _flotilla;
 	_flotilla = _kept;
-
-	if (_gateActive) then { _gateInactiveTime = 0; } else { _gateInactiveTime = _gateInactiveTime + _tickInterval; };
 
 	//=== (3) MAINTAIN: spawn missing boats up to WFBE_C_USV_FLOTILLA_COUNT while gate is active =====
 	if (_gateActive && {count _flotilla < _count} && {count _route > 0}) then {
