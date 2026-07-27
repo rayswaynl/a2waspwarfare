@@ -13,13 +13,13 @@ _active = missionNamespace getVariable ["WFBE_WASP_EarplugActive", false];
 
 if (!_active) then {
 	//--- Put earplugs IN: lower ambient and radio volume.
-	0.25 fadeSound 0.3;
+	1 fadeSound 0.2;
 	0.25 fadeRadio 0.12;
 	playSound "autoViewDistanceToggledOn";
 	missionNamespace setVariable ["WFBE_WASP_EarplugActive", true];
 } else {
 	//--- Take earplugs OUT: restore ambient and radio volume.
-	1 fadeSound 0.3;
+	1 fadeSound 1;
 	1 fadeRadio 1;
 	playSound "autoViewDistanceToggledOff";
 	missionNamespace setVariable ["WFBE_WASP_EarplugActive", false];
