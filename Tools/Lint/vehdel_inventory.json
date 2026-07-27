@@ -232,8 +232,8 @@
     "total": 1
   },
   "Server/Functions/Server_HandleEmptyVehicle.sqf": {
-    "probed": 1,
-    "total": 1
+    "probed": 2,
+    "total": 2
   },
   "Server/Functions/Server_MHQRepair.sqf": {
     "probed": 0,
