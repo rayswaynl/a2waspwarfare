@@ -1,8 +1,25 @@
 WFBE_SE_FNC_HandleSideSupplyChange = {
-	Private ['_amount','_change','_channel','_currentSupply','_event','_expectedSide','_maxSupplyLimit','_payload','_reason','_side','_supplyKey'];
+	//--- DR-55 forged-PVF hardening (WFBE_C_SEC_HARDENING, Common\Init\Init_CommonConstants.sqf):
+	//--- this channel has NO trusted sender (addPublicVariableEventHandler carries no requester
+	//--- identity), so historically ANY connected client could broadcast [side, amount, reason] on
+	//--- wfbe_supply_temp_west/_east/_GUER to max out its own side's economy or zero out the
+	//--- enemy's in one shot - the side/amount were asserted by the caller and never bound to who
+	//--- actually sent them. Legit CLIENT callers (coin_interface.sqf, Init_Client.sqf,
+	//--- GUI_Menu_Economy.sqf, Action_RepairMHQ.sqf, all funneled through the single
+	//--- Common\Functions\Common_ChangeSideSupply.sqf sender) only ever request their OWN
+	//--- sideJoined; Common_ChangeSideSupply.sqf now appends the caller's local `player` object as
+	//--- payload[3] on that path. When the flag is on, this handler requires that requester to be a
+	//--- live player whose (side group) matches the claimed side (mirrors the established
+	//--- RequestMHQRepair.sqf / RequestSiteClearance.sqf trust model). The trusted in-process
+	//--- server->server call (Common_ChangeSideSupply.sqf's WFBE_C_SUPPLY_SERVER_FIX==2 path, which
+	//--- never crosses the network) passes _trusted=true as _this select 2 and is exempt - it never
+	//--- had a "requester" to begin with. Flag OFF (default 0): byte-identical to pre-hardening
+	//--- behaviour, no new rejections.
+	Private ['_amount','_change','_channel','_currentSupply','_event','_expectedSide','_maxSupplyLimit','_payload','_reason','_reqPlayer','_secHardening','_side','_supplyKey','_trusted'];
 
 	_event = _this select 0;
 	_expectedSide = _this select 1;
+	_trusted = if (count _this > 2) then {_this select 2} else {false};
 	_channel = _event select 0;
 	_payload = _event select 1;
 
@@ -32,6 +49,26 @@ WFBE_SE_FNC_HandleSideSupplyChange = {
 
 	if (typeName _reason != "STRING") then {_reason = str _reason};
 	if (_reason == "") then {_reason = "No reason provided for supply value update! This might indicate a malicious supply update request. Check stuff if you see this message."};
+
+	_secHardening = (missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0;
+
+	if (_secHardening && !_trusted) then {
+		_reqPlayer = if (count _payload > 3) then {_payload select 3} else {objNull};
+
+		if !((typeName _reqPlayer) in ["OBJECT"]) exitWith {
+			["WARNING", format ["Server_ChangeSideSupply.sqf: rejected side-supply payload on %1 - requester type %2 (WFBE_C_SEC_HARDENING).", _channel, typeName _reqPlayer]] call WFBE_CO_FNC_LogContent;
+		};
+		if (isNull _reqPlayer) exitWith {
+			["WARNING", format ["Server_ChangeSideSupply.sqf: rejected side-supply payload on %1 - null requester (WFBE_C_SEC_HARDENING).", _channel]] call WFBE_CO_FNC_LogContent;
+		};
+		if !(isPlayer _reqPlayer) exitWith {
+			["WARNING", format ["Server_ChangeSideSupply.sqf: rejected side-supply payload on %1 - non-player requester %2 (WFBE_C_SEC_HARDENING).", _channel, _reqPlayer]] call WFBE_CO_FNC_LogContent;
+		};
+		if !((side group _reqPlayer) in [_side]) exitWith {
+			["WARNING", format ["Server_ChangeSideSupply.sqf: rejected side-supply payload on %1 - requester side %2 does not match claimed side %3 (WFBE_C_SEC_HARDENING).", _channel, side group _reqPlayer, _side]] call WFBE_CO_FNC_LogContent;
+		};
+	};
+
 	_maxSupplyLimit = missionNameSpace getvariable "WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT";
 
 	_currentSupply = (_side) Call GetSideSupply;

@@ -59,12 +59,18 @@ scp "Administrator@78.46.107.142:C:/Users/Administrator/Documents/Arma 2 Other P
 #   (exact server RPT dir varies by profile; if unsure, ssh in and locate it:
 #    ssh Administrator@78.46.107.142 'dir /s /b C:\arma2oaserver.RPT')
 
-# --- HC RPT (the team-driver / CAPTURED [ lines) ---
-scp "Administrator@78.46.107.142:C:/Users/Administrator/AppData/Local/ArmA 2 OA/ArmA2OA.RPT" ./ArmA2OA.RPT
+# --- HC RPTs (team-driver / CAPTURED [ lines) - Sandboxie container paths ---
+# After the 2026-07-21 Sandboxie cutover, host-visible C:\WASP\hc*-profile and
+# AppData ArmA2OA.RPT paths are DECOYS (frozen). Live files:
+scp "Administrator@78.46.107.142:C:/Sandbox/Administrator/HC1/drive/C/WASP/hc1-profile/ArmA2OA.RPT" ./hc1-ArmA2OA.RPT
+scp "Administrator@78.46.107.142:C:/Sandbox/Administrator/HC2/drive/C/WASP/hc2-profile/ArmA2OA.RPT" ./hc2-ArmA2OA.RPT
 ```
 
-> **HC RPT path (authoritative):**
-> `C:\Users\Administrator\AppData\Local\ArmA 2 OA\ArmA2OA.RPT`
+> **HC RPT paths (authoritative, Sandboxie containers - verified 2026-07-27):**
+> - HC1: `C:\Sandbox\Administrator\HC1\drive\C\WASP\hc1-profile\ArmA2OA.RPT`
+> - HC2: `C:\Sandbox\Administrator\HC2\drive\C\WASP\hc2-profile\ArmA2OA.RPT`
+> - Globs: `C:\Sandbox\*\HC1\drive\C\WASP\hc1-profile\ArmA2OA.RPT` / `...\HC2\...`
+> - Decoys (do not use for live triage): `C:\WASP\hc1-profile\ArmA2OA.RPT` (frozen since 2026-07-21), AppData `ArmA2OA.RPT` (stale since 2026-07-07)
 
 Then:
 

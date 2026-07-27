@@ -31,10 +31,17 @@ if !(isNull _object) then {
 	//--- qol-polish-pack: optional player-proximity guard for bodies — never pop a corpse in a player's face. Holds deletion while a player
 	//--- is within WFBE_C_UNITS_BODIES_PROX m, capped at one extra _delay so a camper can't pin a body forever. 0 = off (vanilla behaviour).
 	if (_isMan && {(missionNamespace getVariable ["WFBE_C_UNITS_BODIES_PROX", 0]) > 0}) then {
-		private ["_prox","_held"];
+		private ["_prox","_held","_near","_nearResult"];
 		_prox = missionNamespace getVariable ["WFBE_C_UNITS_BODIES_PROX", 0];
 		_held = 0;
-		while {_held < _delay && {([getPos _object, _prox] Call WFBE_CO_FNC_RealPlayersNear) > 0}} do {
+		_near = false;
+		_nearResult = 0;
+		while {_held < _delay} do {
+			_near = false;
+			_nearResult = 0;
+			_nearResult = [getPos _object, _prox] Call WFBE_CO_FNC_RealPlayersNear;
+			if ((typeName _nearResult) == "SCALAR" && {_nearResult > 0}) then {_near = true};
+			if (!_near) exitWith {};
 			sleep 3; _held = _held + 3;
 		};
 	};

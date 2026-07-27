@@ -70,8 +70,77 @@ switch (_args select 0) do {
 	};
 
 	case "RespawnST": {
-		Private ["_side","_st"];
+		//--- DR-55 forged-PVF hardening (flag-gated; OFF = byte-equivalent legacy behavior).
+		//--- FINDING (101-endpoint PV audit): unguarded, this force-kills (setDammage 1) EVERY AI supply
+		//--- truck + driver for a client-named side - no type/side/requester/cooldown check at all. Trace:
+		//--- the ONLY legitimate caller is the commander's "Respawn Supply Trucks" button
+		//--- (GUI_Menu_Economy.sqf, MenuAction 4), which only ENABLES client-side for that side's own
+		//--- seated commander (ctrlEnable gated on `commanderTeam == group player`, 5s throttle) - cosmetic
+		//--- only, since the server never re-checked it and the PVEH carries no trusted sender.
+		//---
+		//--- HONEST SCOPE (review 2026-07-25, see memory a2-pvf-fake-identity-binding): the requester
+		//--- check below is NOT identity binding. `WFBE_CO_FNC_GetCommanderTeam` is a Common function -
+		//--- callable client-side for ANY side - so it returns the publicly-broadcast commander group. A
+		//--- forger reads `leader ([_side] Call WFBE_CO_FNC_GetCommanderTeam)` and passes that object as
+		//--- element 2; it satisfies isPlayer/alive/side/group without the forger ever controlling that
+		//--- seat. This guard genuinely closes only two cases: (a) AI-commanded or uncommandered sides,
+		//--- where no isPlayer object exists at that group to borrow, so the isPlayer check itself
+		//--- rejects; (b) cross-side forgery (naming a side the requester isn't even a member of). It does
+		//--- NOT close the case of a forger impersonating a real human-commanded side's commander - that
+		//--- requires a value the client cannot compute or observe (a server-minted one-shot capability
+		//--- token, per the Init_IcbmTel/Support_FPV pattern), tracked as branch
+		//--- claude/u3-capability-helper-20260725. Until that lands, treat this as identity-narrowing +
+		//--- rate limiting, not authentication.
+		//---
+		//--- What IS real here: explicit side-type validation (below - a malformed/non-SIDE payload used
+		//--- to fall through to an implicit type-mismatch compare instead of an explicit, logged reject),
+		//--- the per-side cooldown as genuine repeat-abuse mitigation (raised 30s -> 120s: this force-kills
+		//--- a side's ENTIRE supply-truck fleet, and legitimate use of the button is rare/deliberate, not a
+		//--- 30s-cadence action), and UID capture in the rejection log for post-hoc abuse identification
+		//--- even though UID is not itself checked against anything (spoofable, so not a gate).
+		Private ["_side","_st","_rSTRejected","_rSTRequester"];
 		_side = _args select 1;
+		_rSTRejected = false;
+		if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
+			if (typeName _side != "SIDE" || {!(_side in [west, east, resistance])}) then {
+				_rSTRejected = true;
+				["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - side has type [%1] or is not playable.", typeName _side]] Call WFBE_CO_FNC_LogContent;
+			};
+			_rSTRequester = objNull;
+			if (!_rSTRejected) then {
+				if (count _args > 2) then {_rSTRequester = _args select 2};
+				if (isNull _rSTRequester || {!isPlayer _rSTRequester} || {!alive _rSTRequester}) then {
+					_rSTRejected = true;
+					["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - missing/invalid requester for side [%1].", str _side]] Call WFBE_CO_FNC_LogContent;
+				};
+			};
+			if (!_rSTRejected && {side (group _rSTRequester) != _side}) then {
+				_rSTRejected = true;
+				["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - requester [%1|%2] side does not match requested side [%3].", name _rSTRequester, getPlayerUID _rSTRequester, str _side]] Call WFBE_CO_FNC_LogContent;
+			};
+			if (!_rSTRejected && {(group _rSTRequester) != ((_side) Call WFBE_CO_FNC_GetCommanderTeam)}) then {
+				_rSTRejected = true;
+				["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - requester [%1|%2] is not the publicly-broadcast commander for side [%3] (identity NOT cryptographically bound - see capability-helper lane).", name _rSTRequester, getPlayerUID _rSTRequester, str _side]] Call WFBE_CO_FNC_LogContent;
+			};
+			if (!_rSTRejected) then {
+				Private ["_rSTLogik","_rSTCd","_rSTNow","_rSTLast"];
+				_rSTLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+				if (isNull _rSTLogik) then {
+					_rSTRejected = true;
+				} else {
+					_rSTCd = missionNamespace getVariable ["WFBE_C_RESPAWNST_COOLDOWN", 120];
+					_rSTNow = time;
+					_rSTLast = _rSTLogik getVariable ["wfbe_respawnst_last", -1e9];
+					if (_rSTCd > 0 && {(_rSTNow - _rSTLast) < _rSTCd}) then {
+						_rSTRejected = true;
+						["WARNING", Format ["Server_HandleSpecial.sqf: RespawnST rejected - cooldown active for side [%1] (%2s remaining).", str _side, round (_rSTCd - (_rSTNow - _rSTLast))]] Call WFBE_CO_FNC_LogContent;
+					} else {
+						_rSTLogik setVariable ["wfbe_respawnst_last", _rSTNow];
+					};
+				};
+			};
+		};
+		if (_rSTRejected) exitWith {};
 		_st = (_side call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_ai_supplytrucks";
 		{if (!isNull (driver _x)) then {driver _x setDammage 1};_x setDammage 1} forEach _st;
 		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] Supply Trucks were forced respawn.", str _side]] Call WFBE_CO_FNC_LogContent;
@@ -470,7 +539,52 @@ switch (_args select 0) do {
 		[_arty, _sideText, _artilleryIndex, _ammoIndex] Call WFBE_CO_FNC_LoadArtilleryAmmo;
 	};
 	case "process-killed-hq": {
-		(_args select 1) Spawn WFBE_SE_FNC_OnHQKilled;
+		//--- HARDENING (unauthenticated-PV audit, highest severity): this case used to forward a raw
+		//--- client-supplied [structure, killer] pair straight into WFBE_SE_FNC_OnHQKilled, whose ONLY
+		//--- guard is a one-shot idempotency flag (wfbe_hq_killed_done) - it never checked the reported
+		//--- structure was alive, that it was actually the side's registered HQ, or that the killer was
+		//--- a real player. A forged report naming the REAL (still-alive) enemy HQ plus the attacker's
+		//--- own player object credited ~30000 score + $30,000 funds to the attacker's group AND force-
+		//--- flipped IS_<SIDE>_HQ_ALIVE to false (false "HQ destroyed" state) while the HQ was standing.
+		//---
+		//--- Server-side is authoritative independent of this relay: every HQ/MHQ object also carries
+		//--- its OWN server-local 'killed' EH (Construction_HQSite.sqf, Server_MHQRepair.sqf,
+		//--- Init_Server.sqf) which Spawns WFBE_SE_FNC_OnHQKilled directly with zero network latency -
+		//--- that path is untouched by this guard. The client relay (DR-20 comment in
+		//--- Server_OnHQKilled.sqf) is a redundant backup only: for any genuine kill the trusted
+		//--- server-local EH already wins the wfbe_hq_killed_done idempotency race, so narrowing THIS
+		//--- ingress to reject forgeries costs the honest path nothing.
+		//---
+		//--- Unflagged (not gated on WFBE_C_SEC_HARDENING): every check below is satisfied automatically
+		//--- by any genuine HQ death report and rejects only data a legitimate report could never
+		//--- contain - same "reject only illegitimate input" class as RequestMHQRepair.sqf/#1361.
+		Private ["_reportedArgs","_reportedStructure","_reportedKiller","_reportedSide","_registeredHQ"];
+		_reportedArgs = _args select 1;
+		if !((typeName _reportedArgs == "ARRAY") && {(count _reportedArgs) > 1}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: process-killed-hq rejected - malformed payload [%1].", _reportedArgs]] Call WFBE_CO_FNC_LogContent;
+		};
+		_reportedStructure = _reportedArgs select 0;
+		_reportedKiller = _reportedArgs select 1;
+		if !((typeName _reportedStructure == "OBJECT") && {!isNull _reportedStructure}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: process-killed-hq rejected - null/invalid reported structure."] Call WFBE_CO_FNC_LogContent;
+		};
+		if !((typeName _reportedKiller == "OBJECT") && {!isNull _reportedKiller} && {isPlayer _reportedKiller} && {alive _reportedKiller}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: process-killed-hq rejected - killer [%1] is not a live player.", _reportedKiller]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- Resolve the CURRENT registered HQ for the reported structure's own claimed side and require
+		//--- an exact object match - a forger can name a real object, but cannot make it equal the
+		//--- side-logic's live wfbe_hq reference unless it genuinely is that side's HQ.
+		_reportedSide = _reportedStructure getVariable ["wfbe_side", sideUnknown];
+		_registeredHQ = objNull;
+		if (_reportedSide in [west, east, resistance]) then {_registeredHQ = (_reportedSide) Call WFBE_CO_FNC_GetSideHQ};
+		if !(!isNull _registeredHQ && {_reportedStructure == _registeredHQ}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: process-killed-hq rejected - structure [%1] is not the registered HQ for side [%2].", _reportedStructure, _reportedSide]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- The load-bearing check: the report must describe a HQ that is ACTUALLY dead right now.
+		if (alive _reportedStructure) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: process-killed-hq rejected - structure [%1] is still alive.", _reportedStructure]] Call WFBE_CO_FNC_LogContent;
+		};
+		_reportedArgs Spawn WFBE_SE_FNC_OnHQKilled;
 	};
 	// Marty: Authoritative cleanup for dead player AI that can remain in the command bar on dedicated servers.
 	case "commandbar-cleanup-dead-unit": {
@@ -548,6 +662,17 @@ switch (_args select 0) do {
 			};
 
 			if (!isNull _unit) then {_unit setVariable ["CommandBar_DeadUnits_ServerCleanupRunning", false, false]};
+		};
+	};
+	//--- WASPSCALE HC-locality relay: missionNamespace counters are local to the executing
+	//--- machine, so delegated commander work sends a one-count delta through the already
+	//--- allowlisted RequestSpecial PVF. Never public-broadcast missionNamespace counters.
+	case "waspscale-counter-delta": {
+		private ["_wsCounter"];
+		if (count _args != 2) exitWith {};
+		_wsCounter = _args select 1;
+		if (_wsCounter in ["wfbe_waspscale_recov", "wfbe_waspscale_mhqrel"]) then {
+			missionNamespace setVariable [_wsCounter, (missionNamespace getVariable [_wsCounter, 0]) + 1];
 		};
 	};
 	case "aicom-team-created": {
@@ -1905,7 +2030,20 @@ switch (_args select 0) do {
 		_logic = _args select 1;
 		_repairSideID = _args select 2;
 
-		if (alive (_logic getVariable 'wfbe_camp_bunker')) exitWith {};
+		//--- harden-repair-camp (2026-07-25): reentrancy guard, mirrors Server_MHQRepair.sqf's
+		//--- precedent (PR #1361) - check+set BEFORE the alive read so two near-simultaneous
+		//--- requests for the same camp cannot both pass the alive-check and double-spawn a bunker.
+		//--- Caller-agnostic: both the PVF-gated paid player repair (RequestSpecial.sqf) and the
+		//--- server-internal presence-repair `call HandleSpecial` (server_town_camp.sqf) hit this
+		//--- safely. Released on every exit branch below.
+		if (_logic getVariable ["wfbe_camp_repairing", false]) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf/repair-camp: rejected - repair already in progress."] Call WFBE_CO_FNC_LogContent;
+		};
+		_logic setVariable ["wfbe_camp_repairing", true, true];
+
+		if (alive (_logic getVariable 'wfbe_camp_bunker')) exitWith {
+			_logic setVariable ["wfbe_camp_repairing", false, true];
+		};
 
 		//--- fable/fix-camp-placement (2026-07-08): same ATL ground-snap as Init_Town.sqf's seeder - a
 		//--- repaired camp must not re-bury itself on ZG (see Init_Town.sqf for full rationale + citations).
@@ -1937,6 +2075,9 @@ switch (_args select 0) do {
 			//--- Notify / update map if needed.
 			[nil, "CampCaptured", [_logic, _repairSideID, _camp_sideID, true]] Call WFBE_CO_FNC_SendToClients;
 		};
+
+		//--- harden-repair-camp: release the reentrancy flag taken above now the repair is complete.
+		_logic setVariable ["wfbe_camp_repairing", false, true];
 	};
 
 	//--- GUER PLAYER VBIED manual detonation (Feature B player-side, Ray 2026-06-16). The GUER player driver
@@ -2073,6 +2214,18 @@ switch (_args select 0) do {
 							//--- shape) is what actually gates the M113/BRDM/T-tier depot unlocks - GUI_UpgradeMenu.sqf,
 							//--- Root_GUE_PlayerOverlay.sqf and Client_UpdateRHUD.sqf all read WFBE_GUER_PLAYER_KILLS directly.
 							if ((missionNamespace getVariable ["WFBE_C_GUER_VBIED_CREDIT_KILLS", 1]) > 0) then {
+								//--- Driver dies with the VBIED before RequestOnUnitKilled reaches its stats path, so mirror its category-aware stat credit here.
+								if (_drvUID != "") then {
+									private ["_vStat"];
+									_vStat = WFBE_STAT_KILLS_INFANTRY;
+									if !(_x isKindOf "Man") then {
+										if (_x isKindOf "Air") then {_vStat = WFBE_STAT_KILLS_AIR} else {
+											if (_x isKindOf "StaticWeapon") then {_vStat = WFBE_STAT_KILLS_STATIC} else {_vStat = WFBE_STAT_KILLS_VEHICLE};
+										};
+									};
+									[_drvUID, _vStat, 1] Call WFBE_SE_FNC_RecordStat;
+									if (isPlayer _x) then {[_drvUID, WFBE_STAT_PVP_KILLS, 1] Call WFBE_SE_FNC_RecordStat};
+								};
 								WFBE_GUER_PLAYER_KILLS = (missionNamespace getVariable ["WFBE_GUER_PLAYER_KILLS", 0]) + 1;
 								publicVariable "WFBE_GUER_PLAYER_KILLS";
 								//--- Same milestone/unlock table RequestOnUnitKilled.sqf:152-157 uses - keep in sync manually if
@@ -2080,7 +2233,7 @@ switch (_args select 0) do {
 								private ["_vMilestones","_vMsg"];
 								_vMilestones = [
 									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 15], "BRDM-2 + T-34 unlocked  -  Ka-137 flares up to 120"],
-									[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25], "M113 VBIED unlocked  -  armoured suicide APC at 2x speed"],
+									[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 25], "M113 VBIED unlocked  -  armoured suicide APC at ~1.5x speed"],
 									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40], "T-55 unlocked  -  Ka-137 flares up to 240"],
 									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80], "T-72 + BMP-2 unlocked"]
 								];

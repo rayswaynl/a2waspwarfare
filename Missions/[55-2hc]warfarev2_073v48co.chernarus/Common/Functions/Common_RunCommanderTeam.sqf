@@ -489,6 +489,28 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_EASA_AI", 1]) > 0) then {
 			//--- AV-8B II [WEST]: stock Maverick+Sidewinder -> AGM-114(8)+AGM-65(2)+AIM-9L(2) (row L485).
 			["AV8B2", ["MaverickLauncher","SidewinderLaucher_AH1Z"], ["2Rnd_Maverick_A10","2Rnd_Maverick_A10","2Rnd_Maverick_A10","2Rnd_Sidewinder_AH1Z"], ["HellfireLauncher","MaverickLauncher","SidewinderLaucher_AH1Z"], ["8Rnd_Hellfire","2Rnd_Maverick_A10","2Rnd_Sidewinder_AH1Z"], false]
 		];
+		//--- AIR BOMBS (owner request 2026-07-26, "make sure AI commander aircraft can also use FABs", gate
+		//--- WFBE_C_AICOM_AIR_BOMBS default 0): the A10 and Mi24_P rows above REPLACE rather than extend their stock
+		//--- kit, so applying the kit STRIPS the airframe's own ground-attack bomb (AV8B2's kit never had one to begin
+		//--- with). Flag>0 appends the SAME airframe's verbatim EASA bomb launcher+magazine back onto its kitW/kitM
+		//--- (source cited per row below) so the kit no longer loses it; Su34/Su25_TK_EP1 already gain bombs from
+		//--- their own rows above and are left untouched. Flag=0 (default) never runs this loop - _easaKits stays
+		//--- exactly as built above, byte-identical to HEAD.
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_BOMBS", 0]) > 0) then {
+			{
+				private ["_abType"];
+				_abType = _x select 0;
+				if (_abType == "A10") then { //--- A10 bomb-preserve: EASA_Init.sqf L378 stock row (Mk82BombLauncher_6/6Rnd_Mk82, same as this row's own stockW/stockM at L488 above).
+					_easaKits set [_forEachIndex, ["A10", ["FFARLauncher","Mk82BombLauncher_6"], ["38Rnd_FFAR","6Rnd_Mk82"], ["MaverickLauncher","StingerLauncher_twice","Mk82BombLauncher_6"], ["2Rnd_Maverick_A10","2Rnd_Stinger","6Rnd_Mk82"], false]];
+				};
+				if (_abType == "Mi24_P") then { //--- Mi24_P bomb-preserve: EASA_Init.sqf L641 stock row (HeliBombLauncher/2Rnd_FAB_250, same as this row's own stockW/stockM at L477 above).
+					_easaKits set [_forEachIndex, ["Mi24_P", ["AT9Launcher","HeliBombLauncher"], ["4Rnd_AT9_Mi24P","2Rnd_FAB_250"], ["AT9Launcher","Igla_twice","HeliBombLauncher"], ["4Rnd_AT9_Mi24P","2Rnd_Igla","2Rnd_FAB_250"], false]];
+				};
+				if (_abType == "AV8B2") then { //--- AV8B2 bomb-grant: EASA_Init.sqf L505 loadout row (Mk82BombLauncher_6/6Rnd_Mk82 alongside Maverick+Sidewinder; AV8B2 has no stock bomb).
+					_easaKits set [_forEachIndex, ["AV8B2", ["MaverickLauncher","SidewinderLaucher_AH1Z"], ["2Rnd_Maverick_A10","2Rnd_Maverick_A10","2Rnd_Maverick_A10","2Rnd_Sidewinder_AH1Z"], ["HellfireLauncher","MaverickLauncher","SidewinderLaucher_AH1Z","Mk82BombLauncher_6"], ["8Rnd_Hellfire","2Rnd_Maverick_A10","2Rnd_Sidewinder_AH1Z","6Rnd_Mk82"], false]];
+				};
+			} forEach _easaKits;
+		};
 		{
 			private ["_kh"];
 			_kh = _x;
@@ -519,6 +541,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_EASA_AI", 1]) > 0) then {
 						};
 						diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|EASA_AI_KIT|type=" + _khType + "|turret=" + str _kTur);
 						["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] EASA_AI_KIT applied to %2 (turret=%3, EASA researched).", _side, _khType, _kTur]] Call WFBE_CO_FNC_AICOMLog;
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_BOMBS", 0]) > 0 && {_khType in ["A10","Mi24_P","AV8B2"]}) then { //--- confirms the bomb-preserve/-grant path above actually reached this hull.
+							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|EASA_AI_KIT_BOMBS|type=" + _khType);
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] EASA_AI_KIT_BOMBS preserved/granted bomb capability on %2 (WFBE_C_AICOM_AIR_BOMBS armed).", _side, _khType]] Call WFBE_CO_FNC_AICOMLog;
+						};
 					};
 				} forEach _easaKits;
 			};
@@ -1204,6 +1230,7 @@ while {!WFBE_GameOver && _alive} do {
 						diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|UNSTUCK_FIRED|team=" + (str _uTeam) + "|tier=" + str _uTier + "|map=" + worldName + "|dist=" + str _uDbgDist);
 							//--- WASPSCALE recov counter (cmdcon42): shared cumulative recovery-action counter the WASPSCALE emit reads (recov=). Bumped in the missionNamespace of WHICHEVER machine this team is local to; the server emit therefore reports its own SERVER-LOCAL recoveries (HC-delegated team recoveries show as UNSTUCK_FIRED on the HC RPT, which analyze_soak reads). Monotonic.
 							missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
+							if (!isServer) then {["RequestSpecial", ["waspscale-counter-delta", "wfbe_waspscale_recov"]] Call WFBE_CO_FNC_SendToServer};
 							[_uTeam, _uTier, _uSide] Call WFBE_CO_FNC_AICOMRecoveryNotify; //--- Grok idea #28: gated WFBE_C_AICOM_RECOVERY_NOTIFY default 0, inert at default.
 						//--- B37 RE-MOUNT (Ray's mechanized-infantry ask): any team member on foot but with a live,
 						//--- drivable assigned vehicle is ordered back in, so infantry that fell out during the stall
@@ -1305,7 +1332,11 @@ while {!WFBE_GameOver && _alive} do {
 						private "_uPGR";
 						_uPGR = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_PLAYER_GUARD_R", 300];
 						if ((_uTier >= 3 || {_recV2 && _uForceRoad}) && {!isNull _uVeh} && {alive _uVeh}) then {
-							_uPlayerNear = ([getPos _uVeh, _uPGR] Call WFBE_CO_FNC_RealPlayersNear) > 0;
+							private ["_uPlayerNear","_uPlayerNearResult"];
+							_uPlayerNear = false;
+							_uPlayerNearResult = 0;
+							_uPlayerNearResult = [getPos _uVeh, _uPGR] Call WFBE_CO_FNC_RealPlayersNear;
+							if ((typeName _uPlayerNearResult) == "SCALAR" && {_uPlayerNearResult > 0}) then {_uPlayerNear = true};
 							if (!_uPlayerNear) then {
 								_uRds = (getPos _uVeh) nearRoads 150;
 								if (count _uRds > 0) then {
@@ -1350,6 +1381,7 @@ while {!WFBE_GameOver && _alive} do {
 													_uVeh setVelocity [0,0,0];
 													_uVeh setPos _nvPos;
 													missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
+													if (!isServer) then {["RequestSpecial", ["waspscale-counter-delta", "wfbe_waspscale_recov"]] Call WFBE_CO_FNC_SendToServer};
 													diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_NOROAD_STEP|team=" + (str _uTeam) + "|tier=" + str _uTier + "|map=" + worldName + "|step=" + str (round _nvStep) + "|veh=1");
 													["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 NO-ROAD hull step %3m toward objective (map=%4).", _uSide, _uTeam, round _nvStep, worldName]] Call WFBE_CO_FNC_AICOMLog;
 												};
@@ -1360,7 +1392,14 @@ while {!WFBE_GameOver && _alive} do {
 							};
 						};
 						//--- B (Ray 2026-06-29 A/B, guard widened 2026-07-06): a player within _uPGR (same snap-exclusion zone) blocks the teleport-snap; un-wedge the lead hull with a small upward velocity hop instead - it breaks terrain friction and visibly bumps the hull free (never-frozen guardrail). Result matrix: player < _uPGR -> hop; player >= _uPGR -> snap; no gap. The fresh MOVE route below re-applies the order.
-						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then { private "_bNear"; _bNear = ([getPos _uVeh, _uPGR] Call WFBE_CO_FNC_RealPlayersNear) > 0; if (_bNear) then { _uVeh setVelocity [(velocity _uVeh) select 0, (velocity _uVeh) select 1, 4] } };
+						if (_uTier >= 3 && {!isNull _uVeh} && {alive _uVeh}) then {
+							private ["_bNear","_bNearResult"];
+							_bNear = false;
+							_bNearResult = 0;
+							_bNearResult = [getPos _uVeh, _uPGR] Call WFBE_CO_FNC_RealPlayersNear;
+							if ((typeName _bNearResult) == "SCALAR" && {_bNearResult > 0}) then {_bNear = true};
+							if (_bNear) then {_uVeh setVelocity [(velocity _uVeh) select 0, (velocity _uVeh) select 1, 4]};
+						};
 						//--- WAVE-1 CAUSE-1 FOOT/DEAD-HULL UNSTUCK (2026-06-19): the vehicle Tier-3 above gates on
 						//--- !isNull _uVeh && alive _uVeh, so a wedged FOOT team (leader on foot) or a team whose hull
 						//--- is null/dead/immobile NEVER recovers (live: distStart=0, strikes climbed to ~43). Add a
@@ -1373,7 +1412,11 @@ while {!WFBE_GameOver && _alive} do {
 						_uOnFoot   = (vehicle _uLdr) == _uLdr;
 						//--- cmdcon41-w3e (e) WATER GUARD: fire the foot road-snap at ANY tier when water-stuck (_uForceRoad).
 						if ((_uTier >= 3 || {_recV2 && _uForceRoad}) && {_uOnFoot || _uHullDead || {_recV2 && _uForceRoad}}) then {
-							_uFootPlayerNear = ([getPos _uLdr, _uPGR] Call WFBE_CO_FNC_RealPlayersNear) > 0;
+							private ["_uFootPlayerNear","_uFootPlayerNearResult"];
+							_uFootPlayerNear = false;
+							_uFootPlayerNearResult = 0;
+							_uFootPlayerNearResult = [getPos _uLdr, _uPGR] Call WFBE_CO_FNC_RealPlayersNear;
+							if ((typeName _uFootPlayerNearResult) == "SCALAR" && {_uFootPlayerNearResult > 0}) then {_uFootPlayerNear = true};
 							if (!_uFootPlayerNear) then {
 								//--- cmdcon41-w3e (d) SLOPE-AWARE FOOT SNAP: a foot team grinding a steep Takistan slope (surfaceNormal
 								//--- z below WFBE_C_AICOM_RECOVERY_SLOPE_Z, default 0.85) is exactly the hill-grind case - widen the road
@@ -1436,6 +1479,7 @@ while {!WFBE_GameOver && _alive} do {
 												_uLdr setPos _nrFlat;
 													{ if (alive _x && {_x != _uLdr} && {vehicle _x == _x}) then {_x doFollow _uLdr} } forEach (units _uTeam);
 													missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
+													if (!isServer) then {["RequestSpecial", ["waspscale-counter-delta", "wfbe_waspscale_recov"]] Call WFBE_CO_FNC_SendToServer};
 													diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|STUCK_NOROAD_STEP|team=" + (str _uTeam) + "|tier=" + str _uTier + "|map=" + worldName + "|step=" + str (round _nrStep));
 													["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 NO-ROAD shelf step %3m toward objective (re-formed on leader) (map=%4).", _uSide, _uTeam, round _nrStep, worldName]] Call WFBE_CO_FNC_AICOMLog;
 												};
@@ -1534,6 +1578,21 @@ while {!WFBE_GameOver && _alive} do {
 						//--- cmdcon42-l: pass the team's authoritative _vehicles list so the helper can pick a LIGHT
 						//--- ground vehicle to SLING + deep-drop behind the lines (WFBE_C_AICOM_VEHLIFT).
 						if ([_amHeli, _team, _dest, _side, _sideID, _vehicles] Call WFBE_CO_FNC_AICOMAirLeg) then {_amDone = true};
+					};
+					//--- TRANSPORT-HELI REQUISITION: HC teams cannot call server-only AIBuyUnit. A long
+					//--- airmobile leg with no usable transport publishes one idempotent request; the server
+					//--- authorises roster/unlock/factory/funds/caps and this locality owner consumes the grant.
+					if (isNull _amHeli) then {
+						private ["_alReq","_alGrant","_alReqPending","_alGrantPending"];
+						_alReq = _team getVariable "wfbe_aicom_airlift_req";
+						_alGrant = _team getVariable "wfbe_aicom_airlift_grant";
+						_alReqPending = !isNil "_alReq" && {(typeName _alReq) == "ARRAY"} && {count _alReq > 0};
+						_alGrantPending = !isNil "_alGrant" && {(typeName _alGrant) == "ARRAY"} && {count _alGrant > 0};
+						if (!_alReqPending && {!_alGrantPending}) then {
+							_team setVariable ["wfbe_aicom_airlift_req", [time, getPosATL (leader _team)], true];
+							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_REQ|team=" + str _team + "|dist=" + str (round ((leader _team) distance _dest)));
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] has no transport heli for a long airmobile leg - requisition requested.", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
+						};
 					};
 				};
 				//--- P1.1 AIR-MOBILE ATTEMPT TELEMETRY (claude 2026-07-19): reason-code why this ordered leg did or did not
@@ -3057,6 +3116,40 @@ while {!WFBE_GameOver && _alive} do {
 		};
 	};
 
+	//--- AIRMOBILE TRANSPORT GRANT CONSUMER: server selected and charged [class, factoryPos,
+	//--- charge, issuedTime]; the team-local HC builds it with CreateTeam, preserving locality and
+	//--- standard crew/init behavior. Failed creation refunds the exact prepaid charge server-side.
+	if (_alive && {!isNull _team}) then {
+		private ["_alGrant","_alClass","_alPos","_alCharge","_alSpawnPos","_alRet","_alNewVehicles","_alRefund"];
+		_alGrant = _team getVariable "wfbe_aicom_airlift_grant";
+		if (!isNil "_alGrant" && {(typeName _alGrant) == "ARRAY"} && {count _alGrant >= 3}) then {
+			_alClass = _alGrant select 0;
+			_alPos = _alGrant select 1;
+			_alCharge = _alGrant select 2;
+			if ((typeName _alClass) == "STRING" && {_alClass != ""} && {(typeName _alPos) == "ARRAY"} && {count _alPos >= 2}) then {
+				_alSpawnPos = [_alPos, 25, 80] Call WFBE_CO_FNC_GetRandomPosition;
+				_alSpawnPos = [_alSpawnPos, 35] Call WFBE_CO_FNC_GetEmptyPosition;
+				_alRet = [[_alClass], _alSpawnPos, _side, true, _team, true] Call WFBE_CO_FNC_CreateTeam;
+				_alNewVehicles = _alRet select 1;
+				if (count _alNewVehicles > 0) then {
+					{if (!isNull _x && {_x isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0}) then {_x setVariable ["wfbe_aicom_transport", true, true]}} forEach _alNewVehicles;
+					_vehicles = _vehicles + _alNewVehicles;
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_DELIVERED|team=" + str _team + "|class=" + _alClass);
+					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] received paid transport %3 at factory.", _side, _team, _alClass]] Call WFBE_CO_FNC_AICOMLog;
+				} else {
+					_alRefund = if ((typeName _alCharge) == "SCALAR") then {_alCharge} else {0};
+					if (_alRefund > 0) then {
+						if (isServer) then {[_side, _alRefund] Call ChangeAICommanderFunds} else {
+							WFBE_PVF_RequestSpecial = ["SRVFNCRequestSpecial", ["aicom-topup-refund", _sideID, _alRefund]];
+							publicVariableServer "WFBE_PVF_RequestSpecial";
+						};
+					};
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_REFUND|team=" + str _team + "|class=" + _alClass + "|refund=" + str _alRefund);
+				};
+			};
+			_team setVariable ["wfbe_aicom_airlift_grant", [], true];
+		};
+	};
 	//--- ECON-SURGE ARTY TOP-UP CONSUMER (owner-modified econ-surge win, 2026-07-08): mirrors the TOP-UP CONSUMER
 	//--- above but for the single-gun request AI_Commander_Teams.sqf stamps on THIS team as wfbe_aicom_arty_surge_req
 	//--- = [classname, posArray, issuedTime] when wfbe_aicom_econ_surge fires and this team already owns the side's

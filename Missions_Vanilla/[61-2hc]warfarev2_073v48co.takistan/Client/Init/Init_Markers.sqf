@@ -41,7 +41,7 @@ scriptName "Client\Init\Init_Markers.sqf";
 	
 	//--- The town may have some camps.
 	{
-		Private ["_campColor","_campMarker","_campSide","_wCampSideID"];
+		Private ["_campColor","_campMarker","_campSide","_wCampSideID","_wCampMarker"];
 		
 		//--- J6 HANGGUARD: camp sideID must not stall the client marker pass forever.
 		_wCampSideID = 0;
@@ -62,12 +62,20 @@ scriptName "Client\Init\Init_Markers.sqf";
 			_campColor = missionNamespace getVariable (Format ["WFBE_C_%1_COLOR",(_campSide) Call WFBE_CO_FNC_GetSideFromID]);
 		};
 
-		//--- Place a marker over the logic.
-		_campMarker = _x getVariable "wfbe_camp_marker";
-		createMarkerLocal [_campMarker, getPos _x];
-		_campMarker setMarkerTypeLocal "Strongpoint";
-		_campMarker setMarkerColorLocal _campColor;
-		_campMarker setMarkerSizeLocal [0.5,0.5];
+		//--- J6 HANGGUARD: the camp marker name is initialized asynchronously on the client.
+		_wCampMarker = 0;
+		while {isNil {_x getVariable "wfbe_camp_marker"} && (_wCampMarker < 240)} do { uiSleep 0.25; _wCampMarker = _wCampMarker + 1; };
+		if (isNil {_x getVariable "wfbe_camp_marker"}) then {
+			diag_log "[WFBE (INIT)] HANGGUARD| Init_Markers.sqf: camp marker name was not ready after 60s - skipping camp marker.";
+		};
+		if (!isNil {_x getVariable "wfbe_camp_marker"}) then {
+			//--- Place a marker over the logic.
+			_campMarker = _x getVariable "wfbe_camp_marker";
+			createMarkerLocal [_campMarker, getPos _x];
+			_campMarker setMarkerTypeLocal "Strongpoint";
+			_campMarker setMarkerColorLocal _campColor;
+			_campMarker setMarkerSizeLocal [0.5,0.5];
+		};
 	} forEach (_x getVariable ["camps", []]);
 } forEach towns;
 

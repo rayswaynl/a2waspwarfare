@@ -18,6 +18,7 @@ if (isNull _uTeam || {isNull _uLdr} || {!alive _uLdr} || {_uTier < 1}) exitWith 
 
 diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|UNSTUCK_FIRED|team=" + (str _uTeam) + "|tier=" + str _uTier + "|map=" + worldName + "|dist=" + str (round (_uLdr distance _uDest)) + "|origin=" + _uOrigin);
 missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
+if (!isServer) then {["RequestSpecial", ["waspscale-counter-delta", "wfbe_waspscale_recov"]] Call WFBE_CO_FNC_SendToServer};
 [_uTeam, _uTier, _uSide] Call WFBE_CO_FNC_AICOMRecoveryNotify; //--- Grok idea #28: gated WFBE_C_AICOM_RECOVERY_NOTIFY default 0, inert at default.
 
 {if (alive _x && {vehicle _x == _x} && {!isNull (assignedVehicle _x)} && {alive (assignedVehicle _x)} && {canMove (assignedVehicle _x)}) then {[_x] orderGetIn true}} forEach (units _uTeam);

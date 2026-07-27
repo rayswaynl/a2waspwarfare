@@ -29,8 +29,7 @@ if (_isHeadless) then {
 		//---        dead commander-artillery hull that is local to this HC - the reaper cannot delete it directly)
 		//---   cleanup-commander-heli-wreck = server_groupsGC.sqf (fix/heli-husk-reaper; deletes a dead
 		//---        commander-attack-heli hull that is local to this HC - the reaper cannot delete it directly)
-		//--- NOTE: aicom-team-merge is intentionally excluded (no active sender; WFBE_C_AICOM_HC_MERGE_ENABLE
-		//---        defaults to 0, no DRAFT worker registered, nil-guarded in AI_Commander.sqf).
+		//---   aicom-team-merge          = AI_Commander_HCTopUp (same-owner depleted-team consolidation)
 		//---   cleanup-trash-object      = Common_TrashObject.sqf (2026-07-21 locality gate, WFBE_C_TRASH_REMOTE_DELETE
 		//---        default 1; deletes a DEAD, reap-stamped body/hull that is local to this HC - the server cannot)
 		//---   cleanup-empty-vehicle      = Server_HandleEmptyVehicle.sqf (locality-aware empty-hull reaper; the server cannot
@@ -38,7 +37,10 @@ if (_isHeadless) then {
 		//---   cleanup-town-defense-gunner = server_town.sqf (fix/alife proper #1370) + Server_OperateTownDefensesUnits.sqf
 		//---        "remove" case; deletes a town-defense static gunner (dead OR alive) that is local to this HC -
 		//---        the equivalent server-side deletion call on an HC-delegated gunner would silently no-op
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner"]);
+		//---   sidepatrol-watchdog        = server_side_patrols.sqf (WFBE_C_SIDE_PATROL_UNSTUCK; routes the
+		//---        external stuck watchdog to this HC when the wedged patrol's leader is HC-local - the
+		//---        receiver case already exists in HandleSpecial.sqf; this key was the missing wire-up)
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };

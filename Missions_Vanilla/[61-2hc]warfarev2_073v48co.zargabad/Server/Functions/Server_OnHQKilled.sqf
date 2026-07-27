@@ -164,6 +164,15 @@ if (_side == east) then
 
 ["INFORMATION", Format["Server_OnHQKilled.sqf : [%1] HQ [%2] has been destroyed by [%3], Teamkill? [%4], Side Teamkill? [%5]", _side, _structure_kind, name _killer, _teamkill, side _killer]] Call WFBE_CO_FNC_LogContent;
 
+//--- AI HQ recovery: only an AI-commanded side at the instant of genuine HQ loss gets the grace.
+//--- The worker records the wreck position, waits the configured delay, then buys at an owned town centre.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_HQ_REPURCHASE_ENABLE", 0]) > 0 && {_logik getVariable ["wfbe_aicom_running", false]}) then {
+	_logik setVariable ["wfbe_aicom_hq_recovery_pending", true];
+	_logik setVariable ["wfbe_aicom_hq_recovery_destroyed_at", time];
+	_logik setVariable ["wfbe_aicom_hq_recovery_origin", getPos _wreckObject];
+	[_side] Spawn WFBE_SE_FNC_AI_Com_HQRecovery;
+};
+
 //--- MATCH|v1|MILESTONE|HQ_DESTROYED|: narrative beat for HQ kills (teamkills excluded).
 //--- _side = the side whose HQ was destroyed (the losing side for this milestone).
 if ((!_teamkill) && {(missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0}) then {

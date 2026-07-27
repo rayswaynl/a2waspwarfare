@@ -187,6 +187,11 @@ while {!WFBE_GameOver} do {
 	if (!_gateActive && _gateWasActive) then { diag_log "USVFLOTILLA|GATE|CLOSE"; };
 	_gateWasActive = _gateActive;
 
+	//--- Reset immediately on an open gate, before the terminal quiet-despawn prune can consume
+	//--- stale elapsed time. An inactive tick advances the shared countdown toward the configured
+	//--- quiet-despawn threshold.
+	if (_gateActive) then { _gateInactiveTime = 0; } else { _gateInactiveTime = _gateInactiveTime + _tickInterval; };
+
 	//=== (2) PRUNE + SELF-CLEAN + MOVEMENT TICK ================================================
 	_kept = [];
 	{
@@ -278,8 +283,6 @@ while {!WFBE_GameOver} do {
 	} forEach _flotilla;
 	_flotilla = _kept;
 
-	if (_gateActive) then { _gateInactiveTime = 0; } else { _gateInactiveTime = _gateInactiveTime + _tickInterval; };
-
 	//=== (3) MAINTAIN: spawn missing boats up to WFBE_C_USV_FLOTILLA_COUNT while gate is active =====
 	if (_gateActive && {count _flotilla < _count} && {count _route > 0}) then {
 		private ["_nextRole","_nextClass","_spawnPos","_spawnDir","_boat","_static","_grp","_driver","_gunner","_startI","_nextI","_nextWpPos","_toFirst"];
@@ -308,7 +311,7 @@ while {!WFBE_GameOver} do {
 
 			if (!isNull _boat) then {
 				_grp = [resistance, "usv-flotilla"] Call WFBE_CO_FNC_CreateGroup;
-				_driver = [(missionNamespace getVariable ["WFBE_GUER_PILOT_CLASS", "GUE_Soldier"]), _grp, _spawnPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
+				_driver = [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), _grp, _spawnPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
 				if (!isNull _driver) then { _driver moveInDriver _boat; };
 
 				//--- Static weapon, crewless, attachTo idiom. Zeta_Hook.sqf:33-35 is the ONLY
@@ -319,7 +322,7 @@ while {!WFBE_GameOver} do {
 				_static = createVehicle [_nextClass, _spawnPos, [], 0, "NONE"];
 				if (!isNull _static && {count crew _static == 0}) then {
 					_static attachTo [_boat, _mountOffset]; //--- PLACEHOLDER offset - hand-tune in-editor against the PBX model, same caveat as FINAL-SPECS.md's V3S bed offset [0,-1.2,1.1].
-					_gunner = [(missionNamespace getVariable ["WFBE_GUER_CREW_CLASS", "GUE_Soldier"]), _grp, _spawnPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
+					_gunner = [(missionNamespace getVariable ["WFBE_GUERRESCREW", "GUE_Soldier_Crew"]), _grp, _spawnPos, WFBE_C_GUER_ID] Call WFBE_CO_FNC_CreateUnit;
 					if (!isNull _gunner) then { _gunner moveInGunner _static; };
 
 					_boat   setVariable ["wfbe_usv_flotilla", true, true];

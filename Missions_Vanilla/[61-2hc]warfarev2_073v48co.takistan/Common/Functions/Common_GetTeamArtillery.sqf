@@ -31,7 +31,7 @@ _tryAddArtillery = {
 			if !(isPlayer(gunner _vehicle)) then {
 				_weapon = _artyWeapons select _index;
 
-				if (_ignoreAmmo || (_vehicle ammo _weapon > 0)) then {
+				if (_ignoreAmmo || (someAmmo _vehicle)) then {
 					_artillery = _artillery + [_vehicle];
 				};
 			};

@@ -50,6 +50,12 @@ HandleSpecial = Compile preprocessFileLineNumbers "Server\Functions\Server_Handl
 //--- (WFBE_C_SUPPORT_SERVER_AUTH, default 0) inside Server_HandleSpecial.sqf; always compiled here
 //--- (cheap, no behavior at flag-off since the gated cases never Call it).
 WFBE_SE_FNC_AuthorizeSupportCallin = Compile preprocessFileLineNumbers "Server\Functions\Server_AuthorizeSupportCallin.sqf";
+//--- capability-helper (2026-07-25): reusable server-minted, purpose-bound, one-shot capability
+//--- token pair generalising the Init_IcbmTel.sqf / Support_FPV.sqf mint+consume idiom. Infra only --
+//--- no endpoint is converted to use it in this change; see the doc comments on both files for the
+//--- threat model. Always compiled here (cheap, no behavior until a caller actually invokes it).
+WFBE_SE_FNC_MintCapability = Compile preprocessFileLineNumbers "Server\Functions\Server_MintCapability.sqf";
+WFBE_SE_FNC_ConsumeCapability = Compile preprocessFileLineNumbers "Server\Functions\Server_ConsumeCapability.sqf";
 MHQRepair = Compile preprocessFile "Server\Functions\Server_MHQRepair.sqf";
 SideMessage = Compile preprocessFile "Server\Functions\Server_SideMessage.sqf";
 
@@ -86,8 +92,10 @@ WFBE_SE_FNC_AI_Com_Produce = Compile preprocessFileLineNumbers "Server\AI\Comman
 WFBE_SE_FNC_AI_Com_DisbandLowTier = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_DisbandLowTier.sqf";
 WFBE_SE_FNC_AI_Com_Execute = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Execute.sqf";
 WFBE_SE_FNC_AI_Com_Base = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Base.sqf";
+WFBE_SE_FNC_AI_Com_HQRecovery = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_HQRecovery.sqf";
 WFBE_SE_FNC_AI_Com_Beacon = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Beacon.sqf"; //--- AICOM FORWARD SPAWN-BEACON (Approach A): forward ambulance as a mobile spawn point (flag WFBE_C_AICOM_SPAWNBEACON_ENABLE, default 0 = inert).
 WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Teams.sqf";
+WFBE_SE_FNC_AI_Com_HCTopUp = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_HCTopUp.sqf";
 WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Strategy.sqf";
 WFBE_SE_FNC_AICOM2_Snapshot = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Snapshot.sqf"; //--- AICOM v2 rebuild (M0): world-model snapshot builder.
 WFBE_SE_FNC_AICOM2_Allocate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Allocate.sqf"; //--- AICOM v2 rebuild (M1): single offensive authority (flag WFBE_C_AICOM2_ALLOCATE_ENABLE).
@@ -1035,6 +1043,14 @@ if (isServer && {(missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_ENABLE", 1])
 if (isServer && {(missionNamespace getVariable ["WFBE_C_GARRISON_DRESSING", 0]) > 0}) then {
 	[] execVM "Server\Server_TownGarrisonDressing.sqf";
 	["INITIALIZATION", "Init_Server.sqf: GUER garrison dressing loop launched."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- GARRISON SORTIE PATROL (lane 237, docs/design/GARRISON-SORTIE-PATROL-DESIGN.md): short-lived
+//--- foot/light patrol sorties from OWNED, active towns (WEST/EAST/GUER) when a human player is
+//--- nearby. Server-only, default 0 = worker not launched = byte-identical.
+if (isServer && {(missionNamespace getVariable ["WFBE_C_GARRISON_SORTIE", 0]) > 0}) then {
+	[] execVM "Server\Server_GarrisonSortie.sqf";
+	["INITIALIZATION", "Init_Server.sqf: garrison sortie patrol loop launched."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- B74.2: GUER player ECONOMY (per-minute stipend + vehicle-tier broadcast). MOVED here from the GUER

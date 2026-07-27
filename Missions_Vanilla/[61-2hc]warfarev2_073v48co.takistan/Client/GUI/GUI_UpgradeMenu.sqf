@@ -59,7 +59,7 @@ if ((side group player) == resistance && {(missionNamespace getVariable ["WFBE_C
 					};
 					case 2: {
 						_html = Format ["<t color='#B6F563' size='1.1'>M113 VBIED: %1</t>", if (_kills >= _m113k) then {"UNLOCKED"} else {Format ["locked (%1 / %2 kills)", _kills, _m113k]}];
-						_desc = "An unarmed, armoured M113 driven as a suicide VBIED at ~2x its normal top speed. Bought from the depot like the truck VBIED. Tracked + fast, it reaches targets the soft truck can't.";
+						_desc = "An unarmed, armoured M113 driven as a suicide VBIED at ~1.5x its normal top speed. Bought from the depot like the truck VBIED. Tracked + fast, it reaches targets the soft truck can't.";
 					};
 					case 3: {
 						_html = Format ["<t color='#B6F563' size='1.1'>Ka-137 Flares: %1</t>", _flare];

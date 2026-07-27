@@ -75,6 +75,14 @@ WFBE_SE_FNC_HandleAttackWaveDetails = {
         //--- must keep landing even if the original requester later disconnects, dies, or changes side
         //--- mid-wave, or the side would latch ATTACK_WAVE_ACTIVE_* permanently active.
         if (isNull _requester || {!isPlayer _requester} || {!alive _requester} || {side _requester != _side}) exitWith {
+            //--- fix(reject-release): clear the overlap-guard reservation Server_AttackWave.sqf took
+            //--- unconditionally BEFORE spawning its worker - the worker detects this rejection by
+            //--- reading the flag after the Call, so the clear must happen here, inside the reject
+            //--- branch, or a forged/invalid requester latches the side's heavy attack for a full
+            //--- wave-length sleep. Idempotent on the (BE-kicked) direct-publish path, where no
+            //--- reservation exists.
+            if (_side == west) then {ATTACK_WAVE_ACTIVE_WEST = false};
+            if (_side == east) then {ATTACK_WAVE_ACTIVE_EAST = false};
             ["WARNING", Format["AttackWave.sqf: rejected ATTACK_WAVE_DETAILS activation for side [%1] - requester [%2] invalid, dead, not a player, or side-mismatched.", _side, _requester]] Call WFBE_CO_FNC_LogContent;
         };
 
@@ -90,7 +98,7 @@ WFBE_SE_FNC_HandleAttackWaveDetails = {
         //--- exact trap the header of this file documents for the wave channel itself) - so the advertised
         //--- full-supply sacrifice was never charged and HEAVY ATTACK re-armed for free every wave. Route the
         //--- debit straight through the server-side supply handler instead.
-        [[format ["wfbe_supply_temp_%1", _side], [_side, -(_side call GetSideSupply), "Heavy attack mode activated."]], _side] Call WFBE_SE_FNC_HandleSideSupplyChange;
+        [[format ["wfbe_supply_temp_%1", _side], [_side, -(_side call GetSideSupply), "Heavy attack mode activated."]], _side, true] Call WFBE_SE_FNC_HandleSideSupplyChange;
 
         [_side, "HandleSpecial", ["attack-wave", _priceModifier]] Call WFBE_CO_FNC_SendToClients;
 

@@ -15,7 +15,7 @@
 	   town or the enemy HQ - only when no friendlies are near the impact zone.
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_inRange","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0","_perfStart"];
+private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik","_snap","_snapOk","_myTowns","_enemyTowns","_ownTownObjs","_candTowns","_townSide","_myStr","_enStr","_team","_alive","_strikeOn","_wasStrike","_enemyHQ","_strikers","_strong","_best","_bestN","_i","_targets","_cands","_t","_score","_bestScore","_bestTown","_dNear","_d","_perTeam","_want","_attacked","_relieved","_town","_free","_freeD","_cd","_artyTgt","_pieces","_p","_idx","_maxR","_fired","_inRange","_upASel","_relTown","_relAge","_quiet","_strikeCount","_ownNear","_frontRad","_distDiv","_hqDiv","_farPen","_enemyHQForRank","_dHQ","_onFront","_anyFront","_wTeam","_wMode","_wLdr","_wBc","_wBcPos","_wBcT","_wMoved","_lastStand","_stratMode","_spBl","_spBlTowns","_spBlKeep","_spBlCd","_spPrevPrim","_spApproach","_spBest","_spLast","_spStall","_pdTown","_pdT0","_perfStart","_syncAicomState","_scanChunkOn","_scanChunkSleep","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_sliceCut","_sliceYield"];
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -23,9 +23,52 @@ _sideText = str _side;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNil "_logik") exitWith {};
 
+//--- fable/sidepatrol-front-bias-20260727: reuse the EXISTING WFBE_C_AICOM_PUBLIC_STATE_SYNC flag (same
+//--- pattern as wfbe_aicom_running/funds in AI_Commander.sqf) to optionally broadcast wfbe_aicom_targets so an
+//--- HC-hosted reader (e.g. a delegated side patrol) can see it too. Default 0 = local-only setVariable, byte-
+//--- identical to before this change.
+_syncAicomState = (missionNamespace getVariable ["WFBE_C_AICOM_PUBLIC_STATE_SYNC", 0]) > 0;
+
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
 _perfStart = diag_tickTime;
+//--- perf/aicom-scan-chunking (draft PR, flag WFBE_C_AICOM_SCAN_CHUNKED default 0): apply the
+//--- Server_GuerAirDef.sqf guer_airdef_cycle chunkSleep/slice pattern to this commander-tick scan.
+//--- Flag OFF (default) is byte-identical to HEAD: _sliceYield is inert (no telemetry sample, no
+//--- sleep), _perfActive stays 0, and the record below reports the untouched wall-clock
+//--- diag_tickTime - _perfStart. Flag ON splits the single-frame scan into frames by yielding
+//--- WFBE_C_AICOM_SCAN_CHUNK_SLEEP between work sections, reports MEASURED-active ms (every
+//--- suspension excluded) and emits one aicom_strategy_slice audit sample per yield - for the
+//--- matched before/after PerformanceAudit A/B only (see PR body). Accounting locals are pass-scope
+//--- and resolve dynamically at Call time (mirror of Server_GuerAirDef.sqf _sliceCut/_sliceYield).
+_scanChunkOn    = (missionNamespace getVariable ["WFBE_C_AICOM_SCAN_CHUNKED", 0]) > 0;
+_scanChunkSleep = missionNamespace getVariable ["WFBE_C_AICOM_SCAN_CHUNK_SLEEP", 0.4];
+_perfActive = 0;
+_perfSliceMax = 0;
+_perfSlices = 0;
+_sliceDt = 0;
+_chunkSleepTotal = 0;
+_sliceT0 = _perfStart;
+_sliceCut = {
+	_sliceDt = diag_tickTime - _sliceT0;
+	_perfActive = _perfActive + _sliceDt;
+	if (_sliceDt > _perfSliceMax) then { _perfSliceMax = _sliceDt; };
+	_sliceT0 = diag_tickTime;
+};
+_sliceYield = {
+	if (_scanChunkOn) then {
+		Call _sliceCut;
+		_perfSlices = _perfSlices + 1;
+		if (!isNil "PerformanceAudit_Record") then {
+			if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
+				["aicom_strategy_slice", _sliceDt, "", "SERVER"] Call PerformanceAudit_Record;
+			};
+		};
+		_chunkSleepTotal = _chunkSleepTotal + _scanChunkSleep;
+		sleep _scanChunkSleep;
+		_sliceT0 = diag_tickTime;
+	};
+};
 
 //--- Primary foe = the other commanding side (the defender never gets HQ-hunted).
 _enemySide = if (_side == west) then {east} else {west};
@@ -77,6 +120,7 @@ _myStr = 0;
 		};
 	};
 } forEach _teams;
+Call _sliceYield;
 _enStr = 0;
 { if (!isNull _x) then {_enStr = _enStr + ({alive _x} count (units _x))} } forEach (_enemyLogik getVariable ["wfbe_teams", []]);
 
@@ -270,6 +314,7 @@ for "_i" from 1 to _want do {
 	} forEach _cands;
 	if (!isNull _bestTown) then {_targets = _targets + [_bestTown]};
 };
+Call _sliceYield;
 //--- B61 (Ray 2026-06-21) SPEARHEAD RE-PICK: per-side progress memory + stall detection on the PRIMARY.
 //--- PROGRESS SIGNAL = the ASSAULTING TEAMS' best (min) approach to the primary target town - NOT raw
 //--- distFront (distance-to-OWN-town), which stays flat while a town is being contested and would yank the
@@ -433,6 +478,7 @@ if (count _targets > 0) then {
 		diag_log ("AICOMSTAT|v1|SPEARHEAD_REPICK|" + _sideText + "|" + str (round (time / 60)) + "|stalled=" + (_prim getVariable ["name","?"]) + "|approach=" + str (round _spApproach) + "|evals=" + str _spLast + "|newPrimary=" + (if (isNull _newPrim) then {"none"} else {_newPrim getVariable ["name","?"]}) + "|cooldown=" + str _spBlCd);
 	};
 };
+Call _sliceYield;
 //--- cmdcon41-w2 FRONT/SPEARHEAD HYSTERESIS (Fable F2; flag WFBE_C_AICOM_FRONT_DWELL default 480s). The picker re-scores
 //--- the primary spearhead every ~60s, so the FRONT target flipped ~every 4 min (122 EAST changes in a 7h soak) and
 //--- 20-min journeys died administratively on each flip. Once a primary is chosen, DWELL on it: keep the same primary
@@ -515,7 +561,8 @@ private ["_tDbg", "_dDbg", "_dd"];
 	diag_log ("AICOMDBG|v1|SPEARHEAD|" + (str _side) + "|" + str (round (time / 60)) + "|town=" + (_tDbg getVariable ["name", "?"]) + "|supply=" + str (_tDbg getVariable ["supplyValue", 0]) + "|distFront=" + str (round _dDbg) + "|onFront=" + str (_dDbg <= _frontRad) + "|teams=" + str (count _teams) + "|want=" + str _want + "|conc=" + str (missionNamespace getVariable ["WFBE_C_AICOM_CONCENTRATION", 3]));
 } forEach _targets;
 
-_logik setVariable ["wfbe_aicom_targets", _targets];
+_logik setVariable ["wfbe_aicom_targets", _targets, _syncAicomState];
+Call _sliceYield;
 
 //--- 2) REACTIVE DEFENSE: relieve own towns under attack; release quiet reliefs.
 {
@@ -579,6 +626,7 @@ _logik setVariable ["wfbe_aicom_targets", _targets];
 		};
 	};
 } forEach _teams;
+Call _sliceYield;
 
 _attacked = [];
 private ["_atkTownCheck","_reliefEnemyDist","_reliefMax"];
@@ -594,6 +642,7 @@ private ["_atkTownCheck","_reliefEnemyDist","_reliefMax"];
 			if (({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _atkTownCheck) nearEntities [["Man","LandVehicle","Air"], _reliefEnemyDist])) > 0) then {_attacked = _attacked + [_atkTownCheck]};
 		};
 	} forEach towns;
+Call _sliceYield;
 //--- COMMAND-CENTER INSTRUCTION PANEL (PR1): honour a player-set DEFEND-town order from the command center. While
 //--- the order is fresh (WFBE_C_AICOM_DEFEND_TTL) treat that town as "under attack" so the relief loop below diverts
 //--- a reliever to it (additive + reversible + TTL-gated; offensive logic above is untouched). Server_HandleSpecial.sqf
@@ -674,6 +723,7 @@ _relieved = 0;
 		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RELIEF_CAP_SKIP|town=" + (_town getVariable ["name", "town"]) + "|relieved=" + str _relieved + "|cap=" + str _reliefMax);
 	};
 } forEach _attacked;
+Call _sliceYield;
 
 //--- WAVE-1 CAUSE-4 RELIEF/STRIKE WEDGE WATCHDOG (2026-06-19): teams in "defense" (relief) or "move"
 //--- (HQ-strike) are EXCLUDED from the AssignTowns stuck detector (that only watches "towns"/"" mode),
@@ -747,6 +797,7 @@ _relieved = 0;
 		};
 	};
 } forEach _teams;
+Call _sliceYield;
 
 //--- cmdcon41-w2 GRACEFUL WITHDRAWAL EVALUATOR (Fable F3/graceful-withdrawal-evaluator-replaces-hc-blindspot).
 //--- The Produce retreat/cull is gated !isPlayer && !wfbe_aicom_hc, so it NEVER runs for HC-resident teams (~100%
@@ -1261,6 +1312,7 @@ _garBodies = 0;
 		} forEach _garTeams;
 	};
 } forEach towns;
+Call _sliceYield;
 diag_log ("AICOMSTAT|v1|POSTURE|" + _sideText + "|" + str (round (time / 60)) + "|" + _posture + "|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myStr=" + str _myStr + "|enStr=" + str _enStr + "|myEff=" + str _myEff + "|enEff=" + str _enEff + "|townStr=" + str _townStr + "|garBodies=" + str _garBodies + "|reason=" + _postureReason + "|strikeOn=" + str _strikeOn);
 _primT = if (count _targets > 0) then {_targets select 0} else {objNull};
 diag_log ("AICOMSTAT|v1|FRONT|" + _sideText + "|" + str (round (time / 60)) + "|held=" + str _myTowns + "|enemyHeld=" + str _enemyTowns + "|contested=" + str (count _attacked) + "|primary=" + (if (isNull _primT) then {"none"} else {_primT getVariable ["name","?"]}) + "|onFront=" + str _anyFront);
@@ -1460,5 +1512,10 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 };
 
 if !(isNil "PerformanceAudit_Record") then {
-	["aicom_strategy", diag_tickTime - _perfStart, Format["side:%1;teams:%2;myTowns:%3;enemyTowns:%4;targets:%5;attacked:%6;posture:%7;strike:%8;myStr:%9;enStr:%10;garBodies:%11;onFront:%12", _sideText, count _teams, _myTowns, _enemyTowns, count _targets, count _attacked, _posture, _strikeOn, _myStr, _enStr, _garBodies, _anyFront], "SERVER"] Call PerformanceAudit_Record;
+	if (_scanChunkOn) then {
+		Call _sliceCut;
+		["aicom_strategy", _perfActive, Format["side:%1;teams:%2;myTowns:%3;enemyTowns:%4;targets:%5;attacked:%6;posture:%7;strike:%8;myStr:%9;enStr:%10;garBodies:%11;onFront:%12;chunkSleep:%13;slices:%14;sliceMaxMs:%15;wallMs:%16", _sideText, count _teams, _myTowns, _enemyTowns, count _targets, count _attacked, _posture, _strikeOn, _myStr, _enStr, _garBodies, _anyFront, _chunkSleepTotal, _perfSlices, round (_perfSliceMax * 1000), round ((diag_tickTime - _perfStart) * 1000)], "SERVER"] Call PerformanceAudit_Record;
+	} else {
+		["aicom_strategy", diag_tickTime - _perfStart, Format["side:%1;teams:%2;myTowns:%3;enemyTowns:%4;targets:%5;attacked:%6;posture:%7;strike:%8;myStr:%9;enStr:%10;garBodies:%11;onFront:%12", _sideText, count _teams, _myTowns, _enemyTowns, count _targets, count _attacked, _posture, _strikeOn, _myStr, _enStr, _garBodies, _anyFront], "SERVER"] Call PerformanceAudit_Record;
+	};
 };

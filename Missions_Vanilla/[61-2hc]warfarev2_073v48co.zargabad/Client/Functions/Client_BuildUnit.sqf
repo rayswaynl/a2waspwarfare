@@ -963,18 +963,19 @@ if (_isMan) then {
 		//--- Global flag so any machine that gets this vehicle local can recognise + (re)arm the action.
 		_vehicle setVariable ["wfbe_is_guer_vbied", true, true];
 
-		//--- B75 (guer-tech): tag the VBIED variant so the GetIn path arms the right movement assist. The soft truck
-		//--- (a Car) keeps Valhalla high-climbing; the tracked M113 APC gets the dedicated ~2x-speed boost loop instead.
+		//--- Owner 2026-07-27: all VBIEDs opt in to high climbing. Truck/M113 already receive the stock
+		//--- LowGear_Toggle actions from Init_Unit; the motorcycle receives the same action below. Keep the default
+		//--- OFF so climb is never forced, including on the formerly forced-on truck.
+		_vehicle setVariable ["WFBE_HighClimbingEnabled", false, true];
+
+		//--- Reuse one driver-local, self-limiting speed loop for both boosted hulls. The bike remains stock-speed.
 		if ((typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])) then {
-			_vehicle setVariable ["wfbe_vbied_m113", true, true];
+			_vehicle setVariable ["wfbe_vbied_speedcoef", missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_SPEEDCOEF", 1.5], true];
 		} else {
 			if (((missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0) && {(typeOf _vehicle) == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])}) then {
-				//--- fable/guer-suicide-bike: Motorcycle-class hull, already fast/nimble stock -- no movement-assist
-				//--- boost needed (unlike the Car VBIED's Valhalla climb or the M113's speed loop).
+				//--- Motorcycle-class hull: owner requested climb access, but it remains stock-speed.
 			} else {
-				//--- B67 (guer-reward): the truck VBIED is a Car, so enable Valhalla High Climbing on it (broadcast) so the
-				//--- suicide truck can scale steep terrain to reach targets. Mirrors LowGear_Toggle.sqf's enable path.
-				_vehicle setVariable ["WFBE_HighClimbingEnabled", true, true];
+				_vehicle setVariable ["wfbe_vbied_speedcoef", missionNamespace getVariable ["WFBE_C_GUER_VBIED_SPEEDCOEF", 1.25], true];
 			};
 		};
 
@@ -990,23 +991,22 @@ if (_isMan) then {
 			_v setVariable ["wfbe_vbied_action", _aid];
 		};
 
-		//--- B75 (guer-tech): M113 VBIED ~2x-speed driver-local boost. A2-OA has NO setMaxSpeed, so mirror the Valhalla
-		//--- high-climbing setVelocity idiom: each tick, while the LOCAL player drives, nudge the forward velocity up
-		//--- until ~2x the M113's stock top speed (self-limiting). Idempotent via wfbe_m113_boost_running.
-		WFBE_CL_FNC_GuerVbiedM113Boost = {
+		//--- GUER VBIED driver-local speed boost. A2-OA has NO setMaxSpeed, so nudge the forward velocity up
+		//--- until the per-hull coefficient times stock maxSpeed (self-limiting). 1.0 is stock/off-equivalent.
+		WFBE_CL_FNC_GuerVbiedSpeedBoost = {
 			private ["_v"];
 			_v = _this;
 			if (isNull _v) exitWith {};
-			if (_v getVariable ["wfbe_m113_boost_running", false]) exitWith {};   //--- already boosting on this machine.
-			_v setVariable ["wfbe_m113_boost_running", true];
+			if (_v getVariable ["wfbe_vbied_boost_running", false]) exitWith {};   //--- already boosting on this machine.
+			_v setVariable ["wfbe_vbied_boost_running", true];
 			[_v] spawn {
 				private ["_v","_coef","_baseMax","_target","_vel","_dir","_fwd"];
 				_v = _this select 0;
-				_coef = missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_SPEEDCOEF", 2.0];
+				_coef = _v getVariable ["wfbe_vbied_speedcoef", 1];
 				_baseMax = getNumber (configFile >> "CfgVehicles" >> (typeOf _v) >> "maxSpeed");   //--- km/h
 				if (_baseMax <= 0) then {_baseMax = 60};
 				_target = _baseMax * _coef;
-				while {alive _v && {driver _v == player} && {canMove _v}} do {
+				while {alive _v && {driver _v == player} && {canMove _v} && {_coef > 1}} do {
 					if (isEngineOn _v && {(speed _v) > 3} && {(speed _v) < _target}) then {
 						_vel = velocity _v;
 						_dir = direction _v;
@@ -1021,12 +1021,27 @@ if (_isMan) then {
 					};
 					sleep 0.1;
 				};
-				_v setVariable ["wfbe_m113_boost_running", false];
+				_v setVariable ["wfbe_vbied_boost_running", false];
 			};
+		};
+
+		//--- Motorcycle VBIEDs are neither Tank nor Car, so they miss Init_Unit's stock LowGear_Toggle actions.
+		//--- Add the same on/off actions locally once; truck/M113 already have them and must not receive duplicates.
+		WFBE_CL_FNC_AddGuerVbiedClimbAction = {
+			private ["_v","_on","_off"];
+			_v = _this;
+			if (isNull _v) exitWith {};
+			if (!(_v getVariable ["wfbe_is_guer_vbied", false])) exitWith {};
+			if (!((typeOf _v) == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"]))) exitWith {};
+			if (!isNil {_v getVariable "wfbe_vbied_climb_action"}) exitWith {};
+			_on = _v addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOn")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(player == driver _target) && !(_target getVariable ['WFBE_HighClimbingEnabled', false]) && canMove _target"];
+			_off = _v addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOff")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(player == driver _target) && (_target getVariable ['WFBE_HighClimbingEnabled', false]) && canMove _target"];
+			_v setVariable ["wfbe_vbied_climb_action", [_on,_off]];
 		};
 
 		//--- Immediate buyer-local add (instant availability) + GetIn driver-path re-add for persistence.
 		_vehicle call WFBE_CL_FNC_AddGuerVbiedAction;
+		_vehicle call WFBE_CL_FNC_AddGuerVbiedClimbAction;
 		_vehicle addEventHandler ["GetIn", {
 			private ["_v","_pos","_u"];
 			_v = _this select 0;
@@ -1034,6 +1049,7 @@ if (_isMan) then {
 			_u = _this select 2;
 			if (_pos == "driver" && {_u == player} && {side _u == resistance}) then {
 				_v call WFBE_CL_FNC_AddGuerVbiedAction;
+				_v call WFBE_CL_FNC_AddGuerVbiedClimbAction;
 				//--- B67 (guer-reward): start the Valhalla High Climbing loop for the local driver, exactly the way
 				//--- LowGear_Toggle.sqf does (set Local_HighClimbingModeOn, spawn VALHALLA_FNC_LowGear if not running).
 				if (_v getVariable ["WFBE_HighClimbingEnabled", false]) then {
@@ -1042,9 +1058,9 @@ if (_isMan) then {
 						_v spawn VALHALLA_FNC_LowGear;
 					};
 				};
-				//--- B75 (guer-tech): start the M113 ~2x-speed boost for the local driver (mirrors the high-climb start above).
-				if (_v getVariable ["wfbe_vbied_m113", false]) then {
-					_v call WFBE_CL_FNC_GuerVbiedM113Boost;
+				//--- Start the shared per-hull VBIED speed boost for the local driver (mirrors the high-climb start above).
+				if ((_v getVariable ["wfbe_vbied_speedcoef", 1]) > 1) then {
+					_v call WFBE_CL_FNC_GuerVbiedSpeedBoost;
 				};
 			};
 		}];
@@ -1055,6 +1071,47 @@ if (_isMan) then {
 	//--- action (Init_Unit.sqf) and the spawn-on-truck list (Client_GetRespawnAvailable.sqf).
 	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(typeOf _vehicle) in (missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []])}) then {
 		_vehicle setVariable ["wfbe_is_guer_fob", true, true];
+	};
+
+	//--- fable/guer-atgm-tech: GUIDED-AT TECHNICAL. Give the bought SPG-9 technical a guided AT-5 on its
+	//--- EXISTING gunner turret [0], alongside the stock recoilless tube. addWeaponTurret is LOCAL-effect and
+	//--- is not JIP-persistent, so this mirrors the VBIED persistence pattern above exactly: broadcast an
+	//--- object flag any machine can recognise, arm immediately for the buyer, and re-arm on GetIn for
+	//--- whichever client later becomes local crew. Idempotent per machine via wfbe_atgm_tech_armed so a
+	//--- get-out/get-in cycle cannot stack duplicate launchers or magazines.
+	//--- Flag-off: no flag write, no EH, no weapon - byte-for-byte current behaviour.
+	if ((missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECHNICAL", 0]) > 0 && {(typeOf _vehicle) in (missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECH_TYPES", []])} && {(side group player) == resistance}) then {
+		_vehicle setVariable ["wfbe_is_guer_atgm_tech", true, true];
+
+		//--- Local helper: arm once per local vehicle instance.
+		WFBE_CL_FNC_ArmGuerAtgmTech = {
+			private ["_v","_wep","_mag","_nmags","_i"];
+			_v = _this;
+			if (isNull _v) exitWith {};
+			if (!(_v getVariable ["wfbe_is_guer_atgm_tech", false])) exitWith {};
+			if (_v getVariable ["wfbe_atgm_tech_armed", false]) exitWith {};   //--- already armed on this machine.
+			_wep   = missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECH_WEAPON", "AT5Launcher"];
+			_mag   = missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECH_MAG", "5Rnd_AT5_BRDM2"];
+			_nmags = missionNamespace getVariable ["WFBE_C_GUER_ATGM_TECH_MAGS", 2];
+			for "_i" from 1 to _nmags do {
+				_v addMagazineTurret [_mag, [0]];
+			};
+			_v addWeaponTurret [_wep, [0]];
+			_v setVariable ["wfbe_atgm_tech_armed", true];
+			["INFORMATION", Format ["Client_BuildUnit.sqf: guided-AT technical armed (%1) - added %2 + %3 x %4 on turret [0].", typeOf _v, _wep, _nmags, _mag]] Call WFBE_CO_FNC_LogContent;
+		};
+
+		//--- Immediate buyer-local arm + GetIn re-arm for persistence (crew seat, not driver-only: the
+		//--- launcher lives on the GUNNER turret, so the gunner is who needs it armed locally).
+		_vehicle call WFBE_CL_FNC_ArmGuerAtgmTech;
+		_vehicle addEventHandler ["GetIn", {
+			private ["_v","_u"];
+			_v = _this select 0;
+			_u = _this select 2;
+			if (_u == player && {side _u == resistance}) then {
+				_v call WFBE_CL_FNC_ArmGuerAtgmTech;
+			};
+		}];
 	};
 
 	//--- B76 (guer-depot climb): GUER buys EVERY vehicle from the Depot (GUI_Menu_BuyUnits forces _type='Depot'),

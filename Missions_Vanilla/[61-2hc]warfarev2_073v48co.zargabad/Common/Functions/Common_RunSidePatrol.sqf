@@ -244,6 +244,51 @@ while {!WFBE_GameOver && _alive} do {
 					};
 				};
 			};
+			//--- fable/sidepatrol-front-bias-20260727: prefer the AI Commander's published spearhead town(s)
+			//--- (wfbe_aicom_targets) over pure nearest-to-self, so patrols push the contested front instead of
+			//--- looping the backlines. Flag-gated (WFBE_C_SIDE_PATROL_FRONT_BIAS, default 0 = this whole block
+			//--- is skipped, _target stays the nearest-to-self pick above = byte-identical to legacy behaviour).
+			//--- Reuses already-published commander data - no new town scan, no per-frame cost.
+			//--- MANDATORY fallback: if the published list is nil/empty/unavailable for ANY reason (flag off at
+			//--- the commander, no data published yet, or an HC-hosted patrol that cannot see the server-local
+			//--- publish unless WFBE_C_AICOM_PUBLIC_STATE_SYNC is ALSO armed - see PR body) _target is left exactly
+			//--- as picked above - a patrol must never end up idle/targetless because of this branch.
+			if ((missionNamespace getVariable ["WFBE_C_SIDE_PATROL_FRONT_BIAS", 0]) > 0 && {!isNull _target}) then {
+				private ["_fbLogik","_fbSpearheads","_fbInCandidates","_fbT","_fbBiased","_fbBestDist","_fbCand","_fbS","_fbD","_fbPick"];
+				_fbLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+				_fbSpearheads = if (isNull _fbLogik) then {[]} else {_fbLogik getVariable ["wfbe_aicom_targets", []]};
+				if (typeName _fbSpearheads == "ARRAY" && {count _fbSpearheads > 0}) then {
+					_fbInCandidates = [];
+					{
+						_fbT = _x;
+						if (!isNil "_fbT" && {!isNull _fbT} && {_fbT in _candidates}) then {_fbInCandidates set [count _fbInCandidates, _fbT]};
+					} forEach _fbSpearheads;
+					_fbBiased = objNull;
+					if (count _fbInCandidates > 0) then {
+						//--- 1) A published spearhead is itself a live candidate - prefer it (nearest to the leader if several).
+						_fbPick = [leader _team, _fbInCandidates] Call WFBE_CO_FNC_GetClosestEntity;
+						if (!isNull _fbPick) then {_fbBiased = _fbPick};
+					} else {
+						//--- 2) No published spearhead is itself a candidate (already ours / naval-excluded / avoided):
+						//--- prefer the CANDIDATE nearest to a spearhead town instead of nearest to the patrol.
+						_fbBestDist = 1e9;
+						{
+							_fbCand = _x;
+							{
+								_fbS = _x;
+								if (!isNil "_fbS" && {!isNull _fbS}) then {
+									_fbD = _fbCand distance _fbS;
+									if (_fbD < _fbBestDist) then {_fbBestDist = _fbD; _fbBiased = _fbCand};
+								};
+							} forEach _fbSpearheads;
+						} forEach _candidates;
+					};
+					if (!isNull _fbBiased && {_fbBiased != _target}) then {
+						["INFORMATION", Format["Common_RunSidePatrol.sqf: [%1] FRONT_BIAS retargeted patrol from [%2] (nearest-to-self) to [%3] (spearhead-biased).", _side, _target getVariable ["name","?"], _fbBiased getVariable ["name","?"]]] Call WFBE_CO_FNC_LogContent;
+						_target = _fbBiased;
+					};
+				};
+			};
 			if (!isNull _target) then {
 				[_team, getPos _target, 'MOVE', 25] Spawn WFBE_CO_FNC_WaypointSimple;
 			};
@@ -401,7 +446,10 @@ while {!WFBE_GameOver && _alive} do {
 						_pVeh = vehicle _pLdr;
 						_pNear = false;
 						if (!isNull _pVeh && {!(_pVeh in [_pLdr])} && {alive _pVeh} && {canMove _pVeh}) then {
-							_pNear = ([getPos _pVeh, 100] Call WFBE_CO_FNC_RealPlayersNear) > 0;
+							private ["_pNearResult"];
+							_pNearResult = 0;
+							_pNearResult = [getPos _pVeh, 100] Call WFBE_CO_FNC_RealPlayersNear;
+							if ((typeName _pNearResult) == "SCALAR" && {_pNearResult > 0}) then {_pNear = true};
 							if (_pNear) then {
 								_pVeh setVelocity [(velocity _pVeh) select 0, (velocity _pVeh) select 1, 4];
 							} else {

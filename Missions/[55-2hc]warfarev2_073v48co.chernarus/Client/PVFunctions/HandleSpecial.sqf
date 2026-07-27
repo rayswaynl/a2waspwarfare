@@ -10,6 +10,28 @@ switch (_request) do {
 	case "commander-vote": {_args spawn WFBE_CL_FNC_Commander_VoteEnd};
 	case "commander-vote-start": {_args spawn WFBE_CL_FNC_Commander_VoteStart};
 	case "new-commander-assigned": {_args spawn WFBE_CL_FNC_Commander_Assigned};
+	//--- Accept a RequestTeamUpdate capability only when the private reply matches this client's
+	//--- outstanding menu challenge, then spend it by resubmitting the exact pending request.
+	case "team-update-capability": {
+		Private ["_teamChallenge","_teamExpectedChallenge","_teamExpires","_teamPending","_teamPendingKey","_teamPurpose","_teamToken"];
+		if (count _args != 4) exitWith {};
+		_teamPurpose = _args select 0;
+		_teamToken = _args select 1;
+		_teamExpires = _args select 2;
+		_teamChallenge = _args select 3;
+		if (_teamPurpose != "team-update") exitWith {};
+		if (typeName _teamToken != "STRING" || {_teamToken == ""}) exitWith {};
+		if (typeName _teamExpires != "SCALAR" || {_teamExpires <= time}) exitWith {};
+		if (typeName _teamChallenge != "STRING" || {_teamChallenge == ""}) exitWith {};
+		_teamPendingKey = Format ["wfbe_team_update_pending_%1", getPlayerUID player];
+		_teamPending = missionNamespace getVariable [_teamPendingKey, []];
+		if (typeName _teamPending != "ARRAY" || {count _teamPending != 7}) exitWith {};
+		_teamExpectedChallenge = _teamPending select 6;
+		if (typeName _teamExpectedChallenge != "STRING" || {_teamChallenge != _teamExpectedChallenge}) exitWith {};
+		missionNamespace setVariable [_teamPendingKey, []];
+		_teamPending set [6, _teamToken];
+		["RequestTeamUpdate", _teamPending] Call WFBE_CO_FNC_SendToServer;
+	};
 	// Marty: Run delegated town AI cleanup on the machine that owns the local groups.
 	case "cleanup-townai": {_args spawn WFBE_CL_FNC_CleanupDelegatedTownAI};
 	// Item 1: Delete airfield garrison units that are local to this machine.
@@ -239,7 +261,7 @@ switch (_request) do {
 	// reaped by existing GC. If not both local -> no-op (another HC owns it / self-heals next cadence).
 	// Default-OFF via WFBE_C_AICOM_HC_MERGE_ENABLE (no-op until the constant is defined).
 	case "aicom-team-merge": {
-		Private ["_grpA","_grpB","_moved"];
+		Private ["_grpA","_grpB","_moved","_mSideID"];
 		if ((missionNamespace getVariable ["WFBE_C_AICOM_HC_MERGE_ENABLE", 0]) <= 0) exitWith {}; //--- B69 fix: flag ships as Number 0/1; !(Number) is an A2-OA type error.
 		_grpA = _args select 0;
 		_grpB = _args select 1;
@@ -247,7 +269,10 @@ switch (_request) do {
 		if (isNull _grpB) exitWith {};
 		if ((local (leader _grpA)) && (local (leader _grpB))) then {
 			_moved = count (units _grpB); //--- capture donor size BEFORE the join empties B.
+			_mSideID = (side (leader _grpB)) Call WFBE_CO_FNC_GetSideID;
 			(units _grpB) joinSilent _grpA;
+			_grpB setVariable ["wfbe_persistent", false, true];
+			["RequestSpecial", ["aicom-team-ended", _mSideID, _grpB]] Call WFBE_CO_FNC_SendToServer;
 			diag_log Format ["AICOMHCMERGE keeperA:%1 donorB:%2 movedUnits:%3 keeperSize:%4", _grpA, _grpB, _moved, count (units _grpA)];
 		};
 	};
@@ -271,6 +296,29 @@ switch (_request) do {
 		_uav = _args select 1;
 		if (typeName _uid != "STRING" || {_uid != getPlayerUID player} || {isNull _uav}) exitWith {};
 		[_uav] ExecVM "Client\Module\UAV\uav.sqf";
+	};
+	//--- Accept the RequestVehicleLock capability only when the private reply echoes this client's
+	//--- outstanding challenge, then spend it by resubmitting the exact pending vehicle.
+	case "vehicle-lock-capability": {
+		Private ["_lockChallenge","_lockExpectedChallenge","_lockPending","_lockPendingKey","_lockToken","_lockVehicle","_lockExpires","_lockPurpose"];
+		if (count _args != 4) exitWith {};
+		_lockPurpose = _args select 0;
+		_lockToken = _args select 1;
+		_lockExpires = _args select 2;
+		_lockChallenge = _args select 3;
+		if (_lockPurpose != "vehicle-lock") exitWith {};
+		if (typeName _lockToken != "STRING" || {_lockToken == ""}) exitWith {};
+		if (typeName _lockExpires != "SCALAR" || {_lockExpires <= time}) exitWith {};
+		if (typeName _lockChallenge != "STRING" || {_lockChallenge == ""}) exitWith {};
+		_lockPendingKey = Format ["wfbe_vehicle_lock_pending_%1", getPlayerUID player];
+		_lockPending = missionNamespace getVariable [_lockPendingKey, []];
+		if (typeName _lockPending != "ARRAY" || {count _lockPending != 2}) exitWith {};
+		_lockVehicle = _lockPending select 0;
+		_lockExpectedChallenge = _lockPending select 1;
+		if (typeName _lockVehicle != "OBJECT" || {isNull _lockVehicle}) exitWith {};
+		if (typeName _lockExpectedChallenge != "STRING" || {_lockChallenge != _lockExpectedChallenge}) exitWith {};
+		missionNamespace setVariable [_lockPendingKey, []];
+		["RequestVehicleLock", [_lockVehicle, false, player, _lockToken]] Call WFBE_CO_FNC_SendToServer;
 	};
 	//--- Accept the ICBM/TEL token only when it echoes this client's private challenge.
 	case "icbm-tel-auth-token": {

@@ -60,13 +60,15 @@
         [_side, _discountPercentage, _attackWaveLength, _requester] Call WFBE_SE_FNC_HandleAttackWaveDetails;
 
         //--- fix(combine): the requester-bind guard [#1399] inside WFBE_SE_FNC_HandleAttackWaveDetails
-        //--- rejects (exitWith, no flag flip) a forged/invalid-requester activation for this _side. Without
-        //--- this check, the overlap-guard reservation set above (before spawning) would still leave the
-        //--- side locked out of future waves for a full _attackWaveLength (up to 25 min) even though no
-        //--- activation was ever announced or debited - a denial-of-service side effect purely from combining
-        //--- the overlap guard [#1350/#1373] with the requester-bind reject path [#1399]. Detect the rejection
-        //--- by checking the flag the handler would have flipped true on success, and release the reservation
-        //--- immediately instead of sleeping out the window.
+        //--- rejects (exitWith) a forged/invalid-requester activation for this _side. As originally
+        //--- combined, the "detection" below checked the flag the handler flips true on success - dead
+        //--- code, because the reservation above had ALREADY forced that flag true before the spawn, so
+        //--- a rejection latched the side for a full _attackWaveLength even though nothing was debited
+        //--- or announced (a denial-of-service purely from combining the overlap guard [#1350/#1373]
+        //--- with the requester-bind reject path [#1399]). The handler's reject branch now clears the
+        //--- reservation itself; this check observes the cleared flag and exits the worker immediately
+        //--- (skipping the sleep and a spurious wave-end announce), and stays as an idempotent
+        //--- defense-in-depth re-clear.
         if ((_side == west && {!ATTACK_WAVE_ACTIVE_WEST}) || (_side == east && {!ATTACK_WAVE_ACTIVE_EAST})) exitWith {
             if (_side == west) then {ATTACK_WAVE_ACTIVE_WEST = false};
             if (_side == east) then {ATTACK_WAVE_ACTIVE_EAST = false};

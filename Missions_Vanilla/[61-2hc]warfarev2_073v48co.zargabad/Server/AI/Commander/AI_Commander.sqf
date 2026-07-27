@@ -12,7 +12,7 @@
 	disconnect) with no edits to the vote/assign files.
 */
 
-private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_ltCargo","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_aicomConstLog","_arrFast","_arrMed","_arrSlow","_arrDisp","_syncAicomState","_aicomFlushResetOrder"];
+private ["_args","_side","_logik","_active","_ltTypes","_ltUp","_ltTown","_ltProd","_ltBase","_ltTeams","_ltStrat","_ltMHQReloc","_ltBrief","_ltBaseSell","_ltDisband","_ltBeacon","_humanCmd","_cmdTeam","_prevHuman","_state","_prevState","_doctrine","_order","_factory","_program","_winner","_held","_myID","_ownerKey","_ownerSeq","_passedOwner","_ltStat","_elMin","_towns","_supply","_funds","_fTeams","_eTeams","_upgLvls","_upgCsv","_upgArr","_i","_cbrResearchAppended","_richThreshold","_fundsRich","_dynTarget","_richFlag","_prevRich","_stipendActive","_prevStipendActive","_stipendTowns","_ltStipend","_tickS","_stipendFunds","_stipendSupply","_stipendFundsGrant","_stipendSupplyGrant","_stipendSupplyApplied","_stipendMaxTime","_dual","_stipendSupplyOn","_tickUniKey","_tickUni","_noHumanSince","_canBuild","_grpCount","_hcCount","_aiCapTiers","_aiCapTierIndex","_aiCapTierLast","_aiMax","_briefTowns","_briefFunds","_briefTeams","_briefDoctrine","_briefStrat","_briefTs","_ltMerge","_mergeOn","_topupOn","_mergeWorkerOn","_ltIntent","_ltPara","_ltCargo","_prevDelegate","_aiDelegate","_aiStrategy","_humanSeated","_aicomConstLog","_arrFast","_arrMed","_arrSlow","_arrDisp","_syncAicomState","_aicomFlushResetOrder"];
 
 _args = _this;
 _side = if (typeName _args == "ARRAY") then {_args select 0} else {_args};
@@ -269,8 +269,14 @@ _noHumanSince = -1;
 //--- WAR-BRIEF: one-time [AICOM BOOT] snapshot (server groups, HC count, aiMax, starting funds).
 _grpCount = 0;
 { if (side _x == _side) then {_grpCount = _grpCount + 1} } forEach allGroups;
-_hcCount = count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
-["INFORMATION", Format ["AI_Commander.sqf: [AICOM BOOT] side=%1 serverGroups=%2 HCs=%3 aiMax=%4 startFunds=%5", str _side, _grpCount, _hcCount, missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", -1], (_side) Call GetAICommanderFunds]] Call WFBE_CO_FNC_AICOMLog;
+_aiCapTiers = missionNamespace getVariable ["WFBE_C_TOTAL_AI_MAX_BY_TIER", [140,130,100,80]];
+if ((count _aiCapTiers) < 1) then {_aiCapTiers = [missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", 140]]};
+_aiCapTierIndex = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
+_aiCapTierLast = (count _aiCapTiers) - 1;
+if (_aiCapTierIndex > _aiCapTierLast) then {_aiCapTierIndex = _aiCapTierLast};
+_aiMax = _aiCapTiers select _aiCapTierIndex;
+_hcCount = missionNamespace getVariable ["WFBE_C_HC_SLOTS", 0];
+["INFORMATION", Format ["AI_Commander.sqf: [AICOM BOOT] side=%1 serverGroups=%2 HCs=%3 aiMax=%4 startFunds=%5", str _side, _grpCount, _hcCount, _aiMax, (_side) Call GetAICommanderFunds]] Call WFBE_CO_FNC_AICOMLog;
 
 //--- AI COMMANDER LOCK startup notice.
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {

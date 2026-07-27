@@ -369,7 +369,7 @@ while {!WFBE_GameOver} do {
                 if (_kind == "qrfContract") then {
                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER kind=qrf town=%2 product=%3 armed fundedBy=%4 pricePaid=%5",
                         _elmin, _townId, _product, _uid, _pricePaid];
-                    //--- QRF air materializer: fires when town wfbe_contact_time becomes fresh.
+                    //--- QRF air materializer: fires when the town's wfbe_active attack latch is set.
                     //--- Handled in contract poll below (Phase 7 ext).
                 };
 
@@ -433,12 +433,10 @@ while {!WFBE_GameOver} do {
                         private ["_cTownSide"];
                         _cTownSide = _cTownObj getVariable ["sideID", WFBE_C_UNKNOWN_ID]; //--- #815: numeric sideID
 
-                        //--- QRF: fire when town is actively under attack (wfbe_contact_time fresh).
+                        //--- QRF: fire when town is actively under attack (wfbe_active live signal;
+                        //--- repoints the dead wfbe_contact_time trigger - that var is never written).
                         if (_cKind == "qrfInsert" || {_cKind == "qrfGunship"} || {_cKind == "qrfCombo"}) then {
-                            private ["_contactAge","_contactTime"];
-                            _contactTime = _cTownObj getVariable ["wfbe_contact_time", 0];
-                            _contactAge  = _nowT - _contactTime;
-                            if (_contactTime > 0 && {_contactAge < 120}) then {
+                            if (_cTownObj getVariable ["wfbe_active", false]) then {
                                 //--- Town under attack - fire QRF.
                                 private ["_spawnPos","_cTownPos"];
                                 _cTownPos  = getPos _cTownObj;

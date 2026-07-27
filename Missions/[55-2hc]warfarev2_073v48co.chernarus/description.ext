@@ -50,6 +50,24 @@ class CfgMarkerColors
 		name = "Gray";
 		color[] = {0.6,0.6,0.6,1};
 	};
+
+	//--- fable/koth-marker-colors (2026-07-26): same class of bug as ColorGray above. A2 OA 1.64 has no
+	//--- built-in "ColorWest"/"ColorEast" marker colors, so Init_ZgKoth.sqf's holder/winner recolor
+	//--- silently no-op'd ("No entry 'bin\config.bin/CfgMarkerColors.ColorEast'" x238 in the client RPT)
+	//--- and the KOTH hill marker never showed who held it. These must be ABSOLUTE colors, not the
+	//--- viewer-relative WFBE_C_WEST_COLOR/WFBE_C_EAST_COLOR constants - ZgKoth runs server-side and
+	//--- broadcasts one marker color to every client, so a perspective-relative color would be wrong
+	//--- for half the players. Blue=WEST / red=EAST per standard Arma side convention.
+	class ColorWest
+	{
+		name = "West";
+		color[] = {0,0.3,0.6,1};
+	};
+	class ColorEast
+	{
+		name = "East";
+		color[] = {0.5,0,0,1};
+	};
 };
 
 #include "Music\description.ext"

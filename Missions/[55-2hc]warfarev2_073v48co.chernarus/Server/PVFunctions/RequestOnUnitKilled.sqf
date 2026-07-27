@@ -6,7 +6,7 @@
 		- Killed side ID.
 */
 
-Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak","_tallyCount","_fbBonus","_srvBounty","_srvAssist","_srvPvp","_hcNames"];
+Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak","_tallyCount","_fbBonus","_srvBounty","_srvAssist","_srvPvp","_hcNames","_secHardening"];
 
 if !((typeName _this) in ["ARRAY"]) exitWith {
 	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (non-array)."] Call WFBE_CO_FNC_LogContent;
@@ -28,6 +28,29 @@ _killed = _this select 0;
 _killer = _this select 1;
 _killed_side = (_this select 2) Call GetSideFromID;
 _type = typeOf _killed;
+
+_secHardening = (missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0;
+
+//--- DR-55 forged-kill hardening (flag-gated; OFF = byte-equivalent legacy behavior).
+//--- PR #209 validated payload SHAPE (array/object/scalar) but never that the reported kill
+//--- ACTUALLY HAPPENED. A well-formed but entirely fabricated [killed, killer, sideId] triple
+//--- still mints full bounty/score/AI-commander funds and feeds first-blood/streak/tech-unlock
+//--- milestones, and a forger can REPLAY the very same real corpse to re-mint credit on every
+//--- resend. Re-derive from server-authoritative state instead of trusting the claim: the
+//--- reported victim must actually be dead right now, and each corpse settles kill credit at
+//--- most once (one-shot per-corpse latch, same idiom as Server_OnHQKilled.sqf's
+//--- wfbe_hq_killed_done). Does NOT authenticate _killer or _killed_side - see PR body for the
+//--- documented residual.
+if (_secHardening && {isNull _killed}) exitWith {
+	["WARNING", "RequestOnUnitKilled.sqf: rejected forged kill payload - killed object is null."] Call WFBE_CO_FNC_LogContent;
+};
+if (_secHardening && {alive _killed}) exitWith {
+	["WARNING", Format ["RequestOnUnitKilled.sqf: rejected forged kill credit - [%1] reported killed but is still alive.", _killed]] Call WFBE_CO_FNC_LogContent;
+};
+if (_secHardening && {_killed getVariable ["wfbe_killcredit_settled", false]}) exitWith {
+	["WARNING", Format ["RequestOnUnitKilled.sqf: rejected duplicate/replayed kill credit for [%1] (already settled).", _killed]] Call WFBE_CO_FNC_LogContent;
+};
+if (_secHardening) then {_killed setVariable ["wfbe_killcredit_settled", true, true];};
 
 //--- Card #66 (killstreak bounty): server-authoritative killstreak tracking. Capture the VICTIM's
 //--- pre-reset streak (forwarded into the AwardBountyPlayer message below), then UNCONDITIONALLY clear
@@ -156,7 +179,7 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_kill
 	private ["_gMilestones","_gMsg"];
 	_gMilestones = [
 		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 30], "BRDM-2 + T-34 unlocked  -  Ka-137 flares up to 120"],
-		[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 50], "M113 VBIED unlocked  -  armoured suicide APC at 2x speed"],
+		[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 50], "M113 VBIED unlocked  -  armoured suicide APC at ~1.5x speed"],
 		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 80], "T-55 unlocked  -  Ka-137 flares up to 240"],
 		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 160], "T-72 + BMP-2 unlocked"]
 	];

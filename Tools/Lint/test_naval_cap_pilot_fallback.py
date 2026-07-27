@@ -40,7 +40,8 @@ def test_naval_cap_pilot_fallback_checks_the_created_object() -> None:
                 assert f"if (isNull {pilot_name}) then" in fallback, (
                     f"{pilot_name} fallback does not check the createUnit result in {naval_path}"
                 )
-                assert f'{pilot_name} = _capGrp createUnit ["GUE_Soldier"' in fallback, (
+                # #1507: fallback resolves to the specific pilot classname, not the generic soldier one.
+                assert f'{pilot_name} = _capGrp createUnit ["GUE_Soldier_Pilot"' in fallback, (
                     f"{pilot_name} has no default GUER pilot fallback in {naval_path}"
                 )
                 assert f'isNil "{pilot_name}"' not in fallback, (
