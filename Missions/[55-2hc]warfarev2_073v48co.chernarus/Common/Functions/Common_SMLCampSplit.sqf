@@ -29,7 +29,7 @@
 
 Private ["_team","_footInf","_unheldCamps","_sideID","_side","_townCenter","_capSeq","_campFirstEnd"];
 Private ["_ttl","_splitDone","_groupA","_groupB","_hold","_campA","_campB","_holdPos","_detachedBySML1"];
-Private ["_nFoot","_half","_halfTwo","_i","_stamp","_exitReason"];
+Private ["_nFoot","_half","_halfTwo","_i","_stamp","_exitReason","_minFoot"];
 Private ["_aliveCheck","_ordN","_disbandFlag","_grpChg","_campsDone"];
 
 _team         = _this select 0;
@@ -48,10 +48,12 @@ _ttl = missionNamespace getVariable ["WFBE_C_SML_WATCHDOG_TTL", 240];
 _ttlCapture = missionNamespace getVariable ["WFBE_C_SML_CAPTURE_TTL", 0];
 if (_ttlCapture > 0) then {_ttl = _ttlCapture};
 
-//--- Need 2+ unheld camps and 3+ foot infantry for a meaningful split.
+//--- Need 2+ unheld camps and WFBE_C_SML_CAMP_SPLIT_MIN_FOOT+ foot infantry for a meaningful split.
 if (count _unheldCamps < 2) exitWith {};
+_minFoot = missionNamespace getVariable ["WFBE_C_SML_CAMP_SPLIT_MIN_FOOT", 3];
+if (_minFoot < 2) then {_minFoot = 2};  //--- a split needs at least one unit per camp
 _nFoot = count _footInf;
-if (_nFoot < 3) exitWith {};
+if (_nFoot < _minFoot) exitWith {};
 
 //--- Claim only unowned units.  SML-1 and SML-2 are independent spawned workers;
 //--- preserving an existing stamp leaves its watchdog/rejoin lifecycle with the
@@ -67,7 +69,7 @@ _detachedBySML1 = [];
 } forEach _footInf;
 
 _nFoot = count _detachedBySML1;
-if (_nFoot < 3) exitWith {
+if (_nFoot < _minFoot) exitWith {
     //--- No meaningful owned split: release the fresh claim after making any
     //--- owned cargo walkable for the caller's normal camp sweep.
     {
