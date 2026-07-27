@@ -32,6 +32,7 @@ WFBE_C_EAST_ID = 1;
 WFBE_C_GUER_ID = 2;
 WFBE_C_CIV_ID = 3;
 WFBE_C_UNKNOWN_ID = 4;
+if (isNil "WFBE_C_SEC_HARDENING") then {WFBE_C_SEC_HARDENING               = 0};
 
 //--- Common Upgrades, each number match the upgrades arrays.
 WFBE_UP_BARRACKS = 0;

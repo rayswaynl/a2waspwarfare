@@ -425,7 +425,15 @@ while {alive player && dialog} do {
 		// WFBE_RequestTeamUpdate = ['SRVFNCREQUESTTEAMUPDATE',[_to,_behavior,_combat,_formation,_speed]];
 		// publicVariable 'WFBE_RequestTeamUpdate';
 		// if (isHostedServer) then {['SRVFNCREQUESTTEAMUPDATE',[_to,_behavior,_combat,_formation,_speed]] Spawn HandleSPVF};
-		["RequestTeamUpdate", [_to,_behavior,_combat,_formation,_speed]] Call WFBE_CO_FNC_SendToServer;
+		if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
+			private ["_teamChallenge","_teamPendingKey"];
+			_teamPendingKey = Format ["wfbe_team_update_pending_%1", getPlayerUID player];
+			_teamChallenge = Format ["%1:%2:%3", getPlayerUID player, floor (diag_tickTime * 1000), floor (random 1000000000)];
+			missionNamespace setVariable [_teamPendingKey, [_to,_behavior,_combat,_formation,_speed,player,_teamChallenge]];
+			["RequestTeamUpdate", [_to,_behavior,_combat,_formation,_speed,player,"",_teamChallenge]] Call WFBE_CO_FNC_SendToServer;
+		} else {
+			["RequestTeamUpdate", [_to,_behavior,_combat,_formation,_speed]] Call WFBE_CO_FNC_SendToServer;
+		};
 	};	
 	
 	//--- Set respawn.
