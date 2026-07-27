@@ -550,6 +550,17 @@ switch (_args select 0) do {
 			if (!isNull _unit) then {_unit setVariable ["CommandBar_DeadUnits_ServerCleanupRunning", false, false]};
 		};
 	};
+	//--- WASPSCALE HC-locality relay: missionNamespace counters are local to the executing
+	//--- machine, so delegated commander work sends a one-count delta through the already
+	//--- allowlisted RequestSpecial PVF. Never public-broadcast missionNamespace counters.
+	case "waspscale-counter-delta": {
+		private ["_wsCounter"];
+		if (count _args != 2) exitWith {};
+		_wsCounter = _args select 1;
+		if (_wsCounter in ["wfbe_waspscale_recov", "wfbe_waspscale_mhqrel"]) then {
+			missionNamespace setVariable [_wsCounter, (missionNamespace getVariable [_wsCounter, 0]) + 1];
+		};
+	};
 	case "aicom-team-created": {
 		Private ["_csideID","_cteam","_clogik","_caicomList","_cdir","_cldr"];
 		_csideID = _args select 1;

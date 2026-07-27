@@ -98,6 +98,7 @@ WFBE_CO_FNC_AICOM_AutoFlip_Check = {
 	_vehicle setVariable ["WFBE_AICOM_AutoFlip_StuckSince", -1, false];
 	//--- WASPSCALE recov counter (cmdcon42): same shared cumulative recovery-action counter as the unstuck site (recov= on the WASPSCALE line). Auto-flip righting is a recovery action; bumped in this machine's missionNamespace (server or HC, wherever the hull is local). Server emit reports its server-local share. Monotonic.
 	missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
+	if (!isServer) then {["RequestSpecial", ["waspscale-counter-delta", "wfbe_waspscale_recov"]] Call WFBE_CO_FNC_SendToServer};
 	//--- Owner directive: recover even in player view, but expose nearby-player context for RPT tuning.
 	_playerNear = 0;
 	{if (isPlayer _x && {alive _x} && {(_x distance _vehicle) < 200}) then {_playerNear = _playerNear + 1}} forEach playableUnits;
