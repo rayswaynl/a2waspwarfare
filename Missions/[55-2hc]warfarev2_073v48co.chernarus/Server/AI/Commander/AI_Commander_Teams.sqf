@@ -1554,28 +1554,33 @@ if (count _live > 0) then {
 	_bestPad = objNull; _bestD = 1e9;
 	{ if (!isNull _x && {(_x distance _facObj) < _bestD}) then {_bestD = _x distance _facObj; _bestPad = _x} } forEach _padList;
 	if (!isNull _bestPad) then {_spawnPos = getPos _bestPad};
-	if (_isAirTeam && {_hasAirfield}) then { //--- cmdcon41: widened from _isJetTeam -> _isAirTeam so helis relocate to the owned airfield too.
-		private ["_afTown","_haObj"];
+	if (_isAirTeam && {_hasAirfield}) then { //--- cmdcon41: widened from _isJetTeam -> _isAirTeam so all air teams use the owned airfield runway.
+		private ["_afTown","_haObj","_afLogic","_runwayAnchor","_runwayClear","_runwayOffsets","_runwayOffset","_runwayCandidate"];
 		_afTown = objNull;
 		{ if (((_x getVariable ["sideID", -1]) == _sideID) && {(_x getVariable ["wfbe_is_airfield", false]) || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_afTown = _x} } forEach towns;
 		if (!isNull _afTown) then {
 			_haObj = _afTown getVariable ["wfbe_hangar", objNull];
 			if (isNull _haObj) then {_haObj = _afTown getVariable ["wfbe_airfield_hangar_obj", objNull]};
 			_spawnPos = if (!isNull _haObj) then {getPos _haObj} else {getPos _afTown};
-			//--- cmdcon41 (optional, HELI-ONLY): prefer an airfield HeliH pad near the hangar so a grounded
-			//--- heli lands on tarmac, not the hangar hull. Jets keep the raw hangar/field getPos (runway air-start).
-			if ((!_isJetTeam) && {!isNull _haObj}) then {
-				private ["_heliPads"];
-				_heliPads = _haObj nearObjects ["HeliH", 80];
-				if (count _heliPads > 0) then {_spawnPos = getPos (_heliPads select 0)};
-			};
-			//--- RUNWAY HEADING (Ray 2026-07-01, PLANE-ONLY): the airfield is anchored on a LocationLogicAirport logic whose
-			//--- getDir IS the runway orientation (server_town.sqf L569 orients the hangar off it). Resolve the nearest such
-			//--- logic to the airfield town and thread its getDir to the HC as the plane air-start heading. If none is found
-			//--- (-1 kept), Common_RunCommanderTeam self-resolves / falls back. A2-OA-safe: nearEntities on the logic class.
-			private ["_afLogic"];
+			//--- The capture hangar is an interaction object, not a vehicle spawn surface. Use the companion airport logic's
+			//--- runway bearing and accept the first clear point along its centreline; this prevents Balota's nearby trees
+			//--- (and the hangar hull itself) from trapping fresh aircraft. The ordered offsets work on every terrain; if
+			//--- map geometry yields no clear candidate, fall back to the airport anchor rather than the hangar object.
 			_afLogic = ((getPos _afTown) nearEntities [["LocationLogicAirport"], 1500]);
-			if (count _afLogic > 0) then {_runwayDir = getDir (_afLogic select 0)};
+			if (count _afLogic > 0) then {
+				_runwayDir = getDir (_afLogic select 0);
+				_runwayAnchor = getPos (_afLogic select 0);
+				_runwayClear = false;
+				_runwayOffsets = [120,-120,240,-240,60,-60];
+				{
+					_runwayOffset = _x;
+					_runwayCandidate = [_runwayAnchor, _runwayOffset, _runwayDir] Call GetPositionFrom;
+					if (!_runwayClear && {!(surfaceIsWater _runwayCandidate)}) then {
+						if (count (_runwayCandidate isFlatEmpty [18, 0, 2, 18, 0, false, objNull]) > 0) then {_spawnPos = _runwayCandidate; _runwayClear = true};
+					};
+				} forEach _runwayOffsets;
+				if (!_runwayClear) then {_spawnPos = _runwayAnchor};
+			};
 		};
 	};
 	//--- DISBAND-LOW-TIER STAMP (2026-06-28): HC-founded teams SKIP AssignTypes, so they never get wfbe_teamtype
