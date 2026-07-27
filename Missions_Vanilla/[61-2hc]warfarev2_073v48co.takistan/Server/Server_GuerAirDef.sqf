@@ -230,7 +230,7 @@ while {!WFBE_GameOver} do {
 	};
 	sleep _interval;
 
-	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore","_prunedGroups","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal"];
+	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore","_prunedGroups","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_enemyAirScanBudget","_enemyAirScanCount","_enemyAirScanned"];
 	_perfStart = diag_tickTime;
 	_perfAirBefore = count _defenders;
 	_perfDropsBefore = count _drops;
@@ -515,7 +515,24 @@ while {!WFBE_GameOver} do {
 
 	private ["_enemyAirVehicles"];
 	_enemyAirVehicles = [];
-	{if (alive _x && {_x isKindOf "Air"} && {((side _x) == west) || {(side _x) == east}}) then {_enemyAirVehicles set [count _enemyAirVehicles, _x]}} forEach vehicles;
+	//--- A match-long wreck list makes `vehicles` an unbounded input after #1471 deliberately
+	//--- retained shot-down hulls. Preserve the exact live west/east-air candidate semantics, but
+	//--- close a scheduler slice every bounded number of registry entries so dead wreck growth cannot
+	//--- create a single multi-frame hitch. The cache is then reused by every town below.
+	_enemyAirScanBudget = 32;
+	_enemyAirScanCount = 0;
+	_enemyAirScanned = 0;
+	{
+		_enemyAirScanned = _enemyAirScanned + 1;
+		if (alive _x && {_x isKindOf "Air"} && {((side _x) == west) || {(side _x) == east}}) then {
+			_enemyAirVehicles set [count _enemyAirVehicles, _x];
+		};
+		_enemyAirScanCount = _enemyAirScanCount + 1;
+		if (_enemyAirScanCount >= _enemyAirScanBudget) then {
+			_enemyAirScanCount = 0;
+			Call _sliceYield;
+		};
+	} forEach vehicles;
 	Call _sliceYield;
 
 	//=== (3) MAINTAIN: spawn one defender per active GUER town that lacks live air ============
@@ -583,14 +600,9 @@ while {!WFBE_GameOver} do {
 			//--- fix(hunt): nearEntities "Man" returns only DISMOUNTED infantry - fully mounted assaults were invisible (defenders recalled as "quiet" mid-attack, paradrop/Mi-24 response never triggered). Include vehicle hulls: a crewed hull carries its crew's side; empty hulls resolve CIVILIAN and stay filtered by the side check.
 			_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
 
-			//--- Enemy AIR near the town (crewed west/east aircraft) - the counter-air trigger. Scanned over
-			//--- `vehicles` (hull objects); side comes from the crewed hull, so an empty parked heli reads CIV
-			//--- and is ignored (only manned attackers pull a SAM-heli response).
-			_enemyAir = if ((missionNamespace getVariable ["WFBE_C_AIRDEF_CHUNKED", 1]) > 0) then {
-				{(_x distance _town) < ((_town getVariable ["range", 600]) max 600)} count _enemyAirVehicles
-			} else {
-				{alive _x && {_x isKindOf "Air"} && {((side _x) == west) || {(side _x) == east}} && {(_x distance _town) < ((_town getVariable ["range", 600]) max 600)}} count vehicles
-			};
+			//--- Enemy AIR near the town (crewed west/east aircraft) - use the one bounded live-air
+			//--- cache built above. Empty parked hulls still read CIVILIAN and are excluded at cache build.
+			_enemyAir = {(_x distance _town) < ((_town getVariable ["range", 600]) max 600)} count _enemyAirVehicles;
 
 			//--- LARGE-town test: by maxSupplyValue threshold OR by town_type tier (Large/Huge).
 			_maxSV    = _town getVariable ["maxSupplyValue", 0];
@@ -970,6 +982,6 @@ while {!WFBE_GameOver} do {
 	publicVariable "WFBE_ACTIVE_GUER_AIR";
 	Call _sliceCut;
 	if !(isNil "PerformanceAudit_Record") then {
-		["guer_airdef_cycle", _perfActive, Format["towns:%1;airBefore:%2;airAfter:%3;dropsBefore:%4;dropsAfter:%5;markers:%6;cap:%7;dropCap:%8;chunkSleep:%9;slices:%10;sliceMaxMs:%11;wallMs:%12", count towns, _perfAirBefore, count _defenders, _perfDropsBefore, count _drops, count _airList, _maxAir, _dropMax, _chunkSleepTotal, _perfSlices, (_perfSliceMax * 1000) call PerformanceAudit_Round2, ((diag_tickTime - _perfStart) * 1000) call PerformanceAudit_Round2], "SERVER"] Call PerformanceAudit_Record;
+		["guer_airdef_cycle", _perfActive, Format["towns:%1;airBefore:%2;airAfter:%3;dropsBefore:%4;dropsAfter:%5;markers:%6;cap:%7;dropCap:%8;chunkSleep:%9;slices:%10;sliceMaxMs:%11;wallMs:%12;airScan:%13;enemyAir:%14", count towns, _perfAirBefore, count _defenders, _perfDropsBefore, count _drops, count _airList, _maxAir, _dropMax, _chunkSleepTotal, _perfSlices, (_perfSliceMax * 1000) call PerformanceAudit_Round2, ((diag_tickTime - _perfStart) * 1000) call PerformanceAudit_Round2, _enemyAirScanned, count _enemyAirVehicles], "SERVER"] Call PerformanceAudit_Record;
 	};
 };
