@@ -519,6 +519,21 @@ while {!WFBE_GameOver} do {
                                         if (!isNull _uGun) then {_uGun moveInGunner _h};
                                         _h setPos _spawnPos;
                                         _hGrp addWaypoint [_cTownPos, 200];
+                                        //--- fable/gdir-qrf-flight (owner P0 2026-07-27 "QRF just spawns and crashes"): the raw
+                                        //--- createVehicle above gives the hull ZERO velocity and no altitude order - an air unit
+                                        //--- materialising with physics live and only a waypoint drops straight into the town.
+                                        //--- Port Server_GuerAirDef.sqf's proven sequence (:728-732): forward velocity along the
+                                        //--- approach bearing, flyInHeight, THEN the posture stamps (its own comment warns the
+                                        //--- order matters or "the air just orbits passively"). atan2 bearing idiom is A2-safe.
+                                        private ["_qrfDir","_qrfFly"];
+                                        _qrfFly = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_HEIGHT", 120];
+                                        _qrfDir = ((_cTownPos select 0) - (_spawnPos select 0)) atan2 ((_cTownPos select 1) - (_spawnPos select 1));
+                                        _h setDir _qrfDir;
+                                        _h setVelocity [(sin _qrfDir) * 40, (cos _qrfDir) * 40, 0];
+                                        _h flyInHeight _qrfFly;
+                                        _hGrp setBehaviour "COMBAT";
+                                        _hGrp setCombatMode "RED";
+                                        _hGrp setSpeedMode "NORMAL";
                                         //--- LEAK FIX (fix/alife-leak-hardening #4): raw createGroup above bypassed
                                         //--- WFBE_CO_FNC_CreateGroup entirely (no 140-cap emergency GC, no wfbe_group_src
                                         //--- tag) and the hull/group had no cleanup lifecycle at all - each fired QRF left
@@ -584,6 +599,21 @@ while {!WFBE_GameOver} do {
                                     };
                                     _h setPos _spawnPos;
                                     _hGrp addWaypoint [_cTownPos, 200];
+                                    //--- fable/gdir-qrf-flight (owner P0 2026-07-27 "QRF just spawns and crashes"): the raw
+                                    //--- createVehicle above gives the hull ZERO velocity and no altitude order - an air unit
+                                    //--- materialising with physics live and only a waypoint drops straight into the town.
+                                    //--- Port Server_GuerAirDef.sqf's proven sequence (:728-732): forward velocity along the
+                                    //--- approach bearing, flyInHeight, THEN the posture stamps (its own comment warns the
+                                    //--- order matters or "the air just orbits passively"). atan2 bearing idiom is A2-safe.
+                                    private ["_qrfDir","_qrfFly"];
+                                    _qrfFly = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_HEIGHT", 120];
+                                    _qrfDir = ((_cTownPos select 0) - (_spawnPos select 0)) atan2 ((_cTownPos select 1) - (_spawnPos select 1));
+                                    _h setDir _qrfDir;
+                                    _h setVelocity [(sin _qrfDir) * 40, (cos _qrfDir) * 40, 0];
+                                    _h flyInHeight _qrfFly;
+                                    _hGrp setBehaviour "COMBAT";
+                                    _hGrp setCombatMode "RED";
+                                    _hGrp setSpeedMode "NORMAL";
                                     //--- LEAK FIX (fix/alife-leak-hardening #4): same hull/group lifecycle registration
                                     //--- as the combo-gunship block above - see that comment for the full rationale.
                                     [_h] spawn WFBE_SE_FNC_HandleEmptyVehicle;
