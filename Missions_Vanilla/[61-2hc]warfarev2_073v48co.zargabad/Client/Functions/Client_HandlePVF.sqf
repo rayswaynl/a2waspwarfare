@@ -37,10 +37,13 @@ if (_isHeadless) then {
 		//---   cleanup-town-defense-gunner = server_town.sqf (fix/alife proper #1370) + Server_OperateTownDefensesUnits.sqf
 		//---        "remove" case; deletes a town-defense static gunner (dead OR alive) that is local to this HC -
 		//---        the equivalent server-side deletion call on an HC-delegated gunner would silently no-op
+		//---   hc-force-reseat            = server_hcreg_heal.sqf (fable/hc-registry-heal-v2; orders a
+		//---        registry-orphaned HC to ReseatCivilian + re-announce - group joins are locality-bound
+		//---        so the server cannot repair the HC's group itself)
 		//---   sidepatrol-watchdog        = server_side_patrols.sqf (WFBE_C_SIDE_PATROL_UNSTUCK; routes the
 		//---        external stuck watchdog to this HC when the wedged patrol's leader is HC-local - the
 		//---        receiver case already exists in HandleSpecial.sqf; this key was the missing wire-up)
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog"]);
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };

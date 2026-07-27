@@ -225,6 +225,24 @@ switch (_request) do {
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};
+	//--- fable/hc-registry-heal-v2 (2026-07-28): server-ordered reseat for an HC stuck outside the
+	//--- delegation registry in a state its own 15s watcher cannot exit (a wrong-side re-grab whose
+	//--- ReseatCivilian keeps failing announces nothing; the shared-CIV-group case re-announces but a
+	//--- registry heal may still be needed). HC-only by construction: WFBE_HC_FNC_ReseatCivilian is
+	//--- defined solely in Headless\Init\Init_HC.sqf, so the isNil guard makes this a no-op on any
+	//--- human client that would ever receive it.
+	case "hc-force-reseat": {
+		[] Spawn {
+			if (isNil "WFBE_HC_FNC_ReseatCivilian") exitWith {};
+			private "_r";
+			_r = 30 Call WFBE_HC_FNC_ReseatCivilian;
+			["RequestSpecial", ["hc-reseat-result", [name player, "forced:" + _r, str (side group player)]]] Call WFBE_CO_FNC_SendToServer;
+			if (!isNil "WFBE_HC_FNC_ParkSeaHC") then {[] Call WFBE_HC_FNC_ParkSeaHC};
+			if (side group player == civilian) then {
+				["RequestSpecial", ["connected-hc", player]] Call WFBE_CO_FNC_SendToServer;
+			};
+		};
+	};
 	//--- Field Hospital is broadcast by the server, but each locality owner applies only its own AI.
 	case "aicom-field-hospital": {
 		Private ["_fhSide","_fhUnits"];

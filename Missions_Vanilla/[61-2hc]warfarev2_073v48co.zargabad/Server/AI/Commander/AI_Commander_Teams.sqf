@@ -495,7 +495,7 @@ _logik setVariable ["wfbe_aicom_groupcap_warn_t", -9999];
 //--- Live HC available?
 _hcs = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
 _live = [];
-{if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_live = _live + [_x]}} forEach _hcs;
+{if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}) then {_live = _live + [_x]}} forEach _hcs; //--- fable/hc-registry-heal-v2: zombie filter aligned with Server_PickLeastLoadedHC:79 - without it an all-zombie registry entered the HC branch, deducted funds, then SendToClient dropped the dispatch (owner=0).
 
 if (count _live > 0) then {
 	//--- V0.3 HC path: pick a doctrine-weighted UNLOCKED template now (the HC just builds it).
