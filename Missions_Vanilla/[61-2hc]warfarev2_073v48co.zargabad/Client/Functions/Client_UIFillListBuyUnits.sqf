@@ -170,10 +170,10 @@ _wlSupply   = missionNamespace getVariable [Format ["WFBE_%1SUPPLYTRUCKS", sideJ
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.2, 0.2, 1.0]];
 		lnbSetText  [_listBox,[_i,1],_description + " [VBIED - Suicide Truck]"];
 	};
-	//--- B75 (guer-tech): SECOND VBIED — the kill-gated unarmed M113 (~2x speed). Same red weapon styling as the hilux, distinct tag.
+	//--- B75 (guer-tech): SECOND VBIED — the kill-gated unarmed M113 (~1.5x speed). Same red weapon styling as the hilux, distinct tag.
 	if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_x == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])} && {(side group player) == resistance}) then {
 		lnbSetColor [_listBox,[_i,1],[1.0, 0.2, 0.2, 1.0]];
-		lnbSetText  [_listBox,[_i,1],_description + " [VBIED - APC, 2x Speed]"];
+		lnbSetText  [_listBox,[_i,1],_description + " [VBIED - APC, 1.5x Speed]"];
 	};
 	//--- fable/guer-suicide-bike (flag WFBE_C_GUER_SUICIDE_BIKE, default 0): THIRD VBIED variant, a fast
 	//--- small suicide motorcycle. Same red weapon styling as the hilux/M113, distinct tag. Keyed off live

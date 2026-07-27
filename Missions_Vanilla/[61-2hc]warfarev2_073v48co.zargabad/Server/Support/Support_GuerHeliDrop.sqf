@@ -237,7 +237,7 @@ if (!_greenlight) then {
 					Private ["_gMilestones","_gMsg"];
 					_gMilestones = [
 						[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_1", 30], "BRDM-2 + T-34 unlocked  -  Ka-137 flares up to 120"],
-						[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 50], "M113 VBIED unlocked  -  armoured suicide APC at 2x speed"],
+						[missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_KILLS", 50], "M113 VBIED unlocked  -  armoured suicide APC at ~1.5x speed"],
 						[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_HELIBOMB", 60], "Barrel Bomb unlocked  -  heli-delivered call-in strike"],
 						[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 80], "T-55 unlocked  -  Ka-137 flares up to 240"],
 						[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 160], "T-72 + BMP-2 unlocked"]

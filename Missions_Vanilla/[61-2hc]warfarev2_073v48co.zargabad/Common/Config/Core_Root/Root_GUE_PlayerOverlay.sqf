@@ -104,7 +104,7 @@ missionNamespace setVariable ["WFBE_GUERDEPOTUNITS", _seedPool]; //--- first-tic
 			if (_tier >= 2) then {_pool = _pool + ["T55_TK_GUE_EP1"]}; //--- BTR-40 (MG) moved to the tier-0 base pool (2026-07-01); T-55 stays tier-2.
 			if (_tier >= 3) then {_pool = _pool + ["Ural_ZU23_TK_GUE_EP1"]};
 			};
-			//--- B75 (guer-tech): kill-gated SECOND VBIED — an unarmed M113 with ~2x speed (driver-local boost loop in
+			//--- B75 (guer-tech): kill-gated SECOND VBIED — an unarmed M113 with ~1.5x speed (driver-local boost loop in
 			//--- Client_BuildUnit.sqf). Map-independent class (M113_UN_EP1 on both maps), appended after the map branch;
 			//--- shown the same way as the hilux/datsun VBIED (red "[VBIED - APC]" tag in Client_UIFillListBuyUnits.sqf).
 			if (_m113On) then {_pool = _pool + [missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"]]};
