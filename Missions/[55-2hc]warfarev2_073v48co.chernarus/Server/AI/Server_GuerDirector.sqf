@@ -369,7 +369,7 @@ while {!WFBE_GameOver} do {
                 if (_kind == "qrfContract") then {
                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_ORDER kind=qrf town=%2 product=%3 armed fundedBy=%4 pricePaid=%5",
                         _elmin, _townId, _product, _uid, _pricePaid];
-                    //--- QRF air materializer: fires when town wfbe_contact_time becomes fresh.
+                    //--- QRF air materializer: fires when the town's wfbe_active attack latch is set.
                     //--- Handled in contract poll below (Phase 7 ext).
                 };
 
