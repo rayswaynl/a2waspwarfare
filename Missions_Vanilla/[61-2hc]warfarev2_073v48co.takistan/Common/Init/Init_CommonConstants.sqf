@@ -328,7 +328,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AI_COMMANDER_LOCK") then {WFBE_C_AI_COMMANDER_LOCK = 0}; //--- B67 (Ray 2026-06-21): 1->0 to ENABLE the hybrid commander feature (#5). Players can now vote out the AI commander; the AI then keeps founding/refilling its teams (assist mode) while the player builds + can re-task all teams. Set back to 1 to relock (AI always commands - the eval/night-soak posture).
 	if (isNil "WFBE_C_AI_COMMANDER_GARRISON") then {WFBE_C_AI_COMMANDER_GARRISON = 0}; //--- AssignTowns base-garrison opt-in. 0 keeps all AI teams on the front.
 	if (isNil "WFBE_C_AICOM_ALWAYS_OFFENSE") then {WFBE_C_AICOM_ALWAYS_OFFENSE = 1}; //--- Owner ruling 2026-07-21: AICOM stays on offense; 0 restores legacy garrison/last-stand conversions, while active-attack relief remains available.
-	if (isNil "WFBE_C_AICOM_PUBLIC_STATE_SYNC") then {WFBE_C_AICOM_PUBLIC_STATE_SYNC = 0}; //--- Default OFF: keep wfbe_aicom_funds/running server-local. 1 = broadcast side-logic AICOM state writes for HC readers.
+	if (isNil "WFBE_C_AICOM_PUBLIC_STATE_SYNC") then {WFBE_C_AICOM_PUBLIC_STATE_SYNC = 1}; //--- armed 2026-07-27 owner go. Broadcasts side-logic AICOM state writes (wfbe_aicom_funds/running) for HC readers.
 	if (isNil "WFBE_C_AICOM_TELEPORT_ORDER_FLUSH") then {WFBE_C_AICOM_TELEPORT_ORDER_FLUSH = 1}; //--- Lane 377: after teleport-equivalent relocation, publish a fresh HC order from the new position.
 	//--- C3 consensus telemetry: periodic FIELDSPLIT/CAPTURE_TRACE diagnostics are opt-in and behavior-neutral.
 	if (isNil "WFBE_C_AICOM_C3_TELEMETRY") then {WFBE_C_AICOM_C3_TELEMETRY = 1}; //--- ARMED (owner ruling 2026-07-21: everything flags on).
@@ -781,7 +781,7 @@ if (worldName == "Zargabad") then {
 	//--- and Server_GuerAirDef.sqf), satisfying the config-proof rule.
 	//--- The missile launches from the recoilless tube's existing muzzle memory point - script cannot
 	//--- reposition a muzzle, and that origin reads correctly as an improvised launcher.
-	if (isNil "WFBE_C_GUER_ATGM_TECHNICAL")        then {WFBE_C_GUER_ATGM_TECHNICAL        = 0};              //--- 1 = arm the guided-AT technical (depot row + ATGM); 0 = inert. Default 0 (dark).
+	if (isNil "WFBE_C_GUER_ATGM_TECHNICAL")        then {WFBE_C_GUER_ATGM_TECHNICAL        = 1};              //--- armed 2026-07-27 owner go. Guided-AT technical (depot row + ATGM) live.
 	if (isNil "WFBE_C_GUER_ATGM_TECH_TYPES")       then {WFBE_C_GUER_ATGM_TECH_TYPES       = ["Offroad_SPG9_Gue","Offroad_SPG9_TK_GUE_EP1"]}; //--- both terrains' hulls in one list; each map only ever spawns its own, so no worldName branch is needed.
 	if (isNil "WFBE_C_GUER_ATGM_TECH_WEAPON")      then {WFBE_C_GUER_ATGM_TECH_WEAPON      = "AT5Launcher"};  //--- proven pairing with the magazine below (EASA_Init.sqf AT-Strike row).
 	if (isNil "WFBE_C_GUER_ATGM_TECH_MAG")         then {WFBE_C_GUER_ATGM_TECH_MAG         = "5Rnd_AT5_BRDM2"};
@@ -1183,7 +1183,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_STRIKE_COMMIT") then {WFBE_C_AICOM_STRIKE_COMMIT = 0}; //--- 0=current (any towns-mode team is strike-grabbable); 1=a PROGRESSING team (open dispatch + progress>=150m + target still enemy) is skipped for the HQ strike-grab so an active journey is not killed. Exempts recycle-flagged + genuinely-stuck teams.
 	if (isNil "WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE") then {WFBE_C_AICOM_FAILED_JOURNEYS_RECYCLE = 6}; //--- a team with this many failed journeys since its last arrival is recycled (combat- and player-guarded).
 	//--- cmdcon43-pack2: AICOM effectiveness additions (items 2-4).
-	if (isNil "WFBE_C_AICOM_RESEARCH_AIR")    then {WFBE_C_AICOM_RESEARCH_AIR    = 0}; //--- 0=off; 1=AI appends [AIR,1][AIR,2] to doctrine research when an Aircraft Factory is present.
+	if (isNil "WFBE_C_AICOM_RESEARCH_AIR")    then {WFBE_C_AICOM_RESEARCH_AIR    = 1}; //--- armed 2026-07-27 owner go. AI appends [AIR,1][AIR,2] to doctrine research when an Aircraft Factory is present.
 	if (isNil "WFBE_C_AICOM_STRIKE_AT_BONUS") then {WFBE_C_AICOM_STRIKE_AT_BONUS = 0}; //--- 0=off; >0=score bonus for launcher-carrying teams in the HQ-strike picker (suggest 50).
 	if (isNil "WFBE_C_AICOM_MHQ_RING_CLEAR")  then {WFBE_C_AICOM_MHQ_RING_CLEAR  = 600}; //--- m base ring-clear for MHQ standoff (was hard-coded 600; lower to shrink the exclusion zone).
 	//--- aicom-orbiter-stuckdecay lane (cmdcon41-w3-orbiter, 2026-07-02). Build 89 (Ray dark pick 2026-07-03): default 0 = dark (flag-off = byte-identical to pre-feature behavior).
@@ -1505,10 +1505,11 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- HC depleted-team MERGE (default-OFF). Server picks a same-side pair of depleted HC teams (A keep, B donor)
 	//--- and broadcasts a HandleSpecial 'aicom-team-merge' [A,B] to every live HC; the HC consumer self-gates on
 	//--- both leaders LOCAL, then (units B) joinSilent A (empty B reaped by existing GC). Group-count DOWN.
-	if (isNil "WFBE_C_AICOM_HC_MERGE_ENABLE") then {WFBE_C_AICOM_HC_MERGE_ENABLE = 0};   //--- 1 = ON, 0 = off (default; ships dark until a controlled soak).
-	if (isNil "WFBE_C_AICOM_HC_TOPUP_ENABLE") then {WFBE_C_AICOM_HC_TOPUP_ENABLE = 0};   //--- B74: refill attrited HC field teams; 1 = ON after controlled soak, 0 = off by default.
+	if (isNil "WFBE_C_AICOM_HC_MERGE_ENABLE") then {WFBE_C_AICOM_HC_MERGE_ENABLE = 1};   //--- armed 2026-07-27 owner go. 1 = ON, 0 = off.
+	if (isNil "WFBE_C_AICOM_HC_TOPUP_ENABLE") then {WFBE_C_AICOM_HC_TOPUP_ENABLE = 1};   //--- armed 2026-07-27 owner go. B74: refill attrited HC field teams; 1 = ON, 0 = off.
 	//--- The worker has deliberate fallback values for its threshold/range tunables, so existing
-	//--- server configs need no new parameter surface. Keep both switches default-off until soak evidence.
+	//--- server configs need no new parameter surface. #1498 implements and registers the worker
+	//--- (AI_Commander_HCTopUp.sqf, wired from Init_Server.sqf); both switches armed 2026-07-27 owner go.
 	//--- STRANDED-survivor merge (default-ON). A lone stranded remnant near another friendly team is folded in
 	//--- rather than walking home / being culled; same merge payload contract. Group-count DOWN.
 	if (isNil "WFBE_C_AICOM_STRANDED_MERGE")       then {WFBE_C_AICOM_STRANDED_MERGE       = 1};    //--- 1 = ON (default), 0 = off.
@@ -2608,7 +2609,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- USV FLOTILLA (fable/usv-flotilla, owner 2026-07-08): 3-boat GUER coastal flotilla, PBX hull +
 //--- attachTo static per boat (AA/ROCKET/HMG). Master gate default 0 = byte-identical to HEAD.
 //--- Piggybacks on IS_naval_map (see Server_USVFlotilla.sqf header) - no new map define needed.
-	if (isNil "WFBE_C_USV_FLOTILLA_ENABLE")   then {WFBE_C_USV_FLOTILLA_ENABLE = 0};   //--- master flag. 0 = OFF, byte-identical to HEAD. Held at 0 for staging/2026-07-27: USV flotilla stays dark until owner soak-arms (waypoint water-safety unverified in engine).
+	if (isNil "WFBE_C_USV_FLOTILLA_ENABLE")   then {WFBE_C_USV_FLOTILLA_ENABLE = 1};   //--- armed 2026-07-27 owner go: #1519 fixes the gate-reopen-after-quiet-despawn bug and #1504 ships the waypoints. In-engine water-safety is still unproven; QUIET_DESPAWN reaps strays.
 	if (isNil "WFBE_C_NAVAL_THEATER_RUMOR")  then {WFBE_C_NAVAL_THEATER_RUMOR = 0};    //--- 0 = no naval theatre activity announcements; >0 = announce existing gate flips.
 	if (isNil "WFBE_C_NAVAL_THEATER_RUMOR_INTERVAL") then {WFBE_C_NAVAL_THEATER_RUMOR_INTERVAL = 120}; //--- seconds between announcements for the same gate.
 	if (isNil "WFBE_C_USV_FLOTILLA_COUNT")    then {WFBE_C_USV_FLOTILLA_COUNT = 3};    //--- boats roaming at once (owner: 3). Bumping this is a one-line tune; roles cycle round-robin.
@@ -2831,7 +2832,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- human player is within range - moving contact near towns without standing AI at empty map
 //--- locations. Worker: Server/Server_GarrisonSortie.sqf. Flag-off (0) = worker not launched =
 //--- byte-identical to HEAD.
-	if (isNil "WFBE_C_GARRISON_SORTIE")               then {WFBE_C_GARRISON_SORTIE = 0};               //--- Master enable. 0 = off (default); >0 = dispatch sorties from active owned towns.
+	if (isNil "WFBE_C_GARRISON_SORTIE")               then {WFBE_C_GARRISON_SORTIE = 1};               //--- armed 2026-07-27 owner go. Master enable: dispatches sorties from active owned towns.
 	if (isNil "WFBE_C_GARRISON_SORTIE_INTERVAL")      then {WFBE_C_GARRISON_SORTIE_INTERVAL = 120};     //--- Seconds between worker ticks.
 	if (isNil "WFBE_C_GARRISON_SORTIE_TTL")           then {WFBE_C_GARRISON_SORTIE_TTL = 300};          //--- s: forced recycle age per sortie (no "quiet" despawn - deliberately short-lived).
 	if (isNil "WFBE_C_GARRISON_SORTIE_PLAYER_RANGE")  then {WFBE_C_GARRISON_SORTIE_PLAYER_RANGE = 1500}; //--- m: a human player must be within this range of the town for a sortie to spawn.
@@ -3146,7 +3147,7 @@ if (isNil "WFBE_C_AIRDEF_CHUNK_SLEEP") then {WFBE_C_AIRDEF_CHUNK_SLEEP = 0.4};
 //--- AI_Commander_Strategy.sqf + AI_Commander_Teams.sqf commander-tick scans. Default 0 = OFF = byte-identical
 //--- to HEAD (no yields, no slice telemetry, wall-clock record unchanged). Flip to 1 for the matched
 //--- before/after PerformanceAudit A/B; SLEEP is the per-section yield in seconds (mirror of WFBE_C_AIRDEF_*).
-if (isNil "WFBE_C_AICOM_SCAN_CHUNKED") then {WFBE_C_AICOM_SCAN_CHUNKED = 0};
+if (isNil "WFBE_C_AICOM_SCAN_CHUNKED") then {WFBE_C_AICOM_SCAN_CHUNKED = 1}; //--- armed 2026-07-27 owner go.
 if (isNil "WFBE_C_AICOM_SCAN_CHUNK_SLEEP") then {WFBE_C_AICOM_SCAN_CHUNK_SLEEP = 0.4};
 if (isNil "WFBE_C_AIRENV_CHUNKED") then {WFBE_C_AIRENV_CHUNKED = 1};
 if (isNil "WFBE_C_AIRENV_CHUNK_SLEEP") then {WFBE_C_AIRENV_CHUNK_SLEEP = 0.1};
@@ -3282,7 +3283,7 @@ if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = if (!isNi
 //--- 0 (default) = byte-identical to HEAD - the existing kit rows apply exactly as before. >0 = the same kit
 //--- rows additionally preserve/grant the airframe's own verbatim EASA bomb launcher+magazine instead of losing
 //--- it (classnames cited per row at Common_RunCommanderTeam.sqf where this flag is read).
-if (isNil "WFBE_C_AICOM_AIR_BOMBS") then {WFBE_C_AICOM_AIR_BOMBS = 0}; //--- 0=off (byte-identical to HEAD); >0 = EASA-on-AI kit table preserves/grants FAB-250/Mk-82 bomb capability on A10/Mi24_P/AV8B2 instead of stripping it.
+if (isNil "WFBE_C_AICOM_AIR_BOMBS") then {WFBE_C_AICOM_AIR_BOMBS = 1}; //--- armed 2026-07-27 owner go. EASA-on-AI kit table preserves/grants FAB-250/Mk-82 bomb capability on A10/Mi24_P/AV8B2 instead of stripping it.
 
 //--- fable/sidepatrol-front-bias-20260727: side-patrol destination picker prefers the AI Commander's
 //--- published spearhead town(s) (wfbe_aicom_targets) over pure nearest-to-self when set. Default 0 =
@@ -3290,10 +3291,10 @@ if (isNil "WFBE_C_AICOM_AIR_BOMBS") then {WFBE_C_AICOM_AIR_BOMBS = 0}; //--- 0=o
 //--- itself is only visible off-server when WFBE_C_AICOM_PUBLIC_STATE_SYNC is ALSO armed (see that flag
 //--- and AI_Commander_Strategy.sqf/AI_Commander_Allocate.sqf) - arming ONLY this flag on a server with a
 //--- connected HC is a silent no-op (the mandatory empty-list fallback keeps nearest-to-self behaviour).
-if (isNil "WFBE_C_SIDE_PATROL_FRONT_BIAS") then {WFBE_C_SIDE_PATROL_FRONT_BIAS = 0};
+if (isNil "WFBE_C_SIDE_PATROL_FRONT_BIAS") then {WFBE_C_SIDE_PATROL_FRONT_BIAS = 1}; //--- armed 2026-07-27 owner go.
 
 //--- AI HQ REPURCHASE: dark by default. The HQ-loss hook records only full-AICOM losses; the worker delays then uses the nearest owned town centre and charges the AI treasury the live human HQ-deploy price.
-if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_ENABLE") then {WFBE_C_AICOM_HQ_REPURCHASE_ENABLE = 0};
+if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_ENABLE") then {WFBE_C_AICOM_HQ_REPURCHASE_ENABLE = 1}; //--- armed 2026-07-27 owner go.
 if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_DELAY") then {WFBE_C_AICOM_HQ_REPURCHASE_DELAY = 1200};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
