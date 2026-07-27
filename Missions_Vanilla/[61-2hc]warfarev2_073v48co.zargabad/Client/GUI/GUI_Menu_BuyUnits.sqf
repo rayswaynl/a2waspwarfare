@@ -890,9 +890,9 @@ _IDCS = _IDCS - [_currentIDC];
 					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_TYPE", "hilux1_civil_2_covered"])} && {(side group player) == resistance}) then {
 						hintSilent parseText "VBIED - driver-detonated suicide truck. <br/> <br/>Buy it, drive it into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. After a short arm delay it explodes and your GUER team is paid for the kills. One-shot - truck + driver are lost.";
 					};
-					//--- B75 (guer-tech): kill-unlocked SECOND VBIED — the armoured M113 variant (~2x speed, no weapons).
+					//--- B75 (guer-tech): kill-unlocked SECOND VBIED — the armoured M113 variant (~1.5x speed, no weapons).
 					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_VBIED_M113_TYPE", "M113_UN_EP1"])} && {(side group player) == resistance}) then {
-						hintSilent parseText "VBIED (APC) - an unarmoured-crew but TRACKED suicide M113 that drives at roughly DOUBLE its normal top speed. <br/> <br/>Same one-shot use as the truck VBIED: drive into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. Its armour + speed let it punch through to a target the soft truck can't reach. Unlocked by GUER kills.";
+						hintSilent parseText "VBIED (APC) - an unarmoured-crew but TRACKED suicide M113 that drives at roughly 1.5x its normal top speed. <br/> <br/>Same one-shot use as the truck VBIED: drive into a packed enemy position, then action menu (mouse scroll) -> <t color='#ff3333'>Detonate VBIED</t>. Its armour + speed let it punch through to a target the soft truck can't reach. Unlocked by GUER kills.";
 					};
 					//--- fable/guer-suicide-bike (flag WFBE_C_GUER_SUICIDE_BIKE, default 0): THIRD VBIED variant, a fast small suicide motorcycle.
 					if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE", 0]) > 0} && {_unit == (missionNamespace getVariable ["WFBE_C_GUER_SUICIDE_BIKE_TYPE", "TT650_Ins"])} && {(side group player) == resistance}) then {

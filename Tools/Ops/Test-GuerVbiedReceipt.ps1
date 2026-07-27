@@ -65,6 +65,16 @@ $handlerPath = "Missions\[55-2hc]warfarev2_073v48co.chernarus\Server\Functions\S
 $action = Read-Source $actionPath
 $client = Read-Source $clientPath
 $handler = Read-Source $handlerPath
+$buildPath = "Missions\[55-2hc]warfarev2_073v48co.chernarus\Client\Functions\Client_BuildUnit.sqf"
+$constantsPath = "Missions\[55-2hc]warfarev2_073v48co.chernarus\Common\Init\Init_CommonConstants.sqf"
+$listPath = "Missions\[55-2hc]warfarev2_073v48co.chernarus\Client\Functions\Client_UIFillListBuyUnits.sqf"
+$menuPath = "Missions\[55-2hc]warfarev2_073v48co.chernarus\Client\GUI\GUI_Menu_BuyUnits.sqf"
+$upgradePath = "Missions\[55-2hc]warfarev2_073v48co.chernarus\Client\GUI\GUI_UpgradeMenu.sqf"
+$build = Read-Source $buildPath
+$constants = Read-Source $constantsPath
+$list = Read-Source $listPath
+$menu = Read-Source $menuPath
+$upgrade = Read-Source $upgradePath
 
 Write-Host "Checking client pending receipt"
 Assert-Match $action 'wfbe_vbied_pending_token' "action records a client-local pending receipt"
@@ -86,10 +96,29 @@ Assert-Match $client 'if \(_vbiedExpected != _vbiedToken\) exitWith \{\}' "clien
 Assert-Match $client 'if \(_vbiedOK\) then \{\s*_vbiedVeh setVariable \["wfbe_vbied_fired", true\]' "only an accepted matching result consumes the latch"
 Assert-Match $client '_vbiedVeh setVariable \["wfbe_vbied_pending_token", ""\]' "matching results clear the pending receipt"
 
+Write-Host "Checking speed and high-climb contract"
+Assert-Match $constants 'WFBE_C_GUER_VBIED_SPEEDCOEF\s*=\s*1\.25' "truck boost coefficient is 1.25x"
+Assert-Match $constants 'WFBE_C_GUER_VBIED_M113_SPEEDCOEF\s*=\s*1\.5' "M113 boost coefficient is owner-tuned to 1.5x"
+Assert-Match $build 'wfbe_vbied_speedcoef' "shared boost loop is parameterized per VBIED hull"
+Assert-Match $build 'WFBE_HighClimbingEnabled", false, true' "VBIED high climbing defaults off for opt-in"
+Assert-Match $build 'wfbe_vbied_climb_action' "bike receives a deduped local high-climb toggle action"
+Assert-Match $build 'Client\\Module\\Valhalla\\LowGear_Toggle\.sqf' "VBIED climb action reuses the Valhalla toggle"
+Assert-NotMatch $list '2x Speed' "M113 buy-list text no longer promises 2x speed"
+Assert-NotMatch $menu 'DOUBLE its normal top speed' "M113 detail text no longer promises double speed"
+Assert-NotMatch $upgrade 'M113 driven as a suicide VBIED at ~2x' "M113 upgrade text no longer promises 2x speed"
+Assert-Match $list '1\.5x Speed' "M113 buy-list text advertises ~1.5x speed"
+Assert-Match $menu 'roughly 1\.5x its normal top speed' "M113 detail text advertises ~1.5x speed"
+Assert-Match $upgrade 'M113 driven as a suicide VBIED at ~1\.5x' "M113 upgrade text advertises ~1.5x speed"
+
 Write-Host "Checking mirrors"
 Assert-Mirror $actionPath "detonation action mirrors Chernarus to Takistan and Zargabad"
 Assert-Mirror $clientPath "client result handler mirrors Chernarus to Takistan and Zargabad"
 Assert-Mirror $handlerPath "server receipt handler mirrors Chernarus to Takistan and Zargabad"
+Assert-Mirror $buildPath "VBIED speed and climb wiring mirrors Chernarus to Takistan and Zargabad"
+Assert-Mirror $constantsPath "VBIED tuning constants mirror Chernarus to Takistan and Zargabad"
+Assert-Mirror $listPath "VBIED buy-list copy mirrors Chernarus to Takistan and Zargabad"
+Assert-Mirror $menuPath "VBIED detail copy mirrors Chernarus to Takistan and Zargabad"
+Assert-Mirror $upgradePath "VBIED upgrade copy mirrors Chernarus to Takistan and Zargabad"
 
 Write-Host ""
 if ($script:fails -eq 0) {

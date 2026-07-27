@@ -148,11 +148,13 @@ if (worldName == "Zargabad") then {
 		if (isNil "WFBE_C_GUER_KILLTIER_1") then {WFBE_C_GUER_KILLTIER_1 = 30};  //--- 2x-ed (was 15) - slow GUER kill-tech progression.
 		if (isNil "WFBE_C_GUER_KILLTIER_2") then {WFBE_C_GUER_KILLTIER_2 = 80};  //--- 2x-ed (was 40).
 		if (isNil "WFBE_C_GUER_KILLTIER_3") then {WFBE_C_GUER_KILLTIER_3 = 160}; //--- 2x-ed (was 80).
-		//--- Second VBIED: an UNARMED M113 with ~2x speed (driver-detonated, same blast + cash-for-kills as the hilux),
+		//--- Truck VBIED speed target. 1.0 is the no-boost/off-equivalent value; owner requested 1.25x stock speed.
+		if (isNil "WFBE_C_GUER_VBIED_SPEEDCOEF") then {WFBE_C_GUER_VBIED_SPEEDCOEF = 1.25};
+		//--- Second VBIED: an UNARMED M113 with ~1.5x speed (driver-detonated, same blast + cash-for-kills as the hilux),
 		//--- kill-gated into the GUER depot. M113_UN_EP1 exists on both maps so the type is map-independent (no TK repoint).
 		if (isNil "WFBE_C_GUER_VBIED_M113_TYPE") then {WFBE_C_GUER_VBIED_M113_TYPE = "M113_UN_EP1"};
 		if (isNil "WFBE_C_GUER_VBIED_M113_KILLS") then {WFBE_C_GUER_VBIED_M113_KILLS = 50}; //--- 2x-ed (was 25): GUER kills required before the M113 VBIED appears in the depot.
-		if (isNil "WFBE_C_GUER_VBIED_M113_SPEEDCOEF") then {WFBE_C_GUER_VBIED_M113_SPEEDCOEF = 2.0}; //--- target top-speed multiplier of the driver-local boost loop (~2x stock M113).
+		if (isNil "WFBE_C_GUER_VBIED_M113_SPEEDCOEF") then {WFBE_C_GUER_VBIED_M113_SPEEDCOEF = 1.5}; //--- owner-requested target top-speed multiplier of the driver-local boost loop (~1.5x stock M113).
 		//--- Third VBIED variant: a fast, small SUICIDE MOTORCYCLE (fable/guer-suicide-bike). Reuses the truck
 		//--- VBIED's blast/attribution/payout machinery UNCHANGED (Server_HandleSpecial.sqf "guer-vbied-detonate"
 		//--- case) -- only a third accepted vehicle type is added there. Always available when the flag is on
