@@ -30,10 +30,20 @@ if (_amount > 0 && _includeStagnation) then {
 //--- 0 = off (default) — byte-identical to before, no server-side apply; 1 = shadow — diag_logs the
 //--- would-be pre/post delta without applying it; 2 = apply — calls the handler directly with its
 //--- full event envelope, the same shape already proven at Server\PVFunctions\AttackWave.sqf:73.
+//--- DR-55 forged-PVF hardening (WFBE_C_SEC_HARDENING): Server_ChangeSideSupply.sqf's PVEH has no
+//--- trusted-sender info of its own, so it optionally binds the payload's asserted side to a
+//--- requester player object. Below, the network-broadcast path (else branch, the only path a
+//--- remote client/HC ever actually reaches) appends the LOCAL `player` object as payload[3] - on
+//--- a client this is genuinely the calling player (matches sideJoined for every legit caller); on
+//--- a dedicated server it is objNull (harmless: that leg is the pre-existing self-fire no-op, see
+//--- SUPPLYFIX note above, and never reaches the handler either way). The WFBE_C_SUPPLY_SERVER_FIX
+//--- ==2 direct-call leg never crosses the network at all, so it passes _trusted=true instead of a
+//--- requester object. Flag off (default 0) in Server_ChangeSideSupply.sqf: this extra array slot
+//--- and the true flag are both inert, byte-identical to before.
 _supplyServerFix = missionNamespace getVariable ["WFBE_C_SUPPLY_SERVER_FIX", 0];
 if (isServer && (_supplyServerFix > 0)) then {
 	if (_supplyServerFix == 2) then {
-		[[format ["wfbe_supply_temp_%1", _side], [_side, _amount, _reason]], _side] Call WFBE_SE_FNC_HandleSideSupplyChange;
+		[[format ["wfbe_supply_temp_%1", _side], [_side, _amount, _reason]], _side, true] Call WFBE_SE_FNC_HandleSideSupplyChange;
 	} else {
 		_currentSupply = _side Call GetSideSupply;
 		if (isNil "_currentSupply") then {_currentSupply = 0};
@@ -44,7 +54,7 @@ if (isServer && (_supplyServerFix > 0)) then {
 		diag_log format ["SUPPLYFIX|v1|SHADOW|side=%1|amount=%2|reason=%3|pre=%4|wouldbe=%5", _side, _amount, _reason, _currentSupply, _change];
 	};
 } else {
-	missionNamespace setVariable [format ["wfbe_supply_temp_%1", _side], [_side, _amount, _reason]];
+	missionNamespace setVariable [format ["wfbe_supply_temp_%1", _side], [_side, _amount, _reason, player]];
 
 	publicVariableServer format ["wfbe_supply_temp_%1", _side];
 };
