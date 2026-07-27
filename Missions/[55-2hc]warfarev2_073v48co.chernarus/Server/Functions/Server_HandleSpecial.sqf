@@ -470,7 +470,52 @@ switch (_args select 0) do {
 		[_arty, _sideText, _artilleryIndex, _ammoIndex] Call WFBE_CO_FNC_LoadArtilleryAmmo;
 	};
 	case "process-killed-hq": {
-		(_args select 1) Spawn WFBE_SE_FNC_OnHQKilled;
+		//--- HARDENING (unauthenticated-PV audit, highest severity): this case used to forward a raw
+		//--- client-supplied [structure, killer] pair straight into WFBE_SE_FNC_OnHQKilled, whose ONLY
+		//--- guard is a one-shot idempotency flag (wfbe_hq_killed_done) - it never checked the reported
+		//--- structure was alive, that it was actually the side's registered HQ, or that the killer was
+		//--- a real player. A forged report naming the REAL (still-alive) enemy HQ plus the attacker's
+		//--- own player object credited ~30000 score + $30,000 funds to the attacker's group AND force-
+		//--- flipped IS_<SIDE>_HQ_ALIVE to false (false "HQ destroyed" state) while the HQ was standing.
+		//---
+		//--- Server-side is authoritative independent of this relay: every HQ/MHQ object also carries
+		//--- its OWN server-local 'killed' EH (Construction_HQSite.sqf, Server_MHQRepair.sqf,
+		//--- Init_Server.sqf) which Spawns WFBE_SE_FNC_OnHQKilled directly with zero network latency -
+		//--- that path is untouched by this guard. The client relay (DR-20 comment in
+		//--- Server_OnHQKilled.sqf) is a redundant backup only: for any genuine kill the trusted
+		//--- server-local EH already wins the wfbe_hq_killed_done idempotency race, so narrowing THIS
+		//--- ingress to reject forgeries costs the honest path nothing.
+		//---
+		//--- Unflagged (not gated on WFBE_C_SEC_HARDENING): every check below is satisfied automatically
+		//--- by any genuine HQ death report and rejects only data a legitimate report could never
+		//--- contain - same "reject only illegitimate input" class as RequestMHQRepair.sqf/#1361.
+		Private ["_reportedArgs","_reportedStructure","_reportedKiller","_reportedSide","_registeredHQ"];
+		_reportedArgs = _args select 1;
+		if !((typeName _reportedArgs == "ARRAY") && {(count _reportedArgs) > 1}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: process-killed-hq rejected - malformed payload [%1].", _reportedArgs]] Call WFBE_CO_FNC_LogContent;
+		};
+		_reportedStructure = _reportedArgs select 0;
+		_reportedKiller = _reportedArgs select 1;
+		if !((typeName _reportedStructure == "OBJECT") && {!isNull _reportedStructure}) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf: process-killed-hq rejected - null/invalid reported structure."] Call WFBE_CO_FNC_LogContent;
+		};
+		if !((typeName _reportedKiller == "OBJECT") && {!isNull _reportedKiller} && {isPlayer _reportedKiller} && {alive _reportedKiller}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: process-killed-hq rejected - killer [%1] is not a live player.", _reportedKiller]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- Resolve the CURRENT registered HQ for the reported structure's own claimed side and require
+		//--- an exact object match - a forger can name a real object, but cannot make it equal the
+		//--- side-logic's live wfbe_hq reference unless it genuinely is that side's HQ.
+		_reportedSide = _reportedStructure getVariable ["wfbe_side", sideUnknown];
+		_registeredHQ = objNull;
+		if (_reportedSide in [west, east, resistance]) then {_registeredHQ = (_reportedSide) Call WFBE_CO_FNC_GetSideHQ};
+		if !(!isNull _registeredHQ && {_reportedStructure == _registeredHQ}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: process-killed-hq rejected - structure [%1] is not the registered HQ for side [%2].", _reportedStructure, _reportedSide]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- The load-bearing check: the report must describe a HQ that is ACTUALLY dead right now.
+		if (alive _reportedStructure) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: process-killed-hq rejected - structure [%1] is still alive.", _reportedStructure]] Call WFBE_CO_FNC_LogContent;
+		};
+		_reportedArgs Spawn WFBE_SE_FNC_OnHQKilled;
 	};
 	// Marty: Authoritative cleanup for dead player AI that can remain in the command bar on dedicated servers.
 	case "commandbar-cleanup-dead-unit": {
