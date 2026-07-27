@@ -27,8 +27,9 @@ def test_hc_topup_worker_is_registered_and_uses_the_existing_hc_consumer_contrac
     assert 'ChangeAICommanderFunds' in worker
     assert 'aicom-team-merge' in worker
     assert '"aicom-team-merge"' in client_pvf
-    assert 'WFBE_C_AICOM_HC_TOPUP_ENABLE = 0' in constants
-    assert 'WFBE_C_AICOM_HC_MERGE_ENABLE = 0' in constants
+    # Armed 2026-07-27 (owner go): both worker gates flipped from their shipped default-0.
+    assert 'WFBE_C_AICOM_HC_TOPUP_ENABLE = 1' in constants
+    assert 'WFBE_C_AICOM_HC_MERGE_ENABLE = 1' in constants
 
 
 if __name__ == "__main__":
