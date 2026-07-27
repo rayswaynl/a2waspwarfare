@@ -1614,6 +1614,12 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_CAMPS_REPAIR_DELAY = 15;
 	WFBE_C_CAMPS_REPAIR_PRICE = 500;
 	WFBE_C_CAMPS_REPAIR_RANGE = 15;
+	//--- harden-repair-camp (2026-07-25): server-side proximity ceiling for the "repair-camp" PVF
+	//--- gate (RequestSpecial.sqf). Deliberately generous vs WFBE_C_CAMPS_REPAIR_RANGE (15m, the
+	//--- client's truck-to-camp scan range) - the gate checks the ACTUAL PLAYER's distance to the
+	//--- camp logic, not the repair truck's, so it must tolerate the player standing/mounted a few
+	//--- meters off the truck itself. Only rejects requests forged from elsewhere on the map.
+	WFBE_C_CAMPS_REPAIR_SERVER_RADIUS = 50;
 	//--- feat/deadcamp-presence-repair (owner redesign 2026-07-21, "AI soldiers repair a destroyed camp
 	//--- by standing in its bubble for a couple of minutes"): presence-based dead-camp self-repair,
 	//--- consumed by server_town_camp.sqf's dead-bunker branch. Flag default 0 = feature off (repo flag

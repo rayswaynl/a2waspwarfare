@@ -2030,7 +2030,20 @@ switch (_args select 0) do {
 		_logic = _args select 1;
 		_repairSideID = _args select 2;
 
-		if (alive (_logic getVariable 'wfbe_camp_bunker')) exitWith {};
+		//--- harden-repair-camp (2026-07-25): reentrancy guard, mirrors Server_MHQRepair.sqf's
+		//--- precedent (PR #1361) - check+set BEFORE the alive read so two near-simultaneous
+		//--- requests for the same camp cannot both pass the alive-check and double-spawn a bunker.
+		//--- Caller-agnostic: both the PVF-gated paid player repair (RequestSpecial.sqf) and the
+		//--- server-internal presence-repair `call HandleSpecial` (server_town_camp.sqf) hit this
+		//--- safely. Released on every exit branch below.
+		if (_logic getVariable ["wfbe_camp_repairing", false]) exitWith {
+			["WARNING", "Server_HandleSpecial.sqf/repair-camp: rejected - repair already in progress."] Call WFBE_CO_FNC_LogContent;
+		};
+		_logic setVariable ["wfbe_camp_repairing", true, true];
+
+		if (alive (_logic getVariable 'wfbe_camp_bunker')) exitWith {
+			_logic setVariable ["wfbe_camp_repairing", false, true];
+		};
 
 		//--- fable/fix-camp-placement (2026-07-08): same ATL ground-snap as Init_Town.sqf's seeder - a
 		//--- repaired camp must not re-bury itself on ZG (see Init_Town.sqf for full rationale + citations).
@@ -2062,6 +2075,9 @@ switch (_args select 0) do {
 			//--- Notify / update map if needed.
 			[nil, "CampCaptured", [_logic, _repairSideID, _camp_sideID, true]] Call WFBE_CO_FNC_SendToClients;
 		};
+
+		//--- harden-repair-camp: release the reentrancy flag taken above now the repair is complete.
+		_logic setVariable ["wfbe_camp_repairing", false, true];
 	};
 
 	//--- GUER PLAYER VBIED manual detonation (Feature B player-side, Ray 2026-06-16). The GUER player driver
