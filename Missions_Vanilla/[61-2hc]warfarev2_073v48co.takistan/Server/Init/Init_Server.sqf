@@ -94,6 +94,7 @@ WFBE_SE_FNC_AI_Com_Execute = Compile preprocessFileLineNumbers "Server\AI\Comman
 WFBE_SE_FNC_AI_Com_Base = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Base.sqf";
 WFBE_SE_FNC_AI_Com_Beacon = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Beacon.sqf"; //--- AICOM FORWARD SPAWN-BEACON (Approach A): forward ambulance as a mobile spawn point (flag WFBE_C_AICOM_SPAWNBEACON_ENABLE, default 0 = inert).
 WFBE_SE_FNC_AI_Com_Teams = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Teams.sqf";
+WFBE_SE_FNC_AI_Com_HCTopUp = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_HCTopUp.sqf";
 WFBE_SE_FNC_AI_Com_Strategy = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Strategy.sqf";
 WFBE_SE_FNC_AICOM2_Snapshot = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Snapshot.sqf"; //--- AICOM v2 rebuild (M0): world-model snapshot builder.
 WFBE_SE_FNC_AICOM2_Allocate = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_Allocate.sqf"; //--- AICOM v2 rebuild (M1): single offensive authority (flag WFBE_C_AICOM2_ALLOCATE_ENABLE).
