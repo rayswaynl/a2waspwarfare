@@ -22,6 +22,30 @@ if (WF_Debug) then {["DEBUG (RequestStructure.sqf)", Format ["Building: %1", _rl
 _reject = false;
 _rejectMsg = ""; //--- refund-sweep: LocalizeMessage case for a rejected build (sent once, post-gating)
 
+//--- HARDEN u2 (60-audit, RequestStructure side-spoof): re-derive authorization from the requester's
+//--- ACTUAL side, never trust the claimed _side alone - mirrors RequestMHQRepair.sqf / RequestSiteClearance.sqf
+//--- ("side group _reqPlayer" idiom). Caller trace (coin_interface.sqf): every economy-structure build
+//--- (Barracks/Light/CommandCenter/Heavy/Aircraft/ServicePoint/AARadar/CBRadar/Bank/ArtilleryRadar/Reserve)
+//--- sends the real 'player' object as arg 4 (coin_interface.sqf:791). The ONE caller that omits it is the
+//--- HQ-mobilize toggle (coin_interface.sqf:545, re-clicking an already-deployed CommandCenter) - it always
+//--- targets _index 0 (the CommandCenter slot in every side's STRUCTURENAMES) and is otherwise unauthenticated
+//--- already (pre-existing, not a regression here). Every other structure now requires a verified same-side
+//--- player or is rejected before any of the CBRadar/AARadar/Bank gates below can run - this also stops a
+//--- forged request from stamping a pending-reservation lock to grief another side's legitimate builds.
+if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {
+	if !((side group _reqPlayer) in [_side]) then {
+		_reject = true;
+		_rejectMsg = "StructureRequesterMismatch";
+		["WARNING", Format ["RequestStructure.sqf: [%1] requester side mismatch [%2] for structure [%3] (index %4) - rejected.", str _side, side group _reqPlayer, _structureType, _index]] Call WFBE_CO_FNC_LogContent;
+	};
+} else {
+	if (_index != 0) then {
+		_reject = true;
+		_rejectMsg = "StructureRequesterMismatch";
+		["WARNING", Format ["RequestStructure.sqf: [%1] rejected - no verified requester for structure [%2] (index %3).", str _side, _structureType, _index]] Call WFBE_CO_FNC_LogContent;
+	};
+};
+
 //--- CBR requires an alive AAR on the same side.
 if (_rlType == "CBRadar") then {
 	private ["_aarClass","_aarAlive","_structs"];
