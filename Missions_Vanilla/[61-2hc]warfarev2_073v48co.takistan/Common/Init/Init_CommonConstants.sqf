@@ -2628,6 +2628,8 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- attachTo static per boat (AA/ROCKET/HMG). Master gate default 0 = byte-identical to HEAD.
 //--- Piggybacks on IS_naval_map (see Server_USVFlotilla.sqf header) - no new map define needed.
 	if (isNil "WFBE_C_USV_FLOTILLA_ENABLE")   then {WFBE_C_USV_FLOTILLA_ENABLE = 1};   //--- armed 2026-07-27 owner go: #1519 fixes the gate-reopen-after-quiet-despawn bug and #1504 ships the waypoints. In-engine water-safety is still unproven; QUIET_DESPAWN reaps strays.
+	if (isNil "WFBE_C_USV_FLOTILLA_PLAYER_GATE")    then {WFBE_C_USV_FLOTILLA_PLAYER_GATE = 1};    //--- ARMED 2026-07-28 (owner: "USVs also seem active the entire time... Waste of ai"): the coastal-town gate branch additionally requires a live non-HC player within PLAYER_RADIUS of the active coastal town - no audience, no flotilla. 0 = legacy activation-only gate.
+	if (isNil "WFBE_C_USV_FLOTILLA_PLAYER_RADIUS")  then {WFBE_C_USV_FLOTILLA_PLAYER_RADIUS = 1500}; //--- m; player-to-coastal-town distance that counts as an audience for branch (a). Carrier branch keeps its own WFBE_C_USV_CARRIER_APPROACH_RADIUS.
 	if (isNil "WFBE_C_NAVAL_THEATER_RUMOR")  then {WFBE_C_NAVAL_THEATER_RUMOR = 0};    //--- 0 = no naval theatre activity announcements; >0 = announce existing gate flips.
 	if (isNil "WFBE_C_NAVAL_THEATER_RUMOR_INTERVAL") then {WFBE_C_NAVAL_THEATER_RUMOR_INTERVAL = 120}; //--- seconds between announcements for the same gate.
 	if (isNil "WFBE_C_USV_FLOTILLA_COUNT")    then {WFBE_C_USV_FLOTILLA_COUNT = 3};    //--- boats roaming at once (owner: 3). Bumping this is a one-line tune; roles cycle round-robin.
