@@ -56,6 +56,11 @@ if (_updateDefenses) then {
 			_defenseCosts           = _defenseCosts           + [(_d select QUERYUNITPRICE)];
 			_defenseDescriptions    = _defenseDescriptions    + [(_d select QUERYUNITLABEL)];
 			_defenseCategories      = _defenseCategories      + [(_d select QUERYUNITFACTORY)];
+		} else {
+			//--- fable/coin-placement-fixes (owner live report 2026-07-28): a nil config var here previously
+			//--- dropped the entry from the CoIn menu with no trace; log the dropped entry's name so it is
+			//--- diagnosable instead of just missing.
+			diag_log Format ["COINPLACE|v1|dropped-defense|name=%1", _x];
 		};
 	} forEach _allDefenses;
 	_defenses = _filteredDefenses;

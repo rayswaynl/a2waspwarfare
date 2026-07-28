@@ -1562,9 +1562,16 @@ waitUntil {townInit};
 ["INITIALIZATION", "Init_Client.sqf: Towns are initialized."] Call WFBE_CO_FNC_LogContent;
 
 //--- Define the CoIn placement method.
-switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
-    //--- Smooth.
-    case 1: {
+//--- fable/coin-placement-fixes (owner live report 2026-07-28 "Player commander not allowed to place
+//--- items / factories / defenses ... and some things dont even show a preview"): WFBE_C_STRUCTURES_COLLIDING
+//--- previously drove a switch with exactly one case (1) and no default, so any other value left
+//--- WFBE_C_STRUCTURES_PLACEMENT_METHOD unset - coin_interface.sqf's "Call (missionNamespace getVariable ...)"
+//--- on the nil value then silently did nothing (no placement color/validity gate ever ran, no error, no log).
+//--- Collapsed the switch to an unconditional assignment of the one working (former case-1) method below,
+//--- with a log line when the value is not the expected 1 so a future value is diagnosable instead of silent.
+if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
+	diag_log Format ["COINPLACE|v1|placement-method-fallback|value=%1", missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING"];
+};
 		missionNamespace setVariable ["WFBE_C_STRUCTURES_PLACEMENT_METHOD",{
            		 Private ["_color","_itemcategory","_preview","_area","_eside","_restricted"];
 			_restricted = false;
@@ -1701,8 +1708,6 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
 
 			_color
 		}];
-	};
-};
 
 /* JIP System, initialize the camps and towns properly. */
 [] Spawn {
