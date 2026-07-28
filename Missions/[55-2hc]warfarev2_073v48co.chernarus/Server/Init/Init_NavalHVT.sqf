@@ -929,8 +929,30 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						} else {
 							if (_capMode == "MI24") then {
 								//--- THREE-HIND path (WFBE_C_NAVAL_CAP_THREE_HINDS > 0): no An2.
-								_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
-								_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
+								//--- fable/cap-deck-spawn (owner 2026-07-28 "do the same for the sea air patrols" - ground spawn +
+								//--- boarding crew): the three Hinds start PARKED ON THE DECK (aft lanes, staggered to clear the
+								//--- player-buy spot at model-Y -50, the HeliH pad and the stern camps) and their pilots spawn
+								//--- beside the hulls and BOARD (assignAsDriver + orderGetIn) instead of materialising airborne.
+								//--- flyInHeight is sticky pre-takeoff, so cruise height still applies once they lift off. The
+								//--- L39/SUX fixed-wing CAP keeps its over-sea air-start: A2 AI cannot deck-launch fixed-wing
+								//--- (no catapult, ~250 m run) - a grounded deck jet is a guaranteed ditch, the exact failure
+								//--- class the deck-parking fix removed for player buys.
+								private ["_capDeckPart","_capDeckZ","_capPad1","_capPad2","_capPad3","_capDeckDir"];
+								_capDeckPart = _loc getVariable ["wfbe_naval_deckpart", objNull];
+								_capDeckZ    = _loc getVariable ["wfbe_naval_deckz", 15.9];
+								_capDeckDir  = getDir (if (!isNull _capDeckPart) then {_capDeckPart} else {_loc});
+								if (!isNull _capDeckPart) then {
+									_capPad1 = _capDeckPart modelToWorld [8, 25, 0];
+									_capPad2 = _capDeckPart modelToWorld [-8, 55, 0];
+									_capPad3 = _capDeckPart modelToWorld [8, 85, 0];
+								} else {
+									_capPad1 = [(_pos select 0) + 25, _pos select 1, 0];
+									_capPad2 = [(_pos select 0) - 25, _pos select 1, 0];
+									_capPad3 = [_pos select 0, (_pos select 1) + 25, 0];
+								};
+								_hind = createVehicle ["Mi24_P", [_capPad1 select 0, _capPad1 select 1, 0], [], 0, "NONE"];
+								_hind setPosASL [_capPad1 select 0, _capPad1 select 1, _capDeckZ];
+								_hind setDir _capDeckDir;
 
 								//--- fable/ew-naval win-3: EASA random-loadout stamp for carrier Hinds (mirrors the L39 CAP stamp
 								//--- above, retargeted to Mi24_P + _hind). Dormant while WFBE_C_NAVAL_CAP_L39=1 (default) - only
@@ -946,11 +968,13 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot) then {_hindPilot = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-								_hindPilot moveInDriver _hind;
+								_hindPilot setPosASL [(_capPad1 select 0) + 5, (_capPad1 select 1) + 5, _capDeckZ];
+								_hindPilot assignAsDriver _hind; [_hindPilot] orderGetIn true;
 								_hind flyInHeight 350;
 
-								_hind2 = createVehicle ["Mi24_P", [(_pos select 0) - 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
-								_hind2 setPosASL [(_pos select 0) - 200, (_pos select 1) + 200, 400];
+								_hind2 = createVehicle ["Mi24_P", [_capPad2 select 0, _capPad2 select 1, 0], [], 0, "NONE"];
+								_hind2 setPosASL [_capPad2 select 0, _capPad2 select 1, _capDeckZ];
+								_hind2 setDir _capDeckDir;
 
 								//--- fable/ew-naval win-3: EASA random-loadout stamp for carrier Hinds (mirrors the L39 CAP stamp
 								//--- above, retargeted to Mi24_P + _hind2). Dormant while WFBE_C_NAVAL_CAP_L39=1 (default) - only
@@ -966,11 +990,13 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot2) then {_hindPilot2 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: mirror the _hindPilot fallback so a bad WFBE_GUER_PILOT_CLASS does not leave the Hind pilotless
-								_hindPilot2 moveInDriver _hind2;
+								_hindPilot2 setPosASL [(_capPad2 select 0) + 5, (_capPad2 select 1) - 5, _capDeckZ];
+								_hindPilot2 assignAsDriver _hind2; [_hindPilot2] orderGetIn true;
 								_hind2 flyInHeight 350;
 
-								_hind3 = createVehicle ["Mi24_P", [(_pos select 0) + 0, (_pos select 1) - 300, 400], [], 0, "FLY"];
-								_hind3 setPosASL [(_pos select 0) + 0, (_pos select 1) - 300, 400];
+								_hind3 = createVehicle ["Mi24_P", [_capPad3 select 0, _capPad3 select 1, 0], [], 0, "NONE"];
+								_hind3 setPosASL [_capPad3 select 0, _capPad3 select 1, _capDeckZ];
+								_hind3 setDir _capDeckDir;
 
 								//--- fable/ew-naval win-3: EASA random-loadout stamp for carrier Hinds (mirrors the L39 CAP stamp
 								//--- above, retargeted to Mi24_P + _hind3). Dormant while WFBE_C_NAVAL_CAP_L39=1 (default) - only
@@ -986,7 +1012,8 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot3 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot3) then {_hindPilot3 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: same fallback as _hindPilot2
-								_hindPilot3 moveInDriver _hind3;
+								_hindPilot3 setPosASL [(_capPad3 select 0) - 5, (_capPad3 select 1) + 5, _capDeckZ];
+								_hindPilot3 assignAsDriver _hind3; [_hindPilot3] orderGetIn true;
 								_hind3 flyInHeight 350;
 
 								_capGrp setBehaviour "AWARE";
