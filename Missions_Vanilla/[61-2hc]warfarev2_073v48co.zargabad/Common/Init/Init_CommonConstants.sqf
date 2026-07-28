@@ -3345,5 +3345,18 @@ if (isNil "WFBE_C_SIDE_PATROL_FRONT_BIAS") then {WFBE_C_SIDE_PATROL_FRONT_BIAS =
 if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_ENABLE") then {WFBE_C_AICOM_HQ_REPURCHASE_ENABLE = 1}; //--- armed 2026-07-27 owner go.
 if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_DELAY") then {WFBE_C_AICOM_HQ_REPURCHASE_DELAY = 1200};
 
+//--- fable/spectator-v1 (owner request 2026-07-28: spectator mode, owner first): UID-allowlisted
+//--- opt-in free-camera spectator overlay for an already-enrolled player (Client_SpectatorAttach/
+//--- Enter/Exit.sqf, wired from Client\Init\Init_Client.sqf). Client-side only - no HC architecture,
+//--- player enrollment, or JIP flow touched. Master flag defaults ON per owner request; the UID
+//--- allowlist below is the real gate (empty allowlist = fully inert for every connecting player).
+if (isNil "WFBE_C_SPECTATOR") then {WFBE_C_SPECTATOR = 1};
+//--- SteamID64 strings, compared against (getPlayerUID player) - the same string shape getPlayerUID
+//--- already returns everywhere else in this mission (Client_BuildUnit.sqf, Action_CancelQueue.sqf,
+//--- fpv.sqf, etc.). Add more owner/admin UIDs here as extra array entries. NOTE: this file is public
+//--- (rayswaynl/a2waspwarfare) - SteamID64s are public-profile identifiers, not secrets, but this list
+//--- is still an intentional, curated allowlist.
+if (isNil "WFBE_C_SPECTATOR_UIDS") then {WFBE_C_SPECTATOR_UIDS = ["76561198046825568"]};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
