@@ -438,58 +438,50 @@ while {!WFBE_GameOver} do {
                         if (_cKind == "qrfInsert" || {_cKind == "qrfGunship"} || {_cKind == "qrfCombo"}) then {
                             if (_cTownObj getVariable ["wfbe_active", false]) then {
                                 //--- Town under attack - fire QRF.
-                                private ["_spawnPos","_cTownPos"];
+                                private ["_spawnPos","_spawnPosB","_cTownPos","_qrfSrcTown","_qrfSrcDist","_qrfLRec","_qrfLTown","_qrfLSide","_qrfLD","_qrfGDir"];
                                 _cTownPos  = getPos _cTownObj;
-                                _spawnPos  = [_cTownPos select 0, _cTownPos select 1, 50];
-
-                                //--- WFBE_C_GUER_PRESENCE_PULSE (default 0, Grok idea #15): today the QRF
-                                //--- materializes directly over the town center, which is exactly where the
-                                //--- contact is fresh (<120s) - i.e. on top of the players who triggered it.
-                                //--- Armed, bias the spawn onto the RING between the contact town (proxy for
-                                //--- the player cluster - contact is fresh, so players are physically there)
-                                //--- and the nearest OTHER GUER/unknown town already in the ledger (a believable
-                                //--- "reinforcements are coming from home turf" origin). Reuses the ledger's own
-                                //--- town-position data (already resident, no new nearEntities/allUnits/allGroups
-                                //--- scan) and the two dead AICOMV2_GDIR_MIN_SPAWN_M / AICOMV2_GDIR_AMBUSH_BUBBLE_M
-                                //--- constants (declared at startup, never previously consumed in this file) as the
-                                //--- ring's inner/outer radius. WHEN/HOW MANY (contact-freshness gate, group-cap
-                                //--- check, cooldown/contract machinery) are untouched - this only moves WHERE the
-                                //--- already-decided QRF spawns. Flag-off: identical to the two lines above.
-                                if ((missionNamespace getVariable ["WFBE_C_GUER_PRESENCE_PULSE", 0]) > 0) then {
-                                    private ["_ppSrcTown","_ppSrcDist","_ppLedgerRec","_ppLedgerTown","_ppLedgerSide","_ppD"];
-                                    _ppSrcTown = objNull;
-                                    _ppSrcDist = 1e9;
-                                    {
-                                        _ppLedgerRec  = _x;
-                                        _ppLedgerTown = _ppLedgerRec select 0;
-                                        if (_ppLedgerTown != _cTownObj) then {
-                                            _ppLedgerSide = _ppLedgerTown getVariable ["sideID", WFBE_C_UNKNOWN_ID];
-                                            if (_ppLedgerSide == WFBE_C_GUER_ID || {_ppLedgerSide == WFBE_C_UNKNOWN_ID}) then {
-                                                _ppD = _cTownPos distance (getPos _ppLedgerTown);
-                                                if (_ppD < _ppSrcDist) then {
-                                                    _ppSrcDist = _ppD;
-                                                    _ppSrcTown = _ppLedgerTown;
-                                                };
+                                //--- fable/qrf-ground-spawn (owner 2026-07-28 "QRF helicopters immediately blow up - spawn on
+                                //--- the ground at a safe GUER town, crew boards, then move"): the old air-spawn placed the hull
+                                //--- 50 m over the CONTESTED town center (on top of the fresh contact that triggered the QRF),
+                                //--- and the combo path put BOTH hulls on the same point - pair collision on materialise. Now:
+                                //--- the nearest OTHER GUER/unknown ledger town is the home pad; hulls spawn ON THE GROUND there
+                                //--- (combo second hull on its own pad 90 degrees off), crew spawns beside and BOARDS
+                                //--- (assignAs + orderGetIn - also cheaper than air-starting live physics), and the existing
+                                //--- waypoint + posture stamps fly them out. No safe town in the ledger -> ground ring 900 m out.
+                                _qrfSrcTown = objNull;
+                                _qrfSrcDist = 1e9;
+                                {
+                                    _qrfLRec  = _x;
+                                    _qrfLTown = _qrfLRec select 0;
+                                    if (_qrfLTown != _cTownObj) then {
+                                        _qrfLSide = _qrfLTown getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+                                        if (_qrfLSide == WFBE_C_GUER_ID || {_qrfLSide == WFBE_C_UNKNOWN_ID}) then {
+                                            _qrfLD = _cTownPos distance (getPos _qrfLTown);
+                                            if (_qrfLD < _qrfSrcDist) then {
+                                                _qrfSrcDist = _qrfLD;
+                                                _qrfSrcTown = _qrfLTown;
                                             };
                                         };
-                                    } forEach _ledger;
-
-                                    if (!isNull _ppSrcTown) then {
-                                        private ["_ppSrcPos","_ppDirX","_ppDirY","_ppDirLen","_ppRingM","_ppBx","_ppBy"];
-                                        _ppSrcPos = getPos _ppSrcTown;
-                                        _ppDirX   = (_cTownPos select 0) - (_ppSrcPos select 0);
-                                        _ppDirY   = (_cTownPos select 1) - (_ppSrcPos select 1);
-                                        _ppDirLen = sqrt ((_ppDirX * _ppDirX) + (_ppDirY * _ppDirY));
-                                        if (_ppDirLen > 1) then {
-                                            _ppDirX  = _ppDirX / _ppDirLen;
-                                            _ppDirY  = _ppDirY / _ppDirLen;
-                                            _ppRingM = _minSpawnM + (random (_ambushBubbleM - _minSpawnM));
-                                            _ppBx    = (_cTownPos select 0) - (_ppDirX * _ppRingM);
-                                            _ppBy    = (_cTownPos select 1) - (_ppDirY * _ppRingM);
-                                            _spawnPos = [_ppBx, _ppBy, 50];
-                                        };
                                     };
+                                } forEach _ledger;
+                                if (!isNull _qrfSrcTown) then {
+                                    _qrfGDir = ((_cTownPos select 0) - ((getPos _qrfSrcTown) select 0)) atan2 ((_cTownPos select 1) - ((getPos _qrfSrcTown) select 1));
+                                    _spawnPos  = [getPos _qrfSrcTown, 120, _qrfGDir] Call GetPositionFrom;
+                                    _spawnPos  = [_spawnPos select 0, _spawnPos select 1, 0];
+                                    _spawnPosB = [getPos _qrfSrcTown, 120, _qrfGDir + 90] Call GetPositionFrom;
+                                    _spawnPosB = [_spawnPosB select 0, _spawnPosB select 1, 0];
+                                } else {
+                                    _qrfGDir = random 360;
+                                    _spawnPos  = [_cTownPos, 900, _qrfGDir] Call GetPositionFrom;
+                                    _spawnPos  = [_spawnPos select 0, _spawnPos select 1, 0];
+                                    _spawnPosB = [_cTownPos, 900, _qrfGDir + 8] Call GetPositionFrom;
+                                    _spawnPosB = [_spawnPosB select 0, _spawnPosB select 1, 0];
                                 };
+
+                                //--- fable/qrf-ground-spawn: the WFBE_C_GUER_PRESENCE_PULSE ring override (Grok idea #15,
+                                //--- default 0, never armed) is superseded by the always-on safe-town ground spawn above and
+                                //--- was removed - it re-pointed _spawnPos to a mid-air ring position, contradicting the
+                                //--- grounded design. Flag registration left in place; it now has no consumer.
 
                                 //--- Group-cap check before materializing. qrfCombo creates TWO groups
                                 //--- (gunship + insert); reserve headroom for both or the single-slot
@@ -514,22 +506,16 @@ while {!WFBE_GameOver} do {
                                         //--- proven wildcard-GUER pattern: CreateUnit into the group + moveIn*.
                                         private ["_uPilot","_uGun"];
                                         _uPilot = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                        if (!isNull _uPilot) then {_uPilot moveInDriver _h};
+                                        if (!isNull _uPilot) then {_uPilot assignAsDriver _h; [_uPilot] orderGetIn true};
                                         _uGun = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                        if (!isNull _uGun) then {_uGun moveInGunner _h};
-                                        _h setPos _spawnPos;
+                                        if (!isNull _uGun) then {_uGun assignAsGunner _h; [_uGun] orderGetIn true};
                                         _hGrp addWaypoint [_cTownPos, 200];
-                                        //--- fable/gdir-qrf-flight (owner P0 2026-07-27 "QRF just spawns and crashes"): the raw
-                                        //--- createVehicle above gives the hull ZERO velocity and no altitude order - an air unit
-                                        //--- materialising with physics live and only a waypoint drops straight into the town.
-                                        //--- Port Server_GuerAirDef.sqf's proven sequence (:728-732): forward velocity along the
-                                        //--- approach bearing, flyInHeight, THEN the posture stamps (its own comment warns the
-                                        //--- order matters or "the air just orbits passively"). atan2 bearing idiom is A2-safe.
+                                        //--- fable/qrf-ground-spawn: grounded start - no velocity kick, no setPos re-seat. Cruise
+                                        //--- height + posture apply once the boarded crew lifts off (flyInHeight is sticky pre-takeoff).
                                         private ["_qrfDir","_qrfFly"];
                                         _qrfFly = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_HEIGHT", 120];
                                         _qrfDir = ((_cTownPos select 0) - (_spawnPos select 0)) atan2 ((_cTownPos select 1) - (_spawnPos select 1));
                                         _h setDir _qrfDir;
-                                        _h setVelocity [(sin _qrfDir) * 40, (cos _qrfDir) * 40, 0];
                                         _h flyInHeight _qrfFly;
                                         _hGrp setBehaviour "COMBAT";
                                         _hGrp setCombatMode "RED";
@@ -575,6 +561,7 @@ while {!WFBE_GameOver} do {
                                         diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=Mi24_P town=%3 fundedBy=%4",
                                             _elmin, _cId, _cTown, _cUid];
                                         _hClass = "Ka137_MG_PMC";
+                                        _spawnPos = _spawnPosB; //--- fable/qrf-ground-spawn: second hull on its OWN pad - the same-point pair spawn was the "immediately blow up".
                                     };
                                     _h    = _hClass createVehicle _spawnPos;
                                     //--- Ka137 HP multiplier EH (mirrors WFBE_CO_FNC_CreateVehicle hook; raw createVehicle misses it).
@@ -592,24 +579,18 @@ while {!WFBE_GameOver} do {
                                     //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64).
                                     private ["_uPilot2","_uGun2"];
                                     _uPilot2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                    if (!isNull _uPilot2) then {_uPilot2 moveInDriver _h};
+                                    if (!isNull _uPilot2) then {_uPilot2 assignAsDriver _h; [_uPilot2] orderGetIn true};
                                     if (_hClass == "Mi24_P") then {
                                         _uGun2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                        if (!isNull _uGun2) then {_uGun2 moveInGunner _h};
+                                        if (!isNull _uGun2) then {_uGun2 assignAsGunner _h; [_uGun2] orderGetIn true};
                                     };
-                                    _h setPos _spawnPos;
                                     _hGrp addWaypoint [_cTownPos, 200];
-                                    //--- fable/gdir-qrf-flight (owner P0 2026-07-27 "QRF just spawns and crashes"): the raw
-                                    //--- createVehicle above gives the hull ZERO velocity and no altitude order - an air unit
-                                    //--- materialising with physics live and only a waypoint drops straight into the town.
-                                    //--- Port Server_GuerAirDef.sqf's proven sequence (:728-732): forward velocity along the
-                                    //--- approach bearing, flyInHeight, THEN the posture stamps (its own comment warns the
-                                    //--- order matters or "the air just orbits passively"). atan2 bearing idiom is A2-safe.
+                                    //--- fable/qrf-ground-spawn: grounded start - no velocity kick, no setPos re-seat. Cruise
+                                    //--- height + posture apply once the boarded crew lifts off (flyInHeight is sticky pre-takeoff).
                                     private ["_qrfDir","_qrfFly"];
                                     _qrfFly = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_HEIGHT", 120];
                                     _qrfDir = ((_cTownPos select 0) - (_spawnPos select 0)) atan2 ((_cTownPos select 1) - (_spawnPos select 1));
                                     _h setDir _qrfDir;
-                                    _h setVelocity [(sin _qrfDir) * 40, (cos _qrfDir) * 40, 0];
                                     _h flyInHeight _qrfFly;
                                     _hGrp setBehaviour "COMBAT";
                                     _hGrp setCombatMode "RED";
