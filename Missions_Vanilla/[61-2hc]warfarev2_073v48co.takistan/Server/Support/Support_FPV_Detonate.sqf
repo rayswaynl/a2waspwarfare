@@ -219,6 +219,24 @@ if (!isNull _driver) then {
 	missionNamespace setVariable ["WFBE_FPV_BLAST_LEDGER", _ledgerPruned];
 	diag_log Format ["FPVLEDGER|v1|record|pilot=%1|side=%2|pos=%3|r=%4|entries=%5", name _driver, _matchSide, _dronePos, _ledgerR, count _ledgerPruned];
 };
+//--- FPV CAUSATION EVIDENCE LEDGER (fable/fpv-causation, flag WFBE_C_FPV_CAUSE_LOG default 1,
+//--- ARMED - log-only observability, fits repo diagnostic-line policy, zero behavior change):
+//--- separate from WFBE_FPV_BLAST_LEDGER above (that ledger drives REAL attribution fallback in
+//--- RequestOnUnitKilled.sqf; this one is read-only evidence for a later pass to judge whether that
+//--- fallback, or any other kill near this drone blast, actually earned suicide-chopper credit -
+//--- addressing the owner report that AH6J attack-run kills were sometimes scored as FPV kills.
+//--- Bounded ring, hard cap 20, drop-oldest (array-minus idiom, A2-safe) - count-bound only, no
+//--- time-based prune, matching the task spec. Entry shape: [time, position, side, controller].
+if (((missionNamespace getVariable ["WFBE_C_FPV_CAUSE_LOG", 1]) > 0) && {!isNull _driver}) then {
+	Private ["_causeRing","_causeRingPruned"];
+	_causeRing = missionNamespace getVariable ["WFBE_FPV_CAUSE_RING", []];
+	if (typeName _causeRing != "ARRAY") then {_causeRing = []};
+	_causeRingPruned = [];
+	{ _causeRingPruned set [count _causeRingPruned, _x]; } forEach _causeRing;
+	if ((count _causeRingPruned) >= 20) then { _causeRingPruned set [0, -1]; _causeRingPruned = _causeRingPruned - [-1]; };
+	_causeRingPruned set [count _causeRingPruned, [time, _dronePos, _matchSide, _driver]];
+	missionNamespace setVariable ["WFBE_FPV_CAUSE_RING", _causeRingPruned];
+};
 //--- fable/fpv-spawn-safety part 3 of 3 (owner: "exploded in their own base"): nothing in this
 //--- chain ever checked WHERE the warhead lands, so a drone that died on its own pad dropped a
 //--- live R_57mm_HE round (hit 150 / indirect 40 / r 12, no side affiliation) straight into the

@@ -105,6 +105,52 @@ if ((!(_killed isKindOf "Man") || (_killed getVariable ["wfbe_explosivesupportki
 	};
 };
 
+//--- FPV CAUSATION EVIDENCE LOG (fable/fpv-causation, flag WFBE_C_FPV_CAUSE_LOG default 1, log-only,
+//--- zero behavior change - reads WFBE_FPV_CAUSE_RING only, never touches _killer or any reward path):
+//--- owner report was "suicide chopper" (FPV) kill credit that was likely really an AH6J attack run.
+//--- A2 OA has no getShotParents, so this cross-references the ALREADY-FINALIZED _killer above (from
+//--- whichever path produced it, live hit or fallback) against the FPV detonation ring written in
+//--- Support_FPV_Detonate.sqf, and records BOTH error directions so a later pass can threshold on
+//--- nearestDet/detAge/otherShooters (see PR body analysis recipe).
+if ((missionNamespace getVariable ["WFBE_C_FPV_CAUSE_LOG", 1]) > 0) then {
+	Private ["_fcRing","_fcPos","_fcE","_fcMatched","_fcNearest","_fcNearestDist","_fcAge","_fcOther","_fcAttr","_fcKillerType","_fcLine"];
+	_fcRing = missionNamespace getVariable ["WFBE_FPV_CAUSE_RING", []];
+	if (typeName _fcRing != "ARRAY") then {_fcRing = []};
+	if ((count _fcRing) > 0) then {
+		_fcPos = getPosATL _killed;
+		_fcMatched = [];
+		_fcNearest = [];
+		_fcNearestDist = 1e6;
+		{
+			_fcE = _x;
+			if (typeName _fcE == "ARRAY" && {count _fcE >= 4}) then {
+				if (!isNull _killer && {(_fcE select 3) == _killer}) then {_fcMatched = _fcE};
+				if ((_fcPos distance (_fcE select 1)) < _fcNearestDist) then {
+					_fcNearestDist = _fcPos distance (_fcE select 1);
+					_fcNearest = _fcE;
+				};
+			};
+		} forEach _fcRing;
+		_fcAttr = "";
+		if ((count _fcMatched) >= 4) then {
+			_fcAttr = "FPV";
+			_fcNearest = _fcMatched;
+			_fcNearestDist = _fcPos distance (_fcMatched select 1);
+		} else {
+			if ((count _fcNearest) >= 4 && {_fcNearestDist <= 200} && {(time - (_fcNearest select 0)) <= 15}) then {
+				_fcAttr = "OTHER";
+			};
+		};
+		if (_fcAttr != "") then {
+			_fcAge = time - (_fcNearest select 0);
+			_fcOther = {alive _x && {side _x != _killed_side}} count (nearestObjects [_fcPos, ["Air"], 300]);
+			_fcKillerType = if (isNull _killer) then {"NONE"} else {typeOf _killer};
+			_fcLine = Format ["FPVCAUSE|v1|victim=%1|victimType=%2|victimSide=%3|attributedTo=%4|killer=%5|killerType=%6|nearestDet=%7m|detAge=%8s|detSide=%9|otherShooters=%10|t=%11", str _killed, _type, str _killed_side, _fcAttr, str _killer, _fcKillerType, round _fcNearestDist, round _fcAge, str (_fcNearest select 2), _fcOther, round time];
+			diag_log _fcLine;
+		};
+	};
+};
+
 ["INFORMATION", Format ["RequestOnUnitKilled.sqf: [%1] [%2] has been killed by [%3].", _killed_side, _killed, _killer]] Call WFBE_CO_FNC_LogContent;
 
 if !(alive _killer) exitWith {}; //--- Killer is null or dead, nothing to see here.
