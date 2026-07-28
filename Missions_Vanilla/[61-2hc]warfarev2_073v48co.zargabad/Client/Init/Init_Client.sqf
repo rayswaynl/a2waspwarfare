@@ -1126,6 +1126,7 @@ waitUntil {(sideJoined == civilian) || {!isNil {WFBE_Client_Logic getVariable "w
 	/* Commander Handling */
 	["INITIALIZATION", "Init_Client.sqf: Initializing the Commander Update FSM"] Call WFBE_CO_FNC_LogContent;
 	[] ExecVM "Client\FSM\updateclient.sqf";
+	[] ExecVM "Client\FSM\client_crater_cleaner.sqf"; //--- fable/wreck-crater-hygiene: per-client crater decal sweep (engine craters are client-local; the server cleaner cannot see them). Self-gates on flag + hasInterface.
 };
 
 //--- Add the briefing (notes). Client init can re-run during JIP recovery; diary records are identity-bound, so create them once per client session.
