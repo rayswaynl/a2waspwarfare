@@ -637,6 +637,11 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 
 				//--- Exception - preview not created
 				if (isnull _preview) then {
+					//--- fable/coin-placement-fixes (owner live report 2026-07-28 "some things dont even show a preview"):
+					//--- createVehicleLocal can silently return objNull for some ghostpreview/item classnames with no
+					//--- error and no trace in RPT; log the failed classname here so it is diagnosable. Placement is not
+					//--- blocked by this - the existing reset below already lets the flow continue without a preview.
+					diag_log Format ["COINPLACE|v1|no-preview|class=%1|itemclass=%2", _itemclass_preview, _itemclass];
 					deleteVehicle _preview;
 					_logic setVariable ["BIS_COIN_preview",nil];
 					_logic setVariable ["BIS_COIN_params",[]];
