@@ -226,7 +226,11 @@ and preflight checks defined elsewhere in this file win on any conflict.
 - Do not re-propose: TPWCAS, AI supply trucks, satchel AI, EMP/WP/DECOY SCUD munitions,
   doctrine personalities, antistack touch. (ACR content: shelf LIFTED by owner 2026-07-28 09:15 -
   full ACR data confirmed on the live box; ACR classnames are usable WITH config proof, clients
-  resolve them via the bundled ACR-lite.)
+  resolve them via the bundled ACR-lite.) (AI supply trucks: SUPERSEDED by owner order 2026-07-28
+  ~11:15 "Allow the ai commander to run a small supply squad by itself once it reaches its unlock
+  gates (Truck, or helicopter)" - built as `Server/Server_AicomSupplySquad.sqf`, flag
+  `WFBE_C_AICOM_SUPPLY_SQUAD`; the ban now covers only re-proposing the removed W17 Supply Convoy
+  wildcard/cash-payout shape.)
 - Shelved PRs (https://github.com/rayswaynl/a2waspwarfare/wiki/Shelved-PR-*) are closed
   proposals; do not re-open or duplicate. Check the shelved-PR register before proposing
   any audit-flagged fix.
