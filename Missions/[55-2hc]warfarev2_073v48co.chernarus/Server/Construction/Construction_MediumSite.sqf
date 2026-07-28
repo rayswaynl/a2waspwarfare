@@ -209,7 +209,45 @@ if (_rlType == "AARadar") then {
 if (_rlType in ["Reserve","ArtilleryRadar"]) then {
 	private ["_dressTpl"];
 	_dressTpl = Format ["WFBE_NEURODEF_%1_%2", toUpper _rlType, if (_side == west) then {"WEST"} else {"EAST"}];
+	//--- fable/c9-quickwins S22 (owner-approved): Reserve fields the WDDM reserve-guard preset - the
+	//--- base cluster + 2 flank MGs + 1 AT overwatch, crewed below. ONE combined template = ONE
+	//--- dressing call, keeping the wfbe_dressing array + its Killed-EH cleanup single-owner.
+	if (_rlType == "Reserve" && {(missionNamespace getVariable ["WFBE_C_RESERVE_GUARD", 0]) > 0}) then {
+		_dressTpl = _dressTpl + "_GUARDED";
+	};
 	[_site, _dressTpl, _direction] Call WFBE_SE_FNC_SpawnStructureDressing;
+	if (_rlType == "Reserve" && {(missionNamespace getVariable ["WFBE_C_RESERVE_GUARD", 0]) > 0}) then {
+		private ["_gGrp","_gCrewCls","_gUnit","_gGuns"];
+		_gCrewCls = missionNamespace getVariable Format ["WFBE_%1SOLDIER", str _side];
+		_gGrp = [_side, "reserve-guard"] Call WFBE_CO_FNC_CreateGroup;
+		if (!isNull _gGrp && {!isNil "_gCrewCls"}) then {
+			_gGuns = 0;
+			{
+				if ((_x isKindOf "StaticWeapon") && {(count crew _x) == 0}) then {
+					_gUnit = [_gCrewCls, _gGrp, getPos _x, (_side) Call GetSideID] Call WFBE_CO_FNC_CreateUnit;
+					if (!isNull _gUnit) then {
+						_gUnit moveInGunner _x;
+						_gUnit setVariable ["wfbe_reserve_guard", true];
+						_gGuns = _gGuns + 1;
+					};
+				};
+			} forEach (_site getVariable ["wfbe_dressing", []]);
+			_site setVariable ["wfbe_reserve_guard_grp", _gGrp];
+			//--- Crew cleanup on core death (dressing props are handled by the dressing function's own
+			//--- Killed EH; engine EHs stack, so adding a second one is safe).
+			_site addEventHandler ["Killed", {
+				private ["_kGrp"];
+				_kGrp = (_this select 0) getVariable "wfbe_reserve_guard_grp";
+				if (!isNil "_kGrp") then {
+					if (!isNull _kGrp) then {
+						{if (!(isPlayer _x) && {alive _x}) then {deleteVehicle _x}} forEach (units _kGrp);
+						deleteGroup _kGrp;
+					};
+				};
+			}];
+			diag_log Format ["RESERVEGUARD|v1|side=%1|guns=%2", str _side, _gGuns];
+		};
+	};
 	["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] %2 composition dressing spawned via [%3].", str _side, _rlType, _dressTpl]] Call WFBE_CO_FNC_LogContent;
 };
 
