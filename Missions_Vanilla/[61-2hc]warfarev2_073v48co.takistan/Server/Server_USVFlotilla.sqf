@@ -285,15 +285,23 @@ while {!WFBE_GameOver} do {
 
 	//=== (3) MAINTAIN: spawn missing boats up to WFBE_C_USV_FLOTILLA_COUNT while gate is active =====
 	if (_gateActive && {count _flotilla < _count} && {count _route > 0}) then {
-		private ["_nextRole","_nextClass","_spawnPos","_spawnDir","_boat","_static","_grp","_driver","_gunner","_startI","_nextI","_nextWpPos","_toFirst"];
+		private ["_nextRole","_nextClass","_spawnPos","_spawnDir","_boat","_static","_grp","_driver","_gunner","_startI","_nextI","_nextWpPos","_toFirst","_candidateRole","_rolePresent"];
 
-		//--- Round-robin role pick by current flotilla size, so COUNT=3 spawns one-of-each in order
-		//--- (owner default) and COUNT>3 cycles the 3 roles again - a one-line tune, matching the
-		//--- WFBE_C_USV_COUNT precedent in USV-DESIGN.md SS1. NOTE: this does not "refill the exact
-		//--- role that died" - if a mid-cycle boat is lost, the next spawn follows the round-robin
-		//--- index, not a role-gap-fill. Owner language ("any mix of these 3 is fine") makes this an
-		//--- acceptable simplification for a 3-boat feature - see USV-FLOTILLA-BUILD.md SS4.
-		_nextRole = (_roles select ((count _flotilla) mod (count _roles)));
+		//--- Refill the first missing configured role before normal round-robin selection. This keeps
+		//--- the owner-default AA/ROCKET/HMG composition intact after a mid-cycle loss; once every
+		//--- configured role is present, COUNT>3 still cycles roles by fleet size as before.
+		_nextRole = "";
+		{
+			_candidateRole = _x;
+			_rolePresent = false;
+			{
+				if ((_x select 0) == _candidateRole) then {_rolePresent = true};
+			} forEach _flotilla;
+			if (!_rolePresent && {_nextRole == ""}) then {_nextRole = _candidateRole};
+		} forEach _roles;
+		if (_nextRole == "") then {
+			_nextRole = (_roles select ((count _flotilla) mod (count _roles)));
+		};
 		_nextClass = "";
 		{ if ((_x select 0) == _nextRole) exitWith {_nextClass = _x select 1}; } forEach _loadouts;
 
