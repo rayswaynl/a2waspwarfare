@@ -3169,7 +3169,7 @@ if (isNil "WFBE_C_GDIR_CONTRACTS_FIX") then {WFBE_C_GDIR_CONTRACTS_FIX = 1};
 //--- ACR CONTENT GAP (owner 2026-07-24): opt-in registration of the Czech static-defense
 //--- trio and player gear-menu exposure. Full ACR must first be unlocked on the live host;
 //--- 0 keeps the pre-existing catalog and gear lists unchanged.
-if (isNil "WFBE_C_ACR_CONTENT_GAP") then {WFBE_C_ACR_CONTENT_GAP = 0};
+if (isNil "WFBE_C_ACR_CONTENT_GAP") then {WFBE_C_ACR_CONTENT_GAP = 1}; //--- ARMED 2026-07-28 (owner "lift the ACR shelf" 09:15): activates the proven+priced ACR statics (DSHKM_CZ_EP1/AGS_CZ_EP1/2b14_82mm_CZ_EP1, Core_ACR.sqf) and the CZ805/Scorpion/Phantom small-arms rows (Loadout_US/RU/GUE, Gear_US). Full ACR verified on the live box; isClass guards make every row self-defending. Rollback: 0.
 
 //--- supportgate SECURITY (2026-07-24): Server_HandleSpecial.sqf Paratroops/ParaVehi/ParaAmmo/uav
 //--- call-ins used to spawn on request with NO server-side cost or rate check - only a client-side
