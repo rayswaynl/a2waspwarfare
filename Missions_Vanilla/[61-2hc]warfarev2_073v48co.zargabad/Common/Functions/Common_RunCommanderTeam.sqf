@@ -230,6 +230,18 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 	[_team, _side, _vehicles] Spawn {
 		private ["_tm","_sd","_vehs","_liveVehs","_h","_tgt","_cannon","_cannonMuzzle","_muzzles","_isGuided","_ammo","_band"]; //--- B66 +_cannonMuzzle/_muzzles; lane341 hostile filter uses getFriend
 		_tm = _this select 0; _sd = _this select 1; _vehs = _this select 2;
+		//--- fable/watch-0728 (live m0727h HC RPT: "Error Undefined variable ... _idlertbenabled" at the
+		//--- B74.2 reads below): _idleRtbEnabled is seeded in the OUTER function scope, but Spawn does NOT
+		//--- capture locals - every read inside this spawned watcher threw. The earlier seed-first fix
+		//--- (see the outer comment) landed in the wrong scope. Re-derive it here, seeded safe first,
+		//--- same expression as the outer scope - with the RTB flags at their 0 defaults this evaluates
+		//--- false, exactly the value the outer gate used.
+		private ["_idleRtbEnabled","_idleSenseProbe"];
+		_idleRtbEnabled = false;
+		_idleSenseProbe = -1;
+		_idleSenseProbe = missionNamespace getVariable ["WFBE_C_AICOM_AIR_IDLE_SENSE_R", -1];
+		if ((typeName _idleSenseProbe) != "SCALAR") then {_idleSenseProbe = -1};
+		_idleRtbEnabled = (missionNamespace getVariable ["WFBE_C_AICOM_AIR_IDLE_RTB", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_IDLE_MINUTES", 0]) > 0} && {_idleSenseProbe > 0};
 		while {!WFBE_GameOver && !isNull _tm && {(count _vehs) > 0} && {(count ((units _tm) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 			_liveVehs = [];
 			{ if (!isNull _x && {alive _x}) then {_liveVehs = _liveVehs + [_x]} } forEach _vehs;

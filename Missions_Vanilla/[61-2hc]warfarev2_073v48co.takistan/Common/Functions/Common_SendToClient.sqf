@@ -4,7 +4,7 @@
 		- Client PVF.
 */
 
-Private ["_func","_id","_pvf"];
+Private ["_func","_id","_pvf","_dropCase"];
 
 _pvf = _this;
 _func = _pvf select 1;
@@ -27,7 +27,12 @@ if (!isHostedServer) then {
 		//--- no RPT trace on either the server or the (never-reached) target HC, which is why the
 		//--- delegate-aicom-team pipeline break was invisible to RPT archaeology. Correctness-neutral
 		//--- (still drops exactly as before); only adds a trace so a future zero-owner drop is provable.
-		diag_log (Format ["SENDTOCLIENT|v1|DROPPED|func=%1|owner=0-or-negative", _func]);
+		//--- fable/watch-0728: 64 unattributed drops in one live evening - name the HandleSpecial case
+		//--- so retry noise (locality-limbo cleanup dispatches re-scanned every 60s) is separable from a
+		//--- real pipeline break at a glance.
+		_dropCase = "";
+		if ((count _pvf) > 2 && {(typeName (_pvf select 2)) == "ARRAY"} && {(count (_pvf select 2)) > 0} && {(typeName ((_pvf select 2) select 0)) == "STRING"}) then {_dropCase = (_pvf select 2) select 0};
+		diag_log (Format ["SENDTOCLIENT|v1|DROPPED|func=%1|case=%2|owner=0-or-negative", _func, _dropCase]);
 	};
 } else {
 	_pvf Spawn WFBE_CL_FNC_HandlePVF;
