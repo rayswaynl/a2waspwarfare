@@ -220,7 +220,7 @@ switch (_request) do {
 		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
 		if (count _args < 1) exitWith {};
 		_emptyVehicle = _args select 0;
-		if (!isNull _emptyVehicle && {local _emptyVehicle} && {alive _emptyVehicle} && {({alive _x} count crew _emptyVehicle) == 0} && {!(_emptyVehicle getVariable ["wfbe_airlifted", false])} && {!(_emptyVehicle getVariable ["wfbe_is_guer_fob", false])} && {(_emptyVehicle getVariable ["wfbe_empty_vehicle_reap", false])}) then {deleteVehicle _emptyVehicle};
+		if (!isNull _emptyVehicle && {local _emptyVehicle} && {alive _emptyVehicle} && {({alive _x} count crew _emptyVehicle) == 0} && {!(_emptyVehicle getVariable ["wfbe_airlifted", false])} && {!(_emptyVehicle getVariable ["wfbe_is_guer_fob", false])} && {!(_emptyVehicle getVariable ["wfbe_is_fob", false])} && {(_emptyVehicle getVariable ["wfbe_empty_vehicle_reap", false])}) then {deleteVehicle _emptyVehicle};
 	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
