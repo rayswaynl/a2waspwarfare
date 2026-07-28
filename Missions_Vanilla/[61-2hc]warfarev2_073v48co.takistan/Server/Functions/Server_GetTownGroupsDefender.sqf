@@ -111,6 +111,25 @@ if (_garrScale != 1) then {
 	if (_groups_max < 1) then {_groups_max = 1};
 };
 
+//--- fable/garrison-sv-scale (backlog #14, 2026-07-28): _sv was read at the top of this file and never
+//--- consumed - garrison size ignored how SUPPLIED the town actually is. Armed (flag > 0), a town whose
+//--- CURRENT supplyValue exceeds its startingSupplyValue fields a proportionally larger garrison,
+//--- capped at +MAXBONUS. ADDITIVE-ONLY by construction (the max 0 clamp): a drained town is never
+//--- reduced below its normal count - no-GUER-nerf constraint holds. Carriers (SV 80 vs start 50)
+//--- get properly beefy decks. Flag default 0 = byte-identical to HEAD.
+private ["_svScale","_svRef","_svBonus"];
+_svScale = missionNamespace getVariable ["WFBE_C_GARRISON_SV_SCALE", 0];
+if (_svScale > 0 && {_sv > 0}) then {
+	_svRef = _town getVariable ["startingSupplyValue", 30];
+	if (_svRef < 1) then {_svRef = 30};
+	_svBonus = ((_sv - _svRef) / _svRef) max 0;
+	_svBonus = (_svBonus * _svScale) min (missionNamespace getVariable ["WFBE_C_GARRISON_SV_MAXBONUS", 0.5]);
+	if (_svBonus > 0) then {
+		_groups_max = round (_groups_max * (1 + _svBonus));
+		diag_log Format ["GARRSV|v1|town=%1|sv=%2|ref=%3|bonus=%4|groups=%5", _town getVariable ["name","?"], _sv, _svRef, _svBonus, _groups_max];
+	};
+};
+
 //--- Tier-1 (flag WFBE_C_GDIR_GARRISON_GAIN, default 0): a GUER town the Director judges REINFORCED
 //--- (ledger current/baseline ratio > 1, published as wfbe_gdir_str) wakes with a bigger real garrison.
 //--- Additive / no-nerf: the bonus is >= 0, so _groups_max is never reduced below the V1 count.
