@@ -3123,6 +3123,58 @@ class RscMenu_Command {
 			colorBackgroundActive[] = {0.7, 0.1, 0.15, 1};
 		};
 		/* Back */
+		//--- fable/cmd-deck-c4 (owner pick C4, 2026-07-28): COMMAND CONSOLE DECK controls. All carry
+		//--- show = 0 and are admitted to the ctrlShow set ONLY when WFBE_C_CMD_DECK > 0 (the proven
+		//--- STATE-A/B extension pattern in GUI_Menu_Command.sqf:107-110) - flag off means ctrlShow is
+		//--- never called for these idcs and the dialog is pixel-identical to HEAD.
+		class CA_Cmd_DeckHeader : RscText {
+			idc = 14700;
+			x = 0.017244; y = 0.088000; w = 0.965000; h = 0.030;
+			sizeEx = 0.019;
+			colorText[] = {0.961, 0.761, 0.259, 0.95};
+			colorBackground[] = {0.102, 0.086, 0.063, 0.75};
+			text = "";
+			shadow = 2;
+			show = 0;
+		};
+		class CA_Cmd_DeckZ1 : RscText_SubTitle {
+			idc = 14701;
+			x = 0.017244; y = 0.124000; w = 0.300000; h = 0.026;
+			text = "SITUATION MAP";
+			show = 0;
+		};
+		class CA_Cmd_DeckZ2 : CA_Cmd_DeckZ1 {
+			idc = 14702;
+			x = 0.017244; y = 0.560000; w = 0.300000;
+			text = "STRATEGY";
+		};
+		class CA_Cmd_DeckZ3 : CA_Cmd_DeckZ1 {
+			idc = 14703;
+			x = 0.480244; y = 0.124000; w = 0.300000;
+			text = "FORCES";
+		};
+		class CA_Cmd_DeckZ4 : CA_Cmd_DeckZ1 {
+			idc = 14704;
+			x = 0.480244; y = 0.795000; w = 0.300000;
+			text = "OPERATIONS / PRODUCTION";
+		};
+		//--- Order picker: the A2 RscListBox cannot host per-row widgets, so the mockup's per-row
+		//--- [order] dropdown is implemented as ONE combo + GO applying to the roster selection
+		//--- (_selTeam is already resolved every tick at GUI_Menu_Command.sqf:556-558). Mirrors the
+		//--- working build-priority combo pair 14640/14641 in this same dialog.
+		class CA_Cmd_OrderCombo : RscCombo {
+			idc = 14705;
+			x = 0.480244; y = 0.916000; w = 0.150000; h = 0.033;
+			show = 0;
+		};
+		class CA_Cmd_OrderGo : RscButton_Main {
+			idc = 14706;
+			x = 0.636244; y = 0.916000; w = 0.100000; h = 0.033;
+			text = "GIVE ORDER";
+			action = "MenuAction = 770";
+			tooltip = "Apply the selected order to the highlighted team. Position orders (Move/Defend/Patrol/Arty) then ask for a map click.";
+			show = 0;
+		};
 		class Back_Button : RscButton_Back {
 			x = 0.892507;
 			y = 0.953825;
