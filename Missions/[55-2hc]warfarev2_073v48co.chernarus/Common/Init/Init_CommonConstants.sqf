@@ -256,9 +256,10 @@ if (worldName == "Zargabad") then {
 //--- self-cleaning so it can't blow up FPS. Only relevant when the GUER playable faction is enabled.
 	if (isNil "WFBE_C_GUER_AIRDEF_ENABLE") then {WFBE_C_GUER_AIRDEF_ENABLE = 1};        //--- master switch (set 0 to disable the loop entirely).
 	if (isNil "WFBE_C_GUER_AIRDEF_INTERVAL") then {WFBE_C_GUER_AIRDEF_INTERVAL = 120};  //--- seconds between maintain sweeps.
+	if (isNil "WFBE_C_GUER_AIRDEF_THREAT_ONLY") then {WFBE_C_GUER_AIRDEF_THREAT_ONLY = 1}; //--- ARMED 2026-07-28 (owner: "make the Ka-137 appear less ... every town activation gets a bunch in the air"): defenders spawn only for towns with a live W/E foe in range - idle activation no longer summons air. 0 = legacy always-spawn.
 	if (isNil "WFBE_C_GUER_AIRDEF_MAX") then {WFBE_C_GUER_AIRDEF_MAX = 2};              //--- owner design 2026-07-23 06:03: 4->3 (fewer drones, better payloads; drops to 2 when the GUER ground-raider ships - see wasp-guer-harassment-unit card). Rollback: 4. [Ray-dir 2026-07-24: 3->2 - the drop the 4->3 note anticipated once the GUER ground-raider is in; fewer air-def drones = less spawn churn + fewer AI; rollback 3.]
 	if (isNil "WFBE_C_GUER_AIRDEF_AT_CHANCE") then {WFBE_C_GUER_AIRDEF_AT_CHANCE = 0.45}; //--- owner design 2026-07-23 06:03: 0.20->0.45 - fewer drones, each likelier to carry the EASA AT (Konkurs/AT-5) punch. Rollback: 0.20.
-	if (isNil "WFBE_C_GUER_AIRDEF_MI24_CHANCE") then {WFBE_C_GUER_AIRDEF_MI24_CHANCE = 0.25}; //--- chance a LARGE GUER town under attack fields a Mi-24 gunship instead.
+	if (isNil "WFBE_C_GUER_AIRDEF_MI24_CHANCE") then {WFBE_C_GUER_AIRDEF_MI24_CHANCE = 0.40}; //--- chance a LARGE GUER town under attack fields a Mi-24 gunship instead. [Ray-dir 2026-07-28: 0.25->0.40 - threat-only spawning cut total air volume, so the events that DO fire bias toward the interesting gunship response; rollback 0.25.]
 	if (isNil "WFBE_C_GUER_AIRDEF_AA_CHANCE") then {WFBE_C_GUER_AIRDEF_AA_CHANCE = 0.75}; //--- chance a Ka-137 fields the EASA Igla AA loadout when ENEMY AIR is near the town (counter-air; takes priority over Mi-24/AT roll).
 	if (isNil "WFBE_C_GUER_AIRDEF_CLASS_KA") then {WFBE_C_GUER_AIRDEF_CLASS_KA = "Ka137_MG_PMC"}; //--- default light air defender (recon/strike).
 	if (isNil "WFBE_C_GUER_AIRDEF_CLASS_MI24") then {WFBE_C_GUER_AIRDEF_CLASS_MI24 = "Mi24_P"};   //--- heavy gunship for large contested towns.
@@ -277,7 +278,7 @@ if (worldName == "Zargabad") then {
 //--- they formation-fly as a drone flock. Extras COUNT toward WFBE_C_GUER_AIRDEF_MAX; the roll is skipped once the
 //--- cap is reached, so a swarm never exceeds the air budget. Only relevant when the GUER AIRDEF loop is enabled.
 	if (isNil "WFBE_C_GUER_KA137_SWARM") then {WFBE_C_GUER_KA137_SWARM = 1};                //--- master switch (1 = swarm rolls enabled, 0 = single drone only).
-	if (isNil "WFBE_C_GUER_KA137_SWARM_CHANCE") then {WFBE_C_GUER_KA137_SWARM_CHANCE = 0.15}; //--- chance a combat Ka-137 spawn also fields a 2nd drone in the same group. [Ray-dir 2026-07-24 CHURN: 0.25->0.15 (fewer multi-drone spawns per event; aligns with the 4->3 MAX "fewer drones" intent); rollback 0.25.]
+	if (isNil "WFBE_C_GUER_KA137_SWARM_CHANCE") then {WFBE_C_GUER_KA137_SWARM_CHANCE = 0.25}; //--- chance a combat Ka-137 spawn also fields a 2nd drone in the same group. [Ray-dir 2026-07-28: 0.15->0.25 - the threat-only spawn gate removed the idle-town churn behind the 07-24 cut AND finally leaves the cap headroom the roll needs; a pair is the visible "swarm". Rollback 0.15. Prior: 2026-07-24 CHURN 0.25->0.15.]
 	if (isNil "WFBE_C_GUER_KA137_SWARM_CHANCE3") then {WFBE_C_GUER_KA137_SWARM_CHANCE3 = 0.10}; //--- chance (only if the 2nd rolled) for a 3rd drone in the same group. [Ray-dir 2026-07-24 CHURN: 0.15->0.10 (fewer 3-drone flocks); rollback 0.15.]
 
 //--- KA-137 FLARE STOCK (cmdcon42 item2, Ray 2026-07-02; retuned 5-20 same day): AI-spawned Ka-137s (leader +
@@ -409,7 +410,7 @@ if (worldName == "Zargabad") then {
 	//--- === Build 83 / cmdcon35 constants (claude-gaming 2026-07-01) ===
 	if (isNil "WFBE_C_AICOM_HQ_NUDGE_MAX_R") then {WFBE_C_AICOM_HQ_NUDGE_MAX_R = 200};  //--- AI HQ off-road nudge: max expanding-ring radius (m) before using best off-road candidate.
 	if (isNil "WFBE_C_AICOM_HQ_NUDGE_STEP") then {WFBE_C_AICOM_HQ_NUDGE_STEP = 25};     //--- AI HQ off-road nudge: ring radius growth per step (m).
-	if (isNil "WFBE_C_GUER_AIRDEF_DROP_CHANCE") then {WFBE_C_GUER_AIRDEF_DROP_CHANCE = 0.18}; //--- Ka-137 cargo/paradrop roll when a GUER town is under GROUND attack.
+	if (isNil "WFBE_C_GUER_AIRDEF_DROP_CHANCE") then {WFBE_C_GUER_AIRDEF_DROP_CHANCE = 0.25}; //--- Ka-137 cargo/paradrop roll when a GUER town is under GROUND attack. [Ray-dir 2026-07-28: 0.18->0.25 - same "fewer but more interesting" retune as the Mi-24 chance; rollback 0.18.]
 	if (isNil "WFBE_C_GUER_AIRDEF_DROP_COUNT") then {WFBE_C_GUER_AIRDEF_DROP_COUNT = 5};      //--- troopers per Ka-137 paradrop stick.
 	if (isNil "WFBE_C_GUER_AIRDEF_DROP_MAX") then {WFBE_C_GUER_AIRDEF_DROP_MAX = 2};          //--- global alive cap on paradropped GUER squads (anti-spam).
 	if (isNil "WFBE_C_KA137_REWARD_COEF") then {WFBE_C_KA137_REWARD_COEF = 0.4};              //--- Build83 (Ray 2026-07-01): Ka-137 kill/salvage reward -60%. Applied gated on Ka137_MG_PMC in bounty + salvage paths.

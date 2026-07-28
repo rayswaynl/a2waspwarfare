@@ -592,7 +592,17 @@ while {!WFBE_GameOver} do {
 			&& {!(isNull _town)}
 			&& {(_town getVariable ["sideID", -1]) == WFBE_C_GUER_ID}
 			&& {_town getVariable ["wfbe_active", false]}
-			&& {!(_town in _townsWithAir)}) then {
+			&& {!(_town in _townsWithAir)}
+			//--- fable/guer-air-tune (owner 2026-07-28: "make the Ka-137 appear less ... every town
+			//--- activation gets a bunch in the air"): THREAT-ONLY spawn gate. The old gate had no enemy
+			//--- requirement - every active GUER town summoned a defender on the next sweep, so idle towns
+			//--- burned the WFBE_C_GUER_AIRDEF_MAX slots on recon-MG orbits (spawn churn = lag) and the
+			//--- threat-keyed interesting variants (AA/Mi-24/paradrop/swarm) rarely saw a free slot. Now a
+			//--- defender spawns only when a live W/E foe is actually near the town (same scan shape as the
+			//--- loadout selector below; only would-spawn towns pay it). Quiet-recall already despawns when
+			//--- the threat ends - this is the symmetric spawn half. 0 = legacy always-spawn.
+			&& {((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_THREAT_ONLY", 0]) <= 0)
+				|| {({alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)])) > 0}}) then {
 
 			_pos = getPos _town;
 
