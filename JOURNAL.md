@@ -1,5 +1,13 @@
 # JOURNAL — a2waspwarfare-experital
 
+## Working State 2026-07-28 (build-out mode — DO NOT STAGE/CUTOVER without owner GO)
+
+- **Branch:** `release/wasp-aicom-recovery-20260727`, tip after PR #1570 (`fcf588d0e8`). LIVE = m0728c; pending update = **22 PRs** since. Standing rule (owner 08:14): keep building, no server update.
+- **Shipped this stretch:** #1567 gear money fix (post-cap charge inside changed-gate + GUER depot target parity), #1568 Ka-137 threat-only spawns + variant re-weight (MI24 .40 / DROP .25 / SWARM .25), #1569 USV player-audience gate (PLAYER_GATE=1, 1500m), #1570 carrier INLINE_GAP -265→-252 (**previous TWIN_GAP 42→32→26 tunes were a DEAD knob — INLINE_HULLS=1 skips the lateral path**) + deck respawn +2→+0.5.
+- **Owner queue (open):** (1) AICOM small supply squad once truck/heli unlock gates reached — supply-mechanics scout running; **note: "AI supply trucks" do-not-re-propose entry SUPERSEDED by explicit owner order 2026-07-28**. (2) Patrol tiers reimagine: REMOVE money+SV rewards (definite), T3-4 air-unit idea incl. off-map entry (design options) — ground-truth scout running. (3) PVF-drop-class hunt scout running. (4) C9: 8 decision points DM'd to owner (SYNTHESIS.md in `_council_overnight\c9-defense-compositions\`), awaiting sign-off. (5) C10 wildcard council queued — GT-DRONE-SWARM.md archived in `_council_overnight\c10-wildcard-overhaul\` (verdict: no AICOM drone-swarm exists; KA-137 swarm was cap-starved, unblocked by #1568; wildcard COST=8000+HUMAN_BUY=0 means human-commanded sides get NO draws).
+- **Peach DM sender:** `C:\Users\Game\send-peach-dm.ps1` VANISHED again; rebuilt 2026-07-28 from memory recipe (port 5001, X-Ops-Key from bot .env, UTF-8 bytes). Local copy in session scratchpad.
+- **Runtime re-tests owed next build:** carrier seam at -252 + no spawn drop, gear overcharge/no-op charge, GUER depot gear target, Ka-137 threat-only + variant mix + KA137_SWARM lines, USV gate open/close, FOB scroll, VBIED reward, twin seam markers, air store after flip, runway spawn, lockpick, town air rearm, Towns button, deck/T4 UIs.
+
 ## 2026-07-07 — RC29 doubled player-arrow dedupe [fable/rc29-doubled-arrow]
 
 Task: FIX doubled player arrow on the map (two mil_arrow2 markers track the player).

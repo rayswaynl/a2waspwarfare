@@ -83,6 +83,7 @@ WFBE_SE_FNC_AI_SetTownAttackPath = Compile preprocessFileLineNumbers "Server\Fun
 //--- CHAT RELAY REWORK: server-only, free chat blocked-pending-BE because display-24 semantics are not proven here.
 WFBE_SE_FNC_ChatRelayEvent = Compile preprocessFileLineNumbers "Server\Functions\Server_ChatRelayEvent.sqf";
 WFBE_SE_FNC_AI_SetTownAttackPath_PathIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PathIsSafe.sqf";
+WFBE_SE_FNC_PatrolAirPass = Compile preprocessFileLineNumbers "Server\Functions\Server_PatrolAirPass.sqf"; //--- fable/patrol-reimagine: T3/T4 off-map air pass (replaces the removed patrol money/SV rewards).
 WFBE_SE_FNC_AI_SetTownAttackPath_PosIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PosIsSafe.sqf";
 WFBE_SE_FNC_AI_Com_Upgrade = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_Com_Upgrade.sqf";
 //--- feat/ai-commander: revival workers + supervisor.

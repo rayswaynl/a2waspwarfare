@@ -1841,21 +1841,28 @@ switch (_args select 0) do {
 		missionNamespace setVariable ["WFBE_ACTIVE_PATROLS", _pnew];
 		publicVariable "WFBE_ACTIVE_PATROLS";
 	};
-	//--- Task 41: convoy reached a town — pay the owning side.
-	case "sidepatrol-convoy-stop": {
-		Private ["_cSideID","_cTown","_cSide","_cPool","_cShare","_cCount"];
-		_cSideID = _args select 1;
-		_cTown   = _args select 2;
-		_cSide   = (_cSideID) Call WFBE_CO_FNC_GetSideFromID;
-		_cPool   = if (isNil "WFBE_C_PATROL_CONVOY_PAY") then {750} else {WFBE_C_PATROL_CONVOY_PAY};
-
-		_cCount = 0;
-		{if ((isPlayer _x) && (alive _x) && (side _x == _cSide)) then {_cCount = _cCount + 1}} forEach playableUnits;
-		_cShare = round (_cPool / (_cCount max 1));
-
-		[_cSide, "BankPayout", [_cShare]] Call WFBE_CO_FNC_SendToClients;
-		[_cSide, _cShare] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (BankPayout keeps only the message).
-		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] convoy payout $%2 x %3 players at [%4].", str _cSide, _cShare, _cCount, if (!isNull _cTown) then {_cTown getVariable ["name","?"]} else {"?"}]] Call WFBE_CO_FNC_LogContent;
+	//--- fable/patrol-reimagine (owner 2026-07-28): the convoy payout case that lived here is
+	//--- REMOVED with the patrol money rewards. Its replacement is the T3/T4 off-map air pass:
+	//--- server-authoritative chance roll + per-side cooldown, then Server_PatrolAirPass flies
+	//--- one (L3) or two (L4) attack aircraft in from off-map for a single pass over the town
+	//--- and exits them via the nearest map edge. Sender: Common_RunSidePatrol.sqf arrival hook.
+	case "sidepatrol-airpass": {
+		Private ["_apSideID","_apTown","_apLvl","_apSide","_apLast","_apCd"];
+		_apSideID = _args select 1;
+		_apTown   = _args select 2;
+		_apLvl    = if (count _args > 3) then {_args select 3} else {3};
+		_apSide   = (_apSideID) Call WFBE_CO_FNC_GetSideFromID;
+		if ((missionNamespace getVariable ["WFBE_C_PATROL_AIR_TIER", 0]) > 0
+			&& {!isNull _apTown}
+			&& {(_apSide == west) || {_apSide == east}}
+			&& {!isNil "WFBE_SE_FNC_PatrolAirPass"}) then {
+			_apCd   = missionNamespace getVariable ["WFBE_C_PATROL_AIR_COOLDOWN", 300];
+			_apLast = missionNamespace getVariable [Format ["wfbe_patrolair_last_%1", str _apSide], -99999];
+			if ((time - _apLast) >= _apCd && {(random 1) < (missionNamespace getVariable ["WFBE_C_PATROL_AIR_CHANCE", 0.35])}) then {
+				missionNamespace setVariable [Format ["wfbe_patrolair_last_%1", str _apSide], time];
+				[_apSide, _apSideID, _apTown, _apLvl] Spawn WFBE_SE_FNC_PatrolAirPass;
+			};
+		};
 	};
 	//--- HC SEATING TELEMETRY (task #34): pure RPT logging, no gameplay effect. Mirrors the HCSIDE|v1|connect
 	//--- line below so "did an HC land on WEST this boot, and did the script reseat fix it" is directly
