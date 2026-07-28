@@ -945,6 +945,25 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 	};
 } forEach [[_present_east, east, _startE],[_present_west, west, _startW]];
 
+//--- fable/fob-init-park (owner 2026-07-28 "GUER FOB deploy still non existent"): NOTHING ever seeded
+//--- wfbe_upgrades on the RESISTANCE side logic (the loop above covers only WEST/EAST), so
+//--- Init_Unit.sqf's waitUntil {!isNil {_logik getVariable "wfbe_upgrades"}} parked FOREVER on every
+//--- client for every GUER-bought unit - the ENTIRE client-side unit init (Build-FOB actions, deploy
+//--- hints, gear toggles) never ran for GUER vehicles. This is the second, independent break in the
+//--- FOB chain (#1531 fixed the buy-crash half). Seed an all-zero table of the same shape (upgrade
+//--- ids are side-uniform) so the wait releases; every consumer reads levels, and 0 = not researched
+//--- (e.g. the Zeta airlift gate correctly stays closed).
+private ["_guerLogik","_guerUpg","_guerUpgLen"];
+_guerLogik = (resistance) Call WFBE_CO_FNC_GetSideLogic;
+if (!isNull _guerLogik && {isNil {_guerLogik getVariable "wfbe_upgrades"}}) then {
+	_guerUpgLen = count (missionNamespace getVariable ["WFBE_C_UPGRADES_WEST_LEVELS", []]);
+	if (_guerUpgLen < 1) then {_guerUpgLen = 20};
+	_guerUpg = [];
+	for '_i' from 0 to (_guerUpgLen - 1) do {[_guerUpg, 0] Call WFBE_CO_FNC_ArrayPush};
+	_guerLogik setVariable ["wfbe_upgrades", _guerUpg, true];
+	diag_log Format ["[WFBE (INIT)] fable/fob-init-park: seeded zero wfbe_upgrades (%1 slots) on the RESISTANCE logic - releases Init_Unit client-side init for GUER units.", _guerUpgLen];
+};
+
 //--- GUER "Insurgents" player faction team-registration + economy (gated on WFBE_C_GUER_PLAYERSIDE).
 //--- The 4 RESISTANCE player slots are synced to LocationLogicOwnerResistance (WFBE_L_GUE); register each as a
 //--- zero-fund harass team (stipend, not commander economy), then start the GUER economy loop.
