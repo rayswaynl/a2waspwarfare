@@ -2355,7 +2355,36 @@ switch (_args select 0) do {
 				diag_log ("GUERVBIED|v1|drvUID=" + (str _drvUID) + "|victims=" + (str (count _victims)) + "|payout=" + (str _payout) + "|persBounty=" + (str _persBounty) + "|persScore=" + (str _persScore)); //--- Ray 2026-06-27: definitive trace of a GUER VBIED payout (always-on).
 					if (_drvUID != "" && {_persBounty > 0}) then {
 					[_drvUID, "GuerVbiedBounty", _persBounty] Call WFBE_CO_FNC_SendToClients;
-					if (!isNull _drvGrp) then { [_drvGrp, _persBounty] Call WFBE_CO_FNC_ChangeTeamFunds }; //--- J1 funds authority: credit the PRE-BLAST captured slot group (the suicide driver is guaranteed dead at settle, so any alive/UID-scan resolve would pay nobody; his client handler no longer writes the wallet).
+					//--- fable/vbied-respawn-payout (owner 2026-07-28 "still no reward on VBIED - you die to the
+					//--- explosion yourself"): the J1 pay-the-pre-blast-group assumption is FALSE under respawn
+					//--- re-homing - Client_OnRespawnHandler.sqf documents that a respawned player lands in a
+					//--- DIFFERENT group and re-points clientTeam at it, so the credit parked in the orphaned old
+					//--- group where no wallet ever reads it (live-proven: GUERVBIED|v1 persBounty=266 computed +
+					//--- paid, owner wallet unchanged). Defer instead: resolve the detonator's LIVE body by UID
+					//--- (up to 10 min - deadspawn + respawn UI), then credit THAT body's current group. If they
+					//--- never return, fall back to the old group (exactly today's behaviour, loses nothing).
+					[_drvUID, _persBounty, _drvGrp] spawn {
+						private ["_uid","_amt","_fallbackGrp","_deadline","_target","_u"];
+						_uid = _this select 0;
+						_amt = _this select 1;
+						_fallbackGrp = _this select 2;
+						_deadline = time + 600;
+						_target = grpNull;
+						while {isNull _target && {time < _deadline}} do {
+							{
+								_u = _x;
+								if (!isNull _u && {alive _u} && {isPlayer _u} && {getPlayerUID _u == _uid}) exitWith {_target = group _u};
+							} forEach playableUnits;
+							if (isNull _target) then {sleep 5};
+						};
+						if (isNull _target) then {_target = _fallbackGrp};
+						if (!isNull _target) then {
+							[_target, _amt] Call WFBE_CO_FNC_ChangeTeamFunds;
+							diag_log ("GUERVBIED|v3|paid|uid=" + _uid + "|amount=" + str _amt);
+						} else {
+							diag_log ("GUERVBIED|v3|pay-failed|uid=" + _uid + "|amount=" + str _amt);
+						};
+					};
 					["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED personal bounty [%1] + score [%2] paid to detonator UID [%3].", _persBounty, _persScore, _drvUID]] Call WFBE_CO_FNC_LogContent;
 				};
 				if (!isNull _driver && {_persScore > 0}) then {
