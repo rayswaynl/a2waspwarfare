@@ -29,6 +29,10 @@ _ppColor ppEffectCommit 0;
 _ttl = missionNamespace getVariable ["WFBE_C_FPV_DRONE_TTL", 240];
 _t0 = time;
 _warned = false;
+//--- fable/fpv-spawn-safety: impact-fuze arming delay + the damage baseline captured when it arms.
+Private ["_fpvArmDelay","_fpvArmDmg","_fpvArmed"];
+_fpvArmDelay = missionNamespace getVariable ["WFBE_C_FPV_ARM_DELAY", 3];
+_fpvArmDmg = -1;
 hintSilent Format ["FPV drone airborne. Battery: %1s.\nAction menu: DETONATE WARHEAD / abort.", _ttl];
 
 //--- fable/drones-menu: one-time first-flight drill (per profile, TAGS persistence idiom).
@@ -41,7 +45,15 @@ while {alive _drone && {alive player} && {isNil "WFBE_FPV_Boom"} && {isNil "WFBE
 	sleep 0.5;
 	//--- Impact fuze: a hard knock (collision, ground fire) triggers the warhead even when the
 	//--- hit alone would not kill the hull, so clipping a wall still detonates.
-	if ((getDammage _drone) >= 0.35) exitWith {WFBE_FPV_Boom = true};
+	//--- fable/fpv-spawn-safety part 2 of 3: the fuze went live on the very first 0.5s tick, so any
+	//--- damage carried off the spawn pad (clipping the anchor building or another drone) detonated
+	//--- the warhead before the pilot had control. Hold the fuze for a short arming delay AND
+	//--- measure damage as a DELTA from what the airframe already had once armed, so pre-existing
+	//--- spawn scuffing can never count as an impact. A real hit still trips it instantly.
+	_fpvArmed = ((time - _t0) >= _fpvArmDelay);
+	if (_fpvArmed && {_fpvArmDmg < 0}) then {_fpvArmDmg = getDammage _drone};
+	//--- Flat exitWith on purpose: a nested exitWith would leave only the inner block, not this loop.
+	if (_fpvArmed && {_fpvArmDmg >= 0} && {((getDammage _drone) - _fpvArmDmg) >= 0.35}) exitWith {WFBE_FPV_Boom = true};
 	if ((time - _t0) > _ttl) exitWith {WFBE_FPV_Terminate = true};
 	if (!_warned && {(time - _t0) > (_ttl - 30)}) then {_warned = true; hintSilent "FPV battery low: 30 seconds."};
 };

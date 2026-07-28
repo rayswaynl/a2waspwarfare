@@ -219,4 +219,29 @@ if (!isNull _driver) then {
 	missionNamespace setVariable ["WFBE_FPV_BLAST_LEDGER", _ledgerPruned];
 	diag_log Format ["FPVLEDGER|v1|record|pilot=%1|side=%2|pos=%3|r=%4|entries=%5", name _driver, _matchSide, _dronePos, _ledgerR, count _ledgerPruned];
 };
-createVehicle [_ammoClass, _dronePos, [], 0, "NONE"];
+//--- fable/fpv-spawn-safety part 3 of 3 (owner: "exploded in their own base"): nothing in this
+//--- chain ever checked WHERE the warhead lands, so a drone that died on its own pad dropped a
+//--- live R_57mm_HE round (hit 150 / indirect 40 / r 12, no side affiliation) straight into the
+//--- friendly base. Parts 1-2 stop the pad death; this is the last-resort guard for every other
+//--- way a drone can die at home. Inside the standoff radius of the detonating side's OWN
+//--- structures the hull still dies - only the live warhead is suppressed. Enemy-facing lethality
+//--- is untouched: the check is against the pilot side's own buildings, nothing else.
+Private ["_fpvStand","_fpvOwn","_fpvNearOwn"];
+_fpvStand = missionNamespace getVariable ["WFBE_C_FPV_MIN_BLAST_RANGE", 120];
+_fpvNearOwn = false;
+if (_fpvStand > 0 && {_matchSide != sideUnknown}) then {
+	_fpvOwn = (_matchSide) Call WFBE_CO_FNC_GetSideStructures;
+	if (typeName _fpvOwn == "ARRAY") then {
+		{
+			if (!isNil "_x") then {
+				if (!isNull _x && {alive _x} && {(_x distance _dronePos) < _fpvStand}) then {_fpvNearOwn = true};
+			};
+		} forEach _fpvOwn;
+	};
+};
+if (_fpvNearOwn) then {
+	["WARNING", Format ["Support_FPV_Detonate.sqf: [%1] warhead SUPPRESSED - detonation at %2 is within %3m of an own-side structure (friendly-base guard).", str _matchSide, _dronePos, _fpvStand]] Call WFBE_CO_FNC_LogContent;
+	diag_log Format ["FPVGUARD|v1|suppressed|side=%1|pos=%2|standoff=%3", str _matchSide, _dronePos, _fpvStand];
+} else {
+	createVehicle [_ammoClass, _dronePos, [], 0, "NONE"];
+};
