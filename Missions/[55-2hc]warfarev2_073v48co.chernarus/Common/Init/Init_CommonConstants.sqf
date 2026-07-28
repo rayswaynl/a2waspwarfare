@@ -3298,5 +3298,15 @@ if (isNil "WFBE_C_SIDE_PATROL_FRONT_BIAS") then {WFBE_C_SIDE_PATROL_FRONT_BIAS =
 if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_ENABLE") then {WFBE_C_AICOM_HQ_REPURCHASE_ENABLE = 1}; //--- armed 2026-07-27 owner go.
 if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_DELAY") then {WFBE_C_AICOM_HQ_REPURCHASE_DELAY = 1200};
 
+//--- CASTING MODE (2026-07-28): free-flying observer camera for a caster / streamer.
+//--- No new slot and no enrolment change: the caster joins a normal slot, enrols through the
+//--- stock path, then opts out client-side - so mission.sqm is untouched on all three
+//--- terrains, WF_MAXPLAYERS is unchanged, and the slot-count consistency test stays green.
+//--- 0 = INERT: nothing compiled, no KeyDown/KeyUp handler registered.
+if (isNil "WFBE_C_CASTER_MODE") then {WFBE_C_CASTER_MODE = 0};
+//--- Steam64 allowlist. EMPTY BY DEFAULT and empty means nobody, so arming the master flag
+//--- alone grants casting to no one - the UID must be added deliberately.
+if (isNil "WFBE_C_CASTER_UIDS") then {WFBE_C_CASTER_UIDS = []};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

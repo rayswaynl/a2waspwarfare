@@ -1549,6 +1549,17 @@ if (WF_Debug) then {
 };
 execVM "limitThirdPersonView.sqf";
 
+//--- CASTING MODE (WFBE_C_CASTER_MODE, default 0). Compile and both handler registrations sit
+//--- INSIDE the flag guard, so at 0 nothing is compiled and findDisplay 46 gains no handler.
+if ((missionNamespace getVariable ["WFBE_C_CASTER_MODE", 0]) > 0) then {
+	WFBE_CL_FNC_CasterMode = Compile preprocessFileLineNumbers "Client\Functions\Client_CasterMode.sqf";
+	WFBE_CL_FNC_CasterKeys = Compile preprocessFileLineNumbers "Client\Functions\Client_CasterKeys.sqf";
+	WFBE_CL_FNC_CasterKeyUp = Compile preprocessFileLineNumbers "Client\Functions\Client_CasterKeyUp.sqf";
+	_display displayAddEventHandler ["KeyDown", "_this call WFBE_CL_FNC_CasterKeys"];
+	_display displayAddEventHandler ["KeyUp", "_this call WFBE_CL_FNC_CasterKeyUp"];
+	["INITIALIZATION", "Init_Client.sqf: casting mode ARMED (WFBE_C_CASTER_MODE=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 if ((missionNamespace getVariable "WFBE_C_ARTILLERY_UI") > 0) then {[] ExecVM "ca\modules\ARTY\data\scripts\init.sqf"}; //--- Artillery UI.
 if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_EASA") > 0) then {Call Compile preprocessFileLineNumbers "Client\Module\EASA\EASA_Init.sqf"}; //--- EASA.
 if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") > 0 && WF_A2_Vanilla) then {Call Compile preprocessFileLineNumbers "Client\Module\CM\CM_Init.sqf"}; //--- Countermeasures.
