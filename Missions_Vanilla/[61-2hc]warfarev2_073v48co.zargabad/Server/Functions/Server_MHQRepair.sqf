@@ -71,7 +71,7 @@ if (isMultiplayer) then {[_side, "HandleSpecial", ["set-hq-killed-eh", _MHQ]] Ca
 _logik setVariable ['wfbe_hq_deployed', false, true];
 _logik setVariable ['wfbe_hq_repairing',false, true];
 _logik setVariable ['cashrepaired', false, true]; //--- wiki-wins: reset so cash-repair works again after the HQ is rebuilt (Action_RepairMHQDepot set it true permanently)
-_logik setVariable ['wfbe_hq_repair_count', (_logik getVariable "wfbe_hq_repair_count") + 1, true];
+_logik setVariable ['wfbe_hq_repair_count', (_logik getVariable ["wfbe_hq_repair_count", 0]) + 1, true]; //--- fable/fob-structures-seed: 2-arg default - nil-arith guard for any unseeded side
 //--- [>1.62] Set the HQ to be local to the commander.
  _commanderTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 [leader _commanderTeam, "SetMHQLock", _MHQ] Call WFBE_CO_FNC_SendToClient;	
