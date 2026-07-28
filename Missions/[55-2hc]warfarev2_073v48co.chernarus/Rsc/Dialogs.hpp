@@ -2832,6 +2832,17 @@ class RscMenu_Command {
 			y = 0.953825;
 			w = 0.111000;
 			h = 0.040000;
+			//--- fable/cmd-clipping (owner screenshot 2026-07-28: bottom-row buttons truncated at dialog edge):
+			//--- computed geometry (Tools-external cmd_layout_v2.py, inheritance-resolved) proves this 4-way
+			//--- row and every other legacy control in RscMenu_Command sits fully inside [0,1] with zero
+			//--- legacy-vs-legacy overlap in all 4 visibility states - the truncation is TEXT overflow, not a
+			//--- position defect. Calibrated against this dialog's own CA_Cmd_Disband/DisbandSel captions (17
+			//--- chars fit w=0.224 at the inherited sizeEx=0.035 -> ~0.0132 width-units/char): a 12-char caption
+			//--- (SUGGEST TOWN / RELEASE HELI / TEAM: ATTACK) needs ~0.158 in that same box, but this row's
+			//--- 4-way split only gives w=0.111 each, so the centered text clips at both ends. sizeEx=0.020
+			//--- needs ~0.090 for the same 12 chars - fits with margin. Inherited by CA_Cmd_SupportCas /
+			//--- SupportRelease / TeamDoctrine (14632-14634) below - none of them override sizeEx.
+			sizeEx = 0.020;
 			show = 0;
 			text = "SUGGEST TOWN";
 			action = "MenuAction = 780";
