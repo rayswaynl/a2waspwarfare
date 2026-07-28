@@ -107,7 +107,11 @@ for "_fpvTry" from 0 to 7 do {
 	if (_fpvClear == 0) exitWith {};
 };
 _drone = createVehicle [_class, _fpvPos, [], 0, "FLY"];
-if (!isNull _drone) then {_drone setPosATL [_fpvPos select 0, _fpvPos select 1, (25 + (random 10))]};
+//--- fable/review-guards (adversarial review 2026-07-28, CONFIRMED): this re-pin used a fresh
+//--- random 25-35m, DISCARDING the clearance-tested z the retry loop above had just proven
+//--- clear - an escalated spawn dropped straight back into the occupied band. Keep the tested
+//--- height (its z is already base+25 minimum by construction).
+if (!isNull _drone) then {_drone setPosATL [_fpvPos select 0, _fpvPos select 1, (_fpvPos select 2)]};
 if (isNull _drone) exitWith {
 	missionNamespace setVariable [_pendingKey, false];
 	hint "FPV airframe creation failed. Nothing was charged.";
