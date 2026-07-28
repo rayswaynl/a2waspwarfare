@@ -519,7 +519,9 @@ while {!WFBE_GameOver} do {
 	//--- retained shot-down hulls. Preserve the exact live west/east-air candidate semantics, but
 	//--- close a scheduler slice every bounded number of registry entries so dead wreck growth cannot
 	//--- create a single multi-frame hitch. The cache is then reused by every town below.
-	_enemyAirScanBudget = 32;
+	//--- A2's isKindOf lookup is costly on the large, long-lived Chernarus vehicle registry. Four
+	//--- entries target a sub-second air-scan slice on the armed Chernarus run.
+	_enemyAirScanBudget = 4;
 	_enemyAirScanCount = 0;
 	_enemyAirScanned = 0;
 	{
