@@ -505,6 +505,12 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_AIRMOBILE") then {WFBE_C_AICOM_AIRMOBILE = 1};                        //--- 1 = fly ordered legs with the team's own retained transport heli (default). 0 = always road-march (legacy).
 	if (isNil "WFBE_C_AICOM_AIRMOBILE_MIN_DIST") then {WFBE_C_AICOM_AIRMOBILE_MIN_DIST = 1200};  //--- m: only air-mobile when the ordered destination is farther than this (short legs road-march - not worth a fly-out).
 	if (isNil "WFBE_C_AICOM_AIR_RETAIN") then {WFBE_C_AICOM_AIR_RETAIN = 1};                     //--- cmdcon42-f (Ray): 1 = the FOUNDING air-insert KEEPS the team's transport heli (returns to base + holds via the shared AICOMAirReturn path) so the AIR-MOBILE branch above can fly the team's next orders. ECONOMICS BY DESIGN: retaining FORGOES the legacy off-map refund (the hull's QUERYUNITPRICE credited back to the AI treasury) - the side keeps a REAL transport asset instead of the credit (HQ air squads should BE air squads). 0 = legacy fly-off + delete + refund (byte-identical).
+	//--- fable/heli-quickstart (owner 2026-07-28: helicopters linger way too long in base before flying off
+	//--- after spawning): tunable boarding-wait cap for a founded team's OWN air transport
+	//--- (Common_RunCommanderTeam.sqf, the "Let everyone board first" wait before the run-in), replacing the
+	//--- previous hardcoded 30s. Air-only - gates only the transport-insert Spawn enclosed by !isNull _airVeh
+	//--- (an Air hull with transportSoldier>0); ground transports are never affected.
+	if (isNil "WFBE_C_AICOM_BOARD_WAIT") then {WFBE_C_AICOM_BOARD_WAIT = 12};              //--- s: max wait for pax to mount the team's own air transport before the run-in begins. 30 = legacy value.
 	//--- Grok U6 idle-air retirement: all three defaults are 0 so the existing air lifecycle is unchanged until explicitly configured.
 	if (isNil "WFBE_C_AICOM_AIR_IDLE_RTB") then {WFBE_C_AICOM_AIR_IDLE_RTB = 0};
 	if (isNil "WFBE_C_AICOM_AIR_IDLE_MINUTES") then {WFBE_C_AICOM_AIR_IDLE_MINUTES = 0};
