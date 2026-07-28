@@ -2680,7 +2680,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //---   Has no effect unless WFBE_C_NAVAL_INLINE_HULLS > 0.
 //======================================================================================
 	if (isNil "WFBE_C_NAVAL_INLINE_HULLS") then {WFBE_C_NAVAL_INLINE_HULLS  = 1};   //--- 0 = lateral HEAD behaviour; >0 = inline bow-to-stern axis
-	if (isNil "WFBE_C_NAVAL_INLINE_GAP")   then {WFBE_C_NAVAL_INLINE_GAP    = -265}; //--- Hull B aft offset metres (body Y); tune -258..-275 in-editor
+	if (isNil "WFBE_C_NAVAL_INLINE_GAP")   then {WFBE_C_NAVAL_INLINE_GAP    = -252}; //--- Hull B aft offset metres (body Y). [Ray-dir 2026-07-28 "decks still not touching": -265->-252. NOTE the two earlier gap tunes (TWIN_GAP 42->32->26) edited the LATERAL constant, which is SKIPPED while WFBE_C_NAVAL_INLINE_HULLS=1 - THIS is the live knob. Wasp-class LOA ~253m, so -252 should butt stern to bow; slight part interpenetration is fine (statics). If a sliver remains next report: -245. Rollback -265.]
 	if (isNil "WFBE_C_NAVAL_SEAM_BRIDGE")  then {WFBE_C_NAVAL_SEAM_BRIDGE   = 0};   //--- 0 = no bridge piers; >0 = 4x Land_nav_pier_m_1 at seam
 //--- fable/naval-camps-on-deck (Ray 2026-07-07):
 //--- WFBE_C_NAVAL_CAMPS_DECK: when 1 (default), re-seat Khe Sanh camp logics/models/flags +
