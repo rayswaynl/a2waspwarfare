@@ -33,6 +33,25 @@ waitUntil { !isNil "towns" };
 
 Private ["_tick","_grant","_dwell","_cooldown","_aiOnly","_squads","_kept","_now"];
 
+//--- fable/supply-startpos-fix (LIVE RPT 2026-07-28, m0728f Zargabad): the first cut read
+//--- wfbe_startpos and indexed it as a position array. It is an OBJECT - Init_Server.sqf:735
+//--- takes it from the side tuple and line 740 calls getDir on it, which only works on an object.
+//--- So every spawn attempt threw "Type Object, expected Array" at the createVehicle line and the
+//--- squad NEVER spawned once on the live server (zero AICOMSUPPLY lines all match).
+//--- NOTE for the next reader: RequestDefense.sqf:44 carries a comment asserting the opposite
+//--- ("wfbe_startpos is a POSITION ARRAY"). That comment is wrong; those call sites only survive
+//--- because `distance` accepts an object as happily as an array. Anything that INDEXES it must
+//--- normalise first, which is what this helper is for. Always returns a real [x,y,z].
+WFBE_SE_FNC_AicomSupplyBasePos = {
+	private ["_lg","_bp"];
+	_lg = _this select 0;
+	_bp = _lg getVariable "wfbe_startpos";
+	if (isNil "_bp") exitWith {getPos _lg};
+	if ((typeName _bp) == "OBJECT") exitWith {if (isNull _bp) then {getPos _lg} else {getPos _bp}};
+	if ((typeName _bp) == "ARRAY" && {(count _bp) >= 2}) exitWith {[_bp select 0, _bp select 1, 0]};
+	getPos _lg
+};
+
 _tick     = missionNamespace getVariable ["WFBE_C_AICOM_SUPPLY_TICK", 15];
 if (_tick < 5) then {_tick = 5};
 
@@ -80,8 +99,7 @@ while {!WFBE_GameOver} do {
 		} else {
 			//--- State machine: outbound -> loading (dwell) -> inbound -> deliver -> outbound.
 			_eLogik   = (_eSide) Call WFBE_CO_FNC_GetSideLogic;
-			_eBasePos = _eLogik getVariable "wfbe_startpos";
-			if (isNil "_eBasePos") then {_eBasePos = getPos _eLogik};
+			_eBasePos = [_eLogik] Call WFBE_SE_FNC_AicomSupplyBasePos;
 			_eArrive  = if (_eMode == "heli") then {150} else {120};
 			_eObj     = if (_eState == "inbound") then {_eBasePos} else {_eTarget};
 			_eCur     = getPos _eVeh;
@@ -180,8 +198,7 @@ while {!WFBE_GameOver} do {
 						};
 					};
 					if (_mode != "") then {
-						_basePos = _logik getVariable "wfbe_startpos";
-						if (isNil "_basePos") then {_basePos = getPos _logik};
+						_basePos = [_logik] Call WFBE_SE_FNC_AicomSupplyBasePos;
 						_sideID = (_side) Call GetSideID;
 						_cls = "";
 						if (_mode == "heli") then {

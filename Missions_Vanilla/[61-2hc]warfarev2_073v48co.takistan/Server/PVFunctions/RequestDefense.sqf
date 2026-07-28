@@ -41,7 +41,7 @@ if (_index != -1) then {
 		//    (mirrors RequestStructure.sqf bank-placement pattern)
 		//----------------------------------------------------------------------
 		_logik     = _side Call WFBE_CO_FNC_GetSideLogic;
-		_startPos  = _logik getVariable ["wfbe_startpos", [0,0,0]]; //--- fix(hunt): wfbe_startpos is a POSITION ARRAY (Init_Server.sqf:734), not an object - isNull/getPos on it dropped the HQ centre, silently bypassing the base-defense budget/threat gates at the main base
+		_startPos  = _logik getVariable ["wfbe_startpos", [0,0,0]]; //--- fix(hunt): use the HQ centre directly as a distance target instead of isNull/getPos-ing it, which dropped the centre and silently bypassed the base-defense budget/threat gates at the main base. CORRECTION 2026-07-28 (live RPT proof): wfbe_startpos is an OBJECT, not a position array - Init_Server.sqf:735 takes it from the side tuple and :740 calls getDir on it. This line is still correct ONLY because `distance` accepts an object; never INDEX this value without normalising (see WFBE_SE_FNC_AicomSupplyBasePos in Server\Server_AicomSupplySquad.sqf).
 		_baseAreas = _logik getVariable ["wfbe_basearea", []];
 		_baseRange = missionNamespace getVariable ["WFBE_C_BASE_AREA_RANGE", 250];
 
