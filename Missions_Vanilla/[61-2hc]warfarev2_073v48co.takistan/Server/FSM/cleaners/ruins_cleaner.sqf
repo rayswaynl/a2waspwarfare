@@ -27,9 +27,13 @@ while {!WFBE_GameOver} do {
 	_perfScanned = count _clear;
 	{
 		_perfItemStart = diag_tickTime;
-		deleteVehicle _x;
+		//--- fable/cleanup-locality-2: deleteVehicle on a NON-local object silently no-ops (same A2
+		//--- rule as the weaponholder cleaner) - guard + count honestly instead of pretending.
+		if (local _x) then {
+			deleteVehicle _x;
+			_perfDeleted = _perfDeleted + 1;
+		};
 		_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
-		_perfDeleted = _perfDeleted + 1;
 		sleep 0.5;
 	} forEach _clear;
 	if !(isNil "PerformanceAudit_Record") then {
