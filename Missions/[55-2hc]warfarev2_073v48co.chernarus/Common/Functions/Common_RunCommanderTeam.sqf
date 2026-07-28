@@ -256,7 +256,27 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 						{ _ammo = getText (configFile >> "CfgMagazines" >> _x >> "ammo"); if (_ammo != "" && {(getNumber (configFile >> "CfgAmmo" >> _ammo >> "airLock")) == 1 || {(getNumber (configFile >> "CfgAmmo" >> _ammo >> "maxControlRange")) > 0}}) then {_isGuided = true} } forEach (getArray (configFile >> "CfgWeapons" >> _x >> "magazines"));
 						if (!_isGuided && {_cannon == ""}) then {_cannon = _x};
 					} forEach (weapons _h);
-					if (_cannon != "") then {
+					//--- fable/ai-bomb-nudge (owner 2026-07-28 "AI is still not using other loadouts like
+					//--- bombs etc"): this nudge exists to stop gunners parking on GUIDED ATGMs at standoff
+					//--- (see the B60 header above). It picks the FIRST non-guided weapon, which on a Mi24_P
+					//--- is the GSh302 cannon - HeliBombLauncher is equally non-guided but sits later in
+					//--- `weapons`, so it was never picked, AND because this re-fires every
+					//--- WFBE_C_AICOM_HELI_NUDGE_PERIOD (7s) seconds any bomb the AI did select was pulled
+					//--- straight back off. That made the bomb launcher structurally unusable on the one
+					//--- attack heli in the roster that carries one. A gunner already on a bomb is NOT the
+					//--- standoff-ATGM failure this nudge targets, so skip the cycle instead of overriding.
+					//--- Explicit launcher names (house idiom - the AIR_BOMBS table above does the same)
+					//--- rather than an ammo-config probe, so a config quirk cannot silently disable the
+					//--- nudge for a non-bomb weapon. 0 = legacy (always nudge).
+					private ["_curW","_bombSel"];
+					_bombSel = false;
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_NUDGE_BOMB_YIELD", 1]) > 0) then {
+						_curW = currentWeapon (gunner _h);
+						if (_curW in ["HeliBombLauncher","Mk82BombLauncher_6","Mk82BombLauncher","AirBombLauncher","BombLauncherA10","BombLauncher","BombLauncherF35"]) then {
+							_bombSel = true;
+						};
+					};
+					if (_cannon != "" && {!_bombSel}) then {
 						_band = missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_RANGE", 700];
 						_tgt = objNull;
 						{ if (alive _x && {(_sd getFriend (side _x)) < 0.6} && {(_h distance _x) < _band}) exitWith {_tgt = _x} } forEach ((getPos _h) nearEntities [["Man","Car","Wheeled_APC","Tank"], _band]);
