@@ -39,6 +39,10 @@ a2waspwarfare_DiscordBot/a2waspwarfare_DiscordBot/
 
 A3missionTest/
 
+# Subagent git worktrees (harness-created, transient full-repo checkouts;
+# see Agent tool isolation: "worktree"). Never committed.
+.claude/worktrees/
+
 # Agent fleet output junk
 result-*.md
 JOURNAL.md
