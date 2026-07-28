@@ -126,12 +126,15 @@ _lastDeckHdr = "";
 _deckDoctrine = "";
 if (_deckOn) then {
 	_warCtrls = _warCtrls - [14620,14621,14622,14623,14624,14628,14629,14630];
-	_warCtrls = _warCtrls + [14700,14701,14702,14703,14704,14705,14706];
+	//--- fable/review-guards (adversarial review 2026-07-28, CONFIRMED): 14700 is deliberately in
+	//--- NEITHER control set - it was in both, and the advise forEach below runs second, so its
+	//--- !_isCmd write always won and the header was hidden while commanding. Driven explicitly
+	//--- after the two loops instead (deck on = visible in both states).
+	_warCtrls = _warCtrls + [14701,14702,14703,14704,14705,14706];
 	//--- fable/cmd-deck-layout: STATE A (no commander) keeps ONLY the live header strip. The zone
 	//--- titles are labels for the commander deck's own layout; in the advisory state the legacy
 	//--- controls already occupy those rows (14607 spans 0.486..0.626), so admitting them there is
 	//--- what stacked "STRATEGY" on top of the AI-intent readout in the owner screenshot.
-	_adviseCtrls = _adviseCtrls + [14700];
 	lbClear 14705;
 	{lbAdd [14705, _x]} forEach _deckOrders;
 	lbSetCurSel [14705, 0];
@@ -164,6 +167,7 @@ while {alive player && dialog} do {
 	{ctrlShow [_x, _isCmd]} forEach _warCtrls;
 	{ctrlShow [_x, !_isCmd]} forEach _adviseCtrls;                   //--- STATE-A advisory readout + posture nudge
 	ctrlShow [14670, !_isCmd];                                       //--- TAKE COMMAND only when NOT commander
+	if (_deckOn) then {ctrlShow [14700, true]};                      //--- deck header: both states (see fable/review-guards note above)
 	ctrlSetText [14605, (if (_isCmd) then {"WAR ROOM"} else {"COMMAND"})];
 	//--- fable/cmd-deck-c4: STATE LIGHTING + LIVE HEADER. Lighting uses a text marker, not
 	//--- ctrlSetTextColor - colour writes on shortcut buttons are unreliable on A2 OA, a suffix is not.
