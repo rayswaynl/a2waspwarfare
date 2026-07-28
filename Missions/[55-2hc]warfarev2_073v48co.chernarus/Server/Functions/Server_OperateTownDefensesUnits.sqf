@@ -145,8 +145,15 @@ switch (_action) do {
 							if (local _unit) then {deleteVehicle _unit} else {[_unit, "HandleSpecial", ["cleanup-town-defense-gunner", _unit, "remove-case"]] Call WFBE_CO_FNC_SendToClient};
 						};
 					} else {
-						_unit setPos (getPos _x);
-						if (local _unit) then {deleteVehicle _unit} else {[_unit, "HandleSpecial", ["cleanup-town-defense-gunner", _unit, "remove-case"]] Call WFBE_CO_FNC_SendToClient};
+						//--- fable/cleanup-locality-2 (PVF-class hunt, MEDIUM): the alive-branch above skips funded
+						//--- (player-squad) groups before de-manning; this dead-branch had no such guard, so a dead
+						//--- player-squad unit in the seat was setPos'd + dispatch-deleted - and the dispatch case is
+						//--- HC-allowlist-only, so for a client-local body it was also silently DROPPED. Same guard
+						//--- both branches: funded-group corpses belong to the normal death pipeline, not the de-man.
+						if (isNil {(group _unit) getVariable "wfbe_funds"}) then {
+							_unit setPos (getPos _x);
+							if (local _unit) then {deleteVehicle _unit} else {[_unit, "HandleSpecial", ["cleanup-town-defense-gunner", _unit, "remove-case"]] Call WFBE_CO_FNC_SendToClient};
+						};
 					};
 				};
 				//--- OWNER RULING (statics lock): de-manned (or already empty) - lock so a player

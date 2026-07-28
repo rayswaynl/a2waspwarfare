@@ -74,7 +74,11 @@ _logik setVariable ['cashrepaired', false, true]; //--- wiki-wins: reset so cash
 _logik setVariable ['wfbe_hq_repair_count', (_logik getVariable ["wfbe_hq_repair_count", 0]) + 1, true]; //--- fable/fob-structures-seed: 2-arg default - nil-arith guard for any unseeded side
 //--- [>1.62] Set the HQ to be local to the commander.
  _commanderTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-[leader _commanderTeam, "SetMHQLock", _MHQ] Call WFBE_CO_FNC_SendToClient;	
+//--- fable/cleanup-locality-2 (PVF-class hunt, LOW): align with the isPlayer-guarded sibling send
+//--- at the top of this file - an AI/absent commander makes this a dead-destination PVF.
+if (isPlayer (leader _commanderTeam)) then {
+	[leader _commanderTeam, "SetMHQLock", _MHQ] Call WFBE_CO_FNC_SendToClient;
+};
 [_side,"Mobilized", ["Base", _MHQ]] Spawn SideMessage;
 deleteVehicle _hq;	
 

@@ -43,7 +43,7 @@ if (_isHeadless) then {
 		//---   sidepatrol-watchdog        = server_side_patrols.sqf (WFBE_C_SIDE_PATROL_UNSTUCK; routes the
 		//---        external stuck watchdog to this HC when the wedged patrol's leader is HC-local - the
 		//---        receiver case already exists in HandleSpecial.sqf; this key was the missing wire-up)
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat"]);
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat","cleanup-weaponholder"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };
@@ -59,7 +59,7 @@ if (_isHeadless) then {
 //--- touch a live or re-crewed vehicle. Correctness fix: this path executing was always the design
 //--- (WFBE_C_TRASH_REMOTE_DELETE default 1) - only the HC-era gate made it HC-exclusive.
 if (!_isHeadless && {_script == "CLTFNCHandleSpecial"} && {(typeName _parameters) == "ARRAY"} && {(count _parameters) > 0}) then {
-	if ((_parameters select 0) in ["cleanup-trash-object","cleanup-empty-vehicle"]) then {_exit = false};
+	if ((_parameters select 0) in ["cleanup-trash-object","cleanup-empty-vehicle","cleanup-weaponholder"]) then {_exit = false};
 };
 //--- fix(hunt): the old `if !(_hcAllowed) exitWith {}` sat INSIDE the then{} above - it exited only that
 //--- block and FELL THROUGH, and the nil-destination / side-match re-opens below then re-armed _exit=false

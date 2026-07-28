@@ -1864,6 +1864,18 @@ switch (_args select 0) do {
 			};
 		};
 	};
+	//--- fable/cleanup-locality-2 (PVF-class hunt, HIGH): server-side registration for PLAYER-placed
+	//--- mines. DropRPG.sqf's Fired EH runs on the placing player's CLIENT where the `mines` global
+	//--- (seeded only by the server-only mines_cleaner.sqf) is nil - so on every dedicated server the
+	//--- registration silently no-oped and player mines were never age-reaped. typeOf-validated:
+	//--- worst a forged dispatch can do is enroll a real mine for its normal timed deletion.
+	case "register-mine": {
+		Private ["_rmMine"];
+		_rmMine = _args select 1;
+		if (!isNil "mines" && {!isNull _rmMine} && {(typeOf _rmMine) in ["Mine","MineE"]}) then {
+			mines set [count mines, [_rmMine, time]];
+		};
+	};
 	//--- HC SEATING TELEMETRY (task #34): pure RPT logging, no gameplay effect. Mirrors the HCSIDE|v1|connect
 	//--- line below so "did an HC land on WEST this boot, and did the script reseat fix it" is directly
 	//--- observable on the server RPT instead of inferred. _args select 1 is a 2/3-element sub-array packed
