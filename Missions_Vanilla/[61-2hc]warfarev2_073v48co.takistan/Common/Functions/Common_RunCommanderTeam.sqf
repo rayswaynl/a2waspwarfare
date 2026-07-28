@@ -1628,7 +1628,28 @@ while {!WFBE_GameOver && _alive} do {
 						_alReqPending = !isNil "_alReq" && {(typeName _alReq) == "ARRAY"} && {count _alReq > 0};
 						_alGrantPending = !isNil "_alGrant" && {(typeName _alGrant) == "ARRAY"} && {count _alGrant > 0};
 						if (!_alReqPending && {!_alGrantPending}) then {
-							_team setVariable ["wfbe_aicom_airlift_req", [time, getPosATL (leader _team)], true];
+							//--- fable/airlift-parking-lot (LIVE EVIDENCE m0728f, 2026-07-28): this request is
+							//--- DISABLED BY DEFAULT because the delivery half of the handshake has never once
+							//--- completed. Measured on the live server in a single ~100-minute match:
+							//---   AIRMOBILE_REQUISITION_GRANT     = 55  (server RPT, 4928 funds each = ~271k)
+							//---   AIRMOBILE_REQUISITION_DELIVERED = 55  (25 on HC1 + 30 on HC2)
+							//---   AIR-INSERT                      =  0
+							//--- The cause is structural, not a tuning problem: the air-insert block that would
+							//--- load and fly the team lives at ~line 644, BEFORE this file's main loop opens at
+							//--- ~line 1028, so it runs exactly ONCE at team founding. The requisitioned
+							//--- transport is created much later, INSIDE that loop (the grant consumer near line
+							//--- 3184). By the time the helicopter exists, the only code that could lift anyone
+							//--- with it has already run and is never revisited. Every granted transport is
+							//--- therefore paid for, spawned with a pilot, and parked at the aircraft factory
+							//--- forever, while the team walks (owner-visible: "lots of empty mh6j (only pilot)",
+							//--- "spawned in groups of like 5" - the group size is WFBE_C_AICOM_AIR_MAX_TOTAL).
+							//--- Turning the REQUEST off is strictly better than leaving it on: the AI keeps the
+							//--- funds it was burning, the air cap stops filling with idle hulls, and no
+							//--- behaviour is lost that was ever actually happening. Set the flag to 1 only
+							//--- once the lift is re-implemented INSIDE the loop at the delivery point.
+							if ((missionNamespace getVariable ["WFBE_C_AICOM_AIRLIFT_REQ", 0]) > 0) then {
+								_team setVariable ["wfbe_aicom_airlift_req", [time, getPosATL (leader _team)], true];
+							};
 							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_REQ|team=" + str _team + "|dist=" + str (round ((leader _team) distance _dest)));
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] has no transport heli for a long airmobile leg - requisition requested.", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
 						};
@@ -3182,7 +3203,15 @@ while {!WFBE_GameOver && _alive} do {
 				if (count _alNewVehicles > 0) then {
 					{if (!isNull _x && {_x isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0}) then {_x setVariable ["wfbe_aicom_transport", true, true]}} forEach _alNewVehicles;
 					_vehicles = _vehicles + _alNewVehicles;
-					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_DELIVERED|team=" + str _team + "|class=" + _alClass);
+					//--- fable/airlift-parking-lot: record WHY a delivered transport does or does not lift.
+					//--- Always-on (one line per delivery, rare event): when the in-loop lift is built, this
+					//--- is the ground truth for whether seats or passengers were ever the problem. Live
+					//--- 2026-07-28 showed 55 deliveries and 0 lifts, but never recorded seats/pax.
+					private ["_alSeats","_alFoot","_alHull"];
+					_alHull = _alNewVehicles select 0;
+					_alSeats = if (isNull _alHull) then {-1} else {_alHull emptyPositions "cargo"};
+					_alFoot = {alive _x && {vehicle _x == _x}} count ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_DELIVERED|team=" + str _team + "|class=" + _alClass + "|cargoSeats=" + str _alSeats + "|footPax=" + str _alFoot + "|liftedHere=0-by-design-see-airlift-parking-lot");
 					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] received paid transport %3 at factory.", _side, _team, _alClass]] Call WFBE_CO_FNC_AICOMLog;
 				} else {
 					_alRefund = if ((typeName _alCharge) == "SCALAR") then {_alCharge} else {0};
