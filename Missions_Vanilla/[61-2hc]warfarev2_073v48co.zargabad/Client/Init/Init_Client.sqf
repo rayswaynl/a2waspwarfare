@@ -1606,7 +1606,9 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
 				_entities = (position _preview) nearEntities [['Man','Car','Motorcycle','Tank','Air','Ship'],12];
 				if ((count _entities > 0) && {side _x != sideJoined} count _entities !=0) then {_color = _colorRed};
                 _factories =	 nearestObjects[_preview,["Warfare_HQ_base_unfolded","WarfareBBaseStructure","Base_WarfareBContructionSite"],25];
-				if (count _factories == 0) exitWith {};
+				//--- A fortification beyond this local factory-clearance radius is valid. Do not exit the
+				//--- placement callback here: an empty return leaves CoIn without its required green color.
+				if (count _factories > 0) then {
                 _sorted = [_preview,_factories] Call SortByDistance;
                 _factory = _sorted select 0;
                 _type=typeOf _factory;
@@ -1623,9 +1625,10 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
 					case ( _factory isKindOf "Base_WarfareBContructionSite"):{_p=12};
 
 					default {_p=1};
-				};
+					};
 
                 	if(_preview distance _factory < _p*(_lx min _ly)) then {_color = _colorRed};
+				};
 
 			}else{
 				private ["_objects","_sideEfacs","_object"];
