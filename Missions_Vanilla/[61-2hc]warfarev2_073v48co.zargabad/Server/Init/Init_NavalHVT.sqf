@@ -555,7 +555,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_SHOWPIECE", 0]) > 0) then 
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 	private ["_twinDir","_twinGap","_bridgeClass","_bridgeCount"];
 	_twinDir     = 90;			//--- same heading as the original hulls (SpawnLHD dir above)
-	_twinGap     = missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_GAP", 32];	//--- fable/air-cluster (owner 2026-07-27 "decks do not touch"): was hard-coded 42. LHD beam is ~32 m (the deck-spawn fix in Client_BuildUnit measured the ~16 m port half-beam), so 42 centre-to-centre left a ~10 m water strip between the decks. Constant-ised for per-restart tuning; default 32 = deck edges meet.
+	_twinGap     = missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_GAP", 26];	//--- fable/air-cluster (owner 2026-07-27 "decks do not touch"): was hard-coded 42. LHD beam is ~32 m (the deck-spawn fix in Client_BuildUnit measured the ~16 m port half-beam), so 42 centre-to-centre left a ~10 m water strip between the decks. Constant-ised for per-restart tuning; default 32 = deck edges meet.
 	_bridgeClass = "Land_nav_pier_m_1";	//--- confirmed A2 Chernarus flat walkable pier (damage.sqf preserve list)
 	_bridgeCount = 3;			//--- pier segments spanning the gap
 
@@ -1208,7 +1208,98 @@ if ((missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0) the
 			"WFBE_SE_FNC_NavalHVT_BubbleComplete"
 		] call WFBE_CO_FNC_RadiusHold_Register;
 	} forEach [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic];
-	["INITIALIZATION", "Init_NavalHVT.sqf : WFBE_C_NAVALHVT_BUBBLE_ENABLE=1 - proximity bubbles registered on all 3 carriers, camp deck-reseat skipped."] Call WFBE_CO_FNC_LogContent;
+	//--- fable/carrier-capture-fix (owner 2026-07-28 "doesnt show"): KotH-style public state marker per
+	//--- carrier - port of the proven Init_ZgKoth display loop. Ellipse at bubble radius; owner colour
+	//--- while neutral, attacker colour + mm:ss while holding, orange CONTESTED (with live defender
+	//--- count), gray cooldown. Anchors passed as spawn ARGS - spawn does not capture locals.
+	[_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic] spawn {
+		if (!isServer) exitWith {};
+		private ["_bubs","_i","_a","_mName","_westId","_eastId","_guerId","_tickSecs","_holderSide","_progress","_holdSecs","_cooldownUntil","_state","_mm","_ss","_ssStr","_holdMM","_holdSS","_holdSSStr","_text","_color","_lastTexts","_lastColors","_ownSID","_ownN","_bubR","_cName"];
+		_bubs = [];
+		{ if (!isNull _x && {(_x getVariable ["wfbe_rh_id",""]) != ""}) then {_bubs = _bubs + [_x]} } forEach _this;
+		if ((count _bubs) == 0) exitWith {};
+		_westId = west call WFBE_CO_FNC_GetSideID;
+		_eastId = east call WFBE_CO_FNC_GetSideID;
+		_guerId = resistance call WFBE_CO_FNC_GetSideID;
+		_bubR = missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_RADIUS", 180];
+		_lastTexts = []; _lastColors = [];
+		{
+			_mName = Format ["wfbe_carrier_bubble_%1", _forEachIndex];
+			_mName = createMarker [_mName, getPos _x];
+			_mName setMarkerShape "ELLIPSE";
+			_mName setMarkerSize [_bubR, _bubR];
+			_mName setMarkerColor "ColorGreen";
+			_mName setMarkerAlpha 0.5;
+			_lastTexts = _lastTexts + [""];
+			_lastColors = _lastColors + [""];
+		} forEach _bubs;
+		while {!WFBE_GameOver} do {
+			_tickSecs = missionNamespace getVariable ["WFBE_C_RADIUSHOLD_TICK_SECS", 5];
+			{
+				_a = _x;
+				_i = _forEachIndex;
+				_mName = Format ["wfbe_carrier_bubble_%1", _i];
+				_cName = _a getVariable ["name", "Carrier"];
+				_holderSide = _a getVariable ["wfbe_rh_holder_side", -1];
+				_progress = floor (_a getVariable ["wfbe_rh_progress", 0]);
+				_holdSecs = floor (_a getVariable ["wfbe_rh_holdsecs", 0]);
+				_cooldownUntil = _a getVariable ["wfbe_rh_cooldown_until", 0];
+				_ownSID = _a getVariable ["sideID", -1];
+				_holdMM = floor (_holdSecs / 60);
+				_holdSS = _holdSecs - (_holdMM * 60);
+				_holdSSStr = if (_holdSS < 10) then {Format ["0%1", _holdSS]} else {Format ["%1", _holdSS]};
+				if (time < _cooldownUntil) then {
+					_state = "cooldown";
+				} else {
+					if (_holderSide != -1) then {
+						_state = "holding";
+					} else {
+						if (_progress > 0) then {_state = "contested"} else {_state = "neutral"};
+					};
+				};
+				switch (_state) do {
+					case "cooldown": {
+						_color = "ColorGray";
+						_text = Format ["%1 - cooldown", _cName];
+					};
+					case "holding": {
+						_mm = floor (_progress / 60);
+						_ss = _progress - (_mm * 60);
+						_ssStr = if (_ss < 10) then {Format ["0%1", _ss]} else {Format ["%1", _ss]};
+						_color = "ColorYellow";
+						if (_holderSide == _westId) then {_color = "ColorWest"};
+						if (_holderSide == _eastId) then {_color = "ColorEast"};
+						if (_holderSide == _guerId) then {_color = "ColorGreen"};
+						_text = Format ["%1 - CAPTURING %2:%3/%4:%5", _cName, _mm, _ssStr, _holdMM, _holdSSStr];
+					};
+					case "contested": {
+						_ownN = -1;
+						if (_ownSID == _westId) then {_ownN = _a getVariable ["wfbe_rh_westn", -1]};
+						if (_ownSID == _eastId) then {_ownN = _a getVariable ["wfbe_rh_eastn", -1]};
+						if (_ownSID == _guerId) then {_ownN = _a getVariable ["wfbe_rh_guern", -1]};
+						_color = "ColorOrange";
+						_text = if (_ownN > 0) then {Format ["%1 - CONTESTED (defenders %2)", _cName, _ownN]} else {Format ["%1 - CONTESTED", _cName]};
+					};
+					default {
+						_color = "ColorGreen";
+						if (_ownSID == _westId) then {_color = "ColorWest"};
+						if (_ownSID == _eastId) then {_color = "ColorEast"};
+						_text = Format ["%1 - capture zone", _cName];
+					};
+				};
+				if (_text != (_lastTexts select _i)) then {
+					_mName setMarkerText _text;
+					_lastTexts set [_i, _text];
+				};
+				if (_color != (_lastColors select _i)) then {
+					_mName setMarkerColor _color;
+					_lastColors set [_i, _color];
+				};
+			} forEach _bubs;
+			sleep _tickSecs;
+		};
+	};
+	["INITIALIZATION", "Init_NavalHVT.sqf : WFBE_C_NAVALHVT_BUBBLE_ENABLE=1 - proximity bubbles registered on all 3 carriers, camp deck-reseat skipped + KotH state markers armed."] Call WFBE_CO_FNC_LogContent;
 } else {
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
 	private ["_campDeckOffsets"];
