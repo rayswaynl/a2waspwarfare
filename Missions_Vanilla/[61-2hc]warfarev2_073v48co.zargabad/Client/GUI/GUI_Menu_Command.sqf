@@ -127,7 +127,11 @@ _deckDoctrine = "";
 if (_deckOn) then {
 	_warCtrls = _warCtrls - [14620,14621,14622,14623,14624,14628,14629,14630];
 	_warCtrls = _warCtrls + [14700,14701,14702,14703,14704,14705,14706];
-	_adviseCtrls = _adviseCtrls + [14700,14701,14702];
+	//--- fable/cmd-deck-layout: STATE A (no commander) keeps ONLY the live header strip. The zone
+	//--- titles are labels for the commander deck's own layout; in the advisory state the legacy
+	//--- controls already occupy those rows (14607 spans 0.486..0.626), so admitting them there is
+	//--- what stacked "STRATEGY" on top of the AI-intent readout in the owner screenshot.
+	_adviseCtrls = _adviseCtrls + [14700];
 	lbClear 14705;
 	{lbAdd [14705, _x]} forEach _deckOrders;
 	lbSetCurSel [14705, 0];

@@ -3705,11 +3705,10 @@ class Mission
 				class Item0
 				{
 					position[]={10.0,0,10.0};
-					id=7034;
+					id=10;
 					side="CIV";
 					vehicle="Functionary1";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
@@ -3726,11 +3725,10 @@ class Mission
 				class Item0
 				{
 					position[]={20.0,0,10.0};
-					id=7035;
+					id=11;
 					side="CIV";
 					vehicle="Functionary1";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
@@ -3747,11 +3745,10 @@ class Mission
 				class Item0
 				{
 					position[]={30.0,0,10.0};
-					id=7036;
+					id=12;
 					side="CIV";
 					vehicle="Functionary1";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
@@ -3768,11 +3765,10 @@ class Mission
 				class Item0
 				{
 					position[]={40.0,0,10.0};
-					id=7037;
+					id=13;
 					side="CIV";
 					vehicle="Functionary1";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
