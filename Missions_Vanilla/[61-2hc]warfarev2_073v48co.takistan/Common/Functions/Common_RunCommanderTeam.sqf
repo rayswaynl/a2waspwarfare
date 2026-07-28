@@ -2607,6 +2607,15 @@ while {!WFBE_GameOver && _alive} do {
 						if (count _unheldCamps > 0) then {
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] camp-first window expired with %3 camp(s) un-held at [%4] - proceeding to center.", _side, _team, count _unheldCamps, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}]] Call WFBE_CO_FNC_AICOMLog;
 						};
+						//--- fable/mode2-no-futile-hold (backlog #10, adversarial R2): in AllCamps mode (capture mode 2)
+						//--- the depot CANNOT drain while ANY camp is un-held (server_town.sqf gate), so the centre hold
+						//--- below would grind its whole window for guaranteed-zero progress. End the capture attempt
+						//--- instead - same scope + idiom as the _capAbort bail above (plant already released, capture
+						//--- lock self-expires via its TTL) - and the outer loop re-tasks the team. Mode 0/1, or the
+						//--- gate flag off, keep the original fall-through unchanged.
+						if ((count _unheldCamps > 0) && {_capMode == 2} && {_campGateMode2 != 0}) exitWith {
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] mode-2 camps still un-held after the window - skipping the futile centre hold, re-tasking.", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
+						};
 
 						//--- SML-4 overwatch: pre-position launcher soldier on armor approach vector before the depot assault. Flag-gated (WFBE_C_SML_AT_OVERWATCH default 0).
 						if ((missionNamespace getVariable ["WFBE_C_SML_AT_OVERWATCH", 0]) > 0) then {
