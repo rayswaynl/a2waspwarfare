@@ -157,6 +157,7 @@ WFBE_SE_FNC_SpawnStructureDressing = Compile preprocessFileLineNumbers "Server\F
 WFBE_SE_FNC_BankIncome = Compile preprocessFileLineNumbers "Server\Functions\Server_BankIncome.sqf";
 WFBE_SE_FNC_SiteClearance = Compile preprocessFileLineNumbers "Server\Functions\Server_SiteClearance.sqf";
 WFBE_SE_FNC_CmdSupportAir = Compile preprocessFileLineNumbers "Server\Functions\Server_CmdSupportAir.sqf"; //--- COMMAND V2 (c): granted heli-support escort lifecycle. Spawned only from the aicom-support-air case while WFBE_C_CMD_SUPPORT_AIR > 0.
+WFBE_SE_FNC_BombProbe = Compile preprocessFileLineNumbers "Server\Functions\Server_BombProbe.sqf"; //--- fable/bomb-stage-a (2026-07-28): Stage-A bomb-release/turret-vs-hull TEST HARNESS, gated WFBE_C_BOMB_PROBE default 0 (see docs\plans\2026-07-28-bomb-stage-a-runbook.md). Always compiled here (cheap, no behavior until the flag-gated spawn call below invokes it).
 //--- CBR: per-side registries (populated as CBRs are built; pruned lazily during checks).
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
 	missionNamespace setVariable ["WFBE_CBR_WEST", []];
@@ -196,6 +197,15 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
 if ((missionNamespace getVariable ["WFBE_C_HC_LOBBY_LOCK", 0]) > 0) then {
 	[] execVM "Server\Init\Init_HcLobbyLock.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Init_HcLobbyLock.sqf launched (WFBE_C_HC_LOBBY_LOCK>0)."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- fable/bomb-stage-a (2026-07-28) STAGE A TEST HARNESS: default-off Server_BombProbe.sqf spawns
+//--- 5 throwaway AI-crewed hulls to answer the bomb-release + turret-vs-hull EASA-AI questions in
+//--- docs\plans\2026-07-28-bomb-stage-a-runbook.md. The probe file itself waits on commonInitComplete
+//--- and self-guards on WFBE_C_BOMB_PROBE, so this launch is safe to fire early. NEVER arm on the live box.
+if ((missionNamespace getVariable ["WFBE_C_BOMB_PROBE", 0]) > 0) then {
+	[] Spawn WFBE_SE_FNC_BombProbe;
+	["WARNING", "Init_Server.sqf: Server_BombProbe.sqf STAGE A TEST HARNESS launched (WFBE_C_BOMB_PROBE>0) - this must NEVER be true on the live box."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- NEURO: Special Condition.
