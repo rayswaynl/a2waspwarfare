@@ -3129,7 +3129,9 @@ class RscMenu_Command {
 		//--- never called for these idcs and the dialog is pixel-identical to HEAD.
 		class CA_Cmd_DeckHeader : RscText {
 			idc = 14700;
-			x = 0.017244; y = 0.088000; w = 0.965000; h = 0.030;
+			//--- fable/cmd-deck-layout: w was 0.965 - nearly the whole dialog - so the header bar drew
+			//--- straight across the situation map (14002 starts at x=0.4689). Clamped to the left panel.
+			x = 0.017244; y = 0.088000; w = 0.440000; h = 0.030;
 			sizeEx = 0.019;
 			colorText[] = {0.961, 0.761, 0.259, 0.95};
 			colorBackground[] = {0.102, 0.086, 0.063, 0.75};
@@ -3145,17 +3147,24 @@ class RscMenu_Command {
 		};
 		class CA_Cmd_DeckZ2 : CA_Cmd_DeckZ1 {
 			idc = 14702;
-			x = 0.017244; y = 0.560000; w = 0.300000;
+			//--- fable/cmd-deck-layout: y=0.560 put this title INSIDE the roster (14661, 0.414..0.644)
+			//--- and inside the advisory readout (14607, 0.486..0.626). Moved below the roster into the
+			//--- space the deck itself frees by dropping the 8 legacy order buttons.
+			x = 0.017244; y = 0.650000; w = 0.300000;
 			text = "STRATEGY";
 		};
 		class CA_Cmd_DeckZ3 : CA_Cmd_DeckZ1 {
 			idc = 14703;
-			x = 0.480244; y = 0.124000; w = 0.300000;
+			//--- fable/cmd-deck-layout: was x=0.480 (over the map). Now titles the roster it belongs to,
+			//--- sitting just above it (roster 14661 starts y=0.414).
+			x = 0.017244; y = 0.386000; w = 0.300000;
 			text = "FORCES";
 		};
 		class CA_Cmd_DeckZ4 : CA_Cmd_DeckZ1 {
 			idc = 14704;
-			x = 0.480244; y = 0.795000; w = 0.300000;
+			//--- fable/cmd-deck-layout: was x=0.480 (over the map). Moved into the left panel above the
+			//--- production/priority block it labels (14610/14611/14640/14641 at y=0.834).
+			x = 0.017244; y = 0.706000; w = 0.300000;
 			text = "OPERATIONS / PRODUCTION";
 		};
 		//--- Order picker: the A2 RscListBox cannot host per-row widgets, so the mockup's per-row
@@ -3164,12 +3173,15 @@ class RscMenu_Command {
 		//--- working build-priority combo pair 14640/14641 in this same dialog.
 		class CA_Cmd_OrderCombo : RscCombo {
 			idc = 14705;
-			x = 0.480244; y = 0.916000; w = 0.150000; h = 0.033;
+			//--- fable/cmd-deck-layout: was x=0.480 y=0.916 (over the map). Moved into the row the deck
+			//--- frees by removing RALLY/REFIT/HOLD (14628-14630), which these two controls replace.
+			x = 0.006000; y = 0.872000; w = 0.230000; h = 0.033;
 			show = 0;
 		};
 		class CA_Cmd_OrderGo : RscButton_Main {
 			idc = 14706;
-			x = 0.636244; y = 0.916000; w = 0.100000; h = 0.033;
+			//--- fable/cmd-deck-layout: paired beside the combo in the freed steering-verb row.
+			x = 0.241000; y = 0.872000; w = 0.224000; h = 0.033;
 			text = "GIVE ORDER";
 			action = "MenuAction = 770";
 			tooltip = "Apply the selected order to the highlighted team. Position orders (Move/Defend/Patrol/Arty) then ask for a map click.";
