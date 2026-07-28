@@ -224,7 +224,9 @@ and preflight checks defined elsewhere in this file win on any conflict.
 - Never touch: HC architecture, player enrollment/JIP flow, deploy/box scripts.
 - GUER volume is the point; no caps or nerfs to GUER output.
 - Do not re-propose: TPWCAS, AI supply trucks, satchel AI, EMP/WP/DECOY SCUD munitions,
-  doctrine personalities, antistack touch, ACR content.
+  doctrine personalities, antistack touch. (ACR content: shelf LIFTED by owner 2026-07-28 09:15 -
+  full ACR data confirmed on the live box; ACR classnames are usable WITH config proof, clients
+  resolve them via the bundled ACR-lite.)
 - Shelved PRs (https://github.com/rayswaynl/a2waspwarfare/wiki/Shelved-PR-*) are closed
   proposals; do not re-open or duplicate. Check the shelved-PR register before proposing
   any audit-flagged fix.

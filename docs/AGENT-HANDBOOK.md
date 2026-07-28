@@ -358,4 +358,5 @@ duplicating their content wastes a review slot and will be closed without merge.
 
 Current shelved topics include proposals for: TPWCAS integration, AI supply trucks,
 satchel AI, EMP/WP/DECOY SCUD munitions, doctrine personalities, antistack adjustments,
-ACR content additions. Do not re-propose any item on the owner-rejected list in `AGENTS.md`.
+Do not re-propose any item on the owner-rejected list in `AGENTS.md`. (ACR content additions were
+removed from that list - owner lifted the ACR shelf 2026-07-28; config proof still required.)
