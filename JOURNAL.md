@@ -1,6 +1,13 @@
 # JOURNAL — a2waspwarfare-experital
 
-## Working State 2026-07-28 (build-out mode — DO NOT STAGE/CUTOVER without owner GO)
+## Working State 2026-07-28 ~12:15 — m0728e CUTOVER IN FLIGHT (owner GO "deploy autonomously", changelog DM'd first per order)
+
+- **Deploy**: 26-PR update packed from tip `2d1c6a3263` (3 PBOs, read_pbo 939/939 byte-identical), staged to box `C:\WASP\staging-m0728e`, one-shot schtask `WaspCutoverM0728e` FIRED ~12:10 CEST. Cutover script = m0728c clone MINUS bounce2hc (it re-broke HC1 seating) + allocator check at end. Server+HC launchers now `-malloc=system` (owner order; server was mimalloc, HCs tbb — both switched, .pre-sysmalloc.bak backups on box).
+- **Owner live report during boot**: "HC 1 = in blufor slot..." → after CUTOVER DONE: probe seating (`hcreg-probe.ps1`), if bad → run `bounce2hc.ps1` ON-DEMAND via schtask /IT, re-probe. Monitor log: `C:\WASP\cutover-m0728e.log`, watcher `watch-cutover.ps1`.
+- **C9 picker results (owner)**: GO+quick-wins (SHIPPED #1574: S22 Reserve Guard armed, S21 4th gun, R1 17-obj checkpoint default-ON). Approved for NEXT cycle: wall V5 pass S1-S9, GUER Flaktower 3-way skin parity, rigid-pin flag-off, tower split (S12/S14/S19 first, S17 first-cut). PARKED (not approved): S23 earn-back, R4-R6 GUER cards.
+- **Verification owed post-boot**: build=m0728e in RPT, 2 HCs seated right, alloc-modcheck shows NO malloc module (=system heap), then first-hour watch: PATROLAIR|, AICOMSUPPLY|, USVFLOTILLA|GATE, RESERVEGUARD|v1, dispatched: counts in cleaner_droppeditems, carrier seam -252, gear charges. Verification DM after.
+
+## Working State 2026-07-28 morning (superseded — update shipped as m0728e)
 
 - **Branch:** `release/wasp-aicom-recovery-20260727`, tip after PR #1570 (`fcf588d0e8`). LIVE = m0728c; pending update = **22 PRs** since. Standing rule (owner 08:14): keep building, no server update.
 - **Shipped this stretch:** #1567 gear money fix (post-cap charge inside changed-gate + GUER depot target parity), #1568 Ka-137 threat-only spawns + variant re-weight (MI24 .40 / DROP .25 / SWARM .25), #1569 USV player-audience gate (PLAYER_GATE=1, 1500m), #1570 carrier INLINE_GAP -265→-252 (**previous TWIN_GAP 42→32→26 tunes were a DEAD knob — INLINE_HULLS=1 skips the lateral path**) + deck respawn +2→+0.5.
