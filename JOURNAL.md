@@ -776,3 +776,11 @@ the owner.
   engineer class). No audit item was skipped; dormant-root-only classes stayed out.
 - Mirrors regenerated and checked clean; version-template invariants passed
   (CH 32, TK 31, ZG 33). `RESULT.md` is intentionally untracked.
+
+## Working State — 2026-07-28 21:15 (burn window)
+- LIVE: m0728h on Takistan (rotation TK>CH, Veteran). Release branch = m0728h + merged #1585 (deck header both-states + FPV tested-z), #1586+mirrors (board wait 30->12 WFBE_C_AICOM_BOARD_WAIT), #1587 (COIN diagnostics; placement-method default-case was DORMANT, real placement root cause still unknown - COINPLACE|v1 logs will name it).
+- DRAFT awaiting owner: #1584 WEST jets (WFBE_C_AICOM_WEST_JETS=0).
+- Lanes IN FLIGHT (worktrees wt-*): airlift-v2 (draft, AIRLIFT2|v1, flag WFBE_C_AICOM_AIRLIFT_V2=0), cmd-clipping (legacy bottom-row out-of-bounds fix), quickstart-v2 (HC-safe first order, draft, flag WFBE_C_AICOM_AIR_QUICKSTART=0; naive shape rejected - AssignTowns server-only + side-wide), bomb-stage-a (Server_BombProbe + runbook, WFBE_C_BOMB_PROBE=0), fpv-causation (FPVCAUSE|v1 log-only ledger), build-defense-audit (read-only, owner order "commander build menu, base defenses").
+- Secondary box: WaspHcSlotTest schtask RUNNING as SYSTEM (the /IT interactive-only trap silently no-ran it twice - box has no interactive session; /RU SYSTEM fixed).
+- Adversarial review verdicts already fixed: deck header dual-membership, FPV z discard. Deferred into airlift-v2: REQ diag_log outside gate.
+- After lanes land: merge order = cmd-clipping, fpv-causation (non-draft) then mirror pass; drafts stay for owner/soak. Next build cut = m0728i on owner word or 06:00 restart.
