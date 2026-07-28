@@ -511,6 +511,17 @@ if (worldName == "Zargabad") then {
 	//--- previous hardcoded 30s. Air-only - gates only the transport-insert Spawn enclosed by !isNull _airVeh
 	//--- (an Air hull with transportSoldier>0); ground transports are never affected.
 	if (isNil "WFBE_C_AICOM_BOARD_WAIT") then {WFBE_C_AICOM_BOARD_WAIT = 12};              //--- s: max wait for pax to mount the team's own air transport before the run-in begins. 30 = legacy value.
+	//--- fable/air-quickstart-v2 (owner 2026-07-28: helicopters linger way too long in base; HC-safe
+	//--- quickstart v2): a founded team's own air transport otherwise sits idle at the pad until the
+	//--- NEXT WFBE_C_AI_COMMANDER_TOWN_INTERVAL (120s) AssignTowns pass ever issues it an order - up
+	//--- to ~75-120s of dead time the owner reported. Server_HandleSpecial.sqf's "aicom-team-created"
+	//--- handler (already the SINGLE point every founded team - HC or server-fallback - reports back
+	//--- through) writes ONE narrow first wfbe_aicom_order for THAT team only, using the exact [seq,
+	//--- mode, pos] contract Common_RunCommanderTeam.sqf already polls - never calls the HC-unsafe,
+	//--- side-wide WFBE_SE_FNC_AI_Com_AssignTowns (see PR #1586 rejection writeup). Default 0: the
+	//--- handler still runs its existing registration code unchanged; this adds one extra
+	//--- missionNamespace getVariable read and nothing else.
+	if (isNil "WFBE_C_AICOM_AIR_QUICKSTART") then {WFBE_C_AICOM_AIR_QUICKSTART = 0};              //--- 1 = issue a same-tick first order to a freshly founded air-transport team (see Server_HandleSpecial.sqf "aicom-team-created"). 0 = legacy (team waits for the next AssignTowns tick, up to WFBE_C_AI_COMMANDER_TOWN_INTERVAL).
 	//--- Grok U6 idle-air retirement: all three defaults are 0 so the existing air lifecycle is unchanged until explicitly configured.
 	if (isNil "WFBE_C_AICOM_AIR_IDLE_RTB") then {WFBE_C_AICOM_AIR_IDLE_RTB = 0};
 	if (isNil "WFBE_C_AICOM_AIR_IDLE_MINUTES") then {WFBE_C_AICOM_AIR_IDLE_MINUTES = 0};

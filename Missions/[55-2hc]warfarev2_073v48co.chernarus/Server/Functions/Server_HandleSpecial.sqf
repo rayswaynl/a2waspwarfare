@@ -697,6 +697,44 @@ switch (_args select 0) do {
 					publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
 				};
 				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 registered (%3 units).", _csideID, _cteam, count units _cteam]] Call WFBE_CO_FNC_AICOMLog;
+				//--- fable/air-quickstart-v2 (owner 2026-07-28: helicopters linger way too long in base;
+				//--- HC-safe quickstart v2): this handler is the single point EVERY founded team (HC or
+				//--- server-fallback) reports back through, right after it is registered into wfbe_teams
+				//--- above - a narrow, single-team primer belongs exactly here, not in the side-wide
+				//--- WFBE_SE_FNC_AI_Com_AssignTowns tick (HC-unsafe + perturbs every OTHER team's cadence-
+				//--- sensitive state - see PR #1586's rejection writeup for the full trace). Writes ONLY
+				//--- the public wfbe_aicom_order group variable on THIS team, using the exact [seq, mode,
+				//--- pos] contract Common_RunCommanderTeam.sqf already polls every pass (established
+				//--- object/group setVariable-with-public idiom - see e.g. AI_Commander_AssignTowns.sqf:296,
+				//--- AI_Commander_Strategy.sqf:156,622,709 - NOT the banned missionNamespace 3-arg form).
+				//--- Flag default 0: at 0 this whole block is one cheap missionNamespace getVariable read.
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_QUICKSTART", 0]) > 0) then {
+					private ["_qsAirVeh","_qsDestTown","_qsTargets","_qsCand","_qsUncap","_qsBestD","_qsD"];
+					_qsAirVeh = objNull;
+					{
+						private "_qsV";
+						_qsV = vehicle _x;
+						if (!isNull _qsV && {_qsV != _x} && {isNull _qsAirVeh} && {_qsV isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _qsV) >> "transportSoldier")) > 0}) then {_qsAirVeh = _qsV};
+					} forEach (units _cteam);
+					if (!isNull _qsAirVeh && {!isNull _cldr}) then {
+						_qsDestTown = objNull;
+						_qsTargets = _clogik getVariable ["wfbe_aicom_targets", []];
+						if (count _qsTargets > 0) then {
+							_qsCand = _qsTargets select 0;
+							if (typeName _qsCand == "OBJECT" && {!isNull _qsCand} && {(_qsCand getVariable ["sideID", -1]) != _csideID}) then {_qsDestTown = _qsCand};
+						};
+						if (isNull _qsDestTown) then {
+							_qsUncap = [];
+							{ if ((_x getVariable ["sideID", -1]) != _csideID) then {_qsUncap set [count _qsUncap, _x]} } forEach towns;
+							_qsBestD = 1e9;
+							{ _qsD = _cldr distance _x; if (_qsD < _qsBestD) then {_qsBestD = _qsD; _qsDestTown = _x} } forEach _qsUncap;
+						};
+						if (!isNull _qsDestTown) then {
+							_cteam setVariable ["wfbe_aicom_order", [(if (isNil {_cteam getVariable "wfbe_aicom_order"}) then {-1} else {(_cteam getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", getPos _qsDestTown], true];
+							diag_log ("AIRQS|v1|side=" + str _csideID + "|team=" + str _cteam + "|order=" + str (getPos _qsDestTown) + "|town=" + (_qsDestTown getVariable ["name","?"]) + "|src=quickstart");
+						};
+					};
+				};
 			};
 		};
 	};
