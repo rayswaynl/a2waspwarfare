@@ -1244,6 +1244,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_SMOKE_COOLDOWN")          then {WFBE_C_AICOM_SMOKE_COOLDOWN = 120};        //--- s between smoke uses per team.
 	if (isNil "WFBE_C_AICOM_ARMOR_SCREEN")    then {WFBE_C_AICOM_ARMOR_SCREEN = 0};    //--- armor-screen: tanks screen outward on arrival instead of SAD with infantry (0=off, default).
 	if (isNil "WFBE_C_AICOM_ARMOR_SCREEN_R")  then {WFBE_C_AICOM_ARMOR_SCREEN_R = 80}; //--- m stand-off radius for the outward screen position.
+	if (isNil "WFBE_C_GEAR_MAG_SLOTS")                then {WFBE_C_GEAR_MAG_SLOTS = 12};              //--- fable/gear-charge-fix: formal registration (was read with an inline 12 default at the cap sites, never registered - policy gap). Magazine slots a bought loadout is capped to; the charge is computed AFTER this cap.
 	if (isNil "WFBE_C_CLIENT_CRATER_CLEANER")         then {WFBE_C_CLIENT_CRATER_CLEANER = 1};        //--- ARMED 2026-07-28 (owner: crash craters persist): per-client CraterLong/CraterLong_small sweep - craters are engine-spawned CLIENT-LOCAL, invisible to the server-side crater_cleaner. Age + combat-quiet guarded. 0 = off.
 	if (isNil "WFBE_C_CLIENT_CRATER_PERIOD")          then {WFBE_C_CLIENT_CRATER_PERIOD = 120};       //--- sweep cadence seconds (floor 30).
 	if (isNil "WFBE_C_CLIENT_CRATER_AGE")             then {WFBE_C_CLIENT_CRATER_AGE = 600};          //--- crater minimum age before deletion (stamped at first sight - engine craters carry no timestamp).
