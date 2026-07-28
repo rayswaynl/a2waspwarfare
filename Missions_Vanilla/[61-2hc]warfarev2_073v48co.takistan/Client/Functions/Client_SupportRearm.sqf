@@ -29,7 +29,24 @@ _nearIsRT = false;
 	if ((typeOf _x) == WFBE_Logic_Depot) then {_nearIsDP = true};
 	if ((typeOf _x) in _typeRepair) then {_nearIsRT = true};
 } forEach _supports;
-if ((typeOf _veh) iskindOf "Air" && _nearIsDP) exitWith {if (_price > 0) then {_price Call ChangePlayerFunds;};Hint "You can't rearm air in town"};
+//--- fable/guer-field-utils (owner 2026-07-28 "GUER players should be able to rearm air in towns"):
+//--- GUER has no service points or base - towns ARE its infrastructure. When a depot in range
+//--- belongs to a GUER-HELD town (nearest town entry to that depot logic, sanity-bounded 300 m),
+//--- a resistance player's air rearm proceeds instead of hitting the blanket town-air refusal.
+//--- W/E behaviour unchanged. _x captured before the GetClosestEntity call (its inner forEach
+//--- rebinds _x - engine trap).
+private ["_guerTownRearm","_gtrDp","_gtrTown"];
+_guerTownRearm = false;
+if ((side group player == resistance) && {(missionNamespace getVariable ["WFBE_C_GUER_TOWN_AIR_REARM", 0]) > 0}) then {
+	{
+		if ((typeOf _x) == WFBE_Logic_Depot) then {
+			_gtrDp = _x;
+			_gtrTown = [_gtrDp, towns] Call WFBE_CO_FNC_GetClosestEntity;
+			if (!isNull _gtrTown && {(_gtrDp distance _gtrTown) < 300} && {(_gtrTown getVariable ["sideID", -1]) == (resistance Call WFBE_CO_FNC_GetSideID)}) then {_guerTownRearm = true};
+		};
+	} forEach _supports;
+};
+if ((typeOf _veh) iskindOf "Air" && _nearIsDP && {!_guerTownRearm}) exitWith {if (_price > 0) then {_price Call ChangePlayerFunds;};Hint "You can't rearm air in town"};
 //--- Coefficient Vary depending on the support type.
 _airCoef = 1;
 _artCoef = 1;
