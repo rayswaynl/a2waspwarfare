@@ -3466,6 +3466,52 @@ class RscMenu_Tactical {
 			colorBackground[] = WFBE_SPC1;
 		};
 		/* Back */
+		//--- fable/tac-t4 (owner pick T4, 2026-07-28): STRATEGIC vs ROUTINE zone cards. Pure
+		//--- ACCELERATORS - each drives the EXISTING selection + action path (listbox 17019 rows /
+		//--- combo 17008 rows + their MenuAction flows and two-click confirms), so every current
+		//--- function is retained by construction. All show=0, admitted only when WFBE_C_TAC_T4 > 0.
+		class CA_Tac_StratTitle : RscText_SubTitle {
+			idc = 17090;
+			x = 0.020000; y = 0.845000; w = 0.290000; h = 0.024;
+			text = "!! STRATEGIC ORDNANCE";
+			colorText[] = {0.73, 0.55, 1, 0.95};
+			show = 0;
+		};
+		class CA_Tac_CardScud : RscButton_WFBE_Action {
+			idc = 17091;
+			x = 0.020000; y = 0.875000; w = 0.140000; h = 0.033;
+			text = "SCUD SATURATION";
+			action = "MenuAction = 90";
+			tooltip = "Selects the SCUD saturation row and starts the normal fire flow (map click + confirm, server validates platforms/funds/cooldown).";
+			show = 0;
+		};
+		class CA_Tac_CardIcbm : CA_Tac_CardScud {
+			idc = 17092;
+			x = 0.166000;
+			text = "ICBM";
+			action = "MenuAction = 91";
+			tooltip = "Selects the ICBM support row and presses Request - the existing flow (cost check, map click, confirm) runs unchanged.";
+		};
+		class CA_Tac_RoutineTitle : RscText_SubTitle {
+			idc = 17093;
+			x = 0.330000; y = 0.845000; w = 0.290000; h = 0.024;
+			text = "ROUTINE SUPPORT";
+			show = 0;
+		};
+		class CA_Tac_CardPara : CA_Tac_CardScud {
+			idc = 17094;
+			x = 0.330000;
+			text = "PARATROOPERS";
+			action = "MenuAction = 92";
+			tooltip = "Selects the Paratroopers support row and presses Request - existing flow unchanged.";
+		};
+		class CA_Tac_CardFT : CA_Tac_CardScud {
+			idc = 17095;
+			x = 0.476000;
+			text = "FAST TRAVEL";
+			action = "MenuAction = 93";
+			tooltip = "Selects the Fast Travel row and presses Request - existing flow (map click, two-click confirm, billing) unchanged.";
+		};
 		class Back_Button : RscButton_Back {
 			x = 0.892328;
 			y = 0.953825;

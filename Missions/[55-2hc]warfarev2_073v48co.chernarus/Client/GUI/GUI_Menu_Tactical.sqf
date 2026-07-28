@@ -108,6 +108,13 @@ if ((missionNamespace getVariable "WFBE_C_ARTILLERY") == 0) then {{ctrlEnable [_
 
 {ctrlEnable [_x, false]} forEach [17020]; //--- cmdcon (fable, GR-2026-07-08a): trimmed 8 phantom idcs (17010-17015,17017,17018 exist nowhere in Rsc) - 17020 (Use button) kept, re-toggled at the MenuAction 20 gate below
 
+//--- fable/tac-t4 (owner pick T4): show the STRATEGIC / ROUTINE zone cards. They are accelerators
+//--- over the existing listbox/combo flows - every legacy control stays live, so flag 0 (or any
+//--- rollback) loses nothing but the shortcuts.
+if ((missionNamespace getVariable ["WFBE_C_TAC_T4", 0]) > 0) then {
+	{ctrlShow [_x, true]} forEach [17090,17091,17092,17093,17094,17095];
+};
+
 _currentValue = -1;
 _currentFee = -1;
 _currentSpecial = "";
@@ -474,6 +481,38 @@ while {alive player && dialog} do {
 	};
 	
 	//--- Request Asset.
+	//--- fable/tac-t4 CARD HANDLERS (90-93): drive the EXISTING paths. 90 selects the SCUD saturation
+	//--- row on combo 17008 by TEXT (row indices float with _artyCount) then fires the normal CALL
+	//--- flow (MenuAction 2 -> its own map-click + two-click confirm). 91-93 set the support-list
+	//--- selection state vars directly (the loop's own change-watch would lag one tick) then press
+	//--- Request (MenuAction 20). No costs, confirms, cooldowns or server checks are bypassed.
+	if (MenuAction == 90) then {
+		MenuAction = -1;
+		private ["_t4i","_t4hit"];
+		_t4hit = -1;
+		for '_t4i' from 0 to ((lbSize 17008) - 1) do {
+			if (_t4hit < 0 && {(toUpper (lbText [17008, _t4i])) find "SCUD" == 0}) then {_t4hit = _t4i};
+		};
+		if (_t4hit >= 0) then {
+			lbSetCurSel [17008, _t4hit];
+			MenuAction = 2;
+		} else {
+			hintSilent parseText "<t color='#F8D664'>No SCUD platform available.</t>";
+		};
+	};
+	if (MenuAction == 91 || MenuAction == 92 || MenuAction == 93) then {
+		private ["_t4key"];
+		_t4key = switch (MenuAction) do {case 91: {"ICBM"}; case 92: {"Paratroopers"}; default {"Fast_Travel"}};
+		MenuAction = -1;
+		_currentValue = _addToListID find _t4key;
+		if (_currentValue >= 0) then {
+			_currentSpecial = _addToListID select _currentValue;
+			_currentFee = _addToListFee select _currentValue;
+			lbSetCurSel [17019, _currentValue];
+			MenuAction = 20;
+		};
+	};
+
 	if (MenuAction == 20) then {
 		MenuAction = -1;
 		
