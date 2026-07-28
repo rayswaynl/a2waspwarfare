@@ -73,7 +73,15 @@ while {alive player && dialog} do {
 	_enable = false; //added-MrNiceGuy
 	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_enable = true}};
 	[11005, true] call _setWFMenuState; //--- Command war-room: always openable on WEST/EAST; the dialog gates internally (Take Command vs war room). JIP-safe.
-	[11008, _enable] call _setWFMenuState; //--- Commander Menu
+	//--- fable/towns-button-we (owner 2026-07-28 "The towns button is not working for Blufor / Opfor"):
+	//--- idc 11008 was REPURPOSED into the Towns button, but this enable line still carried the old
+	//--- commander-only gate (_enable = commanderTeam == group player) plus its now-wrong "Commander
+	//--- Menu" comment - so on WEST/EAST the Towns button was greyed out for every non-commander, and
+	//--- the commander who could click it hit a hint-only dead end (see the MenuAction 26 branch).
+	//--- The Towns panel is a READ-ONLY own-side garrison view (GUI_Menu_TownsGarrison.sqf keys off
+	//--- sideJoined and enumerates own-side towns only - no intel leak, nothing to command), so it
+	//--- needs no commander gate. Enable it for every WEST/EAST player.
+	[11008, true] call _setWFMenuState; //--- Towns (read-only own-side garrison view)
 	[11006, commandInRange && (player == leader WFBE_Client_Team)] call _setWFMenuState; //--- Special Menu
 	[11007, commandInRange] call _setWFMenuState; //--- Upgrade Menu
 		};
@@ -304,6 +312,8 @@ while {alive player && dialog} do {
 				closeDialog 0;
 				createDialog "WFBE_GDirCommissarMenu";
 			} else {
+				//--- fable/towns-button-we: with WFBE_C_TOWNS_TAB_GARRISON armed this branch is only
+				//--- reachable if a server rolls the flag back to 0 - keep the honest legacy hint.
 				hint "Town garrison actions are for resistance (GUER) players.";
 			};
 		};
