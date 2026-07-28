@@ -962,6 +962,16 @@ if (!isNull _guerLogik && {isNil {_guerLogik getVariable "wfbe_upgrades"}}) then
 	for '_i' from 0 to (_guerUpgLen - 1) do {[_guerUpg, 0] Call WFBE_CO_FNC_ArrayPush};
 	_guerLogik setVariable ["wfbe_upgrades", _guerUpg, true];
 	diag_log Format ["[WFBE (INIT)] fable/fob-init-park: seeded zero wfbe_upgrades (%1 slots) on the RESISTANCE logic - releases Init_Unit client-side init for GUER units.", _guerUpgLen];
+	//--- fable/fob-structures-seed (hunter finding 1, 2026-07-28): wfbe_structures was ALSO W/E-only.
+	//--- Construction_SmallSite/MediumSite append the finished FOB with a 1-arg read ((nil)+[_site]
+	//--- never lands), so RequestFOBStructure's completion gate read the site as unregistered and
+	//--- reported EVERY successful GUER FOB build as FAILED - token refunded, truck re-armed, real
+	//--- structure left standing untracked (no marker, no JIP replay). The removal path
+	//--- (Server_BuildingKilled) already carried a GUER isNil guard; the add path never did.
+	if (isNil {_guerLogik getVariable "wfbe_structures"}) then {
+		_guerLogik setVariable ["wfbe_structures", [], true];
+		diag_log "[WFBE (INIT)] fable/fob-structures-seed: seeded empty wfbe_structures on the RESISTANCE logic.";
+	};
 };
 
 //--- GUER "Insurgents" player faction team-registration + economy (gated on WFBE_C_GUER_PLAYERSIDE).

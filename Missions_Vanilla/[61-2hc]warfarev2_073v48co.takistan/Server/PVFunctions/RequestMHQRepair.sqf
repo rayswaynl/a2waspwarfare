@@ -16,6 +16,12 @@
 		_this select 1 : player (the client that triggered the repair)
 */
 
+//--- fable/fob-structures-seed hardening (hunter finding 2): GUER has NO MHQ by design, and the
+//--- W/E-only seeds mean a resistance-side call would nil-arith throw in Server_MHQRepair. No
+//--- legitimate client path can send it today (both actions are structurally commander/HQ-gated),
+//--- but the server must not rely on client-side gating - reject non-W/E sides outright.
+if ((count _this) > 0 && {(typeName (_this select 0)) == "SIDE"} && {!((_this select 0) in [west, east])}) exitWith {};
+
 private ["_side","_reqPlayer"];
 
 if (isNil "_this") exitWith {

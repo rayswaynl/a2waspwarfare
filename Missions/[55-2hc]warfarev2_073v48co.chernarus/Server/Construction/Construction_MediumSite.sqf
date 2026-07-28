@@ -251,7 +251,7 @@ if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !
 [_side, "Constructed", ["Base", _site]] Spawn SideMessage;
 
 if (!IsNull _site) then {
-	_logik setVariable ["wfbe_structures", (_logik getVariable "wfbe_structures") + [_site], true];
+	_logik setVariable ["wfbe_structures", (_logik getVariable ["wfbe_structures", []]) + [_site], true]; //--- fable/fob-structures-seed: 2-arg default - the 1-arg read was nil for RESISTANCE and the append never landed (GUER FOB completion gate then reported every build failed)
 	
 	_site setVehicleInit Format["[this,false,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'",_sideID];
 	processInitCommands;
