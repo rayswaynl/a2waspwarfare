@@ -1564,6 +1564,12 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_BASE_AREA") then {WFBE_C_BASE_AREA = 2}; //--- Force the bases to be grouped by areas.
 	if (isNil "WFBE_C_BASE_DEFENSE_MAX_AI") then {WFBE_C_BASE_DEFENSE_MAX_AI = 40}; //--- Maximum AIs that will be able to man defense within the barracks area.
 	if (isNil "WFBE_C_BASE_DEFENSE_MANNING_RANGE") then {WFBE_C_BASE_DEFENSE_MANNING_RANGE = 250}; //--- Within x meters, defenses may be manned.
+	//--- build/defense audit 2026-07-28: Server_HandleDefense.sqf's base-defense re-man watcher used to
+	//--- re-check gunner liveness only once per sleep 420 (~7 min worst case before an empty gun refills).
+	//--- Bounded-poll interval (s) between liveness checks once a gunner is seated; a Killed EH on the
+	//--- seated gunner can wake the poll early. Correctness fix (not a feature gate) - lowering this only
+	//--- shortens worst-case re-man latency, the total idle-wait cap (420s) is unchanged.
+	if (isNil "WFBE_C_DEFENSE_REMAN_POLL") then {WFBE_C_DEFENSE_REMAN_POLL = 15};
 	if (isNil "WFBE_C_BASE_START_TOWN") then {WFBE_C_BASE_START_TOWN = 1}; //--- Remove the spawn locations which are too far away from the towns.
 	if (isNil "WFBE_C_BASE_STARTING_MODE") then {WFBE_C_BASE_STARTING_MODE = 2}; //--- Starting Locations Mode: 0 = WN|ES; 1 = WS|EN; 2 = Random. cmdcon41 (Ray): default 0 -> 2 (spawns "didn't seem random" - they were the fixed Build84 default).
 	if (isNil "WFBE_C_BASE_RANDOM_PURE") then {WFBE_C_BASE_RANDOM_PURE = 1}; //--- cmdcon41 (Ray): random-PURE default (original unfiltered Miksuu random). //--- Build84 (backlog#2): 1 = Miksuu-original UNFILTERED pure-random when MODE=2 (skips the B62 airfield / B66 egress-edge / rotation filters in Init_Server); 0 = hardened filtered random (default).
@@ -2246,6 +2252,20 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil 'WFBE_C_STRUCTURES_MAX_CBRadar') then {WFBE_C_STRUCTURES_MAX_CBRadar = 1};
 	if (isNil 'WFBE_C_STRUCTURES_MAX_AARadar') then {WFBE_C_STRUCTURES_MAX_AARadar = 1};
 	if (isNil 'WFBE_C_STRUCTURES_RADAR_PENDING_WINDOW') then {WFBE_C_STRUCTURES_RADAR_PENDING_WINDOW = 180}; //--- fable/ew-economy: CBRadar/AARadar one-per-side reservation window (s) to close the duplicate-build race (mirrors WFBE_C_ECONOMY_BANK_PENDING_WINDOW above), RequestStructure.sqf.
+	//--- build/defense audit 2026-07-28: server-side cap + PENDING-reservation guard for the MULTI-INSTANCE
+	//--- economy structures (Barracks/Light/Heavy/Aircraft/ServicePoint/CommandCenter), extending the
+	//--- CBRadar/AARadar/Bank single-instance idiom above (RequestStructure.sqf, Construction_SmallSite.sqf,
+	//--- Construction_MediumSite.sqf). 1 (default, armed) = server re-checks the SAME WFBE_C_STRUCTURES_MAX_
+	//--- <type> caps the AI commander already obeys server-side (AI_Commander_Base.sqf) before accepting a
+	//--- player build request; it only rejects what the declared caps already forbid. 0 = legacy client-only
+	//--- enforcement (coin_interface.sqf wfbe_structures_live), byte-identical to HEAD.
+	if (isNil "WFBE_C_STRUCTURES_CAP_SERVER") then {WFBE_C_STRUCTURES_CAP_SERVER = 1};
+	//--- Reservation window (s) for the multi-instance PENDING array above: an entry older than this is
+	//--- treated as stale and pruned on the next read, so a construction-side release path that somehow
+	//--- never fires cannot permanently wedge a side's cap. Separate tunable from
+	//--- WFBE_C_STRUCTURES_RADAR_PENDING_WINDOW / WFBE_C_ECONOMY_BANK_PENDING_WINDOW so those existing
+	//--- single-instance defaults are untouched.
+	if (isNil "WFBE_C_STRUCTURES_PENDING_WINDOW") then {WFBE_C_STRUCTURES_PENDING_WINDOW = 180};
 
 //--- Apply a towns unit coeficient.
 	WFBE_C_TOWNS_UNITS_COEF = switch (WFBE_C_TOWNS_OCCUPATION) do {case 1: {1}; case 2: {1.5}; case 3: {2}; case 4: {2.5}; default {1}};

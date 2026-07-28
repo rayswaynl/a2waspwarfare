@@ -56,6 +56,7 @@ switch (_localize) do {
 	case "CBRadarAlreadyBuilt": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "CBRadarAlreadyBuilt"}; //--- fable/ew-economy
 	case "BankAlreadyBuilt": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "BankAlreadyBuilt"};
 	case "BankTooCloseToBase": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "BankTooCloseToBase"};
+	case "StructureCapReached": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "StructureCapReached"}; //--- build/defense audit 2026-07-28
 	case "BankDestroyed": {
 		//--- _this: [1]=killerName, [2]=sideName — broadcast to all (both sides hear it).
 		_txt = Format [Localize "BankDestroyed", _this select 1, _this select 2];

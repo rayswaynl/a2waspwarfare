@@ -5840,6 +5840,10 @@
       <English>The bank must be built outside your base protection area.</English>
       <Russian>Банк нужно строить вне зоны защиты базы.</Russian>
     </Key>
+    <Key ID="StructureCapReached">
+      <English>This structure type has reached its build limit for your side.</English>
+      <Russian>Достигнут лимит построек этого типа для вашей стороны.</Russian>
+    </Key>
     <Key ID="BankDestroyed">
       <English>%1 has destroyed the %2 bank! The economic stronghold has fallen.</English>
       <Russian>%1 уничтожил банк стороны %2! Экономический оплот пал.</Russian>
