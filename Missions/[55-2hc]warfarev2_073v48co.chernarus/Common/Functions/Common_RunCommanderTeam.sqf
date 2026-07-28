@@ -315,16 +315,16 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 								_rPlayerCrew = ({alive _x && {isPlayer _x}} count _rCrew) > 0;
 								_rBusy = false;
 								if (_idleRtbEnabled && {_rTransport}) then {
-									{if (alive _x && {(vehicle _x) == _rh} && {_x != (driver _rh)} && {_x != (gunner _rh)} && {_x != (commander _rh)}) then {_rBusy = true}} forEach (units _team);
+									{if (alive _x && {(vehicle _x) == _rh} && {_x != (driver _rh)} && {_x != (gunner _rh)} && {_x != (commander _rh)}) then {_rBusy = true}} forEach (units _tm); //--- fable/watch-0728b: _team is OUTER scope - Spawn does not capture it; _tm is this watcher's own group ref
 								};
 								_rAirborne = false;
-								_rAirborneAt = _team getVariable "wfbe_aicom_airborne_until";
+								_rAirborneAt = _tm getVariable "wfbe_aicom_airborne_until"; //--- fable/watch-0728b: was _team (outer scope, undefined in this Spawn) - threw on every reap tick once the idleRtb fix let execution reach here
 								if (!isNil "_rAirborneAt" && {_rAirborneAt > time}) then {_rAirborne = true};
 								_rEngaged = false;
 								{if (alive _x && {behaviour _x == "COMBAT"}) then {_rEngaged = true}} forEach _rCrew;
 								_rEnRoute = false;
 								if (_idleRtbEnabled && {(count _rCrew) > 0}) then {
-									_rOrder = _team getVariable "wfbe_aicom_order";
+									_rOrder = _tm getVariable "wfbe_aicom_order"; //--- fable/watch-0728b: was _team (outer scope, undefined in this Spawn)
 									if (!isNil "_rOrder" && {count _rOrder >= 3}) then {
 										_rDest = _rOrder select 2;
 										if (typeName _rDest == "ARRAY" && {(_rh distance _rDest) > (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250])}) then {_rEnRoute = true};
@@ -361,7 +361,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 													if ((time - _rIdleAt) >= _idleSecs) then {
 														_rh setVariable ["wfbe_aicom_air_idle_action", true];
 														_rh setVariable ["wfbe_aicom_air_idle_at", nil];
-														[_rh, _team, _sd] Spawn {
+														[_rh, _tm, _sd] Spawn { //--- fable/watch-0728b: was _team (outer scope) - passed nil into the inner spawn
 															private ["_h","_tm","_sd","_recheckCrew","_recheckBusy","_recheckAirborne","_recheckEngaged","_recheckEnRoute","_recheckOrder","_recheckDest"];
 															_h = _this select 0; _tm = _this select 1; _sd = _this select 2;
 															_recheckCrew = [];
