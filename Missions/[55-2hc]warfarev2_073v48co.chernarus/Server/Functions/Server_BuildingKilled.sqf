@@ -197,6 +197,19 @@ if(_side != resistance)then{
     };
     [resistance, "Destroyed", ["Base", _structure]] Spawn SideMessage;
 };
+//--- fable/walls-and-runway (owner 2026-07-28 "when a factory is demolished / killed its walls
+//--- should also despawn"): auto-walls are spawned with the factory (Construction_SmallSite.sqf:194,
+//--- Construction_MediumSite.sqf:280 -> WFBE_Walls) but NOTHING ever deleted them - the structure
+//--- was removed from wfbe_structures above and deleted below, while its whole concrete ring stayed
+//--- on the map permanently. Every destroyed/rebuilt factory leaked another ring. The HQ path has
+//--- had this cleanup since its own release fix (Server_OnHQKilled.sqf:52-55, same bug, same
+//--- wording: "~23 concrete objects orphaned ... every destroy/redeploy cycle") - factories simply
+//--- never got the equivalent. Mirrors that line exactly, including the wfbe_hq_walls fallback so a
+//--- structure carrying either key is covered. Runs BEFORE the sleep so the ring goes with the
+//--- explosion rather than 10s later.
+{if (!isNull _x) then {deleteVehicle _x}} forEach (_structure getVariable ["wfbe_hq_walls", _structure getVariable ["WFBE_Walls", []]]);
+_structure setVariable ["WFBE_Walls", []];
+
 sleep 10;
 
 deleteVehicle _structure;

@@ -35,6 +35,21 @@ _bestD = 1000000;
 
 if (isNull _best) exitWith { [] };
 
+//--- fable/walls-and-runway (owner live report 2026-07-28, player 777 "plane not spawning when
+//--- buying"): the scan radius above is 100km - effectively the whole map - so the "nearest owned
+//--- runway" could be kilometres from the factory the player actually bought at. The plane DID
+//--- spawn; it just materialised at a distant airfield with no indication, which reads exactly like
+//--- a failed purchase. Cap the relocation: beyond WFBE_C_AIR_RUNWAY_MAX_DIST the caller keeps its
+//--- own apron position (the same byte-identical fallback as owning no airfield at all). The
+//--- owner intent - "planes spawn on the runway" - is preserved wherever a runway is actually
+//--- part of that base. 0 disables the cap (legacy whole-map behaviour).
+private "_maxD";
+_maxD = missionNamespace getVariable ["WFBE_C_AIR_RUNWAY_MAX_DIST", 2500];
+if (_maxD > 0 && {_bestD > _maxD}) exitWith {
+	diag_log Format ["AIRSPAWN|v3|runway-skip|reason=too-far|dist=%1|cap=%2|sideID=%3", round _bestD, _maxD, _sid];
+	[]
+};
+
 _dir = getDir _best;
 _pos = [getPos _best, missionNamespace getVariable ["WFBE_C_AIR_RUNWAY_OFFSET", 60], _dir] Call GetPositionFrom;
 
