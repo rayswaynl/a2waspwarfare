@@ -786,7 +786,14 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			_sID  = _this select 7;
 			_cost = _this select 8;
 			//--- Let everyone board first.
-			_t0 = time + 30;
+			//--- fable/heli-quickstart (owner 2026-07-28: helicopters linger way too long in base before flying off
+			//--- after spawning): the flat 30s boarding cap is a WORST-CASE bound only (the waitUntil below already
+			//--- exits the instant every pax is aboard) but still needlessly delays the run-in on a fast mount.
+			//--- Tunable via WFBE_C_AICOM_BOARD_WAIT (Init_CommonConstants.sqf, default 12s; was hardcoded 30).
+			//--- Air-only by construction: this whole Spawn only runs inside the enclosing !isNull _airVeh gate
+			//--- (L664) - _airVeh is exclusively an Air hull with transportSoldier>0 (L461-464) - ground transports
+			//--- never reach this path, so no additional isKindOf check is needed.
+			_t0 = time + (missionNamespace getVariable ["WFBE_C_AICOM_BOARD_WAIT", 12]);
 			waitUntil {sleep 1; time > _t0 || {({alive _x && vehicle _x == _h} count _pax) >= ({alive _x} count _pax)}};
 			if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)}) exitWith {
 				//--- Heli lost mid-lift: any survivors still aboard/around get an unconditional move.
