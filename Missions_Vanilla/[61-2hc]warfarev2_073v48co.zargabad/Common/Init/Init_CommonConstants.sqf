@@ -2634,6 +2634,12 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_PATROL_AIR_CHANCE")           then {WFBE_C_PATROL_AIR_CHANCE = 0.35};         //--- server-side roll per eligible patrol town-arrival.
 	if (isNil "WFBE_C_PATROL_AIR_COOLDOWN")         then {WFBE_C_PATROL_AIR_COOLDOWN = 300};        //--- s between passes per side.
 	if (isNil "WFBE_C_PATROL_AIR_PASS_TIME")        then {WFBE_C_PATROL_AIR_PASS_TIME = 90};        //--- s of attack run before the edge exit starts (W13 window).
+	if (isNil "WFBE_C_AICOM_SUPPLY_SQUAD")          then {WFBE_C_AICOM_SUPPLY_SQUAD = 1};           //--- ARMED 2026-07-28 (owner: "Allow the ai commander to run a small supply squad by itself once it reaches its unlock gates (Truck, or helicopter)" - supersedes the old do-not-re-propose "AI supply trucks" entry): one autonomous supply squad per AI-commanded W/E side; truck at Light-Factory, heli at AIR>=3; each round trip credits the side supply pool. 0 = off.
+	if (isNil "WFBE_C_AICOM_SUPPLY_GRANT")          then {WFBE_C_AICOM_SUPPLY_GRANT = 300};         //--- side-supply credit per completed round trip (ChangeSideSupply, clamped at the economy ceiling).
+	if (isNil "WFBE_C_AICOM_SUPPLY_TICK")           then {WFBE_C_AICOM_SUPPLY_TICK = 15};           //--- s maintain-loop cadence (floor 5).
+	if (isNil "WFBE_C_AICOM_SUPPLY_DWELL")          then {WFBE_C_AICOM_SUPPLY_DWELL = 20};          //--- s "loading" dwell at the town before the return leg.
+	if (isNil "WFBE_C_AICOM_SUPPLY_COOLDOWN")       then {WFBE_C_AICOM_SUPPLY_COOLDOWN = 300};      //--- s respawn cooldown after the squad is destroyed - killing it matters.
+	if (isNil "WFBE_C_AICOM_SUPPLY_AI_ONLY")        then {WFBE_C_AICOM_SUPPLY_AI_ONLY = 1};         //--- 1 = only while wfbe_aicom_running (human commander runs his own logistics; squad stands down player-safe on takeover). 0 = also under human command.
 	if (isNil "WFBE_C_NAVAL_THEATER_RUMOR")  then {WFBE_C_NAVAL_THEATER_RUMOR = 0};    //--- 0 = no naval theatre activity announcements; >0 = announce existing gate flips.
 	if (isNil "WFBE_C_NAVAL_THEATER_RUMOR_INTERVAL") then {WFBE_C_NAVAL_THEATER_RUMOR_INTERVAL = 120}; //--- seconds between announcements for the same gate.
 	if (isNil "WFBE_C_USV_FLOTILLA_COUNT")    then {WFBE_C_USV_FLOTILLA_COUNT = 3};    //--- boats roaming at once (owner: 3). Bumping this is a one-line tune; roles cycle round-robin.

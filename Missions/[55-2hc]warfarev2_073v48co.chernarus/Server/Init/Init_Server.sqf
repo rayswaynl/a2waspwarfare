@@ -1154,6 +1154,14 @@ if ((missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_ENABLE", 0]) == 1) then 
 	["INITIALIZATION", "Init_Server.sqf: Server_USVFlotilla.sqf launched (WFBE_C_USV_FLOTILLA_ENABLE=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- AICOM SUPPLY SQUAD (fable/aicom-supply-squad, owner 2026-07-28): one autonomous W/E supply
+//--- squad per AI-commanded side once its unlock gate is met (Light Factory -> truck, AIR>=3 ->
+//--- heli). Standalone registry loop (USV pattern) - does NOT consume an AICOM combat-team slot.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_SUPPLY_SQUAD", 0]) > 0) then {
+	[] execVM "Server\Server_AicomSupplySquad.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_AicomSupplySquad.sqf launched (WFBE_C_AICOM_SUPPLY_SQUAD=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): compiles the TEL spawn/fire functions + gates on
 //--- WFBE_C_ICBM_TEL. Same launch pattern as Init_NavalHVT above. The TEL itself is spawned per side when that
 //--- side COMPLETES the ICBM upgrade (hook in Server_ProcessUpgrade.sqf), NOT at boot, so it appears with the tech.
