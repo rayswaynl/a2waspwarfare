@@ -142,6 +142,46 @@ if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0
 	};
 };
 
+//--- build/defense audit 2026-07-28: server-side cap + duplicate-build race guard for the MULTI-INSTANCE
+//--- economy structures (Barracks/Light/Heavy/Aircraft/ServicePoint/CommandCenter). Mirrors the CBRadar/
+//--- AARadar (L73-101 above) and Bank (L104-143 above) single-instance PENDING-reservation idiom: those
+//--- types are otherwise enforced ONLY client-side via the optimistic wfbe_structures_live counter
+//--- (coin_interface.sqf), which races (two commanders, or one client double-clicking before its own
+//--- counter refreshes, can both pass the client gate and land two structures over the declared
+//--- WFBE_C_STRUCTURES_MAX_<type> cap). The AI commander already obeys these SAME per-type caps
+//--- server-side (AI_Commander_Base.sqf ~L686-711: same WFBE_C_STRUCTURES_MAX_%1 lookup + LIVE-structure
+//--- count via WFBE_CO_FNC_GetSideStructures/wfbe_structure_type) - that exact idiom is reused verbatim
+//--- below as the trusted LIVE-count source. PENDING is a self-expiring array (not a scalar timestamp
+//--- like the radar/bank guards) because several concurrent multi-instance builds of the SAME type can
+//--- legitimately be in flight at once; each entry is pruned once older than the pending window, which
+//--- also bounds any reservation that a construction-side release path failed to clear (see the release
+//--- points cited in the PR body). Gate: WFBE_C_STRUCTURES_CAP_SERVER (default 1, armed - it only
+//--- rejects what the declared caps already forbid the AI server-side; 0 = legacy client-only, byte-
+//--- identical to HEAD).
+if (!_reject && (_rlType in ["Barracks","Light","CommandCenter","Heavy","Aircraft","ServicePoint"]) && {(missionNamespace getVariable ["WFBE_C_STRUCTURES_CAP_SERVER", 1]) > 0}) then {
+	private ["_capTypeLimit","_capLiveHave","_capPendingKey","_capPendingWindow","_capPendingArr","_capFreshArr","_capI","_capPendingHave"];
+	_capTypeLimit = missionNamespace getVariable [Format ["WFBE_C_STRUCTURES_MAX_%1", _rlType], 3]; //--- case-insensitive getVariable, same idiom as AI_Commander_Base.sqf / coin_interface.sqf:917.
+	if (typeName _capTypeLimit != "SCALAR") then {_capTypeLimit = 3};
+	_capLiveHave = {((_x getVariable ["wfbe_structure_type", ""]) == _rlType) && {alive _x}} count ((_side) Call WFBE_CO_FNC_GetSideStructures); //--- same trusted LIVE source AI_Commander_Base.sqf reads.
+	_capPendingKey = Format ["WFBE_%1_%2_PENDING", str _side, _rlType];
+	_capPendingWindow = missionNamespace getVariable ["WFBE_C_STRUCTURES_PENDING_WINDOW", 180];
+	_capPendingArr = missionNamespace getVariable [_capPendingKey, []];
+	_capFreshArr = [];
+	for "_capI" from 0 to (count _capPendingArr - 1) do {if ((time - (_capPendingArr select _capI)) < _capPendingWindow) then {_capFreshArr set [count _capFreshArr, _capPendingArr select _capI]}};
+	_capPendingHave = count _capFreshArr;
+	if ((_capLiveHave + _capPendingHave) >= _capTypeLimit) then {
+		_reject = true; //--- same idiom as the radar/bank guards above: was never exitWith (escaped only the then{}).
+		_rejectMsg = "StructureCapReached";
+		["WARNING", Format ["RequestStructure.sqf: [%1] %2 build rejected - server cap reached (live=%3, pending=%4, max=%5).", str _side, _rlType, _capLiveHave, _capPendingHave, _capTypeLimit]] Call WFBE_CO_FNC_LogContent;
+	} else {
+		//--- Reserve the slot synchronously at accept time (pruned array write - see comment block above).
+		//--- Construction_SmallSite.sqf (Barracks/CommandCenter/Aircraft/ServicePoint) / Construction_MediumSite.sqf
+		//--- (Light/Heavy) release ONE reservation once the real structure registers, mirroring the CBRadar/
+		//--- AARadar/Bank _releasePending idiom in both files (file:line citations in the PR body).
+		missionNamespace setVariable [_capPendingKey, _capFreshArr + [time]];
+	};
+};
+
 //--- refund-sweep: a rejected build refunds the placing player (targeted) then skips broadcast + build.
 //--- Mirrors RequestDefense.sqf B5 (targeted SendToClient + client-side pool refund). Non-player callers
 //--- (objNull _reqPlayer, e.g. HQ redeploy) fall back to the legacy side-wide notify with NO refund.
