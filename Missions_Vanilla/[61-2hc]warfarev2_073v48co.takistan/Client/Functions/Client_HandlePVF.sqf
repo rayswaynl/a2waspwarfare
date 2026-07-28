@@ -47,6 +47,20 @@ if (_isHeadless) then {
 	};
 	if (_hcAllowed) then {_exit = false};
 };
+//--- fable/wreck-hygiene (owner 2026-07-28 "some hulls still dont get reaped (player owned)"): the
+//--- cleanup dispatches route by OBJECT locality, so a player-bought hull's cleanup lands on a REAL
+//--- client - where the HC-only bypass above never runs, and the payload's destination field is ""
+//--- (getPlayerUID of a VEHICLE, set in Common_SendToClient.sqf), which the UID match below can
+//--- never equal for a connected human. The dispatch was therefore PERMANENTLY dropped, and the
+//--- wfbe_trashed pre-stamp then blocks every later safety-net sweep - the exact "lingers forever".
+//--- Allow the two SELF-VALIDATING cleanup cases through on normal clients: their receivers
+//--- (Client\PVFunctions\HandleSpecial.sqf) re-check local + dead/empty + reap-stamp + zero live
+//--- crew + airlift/GUER-FOB protections before deleting, so a stale or mis-routed dispatch cannot
+//--- touch a live or re-crewed vehicle. Correctness fix: this path executing was always the design
+//--- (WFBE_C_TRASH_REMOTE_DELETE default 1) - only the HC-era gate made it HC-exclusive.
+if (!_isHeadless && {_script == "CLTFNCHandleSpecial"} && {(typeName _parameters) == "ARRAY"} && {(count _parameters) > 0}) then {
+	if ((_parameters select 0) in ["cleanup-trash-object","cleanup-empty-vehicle"]) then {_exit = false};
+};
 //--- fix(hunt): the old `if !(_hcAllowed) exitWith {}` sat INSIDE the then{} above - it exited only that
 //--- block and FELL THROUGH, and the nil-destination / side-match re-opens below then re-armed _exit=false
 //--- for every broadcast (endgame cameras, irsmoke FX, DashboardAnnounce... all ran on interface-less HCs,
