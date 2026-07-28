@@ -2904,6 +2904,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_FPV_DRONE_COST") then {WFBE_C_FPV_DRONE_COST = 2500};        //--- Purchase price (deducted client-side in fpv.sqf).
 	if (isNil "WFBE_C_FPV_DRONE_TTL")  then {WFBE_C_FPV_DRONE_TTL  = 240};         //--- s: battery life; expiry DISARMS then scuttles (no parked bomb).
 	if (isNil "WFBE_C_FPV_DRONE_AMMO") then {WFBE_C_FPV_DRONE_AMMO = "R_57mm_HE"}; //--- Warhead ammo class (RPG-warhead scale: hit 150 / indirect 40 / r 12).
+	if (isNil "WFBE_C_FPV_CAUSE_LOG")  then {WFBE_C_FPV_CAUSE_LOG  = 1};           //--- fable/fpv-causation (owner 2026-07-28 "AH6J also counts as suicide chopper - misattribution evidence ledger"): log-only causation evidence, ARMED by default (diagnostic-line policy, zero behavior change - see PR body). Ring write in Support_FPV_Detonate.sqf; FPVCAUSE|v1 diag_log lines in RequestOnUnitKilled.sqf. 0 = fully inert (no ring writes, no log lines).
 
 //--- AWACS PLATFORM RADAR (fable/awacs-radar, flag WFBE_C_AWACS default 0, lobby param):
 //--- while a CREWED friendly airframe from WFBE_C_AWACS_TYPES is airborne above MINALT the
