@@ -504,6 +504,15 @@ if ((missionNamespace getVariable ["WFBE_C_PLAYER_TEAMBAR_FIRST", 0]) > 0) then 
 	};
 };
 
+//--- fable/skin-fixes (owner live report 2026-07-28 "GUER team skins dont resolve to teamslot 1"):
+//--- the client-local rejoin above is the ONLY slot1 site that never pinged the server heal - and
+//--- mission-start AI squadmates are SERVER-local, so the local-_x filter collapses it into the
+//--- rejoin-no-local-others no-op on exactly those groups (surfaced on GUER first because GUER
+//--- skins are new, but latent for any side with a surviving server-local squadmate). Same
+//--- one-line ping Init_Client.sqf:783 and Client_OnKilled.sqf:151 already send at connect and
+//--- respawn; Server_TeambarSlot1Rejoin owns the reorder and logs every path.
+if (isMultiplayer) then {["RequestSpecial", ["update-teamleader", WFBE_Client_Team, player]] Call WFBE_CO_FNC_SendToServer};
+
 //--- TEAMBAR probe (round-2 review): capture the final post-rejoin state on every skin-swap path.
 ["skinswap", "post-final"] Call WFBE_CL_FNC_TeambarProbe;
 diag_log format ["[WFBE (SKIN)] B6 COMPLETE: player='%1' class='%2' uid='%3'",
