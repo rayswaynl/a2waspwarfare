@@ -787,7 +787,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 		};
 		_airfieldPts = [];
 		{
-			if ((_x getVariable ["name",""]) in ["NEAF","NWAF"]) then {
+			//--- fable/inland-sweep (owner backlog #6): ALL land airfields via the mission.sqm
+			//--- wfbe_is_airfield flag (carriers never set it - the hangar-obj fallback idiom would
+			//--- match a captured carrier). The old hardcoded ["NEAF","NWAF"] list missed Balota.
+			if (_x getVariable ["wfbe_is_airfield", false]) then {
 				_airfieldPts = _airfieldPts + [[(getPos _x) select 0, (getPos _x) select 1, 550]];
 			};
 		} forEach towns;
@@ -904,7 +907,11 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 							_jetPilot2 doMove [(_pos select 0) - 800, (_pos select 1), 600];
 
 							_capGrp setBehaviour "AWARE";
-							_capGrp setCombatMode "RED";
+							//--- fable/inland-sweep: YELLOW, not RED - the circuit overflies towns and a RED jet strafes
+							//--- infantry (owner: HVT only, never free-fire on men). Engagement is FORCED per tick on
+							//--- armour/APC/manned-statics/air via reveal/doTarget/doFire in the circuit block; YELLOW
+							//--- still returns fire when shot at.
+							_capGrp setCombatMode "YELLOW";
 							_capGrp setSpeedMode "FULL";
 
 							//--- EASA randomisation: stamp wfbe_naval_easa_pending on hull.
@@ -1129,8 +1136,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						if (_routeI >= count _route) then {
 							_lap = _lap + 1;
 							_route = +_circuitPts;
-							if (((_lap mod 3) == 0) && {count _airfieldPts > 0}) then {
-								_route = _route + [_airfieldPts select ((floor (_lap / 3)) mod (count _airfieldPts))];
+							//--- fable/inland-sweep: EVERY lap now flies the full inland leg over ALL airfields
+							//--- (was: ONE airfield every 3rd lap) - owner: "fly inland, overfly each airfield".
+							if ((count _airfieldPts) > 0) then {
+								_route = _route + _airfieldPts;
 							};
 							_routeI = 0;
 						};
@@ -1143,6 +1152,27 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						};
 						if (alive _jet1) then {_jetPilot1 doMove _legPt};
 						if (alive _jet2) then {_jetPilot2 doMove [(_legPt select 0) + 300, (_legPt select 1) + 300, _legPt select 2]};
+						//--- fable/inland-sweep: forced HVT-only engagement en route - armour/APC/manned statics/air.
+						//--- An empty hull reads side CIV and is skipped; infantry is never in the class list; own
+						//--- CAP aircraft excluded by the wfbe_naval_cap tag. reveal/doTarget/doFire is the
+						//--- codebase-proven idiom for targets AI will not otherwise attack (AI_Commander_AirStrike).
+						private ["_swTgt","_swC"];
+						if (alive _jet1) then {
+							_swTgt = objNull;
+							{
+								_swC = _x;
+								if (isNull _swTgt && {alive _swC} && {(side _swC == west) || {side _swC == east}} && {!(_swC getVariable ["wfbe_naval_cap", false])}) then {_swTgt = _swC};
+							} forEach (nearestObjects [getPos _jet1, ["Tank","Wheeled_APC","StaticWeapon","Air"], 900]);
+							if (!isNull _swTgt) then {
+								{
+									if (!isNull _x && {alive _x}) then {
+										_x reveal _swTgt;
+										_x doTarget _swTgt;
+										_x doFire _swTgt;
+									};
+								} forEach [_jetPilot1, _jetPilot2];
+							};
+						};
 					} else {
 						if (_capMode == "MI24") then {
 							if (alive _hind)  then {_hindPilot  doMove [(_pos select 0) + 400 * sin _orbitAng,         (_pos select 1) + 400 * cos _orbitAng, 0]};
@@ -1163,6 +1193,12 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 				//--- No player nearby: count down inactivity.
 				if (_armed) then {
 					_inactiveTime = _inactiveTime + 10;
+					//--- fable/inland-sweep: never quiet-despawn a circuit CAP while it is on the INLAND leg
+					//--- (>2500 m from the carrier) - the old 120 s no-player rule deleted the sweep the moment
+					//--- it left the carrier bubble. The timer holds at 0 until the flight returns seaward.
+					if ((_capMode == "L39" || _capMode == "SUX") && {!isNull _jet1} && {alive _jet1} && {(_jet1 distance _loc) > 2500}) then {
+						_inactiveTime = 0;
+					};
 					if (_inactiveTime >= 120) then {
 						//--- Despawn CAP.
 						_armed = false;
