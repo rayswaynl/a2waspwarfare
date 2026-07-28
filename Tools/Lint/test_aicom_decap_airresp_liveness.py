@@ -48,6 +48,14 @@ class DecapAirRespLivenessTests(unittest.TestCase):
         self.assertIn('|domRatio=" + str _domRatio', self.decap)
         self.assertIn('|maxEnTowns=" + str _maxEnTowns', self.decap)
 
+    def test_decap_map_relative_enemy_town_ceiling_is_opt_in(self) -> None:
+        self.assertIn('"WFBE_C_AICOM2_DECAP_MAPRELATIVE"', self.constants)
+        self.assertIn('WFBE_C_AICOM2_DECAP_MAPRELATIVE = 0', self.constants)
+        self.assertIn('"WFBE_C_AICOM2_DECAP_MAX_ENTOWNS_FRAC"', self.constants)
+        self.assertIn('WFBE_C_AICOM2_DECAP_MAX_ENTOWNS_FRAC = 0.4', self.constants)
+        self.assertIn('_totTowns  = _snap select WFBE_SNAP_TOTTOWNS;', self.decap)
+        self.assertIn('if ((missionNamespace getVariable ["WFBE_C_AICOM2_DECAP_MAPRELATIVE", 0]) > 0 && {_totTowns > 0}) then {_maxEnTowns = ceil (_totTowns * _mapRelativeFrac)};', self.decap)
+
 
 if __name__ == "__main__":
     unittest.main()
