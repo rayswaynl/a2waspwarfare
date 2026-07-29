@@ -211,12 +211,12 @@ while {!WFBE_GameOver} do {
 						WFBE_TownScanDiceAnnounced = true;
 						["INFORMATION", "server_town_ai.sqf: dormant-town scan dice enabled (WFBE_C_TOWN_SCAN_DICE=1)."] Call WFBE_CO_FNC_AICOMLog;
 					};
-					if (!(_town getVariable "wfbe_active") && {!(_town getVariable "wfbe_active_air")} && {(time - (_town getVariable ["wfbe_inactivity", 0])) > (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_GRACE", 30])}) then {
+					if (!(_town getVariable ["wfbe_active", false]) && {!(_town getVariable ["wfbe_active_air", false])} && {(time - (_town getVariable ["wfbe_inactivity", 0])) > (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_GRACE", 30])}) then {
 						if ((random 1) >= (missionNamespace getVariable ["WFBE_C_TOWN_SCAN_DICE_P", 0.5])) then {_doScan = false};
 					};
 				};
 				if (_doScan) then {
-				_dynRange = if (_town getVariable "wfbe_active" || _town getVariable "wfbe_active_air") then {_range_detect_active} else {_range_detect};
+				_dynRange = if ((_town getVariable ["wfbe_active", false]) || {(_town getVariable ["wfbe_active_air", false])}) then {_range_detect_active} else {_range_detect}; //--- nil-guard (live RPT fix 2026-07-29): towns with incomplete init (HANGGUARD) have no wfbe_active*/wfbe_active_air set; the 1-arg form returned nil, the if-expression yielded nil, _dynRange became undefined and line 273 spammed the server RPT (x169k in one session). 2-arg default matches Common_PerformanceAudit.sqf/AI_Commander_AirResp.sqf.
 				_scanStart = diag_tickTime;
 								//--- A2 air-tier (lane 800): scan includes all Air; split into ground vs air lists.
 				private ["_detectedAll","_detectedGround","_detectedAir"];
