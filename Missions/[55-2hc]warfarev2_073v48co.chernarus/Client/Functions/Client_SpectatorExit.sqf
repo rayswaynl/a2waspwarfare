@@ -1,17 +1,16 @@
 /* Client_SpectatorExit.sqf
-   fable/spectator-v1 (owner request 2026-07-28: spectator mode, owner first)
+   fable/spectator-v1 -> v2 (owner request 2026-07-29: caster-grade watch tool)
    -------------------------------------------------------------------------
-   Exits the free-camera spectator overlay and restores everything: camera
-   terminated + destroyed, the parked body's allowDamage/setCaptive
-   restored, keyboard handlers detached, view returned to the player.
-   addAction target (see Client_SpectatorAttach.sqf) - also called
-   internally by the movement loop's death watchdog in
-   Client_SpectatorEnter.sqf so a mid-session death auto-exits safely
-   instead of leaving a dangling camera.
+   Exits the spectator overlay and restores everything: camera terminated +
+   destroyed, the parked body's allowDamage/setCaptive restored, ALL display
+   handlers detached (v2 adds MouseMoving/MouseZChanged to v1's KeyDown/KeyUp),
+   the hint overlay cleared, view returned to the player. addAction target (see
+   Client_SpectatorAttach.sqf), Backspace quick-exit target, and the internal
+   auto-exit for the movement loop's death watchdog in Client_SpectatorEnter.sqf.
 
-   Idempotent: safe to call more than once (e.g. a player clicking "Exit
-   Spectator" right as the death watchdog also fires) - the leading guard
-   makes every call after the first a no-op.
+   Idempotent: safe to call more than once (e.g. Backspace right as the death
+   watchdog also fires) - the leading guard makes every call after the first a
+   no-op.
 */
 Private ["_body"];
 
@@ -20,7 +19,7 @@ WFBE_C_VAR_SpectatorActive = false; //--- first: stops the movement loop in Clie
 
 _body = missionNamespace getVariable ["WFBE_C_VAR_SpectatorBody", objNull];
 
-diag_log Format ["SPECTATE|v1|exit|uid=%1", getPlayerUID player];
+diag_log Format ["SPECTATE|v2|exit|uid=%1", getPlayerUID player];
 
 if (!isNil "WFBE_C_VAR_SpectatorCam" && {!isNull WFBE_C_VAR_SpectatorCam}) then {
 	WFBE_C_VAR_SpectatorCam cameraEffect ["TERMINATE", "BACK"];
@@ -36,6 +35,20 @@ if (!isNil "WFBE_C_VAR_SpectatorKeyUpIdx") then {
 	(findDisplay 46) displayRemoveEventHandler ["KeyUp", WFBE_C_VAR_SpectatorKeyUpIdx];
 	WFBE_C_VAR_SpectatorKeyUpIdx = nil;
 };
+if (!isNil "WFBE_C_VAR_SpectatorMouseMovingIdx") then {
+	(findDisplay 46) displayRemoveEventHandler ["MouseMoving", WFBE_C_VAR_SpectatorMouseMovingIdx];
+	WFBE_C_VAR_SpectatorMouseMovingIdx = nil;
+};
+if (!isNil "WFBE_C_VAR_SpectatorWheelIdx") then {
+	(findDisplay 46) displayRemoveEventHandler ["MouseZChanged", WFBE_C_VAR_SpectatorWheelIdx];
+	WFBE_C_VAR_SpectatorWheelIdx = nil;
+};
+
+hintSilent ""; //--- v2: clear the hint overlay even if it was mid-update.
+
+WFBE_C_VAR_SpectatorMode = "free";
+WFBE_C_VAR_SpectatorTarget = objNull;
+WFBE_C_VAR_SpectatorHideHint = false;
 
 if (!isNull _body) then {
 	if (alive _body) then {_body allowDamage true};

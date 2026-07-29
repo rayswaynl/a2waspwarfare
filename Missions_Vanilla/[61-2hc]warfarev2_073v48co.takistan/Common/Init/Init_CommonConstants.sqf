@@ -3357,6 +3357,15 @@ if (isNil "WFBE_C_SPECTATOR") then {WFBE_C_SPECTATOR = 1};
 //--- (rayswaynl/a2waspwarfare) - SteamID64s are public-profile identifiers, not secrets, but this list
 //--- is still an intentional, curated allowlist.
 if (isNil "WFBE_C_SPECTATOR_UIDS") then {WFBE_C_SPECTATOR_UIDS = ["76561198046825568"]};
+//--- spectator v2 tuning (2026-07-29, docs/plans/2026-07-29-spectator-v2-design.md): free-fly
+//--- base speed, Shift boost / Alt precision multipliers, mouse-look sensitivity (degrees per
+//--- full UI-width delta - playtest-tune), mouse-wheel zoom clamps (0.05 = strong zoom scope).
+if (isNil "WFBE_C_SPECTATOR_SPEED") then {WFBE_C_SPECTATOR_SPEED = 15};
+if (isNil "WFBE_C_SPECTATOR_BOOST") then {WFBE_C_SPECTATOR_BOOST = 4};
+if (isNil "WFBE_C_SPECTATOR_SLOW") then {WFBE_C_SPECTATOR_SLOW = 0.25};
+if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 300};
+if (isNil "WFBE_C_SPECTATOR_FOV_MIN") then {WFBE_C_SPECTATOR_FOV_MIN = 0.05};
+if (isNil "WFBE_C_SPECTATOR_FOV_MAX") then {WFBE_C_SPECTATOR_FOV_MAX = 1.2};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
