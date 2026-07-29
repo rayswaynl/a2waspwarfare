@@ -177,7 +177,9 @@ public abstract class BaseAircraft : BaseVehicle, InterfaceAircraft
             return _priceWithoutModifier;
         }
 
-        return _priceWithoutModifier * (int)ammunitionTypeCostFloatModifier[_ammunitionType];
+        return (int)Math.Round(
+            _priceWithoutModifier * ammunitionTypeCostFloatModifier[_ammunitionType],
+            MidpointRounding.AwayFromZero);
     }
 
     // Generates a row string that represents a loadout based on the given dictionary of ammunition types and counts.
