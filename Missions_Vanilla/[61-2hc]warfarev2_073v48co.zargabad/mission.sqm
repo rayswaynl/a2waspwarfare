@@ -745,7 +745,7 @@ class Mission
 				class Item0
 				{
 					position[]={1203.4164999999998,512.457,8158.522946666667};
-					id=50;
+					id=114;
 					side="WEST";
 					vehicle="US_Soldier_EP1";
 					player="PLAY CDG";
@@ -766,7 +766,7 @@ class Mission
 				class Item0
 				{
 					position[]={1203.3666999999998,512.6393,8159.692946666667};
-					id=51;
+					id=115;
 					side="WEST";
 					vehicle="US_Soldier_EP1";
 					player="PLAY CDG";
@@ -787,7 +787,7 @@ class Mission
 				class Item0
 				{
 					position[]={1204.7802,512.8022,8159.780946666667};
-					id=52;
+					id=116;
 					side="WEST";
 					vehicle="US_Soldier_EP1";
 					player="PLAY CDG";
@@ -809,7 +809,7 @@ class Mission
 				class Item0
 				{
 					position[]={1204.8946999999998,512.6513,8158.5429466666665};
-					id=53;
+					id=117;
 					side="WEST";
 					vehicle="US_Soldier_EP1";
 					player="PLAY CDG";
@@ -1408,7 +1408,7 @@ class Mission
 					leader=1;
 					skill=0.60000002;
 					text="WFBE_L_BLU";
-					synchronizations[]={52,53,54,55,56,57,58,59,60,61,62,63,64};
+					synchronizations[]={116,117,54,55,56,57,58,59,60,61,62,63,64};
 				};
 			};
 		}
@@ -1624,11 +1624,10 @@ class Mission
 				class Item0
 				{
 					position[]={10.0,0,10.0};
-					id=114;
+					id=50;
 					side="CIV";
 					vehicle="Functionary1";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
@@ -1645,11 +1644,10 @@ class Mission
 				class Item0
 				{
 					position[]={20.0,0,10.0};
-					id=115;
+					id=51;
 					side="CIV";
 					vehicle="Functionary1";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
@@ -1666,11 +1664,10 @@ class Mission
 				class Item0
 				{
 					position[]={30.0,0,10.0};
-					id=116;
+					id=52;
 					side="CIV";
 					vehicle="Functionary1";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
@@ -1687,11 +1684,10 @@ class Mission
 				class Item0
 				{
 					position[]={40.0,0,10.0};
-					id=117;
+					id=53;
 					side="CIV";
 					vehicle="Functionary1";
 					player="PLAY CDG";
-					forceHeadlessClient=1;
 					leader=1;
 					skill=0.60000002;
 					init="this allowdamage false;";
