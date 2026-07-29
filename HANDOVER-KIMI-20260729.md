@@ -55,10 +55,18 @@ The 27 "blocked" are **complete work** that couldn't tick a milestone checkbox b
 fleet-console Inbox API was unreachable (3847/4173/4190 refusing). Fixing that endpoint
 unblocks them without redoing any work.
 
-**Two triage lanes were running when this session ended** — collect them first:
-1. `codex-pr-triage` — merge-readiness of the 54 chernarus-codex PRs (conflict map, risk tiers,
-   content-accuracy spot-check against real mission code).
-2. `wasp-finding-verify` — independent verification of the four highest-consequence Grok claims.
+**Two triage lanes were dispatched before this session ended:**
+1. `codex-pr-triage` — **DONE.** Result written up in §6b below. Read that before touching any
+   chernarus-codex PR.
+2. `wasp-finding-verify` — **STILL RUNNING at handover.** It independently checks the four
+   highest-consequence Grok claims (invalid buyable classnames; the 54 wrong-mount EASA rows;
+   24 lobby params silently overriding constants; 66 flags read with different defaults at
+   different sites) and returns a CONFIRMED / PARTIALLY-CORRECT / WRONG verdict per claim with
+   sample hit-rates plus a ranked action list. **Collect this before acting on any Grok finding.**
+   If the result is lost with the session, the four claims are restated in full below — re-run
+   the verification rather than trusting them unverified. The single most important question it
+   answers: what happens at runtime when a player buys a classname that does not exist — does it
+   throw, silently no-op, or charge the player and give nothing?
 
 **Do not act on any Grok finding until that verification lands.** An audit finding that is
 itself wrong is worse than no audit. The claims most worth acting on **if confirmed**:
