@@ -396,10 +396,17 @@ if (_airMaxTotalP > 0) then {
 						//--- MERGE: the survivor's live units join the healthy team; the now-empty old group is
 						//--- deleted (its wfbe_teams entry becomes a null group, which every consumer already skips
 						//--- -- same lifecycle as a wiped HC team / the existing cull). Net groups -1, body preserved.
+						//--- LIVE-UNITS ONLY (grok-main-allnighter-1606 / alife-group-merge bughunt 2026-07-29):
+						//--- joinSilent of full `units _team` also moved combat corpses into the keeper and could
+						//--- leave the donor non-empty so deleteGroup no-op'd (orphan husk until body GC). Merge
+						//--- only live men, delete residual corpses on the donor, then deleteGroup if empty.
 						_mergedInto = _mergeTeam;  //--- capture for the log before _team is gutted
-						(units _team) joinSilent _mergeTeam;  //--- N-FEATUREBUG-49 fix 2026-06-27: joinSilent (not join) to avoid leader churn / behaviour reset on the merged-into team.
+						Private ["_liveMerge"];
+						_liveMerge = (units _team) Call WFBE_CO_FNC_GetLiveUnits;
+						_liveMerge joinSilent _mergeTeam;  //--- N-FEATUREBUG-49 fix 2026-06-27: joinSilent (not join) to avoid leader churn / behaviour reset on the merged-into team.
+						{if (!alive _x && {!(isPlayer _x)}) then {deleteVehicle _x}} forEach (units _team);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] stranded survivor MERGED into [%3] (alive=%4, dist=%5, mergeDist=%6) - body preserved, groups-1.", _sideText, _team, _mergedInto, _aliveNow, _curDist, round _mergeBest]] Call WFBE_CO_FNC_AICOMLog;
-						deleteGroup _team;
+						if ((count (units _team)) == 0) then {deleteGroup _team};
 						_canProduce = false;
 					} else {
 						//--- No eligible nearby team: existing cull, unchanged (guardrail = never strands the survivor).
