@@ -24,6 +24,16 @@ private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_
               "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger",
               "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending","_constructionExpired","_constructionSince","_constructionTTL","_grp","_censusOn","_censusLast","_censusRows","_censusKind","_censusLdr","_censusLdrTxt","_scanChunkOn","_scanChunkSleep","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_sliceCut","_sliceYield"]; //--- B66
 
+//--- Epilogue nil-seed (live RPT fix 2026-07-29): the server-local founding path (no live HC)
+//--- reaches the TEAM_FOUNDED diag_log + PerformanceAudit epilogue without ever assigning
+//--- _eligible/_pick; the unassigned-private reads errored "Undefined variable" (live t0727a
+//--- session: _pick x47 at the :1694 diag_log, _eligible x47 at the :1700 PerformanceAudit
+//--- Format). Seed the same neutral values the main founding flow uses ([] at :568, the -1
+//--- sentinel at :1042); happy paths re-assign both, so behaviour is unchanged except the
+//--- epilogue logs 0/-1 instead of erroring. The _clsU guard requires _pick >= 0, inert at -1.
+_eligible = [];
+_pick = -1;
+
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 _sideText = str _side;
