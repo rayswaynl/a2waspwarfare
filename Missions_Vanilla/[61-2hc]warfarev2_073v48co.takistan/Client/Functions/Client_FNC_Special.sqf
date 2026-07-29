@@ -94,6 +94,9 @@ WFBE_CL_FNC_Reveal_UAV = {
 	_target = _this select 1;
 
 	if (typeName _uav != 'OBJECT' || typeName _target != 'OBJECT') exitWith {["ERROR", Format ["uav-reveal: An object is expected for both parameters given (UAV: [%1]  Target: [%2]).",_uav,_target]] Call WFBE_CO_FNC_LogContent};
+	//--- A2 trap: typeName objNull is still "OBJECT". Spotter PV can arrive after the target
+	//--- (or platform) is deleted; distance/getPos on null is undefined / RPT noise.
+	if (isNull _uav || {isNull _target}) exitWith {};
 
 	_size = round((_uav distance _target) / 16);
 	_marker = Format["WFBE_UAV_SPOTTED_%1",unitMarker];

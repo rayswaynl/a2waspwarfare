@@ -290,11 +290,23 @@ if (count _town_teams > 0) then {
 		_near = _revealPos nearEntities _revealRange;
 		{
 			_ent = _x;
+			//--- Expand vehicle crew for knowsAbout: `_ent != vehicle _ent` is only true for a
+			//--- mounted man, never for the vehicle object itself (vehicle of a vehicle is itself).
+			//--- nearEntities returns hulls; without the vehicle branch, crew never entered
+			//--- _reveal and garrison activation only painted the hull. Mounted-man branch kept
+			//--- for untyped scans that still return passengers as separate entities.
 			_reveal = [_ent];
-			if (_ent != vehicle _ent) then {_reveal = _reveal + (crew _ent)};
+			if !(_ent isKindOf "Man") then {
+				_reveal = _reveal + (crew _ent);
+			} else {
+				if (_ent != vehicle _ent) then {_reveal = _reveal + (crew _ent)};
+			};
 			{
 				_grp = _x;
-				{_grp reveal _ent} forEach _reveal;
+				//--- B5 fix: reveal EACH entry in _reveal (entity + crew). The prior
+				//--- `{_grp reveal _ent} forEach _reveal` re-revealed only the outer entity
+				//--- once per list length, so crew expansion above was dead code.
+				{_grp reveal _x} forEach _reveal;
 			} forEach _teams;
 		} forEach _near;
 	};
