@@ -87,7 +87,11 @@ if (_state == "enroute") then {
 				} else {
 					_x setVehicleAmmo 1;
 				};
-				if (_x isKindOf "Air") then {_x setFuel 1};
+				//--- REFUEL every powered hull (comment L73 promises REPAIR+REARM+REFUEL). Air-only setFuel left
+//--- tanks/APCs/cars dry after a successful SERVICE_DONE - they re-commit with full ammo but no gas.
+if ((_x isKindOf "Tank") || {(_x isKindOf "APC")} || {(_x isKindOf "Car")} || {(_x isKindOf "Air")} || {(_x isKindOf "Ship")}) then {
+_x setFuel 1;
+};
 			};
 		} forEach _vehicles;
 		diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|SERVICE_DONE|" + (str _team));
@@ -141,7 +145,7 @@ if (_state == "enroute") then {
 	};
 	if (_svcSkip) exitWith {};
 
-	//--- needs-service: any wounded member, OR a weaponed combat vehicle low on ammo
+//--- needs-service: wounded member, low-ammo combat hull, OR low-fuel powered hull
 	_needs = false;
 	{
 		if (!_needs && {alive _x} && {getDammage _x > _dmgT}) then {_needs = true};
@@ -155,6 +159,17 @@ if (_state == "enroute") then {
 			};
 		} forEach _vehicles;
 	};
+//--- FUEL DETOUR: undamaged full-ammo hulls still need service when dry (threshold mirrors ammo style).
+if (!_needs) then {
+private "_fuelT";
+_fuelT = missionNamespace getVariable ["WFBE_C_AICOM_SVC_FUEL_THRESH", 0.25];
+{
+if (!_needs && {!isNull _x} && {alive _x}
+    && {(_x isKindOf "Tank") || {(_x isKindOf "APC")} || {(_x isKindOf "Air")} || {(_x isKindOf "Car")} || {(_x isKindOf "Ship")}}) then {
+if ((fuel _x) < _fuelT) then {_needs = true};
+};
+} forEach _vehicles;
+};
 	if (!_needs) exitWith {};
 
 	//--- nearest SAFE friendly town-centre within reach
