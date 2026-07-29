@@ -1562,28 +1562,7 @@ class RscMenu_Team {
 			w = 0.426891;
 			style = ST_RIGHT;
 		};
-		//--- Unit designer tab buttons (IDC 13080-13081; WFBE_C_UNIT_DESIGNER).
-		//--- GUI_Menu_TeamV2.sqf hides both on open; shows when flag > 0.
-		class CA_TAB_Presets : RscButton_WFBE_Action {
-			idc = 13080;
-			x = 0.502;
-			y = 0.207;
-			w = 0.078;
-			h = 0.028;
-			text = "Presets";
-			action = "MenuAction = 1100";
-			tooltip = "Gear presets and squad actions";
-		};
-		class CA_TAB_Units : RscButton_WFBE_Action {
-			idc = 13081;
-			x = 0.584;
-			y = 0.207;
-			w = 0.078;
-			h = 0.028;
-			text = "Units";
-			action = "MenuAction = 1200";
-			tooltip = "Unit template designer - apply loadout to AI squad buys";
-		};
+		//--- Unit Designer tabs live on RscMenu_TeamV2 (idd 13050) only. V1 has no UD handlers.
 		/* Disband */
 		class CA_Disband_SubTitle : RscText_SubTitle {
 			idc = 13011;
@@ -1736,6 +1715,31 @@ class RscMenu_TeamV2 {
 			y = 0.20787;
 			w = 0.426891;
 			style = ST_RIGHT;
+		};
+		//--- Unit designer tab buttons (IDC 13080-13081; WFBE_C_UNIT_DESIGNER).
+		//--- show=0 STRUCTURAL GUARD: revealed by GUI_Menu_TeamV2.sqf via global ctrlShow when flag > 0.
+		//--- (Was wrongly defined only on RscMenu_Team V1; UD controls live on this dialog.)
+		class CA_TAB_Presets : RscButton_WFBE_Action {
+			idc = 13080;
+			show = 0;
+			x = 0.502;
+			y = 0.207;
+			w = 0.078;
+			h = 0.028;
+			text = "Presets";
+			action = "MenuAction = 1100";
+			tooltip = "Gear presets and squad actions";
+		};
+		class CA_TAB_Units : RscButton_WFBE_Action {
+			idc = 13081;
+			show = 0;
+			x = 0.584;
+			y = 0.207;
+			w = 0.078;
+			h = 0.028;
+			text = "Units";
+			action = "MenuAction = 1200";
+			tooltip = "Unit template designer - apply loadout to AI squad buys";
 		};
 		/* --- GEAR PRESETS SECTION --- */
 		class CA_GP_Title : RscText_SubTitle {
@@ -1995,9 +1999,10 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 13";
 		};
 		/* --- UNIT DESIGNER SECTION (IDC 13100-13117; WFBE_C_UNIT_DESIGNER) ---
-		   ctrlShow-managed by GUI_Menu_TeamV2.sqf; hidden on open.             */
+		   show=0 STRUCTURAL GUARD: toggled by GUI_Menu_TeamV2.sqf global ctrlShow (display-scoped no-ops on createDialog).             */
 		class CA_UD_Title : RscText_SubTitle {
 			idc = 13100;
+			show = 0;
 			x = 0.19634;
 			y = 0.265506;
 			w = 0.614;
@@ -2005,6 +2010,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD_ActiveInfo : RscText {
 			idc = 13101;
+			show = 0;
 			x = 0.192941;
 			y = 0.284;
 			w = 0.614;
@@ -2013,6 +2019,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD1_Name : RscText {
 			idc = 13102;
+			show = 0;
 			x = 0.192941;
 			y = 0.308;
 			w = 0.200;
@@ -2021,6 +2028,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD1_Save : RscButton_WFBE_Action {
 			idc = 13103;
+			show = 0;
 			x = 0.397;
 			y = 0.306;
 			w = 0.115;
@@ -2031,6 +2039,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD1_Activate : RscButton_WFBE_Action {
 			idc = 13104;
+			show = 0;
 			x = 0.516;
 			y = 0.306;
 			w = 0.145;
@@ -2041,6 +2050,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD1_Delete : RscButton_WFBE_Action {
 			idc = 13105;
+			show = 0;
 			x = 0.666;
 			y = 0.306;
 			w = 0.110;
@@ -2051,6 +2061,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD2_Name : RscText {
 			idc = 13106;
+			show = 0;
 			x = 0.192941;
 			y = 0.346;
 			w = 0.200;
@@ -2059,6 +2070,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD2_Save : RscButton_WFBE_Action {
 			idc = 13107;
+			show = 0;
 			x = 0.397;
 			y = 0.344;
 			w = 0.115;
@@ -2069,6 +2081,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD2_Activate : RscButton_WFBE_Action {
 			idc = 13108;
+			show = 0;
 			x = 0.516;
 			y = 0.344;
 			w = 0.145;
@@ -2079,6 +2092,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD2_Delete : RscButton_WFBE_Action {
 			idc = 13109;
+			show = 0;
 			x = 0.666;
 			y = 0.344;
 			w = 0.110;
@@ -2089,6 +2103,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD3_Name : RscText {
 			idc = 13110;
+			show = 0;
 			x = 0.192941;
 			y = 0.384;
 			w = 0.200;
@@ -2097,6 +2112,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD3_Save : RscButton_WFBE_Action {
 			idc = 13111;
+			show = 0;
 			x = 0.397;
 			y = 0.382;
 			w = 0.115;
@@ -2107,6 +2123,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD3_Activate : RscButton_WFBE_Action {
 			idc = 13112;
+			show = 0;
 			x = 0.516;
 			y = 0.382;
 			w = 0.145;
@@ -2117,6 +2134,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD3_Delete : RscButton_WFBE_Action {
 			idc = 13113;
+			show = 0;
 			x = 0.666;
 			y = 0.382;
 			w = 0.110;
@@ -2127,6 +2145,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD4_Name : RscText {
 			idc = 13114;
+			show = 0;
 			x = 0.192941;
 			y = 0.422;
 			w = 0.200;
@@ -2135,6 +2154,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD4_Save : RscButton_WFBE_Action {
 			idc = 13115;
+			show = 0;
 			x = 0.397;
 			y = 0.420;
 			w = 0.115;
@@ -2145,6 +2165,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD4_Activate : RscButton_WFBE_Action {
 			idc = 13116;
+			show = 0;
 			x = 0.516;
 			y = 0.420;
 			w = 0.145;
@@ -2155,6 +2176,7 @@ class RscMenu_TeamV2 {
 		};
 		class CA_UD4_Delete : RscButton_WFBE_Action {
 			idc = 13117;
+			show = 0;
 			x = 0.666;
 			y = 0.420;
 			w = 0.110;

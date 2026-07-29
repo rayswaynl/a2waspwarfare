@@ -135,12 +135,16 @@ _rebuyIDCs = [13054, 13058, 13062, 13066];
 //--- ── UNIT DESIGNER init (WFBE_C_UNIT_DESIGNER, default 1) ────────────────
 //--- Tab buttons (IDC 13080-13081) + UD controls (IDC 13100-13117) hidden on open.
 //--- Presets tab is shown by default.
+//--- ROOT-CAUSE FIX (bughunt 2026-07-30): use GLOBAL `ctrlShow [idc,bool]` — display-scoped
+//--- `(_display displayCtrl idc) ctrlShow bool` silently no-ops on idd createDialog menus in
+//--- A2-OA-1.64 (same trap as GUI_Menu_Command.sqf / GUI_RespawnMenu.sqf). Combined with missing
+//--- show=0 on UD controls this left Gear Presets + Unit Designer permanently overlapping.
 _udPresetIDCs = [13049,13051,13052,13053,13054,13055,13056,13057,13058,13059,13060,13061,13062,13063,13064,13065,13066];
 _udUDIDCs     = [13100,13101,13102,13103,13104,13105,13106,13107,13108,13109,13110,13111,13112,13113,13114,13115,13116,13117];
-{(_display displayCtrl _x) ctrlShow false} forEach ([13080,13081] + _udUDIDCs);
+{ctrlShow [_x, false]} forEach ([13080,13081] + _udUDIDCs);
 if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
-	(_display displayCtrl 13080) ctrlShow true;
-	(_display displayCtrl 13081) ctrlShow true;
+	ctrlShow [13080, true];
+	ctrlShow [13081, true];
 	_udTemplates = missionNamespace getVariable ["WFBE_UD_Templates", [[],[],[],[]]];
 	_udActive    = missionNamespace getVariable ["WFBE_UD_Active", -1];
 	_udNameIDCs   = [13102,13106,13110,13114];
@@ -197,8 +201,8 @@ if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
 	//--- way (WFBE_TM2_OpenToUD stays nil).
 	if (!(isNil "WFBE_TM2_OpenToUD") && {WFBE_TM2_OpenToUD}) then {
 		WFBE_TM2_OpenToUD = nil;
-		{(_display displayCtrl _x) ctrlShow false} forEach _udPresetIDCs;
-		{(_display displayCtrl _x) ctrlShow true } forEach _udUDIDCs;
+		{ctrlShow [_x, false]} forEach _udPresetIDCs;
+		{ctrlShow [_x, true]} forEach _udUDIDCs;
 	};
 };
 
@@ -693,16 +697,16 @@ while {alive player && dialog} do {
 	//--- ── UNIT DESIGNER handlers (WFBE_C_UNIT_DESIGNER) ──────────────────────
 	if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
 
-		//--- Tab switch: Presets (1100) / Units (1200).
+		//--- Tab switch: Presets (1100) / Units (1200). Global ctrlShow form (A2 createDialog).
 		if (MenuAction == 1100) then {
 			MenuAction = -1;
-			{(_display displayCtrl _x) ctrlShow true } forEach _udPresetIDCs;
-			{(_display displayCtrl _x) ctrlShow false} forEach _udUDIDCs;
+			{ctrlShow [_x, true]} forEach _udPresetIDCs;
+			{ctrlShow [_x, false]} forEach _udUDIDCs;
 		};
 		if (MenuAction == 1200) then {
 			MenuAction = -1;
-			{(_display displayCtrl _x) ctrlShow false} forEach _udPresetIDCs;
-			{(_display displayCtrl _x) ctrlShow true } forEach _udUDIDCs;
+			{ctrlShow [_x, false]} forEach _udPresetIDCs;
+			{ctrlShow [_x, true]} forEach _udUDIDCs;
 		};
 
 		//--- UD Save (2101-2104): capture player loadout into template slot.
