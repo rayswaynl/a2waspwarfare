@@ -122,6 +122,47 @@ itself wrong is worse than no audit. The claims most worth acting on **if confir
    Note the audit's headline: the player build path has **zero server-side geometric validation**
    — the AI validates everything server-side, players can build on roads.
 
+## 6b. Codex-site PR triage — RESULT (lane completed 06:47, verified against real code)
+
+**Do not bulk-merge the 54.** Verdict: content is sound, mechanics are not.
+
+**Accuracy: clean.** All six highest-risk AI-Behaviour pages were checked line-by-line against
+`a2wasp-smlfix @ 2bcb0cf5e4` (the exact commit each page cites). No factual errors. Every one of
+the four known-unsettled items was hedged correctly — GUER Director's coded `=1` default (which
+contradicts its own design doc) was confirmed byte-for-byte, airlift is described as broken and
+disabled, AI bomb release is explicitly framed as OPEN, and the AICOM V2 "layered brain" is
+correctly described as designed-but-never-built. A couple of cited line numbers are off by one
+and self-caveated. **Publishing these is safe on accuracy grounds.**
+
+**Mechanics: messy.**
+- `src/lib/nav.ts` is touched by **39 of 54** PRs, each re-deriving the same infra hunk from #7.
+  Resolution is mechanical but must be done once per PR, sequentially. No way around it.
+- `src/lib/mdx.ts` is **fully rewritten** by 7 PRs (#49,50,52,53,56,58,60), each for a different
+  purpose. Not diff-mergeable — only the first lands. Three of them implement three *different*
+  mechanisms for intercepting code-block rendering, likely mutually incompatible. #58 also
+  changes `loadDoc()`'s return type. **This needs one unified pipeline written by hand — real
+  dev work, not conflict resolution.**
+- Four PRs (#49/50/52/53) independently reinvent Mermaid infra, all adding the same dependency.
+  #50 and #53 are diagram-first *stubs* that would OVERWRITE the real prose pages in #8 and #13 —
+  merge the prose first, then hand-splice the diagram.
+- `order:` frontmatter collides badly (`order: 14` used by four pages). `content.test.ts` won't
+  catch it — ties pass. Needs one renumbering pass across the batch.
+
+**RED — hold until the mdx.ts unification exists:** #49, #50, #52, #53, #55, #56, #58, #59, #60.
+Two add build-contract changes worth a second look on the real deploy box: **#55** adds a
+`postbuild` Pagefind index step to every future build, and **#59** adds `postinstall`+`prebuild`
+hooks that patch `node_modules` (a real, well-guarded Windows `next/og` fix — but it auto-patches
+third-party code).
+
+**Merge order:** #7 alone → #46 → #31 → #38 → the 17 clean AI pages → #8 then splice #50, #13
+then splice #53, splice #52 onto post-#31, splice #49 onto post-#38 → remaining GREEN
+guides/traps → #51+#54 → #57 → #48 → RED cluster last → renumber `order:`.
+
+**Also found: this repo has ZERO GitHub Actions workflows — no CI gate at all.** Every merge is
+trust-based today. Three PRs were built and tested locally (#12, #55, #56) and all passed clean,
+so the risk is in merging them *together*, not in any one alone. Worth adding a build+test
+workflow before absorbing 54 PRs.
+
 ## 7. Working agreements to honour
 
 - Peach DM after every completed step or gate.
