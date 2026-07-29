@@ -183,6 +183,25 @@ while {!WFBE_GameOver} do {
 		_enemies = 0; //--- perf-dice fix (livetest 2026-07-06): must exist in TOWN-LOOP scope - assigned inside the _doScan block, and SQF inner-block assignments do not escape unless the var pre-exists in an outer scope (RPT: 'Undefined variable _enemies' at the deactivation check).
 
 		_town = towns select _i;
+		//--- Late-registration seed (live RPT fix 2026-07-29): towns that self-register into `towns`
+		//--- AFTER this script's one-shot seed loop above (slow startup census - see the Init_Towns.sqf
+		//--- HANGGUARD lines) have NO wfbe_* defaults, so every 1-arg read below errored "Undefined
+		//--- variable" every sweep forever (live t0727a session: _dynrange x169839 at :273,
+		//--- _town_teams x27 at :732 and x25 at :945). Seed the same defaults the init loop uses,
+		//--- once, the first time the sweep sees such a town. Fires only when wfbe_active was never
+		//--- set, so it can never clobber a live town's state.
+		if (isNil {_town getVariable "wfbe_active"}) then {
+			_town setVariable ["wfbe_active", false];
+			_town setVariable ["wfbe_active_air", false];
+			_town setVariable ["wfbe_inactivity", 0];
+			_town setVariable ["wfbe_active_override", false];
+			_town setVariable ['wfbe_active_vehicles', []];
+			_town setVariable ['wfbe_town_teams', []];
+			_town setVariable ["wfbe_episode_spawned", false];
+			_town setVariable ["wfbe_sortie_grp", grpNull, true];
+			_town setVariable ["wfbe_sortie_started", 0];
+			_town setVariable ["wfbe_sortie_rtb", false];
+		};
 		_town_teams = _town getVariable "wfbe_town_teams";
 		//--- Patrols v2: town-based patrol gating retired (see Server\FSM\server_side_patrols.sqf).
 
