@@ -1670,7 +1670,22 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
 				_town = [_preview] Call GetClosestLocation;
 			    _townside =  (_town getVariable "sideID") Call GetSideFromID;
 			    _eArea = [_preview,((_eside) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity3;
-	            if ((_preview distance _town < 600 && _townside != sideJoined) || !isNull _eArea) then {
+	            //--- fable/restricted-diag (owner live 2026-07-29: "near impossible to find a spot where
+	            //--- you are allowed to build factories ... says i entered a restricted area nearly
+	            //--- everywhere"). Radius is now a constant, but set to 550 per owner 2026-07-29 (was 600).
+	            //--- unchanged. The reported symptom is not explained by this rule as written: with both
+	            //--- sides holding ~half the towns, a 600m ring around the NEAREST town should block a
+	            //--- small fraction of the map, not nearly all of it. So rather than nerf a number on a
+	            //--- guess, log which branch actually fires and what the town side resolves to - a nil or
+	            //--- mis-resolved _townside would make EVERY town compare as hostile, which would match
+	            //--- the symptom exactly. Set the constant to 0 to disable the town rule if it needs
+	            //--- switching off before the cause is known.
+	            private ["_restrRad","_restrTown","_restrBase"];
+	            _restrRad  = missionNamespace getVariable ["WFBE_C_STRUCTURES_ENEMY_TOWN_RADIUS", 550];
+	            _restrTown = (_restrRad > 0) && {_preview distance _town < _restrRad} && {_townside != sideJoined};
+	            _restrBase = !isNull _eArea;
+	            if (_restrTown || _restrBase) then {
+	                diag_log Format ["COINPLACE|v1|restricted|byTown=%1|byBase=%2|dist=%3|rad=%4|townSide=%5|mySide=%6|town=%7", _restrTown, _restrBase, round (_preview distance _town), _restrRad, _townside, sideJoined, _town];
 					_color = _colorRed;
 					_restricted = true;
 					 hintSilent parseText "<t color='#fb0808'> You have entered a restricted area ! Impossible to build here! </t>";
