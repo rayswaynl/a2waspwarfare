@@ -14,7 +14,12 @@ Private ["_captureText","_color","_musicCooldown","_musicLast","_musicNow","_mus
 _town = _this select 0;
 _town_side_value = _this select 1;
 _town_side_value_new = _this select 2;
-_sv = _town getVariable "supplyValue";
+//--- Nil-safe SV for bounty math: public setVariable can lag the TownCaptured PV on A2, and a
+//--- plain 1-arg getVariable poisons 150*_sv into a script error (no cash, no score). Fall back to
+//--- startingSupplyValue (post-flip server reset target) then 30.
+_sv = _town getVariable ["supplyValue", _town getVariable ["startingSupplyValue", 30]];
+if (isNil "_sv" || {typeName _sv != "SCALAR"}) then {_sv = _town getVariable ["startingSupplyValue", 30]};
+if (isNil "_sv" || {typeName _sv != "SCALAR"}) then {_sv = 30};
 if (isNil "WFBE_Client_SideID") exitWith {};
 _side_captured = (_town_side_value_new) Call WFBE_CO_FNC_GetSideFromID;
 

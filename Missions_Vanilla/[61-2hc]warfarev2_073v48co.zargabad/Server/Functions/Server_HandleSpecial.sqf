@@ -2064,13 +2064,29 @@ switch (_args select 0) do {
 		_logic setVariable ["wfbe_camp_bunker", _townModel, true];
 
 		//--- Do we have to update the camp SID ?
-		_camp_sideID = _logic getVariable "sideID";
+		_camp_sideID = _logic getVariable ["sideID", WFBE_C_UNKNOWN_ID];
 		if (_camp_sideID != _repairSideID) then {
-			Private ["_town"];
+			Private ["_town","_repairFlag","_repairStartSV"];
 			_logic setVariable ["sideID", _repairSideID, true];
+			//--- Ownership transition: heal camp SV to town starting (parity with SetCampsToSide /
+			//--- town bulk-flip). A mid-drain SV left on a repaired bunker makes the new owner lose it
+			//--- almost immediately under the next camp-capture tick.
+			_town = _logic getVariable "town";
+			_repairStartSV = if (!isNil "_town" && {!isNull _town}) then {
+				_town getVariable ["startingSupplyValue", 30]
+			} else {
+				30
+			};
+			_logic setVariable ["supplyValue", _repairStartSV, true];
 
 				//--- wiki-wins: also fly the new side's flag (mirrors Server_SetCampsToSide.sqf:22); the side change set sideID but never the world flag texture.
-				(_logic getVariable "wfbe_flag") setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]); (_logic getVariable "wfbe_flag") setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]]); processInitCommands; //--- qol-polish-pack: JIP-safe flag (bake into object init so late joiners replay it)
+				//--- Null-guard flag: deleted/missing poles must not throw on setFlagTexture (A2 isNull trap).
+				_repairFlag = _logic getVariable ["wfbe_flag", objNull];
+				if (!isNull _repairFlag) then {
+					_repairFlag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]);
+					_repairFlag setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]]);
+					processInitCommands; //--- qol-polish-pack: JIP-safe flag (bake into object init so late joiners replay it)
+				};
 
 			//--- Notify / update map if needed.
 			[nil, "CampCaptured", [_logic, _repairSideID, _camp_sideID, true]] Call WFBE_CO_FNC_SendToClients;
