@@ -10,7 +10,7 @@
 	deducts before RequestStructure; here the server deducts itself).
 */
 
-private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_artyScanRadius","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen","_roadClearOK","_slopeOK","_treeClearOK","_tp19RoadClearOK","_defense","_artyObj","_fwdDefObj"];  //--- cmdcon41-w3k: +_roadClearOK (road-clear placement gate helper).
+private ["_side","_sideText","_logik","_hq","_supply","_names","_classes","_costs","_scripts","_structures","_doctrine","_order","_idx","_have","_cost","_class","_script","_pos","_ang","_hqPos","_defMax","_defCount","_defClass","_defData","_defPrice","_funds","_deployCost","_dual","_findBuildPos","_buildPosClear","_isUsableRoad","_nearUsableRoad","_factoryRally","_upgrades","_coreDone","_placed","_roads","_cand","_artyBuilt","_artyClasses","_fam","_i","_bankIdx","_bankCost","_cbrIdx","_scaffoldActivated","_dPos","_dTry","_dAng","_artyThreat","_enemySide","_enemySideText","_enemyArtyCount","_artyScanRadius","_cbrCost","_cbrReserve","_cbrMinTime","_myID","_ownTowns","_defDir","_resIdx","_resCost","_artradIdx","_artradCost","_artradReqArty","_econGateTowns","_econMyID","_econOpen","_roadClearOK","_slopeOK","_treeClearOK","_tp19RoadClearOK","_hqRangeOK","_isBuildPosUsable","_defense","_artyObj","_fwdDefObj"];  //--- cmdcon41-w3k: +_roadClearOK (road-clear placement gate helper).
 
 _side = _this;
 _sideText = str _side;
@@ -288,6 +288,15 @@ _hqRangeOK = {
 	if (count _hqPos < 2) exitWith {true};
 	(_cpos distance _hqPos) <= _hr
 };
+//--- A failed hard-leash fallback returns [] from _findBuildPos. Every AICOM caller uses this
+//--- shape gate before spending; with the leash disabled it remains byte-identical to legacy paths.
+_isBuildPosUsable = {
+	private ["_cpos"];
+	_cpos = _this;
+	if (typeName _cpos != "ARRAY") exitWith {false};
+	if (count _cpos < 2) exitWith {false};
+	_cpos call _hqRangeOK
+};
 _findBuildPos = {
 	private ["_rmin","_rmax","_nearRoad","_p","_ok","_try","_ang","_best","_haveDry","_rd","_rp","_hd","_ox","_oy","_cand","_blocked","_sx","_sy","_tries","_bestClear","_haveClear","_bestBC","_haveBC","_isRoadMode","_stepBest","_haveStep","_stepTarget","_nf","_stepErr","_bestStepErr","_floor","_roadRejLogged"];  //--- cmdcon41-w3k: +_roadRejLogged (rate-limit the road-reject log to first per placement attempt).
 	_roadRejLogged = false; //--- cmdcon41-w3k: one always-on INFORMATION line per rejected-for-road cluster (first reject only, not per nudge/try).
@@ -365,7 +374,7 @@ _findBuildPos = {
 					//--- Ray 2026-06-29 req #1: ALSO gate on the HARD no-overlap floor (_farFromStructs) so the
 						//--- relaxed fallback may use the cushion between FLOOR (30m) and SPACING (45m) but can NEVER
 						//--- return a spot that overlaps an existing structure. Only the 30..45m band is ever relaxed.
-						if (!_blocked && {!_haveBC} && {_cand call _buildPosClear} && {_cand call _farFromStructs}) then {_bestBC = _cand; _haveBC = true};
+						if (!_blocked && {!_haveBC} && {_cand call _buildPosClear} && {_cand call _farFromStructs} && {_cand call _hqRangeOK}) then {_bestBC = _cand; _haveBC = true};
 					//--- B67: reject a candidate that crowds an existing friendly structure
 					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
 					//--- runs before the outer _structures local is assigned (line ~314).
@@ -429,7 +438,7 @@ _findBuildPos = {
 					//--- relaxing the soft STRUCT_SPACING. Preferred over raw 'dry' _best in the fallback chain.
 					//--- Ray 2026-06-29 req #1: ALSO gate on the HARD no-overlap floor (_farFromStructs) so the
 					//--- relaxed fallback can never return a spot that overlaps an existing structure.
-					if (!_haveBC && {_p call _buildPosClear} && {_p call _farFromStructs}) then {_bestBC = _p; _haveBC = true};
+					if (!_haveBC && {_p call _buildPosClear} && {_p call _farFromStructs} && {_p call _hqRangeOK}) then {_bestBC = _p; _haveBC = true};
 					//--- B67: reject a candidate that crowds an existing friendly structure
 					//--- (< WFBE_C_AICOM_STRUCT_SPACING). GetSideStructures fresh - _findBuildPos
 					//--- runs before the outer _structures local is assigned (line ~314).
@@ -515,6 +524,9 @@ _findBuildPos = {
 		};
 		if (!_done) then {_via = _via + "+OVERLAP!"}; //--- could not clear the floor in a crowded base; RPT-flagged.
 	};
+	//--- The fallback and either terminal nudge can move a candidate beyond the hard build leash.
+	//--- Return an explicit no-position sentinel so callers skip the spend and retry next commander pass.
+	if (!(_p call _hqRangeOK)) exitWith {[]};
 	diag_log (format ["AICOMPLACE|near=%1|via=%2|pos=%3|onRoad=%4|clr=%5|nf=%6|floorOK=%7", _nearRoad, _via, _p, (count (_p nearRoads 12) > 0), (_p call _buildPosClear), (round (_p call _nearestFactoryDist)), (_p call _farFromStructs)]);
 	_p
 };
@@ -757,6 +769,9 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 						_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110])] Call _findBuildPos;
 					};
 				};
+				if !(_pos call _isBuildPosUsable) exitWith {
+					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] build of %2 skipped - no position within the configured HQ range.", _sideText, _ordType]] Call WFBE_CO_FNC_AICOMLog;
+				};
 				if (_dual) then {[_side, -_cost, Format ["AI commander base construction (%1).", _ordType], false] Call ChangeSideSupply};
 				_logik setVariable [Format ["wfbe_aicom_built_%1", _ordType], time];
 				_script = _scripts select _idx;
@@ -880,8 +895,9 @@ if (_defCount < _defMax) then {
 			_defPrice = if (!isNil "_defData") then {_defData select QUERYUNITPRICE} else {0};
 			_funds = (_side) Call GetAICommanderFunds;
 			if (_funds >= _defPrice) then {
-				[_side, -_defPrice] Call ChangeAICommanderFunds;
 				_pos = [28, 42] Call _findBuildPos;
+				if (_pos call _isBuildPosUsable) then {
+				[_side, -_defPrice] Call ChangeAICommanderFunds;
 				//--- Steff 2026-06-13: face the defense OUTWARD (bearing HQ->pos) not a random heading,
 				//--- so manned statics engage outward threats and never fire across the base into friendly
 				//--- defenses/structures.
@@ -893,6 +909,9 @@ if (_defCount < _defMax) then {
 				} else {
 					_logik setVariable ["wfbe_aicom_defenses", _defCount + 1];
 					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base defense %2/%3 [%4].", _sideText, _defCount + 1, _defMax, _defClass]] Call WFBE_CO_FNC_AICOMLog;
+				};
+				} else {
+					["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base defense [%2] skipped - no position within the configured HQ range.", _sideText, _defClass]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
 		};
@@ -1068,8 +1087,9 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 				_defPrice = if (!isNil "_defData") then {_defData select QUERYUNITPRICE} else {0};
 				_funds = (_side) Call GetAICommanderFunds;
 				if (_funds >= _defPrice) then {
-					[_side, -_defPrice] Call ChangeAICommanderFunds;
 					_pos = [25, 38] Call _findBuildPos;
+					if (_pos call _isBuildPosUsable) then {
+					[_side, -_defPrice] Call ChangeAICommanderFunds;
 					_artyObj = [_defClass, _side, _pos, random 360, true, true] Call ConstructDefense;
 					if (isNull _artyObj) then {
 						[_side, _defPrice] Call ChangeAICommanderFunds;
@@ -1087,8 +1107,11 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 							_artyObj setVariable ["wfbe_arty_state", "registered"];
 						};
 						_logik setVariable ["wfbe_aicom_arty_skiplog", ""];
-					};
+						};
 						["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] placed base artillery %2/%3 [%4] (cost %5 funds).", _sideText, _artyBuilt + 1, _artyMax, _defClass, _defPrice]] Call WFBE_CO_FNC_AICOMLog;
+					};
+					} else {
+						["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] base artillery [%2] skipped - no position within the configured HQ range.", _sideText, _defClass]] Call WFBE_CO_FNC_AICOMLog;
 					};
 				};
 			};
@@ -1174,13 +1197,17 @@ if (_fwdEnable && {_dual}) then {
 											} else {
 												[(missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FWDBASE_RING_MAX", 110])] Call _findBuildPos
 											};
-											if (_dual) then {[_side, -_fwdCost, Format ["AI commander forward outpost (%1).", _ord], false] Call ChangeSideSupply};
-											_logik setVariable [Format ["wfbe_aicom_fwdbuilt_%1", _ord], time];
-											_fwdScript = _scripts select _fwdIdx;
-											_fwdDir = if (_haveFront) then {((_frontPosF select 0) - (_fwdPos select 0)) atan2 ((_frontPosF select 1) - (_fwdPos select 1))} else {random 360};
-											[_fwdClass, _side, _fwdFacP, _fwdDir, _fwdIdx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _fwdScript]);
-											["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FORWARD OUTPOST building %2 at %3 (town %4, cost %5, distRear %6).", _sideText, _ord, _fwdFacP, (_bestFwdT getVariable ["name","?"]), _fwdCost, round (_fwdPos distance _rearHQpos)]] Call WFBE_CO_FNC_AICOMLog;
-											diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FWDBASE_BUILD|struct=" + _ord + "|cost=" + str _fwdCost + "|town=" + (_bestFwdT getVariable ["name","?"]) + "|distRear=" + str (round (_fwdPos distance _rearHQpos)));
+											if (_fwdFacP call _isBuildPosUsable) then {
+												if (_dual) then {[_side, -_fwdCost, Format ["AI commander forward outpost (%1).", _ord], false] Call ChangeSideSupply};
+												_logik setVariable [Format ["wfbe_aicom_fwdbuilt_%1", _ord], time];
+												_fwdScript = _scripts select _fwdIdx;
+												_fwdDir = if (_haveFront) then {((_frontPosF select 0) - (_fwdPos select 0)) atan2 ((_frontPosF select 1) - (_fwdPos select 1))} else {random 360};
+												[_fwdClass, _side, _fwdFacP, _fwdDir, _fwdIdx] ExecVM (Format ["Server\Construction\Construction_%1.sqf", _fwdScript]);
+												["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FORWARD OUTPOST building %2 at %3 (town %4, cost %5, distRear %6).", _sideText, _ord, _fwdFacP, (_bestFwdT getVariable ["name","?"]), _fwdCost, round (_fwdPos distance _rearHQpos)]] Call WFBE_CO_FNC_AICOMLog;
+												diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FWDBASE_BUILD|struct=" + _ord + "|cost=" + str _fwdCost + "|town=" + (_bestFwdT getVariable ["name","?"]) + "|distRear=" + str (round (_fwdPos distance _rearHQpos)));
+											} else {
+												["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FORWARD OUTPOST %2 skipped - no position within the configured HQ range.", _sideText, _ord]] Call WFBE_CO_FNC_AICOMLog;
+											};
 										};
 									};
 								};
@@ -1201,8 +1228,9 @@ if (_fwdEnable && {_dual}) then {
 									_fwdDefPrice = if (!isNil "_fwdDefData") then {_fwdDefData select QUERYUNITPRICE} else {0};
 									_fwdFunds = (_side) Call GetAICommanderFunds;
 									if (_fwdFunds >= _fwdDefPrice) then {
-										[_side, -_fwdDefPrice] Call ChangeAICommanderFunds;
 										_fwdDefPos = [22, 40] Call _findBuildPos;
+										if (_fwdDefPos call _isBuildPosUsable) then {
+										[_side, -_fwdDefPrice] Call ChangeAICommanderFunds;
 										_fwdDx2 = (_fwdDefPos select 0) - (_fwdPos select 0); _fwdDy2 = (_fwdDefPos select 1) - (_fwdPos select 1);
 										_fwdDefDir = if (abs _fwdDx2 < 0.01 && {abs _fwdDy2 < 0.01}) then {random 360} else {_fwdDx2 atan2 _fwdDy2};
 										_fwdDefObj = [_fwdDefClass, _side, _fwdDefPos, _fwdDefDir, true, true] Call ConstructDefense;
@@ -1212,6 +1240,9 @@ if (_fwdEnable && {_dual}) then {
 										} else {
 											["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] FORWARD OUTPOST defense %2/%3 [%4].", _sideText, _fwdDefCount + 1, _fwdDefMax, _fwdDefClass]] Call WFBE_CO_FNC_AICOMLog;
 											diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FWDBASE_DEFENSE|n=" + str (_fwdDefCount + 1) + "|max=" + str _fwdDefMax);
+										};
+										} else {
+											["INFORMATION", Format ["AI_Commander_Base.sqf: [%1] forward-outpost defense [%2] skipped - no position within the configured HQ range.", _sideText, _fwdDefClass]] Call WFBE_CO_FNC_AICOMLog;
 										};
 									};
 								};
