@@ -22,6 +22,9 @@ if !(isNull _object) then {
 
 	sleep _delay;
 
+	//--- crash 014EFCF4: concurrent cleanup may delete the body while the 60s delay is sleeping.
+	if (isNull _object) exitWith {};
+
 	//--- A slung wreck is intentionally crewless; release the queued deletion so it can be reconsidered after unhook.
 	if (_object getVariable ["wfbe_airlifted", false]) exitWith {
 		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
@@ -36,7 +39,7 @@ if !(isNull _object) then {
 		_held = 0;
 		_near = false;
 		_nearResult = 0;
-		while {_held < _delay} do {
+		while {_held < _delay && {!isNull _object}} do {
 			_near = false;
 			_nearResult = 0;
 			_nearResult = [getPos _object, _prox] Call WFBE_CO_FNC_RealPlayersNear;
@@ -44,6 +47,7 @@ if !(isNull _object) then {
 			if (!_near) exitWith {};
 			sleep 3; _held = _held + 3;
 		};
+		if (isNull _object) exitWith {};
 	};
 
 	["INFORMATION", Format["Server_TrashObject.sqf: Deleting [%1], it has been [%2] seconds.", _object, _delay]] Call WFBE_CO_FNC_LogContent;
