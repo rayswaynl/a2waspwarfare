@@ -415,3 +415,49 @@ given the CIV-slot-for-humans edge case.
 These are zero-risk, the deploy is cleaner, and the RPT is quieter.
 **Recommended path (next experiment):** C with WFBE_C_HC_CIV_MAGNET flag=0, boot-smoke
 to answer the "is the engine's fill side-agnostic?" question once and for all.
+
+---
+
+## 11. RESOLVED 2026-07-29 — implemented as an id swap, not new slots
+
+The section 6.1 / 7.A proposal ("add plain CIV slots at ids 5 and 6") is **not
+implementable as written**: on current `master` the id space `0..231` is fully
+saturated (335 ids in use, no gaps below the lowest playable slot). There is no free
+low id to give a new slot.
+
+The mechanism claim was re-verified and holds, with a sharper proof than section 2.1
+had: the four CIV `forceHeadlessClient=1` slots sat at ids 9009-9012 = **ranks 33-36 of
+36 playable slots**, while the HC reliably landed on id=231 (WEST). id=231 is the
+lowest-id playable slot but NOT the first playable in file order (that is id=240), so
+the engine sorts by **numeric id**, not SQM item order. Section 2.1 conflated the two.
+
+**Implemented instead — a straight id swap, zero slots added or removed:**
+
+1. The four lowest-id playable slots and the four CIV HC slots exchange ids, so the
+   HC slots now hold the lowest playable ids (CH 231-234, TK 7002-7005, ZG 50-53).
+2. `forceHeadlessClient=1` is removed from all four (section 2.2: inert on A2 OA 1.64
+   `-client`, and MAGNET-HANDOFF showed the HC actively SKIPS a slot carrying it -- so
+   leaving it would defeat the magnet).
+3. The displaced WEST role slots keep their `WFBE_L_BLU` (`LocationLogicOwnerWest`,
+   id=255) side-logic sync membership: that one `synchronizations[]` array is remapped
+   to their new ids. It is the only array in the mission referencing them.
+
+No player slot, role, or loadout is lost -- the WEST roles simply move to higher ids
+(they sort to the bottom of the lobby list, which is cosmetic).
+
+**Flag policy note:** this change CANNOT be flag-gated. Lobby slots are parsed by the
+engine before any mission script runs, so no `WFBE_C_*` variable can make it inert.
+The proposed `WFBE_C_HC_CIV_MAGNET` flag was therefore NOT added -- a flag that gates
+nothing would falsely imply a flag-off path exists. It ships as a correctness fix.
+
+**Residual risk (unchanged from 7.A):** a human connecting before the HCs seat can take
+a CIV magnet slot. They spawn civilian with no warfare team, bail out of enrollment
+harmlessly, and rejoin on a WEST/EAST slot.
+
+**Verification gate:** boot with HCs and confirm `HCSIDE|v1|preseat|engineSide=CIV` for
+each HC in the RPT. If WEST still appears, the id-order hypothesis is refuted outright
+and this whole static angle is dead -- record that here and stop re-proposing it.
+
+**Not covered:** `Modded_Missions/*.eden` and `*.tavi` carry the same defect (1 HC slot
+each, at ids 119 and 230 vs lowest playable 80 and 191). Left alone -- outside the
+maintained CH/TK/ZG set.
