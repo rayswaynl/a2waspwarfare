@@ -29,7 +29,18 @@ if (!(_logik getVariable ["wfbe_aicom_hq_recovery_pending", false])) exitWith {}
 _hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
 if (!isNull _hq && {alive _hq}) exitWith {_logik setVariable ["wfbe_aicom_hq_recovery_pending", false]};
 _origin = _logik getVariable ["wfbe_aicom_hq_recovery_origin", [0,0,0]];
-if (typeName _origin != "ARRAY" || {count _origin < 2}) then {_origin = getPos _hq};
+//--- r53: when origin is missing/malformed, do NOT getPos a null/dead HQ (alive HQ already exited above).
+if (typeName _origin != "ARRAY" || {count _origin < 2}) then {
+	if (!isNull _hq) then {
+		_origin = getPos _hq;
+	} else {
+		_origin = [];
+	};
+};
+if (typeName _origin != "ARRAY" || {count _origin < 2}) exitWith {
+	_logik setVariable ["wfbe_aicom_hq_recovery_pending", false];
+	["WARNING", Format ["AI_Commander_HQRecovery.sqf: [%1] HQ recovery aborted - no origin and no HQ reference for nearest-town pick.", str _side]] Call WFBE_CO_FNC_LogContent;
+};
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 _town = objNull;
 _nearest = 1e9;
