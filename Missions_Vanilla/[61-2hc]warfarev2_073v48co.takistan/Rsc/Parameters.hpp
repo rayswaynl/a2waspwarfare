@@ -813,8 +813,8 @@
 	class WFBE_C_SUPPLY_SERVER_FIX {
 		title = "Server-side supply-change fix (rollout stage)";
 		values[] = {0,1,2};
-		texts[] = {"Off (default)","Shadow (log only)","Apply"};
-		default = 0;
+		texts[] = {"Off (legacy no-op)","Shadow (log only)","Apply (default)"};
+		default = 2;
 	};
 
 };
