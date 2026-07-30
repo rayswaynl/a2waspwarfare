@@ -393,20 +393,24 @@ if (_airMaxTotalP > 0) then {
 						} forEach _teams;
 					};
 					if (!isNull _mergeTeam) then {
-						//--- MERGE: the survivor's live units join the healthy team; the now-empty old group is
-						//--- deleted (its wfbe_teams entry becomes a null group, which every consumer already skips
-						//--- -- same lifecycle as a wiped HC team / the existing cull). Net groups -1, body preserved.
+						//--- MERGE: survivor joins healthy team; empty donor fully reclaimed (team-ended + deleteGroup).
+						//--- Net groups -1, body preserved. Bare deleteGroup alone leaked ledger/markers (r29 fix).
 						_mergedInto = _mergeTeam;  //--- capture for the log before _team is gutted
 						(units _team) joinSilent _mergeTeam;  //--- N-FEATUREBUG-49 fix 2026-06-27: joinSilent (not join) to avoid leader churn / behaviour reset on the merged-into team.
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] stranded survivor MERGED into [%3] (alive=%4, dist=%5, mergeDist=%6) - body preserved, groups-1.", _sideText, _team, _mergedInto, _aliveNow, _curDist, round _mergeBest]] Call WFBE_CO_FNC_AICOMLog;
-						deleteGroup _team;
+						//--- r29 idle-reclaim: full ledger cleanup (match HCTopUp B69) BEFORE deleteGroup.
+						_team setVariable ["wfbe_persistent", false, true];
+						["aicom-team-ended", _myID, _team] Call HandleSpecial;
+						if (!isNull _team) then {deleteGroup _team};
 						_canProduce = false;
 					} else {
-						//--- No eligible nearby team: existing cull, unchanged (guardrail = never strands the survivor).
+						//--- No eligible nearby team: cull then full reclaim (same ledger cleanup as merge).
 						//--- Non-player guard is belt-and-braces (this branch is already server-local non-HC, non-player-led).
 						{ if (!(isPlayer _x)) then {["produce-cull-unit", _x, Format ["tries=%1 issues=%2", _rTries, _rIssues]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5, issues=%6) - recycled (no-progress OR issue-cap OR too-far).", _sideText, _team, _aliveNow, _curDist, _rTries, _rIssues]] Call WFBE_CO_FNC_AICOMLog;
-						deleteGroup _team;
+						_team setVariable ["wfbe_persistent", false, true];
+						["aicom-team-ended", _myID, _team] Call HandleSpecial;
+						if (!isNull _team) then {deleteGroup _team};
 						_canProduce = false;
 					};
 					};
