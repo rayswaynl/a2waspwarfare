@@ -191,6 +191,13 @@ switch (_request) do {
 						{if (_x == _wV) then {_wFound = true}} forEach _wVehicles;
 						if (!_wFound) then {_wVehicles = _wVehicles + [_wV]};
 					};
+					//--- fix(alife-stall r34): also reap assigned empty hulls on HC terminal recycle.
+					_wV = assignedVehicle _x;
+					if (!isNull _wV && {_wV != _x} && {alive _wV}) then {
+						_wFound = false;
+						{if (_x == _wV) then {_wFound = true}} forEach _wVehicles;
+						if (!_wFound) then {_wVehicles = _wVehicles + [_wV]};
+					};
 				} forEach _wUnits;
 				{if (!isNull _x) then {deleteVehicle _x}} forEach _wVehicles;
 				{if (!isNull _x) then {deleteVehicle _x}} forEach _wUnits;

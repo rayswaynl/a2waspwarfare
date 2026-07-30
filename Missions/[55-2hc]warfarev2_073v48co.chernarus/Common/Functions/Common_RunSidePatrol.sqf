@@ -454,29 +454,31 @@ while {!WFBE_GameOver && _alive} do {
 							if (_pNear) then {
 								_pVeh setVelocity [(velocity _pVeh) select 0, (velocity _pVeh) select 1, 4];
 							} else {
+								private ["_pSnapped"];
+								_pSnapped = false;
 								_pRds = (getPos _pVeh) nearRoads 150;
 								if (count _pRds > 0) then {
 									_pNode = [getPos _pVeh, _pRds] Call WFBE_CO_FNC_GetClosestEntity;
 									if (!isNull _pNode && {!surfaceIsWater (getPos _pNode)}) then {
 										_pVeh setVelocity [0,0,0];
 										_pVeh setPos (getPos _pNode);
+										_pSnapped = true;
 									};
-								} else {
-									//--- fix(alife-stall r34): NOROAD_STEP parity when nearRoads empty (roadless shelf).
-									if ((missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP", 1]) > 0 && {!isNull _target}) then {
-										_pNrDest = getPos _target;
-										_pNrVp = getPosATL _pVeh;
-										_pNrBrg = ((_pNrDest select 0) - (_pNrVp select 0)) atan2 ((_pNrDest select 1) - (_pNrVp select 1));
-										_pNrStep = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST", 90];
-										if (_pNrStep > ((_pVeh distance _target) - 15)) then {_pNrStep = ((_pVeh distance _target) - 15) max 0};
-										if (_pNrStep > 5) then {
-											_pNrGuess = [(_pNrVp select 0) + _pNrStep * (sin _pNrBrg), (_pNrVp select 1) + _pNrStep * (cos _pNrBrg), 0];
-											_pNrFlat = _pNrGuess isFlatEmpty [12, 0, 2, 14, 0, false, objNull];
-											if (count _pNrFlat > 0 && {!surfaceIsWater _pNrFlat}) then {
-												_pVeh setVelocity [0,0,0];
-												_pVeh setPos _pNrFlat;
-												diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time/60)) + "|PATROL_UNSTUCK_NOROAD|team=" + (str _team) + "|step=" + str (round _pNrStep));
-											};
+								};
+								//--- fix(alife-stall r34): NOROAD_STEP when empty roads OR water/invalid node.
+								if (!_pSnapped && {(missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP", 1]) > 0} && {!isNull _target}) then {
+									_pNrDest = getPos _target;
+									_pNrVp = getPosATL _pVeh;
+									_pNrBrg = ((_pNrDest select 0) - (_pNrVp select 0)) atan2 ((_pNrDest select 1) - (_pNrVp select 1));
+									_pNrStep = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST", 90];
+									if (_pNrStep > ((_pVeh distance _target) - 15)) then {_pNrStep = ((_pVeh distance _target) - 15) max 0};
+									if (_pNrStep > 5) then {
+										_pNrGuess = [(_pNrVp select 0) + _pNrStep * (sin _pNrBrg), (_pNrVp select 1) + _pNrStep * (cos _pNrBrg), 0];
+										_pNrFlat = _pNrGuess isFlatEmpty [12, 0, 2, 14, 0, false, objNull];
+										if (count _pNrFlat > 0 && {!surfaceIsWater _pNrFlat}) then {
+											_pVeh setVelocity [0,0,0];
+											_pVeh setPos _pNrFlat;
+											diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time/60)) + "|PATROL_UNSTUCK_NOROAD|team=" + (str _team) + "|step=" + str (round _pNrStep));
 										};
 									};
 								};
