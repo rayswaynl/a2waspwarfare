@@ -951,6 +951,13 @@ while {!WFBE_GameOver} do {
 					//--- wfbe_active towns are counted (matching the seed), so decrement only when this
 					//--- town was wfbe_active before we clear the flags.
 					if (_town getVariable ["wfbe_active", false]) then { _activeTownCount = _activeTownCount - 1 };
+					//--- DESPAWN-BUDGET INTEGRITY: mirror the active-town mid-sweep reclaim for the GUER
+					//--- group cap. Spawn bumps _guerGroupCount by planned group count; without a matching
+					//--- deactivation reclaim, a resistance town that despawns early in THIS sweep still
+					//--- blocks later GUER activations until the next sweep's allGroups recount.
+					if (_side == resistance) then {
+						_guerGroupCount = (_guerGroupCount - (count _town_teams)) max 0;
+					};
 					_town setVariable ["wfbe_active", false];
 					_town setVariable ["wfbe_active_air", false];
 
