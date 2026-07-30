@@ -33,6 +33,13 @@ _route = [];
 _egRds = _origin nearRoads 300;
 if (count _egRds > 0) then {
 	_egNode = [_origin, _egRds] Call WFBE_CO_FNC_GetClosestEntity;
+	//--- r37 water-route: prefer dry egress node when available
+	if (!isNull _egNode && {surfaceIsWater (getPos _egNode)}) then {
+		private "_egDry";
+		_egDry = objNull;
+		{ if (!isNull _x && {!surfaceIsWater (getPos _x)}) exitWith {_egDry = _x} } forEach _egRds;
+		if (!isNull _egDry) then {_egNode = _egDry};
+	};
 	if (!isNull _egNode) then {_route = _route + [getPos _egNode]};
 };
 
@@ -54,6 +61,13 @@ for "_rmI" from 1 to _hops do {
 	_rmRds = _rmGuess nearRoads (missionNamespace getVariable ["WFBE_C_AICOM_ROUTE_SNAP_RADIUS", 250]);  //--- Build84: wider snap (was 120) so long-leg hops find a road node instead of being silently dropped into beeline gaps.
 	if (count _rmRds > 0) then {
 		_rmNode = [_rmGuess, _rmRds] Call WFBE_CO_FNC_GetClosestEntity;
+		//--- r37 water-route: prefer dry snap among candidates (keep wet only if all wet / bridge span)
+		if (!isNull _rmNode && {surfaceIsWater (getPos _rmNode)}) then {
+			private "_rmDry";
+			_rmDry = objNull;
+			{ if (!isNull _x && {!surfaceIsWater (getPos _x)}) exitWith {_rmDry = _x} } forEach _rmRds;
+			if (!isNull _rmDry) then {_rmNode = _rmDry};
+		};
 		if (!isNull _rmNode) then {_route = _route + [getPos _rmNode]};
 	};
 };
