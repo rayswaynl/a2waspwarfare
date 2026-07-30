@@ -712,7 +712,19 @@ while {!WFBE_GameOver} do {
 								//--- existing server CreateTownUnits fallback instead of dispatching a dropped wave.
 								_liveHCs = {!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 								if (_liveHCs > 0) then {
-									[_town, _side, _groups, _positions, _teams] Call WFBE_CO_FNC_DelegateAITownHeadless;
+									//--- DESPAWN-BUDGET INTEGRITY: free server-side empty shells before HC dispatch.
+									//--- Client_DelegateTownAI.sqf recreates a LOCAL group when the received team is
+									//--- null/empty (A2 group objects do not transfer locality). Leaving the server
+									//--- CreateGroup shells alive leaks empty groups against the ~144/side engine cap
+									//--- and the GUER/side group budget until GC eventually reaps them.
+									private ["_hcTeams","_shell"];
+									_hcTeams = [];
+									{
+										_shell = _x;
+										if (!isNull _shell && {(count (units _shell)) == 0}) then {deleteGroup _shell};
+										[_hcTeams, grpNull] call WFBE_CO_FNC_ArrayPush;
+									} forEach _teams;
+									[_town, _side, _groups, _positions, _hcTeams] Call WFBE_CO_FNC_DelegateAITownHeadless;
 									// Marty: HC-local groups are reported back by update-town-delegation after creation.
 									//--- fable/townteams-queue-singlewriter: NO write-back here. This branch never modifies
 									//--- _town_teams locally (unchanged since the read at wave start), so re-writing the stale
