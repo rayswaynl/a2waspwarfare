@@ -3411,7 +3411,7 @@ if (isNil "WFBE_C_SPECTATOR_FOV_MIN") then {WFBE_C_SPECTATOR_FOV_MIN = 0.05};
 if (isNil "WFBE_C_SPECTATOR_FOV_MAX") then {WFBE_C_SPECTATOR_FOV_MAX = 1.2};
 
 //--- Spectator v3 director: explicit opt-in. All director code paths read this master gate.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR") then {WFBE_C_SPECTATOR_DIRECTOR = 1}; ARMED on owner order 2026-07-30 ("fold v3 in now"), after an adversarial review found and a fix landed for the blocker that made this feature silently do nothing: the poll thread was started after the movement loop had already exited. Blast radius is one client - spectator entry is gated to WFBE_C_SPECTATOR_UIDS - so this only ever runs for an allowlisted caster. Rollback = set to 0 and rebuild.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR") then {WFBE_C_SPECTATOR_DIRECTOR = 1}; //--- ARMED on owner order 2026-07-30 ("fold v3 in now"), after an adversarial review found and a fix landed for the blocker that made this feature silently do nothing: the poll thread was started after the movement loop had already exited. Blast radius is one client - spectator entry is gated to WFBE_C_SPECTATOR_UIDS - so this only ever runs for an allowlisted caster. Rollback = set to 0 and rebuild.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_DWELL = 20};
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP") then {WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP = 5};
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_DWELL_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_DWELL_MIN = 5};
