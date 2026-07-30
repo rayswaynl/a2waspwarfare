@@ -240,6 +240,27 @@ _distDiv  = missionNamespace getVariable ["WFBE_C_AICOM_DISTANCE_DIVISOR", 50];
 if (_distDiv <= 0) then {_distDiv = 1};
 _hqDiv    = missionNamespace getVariable ["WFBE_C_AICOM_HQ_PULL_DIVISOR", 250];
 _farPen   = missionNamespace getVariable ["WFBE_C_AICOM_FAR_PENALTY", 1000];
+//--- SPEARHEAD POOL EXPAND (RPT-DEEPDIVE-20260730): when a compressed front stalls N times, the same
+//--- ~5 near towns re-score forever under FAR_PENALTY. Soften frontier + far-penalty so repick can
+//--- break out. Flag-dark default. A2-safe: reuses existing _frontRad/_farPen scorers only.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND", 0]) > 0) then {
+	private ["_spExpandAfter","_spStallHist","_spExpandRad","_spExpandFar"];
+	_spExpandAfter = missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_AFTER", 3];
+	_spStallHist = _logik getVariable ["wfbe_aicom_spear_stall_hist", 0];
+	if (_spStallHist >= _spExpandAfter) then {
+		_spExpandRad = missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_RADIUS", 6000];
+		_spExpandFar = missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_FAR_PENALTY", 200];
+		if (_spExpandRad > _frontRad) then {_frontRad = _spExpandRad};
+		if (_spExpandFar < _farPen) then {_farPen = _spExpandFar};
+		private ["_spExpLogT"];
+		_spExpLogT = _logik getVariable ["wfbe_aicom_spear_expand_log_t", -9999];
+		if ((time - _spExpLogT) >= 300) then {
+			_logik setVariable ["wfbe_aicom_spear_expand_log_t", time];
+			["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] spearhead pool EXPAND armed (stallHist=%2 frontRad=%3 farPen=%4).", _sideText, _spStallHist, _frontRad, _farPen]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOMSTAT|v1|SPEARHEAD_POOL_EXPAND|" + _sideText + "|" + str (round (time / 60)) + "|hist=" + str _spStallHist + "|frontRad=" + str _frontRad + "|farPen=" + str _farPen);
+		};
+	};
+};
 //--- Enemy HQ for the directional pull (cached once; nil-safe - 0 pull if no HQ object).
 _enemyHQForRank = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;
 //--- Concentrate force: split across FEW towns (cap via SPEARHEAD_TOWNS_MAX), not the old
@@ -386,6 +407,8 @@ if (count _targets > 0) then {
 		{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _prim}) then {_spBlKeep set [count _spBlKeep, _x]} } forEach _spBl;
 		_spBlKeep set [count _spBlKeep, [_prim, time + _spBlCd]];
 		_logik setVariable ["wfbe_aicom_spearhead_bl", _spBlKeep];
+		//--- Pool-expand memory: count stall blacklists this war (reset never mid-war; expand is sticky once armed).
+		_logik setVariable ["wfbe_aicom_spear_stall_hist", (_logik getVariable ["wfbe_aicom_spear_stall_hist", 0]) + 1];
 		//--- Rebuild the candidate set MINUS the live blacklist (same empty-set guardrail as AssignTowns:290-295).
 		_spBlTowns = [];
 		{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_spBlTowns set [count _spBlTowns, (_x select 0)]} } forEach _spBlKeep;
@@ -397,6 +420,18 @@ if (count _targets > 0) then {
 			_logik setVariable ["wfbe_aicom_spearhead_bl", []];
 		} else {
 			_cands = _candsF;
+		};
+		//--- Re-check pool expand AFTER hist bump so the stall that crosses AFTER widens this same re-pick.
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND", 0]) > 0) then {
+			private ["_spExpandAfter2","_spStallHist2","_spExpandRad2","_spExpandFar2"];
+			_spExpandAfter2 = missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_AFTER", 3];
+			_spStallHist2 = _logik getVariable ["wfbe_aicom_spear_stall_hist", 0];
+			if (_spStallHist2 >= _spExpandAfter2) then {
+				_spExpandRad2 = missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_RADIUS", 6000];
+				_spExpandFar2 = missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_FAR_PENALTY", 200];
+				if (_spExpandRad2 > _frontRad) then {_frontRad = _spExpandRad2};
+				if (_spExpandFar2 < _farPen) then {_farPen = _spExpandFar2};
+			};
 		};
 		_want = 1 max (missionNamespace getVariable [format ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 2]]);
 		_want = _want min (count _cands);
