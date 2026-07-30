@@ -129,78 +129,97 @@ _team = grpNull;
 if (isNull _team) exitWith {["WARNING", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] team is null", _name, _uid]] Call WFBE_CO_FNC_LogContent};
 
 //--- We attempt to fetch the client old unit, we need to check if it's group is the right one (on the fly group swapping).
+//--- mission-core disconnect bughunt 2026-07-30: NEVER fall back to leader _team as the
+//--- delete target. After sleep 0.5 the engine has usually already removed the player;
+//--- wfbe_teamleader is often nil/dead, and leader _team is then an AI subordinate. Under
+//--- WFBE_C_AI_TEAMS_JIP_PRESERVE=1 (param default 1) that AI is the unit we must KEEP -
+//--- deleteVehicle on it wiped the preserved squad's leader and left orphaned AI.
 _old_unit = _team getVariable "wfbe_teamleader";
 if (isNil '_old_unit') then {
 	_old_unit = objNull;
 } else {
-	if !(alive _old_unit) then {_old_unit = objNull};
+	if (isNull _old_unit) then {_old_unit = objNull} else {
+		if !(alive _old_unit) then {_old_unit = objNull};
+	};
+};
+
+//--- Prefer a unit still tagged isPlayer (narrow race before engine removal finishes).
+if (isNull _old_unit) then {
+	{
+		if (isPlayer _x) exitWith {_old_unit = _x};
+	} forEach (units _team);
 };
 
 if (isNull _old_unit) then {
-	_old_unit = leader _team;
-	["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] current team leader is dead or nil, using original team leader [%3].", _name, _uid, _team]] Call WFBE_CO_FNC_LogContent;
-};
-_old_unit_group = group _old_unit;
-
-//--- Make sure that our disconnected player group was the same as the original, we simply set him back to his group otherwise).
-if (_old_unit_group != _team) then {
-	//todo, check if we have at least 1 unit in the old squad.
-	Private ["_entitie","_fillerClass"];
-	_entitie = objNull;
-	_fillerClass = missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side];
-	if ((count (units _old_unit_group)) < 2 && {!isNil "_fillerClass"} && {typeName _fillerClass == "STRING"}) then {
-		_entitie = [_fillerClass, _old_unit_group, [0,0,0], _side] Call WFBE_CO_FNC_CreateUnit;
-	};
-
-	[_old_unit] joinSilent _team;
-
-	if !(isNull _entitie) then {deleteVehicle _entitie};
-
-	["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] was in team [%3] and has been transfered to it's source team [%4].", _name, _uid, _old_unit_group, _team]] Call WFBE_CO_FNC_LogContent;
-
-	//--- Make sure that the disconnected unit is the leader of it's group now.
-	if (leader _team != _old_unit) then {
-		_team selectLeader _old_unit;
-		["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has been set as the leader of it's source team [%3].", _name, _uid, _team]] Call WFBE_CO_FNC_LogContent;
-	};
-};
-
-//--- We force the unit out of it's vehicle.
-if !(isNull(assignedVehicle _old_unit)) then {
-	unassignVehicle _old_unit;
-	[_old_unit] orderGetIn false;
-	[_old_unit] allowGetIn false;
-};
-
-//--- Eject the unit if it's in the HQ.
-_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
-if (vehicle _old_unit == _hq) then {_old_unit action ["EJECT", _hq]};
-
-//--- JIP-replay hardening, Finding #1 (stale WFBE_JIP_BODY_<uid> on rapid reconnect): RequestJoin.sqf
-//--- stores this binding on join but never clears it on disconnect, and this handler's own 0.5s sleep at
-//--- the top of the file (before commonInitComplete/serverInitFull) leaves a ~0.5-1s window where a fast
-//--- same-UID reconnect can resolve into (and re-stamp) this about-to-be-deleted body via
-//--- Server_OnPlayerConnected.sqf's PRIMARY resolver tier, only to have it deleted out from under the
-//--- reconnected player a moment later. IDENTITY-GATED: only clear the binding if it still points at the
-//--- EXACT unit we are tearing down (_old_unit) - if a reconnect already landed and rebound it to a NEW
-//--- body, the stored reference no longer equals _old_unit and this leaves that newer binding untouched.
-//--- Pure addition; does not touch RequestJoin.sqf or the connect-side resolver.
-//--- REACH NOTE (review-1253): _old_unit is the CURRENT wfbe_teamleader, which is re-stamped on every
-//--- respawn (Server_HandleSpecial.sqf:12), but WFBE_JIP_BODY_<uid> is stamped ONLY once, at the initial
-//--- RequestJoin. So for any player who has respawned at least once (the normal case in a live match),
-//--- stored != _old_unit here and this clear is a no-op on their disconnect - not a regression (that
-//--- stale first-join body was already excluded by the connect resolver's alive-check), just a narrower
-//--- practical reach than the fix name implies: it only protects "disconnect while still on the
-//--- first-ever join body, before any respawn." Closing the general reconnect race for a
-//--- since-respawned player needs the generation/token variant, which requires stamping RequestJoin.sqf -
-//--- owner-locked, out of scope here.
-if ((missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull]) == _old_unit) then {
+	["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] body already gone (team [%3]); skip body teardown - do not delete AI leader.", _name, _uid, _team]] Call WFBE_CO_FNC_LogContent;
+	//--- Drop stale JIP body binding when the unit is already gone (deleted refs still compare poorly on reconnect).
 	missionNamespace setVariable [Format ["WFBE_JIP_BODY_%1", _uid], nil];
-};
+} else {
+	_old_unit_group = group _old_unit;
 
-deleteVehicle _old_unit;
+	//--- We make sure that our disconnected player group was the same as the original, we simply set him back to his group otherwise).
+	if (_old_unit_group != _team) then {
+		//todo, check if we have at least 1 unit in the old squad.
+		Private ["_entitie","_fillerClass"];
+		_entitie = objNull;
+		_fillerClass = missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side];
+		if ((count (units _old_unit_group)) < 2 && {!isNil "_fillerClass"} && {typeName _fillerClass == "STRING"}) then {
+			_entitie = [_fillerClass, _old_unit_group, [0,0,0], _side] Call WFBE_CO_FNC_CreateUnit;
+		};
+
+		[_old_unit] joinSilent _team;
+
+		if !(isNull _entitie) then {deleteVehicle _entitie};
+
+		["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] was in team [%3] and has been transfered to it's source team [%4].", _name, _uid, _old_unit_group, _team]] Call WFBE_CO_FNC_LogContent;
+
+		//--- Make sure that the disconnected unit is the leader of it's group now.
+		if (leader _team != _old_unit) then {
+			_team selectLeader _old_unit;
+			["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has been set as the leader of it's source team [%3].", _name, _uid, _team]] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+
+	//--- We force the unit out of it's vehicle.
+	if !(isNull(assignedVehicle _old_unit)) then {
+		unassignVehicle _old_unit;
+		[_old_unit] orderGetIn false;
+		[_old_unit] allowGetIn false;
+	};
+
+	//--- Eject the unit if it's in the HQ.
+	_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
+	if (vehicle _old_unit == _hq) then {_old_unit action ["EJECT", _hq]};
+
+	//--- JIP-replay hardening, Finding #1 (stale WFBE_JIP_BODY_<uid> on rapid reconnect): RequestJoin.sqf
+	//--- stores this binding on join but never clears it on disconnect, and this handler's own 0.5s sleep at
+	//--- the top of the file (before commonInitComplete/serverInitFull) leaves a ~0.5-1s window where a fast
+	//--- same-UID reconnect can resolve into (and re-stamp) this about-to-be-deleted body via
+	//--- Server_OnPlayerConnected.sqf's PRIMARY resolver tier, only to have it deleted out from under the
+	//--- reconnected player a moment later. IDENTITY-GATED: only clear the binding if it still points at the
+	//--- EXACT unit we are tearing down (_old_unit) - if a reconnect already landed and rebound it to a NEW
+	//--- body, the stored reference no longer equals _old_unit and this leaves that newer binding untouched.
+	//--- Pure addition; does not touch RequestJoin.sqf or the connect-side resolver.
+	//--- REACH NOTE (review-1253): _old_unit is the CURRENT wfbe_teamleader, which is re-stamped on every
+	//--- respawn (Server_HandleSpecial.sqf:12), but WFBE_JIP_BODY_<uid> is stamped ONLY once, at the initial
+	//--- RequestJoin. So for any player who has respawned at least once (the normal case in a live match),
+	//--- stored != _old_unit here and this clear is a no-op on their disconnect - not a regression (that
+	//--- stale first-join body was already excluded by the connect resolver's alive-check), just a narrower
+	//--- practical reach than the fix name implies: it only protects "disconnect while still on the
+	//--- first-ever join body, before any respawn." Closing the general reconnect race for a
+	//--- since-respawned player needs the generation/token variant, which requires stamping RequestJoin.sqf -
+	//--- owner-locked, out of scope here.
+	if ((missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull]) == _old_unit) then {
+		missionNamespace setVariable [Format ["WFBE_JIP_BODY_%1", _uid], nil];
+	};
+
+	deleteVehicle _old_unit;
+};
 
 //--- If we choose not to keep the current units during this session, then we simply remove them.
+//--- HQ handle always needed for preserve==0 vehicle scrub (body-teardown path may have skipped it).
+_hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
+
 if ((missionNamespace getVariable "WFBE_C_AI_TEAMS_JIP_PRESERVE") == 0) then {
 	["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] units are now being removed for AI Team [%3].", _name, _uid, _team]] Call WFBE_CO_FNC_LogContent;
 	_units = units _team;
