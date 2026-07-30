@@ -160,8 +160,8 @@ if (isNull _site) exitWith {
 };
 _site setDir _direction;
 _site setPos _position;
-_site setVariable ["wfbe_side", _side];
-_site setVariable ["wfbe_structure_type", _rlType];
+_site setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
+_site setVariable ["wfbe_structure_type", _rlType, true]; //--- r30 getvar-jip: JIP clients need type
 
 //--- Bank: spawn composition dressing, register in per-side registry, create global marker, start income drip.
 if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {

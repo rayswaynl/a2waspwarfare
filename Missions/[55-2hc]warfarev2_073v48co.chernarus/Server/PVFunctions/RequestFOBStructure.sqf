@@ -202,7 +202,7 @@ if (!_reject) then {
 				diag_log Format ["GUERFOB|v1|accept|type=%1|pos=%2", _facType, _pos];
 			} else {
 				_completionMessage = "FOB construction failed; your token was restored.";
-				_currentAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", []]);
+				_currentAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]]); //--- r30 getvar-fallback: match debit default
 				if (_idx < (count _currentAvail) && {(typeName (_currentAvail select _idx)) == "SCALAR"}) then {
 					_currentAvail set [_idx, (_currentAvail select _idx) + 1];
 					missionNamespace setVariable ["WFBE_GUER_FOB_AVAIL", _currentAvail];
@@ -226,7 +226,7 @@ if (!_reject) then {
 	} else {
 		_startMessage = "construction start did not complete";
 		if ((count _startResult) > 1 && {(typeName (_startResult select 1)) == "STRING"} && {(_startResult select 1) != ""}) then {_startMessage = _startResult select 1};
-		_currentAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", []]);
+		_currentAvail = + (missionNamespace getVariable ["WFBE_GUER_FOB_AVAIL", [0,0,0]]); //--- r30 getvar-fallback: match debit default
 		if (_idx < (count _currentAvail) && {(typeName (_currentAvail select _idx)) == "SCALAR"}) then {
 			_currentAvail set [_idx, (_currentAvail select _idx) + 1];
 			missionNamespace setVariable ["WFBE_GUER_FOB_AVAIL", _currentAvail];

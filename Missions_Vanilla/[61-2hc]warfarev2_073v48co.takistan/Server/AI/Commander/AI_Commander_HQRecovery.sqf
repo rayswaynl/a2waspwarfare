@@ -28,8 +28,12 @@ if (!(_logik getVariable ["wfbe_aicom_hq_recovery_pending", false])) exitWith {}
 
 _hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
 if (!isNull _hq && {alive _hq}) exitWith {_logik setVariable ["wfbe_aicom_hq_recovery_pending", false]};
-_origin = _logik getVariable ["wfbe_aicom_hq_recovery_origin", [0,0,0]];
-if (typeName _origin != "ARRAY" || {count _origin < 2}) then {_origin = getPos _hq};
+_origin = _logik getVariable "wfbe_aicom_hq_recovery_origin"; //--- r30 getvar-fallback: do NOT default to [0,0,0]
+if (isNil "_origin" || {typeName _origin != "ARRAY"} || {count _origin < 2} || {(_origin select 0) == 0 && {(_origin select 1) == 0}}) then {
+	//--- Missing/zero origin: fall back to side startpos (public), never world-origin nearest-town.
+	_origin = _logik getVariable "wfbe_startpos";
+	if (isNil "_origin" || {typeName _origin != "ARRAY"} || {count _origin < 2}) then {_origin = [0,0,0]};
+};
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 _town = objNull;
 _nearest = 1e9;
