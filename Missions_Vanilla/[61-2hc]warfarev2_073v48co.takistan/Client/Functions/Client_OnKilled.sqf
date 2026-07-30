@@ -133,7 +133,9 @@ WFBE_DeathLocation = getPos _body;
 //--- Fade transition.
 titleCut ["", "BLACK OUT", 1];
 
-waitUntil {alive player};
+private ["_respawnWaitT0"]; _respawnWaitT0 = time;
+//--- SCHEDULER-LEAK: sleep + 10 min bound if respawn never restores alive player.
+waitUntil {sleep 0.2; alive player || {(time - _respawnWaitT0) > 600}};
 
 //--- fable/onkilled-team-resync (owner report "units kept renumbering themselves after I die",
 //--- correctness fix): resync WFBE_Client_Team to the player's POST-RESPAWN group BEFORE the
