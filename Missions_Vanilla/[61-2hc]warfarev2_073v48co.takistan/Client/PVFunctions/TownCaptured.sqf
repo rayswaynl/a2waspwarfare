@@ -14,13 +14,23 @@ Private ["_captureText","_color","_musicCooldown","_musicLast","_musicNow","_mus
 _town = _this select 0;
 _town_side_value = _this select 1;
 _town_side_value_new = _this select 2;
-_sv = _town getVariable "supplyValue";
 if (isNil "WFBE_Client_SideID") exitWith {};
+//--- Null/malformed town object: never touch markers or funds off a bad PV.
+if (isNil "_town" || {typeName _town != "OBJECT"} || {isNull _town}) exitWith {};
+//--- Capture bounty must track the post-flip starting SV the server just wrote. Prefer
+//--- startingSupplyValue: public supplyValue can still be the pre-flip drained value when
+//--- TownCaptured races the setVariable broadcast, under-paying (or nil-poisoning 150*_sv).
+//--- Distinct from ownership SV display - bounty is a capture award, not live SV.
+_sv = _town getVariable ["startingSupplyValue", _town getVariable ["supplyValue", 30]];
+if (isNil "_sv" || {typeName _sv != "SCALAR"}) then {_sv = _town getVariable ["supplyValue", 30]};
+if (isNil "_sv" || {typeName _sv != "SCALAR"}) then {_sv = 30};
 _side_captured = (_town_side_value_new) Call WFBE_CO_FNC_GetSideFromID;
 
 //--- Keep enemy ownership unknown. Init_Markers uses this same policy: only the owning
 //--- client side (and GUER) gets the owner colour; all other clients retain a neutral Depot marker.
-_townMarker = Format ["WFBE_%1_CityMarker", _town];
+//--- Marker name MUST use str (parity with Init_Markers.sqf / updatetownmarkers.sqf). Format of a
+//--- bare object can diverge from str on some logics -> permanent wrong colour after flip.
+_townMarker = Format ["WFBE_%1_CityMarker", str _town];
 _color = missionNamespace getVariable ["WFBE_C_UNKNOWN_COLOR", "ColorGreen"];
 if (_town_side_value_new == WFBE_Client_SideID || _town_side_value_new == WFBE_C_GUER_ID) then {
 	_color = missionNamespace getVariable (Format ["WFBE_C_%1_COLOR", _side_captured]);
