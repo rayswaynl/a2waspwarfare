@@ -35,5 +35,5 @@ if (_clear) then {_team Call AIWPRemove};
 	if (_type == 'SCRIPTED') then {[_team, _WPCount] setWaypointScript _scripted};
 	if (count _statements > 0) then {[_team, _WPCount] setWaypointStatements [_statements select 0, _statements select 1]};
 	
-	if (_WPCount == 0) then {_team setCurrentWaypoint [_team, _WPCount]};
+	if (_forEachIndex == 0) then {_team setCurrentWaypoint [_team, _WPCount]}; //--- WAVE-3 re-lay activation fix (twin of Common_WaypointsAdd L34): AIWPRemove leaves a residual index-0 waypoint, so _WPCount is NEVER 0 on a RE-LAY -> the old _WPCount==0 gate never fired setCurrentWaypoint -> a re-tasked team (server-local AICOM SAD re-dispatch AssignTowns.sqf:1210/1218, human re-aim Execute.sqf:119, town sortie, patrol re-lay) never made its fresh chain ACTIVE and sat parked. Fire on the FIRST node of every batch at its real engine index _WPCount; fresh groups (_WPCount==0) unchanged.
 } forEach _waypoints;
