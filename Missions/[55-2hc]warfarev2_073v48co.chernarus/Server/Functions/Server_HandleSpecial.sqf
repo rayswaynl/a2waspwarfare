@@ -2062,8 +2062,13 @@ switch (_args select 0) do {
 
 		//--- fable/fix-camp-placement (2026-07-08): same ATL ground-snap as Init_Town.sqf's seeder - a
 		//--- repaired camp must not re-bury itself on ZG (see Init_Town.sqf for full rationale + citations).
-		_campXY = getPos _logic;
+				_campXY = getPos _logic;
+		//--- FAIL-CLEAN (r40): create bunker first; null must not setDir/setPos/EH/stamp bunker or leave repairing latched.
 		_townModel = (missionNamespace getVariable "WFBE_C_CAMP") createVehicle [_campXY select 0, _campXY select 1, 0];
+		if (isNull _townModel) exitWith {
+			_logic setVariable ["wfbe_camp_repairing", false, true];
+			["WARNING", Format ["Server_HandleSpecial.sqf/repair-camp: camp bunker createVehicle FAILED at %1 - repair aborted, flag released.", _campXY]] Call WFBE_CO_FNC_LogContent;
+		};
 		_townModel setDir ((getDir _logic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
 		//--- kimi/naval-deckcamp-repair (2026-07-20): naval deck camps (HeliHEmpty stand-in logics,
 		//--- Init_NavalHVT.sqf) carry wfbe_camp_deckz - reseat the revived bunker ON the deck
@@ -2074,18 +2079,24 @@ switch (_args select 0) do {
 		} else {
 			_townModel setPos [_campXY select 0, _campXY select 1, 0];
 		};
-			/*--- wiki-wins: removed killed EH calling undefined WFBE_SE_FNC_OnBuildingKilled (threw a swallowed error on every bunker death); bunker dead-state is already polled via alive (_logic getVariable 'wfbe_camp_bunker') ---*/
+		/*--- wiki-wins: removed killed EH calling undefined WFBE_SE_FNC_OnBuildingKilled (threw a swallowed error on every bunker death); bunker dead-state is already polled via alive (_logic getVariable 'wfbe_camp_bunker') ---*/
 		_townModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
 		_logic setVariable ["wfbe_camp_bunker", _townModel, true];
 
 		//--- Do we have to update the camp SID ?
 		_camp_sideID = _logic getVariable "sideID";
 		if (_camp_sideID != _repairSideID) then {
-			Private ["_town"];
+			Private ["_town","_campFlag"];
 			_logic setVariable ["sideID", _repairSideID, true];
 
-				//--- wiki-wins: also fly the new side's flag (mirrors Server_SetCampsToSide.sqf:22); the side change set sideID but never the world flag texture.
-				(_logic getVariable "wfbe_flag") setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]); (_logic getVariable "wfbe_flag") setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]]); processInitCommands; //--- qol-polish-pack: JIP-safe flag (bake into object init so late joiners replay it)
+			//--- wiki-wins: also fly the new side's flag (mirrors Server_SetCampsToSide.sqf:22); the side change set sideID but never the world flag texture.
+			//--- FAIL-CLEAN (r40): skip flag texture when wfbe_flag is null/missing.
+			_campFlag = _logic getVariable "wfbe_flag";
+			if (!isNil "_campFlag" && {!isNull _campFlag}) then {
+				_campFlag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]);
+				_campFlag setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]]);
+				processInitCommands; //--- qol-polish-pack: JIP-safe flag
+			};
 
 			//--- Notify / update map if needed.
 			[nil, "CampCaptured", [_logic, _repairSideID, _camp_sideID, true]] Call WFBE_CO_FNC_SendToClients;
