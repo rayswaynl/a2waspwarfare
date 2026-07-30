@@ -714,7 +714,17 @@ switch (_request) do {
 			hintSilent parseText ("<t color='#85B5FA'>" + _msg + "</t>");
 		};
 	};
-	case "guer-helibomb-result": {
+	case "support-callin-result": {
+	//--- failure-signalling r38: server notified a tactical support deny/refund.
+	Private ["_ok","_msg"];
+	_ok = if (count _args > 1) then {_args select 1} else {false};
+	_msg = if (count _args > 2) then {_args select 2} else {"Support call-in failed."};
+	if (typeName _msg != "STRING") then {_msg = "Support call-in failed."};
+	hintSilent parseText Format ["<t color='#F8D664'>%1</t>", _msg];
+	systemChat _msg;
+};
+
+case "guer-helibomb-result": {
 		Private ["_ok","_msg"];
 		_ok  = _args select 0;
 		_msg = _args select 1;

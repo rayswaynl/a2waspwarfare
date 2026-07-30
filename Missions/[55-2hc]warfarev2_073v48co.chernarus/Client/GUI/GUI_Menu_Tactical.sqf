@@ -564,7 +564,10 @@ while {alive player && dialog} do {
 			_callPos = _map posScreenToWorld[mouseX,mouseY];
 			if (!surfaceIsWater _callPos) then {
 				lastParaCall = time;
-				-(_currentFee) Call ChangePlayerFunds;
+				//--- failure-signalling r38: when SUPPORT_SERVER_AUTH armed, server is sole charger.
+				if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0) then {
+					-(_currentFee) Call ChangePlayerFunds;
+				};
 				["RequestSpecial", ["Paratroops",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
 				
 				hint (localize "STR_WF_INFO_Paratroop_Info");
@@ -897,7 +900,9 @@ while {alive player && dialog} do {
 			[17022] Call SetControlFadeAnimStop;
 			MenuAction = -1;
 			lastSupplyCall = time;
-			-_currentFee Call ChangePlayerFunds;
+			if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0) then {
+				-_currentFee Call ChangePlayerFunds;
+			};
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
 			["RequestSpecial", ["ParaVehi",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
 		};
@@ -908,7 +913,9 @@ while {alive player && dialog} do {
 			[17022] Call SetControlFadeAnimStop;
 			MenuAction = -1;
 			lastSupplyCall = time;
-			-_currentFee Call ChangePlayerFunds;
+			if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0) then {
+				-_currentFee Call ChangePlayerFunds;
+			};
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
 			["RequestSpecial", ["ParaAmmo",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
 		};

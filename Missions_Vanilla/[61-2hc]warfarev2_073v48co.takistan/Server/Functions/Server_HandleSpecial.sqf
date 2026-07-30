@@ -41,35 +41,77 @@ switch (_args select 0) do {
 		};
 	};
 	case "Paratroops": {
-		//--- supportgate SECURITY (2026-07-24): server-authoritative cost + rate gate, mirroring
-		//--- Support_ScudStrike.sqf's funds/cooldown pattern. Flag WFBE_C_SUPPORT_SERVER_AUTH (default 0):
-		//--- at 0 this is the ORIGINAL unconditional spawn (byte-identical to HEAD) - the client-side debit
-		//--- in GUI_Menu_Tactical.sqf:564 stays the only fee gate, so the exploit remains open until armed.
-		//--- Cost 8500 / cooldown mirror GUI_Menu_Tactical.sqf:119-121 (Paratroopers fee + WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY).
-		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0 || {["Paratroops", _args, 8500, missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY", 1200]] Call WFBE_SE_FNC_AuthorizeSupportCallin}) then {
-			_args spawn KAT_Paratroopers;
+		//--- supportgate SECURITY (2026-07-24): server-authoritative cost + rate gate.
+		//--- Flag WFBE_C_SUPPORT_SERVER_AUTH (default 0): at 0 unconditional spawn (client debit is sole fee).
+		//--- failure-signalling r38: when AUTH is armed and Authorize returns false, notify the caller
+		//--- (previously silent deny after client stamped lastParaCall / may have already debited).
+		Private ["_authOk","_callerTeam","_callerLead","_denyMsg"];
+		_authOk = true;
+		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) > 0) then {
+			_authOk = ["Paratroops", _args, 8500, missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY", 1200]] Call WFBE_SE_FNC_AuthorizeSupportCallin;
+			if (!_authOk) then {
+				_callerTeam = if (count _args > 3) then {_args select 3} else {grpNull};
+				_callerLead = if (!isNull _callerTeam) then {leader _callerTeam} else {objNull};
+				_denyMsg = "Paratroop call denied by server (funds or cooldown). No charge was taken server-side.";
+				if (!isNull _callerLead && {isPlayer _callerLead}) then {
+					if (WF_A2_Vanilla) then {
+						[getPlayerUID _callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
+					} else {
+						[_callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
+					};
+				};
+			};
 		};
+		if (_authOk) then {_args spawn KAT_Paratroopers};
 	};
 
-	case "ParaVehi": {
-		//--- supportgate SECURITY: same server-authoritative gate as "Paratroops" above (flag
-		//--- WFBE_C_SUPPORT_SERVER_AUTH, default 0 = byte-identical unconditional spawn). Cost 3500 /
-		//--- cooldown 600 mirror GUI_Menu_Tactical.sqf:119-121 (Paradrop_Vehicle fee + interval).
-		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0 || {["ParaVehi", _args, 3500, 600] Call WFBE_SE_FNC_AuthorizeSupportCallin}) then {
-			_args spawn KAT_ParaVehicles;
+
+case "ParaVehi": {
+		//--- supportgate SECURITY + failure-signalling r38 deny notify (see Paratroops case).
+		Private ["_authOk","_callerTeam","_callerLead","_denyMsg"];
+		_authOk = true;
+		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) > 0) then {
+			_authOk = ["ParaVehi", _args, 3500, 600] Call WFBE_SE_FNC_AuthorizeSupportCallin;
+			if (!_authOk) then {
+				_callerTeam = if (count _args > 3) then {_args select 3} else {grpNull};
+				_callerLead = if (!isNull _callerTeam) then {leader _callerTeam} else {objNull};
+				_denyMsg = "Vehicle paradrop denied by server (funds or cooldown). No charge was taken server-side.";
+				if (!isNull _callerLead && {isPlayer _callerLead}) then {
+					if (WF_A2_Vanilla) then {
+						[getPlayerUID _callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
+					} else {
+						[_callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
+					};
+				};
+			};
 		};
+		if (_authOk) then {_args spawn KAT_ParaVehicles};
 	};
 
-	case "ParaAmmo": {
-		//--- supportgate SECURITY: same server-authoritative gate as "Paratroops" above (flag
-		//--- WFBE_C_SUPPORT_SERVER_AUTH, default 0 = byte-identical unconditional spawn). Cost 9500 /
-		//--- cooldown 800 mirror GUI_Menu_Tactical.sqf:119-121 (Paradrop_Ammo fee + interval).
-		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0 || {["ParaAmmo", _args, 9500, 800] Call WFBE_SE_FNC_AuthorizeSupportCallin}) then {
-			_args spawn KAT_ParaAmmo;
+
+case "ParaAmmo": {
+		//--- supportgate SECURITY + failure-signalling r38 deny notify (see Paratroops case).
+		Private ["_authOk","_callerTeam","_callerLead","_denyMsg"];
+		_authOk = true;
+		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) > 0) then {
+			_authOk = ["ParaAmmo", _args, 9500, 800] Call WFBE_SE_FNC_AuthorizeSupportCallin;
+			if (!_authOk) then {
+				_callerTeam = if (count _args > 3) then {_args select 3} else {grpNull};
+				_callerLead = if (!isNull _callerTeam) then {leader _callerTeam} else {objNull};
+				_denyMsg = "Ammo paradrop denied by server (funds or cooldown). No charge was taken server-side.";
+				if (!isNull _callerLead && {isPlayer _callerLead}) then {
+					if (WF_A2_Vanilla) then {
+						[getPlayerUID _callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
+					} else {
+						[_callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
+					};
+				};
+			};
 		};
+		if (_authOk) then {_args spawn KAT_ParaAmmo};
 	};
 
-	case "RespawnST": {
+case "RespawnST": {
 		//--- DR-55 forged-PVF hardening (flag-gated; OFF = byte-equivalent legacy behavior).
 		//--- FINDING (101-endpoint PV audit): unguarded, this force-kills (setDammage 1) EVERY AI supply
 		//--- truck + driver for a client-named side - no type/side/requester/cooldown check at all. Trace:
@@ -416,8 +458,12 @@ switch (_args select 0) do {
 
 			waitUntil {!alive _target || isNull _target};
 
-			[_base] Spawn NukeDammage;
-		} else {
+//--- failure-signalling r38: unvalidated legacy path still must not Spawn Nuke on null anchor.
+if (isNull _base) exitWith {
+["WARNING", "Server_HandleSpecial.sqf: ICBM legacy path aborted - null base after cruise death."] Call WFBE_CO_FNC_LogContent;
+};
+[_base] Spawn NukeDammage;
+} else {
 			Private ["_base","_cdKey","_cool","_cost","_funds","_last","_lvl","_playerTeam","_side","_target","_upg"];
 
 			//--- TEL mode (default): no classic-path sender can be legitimate.
@@ -498,10 +544,20 @@ switch (_args select 0) do {
 
 			waitUntil {!alive _target || isNull _target};
 
-			//--- The HeliHEmpty anchor can be deleted mid-flight (GC); never nuke a null position.
-			if (isNull _base) exitWith {};
+		//--- The HeliHEmpty anchor can be deleted mid-flight (GC); never nuke a null position.
+		//--- failure-signalling r38: charge+cooldown already committed above - refund + unstamp on abort
+		//--- so the commander is not left paying for a silent no-op.
+		if (isNull _base) exitWith {
+			private ["_curFunds"];
+			_curFunds = _playerTeam getVariable "wfbe_funds";
+			if (isNil "_curFunds" || {typeName _curFunds != "SCALAR"}) then {_curFunds = 0};
+			_playerTeam setVariable ["wfbe_funds", (_curFunds + _cost), true];
+			if (!isNil "WFBE_SE_FNC_SyncFundsRecord") then {[_playerTeam] Call WFBE_SE_FNC_SyncFundsRecord};
+			missionNamespace setVariable [_cdKey, _last];
+			["WARNING", Format ["Server_HandleSpecial.sqf: ICBM aborted - null base after cruise death; refunded $%1 to team %2 and restored cooldown.", _cost, _playerTeam]] Call WFBE_CO_FNC_LogContent;
+		};
 
-			[_base] Spawn NukeDammage;
+		[_base] Spawn NukeDammage;
 		};
 	};
 
