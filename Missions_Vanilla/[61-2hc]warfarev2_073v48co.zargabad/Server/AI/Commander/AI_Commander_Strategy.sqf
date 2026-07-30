@@ -1299,11 +1299,19 @@ if (_strikeOn) then {
 _losingPress = false;
 //--- cmdcon41-w2 LOSING-SIDE PRESS FLOOR (Fable F7; flag WFBE_C_AICOM_LOSING_PRESS default 1). A losing side with an
 //--- intact army must NOT park in DEFEND (the EAST-sat-in-DEFEND-min201-415 pattern). When we are BEHIND on territory
-//--- (myTowns < enemyTowns) yet at rough strength parity (myEff >= 0.8 * enEff), NOT in last-stand, AND our own base is
+//--- (myTowns < enemyTowns) yet at rough strength parity (myEff >= ENTER * enEff), NOT in last-stand, AND our own base is
 //--- not itself under direct attack, floor the posture at PRESS so the commander keeps attacking to claw territory back.
-//--- Never overrides HQ_STRIKE. A2-OA-safe: scalar math + nearEntities/side/alive/count for the base-threat probe; ==/!=
-//--- only on string/scalar operands (posture strings), never on Booleans.
-if (((missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS", 1]) > 0) && {!_strikeOn} && {!_lastStand} && {_myTowns < _enemyTowns} && {_myEff >= (_enEff * 0.8)}) then {
+//--- HYSTERESIS (RPT-DEEPDIVE 2026-07-30 / cmdcon-posture-hysteresis): enter at ENTER (default 0.8), stay latched until
+//--- myEff drops below EXIT (default 0.65) so behind-towns DEFEND vs losing-press PRESS cannot thrash every strategy tick
+//--- (live: 52 WEST flips, dense PRESS/DEFEND oscillation, multi-hour capture stalemate). Never overrides HQ_STRIKE.
+//--- A2-OA-safe: scalar math + nearEntities/side/alive/count for the base-threat probe; ==/!= only on string/scalar.
+private ["_lpEnter","_lpExit","_lpWas","_lpRatioOk"];
+_lpEnter = missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS_ENTER", 0.8];
+_lpExit  = missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS_EXIT", 0.65];
+if (_lpExit > _lpEnter) then {_lpExit = _lpEnter};
+_lpWas = _logik getVariable ["wfbe_aicom_losing_press", false];
+if (isNil "_lpWas") then {_lpWas = false};
+if (((missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS", 1]) > 0) && {!_strikeOn} && {!_lastStand} && {_myTowns < _enemyTowns}) then {
 	private ["_lpBaseThreat","_lpHQ","_lpDist"];
 	_lpBaseThreat = false;
 	_lpHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
@@ -1311,13 +1319,46 @@ if (((missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS", 1]) > 0) && {!_
 	if (!isNull _lpHQ) then {
 		if (({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _lpHQ) nearEntities [["Man","LandVehicle","Air"], _lpDist])) > 0) then {_lpBaseThreat = true};
 	};
-	if (!_lpBaseThreat) then {
+	//--- Enter on high ratio; once latched, hold until ratio falls below EXIT (shared band with DEFEND trigger).
+	_lpRatioOk = if (_lpWas) then {_myEff >= (_enEff * _lpExit)} else {_myEff >= (_enEff * _lpEnter)};
+	if (!_lpBaseThreat && {_lpRatioOk}) then {
 		_posture = "PRESS";
 		_postureReason = "losing-press-floor";
 		_losingPress = true;
-		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|LOSING_PRESS_FLOOR|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myEff=" + str _myEff + "|enEff=" + str _enEff);
+		if (!_lpWas) then {
+			diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|LOSING_PRESS_FLOOR|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myEff=" + str _myEff + "|enEff=" + str _enEff);
+		};
 	};
 };
+//--- Shared DEFEND<->PRESS dwell (flag WFBE_C_AICOM_POSTURE_HYST_ENABLE default 1): after either trigger wins,
+//--- hold that stance for HYST_SEC before the other may retake. HQ_STRIKE / HOLD / last-stand still apply freely.
+if (((missionNamespace getVariable ["WFBE_C_AICOM_POSTURE_HYST_ENABLE", 1]) > 0) && {!_strikeOn}) then {
+	private ["_prevPosture","_prevReason","_postureT0","_hystSec"];
+	_prevPosture = _logik getVariable ["wfbe_aicom_posture", ""];
+	_prevReason  = _logik getVariable ["wfbe_aicom_posture_reason", ""];
+	_postureT0   = _logik getVariable ["wfbe_aicom_posture_t0", -1e10];
+	_hystSec     = missionNamespace getVariable ["WFBE_C_AICOM_POSTURE_HYST_SEC", 180];
+	if (_hystSec < 0) then {_hystSec = 0};
+	if ((_prevPosture == "DEFEND" || {_prevPosture == "PRESS"}) && {(_posture == "DEFEND" || {_posture == "PRESS"})} && {_prevPosture != _posture} && {(time - _postureT0) < _hystSec}) then {
+		_posture = _prevPosture;
+		if (_prevReason == "losing-press-floor-hyst" || {_prevReason == "behind-towns-hyst"} || {_prevReason == "behind-strength-hyst"} || {_prevReason == "winning-hyst"} || {_prevReason == "balanced-hyst"}) then {
+			_postureReason = _prevReason;
+		} else {
+			_postureReason = _prevReason + "-hyst";
+		};
+		_losingPress = false;
+		if (_posture == "PRESS") then {
+			if ((_prevReason == "losing-press-floor") || {_prevReason == "losing-press-floor-hyst"}) then {_losingPress = true};
+		};
+	};
+};
+//--- Persist stance for next-tick hysteresis + telemetry consumers.
+if ((_logik getVariable ["wfbe_aicom_posture", ""]) != _posture) then {
+	_logik setVariable ["wfbe_aicom_posture_t0", time];
+};
+_logik setVariable ["wfbe_aicom_posture", _posture];
+_logik setVariable ["wfbe_aicom_posture_reason", _postureReason];
+_logik setVariable ["wfbe_aicom_losing_press", _losingPress];
 //--- B69 garrison-body telemetry (stall-telemetry-add-garrison-bodies): how many bodies the leader has tied up in
 //--- town OCCUPATION vs its maneuver _myStr. Pure observation, no behaviour change. Mirrors the existing _myStr idiom
 //--- (L52): {alive _x} count (units _x), guarded by !isNull. One forEach over towns (~30) per side per ~60s strategy
