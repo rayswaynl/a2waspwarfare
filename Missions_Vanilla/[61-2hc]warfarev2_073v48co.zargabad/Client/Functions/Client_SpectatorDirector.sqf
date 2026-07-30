@@ -58,7 +58,7 @@ WFBE_CL_FNC_DirectorBuildPlayers = {
 	_list = [];
 	{
 		if (!isNil "_x") then {
-			if (alive _x && {isPlayer _x} && {!(_x == player)}) then {
+			if (alive _x && {isPlayer _x} && {!(_x == player)} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then { //--- HC bodies are isPlayer-true; never offer them as watch targets (owner 2026-07-30)
 				_contact = [_x, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100], side _x] Call WFBE_CL_FNC_DirectorContactCount;
 				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_BASE", 5]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_CONTACT", 40]));
 				_list = _list + [[name _x, _x, "PLAYER", WFBE_CL_FNC_DirectorPosObject, _score]];
