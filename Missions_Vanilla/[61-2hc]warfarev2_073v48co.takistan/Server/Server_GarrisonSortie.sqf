@@ -128,7 +128,7 @@ while {!WFBE_GameOver} do {
 			if (!_hasSortie) then {
 				//--- Proximity gate: at least one human player within range of the town.
 				_hasPlayerNear = false;
-				{ if (isPlayer _x && {alive _x} && {(_x distance _town) < _playerRange}) exitWith { _hasPlayerNear = true; }; } forEach playableUnits;
+				{ if (isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _town) < _playerRange}) exitWith { _hasPlayerNear = true; }; } forEach playableUnits;
 
 				if (_hasPlayerNear) then {
 					_sideID = _town getVariable ["sideID", -1];
