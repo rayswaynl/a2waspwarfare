@@ -17,7 +17,7 @@ _moveInGunner = true;
 //--- AI16 (lane118): loop exits when the base area that this defense belongs to changes hands.
 _sideStillValid = true;
 
-while {alive _defense && _sideStillValid} do {
+while {!isNull _defense && {alive _defense} && {_sideStillValid}} do {
 	if (isNull(gunner _defense) || !alive gunner _defense) then {
 
 		sleep 7;
@@ -41,6 +41,9 @@ while {alive _defense && _sideStillValid} do {
 			};
 		};
 		if (!_sideStillValid) exitWith {};
+
+		//--- crash 014EFCF4: the defense can be deleted after the 7s sleep and area checks.
+		if (isNull _defense || {!alive _defense}) exitWith {};
 
 		//--- EAST/OPFOR empty-static fix (2026-06-14): this base-static path used to GATE all
 		//--- manning behind `alive _closest` (a side-Barracks within WFBE_C_BASE_DEFENSE_MANNING_RANGE
@@ -67,7 +70,7 @@ while {alive _defense && _sideStillValid} do {
 			//--- boarding a server-local static) the gun would otherwise sit empty until the next 420s
 			//--- tick. Give the delegation a grace window; if no gunner is seated, fill server-side.
 			[_defense,_side,_team] Spawn {
-				Private ["_defense","_side","_team","_deadline","_sideID","_type","_soldier"];
+				Private ["_defense","_side","_team","_deadline","_sideID","_type","_soldier","_position"];
 				_defense = _this select 0;
 				_side    = _this select 1;
 				_team    = _this select 2;
@@ -77,17 +80,19 @@ while {alive _defense && _sideStillValid} do {
 					(time > _deadline) || {!alive _defense} || {(!isNull (gunner _defense)) && {alive gunner _defense}}
 				};
 				//--- Respect the existing "gunner already alive" skip - do NOT double-man.
-				if (alive _defense && {isNull (gunner _defense) || {!alive gunner _defense}}) then {
+				if (!isNull _defense && {alive _defense} && {isNull (gunner _defense) || {!alive gunner _defense}}) then {
+					if (isNull _defense || {!alive _defense}) exitWith {};
+					_position = getPosATL _defense;
 					_sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 					_type = missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side];
-					_soldier = [_type,_team,getPosATL _defense,_sideID] Call WFBE_CO_FNC_CreateUnit;
+					_soldier = [_type,_team,_position,_sideID] Call WFBE_CO_FNC_CreateUnit;
 					if !(isNull _soldier) then {
 						_defense setVariable ["WFBE_StaticDefenseAssignedUnit", _soldier, true];
 						[_soldier] allowGetIn true;
 						_soldier assignAsGunner _defense;
 						[_soldier] orderGetIn true;
 						_soldier moveInGunner _defense;
-						[_team, 1000, getPosATL _defense] spawn WFBE_CO_FNC_RevealArea;
+						[_team, 1000, _position] spawn WFBE_CO_FNC_RevealArea;
 						["WARNING", Format ["Server_HandleDefense.sqf: [%1] HC delegation did not seat a gunner for [%2] within grace window - filled server-side.", str _side, typeOf _defense]] Call WFBE_CO_FNC_LogContent;
 					};
 				};
@@ -95,13 +100,13 @@ while {alive _defense && _sideStillValid} do {
 		}else{
 			_sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 			_type = missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side];
-			_soldier = [_type,_team,getPosATL _defense,_sideID] Call WFBE_CO_FNC_CreateUnit;
+			_soldier = [_type,_team,_position,_sideID] Call WFBE_CO_FNC_CreateUnit;
 			_defense setVariable ["WFBE_StaticDefenseAssignedUnit", _soldier, true];
 			[_soldier] allowGetIn true;
 			_soldier assignAsGunner _defense;
 			[_soldier] orderGetIn true;
 			_soldier moveInGunner _defense;
-			[_team, 1000, getPosATL _defense] spawn WFBE_CO_FNC_RevealArea;
+			[_team, 1000, _position] spawn WFBE_CO_FNC_RevealArea;
 		};
 
 		[str _side,'UnitsCreated',1] Call UpdateStatistics;

@@ -820,7 +820,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 		if (!isNull _gwTeam && {!isNil "_gwHc"} && {_gwHc} && {!isPlayer (leader _gwTeam)}) then {
 			_gwLdr = leader _gwTeam;
 			if (!isNull _gwLdr && {alive _gwLdr}) then {
-				_gwAlive = {alive _x} count (units _gwTeam);
+				_gwAlive = {!isNull _x && {alive _x}} count (units _gwTeam);
 				_gwWant = _gwTeam getVariable "wfbe_aicom_wantrally";
 				if (isNil "_gwWant") then {_gwWant = false};
 				_gwRallying = _gwTeam getVariable "wfbe_aicom_rallying";
@@ -846,27 +846,46 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 				};
 				if (_gwTrigger) then {
 					//--- Rally = NEAREST of [own HQ pos] + every OWN-side town centre. Hand-rolled scalar min (no A3 sort).
-					private ["_gwRallyPos","_gwBestD","_gwLdrPos","_gwD"];
-					_gwLdrPos = getPos _gwLdr;
-					_gwRallyPos = [];
-					_gwBestD = 1e9;
-					if (!isNull _gwHQ) then {_gwRallyPos = getPos _gwHQ; _gwBestD = _gwLdr distance _gwHQ};
-					{
-						if ((_x getVariable ["sideID", -1]) == _sideID) then {
-							_gwD = _gwLdr distance _x;
-							if (_gwD < _gwBestD) then {_gwBestD = _gwD; _gwRallyPos = getPos _x};
+					private ["_gwRallyPos","_gwBestD","_gwLdrPos","_gwD","_gwHQPos","_gwTownPos","_gwFinalAlive"];
+					//--- crash 014EFCF4: the leader can be deleted by the 60s trash pass after the earlier team guard.
+					//--- Capture its position only behind an immediate live-object check; all later vector math uses the array.
+					if (!isNull _gwLdr && {alive _gwLdr}) then {
+						_gwLdrPos = getPos _gwLdr;
+						if (typeName _gwLdrPos == "ARRAY" && {count _gwLdrPos >= 2} && {typeName (_gwLdrPos select 0) == "SCALAR"} && {typeName (_gwLdrPos select 1) == "SCALAR"} && {(_gwLdrPos select 0) == (_gwLdrPos select 0)} && {(_gwLdrPos select 1) == (_gwLdrPos select 1)}) then {
+							_gwRallyPos = [];
+							_gwBestD = 1e9;
+							if (!isNull _gwHQ) then {
+								_gwHQPos = getPos _gwHQ;
+								if (typeName _gwHQPos == "ARRAY" && {count _gwHQPos >= 2} && {typeName (_gwHQPos select 0) == "SCALAR"} && {typeName (_gwHQPos select 1) == "SCALAR"} && {(_gwHQPos select 0) == (_gwHQPos select 0)} && {(_gwHQPos select 1) == (_gwHQPos select 1)}) then {
+									_gwRallyPos = _gwHQPos;
+									_gwBestD = _gwLdrPos distance _gwHQPos;
+								};
+							};
+							{
+								if (!isNull _x && {(_x getVariable ["sideID", -1]) == _sideID}) then {
+									_gwTownPos = getPos _x;
+									if (typeName _gwTownPos == "ARRAY" && {count _gwTownPos >= 2} && {typeName (_gwTownPos select 0) == "SCALAR"} && {typeName (_gwTownPos select 1) == "SCALAR"} && {(_gwTownPos select 0) == (_gwTownPos select 0)} && {(_gwTownPos select 1) == (_gwTownPos select 1)}) then {
+										_gwD = _gwLdrPos distance _gwTownPos;
+										if (_gwD < _gwBestD) then {_gwBestD = _gwD; _gwRallyPos = _gwTownPos};
+									};
+								};
+							} forEach towns;
+							//--- Fallback: no HQ and no own town -> rally on the already captured live leader position.
+							if (count _gwRallyPos == 0) then {_gwRallyPos = _gwLdrPos};
+							//--- Re-check the team immediately before ordering; never publish a rally for a wiped team.
+							_gwFinalAlive = {!isNull _x && {alive _x}} count (units _gwTeam);
+							if (_gwFinalAlive > 0 && {!isNull _gwLdr} && {alive _gwLdr} && {typeName _gwRallyPos == "ARRAY"} && {count _gwRallyPos >= 2} && {typeName (_gwRallyPos select 0) == "SCALAR"} && {typeName (_gwRallyPos select 1) == "SCALAR"} && {(_gwRallyPos select 0) == (_gwRallyPos select 0)} && {(_gwRallyPos select 1) == (_gwRallyPos select 1)}) then {
+								//--- Broadcast a fresh rally order (seq-bump idiom, exact-case lowercase "rally"); clear want; mark rallying.
+								_gwTeam setVariable ["wfbe_aicom_order", [(if (isNil {_gwTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_gwTeam getVariable "wfbe_aicom_order") select 0}) + 1, "rally", _gwRallyPos], true];
+								_gwTeam setVariable ["wfbe_aicom_wantrally", false, true];
+								_gwTeam setVariable ["wfbe_aicom_rallying", true, true];
+								//--- claude/aicom-west-stuck: stamp the per-team rally re-arm cooldown at ISSUE time (bug M root-cause). 2-arg server-local write, read only by this same server-side evaluator - the auto understrength trigger above cannot re-fire for WFBE_C_AICOM_WITHDRAW_COOLDOWN seconds, so a still-understrength team gets a bounded assault window under AssignTowns before it can be pulled back, ending the rally-arrive-rally livelock. Explicit driver wantrally requests bypass the gate and are never delayed. Not broadcast on purpose: only this server-side evaluator consults it, so no NSSETVAR3/cross-machine concern.
+								_gwTeam setVariable ["wfbe_aicom_rally_cooldown_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_COOLDOWN", 240])];
+								["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] GRACEFUL-WITHDRAW (%3 alive) -> rally at %4.", _sideText, _gwTeam, _gwFinalAlive, _gwRallyPos]] Call WFBE_CO_FNC_AICOMLog;
+								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RALLY_ORDER|team=" + (str _gwTeam) + "|alive=" + str _gwFinalAlive + "|want=" + str _gwWant);
+							};
 						};
-					} forEach towns;
-					//--- Fallback: no HQ and no own town -> rally on our own current pos (never leave the team orderless).
-					if (count _gwRallyPos == 0) then {_gwRallyPos = _gwLdrPos};
-					//--- Broadcast a fresh rally order (seq-bump idiom, exact-case lowercase "rally"); clear want; mark rallying.
-					_gwTeam setVariable ["wfbe_aicom_order", [(if (isNil {_gwTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_gwTeam getVariable "wfbe_aicom_order") select 0}) + 1, "rally", _gwRallyPos], true];
-					_gwTeam setVariable ["wfbe_aicom_wantrally", false, true];
-					_gwTeam setVariable ["wfbe_aicom_rallying", true, true];
-					//--- claude/aicom-west-stuck: stamp the per-team rally re-arm cooldown at ISSUE time (bug M root-cause). 2-arg server-local write, read only by this same server-side evaluator - the auto understrength trigger above cannot re-fire for WFBE_C_AICOM_WITHDRAW_COOLDOWN seconds, so a still-understrength team gets a bounded assault window under AssignTowns before it can be pulled back, ending the rally-arrive-rally livelock. Explicit driver wantrally requests bypass the gate and are never delayed. Not broadcast on purpose: only this server-side evaluator consults it, so no NSSETVAR3/cross-machine concern.
-					_gwTeam setVariable ["wfbe_aicom_rally_cooldown_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_COOLDOWN", 240])];
-					["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] GRACEFUL-WITHDRAW (%3 alive) -> rally at %4.", _sideText, _gwTeam, _gwAlive, _gwRallyPos]] Call WFBE_CO_FNC_AICOMLog;
-					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RALLY_ORDER|team=" + (str _gwTeam) + "|alive=" + str _gwAlive + "|want=" + str _gwWant);
+					};
 				};
 			};
 		};
