@@ -1254,18 +1254,28 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 //--- ordinary mid-match JIP joiner skips the whole block and is byte-identical to HEAD.
 //--- Every exit is bounded: server-ready, the mission-time deadline, or a local wall-clock backstop.
 if ((missionNamespace getVariable ["WFBE_C_HC_LOBBY_LOCK", 0]) > 0) then {
-	private ["_hcllTimeout","_hcllReady","_hcllState","_hcllSeated","_hcllExpected","_hcllHeld","_hcllWaited","_hcllMsgAt"];
+	private ["_hcllTimeout","_hcllReady","_hcllState","_hcllSeated","_hcllExpected","_hcllHeld","_hcllWaited","_hcllMsgAt","_hcllDeadline"];
 	_hcllTimeout = missionNamespace getVariable ["WFBE_C_HC_LOBBY_TIMEOUT", 90];
 	if (_hcllTimeout < 10) then {_hcllTimeout = 10};
-	if (time < _hcllTimeout) then {
+	//--- RE-ANCHORED 2026-07-30: the deadline is the SERVER's number. Server\Init\Init_HcLobbyLock.sqf
+	//--- stamps _t0 when the mission actually goes live (the same commonInitComplete && townInit condition
+	//--- Init_Server.sqf waits on before MATCH|v1|START|) and publishes WFBE_HC_LOBBY_DEADLINE = _t0 +
+	//--- WFBE_C_HC_LOBBY_TIMEOUT. This gate must never recompute that arithmetic: both sides read the same
+	//--- mission clock, so a locally derived deadline would drift by however long this client took to get
+	//--- here. Fall back to the raw timeout only for the window BEFORE the server has published - i.e.
+	//--- during mission load, where `time` is still 0 - so the gate still arms; the loop below re-reads the
+	//--- published value every pass and adopts it the moment the first heartbeat carrying it arrives.
+	_hcllDeadline = missionNamespace getVariable ["WFBE_HC_LOBBY_DEADLINE", _hcllTimeout];
+	if (time < _hcllDeadline) then {
 		_hcllHeld = false;
 		_hcllWaited = 0;
 		_hcllMsgAt = -10;
 		while {true} do {
 			_hcllReady = missionNamespace getVariable "WFBE_HC_LOBBY_READY";
 			if (!isNil "_hcllReady" && {_hcllReady}) exitWith {};
-			if (time >= _hcllTimeout) exitWith {
-				["WARNING", Format ["Init_Client.sqf: HC lobby lock released on the mission-time deadline (%1s) - the server never reported ready.", _hcllTimeout]] Call WFBE_CO_FNC_LogContent;
+			_hcllDeadline = missionNamespace getVariable ["WFBE_HC_LOBBY_DEADLINE", _hcllTimeout];
+			if (time >= _hcllDeadline) exitWith {
+				["WARNING", Format ["Init_Client.sqf: HC lobby lock released on the mission-time deadline (%1s) - the server never reported ready.", _hcllDeadline]] Call WFBE_CO_FNC_LogContent;
 			};
 			//--- Local backstop: if mission `time` ever stalls (paused sim / stuck load) the deadline above
 			//--- can never fire, so count our own sleeps as well and bail on the same budget either way.
