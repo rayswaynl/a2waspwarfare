@@ -37,6 +37,12 @@ if (isNull _logik) exitWith {
 };
 
 if ((_logik getVariable "wfbe_votetime") <= 0) then {
+	//--- Latch votetime IMMEDIATELY (before any Spawn) so a second concurrent
+	//--- RequestCommanderVote on the same side cannot also pass votetime<=0 and
+	//--- double-spawn WFBE_SE_FNC_VoteForCommander. VoteForCommander rewrites the
+	//--- countdown on its first loop tick; this only closes the TOCTOU window.
+	_logik setVariable ["wfbe_votetime", (missionNamespace getVariable "WFBE_C_GAMEPLAY_VOTE_TIME"), true];
+
 	_team = -1;
 	_commanderTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 
