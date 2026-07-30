@@ -2724,6 +2724,11 @@ while {!WFBE_GameOver && _alive} do {
 								_townObj setVariable ["wfbe_aicom_hold_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180]), true];
 								[_team, "defense"] Call SetTeamMoveMode;               //--- broadcast wfbe_teammode "defense"
 								[_team, getPos _townObj] Call SetTeamMovePos;          //--- broadcast wfbe_teamgoto = town centre (goto NOT nulled)
+								//--- r37 post-capture hold: HC driver ignores teammode/teamgoto - dual-write defense order
+								//--- (WAVE-1 A3 pattern; without this the hold latch exists but the team never holds the centre).
+								if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+									_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _townObj], true];
+								};
 								_team setVariable ["wfbe_aicom_holding_town", _townObj, true]; //--- which town this team is holding (AssignTowns holder-skip reads it)
 								_team setVariable ["wfbe_aicom_strike", false, true];  //--- clear stale strike state so Strategy.sqf doesn't re-grab
 								_team setVariable ["wfbe_aicom_relief", objNull, true];
@@ -2865,12 +2870,40 @@ while {!WFBE_GameOver && _alive} do {
 						if ((!isNull _townObj) && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {
 							_captureDone = true;
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] (armour) CAPTURED [%3] - holding center.", _side, _team, _townObj getVariable ["name","?"]]] Call WFBE_CO_FNC_AICOMLog;
-							_team setVariable ["wfbe_teamgoto", objNull, true];
-							_team setVariable ["wfbe_aicom_townorder", [], false];
-							_team setVariable ["wfbe_teammode", "towns", true];
-							_team setVariable ["wfbe_aicom_strike", false, true];
-							_team setVariable ["wfbe_aicom_relief", objNull, true];
-							_team setVariable ["wfbe_aicom_caplock", [], true];   //--- CAPTURE LOCK CLEAR (GR-2026-07-03a): no longer draining -> re-taskable now.
+							//--- r37 post-capture hold: armour path previously always null-goto/towns-retasked and NEVER
+							//--- claimed the DEFEND hold latch (infantry-only asymmetry). Share the same claim rules.
+							private ["_armHoldMode","_armHoldUntil","_armHoldClaimed","_armHoldUnderAttack","_armHoldEnemyDist"];
+							_armHoldMode = missionNamespace getVariable ["WFBE_C_AICOM_HOLD_MODE", 1];
+							_armHoldUntil = _townObj getVariable ["wfbe_aicom_hold_until", 0];
+							_armHoldClaimed = false;
+							_armHoldUnderAttack = false;
+							_armHoldEnemyDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
+							if ((_townObj getVariable ["wfbe_active", false]) && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _townObj) nearEntities [["Man","LandVehicle","Air"], _armHoldEnemyDist])) > 0}) then {_armHoldUnderAttack = true};
+							if (_armHoldMode > 0 && {time > _armHoldUntil} && {((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) <= 0) || {_armHoldUnderAttack}}) then {
+								_townObj setVariable ["wfbe_aicom_hold_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180]), true];
+								[_team, "defense"] Call SetTeamMoveMode;
+								[_team, getPos _townObj] Call SetTeamMovePos;
+								if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+									_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _townObj], true];
+								};
+								_team setVariable ["wfbe_aicom_holding_town", _townObj, true];
+								_team setVariable ["wfbe_aicom_strike", false, true];
+								_team setVariable ["wfbe_aicom_relief", objNull, true];
+								_team setVariable ["wfbe_aicom_caplock", [], true];
+								_armHoldClaimed = true;
+								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] (armour) HOLD-CLAIM [%3] on defense for %4s.", _side, _team, _townObj getVariable ["name","?"], (missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180])]] Call WFBE_CO_FNC_AICOMLog;
+							};
+							if (!_armHoldClaimed) then {
+								_team setVariable ["wfbe_teamgoto", objNull, true];
+								_team setVariable ["wfbe_aicom_townorder", [], false];
+								_team setVariable ["wfbe_teammode", "towns", true];
+								_team setVariable ["wfbe_aicom_strike", false, true];
+								_team setVariable ["wfbe_aicom_relief", objNull, true];
+								_team setVariable ["wfbe_aicom_caplock", [], true];
+								if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+									_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos (leader _team)], true];
+								};
+							};
 						} else {
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] (armour) depot pass at [%3] did not flip (res-near=%4) - holding + retrying.", _side, _team, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}, _armResNear]] Call WFBE_CO_FNC_AICOMLog;
 						};
