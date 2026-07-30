@@ -46,7 +46,19 @@ while {!gameOver && (alive _vehicle)} do { //--- wiki-wins: exit when the truck 
 				_overAllCost = _overAllCost + _salvageCost;
 				(Format [localize 'STR_WF_CHAT_Salvaged_Unit',_salvageCost,[typeOf _x,'displayName'] Call GetConfigInfo]) Call GroupChatMessage;
 		
-				deleteVehicle _x;
+				//--- LOCALITY: deleteVehicle on non-local wrecks silently no-ops (HC-owned hulls).
+				//--- Local delete when we own it; otherwise stamp + ask server to re-dispatch
+				//--- cleanup-trash-object to the owner (same channel as Common_TrashObject).
+				if (local _x) then {
+					deleteVehicle _x;
+				} else {
+					_x setVariable ["wfbe_trash_reap", true, true];
+					if (isServer) then {
+						[_x, "HandleSpecial", ["cleanup-trash-object", _x]] Call WFBE_CO_FNC_SendToClient;
+					} else {
+						["RequestSpecial", ["salvage-delete-wreck", _x]] Call WFBE_CO_FNC_SendToServer;
+					};
+				};
 			};
 		} foreach _wrecks;
 

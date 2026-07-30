@@ -820,7 +820,7 @@ emptyQueu = [];
 			_logik setVariable ["wfbe_ai_supplytrucks", []];
 			["WARNING", Format ["Init_Server.sqf: AI supply-truck logistics are disabled for [%1]; legacy UpdateSupplyTruck depends on missing Server\FSM\supplytruck.fsm.", _side]] Call WFBE_CO_FNC_LogContent;
 		};
-		if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {missionNamespace setVariable [format ["wfbe_supply_%1", str _side], missionNamespace getVariable Format ["WFBE_C_ECONOMY_SUPPLY_START_%1", _side]]};
+		if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {private ["_supKeyG1606"]; _supKeyG1606 = format ["wfbe_supply_%1", str _side]; missionNamespace setVariable [_supKeyG1606, missionNamespace getVariable Format ["WFBE_C_ECONOMY_SUPPLY_START_%1", _side]]; publicVariable _supKeyG1606}; //--- g1606: publish start supply so clients see seed without REQUEST_SUPPLY_VALUE round-trip
 		if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_SYSTEM") in [3,4]) then {
 			_logik setVariable ["wfbe_commander_percent", if ((missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_PERCENT_MAX") < 70) then {missionNamespace getVariable "WFBE_C_ECONOMY_INCOME_PERCENT_MAX"} else {70}, true];
 		};

@@ -11,8 +11,13 @@ switch (_this) do {
 		_supplyTeam = missionNamespace getVariable format ["wfbe_supply_%1", str _this];
 
 		if (isNil "_supplyTeam") then {
-			REQUEST_SUPPLY_VALUE = player;
-			publicVariableServer "REQUEST_SUPPLY_VALUE";
+			//--- LOCALITY/PV (g1606 2026-07-30): never publicVariableServer FROM the server - that is a
+			//--- silent no-op and REQUEST_SUPPLY_VALUE = player is null on dedicated. Server-nil means
+			//--- the seed/apply path has not run; return 0. Clients still request a one-shot fill.
+			if (!isServer) then {
+				REQUEST_SUPPLY_VALUE = player;
+				publicVariableServer "REQUEST_SUPPLY_VALUE";
+			};
 
 			//--- cmdcon44m: NON-BLOCKING like the resistance case below. The old sleep-poll threw
 			//--- "Generic error" from every unscheduled caller (victory/upgrade FSMs, PVFs) whenever
@@ -27,8 +32,13 @@ switch (_this) do {
 		_supplyTeam = missionNamespace getVariable format ["wfbe_supply_%1", str _this];
 
 		if (isNil "_supplyTeam") then {
-			REQUEST_SUPPLY_VALUE = player;
-			publicVariableServer "REQUEST_SUPPLY_VALUE";
+			//--- LOCALITY/PV (g1606 2026-07-30): never publicVariableServer FROM the server - that is a
+			//--- silent no-op and REQUEST_SUPPLY_VALUE = player is null on dedicated. Server-nil means
+			//--- the seed/apply path has not run; return 0. Clients still request a one-shot fill.
+			if (!isServer) then {
+				REQUEST_SUPPLY_VALUE = player;
+				publicVariableServer "REQUEST_SUPPLY_VALUE";
+			};
 
 			//--- cmdcon44m: NON-BLOCKING like the resistance case below. The old sleep-poll threw
 			//--- "Generic error" from every unscheduled caller (victory/upgrade FSMs, PVFs) whenever
