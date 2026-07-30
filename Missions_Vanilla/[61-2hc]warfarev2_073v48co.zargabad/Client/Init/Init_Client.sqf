@@ -59,7 +59,9 @@ missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", false];
 	_t0 = time;
 	waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
 	sleep 3;
-	if (alive player) then { player allowDamage true };
+	if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
+		if (alive player) then { player allowDamage true };
+	};
 };
 
 // Set the default target fps to 60
@@ -1305,7 +1307,9 @@ if ((missionNamespace getVariable ["WFBE_C_HC_LOBBY_LOCK", 0]) > 0) then {
 				_t0 = time;
 				waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
 				sleep 3;
-				if (alive player) then { player allowDamage true };
+				if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
+					if (alive player) then { player allowDamage true };
+				};
 			};
 		};
 	};
