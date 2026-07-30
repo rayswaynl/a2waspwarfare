@@ -266,7 +266,8 @@ while {!WFBE_GameOver} do {
 				//--- TOWNSCAN TELEMETRY: the dice skipped this dormant town's scan this sweep.
 				if (_tstOn && {!_doScan}) then {_tstScansSkipped = _tstScansSkipped + 1};
 				if (_doScan) then {
-				_dynRange = if (_town getVariable "wfbe_active" || _town getVariable "wfbe_active_air") then {_range_detect_active} else {_range_detect};
+		//--- Hysteresis: active towns use the WIDER ACTIVE_COEF ring (see Init_CommonConstants); idle uses DETECT COEF.
+		_dynRange = if (_town getVariable "wfbe_active" || _town getVariable "wfbe_active_air") then {_range_detect_active} else {_range_detect};
 				_scanStart = diag_tickTime;
 								//--- A2 air-tier (lane 800): scan includes all Air; split into ground vs air lists.
 				private ["_detectedAll","_detectedGround","_detectedAir"];

@@ -1980,7 +1980,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	WFBE_C_TOWNS_DEFENSE_RANGE = 30;
 	WFBE_C_TOWNS_AI_SCAN_RANGE_OVERRIDE = 0; //--- Fleet lane 106: 0 keeps the legacy 600m activation scan base range.
 	WFBE_C_TOWNS_AI_SCAN_BASE_RANGE = 600; //--- Used only when WFBE_C_TOWNS_AI_SCAN_RANGE_OVERRIDE > 0.
-	WFBE_C_TOWNS_DETECTION_RANGE_ACTIVE_COEF = 1; //--- Town activation range once active (town range * coef)
+	WFBE_C_TOWNS_DETECTION_RANGE_ACTIVE_COEF = 1.25; //--- HYSTERESIS: presence range once active (must be > idle COEF; was 1=no band)
 	WFBE_C_TOWNS_DETECTION_RANGE_COEF = 1; //--- Town activation range while idling (town range * coef)
 	WFBE_C_TOWNS_DETECTION_RANGE_AIR = 50; //--- Detect Air if > x
 	if (isNil "WFBE_C_TOWN_SCAN_DICE") then {WFBE_C_TOWN_SCAN_DICE = 1}; //--- Perf (2026-07-06): when 1, DORMANT towns (not active, no air tier, no enemy seen within DICE_GRACE) roll per side per sweep whether to run the 600 m activation nearEntities scan. Active towns always scan. Default off = V1 behaviour.
