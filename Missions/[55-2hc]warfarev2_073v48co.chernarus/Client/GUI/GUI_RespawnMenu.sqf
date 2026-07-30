@@ -326,8 +326,11 @@ if (alive player) then {
 				
 				//--- Destroy the camera.
 				if !(isNil 'WFBE_DeathCamera') then {
-					WFBE_DeathCamera cameraEffect ["TERMINATE", "BACK"];
-					camDestroy WFBE_DeathCamera;
+					if (!isNull WFBE_DeathCamera) then {
+						WFBE_DeathCamera cameraEffect ["TERMINATE", "BACK"];
+						camDestroy WFBE_DeathCamera;
+					};
+					WFBE_DeathCamera = nil;
 				};
 				
 				//--- Remove PP FX.
@@ -351,8 +354,11 @@ if (alive player) then {
 		
 		//--- Destroy the camera.
 		if !(isNil 'WFBE_DeathCamera') then {
-			WFBE_DeathCamera cameraEffect ["TERMINATE", "BACK"];
-			camDestroy WFBE_DeathCamera;
+			if (!isNull WFBE_DeathCamera) then {
+				WFBE_DeathCamera cameraEffect ["TERMINATE", "BACK"];
+				camDestroy WFBE_DeathCamera;
+			};
+			WFBE_DeathCamera = nil;
 		};
 		
 		//--- Remove PP FX.
@@ -372,8 +378,11 @@ if (alive player) then {
 	
 	//--- Destroy the camera.
 	if !(isNil 'WFBE_DeathCamera') then {
-		WFBE_DeathCamera cameraEffect ["TERMINATE", "BACK"];
-		camDestroy WFBE_DeathCamera;
+		if (!isNull WFBE_DeathCamera) then {
+			WFBE_DeathCamera cameraEffect ["TERMINATE", "BACK"];
+			camDestroy WFBE_DeathCamera;
+		};
+		WFBE_DeathCamera = nil;
 	};
 	
 	//--- Remove PP FX.

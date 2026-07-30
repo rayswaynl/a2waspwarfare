@@ -266,7 +266,9 @@ if (!isNil "Bipod_AddAutoDeploy") then {[] call Bipod_AddAutoDeploy};
 	};
 
 	WFBE_DeathCamera = "camera" camCreate WFBE_DeathLocation;
-	if (isNil "WFBE_DeathCamera") exitWith {
+	//--- camCreate always assigns; failure is a null object, not an undefined var. isNil never fired.
+	if (isNull WFBE_DeathCamera) exitWith {
+		WFBE_DeathCamera = nil;
 		"dynamicBlur" ppEffectEnable false;
 		"colorCorrections" ppEffectEnable false;
 	};

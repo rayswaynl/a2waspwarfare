@@ -320,4 +320,9 @@ WFBE_C_VAR_SpectatorWheelIdx = _disp displayAddEventHandler ["MouseZChanged", "_
 			];
 		};
 	};
+	//--- Fail-clean: while can exit on WFBE_gameover (or Active cleared externally) without the
+	//--- death-watchdog exitWith path, leaving cam + display EHs + parked-body invuln/captive latched.
+	if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) then {
+		[] Call WFBE_CL_FNC_SpectatorExit;
+	};
 };

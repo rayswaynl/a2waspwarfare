@@ -157,4 +157,8 @@ while {true} do {
 };
 
 closeDialog 0;
-((player) Call GetUnitVehicle) switchCamera _currentMode;
+//--- Always restore the player to Internal on exit. Restoring _currentMode left External/Gunner/Group
+//--- latched after watching another unit (observer teardown); Internal is the only safe player view.
+if (alive player) then {
+	((player) Call GetUnitVehicle) switchCamera "Internal";
+};
