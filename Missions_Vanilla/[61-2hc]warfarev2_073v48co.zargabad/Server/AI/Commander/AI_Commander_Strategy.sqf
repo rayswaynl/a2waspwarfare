@@ -99,6 +99,18 @@ if (_snapOk) then {
 		if (_townSide == _enemyID) then {_enemyTowns = _enemyTowns + 1};
 	} forEach towns;
 };
+//--- r26 topology (town adjacency / frontline): offshore naval-HVT decks sit in towns[] and are
+//--- capturable, but they are NOT ground-front-adjacent (sea gap). With WFBE_C_AICOM_NAVAL_AIR_ONLY
+//--- the coherent-front spearhead must stay on land-reachable towns so the side does not publish a
+//--- sea primary that ground columns then walk into. Air teams still reach naval via AssignTowns
+//--- B756 (_teamAir || !naval). Empty-set guardrail: if every candidate is naval, keep the full list
+//--- so the side never idles (last remaining objectives are carriers).
+if ((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) > 0) then {
+	private ["_candLand"];
+	_candLand = [];
+	{ if (!isNull _x && {!(_x getVariable ["wfbe_is_naval_hvt", false])}) then {_candLand set [count _candLand, _x]} } forEach _candTowns;
+	if (count _candLand > 0) then {_candTowns = _candLand};
+};
 //--- B68 (Ray 2026-06-21) ATTACK-BIAS: _myStr is the MANEUVER strength that gates LAST-STAND (and the HQ-strike).
 //--- Exclude stranded lone-survivor remnants (alive < N AND far from HQ) and in-refit teams so a few far-flung
 //--- survivors do not deflate strength below the enemy and falsely trip the defensive gates (the b67 "EAST amasses
