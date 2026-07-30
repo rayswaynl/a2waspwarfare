@@ -2328,6 +2328,8 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_REINF")     then {AICOMV2_GDIR_PANEL_PRICE_REINF = 1600}; //--- Base price: Action 1 convoy reinforcement.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_QRF_INS")   then {AICOMV2_GDIR_PANEL_PRICE_QRF_INS = 1200};  //--- Base price: Action 2 QRF insert tier.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_QRF_GUN")   then {AICOMV2_GDIR_PANEL_PRICE_QRF_GUN = 2400}; //--- Base price: Action 2 QRF gunship tier.
+	if (isNil "WFBE_C_GDIR_QRF_AIRFRAME_POOL") then {WFBE_C_GDIR_QRF_AIRFRAME_POOL = 0}; //--- 1 = roll QRF gunship class from GDIR_QRF_GUNSHIP_POOL instead of hardcoded Mi24_P (RPT-DEEPDIVE-20260730: 174/174 Mi24_P). 0 = dark legacy Mi24_P only.
+	if (isNil "WFBE_C_GDIR_QRF_GUNSHIP_POOL") then {WFBE_C_GDIR_QRF_GUNSHIP_POOL = ["Mi24_P","Ka60_GL_PMC","Ka60_PMC"]}; //--- classnames eligible when AIRFRAME_POOL=1; invalid/missing CfgVehicles entries skipped at fire time.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_CTR_ATK")   then {AICOMV2_GDIR_PANEL_PRICE_CTR_ATK = 1000};  //--- Base price: Action 3 counter-attack contract.
 	if (isNil "AICOMV2_GDIR_PANEL_SCARCITY_STEP")   then {AICOMV2_GDIR_PANEL_SCARCITY_STEP = 0.2};  //--- Scarcity multiplier step per recent buy on same town.
 	if (isNil "AICOMV2_GDIR_PANEL_SCARCITY_DECAY")  then {AICOMV2_GDIR_PANEL_SCARCITY_DECAY = 120}; //--- Seconds for scarcity to decay one step back toward 1.0.
