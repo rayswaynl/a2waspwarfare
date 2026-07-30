@@ -23,7 +23,7 @@ _now = time;
 //--- AI-RUN gate: the AI never spends a human commander's treasury. LOCK mirrors the existing Paratroops gate.
 _humanCmd = false;
 _cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-if (!isNull _cmdTeam) then {if (isPlayer (leader _cmdTeam)) then {_humanCmd = true}};
+if (!isNull _cmdTeam) then {if ([leader _cmdTeam] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmd = true}};
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_humanCmd = false};
 if (_humanCmd) exitWith {};
 

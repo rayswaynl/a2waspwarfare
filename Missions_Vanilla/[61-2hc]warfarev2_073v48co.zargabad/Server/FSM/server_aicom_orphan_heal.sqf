@@ -141,7 +141,7 @@ while {!WFBE_GameOver} do {
 											_never = (_moved >= 0) && {_moved < _homeR};
 											_pNear = false;
 											if (!_never) then {
-												{ if (isPlayer _x && {alive _x} && {(_x distance _ldr) < _safeD}) exitWith {_pNear = true} } forEach playableUnits;
+												_pNear = ([getPos _ldr, _safeD] Call WFBE_CO_FNC_RealPlayersNear) > 0;
 											};
 											_combat = (behaviour _ldr == "COMBAT");
 											if (_never || {(!_pNear) && {!_combat}}) then {

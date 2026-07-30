@@ -3527,5 +3527,8 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECT
 //--- Layer 12456 is reserved for this title; 12450-12452/12454/12455/12461 remain occupied.
 if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 1}; //--- ARMED on owner order 2026-07-31 ("turn all the suggested on"): m0730q flag wave.
 
+//--- Dedicated CIV caster slot: 0 leaves the static lobby slot as a plain CIV slot and keeps this client branch inert.
+if (isNil "WFBE_C_SPECTATOR_CASTER_SLOT") then {WFBE_C_SPECTATOR_CASTER_SLOT = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

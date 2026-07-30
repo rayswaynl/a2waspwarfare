@@ -521,7 +521,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			//--- the outer side into a private so the nested forEach's magic _x stays safe.
 			private ["_capSide","_capUid"];
 			_capSide = _newSide;
-			{ if (isPlayer _x && {alive _x} && {side _x == _capSide}) then {_capUid = getPlayerUID _x; if (_capUid != "") then {[_capUid, WFBE_STAT_CAPTURES_TOWN, 1] call WFBE_SE_FNC_RecordStat}} } forEach _objects;
+			{ if ([_x] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {side _x == _capSide}) then {_capUid = getPlayerUID _x; if (_capUid != "") then {[_capUid, WFBE_STAT_CAPTURES_TOWN, 1] call WFBE_SE_FNC_RecordStat}} } forEach _objects;
 
 			// AICOMSTAT FIRST_TOWN metric: emit once per side per round on its first capture.
 			// Plain logic getVariable with isNil guard (A2 OA safe; no == on Bool).
@@ -554,7 +554,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 				WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
 				private ["_wsSideCap", "_wsPn", "_wsAn", "_wsWho"];
 				_wsSideCap = _newSide; _wsPn = 0; _wsAn = 0; _wsWho = "";
-				{if (!isNull _x && {alive _x} && {side _x == _wsSideCap} && {_x isKindOf "Man"}) then {if (isPlayer _x) then {_wsPn = _wsPn + 1; if (_wsWho == "") then {_wsWho = name _x} else {_wsWho = _wsWho + "," + name _x}} else {_wsAn = _wsAn + 1}}} forEach _objects;
+				{if (!isNull _x && {alive _x} && {side _x == _wsSideCap} && {_x isKindOf "Man"}) then {if ([_x] Call WFBE_CO_FNC_IsRealPlayer) then {_wsPn = _wsPn + 1; if (_wsWho == "") then {_wsWho = name _x} else {_wsWho = _wsWho + "," + name _x}} else {_wsAn = _wsAn + 1}}} forEach _objects;
 				diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|CAPTURE|" + (_location getVariable ["name","unknown"]) + "|" + str _sideID + "|" + str _newSID + "|t=" + str (round time) + "|by=" + (if (_wsPn > 0) then {"player"} else {"ai"}) + "|pN=" + str _wsPn + "|aiN=" + str _wsAn + "|who=" + _wsWho);
 			};
 			// END WASPSTAT CAPTURE (Task 10)

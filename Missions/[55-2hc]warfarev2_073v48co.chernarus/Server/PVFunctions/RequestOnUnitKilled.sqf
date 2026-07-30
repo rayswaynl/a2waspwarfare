@@ -6,7 +6,7 @@
 		- Killed side ID.
 */
 
-Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak","_tallyCount","_fbBonus","_srvBounty","_srvAssist","_srvPvp","_hcNames","_secHardening"];
+Private ["_get","_killed","_killed_isplayer","_killed_group","_killed_isman","_killed_side","_killed_type","_killer","_killer_group","_killer_isplayer","_killer_iswfteam","_killer_side","_killer_type","_killer_vehicle","_killer_uid","_killer_award","_last_hit","_last_hit_time","_last_hit_window","_points","_nameOfKilledUnit","_type","_killerVehObj","_isArtyKill","_victimLogik","_artyKillCount","_victimStreak","_tallyCount","_fbBonus","_srvBounty","_srvAssist","_srvPvp","_secHardening"];
 
 if !((typeName _this) in ["ARRAY"]) exitWith {
 	["WARNING", "RequestOnUnitKilled.sqf: Rejected malformed kill payload (non-array)."] Call WFBE_CO_FNC_LogContent;
@@ -160,20 +160,13 @@ _killed_group = group _killed;
 _killed_isman = if (_killed isKindOf "Man") then {true} else {false};
 _killed_type = typeOf _killed;
 _killer_group = group _killer;
-_killer_isplayer = if (isPlayer _killer) then {true} else {false};
-_killed_isplayer = if (isPlayer _killed) then {true} else {false};
+_killer_isplayer = [_killer] Call WFBE_CO_FNC_IsRealPlayer;
+_killed_isplayer = [_killed] Call WFBE_CO_FNC_IsRealPlayer;
 _killer_iswfteam = if !(isNil {_killer_group getVariable "wfbe_funds"}) then {true} else {false};
 _killer_side = side _killer;
 _killer_type = typeOf _killer;
 _killer_vehicle = vehicle _killer;
 _killer_uid = getPlayerUID (leader _killer_group);
-//--- J1 funds authority: HC-seated bodies are isPlayer on WEST/EAST but never run the client wallet
-//--- handlers (Client_HandlePVF.sqf:37 hard-exits non-allowlisted PVFs on headless clients) - the
-//--- server-side credits below must skip HC-led recipients for exact parity. Shared list from
-//--- Init_CommonConstants.sqf (WFBE_C_HC_NAMES, derived from WFBE_C_HC_SLOTS).
-_hcNames = WFBE_C_HC_NAMES;
-
-
 if (_killer_side == sideEnemy) then { //--- Make sure the killer is not renegade, if so, get the side from the config.
 	if !(_killer isKindOf "Man") then {_killer_type = typeOf effectiveCommander(vehicle _killer)};
 	//--- Missing CfgVehicles class: getNumber returns 0 (silent default) which maps to EAST — false kill credit.
@@ -278,7 +271,7 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_kill
 };
 
 //--- GUER kill bounty: credit the killer's GUER team for WEST/EAST kills (server-side; bypasses the WFBE_C_UNITS_BOUNTY coef gate).
-	if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_killer_side == resistance} && {_killer_side != _killed_side} && {_killer_iswfteam} && {!(isPlayer (leader _killer_group))}) then { //--- fix(tonight-20260717): gate on AI-led GUER team only; a player-led GUER kill already pays via the normal player-bounty path below (~line 393-400), so without this gate a player kill paid BOTH paths (double bounty).
+	if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_killer_side == resistance} && {_killer_side != _killed_side} && {_killer_iswfteam} && {!([leader _killer_group] Call WFBE_CO_FNC_IsRealPlayer)}) then { //--- fix(tonight-20260717): gate on AI-led GUER team only; a player-led GUER kill already pays via the normal player-bounty path below (~line 393-400), so without this gate a player kill paid BOTH paths (double bounty).
 		private ["_guerKillGet","_guerBounty","_guerCoef","_iedRecent","_isIedKill"];
 		//--- B67 (Ray 2026-06-21) item #3: IED anti-farm. If this kill was tagged as an IED kill by the killer's
 		//--- Fired EH (Client_OnRespawnHandler.sqf stamps wfbe_ied_recent = time on a BAF_ied detonation), and that
@@ -481,7 +474,8 @@ _get = missionNamespace getVariable _killed_type; //--- Get the killed informati
 
 if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed type is defined in the core files and that the killer is a WF team.
 	if (_killer_side != _killed_side) then { //--- Normal kill.
-		if (isPlayer (leader _killer_group)) then { //--- The team is lead by a player.
+		if ([leader _killer_group] Call WFBE_CO_FNC_IsRealPlayer) then {
+			//--- The team is led by a real player.
 			_killer_award = objNull;
 			if !(_killer_isplayer) then { //--- An AI is the killer.
 				_killer_award = _killer;
@@ -510,7 +504,7 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 				//--- WFBE_CO_FNC_ComputePvpBounty; score read server-side at kill time, immune to client score-lag and
 				//--- corpse deletion) and the authoritative amount rides the payload as element 2 for the display line.
 				_srvPvp = [score _killed, _victimStreak] Call WFBE_CO_FNC_ComputePvpBounty;
-				if (_killer_uid != "" && {_srvPvp > 0} && {!((name (leader _killer_group)) in _hcNames)}) then {
+				if (_killer_uid != "" && {_srvPvp > 0} && {[leader _killer_group] Call WFBE_CO_FNC_IsRealPlayer}) then {
 					[_killer_group, _srvPvp] Call WFBE_CO_FNC_ChangeTeamFunds;
 				};
 				[_killer_uid, "AwardBountyPlayer", [_killed, _victimStreak, _srvPvp]] Call WFBE_CO_FNC_SendToClients;
@@ -520,7 +514,7 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 			//--- WFBE_CO_FNC_ComputeKillBounty); the amount is appended to the payload for the client display.
 			//--- Credit only when > 0 (registry-less/zero-priced types never paid anything real before either).
 			_srvBounty = [_killed_type, false] Call WFBE_CO_FNC_ComputeKillBounty;
-			if (_killer_uid != "" && {_srvBounty > 0} && {!((name (leader _killer_group)) in _hcNames)}) then {
+			if (_killer_uid != "" && {_srvBounty > 0} && {[leader _killer_group] Call WFBE_CO_FNC_IsRealPlayer}) then {
 				[_killer_group, _srvBounty] Call WFBE_CO_FNC_ChangeTeamFunds;
 			};
 			[_killer_uid, "AwardBounty", [_killed_type, false, _killer_award, _srvBounty]] Call WFBE_CO_FNC_SendToClients;
@@ -532,8 +526,10 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 				_srvAssist = [_killed_type, true] Call WFBE_CO_FNC_ComputeKillBounty;
 				private ["_assistCreditedGroups"]; //--- fix(tonight-20260717): de-dup per-group credit below.
 				_assistCreditedGroups = [];
-				{if (alive _x && isPlayer _x) then {
-					if ((getPlayerUID _x) != "" && {_srvAssist > 0} && {!((name _x) in _hcNames)} && {!(group _x in _assistCreditedGroups)}) then { //--- fix(tonight-20260717): was keyed only on _hcNames with no per-group de-dup, so a same-squad vehicle crew (one wallet, multiple crewmates) got credited once PER surviving crewmate instead of once per group.
+				//--- Shared real-player filtering also excludes HC and caster bodies before assist crediting.
+				{if (alive _x && {[_x] Call WFBE_CO_FNC_IsRealPlayer}) then {
+					if ((getPlayerUID _x) != "" && {_srvAssist > 0} && {!(group _x in _assistCreditedGroups)}) then {
+						//--- Keep one assist credit per surviving player group.
 						[group _x, _srvAssist] Call WFBE_CO_FNC_ChangeTeamFunds;
 						_assistCreditedGroups set [count _assistCreditedGroups, group _x];
 					};
@@ -568,12 +564,12 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 			};
 		};
 	} else { //--- Teamkill.
-		if (isPlayer (leader _killer_group) && _killer != _killed && !(_killed_type isKindOf "Building")) then {
+		if ([leader _killer_group] Call WFBE_CO_FNC_IsRealPlayer && _killer != _killed && !(_killed_type isKindOf "Building")) then {
 
 		//--- Only applies to player groups.
 			//--- J1 funds authority: the penalty debit moves server-side (LocalizeMessage keeps only the chat
 			//--- text; an HC-led leader's client never ran the debit, so skip those here too).
-			if (_killer_uid != "" && {!((name (leader _killer_group)) in _hcNames)}) then {
+			if (_killer_uid != "" && {[leader _killer_group] Call WFBE_CO_FNC_IsRealPlayer}) then {
 				[_killer_group, -(missionNamespace getVariable "WFBE_C_PLAYERS_PENALTY_TEAMKILL")] Call WFBE_CO_FNC_ChangeTeamFunds;
 			};
 			[_killer_uid, "LocalizeMessage", ['Teamkill']] Call WFBE_CO_FNC_SendToClients;
@@ -581,7 +577,7 @@ if (!isNil '_get' && _killer_iswfteam) then { //--- Make sure that type killed t
 	};
 };
 
-if(!isPlayer(_killed) && _killed_type isKindOf "Infantry")then{
+if(!_killed_isplayer && _killed_type isKindOf "Infantry")then{
 	//--- D5 2026-06-19: index 0 is safe here. A2 OA EH indices are PER-TYPE, so this removes the
 	//--- FIRST "killed" handler regardless of any Fired/incomingMissile EHs on the unit. AI-created
 	//--- infantry get exactly one "killed" EH (Common_CreateUnit.sqf:125, added at creation), so

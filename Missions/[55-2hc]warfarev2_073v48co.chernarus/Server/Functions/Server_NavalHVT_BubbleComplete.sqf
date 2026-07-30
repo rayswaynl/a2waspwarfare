@@ -53,7 +53,7 @@ _anchor setVariable ["sideID", _newSID, true];
 //--- Mirrors server_town.sqf:328-333 (leaderboard TOWN-capture credit). Re-derive presence from the
 //--- bubble's own registered radius instead of reusing a town-loop _objects scan (design doc S5.2).
 _objects = _anchor nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"], (_anchor getVariable ["wfbe_rh_radius", 200])];
-{ if (isPlayer _x && {alive _x} && {side _x == _winningSide}) then {_capUid = getPlayerUID _x; if (_capUid != "") then {[_capUid, WFBE_STAT_CAPTURES_TOWN, 1] call WFBE_SE_FNC_RecordStat}} } forEach _objects;
+{ if ([_x] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {side _x == _winningSide}) then {_capUid = getPlayerUID _x; if (_capUid != "") then {[_capUid, WFBE_STAT_CAPTURES_TOWN, 1] call WFBE_SE_FNC_RecordStat}} } forEach _objects;
 
 //--- Mirrors server_town.sqf:379-381 (garrison-flag reset; N/A for carriers today, kept defensively
 //--- per design doc S0.1 item 5).

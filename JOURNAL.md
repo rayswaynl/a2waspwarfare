@@ -820,3 +820,12 @@ rotation entry at the next stop window; log `C:\WASP	k-swap-m0730g.log`).
 tree carries the 2-slot fix). `server-config/provision/Start-Wasp-4HC.ps1` documents an
 `-HcCount` parameter it does not actually declare, and hardcodes `1..4` - would fail if
 invoked as the README instructs.
+
+## 2026-07-31 — dedicated CIV caster slot
+
+**Working state:** branch `fable/caster-civ-slot-20260731`, ready for the requested local commit; no push, PR, or deploy.
+
+- Added one post-HC CIV `Functionary1` caster slot to Chernarus, Takistan, and Zargabad with contiguous `Groups` indices.
+- The A2-safe `mission.sqm` init stamp identifies the caster; the flag-gated early client branch parks the body, bypasses enrollment/lobby hold/deadspawn, and retries the UID allowlist every 60 seconds.
+- Centralized HC/caster exclusion in `Common_IsRealPlayer.sqf` and routed human-count, side-credit, proximity, spectator-target, commander, score, and spawn-veto consumers through it.
+- Verification: LoadoutManager mirror parity, focused caster tests, 162-file delimiter-delta check, exact lint baseline 168 with zero findings in changed SQFs.

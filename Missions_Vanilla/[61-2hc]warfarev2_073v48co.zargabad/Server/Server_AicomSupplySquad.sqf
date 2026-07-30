@@ -157,7 +157,7 @@ while {!WFBE_GameOver} do {
 					if ((_eCur distance _eLast) < 15 && {(_eCur distance _eObj) > _eArrive}) then {_eStuck = _eStuck + 1} else {_eStuck = 0};
 					if (_eStuck >= 3) then {
 						_eStuck = 0;
-						_playerNear = {isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _eVeh) < 200}} count playableUnits;
+						_playerNear = [getPos _eVeh, 200, true] Call WFBE_CO_FNC_RealPlayersNear;
 						if (_playerNear > 0) then {
 							_eVeh setVelocity [(velocity _eVeh) select 0, (velocity _eVeh) select 1, 3];
 						} else {

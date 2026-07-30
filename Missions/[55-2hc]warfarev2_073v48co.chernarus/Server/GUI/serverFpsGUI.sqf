@@ -3,7 +3,7 @@
 // (isServer true, isDedicated false) this `while {true}` spun every frame with no yield = a CPU busy-loop.
 if (!isDedicated) exitWith {};
 
-Private ["_activePlayersOnly","_hcs","_hasHuman"];
+Private ["_activePlayersOnly","_hasHuman"];
 
 while {true} do
 {
@@ -12,9 +12,8 @@ while {true} do
 
     if (_activePlayersOnly > 0) then {
         _hasHuman = false;
-        _hcs = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
         {
-            if (isPlayer _x && {!((group _x) in _hcs)}) exitWith {_hasHuman = true};
+            if ([_x] Call WFBE_CO_FNC_IsRealPlayer) exitWith {_hasHuman = true};
         } forEach (call BIS_fnc_listPlayers);
     };
 

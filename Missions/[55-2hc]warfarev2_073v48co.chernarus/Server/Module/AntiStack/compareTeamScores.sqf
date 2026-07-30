@@ -18,13 +18,13 @@ _diffCoef = 0;
 _canJoin = true;
 
 {
-	if (isPlayer _x && (side _x == west)) then {
+	if ([_x] Call WFBE_CO_FNC_IsRealPlayer && (side _x == west)) then {
 		_playersOnBLUFOR = _playersOnBLUFOR + 1;
 	};
 } forEach allUnits;
 
 {
-	if (isPlayer _x && (side _x == east)) then {
+	if ([_x] Call WFBE_CO_FNC_IsRealPlayer && (side _x == east)) then {
 		_playersOnOPFOR = _playersOnOPFOR + 1;
 	};
 } forEach allUnits;

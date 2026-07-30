@@ -273,6 +273,6 @@ if (!isNull _site) then {
 	_bAttrSide  = _side;
 	_bAttrRange = missionNamespace getVariable ["WFBE_C_STATS_BUILD_ATTR_RANGE", 150];
 	_bNear = objNull; _bDist = _bAttrRange + 1;
-	{ if (isPlayer _x && {alive _x} && {side _x == _bAttrSide} && {(_x distance _bAttrPos) < _bDist}) then {_bNear = _x; _bDist = _x distance _bAttrPos} } forEach playableUnits;
+	{ if ([_x] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {side _x == _bAttrSide} && {(_x distance _bAttrPos) < _bDist}) then {_bNear = _x; _bDist = _x distance _bAttrPos} } forEach playableUnits;
 	if (!isNull _bNear) then {_bUid = getPlayerUID _bNear; if (_bUid != "") then {[_bUid, WFBE_STAT_STRUCTURES_BUILT, 1] call WFBE_SE_FNC_RecordStat}};
 };

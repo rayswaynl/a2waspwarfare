@@ -33,7 +33,7 @@ _consolRad = missionNamespace getVariable ["WFBE_C_AICOM2_CONSOLIDATE_RADIUS", 2
 _cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 _humanCmd = false;
 if (!isNull _cmdTeam) then {
-	if (isPlayer (leader _cmdTeam)) then {_humanCmd = true};
+	if ([leader _cmdTeam] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmd = true};
 };
 
 //--- OA-safe filter: towns not owned by this side.
@@ -253,7 +253,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	//--- sits inside. Flag 0 = one cheap missionNamespace getVariable+compare per team per pass (same negligible
 	//--- gate idiom every other flag check in this file already pays, e.g. the HELI_CANNON_NUDGE gate in
 	//--- Common_RunCommanderTeam.sqf) - no team-var reads/writes, no state mutation, behaviourally inert.
-	if ((missionNamespace getVariable ["WFBE_C_AICOM_LOSS_RETREAT", 0]) > 0 && {!isPlayer (leader _team)} && {_modeNow == "towns"}) then {
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_LOSS_RETREAT", 0]) > 0 && {![leader _team] Call WFBE_CO_FNC_IsRealPlayer} && {_modeNow == "towns"}) then {
 		private ["_lrPrev","_lrPrevT","_lrWindow","_lrThresh","_lrCoolUntil","_lrRallying","_lrWant","_lrFrac"];
 		_lrWindow = missionNamespace getVariable ["WFBE_C_AICOM_LOSS_RETREAT_WINDOW", 120];
 		_lrThresh = missionNamespace getVariable ["WFBE_C_AICOM_LOSS_RETREAT_FRACTION", 0.5];
@@ -325,7 +325,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 
 	//--- Drive only if AI-controllable (no human, or human delegated this team) AND the executor doesn't own it.
 	if (_aliveCount > 0) then {
-		if (!isPlayer (leader _team)) then {
+		if (![leader _team] Call WFBE_CO_FNC_IsRealPlayer) then {
 			//--- B36 (Ray 2026-06-15) #3b: the AI drives its OWN (non-player-led) HQ teams even while a
 			//--- human is commander, so they never sit idle and keep capturing towns. A team the human has
 			//--- explicitly ordered (move/patrol/defense) is preserved by the !_explicitMode gate below,

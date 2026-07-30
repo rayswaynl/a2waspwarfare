@@ -28,6 +28,49 @@ diag_log format ["Init_Client.sqf: Client initialization begins at [%1]", time];
 //--- (the watchdog above still clears the fade so the player can respawn/retry instead of staring at black).
 if (isNull player) exitWith {["ERROR", "Init_Client.sqf: player is NULL at init (joined a deleted/shell slot?) - aborting client init gracefully; fade watchdog clears the screen."] Call WFBE_CO_FNC_LogContent};
 
+//--- OA 1.64 has no roleDescription runtime command; the mission.sqm init stamp is an object-local, A2-safe identifier.
+if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_CASTER_SLOT", 0]) > 0 && {player getVariable ["WFBE_C_SPECTATOR_CASTER_SLOT", 0] > 0}) exitWith {
+	//--- Clear the normal join blackout because this branch intentionally never reaches clientInitComplete.
+	12452 cutText ["", "BLACK IN", 1];
+
+	//--- Park the dedicated CIV body at the fixed deadspawn enclosure marker before any spectator handoff.
+	player allowDamage false;
+	player setCaptive true;
+	player setPos (getMarkerPos "GuerTempRespawnMarker");
+
+	//--- Compile only the existing spectator path needed by this early-exit branch.
+	WFBE_CL_FNC_SpectatorEnter = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorEnter.sqf";
+	Call Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorDirector.sqf";
+	WFBE_CL_FNC_SpectatorExit = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorExit.sqf";
+
+	[] spawn {
+		private ["_uid","_messageAt","_allowlisted"];
+		_uid = getPlayerUID player;
+		_messageAt = -60;
+
+		while {!(missionNamespace getVariable ["WFBE_gameover", false])} do {
+			if (isNull player) exitWith {};
+
+			//--- Keep an unauthorised or waiting caster body parked and harmless.
+			player allowDamage false;
+			player setCaptive true;
+			player setPos (getMarkerPos "GuerTempRespawnMarker");
+
+			_allowlisted = _uid in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []]);
+			if (_allowlisted) exitWith {
+				12453 cutText ["", "PLAIN", 0];
+				[] Call WFBE_CL_FNC_SpectatorEnter;
+			};
+
+			if ((time - _messageAt) >= 60) then {
+				_messageAt = time;
+				12453 cutText ["CASTER SLOT RESERVED - this CIV slot is for an allowlisted spectator only.", "PLAIN DOWN", 5];
+			};
+			sleep 60;
+		};
+	};
+};
+
 sideJoined = side player;
 //--- CIV-SIDE GUARD (B76 2026-06-29): on a reconnect/JIP the engine can briefly report `side player == civilian`
 //--- (HC seat-magnet + in-place restart re-slot churn). `sideJoined` is read ONCE here and never re-derived, so a

@@ -140,7 +140,7 @@ _entPositions = [];
 if (_posCacheOn) then {
 	_seenVeh = [];
 	{
-		if (isPlayer _x && {alive _x} && {(side _x) == _enemySide}) then {
+		if ([_x] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {(side _x) == _enemySide}) then {
 			_ePlayer = _x;
 			_eVeh = vehicle _ePlayer;
 			if (_eVeh == _ePlayer) then {
@@ -166,7 +166,7 @@ _bestTown = objNull; _bestCount = 0;
 	_nearCount = if (_posCacheOn) then {
 		{(_lanePos distance _x) < _senseRadius} count _entPositions
 	} else {
-		{if (_x isKindOf "Man") then {isPlayer _x && {alive _x} && {(side _x) == _enemySide}} else {({isPlayer _x && {alive _x} && {(side _x) == _enemySide}} count (crew _x)) > 0}} count (_lanePos nearEntities [["Man","LandVehicle","Air"], _senseRadius])
+		{if (_x isKindOf "Man") then {[_x] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {(side _x) == _enemySide}} else {({[_x] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {(side _x) == _enemySide}} count (crew _x)) > 0}} count (_lanePos nearEntities [["Man","LandVehicle","Air"], _senseRadius])
 	};
 	if (_nearCount > _bestCount) then {_bestCount = _nearCount; _bestTown = _x2};
 } forEach _cands;
