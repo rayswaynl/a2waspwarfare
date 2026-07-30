@@ -60,11 +60,63 @@ _releasePending = {
 	};
 };
 
+//--- r31 livecount: optional player placer (RequestStructure arg7). FOB uses args5/6 as STRING result keys and leaves arg7 unset.
+//--- AI_Commander_Base / other direct ExecVM callers also leave arg7 unset (objNull).
+private ["_reqPlayer"];
+_reqPlayer = if ((count _this) > 7) then {_this select 7} else {objNull};
+if (isNil "_reqPlayer" || {typeName _reqPlayer != "OBJECT"}) then {_reqPlayer = objNull};
+
+//--- r31: on player-path abort AFTER RequestStructure accepted, release pending AND undo the optimistic
+//--- coin_interface.sqf live-count + refund the charge. AI path never optimistically incremented live, so only
+//--- release pending. Server is authority for the live write (public) - LocalizeMessage StructureBuildFailed
+//--- refunds only (no LIVE_ROLLBACK) to avoid double-decrement.
+private ["_onConstructionAbort"];
+_onConstructionAbort = {
+	Call _releasePending;
+	if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {
+		private ["_slot","_live","_cur","_costsArr","_refundPrice"];
+		if (_index > 0 && {!isNull _logik}) then {
+			_slot = _index - 1;
+			_live = _logik getVariable "wfbe_structures_live";
+			if (!isNil "_live" && {typeName _live == "ARRAY"} && {_slot < count _live}) then {
+				_cur = _live select _slot;
+				if (typeName _cur != "SCALAR") then {_cur = 0};
+				_live set [_slot, (_cur - 1) max 0];
+				_logik setVariable ["wfbe_structures_live", _live, true];
+			};
+		};
+		_refundPrice = 0;
+		_costsArr = missionNamespace getVariable [Format ["WFBE_%1STRUCTURECOSTS", str _side], []];
+		if (_index >= 0 && {_index < count _costsArr}) then {_refundPrice = _costsArr select _index};
+		[_reqPlayer, "LocalizeMessage", ["StructureBuildFailed", _refundPrice]] Call WFBE_CO_FNC_SendToClient;
+		diag_log Format ["CONSTRUCTION|v1|live-rollback-abort|type=%1|side=%2|index=%3|refund=%4", _rlType, str _side, _index, _refundPrice];
+	};
+};
+
+//--- r31: AI/direct Construction success never went through coin_interface optimistic +1, so player CanBuild
+//--- under-counted AI-built factories and BuildingKilled could drive live negative. Bump only when no verified
+//--- player placer (player path already +1 client-side). Resistance FOB builds skip (no structures_live ledger).
+private ["_onConstructionSuccessLive"];
+_onConstructionSuccessLive = {
+	if (!isNull _reqPlayer && {isPlayer _reqPlayer}) exitWith {};
+	if (_side == resistance) exitWith {};
+	if (_index <= 0 || {isNull _logik}) exitWith {};
+	private ["_slot","_live","_cur"];
+	_slot = _index - 1;
+	_live = _logik getVariable "wfbe_structures_live";
+	if (isNil "_live" || {typeName _live != "ARRAY"} || {_slot >= count _live}) exitWith {};
+	_cur = _live select _slot;
+	if (typeName _cur != "SCALAR") then {_cur = 0};
+	_live set [_slot, _cur + 1];
+	_logik setVariable ["wfbe_structures_live", _live, true];
+	diag_log Format ["CONSTRUCTION|v1|live-inc-ai|type=%1|side=%2|index=%3|now=%4", _rlType, str _side, _index, (_cur + 1)];
+};
+
 _group = createGroup sideLogic;
 _nearLogic = objNull;
 if !(isNull _group) then {_nearLogic = _group createUnit ["LocationLogicStart",_position,[],0,"NONE"]};
 if (isNull _nearLogic) exitWith {
-	Call _releasePending;
+	Call _onConstructionAbort;
 	if (_startResultKey != "") then {missionNamespace setVariable [_startResultKey, [-1,"LocationLogicStart missing"]]};
 	if !(isNull _group) then {deleteGroup _group};
 	diag_log Format ["CONSTRUCTION|v1|reject|reason=missing-start-logic|script=MediumSite|type=%1|pos=%2", _type, _position];
@@ -138,7 +190,7 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) t
 };
 
 if (_constructionLogicLost) exitWith {
-	Call _releasePending;
+	Call _onConstructionAbort;
 	{if !(isNull _x) then {deleteVehicle _x}} forEach _constructed;
 	if !(isNull _group) then {deleteGroup _group};
 	if (_completionResultKey != "") then {missionNamespace setVariable [_completionResultKey, [-1,"construction logic was destroyed"]]};
@@ -149,7 +201,7 @@ if (_constructionLogicLost) exitWith {
 
 _site = createVehicle [_type, _position, [], 0, "NONE"];
 if (isNull _site) exitWith {
-	Call _releasePending;
+	Call _onConstructionAbort;
 	if !(isNull _nearLogic) then {
 		_group = group _nearLogic;
 		deleteVehicle _nearLogic;
@@ -162,6 +214,7 @@ _site setDir _direction;
 _site setPos _position;
 _site setVariable ["wfbe_side", _side];
 _site setVariable ["wfbe_structure_type", _rlType];
+Call _onConstructionSuccessLive;
 
 //--- Bank: spawn composition dressing, register in per-side registry, create global marker, start income drip.
 if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {

@@ -157,12 +157,19 @@ if ((_structure getVariable ["wfbe_structure_type", ""]) == "Bank" && (missionNa
 };
 
 //--- Decrement building limit.
+//--- r31 livecount: HQ is STRUCTURENAMES index 0 and is NOT tracked in wfbe_structures_live (Init_Server
+//--- sizes the array to count(STRUCTURES)-1; coin_interface / LIVE_ROLLBACK / BaseSell all use slot = index-1
+//--- and skip index 0). Without `_find > 0`, an HQ classname match would select/set index -1 (A2: last element)
+//--- and corrupt the last type's cap. Also clamp at 0 so AI-built structures that never bumped live cannot
+//--- drive the slot negative (mirrors AI_Commander_BaseSell.sqf).
 if(_side != resistance)then{
     _find = (missionNamespace getVariable Format ['WFBE_%1STRUCTURENAMES',_side]) find _type;
-    if (_find != -1) then {
+    if (_find > 0) then {
     	_current = _logik getVariable "wfbe_structures_live";
-    	_current set [_find - 1, (_current select (_find-1)) - 1];
+    	if (!isNil "_current" && {typeName _current == "ARRAY"} && {(_find - 1) < count _current}) then {
+    	_current set [_find - 1, ((_current select (_find - 1)) - 1) max 0];
     	_logik setVariable ["wfbe_structures_live", _current, true];
+    	};
     };
 
     _logik setVariable ["wfbe_structures", (_logik getVariable "wfbe_structures") - [_structure, objNull], true];

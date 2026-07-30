@@ -5840,6 +5840,11 @@
       <English>The bank must be built outside your base protection area.</English>
       <Russian>Банк нужно строить вне зоны защиты базы.</Russian>
     </Key>
+
+    <Key ID="StructureBuildFailed">
+      <English>Construction failed. Your structure cost has been refunded and the build slot freed.</English>
+      <Russian>Строительство не удалось. Стоимость возвращена, слот освобождён.</Russian>
+    </Key>
     <Key ID="BankDestroyed">
       <English>%1 has destroyed the %2 bank! The economic stronghold has fallen.</English>
       <Russian>%1 уничтожил банк стороны %2! Экономический оплот пал.</Russian>
