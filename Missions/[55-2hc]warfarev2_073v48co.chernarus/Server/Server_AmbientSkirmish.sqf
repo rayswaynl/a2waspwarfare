@@ -197,9 +197,18 @@ if (!WFBE_GameOver) then {
 			_activeAlive = _activeAlive + ([_x] Call _groupAlive);
 		} forEach _activeGroups;
 
+		//--- Hard cap includes the post-wipe GC window (A-Life event bughunt 2026-07-30):
+		//--- previously only living units blocked re-arm. After a combat wipe, corpse-holding
+		//--- groups stayed until the lifetime thread; CreateGroup emergency GC will not reap
+		//--- them (count units > 0 for corpses). Eager cleanup on re-arm closes the slot leak
+		//--- and restores the documented one-active-cell cap before the next spawn attempt.
 		if (_activeAlive > 0) then {
 			diag_log Format ["AMBSKIRMISH|v1|SKIP|t=%1|reason=active|alive=%2", round time, _activeAlive];
 		} else {
+			if ((count _activeGroups) > 0) then {
+				[_activeGroups] Call _cleanupGroups;
+				diag_log Format ["AMBSKIRMISH|v1|REAP|t=%1|reason=rearm_cleanup|groups=%2", round time, count _activeGroups];
+			};
 			_activeGroups = [];
 			_pos = [_center, _radius, _tries, _playerRadius, _townRadius] Call _findPosition;
 

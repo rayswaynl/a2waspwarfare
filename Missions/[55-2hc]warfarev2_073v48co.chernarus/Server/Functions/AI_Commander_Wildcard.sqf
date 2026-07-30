@@ -920,8 +920,12 @@ while {!gameOver} do {
 												//--- the generic pipeline (killed EH -> RequestOnUnitKilled.sqf -> wfbe_trashed + TrashObject; hull is
 												//--- SERVER-LOCAL because W13 spawns directly here and is never delegate-aicom-team'd). deleteGroup is
 												//--- skipped on that branch too - the dead crew are still in the group; TrashObject reaps it once empty.
-												if (alive _heli) then {
-													{deleteVehicle _x} forEach (crew _heli);
+												//--- Group-first teardown (A-Life event bughunt 2026-07-30): A2 deleteGroup NO-OPS while
+												//--- ANY unit (incl. dismounted pilot/gunner) remains in the group. crew-only delete left
+												//--- ejected members holding a side group slot after the 90s window. Mirror Naval CAP /
+												//--- SidePatrol: delete ALL non-player units of the group, then hull, then deleteGroup.
+												if (!isNull _heli && {alive _heli}) then {
+													if (!isNull _grp) then {{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x}} forEach units _grp};
 													if (!isNull _heli) then {deleteVehicle _heli};
 													if (!isNull _grp) then {deleteGroup _grp};
 												};
@@ -1156,8 +1160,9 @@ while {!gameOver} do {
 											//--- DESPAWN vs DESTROYED (same fix as the W13 block above): the 180s window deleted the plane
 											//--- unconditionally, reaping the WRECK of a top-gun plane that was shot down inside the window.
 											//--- Despawn only a still-live airframe; a destroyed one is left to the generic pipeline.
-											if (alive _pl) then {
-												{deleteVehicle _x} forEach (crew _pl);
+											//--- Same group-first teardown as W13 (ejected pilot/WSO must not pin the group slot).
+											if (!isNull _pl && {alive _pl}) then {
+												if (!isNull _grp) then {{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x}} forEach units _grp};
 												if (!isNull _pl) then {deleteVehicle _pl};
 												if (!isNull _grp) then {deleteGroup _grp};
 											};
