@@ -449,7 +449,13 @@ if (!alive _drone) then {sleep _detGrace};
 //--- Keep the active slot reserved until this watchdog settles so a death/abort cannot race a new buy.
 _next = time + _cooldown;
 missionNamespace setVariable [_nextKey, _next];
-publicVariable _nextKey;
+//--- object-var-namespace bughunt: was `publicVariable _nextKey` with a per-UID dynamic name
+//--- (wfbe_fpv_next_<steam64>). That (1) registered a permanent publicVariable channel per unique
+//--- launcher for the whole match and (2) spammed every connected client with a value only the
+//--- operator's UI reads. Server-local set + private CLTFNCHandleSpecial keeps the rearm UI in sync.
+if (!isNull _player) then {
+	[_player, ["fpv-rearm-cooldown", _next], _replyId, _uid] Call _sendPrivate;
+};
 if ((missionNamespace getVariable [_activeKey, objNull]) == _drone) then {
 	missionNamespace setVariable [_activeKey, objNull];
 };
