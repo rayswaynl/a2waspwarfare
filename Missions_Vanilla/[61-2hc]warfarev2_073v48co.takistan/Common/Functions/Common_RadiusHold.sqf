@@ -59,6 +59,11 @@ if ((count WFBE_RADIUSHOLD_REGISTRY) >= _maxActive) exitWith {
 
 if (typeName _anchorArg == "ARRAY") then {
 	_anchor = "HeliHEmpty" createVehicle [_anchorArg select 0, _anchorArg select 1, 0];
+	//--- r47 fail-clean: never setPos*/sim on a failed createVehicle (isNull after configure was too late).
+	if (isNull _anchor) exitWith {
+		diag_log Format ["RADIUSHOLD-WARN: register(%1) refused - HeliHEmpty createVehicle null at %2.", _holdId, _anchorArg];
+		nil
+	};
 	_anchor setPosASL [_anchorArg select 0, _anchorArg select 1, if (count _anchorArg > 2) then {_anchorArg select 2} else {0}];
 	_anchor enableSimulation false;
 	_anchor allowDamage false;

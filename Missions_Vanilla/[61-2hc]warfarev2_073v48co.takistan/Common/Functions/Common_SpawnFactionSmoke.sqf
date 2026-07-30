@@ -47,6 +47,11 @@ missionNamespace setVariable [_key, time + (missionNamespace getVariable ["WFBE_
 
 //--- Spawn the shell, register it, and schedule a TTL cleanup that also de-lists it.
 _s = _color createVehicle _pos;
+//--- r47 fail-clean: do not register null into the active cap list (cooldown already stamped above).
+if (isNull _s) exitWith {
+["WARNING", Format ["Common_SpawnFactionSmoke.sqf: createVehicle null class=%1 pos=%2.", _color, _pos]] Call WFBE_CO_FNC_LogContent;
+missionNamespace setVariable ["WFBE_FSMOKE_ACTIVE", _active];
+};
 _active = _active + [_s];
 missionNamespace setVariable ["WFBE_FSMOKE_ACTIVE", _active];
 
