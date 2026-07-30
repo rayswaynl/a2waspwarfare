@@ -104,14 +104,23 @@ if (isNull _target) exitWith {}; //--- nothing worth reinforcing this tick; try 
 
 _objName = _target getVariable ["name", "?"];
 
-//--- Stamp the cooldown BEFORE the drop so a long in-flight drop can never double-fire on the next tick.
-_logik setVariable ["wfbe_aicom_para_last", _now];
-
 //--- Fire the drop through the SAME player-support function (now AI-aware). _playerTeam is a fresh, empty
 //--- paradrop group on this side; Support_Paratroopers.sqf creates the stick INTO it and (because its leader
 //--- is not a player) keeps only the 500s transit timeout and skips the client marker-send. CreateGroup tags
 //--- the group server-side; the function flies it to the objective, ejects, then flies the transport home.
+//--- fail-clean r48: stamp cooldown only AFTER a live group exists (mirror CargoAirdrop group-null path).
+//--- Prior: cooldown stamped before CreateGroup; grpNull still Spawn'd KAT_Paratroopers and locked the side
+//--- out of AI para for the full cooldown with no delivery.
 _grp = [_side, "aicom_paradrop"] Call WFBE_CO_FNC_CreateGroup;
+if (isNull _grp) exitWith {
+	["WARNING", Format ["AI_Commander_Paratroops.sqf: [%1] PARATROOP DROP aborted - CreateGroup null; cooldown not stamped.", str _side]] Call WFBE_CO_FNC_AICOMLog;
+	diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (_now / 60)) + "|PARATROOP_DROP_SKIP|group-create-failed|" + _objName);
+};
+
+//--- Stamp the cooldown AFTER group create so a long in-flight drop can never double-fire on the next tick,
+//--- but a group-cap refusal does not burn the window.
+_logik setVariable ["wfbe_aicom_para_last", _now];
+
 ["Paratroops", _side, getPos _target, _grp] Spawn KAT_Paratroopers;
 
 ["INFORMATION", Format ["AI_Commander_Paratroops.sqf: [%1] PARATROOP DROP called (lvl %2) to reinforce [%3] (%4).", str _side, _paraLvl, _objName, if (count _attacked > 0) then {"under attack"} else {"offensive target"}]] Call WFBE_CO_FNC_AICOMLog;
