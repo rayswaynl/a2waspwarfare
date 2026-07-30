@@ -60,6 +60,17 @@ WFBE_C_VAR_SpectatorActive = true;
 WFBE_C_VAR_SpectatorBody = player; //--- pin the exact body this session belongs to.
 WFBE_C_VAR_SpectatorMode = "free";
 WFBE_C_VAR_SpectatorTarget = objNull;
+WFBE_C_VAR_SpectatorDirectorClass = "PLAYER";
+WFBE_C_VAR_SpectatorDirectorAuto = false;
+WFBE_C_VAR_SpectatorOrbit = true;
+WFBE_C_VAR_SpectatorOrbitAngle = 0;
+WFBE_C_VAR_SpectatorDirectorDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL", 20];
+WFBE_C_VAR_SpectatorDirectorPosFn = WFBE_CL_FNC_DirectorPosObject;
+WFBE_C_VAR_SpectatorDirectorTargetLabel = "-";
+WFBE_C_VAR_DirectorRecent = [];
+WFBE_C_VAR_DirectorLastSwitch = 0;
+WFBE_C_VAR_DirectorLastTownPoll = 0;
+WFBE_C_VAR_DirectorTownData = [];
 WFBE_C_VAR_SpectatorHideHint = false;
 WFBE_C_VAR_SpectatorMouseBaseline = true; //--- first MouseMoving event only sets the baseline (recentre-bias fix)
 
@@ -91,6 +102,9 @@ WFBE_C_VAR_SpectatorLastMouseX = 0.5;
 WFBE_C_VAR_SpectatorLastMouseY = 0.5;
 
 systemChat "[WASP] Spectator v2: mouse look, wheel zoom, WASD fly, Shift/Alt speed, N/B target, F follow, V eyes, H hide UI, Backspace exit.";
+if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
+	systemChat "[WASP] Spectator v3 director armed: TAB class, G auto-switch, O orbit, [ ] dwell.";
+};
 
 WFBE_C_VAR_SpectatorKeys = [false,false,false,false,false,false,false,false]; //--- W,S,A,D,Space,Ctrl,Shift,Alt
 
@@ -99,6 +113,9 @@ WFBE_C_VAR_SpectatorKeys = [false,false,false,false,false,false,false,false]; //
 WFBE_CL_FNC_SpectatorCycleTarget = {
 	Private ["_step","_list","_cur","_idx","_next","_i"];
 	_step = _this;
+	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {WFBE_C_VAR_SpectatorDirectorClass != "PLAYER"}) exitWith {
+		_step Call WFBE_CL_FNC_DirectorCycleTarget;
+	};
 	_list = [];
 	{
 		if (!isNil "_x") then {
@@ -126,7 +143,7 @@ WFBE_CL_FNC_SpectatorCycleTarget = {
 };
 
 WFBE_CL_FNC_SpectatorKeyDown = {
-	Private ["_dik","_handled"];
+	Private ["_dik","_handled","_cls","_d","_step"];
 	_dik = _this select 1;
 	_handled = true;
 	switch (_dik) do {
@@ -142,12 +159,72 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 		case 56: {WFBE_C_VAR_SpectatorKeys set [7, true]}; //--- LAlt
 		case 49: {1 Call WFBE_CL_FNC_SpectatorCycleTarget}; //--- N: arm next player
 		case 48: {-1 Call WFBE_CL_FNC_SpectatorCycleTarget}; //--- B: arm previous player
+		case 15: { //--- TAB: cycle director target class
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
+				_cls = WFBE_C_VAR_SpectatorDirectorClass;
+				if (_cls == "PLAYER") then {_cls = "TEAM"} else {
+					if (_cls == "TEAM") then {_cls = "TOWN"} else {
+						if (_cls == "TOWN") then {_cls = "HQ"} else {_cls = "PLAYER"};
+					};
+				};
+				WFBE_C_VAR_SpectatorDirectorClass = _cls;
+				WFBE_C_VAR_SpectatorTarget = objNull;
+				WFBE_C_VAR_DirectorLastSwitch = 0;
+				diag_log Format ["SPECTATE|v3|class-switch|class=%1", _cls];
+				systemChat Format ["[WASP] Director class: %1 (N/B cycle)", _cls];
+			} else {_handled = false};
+		};
+		case 34: { //--- G: toggle director mode and its 1-second auto-switch loop
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
+				if (WFBE_C_VAR_SpectatorMode == "director") then {
+					WFBE_C_VAR_SpectatorMode = "free";
+					WFBE_C_VAR_SpectatorDirectorAuto = false;
+					diag_log "SPECTATE|v3|mode-off|reason=key";
+					systemChat "[WASP] Director mode off - free camera.";
+				} else {
+					WFBE_C_VAR_SpectatorMode = "director";
+					WFBE_C_VAR_SpectatorDirectorAuto = true;
+					WFBE_C_VAR_SpectatorOrbit = true;
+					WFBE_C_VAR_SpectatorOrbitAngle = 0;
+					WFBE_C_VAR_SpectatorTarget = objNull;
+					WFBE_C_VAR_DirectorLastSwitch = 0;
+					diag_log Format ["SPECTATE|v3|mode-on|class=%1", WFBE_C_VAR_SpectatorDirectorClass];
+					systemChat "[WASP] Director mode on - auto-switch enabled.";
+				};
+			} else {_handled = false};
+		};
+		case 24: { //--- O: toggle orbit sweep / static framing
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
+				WFBE_C_VAR_SpectatorOrbit = !WFBE_C_VAR_SpectatorOrbit;
+				systemChat Format ["[WASP] Director orbit: %1", if (WFBE_C_VAR_SpectatorOrbit) then {"ON"} else {"OFF (static)"}];
+			} else {_handled = false};
+		};
+		case 26: { //--- [: reduce director dwell
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
+				_step = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP", 5];
+				_d = ((WFBE_C_VAR_SpectatorDirectorDwell - _step) max (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_MIN", 5]));
+				WFBE_C_VAR_SpectatorDirectorDwell = _d;
+				hintSilent Format ["Director dwell: %1s", _d];
+			} else {_handled = false};
+		};
+		case 27: { //--- ]: increase director dwell
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
+				_step = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP", 5];
+				_d = ((WFBE_C_VAR_SpectatorDirectorDwell + _step) min (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_MAX", 120]));
+				WFBE_C_VAR_SpectatorDirectorDwell = _d;
+				hintSilent Format ["Director dwell: %1s", _d];
+			} else {_handled = false};
+		};
 		case 33: { //--- F: toggle follow-cam on the armed target
 			if (WFBE_C_VAR_SpectatorMode == "follow") then {
 				WFBE_C_VAR_SpectatorMode = "free";
 				systemChat "[WASP] Free camera.";
 			} else {
 				if (!isNull WFBE_C_VAR_SpectatorTarget && {alive WFBE_C_VAR_SpectatorTarget}) then {
+					if (WFBE_C_VAR_SpectatorMode == "director") then {
+						WFBE_C_VAR_SpectatorDirectorAuto = false;
+						diag_log "SPECTATE|v3|mode-off|reason=follow";
+					};
 					WFBE_C_VAR_SpectatorMode = "follow";
 					systemChat Format ["[WASP] Follow-cam: %1 (WASD to detach)", name WFBE_C_VAR_SpectatorTarget];
 				} else {
@@ -161,6 +238,10 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 				systemChat "[WASP] Free camera.";
 			} else {
 				if (!isNull WFBE_C_VAR_SpectatorTarget && {alive WFBE_C_VAR_SpectatorTarget}) then {
+					if (WFBE_C_VAR_SpectatorMode == "director") then {
+						WFBE_C_VAR_SpectatorDirectorAuto = false;
+						diag_log "SPECTATE|v3|mode-off|reason=eyes";
+					};
 					WFBE_C_VAR_SpectatorMode = "eyes";
 					systemChat Format ["[WASP] POV: %1 (WASD to detach)", name WFBE_C_VAR_SpectatorTarget];
 				} else {
@@ -266,7 +347,7 @@ WFBE_C_VAR_SpectatorWheelIdx = (findDisplay 46) displayAddEventHandler ["MouseZC
 diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_SpectatorKeyDownIdx, WFBE_C_VAR_SpectatorMouseMovingIdx];
 
 [] spawn {
-	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d"];
+	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d","_center","_radius","_height","_rate","_angle","_dirCard"];
 	_body = WFBE_C_VAR_SpectatorBody;
 	_lockPos = getPos _body;
 	_lockDir = getDir _body; //--- direction lock added in v2: the body must not spin under the mouse.
@@ -293,6 +374,10 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 		//--- Any movement-key input detaches from follow/eyes back to free at the current position.
 		if (_mode != "free") then {
 			if ((_k select 0) || {(_k select 1)} || {(_k select 2)} || {(_k select 3)} || {(_k select 4)} || {(_k select 5)}) then {
+				if (_mode == "director") then {
+					WFBE_C_VAR_SpectatorDirectorAuto = false;
+					diag_log "SPECTATE|v3|mode-off|reason=manual";
+				};
 				WFBE_C_VAR_SpectatorMode = "free";
 				_mode = "free";
 			};
@@ -326,6 +411,27 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 					WFBE_C_VAR_SpectatorCam camSetPos _e;
 					WFBE_C_VAR_SpectatorCam camSetTarget [(_e select 0) + (_d select 0) * 100, (_e select 1) + (_d select 1) * 100, (_e select 2) + (_d select 2) * 100];
 				};
+				case "director": {
+					if (!isNull _t) then {
+						_center = _t call WFBE_C_VAR_SpectatorDirectorPosFn;
+						_radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_RADIUS", 40];
+						_height = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_HEIGHT", 25];
+						if (WFBE_C_VAR_SpectatorOrbit) then {
+							_rate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_DEG_PER_SEC", 6];
+							_angle = (WFBE_C_VAR_SpectatorOrbitAngle + (_rate * _dt)) % 360;
+							WFBE_C_VAR_SpectatorOrbitAngle = _angle;
+						} else {_angle = WFBE_C_VAR_SpectatorOrbitAngle};
+						_p = [(_center select 0) + (_radius * sin _angle), (_center select 1) + (_radius * cos _angle), (_center select 2) + _height];
+						_tx = _center select 0;
+						_ty = _center select 1;
+						_tz = _center select 2;
+						_hd = sqrt (((_tx - (_p select 0)) ^ 2) + ((_ty - (_p select 1)) ^ 2));
+						_y = (((_tx - (_p select 0)) atan2 (_ty - (_p select 1))) + 360) % 360;
+						_pt = (((_tz - (_p select 2)) atan2 (_hd max 0.01)) max -80) min 80;
+						WFBE_C_VAR_SpectatorCam camSetPos _p;
+						WFBE_C_VAR_SpectatorCam camSetTarget _center;
+					};
+				};
 				default {
 					_cy = cos _y; _sy = sin _y; _cp = cos _pt; _sp = sin _pt;
 					_fwd = [_sy * _cp, _cy * _cp, _sp];
@@ -352,6 +458,13 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 		if !(WFBE_C_VAR_SpectatorHideHint) then {
 			_tgtTxt = "-";
 			if (!isNull _t && {alive _t}) then {_tgtTxt = name _t};
+			_dirCard = "";
+			if (_mode == "director" && {!isNull _t}) then {
+				_tgtTxt = Format ["%1: %2", WFBE_C_VAR_SpectatorDirectorClass, WFBE_C_VAR_SpectatorDirectorTargetLabel];
+			};
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
+				_dirCard = "<t size='0.9' color='#7fd4ff'>DIRECTOR</t><br/>" + "<t size='0.85' color='#aaaaaa'>TAB class | G auto %7 | O orbit %8 | [ ] dwell %9s</t><br/>";
+			};
 			hintSilent parseText Format [
 				"<t size='1.2' color='#7fd4ff'>SPECTATOR</t>  <t color='#ffcc33'>%1</t><br/>"
 				+ "<t color='#cccccc'>Target</t> %2<br/>"
@@ -361,11 +474,18 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 				+ "Shift boost | Alt crawl | Wheel zoom</t><br/>"
 				+ "<t size='0.9' color='#7fd4ff'>TARGETS</t><br/>"
 				+ "<t size='0.85' color='#aaaaaa'>N / B next-prev player | F follow-cam | V through-their-eyes</t><br/>"
+				+ _dirCard
 				+ "<t size='0.9' color='#7fd4ff'>SETUP</t><br/>"
 				+ "<t size='0.85' color='#aaaaaa'>PgUp / PgDn sensitivity | H hide this card | Backspace exit</t>",
 				toUpper _mode, _tgtTxt, round _spd, round (WFBE_C_VAR_SpectatorFov * 100), "%",
-				round (missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 45])
+				round (missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 45]),
+				if (WFBE_C_VAR_SpectatorDirectorAuto) then {"ON"} else {"OFF"},
+				if (WFBE_C_VAR_SpectatorOrbit) then {"ON"} else {"OFF"},
+				round WFBE_C_VAR_SpectatorDirectorDwell
 			];
 		};
+	};
+	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
+		Call WFBE_CL_FNC_DirectorLoopStart;
 	};
 };

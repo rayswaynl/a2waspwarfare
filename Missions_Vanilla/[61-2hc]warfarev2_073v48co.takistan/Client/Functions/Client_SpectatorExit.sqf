@@ -17,6 +17,9 @@
 Private ["_body"];
 
 if !(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) exitWith {}; //--- already exited / never entered.
+if ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"]) == "director") then {
+	diag_log "SPECTATE|v3|mode-off|reason=exit";
+};
 WFBE_C_VAR_SpectatorActive = false; //--- first: stops the movement loop in Client_SpectatorEnter.sqf on its next tick.
 
 _body = missionNamespace getVariable ["WFBE_C_VAR_SpectatorBody", objNull];
