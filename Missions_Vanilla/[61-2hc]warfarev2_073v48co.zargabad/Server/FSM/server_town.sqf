@@ -579,36 +579,6 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			_location setVariable ["wfbe_active_air", false];
 			_location setVariable ["wfbe_episode_spawned", false];
 
-			//--- CAPTURE GARRISON TEARDOWN (sideID consistency / double-garrison):
-			//--- FM-5 only cleared active/episode flags. Old wfbe_town_teams stayed alive under the
-			//--- PREVIOUS side while the new owner could re-activate immediately (episode_spawned=false),
-			//--- stacking two garrisons and leaving public sideID vs field force desynced until inactivity GC.
-			//--- Mirror server_town_ai deactivation locality rules: broadcast cleanup-townai for the OLD side,
-			//--- delete server-local units/vehicles, clear registries + sortie pointers.
-			private ["_capTownTeams","_capTeam","_capVeh"];
-			if (isMultiplayer) then {
-				[nil, "HandleSpecial", ["cleanup-townai", _location, _side]] Call WFBE_CO_FNC_SendToClients;
-			};
-			_capTownTeams = _location getVariable ["wfbe_town_teams", []];
-			{
-				_capTeam = _x;
-				if (!isNil "_capTeam" && {!isNull _capTeam}) then {
-					{if (local _x && {!(isPlayer _x)}) then {["capture-sweep-unit", _x, Format ["town=%1", _location getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach units _capTeam;
-					if (({!(local _x)} count units _capTeam) == 0) then {deleteGroup _capTeam};
-				};
-			} forEach _capTownTeams;
-			{
-				_capVeh = _x;
-				if (alive _capVeh && {local _capVeh}) then {
-					if (({isPlayer _x} count crew _capVeh) == 0) then {["capture-sweep-hull", _capVeh, Format ["town=%1", _location getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _capVeh};
-				};
-			} forEach (_location getVariable ["wfbe_active_vehicles", []]);
-			_location setVariable ["wfbe_town_teams", []];
-			_location setVariable ["wfbe_active_vehicles", []];
-			_location setVariable ["wfbe_ctl_lastspawn", 0];
-			_location setVariable ["wfbe_sortie_grp", grpNull, true];
-			_location setVariable ["wfbe_sortie_started", 0];
-
 			[nil, "TownCaptured", [_location, _sideID, _newSID]] Call WFBE_CO_FNC_SendToClients;
 			if ((missionNamespace getVariable "WFBE_C_CAMPS_CREATE") > 0 && {!(((missionNamespace getVariable ["WFBE_C_TOWN_CAPTURE_FLIPS_CAMPS", 1]) > 0) && {(missionNamespace getVariable ["WFBE_C_CAMPS_LEGACY_SKIP_ON_PERCAMP_FLIP", 0]) > 0})}) then {[_location, _sideID, _newSID] Spawn WFBE_SE_FNC_SetCampsToSide};
 
