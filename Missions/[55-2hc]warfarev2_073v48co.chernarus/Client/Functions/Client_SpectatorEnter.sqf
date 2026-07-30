@@ -353,6 +353,17 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 	_lockDir = getDir _body; //--- direction lock added in v2: the body must not spin under the mouse.
 	_last = time;
 	diag_log "SPECTATE|v2|loop-alive";
+	//--- START THE DIRECTOR POLL THREAD **BEFORE** the movement loop below, not after it.
+	//--- It used to sit after that loop's closing brace, which is plain sequential SQF: the loop only
+	//--- exits once WFBE_C_VAR_SpectatorActive has already gone false, and DirectorLoopStart guards its
+	//--- own loop on that exact same variable - so the poll body ran ZERO times in a real session and
+	//--- G reported "auto-switch on" while nothing ever auto-switched. DirectorLoopStart opens with its
+	//--- own [] spawn {}, so this Call returns immediately and the movement loop still starts on the
+	//--- next line; the two threads then run in parallel for the whole session, which is what
+	//--- Init_Client.sqf's own registration comment already promised.
+	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
+		Call WFBE_CL_FNC_DirectorLoopStart;
+	};
 	while {WFBE_C_VAR_SpectatorActive && {!(missionNamespace getVariable ["WFBE_gameover", false])}} do {
 		sleep 0.05;
 		//--- Safety: auto-exit if the parked body died while unattended (allowDamage/setCaptive should
@@ -484,8 +495,5 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 				round WFBE_C_VAR_SpectatorDirectorDwell
 			];
 		};
-	};
-	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
-		Call WFBE_CL_FNC_DirectorLoopStart;
 	};
 };
