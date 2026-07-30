@@ -45,6 +45,7 @@ Private ["_tick","_grant","_dwell","_cooldown","_aiOnly","_squads","_kept","_now
 WFBE_SE_FNC_AicomSupplyBasePos = {
 	private ["_lg","_bp"];
 	_lg = _this select 0;
+	if (isNull _lg) exitWith {[0,0,0]};
 	_bp = _lg getVariable "wfbe_startpos";
 	if (isNil "_bp") exitWith {getPos _lg};
 	if ((typeName _bp) == "OBJECT") exitWith {if (isNull _bp) then {getPos _lg} else {getPos _bp}};
@@ -97,6 +98,11 @@ while {!WFBE_GameOver} do {
 			};
 			diag_log Format ["AICOMSUPPLY|DESPAWN|side=%1|reason=%2", str _eSide, _reason];
 		} else {
+			//--- Re-check hull after prune gate (TOCTOU): concurrent destroy between isNull and getPos/velocity is native-crash class (014EFCF4).
+			if (isNull _eVeh || {!alive _eVeh}) then {
+				missionNamespace setVariable [Format ["wfbe_aicomsupply_cd_%1", str _eSide], _now];
+				diag_log Format ["AICOMSUPPLY|DESPAWN|side=%1|reason=destroyed_race", str _eSide];
+			} else {
 			//--- State machine: outbound -> loading (dwell) -> inbound -> deliver -> outbound.
 			_eLogik   = (_eSide) Call WFBE_CO_FNC_GetSideLogic;
 			_eBasePos = [_eLogik] Call WFBE_SE_FNC_AicomSupplyBasePos;
@@ -166,6 +172,7 @@ while {!WFBE_GameOver} do {
 			};
 
 			_kept = _kept + [[_eSide, _eSideID, _eMode, _eVeh, _eGrp, _eState, _eTarget, _eLast, _eStuck, _eStateT, _eTown]];
+			};
 		};
 	} forEach _squads;
 	_squads = _kept;
