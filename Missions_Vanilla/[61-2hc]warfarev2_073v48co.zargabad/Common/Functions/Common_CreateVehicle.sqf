@@ -105,13 +105,10 @@ if (_global) then {
 	};
 };
  
-// Marty: Only globally initialized vehicles have map combat markers, so town AI can stay marker-light.
-if (_global && (missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {
-	_vehicle addEventHandler ["Fired", {
-		_u = _this select 0;                 // unit that fired
-		if (!isNil "WFBE_CL_FNC_SetMapIconStatusInCombat") then {_u Call WFBE_CL_FNC_SetMapIconStatusInCombat}; //--- wiring-sweep 2026-07-22: Common-scope EH also runs on the HC/server, which never compile Client\Init (PR1258 class); isNil guard idiom per Common_ChangeUnitGroup.sqf
-	}];
-};
+// Marty: combat-marker blink Fired EH lives ONLY in Common\Init\Init_Unit.sqf (stores
+// WFBE_BlinkFiredEH so Common_MarkerLoop can remove it on death). An untracked add here
+// double-stacked with Init_Unit on the vehicleInit path (every global buy/spawn) and
+// could never be removed by the marker loop - fix/sqf-eh-hygiene-20260730 removed it.
 
 //--- cmdcon45 (owner order): Ka-137 durability - divide ALL incoming part damage by
 //--- WFBE_C_KA137_HP_MULT (default 3 = 3x effective HP on every hit selection). Config armor is

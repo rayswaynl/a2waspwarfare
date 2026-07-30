@@ -252,26 +252,30 @@ while {true} do {
 				if (isNull _tracked || !(alive _tracked)) exitWith {
 					_markerName = _entry select 1;
 					// Marty: EH hygiene - dead bodies keep their Fired EHs until GC deletion; drop ours now.
+					//--- fix/sqf-eh-hygiene-20260730: A2 removeEventHandler re-indexes SAME-TYPE handlers.
+					//--- BlinkFired + MissileTerrain are both Fired; removing the lower index first shifts
+					//--- the stored higher index and leaks the terrain-masking Fired EH on corpses.
+					//--- Remove higher Fired index first, then lower (mirrors Common_FireArtillery.sqf).
 					if !(isNull _tracked) then {
-						_ehHandle = _tracked getVariable "WFBE_BlinkFiredEH";
-						if !(isNil "_ehHandle") then {
-							_tracked removeEventHandler ["Fired", _ehHandle];
-							_tracked setVariable ["WFBE_BlinkFiredEH", nil, false];
-						};
-						//--- fable/marker-combat-flash-fixes (owner 2026-07-09): mirror cleanup for the
-						//--- being-shot-at Hit EH added alongside WFBE_BlinkFiredEH.
+						Private ["_ehFiredA","_ehFiredB","_ehHi","_ehLo"];
+						_ehFiredA = _tracked getVariable "WFBE_BlinkFiredEH";
+						_ehFiredB = _tracked getVariable "WFBE_MissileTerrainMaskingEH";
+						if (isNil "_ehFiredA") then {_ehFiredA = -1};
+						if (isNil "_ehFiredB") then {_ehFiredB = -1};
+						_ehHi = _ehFiredA max _ehFiredB;
+						_ehLo = _ehFiredA min _ehFiredB;
+						if (_ehHi >= 0) then {_tracked removeEventHandler ["Fired", _ehHi]};
+						if (_ehLo >= 0 && {_ehLo != _ehHi}) then {_tracked removeEventHandler ["Fired", _ehLo]};
+						_tracked setVariable ["WFBE_BlinkFiredEH", nil, false];
+						_tracked setVariable ["WFBE_MissileTerrainMaskingEH", nil, false];
+						//--- Hit is a different EH type - index space independent of Fired; order free.
 						_ehHandle = _tracked getVariable "WFBE_BlinkHitEH";
 						if !(isNil "_ehHandle") then {
 							_tracked removeEventHandler ["Hit", _ehHandle];
 							_tracked setVariable ["WFBE_BlinkHitEH", nil, false];
 						};
-						_ehHandle = _tracked getVariable "WFBE_MissileTerrainMaskingEH";
-						if !(isNil "_ehHandle") then {
-							_tracked removeEventHandler ["Fired", _ehHandle];
-							_tracked setVariable ["WFBE_MissileTerrainMaskingEH", nil, false];
-						};
 					};
-					if ((_entry select 6) && !(isNull _tracked)) then {
+if ((_entry select 6) && !(isNull _tracked)) then {
 						_markerName setMarkerTypeLocal (_entry select 7);
 						_markerName setMarkerColorLocal (_entry select 8);
 						_markerName setMarkerSizeLocal (_entry select 9);
