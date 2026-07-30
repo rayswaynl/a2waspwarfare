@@ -23,7 +23,8 @@ if (playerSide == _ICBM_side) then
 {
 	[_ICBM_side] call ICBM_FriendySide_Message;
 	// Create de ICBM marker on map for each client of the west team :
-	_nukeMarker = createMarkerLocal ["icbmstrike", _ICBM_postion];
+	if (markerType "icbmstrike" != "") then {deleteMarkerLocal "icbmstrike"};
+_nukeMarker = createMarkerLocal ["icbmstrike", _ICBM_postion];
 	_nukeMarker setMarkerTypeLocal "mil_warning";
 	_nukeMarker setMarkerTextLocal "ICBM";
 	_nukeMarker setMarkerColorLocal "ColorRed";	
