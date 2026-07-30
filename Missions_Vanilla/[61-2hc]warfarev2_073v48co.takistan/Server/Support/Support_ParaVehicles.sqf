@@ -28,11 +28,33 @@ _timeStart = time;
 _isAI = !(isPlayer (leader _playerTeam));
 _ran = round(random((count _ranPos)-1));
 _grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
+//--- createVehicle/crew fail-clean (r32): group/hull/pilot can each return null under side group
+//--- saturation or bad class. Previously: stats always +1, moveInDriver on null pilot, attachTo on
+//--- null cargo, then pilotless transport flew until timeout. Mirror Support_GuerHeliDrop seat gates.
+if (isNull _grp) exitWith {
+	["ERROR", Format ["Support_ParaVehicles.sqf: [%1] paradrop group create failed — abort vehicle paradrop.", str _side]] Call WFBE_CO_FNC_LogContent;
+};
 _vehicle = createVehicle [missionNamespace getVariable Format ["WFBE_%1PARAVEHI",str _side],(_ranPos select _ran), [], (_ranDir select _ran), "FLY"];
+if (isNull _vehicle) exitWith {
+	deleteGroup _grp;
+	["ERROR", Format ["Support_ParaVehicles.sqf: [%1] transport createVehicle failed — abort vehicle paradrop.", str _side]] Call WFBE_CO_FNC_LogContent;
+};
+_pilot = [missionNamespace getVariable Format ["WFBE_%1PILOT",str _side],_grp,[100,12000,0],_sideID] Call WFBE_CO_FNC_CreateUnit;
+if (isNull _pilot) exitWith {
+	deleteVehicle _vehicle;
+	deleteGroup _grp;
+	["ERROR", Format ["Support_ParaVehicles.sqf: [%1] pilot CreateUnit failed — abort vehicle paradrop.", str _side]] Call WFBE_CO_FNC_LogContent;
+};
+_pilot moveInDriver _vehicle;
+if (driver _vehicle != _pilot) exitWith {
+	deleteVehicle _pilot;
+	deleteVehicle _vehicle;
+	deleteGroup _grp;
+	["ERROR", Format ["Support_ParaVehicles.sqf: [%1] pilot moveInDriver failed — abort vehicle paradrop.", str _side]] Call WFBE_CO_FNC_LogContent;
+};
+//--- Stats only after a seated pilot exists (no phantom VehiclesCreated/UnitsCreated).
 [str _side,'VehiclesCreated',1] Call UpdateStatistics;
 [str _side,'UnitsCreated',1] Call UpdateStatistics;
-_pilot = [missionNamespace getVariable Format ["WFBE_%1PILOT",str _side],_grp,[100,12000,0],_sideID] Call WFBE_CO_FNC_CreateUnit;
-_pilot moveInDriver _vehicle;
 _pilot doMove (_args select 2);
 _grp setBehaviour 'CARELESS';
 _grp setCombatMode 'STEALTH';
@@ -45,6 +67,12 @@ processInitCommands;
 _vehicle flyInHeight (300 + random(75));
 _cargo = (crew _vehicle) - [driver _vehicle, gunner _vehicle, commander _vehicle];
 _cargoVehicle = [missionNamespace getVariable Format ["WFBE_%1PARAVEHICARGO", _side], [0,0,50] ,_sideID, 0, false] Call WFBE_CO_FNC_CreateVehicle;
+if (isNull _cargoVehicle) exitWith {
+	{deleteVehicle _x} forEach (crew _vehicle);
+	deleteVehicle _vehicle;
+	deleteGroup _grp;
+	["ERROR", Format ["Support_ParaVehicles.sqf: [%1] cargo hull CreateVehicle failed — abort vehicle paradrop.", str _side]] Call WFBE_CO_FNC_LogContent;
+};
 _cargoVehicle attachTo [_vehicle,[0,0,-3]];
 
 emptyQueu = emptyQueu + [_cargoVehicle];
@@ -94,6 +122,6 @@ while {true} do {
 };
 if (!_dropReady && {!isNull _cargoVehicle}) then {deleteVehicle _cargoVehicle};
 
-deleteVehicle _pilot;
-deleteVehicle _vehicle;
-deleteGroup _grp;
+if (!isNull _pilot) then {deleteVehicle _pilot};
+if (!isNull _vehicle) then {deleteVehicle _vehicle};
+if (!isNull _grp) then {deleteGroup _grp};

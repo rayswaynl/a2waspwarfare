@@ -57,25 +57,51 @@ _vehicle_pilot = missionNamespace getVariable Format ["WFBE_%1PILOT",str _side];
 _ran = floor(random count _ranPos);
 _grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
 _built = 0;
+//--- createVehicle/crew fail-clean (r32): each transport needs a live group + hull + seated pilot.
+//--- Previously: null vehicle/pilot still got EH/init, moveInDriver on null, _built always +1, and
+//--- UnitsCreated reused _built after the cargo loop corrupted it with infantry counts.
+if (isNull _grp) exitWith {
+	["ERROR", Format["Support_Paratroopers.sqf : [%1] paradrop group create failed — abort paratroops.", _side]] Call WFBE_CO_FNC_LogContent;
+};
 
 for '_i' from 1 to _vehicle_count do {
 	//--- Spawn the vehicle.
 	_vehicle = createVehicle [missionNamespace getVariable Format ["WFBE_%1PARACARGO",str _side],(_ranPos select _ran), [], (_ranDir select _ran), "FLY"];
-	_vehicle addEventHandler ['killed', Format["[_this select 0, _this select 1, %1] Spawn WFBE_CO_FNC_OnUnitKilled",_sideID]];
-	_vehicle setVehicleInit Format["[this, %1] ExecVM 'Common\Init\Init_Unit.sqf';", _sideID];
-	[_vehicles, _vehicle] Call WFBE_CO_FNC_ArrayPush;
-	
-	//--- Spawn the pilot.
-	_pilot = [_vehicle_pilot, _grp, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
-	_pilot moveInDriver _vehicle;
-	_pilot doMove _destination;
-	_grp setBehaviour 'CARELESS';
-	_grp setCombatMode 'STEALTH';
-	{_pilot disableAI _x} forEach ["AUTOTARGET","TARGET"];
-	_built = _built + 1;
-	
-	_vehicle flyInHeight (300 + random 15);
-	_vehicle lockDriver true;
+	if (isNull _vehicle) then {
+		["WARNING", Format["Support_Paratroopers.sqf : [%1] transport createVehicle failed for slot %2.", _side, _i]] Call WFBE_CO_FNC_LogContent;
+	} else {
+		//--- Spawn the pilot.
+		_pilot = [_vehicle_pilot, _grp, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
+		if (isNull _pilot) then {
+			deleteVehicle _vehicle;
+			["WARNING", Format["Support_Paratroopers.sqf : [%1] pilot CreateUnit failed for slot %2 — hull discarded.", _side, _i]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			_pilot moveInDriver _vehicle;
+			if (driver _vehicle != _pilot) then {
+				deleteVehicle _pilot;
+				deleteVehicle _vehicle;
+				["WARNING", Format["Support_Paratroopers.sqf : [%1] pilot moveInDriver failed for slot %2 — hull discarded.", _side, _i]] Call WFBE_CO_FNC_LogContent;
+			} else {
+				_vehicle addEventHandler ['killed', Format["[_this select 0, _this select 1, %1] Spawn WFBE_CO_FNC_OnUnitKilled",_sideID]];
+				_vehicle setVehicleInit Format["[this, %1] ExecVM 'Common\Init\Init_Unit.sqf';", _sideID];
+				[_vehicles, _vehicle] Call WFBE_CO_FNC_ArrayPush;
+
+				_pilot doMove _destination;
+				_grp setBehaviour 'CARELESS';
+				_grp setCombatMode 'STEALTH';
+				{_pilot disableAI _x} forEach ["AUTOTARGET","TARGET"];
+				_built = _built + 1;
+
+				_vehicle flyInHeight (300 + random 15);
+				_vehicle lockDriver true;
+			};
+		};
+	};
+};
+
+if (_built <= 0 || {(count _vehicles) <= 0}) exitWith {
+	if (!isNull _grp) then {deleteGroup _grp};
+	["ERROR", Format["Support_Paratroopers.sqf : [%1] no transport with seated pilot — abort paratroops.", _side]] Call WFBE_CO_FNC_LogContent;
 };
 
 [str _side, 'VehiclesCreated', _built] Call UpdateStatistics;
@@ -85,21 +111,32 @@ processInitCommands;
 
 //--- Create the units.
 _built_inf = 0;
+_built_inf_total = 0;
 _index = 0;
 _vehicle = _vehicles select _index;
 _paratroopers = [];
 {
-	//--- Spawn the unit.
+	//--- Spawn the unit into the requesting team cargo.
 	//_unit = [_x, _grp, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
-	_unit = [_x, _playerTeam, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;	
-	_unit moveInCargo _vehicle;
-	_built_inf = _built_inf + 1;
-	[_paratroopers, _unit] Call WFBE_CO_FNC_ArrayPush;
-	//--- If the unit amount exceed the cargo cap, swap to the next vehicle then.
-	if (_built_inf >= _vehicle_cargo && {_index < ((count _vehicles) - 1)}) then {_built = _built + _built_inf; _built_inf = 0; _index = _index + 1; _vehicle = _vehicles select _index};
+	_unit = [_x, _playerTeam, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
+	if (isNull _unit) then {
+		["WARNING", Format["Support_Paratroopers.sqf : [%1] paratrooper CreateUnit failed for class [%2].", _side, _x]] Call WFBE_CO_FNC_LogContent;
+	} else {
+		_unit moveInCargo _vehicle;
+		_built_inf = _built_inf + 1;
+		_built_inf_total = _built_inf_total + 1;
+		[_paratroopers, _unit] Call WFBE_CO_FNC_ArrayPush;
+		//--- If the unit amount exceed the cargo cap, swap to the next vehicle then.
+		//--- Do NOT fold infantry into _built (vehicle count) — that corrupted UnitsCreated.
+		if (_built_inf >= _vehicle_cargo && {_index < ((count _vehicles) - 1)}) then {
+			_built_inf = 0;
+			_index = _index + 1;
+			_vehicle = _vehicles select _index;
+		};
+	};
 } forEach _units;
 
-[str _side,'UnitsCreated', _built] Call UpdateStatistics;
+[str _side,'UnitsCreated', _built_inf_total] Call UpdateStatistics;
 
 //--- Tell the group to move.
 [_grp, _destination, "MOVE", 10] Call AIMoveTo;

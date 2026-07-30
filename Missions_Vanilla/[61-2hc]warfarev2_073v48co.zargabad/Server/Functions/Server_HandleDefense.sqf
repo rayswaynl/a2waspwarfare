@@ -93,6 +93,9 @@ while {!isNull _defense && {alive _defense} && {_sideStillValid}} do {
 						[_soldier] orderGetIn true;
 						_soldier moveInGunner _defense;
 						[_team, 1000, _position] spawn WFBE_CO_FNC_RevealArea;
+						//--- Stats only after a real gunner is created (HC CreateUnitForStaticDefence already counts
+						//--- successful HC seats; this branch is server fallback only — avoid phantom UnitsCreated).
+						[str _side,'UnitsCreated',1] Call UpdateStatistics;
 						["WARNING", Format ["Server_HandleDefense.sqf: [%1] HC delegation did not seat a gunner for [%2] within grace window - filled server-side.", str _side, typeOf _defense]] Call WFBE_CO_FNC_LogContent;
 					};
 				};
@@ -101,16 +104,24 @@ while {!isNull _defense && {alive _defense} && {_sideStillValid}} do {
 			_sideID = (_side) Call WFBE_CO_FNC_GetSideID;
 			_type = missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side];
 			_soldier = [_type,_team,_position,_sideID] Call WFBE_CO_FNC_CreateUnit;
-			_defense setVariable ["WFBE_StaticDefenseAssignedUnit", _soldier, true];
-			[_soldier] allowGetIn true;
-			_soldier assignAsGunner _defense;
-			[_soldier] orderGetIn true;
-			_soldier moveInGunner _defense;
-			[_team, 1000, _position] spawn WFBE_CO_FNC_RevealArea;
+			//--- createUnit can return objNull (group/unit limit). Never moveIn/assign on null;
+			//--- never stamp AssignedUnit or UnitsCreated for a failed seat (phantom stats + null ops).
+			if (isNull _soldier) then {
+				["WARNING", Format ["Server_HandleDefense.sqf: [%1] CreateUnit failed for [%2] defense — gunner seat left empty.", str _side, typeOf _defense]] Call WFBE_CO_FNC_LogContent;
+			} else {
+				_defense setVariable ["WFBE_StaticDefenseAssignedUnit", _soldier, true];
+				[_soldier] allowGetIn true;
+				_soldier assignAsGunner _defense;
+				[_soldier] orderGetIn true;
+				_soldier moveInGunner _defense;
+				[_team, 1000, _position] spawn WFBE_CO_FNC_RevealArea;
+				[str _side,'UnitsCreated',1] Call UpdateStatistics;
+				["INFORMATION", Format ["Server_HandleDefense.sqf: [%1] Unit has been dispatched to a [%2] defense (instant=%3).", str _side,typeOf _defense,_moveInGunner]] Call WFBE_CO_FNC_LogContent;
+			};
 		};
-
-		[str _side,'UnitsCreated',1] Call UpdateStatistics;
-		["INFORMATION", Format ["Server_HandleDefense.sqf: [%1] Unit has been dispatched to a [%2] defense (instant=%3).", str _side,typeOf _defense,_moveInGunner]] Call WFBE_CO_FNC_LogContent;
+		//--- HC path: do NOT bump UnitsCreated here. CreateUnitForStaticDefence counts successful HC seats;
+		//--- the server fallback spawn above counts only when it actually creates a soldier. Unconditional
+		//--- +1 previously double-counted HC success and phantom-counted failed creates / fire-and-forget dispatch.
 	};
 	sleep 420;
 };

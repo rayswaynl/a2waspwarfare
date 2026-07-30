@@ -12,8 +12,13 @@ while {_i < (count _turrets)} do {
 	_thisTurret = _path + [_turretIndex];
 
 	if (isNull (_vehicle turretUnit _thisTurret)) then {
-		_unit = [_crew,_team,getPos _vehicle,side _team] Call WFBE_CO_FNC_CreateUnit;
-		_unit moveInTurret [_vehicle, _thisTurret];
+		//--- createUnit can return objNull; never moveInTurret a null unit (A2 null-ops / orphan path).
+		if (!isNull _vehicle && {!isNull _team}) then {
+			_unit = [_crew,_team,getPos _vehicle,side _team] Call WFBE_CO_FNC_CreateUnit;
+			if (!isNull _unit) then {
+				_unit moveInTurret [_vehicle, _thisTurret];
+			};
+		};
 	};
 	
 	//Spawn units into subturrets.
