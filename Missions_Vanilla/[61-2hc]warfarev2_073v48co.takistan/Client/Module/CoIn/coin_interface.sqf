@@ -154,9 +154,13 @@ _createBorder = {
 		_zpos = (_center select 2);
 
 		_a = "transparentwall" createVehicleLocal [_xpos,_ypos,_zpos];
-		_a setposasl [_xpos,_ypos,0];
-		_a setdir (_dir + 90);
-		_border = _border + [_a];
+		if (isNull _a) then {
+			["WARNING", Format ["coin_interface.sqf: transparentwall create failed at [%1,%2,%3].", _xpos, _ypos, _zpos]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			_a setposasl [_xpos,_ypos,0];
+			_a setdir (_dir + 90);
+			_border = _border + [_a];
+		};
 	};
 	missionNamespace setVariable ["BIS_COIN_border",_border];
 };
@@ -609,42 +613,43 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 				};
 
 				_preview = _itemclass_preview createVehicleLocal (screenToWorld [0.5,0.5]);
-				_gdir = _logic getVariable 'BIS_COIN_lastdir';
-				if !(isNil '_gdir') then {_preview setDir _gdir};
-				BIS_CONTROL_CAM camSetTarget _preview;
-				BIS_CONTROL_CAM camCommit 0;
-				_logic setVariable ["BIS_COIN_preview",_preview];
-				_new = true;
-
-				//--- Preview Helper.
-				if (_itemclass in _greenList && _index != -1) then {
-					_distance = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDISTANCES",sideJoinedText]) select _index;
-					_direction = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",sideJoinedText]) select _index;
-					_npos = [getPos _preview,_distance,getDir _preview + _direction] Call GetPositionFrom;
-					_helper = "Sign_Danger" createVehicleLocal _npos;
-					_helper setPos _npos;
-					_helper setDir (_direction+65);
-
-					_array = _preview worldToModel (getPos _helper);
-					_array set [2,0];
-					_helper attachTo [_preview,_array];
-
-					_logic setVariable ['WFBE_Helper',_helper];
-				};
-
-				_preview setObjectTexture [0,_colorGray];
-				_preview setVariable ["BIS_COIN_color",_colorGray];
-
-				//--- Exception - preview not created
-				if (isnull _preview) then {
-					deleteVehicle _preview;
+				//--- r44: create may return objNull (missing class / engine reject). Prior code
+				//--- setDir / camSetTarget / helper attach / setObjectTexture BEFORE isnull - script
+				//--- errors and left camera + params half-applied. Gate first; only then configure.
+				if (isNull _preview) then {
+					["WARNING", Format ["coin_interface.sqf: preview class [%1] createVehicleLocal failed.", _itemclass_preview]] Call WFBE_CO_FNC_LogContent;
 					_logic setVariable ["BIS_COIN_preview",nil];
 					_logic setVariable ["BIS_COIN_params",[]];
-					_get = _logic getVariable 'WFBE_Helper';
-					if !(isNil '_get') then {
-						deleteVehicle _get;
-						_logic setVariable ['WFBE_Helper',nil];
+				} else {
+					_gdir = _logic getVariable 'BIS_COIN_lastdir';
+					if !(isNil '_gdir') then {_preview setDir _gdir};
+					BIS_CONTROL_CAM camSetTarget _preview;
+					BIS_CONTROL_CAM camCommit 0;
+					_logic setVariable ["BIS_COIN_preview",_preview];
+					_new = true;
+
+					//--- Preview Helper.
+					if (_itemclass in _greenList && _index != -1) then {
+						_distance = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDISTANCES",sideJoinedText]) select _index;
+						_direction = (missionNamespace getVariable Format ["WFBE_%1STRUCTUREDIRECTIONS",sideJoinedText]) select _index;
+						_npos = [getPos _preview,_distance,getDir _preview + _direction] Call GetPositionFrom;
+						_helper = "Sign_Danger" createVehicleLocal _npos;
+						if (isNull _helper) then {
+							["WARNING", Format ["coin_interface.sqf: Sign_Danger helper create failed at %1.", _npos]] Call WFBE_CO_FNC_LogContent;
+						} else {
+							_helper setPos _npos;
+							_helper setDir (_direction+65);
+
+							_array = _preview worldToModel (getPos _helper);
+							_array set [2,0];
+							_helper attachTo [_preview,_array];
+
+							_logic setVariable ['WFBE_Helper',_helper];
+						};
 					};
+
+					_preview setObjectTexture [0,_colorGray];
+					_preview setVariable ["BIS_COIN_color",_colorGray];
 				};
 
 			} else {
