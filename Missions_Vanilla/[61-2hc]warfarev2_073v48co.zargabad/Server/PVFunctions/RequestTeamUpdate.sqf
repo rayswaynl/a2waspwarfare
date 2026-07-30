@@ -2,15 +2,74 @@ Private["_args","_challenge","_commanderTeam","_consumeResult","_minted","_prope
 
 _args = _this;
 
-_secHardening = (missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0;
-if (_secHardening && {typeName _args != "ARRAY" || {count _args < 1}}) exitWith {
+//--- ORDER-AUTH 20260730: always reject non-array / empty. Previously only under SEC_HARDENING.
+if (typeName _args != "ARRAY" || {count _args < 1}) exitWith {
 	["WARNING", "RequestTeamUpdate.sqf: rejected non-array or empty payload."] Call WFBE_CO_FNC_LogContent;
 };
 _team = _args select 0;
 
-//--- Security hardening: the PVF carries no trusted sender identity. A client-supplied requester
-//--- object is therefore only used to select the server-owned commander state and to target a
-//--- private capability reply; possession of that object alone is not accepted.
+_secHardening = (missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0;
+
+//--- ORDER-AUTH 20260730 BASELINE (always-on, unflagged): when SEC_HARDENING=0 the entire commander /
+//--- side-scope / property-whitelist block below was skipped, so ANY client could forge
+//--- RequestTeamUpdate [enemySide|enemyGroups, behaviour, combat, formation, speed] and re-task
+//--- the victim side's AI formations. Apply a minimal always-on gate: live player requester who is
+//--- the commander of the claimed side, and team scope owned by that side. Capability token mint/
+//--- consume remains behind SEC_HARDENING only (C4 residual: object possession is not crypto bind).
+_rejected = false;
+_requester = objNull;
+if (count _args > 5) then {_requester = _args select 5};
+if (typeName _requester != "OBJECT" || {isNull _requester} || {!isPlayer _requester} || {!alive _requester}) then {
+	//--- Legacy short payloads (no requester slot): reject under baseline auth. Honest clients using
+	//--- the capability-reply path always send requester at select 5.
+	_rejected = true;
+	["WARNING", "RequestTeamUpdate.sqf: rejected update with missing/invalid requester (baseline auth)."] Call WFBE_CO_FNC_LogContent;
+};
+if (!_rejected) then {
+	_requesterSide = side (group _requester);
+	_commanderTeam = _requesterSide Call WFBE_CO_FNC_GetCommanderTeam;
+	if (isNull _commanderTeam || {group _requester != _commanderTeam} || {leader _commanderTeam != _requester}) then {
+		_rejected = true;
+		["WARNING", Format ["RequestTeamUpdate.sqf: rejected non-commander requester [%1] (baseline auth).", _requester]] Call WFBE_CO_FNC_LogContent;
+	};
+};
+if (!_rejected) then {
+	if (count _args < 5) then {
+		_rejected = true;
+		["WARNING", "RequestTeamUpdate.sqf: rejected short update payload (baseline auth)."] Call WFBE_CO_FNC_LogContent;
+	} else {
+		_validProps = ((_args select 1) in ["CARELESS","SAFE","AWARE","COMBAT","STEALTH"])
+			&& {(_args select 2) in ["BLUE","GREEN","WHITE","YELLOW","RED"]}
+			&& {(_args select 3) in ["COLUMN","STAG COLUMN","WEDGE","ECH LEFT","ECH RIGHT","ECH  RIGHT","VEE","LINE","FILE","DIAMOND","NO CHANGE"]}
+			&& {(_args select 4) in ["LIMITED","NORMAL","FULL"]};
+		if (!_validProps) then {
+			_rejected = true;
+			["WARNING", "RequestTeamUpdate.sqf: rejected invalid team property value(s) (baseline auth)."] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+};
+if (!_rejected) then {
+	_teamOwned = true;
+	if (typeName _team == "ARRAY") then {
+		{
+			if (isNil "_x") then {
+				_teamOwned = false;
+			} else {
+				if (typeName _x != "GROUP" || {isNull _x} || {side _x != _requesterSide}) then {_teamOwned = false};
+			};
+		} forEach _team;
+	} else {
+		if (typeName _team != "SIDE" || {_team != _requesterSide}) then {_teamOwned = false};
+	};
+	if (!_teamOwned) then {
+		_rejected = true;
+		["WARNING", Format ["RequestTeamUpdate.sqf: rejected team scope outside requester side [%1] (baseline auth).", _requester]] Call WFBE_CO_FNC_LogContent;
+	};
+};
+if (_rejected) exitWith {};
+
+//--- Security hardening (optional, capability token layer): mint/consume still behind the dark flag.
+//--- Baseline commander+side+props already applied above.
 _rejected = false;
 if (_secHardening) then {
 	_requester = objNull;
