@@ -30,7 +30,7 @@
 if (!isServer) exitWith {};
 if !((missionNamespace getVariable ["WFBE_C_HC_LOBBY_LOCK", 0]) > 0) exitWith {};
 
-private ["_timeout","_expected","_override","_source","_probe","_tries","_seated","_reason","_lastBeatLog"];
+private ["_timeout","_expected","_override","_source","_probe","_tries","_seated","_reason","_lastBeatLog","_t0","_anchorWait"];
 
 _timeout = missionNamespace getVariable ["WFBE_C_HC_LOBBY_TIMEOUT", 90];
 if (_timeout < 10) then {_timeout = 10}; //--- floor: a sub-10s window cannot cover any real HC seat.
@@ -80,21 +80,50 @@ publicVariable "WFBE_HC_LOBBY_STATE";
 ["INFORMATION", Format ["Init_HcLobbyLock.sqf: HC lobby lock armed - expected %1 headless client(s) (%2), timeout %3s, open=%4.", _expected, _source, _timeout, WFBE_HC_LOBBY_READY]] Call WFBE_CO_FNC_LogContent;
 diag_log Format ["HCLOBBY|v1|ARMED|expected=%1|source=%2|timeout=%3|delegation=%4|open=%5", _expected, _source, _timeout, (missionNamespace getVariable ["WFBE_C_AI_DELEGATION", -1]), WFBE_HC_LOBBY_READY];
 
+//--- MISSION-LIVE ANCHOR (2026-07-30). WFBE_C_HC_LOBBY_TIMEOUT is a budget for the HEADLESS-CLIENT
+//--- BRING-UP, and the HCs are launched by C:\WASP\provision\Start-Wasp-*HC.ps1 only after that script
+//--- sees MATCH|v1|START| in the server RPT. Measuring the budget from mission-init instead would make it
+//--- silently absorb whatever the ops-side mission-live gate costs, so raising that gate's own timeout
+//--- would eat this one. Anchor on the exact condition Init_Server.sqf waits on immediately before it
+//--- emits MATCH|v1|START| (both flags are pre-seeded to false in initJIPCompatible.sqf, so this is never
+//--- a nil compare) and stamp _t0 there. MEASURED on the live 2-HC box 2026-07-30 (builds m0730e-h): the
+//--- mission clock does NOT advance during load - `time` reads 0 from Init_Server start through every HC
+//--- connect and only starts running ~2s before MATCH|v1|START| - so on this hardware the anchor moves the
+//--- deadline by ~2s. It is still the correct anchor: it is what makes the constant mean "seconds after the
+//--- mission went live" on any box, instead of depending on that frozen-clock accident holding.
+//--- BOUNDED like every other exit in this file: if the mission never goes live the anchor falls through
+//--- anyway rather than parking the lock (and therefore every joiner) forever. uiSleep, not sleep, because
+//--- the mission clock this guard exists to survive is exactly the one that is frozen during load.
+_anchorWait = 0;
+while {!(commonInitComplete && townInit) && {_anchorWait < 900}} do {
+	uiSleep 1;
+	_anchorWait = _anchorWait + 1;
+};
+_t0 = time;
+
+//--- PUBLISH THE DEADLINE, never the arithmetic. Client\Init\Init_Client.sqf gates on the same mission
+//--- clock, so if it recomputed _t0 + timeout locally the two sides would disagree by however long the
+//--- client took to reach its gate. One publisher, one number. Re-published on the heartbeat below for the
+//--- same JIP-durability reason as WFBE_HC_LOBBY_READY.
+WFBE_HC_LOBBY_DEADLINE = _t0 + _timeout;
+publicVariable "WFBE_HC_LOBBY_DEADLINE";
+diag_log Format ["HCLOBBY|v1|ANCHOR|t0=%1|deadline=%2|timeout=%3|anchorWait=%4|live=%5", round _t0, round WFBE_HC_LOBBY_DEADLINE, _timeout, _anchorWait, (commonInitComplete && townInit)];
+
 //--- HEARTBEAT. A publicVariable is not JIP-durable in A2-OA: a client that connects after a one-shot
 //--- broadcast never receives it. Re-publish every 2s for the whole cold-start window and 30s past it, so
-//--- every client whose gate can still be armed (it is armed only while time < WFBE_C_HC_LOBBY_TIMEOUT) is
+//--- every client whose gate can still be armed (it is armed only while time < WFBE_HC_LOBBY_DEADLINE) is
 //--- guaranteed to sit inside a live heartbeat. After that the loop ends for good - two small variables
 //--- every 2s for at most ~2 minutes, then silence for the rest of the round.
 _reason = "";
 _lastBeatLog = -1;
-while {time < (_timeout + 30)} do {
+while {time < (WFBE_HC_LOBBY_DEADLINE + 30)} do {
 	_seated = {!isNull _x && {!isNull leader _x} && {alive leader _x}} count (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 	if (!WFBE_HC_LOBBY_READY) then {
 		if (_seated >= _expected) then {
 			WFBE_HC_LOBBY_READY = true;
 			_reason = "seated";
 		};
-		if (!WFBE_HC_LOBBY_READY && {time >= _timeout}) then {
+		if (!WFBE_HC_LOBBY_READY && {time >= WFBE_HC_LOBBY_DEADLINE}) then {
 			WFBE_HC_LOBBY_READY = true;
 			_reason = "timeout";
 		};
@@ -110,6 +139,7 @@ while {time < (_timeout + 30)} do {
 	WFBE_HC_LOBBY_STATE = [_seated, _expected];
 	publicVariable "WFBE_HC_LOBBY_READY";
 	publicVariable "WFBE_HC_LOBBY_STATE";
+	publicVariable "WFBE_HC_LOBBY_DEADLINE";
 	if ((round time) != _lastBeatLog && {((round time) mod 10) == 0}) then {
 		_lastBeatLog = round time;
 		diag_log Format ["HCLOBBY|v1|BEAT|ready=%1|seated=%2|expected=%3|at=%4", WFBE_HC_LOBBY_READY, _seated, _expected, _lastBeatLog];
