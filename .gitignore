@@ -74,3 +74,6 @@ Tools/Pack/out/
 # Read-only scripts recovered from the Game PC build box during the PBO-packing
 # recovery investigation - local analysis material only, not part of the repo.
 _recovered-pack-scripts/
+
+# deploy staging artifacts (regenerable PBOs, never commit)
+.deploy-stage/
