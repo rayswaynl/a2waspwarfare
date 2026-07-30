@@ -837,8 +837,11 @@ while {!WFBE_GameOver} do {
 						//--- CONTESTED: recall the sortie for defense immediately (tight move back onto the town),
 						//--- then clear the slot so no new sortie launches while the town is under attack.
 						if (_sortieValid) then {
-							//--- r32 wakeup fidelity: re-anchor garrison posture (not bare MOVE that leaves them idle on arrival).
-							[_sortieGrp, _townPos, 180] Call AIPatrol;
+							//--- r32 wakeup fidelity: contested recall restores DEFENSE (town SAD + AWARE/RED).
+							//--- AIPatrol is wrong here - PATROLS_ROADBIAS can corridor them OFF the contested town.
+							//--- Bare MOVE (pre-r32) arrived then sat idle; server_town_patrol only re-lays on mode change.
+							_sortieDefR = missionNamespace getVariable ["WFBE_C_TOWNS_DEFENSE_RANGE", 30];
+							[_sortieGrp, _townPos, "SAD", _sortieDefR] Call WFBE_CO_FNC_WaypointSimple;
 							_sortieGrp setBehaviour "AWARE";
 							_sortieGrp setCombatMode "RED";
 							["INFORMATION", Format ["server_town_ai.sqf: sortie RECALLED (contested) for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
@@ -865,11 +868,11 @@ while {!WFBE_GameOver} do {
 								_sortieRtbCap = missionNamespace getVariable ["WFBE_C_TOWNS_SORTIE_RTB_TIMEOUT", 180];
 								if (_sortieRtbCap < 15) then {_sortieRtbCap = 15};
 								if (((leader _sortieGrp) distance _townPos) <= 60 || {(time - _sortieStarted) >= _sortieRtbCap}) then {
-									//--- r32 wakeup fidelity: after RTB, restore town-ring patrol + combat mode (MOVE arrival left idle).
+									//--- r32 wakeup fidelity: after RTB restore camp-biased town patrol (WaypointPatrolTown).
+									//--- AIPatrol is wrong: road-bias can re-send them off-town; MOVE left them idle.
 									if (count units _sortieGrp > 0 && {local (leader _sortieGrp)}) then {
-										[_sortieGrp, _townPos, 180] Call AIPatrol;
-										_sortieGrp setBehaviour "AWARE";
-										_sortieGrp setCombatMode "RED";
+										_sortiePatR = missionNamespace getVariable ["WFBE_C_TOWNS_PATROL_RANGE", 500];
+										[_sortieGrp, _town, _sortiePatR] Call WFBE_CO_FNC_WaypointPatrolTown;
 									};
 									_town setVariable ["wfbe_sortie_grp", grpNull, true];
 									_town setVariable ["wfbe_sortie_started", 0];
@@ -890,10 +893,10 @@ while {!WFBE_GameOver} do {
 										_town setVariable ["wfbe_sortie_rtb", true];
 										["INFORMATION", Format ["server_town_ai.sqf: sortie RTB started for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
 									} else {
-										//--- r32 wakeup fidelity: re-arm town-ring garrison patrol + combat after outer-ring rotation ends.
-										[_sortieGrp, _townPos, 180] Call AIPatrol;
-										_sortieGrp setBehaviour "AWARE";
-										_sortieGrp setCombatMode "RED";
+										//--- r32 wakeup fidelity: re-arm town-camp patrol after outer-ring rotation ends.
+										//--- Matches server_town_patrol "patrol" mode; not AIPatrol (road-bias corridor).
+										_sortiePatR = missionNamespace getVariable ["WFBE_C_TOWNS_PATROL_RANGE", 500];
+										[_sortieGrp, _town, _sortiePatR] Call WFBE_CO_FNC_WaypointPatrolTown;
 										_town setVariable ["wfbe_sortie_grp", grpNull, true];
 										_town setVariable ["wfbe_sortie_started", 0];
 										["INFORMATION", Format ["server_town_ai.sqf: sortie rotated home for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;

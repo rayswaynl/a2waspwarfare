@@ -47,7 +47,11 @@ while {!WFBE_GameOver && _aliveTeam} do {
 				[_team,_focus,_patrol_range/4] Spawn WFBE_CO_FNC_WaypointPatrol;
 			};
 		} else {
-			[_team,getPos _location,'SAD',_defense_range] Spawn WFBE_CO_FNC_WaypointSimple;
+			//--- r32 wakeup fidelity: defense mode must stamp AWARE/RED (WaypointSimple lays SAD only).
+			//--- Without this, a group that left SAFE/YELLOW outer-ring (AIPatrol) or was just recalled keeps a passive combat mode while defending.
+			[_team,getPos _location,'SAD',_defense_range] Call WFBE_CO_FNC_WaypointSimple;
+			_team setBehaviour "AWARE";
+			_team setCombatMode "RED";
 		};
 	};
 	if !(isNil "PerformanceAudit_Record") then {

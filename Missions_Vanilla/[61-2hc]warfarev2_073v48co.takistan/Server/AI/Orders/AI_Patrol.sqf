@@ -1,5 +1,5 @@
 Private ["_destination","_maxWaypoints","_pos","_radius","_rand1","_rand2","_team","_type","_update","_wps","_z",
-	"_rbEnabled","_rbSideID","_rbOwned","_rbOrigin","_rbDest","_rbHQ","_rbA","_rbB","_rbLane","_rbHops","_rbRoute","_rbNodeCount","_rbI","_rbNode","_rbType","_rbSkipNaval"];  //--- cmdcon41-w3m: +_rbSkipNaval (naval-HVT corridor-endpoint exclusion).
+	"_rbEnabled","_rbSideID","_rbOwned","_rbOrigin","_rbDest","_rbHQ","_rbA","_rbB","_rbLane","_rbHops","_rbRoute","_rbNodeCount","_rbI","_rbNode","_rbType","_rbSkipNaval","_rbTownAI"];  //--- cmdcon41-w3m: +_rbSkipNaval; r32 +_rbTownAI (town-garrison ring fidelity).
 _team = _this select 0;
 _destination = _this select 1;
 _radius = if (count _this > 2) then {_this select 2} else {30};
@@ -37,7 +37,13 @@ _wps = [];
 //--- ROADS between owned towns instead of to their target. Exclude Air here so air falls through to the legacy
 //--- direct-destination block below. Byte-identical for ground patrols (isKindOf "Air" is false for a man/ground
 //--- vehicle leader). A2-OA-1.64-safe: vehicle/leader/isKindOf.
-_rbEnabled = ((missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0) && {!((vehicle (leader _team)) isKindOf "Air")};
+//--- r32 wakeup fidelity: town garrison groups (WFBE_TownAI_Group, set by CreateTownUnits) use AIPatrol
+//--- for the 300-800m OUTER RING around their town. Road-bias ignores the destination radius and builds an
+//--- inter-owned-town corridor instead - so a "local ring" woke them kilometers away. Side patrols are
+//--- unaffected (they never stamp WFBE_TownAI_Group). A2 GROUPGETVAR: 1-arg + isNil (2-arg default is nil).
+_rbTownAI = _team getVariable "WFBE_TownAI_Group";
+if (isNil "_rbTownAI") then {_rbTownAI = false};
+_rbEnabled = ((missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0) && {!((vehicle (leader _team)) isKindOf "Air")} && {!_rbTownAI};
 if (_rbEnabled) then {
 	_rbSideID = (side _team) Call WFBE_CO_FNC_GetSideID;
 	_rbOwned = [];
