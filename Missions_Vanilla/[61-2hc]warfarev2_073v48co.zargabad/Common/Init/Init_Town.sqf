@@ -63,8 +63,8 @@ if (isNull _town || (_town getVariable "wfbe_inactive")) exitWith {};
 
 _town setVariable ["name",_townName];
 _town setVariable ["range",_townRange];
-_town setVariable ["startingSupplyValue",_townStartSV];
-_town setVariable ["maxSupplyValue",_townMaxSV];
+_town setVariable ["startingSupplyValue",_townStartSV, true]; //--- r35: public so JIP/HC town_patrol + capture UI see the same start SV (was machine-local only).
+_town setVariable ["maxSupplyValue",_townMaxSV, true]; //--- r35: public with startingSupplyValue (parity; readers already 2-arg default).
 _town setVariable ["LastSupplyMissionRun", 0]; //--- XR4: match the read/write casing in isSupplyMissionActiveInTown / supplyMissionStarted (was lowercase "lastSupplyMissionRun" -> first cooldown check read nil).
 _town setVariable ["supplyMissionCoolDownEnabled", false];
 
