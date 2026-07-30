@@ -125,6 +125,13 @@ _deckOrders    = ["MOVE / ATTACK","DEFEND","PATROL","ARTILLERY","RALLY","REFIT",
 _deckOrderActs = [720,721,722,723,727,728,729,724];
 _lastDeckHdr = "";
 _deckDoctrine = "";
+if (!_deckOn) then {
+	//--- BELT-AND-BRACES (owner report 2026-07-30: deck zone labels rendered with the flag off):
+	//--- never rely on the dialog's show=0 default alone - a stale cached mission, an inherited
+	//--- class default, or any future path that admits these idcs would leave them drawing over
+	//--- the legacy layout. Hidden explicitly, every open, when the deck is off.
+	{ctrlShow [_x, false]} forEach [14700,14701,14702,14703,14704,14705,14706];
+};
 if (_deckOn) then {
 	_warCtrls = _warCtrls - [14620,14621,14622,14623,14624,14628,14629,14630];
 	//--- fable/review-guards (adversarial review 2026-07-28, CONFIRMED): 14700 is deliberately in

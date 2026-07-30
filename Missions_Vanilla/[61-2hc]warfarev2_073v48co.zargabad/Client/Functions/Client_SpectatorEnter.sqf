@@ -162,6 +162,20 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 				};
 			};
 		};
+		case 201: { //--- PgUp: raise mouse sensitivity (live tuning for streaming setups)
+			private "_s";
+			_s = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 80]) + 10) min 400;
+			missionNamespace setVariable ["WFBE_C_SPECTATOR_SENS", _s];
+			hintSilent Format ["Spectator sensitivity: %1", _s];
+			true
+		};
+		case 209: { //--- PgDn: lower mouse sensitivity
+			private "_s";
+			_s = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 80]) - 10) max 10;
+			missionNamespace setVariable ["WFBE_C_SPECTATOR_SENS", _s];
+			hintSilent Format ["Spectator sensitivity: %1", _s];
+			true
+		};
 		case 35: { //--- H: hide/show the hint overlay (clean OBS capture)
 			WFBE_C_VAR_SpectatorHideHint = !WFBE_C_VAR_SpectatorHideHint;
 			if (WFBE_C_VAR_SpectatorHideHint) then {hintSilent ""};
