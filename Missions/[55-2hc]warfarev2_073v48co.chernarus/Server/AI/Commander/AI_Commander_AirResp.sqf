@@ -328,9 +328,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_
 						//--- TEAMS, the leak that reaper exists for), so the hull is SERVER-LOCAL and Common_TrashObject.sqf's
 						//--- locality-free deleteVehicle does land on it.
 						if (alive _h) then {
-							{deleteVehicle _x} forEach (crew _h);
-							if (!isNull _h) then {deleteVehicle _h};
-							if (!isNull _g) then {deleteGroup _g};
+							//--- r56 fail-clean: crew snapshot can contain nulls after long loiter poll; skip voids.
+							{ if (!isNull _x) then { deleteVehicle _x } } forEach (crew _h);
+							if (!isNull _h) then { deleteVehicle _h };
+							if (!isNull _g) then { deleteGroup _g };
 						};
 					};
 				} else {

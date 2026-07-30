@@ -16,6 +16,9 @@ Private ["_deadline","_deletedGroups","_deletedUnits","_entry","_entryEpoch","_e
 
 _town = _this select 0;
 _side = _this select 1;
+//--- r56 fail-clean: town can be nil/null on late HC cleanup races; never getVariable/delete against void.
+if (isNil "_town") exitWith {};
+if (isNull _town) exitWith {};
 //--- fix-1375 (codex hold a): -1 means "no epoch gate" (legacy/deactivation callers) - delete every
 //--- matching town+side entry as before.
 _epochGate = if (count _this > 2) then {_this select 2} else {-1};
@@ -42,7 +45,7 @@ if (count _groups == 0) exitWith {};
 _deletedUnits = 0;
 _deletedGroups = 0;
 _keptGroups = 0;
-_townName = _town getVariable "name";
+_townName = _town getVariable ["name", "?"];
 
 // Marty: Record local HC/client group counts before and after delegated town AI cleanup.
 _logGroupCount = {
@@ -92,7 +95,14 @@ _logGroupCount = {
 		if (!(isNil {_group getVariable "WFBE_TownAI_Side"}) && {(_group getVariable "WFBE_TownAI_Side") != _side}) exitWith {};
 
 		_units = +units _group;
-		{["hc-townai-cleanup-unit", _x, Format ["town=%1", _townName]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; _deletedUnits = _deletedUnits + 1} forEach _units;
+		//--- r56 fail-clean: skip null unit refs; only count real deletes.
+		{
+			if (!isNull _x) then {
+				["hc-townai-cleanup-unit", _x, Format ["town=%1", _townName]] Call WFBE_CO_FNC_LogVehDelete;
+				deleteVehicle _x;
+				_deletedUnits = _deletedUnits + 1;
+			};
+		} forEach _units;
 
 		_deadline = time + 5;
 		waitUntil {sleep 0.1; isNull _group || count (units _group) == 0 || time > _deadline};

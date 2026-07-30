@@ -7,8 +7,11 @@
 Private ["_delay","_group","_isMan","_object","_town"];
 
 _object = _this;
-_town = [_object] Call GetClosestLocation;
-if !(isNull _object) then {
+//--- r56 fail-clean: isNull BEFORE any work. Prior code called GetClosestLocation on a
+//--- possibly-null object into unused _town (dead null risk + cost).
+if (isNil "_object") exitWith {};
+if (isNull _object) exitWith {};
+if (true) then {
 	_isMan = if (_object isKindOf "Man") then {true} else {false};
 
 	_group = if (_isMan) then {group _object} else {grpNull};
