@@ -625,6 +625,11 @@ while {!WFBE_GameOver} do {
 							_position = [_position, 50] call WFBE_CO_FNC_GetEmptyPosition;
 							[_positions, _position] call WFBE_CO_FNC_ArrayPush;
 							_ctlNewGrp = ([_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup);
+							//--- r50 fail-clean: CreateGroup returns grpNull at side group-cap; setVariable on null
+							//--- and pushing grpNull into _teams poisons the later CreateTownUnits batch for the wave.
+							if (isNull _ctlNewGrp) then {
+								["WARNING", Format ["server_town_ai.sqf: town-ai CreateGroup failed for side [%1] town [%2] - slot dropped.", _side, _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+							} else {
 							//--- New-Bug-A fix (fable/ctl-survivor-bugs): stamp each freshly created group with the SAME
 							//--- per-town wfbe_ctl_ground_wave state just set above for this wave (line ~287/~309), so
 							//--- the survivor-tally numerator below (deactivation block) can tell ground-wave groups
@@ -636,6 +641,7 @@ while {!WFBE_GameOver} do {
 								_ctlNewGrp setVariable ["wfbe_ctl_ground_wave", (_town getVariable ["wfbe_ctl_ground_wave", true])];
 							};
 							[_teams, _ctlNewGrp] call WFBE_CO_FNC_ArrayPush;
+							};
 						};
 
 						//--- Paid GDIR defensive vehicles are a server-owned supplement, never an item in
