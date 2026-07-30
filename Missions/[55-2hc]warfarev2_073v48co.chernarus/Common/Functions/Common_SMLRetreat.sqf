@@ -44,9 +44,13 @@ if (_healthyCount < _healthyMin) exitWith {
     diag_log Format ["SML|v1|RETREAT_SKIP|side=%1 team=%2 healthy=%3 mauled=%4 (below_healthy_min=%5)", _side, _team, _healthyCount, _mauledCount, _healthyMin];
 };
 
-if (count _mauled == 0) exitWith {};
+//--- BUGFIX 2026-07-30 (alife-suppression-stance): do NOT exit when _mauled is empty.
+//--- Retreat is spawned at CENTER_PUSH entry when the squad is usually still healthy; the
+//--- prior one-shot scan made SML-3 a no-op for units wounded DURING the depot firefight.
+//--- Keep healthyMin gate above; enter the watchdog even with zero mauled and attach new
+//--- casualties each poll while enough healthy fighters remain.
 
-//--- Detach each mauled unit: stamp + pull back 80m away from _townCenter.
+//--- Detach helper (initial + continuous): stamp + pull back 80m away from _townCenter.
 //--- Only units SML-3 actually stamps are tracked in _detachedBySML3 for rejoin.
 _detachedBySML3 = [];
 {
@@ -65,7 +69,11 @@ _detachedBySML3 = [];
     };
 } forEach _mauled;
 
-diag_log Format ["SML|v1|RETREAT|side=%1 team=%2 mauled=%3 healthy=%4 ttl=%5", _side, _team, _mauledCount, _healthyCount, _ttl];
+if (count _detachedBySML3 > 0) then {
+    diag_log Format ["SML|v1|RETREAT|side=%1 team=%2 mauled=%3 healthy=%4 ttl=%5", _side, _team, count _detachedBySML3, _healthyCount, _ttl];
+} else {
+    diag_log Format ["SML|v1|RETREAT_ARM|side=%1 team=%2 healthy=%3 mauled=0 ttl=%4 (continuous scan)", _side, _team, _healthyCount, _ttl];
+}
 
 //--- WATCHDOG: poll every 3s until TTL or exit condition.
 _reason = "ttl";
@@ -92,22 +100,52 @@ waitUntil {
     _retasked = (count _ordN >= 1) && {(_ordN select 0) != _capSeq};
     if (_retasked) then {_reason = "retasked"; true} else {
 
-    //--- (e) All mauled units dead or healed.
-    _allDone = true;
+    //--- (e) Continuous attach: newly mauled foot still in the fight (unstamped) pull back
+    //--- while healthy fighters remain above HEALTHY_MIN. Does not re-count already detached.
+    _healthyCount = 0;
     {
-        _mX = _x;
-        if (alive _mX && {_mX in (units _team)} && {(getDammage _mX) >= _thresh}) then {
-            _allDone = false;
+        if (alive _x && {(getDammage _x) < _thresh} && {isNil {_x getVariable "wfbe_sml_detach_at"}}) then {
+            _healthyCount = _healthyCount + 1;
         };
-    } forEach _mauled;
+    } forEach _footInf;
+    if (_healthyCount >= _healthyMin) then {
+        {
+            _mX = _x;
+            if (alive _mX && {(getDammage _mX) >= _thresh} && {isNil {_mX getVariable "wfbe_sml_detach_at"}}) then {
+                _mX setVariable ["wfbe_sml_detach_at", time];
+                _posX   = (getPos _mX) select 0;
+                _posY   = (getPos _mX) select 1;
+                _bearing = (_posX - ((_townCenter) select 0)) atan2 (_posY - ((_townCenter) select 1));
+                _retreatPos = [_posX + 80 * (sin _bearing), _posY + 80 * (cos _bearing), 0];
+                doStop _mX;
+                _mX doMove _retreatPos;
+                _detachedBySML3 set [count _detachedBySML3, _mX];
+                diag_log Format ["SML|v1|RETREAT_LATE|side=%1 team=%2 unit=%3 healthy_left=%4", _side, _team, _mX, _healthyCount];
+            };
+        } forEach _footInf;
+    };
+
+    //--- (f) All currently detached mauled units dead or healed.
+    //--- Keep running while zero detached yet (armed continuous scan) so late casualties attach.
+    _allDone = true;
+    if (count _detachedBySML3 == 0) then {
+        _allDone = false;
+    } else {
+        {
+            _mX = _x;
+            if (alive _mX && {_mX in (units _team)} && {(getDammage _mX) >= _thresh}) then {
+                _allDone = false;
+            };
+        } forEach _detachedBySML3;
+    };
     if (_allDone) then {_reason = "all_dead_or_healed"; true} else {
 
-    //--- (f) Group change: any mauled unit no longer in _team.
+    //--- (g) Group change: any SML-3-detached unit no longer in _team.
     _groupChanged = false;
     {
         _mX = _x;
         if (alive _mX && {!(_mX in (units _team))}) then {_groupChanged = true};
-    } forEach _mauled;
+    } forEach _detachedBySML3;
     if (_groupChanged) then {_reason = "group_change"; true} else {false}
     }}}}}
 };
@@ -118,7 +156,10 @@ waitUntil {
     _mX setVariable ["wfbe_sml_detach_at", nil];
     if (alive _mX && {_mX in (units _team)}) then {
         _mX setUnitPos "AUTO";
-        _mX doFollow (leader _team);
+        //--- Match SML-2 W1: never doFollow a null/dead leader (leader_dead exit races here).
+        if (!isNull (leader _team) && {alive (leader _team)}) then {
+            _mX doFollow (leader _team);
+        };
     };
 } forEach _detachedBySML3;
 

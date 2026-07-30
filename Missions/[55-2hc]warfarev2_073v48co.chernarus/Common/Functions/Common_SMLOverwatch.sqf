@@ -41,7 +41,7 @@ if (isNull _launcher || {!_found}) exitWith {
 };
 
 //--- Step 2: Scan for hostile armor near _townCenter.
-_scanResult  = _townCenter nearEntities [["Tank"], _armorR];
+_scanResult  = _townCenter nearEntities [["Tank","Wheeled_APC"], _armorR];
 _hostileArmor = [];
 {
     _uX = _x;
@@ -109,7 +109,7 @@ waitUntil {
     if (_retasked) then {_reason = "retasked"; true} else {
 
     //--- (f) No more hostile armor in range.
-    _scanResult = _townCenter nearEntities [["Tank"], _armorR];
+    _scanResult = _townCenter nearEntities [["Tank","Wheeled_APC"], _armorR];
     _hostileCount = 0;
     {
         _uX = _x;
@@ -128,7 +128,10 @@ waitUntil {
 _launcher setVariable ["wfbe_sml_detach_at", nil];
 if (alive _launcher) then {
     _launcher setUnitPos "AUTO";
-    _launcher doFollow (leader _team);
+    //--- Match SML-2 W1: never doFollow a null/dead leader (leader_dead exit races here).
+    if (!isNull (leader _team) && {alive (leader _team)}) then {
+        _launcher doFollow (leader _team);
+    };
 };
 
 diag_log Format ["SML|v1|OVERWATCH_REJOIN|side=%1 team=%2 reason=%3 elapsed=%4", _side, _team, _reason, (time - _startTime)];
