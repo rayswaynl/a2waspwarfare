@@ -3405,6 +3405,18 @@ if (isNil "WFBE_C_SPECTATOR_SLOW") then {WFBE_C_SPECTATOR_SLOW = 0.25};
 if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 45};	//--- owner playtest 2026-07-30: 300 deg per full UI-width was unusable; 80 is a broadcast-friendly base. PgUp/PgDn adjust live in-session.
 if (isNil "WFBE_C_SPECTATOR_FOV_MIN") then {WFBE_C_SPECTATOR_FOV_MIN = 0.05};
 if (isNil "WFBE_C_SPECTATOR_FOV_MAX") then {WFBE_C_SPECTATOR_FOV_MAX = 1.2};
+//--- Spectator v3 director (streaming): target classes + orbit + auto-rotation. All default ON for soak;
+//--- set any to 0 for instant rollback of that slice without touching the v1/v2 free-cam core.
+if (isNil "WFBE_C_SPECTATOR_TEAMS") then {WFBE_C_SPECTATOR_TEAMS = 1}; //--- G class: cycle AICOM/side-logic wfbe_teams leaders (west+east).
+if (isNil "WFBE_C_SPECTATOR_TOWNS") then {WFBE_C_SPECTATOR_TOWNS = 1}; //--- G class: cycle towns[] (capture FSM objects with name).
+if (isNil "WFBE_C_SPECTATOR_ORBIT") then {WFBE_C_SPECTATOR_ORBIT = 1}; //--- O key: circular orbit cam around armed target.
+if (isNil "WFBE_C_SPECTATOR_ORBIT_RADIUS") then {WFBE_C_SPECTATOR_ORBIT_RADIUS = 25}; //--- m horizontal radius.
+if (isNil "WFBE_C_SPECTATOR_ORBIT_HEIGHT") then {WFBE_C_SPECTATOR_ORBIT_HEIGHT = 12}; //--- m above target.
+if (isNil "WFBE_C_SPECTATOR_ORBIT_RATE") then {WFBE_C_SPECTATOR_ORBIT_RATE = 12}; //--- deg/s orbit rate.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR") then {WFBE_C_SPECTATOR_DIRECTOR = 1}; //--- R key: unattended interest-ranked rotation.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_DWELL = 12}; //--- seconds on each director pick.
+if (isNil "WFBE_C_SPECTATOR_SEAGULL") then {WFBE_C_SPECTATOR_SEAGULL = 0}; //--- EVALUATED: seagull carrier NOT used (default 0). Keep camCreate; do not arm without OA 1.64 ladder proof.
+
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

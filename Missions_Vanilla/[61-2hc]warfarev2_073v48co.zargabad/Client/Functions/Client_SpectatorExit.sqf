@@ -52,6 +52,9 @@ hintSilent ""; //--- v2: clear the hint overlay even if it was mid-update.
 WFBE_C_VAR_SpectatorMode = "free";
 WFBE_C_VAR_SpectatorTarget = objNull;
 WFBE_C_VAR_SpectatorHideHint = false;
+WFBE_C_VAR_SpectatorDirector = false;
+WFBE_C_VAR_SpectatorTargetClass = "players";
+WFBE_C_VAR_SpectatorOrbitAng = 0;
 
 if (!isNull _body) then {
 	if (alive _body) then {_body allowDamage true};
