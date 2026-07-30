@@ -270,6 +270,14 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_
 				_pilot = [_pilotClass, _grp, _spawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 				if (!isNull _pilot) then {
 					_pilot moveInDriver _heli;
+					//--- FAIL-CLEAN (r39): seat fail left pilot free + empty airframe still registered as dispatched.
+					if (driver _heli != _pilot) then {
+						_skipReason = "pilot-seat-failed";
+						deleteVehicle _pilot;
+						deleteVehicle _heli;
+						deleteGroup _grp;
+						["WARNING", Format ["AI_Commander_AirResp.sqf: [%1] pilot seat failed class=%2 - flight aborted.", _sideText, _class]] Call WFBE_CO_FNC_LogContent;
+					} else {
 					//--- ATTACK-HELI GUNNER (flag WFBE_C_AIR_ATTACK_GUNNER, default 0/byte-identical): AH64/AH1Z/Mi24
 					//--- fire their principal armament (Hellfire/TOW/Vikhr) from the GUNNER seat, so a pilot-only spawn
 					//--- flies but never engages. Mount a gunner too (mirrors the B62 fix at Server_GuerAirDef.sqf:378-387).
@@ -332,6 +340,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_
 							if (!isNull _h) then {deleteVehicle _h};
 							if (!isNull _g) then {deleteGroup _g};
 						};
+					};
 					};
 				} else {
 					_skipReason = "pilot-create-failed";

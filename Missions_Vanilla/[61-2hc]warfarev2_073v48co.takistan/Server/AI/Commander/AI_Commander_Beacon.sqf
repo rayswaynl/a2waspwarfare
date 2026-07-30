@@ -138,15 +138,21 @@ if (_funds < _price) exitWith {};
 
 //--- 10) Field the forward spawn beacon. createVehicle (A2-OA-safe; same as ConstructDefense; it already places the
 //--- unit at _pos), aim toward the fist, TAG it so we only manage ours (broadcast so the respawn menus everywhere see
-//--- the tag), and pin it (low fuel + locked) so the AI does not drive it off. Stamp the re-buy cooldown on success.
-[_side, -_price] Call ChangeAICommanderFunds;
+//--- the tag), and pin it (low fuel + locked) so the AI does not drive it off. Stamp the re-buy cooldown on success only.
+//--- FAIL-CLEAN (r39): create first; debit+cooldown only after non-null hull (null must not setDir/setVar/setFuel/lock).
 _veh = createVehicle [_amb, _pos, [], 0, "NONE"];
-_veh setDir _dir;
-_veh setVariable ["wfbe_aicom_beacon", true, true];
-_veh setVariable ["wfbe_aicom_beacon_side", _myID, true];
-_veh setFuel 0.5;
-_veh lock true;
-_logik setVariable ["wfbe_aicom_beaconbuilt", time];
+if (isNull _veh) then {
+	["WARNING", Format ["AI_Commander_Beacon.sqf: [%1] spawn-beacon createVehicle FAILED class=%2 pos=%3 - no debit/cooldown.", _sideText, _amb, _pos]] Call WFBE_CO_FNC_LogContent;
+	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SPAWNBEACON_CREATEFAIL|class=" + _amb + "|pos=" + str _pos);
+} else {
+	[_side, -_price] Call ChangeAICommanderFunds;
+	_veh setDir _dir;
+	_veh setVariable ["wfbe_aicom_beacon", true, true];
+	_veh setVariable ["wfbe_aicom_beacon_side", _myID, true];
+	_veh setFuel 0.5;
+	_veh lock true;
+	_logik setVariable ["wfbe_aicom_beaconbuilt", time];
 
-["INFORMATION", Format ["AI_Commander_Beacon.sqf: [%1] FORWARD SPAWN-BEACON fielded (%2) at %3 (own town %4, cost %5 funds, standoff %6m toward fist).", _sideText, _amb, _pos, (_fwdTown getVariable ["name", "?"]), _price, _standoff]] Call WFBE_CO_FNC_AICOMLog;
-diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SPAWNBEACON_FIELDED|class=" + _amb + "|cost=" + str _price + "|pos=" + str _pos + "|ownTown=" + (_fwdTown getVariable ["name", "?"]) + "|fist=" + (_target getVariable ["name", "?"]) + "|standoff=" + str _standoff);
+	["INFORMATION", Format ["AI_Commander_Beacon.sqf: [%1] FORWARD SPAWN-BEACON fielded (%2) at %3 (own town %4, cost %5 funds, standoff %6m toward fist).", _sideText, _amb, _pos, (_fwdTown getVariable ["name", "?"]), _price, _standoff]] Call WFBE_CO_FNC_AICOMLog;
+	diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SPAWNBEACON_FIELDED|class=" + _amb + "|cost=" + str _price + "|pos=" + str _pos + "|ownTown=" + (_fwdTown getVariable ["name", "?"]) + "|fist=" + (_target getVariable ["name", "?"]) + "|standoff=" + str _standoff);
+};
