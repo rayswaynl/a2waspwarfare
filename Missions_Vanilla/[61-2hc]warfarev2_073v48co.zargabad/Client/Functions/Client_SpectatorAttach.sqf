@@ -5,6 +5,8 @@
    spectator overlay. Spawned ONCE from Init_Client.sqf for EVERY client
    (cheap early-exit for anyone not on the allowlist); only the allowlisted
    owner UID(s) in WFBE_C_SPECTATOR_UIDS ever get the addActions below.
+   The UID allowlist gates ACTION VISIBILITY on this client only, under standard
+   A2 locality; it is not server-enforced authentication or authorization.
 
    Re-checks every few seconds instead of a one-shot attach because `player`
    is a FRESH object after every respawn (addAction is object-bound and does

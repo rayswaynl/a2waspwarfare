@@ -2,6 +2,8 @@
    fable/spectator-v1 -> v2 (owner request 2026-07-29: caster-grade watch tool)
    -------------------------------------------------------------------------
    Enters the UID-allowlisted spectator overlay for the CALLING client only.
+   The UID allowlist gates ACTION VISIBILITY on this client only, under standard
+   A2 locality; it is not server-enforced authentication or authorization.
    addAction target (see Client_SpectatorAttach.sqf); the addAction condition
    already restricts visibility to the allowlisted UID, an alive body, and past
    the deadspawn-transit invulnerability window (WFBE_Client_DeadspawnEscaped,

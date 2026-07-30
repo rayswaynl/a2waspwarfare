@@ -3303,7 +3303,8 @@ if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_DELAY") then {WFBE_C_AICOM_HQ_REPURCHASE_D
 //--- opt-in free-camera spectator overlay for an already-enrolled player (Client_SpectatorAttach/
 //--- Enter/Exit.sqf, wired from Client\Init\Init_Client.sqf). Client-side only - no HC architecture,
 //--- player enrollment, or JIP flow touched. Master flag defaults ON per owner request; the UID
-//--- allowlist below is the real gate (empty allowlist = fully inert for every connecting player).
+//--- allowlist gates ACTION VISIBILITY on each client only under standard A2 locality; it is
+//--- not server-enforced authentication or authorization (empty allowlist = fully inert).
 if (isNil "WFBE_C_SPECTATOR") then {WFBE_C_SPECTATOR = 1};
 //--- SteamID64 strings, compared against (getPlayerUID player) - the same string shape getPlayerUID
 //--- already returns everywhere else in this mission (Client_BuildUnit.sqf, Action_CancelQueue.sqf,

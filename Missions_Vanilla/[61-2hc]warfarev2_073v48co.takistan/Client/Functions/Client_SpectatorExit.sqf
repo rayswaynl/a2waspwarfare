@@ -6,6 +6,8 @@
    handlers detached (v2 adds MouseMoving/MouseZChanged to v1's KeyDown/KeyUp),
    the hint overlay cleared, view returned to the player. addAction target (see
    Client_SpectatorAttach.sqf), Backspace quick-exit target, and the internal
+   (The UID allowlist controls ACTION VISIBILITY on this client only under standard
+   A2 locality; it is not server-enforced authentication or authorization.)
    auto-exit for the movement loop's death watchdog in Client_SpectatorEnter.sqf.
 
    Idempotent: safe to call more than once (e.g. Backspace right as the death
