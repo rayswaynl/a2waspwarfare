@@ -43,7 +43,9 @@ if (_isHeadless) then {
 		//---   hc-force-reseat            = server_hcreg_heal.sqf (hc-locality-group-owner; orders a
 		//---        registry-orphaned HC to ReseatCivilian + re-announce - group joins are locality-bound
 		//---        so the server cannot repair the HC's group itself)
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat"]);
+		//---   cleanup-weaponholder       = droppeditems_cleaner.sqf (weaponholder loot reaper; holders are
+		//---        "alive" so cleanup-trash-object's !alive gate can never pass them - dedicated case)
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat","cleanup-weaponholder"]);
 	};
 	if (_hcAllowed) then {_exit = false};
 };
@@ -52,6 +54,14 @@ if (_isHeadless) then {
 //--- for every broadcast (endgame cameras, irsmoke FX, DashboardAnnounce... all ran on interface-less HCs,
 //--- HCs auto-seat a WEST slot so SIDE-scoped sends matched too). Top-scope exit makes the allowlist real.
 if (_isHeadless && {!_hcAllowed}) exitWith {};
+
+//--- Real clients: SendToClient stamps destination as getPlayerUID(object). That is empty for non-unit
+//--- objects (WeaponHolder), so the UID match below never opens the gate for client-local gear piles.
+//--- Re-open for the self-validating cleanup-weaponholder case; the receiver still requires local +
+//--- reap stamp + isKindOf WeaponHolder (forged dispatch can at worst despawn a pile).
+if (!_isHeadless && {_script == "CLTFNCHandleSpecial"} && {(typeName _parameters) == "ARRAY"} && {(count _parameters) > 0}) then {
+	if ((_parameters select 0) in ["cleanup-weaponholder"]) then {_exit = false};
+};
 
 if (isNil '_destination') then {_destination = 0;_exit = false};
 if (typeName(_destination) == 'SIDE') then {if !(isNil "sideJoined") then {if (sideJoined == _destination) then {_exit = false}}};

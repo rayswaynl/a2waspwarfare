@@ -211,6 +211,17 @@ switch (_request) do {
 		_trashObj = _args select 0;
 		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])}) then {deleteVehicle _trashObj};
 	};
+	//--- Owner-side half of droppeditems_cleaner.sqf locality gate (weaponholder loot reaper).
+	//--- Weaponholders are "alive", so the trash case above can never pass them - dedicated case
+	//--- with its own self-validation: flag + local + reap stamp + WeaponHolder-family. Worst a
+	//--- forged dispatch can do is despawn a gear pile - which is this channel's entire job.
+	case "cleanup-weaponholder": {
+		Private ["_whObj"];
+		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
+		if (count _args < 1) exitWith {};
+		_whObj = _args select 0;
+		if (!isNull _whObj && {local _whObj} && {_whObj isKindOf "WeaponHolder"} && {(_whObj getVariable ["wfbe_trash_reap", false])}) then {deleteVehicle _whObj};
+	};
 	//--- Owner-side half of Server_HandleEmptyVehicle.sqf's locality gate. The server has already held this
 	//--- hull past the empty timeout, but it cannot delete a HC-local alive object directly. Re-check local
 	//--- ownership, no alive crew, and the existing airlift/FOB exemptions here so a delayed or forged dispatch
