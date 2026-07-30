@@ -558,13 +558,27 @@ while {!WFBE_GameOver} do {
                                 if (_cKind == "qrfCombo") then {_qrfSlots = 2};
                                 if ((_curGuerGrps + _qrfSlots) <= _grpBudgetMax) then {
                                     //--- Authorized new air execution path for A1 panel (no V1 GUER air path existed).
-                                    private ["_hClass","_h","_hGrp"];
+                                    private ["_hClass","_h","_hGrp","_qrfGunPool","_qrfGunOk","_qrfGunPick"];
+                                    //--- Pick QRF gunship classname (flag-gated pool; default hardcoded Mi24_P).
+                                    _qrfGunPick = "Mi24_P";
+                                    if ((missionNamespace getVariable ["WFBE_C_GDIR_QRF_AIRFRAME_POOL", 0]) > 0) then {
+                                        _qrfGunPool = missionNamespace getVariable ["WFBE_C_GDIR_QRF_GUNSHIP_POOL", ["Mi24_P","Ka60_GL_PMC","Ka60_PMC"]];
+                                        if (typeName _qrfGunPool != "ARRAY") then {_qrfGunPool = ["Mi24_P"]};
+                                        _qrfGunOk = [];
+                                        {
+                                            if (typeName _x == "STRING" && {_x != ""} && {isClass (configFile >> "CfgVehicles" >> _x)}) then {
+                                                _qrfGunOk set [count _qrfGunOk, _x];
+                                            };
+                                        } forEach _qrfGunPool;
+                                        if (count _qrfGunOk == 0) then {_qrfGunOk = ["Mi24_P"]};
+                                        _qrfGunPick = _qrfGunOk select (floor random (count _qrfGunOk));
+                                    };
                                     _hClass = "Ka137_MG_PMC"; //--- GUER insert: Ka-137 from Core_GUE.sqf.
-                                    if (_cKind == "qrfGunship") then {_hClass = "Mi24_P"};  //--- GUER gunship.
+                                    if (_cKind == "qrfGunship") then {_hClass = _qrfGunPick};  //--- GUER gunship from pool or Mi24_P.
                                     if (_cKind == "qrfCombo") then {
                                         //--- Spawn both. Gunship first (FIX: _hClass was never set to the gunship
                                         //--- here, so combo fired two Ka-137s and the telemetry lied).
-                                        _hClass = "Mi24_P";
+                                        _hClass = _qrfGunPick;
                                         _h    = _hClass createVehicle _spawnPos;
                                         _hGrp = [resistance, "qrf-air"] Call WFBE_CO_FNC_CreateGroup;
                                         //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64). Crew via the
@@ -614,8 +628,8 @@ while {!WFBE_GameOver} do {
                                                 if (({alive _x} count (units _grp)) == 0) then {deleteGroup _grp};
                                             };
                                         };
-                                        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=Mi24_P town=%3 fundedBy=%4",
-                                            _elmin, _cId, _cTown, _cUid];
+                                        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=%3 town=%4 fundedBy=%5",
+                                            _elmin, _cId, _hClass, _cTown, _cUid];
                                         _hClass = "Ka137_MG_PMC";
                                     };
                                     _h    = _hClass createVehicle _spawnPos;
@@ -635,7 +649,8 @@ while {!WFBE_GameOver} do {
                                     private ["_uPilot2","_uGun2"];
                                     _uPilot2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
                                     if (!isNull _uPilot2) then {_uPilot2 moveInDriver _h};
-                                    if (_hClass == "Mi24_P") then {
+                                    //--- Crew a gunner on armed gunship hulls (pool may include Ka60_GL / Mi24 variants).
+                                    if (_hClass != "Ka137_MG_PMC") then {
                                         _uGun2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
                                         if (!isNull _uGun2) then {_uGun2 moveInGunner _h};
                                     };
