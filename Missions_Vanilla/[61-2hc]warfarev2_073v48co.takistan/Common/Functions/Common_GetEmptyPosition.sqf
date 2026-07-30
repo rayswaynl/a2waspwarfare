@@ -5,24 +5,35 @@
 		- Radius.
 */
 
-Private ["_i" ,"_object", "_position", "_tpos"];
+Private ["_attempts", "_band", "_found", "_i", "_object", "_position", "_radius", "_searchRadius", "_tpos"];
 
 _object = _this select 0;
 _radius = _this select 1;
 
 if (typeName _object == "OBJECT") then {_object = getPos _object};
 
-_position = [(_object select 0)+5,(_object select 1)+5,0];
-_i = 0;
+//--- Search four bounded bands instead of spending all 1000 checks at one radius.
+_attempts = 0;
+_band = 0;
+_found = false;
+_searchRadius = _radius max 5;
+_position = [(_object select 0)+(_searchRadius - (random (_searchRadius * 2))),(_object select 1)+(_searchRadius - (random (_searchRadius * 2))),0];
 
-while {_i < 1000} do {
-	_tpos = [(_object select 0)+(_radius - (random (_radius * 2))),(_object select 1)+(_radius - (random (_radius * 2))),0];
-	if (count (_tpos isFlatEmpty [15, 0, 2, 10, 0, false, objNull]) > 0) exitWith {_position = _tpos};
-	_i = _i + 1;
+while {_band < 4 && {!_found}} do {
+	_searchRadius = ((_radius * (1 + (_band * 0.5))) max 5);
+	_i = 0;
+	while {_attempts < ((_band + 1) * 250) && {!_found}} do {
+		_tpos = [(_object select 0)+(_searchRadius - (random (_searchRadius * 2))),(_object select 1)+(_searchRadius - (random (_searchRadius * 2))),0];
+		_position = _tpos;
+		if (count (_tpos isFlatEmpty [15, 0, 2, 10, 0, false, objNull]) > 0) then {_found = true};
+		_i = _i + 1;
+		_attempts = _attempts + 1;
+	};
+	_band = _band + 1;
 };
 
-if (_i >= 1000) then {
-	["WARNING", Format ["Common_GetEmptyPosition.sqf: no empty position after 1000 attempts near [%1,%2] radius %3; using fallback.", _object select 0, _object select 1, _radius]] Call WFBE_CO_FNC_AICOMLog;
+if (!_found) then {
+	["WARNING", Format ["Common_GetEmptyPosition.sqf: no empty position after 1000 attempts near [%1,%2] radius %3; using randomized widened fallback.", _object select 0, _object select 1, _radius]] Call WFBE_CO_FNC_AICOMLog;
 };
 
 _position

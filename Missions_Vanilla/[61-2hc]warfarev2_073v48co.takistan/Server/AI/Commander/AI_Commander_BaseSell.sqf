@@ -8,7 +8,7 @@
 	A2-OA-1.64 safe: no isEqualType/findIf/pushBack/params; find/+/- on arrays; getVariable[name,default] on the
 	side-logic OBJECT only; typeOf/distance/deleteVehicle core commands.
 */
-private ["_side","_sideText","_logik","_names","_costs","_structures","_counts","_i","_st","_stype","_idx","_cost","_victim","_victimCost","_victimIdx","_victimType","_refund","_protected"];
+private ["_side","_sideText","_logik","_names","_costs","_structures","_counts","_i","_st","_stype","_idx","_cost","_victim","_victimCost","_victimIdx","_victimType","_refund","_protected","_protectedPass1"];
 if ((missionNamespace getVariable ["WFBE_C_AICOM_BASE_SELL_ENABLE", 0]) <= 0) exitWith {};
 _side = _this;
 if (_side == resistance) exitWith {};            //--- GUER has no commander economy.
@@ -22,8 +22,10 @@ _costs = missionNamespace getVariable Format ["WFBE_%1STRUCTURECOSTS", _sideText
 if (isNil "_names" || isNil "_costs") exitWith {};
 _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 if (isNil "_structures" || {typeName _structures != "ARRAY"}) exitWith {};
-//--- never sell the HQ or the CommandCenter (the base's spine); everything else is sellable.
+//--- Pass 2 protects both base-spine types from the crude duplicate-trigger sell.
 _protected = ["Headquarters", "CommandCenter"];
+//--- Pass 1 may recoup a stranded CommandCenter once a working copy exists at the current HQ.
+_protectedPass1 = ["Headquarters"];
 //--- 1) tally how many ALIVE structures of each TYPE we hold (by wfbe_structure_type tag).
 _counts = [];
 { _counts set [_forEachIndex, 0]; } forEach _names;   //--- one slot per name (parallel to _names/_costs).
@@ -50,7 +52,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_SELL_STRANDED", 1]) > 0 && {!is
 		_struc = _x;
 		if (!isNull _struc && {alive _struc}) then {
 			_stype = _struc getVariable ["wfbe_structure_type", ""];
-			if (!(_stype in _protected) && {(_struc distance _hqPos) > _baseRad}) then {
+			if (!(_stype in _protectedPass1) && {(_struc distance _hqPos) > _baseRad}) then {
 				_nearSame = {alive _x && {(_x getVariable ["wfbe_structure_type", ""]) == _stype} && {(_x distance _hqPos) <= _baseRad}} count _structures;
 				if (_nearSame > 0) then {
 					_idx = _names find _stype;
