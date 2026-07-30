@@ -12,8 +12,11 @@ WFBE_CL_FNC_Commander_Assigned = {
 		_text = Format[localize "STR_WF_CHAT_VoteForNewCommander",name (leader _commanderTeam)];
 		if (group player == _commanderTeam) then {_text = localize "STR_WF_CHAT_PlayerCommanderTitleText"};
 	}else{
+		//--- LOCALITY/PV: this is a CLIENT event handler. Public setVariable from every client
+		//--- overwrites server commander state and floods the network. Server owns public
+		//--- wfbe_commander; clients only mirror locally for UI/chat.
 		_logic = (side group player) Call WFBE_CO_FNC_GetSideLogic;
-		_logic setVariable ["wfbe_commander", _commanderTeam, true];
+		_logic setVariable ["wfbe_commander", _commanderTeam];
 	};
 
 	[_text] Call TitleTextMessage;

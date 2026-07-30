@@ -96,12 +96,12 @@ _target = _this select 0;
             // Playing radiation sound on client when object is a player:
             if (isPlayer _x) then 
             {
-                // Broadcast the player radiated to clients to play radiation sound effect.
-                // Sounds must be played on client side and not on server side.
-                // Here we are on server side, that's why we use public variable event handler.
+                //--- LOCALITY/PV: targeted publicVariableClient to the radiated player only.
+                //--- Old publicVariable spammed ALL clients every tick and only the last write
+                //--- in a multi-player loop was reliable (shared global name collision).
                 _PLAYER_Radiated = _x;
                 missionNamespace setVariable ["PLAYER_RADIATED", _PLAYER_Radiated];
-                publicVariable "PLAYER_RADIATED"; // will trigger the PLAYER_RADIATED addPublicVariableEventHandler.
+                (owner _x) publicVariableClient "PLAYER_RADIATED";
             };
 
         } forEach _array;
