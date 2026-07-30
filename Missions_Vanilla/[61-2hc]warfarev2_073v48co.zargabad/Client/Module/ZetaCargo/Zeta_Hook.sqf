@@ -7,11 +7,10 @@ _ehq = ['BTR90_HQ','BMP2_HQ_TK_EP1','BMP2_HQ_INS'];
 _whq = ['LAV25_HQ','M1130_CV_EP1','BMP2_HQ_CDF'];
 
 if (_caller != driver _lifter) exitWith {};
-if ((typeOf _lifter) in Zeta_Special) then {
-	if (speed _lifter > 20) exitWith {};
-} else {
-	if ((speed _lifter > 20)||((getpos _lifter select 2)<2)) exitWith {};
-};
+//--- fix(exitWith-control-flow g1606): exitWith inside then/else only left that block — speed/height
+//--- gates never aborted the hook and airlift still attached cargo. Use top-scope exitWith.
+if (((typeOf _lifter) in Zeta_Special) && {speed _lifter > 20}) exitWith {};
+if (!((typeOf _lifter) in Zeta_Special) && {(speed _lifter > 20) || ((getpos _lifter select 2) < 2)}) exitWith {};
 //--- nearEntities handle living units.
 _vehicles = _lifter nearObjects ["LandVehicle", 10];
 //--- Build83 (Ray 2026-07-01): airlifting your OWN HQ is RE-ENABLED (was disabled by Trello #87). Flag-gated: set WFBE_C_AIRLIFT_OWN_HQ=0 to restore the old exclusion. Enemy-HQ-wreck guard below unchanged.
