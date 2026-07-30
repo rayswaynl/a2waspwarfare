@@ -197,6 +197,11 @@ if(_side != resistance)then{
     };
     [resistance, "Destroyed", ["Base", _structure]] Spawn SideMessage;
 };
+//--- teardown (structure-loss cascade): delete this structure's auto-wall defense ring. Non-HQ
+//--- structures never cleaned WFBE_Walls on death, so every destroyed factory / barracks / depot left
+//--- its concrete ring orphaned on the map permanently (engine-object lifecycle leak). Mirrors the
+//--- Server_OnHQKilled.sqf wall cleanup; isNull-guarded (some walls may already be blast-destroyed).
+{if (!isNull _x) then {deleteVehicle _x}} forEach (_structure getVariable ["WFBE_Walls", []]);
 sleep 10;
 
 deleteVehicle _structure;
