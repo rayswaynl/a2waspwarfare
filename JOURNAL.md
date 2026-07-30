@@ -794,3 +794,29 @@ the owner.
 - Master history source retained: `origin/master` at `a1f97cfdbb` (spectator recut merge).
 - This receipt is the appended master-side reconciliation section for the
   `reconcile/release-plus-master-20260730` merge.
+
+## 2026-07-30 — m0730g live: HC topology 2 CIV slots + spectator regression fixed
+
+**Working state:** deploy lineage = worktree `.worktrees/grand-reconcile`, branch
+`reconcile/release-plus-master-20260730` (pushed). Live CH rotation entry = m0730g.
+Takistan m0730g staged + waiter task `WaspTkSwapM0730g` armed on the box (swaps the
+rotation entry at the next stop window; log `C:\WASP	k-swap-m0730g.log`).
+
+- HC lobby slots 4 -> 2 on all three terrains, CIV only. Takistan had four slots
+  *labelled* "Headless Client" with `forceHeadlessClient` on **none** of them - that is
+  the mechanism behind HCs appearing as BLUFOR/OPFOR (1.64 seats a connecting client into
+  the lowest-id free playable slot, side-blind, honouring the flag only for a JIP into an
+  already-live mission). `WFBE_C_HC_SLOTS` 4 -> 2; HC *name* exclusion list intentionally
+  left as a 1..4 superset. `WaspHC3`/`WaspHC4` box tasks disabled.
+  Verified live: `who="HC-AI-Control-1"` and `-2` both reporting, 45-46 fps.
+- Spectator dead-on-m0730f root cause: **my own `disableSerialization`**. On OA 1.64 a
+  script that calls it does not survive its first suspension (opposite of A3), so handler
+  attach, movement loop and HUD never ran. Fixed by holding no Display in a local at all.
+  Mouse model rewritten (steer every event, warp only near the UI edge), sens 45 -> 25.
+- Spectator v3 director mode built on `fable/spectator-v3-director-20260730` (commit
+  aa5a4fea03), flag `WFBE_C_SPECTATOR_DIRECTOR` default 0. Not in m0730g.
+
+**Discovered issues:** Zargabad is not in the live rotation and was left unpacked (its
+tree carries the 2-slot fix). `server-config/provision/Start-Wasp-4HC.ps1` documents an
+`-HcCount` parameter it does not actually declare, and hardcodes `1..4` - would fail if
+invoked as the README instructs.
