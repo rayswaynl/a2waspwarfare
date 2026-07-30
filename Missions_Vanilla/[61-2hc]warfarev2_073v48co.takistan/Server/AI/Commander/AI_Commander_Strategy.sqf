@@ -745,6 +745,12 @@ _relieved = 0;
 				};
 				_free setVariable ["wfbe_aicom_relief", _town];
 				_free setVariable ["wfbe_aicom_relief_until", time + (missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_HOLD_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_HOLD", 240]])]; //--- punchy-AICOM (Ray 2026-06-17): hold-window stamp; released back to offense when it expires.
+				//--- STALE-ORDER FIX (wasp-bughunt-aicom-stale-order-task-expiry-r22): retire this team's OPEN offensive dispatch
+				//--- when diverting it to relief, exactly as the FOOT_STAGE re-task does (AI_Commander_AssignTowns.sqf ~L1094-1095).
+				//--- Without this the AssignTowns assault watcher keeps counting the abandoned dispatch timeout against a team now
+				//--- doing relief, logging a spurious ASSAULT_STRANDED and tallying wfbe_aicom_failedjourneys (which can later recycle it).
+				_free setVariable ["wfbe_aicom_townorder", [], false];
+				_free setVariable ["wfbe_aicom_dispatch_open", false];
 				_relieved = _relieved + 1;
 				_stratMode = "relief";
 				_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
