@@ -123,7 +123,12 @@ if (_upgLvl >= 4) then {
 		//--- Prefer the T810 as the convoy truck when ACR is present; fall back to the
 		//--- side's first supply truck so it still works without the ACR DLC.
 		_truckCls = if (isClass (configFile >> "CfgVehicles" >> "T810_CZ_EP1")) then {"T810_CZ_EP1"} else {_truckList select 0};
+		//--- r37 fail-clean: create null or pilot-seat fail must not leave a driverless truck (or
+		//--- setPos/createUnit on objNull) that never moves and never pays convoy.
 		_truckVeh    = _truckCls createVehicle _position;
+		if (isNull _truckVeh) then {
+			["WARNING", Format["Common_RunSidePatrol.sqf: [%1] convoy truck create failed class [%2]; patrol continues without convoy.", _side, _truckCls]] Call WFBE_CO_FNC_LogContent;
+		} else {
 		_truckVeh    setPos _position;
 		//--- Fix 2026-06-11: the driver was created with the TRUCK classname (a vehicle
 		//--- class as a soldier = no driver, truck never moves, convoy pay never fires).
@@ -133,8 +138,22 @@ if (_upgLvl >= 4) then {
 		//--- driverless, never moved). Use the returning CreateUnit helper (same source
 		//--- Server_HandleDefense uses) and guard moveInDriver on a non-null result.
 		_truckDriver = [(missionNamespace getVariable Format["WFBE_%1SOLDIER", _side]), _team, _position, _sideID] Call WFBE_CO_FNC_CreateUnit;
-		if (!isNull _truckDriver) then {_truckDriver moveInDriver _truckVeh};
-		["INFORMATION", Format["Common_RunSidePatrol.sqf: [%1] convoy truck [%2] spawned for L4 patrol.", _side, _truckCls]] Call WFBE_CO_FNC_LogContent;
+		if (isNull _truckDriver) then {
+			deleteVehicle _truckVeh;
+			_truckVeh = objNull;
+			["WARNING", Format["Common_RunSidePatrol.sqf: [%1] convoy driver create failed for [%2]; truck discarded.", _side, _truckCls]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			_truckDriver moveInDriver _truckVeh;
+			if (driver _truckVeh != _truckDriver) then {
+				deleteVehicle _truckDriver;
+				deleteVehicle _truckVeh;
+				_truckVeh = objNull;
+				["WARNING", Format["Common_RunSidePatrol.sqf: [%1] convoy driver seat failed for [%2]; truck discarded.", _side, _truckCls]] Call WFBE_CO_FNC_LogContent;
+			} else {
+				["INFORMATION", Format["Common_RunSidePatrol.sqf: [%1] convoy truck [%2] spawned for L4 patrol.", _side, _truckCls]] Call WFBE_CO_FNC_LogContent;
+			};
+		};
+		};
 	};
 };
 
