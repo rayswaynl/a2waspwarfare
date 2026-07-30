@@ -837,7 +837,10 @@ while {!WFBE_GameOver} do {
 						//--- CONTESTED: recall the sortie for defense immediately (tight move back onto the town),
 						//--- then clear the slot so no new sortie launches while the town is under attack.
 						if (_sortieValid) then {
-							[_sortieGrp, _townPos, "MOVE", 40] Call AIMoveTo;
+							//--- r32 wakeup fidelity: re-anchor garrison posture (not bare MOVE that leaves them idle on arrival).
+							[_sortieGrp, _townPos, 180] Call AIPatrol;
+							_sortieGrp setBehaviour "AWARE";
+							_sortieGrp setCombatMode "RED";
 							["INFORMATION", Format ["server_town_ai.sqf: sortie RECALLED (contested) for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
 						};
 						_town setVariable ["wfbe_sortie_grp", grpNull, true];
@@ -862,6 +865,12 @@ while {!WFBE_GameOver} do {
 								_sortieRtbCap = missionNamespace getVariable ["WFBE_C_TOWNS_SORTIE_RTB_TIMEOUT", 180];
 								if (_sortieRtbCap < 15) then {_sortieRtbCap = 15};
 								if (((leader _sortieGrp) distance _townPos) <= 60 || {(time - _sortieStarted) >= _sortieRtbCap}) then {
+									//--- r32 wakeup fidelity: after RTB, restore town-ring patrol + combat mode (MOVE arrival left idle).
+									if (count units _sortieGrp > 0 && {local (leader _sortieGrp)}) then {
+										[_sortieGrp, _townPos, 180] Call AIPatrol;
+										_sortieGrp setBehaviour "AWARE";
+										_sortieGrp setCombatMode "RED";
+									};
 									_town setVariable ["wfbe_sortie_grp", grpNull, true];
 									_town setVariable ["wfbe_sortie_started", 0];
 									_town setVariable ["wfbe_sortie_rtb", false];
@@ -871,8 +880,8 @@ while {!WFBE_GameOver} do {
 								//--- Rotation: after WFBE_C_TOWNS_SORTIE_MINS, bring this group home and free the slot
 								//--- so a different group takes the next turn on the following eligible sweep.
 								if ((time - _sortieStarted) >= (_sortieMins * 60)) then {
-									[_sortieGrp, _townPos, "MOVE", 50] Call AIMoveTo;
 									if (_sortieRtbOn) then {
+										[_sortieGrp, _townPos, "MOVE", 50] Call AIMoveTo;
 										//--- Return leg armed: keep the group tracked (so no new sortie launches while
 										//--- it walks home, and so the RTB poll above picks it up next sweep). Reuse
 										//--- wfbe_sortie_started as the return-leg clock (its rotation-timer job for
@@ -881,6 +890,10 @@ while {!WFBE_GameOver} do {
 										_town setVariable ["wfbe_sortie_rtb", true];
 										["INFORMATION", Format ["server_town_ai.sqf: sortie RTB started for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
 									} else {
+										//--- r32 wakeup fidelity: re-arm town-ring garrison patrol + combat after outer-ring rotation ends.
+										[_sortieGrp, _townPos, 180] Call AIPatrol;
+										_sortieGrp setBehaviour "AWARE";
+										_sortieGrp setCombatMode "RED";
 										_town setVariable ["wfbe_sortie_grp", grpNull, true];
 										_town setVariable ["wfbe_sortie_started", 0];
 										["INFORMATION", Format ["server_town_ai.sqf: sortie rotated home for %1.", _town getVariable "name"]] Call WFBE_CO_FNC_AICOMLog;
