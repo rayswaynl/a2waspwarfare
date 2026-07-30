@@ -48,7 +48,7 @@ _fnGuerGroups = {
 
 //--- Constants (read once at startup).
 private ["_tickSec","_regenFullSec","_surgeCap","_surgeCapPaid","_grpBudgetMax",
-         "_minSpawnM","_ambushBubbleM","_suppressSec","_retakeEnabled","_playerSupport"];
+         "_minSpawnM","_ambushBubbleM","_suppressSec","_retakeEnabled","_playerSupport","_suppressWire"];
 
 _tickSec        = missionNamespace getVariable ["AICOMV2_GDIR_TICK_SEC",         30];
 _regenFullSec   = missionNamespace getVariable ["AICOMV2_GDIR_REGEN_FULL_SEC",   1800];
@@ -60,6 +60,7 @@ _ambushBubbleM  = missionNamespace getVariable ["AICOMV2_GDIR_AMBUSH_BUBBLE_M", 
 _suppressSec    = missionNamespace getVariable ["AICOMV2_GDIR_SUPPRESS_SEC",     600];
 _retakeEnabled  = missionNamespace getVariable ["AICOMV2_GDIR_RETAKE",           0];
 _playerSupport  = missionNamespace getVariable ["AICOMV2_GDIR_PLAYER_SUPPORT",   0];
+_suppressWire   = (missionNamespace getVariable ["AICOMV2_GDIR_SUPPRESS_WIRE", 0]) > 0;
 //--- P1/P2 hardening flags (fable/gdir-harden-shop).
 private ["_hardenOn","_moveTimeoutFactor","_cellSpeedMs","_jipSnapInterval","_jipSnapLastT"];
 _hardenOn          = (missionNamespace getVariable ["AICOMV2_GDIR_HARDEN",             1]) > 0;
@@ -173,6 +174,7 @@ while {!WFBE_GameOver} do {
                 _rec set [2, ((_rec select 2) * _ratio) max 0];
             };
             _rec set [5, 0];
+            if (_suppressWire) then {_rec set [4, diag_tickTime + _suppressSec]}; //--- stamp the post-wipe suppression deadline PHASE-3 :220 reads as _suppEnd < diag_tickTime; clock-consistent, was never written.
         };
         if (_active) then {
             _grps        = [_town] call _fnGuerGroups;
