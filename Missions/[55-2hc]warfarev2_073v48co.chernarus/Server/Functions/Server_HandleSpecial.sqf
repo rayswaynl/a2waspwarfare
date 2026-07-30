@@ -201,6 +201,21 @@ switch (_args select 0) do {
 			missionNamespace setVariable [format["WFBE_AI_DELEGATION_%1", _uid], _get];
 		};
 	};
+	case "salvage-delete-wreck": {
+		//--- LOCALITY: client salvager found a non-local wreck. Re-dispatch cleanup-trash-object
+		//--- to the owning machine (same stamp + channel as Common_TrashObject remote delete).
+		Private ["_wreck"];
+		if (count _args < 1) exitWith {};
+		_wreck = _args select 0;
+		if (isNull _wreck) exitWith {};
+		if (alive _wreck) exitWith {}; //--- only dead hulls; refuse live deletes
+		_wreck setVariable ["wfbe_trash_reap", true, true];
+		if (local _wreck) then {
+			deleteVehicle _wreck;
+		} else {
+			[_wreck, "HandleSpecial", ["cleanup-trash-object", _wreck]] Call WFBE_CO_FNC_SendToClient;
+		};
+	};
 	case "update-town-delegation": {
 		Private ["_currentEpoch","_currentSide","_delegatedSide","_isCurrent","_reportedEpoch","_reportedSide","_teams","_town","_vehicles"];
 		_town = _args select 1;

@@ -234,7 +234,12 @@ while {!WFBE_GameOver} do {
 		_town_teams = _town getVariable "wfbe_town_teams";
 		//--- Patrols v2: town-based patrol gating retired (see Server\FSM\server_side_patrols.sqf).
 
-		_sideID = _town getVariable "sideID";
+		//--- Nil-safe sideID (parity with server_town_camp N9 / capture ownership bughunt): 1-arg
+		//--- getVariable on an unset sideID yields Undefined -> GetSideFromID default sideLogic and
+		//--- poisons garrison spawn / enemy detect / HostilesDetectedNear for that town after flip
+		//--- or mid-init. Fall back to UNKNOWN so the side_enabled gate below skips cleanly.
+		_sideID = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+		if (isNil "_sideID") then {_sideID = WFBE_C_UNKNOWN_ID};
 		_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
 
 

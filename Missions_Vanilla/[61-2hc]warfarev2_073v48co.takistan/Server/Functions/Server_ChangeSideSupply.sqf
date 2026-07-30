@@ -15,7 +15,7 @@ WFBE_SE_FNC_HandleSideSupplyChange = {
 	//--- never crosses the network) passes _trusted=true as _this select 2 and is exempt - it never
 	//--- had a "requester" to begin with. Flag OFF (default 0): byte-identical to pre-hardening
 	//--- behaviour, no new rejections.
-	Private ['_amount','_change','_channel','_currentSupply','_event','_expectedSide','_maxSupplyLimit','_payload','_reason','_reqPlayer','_secHardening','_side','_supplyKey','_trusted'];
+	Private ['_amount','_change','_channel','_currentSupply','_event','_expectedSide','_maxSupplyLimit','_payload','_reason','_rejected','_reqPlayer','_secHardening','_side','_supplyKey','_trusted'];
 
 	_event = _this select 0;
 	_expectedSide = _this select 1;
@@ -52,22 +52,30 @@ WFBE_SE_FNC_HandleSideSupplyChange = {
 
 	_secHardening = (missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0;
 
+	//--- fix(exitWith-control-flow g1606): same A2-OA trap as RequestChangeScore — exitWith inside then{}
+	//--- only left the hardening block and FALLS THROUGH to apply the supply write. Latch + top-scope exit.
+	_rejected = false;
 	if (_secHardening && !_trusted) then {
 		_reqPlayer = if (count _payload > 3) then {_payload select 3} else {objNull};
 
-		if !((typeName _reqPlayer) in ["OBJECT"]) exitWith {
+		if !((typeName _reqPlayer) in ["OBJECT"]) then {
+			_rejected = true;
 			["WARNING", format ["Server_ChangeSideSupply.sqf: rejected side-supply payload on %1 - requester type %2 (WFBE_C_SEC_HARDENING).", _channel, typeName _reqPlayer]] call WFBE_CO_FNC_LogContent;
 		};
-		if (isNull _reqPlayer) exitWith {
+		if (!_rejected && {isNull _reqPlayer}) then {
+			_rejected = true;
 			["WARNING", format ["Server_ChangeSideSupply.sqf: rejected side-supply payload on %1 - null requester (WFBE_C_SEC_HARDENING).", _channel]] call WFBE_CO_FNC_LogContent;
 		};
-		if !(isPlayer _reqPlayer) exitWith {
+		if (!_rejected && {!(isPlayer _reqPlayer)}) then {
+			_rejected = true;
 			["WARNING", format ["Server_ChangeSideSupply.sqf: rejected side-supply payload on %1 - non-player requester %2 (WFBE_C_SEC_HARDENING).", _channel, _reqPlayer]] call WFBE_CO_FNC_LogContent;
 		};
-		if !((side group _reqPlayer) in [_side]) exitWith {
+		if (!_rejected && {!((side group _reqPlayer) in [_side])}) then {
+			_rejected = true;
 			["WARNING", format ["Server_ChangeSideSupply.sqf: rejected side-supply payload on %1 - requester side %2 does not match claimed side %3 (WFBE_C_SEC_HARDENING).", _channel, side group _reqPlayer, _side]] call WFBE_CO_FNC_LogContent;
 		};
 	};
+	if (_rejected) exitWith {};
 
 	_maxSupplyLimit = missionNameSpace getvariable "WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT";
 

@@ -424,6 +424,28 @@ while {!WFBE_GameOver} do {
 							} else {
 								_template = _pool select floor(random count _pool);
 							};
+							//--- TEMPLATE INTEGRITY (g1606): PATROL pools may contain shared-roster STRING keys
+							//--- (e.g. "Squad_Advanced" in Root_GUE/Root_TKGUE). Groups_* tables load only under
+							//--- isServer, so an unresolved string dispatched to HC always yields [] in
+							//--- Common_RunSidePatrol and burns a patrol slot. Resolve on the SERVER here,
+							//--- before escVehCap (which forEach's the template) and HC dispatch.
+							if (typeName _template == "STRING") then {
+								private ["_resChoices","_resPick"];
+								_resChoices = missionNamespace getVariable [Format["WFBE_%1_GROUPS_%2", str _side, _template], []];
+								if ((typeName _resChoices == "ARRAY") && {(count _resChoices) > 0}) then {
+									_resPick = _resChoices select floor(random count _resChoices);
+									if ((typeName _resPick == "ARRAY") && {(count _resPick) > 0}) then {
+										_template = _resPick;
+									} else {
+										["WARNING", Format["server_side_patrols.sqf: [%1] patrol key [%2] resolved empty - skip dispatch.", _side, _template]] Call WFBE_CO_FNC_LogContent;
+										_template = [];
+									};
+								} else {
+									["WARNING", Format["server_side_patrols.sqf: [%1] unresolved patrol template key [%2] - skip dispatch.", _side, _template]] Call WFBE_CO_FNC_LogContent;
+									_template = [];
+								};
+							};
+							if ((typeName _template == "ARRAY") && {(count _template) > 0}) then {
 							//--- MAX-ESCALATION +1 ESCORT VEHICLE (cmdcon41-w3e). Only when _escVehCap is set (LOW/MID pop,
 							//--- HEAVY-by-score late game) AND the drawn template already CONTAINS a vehicle: append a COPY of
 							//--- that template's FIRST vehicle classname so the patrol gains one extra escort hull. We reuse a
@@ -461,6 +483,7 @@ while {!WFBE_GameOver} do {
 									};
 								};
 							};
+							}; //--- end non-empty template guard (g1606)
 						};
 					};
 				};

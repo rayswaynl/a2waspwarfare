@@ -1130,6 +1130,19 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							if (isNil "_waveJit") then {_waveJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _waveJit, true]};
 							_waveDelay = (missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MIN", 30]) + (((_waveJit + 1) / 2) * ((missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MAX", 90]) - (missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MIN", 30])));
 						};
+						//--- hc-locality-group-owner: demote HC flag if leader is server-local (HC drop) so this
+						//--- branch falls through to AIMoveTo / SetTownAttackPath instead of publishing a dead order.
+						if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+							private "_atLdr";
+							_atLdr = leader _team;
+							if (!isNull _atLdr && {local _atLdr}) then {
+								_team setVariable ["wfbe_aicom_hc", false, true];
+								if (!([_team, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool)) then {
+									_team setVariable ["wfbe_aicom_founded", true, true];
+								};
+								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HC_LOCALITY_DEMOTE|team=" + (str _team) + "|reason=assigntowns-local-leader");
+							};
+						};
 						if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
 							//--- V0.3: HC-resident team - the HC driver issues the local waypoints;
 							//--- server-side waypoint commands on remote groups are unreliable.

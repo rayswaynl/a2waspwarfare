@@ -15,23 +15,27 @@ if (!isNull playerUAV) exitWith {
 //--- Server-authoritative handoff: a normal terminal use requests an airframe only.
 //--- The returned server-created object is passed back into this script so the existing client-local
 //--- crew/group and terminal controls retain their OA locality semantics.
-if (count _this > 0) then {
-	_uav = _this select 0;
-} else {
-	if (isNil {missionNamespace getVariable Format ["WFBE_%1UAV",sideJoinedText]}) exitWith {};
-	if ((missionNamespace getVariable Format ["WFBE_%1UAV",sideJoinedText]) == "") exitWith {};
+//--- fix(exitWith-control-flow g1606): request path used bare exitWith inside else{} which only left
+//--- the else and fell through to isNull _uav / crew spawn on an unassigned private.
+//--- Outer top-scope exitWith always leaves the script after the request attempt; inner call{} gives
+//--- early-abort exitWith a real scope (not a then{}) so SendToServer is skipped cleanly.
+if (count _this <= 0) exitWith {
+	call {
+		if (isNil {missionNamespace getVariable Format ["WFBE_%1UAV",sideJoinedText]}) exitWith {};
+		if ((missionNamespace getVariable Format ["WFBE_%1UAV",sideJoinedText]) == "") exitWith {};
 
-	_buildings = (sideJoined) Call WFBE_CO_FNC_GetSideStructures;
-	_checks = [sideJoined,missionNamespace getVariable Format ["WFBE_%1COMMANDCENTERTYPE",sideJoinedText],_buildings] Call GetFactories;
-	_closest = objNull;
-	if (count _checks > 0) then {
-		_closest = [player,_checks] Call WFBE_CO_FNC_GetClosestEntity;
+		_buildings = (sideJoined) Call WFBE_CO_FNC_GetSideStructures;
+		_checks = [sideJoined,missionNamespace getVariable Format ["WFBE_%1COMMANDCENTERTYPE",sideJoinedText],_buildings] Call GetFactories;
+		_closest = objNull;
+		if (count _checks > 0) then {
+			_closest = [player,_checks] Call WFBE_CO_FNC_GetClosestEntity;
+		};
+
+		if (isNull _closest) exitWith {};
+		["RequestSpecial", ["uav",sideJoined,clientTeam]] Call WFBE_CO_FNC_SendToServer;
 	};
-
-	if (isNull _closest) exitWith {};
-	["RequestSpecial", ["uav",sideJoined,clientTeam]] Call WFBE_CO_FNC_SendToServer;
-	exitWith {};
 };
+_uav = _this select 0;
 
 if (isNull _uav) exitWith {};
 playerUAV = _uav;

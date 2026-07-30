@@ -86,12 +86,10 @@ _logGroupCount = {
 	_group = _x;
 	call {
 		if (isNull _group) exitWith {};
-		if !(isNil {_group getVariable "WFBE_TownAI_Town"}) then {
-			if ((_group getVariable "WFBE_TownAI_Town") != _town) exitWith {};
-		};
-		if !(isNil {_group getVariable "WFBE_TownAI_Side"}) then {
-			if ((_group getVariable "WFBE_TownAI_Side") != _side) exitWith {};
-		};
+		//--- fix(exitWith-control-flow g1606): mismatch exitWith was nested in then{} so it only left the
+		//--- then-block and FALLS THROUGH into deleteVehicle (wrong-town/side stamp was ignored).
+		if (!(isNil {_group getVariable "WFBE_TownAI_Town"}) && {(_group getVariable "WFBE_TownAI_Town") != _town}) exitWith {};
+		if (!(isNil {_group getVariable "WFBE_TownAI_Side"}) && {(_group getVariable "WFBE_TownAI_Side") != _side}) exitWith {};
 
 		_units = +units _group;
 		{["hc-townai-cleanup-unit", _x, Format ["town=%1", _townName]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; _deletedUnits = _deletedUnits + 1} forEach _units;

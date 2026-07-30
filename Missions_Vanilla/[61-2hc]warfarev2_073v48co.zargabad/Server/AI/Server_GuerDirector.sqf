@@ -226,17 +226,69 @@ while {!WFBE_GameOver} do {
         };
     } forEach _ledger;
 
+    //--- CELL SPREAD (RPT-DEEPDIVE-20260730): ledger order + first-come sources funnel moveCell into
+    //--- the same few depleted towns. When armed: Fisher-Yates shuffle dest lists + randomize source
+    //--- start index so surplus rotates across the depleted set. Flag-dark default.
+    if ((missionNamespace getVariable ["WFBE_C_GDIR_CELL_SPREAD", 0]) > 0) then {
+        private ["_spI","_spJ","_spTmp"];
+        if ((count _stateDep) > 1) then {
+            for "_spI" from ((count _stateDep) - 1) to 1 step -1 do {
+                _spJ = floor random (_spI + 1);
+                _spTmp = _stateDep select _spI;
+                _stateDep set [_spI, _stateDep select _spJ];
+                _stateDep set [_spJ, _spTmp];
+            };
+        };
+        if ((count _stateThr) > 1) then {
+            for "_spI" from ((count _stateThr) - 1) to 1 step -1 do {
+                _spJ = floor random (_spI + 1);
+                _spTmp = _stateThr select _spI;
+                _stateThr set [_spI, _stateThr select _spJ];
+                _stateThr set [_spJ, _spTmp];
+            };
+        };
+        if ((count _stateOpp) > 1) then {
+            for "_spI" from ((count _stateOpp) - 1) to 1 step -1 do {
+                _spJ = floor random (_spI + 1);
+                _spTmp = _stateOpp select _spI;
+                _stateOpp set [_spI, _stateOpp select _spJ];
+                _stateOpp set [_spJ, _spTmp];
+            };
+        };
+        if ((count _stateSafe) > 1) then {
+            for "_spI" from ((count _stateSafe) - 1) to 1 step -1 do {
+                _spJ = floor random (_spI + 1);
+                _spTmp = _stateSafe select _spI;
+                _stateSafe set [_spI, _stateSafe select _spJ];
+                _stateSafe set [_spJ, _spTmp];
+            };
+        };
+    };
+
     //--------------------------------------------------------------------
     // PHASE 4: PLANNING - reinforce depleted/threatened from surplus towns.
     // Conservation: drain source on dispatch; credit destination on arrival.
     //--------------------------------------------------------------------
-    private ["_sources","_orderCount","_srcIdx"];
+    private ["_sources","_orderCount","_srcIdx","_cellSpreadOn","_cellTransitFrac"];
     _sources    = [];
     _orderCount = 0;
     _srcIdx     = 0;
+    _cellSpreadOn = (missionNamespace getVariable ["WFBE_C_GDIR_CELL_SPREAD", 0]) > 0;
+    _cellTransitFrac = missionNamespace getVariable ["WFBE_C_GDIR_CELL_SPREAD_TRANSIT_FRAC", 0.45];
+    if (_cellTransitFrac < 0.1) then {_cellTransitFrac = 0.1};
+    if (_cellTransitFrac > 1) then {_cellTransitFrac = 1};
 
     {_sources set [count _sources, _x]} forEach _stateOpp;
     {_sources set [count _sources, _x]} forEach _stateSafe;
+    if (_cellSpreadOn && {(count _sources) > 1}) then {
+        private ["_spI2","_spJ2","_spTmp2"];
+        for "_spI2" from ((count _sources) - 1) to 1 step -1 do {
+            _spJ2 = floor random (_spI2 + 1);
+            _spTmp2 = _sources select _spI2;
+            _sources set [_spI2, _sources select _spJ2];
+            _sources set [_spJ2, _spTmp2];
+        };
+    };
 
     {
         private ["_dst","_dstStr","_dstBase","_needed","_src","_srcStr","_srcBase","_send"];
@@ -244,6 +296,7 @@ while {!WFBE_GameOver} do {
         _dstStr = _dst select 2;
         _dstBase= _dst select 1;
         _needed = _dstBase - _dstStr;
+        if (_cellSpreadOn && {(_dst select 3) > (_dstBase * _cellTransitFrac)}) then {_needed = 0};
         if (_needed > 0.05 && {count _sources > 0}) then {
             while {_srcIdx < count _sources && {(((_sources select _srcIdx) select 2) - ((_sources select _srcIdx) select 1) * 0.5) <= 0.05}} do {
                 _srcIdx = _srcIdx + 1;
@@ -278,6 +331,7 @@ while {!WFBE_GameOver} do {
         _dstStr = _dst select 2;
         _dstBase= _dst select 1;
         _needed = _dstBase - _dstStr;
+        if (_cellSpreadOn && {(_dst select 3) > (_dstBase * _cellTransitFrac)}) then {_needed = 0};
         if (_needed > 0.1 && {count _sources > 0}) then {
             while {_srcIdx < count _sources && {(((_sources select _srcIdx) select 2) - ((_sources select _srcIdx) select 1) * 0.6) <= 0.05}} do {
                 _srcIdx = _srcIdx + 1;
@@ -493,13 +547,22 @@ while {!WFBE_GameOver} do {
                                 if (_cKind == "qrfCombo") then {_qrfSlots = 2};
                                 if ((_curGuerGrps + _qrfSlots) <= _grpBudgetMax) then {
                                     //--- Authorized new air execution path for A1 panel (no V1 GUER air path existed).
-                                    private ["_hClass","_h","_hGrp"];
+                                    private ["_hClass","_h","_hGrp","_qrfGunPool","_qrfGunOk","_qrfGunPick"];
+                                    _qrfGunPick = "Mi24_P";
+                                    if ((missionNamespace getVariable ["WFBE_C_GDIR_QRF_AIRFRAME_POOL", 0]) > 0) then {
+                                        _qrfGunPool = missionNamespace getVariable ["WFBE_C_GDIR_QRF_GUNSHIP_POOL", ["Mi24_P","Ka60_GL_PMC","Ka60_PMC"]];
+                                        if (typeName _qrfGunPool != "ARRAY") then {_qrfGunPool = ["Mi24_P"]};
+                                        _qrfGunOk = [];
+                                        {if (typeName _x == "STRING" && {_x != ""} && {isClass (configFile >> "CfgVehicles" >> _x)}) then {_qrfGunOk set [count _qrfGunOk, _x]}} forEach _qrfGunPool;
+                                        if (count _qrfGunOk == 0) then {_qrfGunOk = ["Mi24_P"]};
+                                        _qrfGunPick = _qrfGunOk select (floor random (count _qrfGunOk));
+                                    };
                                     _hClass = "Ka137_MG_PMC"; //--- GUER insert: Ka-137 from Core_GUE.sqf.
-                                    if (_cKind == "qrfGunship") then {_hClass = "Mi24_P"};  //--- GUER gunship.
+                                    if (_cKind == "qrfGunship") then {_hClass = _qrfGunPick};  //--- GUER gunship.
                                     if (_cKind == "qrfCombo") then {
                                         //--- Spawn both. Gunship first (FIX: _hClass was never set to the gunship
                                         //--- here, so combo fired two Ka-137s and the telemetry lied).
-                                        _hClass = "Mi24_P";
+                                        _hClass = _qrfGunPick;
                                         _h    = _hClass createVehicle _spawnPos;
                                         _hGrp = [resistance, "qrf-air"] Call WFBE_CO_FNC_CreateGroup;
                                         //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64). Crew via the
@@ -558,8 +621,8 @@ while {!WFBE_GameOver} do {
                                                 if (({alive _x} count (units _grp)) == 0) then {deleteGroup _grp};
                                             };
                                         };
-                                        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=Mi24_P town=%3 fundedBy=%4",
-                                            _elmin, _cId, _cTown, _cUid];
+                                        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=%3 town=%4 fundedBy=%5",
+                                            _elmin, _cId, _hClass, _cTown, _cUid];
                                         _hClass = "Ka137_MG_PMC";
                                         _spawnPos = _spawnPosB; //--- fable/qrf-ground-spawn: second hull on its OWN pad - the same-point pair spawn was the "immediately blow up".
                                     };
@@ -580,7 +643,7 @@ while {!WFBE_GameOver} do {
                                     private ["_uPilot2","_uGun2"];
                                     _uPilot2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
                                     if (!isNull _uPilot2) then {_uPilot2 assignAsDriver _h; [_uPilot2] orderGetIn true};
-                                    if (_hClass == "Mi24_P") then {
+                                    if (_hClass != "Ka137_MG_PMC") then {
                                         _uGun2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
                                         if (!isNull _uGun2) then {_uGun2 assignAsGunner _h; [_uGun2] orderGetIn true};
                                     };

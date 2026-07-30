@@ -659,6 +659,10 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_DISTANCE_DIVISOR") then {WFBE_C_AICOM_DISTANCE_DIVISOR = 30};   //--- C6 pick 1 (owner GO 2026-07-22 19:08): 50->30, stronger near-front preference so hauls shorten. Rollback: 50.   //--- score divisor on distance-to-front: one supply point is worth this many metres of march. Was effectively 150 (too weak); 50 makes distance dominate so the nearest contestable town wins.
 	if (isNil "WFBE_C_AICOM_HQ_PULL_DIVISOR") then {WFBE_C_AICOM_HQ_PULL_DIVISOR = 250};    //--- score divisor on distance-to-ENEMY-HQ: adds a small spearhead bias toward the enemy capital so the front advances in one direction instead of wandering. Larger = weaker pull. 0 disables the pull.
 	if (isNil "WFBE_C_AICOM_FAR_PENALTY") then {WFBE_C_AICOM_FAR_PENALTY = 1000};           //--- flat score penalty applied to any candidate OUTSIDE the frontier radius, so a rich deep city can no longer buy its way over a near contestable town. Large enough to swamp supply spread.
+	if (isNil "WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND") then {WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND = 0}; //--- 1 = after N stall blacklists, widen frontier so repick can leave a compressed 5-town front loop (RPT-DEEPDIVE-20260730 WEST spearhead). 0 = dark (default).
+	if (isNil "WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_AFTER") then {WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_AFTER = 3}; //--- cumulative stall blacklists this war before expand arms (per side logic).
+	if (isNil "WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_RADIUS") then {WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_RADIUS = 6000}; //--- m: FRONTIER_RADIUS override while expanded (deeper candidates score without full FAR_PENALTY wall).
+	if (isNil "WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_FAR_PENALTY") then {WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_FAR_PENALTY = 200}; //--- softer off-front penalty while expanded (legacy FAR_PENALTY=1000 kept sides cycling near towns only).
 	if (isNil "WFBE_C_AICOM_SOFT_WEIGHT")  then {WFBE_C_AICOM_SOFT_WEIGHT  = 12};            //--- A8: score points SUBTRACTED per garrison hardness tier (wfbe_town_type Tiny=0..Huge=4) so at comparable distance the AI prefers SOFTER towns. Full swing ~48pts (~2.4 town-spacings at DISTANCE_DIVISOR=50); under FAR_PENALTY so front-contiguity is unaffected. 0 = rollback to distance-only.
 	if (isNil "WFBE_C_AICOM_GARRISON_PENALTY") then {WFBE_C_AICOM_GARRISON_PENALTY = 0};      //--- Lane-329: Allocate fist scorer penalty per garrison hardness tier; 0 = inert/default-off.
 	if (isNil "WFBE_C_AICOM_VALUE_DIVISOR") then {WFBE_C_AICOM_VALUE_DIVISOR = 50};           //--- A8: divisor on the (previously dead) per-town wfbe_town_value (100..1000) -> 2..20 pts; rewards rich towns at comparable distance. Larger = weaker. Clamped to 1 if <=0.
@@ -713,6 +717,7 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_MHQ_FRONT_DIST")        then {WFBE_C_AICOM_MHQ_FRONT_DIST        = 2500}; //--- m: relocate only once the front (spearhead town) is farther than this from the HQ.
 	if (isNil "WFBE_C_AICOM_MHQ_STANDOFF")          then {WFBE_C_AICOM_MHQ_STANDOFF          = 1500}; //--- B74 (Ray 2026-06-22): 800->1500. m: new base sits this far BEHIND the front town (toward the old HQ), capped so it never overshoots.
 	if (isNil "WFBE_C_AICOM_MHQ_MIN_ADVANCE")       then {WFBE_C_AICOM_MHQ_MIN_ADVANCE       = 1500}; //--- B74.1 (2026-06-23): 3000->1500. The b74 soak proved 3000 unreachable on Chernarus - the DEEPEST standoff candidate all night was 2790m, so the gate rejected ALL 376 relocations + zeroed _destPos before the new teleport-on-stuck path could help, leaving #9 forward-factory dormant. 1500 admits the real candidates (still far enough to not stack on the old base, which the original 800m moves did).
+	if (isNil "WFBE_C_AICOM_MHQ_MINADV_RELAX_SKIP") then {WFBE_C_AICOM_MHQ_MINADV_RELAX_SKIP = 1};    //--- cmdcon-base-unstick: relaxed-ring candidates may be closer than MIN_ADVANCE; 1 = allow them, 0 = preserve the strict gate.
 	if (isNil "WFBE_C_AICOM_REBASE_ON")             then {WFBE_C_AICOM_REBASE_ON             = 1};    //--- B74 (Ray 2026-06-22): after an MHQ relocation, (re)build the production factories at the NEW HQ (supply-gated, HQ-local check) so a moved base is not a dead base. 1=on.
 	if (isNil "WFBE_C_AICOM_BASE_RADIUS")           then {WFBE_C_AICOM_BASE_RADIUS           = 450};  //--- B74: m radius around the CURRENT HQ within which 'do we already have this factory' is judged, so a forward HQ rebuilds locally instead of counting the OLD base's factories side-wide.
 	if (isNil "WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS")    then {WFBE_C_AICOM_HQSTRIKE_MIN_TOWNS    = 12};   //--- B74.1 (Ray 2026-06-23): a side launches the HQ-STRIKE round-ender once it holds this many towns. Replaces the DEAD ceil(count-towns*0.5)=~20 gate (unreachable on Chernarus' 40+ towns; sides peaked at 13), so a dominant side now actually goes for the kill instead of grinding forever. Absolute town count.
@@ -745,6 +750,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_BASE_SELL_INTERVAL")    then {WFBE_C_AICOM_BASE_SELL_INTERVAL    = 120};  //--- s between sell evaluations per side (slow; selling is rare).
 	if (isNil "WFBE_C_AICOM_SELL_REFUND_FRAC")      then {WFBE_C_AICOM_SELL_REFUND_FRAC      = 0.5};  //--- fraction of the structure's build cost refunded to side SUPPLY on sell (0..1). Never over-refunds (clamped).
 	if (isNil "WFBE_C_AICOM_SELL_REDUNDANT_MAX")    then {WFBE_C_AICOM_SELL_REDUNDANT_MAX    = 2};    //--- self-contained trigger (pre-cap): sell only when the side holds MORE than this many DUPLICATE structures of any one sellable type (a 2nd+ Barracks/Light/Heavy/etc). Once item 1/4's base/building cap lands, the cap becomes the primary trigger and this is the floor.
+	if (isNil "WFBE_C_AICOM_ARTY_SELL_STRANDED") then {WFBE_C_AICOM_ARTY_SELL_STRANDED = 0}; //--- 1 = BaseSell Pass-3 recycles stranded commander base-artillery (WFBE_CommanderArtillery SPGs not in wfbe_structures) after MHQ relocate so the 2/2 cap can rebuild near the new HQ (RPT-DEEPDIVE-20260730 sec 2.5). 0 = dark (default). AI-commander only.
+	if (isNil "WFBE_C_AICOM_ARTY_SELL_STRANDED_DIST") then {WFBE_C_AICOM_ARTY_SELL_STRANDED_DIST = 1500}; //--- m: commander SPG must be farther than this from current HQ to count as stranded (floor = BASE_RADIUS). Wider than factory Pass-1 so echelon-forward guns near the front are less likely to look stranded.
 	if (isNil "WFBE_C_AICOM_INCOME_TAPER_TOWNS")    then {WFBE_C_AICOM_INCOME_TAPER_TOWNS    = 8};    //--- B74.1 (Ray 2026-06-23): AICOM income TAPER kicks in above this town count - diminishing per-town funds so a territorial LEADER's treasury can't compound unbounded (soak leader ran to +281k/tick). At/below = full income.
 	if (isNil "WFBE_C_AICOM_INCOME_TAPER_RATE")     then {WFBE_C_AICOM_INCOME_TAPER_RATE     = 0.4};  //--- B74.1: each town held ABOVE the taper threshold contributes only this fraction of a normal town's funds. 0.4 = strong damping; 1.0 = no taper. AICOM-ONLY (never touches player income or supply).
 	if (isNil "WFBE_C_AICOM_OVERRUN_DIST")          then {WFBE_C_AICOM_OVERRUN_DIST          = 250};  //--- B74.1 (Ray 2026-06-23): a striking side has OVERRUN the enemy base when a strike-team unit is within this many m of the enemy HQ...
@@ -1177,6 +1184,10 @@ if (worldName == "Zargabad") then {
 	//--- own master flag (AI_Commander_Base.sqf).
 	if (isNil "WFBE_C_AI_COMMANDER_ARTILLERY_MAX") then {WFBE_C_AI_COMMANDER_ARTILLERY_MAX = 2}; //--- max SELF-PROPELLED base-built artillery pieces a commander may have LIVE at once (self-healing cap, AI_Commander_Base.sqf) - the owner's "max 2 tracked artillery" idea, now a named/tunable constant.
 	if (isNil "WFBE_C_AICOM_LOSING_PRESS")            then {WFBE_C_AICOM_LOSING_PRESS = 1};            //--- losing-side aggression floor: behind on towns + near strength parity + base safe -> minimum PRESS (never park in DEFEND).
+	if (isNil "WFBE_C_AICOM_POSTURE_HYST_ENABLE")      then {WFBE_C_AICOM_POSTURE_HYST_ENABLE = 1};      //--- cmdcon-posture-hysteresis (RPT-DEEPDIVE 2026-07-30): 1=shared DEFEND/PRESS dwell so behind-towns vs losing-press-floor cannot thrash every strategy tick (52 flips/side live). 0=byte-identical thrash.
+	if (isNil "WFBE_C_AICOM_POSTURE_HYST_SEC")         then {WFBE_C_AICOM_POSTURE_HYST_SEC = 180};       //--- min seconds a DEFEND<->PRESS flip is held before the other trigger may retake stance.
+	if (isNil "WFBE_C_AICOM_LOSING_PRESS_ENTER")      then {WFBE_C_AICOM_LOSING_PRESS_ENTER = 0.8};    //--- myEff/enEff ratio to ENTER losing-press floor (was hard-coded 0.8).
+	if (isNil "WFBE_C_AICOM_LOSING_PRESS_EXIT")       then {WFBE_C_AICOM_LOSING_PRESS_EXIT = 0.65};    //--- ratio to EXIT losing-press once latched (hysteresis band below ENTER; stops marginal thrash).
 	if (isNil "WFBE_C_AICOM_WITHDRAW_EVAL")           then {WFBE_C_AICOM_WITHDRAW_EVAL = 1};           //--- graceful-withdrawal evaluator: bleeding HC teams get a "rally" order to the nearest own HQ/town (Ray: reinforce at friendly towns).
 	if (isNil "WFBE_C_AICOM_WITHDRAW_MIN_ALIVE")      then {WFBE_C_AICOM_WITHDRAW_MIN_ALIVE = 3};      //--- alive-count floor that triggers the withdrawal (MBT/attack-heli teams exempt).
 	if (isNil "WFBE_C_AICOM_WITHDRAW_COOLDOWN")       then {WFBE_C_AICOM_WITHDRAW_COOLDOWN = 240};     //--- claude/aicom-west-stuck (bug M): min seconds between auto-rally re-arms for the SAME understrength team - ends the rally-arrive-rally livelock, gives a bounded assault window between withdrawal episodes. Explicit driver wantrally requests bypass this.
@@ -1742,7 +1753,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- 2 = APPLY — server calls WFBE_SE_FNC_HandleSideSupplyChange directly with the full event envelope, the same
 	//--- shape already proven at Server\PVFunctions\AttackWave.sqf:73. Rollout: shadow one round, then Chernarus first,
 	//--- then Takistan, Zargabad last (its 5x town-income multiplier makes it the highest-risk map to arm).
-	if (isNil "WFBE_C_SUPPLY_SERVER_FIX") then {WFBE_C_SUPPLY_SERVER_FIX = 0};
+	if (isNil "WFBE_C_SUPPLY_SERVER_FIX") then {WFBE_C_SUPPLY_SERVER_FIX = 2}; //--- g1606 2026-07-30: default APPLY (was 0 = silent no-op for every server/AI-originated ChangeSideSupply via publicVariableServer self-fire trap)
 	WFBE_C_FIX_INCOME_SYSTEM4_DISPLAY = 0; //--- 1 makes Client_GetIncome mirror the server's income-system 4 x1.5 payout display.
 	WFBE_C_ECONOMY_INCOME_COEF = if (worldName == "Zargabad") then {42} else {14}; //--- cmdcon44r (Ray 2026-07-04): ZG CASH x3 (14*3=42) - Ray: "cash stays at 3x". NOTE cash had never been multiplied on ZG (44p only tripled the SUPPLY stream), so this SETS the ZG cash stream to the x3 Ray specified; CH/TK unchanged at 14. Consumers: updateresources.sqf:16 + Common_GetTownsIncome.sqf:7 (both read this constant, both scale together). B67 (Ray 2026-06-21): 8->14. Boost town-driven CASH income ~1.75x (CASH path only: updateresources.sqf:60->95; the SUPPLY credit at :76 uses WFBE_C_ECONOMY_SUPPLY_INCOME_MULT and is UNCHANGED). Town Multiplicator Coefficient (SV * x).
 	WFBE_C_ECONOMY_SUPPLY_INCOME_MULT = if (worldName == "Zargabad") then {5.0} else {1.0}; //--- cmdcon44r (Ray 2026-07-04): ZG supply x3 -> x5 ("push ZG to 5x, cash stays at 3x"; cash stream split off to x3 via INCOME_COEF on the line above). 44p note: TRIPLE supply income on Zargabad only - the 11-town map generates too little SV for its pacing (CH/TK have 30-40 towns feeding the same economy). Side-wide credit (updateresources.sqf:96): players, human+AI commanders and GUER all x3 on ZG. CH/TK stay 1.0. Original 2026-06-29 parity note: un-throttle ongoing town SUPPLY income to stock 1.0. The credit is SIDE-WIDE (updateresources.sqf:87; funds AI + human commanders + GUER equally - see L420), so 1.0 gives AI commanders the same full supply SV income a human commander's economy gets (there was never an AI-specific handicap - the throttle hit everyone). Supersedes the B57 progression-throttle (0.35->0.5): the funds->supply bridge that made throttling safe is gone, research + factory-rebuild are now SUPPLY-ONLY, and 0.35/0.5 was starving the AI (live no-affordable-upgrade RPT: needed 9500 supply with ~1650 banked). NOTE: founding/research/structure costs were tuned against 0.35 (see L593) -> economy now runs ~2-3x faster; review costs if the AI over-builds. Cash/funds + starting-supply seed UNCHANGED (Ray: cash=units, supply=buildings+upgrades).
@@ -2374,6 +2385,8 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_REINF")     then {AICOMV2_GDIR_PANEL_PRICE_REINF = 1600}; //--- Base price: Action 1 convoy reinforcement.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_QRF_INS")   then {AICOMV2_GDIR_PANEL_PRICE_QRF_INS = 1200};  //--- Base price: Action 2 QRF insert tier.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_QRF_GUN")   then {AICOMV2_GDIR_PANEL_PRICE_QRF_GUN = 2400}; //--- Base price: Action 2 QRF gunship tier.
+	if (isNil "WFBE_C_GDIR_QRF_AIRFRAME_POOL") then {WFBE_C_GDIR_QRF_AIRFRAME_POOL = 0}; //--- 1 = roll QRF gunship class from GDIR_QRF_GUNSHIP_POOL instead of hardcoded Mi24_P (RPT-DEEPDIVE-20260730: 174/174 Mi24_P). 0 = dark legacy Mi24_P only.
+	if (isNil "WFBE_C_GDIR_QRF_GUNSHIP_POOL") then {WFBE_C_GDIR_QRF_GUNSHIP_POOL = ["Mi24_P","Ka60_GL_PMC","Ka60_PMC"]}; //--- classnames eligible when AIRFRAME_POOL=1; invalid/missing CfgVehicles entries skipped at fire time.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_CTR_ATK")   then {AICOMV2_GDIR_PANEL_PRICE_CTR_ATK = 1000};  //--- Base price: Action 3 counter-attack contract.
 	if (isNil "AICOMV2_GDIR_PANEL_SCARCITY_STEP")   then {AICOMV2_GDIR_PANEL_SCARCITY_STEP = 0.2};  //--- Scarcity multiplier step per recent buy on same town.
 	if (isNil "AICOMV2_GDIR_PANEL_SCARCITY_DECAY")  then {AICOMV2_GDIR_PANEL_SCARCITY_DECAY = 120}; //--- Seconds for scarcity to decay one step back toward 1.0.
@@ -2994,6 +3007,8 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_ARTY_RING_VISUAL_CAP") then {WFBE_C_ARTY_RING_VISUAL_CAP = 2000}; //--- #90 owner 2026-07-22: cap the DRAWN ring radius (m); real range survives in the marker label. 0 = legacy uncapped.
 	if (isNil "WFBE_C_TAGS_AI") then {WFBE_C_TAGS_AI = 1}; //--- TAGS: nametags above friendly AI infantry + vehicles (shares the 18-slot pool).
 	if (isNil "WFBE_C_GDIR_VIS") then {WFBE_C_GDIR_VIS = 1}; //--- Commissar visibility pack: wallet label, heatmap, order broadcasts, QRF feedback.
+	if (isNil "WFBE_C_GDIR_CELL_SPREAD") then {WFBE_C_GDIR_CELL_SPREAD = 0}; //--- 1 = shuffle moveCell dest lists + transit soft-cap so depleted pressure is not funnelled into the same 2 towns (RPT-DEEPDIVE-20260730: 35.5% into Msta/Shakhovka). 0 = dark (ledger order).
+	if (isNil "WFBE_C_GDIR_CELL_SPREAD_TRANSIT_FRAC") then {WFBE_C_GDIR_CELL_SPREAD_TRANSIT_FRAC = 0.45}; //--- skip destination this tick if pending transit already exceeds this fraction of baseline (forces surplus to other depleted towns).
 	if (isNil "WFBE_C_ICBM_COUNTDOWN") then {WFBE_C_ICBM_COUNTDOWN = 1}; //--- #78/#455: both-sides HUD countdown to ICBM impact.
 	if (isNil "WFBE_C_MISSILE_WARNING") then {WFBE_C_MISSILE_WARNING = 1}; //--- #367/#307: audible warning while an ICBM is in flight.
 	if (isNil "WFBE_C_LOADOUT_REGISTRY_SCRUB") then {WFBE_C_LOADOUT_REGISTRY_SCRUB = 1}; //--- #416 cheat fix: strip non-purchasable items from player loadouts on equip.
@@ -3367,6 +3382,29 @@ if (isNil "WFBE_C_SIDE_PATROL_FRONT_BIAS") then {WFBE_C_SIDE_PATROL_FRONT_BIAS =
 //--- AI HQ REPURCHASE: dark by default. The HQ-loss hook records only full-AICOM losses; the worker delays then uses the nearest owned town centre and charges the AI treasury the live human HQ-deploy price.
 if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_ENABLE") then {WFBE_C_AICOM_HQ_REPURCHASE_ENABLE = 1}; //--- armed 2026-07-27 owner go.
 if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_DELAY") then {WFBE_C_AICOM_HQ_REPURCHASE_DELAY = 1200};
+
+//--- fable/spectator-v1 (owner request 2026-07-28: spectator mode, owner first): UID-allowlisted
+//--- opt-in free-camera spectator overlay for an already-enrolled player (Client_SpectatorAttach/
+//--- Enter/Exit.sqf, wired from Client\Init\Init_Client.sqf). Client-side only - no HC architecture,
+//--- player enrollment, or JIP flow touched. Master flag defaults ON per owner request; the UID
+//--- allowlist gates ACTION VISIBILITY on each client only under standard A2 locality; it is
+//--- not server-enforced authentication or authorization (empty allowlist = fully inert).
+if (isNil "WFBE_C_SPECTATOR") then {WFBE_C_SPECTATOR = 1};
+//--- SteamID64 strings, compared against (getPlayerUID player) - the same string shape getPlayerUID
+//--- already returns everywhere else in this mission (Client_BuildUnit.sqf, Action_CancelQueue.sqf,
+//--- fpv.sqf, etc.). Add more owner/admin UIDs here as extra array entries. NOTE: this file is public
+//--- (rayswaynl/a2waspwarfare) - SteamID64s are public-profile identifiers, not secrets, but this list
+//--- is still an intentional, curated allowlist.
+if (isNil "WFBE_C_SPECTATOR_UIDS") then {WFBE_C_SPECTATOR_UIDS = ["76561198046825568"]};
+//--- spectator v2 tuning (2026-07-29, docs/plans/2026-07-29-spectator-v2-design.md): free-fly
+//--- base speed, Shift boost / Alt precision multipliers, mouse-look sensitivity (degrees per
+//--- full UI-width delta - playtest-tune), mouse-wheel zoom clamps (0.05 = strong zoom scope).
+if (isNil "WFBE_C_SPECTATOR_SPEED") then {WFBE_C_SPECTATOR_SPEED = 15};
+if (isNil "WFBE_C_SPECTATOR_BOOST") then {WFBE_C_SPECTATOR_BOOST = 4};
+if (isNil "WFBE_C_SPECTATOR_SLOW") then {WFBE_C_SPECTATOR_SLOW = 0.25};
+if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 300};
+if (isNil "WFBE_C_SPECTATOR_FOV_MIN") then {WFBE_C_SPECTATOR_FOV_MIN = 0.05};
+if (isNil "WFBE_C_SPECTATOR_FOV_MAX") then {WFBE_C_SPECTATOR_FOV_MAX = 1.2};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

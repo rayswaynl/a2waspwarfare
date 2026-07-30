@@ -272,6 +272,31 @@ _rearmor = {
 	};
 } forEach _list;
 
+//--- TEMPLATE INTEGRITY (g1606): cargo seat mismatch at spawn. Mixed vehicle+infantry
+//--- rosters (town Motorized variants, side-patrol MTVR/LAV/technical dismount packs) used
+//--- to leave Man classnames on FOOT after CreateTeam. Seat leftover infantry (not already
+//--- in the crew list) into free cargo seats of hulls created in THIS pass. Overflow stays
+//--- on foot (no seat fabrication). Turret seats are intentionally out of scope (PR #1618).
+if ((count _vehicles > 0) && {(count _units) > 0}) then {
+	{
+		private ["_cargoUnit","_cargoVeh","_cargoLeft"];
+		_cargoUnit = _x;
+		if (!isNull _cargoUnit && {alive _cargoUnit} && {(vehicle _cargoUnit) == _cargoUnit} && {!(_cargoUnit in _crews)}) then {
+			{
+				_cargoVeh = _x;
+				if (!isNull _cargoVeh && {alive _cargoVeh}) then {
+					_cargoLeft = _cargoVeh emptyPositions "cargo";
+					if (_cargoLeft > 0) then {
+						_cargoUnit assignAsCargo _cargoVeh;
+						_cargoUnit moveInCargo _cargoVeh;
+					};
+				};
+				if ((vehicle _cargoUnit) != _cargoUnit) exitWith {};
+			} forEach _vehicles;
+		};
+	} forEach _units;
+};
+
 // Marty: Audit exposes that CreateUnit now receives the team global flag.
 if !(isNil "PerformanceAudit_Record") then {
 	if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {

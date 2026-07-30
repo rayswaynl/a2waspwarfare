@@ -553,9 +553,11 @@ WFBE_FNC_OilfieldApplyPull = {
 	_amt = missionNamespace getVariable ["WFBE_C_OILFIELD_AICOM_WEIGHT", 600];
 	_key = format ["WFBE_OILFIELD_PULL_%1", _side];
 	_rec = missionNamespace getVariable [_key, []];
+	//--- fix(exitWith-control-flow g1606): `if (_prevT == _t) exitWith` was nested in then{} so it only
+	//--- left the then-block and FALLS THROUGH to re-add weight every oilfield tick (unbounded AICOM pull).
+	//--- Top-scope exitWith for same-town no-op; ClearPull only when moving to a different town.
+	if ((count _rec == 2) && {(_rec select 0) == _t}) exitWith {};
 	if (count _rec == 2) then {
-		_prevT = _rec select 0;
-		if (_prevT == _t) exitWith {};        //--- already bumping the right town.
 		_side Call WFBE_FNC_OilfieldClearPull;  //--- moved: undo old bump first.
 	};
 	_cur = _t getVariable ["wfbe_aicom_town_weight", 0];

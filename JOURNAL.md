@@ -784,3 +784,13 @@ the owner.
 - Secondary box: WaspHcSlotTest schtask RUNNING as SYSTEM (the /IT interactive-only trap silently no-ran it twice - box has no interactive session; /RU SYSTEM fixed).
 - Adversarial review verdicts already fixed: deck header dual-membership, FPV z discard. Deferred into airlift-v2: REQ diag_log outside gate.
 - After lanes land: merge order = cmd-clipping, fpv-causation (non-draft) then mirror pass; drafts stay for owner/soak. Next build cut = m0728i on owner word or 06:00 restart.
+
+
+## 2026-07-30 — Release/master reconciliation receipt
+
+- The release-side journal above is retained in full. The `origin/master` journal was
+  already the same prior history after omitting only two release-only 2026-07-28
+  working-state blocks; no master-only journal entries were dropped by the merge.
+- Master history source retained: `origin/master` at `a1f97cfdbb` (spectator recut merge).
+- This receipt is the appended master-side reconciliation section for the
+  `reconcile/release-plus-master-20260730` merge.
