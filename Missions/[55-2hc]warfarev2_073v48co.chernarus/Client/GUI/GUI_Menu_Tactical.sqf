@@ -952,7 +952,7 @@ while {alive player && dialog} do {
 		//--- cmdcon41-w3i (Ray 2026-07-02) TEL FASCAM fire. Two-click map confirm (ICBM idiom); NO client fund deduction
 		//--- (server WFBE_SE_FNC_IcbmTelFire re-validates TEL-alive + SCUD level >= 1 + shared cooldown + range + funds + charges).
 		if (MenuAction == 83) then {
-			if (!(["wf_tel_tel_fascam", Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL FASCAM mine barrage?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_FASCAM_COST", 14000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			if (!([["wf_tel_tel_fascam", _map PosScreenToWorld[mouseX,mouseY]] call _mapAimKey, Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL FASCAM mine barrage?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_FASCAM_COST", 14000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
 			_forceReload = true;
 			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 			[17022] Call SetControlFadeAnimStop;
@@ -964,7 +964,7 @@ while {alive player && dialog} do {
 		//--- cmdcon41-w3i (Ray 2026-07-02) TEL STEELRAIN fire. Two-click map confirm (ICBM idiom); NO client fund deduction
 		//--- (server WFBE_SE_FNC_IcbmTelFire re-validates TEL-alive + SCUD level >= 1 + shared cooldown + range + funds + charges).
 		if (MenuAction == 84) then {
-			if (!(["wf_tel_tel_rain", Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL steel rain?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_COST", 9000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			if (!([["wf_tel_tel_rain", _map PosScreenToWorld[mouseX,mouseY]] call _mapAimKey, Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL steel rain?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_RAIN_COST", 9000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
 			_forceReload = true;
 			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 			[17022] Call SetControlFadeAnimStop;
@@ -976,7 +976,7 @@ while {alive player && dialog} do {
 		//--- cmdcon41-w3i (Ray 2026-07-02) TEL BUSTER fire. Two-click map confirm (ICBM idiom); NO client fund deduction
 		//--- (server WFBE_SE_FNC_IcbmTelFire re-validates TEL-alive + SCUD level >= 1 + shared cooldown + range + funds + charges).
 		if (MenuAction == 85) then {
-			if (!(["wf_tel_tel_buster", Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL bunker buster?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_BUSTER_COST", 18000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
+			if (!([["wf_tel_tel_buster", _map PosScreenToWorld[mouseX,mouseY]] call _mapAimKey, Format ["<t color='#ff5a5a' size='1.1'>Confirm TEL bunker buster?</t><br/>Cost $%1. Click the target again to confirm.", (missionNamespace getVariable ["WFBE_C_ICBM_TEL_BUSTER_COST", 18000])]] call WFBE_CL_FNC_ConfirmAction)) exitWith {};
 			_forceReload = true;
 			if !(scriptDone _textAnimHandler) then {terminate _textAnimHandler};
 			[17022] Call SetControlFadeAnimStop;
