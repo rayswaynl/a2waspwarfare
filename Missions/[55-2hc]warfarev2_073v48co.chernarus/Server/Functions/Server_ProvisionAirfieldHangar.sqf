@@ -32,6 +32,9 @@ if !(isNull _oldHangar) then {
 //--- Spawn new hangar on the airport logic so GetClosestAirport can find it.
 if !(isNull _airfieldLogic) then {
 	_newHangar = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle (getPos _airfieldLogic);
+	if (isNull _newHangar) exitWith {
+		["WARNING", "Server_ProvisionAirfieldHangar.sqf: hangar createVehicle failed; airfield hangar link left empty after old hangar teardown."] Call WFBE_CO_FNC_LogContent;
+	};
 	_newHangar setDir ((getDir _airfieldLogic) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
 	_newHangar setPos (getPos _airfieldLogic);
 	_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
