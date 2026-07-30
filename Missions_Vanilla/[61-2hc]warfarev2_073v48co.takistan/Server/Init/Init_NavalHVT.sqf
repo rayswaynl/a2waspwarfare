@@ -798,6 +798,33 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 			_sideID = _loc getVariable ["sideID", WFBE_C_GUER_ID];
 			_pos    = getPosASL _loc;
 
+			//--- fix/naval-cap-capture-teardown: the arm gate below only checks GUER ownership when ARMING.
+			//--- Once airborne, the orbit branch never re-checks sideID, so a GUER carrier captured by another
+			//--- side while a player stays inside the 1800m radius keeps its resistance CAP orbiting and engaging
+			//--- the new owner forever (only the player-inactivity path far below despawns it), and no CAP for the
+			//--- new owner can ever arm. Mirror the SCUD action loop in this file (~L399), which re-derives the
+			//--- owning side every iteration. Reuse the exact inactivity teardown so a captured site sheds its
+			//--- bound air population immediately instead of at the next empty-radius timeout.
+			if (_armed && {_sideID != WFBE_C_GUER_ID}) then {
+				_armed = false;
+				_inactiveTime = 0;
+				if (_capMode == "L39" || _capMode == "SUX") then {
+					if (!isNull _jet1 && alive _jet1) then { {deleteVehicle _x} forEach (crew _jet1); deleteVehicle _jet1 };
+					if (!isNull _jet2 && alive _jet2) then { {deleteVehicle _x} forEach (crew _jet2); deleteVehicle _jet2 };
+				} else {
+					if (_capMode == "MI24") then {
+						if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x} forEach (crew _hind);  deleteVehicle _hind };
+						if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x} forEach (crew _hind2); deleteVehicle _hind2 };
+						if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x} forEach (crew _hind3); deleteVehicle _hind3 };
+					} else {
+						if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x} forEach (crew _hind);   deleteVehicle _hind };
+						if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
+					};
+				};
+				if (!isNull _capGrp) then { deleteGroup _capGrp };
+				["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP torn down at %1 (carrier captured, sideID=%2).", _loc getVariable "name", _sideID]] Call WFBE_CO_FNC_LogContent;
+			};
+
 			//--- Check for any HUMAN player within arming radius (1800m).
 			//--- wasp-navalcap-playableunits (owner review note 19:2x): playableUnits INCLUDES the two
 			//--- headless-client CIV bodies - isPlayer is TRUE for an HC on A2 OA - and ParkSeaHC
