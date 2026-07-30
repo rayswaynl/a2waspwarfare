@@ -7,7 +7,13 @@ _side = _this select 2;
 
 _units = (units group _unit) Call WFBE_CO_FNC_GetLiveUnits;
 //--- Be aware, if the unit that is changing group is the only one left, the join command will erase the group. We fix it by adding a "temp" unit before the join.
-if ((count _units) < 2) then {_entitie = [missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side], group _unit, [0,0,0], _side, false] Call WFBE_CO_FNC_CreateUnit};
+//--- r52: CreateUnit can return objNull (group cap / bad class). Joining without a live placeholder still erases the source group - abort the transfer instead of silently destroying it.
+if ((count _units) < 2) then {
+_entitie = [missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side], group _unit, [0,0,0], _side, false] Call WFBE_CO_FNC_CreateUnit;
+if (isNull _entitie) exitWith {
+["WARNING", Format ["Common_ChangeUnitGroup.sqf: temp placeholder CreateUnit failed for side [%1] - join aborted to preserve source group.", _side]] Call WFBE_CO_FNC_LogContent;
+};
+};
 [_unit] join _group;
 if !(isNull _entitie) then {deleteVehicle _entitie};
 //--- TEAMBAR probe (round-2 review: generic group-transfer coverage). Fires only on the machine
