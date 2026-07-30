@@ -234,7 +234,7 @@ WFBE_C_VAR_SpectatorWheelIdx = _disp displayAddEventHandler ["MouseZChanged", "_
 	_lockPos = getPos _body;
 	_lockDir = getDir _body; //--- direction lock added in v2: the body must not spin under the mouse.
 	_last = time;
-	while {WFBE_C_VAR_SpectatorActive && {!WFBE_gameover}} do {
+	while {WFBE_C_VAR_SpectatorActive && {!(missionNamespace getVariable ["WFBE_gameover", false])}} do {
 		sleep 0.05;
 		//--- Safety: auto-exit if the parked body died while unattended (allowDamage/setCaptive should
 		//--- prevent this outright, but this loop is the last line of defence against a dangling camera).

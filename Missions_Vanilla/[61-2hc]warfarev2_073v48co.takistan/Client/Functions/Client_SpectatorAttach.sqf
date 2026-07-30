@@ -31,9 +31,9 @@ if (isNil "WFBE_C_VAR_SpectatorActive") then {WFBE_C_VAR_SpectatorActive = false
 
 diag_log Format ["SPECTATE|v1|allowlisted-client|uid=%1", _myUID];
 
-while {!WFBE_gameover} do {
-	waitUntil {sleep 2; !isNull player || WFBE_gameover};
-	if (WFBE_gameover) exitWith {};
+while {!(missionNamespace getVariable ["WFBE_gameover", false])} do {
+	waitUntil {sleep 2; !isNull player || (missionNamespace getVariable ["WFBE_gameover", false])};
+	if (missionNamespace getVariable ["WFBE_gameover", false]) exitWith {};
 	if !(player getVariable ["wfbe_spectator_actions_added", false]) then {
 		player setVariable ["wfbe_spectator_actions_added", true];
 		player addAction [
