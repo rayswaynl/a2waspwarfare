@@ -1,4 +1,4 @@
-Private["_ammo","_angle","_artillery","_artillery_classes","_artillery_type","_burst","_CBREH","_destination","_dispersion","_direction","_distance","_FEH","_gunner","_i","_index","_minRange","_maxRange","_position","_radius","_reloadTime","_side","_type","_velocity","_watchPosition","_weapon","_xcoord","_ycoord"];
+Private["_ammo","_angle","_artillery","_artillery_classes","_artillery_type","_burst","_CBREH","_destination","_dispersion","_direction","_distance","_FEH","_ffAbort","_ffNear","_ffRad","_gunner","_i","_index","_minRange","_maxRange","_position","_radius","_reloadTime","_side","_type","_velocity","_watchPosition","_weapon","_xcoord","_ycoord"];
 
 _artillery = _this select 0;
 _destination = _this select 1;
@@ -94,10 +94,36 @@ if !(alive _artillery) exitWith {
 	if (alive _gunner) then {{_gunner enableAI _x} forEach ['MOVE','TARGET','AUTOTARGET']};
 };
 
+//--- r30 fire-deconflict: re-check FRIENDLIES AT IMPACT after the aim sleep (and each round).
+//--- Strategy/PlayerArty gate friendlies at decision time (~400m) then Spawn this script, which
+//--- sleeps 10+s before the first shot - advancing own squads can enter the impact zone meanwhile.
+//--- Measure from _destination (impact), not the battery. Abort with full teardown (restricted clear).
+_ffRad = 400;
+_ffNear = 0;
+{ if (alive _x && {side _x == _side}) then {_ffNear = _ffNear + 1} } forEach (_destination nearEntities [["Man","Car","Tank","Air"], _ffRad]);
+if (_ffNear > 0) exitWith {
+	if !(isNull _artillery) then {
+		if (_CBREH >= 0) then {_artillery removeEventHandler ['Fired',_CBREH]};
+		_artillery removeEventHandler ['Fired',_FEH];
+		if (alive _artillery) then {
+			[_artillery] Call ARTY_Finish;
+			if (alive (driver _artillery)) then {{(driver _artillery) enableAI _x} forEach ['MOVE','TARGET','AUTOTARGET']};
+			_artillery setVariable ["restricted",false];
+		};
+	};
+	if (alive _gunner) then {{_gunner enableAI _x} forEach ['MOVE','TARGET','AUTOTARGET']};
+	diag_log ("ARTILLERY|v1|ABORT_FRIENDLY|side=" + str _side + "|near=" + str _ffNear + "|rad=" + str _ffRad);
+};
+
 for '_i' from 1 to _burst do {
 	sleep (_reloadTime+random 3);
 	if (!alive _gunner || !alive _artillery) exitWith {};
-	
+	//--- Per-round FF recheck (multi-round missions must not walk onto friendlies).
+	_ffNear = 0;
+	{ if (alive _x && {side _x == _side}) then {_ffNear = _ffNear + 1} } forEach (_destination nearEntities [["Man","Car","Tank","Air"], _ffRad]);
+	if (_ffNear > 0) exitWith {
+		diag_log ("ARTILLERY|v1|ABORT_FRIENDLY_ROUND|side=" + str _side + "|near=" + str _ffNear + "|round=" + str _i);
+	};
 	_artillery fire _weapon;
 };
 
