@@ -131,11 +131,10 @@ if (_deckOn) then {
 	//--- NEITHER control set - it was in both, and the advise forEach below runs second, so its
 	//--- !_isCmd write always won and the header was hidden while commanding. Driven explicitly
 	//--- after the two loops instead (deck on = visible in both states).
-	_warCtrls = _warCtrls + [14701,14702,14703,14704,14705,14706];
-	//--- fable/cmd-deck-layout: STATE A (no commander) keeps ONLY the live header strip. The zone
-	//--- titles are labels for the commander deck's own layout; in the advisory state the legacy
-	//--- controls already occupy those rows (14607 spans 0.486..0.626), so admitting them there is
-	//--- what stacked "STRATEGY" on top of the AI-intent readout in the owner screenshot.
+	_warCtrls = _warCtrls + [14702,14704,14705,14706];
+	//--- fable/cmd-deck-layout: keep only zone labels that do not collide with persistent economy
+	//--- and roster title controls. 14701 ("SITUATION MAP") would cover 14600 FUNDS, and 14703
+	//--- ("FORCES") would cover the 14660 YOUR TEAMS title; those decorative labels remain hidden.
 	lbClear 14705;
 	{lbAdd [14705, _x]} forEach _deckOrders;
 	lbSetCurSel [14705, 0];
