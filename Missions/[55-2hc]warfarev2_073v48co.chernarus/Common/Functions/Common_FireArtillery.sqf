@@ -17,6 +17,12 @@ if ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) <= 0) exitWith {
 	["WARNING", Format ["Common_FireArtillery.sqf: Artillery fire missions disabled (WFBE_C_ARTILLERY=%1).", missionNamespace getVariable ["WFBE_C_ARTILLERY", 0]]] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- r30 lifecycle: refuse re-entry while a mission is live (restricted).
+//--- Without this, Strategy/PlayerArty/mobile/RequestFireMission can Spawn FireArtillery
+//--- twice on the same piece -> double Fired EH, stacked Prep, stuck restricted.
+if (_artillery getVariable ["restricted", false]) exitWith {
+	["WARNING", Format ["Common_FireArtillery.sqf: Artillery [%1] already on a fire mission (restricted) - skip.", _artillery]] Call WFBE_CO_FNC_LogContent;
+};
 //--- WFBE_C_ARTILLERY_DISABLED_GUARD
 _artillery setVariable ["restricted",true];
 {if(isPlayer _x) then {_x action  ["getOut", _artillery]};} forEach (crew _artillery);
@@ -85,12 +91,21 @@ if !(alive _gunner) exitWith {
 		if (_CBREH >= 0) then {_artillery removeEventHandler ['Fired',_CBREH]};
 		_artillery removeEventHandler ['Fired',_FEH];
 		if (alive _artillery) then {
+			//--- r30 lifecycle: full mission teardown (was missing ARTY_Finish -> prep lock linger).
+			[_artillery] Call ARTY_Finish;
 			if (alive (driver _artillery)) then {{(driver _artillery) enableAI _x} forEach ['MOVE','TARGET','AUTOTARGET']};
 			_artillery setVariable ["restricted",false];
+			if ((_artillery getVariable ["wfbe_arty_state", ""]) == "firing") then {_artillery setVariable ["wfbe_arty_state", "registered"]};
 		};
 	};
 };
 if !(alive _artillery) exitWith {
+	//--- r30 lifecycle: hull died during aim - drop EHs if still attached; clear restricted on wreck if object remains.
+	if !(isNull _artillery) then {
+		if (_CBREH >= 0) then {_artillery removeEventHandler ['Fired',_CBREH]};
+		_artillery removeEventHandler ['Fired',_FEH];
+		_artillery setVariable ["restricted",false];
+	};
 	if (alive _gunner) then {{_gunner enableAI _x} forEach ['MOVE','TARGET','AUTOTARGET']};
 };
 
@@ -122,6 +137,10 @@ if (alive (_gunner)) then {{_gunner enableAI _x} forEach ['MOVE','TARGET','AUTOT
 if (!isNull _artillery) then {
 	[_artillery] Call ARTY_Finish; //--- Free the artillery unit from the fire mission submission.
 	sleep 5;
-	if (!isNull _artillery) then {_artillery setVariable ["restricted",false]};
+	if (!isNull _artillery) then {
+		_artillery setVariable ["restricted",false];
+		//--- r30 lifecycle: clear echelon 'firing' so the piece is not stuck busy forever.
+		if ((_artillery getVariable ["wfbe_arty_state", ""]) == "firing") then {_artillery setVariable ["wfbe_arty_state", "registered"]};
+	};
 };
 

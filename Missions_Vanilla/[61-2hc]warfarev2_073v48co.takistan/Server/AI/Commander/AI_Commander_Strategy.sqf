@@ -1535,7 +1535,7 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 				_fired = false;
 				{
 					_p = _x;
-					if (alive _p && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p}) then {
+					if (alive _p && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p} && {!(_p getVariable ["restricted", false])}) then { //--- r30 lifecycle: skip battery already mid fire-mission
 						_idx = [typeOf _p, _side] Call IsArtillery;
 						if (_idx >= 0) then {
 							_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1);
