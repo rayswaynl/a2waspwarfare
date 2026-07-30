@@ -86,6 +86,28 @@ if (_uTier >= 3) then {
 						_uVeh setVelocity [0,0,0];
 						_uVeh setPos (getPos _uNode);
 					};
+				} else {
+					//--- fix(alife-stall r34): NOROAD_STEP parity with RunCommanderTeam (side-patrol bridge used empty nearRoads as silent no-op).
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP", 1]) > 0) then {
+						private ["_nvDest","_nvBrg","_nvStep","_nvGuess","_nvFlat","_nvVp"];
+						_nvDest = _uDest;
+						if (typeName _nvDest == "OBJECT" && {!isNull _nvDest}) then {_nvDest = getPos _nvDest};
+						if (typeName _nvDest == "ARRAY" && {count _nvDest >= 2}) then {
+							_nvVp = getPosATL _uVeh;
+							_nvBrg = ((_nvDest select 0) - (_nvVp select 0)) atan2 ((_nvDest select 1) - (_nvVp select 1));
+							_nvStep = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST", 90];
+							if (_nvStep > ((_uVeh distance _nvDest) - 15)) then {_nvStep = ((_uVeh distance _nvDest) - 15) max 0};
+							if (_nvStep > 5) then {
+								_nvGuess = [(_nvVp select 0) + _nvStep * (sin _nvBrg), (_nvVp select 1) + _nvStep * (cos _nvBrg), 0];
+								_nvFlat = _nvGuess isFlatEmpty [12, 0, 2, 14, 0, false, objNull];
+								if (count _nvFlat > 0 && {!surfaceIsWater _nvFlat}) then {
+									_uVeh setVelocity [0,0,0];
+									_uVeh setPos _nvFlat;
+									diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|UNSTUCK_NOROAD|team=" + (str _uTeam) + "|tier=" + str _uTier + "|step=" + str (round _nvStep) + "|veh=1|origin=" + _uOrigin);
+								};
+							};
+						};
+					};
 				};
 			} else {
 				_uRds = (getPos _uLdr) nearRoads (missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_FOOT_ROAD_R", 200]);
@@ -95,6 +117,29 @@ if (_uTier >= 3) then {
 						_uLdr setVelocity [0,0,0];
 						_uLdr setPos (getPos _uNode);
 						{if (alive _x && {_x != _uLdr} && {vehicle _x == _x}) then {_x doFollow _uLdr}} forEach (units _uTeam);
+					};
+				} else {
+					//--- fix(alife-stall r34): foot NOROAD_STEP when no road in ring.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP", 1]) > 0) then {
+						private ["_nrDest","_nrBrg","_nrStep","_nrGuess","_nrFlat","_nrLp"];
+						_nrDest = _uDest;
+						if (typeName _nrDest == "OBJECT" && {!isNull _nrDest}) then {_nrDest = getPos _nrDest};
+						if (typeName _nrDest == "ARRAY" && {count _nrDest >= 2}) then {
+							_nrLp = getPosATL _uLdr;
+							_nrBrg = ((_nrDest select 0) - (_nrLp select 0)) atan2 ((_nrDest select 1) - (_nrLp select 1));
+							_nrStep = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST", 90];
+							if (_nrStep > ((_uLdr distance _nrDest) - 10)) then {_nrStep = ((_uLdr distance _nrDest) - 10) max 0};
+							if (_nrStep > 5) then {
+								_nrGuess = [(_nrLp select 0) + _nrStep * (sin _nrBrg), (_nrLp select 1) + _nrStep * (cos _nrBrg), 0];
+								_nrFlat = _nrGuess isFlatEmpty [8, 0, 3, 10, 0, false, objNull];
+								if (count _nrFlat > 0 && {!surfaceIsWater _nrFlat}) then {
+									_uLdr setVelocity [0,0,0];
+									_uLdr setPos _nrFlat;
+									{if (alive _x && {_x != _uLdr} && {vehicle _x == _x}) then {_x doFollow _uLdr}} forEach (units _uTeam);
+									diag_log ("AICOMSTAT|v2|EVENT|" + (str _uSide) + "|" + str (round (time / 60)) + "|UNSTUCK_NOROAD|team=" + (str _uTeam) + "|tier=" + str _uTier + "|step=" + str (round _nrStep) + "|veh=0|origin=" + _uOrigin);
+								};
+							};
+						};
 					};
 				};
 			};

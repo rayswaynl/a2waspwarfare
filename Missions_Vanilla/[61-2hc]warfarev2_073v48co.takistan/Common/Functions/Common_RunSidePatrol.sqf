@@ -445,8 +445,9 @@ while {!WFBE_GameOver && _alive} do {
 						[_team, getPos _target, 'MOVE', 25] Spawn WFBE_CO_FNC_WaypointSimple;
 						_pVeh = vehicle _pLdr;
 						_pNear = false;
-						if (!isNull _pVeh && {!(_pVeh in [_pLdr])} && {alive _pVeh} && {canMove _pVeh}) then {
-							private ["_pNearResult"];
+						//--- fix(alife-stall r34): do NOT require canMove - immobilized/flipped hulls need setPos.
+						if (!isNull _pVeh && {!(_pVeh in [_pLdr])} && {alive _pVeh}) then {
+							private ["_pNearResult","_pNrStep","_pNrGuess","_pNrFlat","_pNrBrg","_pNrVp","_pNrDest"];
 							_pNearResult = 0;
 							_pNearResult = [getPos _pVeh, 100] Call WFBE_CO_FNC_RealPlayersNear;
 							if ((typeName _pNearResult) == "SCALAR" && {_pNearResult > 0}) then {_pNear = true};
@@ -459,6 +460,24 @@ while {!WFBE_GameOver && _alive} do {
 									if (!isNull _pNode && {!surfaceIsWater (getPos _pNode)}) then {
 										_pVeh setVelocity [0,0,0];
 										_pVeh setPos (getPos _pNode);
+									};
+								} else {
+									//--- fix(alife-stall r34): NOROAD_STEP parity when nearRoads empty (roadless shelf).
+									if ((missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP", 1]) > 0 && {!isNull _target}) then {
+										_pNrDest = getPos _target;
+										_pNrVp = getPosATL _pVeh;
+										_pNrBrg = ((_pNrDest select 0) - (_pNrVp select 0)) atan2 ((_pNrDest select 1) - (_pNrVp select 1));
+										_pNrStep = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST", 90];
+										if (_pNrStep > ((_pVeh distance _target) - 15)) then {_pNrStep = ((_pVeh distance _target) - 15) max 0};
+										if (_pNrStep > 5) then {
+											_pNrGuess = [(_pNrVp select 0) + _pNrStep * (sin _pNrBrg), (_pNrVp select 1) + _pNrStep * (cos _pNrBrg), 0];
+											_pNrFlat = _pNrGuess isFlatEmpty [12, 0, 2, 14, 0, false, objNull];
+											if (count _pNrFlat > 0 && {!surfaceIsWater _pNrFlat}) then {
+												_pVeh setVelocity [0,0,0];
+												_pVeh setPos _pNrFlat;
+												diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time/60)) + "|PATROL_UNSTUCK_NOROAD|team=" + (str _team) + "|step=" + str (round _pNrStep));
+											};
+										};
 									};
 								};
 							};
