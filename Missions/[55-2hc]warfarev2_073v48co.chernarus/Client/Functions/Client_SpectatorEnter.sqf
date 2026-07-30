@@ -17,7 +17,7 @@
      wheel       FOV zoom (WFBE_C_SPECTATOR_FOV_MIN..MAX)
      W/S         fly along view direction (incl. pitch), A/D horizontal strafe
      Space/Ctrl  vertical, Shift boost, Alt precision crawl
-     N / B       arm next/previous alive player as watch target (skips self)
+     N / B       arm next/previous target within the current director class
      F           toggle follow-cam on armed target (8m behind / 3m above)
      V           toggle through-their-eyes POV (eyePos + eyeDirection)
      H           hide/show the hint overlay (clean OBS capture)
@@ -61,6 +61,7 @@ WFBE_C_VAR_SpectatorBody = player; //--- pin the exact body this session belongs
 WFBE_C_VAR_SpectatorMode = "free";
 WFBE_C_VAR_SpectatorTarget = objNull;
 WFBE_C_VAR_SpectatorDirectorClass = "PLAYER";
+WFBE_C_VAR_SpectatorDirectorPinned = false;
 WFBE_C_VAR_SpectatorDirectorAuto = false;
 WFBE_C_VAR_SpectatorOrbit = true;
 WFBE_C_VAR_SpectatorOrbitAngle = 0;
@@ -103,7 +104,7 @@ WFBE_C_VAR_SpectatorLastMouseY = 0.5;
 
 systemChat "[WASP] Spectator v2: mouse look, wheel zoom, WASD fly, Shift/Alt speed, N/B target, F follow, V eyes, H hide UI, Backspace exit.";
 if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
-	systemChat "[WASP] Spectator v3 director armed: TAB class, G auto-switch, O orbit, [ ] dwell.";
+	systemChat "[WASP] Spectator v3 director armed: TAB pins class, G pools action, O orbit, [ ] dwell.";
 };
 
 WFBE_C_VAR_SpectatorKeys = [false,false,false,false,false,false,false,false]; //--- W,S,A,D,Space,Ctrl,Shift,Alt
@@ -169,6 +170,7 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 					};
 				};
 				WFBE_C_VAR_SpectatorDirectorClass = _cls;
+				WFBE_C_VAR_SpectatorDirectorPinned = true;
 				WFBE_C_VAR_SpectatorTarget = objNull;
 				WFBE_C_VAR_DirectorLastSwitch = 0;
 				diag_log Format ["SPECTATE|v3|class-switch|class=%1", _cls];
@@ -184,13 +186,14 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 					systemChat "[WASP] Director mode off - free camera.";
 				} else {
 					WFBE_C_VAR_SpectatorMode = "director";
+					WFBE_C_VAR_SpectatorDirectorPinned = false;
 					WFBE_C_VAR_SpectatorDirectorAuto = true;
 					WFBE_C_VAR_SpectatorOrbit = true;
 					WFBE_C_VAR_SpectatorOrbitAngle = 0;
 					WFBE_C_VAR_SpectatorTarget = objNull;
 					WFBE_C_VAR_DirectorLastSwitch = 0;
 					diag_log Format ["SPECTATE|v3|mode-on|class=%1", WFBE_C_VAR_SpectatorDirectorClass];
-					systemChat "[WASP] Director mode on - auto-switch enabled.";
+					systemChat "[WASP] Director mode on - pooled action auto-switch enabled.";
 				};
 			} else {_handled = false};
 		};
@@ -348,11 +351,12 @@ WFBE_C_VAR_SpectatorWheelIdx = (findDisplay 46) displayAddEventHandler ["MouseZC
 diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_SpectatorKeyDownIdx, WFBE_C_VAR_SpectatorMouseMovingIdx];
 
 [] spawn {
-	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d","_center","_radius","_height","_rate","_angle","_dirCard"];
+	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d","_center","_radius","_height","_rate","_angle","_dirCard","_wantPos","_wantAim","_smoothPos","_smoothAim","_smoothFactor","_smoothK","_lastDirectorTarget"];
 	_body = WFBE_C_VAR_SpectatorBody;
 	_lockPos = getPos _body;
 	_lockDir = getDir _body; //--- direction lock added in v2: the body must not spin under the mouse.
 	_last = time;
+	_lastDirectorTarget = objNull;
 	diag_log "SPECTATE|v2|loop-alive";
 	//--- START THE DIRECTOR POLL THREAD **BEFORE** the movement loop below, not after it.
 	//--- It used to sit after that loop's closing brace, which is plain sequential SQF: the loop only
@@ -433,15 +437,35 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 							_angle = (WFBE_C_VAR_SpectatorOrbitAngle + (_rate * _dt)) % 360;
 							WFBE_C_VAR_SpectatorOrbitAngle = _angle;
 						} else {_angle = WFBE_C_VAR_SpectatorOrbitAngle};
-						_p = [(_center select 0) + (_radius * sin _angle), (_center select 1) + (_radius * cos _angle), (_center select 2) + _height];
-						_tx = _center select 0;
-						_ty = _center select 1;
-						_tz = _center select 2;
+						_wantPos = [(_center select 0) + (_radius * sin _angle), (_center select 1) + (_radius * cos _angle), (_center select 2) + _height];
+						_wantAim = [_center select 0, _center select 1, _center select 2];
+						if (_t != _lastDirectorTarget) then {
+							_smoothPos = _wantPos;
+							_smoothAim = _wantAim;
+							_lastDirectorTarget = _t;
+						} else {
+							_smoothK = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_SMOOTHING", 5];
+							_smoothFactor = ((_smoothK * _dt) min 1) max 0;
+							_smoothPos = [
+								(_smoothPos select 0) + (((_wantPos select 0) - (_smoothPos select 0)) * _smoothFactor),
+								(_smoothPos select 1) + (((_wantPos select 1) - (_smoothPos select 1)) * _smoothFactor),
+								(_smoothPos select 2) + (((_wantPos select 2) - (_smoothPos select 2)) * _smoothFactor)
+							];
+							_smoothAim = [
+								(_smoothAim select 0) + (((_wantAim select 0) - (_smoothAim select 0)) * _smoothFactor),
+								(_smoothAim select 1) + (((_wantAim select 1) - (_smoothAim select 1)) * _smoothFactor),
+								(_smoothAim select 2) + (((_wantAim select 2) - (_smoothAim select 2)) * _smoothFactor)
+							];
+						};
+						_p = _smoothPos;
+						_tx = _smoothAim select 0;
+						_ty = _smoothAim select 1;
+						_tz = _smoothAim select 2;
 						_hd = sqrt (((_tx - (_p select 0)) ^ 2) + ((_ty - (_p select 1)) ^ 2));
 						_y = (((_tx - (_p select 0)) atan2 (_ty - (_p select 1))) + 360) % 360;
 						_pt = (((_tz - (_p select 2)) atan2 (_hd max 0.01)) max -80) min 80;
-						WFBE_C_VAR_SpectatorCam camSetPos _p;
-						WFBE_C_VAR_SpectatorCam camSetTarget _center;
+						WFBE_C_VAR_SpectatorCam camSetPos _smoothPos;
+						WFBE_C_VAR_SpectatorCam camSetTarget _smoothAim;
 					};
 				};
 				default {
@@ -475,7 +499,7 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 				_tgtTxt = Format ["%1: %2", WFBE_C_VAR_SpectatorDirectorClass, WFBE_C_VAR_SpectatorDirectorTargetLabel];
 			};
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
-				_dirCard = "<t size='0.9' color='#7fd4ff'>DIRECTOR</t><br/>" + "<t size='0.85' color='#aaaaaa'>TAB class | G auto %7 | O orbit %8 | [ ] dwell %9s</t><br/>";
+				_dirCard = "<t size='0.9' color='#7fd4ff'>DIRECTOR</t><br/>" + "<t size='0.85' color='#aaaaaa'>TAB pin class | G pooled action %7 | O orbit %8 | [ ] dwell %9s</t><br/>";
 			};
 			hintSilent parseText Format [
 				"<t size='1.2' color='#7fd4ff'>SPECTATOR</t>  <t color='#ffcc33'>%1</t><br/>"
@@ -485,7 +509,7 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 				+ "<t size='0.85' color='#aaaaaa'>Mouse look | W/S fly | A/D strafe | Space/Ctrl up-down<br/>"
 				+ "Shift boost | Alt crawl | Wheel zoom</t><br/>"
 				+ "<t size='0.9' color='#7fd4ff'>TARGETS</t><br/>"
-				+ "<t size='0.85' color='#aaaaaa'>N / B next-prev player | F follow-cam | V through-their-eyes</t><br/>"
+				+ "<t size='0.85' color='#aaaaaa'>N / B next-prev target | F follow-cam | V through-their-eyes</t><br/>"
 				+ _dirCard
 				+ "<t size='0.9' color='#7fd4ff'>SETUP</t><br/>"
 				+ "<t size='0.85' color='#aaaaaa'>PgUp / PgDn sensitivity | H hide this card | Backspace exit</t>",

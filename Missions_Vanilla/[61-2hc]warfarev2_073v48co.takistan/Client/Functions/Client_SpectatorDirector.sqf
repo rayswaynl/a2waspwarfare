@@ -60,7 +60,8 @@ WFBE_CL_FNC_DirectorBuildPlayers = {
 		if (!isNil "_x") then {
 			if (alive _x && {isPlayer _x} && {!(_x == player)} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then { //--- HC bodies are isPlayer-true; never offer them as watch targets (owner 2026-07-30)
 				_contact = [_x, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100], side _x] Call WFBE_CL_FNC_DirectorContactCount;
-				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_BASE", 5]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_CONTACT", 40]));
+				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_BASE", 10]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_CONTACT", 1000]));
+				if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
 				_list = _list + [[name _x, _x, "PLAYER", WFBE_CL_FNC_DirectorPosObject, _score]];
 			};
 		};
@@ -69,11 +70,9 @@ WFBE_CL_FNC_DirectorBuildPlayers = {
 };
 
 WFBE_CL_FNC_DirectorBuildTeams = {
-	Private ["_list","_feed","_entry","_leader","_sid","_grp","_mySid","_reveal","_alive","_contact","_score","_label"];
+	Private ["_list","_feed","_entry","_leader","_sid","_grp","_alive","_contact","_score","_label"];
 	_list = [];
 	_feed = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
-	_mySid = missionNamespace getVariable ["WFBE_Client_SideID", -1];
-	_reveal = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_REVEAL_ENEMY_HQ", 0]) > 0;
 	{
 		_entry = _x;
 		if (typeName _entry == "ARRAY" && {count _entry >= 4}) then {
@@ -82,10 +81,11 @@ WFBE_CL_FNC_DirectorBuildTeams = {
 			_grp = _entry select 3;
 			if (typeName _grp == "GROUP") then {
 				_leader = leader _grp;
-				if (!isNull _leader && {alive _leader} && {(_reveal || {_sid == _mySid})}) then {
+				if (!isNull _leader && {alive _leader}) then {
 					_alive = ({alive _x} count units _grp);
 					_contact = [_leader, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TEAM_CONTACT_RADIUS", 150], side _leader] Call WFBE_CL_FNC_DirectorContactCount;
-					_score = (_alive * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TEAM_SIZE", 3])) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TEAM_CONTACT", 60]));
+					_score = (_alive * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TEAM_SIZE", 2])) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TEAM_CONTACT", 1000]));
+					if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
 					_label = Format ["TEAM %1 (%2/%3)", _sid, _alive, _contact];
 					_list = _list + [[_label, _leader, "TEAM", WFBE_CL_FNC_DirectorPosObject, _score]];
 				};
@@ -96,7 +96,7 @@ WFBE_CL_FNC_DirectorBuildTeams = {
 };
 
 WFBE_CL_FNC_DirectorBuildTowns = {
-	Private ["_list","_data","_town","_mix","_delta","_headcount","_score","_label"];
+	Private ["_list","_data","_town","_mix","_contact","_delta","_headcount","_score","_label"];
 	_data = missionNamespace getVariable ["WFBE_C_VAR_DirectorTownData", []];
 	if (count _data == 0) then {_data = Call WFBE_CL_FNC_DirectorPollTowns};
 	_list = [];
@@ -105,7 +105,9 @@ WFBE_CL_FNC_DirectorBuildTowns = {
 		_mix = _x select 3;
 		_delta = _x select 2;
 		_headcount = _x select 4;
-		_score = (_mix * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_CONTEST", 100])) + (((-_delta) max 0) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_TREND", 4])) + (_headcount * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_SIZE", 2]));
+		_contact = ((_mix - 1) max 0);
+		_score = (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_CONTEST", 1000])) + (((-_delta) max 0) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_TREND", 10])) + (_headcount * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_SIZE", 2]));
+		if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
 		_label = _town getVariable ["name", "Town"];
 		_list = _list + [[_label, _town, "TOWN", WFBE_CL_FNC_DirectorPosObject, _score]];
 	} forEach _data;
@@ -124,7 +126,8 @@ WFBE_CL_FNC_DirectorBuildHQs = {
 			if (!isNull _hq) then {
 				_contact = [_hq, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_HQ_CONTACT_RADIUS", 250], _side] Call WFBE_CL_FNC_DirectorContactCount;
 				_label = switch (_side) do {case west: {"WEST HQ"}; case east: {"EAST HQ"}; default {"GUER HQ"}};
-				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_HQ_BASE", 10]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_HQ_UNDER_ATTACK", 150]));
+				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_HQ_BASE", 15]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_HQ_UNDER_ATTACK", 1000]));
+				if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
 				_list = _list + [[_label, _hq, "HQ", WFBE_CL_FNC_DirectorPosObject, _score]];
 			};
 		};
@@ -141,6 +144,12 @@ WFBE_CL_FNC_DirectorBuildActive = {
 		case "HQ": {Call WFBE_CL_FNC_DirectorBuildHQs};
 		default {Call WFBE_CL_FNC_DirectorBuildPlayers};
 	}
+};
+
+WFBE_CL_FNC_DirectorBuildAll = {
+	Private ["_list"];
+	_list = (Call WFBE_CL_FNC_DirectorBuildPlayers) + (Call WFBE_CL_FNC_DirectorBuildTeams) + (Call WFBE_CL_FNC_DirectorBuildTowns) + (Call WFBE_CL_FNC_DirectorBuildHQs);
+	_list
 };
 
 WFBE_CL_FNC_DirectorCycleTarget = {
@@ -168,8 +177,9 @@ WFBE_CL_FNC_DirectorCycleTarget = {
 };
 
 WFBE_CL_FNC_DirectorPickNext = {
-	Private ["_list","_current","_recent","_cooldown","_best","_bestScore","_entry","_target","_score","_skip","_chosen"];
-	_list = Call WFBE_CL_FNC_DirectorBuildActive;
+	Private ["_list","_current","_recent","_cooldown","_best","_bestScore","_entry","_target","_score","_skip","_pinned"];
+	_pinned = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorPinned", false];
+	if (_pinned) then {_list = Call WFBE_CL_FNC_DirectorBuildActive} else {_list = Call WFBE_CL_FNC_DirectorBuildAll};
 	if (count _list == 0) exitWith {[]};
 	_current = WFBE_C_VAR_SpectatorTarget;
 	_recent = missionNamespace getVariable ["WFBE_C_VAR_DirectorRecent", []];
@@ -208,7 +218,7 @@ WFBE_CL_FNC_DirectorPickNext = {
 
 WFBE_CL_FNC_DirectorLoopStart = {
 	[] spawn {
-		Private ["_next","_entry","_recent","_pollSec","_dwell","_recentKeep","_recentStart","_i"];
+		Private ["_next","_entry","_recent","_pollSec","_dwell","_recentKeep","_recentStart","_i","_pinned","_oldClass"];
 		diag_log "SPECTATE|v3|director-thread-start";
 		while {missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false] && {!(missionNamespace getVariable ["WFBE_gameover", false])}} do {
 			sleep 1;
@@ -220,9 +230,12 @@ WFBE_CL_FNC_DirectorLoopStart = {
 				};
 				_dwell = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorDwell", 20];
 				if ((time - (missionNamespace getVariable ["WFBE_C_VAR_DirectorLastSwitch", 0])) >= _dwell || {isNull WFBE_C_VAR_SpectatorTarget} || {!alive WFBE_C_VAR_SpectatorTarget}) then {
+					_pinned = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorPinned", false];
+					_oldClass = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorClass", "PLAYER"];
 					_next = Call WFBE_CL_FNC_DirectorPickNext;
 					if (count _next > 0) then {
 						_entry = _next;
+						if (!_pinned) then {WFBE_C_VAR_SpectatorDirectorClass = _entry select 2};
 						WFBE_C_VAR_SpectatorTarget = _entry select 1;
 						WFBE_C_VAR_SpectatorDirectorPosFn = _entry select 3;
 						WFBE_C_VAR_SpectatorDirectorTargetLabel = _entry select 0;
@@ -241,7 +254,11 @@ WFBE_CL_FNC_DirectorLoopStart = {
 							_recent = _recentKeep;
 						};
 						WFBE_C_VAR_DirectorRecent = _recent;
-						diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3", missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorClass", "PLAYER"], _entry select 0, _entry select 4];
+						if (!_pinned && {(_entry select 2) != _oldClass}) then {
+							diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3|pooled=1", _entry select 2, _entry select 0, _entry select 4];
+						} else {
+							diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3", _entry select 2, _entry select 0, _entry select 4];
+						};
 					};
 				};
 			};
