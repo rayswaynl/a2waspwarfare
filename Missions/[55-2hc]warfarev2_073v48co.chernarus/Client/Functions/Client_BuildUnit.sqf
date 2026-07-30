@@ -740,9 +740,12 @@ if (_isMan) then {
 			_easaTypeIdx = _easaVehi find (typeOf _vehicle);
 			if (_easaTypeIdx >= 0) then {
 				_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaTypeIdx;
-				_easaRandIdx = floor (random (count _easaLoadouts));
-				[_vehicle, _easaRandIdx] call EASA_Equip;
-				["INFORMATION", Format ["Client_BuildUnit.sqf: naval EASA random preset %1 applied to %2 (carrier buy).", _easaRandIdx, typeOf _vehicle]] Call WFBE_CO_FNC_LogContent;
+				//--- NUMERIC: empty/nil loadout array would error floor(random 0) + EASA_Equip.
+				if (!isNil "_easaLoadouts" && {typeName _easaLoadouts == "ARRAY"} && {(count _easaLoadouts) > 0}) then {
+					_easaRandIdx = floor (random (count _easaLoadouts));
+					[_vehicle, _easaRandIdx] call EASA_Equip;
+					["INFORMATION", Format ["Client_BuildUnit.sqf: naval EASA random preset %1 applied to %2 (carrier buy).", _easaRandIdx, typeOf _vehicle]] Call WFBE_CO_FNC_LogContent;
+				};
 			};
 		};
 	};
