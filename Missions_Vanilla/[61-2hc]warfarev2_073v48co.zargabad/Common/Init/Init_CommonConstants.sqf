@@ -3299,5 +3299,27 @@ if (isNil "WFBE_C_SIDE_PATROL_FRONT_BIAS") then {WFBE_C_SIDE_PATROL_FRONT_BIAS =
 if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_ENABLE") then {WFBE_C_AICOM_HQ_REPURCHASE_ENABLE = 1}; //--- armed 2026-07-27 owner go.
 if (isNil "WFBE_C_AICOM_HQ_REPURCHASE_DELAY") then {WFBE_C_AICOM_HQ_REPURCHASE_DELAY = 1200};
 
+//--- fable/spectator-v1 (owner request 2026-07-28: spectator mode, owner first): UID-allowlisted
+//--- opt-in free-camera spectator overlay for an already-enrolled player (Client_SpectatorAttach/
+//--- Enter/Exit.sqf, wired from Client\Init\Init_Client.sqf). Client-side only - no HC architecture,
+//--- player enrollment, or JIP flow touched. Master flag defaults ON per owner request; the UID
+//--- allowlist below is the real gate (empty allowlist = fully inert for every connecting player).
+if (isNil "WFBE_C_SPECTATOR") then {WFBE_C_SPECTATOR = 1};
+//--- SteamID64 strings, compared against (getPlayerUID player) - the same string shape getPlayerUID
+//--- already returns everywhere else in this mission (Client_BuildUnit.sqf, Action_CancelQueue.sqf,
+//--- fpv.sqf, etc.). Add more owner/admin UIDs here as extra array entries. NOTE: this file is public
+//--- (rayswaynl/a2waspwarfare) - SteamID64s are public-profile identifiers, not secrets, but this list
+//--- is still an intentional, curated allowlist.
+if (isNil "WFBE_C_SPECTATOR_UIDS") then {WFBE_C_SPECTATOR_UIDS = ["76561198046825568"]};
+//--- spectator v2 tuning (2026-07-29, docs/plans/2026-07-29-spectator-v2-design.md): free-fly
+//--- base speed, Shift boost / Alt precision multipliers, mouse-look sensitivity (degrees per
+//--- full UI-width delta - playtest-tune), mouse-wheel zoom clamps (0.05 = strong zoom scope).
+if (isNil "WFBE_C_SPECTATOR_SPEED") then {WFBE_C_SPECTATOR_SPEED = 15};
+if (isNil "WFBE_C_SPECTATOR_BOOST") then {WFBE_C_SPECTATOR_BOOST = 4};
+if (isNil "WFBE_C_SPECTATOR_SLOW") then {WFBE_C_SPECTATOR_SLOW = 0.25};
+if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 300};
+if (isNil "WFBE_C_SPECTATOR_FOV_MIN") then {WFBE_C_SPECTATOR_FOV_MIN = 0.05};
+if (isNil "WFBE_C_SPECTATOR_FOV_MAX") then {WFBE_C_SPECTATOR_FOV_MAX = 1.2};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
