@@ -53,6 +53,11 @@
 
         while { alive _associatedSupplyTruck } do {
             sleep 1;
+            //--- Post-sleep null/deleted guard: the truck can be deleted during the 1s yield (empty-vehicle
+            //--- reaper, combat, admin cleanup). A2OA 2-arg getVariable on null ignores the default, and
+            //--- getPos/nearestObjects on a deleted handle is native-crash class (same family as TrashObject
+            //--- post-sleep / AICOM supply TOCTOU drafts — this is the PLAYER supply mission loop, not those).
+            if (isNull _associatedSupplyTruck) exitWith {};
             if ((_associatedSupplyTruck getVariable ["SupplyAmount", 0]) <= 0) exitWith {};
 
             _friendlyCommandCenterInProximity = false;

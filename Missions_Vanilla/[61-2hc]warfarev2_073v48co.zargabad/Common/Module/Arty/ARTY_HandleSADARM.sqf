@@ -23,8 +23,9 @@ _impactAreaSimulation = objNull;
 //--- Fall straigh.
 _shell setVelocity [0,0,-_velocity];
 
-//--- Wait before deploying.
-waitUntil {(getPos _shell select 2) < 600};
+//--- Wait before deploying. Shell can be deleted/cleaned mid-fall — bare getPos is crash class.
+waitUntil {isNull _shell || {(getPos _shell select 2) < 600}};
+if (isNull _shell) exitWith {};
 
 //--- Retrieve the shell position.
 _deployPos = getPos _shell;
@@ -41,10 +42,16 @@ _barrel attachTo [_parachute,[0,0,0]];
 waitUntil
 {
 	sleep 0.1;   //--- DR-56: throttle; this waitUntil setVelocity'd every frame for the whole descent.
+	//--- Post-sleep null guard: parachute/barrel can be deleted during descent (cleanup / locality).
+	if (isNull _parachute) exitWith {true};
 	_altitude = getPos _parachute select 2;
 	_v1 = velocity _parachute;
 	_parachute setVelocity [_v1 select 0, _v1 select 1, -_velocity];
 	(_altitude < 400);
+};
+if (isNull _parachute || {isNull _barrel}) exitWith {
+	if (!isNull _barrel) then {deleteVehicle _barrel};
+	if (!isNull _parachute) then {deleteVehicle _parachute};
 };
 
 //--- Using BIS SADARM Script, improved.
@@ -53,6 +60,7 @@ _targetFound = false;
 //--- Wait until either way the device find no target and fall bellow 10 meters or it find one or more targets.
 waitUntil
 {
+	if (isNull _barrel) exitWith {true};
 	_deployPos = getPos _barrel;
 	_px = _deployPos select 0;
 	_py = _deployPos select 1;
@@ -66,7 +74,13 @@ waitUntil
 		if (count _targets > 0) then {
 			_targetToHit = _targets select floor(random count _targets);
 			sleep (random 3);
-			_targetFound = true;
+			//--- TOCTOU: target (or barrel) may have been deleted during the random sleep.
+			if (isNull _barrel || {isNull _targetToHit} || {!alive _targetToHit}) then {
+				_targetToHit = objNull;
+				_targetFound = false;
+			} else {
+				_targetFound = true;
+			};
 		};
 	};
 
@@ -76,7 +90,7 @@ waitUntil
 };
 
 // Deploy attack munition if a target was found.
-if (_targetFound && alive _barrel) then {
+if (_targetFound && {!isNull _barrel} && {alive _barrel} && {!isNull _targetToHit} && {alive _targetToHit}) then {
 	_deployPos = getPos _barrel;
 	_px = _deployPos select 0;
 	_py = _deployPos select 1;

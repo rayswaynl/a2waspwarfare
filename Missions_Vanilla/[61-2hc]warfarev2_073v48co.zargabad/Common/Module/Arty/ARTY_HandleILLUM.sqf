@@ -14,8 +14,9 @@ _targetToHit = objNull;
 //--- Fall straigh.
 _shell setVelocity [0,0,-_velocity];
 
-//--- Wait before deploying.
-waitUntil {(getPos _shell select 2) < 310};
+//--- Wait before deploying. Shell can be deleted/cleaned mid-fall — bare getPos is crash class.
+waitUntil {isNull _shell || {(getPos _shell select 2) < 310}};
+if (isNull _shell) exitWith {};
 
 //--- Retrieve the shell position.
 _deployPos = getPos _shell;

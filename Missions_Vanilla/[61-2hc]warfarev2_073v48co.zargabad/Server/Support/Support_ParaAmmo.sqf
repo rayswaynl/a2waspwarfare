@@ -71,6 +71,9 @@ if (_dropReady) then {
 			_ammo = _this select 1;
 			_side = _this select 2;
 			_sideID = _this select 3;
+			//--- TOCTOU: dropReady was true earlier; the transport may already be deleted/dead by the
+			//--- time this spawn runs. getPos/getDir on a null hull is native-crash class.
+			if (isNull _chopper || {!alive _chopper}) exitWith {if (!isNull _ammo) then {deleteVehicle _ammo}};
 			
 			_chute = (missionNamespace getVariable Format['WFBE_%1PARACHUTE',str _side]) createVehicle [0,0,20];
 			_chute setPos [getPos _chopper select 0, getPos _chopper select 1, (getPos _chopper select 2) - 11];
