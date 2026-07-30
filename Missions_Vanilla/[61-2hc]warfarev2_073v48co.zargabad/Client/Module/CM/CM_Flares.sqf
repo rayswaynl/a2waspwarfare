@@ -14,31 +14,43 @@ for "_i" from 1 to (_launchercount) do {
 	_relpos = _vehicle modelToWorld (_vehicle selectionPosition format["flare_launcher%1",_i]);
 	_dirpos = _vehicle modelToWorld (_vehicle selectionPosition format["flare_launcher%1_dir",_i]);
 	_flare = "FlareCountermeasure" createVehicleLocal _relpos;
-	_dirpos = [(_dirpos select 0) - (_relpos select 0),(_dirpos select 1) - (_relpos select 1),(_dirpos select 2) - (_relpos select 2)];
-	_div = abs(_dirpos select 0)+abs(_dirpos select 1)+abs(_dirpos select 2);
-	if (_div < 0.001) then {_div = 1}; //--- NUMERIC: coinciding launcher/dir selections => sum abs = 0 (div0 / NaN velocity)
-	_flarevel = [(_dirpos select 0)/_div*_muzzzlevel,(_dirpos select 1)/_div*_muzzzlevel,(_dirpos select 2)/_div*_muzzzlevel];
-	_vvel = velocity _vehicle;
+	if (isNull _flare) then {
+		["WARNING", Format ["CM_Flares.sqf: FlareCountermeasure create failed at launcher %1 pos %2.", _i, _relpos]] Call WFBE_CO_FNC_LogContent;
+	} else {
+		_dirpos = [(_dirpos select 0) - (_relpos select 0),(_dirpos select 1) - (_relpos select 1),(_dirpos select 2) - (_relpos select 2)];
+		_div = abs(_dirpos select 0)+abs(_dirpos select 1)+abs(_dirpos select 2);
+		if (_div < 0.001) then {_div = 1}; //--- NUMERIC: coinciding launcher/dir selections => sum abs = 0 (div0 / NaN velocity)
+		_flarevel = [(_dirpos select 0)/_div*_muzzzlevel,(_dirpos select 1)/_div*_muzzzlevel,(_dirpos select 2)/_div*_muzzzlevel];
+		_vvel = velocity _vehicle;
 
-	_flare setVelocity [(_flarevel select 0) + (_vvel select 0),(_flarevel select 1) + (_vvel select 1),(_flarevel select 2) + (_vvel select 2)];
-	_flares = _flares + [_flare];
+		_flare setVelocity [(_flarevel select 0) + (_vvel select 0),(_flarevel select 1) + (_vvel select 1),(_flarevel select 2) + (_vvel select 2)];
+		_flares = _flares + [_flare];
 
-	_sm = "#particlesource" createVehicleLocal getpos _flare;
-	_sm setParticleRandom [0.5, [0.3, 0.3, 0.3], [0.5, 0.5, 0.5], 0, 0.3, [0, 0, 0, 0], 0, 0,360];
-	_sm setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 12, 8,0],"", "Billboard", 1, 3, [0, 0, 0],[0,0,0], 1, 1, 0.80, 0.5, [1.3,4],[[0.9,0.9,0.9,0.6], [1,1,1,0.3], [1,1,1,0]],[1],0.1,0.1,"","",_flare];
-	_sm setDropInterval 0.02;
+		_sm = "#particlesource" createVehicleLocal getpos _flare;
+		if !(isNull _sm) then {
+			_sm setParticleRandom [0.5, [0.3, 0.3, 0.3], [0.5, 0.5, 0.5], 0, 0.3, [0, 0, 0, 0], 0, 0,360];
+			_sm setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 12, 8,0],"", "Billboard", 1, 3, [0, 0, 0],[0,0,0], 1, 1, 0.80, 0.5, [1.3,4],[[0.9,0.9,0.9,0.6], [1,1,1,0.3], [1,1,1,0]],[1],0.1,0.1,"","",_flare];
+			_sm setDropInterval 0.02;
+			_emmiters = _emmiters + [_sm];
+		};
 
-	_sp = "#particlesource" createVehicleLocal getpos _flare;
-	_sp setParticleRandom [0.03, [0.3, 0.3, 0.3], [1, 1, 1], 0, 0.2, [0, 0, 0, 0], 0, 0,360];
-	_sp setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 13, 2,0],"", "Billboard", 1, 0.1, [0, 0, 0],[0,0,0], 1, 1, 0.80, 0.5, [1.5,0],[[1,1,1,-4], [1,1,1,-4], [1,1,1,-2],[1,1,1,0]],[1000],0.1,0.1,"","",_flare,360];
-	_sp setDropInterval 0.001;
+		_sp = "#particlesource" createVehicleLocal getpos _flare;
+		if !(isNull _sp) then {
+			_sp setParticleRandom [0.03, [0.3, 0.3, 0.3], [1, 1, 1], 0, 0.2, [0, 0, 0, 0], 0, 0,360];
+			_sp setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 13, 2,0],"", "Billboard", 1, 0.1, [0, 0, 0],[0,0,0], 1, 1, 0.80, 0.5, [1.5,0],[[1,1,1,-4], [1,1,1,-4], [1,1,1,-2],[1,1,1,0]],[1000],0.1,0.1,"","",_flare,360];
+			_sp setDropInterval 0.001;
+			_emmiters = _emmiters + [_sp];
+		};
 
-	_li = "#lightpoint" createVehicleLocal getpos _flare;
-	_li setLightBrightness 0.1;
-	_li setLightAmbient [0.8, 0.6, 0.2];
-	_li setLightColor [1, 0.5, 0.2];
-	_li lightAttachObject [_flare, [0,0,0]];
-	_emmiters = _emmiters + [_sm,_sp,_li];
+		_li = "#lightpoint" createVehicleLocal getpos _flare;
+		if !(isNull _li) then {
+			_li setLightBrightness 0.1;
+			_li setLightAmbient [0.8, 0.6, 0.2];
+			_li setLightColor [1, 0.5, 0.2];
+			_li lightAttachObject [_flare, [0,0,0]];
+			_emmiters = _emmiters + [_li];
+		};
+	};
 };
 
 (_emmiters + _flares) spawn {

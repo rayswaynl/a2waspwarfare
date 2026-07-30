@@ -30,9 +30,13 @@ for "_i" from 1 to _burst do {
 		_vehicle setVariable ["FlareCount", (_vehicle getVariable ["FlareCount", 0]) - 1];
 		_pos   = _vehicle modelToWorld [0, -2, -1.5];             //--- behind & below the aircraft
 		_flare = "FlareCountermeasure" createVehicleLocal _pos;
-		_vvel  = velocity _vehicle;
-		_flare setVelocity [(_vvel select 0) * 0.5, (_vvel select 1) * 0.5, ((_vvel select 2) * 0.5) - 4];
-		_flare spawn { sleep (4.5 + random 1); deleteVehicle _this };
+		if (isNull _flare) then {
+			["WARNING", Format ["CM_AutoCM_OA.sqf: FlareCountermeasure create failed at %1.", _pos]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			_vvel  = velocity _vehicle;
+			_flare setVelocity [(_vvel select 0) * 0.5, (_vvel select 1) * 0.5, ((_vvel select 2) * 0.5) - 4];
+			_flare spawn { sleep (4.5 + random 1); deleteVehicle _this };
+		};
 	};
 	sleep 0.3;
 };

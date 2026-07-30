@@ -55,6 +55,9 @@ _clearance  = missionNamespace getVariable ["WFBE_C_AIHELI_GUARD_CLEARANCE", 60]
 
 //--- One reusable terrain-sampling probe (LOCAL to this machine, invisible) - same idiom as the server guard.
 _probe = "Sign_sphere10cm_EP1" createVehicleLocal [0, 0, 0];
+if (isNull _probe) exitWith {
+["WARNING", "Common_AICOM_HeliTerrainGuard.sqf: terrain probe create failed - heli look-ahead climb guard inactive."] Call WFBE_CO_FNC_AICOMLog;
+};
 _probe hideObject true;
 
 ["INFORMATION", Format ["Common_AICOM_HeliTerrainGuard.sqf: AICOM-heli terrain guard started (%1, look-ahead %2m, min clearance %3m).", _machineTag, _lookAhead, _clearance]] Call WFBE_CO_FNC_AICOMLog;
