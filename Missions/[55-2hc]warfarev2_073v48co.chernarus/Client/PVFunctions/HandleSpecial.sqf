@@ -561,17 +561,26 @@ switch (_request) do {
 	case "icbm-tel-recon-markers": {
 		if (isDedicated) exitWith {};
 		if (isNil "player" || {isNull player}) exitWith {};
-		private ["_posList","_secs","_i","_mkr"];
+		private ["_posList","_secs","_i","_mkr","_pos"];
 		_posList = _args select 0;
 		_secs    = _args select 1;
 		if (typeName _posList != "ARRAY") exitWith {};
+		//--- r35 recon-intel: bad _secs must not sleep-nil (would stall the delete spawn).
+		if (typeName _secs != "SCALAR") then {_secs = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RECON_SECS", 45]};
+		if (_secs < 1) then {_secs = 1};
 		_i = 0;
 		{
-			_mkr = createMarkerLocal [Format ["wfbe_icbmtel_recon_%1_%2", round (diag_tickTime * 1000), _i], [_x select 0, _x select 1, 0]];
-			_mkr setMarkerTypeLocal "mil_dot";
-			_mkr setMarkerColorLocal "ColorRed";
-			_mkr setMarkerSizeLocal [0.6, 0.6];
-			[_mkr, _secs] spawn { sleep (_this select 1); deleteMarkerLocal (_this select 0) };
+			_pos = _x;
+			//--- each entry is [x,y] from server; skip garbage so setMarker* never runs on a failed create.
+			if (typeName _pos == "ARRAY" && {count _pos >= 2}) then {
+				_mkr = createMarkerLocal [Format ["wfbe_icbmtel_recon_%1_%2", round (diag_tickTime * 1000), _i], [_pos select 0, _pos select 1, 0]];
+				if (typeName _mkr == "STRING" && {_mkr != ""}) then {
+					_mkr setMarkerTypeLocal "mil_dot";
+					_mkr setMarkerColorLocal "ColorRed";
+					_mkr setMarkerSizeLocal [0.6, 0.6];
+					[_mkr, _secs] spawn { sleep (_this select 1); deleteMarkerLocal (_this select 0) };
+				};
+			};
 			_i = _i + 1;
 		} forEach _posList;
 	};
