@@ -1,5 +1,5 @@
 //--- Nuke launching.
-Private ['_cruise','_dropPosition','_dropPosX','_dropPosY','_dropPosZ','_misFlare','_nukeMarker','_path','_pathS','_planespawnpos','_target','_type'];
+Private ['_cruise','_deadline','_dropPosition','_dropPosX','_dropPosY','_dropPosZ','_misFlare','_nukeMarker','_path','_pathS','_planespawnpos','_target','_type'];
 _target = _this select 0;
 _nukeMarker = _this select 1;
 
@@ -47,7 +47,15 @@ if (WF_A2_Vanilla || WF_A2_CombinedOps) then {
 
 sleep 7;
 
-waitUntil {!alive _cruise};
+//--- Bounded wait (scheduler-leak audit 2026-07-30, confirmed-high): NOTHING in the tree ever
+//--- kills the classic-path cruise (spawned uncrewed, vector +0.5 Z = climbs away forever), so
+//--- 'waitUntil {!alive _cruise}' deadlocked this thread AND the server's ICBM handler (which
+//--- waits on the same object before Spawn NukeDammage) - classic ICBM never detonated at all.
+//--- 180s covers any Chernarus flight; on deadline the delete below fires the server's isNull
+//--- escape, so NukeDammage still lands. Same detonate-by-delete idiom as the TEL path
+//--- (Init_IcbmTel.sqf), which deliberately avoids this wait.
+_deadline = time + 180;
+waitUntil {!alive _cruise || {isNull _cruise} || {time > _deadline}};
 
 sleep 5;
 if (WF_A2_Vanilla || WF_A2_CombinedOps) then {deleteVehicle _misFlare};
