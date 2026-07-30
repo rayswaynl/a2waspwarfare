@@ -82,6 +82,33 @@ _u = _u + ["Soldier_Sniper_KSVK_PMC"];
 _u = _u + ["Soldier_Sniper_PMC"];
 _l = _l + [_u];
 
+//--- TEMPLATE INTEGRITY (g1606): Server_GetTownGroupsDefender requests Team_MG / Squad_Advanced
+//--- / Squad_Contractor for Large/Huge towns. Groups_GUE/TKGUE define them; Groups_PMC (selectable
+//--- GUER faction) omitted them so those keys resolved nil and were silently dropped - under-garrison
+//--- when WFBE_C_UNITS_FACTION_GUER selects PMC.
+_k = _k + ["Team_MG"];
+_u		= ["Soldier_TL_PMC"];
+_u = _u + ["Soldier_MG_PMC"];
+_u = _u + ["Soldier_MG_PKM_PMC"];
+_u = _u + ["Soldier_Medic_PMC"];
+_l = _l + [_u];
+
+_k = _k + ["Squad_Advanced"];
+_u		= ["Soldier_TL_PMC"];
+_u = _u + ["Soldier_Engineer_PMC"];
+_u = _u + ["Soldier_AA_PMC"];
+_u = _u + ["Soldier_Sniper_PMC"];
+_u = _u + ["Soldier_GL_M16A2_PMC"];
+_l = _l + [_u];
+
+_k = _k + ["Squad_Contractor"];
+_u		= ["Soldier_TL_PMC"];
+_u = _u + ["Soldier_MG_PMC"];
+_u = _u + ["Soldier_AT_PMC"];
+_u = _u + ["Soldier_Medic_PMC"];
+_u = _u + ["Soldier_M4A3_PMC"];
+_l = _l + [_u];
+
 _k = _k + ["Motorized"];
 _u		= ["Soldier_TL_PMC"];
 _u = _u + ["ArmoredSUV_PMC"];
