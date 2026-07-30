@@ -3142,7 +3142,7 @@ class RscMenu_Command {
 			idc = 14700;
 			//--- fable/cmd-deck-layout: w was 0.965 - nearly the whole dialog - so the header bar drew
 			//--- straight across the situation map (14002 starts at x=0.4689). Clamped to the left panel.
-			x = 0.017244; y = 0.088000; w = 0.440000; h = 0.030;
+			x = 0.017244; y = 0.951000; w = 0.440000; h = 0.025;
 			sizeEx = 0.019;
 			colorText[] = {0.961, 0.761, 0.259, 0.95};
 			colorBackground[] = {0.102, 0.086, 0.063, 0.75};

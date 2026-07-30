@@ -763,9 +763,12 @@ if (_isMan) then {
 			_easaTypeIdx = _easaVehi find (typeOf _vehicle);
 			if (_easaTypeIdx >= 0) then {
 				_easaLoadouts = (missionNamespace getVariable ["WFBE_EASA_Loadouts", []]) select _easaTypeIdx;
-				_easaRandIdx = floor (random (count _easaLoadouts));
-				[_vehicle, _easaRandIdx] call EASA_Equip;
-				["INFORMATION", Format ["Client_BuildUnit.sqf: naval EASA random preset %1 applied to %2 (carrier buy).", _easaRandIdx, typeOf _vehicle]] Call WFBE_CO_FNC_LogContent;
+				//--- NUMERIC: empty/nil loadout array would error floor(random 0) + EASA_Equip.
+				if (!isNil "_easaLoadouts" && {typeName _easaLoadouts == "ARRAY"} && {(count _easaLoadouts) > 0}) then {
+					_easaRandIdx = floor (random (count _easaLoadouts));
+					[_vehicle, _easaRandIdx] call EASA_Equip;
+					["INFORMATION", Format ["Client_BuildUnit.sqf: naval EASA random preset %1 applied to %2 (carrier buy).", _easaRandIdx, typeOf _vehicle]] Call WFBE_CO_FNC_LogContent;
+				};
 			};
 		};
 	};
@@ -874,7 +877,8 @@ if (_isMan) then {
 						private ["_p","_myToken"];
 						_p = _this select 0;
 						_myToken = _this select 1;
-						waitUntil {!visibleMap || {isNull _p} || {!(_p getVariable ["wfbe_tk_scud_designating", false])}};
+						//--- SCHEDULER-LEAK: sleep in SCUD map-designate wait.
+	waitUntil {sleep 0.1; !visibleMap || {isNull _p} || {!(_p getVariable ["wfbe_tk_scud_designating", false])}};
 						if ((_p getVariable ["wfbe_tk_scud_designating", false]) && {(_p getVariable ["wfbe_tk_scud_design_token", -1]) == _myToken}) then {
 							_p setVariable ["wfbe_tk_scud_designating", false];
 							onMapSingleClick {[_pos, _shift, _alt, _units] call WFBE_CL_FNC_HandleMapSingleClick};

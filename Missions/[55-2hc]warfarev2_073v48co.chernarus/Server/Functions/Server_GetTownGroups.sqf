@@ -267,9 +267,17 @@ _fi = 0;
 {
 	_get = missionNamespace getVariable Format ["WFBE_%1_GROUPS_%2", _side, _x];
 
+	//--- TEMPLATE INTEGRITY (g1606): skip empty/malformed GROUP variants so zero-asset shells
+	//--- are never planned into the activation batch (twin of GetTownGroupsDefender).
 	if !(isNil '_get') then {
-		[_contents, _get select floor(random count _get)] Call WFBE_CO_FNC_ArrayPush;
-		[_contentsKind, _finalKind select _fi] Call WFBE_CO_FNC_ArrayPush;
+		if ((typeName _get == "ARRAY") && {(count _get) > 0}) then {
+			private ["_pick"];
+			_pick = _get select floor(random count _get);
+			if ((typeName _pick == "ARRAY") && {(count _pick) > 0}) then {
+				[_contents, _pick] Call WFBE_CO_FNC_ArrayPush;
+				[_contentsKind, _finalKind select _fi] Call WFBE_CO_FNC_ArrayPush;
+			};
+		};
 	};
 	_fi = _fi + 1;
 } forEach _final;

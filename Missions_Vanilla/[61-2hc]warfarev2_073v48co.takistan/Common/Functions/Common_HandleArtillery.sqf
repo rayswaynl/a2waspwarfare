@@ -21,7 +21,7 @@ if (_ammo in _ammoList) then {
 	_smokeOnImpact = false;
 
 	//--- Randomize Land Area.
-	_distance = random (_distance / _maxRange * 100) + random _radius;
+	_distance = random (_distance / ((_maxRange max 1)) * 100) + random _radius;
 	_direction = random 360;
 
 	//--- Default Position.
@@ -55,7 +55,7 @@ if (_ammo in _ammoList) then {
 		
 		//--- Calculate the shell estimated spawn area.
 		_distance = _landDestination distance _cannon;
-		_percent = ((500 * 100 / _distance) / 100);
+		_percent = ((500 * 100 / (_distance max 1)) / 100);
 		_xcoord = (_landDestination select 0) + _percent * ((_cannon select 0) - (_landDestination select 0));
 		_ycoord = (_landDestination select 1) + _percent * ((_cannon select 1) - (_landDestination select 1));
 		_shellpos = [_xcoord,_ycoord,1000];

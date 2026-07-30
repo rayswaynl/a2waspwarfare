@@ -59,7 +59,9 @@ missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", false];
 	_t0 = time;
 	waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
 	sleep 3;
-	if (alive player) then { player allowDamage true };
+	if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
+		if (alive player) then { player allowDamage true };
+	};
 };
 
 // Set the default target fps to 60
@@ -299,6 +301,13 @@ WFBE_CL_PV_ReceiveSupplyValue = Call Compile preprocessFileLineNumbers "Client\F
 WFBE_CL_FNC_ReturnAircraftNameFromItsType = Compile preprocessFileLineNumbers "Common\Common_ReturnAircraftNameFromItsType.sqf";
 WFBE_CL_FNC_SetMapIconStatusInCombat = Compile preprocessFileLineNumbers "Client\Functions\Client_SetMapIconStatusInCombat.sqf";
 WFBE_CL_FNC_BlinkMapIcon = Compile preprocessFileLineNumbers "Client\Functions\Client_BlinkMapIcon.sqf";
+//--- fable/spectator-v1 (owner request 2026-07-28: spectator mode, owner first): UID-allowlisted
+//--- opt-in free-camera spectator overlay. Registered here per repo convention; actually attached
+//--- (spawned) further below, gated on WFBE_C_SPECTATOR, alongside the other flag-gated feature
+//--- attaches. The UID allowlist check itself lives inside Client_SpectatorAttach.sqf.
+WFBE_CL_FNC_SpectatorAttach = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorAttach.sqf";
+WFBE_CL_FNC_SpectatorEnter = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorEnter.sqf";
+WFBE_CL_FNC_SpectatorExit = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorExit.sqf";
 
 //Affichage Rubber maps:
 	Local_GUIWorking = false;
@@ -820,6 +829,7 @@ if ((missionNamespace getVariable ["WFBE_C_CAMP_REPAIR_PRESENCE", 0]) > 0) then 
 [] execVM "Client\FSM\updatepatrolmarkers.sqf"; //--- Friendly side-patrol markers (Patrols upgrade).
 [] execVM "Client\FSM\updateaicommarkers.sqf"; //--- AI-commander team direction arrows (task #3).
 if ((missionNamespace getVariable ["WFBE_C_AWACS", 0]) > 0) then {[] execVM "Client\Module\AWACS\awacs_pilot_watch.sqf"}; //--- fable/awacs-radar: AWACS pilot watch (ground MTI sweep). Flag default 0 = never launched.
+if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0) then {[] spawn WFBE_CL_FNC_SpectatorAttach}; //--- fable/spectator-v1: UID-allowlisted free-camera spectator overlay; inert for everyone not on WFBE_C_SPECTATOR_UIDS.
 
 //--- B62 (Ray 2026-06-21): OWN-SIDE MARKER RECONCILIATION / SELF-HEAL.
 //--- THE BUG (Ray RPT, OPFOR/insurgent JIP join): own-side FACTORY/structure markers AND own-side HQ-team
@@ -1298,7 +1308,9 @@ if ((missionNamespace getVariable ["WFBE_C_HC_LOBBY_LOCK", 0]) > 0) then {
 				_t0 = time;
 				waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
 				sleep 3;
-				if (alive player) then { player allowDamage true };
+				if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
+					if (alive player) then { player allowDamage true };
+				};
 			};
 		};
 	};
@@ -1583,7 +1595,7 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
             					"Base_WarfareBAircraftFactory","Base_WarfareBUAVterminal","Base_WarfareBVehicleServicePoint","BASE_WarfareBAntiAirRadar"];
 			_area = [_preview,((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
 
-            	if (!isNull _area && {(_area getVariable ['avail', 0]) <= 0}) then { _color = _colorRed }; //--- cmdcon33: guard objNull _area (no base area before first HQ deploy -> nil<=0 falsely reddened the HQ ghost)
+			if (!isNull _area && {_itemcategory != 0} && {(_area getVariable ['avail', 0]) <= 0}) then { _color = _colorRed }; //--- cmdcon33: guard objNull _area (no base area before first HQ deploy -> nil<=0 falsely reddened the HQ ghost)
            		if (surfaceIsWater(position _preview)) then { _color = _colorRed }; if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_CHECK", 1]) > 0 && {({_preview isKindOf _x} count _affected) != 0} && {!(_preview isKindOf "Warfare_HQ_base_unfolded")} && {count ((position _preview) isFlatEmpty [(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_RADIUS", 10]), 0, (missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_GRAD", 0.5]), 10, 0, false, objNull]) == 0}) then { _color = _colorRed }; //--- qol-polish-pack: reject too-steep ground for base structures (players lacked the slope check the AI commander already has)
            		if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_TREE_CLEAR", 0]) > 0 && {({_preview isKindOf _x} count _affected) != 0} && {!(_preview isKindOf "Warfare_HQ_base_unfolded")} && {count (nearestObjects [position _preview, ["Tree","SmallTree"], (missionNamespace getVariable ["WFBE_C_STRUCTURES_TREE_CLEAR", 0])]) != 0}) then { _color = _colorRed }; //--- fable/player-build-placement-gate: reject placement near trees for base structures (parity with the AI commander's _treeClearOK gate, PR #733 TP-19; nearestObjects not nearestTerrainObjects - the latter is A3-only, hotfixed out of the AI-side gate after a live RPT crash - see AI_Commander_Base.sqf:244)
 

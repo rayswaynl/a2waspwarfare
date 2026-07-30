@@ -240,6 +240,27 @@ _distDiv  = missionNamespace getVariable ["WFBE_C_AICOM_DISTANCE_DIVISOR", 50];
 if (_distDiv <= 0) then {_distDiv = 1};
 _hqDiv    = missionNamespace getVariable ["WFBE_C_AICOM_HQ_PULL_DIVISOR", 250];
 _farPen   = missionNamespace getVariable ["WFBE_C_AICOM_FAR_PENALTY", 1000];
+//--- SPEARHEAD POOL EXPAND (RPT-DEEPDIVE-20260730): when a compressed front stalls N times, the same
+//--- ~5 near towns re-score forever under FAR_PENALTY. Soften frontier + far-penalty so repick can
+//--- break out. Flag-dark default. A2-safe: reuses existing _frontRad/_farPen scorers only.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND", 0]) > 0) then {
+	private ["_spExpandAfter","_spStallHist","_spExpandRad","_spExpandFar"];
+	_spExpandAfter = missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_AFTER", 3];
+	_spStallHist = _logik getVariable ["wfbe_aicom_spear_stall_hist", 0];
+	if (_spStallHist >= _spExpandAfter) then {
+		_spExpandRad = missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_RADIUS", 6000];
+		_spExpandFar = missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_FAR_PENALTY", 200];
+		if (_spExpandRad > _frontRad) then {_frontRad = _spExpandRad};
+		if (_spExpandFar < _farPen) then {_farPen = _spExpandFar};
+		private ["_spExpLogT"];
+		_spExpLogT = _logik getVariable ["wfbe_aicom_spear_expand_log_t", -9999];
+		if ((time - _spExpLogT) >= 300) then {
+			_logik setVariable ["wfbe_aicom_spear_expand_log_t", time];
+			["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] spearhead pool EXPAND armed (stallHist=%2 frontRad=%3 farPen=%4).", _sideText, _spStallHist, _frontRad, _farPen]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOMSTAT|v1|SPEARHEAD_POOL_EXPAND|" + _sideText + "|" + str (round (time / 60)) + "|hist=" + str _spStallHist + "|frontRad=" + str _frontRad + "|farPen=" + str _farPen);
+		};
+	};
+};
 //--- Enemy HQ for the directional pull (cached once; nil-safe - 0 pull if no HQ object).
 _enemyHQForRank = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;
 //--- Concentrate force: split across FEW towns (cap via SPEARHEAD_TOWNS_MAX), not the old
@@ -386,6 +407,8 @@ if (count _targets > 0) then {
 		{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _prim}) then {_spBlKeep set [count _spBlKeep, _x]} } forEach _spBl;
 		_spBlKeep set [count _spBlKeep, [_prim, time + _spBlCd]];
 		_logik setVariable ["wfbe_aicom_spearhead_bl", _spBlKeep];
+		//--- Pool-expand memory: count stall blacklists this war (reset never mid-war; expand is sticky once armed).
+		_logik setVariable ["wfbe_aicom_spear_stall_hist", (_logik getVariable ["wfbe_aicom_spear_stall_hist", 0]) + 1];
 		//--- Rebuild the candidate set MINUS the live blacklist (same empty-set guardrail as AssignTowns:290-295).
 		_spBlTowns = [];
 		{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {_spBlTowns set [count _spBlTowns, (_x select 0)]} } forEach _spBlKeep;
@@ -397,6 +420,18 @@ if (count _targets > 0) then {
 			_logik setVariable ["wfbe_aicom_spearhead_bl", []];
 		} else {
 			_cands = _candsF;
+		};
+		//--- Re-check pool expand AFTER hist bump so the stall that crosses AFTER widens this same re-pick.
+		if ((missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND", 0]) > 0) then {
+			private ["_spExpandAfter2","_spStallHist2","_spExpandRad2","_spExpandFar2"];
+			_spExpandAfter2 = missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_AFTER", 3];
+			_spStallHist2 = _logik getVariable ["wfbe_aicom_spear_stall_hist", 0];
+			if (_spStallHist2 >= _spExpandAfter2) then {
+				_spExpandRad2 = missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_RADIUS", 6000];
+				_spExpandFar2 = missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_POOL_EXPAND_FAR_PENALTY", 200];
+				if (_spExpandRad2 > _frontRad) then {_frontRad = _spExpandRad2};
+				if (_spExpandFar2 < _farPen) then {_farPen = _spExpandFar2};
+			};
 		};
 		_want = 1 max (missionNamespace getVariable [format ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_SPEARHEAD_TOWNS_MAX", 2]]);
 		_want = _want min (count _cands);
@@ -710,6 +745,12 @@ _relieved = 0;
 				};
 				_free setVariable ["wfbe_aicom_relief", _town];
 				_free setVariable ["wfbe_aicom_relief_until", time + (missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_HOLD_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_HOLD", 240]])]; //--- punchy-AICOM (Ray 2026-06-17): hold-window stamp; released back to offense when it expires.
+				//--- STALE-ORDER FIX (wasp-bughunt-aicom-stale-order-task-expiry-r22): retire this team's OPEN offensive dispatch
+				//--- when diverting it to relief, exactly as the FOOT_STAGE re-task does (AI_Commander_AssignTowns.sqf ~L1094-1095).
+				//--- Without this the AssignTowns assault watcher keeps counting the abandoned dispatch timeout against a team now
+				//--- doing relief, logging a spurious ASSAULT_STRANDED and tallying wfbe_aicom_failedjourneys (which can later recycle it).
+				_free setVariable ["wfbe_aicom_townorder", [], false];
+				_free setVariable ["wfbe_aicom_dispatch_open", false];
 				_relieved = _relieved + 1;
 				_stratMode = "relief";
 				_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
@@ -820,7 +861,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 		if (!isNull _gwTeam && {!isNil "_gwHc"} && {_gwHc} && {!isPlayer (leader _gwTeam)}) then {
 			_gwLdr = leader _gwTeam;
 			if (!isNull _gwLdr && {alive _gwLdr}) then {
-				_gwAlive = {alive _x} count (units _gwTeam);
+				_gwAlive = {!isNull _x && {alive _x}} count (units _gwTeam);
 				_gwWant = _gwTeam getVariable "wfbe_aicom_wantrally";
 				if (isNil "_gwWant") then {_gwWant = false};
 				_gwRallying = _gwTeam getVariable "wfbe_aicom_rallying";
@@ -846,27 +887,46 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 				};
 				if (_gwTrigger) then {
 					//--- Rally = NEAREST of [own HQ pos] + every OWN-side town centre. Hand-rolled scalar min (no A3 sort).
-					private ["_gwRallyPos","_gwBestD","_gwLdrPos","_gwD"];
-					_gwLdrPos = getPos _gwLdr;
-					_gwRallyPos = [];
-					_gwBestD = 1e9;
-					if (!isNull _gwHQ) then {_gwRallyPos = getPos _gwHQ; _gwBestD = _gwLdr distance _gwHQ};
-					{
-						if ((_x getVariable ["sideID", -1]) == _sideID) then {
-							_gwD = _gwLdr distance _x;
-							if (_gwD < _gwBestD) then {_gwBestD = _gwD; _gwRallyPos = getPos _x};
+					private ["_gwRallyPos","_gwBestD","_gwLdrPos","_gwD","_gwHQPos","_gwTownPos","_gwFinalAlive"];
+					//--- crash 014EFCF4: the leader can be deleted by the 60s trash pass after the earlier team guard.
+					//--- Capture its position only behind an immediate live-object check; all later vector math uses the array.
+					if (!isNull _gwLdr && {alive _gwLdr}) then {
+						_gwLdrPos = getPos _gwLdr;
+						if (typeName _gwLdrPos == "ARRAY" && {count _gwLdrPos >= 2} && {typeName (_gwLdrPos select 0) == "SCALAR"} && {typeName (_gwLdrPos select 1) == "SCALAR"} && {(_gwLdrPos select 0) == (_gwLdrPos select 0)} && {(_gwLdrPos select 1) == (_gwLdrPos select 1)}) then {
+							_gwRallyPos = [];
+							_gwBestD = 1e9;
+							if (!isNull _gwHQ) then {
+								_gwHQPos = getPos _gwHQ;
+								if (typeName _gwHQPos == "ARRAY" && {count _gwHQPos >= 2} && {typeName (_gwHQPos select 0) == "SCALAR"} && {typeName (_gwHQPos select 1) == "SCALAR"} && {(_gwHQPos select 0) == (_gwHQPos select 0)} && {(_gwHQPos select 1) == (_gwHQPos select 1)}) then {
+									_gwRallyPos = _gwHQPos;
+									_gwBestD = _gwLdrPos distance _gwHQPos;
+								};
+							};
+							{
+								if (!isNull _x && {(_x getVariable ["sideID", -1]) == _sideID}) then {
+									_gwTownPos = getPos _x;
+									if (typeName _gwTownPos == "ARRAY" && {count _gwTownPos >= 2} && {typeName (_gwTownPos select 0) == "SCALAR"} && {typeName (_gwTownPos select 1) == "SCALAR"} && {(_gwTownPos select 0) == (_gwTownPos select 0)} && {(_gwTownPos select 1) == (_gwTownPos select 1)}) then {
+										_gwD = _gwLdrPos distance _gwTownPos;
+										if (_gwD < _gwBestD) then {_gwBestD = _gwD; _gwRallyPos = _gwTownPos};
+									};
+								};
+							} forEach towns;
+							//--- Fallback: no HQ and no own town -> rally on the already captured live leader position.
+							if (count _gwRallyPos == 0) then {_gwRallyPos = _gwLdrPos};
+							//--- Re-check the team immediately before ordering; never publish a rally for a wiped team.
+							_gwFinalAlive = {!isNull _x && {alive _x}} count (units _gwTeam);
+							if (_gwFinalAlive > 0 && {!isNull _gwLdr} && {alive _gwLdr} && {typeName _gwRallyPos == "ARRAY"} && {count _gwRallyPos >= 2} && {typeName (_gwRallyPos select 0) == "SCALAR"} && {typeName (_gwRallyPos select 1) == "SCALAR"} && {(_gwRallyPos select 0) == (_gwRallyPos select 0)} && {(_gwRallyPos select 1) == (_gwRallyPos select 1)}) then {
+								//--- Broadcast a fresh rally order (seq-bump idiom, exact-case lowercase "rally"); clear want; mark rallying.
+								_gwTeam setVariable ["wfbe_aicom_order", [(if (isNil {_gwTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_gwTeam getVariable "wfbe_aicom_order") select 0}) + 1, "rally", _gwRallyPos], true];
+								_gwTeam setVariable ["wfbe_aicom_wantrally", false, true];
+								_gwTeam setVariable ["wfbe_aicom_rallying", true, true];
+								//--- claude/aicom-west-stuck: stamp the per-team rally re-arm cooldown at ISSUE time (bug M root-cause). 2-arg server-local write, read only by this same server-side evaluator - the auto understrength trigger above cannot re-fire for WFBE_C_AICOM_WITHDRAW_COOLDOWN seconds, so a still-understrength team gets a bounded assault window under AssignTowns before it can be pulled back, ending the rally-arrive-rally livelock. Explicit driver wantrally requests bypass the gate and are never delayed. Not broadcast on purpose: only this server-side evaluator consults it, so no NSSETVAR3/cross-machine concern.
+								_gwTeam setVariable ["wfbe_aicom_rally_cooldown_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_COOLDOWN", 240])];
+								["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] GRACEFUL-WITHDRAW (%3 alive) -> rally at %4.", _sideText, _gwTeam, _gwFinalAlive, _gwRallyPos]] Call WFBE_CO_FNC_AICOMLog;
+								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RALLY_ORDER|team=" + (str _gwTeam) + "|alive=" + str _gwFinalAlive + "|want=" + str _gwWant);
+							};
 						};
-					} forEach towns;
-					//--- Fallback: no HQ and no own town -> rally on our own current pos (never leave the team orderless).
-					if (count _gwRallyPos == 0) then {_gwRallyPos = _gwLdrPos};
-					//--- Broadcast a fresh rally order (seq-bump idiom, exact-case lowercase "rally"); clear want; mark rallying.
-					_gwTeam setVariable ["wfbe_aicom_order", [(if (isNil {_gwTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_gwTeam getVariable "wfbe_aicom_order") select 0}) + 1, "rally", _gwRallyPos], true];
-					_gwTeam setVariable ["wfbe_aicom_wantrally", false, true];
-					_gwTeam setVariable ["wfbe_aicom_rallying", true, true];
-					//--- claude/aicom-west-stuck: stamp the per-team rally re-arm cooldown at ISSUE time (bug M root-cause). 2-arg server-local write, read only by this same server-side evaluator - the auto understrength trigger above cannot re-fire for WFBE_C_AICOM_WITHDRAW_COOLDOWN seconds, so a still-understrength team gets a bounded assault window under AssignTowns before it can be pulled back, ending the rally-arrive-rally livelock. Explicit driver wantrally requests bypass the gate and are never delayed. Not broadcast on purpose: only this server-side evaluator consults it, so no NSSETVAR3/cross-machine concern.
-					_gwTeam setVariable ["wfbe_aicom_rally_cooldown_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_COOLDOWN", 240])];
-					["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] GRACEFUL-WITHDRAW (%3 alive) -> rally at %4.", _sideText, _gwTeam, _gwAlive, _gwRallyPos]] Call WFBE_CO_FNC_AICOMLog;
-					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|RALLY_ORDER|team=" + (str _gwTeam) + "|alive=" + str _gwAlive + "|want=" + str _gwWant);
+					};
 				};
 			};
 		};
@@ -1280,11 +1340,19 @@ if (_strikeOn) then {
 _losingPress = false;
 //--- cmdcon41-w2 LOSING-SIDE PRESS FLOOR (Fable F7; flag WFBE_C_AICOM_LOSING_PRESS default 1). A losing side with an
 //--- intact army must NOT park in DEFEND (the EAST-sat-in-DEFEND-min201-415 pattern). When we are BEHIND on territory
-//--- (myTowns < enemyTowns) yet at rough strength parity (myEff >= 0.8 * enEff), NOT in last-stand, AND our own base is
+//--- (myTowns < enemyTowns) yet at rough strength parity (myEff >= ENTER * enEff), NOT in last-stand, AND our own base is
 //--- not itself under direct attack, floor the posture at PRESS so the commander keeps attacking to claw territory back.
-//--- Never overrides HQ_STRIKE. A2-OA-safe: scalar math + nearEntities/side/alive/count for the base-threat probe; ==/!=
-//--- only on string/scalar operands (posture strings), never on Booleans.
-if (((missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS", 1]) > 0) && {!_strikeOn} && {!_lastStand} && {_myTowns < _enemyTowns} && {_myEff >= (_enEff * 0.8)}) then {
+//--- HYSTERESIS (RPT-DEEPDIVE 2026-07-30 / cmdcon-posture-hysteresis): enter at ENTER (default 0.8), stay latched until
+//--- myEff drops below EXIT (default 0.65) so behind-towns DEFEND vs losing-press PRESS cannot thrash every strategy tick
+//--- (live: 52 WEST flips, dense PRESS/DEFEND oscillation, multi-hour capture stalemate). Never overrides HQ_STRIKE.
+//--- A2-OA-safe: scalar math + nearEntities/side/alive/count for the base-threat probe; ==/!= only on string/scalar.
+private ["_lpEnter","_lpExit","_lpWas","_lpRatioOk"];
+_lpEnter = missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS_ENTER", 0.8];
+_lpExit  = missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS_EXIT", 0.65];
+if (_lpExit > _lpEnter) then {_lpExit = _lpEnter};
+_lpWas = _logik getVariable ["wfbe_aicom_losing_press", false];
+if (isNil "_lpWas") then {_lpWas = false};
+if (((missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS", 1]) > 0) && {!_strikeOn} && {!_lastStand} && {_myTowns < _enemyTowns}) then {
 	private ["_lpBaseThreat","_lpHQ","_lpDist"];
 	_lpBaseThreat = false;
 	_lpHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
@@ -1292,13 +1360,46 @@ if (((missionNamespace getVariable ["WFBE_C_AICOM_LOSING_PRESS", 1]) > 0) && {!_
 	if (!isNull _lpHQ) then {
 		if (({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _lpHQ) nearEntities [["Man","LandVehicle","Air"], _lpDist])) > 0) then {_lpBaseThreat = true};
 	};
-	if (!_lpBaseThreat) then {
+	//--- Enter on high ratio; once latched, hold until ratio falls below EXIT (shared band with DEFEND trigger).
+	_lpRatioOk = if (_lpWas) then {_myEff >= (_enEff * _lpExit)} else {_myEff >= (_enEff * _lpEnter)};
+	if (!_lpBaseThreat && {_lpRatioOk}) then {
 		_posture = "PRESS";
 		_postureReason = "losing-press-floor";
 		_losingPress = true;
-		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|LOSING_PRESS_FLOOR|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myEff=" + str _myEff + "|enEff=" + str _enEff);
+		if (!_lpWas) then {
+			diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|LOSING_PRESS_FLOOR|myTowns=" + str _myTowns + "|enTowns=" + str _enemyTowns + "|myEff=" + str _myEff + "|enEff=" + str _enEff);
+		};
 	};
 };
+//--- Shared DEFEND<->PRESS dwell (flag WFBE_C_AICOM_POSTURE_HYST_ENABLE default 1): after either trigger wins,
+//--- hold that stance for HYST_SEC before the other may retake. HQ_STRIKE / HOLD / last-stand still apply freely.
+if (((missionNamespace getVariable ["WFBE_C_AICOM_POSTURE_HYST_ENABLE", 1]) > 0) && {!_strikeOn}) then {
+	private ["_prevPosture","_prevReason","_postureT0","_hystSec"];
+	_prevPosture = _logik getVariable ["wfbe_aicom_posture", ""];
+	_prevReason  = _logik getVariable ["wfbe_aicom_posture_reason", ""];
+	_postureT0   = _logik getVariable ["wfbe_aicom_posture_t0", -1e10];
+	_hystSec     = missionNamespace getVariable ["WFBE_C_AICOM_POSTURE_HYST_SEC", 180];
+	if (_hystSec < 0) then {_hystSec = 0};
+	if ((_prevPosture == "DEFEND" || {_prevPosture == "PRESS"}) && {(_posture == "DEFEND" || {_posture == "PRESS"})} && {_prevPosture != _posture} && {(time - _postureT0) < _hystSec}) then {
+		_posture = _prevPosture;
+		if (_prevReason == "losing-press-floor-hyst" || {_prevReason == "behind-towns-hyst"} || {_prevReason == "behind-strength-hyst"} || {_prevReason == "winning-hyst"} || {_prevReason == "balanced-hyst"}) then {
+			_postureReason = _prevReason;
+		} else {
+			_postureReason = _prevReason + "-hyst";
+		};
+		_losingPress = false;
+		if (_posture == "PRESS") then {
+			if ((_prevReason == "losing-press-floor") || {_prevReason == "losing-press-floor-hyst"}) then {_losingPress = true};
+		};
+	};
+};
+//--- Persist stance for next-tick hysteresis + telemetry consumers.
+if ((_logik getVariable ["wfbe_aicom_posture", ""]) != _posture) then {
+	_logik setVariable ["wfbe_aicom_posture_t0", time];
+};
+_logik setVariable ["wfbe_aicom_posture", _posture];
+_logik setVariable ["wfbe_aicom_posture_reason", _postureReason];
+_logik setVariable ["wfbe_aicom_losing_press", _losingPress];
 //--- B69 garrison-body telemetry (stall-telemetry-add-garrison-bodies): how many bodies the leader has tied up in
 //--- town OCCUPATION vs its maneuver _myStr. Pure observation, no behaviour change. Mirrors the existing _myStr idiom
 //--- (L52): {alive _x} count (units _x), guarded by !isNull. One forEach over towns (~30) per side per ~60s strategy
@@ -1437,7 +1538,7 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 					if (alive _p && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p}) then {
 						_idx = [typeOf _p, _side] Call IsArtillery;
 						if (_idx >= 0) then {
-							_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / (missionNamespace getVariable "WFBE_C_ARTILLERY");
+							_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1);
 							_inRange = (_p distance _artyTgt <= _maxR) && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])} count _ownTownObjs) > 0}}; //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
 							if (_inRange) then { //--- review-fix (fable 2026-07-21, PR #1159 drain): reposition must be evaluated even when another gun already fired this cycle - only the FIRE action itself stays single-fire-gated.
 								if (!_fired) then {

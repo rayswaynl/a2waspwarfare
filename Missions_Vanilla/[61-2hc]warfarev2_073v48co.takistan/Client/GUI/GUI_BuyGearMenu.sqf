@@ -30,6 +30,11 @@ _need_save = false;_quick_clear = false;_quick_reload = false;_template_create =
 _gear_primary = "";_gear_secondary = "";_gear_pistol = "";_gear_backpack = "";
 _gear_sel_weapons = [];_gear_sel_magazines = [];_gear_sel_backpack = [];_gear_sel_vehicle = [];_gear_backpack_content = [];_gear_items = [];_gear_refresh = [];_gear_special = [];_gear_mag_main = [];_gear_mag_pool = [];_gear_vehicle_content = [];
 _view = "gear";
+//--- BUGHUNT sqf-array-aliasing: backpack cargo content [[items,counts],[items,counts]] is loaded
+//--- from shared stores (per-class default, saved template, unit custom gear). A bare assignment or
+//--- outer-only + leaves the nested rows aliased, so the in-place add/substract edits below (via
+//--- WFBE_CL_FNC_OperateCargoGear) corrupt that shared store for every later reader. Deep-copy on load/store.
+_bpCopy = { [[+((_this select 0) select 0),+((_this select 0) select 1)],[+((_this select 1) select 0),+((_this select 1) select 1)]] };
 
 ctrlShow[_lb_cargo, false];
 _targets = (_target) Call WFBE_CL_FNC_UI_Gear_UpdateTarget;
@@ -120,7 +125,7 @@ while {true} do {
 		[_gear_backpack,_target] Call WFBE_CL_FNC_UI_Gear_UpdateView;
 		_gear_sel_weapons = +_target_weapons;
 		_gear_sel_magazines = +_target_magazines;
-		_gear_backpack_content = +_gear_sel_backpack;
+		_gear_backpack_content = _gear_sel_backpack call _bpCopy;
 		_gear_vehicle_content = +_gear_sel_vehicle;
 		_has_veh_changed = false;
 		_has_inv_changed = false;
@@ -193,7 +198,7 @@ while {true} do {
 						_gear_sel_weapons = +(_gear_config select 0);
 						_gear_sel_magazines = +(_gear_config select 1);
 						_gear_backpack = _gear_config select 2;
-						_gear_backpack_content = +(_gear_config select 3);
+						_gear_backpack_content = (_gear_config select 3) call _bpCopy;
 						if (_gear_backpack != "") then {[_gear_backpack,_target] Call WFBE_CL_FNC_UI_Gear_UpdateView};
 					} else {
 						hint localize "STR_WF_GEAR_ProhibPlayerDefault";
@@ -202,7 +207,7 @@ while {true} do {
 					_gear_sel_weapons = +(_get select 0);
 					_gear_sel_magazines = +(_get select 1);
 					_gear_backpack = _get select 2;
-					_gear_backpack_content = +(_get select 3);
+					_gear_backpack_content = (_get select 3) call _bpCopy;
 				};
 
 				if (_gear_backpack != "") then { _gear_sel_weapons = _gear_sel_weapons + [_gear_backpack]};
@@ -296,7 +301,7 @@ while {true} do {
 								case 5: {if !(_item_selected in _gear_items) then {_gear_items = _gear_items + [_item_selected]; _gear_sel_weapons = _gear_sel_weapons + [_item_selected]; _gear_refresh = ["items"];_update_inventory = true;_has_inv_changed = true;}};
 								case 100: {_mag_size = _get select 5; _size = (_gear_mag_pool) Call WFBE_CL_FNC_GetMagazinesSize; if (_mag_size + _size <= 8) then {_gear_mag_pool = _gear_mag_pool + [_get select 6];_gear_sel_magazines = _gear_mag_main + _gear_mag_pool; _gear_refresh = ["magazines_hand"]; _has_inv_changed = true; _update_inventory = true;}};
 								case 101: {_mag_size = _get select 5; _size = (_gear_mag_main) Call WFBE_CL_FNC_GetMagazinesSize; if (_mag_size + _size <= 12) then {_gear_mag_main = _gear_mag_main + [_get select 6];_gear_sel_magazines = _gear_mag_main + _gear_mag_pool; _gear_refresh = ["magazines_main"]; _has_inv_changed = true; _update_inventory = true;}};
-								case 200: {_add = true;if !(_target_cancarrybp) then {_add = false; hint "The target cannot carry a backpack!"};if (_gear_primary != "") then {if ((missionNamespace getVariable _gear_primary) select 4 == 3) then {_add = false}};if (_add) then {_gear_refresh = [];_gear_backpack_content = _get select 5;if (_gear_secondary != "") then {_gear_mag_main = [_gear_secondary, "", _gear_mag_main] Call WFBE_CL_FNC_ReplaceMagazinesGear; _gear_sel_magazines = _gear_mag_main + _gear_mag_pool; _gear_refresh = ["magazines_main"]; _gear_sel_weapons = _gear_sel_weapons - [_gear_secondary]};_gear_sel_weapons = _gear_sel_weapons - [_gear_backpack];_gear_backpack = _item_selected; _gear_sel_weapons = _gear_sel_weapons + [_gear_backpack]; _gear_refresh = _gear_refresh + ["weapons"];[_gear_backpack,_target] Call WFBE_CL_FNC_UI_Gear_UpdateView;_update_inventory = true;_has_inv_changed = true;}};
+								case 200: {_add = true;if !(_target_cancarrybp) then {_add = false; hint "The target cannot carry a backpack!"};if (_gear_primary != "") then {if ((missionNamespace getVariable _gear_primary) select 4 == 3) then {_add = false}};if (_add) then {_gear_refresh = [];_gear_backpack_content = (_get select 5) call _bpCopy;if (_gear_secondary != "") then {_gear_mag_main = [_gear_secondary, "", _gear_mag_main] Call WFBE_CL_FNC_ReplaceMagazinesGear; _gear_sel_magazines = _gear_mag_main + _gear_mag_pool; _gear_refresh = ["magazines_main"]; _gear_sel_weapons = _gear_sel_weapons - [_gear_secondary]};_gear_sel_weapons = _gear_sel_weapons - [_gear_backpack];_gear_backpack = _item_selected; _gear_sel_weapons = _gear_sel_weapons + [_gear_backpack]; _gear_refresh = _gear_refresh + ["weapons"];[_gear_backpack,_target] Call WFBE_CL_FNC_UI_Gear_UpdateView;_update_inventory = true;_has_inv_changed = true;}};
 								case 201: {_add = true;if !(_target_cancarrybp) then {_add = false; hint "The target cannot carry a backpack!"};if (_gear_primary != "") then {if ((missionNamespace getVariable _gear_primary) select 4 == 3) then {_add = false}};if (_add) then {_gear_refresh = [];_gear_backpack_content = [[[],[]],[[],[]]];if (_gear_secondary != "") then {_gear_mag_main = [_gear_secondary, "", _gear_mag_main] Call WFBE_CL_FNC_ReplaceMagazinesGear; _gear_sel_magazines = _gear_mag_main + _gear_mag_pool; _gear_refresh = ["magazines_main"]; _gear_sel_weapons = _gear_sel_weapons - [_gear_secondary]};_gear_sel_weapons = _gear_sel_weapons - [_gear_backpack];_gear_backpack = _item_selected; _gear_sel_weapons = _gear_sel_weapons + [_gear_backpack]; _gear_refresh = _gear_refresh + ["weapons"];[_gear_backpack,_target] Call WFBE_CL_FNC_UI_Gear_UpdateView;_update_inventory = true;_has_inv_changed = true;}};
 							};
 						};
@@ -369,7 +374,7 @@ while {true} do {
 					[_gear_backpack,_target] Call WFBE_CL_FNC_UI_Gear_UpdateView;
 					_gear_sel_weapons = +_weapons;
 					_gear_sel_magazines = +_magazines;
-					_gear_backpack_content = +_backpack_content;
+					_gear_backpack_content = _backpack_content call _bpCopy;
 					_has_inv_changed = true;
 					_update_inventory = true;
 				};
@@ -472,7 +477,7 @@ while {true} do {
 			_old_veh = +_gear_sel_vehicle;
 			_target_weapons = +_gear_sel_weapons;
 			_target_magazines = +_gear_sel_magazines;
-			_gear_sel_backpack = +_gear_backpack_content;
+			_gear_sel_backpack = _gear_backpack_content call _bpCopy;
 			_gear_sel_vehicle = +_gear_vehicle_content;
 			_msg = "";
 			//--- Cap magazine count to inventory capacity.

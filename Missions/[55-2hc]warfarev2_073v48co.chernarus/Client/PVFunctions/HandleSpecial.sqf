@@ -659,7 +659,7 @@ switch (_request) do {
 				_navColor = missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _navSide], "ColorGreen"];
 			};
 		};
-		_navMkr   = Format ["WFBE_%1_CityMarker", _navLoc];
+		_navMkr   = Format ["WFBE_%1_CityMarker", str _navLoc];
 		_navMkr setMarkerColorLocal _navColor;
 		//--- Flip notification hint (localized). Prefix the carrier name so players know which one flipped.
 		//--- Guard on a real player (skip the HC, which has no interface) - mirrors the scud-action-add guard.

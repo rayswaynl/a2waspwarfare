@@ -46,7 +46,7 @@ if (isNil "mouseY") then {mouseY = 0.5};
 private ["_display","_map","_sid","_armed","_lastSend","_cool","_artyOn","_now","_position",
          "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastCmdTeams","_lastEcon","_lastIntent","_posture","_disbandArm",
          "_deckOn","_deckOrders","_deckOrderActs","_lastDeckHdr","_deckDoctrine",
-         "_disbandSelArm","_focusArmed","_lastDirect","_directCool","_tnArmed","_tdNext"];
+         "_disbandSelArm","_disbandSelIdx","_focusArmed","_lastDirect","_directCool","_tnArmed","_tdNext"];
 
 _display = _this select 0;
 _map = _display displayCtrl 14002;
@@ -77,6 +77,7 @@ _lastSend = -1000;
 _lastDirect = -1000;        //--- Build83 smoother-console: separate short-cooldown timestamp for DIRECT map-click group-var orders (claude-gaming 2026-07-01).
 _disbandArm = -1000;        //--- player-commander DISBAND-ALL failsafe: 2-click-arm timestamp (claude-gaming 2026-06-30).
 _disbandSelArm = -1000;     //--- Command Console v2: per-team DISBAND-SELECTED 2-click-arm timestamp (claude-gaming 2026-07-01).
+_disbandSelIdx = -1;        //--- fix(menuaction-race): bind confirm arm to the roster index shown at click-1.
 _focusArmed = false;        //--- Command Console v2: STATE-A "AI: FOCUS TOWN" armed flag - next map click sets the AI focus (claude-gaming 2026-07-01).
 _tnArmed = false;           //--- COMMAND V2 (a): STATE-A "SUGGEST TOWN" armed flag - next map click sends a SOFT weighted town nudge (never a focus/pin).
 _tdNext  = "aggressive";    //--- COMMAND V2 (b): which stance the next TEAM DOCTRINE press sends; the button label mirrors it so the player always sees what they are about to send.
@@ -130,11 +131,10 @@ if (_deckOn) then {
 	//--- NEITHER control set - it was in both, and the advise forEach below runs second, so its
 	//--- !_isCmd write always won and the header was hidden while commanding. Driven explicitly
 	//--- after the two loops instead (deck on = visible in both states).
-	_warCtrls = _warCtrls + [14701,14702,14703,14704,14705,14706];
-	//--- fable/cmd-deck-layout: STATE A (no commander) keeps ONLY the live header strip. The zone
-	//--- titles are labels for the commander deck's own layout; in the advisory state the legacy
-	//--- controls already occupy those rows (14607 spans 0.486..0.626), so admitting them there is
-	//--- what stacked "STRATEGY" on top of the AI-intent readout in the owner screenshot.
+	_warCtrls = _warCtrls + [14702,14704,14705,14706];
+	//--- fable/cmd-deck-layout: keep only zone labels that do not collide with persistent economy
+	//--- and roster title controls. 14701 ("SITUATION MAP") would cover 14600 FUNDS, and 14703
+	//--- ("FORCES") would cover the 14660 YOUR TEAMS title; those decorative labels remain hidden.
 	lbClear 14705;
 	{lbAdd [14705, _x]} forEach _deckOrders;
 	lbSetCurSel [14705, 0];
@@ -923,12 +923,15 @@ while {alive player && dialog} do {
 					if (_tIdx < 0) then {
 						hintSilent parseText "<t color='#F8D664'>Cannot target that team yet - try again in a moment.</t>";
 					} else {
-						if ((_now - _disbandSelArm) <= 5) then {
+						//--- fix(menuaction-race): require the same roster index as the armed click.
+						if (((_now - _disbandSelArm) <= 5) && {_disbandSelIdx == _tIdx}) then {
 							_disbandSelArm = -1000;
+							_disbandSelIdx = -1;
 							["RequestSpecial", ["aicom-team-disband", sideJoined, _tIdx, player]] Call WFBE_CO_FNC_SendToServer;
 							hintSilent parseText (format ["<t color='#F89060'>Disband order sent - %1 will stand down where safe.</t>", (name (leader _selTeam))]);
 						} else {
 							_disbandSelArm = _now;
+							_disbandSelIdx = _tIdx;
 							hintSilent parseText (format ["<t color='#F85050'>DISBAND %1? Click again within 5s to confirm.</t>", (name (leader _selTeam))]);
 						};
 					};
