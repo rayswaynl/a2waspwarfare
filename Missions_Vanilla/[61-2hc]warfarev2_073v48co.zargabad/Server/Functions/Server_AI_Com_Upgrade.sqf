@@ -7,7 +7,7 @@
 	entry is kept (not dropped) and retried next cycle once supply has regrown.
 	A debounced log (at most once per 5 min per side) prevents RPT spam.
 	Supply reserve floor: never start an upgrade that would drop supply below
-	WFBE_C_AICOM_SUPPLY_RESERVE (default 500) so base building / defense isn't starved.
+	WFBE_C_AICOM_SUPPLY_RESERVE (default 1000) so base building / defense isn't starved.
 	At most one upgrade start per call (unchanged behaviour).
 
 	V0.6.8 SKIP-UNAFFORDABLE: the old picker grabbed only the FIRST unmet upgrade and,
@@ -16,9 +16,15 @@
 	the first AFFORDABLE one; only when NONE are affordable do we debounced-warn (reporting
 	the head item, which is what's actually being waited on). Supply-reserve floor and the
 	one-start-per-call behaviour are unchanged.
+
+	V0.6.9 LINKS GATE (bughunt 2026-07-30 / UR-H1): V0.6.8 could still start a later
+	program entry whose dependency LINKS were not met when an earlier head was unaffordable
+	(e.g. Airlift before Air L1). Mirror RequestUpgrade / econ-sink: only pick a candidate
+	when current-level LINKS are satisfied. Unmet-link rows are skipped for selection but
+	still count as the program head for the debounced warn.
 */
 
-Private["_can_upgrade","_cost","_enabled","_funds","_level","_logik","_path","_side","_upgrade","_upgrades","_supplyReserve","_supply","_lastWarnKey","_lastWarnTime","_lastExhaustedKey","_lastExhaustedTime","_nowTime","_currency","_headUpgrade","_headCost","_chosen","_chosenCost"];
+Private["_can_upgrade","_cost","_curLvl","_enabled","_funds","_level","_logik","_path","_side","_upgrade","_upgrades","_supplyReserve","_supply","_lastWarnKey","_lastWarnTime","_lastExhaustedKey","_lastExhaustedTime","_nowTime","_currency","_headUpgrade","_headCost","_chosen","_chosenCost","_links","_linksForLevel","_linkNeeded","_clink","_target","_i"];
 
 _side = _this;
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
@@ -36,7 +42,7 @@ _ownTowns = {!isNull _x && {(_x getVariable "sideID") == _myID}} count towns;
 _patrolsId = if (isNil "WFBE_UP_PATROLS") then {-1} else {WFBE_UP_PATROLS};
 
 //--- Supply reserve floor: do not start upgrades that would starve base building.
-_supplyReserve = missionNamespace getVariable ["WFBE_C_AICOM_SUPPLY_RESERVE", 500];
+_supplyReserve = missionNamespace getVariable ["WFBE_C_AICOM_SUPPLY_RESERVE", 1000];
 
 //--- Read economy state ONCE up front (the same funds/supply pool applies to every
 //--- candidate this cycle, so there's no need to re-query per item).
@@ -47,7 +53,8 @@ if (_currency == 0) then {_supply = _side Call WFBE_CO_FNC_GetSideSupply};
 
 //--- V0.6.8 SKIP-UNAFFORDABLE: scan ALL unmet upgrades in program order. Remember the
 //--- FIRST unmet one (the "head", for the warn message) and start the FIRST AFFORDABLE
-//--- one. This prevents a single unaffordable head item from stalling the whole program.
+//--- + LINKS-met one. This prevents a single unaffordable head item from stalling the
+//--- whole program without also skipping prereq ladders (V0.6.9).
 _headUpgrade = -1;
 _headCost = [];
 _chosen = -1;
@@ -72,7 +79,9 @@ _chosenCost = [];
 				_headCost = _cost;
 			};
 
-			//--- Affordability gate (reserve floor honoured): pick the first affordable one.
+			//--- Affordability + LINKS gate (reserve floor honoured): pick the first
+			//--- affordable AND dependency-met candidate. LINKS mirror RequestUpgrade /
+			//--- AI_Commander econ-sink so skip-unaffordable cannot jump a prereq ladder.
 			if (_chosen < 0) then {
 				_can_upgrade = false;
 				if (_currency == 0) then {
@@ -83,8 +92,37 @@ _chosenCost = [];
 				};
 
 				if (_can_upgrade) then {
-					_chosen = _upgrade;
-					_chosenCost = _cost;
+					//--- LINKS for CURRENT level (researching N+1 uses links select N).
+					_linkNeeded = false;
+					_links = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_LINKS", _side];
+					if (!isNil "_links" && {typeName _links == "ARRAY"} && {_upgrade < count _links}) then {
+						_linksForLevel = _links select _upgrade;
+						if (typeName _linksForLevel == "ARRAY") then {
+							_curLvl = _upgrades select _upgrade;
+							if (_curLvl < count _linksForLevel) then {
+								_linksForLevel = _linksForLevel select _curLvl;
+								if (typeName _linksForLevel == "ARRAY" && {count _linksForLevel > 0}) then {
+									if (typeName (_linksForLevel select 0) == "ARRAY") then {
+										for "_i" from 0 to ((count _linksForLevel) - 1) do {
+											_clink = _linksForLevel select _i;
+											if (typeName _clink == "ARRAY" && {count _clink >= 2}) then {
+												_target = _clink select 0;
+												if (_target < 0 || {_target >= count _upgrades} || {(_upgrades select _target) < (_clink select 1)}) exitWith {_linkNeeded = true};
+											};
+										};
+									} else {
+										_target = _linksForLevel select 0;
+										if (_target < 0 || {_target >= count _upgrades} || {(_upgrades select _target) < (_linksForLevel select 1)}) then {_linkNeeded = true};
+									};
+								};
+							};
+						};
+					};
+
+					if (!_linkNeeded) then {
+						_chosen = _upgrade;
+						_chosenCost = _cost;
+					};
 				};
 			};
 		};
