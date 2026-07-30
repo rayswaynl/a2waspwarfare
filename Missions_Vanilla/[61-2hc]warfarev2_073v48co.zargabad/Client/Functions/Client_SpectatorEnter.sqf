@@ -290,7 +290,7 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 		};
 		case 35: { //--- H: hide/show the card overlay (clean OBS capture)
 			WFBE_C_VAR_SpectatorHideHint = !WFBE_C_VAR_SpectatorHideHint;
-			if (WFBE_C_VAR_SpectatorHideHint) then {12455 cutText ["", "PLAIN", 0]};
+			if (WFBE_C_VAR_SpectatorHideHint) then {12455 cutText ["", "PLAIN", 0]}; WFBE_C_VAR_SpectatorCardLast = ""; //--- reset the card cache either way so the next draw re-cuts
 		};
 		case 14: {[] Call WFBE_CL_FNC_SpectatorExit}; //--- Backspace: quick exit
 		default {_handled = false}; //--- unhandled keys (Esc, chat, etc.) fall through to the game.
@@ -644,7 +644,14 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 				];
 			};
 			_dirCard = _dirCard + "\nSETUP  PgUp/PgDn sens | H hide card | Backspace exit";
-			12455 cutText [_dirCard, "PLAIN DOWN", 0];
+			//--- FLICKER FIX (owner live report 2026-07-31: "H menu just flashed small white text"):
+			//--- re-issuing cutText every 0.05s tick makes the engine restart the title each frame,
+			//--- which renders as a flash instead of a steady card. Only re-cut when the card STRING
+			//--- actually changed (speed/FOV/target update at ~1Hz, not 20Hz).
+			if (_dirCard != (missionNamespace getVariable ["WFBE_C_VAR_SpectatorCardLast", ""])) then {
+				WFBE_C_VAR_SpectatorCardLast = _dirCard;
+				12455 cutText [_dirCard, "PLAIN DOWN", 0];
+			};
 		};
 	};
 };
