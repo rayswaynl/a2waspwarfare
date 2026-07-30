@@ -29,19 +29,25 @@ for '_i' from 0 to count(_template)-1 do {
 	};
 	
 	if !(_skip) then {
+		//--- r38 fail-clean: null wall must not setVar/setDir/setPos or pollute return array.
 		_toplace = createVehicle [_object, [0,0,0], [], 0, "NONE"];
-		_toplace setVariable ["wfbe_defense", true]; //--- This is one of our defenses.
-		
-		_toWorld = _origin modelToWorld _relPos;
-		_toWorld set [2,0];
-
-		_toplace setDir (_dir - _relDir);
-		_toplace setPos _toWorld;
+		if (isNull _toplace) then {
+			["WARNING", Format ["Server_CreateDefenseTemplate.sqf: class [%1] failed createVehicle for origin [%2]; wall slot skipped.", _object, typeOf _origin]] Call WFBE_CO_FNC_LogContent;
+			diag_log format ["DEFWALL|CREATEFAIL|class=%1|origin=%2", _object, typeOf _origin];
+		} else {
+			_toplace setVariable ["wfbe_defense", true]; //--- This is one of our defenses.
+			
+			_toWorld = _origin modelToWorld _relPos;
+			_toWorld set [2,0];
+			
+			_toplace setDir (_dir - _relDir);
+			_toplace setPos _toWorld;
+			_created = _created + [_toplace];
+		};
 	} else {
 		_toplace = _existingTemplate select _i;
+		_created = _created + [_toplace];
 	};
-	
-	_created = _created + [_toplace];
 };
 
 _created
