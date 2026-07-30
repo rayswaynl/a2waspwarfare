@@ -68,7 +68,8 @@ openMap true;
 	private ["_p","_myToken"];
 	_p = _this select 0;
 	_myToken = _this select 1;
-	waitUntil {!visibleMap || {isNull _p} || {!(_p getVariable ["wfbe_helibomb_designating", false])}};
+	//--- SCHEDULER-LEAK: sleep in map-designate wait (was hard-spinning the SQF scheduler while map open).
+	waitUntil {sleep 0.1; !visibleMap || {isNull _p} || {!(_p getVariable ["wfbe_helibomb_designating", false])}};
 	if ((_p getVariable ["wfbe_helibomb_designating", false]) && {(_p getVariable ["wfbe_helibomb_design_token", -1]) == _myToken}) then {
 		//--- Map closed without a completed/rejected click while THIS designation was still pending: treat
 		//--- as a cancel - clear the latch and restore the default team-order map-click handler (same

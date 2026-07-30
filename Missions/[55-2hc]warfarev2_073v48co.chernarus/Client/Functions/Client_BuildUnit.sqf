@@ -851,7 +851,8 @@ if (_isMan) then {
 						private ["_p","_myToken"];
 						_p = _this select 0;
 						_myToken = _this select 1;
-						waitUntil {!visibleMap || {isNull _p} || {!(_p getVariable ["wfbe_tk_scud_designating", false])}};
+						//--- SCHEDULER-LEAK: sleep in SCUD map-designate wait.
+	waitUntil {sleep 0.1; !visibleMap || {isNull _p} || {!(_p getVariable ["wfbe_tk_scud_designating", false])}};
 						if ((_p getVariable ["wfbe_tk_scud_designating", false]) && {(_p getVariable ["wfbe_tk_scud_design_token", -1]) == _myToken}) then {
 							_p setVariable ["wfbe_tk_scud_designating", false];
 							onMapSingleClick {[_pos, _shift, _alt, _units] call WFBE_CL_FNC_HandleMapSingleClick};

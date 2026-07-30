@@ -367,11 +367,14 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 			_eOnRoute = false;
 			{ if (side _x == _enemySide && {alive _x}) then {_eOnRoute = true} } forEach (_cur nearEntities [["Man","Car","Tank","Air"], _enemyClear]);
 			if (_eOnRoute) then {
-				//--- CONTACT: grant the timers grace every contact tick so a pause never trips stuck/deadline.
-				_lastImprove = _lastImprove + _routeGrace;
-				_t0          = _t0 + _routeGrace;
+				//--- CONTACT: grant timer grace ONCE on the contact edge (not every 5s tick).
+				//--- Per-tick grace extended deadline forever under sustained contact (scheduler/drive
+				//--- monitor never converged on stuck/deadline deploy). Edge-only keeps brief-pause
+				//--- protection without unbounded clock extension.
 				if (!_inContact) then {
 					_inContact = true;
+					_lastImprove = _lastImprove + _routeGrace;
+					_t0          = _t0 + _routeGrace;
 					_drvGrp setBehaviour "AWARE";
 					_drvGrp setCombatMode "NORMAL";
 					if (!isNull (driver _mhq)) then {{(driver _mhq) enableAI _x} forEach ["AUTOTARGET","TARGET"]};

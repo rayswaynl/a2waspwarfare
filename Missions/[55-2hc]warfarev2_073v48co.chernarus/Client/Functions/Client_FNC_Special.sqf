@@ -38,7 +38,9 @@ WFBE_CL_FNC_Commander_VoteStart = {
 	_name = _this select 0;
 
 	if (votePopUp) then {
-		waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_votetime"}};
+	//--- SCHEDULER-LEAK: bound votetime readiness wait.
+	private ["_voteWaitT0"]; _voteWaitT0 = time;
+	waitUntil {sleep 0.2; !isNil {WFBE_Client_Logic getVariable "wfbe_votetime"} || {(time - _voteWaitT0) > 30}};
 		if ((WFBE_Client_Logic getVariable "wfbe_votetime") > 0 && !voted) then {
 			createDialog "WFBE_VoteMenu"
 		};
@@ -49,11 +51,14 @@ WFBE_CL_FNC_Commander_VoteStart = {
 };
 
 WFBE_CL_FNC_Display_ICBM = {
-	Private ["_cruise", "_obj"];
+Private ["_cruise", "_obj", "_nukeWaitDeadline"];
 	_obj = _this select 0;
 	_cruise = _this select 1;
 
-	waitUntil {!alive _cruise};
+	//--- SCHEDULER-LEAK: unbounded waitUntil if _cruise never dies / null. Bound with sleep + 10 min deadline.
+	if (isNull _cruise) exitWith {};
+	_nukeWaitDeadline = time + 600;
+	waitUntil {sleep 0.5; isNull _cruise || {!alive _cruise} || {time >= _nukeWaitDeadline}};
 
 	[_obj] Spawn Nuke;
 };
