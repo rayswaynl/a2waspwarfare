@@ -1,11 +1,13 @@
 "WFBE_Client_PV_SupplyMissionStarted" addPublicVariableEventHandler {
     (_this select 1) spawn {
-        private ['_associatedSupplyTruck', '_associatedSourceTown', '_sidePlayer','_iteratedObject','_friendlyCommandCenterInProximity','_playerObject','_match','_currentSupplyTruckDriverLeader','_playerIsDrivingSupplyTruck','_playerisInProximityOfSupplyTruck','_byHeli','_vp','_cp','_dx','_dy','_ccDwell','_heliCCSeen','_unloadNeed'];
+        private ['_associatedSupplyTruck', '_associatedSourceTown', '_sidePlayer','_iteratedObject','_friendlyCommandCenterInProximity','_playerObject','_match','_currentSupplyTruckDriverLeader','_playerIsDrivingSupplyTruck','_playerisInProximityOfSupplyTruck','_byHeli','_vp','_cp','_dx','_dy','_ccDwell','_heliCCSeen','_unloadNeed','_loaderSide','_sideStructures','_ccSide','_friendlyCC','_creditPlayer','_iteratedPlayerUID','_leaderGroupIteratedObject','_truckDriver','_deliveryDone','_nearTruck'];
         _playerObject = _this select 0;
         _associatedSupplyTruck = _this select 1;
         _associatedSourceTown = _this select 2;
-        _byHeli = _associatedSupplyTruck getVariable "SupplyByHeli";
-        if (isNil "_byHeli") then { _byHeli = false; };
+        //--- byHeli from vehicle class (server truth). Client-stamped SupplyByHeli can desync unload vs auto-complete path.
+        _byHeli = (typeOf _associatedSupplyTruck) in WFBE_C_SUPPLY_HELI_TYPES;
+        //--- Mission side captured from the starter for CC ownership checks (not re-read after credit reassignment).
+        _loaderSide = if (isNull _playerObject) then { sideUnknown } else { side group _playerObject };
 
         //--- Broadcast (3rd arg): the town-marker supply countdown reads this on CLIENTS —
         //--- without the broadcast every client saw the init value 0 and rendered 0:00 (task 43).
@@ -42,6 +44,7 @@
         _playerIsDrivingSupplyTruck = false;
         
         _match = false;
+        _deliveryDone = false;
 
         ["INFORMATION", Format ["SupplyMissionStarted.sqf: Player %1 started supply mission in town %2.",(name leader group _playerObject), _associatedSourceTown]] Call WFBE_CO_FNC_LogContent;
 
@@ -50,18 +53,30 @@
         _ccDwell = 0;
         _heliCCSeen = false;
         _unloadNeed = if (_byHeli) then { WFBE_C_SUPPLY_HELI_UNLOAD_TIME } else { 0 };
+        _sideStructures = _loaderSide Call WFBE_CO_FNC_GetSideStructures;
 
-        while { alive _associatedSupplyTruck } do {
+        //--- _deliveryDone flag (not exitWith on the CC branch): if the truck is near a friendly CC but no
+        //--- delivering player is present yet, keep polling until a driver/nearby player shows up or cargo clears.
+        while { alive _associatedSupplyTruck && {!_deliveryDone} } do {
             sleep 1;
             if ((_associatedSupplyTruck getVariable ["SupplyAmount", 0]) <= 0) exitWith {};
 
             _friendlyCommandCenterInProximity = false;
             {
                 if (_x isKindOf "Base_WarfareBUAVterminal") then {
-                    //--- Helicopters fly high: qualify on HORIZONTAL (2D) distance to the CC, ignore altitude. Trucks unchanged.
-                    _vp = getPos _associatedSupplyTruck; _cp = getPos _x;
-                    _dx = (_vp select 0) - (_cp select 0); _dy = (_vp select 1) - (_cp select 1);
-                    if ((!_byHeli) || (((_dx*_dx)+(_dy*_dy)) < 6400)) then { _friendlyCommandCenterInProximity = true; };
+                    //--- BUG fix: only OWN-side Command Centers count (name claimed "friendly"; code accepted any side).
+                    _ccSide = _x getVariable ["wfbe_side", sideUnknown];
+                    _friendlyCC = false;
+                    if (_ccSide == _loaderSide) then { _friendlyCC = true; };
+                    if (!_friendlyCC) then {
+                        if (_x in _sideStructures) then { _friendlyCC = true; };
+                    };
+                    if (_friendlyCC) then {
+                        //--- Helicopters fly high: qualify on HORIZONTAL (2D) distance to the CC, ignore altitude. Trucks unchanged.
+                        _vp = getPos _associatedSupplyTruck; _cp = getPos _x;
+                        _dx = (_vp select 0) - (_cp select 0); _dy = (_vp select 1) - (_cp select 1);
+                        if ((!_byHeli) || (((_dx*_dx)+(_dy*_dy)) < 6400)) then { _friendlyCommandCenterInProximity = true; };
+                    };
                 };
             } forEach (nearestObjects [(getPos _associatedSupplyTruck), ["Base_WarfareBUAVterminal"], (if (_byHeli) then {400} else {80})]);
 
@@ -71,51 +86,56 @@
                 ["INFORMATION", Format ["SupplyMissionStarted.sqf: Helicopter supply vehicle %1 reached Command Center area; waiting for manual UNLOAD SUPPLIES.", _associatedSupplyTruck]] Call WFBE_CO_FNC_LogContent;
             };
 
-            if ((!_byHeli) && _friendlyCommandCenterInProximity && (_ccDwell >= _unloadNeed)) exitWith {
-                //--- perf: the supply-truck position is fixed for this whole exitWith pass (no sleep between
+            if ((!_byHeli) && _friendlyCommandCenterInProximity && (_ccDwell >= _unloadNeed)) then {
+                //--- perf: the supply-truck position is fixed for this whole pass (no sleep between
                 //--- iterations), so the identical nearestObjects 8m sphere was being rescanned once per
                 //--- player in WFBE_SE_PLAYERLIST. Hoist it once and reuse - behaviour-identical (same objects),
                 //--- N scans -> 1 scan.
-                private "_nearTruck";
                 _nearTruck = nearestObjects [(getPos _associatedSupplyTruck), [], 8];
+
+                //--- BUG fix: do NOT default credit to the start-PV player. Require a living deliverer who is
+                //--- driving the truck or standing next to it (teammate relay still works; remote starter does not).
+                _creditPlayer = objNull;
+                _playerisInProximityOfSupplyTruck = false;
+                _playerIsDrivingSupplyTruck = false;
+                _truckDriver = driver _associatedSupplyTruck;
                 {
                     _iteratedPlayerUID = _x select 1;
-                    // diag_log format ["_associatedSupplyTruck: %1, leader group: %2, getPlayerUID leader group _associatedSupplyTruck: %3, _iteratedPlayerUID: %4, _playerObject: %5", _associatedSupplyTruck, leader group _associatedSupplyTruck, getPlayerUID leader group _associatedSupplyTruck, _iteratedPlayerUID, _playerObject];
-                    
+
                     {
                         _iteratedObject = _x;
-                        _leaderGroupIteratedObject = leader group _iteratedObject;
-
-                        if ((isPlayer _leaderGroupIteratedObject) && (getPlayerUID (_leaderGroupIteratedObject) == _iteratedPlayerUID)) then {
+                        //--- Prefer the near unit itself when it is a player (not only its group leader who may be remote).
+                        if ((isPlayer _iteratedObject) && {(getPlayerUID _iteratedObject) == _iteratedPlayerUID}) then {
                             _playerisInProximityOfSupplyTruck = true;
-                            _playerObject = _leaderGroupIteratedObject;
-                            // diag_log format ["_playerIsInProximityOfSupplyTruck, _iteratedObject: %1, _leaderGroupIteratedObject: %2", _iteratedObject, _leaderGroupIteratedObject];
+                            _creditPlayer = _iteratedObject;
+                        } else {
+                            _leaderGroupIteratedObject = leader group _iteratedObject;
+                            if ((isPlayer _leaderGroupIteratedObject) && {(getPlayerUID _leaderGroupIteratedObject) == _iteratedPlayerUID}) then {
+                                //--- Squad member near truck, leader is the list row: only credit leader if THEY are also near.
+                                if ((_leaderGroupIteratedObject distance _associatedSupplyTruck) <= 8) then {
+                                    _playerisInProximityOfSupplyTruck = true;
+                                    _creditPlayer = _leaderGroupIteratedObject;
+                                };
+                            };
                         };
                     } forEach _nearTruck;
 
-
-                    _playerIsDrivingSupplyTruck = ((getPlayerUID (leader group _associatedSupplyTruck)) == _iteratedPlayerUID);
-
-                    if (_playerIsDrivingSupplyTruck && (isNull _playerObject)) then {
-                        _iteratedObjectDriver = _x select 0;
-                        if (!(isNull _iteratedObjectDriver)) then {
-                            _playerObject = _iteratedObjectDriver;
-                        };
-                        // diag_log format ["_playerObject (_iteratedObjectDriver): %1", _playerObject];
+                    if (!(isNull _truckDriver) && {isPlayer _truckDriver} && {(getPlayerUID _truckDriver) == _iteratedPlayerUID}) then {
+                        _playerIsDrivingSupplyTruck = true;
+                        _creditPlayer = _truckDriver;
                     };
-                    
+
                 } forEach (WFBE_SE_PLAYERLIST);
 
-                // diag_log format ["_playerObject/_currentSupplyTruckDriverLeader: %1", _playerObject];
-
-                _match = !(isNull _playerObject);
+                _match = (_playerIsDrivingSupplyTruck || _playerisInProximityOfSupplyTruck) && {!isNull _creditPlayer} && {isPlayer _creditPlayer};
 
                 if (_match) then {
 				    //--- fix(hunt): this detector runs ON the server; publicVariableServer here never fires the server's own
 				    //--- PVEH (engine trap - see AttackWave.sqf), so ground-truck deliveries were never credited (no supply,
 				    //--- no cash, no message). Call the extracted completion handler directly; the heli path (client sender,
 				    //--- supplyMissionUnload.sqf) is unchanged.
-				    [_playerObject, _associatedSupplyTruck, side _playerObject] Call WFBE_SE_FNC_HandleSupplyMissionCompleted;
+				    [_creditPlayer, _associatedSupplyTruck, side group _creditPlayer] Call WFBE_SE_FNC_HandleSupplyMissionCompleted;
+                    _deliveryDone = true;
                 };
             };
 
