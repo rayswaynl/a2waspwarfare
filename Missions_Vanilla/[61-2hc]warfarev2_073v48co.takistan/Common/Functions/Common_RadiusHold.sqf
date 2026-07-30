@@ -58,8 +58,16 @@ if ((count WFBE_RADIUSHOLD_REGISTRY) >= _maxActive) exitWith {
 };
 
 if (typeName _anchorArg == "ARRAY") then {
+	//--- COORD-SPACE (r25 bughunt): createVehicle [x,y,0] + setPosASL [x,y,0] when only 2 elements
+	//--- anchors at SEA LEVEL (ASL z=0). On Chernarus hills the hold sits buried and unitsBelowHeight
+	//--- (anchorZ+12) can filter out every unit on the real terrain. ZgKoth already probes terrain ASL;
+	//--- 2-element callers must ground-snap via setPos (ATL z=0 = surface).
 	_anchor = "HeliHEmpty" createVehicle [_anchorArg select 0, _anchorArg select 1, 0];
-	_anchor setPosASL [_anchorArg select 0, _anchorArg select 1, if (count _anchorArg > 2) then {_anchorArg select 2} else {0}];
+	if ((count _anchorArg) > 2) then {
+		_anchor setPosASL [_anchorArg select 0, _anchorArg select 1, _anchorArg select 2];
+	} else {
+		_anchor setPos [_anchorArg select 0, _anchorArg select 1, 0];
+	};
 	_anchor enableSimulation false;
 	_anchor allowDamage false;
 } else {
