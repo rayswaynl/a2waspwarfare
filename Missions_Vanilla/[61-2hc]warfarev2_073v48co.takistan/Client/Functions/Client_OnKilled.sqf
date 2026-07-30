@@ -254,6 +254,11 @@ if (!isNil "Bipod_AddAutoDeploy") then {[] call Bipod_AddAutoDeploy};
 
 	"colorCorrections" ppEffectCommit _delay / 3;
 
+	//--- Spectator owns the view while active; tear it down before the death camera is created.
+	if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) then {
+		[] Call WFBE_CL_FNC_SpectatorExit;
+	};
+
 	//--- Guard: bail if the death position is invalid or camCreate failed to bind (prevents per-frame "Undefined variable wfbe_deathcamera" spam in the waitUntil below).
 	if (isNil "WFBE_DeathLocation" || {typeName WFBE_DeathLocation != "ARRAY"} || {count WFBE_DeathLocation < 3}) exitWith {
 		"dynamicBlur" ppEffectEnable false;
