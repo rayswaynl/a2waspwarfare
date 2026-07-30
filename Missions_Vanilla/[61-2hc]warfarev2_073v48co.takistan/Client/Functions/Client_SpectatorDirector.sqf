@@ -249,7 +249,7 @@ WFBE_CL_FNC_DirectorPickBase = {
 };
 
 WFBE_CL_FNC_DirectorAimPoint = {
-    Private ["_target","_class","_center","_radius","_contact","_active","_previous","_dir","_distance","_aim"];
+    Private ["_target","_class","_center","_radius","_contact","_active","_previous","_dir","_distance","_aim","_shotType","_shotRadius"];
     _target = _this select 0;
     _class = _this select 1;
     _center = _this select 2;
@@ -269,7 +269,13 @@ WFBE_CL_FNC_DirectorAimPoint = {
     _aim = _center;
     if (_active) then {
         _dir = getDir _target;
-        _distance = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ENGAGEMENT_AIM_DISTANCE", 150];
+        _shotType = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorShotType", "MEDIUM"];
+        _shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS", 8];
+        if (_shotType == "MEDIUM") then {_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS", 18]};
+        //--- fix (v3.2 review): cap the look-ahead bias to the shot's own standoff radius so the aim point
+        //--- stays near the subject; the flat 150m distance put the aim ~150m past a 8-18m-radius camera,
+        //--- pitching the shot nearly level instead of down at the engaged unit.
+        _distance = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ENGAGEMENT_AIM_DISTANCE", 150]) min (_shotRadius * 0.5);
         _aim = [
             (_center select 0) + (_distance * sin _dir),
             (_center select 1) + (_distance * cos _dir),
@@ -352,7 +358,7 @@ WFBE_CL_FNC_DirectorCycleTarget = {
 };
 
 WFBE_CL_FNC_DirectorPickNext = {
-    Private ["_list","_current","_recent","_cooldown","_best","_bestScore","_entry","_target","_score","_skip","_pinned","_currentEntry","_currentScore","_runnerUpScore","_repeatMargin","_hysteresisMargin"];
+    Private ["_list","_current","_recent","_cooldown","_best","_bestScore","_entry","_target","_score","_skip","_pinned","_currentEntry","_currentScore","_bestAlt","_bestAltScore","_repeatMargin","_hysteresisMargin"];
     _pinned = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorPinned", false];
     if (_pinned) then {_list = Call WFBE_CL_FNC_DirectorBuildActive} else {_list = Call WFBE_CL_FNC_DirectorBuildAll};
     if (count _list == 0) exitWith {[]};
@@ -370,8 +376,16 @@ WFBE_CL_FNC_DirectorPickNext = {
             _currentScore = _entry select 4;
         };
     } forEach _list;
+    //--- fix (v3.2 review): loop1 finds the best candidate that clears BOTH cooldown and the
+    //--- hysteresis margin (the switch-worthy pick). _bestAlt tracks the best candidate that
+    //--- only clears cooldown (ignoring hysteresis) - the true runner-up used below to decide
+    //--- whether to hold on the current target or force a repeat-margin switch. The old
+    //--- fallback loop re-scanned ignoring cooldown AND hysteresis on every hysteresis skip
+    //--- (not just when cooldown blocked everything), which silently defeated both mechanisms.
     _best = [];
     _bestScore = -1e9;
+    _bestAlt = [];
+    _bestAltScore = -1e9;
     {
         _entry = _x;
         _target = _entry select 1;
@@ -382,15 +396,19 @@ WFBE_CL_FNC_DirectorPickNext = {
                 if ((_x select 0) == _target && {(time - (_x select 1)) < _cooldown}) then {_skip = true};
             } forEach _recent;
             if (!_skip) then {
-                if (_currentScore > 0 && {_score < (_currentScore * (1 + _hysteresisMargin))}) then {_skip = true};
-            };
-            if (!_skip && {_score > _bestScore}) then {
-                _best = _entry;
-                _bestScore = _score;
+                if (_score > _bestAltScore) then {
+                    _bestAlt = _entry;
+                    _bestAltScore = _score;
+                };
+                if ((_currentScore <= 0 || {_score >= (_currentScore * (1 + _hysteresisMargin))}) && {_score > _bestScore}) then {
+                    _best = _entry;
+                    _bestScore = _score;
+                };
             };
         };
     } forEach _list;
-    if (count _best == 0) then {
+    if (count _best == 0 && {count _bestAlt == 0}) then {
+        //--- genuinely nothing survives cooldown at all; ignore cooldown rather than get stuck.
         _bestScore = -1e9;
         {
             _entry = _x;
@@ -405,15 +423,22 @@ WFBE_CL_FNC_DirectorPickNext = {
         } forEach _list;
     };
     if (count _best == 0 && {count _currentEntry > 0}) then {
-        _runnerUpScore = -1e9;
-        {
-            _entry = _x;
-            if ((_entry select 1) != _current && {(_entry select 4) > _runnerUpScore}) then {
-                _runnerUpScore = _entry select 4;
-            };
-        } forEach _list;
-        if (_runnerUpScore <= -1e8 || {_currentScore >= (_runnerUpScore * (1 + _repeatMargin))}) then {
+        if (count _bestAlt == 0) then {
             _best = _currentEntry;
+        } else {
+            if (_bestAltScore > _currentScore) then {
+                //--- a rival outscores current but not by the hysteresis margin; hold - this is
+                //--- exactly what hysteresis exists to do, do not let repeat-margin re-litigate it.
+                _best = _currentEntry;
+            } else {
+                //--- current is the top scorer outright; spec item C only allows repeating it
+                //--- when it clears the runner-up by the repeat margin, else force a switch.
+                if (_currentScore >= (_bestAltScore * (1 + _repeatMargin))) then {
+                    _best = _currentEntry;
+                } else {
+                    _best = _bestAlt;
+                };
+            };
         };
     };
     _best

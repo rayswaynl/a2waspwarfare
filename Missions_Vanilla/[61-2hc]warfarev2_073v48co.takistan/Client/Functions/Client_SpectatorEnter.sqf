@@ -455,26 +455,36 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 						_shotType = WFBE_C_VAR_SpectatorDirectorShotType;
 						_wantAim = [_t, WFBE_C_VAR_SpectatorDirectorClass, _center] Call WFBE_CL_FNC_DirectorAimPoint;
 						_engaged = WFBE_C_VAR_DirectorEngagementActive;
-						if (_engaged && {(_shotType == "TIGHT") || {_shotType == "MEDIUM"}}) then {
-							_shotDir = getDir _t;
-							_angle = (_shotDir + 180) % 360;
-							if (_shotType == "TIGHT") then {
+						//--- fix (v3.2 review): radius/height now derive from _shotType alone (was gated behind
+						//--- _engaged, so an idle/non-engaged MEDIUM shot - the common case - fell through to the
+						//--- legacy 40/25 ORBIT constants instead of its own 18/12 MEDIUM constants). Orbit sweep
+						//--- now applies to any shot that is not the fixed engagement angle (v3.1 parity - was
+						//--- narrowed to WIDE/BASE only, freezing the camera on every idle PLAYER/TEAM MEDIUM shot).
+						_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_RADIUS", 40];
+						_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_HEIGHT", 25];
+						switch (_shotType) do {
+							case "TIGHT": {
 								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS", 8];
 								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT", 4];
-							} else {
+							};
+							case "MEDIUM": {
 								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS", 18];
 								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT", 12];
 							};
-							_wantPos = [(_center select 0) + (_shotRadius * sin _angle), (_center select 1) + (_shotRadius * cos _angle), (_center select 2) + _shotHeight];
-						} else {
-							if ((_shotType == "WIDE") || {_shotType == "BASE"}) then {
+							case "WIDE": {
 								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS", 180];
 								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT", 110];
-							} else {
-								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_RADIUS", 40];
-								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_HEIGHT", 25];
 							};
-							if (WFBE_C_VAR_SpectatorOrbit && {(_shotType == "WIDE") || {_shotType == "BASE"}}) then {
+							case "BASE": {
+								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS", 180];
+								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT", 110];
+							};
+						};
+						if (_engaged && {(_shotType == "TIGHT") || {_shotType == "MEDIUM"}}) then {
+							_shotDir = getDir _t;
+							_angle = (_shotDir + 180) % 360;
+						} else {
+							if (WFBE_C_VAR_SpectatorOrbit) then {
 								_rate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_ORBIT_DEG_PER_SEC", 4];
 								if (_rate > (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC", 8])) then {
 									_rate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC", 8];
@@ -484,8 +494,8 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 							} else {
 								_angle = WFBE_C_VAR_SpectatorOrbitAngle;
 							};
-							_wantPos = [(_center select 0) + (_shotRadius * sin _angle), (_center select 1) + (_shotRadius * cos _angle), (_center select 2) + _shotHeight];
 						};
+						_wantPos = [(_center select 0) + (_shotRadius * sin _angle), (_center select 1) + (_shotRadius * cos _angle), (_center select 2) + _shotHeight];
 						if (_t != _lastDirectorTarget) then {
 							WFBE_C_VAR_DirectorAimHardCut = false;
 							_smoothPos = _wantPos;
