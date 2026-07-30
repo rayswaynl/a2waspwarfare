@@ -72,6 +72,20 @@ WFBE_C_VAR_DirectorRecent = [];
 WFBE_C_VAR_DirectorLastSwitch = 0;
 WFBE_C_VAR_DirectorLastTownPoll = 0;
 WFBE_C_VAR_DirectorTownData = [];
+WFBE_C_VAR_DirectorAutoTime = 0;
+WFBE_C_VAR_DirectorLastBaseCheck = 0;
+WFBE_C_VAR_DirectorLastEstablish = -120;
+WFBE_C_VAR_SpectatorDirectorShotType = "WIDE";
+WFBE_C_VAR_SpectatorDirectorShotMinDwell = 1.5;
+WFBE_C_VAR_SpectatorDirectorShotMaxDwell = 7;
+WFBE_C_VAR_SpectatorDirectorTargetFov = 0.85;
+WFBE_C_VAR_DirectorContactTarget = objNull;
+WFBE_C_VAR_DirectorLastContactScan = 0;
+WFBE_C_VAR_DirectorEngagementActive = false;
+WFBE_C_VAR_DirectorAimHardCut = false;
+WFBE_C_VAR_DirectorReturnClass = "";
+WFBE_C_VAR_DirectorReturnPending = false;
+WFBE_C_VAR_SpectatorLastManualZoom = 0;
 WFBE_C_VAR_SpectatorHideHint = false;
 WFBE_C_VAR_SpectatorMouseBaseline = true; //--- first MouseMoving event only sets the baseline (recentre-bias fix)
 
@@ -171,6 +185,7 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 				};
 				WFBE_C_VAR_SpectatorDirectorClass = _cls;
 				WFBE_C_VAR_SpectatorDirectorPinned = true;
+				WFBE_C_VAR_DirectorReturnPending = false;
 				WFBE_C_VAR_SpectatorTarget = objNull;
 				WFBE_C_VAR_DirectorLastSwitch = 0;
 				diag_log Format ["SPECTATE|v3|class-switch|class=%1", _cls];
@@ -192,6 +207,12 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 					WFBE_C_VAR_SpectatorOrbitAngle = 0;
 					WFBE_C_VAR_SpectatorTarget = objNull;
 					WFBE_C_VAR_DirectorLastSwitch = 0;
+					WFBE_C_VAR_DirectorAutoTime = 0;
+					WFBE_C_VAR_DirectorLastBaseCheck = 0;
+					WFBE_C_VAR_DirectorLastEstablish = -120;
+					WFBE_C_VAR_DirectorContactTarget = objNull;
+					WFBE_C_VAR_DirectorLastContactScan = 0;
+					WFBE_C_VAR_DirectorReturnPending = false;
 					diag_log Format ["SPECTATE|v3|mode-on|class=%1", WFBE_C_VAR_SpectatorDirectorClass];
 					systemChat "[WASP] Director mode on - pooled action auto-switch enabled.";
 				};
@@ -337,6 +358,7 @@ WFBE_CL_FNC_SpectatorMouseMoving = {
 WFBE_CL_FNC_SpectatorWheel = {
 	Private ["_z","_f"];
 	_z = _this select 1;
+	WFBE_C_VAR_SpectatorLastManualZoom = time;
 	_f = WFBE_C_VAR_SpectatorFov;
 	if (_z > 0) then {_f = _f * 0.85} else {_f = _f * 1.18};
 	_f = (_f max (missionNamespace getVariable ["WFBE_C_SPECTATOR_FOV_MIN", 0.05])) min (missionNamespace getVariable ["WFBE_C_SPECTATOR_FOV_MAX", 1.2]);
@@ -351,7 +373,7 @@ WFBE_C_VAR_SpectatorWheelIdx = (findDisplay 46) displayAddEventHandler ["MouseZC
 diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_SpectatorKeyDownIdx, WFBE_C_VAR_SpectatorMouseMovingIdx];
 
 [] spawn {
-	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d","_center","_radius","_height","_rate","_angle","_dirCard","_wantPos","_wantAim","_smoothPos","_smoothAim","_smoothFactor","_smoothK","_lastDirectorTarget"];
+	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d","_center","_radius","_height","_rate","_angle","_dirCard","_wantPos","_wantAim","_smoothPos","_smoothAim","_smoothFactor","_smoothK","_lastDirectorTarget","_shotType","_engaged","_shotRadius","_shotHeight","_shotDir","_targetFov","_fovStep","_fovDelta","_manualZoomLock","_baseRemain"];
 	_body = WFBE_C_VAR_SpectatorBody;
 	_lockPos = getPos _body;
 	_lockDir = getDir _body; //--- direction lock added in v2: the body must not spin under the mouse.
@@ -428,18 +450,44 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 					WFBE_C_VAR_SpectatorCam camSetTarget [(_e select 0) + (_d select 0) * 100, (_e select 1) + (_d select 1) * 100, (_e select 2) + (_d select 2) * 100];
 				};
 				case "director": {
-					if (!isNull _t) then {
+					if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {!isNull _t}) then {
 						_center = _t call WFBE_C_VAR_SpectatorDirectorPosFn;
-						_radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_RADIUS", 40];
-						_height = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_HEIGHT", 25];
-						if (WFBE_C_VAR_SpectatorOrbit) then {
-							_rate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_DEG_PER_SEC", 6];
-							_angle = (WFBE_C_VAR_SpectatorOrbitAngle + (_rate * _dt)) % 360;
-							WFBE_C_VAR_SpectatorOrbitAngle = _angle;
-						} else {_angle = WFBE_C_VAR_SpectatorOrbitAngle};
-						_wantPos = [(_center select 0) + (_radius * sin _angle), (_center select 1) + (_radius * cos _angle), (_center select 2) + _height];
-						_wantAim = [_center select 0, _center select 1, _center select 2];
+						_shotType = WFBE_C_VAR_SpectatorDirectorShotType;
+						_wantAim = [_t, WFBE_C_VAR_SpectatorDirectorClass, _center] Call WFBE_CL_FNC_DirectorAimPoint;
+						_engaged = WFBE_C_VAR_DirectorEngagementActive;
+						if (_engaged && {(_shotType == "TIGHT") || {_shotType == "MEDIUM"}}) then {
+							_shotDir = getDir _t;
+							_angle = (_shotDir + 180) % 360;
+							if (_shotType == "TIGHT") then {
+								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS", 8];
+								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT", 4];
+							} else {
+								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS", 18];
+								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT", 12];
+							};
+							_wantPos = [(_center select 0) + (_shotRadius * sin _angle), (_center select 1) + (_shotRadius * cos _angle), (_center select 2) + _shotHeight];
+						} else {
+							if ((_shotType == "WIDE") || {_shotType == "BASE"}) then {
+								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS", 180];
+								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT", 110];
+							} else {
+								_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_RADIUS", 40];
+								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_HEIGHT", 25];
+							};
+							if (WFBE_C_VAR_SpectatorOrbit && {(_shotType == "WIDE") || {_shotType == "BASE"}}) then {
+								_rate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_ORBIT_DEG_PER_SEC", 4];
+								if (_rate > (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC", 8])) then {
+									_rate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC", 8];
+								};
+								_angle = (WFBE_C_VAR_SpectatorOrbitAngle + (_rate * _dt)) % 360;
+								WFBE_C_VAR_SpectatorOrbitAngle = _angle;
+							} else {
+								_angle = WFBE_C_VAR_SpectatorOrbitAngle;
+							};
+							_wantPos = [(_center select 0) + (_shotRadius * sin _angle), (_center select 1) + (_shotRadius * cos _angle), (_center select 2) + _shotHeight];
+						};
 						if (_t != _lastDirectorTarget) then {
+							WFBE_C_VAR_DirectorAimHardCut = false;
 							_smoothPos = _wantPos;
 							_smoothAim = _wantAim;
 							_lastDirectorTarget = _t;
@@ -451,11 +499,11 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 								(_smoothPos select 1) + (((_wantPos select 1) - (_smoothPos select 1)) * _smoothFactor),
 								(_smoothPos select 2) + (((_wantPos select 2) - (_smoothPos select 2)) * _smoothFactor)
 							];
-							_smoothAim = [
-								(_smoothAim select 0) + (((_wantAim select 0) - (_smoothAim select 0)) * _smoothFactor),
-								(_smoothAim select 1) + (((_wantAim select 1) - (_smoothAim select 1)) * _smoothFactor),
-								(_smoothAim select 2) + (((_wantAim select 2) - (_smoothAim select 2)) * _smoothFactor)
-							];
+							_smoothAim = [_smoothPos, _smoothAim, _wantAim, _dt] Call WFBE_CL_FNC_DirectorAimStep;
+							if (WFBE_C_VAR_DirectorAimHardCut) then {
+								_smoothPos = _wantPos;
+								_smoothAim = _wantAim;
+							};
 						};
 						_p = _smoothPos;
 						_tx = _smoothAim select 0;
@@ -485,6 +533,19 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 					WFBE_C_VAR_SpectatorCam camSetTarget [_tx, _ty, _tz];
 				};
 			};
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {_mode == "director"} && {WFBE_C_VAR_SpectatorDirectorAuto}) then {
+				_manualZoomLock = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC", 10];
+				if ((time - WFBE_C_VAR_SpectatorLastManualZoom) >= _manualZoomLock) then {
+					_targetFov = WFBE_C_VAR_SpectatorDirectorTargetFov;
+					_fovStep = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE", 0.05]) * _dt;
+					_fovDelta = _targetFov - WFBE_C_VAR_SpectatorFov;
+					if (abs _fovDelta > _fovStep) then {
+						if (_fovDelta > 0) then {WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorFov + _fovStep} else {WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorFov - _fovStep};
+					} else {
+						WFBE_C_VAR_SpectatorFov = _targetFov;
+					};
+				};
+			};
 			WFBE_C_VAR_SpectatorCam camSetFov WFBE_C_VAR_SpectatorFov;
 			WFBE_C_VAR_SpectatorCam camCommit 0;
 		};
@@ -494,6 +555,14 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 		if !(WFBE_C_VAR_SpectatorHideHint) then {
 			_tgtTxt = "-";
 			if (!isNull _t && {alive _t}) then {_tgtTxt = name _t};
+			_baseRemain = "--";
+			_shotType = "-";
+			if (_mode == "director") then {
+				_shotType = WFBE_C_VAR_SpectatorDirectorShotType;
+				if (WFBE_C_VAR_SpectatorDirectorAuto) then {
+					_baseRemain = round (((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_BASE_CHECK_SEC", 420]) - (WFBE_C_VAR_DirectorAutoTime - WFBE_C_VAR_DirectorLastBaseCheck)) max 0);
+				};
+			};
 			_dirCard = "";
 			if (_mode == "director" && {!isNull _t}) then {
 				_tgtTxt = Format ["%1: %2", WFBE_C_VAR_SpectatorDirectorClass, WFBE_C_VAR_SpectatorDirectorTargetLabel];
@@ -516,9 +585,11 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 			_dirCard = _dirCard + "\nTARGETS  N/B cycle | F follow | V eyes";
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
 				_dirCard = _dirCard + Format [
-					"\nDIRECTOR  TAB pin class | G pooled auto %1 | O orbit %2 | [ ] dwell %3s",
+					"\nDIRECTOR  TAB pin | G auto %1 | O orbit %2 | shot %3 | base %4s | dwell %5s",
 					if (WFBE_C_VAR_SpectatorDirectorAuto) then {"ON"} else {"OFF"},
 					if (WFBE_C_VAR_SpectatorOrbit) then {"ON"} else {"OFF"},
+					_shotType,
+					_baseRemain,
 					round WFBE_C_VAR_SpectatorDirectorDwell
 				];
 			};

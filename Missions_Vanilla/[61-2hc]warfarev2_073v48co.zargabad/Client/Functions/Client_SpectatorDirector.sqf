@@ -152,6 +152,181 @@ WFBE_CL_FNC_DirectorBuildAll = {
 	_list
 };
 
+WFBE_CL_FNC_DirectorShotType = {
+    Private ["_entry","_target","_class","_contact","_radius"];
+    _entry = _this;
+    _target = _entry select 1;
+    _class = _entry select 2;
+    _contact = 0;
+    if ((_class == "PLAYER" || {_class == "TEAM"}) && {!isNull _target} && {alive _target}) then {
+        _radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100];
+        if (_class == "TEAM") then {_radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TEAM_CONTACT_RADIUS", 150]};
+        _contact = [_target, _radius, side _target] Call WFBE_CL_FNC_DirectorContactCount;
+    };
+    if ((_class == "TOWN") || {_class == "HQ"}) then {
+        "WIDE"
+    } else {
+        if (_contact > 0) then {"TIGHT"} else {"MEDIUM"}
+    }
+};
+
+WFBE_CL_FNC_DirectorShotBounds = {
+    Private ["_type","_minDwell","_maxDwell","_fovMin","_fovMax"];
+    _type = _this;
+    _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL", 1.5];
+    _maxDwell = _minDwell;
+    _fovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN", 0.5];
+    _fovMax = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX", 0.65];
+    switch (_type) do {
+        case "BASE": {
+            _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_BASE_MIN_DWELL", 6];
+            _maxDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_BASE_MAX_DWELL", 9];
+            _fovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MIN", 0.8];
+            _fovMax = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MAX", 0.95];
+        };
+        case "WIDE": {
+            _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_MIN_DWELL", 4];
+            _maxDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_MAX_DWELL", 7];
+            _fovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MIN", 0.8];
+            _fovMax = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MAX", 0.95];
+        };
+        case "TIGHT": {
+            _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL", 1.5];
+            _maxDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MAX_DWELL", 3];
+            _fovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN", 0.35];
+            _fovMax = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX", 0.5];
+        };
+        case "MEDIUM": {
+            _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL", 3];
+            _maxDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL", 5];
+        };
+    };
+    if (_minDwell < (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL", 1.5])) then {
+        _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL", 1.5];
+    };
+    if (_maxDwell < _minDwell) then {_maxDwell = _minDwell};
+    [_minDwell, _maxDwell, _fovMin, _fovMax]
+};
+
+WFBE_CL_FNC_DirectorPickEstablish = {
+    Private ["_list","_entry","_best","_bestScore","_current","_score"];
+    _list = (Call WFBE_CL_FNC_DirectorBuildTowns) + (Call WFBE_CL_FNC_DirectorBuildHQs);
+    _current = WFBE_C_VAR_SpectatorTarget;
+    _best = [];
+    _bestScore = -1e9;
+    {
+        _entry = _x;
+        _score = _entry select 4;
+        if ((_entry select 1) != _current && {_score > _bestScore}) then {
+            _best = _entry;
+            _bestScore = _score;
+        };
+    } forEach _list;
+    if (count _best == 0) then {
+        _bestScore = -1e9;
+        {
+            _entry = _x;
+            _score = _entry select 4;
+            if (_score > _bestScore) then {
+                _best = _entry;
+                _bestScore = _score;
+            };
+        } forEach _list;
+    };
+    _best
+};
+
+WFBE_CL_FNC_DirectorPickBase = {
+    Private ["_list","_friendlyHQ","_entry","_best"];
+    _list = Call WFBE_CL_FNC_DirectorBuildHQs;
+    _friendlyHQ = (side player) Call WFBE_CO_FNC_GetSideHQ;
+    _best = [];
+    {
+        _entry = _x;
+        if ((_entry select 1) == _friendlyHQ) then {_best = _entry};
+    } forEach _list;
+    _best
+};
+
+WFBE_CL_FNC_DirectorAimPoint = {
+    Private ["_target","_class","_center","_radius","_contact","_active","_previous","_dir","_distance","_aim"];
+    _target = _this select 0;
+    _class = _this select 1;
+    _center = _this select 2;
+    _active = false;
+    _previous = WFBE_C_VAR_DirectorEngagementActive;
+    if ((_class == "PLAYER" || {_class == "TEAM"}) && {!isNull _target} && {alive _target}) then {
+        if ((_target != WFBE_C_VAR_DirectorContactTarget) || {(time - WFBE_C_VAR_DirectorLastContactScan) >= 1}) then {
+            _radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100];
+            if (_class == "TEAM") then {_radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TEAM_CONTACT_RADIUS", 150]};
+            _contact = [_target, _radius, side _target] Call WFBE_CL_FNC_DirectorContactCount;
+            WFBE_C_VAR_DirectorEngagementActive = (_contact > 0);
+            WFBE_C_VAR_DirectorContactTarget = _target;
+            WFBE_C_VAR_DirectorLastContactScan = time;
+        };
+        _active = WFBE_C_VAR_DirectorEngagementActive;
+    };
+    _aim = _center;
+    if (_active) then {
+        _dir = getDir _target;
+        _distance = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ENGAGEMENT_AIM_DISTANCE", 150];
+        _aim = [
+            (_center select 0) + (_distance * sin _dir),
+            (_center select 1) + (_distance * cos _dir),
+            (_center select 2) + 1.5
+        ];
+    };
+    if (_active) then {
+        if (!_previous) then {diag_log Format ["SPECTATE|v3|engagement|state=on|class=%1", _class]};
+    } else {
+        if (_previous) then {diag_log Format ["SPECTATE|v3|engagement|state=off|class=%1", _class]};
+    };
+    WFBE_C_VAR_DirectorEngagementActive = _active;
+    _aim
+};
+
+WFBE_CL_FNC_DirectorAimStep = {
+    Private ["_camPos","_oldAim","_wantAim","_dt","_oldDx","_oldDy","_newDx","_newDy","_oldRange","_newRange","_oldDir","_newDir","_delta","_panRate","_maxSlew","_cutAngle","_factor","_stepDir","_result"];
+    _camPos = _this select 0;
+    _oldAim = _this select 1;
+    _wantAim = _this select 2;
+    _dt = _this select 3;
+    _oldDx = (_oldAim select 0) - (_camPos select 0);
+    _oldDy = (_oldAim select 1) - (_camPos select 1);
+    _newDx = (_wantAim select 0) - (_camPos select 0);
+    _newDy = (_wantAim select 1) - (_camPos select 1);
+    _oldRange = sqrt ((_oldDx ^ 2) + (_oldDy ^ 2));
+    _newRange = sqrt ((_newDx ^ 2) + (_newDy ^ 2));
+    _result = _wantAim;
+    if (_oldRange > 0.01 && {_newRange > 0.01}) then {
+        _oldDir = ((_oldDx atan2 _oldDy) + 360) % 360;
+        _newDir = ((_newDx atan2 _newDy) + 360) % 360;
+        _delta = _newDir - _oldDir;
+        if (_delta > 180) then {_delta = _delta - 360};
+        if (_delta < -180) then {_delta = _delta + 360};
+        _panRate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC", 8];
+        _maxSlew = _panRate * _dt;
+        _cutAngle = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_CUT_DEG", 35];
+        if (abs _delta > _cutAngle) then {
+            if (!WFBE_C_VAR_DirectorAimHardCut) then {
+                diag_log Format ["SPECTATE|v3|aim-cut|delta=%1|threshold=%2", round (abs _delta), _cutAngle];
+            };
+            WFBE_C_VAR_DirectorAimHardCut = true;
+        } else {
+            WFBE_C_VAR_DirectorAimHardCut = false;
+            if (_maxSlew > 0 && {abs _delta > _maxSlew}) then {
+                _factor = _maxSlew / (abs _delta);
+                _stepDir = _oldDir + (_delta * _factor);
+                _result = [
+                    (_camPos select 0) + (_oldRange * sin _stepDir),
+                    (_camPos select 1) + (_oldRange * cos _stepDir),
+                    (_oldAim select 2) + (((_wantAim select 2) - (_oldAim select 2)) * _factor)
+                ];
+            };
+        };
+    };
+    _result
+};
 WFBE_CL_FNC_DirectorCycleTarget = {
 	Private ["_step","_list","_current","_index","_i","_entry"];
 	_step = _this;
@@ -177,91 +352,177 @@ WFBE_CL_FNC_DirectorCycleTarget = {
 };
 
 WFBE_CL_FNC_DirectorPickNext = {
-	Private ["_list","_current","_recent","_cooldown","_best","_bestScore","_entry","_target","_score","_skip","_pinned"];
-	_pinned = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorPinned", false];
-	if (_pinned) then {_list = Call WFBE_CL_FNC_DirectorBuildActive} else {_list = Call WFBE_CL_FNC_DirectorBuildAll};
-	if (count _list == 0) exitWith {[]};
-	_current = WFBE_C_VAR_SpectatorTarget;
-	_recent = missionNamespace getVariable ["WFBE_C_VAR_DirectorRecent", []];
-	_cooldown = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_COOLDOWN_SEC", 45];
-	_best = [];
-	_bestScore = -1e9;
-	{
-		_entry = _x;
-		_target = _entry select 1;
-		_score = _entry select 4;
-		_skip = false;
-		{
-			if ((_x select 0) == _target && {(time - (_x select 1)) < _cooldown}) then {_skip = true};
-		} forEach _recent;
-		if (!_skip && {_target != _current} && {_score > _bestScore}) then {
-			_best = _entry;
-			_bestScore = _score;
-		};
-	} forEach _list;
-	if (count _best == 0) then {
-		_bestScore = -1e9;
-		{
-			_entry = _x;
-			_score = _entry select 4;
-			if ((_entry select 1) != _current && {_score > _bestScore}) then {
-				_best = _entry;
-				_bestScore = _score;
-			};
-		} forEach _list;
-	};
-	if (count _best == 0) then {
-		_best = _list select 0;
-	};
-	_best
+    Private ["_list","_current","_recent","_cooldown","_best","_bestScore","_entry","_target","_score","_skip","_pinned","_currentEntry","_currentScore","_runnerUpScore","_repeatMargin","_hysteresisMargin"];
+    _pinned = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorPinned", false];
+    if (_pinned) then {_list = Call WFBE_CL_FNC_DirectorBuildActive} else {_list = Call WFBE_CL_FNC_DirectorBuildAll};
+    if (count _list == 0) exitWith {[]};
+    _current = WFBE_C_VAR_SpectatorTarget;
+    _recent = missionNamespace getVariable ["WFBE_C_VAR_DirectorRecent", []];
+    _cooldown = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_COOLDOWN_SEC", 45];
+    _repeatMargin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_REPEAT_SCORE_MARGIN", 0.5];
+    _hysteresisMargin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_HYSTERESIS_MARGIN", 0.2];
+    _currentEntry = [];
+    _currentScore = -1e9;
+    {
+        _entry = _x;
+        if ((_entry select 1) == _current) then {
+            _currentEntry = _entry;
+            _currentScore = _entry select 4;
+        };
+    } forEach _list;
+    _best = [];
+    _bestScore = -1e9;
+    {
+        _entry = _x;
+        _target = _entry select 1;
+        _score = _entry select 4;
+        if (_target != _current) then {
+            _skip = false;
+            {
+                if ((_x select 0) == _target && {(time - (_x select 1)) < _cooldown}) then {_skip = true};
+            } forEach _recent;
+            if (!_skip) then {
+                if (_currentScore > 0 && {_score < (_currentScore * (1 + _hysteresisMargin))}) then {_skip = true};
+            };
+            if (!_skip && {_score > _bestScore}) then {
+                _best = _entry;
+                _bestScore = _score;
+            };
+        };
+    } forEach _list;
+    if (count _best == 0) then {
+        _bestScore = -1e9;
+        {
+            _entry = _x;
+            _target = _entry select 1;
+            _score = _entry select 4;
+            if (_target != _current) then {
+                if (_score > _bestScore) then {
+                    _best = _entry;
+                    _bestScore = _score;
+                };
+            };
+        } forEach _list;
+    };
+    if (count _best == 0 && {count _currentEntry > 0}) then {
+        _runnerUpScore = -1e9;
+        {
+            _entry = _x;
+            if ((_entry select 1) != _current && {(_entry select 4) > _runnerUpScore}) then {
+                _runnerUpScore = _entry select 4;
+            };
+        } forEach _list;
+        if (_runnerUpScore <= -1e8 || {_currentScore >= (_runnerUpScore * (1 + _repeatMargin))}) then {
+            _best = _currentEntry;
+        };
+    };
+    _best
 };
 
 WFBE_CL_FNC_DirectorLoopStart = {
-	[] spawn {
-		Private ["_next","_entry","_recent","_pollSec","_dwell","_recentKeep","_recentStart","_i","_pinned","_oldClass"];
-		diag_log "SPECTATE|v3|director-thread-start";
-		while {missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false] && {!(missionNamespace getVariable ["WFBE_gameover", false])}} do {
-			sleep 1;
-			if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"] == "director" && {missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorAuto", false]}) then {
-				_pollSec = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TOWN_POLL_SEC", 8];
-				if ((time - (missionNamespace getVariable ["WFBE_C_VAR_DirectorLastTownPoll", 0])) >= _pollSec) then {
-					Call WFBE_CL_FNC_DirectorPollTowns;
-					WFBE_C_VAR_DirectorLastTownPoll = time;
-				};
-				_dwell = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorDwell", 20];
-				if ((time - (missionNamespace getVariable ["WFBE_C_VAR_DirectorLastSwitch", 0])) >= _dwell || {isNull WFBE_C_VAR_SpectatorTarget} || {!alive WFBE_C_VAR_SpectatorTarget}) then {
-					_pinned = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorPinned", false];
-					_oldClass = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorClass", "PLAYER"];
-					_next = Call WFBE_CL_FNC_DirectorPickNext;
-					if (count _next > 0) then {
-						_entry = _next;
-						if (!_pinned) then {WFBE_C_VAR_SpectatorDirectorClass = _entry select 2};
-						WFBE_C_VAR_SpectatorTarget = _entry select 1;
-						WFBE_C_VAR_SpectatorDirectorPosFn = _entry select 3;
-						WFBE_C_VAR_SpectatorDirectorTargetLabel = _entry select 0;
-						WFBE_C_VAR_SpectatorOrbitAngle = 0;
-						WFBE_C_VAR_DirectorLastSwitch = time;
-						_recent = missionNamespace getVariable ["WFBE_C_VAR_DirectorRecent", []];
-						_recent = _recent + [[_entry select 1, time]];
-						if (count _recent > 6) then {
-							_recentKeep = [];
-							_recentStart = (count _recent) - 6;
-							_i = 0;
-							{
-								if (_i >= _recentStart) then {_recentKeep = _recentKeep + [_x]};
-								_i = _i + 1;
-							} forEach _recent;
-							_recent = _recentKeep;
-						};
-						WFBE_C_VAR_DirectorRecent = _recent;
-						if (!_pinned && {(_entry select 2) != _oldClass}) then {
-							diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3|pooled=1", _entry select 2, _entry select 0, _entry select 4];
-						} else {
-							diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3", _entry select 2, _entry select 0, _entry select 4];
-						};
-					};
-				};
-			};
-		};
-	};
+    [] spawn {
+        Private ["_next","_entry","_recent","_recentKeep","_recentStart","_i","_pinned","_oldClass","_now","_autoDelta","_pollSec","_shotAge","_minDwell","_maxDwell","_dwell","_shotType","_bounds","_forcedType","_forcedEstablish","_baseDue","_forceEstablish"];
+        _now = time;
+        diag_log "SPECTATE|v3|director-thread-start";
+        while {missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false] && {!(missionNamespace getVariable ["WFBE_gameover", false])}} do {
+            sleep 1;
+            if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"] == "director" && {missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorAuto", false]}) then {
+                _autoDelta = time - _now;
+                _now = time;
+                if (_autoDelta < 0) then {_autoDelta = 0};
+                WFBE_C_VAR_DirectorAutoTime = WFBE_C_VAR_DirectorAutoTime + _autoDelta;
+                _pollSec = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TOWN_POLL_SEC", 8];
+                if ((time - (missionNamespace getVariable ["WFBE_C_VAR_DirectorLastTownPoll", 0])) >= _pollSec) then {
+                    Call WFBE_CL_FNC_DirectorPollTowns;
+                    WFBE_C_VAR_DirectorLastTownPoll = time;
+                };
+                _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL", 1.5];
+                if (WFBE_C_VAR_SpectatorDirectorShotMinDwell > _minDwell) then {_minDwell = WFBE_C_VAR_SpectatorDirectorShotMinDwell};
+                _maxDwell = WFBE_C_VAR_SpectatorDirectorShotMaxDwell;
+                if (_maxDwell < _minDwell) then {_maxDwell = _minDwell};
+                _dwell = (WFBE_C_VAR_SpectatorDirectorDwell max _minDwell) min _maxDwell;
+                _shotAge = WFBE_C_VAR_DirectorAutoTime - WFBE_C_VAR_DirectorLastSwitch;
+                if (isNull WFBE_C_VAR_SpectatorTarget || {_shotAge >= _dwell}) then {
+                    if (WFBE_C_VAR_DirectorReturnPending) then {
+                        WFBE_C_VAR_SpectatorDirectorClass = WFBE_C_VAR_DirectorReturnClass;
+                        WFBE_C_VAR_DirectorReturnPending = false;
+                    };
+                    _next = [];
+                    _forcedType = "";
+                    _forcedEstablish = false;
+                    _baseDue = (WFBE_C_VAR_DirectorAutoTime - WFBE_C_VAR_DirectorLastBaseCheck) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_BASE_CHECK_SEC", 420]);
+                    if (_baseDue) then {
+                        WFBE_C_VAR_DirectorLastBaseCheck = WFBE_C_VAR_DirectorAutoTime;
+                        _next = Call WFBE_CL_FNC_DirectorPickBase;
+                        if (count _next > 0) then {
+                            _forcedType = "BASE";
+                            _forcedEstablish = true;
+                        };
+                    };
+                    if (count _next == 0) then {
+                        _forceEstablish = (WFBE_C_VAR_DirectorAutoTime - WFBE_C_VAR_DirectorLastEstablish) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ESTABLISH_FLOOR_SEC", 120]);
+                        if (_forceEstablish) then {
+                            _next = Call WFBE_CL_FNC_DirectorPickEstablish;
+                            if (count _next > 0) then {_forcedEstablish = true};
+                        };
+                    };
+                    if (count _next == 0) then {_next = Call WFBE_CL_FNC_DirectorPickNext};
+                    if (count _next > 0) then {
+                        _entry = _next;
+                        _pinned = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorPinned", false];
+                        _oldClass = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorClass", "PLAYER"];
+                        if (_pinned && {_forcedEstablish}) then {
+                            WFBE_C_VAR_DirectorReturnClass = _oldClass;
+                            WFBE_C_VAR_DirectorReturnPending = true;
+                        };
+                        if (!_pinned || {_forcedEstablish}) then {WFBE_C_VAR_SpectatorDirectorClass = _entry select 2};
+                        WFBE_C_VAR_SpectatorTarget = _entry select 1;
+                        WFBE_C_VAR_SpectatorDirectorPosFn = _entry select 3;
+                        WFBE_C_VAR_SpectatorDirectorTargetLabel = _entry select 0;
+                        WFBE_C_VAR_SpectatorOrbitAngle = 0;
+                        _shotType = _entry Call WFBE_CL_FNC_DirectorShotType;
+                        if (_forcedType != "") then {_shotType = _forcedType};
+                        _bounds = _shotType Call WFBE_CL_FNC_DirectorShotBounds;
+                        WFBE_C_VAR_SpectatorDirectorShotType = _shotType;
+                        WFBE_C_VAR_SpectatorDirectorShotMinDwell = _bounds select 0;
+                        WFBE_C_VAR_SpectatorDirectorShotMaxDwell = _bounds select 1;
+                        WFBE_C_VAR_SpectatorDirectorTargetFov = ((_bounds select 2) + (_bounds select 3)) / 2;
+                        WFBE_C_VAR_DirectorContactTarget = objNull;
+                        WFBE_C_VAR_DirectorLastContactScan = 0;
+                        WFBE_C_VAR_DirectorEngagementActive = false;
+                        if ((time - WFBE_C_VAR_SpectatorLastManualZoom) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC", 10])) then {
+                            WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorDirectorTargetFov;
+                        };
+                        WFBE_C_VAR_DirectorLastSwitch = WFBE_C_VAR_DirectorAutoTime;
+                        if ((_shotType == "WIDE") || {_shotType == "BASE"}) then {
+                            WFBE_C_VAR_DirectorLastEstablish = WFBE_C_VAR_DirectorAutoTime;
+                        };
+                        _recent = missionNamespace getVariable ["WFBE_C_VAR_DirectorRecent", []];
+                        _recent = _recent + [[_entry select 1, time]];
+                        if (count _recent > 6) then {
+                            _recentKeep = [];
+                            _recentStart = (count _recent) - 6;
+                            _i = 0;
+                            {
+                                if (_i >= _recentStart) then {_recentKeep = _recentKeep + [_x]};
+                                _i = _i + 1;
+                            } forEach _recent;
+                            _recent = _recentKeep;
+                        };
+                        WFBE_C_VAR_DirectorRecent = _recent;
+                        if (_forcedType == "BASE") then {
+                            diag_log Format ["SPECTATE|v3|base-checkin|target=%1|shot=%2|hold=%3", _entry select 0, _shotType, _bounds select 1];
+                        };
+                        if (!_pinned || {(_entry select 2) != _oldClass} || {_forcedEstablish}) then {
+                            diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3|shot=%4|fov=%5|dwell=%6|transition=cut|pooled=1", _entry select 2, _entry select 0, _entry select 4, _shotType, WFBE_C_VAR_SpectatorDirectorTargetFov, _bounds select 1];
+                        } else {
+                            diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3|shot=%4|fov=%5|dwell=%6|transition=cut", _entry select 2, _entry select 0, _entry select 4, _shotType, WFBE_C_VAR_SpectatorDirectorTargetFov, _bounds select 1];
+                        };
+                    };
+                };
+            } else {
+                _now = time;
+            };
+        };
+    };
 };

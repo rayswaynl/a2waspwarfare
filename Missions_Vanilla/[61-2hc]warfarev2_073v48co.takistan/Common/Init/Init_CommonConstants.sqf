@@ -3438,5 +3438,69 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_W_HQ_UNDER_ATTACK") then {WFBE_C_SPECTATOR_
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY") then {WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY = 250}; //--- 2026-07-30: idle targets lose unless no contact target exists.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_SMOOTHING") then {WFBE_C_SPECTATOR_DIRECTOR_SMOOTHING = 5}; //--- 2026-07-30: director camera convergence rate, per second.
 
+//--- Spectator v3.2 shot grammar, engagement framing, and director pacing.
+//--- director-auto seconds between friendly HQ base check-ins.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_BASE_CHECK_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_BASE_CHECK_SEC = 420};
+//--- director-auto seconds allowed without a WIDE establish shot.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ESTABLISH_FLOOR_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_ESTABLISH_FLOOR_SEC = 120};
+//--- absolute per-shot dwell floor in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL = 1.5};
+//--- candidate score margin required over the current target.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_HYSTERESIS_MARGIN") then {WFBE_C_SPECTATOR_DIRECTOR_HYSTERESIS_MARGIN = 0.2};
+//--- score margin required to repeat the current target.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_REPEAT_SCORE_MARGIN") then {WFBE_C_SPECTATOR_DIRECTOR_REPEAT_SCORE_MARGIN = 0.5};
+//--- continuous aim and orbit ceiling in degrees per second.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC = 8};
+//--- aim delta in degrees that becomes a hard cut.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_CUT_DEG") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_CUT_DEG = 35};
+//--- maximum in-shot FOV change per second.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE") then {WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE = 0.05};
+//--- seconds manual wheel zoom suppresses director FOV control.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC = 10};
+//--- fallback getDir engagement look-ahead distance in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ENGAGEMENT_AIM_DISTANCE") then {WFBE_C_SPECTATOR_DIRECTOR_ENGAGEMENT_AIM_DISTANCE = 150};
+//--- WIDE and BASE lower FOV bound.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MIN = 0.8};
+//--- WIDE and BASE upper FOV bound.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MAX = 0.95};
+//--- WIDE lower dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_MIN_DWELL = 4};
+//--- WIDE upper dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_MAX_DWELL = 7};
+//--- BASE lower dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_BASE_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_BASE_MIN_DWELL = 6};
+//--- BASE upper dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_BASE_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_BASE_MAX_DWELL = 9};
+//--- MEDIUM lower FOV bound.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN = 0.5};
+//--- MEDIUM upper FOV bound.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX = 0.65};
+//--- MEDIUM lower dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL = 3};
+//--- MEDIUM upper dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL = 5};
+//--- TIGHT lower FOV bound.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN = 0.35};
+//--- TIGHT upper FOV bound.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX = 0.5};
+//--- TIGHT lower dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL = 1.5};
+//--- TIGHT upper dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MAX_DWELL = 3};
+//--- WIDE and BASE camera standoff radius in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS = 180};
+//--- WIDE and BASE camera height above target in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT = 110};
+//--- WIDE and BASE orbit rate in degrees per second.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_ORBIT_DEG_PER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_ORBIT_DEG_PER_SEC = 4};
+//--- MEDIUM camera standoff radius in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS = 18};
+//--- MEDIUM camera height above target in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT = 12};
+//--- TIGHT camera standoff radius in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS = 8};
+//--- TIGHT camera height above target in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT = 4};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
