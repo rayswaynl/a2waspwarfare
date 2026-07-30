@@ -776,7 +776,10 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 				_h land "GET OUT";
 				_h flyInHeight 0;
 				_t0 = time + 40;
-				waitUntil {sleep 1; time > _t0 || {(getPosATL _h) select 2 < 1.5}};
+				//--- Post-sleep null/deleted guard: sibling waitUntils already re-check isNull/alive before
+				//--- distance/getPos; this land hold did not. If the transport is deleted mid-descent
+				//--- (GC / combat / fly-off race), bare getPosATL on a null handle is native-crash class.
+				waitUntil {sleep 1; time > _t0 || isNull _h || {!alive _h} || {((getPosATL _h) select 2) < 1.5}};
 				{if (alive _x && {vehicle _x == _h}) then {unassignVehicle _x; [_x] orderGetIn false}} forEach _pax;
 			} else {
 				//--- No flat LZ: para-drop over the objective (eject pattern, Support_Paratroopers).
