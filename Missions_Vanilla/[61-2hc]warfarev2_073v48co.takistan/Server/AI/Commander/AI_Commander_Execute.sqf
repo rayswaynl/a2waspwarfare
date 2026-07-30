@@ -79,6 +79,21 @@ if (isNil "_teams") exitWith {};
 						//--- Server-local teams keep the AIMoveTo path below unchanged. WFBE_CO_FNC_GroupGetBool guards the
 						//--- UNSET-on-group bool read (A2-OA "G1" trap).
 						_isHc = [_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool;
+						//--- hc-locality-group-owner: if the HC flag is set but the leader is now server-local
+						//--- (HC drop transferred ownership), demote so we lay waypoints instead of publishing
+						//--- to a dead wfbe_aicom_order driver channel. Defense-in-depth vs disconnect demote.
+						if (_isHc) then {
+							private "_exLdr";
+							_exLdr = leader _team;
+							if (!isNull _exLdr && {local _exLdr}) then {
+								_team setVariable ["wfbe_aicom_hc", false, true];
+								if (!([_team, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool)) then {
+									_team setVariable ["wfbe_aicom_founded", true, true];
+								};
+								_isHc = false;
+								diag_log ("AICOMSTAT|v2|EVENT|" + str _side + "|" + str (round (time / 60)) + "|HC_LOCALITY_DEMOTE|team=" + (str _team) + "|reason=exec-local-leader");
+							};
+						};
 						if (_isHc) then {
 							_hcMode = if (_modeL == "defense") then {"defense"} else {_modeL}; //--- "move"/"patrol" pass through to the driver's assault-SAD branch.
 							//--- build83 fold (console road-route, agent 06190dac): populate wfbe_aicom_route so the HC driver ROAD-MARCHES a long human MOVE leg instead of cutting cross-country (only AssignTowns used to fill this). Same >700m gate; the driver's own ground-vehicle gate keeps pure-infantry HC teams on the foot column.

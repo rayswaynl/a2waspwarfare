@@ -48,12 +48,55 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
 			missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], nil];
 		};
 		diag_log (Format ["HCSIDE|v1|disconnect|uid=%1|owner=%2|removed=%3", _uid, _id, str _hcGroup]);
+		//--- hc-locality-group-owner (2026-07-30): after HC drop the engine transfers unit locality to the
+		//--- server, but mission state still believes those groups are HC-resident (wfbe_aicom_hc=true).
+		//--- AssignTowns/Execute then only publish wfbe_aicom_order (dead channel - no HC driver) and never
+		//--- lay server-local waypoints => AI freeze until orphan-heal recycles (~3+ min later). Demote the
+		//--- flag once units are server-local so the server path drives them; keep founded stamp for census.
+		//--- Also clear sticky town HC owner for this dead owner so re-activation does not prefer a ghost.
 		[_uid, _name, _id, _hcGroup] spawn {
-			Private ["_uid","_name","_oldOwner","_oldGroup","_delay","_side","_sideText","_logik","_teams","_g","_ldr","_ldrOwner","_last","_age","_hcTeams","_live","_oldOwnerLive","_headingFresh","_headingStale","_headingUnknown"];
+			Private ["_uid","_name","_oldOwner","_oldGroup","_delay","_side","_sideText","_logik","_teams","_g","_ldr","_ldrOwner","_last","_age","_hcTeams","_live","_oldOwnerLive","_headingFresh","_headingStale","_headingUnknown","_demoted","_stickyCleared","_t"];
 			_uid = _this select 0;
 			_name = _this select 1;
 			_oldOwner = _this select 2;
 			_oldGroup = _this select 3;
+			//--- Short settle so engine ownership transfer completes before we sample locality.
+			sleep 2;
+			_demoted = 0;
+			{
+				_side = _x;
+				_logik = _side Call WFBE_CO_FNC_GetSideLogic;
+				if (!isNull _logik && {!(isNil {_logik getVariable "wfbe_teams"})}) then {
+					{
+						_g = _x;
+						if (!isNull _g && {[_g, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}) then {
+							_ldr = leader _g;
+							//--- local leader on server = units transferred off the dead HC (A2 OA has no setGroupOwner rehome).
+							if (!isNull _ldr && {alive _ldr} && {local _ldr}) then {
+								_g setVariable ["wfbe_aicom_hc", false, true];
+								if (!([_g, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool)) then {
+									_g setVariable ["wfbe_aicom_founded", true, true];
+								};
+								_demoted = _demoted + 1;
+							};
+						};
+					} forEach (_logik getVariable ["wfbe_teams", []]);
+				};
+			} forEach [west, east];
+			_stickyCleared = 0;
+			if ((missionNamespace getVariable ["WFBE_C_HC_DELEGATE_STICKY", 0]) > 0) then {
+				if (!isNil "towns") then {
+					{
+						_t = _x;
+						if (!isNull _t && {(_t getVariable ["wfbe_town_hc_owner", -1]) == _oldOwner}) then {
+							_t setVariable ["wfbe_town_hc_owner", -1];
+							_t setVariable ["wfbe_town_hc_owner_ts", -1];
+							_stickyCleared = _stickyCleared + 1;
+						};
+					} forEach towns;
+				};
+			};
+			diag_log (Format ["HCSIDE|v1|hcdrop-demote|uid=%1|owner=%2|demoted=%3|stickyCleared=%4", _uid, _oldOwner, _demoted, _stickyCleared]);
 			{
 				_delay = _x;
 				sleep _delay;
