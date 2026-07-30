@@ -6079,6 +6079,10 @@
       <English>Ask the war effort to prioritise building the selected unit type next.</English>
       <Russian>Попросить приоритетно построить выбранный тип техники следующим.</Russian>
     </Key>
+    <Key ID="STR_WF_STRUCTURE_Bank">
+      <English>Bank</English>
+      <Russian>Банк</Russian>
+    </Key>
 
     </Container>
   </Package>

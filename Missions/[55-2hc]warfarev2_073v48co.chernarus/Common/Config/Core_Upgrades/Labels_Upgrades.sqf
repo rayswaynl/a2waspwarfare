@@ -91,9 +91,9 @@ _upgrade_icbm_xlabel = {
 //--- UI Labels
 missionNamespace setVariable [Format["WFBE_C_UPGRADES_LABELS"], [
 	localize 'strwfbarracks',
-	localize 'strwflightfactory',
-	localize 'strwfheavyfactory',
-	localize 'strwfaircraftfactory',
+	localize 'STRLightVehicleSupply',
+	localize 'STRHeavyVehicleSupply',
+	localize 'STR_WF_AircraftFactory',
 	localize 'STR_WF_TACTICAL_Paratroop',
 	localize 'str_dn_uav',
 	localize 'STR_WF_UPGRADE_Supply',

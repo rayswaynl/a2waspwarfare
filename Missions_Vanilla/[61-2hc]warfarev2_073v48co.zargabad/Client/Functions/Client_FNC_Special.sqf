@@ -189,6 +189,14 @@ WFBE_CL_FNC_Building_Started = {
 		case "ArtilleryRadar": {
 			_localisedBuilding = localize "RB_Artillery_Radar";
 		};
+		case "CBRadar": {
+			//--- STRINGTABLE-R30: RequestStructure broadcasts building-started for CBRadar; without this case the switch fell to Unknown and suppressed the construction chat.
+			_localisedBuilding = localize "STR_WF_UPGRADE_CBRadar";
+		};
+		case "Bank": {
+			//--- STRINGTABLE-R30: Bank was broadcast on accept but never localized here (silent construction announce).
+			_localisedBuilding = localize "STR_WF_STRUCTURE_Bank";
+		};
 		case "Reserve": {
 			_localisedBuilding = localize "RB_Reserve";
 		};
