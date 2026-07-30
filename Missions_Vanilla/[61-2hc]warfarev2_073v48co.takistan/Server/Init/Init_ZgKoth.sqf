@@ -42,9 +42,14 @@ waitUntil {townInit};
 //--- presence scan (unitsBelowHeight anchorZ+12) would then filter out every unit standing on the
 //--- actual elevated city terrain, permanently. Getting this right is load-bearing.
 _probe = "Sign_sphere10cm_EP1" createVehicleLocal [4071, 4183, 0];
-_probe hideObject true;
-_terrainZ = (getPosASL _probe) select 2;
-deleteVehicle _probe;
+if (isNull _probe) then {
+	["WARNING", "Init_ZgKoth.sqf: terrain probe create failed - falling back to ATL z=0 anchor (presence scan may miss elevated units)."] Call WFBE_CO_FNC_LogContent;
+	_terrainZ = 0;
+} else {
+	_probe hideObject true;
+	_terrainZ = (getPosASL _probe) select 2;
+	deleteVehicle _probe;
+};
 
 _anchorPos = [4071, 4183, _terrainZ];
 
