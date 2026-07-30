@@ -208,7 +208,7 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 				_step = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP", 5];
 				_d = ((WFBE_C_VAR_SpectatorDirectorDwell - _step) max (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_MIN", 5]));
 				WFBE_C_VAR_SpectatorDirectorDwell = _d;
-				//--- readout lives on the always-on cutText card (hint layer is dead on this server).
+				//--- readout lives on the always-on cutText card (hints do not render under the spectator camera).
 			} else {_handled = false};
 		};
 		case 27: { //--- ]: increase director dwell
@@ -216,7 +216,7 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 				_step = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP", 5];
 				_d = ((WFBE_C_VAR_SpectatorDirectorDwell + _step) min (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_MAX", 120]));
 				WFBE_C_VAR_SpectatorDirectorDwell = _d;
-				//--- readout lives on the always-on cutText card (hint layer is dead on this server).
+				//--- readout lives on the always-on cutText card (hints do not render under the spectator camera).
 			} else {_handled = false};
 		};
 		case 33: { //--- F: toggle follow-cam on the armed target
@@ -257,14 +257,14 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 			private "_s";
 			_s = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 25]) + 10) min 400;
 			missionNamespace setVariable ["WFBE_C_SPECTATOR_SENS", _s];
-			//--- readout lives on the always-on cutText card (hint layer is dead on this server).
+			//--- readout lives on the always-on cutText card (hints do not render under the spectator camera).
 			true
 		};
 		case 209: { //--- PgDn: lower mouse sensitivity
 			private "_s";
 			_s = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 25]) - 10) max 10;
 			missionNamespace setVariable ["WFBE_C_SPECTATOR_SENS", _s];
-			//--- readout lives on the always-on cutText card (hint layer is dead on this server).
+			//--- readout lives on the always-on cutText card (hints do not render under the spectator camera).
 			true
 		};
 		case 35: { //--- H: hide/show the card overlay (clean OBS capture)
@@ -498,9 +498,11 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 			if (_mode == "director" && {!isNull _t}) then {
 				_tgtTxt = Format ["%1: %2", WFBE_C_VAR_SpectatorDirectorClass, WFBE_C_VAR_SpectatorDirectorTargetLabel];
 			};
-			//--- CUTTEXT, NOT HINT (live-proven 2026-07-30): this server's Veteran difficulty
-			//--- profile suppresses the hint layer entirely - PgUp gave no readout and this card
-			//--- never drew, while the lobby-lock hold's cutText rendered fine (owner screenshot).
+			//--- CUTTEXT, NOT HINT (live-proven 2026-07-30): hints do NOT render while a scripted
+			//--- cameraEffect camera is live - PgUp gave no readout and this card never drew in
+			//--- spectator, while the SAME client sees normal gameplay hints fine in first person
+			//--- (owner-confirmed) and the lobby-lock hold's cutText rendered during the join hold.
+			//--- Title layers composite over camera effects; the hint layer does not.
 			//--- Layer 12455 (12454 belongs to the lobby-lock hold; 12450-12452/12461 are taken).
 			//--- cutText takes a plain STRING; "\n" line breaks are the in-tree proven pattern
 			//--- (Client_TitleTextMessage.sqf). Styled structured text returns with the cutRsc
