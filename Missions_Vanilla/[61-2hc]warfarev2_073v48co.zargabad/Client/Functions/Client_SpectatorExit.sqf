@@ -14,7 +14,6 @@
    watchdog also fires) - the leading guard makes every call after the first a
    no-op.
 */
-disableSerialization; //--- holds a Display ref while removing event handlers
 Private ["_body"];
 
 if !(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) exitWith {}; //--- already exited / never entered.

@@ -41,11 +41,13 @@
    eyeDirection / modelToWorld / isPlayer / allUnits / name / toUpper /
    hintSilent / parseText / switch - no A3-only commands.
 */
-disableSerialization; //--- MANDATORY: this script holds a Display ref (_disp) across
-//--- frame boundaries (the movement loop sleeps). Without this A2 raises
-//--- "Variable '_disp' does not support serialization" on every entry
-//--- (live-proven 2026-07-30, m0730e).
-Private ["_myUID","_pos0","_yaw0","_disp","_recentre"];
+//--- NO disableSerialization here: a script that calls it may never suspend, and this
+//--- script suspends (it runs scheduled from addAction). On m0730f it silently died at
+//--- the first waitUntil - handler attach and the movement loop never ran (live RPT:
+//--- SPECTATE|v2|enter logged, nothing after; camera stayed target-locked to the entry
+//--- focus point). The display is never stored in a local (handlers attach inline via
+//--- (findDisplay 46)), so serialization never sees a Display ref in the first place.
+Private ["_myUID","_pos0","_yaw0"];
 
 if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) exitWith {}; //--- already active; ignore a double-click race.
 if !(alive player) exitWith {};
@@ -80,8 +82,7 @@ WFBE_C_VAR_SpectatorCam camSetTarget [
 	(_pos0 select 1) + 10 * (cos _yaw0),
 	(_pos0 select 2) + 2
 ];
-WFBE_C_VAR_SpectatorCam camCommit 0;
-waitUntil {camCommitted WFBE_C_VAR_SpectatorCam};
+WFBE_C_VAR_SpectatorCam camCommit 0; //--- instant commit; no waitUntil (movement loop re-commits within 50ms anyway)
 
 WFBE_C_VAR_SpectatorPos = [_pos0 select 0, _pos0 select 1, (_pos0 select 2) + 2];
 WFBE_C_VAR_SpectatorYaw = _yaw0;
@@ -169,14 +170,14 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 		};
 		case 201: { //--- PgUp: raise mouse sensitivity (live tuning for streaming setups)
 			private "_s";
-			_s = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 80]) + 10) min 400;
+			_s = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 25]) + 10) min 400;
 			missionNamespace setVariable ["WFBE_C_SPECTATOR_SENS", _s];
 			hintSilent Format ["Spectator sensitivity: %1", _s];
 			true
 		};
 		case 209: { //--- PgDn: lower mouse sensitivity
 			private "_s";
-			_s = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 80]) - 10) max 10;
+			_s = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 25]) - 10) max 10;
 			missionNamespace setVariable ["WFBE_C_SPECTATOR_SENS", _s];
 			hintSilent Format ["Spectator sensitivity: %1", _s];
 			true
@@ -209,24 +210,20 @@ WFBE_CL_FNC_SpectatorKeyUp = {
 	false
 };
 
-//--- Mouse look: delta from the last event, then re-center the cursor so the edge of the
-//--- screen never stops a swipe. Only drives the camera in free mode (follow/eyes aim from
-//--- the target). Sensitivity is WFBE_C_SPECTATOR_SENS (degrees per full UI-width delta).
+//--- Mouse look, edge-recentre model: EVERY event steers at full rate (no alternating
+//--- baseline half-rate, no per-event warp). The cursor is only warped home when it nears
+//--- the UI edge; the event right after a warp only re-anchors, never steers, so the
+//--- anchor is always a real reported position and no recentre bias can accumulate.
+//--- Sensitivity is WFBE_C_SPECTATOR_SENS (degrees per full UI-width of travel).
 WFBE_CL_FNC_SpectatorMouseMoving = {
 	Private ["_x","_y","_dx","_dy","_sens","_cap"];
 	_x = _this select 1;
 	_y = _this select 2;
-	//--- RECENTRE BIAS FIX (owner live report 2026-07-30: "camera keeps looking straight up").
-	//--- The old code assumed the engine reports the recentred cursor as exactly (0.5,0.5).
-	//--- It does not - safezone/aspect means the reported centre differs from the value passed
-	//--- to setMousePosition, so every event carried the SAME small negative _dy, and pitch
-	//--- integrated it until it pinned at +89. Now the first event after each recentre only
-	//--- re-baselines (delta 0) instead of steering, so no constant bias can accumulate.
 	if (WFBE_C_VAR_SpectatorMouseBaseline) then {
+		//--- first event after entry or after an edge warp: anchor only.
 		WFBE_C_VAR_SpectatorLastMouseX = _x;
 		WFBE_C_VAR_SpectatorLastMouseY = _y;
 		WFBE_C_VAR_SpectatorMouseBaseline = false;
-		false
 	} else {
 		_dx = _x - WFBE_C_VAR_SpectatorLastMouseX;
 		_dy = _y - WFBE_C_VAR_SpectatorLastMouseY;
@@ -234,15 +231,20 @@ WFBE_CL_FNC_SpectatorMouseMoving = {
 		_cap = 0.25;
 		_dx = (_dx max -_cap) min _cap;
 		_dy = (_dy max -_cap) min _cap;
-		setMousePosition [0.5, 0.5];
-		WFBE_C_VAR_SpectatorMouseBaseline = true; //--- next event re-baselines, see above
 		if (WFBE_C_VAR_SpectatorMode == "free") then {
 			_sens = missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 45];
 			WFBE_C_VAR_SpectatorYaw = WFBE_C_VAR_SpectatorYaw + _dx * _sens;
 			WFBE_C_VAR_SpectatorPitch = ((WFBE_C_VAR_SpectatorPitch - _dy * _sens) max -89) min 89;
 		};
-		false
+		if (_x < 0.2 || {_x > 0.8} || {_y < 0.2} || {_y > 0.8}) then {
+			setMousePosition [0.5, 0.5];
+			WFBE_C_VAR_SpectatorMouseBaseline = true; //--- next event re-anchors at the warped position
+		} else {
+			WFBE_C_VAR_SpectatorLastMouseX = _x;
+			WFBE_C_VAR_SpectatorLastMouseY = _y;
+		};
 	};
+	false
 };
 
 //--- Wheel zoom: multiplicative FOV steps, clamped. Returns true so the wheel does not
@@ -257,11 +259,11 @@ WFBE_CL_FNC_SpectatorWheel = {
 	true
 };
 
-_disp = findDisplay 46;
-WFBE_C_VAR_SpectatorKeyDownIdx = _disp displayAddEventHandler ["KeyDown", "_this Call WFBE_CL_FNC_SpectatorKeyDown"];
-WFBE_C_VAR_SpectatorKeyUpIdx = _disp displayAddEventHandler ["KeyUp", "_this Call WFBE_CL_FNC_SpectatorKeyUp"];
-WFBE_C_VAR_SpectatorMouseMovingIdx = _disp displayAddEventHandler ["MouseMoving", "_this Call WFBE_CL_FNC_SpectatorMouseMoving"];
-WFBE_C_VAR_SpectatorWheelIdx = _disp displayAddEventHandler ["MouseZChanged", "_this Call WFBE_CL_FNC_SpectatorWheel"];
+WFBE_C_VAR_SpectatorKeyDownIdx = (findDisplay 46) displayAddEventHandler ["KeyDown", "_this Call WFBE_CL_FNC_SpectatorKeyDown"];
+WFBE_C_VAR_SpectatorKeyUpIdx = (findDisplay 46) displayAddEventHandler ["KeyUp", "_this Call WFBE_CL_FNC_SpectatorKeyUp"];
+WFBE_C_VAR_SpectatorMouseMovingIdx = (findDisplay 46) displayAddEventHandler ["MouseMoving", "_this Call WFBE_CL_FNC_SpectatorMouseMoving"];
+WFBE_C_VAR_SpectatorWheelIdx = (findDisplay 46) displayAddEventHandler ["MouseZChanged", "_this Call WFBE_CL_FNC_SpectatorWheel"];
+diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_SpectatorKeyDownIdx, WFBE_C_VAR_SpectatorMouseMovingIdx];
 
 [] spawn {
 	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d"];
@@ -269,6 +271,7 @@ WFBE_C_VAR_SpectatorWheelIdx = _disp displayAddEventHandler ["MouseZChanged", "_
 	_lockPos = getPos _body;
 	_lockDir = getDir _body; //--- direction lock added in v2: the body must not spin under the mouse.
 	_last = time;
+	diag_log "SPECTATE|v2|loop-alive";
 	while {WFBE_C_VAR_SpectatorActive && {!(missionNamespace getVariable ["WFBE_gameover", false])}} do {
 		sleep 0.05;
 		//--- Safety: auto-exit if the parked body died while unattended (allowDamage/setCaptive should

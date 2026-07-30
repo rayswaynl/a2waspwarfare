@@ -35,7 +35,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=153;
+		items=151;
 		class Item134
 		{
 			side="LOGIC";
@@ -5326,48 +5326,6 @@ class Mission
 			};
 		};
 		class Item150
-		{
-			side="CIV";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={30.0,0,10.0};
-					id=9011;
-					side="CIV";
-					vehicle="Functionary1";
-					player="PLAY CDG";
-					forceHeadlessClient=1;
-					leader=1;
-					skill=0.60000002;
-					init="this allowdamage false;";
-					description="Headless Client 3";
-				};
-			};
-		};
-		class Item151
-		{
-			side="CIV";
-			class Vehicles
-			{
-				items=1;
-				class Item0
-				{
-					position[]={40.0,0,10.0};
-					id=9012;
-					side="CIV";
-					vehicle="Functionary1";
-					player="PLAY CDG";
-					forceHeadlessClient=1;
-					leader=1;
-					skill=0.60000002;
-					init="this allowdamage false;";
-					description="Headless Client 4";
-				};
-			};
-		};
-		class Item152
 		{
 			side="LOGIC";
 			class Vehicles

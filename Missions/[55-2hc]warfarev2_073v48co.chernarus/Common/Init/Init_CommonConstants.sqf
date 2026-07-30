@@ -3338,12 +3338,16 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_
 //--- name list is the sole working exclusion there. Derive the list from a slot count so adding HC5 is one
 //--- number rather than a repo-wide grep. Runs before Init_Common.sqf (initJIPCompatible.sqf:140 Call vs
 //--- :329 ExecVM), so WFBE_C_HC_NAMES is always defined before any consumer compiles.
-if (isNil "WFBE_C_HC_SLOTS") then {WFBE_C_HC_SLOTS = 4}; //--- HC-AI-Control-<n> slots the mission ships (PR #1456 added 3 and 4). Bump this alone for HC5.
+if (isNil "WFBE_C_HC_SLOTS") then {WFBE_C_HC_SLOTS = 2}; //--- HC-AI-Control-<n> slots the mission SHIPS in mission.sqm. Back to 2 on owner order 2026-07-30 ("PLS NO MORE HC IN BLUFOR / OPFOR"): the live box runs Start-Wasp-2HC.ps1 (2 HC processes), so slots 3 and 4 only ever sat unfilled in the lobby. The exclusion NAME list below deliberately still covers 4 - see there.
 if (isNil "WFBE_C_HC_NAMES") then {
 	private ["_hcNameList"];
 	_hcNameList = ["HC"]; //--- legacy single-HC profile name, still present in older box configs.
-	if ((typeName WFBE_C_HC_SLOTS) != "SCALAR") then {WFBE_C_HC_SLOTS = 4}; //--- a mistyped override must not throw inside the for below.
-	for "_hcSlot" from 1 to WFBE_C_HC_SLOTS do {_hcNameList set [count _hcNameList, Format ["HC-AI-Control-%1", _hcSlot]]};
+	if ((typeName WFBE_C_HC_SLOTS) != "SCALAR") then {WFBE_C_HC_SLOTS = 2}; //--- a mistyped override must not throw inside the for below.
+	//--- Name list is an EXCLUSION net ("is this body a real human?"), so a SUPERSET is the safe
+	//--- direction: it must keep covering HC-AI-Control-3/4 even now that the mission ships 2 slots,
+	//--- because the box still has WaspHC3/WaspHC4 launchers on disk and a stray one connecting must
+	//--- not be counted as a player (that exact drift is what broke spawn vetoes in #1456).
+	for "_hcSlot" from 1 to (WFBE_C_HC_SLOTS max 4) do {_hcNameList set [count _hcNameList, Format ["HC-AI-Control-%1", _hcSlot]]};
 	WFBE_C_HC_NAMES = _hcNameList;
 };
 
@@ -3361,7 +3365,7 @@ if (isNil "WFBE_C_HC_NAMES") then {
 //--- (Init_Server.sqf) and the client-side hold is never entered (Init_Client.sqf).
 if (isNil "WFBE_C_HC_LOBBY_LOCK") then {WFBE_C_HC_LOBBY_LOCK = 0}; //--- Master gate: 0=off (byte-identical), 1=on.
 if (isNil "WFBE_C_HC_LOBBY_TIMEOUT") then {WFBE_C_HC_LOBBY_TIMEOUT = 90}; //--- s of mission time: hard fail-open. A permanently missing HC opens the server anyway (logged loudly) instead of locking it out forever. Also the window in which the client-side gate is armed at all, so an ordinary mid-match JIP joiner never sees it. Keep it under the ~120s deadspawn-transit invulnerability budget in Init_Client.sqf.
-if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = if (!isNil "WFBE_C_HC_SLOTS" && {(typeName WFBE_C_HC_SLOTS) == "SCALAR"}) then {WFBE_C_HC_SLOTS} else {4}}; //--- Expected seated-HC count. Defaults to WFBE_C_HC_SLOTS (4 today, defined just above by the HC-name registry) so the repo keeps ONE number for how many headless clients this mission ships - bumping WFBE_C_HC_SLOTS to 5 carries here automatically, which is exactly the hardcoded-list drift that registry was added to end. Falls back to a literal 4 only if that constant is absent or mistyped. 0 disables the lock. -1 opts in to RUNTIME DERIVATION from the mission's own playable CIV slot count instead.
+if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = if (!isNil "WFBE_C_HC_SLOTS" && {(typeName WFBE_C_HC_SLOTS) == "SCALAR"}) then {WFBE_C_HC_SLOTS} else {2}}; //--- Expected seated-HC count. Defaults to WFBE_C_HC_SLOTS (4 today, defined just above by the HC-name registry) so the repo keeps ONE number for how many headless clients this mission ships - bumping WFBE_C_HC_SLOTS to 5 carries here automatically, which is exactly the hardcoded-list drift that registry was added to end. Falls back to a literal 4 only if that constant is absent or mistyped. 0 disables the lock. -1 opts in to RUNTIME DERIVATION from the mission's own playable CIV slot count instead.
 
 //--- AICOM AIR BOMBS (owner request 2026-07-26, "make sure AI commander aircraft can also use FABs"): the
 //--- EASA-on-AI kit table in Common_RunCommanderTeam.sqf (~L462-513) REPLACES rather than extends the A10 and
@@ -3402,7 +3406,7 @@ if (isNil "WFBE_C_SPECTATOR_UIDS") then {WFBE_C_SPECTATOR_UIDS = ["7656119804682
 if (isNil "WFBE_C_SPECTATOR_SPEED") then {WFBE_C_SPECTATOR_SPEED = 15};
 if (isNil "WFBE_C_SPECTATOR_BOOST") then {WFBE_C_SPECTATOR_BOOST = 4};
 if (isNil "WFBE_C_SPECTATOR_SLOW") then {WFBE_C_SPECTATOR_SLOW = 0.25};
-if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 45};	//--- owner playtest 2026-07-30: 300 deg per full UI-width was unusable; 80 is a broadcast-friendly base. PgUp/PgDn adjust live in-session.
+if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 25};	//--- owner playtest 2026-07-30: 300 deg per full UI-width was unusable; 80 is a broadcast-friendly base. PgUp/PgDn adjust live in-session.
 if (isNil "WFBE_C_SPECTATOR_FOV_MIN") then {WFBE_C_SPECTATOR_FOV_MIN = 0.05};
 if (isNil "WFBE_C_SPECTATOR_FOV_MAX") then {WFBE_C_SPECTATOR_FOV_MAX = 1.2};
 
