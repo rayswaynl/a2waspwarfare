@@ -2926,6 +2926,8 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_ARTY_RING_VISUAL_CAP") then {WFBE_C_ARTY_RING_VISUAL_CAP = 2000}; //--- #90 owner 2026-07-22: cap the DRAWN ring radius (m); real range survives in the marker label. 0 = legacy uncapped.
 	if (isNil "WFBE_C_TAGS_AI") then {WFBE_C_TAGS_AI = 1}; //--- TAGS: nametags above friendly AI infantry + vehicles (shares the 18-slot pool).
 	if (isNil "WFBE_C_GDIR_VIS") then {WFBE_C_GDIR_VIS = 1}; //--- Commissar visibility pack: wallet label, heatmap, order broadcasts, QRF feedback.
+	if (isNil "WFBE_C_GDIR_CELL_SPREAD") then {WFBE_C_GDIR_CELL_SPREAD = 0}; //--- 1 = shuffle moveCell dest lists + transit soft-cap so depleted pressure is not funnelled into the same 2 towns (RPT-DEEPDIVE-20260730: 35.5% into Msta/Shakhovka). 0 = dark (ledger order).
+	if (isNil "WFBE_C_GDIR_CELL_SPREAD_TRANSIT_FRAC") then {WFBE_C_GDIR_CELL_SPREAD_TRANSIT_FRAC = 0.45}; //--- skip destination this tick if pending transit already exceeds this fraction of baseline (forces surplus to other depleted towns).
 	if (isNil "WFBE_C_ICBM_COUNTDOWN") then {WFBE_C_ICBM_COUNTDOWN = 1}; //--- #78/#455: both-sides HUD countdown to ICBM impact.
 	if (isNil "WFBE_C_MISSILE_WARNING") then {WFBE_C_MISSILE_WARNING = 1}; //--- #367/#307: audible warning while an ICBM is in flight.
 	if (isNil "WFBE_C_LOADOUT_REGISTRY_SCRUB") then {WFBE_C_LOADOUT_REGISTRY_SCRUB = 1}; //--- #416 cheat fix: strip non-purchasable items from player loadouts on equip.

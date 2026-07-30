@@ -226,17 +226,71 @@ while {!WFBE_GameOver} do {
         };
     } forEach _ledger;
 
+    //--- CELL SPREAD (RPT-DEEPDIVE-20260730): ledger order + first-come sources funnel moveCell into
+    //--- the same few depleted towns. When armed: Fisher-Yates shuffle dest lists + randomize source
+    //--- start index so surplus rotates across the depleted set. Flag-dark default.
+    if ((missionNamespace getVariable ["WFBE_C_GDIR_CELL_SPREAD", 0]) > 0) then {
+        private ["_spI","_spJ","_spTmp"];
+        if ((count _stateDep) > 1) then {
+            for "_spI" from ((count _stateDep) - 1) to 1 step -1 do {
+                _spJ = floor random (_spI + 1);
+                _spTmp = _stateDep select _spI;
+                _stateDep set [_spI, _stateDep select _spJ];
+                _stateDep set [_spJ, _spTmp];
+            };
+        };
+        if ((count _stateThr) > 1) then {
+            for "_spI" from ((count _stateThr) - 1) to 1 step -1 do {
+                _spJ = floor random (_spI + 1);
+                _spTmp = _stateThr select _spI;
+                _stateThr set [_spI, _stateThr select _spJ];
+                _stateThr set [_spJ, _spTmp];
+            };
+        };
+        if ((count _stateOpp) > 1) then {
+            for "_spI" from ((count _stateOpp) - 1) to 1 step -1 do {
+                _spJ = floor random (_spI + 1);
+                _spTmp = _stateOpp select _spI;
+                _stateOpp set [_spI, _stateOpp select _spJ];
+                _stateOpp set [_spJ, _spTmp];
+            };
+        };
+        if ((count _stateSafe) > 1) then {
+            for "_spI" from ((count _stateSafe) - 1) to 1 step -1 do {
+                _spJ = floor random (_spI + 1);
+                _spTmp = _stateSafe select _spI;
+                _stateSafe set [_spI, _stateSafe select _spJ];
+                _stateSafe set [_spJ, _spTmp];
+            };
+        };
+    };
+
     //--------------------------------------------------------------------
     // PHASE 4: PLANNING - reinforce depleted/threatened from surplus towns.
     // Conservation: drain source on dispatch; credit destination on arrival.
     //--------------------------------------------------------------------
-    private ["_sources","_orderCount","_srcIdx"];
+    private ["_sources","_orderCount","_srcIdx","_cellSpreadOn","_cellTransitFrac"];
     _sources    = [];
     _orderCount = 0;
     _srcIdx     = 0;
+    _cellSpreadOn = (missionNamespace getVariable ["WFBE_C_GDIR_CELL_SPREAD", 0]) > 0;
+    _cellTransitFrac = missionNamespace getVariable ["WFBE_C_GDIR_CELL_SPREAD_TRANSIT_FRAC", 0.45];
+    if (_cellTransitFrac < 0.1) then {_cellTransitFrac = 0.1};
+    if (_cellTransitFrac > 1) then {_cellTransitFrac = 1};
 
     {_sources set [count _sources, _x]} forEach _stateOpp;
     {_sources set [count _sources, _x]} forEach _stateSafe;
+    //--- Shuffle surplus order when spread is armed (otherwise index 0 always feeds first dests).
+    if (_cellSpreadOn && {(count _sources) > 1}) then {
+        private ["_spI2","_spJ2","_spTmp2"];
+        for "_spI2" from ((count _sources) - 1) to 1 step -1 do {
+            _spJ2 = floor random (_spI2 + 1);
+            _spTmp2 = _sources select _spI2;
+            _sources set [_spI2, _sources select _spJ2];
+            _sources set [_spJ2, _spTmp2];
+        };
+        _srcIdx = 0;
+    };
 
     {
         private ["_dst","_dstStr","_dstBase","_needed","_src","_srcStr","_srcBase","_send"];
@@ -244,6 +298,8 @@ while {!WFBE_GameOver} do {
         _dstStr = _dst select 2;
         _dstBase= _dst select 1;
         _needed = _dstBase - _dstStr;
+        //--- Soft-cap pending inbound so one town cannot absorb every surplus cell while others starve.
+        if (_cellSpreadOn && {(_dst select 3) > (_dstBase * _cellTransitFrac)}) then {_needed = 0};
         if (_needed > 0.05 && {count _sources > 0}) then {
             while {_srcIdx < count _sources && {(((_sources select _srcIdx) select 2) - ((_sources select _srcIdx) select 1) * 0.5) <= 0.05}} do {
                 _srcIdx = _srcIdx + 1;
@@ -278,6 +334,7 @@ while {!WFBE_GameOver} do {
         _dstStr = _dst select 2;
         _dstBase= _dst select 1;
         _needed = _dstBase - _dstStr;
+        if (_cellSpreadOn && {(_dst select 3) > (_dstBase * _cellTransitFrac)}) then {_needed = 0};
         if (_needed > 0.1 && {count _sources > 0}) then {
             while {_srcIdx < count _sources && {(((_sources select _srcIdx) select 2) - ((_sources select _srcIdx) select 1) * 0.6) <= 0.05}} do {
                 _srcIdx = _srcIdx + 1;
