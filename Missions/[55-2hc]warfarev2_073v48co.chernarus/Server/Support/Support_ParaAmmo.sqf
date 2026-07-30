@@ -24,7 +24,7 @@ if !(isNil '_bd') then {
 };
 
 _timeStart = time;
-_ran = round(random((count _ranPos)-1));
+_ran = floor (random (count _ranPos)); //--- uniform; count==0 would still be bad so caller must gate
 _grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
 _vehicle = createVehicle [missionNamespace getVariable Format ["WFBE_%1PARAVEHI",str _side],(_ranPos select _ran), [], (_ranDir select _ran), "FLY"];
 _pilot = [missionNamespace getVariable Format ["WFBE_%1PILOT",str _side],_grp,[100,12000,0],_sideID] Call WFBE_CO_FNC_CreateUnit;

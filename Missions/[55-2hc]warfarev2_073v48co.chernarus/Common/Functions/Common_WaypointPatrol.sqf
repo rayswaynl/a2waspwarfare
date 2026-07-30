@@ -13,7 +13,8 @@ _radius = _this select 2;
 _maxWaypoints = _this select 3;
 _behaviours = if (count _this > 4) then {_this select 4} else {[]};
 if (typeName _destination == 'OBJECT') then {_destination = getPos _destination};
-_waterRetryCap = missionNamespace getVariable ["WFBE_C_WAYPOINT_WATER_RETRY_CAP", 0];
+_waterRetryCap = missionNamespace getVariable ["WFBE_C_WAYPOINT_WATER_RETRY_CAP", 20];
+if (_waterRetryCap < 1) then {_waterRetryCap = 20}; //--- never uncapped (0 used to mean infinite while surfaceIsWater)
 
 _wps = [];
 for '_z' from 0 to _maxWaypoints do {

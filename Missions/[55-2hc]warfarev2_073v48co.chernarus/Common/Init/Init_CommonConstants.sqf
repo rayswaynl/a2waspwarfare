@@ -1965,7 +1965,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_TOWNS_GEAR") then {WFBE_C_TOWNS_GEAR = 1}; //--- Buy Gear From (0: None, 1: Camps, 2: Depot, 3: Camps & Depot).
 	if (isNil "WFBE_C_TOWNS_PATROLS") then {WFBE_C_TOWNS_PATROLS = 6}; //--- Town-to-town patrols ON by default (up to 6 towns); set 0 in the lobby to disable. DR-57 fix makes them work.
 	if (isNil "WFBE_C_TOWNS_PATROL_CONTESTED_ONLY") then {WFBE_C_TOWNS_PATROL_CONTESTED_ONLY = 0}; //--- Lane 190: 0 keeps legacy supply-drop defense flips; 1 only pulls town patrols into defense while the town is stamped contested.
-	if (isNil "WFBE_C_WAYPOINT_WATER_RETRY_CAP") then {WFBE_C_WAYPOINT_WATER_RETRY_CAP = 0}; //--- Max random waypoint water rerolls before falling back to the patrol center; 0 keeps legacy uncapped retries.
+	if (isNil "WFBE_C_WAYPOINT_WATER_RETRY_CAP") then {WFBE_C_WAYPOINT_WATER_RETRY_CAP = 20}; //--- Max random waypoint water rerolls before falling back to the patrol center. Default 20 (was 0 = uncapped) so coastal patrols cannot hang a scheduled thread forever when every redraw lands on water (sqf-randomness bughunt 2026-07-30).
 	if (isNil "WFBE_C_TOWNS_STARTING_MODE") then {WFBE_C_TOWNS_STARTING_MODE = 0}; //--- Town starting mode (0: Resistance, 1: 50% blu, 50% red, 2: Nearby Towns, 3: Random).
 	if (isNil "WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER") then {WFBE_C_TOWNS_VEHICLES_LOCK_DEFENDER = 1}; //--- Lock the vehicles of the defender side.
 	if (isNil "WFBE_C_TOWNS_CAPTURE_BAR_DETAIL") then {WFBE_C_TOWNS_CAPTURE_BAR_DETAIL = 0}; //--- Lane 52: 1 adds SV trend, mode-2 Camps X/Y, and camp SV text to the client capture bar; 0 keeps the legacy label.

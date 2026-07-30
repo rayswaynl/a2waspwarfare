@@ -106,7 +106,7 @@ switch (missionNamespace getVariable "WFBE_C_TOWNS_STARTING_MODE") do {
 			//--- Check if we couldn't reach 50% Res.
 			if (count _resTowns < _minus) then {
 				for '_z' from 0 to _e-1 do {
-					_town = _towns select round(random((count _towns)-1));
+					_town = _towns select floor (random (count _towns)); //--- uniform town pick
 					_towns = _towns - [_town];
 					
 					_resTowns = _resTowns + [_town];
@@ -121,7 +121,7 @@ switch (missionNamespace getVariable "WFBE_C_TOWNS_STARTING_MODE") do {
 			
 			//--- Assign west or east towns.
 			for '_z' from 0 to totalTowns-_minus-1 do {
-				_town = _towns select round(random((count _towns)-1));
+				_town = _towns select floor (random (count _towns)); //--- uniform town pick
 				_towns = _towns - [_town];
 				if (count _nearTownsW < _half) then {
 					_nearTownsW = _nearTownsW + [_town];
@@ -137,7 +137,7 @@ switch (missionNamespace getVariable "WFBE_C_TOWNS_STARTING_MODE") do {
 		} else {
 			//--- No boundaries defined, we use a random system.
 			for '_z' from 0 to _minus-1 do {
-				_town = _towns select round(random((count _towns)-1));
+				_town = _towns select floor (random (count _towns)); //--- uniform town pick
 				_towns = _towns - [_town];
 				if (count _nearTownsW < _half) then {
 					_nearTownsW = _nearTownsW + [_town];

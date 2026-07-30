@@ -26,7 +26,7 @@ if !(isNil '_bd') then {
 _timeStart = time;
 //--- AICOM PARAVEHI: AI-owned groups have no player leader, so keep the 500s transit cap but do not abort immediately.
 _isAI = !(isPlayer (leader _playerTeam));
-_ran = round(random((count _ranPos)-1));
+_ran = floor (random (count _ranPos)); //--- uniform
 _grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
 _vehicle = createVehicle [missionNamespace getVariable Format ["WFBE_%1PARAVEHI",str _side],(_ranPos select _ran), [], (_ranDir select _ran), "FLY"];
 [str _side,'VehiclesCreated',1] Call UpdateStatistics;

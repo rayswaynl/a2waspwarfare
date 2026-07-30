@@ -14,7 +14,8 @@ _radius = if (count _this > 2) then {_this select 2} else {30};
 if (typeName _town != 'OBJECT') exitWith {};
 if (isNull _team) exitWith {};
 _townPos = getPos _town;
-_waterRetryCap = missionNamespace getVariable ["WFBE_C_WAYPOINT_WATER_RETRY_CAP", 0];
+_waterRetryCap = missionNamespace getVariable ["WFBE_C_WAYPOINT_WATER_RETRY_CAP", 20];
+if (_waterRetryCap < 1) then {_waterRetryCap = 20}; //--- never uncapped (0 used to mean infinite while surfaceIsWater)
 
 _camps = _town getVariable 'camps';//wf2
 
@@ -38,7 +39,7 @@ _wpcompletionRadius = -1;
 for '_z' from 0 to _maxWaypoints do {
 	if (_z == _insert && count _usable > 0) then {
 		_insert = _insert + _insertStep;
-		_insertObject = _usable select (round(random((count _usable)-1)));
+		_insertObject = _usable select floor (random (count _usable)); //--- uniform pick (round bias on ends)
 		_usable = _usable - [_insertObject];
 	};
 
