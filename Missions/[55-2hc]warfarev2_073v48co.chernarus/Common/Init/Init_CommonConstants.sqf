@@ -3402,7 +3402,7 @@ if (isNil "WFBE_C_SPECTATOR_UIDS") then {WFBE_C_SPECTATOR_UIDS = ["7656119804682
 if (isNil "WFBE_C_SPECTATOR_SPEED") then {WFBE_C_SPECTATOR_SPEED = 15};
 if (isNil "WFBE_C_SPECTATOR_BOOST") then {WFBE_C_SPECTATOR_BOOST = 4};
 if (isNil "WFBE_C_SPECTATOR_SLOW") then {WFBE_C_SPECTATOR_SLOW = 0.25};
-if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 80};	//--- owner playtest 2026-07-30: 300 deg per full UI-width was unusable; 80 is a broadcast-friendly base. PgUp/PgDn adjust live in-session.
+if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 45};	//--- owner playtest 2026-07-30: 300 deg per full UI-width was unusable; 80 is a broadcast-friendly base. PgUp/PgDn adjust live in-session.
 if (isNil "WFBE_C_SPECTATOR_FOV_MIN") then {WFBE_C_SPECTATOR_FOV_MIN = 0.05};
 if (isNil "WFBE_C_SPECTATOR_FOV_MAX") then {WFBE_C_SPECTATOR_FOV_MAX = 1.2};
 

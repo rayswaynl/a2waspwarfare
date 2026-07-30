@@ -41,7 +41,11 @@
    eyeDirection / modelToWorld / isPlayer / allUnits / name / toUpper /
    hintSilent / parseText / switch - no A3-only commands.
 */
-Private ["_myUID","_pos0","_yaw0","_disp"];
+disableSerialization; //--- MANDATORY: this script holds a Display ref (_disp) across
+//--- frame boundaries (the movement loop sleeps). Without this A2 raises
+//--- "Variable '_disp' does not support serialization" on every entry
+//--- (live-proven 2026-07-30, m0730e).
+Private ["_myUID","_pos0","_yaw0","_disp","_recentre"];
 
 if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) exitWith {}; //--- already active; ignore a double-click race.
 if !(alive player) exitWith {};
@@ -55,6 +59,7 @@ WFBE_C_VAR_SpectatorBody = player; //--- pin the exact body this session belongs
 WFBE_C_VAR_SpectatorMode = "free";
 WFBE_C_VAR_SpectatorTarget = objNull;
 WFBE_C_VAR_SpectatorHideHint = false;
+WFBE_C_VAR_SpectatorMouseBaseline = true; //--- first MouseMoving event only sets the baseline (recentre-bias fix)
 
 _pos0 = getPos player;
 _yaw0 = getDir player;
@@ -208,20 +213,36 @@ WFBE_CL_FNC_SpectatorKeyUp = {
 //--- screen never stops a swipe. Only drives the camera in free mode (follow/eyes aim from
 //--- the target). Sensitivity is WFBE_C_SPECTATOR_SENS (degrees per full UI-width delta).
 WFBE_CL_FNC_SpectatorMouseMoving = {
-	Private ["_x","_y","_dx","_dy","_sens"];
+	Private ["_x","_y","_dx","_dy","_sens","_cap"];
 	_x = _this select 1;
 	_y = _this select 2;
-	_dx = _x - WFBE_C_VAR_SpectatorLastMouseX;
-	_dy = _y - WFBE_C_VAR_SpectatorLastMouseY;
-	setMousePosition [0.5, 0.5];
-	WFBE_C_VAR_SpectatorLastMouseX = 0.5;
-	WFBE_C_VAR_SpectatorLastMouseY = 0.5;
-	if (WFBE_C_VAR_SpectatorMode == "free") then {
-		_sens = missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 300];
-		WFBE_C_VAR_SpectatorYaw = WFBE_C_VAR_SpectatorYaw + _dx * _sens;
-		WFBE_C_VAR_SpectatorPitch = ((WFBE_C_VAR_SpectatorPitch - _dy * _sens) max -89) min 89;
+	//--- RECENTRE BIAS FIX (owner live report 2026-07-30: "camera keeps looking straight up").
+	//--- The old code assumed the engine reports the recentred cursor as exactly (0.5,0.5).
+	//--- It does not - safezone/aspect means the reported centre differs from the value passed
+	//--- to setMousePosition, so every event carried the SAME small negative _dy, and pitch
+	//--- integrated it until it pinned at +89. Now the first event after each recentre only
+	//--- re-baselines (delta 0) instead of steering, so no constant bias can accumulate.
+	if (WFBE_C_VAR_SpectatorMouseBaseline) then {
+		WFBE_C_VAR_SpectatorLastMouseX = _x;
+		WFBE_C_VAR_SpectatorLastMouseY = _y;
+		WFBE_C_VAR_SpectatorMouseBaseline = false;
+		false
+	} else {
+		_dx = _x - WFBE_C_VAR_SpectatorLastMouseX;
+		_dy = _y - WFBE_C_VAR_SpectatorLastMouseY;
+		//--- Clamp one event's travel: a stray jump (alt-tab, cursor warp) must not whip the view.
+		_cap = 0.25;
+		_dx = (_dx max -_cap) min _cap;
+		_dy = (_dy max -_cap) min _cap;
+		setMousePosition [0.5, 0.5];
+		WFBE_C_VAR_SpectatorMouseBaseline = true; //--- next event re-baselines, see above
+		if (WFBE_C_VAR_SpectatorMode == "free") then {
+			_sens = missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 45];
+			WFBE_C_VAR_SpectatorYaw = WFBE_C_VAR_SpectatorYaw + _dx * _sens;
+			WFBE_C_VAR_SpectatorPitch = ((WFBE_C_VAR_SpectatorPitch - _dy * _sens) max -89) min 89;
+		};
+		false
 	};
-	false
 };
 
 //--- Wheel zoom: multiplicative FOV steps, clamped. Returns true so the wheel does not
@@ -329,8 +350,18 @@ WFBE_C_VAR_SpectatorWheelIdx = _disp displayAddEventHandler ["MouseZChanged", "_
 			_tgtTxt = "-";
 			if (!isNull _t && {alive _t}) then {_tgtTxt = name _t};
 			hintSilent parseText Format [
-				"<t size='1.1' color='#7fd4ff'>SPECTATOR v2 [%1]</t><br/>Target: %2<br/>Speed: %3 m/s<br/>FOV: %4%5<br/><t color='#aaaaaa'>N/B target | F follow | V eyes | wheel zoom | H hide | Backspace exit</t>",
-				toUpper _mode, _tgtTxt, round _spd, round (WFBE_C_VAR_SpectatorFov * 100), "%"
+				"<t size='1.2' color='#7fd4ff'>SPECTATOR</t>  <t color='#ffcc33'>%1</t><br/>"
+				+ "<t color='#cccccc'>Target</t> %2<br/>"
+				+ "<t color='#cccccc'>Speed</t> %3 m/s   <t color='#cccccc'>FOV</t> %4%5   <t color='#cccccc'>Sens</t> %6<br/>"
+				+ "<br/><t size='0.9' color='#7fd4ff'>MOVE</t><br/>"
+				+ "<t size='0.85' color='#aaaaaa'>Mouse look | W/S fly | A/D strafe | Space/Ctrl up-down<br/>"
+				+ "Shift boost | Alt crawl | Wheel zoom</t><br/>"
+				+ "<t size='0.9' color='#7fd4ff'>TARGETS</t><br/>"
+				+ "<t size='0.85' color='#aaaaaa'>N / B next-prev player | F follow-cam | V through-their-eyes</t><br/>"
+				+ "<t size='0.9' color='#7fd4ff'>SETUP</t><br/>"
+				+ "<t size='0.85' color='#aaaaaa'>PgUp / PgDn sensitivity | H hide this card | Backspace exit</t>",
+				toUpper _mode, _tgtTxt, round _spd, round (WFBE_C_VAR_SpectatorFov * 100), "%",
+				round (missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 45])
 			];
 		};
 	};
