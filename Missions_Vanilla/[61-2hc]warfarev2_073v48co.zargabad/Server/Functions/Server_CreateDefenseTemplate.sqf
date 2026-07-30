@@ -30,18 +30,24 @@ for '_i' from 0 to count(_template)-1 do {
 	
 	if !(_skip) then {
 		_toplace = createVehicle [_object, [0,0,0], [], 0, "NONE"];
-		_toplace setVariable ["wfbe_defense", true]; //--- This is one of our defenses.
-		
-		_toWorld = _origin modelToWorld _relPos;
-		_toWorld set [2,0];
+		//--- r36 fail-clean: skip null pieces so WFBE_Walls/hq_walls do not accumulate objNull and
+		//--- setDir/setPos never run on a failed create (bad class / engine fail mid-ring).
+		if (isNull _toplace) then {
+			["WARNING", Format ["Server_CreateDefenseTemplate.sqf: createVehicle FAILED for class [%1] on origin [%2] (template index %3).", _object, typeOf _origin, _i]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			_toplace setVariable ["wfbe_defense", true]; //--- This is one of our defenses.
 
-		_toplace setDir (_dir - _relDir);
-		_toplace setPos _toWorld;
+			_toWorld = _origin modelToWorld _relPos;
+			_toWorld set [2,0];
+
+			_toplace setDir (_dir - _relDir);
+			_toplace setPos _toWorld;
+			_created = _created + [_toplace];
+		};
 	} else {
 		_toplace = _existingTemplate select _i;
+		_created = _created + [_toplace];
 	};
-	
-	_created = _created + [_toplace];
 };
 
 _created

@@ -21,6 +21,14 @@ if (!_deployed) then {
 	_HQ setPos [1,1,1];
 
 	_site = createVehicle [_type, _position, [], 0, "NONE"];
+	//--- r36 fail-clean: createVehicle null after parking the MHQ would publish a null HQ and delete the live MHQ.
+	//--- Restore the parked MHQ, clear the lag latch, and abort before setVariable/deployed/deleteVehicle.
+	if (isNull _site) exitWith {
+		_HQ setPos _position;
+		_HQ setDir _direction;
+		_logik setVariable ["wfbe_hqinuse", false];
+		["WARNING", Format ["Construction_HQSite.sqf: [%1] HQ deploy createVehicle FAILED for type [%2] at %3 - MHQ restored.", _sideText, _type, _position]] Call WFBE_CO_FNC_LogContent;
+	};
 	_site setDir _direction;
 	_site setPos _position;
 	_site setVariable ["wfbe_side", _side];
@@ -80,11 +88,19 @@ if (!_deployed) then {
 	_HQName = missionNamespace getVariable Format["WFBE_%1MHQNAME",_sideText];
 
 	_defenses = _HQ getVariable ["wfbe_hq_walls", _HQ getVariable ["WFBE_Walls", []]];
-	{if (!isNull _x) then {deleteVehicle _x}} forEach _defenses;
 
 	_HQ setPos [1,1,1];
 
 	_MHQ = [_HQName, _position, _sideID, _direction, true, false] Call WFBE_CO_FNC_CreateVehicle;
+	//--- r36 fail-clean: Common_CreateVehicle already logs null, but callers used to stamp wfbe_hq=objNull
+	//--- and delete the deployed HQ. Restore parked HQ + lag latch; keep walls until create succeeds.
+	if (isNull _MHQ) exitWith {
+		_HQ setPos _position;
+		_HQ setDir _direction;
+		_logik setVariable ["wfbe_hqinuse", false];
+		["WARNING", Format ["Construction_HQSite.sqf: [%1] MHQ mobilize create FAILED at %2 - deployed HQ restored.", _sideText, _position]] Call WFBE_CO_FNC_LogContent;
+	};
+	{if (!isNull _x) then {deleteVehicle _x}} forEach _defenses;
 	_MHQ setVelocity [0,0,-1];
 	_MHQ setVariable ["WFBE_Taxi_Prohib", true];
 	_MHQ setVariable ["wfbe_side", _side];
