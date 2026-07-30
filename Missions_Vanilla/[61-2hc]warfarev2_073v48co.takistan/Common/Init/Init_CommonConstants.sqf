@@ -3502,5 +3502,10 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS") then {WFBE_C_SPECTATOR_DIREC
 //--- TIGHT camera height above target in metres.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT = 4};
 
+//--- Spectator broadcast HUD: opt-in styled title overlay + dialog map fallback.
+//--- 0 (default) leaves the existing 12455 cutText spectator card path unchanged.
+//--- Layer 12456 is reserved for this title; 12450-12452/12454/12455/12461 remain occupied.
+if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

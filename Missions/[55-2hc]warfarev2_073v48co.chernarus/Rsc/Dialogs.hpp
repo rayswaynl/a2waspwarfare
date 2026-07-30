@@ -5405,3 +5405,52 @@ class WFBE_TownsGarrisonMenu {
 		};
 	};
 };
+
+/* Spectator broadcast map fallback. A2 OA map controls are hosted in a dialog,
+   so the caster can click a world position while the camera movement keys are
+   paused by dialog focus. M closes the dialog through the display KeyDown EH. */
+class WFBE_SpectatorMapDialog {
+	movingEnable = 0;
+	idd = 10263;
+	onLoad = "uiNamespace setVariable ['wfbe_spectator_map_display', _this select 0]; [] Call WFBE_CL_FNC_SpectatorMapFollow; (_this select 0) displayAddEventHandler ['KeyDown', 'if ((_this select 1) == 50) then {closeDialog 0; true} else {false}'];";
+	onUnload = "uiNamespace setVariable ['wfbe_spectator_map_display', displayNull]";
+
+	class controlsBackground {
+		class SBH_MapFrame : RscText {
+			x = 0.055;
+			y = 0.035;
+			w = 0.890;
+			h = 0.905;
+			colorBackground[] = {0,0,0,0.88};
+		};
+	};
+
+	class controls {
+		class SBH_Map : RscMapControl {
+			idc = 124570;
+			x = 0.075;
+			y = 0.085;
+			w = 0.850;
+			h = 0.760;
+			ShowCountourInterval = 1;
+			onMouseMoving = "WFBE_C_VAR_SpectatorMapX = _this select 1; WFBE_C_VAR_SpectatorMapY = _this select 2;";
+			onMouseButtonDown = "if ((_this select 1) == 0) then {[_this select 0, _this select 2, _this select 3] Call WFBE_CL_FNC_SpectatorMapClick};";
+		};
+		class SBH_MapTitle : RscStructuredText {
+			x = 0.090;
+			y = 0.045;
+			w = 0.820;
+			h = 0.040;
+			size = 0.035;
+			text = "<t align='center' color='#FFFFFF' shadow='2'>SPECTATOR MAP</t>";
+		};
+		class SBH_MapHint : RscStructuredText {
+			x = 0.090;
+			y = 0.860;
+			w = 0.820;
+			h = 0.050;
+			size = 0.028;
+			text = "<t align='center' color='#D8F3FF' shadow='2'>CLICK TO TELEPORT CAMERA  |  M CLOSE  |  CAMERA KEYS PAUSE WHILE MAP IS OPEN</t>";
+		};
+	};
+};

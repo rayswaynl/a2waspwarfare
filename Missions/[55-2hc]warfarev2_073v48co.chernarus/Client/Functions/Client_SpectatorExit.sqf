@@ -49,8 +49,11 @@ if (!isNil "WFBE_C_VAR_SpectatorWheelIdx") then {
 	WFBE_C_VAR_SpectatorWheelIdx = nil;
 };
 
-hintSilent ""; //--- v2: clear the hint overlay even if it was mid-update.
-12455 cutText ["", "PLAIN", 0]; //--- clear the cutText card layer (hints do not render under a cameraEffect camera - see Enter).
+if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
+	if (dialog) then {closeDialog 0};
+	12456 cutText ["", "PLAIN", 0];
+};
+12455 cutText ["", "PLAIN", 0]; //--- clear the legacy cutText card layer; the broadcast path uses 12456.
 
 WFBE_C_VAR_SpectatorMode = "free";
 WFBE_C_VAR_SpectatorTarget = objNull;
