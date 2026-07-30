@@ -13,9 +13,24 @@
 
 Private ["_side","_claimTeam","_logic","_currentCommander","_syncAicomState"];
 
+//--- Envelope: short / wrong-type claim payloads must not reach commander assignment.
+if (typeName _this != "ARRAY") exitWith {
+	["WARNING", Format ["RequestClaimCommander.sqf: rejected malformed payload type [%1].", typeName _this]] Call WFBE_CO_FNC_LogContent;
+};
+if (count _this < 2) exitWith {
+	["WARNING", Format ["RequestClaimCommander.sqf: rejected short payload [%1].", _this]] Call WFBE_CO_FNC_LogContent;
+};
+
 _side = _this select 0;
 _claimTeam = _this select 1;
 _syncAicomState = (missionNamespace getVariable ["WFBE_C_AICOM_PUBLIC_STATE_SYNC", 0]) > 0;
+
+if (typeName _side != "SIDE") exitWith {
+	["WARNING", Format ["RequestClaimCommander.sqf: rejected non-side payload side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _claimTeam != "GROUP") exitWith {
+	["WARNING", Format ["RequestClaimCommander.sqf: rejected non-group claim team [%1].", typeName _claimTeam]] Call WFBE_CO_FNC_LogContent;
+};
 
 _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
 
@@ -30,9 +45,15 @@ _currentCommander = _logic getVariable ["wfbe_commander", objNull];
 if (!isNull _currentCommander) exitWith {};
 
 //--- Guard: the claiming team must be a real, player-led team on the requesting side.
-if (isNull _claimTeam) exitWith {};
-if (!isPlayer (leader _claimTeam)) exitWith {};
-if (side _claimTeam != _side) exitWith {};
+if (isNull _claimTeam) exitWith {
+	["WARNING", "RequestClaimCommander.sqf: rejected null claim team."] Call WFBE_CO_FNC_LogContent;
+};
+if (!isPlayer (leader _claimTeam)) exitWith {
+	["WARNING", Format ["RequestClaimCommander.sqf: rejected non-player-led claim team [%1].", _claimTeam]] Call WFBE_CO_FNC_LogContent;
+};
+if (side _claimTeam != _side) exitWith {
+	["WARNING", Format ["RequestClaimCommander.sqf: rejected claim side mismatch payload [%1] team [%2].", _side, side _claimTeam]] Call WFBE_CO_FNC_LogContent;
+};
 
 //--- Promote EXACTLY like the elected path (RequestNewCommander.sqf:12-13).
 //--- Round-3 review (P1-1/P1-3): with the lease enabled the writer ONLY ENQUEUES a grant
