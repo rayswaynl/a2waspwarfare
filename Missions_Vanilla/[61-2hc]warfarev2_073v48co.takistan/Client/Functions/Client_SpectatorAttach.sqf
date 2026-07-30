@@ -17,6 +17,10 @@
    (wfbe_blink_eh_added / wfbe_ied_eh_added): same idempotency idea, but
    entirely out-of-band here.
 
+   A2 OA 1.64: addAction script param must be a STRING file path - a code block
+   raises "Type code, expected String" and the action is never added
+   (live-proven client RPT 2026-07-30). Same idiom as the working
+   MHQ lock/build actions in updateclient.sqf.
    A2-OA-1.64 safe: getPlayerUID / missionNamespace getVariable / addAction /
    `in` (array membership) / isNil / WFBE_gameover - no A3-only commands.
 */
@@ -38,7 +42,7 @@ while {!(missionNamespace getVariable ["WFBE_gameover", false])} do {
 		player setVariable ["wfbe_spectator_actions_added", true];
 		player addAction [
 			"<t color='#7fd4ff'>Spectator Camera</t>",
-			{[] Call WFBE_CL_FNC_SpectatorEnter},
+			"Client\Functions\Client_SpectatorEnter.sqf",
 			[],
 			1.5,
 			false,
@@ -48,7 +52,7 @@ while {!(missionNamespace getVariable ["WFBE_gameover", false])} do {
 		];
 		player addAction [
 			"<t color='#ffcc33'>Exit Spectator</t>",
-			{[] Call WFBE_CL_FNC_SpectatorExit},
+			"Client\Functions\Client_SpectatorExit.sqf",
 			[],
 			1.5,
 			false,
