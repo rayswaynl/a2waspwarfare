@@ -69,21 +69,14 @@ while {count _seaPos == 0 && {_ring < 40}} do {
 };
 if (count _seaPos == 0) then { _seaPos = _seed }; //--- no water found (or landlocked map): fall back to the verified seed.
 
-//--- BOUNDARY GUARD: re-derive the same true/false test Client_IsOnMap.sqf runs on `player`,
-//--- against this CANDIDATE point instead, before committing to it. Falls back to the
-//--- analytically-verified seed if the candidate somehow fails (belt+suspenders - see header).
+//--- BOUNDARY GUARD: same square AABB Client_IsOnMap.sqf uses (no atan/cos axis div0).
+//--- Falls back to the analytically-verified seed if the candidate is outside [0..B]^2.
 _boundary = missionNamespace getVariable ["WFBE_BOUNDARIESXY", 15360];
-_half = _boundary / 2;
 _posXY = [_seaPos select 0, _seaPos select 1];
-_difx = (_posXY select 0) - _half;
-_dify = (_posXY select 1) - _half;
-_dir = atan (_difx / _dify);
-if (_dify < 0) then {_dir = _dir + 180};
-_adis = abs (_half / cos (90 - _dir));
-_bdis = abs (_half / cos _dir);
-_borderdis = _adis min _bdis;
-_posdis = _posXY distance [_half,_half];
-if !(_posdis < _borderdis) then { _seaPos = _seed; _posXY = [_seed select 0, _seed select 1] };
+if (!(
+	((_posXY select 0) >= 0) && {(_posXY select 0) <= _boundary} &&
+	{(_posXY select 1) >= 0} && {(_posXY select 1) <= _boundary}
+)) then { _seaPos = _seed; _posXY = [_seed select 0, _seed select 1] };
 
 //--- BUGFIX (fable/deadspawn-redesign, landlocked follow-up): the original version of this
 //--- function set Z=-8 unconditionally, including on the DRY fallback branch (no water found

@@ -11,11 +11,18 @@ if (_index == -1) exitWith {["WARNING", Format ["Common_FireArtillery.sqf: No ar
 if (isNull _gunner) exitWith {["WARNING", Format ["Common_FireArtillery.sqf: Artillery [%1] gunner is null.", _artillery]] Call WFBE_CO_FNC_LogContent};
 if (isPlayer _gunner) exitWith {["WARNING", Format ["Common_FireArtillery.sqf: Artillery [%1] gunner is a player", _artillery]] Call WFBE_CO_FNC_LogContent};
 
+//--- NUMERIC: WFBE_C_ARTILLERY 0 = Disabled (Init_CommonConstants). Divisor must never be 0
+//--- (range max / 0 -> scalar NaN). Exit clean before ARTY_Prep locks the piece.
+if ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) <= 0) exitWith {
+	["WARNING", Format ["Common_FireArtillery.sqf: Artillery fire missions disabled (WFBE_C_ARTILLERY=%1).", missionNamespace getVariable ["WFBE_C_ARTILLERY", 0]]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- WFBE_C_ARTILLERY_DISABLED_GUARD
 _artillery setVariable ["restricted",true];
 {if(isPlayer _x) then {_x action  ["getOut", _artillery]};} forEach (crew _artillery);
 
 _minRange 	= (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",_side]) select _index;
-_maxRange 	= round(((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",_side]) select _index) / (missionNamespace getVariable "WFBE_C_ARTILLERY"));
+_maxRange 	= round(((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",_side]) select _index) / ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1));
 _weapon 	= (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_WEAPONS",_side]) select _index;
 _ammo 		= (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_AMMOS",_side]) select _index;
 _velocity 	= (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_VELOCITIES",_side]) select _index;
@@ -33,7 +40,7 @@ _ycoord = (_destination select 1) - (_position select 1);
 _direction =  -(((_ycoord atan2 _xcoord) + 270) % 360);
 if (_direction < 0) then {_direction = _direction + 360};
 _distance = sqrt ((_xcoord ^ 2) + (_ycoord ^ 2)) - _minRange;
-_angle = _distance / (_maxRange - _minRange) * 100 + 15;
+_angle = _distance / (((_maxRange - _minRange) max 1)) * 100 + 15;
 if (_angle > 70) then {_angle = 70};
 //--- N-FEATUREBUG-39: out-of-range early exit. ARTY_Prep (above) already stopped the vehicle and
 //--- disabled the driver's AI, and line 7 set restricted=true. Returning here without undoing that

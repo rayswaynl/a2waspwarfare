@@ -16,6 +16,7 @@ for "_i" from 1 to (_launchercount) do {
 	_flare = "FlareCountermeasure" createVehicleLocal _relpos;
 	_dirpos = [(_dirpos select 0) - (_relpos select 0),(_dirpos select 1) - (_relpos select 1),(_dirpos select 2) - (_relpos select 2)];
 	_div = abs(_dirpos select 0)+abs(_dirpos select 1)+abs(_dirpos select 2);
+	if (_div < 0.001) then {_div = 1}; //--- NUMERIC: coinciding launcher/dir selections => sum abs = 0 (div0 / NaN velocity)
 	_flarevel = [(_dirpos select 0)/_div*_muzzzlevel,(_dirpos select 1)/_div*_muzzzlevel,(_dirpos select 2)/_div*_muzzzlevel];
 	_vvel = velocity _vehicle;
 
