@@ -48,7 +48,8 @@ switch (_action) do {
 		{
 			_defense = _x getVariable "wfbe_defense";
 			_use_server = true;
-			if !(isNil '_defense') then {
+			//--- r33: objNull is not nil - a failed createVehicle still stamped the logic; never man/lock null hulls.
+			if (!(isNil "_defense") && {!isNull _defense} && {alive _defense}) then {
 				_positions = [];
 				_groups = [];
 				if !(alive gunner _defense) then { //--- Make sure that the defense gunner is null or dead.
@@ -127,7 +128,8 @@ switch (_action) do {
 		{
 			_defense = _x getVariable "wfbe_defense";
 
-			if !(isNil '_defense') then {
+			//--- r33: skip null hulls (same class as spawn gate).
+			if (!(isNil "_defense") && {!isNull _defense}) then {
 				_unit = gunner _defense;
 				if !(isNull _unit) then { //--- Make sure that we do not remove a player's unit.
 					//--- fix(alife) proper #1370 audit: the bare deleteVehicle below silently no-ops when
