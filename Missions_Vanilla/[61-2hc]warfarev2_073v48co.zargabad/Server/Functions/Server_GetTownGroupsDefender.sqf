@@ -58,14 +58,14 @@ switch (_town getVariable "wfbe_town_type") do { // _units = [[group type, force
 		_groups_max = 7;
 	};
 	case "HugeTown1": {
-		_units = [["Squad", 3, 0],["Team", 2, 0],["Squad_Advanced",2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 1, 0],["AA_Heavy", 2, 0],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 2, 1],["Armored_Heavy", 2, 1]];
+		_units = [["Squad", 3, 0],["Team", 2, 0],["Squad_Advanced",2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 1, 0],["AA_Heavy", 2, 1],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 2, 1],["Armored_Heavy", 2, 1]];
 		_percentage_inf = 75;
 		_groups_max = 8;
 	};
 	case "HugeTown2": {
 		//--- cmdcon35 (role-diversity): shifted 1 weight off bland Team (3->2) onto the elite Squad_Contractor (1->2).
 		//--- Net infantry weight is unchanged, so _groups_max stays 8; the HUGE garrison just skews toward the PMC squad.
-		_units = [["Squad", 2, 0],["Team", 2, 0],["Squad_Advanced",2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 2, 0],["AA_Heavy", 2, 0],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 2, 1],["Armored_Heavy", 2, 1]];
+		_units = [["Squad", 2, 0],["Team", 2, 0],["Squad_Advanced",2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 2, 0],["AA_Heavy", 2, 1],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 2, 1],["Armored_Heavy", 2, 1]];
 		_percentage_inf = 75;
 		_groups_max = 8;
 	};
@@ -231,9 +231,18 @@ _contentsKind = [];
 _fi = 0;
 {
 	_get = missionNamespace getVariable Format ["WFBE_%1_GROUPS_%2", _side, _x];
+	//--- TEMPLATE INTEGRITY (g1606): only register non-empty resolved rosters. Empty GROUP
+	//--- tables or empty variants previously still entered _contents (isNil is false for []),
+	//--- so town AI pre-created group shells for zero-asset templates.
 	if !(isNil '_get') then {
-		[_contents, _get select floor(random count _get)] Call WFBE_CO_FNC_ArrayPush;
-		[_contentsKind, _finalKind select _fi] Call WFBE_CO_FNC_ArrayPush;
+		if ((typeName _get == "ARRAY") && {(count _get) > 0}) then {
+			private ["_pick"];
+			_pick = _get select floor(random count _get);
+			if ((typeName _pick == "ARRAY") && {(count _pick) > 0}) then {
+				[_contents, _pick] Call WFBE_CO_FNC_ArrayPush;
+				[_contentsKind, _finalKind select _fi] Call WFBE_CO_FNC_ArrayPush;
+			};
+		};
 	};
 	_fi = _fi + 1;
 } forEach _final;
