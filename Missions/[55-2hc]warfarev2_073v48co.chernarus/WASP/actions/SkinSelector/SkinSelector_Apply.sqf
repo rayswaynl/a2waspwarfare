@@ -143,6 +143,11 @@ if (_oldGrpLeaderLocal) then {
 	//--- FALLBACK PATH (subordinate with a remote slot-group leader): dedicated LOCAL swap group so
 	//--- createUnit does not silently fail; full re-registration happens after selectPlayer (B5c/B6).
 	_swapGrp = createGroup (side _oldUnit);
+if (isNull _swapGrp) exitWith { //--- r49 fail-clean: group-cap createGroup returns grpNull; do not CreateUnit into null
+diag_log format ["[WFBE (SKIN)] B2 ABORT: createGroup returned grpNull for skin swap (side=%1)", side _oldUnit];
+WFBE_SkinSelector_InProgress = false;
+hint "Skin swap failed (group limit). Please try again later.";
+};
 	_swapGrp setVariable ["wfbe_group_src", "skin-swap", true]; //--- audit clarity: transient client-local swap group. BROADCAST (3rd arg true) so the SERVER-side GROUPAUDIT/UNTAGLEAK sees the tag - a client-local setVariable would be invisible to the server's allGroups audit and read "untagged".
 	_createGrp = _swapGrp;
 	_usedSwapGrp = true;
