@@ -197,15 +197,15 @@ if (count _destPos > 0 && {_usedRing < (600 + _townBuffer)}) then {
 //--- must be at least MHQ_MIN_ADVANCE metres from the OLD HQ, else keep the current base. Ray saw the HQ
 //--- move ~800m and stack on the old base; a relocation should only fire when the front has genuinely run away.
 if (count _destPos > 0) then {
-	private ["_minAdv","_advDX","_advDY","_advD"];
+	private ["_minAdv","_advDX","_advDY","_advD","_relaxSkip"];
+	_relaxSkip = (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_MINADV_RELAX_SKIP", 1]) > 0;
 	_minAdv = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_MIN_ADVANCE", 3000];
 	_advDX = (_destPos select 0) - (_hqPos select 0);
 	_advDY = (_destPos select 1) - (_hqPos select 1);
 	_advD  = sqrt (_advDX*_advDX + _advDY*_advDY);
-	if (_advD < _minAdv) then {
+	if ((_advD < _minAdv) && ((!_relaxSkip) || (_usedRing >= (600 + _townBuffer)))) exitWith {
 		diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|ABORT|advance-below-min|adv=" + str (round _advD) + "|min=" + str (round _minAdv));
 		_logik setVariable ["wfbe_mhqreloc_abort_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_MHQ_ABORT_COOLDOWN", 0])]; //--- B74.2 anti-thrash: back off re-eval (no-op when cooldown=0).
-		_destPos = [];
 	};
 };
 
