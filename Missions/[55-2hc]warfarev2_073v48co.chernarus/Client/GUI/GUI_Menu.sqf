@@ -150,7 +150,7 @@ while {alive player && dialog} do {
 				};
 
 				if !(_skip) exitWith {};
-				["RequestCommanderVote", [sideJoined, name player]] Call WFBE_CO_FNC_SendToServer;
+				["RequestCommanderVote", [sideJoined, name player, player]] Call WFBE_CO_FNC_SendToServer;
 				voted = true;
 				waitUntil {(WFBE_Client_Logic getVariable "wfbe_votetime") > 0 || !dialog || !alive player};
 				if (!alive player || !dialog) exitWith {};
@@ -169,7 +169,7 @@ while {alive player && dialog} do {
 
 			if (!_skip) then {
 				//--- Round-start path: cast a vote (unchanged behaviour).
-				["RequestCommanderVote", [sideJoined, name player]] Call WFBE_CO_FNC_SendToServer;
+				["RequestCommanderVote", [sideJoined, name player, player]] Call WFBE_CO_FNC_SendToServer;
 				voted = true;
 				waitUntil {(WFBE_Client_Logic getVariable "wfbe_votetime") > 0 || !dialog || !alive player};
 				if (alive player && dialog) then {

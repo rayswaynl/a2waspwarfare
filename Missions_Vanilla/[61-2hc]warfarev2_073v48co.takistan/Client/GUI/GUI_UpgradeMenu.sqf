@@ -568,7 +568,7 @@ while {alive player && dialog} do {
 			_qtotal = {_x == _id} count _queue;
 			if ((WFBE_Client_Logic getVariable ["wfbe_upgrading", false]) && {(WFBE_Client_Logic getVariable "wfbe_upgrading_id") == _id}) then {_qtotal = _qtotal + 1};
 			if (_upgrade_current + _qtotal < (_upgrade_levels select _id)) then {
-				["RequestEnqueue", [WFBE_Client_SideJoined, _id]] call WFBE_CO_FNC_SendToServer;
+				["RequestEnqueue", [WFBE_Client_SideJoined, _id, player]] call WFBE_CO_FNC_SendToServer;
 				hint parseText(Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Queued <t color='#B6F563'>%1</t> level <t color='#F5D363'>%2</t></t>", _upgrade_labels select _id, _upgrade_current + _qtotal + 1]);
 			} else {
 				hint parseText(Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Every remaining level of <t color='#F5D363'>%1</t> is already running, queued or maxed</t>", _upgrade_labels select _id]);
@@ -584,7 +584,7 @@ while {alive player && dialog} do {
 			_queue = WFBE_Client_Logic getVariable "wfbe_upgrade_queue";
 			if (isNil "_queue") then {_queue = []};
 			if (({_x == _id} count _queue) > 0) then {
-				["RequestDequeue", [WFBE_Client_SideJoined, _id]] call WFBE_CO_FNC_SendToServer;
+				["RequestDequeue", [WFBE_Client_SideJoined, _id, player]] call WFBE_CO_FNC_SendToServer;
 				hint parseText(Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Removed the last queued level of <t color='#F5D363'>%1</t></t>", _upgrade_labels select _id]);
 			};
 		};
