@@ -10,6 +10,11 @@ Private ["_wreckObject", "_building","_dammages","_dammages_current","_get","_ki
 _structure = _this select 0;
 _killer = _this select 1;
 
+//--- r55 fail-clean: structure can be nil/null on relay races; never touch getVariable on a void object.
+if (isNil "_structure") exitWith {};
+if (isNull _structure) exitWith {};
+if (isNil "_killer") then {_killer = objNull};
+
 //--- DR-20: server-local killed EHs plus client process-killed-hq relays can replay the same HQ death.
 //--- Keep redundant detection, but let this consumer process each HQ object once.
 if (_structure getVariable ["wfbe_hq_killed_done", false]) exitWith {};
@@ -36,26 +41,33 @@ _points = 30000 / 100 * WFBE_C_BUILDINGS_SCORE_COEF;
 if ((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus) then {
 	Private ["_hq"];
 	_hq = [missionNamespace getVariable Format["WFBE_%1MHQNAME", _side], getPos _structure, (_side) Call WFBE_CO_FNC_GetSideID, getDir _structure, false, false, false] Call WFBE_CO_FNC_CreateVehicle;
-	_hq setPos (getPos _structure);
-	_hq setVariable ["wfbe_trashable", false];
-	_hq setVariable ["wfbe_side", _side];
-	_hq setDamage 1;
+	//--- r55 fail-clean: CreateVehicle can return null (group/vehicle cap / bad class); never stamp null as live HQ.
+	if (!isNull _hq) then {
+		_hq setPos (getPos _structure);
+		_hq setVariable ["wfbe_trashable", false];
+		_hq setVariable ["wfbe_side", _side];
+		_hq setDamage 1;
 
-	// Marty : from now on, the marker must track the newly created dead MHQ wreck,
-	// not the deployed HQ structure that will be deleted after 10 seconds.
-	_wreckObject = _hq;
+		// Marty : from now on, the marker must track the newly created dead MHQ wreck,
+		// not the deployed HQ structure that will be deleted after 10 seconds.
+		_wreckObject = _hq;
 
-	//--- HQ is now considered mobilized.
-	_logik setVariable ["wfbe_hq_deployed", false, true];
-	_logik setVariable ["wfbe_hq",_hq,true];
+		//--- HQ is now considered mobilized.
+		_logik setVariable ["wfbe_hq_deployed", false, true];
+		_logik setVariable ["wfbe_hq",_hq,true];
+	} else {
+		//--- Keep deployed flag consistent so recovery can still run; leave wreck marker on the dying structure.
+		_logik setVariable ["wfbe_hq_deployed", false, true];
+		["WARNING", Format["Server_OnHQKilled.sqf: [%1] dead-MHQ create failed for deployed HQ [%2].", _side, _structure_kind]] Call WFBE_CO_FNC_LogContent;
+	};
 
 	//--- Release fix: delete the deployed-HQ shield walls too. They are created on deploy
 	//--- (Construction_HQSite.sqf) and were previously cleaned ONLY on mobilize, so a DESTROYED
 	//--- deployed HQ left ~23 concrete objects orphaned on the map every destroy/redeploy cycle.
 	{if (!isNull _x) then {deleteVehicle _x}} forEach (_structure getVariable ["wfbe_hq_walls", _structure getVariable ["WFBE_Walls", []]]);
 
-	//--- Remove the structure after the burial.
-	(_structure) Spawn {sleep 10; deleteVehicle _this};
+	//--- Remove the structure after the burial (r55: re-check isNull after sleep).
+	(_structure) Spawn {sleep 10; if (!isNull _this) then {deleteVehicle _this};};
 };
 
 //--- B69 S6 : base-fall spectacle. This fires ONCE per (rare) HQ destruction, so spawning
@@ -64,16 +76,17 @@ if ((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus) then {
 //--- structure itself). SmokeShellBlack is a vanilla A2-OA class. Toggleable via a missionNamespace
 //--- constant so the dedicated constants agent can default/disable it without touching this file;
 //--- the [name,default] getVariable form is reliable on missionNamespace.
-if (isServer && (missionNamespace getVariable ["WFBE_C_BASEFALL_SMOKE_ENABLED", true])) then {
+if (isServer && (missionNamespace getVariable ["WFBE_C_BASEFALL_SMOKE_ENABLED", true]) && {!isNull _wreckObject}) then {
 	Private ["_smoke"];
 	_smoke = "SmokeShellBlack" createVehicle (getPos _wreckObject);
-	_smoke setPos (getPos _wreckObject);
+	if (!isNull _smoke) then {_smoke setPos (getPos _wreckObject);};
 };
 
 //--- Teamkill? [_side, "SendMessage", ["command", "tkill", [name _killer, _structure_kind]]] Call WFBE_CO_FNC_SendToClients
 //--- DR-50 (cmdcon41-w3f): compute the teamkill flag BEFORE any score award (it was computed below,
 //--- AFTER the award, so the award fired even on a teamkill). Same test as the old inline form.
-_teamkill = if (side _killer == _side) then {true} else {false};
+//--- r55 fail-clean: null killer is never a teamkill (side objNull is civilian / undefined in practice).
+_teamkill = if (!isNull _killer && {side _killer == _side}) then {true} else {false};
 
 //--- DR-50 (cmdcon41-w3f): award the HQ-kill points EXACTLY ONCE, and ONLY on a clean enemy kill.
 //--- Previously this award was UNCONDITIONAL (paid on teamkills too), and a SECOND guarded award of a

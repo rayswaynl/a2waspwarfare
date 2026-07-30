@@ -1,7 +1,7 @@
 private["_clear","_mapHalf","_mapSize","_perfActive","_perfDeleted","_perfItemStart","_perfScanned","_perfStart","_scanCentre","_scanRadius","_timer"];
 
-_timer = missionNamespace getVariable "WFBE_C_RUINS_CLEANER_TIME_PERIOD";
-if (isNil "_timer") then {_timer = 1800};
+_timer = missionNamespace getVariable ["WFBE_C_RUINS_CLEANER_TIME_PERIOD", 1800];
+if (isNil "_timer" || {typeName _timer != "SCALAR"}) then {_timer = 1800};
 if (_timer < 1800) then {_timer = 1800};
 
 _scanCentre = [7000,7500,0];
@@ -26,10 +26,13 @@ while {!WFBE_GameOver} do {
 	_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
 	_perfScanned = count _clear;
 	{
-		_perfItemStart = diag_tickTime;
-		deleteVehicle _x;
-		_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
-		_perfDeleted = _perfDeleted + 1;
+		//--- r55 fail-clean: skip nulls after cooperative sleep; count only real deletes.
+		if (!isNull _x) then {
+			_perfItemStart = diag_tickTime;
+			deleteVehicle _x;
+			_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
+			_perfDeleted = _perfDeleted + 1;
+		};
 		sleep 0.5;
 	} forEach _clear;
 	if !(isNil "PerformanceAudit_Record") then {

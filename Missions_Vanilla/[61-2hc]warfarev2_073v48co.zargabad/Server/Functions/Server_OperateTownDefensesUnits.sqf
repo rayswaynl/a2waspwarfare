@@ -153,10 +153,13 @@ switch (_action) do {
 				//--- cannot board/steal the gun until the next "spawn" pass re-mans it.
 				_defense lock true;
 			};
-			if !(isNil {_x getVariable "wfbe_defense_operator"}) then { //--- Delete the original gunner if he's still around.
-				if (alive(_x getVariable "wfbe_defense_operator")) then {deleteVehicle (_x getVariable "wfbe_defense_operator")};
-				_x setVariable ["wfbe_defense_operator", nil];
+			//--- r55 fail-clean: bare getVariable can be nil/non-object; alive(nil) is unsafe — bind once and gate.
+			Private ["_defOp"];
+			_defOp = _x getVariable "wfbe_defense_operator";
+			if (!isNil "_defOp" && {typeName _defOp == "OBJECT"} && {!isNull _defOp} && {alive _defOp}) then {
+				deleteVehicle _defOp;
 			};
+			_x setVariable ["wfbe_defense_operator", nil];
 		} forEach (_town getVariable "wfbe_town_defenses");
 
 		//--- Clear per-town gunner group references so the next spawn creates fresh groups.

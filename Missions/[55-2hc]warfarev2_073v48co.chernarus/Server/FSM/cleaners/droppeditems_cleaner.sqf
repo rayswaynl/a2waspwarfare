@@ -85,7 +85,15 @@ while {!WFBE_GameOver} do {
 	_perfScanned = _perfScanned + _perfWeaponholders;
 	{
 		if (_capacity <= 0) exitWith {};
-		_perfItemStart = diag_tickTime;deleteVehicle _x;_perfActive = _perfActive + (diag_tickTime - _perfItemStart);_perfDeleted = _perfDeleted + 1;_capacity = _capacity - 1;sleep 0.5;
+		//--- r55 fail-clean: cooperative sleep can invalidate the snapshot entry; only delete/count real objects.
+		if (!isNull _x) then {
+			_perfItemStart = diag_tickTime;
+			deleteVehicle _x;
+			_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
+			_perfDeleted = _perfDeleted + 1;
+			_capacity = _capacity - 1;
+		};
+		sleep 0.5;
 	} forEach _clear;
 
 	//--- Mines: NOT scanned here. mines_cleaner.sqf tracks every createMine via the global `mines`
