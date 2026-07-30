@@ -102,7 +102,7 @@ while {alive player && dialog} do {
 			};
 		} forEach _hvtList;
 		_carrierOwned = !isNull _platform;
-		_scudCost = missionNamespace getVariable ["WFBE_C_SCUD_COST_GUER", 40000];
+		_scudCost = missionNamespace getVariable ["WFBE_C_SCUD_COST", 25000];
 
 		ctrlShow [32020, true]; ctrlShow [32021, true]; ctrlShow [32022, true];
 		ctrlShow [32023, true]; ctrlShow [32024, true];
