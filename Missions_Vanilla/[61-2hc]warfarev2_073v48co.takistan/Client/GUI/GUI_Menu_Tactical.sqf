@@ -1130,7 +1130,7 @@ while {alive player && dialog} do {
 		//--- range/GetTeamArtillery data - skip the cannon-only reads instead of indexing past the end.
 		if (_index >= 0 && {_index < _artyCount}) then {
 			_minRange = (missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN",sideJoined]) select _index;
-			_maxRange = round(((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",sideJoined]) select _index) / (missionNamespace getVariable "WFBE_C_ARTILLERY"));
+			_maxRange = round(((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX",sideJoined]) select _index) / ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1));
 			_trackingArray = [group player,true,_index,sideJoined] Call GetTeamArtillery;
 		} else {
 			_minRange = 0;
