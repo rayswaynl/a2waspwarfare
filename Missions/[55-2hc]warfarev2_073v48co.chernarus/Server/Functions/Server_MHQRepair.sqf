@@ -71,10 +71,12 @@ if (isMultiplayer) then {[_side, "HandleSpecial", ["set-hq-killed-eh", _MHQ]] Ca
 _logik setVariable ['wfbe_hq_deployed', false, true];
 _logik setVariable ['wfbe_hq_repairing',false, true];
 _logik setVariable ['cashrepaired', false, true]; //--- wiki-wins: reset so cash-repair works again after the HQ is rebuilt (Action_RepairMHQDepot set it true permanently)
-_logik setVariable ['wfbe_hq_repair_count', (_logik getVariable "wfbe_hq_repair_count") + 1, true];
-//--- [>1.62] Set the HQ to be local to the commander.
+_logik setVariable ['wfbe_hq_repair_count', (_logik getVariable ["wfbe_hq_repair_count", 0]) + 1, true]; //--- r30: nil-safe count (first repair after boot)
+//--- [>1.62] Set the HQ to be local to the commander (skip when no commander team - AI-only / interregnum).
  _commanderTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-[leader _commanderTeam, "SetMHQLock", _MHQ] Call WFBE_CO_FNC_SendToClient;	
+if (!isNull _commanderTeam && {isPlayer (leader _commanderTeam)}) then {
+	[leader _commanderTeam, "SetMHQLock", _MHQ] Call WFBE_CO_FNC_SendToClient;
+};
 [_side,"Mobilized", ["Base", _MHQ]] Spawn SideMessage;
 deleteVehicle _hq;	
 

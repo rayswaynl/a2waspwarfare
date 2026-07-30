@@ -17,6 +17,14 @@ _logik setVariable ["wfbe_hqinuse", true];
 _HQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
 _deployed = (_side) Call WFBE_CO_FNC_GetSideHQDeployStatus;
 
+//--- r30: refuse deploy/pack when the current HQ object is missing or already destroyed.
+//--- Without this, RequestStructure(index 0) against a wreck flipped dead MHQ -> live deployed HQ
+//--- for free (bypassed Server_MHQRepair cost + repair count). AI recovery uses MHQRepair, not this path.
+if (isNull _HQ || {!alive _HQ}) exitWith {
+	_logik setVariable ["wfbe_hqinuse", false];
+	["WARNING", Format ["Construction_HQSite.sqf: [%1] aborted - HQ missing or destroyed (cannot deploy/pack a wreck).", _sideText]] Call WFBE_CO_FNC_LogContent;
+};
+
 if (!_deployed) then {
 	_HQ setPos [1,1,1];
 

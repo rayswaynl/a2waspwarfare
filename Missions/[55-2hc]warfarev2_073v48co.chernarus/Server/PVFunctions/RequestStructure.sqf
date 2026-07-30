@@ -24,25 +24,33 @@ _rejectMsg = ""; //--- refund-sweep: LocalizeMessage case for a rejected build (
 
 //--- HARDEN u2 (60-audit, RequestStructure side-spoof): re-derive authorization from the requester's
 //--- ACTUAL side, never trust the claimed _side alone - mirrors RequestMHQRepair.sqf / RequestSiteClearance.sqf
-//--- ("side group _reqPlayer" idiom). Caller trace (coin_interface.sqf): every economy-structure build
-//--- (Barracks/Light/CommandCenter/Heavy/Aircraft/ServicePoint/AARadar/CBRadar/Bank/ArtilleryRadar/Reserve)
-//--- sends the real 'player' object as arg 4 (coin_interface.sqf:791). The ONE caller that omits it is the
-//--- HQ-mobilize toggle (coin_interface.sqf:545, re-clicking an already-deployed CommandCenter) - it always
-//--- targets _index 0 (the CommandCenter slot in every side's STRUCTURENAMES) and is otherwise unauthenticated
-//--- already (pre-existing, not a regression here). Every other structure now requires a verified same-side
-//--- player or is rejected before any of the CBRadar/AARadar/Bank gates below can run - this also stops a
-//--- forged request from stamping a pending-reservation lock to grief another side's legitimate builds.
-if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {
+//--- ("side group _reqPlayer" idiom). Caller trace (coin_interface.sqf): every structure build including
+//--- HQ deploy/pack sends the real 'player' object as arg 4. HQ was previously exempt (index 0 without a
+//--- verified requester), so a forged RequestStructure with the enemy side + HQ classname could pack or
+//--- deploy the enemy MHQ with no player identity. All structure requests (including HQ) now require a
+//--- verified same-side player. HQ also re-checks commander-team membership server-side (coin UI is only
+//--- a client gate). AI commander still ExecVMs Construction_HQSite.sqf directly and never hits this PVF.
+if (isNull _reqPlayer || {!isPlayer _reqPlayer}) then {
+	_reject = true;
+	_rejectMsg = "StructureRequesterMismatch";
+	["WARNING", Format ["RequestStructure.sqf: [%1] rejected - no verified requester for structure [%2] (index %3).", str _side, _structureType, _index]] Call WFBE_CO_FNC_LogContent;
+} else {
 	if !((side group _reqPlayer) in [_side]) then {
 		_reject = true;
 		_rejectMsg = "StructureRequesterMismatch";
 		["WARNING", Format ["RequestStructure.sqf: [%1] requester side mismatch [%2] for structure [%3] (index %4) - rejected.", str _side, side group _reqPlayer, _structureType, _index]] Call WFBE_CO_FNC_LogContent;
 	};
-} else {
-	if (_index != 0) then {
+};
+
+//--- HQ deploy/pack (STRUCTURENAMES index 0): only the acting commander team's group may flip HQ state.
+//--- Without this, any same-side player could forge RequestStructure and pack/deploy the side HQ.
+if (!_reject && _index == 0) then {
+	private ["_cmdTeam"];
+	_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
+	if (isNull _cmdTeam || {group _reqPlayer != _cmdTeam}) then {
 		_reject = true;
 		_rejectMsg = "StructureRequesterMismatch";
-		["WARNING", Format ["RequestStructure.sqf: [%1] rejected - no verified requester for structure [%2] (index %3).", str _side, _structureType, _index]] Call WFBE_CO_FNC_LogContent;
+		["WARNING", Format ["RequestStructure.sqf: [%1] HQ deploy/pack rejected - requester not commander team (player=%2).", str _side, _reqPlayer]] Call WFBE_CO_FNC_LogContent;
 	};
 };
 
