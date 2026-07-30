@@ -50,6 +50,7 @@ if (!isNil "WFBE_C_VAR_SpectatorWheelIdx") then {
 };
 
 hintSilent ""; //--- v2: clear the hint overlay even if it was mid-update.
+12455 cutText ["", "PLAIN", 0]; //--- clear the cutText card layer (hint layer is dead on this server - see Enter).
 
 WFBE_C_VAR_SpectatorMode = "free";
 WFBE_C_VAR_SpectatorTarget = objNull;

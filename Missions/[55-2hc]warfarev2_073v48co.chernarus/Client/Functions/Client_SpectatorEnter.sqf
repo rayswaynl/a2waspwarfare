@@ -208,7 +208,7 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 				_step = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP", 5];
 				_d = ((WFBE_C_VAR_SpectatorDirectorDwell - _step) max (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_MIN", 5]));
 				WFBE_C_VAR_SpectatorDirectorDwell = _d;
-				hintSilent Format ["Director dwell: %1s", _d];
+				//--- readout lives on the always-on cutText card (hint layer is dead on this server).
 			} else {_handled = false};
 		};
 		case 27: { //--- ]: increase director dwell
@@ -216,7 +216,7 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 				_step = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP", 5];
 				_d = ((WFBE_C_VAR_SpectatorDirectorDwell + _step) min (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_DWELL_MAX", 120]));
 				WFBE_C_VAR_SpectatorDirectorDwell = _d;
-				hintSilent Format ["Director dwell: %1s", _d];
+				//--- readout lives on the always-on cutText card (hint layer is dead on this server).
 			} else {_handled = false};
 		};
 		case 33: { //--- F: toggle follow-cam on the armed target
@@ -257,19 +257,19 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 			private "_s";
 			_s = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 25]) + 10) min 400;
 			missionNamespace setVariable ["WFBE_C_SPECTATOR_SENS", _s];
-			hintSilent Format ["Spectator sensitivity: %1", _s];
+			//--- readout lives on the always-on cutText card (hint layer is dead on this server).
 			true
 		};
 		case 209: { //--- PgDn: lower mouse sensitivity
 			private "_s";
 			_s = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 25]) - 10) max 10;
 			missionNamespace setVariable ["WFBE_C_SPECTATOR_SENS", _s];
-			hintSilent Format ["Spectator sensitivity: %1", _s];
+			//--- readout lives on the always-on cutText card (hint layer is dead on this server).
 			true
 		};
-		case 35: { //--- H: hide/show the hint overlay (clean OBS capture)
+		case 35: { //--- H: hide/show the card overlay (clean OBS capture)
 			WFBE_C_VAR_SpectatorHideHint = !WFBE_C_VAR_SpectatorHideHint;
-			if (WFBE_C_VAR_SpectatorHideHint) then {hintSilent ""};
+			if (WFBE_C_VAR_SpectatorHideHint) then {12455 cutText ["", "PLAIN", 0]};
 		};
 		case 14: {[] Call WFBE_CL_FNC_SpectatorExit}; //--- Backspace: quick exit
 		default {_handled = false}; //--- unhandled keys (Esc, chat, etc.) fall through to the game.
@@ -498,27 +498,30 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 			if (_mode == "director" && {!isNull _t}) then {
 				_tgtTxt = Format ["%1: %2", WFBE_C_VAR_SpectatorDirectorClass, WFBE_C_VAR_SpectatorDirectorTargetLabel];
 			};
-			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
-				_dirCard = "<t size='0.9' color='#7fd4ff'>DIRECTOR</t><br/>" + "<t size='0.85' color='#aaaaaa'>TAB pin class | G pooled action %7 | O orbit %8 | [ ] dwell %9s</t><br/>";
-			};
-			hintSilent parseText Format [
-				"<t size='1.2' color='#7fd4ff'>SPECTATOR</t>  <t color='#ffcc33'>%1</t><br/>"
-				+ "<t color='#cccccc'>Target</t> %2<br/>"
-				+ "<t color='#cccccc'>Speed</t> %3 m/s   <t color='#cccccc'>FOV</t> %4%5   <t color='#cccccc'>Sens</t> %6<br/>"
-				+ "<br/><t size='0.9' color='#7fd4ff'>MOVE</t><br/>"
-				+ "<t size='0.85' color='#aaaaaa'>Mouse look | W/S fly | A/D strafe | Space/Ctrl up-down<br/>"
-				+ "Shift boost | Alt crawl | Wheel zoom</t><br/>"
-				+ "<t size='0.9' color='#7fd4ff'>TARGETS</t><br/>"
-				+ "<t size='0.85' color='#aaaaaa'>N / B next-prev target | F follow-cam | V through-their-eyes</t><br/>"
-				+ _dirCard
-				+ "<t size='0.9' color='#7fd4ff'>SETUP</t><br/>"
-				+ "<t size='0.85' color='#aaaaaa'>PgUp / PgDn sensitivity | H hide this card | Backspace exit</t>",
+			//--- CUTTEXT, NOT HINT (live-proven 2026-07-30): this server's Veteran difficulty
+			//--- profile suppresses the hint layer entirely - PgUp gave no readout and this card
+			//--- never drew, while the lobby-lock hold's cutText rendered fine (owner screenshot).
+			//--- Layer 12455 (12454 belongs to the lobby-lock hold; 12450-12452/12461 are taken).
+			//--- cutText takes a plain STRING; "\n" line breaks are the in-tree proven pattern
+			//--- (Client_TitleTextMessage.sqf). Styled structured text returns with the cutRsc
+			//--- broadcast HUD planned in the v3.2 overlay lane.
+			_dirCard = Format [
+				"SPECTATOR [%1]  target %2\nspeed %3 m/s | FOV %4%5 | sens %6",
 				toUpper _mode, _tgtTxt, round _spd, round (WFBE_C_VAR_SpectatorFov * 100), "%",
-				round (missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 45]),
-				if (WFBE_C_VAR_SpectatorDirectorAuto) then {"ON"} else {"OFF"},
-				if (WFBE_C_VAR_SpectatorOrbit) then {"ON"} else {"OFF"},
-				round WFBE_C_VAR_SpectatorDirectorDwell
+				round (missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 45])
 			];
+			_dirCard = _dirCard + "\nMOVE  mouse look | W/S fly | A/D strafe | Space/Ctrl up-down | Shift boost | Alt crawl | wheel zoom";
+			_dirCard = _dirCard + "\nTARGETS  N/B cycle | F follow | V eyes";
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
+				_dirCard = _dirCard + Format [
+					"\nDIRECTOR  TAB pin class | G pooled auto %1 | O orbit %2 | [ ] dwell %3s",
+					if (WFBE_C_VAR_SpectatorDirectorAuto) then {"ON"} else {"OFF"},
+					if (WFBE_C_VAR_SpectatorOrbit) then {"ON"} else {"OFF"},
+					round WFBE_C_VAR_SpectatorDirectorDwell
+				];
+			};
+			_dirCard = _dirCard + "\nSETUP  PgUp/PgDn sens | H hide card | Backspace exit";
+			12455 cutText [_dirCard, "PLAIN DOWN", 0];
 		};
 	};
 };
