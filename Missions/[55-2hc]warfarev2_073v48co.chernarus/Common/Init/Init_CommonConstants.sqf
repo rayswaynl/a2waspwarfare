@@ -3501,6 +3501,18 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT") then {WFBE_C_SPECTATOR_DIRE
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS = 8};
 //--- TIGHT camera height above target in metres.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT = 4};
+//--- seconds of velocity feed-forward for moving director and manual-follow subjects.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_LEAD_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_LEAD_SEC = 0.4};
+//--- multiplier for position convergence when subject speed exceeds 8 m/s.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FAST_GAIN_MULT") then {WFBE_C_SPECTATOR_DIRECTOR_FAST_GAIN_MULT = 2.5};
+//--- standoff multiplier for non-Man director subjects.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_VEH_STANDOFF_MULT") then {WFBE_C_SPECTATOR_DIRECTOR_VEH_STANDOFF_MULT = 2.5};
+//--- minimum FOV for non-Air vehicle director subjects.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_VEH_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_VEH_FOV_MIN = 0.55};
+//--- standoff multiplier for Air director subjects.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_AIR_STANDOFF_MULT") then {WFBE_C_SPECTATOR_DIRECTOR_AIR_STANDOFF_MULT = 4.0};
+//--- minimum FOV for Air director subjects.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN = 0.45};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

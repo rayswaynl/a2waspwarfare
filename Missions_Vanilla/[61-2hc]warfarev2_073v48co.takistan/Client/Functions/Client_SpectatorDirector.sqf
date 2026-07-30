@@ -292,11 +292,12 @@ WFBE_CL_FNC_DirectorAimPoint = {
 };
 
 WFBE_CL_FNC_DirectorAimStep = {
-    Private ["_camPos","_oldAim","_wantAim","_dt","_oldDx","_oldDy","_newDx","_newDy","_oldRange","_newRange","_oldDir","_newDir","_delta","_panRate","_maxSlew","_cutAngle","_factor","_stepDir","_result"];
+    Private ["_camPos","_oldAim","_wantAim","_dt","_allowCut","_oldDx","_oldDy","_newDx","_newDy","_oldRange","_newRange","_oldDir","_newDir","_delta","_panRate","_maxSlew","_cutAngle","_factor","_stepDir","_result"];
     _camPos = _this select 0;
     _oldAim = _this select 1;
     _wantAim = _this select 2;
     _dt = _this select 3;
+    _allowCut = _this select 4;
     _oldDx = (_oldAim select 0) - (_camPos select 0);
     _oldDy = (_oldAim select 1) - (_camPos select 1);
     _newDx = (_wantAim select 0) - (_camPos select 0);
@@ -313,7 +314,7 @@ WFBE_CL_FNC_DirectorAimStep = {
         _panRate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC", 8];
         _maxSlew = _panRate * _dt;
         _cutAngle = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_CUT_DEG", 35];
-        if (abs _delta > _cutAngle) then {
+        if (abs _delta > _cutAngle && {_allowCut}) then {
             if (!WFBE_C_VAR_DirectorAimHardCut) then {
                 diag_log Format ["SPECTATE|v3|aim-cut|delta=%1|threshold=%2", round (abs _delta), _cutAngle];
             };
@@ -446,7 +447,7 @@ WFBE_CL_FNC_DirectorPickNext = {
 
 WFBE_CL_FNC_DirectorLoopStart = {
     [] spawn {
-        Private ["_next","_entry","_recent","_recentKeep","_recentStart","_i","_pinned","_oldClass","_now","_autoDelta","_pollSec","_shotAge","_minDwell","_maxDwell","_dwell","_shotType","_bounds","_forcedType","_forcedEstablish","_baseDue","_forceEstablish"];
+        Private ["_next","_entry","_recent","_recentKeep","_recentStart","_i","_pinned","_oldClass","_now","_autoDelta","_pollSec","_shotAge","_minDwell","_maxDwell","_dwell","_shotType","_bounds","_forcedType","_forcedEstablish","_baseDue","_forceEstablish","_target","_subject","_subjectFovMin"];
         _now = time;
         diag_log "SPECTATE|v3|director-thread-start";
         while {missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false] && {!(missionNamespace getVariable ["WFBE_gameover", false])}} do {
@@ -508,10 +509,17 @@ WFBE_CL_FNC_DirectorLoopStart = {
                         _shotType = _entry Call WFBE_CL_FNC_DirectorShotType;
                         if (_forcedType != "") then {_shotType = _forcedType};
                         _bounds = _shotType Call WFBE_CL_FNC_DirectorShotBounds;
+                        _target = _entry select 1;
+                        _subject = vehicle _target;
+                        _subjectFovMin = 0;
+                        if (!(_subject isKindOf "Man")) then {
+                            _subjectFovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_VEH_FOV_MIN", 0.55];
+                            if (_subject isKindOf "Air") then {_subjectFovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN", 0.45]};
+                        };
                         WFBE_C_VAR_SpectatorDirectorShotType = _shotType;
                         WFBE_C_VAR_SpectatorDirectorShotMinDwell = _bounds select 0;
                         WFBE_C_VAR_SpectatorDirectorShotMaxDwell = _bounds select 1;
-                        WFBE_C_VAR_SpectatorDirectorTargetFov = ((_bounds select 2) + (_bounds select 3)) / 2;
+                        WFBE_C_VAR_SpectatorDirectorTargetFov = (((_bounds select 2) + (_bounds select 3)) / 2) max _subjectFovMin;
                         WFBE_C_VAR_DirectorContactTarget = objNull;
                         WFBE_C_VAR_DirectorLastContactScan = 0;
                         WFBE_C_VAR_DirectorEngagementActive = false;
