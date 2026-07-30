@@ -219,9 +219,15 @@ while {alive player && dialog} do {
 		titleCut["","BLACK FADED",0];
 		_pos = position player;
 		_vehi = "Lada1" createVehicle [0,0,0];
-		player moveInCargo _vehi;
-		deleteVehicle _vehi;
-		player setPos _pos;
+		//--- FAIL-CLEAN r44: Lada1 create null must not moveInCargo/deleteVehicle
+		if (isNull _vehi) then {
+			["WARNING", "GUI_Menu.sqf: Lada1 headbug-fix create failed."] Call WFBE_CO_FNC_LogContent;
+			player setPos _pos;
+		} else {
+			player moveInCargo _vehi;
+			deleteVehicle _vehi;
+			player setPos _pos;
+		};
 		titleCut["","BLACK IN",5];
 	};
 
