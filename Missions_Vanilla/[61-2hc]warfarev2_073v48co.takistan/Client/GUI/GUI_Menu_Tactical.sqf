@@ -855,7 +855,14 @@ while {alive player && dialog} do {
 				-_currentFee Call ChangePlayerFunds;
 			};
 			_obj = "HeliHEmpty" createVehicle _callPos;
-			
+			if (isNull _obj) then {
+				["WARNING", Format ["GUI_Menu_Tactical.sqf: classic ICBM HeliHEmpty create failed at %1 - launch aborted.", _callPos]] Call WFBE_CO_FNC_LogContent;
+				//--- Refund client-side debit when create fails (legacy auth path only; server-auth never debited here).
+				if ((missionNamespace getVariable ["WFBE_C_ICBM_LEGACY_SERVER_AUTH", 0]) <= 0) then {
+					_currentFee Call ChangePlayerFunds;
+				};
+				hintSilent parseText "<t color='#F8D664'>ICBM target marker failed to spawn. Funds restored if charged. Try again.</t>";
+			} else {
 			//--- Marty : Creating the ICBM marker on map for the commander who give the order:
 			_ICBM_marker_name 		= "ICBM_" + str(time) ;
 			_ICBM_markerPosition 	= position _obj ;
@@ -888,7 +895,8 @@ while {alive player && dialog} do {
 			_time_before_ICBM_impact = missionNamespace getVariable "WFBE_ICBM_TIME_TO_IMPACT"; // time in minutes.
 			_time_before_ICBM_impact = _time_before_ICBM_impact * 60 ;							// time in seconds.
 			[_ICBM_marker_name,_time_before_ICBM_impact] call WFBE_CL_FNC_Delete_Marker ;			// delete the marker. 
-			[_ICBM_marker_elipse_name,_time_before_ICBM_impact] call WFBE_CL_FNC_Delete_Marker ;	// delete the elipse marker.		
+			[_ICBM_marker_elipse_name,_time_before_ICBM_impact] call WFBE_CL_FNC_Delete_Marker ;	// delete the elipse marker.
+			};
 		};
 		//--- Vehicle Paradrop.
 		if (MenuAction == 9) then {

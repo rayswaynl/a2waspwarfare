@@ -1990,8 +1990,11 @@ while {!WFBE_GameOver && _alive} do {
 								_asFwd = 45;
 								_asP0 = [(_asBase select 0) + _asFwd * (sin _asBrg), (_asBase select 1) + _asFwd * (cos _asBrg), 0];
 								_asP1 = [(_asBase select 0) + (_asFwd + 15) * (sin _asBrg), (_asBase select 1) + (_asFwd + 15) * (cos _asBrg), 0];
-								createVehicle [_asCls, _asP0, [], 0, "NONE"];
-								createVehicle [_asCls, _asP1, [], 0, "NONE"];
+								private ["_asS0","_asS1"];
+								_asS0 = createVehicle [_asCls, _asP0, [], 0, "NONE"];
+								_asS1 = createVehicle [_asCls, _asP1, [], 0, "NONE"];
+								if (isNull _asS0) then {["WARNING", Format ["Common_RunCommanderTeam.sqf: AICOM assault smoke create failed at %1 class %2.", _asP0, _asCls]] Call WFBE_CO_FNC_LogContent;};
+								if (isNull _asS1) then {["WARNING", Format ["Common_RunCommanderTeam.sqf: AICOM assault smoke create failed at %1 class %2.", _asP1, _asCls]] Call WFBE_CO_FNC_LogContent;};
 								_team setVariable ["wfbe_aicom_smoke_last", time];
 								diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|SMOKE|ASSAULT|team=" + (str _team) + "|cls=" + _asCls);
 							};
@@ -2674,8 +2677,11 @@ while {!WFBE_GameOver && _alive} do {
 										//--- Two shells ~15m out on either side of the enemy bearing (a covering arc, not a stack).
 										_smkP0 = [(_smkBase select 0) + 15 * (sin (_smkBrg - 30)), (_smkBase select 1) + 15 * (cos (_smkBrg - 30)), 0];
 										_smkP1 = [(_smkBase select 0) + 15 * (sin (_smkBrg + 30)), (_smkBase select 1) + 15 * (cos (_smkBrg + 30)), 0];
-										createVehicle [_smkCls, _smkP0, [], 0, "NONE"];
-										createVehicle [_smkCls, _smkP1, [], 0, "NONE"];
+										private ["_smkS0","_smkS1"];
+										_smkS0 = createVehicle [_smkCls, _smkP0, [], 0, "NONE"];
+										_smkS1 = createVehicle [_smkCls, _smkP1, [], 0, "NONE"];
+										if (isNull _smkS0) then {["WARNING", Format ["Common_RunCommanderTeam.sqf: AICOM breakoff smoke create failed at %1 class %2.", _smkP0, _smkCls]] Call WFBE_CO_FNC_LogContent;};
+										if (isNull _smkS1) then {["WARNING", Format ["Common_RunCommanderTeam.sqf: AICOM breakoff smoke create failed at %1 class %2.", _smkP1, _smkCls]] Call WFBE_CO_FNC_LogContent;};
 										_team setVariable ["wfbe_aicom_smoke_last", time];
 										diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|SMOKE|BREAKOFF|team=" + (str _team) + "|cls=" + _smkCls);
 									};
