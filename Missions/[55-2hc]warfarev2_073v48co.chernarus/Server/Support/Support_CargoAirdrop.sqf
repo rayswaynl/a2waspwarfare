@@ -105,6 +105,13 @@ if (isNull _pilot) exitWith {
 	if (!isNull _playerTeam) then {deleteGroup _playerTeam};
 };
 _pilot moveInDriver _vehicle;
+if (driver _vehicle != _pilot) exitWith {
+	if (!isNull _pilot) then {deleteVehicle _pilot};
+	if (!isNull _vehicle) then {deleteVehicle _vehicle};
+	if (!isNull _transportGroup) then {deleteGroup _transportGroup};
+	if (!isNull _playerTeam) then {deleteGroup _playerTeam};
+	["WARNING", Format ["Support_CargoAirdrop.sqf: [%1] transport pilot seat failed; aborting drop.", str _side]] Call WFBE_CO_FNC_LogContent;
+};
 _vehicle flyInHeight (300 + random(75));
 _transportGroup setBehaviour "CARELESS";
 _transportGroup setCombatMode "STEALTH";
@@ -160,18 +167,33 @@ if (_spawnEscort) then {
 			_escortPilot = [_pilotClass, _transportGroup, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
 			if (!isNull _escortPilot) then {
 				_escortPilot moveInDriver _escortJet;
-				_escortPilot setBehaviour "COMBAT";
-				_escortPilot setCombatMode "RED";
-				_escortPilot doMove _destination;
-				if ((missionNamespace getVariable ["WFBE_C_AIR_ATTACK_GUNNER", 0]) > 0 && {(_escortJet emptyPositions "gunner") > 0}) then {
-					_escortGunner = [_pilotClass, _transportGroup, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
-					if (!isNull _escortGunner) then {_escortGunner moveInGunner _escortJet};
+				if (driver _escortJet != _escortPilot) then {
+					deleteVehicle _escortPilot;
+					_escortPilot = objNull;
+					deleteVehicle _escortJet;
+					_escortJet = objNull;
+					["WARNING", Format ["Support_CargoAirdrop.sqf: [%1] escort pilot seat failed; cargo continues without escort.", str _side]] Call WFBE_CO_FNC_LogContent;
+				} else {
+					_escortPilot setBehaviour "COMBAT";
+					_escortPilot setCombatMode "RED";
+					_escortPilot doMove _destination;
+					if ((missionNamespace getVariable ["WFBE_C_AIR_ATTACK_GUNNER", 0]) > 0 && {(_escortJet emptyPositions "gunner") > 0}) then {
+						_escortGunner = [_pilotClass, _transportGroup, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
+						if (!isNull _escortGunner) then {
+							_escortGunner moveInGunner _escortJet;
+							if (gunner _escortJet != _escortGunner) then {
+								deleteVehicle _escortGunner;
+								_escortGunner = objNull;
+								["WARNING", Format ["Support_CargoAirdrop.sqf: [%1] escort gunner seat failed; escort flies driver-only.", str _side]] Call WFBE_CO_FNC_LogContent;
+							};
+						};
+					};
+					_escortJet flyInHeight (300 + random(75));
+					Call Compile Format ["_escortJet addEventHandler ['Killed',{[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled}]", _sideID];
+					_escortJet setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';", _sideID];
+					processInitCommands;
+					["INFORMATION", Format ["Support_CargoAirdrop.sqf: [%1] cargo drop escort [%2] launched.", str _side, _escortClass]] Call WFBE_CO_FNC_LogContent;
 				};
-				_escortJet flyInHeight (300 + random(75));
-				Call Compile Format ["_escortJet addEventHandler ['Killed',{[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled}]", _sideID];
-				_escortJet setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';", _sideID];
-				processInitCommands;
-				["INFORMATION", Format ["Support_CargoAirdrop.sqf: [%1] cargo drop escort [%2] launched.", str _side, _escortClass]] Call WFBE_CO_FNC_LogContent;
 			} else {
 				deleteVehicle _escortJet;
 				_escortJet = objNull;
@@ -242,9 +264,13 @@ if (_dropReady) then {
 					sleep 2;
 					if (isNull _cargo || {!alive _cargo}) exitWith {};
 					_chute = _chuteClass createVehicle [0,0,20];
-					_chute setPos [getPos _cargo select 0, getPos _cargo select 1, (getPos _cargo select 2) - 11];
-					_chute setDir (getDir _cargo);
-					_cargo attachTo [_chute, [0,0,0]];
+					if (isNull _chute) then {
+						["WARNING", Format ["Support_CargoAirdrop.sqf: [%1] cargo chute create failed; hull free-falls.", str _side]] Call WFBE_CO_FNC_LogContent;
+					} else {
+						_chute setPos [getPos _cargo select 0, getPos _cargo select 1, (getPos _cargo select 2) - 11];
+						_chute setDir (getDir _cargo);
+						_cargo attachTo [_chute, [0,0,0]];
+					};
 					_dropStart = time;
 					while {!isNull _cargo && {alive _cargo} && {(getPos _cargo select 2) >= 10} && {(time - _dropStart) < 120}} do {sleep 1};
 					if (!isNull _cargo) then {detach _cargo};

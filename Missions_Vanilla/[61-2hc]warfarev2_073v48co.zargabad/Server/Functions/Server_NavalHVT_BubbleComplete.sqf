@@ -87,14 +87,19 @@ if (_anchor getVariable ["wfbe_is_carrier_hvt", false]) then {
 		_navDeckZ  = _airLogicRef getVariable ["wfbe_naval_deckz", 16];
 		_navRefPos = getPosASL _airLogicRef;
 		_newHangar = "HeliHEmpty" createVehicle [_navRefPos select 0, _navRefPos select 1, 0];
-		_newHangar setPosASL [_navRefPos select 0, _navRefPos select 1, _navDeckZ];
-		_newHangar setDir ((getDir _airLogicRef) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
-		_newHangar enableSimulation false;
-		_newHangar allowDamage false;
-		_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
-		_airLogicRef setVariable ["wfbe_hangar", _newHangar, true];
-		_airLogicRef setVariable ["wfbe_airfield_side", _hvtNewSide, true];
-		_anchor setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
-		["INFORMATION", Format ["Server_NavalHVT_BubbleComplete.sqf: Carrier [%1] hangar respawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+		//--- FAIL-CLEAN (r39): null create must not setPosASL/setVar hangar refs (air shop would bind null).
+		if (isNull _newHangar) then {
+			["WARNING", Format ["Server_NavalHVT_BubbleComplete.sqf: Carrier [%1] hangar createVehicle FAILED for side %2 - refs not stamped.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			_newHangar setPosASL [_navRefPos select 0, _navRefPos select 1, _navDeckZ];
+			_newHangar setDir ((getDir _airLogicRef) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
+			_newHangar enableSimulation false;
+			_newHangar allowDamage false;
+			_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
+			_airLogicRef setVariable ["wfbe_hangar", _newHangar, true];
+			_airLogicRef setVariable ["wfbe_airfield_side", _hvtNewSide, true];
+			_anchor setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
+			["INFORMATION", Format ["Server_NavalHVT_BubbleComplete.sqf: Carrier [%1] hangar respawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+		};
 	};
 };

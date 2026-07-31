@@ -12,7 +12,7 @@
       - town sideID == WFBE_C_GUER_ID
       - wfbe_active == true
       - no existing registry entry owns that town
-      - at least one WEST or EAST man within WFBE_C_GARRISON_DRESSING_RADIUS
+      - at least one WEST or EAST combatant (dismounted Man OR crewed LandVehicle/Air/Ship) within WFBE_C_GARRISON_DRESSING_RADIUS
       - global dressed-town count < WFBE_C_GARRISON_DRESSING_MAX
 
     Registry entry: [_town, _gun, _light, _group, _crew, _spawnTime, _lastEnemyTime]
@@ -98,9 +98,12 @@ while {!WFBE_GameOver} do {
         };
 
         //--- Refresh last-enemy timestamp.
+        //--- nearEntities "Man" returns only DISMOUNTED infantry (same class as Server_GuerAirDef fix):
+        //--- fully mounted assaults were invisible → quiet-timeout tore down ZU-23 mid-attack.
+        //--- Include vehicle/air/ship hulls: crewed hull carries crew side; empty hulls resolve CIVILIAN.
         if (!_drop && {!(isNull _eTown)}) then {
             _enemiesNow = {alive _x && {((side _x) == west) || {(side _x) == east}}}
-                count ((getPos _eTown) nearEntities [["Man"], _radius]);
+                count ((getPos _eTown) nearEntities [["Man","LandVehicle","Air","Ship"], _radius]);
             if (_enemiesNow > 0) then { _eLastEnemy = _now; };
         };
 
@@ -144,10 +147,10 @@ while {!WFBE_GameOver} do {
             && {_town getVariable ["wfbe_active", false]}
             && {!(_town in _townsWithGun)}) then {
 
-            //--- Proximity gate: at least one WEST or EAST man near the town.
+            //--- Proximity gate: at least one WEST or EAST combatant near the town (Man + hulls).
             _tRange  = (_town getVariable ["range", 600]) max 300;
             _enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}}
-                count ((getPos _town) nearEntities [["Man"], _radius]);
+                count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], _radius]);
 
             if (_enemies > 0) then {
                 _pos = getPos _town;
@@ -201,7 +204,12 @@ while {!WFBE_GameOver} do {
                                         [(_gunPos select 0) + 10 * (sin (_bear + 90)),
                                          (_gunPos select 1) + 10 * (cos (_bear + 90)),
                                          0];
-                                    _light setDir (_bear + 180);
+                                    //--- r47 fail-clean: skip setDir when searchlight createVehicle fails.
+                                    if (isNull _light) then {
+                                    	["WARNING", Format ["Server_TownGarrisonDressing.sqf: searchlight createVehicle null class=%1 town=%2.", _lightClass, (_town getVariable ["name","?"])]] Call WFBE_CO_FNC_LogContent;
+                                    } else {
+                                    	_light setDir (_bear + 180);
+                                    };
                                 };
 
                                 _registry     = _registry + [[_town, _gun, _light, _grp, _crew, time, time]];

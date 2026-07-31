@@ -11,16 +11,44 @@ _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (typeName _position == "OBJECT") then {_position = position _position};
 
 /* Handle the LAG. */
-waitUntil {!(_logik getVariable "wfbe_hqinuse")};
+//--- r60 waitUntil: bare waitUntil hard-spins and never times out if wfbe_hqinuse sticks true
+//--- (mid-script crash between set true and set false). Match AI_Commander_MHQReloc: sleep + deadline +
+//--- defaulted getVariable; force-clear stale lock so mobilize/deploy cannot permanently jam.
+private ["_hqLockDeadline"];
+_hqLockDeadline = time + (missionNamespace getVariable ["WFBE_C_HQ_INUSE_WAIT", 45]);
+waitUntil {
+	sleep 0.5;
+	time > _hqLockDeadline || {!(_logik getVariable ["wfbe_hqinuse", false])}
+};
+if (_logik getVariable ["wfbe_hqinuse", false]) then {
+	["WARNING", Format ["Construction_HQSite.sqf: [%1] wfbe_hqinuse stuck true past wait; force-clear.", _sideText]] Call WFBE_CO_FNC_LogContent;
+	_logik setVariable ["wfbe_hqinuse", false];
+};
 _logik setVariable ["wfbe_hqinuse", true];
 
 _HQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
 _deployed = (_side) Call WFBE_CO_FNC_GetSideHQDeployStatus;
 
+//--- r30: refuse deploy/pack when the current HQ object is missing or already destroyed.
+//--- Without this, RequestStructure(index 0) against a wreck flipped dead MHQ -> live deployed HQ
+//--- for free (bypassed Server_MHQRepair cost + repair count). AI recovery uses MHQRepair, not this path.
+if (isNull _HQ || {!alive _HQ}) exitWith {
+	_logik setVariable ["wfbe_hqinuse", false];
+	["WARNING", Format ["Construction_HQSite.sqf: [%1] aborted - HQ missing or destroyed (cannot deploy/pack a wreck).", _sideText]] Call WFBE_CO_FNC_LogContent;
+};
+
 if (!_deployed) then {
 	_HQ setPos [1,1,1];
 
 	_site = createVehicle [_type, _position, [], 0, "NONE"];
+	//--- r36 fail-clean: createVehicle null after parking the MHQ would publish a null HQ and delete the live MHQ.
+	//--- Restore the parked MHQ, clear the lag latch, and abort before setVariable/deployed/deleteVehicle.
+	if (isNull _site) exitWith {
+		_HQ setPos _position;
+		_HQ setDir _direction;
+		_logik setVariable ["wfbe_hqinuse", false];
+		["WARNING", Format ["Construction_HQSite.sqf: [%1] HQ deploy createVehicle FAILED for type [%2] at %3 - MHQ restored.", _sideText, _type, _position]] Call WFBE_CO_FNC_LogContent;
+	};
 	_site setDir _direction;
 	_site setPos _position;
 	_site setVariable ["wfbe_side", _side];
@@ -80,11 +108,19 @@ if (!_deployed) then {
 	_HQName = missionNamespace getVariable Format["WFBE_%1MHQNAME",_sideText];
 
 	_defenses = _HQ getVariable ["wfbe_hq_walls", _HQ getVariable ["WFBE_Walls", []]];
-	{if (!isNull _x) then {deleteVehicle _x}} forEach _defenses;
 
 	_HQ setPos [1,1,1];
 
 	_MHQ = [_HQName, _position, _sideID, _direction, true, false] Call WFBE_CO_FNC_CreateVehicle;
+	//--- r36 fail-clean: Common_CreateVehicle already logs null, but callers used to stamp wfbe_hq=objNull
+	//--- and delete the deployed HQ. Restore parked HQ + lag latch; keep walls until create succeeds.
+	if (isNull _MHQ) exitWith {
+		_HQ setPos _position;
+		_HQ setDir _direction;
+		_logik setVariable ["wfbe_hqinuse", false];
+		["WARNING", Format ["Construction_HQSite.sqf: [%1] MHQ mobilize create FAILED at %2 - deployed HQ restored.", _sideText, _position]] Call WFBE_CO_FNC_LogContent;
+	};
+	{if (!isNull _x) then {deleteVehicle _x}} forEach _defenses;
 	_MHQ setVelocity [0,0,-1];
 	_MHQ setVariable ["WFBE_Taxi_Prohib", true];
 	_MHQ setVariable ["wfbe_side", _side];
@@ -94,10 +130,10 @@ if (!_deployed) then {
 	_logik setVariable ["wfbe_hq", _MHQ, true];
 	_logik setVariable ['wfbe_hq_deployed', false, true];
     if (_side == west && !(IS_chernarus_map_dependent)) then {
-	_MHQ setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]";
-	_MHQ setVehicleInit "this setObjectTexture [1,""Textures\lavbody2_coD.paa""]";
-	_MHQ setVehicleInit "this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
-	processinitcommands;
+	//--- fix(code-as-string r33): setVehicleInit keeps ONLY the last string - three separate
+	//--- calls applied only slot 2. One combined init so all three desert LAV selections run.
+	_MHQ setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]; this setObjectTexture [1,""Textures\lavbody2_coD.paa""]; this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
+	processInitCommands;
 	};
 
 	//--- B66: the DEPLOY branch (~:32) fires Init_BaseStructure via setVehicleInit so every client draws the

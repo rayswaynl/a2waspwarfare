@@ -1,4 +1,4 @@
-Private ["_building","_buyFailed","_cpt","_commander","_crew","_crewCostPerHead","_crewCreated","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta","_qTailFn","_qTail","_isTkvToken","_scudProof"];
+Private ["_building","_buyFailed","_cpt","_commander","_crew","_crewCostPerHead","_crewCreated","_currentUnit","_description","_direction","_distance","_driver","_extracrew","_factory","_factoryPosition","_factoryType","_group","_gunner","_index","_init","_isArtillery","_isMan","_locked","_longest","_picture","_position","_queu","_queu2","_ret","_show","_soldier","_spawnedUnits","_waitTime","_txt","_type","_upgrades","_unique","_unit","_vehi","_vehicle","_vehicles","_faction","_queuLabels","_unitLabel33","_ah6xM134Kit","_tkEasaKit","_tkeRow","_nextQueueHint","_queuePos","_queueEta","_qTailFn","_qTail","_isTkvToken","_scudProof"];
 _building = _this select 0;
 _unit = _this select 1;
 _vehi = _this select 2;
@@ -300,7 +300,7 @@ while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} d
 		};
 	};
 
-	if ((_queu select 0) in [_queu2 select 0]) then {
+	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) in [_queu2 select 0]}) then {  //--- queue-fix: empty-guard the head-compare (mirror Server_BuyUnit.sqf:201) - a bare `_queu select 0` on an emptied shared queue is undefined on A2-OA.
 		if (_ret > _longest) then {
 			if (count _queu > 0) then {
 				_queu = _building getVariable "queu";
@@ -309,7 +309,7 @@ while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} d
 			};
 		};
 	};
-	if !((count _queu) in [count _queu2]) then {
+	if ((count _queu > 0) && {count _queu2 > 0} && {!((_queu select 0) in [_queu2 select 0])}) then {  //--- queue-fix (mirror Server_BuyUnit.sqf:210, 2026-06-14 head-based fix): reset the stuck-head purge timer ONLY when the head token actually ADVANCES, not on any shared-queue COUNT change. The old count-based reset let a busy shared factory (concurrent player/AI buys + cancels churning the count) continually zero _ret so `_ret > _longest` never fired - a dead head token (e.g. a disconnected buyer whose coroutine died) then jammed the whole factory build queue permanently for every player behind it. Head-based reset lets _ret accumulate to _longest and purge the stuck head, exactly as the AI path already does.
 		_ret = 0;
 		_queu2 = _building getVariable "queu";
 	};
@@ -1178,7 +1178,16 @@ if (_isMan) then {
 
 	if (_unit isKindOf "Air") then {
 		//--- Countermeasures.
-			if (getNumber(configFile >> "CfgVehicles" >> typeOf _vehicle >> "incommingmissliedetectionsystem") > 8) then {_vehicle addeventhandler ['IncomingMissile',{_this spawn HandleAlarm;}]};
+			//--- A2 OA: no CfgVehicles incomingMissileDetectionSystem (A3). Misspelled key always getNumber 0 → EH never attached.
+		//--- Prefer real property when present (A3/mod packs); otherwise fail-open inbound alarm for all player-built Air.
+		Private ["_imdCfg","_imd"];
+		_imdCfg = configFile >> "CfgVehicles" >> typeOf _vehicle >> "incomingMissileDetectionSystem";
+		if (isNumber _imdCfg) then {
+			_imd = getNumber _imdCfg;
+			if (_imd > 8) then {_vehicle addeventhandler ['IncomingMissile',{_this spawn HandleAlarm;}]};
+		} else {
+			_vehicle addeventhandler ['IncomingMissile',{_this spawn HandleAlarm;}];
+		};
 		if !(WF_A2_Vanilla) then {
 			switch (missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") do { //--- Remove CM if needed.
 				case 0: {(_vehicle) Call WFBE_CO_FNC_RemoveCountermeasures}; //--- Disabled.
@@ -1273,7 +1282,7 @@ if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base",
 //--- V2: removed duplicate "fired"->HandleReload event handler (was identical to the IFV line above; double-registering spawned HandleReload twice per shot).
 
 if({(_vehicle isKindOf _x)} count ["Tank","Wheeled_APC"] !=0) then {_vehicle addeventhandler ['Engine',{_this execVM "Client\Module\Engines\Engine.sqf"}];
-     _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target &&(isEngineOn _target)"];};
+     _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target && {isEngineOn _target}"];}; //--- fix(code-as-string r33): lazy && so isEngineOn is not evaluated on a dead hull
 
 // IRS MODULE
 if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then {
@@ -1449,5 +1458,8 @@ if (_buyFailed) then {
 	//--- failed buy: the player already got the refund (guard above); tell them instead of "complete".
 	hint parseText(Format ["<t color='#ff9060'>%1 could not be built - price refunded.</t>", _description]);
 } else {
-	hint parseText(Format [localize "STR_WF_INFO_Build_Complete",_description]);
+	//--- STRINGTABLE-R30: STR_WF_INFO_Build_Complete needs %1=label and %2=picture path (parseText img). Pass QUERYUNITPICTURE when the unit tuple exists; empty string otherwise so the img tag does not render a literal %2.
+_picture = "";
+if !(isNil "_currentUnit") then { _picture = _currentUnit select QUERYUNITPICTURE; };
+hint parseText(Format [localize "STR_WF_INFO_Build_Complete",_description,_picture]);
 };

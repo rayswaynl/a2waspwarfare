@@ -62,7 +62,10 @@ while {count _seaPos == 0 && {_ring < 40}} do {
 	_step = _ring * 250;
 	{
 		if (count _seaPos == 0) then {
-			_cand = [(1000 + ((_x select 0) * _step)), (1000 + ((_x select 1) * _step)), 0];
+			//--- r54: ring must radiate from the resolved _seed, not a stale hardcoded SW [1000,1000].
+			//--- After the SE-sea seed move to [10000,400], probing from 1000,1000 missed nearby water
+			//--- and fell through to a dry/wrong fallback on maps where the seed itself is land.
+			_cand = [((_seed select 0) + ((_x select 0) * _step)), ((_seed select 1) + ((_x select 1) * _step)), 0];
 			if (surfaceIsWater _cand) then { _seaPos = _cand };
 		};
 	} forEach [[-1,-1],[-1,0],[0,-1],[-1,1],[1,-1],[0,1],[1,0],[1,1]];

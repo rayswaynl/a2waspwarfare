@@ -58,9 +58,11 @@ if (!isNil '_mbuByTier') then {
 //--- Patrols upgrade trades 1 max AI per player for the side's autonomous patrols.
 if (count ((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) > WFBE_UP_PATROLS && {(((sideJoined) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_PATROLS) > 0}) then {_mbu = (_mbu - 1) max 1};
 
-_driverEnabledByDefault = true;
-profileNamespace setVariable ["wfbe_c_driver_enabled_by_default", true];
-profileNamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", true];
+//--- fix(ns-persist r34): READ saved driver-default (do not force true on every open).
+_driverEnabledByDefault = profileNamespace getVariable ["wfbe_c_driver_enabled_by_default", true];
+if (isNil "_driverEnabledByDefault" || {typeName _driverEnabledByDefault != "BOOL"}) then {_driverEnabledByDefault = true};
+profileNamespace setVariable ["wfbe_c_driver_enabled_by_default", _driverEnabledByDefault];
+profileNamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", _driverEnabledByDefault];
 
 
 ctrlSetText[12025,localize 'STR_WF_UNITS_FactionChoiceLabel' + ":"]; // changed-MrNiceGuy
@@ -113,7 +115,10 @@ _IDCS = _IDCS - [_currentIDC];
 	if (MenuAction == 1) then {
 		MenuAction = -1;
 		_currentRow = lnbCurSelRow _listBox;
+		//--- r62 select-bounds: empty/no-row or stale lnbValue into _listUnits throws Zero divisor BEFORE the existing row-check deeper in this block.
+		if (_currentRow != -1) then {
 		_currentValue = lnbValue[_listBox,[_currentRow,0]];
+		if (_currentValue >= 0 && {_currentValue < count _listUnits}) then {
 		_unit = _listUnits select _currentValue;
 		_currentUnit = missionNamespace getVariable _unit;
 		//--- fable/fix-unit-purchase-nil-guards: guard nil _currentUnit (unregistered classname) before the select-chain below - matches a55605e10/#1003 shape. Nil = skip the whole purchase (no charge, no spawn).
@@ -327,6 +332,8 @@ _IDCS = _IDCS - [_currentIDC];
 		} else {
 			["WARNING", Format ["GUI_Menu_BuyUnits.sqf: purchase classname [%1] not registered in missionNamespace; skipping buy (nil-poison guard, matches a55605e10/#1003).", _unit]] Call WFBE_CO_FNC_LogContent;
 		};
+		};
+		};
 	};
 	
 	//--- Tabs selection.
@@ -340,9 +347,13 @@ _IDCS = _IDCS - [_currentIDC];
 	//--- driver-gunner-commander icons.
 	if (MenuAction == 201) then {
 		MenuAction = -1;
-		_driverEnabledByDefault = !(profileNamespace getVariable "wfbe_c_driver_enabled_by_default");
+		//--- fix(ns-persist r34): safe default + save so toggle survives hard exit.
+		_driverEnabledByDefault = profileNamespace getVariable ["wfbe_c_driver_enabled_by_default", true];
+		if (isNil "_driverEnabledByDefault" || {typeName _driverEnabledByDefault != "BOOL"}) then {_driverEnabledByDefault = true};
+		_driverEnabledByDefault = !_driverEnabledByDefault;
 		profileNamespace setVariable ["wfbe_c_driver_enabled_by_default", _driverEnabledByDefault];
 		profileNamespace setVariable ["WFBE_C_DRIVER_ENABLED_BY_DEFAULT", _driverEnabledByDefault];
+		saveProfileNamespace;
 		_updateDetails = true;
 	};
 	if (MenuAction == 202) then {MenuAction = -1;_gunner = if (_gunner) then {false} else {true};_updateDetails = true};

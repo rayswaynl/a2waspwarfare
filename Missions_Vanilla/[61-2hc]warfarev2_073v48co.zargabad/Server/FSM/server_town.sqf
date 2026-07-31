@@ -109,6 +109,14 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 						if (isNull (_bootAirfieldLogic getVariable ["wfbe_hangar", objNull])) then {
 							[_location, _bootAirfieldLogic, _side] Call WFBE_SE_FNC_ProvisionAirfieldHangar;
 						} else {
+							//--- ADOPT-BRANCH OWNERSHIP STAMP (r65 aicom-airfield-rebasing): an airfield that got its hangar
+							//--- straight from Init_Airports (a non-skip-flagged field, e.g. ZG's single airfield) is only
+							//--- ADOPTED here - it never runs Server_ProvisionAirfieldHangar's wfbe_airfield_side stamp until it
+							//--- is captured at least once. Client_GetClosestAirport's resistance ownership gate reads
+							//--- wfbe_airfield_side (default civilian), so a GUER side that HOLDS such a field FROM BOOT saw
+							//--- "No airport in range" and could not buy air there. Stamp the current owner now, mirroring the
+							//--- two sibling provisioning paths (Server_ProvisionAirfieldHangar + the carrier/HVT re-side blocks).
+							_bootAirfieldLogic setVariable ["wfbe_airfield_side", _side, true];
 							_location setVariable ["wfbe_airfield_hangar_obj", (_bootAirfieldLogic getVariable ["wfbe_hangar", objNull]), true];
 						};
 					};
@@ -183,14 +191,14 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 				};
 				//--- cmdcon41-w3c WRITE-ON-CHANGE (claude-gaming 2026-07-02): only stamp wfbe_contested when the
 				//--- value actually FLIPS, not every 5s x every town. VERIFIED this write is LOCAL (no ,true
-				//--- broadcast flag) and the sole reader (server_groupsGC.sqf:353) uses a default-false 2-arg get,
+				//--- broadcast flag) and readers (server_groupsGC + server_town_patrol; was server-local only) uses a default-false 2-arg get,
 				//--- so unchanged/never-written towns read false safely - the task's "per-tick global broadcast x40
 				//--- towns = network churn" suspicion is DISPROVEN (there is no broadcast). This is a pure local
 				//--- setVariable-count trim (~40 no-op writes/5s -> only real transitions). A2-OA-safe: plain 2-arg
 				//--- getVariable, == on Bools avoided (compares two booleans via if-guard, not ==).
 				private "_prevContested"; _prevContested = _location getVariable ["wfbe_contested", false];
-				if (_contested && !_prevContested) then {_location setVariable ["wfbe_contested", true]};
-				if (!_contested && _prevContested) then {_location setVariable ["wfbe_contested", false]};
+				if (_contested && !_prevContested) then {_location setVariable ["wfbe_contested", true, true]};
+				if (!_contested && _prevContested) then {_location setVariable ["wfbe_contested", false, true]};
 
 				//--- cmdcon44-d: nil-safe (see SV-reads note above). A town mid-init (or from a stale transplant)
 				//--- may not yet have "supplyValue" set; default to startingSupplyValue so this scan drains from
@@ -613,15 +621,20 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 						_navDeckZ  = _airLogicRef getVariable ["wfbe_naval_deckz", 16];
 						_navRefPos = getPosASL _airLogicRef;
 						_newHangar = "HeliHEmpty" createVehicle [_navRefPos select 0, _navRefPos select 1, 0]; //--- B754b (Ray 2026-06-25): invisible-but-alive HeliHEmpty instead of the hangar building (A2-OA has no hideObjectGlobal). Mirror of the Init_NavalHVT spawn site.
-						_newHangar setPosASL [_navRefPos select 0, _navRefPos select 1, _navDeckZ];
-						_newHangar setDir ((getDir _airLogicRef) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
-						_newHangar enableSimulation false;
-						_newHangar allowDamage false; //--- B754b: hangar suppressed via invisible HeliHEmpty above (no hideObjectGlobal in A2-OA).
-						_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
-						_airLogicRef setVariable ["wfbe_hangar", _newHangar, true];
-						_airLogicRef setVariable ["wfbe_airfield_side", _hvtNewSide, true];
-						_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
-						["INFORMATION", Format ["server_town.sqf: Carrier [%1] hangar respawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+						//--- FAIL-CLEAN (r39): null create must not setPosASL/setVar hangar refs (air shop would bind null).
+						if (isNull _newHangar) then {
+							["WARNING", Format ["server_town.sqf: Carrier [%1] hangar createVehicle FAILED for side %2 - refs not stamped.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+						} else {
+							_newHangar setPosASL [_navRefPos select 0, _navRefPos select 1, _navDeckZ];
+							_newHangar setDir ((getDir _airLogicRef) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
+							_newHangar enableSimulation false;
+							_newHangar allowDamage false; //--- B754b: hangar suppressed via invisible HeliHEmpty above (no hideObjectGlobal in A2-OA).
+							_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
+							_airLogicRef setVariable ["wfbe_hangar", _newHangar, true];
+							_airLogicRef setVariable ["wfbe_airfield_side", _hvtNewSide, true];
+							_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
+							["INFORMATION", Format ["server_town.sqf: Carrier [%1] hangar respawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+						};
 					};
 
 				//--- fable/ew-naval: gate the carrier ServicePoint behind its own default-0 flag per
@@ -670,6 +683,9 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 					};
 
 					_navSp = _navSpClass createVehicle [_navSpPos select 0, _navSpPos select 1, 0];
+if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/register/processInit/EH
+["WARNING", Format ["server_town.sqf: Carrier [%1] ServicePoint createVehicle FAILED class=%2 for side %3 - refs not stamped.", _hvtName, _navSpClass, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+} else {
 					_navSp setPosASL _navSpPos;
 					_navSp setDir _navSpDir;
 					_navSp setVariable ["WFBE_RepairTruckServicePoint", true, true];
@@ -692,6 +708,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 
 					diag_log Format ["NAVALHVT-SP: carrier [%1] ServicePoint (%2) placed at %3 (deckZ=%4, dir=%5) for side %6.", _hvtName, _navSpClass, _navSpPos, _navSpDeckZ, _navSpDir, str _hvtNewSide];
 					["INFORMATION", Format ["server_town.sqf: Carrier [%1] ServicePoint spawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+};
 				};
 				};
 			};
@@ -965,6 +982,9 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 					[(getPos _location select 0), ((getPos _location select 1) + 80), 0]
 				};
 				_sp = _spClass createVehicle _spPos;
+if (isNull _sp) then { //--- r49 fail-clean: null create must not setPos/register/processInit/EH
+["WARNING", Format ["server_town.sqf: Airfield [%1] ServicePoint createVehicle FAILED class=%2 for side %3 - refs not stamped.", _location getVariable ["name","unknown"], _spClass, str _newSide]] Call WFBE_CO_FNC_LogContent;
+} else {
 				_sp setPos _spPos;
 				_sp setVariable ["WFBE_RepairTruckServicePoint", true, true];
 				_sp setVariable ["wfbe_side", _newSide, true]; //--- A1 fix: airfield repair-point was missing wfbe_side ->
@@ -985,6 +1005,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 
 				//--- Store on location for cleanup on next capture.
 				_location setVariable ["wfbe_airfield_sp", _sp, true];
+};
 
 				//--- Provision (re-provision) the aircraft-buy hangar for the new owner. Also called by
 				//--- the boot bootstrap above (~line 63) for airfields that start pre-owned.
@@ -1025,9 +1046,16 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 						};
 
 						_radar = _radarClass createVehicle _radarPos;
+if (isNull _radar) then { //--- r49 fail-clean: null create must not setPos/register CBR
+["WARNING", Format ["server_town.sqf: [%1] airfield CBR createVehicle FAILED class=%2 - registry not stamped.", str _newSide, _radarClass]] Call WFBE_CO_FNC_LogContent;
+_location setVariable ["wfbe_airfield_cbr", objNull, true];
+} else {
 						_radar setPos _radarPos;
 						//--- Radius override: 2000 m. Server_CounterBattery.sqf reads "wfbe_cbr_radius" getVariable.
 						_radar setVariable ["wfbe_cbr_radius", 2000, true]; //--- AF2: broadcast so clients read the fixed 2000 (Init_BaseStructure uses it for BOTH the circle radius AND the "_fixed" flag; un-broadcast -> client drew the 750/1500 upgrade tier and live-resized it)
+						//--- Public CBR identity + ownership for counterbattery routing (empty Land_Antenna is civilian side).
+						_radar setVariable ["wfbe_is_cbr", true, true];
+						_radar setVariable ["wfbe_side", _newSide];
 						//--- Indestructible: HandleDamage returning 0 prevents any damage being applied.
 						_radar addEventHandler ["HandleDamage", {0}];
 
@@ -1054,6 +1082,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 						["INFORMATION", Format ["server_town.sqf: [%1] airfield CBR spawned (%2) at %3. Radius 2000 m. Registry [%4] size: %5.",
 							str _newSide, _radarClass, _radarPos, _cbrKey,
 							count (missionNamespace getVariable [_cbrKey, []])]] Call WFBE_CO_FNC_LogContent;
+};
 					} else {
 						//--- Resistance capture: no CBR registry for GUER — radar skipped, mast not spawned.
 						_location setVariable ["wfbe_airfield_cbr", objNull, true];

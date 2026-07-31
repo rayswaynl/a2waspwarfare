@@ -20,45 +20,75 @@ if (missionNamespace getVariable ["WFBE_HAS_FX_MOD", false]) exitWith {
 };
 
 _Cone = "#particlesource" createVehicleLocal getPos _target;
-_Cone setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 7, 48], "", "Billboard", 1, 10, [0, 0, 0],
-				[0, 0, 0], 0, 1.275, 1, 0, [40,80], [[0.25, 0.25, 0.25, 0], [0.25, 0.25, 0.25, 0.5], 
-				[0.25, 0.25, 0.25, 0.5], [0.25, 0.25, 0.25, 0.05], [0.25, 0.25, 0.25, 0]], [0.25], 0.1, 1, "", "", _target];
-_Cone setParticleRandom [2, [1, 1, 30], [1, 1, 30], 0, 0, [0, 0, 0, 0.1], 0, 0];
-_Cone setParticleCircle [10, [-10, -10, 20]];
-_Cone setDropInterval 0.005;
+//--- FAIL-CLEAN r45: _Cone create null must not setParticle/setLight
+if (isNull _Cone) then {
+["WARNING", Format ["nuke.sqf: _Cone create failed at %1.", getPos _target]] Call WFBE_CO_FNC_LogContent;
+} else {
+	_Cone setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 7, 48], "", "Billboard", 1, 10, [0, 0, 0],
+					[0, 0, 0], 0, 1.275, 1, 0, [40,80], [[0.25, 0.25, 0.25, 0], [0.25, 0.25, 0.25, 0.5], 
+					[0.25, 0.25, 0.25, 0.5], [0.25, 0.25, 0.25, 0.05], [0.25, 0.25, 0.25, 0]], [0.25], 0.1, 1, "", "", _target];
+	_Cone setParticleRandom [2, [1, 1, 30], [1, 1, 30], 0, 0, [0, 0, 0, 0.1], 0, 0];
+	_Cone setParticleCircle [10, [-10, -10, 20]];
+	_Cone setDropInterval 0.005;
+};
 
 _top = "#particlesource" createVehicleLocal getPos _target;
-_top setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 3, 48, 0], "", "Billboard", 1, 20, [0, 0, 0],
-				[0, 0, 80], 0, 1.7, 1, 0, [180,150,180], [[1, 1, 1, -10],[1, 1, 1, -7],[1, 1, 1, -4],[1, 1, 1, -0.5],[1, 1, 1, 0]], [0.05], 1, 1, "", "", _target];
-_top setParticleRandom [0, [75, 75, 15], [17, 17, 10], 0, 0, [0, 0, 0, 0], 0, 0, 360];
-_top setDropInterval 0.001;
+//--- FAIL-CLEAN r45: _top create null must not setParticle/setLight
+if (isNull _top) then {
+["WARNING", Format ["nuke.sqf: _top create failed at %1.", getPos _target]] Call WFBE_CO_FNC_LogContent;
+} else {
+	_top setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 3, 48, 0], "", "Billboard", 1, 20, [0, 0, 0],
+					[0, 0, 80], 0, 1.7, 1, 0, [180,150,180], [[1, 1, 1, -10],[1, 1, 1, -7],[1, 1, 1, -4],[1, 1, 1, -0.5],[1, 1, 1, 0]], [0.05], 1, 1, "", "", _target];
+	_top setParticleRandom [0, [75, 75, 15], [17, 17, 10], 0, 0, [0, 0, 0, 0], 0, 0, 360];
+	_top setDropInterval 0.001;
+};
 
 _top2 = "#particlesource" createVehicleLocal getPos _target;
-_top2 setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 3, 112, 0], "", "Billboard", 1, 20, [0, 0, 0],
-				[0, 0, 20], 0, 1.7, 1, 0, [80,80,100], [[1, 1, 1, 0.5],[1, 1, 1, 0]], [0.07], 1, 1, "", "", _target];
-_top2 setParticleRandom [0, [75, 75, 15], [17, 17, 10], 0, 0, [0, 0, 0, 0], 0, 0, 360];
-_top2 setDropInterval 0.002;
+//--- FAIL-CLEAN r45: _top2 create null must not setParticle/setLight
+if (isNull _top2) then {
+["WARNING", Format ["nuke.sqf: _top2 create failed at %1.", getPos _target]] Call WFBE_CO_FNC_LogContent;
+} else {
+	_top2 setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 3, 112, 0], "", "Billboard", 1, 20, [0, 0, 0],
+					[0, 0, 20], 0, 1.7, 1, 0, [80,80,100], [[1, 1, 1, 0.5],[1, 1, 1, 0]], [0.07], 1, 1, "", "", _target];
+	_top2 setParticleRandom [0, [75, 75, 15], [17, 17, 10], 0, 0, [0, 0, 0, 0], 0, 0, 360];
+	_top2 setDropInterval 0.002;
+};
 
 _smoke = "#particlesource" createVehicleLocal getPos _target;
-_smoke setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 7, 48, 1], "", "Billboard", 1, 25, [0, 0, 0],
-				[0, 0, 80], 0, 1.7, 1, 0, [40,50,60], 
-				[[1, 1, 1, 0.2],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0]]
-				, [0.5, 0.1], 1, 1, "", "", _target];
-_smoke setParticleRandom [0, [10, 10, 15], [15, 15, 7], 0, 0, [0, 0, 0, 0], 0, 0, 360];
-_smoke setDropInterval 0.002;
+//--- FAIL-CLEAN r45: _smoke create null must not setParticle/setLight
+if (isNull _smoke) then {
+["WARNING", Format ["nuke.sqf: _smoke create failed at %1.", getPos _target]] Call WFBE_CO_FNC_LogContent;
+} else {
+	_smoke setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 7, 48, 1], "", "Billboard", 1, 25, [0, 0, 0],
+					[0, 0, 80], 0, 1.7, 1, 0, [40,50,60], 
+					[[1, 1, 1, 0.2],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0]]
+					, [0.5, 0.1], 1, 1, "", "", _target];
+	_smoke setParticleRandom [0, [10, 10, 15], [15, 15, 7], 0, 0, [0, 0, 0, 0], 0, 0, 360];
+	_smoke setDropInterval 0.002;
+};
 
 _Wave = "#particlesource" createVehicleLocal getPos _target;
-_Wave setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 7, 48], "", "Billboard", 1, 20, [0, 0, 0],
-				[0, 0, 0], 0, 1.5, 1, 0, [50, 100], [[0.1, 0.1, 0.1, 0.5], 
-				[0.5, 0.5, 0.5, 0.5], [1, 1, 1, 0.3], [1, 1, 1, 0]], [1,0.5], 0.1, 1, "", "", _target];
-_Wave setParticleRandom [2, [20, 20, 20], [5, 5, 0], 0, 0, [0, 0, 0, 0.1], 0, 0];
-_Wave setParticleCircle [50, [-80, -80, 2.5]];
-_Wave setDropInterval 0.0002;
+//--- FAIL-CLEAN r45: _Wave create null must not setParticle/setLight
+if (isNull _Wave) then {
+["WARNING", Format ["nuke.sqf: _Wave create failed at %1.", getPos _target]] Call WFBE_CO_FNC_LogContent;
+} else {
+	_Wave setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 7, 48], "", "Billboard", 1, 20, [0, 0, 0],
+					[0, 0, 0], 0, 1.5, 1, 0, [50, 100], [[0.1, 0.1, 0.1, 0.5], 
+					[0.5, 0.5, 0.5, 0.5], [1, 1, 1, 0.3], [1, 1, 1, 0]], [1,0.5], 0.1, 1, "", "", _target];
+	_Wave setParticleRandom [2, [20, 20, 20], [5, 5, 0], 0, 0, [0, 0, 0, 0.1], 0, 0];
+	_Wave setParticleCircle [50, [-80, -80, 2.5]];
+	_Wave setDropInterval 0.0002;
+};
 
 _light = "#lightpoint" createVehicleLocal [((getPos _target select 0)),(getPos _target select 1),((getPos _target select 2)+500)];
-_light setLightAmbient[1500, 1200, 1000];
-_light setLightColor[1500, 1200, 1000];
-_light setLightBrightness 100000.0;
+//--- FAIL-CLEAN r45: _light create null must not setParticle/setLight
+if (isNull _light) then {
+["WARNING", Format ["nuke.sqf: _light create failed at %1.", getPos _target]] Call WFBE_CO_FNC_LogContent;
+} else {
+	_light setLightAmbient[1500, 1200, 1000];
+	_light setLightColor[1500, 1200, 1000];
+	_light setLightBrightness 100000.0;
+};
 
 if (player distance _target < 4000) then {
 	"colorCorrections" ppEffectEnable true;
@@ -82,22 +112,27 @@ if (player distance _target < 4000) then {
 	"dynamicBlur" ppEffectAdjust [0.5];
 	"dynamicBlur" ppEffectCommit 4;
 };
-_light setLightBrightness 100000.0;
+if !(isNull _light) then {_light setLightBrightness 100000.0;};
 
 sleep 3.5;
 
-_Wave setDropInterval 0.001;
-deleteVehicle _top;
-deleteVehicle _top2;
+if !(isNull _Wave) then {_Wave setDropInterval 0.001;};
+if !(isNull _top) then {deleteVehicle _top};
+if !(isNull _top2) then {deleteVehicle _top2};
 sleep 7;
 _top3 = "#particlesource" createVehicleLocal getPos _target;
-_top3 setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 3, 48, 0], "", "Billboard", 1, 20, [0, 0, 500],
-				[0, 0, 65], 0, 1.7, 1, 0, [200,200,200], [[1, 1, 1, -10],[1, 1, 1, -7],[1, 1, 1, -4],[1, 1, 1, -0.5],[1, 1, 1, 0]], [0.05], 1, 1, "", "", _target];
-_top3 setParticleRandom [0, [75, 75, 15], [17, 17, 10], 0, 0, [0, 0, 0, 0], 0, 0, 360];
-_top3 setDropInterval 0.001;
+//--- FAIL-CLEAN r45: _top3 create null must not setParticle/setLight
+if (isNull _top3) then {
+["WARNING", Format ["nuke.sqf: _top3 create failed at %1.", getPos _target]] Call WFBE_CO_FNC_LogContent;
+} else {
+	_top3 setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 3, 48, 0], "", "Billboard", 1, 20, [0, 0, 500],
+					[0, 0, 65], 0, 1.7, 1, 0, [200,200,200], [[1, 1, 1, -10],[1, 1, 1, -7],[1, 1, 1, -4],[1, 1, 1, -0.5],[1, 1, 1, 0]], [0.05], 1, 1, "", "", _target];
+	_top3 setParticleRandom [0, [75, 75, 15], [17, 17, 10], 0, 0, [0, 0, 0, 0], 0, 0, 360];
+	_top3 setDropInterval 0.001;
+};
 
 sleep 0.6;
-deleteVehicle _top3;
+if !(isNull _top3) then {deleteVehicle _top3};
 
 sleep 3;
 
@@ -108,50 +143,67 @@ if (player distance _target < 4000) then {
 };
 
 _top4 = "#particlesource" createVehicleLocal getPos _target;
-_top4 setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 3, 48, 0], "", "Billboard", 1, 20, [0, 0, 800],
-				[0, 0, 55], 0, 1.7, 1, 0, [200,200,200], [[1, 1, 1, -10],[1, 1, 1, -7],[1, 1, 1, -4],[1, 1, 1, -0.5],[1, 1, 1, 0]], [0.05], 1, 1, "", "", _target];
-_top4 setParticleRandom [0, [75, 75, 15], [17, 17, 10], 0, 0, [0, 0, 0, 0], 0, 0, 360];
-_top4 setDropInterval 0.001;
+//--- FAIL-CLEAN r45: _top4 create null must not setParticle/setLight
+if (isNull _top4) then {
+["WARNING", Format ["nuke.sqf: _top4 create failed at %1.", getPos _target]] Call WFBE_CO_FNC_LogContent;
+} else {
+	_top4 setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 3, 48, 0], "", "Billboard", 1, 20, [0, 0, 800],
+					[0, 0, 55], 0, 1.7, 1, 0, [200,200,200], [[1, 1, 1, -10],[1, 1, 1, -7],[1, 1, 1, -4],[1, 1, 1, -0.5],[1, 1, 1, 0]], [0.05], 1, 1, "", "", _target];
+	_top4 setParticleRandom [0, [75, 75, 15], [17, 17, 10], 0, 0, [0, 0, 0, 0], 0, 0, 360];
+	_top4 setDropInterval 0.001;
+};
 
 sleep 0.6;
-deleteVehicle _light;
-deleteVehicle _top4;
+if !(isNull _light) then {deleteVehicle _light};
+if !(isNull _top4) then {deleteVehicle _top4};
 sleep 4;
 
 _top5 = "#particlesource" createVehicleLocal getPos _target;
-_top5 setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 3, 48, 0], "", "Billboard", 1, 20, [0, 0, 1000],
-				[0, 0, 20], 0, 1.7, 1, 0, [250,280,250], [[1, 1, 1, -10],[1, 1, 1, -7],[1, 1, 1, -4],[1, 1, 1, -0.5],[1, 1, 1, 0]], [0.05], 1, 1, "", "", _target];
-_top5 setParticleRandom [0, [75, 75, 15], [17, 17, 10], 0, 0, [0, 0, 0, 0], 0, 0, 360];
-_top5 setDropInterval 0.001;
+//--- FAIL-CLEAN r45: _top5 create null must not setParticle/setLight
+if (isNull _top5) then {
+["WARNING", Format ["nuke.sqf: _top5 create failed at %1.", getPos _target]] Call WFBE_CO_FNC_LogContent;
+} else {
+	_top5 setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 3, 48, 0], "", "Billboard", 1, 20, [0, 0, 1000],
+					[0, 0, 20], 0, 1.7, 1, 0, [250,280,250], [[1, 1, 1, -10],[1, 1, 1, -7],[1, 1, 1, -4],[1, 1, 1, -0.5],[1, 1, 1, 0]], [0.05], 1, 1, "", "", _target];
+	_top5 setParticleRandom [0, [75, 75, 15], [17, 17, 10], 0, 0, [0, 0, 0, 0], 0, 0, 360];
+	_top5 setDropInterval 0.001;
+};
 
-_Cone setDropInterval 0.01;
-_Wave setDropInterval 0.001;
+if !(isNull _Cone) then {_Cone setDropInterval 0.01;};
+if !(isNull _Wave) then {_Wave setDropInterval 0.001;};
 
+if !(isNull _smoke) then {
 _smoke setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 7, 48, 1], "", "Billboard", 1, 25, [0, 0, 0],
-				[0, 0, 80], 0, 1.7, 1, 0, [150,150,150], 
-				[[1, 1, 1, 0.2],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0]]
-				, [0.5, 0.1], 1, 1, "", "", _target];
+[0, 0, 80], 0, 1.7, 1, 0, [150,150,150], 
+[[1, 1, 1, 0.2],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0]]
+, [0.5, 0.1], 1, 1, "", "", _target];
 _smoke setDropInterval 0.01;
+};
 
 _smoke2 = "#particlesource" createVehicleLocal getPos _target;
-_smoke2 setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 7, 48, 1], "", "Billboard", 1, 25, [0, 0, 900],
-				[0, 0, 25], 0, 1.7, 1, 0, [160,180,170], 
-				[[1, 1, 1, 0.2],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0]]
-				, [0.5, 0.1], 1, 1, "", "", _target];
-_smoke2 setParticleRandom [0, [10, 10, 15], [15, 15, 7], 0, 0, [0, 0, 0, 0], 0, 0, 360];
-_smoke2 setDropInterval 0.01;
+//--- FAIL-CLEAN r45: _smoke2 create null must not setParticle/setLight
+if (isNull _smoke2) then {
+["WARNING", Format ["nuke.sqf: _smoke2 create failed at %1.", getPos _target]] Call WFBE_CO_FNC_LogContent;
+} else {
+	_smoke2 setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 7, 48, 1], "", "Billboard", 1, 25, [0, 0, 900],
+					[0, 0, 25], 0, 1.7, 1, 0, [160,180,170], 
+					[[1, 1, 1, 0.2],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0.3],[1, 1, 1, 0]]
+					, [0.5, 0.1], 1, 1, "", "", _target];
+	_smoke2 setParticleRandom [0, [10, 10, 15], [15, 15, 7], 0, 0, [0, 0, 0, 0], 0, 0, 360];
+	_smoke2 setDropInterval 0.01;
+};
 
 sleep 5;
-deleteVehicle _top5;
-_Cone setDropInterval 0.02;
-_Wave setDropInterval 0.01;
+if !(isNull _top5) then {deleteVehicle _top5};
+if !(isNull _Cone) then {_Cone setDropInterval 0.02;};
+if !(isNull _Wave) then {_Wave setDropInterval 0.01;};
 
 sleep 5;
-deleteVehicle _smoke2;
+if !(isNull _smoke2) then {deleteVehicle _smoke2};
 sleep 10;
-deleteVehicle _Wave;
-deleteVehicle _cone;
-deleteVehicle _smoke;
+if !(isNull _Wave) then {deleteVehicle _Wave};
+if !(isNull _cone) then {deleteVehicle _cone};
+if !(isNull _smoke) then {deleteVehicle _smoke};
 sleep 20;
 if (player distance _target < 4000) then {"colorCorrections" ppEffectEnable false};
 [currentFX] Spawn FX;

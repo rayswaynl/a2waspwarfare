@@ -5,10 +5,28 @@
 	copy cancels only the highest pending level.
 */
 
-Private ["_side","_id","_logik","_queue","_k","_idx"];
+Private ["_side","_id","_logik","_queue","_k","_idx","_reqPlayer","_cmdTeamAuth"];
 
 _side = _this select 0;
 _id   = _this select 1;
+
+//--- Caller authority bind (mirror RequestUpgrade.sqf / RequestEnqueue.sqf): the auto-upgrade queue is a
+//--- COMMANDER-owned resource; the client Upgrade Center enables the queue buttons only for the seated
+//--- commander (GUI_UpgradeMenu.sqf:270-272). The client now appends the acting player; without it any
+//--- same-side member - or a forged PVF naming an ENEMY side - could strip another team queued upgrades
+//--- whenever that side has a human commander.
+if ((count _this) < 3) exitWith {
+	["WARNING", Format ["RequestDequeue.sqf: rejected - missing acting player in payload %1.", _this]] Call WFBE_CO_FNC_LogContent;
+};
+_reqPlayer = _this select 2;
+if (typeName _reqPlayer != "OBJECT" || {isNull _reqPlayer} || {!isPlayer _reqPlayer}) exitWith {
+	["WARNING", Format ["RequestDequeue.sqf: rejected invalid requester [%1].", _reqPlayer]] Call WFBE_CO_FNC_LogContent;
+};
+_cmdTeamAuth = _side Call WFBE_CO_FNC_GetCommanderTeam;
+if (isNull _cmdTeamAuth) exitWith {};
+if (leader _cmdTeamAuth != _reqPlayer) exitWith {
+	["WARNING", Format ["RequestDequeue.sqf: rejected requester [%1] is not the %2 commander leader.", _reqPlayer, _side]] Call WFBE_CO_FNC_LogContent;
+};
 
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNull _logik) exitWith {};

@@ -277,7 +277,7 @@ if (!alive _uav) then {
 	//--- Reenable targetting.
 	{(driver playerUAV) enableAI _x} forEach ["TARGET","AUTOTARGET"];
 };
-_uav lock _locked;
+if (!isNull _uav) then {_uav lock _locked};
 titletext ["","black in"];
 bis_uav_terminate = nil;
 BIS_UAV_TIME = nil;

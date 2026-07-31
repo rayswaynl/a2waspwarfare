@@ -24,4 +24,7 @@ deleteVehicle _shell;
 
 //--- Deploy a Flare.
 _flare = "ARTY_Flare_Medium" createVehicle _deployPos;
+if (isNull _flare) exitWith {
+	["WARNING", Format ["ARTY_HandleILLUM.sqf: flare create failed at %1 class ARTY_Flare_Medium.", _deployPos]] Call WFBE_CO_FNC_LogContent;
+};
 _flare setPos _deployPos;

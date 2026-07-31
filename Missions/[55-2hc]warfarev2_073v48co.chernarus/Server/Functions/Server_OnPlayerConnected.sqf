@@ -256,6 +256,20 @@ if (!isNil "WFBE_GUER_VEHICLE_TIER") then {_id publicVariableClient "WFBE_GUER_V
 if (!isNil "WFBE_GUER_FOB_AVAIL") then {_id publicVariableClient "WFBE_GUER_FOB_AVAIL"}; //--- B75: GUER FOB availability JIP catch-up (depot FOB trucks + RHUD).
 if (!isNil "AICOMV2_GDIR_JIP_SNAP") then {_id publicVariableClient "AICOMV2_GDIR_JIP_SNAP"}; //--- J10: GUER Director snapshot is not JIP-durable in A2-OA; target the current value to this joiner.
 if (!isNil "WFBE_PopTier") then {_id publicVariableClient "WFBE_PopTier"}; //--- B74.2: player-pop tier JIP catch-up (AI cap + RHUD scaling).
+//--- r68 (marker JIP + public-state fidelity): the MHQ/HQ wreck-marker feed is a set of missionNamespace
+//--- PRIMITIVES broadcast with plain publicVariable in Server_OnHQKilled.sqf (false + wreck payload) and
+//--- Server_MHQRepair.sqf (true + []). Per the B63 note above, a plain publicVariable is NOT replayed to a
+//--- client that joined after the broadcast, so a JIP joiner arriving while a side MHQ sits destroyed-and-
+//--- awaiting-repair reads the optimistic client default (IS_%1_HQ_ALIVE=true / infos=[] at updateclient.sqf:52-107)
+//--- and never renders the own-side "HQ WRECK must be repaired" flag until the NEXT HQ kill/repair event. These
+//--- primitives are NOT object vars (no auto JIP re-sync) and are re-pushed nowhere - close the gap with the same
+//--- targeted publicVariableClient idiom as the marker feeds above. isNil-guarded so each fires only once a real
+//--- HQ event has populated it (inert on a fresh match / before any HQ loss); the client render loop already
+//--- count>=7 / default-guards the payload, so a stale-but-harmless value is impossible.
+if (!isNil "IS_WEST_HQ_ALIVE") then {_id publicVariableClient "IS_WEST_HQ_ALIVE"};
+if (!isNil "IS_EAST_HQ_ALIVE") then {_id publicVariableClient "IS_EAST_HQ_ALIVE"};
+if (!isNil "HQ_WEST_MARKER_INFOS") then {_id publicVariableClient "HQ_WEST_MARKER_INFOS"};
+if (!isNil "HQ_EAST_MARKER_INFOS") then {_id publicVariableClient "HQ_EAST_MARKER_INFOS"};
 //--- fable/fob-polish (2026-07-07): replay ACTIVE GUER FOB markers to a GUER late joiner (#846 known gap).
 //--- WildcardMarker creates are fire-and-forget publicVariables, so a client that joined after the broadcast
 //--- never saw them. The server-side WFBE_GUER_FOB_ACTIVE ledger (added in RequestFOBStructure, retired in
@@ -543,15 +557,18 @@ if (_sideOrigin != _sideJoined) then {
 };
 
 //--- Set the current player funds. NO-CLOBBER (2026-07-04): never overwrite a positive group wallet with
-//--- nil/0 at connect - if the computed value is empty but the group already holds money, keep the group's
-//--- value and repair the record to match (the record is authoritative only when it is a real number > 0).
+//--- a MISSING (nil) computed value at connect - if the record is absent but the group already holds
+//--- money (same-slot mid-double-resolve), keep the group's value and repair the record.
+//--- r69b (2026-07-31): do NOT treat a legitimate scalar 0 the same as nil. A real spend-to-0 writes 0
+//--- into the lock-step record; elevating from a vacated-slot leftover (or any foreign positive
+//--- wallet) would MINT funds into the record. Only nil-computed may adopt the group wallet.
 private ["_grpCurF"];
 _grpCurF = _team getVariable "wfbe_funds";
-if ((isNil "_funds" || {_funds <= 0}) && {!isNil "_grpCurF"} && {_grpCurF > 0}) then {
+if (isNil "_funds" && {!isNil "_grpCurF"} && {_grpCurF > 0}) then {
 	_funds = _grpCurF;
 	_get set [1, _grpCurF];
 	missionNamespace setVariable [format["WFBE_JIP_USER%1",_uid], _get];
-	diag_log (Format ["[WFBE][JIPFUNDS] no-clobber: kept group wallet %1 for [%2] (computed was 0/nil); record repaired.", _grpCurF, _uid]);
+	diag_log (Format ["[WFBE][JIPFUNDS] no-clobber: kept group wallet %1 for [%2] (computed was nil); record repaired.", _grpCurF, _uid]);
 };
 _funds = if (isNil "_funds") then {0} else {_funds};
 _team setVariable ["wfbe_funds", _funds, true];

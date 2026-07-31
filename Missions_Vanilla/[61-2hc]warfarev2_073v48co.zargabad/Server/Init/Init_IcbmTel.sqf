@@ -93,7 +93,7 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 		objNull
 	};
 	_tel setPos [_pos select 0, _pos select 1, 0];
-	_tel setVehicleLock "LOCKED";
+	_tel lock true;
 	_tel setDir (random 360);
 	_tel allowDamage true;   //--- destroyable = the counterplay (destroy-to-cancel an in-flight NUKE; else it just respawns).
 	_tel setVariable ["wfbe_icbm_tel_side", _side, true];
@@ -992,25 +992,39 @@ WFBE_SE_FNC_IcbmTelRecon = {
 	(missionNamespace getVariable ["WFBE_C_SCUD_WARHEAD_HE", "Sh_125_HE"]) createVehicle [(_dest select 0), (_dest select 1), 200];
 
 	//--- Gather living enemy MEN + crewed vehicles in radius (bounded by nearestObjects radius).
+	//--- r60 knowsabout residual: hull-only list never expanded crew (same trap as
+	//--- RevealArea pre-#1608: vehicle of a vehicle is itself). Add alive crew so
+	//--- dismounts inherit deliberate knowledge, not just the hull.
+	//--- Capture entity into _ent BEFORE any count/forEach that rebinds _x (A2 count
+	//--- condition leaves _x as the last element - would otherwise append last crew
+	//--- instead of the hull after `{alive _x} count (crew _x)`).
 	_enemies = [];
 	{
-		if (alive _x && {(side _x) in _enemySides}) then {
-			if (_x isKindOf "Man") then {
-				_enemies set [count _enemies, _x];
+		private ["_ent","_crewList"];
+		_ent = _x;
+		if (alive _ent && {(side _ent) in _enemySides}) then {
+			if (_ent isKindOf "Man") then {
+				_enemies set [count _enemies, _ent];
 			} else {
-				if (({alive _x} count (crew _x)) > 0) then {_enemies set [count _enemies, _x]};
+				_crewList = crew _ent;
+				if (({alive _x} count _crewList) > 0) then {
+					_enemies set [count _enemies, _ent];
+					{ if (alive _x) then {_enemies set [count _enemies, _x]} } forEach _crewList;
+				};
 			};
 		};
 	} forEach (nearestObjects [_dest, ["Man","LandVehicle","Air"], _r]);
 
-	//--- (a) AI reveal: each firing-side AI leader reveals each detected enemy (2-operand reveal — A2-OA-safe).
+	//--- (a) AI reveal: each firing-side AI-led group reveals each detected enemy (2-operand).
+	//--- r60 residual: leader-only reveal left squadmates FOW-blind; group reveal matches
+	//--- Capture / RevealArea / B5 idiom (_team reveal / _grp reveal) used elsewhere.
 	//--- Bound the outer loop to AI-led same-side groups; inner loop already bounded by _enemies.
 	{
 		_grp = _x;
 		if (side _grp == _side) then {
 			_ldr = leader _grp;
 			if (!isNull _ldr && {alive _ldr} && {!isPlayer _ldr}) then {
-				{ _ldr reveal _x } forEach _enemies;
+				{ _grp reveal _x } forEach _enemies;
 			};
 		};
 	} forEach allGroups;
@@ -1525,7 +1539,7 @@ WFBE_SE_FNC_IcbmTelAiBuy = {
 		["WARNING", Format ["Init_IcbmTel.sqf : [%1] AI SCUD buy — createVehicle FAILED at %2.", _sideText, _pos]] Call WFBE_CO_FNC_LogContent;
 	};
 	_veh setPos [_pos select 0, _pos select 1, 0];
-	_veh setVehicleLock "LOCKED";
+	_veh lock true;
 	_veh setDir (random 360);
 	[_side, -_cost] Call ChangeAICommanderFunds;
 	//--- register (grpNull team => no player refund path taken; our AI charge above is the debit). Cap enforced inside.

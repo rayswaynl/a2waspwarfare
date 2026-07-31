@@ -265,7 +265,7 @@ while {!gameOver && !_afkKickRequested} do {
 			SideHQAttack = _sideHQ;
 			_actionAttached = SideHQAttack getVariable "actionAttached";
 			if (isNil "_actionAttached") then {
-				_sideHQ setVariable ["wfbe_mhq_heavy_aid", _sideHQ addAction ["<t color='#ff6a00'>HEAVY ATTACK MODE</t>","Common\Functions\Common_AttackWaveActivate.sqf", [(sideJoined) call GetSideSupply, sideJoined], 1.5, false, false, "", "(((sideJoined) Call GetSideSupply) >= 25000) && (cursorTarget distance player < 50)"]]; //--- fix(hunt): store the LOCAL action id for exact removal on commander change
+				_sideHQ setVariable ["wfbe_mhq_heavy_aid", _sideHQ addAction ["<t color='#ff6a00'>HEAVY ATTACK MODE</t>","Common\Functions\Common_AttackWaveActivate.sqf", [], 1.5, false, false, "", "(((sideJoined) Call GetSideSupply) >= 25000) && (player distance _target < 50)"]]; //--- fix(code-as-string r33): condition uses action _target (MHQ), not cursorTarget; args empty - supply/side re-read live in handler
 				_sideHQ setVariable ["actionAttached", true];
 			};
 		};

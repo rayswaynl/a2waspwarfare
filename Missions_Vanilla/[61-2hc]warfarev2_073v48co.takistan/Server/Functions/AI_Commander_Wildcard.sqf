@@ -746,12 +746,21 @@ while {!gameOver} do {
 									//--- ~417-418; the path W6/W19/W23 use) - so the per-side 144-group-cap GC (server_groupsGC.sqf:93)
 									//--- never saw it and could never reap it: every AI-commanded W4 draw permanently leaked one live
 									//--- paratrooper group toward the cap. Register it the same way "aicom-team-created" does.
-									private ["_w4Teams"];
-									_w4Teams = _logik getVariable ["wfbe_teams", []];
-									_logik setVariable ["wfbe_teams", _w4Teams + [_cmdTeam], true];
+									//--- r51: never register/spawn on grpNull createGroup.
+									if (!isNull _cmdTeam) then {
+										private ["_w4Teams"];
+										_w4Teams = _logik getVariable ["wfbe_teams", []];
+										_logik setVariable ["wfbe_teams", _w4Teams + [_cmdTeam], true];
+									};
 								};
-								[nil, _side, _destination, _cmdTeam, 3] Spawn (Compile preprocessFile "Server\Support\Support_Paratroopers.sqf");
-								_detail = Format ["target=%1 level=3 model=%2 humanCmd=%3", _bestTown getVariable ["name","?"], _w4Model, _humanCmd];
+								if (isNull _cmdTeam) then {
+									_result = "partial";
+									_detail = "W4 createGroup null - no commander team for paradrop";
+									["WARNING", Format ["AI_Commander_Wildcard.sqf: W4 aborted - createGroup returned grpNull for side %1.", _sideText]] Call WFBE_CO_FNC_LogContent;
+								} else {
+									[nil, _side, _destination, _cmdTeam, 3] Spawn (Compile preprocessFile "Server\Support\Support_Paratroopers.sqf");
+									_detail = Format ["target=%1 level=3 model=%2 humanCmd=%3", _bestTown getVariable ["name","?"], _w4Model, _humanCmd];
+								};
 							} else {
 								_result = "ineligible";
 								_detail = "W4 no PARACHUTELEVEL3 units defined";
@@ -899,6 +908,14 @@ while {!gameOver} do {
 										_w13Pilot = [_w13PilotClass, _w13Grp, _w13SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 										if (!isNull _w13Pilot) then {
 											_w13Pilot moveInDriver _w13Heli;
+											//--- r51: seat-fail left empty airframe counted as successful W13 draw.
+											if (driver _w13Heli != _w13Pilot) then {
+												if (!isNull _w13Pilot) then {deleteVehicle _w13Pilot};
+												if (!isNull _w13Heli) then {deleteVehicle _w13Heli};
+												if (!isNull _w13Grp) then {deleteGroup _w13Grp};
+												_result = "partial"; _detail = Format ["W13 pilot seat fail for %1", _w13Class];
+												["WARNING", Format ["AI_Commander_Wildcard.sqf: W13 pilot seat fail for %1 - teardown.", _w13Class]] Call WFBE_CO_FNC_LogContent;
+											} else {
 											//--- ATTACK-HELI GUNNER (flag WFBE_C_AIR_ATTACK_GUNNER, default 0/byte-identical): the W13
 											//--- gunship's main armament fires from the GUNNER seat - pilot-only flies but never engages.
 											//--- Mount a gunner (mirrors B62, Server_GuerAirDef.sqf:378-387), gated on an empty gunner seat.
@@ -927,8 +944,9 @@ while {!gameOver} do {
 												};
 											};
 											_detail = Format ["class=%1 target=%2 cluster=%3", _w13Class, _w13TargetTown getVariable ["name","?"], _w13MaxCluster];
+											};
 										} else {
-											deleteVehicle _w13Heli; deleteGroup _w13Grp;
+											if (!isNull _w13Heli) then {deleteVehicle _w13Heli}; if (!isNull _w13Grp) then {deleteGroup _w13Grp};
 											_result = "partial"; _detail = Format ["W13 no pilot for %1", _w13Class];
 										};
 									} else {
@@ -1134,6 +1152,14 @@ while {!gameOver} do {
 									_w22Pilot = [_w22PilotClass, _w22Grp, _w22SpawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 									if (!isNull _w22Pilot) then {
 										_w22Pilot moveInDriver _w22Plane;
+										//--- r51: seat-fail left empty airframe counted as successful W22 draw.
+										if (driver _w22Plane != _w22Pilot) then {
+											if (!isNull _w22Pilot) then {deleteVehicle _w22Pilot};
+											if (!isNull _w22Plane) then {deleteVehicle _w22Plane};
+											if (!isNull _w22Grp) then {deleteGroup _w22Grp};
+											_result = "partial"; _detail = Format ["W22 pilot seat fail for %1", _w22PlaneClass];
+											["WARNING", Format ["AI_Commander_Wildcard.sqf: W22 pilot seat fail for %1 - teardown.", _w22PlaneClass]] Call WFBE_CO_FNC_LogContent;
+										} else {
 										//--- PLANE GUNNER (flag WFBE_C_AIR_ATTACK_GUNNER, default 0/byte-identical): the W22 top-gun
 										//--- plane pick is the side's first Plane class, which can be a TWO-seat airframe (Su34: the
 										//--- WSO/gunner seat fires the guided armament) - it flew pilot-only and never engaged with
@@ -1163,8 +1189,9 @@ while {!gameOver} do {
 											};
 										};
 										_detail = Format ["class=%1 loiter=%2 window=180s", _w22PlaneClass, if (!isNull _w22Target) then {_w22Target getVariable ["name","?"]} else {"HQ"}];
+										};
 									} else {
-										deleteVehicle _w22Plane; deleteGroup _w22Grp;
+										if (!isNull _w22Plane) then {deleteVehicle _w22Plane}; if (!isNull _w22Grp) then {deleteGroup _w22Grp};
 										_result = "partial"; _detail = Format ["W22 no pilot for %1", _w22PlaneClass];
 									};
 								} else {

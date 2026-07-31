@@ -55,7 +55,10 @@ _watchedGrps = [];
 		Private ["_team"];
 		_team = _this;
 		private "_wDeadline"; _wDeadline = time + 600; //--- wiki-wins: cap the watcher (was unbounded; a zombified/never-emptied group leaked this spawned thread for the rest of the mission)
-			while {count (units _team) > 0 && time < _wDeadline} do {sleep 1};
-		deleteGroup _team;
+		while {!isNull _team && {count (units _team) > 0} && {time < _wDeadline}} do {sleep 1};
+		//--- r57 fail-clean: only deleteGroup when still valid AND empty (deadline with live units must not dissolve a populated group).
+		if (!isNull _team && {count (units _team) == 0}) then {
+			deleteGroup _team;
+		};
 	};
 } forEach _watchedGrps;

@@ -120,6 +120,16 @@ if (_len < 1) then {_len = 1};
 _dist = _len;
 
 _chukar = createVehicle ["Chukar_EP1", _launchPos, [], 0, "FLY"];
+//--- r36 fail-clean: funds+cooldown already stamped above. Null chukar would crash setPosASL/setVelocity
+//--- and leave a paid, cool-downed no-strike. Refund wallet, clear cooldown, abort cleanly.
+if (isNull _chukar) exitWith {
+	_funds = _playerTeam getVariable "wfbe_funds";
+	if (isNil "_funds" || {typeName _funds != "SCALAR"}) then {_funds = 0};
+	_playerTeam setVariable ["wfbe_funds", (_funds + WFBE_C_SCUD_COST), true];
+	[_playerTeam] Call WFBE_SE_FNC_SyncFundsRecord;
+	missionNamespace setVariable [_cooldownKey, _lastFired];
+	["WARNING", Format ["Support_ScudStrike.sqf: [%1] Chukar createVehicle FAILED after debit - refunded %2 and restored cooldown.", str _side, WFBE_C_SCUD_COST]] Call WFBE_CO_FNC_LogContent;
+};
 _chukar setPosASL [_launchPos select 0, _launchPos select 1, 350];
 _chukar setVectorDir [_dx / _len, _dy / _len, 0];
 _chukar setVelocity [(_dx / _len) * 140, (_dy / _len) * 140, 0];

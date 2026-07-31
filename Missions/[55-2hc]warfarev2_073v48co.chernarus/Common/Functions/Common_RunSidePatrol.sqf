@@ -430,20 +430,41 @@ while {!WFBE_GameOver && _alive} do {
 						[_team, getPos _target, 'MOVE', 25] Spawn WFBE_CO_FNC_WaypointSimple;
 						_pVeh = vehicle _pLdr;
 						_pNear = false;
-						if (!isNull _pVeh && {!(_pVeh in [_pLdr])} && {alive _pVeh} && {canMove _pVeh}) then {
-							private ["_pNearResult"];
+						//--- fix(alife-stall r34): do NOT require canMove - immobilized/flipped hulls need setPos.
+						if (!isNull _pVeh && {!(_pVeh in [_pLdr])} && {alive _pVeh}) then {
+							private ["_pNearResult","_pNrStep","_pNrGuess","_pNrFlat","_pNrBrg","_pNrVp","_pNrDest"];
 							_pNearResult = 0;
 							_pNearResult = [getPos _pVeh, 100] Call WFBE_CO_FNC_RealPlayersNear;
 							if ((typeName _pNearResult) == "SCALAR" && {_pNearResult > 0}) then {_pNear = true};
 							if (_pNear) then {
 								_pVeh setVelocity [(velocity _pVeh) select 0, (velocity _pVeh) select 1, 4];
 							} else {
+								private ["_pSnapped"];
+								_pSnapped = false;
 								_pRds = (getPos _pVeh) nearRoads 150;
 								if (count _pRds > 0) then {
 									_pNode = [getPos _pVeh, _pRds] Call WFBE_CO_FNC_GetClosestEntity;
 									if (!isNull _pNode && {!surfaceIsWater (getPos _pNode)}) then {
 										_pVeh setVelocity [0,0,0];
 										_pVeh setPos (getPos _pNode);
+										_pSnapped = true;
+									};
+								};
+								//--- fix(alife-stall r34): NOROAD_STEP when empty roads OR water/invalid node.
+								if (!_pSnapped && {(missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP", 1]) > 0} && {!isNull _target}) then {
+									_pNrDest = getPos _target;
+									_pNrVp = getPosATL _pVeh;
+									_pNrBrg = ((_pNrDest select 0) - (_pNrVp select 0)) atan2 ((_pNrDest select 1) - (_pNrVp select 1));
+									_pNrStep = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_NOROAD_STEP_DIST", 90];
+									if (_pNrStep > ((_pVeh distance _target) - 15)) then {_pNrStep = ((_pVeh distance _target) - 15) max 0};
+									if (_pNrStep > 5) then {
+										_pNrGuess = [(_pNrVp select 0) + _pNrStep * (sin _pNrBrg), (_pNrVp select 1) + _pNrStep * (cos _pNrBrg), 0];
+										_pNrFlat = _pNrGuess isFlatEmpty [12, 0, 2, 14, 0, false, objNull];
+										if (count _pNrFlat > 0 && {!surfaceIsWater _pNrFlat}) then {
+											_pVeh setVelocity [0,0,0];
+											_pVeh setPos _pNrFlat;
+											diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time/60)) + "|PATROL_UNSTUCK_NOROAD|team=" + (str _team) + "|step=" + str (round _pNrStep));
+										};
 									};
 								};
 							};
@@ -504,6 +525,7 @@ if (isServer) then {
 //--- this script: delete surviving units BEFORE deleteGroup. Player-safe - never delete a player
 //--- (a real player in the group legitimately keeps it non-empty, so it is left alone).
 {
-	if (!isNull _x && {alive _x} && {!isPlayer _x}) then {deleteVehicle _x};
+	if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x};
 } forEach (units _team);
-if (!isNull _team) then {deleteGroup _team};
+//--- r70 empty-group: also reap corpses (combat-wipe left dead units so deleteGroup no-op'd; SidePatrol skipped by BASE-GC).
+if (!isNull _team && {({isPlayer _x} count (units _team)) == 0}) then {deleteGroup _team};

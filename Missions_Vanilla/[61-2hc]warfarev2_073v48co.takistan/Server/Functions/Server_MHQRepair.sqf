@@ -76,7 +76,7 @@ _logik setVariable ['wfbe_hq_repair_count', (_logik getVariable ["wfbe_hq_repair
  _commanderTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 //--- fable/cleanup-locality-2 (PVF-class hunt, LOW): align with the isPlayer-guarded sibling send
 //--- at the top of this file - an AI/absent commander makes this a dead-destination PVF.
-if (isPlayer (leader _commanderTeam)) then {
+if (!isNull _commanderTeam && {isPlayer (leader _commanderTeam)}) then {
 	[leader _commanderTeam, "SetMHQLock", _MHQ] Call WFBE_CO_FNC_SendToClient;
 };
 [_side,"Mobilized", ["Base", _MHQ]] Spawn SideMessage;

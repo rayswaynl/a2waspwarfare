@@ -147,9 +147,14 @@ if !(_skip) then {
 		_respawnedUnit allowDamage true;
 		["INFORMATION", Format ["DEADSPAWN_GUARD|release|side=%1|unit=%2|skip=%3", _sideText, _respawnedUnit, _skip]] Call WFBE_CO_FNC_LogContent;
 	};
+	//--- fail-clean r48: null HQ + no buildings + empty availableSpawn => getPos throws, unit stuck on temp marker.
+	if (isNull _respawnLoc) then {
+		["WARNING", Format ["AI_AdvancedRespawn.sqf: [%1] AI unit [%2] null respawnLoc - keeping temp marker park.", _sideText, _respawnedUnit]] Call WFBE_CO_FNC_LogContent;
+	} else {
 	_pos = [getPos _respawnLoc,20,30] Call GetRandomPosition;
 	_pos set [2,0];
 	_respawnedUnit setPos _pos;
+	};
 	
 	//--- Assign fresh order if the AI is not on autonomous mode.
 	_autonomous = (_team) Call GetTeamAutonomous;

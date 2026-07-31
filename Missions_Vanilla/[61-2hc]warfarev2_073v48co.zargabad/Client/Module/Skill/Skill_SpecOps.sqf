@@ -33,14 +33,16 @@ for [{_z = 0},{_z < 4},{_z = _z + 1}] do {
 if (!locked _vehicle) exitWith {};
 
 if (!_skip) then {
-	_min = 51;
-	switch (typeOf _vehicle) do {
-		case "Motorcycle": {_min = 45};
-		case "Car": {_min = 52};
-		case "Tank": {_min = 53};
-		case "Ship": {_min = 25};
-		case "Air": {_min = 65};
-	};
+_min = 51;
+//--- typeOf returns classname (e.g. HMMWV_M2), never abstract kind "Car"/"Tank".
+//--- isKindOf so Air/Ship/Motorcycle/Tank difficulty actually applies (was always 51).
+call {
+	if (_vehicle isKindOf "Air") exitWith {_min = 65};
+	if (_vehicle isKindOf "Ship") exitWith {_min = 25};
+	if (_vehicle isKindOf "Tank") exitWith {_min = 53};
+	if (_vehicle isKindOf "Motorcycle") exitWith {_min = 45};
+	if (_vehicle isKindOf "Car") exitWith {_min = 52};
+};
 	_ran = ((random 100)- WFBE_SK_V_LockpickChance);
 	
 	if (_ran >= _min) then {

@@ -6,7 +6,7 @@
 		- Action ("spawn"/"remove").
 */
 
-Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
+Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_op","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -42,13 +42,18 @@ switch (_action) do {
 			};
 		};
 		//--- Fallback: if group creation failed (cap reached), use the global DefenseTeam.
-		if (isNull _team) then {_team = missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side]};
+		//--- r40 handoff: DefenseTeam may be unset (nil) when group cap blocked createGroup — never leave _team as nil for RevealArea/setBehaviour.
+if (isNull _team) then {
+	_team = missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side];
+	if (isNil "_team") then {_team = grpNull};
+};
 
 		//--- Man the defenses.
 		{
 			_defense = _x getVariable "wfbe_defense";
 			_use_server = true;
-			if !(isNil '_defense') then {
+			//--- r33: objNull is not nil - a failed createVehicle still stamped the logic; never man/lock null hulls.
+			if (!(isNil "_defense") && {!isNull _defense} && {alive _defense}) then {
 				_positions = [];
 				_groups = [];
 				if !(alive gunner _defense) then { //--- Make sure that the defense gunner is null or dead.
@@ -75,6 +80,24 @@ switch (_action) do {
 					};
 
 					if (_use_server) then {
+						//--- r62 alife-static-manning: multi-group 12-cap is intended (header), but the pre-loop
+						//--- while only advances on ALREADY-full groups. Mid-forEach after CreateUnit fills slot 12,
+						//--- further guns kept stuffing the same group (bloat) or failed creates left guns empty.
+						//--- Re-pick a non-full per-town gunner group before each server-side CreateUnit.
+						while {!(isNull _team) && {count units _team >= 12}} do {
+							_grpIdx = _grpIdx + 1;
+							_grpKey = Format ["wfbe_gungrp_%1_%2", _sideID, _grpIdx];
+							_team = _town getVariable _grpKey;
+							if (isNil "_team") then {_team = grpNull};
+						};
+						if (isNull _team) then {
+							_team = [_side, "defense-gunners"] Call WFBE_CO_FNC_CreateGroup;
+							if !(isNull _team) then {
+								_team setVariable ["wfbe_persistent", true];
+								_town setVariable [_grpKey, _team];
+							};
+						};
+						if (isNull _team) then {_team = missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side]};
 						_unit = [missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side], _team, getPos _x, _side] Call WFBE_CO_FNC_CreateUnit;
 						if (isNull _unit) then {
 							["WARNING", Format ["Server_OperateTownDefensesUnits.sqf: Town [%1] failed to create a defense gunner for [%2].", _town getVariable "name", typeOf _defense]] Call WFBE_CO_FNC_LogContent;
@@ -127,7 +150,8 @@ switch (_action) do {
 		{
 			_defense = _x getVariable "wfbe_defense";
 
-			if !(isNil '_defense') then {
+			//--- r33: skip null hulls (same class as spawn gate).
+			if (!(isNil "_defense") && {!isNull _defense}) then {
 				_unit = gunner _defense;
 				if !(isNull _unit) then { //--- Make sure that we do not remove a player's unit.
 					//--- fix(alife) proper #1370 audit: the bare deleteVehicle below silently no-ops when
@@ -161,7 +185,11 @@ switch (_action) do {
 				_defense lock true;
 			};
 			if !(isNil {_x getVariable "wfbe_defense_operator"}) then { //--- Delete the original gunner if he's still around.
-				if (alive(_x getVariable "wfbe_defense_operator")) then {deleteVehicle (_x getVariable "wfbe_defense_operator")};
+				//--- r62: operator delete locality parity with gunner remove-case (HC-local deleteVehicle no-ops).
+				private "_opUnit"; _opUnit = _x getVariable "wfbe_defense_operator";
+				if (!isNull _opUnit && {alive _opUnit}) then {
+					if (local _opUnit) then {deleteVehicle _opUnit} else {[_opUnit, "HandleSpecial", ["cleanup-town-defense-gunner", _opUnit, "remove-case"]] Call WFBE_CO_FNC_SendToClient};
+				};
 				_x setVariable ["wfbe_defense_operator", nil];
 			};
 		} forEach (_town getVariable "wfbe_town_defenses");

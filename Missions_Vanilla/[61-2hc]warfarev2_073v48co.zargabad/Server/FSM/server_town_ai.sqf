@@ -602,7 +602,7 @@ while {!WFBE_GameOver} do {
 						_teams = [];
 						//--- fable/garrison-tonight (owner 2026-07-07): PERIMETER spread - ring the defenders around the
 						//--- town EDGE by bearing instead of clustering at camps/center. WFBE_C_TOWNS_PERIMETER 0 = legacy.
-						private ["_perimeterOn","_grpTotalP","_townRangeP","_townCenP","_bearingP","_distP","_ctlNewGrp"];
+						private ["_perimeterOn","_grpTotalP","_townRangeP","_townCenP","_bearingP","_distP","_ctlNewGrp","_wtryP"];
 						_perimeterOn = (missionNamespace getVariable ["WFBE_C_TOWNS_PERIMETER", 0]) > 0;
 						_grpTotalP   = count _groups; if (_grpTotalP < 1) then {_grpTotalP = 1};
 						_townRangeP  = _town getVariable ["range", 300]; if (_townRangeP < 120) then {_townRangeP = 120};
@@ -613,6 +613,20 @@ while {!WFBE_GameOver} do {
 								_bearingP = (360 / _grpTotalP) * _groupIndex + (random 40) - 20;
 								_distP    = _townRangeP * (0.70 + (random 0.25));
 								_position = [(_townCenP select 0) + _distP * (sin _bearingP), (_townCenP select 1) + _distP * (cos _bearingP), 0];
+								//--- COASTAL WATER GUARD (bughunt r29): the perimeter seed is a raw bearing offset handed
+								//--- straight to GetEmptyPosition, whose isFlatEmpty test does NOT reject water (the codebase
+								//--- pairs isFlatEmpty with a SEPARATE surfaceIsWater everywhere it must stay off the sea - see
+								//--- Common_AICOMAirLeg.sqf). The legacy else-branch seeds through GetRandomPosition, which
+								//--- rejects water; the perimeter branch (LIVE default WFBE_C_TOWNS_PERIMETER=1) did not, so at a
+								//--- coastal town the edge ring dropped land garrison groups into the water. Re-roll the bearing
+								//--- off water with the SAME bounded 20-try idiom Common_GetRandomPosition uses.
+								_wtryP = 0;
+								while {surfaceIsWater _position && {_wtryP < 20}} do {
+									_bearingP = random 360;
+									_distP    = _townRangeP * (0.70 + (random 0.25));
+									_position = [(_townCenP select 0) + _distP * (sin _bearingP), (_townCenP select 1) + _distP * (cos _bearingP), 0];
+									_wtryP = _wtryP + 1;
+								};
 							} else {
 								if (count _camps > 0 && random 100 > 50) then {
 									_camp = _camps select floor (random count _camps);
@@ -625,6 +639,11 @@ while {!WFBE_GameOver} do {
 							_position = [_position, 50] call WFBE_CO_FNC_GetEmptyPosition;
 							[_positions, _position] call WFBE_CO_FNC_ArrayPush;
 							_ctlNewGrp = ([_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup);
+							//--- r50 fail-clean: CreateGroup returns grpNull at side group-cap; setVariable on null
+							//--- and pushing grpNull into _teams poisons the later CreateTownUnits batch for the wave.
+							if (isNull _ctlNewGrp) then {
+								["WARNING", Format ["server_town_ai.sqf: town-ai CreateGroup failed for side [%1] town [%2] - slot dropped.", _side, _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+							} else {
 							//--- New-Bug-A fix (fable/ctl-survivor-bugs): stamp each freshly created group with the SAME
 							//--- per-town wfbe_ctl_ground_wave state just set above for this wave (line ~287/~309), so
 							//--- the survivor-tally numerator below (deactivation block) can tell ground-wave groups
@@ -636,6 +655,7 @@ while {!WFBE_GameOver} do {
 								_ctlNewGrp setVariable ["wfbe_ctl_ground_wave", (_town getVariable ["wfbe_ctl_ground_wave", true])];
 							};
 							[_teams, _ctlNewGrp] call WFBE_CO_FNC_ArrayPush;
+							};
 						};
 
 						//--- Paid GDIR defensive vehicles are a server-owned supplement, never an item in
@@ -899,7 +919,7 @@ while {!WFBE_GameOver} do {
 								_sortieProximityRange = missionNamespace getVariable ["WFBE_C_TOWNS_SORTIES_PROXIMITY_RANGE", 1500];
 								_sortieProximityOk = false;
 								{
-									if (isPlayer _x && {alive _x} && {(_x distance _town) < _sortieProximityRange}) exitWith { _sortieProximityOk = true; };
+									if (isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _town) < _sortieProximityRange}) exitWith { _sortieProximityOk = true; };
 								} forEach playableUnits;
 							};
 
@@ -984,14 +1004,15 @@ while {!WFBE_GameOver} do {
 								//--- current, possibly-overwritten, per-town flag. Default true (count) for any untagged
 								//--- group so pre-existing/edge-case groups keep the old behaviour - this only narrows
 								//--- counting for groups explicitly tagged air-only.
+								private ["_deactGrp"]; _deactGrp = _x; //--- deact-group-clobber fix: capture the GROUP before the inner forEach loops below rebind _x to units (A2 inner-forEach _x-clobber trap) - the deleteGroup at the bottom must target the group, not the last (deleted) unit ref.
 								if (_ctlLaneOn && {([_x, "wfbe_ctl_ground_wave", true] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- sweep-fix #936: _x is a GROUP; 2-arg getVariable returns nil-not-default on groups (G1 trap) - route through the group-safe wrapper.
 									{if (alive _x) then {_ctlSurviving = _ctlSurviving + 1}} forEach units _x;
 								};
 								//--- B67 [wiki-wins]: never delete a player unit. The old loop deleted
 								//--- every server-local unit; a player whose unit is server-local (e.g. a
 								//--- JIP/HC-handoff edge) would be wiped on despawn. Guard with !isPlayer.
-								{if (local _x && !(isPlayer _x)) then {["town-sweep-unit", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach units _x;
-								if (({!(local _x)} count units _x) == 0) then {deleteGroup _x};
+								{if (local _x && !(isPlayer _x)) then {["town-sweep-unit", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach units _deactGrp;
+								if (({!(local _x)} count units _deactGrp) == 0) then {deleteGroup _deactGrp};
 							};
 						};
 					} forEach _town_teams;

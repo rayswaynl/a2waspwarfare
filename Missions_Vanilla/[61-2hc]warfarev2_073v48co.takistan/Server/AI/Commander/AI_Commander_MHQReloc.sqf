@@ -218,12 +218,13 @@ if (count _destPos == 0) exitWith {
 };
 
 //--- RAIL 2 (ENEMY STANDOFF) + no-water destination.
+//--- Type filter: Man+LandVehicle+Air (Car/Tank alone missed Motorcycle / Wheeled_APC edges; LandVehicle covers all).
 if (surfaceIsWater _destPos) exitWith {};
 _eNear = false;
-{ if (side _x == _enemySideObj && {alive _x}) then {_eNear = true} } forEach (_destPos nearEntities [["Man","Car","Tank","Air"], _enemyClear]);
+{ if (side _x == _enemySideObj && {alive _x}) then {_eNear = true} } forEach (_destPos nearEntities [["Man","LandVehicle","Air"], _enemyClear]);
 if (_eNear) exitWith {};
 _eNear = false;
-{ if (side _x == _enemySideObj && {alive _x}) then {_eNear = true} } forEach (_hqPos nearEntities [["Man","Car","Tank","Air"], _enemyClear]);
+{ if (side _x == _enemySideObj && {alive _x}) then {_eNear = true} } forEach (_hqPos nearEntities [["Man","LandVehicle","Air"], _enemyClear]);
 if (_eNear) exitWith {};
 
 //--- cmdcon41-w2 (mhq-reloc-avoid-human-front-overrun): HUMAN-FRONT DEFER. After the two enemy-clear
@@ -234,12 +235,22 @@ if (_eNear) exitWith {};
 //--- 0 disables. A2-OA-safe: behaviour == "COMBAT" is an exact-case string compare (no A3 commands).
 //--- Compute _hNear at SCRIPT scope first (a then{} block has its own scope, so an exitWith inside it would
 //--- only exit that block, not the script - the defer exitWith below MUST live at top level).
+//--- FIX r64: nearEntities "Man" never returns MOUNTED players — a player fighting from a BMP was invisible
+//--- to this defer, so MHQ still crept onto the human front. Scan hulls and walk crew for isPlayer.
 _hfDist = missionNamespace getVariable ["WFBE_C_AICOM_MHQ_HUMAN_FRONT_DIST", 900];
 _hNear = false;
 if (_hfDist > 0) then {
 	{
-		if (isPlayer _x && {alive _x} && {side _x == _side} && {behaviour _x == "COMBAT"}) then {_hNear = true};
-	} forEach (_destPos nearEntities [["Man"], _hfDist]);
+		if (!_hNear) then {
+			if (_x isKindOf "Man") then {
+				if (isPlayer _x && {alive _x} && {side _x == _side} && {behaviour _x == "COMBAT"}) then {_hNear = true};
+			} else {
+				{
+					if (!_hNear && {isPlayer _x} && {alive _x} && {side _x == _side} && {behaviour _x == "COMBAT"}) then {_hNear = true};
+				} forEach (crew _x);
+			};
+		};
+	} forEach (_destPos nearEntities [["Man","LandVehicle","Air"], _hfDist]);
 };
 if (_hNear) exitWith {
 	diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) + "|DEFER|human-front|dist=" + str (round _hfDist) + "|dest=" + str _destPos);
@@ -365,7 +376,7 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 		//--- setBehaviour/setCombatMode/setSpeedMode, exact-case mode strings).
 		if (_routeDeesc > 0 && {!isNull _drvGrp}) then {
 			_eOnRoute = false;
-			{ if (side _x == _enemySide && {alive _x}) then {_eOnRoute = true} } forEach (_cur nearEntities [["Man","Car","Tank","Air"], _enemyClear]);
+			{ if (side _x == _enemySide && {alive _x}) then {_eOnRoute = true} } forEach (_cur nearEntities [["Man","LandVehicle","Air"], _enemyClear]);
 			if (_eOnRoute) then {
 				//--- CONTACT: grant timer grace ONCE on the contact edge (not every 5s tick).
 				//--- Per-tick grace extended deadline forever under sustained contact (scheduler/drive

@@ -26,6 +26,12 @@ if (isNil "_position" || {typeName _position != "ARRAY"} || {count _position < 2
 _area = [_position,((_side) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity4;
 
 _defense = createVehicle [_type, _position, [], 0, "NONE"];
+//--- r36 fail-clean: null defense would throw on setDir/setPos and return a broken object to callers
+//--- that treat non-null as a live defense (minefield spawn, manning, kill EH).
+if (isNull _defense) exitWith {
+	["WARNING", Format ["Construction_StationaryDefense.sqf: [%1] Defense [%2] createVehicle FAILED at %3.", str _side, _type, _position]] Call WFBE_CO_FNC_LogContent;
+	objNull
+};
 _defense setDir _direction;
 _defense setPos _position;
 _defense setVariable ["side" ,_side];

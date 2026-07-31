@@ -60,7 +60,8 @@ _assigned = [];
 				if (typeName _curTgt == "OBJECT" && {!isNull _curTgt}) then {
 					//--- Only count it as committed mass if the town is still contestable
 					//--- (not ours yet); a captured town frees the team to roll forward.
-					if ((_curTgt getVariable "sideID") != _sideID) then {
+					//--- r36 wave/staging: bare getVariable sideID can nil-poison concentration pre-seed
+					if ((_curTgt getVariable ["sideID", -1]) != _sideID) then {
 						_assigned set [count _assigned, _curTgt];
 					};
 				};
@@ -110,6 +111,14 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					_logik setVariable [_bandKey, _bandVal + 1];
 					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_ARRIVED|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|elapsed=" + str _elapsed);
 					_team setVariable ["wfbe_aicom_dispatch_open", false];
+					//--- r40 intel freshness: arrival proves reachability - clear side-abandon memory for this town.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST", 1]) > 0) then {
+						private ["_sbaArr","_sbaArrKeep"];
+						_sbaArr = _logik getVariable ["wfbe_aicom_side_abandons", []];
+						_sbaArrKeep = [];
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 0) != _dtgt}) then {_sbaArrKeep set [count _sbaArrKeep, _x]} } forEach _sbaArr;
+						if ((count _sbaArrKeep) != (count _sbaArr)) then {_logik setVariable ["wfbe_aicom_side_abandons", _sbaArrKeep]};
+					};
 					//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, claude-gaming 2026-07-02): the team reached a town
 					//--- this dispatch - a successful journey. Reset its failed-journey counter AND its per-pass
 					//--- orbiter watch state so a fresh leg starts clean. A2-OA-safe (plain setVariable).
@@ -281,6 +290,11 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	if (_modeNow == "move" && {!_footStage}) then {_explicitMode = true};
 	if (_modeNow == "patrol") then {_explicitMode = true};
 	if (_modeNow == "defense") then {_explicitMode = true};
+	//--- r27 ownership: logistics self-service detour owns the group while enroute (Common_AICOMServiceTick).
+	//--- Treat as explicit so this worker does not re-book an assault townorder and thrash waypoints.
+	private "_svcStateAT";
+	_svcStateAT = _team getVariable "wfbe_aicom_svcstate";
+	if (!isNil "_svcStateAT" && {_svcStateAT == "enroute"}) then {_explicitMode = true};
 	//--- Owner ruling: clear legacy standing defense/garrison posture on each worker pass; active relief and an active capture hold remain explicit below.
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0 && {_modeNow == "defense"} && {!_humanCmd}) then {
 		private ["_legacyRelief","_legacyHold"];
@@ -550,7 +564,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 												private ["_sba","_newSba","_sFound","_sCnt"];
 												_sba = _logik getVariable ["wfbe_aicom_side_abandons", []];
 												_newSba = []; _sFound = false; _sCnt = 0;
-												{ if ((_x select 0) == _goto) then {_sFound = true; _sCnt = (_x select 1) + 1; _newSba set [count _newSba, [_goto, _sCnt]]} else {_newSba set [count _newSba, _x]} } forEach _sba;
+												//--- r40 intel freshness: drop null/deleted town keys while rewriting.
+												{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)}) then {
+													if ((_x select 0) == _goto) then {_sFound = true; _sCnt = (_x select 1) + 1; _newSba set [count _newSba, [_goto, _sCnt]]} else {_newSba set [count _newSba, _x]};
+												} } forEach _sba;
 												if (!_sFound) then {_sCnt = 1; _newSba set [count _newSba, [_goto, 1]]};
 												_logik setVariable ["wfbe_aicom_side_abandons", _newSba];
 												if (_sCnt >= (missionNamespace getVariable ["WFBE_C_AICOM_SIDE_ABANDON", 3])) then {
@@ -703,7 +720,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 													private ["_sba","_newSba","_sFound","_sCnt"];
 													_sba = _logik getVariable ["wfbe_aicom_side_abandons", []];
 													_newSba = []; _sFound = false; _sCnt = 0;
-													{ if ((_x select 0) == _goto) then {_sFound = true; _sCnt = (_x select 1) + 1; _newSba set [count _newSba, [_goto, _sCnt]]} else {_newSba set [count _newSba, _x]} } forEach _sba;
+													//--- r40 intel freshness: drop null/deleted town keys while rewriting.
+													{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)}) then {
+														if ((_x select 0) == _goto) then {_sFound = true; _sCnt = (_x select 1) + 1; _newSba set [count _newSba, [_goto, _sCnt]]} else {_newSba set [count _newSba, _x]};
+													} } forEach _sba;
 													if (!_sFound) then {_sCnt = 1; _newSba set [count _newSba, [_goto, 1]]};
 													_logik setVariable ["wfbe_aicom_side_abandons", _newSba];
 													if (_sCnt >= (missionNamespace getVariable ["WFBE_C_AICOM_SIDE_ABANDON", 3])) then {
@@ -937,6 +957,27 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					_reachFoot    = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_FOOT", 3500];
 					_reachMounted = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_REACH_MOUNTED", 9000];
 					_teamReach = if (_mounted) then {_reachMounted} else {_reachFoot}; private "_teamAir"; _teamAir = false; { if (!_teamAir && {alive _x} && {(vehicle _x) isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0}) then {_teamAir = true} } forEach (units _team); //--- B756 (Ray 2026-06-26): does this team carry a TRANSPORT heli? gates naval-HVT targets to air teams only (no ground sea-stranding).
+//--- r37 water-crossing: amphibious capability + straight-line water-leg gate for land-only teams.
+//--- Without this, island/peninsula towns pass pure-distance reach and foot/wheeled teams walk into
+//--- the shoreline forever (no surfaceIsWater test at objective pick; BuildRoadRoute only snaps roads).
+private ["_teamAmphib","_waterBlocks"];
+_teamAmphib = false;
+{ if (!_teamAmphib && {alive _x}) then { private "_wv"; _wv = vehicle _x; if (_wv != _x && {alive _wv} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _wv) >> "canFloat")) > 0}) then {_teamAmphib = true} } } forEach (units _team);
+_waterBlocks = {
+	private ["_from","_to","_hits","_i","_frac","_px","_py"];
+	_from = _this select 0; _to = _this select 1;
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_WATER_LEG_GATE", 1]) <= 0) exitWith {false};
+	if (_teamAir || {_teamAmphib}) exitWith {false};
+	if ((typeName _from) != "ARRAY" || {(typeName _to) != "ARRAY"} || {(count _from) < 2} || {(count _to) < 2}) exitWith {false};
+	_hits = 0;
+	for "_i" from 1 to 4 do {
+		_frac = _i / 5;
+		_px = (_from select 0) + (((_to select 0) - (_from select 0)) * _frac);
+		_py = (_from select 1) + (((_to select 1) - (_from select 1)) * _frac);
+		if (surfaceIsWater [_px, _py, 0]) then {_hits = _hits + 1};
+	};
+	(_hits >= 2)
+};
 					//--- WAVE-1 CAUSE-2: live (non-expired) blacklist towns for THIS team. Prune expired entries
 					//--- back onto the team var, then build _uncapturedF = uncaptured minus blacklisted. GUARDRAIL:
 					//--- if excluding the blacklist would leave NO uncaptured town, clear the blacklist and fall back
@@ -956,8 +997,20 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					//--- side stops sending teams there. The empty-pool guardrail below clears _blTowns (incl these) so a
 					//--- team is never left idle. Flag-gated WFBE_C_AICOM_SIDE_BLACKLIST (default on), reversible. A2-safe.
 					if ((missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST", 1]) > 0) then {
-						private "_sbl"; _sbl = _logik getVariable ["wfbe_aicom_side_blacklist", []];
-						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {!((_x select 0) in _blTowns)}) then {_blTowns set [count _blTowns, (_x select 0)]} } forEach _sbl;
+						private ["_sbl","_sblLive","_sba","_sbaKeep"];
+						_sbl = _logik getVariable ["wfbe_aicom_side_blacklist", []];
+						_sblLive = [];
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {
+							_sblLive set [count _sblLive, (_x select 0)];
+							if (!((_x select 0) in _blTowns)) then {_blTowns set [count _blTowns, (_x select 0)]};
+						} } forEach _sbl;
+						//--- r40 intel freshness: side_abandons is permanent 'unreachable town' contact memory.
+						//--- After blacklist cooldown, count stayed >= threshold so ONE abandon re-banned forever.
+						//--- Age abandon tallies with the live side blacklist so intelligence expires with the ban.
+						_sba = _logik getVariable ["wfbe_aicom_side_abandons", []];
+						_sbaKeep = [];
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 0) in _sblLive}) then {_sbaKeep set [count _sbaKeep, _x]} } forEach _sba;
+						if ((count _sbaKeep) != (count _sba)) then {_logik setVariable ["wfbe_aicom_side_abandons", _sbaKeep]};
 					};
 					_uncapturedF = _uncaptured - _blTowns;
 					if (count _uncapturedF == 0) then {
@@ -997,7 +1050,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_allocTtl  = missionNamespace getVariable ["WFBE_C_AICOM2_ALLOC_TICK_TTL", 180];
 						if ((missionNamespace getVariable ["WFBE_C_AICOM2_ALLOC_TTL_HARDEN", 0]) > 0) then {if (_allocTtl < 300) then {_allocTtl = 300}};
 						if (!isNil "_allocTick") then {_allocAge = time - _allocTick} else {_allocAge = 1e9};
-						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)} && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_mounted} || {(_ldrPos distance _allocT) <= _teamReach}}) then { //--- review fix: FOOT_STAGE must not accept an allocator target outside honest reach.
+						if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge < _allocTtl} && {(_allocT getVariable ["sideID", _sideID]) != _sideID} && {!(_allocT in _blTowns)} && {!((missionNamespace getVariable ["WFBE_C_AICOM_FOOT_STAGE", 0]) > 0) || {_mounted} || {(_ldrPos distance _allocT) <= _teamReach}} && {!([_ldrPos, getPos _allocT] Call _waterBlocks)}) then { //--- review fix FOOT_STAGE + r37 water-leg gate
 							_target = _allocT;
 						} else {
 							if (!isNil "_allocT" && {!isNull _allocT} && {!isNil "_allocTick"} && {_allocAge >= _allocTtl}) then {
@@ -1012,7 +1065,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					{
 						_spearT = _x;
 						if (isNull _target && {!isNull _spearT}) then {
-							if (((_spearT getVariable "sideID") != _sideID) && {!(_spearT in _blTowns)} && {(_ldrPos distance _spearT) <= _teamReach} && {((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_spearT getVariable ["wfbe_is_naval_hvt", false])} || _teamAir}) then { //--- B756: naval-HVT targets are air-team-only (offshore decks) - a ground team skips them (no sea-stranding) and takes a land target instead.
+							if (((_spearT getVariable ["sideID", -1]) != _sideID) && {!(_spearT in _blTowns)} && {(_ldrPos distance _spearT) <= _teamReach} && {((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_spearT getVariable ["wfbe_is_naval_hvt", false])} || _teamAir} && {!([_ldrPos, getPos _spearT] Call _waterBlocks)}) then { //--- B756 naval-HVT + r37 water-leg gate for land-only teams
 								//--- Per-target quota = base concentration scaled by garrison tier
 								//--- (wfbe_town_type maps to defender group count in
 								//--- Server_GetTownGroupsDefender.sqf: Tiny 3, Small 5, Medium 6,
@@ -1046,7 +1099,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_nearReach = objNull; _nearReachD = 1e9;
 						{
 							_tgtDist = _ldrPos distance _x;
-							if (_tgtDist <= _teamReach && {_tgtDist < _nearReachD} && {((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_x getVariable ["wfbe_is_naval_hvt", false])} || _teamAir}) then {_nearReachD = _tgtDist; _nearReach = _x}; //--- B756: ground teams skip naval HVTs in the nearest-town fallback too.
+							if (_tgtDist <= _teamReach && {_tgtDist < _nearReachD} && {((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_x getVariable ["wfbe_is_naval_hvt", false])} || _teamAir} && {!([_ldrPos, getPos _x] Call _waterBlocks)}) then {_nearReachD = _tgtDist; _nearReach = _x}; //--- B756 naval-HVT + r37 water-leg gate
 						} forEach _avail;
 						if (!isNull _nearReach) then {
 							_target = _nearReach;
@@ -1089,6 +1142,13 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 									};
 									[_team, "move"] Call SetTeamMoveMode;
 									[_team, getPos _footStageTown] Call SetTeamMovePos;
+									//--- r36 assault-staging: HC driver reads ONLY wfbe_aicom_order (WAVE-1 A3 pattern from Strategy
+									//--- relief). Relying solely on Execute's move-mode dual-write left FOOT_STAGE teams waiting a
+									//--- full supervisor tick (or stuck if Execute debounce held) while foot_stage=true excluded
+									//--- them from the wedge watchdog - publish the order here.
+									if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+										_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "move", getPos _footStageTown], true];
+									};
 									_team setVariable ["wfbe_aicom_foot_stage", true];
 									_team setVariable ["wfbe_aicom_foot_stage_pos", getPos _footStageTown];
 									_team setVariable ["wfbe_aicom_townorder", [], false];
@@ -1125,10 +1185,15 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						//--- run inline exactly as before (byte-identical).
 						_waveDelay = 0;
 						if (((missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER", 0]) > 0) && {({_x == _target} count _assigned) > 0}) then {
-							private "_waveJit";
+							private ["_waveJit","_waveMin","_waveMax"];
 							_waveJit = _team getVariable "wfbe_aicom_lanejit";
-							if (isNil "_waveJit") then {_waveJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _waveJit, true]};
-							_waveDelay = (missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MIN", 30]) + (((_waveJit + 1) / 2) * ((missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MAX", 90]) - (missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MIN", 30])));
+							//--- r36 wave-sync: non-scalar / missing lanejit must not throw in the delay arithmetic
+							if (isNil "_waveJit" || {typeName _waveJit != "SCALAR"}) then {_waveJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _waveJit, true]};
+							_waveMin = missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MIN", 30];
+							_waveMax = missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MAX", 90];
+							if (typeName _waveMin != "SCALAR" || {_waveMin < 0}) then {_waveMin = 30};
+							if (typeName _waveMax != "SCALAR" || {_waveMax < _waveMin}) then {_waveMax = _waveMin + 60};
+							_waveDelay = _waveMin + (((_waveJit + 1) / 2) * (_waveMax - _waveMin));
 						};
 						//--- hc-locality-group-owner: demote HC flag if leader is server-local (HC drop) so this
 						//--- branch falls through to AIMoveTo / SetTownAttackPath instead of publishing a dead order.
@@ -1246,7 +1311,12 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_priorOpen = [_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool;
 						_sameTgt   = (count _priorOrd >= 1) && {(typeName (_priorOrd select 0)) == "OBJECT"} && {(_priorOrd select 0) == _target};
 						_priorDispT0 = if (count _priorOrd >= 2) then {_priorOrd select 1} else {time};
-						_dispT0    = if (_priorOpen && _sameTgt && {count _priorOrd >= 2}) then {_priorDispT0} else {time};
+						//--- r36 wave-sync: WAVE_STAGGER defers the actual MOVE/order by _waveDelay, but the assault
+						//--- strand clock used to start at assignment time - second+ teams lost 30-90s of budget while
+						//--- sitting still. New dispatches start the clock when the delayed march is due to fire.
+						_dispT0    = if (_priorOpen && _sameTgt && {count _priorOrd >= 2}) then {_priorDispT0} else {
+							if (!isNil "_waveDelay" && {typeName _waveDelay == "SCALAR"} && {_waveDelay > 0}) then {time + _waveDelay} else {time}
+						};
 						//--- FIX A: distance/mobility-aware assault timeout (fable, GR-2026-07-08a; design ASSAULT-DYNTIMEOUT-DESIGN.md
 						//--- S2.5). _asltSpeed/_asltDist/_asltToSecs are in the top-of-file private list. _mounted/_teamAir are the
 						//--- SAME locals the reach gate above already computed this iteration (no re-scan of units _team).

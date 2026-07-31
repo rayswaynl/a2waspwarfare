@@ -47,6 +47,12 @@ switch (true) do {
 				case "Aircraft": {_localizedString = localize "STRHelipad";_value = "Helipad"};
 				case "ServicePoint": {_localizedString = localize "STRServicePoint";_value = "ServicePoint"};
 				case "AARadar": {_localizedString = localize "STRAntiAirRadar";_value = "AntiAirRadar"};
+				//--- STRINGTABLE-R30: Bank/CBRadar/ArtilleryRadar/Reserve were live structure types but never localized here,
+				//--- so Constructed/Destroyed/IsUnderAttack radio kbTell used empty name/value for those sites.
+				case "CBRadar": {_localizedString = localize "STR_WF_UPGRADE_CBRadar";_value = "AntiAirRadar"};
+				case "ArtilleryRadar": {_localizedString = localize "RB_Artillery_Radar";_value = "AntiAirRadar"};
+				case "Bank": {_localizedString = localize "STR_WF_STRUCTURE_Bank";_value = "Headquarters"};
+				case "Reserve": {_localizedString = localize "RB_Reserve";_value = "Barracks"};
 			};
 		} else {
 			_localizedString = (_parameters select 1) getVariable "name";

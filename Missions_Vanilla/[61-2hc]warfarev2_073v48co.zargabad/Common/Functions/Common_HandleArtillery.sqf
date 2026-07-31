@@ -97,7 +97,11 @@ if (_ammo in _ammoList) then {
 		if (count _shellPos > 0) then {
 			_shellPos set [2,0];
 			_smoke = "ARTY_SmokeShellWhite" createVehicle _shellPos;
-			_smoke setPos _shellPos;
+			if (isNull _smoke) then {
+				["WARNING", Format ["Common_HandleArtillery.sqf: impact smoke create failed at %1.", _shellPos]] Call WFBE_CO_FNC_LogContent;
+			} else {
+				_smoke setPos _shellPos;
+			};
 		};
 	};
 };

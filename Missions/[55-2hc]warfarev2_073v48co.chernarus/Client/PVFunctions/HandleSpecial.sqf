@@ -191,6 +191,13 @@ switch (_request) do {
 						{if (_x == _wV) then {_wFound = true}} forEach _wVehicles;
 						if (!_wFound) then {_wVehicles = _wVehicles + [_wV]};
 					};
+					//--- fix(alife-stall r34): also reap assigned empty hulls on HC terminal recycle.
+					_wV = assignedVehicle _x;
+					if (!isNull _wV && {_wV != _x} && {alive _wV}) then {
+						_wFound = false;
+						{if (_x == _wV) then {_wFound = true}} forEach _wVehicles;
+						if (!_wFound) then {_wVehicles = _wVehicles + [_wV]};
+					};
 				} forEach _wUnits;
 				{if (!isNull _x) then {deleteVehicle _x}} forEach _wVehicles;
 				{if (!isNull _x) then {deleteVehicle _x}} forEach _wUnits;
@@ -578,17 +585,26 @@ switch (_request) do {
 	case "icbm-tel-recon-markers": {
 		if (isDedicated) exitWith {};
 		if (isNil "player" || {isNull player}) exitWith {};
-		private ["_posList","_secs","_i","_mkr"];
+		private ["_posList","_secs","_i","_mkr","_pos"];
 		_posList = _args select 0;
 		_secs    = _args select 1;
 		if (typeName _posList != "ARRAY") exitWith {};
+		//--- r35 recon-intel: bad _secs must not sleep-nil (would stall the delete spawn).
+		if (typeName _secs != "SCALAR") then {_secs = missionNamespace getVariable ["WFBE_C_ICBM_TEL_RECON_SECS", 45]};
+		if (_secs < 1) then {_secs = 1};
 		_i = 0;
 		{
-			_mkr = createMarkerLocal [Format ["wfbe_icbmtel_recon_%1_%2", round (diag_tickTime * 1000), _i], [_x select 0, _x select 1, 0]];
-			_mkr setMarkerTypeLocal "mil_dot";
-			_mkr setMarkerColorLocal "ColorRed";
-			_mkr setMarkerSizeLocal [0.6, 0.6];
-			[_mkr, _secs] spawn { sleep (_this select 1); deleteMarkerLocal (_this select 0) };
+			_pos = _x;
+			//--- each entry is [x,y] from server; skip garbage so setMarker* never runs on a failed create.
+			if (typeName _pos == "ARRAY" && {count _pos >= 2}) then {
+				_mkr = createMarkerLocal [Format ["wfbe_icbmtel_recon_%1_%2", round (diag_tickTime * 1000), _i], [_pos select 0, _pos select 1, 0]];
+				if (typeName _mkr == "STRING" && {_mkr != ""}) then {
+					_mkr setMarkerTypeLocal "mil_dot";
+					_mkr setMarkerColorLocal "ColorRed";
+					_mkr setMarkerSizeLocal [0.6, 0.6];
+					[_mkr, _secs] spawn { sleep (_this select 1); deleteMarkerLocal (_this select 0) };
+				};
+			};
 			_i = _i + 1;
 		} forEach _posList;
 	};
@@ -725,12 +741,29 @@ switch (_request) do {
 	//--- Payload is [ messageString ]. Deliberately dumb - it renders, it never acts.
 	case "cmdv2-receipt": {
 		Private ["_msg"];
+		//--- FANOUT-R29: every live sender packs ["cmdv2-receipt", [messageString]] (nested array).
+		//--- After request-strip, _args select 0 is therefore ARRAY not STRING, so the old typeName
+		//--- STRING guard dropped every commander receipt (town nudge / doctrine / support-heli / recovery).
+		//--- Accept both shapes: bare STRING (legacy comment shape) and single-element [STRING].
 		_msg = _args select 0;
+		if (typeName _msg == "ARRAY") then {
+			if ((count _msg) > 0) then {_msg = _msg select 0} else {_msg = ""};
+		};
 		if (typeName _msg == "STRING" && {_msg != ""}) then {
 			hintSilent parseText ("<t color='#85B5FA'>" + _msg + "</t>");
 		};
 	};
-	case "guer-helibomb-result": {
+	case "support-callin-result": {
+	//--- failure-signalling r38: server notified a tactical support deny/refund.
+	Private ["_ok","_msg"];
+	_ok = if (count _args > 1) then {_args select 1} else {false};
+	_msg = if (count _args > 2) then {_args select 2} else {"Support call-in failed."};
+	if (typeName _msg != "STRING") then {_msg = "Support call-in failed."};
+	hintSilent parseText Format ["<t color='#F8D664'>%1</t>", _msg];
+	systemChat _msg;
+};
+
+case "guer-helibomb-result": {
 		Private ["_ok","_msg"];
 		_ok  = _args select 0;
 		_msg = _args select 1;

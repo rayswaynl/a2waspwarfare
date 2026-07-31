@@ -47,13 +47,17 @@ for '_z' from 0 to _maxWaypoints do {
 		_rand2 = random _radius - random _radius;
 		_pos = [(_townPos select 0)+_rand1,(_townPos select 1)+_rand2,0];
 		_waterRetries = 0;
-		while {(surfaceIsWater _pos) && {(_waterRetryCap <= 0) || {_waterRetries < _waterRetryCap}}} do {
-			if (_waterRetryCap > 0) then {_waterRetries = _waterRetries + 1};
+		//--- r41: same water-retry fix as WaypointPatrol (bounded + always snap dry).
+		private ["_wCap"];
+		_wCap = _waterRetryCap;
+		if (typeName _wCap != "SCALAR" || {_wCap <= 0}) then {_wCap = 20};
+		while {(surfaceIsWater _pos) && {_waterRetries < _wCap}} do {
+			_waterRetries = _waterRetries + 1;
 			_rand1 = random _radius - random _radius;
 			_rand2 = random _radius - random _radius;
 			_pos = [(_townPos select 0)+_rand1,(_townPos select 1)+_rand2,0];
 		};
-		if ((surfaceIsWater _pos) && {_waterRetryCap > 0}) then {_pos = [(_townPos select 0),(_townPos select 1),0]};
+		if (surfaceIsWater _pos) then {_pos = [(_townPos select 0),(_townPos select 1),0]};
 		_wpradius = 32;
 		_wpcompletionRadius = 44;
 	} else {

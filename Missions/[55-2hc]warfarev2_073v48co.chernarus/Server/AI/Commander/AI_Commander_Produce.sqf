@@ -184,7 +184,7 @@ if (_airMaxTotalP > 0) then {
 		//--- gets an infantry top-up. We CHARGE the side up front (per-missing-unit flat cost) and broadcast a
 		//--- wfbe_aicom_topup_req [count,pos,classes,issuedTime] the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
 		//--- one top-up per team per COOLDOWN via a group stamp. Never fires in COMBAT (rallying/parked implies not) or while pending disband (PR #542).
-		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag","_wm_costOn","_wm_afford"];
+		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag","_wm_costOn","_wm_afford","_wm_existingReq","_wm_hasPending"];
 		if (_wm_alive < 6 && {behaviour _wm_ldr != "COMBAT"}) then {
 			_wm_rally = _team getVariable "wfbe_aicom_rallying";
 			_wm_rally = (!isNil "_wm_rally" && {_wm_rally});
@@ -204,6 +204,11 @@ if (_airMaxTotalP > 0) then {
 				_wm_lastTU = _team getVariable "wfbe_aicom_topup_stamp"; if (isNil "_wm_lastTU") then {_wm_lastTU = -1e9};
 				_wm_cd    = missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_COOLDOWN", 240];
 				if ((_wm_now - _wm_lastTU) >= _wm_cd) then {
+					//--- PENDING gate (parity AI_Commander_HCTopUp): do not re-charge / overwrite an unpaid topup_req
+					//--- still held by the HC consumer (would double-charge when consumer defers past COOLDOWN).
+					_wm_existingReq = _team getVariable "wfbe_aicom_topup_req";
+					_wm_hasPending = !isNil "_wm_existingReq" && {(typeName _wm_existingReq) == "ARRAY"} && {(count _wm_existingReq) > 0};
+					if (!_wm_hasPending) then {
 					_wm_missing = ((6 - _wm_alive) min 4) min _capRemaining; //--- top up toward 6, bounded by remaining side cap
 					if (_wm_missing > 0) then {
 						//--- Resolve the side's BASIC infantry classnames the founding templates use: the barracks unit
@@ -274,6 +279,7 @@ if (_airMaxTotalP > 0) then {
 								["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TOPUP_REQ (missing=%3, alive=%4, rally=%5, cost=%6, classes=%7)%8 - charged, broadcast to HC driver.", _sideText, _team, _wm_missing, _wm_alive, _wm_rally, _wm_charge, _wm_infCls, _wm_humanTag]] Call WFBE_CO_FNC_AICOMLog;
 							};
 						};
+					};
 					};
 				};
 			};
@@ -393,20 +399,24 @@ if (_airMaxTotalP > 0) then {
 						} forEach _teams;
 					};
 					if (!isNull _mergeTeam) then {
-						//--- MERGE: the survivor's live units join the healthy team; the now-empty old group is
-						//--- deleted (its wfbe_teams entry becomes a null group, which every consumer already skips
-						//--- -- same lifecycle as a wiped HC team / the existing cull). Net groups -1, body preserved.
+						//--- MERGE: survivor joins healthy team; empty donor fully reclaimed (team-ended + deleteGroup).
+						//--- Net groups -1, body preserved. Bare deleteGroup alone leaked ledger/markers (r29 fix).
 						_mergedInto = _mergeTeam;  //--- capture for the log before _team is gutted
 						(units _team) joinSilent _mergeTeam;  //--- N-FEATUREBUG-49 fix 2026-06-27: joinSilent (not join) to avoid leader churn / behaviour reset on the merged-into team.
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] stranded survivor MERGED into [%3] (alive=%4, dist=%5, mergeDist=%6) - body preserved, groups-1.", _sideText, _team, _mergedInto, _aliveNow, _curDist, round _mergeBest]] Call WFBE_CO_FNC_AICOMLog;
-						deleteGroup _team;
+						//--- r29 idle-reclaim: full ledger cleanup (match HCTopUp B69) BEFORE deleteGroup.
+						_team setVariable ["wfbe_persistent", false, true];
+						["aicom-team-ended", _myID, _team] Call HandleSpecial;
+						if (!isNull _team) then {deleteGroup _team};
 						_canProduce = false;
 					} else {
-						//--- No eligible nearby team: existing cull, unchanged (guardrail = never strands the survivor).
+						//--- No eligible nearby team: cull then full reclaim (same ledger cleanup as merge).
 						//--- Non-player guard is belt-and-braces (this branch is already server-local non-HC, non-player-led).
 						{ if (!(isPlayer _x)) then {["produce-cull-unit", _x, Format ["tries=%1 issues=%2", _rTries, _rIssues]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5, issues=%6) - recycled (no-progress OR issue-cap OR too-far).", _sideText, _team, _aliveNow, _curDist, _rTries, _rIssues]] Call WFBE_CO_FNC_AICOMLog;
-						deleteGroup _team;
+						_team setVariable ["wfbe_persistent", false, true];
+						["aicom-team-ended", _myID, _team] Call HandleSpecial;
+						if (!isNull _team) then {deleteGroup _team};
 						_canProduce = false;
 					};
 					};
@@ -617,6 +627,17 @@ if (_airMaxTotalP > 0) then {
 			_team setVariable ["wfbe_aicom_refit", false, true];
 			if ((missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_WALKHOME", 1]) > 0) then {
 				[_team, "towns"] Call SetTeamMoveMode;
+			};
+			//--- r68 objective rebind: HC teams read ONLY wfbe_aicom_order (not teammode). Retreat stamped
+			//--- move/defense@HQ; clearing refit + SetTeamMoveMode alone left HC drivers parked at base until
+			//--- the wedge watchdog (~stuck timer). Mirror Strategy WAVE-1 A3 (c) relief-release: bump order
+			//--- to towns so AssignTowns can rebind a real spearhead next cycle. Server-local ignores order.
+			if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+				_refitOrder = _team getVariable "wfbe_aicom_order";
+				_refitSeq = if (isNil "_refitOrder") then {0} else {(_refitOrder select 0) + 1};
+				_refitLdr = leader _team;
+				_refitPos = if (!isNull _refitLdr) then {getPos _refitLdr} else {[0,0,0]};
+				_team setVariable ["wfbe_aicom_order", [_refitSeq, "towns", _refitPos], true];
 			};
 			_refitDur = round (time - _refitStart);
 			if (_refitDur < 0) then {_refitDur = 0};

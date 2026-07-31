@@ -49,15 +49,22 @@ while {!gameOver} do {
 	//--- come up Void, undefining _isAttached at the next line's '!_isAttached' check (LATENT - not yet fired
 	//--- live). Block-exit falls through to the while condition; mirror the loop's own cleanup (detach +
 	//--- wfbe_airlifted reset) so the cargo is not left glued/flagged to a deleted lifter.
-	if (isNull _lifter) exitWith {
-		detach _vehicle;
-		_vehicle setVariable ["wfbe_airlifted", false, true];
+	//--- r50 fail-clean: cargo can also vanish during the sleep (combat/GC). Guard both sides.
+	if (isNull _lifter || {isNull _vehicle}) exitWith {
+		if (!isNull _vehicle) then {
+			detach _vehicle;
+			_vehicle setVariable ["wfbe_airlifted", false, true];
+		};
 	};
 	_isAttached = _lifter getVariable "Attached";
-	if ((getDammage _lifter > 0.3)||!_isAttached||isNull (driver _lifter)) exitWith {
-		detach _vehicle;
-		_vehicle setVariable ["wfbe_airlifted", false, true];
-		_lifter removeAction _action;
-		if (alive _lifter) then {_lifter addAction [localize "STR_WF_Lift","Client\Module\ZetaCargo\Zeta_Hook.sqf"]};
+	if ((getDammage _lifter > 0.3)||!_isAttached||isNull (driver _lifter)||{isNull _vehicle}) exitWith {
+		if (!isNull _vehicle) then {
+			detach _vehicle;
+			_vehicle setVariable ["wfbe_airlifted", false, true];
+		};
+		if (!isNull _lifter) then {
+			_lifter removeAction _action;
+			if (alive _lifter) then {_lifter addAction [localize "STR_WF_Lift","Client\Module\ZetaCargo\Zeta_Hook.sqf"]};
+		};
 	};
 };

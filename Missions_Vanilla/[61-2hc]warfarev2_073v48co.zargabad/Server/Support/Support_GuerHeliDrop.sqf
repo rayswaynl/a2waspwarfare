@@ -147,8 +147,8 @@ _failureReason = "";
 while {true} do {
 	sleep 1;
 
-	if (!alive _vehicle) exitWith {_failureReason = "transport-destroyed"};      //--- Vehicle destruction.
-	if (!alive _pilot) exitWith {_failureReason = "pilot-dead"};                  //--- Pilot dead.
+	if (isNull _vehicle || {!alive _vehicle}) exitWith {_failureReason = "transport-destroyed"};
+	if (isNull _pilot || {!alive _pilot}) exitWith {_failureReason = "pilot-dead"};
 	if (time - _starttime > 500) exitWith {_failureReason = "transit-timeout"};   //--- Hard transit timeout.
 
 	_vehicleCoord = [(getPos _vehicle) select 0, (getPos _vehicle) select 1];
@@ -264,8 +264,8 @@ if (!_greenlight) then {
 		while {true} do {
 			sleep 1;
 
-			if (!alive _vehicle) exitWith {};
-			if (!alive _pilot) exitWith {};
+			if (isNull _vehicle || {!alive _vehicle}) exitWith {};
+			if (isNull _pilot || {!alive _pilot}) exitWith {};
 			if (time - _returnStart > 500) exitWith {};
 
 			_vehicleCoord = [(getPos _vehicle) select 0, (getPos _vehicle) select 1];
@@ -275,7 +275,9 @@ if (!_greenlight) then {
 	};
 };
 
-//--- In any case, cleanup the transporter.
-{deleteVehicle _x} forEach crew _vehicle;   //--- Remove the crew.
-deleteVehicle _vehicle;                     //--- Remove the vehicle.
-deleteGroup _grp;
+//--- In any case, cleanup the transporter (r51: null-safe - vehicle/group may already be gone).
+if (!isNull _vehicle) then {
+	{if (!isNull _x) then {deleteVehicle _x}} forEach (crew _vehicle);
+	deleteVehicle _vehicle;
+};
+if (!isNull _grp) then {deleteGroup _grp};

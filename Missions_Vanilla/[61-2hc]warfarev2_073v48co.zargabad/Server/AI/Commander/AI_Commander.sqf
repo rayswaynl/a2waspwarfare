@@ -709,11 +709,17 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			//--- ceiling) so the transient boot-window value errs conservative (never-prematurely-rich) rather
 			//--- than permissive, until the real published value lands within one interval.
 			_dynTarget = _logik getVariable ["wfbe_aicom_dyntarget", missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 10]];
+			//--- r39 counters: only LIVE founded/HC teams feed wealth/REQDRAW (parity Teams.sqf census).
+			//--- Empty husks previously inflated _fTeams so the commander thought it was at team-cap while understrength.
 			_fTeams = 0;
 			{
 				if (!isNull _x) then {
-					if (([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {
-						_fTeams = _fTeams + 1;
+					private ["_ftGrp","_ftLive"];
+					_ftGrp = _x;
+					if (([_ftGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_ftGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {
+						//--- Capture group before count (units _x rebinds _x - A2 trap; see Teams.sqf TEAMCENSUS).
+						_ftLive = {alive _x && {side _x == _side} && {!isPlayer _x}} count (units _ftGrp);
+						if (_ftLive > 0) then {_fTeams = _fTeams + 1};
 					};
 				};
 			} forEach (_logik getVariable ["wfbe_teams", []]);
@@ -1009,13 +1015,17 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		_towns = 0; { if ((_x getVariable "sideID") == _myID) then {_towns = _towns + 1} } forEach towns;
 		_supply = if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {(_side) Call WFBE_CO_FNC_GetSideSupply} else {0};
 		_funds = (_side) Call GetAICommanderFunds;
+		//--- r39 counters: TICK fTeams uses the same live-only founded/HC census as wealth/REQDRAW.
 		_fTeams = 0; _eTeams = 0;
 		{
 			if (!isNull _x) then {
-				if (([_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {
-					_fTeams = _fTeams + 1;
+				private ["_ftGrp","_ftLive"];
+				_ftGrp = _x;
+				if (([_ftGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_ftGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {
+					_ftLive = {alive _x && {side _x == _side} && {!isPlayer _x}} count (units _ftGrp);
+					if (_ftLive > 0) then {_fTeams = _fTeams + 1};
 				} else {
-					if ((count units _x) > 0 && {!isPlayer (leader _x)} && {alive (leader _x)}) then {_eTeams = _eTeams + 1};
+					if ((count units _ftGrp) > 0 && {!isPlayer (leader _ftGrp)} && {alive (leader _ftGrp)}) then {_eTeams = _eTeams + 1};
 				};
 			};
 		} forEach (_logik getVariable ["wfbe_teams", []]);
@@ -1121,24 +1131,32 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				_ldr = leader _x;
 				if (_isFounded && {!_isHc} && {!isNull _ldr} && {local _ldr}) then {_srvTeams = _srvTeams + 1};
 				if (_isHc || _isFounded) then {
-					_foundedN = _foundedN + 1;
-					_aliveN = {alive _x} count (units _x);
-					_aliveSum = _aliveSum + _aliveN;
-					_tt = _x getVariable ["wfbe_teamtype", -1];
-					//--- SOAK DRAFT: classify the team as VEHICLE (Tank or non-transport heli in its
-					//--- template = the founding-pad's _isBigVeh rule, Teams.sqf:294-297) vs INFANTRY,
-					//--- so the per-bucket average isolates the real infantry dribble. Unknown _tt =>
-					//--- infantry bucket (the common case). First match wins (exitWith).
-					_isVehTeam = false;
-					if (_tt >= 0 && {_tt < (count _cmdrTpl)}) then {
-						_tplSize = count (_cmdrTpl select _tt);
-						if (_aliveN > 0 && {_tplSize > 0} && {_aliveN < (ceil (0.30 * _tplSize))}) then {_remnants = _remnants + 1};
-						{
-							if (_x isKindOf "Tank") exitWith {_isVehTeam = true};
-							if ((_x isKindOf "Helicopter") && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) == 0}) exitWith {_isVehTeam = true};
-						} forEach (_cmdrTpl select _tt);
+					//--- r39 counters: capture group (units-count rebinds _x); exclude zero-live husks from foundedN.
+					private ["_cmdrGrp"];
+					_cmdrGrp = _x;
+					_aliveN = {alive _x} count (units _cmdrGrp);
+					if (_aliveN > 0) then {
+						_foundedN = _foundedN + 1;
+						_aliveSum = _aliveSum + _aliveN;
+						//--- GROUPGETVAR trap (repo hard-stop list): the 2-arg getVariable default form is
+						//--- unreliable on a GROUP receiver in A2 OA - use 1-arg + isNil (fixed at fold time).
+						_tt = _cmdrGrp getVariable "wfbe_teamtype";
+						if (isNil "_tt") then {_tt = -1};
+						//--- SOAK DRAFT: classify the team as VEHICLE (Tank or non-transport heli in its
+						//--- template = the founding-pad's _isBigVeh rule, Teams.sqf:294-297) vs INFANTRY,
+						//--- so the per-bucket average isolates the real infantry dribble. Unknown _tt =>
+						//--- infantry bucket (the common case). First match wins (exitWith).
+						_isVehTeam = false;
+						if (_tt >= 0 && {_tt < (count _cmdrTpl)}) then {
+							_tplSize = count (_cmdrTpl select _tt);
+							if (_tplSize > 0 && {_aliveN < (ceil (0.30 * _tplSize))}) then {_remnants = _remnants + 1};
+							{
+								if (_x isKindOf "Tank") exitWith {_isVehTeam = true};
+								if ((_x isKindOf "Helicopter") && {(getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier")) == 0}) exitWith {_isVehTeam = true};
+							} forEach (_cmdrTpl select _tt);
+						};
+						if (_isVehTeam) then {_vehSum = _vehSum + _aliveN; _vehN = _vehN + 1} else {_infSum = _infSum + _aliveN; _infN = _infN + 1};
 					};
-					if (_isVehTeam) then {_vehSum = _vehSum + _aliveN; _vehN = _vehN + 1} else {_infSum = _infSum + _aliveN; _infN = _infN + 1};
 				};
 			};
 		} forEach (_logik getVariable ["wfbe_teams", []]);

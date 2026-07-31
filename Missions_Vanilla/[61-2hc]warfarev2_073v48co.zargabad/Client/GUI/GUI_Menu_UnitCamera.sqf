@@ -125,8 +125,12 @@ while {true} do {
 	//--- Camera Modes
 	if (MenuAction == 103) then {
 		MenuAction = -1;
-		_currentMode = (_cameraModes select (lbCurSel 21006));
-		_cameraSwap = true;
+		//--- r62 select-bounds: same empty/-1/OOB guard as MenuAction 101/102 (Zero divisor on A2-OA 1.64).
+		private ["_cmSel"]; _cmSel = lbCurSel 21006;
+		if ((count _cameraModes) > 0 && {_cmSel >= 0} && {_cmSel < (count _cameraModes)}) then {
+			_currentMode = (_cameraModes select _cmSel);
+			_cameraSwap = true;
+		};
 	};
 	//--- Unflip button clicked
     if (WF_MenuAction == 140 && !(isNil "_currentUnit")) then {

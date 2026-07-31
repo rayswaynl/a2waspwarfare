@@ -21,10 +21,16 @@
 */
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) == 0) exitWith {};
 
-Private ["_unit","_fpos","_firingSide","_opposingSideKey","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt","_aliveCbrs","_opposingLogik","_fireMissCount","_missWindow","_lastMiss"];
+//--- Payload fail-clean: client PV path (CounterBatteryFired) can deliver null/malformed tuples
+//--- when the firer is deleted mid-burst. Never side/getPos a bad object.
+if (isNil "_this" || {typeName _this != "ARRAY"} || {count _this < 2}) exitWith {};
+Private ["_unit","_fpos","_firingSide","_opposingSideKey","_detectSide","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt","_aliveCbrs","_opposingLogik","_fireMissCount","_missWindow","_lastMiss","_cbrSide","_cbrLogic"];
 
 _unit  = _this select 0;
 _fpos  = _this select 1;
+if (isNil "_unit" || {isNull _unit}) exitWith {};
+if (isNil "_fpos" || {typeName _fpos != "ARRAY"} || {count _fpos < 2}) then {_fpos = getPos _unit};
+if (typeName (_fpos select 0) != "SCALAR" || {typeName (_fpos select 1) != "SCALAR"}) exitWith {};
 _firingSide = side _unit;
 
 //--- Rate-limit: skip if this unit fired a CBR ping within the last 10 s (server-side variable).
@@ -55,24 +61,33 @@ if (!isNil "_opposingLogik") then {
 };
 
 //--- Determine the detecting side's CBR registry.
+//--- Empty createVehicle structures report side civilian (A2: no crew = civilian), so NEVER use
+//--- side _cbr for upgrade lookup or client PV destination - contacts would only reach civilian
+//--- clients and CBRADAR upgrades would never extend the server detection radius. The registry
+//--- key itself is the authority for which side owns these radars.
 _opposingSideKey = if (_firingSide == west) then {"WFBE_CBR_EAST"} else {"WFBE_CBR_WEST"};
+_detectSide = if (_opposingSideKey == "WFBE_CBR_EAST") then {east} else {west};
 _cbrs = missionNamespace getVariable [_opposingSideKey, []];
 if (count _cbrs == 0) exitWith {};
 
 //--- Scan each registered CBR for range match.
 {
     _cbr = _x;
-    if !(alive _cbr) then {
+    if (isNull _cbr || {!(alive _cbr)}) then {
         //--- Prune dead CBRs lazily (can't modify array in forEach; mark for removal).
     } else {
-        //--- Per-object radius override (for future airfield static CBRs).
+        //--- Per-object radius override (airfield static CBRs stamp wfbe_cbr_radius=2000).
         _r = _cbr getVariable ["wfbe_cbr_radius", -1];
         if (_r < 0) then {
-            //--- Use upgrade level to pick radius.
-            _upgs = ((side _cbr) Call WFBE_CO_FNC_GetSideLogic) getVariable ["wfbe_upgrades", []];
+            //--- Prefer object-stamped wfbe_side (buildable path); fall back to registry side.
+            _cbrSide = _cbr getVariable "wfbe_side";
+            if (isNil "_cbrSide" || {typeName _cbrSide != "SIDE"} || {!(_cbrSide in [west, east])}) then {_cbrSide = _detectSide};
+            _cbrLogic = _cbrSide Call WFBE_CO_FNC_GetSideLogic;
+            _upgs = if (isNull _cbrLogic) then {[]} else {_cbrLogic getVariable ["wfbe_upgrades", []]};
             _lvl = 0;
-            if (count _upgs > WFBE_UP_CBRADAR) then {_lvl = _upgs select WFBE_UP_CBRADAR};
-            _lvl = _lvl min 2;
+            if (!isNil "WFBE_UP_CBRADAR" && {count _upgs > WFBE_UP_CBRADAR}) then {_lvl = _upgs select WFBE_UP_CBRADAR};
+            if (typeName _lvl != "SCALAR") then {_lvl = 0};
+            _lvl = (_lvl min 2) max 0;
             _r = [750, 1500, 2000] select _lvl;
         };
 
@@ -87,12 +102,12 @@ if (count _cbrs == 0) exitWith {};
             _tStr = Format ["%1:%2", if ((_t select 3) < 10) then {Format["0%1",_t select 3]} else {Format["%1",_t select 3]},
                                      if ((_t select 4) < 10) then {Format["0%1",_t select 4]} else {Format["%1",_t select 4]}];
 
-            //--- Notify the detecting side via client PVF (side-targeted).
+            //--- Notify the detecting side via client PVF (side-targeted). Use registry side, not side _cbr.
             _markerPos = [_fpos select 0, _fpos select 1, 0];
-            _pkt = [side _cbr, "CounterBatteryContact", [_markerPos, _tStr]];
+            _pkt = [_detectSide, "CounterBatteryContact", [_markerPos, _tStr]];
             _pkt Call WFBE_CO_FNC_SendToClients;
 
-            ["INFORMATION", Format ["Server_CounterBattery.sqf: [%1] CBR detected [%2] at dist %3 m (radius %4 m). Time %5.", str (side _cbr), _unit, round _d, _r, _tStr]] Call WFBE_CO_FNC_LogContent;
+            ["INFORMATION", Format ["Server_CounterBattery.sqf: [%1] CBR detected [%2] at dist %3 m (radius %4 m). Time %5.", str _detectSide, _unit, round _d, _r, _tStr]] Call WFBE_CO_FNC_LogContent;
         };
     };
 } forEach _cbrs;

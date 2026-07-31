@@ -219,7 +219,7 @@ _rearmor = {
 					// Marty: A town combat vehicle without any crew is worse than no vehicle; remove it immediately.
 					if (count _vehicleCrews == 0) exitWith {
 						["WARNING", Format ["Common_CreateTeam.sqf: Vehicle [%1] for side [%2] at [%3] had no crew and was removed to prevent empty town defenses.", typeOf _vehicle, _side, _position]] Call WFBE_CO_FNC_LogContent;
-						deleteVehicle _vehicle;
+						if (!isNull _vehicle) then {deleteVehicle _vehicle}; //--- r40 handoff: hull can be nulled by concurrent fail path
 						_perfSkipped = _perfSkipped + 1;
 					};
 

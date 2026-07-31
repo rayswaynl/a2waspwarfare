@@ -41,7 +41,9 @@ if (isNull _launcher || {!_found}) exitWith {
 };
 
 //--- Step 2: Scan for hostile armor near _townCenter.
-_scanResult  = _townCenter nearEntities [["Tank"], _armorR];
+//--- Tank alone misses wheeled/tracked APCs (BTR/Stryker = Wheeled_APC, BMP often Tracked_APC not under Tank).
+//--- AT overwatch exists for all armor-class threats, not only pure Tank hulls.
+_scanResult  = _townCenter nearEntities [["Tank","Wheeled_APC","Tracked_APC"], _armorR];
 _hostileArmor = [];
 {
     _uX = _x;
@@ -108,8 +110,8 @@ waitUntil {
     _retasked = (count _ordN >= 1) && {(_ordN select 0) != _capSeq};
     if (_retasked) then {_reason = "retasked"; true} else {
 
-    //--- (f) No more hostile armor in range.
-    _scanResult = _townCenter nearEntities [["Tank"], _armorR];
+    //--- (f) No more hostile armor in range (same type filter as Step 2).
+    _scanResult = _townCenter nearEntities [["Tank","Wheeled_APC","Tracked_APC"], _armorR];
     _hostileCount = 0;
     {
         _uX = _x;

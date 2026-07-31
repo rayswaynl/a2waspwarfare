@@ -81,7 +81,7 @@ if (WF_A2_Vanilla) then {
 _spawn = [] spawn {}; //--- Empty spawn
 while {alive _uav} do {
 	waituntil {waypointDescription [group _uav,currentWaypoint group _uav] != ' ' || !alive _uav};
-	terminate _spawn; //--- Terminate spawn from previous loop
+	if (!isNil "_spawn" && {!(scriptDone _spawn)}) then {terminate _spawn}; //--- r65: only terminate a live handle (was bare terminate every loop)
 	if !(alive _uav) exitWith {};
 
 	_waypoints = waypoints _uav;
@@ -99,8 +99,8 @@ while {alive _uav} do {
 		_wp setWaypointCompletionRadius (1000/_wpcount);
 	};
 
-	_spawn = [_uav,_add,_step,_lastWPpos,_radius,_dir,_cw] spawn {
-		Private ['_add','_currentWP','_cw','_dir','_lastWPpos','_pos','_radius','_step','_uav','_wp'];
+	_spawn = [_uav,_add,_step,_lastWPpos,_radius,_dir,_cw,_wpcount] spawn {
+		Private ['_add','_currentWP','_cw','_dir','_lastWPpos','_pos','_radius','_step','_uav','_wp','_wpcount'];
 		scriptname "UAV Route planning";
 		_uav = _this select 0;
 		_add = _this select 1;
@@ -109,6 +109,7 @@ while {alive _uav} do {
 		_radius = _this select 4;
 		_dir = _this select 5;
 		_cw = _this select 6;
+		_wpcount = _this select 7;
 		_currentWP = currentWaypoint group _uav;
 		while {alive _uav} do {
 			waitUntil {_currentWP != currentWaypoint group _uav};

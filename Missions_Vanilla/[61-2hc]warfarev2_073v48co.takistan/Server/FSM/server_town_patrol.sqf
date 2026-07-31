@@ -1,4 +1,4 @@
-Private["_aliveTeam","_currentSV","_defense_range","_focus","_lastMode","_lastSV","_location","_mode","_patrol_range","_perfModeChange","_perfScope","_perfStart","_sideChanged","_sideID","_startSV","_supplyDrop","_team","_townContested"];
+Private["_aliveTeam","_alertHold","_alertUntil","_contestedOnly","_currentSV","_defense_range","_dropArmsHold","_focus","_lastMode","_lastSV","_location","_mode","_patrol_range","_perfModeChange","_perfScope","_perfStart","_sideChanged","_sideID","_sideNow","_team","_townContested"];
 
 _location = _this select 0;
 _team = _this select 1;
@@ -8,13 +8,24 @@ _focus = if (count _this > 3) then {_this select 3} else {objNull};
 // Marty: Town unit creation can fail under engine limits; do not keep a patrol script alive for a null group.
 if (isNull _team) exitWith {};
 
-_lastSV = _location getVariable ['supplyValue', 0];
-_startSV = _location getVariable 'startingSupplyValue';
+//--- r35 alert-state: 2-arg nil-guards. Bare 1-arg getVariable returns nil when unset;
+//--- `_currentSV < nil` / `_sideID in [nil]` can throw and kill this while-loop, freezing the
+//--- group in lastMode (often permanent defense + combat pathing for the rest of the episode).
+_lastSV = _location getVariable ["supplyValue", 0];
 _mode = "patrol";
 _lastMode = "nil";
+//--- r35 alert-state hold/decay: defense lasts WFBE_C_TOWNS_PATROL_ALERT_HOLD seconds after a
+//--- supply-drop escalate (refreshed on each drop), then DECAYS back to patrol. Replaces the
+//--- legacy permanent `_currentSV < startingSupplyValue` latch which never decayed on GUER
+//--- (server_town.sqf skips time-based SV regen for GUER_ID) and held every damaged town in
+//--- SAD combat pathing for the rest of the activation episode.
+_alertHold = missionNamespace getVariable ["WFBE_C_TOWNS_PATROL_ALERT_HOLD", 180];
+if (_alertHold < 30) then {_alertHold = 30};
+_alertUntil = 0;
+_contestedOnly = (missionNamespace getVariable ["WFBE_C_TOWNS_PATROL_CONTESTED_ONLY", 0]) > 0;
 
-_patrol_range = missionNamespace getVariable 'WFBE_C_TOWNS_PATROL_RANGE';
-_defense_range = missionNamespace getVariable 'WFBE_C_TOWNS_DEFENSE_RANGE';
+_patrol_range = missionNamespace getVariable "WFBE_C_TOWNS_PATROL_RANGE";
+_defense_range = missionNamespace getVariable "WFBE_C_TOWNS_DEFENSE_RANGE";
 _aliveTeam = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
 // Marty: Stop the patrol monitor as soon as the team is gone; dead empty loops accumulate over long games.
@@ -24,11 +35,20 @@ while {!WFBE_GameOver && _aliveTeam} do {
 	_perfModeChange = 0;
 	_aliveTeam = if (count ((units _team) Call WFBE_CO_FNC_GetLiveUnits) == 0 || isNull _team) then {false} else {true};
 
-	_currentSV = _location getVariable ['supplyValue', 0];
-	_sideChanged = !(_sideID in [_location getVariable 'sideID']);
-	_supplyDrop = (_currentSV < _lastSV || _currentSV < _startSV);
+	_currentSV = _location getVariable ["supplyValue", 0];
+	//--- A2-safe sideID read (default -1 so a missing var does not permanently flip sideChanged).
+	_sideNow = _location getVariable ["sideID", -1];
+	_sideChanged = !(_sideID in [_sideNow]);
+	//--- Escalate on a FRESH supply drop this tick only (not a permanent below-start latch).
+	_dropArmsHold = (_currentSV < _lastSV);
+	//--- wfbe_contested is public (server_town.sqf r35) so HC-local town_patrol can see it.
 	_townContested = _location getVariable ["wfbe_contested", false];
-	if (_sideChanged || {_supplyDrop && {((missionNamespace getVariable ["WFBE_C_TOWNS_PATROL_CONTESTED_ONLY", 0]) < 1 || {_townContested})}}) then {
+	//--- CONTENDED_ONLY=1: only arm the hold when the town is contested (Lane 190). Legacy (0): any drop.
+	if (_dropArmsHold && {!_contestedOnly || _townContested}) then {
+		_alertUntil = time + _alertHold;
+	};
+	//--- Defense while: ownership flipped, (contested-only mode AND contested), or hold not yet expired.
+	if (_sideChanged || {_contestedOnly && _townContested} || {time < _alertUntil}) then {
 		_mode = "defense";
 	} else {
 		_mode = "patrol";
@@ -53,7 +73,7 @@ while {!WFBE_GameOver && _aliveTeam} do {
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
 			_perfScope = if (isServer && !hasInterface) then {"SERVER"} else {"CLIENT"};
-			["town_patrol", diag_tickTime - _perfStart, Format["town:%1;side:%2;alive:%3;units:%4;mode:%5;changed:%6;focus:%7", _location getVariable "name", _sideID, _aliveTeam, count (units _team), _mode, _perfModeChange, !(isNull _focus)], _perfScope] Call PerformanceAudit_Record;
+			["town_patrol", diag_tickTime - _perfStart, Format["town:%1;side:%2;alive:%3;units:%4;mode:%5;changed:%6;focus:%7;alertUntil:%8", _location getVariable "name", _sideID, _aliveTeam, count (units _team), _mode, _perfModeChange, !(isNull _focus), round _alertUntil], _perfScope] Call PerformanceAudit_Record;
 		};
 	};
 	sleep 30;

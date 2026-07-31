@@ -77,6 +77,11 @@ if ((missionNamespace getVariable ["WFBE_C_SEC_HARDENING", 0]) > 0) then {
 };
 if (_rejected) exitWith {};
 
+//--- r59 fail-clean: unhardened path still needs a live vehicle object before lock + broadcast.
+if (isNil "_vehicle" || {typeName _vehicle != "OBJECT"} || {isNull _vehicle}) exitWith {
+	["WARNING", "RequestVehicleLock.sqf: rejected - null vehicle (base path)."] Call WFBE_CO_FNC_LogContent;
+};
+
 _vehicle lock _locked;
 
 [nil, "SetVehicleLock", [_vehicle,_locked]] Call WFBE_CO_FNC_SendToClients;

@@ -8,6 +8,10 @@ _shell = _this;
 
 sleep (1.5 + random 0.5);
 
+//--- fail-clean r48: shell can be deleted during the arm delay (impact despawn / cleanup).
+//--- getPosASL / particle attach on a null object throws and leaves orphan particle sources.
+if (isNull _shell) exitWith {};
+
 _trails = "#particlesource" createVehicleLocal getPosASL _shell;
 _trails setDropInterval 0.02;
 _trails setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 0, 1], "", "Billboard", 0.1, 1, [0,0,0], [0, 0, 7], 0, 15, 7.9, 0.075, [0.4], [[1, 1, 1, 1]], [0], 1, 0, "\CA\Data\ParticleEffects\SCRIPTS\WPTrail.sqf", "", _shell];
@@ -19,7 +23,10 @@ _wp setParticleParams [["\Ca\Data\Cl_basic.p3d", 1, 0, 1], 	"", "Billboard", 1, 
 _wp setParticleRandom [4, [3, 3, 3], [0.1, 0.1, 0.1], 0, 0.25, [0, 0, 0, 0], 0, 0];
 	
 sleep 0.15;
-{deleteVehicle _x} forEach [_trails, _wp];
+{if (!isNull _x) then {deleteVehicle _x}} forEach [_trails, _wp];
+
+//--- shell may still vanish mid-FX; skip lingering smoke if gone.
+if (isNull _shell) exitWith {};
 
 _source2 = "#particlesource" createVehicleLocal getPosASL _shell;
 _source2 setParticleParams [["\Ca\Data\ParticleEffects\Universal\Universal", 16, 12, 8, 0], "", "Billboard", 1, 6, [0, 0, 0], [0, 0, 0.5], 0, 1.277, 1, 0.025, [0.5, 8, 12, 15], [[1, 1, 1, 1],[1, 1, 1, 1], [1, 1, 1, 1], [1, 1, 1, 0]], [0.2], 1, 0.04, "", "", _shell];

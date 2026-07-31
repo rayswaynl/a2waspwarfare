@@ -72,9 +72,10 @@ _unit addWeapon "Put";
 _use = "";
 {if (_x != "") exitWith {_use = _x}} forEach _eligible;
 
-if (_use != "") then { 
-	_muzzles = getArray (configFile >> "CfgWeapons" >> _use >> "muzzles"); 
-	if !("this" in _muzzles) then {_unit selectWeapon (_muzzles select 0)} else {_unit selectWeapon _use}; 
+if (_use != "") then {
+	_muzzles = getArray (configFile >> "CfgWeapons" >> _use >> "muzzles");
+	//--- Missing/empty muzzles entry: getArray returns [] — unguarded select 0 kills the equip script.
+	if (count _muzzles == 0 || {("this" in _muzzles)}) then {_unit selectWeapon _use} else {_unit selectWeapon (_muzzles select 0)};
 };
 
 //--- Backpack handling.

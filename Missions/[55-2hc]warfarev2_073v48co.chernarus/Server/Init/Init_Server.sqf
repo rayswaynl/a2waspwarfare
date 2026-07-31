@@ -844,6 +844,14 @@ emptyQueu = [];
 		//--- Radio: Initialize the announcers entities.
 		_radio_hq1 = (createGroup sideLogic) createUnit ["Logic",[0,0,0],[],0,"NONE"];
 		_radio_hq2 = (createGroup sideLogic) createUnit ["Logic",[0,0,0],[],0,"NONE"];
+//--- r47 fail-clean: skip identity/kbAddTopic when createUnit returns null (SideMessage has speaker null-guard).
+if (isNull _radio_hq1 || {isNull _radio_hq2}) then {
+["WARNING", Format ["Init_Server.sqf: radio HQ Logic createUnit null side=%1 hq1Null=%2 hq2Null=%3.", _side, isNull _radio_hq1, isNull _radio_hq2]] Call WFBE_CO_FNC_LogContent;
+if (!isNull _radio_hq1) then {deleteVehicle _radio_hq1};
+if (!isNull _radio_hq2) then {deleteVehicle _radio_hq2};
+_logik setVariable ["wfbe_radio_hq", objNull, true];
+_logik setVariable ["wfbe_radio_hq_rec", objNull];
+} else {
 		[_radio_hq1] joinSilent ([_side, "misc"] Call WFBE_CO_FNC_CreateGroup);
 		[_radio_hq2] joinSilent ([_side, "misc"] Call WFBE_CO_FNC_CreateGroup);
 		_logik setVariable ["wfbe_radio_hq", _radio_hq1, true];
@@ -859,15 +867,21 @@ emptyQueu = [];
 		_radio_hq1 setGroupId ["HQ"];
 		_radio_hq1 kbAddTopic [_radio_hq_id, "Client\kb\hq.bikb","Client\kb\hq.fsm", {call compile preprocessFileLineNumbers "Client\kb\hq.sqf"}];
 		_logik setVariable ["wfbe_radio_hq_id", _radio_hq_id, true];
+};
 
 		//--- Starting vehicles.
 		{
 			_vehicle = [_x, getPos _hq, _sideID, 0, false] Call WFBE_CO_FNC_CreateVehicle;
+//--- r47 fail-clean: CreateVehicle already WARN+objNull; do not PlaceNear/cargo/emptyQueu a null hull.
+if (isNull _vehicle) then {
+["WARNING", Format ["Init_Server.sqf: starting vehicle create null class=%1 side=%2.", _x, _side]] Call WFBE_CO_FNC_LogContent;
+} else {
 			[_vehicle, getPos _hq, 45, 60, true, false, true] Call PlaceNear;
 			_vehicle setVariable ["WFBE_Taxi_Prohib", true];
 			(_vehicle) call WFBE_CO_FNC_ClearVehicleCargo;
 			emptyQueu = emptyQueu + [_vehicle];
 			[_vehicle] spawn WFBE_SE_FNC_HandleEmptyVehicle;
+};
 		} forEach (missionNamespace getVariable Format ['WFBE_%1STARTINGVEHICLES', _side]);
 
 		//--- WASP additional vehiecles
@@ -877,6 +891,10 @@ emptyQueu = [];
 		call _wasptmpFun;
 		_tVeh = WEST_StartVeh select floor(random (count WEST_StartVeh));
 		_vehicle = [_tVeh, getPos _hq, west, 0, false] Call WFBE_CO_FNC_CreateVehicle;
+//--- r47 fail-clean: skip PlaceNear/EH/cargo on null WASP west start hull.
+if (isNull _vehicle) then {
+["WARNING", Format ["Init_Server.sqf: WASP west start vehicle create null class=%1.", _tVeh]] Call WFBE_CO_FNC_LogContent;
+} else {
 		[_vehicle,getPos _hq,45,60,true,false,true] Call PlaceNear;
 		_vehicle setVariable ["WFBE_Taxi_Prohib", true];
 		_vehicle addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
@@ -888,12 +906,17 @@ emptyQueu = [];
 if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];};
 if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base"] != 0) then {_vehicle addeventhandler ["fired",{_this spawn HandleReload;}];};
 if({(_vehicle isKindOf _x)} count ["Tank","Wheeled_APC"] !=0) then {_vehicle addeventhandler ['Engine',{_this execVM "Client\Module\Engines\Engine.sqf"}];
-_vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target &&(isEngineOn _target)"];};
+_vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target && {isEngineOn _target}"];}; //--- fix(code-as-string r33): lazy &&
+		};
 		};
 		case east:{
 		call _wasptmpFun;
 		_tVeh = EAST_StartVeh select floor(random (count EAST_StartVeh));
 		_vehicle = [_tVeh, getPos _hq, east, 0, false] Call WFBE_CO_FNC_CreateVehicle;
+//--- r47 fail-clean: skip PlaceNear/EH/cargo on null WASP east start hull.
+if (isNull _vehicle) then {
+["WARNING", Format ["Init_Server.sqf: WASP east start vehicle create null class=%1.", _tVeh]] Call WFBE_CO_FNC_LogContent;
+} else {
 		[_vehicle,getPos _hq,45,60,true,false,true] Call PlaceNear;
 		_vehicle setVariable ["WFBE_Taxi_Prohib", true];
 		_vehicle addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
@@ -906,7 +929,8 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];};
 if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base"] != 0) then {_vehicle addeventhandler ["fired",{_this spawn HandleReload;}];};
 if({(_vehicle isKindOf _x)} count ["Tank","Wheeled_APC"] !=0) then {_vehicle addeventhandler ['Engine',{_this execVM "Client\Module\Engines\Engine.sqf"}];
-_vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target &&(isEngineOn _target)"];};
+_vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Engines\Stopengine.sqf", [], 7,false, true,"","alive _target && {isEngineOn _target}"];}; //--- fix(code-as-string r33): lazy &&
+		};
 		};
 		};
 
@@ -1030,6 +1054,14 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 			private ["_guer_radio_hq1","_guer_radio_hq2","_guer_announcers","_guer_radio_hq_id"];
 			_guer_radio_hq1 = (createGroup sideLogic) createUnit ["Logic",[0,0,0],[],0,"NONE"];
 			_guer_radio_hq2 = (createGroup sideLogic) createUnit ["Logic",[0,0,0],[],0,"NONE"];
+//--- r47 fail-clean: mirror W/E radio path - no setIdentity/kbAddTopic on null Logic.
+if (isNull _guer_radio_hq1 || {isNull _guer_radio_hq2}) then {
+["WARNING", Format ["Init_Server.sqf: GUER radio HQ Logic createUnit null hq1Null=%1 hq2Null=%2.", isNull _guer_radio_hq1, isNull _guer_radio_hq2]] Call WFBE_CO_FNC_LogContent;
+if (!isNull _guer_radio_hq1) then {deleteVehicle _guer_radio_hq1};
+if (!isNull _guer_radio_hq2) then {deleteVehicle _guer_radio_hq2};
+_guerLogic setVariable ["wfbe_radio_hq", objNull, true];
+_guerLogic setVariable ["wfbe_radio_hq_rec", objNull];
+} else {
 			[_guer_radio_hq1] joinSilent ([resistance, "misc"] Call WFBE_CO_FNC_CreateGroup);
 			[_guer_radio_hq2] joinSilent ([resistance, "misc"] Call WFBE_CO_FNC_CreateGroup);
 			_guerLogic setVariable ["wfbe_radio_hq", _guer_radio_hq1, true];
@@ -1043,6 +1075,7 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {!isNi
 			_guer_radio_hq1 kbAddTopic [_guer_radio_hq_id, "Client\kb\hq.bikb","Client\kb\hq.fsm", {call compile preprocessFileLineNumbers "Client\kb\hq.sqf"}];
 			_guerLogic setVariable ["wfbe_radio_hq_id", _guer_radio_hq_id, true];
 			["INITIALIZATION", Format ["Init_Server.sqf: GUER radio announcer initialized [%1] (identity: %2).", _guer_radio_hq1, _guer_radio_hq_id]] Call WFBE_CO_FNC_LogContent;
+};
 
 			//--- B74.2: the GUER stipend/economy execVM was MOVED out of this team-registration block to its own
 			//--- isServer+WFBE_C_GUER_PLAYERSIDE gate below (beside the air-def launch). Rationale: the economy loop
@@ -1193,7 +1226,10 @@ if ((missionNamespace getVariable ["WFBE_C_ZG_KOTH_ENABLE", 0]) == 1) then {
 //--- Map-gated to Takistan inside the file (worldName check), plus the WFBE_C_OILFIELD_ENABLE flag (default 1).
 //--- The file self-waits townInit and self-gates internally, so launching it here is safe + strictly additive.
 if ((missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 1]) == 1 && {toLower worldName == "takistan"}) then {
-	[] execVM "Server\Server_Oilfields.sqf";
+	//--- r65 script-handle lifecycle: store oilfield loop handle so coreloop supervisor can
+	//--- terminate-before-restart if RESTART is armed (OBSERVE default still only alerts).
+	//--- Without this, restart would double-spawn derrick composition (script is not replay-safe).
+	missionNamespace setVariable ["wfbe_coreloop_handle_oilfield", [] execVM "Server\Server_Oilfields.sqf"];
 	["INITIALIZATION", "Init_Server.sqf: Server_Oilfields.sqf launched (WFBE_C_OILFIELD_ENABLE=1, Takistan)."] Call WFBE_CO_FNC_LogContent;
 };
 

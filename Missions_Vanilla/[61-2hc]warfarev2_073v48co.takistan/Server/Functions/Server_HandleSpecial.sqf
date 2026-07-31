@@ -9,7 +9,22 @@ switch (_args select 0) do {
 		_leader = _args select 2;
 		_side = civilian;
 
-		_team setVariable ["wfbe_teamleader", _leader];
+		//--- SG-forge (mission-core-squad-membership r41): RequestSpecial is an UNAUTHENTICATED command
+		//--- bus (RequestSpecial.sqf:3,20-21 - the same threat model the repair-camp guard closes), so a
+		//--- forged ["RequestSpecial",["update-teamleader", <anyGroup>, <anyUnit>]] would otherwise stamp
+		//--- ANY team's stored leader to an ARBITRARY unit. The disconnect handler consumes that stamp
+		//--- (Server_OnPlayerDisconnected.sqf:175) and, when the stamped unit sits in another group,
+		//--- joinSilent's it into the team, selectLeader's it, ejects it from its vehicle/HQ and
+		//--- deleteVehicle's it (:198-244) - a remote forced-regroup + unit-delete grief on any player.
+		//--- Authorise the write: the reported leader must be a real PLAYER member of the reported team
+		//--- (both legit senders pass `player` + their own WFBE_Client_Team, where player is always in
+		//--- units of its own group). A rejected forge leaves wfbe_teamleader unchanged, so the disconnect
+		//--- handler falls back to the live `leader _team` (:183) - always safe.
+		if (!isNull _team && {isPlayer _leader} && {_leader in units _team}) then {
+			_team setVariable ["wfbe_teamleader", _leader];
+		} else {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected update-teamleader - leader [%1] not a player-member of team [%2] (forged/stale RequestSpecial).", _leader, _team]] Call WFBE_CO_FNC_LogContent;
+		};
 
 		//--- TEAMBAR server probe (card wasp-player-group-rank-order-diagnosis-20260718): the client
 		//--- pings this at init + every respawn. Round-2 review PHASE NOTE: this observation is
@@ -41,35 +56,77 @@ switch (_args select 0) do {
 		};
 	};
 	case "Paratroops": {
-		//--- supportgate SECURITY (2026-07-24): server-authoritative cost + rate gate, mirroring
-		//--- Support_ScudStrike.sqf's funds/cooldown pattern. Flag WFBE_C_SUPPORT_SERVER_AUTH (default 0):
-		//--- at 0 this is the ORIGINAL unconditional spawn (byte-identical to HEAD) - the client-side debit
-		//--- in GUI_Menu_Tactical.sqf:564 stays the only fee gate, so the exploit remains open until armed.
-		//--- Cost 8500 / cooldown mirror GUI_Menu_Tactical.sqf:119-121 (Paratroopers fee + WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY).
-		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0 || {["Paratroops", _args, 8500, missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY", 1200]] Call WFBE_SE_FNC_AuthorizeSupportCallin}) then {
-			_args spawn KAT_Paratroopers;
+		//--- supportgate SECURITY (2026-07-24): server-authoritative cost + rate gate.
+		//--- Flag WFBE_C_SUPPORT_SERVER_AUTH (default 0): at 0 unconditional spawn (client debit is sole fee).
+		//--- failure-signalling r38: when AUTH is armed and Authorize returns false, notify the caller
+		//--- (previously silent deny after client stamped lastParaCall / may have already debited).
+		Private ["_authOk","_callerTeam","_callerLead","_denyMsg"];
+		_authOk = true;
+		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) > 0) then {
+			_authOk = ["Paratroops", _args, 8500, missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY", 1200]] Call WFBE_SE_FNC_AuthorizeSupportCallin;
+			if (!_authOk) then {
+				_callerTeam = if (count _args > 3) then {_args select 3} else {grpNull};
+				_callerLead = if (!isNull _callerTeam) then {leader _callerTeam} else {objNull};
+				_denyMsg = "Paratroop call denied by server (funds or cooldown). No charge was taken server-side.";
+				if (!isNull _callerLead && {isPlayer _callerLead}) then {
+					if (WF_A2_Vanilla) then {
+						[getPlayerUID _callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
+					} else {
+						[_callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
+					};
+				};
+			};
 		};
+		if (_authOk) then {_args spawn KAT_Paratroopers};
 	};
 
-	case "ParaVehi": {
-		//--- supportgate SECURITY: same server-authoritative gate as "Paratroops" above (flag
-		//--- WFBE_C_SUPPORT_SERVER_AUTH, default 0 = byte-identical unconditional spawn). Cost 3500 /
-		//--- cooldown 600 mirror GUI_Menu_Tactical.sqf:119-121 (Paradrop_Vehicle fee + interval).
-		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0 || {["ParaVehi", _args, 3500, 600] Call WFBE_SE_FNC_AuthorizeSupportCallin}) then {
-			_args spawn KAT_ParaVehicles;
+
+case "ParaVehi": {
+		//--- supportgate SECURITY + failure-signalling r38 deny notify (see Paratroops case).
+		Private ["_authOk","_callerTeam","_callerLead","_denyMsg"];
+		_authOk = true;
+		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) > 0) then {
+			_authOk = ["ParaVehi", _args, 3500, 600] Call WFBE_SE_FNC_AuthorizeSupportCallin;
+			if (!_authOk) then {
+				_callerTeam = if (count _args > 3) then {_args select 3} else {grpNull};
+				_callerLead = if (!isNull _callerTeam) then {leader _callerTeam} else {objNull};
+				_denyMsg = "Vehicle paradrop denied by server (funds or cooldown). No charge was taken server-side.";
+				if (!isNull _callerLead && {isPlayer _callerLead}) then {
+					if (WF_A2_Vanilla) then {
+						[getPlayerUID _callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
+					} else {
+						[_callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
+					};
+				};
+			};
 		};
+		if (_authOk) then {_args spawn KAT_ParaVehicles};
 	};
 
-	case "ParaAmmo": {
-		//--- supportgate SECURITY: same server-authoritative gate as "Paratroops" above (flag
-		//--- WFBE_C_SUPPORT_SERVER_AUTH, default 0 = byte-identical unconditional spawn). Cost 9500 /
-		//--- cooldown 800 mirror GUI_Menu_Tactical.sqf:119-121 (Paradrop_Ammo fee + interval).
-		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0 || {["ParaAmmo", _args, 9500, 800] Call WFBE_SE_FNC_AuthorizeSupportCallin}) then {
-			_args spawn KAT_ParaAmmo;
+
+case "ParaAmmo": {
+		//--- supportgate SECURITY + failure-signalling r38 deny notify (see Paratroops case).
+		Private ["_authOk","_callerTeam","_callerLead","_denyMsg"];
+		_authOk = true;
+		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) > 0) then {
+			_authOk = ["ParaAmmo", _args, 9500, 800] Call WFBE_SE_FNC_AuthorizeSupportCallin;
+			if (!_authOk) then {
+				_callerTeam = if (count _args > 3) then {_args select 3} else {grpNull};
+				_callerLead = if (!isNull _callerTeam) then {leader _callerTeam} else {objNull};
+				_denyMsg = "Ammo paradrop denied by server (funds or cooldown). No charge was taken server-side.";
+				if (!isNull _callerLead && {isPlayer _callerLead}) then {
+					if (WF_A2_Vanilla) then {
+						[getPlayerUID _callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
+					} else {
+						[_callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
+					};
+				};
+			};
 		};
+		if (_authOk) then {_args spawn KAT_ParaAmmo};
 	};
 
-	case "RespawnST": {
+case "RespawnST": {
 		//--- DR-55 forged-PVF hardening (flag-gated; OFF = byte-equivalent legacy behavior).
 		//--- FINDING (101-endpoint PV audit): unguarded, this force-kills (setDammage 1) EVERY AI supply
 		//--- truck + driver for a client-named side - no type/side/requester/cooldown check at all. Trace:
@@ -414,10 +471,23 @@ switch (_args select 0) do {
 
 			if (isNull _target || !alive _target) exitWith {};
 
-			waitUntil {!alive _target || isNull _target};
+			//--- r60 waitUntil: cruise-death wait had no sleep/timeout; a stuck-alive cruise hung this PVF thread forever.
+			private ["_cruiseDeadline"];
+			_cruiseDeadline = time + (missionNamespace getVariable ["WFBE_C_ICBM_CRUISE_WAIT", 600]);
+			waitUntil {
+				sleep 1;
+				!alive _target || {isNull _target} || {time > _cruiseDeadline}
+			};
+			if (alive _target && {!isNull _target}) exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM cruise wait timeout (%1s) - nuke aborted.", missionNamespace getVariable ["WFBE_C_ICBM_CRUISE_WAIT", 600]]] Call WFBE_CO_FNC_LogContent;
+			};
 
-			[_base] Spawn NukeDammage;
-		} else {
+//--- failure-signalling r38: unvalidated legacy path still must not Spawn Nuke on null anchor.
+if (isNull _base) exitWith {
+["WARNING", "Server_HandleSpecial.sqf: ICBM legacy path aborted - null base after cruise death."] Call WFBE_CO_FNC_LogContent;
+};
+[_base] Spawn NukeDammage;
+} else {
 			Private ["_base","_cdKey","_cool","_cost","_funds","_last","_lvl","_playerTeam","_side","_target","_upg"];
 
 			//--- TEL mode (default): no classic-path sender can be legitimate.
@@ -496,12 +566,31 @@ switch (_args select 0) do {
 			[_playerTeam] Call WFBE_SE_FNC_SyncFundsRecord;
 			missionNamespace setVariable [_cdKey, time];
 
-			waitUntil {!alive _target || isNull _target};
+			//--- r60 waitUntil: cruise-death wait sleep+timeout (same shape as legacy branch above).
+			private ["_cruiseDeadline"];
+			_cruiseDeadline = time + (missionNamespace getVariable ["WFBE_C_ICBM_CRUISE_WAIT", 600]);
+			waitUntil {
+				sleep 1;
+				!alive _target || {isNull _target} || {time > _cruiseDeadline}
+			};
+			if (alive _target && {!isNull _target}) exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM cruise wait timeout (%1s) - nuke aborted.", missionNamespace getVariable ["WFBE_C_ICBM_CRUISE_WAIT", 600]]] Call WFBE_CO_FNC_LogContent;
+			};
 
-			//--- The HeliHEmpty anchor can be deleted mid-flight (GC); never nuke a null position.
-			if (isNull _base) exitWith {};
+		//--- The HeliHEmpty anchor can be deleted mid-flight (GC); never nuke a null position.
+		//--- failure-signalling r38: charge+cooldown already committed above - refund + unstamp on abort
+		//--- so the commander is not left paying for a silent no-op.
+		if (isNull _base) exitWith {
+			private ["_curFunds"];
+			_curFunds = _playerTeam getVariable "wfbe_funds";
+			if (isNil "_curFunds" || {typeName _curFunds != "SCALAR"}) then {_curFunds = 0};
+			_playerTeam setVariable ["wfbe_funds", (_curFunds + _cost), true];
+			if (!isNil "WFBE_SE_FNC_SyncFundsRecord") then {[_playerTeam] Call WFBE_SE_FNC_SyncFundsRecord};
+			missionNamespace setVariable [_cdKey, _last];
+			["WARNING", Format ["Server_HandleSpecial.sqf: ICBM aborted - null base after cruise death; refunded $%1 to team %2 and restored cooldown.", _cost, _playerTeam]] Call WFBE_CO_FNC_LogContent;
+		};
 
-			[_base] Spawn NukeDammage;
+		[_base] Spawn NukeDammage;
 		};
 	};
 
@@ -2097,14 +2186,31 @@ switch (_args select 0) do {
 		_townModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
 		_logic setVariable ["wfbe_camp_bunker", _townModel, true];
 
+		//--- r69 camp SV heal: ALWAYS restore supplyValue after a successful rebuild (paid repair +
+		//--- presence-repair). Residual vs bulk/ownership-flip heal: same-side rebuild previously left a
+		//--- mid-drain SV on the revived bunker so the next camp tick re-flipped it almost immediately.
+		Private ["_town","_repairStartSV","_repairFlag"];
+		_town = _logic getVariable "town";
+		_repairStartSV = 30;
+		if (!isNil "_town" && {typeName _town == "OBJECT"} && {!isNull _town}) then {
+			_repairStartSV = _town getVariable ["startingSupplyValue", 30];
+			if (isNil "_repairStartSV" || {typeName _repairStartSV != "SCALAR"}) then {_repairStartSV = 30};
+		};
+		_logic setVariable ["supplyValue", _repairStartSV, true];
+
 		//--- Do we have to update the camp SID ?
-		_camp_sideID = _logic getVariable "sideID";
+		_camp_sideID = _logic getVariable ["sideID", WFBE_DEFENDER_ID];
 		if (_camp_sideID != _repairSideID) then {
-			Private ["_town"];
 			_logic setVariable ["sideID", _repairSideID, true];
 
-				//--- wiki-wins: also fly the new side's flag (mirrors Server_SetCampsToSide.sqf:22); the side change set sideID but never the world flag texture.
-				(_logic getVariable "wfbe_flag") setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]); (_logic getVariable "wfbe_flag") setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]]); processInitCommands; //--- qol-polish-pack: JIP-safe flag (bake into object init so late joiners replay it)
+			//--- wiki-wins: also fly the new side's flag (mirrors Server_SetCampsToSide.sqf:22); the side change set sideID but never the world flag texture.
+			//--- Null-guard flag pole: deleted/missing poles must not throw on setFlagTexture (A2 isNull trap).
+			_repairFlag = _logic getVariable ["wfbe_flag", objNull];
+			if (!isNull _repairFlag) then {
+				_repairFlag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]);
+				_repairFlag setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]]);
+				processInitCommands; //--- qol-polish-pack: JIP-safe flag (bake into object init so late joiners replay it)
+			};
 
 			//--- Notify / update map if needed.
 			[nil, "CampCaptured", [_logic, _repairSideID, _camp_sideID, true]] Call WFBE_CO_FNC_SendToClients;
@@ -2315,6 +2421,11 @@ switch (_args select 0) do {
 									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40], "T-55 unlocked  -  Ka-137 flares up to 240"],
 									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80], "T-72 + BMP-2 unlocked"]
 								];
+								//--- guer-tech: barrel-bomb unlock toast - see RequestOnUnitKilled.sqf. Flag-guarded append so the
+								//--- announcement fires when a VBIED kill crosses WFBE_C_GUER_KILLTIER_HELIBOMB (dead in Support_GuerHeliDrop).
+								if ((missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 1]) > 0) then {
+									_vMilestones set [count _vMilestones, [missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_HELIBOMB", 60], "Barrel Bomb unlocked  -  heli-delivered call-in strike"]];
+								};
 								_vMsg = "";
 								{ if (WFBE_GUER_PLAYER_KILLS == (_x select 0)) then {_vMsg = _x select 1} } forEach _vMilestones;
 								if (_vMsg != "") then {

@@ -322,6 +322,17 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 	//--- Let everyone board first (bounded).
 	_t0 = time + 30;
 	waitUntil {sleep 1; time > _t0 || {({alive _x && vehicle _x == _h} count _pax) >= ({alive _x} count _pax)}};
+	//--- UNLOAD/BOARD INTEGRITY (r60): anyone who failed the 30s board window still holds
+	//--- assignAsCargo + orderGetIn true from the pre-flight seat fill. Without a cancel they
+	//--- chase the departing transport instead of marching the objective (and block a clean
+	//--- later re-embark once the hull RTBs). Mirror abort-path unassign idiom.
+	{
+		if (alive _x && {vehicle _x != _h}) then {
+			unassignVehicle _x;
+			[_x] orderGetIn false;
+			_x doMove _obj;
+		};
+	} forEach _pax;
 	if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)}) exitWith {
 		//--- Heli lost mid-lift: any survivors still aboard/around get an unconditional move.
 		{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false}; _x doMove _obj}} forEach _pax;
@@ -375,21 +386,33 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 		//--- distance/getPos; this land hold did not. If the transport is deleted mid-descent
 		//--- (GC / combat / fly-off race), bare getPosATL on a null handle is native-crash class.
 		waitUntil {sleep 1; time > _t0 || isNull _h || {!alive _h} || {((getPosATL _h) select 2) < 1.5}};
-		{if (alive _x && {vehicle _x == _h}) then {unassignVehicle _x; [_x] orderGetIn false}} forEach _pax;
 	} else {
 		//--- HOT LZ: hold altitude + para-drop (eject pattern, mirrors the founding para branch).
+		//--- NEURO unload pairs unassign + orderGetIn false + EJECT; orderGetIn false was missing
+		//--- here so sticky get-in survived a partial eject and pax re-boarded the transport.
 		_h flyInHeight (120 + random 20);
 		{
 			if (alive _x && {vehicle _x == _h}) then {
 				unassignVehicle _x;
+				[_x] orderGetIn false;
 				_x action ["EJECT", _h];
 				sleep 0.85;
 			};
 		} forEach _pax;
 	};
-	//--- GUARD: dropped pax ALWAYS get an unconditional ground move to the objective so the order
-	//--- loop's arrival latch + MOVE/SAD capture chain folds them in exactly like a walked insert.
-	{if (alive _x) then {_x doMove _obj}} forEach _pax;
+	//--- UNLOAD INTEGRITY (r60): clear assignment + sticky get-in for ALL pax — including those
+	//--- already on the ground via land "GET OUT", who previously kept assignAsCargo + orderGetIn
+	//--- true and immediately re-boarded (cold path only cleaned units STILL in the hull). Force
+	//--- moveOut residual cargo so they cannot ride AICOMAirReturn home (orderGetIn false is a
+	//--- silent no-op on already-seated units — SML-2 / MHQReloc moveOut idiom). Then ground-move.
+	{
+		if (alive _x) then {
+			unassignVehicle _x;
+			[_x] orderGetIn false;
+			if (vehicle _x == _h) then {moveOut _x};
+			_x doMove _obj;
+		};
+	} forEach _pax;
 
 	//--- ===================================================================
 	//--- cmdcon42-l VEHICLE DEEP-DROP (Ray: drop the vehicle 1-2k BEHIND the lines). SEQUENCING DECISION:

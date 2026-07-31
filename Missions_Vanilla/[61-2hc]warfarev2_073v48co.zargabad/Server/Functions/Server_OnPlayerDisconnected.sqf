@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_buildings','_commander','_funds','_get','_hcGroup','_hq','_id','_isHCDisconnect','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik','_lease','_leaseExpires','_leaseGen'];
+Private ['_buildings','_commander','_funds','_get','_hcGroup','_hcList','_hcKeep','_hq','_id','_isHCDisconnect','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik','_lease','_leaseExpires','_leaseGen'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -29,6 +29,20 @@ if (_name == '__SERVER__' || local player) exitWith {};
 //--- resolver so they never hold this key - the clear is a harmless no-op for them.
 if (_uid != "") then {missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], nil]};
 
+//--- jip-funds-latch-disc-clear (r69, 2026-07-31): mirror the CONNECT_RETRY clear above for the JIP
+//--- funds latch. WFBE_JIP_LATCH<uid> (Server_OnPlayerConnected) dedupes the TWO funds-block resolve
+//--- passes WITHIN A SINGLE join (its 15s window), but it is set on connect and NEVER cleared on
+//--- disconnect - so a reconnect within 15s inherits the previous join's latch and SKIPS its funds
+//--- reconcile. In the common same-slot case the vacated group still carries the wallet so the skip is
+//--- harmless, but a fast reconnect that lands on a DIFFERENT vacated slot (disconnect never zeroes a
+//--- group's wfbe_funds) shows that stale positive wallet, never triggers the client B76 funds self-heal
+//--- (non-nil funds), and then corrupts the lock-step WFBE_JIP_USER<uid> record downward on the next
+//--- RequestFundsRecord spend. Clearing here makes every genuine re-join run its record-authoritative
+//--- funds reconcile. SAFE for the double-resolve guard: the re-join's FIRST pass re-sets the latch
+//--- fresh, still catching that join's second pass. A2-OA-1.64-safe (setVariable nil). HCs never store
+//--- the latch (they exit the connect handler before it is set) - the clear is a harmless no-op for them.
+if (_uid != "") then {missionNamespace setVariable [Format ["WFBE_JIP_LATCH%1", _uid], nil]};
+
 //--- Headless Clients disconnection?.
 _isHCDisconnect = false;
 _hcGroup = grpNull;
@@ -42,7 +56,15 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
 		if !(isNil '_get') then {_hcGroup = _get; _isHCDisconnect = true};
 	};
 	if (_isHCDisconnect) then {
-		missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", (missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID") - [_hcGroup]];
+		//--- r35 HC-lifecycle: bare getVariable can nil-throw and abort the whole disconnect handler
+		//--- (UID/OWNER keys never clear, demote spawn never arms). Default [] + prune nulls.
+		_hcList = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
+		if (typeName _hcList != "ARRAY") then {_hcList = []};
+		if (!isNull _hcGroup) then {_hcList = _hcList - [_hcGroup]};
+		_hcList = _hcList - [grpNull];
+		_hcKeep = [];
+		{ if (!isNull _x) then { if (!(_x in _hcKeep)) then {_hcKeep = _hcKeep + [_x]} } } forEach _hcList;
+		missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcKeep];
 		missionNamespace setVariable [Format["WFBE_HEADLESS_OWNER_%1", _id], nil];
 		if (_uid != "") then {
 			missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], nil];
@@ -71,8 +93,10 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
 						_g = _x;
 						if (!isNull _g && {[_g, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}) then {
 							_ldr = leader _g;
-							//--- local leader on server = units transferred off the dead HC (A2 OA has no setGroupOwner rehome).
-							if (!isNull _ldr && {alive _ldr} && {local _ldr}) then {
+							//--- r35 HC-lifecycle: demote when server-local OR ownership is dead/orphaned (owner 0 or still
+							//--- the dropped HC owner). Local-only left groups stuck wfbe_aicom_hc=true while owner still
+							//--- pointed at the dead client -> server path never laid waypoints until orphan-heal.
+							if (!isNull _ldr && {alive _ldr} && {local _ldr || {(owner _ldr) == 0} || {(owner _ldr) == _oldOwner}}) then {
 								_g setVariable ["wfbe_aicom_hc", false, true];
 								if (!([_g, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool)) then {
 									_g setVariable ["wfbe_aicom_founded", true, true];
@@ -151,7 +175,28 @@ if ((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0) then {
 
 //--- We attempt to get the player information in case that he joined before.
 _get = missionNamespace getVariable format["WFBE_JIP_USER%1",_uid];
-if (isNil '_get') exitWith {["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] don't have any information stored", _name, _uid]] Call WFBE_CO_FNC_LogContent};
+//--- r69b ghost-slot-on-pre-funds-disconnect (2026-07-31): a CIV-deferred / incomplete enroll can
+//--- stamp wfbe_uid + teamleader (and possibly a wallet) BEFORE WFBE_JIP_USER is created. The old
+//--- early-exit left that stamp forever -> ghost ownership blocks reclaim and leftover funds feed
+//--- the vacated-wallet mint. Scan + release + zero; do not delete units here (no full team path).
+if (isNil '_get') exitWith {
+Private ["_ghostTeam"];
+_ghostTeam = grpNull;
+{
+{
+if !(isNil {_x getVariable "wfbe_uid"}) then {if ((_x getVariable "wfbe_uid") == _uid) then {_ghostTeam = _x}};
+if !(isNull _ghostTeam) exitWith {};
+} forEach ((_x Call WFBE_CO_FNC_GetSideLogic) getVariable ["wfbe_teams", []]);
+if !(isNull _ghostTeam) exitWith {};
+} forEach WFBE_PRESENTSIDES;
+if !(isNull _ghostTeam) then {
+_ghostTeam setVariable ["wfbe_uid", nil];
+_ghostTeam setVariable ["wfbe_teamleader", nil];
+_ghostTeam setVariable ["wfbe_funds", 0, true];
+};
+missionNamespace setVariable [Format ["WFBE_JIP_BODY_%1", _uid], nil];
+["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] don't have any information stored (ghost uid released if present)", _name, _uid]] Call WFBE_CO_FNC_LogContent
+};
 
 //--- Determine the root team.
 _side = _get select 3;
@@ -276,6 +321,15 @@ if !(isNil "WFBE_SE_PLAYERLIST") then {
 //--- Release the UID.
 _team setVariable ["wfbe_uid", nil];
 _team setVariable ["wfbe_teamleader", nil];
+
+//--- r69b vacated-wallet-bleed (2026-07-31): the disconnect snapshot above wrote cash into
+//--- WFBE_JIP_USER<uid> but historically LEFT the group's wfbe_funds untouched. A later joiner
+//--- landing on that vacated slot with a nil/0 record (legit spend-to-0, or first-join race)
+//--- hit Server_OnPlayerConnected's no-clobber path (or RequestFundsResend branch-2 rebroadcast)
+//--- and MINTED the leftover into their wallet/record. Zero AFTER uid release so ChangeTeamFunds
+//--- lock-step cannot re-enter SyncFundsRecord against this uid; same player reconnects from the
+//--- record (authoritative). A2-OA-1.64-safe public setVariable.
+_team setVariable ["wfbe_funds", 0, true];
 
 //--- If AI delegation is enabled, we remove the player's variable.
 if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 1) then {

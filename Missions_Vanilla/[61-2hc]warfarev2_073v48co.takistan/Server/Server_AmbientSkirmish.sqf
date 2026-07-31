@@ -79,7 +79,7 @@ _groupAlive = {
 
 _findPosition = {
 	Private ["_center","_radius","_tries","_playerRadius","_townRadius","_found","_playersOnline","_i",
-		"_ang","_dist","_candidate","_tooClose"];
+		"_ang","_dist","_candidate","_tooClose","_hcNames"];
 	_center       = _this select 0;
 	_radius       = _this select 1;
 	_tries        = _this select 2;
@@ -88,8 +88,12 @@ _findPosition = {
 	_found = [];
 	_playersOnline = 0;
 
+	//--- r35 HC-lifecycle: HCs are isPlayer; without name exclusion empty-server+HC only looks online
+	//--- and HC park positions veto ambient spawns as if they were humans.
+	_hcNames = missionNamespace getVariable ["WFBE_C_HC_NAMES", ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]];
+	if (typeName _hcNames != "ARRAY") then {_hcNames = ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]};
 	{
-		if (isPlayer _x) then {_playersOnline = _playersOnline + 1};
+		if (isPlayer _x && {!((name _x) in _hcNames)}) then {_playersOnline = _playersOnline + 1};
 	} forEach allUnits;
 
 	if (_playersOnline < 1) exitWith {[]};
@@ -104,10 +108,8 @@ _findPosition = {
 
 		if (!_tooClose) then {
 			{
-				if (isPlayer _x) then {
-					if (alive _x) then {
-						if ((vehicle _x) distance _candidate < _playerRadius) then {_tooClose = true};
-					};
+				if (isPlayer _x && {alive _x} && {!((name _x) in _hcNames)}) then {
+					if ((vehicle _x) distance _candidate < _playerRadius) then {_tooClose = true};
 				};
 			} forEach allUnits;
 		};
@@ -118,6 +120,27 @@ _findPosition = {
 					if (_x distance _candidate < _townRadius) then {_tooClose = true};
 				} forEach towns;
 			};
+		};
+
+		//--- r39 alife FOB/structures: suppress near player-built bases (HQ + side structure registry).
+		//--- Player-radius alone misses empty bases when no human is currently in range.
+		if (!_tooClose) then {
+			private ["_structR","_sideX","_hqX","_structsX"];
+			_structR = missionNamespace getVariable ["WFBE_C_AMBIENT_SKIRMISH_STRUCTURE_RADIUS", _playerRadius];
+			if (_structR < 250) then {_structR = 250};
+			{
+				_sideX = _x;
+				_hqX = _sideX Call WFBE_CO_FNC_GetSideHQ;
+				if (!isNull _hqX && {alive _hqX} && {_hqX distance _candidate < _structR}) then {_tooClose = true};
+				if (!_tooClose) then {
+					_structsX = _sideX Call WFBE_CO_FNC_GetSideStructures;
+					if (typeName _structsX == "ARRAY") then {
+						{
+							if (!isNull _x && {alive _x} && {_x distance _candidate < _structR}) then {_tooClose = true};
+						} forEach _structsX;
+					};
+				};
+			} forEach [west, east, resistance];
 		};
 
 		if (!_tooClose) exitWith {_found = _candidate};

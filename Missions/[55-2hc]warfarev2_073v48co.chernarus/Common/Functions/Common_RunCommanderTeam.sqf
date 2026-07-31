@@ -294,6 +294,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 								if ((toLower _cannonMuzzle) == "this") then {_cannonMuzzle = _cannon};
 							};
 							(gunner _h) selectWeapon _cannonMuzzle; //--- B66: muzzle, not weapon name
+							//--- r60 knowsabout residual: comment claimed a "revealed enemy" but never
+							//--- seeded knowledge. doTarget/doFire without reveal leaves the gunner FOW-blind
+							//--- until organic engine detect; seed knowsAbout (2-operand, A2-safe) first.
+							(gunner _h) reveal _tgt;
 							(gunner _h) doTarget _tgt;
 							(gunner _h) doFire _tgt;
 						};
@@ -795,6 +799,16 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			//--- never reach this path, so no additional isKindOf check is needed.
 			_t0 = time + (missionNamespace getVariable ["WFBE_C_AICOM_BOARD_WAIT", 12]);
 			waitUntil {sleep 1; time > _t0 || {({alive _x && vehicle _x == _h} count _pax) >= ({alive _x} count _pax)}};
+			//--- UNLOAD/BOARD INTEGRITY (r60): cancel sticky assignAsCargo + orderGetIn true for
+			//--- pax who missed the board window so they march the objective instead of chasing
+			//--- the departing transport (mirrors Common_AICOMAirLeg).
+			{
+				if (alive _x && {vehicle _x != _h}) then {
+					unassignVehicle _x;
+					[_x] orderGetIn false;
+					_x doMove _obj;
+				};
+			} forEach _pax;
 			if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)}) exitWith {
 				//--- Heli lost mid-lift: any survivors still aboard/around get an unconditional move.
 				{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false}; _x doMove _obj}} forEach _pax;
@@ -819,21 +833,31 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 				//--- distance/getPos; this land hold did not. If the transport is deleted mid-descent
 				//--- (GC / combat / fly-off race), bare getPosATL on a null handle is native-crash class.
 				waitUntil {sleep 1; time > _t0 || isNull _h || {!alive _h} || {((getPosATL _h) select 2) < 1.5}};
-				{if (alive _x && {vehicle _x == _h}) then {unassignVehicle _x; [_x] orderGetIn false}} forEach _pax;
 			} else {
 				//--- No flat LZ: para-drop over the objective (eject pattern, Support_Paratroopers).
+				//--- NEURO pairs unassign + orderGetIn false + EJECT; sticky get-in was previously
+				//--- left armed so partial ejects re-boarded the transport.
 				_h flyInHeight (120 + random 20);
 				{
 					if (alive _x && {vehicle _x == _h}) then {
 						unassignVehicle _x;
+						[_x] orderGetIn false;
 						_x action ["EJECT", _h];
 						sleep 0.85;
 					};
 				} forEach _pax;
 			};
-			//--- GUARD: dropped pax always get an unconditional ground move to the objective
-			//--- (the order loop will then fold them into the team MOVE/SAD).
-			{if (alive _x) then {_x doMove _obj}} forEach _pax;
+			//--- UNLOAD INTEGRITY (r60): clear assignment + sticky get-in for ALL pax (not only
+			//--- residual cargo) so land-"GET OUT" leavers cannot re-board; moveOut residual cargo
+			//--- so they cannot ride the RTB/refund home. Then ground-move to objective.
+			{
+				if (alive _x) then {
+					unassignVehicle _x;
+					[_x] orderGetIn false;
+					if (vehicle _x == _h) then {moveOut _x};
+					_x doMove _obj;
+				};
+			} forEach _pax;
 
 			//--- HELI FLY-OFF + REFUND (user request): the empty team transport now flies
 			//--- to the NEAREST MAP EDGE and, on reaching off-map ALIVE, is deleted and its
@@ -1776,10 +1800,33 @@ while {!WFBE_GameOver && _alive} do {
 					};
 				} forEach (units _team);
 
+				//--- r64 convoy integrity: before road-march gate, reseat a live non-player crewman as driver
+				//--- on EVERY ground hull with canMove but no live driver (stuck recovery only did the lead hull).
+				//--- Also: empty driverless hulls (zero live crew) must NOT force _rmDriverReady false - they used
+				//--- to kill the whole convoy road-march while the remaining crewed transports sat idle.
+				{
+					private ["_ddHull","_ddPick","_ddCrew"];
+					{
+						_ddHull = _x;
+						if (!isNull _ddHull && {alive _ddHull} && {!(_ddHull isKindOf "Air")} && {canMove _ddHull} && {(isNull (driver _ddHull)) || {!alive (driver _ddHull)}}) then {
+							if (({alive _x} count (crew _ddHull)) > 0) then {
+								_ddPick = objNull;
+								_ddCrew = crew _ddHull;
+								{ if (isNull _ddPick && {alive _x} && {!isPlayer _x}) then {_ddPick = _x} } forEach _ddCrew;
+								if (!isNull _ddPick) then {
+									_ddPick assignAsDriver _ddHull;
+									_ddPick moveInDriver _ddHull;
+									diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CONVOY_DRIVER_SWAP|team=" + (str _team) + "|veh=" + (typeOf _ddHull));
+								};
+							};
+						};
+					} forEach _vehicles;
+				};
 				_rmHasVeh = false;
 				{ if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x}) then {_rmHasVeh = true} } forEach _vehicles;
 				_rmDriverReady = true;
-				{ if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x} && {(isNull (driver _x) || {!alive (driver _x)})}) then {_rmDriverReady = false} } forEach _vehicles;
+				//--- Only hulls that still have live crew but no live driver block road-march (empty wrecks ignored).
+				{ if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x} && {(isNull (driver _x) || {!alive (driver _x)})} && {({alive _x} count (crew _x)) > 0}) then {_rmDriverReady = false} } forEach _vehicles;
 				if (!_rmDriverReady) then {_rmHasVeh = false};
 
 				if (_rmHasVeh && {(leader _team) distance _dest > 700}) then {
@@ -2077,8 +2124,11 @@ while {!WFBE_GameOver && _alive} do {
 								_asFwd = 45;
 								_asP0 = [(_asBase select 0) + _asFwd * (sin _asBrg), (_asBase select 1) + _asFwd * (cos _asBrg), 0];
 								_asP1 = [(_asBase select 0) + (_asFwd + 15) * (sin _asBrg), (_asBase select 1) + (_asFwd + 15) * (cos _asBrg), 0];
-								createVehicle [_asCls, _asP0, [], 0, "NONE"];
-								createVehicle [_asCls, _asP1, [], 0, "NONE"];
+								private ["_asS0","_asS1"];
+								_asS0 = createVehicle [_asCls, _asP0, [], 0, "NONE"];
+								_asS1 = createVehicle [_asCls, _asP1, [], 0, "NONE"];
+								if (isNull _asS0) then {["WARNING", Format ["Common_RunCommanderTeam.sqf: AICOM assault smoke create failed at %1 class %2.", _asP0, _asCls]] Call WFBE_CO_FNC_LogContent;};
+								if (isNull _asS1) then {["WARNING", Format ["Common_RunCommanderTeam.sqf: AICOM assault smoke create failed at %1 class %2.", _asP1, _asCls]] Call WFBE_CO_FNC_LogContent;};
 								_team setVariable ["wfbe_aicom_smoke_last", time];
 								diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|SMOKE|ASSAULT|team=" + (str _team) + "|cls=" + _asCls);
 							};
@@ -2443,7 +2493,9 @@ while {!WFBE_GameOver && _alive} do {
 					_crewDismountThreatClear = true;
 					if (!_hasNonCrewInf) then {
 						_cdtR = missionNamespace getVariable ["WFBE_C_AICOM_CREW_DISMOUNT_THREAT_RADIUS", 100];
-						_crewDismountThreatClear = ({alive _x && {side _x != _side} && {side _x != civilian}} count ((getPos (leader _team)) nearEntities [["Man"], _cdtR])) <= 0;
+						//--- r60 detect residual: Man-only misses crewed hulls (GuerAirDef hunt fix).
+						//--- Crew must not dismount into vehicle fire just because no dismounted Man is in the ring.
+						_crewDismountThreatClear = ({alive _x && {side _x != _side} && {side _x != civilian}} count ((getPos (leader _team)) nearEntities [["Man","Car","Motorcycle","Tank","Air"], _cdtR])) <= 0;
 					};
 					{
 						_u = _x;
@@ -2464,13 +2516,21 @@ while {!WFBE_GameOver && _alive} do {
 										{if (typeName _x == "ARRAY" && {count _x >= 2} && {(_x select 0) == _veh}) then {_stampFound = true}} forEach _transportCaps;
 										if (!_stampFound && {alive _veh} && {_veh isKindOf "LandVehicle"} && {canMove _veh}) then {_transportCaps set [count _transportCaps, [_veh, time]]};
 										_team setVariable ["wfbe_aicom_transport_capable", _transportCaps, true];
+										//--- UNLOAD INTEGRITY (r60): orderGetIn false is a silent no-op on
+										//--- already-seated units (SML-2 header). moveOut force-ejects so
+										//--- crew-only capture bodies actually leave the hull for the camp
+										//--- Man-scan; seat stamp + B755 long-leg remount restore them later.
 										unassignVehicle _u;
 										[_u] orderGetIn false;
+										if (vehicle _u != _u) then {moveOut _u};
 										_footInf = _footInf + [_u];
 									};
 								} else {
+									//--- Cargo unload: same moveOut force (without it infantry stay seated
+									//--- while counted as "foot" for camp/depot doMove — capture stall).
 									unassignVehicle _u;
 									[_u] orderGetIn false;
+									if (vehicle _u != _u) then {moveOut _u};
 									_footInf = _footInf + [_u];
 								};
 							} else {
@@ -2766,12 +2826,17 @@ while {!WFBE_GameOver && _alive} do {
 											if (alive _x && {side _x != _side} && {side _x != civilian}) exitWith {
 												_smkBrg = (((getPosATL _x) select 0) - (_smkBase select 0)) atan2 (((getPosATL _x) select 1) - (_smkBase select 1));
 											};
-										} forEach (_smkBase nearEntities [["Man"], _capRange]);
+										//--- r60 detect residual: Man-only bearing misses mounted resistance; smoke screen
+										//--- then falls back to leader heading (wrong arc). Match multi-type capture ring.
+										} forEach (_smkBase nearEntities [["Man","Car","Motorcycle","Tank","Air"], _capRange]);
 										//--- Two shells ~15m out on either side of the enemy bearing (a covering arc, not a stack).
 										_smkP0 = [(_smkBase select 0) + 15 * (sin (_smkBrg - 30)), (_smkBase select 1) + 15 * (cos (_smkBrg - 30)), 0];
 										_smkP1 = [(_smkBase select 0) + 15 * (sin (_smkBrg + 30)), (_smkBase select 1) + 15 * (cos (_smkBrg + 30)), 0];
-										createVehicle [_smkCls, _smkP0, [], 0, "NONE"];
-										createVehicle [_smkCls, _smkP1, [], 0, "NONE"];
+										private ["_smkS0","_smkS1"];
+										_smkS0 = createVehicle [_smkCls, _smkP0, [], 0, "NONE"];
+										_smkS1 = createVehicle [_smkCls, _smkP1, [], 0, "NONE"];
+										if (isNull _smkS0) then {["WARNING", Format ["Common_RunCommanderTeam.sqf: AICOM breakoff smoke create failed at %1 class %2.", _smkP0, _smkCls]] Call WFBE_CO_FNC_LogContent;};
+										if (isNull _smkS1) then {["WARNING", Format ["Common_RunCommanderTeam.sqf: AICOM breakoff smoke create failed at %1 class %2.", _smkP1, _smkCls]] Call WFBE_CO_FNC_LogContent;};
 										_team setVariable ["wfbe_aicom_smoke_last", time];
 										diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|SMOKE|BREAKOFF|team=" + (str _team) + "|cls=" + _smkCls);
 									};
@@ -2820,6 +2885,11 @@ while {!WFBE_GameOver && _alive} do {
 								_townObj setVariable ["wfbe_aicom_hold_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180]), true];
 								[_team, "defense"] Call SetTeamMoveMode;               //--- broadcast wfbe_teammode "defense"
 								[_team, getPos _townObj] Call SetTeamMovePos;          //--- broadcast wfbe_teamgoto = town centre (goto NOT nulled)
+								//--- r37 post-capture hold: HC driver ignores teammode/teamgoto - dual-write defense order
+								//--- (WAVE-1 A3 pattern; without this the hold latch exists but the team never holds the centre).
+								if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+									_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _townObj], true];
+								};
 								_team setVariable ["wfbe_aicom_holding_town", _townObj, true]; //--- which town this team is holding (AssignTowns holder-skip reads it)
 								_team setVariable ["wfbe_aicom_strike", false, true];  //--- clear stale strike state so Strategy.sqf doesn't re-grab
 								_team setVariable ["wfbe_aicom_relief", objNull, true];
@@ -2961,12 +3031,40 @@ while {!WFBE_GameOver && _alive} do {
 						if ((!isNull _townObj) && {(_townObj getVariable ["sideID", -1]) == _sideID}) then {
 							_captureDone = true;
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] (armour) CAPTURED [%3] - holding center.", _side, _team, _townObj getVariable ["name","?"]]] Call WFBE_CO_FNC_AICOMLog;
-							_team setVariable ["wfbe_teamgoto", objNull, true];
-							_team setVariable ["wfbe_aicom_townorder", [], false];
-							_team setVariable ["wfbe_teammode", "towns", true];
-							_team setVariable ["wfbe_aicom_strike", false, true];
-							_team setVariable ["wfbe_aicom_relief", objNull, true];
-							_team setVariable ["wfbe_aicom_caplock", [], true];   //--- CAPTURE LOCK CLEAR (GR-2026-07-03a): no longer draining -> re-taskable now.
+							//--- r37 post-capture hold: armour path previously always null-goto/towns-retasked and NEVER
+							//--- claimed the DEFEND hold latch (infantry-only asymmetry). Share the same claim rules.
+							private ["_armHoldMode","_armHoldUntil","_armHoldClaimed","_armHoldUnderAttack","_armHoldEnemyDist"];
+							_armHoldMode = missionNamespace getVariable ["WFBE_C_AICOM_HOLD_MODE", 1];
+							_armHoldUntil = _townObj getVariable ["wfbe_aicom_hold_until", 0];
+							_armHoldClaimed = false;
+							_armHoldUnderAttack = false;
+							_armHoldEnemyDist = missionNamespace getVariable [format ["WFBE_C_AICOM_RELIEF_ENEMY_DIST_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_RELIEF_ENEMY_DIST", 500]];
+							if ((_townObj getVariable ["wfbe_active", false]) && {({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _townObj) nearEntities [["Man","LandVehicle","Air"], _armHoldEnemyDist])) > 0}) then {_armHoldUnderAttack = true};
+							if (_armHoldMode > 0 && {time > _armHoldUntil} && {((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) <= 0) || {_armHoldUnderAttack}}) then {
+								_townObj setVariable ["wfbe_aicom_hold_until", time + (missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180]), true];
+								[_team, "defense"] Call SetTeamMoveMode;
+								[_team, getPos _townObj] Call SetTeamMovePos;
+								if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+									_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "defense", getPos _townObj], true];
+								};
+								_team setVariable ["wfbe_aicom_holding_town", _townObj, true];
+								_team setVariable ["wfbe_aicom_strike", false, true];
+								_team setVariable ["wfbe_aicom_relief", objNull, true];
+								_team setVariable ["wfbe_aicom_caplock", [], true];
+								_armHoldClaimed = true;
+								["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] (armour) HOLD-CLAIM [%3] on defense for %4s.", _side, _team, _townObj getVariable ["name","?"], (missionNamespace getVariable ["WFBE_C_AICOM_HOLD_SECS", 180])]] Call WFBE_CO_FNC_AICOMLog;
+							};
+							if (!_armHoldClaimed) then {
+								_team setVariable ["wfbe_teamgoto", objNull, true];
+								_team setVariable ["wfbe_aicom_townorder", [], false];
+								_team setVariable ["wfbe_teammode", "towns", true];
+								_team setVariable ["wfbe_aicom_strike", false, true];
+								_team setVariable ["wfbe_aicom_relief", objNull, true];
+								_team setVariable ["wfbe_aicom_caplock", [], true];
+								if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+									_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos (leader _team)], true];
+								};
+							};
 						} else {
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] (armour) depot pass at [%3] did not flip (res-near=%4) - holding + retrying.", _side, _team, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}, _armResNear]] Call WFBE_CO_FNC_AICOMLog;
 						};
@@ -3073,7 +3171,7 @@ while {!WFBE_GameOver && _alive} do {
 		//--- never a static towed gun or mortar emplacement. IsMobileArtillery = IsArtillery!=-1 AND a vehicle chassis
 		//--- (Tank/Car/Wheeled_APC/Tracked_APC) AND NOT StaticWeapon. _vehicles only ever holds the team's mounted hulls,
 		//--- so in practice this is the GRAD/MLRS; the guard just makes "self-propelled only" explicit + future-proof.
-		{ if (alive _x && {[_x, _side] Call IsMobileArtillery} && {!isNull (gunner _x)} && {alive (gunner _x)} && {someAmmo _x}) exitWith {_artyHull = _x} } forEach _vehicles;
+		{ if (alive _x && {[_x, _side] Call IsMobileArtillery} && {!isNull (gunner _x)} && {alive (gunner _x)} && {someAmmo _x} && {!(_x getVariable ["restricted", false])}) exitWith {_artyHull = _x} } forEach _vehicles; //--- r30 lifecycle: skip mid-mission hull
 		if (!isNull _artyHull && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({((_x getVariable ["sideID", -1]) == _sideID) && {(_artyHull distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])}} count towns) > 0}}) then { //--- Ray 2026-06-29: SPG fires only when SUPPORTED from a captured town (within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off).
 			_aLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 			_upLvl = if (isNull _aLogik) then {0} else {(_aLogik getVariable ["wfbe_upgrades", [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]]) select WFBE_UP_ARTYTIMEOUT};
@@ -3299,4 +3397,9 @@ if (isNull _team || {!([_team, "wfbe_aicom_ended_fired", false] Call WFBE_CO_FNC
 	};
 };
 
-if (!isNull _team) then {deleteGroup _team};
+//--- r70 empty-group lifecycle: GetLiveUnits==0 still leaves corpses in units _team; bare
+//--- deleteGroup NO-OPs (Client_GroupsGC documents the HC husk leak). Purge non-player bodies first.
+if (!isNull _team) then {
+{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x}} forEach (units _team);
+if (({isPlayer _x} count (units _team)) == 0) then {deleteGroup _team};
+};

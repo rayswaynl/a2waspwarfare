@@ -10,10 +10,17 @@ Private ["_behaviours","_destination","_maxWaypoints","_pos","_radius","_rand1",
 _team = _this select 0;
 _destination = _this select 1;
 _radius = _this select 2;
-_maxWaypoints = _this select 3;
+//--- r41 patrol-waypoint: server_town_patrol spawns with only 3 args (team, focus, radius).
+//--- Bare select 3 on a 3-arg payload is Zero divisor and aborts the whole focus-patrol path.
+_maxWaypoints = if (count _this > 3) then {_this select 3} else {missionNamespace getVariable ["WFBE_C_TOWNS_UNITS_WAYPOINTS", 8]};
+if (typeName _maxWaypoints != "SCALAR") then {_maxWaypoints = 8};
+if (_maxWaypoints < 1) then {_maxWaypoints = 1}; //--- at least one MOVE before CYCLE needs 2 nodes total (0..max)
 _behaviours = if (count _this > 4) then {_this select 4} else {[]};
 if (typeName _destination == 'OBJECT') then {_destination = getPos _destination};
 _waterRetryCap = missionNamespace getVariable ["WFBE_C_WAYPOINT_WATER_RETRY_CAP", 0];
+//--- r41: cap<=0 used to mean "retry forever while water" (unbounded while) AND skipped the dry fallback.
+//--- Match AI_Patrol.sqf: hard retry budget then snap to destination if still water.
+if (typeName _waterRetryCap != "SCALAR" || {_waterRetryCap <= 0}) then {_waterRetryCap = 20};
 
 _wps = [];
 for '_z' from 0 to _maxWaypoints do {
@@ -21,13 +28,13 @@ for '_z' from 0 to _maxWaypoints do {
 	_rand2 = random _radius - random _radius;
 	_pos = [(_destination select 0)+_rand1,(_destination select 1)+_rand2,0];
 	_waterRetries = 0;
-	while {(surfaceIsWater _pos) && {(_waterRetryCap <= 0) || {_waterRetries < _waterRetryCap}}} do {
-		if (_waterRetryCap > 0) then {_waterRetries = _waterRetries + 1};
+	while {(surfaceIsWater _pos) && {_waterRetries < _waterRetryCap}} do {
+		_waterRetries = _waterRetries + 1;
 		_rand1 = random _radius - random _radius;
 		_rand2 = random _radius - random _radius;
 		_pos = [(_destination select 0)+_rand1,(_destination select 1)+_rand2,0];
 	};
-	if ((surfaceIsWater _pos) && {_waterRetryCap > 0}) then {_pos = [(_destination select 0),(_destination select 1),0]};
+	if (surfaceIsWater _pos) then {_pos = [(_destination select 0),(_destination select 1),0]};
 	_type = if (_z != _maxWaypoints) then {'MOVE'} else {'CYCLE'};
 	[_wps, [_pos,_type,35,40,[],[],_behaviours]] Call WFBE_CO_FNC_ArrayPush;
 };

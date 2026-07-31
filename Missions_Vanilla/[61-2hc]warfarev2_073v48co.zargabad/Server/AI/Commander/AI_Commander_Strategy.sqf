@@ -725,7 +725,10 @@ _relieved = 0;
 							//--- relief dead - every commander team is HC-resident). HC dispatch handled below via the order var.
 							//--- CAPTURE LOCK (GR-2026-07-03a): never DIVERT a mid-capture-drain team to relief (it would abandon a near-complete drain). CapLock
 							//--- returns a plain BOOL and auto-clears once the town is captured/dead/TTL/flips-to-us, so the team becomes relief-eligible again.
-							if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_team] Call WFBE_CO_FNC_CapLock)}) then { //--- fix(hunt): G1-safe (unstamped teams nil-poisoned the chain and were unpickable)
+							//--- r27 ownership: also skip logistics self-service enroute (ServiceTick owns the group).
+							private "_svcStateRel";
+							_svcStateRel = _team getVariable "wfbe_aicom_svcstate";
+							if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_team] Call WFBE_CO_FNC_CapLock)} && {isNil "_svcStateRel" || {_svcStateRel != "enroute"}}) then { //--- fix(hunt): G1-safe (unstamped teams nil-poisoned the chain and were unpickable)
 								_d = (leader _team) distance _town;
 								if (_d < _freeD) then {_freeD = _d; _free = _team};
 							};
@@ -751,6 +754,10 @@ _relieved = 0;
 				//--- doing relief, logging a spurious ASSAULT_STRANDED and tallying wfbe_aicom_failedjourneys (which can later recycle it).
 				_free setVariable ["wfbe_aicom_townorder", [], false];
 				_free setVariable ["wfbe_aicom_dispatch_open", false];
+				//--- r27 ownership: also drop a stale Allocator pin so offense does not re-grab this team mid-relief
+				//--- via wfbe_aicom_alloc_target (Allocate skips relief, but AssignTowns alloc path did not always).
+				_free setVariable ["wfbe_aicom_alloc_target", nil];
+				_free setVariable ["wfbe_aicom_alloc_tick", nil];
 				_relieved = _relieved + 1;
 				_stratMode = "relief";
 				_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];
@@ -1535,11 +1542,15 @@ if (((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ARTILLERY", 0]) > 0) &&
 				_fired = false;
 				{
 					_p = _x;
-					if (alive _p && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p}) then {
+					if (alive _p && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p} && {!(_p getVariable ["restricted", false])}) then { //--- r30 lifecycle: skip battery already mid fire-mission
 						_idx = [typeOf _p, _side] Call IsArtillery;
 						if (_idx >= 0) then {
 							_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1);
-							_inRange = (_p distance _artyTgt <= _maxR) && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])} count _ownTownObjs) > 0}}; //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
+							//--- r30 fire-deconflict: MIN-RANGE parity with RunCommanderTeam mobile path. Without this,
+							//--- Spawn FireArtillery no-ops after ARTY_Prep while Strategy already stamps wfbe_aicom_arty_last.
+							_minR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MIN", _sideText]) select _idx);
+							if (typeName _minR != "SCALAR") then {_minR = 0};
+							_inRange = (_p distance _artyTgt >= _minR) && {(_p distance _artyTgt <= _maxR)} && {((missionNamespace getVariable ["WFBE_C_AICOM_ARTY_REQUIRE_TOWN", 0]) <= 0) || {({(_p distance _x) <= (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_TOWN_RANGE", 300])} count _ownTownObjs) > 0}}; //--- Ray 2026-06-29: AICOM arty fires only when SUPPORTED from a captured town (gun within ARTY_TOWN_RANGE of a friendly town centre); flag-gated WFBE_C_AICOM_ARTY_REQUIRE_TOWN (default 0=off/inert).
 							if (_inRange) then { //--- review-fix (fable 2026-07-21, PR #1159 drain): reposition must be evaluated even when another gun already fired this cycle - only the FIRE action itself stays single-fire-gated.
 								if (!_fired) then {
 									//--- AMMO-TYPE SELECT (claude-gaming 2026-06-29, flag WFBE_C_AICOM_ARTY_AMMOTYPES_ENABLE default OFF):

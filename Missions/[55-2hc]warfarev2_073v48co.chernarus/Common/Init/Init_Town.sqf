@@ -63,8 +63,8 @@ if (isNull _town || (_town getVariable "wfbe_inactive")) exitWith {};
 
 _town setVariable ["name",_townName];
 _town setVariable ["range",_townRange];
-_town setVariable ["startingSupplyValue",_townStartSV];
-_town setVariable ["maxSupplyValue",_townMaxSV];
+_town setVariable ["startingSupplyValue",_townStartSV, true]; //--- r35: public so JIP/HC town_patrol + capture UI see the same start SV (was machine-local only).
+_town setVariable ["maxSupplyValue",_townMaxSV, true]; //--- r35: public with startingSupplyValue (parity; readers already 2-arg default).
 _town setVariable ["LastSupplyMissionRun", 0]; //--- XR4: match the read/write casing in isSupplyMissionActiveInTown / supplyMissionStarted (was lowercase "lastSupplyMissionRun" -> first cooldown check read nil).
 _town setVariable ["supplyMissionCoolDownEnabled", false];
 
@@ -121,9 +121,13 @@ if (isServer) then {
 
 		//--- Models creation.
 		_townModel = createVehicle [missionNamespace getVariable "WFBE_C_DEPOT", getPos _town, [], 0, "NONE"];
-		_townModel setDir ((getDir _town) + (missionNamespace getVariable "WFBE_C_DEPOT_RDIR"));
-		_townModel setPos (getPos _town);
-		_townModel addEventHandler ["handleDamage", {0}];
+		if (isNull _townModel) then {
+			["WARNING", Format ["Init_Town.sqf: depot create failed for town [%1] class [%2].", _town getVariable ["name", "?"], missionNamespace getVariable "WFBE_C_DEPOT"]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			_townModel setDir ((getDir _town) + (missionNamespace getVariable "WFBE_C_DEPOT_RDIR"));
+			_townModel setPos (getPos _town);
+			_townModel addEventHandler ["handleDamage", {0}];
+		};
 
 		if (isNil {_town getVariable "sideID"}) then {_town setVariable ["sideID",WFBE_DEFENDER_ID,true]};
 		_town setVariable ["supplyValue",_townStartSV,true];
@@ -151,14 +155,17 @@ if (isServer) then {
 			_campXY = getPos _x;
 			//--- Create the camp model.
 			_townModel = createVehicle [missionNamespace getVariable "WFBE_C_CAMP", [_campXY select 0, _campXY select 1, 0], [], 0, "NONE"];
-			_townModel setDir ((getDir _x) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
-			_townModel setPos [_campXY select 0, _campXY select 1, 0];
-			["INFORMATION", Format ["Init_Town.sqf: camp ground-snap dz=%1m at %2 (town=%3).", ((getPos _x) select 2), _campXY, _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
-
-			//--- Maybe we want to make the camp stronger.
-			_camp_health = missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF";
-			if !(isNil '_camp_health') then {
-				_townModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
+			if (isNull _townModel) then {
+				["WARNING", Format ["Init_Town.sqf: camp create failed at %1 (town=%2) class [%3].", _campXY, _town getVariable ["name", "?"], missionNamespace getVariable "WFBE_C_CAMP"]] Call WFBE_CO_FNC_LogContent;
+			} else {
+				_townModel setDir ((getDir _x) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
+				_townModel setPos [_campXY select 0, _campXY select 1, 0];
+				["INFORMATION", Format ["Init_Town.sqf: camp ground-snap dz=%1m at %2 (town=%3).", ((getPos _x) select 2), _campXY, _town getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+				//--- Maybe we want to make the camp stronger.
+				_camp_health = missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF";
+				if !(isNil '_camp_health') then {
+					_townModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
+				};
 			};
 
 			//--- Create a flag near the camp location & position it. fable/fix-camp-placement: ground-snap Z
@@ -166,9 +173,12 @@ if (isServer) then {
 			//--- from _x's transform is unchanged).
 			_pos = _x modelToWorld (missionNamespace getVariable "WFBE_C_CAMP_FLAG_POS");
 			_flag = createVehicle [missionNamespace getVariable "WFBE_C_CAMP_FLAG", [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
-			_flag setPos [_pos select 0, _pos select 1, 0];
-
-			_x setVariable ["wfbe_flag", _flag];
+			if (isNull _flag) then {
+				["WARNING", Format ["Init_Town.sqf: camp flag create failed at %1 (town=%2) class [%3].", _pos, _town getVariable ["name", "?"], missionNamespace getVariable "WFBE_C_CAMP_FLAG"]] Call WFBE_CO_FNC_LogContent;
+			} else {
+				_flag setPos [_pos select 0, _pos select 1, 0];
+				_x setVariable ["wfbe_flag", _flag];
+			};
 
 			//--- Initialize the camp.
 			if (isNil {_x getVariable "sideID"}) then {_x setVariable ["sideID",WFBE_DEFENDER_ID,true]};
@@ -177,13 +187,16 @@ if (isServer) then {
 				while {isNil {_town getVariable "supplyValue"} && (_wSupplyValue < 120)} do { uiSleep 0.25; _wSupplyValue = _wSupplyValue + 1; };
 				if (!isNil {_town getVariable "supplyValue"}) then {
 					_x setVariable ["supplyValue", _town getVariable "supplyValue", true];
-					_x setVariable ["wfbe_camp_bunker", _townModel, true];
-					_towns_camps = _towns_camps + [_x];
-					//--- kimi/bughunt-mission-core (2026-07-20): keep _town_camp_flags index-parallel with
-					//--- _towns_camps - it used to grow UNCONDITIONALLY below, so a camp that failed the SV
-					//--- sync (HANGGUARD path) left the flag list one element longer and server_town_camp.sqf
-					//--- paired every subsequent camp with the WRONG flag (capture re-textured the wrong pole).
-					_town_camp_flags = _town_camp_flags + [_flag];
+					//--- Only stamp bunker/flag lists when creates succeeded (null bunker/flag pollutes capture FSM).
+					if (!isNull _townModel) then {_x setVariable ["wfbe_camp_bunker", _townModel, true]};
+					if (!isNull _flag) then {
+						_towns_camps = _towns_camps + [_x];
+						//--- kimi/bughunt-mission-core (2026-07-20): keep _town_camp_flags index-parallel with
+						//--- _towns_camps - it used to grow UNCONDITIONALLY below, so a camp that failed the SV
+						//--- sync (HANGGUARD path) left the flag list one element longer and server_town_camp.sqf
+						//--- paired every subsequent camp with the WRONG flag (capture re-textured the wrong pole).
+						_town_camp_flags = _town_camp_flags + [_flag];
+					};
 					//[_x, _town, _flag] execVM "Server\FSM\server_town_camp.sqf";
 				} else {
 					diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: town supplyValue was not ready after 30s - skipping camp supply sync (town=%1).", (_town getVariable ["name", "?"])];

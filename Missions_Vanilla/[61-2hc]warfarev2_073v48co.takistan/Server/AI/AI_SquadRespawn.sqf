@@ -131,9 +131,15 @@ while {!gameOver} do {
 		_leader allowDamage true;
 		["INFORMATION", Format ["DEADSPAWN_GUARD|release|side=%1|unit=%2|handoff=0", _sideText, _leader]] Call WFBE_CO_FNC_LogContent;
 	};
+	//--- fail-clean r48: HQ/buildings/availableSpawn can all resolve null (HQ lost, empty base).
+	//--- getPos objNull throws and strands the leader on TempRespawnMarker forever.
+	if (isNull _respawnLoc) then {
+		["WARNING", Format ["AI_SquadRespawn.sqf: [%1] AI Team Leader [%2] null respawnLoc - keeping temp marker park.", _sideText, _team]] Call WFBE_CO_FNC_LogContent;
+	} else {
 	_pos = [getPos _respawnLoc,20,30] Call GetRandomPosition;
 	_pos set [2,0];
 	_leader setPos _pos;
+	};
 	
 	//--- Assign fresh order (tbc).
 	_autonomous = (_team) Call GetTeamAutonomous;

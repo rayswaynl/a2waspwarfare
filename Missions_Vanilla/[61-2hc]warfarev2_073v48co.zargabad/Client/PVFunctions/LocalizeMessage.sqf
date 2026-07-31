@@ -57,6 +57,8 @@ switch (_localize) do {
 	case "BankAlreadyBuilt": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "BankAlreadyBuilt"};
 	case "BankTooCloseToBase": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "BankTooCloseToBase"};
 	case "StructureCapReached": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "StructureCapReached"}; //--- build/defense audit 2026-07-28
+	//--- FANOUT-R29: RequestStructure.sqf reject path sends this key with [refundPrice, liveIndex] for side-mismatch / missing requester. Without a case the tail still group/command-chatted empty text and never refunded or rolled back wfbe_structures_live.
+	case "StructureRequesterMismatch": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = "Structure build rejected: requester not authorized for that side."};
 	case "BankDestroyed": {
 		//--- _this: [1]=killerName, [2]=sideName — broadcast to all (both sides hear it).
 		_txt = Format [Localize "BankDestroyed", _this select 1, _this select 2];
@@ -230,15 +232,20 @@ switch (_localize) do {
     };
 };
 
-if (_commandChat) then {
-	//--- GUARD (2026-06-18): CommandChatMessage can be nil on a client where the command-chat
-	//--- function hasn't compiled yet (prior RPT logged 37x 'Error position: <CommandChatMessage').
-	//--- Skip the call rather than error out; the message is non-critical chat.
-	if (!isNil "CommandChatMessage") then {
-		_txt Call CommandChatMessage;
-	};
-} else {
-	if (!isNil "GroupChatMessage") then {
-		_txt Call GroupChatMessage;
+//--- FANOUT-R29: never emit blank command/group chat. Sound-only cases (BaseFallSting) and
+//--- fall-through / conditional cases that leave _txt "" previously still called GroupChatMessage
+//--- or CommandChatMessage with an empty string (visible empty line on every HQ kill, etc.).
+if (_txt != "") then {
+	if (_commandChat) then {
+		//--- GUARD (2026-06-18): CommandChatMessage can be nil on a client where the command-chat
+		//--- function hasn't compiled yet (prior RPT logged 37x 'Error position: <CommandChatMessage').
+		//--- Skip the call rather than error out; the message is non-critical chat.
+		if (!isNil "CommandChatMessage") then {
+			_txt Call CommandChatMessage;
+		};
+	} else {
+		if (!isNil "GroupChatMessage") then {
+			_txt Call GroupChatMessage;
+		};
 	};
 };
