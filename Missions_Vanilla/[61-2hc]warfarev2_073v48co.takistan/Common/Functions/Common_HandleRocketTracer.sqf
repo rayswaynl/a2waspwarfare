@@ -18,26 +18,37 @@ _unit = _this select 0;
 _weapon = currentWeapon _unit;
 _rocket = nearestObject [_unit,_ammo];
 
+//--- Fail-clean: nearestObject can return null (missed projectile); particle creates can also null.
+if (isNull _rocket) exitWith {
+	["WARNING", Format ["Common_HandleRocketTracer.sqf: rocket projectile null for ammo %1.", _ammo]] Call WFBE_CO_FNC_LogContent;
+};
+
 _vx = velocity _rocket select 0;
 _vy = velocity _rocket select 1;
 _vz = velocity _rocket select 2;
 
 _sp = "#particlesource" createVehicleLocal getPos _rocket;
-_sp setParticleRandom [0.03, [0, 0, 0], [0, 0, 0], 0, 0.2, [0, 0, 0, 0], 0, 0,360];
-_sp setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 12, 2,1],"", "Billboard", 1, 2.0, [0,0,0],[0,0,0], 1, 1, 0.80, 0.5, [0.65,0.45+random 4],[[1,1,1,0.10],[1,1,1,0.05],[1,1,1,0]],[1000],0.1,0.1,"","",_rocket,360];	
-_sp setdropinterval 0.04;
+if !(isNull _sp) then {
+	_sp setParticleRandom [0.03, [0, 0, 0], [0, 0, 0], 0, 0.2, [0, 0, 0, 0], 0, 0,360];
+	_sp setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 12, 2,1],"", "Billboard", 1, 2.0, [0,0,0],[0,0,0], 1, 1, 0.80, 0.5, [0.65,0.45+random 4],[[1,1,1,0.10],[1,1,1,0.05],[1,1,1,0]],[1000],0.1,0.1,"","",_rocket,360];
+	_sp setdropinterval 0.04;
+};
 
 _fp = "#particlesource" createVehicleLocal getPos _rocket;
-_fp setParticleRandom [0.03, [0,0,0], [0,0,0], 0, 0, [0, 0, 0, 0], 0, 0,360];
-_fp setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 13, 2,0],"", "Billboard", 1, 0.08+random 0.15, [0,2,0],[_vx*2,_vy*2,_vz*2], 0, 1, 0.80, 0.5, [0,2.95+random 4.15,0],[[1,0.6,0.2,-0.6],[1,1,1,0]],[1000],0.1,0.1,"","",_rocket,360];	
-_fp setdropinterval 0.10+random 0.18;
+if !(isNull _fp) then {
+	_fp setParticleRandom [0.03, [0,0,0], [0,0,0], 0, 0, [0, 0, 0, 0], 0, 0,360];
+	_fp setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 13, 2,0],"", "Billboard", 1, 0.08+random 0.15, [0,2,0],[_vx*2,_vy*2,_vz*2], 0, 1, 0.80, 0.5, [0,2.95+random 4.15,0],[[1,0.6,0.2,-0.6],[1,1,1,0]],[1000],0.1,0.1,"","",_rocket,360];
+	_fp setdropinterval 0.10+random 0.18;
+};
 
 sleep 0.7;
 
 _fp1 = "#particlesource" createVehicleLocal getPos _rocket;
-_fp1 setParticleRandom [0.03, [0,0,0], [0.3,0.3,0.3], 0, 0, [0, 0, 0, 0], 0, 0,360];
-_fp1 setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 4, 1,1],"", "Billboard", 1, 0.09, [-0.05+random 0.05,1.7,-0.05],[_vx*2,_vy*2,_vz*2], 0, 1, 0.80, 0.5, [0.45,0],[[1,1,1,0],[1,1,1,-0.5],[1,1,1,-0.4],[1,1,1,0]],[1000],0.1,0.1,"","",_rocket,360];	
-_fp1 setdropinterval 0.0004;
+if !(isNull _fp1) then {
+	_fp1 setParticleRandom [0.03, [0,0,0], [0.3,0.3,0.3], 0, 0, [0, 0, 0, 0], 0, 0,360];
+	_fp1 setParticleParams [["\ca\Data\ParticleEffects\Universal\Universal", 16, 4, 1,1],"", "Billboard", 1, 0.09, [-0.05+random 0.05,1.7,-0.05],[_vx*2,_vy*2,_vz*2], 0, 1, 0.80, 0.5, [0.45,0],[[1,1,1,0],[1,1,1,-0.5],[1,1,1,-0.4],[1,1,1,0]],[1000],0.1,0.1,"","",_rocket,360];
+	_fp1 setdropinterval 0.0004;
+};
 
 };
 
