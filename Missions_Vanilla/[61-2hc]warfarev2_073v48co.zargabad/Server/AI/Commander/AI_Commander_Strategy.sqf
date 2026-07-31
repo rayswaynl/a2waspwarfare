@@ -725,7 +725,10 @@ _relieved = 0;
 							//--- relief dead - every commander team is HC-resident). HC dispatch handled below via the order var.
 							//--- CAPTURE LOCK (GR-2026-07-03a): never DIVERT a mid-capture-drain team to relief (it would abandon a near-complete drain). CapLock
 							//--- returns a plain BOOL and auto-clears once the town is captured/dead/TTL/flips-to-us, so the team becomes relief-eligible again.
-							if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_team] Call WFBE_CO_FNC_CapLock)}) then { //--- fix(hunt): G1-safe (unstamped teams nil-poisoned the chain and were unpickable)
+							//--- r27 ownership: also skip logistics self-service enroute (ServiceTick owns the group).
+							private "_svcStateRel";
+							_svcStateRel = _team getVariable "wfbe_aicom_svcstate";
+							if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_team] Call WFBE_CO_FNC_CapLock)} && {isNil "_svcStateRel" || {_svcStateRel != "enroute"}}) then { //--- fix(hunt): G1-safe (unstamped teams nil-poisoned the chain and were unpickable)
 								_d = (leader _team) distance _town;
 								if (_d < _freeD) then {_freeD = _d; _free = _team};
 							};
@@ -751,6 +754,10 @@ _relieved = 0;
 				//--- doing relief, logging a spurious ASSAULT_STRANDED and tallying wfbe_aicom_failedjourneys (which can later recycle it).
 				_free setVariable ["wfbe_aicom_townorder", [], false];
 				_free setVariable ["wfbe_aicom_dispatch_open", false];
+				//--- r27 ownership: also drop a stale Allocator pin so offense does not re-grab this team mid-relief
+				//--- via wfbe_aicom_alloc_target (Allocate skips relief, but AssignTowns alloc path did not always).
+				_free setVariable ["wfbe_aicom_alloc_target", nil];
+				_free setVariable ["wfbe_aicom_alloc_tick", nil];
 				_relieved = _relieved + 1;
 				_stratMode = "relief";
 				_logik setVariable ["wfbe_aicom_strat_mode", _stratMode];

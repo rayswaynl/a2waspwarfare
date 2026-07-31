@@ -556,10 +556,15 @@ _dedupOn = (missionNamespace getVariable ["WFBE_C_AICOM_EXPAND_DEDUP", 0]) > 0;
 		_mode   = toLower ([_grp, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool); //--- fix(hunt): G1-safe - nil reads here nil-poisoned the eligibility chain so EVERY unstamped team failed eligibility every tick
 		_relief = [_grp, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
 		_strike = [_grp, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool;
+		//--- r27 ownership: skip logistics self-service detour (Common_AICOMServiceTick stamps enroute).
+		//--- A2 group vars: plain get + isNil (no [name,default] G1 trap).
+		private "_svcState";
+		_svcState = _grp getVariable "wfbe_aicom_svcstate";
 		//--- ELIGIBILITY: an offensive founded/HC team Strategy hasn't claimed (relief/strike), not the base
 		//--- garrison, not player-led, not under an explicit human order (move/patrol/defense).
 		if (_alive > 0 && {!isNull _ldr} && {!isPlayer _ldr} && {_grp != _garGrp}
 		    && {isNull _relief} && {!_strike} && {!(_mode in ["move","patrol","defense"])}
+		    && {isNil "_svcState" || {_svcState != "enroute"}}
 		    && {!([_grp] Call WFBE_CO_FNC_CapLock)}   //--- CAPTURE LOCK (GR-2026-07-03a): skip a mid-capture-drain team so the Allocator does not re-aim it off a near-complete drain (plain BOOL, self-clears on captured/dead/TTL/town-ours).
 		    && {([_grp, "wfbe_aicom_feint_expiry", 0] Call WFBE_CO_FNC_GroupGetBool) <= 0}   //--- FIX(review CRITICAL): skip feint-tagged teams so the feint alloc_target survives across ticks
 		    && {([_grp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool) || {[_grp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}}) then {

@@ -290,6 +290,11 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	if (_modeNow == "move" && {!_footStage}) then {_explicitMode = true};
 	if (_modeNow == "patrol") then {_explicitMode = true};
 	if (_modeNow == "defense") then {_explicitMode = true};
+	//--- r27 ownership: logistics self-service detour owns the group while enroute (Common_AICOMServiceTick).
+	//--- Treat as explicit so this worker does not re-book an assault townorder and thrash waypoints.
+	private "_svcStateAT";
+	_svcStateAT = _team getVariable "wfbe_aicom_svcstate";
+	if (!isNil "_svcStateAT" && {_svcStateAT == "enroute"}) then {_explicitMode = true};
 	//--- Owner ruling: clear legacy standing defense/garrison posture on each worker pass; active relief and an active capture hold remain explicit below.
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0 && {_modeNow == "defense"} && {!_humanCmd}) then {
 		private ["_legacyRelief","_legacyHold"];

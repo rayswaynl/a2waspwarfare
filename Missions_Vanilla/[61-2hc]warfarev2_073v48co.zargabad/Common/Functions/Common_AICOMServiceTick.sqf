@@ -203,6 +203,11 @@ if (_state == "enroute") then {
 	_team setVariable ["wfbe_aicom_svcstate", "enroute"];
 	_team setVariable ["wfbe_aicom_svcpos", _svcPos];
 	_team setVariable ["wfbe_aicom_svcdeadline", time + (missionNamespace getVariable ["WFBE_C_AICOM_SVC_TIMEOUT", 300])];
+	//--- r27 ownership: retire the OPEN offensive dispatch when claiming this group for logistics
+	//--- (same contract as Strategy RELIEF ~L752-753). Without this AssignTowns/Allocate keep rewriting
+	//--- assault waypoints every tick while ServiceTick holds a MOVE to the depot -> oscillation.
+	_team setVariable ["wfbe_aicom_townorder", [], false];
+	_team setVariable ["wfbe_aicom_dispatch_open", false];
 	[_team, _svcPos, 'MOVE', 40] Spawn WFBE_CO_FNC_WaypointSimple;
 	diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|SERVICE_ENROUTE|" + (_best getVariable ["name", "?"]));
 };
