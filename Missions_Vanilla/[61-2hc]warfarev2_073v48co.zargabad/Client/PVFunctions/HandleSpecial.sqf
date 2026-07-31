@@ -192,8 +192,9 @@ switch (_request) do {
 						if (!_wFound) then {_wVehicles = _wVehicles + [_wV]};
 					};
 				} forEach _wUnits;
-				{if (!isNull _x) then {deleteVehicle _x}} forEach _wVehicles;
 				{if (!isNull _x) then {deleteVehicle _x}} forEach _wUnits;
+				//--- r66: units before hulls (014EFCF4 seated-delete race)
+				{if (!isNull _x) then {deleteVehicle _x}} forEach _wVehicles;
 				if (!isNull _wGrp) then {deleteGroup _wGrp};
 			} else {
 				diag_log Format ["WARNING sidepatrol-watchdog HandleSpecial received unknown tier %1 - no-op", _wTier];
@@ -209,7 +210,13 @@ switch (_request) do {
 		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
 		if (count _args < 1) exitWith {};
 		_trashObj = _args select 0;
-		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])}) then {deleteVehicle _trashObj};
+		//--- r66: owner-side wreck reap — purge dead non-player crew first (A2 refuses deleteVehicle on crewed hulls). Man corpses unchanged here; open #1688 owns live-seat defer.
+if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])}) then {
+	if (!(_trashObj isKindOf "Man")) then {
+		{ if (!isNull _x && {!alive _x} && {!isPlayer _x}) then { deleteVehicle _x } } forEach (crew _trashObj);
+	};
+	if (!isNull _trashObj) then { deleteVehicle _trashObj };
+};
 	};
 	//--- Owner-side half of Server_HandleEmptyVehicle.sqf's locality gate. The server has already held this
 	//--- hull past the empty timeout, but it cannot delete a HC-local alive object directly. Re-check local
@@ -220,7 +227,11 @@ switch (_request) do {
 		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
 		if (count _args < 1) exitWith {};
 		_emptyVehicle = _args select 0;
-		if (!isNull _emptyVehicle && {local _emptyVehicle} && {alive _emptyVehicle} && {({alive _x} count crew _emptyVehicle) == 0} && {!(_emptyVehicle getVariable ["wfbe_airlifted", false])} && {!(_emptyVehicle getVariable ["wfbe_is_guer_fob", false])} && {(_emptyVehicle getVariable ["wfbe_empty_vehicle_reap", false])}) then {deleteVehicle _emptyVehicle};
+		//--- r66: empty hull with only dead crew still blocks deleteVehicle (crewed-hull refusal). Purge dead non-player crew, then hull. Living-crew guard above already required zero alive crew.
+if (!isNull _emptyVehicle && {local _emptyVehicle} && {alive _emptyVehicle} && {({alive _x} count crew _emptyVehicle) == 0} && {!(_emptyVehicle getVariable ["wfbe_airlifted", false])} && {!(_emptyVehicle getVariable ["wfbe_is_guer_fob", false])} && {(_emptyVehicle getVariable ["wfbe_empty_vehicle_reap", false])}) then {
+	{ if (!isNull _x && {!alive _x} && {!isPlayer _x}) then { deleteVehicle _x } } forEach (crew _emptyVehicle);
+	if (!isNull _emptyVehicle) then { deleteVehicle _emptyVehicle };
+};
 	};
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};

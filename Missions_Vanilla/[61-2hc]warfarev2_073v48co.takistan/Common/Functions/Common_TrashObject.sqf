@@ -4,7 +4,7 @@
 		- Object.
 */
 
-Private ["_delay","_group","_isMan","_object","_town"];
+Private ["_delay","_group","_isMan","_object","_town","_crewDead"];
 
 _object = _this;
 _town = [_object] Call GetClosestLocation;
@@ -26,8 +26,12 @@ if !(isNull _object) then {
 	if (isNull _object) exitWith {};
 
 	//--- A slung wreck is intentionally crewless; release the queued deletion so it can be reconsidered after unhook.
+	//--- r66 corpse/wreck reap: kill-path stamps wfbe_trashed before Spawn TrashObject. Collector nil-gates on
+	//--- that stamp, so only releasing gc_collector left airlifted-then-unhooked wrecks permanent leaks.
+	//--- Clear the stamp so the next collector pass re-queues once wfbe_airlifted drops on unhook.
 	if (_object getVariable ["wfbe_airlifted", false]) exitWith {
 		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
+		_object setVariable ["wfbe_trashed", nil];
 		["INFORMATION", Format["Common_TrashObject.sqf: retaining airlifted wreck [%1].", _object]] Call WFBE_CO_FNC_LogContent;
 	};
 
@@ -63,8 +67,22 @@ if !(isNull _object) then {
 		_object setVariable ["wfbe_trash_reap", true, true];
 		["INFORMATION", Format["Common_TrashObject.sqf: [%1] is not server-local; dispatching the delete to its owner.", _object]] Call WFBE_CO_FNC_LogContent;
 		[_object, "HandleSpecial", ["cleanup-trash-object", _object]] Call WFBE_CO_FNC_SendToClient;
+		//--- r66: fire-and-forget remote delete. If the owner rejects (not local / stamp race / seated
+		//--- guard on open #1688) the body must re-enter the collector. Kill-path leaves wfbe_trashed set,
+		//--- which blocks re-queue — clear stamp + drop from gc_collector so the next pass retries.
+		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
+		_object setVariable ["wfbe_trashed", nil];
 	} else {
-		deleteVehicle _object;
+		//--- r66 wreck never reaped: A2 OA refuses deleteVehicle on a crewed hull (living OR dead crew).
+		//--- TrashObject is one-shot; if the wreck still holds corpses the delete no-ops and wfbe_trashed
+		//--- blocks collector re-queue → permanent leak. Purge non-player dead crew first (cold-wreck seats
+		//--- only — living crew never reach this branch as hulls are !alive). Then delete the hull.
+		if (!_isMan && {!isNull _object}) then {
+			_crewDead = [];
+			{ if (!isNull _x && {!alive _x} && {!isPlayer _x}) then { _crewDead set [count _crewDead, _x] } } forEach (crew _object);
+			{ deleteVehicle _x } forEach _crewDead;
+		};
+		if (!isNull _object) then { deleteVehicle _object };
 	};
 
 	if (_isMan) then {
