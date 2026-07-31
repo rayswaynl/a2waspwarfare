@@ -1665,6 +1665,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	//--- calibration protocol from a confirmed-live ASSAULT_* RPT window before flipping this to 1 in production.
 	if (isNil 'WFBE_C_AICOM_ASSAULT_DYNTIMEOUT')    then {WFBE_C_AICOM_ASSAULT_DYNTIMEOUT    = 1};
 	if (isNil 'WFBE_C_AICOM_FOOT_STAGE') then {WFBE_C_AICOM_FOOT_STAGE = 1}; //--- ARMED (owner ruling 2026-07-21: everything flags on). TK arrivals pack M5: offensive staging for foot teams with no honest reach; MOVE to the friendly town nearest the enemy front and re-evaluate targets each pass.
+if (isNil "WFBE_C_AICOM_WATER_LEG_GATE") then {WFBE_C_AICOM_WATER_LEG_GATE = 1}; //--- r37 water-crossing: land-only teams skip towns whose leader->town straight line is mostly water.
 	if (isNil 'WFBE_C_AICOM_STRAND_RECOVERY') then {WFBE_C_AICOM_STRAND_RECOVERY = 1}; //--- ARMED (owner ruling 2026-07-21: everything flags on); supersedes the prior M6-soak gate. TK arrivals pack M3: one-shot recovery after a short-move ASSAULT_STRANDED verdict.
 	if (isNil 'WFBE_C_AICOM_ASSAULT_SPEED_FOOT')    then {WFBE_C_AICOM_ASSAULT_SPEED_FOOT    = if (worldName == "Takistan") then {0.9} else {2.2}};  //--- m/s conservative cross-country foot pace. ENGINEERING DEFAULT.
 	if (isNil 'WFBE_C_AICOM_ASSAULT_SPEED_MOUNTED') then {WFBE_C_AICOM_ASSAULT_SPEED_MOUNTED = if (worldName == "Takistan") then {3.5} else {7.5}};  //--- m/s effective AI-driven road speed incl. hop-node deceleration. ENGINEERING DEFAULT.
