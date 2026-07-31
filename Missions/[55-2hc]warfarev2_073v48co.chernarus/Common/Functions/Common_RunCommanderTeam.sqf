@@ -1839,6 +1839,44 @@ while {!WFBE_GameOver && _alive} do {
 				};
 
 			} else {
+				//--- r61 alife-rally-regroup B2: RALLY destination revalidation while en route.
+				//--- Strategy / BREAKOFF stamp [seq,"rally",pos] with an absolute position snapshot of the nearest
+				//--- OWN HQ/town at ISSUE time. A multi-minute withdrawal can walk into a town that flipped after
+				//--- issue (frozen coords, no live sideID re-check). Re-resolve nearest friendly rally each pass;
+				//--- if the live best is >400m from the stamped dest, bump seq with the new pos so the fresh-order
+				//--- block re-lays transit (never freezes; A2-OA-safe distance + getPos + sideID).
+				if (!_arrived && {_mode == "rally"}) then {
+					private ["_rvHQ","_rvBest","_rvBestD","_rvLdr","_rvLdrPos","_rvCand","_rvD","_rvTownPos"];
+					_rvLdr = leader _team;
+					if (!isNull _rvLdr && {alive _rvLdr}) then {
+						_rvLdrPos = getPos _rvLdr;
+						_rvBest = [];
+						_rvBestD = 1e9;
+						_rvHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
+						if (!isNull _rvHQ) then {
+							_rvCand = getPos _rvHQ;
+							if (typeName _rvCand == "ARRAY" && {count _rvCand >= 2}) then {
+								_rvBest = _rvCand;
+								_rvBestD = _rvLdrPos distance _rvCand;
+							};
+						};
+						{
+							if (!isNull _x && {(_x getVariable ["sideID", -1]) == _sideID}) then {
+								_rvTownPos = getPos _x;
+								if (typeName _rvTownPos == "ARRAY" && {count _rvTownPos >= 2}) then {
+									_rvD = _rvLdrPos distance _rvTownPos;
+									if (_rvD < _rvBestD) then {_rvBestD = _rvD; _rvBest = _rvTownPos};
+								};
+							};
+						} forEach towns;
+						if ((count _rvBest) >= 2 && {typeName (_rvBest select 0) == "SCALAR"} && {(_dest distance _rvBest) > 400}) then {
+							_team setVariable ["wfbe_aicom_order", [_seq + 1, "rally", _rvBest], true];
+							_team setVariable ["wfbe_aicom_route", []];
+							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|RALLY_REVALID|team=" + (str _team) + "|oldDist=" + str (round (_dest distance _rvBest)) + "|newBestD=" + str (round _rvBestD));
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RALLY_REVALID - dest drifted (>%3m) to live friendly rally.", _side, _team, 400]] Call WFBE_CO_FNC_AICOMLog;
+						};
+					};
+				};
 				//--- CAREFUL-GEAR GOVERNOR (owner refinement, layered on the 20s loop):
 				//--- the road-march already drives transit FAST (AWARE/NORMAL, never LIMITED/
 				//--- COMBAT), so the DEFAULT stays NORMAL. We only DOWNSHIFT to LIMITED while
@@ -1943,11 +1981,14 @@ while {!WFBE_GameOver && _alive} do {
 							};
 						};
 						if (_rallying) then {
-							//--- cmdcon41-w2 RALLY MODE EXECUTOR (arrival): a rallying team reached the rally pos. Do NOT lay the
-							//--- assault SAD - clear the rally flag and re-task to "towns" (broadcast, SAME idiom as the capture-
-							//--- success release) so AssignTowns re-tasks it next cycle and it re-engages on proximity (never idles
-							//--- at the rally point). Also clear the goto + stale strike/relief so AssignTowns owns it. A2-OA-safe:
-							//--- broadcast setVariable (same locality as the capture-success writes below).
+							//--- cmdcon41-w2 RALLY MODE EXECUTOR (arrival) + r61 alife-rally-regroup:
+							//--- Do NOT lay the assault SAD (would re-commit a remnant into a new attack). Clear the rally flag
+							//--- and re-task mode to "towns" so AssignTowns owns the next objective. ALSO lay a short defensive
+							//--- SAD at the rally pos: transit WaypointsAdd cleared the prior chain, and AssignTowns only runs
+							//--- every WFBE_C_AI_COMMANDER_TOWN_INTERVAL (~120s), so without a hold WP the group sat idle in the
+							//--- open until retasked (r61 B1). Fresh towns-target order still clears via WaypointsAdd clear=true.
+							//--- A2-OA-safe: broadcast setVariable + existing WaypointsAdd defense idiom.
+							[_team, true, [[_dest, 'SAD', 100, 30, [], [], [_stB,_stC,"WEDGE","NORMAL]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 							_team setVariable ["wfbe_aicom_rallying", false, true];
 							_team setVariable ["wfbe_teamgoto", objNull, true];        //--- drop the rally goto -> AssignTowns retargets next tick (isNull _goto => _needs=true)
 							_team setVariable ["wfbe_aicom_townorder", [], false];     //--- 2-arg (NOT broadcast) to match existing townorder writes
@@ -1955,8 +1996,8 @@ while {!WFBE_GameOver && _alive} do {
 							_team setVariable ["wfbe_aicom_strike", false, true];      //--- clear stale strike so Strategy.sqf does not re-grab
 							_team setVariable ["wfbe_aicom_relief", objNull, true];
 							_team setVariable ["wfbe_aicom_caplock", [], true];   //--- CAPTURE LOCK CLEAR (GR-2026-07-03a): no longer draining -> re-taskable now.
-							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|RALLY_ARRIVED|team=" + (str _team) + "|seq=" + str _seq + "|dist=" + str (round _arrivalDist));
-							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RALLY_ARRIVED - re-tasking to towns (no assault SAD).", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
+							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|RALLY_ARRIVED|team=" + (str _team) + "|seq=" + str _seq + "|dist=" + str (round _arrivalDist) + "|hold=1");
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] RALLY_ARRIVED - defensive hold + re-task to towns.", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
 						} else {
 						//--- cmdcon41-w3 ASSAULT APPROACH SMOKE (gate WFBE_C_AICOM_SMOKE default 1): the moment the team latches
 						//--- arrival on a towns-target (NON-rally) objective, before the assault SAD is laid, pop ONE covering
