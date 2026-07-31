@@ -103,6 +103,8 @@ def test_flag_off_predicate_path_preserves_bare_isplayer_semantics():
     air_resp = _text(source / "Server/AI/Commander/AI_Commander_AirResp.sqf")
     anti_stack = _text(source / "Server/Module/AntiStack/compareTeamScores.sqf")
     bank_income = _text(source / "Server/Functions/Server_BankIncome.sqf")
+    global_stats = _text(source / "Server/CallExtensions/GlobalGameStats.sqf")
+    monitor_count = _text(source / "Server/MonitorPlayerCount.sqf")
 
     assert "_exclHC = true" in predicate
     assert "if (!_exclHC) exitWith {true};" in predicate
@@ -110,6 +112,19 @@ def test_flag_off_predicate_path_preserves_bare_isplayer_semantics():
     assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in air_resp
     assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in anti_stack
     assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in bank_income
+    assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in global_stats
+    assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in monitor_count
+
+    # Only the two helpers whose legacy contract already excluded HCs may use the
+    # predicate default. Every direct refactor consumer must opt out explicitly so
+    # flag 0 remains a bare-isPlayer-equivalent path.
+    for path in source.rglob("*.sqf"):
+        if path.name in {"Common_RealPlayers.sqf", "Common_RealPlayersNear.sqf"}:
+            continue
+        for line in _text(path).splitlines():
+            if "WFBE_CO_FNC_IsRealPlayer" in line and not line.lstrip().startswith("//"):
+                if "Call WFBE_CO_FNC_IsRealPlayer" in line:
+                    assert ", false] Call WFBE_CO_FNC_IsRealPlayer" in line, (path, line)
 
 
 def test_legacy_name_and_group_filters_are_not_flattened():

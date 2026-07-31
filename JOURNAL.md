@@ -829,3 +829,11 @@ invoked as the README instructs.
 - The A2-safe `mission.sqm` init stamp identifies the caster; the flag-gated early client branch parks the body, bypasses enrollment/lobby hold/deadspawn, and retries the UID allowlist every 60 seconds.
 - Centralized HC/caster exclusion in `Common_IsRealPlayer.sqf` and routed human-count, side-credit, proximity, spectator-target, commander, score, and spawn-veto consumers through it.
 - Verification: LoadoutManager mirror parity, focused caster tests, 162-file delimiter-delta check, exact lint baseline 168 with zero findings in changed SQFs.
+
+
+## 2026-07-31 — caster-slot review completion receipt
+
+- Rebased onto `origin/deploy/m0730i-20260730` at `28273838fb80b7a920ac541a593cb83aa75b8236`; manually composed 27 conflict paths (nine source paths across three terrain trees) and retained deploy-lineage changes.
+- Closed the remaining kill-bounty/stat HC cascade, restored dead `getTeamScore` cosmetic parity, corrected all manual player counters to use the flag-0-preserving predicate opt-out, and removed forbidden spectator-path API names from explanatory comments.
+- Flag `WFBE_C_SPECTATOR_CASTER_SLOT` is owner-armed at `1` with a dated `//---` comment.
+- Verification: focused caster tests `6 passed`; lint baseline exactly `168`, with `0` findings in lane files; comment-stripped net delimiter deltas `0/159`; terrain parity `0/52`; mission brace-walk contiguous on CH/TK/ZG; mirror generator completed with zip suppressed.

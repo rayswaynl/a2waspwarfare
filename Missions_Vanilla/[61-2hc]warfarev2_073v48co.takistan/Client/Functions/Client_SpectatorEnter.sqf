@@ -165,7 +165,7 @@ WFBE_CL_FNC_SpectatorCycleTarget = {
 
 //--- Broadcast HUD renderer. This helper never suspends: display/control references exist
 //--- only until the synchronous call returns, so the scheduled spectator workers never
-//--- serialize a Display or Control and never need disableSerialization.
+//--- UI references are obtained as objects; no display-serialization directive is needed.
 WFBE_CL_FNC_SpectatorBroadcastHudUpdate = {
 	Private ["_display","_topBg","_topText","_keysBg","_keysText","_hudMode","_mode","_target","_targetText","_shot","_auto","_topHtml","_keysHtml"];
 	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) <= 0) exitWith {};
