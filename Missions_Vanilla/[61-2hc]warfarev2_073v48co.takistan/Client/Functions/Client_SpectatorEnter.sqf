@@ -39,7 +39,7 @@
    setPos / sin / cos / sqrt / atan2 / min / max / mod(% operator) /
    displayAddEventHandler / setMousePosition (OA 1.60+) / eyePos /
    eyeDirection / modelToWorld / isPlayer / allUnits / name / toUpper /
-   hintSilent / parseText / switch - no A3-only commands.
+   parseText / switch - no A3-only commands.
 */
 //--- NO disableSerialization here: a script that calls it may never suspend, and this
 //--- script suspends (it runs scheduled from addAction). On m0730f it silently died at
@@ -87,6 +87,7 @@ WFBE_C_VAR_DirectorReturnClass = "";
 WFBE_C_VAR_DirectorReturnPending = false;
 WFBE_C_VAR_SpectatorLastManualZoom = 0;
 WFBE_C_VAR_SpectatorHideHint = false;
+WFBE_C_VAR_SpectatorHudMode = 2; //--- 2=FULL, 1=MINIMAL, 0=OFF; only read when the broadcast flag is armed.
 WFBE_C_VAR_SpectatorMouseBaseline = true; //--- first MouseMoving event only sets the baseline (recentre-bias fix)
 
 _pos0 = getPos player;
@@ -116,7 +117,11 @@ WFBE_C_VAR_SpectatorPitch = 0;
 WFBE_C_VAR_SpectatorLastMouseX = 0.5;
 WFBE_C_VAR_SpectatorLastMouseY = 0.5;
 
-systemChat "[WASP] Spectator v2: mouse look, wheel zoom, WASD fly, Shift/Alt speed, N/B target, F follow, V eyes, H hide UI, Backspace exit.";
+if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
+	systemChat "[WASP] Spectator v2: mouse look, wheel zoom, WASD fly, Shift/Alt speed, N/B target, F follow, V eyes, H HUD mode, M map, Backspace exit.";
+} else {
+	systemChat "[WASP] Spectator v2: mouse look, wheel zoom, WASD fly, Shift/Alt speed, N/B target, F follow, V eyes, H hide UI, Backspace exit.";
+};
 if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0) then {
 	systemChat "[WASP] Spectator v3 director armed: TAB pins class, G pools action, O orbit, [ ] dwell.";
 };
@@ -156,6 +161,99 @@ WFBE_CL_FNC_SpectatorCycleTarget = {
 	};
 	WFBE_C_VAR_SpectatorTarget = _next;
 	systemChat Format ["[WASP] Spectator target: %1 (F follow, V eyes)", name _next];
+};
+
+//--- Broadcast HUD renderer. This helper never suspends: display/control references exist
+//--- only until the synchronous call returns, so the scheduled spectator workers never
+//--- serialize a Display or Control and never need disableSerialization.
+WFBE_CL_FNC_SpectatorBroadcastHudUpdate = {
+	Private ["_display","_topBg","_topText","_keysBg","_keysText","_hudMode","_mode","_target","_targetText","_shot","_auto","_topHtml","_keysHtml"];
+	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) <= 0) exitWith {};
+	_display = uiNamespace getVariable ["wfbe_spectator_broadcast_display", displayNull];
+	if (isNull _display) exitWith {};
+	_topBg = _display displayCtrl 124560;
+	_topText = _display displayCtrl 124561;
+	_keysBg = _display displayCtrl 124562;
+	_keysText = _display displayCtrl 124563;
+	_hudMode = missionNamespace getVariable ["WFBE_C_VAR_SpectatorHudMode", 2];
+	if (_hudMode <= 0) exitWith {
+		_topBg ctrlShow false;
+		_topText ctrlShow false;
+		_keysBg ctrlShow false;
+		_keysText ctrlShow false;
+	};
+	_mode = missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"];
+	_target = missionNamespace getVariable ["WFBE_C_VAR_SpectatorTarget", objNull];
+	_targetText = "-";
+	if (!isNull _target && {alive _target}) then {_targetText = name _target};
+	_shot = "FREE";
+	if (_mode == "director") then {_shot = toUpper (missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorShotType", "WIDE"])};
+	_auto = "OFF";
+	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorAuto", false]}) then {_auto = "ON"};
+	_topHtml = Format [
+		"<t align='left' size='1.05' color='#FFFFFF' shadow='2'>SHOT %1</t><br/><t align='left' size='0.92' color='#D8F3FF' shadow='2'>TARGET %2 | DIRECTOR AUTO %3</t>",
+		_shot,
+		_targetText,
+		_auto
+	];
+	_topBg ctrlShow true;
+	_topText ctrlShow true;
+	_topText ctrlSetStructuredText (parseText _topHtml);
+	if (_hudMode > 1) then {
+		_keysHtml = "<t align='left' size='0.95' color='#FFFFFF' shadow='2'>H HUD: FULL > MINIMAL > OFF  |  M MAP  |  WASD MOVE  |  SPACE/CTRL ALTITUDE</t><br/><t align='left' size='0.88' color='#D8F3FF' shadow='2'>N/B TARGET  |  F FOLLOW  |  V EYES  |  G DIRECTOR  |  BACKSPACE EXIT</t>";
+		_keysBg ctrlShow true;
+		_keysText ctrlShow true;
+		_keysText ctrlSetStructuredText (parseText _keysHtml);
+	} else {
+		_keysBg ctrlShow false;
+		_keysText ctrlShow false;
+	};
+};
+
+//--- Map follow/camera teleport helpers are also non-suspending. The one-second worker
+//--- calls them and releases all display/control references before its next sleep.
+WFBE_CL_FNC_SpectatorMapFollow = {
+	Private ["_display","_map","_pos"];
+	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) <= 0) exitWith {};
+	_display = uiNamespace getVariable ["wfbe_spectator_map_display", displayNull];
+	if (isNull _display) exitWith {};
+	_map = _display displayCtrl 124570;
+	_pos = missionNamespace getVariable ["WFBE_C_VAR_SpectatorPos", [0,0,0]];
+	_map ctrlMapAnimAdd [0.5, 0.03, _pos];
+	ctrlMapAnimCommit _map;
+};
+
+WFBE_CL_FNC_SpectatorMapClick = {
+	Private ["_map","_x","_y","_pos","_camPos","_yaw","_pitch","_cy","_sy","_cp","_sp","_aim"];
+	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) <= 0) exitWith {};
+	_map = _this select 0;
+	_x = _this select 1;
+	_y = _this select 2;
+	_pos = _map ctrlMapScreenToWorld [_x, _y];
+	if (isNil "_pos" || {typeName _pos != "ARRAY"} || {count _pos < 2}) exitWith {};
+	_camPos = missionNamespace getVariable ["WFBE_C_VAR_SpectatorPos", [0,0,0]];
+	_camPos = [_pos select 0, _pos select 1, _camPos select 2];
+	WFBE_C_VAR_SpectatorPos = _camPos;
+	WFBE_C_VAR_SpectatorMode = "free";
+	WFBE_C_VAR_SpectatorDirectorAuto = false;
+	WFBE_C_VAR_SpectatorTarget = objNull;
+	_yaw = missionNamespace getVariable ["WFBE_C_VAR_SpectatorYaw", 0];
+	_pitch = missionNamespace getVariable ["WFBE_C_VAR_SpectatorPitch", 0];
+	_cy = cos _yaw;
+	_sy = sin _yaw;
+	_cp = cos _pitch;
+	_sp = sin _pitch;
+	_aim = [
+		(_camPos select 0) + (_sy * _cp * 100),
+		(_camPos select 1) + (_cy * _cp * 100),
+		(_camPos select 2) + (_sp * 100)
+	];
+	if (!isNull (missionNamespace getVariable ["WFBE_C_VAR_SpectatorCam", objNull])) then {
+		WFBE_C_VAR_SpectatorCam camSetPos _camPos;
+		WFBE_C_VAR_SpectatorCam camSetTarget _aim;
+		WFBE_C_VAR_SpectatorCam camCommit 0;
+	};
+	diag_log Format ["SPECTATE|broadcast-map|teleport|x=%1|y=%2", round (_pos select 0), round (_pos select 1)];
 };
 
 WFBE_CL_FNC_SpectatorKeyDown = {
@@ -288,9 +386,21 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 			//--- readout lives on the always-on cutText card (hints do not render under the spectator camera).
 			true
 		};
-		case 35: { //--- H: hide/show the card overlay (clean OBS capture)
-			WFBE_C_VAR_SpectatorHideHint = !WFBE_C_VAR_SpectatorHideHint;
-			if (WFBE_C_VAR_SpectatorHideHint) then {12455 cutText ["", "PLAIN", 0]}; WFBE_C_VAR_SpectatorCardLast = ""; //--- reset the card cache either way so the next draw re-cuts
+		case 35: { //--- H: FULL -> MINIMAL -> OFF when broadcast HUD is armed; legacy hide/show otherwise.
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
+				WFBE_C_VAR_SpectatorHudMode = (WFBE_C_VAR_SpectatorHudMode + 1) % 3;
+				[] Call WFBE_CL_FNC_SpectatorBroadcastHudUpdate;
+			} else {
+				WFBE_C_VAR_SpectatorHideHint = !WFBE_C_VAR_SpectatorHideHint;
+				if (WFBE_C_VAR_SpectatorHideHint) then {12455 cutText ["", "PLAIN", 0]}; WFBE_C_VAR_SpectatorCardLast = ""; //--- reset the card cache either way so the next draw re-cuts (flicker fix, merged)
+			};
+		};
+		case 50: { //--- M: open/close spectator map dialog; DIK 50 is not used by the spectator key set.
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
+				if (dialog) then {closeDialog 0} else {createDialog "WFBE_SpectatorMapDialog"};
+			} else {
+				_handled = false;
+			};
 		};
 		case 14: {[] Call WFBE_CL_FNC_SpectatorExit}; //--- Backspace: quick exit
 		default {_handled = false}; //--- unhandled keys (Esc, chat, etc.) fall through to the game.
@@ -364,6 +474,17 @@ WFBE_CL_FNC_SpectatorWheel = {
 	_f = (_f max (missionNamespace getVariable ["WFBE_C_SPECTATOR_FOV_MIN", 0.05])) min (missionNamespace getVariable ["WFBE_C_SPECTATOR_FOV_MAX", 1.2]);
 	WFBE_C_VAR_SpectatorFov = _f;
 	true
+};
+
+if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
+	12456 cutRsc ["WFBE_SpectatorBroadcastHud", "PLAIN", 0];
+	[] Call WFBE_CL_FNC_SpectatorBroadcastHudUpdate;
+	[] spawn {
+		while {WFBE_C_VAR_SpectatorActive} do {
+			[] Call WFBE_CL_FNC_SpectatorMapFollow;
+			sleep 1;
+		};
+	};
 };
 
 WFBE_C_VAR_SpectatorKeyDownIdx = (findDisplay 46) displayAddEventHandler ["KeyDown", "_this Call WFBE_CL_FNC_SpectatorKeyDown"];
@@ -602,7 +723,10 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 		WFBE_C_VAR_SpectatorPos = _p;
 		WFBE_C_VAR_SpectatorYaw = _y;
 		WFBE_C_VAR_SpectatorPitch = _pt;
-		if !(WFBE_C_VAR_SpectatorHideHint) then {
+		if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
+			[] Call WFBE_CL_FNC_SpectatorBroadcastHudUpdate;
+		} else {
+			if !(WFBE_C_VAR_SpectatorHideHint) then {
 			_tgtTxt = "-";
 			if (!isNull _t && {alive _t}) then {_tgtTxt = name _t};
 			_baseRemain = "--";
@@ -624,8 +748,7 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 			//--- Title layers composite over camera effects; the hint layer does not.
 			//--- Layer 12455 (12454 belongs to the lobby-lock hold; 12450-12452/12461 are taken).
 			//--- cutText takes a plain STRING; "\n" line breaks are the in-tree proven pattern
-			//--- (Client_TitleTextMessage.sqf). Styled structured text returns with the cutRsc
-			//--- broadcast HUD planned in the v3.2 overlay lane.
+			//--- (Client_TitleTextMessage.sqf). The opt-in broadcast HUD now uses the cutRsc path above.
 			_dirCard = Format [
 				"SPECTATOR [%1]  target %2\nspeed %3 m/s | FOV %4%5 | sens %6",
 				toUpper _mode, _tgtTxt, round _spd, round (WFBE_C_VAR_SpectatorFov * 100), "%",
@@ -652,6 +775,7 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 				WFBE_C_VAR_SpectatorCardLast = _dirCard;
 				12455 cutText [_dirCard, "PLAIN DOWN", 0];
 			};
+		};
 		};
 	};
 };

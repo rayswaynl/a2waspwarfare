@@ -3514,5 +3514,10 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_AIR_STANDOFF_MULT") then {WFBE_C_SPECTATOR_
 //--- minimum FOV for Air director subjects.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN = 0.45};
 
+//--- Spectator broadcast HUD: opt-in styled title overlay + dialog map fallback.
+//--- 0 (default) leaves the existing 12455 cutText spectator card path unchanged.
+//--- Layer 12456 is reserved for this title; 12450-12452/12454/12455/12461 remain occupied.
+if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

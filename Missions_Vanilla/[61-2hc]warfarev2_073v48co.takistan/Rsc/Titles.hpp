@@ -22,7 +22,7 @@
 
 class RscTitles {
 
-	titles[] = {RscOverlay,CaptureBar,OptionsAvailable,EndOfGameStats,WFBE_VehicleTintLegend,WFBE_NameTagOverlay};
+	titles[] = {RscOverlay,CaptureBar,OptionsAvailable,EndOfGameStats,WFBE_VehicleTintLegend,WFBE_NameTagOverlay,WFBE_SpectatorBroadcastHud};
 	//--- qol-polish-pack: pooled friendly name-tag overlay. Slots are positioned each tick from Init_Client.sqf via worldToScreen + ctrlSetPosition.
 	class WFBE_NameTagOverlay {
 		idd = 10261;
@@ -1091,4 +1091,57 @@ class RscTitles {
 		};
 	};
 	//--- ============================================================================
+	//--- Broadcast spectator HUD. Layer 12456 is deliberately separate from the legacy
+	//--- 12455 cutText card and the occupied 12450-12452/12454/12461 layers.
+	class WFBE_SpectatorBroadcastHud {
+		idd = 10262;
+		movingEnable = 0;
+		duration = 1e+011;
+		fadeIn = 0;
+		fadeOut = 0;
+		name = "WFBE_SpectatorBroadcastHud";
+		onLoad = "uiNamespace setVariable ['wfbe_spectator_broadcast_display', _this select 0]";
+		onUnload = "uiNamespace setVariable ['wfbe_spectator_broadcast_display', displayNull]";
+		controls[] = {"SBH_TopBG","SBH_TopText","SBH_KeysBG","SBH_KeysText"};
+
+		class SBH_TopBG : RscText {
+			idc = 124560;
+			text = "";
+			x = 0.030 * safezoneW + safezoneX;
+			y = 0.030 * safezoneH + safezoneY;
+			w = 0.640 * safezoneW;
+			h = 0.105 * safezoneH;
+			colorBackground[] = {0,0,0,0.82};
+		};
+		class SBH_TopText : RscStructuredText {
+			idc = 124561;
+			x = 0.045 * safezoneW + safezoneX;
+			y = 0.040 * safezoneH + safezoneY;
+			w = 0.610 * safezoneW;
+			h = 0.090 * safezoneH;
+			size = 0.045;
+			colorText[] = {1,1,1,1};
+			text = "";
+		};
+		class SBH_KeysBG : RscText {
+			idc = 124562;
+			text = "";
+			x = 0.030 * safezoneW + safezoneX;
+			y = 0.805 * safezoneH + safezoneY;
+			w = 0.735 * safezoneW;
+			h = 0.145 * safezoneH;
+			colorBackground[] = {0,0,0,0.78};
+		};
+		class SBH_KeysText : RscStructuredText {
+			idc = 124563;
+			x = 0.045 * safezoneW + safezoneX;
+			y = 0.820 * safezoneH + safezoneY;
+			w = 0.705 * safezoneW;
+			h = 0.115 * safezoneH;
+			size = 0.032;
+			colorText[] = {1,1,1,1};
+			text = "";
+		};
+	};
+
 };
