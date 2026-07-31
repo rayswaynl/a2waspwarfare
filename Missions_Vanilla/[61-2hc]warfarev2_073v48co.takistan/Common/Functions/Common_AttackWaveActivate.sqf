@@ -1,7 +1,13 @@
-private ["_supply", "_side", "_requester"];
+private ["_supply", "_side", "_requester", "_args"];
 
-_supply = _this select 3 select 0;
-_side = _this select 3 select 1;
+//--- fix(code-as-string r33): never trust addAction args baked at attach-time (stale supply).
+//--- Re-read live side + supply; keep optional legacy args only as a soft fallback.
+_args = if (count _this > 3) then {_this select 3} else {[]};
+_side = sideJoined;
+if (typeName _args == "ARRAY" && {count _args > 1}) then {
+	if (typeName (_args select 1) == "SIDE") then {_side = _args select 1};
+};
+_supply = _side call GetSideSupply;
 _requester = player;
 
 //--- fix(harden) [#1399]: thread the acting player through ATTACK_WAVE_INIT so the server can bind the

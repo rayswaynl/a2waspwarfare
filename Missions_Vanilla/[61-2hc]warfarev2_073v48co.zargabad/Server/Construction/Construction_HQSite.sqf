@@ -110,10 +110,10 @@ if (!_deployed) then {
 	_logik setVariable ["wfbe_hq", _MHQ, true];
 	_logik setVariable ['wfbe_hq_deployed', false, true];
     if (_side == west && !(IS_chernarus_map_dependent)) then {
-	_MHQ setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]";
-	_MHQ setVehicleInit "this setObjectTexture [1,""Textures\lavbody2_coD.paa""]";
-	_MHQ setVehicleInit "this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
-	processinitcommands;
+	//--- fix(code-as-string r33): setVehicleInit keeps ONLY the last string - three separate
+	//--- calls applied only slot 2. One combined init so all three desert LAV selections run.
+	_MHQ setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]; this setObjectTexture [1,""Textures\lavbody2_coD.paa""]; this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
+	processInitCommands;
 	};
 
 	//--- B66: the DEPLOY branch (~:32) fires Init_BaseStructure via setVehicleInit so every client draws the
