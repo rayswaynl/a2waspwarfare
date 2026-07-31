@@ -613,15 +613,20 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 						_navDeckZ  = _airLogicRef getVariable ["wfbe_naval_deckz", 16];
 						_navRefPos = getPosASL _airLogicRef;
 						_newHangar = "HeliHEmpty" createVehicle [_navRefPos select 0, _navRefPos select 1, 0]; //--- B754b (Ray 2026-06-25): invisible-but-alive HeliHEmpty instead of the hangar building (A2-OA has no hideObjectGlobal). Mirror of the Init_NavalHVT spawn site.
-						_newHangar setPosASL [_navRefPos select 0, _navRefPos select 1, _navDeckZ];
-						_newHangar setDir ((getDir _airLogicRef) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
-						_newHangar enableSimulation false;
-						_newHangar allowDamage false; //--- B754b: hangar suppressed via invisible HeliHEmpty above (no hideObjectGlobal in A2-OA).
-						_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
-						_airLogicRef setVariable ["wfbe_hangar", _newHangar, true];
-						_airLogicRef setVariable ["wfbe_airfield_side", _hvtNewSide, true];
-						_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
-						["INFORMATION", Format ["server_town.sqf: Carrier [%1] hangar respawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+						//--- FAIL-CLEAN (r39): null create must not setPosASL/setVar hangar refs (air shop would bind null).
+						if (isNull _newHangar) then {
+							["WARNING", Format ["server_town.sqf: Carrier [%1] hangar createVehicle FAILED for side %2 - refs not stamped.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+						} else {
+							_newHangar setPosASL [_navRefPos select 0, _navRefPos select 1, _navDeckZ];
+							_newHangar setDir ((getDir _airLogicRef) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
+							_newHangar enableSimulation false;
+							_newHangar allowDamage false; //--- B754b: hangar suppressed via invisible HeliHEmpty above (no hideObjectGlobal in A2-OA).
+							_newHangar setVariable ["wfbe_is_airfield_hangar", true, true];
+							_airLogicRef setVariable ["wfbe_hangar", _newHangar, true];
+							_airLogicRef setVariable ["wfbe_airfield_side", _hvtNewSide, true];
+							_location setVariable ["wfbe_airfield_hangar_obj", _newHangar, true];
+							["INFORMATION", Format ["server_town.sqf: Carrier [%1] hangar respawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+						};
 					};
 
 				//--- fable/ew-naval: gate the carrier ServicePoint behind its own default-0 flag per

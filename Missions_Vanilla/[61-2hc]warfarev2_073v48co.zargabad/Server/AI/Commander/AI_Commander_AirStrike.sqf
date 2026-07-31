@@ -242,6 +242,14 @@ if (_canDispatch) then {
 				_pilot = [_pilotClass, _grp, _spawnPos, _sideID] Call WFBE_CO_FNC_CreateUnit;
 				if (!isNull _pilot) then {
 					_pilot moveInDriver _heli;
+					//--- FAIL-CLEAN (r39): seat fail left pilot free + empty airframe still registered as dispatched.
+					if (driver _heli != _pilot) then {
+						_skipReason = "pilot-seat-failed";
+						deleteVehicle _pilot;
+						deleteVehicle _heli;
+						deleteGroup _grp;
+						["WARNING", Format ["AI_Commander_AirStrike.sqf: [%1] pilot seat failed class=%2 - flight aborted.", _sideText, _class]] Call WFBE_CO_FNC_LogContent;
+					} else {
 					//--- ATTACK-HELI GUNNER (flag WFBE_C_AIR_ATTACK_GUNNER, default 0/byte-identical, already
 					//--- registered): mirrors AI_Commander_AirResp.sqf:221-228 / Server_GuerAirDef.sqf:378-387.
 					if ((missionNamespace getVariable ["WFBE_C_AIR_ATTACK_GUNNER", 0]) > 0 && {(_heli emptyPositions "gunner") > 0}) then {
@@ -305,6 +313,7 @@ if (_canDispatch) then {
 						{deleteVehicle _x} forEach (crew _h); //--- delete CREW units first (empties the group)...
 						if (!isNull _h) then {deleteVehicle _h};
 						if (!isNull _g) then {deleteGroup _g}; //--- ...so this deleteGroup is never a silent no-op on a non-empty group.
+					};
 					};
 				} else {
 					_skipReason = "pilot-create-failed";
