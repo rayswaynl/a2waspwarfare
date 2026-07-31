@@ -795,6 +795,16 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			//--- never reach this path, so no additional isKindOf check is needed.
 			_t0 = time + (missionNamespace getVariable ["WFBE_C_AICOM_BOARD_WAIT", 12]);
 			waitUntil {sleep 1; time > _t0 || {({alive _x && vehicle _x == _h} count _pax) >= ({alive _x} count _pax)}};
+			//--- UNLOAD/BOARD INTEGRITY (r60): cancel sticky assignAsCargo + orderGetIn true for
+			//--- pax who missed the board window so they march the objective instead of chasing
+			//--- the departing transport (mirrors Common_AICOMAirLeg).
+			{
+				if (alive _x && {vehicle _x != _h}) then {
+					unassignVehicle _x;
+					[_x] orderGetIn false;
+					_x doMove _obj;
+				};
+			} forEach _pax;
 			if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)}) exitWith {
 				//--- Heli lost mid-lift: any survivors still aboard/around get an unconditional move.
 				{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false}; _x doMove _obj}} forEach _pax;
@@ -819,21 +829,31 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 				//--- distance/getPos; this land hold did not. If the transport is deleted mid-descent
 				//--- (GC / combat / fly-off race), bare getPosATL on a null handle is native-crash class.
 				waitUntil {sleep 1; time > _t0 || isNull _h || {!alive _h} || {((getPosATL _h) select 2) < 1.5}};
-				{if (alive _x && {vehicle _x == _h}) then {unassignVehicle _x; [_x] orderGetIn false}} forEach _pax;
 			} else {
 				//--- No flat LZ: para-drop over the objective (eject pattern, Support_Paratroopers).
+				//--- NEURO pairs unassign + orderGetIn false + EJECT; sticky get-in was previously
+				//--- left armed so partial ejects re-boarded the transport.
 				_h flyInHeight (120 + random 20);
 				{
 					if (alive _x && {vehicle _x == _h}) then {
 						unassignVehicle _x;
+						[_x] orderGetIn false;
 						_x action ["EJECT", _h];
 						sleep 0.85;
 					};
 				} forEach _pax;
 			};
-			//--- GUARD: dropped pax always get an unconditional ground move to the objective
-			//--- (the order loop will then fold them into the team MOVE/SAD).
-			{if (alive _x) then {_x doMove _obj}} forEach _pax;
+			//--- UNLOAD INTEGRITY (r60): clear assignment + sticky get-in for ALL pax (not only
+			//--- residual cargo) so land-"GET OUT" leavers cannot re-board; moveOut residual cargo
+			//--- so they cannot ride the RTB/refund home. Then ground-move to objective.
+			{
+				if (alive _x) then {
+					unassignVehicle _x;
+					[_x] orderGetIn false;
+					if (vehicle _x == _h) then {moveOut _x};
+					_x doMove _obj;
+				};
+			} forEach _pax;
 
 			//--- HELI FLY-OFF + REFUND (user request): the empty team transport now flies
 			//--- to the NEAREST MAP EDGE and, on reaching off-map ALIVE, is deleted and its
@@ -2467,13 +2487,21 @@ while {!WFBE_GameOver && _alive} do {
 										{if (typeName _x == "ARRAY" && {count _x >= 2} && {(_x select 0) == _veh}) then {_stampFound = true}} forEach _transportCaps;
 										if (!_stampFound && {alive _veh} && {_veh isKindOf "LandVehicle"} && {canMove _veh}) then {_transportCaps set [count _transportCaps, [_veh, time]]};
 										_team setVariable ["wfbe_aicom_transport_capable", _transportCaps, true];
+										//--- UNLOAD INTEGRITY (r60): orderGetIn false is a silent no-op on
+										//--- already-seated units (SML-2 header). moveOut force-ejects so
+										//--- crew-only capture bodies actually leave the hull for the camp
+										//--- Man-scan; seat stamp + B755 long-leg remount restore them later.
 										unassignVehicle _u;
 										[_u] orderGetIn false;
+										if (vehicle _u != _u) then {moveOut _u};
 										_footInf = _footInf + [_u];
 									};
 								} else {
+									//--- Cargo unload: same moveOut force (without it infantry stay seated
+									//--- while counted as "foot" for camp/depot doMove — capture stall).
 									unassignVehicle _u;
 									[_u] orderGetIn false;
+									if (vehicle _u != _u) then {moveOut _u};
 									_footInf = _footInf + [_u];
 								};
 							} else {
