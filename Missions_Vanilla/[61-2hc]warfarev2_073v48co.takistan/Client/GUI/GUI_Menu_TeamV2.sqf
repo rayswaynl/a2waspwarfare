@@ -496,7 +496,8 @@ while {alive player && dialog} do {
 		MenuAction = -1;
 		titleText [localize "STR_WF_TEAM_MapShortcutDisbandTip", "PLAIN DOWN", 3];
 		_curUnitSel = lbCurSel 13071;
-		if (_curUnitSel != -1) then {
+		//--- r62 select-bounds: parity with MenuAction 2001/2002 eject/repair upper-bound.
+		if (_curUnitSel != -1 && {_curUnitSel < count _units}) then {
 			private ["_tgt","_veh2","_lc2","_des2"];
 			_tgt  = _units select _curUnitSel;
 			_veh2 = vehicle _tgt;
