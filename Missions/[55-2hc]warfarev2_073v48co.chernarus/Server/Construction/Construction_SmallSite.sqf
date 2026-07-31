@@ -153,6 +153,12 @@ if (_rlType == "CBRadar" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_CO
 	private ["_dressTpl","_cbrRegistry","_cbrKey"];
 	_dressTpl = Format ["WFBE_NEURODEF_CBRADAR_%1", if (_side == west) then {"WEST"} else {"EAST"}];
 	[_site, _dressTpl, _direction] Call WFBE_SE_FNC_SpawnStructureDressing;
+	//--- Public CBR identity: buildable CBRadar shares the same model as cosmetic ArtilleryRadar
+	//--- (*_WarfareBArtilleryRadar). Clients (Init_BaseStructure range circle) need an authoritative
+	//--- tag that is not typeOf-based. Broadcast so non-server machines can read it.
+	_site setVariable ["wfbe_is_cbr", true, true];
+	//--- Ensure ownership side is readable server-side for CBR radius upgrade (empty hulls are civilian).
+	_site setVariable ["wfbe_side", _side];
 	//--- Register in the per-side CBR array.
 	_cbrKey = if (_side == west) then {"WFBE_CBR_WEST"} else {"WFBE_CBR_EAST"};
 	_cbrRegistry = missionNamespace getVariable [_cbrKey, []];

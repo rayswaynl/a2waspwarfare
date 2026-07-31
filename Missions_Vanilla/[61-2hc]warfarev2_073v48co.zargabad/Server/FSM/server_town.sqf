@@ -1028,6 +1028,9 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 						_radar setPos _radarPos;
 						//--- Radius override: 2000 m. Server_CounterBattery.sqf reads "wfbe_cbr_radius" getVariable.
 						_radar setVariable ["wfbe_cbr_radius", 2000, true]; //--- AF2: broadcast so clients read the fixed 2000 (Init_BaseStructure uses it for BOTH the circle radius AND the "_fixed" flag; un-broadcast -> client drew the 750/1500 upgrade tier and live-resized it)
+						//--- Public CBR identity + ownership for counterbattery routing (empty Land_Antenna is civilian side).
+						_radar setVariable ["wfbe_is_cbr", true, true];
+						_radar setVariable ["wfbe_side", _newSide];
 						//--- Indestructible: HandleDamage returning 0 prevents any damage being applied.
 						_radar addEventHandler ["HandleDamage", {0}];
 

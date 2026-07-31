@@ -85,11 +85,14 @@ if (local player) then {
 		_marker setMarkerColorLocal (missionNamespace getVariable (Format ["WFBE_C_%1_COLOR", _side]));
 	};
 
-	//--- CBR range circle: spawn a separate watch block for Land_Antenna CBR structures.
-	//--- Guard: structure must be a Land_Antenna (CBR radar type used by both buildable and airfield CBRs),
-	//---   NOT a UAV terminal (which is also a Base_WarfareBUAVterminal and not a CBR), and CBR feature enabled.
-	_isCBR = (typeOf _structure == "Land_Antenna" && !(typeOf _structure isKindOf "Base_WarfareBUAVterminal")
-	           && (missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0);
+	//--- CBR range circle: buildable CBRadar is *_WarfareBArtilleryRadar after b760 (same model as cosmetic
+	//--- ArtilleryRadar), so typeOf alone cannot distinguish. Prefer the public wfbe_is_cbr stamp set at
+	//--- construction/airfield spawn; keep Land_Antenna fallback for airfield masts / pre-stamp objects.
+	//--- Never treat UAV terminals as CBR.
+	_isCBR = (missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0
+	           && {!((typeOf _structure) isKindOf "Base_WarfareBUAVterminal")}
+	           && {(_structure getVariable ["wfbe_is_cbr", false])
+	               || {typeOf _structure == "Land_Antenna"}};
 	if (_isCBR) then {
 		_cbrMarker = Format ["CBRrange%1", CBRCircleMarker];
 		CBRCircleMarker = CBRCircleMarker + 1;
