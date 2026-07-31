@@ -180,7 +180,8 @@ class FSM
 	   "if !(gearInRange) then {" \n
 	   " _checks = (getPos player) nearEntities[_typeAmmo,_gear_field_range];" \n
 	   " _perfNearEntities = _perfNearEntities + 1;" \n
-	   "if (count _checks > 0) then {gearInRange = true;};" \n
+	   "//--- dismounted-resupply r38: own-side gate (AMMOTRUCKS list is multi-faction)." \n
+	   "{if (alive _x) then {_sid = _x getVariable [""wfbe_side_id"", -99]; if (_sid == sideID || {_sid < 0 && {side _x == sideJoined}}) then {gearInRange = true}};} forEach _checks;" \n
        "};" \n
        "" \n
        "lightInRange = if (isNull (['LIGHTTYPE',_buildings,_purchaseRange,sideJoined,player] Call BuildingInRange)) then {false} else {true};" \n
