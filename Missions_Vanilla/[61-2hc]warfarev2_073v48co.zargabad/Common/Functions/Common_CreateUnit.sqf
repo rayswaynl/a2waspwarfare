@@ -45,7 +45,11 @@ if (isNull _team) exitWith {
 };
 
 _get = missionNamespace getVariable _type;
-_skill = if !(isNil '_get') then {_get select QUERYUNITSKILL} else {missionNamespace getVariable "WFBE_C_UNITS_SKILL_DEFAULT"};
+_skill = if !(isNil '_get') then {_get select QUERYUNITSKILL} else {missionNamespace getVariable ["WFBE_C_UNITS_SKILL_DEFAULT", 0.5]};
+//--- r76b: setSkill on nil/non-scalar (missing QUERYUNITSKILL / broken registry) throws; clamp [0,1].
+if (isNil "_skill" || {typeName _skill != "SCALAR"}) then {_skill = missionNamespace getVariable ["WFBE_C_UNITS_SKILL_DEFAULT", 0.5]};
+if (isNil "_skill" || {typeName _skill != "SCALAR"}) then {_skill = 0.5};
+_skill = (_skill max 0) min 1;
 _unit = _team createUnit [_type, _position, [], 5, _special];
 
 // Marty: Stop cleanly if the engine refused the unit, usually because a group/unit limit was reached.
@@ -54,7 +58,7 @@ if (isNull _unit) exitWith {
 	objNull
 };
 
-_unit setSkill _skill;
+if (alive _unit) then {_unit setSkill _skill};
 
 // Claude: weapon-backfill. Some specialist EP1 / crew classes come back from
 // createUnit with an EMPTY primary loadout (engine quirk), producing the
