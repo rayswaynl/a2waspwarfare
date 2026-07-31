@@ -99,7 +99,7 @@ if (_teamFunds < _amount) exitWith {
 [_target, _amount] Call ChangeTeamFunds;
 
 //--- Notify the recipient's leader if a player (matches prior client-side UX).
-if (isPlayer (leader _target)) then {
+if ([leader _target, false] Call WFBE_CO_FNC_IsRealPlayer) then {
 	[getPlayerUID (leader _target), "LocalizeMessage", ["FundsTransfer", _amount, _donorName]] Call WFBE_CO_FNC_SendToClients;
 };
 

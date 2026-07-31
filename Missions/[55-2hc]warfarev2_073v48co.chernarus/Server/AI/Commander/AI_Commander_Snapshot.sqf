@@ -108,7 +108,7 @@ _hcUnits = [];
 { if (!isNull _x) then { { _hcUnits set [count _hcUnits, _x] } forEach (units _x) } } forEach (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 _players = 0; _myPlayers = 0;
 {
-	if (isPlayer _x && {!(_x in _hcUnits)}) then {
+	if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {!(_x in _hcUnits)}) then {
 		_players = _players + 1;
 		if ((side _x) == _side) then {_myPlayers = _myPlayers + 1};
 	};

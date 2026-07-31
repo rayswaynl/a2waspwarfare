@@ -93,7 +93,7 @@ _findPosition = {
 	_hcNames = missionNamespace getVariable ["WFBE_C_HC_NAMES", ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]];
 	if (typeName _hcNames != "ARRAY") then {_hcNames = ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]};
 	{
-		if (isPlayer _x && {!((name _x) in _hcNames)}) then {_playersOnline = _playersOnline + 1};
+		if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {!((name _x) in _hcNames)}) then {_playersOnline = _playersOnline + 1};
 	} forEach allUnits;
 
 	if (_playersOnline < 1) exitWith {[]};
@@ -108,7 +108,7 @@ _findPosition = {
 
 		if (!_tooClose) then {
 			{
-				if (isPlayer _x && {alive _x} && {!((name _x) in _hcNames)}) then {
+				if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {!((name _x) in _hcNames)}) then {
 					if ((vehicle _x) distance _candidate < _playerRadius) then {_tooClose = true};
 				};
 			} forEach allUnits;

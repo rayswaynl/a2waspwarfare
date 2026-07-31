@@ -7,7 +7,7 @@
 	Returns: ARRAY
 	A2-OA-1.64 safe: playableUnits / isPlayer / alive / side / name / lazy && {} and || {} only.
 */
-Private ["_side","_filter","_useSide","_excludeCivilian","_hcUnits","_hcGroup","_hcNames","_players"];
+Private ["_side","_filter","_useSide","_excludeCivilian","_players"];
 
 _useSide = false;
 _excludeCivilian = false;
@@ -21,25 +21,11 @@ if (count _this > 0) then {
 	};
 };
 
-//--- WFBE_HEADLESSCLIENTS_ID holds GROUPS, not ids (Server_HandleSpecial.sqf:1798 stores `group _hc`), so
-//--- isNull/units are the right operators. It is SERVER-ONLY state: on a headless client this always reads
-//--- back [] and _hcNames below is the only HC exclusion that fires. Capture the outer _x before the inner
-//--- forEach - it permanently rebinds _x. Kept symmetric with Common_RealPlayersNear.sqf.
-_hcUnits = [];
-{
-	_hcGroup = _x;
-	if (!isNull _hcGroup) then {
-		{_hcUnits set [count _hcUnits, _x]} forEach (units _hcGroup);
-	};
-} forEach (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
-
-//--- Single source of truth (Init_CommonConstants.sqf); complete-for-4-HCs literal fallback.
-_hcNames = missionNamespace getVariable ["WFBE_C_HC_NAMES", ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]];
-if ((typeName _hcNames) != "ARRAY") then {_hcNames = ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]};
+//--- HC and dedicated-caster exclusion is centralized in Common_IsRealPlayer.sqf.
 
 _players = [];
 {
-	if (alive _x && {isPlayer _x} && {!(_x in _hcUnits)} && {!_excludeCivilian || {(side _x) != civilian}} && {!((name _x) in _hcNames)} && {!_useSide || {side _x == _side}}) then {
+	if ([_x] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {!_excludeCivilian || {(side _x) != civilian}} && {!_useSide || {side _x == _side}}) then {
 		_players set [count _players, _x];
 	};
 } forEach playableUnits;

@@ -26,7 +26,7 @@ if (isNil "_amount" || {typeName _amount != "SCALAR"} || {_amount <= 0}) exitWit
 
 _count = 0;
 {
-	if ((isPlayer _x) && {alive _x} && {side _x == _side} && {!((name _x) in WFBE_C_HC_NAMES)}) then {
+	if (([_x, false] Call WFBE_CO_FNC_IsRealPlayer) && {alive _x} && {side _x == _side} && {!((name _x) in WFBE_C_HC_NAMES)}) then {
 		[group _x, _amount] Call WFBE_CO_FNC_ChangeTeamFunds;
 		_count = _count + 1;
 	};

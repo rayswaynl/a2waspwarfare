@@ -20,7 +20,7 @@ while {true} do {
 		// cmdcon41 (P0-5): HC-FILTER AT SOURCE. A headless client is an isPlayer unit but is NOT a human
 		// participant - crediting it here leaks a phantom "HC" entry into WASPSTAT -> leaderboard/report.
 		// Skip any unit whose name is a known HC name (A2-OA-safe exact `in` check - no A3 string find/substring).
-		if ((isPlayer _x) && {!((name _x) in WFBE_C_HC_NAMES)}) then {
+		if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {!((name _x) in WFBE_C_HC_NAMES)}) then {
 			private ["_uid","_sideNum"];
 			_uid = getPlayerUID _x;
 			//--- Stamp check in addition to the name list above. The name list is now the single shared

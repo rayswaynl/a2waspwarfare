@@ -9,7 +9,7 @@ while {true} do {
 	_playerCount = 0;
 
 	{
-		if (isPlayer _x) then {
+		if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer) then {
 			_playerCount = _playerCount + 1;
 		}
 	} forEach allUnits;

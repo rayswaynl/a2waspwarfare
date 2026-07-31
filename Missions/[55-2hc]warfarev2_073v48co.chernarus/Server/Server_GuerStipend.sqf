@@ -56,7 +56,7 @@ while {!WFBE_GameOver} do {
 	//--- GUER economy exists; AI-only rounds have no such group and must retain the original time escalation.
 	_paidGroups = [];
 	{
-		if ((alive _x) && {side _x == resistance} && {isPlayer _x}) then {
+		if ((alive _x) && {side _x == resistance} && {[_x, false] Call WFBE_CO_FNC_IsRealPlayer}) then {
 			_g = group _x;
 			if !(_g in _paidGroups) then {_paidGroups = _paidGroups + [_g]};
 		};

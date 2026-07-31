@@ -243,10 +243,10 @@ if (_hfDist > 0) then {
 	{
 		if (!_hNear) then {
 			if (_x isKindOf "Man") then {
-				if (isPlayer _x && {alive _x} && {side _x == _side} && {behaviour _x == "COMBAT"}) then {_hNear = true};
+				if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {side _x == _side} && {behaviour _x == "COMBAT"}) then {_hNear = true};
 			} else {
 				{
-					if (!_hNear && {isPlayer _x} && {alive _x} && {side _x == _side} && {behaviour _x == "COMBAT"}) then {_hNear = true};
+					if (!_hNear && {[_x, false] Call WFBE_CO_FNC_IsRealPlayer} && {alive _x} && {side _x == _side} && {behaviour _x == "COMBAT"}) then {_hNear = true};
 				} forEach (crew _x);
 			};
 		};

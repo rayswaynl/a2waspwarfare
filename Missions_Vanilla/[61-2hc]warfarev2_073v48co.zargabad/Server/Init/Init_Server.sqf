@@ -1669,7 +1669,7 @@ if ((missionNamespace getVariable ["WFBE_C_HC_CIV_RESLOT", 0]) > 0) then {
 		//--- the reslot safe-window never opened.
 		while {true} do {
 			private ["_real"];
-			_real = { (isPlayer _x) && {!((name _x) in _hcNames)} } count allUnits;
+			_real = { ([_x, false] Call WFBE_CO_FNC_IsRealPlayer) && {!((name _x) in _hcNames)} } count allUnits;
 			WFBE_HC_RESLOT_SAFE = (_real == 0);
 			publicVariable "WFBE_HC_RESLOT_SAFE";
 			sleep 5;

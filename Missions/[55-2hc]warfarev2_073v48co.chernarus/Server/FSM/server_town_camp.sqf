@@ -70,7 +70,7 @@ while {!WFBE_GameOver} do {
 				//--- countSide counts bodies, so a pile of corpses could hold or contest a camp forever. Folded
 				//--- into the existing single filter pass (no extra loop, no extra nearEntities).
 				if (!alive _x) then {_objects = _objects - [_x]};
-				if (isPlayer _x) then {if (_x distance _camp > _camp_range_players) then {_objects = _objects - [_x]}};
+				if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer) then {if (_x distance _camp > _camp_range_players) then {_objects = _objects - [_x]}};
 			} forEach _in_range;
 
 			_west = west countSide _objects;
@@ -138,7 +138,7 @@ while {!WFBE_GameOver} do {
 					//--- private so the nested forEach's magic _x stays safe.
 					private ["_capSideC","_capUidC"];
 					_capSideC = _newSide;
-					{ if (isPlayer _x && {alive _x} && {side _x == _capSideC}) then {_capUidC = getPlayerUID _x; if (_capUidC != "") then {[_capUidC, WFBE_STAT_CAPTURES_CAMP, 1] call WFBE_SE_FNC_RecordStat}} } forEach _objects;
+					{ if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {side _x == _capSideC}) then {_capUidC = getPlayerUID _x; if (_capUidC != "") then {[_capUidC, WFBE_STAT_CAPTURES_CAMP, 1] call WFBE_SE_FNC_RecordStat}} } forEach _objects;
 					//--- r69: null-guard live capture flag (parity with bulk FLIPS_CAMPS / SetCampsToSide).
 				if (!isNull _flag) then {
 					_flag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG",str _newSide]);
@@ -152,7 +152,7 @@ while {!WFBE_GameOver} do {
 						WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
 						private ["_wcSideCap", "_wcPn", "_wcAn", "_wcWho"];
 						_wcSideCap = _newSide; _wcPn = 0; _wcAn = 0; _wcWho = "";
-						{if (!isNull _x && {alive _x} && {side _x == _wcSideCap} && {_x isKindOf "Man"}) then {if (isPlayer _x) then {_wcPn = _wcPn + 1; if (_wcWho == "") then {_wcWho = name _x} else {_wcWho = _wcWho + "," + name _x}} else {_wcAn = _wcAn + 1}}} forEach _objects;
+						{if (!isNull _x && {alive _x} && {side _x == _wcSideCap} && {_x isKindOf "Man"}) then {if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer) then {_wcPn = _wcPn + 1; if (_wcWho == "") then {_wcWho = name _x} else {_wcWho = _wcWho + "," + name _x}} else {_wcAn = _wcAn + 1}}} forEach _objects;
 						diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|CAMP|" + (_town getVariable ["name","unknown"]) + "|" + str _sideID + "|" + str _newSID + "|t=" + str (round time) + "|by=" + (if (_wcPn > 0) then {"player"} else {"ai"}) + "|pN=" + str _wcPn + "|aiN=" + str _wcAn + "|who=" + _wcWho);
 					};
 				};
@@ -182,7 +182,7 @@ while {!WFBE_GameOver} do {
 					_presentSnap = _presentMen;
 					{
 						if (!alive _x) then {_presentMen = _presentMen - [_x]};
-						if (isPlayer _x && {_x distance _camp > _camp_range_players}) then {_presentMen = _presentMen - [_x]};
+						if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {_x distance _camp > _camp_range_players}) then {_presentMen = _presentMen - [_x]};
 					} forEach _presentSnap;
 
 					_dcWest = west countSide _presentMen;

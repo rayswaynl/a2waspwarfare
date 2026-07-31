@@ -18,7 +18,7 @@ _refunded = false;
 
 _sideText = str _side;
 
-if (!(alive _building)||{isNull _team}||{isPlayer (leader _team)}) exitWith {
+if (!(alive _building)||{isNull _team}||{[leader _team, false] Call WFBE_CO_FNC_IsRealPlayer}) exitWith {
 	if (!isNull _team) then {
 		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 	};
@@ -27,7 +27,7 @@ if (!(alive _building)||{isNull _team}||{isPlayer (leader _team)}) exitWith {
 	//--- idiom as the createVehicle->objNull guard further down.
 	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted pre-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
-	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
+	if ([leader _team, false] Call WFBE_CO_FNC_IsRealPlayer) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 };
 
 ["INFORMATION", Format ["Server_BuyUnit.sqf: [%1] Team [%2] has purchased [%3].", _side,_team,_unitType]] Call WFBE_CO_FNC_LogContent;
@@ -62,10 +62,10 @@ if !(isNil "_unitTypeGet") then {
 _position = [getPos _building,_distance,getDir _building + _direction] Call GetPositionFrom;
 //--- B67 OPEN SPAWN APRON: the fixed trig offset above has no flat/empty check, so AI
 //--- factory output can drop in trees / on a slope. For AI-owned factories ONLY
-//--- (!isPlayer (leader _team)) sweep for a flat, dry, object-clear apron near the
+//--- (![leader _team] Call WFBE_CO_FNC_IsRealPlayer) sweep for a flat, dry, object-clear apron near the
 //--- factory and use it; on failure fall back to the original fixed offset. The human
 //--- player path is byte-identical (this whole block is skipped when a player leads).
-if (!isPlayer (leader _team)) then {
+if (![leader _team, false] Call WFBE_CO_FNC_IsRealPlayer) then {
 	private ["_apFac","_apBaseBrg","_apOk","_apTry","_apBrg","_apDist","_apCand","_apFlat"];
 	_apFac = getPos _building;
 	_apBaseBrg = getDir _building + _direction;
@@ -149,7 +149,7 @@ if (!isPlayer (leader _team)) then {
 //--- as-is (current behaviour = byte-identical fallback). Reuses WFBE_C_AICOM_SPAWN_ROAD_RADIUS:
 //--- no second radius constant because the snap geometry is identical for players and AI.
 //--- A2-OA-safe: nearRoads + WFBE_CO_FNC_GetClosestEntity + getPos (same idiom as the AI block).
-if (isPlayer (leader _team)) then {
+if ([leader _team, false] Call WFBE_CO_FNC_IsRealPlayer) then {
 	if ((missionNamespace getVariable ["WFBE_C_PLAYER_SPAWN_ON_ROADS", 0]) > 0) then {
 		private ["_plRds","_plNode","_plPos"];
 		_plPos = _position;
@@ -183,7 +183,7 @@ while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--
 	//--- aborts the script for real before anything spawns, and (b) the wfbe_queue release is an ARRAY
 	//--- subtraction (removing the same token twice is a no-op), so the double pass cannot double-count.
 	//--- Client_BuildUnit.sqf's NUMERIC counters were not safe this way - see its cmdcon44-g comments.
-	if (!(alive _building)||(isNull _building)||{isNull _team}||{isPlayer (leader _team)}) exitWith {
+	if (!(alive _building)||(isNull _building)||{isNull _team}||{[leader _team, false] Call WFBE_CO_FNC_IsRealPlayer}) exitWith {
 		if (!isNull _team) then {
 			_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 		};
@@ -195,7 +195,7 @@ while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--
 		//--- ENGINE-VERIFIED note above - this exitWith only breaks the loop and always falls through).
 		if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted mid-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 		if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
-		if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
+		if ([leader _team, false] Call WFBE_CO_FNC_IsRealPlayer) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 	};
 
 	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) in [_queu2 select 0]}) then {  //--- queue-fix: guard empty queu/queu2 before head-compare + type-safe head-compare (mirror Client_BuildUnit.sqf:302) - a mixed player/AI head token would throw Generic error on raw ==
@@ -227,7 +227,7 @@ _building setVariable ["queu",_queu,true];
 //--- double-value; for a vehicle that then hits the objNull guard below, a second full refund on top of
 //--- that). Once ANY earlier abort has paid a refund, this exitWith is now TERMINAL regardless of whether
 //--- the original abort condition still holds - the build must never happen after a refund fired.
-if (_refunded || {!(alive _building)} || {isNull _team} || {isPlayer (leader _team)}) exitWith {
+if (_refunded || {!(alive _building)} || {isNull _team} || {[leader _team, false] Call WFBE_CO_FNC_IsRealPlayer}) exitWith {
 	if (!isNull _team) then {
 		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 	};
@@ -235,11 +235,11 @@ if (_refunded || {!(alive _building)} || {isNull _team} || {isPlayer (leader _te
 	//--- earlier mid-loop abort fired) - the flag guard is a no-op if the block above already refunded.
 	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted post-wait - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
 	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
-	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
+	if ([leader _team, false] Call WFBE_CO_FNC_IsRealPlayer) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
 	//--- fable/aicom-refund-then-build-fix: reached solely because _refunded was already true (the abort
 	//--- condition itself reverted during the sleep) - neither log line above fired, so make the RPT read
 	//--- clearly instead of silently looking like a no-op exit.
-	if (_refunded && {alive _building} && {!(isPlayer (leader _team))}) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] build skipped - treasury already refunded earlier this cycle (abort condition reverted during wait; no double-value).", _unitType]] Call WFBE_CO_FNC_LogContent};
+	if (_refunded && {alive _building} && {!([leader _team, false] Call WFBE_CO_FNC_IsRealPlayer)}) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] build skipped - treasury already refunded earlier this cycle (abort condition reverted during wait; no double-value).", _unitType]] Call WFBE_CO_FNC_LogContent};
 };
 
 if (_unitType isKindOf "Man") then {
@@ -259,7 +259,7 @@ if (_unitType isKindOf "Man") then {
 	//--- rally. Player factories never set the var, so the count-guard makes this AI-only.
 	private "_aiRally";
 	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
-	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull _soldier}) then {
+	if (!isNil "_aiRally" && {count _aiRally >= 2} && {![leader _team, false] Call WFBE_CO_FNC_IsRealPlayer} && {!isNull _soldier}) then {
 		_soldier commandMove _aiRally;
 	};
 } else {
@@ -462,7 +462,7 @@ _vehicle allowCrewInImmobile true;
 	//--- vehicle takes the lane out instead of idling in base. AI-only via the count-guard.
 	private "_aiRally";
 	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
-	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull (driver _vehicle)}) then {
+	if (!isNil "_aiRally" && {count _aiRally >= 2} && {![leader _team, false] Call WFBE_CO_FNC_IsRealPlayer} && {!isNull (driver _vehicle)}) then {
 		(driver _vehicle) commandMove _aiRally;
 	};
 	//--- fable/aicom-carrier-velocity (2026-07-07): carrier fixed-wing air-start chip - the AI-path equivalent of

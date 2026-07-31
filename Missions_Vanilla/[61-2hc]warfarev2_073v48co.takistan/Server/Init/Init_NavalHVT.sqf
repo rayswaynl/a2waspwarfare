@@ -405,7 +405,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_PLATFORMS", [_scudLogic]];
 //--- to _pad preserves safe behaviour if the ref is absent.
 private ["_scudRef"];
 _scudRef = _loc getVariable ["wfbe_scud_model_ref", _pad];
-if (isPlayer _x && {alive _x} && {(side _x) == _ownerSide} && {(_x distance _scudRef) < 50}) then {
+if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {(side _x) == _ownerSide} && {(_x distance _scudRef) < 50}) then {
 				_team = group _x;
 				_isLeader = (_x == leader _team);
 				if (_isLeader) then {
@@ -806,14 +806,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 			//--- headless-client CIV bodies - isPlayer is TRUE for an HC on A2 OA - and ParkSeaHC
 			//--- (Init_HC.sqf) parks those bodies AT SEA, so an HC drifting inside 1800m of a carrier
 			//--- would arm and hold this CAP forever with no human around. Filter side - HCs seat
-			//--- CIVILIAN, and no human playable slot is CIV - plus the known HC name list, the
-			//--- StatsFlush.sqf P0-5 idiom, which also covers the mission-restart re-grab window where
-			//--- an HC briefly lands on a WEST slot before its reseat watcher recovers it. Dead-but-
-			//--- unrespawned players are already excluded by alive; JIP-transition bodies read
-			//--- isPlayer false. A2-OA-safe: side compare, name, string-list in, lazy and-braces.
+			//--- Preserve the pre-caster side/name/alive proximity filter exactly; add only the caster gate.
 			_anyNear = false;
 			{
-				if (isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance [_pos select 0, _pos select 1, 0]) < 1800}) then {
+				if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance [_pos select 0, _pos select 1, 0]) < 1800}) then {
 					_anyNear = true;
 				};
 			} forEach playableUnits;

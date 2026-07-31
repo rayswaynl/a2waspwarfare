@@ -14,7 +14,7 @@ while {true} do
         _hasHuman = false;
         _hcs = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
         {
-            if (isPlayer _x && {!((group _x) in _hcs)}) exitWith {_hasHuman = true};
+            if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {!((group _x) in _hcs)}) exitWith {_hasHuman = true};
         } forEach (call BIS_fnc_listPlayers);
     };
 

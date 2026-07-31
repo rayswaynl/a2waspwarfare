@@ -3545,6 +3545,9 @@ if (isNil "WFBE_C_SPECTATOR_ZOOM_RATE") then {WFBE_C_SPECTATOR_ZOOM_RATE = 8}; /
 if (isNil "WFBE_C_SPECTATOR_MOUSE_SMOOTH") then {WFBE_C_SPECTATOR_MOUSE_SMOOTH = 0.55}; //--- per-event mouse-delta EMA blend (1=instant/off, lower=smoother).
 if (isNil "WFBE_C_SPECTATOR_SENS_REF_FOV") then {WFBE_C_SPECTATOR_SENS_REF_FOV = 0.8}; //--- FOV at which SENS applies 1:1; sensitivity scales linearly with zoom (scoped-aim feel).
 if (isNil "WFBE_C_SPECTATOR_SENS_MIN_FACTOR") then {WFBE_C_SPECTATOR_SENS_MIN_FACTOR = 0.05}; //--- never let zoom-scaled sensitivity drop below this fraction of SENS.
+//--- Dedicated CIV caster slot: 0 leaves the static lobby slot as a plain CIV slot and keeps this client branch inert.
+//--- 2026-07-31: owner-armed after the completed caster-slot review pass.
+if (isNil "WFBE_C_SPECTATOR_CASTER_SLOT") then {WFBE_C_SPECTATOR_CASTER_SLOT = 1};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

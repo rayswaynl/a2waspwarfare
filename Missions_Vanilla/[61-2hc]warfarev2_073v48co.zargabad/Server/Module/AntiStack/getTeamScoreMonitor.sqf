@@ -10,7 +10,7 @@ _miniSleep = 0.10;
 {
 	_sideMatches = (_side == side _x);
 	
-	if (isPlayer _x && _sideMatches) then {
+	if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && _sideMatches) then {
 		_playerScore = score _x;
 		// ["INFORMATION", Format["GetTeamScore.sqf: Calling database: RETRIEVE: player UID: %1, _playerScore: %2", getPlayerUID _x, _playerScore]] Call WFBE_CO_FNC_LogContent;
 		_playerStats = ["RETRIEVE", getPlayerUID _x] call WFBE_SE_FNC_CallDatabaseRetrieve;
