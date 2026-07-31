@@ -109,6 +109,14 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 						if (isNull (_bootAirfieldLogic getVariable ["wfbe_hangar", objNull])) then {
 							[_location, _bootAirfieldLogic, _side] Call WFBE_SE_FNC_ProvisionAirfieldHangar;
 						} else {
+							//--- ADOPT-BRANCH OWNERSHIP STAMP (r65 aicom-airfield-rebasing): an airfield that got its hangar
+							//--- straight from Init_Airports (a non-skip-flagged field, e.g. ZG's single airfield) is only
+							//--- ADOPTED here - it never runs Server_ProvisionAirfieldHangar's wfbe_airfield_side stamp until it
+							//--- is captured at least once. Client_GetClosestAirport's resistance ownership gate reads
+							//--- wfbe_airfield_side (default civilian), so a GUER side that HOLDS such a field FROM BOOT saw
+							//--- "No airport in range" and could not buy air there. Stamp the current owner now, mirroring the
+							//--- two sibling provisioning paths (Server_ProvisionAirfieldHangar + the carrier/HVT re-side blocks).
+							_bootAirfieldLogic setVariable ["wfbe_airfield_side", _side, true];
 							_location setVariable ["wfbe_airfield_hangar_obj", (_bootAirfieldLogic getVariable ["wfbe_hangar", objNull]), true];
 						};
 					};
