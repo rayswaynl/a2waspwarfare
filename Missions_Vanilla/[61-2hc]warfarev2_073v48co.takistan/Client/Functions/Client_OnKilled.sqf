@@ -127,6 +127,13 @@ if (dialog) then {
 	closeDialog 0;
 };
 
+//--- r78 UAV/FPV terminal handover: force control teardown on death so the new life does not
+//--- inherit remoteControl / playerUAV binding (interfaces wait on !alive player but left the
+//--- binding set). Kick the terminate flags early so cam/PP/EH cleanup races the death camera.
+bis_uav_terminate = true;
+WFBE_FPV_Terminate = true;
+if (!isNil "playerUAV") then {playerUAV = objNull};
+
 WFBE_DeathLocation = getPos _body;
 
 
