@@ -12,6 +12,32 @@ _starttime = time;
 //--- client marker-send. The human-called path (leader is a player) is byte-for-byte unchanged: _isAI is false there.
 _isAI = !(isPlayer (leader _playerTeam));
 
+//--- failure-signalling r38: refund human call-in fee + notify when setup aborts before a live drop.
+//--- Mirrors GuerHeliDrop receipt refund. Cost matches GUI Paratroopers fee / AuthorizeSupportCallin (8500).
+//--- AI commander drops (_isAI) are not charged this fee - skip refund.
+_refundParaSetup = {
+	Private ["_team","_cost","_leader","_reason","_msg","_cdKey"];
+	_team = _this select 0;
+	_cost = _this select 1;
+	_reason = _this select 2;
+	if (isNull _team) exitWith {};
+	if (_cost <= 0) exitWith {};
+	[_team, _cost] Call WFBE_CO_FNC_ChangeTeamFunds;
+	//--- Clear server-auth cooldown stamp so a setup fail does not lock the team out for the full interval.
+	_cdKey = "wfbe_support_callin_next_Paratroops";
+	_team setVariable [_cdKey, 0];
+	_leader = leader _team;
+	if (!isNull _leader && {isPlayer _leader}) then {
+		_msg = Format ["Paratroop call aborted (%1); $%2 refunded.", _reason, _cost];
+		if (WF_A2_Vanilla) then {
+			[getPlayerUID _leader, "HandleSpecial", ["support-callin-result", false, _msg]] Call WFBE_CO_FNC_SendToClients;
+		} else {
+			[_leader, "HandleSpecial", ["support-callin-result", false, _msg]] Call WFBE_CO_FNC_SendToClient;
+		};
+	};
+	["WARNING", Format["Support_Paratroopers.sqf: setup abort refund $%1 to team %2 (%3).", _cost, _team, _reason]] Call WFBE_CO_FNC_LogContent;
+};
+
 ["INFORMATION", Format["Support_Paratroopers.sqf : [%1] Team [%2] has requested paratroopers (ai:%3).", _side, _playerTeam, _isAI]] Call WFBE_CO_FNC_LogContent;
 
 //--- Determine a random spawn location.
@@ -44,11 +70,17 @@ if (count _this > 4) then {
 _units = missionNamespace getVariable Format ["WFBE_%1PARACHUTELEVEL%2", str _side, _currentLevel];
 _vehicle_model = missionNamespace getVariable Format ["WFBE_%1PARACARGO", str _side];
 
-if (isNil '_units' || isNil '_vehicle_model') exitWith {["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle or units are not defined (level %2).", _side, _currentLevel]] Call WFBE_CO_FNC_LogContent};
+if (isNil '_units' || isNil '_vehicle_model') exitWith {
+	["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle or units are not defined (level %2).", _side, _currentLevel]] Call WFBE_CO_FNC_LogContent;
+	if (!_isAI) then {[_playerTeam, 8500, Format ["undefined roster/model L%1", _currentLevel]] Call _refundParaSetup};
+};
 
 //--- Determine how many vehicles do we need.
 _vehicle_cargo = getNumber(configFile >> 'CfgVehicles' >> _vehicle_model >> 'transportSoldier');
-if (_vehicle_cargo == 0) exitWith {["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle [%2] has no cargo capacity.", _side, _vehicle_model]] Call WFBE_CO_FNC_LogContent};
+if (_vehicle_cargo == 0) exitWith {
+	["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle [%2] has no cargo capacity.", _side, _vehicle_model]] Call WFBE_CO_FNC_LogContent;
+	if (!_isAI) then {[_playerTeam, 8500, Format ["zero cargo %1", _vehicle_model]] Call _refundParaSetup};
+};
 _vehicle_count = ceil((count _units) / _vehicle_cargo);
 
 //--- Create the vehicles.
@@ -82,6 +114,14 @@ for '_i' from 1 to _vehicle_count do {
 
 //--- Global Init.
 processInitCommands;
+
+//--- failure-signalling r38: empty transport list after create loop (engine create failed for all slots).
+_vehicles = _vehicles - [objNull];
+if ((count _vehicles) == 0) exitWith {
+	["ERROR", Format["Support_Paratroopers.sqf : [%1] no transport survived create; aborting.", _side]] Call WFBE_CO_FNC_LogContent;
+	if (!isNull _grp) then {deleteGroup _grp};
+	if (!_isAI) then {[_playerTeam, 8500, "transport create failed"] Call _refundParaSetup};
+};
 
 //--- Create the units.
 _built_inf = 0;

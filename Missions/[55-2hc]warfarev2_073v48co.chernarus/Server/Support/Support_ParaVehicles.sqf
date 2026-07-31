@@ -26,13 +26,55 @@ if !(isNil '_bd') then {
 _timeStart = time;
 //--- AICOM PARAVEHI: AI-owned groups have no player leader, so keep the 500s transit cap but do not abort immediately.
 _isAI = !(isPlayer (leader _playerTeam));
+//--- failure-signalling r38: refund human ParaVehi fee (3500) on setup abort.
+_refundParaVehiSetup = {
+	Private ["_team","_cost","_leader","_reason","_msg","_cdKey"];
+	_team = _this select 0;
+	_cost = _this select 1;
+	_reason = _this select 2;
+	if (isNull _team || {_cost <= 0}) exitWith {};
+	[_team, _cost] Call WFBE_CO_FNC_ChangeTeamFunds;
+	_team setVariable ["wfbe_support_callin_next_ParaVehi", 0];
+	_leader = leader _team;
+	if (!isNull _leader && {isPlayer _leader}) then {
+		_msg = Format ["Vehicle paradrop aborted (%1); $%2 refunded.", _reason, _cost];
+		if (WF_A2_Vanilla) then {
+			[getPlayerUID _leader, "HandleSpecial", ["support-callin-result", false, _msg]] Call WFBE_CO_FNC_SendToClients;
+		} else {
+			[_leader, "HandleSpecial", ["support-callin-result", false, _msg]] Call WFBE_CO_FNC_SendToClient;
+		};
+	};
+	["WARNING", Format ["Support_ParaVehicles.sqf: setup abort refund $%1 (%2).", _cost, _reason]] Call WFBE_CO_FNC_LogContent;
+};
 _ran = round(random((count _ranPos)-1));
 _grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
+if (isNull _grp) exitWith {
+	["WARNING", Format ["Support_ParaVehicles.sqf: [%1] paradrop group create failed.", str _side]] Call WFBE_CO_FNC_LogContent;
+	if (!_isAI) then {[_playerTeam, 3500, "group create failed"] Call _refundParaVehiSetup};
+};
 _vehicle = createVehicle [missionNamespace getVariable Format ["WFBE_%1PARAVEHI",str _side],(_ranPos select _ran), [], (_ranDir select _ran), "FLY"];
+if (isNull _vehicle) exitWith {
+	["WARNING", Format ["Support_ParaVehicles.sqf: [%1] transport create failed.", str _side]] Call WFBE_CO_FNC_LogContent;
+	if (!isNull _grp) then {deleteGroup _grp};
+	if (!_isAI) then {[_playerTeam, 3500, "transport create failed"] Call _refundParaVehiSetup};
+};
 [str _side,'VehiclesCreated',1] Call UpdateStatistics;
 [str _side,'UnitsCreated',1] Call UpdateStatistics;
 _pilot = [missionNamespace getVariable Format ["WFBE_%1PILOT",str _side],_grp,[100,12000,0],_sideID] Call WFBE_CO_FNC_CreateUnit;
+if (isNull _pilot) exitWith {
+	["WARNING", Format ["Support_ParaVehicles.sqf: [%1] pilot create failed; transport deleted.", str _side]] Call WFBE_CO_FNC_LogContent;
+	deleteVehicle _vehicle;
+	if (!isNull _grp) then {deleteGroup _grp};
+	if (!_isAI) then {[_playerTeam, 3500, "pilot create failed"] Call _refundParaVehiSetup};
+};
 _pilot moveInDriver _vehicle;
+if (driver _vehicle != _pilot) exitWith {
+	["WARNING", Format ["Support_ParaVehicles.sqf: [%1] pilot seat failed; transport torn down.", str _side]] Call WFBE_CO_FNC_LogContent;
+	deleteVehicle _pilot;
+	deleteVehicle _vehicle;
+	if (!isNull _grp) then {deleteGroup _grp};
+	if (!_isAI) then {[_playerTeam, 3500, "pilot seat failed"] Call _refundParaVehiSetup};
+};
 _pilot doMove (_args select 2);
 _grp setBehaviour 'CARELESS';
 _grp setCombatMode 'STEALTH';
@@ -45,6 +87,12 @@ processInitCommands;
 _vehicle flyInHeight (300 + random(75));
 _cargo = (crew _vehicle) - [driver _vehicle, gunner _vehicle, commander _vehicle];
 _cargoVehicle = [missionNamespace getVariable Format ["WFBE_%1PARAVEHICARGO", _side], [0,0,50] ,_sideID, 0, false] Call WFBE_CO_FNC_CreateVehicle;
+if (isNull _cargoVehicle) exitWith {
+	["WARNING", Format ["Support_ParaVehicles.sqf: [%1] cargo vehicle create failed; transport torn down.", str _side]] Call WFBE_CO_FNC_LogContent;
+	{if (!isNull _x) then {deleteVehicle _x}} forEach [_pilot, _vehicle];
+	if (!isNull _grp) then {deleteGroup _grp};
+	if (!_isAI) then {[_playerTeam, 3500, "cargo create failed"] Call _refundParaVehiSetup};
+};
 _cargoVehicle attachTo [_vehicle,[0,0,-3]];
 
 emptyQueu = emptyQueu + [_cargoVehicle];
