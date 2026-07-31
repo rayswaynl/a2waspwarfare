@@ -15,6 +15,10 @@ _side = _this select 1;
 _groups = +(_this select 2);
 _positions = +(_this select 3);
 _teams = +(_this select 4);
+//--- r40 handoff: null town (deactivated/deleted mid-call) must not getVariable/setVariable.
+if (isNil "_town" || {isNull _town}) exitWith {
+	["WARNING", "Server_DelegateAITownHeadless.sqf: null town — delegation aborted."] Call WFBE_CO_FNC_LogContent;
+};
 //--- fix-1342-1343: snapshot the town's current lifecycle epoch at send time so a late-arriving
 //--- ack can be told apart from a fresh one after the town changes owner.
 _epoch = _town getVariable ["wfbe_town_ai_epoch", 0];
@@ -67,8 +71,13 @@ for '_i' from 0 to count(_groups) -1 do {
 		//--- Cheap local round-robin across the live HCs, anchored at the lightest one.
 		_hcUnit = _live select ((_seedIdx + _rr) mod _hcCount);
 		_rr = _rr + 1;
-		[_hcUnit, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i], _epoch]] Call WFBE_CO_FNC_SendToClient;
-		_delegated = _delegated + 1;
+		//--- r40 handoff: HC body can disconnect between list build and send.
+		if (isNull _hcUnit) then {
+			["WARNING", Format["Server_DelegateAITownHeadless.sqf: HC unit null for town [%1] group %2 - skip.", _town getVariable "name", _i]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			[_hcUnit, "HandleSpecial", ['delegate-townai', _town, _side, [_groups select _i], [_positions select _i], [_teams select _i], _epoch]] Call WFBE_CO_FNC_SendToClient;
+			_delegated = _delegated + 1;
+		};
 	};
 };
 

@@ -6,7 +6,7 @@
 		- Action ("spawn"/"remove").
 */
 
-Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
+Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_op","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -42,7 +42,11 @@ switch (_action) do {
 			};
 		};
 		//--- Fallback: if group creation failed (cap reached), use the global DefenseTeam.
-		if (isNull _team) then {_team = missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side]};
+		//--- r40 handoff: DefenseTeam may be unset (nil) when group cap blocked createGroup — never leave _team as nil for RevealArea/setBehaviour.
+if (isNull _team) then {
+	_team = missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side];
+	if (isNil "_team") then {_team = grpNull};
+};
 
 		//--- Man the defenses.
 		{
@@ -183,8 +187,8 @@ switch (_action) do {
 			if !(isNil {_x getVariable "wfbe_defense_operator"}) then { //--- Delete the original gunner if he's still around.
 				//--- r62: operator delete locality parity with gunner remove-case (HC-local deleteVehicle no-ops).
 				private "_opUnit"; _opUnit = _x getVariable "wfbe_defense_operator";
-				if (alive _opUnit) then {
-					if (local _opUnit) then {deleteVehicle _opUnit} else {[_opUnit, "HandleSpecial", ["cleanup-town-defense-gunner", _opUnit, "operator-remove"]] Call WFBE_CO_FNC_SendToClient};
+				if (!isNull _opUnit && {alive _opUnit}) then {
+					if (local _opUnit) then {deleteVehicle _opUnit} else {[_opUnit, "HandleSpecial", ["cleanup-town-defense-gunner", _opUnit, "remove-case"]] Call WFBE_CO_FNC_SendToClient};
 				};
 				_x setVariable ["wfbe_defense_operator", nil];
 			};

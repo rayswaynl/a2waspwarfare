@@ -6,6 +6,7 @@ Private ["_vehicle"];
 
 _vehicle = _this;
 _shells = [];
+if (isNull _vehicle) exitWith {};
 
 //Read values from config
 _smoke_count = getNumber (configFile >> "CfgVehicles" >> typeOf _vehicle >> "smokeLauncherGrenadeCount");
@@ -19,6 +20,7 @@ if (_smoke_turret == 1 && (count weapons _vehicle) > 0) then {
 	_dir = (((_dir select 0) atan2 (_dir select 1))+360)%360;
 };
 
+if (_smoke_count < 1) exitWith {};
 _delta = _smoke_angle / _smoke_count; //degrees between grenades.
 _arc = _delta * (_smoke_count-1);	//total arc to cover, in degrees
 
@@ -41,9 +43,13 @@ for "_i" from 0 to (_smoke_count - 1) do {
 
 	//create / launch the grenade
 	_smokeg = "SmokeShellVehicle" createVehicle (_vehicle modelToWorld [_pH * sin _Hdir, _pH * cos _Hdir, _pV]);
-	_smokeg setVelocity _Gvel;
-	_smokeg setVectorDir _Gvel;
-	_shells = _shells + [_smokeg];
+	if (isNull _smokeg) then {
+		["WARNING", "IRS_DeploySmoke.sqf: SmokeShellVehicle create failed."] Call WFBE_CO_FNC_LogContent;
+	} else {
+		_smokeg setVelocity _Gvel;
+		_smokeg setVectorDir _Gvel;
+		_shells = _shells + [_smokeg];
+	};
 };
 
 [nil, "HandleSpecial", ["irsmoke-createfx", _shells]] Call WFBE_CO_FNC_SendToClients;

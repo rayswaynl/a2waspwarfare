@@ -165,6 +165,10 @@ if (_victimType == "CommanderArtillery") then {
 		_logik setVariable ["wfbe_structures_live", _live, true];
 	};
 	_logik setVariable ["wfbe_structures", (_logik getVariable "wfbe_structures") - [_victim, objNull], true];
+	//--- teardown (structure-loss cascade): delete the sold structure's auto-wall ring too, mirroring
+	//--- Server_BuildingKilled + Server_OnHQKilled. The sell path freed the ledger slot but left the
+	//--- concrete walls orphaned on the map (same engine-object leak as the destruction path).
+	{if (!isNull _x) then {deleteVehicle _x}} forEach (_victim getVariable ["WFBE_Walls", []]);
 	deleteVehicle _victim;
 	["INFORMATION", Format ["AI_Commander_BaseSell.sqf: [%1] SOLD redundant %2 (cost %3, refunded %4 supply).", _sideText, _victimType, _victimCost, _refund]] Call WFBE_CO_FNC_AICOMLog;
 	diag_log ("AICOM2|v1|SELL|" + _sideText + "|" + str (round (time / 60)) + "|event=BASE_SELL|type=" + _victimType + "|cost=" + str _victimCost + "|refund=" + str _refund);

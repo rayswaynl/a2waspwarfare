@@ -542,7 +542,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					// WFBE_RequestStructure = ['SRVFNCREQUESTSTRUCTURE',[sideJoined,_itemclass,[0,0,0],0]];
 					// publicVariable 'WFBE_RequestStructure';
 					// if (isHostedServer) then {['SRVFNCREQUESTSTRUCTURE',[sideJoined,_itemclass,[0,0,0],0]] Spawn HandleSPVF};
-					["RequestStructure", [sideJoined,_itemclass,[0,0,0],0]] Call WFBE_CO_FNC_SendToServer;
+					["RequestStructure", [sideJoined,_itemclass,[0,0,0],0,player]] Call WFBE_CO_FNC_SendToServer; //--- r30: pass placer so server HQ auth + commander re-check can bind the request
 
 					[missionNamespace getVariable "WFBE_C_BASE_COIN_AREA_HQ_UNDEPLOYED",false,MCoin] Call Compile preprocessFile "Client\Init\Init_Coin.sqf";
 

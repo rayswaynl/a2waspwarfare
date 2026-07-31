@@ -138,7 +138,7 @@ for '_i' from 0 to count(_groups)-1 do {
 		};
 		if ((_gdirDeliveryResult select 0) == 0) then {
 			{if (!isNull _x) then {deleteVehicle _x}} forEach (_units + _crews + _vehicles);
-			if (!isNull _team) then {deleteGroup _team};
+			if (!isNull _team && {(count (units _team)) == 0}) then {deleteGroup _team}; //--- r40 handoff: empty-only
 			_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_HULL", objNull];
 			_town setVariable ["AICOMV2_GDIR_VEHICLE_ATTEMPT_TEAM", grpNull];
 			_units = [];

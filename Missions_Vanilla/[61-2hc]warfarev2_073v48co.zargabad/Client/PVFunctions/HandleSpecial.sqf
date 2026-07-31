@@ -741,7 +741,14 @@ switch (_request) do {
 	//--- Payload is [ messageString ]. Deliberately dumb - it renders, it never acts.
 	case "cmdv2-receipt": {
 		Private ["_msg"];
+		//--- FANOUT-R29: every live sender packs ["cmdv2-receipt", [messageString]] (nested array).
+		//--- After request-strip, _args select 0 is therefore ARRAY not STRING, so the old typeName
+		//--- STRING guard dropped every commander receipt (town nudge / doctrine / support-heli / recovery).
+		//--- Accept both shapes: bare STRING (legacy comment shape) and single-element [STRING].
 		_msg = _args select 0;
+		if (typeName _msg == "ARRAY") then {
+			if ((count _msg) > 0) then {_msg = _msg select 0} else {_msg = ""};
+		};
 		if (typeName _msg == "STRING" && {_msg != ""}) then {
 			hintSilent parseText ("<t color='#85B5FA'>" + _msg + "</t>");
 		};

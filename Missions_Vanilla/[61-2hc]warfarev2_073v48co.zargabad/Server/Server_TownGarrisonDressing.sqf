@@ -204,7 +204,12 @@ while {!WFBE_GameOver} do {
                                         [(_gunPos select 0) + 10 * (sin (_bear + 90)),
                                          (_gunPos select 1) + 10 * (cos (_bear + 90)),
                                          0];
-                                    _light setDir (_bear + 180);
+                                    //--- r47 fail-clean: skip setDir when searchlight createVehicle fails.
+                                    if (isNull _light) then {
+                                    	["WARNING", Format ["Server_TownGarrisonDressing.sqf: searchlight createVehicle null class=%1 town=%2.", _lightClass, (_town getVariable ["name","?"])]] Call WFBE_CO_FNC_LogContent;
+                                    } else {
+                                    	_light setDir (_bear + 180);
+                                    };
                                 };
 
                                 _registry     = _registry + [[_town, _gun, _light, _grp, _crew, time, time]];
