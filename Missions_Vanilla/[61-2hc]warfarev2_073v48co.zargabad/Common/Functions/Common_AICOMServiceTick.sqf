@@ -165,7 +165,8 @@ if (_state == "enroute") then {
 		if ((_twn getVariable ["sideID", -1]) == _sideID) then {
 			_d = _ldr distance _twn;
 			if (_d < _bestD && {_d <= _reach}) then {
-				if (({alive _x && {side _x == _enemySide}} count ((getPos _twn) nearEntities [["Man"], _safeDist])) == 0) then {
+				//--- SAFE town = no enemy Man OR crewed hull within SAFE_DIST (Man-only missed armor/air on the depot).
+				if (({alive _x && {side _x == _enemySide}} count ((getPos _twn) nearEntities [["Man","LandVehicle","Air"], _safeDist])) == 0) then {
 					_best = _twn; _bestD = _d;
 				};
 			};
@@ -185,7 +186,8 @@ if (_state == "enroute") then {
 			if (((_twnA getVariable ["sideID", -1]) == _sideID) && {(_twnA getVariable ["wfbe_is_airfield", false]) || {!(isNull (_twnA getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) then {
 				_dA = _ldr distance _twnA;
 				if (_dA < _afBestD && {_dA <= _reach}) then {
-					if (({alive _x && {side _x == _enemySide}} count ((getPos _twnA) nearEntities [["Man"], _safeDist])) == 0) then {
+					//--- same type filter as en-route abort / start trigger (Man alone cannot clear a hangar of enemy APCs).
+					if (({alive _x && {side _x == _enemySide}} count ((getPos _twnA) nearEntities [["Man","LandVehicle","Air"], _safeDist])) == 0) then {
 						_afBest = _twnA; _afBestD = _dA;
 					};
 				};

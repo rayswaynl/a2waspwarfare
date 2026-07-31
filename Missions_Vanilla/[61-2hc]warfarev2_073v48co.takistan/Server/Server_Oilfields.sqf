@@ -681,15 +681,18 @@ while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
 	_owner = missionNamespace getVariable ["WFBE_OILFIELD_OWNER", sideLogic];
 	_sab   = missionNamespace getVariable ["WFBE_OILFIELD_SABOTAGED", false];
 
-	//--- Presence scan: count alive WEST/EAST/GUER MEN within radius (2D), and whether an engineer/
+	//--- Presence scan: count alive WEST/EAST/GUER units within radius (2D), and whether an engineer/
 	//--- repair vehicle is present (speeds repair). One nearEntities pass over living men + vehicles.
+	//--- FIX r64 type/radius correctness:
+	//---  (a) type filter was Man+Car+Tank only → Motorcycle (and similar LandVehicle edges) never scanned;
+	//---  (b) nearEntities "Man" is DISMOUNTED-only — mounted drivers/gunners live on the hull object.
+	//---      Header design (4) says ">=1 alive unit (player OR AI)" wins the node; code previously only
+	//---      tallied dismounted Man and used vehicles solely for repair-truck detect, so a fully mounted
+	//---      column could not capture or contest. Tally crew of crewed hulls (empty hulls skipped).
 	_westNear = 0; _eastNear = 0; _guerNear = 0; _repairNear = false;
 	{
 		_u = _x;
 		if (alive _u) then {
-			//--- crewed vehicle counts by its crew's side; a "Man" counts directly. side of an empty hull
-			//--- is unreliable in A2-OA, so we only tally MEN (drivers/gunners/infantry), which is exactly
-			//--- "units present". This keeps the capture rule to real personnel, per the ~zero-AI design.
 			if (_u isKindOf "Man") then {
 				switch (side _u) do {
 					case west:       { _westNear = _westNear + 1 };
@@ -699,11 +702,22 @@ while { !(missionNamespace getVariable ["WFBE_GameOver", false]) } do {
 				_ut = typeOf _u;
 				if (_ut in _repairTypes) then {_repairNear = true};
 			} else {
-				//--- vehicle: only used to detect a repair TRUCK near the field (never for capture tally).
-				if (count (crew _u) > 0) then { if ((typeOf _u) in _repairTypes) then {_repairNear = true} };
+				//--- crewed vehicle: tally living crew by side (capture presence) + repair-truck detect.
+				if (count (crew _u) > 0) then {
+					if ((typeOf _u) in _repairTypes) then {_repairNear = true};
+					{
+						if (alive _x) then {
+							switch (side _x) do {
+								case west:       { _westNear = _westNear + 1 };
+								case east:       { _eastNear = _eastNear + 1 };
+								case resistance: { _guerNear = _guerNear + 1 };
+							};
+						};
+					} forEach (crew _u);
+				};
 			};
 		};
-	} forEach (_nodePos nearEntities [["Man","Car","Tank"], _radius]);
+	} forEach (_nodePos nearEntities [["Man","Car","Motorcycle","Tank","Air"], _radius]);
 
 	//--- Determine controlling side this scan: exactly one MAIN side present -> that side controls.
 	//--- Contested (both) or empty (neither) -> no controller this scan. (GUER can sabotage but not own.)
