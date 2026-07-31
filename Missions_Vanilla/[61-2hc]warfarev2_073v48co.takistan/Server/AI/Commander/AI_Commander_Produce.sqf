@@ -294,7 +294,7 @@ if (_airMaxTotalP > 0) then {
 	//--- bool read is routed through WFBE_CO_FNC_GroupGetBool (A2-OA: the 2-arg [name,default] form is
 	//--- UNRELIABLE for UNSET vars on a GROUP), and the intent is relabelled: this branch is the
 	//--- server-local-team path, NOT the HC path.
-	if (![leader _team, false] Call WFBE_CO_FNC_IsRealPlayer && {!([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- B66
+	if (!([leader _team, false] Call WFBE_CO_FNC_IsRealPlayer) && {!([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- B66
 		if (_type >= 0) then {
 			if (_type < count _templates) then {
 				_q = _team getVariable "wfbe_queue";

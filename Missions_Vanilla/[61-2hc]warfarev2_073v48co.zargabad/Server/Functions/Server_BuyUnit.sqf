@@ -65,7 +65,7 @@ _position = [getPos _building,_distance,getDir _building + _direction] Call GetP
 //--- (![leader _team] Call WFBE_CO_FNC_IsRealPlayer) sweep for a flat, dry, object-clear apron near the
 //--- factory and use it; on failure fall back to the original fixed offset. The human
 //--- player path is byte-identical (this whole block is skipped when a player leads).
-if (![leader _team, false] Call WFBE_CO_FNC_IsRealPlayer) then {
+if (!([leader _team, false] Call WFBE_CO_FNC_IsRealPlayer)) then {
 	private ["_apFac","_apBaseBrg","_apOk","_apTry","_apBrg","_apDist","_apCand","_apFlat"];
 	_apFac = getPos _building;
 	_apBaseBrg = getDir _building + _direction;
@@ -259,7 +259,7 @@ if (_unitType isKindOf "Man") then {
 	//--- rally. Player factories never set the var, so the count-guard makes this AI-only.
 	private "_aiRally";
 	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
-	if (!isNil "_aiRally" && {count _aiRally >= 2} && {![leader _team, false] Call WFBE_CO_FNC_IsRealPlayer} && {!isNull _soldier}) then {
+	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!([leader _team, false] Call WFBE_CO_FNC_IsRealPlayer)} && {!isNull _soldier}) then {
 		_soldier commandMove _aiRally;
 	};
 } else {
@@ -462,7 +462,7 @@ _vehicle allowCrewInImmobile true;
 	//--- vehicle takes the lane out instead of idling in base. AI-only via the count-guard.
 	private "_aiRally";
 	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
-	if (!isNil "_aiRally" && {count _aiRally >= 2} && {![leader _team, false] Call WFBE_CO_FNC_IsRealPlayer} && {!isNull (driver _vehicle)}) then {
+	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!([leader _team, false] Call WFBE_CO_FNC_IsRealPlayer)} && {!isNull (driver _vehicle)}) then {
 		(driver _vehicle) commandMove _aiRally;
 	};
 	//--- fable/aicom-carrier-velocity (2026-07-07): carrier fixed-wing air-start chip - the AI-path equivalent of

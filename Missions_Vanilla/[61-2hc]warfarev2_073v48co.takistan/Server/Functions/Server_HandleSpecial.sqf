@@ -1083,7 +1083,7 @@ if (isNull _base) exitWith {
 					//--- SPECIFIC-TEAM disband: human commander required, but no side cooldown (single, deliberate stand-down).
 					if (_dHuman && {_dAuth} && {_dIdx >= 0} && {_dIdx < (count _dTeams)}) then {
 						private "_dTeam"; _dTeam = _dTeams select _dIdx;
-						if (!isNull _dTeam && {![leader _dTeam, false] Call WFBE_CO_FNC_IsRealPlayer}) then {
+						if (!isNull _dTeam && {!([leader _dTeam, false] Call WFBE_CO_FNC_IsRealPlayer)}) then {
 							_dTeam setVariable ["wfbe_aicom_disband", true, true];
 							_dTeam setVariable ["wfbe_aicom_disband_cmd", true, true]; //--- Build84: explicit human console order -> bypass the player-proximity veto in the HC executor
 							[_dTeam] Call _dDispatch;
@@ -1102,7 +1102,7 @@ if (isNull _base) exitWith {
 					if (_dHuman && {_dAuth} && {(time - _dLast) >= _dCool}) then {
 						_dLogik setVariable ["wfbe_aicom_last_disband", time, true];
 						_dN = 0;
-						{ if (!isNull _x && {![leader _x, false] Call WFBE_CO_FNC_IsRealPlayer}) then {_x setVariable ["wfbe_aicom_disband", true, true]; _x setVariable ["wfbe_aicom_disband_cmd", true, true]; [_x] Call _dDispatch; _dN = _dN + 1} } forEach _dTeams;
+						{ if (!isNull _x && {!([leader _x, false] Call WFBE_CO_FNC_IsRealPlayer)}) then {_x setVariable ["wfbe_aicom_disband", true, true]; _x setVariable ["wfbe_aicom_disband_cmd", true, true]; [_x] Call _dDispatch; _dN = _dN + 1} } forEach _dTeams;
 						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|" + str _dSide + "|" + str (round (time / 60)) + "|flagged=" + str _dN + "|teams=" + str (count _dTeams));
 					} else {
 						diag_log ("AICOM2|v1|ORDER|aicom-team-disband|REJECT|" + str _dSide + "|human=" + str _dHuman + "|auth=" + str _dAuth + "|cdLeft=" + str (_dCool - (time - _dLast)));
@@ -1181,7 +1181,7 @@ if (isNull _base) exitWith {
 				_ryAuth = (!isNull _ryPlayer) && {alive _ryPlayer} && {isPlayer _ryPlayer} && {!isNull _ryCmd} && {side (group _ryPlayer) == _rySide} && {group _ryPlayer == _ryCmd}; //--- caller must be IN this side commander team
 				if (_ryHuman && {_ryAuth} && {_ryIdx < (count _ryTeams)}) then {
 					_ryTeam = _ryTeams select _ryIdx;
-					if (!isNull _ryTeam && {({alive _x} count units _ryTeam) > 0} && {![leader _ryTeam, false] Call WFBE_CO_FNC_IsRealPlayer}) then {
+					if (!isNull _ryTeam && {({alive _x} count units _ryTeam) > 0} && {!([leader _ryTeam, false] Call WFBE_CO_FNC_IsRealPlayer)}) then {
 						//--- Nearest own rally point: own HQ, else nearest OWN-side town centre (fall back to HQ).
 						_rySID = (_rySide) Call WFBE_CO_FNC_GetSideID;
 						_ryHQ  = (_rySide) Call WFBE_CO_FNC_GetSideHQ;
@@ -1241,7 +1241,7 @@ if (isNull _base) exitWith {
 				_rfAuth = (!isNull _rfPlayer) && {alive _rfPlayer} && {isPlayer _rfPlayer} && {!isNull _rfCmd} && {side (group _rfPlayer) == _rfSide} && {group _rfPlayer == _rfCmd}; //--- caller must be IN this side commander team
 				if (_rfHuman && {_rfAuth} && {_rfIdx < (count _rfTeams)}) then {
 					_rfTeam = _rfTeams select _rfIdx;
-					if (!isNull _rfTeam && {![leader _rfTeam, false] Call WFBE_CO_FNC_IsRealPlayer}) then {
+					if (!isNull _rfTeam && {!([leader _rfTeam, false] Call WFBE_CO_FNC_IsRealPlayer)}) then {
 						_rfAlive = {alive _x} count (units _rfTeam);
 						_rfNow   = time;
 						_rfLast  = _rfTeam getVariable "wfbe_aicom_topup_stamp"; if (isNil "_rfLast") then {_rfLast = -1e9};
@@ -1316,7 +1316,7 @@ if (isNull _base) exitWith {
 				_hdAuth = (!isNull _hdPlayer) && {alive _hdPlayer} && {isPlayer _hdPlayer} && {!isNull _hdCmd} && {side (group _hdPlayer) == _hdSide} && {group _hdPlayer == _hdCmd}; //--- caller must be IN this side commander team
 				if (_hdHuman && {_hdAuth} && {_hdIdx < (count _hdTeams)}) then {
 					_hdTeam = _hdTeams select _hdIdx;
-					if (!isNull _hdTeam && {({alive _x} count units _hdTeam) > 0} && {![leader _hdTeam, false] Call WFBE_CO_FNC_IsRealPlayer}) then {
+					if (!isNull _hdTeam && {({alive _x} count units _hdTeam) > 0} && {!([leader _hdTeam, false] Call WFBE_CO_FNC_IsRealPlayer)}) then {
 						_hdSID = (_hdSide) Call WFBE_CO_FNC_GetSideID;
 						_hdTown = objNull; _hdBest = 1e12;
 						{ if ((_x getVariable ["sideID", -1]) == _hdSID) then {private "_d"; _d = (leader _hdTeam) distance _x; if (_d < _hdBest) then {_hdBest = _d; _hdTown = _x}} } forEach towns;
@@ -1368,7 +1368,7 @@ if (isNull _base) exitWith {
 						_spTeams = _spLogik getVariable ["wfbe_teams", []];
 						_spBest  = _spRange; _spTeam = objNull;
 						{
-							if (!isNull _x && {![leader _x, false] Call WFBE_CO_FNC_IsRealPlayer}) then {
+							if (!isNull _x && {!([leader _x, false] Call WFBE_CO_FNC_IsRealPlayer)}) then {
 								private "_alv"; _alv = {alive _x} count (units _x);
 								if (_alv > 0) then {
 									//--- skip teams mid-capture/strike, rallying, or on an active hold latch (leave the AI's own
@@ -1465,7 +1465,7 @@ if (isNull _base) exitWith {
 									private ["_tnTm","_alv","_d"];
 									if (!isNil "_x") then {
 										_tnTm = _x;
-										if (!isNull _tnTm && {![leader _tnTm, false] Call WFBE_CO_FNC_IsRealPlayer}) then {
+										if (!isNull _tnTm && {!([leader _tnTm, false] Call WFBE_CO_FNC_IsRealPlayer)}) then {
 											_alv = {alive _x} count (units _tnTm);
 											if (_alv > 0 && {!isNull (leader _tnTm)}) then {
 												_d = _tnPlayer distance (leader _tnTm);
@@ -1671,7 +1671,7 @@ if (isNull _base) exitWith {
 									//--- unreachable. Identical guard-first shape to the aicom-town-nudge team scan above.
 									if (!isNil "_x") then {
 										_tm = _x;
-										if (!isNull _tm && {![leader _tm, false] Call WFBE_CO_FNC_IsRealPlayer}) then {
+										if (!isNull _tm && {!([leader _tm, false] Call WFBE_CO_FNC_IsRealPlayer)}) then {
 											_alv = {alive _x} count (units _tm);
 											if (_alv > 0) then {
 												_busy = false;

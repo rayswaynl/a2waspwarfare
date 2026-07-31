@@ -61,7 +61,7 @@ if (_requestTeam != _cmdTeam) exitWith {
 if (leader _cmdTeam != _requester) exitWith {
 	["WARNING", Format ["RequestUpgrade.sqf: rejected requester [%1] is not commander leader [%2] for side %3.", _requester, leader _cmdTeam, _side]] Call WFBE_CO_FNC_LogContent;
 };
-if (![leader _cmdTeam, false] Call WFBE_CO_FNC_IsRealPlayer) exitWith {
+if (!([leader _cmdTeam, false] Call WFBE_CO_FNC_IsRealPlayer)) exitWith {
 	["WARNING", Format ["RequestUpgrade.sqf: rejected - commander team for side %1 is not player-led.", _side]] Call WFBE_CO_FNC_LogContent;
 };
 if (side (leader _cmdTeam) != _side) exitWith {
