@@ -1172,7 +1172,7 @@ sideHQ = _HQRadio;
 
 /* Wait for a valid signal (Teamswaping) with failover */
 if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DISABLE") > 0 && !WF_Debug) && time > 7) then {
-	Private ["_get","_timelaps","_totalWait"];
+	Private ["_get","_timelaps","_totalWait","_gateT0"];
 	_get = true;
 
 	sleep (random 0.1);
@@ -1181,6 +1181,17 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 
 	_timelaps = 0;
 	_totalWait = 0;
+	//--- DEADSPAWN SAFETY (2026-07-30): this gate is bounded on the MISSION CLOCK, not on the sleep
+	//--- accumulator below. `sleep 0.1` is a MINIMUM wait - under scheduler congestion (cold start with
+	//--- every client joining at once) each pass takes longer than 0.1s, so `_totalWait` under-counts
+	//--- elapsed time and the old `_totalWait > 120` cap fired well past 120 real seconds. The deadspawn
+	//--- transit watchdog at the top of this file reads `time` directly and re-enables damage at mission
+	//--- time _t0+120 regardless, and its _t0 is captured strictly EARLIER than this gate starts - so a
+	//--- drifting gate could still be holding the player among the holding-area bots after protection
+	//--- had already lapsed: the exact "AI killed <player> in the deadspawn" bug that watchdog exists to
+	//--- prevent. `_totalWait` is kept as a secondary backstop for the "mission time stalled" case - the
+	//--- same belt-and-braces shape the HC lobby lock hold below uses for its `_hcllWaited` backstop.
+	_gateT0 = time;
 	while {true} do {
 		sleep 0.1;
 		_get = missionNamespace getVariable 'WFBE_P_CANJOIN';
@@ -1188,13 +1199,22 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 
 		_timelaps = _timelaps + 0.1;
 		_totalWait = _totalWait + 0.1;
+		//--- Hold the deadspawn transit invulnerability for as long as this gate holds the player in the
+		//--- holding area - the top-of-file watchdog can expire mid-gate. Re-armed once the gate clears.
+		if (!isNull player) then {player allowDamage false};
 		//--- B74.2.2: HARD failover. This loop was while{true} with only a 30s re-request and NO total timeout,
 		//--- so if the server join-ACK never arrived (handshake stuck under heavy-AI load) Init_Client hung here
 		//--- forever -> clientInitComplete never set -> no team/vote/money/own-marker. After 120s, proceed
 		//--- (treat as can-join) so the client always finishes init rather than stalling permanently.
-		if (_totalWait > 120) exitWith {
+		if ((time - _gateT0) > 120) exitWith {
 			_get = true;
 			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] no join ACK after 120s - proceeding to avoid a permanent client stall.",sideJoined,name player]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- Secondary backstop: if mission `time` ever stalls (paused sim / stuck load) the deadline above
+		//--- can never fire, so count our own sleeps as well and bail on the same budget either way.
+		if (_totalWait > 135) exitWith {
+			_get = true;
+			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] no join ACK - released on the local %3s backstop (mission time stalled at %4).",sideJoined,name player,_totalWait,round time]] Call WFBE_CO_FNC_LogContent;
 		};
 		if (_timelaps > 30) then {
 			_timelaps = 0;
@@ -1211,11 +1231,22 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 		failMission "END1";
 	};
 } else {
-	Private ["_hasConnectedAtLaunchACK","_timelaps","_totalWait"];
+	Private ["_hasConnectedAtLaunchACK","_timelaps","_totalWait","_gateT0"];
 	_timelaps = 0;
 	_totalWait = 0;
 	WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH = player;
 	publicVariableServer "WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH";
+	//--- DEADSPAWN SAFETY (2026-07-30): this gate is bounded on the MISSION CLOCK, not on the sleep
+	//--- accumulator below. `sleep 0.1` is a MINIMUM wait - under scheduler congestion (cold start with
+	//--- every client joining at once) each pass takes longer than 0.1s, so `_totalWait` under-counts
+	//--- elapsed time and the old `_totalWait > 120` cap fired well past 120 real seconds. The deadspawn
+	//--- transit watchdog at the top of this file reads `time` directly and re-enables damage at mission
+	//--- time _t0+120 regardless, and its _t0 is captured strictly EARLIER than this gate starts - so a
+	//--- drifting gate could still be holding the player among the holding-area bots after protection
+	//--- had already lapsed: the exact "AI killed <player> in the deadspawn" bug that watchdog exists to
+	//--- prevent. `_totalWait` is kept as a secondary backstop for the "mission time stalled" case - the
+	//--- same belt-and-braces shape the HC lobby lock hold below uses for its `_hcllWaited` backstop.
+	_gateT0 = time;
 	while {true} do {
 		sleep 0.1;
 		_hasConnectedAtLaunchACK = missionNamespace getVariable 'WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK';
@@ -1223,10 +1254,18 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 
 		_timelaps = _timelaps + 0.1;
 		_totalWait = _totalWait + 0.1;
+		//--- Hold the deadspawn transit invulnerability for as long as this gate holds the player in the
+		//--- holding area - the top-of-file watchdog can expire mid-gate. Re-armed once the gate clears.
+		if (!isNull player) then {player allowDamage false};
 		//--- B74.2.2: HARD failover (same rationale as the RequestJoin branch) - never hang Init_Client on a
 		//--- missing connect-ACK; after 120s proceed so clientInitComplete is always reached.
-		if (_totalWait > 120) exitWith {
+		if ((time - _gateT0) > 120) exitWith {
 			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] no connect ACK after 120s - proceeding to avoid a permanent client stall.",sideJoined,name player]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- Secondary backstop: if mission `time` ever stalls (paused sim / stuck load) the deadline above
+		//--- can never fire, so count our own sleeps as well and bail on the same budget either way.
+		if (_totalWait > 135) exitWith {
+			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] no connect ACK - released on the local %3s backstop (mission time stalled at %4).",sideJoined,name player,_totalWait,round time]] Call WFBE_CO_FNC_LogContent;
 		};
 		if (_timelaps > 30) then {
 			_timelaps = 0;
@@ -1234,6 +1273,24 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 			WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH = player;
 			publicVariableServer "WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH";
 		};
+	};
+};
+
+//--- DEADSPAWN SAFETY (2026-07-30): re-arm the transit invulnerability watchdog now the join gate is
+//--- clear. The watchdog spawned at the top of this file starts its 120s budget when client init starts,
+//--- which is strictly earlier than the gate above starts, so on a slow cold start it can expire while
+//--- that gate is still holding the player in the deadspawn holding area. The gate above now re-asserts
+//--- `allowDamage false` for as long as it holds, which means nothing would ever re-enable damage once
+//--- that first watchdog has gone. This is the same re-arm the HC lobby lock below already performs on
+//--- release; both watchdogs firing is harmless (allowDamage true is idempotent) and both exit at once
+//--- on WFBE_Client_DeadspawnEscaped.
+[] spawn {
+	private ["_t0"];
+	_t0 = time;
+	waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
+	sleep 3;
+	if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
+		if (alive player) then { player allowDamage true };
 	};
 };
 
