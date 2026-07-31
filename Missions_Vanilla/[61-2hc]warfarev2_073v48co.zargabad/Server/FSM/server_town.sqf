@@ -675,6 +675,9 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 					};
 
 					_navSp = _navSpClass createVehicle [_navSpPos select 0, _navSpPos select 1, 0];
+if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/register/processInit/EH
+["WARNING", Format ["server_town.sqf: Carrier [%1] ServicePoint createVehicle FAILED class=%2 for side %3 - refs not stamped.", _hvtName, _navSpClass, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+} else {
 					_navSp setPosASL _navSpPos;
 					_navSp setDir _navSpDir;
 					_navSp setVariable ["WFBE_RepairTruckServicePoint", true, true];
@@ -697,6 +700,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 
 					diag_log Format ["NAVALHVT-SP: carrier [%1] ServicePoint (%2) placed at %3 (deckZ=%4, dir=%5) for side %6.", _hvtName, _navSpClass, _navSpPos, _navSpDeckZ, _navSpDir, str _hvtNewSide];
 					["INFORMATION", Format ["server_town.sqf: Carrier [%1] ServicePoint spawned for side %2.", _hvtName, str _hvtNewSide]] Call WFBE_CO_FNC_LogContent;
+};
 				};
 				};
 			};
@@ -970,6 +974,9 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 					[(getPos _location select 0), ((getPos _location select 1) + 80), 0]
 				};
 				_sp = _spClass createVehicle _spPos;
+if (isNull _sp) then { //--- r49 fail-clean: null create must not setPos/register/processInit/EH
+["WARNING", Format ["server_town.sqf: Airfield [%1] ServicePoint createVehicle FAILED class=%2 for side %3 - refs not stamped.", _location getVariable ["name","unknown"], _spClass, str _newSide]] Call WFBE_CO_FNC_LogContent;
+} else {
 				_sp setPos _spPos;
 				_sp setVariable ["WFBE_RepairTruckServicePoint", true, true];
 				_sp setVariable ["wfbe_side", _newSide, true]; //--- A1 fix: airfield repair-point was missing wfbe_side ->
@@ -990,6 +997,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 
 				//--- Store on location for cleanup on next capture.
 				_location setVariable ["wfbe_airfield_sp", _sp, true];
+};
 
 				//--- Provision (re-provision) the aircraft-buy hangar for the new owner. Also called by
 				//--- the boot bootstrap above (~line 63) for airfields that start pre-owned.
@@ -1030,6 +1038,10 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 						};
 
 						_radar = _radarClass createVehicle _radarPos;
+if (isNull _radar) then { //--- r49 fail-clean: null create must not setPos/register CBR
+["WARNING", Format ["server_town.sqf: [%1] airfield CBR createVehicle FAILED class=%2 - registry not stamped.", str _newSide, _radarClass]] Call WFBE_CO_FNC_LogContent;
+_location setVariable ["wfbe_airfield_cbr", objNull, true];
+} else {
 						_radar setPos _radarPos;
 						//--- Radius override: 2000 m. Server_CounterBattery.sqf reads "wfbe_cbr_radius" getVariable.
 						_radar setVariable ["wfbe_cbr_radius", 2000, true]; //--- AF2: broadcast so clients read the fixed 2000 (Init_BaseStructure uses it for BOTH the circle radius AND the "_fixed" flag; un-broadcast -> client drew the 750/1500 upgrade tier and live-resized it)
@@ -1059,6 +1071,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 						["INFORMATION", Format ["server_town.sqf: [%1] airfield CBR spawned (%2) at %3. Radius 2000 m. Registry [%4] size: %5.",
 							str _newSide, _radarClass, _radarPos, _cbrKey,
 							count (missionNamespace getVariable [_cbrKey, []])]] Call WFBE_CO_FNC_LogContent;
+};
 					} else {
 						//--- Resistance capture: no CBR registry for GUER — radar skipped, mast not spawned.
 						_location setVariable ["wfbe_airfield_cbr", objNull, true];

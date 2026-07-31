@@ -37,6 +37,8 @@ if (local player) then {
 	_structure setVariable ["wfbe_b62_marker_built", true];
 
 	sleep 2;
+//--- r49 fail-clean: structure may be deleted during the 2s settle; skip marker paint on null.
+if (isNull _structure) exitWith {};
 
 	_marker = Format["BaseMarker%1",buildingMarker];
 	buildingMarker = buildingMarker + 1;
