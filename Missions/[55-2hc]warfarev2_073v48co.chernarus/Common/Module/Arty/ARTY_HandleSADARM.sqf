@@ -33,9 +33,19 @@ deleteVehicle _shell;
 
 //--- Deploy the model.
 _chuteModel = missionNamespace getVariable Format ["WFBE_%1PARACHUTE",_side];
+if (isNil "_chuteModel" || {typeName _chuteModel != "STRING"} || {_chuteModel == ""}) exitWith {
+	["WARNING", Format ["ARTY_HandleSADARM.sqf: parachute model undefined for side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+};
 _parachute = _chuteModel createVehicle _deployPos;
+if (isNull _parachute) exitWith {
+	["WARNING", Format ["ARTY_HandleSADARM.sqf: parachute create failed class [%1] at %2.", _chuteModel, _deployPos]] Call WFBE_CO_FNC_LogContent;
+};
 _parachute setPos _deployPos;
 _barrel = "Barrel4" createVehicle _deployPos;
+if (isNull _barrel) exitWith {
+	deleteVehicle _parachute;
+	["WARNING", Format ["ARTY_HandleSADARM.sqf: barrel create failed at %1.", _deployPos]] Call WFBE_CO_FNC_LogContent;
+};
 _barrel attachTo [_parachute,[0,0,0]];
 
 //--- Free Fall Simulation with stabilization.

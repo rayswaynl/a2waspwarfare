@@ -14,11 +14,14 @@ _i = 0;
 		if (isServer) then {
 			//--- Create the airport model.
 			_airport = (missionNamespace getVariable "WFBE_C_HANGAR") createVehicle (getPos _x);
-			_airport setDir ((getDir _x) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
-			_airport setPos (getPos _x);
-
-			//--- Link the airport to the logic.
-			_x setVariable ["wfbe_hangar", _airport, true];
+			if (isNull _airport) then {
+				["WARNING", Format ["Init_Airports.sqf: hangar create failed at %1 class [%2].", getPos _x, missionNamespace getVariable "WFBE_C_HANGAR"]] Call WFBE_CO_FNC_LogContent;
+			} else {
+				_airport setDir ((getDir _x) + (missionNamespace getVariable "WFBE_C_HANGAR_RDIR"));
+				_airport setPos (getPos _x);
+				//--- Link the airport to the logic.
+				_x setVariable ["wfbe_hangar", _airport, true];
+			};
 		};
 
 		if (local player) then {
