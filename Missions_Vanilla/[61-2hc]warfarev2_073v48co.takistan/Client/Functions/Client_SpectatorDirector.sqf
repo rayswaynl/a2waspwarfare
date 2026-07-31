@@ -2,6 +2,9 @@
    WASP Spectator v3 director helpers for Arma 2 OA 1.64.
    Client-only target discovery: players, HQ teams, towns, and mobile HQ objects.
    No Display references, no serialization directive, and no A3-only array helpers.
+   v4 streaming pass (design: docs/plans/2026-07-31-spectator-v4-streaming-design.md):
+   town picks hard-gated to active fights (belligerent side mix + 45s hot linger),
+   tiered auto-pick (contact > units > wide establishing), adaptive aim slew.
 */
 
 WFBE_CL_FNC_DirectorPosObject = {
@@ -24,10 +27,12 @@ WFBE_CL_FNC_DirectorContactCount = {
 };
 
 WFBE_CL_FNC_DirectorPollTowns = {
-	Private ["_oldData","_newData","_radius","_town","_units","_sides","_headcount","_unitSide","_current","_oldValue","_delta","_entry"];
+	Private ["_oldData","_newData","_radius","_town","_units","_sides","_headcount","_unitSide","_current","_oldValue","_delta","_entry","_contact","_hot","_hotSet","_hotIdx","_hotFound","_linger"];
 	_oldData = missionNamespace getVariable ["WFBE_C_VAR_DirectorTownData", []];
 	_newData = [];
 	_radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TOWN_CONTEST_RADIUS", 200];
+	_linger = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TOWN_LINGER_SEC", 45];
+	_hotSet = missionNamespace getVariable ["WFBE_C_VAR_DirectorTownHot", []];
 	{
 		_town = _x;
 		_units = _town nearEntities [["Man"], _radius];
@@ -35,9 +40,12 @@ WFBE_CL_FNC_DirectorPollTowns = {
 		_headcount = 0;
 		{
 			if (!isNull _x && {alive _x}) then {
-				_headcount = _headcount + 1;
 				_unitSide = side _x;
-				if !(_unitSide in _sides) then {_sides = _sides + [_unitSide]};
+				//--- v4: belligerents only - a parked CIV caster body or neutral crew must not fake a contest.
+				if (_unitSide in [west, east, resistance]) then {
+					_headcount = _headcount + 1;
+					if !(_unitSide in _sides) then {_sides = _sides + [_unitSide]};
+				};
 			};
 		} forEach _units;
 		_current = _town getVariable ["supplyValue", 0];
@@ -47,9 +55,35 @@ WFBE_CL_FNC_DirectorPollTowns = {
 			if ((_entry select 0) == _town) then {_oldValue = _entry select 1};
 		} forEach _oldData;
 		_delta = _current - _oldValue;
-		_newData = _newData + [[_town, _current, _delta, count _sides, _headcount]];
+		_contact = ((count _sides) - 1) max 0;
+		//--- v4 hot linger: a contested town stays fight-pickable for TOWN_LINGER_SEC after
+		//--- the last enemy leaves/dies, so a pausing firefight does not flicker the shot.
+		if (_contact > 0) then {
+			_hotFound = false;
+			_hotIdx = 0;
+			{
+				if (!isNil "_x") then {
+					if ((_x select 0) == _town) then {_hotSet set [_hotIdx, [_town, time]]; _hotFound = true};
+				};
+				_hotIdx = _hotIdx + 1;
+			} forEach _hotSet;
+			if (!_hotFound) then {
+				_hotSet = _hotSet + [[_town, time]];
+				diag_log Format ["SPECTATE|v4|town-hot|state=on|town=%1", _town getVariable ["name", "Town"]];
+			};
+		};
+		_hot = (_contact > 0);
+		if (!_hot) then {
+			{
+				if (!isNil "_x") then {
+					if ((_x select 0) == _town && {(time - (_x select 1)) < _linger}) then {_hot = true};
+				};
+			} forEach _hotSet;
+		};
+		_newData = _newData + [[_town, _current, _delta, count _sides, _headcount, _contact, _hot]];
 	} forEach towns;
 	WFBE_C_VAR_DirectorTownData = _newData;
+	WFBE_C_VAR_DirectorTownHot = _hotSet;
 	_newData
 };
 
@@ -62,7 +96,7 @@ WFBE_CL_FNC_DirectorBuildPlayers = {
 				_contact = [_x, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100], side _x] Call WFBE_CL_FNC_DirectorContactCount;
 				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_BASE", 10]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_CONTACT", 1000]));
 				if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
-				_list = _list + [[name _x, _x, "PLAYER", WFBE_CL_FNC_DirectorPosObject, _score]];
+				_list = _list + [[name _x, _x, "PLAYER", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
 			};
 		};
 	} forEach allUnits;
@@ -87,7 +121,7 @@ WFBE_CL_FNC_DirectorBuildTeams = {
 					_score = (_alive * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TEAM_SIZE", 2])) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TEAM_CONTACT", 1000]));
 					if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
 					_label = Format ["TEAM %1 (%2/%3)", _sid, _alive, _contact];
-					_list = _list + [[_label, _leader, "TEAM", WFBE_CL_FNC_DirectorPosObject, _score]];
+					_list = _list + [[_label, _leader, "TEAM", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
 				};
 			};
 		};
@@ -96,20 +130,29 @@ WFBE_CL_FNC_DirectorBuildTeams = {
 };
 
 WFBE_CL_FNC_DirectorBuildTowns = {
-	Private ["_list","_data","_town","_mix","_contact","_delta","_headcount","_score","_label"];
+	Private ["_list","_data","_town","_contact","_hot","_delta","_headcount","_score","_label"];
 	_data = missionNamespace getVariable ["WFBE_C_VAR_DirectorTownData", []];
 	if (count _data == 0) then {_data = Call WFBE_CL_FNC_DirectorPollTowns};
 	_list = [];
 	{
 		_town = _x select 0;
-		_mix = _x select 3;
 		_delta = _x select 2;
 		_headcount = _x select 4;
-		_contact = ((_mix - 1) max 0);
-		_score = (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_CONTEST", 1000])) + (((-_delta) max 0) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_TREND", 10])) + (_headcount * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_SIZE", 2]));
-		if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
+		_contact = _x select 5;
+		_hot = _x select 6;
+		//--- v4 hard gate (owner 2026-07-31: town cams only on active fights): only HOT
+		//--- towns (live contest or inside the linger window) keep the contact-driven score
+		//--- and a nonzero pick-contact field. Cold towns keep a small size/trend score so
+		//--- they remain available as WIDE establishing shots but can never win an action pick.
+		if (_hot) then {
+			_score = (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_CONTEST", 1000])) + (((-_delta) max 0) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_TREND", 10])) + (_headcount * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_SIZE", 2]));
+			if (_contact == 0) then {_contact = 1}; //--- linger-hot counts as fight-adjacent for tier 1.
+		} else {
+			_score = (((-_delta) max 0) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_TREND", 10])) + (_headcount * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_SIZE", 2]));
+			_contact = 0;
+		};
 		_label = _town getVariable ["name", "Town"];
-		_list = _list + [[_label, _town, "TOWN", WFBE_CL_FNC_DirectorPosObject, _score]];
+		_list = _list + [[_label, _town, "TOWN", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
 	} forEach _data;
 	_list
 };
@@ -128,7 +171,7 @@ WFBE_CL_FNC_DirectorBuildHQs = {
 				_label = switch (_side) do {case west: {"WEST HQ"}; case east: {"EAST HQ"}; default {"GUER HQ"}};
 				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_HQ_BASE", 15]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_HQ_UNDER_ATTACK", 1000]));
 				if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
-				_list = _list + [[_label, _hq, "HQ", WFBE_CL_FNC_DirectorPosObject, _score]];
+				_list = _list + [[_label, _hq, "HQ", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
 			};
 		};
 	} forEach _sides;
@@ -191,14 +234,14 @@ WFBE_CL_FNC_DirectorShotBounds = {
             _fovMax = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MAX", 0.95];
         };
         case "TIGHT": {
-            _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL", 1.5];
-            _maxDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MAX_DWELL", 3];
+            _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL", 3];
+            _maxDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MAX_DWELL", 6];
             _fovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN", 0.35];
             _fovMax = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX", 0.5];
         };
         case "MEDIUM": {
-            _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL", 3];
-            _maxDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL", 5];
+            _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL", 4];
+            _maxDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL", 7];
         };
     };
     if (_minDwell < (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL", 1.5])) then {
@@ -311,7 +354,9 @@ WFBE_CL_FNC_DirectorAimStep = {
         _delta = _newDir - _oldDir;
         if (_delta > 180) then {_delta = _delta - 360};
         if (_delta < -180) then {_delta = _delta + 360};
-        _panRate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC", 8];
+        //--- v4 adaptive slew: fast while far off-axis, ease-out near the frame (was a flat
+        //--- 8 deg/s that sprinting targets outran); the cut threshold now gates only true breaks.
+        _panRate = (((abs _delta) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_EASE", 6])) max (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_MIN_DEG_PER_SEC", 25])) min (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_MAX_DEG_PER_SEC", 240]);
         _maxSlew = _panRate * _dt;
         _cutAngle = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_CUT_DEG", 35];
         if (abs _delta > _cutAngle && {_allowCut}) then {
@@ -359,10 +404,27 @@ WFBE_CL_FNC_DirectorCycleTarget = {
 };
 
 WFBE_CL_FNC_DirectorPickNext = {
-    Private ["_list","_current","_recent","_cooldown","_best","_bestScore","_entry","_target","_score","_skip","_pinned","_currentEntry","_currentScore","_bestAlt","_bestAltScore","_repeatMargin","_hysteresisMargin"];
+    Private ["_list","_current","_recent","_cooldown","_best","_bestScore","_entry","_target","_score","_skip","_pinned","_currentEntry","_currentScore","_bestAlt","_bestAltScore","_repeatMargin","_hysteresisMargin","_pool","_tier","_currentInPool"];
     _pinned = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorPinned", false];
     if (_pinned) then {_list = Call WFBE_CL_FNC_DirectorBuildActive} else {_list = Call WFBE_CL_FNC_DirectorBuildAll};
     if (count _list == 0) exitWith {[]};
+    //--- v4 tiering (owner 2026-07-31: town cams only on active fights; hybrid idle):
+    //--- tier 1 = live-contact entries (hot towns carry contact >= 1, cold towns 0);
+    //--- tier 2 = players/teams (build-up footage when nothing fights);
+    //--- tier 3 = the full list (quiet towns/HQ = WIDE establishing shots only).
+    _pool = [];
+    {
+        if (!isNil "_x") then {if ((_x select 5) > 0) then {_pool = _pool + [_x]}};
+    } forEach _list;
+    _tier = 1;
+    if (count _pool == 0) then {
+        _tier = 2;
+        {
+            if (!isNil "_x") then {if ((_x select 2) == "PLAYER" || {(_x select 2) == "TEAM"}) then {_pool = _pool + [_x]}};
+        } forEach _list;
+    };
+    if (count _pool == 0) then {_tier = 3; _pool = _list};
+    WFBE_C_VAR_DirectorLastPickTier = _tier;
     _current = WFBE_C_VAR_SpectatorTarget;
     _recent = missionNamespace getVariable ["WFBE_C_VAR_DirectorRecent", []];
     _cooldown = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_COOLDOWN_SEC", 45];
@@ -377,6 +439,10 @@ WFBE_CL_FNC_DirectorPickNext = {
             _currentScore = _entry select 4;
         };
     } forEach _list;
+    _currentInPool = false;
+    {
+        if (!isNil "_x") then {if ((_x select 1) == _current) then {_currentInPool = true}};
+    } forEach _pool;
     //--- fix (v3.2 review): loop1 finds the best candidate that clears BOTH cooldown and the
     //--- hysteresis margin (the switch-worthy pick). _bestAlt tracks the best candidate that
     //--- only clears cooldown (ignoring hysteresis) - the true runner-up used below to decide
@@ -407,7 +473,7 @@ WFBE_CL_FNC_DirectorPickNext = {
                 };
             };
         };
-    } forEach _list;
+    } forEach _pool;
     if (count _best == 0 && {count _bestAlt == 0}) then {
         //--- genuinely nothing survives cooldown at all; ignore cooldown rather than get stuck.
         _bestScore = -1e9;
@@ -421,9 +487,9 @@ WFBE_CL_FNC_DirectorPickNext = {
                     _bestScore = _score;
                 };
             };
-        } forEach _list;
+        } forEach _pool;
     };
-    if (count _best == 0 && {count _currentEntry > 0}) then {
+    if (count _best == 0 && {count _currentEntry > 0} && {_currentInPool}) then {
         if (count _bestAlt == 0) then {
             _best = _currentEntry;
         } else {
@@ -547,9 +613,9 @@ WFBE_CL_FNC_DirectorLoopStart = {
                             diag_log Format ["SPECTATE|v3|base-checkin|target=%1|shot=%2|hold=%3", _entry select 0, _shotType, _bounds select 1];
                         };
                         if (!_pinned || {(_entry select 2) != _oldClass} || {_forcedEstablish}) then {
-                            diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3|shot=%4|fov=%5|dwell=%6|transition=cut|pooled=1", _entry select 2, _entry select 0, _entry select 4, _shotType, WFBE_C_VAR_SpectatorDirectorTargetFov, _bounds select 1];
+                            diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3|shot=%4|fov=%5|dwell=%6|transition=cut|pooled=1|tier=%7", _entry select 2, _entry select 0, _entry select 4, _shotType, WFBE_C_VAR_SpectatorDirectorTargetFov, _bounds select 1, missionNamespace getVariable ["WFBE_C_VAR_DirectorLastPickTier", 1]];
                         } else {
-                            diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3|shot=%4|fov=%5|dwell=%6|transition=cut", _entry select 2, _entry select 0, _entry select 4, _shotType, WFBE_C_VAR_SpectatorDirectorTargetFov, _bounds select 1];
+                            diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3|shot=%4|fov=%5|dwell=%6|transition=cut|tier=%7", _entry select 2, _entry select 0, _entry select 4, _shotType, WFBE_C_VAR_SpectatorDirectorTargetFov, _bounds select 1, missionNamespace getVariable ["WFBE_C_VAR_DirectorLastPickTier", 1]];
                         };
                     };
                 };
