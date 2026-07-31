@@ -39,6 +39,9 @@
    director pan (PAN_MIN/MAX/EASE, mid-shot cut 70deg), FOV snaps on target
    cuts, town cams gated to active fights + hot linger (Client_SpectatorDirector.sqf),
    WFBE_C_SPECTATOR_AUTOSTART hands-off entry (Client_SpectatorAttach.sqf).
+   v4.1 free-cam pass (owner 2026-07-31): WASD acceleration/inertia (ACCEL/BRAKE),
+   zoom-scaled mouse sensitivity + delta EMA (scoped-aim feel), eased wheel zoom
+   (ZOOM_RATE toward a wheel target; director-auto FOV logic otherwise unchanged).
 
    A2-OA-1.64 safe commands used: camCreate / camSetPos / camSetTarget /
    camSetFov / camCommit / camCommitted / cameraEffect / camDestroy /
@@ -98,6 +101,9 @@ WFBE_C_VAR_SpectatorHideHint = false;
 WFBE_C_VAR_SpectatorHudMode = 2; //--- 2=FULL, 1=MINIMAL, 0=OFF; only read when the broadcast flag is armed.
 WFBE_C_VAR_SpectatorMouseBaseline = true; //--- first MouseMoving event only sets the baseline (recentre-bias fix)
 WFBE_C_VAR_SpectatorVelEma = [0,0,0]; //--- v4: EMA of the watched subject's velocity; raw networked velocity stair-steps and jittered the feed-forward.
+WFBE_C_VAR_SpectatorFreeVel = [0,0,0]; //--- v4.1: free-cam velocity for acceleration/inertia.
+WFBE_C_VAR_SpectatorMouseSdx = 0; //--- v4.1: smoothed mouse deltas (EMA), see SpectatorMouseMoving.
+WFBE_C_VAR_SpectatorMouseSdy = 0;
 
 _pos0 = getPos player;
 _yaw0 = getDir player;
@@ -110,6 +116,7 @@ player setCaptive true;
 
 WFBE_C_VAR_SpectatorCam = "camera" camCreate _pos0;
 WFBE_C_VAR_SpectatorFov = 0.8;
+WFBE_C_VAR_SpectatorFovTarget = 0.8; //--- v4.1: wheel-zoom goal; the camera eases toward it (ZOOM_RATE).
 WFBE_C_VAR_SpectatorCam camSetFov 0.8;
 WFBE_C_VAR_SpectatorCam cameraEffect ["Internal", "Back"];
 WFBE_C_VAR_SpectatorCam camSetPos [_pos0 select 0, _pos0 select 1, (_pos0 select 2) + 2];
@@ -466,9 +473,9 @@ WFBE_CL_FNC_SpectatorKeyUp = {
 //--- baseline half-rate, no per-event warp). The cursor is only warped home when it nears
 //--- the UI edge; the event right after a warp only re-anchors, never steers, so the
 //--- anchor is always a real reported position and no recentre bias can accumulate.
-//--- Sensitivity is WFBE_C_SPECTATOR_SENS (degrees per full UI-width of travel).
+//--- Sensitivity is WFBE_C_SPECTATOR_SENS scaled by zoom (v4.1: SENS_REF_FOV anchor, scoped-aim feel).
 WFBE_CL_FNC_SpectatorMouseMoving = {
-	Private ["_x","_y","_dx","_dy","_sens","_cap"];
+	Private ["_x","_y","_dx","_dy","_sens","_cap","_sm","_sdx","_sdy","_fovFac"];
 	_x = _this select 1;
 	_y = _this select 2;
 	if (WFBE_C_VAR_SpectatorMouseBaseline) then {
@@ -476,6 +483,8 @@ WFBE_CL_FNC_SpectatorMouseMoving = {
 		WFBE_C_VAR_SpectatorLastMouseX = _x;
 		WFBE_C_VAR_SpectatorLastMouseY = _y;
 		WFBE_C_VAR_SpectatorMouseBaseline = false;
+		WFBE_C_VAR_SpectatorMouseSdx = 0;
+		WFBE_C_VAR_SpectatorMouseSdy = 0;
 	} else {
 		_dx = _x - WFBE_C_VAR_SpectatorLastMouseX;
 		_dy = _y - WFBE_C_VAR_SpectatorLastMouseY;
@@ -484,9 +493,18 @@ WFBE_CL_FNC_SpectatorMouseMoving = {
 		_dx = (_dx max -_cap) min _cap;
 		_dy = (_dy max -_cap) min _cap;
 		if (WFBE_C_VAR_SpectatorMode == "free") then {
-			_sens = missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 45];
-			WFBE_C_VAR_SpectatorYaw = WFBE_C_VAR_SpectatorYaw + _dx * _sens;
-			WFBE_C_VAR_SpectatorPitch = ((WFBE_C_VAR_SpectatorPitch - _dy * _sens) max -89) min 89;
+			//--- v4.1: light delta EMA kills per-event jitter without noticeable lag, and the
+			//--- sensitivity scales with zoom (scoped-aim feel): at max zoom the screen shows
+			//--- ~3deg, so a flat 25deg-per-swipe sens spun the view way past the subject.
+			_sm = missionNamespace getVariable ["WFBE_C_SPECTATOR_MOUSE_SMOOTH", 0.55];
+			_sdx = WFBE_C_VAR_SpectatorMouseSdx + ((_dx - WFBE_C_VAR_SpectatorMouseSdx) * _sm);
+			_sdy = WFBE_C_VAR_SpectatorMouseSdy + ((_dy - WFBE_C_VAR_SpectatorMouseSdy) * _sm);
+			WFBE_C_VAR_SpectatorMouseSdx = _sdx;
+			WFBE_C_VAR_SpectatorMouseSdy = _sdy;
+			_fovFac = ((WFBE_C_VAR_SpectatorFov / (missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS_REF_FOV", 0.8])) max (missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS_MIN_FACTOR", 0.05])) min 1.5;
+			_sens = (missionNamespace getVariable ["WFBE_C_SPECTATOR_SENS", 45]) * _fovFac;
+			WFBE_C_VAR_SpectatorYaw = WFBE_C_VAR_SpectatorYaw + _sdx * _sens;
+			WFBE_C_VAR_SpectatorPitch = ((WFBE_C_VAR_SpectatorPitch - _sdy * _sens) max -89) min 89;
 		};
 		if (_x < 0.2 || {_x > 0.8} || {_y < 0.2} || {_y > 0.8}) then {
 			setMousePosition [0.5, 0.5];
@@ -505,10 +523,12 @@ WFBE_CL_FNC_SpectatorWheel = {
 	Private ["_z","_f"];
 	_z = _this select 1;
 	WFBE_C_VAR_SpectatorLastManualZoom = time;
-	_f = WFBE_C_VAR_SpectatorFov;
+	//--- v4.1: the wheel now sets a TARGET fov; the movement loop eases SpectatorFov
+	//--- toward it at ZOOM_RATE/s (was: instant multiplicative jumps = steppy zoom on stream).
+	_f = missionNamespace getVariable ["WFBE_C_VAR_SpectatorFovTarget", WFBE_C_VAR_SpectatorFov];
 	if (_z > 0) then {_f = _f * 0.85} else {_f = _f * 1.18};
 	_f = (_f max (missionNamespace getVariable ["WFBE_C_SPECTATOR_FOV_MIN", 0.05])) min (missionNamespace getVariable ["WFBE_C_SPECTATOR_FOV_MAX", 1.2]);
-	WFBE_C_VAR_SpectatorFov = _f;
+	WFBE_C_VAR_SpectatorFovTarget = _f;
 	true
 };
 
@@ -530,7 +550,7 @@ WFBE_C_VAR_SpectatorWheelIdx = (findDisplay 46) displayAddEventHandler ["MouseZC
 diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_SpectatorKeyDownIdx, WFBE_C_VAR_SpectatorMouseMovingIdx];
 
 [] spawn {
-	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d","_center","_radius","_height","_rate","_angle","_dirCard","_wantPos","_wantAim","_smoothPos","_smoothAim","_smoothFactor","_smoothK","_lastDirectorTarget","_lastDirectorShotType","_shotChanged","_shotType","_engaged","_shotRadius","_shotHeight","_shotDir","_targetFov","_fovStep","_fovDelta","_manualZoomLock","_baseRemain","_subject","_leadSec","_subjectPos","_subjectVelocity","_leadOffset","_subjectSpeed","_standoffMult","_subjectFovMin","_lastDirectorStandoffTarget","_lastFollowTarget","_followSmoothPos","_followSmoothAim","_kin"];
+	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d","_center","_radius","_height","_rate","_angle","_dirCard","_wantPos","_wantAim","_smoothPos","_smoothAim","_smoothFactor","_smoothK","_lastDirectorTarget","_lastDirectorShotType","_shotChanged","_shotType","_engaged","_shotRadius","_shotHeight","_shotDir","_targetFov","_fovStep","_fovDelta","_manualZoomLock","_baseRemain","_subject","_leadSec","_subjectPos","_subjectVelocity","_leadOffset","_subjectSpeed","_standoffMult","_subjectFovMin","_lastDirectorStandoffTarget","_lastFollowTarget","_followSmoothPos","_followSmoothAim","_kin","_wantVel","_accel","_accelF","_vel","_fovRate","_fovWasDirector"];
 	_body = WFBE_C_VAR_SpectatorBody;
 	_lockPos = getPos _body;
 	_lockDir = getDir _body; //--- direction lock added in v2: the body must not spin under the mouse.
@@ -539,6 +559,7 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 	_lastDirectorShotType = "";
 	_lastDirectorStandoffTarget = objNull;
 	_lastFollowTarget = objNull;
+	_fovWasDirector = false;
 	_followSmoothPos = WFBE_C_VAR_SpectatorPos;
 	_followSmoothAim = WFBE_C_VAR_SpectatorPos;
 	diag_log "SPECTATE|v2|loop-alive";
@@ -582,6 +603,7 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 				_mode = "free";
 			};
 		};
+		if (_mode != "free") then {WFBE_C_VAR_SpectatorFreeVel = [0,0,0]}; //--- v4.1: the fly-cam stays at rest until WASD actually drives it (no lurch on mode handoff).
 		_spd = missionNamespace getVariable ["WFBE_C_SPECTATOR_SPEED", 15];
 		if (_k select 6) then {_spd = _spd * (missionNamespace getVariable ["WFBE_C_SPECTATOR_BOOST", 4])};
 		if (_k select 7) then {_spd = _spd * (missionNamespace getVariable ["WFBE_C_SPECTATOR_SLOW", 0.25])};
@@ -719,6 +741,7 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 							//--- v4: a target cut snaps FOV with the frame (was: kept easing from the previous shot's FOV = "too slow zoomed in" after every switch).
 							if ((time - WFBE_C_VAR_SpectatorLastManualZoom) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC", 10])) then {
 								WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorDirectorTargetFov;
+								WFBE_C_VAR_SpectatorFovTarget = WFBE_C_VAR_SpectatorDirectorTargetFov; //--- v4.1: keep the wheel goal in agreement after a director cut.
 							};
 						} else {
 							_shotChanged = _shotType != _lastDirectorShotType;
@@ -752,12 +775,26 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 					_cy = cos _y; _sy = sin _y; _cp = cos _pt; _sp = sin _pt;
 					_fwd = [_sy * _cp, _cy * _cp, _sp];
 					_right = [_cy, -_sy, 0];
-					if (_k select 0) then {_p = [(_p select 0) + (_fwd select 0) * _spd * _dt, (_p select 1) + (_fwd select 1) * _spd * _dt, (_p select 2) + (_fwd select 2) * _spd * _dt]};
-					if (_k select 1) then {_p = [(_p select 0) - (_fwd select 0) * _spd * _dt, (_p select 1) - (_fwd select 1) * _spd * _dt, (_p select 2) - (_fwd select 2) * _spd * _dt]};
-					if (_k select 3) then {_p = [(_p select 0) + (_right select 0) * _spd * _dt, (_p select 1) + (_right select 1) * _spd * _dt, _p select 2]};
-					if (_k select 2) then {_p = [(_p select 0) - (_right select 0) * _spd * _dt, (_p select 1) - (_right select 1) * _spd * _dt, _p select 2]};
-					if (_k select 4) then {_p set [2, (_p select 2) + _spd * _dt]};
-					if (_k select 5) then {_p set [2, (_p select 2) - _spd * _dt]};
+					//--- v4.1: acceleration/inertia - keys set a DESIRED velocity and the camera eases
+					//--- toward it (was: instant full speed / instant stop = robotic motion on stream).
+					_wantVel = [0,0,0];
+					if (_k select 0) then {_wantVel = [(_wantVel select 0) + (_fwd select 0) * _spd, (_wantVel select 1) + (_fwd select 1) * _spd, (_wantVel select 2) + (_fwd select 2) * _spd]};
+					if (_k select 1) then {_wantVel = [(_wantVel select 0) - (_fwd select 0) * _spd, (_wantVel select 1) - (_fwd select 1) * _spd, (_wantVel select 2) - (_fwd select 2) * _spd]};
+					if (_k select 3) then {_wantVel = [(_wantVel select 0) + (_right select 0) * _spd, (_wantVel select 1) + (_right select 1) * _spd, _wantVel select 2]};
+					if (_k select 2) then {_wantVel = [(_wantVel select 0) - (_right select 0) * _spd, (_wantVel select 1) - (_right select 1) * _spd, _wantVel select 2]};
+					if (_k select 4) then {_wantVel set [2, (_wantVel select 2) + _spd]};
+					if (_k select 5) then {_wantVel set [2, (_wantVel select 2) - _spd]};
+					_accel = missionNamespace getVariable ["WFBE_C_SPECTATOR_ACCEL", 6];
+					if ((_wantVel select 0) == 0 && {(_wantVel select 1) == 0} && {(_wantVel select 2) == 0}) then {_accel = missionNamespace getVariable ["WFBE_C_SPECTATOR_BRAKE", 9]};
+					_accelF = ((_accel * _dt) min 1) max 0;
+					_vel = WFBE_C_VAR_SpectatorFreeVel;
+					_vel = [
+						(_vel select 0) + (((_wantVel select 0) - (_vel select 0)) * _accelF),
+						(_vel select 1) + (((_wantVel select 1) - (_vel select 1)) * _accelF),
+						(_vel select 2) + (((_wantVel select 2) - (_vel select 2)) * _accelF)
+					];
+					WFBE_C_VAR_SpectatorFreeVel = _vel;
+					_p = [(_p select 0) + (_vel select 0) * _dt, (_p select 1) + (_vel select 1) * _dt, (_p select 2) + (_vel select 2) * _dt];
 					_tx = (_p select 0) + (_fwd select 0) * 100;
 					_ty = (_p select 1) + (_fwd select 1) * 100;
 					_tz = (_p select 2) + (_fwd select 2) * 100;
@@ -768,19 +805,30 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 			if (_subjectFovMin > 0) then {
 				if (WFBE_C_VAR_SpectatorFov < _subjectFovMin) then {WFBE_C_VAR_SpectatorFov = _subjectFovMin};
 				if (WFBE_C_VAR_SpectatorDirectorTargetFov < _subjectFovMin) then {WFBE_C_VAR_SpectatorDirectorTargetFov = _subjectFovMin};
+				if (WFBE_C_VAR_SpectatorFovTarget < _subjectFovMin) then {WFBE_C_VAR_SpectatorFovTarget = _subjectFovMin}; //--- v4.1: keep the manual zoom goal above the subject floor too.
 			};
-			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {_mode == "director"} && {WFBE_C_VAR_SpectatorDirectorAuto}) then {
-				_manualZoomLock = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC", 10];
-				if ((time - WFBE_C_VAR_SpectatorLastManualZoom) >= _manualZoomLock) then {
-					_targetFov = WFBE_C_VAR_SpectatorDirectorTargetFov;
-					_fovStep = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE", 0.35]) * _dt;
-					_fovDelta = _targetFov - WFBE_C_VAR_SpectatorFov;
-					if (abs _fovDelta > _fovStep) then {
-						if (_fovDelta > 0) then {WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorFov + _fovStep} else {WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorFov - _fovStep};
-					} else {
-						WFBE_C_VAR_SpectatorFov = _targetFov;
-					};
+			//--- v4.1 unified zoom goal: director-auto drives the shot FOV (unless the wheel
+			//--- locked zoom recently); every other mode eases toward the wheel target.
+			_targetFov = WFBE_C_VAR_SpectatorFovTarget;
+			_fovRate = missionNamespace getVariable ["WFBE_C_SPECTATOR_ZOOM_RATE", 8];
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {_mode == "director"} && {WFBE_C_VAR_SpectatorDirectorAuto} && {(time - WFBE_C_VAR_SpectatorLastManualZoom) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC", 10])}) then {
+				_targetFov = WFBE_C_VAR_SpectatorDirectorTargetFov;
+				_fovRate = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE", 0.35];
+				_fovWasDirector = true;
+			} else {
+				//--- leaving director-driven zoom without a recent wheel touch: hand manual zoom
+				//--- off from where the director left it, not from a stale wheel value.
+				if (_fovWasDirector && {(time - WFBE_C_VAR_SpectatorLastManualZoom) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC", 10])}) then {
+					WFBE_C_VAR_SpectatorFovTarget = WFBE_C_VAR_SpectatorFov;
 				};
+				_fovWasDirector = false;
+			};
+			_fovStep = _fovRate * _dt;
+			_fovDelta = _targetFov - WFBE_C_VAR_SpectatorFov;
+			if (abs _fovDelta > _fovStep) then {
+				if (_fovDelta > 0) then {WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorFov + _fovStep} else {WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorFov - _fovStep};
+			} else {
+				WFBE_C_VAR_SpectatorFov = _targetFov;
 			};
 			WFBE_C_VAR_SpectatorCam camSetFov WFBE_C_VAR_SpectatorFov;
 			WFBE_C_VAR_SpectatorCam camCommit 0;

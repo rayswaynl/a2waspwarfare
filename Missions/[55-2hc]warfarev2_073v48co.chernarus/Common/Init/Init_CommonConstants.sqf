@@ -3532,5 +3532,13 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_LEAD_MAX_SEC") then {WFBE_C_SPECTATOR_DIREC
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_LEAD_FULL_SPEED") then {WFBE_C_SPECTATOR_DIRECTOR_LEAD_FULL_SPEED = 25}; //--- m/s at which the full lead applies; walking infantry get ~none.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_VEL_EMA_RATE") then {WFBE_C_SPECTATOR_DIRECTOR_VEL_EMA_RATE = 8}; //--- per-second blend of the subject-velocity EMA; kills network stair-step feed-forward noise.
 
+//--- Spectator v4.1 free-cam pass (owner 2026-07-31: caster-grade user-driven cam).
+if (isNil "WFBE_C_SPECTATOR_ACCEL") then {WFBE_C_SPECTATOR_ACCEL = 6}; //--- free-cam velocity convergence per second while keys are held.
+if (isNil "WFBE_C_SPECTATOR_BRAKE") then {WFBE_C_SPECTATOR_BRAKE = 9}; //--- free-cam stop convergence per second when no key is held (faster than ACCEL so stops stay crisp).
+if (isNil "WFBE_C_SPECTATOR_ZOOM_RATE") then {WFBE_C_SPECTATOR_ZOOM_RATE = 8}; //--- manual wheel-zoom ease rate (FOV per second toward the wheel target).
+if (isNil "WFBE_C_SPECTATOR_MOUSE_SMOOTH") then {WFBE_C_SPECTATOR_MOUSE_SMOOTH = 0.55}; //--- per-event mouse-delta EMA blend (1=instant/off, lower=smoother).
+if (isNil "WFBE_C_SPECTATOR_SENS_REF_FOV") then {WFBE_C_SPECTATOR_SENS_REF_FOV = 0.8}; //--- FOV at which SENS applies 1:1; sensitivity scales linearly with zoom (scoped-aim feel).
+if (isNil "WFBE_C_SPECTATOR_SENS_MIN_FACTOR") then {WFBE_C_SPECTATOR_SENS_MIN_FACTOR = 0.05}; //--- never let zoom-scaled sensitivity drop below this fraction of SENS.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

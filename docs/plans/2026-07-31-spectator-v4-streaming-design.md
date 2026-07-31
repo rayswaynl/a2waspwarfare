@@ -90,6 +90,23 @@ Only v3-proven commands; no new engine surface beyond arithmetic. No `params`,
 no `pushBack`, no `#` selector, lazy `&& {}`/`|| {}` only, group receivers never
 use 2-arg getVariable.
 
+## v4.1 free-cam addendum (2026-07-31)
+
+User-driven free view / fly cam gets the same broadcast-grade feel (same PR):
+
+- **WASD acceleration/inertia**: keys set a desired velocity, the camera eases toward
+  it (`SPECTATOR_ACCEL` 6/s, `SPECTATOR_BRAKE` 9/s for crisp stops). Was: instant
+  full speed / instant stop. Velocity is held at zero while not in free mode, so
+  follow/eyes/director handoffs never lurch.
+- **Zoom-scaled mouse sensitivity**: `SENS * clamp(FOV/SENS_REF_FOV(0.8),
+  SENS_MIN_FACTOR(0.05), 1.5)` — at max zoom the screen shows ~3 deg, so the old
+  flat 25 deg/swipe spun past the subject. Plus a light per-event delta EMA
+  (`SPECTATOR_MOUSE_SMOOTH` 0.55) against jitter.
+- **Eased wheel zoom**: the wheel sets a target FOV, the loop eases toward it
+  (`SPECTATOR_ZOOM_RATE` 8/s). Unified zoom goal: director-auto drives the shot FOV
+  unless the wheel locked zoom recently; leaving director hands manual zoom off from
+  where the director left it. Director cuts sync the wheel target too.
+
 ## Done when
 
 All three mirrors carry identical v4 files, lint + HUD contract test pass, bracket
