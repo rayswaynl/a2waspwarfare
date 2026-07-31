@@ -160,9 +160,13 @@ if ((_structure getVariable ["wfbe_structure_type", ""]) == "Bank" && (missionNa
 if(_side != resistance)then{
     _find = (missionNamespace getVariable Format ['WFBE_%1STRUCTURENAMES',_side]) find _type;
     if (_find != -1) then {
-    	_current = _logik getVariable "wfbe_structures_live";
-    	_current set [_find - 1, (_current select (_find-1)) - 1];
-    	_logik setVariable ["wfbe_structures_live", _current, true];
+        //--- r63: bounds-guard live-count slot (coin_interface + BaseSell already skip HQ index 0).
+        //--- Unguarded _find-1 on HQ/invalid index corrupts the LAST structures_live slot (select -1).
+        _current = _logik getVariable "wfbe_structures_live";
+        if (!isNil "_current" && {typeName _current == "ARRAY"} && {(_find - 1) >= 0} && {(_find - 1) < count _current}) then {
+            _current set [_find - 1, ((_current select (_find - 1)) - 1) max 0];
+            _logik setVariable ["wfbe_structures_live", _current, true];
+        };
     };
 
     _logik setVariable ["wfbe_structures", (_logik getVariable "wfbe_structures") - [_structure, objNull], true];
