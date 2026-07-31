@@ -26,7 +26,7 @@ while {alive _awacs && {vehicle player == _awacs} && {driver _awacs == player}} 
 	if (((getPosATL _awacs) select 2) > _minAlt) then {
 		{
 			_target = _x;
-			if (!(side _target in [sideJoined, civilian]) && {abs (speed _target) > _minSpeed}) then {
+			if (!isNull _target && {alive _target} && {!(side _target in [sideJoined, civilian])} && {abs (speed _target) > _minSpeed}) then {
 				sleep (0.05 + random 0.05);
 				[sideJoined, "HandleSpecial", ["uav-reveal", _awacs, _target]] Call WFBE_CO_FNC_SendToClients;
 			};

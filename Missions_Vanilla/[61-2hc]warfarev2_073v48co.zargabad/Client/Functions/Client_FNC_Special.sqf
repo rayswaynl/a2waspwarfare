@@ -97,21 +97,33 @@ WFBE_CL_FNC_Perform_Action = {
 };
 
 WFBE_CL_FNC_Reveal_UAV = {
-	Private ['_marker','_size','_target','_uav'];
+	Private ['_marker','_size','_target','_uav','_delay','_tx','_ty','_created'];
 	_uav = _this select 0;
 	_target = _this select 1;
 
 	if (typeName _uav != 'OBJECT' || typeName _target != 'OBJECT') exitWith {["ERROR", Format ["uav-reveal: An object is expected for both parameters given (UAV: [%1]  Target: [%2]).",_uav,_target]] Call WFBE_CO_FNC_LogContent};
+	//--- r35 recon-intel: deleted/null net objects still typeName OBJECT; distance/getPos on them poisons the map ellipse.
+	if (isNull _uav || {isNull _target}) exitWith {};
+	//--- r35 recon-intel: never stamp acquisition markers on corpses/wrecks (stale intel).
+	if (!alive _target) exitWith {};
 
 	_size = round((_uav distance _target) / 16);
+	if (_size < 1) then {_size = 1};
 	_marker = Format["WFBE_UAV_SPOTTED_%1",unitMarker];
 	unitMarker = unitMarker + 1;
-	createMarkerLocal [_marker,[(getPos _target select 0) - random(_size) + random(_size),(getPos _target select 1) - random(_size) + random(_size),0]];
+	_tx = (getPos _target select 0) - random(_size) + random(_size);
+	_ty = (getPos _target select 1) - random(_size) + random(_size);
+	_created = createMarkerLocal [_marker, [_tx, _ty, 0]];
+	//--- createMarkerLocal returns the name string on success, "" on failure.
+	if (typeName _created != "STRING" || {_created == ""}) exitWith {};
 	_marker setMarkerShapeLocal "Ellipse";
 	_marker setMarkerColorLocal "ColorOrange";
 	_marker setMarkerSizeLocal [_size,_size];
 
-	sleep ((missionNamespace getVariable "WFBE_C_PLAYERS_UAV_SPOTTING_DELAY")*3);
+	_delay = missionNamespace getVariable ["WFBE_C_PLAYERS_UAV_SPOTTING_DELAY", 20];
+	if (typeName _delay != "SCALAR") then {_delay = 20};
+	if (_delay < 1) then {_delay = 1};
+	sleep (_delay * 3);
 
 	deleteMarkerLocal _marker;
 };
