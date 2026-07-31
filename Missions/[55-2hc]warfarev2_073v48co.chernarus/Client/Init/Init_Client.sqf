@@ -49,29 +49,45 @@ if ((player getVariable ["WFBE_C_SPECTATOR_CASTER_SLOT", 0]) > 0) exitWith {
 	WFBE_CL_FNC_SpectatorExit = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorExit.sqf";
 
 	[] spawn {
-		private ["_uid","_messageAt","_allowlisted"];
+		private ["_uid","_messageAt","_allowlisted","_entered"];
 		_uid = getPlayerUID player;
 		_messageAt = -60;
+		_entered = false;
 
+		//--- CASTER GUARDIAN (owner live bug 2026-07-31: "if you die as caster you can never enter the
+		//--- cast menu again"). The first version of this loop exitWith-ed on its first spectator entry,
+		//--- so a dead caster respawned into a bare CIV body with no park, no re-entry and no scroll
+		//--- action - locked out until reconnect. This loop now runs for the whole session: whenever the
+		//--- spectator session is NOT active and the (possibly respawned) body is alive, it re-parks and
+		//--- re-enters. `player` re-resolves to the new body after respawn on this client, and
+		//--- SpectatorEnter both guards against double-entry (WFBE_C_VAR_SpectatorActive) and auto-exits
+		//--- on death (its watchdog calls SpectatorExit, which drops SpectatorActive) - so death ->
+		//--- watchdog exit -> respawn -> this loop re-enters, with no double-enter race window.
+		//--- While the spectator session IS active this loop never touches the body (the movement loop
+		//--- owns its position lock); the 5s cadence is the harden-the-park re-assert when it is not.
 		while {!(missionNamespace getVariable ["WFBE_gameover", false])} do {
-			if (isNull player) exitWith {};
+			if (!isNull player) then {
+				if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) && {alive player}) then {
+					//--- Keep an unauthorised, waiting, or freshly-respawned caster body parked and harmless.
+					player allowDamage false;
+					player setCaptive true;
+					player setPos (getMarkerPos "GuerTempRespawnMarker");
 
-			//--- Keep an unauthorised or waiting caster body parked and harmless.
-			player allowDamage false;
-			player setCaptive true;
-			player setPos (getMarkerPos "GuerTempRespawnMarker");
-
-			_allowlisted = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_CASTER_SLOT", 0]) > 0) && {_uid in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []])};
-			if (_allowlisted) exitWith {
-				12453 cutText ["", "PLAIN", 0];
-				[] Call WFBE_CL_FNC_SpectatorEnter;
+					_allowlisted = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_CASTER_SLOT", 0]) > 0) && {_uid in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []])};
+					if (_allowlisted) then {
+						12453 cutText ["", "PLAIN", 0];
+						if (_entered) then {diag_log Format ["SPECTATE|v3|caster-respawn-reenter|uid=%1|t=%2", _uid, round time]};
+						_entered = true;
+						[] Call WFBE_CL_FNC_SpectatorEnter;
+					} else {
+						if ((time - _messageAt) >= 60) then {
+							_messageAt = time;
+							12453 cutText ["CASTER SLOT RESERVED - this CIV slot is for an allowlisted spectator only.", "PLAIN DOWN", 5];
+						};
+					};
+				};
 			};
-
-			if ((time - _messageAt) >= 60) then {
-				_messageAt = time;
-				12453 cutText ["CASTER SLOT RESERVED - this CIV slot is for an allowlisted spectator only.", "PLAIN DOWN", 5];
-			};
-			sleep 60;
+			sleep 5;
 		};
 	};
 };
