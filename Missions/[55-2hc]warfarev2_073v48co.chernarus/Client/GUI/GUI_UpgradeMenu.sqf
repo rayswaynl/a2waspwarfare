@@ -228,6 +228,7 @@ _upgrade_lastsel = uiNamespace getVariable "wfbe_display_upgrades_sel";
 if (isNil '_upgrade_lastsel') then {_upgrade_lastsel = 0; uiNamespace setVariable ["wfbe_display_upgrades_sel", 0]};
 
 _currency_system = missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM";
+if (isNil "_currency_system") then {_currency_system = 0};
 _upgrade_enabled = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_ENABLED",WFBE_Client_SideJoinedText];
 _upgrade_costs = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_COSTS",WFBE_Client_SideJoinedText];
 _upgrade_descriptions = missionNamespace getVariable "WFBE_C_UPGRADES_DESCRIPTIONS";
@@ -237,21 +238,48 @@ _upgrade_levels = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_LEVELS
 _upgrade_links = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_LINKS",WFBE_Client_SideJoinedText];
 _upgrade_sorted = missionNamespace getVariable "WFBE_C_UPGRADES_SORTED";
 _upgrade_times = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_TIMES",WFBE_Client_SideJoinedText];
+//--- Boot/JIP race or missing side config: bare select on nil arrays throws and freezes the dialog
+//--- open path (player stuck with a broken Upgrade Center until reconnect). Fail closed with a hint.
+if (
+	typeName _upgrade_enabled != "ARRAY" ||
+	{typeName _upgrade_costs != "ARRAY"} ||
+	{typeName _upgrade_descriptions != "ARRAY"} ||
+	{typeName _upgrade_images != "ARRAY"} ||
+	{typeName _upgrade_labels != "ARRAY"} ||
+	{typeName _upgrade_levels != "ARRAY"} ||
+	{typeName _upgrade_links != "ARRAY"} ||
+	{typeName _upgrade_sorted != "ARRAY"} ||
+	{typeName _upgrade_times != "ARRAY"}
+) exitWith {
+	hint parseText "<t color='#F56363' size='1.1'>Upgrade Center unavailable (config not ready).</t>";
+	uiNamespace setVariable ["wfbe_display_upgrades", nil];
+	closeDialog 0;
+};
+if (isNil "WFBE_Client_Logic" || {isNull WFBE_Client_Logic}) exitWith {
+	hint parseText "<t color='#F56363' size='1.1'>Upgrade Center unavailable (side logic missing).</t>";
+	uiNamespace setVariable ["wfbe_display_upgrades", nil];
+	closeDialog 0;
+};
 _upgrade_isupgrading = false;
 _upgrade_running_id = -1;
 
 _upgrades = (WFBE_Client_SideJoined) call WFBE_CO_FNC_GetSideUpgrades;
+if (typeName _upgrades != "ARRAY") then {_upgrades = []};
 _i = 0;
 {
-	if (_upgrade_enabled select _x) then {
-		//--- Ray B89: 3rd cell = dedicated right-hand Q# column (empty at build; filled on refresh below).
-		lnbAddRow [504001, [Format ["%1/%2",_upgrades select _x,_upgrade_levels select _x],_upgrade_labels select _x,""]];
-		lnbSetValue [504001, [_i, 0], _x];
-		//--- Card #164: paint the upgrade icon into the level cell (column 0), same cell-picture pattern as Client_UI_Gear_FillList. Skip empty image strings for graceful fallback.
-		if ((_upgrade_images select _x) != "") then {lnbSetPicture [504001, [_i, 0], (_upgrade_images select _x)]};
-		_i = _i + 1;
+	//--- Skip out-of-range sort ids so a partial config cannot throw mid-build.
+	if (typeName _x == "SCALAR" && {_x >= 0} && {_x < count _upgrade_enabled} && {_x < count _upgrade_levels} && {_x < count _upgrade_labels} && {_x < count _upgrade_images} && {_x < count _upgrades}) then {
+		if (_upgrade_enabled select _x) then {
+			//--- Ray B89: 3rd cell = dedicated right-hand Q# column (empty at build; filled on refresh below).
+			lnbAddRow [504001, [Format ["%1/%2",_upgrades select _x,_upgrade_levels select _x],_upgrade_labels select _x,""]];
+			lnbSetValue [504001, [_i, 0], _x];
+			//--- Card #164: paint the upgrade icon into the level cell (column 0), same cell-picture pattern as Client_UI_Gear_FillList. Skip empty image strings for graceful fallback.
+			if ((_upgrade_images select _x) != "") then {lnbSetPicture [504001, [_i, 0], (_upgrade_images select _x)]};
+			_i = _i + 1;
+		};
 	};
 } forEach _upgrade_sorted;
+if (_upgrade_lastsel >= _i) then {_upgrade_lastsel = 0};
 lnbSetCurSelRow[504001, _upgrade_lastsel];
 _upgrades_old = _upgrades;
 
@@ -266,7 +294,9 @@ _update_list = false;
 _update_upgrade_lastcheck = -1;
 
 _player_commander = false; //added-MrNiceGuy
-if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_player_commander = true}};
+//--- commanderTeam is nil before the client team-resolve path finishes (JIP / late slot).
+//--- isNull nil throws on A2 and kills the rest of the menu init (buttons stay wrong state).
+if (!isNil "commanderTeam" && {!isNull commanderTeam}) then {if (commanderTeam == group player) then {_player_commander = true}};
 if !(_player_commander) then {ctrlEnable [504007, false]};
 if !(_player_commander) then {ctrlEnable [504008, false]};
 if !(_player_commander) then {ctrlEnable [504009, false]};

@@ -46,6 +46,12 @@ while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) =
 					_upgrades = (_x) Call WFBE_CO_FNC_GetSideUpgrades;
 					_levels = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_LEVELS", str _x];
 					_costs = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_COSTS", str _x];
+					//--- A single bad entry (forged id, missing LEVELS/COSTS/LINKS, non-array upgrades) used to
+					//--- throw mid-scan and kill this core-loop FSM for EVERY side until restart. Fail-clean:
+					//--- skip the side this tick when config is missing; drop corrupt queue slots.
+					if (typeName _upgrades != "ARRAY" || {typeName _levels != "ARRAY"} || {typeName _costs != "ARRAY"}) then {
+						// fall through without starting
+					} else {
 
 					_seen = [];
 					_startIdx = -1;
@@ -55,9 +61,15 @@ while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) =
 					for "_k" from 0 to (count _queue - 1) do {
 						if (!_stop && {_startIdx < 0}) then {
 							_id = _queue select _k;
+							//--- Corrupt / non-integer queue slots: drop so they cannot strand the scan.
+							if (typeName _id != "SCALAR" || {_id != floor _id} || {_id < 0} || {_id >= count _upgrades} || {_id >= count _levels} || {_id >= count _costs}) then {
+								_queue set [_k, objNull];
+								_dirty = true;
+							} else {
 							if !(_id in _seen) then {
 								_seen = _seen + [_id];
 								_current = _upgrades select _id;
+								if (typeName _current != "SCALAR") then {_current = 0};
 
 								if (_current >= (_levels select _id)) then {
 									//--- Stale first copy of a maxed id: mark for removal, keep scanning.
@@ -65,23 +77,51 @@ while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) =
 									_dirty = true;
 								} else {
 									//--- Prerequisites for this level (for-loop, NOT a nested forEach - _x is the side).
-									_lnk = (missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_LINKS", str _x]) select _id;
-									_lnk = _lnk select _current;
+									_lnk = missionNamespace getVariable Format["WFBE_C_UPGRADES_%1_LINKS", str _x];
 									_linkNeeded = false;
-									if (count _lnk > 0) then {
-										if (typeName (_lnk select 0) == "ARRAY") then {
-											for "_li" from 0 to (count _lnk - 1) do {
-												_clink = _lnk select _li;
-												if ((_upgrades select (_clink select 0)) < (_clink select 1)) exitWith {_linkNeeded = true};
-											};
+									if (typeName _lnk != "ARRAY" || {_id >= count _lnk}) then {
+										_linkNeeded = true;
+									} else {
+										_lnk = _lnk select _id;
+										if (typeName _lnk != "ARRAY" || {_current >= count _lnk}) then {
+											_linkNeeded = true;
 										} else {
-											if ((_upgrades select (_lnk select 0)) < (_lnk select 1)) then {_linkNeeded = true};
+											_lnk = _lnk select _current;
+											if (typeName _lnk != "ARRAY") then {
+												_linkNeeded = true;
+											} else {
+												if (count _lnk > 0) then {
+													if (typeName (_lnk select 0) == "ARRAY") then {
+														for "_li" from 0 to (count _lnk - 1) do {
+															_clink = _lnk select _li;
+															if (typeName _clink != "ARRAY" || {count _clink < 2}) exitWith {_linkNeeded = true};
+															if (typeName (_clink select 0) != "SCALAR" || {(_clink select 0) < 0} || {(_clink select 0) >= count _upgrades}) exitWith {_linkNeeded = true};
+															if ((_upgrades select (_clink select 0)) < (_clink select 1)) exitWith {_linkNeeded = true};
+														};
+													} else {
+														if (count _lnk < 2 || {typeName (_lnk select 0) != "SCALAR"} || {(_lnk select 0) < 0} || {(_lnk select 0) >= count _upgrades}) then {
+															_linkNeeded = true;
+														} else {
+															if ((_upgrades select (_lnk select 0)) < (_lnk select 1)) then {_linkNeeded = true};
+														};
+													};
+												};
+											};
 										};
 									};
 
 									//--- Link not live yet: SKIP (it may be queued behind this entry); try the next id.
+									//--- Malformed cost/link config: treat as unaffordable stop (no jump) after marking dirty if cost unusable.
 									if (!_linkNeeded) then {
-										_cost = (_costs select _id) select _current;   // [supply, funds]
+										_cost = [];
+										if (typeName (_costs select _id) == "ARRAY" && {_current < count (_costs select _id)}) then {
+											_cost = (_costs select _id) select _current;   // [supply, funds]
+										};
+										if (typeName _cost != "ARRAY" || {count _cost < 2} || {typeName (_cost select 0) != "SCALAR"} || {typeName (_cost select 1) != "SCALAR"}) then {
+											//--- Unusable cost row: drop the slot so it cannot wedge the queue forever.
+											_queue set [_k, objNull];
+											_dirty = true;
+										} else {
 										_canStart = true;
 										if (_dual && {((_x) Call WFBE_CO_FNC_GetSideSupply) < (_cost select 0)}) then {_canStart = false};
 										if (_canStart && {(_comTeam Call WFBE_CO_FNC_GetTeamFunds) < (_cost select 1)}) then {_canStart = false};
@@ -91,8 +131,10 @@ while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) =
 											//--- Unaffordable: stop - the queue saves up for this entry (no jumping on funds).
 											_stop = true;
 										};
+										};
 									};
 								};
+							};
 							};
 						};
 					};
@@ -100,6 +142,7 @@ while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) =
 					if (_startIdx >= 0) then {
 						_id = _queue select _startIdx;
 						_current = _upgrades select _id;
+						if (typeName _current != "SCALAR") then {_current = 0};
 						_cost = (_costs select _id) select _current;
 						//--- Pop exactly this copy (subtraction strips ALL copies of a stacked id) + drop any stale marks.
 						_queue set [_startIdx, objNull];
@@ -123,6 +166,7 @@ while {!gameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSeq]) =
 							_logik setVariable ["wfbe_upgrade_queue", _queue, true];
 						};
 					};
+					}; //--- end config typeName guard
 				};
 			};
 		};
