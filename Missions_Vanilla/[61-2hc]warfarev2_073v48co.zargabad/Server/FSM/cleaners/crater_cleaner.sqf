@@ -1,6 +1,7 @@
 private["_clear","_mapHalf","_mapSize","_perfActive","_perfDeleted","_perfItemStart","_perfLong","_perfScanned","_perfSmall","_perfStart","_scanCentre","_scanRadius","_timer"];
 
-_timer = missionNamespace getVariable "WFBE_C_CRATER_CLEANER_TIME_PERIOD";
+//--- r54: 2-arg default so a missing cleaner period never leaves _timer nil into sleep.
+_timer = missionNamespace getVariable ["WFBE_C_CRATER_CLEANER_TIME_PERIOD", 1800];
 if (isNil "_timer") then {_timer = 1800};
 if (_timer < 1800) then {_timer = 1800};
 
@@ -32,9 +33,12 @@ while {!WFBE_GameOver} do {
 	_perfScanned = _perfScanned + _perfSmall;
 	{
 		_perfItemStart = diag_tickTime;
-		deleteVehicle _x;
+		//--- r54: nearestObjects snapshot can go stale during the cooperative 0.5s sleep - skip null holes.
+		if (!isNull _x) then {
+			deleteVehicle _x;
+			_perfDeleted = _perfDeleted + 1;
+		};
 		_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
-		_perfDeleted = _perfDeleted + 1;
 		sleep 0.5;
 	} forEach _clear;
 
@@ -45,9 +49,12 @@ while {!WFBE_GameOver} do {
 	_perfScanned = _perfScanned + _perfLong;
 	{
 		_perfItemStart = diag_tickTime;
-		deleteVehicle _x;
+		//--- r54: nearestObjects snapshot can go stale during the cooperative 0.5s sleep - skip null holes.
+		if (!isNull _x) then {
+			deleteVehicle _x;
+			_perfDeleted = _perfDeleted + 1;
+		};
 		_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
-		_perfDeleted = _perfDeleted + 1;
 		sleep 0.5;
 	} forEach _clear;
 
