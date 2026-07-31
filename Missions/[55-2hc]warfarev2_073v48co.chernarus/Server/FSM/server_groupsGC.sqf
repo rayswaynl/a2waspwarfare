@@ -184,7 +184,18 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 								//--- broadcasts WFBE_SidePatrol (broadcast=true) so the server can see it here; a patrol
 								//--- transiting/home at base must never be re-adopted/re-tasked by the BASE-GC.
 								private "_baseIsPatrol"; _baseIsPatrol = [_baseG, "WFBE_SidePatrol", false] Call WFBE_CO_FNC_GroupGetBool;
-								if (!_baseIsPers && {!_baseIsTownTeam} && {!_baseIsPatrol}) then {
+								//--- OWNERSHIP HANDOVER FIX (alife region-boundary r65): also skip TOWN-GARRISON groups.
+								//--- Town garrison groups (Common_CreateTownUnits.sqf) carry WFBE_TownAI_Group but are NOT
+								//--- tagged wfbe_persistent, so the three guards above miss them. A town garrison of a town
+								//--- within WFBE_C_BASEGC_RANGE of its own HQ that sat idle mid-siege (enemy holding the town
+								//--- active from a far edge, none within 300m of THIS group) was re-adopted into the commander
+								//--- - owned by BOTH server_town_ai (wfbe_town_teams) and the commander (wfbe_teams) at once,
+								//--- then deleted out from under the commander when the town deactivated. The B61 header claim
+								//--- that wfbe_persistent covers town garrisons was never true. Guard on the existing TownAI tag
+								//--- rather than flipping wfbe_persistent (that would stop the empty-group GC reaping dead
+								//--- garrison shells mid-siege). GroupGetBool = A2-safe bool read on a GROUP.
+								private "_baseIsTownGarr"; _baseIsTownGarr = [_baseG, "WFBE_TownAI_Group", false] Call WFBE_CO_FNC_GroupGetBool;
+								if (!_baseIsPers && {!_baseIsTownTeam} && {!_baseIsPatrol} && {!_baseIsTownGarr}) then {
 									//--- COMBAT GUARD (always): skip if the group is fighting OR took damage / fired
 									//--- since the last pass. We detect "fired/took damage in last ~30s" via a stamped
 									//--- damage sum: any rise vs the stored value (or an active COMBAT behaviour / enemy
@@ -287,7 +298,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 							//--- Only genuinely UNTRACKED crewed hulls are reapable. GroupGetBool = A2-safe on a GROUP.
 							private ["_baseVgrp","_baseVowned"];
 							_baseVgrp = group (_baseVcrew select 0);
-							_baseVowned = ([_baseVgrp, "wfbe_persistent", false] Call WFBE_CO_FNC_GroupGetBool) || {[_baseVgrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool} || {[_baseVgrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool};
+							_baseVowned = ([_baseVgrp, "wfbe_persistent", false] Call WFBE_CO_FNC_GroupGetBool) || {[_baseVgrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool} || {[_baseVgrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool} || {[_baseVgrp, "WFBE_TownAI_Group", false] Call WFBE_CO_FNC_GroupGetBool};   //--- r65 ownership fix: a town-garrison armor/APC crew group is town-owned, never a BASE-GC reap candidate
 							//--- own side, idle (speed < threshold OR immobile hull), within base radius, no player aboard.
 							private ["_baseHasPlayer"];
 							_baseHasPlayer = false;
