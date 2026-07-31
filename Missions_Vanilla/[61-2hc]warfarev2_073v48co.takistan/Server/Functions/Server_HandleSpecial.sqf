@@ -471,7 +471,16 @@ case "RespawnST": {
 
 			if (isNull _target || !alive _target) exitWith {};
 
-			waitUntil {!alive _target || isNull _target};
+			//--- r60 waitUntil: cruise-death wait had no sleep/timeout; a stuck-alive cruise hung this PVF thread forever.
+			private ["_cruiseDeadline"];
+			_cruiseDeadline = time + (missionNamespace getVariable ["WFBE_C_ICBM_CRUISE_WAIT", 600]);
+			waitUntil {
+				sleep 1;
+				!alive _target || {isNull _target} || {time > _cruiseDeadline}
+			};
+			if (alive _target && {!isNull _target}) exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM cruise wait timeout (%1s) - nuke aborted.", missionNamespace getVariable ["WFBE_C_ICBM_CRUISE_WAIT", 600]]] Call WFBE_CO_FNC_LogContent;
+			};
 
 //--- failure-signalling r38: unvalidated legacy path still must not Spawn Nuke on null anchor.
 if (isNull _base) exitWith {
@@ -557,7 +566,16 @@ if (isNull _base) exitWith {
 			[_playerTeam] Call WFBE_SE_FNC_SyncFundsRecord;
 			missionNamespace setVariable [_cdKey, time];
 
-			waitUntil {!alive _target || isNull _target};
+			//--- r60 waitUntil: cruise-death wait sleep+timeout (same shape as legacy branch above).
+			private ["_cruiseDeadline"];
+			_cruiseDeadline = time + (missionNamespace getVariable ["WFBE_C_ICBM_CRUISE_WAIT", 600]);
+			waitUntil {
+				sleep 1;
+				!alive _target || {isNull _target} || {time > _cruiseDeadline}
+			};
+			if (alive _target && {!isNull _target}) exitWith {
+				["WARNING", Format ["Server_HandleSpecial.sqf: ICBM cruise wait timeout (%1s) - nuke aborted.", missionNamespace getVariable ["WFBE_C_ICBM_CRUISE_WAIT", 600]]] Call WFBE_CO_FNC_LogContent;
+			};
 
 		//--- The HeliHEmpty anchor can be deleted mid-flight (GC); never nuke a null position.
 		//--- failure-signalling r38: charge+cooldown already committed above - refund + unstamp on abort
