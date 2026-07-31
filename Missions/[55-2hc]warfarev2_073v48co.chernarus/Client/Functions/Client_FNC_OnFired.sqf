@@ -21,9 +21,13 @@ WFBE_CL_FNC_OnFiredSatchel = {
 	//--- Get the closest structure.
 	_closest = [_unit, _side_structures] Call WFBE_CO_FNC_GetClosestEntity;
 
+	//--- r57 fail-clean: empty structure list / null closest must not call distance; projectile may already be gone.
+	if (isNull _closest) exitWith {};
+	if (isNull _projectile) exitWith {};
+
 	//--- Check the distance between the _unit and the closest friendly building.
 	if (_closest distance _unit < 30) then {
-		deleteVehicle _projectile;
+		if (!isNull _projectile) then {deleteVehicle _projectile};
 
 		//--- Show ID?
 		_uid = if ((missionNamespace getVariable "WFBE_C_GAMEPLAY_UID_SHOW") == 0) then {"xxxxxxx"} else {getPlayerUID _unit};

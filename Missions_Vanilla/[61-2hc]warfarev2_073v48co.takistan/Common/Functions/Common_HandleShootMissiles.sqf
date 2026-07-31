@@ -133,7 +133,8 @@ _terrainMasked = terrainIntersectASL [_fromPos, _targetPos];
 if !(_terrainMasked) exitWith {};
 
 // If we reach this point, the player fired a restricted guided missile while masked by terrain.
-deleteVehicle _projectile;
+//--- r57 fail-clean: projectile can be null if already cleaned by other Fired handlers.
+if (!isNull _projectile) then {deleteVehicle _projectile};
 
 // Warn the player that the missile launch has been blocked.
 hint localize "STR_WF_MESSAGE_MissileTerrainMaskingRestriction";
