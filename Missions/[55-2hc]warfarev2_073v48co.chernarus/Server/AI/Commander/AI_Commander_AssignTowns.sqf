@@ -211,6 +211,16 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 			} else {
 				//--- Target captured/null (e.g. Strategy cleared the order): close the latch silently.
 				_team setVariable ["wfbe_aicom_dispatch_open", false];
+				//--- r78: cancel undelivered airlift attached to the dead dispatch (no retarget this tick).
+				private ["_alGCap","_alChCap"];
+				_alGCap = _team getVariable "wfbe_aicom_airlift_grant";
+				if (!isNil "_alGCap" && {typeName _alGCap == "ARRAY"} && {count _alGCap >= 3}) then {
+					_alChCap = _alGCap select 2;
+					if (typeName _alChCap == "SCALAR" && {_alChCap > 0}) then {[_side, _alChCap] Call ChangeAICommanderFunds};
+					_team setVariable ["wfbe_aicom_airlift_grant", [], true];
+					_team setVariable ["wfbe_aicom_airlift_req", [], true];
+					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ORDER_CANCEL_AIRLIFT|team=" + (str _team) + "|refund=" + str _alChCap + "|why=dispatch-closed");
+				};
 			};
 		};
 	};
@@ -1167,6 +1177,23 @@ _waterBlocks = {
 				};
 				if (!isNil "_target") then {
 					if (!isNull _target) then {
+						//--- r78 order-cancel propagation: a retarget abandons the prior objective. Pending
+						//--- airlift grant/req (charged transport still undelivered) would keep flying the old
+						//--- leg after cancel. Clear + refund prepaid charge (mirror RunCommanderTeam create-fail refund).
+						private ["_alGCancel","_alChCancel"];
+						_alGCancel = _team getVariable "wfbe_aicom_airlift_grant";
+						if (!isNil "_alGCancel" && {typeName _alGCancel == "ARRAY"} && {count _alGCancel >= 3}) then {
+							_alChCancel = _alGCancel select 2;
+							if (typeName _alChCancel == "SCALAR" && {_alChCancel > 0}) then {
+								[_side, _alChCancel] Call ChangeAICommanderFunds;
+							};
+							_team setVariable ["wfbe_aicom_airlift_grant", [], true];
+							_team setVariable ["wfbe_aicom_airlift_req", [], true];
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ORDER_CANCEL_AIRLIFT|team=" + (str _team) + "|refund=" + str _alChCancel);
+						} else {
+							//--- Clear empty/pending req even if no grant charge (cancel race with Produce charge).
+							_team setVariable ["wfbe_aicom_airlift_req", [], true];
+						};
 						_team setVariable ["wfbe_aicom_foot_stage", false];
 						_team setVariable ["wfbe_aicom_foot_stage_pos", []];
 						[_team, "towns"] Call SetTeamMoveMode;
