@@ -2252,6 +2252,11 @@ switch (_args select 0) do {
 									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 40], "T-55 unlocked  -  Ka-137 flares up to 240"],
 									[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 80], "T-72 + BMP-2 unlocked"]
 								];
+								//--- guer-tech: barrel-bomb unlock toast - see RequestOnUnitKilled.sqf. Flag-guarded append so the
+								//--- announcement fires when a VBIED kill crosses WFBE_C_GUER_KILLTIER_HELIBOMB (dead in Support_GuerHeliDrop).
+								if ((missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 1]) > 0) then {
+									_vMilestones set [count _vMilestones, [missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_HELIBOMB", 60], "Barrel Bomb unlocked  -  heli-delivered call-in strike"]];
+								};
 								_vMsg = "";
 								{ if (WFBE_GUER_PLAYER_KILLS == (_x select 0)) then {_vMsg = _x select 1} } forEach _vMilestones;
 								if (_vMsg != "") then {

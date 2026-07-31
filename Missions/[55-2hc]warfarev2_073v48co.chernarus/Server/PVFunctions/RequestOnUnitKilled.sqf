@@ -183,6 +183,14 @@ if (((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) && {_kill
 		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_2", 80], "T-55 unlocked  -  Ka-137 flares up to 240"],
 		[missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_3", 160], "T-72 + BMP-2 unlocked"]
 	];
+	//--- guer-tech: the barrel-bomb call-in unlocks at WFBE_C_GUER_KILLTIER_HELIBOMB kills, but the "Barrel Bomb
+	//--- unlocked" toast previously lived ONLY in Support_GuerHeliDrop.sqf's table - a path unreachable until the
+	//--- ability is already unlocked (its own >=HELIBOMB addAction gate), so the side-wide counter (monotonic +1)
+	//--- always crossed the threshold via a rifle/VBIED kill whose table lacked the entry and the announcement
+	//--- never fired. Append it to the table every kill path shares (flag-guarded so a HELIBOMB-disabled server stays silent).
+	if ((missionNamespace getVariable ["WFBE_C_GUER_HELIBOMB_ENABLE", 1]) > 0) then {
+		_gMilestones set [count _gMilestones, [missionNamespace getVariable ["WFBE_C_GUER_KILLTIER_HELIBOMB", 60], "Barrel Bomb unlocked  -  heli-delivered call-in strike"]];
+	};
 	_gMsg = "";
 	{ if (WFBE_GUER_PLAYER_KILLS == (_x select 0)) then {_gMsg = _x select 1} } forEach _gMilestones;
 	if (_gMsg != "") then {
