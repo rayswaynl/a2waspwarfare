@@ -752,6 +752,12 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_SELL_REDUNDANT_MAX")    then {WFBE_C_AICOM_SELL_REDUNDANT_MAX    = 2};    //--- self-contained trigger (pre-cap): sell only when the side holds MORE than this many DUPLICATE structures of any one sellable type (a 2nd+ Barracks/Light/Heavy/etc). Once item 1/4's base/building cap lands, the cap becomes the primary trigger and this is the floor.
 	if (isNil "WFBE_C_AICOM_ARTY_SELL_STRANDED") then {WFBE_C_AICOM_ARTY_SELL_STRANDED = 0}; //--- 1 = BaseSell Pass-3 recycles stranded commander base-artillery (WFBE_CommanderArtillery SPGs not in wfbe_structures) after MHQ relocate so the 2/2 cap can rebuild near the new HQ (RPT-DEEPDIVE-20260730 sec 2.5). 0 = dark (default). AI-commander only.
 	if (isNil "WFBE_C_AICOM_ARTY_SELL_STRANDED_DIST") then {WFBE_C_AICOM_ARTY_SELL_STRANDED_DIST = 1500}; //--- m: commander SPG must be farther than this from current HQ to count as stranded (floor = BASE_RADIUS). Wider than factory Pass-1 so echelon-forward guns near the front are less likely to look stranded.
+	//--- AICOM relocation sell: default-off cleanup of the previous base cluster after a real MHQ move.
+	if (isNil "WFBE_C_AICOM_RELOC_SELL") then {WFBE_C_AICOM_RELOC_SELL = 0};
+	//--- Minimum movement between the remembered live base center and the current deployed HQ.
+	if (isNil "WFBE_C_AICOM_RELOC_SELL_DIST") then {WFBE_C_AICOM_RELOC_SELL_DIST = 500};
+	//--- Radius used to classify the old base cluster and protect the live current base.
+	if (isNil "WFBE_C_AICOM_RELOC_SELL_RADIUS") then {WFBE_C_AICOM_RELOC_SELL_RADIUS = 300};
 	if (isNil "WFBE_C_AICOM_INCOME_TAPER_TOWNS")    then {WFBE_C_AICOM_INCOME_TAPER_TOWNS    = 8};    //--- B74.1 (Ray 2026-06-23): AICOM income TAPER kicks in above this town count - diminishing per-town funds so a territorial LEADER's treasury can't compound unbounded (soak leader ran to +281k/tick). At/below = full income.
 	if (isNil "WFBE_C_AICOM_INCOME_TAPER_RATE")     then {WFBE_C_AICOM_INCOME_TAPER_RATE     = 0.4};  //--- B74.1: each town held ABOVE the taper threshold contributes only this fraction of a normal town's funds. 0.4 = strong damping; 1.0 = no taper. AICOM-ONLY (never touches player income or supply).
 	if (isNil "WFBE_C_AICOM_OVERRUN_DIST")          then {WFBE_C_AICOM_OVERRUN_DIST          = 250};  //--- B74.1 (Ray 2026-06-23): a striking side has OVERRUN the enemy base when a strike-team unit is within this many m of the enemy HQ...
