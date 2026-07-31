@@ -619,6 +619,18 @@ WFBE_FNC_OilfieldTryGuerRaid = {
 	[_grp, _nodePos, 90] Call AIPatrol;
 	_grp setBehaviour "AWARE";
 	_grp setCombatMode "RED";
+	//--- r70 empty-group lifecycle: raids had no end-of-life reaper; wiped squads held resistance
+	//--- group slots until the global corpse timer. One-shot watcher purges then deleteGroup.
+	[_grp] Spawn {
+	Private ["_rg","_deadline"];
+	_rg = _this select 0;
+	if (isNull _rg) exitWith {};
+	_deadline = time + 3600;
+	waitUntil {sleep 15; isNull _rg || {({alive _x} count (units _rg)) == 0} || {time > _deadline}};
+	if (isNull _rg) exitWith {};
+	{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x}} forEach (units _rg);
+	if (({isPlayer _x} count (units _rg)) == 0) then {deleteGroup _rg};
+	};
 	missionNamespace setVariable ["WFBE_OILFIELD_GUER_LAST", time];
 	diag_log Format ["OILFIELD|v2|GUERRAID|t=%1|requested=%2|created=%3|from=%4", round time, _size, _created, _ringPos];
 	["INFORMATION", Format ["Server_Oilfields.sqf: GUER raid (%1/%2 raiders) dispatched to the OILFIELD from %3.", _created, _size, _ringPos]] Call WFBE_CO_FNC_LogContent;

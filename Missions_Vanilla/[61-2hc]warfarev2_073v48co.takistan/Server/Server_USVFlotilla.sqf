@@ -229,7 +229,12 @@ while {!WFBE_GameOver} do {
 			if (!_boatHasPlayer && !_staticHasPlayer) then {
 				if (!isNull _eStatic && {alive _eStatic}) then { {["usv-static-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _eStatic); ["usv-static-hull", _eStatic, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eStatic; };
 				if (!isNull _eBoat   && {alive _eBoat})   then { {["usv-boat-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _eBoat);   ["usv-boat-hull", _eBoat, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eBoat;   };
-				if (!isNull _eGrp) then { deleteGroup _eGrp; };
+				//--- r70 empty-group lifecycle: wipe path only deleted crew when hulls still ALIVE; corpse-only
+//--- groups made deleteGroup a silent no-op. Purge non-player group members first.
+if (!isNull _eGrp) then {
+{if (!isNull _x && {!isPlayer _x}) then {["usv-group-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _eGrp);
+if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
+};
 			};
 			diag_log format ["USVFLOTILLA|DESPAWN|role=%1|reason=%2|playerAboard=%3", _eRole, _reason, (_boatHasPlayer || _staticHasPlayer)];
 		} else {

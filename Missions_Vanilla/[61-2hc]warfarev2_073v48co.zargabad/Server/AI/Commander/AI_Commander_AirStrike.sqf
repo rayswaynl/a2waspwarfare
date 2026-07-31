@@ -302,9 +302,11 @@ if (_canDispatch) then {
 							sleep _poll;
 							_elapsed = _elapsed + _poll;
 						};
-						{deleteVehicle _x} forEach (crew _h); //--- delete CREW units first (empties the group)...
-						if (!isNull _h) then {deleteVehicle _h};
-						if (!isNull _g) then {deleteGroup _g}; //--- ...so this deleteGroup is never a silent no-op on a non-empty group.
+						//--- r70 empty-group lifecycle: purge ALL group members (not only current crew). Dead/dismounted
+						//--- stay in units _g after the alive-count while-exit; crew-only delete left corpse husks.
+						{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x}} forEach (units _g);
+						if (!isNull _h && {({isPlayer _x} count (crew _h)) == 0}) then {deleteVehicle _h};
+						if (!isNull _g && {({isPlayer _x} count (units _g)) == 0}) then {deleteGroup _g};
 					};
 				} else {
 					_skipReason = "pilot-create-failed";
