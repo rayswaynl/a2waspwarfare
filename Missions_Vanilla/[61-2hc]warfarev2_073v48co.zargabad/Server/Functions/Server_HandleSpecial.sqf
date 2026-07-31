@@ -9,7 +9,22 @@ switch (_args select 0) do {
 		_leader = _args select 2;
 		_side = civilian;
 
-		_team setVariable ["wfbe_teamleader", _leader];
+		//--- SG-forge (mission-core-squad-membership r41): RequestSpecial is an UNAUTHENTICATED command
+		//--- bus (RequestSpecial.sqf:3,20-21 - the same threat model the repair-camp guard closes), so a
+		//--- forged ["RequestSpecial",["update-teamleader", <anyGroup>, <anyUnit>]] would otherwise stamp
+		//--- ANY team's stored leader to an ARBITRARY unit. The disconnect handler consumes that stamp
+		//--- (Server_OnPlayerDisconnected.sqf:175) and, when the stamped unit sits in another group,
+		//--- joinSilent's it into the team, selectLeader's it, ejects it from its vehicle/HQ and
+		//--- deleteVehicle's it (:198-244) - a remote forced-regroup + unit-delete grief on any player.
+		//--- Authorise the write: the reported leader must be a real PLAYER member of the reported team
+		//--- (both legit senders pass `player` + their own WFBE_Client_Team, where player is always in
+		//--- units of its own group). A rejected forge leaves wfbe_teamleader unchanged, so the disconnect
+		//--- handler falls back to the live `leader _team` (:183) - always safe.
+		if (!isNull _team && {isPlayer _leader} && {_leader in units _team}) then {
+			_team setVariable ["wfbe_teamleader", _leader];
+		} else {
+			["WARNING", Format ["Server_HandleSpecial.sqf: rejected update-teamleader - leader [%1] not a player-member of team [%2] (forged/stale RequestSpecial).", _leader, _team]] Call WFBE_CO_FNC_LogContent;
+		};
 
 		//--- TEAMBAR server probe (card wasp-player-group-rank-order-diagnosis-20260718): the client
 		//--- pings this at init + every respawn. Round-2 review PHASE NOTE: this observation is
