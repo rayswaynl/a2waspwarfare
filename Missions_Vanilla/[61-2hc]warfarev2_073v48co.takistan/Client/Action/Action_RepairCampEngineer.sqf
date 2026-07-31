@@ -29,9 +29,13 @@ _temp = _camps;
 if (count _camps == 0) exitWith {hint (localize "STR_WF_Repair_Camp_None")};
 
 //--- Now, we need to check if one of those camp is destroyed at least, remove the living ones.
+//--- r69: nil bunker (mid-init / deleted model) must not feed `alive <undefined>` — heal to objNull.
 _temp = _camps;
 {
-	if (alive (_x getVariable 'wfbe_camp_bunker')) then {_camps = _camps - [_x]};
+	Private ["_bunker"];
+	_bunker = _x getVariable 'wfbe_camp_bunker';
+	_bunker = if (isNil "_bunker") then {objNull} else {_bunker};
+	if (alive _bunker) then {_camps = _camps - [_x]};
 } forEach _temp;
 
 //--- If we have no repairable camps in range, abort with a message.
@@ -58,7 +62,7 @@ _delay = missionNamespace getVariable "WFBE_C_CAMPS_REPAIR_DELAY";
 
 while {_delay > 0} do {
     _vehicle playMove "AinvPknlMstpSlayWrflDnon_medic";
-	if (!alive _vehicle || alive (_camp getVariable 'wfbe_camp_bunker') || (_vehicle distance _camp > _range)) exitWith {};
+	if (!alive _vehicle || alive (if (isNil {_camp getVariable 'wfbe_camp_bunker'}) then {objNull} else {_camp getVariable 'wfbe_camp_bunker'}) || (_vehicle distance _camp > _range)) exitWith {};
 	
 	sleep 1;
 	_delay = _delay - 1;
@@ -68,7 +72,7 @@ if (!(alive _vehicle) || (_vehicle distance _camp > _range)) exitWith {
 	hint (localize "STR_WF_Repair_TooFar");
 	if (_price > 0) then {_price Call WFBE_CL_FNC_ChangeClientFunds;};
 };
-if (alive (_camp getVariable 'wfbe_camp_bunker')) exitWith {
+if (alive (if (isNil {_camp getVariable 'wfbe_camp_bunker'}) then {objNull} else {_camp getVariable 'wfbe_camp_bunker'})) exitWith {
 	hint (localize "STR_WF_Repair_Camp_IsAlive");
 	
 	//--- Refunds the player.

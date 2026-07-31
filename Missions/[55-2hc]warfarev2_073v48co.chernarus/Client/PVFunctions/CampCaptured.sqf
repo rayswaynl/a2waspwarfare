@@ -10,20 +10,28 @@
 
 //--- Malformed-payload guard: ensure _this is ARRAY with >= 3 elements (camp, newSide, oldSide).
 if (!((typeName _this) in ["ARRAY"]) || {count _this < 3}) exitWith {};
-Private ["_camps","_is_repair","_side","_side_new","_sideID_new","_sideID_old","_town","_feedbackLast"];
+Private ["_camps","_closest","_is_repair","_marker","_side","_side_new","_sideID_new","_sideID_old","_town","_feedbackLast"];
 
 _camp = _this select 0;
 _sideID_new = _this select 1;
 _sideID_old = _this select 2;
 _is_repair = if (count _this > 3) then {_this select 3} else {false};
 
+//--- r69: null/invalid camp aborts before getVariable/town (deleted camp mid-broadcast).
+if (isNil "_camp" || {typeName _camp != "OBJECT"} || {isNull _camp}) exitWith {};
+
 _town = _camp getVariable "town";
 if (isNil "WFBE_Client_SideID") exitWith {};
+//--- r69: town link missing (init race / deleted logic) must not poison marker/bounty paths.
+if (isNil "_town" || {typeName _town != "OBJECT"} || {isNull _town}) exitWith {};
 
 //--- Does the new side match the client side?
 if (WFBE_Client_SideID == _sideID_new) then {
 	//--- The client side has captured a camp.
-	(_camp getVariable "wfbe_camp_marker") setMarkerColorLocal WFBE_Client_Color;
+	_marker = _camp getVariable "wfbe_camp_marker";
+	if (!(isNil "_marker") && {typeName _marker == "STRING"} && {_marker != ""}) then {
+		_marker setMarkerColorLocal WFBE_Client_Color;
+	};
 
 	//--- Skip the reset upon repair.
 	if (_is_repair) exitWith {};
@@ -41,12 +49,12 @@ if (WFBE_Client_SideID == _sideID_new) then {
 	// if ((WFBE_Client_Team getVariable "wfbe_task_order") == "towns") then {
 		//--- Ensure that the destination is the camp's town.
 		// if ((WFBE_Client_Team getVariable "wfbe_task_position") == _town) then {
-			Private ["_closest"];
 			//--- Get the closest unit from the player group near the camp.
 			_closest = [_camp, units group player] Call WFBE_CO_FNC_GetClosestEntity;
 
 			//--- If the closest unit is in range, then award the player's group.
-			if (_closest distance _camp < (missionNamespace getVariable "WFBE_C_CAMPS_RANGE_PLAYERS")) then {
+			//--- r69: empty group / null closest must not evaluate `null distance camp` (A2 script error kills bounty path).
+			if (!isNull _closest && {_closest distance _camp < (missionNamespace getVariable ["WFBE_C_CAMPS_RANGE_PLAYERS", 8])}) then {
 				hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Your squad has captured a camp near <t color='#B6F563'>%1</t> and has been rewarded with <t color='#EAD267'>$%2.</t></t>",_town getVariable "name",missionNamespace getVariable "WFBE_C_CAMPS_CAPTURE_BOUNTY"];
 				["RequestChangeScore", [player,score player + (missionNamespace getVariable 'WFBE_C_PLAYERS_SCORE_CAPTURE_CAMP')]] Call WFBE_CO_FNC_SendToServer;
 				(missionNamespace getVariable "WFBE_C_CAMPS_CAPTURE_BOUNTY") Call WFBE_CL_FNC_ChangeClientFunds;
@@ -56,8 +64,11 @@ if (WFBE_Client_SideID == _sideID_new) then {
 	// };
 } else {
 	//--- Did the client side lost a known camp?
-	if ((WFBE_Client_SideID in [(_town getVariable "sideID"), _sideID_old]) || (WFBE_Client_SideID == WFBE_C_GUER_ID)) then {
-		(_camp getVariable "wfbe_camp_marker") setMarkerColorLocal (missionNamespace getVariable Format ["WFBE_C_%1_COLOR",(_sideID_new) Call WFBE_CO_FNC_GetSideFromID]);
+	if ((WFBE_Client_SideID in [(_town getVariable ["sideID", WFBE_C_UNKNOWN_ID]), _sideID_old]) || (WFBE_Client_SideID == WFBE_C_GUER_ID)) then {
+		_marker = _camp getVariable "wfbe_camp_marker";
+		if (!(isNil "_marker") && {typeName _marker == "STRING"} && {_marker != ""}) then {
+			_marker setMarkerColorLocal (missionNamespace getVariable Format ["WFBE_C_%1_COLOR",(_sideID_new) Call WFBE_CO_FNC_GetSideFromID]);
+		};
 		//--- Enemy repaired a destroyed camp: warn the player with an inbound sound.
 		if (_is_repair) then {playSound "inbound"};
 	};

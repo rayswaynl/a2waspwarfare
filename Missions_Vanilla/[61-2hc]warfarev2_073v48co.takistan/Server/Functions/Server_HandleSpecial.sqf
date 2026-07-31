@@ -2186,14 +2186,31 @@ if (isNull _base) exitWith {
 		_townModel addEventHandler ["handleDamage",{getDammage (_this select 0)+((_this select 2)/(missionNamespace getVariable "WFBE_C_CAMP_HEALTH_COEF"))}];
 		_logic setVariable ["wfbe_camp_bunker", _townModel, true];
 
+		//--- r69 camp SV heal: ALWAYS restore supplyValue after a successful rebuild (paid repair +
+		//--- presence-repair). Residual vs bulk/ownership-flip heal: same-side rebuild previously left a
+		//--- mid-drain SV on the revived bunker so the next camp tick re-flipped it almost immediately.
+		Private ["_town","_repairStartSV","_repairFlag"];
+		_town = _logic getVariable "town";
+		_repairStartSV = 30;
+		if (!isNil "_town" && {typeName _town == "OBJECT"} && {!isNull _town}) then {
+			_repairStartSV = _town getVariable ["startingSupplyValue", 30];
+			if (isNil "_repairStartSV" || {typeName _repairStartSV != "SCALAR"}) then {_repairStartSV = 30};
+		};
+		_logic setVariable ["supplyValue", _repairStartSV, true];
+
 		//--- Do we have to update the camp SID ?
-		_camp_sideID = _logic getVariable "sideID";
+		_camp_sideID = _logic getVariable ["sideID", WFBE_DEFENDER_ID];
 		if (_camp_sideID != _repairSideID) then {
-			Private ["_town"];
 			_logic setVariable ["sideID", _repairSideID, true];
 
-				//--- wiki-wins: also fly the new side's flag (mirrors Server_SetCampsToSide.sqf:22); the side change set sideID but never the world flag texture.
-				(_logic getVariable "wfbe_flag") setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]); (_logic getVariable "wfbe_flag") setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]]); processInitCommands; //--- qol-polish-pack: JIP-safe flag (bake into object init so late joiners replay it)
+			//--- wiki-wins: also fly the new side's flag (mirrors Server_SetCampsToSide.sqf:22); the side change set sideID but never the world flag texture.
+			//--- Null-guard flag pole: deleted/missing poles must not throw on setFlagTexture (A2 isNull trap).
+			_repairFlag = _logic getVariable ["wfbe_flag", objNull];
+			if (!isNull _repairFlag) then {
+				_repairFlag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]);
+				_repairFlag setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG", (_repairSideID) Call WFBE_CO_FNC_GetSideFromID]]);
+				processInitCommands; //--- qol-polish-pack: JIP-safe flag (bake into object init so late joiners replay it)
+			};
 
 			//--- Notify / update map if needed.
 			[nil, "CampCaptured", [_logic, _repairSideID, _camp_sideID, true]] Call WFBE_CO_FNC_SendToClients;
