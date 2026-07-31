@@ -50,6 +50,7 @@ if (_use == "") then {
 
 if (_use != "") then {
 	Private ["_muzzles"];
-	_muzzles = getArray (configFile >> "CfgWeapons" >> _use >> "muzzles"); 
-	if !("this" in _muzzles) then {_unit selectWeapon (_muzzles select 0)} else {_unit selectWeapon _use}; 
+	_muzzles = getArray (configFile >> "CfgWeapons" >> _use >> "muzzles");
+	//--- Missing/empty muzzles entry: getArray returns [] — "this" not in [] is true, select 0 throws.
+	if (count _muzzles == 0 || {("this" in _muzzles)}) then {_unit selectWeapon _use} else {_unit selectWeapon (_muzzles select 0)};
 };
