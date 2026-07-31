@@ -63,13 +63,16 @@ _spd  = _sspd;
 
 sleep 0.05;
 
-While {!isNull _rkt} do {
-
+//--- r59 fail-clean: AA target can despawn mid-guide; rocket speed can be zero after impact.
+While {!isNull _rkt && {!isNull _nearest} && {alive _nearest}} do {
+    private ["_rSpd"];
     _dis     = _fp distance (getPosASL _nearest);
     _trvldis = _fp distance _rkt;
     _trgv    = velocity _nearest;
 
-    _ttimp = _prd * ((_rkt distance _nearest) / ((velocity _rkt) distance [0,0,0]));
+    _rSpd = (velocity _rkt) distance [0,0,0];
+    if (_rSpd <= 0.01) then { breakTo "OUT" };
+    _ttimp = _prd * ((_rkt distance _nearest) / _rSpd);
     _trgp  = [
         ((getPosASL _nearest) select 0) + _ttimp * (_trgv select 0),
         ((getPosASL _nearest) select 1) + _ttimp * (_trgv select 1),
@@ -98,7 +101,7 @@ While {!isNull _rkt} do {
         _vcnrd = [0,0,0];
     };
 
-    _t    = _trvldis / _spd;
+    _t    = if (_spd > 0.01) then {_trvldis / _spd} else {0};
     _spd  = _sltd - (_sltd - _sspd) * exp((-1) * _acc * _t);
 
     _vg    = [
@@ -107,6 +110,7 @@ While {!isNull _rkt} do {
         _agl * (_vcnrd select 2) + (_vlnrd select 2)
     ];
     _vgnr  = _vg distance [0,0,0];
+    if (_vgnr <= 0.0001) then { breakTo "OUT" };
     _vgnrd = [(_vg select 0) / _vgnr, (_vg select 1) / _vgnr, (_vg select 2) / _vgnr];
 
     _rkt setVectorDirAndUp [

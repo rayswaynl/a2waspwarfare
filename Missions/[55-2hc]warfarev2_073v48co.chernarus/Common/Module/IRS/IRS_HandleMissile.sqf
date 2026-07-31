@@ -14,16 +14,21 @@ _vehicle = _this select 0;
 _missile = _this select 1;
 _ammo = _this select 2;
 
-_missile_range = missionNamespace getVariable "WFBE_IRS_AUTO_DETECT_RANGE";
+//--- r59 fail-clean: null vehicle/missile + missing per-class IRS table must not throw.
+if (isNull _vehicle || {isNull _missile}) exitWith {};
+if (isNil "_ammo") exitWith {};
+
+_missile_range = missionNamespace getVariable ["WFBE_IRS_AUTO_DETECT_RANGE", 200];
 _get = missionNamespace getVariable Format ["%1_IRS", typeOf _vehicle];
+if (isNil "_get" || {typeName _get != "ARRAY"} || {count _get < 1}) exitWith {};
 
 //--- Wait until that the missile enter the operative area of the tank.
-waitUntil {!alive _missile || {!alive _vehicle} || {_missile distance _vehicle < _missile_range}};
+waitUntil {isNull _missile || {isNull _vehicle} || {!alive _missile} || {!alive _vehicle} || {_missile distance _vehicle < _missile_range}};
 
-if (!alive _missile || {!alive _vehicle}) exitWith {};
+if (isNull _missile || {isNull _vehicle} || {!alive _missile} || {!alive _vehicle}) exitWith {};
 
 //--- Attempt to get the IR Smoke grenade models deployed by the tank within the IR Smoke operative area.
-_smokeshells = (getPos _vehicle) nearObjects ["SmokeShellVehicle", missionNamespace getVariable "WFBE_IRS_AREA_OPERATING"];
+_smokeshells = (getPos _vehicle) nearObjects ["SmokeShellVehicle", missionNamespace getVariable ["WFBE_IRS_AREA_OPERATING", 30]];
 if (count _smokeshells == 0) exitWith {};
 
 if (random 100 <= (_get select 0)) then {
