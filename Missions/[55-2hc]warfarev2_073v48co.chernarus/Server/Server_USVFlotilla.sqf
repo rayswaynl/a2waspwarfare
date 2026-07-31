@@ -227,6 +227,10 @@ while {!WFBE_GameOver} do {
 
 		//--- Hull destroyed -> prune.
 		if (isNull _eBoat || {!(alive _eBoat)}) then { _drop = true; _reason = "hull_destroyed"; };
+		//--- r76 boat-patrol lifecycle: living hull with dead/null driver never reaped before (only hull
+		//--- destroyed). Driverless boats beach and hold the flotilla slot so coastal sites cannot repopulate.
+		//--- Spawn-time driver fail is open #1687; this is mid-life driver death.
+		if (!_drop && {(isNull _eDriver) || {!alive _eDriver}}) then { _drop = true; _reason = "driver_lost"; };
 
 		//--- Gate closed -> count down the FLOTILLA-WIDE quiet-despawn timer (shared across all
 		//--- boats, since the gate itself is a flotilla-wide condition, not per-boat).
@@ -278,10 +282,20 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 							//--- Player-near velocity hop (Common_RunSidePatrol.sqf:358-359), generalizes to water.
 							_eBoat setVelocity [(velocity _eBoat) select 0, (velocity _eBoat) select 1, 4];
 						} else {
-							//--- No player near: setPos to the PREVIOUS route point (known-good water
-							//--- position) - reuses data already on hand instead of a nearRoads-style
-							//--- search (boats have no roads).
-							_eBoat setPos (getPos (_route select ((_eRouteI - 1 + (count _route)) mod (count _route))));
+							//--- No player near: setPos to a known-good WATER route point (prev first).
+							//--- r76: if prev WP is dry (misplaced logic), scan route for water instead of beaching.
+							private ["_uPos","_uTry","_uI","_uP"];
+							_uPos = getPos (_route select ((_eRouteI - 1 + (count _route)) mod (count _route)));
+							if (!(surfaceIsWater _uPos)) then {
+								_uTry = 0;
+								while {_uTry < (count _route) && {!(surfaceIsWater _uPos)}} do {
+									_uI = (_eRouteI + _uTry) mod (count _route);
+									_uP = getPos (_route select _uI);
+									if (surfaceIsWater _uP) then {_uPos = _uP};
+									_uTry = _uTry + 1;
+								};
+							};
+							if (surfaceIsWater _uPos) then {_eBoat setPos _uPos};
 						};
 						diag_log format ["USVFLOTILLA|UNSTUCK|role=%1|streak=%2", _eRole, _eUnstuck + 1];
 						_eUnstuck = _eUnstuck + 1;
