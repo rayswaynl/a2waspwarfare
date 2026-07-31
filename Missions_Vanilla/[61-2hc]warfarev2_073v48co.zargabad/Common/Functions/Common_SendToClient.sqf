@@ -4,13 +4,26 @@
 		- Client PVF.
 */
 
-Private ["_func","_id","_pvf","_dropCase"];
+Private ["_func","_id","_pvf","_dropCase","_target"];
 
+//--- r80b HC locality PV: short/malformed payload or null/non-object HC target used to throw on
+//--- select 0/1 / owner / getPlayerUID before the owner>0 drop guard, aborting the whole caller
+//--- (town AI / static defence / aicom-team delegate) mid-batch. Fail-closed with RPT drop line.
 _pvf = _this;
+if (isNil "_pvf" || {typeName _pvf != "ARRAY"} || {count _pvf < 2}) exitWith {
+	diag_log "SENDTOCLIENT|v1|DROPPED|func=?|case=short-or-nonarray-payload|owner=n/a";
+};
+_target = _pvf select 0;
 _func = _pvf select 1;
-_id = owner (_pvf select 0);
+if (isNil "_target" || {typeName _target != "OBJECT"} || {isNull _target}) exitWith {
+	diag_log (Format ["SENDTOCLIENT|v1|DROPPED|func=%1|case=null-or-nonobject-target|owner=n/a", _func]);
+};
+if (isNil "_func" || {typeName _func != "STRING"} || {_func == ""}) exitWith {
+	diag_log "SENDTOCLIENT|v1|DROPPED|func=?|case=bad-func-name|owner=n/a";
+};
+_id = owner _target;
 
-_pvf set [0, getPlayerUID (_pvf select 0)];
+_pvf set [0, getPlayerUID _target];
 _pvf set [1, Format["CLTFNC%1",_func]];
 
 // Guard: owner() returns 0 when the target HC has disconnected or its unit's
