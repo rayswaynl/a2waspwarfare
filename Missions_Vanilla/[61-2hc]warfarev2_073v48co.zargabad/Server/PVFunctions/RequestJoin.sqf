@@ -2,6 +2,10 @@ private ["_canJoin","_name","_player","_side","_uid","_skillBLUFOR","_skillOPFOR
 
 _player = _this select 0;
 _side = _this select 1;
+//--- r70: reject null/non-object player before name/UID (forged/stale PV).
+if (isNil "_player" || {typeName _player != "OBJECT"} || {isNull _player}) exitWith {
+	["WARNING", "RequestJoin.sqf: null player - join request ignored."] Call WFBE_CO_FNC_LogContent;
+};
 _name = name _player;
 
 _uid = getPlayerUID(_player);
@@ -19,7 +23,7 @@ if ( !(isNil "_teamJoinedConfirmed")) then { //--- Retrieve JIP Information if t
 	if (_teamJoinedConfirmed != _side) then {
 
 		_canJoin = false;
-		[leader group _player, "LocalizeMessage", ['Teamswap',_name,_uid,_teamJoinedConfirmed,_side]] Call WFBE_CO_FNC_SendToClient; //--- Inform the client about the teamswap.
+		[_player, "LocalizeMessage", ['Teamswap',_name,_uid,_teamJoinedConfirmed,_side]] Call WFBE_CO_FNC_SendToClient; //--- r70: address the joining unit (leader group can be null/wrong).
 		["INFORMATION", Format["RequestJoin.sqf: Player [%1] [%2] has been sent back to the lobby for teamswapping, original side [%3], joined side [%4].", _name,_uid,_teamJoinedConfirmed,_side]] Call WFBE_CO_FNC_LogContent;
 
 	} else {
@@ -35,7 +39,7 @@ if ( !(isNil "_teamJoinedConfirmed")) then { //--- Retrieve JIP Information if t
 		if (_hasConnectedAtLaunchToSide != _side) then {
 
 			_canJoin = false;
-			[leader group _player, "LocalizeMessage", ['Teamswap',_name,_uid,_hasConnectedAtLaunchToSide,_side]] Call WFBE_CO_FNC_SendToClient; //--- Inform the client about the teamswap.
+			[_player, "LocalizeMessage", ['Teamswap',_name,_uid,_hasConnectedAtLaunchToSide,_side]] Call WFBE_CO_FNC_SendToClient; //--- r70: address the joining unit (leader group can be null/wrong).
 			["INFORMATION", Format["RequestJoin.sqf: Player [%1] [%2] has been sent back to the lobby for teamswapping, original side [%3], attempted side [%4].", _name,_uid,_hasConnectedAtLaunchToSide,_side]] Call WFBE_CO_FNC_LogContent;
 		} else {
 
