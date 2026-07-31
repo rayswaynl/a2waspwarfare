@@ -29,6 +29,20 @@ if (_name == '__SERVER__' || local player) exitWith {};
 //--- resolver so they never hold this key - the clear is a harmless no-op for them.
 if (_uid != "") then {missionNamespace setVariable [Format ["WFBE_CONNECT_RETRY_%1", _uid], nil]};
 
+//--- jip-funds-latch-disc-clear (r69, 2026-07-31): mirror the CONNECT_RETRY clear above for the JIP
+//--- funds latch. WFBE_JIP_LATCH<uid> (Server_OnPlayerConnected) dedupes the TWO funds-block resolve
+//--- passes WITHIN A SINGLE join (its 15s window), but it is set on connect and NEVER cleared on
+//--- disconnect - so a reconnect within 15s inherits the previous join's latch and SKIPS its funds
+//--- reconcile. In the common same-slot case the vacated group still carries the wallet so the skip is
+//--- harmless, but a fast reconnect that lands on a DIFFERENT vacated slot (disconnect never zeroes a
+//--- group's wfbe_funds) shows that stale positive wallet, never triggers the client B76 funds self-heal
+//--- (non-nil funds), and then corrupts the lock-step WFBE_JIP_USER<uid> record downward on the next
+//--- RequestFundsRecord spend. Clearing here makes every genuine re-join run its record-authoritative
+//--- funds reconcile. SAFE for the double-resolve guard: the re-join's FIRST pass re-sets the latch
+//--- fresh, still catching that join's second pass. A2-OA-1.64-safe (setVariable nil). HCs never store
+//--- the latch (they exit the connect handler before it is set) - the clear is a harmless no-op for them.
+if (_uid != "") then {missionNamespace setVariable [Format ["WFBE_JIP_LATCH%1", _uid], nil]};
+
 //--- Headless Clients disconnection?.
 _isHCDisconnect = false;
 _hcGroup = grpNull;
