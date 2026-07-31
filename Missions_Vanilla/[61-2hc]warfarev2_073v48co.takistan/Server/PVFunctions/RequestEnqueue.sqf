@@ -8,10 +8,28 @@
 	so [LF, LF, LF] runs LF1 -> LF2 -> LF3).
 */
 
-Private ["_side","_id","_logik","_queue","_levels","_enabled","_upgrades","_current","_pending","_lnk","_li","_clink","_linkNeeded","_target","_need","_eff","_rejected"];
+Private ["_side","_id","_logik","_queue","_levels","_enabled","_upgrades","_current","_pending","_lnk","_li","_clink","_linkNeeded","_target","_need","_eff","_rejected","_reqPlayer","_cmdTeamAuth"];
 
 _side = _this select 0;
 _id   = _this select 1;
+
+//--- Caller authority bind (mirror RequestUpgrade.sqf, the immediate-purchase sibling): the auto-upgrade queue
+//--- is a COMMANDER-owned resource paid from commander funds, and the client Upgrade Center enables the queue
+//--- buttons only for the seated commander (GUI_UpgradeMenu.sqf:270-272). The client now appends the acting
+//--- player; without it any same-side member - or a forged PVF naming an ENEMY side - could grow another team
+//--- queue whenever that side has a human commander.
+if ((count _this) < 3) exitWith {
+	["WARNING", Format ["RequestEnqueue.sqf: rejected - missing acting player in payload %1.", _this]] Call WFBE_CO_FNC_LogContent;
+};
+_reqPlayer = _this select 2;
+if (typeName _reqPlayer != "OBJECT" || {isNull _reqPlayer} || {!isPlayer _reqPlayer}) exitWith {
+	["WARNING", Format ["RequestEnqueue.sqf: rejected invalid requester [%1].", _reqPlayer]] Call WFBE_CO_FNC_LogContent;
+};
+_cmdTeamAuth = _side Call WFBE_CO_FNC_GetCommanderTeam;
+if (isNull _cmdTeamAuth) exitWith {};
+if (leader _cmdTeamAuth != _reqPlayer) exitWith {
+	["WARNING", Format ["RequestEnqueue.sqf: rejected requester [%1] is not the %2 commander leader.", _reqPlayer, _side]] Call WFBE_CO_FNC_LogContent;
+};
 
 _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (isNull _logik) exitWith {};
