@@ -924,7 +924,11 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 							_gwFinalAlive = {!isNull _x && {alive _x}} count (units _gwTeam);
 							if (_gwFinalAlive > 0 && {!isNull _gwLdr} && {alive _gwLdr} && {typeName _gwRallyPos == "ARRAY"} && {count _gwRallyPos >= 2} && {typeName (_gwRallyPos select 0) == "SCALAR"} && {typeName (_gwRallyPos select 1) == "SCALAR"} && {(_gwRallyPos select 0) == (_gwRallyPos select 0)} && {(_gwRallyPos select 1) == (_gwRallyPos select 1)}) then {
 								//--- Broadcast a fresh rally order (seq-bump idiom, exact-case lowercase "rally"); clear want; mark rallying.
-								_gwTeam setVariable ["wfbe_aicom_order", [(if (isNil {_gwTeam getVariable "wfbe_aicom_order"}) then {-1} else {(_gwTeam getVariable "wfbe_aicom_order") select 0}) + 1, "rally", _gwRallyPos], true];
+								//--- r76: type/count-safe seq bump (empty/non-array order would throw on bare select 0).
+								private ["_gwPrevOrd","_gwSeq"];
+								_gwPrevOrd = _gwTeam getVariable "wfbe_aicom_order";
+								_gwSeq = if (isNil "_gwPrevOrd" || {typeName _gwPrevOrd != "ARRAY"} || {count _gwPrevOrd < 1} || {typeName (_gwPrevOrd select 0) != "SCALAR"}) then {0} else {(_gwPrevOrd select 0) + 1};
+								_gwTeam setVariable ["wfbe_aicom_order", [_gwSeq, "rally", _gwRallyPos], true];
 								_gwTeam setVariable ["wfbe_aicom_wantrally", false, true];
 								_gwTeam setVariable ["wfbe_aicom_rallying", true, true];
 								//--- claude/aicom-west-stuck: stamp the per-team rally re-arm cooldown at ISSUE time (bug M root-cause). 2-arg server-local write, read only by this same server-side evaluator - the auto understrength trigger above cannot re-fire for WFBE_C_AICOM_WITHDRAW_COOLDOWN seconds, so a still-understrength team gets a bounded assault window under AssignTowns before it can be pulled back, ending the rally-arrive-rally livelock. Explicit driver wantrally requests bypass the gate and are never delayed. Not broadcast on purpose: only this server-side evaluator consults it, so no NSSETVAR3/cross-machine concern.

@@ -18,6 +18,13 @@ _side       = _this select 3;
 _townCenter = _this select 4;
 _capSeq     = _this select 5;
 
+//--- r76 fail-clean: bad spawn args (null team, non-array foot/center) would throw on forEach/select.
+if (isNull _team) exitWith {};
+if (isNil "_footInf" || {typeName _footInf != "ARRAY"}) then {_footInf = []};
+if (isNil "_townCenter" || {typeName _townCenter != "ARRAY"} || {count _townCenter < 2} || {typeName (_townCenter select 0) != "SCALAR"} || {typeName (_townCenter select 1) != "SCALAR"}) exitWith {
+    diag_log Format ["SML|v1|RETREAT_SKIP|side=%1 team=%2 reason=bad_townCenter", _side, _team];
+};
+
 _ttl        = missionNamespace getVariable ["WFBE_C_SML_WATCHDOG_TTL", 240];
 _thresh     = missionNamespace getVariable ["WFBE_C_SML_RETREAT_DAMAGE_THRESHOLD", 0.5];
 _healthyMin = missionNamespace getVariable ["WFBE_C_SML_RETREAT_HEALTHY_MIN", 4];
@@ -29,7 +36,7 @@ _healthyCount = 0;
 _mauledCount  = 0;
 _mauled       = [];
 {
-    if (alive _x) then {
+    if (!isNull _x && {alive _x}) then {
         if ((getDammage _x) >= _thresh) then {
             _mauledCount = _mauledCount + 1;
             _mauled = _mauled + [_x];
@@ -51,17 +58,27 @@ if (count _mauled == 0) exitWith {};
 _detachedBySML3 = [];
 {
     _mX = _x;
+    if (isNull _mX || {!alive _mX}) then {
+        //--- r76: skip null/dead refs in mauled list
+    } else {
     if (!(isNil {_mX getVariable "wfbe_sml_detach_at"})) then {
         //--- Already choreographed by another SML feature; skip to avoid double-detach.
     } else {
         _mX setVariable ["wfbe_sml_detach_at", time];
-        _posX   = (getPos _mX) select 0;
-        _posY   = (getPos _mX) select 1;
-        _bearing = (_posX - ((_townCenter) select 0)) atan2 (_posY - ((_townCenter) select 1));
-        _retreatPos = [_posX + 80 * (sin _bearing), _posY + 80 * (cos _bearing), 0];
-        doStop _mX;
-        _mX doMove _retreatPos;
-        _detachedBySML3 set [count _detachedBySML3, _mX];
+        private ["_mPos"];
+        _mPos = getPos _mX;
+        if (typeName _mPos == "ARRAY" && {count _mPos >= 2} && {typeName (_mPos select 0) == "SCALAR"} && {typeName (_mPos select 1) == "SCALAR"}) then {
+            _posX   = _mPos select 0;
+            _posY   = _mPos select 1;
+            _bearing = (_posX - ((_townCenter) select 0)) atan2 (_posY - ((_townCenter) select 1));
+            _retreatPos = [_posX + 80 * (sin _bearing), _posY + 80 * (cos _bearing), 0];
+            doStop _mX;
+            _mX doMove _retreatPos;
+            _detachedBySML3 set [count _detachedBySML3, _mX];
+        } else {
+            _mX setVariable ["wfbe_sml_detach_at", nil];
+        };
+    };
     };
 } forEach _mauled;
 
@@ -115,10 +132,15 @@ waitUntil {
 //--- REJOIN: restore only units SML-3 actually detached (not units skipped due to another SML stamp).
 {
     _mX = _x;
-    _mX setVariable ["wfbe_sml_detach_at", nil];
-    if (alive _mX && {_mX in (units _team)}) then {
-        _mX setUnitPos "AUTO";
-        _mX doFollow (leader _team);
+    if (!isNull _mX) then {
+        _mX setVariable ["wfbe_sml_detach_at", nil];
+        if (alive _mX && {_mX in (units _team)}) then {
+            _mX setUnitPos "AUTO";
+            //--- r76: never doFollow null/dead leader (leader_dead exit races rejoin).
+            if (!isNull (leader _team) && {alive (leader _team)}) then {
+                _mX doFollow (leader _team);
+            };
+        };
     };
 } forEach _detachedBySML3;
 

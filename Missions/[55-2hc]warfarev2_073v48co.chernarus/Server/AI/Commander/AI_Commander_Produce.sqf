@@ -321,7 +321,12 @@ if (_airMaxTotalP > 0) then {
 			//--- Produce tops it back to the founding floor once it arrives home, then re-dispatches it,
 			//--- instead of parking it forever as a low-strength tracked remnant (the bulk of the base pile).
 			_homeR = missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_HOME_RANGE", 800];
-			if (_aliveNow < 2 && {(_ldr distance _hqP) > _homeR}) then {
+			//--- r76 retreat fail-clean: null/dead leader can sit on a still-alive remnant (leadership race /
+			//--- corpse before reassignment). Bare _ldr distance throws and aborts Produce for the rest of the side.
+			if (isNull _ldr || {!alive _ldr}) then {
+				{ if (!isNull _x && {alive _x}) exitWith { _ldr = _x } } forEach (units _team);
+			};
+			if (_aliveNow < 2 && {!isNull _ldr} && {alive _ldr} && {(_ldr distance _hqP) > _homeR}) then {
 				//--- B67 RETREAT-CULL (retreat-thrash fix): a lone survivor far from HQ re-fires this
 				//--- retreat-and-reform order every produce cycle and never resolves (live: team O 1-2-F
 				//--- alive=1 dist=5566m looping forever - it can't path home and Produce can't refill it in
@@ -386,7 +391,8 @@ if (_airMaxTotalP > 0) then {
 							if (!isNull _cand && {_cand != _team}) then {
 								_candLdr = leader _cand;
 								//--- (b) server-local + non-HC: leader local to server AND not an HC team.
-								if (local _candLdr && {!(isPlayer _candLdr)} && {(behaviour _candLdr) != "COMBAT"} && {!([_cand, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+								//--- r76: null/dead candidate or source leader would throw on local/distance.
+								if (!isNull _candLdr && {alive _candLdr} && {!isNull _ldr} && {alive _ldr} && {local _candLdr} && {!(isPlayer _candLdr)} && {(behaviour _candLdr) != "COMBAT"} && {!([_cand, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 									_candAlive = {alive _x} count (units _cand);
 									//--- (c) alive>=2 healthy, (d) below the 12 ceiling so the merge can't overflow
 									//--- 8-12 policy: surviving body count must still fit (_candAlive + _aliveNow <= MAX).
@@ -427,14 +433,18 @@ if (_airMaxTotalP > 0) then {
 					_team setVariable ["wfbe_aicom_retreat_issues", _rIssues + 1, true]; //--- B68: monotonic re-issue count, never reset by progress.
 					_team setVariable ["wfbe_aicom_retreat_lastdist", _curDist, true];
 					_retreatOrder = _team getVariable "wfbe_aicom_order";
-					if (isNil "_retreatOrder") then {_retreatOrder = [-1]};
+					//--- r76: order may be nil, empty, or non-array (stale group slot); bare select 0 throws.
+					if (isNil "_retreatOrder" || {typeName _retreatOrder != "ARRAY"} || {count _retreatOrder < 1} || {typeName (_retreatOrder select 0) != "SCALAR"}) then {_retreatOrder = [-1]};
 					_retreatSeq = (_retreatOrder select 0) + 1;
 					//--- Refit is a logistical MOVE under always-offense; legacy DEFEND remains a rollback only.
-					_retreatOrder = [_retreatSeq, if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {"move"} else {"defense"}, getPosATL _hqP];
-					_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
-					if ((missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_WALKHOME", 1]) > 0) then {
-						[_team, (_retreatOrder select 1)] Call SetTeamMoveMode;
-						[_team, (_retreatOrder select 2)] Call SetTeamMovePos;
+					//--- Re-check HQ before getPosATL (delete race). No exitWith inside Produce forEach.
+					if (!isNull _hqP && {alive _hqP}) then {
+						_retreatOrder = [_retreatSeq, if ((missionNamespace getVariable ["WFBE_C_AICOM_ALWAYS_OFFENSE", 1]) > 0) then {"move"} else {"defense"}, getPosATL _hqP];
+						_team setVariable ["wfbe_aicom_order", _retreatOrder, true];
+						if ((missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_WALKHOME", 1]) > 0) then {
+							[_team, (_retreatOrder select 1)] Call SetTeamMoveMode;
+							[_team, (_retreatOrder select 2)] Call SetTeamMovePos;
+						};
 					};
 					_team setVariable ["wfbe_aicom_refit", true, true]; //--- B61: mark for top-up-at-base once home.
 					if (!_refitWas) then {
@@ -461,8 +471,12 @@ if (_airMaxTotalP > 0) then {
 				//--- that has retreated home (refit flag set + now within home-range of HQ) is forced
 				//--- in-range so it refills regardless of REINFORCE_RANGE, is topped to the floor below,
 				//--- then re-dispatched - rather than sitting at base as an un-refillable survivor.
-				_refitAtBase = ([_team, "wfbe_aicom_refit", false] Call WFBE_CO_FNC_GroupGetBool) && {(_ldr distance _hqP) <= _homeR}; //--- B66: A2-safe GROUP bool read (was unreliable getVariable[name,default])
-				if (!_refitAtBase && {_ldr distance _hqP > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_REINFORCE_RANGE", 1200])}) then {
+				//--- r76: same null/dead leader re-resolve before refit/reinforce distance gates.
+				if (isNull _ldr || {!alive _ldr}) then {
+					{ if (!isNull _x && {alive _x}) exitWith { _ldr = _x } } forEach (units _team);
+				};
+				_refitAtBase = (!isNull _ldr && {alive _ldr}) && {([_team, "wfbe_aicom_refit", false] Call WFBE_CO_FNC_GroupGetBool) && {(_ldr distance _hqP) <= _homeR}}; //--- B66: A2-safe GROUP bool read (was unreliable getVariable[name,default])
+				if (!_refitAtBase && {!isNull _ldr} && {alive _ldr} && {_ldr distance _hqP > (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_REINFORCE_RANGE", 1200])}) then {
 					//--- FORWARD-REINFORCE: a deep team beyond base range may still refill if its
 					//--- leader is hugging an owned town (front-line resupply), so spearheads stop
 					//--- bleeding out far from HQ. The refill spawn point is pulled forward below.

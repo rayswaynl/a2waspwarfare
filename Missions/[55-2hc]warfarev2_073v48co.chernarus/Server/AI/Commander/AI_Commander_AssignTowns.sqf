@@ -392,6 +392,24 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					if (typeName _ht == "OBJECT" && {!isNull _ht}) then {
 						if (_htSide != _sideID) then {
 							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HOLD_TOWN_LOST|team=" + (str _team) + "|town=" + (_ht getVariable ["name","town"]) + "|townSide=" + str _htSide + "|remaining=" + str (round (_htUntil - time)));
+							//--- r76 town-loss withdrawal: a holder whose town just flipped sits ON the lost depot.
+							//--- Immediate towns retarget picks that same town as nearest uncaptured and walks them
+							//--- straight back into it (card: retreat into the town just lost). Understrength remnants
+							//--- request graceful withdraw (wantrally -> Strategy rally) and blacklist the lost town
+							//--- briefly so AssignTowns does not re-dogpile it next pass.
+							private ["_htAlive","_htBl","_htKeep","_htCd"];
+							_htAlive = {alive _x} count (units _team);
+							if (_htAlive > 0 && {_htAlive < (missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_MIN_ALIVE", 3])}) then {
+								_team setVariable ["wfbe_aicom_wantrally", true, true];
+								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|HOLD_LOST_WANT_RALLY|team=" + (str _team) + "|alive=" + str _htAlive + "|town=" + (_ht getVariable ["name","town"]));
+							};
+							_htCd = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
+							_htBl = [_team, "wfbe_aicom_blacklist", []] Call WFBE_CO_FNC_GroupGetBool;
+							if (typeName _htBl != "ARRAY") then {_htBl = []};
+							_htKeep = [];
+							{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {(_x select 0) != _ht}) then {_htKeep set [count _htKeep, _x]} } forEach _htBl;
+							_htKeep set [count _htKeep, [_ht, time + _htCd]];
+							_team setVariable ["wfbe_aicom_blacklist", _htKeep];
 						};
 					};
 				};
@@ -404,7 +422,15 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					_explicitMode = false;
 					_modeNow = "towns";
 					if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
-						_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos (leader _team)], true];
+						//--- r76: safe seq + live leader pos (null leader would throw on getPos).
+						private ["_htOrd","_htSeq","_htLdr","_htPos"];
+						_htOrd = _team getVariable "wfbe_aicom_order";
+						_htSeq = if (isNil "_htOrd" || {typeName _htOrd != "ARRAY"} || {count _htOrd < 1} || {typeName (_htOrd select 0) != "SCALAR"}) then {0} else {(_htOrd select 0) + 1};
+						_htLdr = leader _team;
+						_htPos = if (!isNull _htLdr && {alive _htLdr}) then {getPos _htLdr} else {[0,0,0]};
+						if (!isNull _htLdr && {alive _htLdr}) then {
+							_team setVariable ["wfbe_aicom_order", [_htSeq, "towns", _htPos], true];
+						};
 					};
 				};
 			};
