@@ -183,7 +183,9 @@ if (_unit isKindOf "Ship") then { //--- Boats.
 if (_unit isKindOf "Air") then { //--- Air units.
 	if ((getNumber (configFile >> 'CfgVehicles' >> _unit_kind >> 'transportSoldier')) > 0) then { //--- Transporters only.
 		//--- HALO action.
-		_unit addAction ['HALO','Client\Action\Action_HALO.sqf', [], 97, false, true, '', Format['getPos _target select 2 >= %1 && alive _target', missionNamespace getVariable 'WFBE_C_PLAYERS_HALO_HEIGHT']];
+		//--- r72: only occupants (vehicle _this == _target) — prior condition showed HALO to any scroll
+		//--- target in range when the airframe was high enough, not just cargo/crew.
+		_unit addAction ['HALO','Client\Action\Action_HALO.sqf', [], 97, false, true, '', Format['vehicle _this == _target && {getPos _target select 2 >= %1} && {alive _target}', missionNamespace getVariable 'WFBE_C_PLAYERS_HALO_HEIGHT']];
 		//--- Cargo Eject action.
 		_unit addAction [localize 'STR_WF_Cargo_Eject','Client\Action\Action_EjectCargo.sqf', [], 99, false, true, '', 'driver _target == _this && alive _target'];
 	};
