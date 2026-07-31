@@ -262,6 +262,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 								if ((toLower _cannonMuzzle) == "this") then {_cannonMuzzle = _cannon};
 							};
 							(gunner _h) selectWeapon _cannonMuzzle; //--- B66: muzzle, not weapon name
+							//--- r60 knowsabout residual: comment claimed a "revealed enemy" but never
+							//--- seeded knowledge. doTarget/doFire without reveal leaves the gunner FOW-blind
+							//--- until organic engine detect; seed knowsAbout (2-operand, A2-safe) first.
+							(gunner _h) reveal _tgt;
 							(gunner _h) doTarget _tgt;
 							(gunner _h) doFire _tgt;
 						};
@@ -2356,7 +2360,9 @@ while {!WFBE_GameOver && _alive} do {
 					_crewDismountThreatClear = true;
 					if (!_hasNonCrewInf) then {
 						_cdtR = missionNamespace getVariable ["WFBE_C_AICOM_CREW_DISMOUNT_THREAT_RADIUS", 100];
-						_crewDismountThreatClear = ({alive _x && {side _x != _side} && {side _x != civilian}} count ((getPos (leader _team)) nearEntities [["Man"], _cdtR])) <= 0;
+						//--- r60 detect residual: Man-only misses crewed hulls (GuerAirDef hunt fix).
+						//--- Crew must not dismount into vehicle fire just because no dismounted Man is in the ring.
+						_crewDismountThreatClear = ({alive _x && {side _x != _side} && {side _x != civilian}} count ((getPos (leader _team)) nearEntities [["Man","Car","Motorcycle","Tank","Air"], _cdtR])) <= 0;
 					};
 					{
 						_u = _x;
@@ -2670,7 +2676,9 @@ while {!WFBE_GameOver && _alive} do {
 											if (alive _x && {side _x != _side} && {side _x != civilian}) exitWith {
 												_smkBrg = (((getPosATL _x) select 0) - (_smkBase select 0)) atan2 (((getPosATL _x) select 1) - (_smkBase select 1));
 											};
-										} forEach (_smkBase nearEntities [["Man"], _capRange]);
+										//--- r60 detect residual: Man-only bearing misses mounted resistance; smoke screen
+										//--- then falls back to leader heading (wrong arc). Match multi-type capture ring.
+										} forEach (_smkBase nearEntities [["Man","Car","Motorcycle","Tank","Air"], _capRange]);
 										//--- Two shells ~15m out on either side of the enemy bearing (a covering arc, not a stack).
 										_smkP0 = [(_smkBase select 0) + 15 * (sin (_smkBrg - 30)), (_smkBase select 1) + 15 * (cos (_smkBrg - 30)), 0];
 										_smkP1 = [(_smkBase select 0) + 15 * (sin (_smkBrg + 30)), (_smkBase select 1) + 15 * (cos (_smkBrg + 30)), 0];

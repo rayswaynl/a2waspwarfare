@@ -122,6 +122,15 @@ while {_running} do {
 			if (!isNull _best) then {
 				_mode = "patrol";                      //--- Execute maps "patrol" -> SAD waypoint = engage in that area
 				_tPos = getPos _best;
+				//--- r60 knowsabout residual: CAS found a contact and ordered SAD, but never seeded
+				//--- group knowledge. Seed 2-operand reveal so the crew prosecutes the hull (and
+				//--- alive crew members) instead of waiting on organic detect inside the SAD ring.
+				if (!isNull _team) then {
+					_team reveal _best;
+					if !(_best isKindOf "Man") then {
+						{ if (alive _x) then {_team reveal _x} } forEach (crew _best);
+					};
+				};
 				//--- Verbose per-interval dump. WF_LOG_CONTENT is a PREPROCESSOR DEFINE, not a namespace
 				//--- variable - it cannot be read with getVariable. WFBE_CO_FNC_LogContent already self-gates
 				//--- on it (LOG_CONTENT_STATE) and is forced always-on for every HC, so calling it directly is
