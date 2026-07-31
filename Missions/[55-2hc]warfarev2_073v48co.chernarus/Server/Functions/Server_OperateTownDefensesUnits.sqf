@@ -76,6 +76,24 @@ switch (_action) do {
 					};
 
 					if (_use_server) then {
+						//--- r62 alife-static-manning: multi-group 12-cap is intended (header), but the pre-loop
+						//--- while only advances on ALREADY-full groups. Mid-forEach after CreateUnit fills slot 12,
+						//--- further guns kept stuffing the same group (bloat) or failed creates left guns empty.
+						//--- Re-pick a non-full per-town gunner group before each server-side CreateUnit.
+						while {!(isNull _team) && {count units _team >= 12}} do {
+							_grpIdx = _grpIdx + 1;
+							_grpKey = Format ["wfbe_gungrp_%1_%2", _sideID, _grpIdx];
+							_team = _town getVariable _grpKey;
+							if (isNil "_team") then {_team = grpNull};
+						};
+						if (isNull _team) then {
+							_team = [_side, "defense-gunners"] Call WFBE_CO_FNC_CreateGroup;
+							if !(isNull _team) then {
+								_team setVariable ["wfbe_persistent", true];
+								_town setVariable [_grpKey, _team];
+							};
+						};
+						if (isNull _team) then {_team = missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side]};
 						_unit = [missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side], _team, getPos _x, _side] Call WFBE_CO_FNC_CreateUnit;
 						if (isNull _unit) then {
 							["WARNING", Format ["Server_OperateTownDefensesUnits.sqf: Town [%1] failed to create a defense gunner for [%2].", _town getVariable "name", typeOf _defense]] Call WFBE_CO_FNC_LogContent;
@@ -163,7 +181,11 @@ switch (_action) do {
 				_defense lock true;
 			};
 			if !(isNil {_x getVariable "wfbe_defense_operator"}) then { //--- Delete the original gunner if he's still around.
-				if (alive(_x getVariable "wfbe_defense_operator")) then {deleteVehicle (_x getVariable "wfbe_defense_operator")};
+				//--- r62: operator delete locality parity with gunner remove-case (HC-local deleteVehicle no-ops).
+				private "_opUnit"; _opUnit = _x getVariable "wfbe_defense_operator";
+				if (alive _opUnit) then {
+					if (local _opUnit) then {deleteVehicle _opUnit} else {[_opUnit, "HandleSpecial", ["cleanup-town-defense-gunner", _opUnit, "operator-remove"]] Call WFBE_CO_FNC_SendToClient};
+				};
 				_x setVariable ["wfbe_defense_operator", nil];
 			};
 		} forEach (_town getVariable "wfbe_town_defenses");
