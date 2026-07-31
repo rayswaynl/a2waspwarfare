@@ -22,8 +22,8 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="WASP Warfare Build 91 (Chernarus)";
-		briefingDescription="Build 91: WDDM-designed defense positions & fortifications with thin-tower flak, a big AI commander wave (SCUD research restored, armor screens, target-aware team comps, feints, stuck-team watchers, air discipline), town AA fixed to guard active-air towns, ambient skirmish cells, GUER respawn fixes, JIP state sync, artillery-radar structures, economy divide-by-zero and crew-dismiss fixes, endgame summary, and a QoL batch.";
+		briefingName="WASP Warfare (Chernarus)";
+		briefingDescription="Combined-arms Warfare CTI on Chernarus. Two AI commanders fight each other and a GUER insurgency for every town on the map: capture and upgrade settlements to grow your economy, buy infantry, armour, aircraft and naval assets, run supply and repair convoys, call artillery and close air support, and command your own AI teams from the map. Headless clients carry the AI load so the server stays fast in large battles.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;
