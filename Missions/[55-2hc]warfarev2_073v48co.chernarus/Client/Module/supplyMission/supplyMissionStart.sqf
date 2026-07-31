@@ -3,6 +3,12 @@ private ['_sourceTown', '_associatedSupplyTruck', '_supplyAmount', '_supplyMissi
 _sourceTown = call GetClosestFriendlyLocation;
 WFBE_CL_VAR_ASSOCIATED_SUPPLY_TRUCK = objNull;
 
+//--- fail-clean r48: no owned town => GetClosestFriendlyLocation returns objNull; getVariable/supplyValue
+//--- on null and the PV payload would poison the server town cooldown path.
+if (isNull _sourceTown) exitWith {
+    format ["No friendly town nearby to collect supplies from."] call GroupChatMessage;
+};
+
 missionNamespace setVariable ["WFBE_Client_PV_IsSupplyMissionActiveInTown", [player, _sourceTown]];
 publicVariableServer "WFBE_Client_PV_IsSupplyMissionActiveInTown";
 
