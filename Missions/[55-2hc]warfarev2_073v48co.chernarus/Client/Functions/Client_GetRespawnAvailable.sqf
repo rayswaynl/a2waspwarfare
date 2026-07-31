@@ -7,7 +7,8 @@ _sideText = str _side;
 
 //--- Base.
 _hq = (_side) Call WFBE_CO_FNC_GetSideHQ;
-_availableSpawn = [_hq];
+//--- r67: only seed a LIVE HQ (dead/null HQ was offered as a selectable spawn until deleted).
+_availableSpawn = if (!isNull _hq && {alive _hq}) then {[_hq]} else {[]};
 _buildings = (_side) Call WFBE_CO_FNC_GetSideStructures;
 _checks = [_side,missionNamespace getVariable Format["WFBE_%1BARRACKSTYPE",_sideText],_buildings] Call GetFactories;
 if (count _checks > 0) then {_availableSpawn = _availableSpawn + _checks};
@@ -28,7 +29,8 @@ if (count _checks > 0) then {_availableSpawn = _availableSpawn + _checks}; */
 
 
 //--- HQ is dead, but we can spawn at other buildings.
-if (!alive _hq && count _availableSpawn > 1) then {_availableSpawn = _availableSpawn - [_hq]};
+//--- r67: always drop dead/null HQ (was only when count>1, so base-wipe left a dead HQ selectable).
+if (isNull _hq || {!alive _hq}) then {_availableSpawn = _availableSpawn - [_hq, objNull]};
 
 //--- Mobile respawn.
 if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") > 0) then {
@@ -133,4 +135,8 @@ if (_side != resistance) then {
 	} forEach towns;
 };
 
+//--- r67: final pass — drop null/dead entries (menu clean only filtered isNull).
+private "_aliveSpawn"; _aliveSpawn = [];
+{ if (!isNil "_x" && {typeName _x == "OBJECT"} && {!isNull _x} && {alive _x}) then {_aliveSpawn = _aliveSpawn + [_x]} } forEach _availableSpawn;
+_availableSpawn = _aliveSpawn;
 _availableSpawn
