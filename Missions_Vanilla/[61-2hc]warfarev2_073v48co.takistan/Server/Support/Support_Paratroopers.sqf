@@ -1,4 +1,4 @@
-Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_delay','_destination','_dropPos','_greenlight','_grp','_index','_isAI','_lvlOverride','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles','_transporter'];
+Private['_bd','_built','_built_inf','_currentLevel','_currentUpgrades','_delay','_destination','_dropPos','_greenlight','_grp','_index','_isAI','_lvlOverride','_paratroopers','_playerTeam','_ran','_ranDir','_ranPos','_returnStart','_side','_sideID','_starttime','_units','_vehicle','_vehicle_cargo','_vehicle_count','_vehicle_model','_vehicle_pilot','_vehicles','_transporter','_logikAI','_liveVeh'];
 
 _side = _this select 1;
 _destination = _this select 2;
@@ -11,6 +11,18 @@ _starttime = time;
 //--- true and we keep ONLY the hard 500s transit timeout (drop the "player left -> abort" leg) and skip the per-trooper
 //--- client marker-send. The human-called path (leader is a player) is byte-for-byte unchanged: _isAI is false there.
 _isAI = !(isPlayer (leader _playerTeam));
+
+//--- r70 tasking: AI caller stamps wfbe_aicom_para_last BEFORE this script runs (and after CreateGroup in #1708).
+//--- Pre-flight aborts here must release that stamp or the side is locked out for the full cooldown with no stick.
+_fnReleaseAIParaCd = {
+	if (!_isAI) exitWith {};
+	_logikAI = (_side) Call WFBE_CO_FNC_GetSideLogic;
+	if (!isNull _logikAI) then {
+		_logikAI setVariable ["wfbe_aicom_para_last", -1e9];
+		["WARNING", Format ["Support_Paratroopers.sqf: [%1] AI para pre-flight abort - cooldown released.", _side]] Call WFBE_CO_FNC_LogContent;
+		diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|PARATROOP_CD_RELEASE|preflight-abort");
+	};
+};
 
 ["INFORMATION", Format["Support_Paratroopers.sqf : [%1] Team [%2] has requested paratroopers (ai:%3).", _side, _playerTeam, _isAI]] Call WFBE_CO_FNC_LogContent;
 
@@ -44,11 +56,17 @@ if (count _this > 4) then {
 _units = missionNamespace getVariable Format ["WFBE_%1PARACHUTELEVEL%2", str _side, _currentLevel];
 _vehicle_model = missionNamespace getVariable Format ["WFBE_%1PARACARGO", str _side];
 
-if (isNil '_units' || isNil '_vehicle_model') exitWith {["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle or units are not defined (level %2).", _side, _currentLevel]] Call WFBE_CO_FNC_LogContent};
+if (isNil '_units' || isNil '_vehicle_model') exitWith {
+	call _fnReleaseAIParaCd;
+	["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle or units are not defined (level %2).", _side, _currentLevel]] Call WFBE_CO_FNC_LogContent
+};
 
 //--- Determine how many vehicles do we need.
 _vehicle_cargo = getNumber(configFile >> 'CfgVehicles' >> _vehicle_model >> 'transportSoldier');
-if (_vehicle_cargo == 0) exitWith {["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle [%2] has no cargo capacity.", _side, _vehicle_model]] Call WFBE_CO_FNC_LogContent};
+if (_vehicle_cargo == 0) exitWith {
+	call _fnReleaseAIParaCd;
+	["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle [%2] has no cargo capacity.", _side, _vehicle_model]] Call WFBE_CO_FNC_LogContent
+};
 _vehicle_count = ceil((count _units) / _vehicle_cargo);
 
 //--- Create the vehicles.
@@ -76,6 +94,16 @@ for '_i' from 1 to _vehicle_count do {
 	
 	_vehicle flyInHeight (300 + random 15);
 	_vehicle lockDriver true;
+};
+
+//--- r70: drop null hulls (createVehicle fail) so select/init never run on objNull.
+_liveVeh = [];
+{ if (!isNull _x) then {_liveVeh = _liveVeh + [_x]} } forEach _vehicles;
+_vehicles = _liveVeh;
+if ((count _vehicles) == 0) exitWith {
+	call _fnReleaseAIParaCd;
+	if (!isNull _grp) then {deleteGroup _grp};
+	["ERROR", Format["Support_Paratroopers.sqf : [%1] No live transport after create - abort.", _side]] Call WFBE_CO_FNC_LogContent
 };
 
 [str _side, 'VehiclesCreated', _built] Call UpdateStatistics;
@@ -138,7 +166,12 @@ if (_greenlight) then {
 	//--- stick previously got no waypoint/doMove/patrol at all and stood idle at the drop zone forever.
 	//--- A human-called drop already has the player commanding _playerTeam, so only the AI path needs this.
 	if (_isAI && {count units _playerTeam > 0}) then {
-		_dropPos = getPos (leader _playerTeam);
+		//--- r70 tasking: re-home stick to the ORDERED objective (town centre), not the parachuting
+		//--- leader mid-air pos (prior: AIPatrol around fall position, never the reinforce target).
+		_dropPos = _destination;
+		if (isNil "_dropPos" || {typeName _dropPos != "ARRAY"} || {count _dropPos < 2}) then {
+			_dropPos = getPos (leader _playerTeam);
+		};
 		//--- AIPatrol resets behaviour to AWARE/YELLOW as its first act, so it MUST run BEFORE the engage
 		//--- posture is set or COMBAT/RED gets clobbered (same idiom as Server_GuerAirDef.sqf).
 		[_playerTeam, _dropPos, 200] Call AIPatrol;
