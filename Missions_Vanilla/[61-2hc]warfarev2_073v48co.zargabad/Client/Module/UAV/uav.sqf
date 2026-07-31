@@ -81,7 +81,7 @@ if (WF_A2_Vanilla) then {
 _spawn = [] spawn {}; //--- Empty spawn
 while {alive _uav} do {
 	waituntil {waypointDescription [group _uav,currentWaypoint group _uav] != ' ' || !alive _uav};
-	terminate _spawn; //--- Terminate spawn from previous loop
+	if (!isNil "_spawn" && {!(scriptDone _spawn)}) then {terminate _spawn}; //--- r65: only terminate a live handle (was bare terminate every loop)
 	if !(alive _uav) exitWith {};
 
 	_waypoints = waypoints _uav;
