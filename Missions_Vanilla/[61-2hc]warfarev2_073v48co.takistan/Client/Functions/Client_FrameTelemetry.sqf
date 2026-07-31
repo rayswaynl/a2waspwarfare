@@ -62,7 +62,7 @@ while {!(missionNamespace getVariable ["WFBE_GameOver", false])} do {
 		};
 		_markerCount = missionNamespace getVariable ["PerformanceAuditMarkerScripts", 0];
 		_aarMarkerCount = missionNamespace getVariable ["PerformanceAuditAARMarkerScripts", 0];
-		_playerCount = count ([] Call WFBE_CO_FNC_RealPlayers);
+		_playerCount = {[_x, false] Call WFBE_CO_FNC_IsRealPlayer} count allUnits;
 		_aiCount = (count allUnits) - _playerCount;
 		_profileViewDistance = profileNamespace getVariable ["WFBE_PERSISTENT_CONST_VIEW_DISTANCE", -1];
 		_profileTerrainGrid = profileNamespace getVariable ["WFBE_PERSISTENT_CONST_TERRAIN_GRID", -1];

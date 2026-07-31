@@ -45,7 +45,7 @@ _now = time;
 //--- support). LOCK forces AI command regardless of an occupied slot (mirrors AI_Commander.sqf:145).
 _humanCmd = false;
 _cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
-if (!isNull _cmdTeam) then { if ([leader _cmdTeam] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmd = true} };
+if (!isNull _cmdTeam) then { if ([leader _cmdTeam, false] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmd = true} };
 if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) then {_humanCmd = false};
 if (_humanCmd) exitWith {};
 

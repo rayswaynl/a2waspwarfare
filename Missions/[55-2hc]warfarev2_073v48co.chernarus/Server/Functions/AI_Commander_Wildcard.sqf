@@ -111,12 +111,12 @@ while {!gameOver} do {
 	_cmdTeam      = (west) Call WFBE_CO_FNC_GetCommanderTeam;
 	_humanCmdWEST = false;
 	if (!isNull _cmdTeam) then {
-		if ([leader _cmdTeam] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmdWEST = true};
+		if ([leader _cmdTeam, false] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmdWEST = true};
 	};
 	_cmdTeam      = (east) Call WFBE_CO_FNC_GetCommanderTeam;
 	_humanCmdEAST = false;
 	if (!isNull _cmdTeam) then {
-		if ([leader _cmdTeam] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmdEAST = true};
+		if ([leader _cmdTeam, false] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmdEAST = true};
 	};
 	_bothHuman = (_humanCmdWEST && _humanCmdEAST);
 
@@ -139,7 +139,7 @@ while {!gameOver} do {
 		_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 		_humanCmd = false;
 		if (!isNull _cmdTeam) then {
-			if ([leader _cmdTeam] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmd = true};
+			if ([leader _cmdTeam, false] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmd = true};
 		};
 
 		//--- For AI-commanded sides: also require wfbe_aicom_running; HQ alive.

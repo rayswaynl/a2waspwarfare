@@ -29,7 +29,7 @@
 private ["_side","_sideID","_sideText","_logik","_teams","_enemySide","_enemyID","_enemyLogik",
 	"_myTowns","_enemyTowns","_neutTowns","_totTowns","_ownTownObjs","_tgtTownObjs",
 	"_myHQ","_enemyHQ","_myStr","_enStr","_loneAlive","_loneFar","_townStr","_myEff","_enEff",
-	"_funds","_supply","_players","_myPlayers","_teamDigests","_team","_tAlive",
+	"_funds","_supply","_players","_myPlayers","_hcUnits","_teamDigests","_team","_tAlive",
 	"_isRemnant","_rf","_ldr","_ldrPos","_isHC","_isFound","_isGar","_mode","_strikeFlag",
 	"_reliefTown","_hasGndVeh","_mountedNow","_hasHeavy","_veh","_garGrp","_snap","_elMin"];
 
@@ -101,11 +101,14 @@ _enEff = _enStr + (_enemyTowns * _townStr);
 _funds  = (_side) Call GetAICommanderFunds;
 _supply = if ((missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0) then {(_side) Call WFBE_CO_FNC_GetSideSupply} else {0};
 
-//--- HUMAN-PLAYER COUNT (drives player-scaled closer pacing). Common_IsRealPlayer excludes
-//--- registered headless-client bodies and the dedicated CIV caster in one place.
+//--- HUMAN-PLAYER COUNT (drives player-scaled closer pacing). EXCLUDE headless-client bodies
+//--- (they report isPlayer=true but are not real humans) by filtering out units owned by any
+//--- registered HC group, so an AI-vs-AI soak correctly reads players=0.
+_hcUnits = [];
+{ if (!isNull _x) then { { _hcUnits set [count _hcUnits, _x] } forEach (units _x) } } forEach (missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []]);
 _players = 0; _myPlayers = 0;
 {
-	if ([_x] Call WFBE_CO_FNC_IsRealPlayer) then {
+	if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {!(_x in _hcUnits)}) then {
 		_players = _players + 1;
 		if ((side _x) == _side) then {_myPlayers = _myPlayers + 1};
 	};

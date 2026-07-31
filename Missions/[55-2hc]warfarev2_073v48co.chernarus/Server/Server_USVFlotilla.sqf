@@ -164,7 +164,7 @@ while {!WFBE_GameOver} do {
 		if ((_gTown getVariable ["wfbe_is_coastal", false])
 			&& {_gTown getVariable ["wfbe_active", false]}
 			&& {((missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_PLAYER_GATE", 0]) <= 0)
-				|| {([getPos _gTown, missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_PLAYER_RADIUS", 1500], true] Call WFBE_CO_FNC_RealPlayersNear) > 0}}) exitWith {
+				|| {({[_x, false] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _gTown) < (missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_PLAYER_RADIUS", 1500])}} count playableUnits) > 0}}) exitWith {
 			_gateActive = true;
 			_gateReason = format ["coastal_town:%1", _gTown getVariable ["name","?"]];
 		};
@@ -180,8 +180,8 @@ while {!WFBE_GameOver} do {
 			_cPos = getPos _x;
 			//--- wasp-navalcap-playableunits: same HC hardening as the Init_NavalHVT.sqf CAP arm gate -
 			//--- a sea-parked headless-client body (isPlayer TRUE, alive, CIV) inside the approach
-			//--- radius would hold this flotilla gate open forever. Side + shared real-player filter.
-			if (([_cPos, _approachRadius, true] Call WFBE_CO_FNC_RealPlayersNear) > 0) exitWith {
+			//--- radius would hold this flotilla gate open forever. Side + known-HC-name filter.
+			if ({[_x, false] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _cPos) < _approachRadius}} count playableUnits > 0) exitWith {
 				_gateActive = true;
 				_gateReason = format ["carrier_approach:%1", _x getVariable ["name","?"]];
 			};
@@ -274,7 +274,7 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 						//--- wasp-navalcap-playableunits: alive was MISSING here (a dead body 100m away kept a
 						//--- wedged boat on the gentle velocity-hop path forever), and the same HC edge case
 						//--- applies - a sea-parked HC body near the route must not count as a player.
-						if (([getPos _eBoat, 100, true] Call WFBE_CO_FNC_RealPlayersNear) > 0) then {
+						if ({[_x, false] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _eBoat) < 100}} count playableUnits > 0) then {
 							//--- Player-near velocity hop (Common_RunSidePatrol.sqf:358-359), generalizes to water.
 							_eBoat setVelocity [(velocity _eBoat) select 0, (velocity _eBoat) select 1, 4];
 						} else {

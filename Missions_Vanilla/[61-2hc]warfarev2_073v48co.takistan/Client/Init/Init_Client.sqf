@@ -29,7 +29,12 @@ diag_log format ["Init_Client.sqf: Client initialization begins at [%1]", time];
 if (isNull player) exitWith {["ERROR", "Init_Client.sqf: player is NULL at init (joined a deleted/shell slot?) - aborting client init gracefully; fade watchdog clears the screen."] Call WFBE_CO_FNC_LogContent};
 
 //--- OA 1.64 has no roleDescription runtime command; the mission.sqm init stamp is an object-local, A2-safe identifier.
-if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_CASTER_SLOT", 0]) > 0 && {player getVariable ["WFBE_C_SPECTATOR_CASTER_SLOT", 0] > 0}) exitWith {
+//--- flag-off review 2026-07-31: detection of "is this the caster body" is intentionally NOT gated on the
+//--- missionNamespace flag below - mission.sqm's Item150/151 CIV slot is static content that is always
+//--- player-selectable regardless of flag state, so the safe park/contained handling here must ALSO be
+//--- reachable regardless of flag state. Only the actual promotion to an active spectator (the
+//--- _allowlisted check inside this branch) still requires the flag to be armed.
+if ((player getVariable ["WFBE_C_SPECTATOR_CASTER_SLOT", 0]) > 0) exitWith {
 	//--- Clear the normal join blackout because this branch intentionally never reaches clientInitComplete.
 	12452 cutText ["", "BLACK IN", 1];
 
@@ -56,7 +61,7 @@ if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_CASTER_SLOT", 0]) > 0 && {p
 			player setCaptive true;
 			player setPos (getMarkerPos "GuerTempRespawnMarker");
 
-			_allowlisted = _uid in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []]);
+			_allowlisted = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_CASTER_SLOT", 0]) > 0) && {_uid in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []])};
 			if (_allowlisted) exitWith {
 				12453 cutText ["", "PLAIN", 0];
 				[] Call WFBE_CL_FNC_SpectatorEnter;

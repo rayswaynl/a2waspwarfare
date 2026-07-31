@@ -100,7 +100,8 @@ WFBE_CO_FNC_AICOM_AutoFlip_Check = {
 	missionNamespace setVariable ["wfbe_waspscale_recov", (missionNamespace getVariable ["wfbe_waspscale_recov", 0]) + 1];
 	if (!isServer) then {["RequestSpecial", ["waspscale-counter-delta", "wfbe_waspscale_recov"]] Call WFBE_CO_FNC_SendToServer};
 	//--- Owner directive: recover even in player view, but expose nearby-player context for RPT tuning.
-	_playerNear = [getPos _vehicle, 200] Call WFBE_CO_FNC_RealPlayersNear;
+	_playerNear = 0;
+	{if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {(_x distance _vehicle) < 200}) then {_playerNear = _playerNear + 1}} forEach playableUnits;
 	diag_log (Format ["AICOMSTAT|v1|EVENT|%1|%2|AUTOFLIP|righted=%3|playersNear=%4", str isServer, round (time / 60), typeOf _vehicle, _playerNear]);
 };
 

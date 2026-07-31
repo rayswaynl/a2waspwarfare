@@ -11,7 +11,7 @@ _miniSleep = 0.10;
 	_sideMatches = (_side == side _x);
 
 	// We must exclude the player itself from score counting.
-	if ([_x] Call WFBE_CO_FNC_IsRealPlayer && _sideMatches && (getPlayerUID _x != _uid)) then {
+	if (isPlayer _x && _sideMatches && (getPlayerUID _x != _uid)) then {
 		_playersOnSide = [];
 		uiSleep _miniSleep;
 		

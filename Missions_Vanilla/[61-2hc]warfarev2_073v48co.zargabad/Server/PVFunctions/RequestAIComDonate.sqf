@@ -87,7 +87,7 @@ if (isNull _logik) exitWith {
 _cmdTeam  = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 _humanCmd = false;
 if (!isNull _cmdTeam) then {
-	if ([leader _cmdTeam] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmd = true};
+	if ([leader _cmdTeam, false] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmd = true};
 };
 
 if (_humanCmd) exitWith {

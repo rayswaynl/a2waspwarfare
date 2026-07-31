@@ -39,9 +39,9 @@
    setPos / sin / cos / sqrt / atan2 / min / max / mod(% operator) /
    displayAddEventHandler / setMousePosition (OA 1.60+) / eyePos /
    eyeDirection / modelToWorld / isPlayer / allUnits / name / toUpper /
-   parseText / switch - no A3-only commands.
+   cutText / parseText / switch - no A3-only commands.
 */
-//--- No display-serialization directive here: this script may suspend, and it
+//--- No display-serialization directive here: this
 //--- script suspends (it runs scheduled from addAction). On m0730f it silently died at
 //--- the first waitUntil - handler attach and the movement loop never ran (live RPT:
 //--- SPECTATE|v2|enter logged, nothing after; camera stayed target-locked to the entry
@@ -139,8 +139,8 @@ WFBE_CL_FNC_SpectatorCycleTarget = {
 	_list = [];
 	{
 		if (!isNil "_x") then {
-			//--- The shared real-player predicate keeps HC and caster bodies out of watch targets.
-			if ([_x] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {!(_x == player)}) then {_list = _list + [_x]};
+			//--- HC bodies are isPlayer-true; never offer them as watch targets (owner 2026-07-30).
+			if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer && {alive _x} && {!(_x == player)} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {_list = _list + [_x]};
 		};
 	} forEach allUnits;
 	if (count _list == 0) exitWith {

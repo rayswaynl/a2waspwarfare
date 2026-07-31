@@ -36,7 +36,7 @@ while {alive _bank && {!WFBE_GameOver}} do {
 	} else {
 		//--- Split the pool among living players on the owning side.
 		_playerCount = 0;
-		{if ((isPlayer _x) && (alive _x) && (side _x == _side) && {!((name _x) in WFBE_C_HC_NAMES)}) then {_playerCount = _playerCount + 1}} forEach playableUnits;
+		{if (([_x, false] Call WFBE_CO_FNC_IsRealPlayer) && (alive _x) && (side _x == _side) && {!((name _x) in WFBE_C_HC_NAMES)}) then {_playerCount = _playerCount + 1}} forEach playableUnits;
 		_share = round (_pool / (_playerCount max 1));
 		[_side, "BankPayout", [_share]] Call WFBE_CO_FNC_SendToClients;
 		[_side, _share] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (BankPayout keeps only the message).

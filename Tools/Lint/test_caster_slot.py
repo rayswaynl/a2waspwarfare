@@ -77,8 +77,10 @@ def test_caster_flag_branch_and_shared_predicate_are_present():
     predicate = _text(source / "Common/Functions/Common_IsRealPlayer.sqf")
     real_players = _text(source / "Common/Functions/Common_RealPlayers.sqf")
     real_players_near = _text(source / "Common/Functions/Common_RealPlayersNear.sqf")
+    spectator_director = _text(source / "Client/Functions/Client_SpectatorDirector.sqf")
+    spectator_enter = _text(source / "Client/Functions/Client_SpectatorEnter.sqf")
 
-    assert 'if (isNil "WFBE_C_SPECTATOR_CASTER_SLOT") then {WFBE_C_SPECTATOR_CASTER_SLOT = 0}' in constants
+    assert 'if (isNil "WFBE_C_SPECTATOR_CASTER_SLOT") then {WFBE_C_SPECTATOR_CASTER_SLOT = 1}' in constants
     assert "WFBE_CO_FNC_IsRealPlayer = Compile preprocessFileLineNumbers" in common_init
     assert 'player getVariable ["WFBE_C_SPECTATOR_CASTER_SLOT", 0]' in client
     assert 'player setPos (getMarkerPos "GuerTempRespawnMarker")' in client
@@ -91,3 +93,69 @@ def test_caster_flag_branch_and_shared_predicate_are_present():
     caster_branch = client[client.index("WFBE_C_SPECTATOR_CASTER_SLOT") : client.index("sideJoined = side player;")]
     assert "disableSerialization" not in caster_branch
     assert "hintSilent" not in caster_branch
+    assert "disableSerialization" not in spectator_director + spectator_enter
+    assert "hintSilent" not in spectator_director + spectator_enter
+
+def test_flag_off_predicate_path_preserves_bare_isplayer_semantics():
+    source = TERRAINS[0]
+    predicate = _text(source / "Common/Functions/Common_IsRealPlayer.sqf")
+    frame_telemetry = _text(source / "Client/Functions/Client_FrameTelemetry.sqf")
+    air_resp = _text(source / "Server/AI/Commander/AI_Commander_AirResp.sqf")
+    anti_stack = _text(source / "Server/Module/AntiStack/compareTeamScores.sqf")
+    bank_income = _text(source / "Server/Functions/Server_BankIncome.sqf")
+
+    assert "_exclHC = true" in predicate
+    assert "if (!_exclHC) exitWith {true};" in predicate
+    assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in frame_telemetry
+    assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in air_resp
+    assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in anti_stack
+    assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in bank_income
+
+
+def test_legacy_name_and_group_filters_are_not_flattened():
+    source = TERRAINS[0]
+    director = _text(source / "Client/Functions/Client_SpectatorDirector.sqf")
+    credit = _text(source / "Common/Functions/Common_CreditSidePlayers.sqf")
+    stats = _text(source / "Server/Stats/StatsFlush.sqf")
+    naval = _text(source / "Server/Init/Init_NavalHVT.sqf")
+    snapshot = _text(source / "Server/AI/Commander/AI_Commander_Snapshot.sqf")
+
+    assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in director
+    assert "WFBE_C_HC_NAMES" in director
+    assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in credit
+    assert "WFBE_C_HC_NAMES" in credit
+    assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in stats
+    assert "WFBE_C_HC_NAMES" in stats
+    assert "[_x, false] Call WFBE_CO_FNC_IsRealPlayer" in naval
+    assert "WFBE_C_HC_NAMES" in naval
+    assert "_hcUnits" in snapshot
+    assert "!(_x in _hcUnits)" in snapshot
+
+
+def test_review_gaps_are_closed_in_every_terrain():
+    for terrain in TERRAINS:
+        killed = _text(terrain / "Server/PVFunctions/RequestOnUnitKilled.sqf")
+        score = _text(terrain / "Server/Module/AntiStack/getTeamScore.sqf")
+        constants = _text(terrain / "Common/Init/Init_CommonConstants.sqf")
+
+        assert "_killer_isplayer = [_killer, false] Call WFBE_CO_FNC_IsRealPlayer;" in killed
+        assert "_killed_isplayer = [_killed, false] Call WFBE_CO_FNC_IsRealPlayer;" in killed
+        assert 'if(!isPlayer(_killed) && _killed_type isKindOf "Infantry")then{' in killed
+        dead_block = score[score.index("/*") : score.index("*/") + 2]
+        assert "WFBE_CO_FNC_IsRealPlayer" not in dead_block
+        assert 'WFBE_C_SPECTATOR_CASTER_SLOT = 1' in constants
+
+
+def test_caster_group_is_immediately_after_the_two_hc_groups():
+    for terrain in TERRAINS:
+        block = _groups_block(_text(terrain / "mission.sqm"))
+        declared, groups = _group_items(block)
+        hc_indices = [
+            index for index, body in groups if 'forceHeadlessClient=1;' in body
+        ]
+        caster_indices = [
+            index for index, body in groups
+            if 'description="CASTER (allowlist only) -- spectator";' in body
+        ]
+        assert len(hc_indices) == 2
+        assert caster_indices == [max(hc_indices) + 1]

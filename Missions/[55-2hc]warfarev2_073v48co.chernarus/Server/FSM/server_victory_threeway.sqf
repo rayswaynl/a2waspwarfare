@@ -325,7 +325,7 @@ if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWit
 
 //--- Save the players' stats to database.
 {
-	if ([_x] Call WFBE_CO_FNC_IsRealPlayer) then {
+	if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer) then {
 		_uid = getPlayerUID _x;
 		_name = name _x;
 		_playerScore = missionNamespace getVariable format ["WFBE_CO_CURRENT_SCORE_PLAYER_%1", _uid];

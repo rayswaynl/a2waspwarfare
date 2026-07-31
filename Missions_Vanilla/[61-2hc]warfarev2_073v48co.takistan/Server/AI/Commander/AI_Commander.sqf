@@ -310,7 +310,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		_cmdTeam  = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 		_humanCmd = false;
 		if (!isNull _cmdTeam) then {
-			if (isPlayer (leader _cmdTeam)) then {_humanCmd = true};
+			if ([leader _cmdTeam, false] Call WFBE_CO_FNC_IsRealPlayer) then {_humanCmd = true};
 		};
 
 		//--- cmdcon42 (Ray 2026-07-02): RAW human-seated flag, captured BEFORE the LOCK override below.
@@ -718,7 +718,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					_ftGrp = _x;
 					if (([_ftGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_ftGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {
 						//--- Capture group before count (units _x rebinds _x - A2 trap; see Teams.sqf TEAMCENSUS).
-						_ftLive = {alive _x && {side _x == _side} && {!isPlayer _x}} count (units _ftGrp);
+						_ftLive = {alive _x && {side _x == _side} && {!([_x, false] Call WFBE_CO_FNC_IsRealPlayer)}} count (units _ftGrp);
 						if (_ftLive > 0) then {_fTeams = _fTeams + 1};
 					};
 				};
@@ -1022,10 +1022,10 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				private ["_ftGrp","_ftLive"];
 				_ftGrp = _x;
 				if (([_ftGrp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) || {[_ftGrp, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool}) then {
-					_ftLive = {alive _x && {side _x == _side} && {!isPlayer _x}} count (units _ftGrp);
+					_ftLive = {alive _x && {side _x == _side} && {!([_x, false] Call WFBE_CO_FNC_IsRealPlayer)}} count (units _ftGrp);
 					if (_ftLive > 0) then {_fTeams = _fTeams + 1};
 				} else {
-					if ((count units _ftGrp) > 0 && {!isPlayer (leader _ftGrp)} && {alive (leader _ftGrp)}) then {_eTeams = _eTeams + 1};
+					if ((count units _ftGrp) > 0 && {!([leader _ftGrp, false] Call WFBE_CO_FNC_IsRealPlayer)} && {alive (leader _ftGrp)}) then {_eTeams = _eTeams + 1};
 				};
 			};
 		} forEach (_logik getVariable ["wfbe_teams", []]);
@@ -1076,7 +1076,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		private ["_ptFunds","_tf","_prevPtKey","_prevPtFunds","_dPtFunds"];
 		_ptFunds = 0;
 		{
-			if (!isNull _x && {!isNull leader _x} && {isPlayer (leader _x)}) then {
+			if (!isNull _x && {!isNull leader _x} && {[leader _x, false] Call WFBE_CO_FNC_IsRealPlayer}) then {
 				_tf = _x getVariable "wfbe_funds";
 				if (isNil "_tf") then {_tf = 0};
 				_ptFunds = _ptFunds + _tf;
@@ -1213,7 +1213,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//---                cache it in wfbe_buildtag (falls back to the raw missionName if no cmdcon token is present).
 		//---   hc_fps=<n>   min diag_fps across HCs that reported (via the existing 60s HCStat channel, cached in
 		//---                WFBE_HCFPS_REG by Server/PVFunctions/HCStat.sqf) within the last ~2 min; -1 if none fresh.
-		private ["_aiW","_aiE","_aiG","_humN","_tier","_bt","_mn","_ci","_hcFps","_hcReg2"]; _aiW=0;_aiE=0;_aiG=0;_humN=0; { if (isPlayer _x) then {_humN=_humN+1} else { switch (side _x) do { case west:{_aiW=_aiW+1}; case east:{_aiE=_aiE+1}; case resistance:{_aiG=_aiG+1} } } } forEach allUnits; _tier = missionNamespace getVariable ["WFBE_PopTier",0];
+		private ["_aiW","_aiE","_aiG","_humN","_tier","_bt","_mn","_ci","_hcFps","_hcReg2"]; _aiW=0;_aiE=0;_aiG=0;_humN=0; { if ([_x, false] Call WFBE_CO_FNC_IsRealPlayer) then {_humN=_humN+1} else { switch (side _x) do { case west:{_aiW=_aiW+1}; case east:{_aiE=_aiE+1}; case resistance:{_aiG=_aiG+1} } } } forEach allUnits; _tier = missionNamespace getVariable ["WFBE_PopTier",0];
 		_bt = missionNamespace getVariable ["wfbe_buildtag", ""];
 		if (_bt == "") then {
 			_mn = missionName; if (typeName _mn != "STRING") then {_mn = ""};

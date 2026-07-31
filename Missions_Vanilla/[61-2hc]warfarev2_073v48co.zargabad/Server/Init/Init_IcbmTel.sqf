@@ -1305,7 +1305,7 @@ WFBE_SE_FNC_IcbmTelSideIsAI = {
 	if ((missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", 0]) > 0) exitWith {true};
 	_cmdTeam = (_side) Call WFBE_CO_FNC_GetCommanderTeam;
 	if (isNull _cmdTeam) exitWith {true};   //--- no commander team object => not a human commander.
-	if ([leader _cmdTeam] Call WFBE_CO_FNC_IsRealPlayer) exitWith {false};
+	if ([leader _cmdTeam, false] Call WFBE_CO_FNC_IsRealPlayer) exitWith {false};
 	true
 };
 
