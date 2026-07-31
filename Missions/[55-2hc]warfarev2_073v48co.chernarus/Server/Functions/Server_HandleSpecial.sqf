@@ -1368,19 +1368,26 @@ if (isNull _base) exitWith {
 						_spTeams = _spLogik getVariable ["wfbe_teams", []];
 						_spBest  = _spRange; _spTeam = objNull;
 						{
-							if (!isNull _x && {!([leader _x, false] Call WFBE_CO_FNC_IsRealPlayer)}) then {
-								private "_alv"; _alv = {alive _x} count (units _x);
-								if (_alv > 0) then {
-									//--- skip teams mid-capture/strike, rallying, or on an active hold latch (leave the AI's own
-									//--- priorities alone). A team on a strike mission is "capturing"; there is no separate
-									//--- capturing flag in this build. A2-OA: plain single-arg getVariable on the GROUP + isNil.
-									private ["_busy","_str","_ral","_hld"];
-									_str = _x getVariable "wfbe_aicom_strike"; _busy = (!isNil "_str" && {_str});
-									if (!_busy) then {_ral = _x getVariable "wfbe_aicom_rallying"; _busy = (!isNil "_ral" && {_ral})};
-									if (!_busy) then {_hld = _x getVariable "wfbe_aicom_holding_town"; _busy = (!isNil "_hld" && {!isNull _hld})};
-									if (!_busy) then {
-										private "_d"; _d = _spPos distance (getPos (leader _x));
-										if (_d < _spBest) then {_spBest = _d; _spTeam = _x};
+							//--- CAPTURE the outer _x FIRST: the inner units count below permanently rebinds it.
+							//--- Guard isNil "_x" BEFORE the bare read - a nil hole in wfbe_teams must never be dereferenced.
+							//--- Same hardening the TOWN_NUDGE and CMD_SUPPORT scans in this file already carry.
+							private ["_spTm","_alv"];
+							if (!isNil "_x") then {
+								_spTm = _x;
+								if (!isNull _spTm && {!([leader _spTm, false] Call WFBE_CO_FNC_IsRealPlayer)}) then {
+									_alv = {alive _x} count (units _spTm);
+									if (_alv > 0) then {
+										//--- skip teams mid-capture/strike, rallying, or on an active hold latch (leave the AI's own
+										//--- priorities alone). A team on a strike mission is "capturing"; there is no separate
+										//--- capturing flag in this build. A2-OA: plain single-arg getVariable on the GROUP + isNil.
+										private ["_busy","_str","_ral","_hld"];
+										_str = _spTm getVariable "wfbe_aicom_strike"; _busy = (!isNil "_str" && {_str});
+										if (!_busy) then {_ral = _spTm getVariable "wfbe_aicom_rallying"; _busy = (!isNil "_ral" && {_ral})};
+										if (!_busy) then {_hld = _spTm getVariable "wfbe_aicom_holding_town"; _busy = (!isNil "_hld" && {!isNull _hld})};
+										if (!_busy) then {
+											private "_d"; _d = _spPos distance (getPos (leader _spTm));
+											if (_d < _spBest) then {_spBest = _d; _spTeam = _spTm};
+										};
 									};
 								};
 							};
