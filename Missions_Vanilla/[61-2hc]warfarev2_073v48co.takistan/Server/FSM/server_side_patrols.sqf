@@ -18,7 +18,7 @@ private ["_side","_sideID","_logik","_upgrades","_lvl","_active","_last","_hq","
 	"_feedChangeOnly","_feedKeepAlive","_feedSig","_feedLastSig","_feedChanged","_feedDue","_feedLastBroadcast",
 	"_perfProbe","_perfCap","_perfReason","_perfPopTier",
 	"_rcSide","_rcSideID","_rcLogik","_rcCount","_rcOld","_entryLdr","_entryGrp",
-	"_pwEnabled","_pwLastSample","_pwMins","_pwDist","_pwWpDist","_pwMaxStrikes","_pwEntry","_pwLdr","_pwSideID","_pwGrp","_pwVeh","_pwPos","_pwWpPos","_pwLastPos","_pwStrikes","_pwSide","_pwTier","_pwUnits","_pwVehicles","_pwV","_pwFound","_pwWpIdx"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler); +_entryLdr/_entryGrp (B66-style any-live-member scrub test, review-1254 defect fix). Grok idea #8 (side-patrol stuck watchdog): +_pw* (see WFBE_C_SIDE_PATROL_UNSTUCK block below).
+	"_pwEnabled","_pwLastSample","_pwMins","_pwDist","_pwWpDist","_pwMaxStrikes","_pwEntry","_pwLdr","_pwSideID","_pwGrp","_pwVeh","_pwPos","_pwWpPos","_pwLastPos","_pwStrikes","_pwSide","_pwTier","_pwUnits","_pwVehicles","_pwV","_pwFound","_pwWpIdx","_pwSample"];  //--- cmdcon41-w3m: +_homePool/_spSkipNaval/_hpX (naval-HVT-excluded spawn-town pool). fix/alife-leak-hardening: +_rcSide/_rcSideID/_rcLogik/_rcCount/_rcOld (side-patrol slot-leak reconciler); +_entryLdr/_entryGrp (B66-style any-live-member scrub test, review-1254 defect fix). Grok idea #8 (side-patrol stuck watchdog): +_pw* (see WFBE_C_SIDE_PATROL_UNSTUCK block below).
 
 waitUntil {townInitServer};
 sleep 30;
@@ -183,8 +183,19 @@ while {!WFBE_GameOver} do {
 				_pwEntry  = _x;
 				_pwLdr    = _pwEntry select 0;
 				_pwSideID = _pwEntry select 1;
-				if (!isNull _pwLdr && {alive _pwLdr}) then {
-					_pwGrp = group _pwLdr;
+				//--- fix(alife-stall r34): entry stores founding leader; scrub keeps the entry after that leader dies while the patrol still has live units.
+				//--- Gating the external stuck watchdog on alive(_pwLdr) made the HC-hang backstop blind for the rest of the patrol lifetime.
+				_pwGrp = grpNull;
+				if (!isNull _pwLdr) then {_pwGrp = group _pwLdr};
+				_pwSample = objNull;
+				if (!isNull _pwGrp) then {
+					_pwSample = leader _pwGrp;
+					if (isNull _pwSample || {!alive _pwSample}) then {
+						{if (isNull _pwSample && {alive _x}) then {_pwSample = _x}} forEach (units _pwGrp);
+					};
+				};
+				if (!isNull _pwSample && {alive _pwSample} && {!isNull _pwGrp}) then {
+					_pwLdr = _pwSample;
 					if (!isNull _pwGrp) then {
 						_pwVeh   = vehicle _pwLdr;
 						_pwPos   = getPos _pwVeh;
@@ -243,6 +254,13 @@ while {!WFBE_GameOver} do {
 										{
 											_pwV = vehicle _x;
 											if (_pwV != _x) then {
+												_pwFound = false;
+												{if (_x == _pwV) then {_pwFound = true}} forEach _pwVehicles;
+												if (!_pwFound) then {_pwVehicles = _pwVehicles + [_pwV]};
+											};
+											//--- fix(alife-stall r34): also reap assigned empty hulls on terminal recycle.
+											_pwV = assignedVehicle _x;
+											if (!isNull _pwV && {_pwV != _x} && {alive _pwV}) then {
 												_pwFound = false;
 												{if (_x == _pwV) then {_pwFound = true}} forEach _pwVehicles;
 												if (!_pwFound) then {_pwVehicles = _pwVehicles + [_pwV]};
