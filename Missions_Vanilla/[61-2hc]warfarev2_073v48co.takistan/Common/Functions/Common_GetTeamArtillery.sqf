@@ -31,7 +31,8 @@ _tryAddArtillery = {
 			if !(isPlayer(gunner _vehicle)) then {
 				_weapon = _artyWeapons select _index;
 
-				if (_ignoreAmmo || (someAmmo _vehicle)) then {
+				if ((_ignoreAmmo || (someAmmo _vehicle)) && {!(_vehicle getVariable ["restricted", false])}) then {
+					//--- r30 lifecycle: never hand out a tube already locked on a fire mission
 					_artillery = _artillery + [_vehicle];
 				};
 			};
