@@ -1689,10 +1689,33 @@ while {!WFBE_GameOver && _alive} do {
 					};
 				} forEach (units _team);
 
+				//--- r64 convoy integrity: before road-march gate, reseat a live non-player crewman as driver
+				//--- on EVERY ground hull with canMove but no live driver (stuck recovery only did the lead hull).
+				//--- Also: empty driverless hulls (zero live crew) must NOT force _rmDriverReady false - they used
+				//--- to kill the whole convoy road-march while the remaining crewed transports sat idle.
+				{
+					private ["_ddHull","_ddPick","_ddCrew"];
+					{
+						_ddHull = _x;
+						if (!isNull _ddHull && {alive _ddHull} && {!(_ddHull isKindOf "Air")} && {canMove _ddHull} && {(isNull (driver _ddHull)) || {!alive (driver _ddHull)}}) then {
+							if (({alive _x} count (crew _ddHull)) > 0) then {
+								_ddPick = objNull;
+								_ddCrew = crew _ddHull;
+								{ if (isNull _ddPick && {alive _x} && {!isPlayer _x}) then {_ddPick = _x} } forEach _ddCrew;
+								if (!isNull _ddPick) then {
+									_ddPick assignAsDriver _ddHull;
+									_ddPick moveInDriver _ddHull;
+									diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|CONVOY_DRIVER_SWAP|team=" + (str _team) + "|veh=" + (typeOf _ddHull));
+								};
+							};
+						};
+					} forEach _vehicles;
+				};
 				_rmHasVeh = false;
 				{ if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x}) then {_rmHasVeh = true} } forEach _vehicles;
 				_rmDriverReady = true;
-				{ if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x} && {(isNull (driver _x) || {!alive (driver _x)})}) then {_rmDriverReady = false} } forEach _vehicles;
+				//--- Only hulls that still have live crew but no live driver block road-march (empty wrecks ignored).
+				{ if (!isNull _x && {alive _x} && {!(_x isKindOf "Air")} && {canMove _x} && {(isNull (driver _x) || {!alive (driver _x)})} && {({alive _x} count (crew _x)) > 0}) then {_rmDriverReady = false} } forEach _vehicles;
 				if (!_rmDriverReady) then {_rmHasVeh = false};
 
 				if (_rmHasVeh && {(leader _team) distance _dest > 700}) then {
