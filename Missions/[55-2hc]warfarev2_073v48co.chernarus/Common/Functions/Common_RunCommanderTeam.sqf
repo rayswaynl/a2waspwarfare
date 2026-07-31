@@ -3397,4 +3397,9 @@ if (isNull _team || {!([_team, "wfbe_aicom_ended_fired", false] Call WFBE_CO_FNC
 	};
 };
 
-if (!isNull _team) then {deleteGroup _team};
+//--- r70 empty-group lifecycle: GetLiveUnits==0 still leaves corpses in units _team; bare
+//--- deleteGroup NO-OPs (Client_GroupsGC documents the HC husk leak). Purge non-player bodies first.
+if (!isNull _team) then {
+{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x}} forEach (units _team);
+if (({isPlayer _x} count (units _team)) == 0) then {deleteGroup _team};
+};

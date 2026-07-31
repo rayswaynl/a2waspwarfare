@@ -525,6 +525,7 @@ if (isServer) then {
 //--- this script: delete surviving units BEFORE deleteGroup. Player-safe - never delete a player
 //--- (a real player in the group legitimately keeps it non-empty, so it is left alone).
 {
-	if (!isNull _x && {alive _x} && {!isPlayer _x}) then {deleteVehicle _x};
+	if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x};
 } forEach (units _team);
-if (!isNull _team) then {deleteGroup _team};
+//--- r70 empty-group: also reap corpses (combat-wipe left dead units so deleteGroup no-op'd; SidePatrol skipped by BASE-GC).
+if (!isNull _team && {({isPlayer _x} count (units _team)) == 0}) then {deleteGroup _team};
