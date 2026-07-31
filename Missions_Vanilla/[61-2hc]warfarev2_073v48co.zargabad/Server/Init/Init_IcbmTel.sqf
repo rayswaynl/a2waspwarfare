@@ -93,7 +93,7 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 		objNull
 	};
 	_tel setPos [_pos select 0, _pos select 1, 0];
-	_tel setVehicleLock "LOCKED";
+	_tel lock true;
 	_tel setDir (random 360);
 	_tel allowDamage true;   //--- destroyable = the counterplay (destroy-to-cancel an in-flight NUKE; else it just respawns).
 	_tel setVariable ["wfbe_icbm_tel_side", _side, true];
@@ -1525,7 +1525,7 @@ WFBE_SE_FNC_IcbmTelAiBuy = {
 		["WARNING", Format ["Init_IcbmTel.sqf : [%1] AI SCUD buy — createVehicle FAILED at %2.", _sideText, _pos]] Call WFBE_CO_FNC_LogContent;
 	};
 	_veh setPos [_pos select 0, _pos select 1, 0];
-	_veh setVehicleLock "LOCKED";
+	_veh lock true;
 	_veh setDir (random 360);
 	[_side, -_cost] Call ChangeAICommanderFunds;
 	//--- register (grpNull team => no player refund path taken; our AI charge above is the debit). Cap enforced inside.
