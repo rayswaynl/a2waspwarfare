@@ -209,7 +209,23 @@ switch (_request) do {
 		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
 		if (count _args < 1) exitWith {};
 		_trashObj = _args select 0;
-		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])}) then {deleteVehicle _trashObj};
+		//--- crash 014EFCF4 #4 (2026-07-30): executor half of the seated-corpse defer in Common_TrashObject.sqf.
+		//--- Never delete a Man out of a hull that is alive or still holds living crew - the engine's dead-crew
+		//--- eject / survivor get-out walks those seats. This runs on the OWNER, so the vehicle/crew reads are
+		//--- authoritative. Fails closed; the sender defers hot bodies itself and releases dispatched ones back
+		//--- to its collector, so a rejection here is re-queued on the next pass, never leaked.
+		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])} && {!(_trashObj isKindOf "Man") || {vehicle _trashObj == _trashObj} || {!(alive (vehicle _trashObj)) && {({alive _x} count crew (vehicle _trashObj)) == 0}}}) then {deleteVehicle _trashObj};
+	};
+	//--- fable/cleanup-locality-2: owner-side half of the weaponholder sweep (droppeditems_cleaner.sqf).
+	//--- Weaponholders are "alive", so the trash case above can never pass them - dedicated case with
+	//--- its own self-validation: flag + local + reap stamp + actually a WeaponHolder-family object.
+	//--- Worst a forged dispatch can do is despawn a gear pile - which is this channel's entire job.
+	case "cleanup-weaponholder": {
+		Private ["_whObj"];
+		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
+		if (count _args < 1) exitWith {};
+		_whObj = _args select 0;
+		if (!isNull _whObj && {local _whObj} && {_whObj isKindOf "WeaponHolder"} && {(_whObj getVariable ["wfbe_trash_reap", false])}) then {deleteVehicle _whObj};
 	};
 	//--- Owner-side half of Server_HandleEmptyVehicle.sqf's locality gate. The server has already held this
 	//--- hull past the empty timeout, but it cannot delete a HC-local alive object directly. Re-check local
@@ -225,11 +241,12 @@ switch (_request) do {
 	case "delegate-townai": {_args spawn WFBE_CL_FNC_DelegateTownAI};
 	case "delegate-sidepatrol": {_args spawn WFBE_CO_FNC_RunSidePatrol};
 	case "delegate-aicom-team": {_args spawn WFBE_CO_FNC_RunCommanderTeam};
-	//--- hc-locality-group-owner (2026-07-30, re-land of hc-registry-heal-v2): server-ordered reseat for an HC
-	//--- stuck outside the delegation registry in a state its own 15s watcher cannot exit (wrong-side re-grab
-	//--- whose ReseatCivilian keeps failing announces nothing; shared-CIV-group re-announces but may still need
-	//--- a registry heal). HC-only by construction: WFBE_HC_FNC_ReseatCivilian is defined solely in
-	//--- Headless\Init\Init_HC.sqf, so the isNil guard makes this a no-op on any human client that would ever receive it.
+	//--- fable/hc-registry-heal-v2 (2026-07-28): server-ordered reseat for an HC stuck outside the
+	//--- delegation registry in a state its own 15s watcher cannot exit (a wrong-side re-grab whose
+	//--- ReseatCivilian keeps failing announces nothing; the shared-CIV-group case re-announces but a
+	//--- registry heal may still be needed). HC-only by construction: WFBE_HC_FNC_ReseatCivilian is
+	//--- defined solely in Headless\Init\Init_HC.sqf, so the isNil guard makes this a no-op on any
+	//--- human client that would ever receive it.
 	case "hc-force-reseat": {
 		[] Spawn {
 			if (isNil "WFBE_HC_FNC_ReseatCivilian") exitWith {};
@@ -647,7 +664,6 @@ switch (_request) do {
 				_navColor = missionNamespace getVariable [Format ["WFBE_C_%1_COLOR", _navSide], "ColorGreen"];
 			};
 		};
-		//--- str parity with Init_Markers / TownCaptured (permanent colour after carrier flip).
 		_navMkr   = Format ["WFBE_%1_CityMarker", str _navLoc];
 		_navMkr setMarkerColorLocal _navColor;
 		//--- Flip notification hint (localized). Prefix the carrier name so players know which one flipped.

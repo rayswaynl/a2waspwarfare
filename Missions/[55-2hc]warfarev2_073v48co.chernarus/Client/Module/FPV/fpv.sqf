@@ -85,7 +85,33 @@ if (!_capValid) exitWith {
 };
 _token = _cap select 0;
 
-_drone = createVehicle [_class, getPos _closest, [], 0, "FLY"];
+//--- fable/fpv-spawn-safety (owner live report 2026-07-28: "some of the suicide choppers spawned
+//--- into each other, or never left base.... and then exploded in their own base"): the airframe
+//--- was created at the RAW anchor position - the same nearest command centre for every WEST/EAST
+//--- buyer, or the same player position for GUER - with no offset and no clearance test. Two
+//--- launches near one anchor therefore materialised inside each other, and the resulting spawn
+//--- clip is exactly the >=0.35 damage the impact fuze reads as "hit something" (fpv_interface),
+//--- so the drone died on its own pad and the live warhead went off in the friendly base.
+//--- Fix part 1 of 3: separate the spawn. Radial offset + per-attempt height stagger, then a
+//--- bounded clearance retry against anything already parked there - the same idiom the GUER
+//--- air-def swarm already uses to keep its Ka-137 extras from overlapping.
+Private ["_fpvR","_fpvA","_fpvTry","_fpvPos","_fpvBase","_fpvClear"];
+_fpvBase = getPos _closest;
+_fpvR = missionNamespace getVariable ["WFBE_C_FPV_SPAWN_OFFSET", 40];
+if (_fpvR < 10) then {_fpvR = 10};
+_fpvPos = _fpvBase;
+for "_fpvTry" from 0 to 7 do {
+	_fpvA = random 360;
+	_fpvPos = [(_fpvBase select 0) + _fpvR * (sin _fpvA), (_fpvBase select 1) + _fpvR * (cos _fpvA), (_fpvBase select 2) + 25 + (_fpvTry * 8)];
+	_fpvClear = {alive _x} count (nearestObjects [_fpvPos, ["Air","LandVehicle"], 25]);
+	if (_fpvClear == 0) exitWith {};
+};
+_drone = createVehicle [_class, _fpvPos, [], 0, "FLY"];
+//--- fable/review-guards (adversarial review 2026-07-28, CONFIRMED): this re-pin used a fresh
+//--- random 25-35m, DISCARDING the clearance-tested z the retry loop above had just proven
+//--- clear - an escalated spawn dropped straight back into the occupied band. Keep the tested
+//--- height (its z is already base+25 minimum by construction).
+if (!isNull _drone) then {_drone setPosATL [_fpvPos select 0, _fpvPos select 1, (_fpvPos select 2)]};
 if (isNull _drone) exitWith {
 	missionNamespace setVariable [_pendingKey, false];
 	hint "FPV airframe creation failed. Nothing was charged.";

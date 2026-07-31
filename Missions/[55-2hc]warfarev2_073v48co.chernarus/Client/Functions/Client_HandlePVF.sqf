@@ -37,15 +37,29 @@ if (_isHeadless) then {
 		//---   cleanup-town-defense-gunner = server_town.sqf (fix/alife proper #1370) + Server_OperateTownDefensesUnits.sqf
 		//---        "remove" case; deletes a town-defense static gunner (dead OR alive) that is local to this HC -
 		//---        the equivalent server-side deletion call on an HC-delegated gunner would silently no-op
+		//---   hc-force-reseat            = server_hcreg_heal.sqf (fable/hc-registry-heal-v2; orders a
+		//---        registry-orphaned HC to ReseatCivilian + re-announce - group joins are locality-bound
+		//---        so the server cannot repair the HC's group itself)
 		//---   sidepatrol-watchdog        = server_side_patrols.sqf (WFBE_C_SIDE_PATROL_UNSTUCK; routes the
 		//---        external stuck watchdog to this HC when the wedged patrol's leader is HC-local - the
 		//---        receiver case already exists in HandleSpecial.sqf; this key was the missing wire-up)
-		//---   hc-force-reseat            = server_hcreg_heal.sqf (hc-locality-group-owner; orders a
-		//---        registry-orphaned HC to ReseatCivilian + re-announce - group joins are locality-bound
-		//---        so the server cannot repair the HC's group itself)
-		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat"]);
+		_hcAllowed = ((_parameters select 0) in ["delegate-townai","delegate-ai-static-defence","cleanup-townai","cleanup-airfield-garrison","delegate-aicom-team","delegate-sidepatrol","aicom-field-hospital","aicom-team-disband-execute","aicom-team-merge","cleanup-commander-arty-wreck","cleanup-commander-heli-wreck","cleanup-trash-object","cleanup-empty-vehicle","cleanup-town-defense-gunner","sidepatrol-watchdog","hc-force-reseat","cleanup-weaponholder"]);
 	};
 	if (_hcAllowed) then {_exit = false};
+};
+//--- fable/wreck-hygiene (owner 2026-07-28 "some hulls still dont get reaped (player owned)"): the
+//--- cleanup dispatches route by OBJECT locality, so a player-bought hull's cleanup lands on a REAL
+//--- client - where the HC-only bypass above never runs, and the payload's destination field is ""
+//--- (getPlayerUID of a VEHICLE, set in Common_SendToClient.sqf), which the UID match below can
+//--- never equal for a connected human. The dispatch was therefore PERMANENTLY dropped, and the
+//--- wfbe_trashed pre-stamp then blocks every later safety-net sweep - the exact "lingers forever".
+//--- Allow the two SELF-VALIDATING cleanup cases through on normal clients: their receivers
+//--- (Client\PVFunctions\HandleSpecial.sqf) re-check local + dead/empty + reap-stamp + zero live
+//--- crew + airlift/GUER-FOB protections before deleting, so a stale or mis-routed dispatch cannot
+//--- touch a live or re-crewed vehicle. Correctness fix: this path executing was always the design
+//--- (WFBE_C_TRASH_REMOTE_DELETE default 1) - only the HC-era gate made it HC-exclusive.
+if (!_isHeadless && {_script == "CLTFNCHandleSpecial"} && {(typeName _parameters) == "ARRAY"} && {(count _parameters) > 0}) then {
+	if ((_parameters select 0) in ["cleanup-trash-object","cleanup-empty-vehicle","cleanup-weaponholder"]) then {_exit = false};
 };
 //--- fix(hunt): the old `if !(_hcAllowed) exitWith {}` sat INSIDE the then{} above - it exited only that
 //--- block and FELL THROUGH, and the nil-destination / side-match re-opens below then re-armed _exit=false

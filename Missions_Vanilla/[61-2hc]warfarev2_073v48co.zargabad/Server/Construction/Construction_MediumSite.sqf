@@ -60,11 +60,37 @@ _releasePending = {
 	};
 };
 
+//--- build/defense audit 2026-07-28: mirrors _releasePending immediately above, but for the
+//--- MULTI-INSTANCE structure types this script builds (Light/Heavy - Barracks/CommandCenter/
+//--- Aircraft/ServicePoint have the MediumSite-sibling of this block in Construction_SmallSite.sqf).
+//--- Kept as a SEPARATE codeblock (not folded into _releasePending) so the existing CBRadar/AARadar/
+//--- Bank release paths - including their diag_log call count - are completely unchanged. Removes
+//--- exactly ONE reservation (the oldest) from the RequestStructure.sqf pending array; see that file
+//--- for the accept-time reserve. Called from every abort exitWith below AND once on the success tail.
+private ["_releaseCapPending"];
+_releaseCapPending = {
+	//--- build/defense audit 2026-07-28: gate on the SAME flag as the RequestStructure.sqf reserve
+	//--- side, so flag-off is truly byte-identical to HEAD (no diag_log line, no missionNamespace
+	//--- touch) - not just "no reservation was ever taken".
+	if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_CAP_SERVER", 1]) > 0 && {_rlType in ["Light","Heavy"]}) then {
+		private ["_capKey","_capArr","_capNew","_capI"];
+		_capKey = Format ["WFBE_%1_%2_PENDING", str _side, _rlType];
+		_capArr = missionNamespace getVariable [_capKey, []];
+		if (count _capArr > 0) then {
+			_capNew = [];
+			for "_capI" from 1 to (count _capArr - 1) do {_capNew set [count _capNew, _capArr select _capI]};
+			missionNamespace setVariable [_capKey, _capNew];
+		};
+		diag_log Format ["CONSTRUCTION|v1|pending-released|type=%1|side=%2", _rlType, str _side];
+	};
+};
+
 _group = createGroup sideLogic;
 _nearLogic = objNull;
 if !(isNull _group) then {_nearLogic = _group createUnit ["LocationLogicStart",_position,[],0,"NONE"]};
 if (isNull _nearLogic) exitWith {
 	Call _releasePending;
+	Call _releaseCapPending;
 	if (_startResultKey != "") then {missionNamespace setVariable [_startResultKey, [-1,"LocationLogicStart missing"]]};
 	if !(isNull _group) then {deleteGroup _group};
 	diag_log Format ["CONSTRUCTION|v1|reject|reason=missing-start-logic|script=MediumSite|type=%1|pos=%2", _type, _position];
@@ -139,6 +165,7 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_CONSTRUCTION_MODE") == 0) t
 
 if (_constructionLogicLost) exitWith {
 	Call _releasePending;
+	Call _releaseCapPending;
 	{if !(isNull _x) then {deleteVehicle _x}} forEach _constructed;
 	if !(isNull _group) then {deleteGroup _group};
 	if (_completionResultKey != "") then {missionNamespace setVariable [_completionResultKey, [-1,"construction logic was destroyed"]]};
@@ -150,6 +177,7 @@ if (_constructionLogicLost) exitWith {
 _site = createVehicle [_type, _position, [], 0, "NONE"];
 if (isNull _site) exitWith {
 	Call _releasePending;
+	Call _releaseCapPending;
 	if !(isNull _nearLogic) then {
 		_group = group _nearLogic;
 		deleteVehicle _nearLogic;
@@ -162,6 +190,9 @@ _site setDir _direction;
 _site setPos _position;
 _site setVariable ["wfbe_side", _side];
 _site setVariable ["wfbe_structure_type", _rlType];
+//--- build/defense audit 2026-07-28: release the RequestStructure.sqf cap reservation now that the
+//--- real structure is registered (no-op for types _releaseCapPending does not recognize).
+Call _releaseCapPending;
 
 //--- Bank: spawn composition dressing, register in per-side registry, create global marker, start income drip.
 if (_rlType == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
@@ -209,7 +240,45 @@ if (_rlType == "AARadar") then {
 if (_rlType in ["Reserve","ArtilleryRadar"]) then {
 	private ["_dressTpl"];
 	_dressTpl = Format ["WFBE_NEURODEF_%1_%2", toUpper _rlType, if (_side == west) then {"WEST"} else {"EAST"}];
+	//--- fable/c9-quickwins S22 (owner-approved): Reserve fields the WDDM reserve-guard preset - the
+	//--- base cluster + 2 flank MGs + 1 AT overwatch, crewed below. ONE combined template = ONE
+	//--- dressing call, keeping the wfbe_dressing array + its Killed-EH cleanup single-owner.
+	if (_rlType == "Reserve" && {(missionNamespace getVariable ["WFBE_C_RESERVE_GUARD", 0]) > 0}) then {
+		_dressTpl = _dressTpl + "_GUARDED";
+	};
 	[_site, _dressTpl, _direction] Call WFBE_SE_FNC_SpawnStructureDressing;
+	if (_rlType == "Reserve" && {(missionNamespace getVariable ["WFBE_C_RESERVE_GUARD", 0]) > 0}) then {
+		private ["_gGrp","_gCrewCls","_gUnit","_gGuns"];
+		_gCrewCls = missionNamespace getVariable Format ["WFBE_%1SOLDIER", str _side];
+		_gGrp = [_side, "reserve-guard"] Call WFBE_CO_FNC_CreateGroup;
+		if (!isNull _gGrp && {!isNil "_gCrewCls"}) then {
+			_gGuns = 0;
+			{
+				if ((_x isKindOf "StaticWeapon") && {(count crew _x) == 0}) then {
+					_gUnit = [_gCrewCls, _gGrp, getPos _x, (_side) Call GetSideID] Call WFBE_CO_FNC_CreateUnit;
+					if (!isNull _gUnit) then {
+						_gUnit moveInGunner _x;
+						_gUnit setVariable ["wfbe_reserve_guard", true];
+						_gGuns = _gGuns + 1;
+					};
+				};
+			} forEach (_site getVariable ["wfbe_dressing", []]);
+			_site setVariable ["wfbe_reserve_guard_grp", _gGrp];
+			//--- Crew cleanup on core death (dressing props are handled by the dressing function's own
+			//--- Killed EH; engine EHs stack, so adding a second one is safe).
+			_site addEventHandler ["Killed", {
+				private ["_kGrp"];
+				_kGrp = (_this select 0) getVariable "wfbe_reserve_guard_grp";
+				if (!isNil "_kGrp") then {
+					if (!isNull _kGrp) then {
+						{if (!(isPlayer _x) && {alive _x}) then {deleteVehicle _x}} forEach (units _kGrp);
+						deleteGroup _kGrp;
+					};
+				};
+			}];
+			diag_log Format ["RESERVEGUARD|v1|side=%1|guns=%2", str _side, _gGuns];
+		};
+	};
 	["INFORMATION", Format ["Construction_MediumSite.sqf: [%1] %2 composition dressing spawned via [%3].", str _side, _rlType, _dressTpl]] Call WFBE_CO_FNC_LogContent;
 };
 
@@ -251,7 +320,7 @@ if((missionNamespace getVariable [Format["WFBE_AUTOWALL_%1", _side], true]) && !
 [_side, "Constructed", ["Base", _site]] Spawn SideMessage;
 
 if (!IsNull _site) then {
-	_logik setVariable ["wfbe_structures", (_logik getVariable "wfbe_structures") + [_site], true];
+	_logik setVariable ["wfbe_structures", (_logik getVariable ["wfbe_structures", []]) + [_site], true]; //--- fable/fob-structures-seed: 2-arg default - the 1-arg read was nil for RESISTANCE and the append never landed (GUER FOB completion gate then reported every build failed)
 	
 	_site setVehicleInit Format["[this,false,%1] ExecVM 'Client\Init\Init_BaseStructure.sqf'",_sideID];
 	processInitCommands;

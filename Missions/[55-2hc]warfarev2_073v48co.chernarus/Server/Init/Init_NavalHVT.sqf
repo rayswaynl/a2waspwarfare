@@ -555,7 +555,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_SCUD_SHOWPIECE", 0]) > 0) then 
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 	private ["_twinDir","_twinGap","_bridgeClass","_bridgeCount"];
 	_twinDir     = 90;			//--- same heading as the original hulls (SpawnLHD dir above)
-	_twinGap     = 42;			//--- lateral (perpendicular) offset to the twin hull, metres
+	_twinGap     = missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_GAP", 26];	//--- fable/air-cluster (owner 2026-07-27 "decks do not touch"): was hard-coded 42. LHD beam is ~32 m (the deck-spawn fix in Client_BuildUnit measured the ~16 m port half-beam), so 42 centre-to-centre left a ~10 m water strip between the decks. Constant-ised for per-restart tuning; default 32 = deck edges meet.
 	_bridgeClass = "Land_nav_pier_m_1";	//--- confirmed A2 Chernarus flat walkable pier (damage.sqf preserve list)
 	_bridgeCount = 3;			//--- pier segments spanning the gap
 
@@ -787,7 +787,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 		};
 		_airfieldPts = [];
 		{
-			if ((_x getVariable ["name",""]) in ["NEAF","NWAF"]) then {
+			//--- fable/inland-sweep (owner backlog #6): ALL land airfields via the mission.sqm
+			//--- wfbe_is_airfield flag (carriers never set it - the hangar-obj fallback idiom would
+			//--- match a captured carrier). The old hardcoded ["NEAF","NWAF"] list missed Balota.
+			if (_x getVariable ["wfbe_is_airfield", false]) then {
 				_airfieldPts = _airfieldPts + [[(getPos _x) select 0, (getPos _x) select 1, 550]];
 			};
 		} forEach towns;
@@ -904,7 +907,11 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 							_jetPilot2 doMove [(_pos select 0) - 800, (_pos select 1), 600];
 
 							_capGrp setBehaviour "AWARE";
-							_capGrp setCombatMode "RED";
+							//--- fable/inland-sweep: YELLOW, not RED - the circuit overflies towns and a RED jet strafes
+							//--- infantry (owner: HVT only, never free-fire on men). Engagement is FORCED per tick on
+							//--- armour/APC/manned-statics/air via reveal/doTarget/doFire in the circuit block; YELLOW
+							//--- still returns fire when shot at.
+							_capGrp setCombatMode "YELLOW";
 							_capGrp setSpeedMode "FULL";
 
 							//--- EASA randomisation: stamp wfbe_naval_easa_pending on hull.
@@ -929,8 +936,30 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						} else {
 							if (_capMode == "MI24") then {
 								//--- THREE-HIND path (WFBE_C_NAVAL_CAP_THREE_HINDS > 0): no An2.
-								_hind = createVehicle ["Mi24_P", [(_pos select 0) + 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
-								_hind setPosASL [(_pos select 0) + 200, (_pos select 1) + 200, 400];
+								//--- fable/cap-deck-spawn (owner 2026-07-28 "do the same for the sea air patrols" - ground spawn +
+								//--- boarding crew): the three Hinds start PARKED ON THE DECK (aft lanes, staggered to clear the
+								//--- player-buy spot at model-Y -50, the HeliH pad and the stern camps) and their pilots spawn
+								//--- beside the hulls and BOARD (assignAsDriver + orderGetIn) instead of materialising airborne.
+								//--- flyInHeight is sticky pre-takeoff, so cruise height still applies once they lift off. The
+								//--- L39/SUX fixed-wing CAP keeps its over-sea air-start: A2 AI cannot deck-launch fixed-wing
+								//--- (no catapult, ~250 m run) - a grounded deck jet is a guaranteed ditch, the exact failure
+								//--- class the deck-parking fix removed for player buys.
+								private ["_capDeckPart","_capDeckZ","_capPad1","_capPad2","_capPad3","_capDeckDir"];
+								_capDeckPart = _loc getVariable ["wfbe_naval_deckpart", objNull];
+								_capDeckZ    = _loc getVariable ["wfbe_naval_deckz", 15.9];
+								_capDeckDir  = getDir (if (!isNull _capDeckPart) then {_capDeckPart} else {_loc});
+								if (!isNull _capDeckPart) then {
+									_capPad1 = _capDeckPart modelToWorld [8, 25, 0];
+									_capPad2 = _capDeckPart modelToWorld [-8, 55, 0];
+									_capPad3 = _capDeckPart modelToWorld [8, 85, 0];
+								} else {
+									_capPad1 = [(_pos select 0) + 25, _pos select 1, 0];
+									_capPad2 = [(_pos select 0) - 25, _pos select 1, 0];
+									_capPad3 = [_pos select 0, (_pos select 1) + 25, 0];
+								};
+								_hind = createVehicle ["Mi24_P", [_capPad1 select 0, _capPad1 select 1, 0], [], 0, "NONE"];
+								_hind setPosASL [_capPad1 select 0, _capPad1 select 1, _capDeckZ];
+								_hind setDir _capDeckDir;
 
 								//--- fable/ew-naval win-3: EASA random-loadout stamp for carrier Hinds (mirrors the L39 CAP stamp
 								//--- above, retargeted to Mi24_P + _hind). Dormant while WFBE_C_NAVAL_CAP_L39=1 (default) - only
@@ -946,11 +975,13 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot) then {_hindPilot = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-								_hindPilot moveInDriver _hind;
+								_hindPilot setPosASL [(_capPad1 select 0) + 5, (_capPad1 select 1) + 5, _capDeckZ];
+								_hindPilot assignAsDriver _hind; [_hindPilot] orderGetIn true;
 								_hind flyInHeight 350;
 
-								_hind2 = createVehicle ["Mi24_P", [(_pos select 0) - 200, (_pos select 1) + 200, 400], [], 0, "FLY"];
-								_hind2 setPosASL [(_pos select 0) - 200, (_pos select 1) + 200, 400];
+								_hind2 = createVehicle ["Mi24_P", [_capPad2 select 0, _capPad2 select 1, 0], [], 0, "NONE"];
+								_hind2 setPosASL [_capPad2 select 0, _capPad2 select 1, _capDeckZ];
+								_hind2 setDir _capDeckDir;
 
 								//--- fable/ew-naval win-3: EASA random-loadout stamp for carrier Hinds (mirrors the L39 CAP stamp
 								//--- above, retargeted to Mi24_P + _hind2). Dormant while WFBE_C_NAVAL_CAP_L39=1 (default) - only
@@ -966,11 +997,13 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot2) then {_hindPilot2 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: mirror the _hindPilot fallback so a bad WFBE_GUER_PILOT_CLASS does not leave the Hind pilotless
-								_hindPilot2 moveInDriver _hind2;
+								_hindPilot2 setPosASL [(_capPad2 select 0) + 5, (_capPad2 select 1) - 5, _capDeckZ];
+								_hindPilot2 assignAsDriver _hind2; [_hindPilot2] orderGetIn true;
 								_hind2 flyInHeight 350;
 
-								_hind3 = createVehicle ["Mi24_P", [(_pos select 0) + 0, (_pos select 1) - 300, 400], [], 0, "FLY"];
-								_hind3 setPosASL [(_pos select 0) + 0, (_pos select 1) - 300, 400];
+								_hind3 = createVehicle ["Mi24_P", [_capPad3 select 0, _capPad3 select 1, 0], [], 0, "NONE"];
+								_hind3 setPosASL [_capPad3 select 0, _capPad3 select 1, _capDeckZ];
+								_hind3 setDir _capDeckDir;
 
 								//--- fable/ew-naval win-3: EASA random-loadout stamp for carrier Hinds (mirrors the L39 CAP stamp
 								//--- above, retargeted to Mi24_P + _hind3). Dormant while WFBE_C_NAVAL_CAP_L39=1 (default) - only
@@ -986,7 +1019,8 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot3 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot3) then {_hindPilot3 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: same fallback as _hindPilot2
-								_hindPilot3 moveInDriver _hind3;
+								_hindPilot3 setPosASL [(_capPad3 select 0) - 5, (_capPad3 select 1) + 5, _capDeckZ];
+								_hindPilot3 assignAsDriver _hind3; [_hindPilot3] orderGetIn true;
 								_hind3 flyInHeight 350;
 
 								_capGrp setBehaviour "AWARE";
@@ -1102,8 +1136,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						if (_routeI >= count _route) then {
 							_lap = _lap + 1;
 							_route = +_circuitPts;
-							if (((_lap mod 3) == 0) && {count _airfieldPts > 0}) then {
-								_route = _route + [_airfieldPts select ((floor (_lap / 3)) mod (count _airfieldPts))];
+							//--- fable/inland-sweep: EVERY lap now flies the full inland leg over ALL airfields
+							//--- (was: ONE airfield every 3rd lap) - owner: "fly inland, overfly each airfield".
+							if ((count _airfieldPts) > 0) then {
+								_route = _route + _airfieldPts;
 							};
 							_routeI = 0;
 						};
@@ -1116,6 +1152,27 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						};
 						if (alive _jet1) then {_jetPilot1 doMove _legPt};
 						if (alive _jet2) then {_jetPilot2 doMove [(_legPt select 0) + 300, (_legPt select 1) + 300, _legPt select 2]};
+						//--- fable/inland-sweep: forced HVT-only engagement en route - armour/APC/manned statics/air.
+						//--- An empty hull reads side CIV and is skipped; infantry is never in the class list; own
+						//--- CAP aircraft excluded by the wfbe_naval_cap tag. reveal/doTarget/doFire is the
+						//--- codebase-proven idiom for targets AI will not otherwise attack (AI_Commander_AirStrike).
+						private ["_swTgt","_swC"];
+						if (alive _jet1) then {
+							_swTgt = objNull;
+							{
+								_swC = _x;
+								if (isNull _swTgt && {alive _swC} && {(side _swC == west) || {side _swC == east}} && {!(_swC getVariable ["wfbe_naval_cap", false])}) then {_swTgt = _swC};
+							} forEach (nearestObjects [getPos _jet1, ["Tank","Wheeled_APC","StaticWeapon","Air"], 900]);
+							if (!isNull _swTgt) then {
+								{
+									if (!isNull _x && {alive _x}) then {
+										_x reveal _swTgt;
+										_x doTarget _swTgt;
+										_x doFire _swTgt;
+									};
+								} forEach [_jetPilot1, _jetPilot2];
+							};
+						};
 					} else {
 						if (_capMode == "MI24") then {
 							if (alive _hind)  then {_hindPilot  doMove [(_pos select 0) + 400 * sin _orbitAng,         (_pos select 1) + 400 * cos _orbitAng, 0]};
@@ -1136,6 +1193,12 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 				//--- No player nearby: count down inactivity.
 				if (_armed) then {
 					_inactiveTime = _inactiveTime + 10;
+					//--- fable/inland-sweep: never quiet-despawn a circuit CAP while it is on the INLAND leg
+					//--- (>2500 m from the carrier) - the old 120 s no-player rule deleted the sweep the moment
+					//--- it left the carrier bubble. The timer holds at 0 until the flight returns seaward.
+					if ((_capMode == "L39" || _capMode == "SUX") && {!isNull _jet1} && {alive _jet1} && {(_jet1 distance _loc) > 2500}) then {
+						_inactiveTime = 0;
+					};
 					if (_inactiveTime >= 120) then {
 						//--- Despawn CAP.
 						_armed = false;
@@ -1203,12 +1266,103 @@ if ((missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0) the
 			missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_RADIUS", 180],
 			missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_HOLDSECS", 120],
 			[west, east, resistance],
-			0,
+			2,  //--- contest mode 2 = BEAT-DOWN (owner ruling 2026-07-27): clear the garrison, then hold.
 			0,
 			"WFBE_SE_FNC_NavalHVT_BubbleComplete"
 		] call WFBE_CO_FNC_RadiusHold_Register;
 	} forEach [_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic];
-	["INITIALIZATION", "Init_NavalHVT.sqf : WFBE_C_NAVALHVT_BUBBLE_ENABLE=1 - proximity bubbles registered on all 3 carriers, camp deck-reseat skipped."] Call WFBE_CO_FNC_LogContent;
+	//--- fable/carrier-capture-fix (owner 2026-07-28 "doesnt show"): KotH-style public state marker per
+	//--- carrier - port of the proven Init_ZgKoth display loop. Ellipse at bubble radius; owner colour
+	//--- while neutral, attacker colour + mm:ss while holding, orange CONTESTED (with live defender
+	//--- count), gray cooldown. Anchors passed as spawn ARGS - spawn does not capture locals.
+	[_lhdAlphaLogic, _lhdBravoLogic, _lhdCharlieLogic] spawn {
+		if (!isServer) exitWith {};
+		private ["_bubs","_i","_a","_mName","_westId","_eastId","_guerId","_tickSecs","_holderSide","_progress","_holdSecs","_cooldownUntil","_state","_mm","_ss","_ssStr","_holdMM","_holdSS","_holdSSStr","_text","_color","_lastTexts","_lastColors","_ownSID","_ownN","_bubR","_cName"];
+		_bubs = [];
+		{ if (!isNull _x && {(_x getVariable ["wfbe_rh_id",""]) != ""}) then {_bubs = _bubs + [_x]} } forEach _this;
+		if ((count _bubs) == 0) exitWith {};
+		_westId = west call WFBE_CO_FNC_GetSideID;
+		_eastId = east call WFBE_CO_FNC_GetSideID;
+		_guerId = resistance call WFBE_CO_FNC_GetSideID;
+		_bubR = missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_RADIUS", 180];
+		_lastTexts = []; _lastColors = [];
+		{
+			_mName = Format ["wfbe_carrier_bubble_%1", _forEachIndex];
+			_mName = createMarker [_mName, getPos _x];
+			_mName setMarkerShape "ELLIPSE";
+			_mName setMarkerSize [_bubR, _bubR];
+			_mName setMarkerColor "ColorGreen";
+			_mName setMarkerAlpha 0.5;
+			_lastTexts = _lastTexts + [""];
+			_lastColors = _lastColors + [""];
+		} forEach _bubs;
+		while {!WFBE_GameOver} do {
+			_tickSecs = missionNamespace getVariable ["WFBE_C_RADIUSHOLD_TICK_SECS", 5];
+			{
+				_a = _x;
+				_i = _forEachIndex;
+				_mName = Format ["wfbe_carrier_bubble_%1", _i];
+				_cName = _a getVariable ["name", "Carrier"];
+				_holderSide = _a getVariable ["wfbe_rh_holder_side", -1];
+				_progress = floor (_a getVariable ["wfbe_rh_progress", 0]);
+				_holdSecs = floor (_a getVariable ["wfbe_rh_holdsecs", 0]);
+				_cooldownUntil = _a getVariable ["wfbe_rh_cooldown_until", 0];
+				_ownSID = _a getVariable ["sideID", -1];
+				_holdMM = floor (_holdSecs / 60);
+				_holdSS = _holdSecs - (_holdMM * 60);
+				_holdSSStr = if (_holdSS < 10) then {Format ["0%1", _holdSS]} else {Format ["%1", _holdSS]};
+				if (time < _cooldownUntil) then {
+					_state = "cooldown";
+				} else {
+					if (_holderSide != -1) then {
+						_state = "holding";
+					} else {
+						if (_progress > 0) then {_state = "contested"} else {_state = "neutral"};
+					};
+				};
+				switch (_state) do {
+					case "cooldown": {
+						_color = "ColorGray";
+						_text = Format ["%1 - cooldown", _cName];
+					};
+					case "holding": {
+						_mm = floor (_progress / 60);
+						_ss = _progress - (_mm * 60);
+						_ssStr = if (_ss < 10) then {Format ["0%1", _ss]} else {Format ["%1", _ss]};
+						_color = "ColorYellow";
+						if (_holderSide == _westId) then {_color = "ColorWest"};
+						if (_holderSide == _eastId) then {_color = "ColorEast"};
+						if (_holderSide == _guerId) then {_color = "ColorGreen"};
+						_text = Format ["%1 - CAPTURING %2:%3/%4:%5", _cName, _mm, _ssStr, _holdMM, _holdSSStr];
+					};
+					case "contested": {
+						_ownN = -1;
+						if (_ownSID == _westId) then {_ownN = _a getVariable ["wfbe_rh_westn", -1]};
+						if (_ownSID == _eastId) then {_ownN = _a getVariable ["wfbe_rh_eastn", -1]};
+						if (_ownSID == _guerId) then {_ownN = _a getVariable ["wfbe_rh_guern", -1]};
+						_color = "ColorOrange";
+						_text = if (_ownN > 0) then {Format ["%1 - CONTESTED (defenders %2)", _cName, _ownN]} else {Format ["%1 - CONTESTED", _cName]};
+					};
+					default {
+						_color = "ColorGreen";
+						if (_ownSID == _westId) then {_color = "ColorWest"};
+						if (_ownSID == _eastId) then {_color = "ColorEast"};
+						_text = Format ["%1 - capture zone", _cName];
+					};
+				};
+				if (_text != (_lastTexts select _i)) then {
+					_mName setMarkerText _text;
+					_lastTexts set [_i, _text];
+				};
+				if (_color != (_lastColors select _i)) then {
+					_mName setMarkerColor _color;
+					_lastColors set [_i, _color];
+				};
+			} forEach _bubs;
+			sleep _tickSecs;
+		};
+	};
+	["INITIALIZATION", "Init_NavalHVT.sqf : WFBE_C_NAVALHVT_BUBBLE_ENABLE=1 - proximity bubbles registered on all 3 carriers, camp deck-reseat skipped + KotH state markers armed."] Call WFBE_CO_FNC_LogContent;
 } else {
 if ((missionNamespace getVariable ["WFBE_C_NAVAL_CAMPS_DECK", 1]) > 0) then {
 	private ["_campDeckOffsets"];

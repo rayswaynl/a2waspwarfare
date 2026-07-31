@@ -58,6 +58,7 @@ GetTeamVehicles = Compile preprocessFileLineNumbers "Common\Functions\Common_Get
 GetTotalCamps = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTotalCamps.sqf";
 GetTotalCampsOnSide = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTotalCampsOnSide.sqf";
 GetTotalSupplyValue = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTotalSupplyValue.sqf";
+WFBE_CO_FNC_GetRunwaySpawn = Compile preprocessFileLineNumbers "Common\Functions\Common_GetRunwaySpawn.sqf"; //--- fable/air-cluster: [sideID, fallbackPos] -> [[x,y,0], runwayDir] on the nearest OWNED land runway, [] = caller keeps its position.
 GetTownsHeld = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTownsHeld.sqf";
 GetTownsIncome = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTownsIncome.sqf";
 GetUnitVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitVehicle.sqf";

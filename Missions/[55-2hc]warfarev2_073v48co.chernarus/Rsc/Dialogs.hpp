@@ -2832,6 +2832,17 @@ class RscMenu_Command {
 			y = 0.953825;
 			w = 0.111000;
 			h = 0.040000;
+			//--- fable/cmd-clipping (owner screenshot 2026-07-28: bottom-row buttons truncated at dialog edge):
+			//--- computed geometry (Tools-external cmd_layout_v2.py, inheritance-resolved) proves this 4-way
+			//--- row and every other legacy control in RscMenu_Command sits fully inside [0,1] with zero
+			//--- legacy-vs-legacy overlap in all 4 visibility states - the truncation is TEXT overflow, not a
+			//--- position defect. Calibrated against this dialog's own CA_Cmd_Disband/DisbandSel captions (17
+			//--- chars fit w=0.224 at the inherited sizeEx=0.035 -> ~0.0132 width-units/char): a 12-char caption
+			//--- (SUGGEST TOWN / RELEASE HELI / TEAM: ATTACK) needs ~0.158 in that same box, but this row's
+			//--- 4-way split only gives w=0.111 each, so the centered text clips at both ends. sizeEx=0.020
+			//--- needs ~0.090 for the same 12 chars - fits with margin. Inherited by CA_Cmd_SupportCas /
+			//--- SupportRelease / TeamDoctrine (14632-14634) below - none of them override sizeEx.
+			sizeEx = 0.020;
 			show = 0;
 			text = "SUGGEST TOWN";
 			action = "MenuAction = 780";
@@ -3123,6 +3134,70 @@ class RscMenu_Command {
 			colorBackgroundActive[] = {0.7, 0.1, 0.15, 1};
 		};
 		/* Back */
+		//--- fable/cmd-deck-c4 (owner pick C4, 2026-07-28): COMMAND CONSOLE DECK controls. All carry
+		//--- show = 0 and are admitted to the ctrlShow set ONLY when WFBE_C_CMD_DECK > 0 (the proven
+		//--- STATE-A/B extension pattern in GUI_Menu_Command.sqf:107-110) - flag off means ctrlShow is
+		//--- never called for these idcs and the dialog is pixel-identical to HEAD.
+		class CA_Cmd_DeckHeader : RscText {
+			idc = 14700;
+			//--- fable/cmd-deck-layout: w was 0.965 - nearly the whole dialog - so the header bar drew
+			//--- straight across the situation map (14002 starts at x=0.4689). Clamped to the left panel.
+			x = 0.017244; y = 0.951000; w = 0.440000; h = 0.025;
+			sizeEx = 0.019;
+			colorText[] = {0.961, 0.761, 0.259, 0.95};
+			colorBackground[] = {0.102, 0.086, 0.063, 0.75};
+			text = "";
+			shadow = 2;
+			show = 0;
+		};
+		class CA_Cmd_DeckZ1 : RscText_SubTitle {
+			idc = 14701;
+			x = 0.017244; y = 0.124000; w = 0.300000; h = 0.026;
+			text = "SITUATION MAP";
+			show = 0;
+		};
+		class CA_Cmd_DeckZ2 : CA_Cmd_DeckZ1 {
+			idc = 14702;
+			//--- fable/cmd-deck-layout: y=0.560 put this title INSIDE the roster (14661, 0.414..0.644)
+			//--- and inside the advisory readout (14607, 0.486..0.626). Moved below the roster into the
+			//--- space the deck itself frees by dropping the 8 legacy order buttons.
+			x = 0.017244; y = 0.650000; w = 0.300000;
+			text = "STRATEGY";
+		};
+		class CA_Cmd_DeckZ3 : CA_Cmd_DeckZ1 {
+			idc = 14703;
+			//--- fable/cmd-deck-layout: was x=0.480 (over the map). Now titles the roster it belongs to,
+			//--- sitting just above it (roster 14661 starts y=0.414).
+			x = 0.017244; y = 0.386000; w = 0.300000;
+			text = "FORCES";
+		};
+		class CA_Cmd_DeckZ4 : CA_Cmd_DeckZ1 {
+			idc = 14704;
+			//--- fable/cmd-deck-layout: was x=0.480 (over the map). Moved into the left panel above the
+			//--- production/priority block it labels (14610/14611/14640/14641 at y=0.834).
+			x = 0.017244; y = 0.706000; w = 0.300000;
+			text = "OPERATIONS / PRODUCTION";
+		};
+		//--- Order picker: the A2 RscListBox cannot host per-row widgets, so the mockup's per-row
+		//--- [order] dropdown is implemented as ONE combo + GO applying to the roster selection
+		//--- (_selTeam is already resolved every tick at GUI_Menu_Command.sqf:556-558). Mirrors the
+		//--- working build-priority combo pair 14640/14641 in this same dialog.
+		class CA_Cmd_OrderCombo : RscCombo {
+			idc = 14705;
+			//--- fable/cmd-deck-layout: was x=0.480 y=0.916 (over the map). Moved into the row the deck
+			//--- frees by removing RALLY/REFIT/HOLD (14628-14630), which these two controls replace.
+			x = 0.006000; y = 0.872000; w = 0.230000; h = 0.033;
+			show = 0;
+		};
+		class CA_Cmd_OrderGo : RscButton_Main {
+			idc = 14706;
+			//--- fable/cmd-deck-layout: paired beside the combo in the freed steering-verb row.
+			x = 0.241000; y = 0.872000; w = 0.224000; h = 0.033;
+			text = "GIVE ORDER";
+			action = "MenuAction = 770";
+			tooltip = "Apply the selected order to the highlighted team. Position orders (Move/Defend/Patrol/Arty) then ask for a map click.";
+			show = 0;
+		};
 		class Back_Button : RscButton_Back {
 			x = 0.892507;
 			y = 0.953825;
@@ -3414,6 +3489,58 @@ class RscMenu_Tactical {
 			colorBackground[] = WFBE_SPC1;
 		};
 		/* Back */
+		//--- fable/tac-t4 (owner pick T4, 2026-07-28): STRATEGIC vs ROUTINE zone cards. Pure
+		//--- ACCELERATORS - each drives the EXISTING selection + action path (listbox 17019 rows /
+		//--- combo 17008 rows + their MenuAction flows and two-click confirms), so every current
+		//--- function is retained by construction. All show=0, admitted only when WFBE_C_TAC_T4 > 0.
+		//--- fable/t4-geometry (owner screenshot 2026-07-28, live m0728f): the first-cut card
+		//--- coordinates (left column, y 0.845+) collided with the REAL dialog - SupportList 17019
+		//--- runs to y~0.90 and the price/Use row sits at y~0.905, so titles and buttons rendered
+		//--- through the support list. The strip now floats over the BOTTOM OF THE MAP (17002:
+		//--- x 0.375-1.0, y 0.057-0.946) - titles y=0.873, buttons y=0.900, x 0.385-0.985 - which
+		//--- is always free (declared after the map, so they draw on top).
+		class CA_Tac_StratTitle : RscText_SubTitle {
+			idc = 17090;
+			x = 0.385000; y = 0.873000; w = 0.280000; h = 0.024;
+			text = "!! STRATEGIC ORDNANCE";
+			colorText[] = {0.73, 0.55, 1, 0.95};
+			show = 0;
+		};
+		class CA_Tac_CardScud : RscButton_WFBE_Action {
+			idc = 17091;
+			x = 0.385000; y = 0.900000; w = 0.140000; h = 0.033;
+			text = "SCUD SATURATION";
+			action = "MenuAction = 90";
+			tooltip = "Selects the SCUD saturation row and starts the normal fire flow (map click + confirm, server validates platforms/funds/cooldown).";
+			show = 0;
+		};
+		class CA_Tac_CardIcbm : CA_Tac_CardScud {
+			idc = 17092;
+			x = 0.530000;
+			text = "ICBM";
+			action = "MenuAction = 91";
+			tooltip = "Selects the ICBM support row and presses Request - the existing flow (cost check, map click, confirm) runs unchanged.";
+		};
+		class CA_Tac_RoutineTitle : RscText_SubTitle {
+			idc = 17093;
+			x = 0.700000; y = 0.873000; w = 0.280000; h = 0.024;
+			text = "ROUTINE SUPPORT";
+			show = 0;
+		};
+		class CA_Tac_CardPara : CA_Tac_CardScud {
+			idc = 17094;
+			x = 0.700000;
+			text = "PARATROOPERS";
+			action = "MenuAction = 92";
+			tooltip = "Selects the Paratroopers support row and presses Request - existing flow unchanged.";
+		};
+		class CA_Tac_CardFT : CA_Tac_CardScud {
+			idc = 17095;
+			x = 0.845000;
+			text = "FAST TRAVEL";
+			action = "MenuAction = 93";
+			tooltip = "Selects the Fast Travel row and presses Request - existing flow (map click, two-click confirm, billing) unchanged.";
+		};
 		class Back_Button : RscButton_Back {
 			x = 0.892328;
 			y = 0.953825;
@@ -5275,6 +5402,55 @@ class WFBE_TownsGarrisonMenu {
 			x = 0.610; y = 0.785; w = 0.190; h = 0.035;
 			text = "< BACK";
 			action = "MenuAction = 90;";
+		};
+	};
+};
+
+/* Spectator broadcast map fallback. A2 OA map controls are hosted in a dialog,
+   so the caster can click a world position while the camera movement keys are
+   paused by dialog focus. M closes the dialog through the display KeyDown EH. */
+class WFBE_SpectatorMapDialog {
+	movingEnable = 0;
+	idd = 10263;
+	onLoad = "uiNamespace setVariable ['wfbe_spectator_map_display', _this select 0]; [] Call WFBE_CL_FNC_SpectatorMapFollow; (_this select 0) displayAddEventHandler ['KeyDown', 'if ((_this select 1) == 50) then {closeDialog 0; true} else {false}'];";
+	onUnload = "uiNamespace setVariable ['wfbe_spectator_map_display', displayNull]";
+
+	class controlsBackground {
+		class SBH_MapFrame : RscText {
+			x = 0.055;
+			y = 0.035;
+			w = 0.890;
+			h = 0.905;
+			colorBackground[] = {0,0,0,0.88};
+		};
+	};
+
+	class controls {
+		class SBH_Map : RscMapControl {
+			idc = 124570;
+			x = 0.075;
+			y = 0.085;
+			w = 0.850;
+			h = 0.760;
+			ShowCountourInterval = 1;
+			onMouseMoving = "WFBE_C_VAR_SpectatorMapX = _this select 1; WFBE_C_VAR_SpectatorMapY = _this select 2;";
+			onMouseButtonDown = "if ((_this select 1) == 0) then {[_this select 0, _this select 2, _this select 3] Call WFBE_CL_FNC_SpectatorMapClick};";
+		};
+		class SBH_MapTitle : RscStructuredText {
+			x = 0.090;
+			y = 0.045;
+			w = 0.820;
+			h = 0.040;
+			size = 0.035;
+			text = "<t align='center' color='#FFFFFF' shadow='2'>SPECTATOR MAP</t>";
+		};
+		class SBH_MapHint : RscStructuredText {
+			x = 0.090;
+			y = 0.860;
+			w = 0.820;
+			h = 0.050;
+			size = 0.028;
+			text = "<t align='center' color='#D8F3FF' shadow='2'>CLICK TO TELEPORT CAMERA  |  M CLOSE  |  CAMERA KEYS PAUSE WHILE MAP IS OPEN</t>";
 		};
 	};
 };

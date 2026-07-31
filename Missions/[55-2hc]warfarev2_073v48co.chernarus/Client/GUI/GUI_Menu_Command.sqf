@@ -45,6 +45,7 @@ if (isNil "mouseY") then {mouseY = 0.5};
 
 private ["_display","_map","_sid","_armed","_lastSend","_cool","_artyOn","_now","_position",
          "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastCmdTeams","_lastEcon","_lastIntent","_posture","_disbandArm",
+         "_deckOn","_deckOrders","_deckOrderActs","_lastDeckHdr","_deckDoctrine",
          "_disbandSelArm","_disbandSelIdx","_focusArmed","_lastDirect","_directCool","_tnArmed","_tdNext"];
 
 _display = _this select 0;
@@ -76,7 +77,7 @@ _lastSend = -1000;
 _lastDirect = -1000;        //--- Build83 smoother-console: separate short-cooldown timestamp for DIRECT map-click group-var orders (claude-gaming 2026-07-01).
 _disbandArm = -1000;        //--- player-commander DISBAND-ALL failsafe: 2-click-arm timestamp (claude-gaming 2026-06-30).
 _disbandSelArm = -1000;     //--- Command Console v2: per-team DISBAND-SELECTED 2-click-arm timestamp (claude-gaming 2026-07-01).
-_disbandSelIdx = -1;        //--- fix(menuaction-race): bind confirm arm to the roster index shown at click-1 (map-disband WFBE_CLIENT_DISBAND_PENDING idiom).
+_disbandSelIdx = -1;        //--- fix(menuaction-race): bind confirm arm to the roster index shown at click-1.
 _focusArmed = false;        //--- Command Console v2: STATE-A "AI: FOCUS TOWN" armed flag - next map click sets the AI focus (claude-gaming 2026-07-01).
 _tnArmed = false;           //--- COMMAND V2 (a): STATE-A "SUGGEST TOWN" armed flag - next map click sends a SOFT weighted town nudge (never a focus/pin).
 _tdNext  = "aggressive";    //--- COMMAND V2 (b): which stance the next TEAM DOCTRINE press sends; the button label mirrors it so the player always sees what they are about to send.
@@ -115,6 +116,37 @@ if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0) then {
 	if ((missionNamespace getVariable ["WFBE_C_CMD_TEAM_DOCTRINE", 0]) > 0) then {_adviseCtrls = _adviseCtrls + [14634]};
 };
 
+//--- fable/cmd-deck-c4 (owner pick C4, 2026-07-28): CONSOLE DECK. Admit the new controls only when
+//--- the flag is on (same pattern as every other V2 control above), fill the order combo once, and
+//--- drop the 9 map-arming/steering order buttons from the war-room set - 14705/14706 replace them.
+//--- Flag 0 = none of this runs and the dialog is exactly HEAD.
+_deckOn = (missionNamespace getVariable ["WFBE_C_CMD_DECK", 0]) > 0;
+_deckOrders    = ["MOVE / ATTACK","DEFEND","PATROL","ARTILLERY","RALLY","REFIT","HOLD TOWN","RELEASE TO AI"];
+_deckOrderActs = [720,721,722,723,727,728,729,724];
+_lastDeckHdr = "";
+_deckDoctrine = "";
+if (!_deckOn) then {
+	//--- BELT-AND-BRACES (owner report 2026-07-30: deck zone labels rendered with the flag off):
+	//--- never rely on the dialog's show=0 default alone - a stale cached mission, an inherited
+	//--- class default, or any future path that admits these idcs would leave them drawing over
+	//--- the legacy layout. Hidden explicitly, every open, when the deck is off.
+	{ctrlShow [_x, false]} forEach [14700,14701,14702,14703,14704,14705,14706];
+};
+if (_deckOn) then {
+	_warCtrls = _warCtrls - [14620,14621,14622,14623,14624,14628,14629,14630];
+	//--- fable/review-guards (adversarial review 2026-07-28, CONFIRMED): 14700 is deliberately in
+	//--- NEITHER control set - it was in both, and the advise forEach below runs second, so its
+	//--- !_isCmd write always won and the header was hidden while commanding. Driven explicitly
+	//--- after the two loops instead (deck on = visible in both states).
+	_warCtrls = _warCtrls + [14702,14704,14705,14706];
+	//--- fable/cmd-deck-layout: keep only zone labels that do not collide with persistent economy
+	//--- and roster title controls. 14701 ("SITUATION MAP") would cover 14600 FUNDS, and 14703
+	//--- ("FORCES") would cover the 14660 YOUR TEAMS title; those decorative labels remain hidden.
+	lbClear 14705;
+	{lbAdd [14705, _x]} forEach _deckOrders;
+	lbSetCurSel [14705, 0];
+};
+
 (_display displayCtrl 14650) ctrlSetStructuredText (parseText "Opening the war room...");
 
 while {alive player && dialog} do {
@@ -142,7 +174,41 @@ while {alive player && dialog} do {
 	{ctrlShow [_x, _isCmd]} forEach _warCtrls;
 	{ctrlShow [_x, !_isCmd]} forEach _adviseCtrls;                   //--- STATE-A advisory readout + posture nudge
 	ctrlShow [14670, !_isCmd];                                       //--- TAKE COMMAND only when NOT commander
+	if (_deckOn) then {ctrlShow [14700, true]};                      //--- deck header: both states (see fable/review-guards note above)
 	ctrlSetText [14605, (if (_isCmd) then {"WAR ROOM"} else {"COMMAND"})];
+	//--- fable/cmd-deck-c4: STATE LIGHTING + LIVE HEADER. Lighting uses a text marker, not
+	//--- ctrlSetTextColor - colour writes on shortcut buttons are unreliable on A2 OA, a suffix is not.
+	//--- _posture holds the last nudge this session (""/"PUSH"/"HOLD"); _deckDoctrine likewise for the
+	//--- four field-order verbs. Both are set where those buttons are handled below.
+	if (_deckOn) then {
+		ctrlSetText [14609, (if (_posture == "PUSH") then {"PUSH (ACTIVE)"} else {"PUSH"})];
+		ctrlSetText [14612, (if (_posture == "HOLD") then {"HOLD (ACTIVE)"} else {"HOLD"})];
+		ctrlSetText [14613, (if (_deckDoctrine == "SPLIT") then {"SPLIT UP (ACTIVE)"} else {"SPLIT UP"})];
+		ctrlSetText [14614, (if (_deckDoctrine == "MASS") then {"PUSH TOGETHER (ACTIVE)"} else {"PUSH TOGETHER"})];
+		ctrlSetText [14615, (if (_deckDoctrine == "HARASS") then {"HARASS (ACTIVE)"} else {"HARASS"})];
+		ctrlSetText [14616, (if (_deckDoctrine == "FALLBACK") then {"FALL BACK (ACTIVE)"} else {"FALL BACK"})];
+		//--- Header: one change-detected line. All reads are already-replicated side/logic state.
+		private ["_hdrLogik","_hdrFunds","_hdrTeams","_hdrAI","_hdrFocus","_hdrTxt","_hdrCap","_hdrPost","_hdrDoc"];
+		_hdrLogik = (sideJoined) Call WFBE_CO_FNC_GetSideLogic;
+		_hdrFunds = 0;
+		if (!isNull _hdrLogik) then {
+			_hdrFunds = _hdrLogik getVariable ["wfbe_aicom_funds", 0];
+			if (typeName _hdrFunds != "SCALAR") then {_hdrFunds = 0};
+		};
+		_hdrTeams = count _cmdTeams;
+		_hdrCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 12];
+		_hdrAI = 0;
+		{if (!isNull _x) then {_hdrAI = _hdrAI + ({alive _x} count (units _x))}} forEach _cmdTeams;
+		_hdrFocus = missionNamespace getVariable [Format ["WFBE_AICOM_FOCUS_%1", (sideJoined) Call WFBE_CO_FNC_GetSideID], ""];
+		if (typeName _hdrFocus != "STRING") then {_hdrFocus = ""};
+		if (_hdrFocus == "") then {_hdrFocus = "-"};
+		_hdrPost = if (_posture == "") then {"AUTO"} else {_posture};
+		_hdrDoc  = if (_deckDoctrine == "") then {"AUTO"} else {_deckDoctrine};
+		_hdrTxt = Format ["  FUNDS %1k  |  POSTURE %2  |  DOCTRINE %3  |  FOCUS %4  |  TEAMS %5/%6  |  AI %7  |  %8",
+			round (_hdrFunds / 1000), _hdrPost, _hdrDoc, _hdrFocus, _hdrTeams, _hdrCap, _hdrAI,
+			(if (_isCmd) then {"YOU COMMAND"} else {"AI COMMANDS"})];
+		if (_hdrTxt != _lastDeckHdr) then {ctrlSetText [14700, _hdrTxt]; _lastDeckHdr = _hdrTxt};
+	};
 	//--- The posture nudge only BITES the brain when the AI actually holds command of the side (the server handler
 	//--- honours it iff no human commander, treating LOCK as no-human). Mirror that: it bites when the seat is empty
 	//--- (AI runs it) OR the side is AI-LOCKED. Shown only in STATE A; greyed when a DIFFERENT human commands.
@@ -236,6 +302,8 @@ while {alive player && dialog} do {
 						private "_pv"; _pv = switch (_pb) do {case 762:{"SPLIT"};case 763:{"MASS"};case 764:{"HARASS"};default{"FALLBACK"}};
 						["RequestSpecial", ["aicom-fieldorder", sideJoined, _pv, player]] Call WFBE_CO_FNC_SendToServer; //--- TP-20: player appended so the server can key its per-UID rate limit (server count-guards for legacy 3-arg senders).
 						_posture = _pv; _lastSend = _now; _lastIntent = "";   //--- force the readout to repaint with the new field-order line
+						//--- fable/cmd-deck-c4: remember WHICH field-order verb is active so the deck can light it.
+						_deckDoctrine = switch (_b) do {case 762: {"SPLIT"}; case 763: {"MASS"}; case 764: {"HARASS"}; case 765: {"FALLBACK"}; default {_deckDoctrine}};
 						hintSilent parseText (format ["<t color='#A0E060'>Field order sent: %1.</t>", _pv]);
 					};
 				} else {
@@ -862,8 +930,7 @@ while {alive player && dialog} do {
 					if (_tIdx < 0) then {
 						hintSilent parseText "<t color='#F8D664'>Cannot target that team yet - try again in a moment.</t>";
 					} else {
-						//--- fix(menuaction-race): require same roster index as the armed click so selecting another team
-						//--- mid-window re-arms instead of firing against a team the player never confirmed.
+						//--- fix(menuaction-race): require the same roster index as the armed click.
 						if (((_now - _disbandSelArm) <= 5) && {_disbandSelIdx == _tIdx}) then {
 							_disbandSelArm = -1000;
 							_disbandSelIdx = -1;
@@ -884,6 +951,23 @@ while {alive player && dialog} do {
 		//--- idiom as DISBAND SELECTED above) and sends a RequestSpecial the server re-validates (commander-only, side,
 		//--- team-valid). All the real work (rally pos / funds charge / hold latch) is server-side; the client only sends
 		//--- the index. Gated on the 8s brain-send cooldown (_lastSend). Flag-gated via WFBE_C_CMD_MENU_V2. -----
+		//--- fable/cmd-deck-c4: GIVE ORDER (770) - read the combo, translate to the existing order
+		//--- MenuAction and fall through to its own handler this same tick. No order logic is duplicated:
+		//--- 720-723 arm a map click, 724/727/728/729 apply directly, exactly as their buttons do.
+		if (MenuAction == 770) then {
+			MenuAction = -1;
+			if (_deckOn) then {
+				private ["_oSel"];
+				_oSel = lbCurSel 14705;
+				if (_oSel < 0) then {_oSel = 0};
+				if (isNull _selTeam) then {
+					hintSilent parseText "<t color='#F8D664'>Pick a team in the roster first.</t>";
+				} else {
+					if (_oSel < (count _deckOrderActs)) then {MenuAction = _deckOrderActs select _oSel};
+				};
+			};
+		};
+
 		if (MenuAction == 727 || MenuAction == 728 || MenuAction == 729) then {
 			private "_vb"; _vb = MenuAction; MenuAction = -1;
 			if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) <= 0) then {

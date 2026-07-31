@@ -328,7 +328,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_
 						//--- TEAMS, the leak that reaper exists for), so the hull is SERVER-LOCAL and Common_TrashObject.sqf's
 						//--- locality-free deleteVehicle does land on it.
 						if (alive _h) then {
-							{deleteVehicle _x} forEach (crew _h);
+							//--- crash 014EFCF4: yield a frame between crew deletes so the engine's dead-crew-eject /
+							//--- survivor get-out seat walk never overlaps a script deleteVehicle on an adjacent seat of
+							//--- the same live hull (see Common_TrashObject.sqf). Legal here: scheduled context (spawn, sleeps).
+							{deleteVehicle _x; sleep 0} forEach (crew _h);
 							if (!isNull _h) then {deleteVehicle _h};
 							if (!isNull _g) then {deleteGroup _g};
 						};

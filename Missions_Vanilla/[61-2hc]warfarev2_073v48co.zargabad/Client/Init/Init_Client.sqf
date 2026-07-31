@@ -307,6 +307,7 @@ WFBE_CL_FNC_BlinkMapIcon = Compile preprocessFileLineNumbers "Client\Functions\C
 //--- attaches. The UID allowlist check itself lives inside Client_SpectatorAttach.sqf.
 WFBE_CL_FNC_SpectatorAttach = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorAttach.sqf";
 WFBE_CL_FNC_SpectatorEnter = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorEnter.sqf";
+Call Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorDirector.sqf"; //--- spectator v3 director helpers; definitions only, loop starts from Enter when flag is armed.
 WFBE_CL_FNC_SpectatorExit = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorExit.sqf";
 
 //Affichage Rubber maps:
@@ -1136,6 +1137,7 @@ waitUntil {(sideJoined == civilian) || {!isNil {WFBE_Client_Logic getVariable "w
 	/* Commander Handling */
 	["INITIALIZATION", "Init_Client.sqf: Initializing the Commander Update FSM"] Call WFBE_CO_FNC_LogContent;
 	[] ExecVM "Client\FSM\updateclient.sqf";
+	[] ExecVM "Client\FSM\client_crater_cleaner.sqf"; //--- fable/wreck-crater-hygiene: per-client crater decal sweep (engine craters are client-local; the server cleaner cannot see them). Self-gates on flag + hasInterface.
 };
 
 //--- Add the briefing (notes). Client init can re-run during JIP recovery; diary records are identity-bound, so create them once per client session.
@@ -1170,7 +1172,7 @@ sideHQ = _HQRadio;
 
 /* Wait for a valid signal (Teamswaping) with failover */
 if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DISABLE") > 0 && !WF_Debug) && time > 7) then {
-	Private ["_get","_timelaps","_totalWait"];
+	Private ["_get","_timelaps","_totalWait","_gateT0"];
 	_get = true;
 
 	sleep (random 0.1);
@@ -1179,6 +1181,17 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 
 	_timelaps = 0;
 	_totalWait = 0;
+	//--- DEADSPAWN SAFETY (2026-07-30): this gate is bounded on the MISSION CLOCK, not on the sleep
+	//--- accumulator below. `sleep 0.1` is a MINIMUM wait - under scheduler congestion (cold start with
+	//--- every client joining at once) each pass takes longer than 0.1s, so `_totalWait` under-counts
+	//--- elapsed time and the old `_totalWait > 120` cap fired well past 120 real seconds. The deadspawn
+	//--- transit watchdog at the top of this file reads `time` directly and re-enables damage at mission
+	//--- time _t0+120 regardless, and its _t0 is captured strictly EARLIER than this gate starts - so a
+	//--- drifting gate could still be holding the player among the holding-area bots after protection
+	//--- had already lapsed: the exact "AI killed <player> in the deadspawn" bug that watchdog exists to
+	//--- prevent. `_totalWait` is kept as a secondary backstop for the "mission time stalled" case - the
+	//--- same belt-and-braces shape the HC lobby lock hold below uses for its `_hcllWaited` backstop.
+	_gateT0 = time;
 	while {true} do {
 		sleep 0.1;
 		_get = missionNamespace getVariable 'WFBE_P_CANJOIN';
@@ -1186,13 +1199,22 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 
 		_timelaps = _timelaps + 0.1;
 		_totalWait = _totalWait + 0.1;
+		//--- Hold the deadspawn transit invulnerability for as long as this gate holds the player in the
+		//--- holding area - the top-of-file watchdog can expire mid-gate. Re-armed once the gate clears.
+		if (!isNull player) then {player allowDamage false};
 		//--- B74.2.2: HARD failover. This loop was while{true} with only a 30s re-request and NO total timeout,
 		//--- so if the server join-ACK never arrived (handshake stuck under heavy-AI load) Init_Client hung here
 		//--- forever -> clientInitComplete never set -> no team/vote/money/own-marker. After 120s, proceed
 		//--- (treat as can-join) so the client always finishes init rather than stalling permanently.
-		if (_totalWait > 120) exitWith {
+		if ((time - _gateT0) > 120) exitWith {
 			_get = true;
 			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] no join ACK after 120s - proceeding to avoid a permanent client stall.",sideJoined,name player]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- Secondary backstop: if mission `time` ever stalls (paused sim / stuck load) the deadline above
+		//--- can never fire, so count our own sleeps as well and bail on the same budget either way.
+		if (_totalWait > 135) exitWith {
+			_get = true;
+			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] no join ACK - released on the local %3s backstop (mission time stalled at %4).",sideJoined,name player,_totalWait,round time]] Call WFBE_CO_FNC_LogContent;
 		};
 		if (_timelaps > 30) then {
 			_timelaps = 0;
@@ -1209,11 +1231,22 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 		failMission "END1";
 	};
 } else {
-	Private ["_hasConnectedAtLaunchACK","_timelaps","_totalWait"];
+	Private ["_hasConnectedAtLaunchACK","_timelaps","_totalWait","_gateT0"];
 	_timelaps = 0;
 	_totalWait = 0;
 	WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH = player;
 	publicVariableServer "WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH";
+	//--- DEADSPAWN SAFETY (2026-07-30): this gate is bounded on the MISSION CLOCK, not on the sleep
+	//--- accumulator below. `sleep 0.1` is a MINIMUM wait - under scheduler congestion (cold start with
+	//--- every client joining at once) each pass takes longer than 0.1s, so `_totalWait` under-counts
+	//--- elapsed time and the old `_totalWait > 120` cap fired well past 120 real seconds. The deadspawn
+	//--- transit watchdog at the top of this file reads `time` directly and re-enables damage at mission
+	//--- time _t0+120 regardless, and its _t0 is captured strictly EARLIER than this gate starts - so a
+	//--- drifting gate could still be holding the player among the holding-area bots after protection
+	//--- had already lapsed: the exact "AI killed <player> in the deadspawn" bug that watchdog exists to
+	//--- prevent. `_totalWait` is kept as a secondary backstop for the "mission time stalled" case - the
+	//--- same belt-and-braces shape the HC lobby lock hold below uses for its `_hcllWaited` backstop.
+	_gateT0 = time;
 	while {true} do {
 		sleep 0.1;
 		_hasConnectedAtLaunchACK = missionNamespace getVariable 'WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK';
@@ -1221,10 +1254,18 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 
 		_timelaps = _timelaps + 0.1;
 		_totalWait = _totalWait + 0.1;
+		//--- Hold the deadspawn transit invulnerability for as long as this gate holds the player in the
+		//--- holding area - the top-of-file watchdog can expire mid-gate. Re-armed once the gate clears.
+		if (!isNull player) then {player allowDamage false};
 		//--- B74.2.2: HARD failover (same rationale as the RequestJoin branch) - never hang Init_Client on a
 		//--- missing connect-ACK; after 120s proceed so clientInitComplete is always reached.
-		if (_totalWait > 120) exitWith {
+		if ((time - _gateT0) > 120) exitWith {
 			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] no connect ACK after 120s - proceeding to avoid a permanent client stall.",sideJoined,name player]] Call WFBE_CO_FNC_LogContent;
+		};
+		//--- Secondary backstop: if mission `time` ever stalls (paused sim / stuck load) the deadline above
+		//--- can never fire, so count our own sleeps as well and bail on the same budget either way.
+		if (_totalWait > 135) exitWith {
+			["WARNING", Format["Init_Client.sqf: [%1] Client [%2] no connect ACK - released on the local %3s backstop (mission time stalled at %4).",sideJoined,name player,_totalWait,round time]] Call WFBE_CO_FNC_LogContent;
 		};
 		if (_timelaps > 30) then {
 			_timelaps = 0;
@@ -1232,6 +1273,24 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 			WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH = player;
 			publicVariableServer "WFBE_CLIENT_HAS_CONNECTED_AT_LAUNCH";
 		};
+	};
+};
+
+//--- DEADSPAWN SAFETY (2026-07-30): re-arm the transit invulnerability watchdog now the join gate is
+//--- clear. The watchdog spawned at the top of this file starts its 120s budget when client init starts,
+//--- which is strictly earlier than the gate above starts, so on a slow cold start it can expire while
+//--- that gate is still holding the player in the deadspawn holding area. The gate above now re-asserts
+//--- `allowDamage false` for as long as it holds, which means nothing would ever re-enable damage once
+//--- that first watchdog has gone. This is the same re-arm the HC lobby lock below already performs on
+//--- release; both watchdogs firing is harmless (allowDamage true is idempotent) and both exit at once
+//--- on WFBE_Client_DeadspawnEscaped.
+[] spawn {
+	private ["_t0"];
+	_t0 = time;
+	waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
+	sleep 3;
+	if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
+		if (alive player) then { player allowDamage true };
 	};
 };
 
@@ -1573,9 +1632,16 @@ waitUntil {townInit};
 ["INITIALIZATION", "Init_Client.sqf: Towns are initialized."] Call WFBE_CO_FNC_LogContent;
 
 //--- Define the CoIn placement method.
-switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
-    //--- Smooth.
-    case 1: {
+//--- fable/coin-placement-fixes (owner live report 2026-07-28 "Player commander not allowed to place
+//--- items / factories / defenses ... and some things dont even show a preview"): WFBE_C_STRUCTURES_COLLIDING
+//--- previously drove a switch with exactly one case (1) and no default, so any other value left
+//--- WFBE_C_STRUCTURES_PLACEMENT_METHOD unset - coin_interface.sqf's "Call (missionNamespace getVariable ...)"
+//--- on the nil value then silently did nothing (no placement color/validity gate ever ran, no error, no log).
+//--- Collapsed the switch to an unconditional assignment of the one working (former case-1) method below,
+//--- with a log line when the value is not the expected 1 so a future value is diagnosable instead of silent.
+if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
+	diag_log Format ["COINPLACE|v1|placement-method-fallback|value=%1", missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING"];
+};
 		missionNamespace setVariable ["WFBE_C_STRUCTURES_PLACEMENT_METHOD",{
            		 Private ["_color","_itemcategory","_preview","_area","_eside","_restricted"];
 			_restricted = false;
@@ -1587,7 +1653,7 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
             					"Base_WarfareBAircraftFactory","Base_WarfareBUAVterminal","Base_WarfareBVehicleServicePoint","BASE_WarfareBAntiAirRadar"];
 			_area = [_preview,((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
 
-            	if (!isNull _area && {(_area getVariable ['avail', 0]) <= 0}) then { _color = _colorRed }; //--- cmdcon33: guard objNull _area (no base area before first HQ deploy -> nil<=0 falsely reddened the HQ ghost)
+			if (!isNull _area && {_itemcategory != 0} && {(_area getVariable ['avail', 0]) <= 0}) then { _color = _colorRed }; //--- cmdcon33: guard objNull _area (no base area before first HQ deploy -> nil<=0 falsely reddened the HQ ghost)
            		if (surfaceIsWater(position _preview)) then { _color = _colorRed }; if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_CHECK", 1]) > 0 && {({_preview isKindOf _x} count _affected) != 0} && {!(_preview isKindOf "Warfare_HQ_base_unfolded")} && {count ((position _preview) isFlatEmpty [(missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_RADIUS", 10]), 0, (missionNamespace getVariable ["WFBE_C_STRUCTURES_FLAT_GRAD", 0.5]), 10, 0, false, objNull]) == 0}) then { _color = _colorRed }; //--- qol-polish-pack: reject too-steep ground for base structures (players lacked the slope check the AI commander already has)
            		if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_TREE_CLEAR", 0]) > 0 && {({_preview isKindOf _x} count _affected) != 0} && {!(_preview isKindOf "Warfare_HQ_base_unfolded")} && {count (nearestObjects [position _preview, ["Tree","SmallTree"], (missionNamespace getVariable ["WFBE_C_STRUCTURES_TREE_CLEAR", 0])]) != 0}) then { _color = _colorRed }; //--- fable/player-build-placement-gate: reject placement near trees for base structures (parity with the AI commander's _treeClearOK gate, PR #733 TP-19; nearestObjects not nearestTerrainObjects - the latter is A3-only, hotfixed out of the AI-side gate after a live RPT crash - see AI_Commander_Base.sqf:244)
 
@@ -1674,7 +1740,22 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
 				_town = [_preview] Call GetClosestLocation;
 			    _townside =  (_town getVariable "sideID") Call GetSideFromID;
 			    _eArea = [_preview,((_eside) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity3;
-	            if ((_preview distance _town < 600 && _townside != sideJoined) || !isNull _eArea) then {
+	            //--- fable/restricted-diag (owner live 2026-07-29: "near impossible to find a spot where
+	            //--- you are allowed to build factories ... says i entered a restricted area nearly
+	            //--- everywhere"). Radius is now a constant, but set to 550 per owner 2026-07-29 (was 600).
+	            //--- unchanged. The reported symptom is not explained by this rule as written: with both
+	            //--- sides holding ~half the towns, a 600m ring around the NEAREST town should block a
+	            //--- small fraction of the map, not nearly all of it. So rather than nerf a number on a
+	            //--- guess, log which branch actually fires and what the town side resolves to - a nil or
+	            //--- mis-resolved _townside would make EVERY town compare as hostile, which would match
+	            //--- the symptom exactly. Set the constant to 0 to disable the town rule if it needs
+	            //--- switching off before the cause is known.
+	            private ["_restrRad","_restrTown","_restrBase"];
+	            _restrRad  = missionNamespace getVariable ["WFBE_C_STRUCTURES_ENEMY_TOWN_RADIUS", 550];
+	            _restrTown = (_restrRad > 0) && {_preview distance _town < _restrRad} && {_townside != sideJoined};
+	            _restrBase = !isNull _eArea;
+	            if (_restrTown || _restrBase) then {
+	                diag_log Format ["COINPLACE|v1|restricted|byTown=%1|byBase=%2|dist=%3|rad=%4|townSide=%5|mySide=%6|town=%7", _restrTown, _restrBase, round (_preview distance _town), _restrRad, _townside, sideJoined, _town];
 					_color = _colorRed;
 					_restricted = true;
 					 hintSilent parseText "<t color='#fb0808'> You have entered a restricted area ! Impossible to build here! </t>";
@@ -1712,8 +1793,6 @@ switch (missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") do {
 
 			_color
 		}];
-	};
-};
 
 /* JIP System, initialize the camps and towns properly. */
 [] Spawn {

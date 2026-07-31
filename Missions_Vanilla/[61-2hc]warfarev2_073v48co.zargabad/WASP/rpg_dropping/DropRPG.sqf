@@ -70,7 +70,14 @@ _this addeventhandler ["Fired", {
 		//--- so on a dedicated server `mines` is undefined here -> "Undefined variable: mines" on every
 		//--- player Mine/MineE placement. Server mine tracking/cleanup is unaffected (Construction_
 		//--- StationaryDefense.sqf writes `mines` server-side). Guard so the client no-ops instead of erroring.
-		if (!isNil "mines") then { mines set [count mines, _mines_arr]; };
+		if (!isNil "mines") then { mines set [count mines, _mines_arr]; } else {
+			//--- fable/cleanup-locality-2 (PVF-class hunt, HIGH): on a DEDICATED server `mines` is nil on
+			//--- every client, so the guard above silently skipped registration on ALL real deployments -
+			//--- player-placed mines were never tracked and littered the map for the rest of the match.
+			//--- Register via the server: the "register-mine" case re-validates typeOf and stamps server
+			//--- time, so the age-gated reaper (mines_cleaner.sqf) finally sees them.
+			["RequestSpecial", ["register-mine", _bomb]] Call WFBE_CO_FNC_SendToServer;
+		};
 	};
 
 

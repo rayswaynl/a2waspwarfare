@@ -1,5 +1,20 @@
 # JOURNAL — a2waspwarfare-experital
 
+## Working State 2026-07-28 ~12:15 — m0728e CUTOVER IN FLIGHT (owner GO "deploy autonomously", changelog DM'd first per order)
+
+- **Deploy**: 26-PR update packed from tip `2d1c6a3263` (3 PBOs, read_pbo 939/939 byte-identical), staged to box `C:\WASP\staging-m0728e`, one-shot schtask `WaspCutoverM0728e` FIRED ~12:10 CEST. Cutover script = m0728c clone MINUS bounce2hc (it re-broke HC1 seating) + allocator check at end. Server+HC launchers now `-malloc=system` (owner order; server was mimalloc, HCs tbb — both switched, .pre-sysmalloc.bak backups on box).
+- **Owner live report during boot**: "HC 1 = in blufor slot..." → after CUTOVER DONE: probe seating (`hcreg-probe.ps1`), if bad → run `bounce2hc.ps1` ON-DEMAND via schtask /IT, re-probe. Monitor log: `C:\WASP\cutover-m0728e.log`, watcher `watch-cutover.ps1`.
+- **C9 picker results (owner)**: GO+quick-wins (SHIPPED #1574: S22 Reserve Guard armed, S21 4th gun, R1 17-obj checkpoint default-ON). Approved for NEXT cycle: wall V5 pass S1-S9, GUER Flaktower 3-way skin parity, rigid-pin flag-off, tower split (S12/S14/S19 first, S17 first-cut). PARKED (not approved): S23 earn-back, R4-R6 GUER cards.
+- **Verification owed post-boot**: build=m0728e in RPT, 2 HCs seated right, alloc-modcheck shows NO malloc module (=system heap), then first-hour watch: PATROLAIR|, AICOMSUPPLY|, USVFLOTILLA|GATE, RESERVEGUARD|v1, dispatched: counts in cleaner_droppeditems, carrier seam -252, gear charges. Verification DM after.
+
+## Working State 2026-07-28 morning (superseded — update shipped as m0728e)
+
+- **Branch:** `release/wasp-aicom-recovery-20260727`, tip after PR #1570 (`fcf588d0e8`). LIVE = m0728c; pending update = **22 PRs** since. Standing rule (owner 08:14): keep building, no server update.
+- **Shipped this stretch:** #1567 gear money fix (post-cap charge inside changed-gate + GUER depot target parity), #1568 Ka-137 threat-only spawns + variant re-weight (MI24 .40 / DROP .25 / SWARM .25), #1569 USV player-audience gate (PLAYER_GATE=1, 1500m), #1570 carrier INLINE_GAP -265→-252 (**previous TWIN_GAP 42→32→26 tunes were a DEAD knob — INLINE_HULLS=1 skips the lateral path**) + deck respawn +2→+0.5.
+- **Owner queue (open):** (1) AICOM small supply squad once truck/heli unlock gates reached — supply-mechanics scout running; **note: "AI supply trucks" do-not-re-propose entry SUPERSEDED by explicit owner order 2026-07-28**. (2) Patrol tiers reimagine: REMOVE money+SV rewards (definite), T3-4 air-unit idea incl. off-map entry (design options) — ground-truth scout running. (3) PVF-drop-class hunt scout running. (4) C9: 8 decision points DM'd to owner (SYNTHESIS.md in `_council_overnight\c9-defense-compositions\`), awaiting sign-off. (5) C10 wildcard council queued — GT-DRONE-SWARM.md archived in `_council_overnight\c10-wildcard-overhaul\` (verdict: no AICOM drone-swarm exists; KA-137 swarm was cap-starved, unblocked by #1568; wildcard COST=8000+HUMAN_BUY=0 means human-commanded sides get NO draws).
+- **Peach DM sender:** `C:\Users\Game\send-peach-dm.ps1` VANISHED again; rebuilt 2026-07-28 from memory recipe (port 5001, X-Ops-Key from bot .env, UTF-8 bytes). Local copy in session scratchpad.
+- **Runtime re-tests owed next build:** carrier seam at -252 + no spawn drop, gear overcharge/no-op charge, GUER depot gear target, Ka-137 threat-only + variant mix + KA137_SWARM lines, USV gate open/close, FOB scroll, VBIED reward, twin seam markers, air store after flip, runway spawn, lockpick, town air rearm, Towns button, deck/T4 UIs.
+
 ## 2026-07-07 — RC29 doubled player-arrow dedupe [fable/rc29-doubled-arrow]
 
 Task: FIX doubled player arrow on the map (two mil_arrow2 markers track the player).
@@ -761,3 +776,47 @@ the owner.
   engineer class). No audit item was skipped; dormant-root-only classes stayed out.
 - Mirrors regenerated and checked clean; version-template invariants passed
   (CH 32, TK 31, ZG 33). `RESULT.md` is intentionally untracked.
+
+## Working State — 2026-07-28 21:15 (burn window)
+- LIVE: m0728h on Takistan (rotation TK>CH, Veteran). Release branch = m0728h + merged #1585 (deck header both-states + FPV tested-z), #1586+mirrors (board wait 30->12 WFBE_C_AICOM_BOARD_WAIT), #1587 (COIN diagnostics; placement-method default-case was DORMANT, real placement root cause still unknown - COINPLACE|v1 logs will name it).
+- DRAFT awaiting owner: #1584 WEST jets (WFBE_C_AICOM_WEST_JETS=0).
+- Lanes IN FLIGHT (worktrees wt-*): airlift-v2 (draft, AIRLIFT2|v1, flag WFBE_C_AICOM_AIRLIFT_V2=0), cmd-clipping (legacy bottom-row out-of-bounds fix), quickstart-v2 (HC-safe first order, draft, flag WFBE_C_AICOM_AIR_QUICKSTART=0; naive shape rejected - AssignTowns server-only + side-wide), bomb-stage-a (Server_BombProbe + runbook, WFBE_C_BOMB_PROBE=0), fpv-causation (FPVCAUSE|v1 log-only ledger), build-defense-audit (read-only, owner order "commander build menu, base defenses").
+- Secondary box: WaspHcSlotTest schtask RUNNING as SYSTEM (the /IT interactive-only trap silently no-ran it twice - box has no interactive session; /RU SYSTEM fixed).
+- Adversarial review verdicts already fixed: deck header dual-membership, FPV z discard. Deferred into airlift-v2: REQ diag_log outside gate.
+- After lanes land: merge order = cmd-clipping, fpv-causation (non-draft) then mirror pass; drafts stay for owner/soak. Next build cut = m0728i on owner word or 06:00 restart.
+
+
+## 2026-07-30 — Release/master reconciliation receipt
+
+- The release-side journal above is retained in full. The `origin/master` journal was
+  already the same prior history after omitting only two release-only 2026-07-28
+  working-state blocks; no master-only journal entries were dropped by the merge.
+- Master history source retained: `origin/master` at `a1f97cfdbb` (spectator recut merge).
+- This receipt is the appended master-side reconciliation section for the
+  `reconcile/release-plus-master-20260730` merge.
+
+## 2026-07-30 — m0730g live: HC topology 2 CIV slots + spectator regression fixed
+
+**Working state:** deploy lineage = worktree `.worktrees/grand-reconcile`, branch
+`reconcile/release-plus-master-20260730` (pushed). Live CH rotation entry = m0730g.
+Takistan m0730g staged + waiter task `WaspTkSwapM0730g` armed on the box (swaps the
+rotation entry at the next stop window; log `C:\WASP	k-swap-m0730g.log`).
+
+- HC lobby slots 4 -> 2 on all three terrains, CIV only. Takistan had four slots
+  *labelled* "Headless Client" with `forceHeadlessClient` on **none** of them - that is
+  the mechanism behind HCs appearing as BLUFOR/OPFOR (1.64 seats a connecting client into
+  the lowest-id free playable slot, side-blind, honouring the flag only for a JIP into an
+  already-live mission). `WFBE_C_HC_SLOTS` 4 -> 2; HC *name* exclusion list intentionally
+  left as a 1..4 superset. `WaspHC3`/`WaspHC4` box tasks disabled.
+  Verified live: `who="HC-AI-Control-1"` and `-2` both reporting, 45-46 fps.
+- Spectator dead-on-m0730f root cause: **my own `disableSerialization`**. On OA 1.64 a
+  script that calls it does not survive its first suspension (opposite of A3), so handler
+  attach, movement loop and HUD never ran. Fixed by holding no Display in a local at all.
+  Mouse model rewritten (steer every event, warp only near the UI edge), sens 45 -> 25.
+- Spectator v3 director mode built on `fable/spectator-v3-director-20260730` (commit
+  aa5a4fea03), flag `WFBE_C_SPECTATOR_DIRECTOR` default 0. Not in m0730g.
+
+**Discovered issues:** Zargabad is not in the live rotation and was left unpacked (its
+tree carries the 2-slot fix). `server-config/provision/Start-Wasp-4HC.ps1` documents an
+`-HcCount` parameter it does not actually declare, and hardcodes `1..4` - would fail if
+invoked as the README instructs.

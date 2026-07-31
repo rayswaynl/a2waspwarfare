@@ -17,12 +17,16 @@
    (wfbe_blink_eh_added / wfbe_ied_eh_added): same idempotency idea, but
    entirely out-of-band here.
 
+   A2 OA 1.64: addAction script param must be a STRING file path - a code block
+   raises "Type code, expected String" and the action is never added
+   (live-proven client RPT 2026-07-30). Same idiom as the working
+   MHQ lock/build actions in updateclient.sqf.
    A2-OA-1.64 safe: getPlayerUID / missionNamespace getVariable / addAction /
    `in` (array membership) / isNil / WFBE_gameover - no A3-only commands.
 */
 Private ["_myUID"];
 
-if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) <= 0) exitWith {};
+if !((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0) exitWith {};
 
 _myUID = getPlayerUID player;
 if !(_myUID in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []])) exitWith {};
@@ -31,14 +35,14 @@ if (isNil "WFBE_C_VAR_SpectatorActive") then {WFBE_C_VAR_SpectatorActive = false
 
 diag_log Format ["SPECTATE|v1|allowlisted-client|uid=%1", _myUID];
 
-while {!WFBE_gameover} do {
-	waitUntil {sleep 2; !isNull player || WFBE_gameover};
-	if (WFBE_gameover) exitWith {};
+while {!(missionNamespace getVariable ["WFBE_gameover", false])} do {
+	waitUntil {sleep 2; !isNull player || (missionNamespace getVariable ["WFBE_gameover", false])};
+	if (missionNamespace getVariable ["WFBE_gameover", false]) exitWith {};
 	if !(player getVariable ["wfbe_spectator_actions_added", false]) then {
 		player setVariable ["wfbe_spectator_actions_added", true];
 		player addAction [
 			"<t color='#7fd4ff'>Spectator Camera</t>",
-			{[] Call WFBE_CL_FNC_SpectatorEnter},
+			"Client\Functions\Client_SpectatorEnter.sqf",
 			[],
 			1.5,
 			false,
@@ -48,7 +52,7 @@ while {!WFBE_gameover} do {
 		];
 		player addAction [
 			"<t color='#ffcc33'>Exit Spectator</t>",
-			{[] Call WFBE_CL_FNC_SpectatorExit},
+			"Client\Functions\Client_SpectatorExit.sqf",
 			[],
 			1.5,
 			false,

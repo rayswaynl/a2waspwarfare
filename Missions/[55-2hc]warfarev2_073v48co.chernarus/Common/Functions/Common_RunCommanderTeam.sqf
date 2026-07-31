@@ -230,6 +230,18 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 	[_team, _side, _vehicles] Spawn {
 		private ["_tm","_sd","_vehs","_liveVehs","_h","_tgt","_cannon","_cannonMuzzle","_muzzles","_isGuided","_ammo","_band"]; //--- B66 +_cannonMuzzle/_muzzles; lane341 hostile filter uses getFriend
 		_tm = _this select 0; _sd = _this select 1; _vehs = _this select 2;
+		//--- fable/watch-0728 (live m0727h HC RPT: "Error Undefined variable ... _idlertbenabled" at the
+		//--- B74.2 reads below): _idleRtbEnabled is seeded in the OUTER function scope, but Spawn does NOT
+		//--- capture locals - every read inside this spawned watcher threw. The earlier seed-first fix
+		//--- (see the outer comment) landed in the wrong scope. Re-derive it here, seeded safe first,
+		//--- same expression as the outer scope - with the RTB flags at their 0 defaults this evaluates
+		//--- false, exactly the value the outer gate used.
+		private ["_idleRtbEnabled","_idleSenseProbe"];
+		_idleRtbEnabled = false;
+		_idleSenseProbe = -1;
+		_idleSenseProbe = missionNamespace getVariable ["WFBE_C_AICOM_AIR_IDLE_SENSE_R", -1];
+		if ((typeName _idleSenseProbe) != "SCALAR") then {_idleSenseProbe = -1};
+		_idleRtbEnabled = (missionNamespace getVariable ["WFBE_C_AICOM_AIR_IDLE_RTB", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_IDLE_MINUTES", 0]) > 0} && {_idleSenseProbe > 0};
 		while {!WFBE_GameOver && !isNull _tm && {(count _vehs) > 0} && {(count ((units _tm) Call WFBE_CO_FNC_GetLiveUnits)) > 0}} do {
 			_liveVehs = [];
 			{ if (!isNull _x && {alive _x}) then {_liveVehs = _liveVehs + [_x]} } forEach _vehs;
@@ -244,7 +256,27 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 						{ _ammo = getText (configFile >> "CfgMagazines" >> _x >> "ammo"); if (_ammo != "" && {(getNumber (configFile >> "CfgAmmo" >> _ammo >> "airLock")) == 1 || {(getNumber (configFile >> "CfgAmmo" >> _ammo >> "maxControlRange")) > 0}}) then {_isGuided = true} } forEach (getArray (configFile >> "CfgWeapons" >> _x >> "magazines"));
 						if (!_isGuided && {_cannon == ""}) then {_cannon = _x};
 					} forEach (weapons _h);
-					if (_cannon != "") then {
+					//--- fable/ai-bomb-nudge (owner 2026-07-28 "AI is still not using other loadouts like
+					//--- bombs etc"): this nudge exists to stop gunners parking on GUIDED ATGMs at standoff
+					//--- (see the B60 header above). It picks the FIRST non-guided weapon, which on a Mi24_P
+					//--- is the GSh302 cannon - HeliBombLauncher is equally non-guided but sits later in
+					//--- `weapons`, so it was never picked, AND because this re-fires every
+					//--- WFBE_C_AICOM_HELI_NUDGE_PERIOD (7s) seconds any bomb the AI did select was pulled
+					//--- straight back off. That made the bomb launcher structurally unusable on the one
+					//--- attack heli in the roster that carries one. A gunner already on a bomb is NOT the
+					//--- standoff-ATGM failure this nudge targets, so skip the cycle instead of overriding.
+					//--- Explicit launcher names (house idiom - the AIR_BOMBS table above does the same)
+					//--- rather than an ammo-config probe, so a config quirk cannot silently disable the
+					//--- nudge for a non-bomb weapon. 0 = legacy (always nudge).
+					private ["_curW","_bombSel"];
+					_bombSel = false;
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_NUDGE_BOMB_YIELD", 1]) > 0) then {
+						_curW = currentWeapon (gunner _h);
+						if (_curW in ["HeliBombLauncher","Mk82BombLauncher_6","Mk82BombLauncher","AirBombLauncher","BombLauncherA10","BombLauncher","BombLauncherF35"]) then {
+							_bombSel = true;
+						};
+					};
+					if (_cannon != "" && {!_bombSel}) then {
 						_band = missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_RANGE", 700];
 						_tgt = objNull;
 						{ if (alive _x && {(_sd getFriend (side _x)) < 0.6} && {(_h distance _x) < _band}) exitWith {_tgt = _x} } forEach ((getPos _h) nearEntities [["Man","Car","Wheeled_APC","Tank"], _band]);
@@ -303,16 +335,16 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 								_rPlayerCrew = ({alive _x && {isPlayer _x}} count _rCrew) > 0;
 								_rBusy = false;
 								if (_idleRtbEnabled && {_rTransport}) then {
-									{if (alive _x && {(vehicle _x) == _rh} && {_x != (driver _rh)} && {_x != (gunner _rh)} && {_x != (commander _rh)}) then {_rBusy = true}} forEach (units _team);
+									{if (alive _x && {(vehicle _x) == _rh} && {_x != (driver _rh)} && {_x != (gunner _rh)} && {_x != (commander _rh)}) then {_rBusy = true}} forEach (units _tm); //--- fable/watch-0728b: _team is OUTER scope - Spawn does not capture it; _tm is this watcher's own group ref
 								};
 								_rAirborne = false;
-								_rAirborneAt = _team getVariable "wfbe_aicom_airborne_until";
+								_rAirborneAt = _tm getVariable "wfbe_aicom_airborne_until"; //--- fable/watch-0728b: was _team (outer scope, undefined in this Spawn) - threw on every reap tick once the idleRtb fix let execution reach here
 								if (!isNil "_rAirborneAt" && {_rAirborneAt > time}) then {_rAirborne = true};
 								_rEngaged = false;
 								{if (alive _x && {behaviour _x == "COMBAT"}) then {_rEngaged = true}} forEach _rCrew;
 								_rEnRoute = false;
 								if (_idleRtbEnabled && {(count _rCrew) > 0}) then {
-									_rOrder = _team getVariable "wfbe_aicom_order";
+									_rOrder = _tm getVariable "wfbe_aicom_order"; //--- fable/watch-0728b: was _team (outer scope, undefined in this Spawn)
 									if (!isNil "_rOrder" && {count _rOrder >= 3}) then {
 										_rDest = _rOrder select 2;
 										if (typeName _rDest == "ARRAY" && {(_rh distance _rDest) > (missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250])}) then {_rEnRoute = true};
@@ -349,7 +381,7 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 													if ((time - _rIdleAt) >= _idleSecs) then {
 														_rh setVariable ["wfbe_aicom_air_idle_action", true];
 														_rh setVariable ["wfbe_aicom_air_idle_at", nil];
-														[_rh, _team, _sd] Spawn {
+														[_rh, _tm, _sd] Spawn { //--- fable/watch-0728b: was _team (outer scope) - passed nil into the inner spawn
 															private ["_h","_tm","_sd","_recheckCrew","_recheckBusy","_recheckAirborne","_recheckEngaged","_recheckEnRoute","_recheckOrder","_recheckDest"];
 															_h = _this select 0; _tm = _this select 1; _sd = _this select 2;
 															_recheckCrew = [];
@@ -754,7 +786,14 @@ if (!isNull _airVeh && {alive _airVeh} && {!isNull (driver _airVeh)} && {alive (
 			_sID  = _this select 7;
 			_cost = _this select 8;
 			//--- Let everyone board first.
-			_t0 = time + 30;
+			//--- fable/heli-quickstart (owner 2026-07-28: helicopters linger way too long in base before flying off
+			//--- after spawning): the flat 30s boarding cap is a WORST-CASE bound only (the waitUntil below already
+			//--- exits the instant every pax is aboard) but still needlessly delays the run-in on a fast mount.
+			//--- Tunable via WFBE_C_AICOM_BOARD_WAIT (Init_CommonConstants.sqf, default 12s; was hardcoded 30).
+			//--- Air-only by construction: this whole Spawn only runs inside the enclosing !isNull _airVeh gate
+			//--- (L664) - _airVeh is exclusively an Air hull with transportSoldier>0 (L461-464) - ground transports
+			//--- never reach this path, so no additional isKindOf check is needed.
+			_t0 = time + (missionNamespace getVariable ["WFBE_C_AICOM_BOARD_WAIT", 12]);
 			waitUntil {sleep 1; time > _t0 || {({alive _x && vehicle _x == _h} count _pax) >= ({alive _x} count _pax)}};
 			if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)}) exitWith {
 				//--- Heli lost mid-lift: any survivors still aboard/around get an unconditional move.
@@ -1045,13 +1084,20 @@ while {!WFBE_GameOver && _alive} do {
 	if ((missionNamespace getVariable ["WFBE_C_AICOM_VEHICLE_SELFREPAIR", 1]) > 0) then {
 		private ["_srVeh","_srSafe","_srDelay"];
 		_srSafe  = missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_SAFE_DIST", 250];
+		//--- WFBE_C_AICOM_SELFREPAIR_AIRSHIP (default 0 = OFF, byte-identical): when >0, immobilised AIR and
+		//--- SHIP hulls become eligible for the same field repair as LandVehicle, and the threat scan also
+		//--- looks for enemy AIR (a grounded helicopter is most threatened by aircraft, which the LandVehicle-
+		//--- only scan cannot see). At 0 both the class gate and the scan types are exactly as before.
+		private ["_srAirShip","_srScanTypes"];
+		_srAirShip   = (missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_AIRSHIP", 0]) > 0;
+		_srScanTypes = if (_srAirShip) then {["Man","LandVehicle","Air"]} else {["Man","LandVehicle"]};
 		_srDelay = missionNamespace getVariable ["WFBE_C_AICOM_SELFREPAIR_DELAY", 30];
 		{
 			_srVeh = _x;
-			if (!isNull _srVeh && {alive _srVeh} && {local _srVeh} && {_srVeh isKindOf "LandVehicle"} && {!(canMove _srVeh)} && {({alive _x} count (crew _srVeh)) > 0}) then {
+			if (!isNull _srVeh && {alive _srVeh} && {local _srVeh} && {(_srVeh isKindOf "LandVehicle") || {_srAirShip && {(_srVeh isKindOf "Air") || {_srVeh isKindOf "Ship"}}}} && {!(canMove _srVeh)} && {({alive _x} count (crew _srVeh)) > 0}) then {
 				//--- threat present (enemy/neutral-hostile within the safe radius) or the team is fighting? stand down.
 				private ["_srThreat","_srStamp"];
-				_srThreat = {!isNull _x && {alive _x} && {((side _team) getFriend (side _x)) < 0.6}} count (_srVeh nearEntities [["Man","LandVehicle"], _srSafe]);
+				_srThreat = {!isNull _x && {alive _x} && {((side _team) getFriend (side _x)) < 0.6}} count (_srVeh nearEntities [_srScanTypes, _srSafe]);
 				if (_srThreat == 0 && {behaviour (leader _team) != "COMBAT"}) then {
 					_srStamp = _srVeh getVariable "wfbe_aicom_repair_at";
 					if (isNil "_srStamp") then {
@@ -1059,6 +1105,26 @@ while {!WFBE_GameOver && _alive} do {
 					} else {
 						if ((time - _srStamp) >= _srDelay) then {
 							_srVeh setDamage 0;
+							//--- CORRECTNESS FIX: setDamage 0 clears ONLY the overall damage scalar. Engine-verified
+							//--- (BI wiki setHit, "Introduced with Arma 2 version 1.00", OA category): "Damaging specific
+							//--- parts of the vehicle will not update its overall damage value" - and the converse holds, so
+							//--- a destroyed wheel/track/engine/rotor HITPOINT survives setDamage 0 and the hull stays
+							//--- !canMove. This block therefore logged VEHICLE_SELFREPAIR while leaving the vehicle immobile;
+							//--- see the STUCK_REPAIR_RESETS_TIER note at Init_CommonConstants.sqf:2797 ("STUCK_REPAIR fired
+							//--- 3x but averted 0 teleports"). Mirrors the proven player path Client_SupportRepair.sqf:83-92.
+							//--- Part names MUST come from config, never hardcoded: they are model selection names, several
+							//--- are Czech ("mala vrtule"), and they vary per addon (BI wiki note). 2-ARG setHit ONLY - the
+							//--- optional useEffects argument is 1.68+, above this engine. setHit needs a LOCAL object,
+							//--- guaranteed by the {local _srVeh} gate above.
+							private ["_srHp","_srHpCfg","_srHpName"];
+							_srHp = configFile >> "CfgVehicles" >> (typeOf _srVeh) >> "HitPoints";
+							if (isClass _srHp && {(count _srHp) > 0}) then {
+								for "_srI" from 0 to ((count _srHp) - 1) do {
+									_srHpCfg  = _srHp select _srI;
+									_srHpName = getText (_srHpCfg >> "name");
+									if (!(_srHpName in [""])) then {_srVeh setHit [_srHpName, 0]};
+								};
+							};
 							_srVeh setVariable ["wfbe_aicom_repair_at", nil];
 							diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|VEHICLE_SELFREPAIR|veh=" + (typeOf _srVeh));
 						};
@@ -1592,7 +1658,28 @@ while {!WFBE_GameOver && _alive} do {
 						_alReqPending = !isNil "_alReq" && {(typeName _alReq) == "ARRAY"} && {count _alReq > 0};
 						_alGrantPending = !isNil "_alGrant" && {(typeName _alGrant) == "ARRAY"} && {count _alGrant > 0};
 						if (!_alReqPending && {!_alGrantPending}) then {
-							_team setVariable ["wfbe_aicom_airlift_req", [time, getPosATL (leader _team)], true];
+							//--- fable/airlift-parking-lot (LIVE EVIDENCE m0728f, 2026-07-28): this request is
+							//--- DISABLED BY DEFAULT because the delivery half of the handshake has never once
+							//--- completed. Measured on the live server in a single ~100-minute match:
+							//---   AIRMOBILE_REQUISITION_GRANT     = 55  (server RPT, 4928 funds each = ~271k)
+							//---   AIRMOBILE_REQUISITION_DELIVERED = 55  (25 on HC1 + 30 on HC2)
+							//---   AIR-INSERT                      =  0
+							//--- The cause is structural, not a tuning problem: the air-insert block that would
+							//--- load and fly the team lives at ~line 644, BEFORE this file's main loop opens at
+							//--- ~line 1028, so it runs exactly ONCE at team founding. The requisitioned
+							//--- transport is created much later, INSIDE that loop (the grant consumer near line
+							//--- 3184). By the time the helicopter exists, the only code that could lift anyone
+							//--- with it has already run and is never revisited. Every granted transport is
+							//--- therefore paid for, spawned with a pilot, and parked at the aircraft factory
+							//--- forever, while the team walks (owner-visible: "lots of empty mh6j (only pilot)",
+							//--- "spawned in groups of like 5" - the group size is WFBE_C_AICOM_AIR_MAX_TOTAL).
+							//--- Turning the REQUEST off is strictly better than leaving it on: the AI keeps the
+							//--- funds it was burning, the air cap stops filling with idle hulls, and no
+							//--- behaviour is lost that was ever actually happening. Set the flag to 1 only
+							//--- once the lift is re-implemented INSIDE the loop at the delivery point.
+							if ((missionNamespace getVariable ["WFBE_C_AICOM_AIRLIFT_REQ", 0]) > 0) then {
+								_team setVariable ["wfbe_aicom_airlift_req", [time, getPosATL (leader _team)], true];
+							};
 							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_REQ|team=" + str _team + "|dist=" + str (round ((leader _team) distance _dest)));
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] has no transport heli for a long airmobile leg - requisition requested.", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
 						};
@@ -2571,6 +2658,15 @@ while {!WFBE_GameOver && _alive} do {
 						if (count _unheldCamps > 0) then {
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] camp-first window expired with %3 camp(s) un-held at [%4] - proceeding to center.", _side, _team, count _unheldCamps, if (!isNull _townObj) then {_townObj getVariable ["name","?"]} else {"pos"}]] Call WFBE_CO_FNC_AICOMLog;
 						};
+						//--- fable/mode2-no-futile-hold (backlog #10, adversarial R2): in AllCamps mode (capture mode 2)
+						//--- the depot CANNOT drain while ANY camp is un-held (server_town.sqf gate), so the centre hold
+						//--- below would grind its whole window for guaranteed-zero progress. End the capture attempt
+						//--- instead - same scope + idiom as the _capAbort bail above (plant already released, capture
+						//--- lock self-expires via its TTL) - and the outer loop re-tasks the team. Mode 0/1, or the
+						//--- gate flag off, keep the original fall-through unchanged.
+						if ((count _unheldCamps > 0) && {_capMode == 2} && {_campGateMode2 != 0}) exitWith {
+							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] mode-2 camps still un-held after the window - skipping the futile centre hold, re-tasking.", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
+						};
 
 						//--- SML-4 overwatch: pre-position launcher soldier on armor approach vector before the depot assault. Flag-gated (WFBE_C_SML_AT_OVERWATCH default 0).
 						if ((missionNamespace getVariable ["WFBE_C_SML_AT_OVERWATCH", 0]) > 0) then {
@@ -3137,7 +3233,15 @@ while {!WFBE_GameOver && _alive} do {
 				if (count _alNewVehicles > 0) then {
 					{if (!isNull _x && {_x isKindOf "Air"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "transportSoldier")) > 0}) then {_x setVariable ["wfbe_aicom_transport", true, true]}} forEach _alNewVehicles;
 					_vehicles = _vehicles + _alNewVehicles;
-					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_DELIVERED|team=" + str _team + "|class=" + _alClass);
+					//--- fable/airlift-parking-lot: record WHY a delivered transport does or does not lift.
+					//--- Always-on (one line per delivery, rare event): when the in-loop lift is built, this
+					//--- is the ground truth for whether seats or passengers were ever the problem. Live
+					//--- 2026-07-28 showed 55 deliveries and 0 lifts, but never recorded seats/pax.
+					private ["_alSeats","_alFoot","_alHull"];
+					_alHull = _alNewVehicles select 0;
+					_alSeats = if (isNull _alHull) then {-1} else {_alHull emptyPositions "cargo"};
+					_alFoot = {alive _x && {vehicle _x == _x}} count ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_DELIVERED|team=" + str _team + "|class=" + _alClass + "|cargoSeats=" + str _alSeats + "|footPax=" + str _alFoot + "|liftedHere=0-by-design-see-airlift-parking-lot");
 					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] received paid transport %3 at factory.", _side, _team, _alClass]] Call WFBE_CO_FNC_AICOMLog;
 				} else {
 					_alRefund = if ((typeName _alCharge) == "SCALAR") then {_alCharge} else {0};

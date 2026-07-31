@@ -129,6 +129,32 @@ if (_side == EAST) then {
 	];
 };
 
+//--- fable/guer-skins (owner 2026-07-28 "Can we add GUER skins?"): resistance previously fell
+//--- through BOTH side blocks with _pool = [] - the selector opened EMPTY for every GUER player.
+//--- fable/skin-fixes (owner live report, same day): the first cut also shipped 5 CROSS-SIDE
+//--- classes (Chedaki x2 = EAST config, CZ scout + PMC = WEST config, gorka = EAST addon). The
+//--- SkinSelector_Apply cross-side respawn guard rightly hard-blocks those at pick time (the
+//--- engine respawn re-evaluates the persisted class by CONFIG side - a cross-side body gets the
+//--- player executed by his own base, the exact bug that removed CDF from the EAST pool
+//--- 2026-07-04 cmdcon44o). Dropped: this pool is side-2 (resistance) config classes ONLY.
+//--- The isClass filter below still drops anything absent, same safety as every other entry.
+if (_side == resistance) then {
+	_pool = [
+		["GUE_Soldier_1",         "Woodland Wolf (NAPA)", false],
+		["GUE_Soldier_2",         "Backwoods Boy (NAPA)", false],
+		["GUE_Soldier_3",         "Flannel Fighter (NAPA)", false],
+		["GUE_Soldier_CO",        "Warlord (NAPA CO)", false],
+		["GUE_Commander",         "Field Commander (NAPA)", false],
+		["GUE_Soldier_MG",        "Belt Feeder (NAPA MG)", false],
+		["GUE_Soldier_GL",        "Thumper (NAPA GL)", false],
+		["GUE_Soldier_AT",        "Tank Hunter (NAPA AT)", false],
+		["GUE_Soldier_Medic",     "Bush Doctor (NAPA Medic)", false],
+		["GUE_Soldier_Scout",     "Pathfinder (NAPA Scout)", false],
+		//--- Ghillie / sniper skins (sniper role only - kept LAST).
+		["GUE_Soldier_Sniper",    "Kudu Ghillie (NAPA)", true]
+	];
+};
+
 //--- Filter: drop entries whose class does not exist in CfgVehicles (e.g. missing DLC).
 _filtered = [];
 _i = 0;

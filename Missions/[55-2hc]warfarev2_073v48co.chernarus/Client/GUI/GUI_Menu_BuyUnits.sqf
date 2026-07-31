@@ -3,6 +3,20 @@ disableSerialization;
 //--- Init.
 MenuAction = -1;
 
+//--- ROOT-CAUSE FIX (live client RPT 2026-07-27, GUER FOB truck depot buy): _crewCostPerHead was
+//--- never declared in this file and is only ASSIGNED inside conditional branches (the !_isInfantry
+//--- cost block and the two analogous charge points further down). On the observed GUER Depot buy none
+//--- of those ran, so the _params build threw:
+//---   "Error Undefined variable in expression: _crewcostperhead ... GUI_Menu_BuyUnits.sqf, line 287"
+//--- A2 does NOT abort the script on a throwing statement (see the failed-statement-continues trap), so
+//--- the buy proceeded half-initialised: the hull WAS created (BUYTRACE createveh null=false) but the
+//--- downstream wfbe_is_guer_fob stamp in Client_BuildUnit.sqf never ran, and no init_unit_client_setup
+//--- audit appeared for the truck - so Init_Unit.sqf never added EITHER Build-FOB action and the player
+//--- saw no scroll entry at all. Declaring + seeding it here dominates every use site, so line 287 can
+//--- never throw regardless of which cost branch ran. The branch assignments below still refine it.
+private ["_crewCostPerHead"];
+_crewCostPerHead = missionNamespace getVariable ["WFBE_C_UNITS_CREW_COST", 0];
+
 _listUnits = [];
 
 _closest = objNull;

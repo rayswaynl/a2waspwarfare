@@ -22,7 +22,11 @@
 		                             Does NOT affect who counts toward CONTEST - every side always
 		                             counts for contest purposes (design doc S3.4/S4).
 		5: _contestMode               NUMBER  0 = pause progress on multi-side presence (default),
-		                               1 = decay progress at WFBE_C_RADIUSHOLD_CONTEST_DECAY sec/tick.
+		                               1 = decay progress at WFBE_C_RADIUSHOLD_CONTEST_DECAY sec/tick,
+		                               2 = BEAT-DOWN: the anchor's current owner (sideID) stops counting
+		                               toward contest once reduced to WFBE_C_RADIUSHOLD_BEATDOWN_FLOOR
+		                               bodies or fewer, so an attacker must clear the garrison before it
+		                               can accrue. A third side still contests normally.
 		6: _cooldownSecs               NUMBER  re-arm cooldown after completion; 0 = none.
 		7: _onCompleteFnName             STRING  name of a global compiled function, called as
 		                                 [_holdId, _anchor, _winningSide] call (missionNamespace getVariable _onCompleteFnName)
@@ -129,6 +133,19 @@ if (isNil "WFBE_RADIUSHOLD_DISPATCHER_STARTED") then {
 			//--- using the ANCHOR's own ASL Z (== deckZ for the carrier consumer, since the naval town
 			//--- logic is already raised to deckZ before registration) + the same 12 m tolerance.
 			_objects = (_anchor nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"], _radius]) unitsBelowHeight ((getPosASL _anchor select 2) + 12);
+			//--- fable/carrier-capture-fix (owner 2026-07-28 "capping doesnt work"): DECK FLOOR. Over water
+			//--- (carrier consumer) a unit at SEA LEVEL - garrison spawned outside the camps path, swimmers,
+			//--- hull-interior strays - sits inside the radius and below the +12 ceiling, so it counted
+			//--- forever and kept the hold CONTESTED against a deck attacker who could not even see it.
+			//--- Presence now also requires deck height: ASL z >= anchor z - 4. Land holds (ZG KotH) are
+			//--- untouched - the filter only arms when the anchor stands over water.
+			if (surfaceIsWater (getPos _anchor)) then {
+				private ["_deckFloorZ","_onDeck"];
+				_deckFloorZ = (getPosASL _anchor select 2) - 4;
+				_onDeck = [];
+				{ if (((getPosASL _x) select 2) >= _deckFloorZ) then {_onDeck = _onDeck + [_x]} } forEach _objects;
+				_objects = _onDeck;
+			};
 			_westN = west countSide _objects;
 			_eastN = east countSide _objects;
 			_guerN = resistance countSide _objects;
@@ -137,6 +154,29 @@ if (isNil "WFBE_RADIUSHOLD_DISPATCHER_STARTED") then {
 			if (_westN > 0) then { _presentSides set [count _presentSides, west]; };
 			if (_eastN > 0) then { _presentSides set [count _presentSides, east]; };
 			if (_guerN > 0) then { _presentSides set [count _presentSides, resistance]; };
+
+			//--- CONTEST MODE 2 "BEAT-DOWN" (owner ruling 2026-07-27, carrier consumer). The objective's
+			//--- CURRENT OWNER stops counting toward contest once its presence is beaten down to
+			//--- WFBE_C_RADIUSHOLD_BEATDOWN_FLOOR bodies or fewer. ABOVE that floor the owner still counts,
+			//--- so an attacker standing on a defended deck reads CONTESTED and accrues nothing - it must
+			//--- clear the garrison first. A THIRD side always still contests, so this is not a free pass.
+			//--- WHY: plain sole-presence contest made the carriers UNCAPTURABLE - a LargeTown1 carrier
+			//--- always carries a GUER garrison, so a boarder was permanently contested and progress never
+			//--- accrued. That is the 2026-07-10 "bubbles do not grant deck capture" regression which
+			//--- disarmed WFBE_C_NAVALHVT_BUBBLE_ENABLE (commit 7ec25d16f5). Modes 0/1 are UNTOUCHED -
+			//--- Init_ZgKoth.sqf registers mode 0 and is unaffected.
+			if (_contestMode == 2 && {(count _presentSides) > 1}) then {
+				private ["_ownSID","_ownSide","_ownN","_bdFloor"];
+				_ownSID  = _anchor getVariable ["sideID", -1];
+				_bdFloor = missionNamespace getVariable ["WFBE_C_RADIUSHOLD_BEATDOWN_FLOOR", 2];
+				if (_ownSID >= 0) then {
+					_ownSide = (_ownSID) Call WFBE_CO_FNC_GetSideFromID;
+					_ownN = switch (_ownSide) do {case west: {_westN}; case east: {_eastN}; case resistance: {_guerN}; default {-1}};
+					if (_ownN >= 0 && {_ownN <= _bdFloor} && {_ownSide in _presentSides}) then {
+						_presentSides = _presentSides - [_ownSide];
+					};
+				};
+			};
 
 			_holderSideNum = -1;
 
@@ -172,6 +212,21 @@ if (isNil "WFBE_RADIUSHOLD_DISPATCHER_STARTED") then {
 
 			_anchor setVariable ["wfbe_rh_holder_side", _holderSideNum, true];
 			_anchor setVariable ["wfbe_rh_progress", _progress, true];
+			_anchor setVariable ["wfbe_rh_westn", _westN];
+			_anchor setVariable ["wfbe_rh_eastn", _eastN];
+			_anchor setVariable ["wfbe_rh_guern", _guerN];
+			//--- fable/carrier-capture-fix: always-on state telemetry (diag_log - LogContent is compiled
+			//--- off on the server, which left this primitive RPT-invisible: a dead scan and a healthy idle
+			//--- hold looked identical across a whole night). One line on any state change (progress
+			//--- bucketed to 30s so a clean hold logs ~4 lines, not 24) + a 60s heartbeat per hold.
+			private ["_rhSig","_rhNow"];
+			_rhSig = Format ["id=%1|w=%2|e=%3|g=%4|present=%5|holder=%6|prog30=%7", _id, _westN, _eastN, _guerN, count _presentSides, _holderSideNum, floor (_progress / 30)];
+			_rhNow = time;
+			if ((_rhSig != (_anchor getVariable ["wfbe_rh_lastsig",""])) || {(_rhNow - (_anchor getVariable ["wfbe_rh_lastlog",-1e9])) >= 60}) then {
+				_anchor setVariable ["wfbe_rh_lastsig", _rhSig];
+				_anchor setVariable ["wfbe_rh_lastlog", _rhNow];
+				diag_log ("RADIUSHOLD|v2|tick|" + _rhSig + "|prog=" + str (floor _progress) + "/" + str _holdSecs + "|mode=" + str _contestMode);
+			};
 
 			if (_holderSideNum != -1 && {_holdSecs > 0} && {_progress >= _holdSecs}) then {
 				_winnerSideNum = _holderSideNum;
@@ -180,6 +235,7 @@ if (isNil "WFBE_RADIUSHOLD_DISPATCHER_STARTED") then {
 				_anchor setVariable ["wfbe_rh_cooldown_until", time + _cooldownSecs, true];
 				_anchor setVariable ["wfbe_rh_last_complete_side", _winnerSideNum, true];
 				_anchor setVariable ["wfbe_rh_last_complete_time", time, true];
+				diag_log Format ["RADIUSHOLD|v2|COMPLETE|id=%1|winner=%2", _id, _winnerSideNum];
 				["INFORMATION", Format ["Common_RadiusHold.sqf: hold id=%1 COMPLETE winner=%2 onComplete=%3.", _id, _winnerSideNum, _onComplete]] Call WFBE_CO_FNC_LogContent;
 				if (_onComplete != "") then {
 					[_id, _anchor, _winnerSideType] call (missionNamespace getVariable _onComplete);

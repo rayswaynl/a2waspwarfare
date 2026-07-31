@@ -17,7 +17,7 @@ if ((missionNamespace getVariable ["WFBE_C_FPV_DRONE", 0]) <= 0) exitWith {
 	["INFORMATION", "Support_FPV_Detonate.sqf: WFBE_C_FPV_DRONE=0, ignoring detonation request."] Call WFBE_CO_FNC_LogContent;
 };
 
-private ["_args","_request","_requestedDrone","_detCap","_pos","_ammoClass","_sides","_matchSide","_matchDrone","_matchCount","_token","_sKey","_sStr","_sArr","_sideVal","_tok","_dronePos","_dist","_lastKey","_lastFire","_now","_driver","_stampRadius","_enemySides","_cand","_bestDist","_atomicState","_serverCap","_ownerStamp","_cArr","_retryArgs","_retryDelay","_retryPending","_retryDrone"];
+private ["_args","_request","_requestedDrone","_detCap","_pos","_ammoClass","_sides","_matchSide","_matchDrone","_matchCount","_token","_sKey","_sStr","_sArr","_sideVal","_tok","_dronePos","_dist","_lastKey","_lastFire","_now","_driver","_stampRadius","_enemySides","_cand","_bestDist","_atomicState","_serverCap","_ownerStamp","_cArr","_retryArgs","_retryDelay","_retryPending","_retryDrone","_ledgerR","_ledger","_ledgerPruned"];
 _args = _this;
 
 if (count _args < 2) exitWith {
@@ -199,4 +199,67 @@ if (!isNull _driver) then {
 //--- FIX (fable/fpv-auth-hardening): spawn warhead at the drone's actual server position,
 //--- NOT the client-supplied _pos. This eliminates the ~200m free-aim exploit where an
 //--- attacker could supply any _pos within the proximity gate and get a remote warhead.
-createVehicle [_ammoClass, _dronePos, [], 0, "NONE"];
+//--- FPV BLAST LEDGER (fable/fpv-blast-ledger, live-evidenced 2026-07-27): radius-independent
+//--- attribution backstop. The pre-blast per-victim stamp above misses fast-drift kills (the scan
+//--- runs at _dronePos BEFORE the warhead spawns, and the drone carries residual velocity into the
+//--- impact) plus anything just outside indirectHitRange that the blast still kills - observed live
+//--- as an FPV kill paying the flat GUERVBIED wallet bounty while producing NO attributed KILL row,
+//--- no score and no killfeed (the victim reached RequestOnUnitKilled.sqf with no live killer and
+//--- died at line 85). Record the detonation server-side; RequestOnUnitKilled.sqf reads the ledger
+//--- as a fallback when no live killer resolves. Both files run on the server, so a plain global
+//--- with 2-arg setVariable suffices (no broadcast). Bounded: entries older than 20s pruned each
+//--- write, hard cap 12 with drop-oldest (array-minus idiom, A2-safe).
+if (!isNull _driver) then {
+	_ledgerR = ((getNumber (configFile >> "CfgAmmo" >> _ammoClass >> "indirectHitRange")) * 2) max 30;
+	_ledger = missionNamespace getVariable ["WFBE_FPV_BLAST_LEDGER", []];
+	_ledgerPruned = [];
+	{ if ((time - (_x select 0)) <= 20) then { _ledgerPruned set [count _ledgerPruned, _x]; }; } forEach _ledger;
+	if ((count _ledgerPruned) >= 12) then { _ledgerPruned set [0, -1]; _ledgerPruned = _ledgerPruned - [-1]; };
+	_ledgerPruned set [count _ledgerPruned, [time, _dronePos, _driver, _matchSide, _ledgerR]];
+	missionNamespace setVariable ["WFBE_FPV_BLAST_LEDGER", _ledgerPruned];
+	diag_log Format ["FPVLEDGER|v1|record|pilot=%1|side=%2|pos=%3|r=%4|entries=%5", name _driver, _matchSide, _dronePos, _ledgerR, count _ledgerPruned];
+};
+//--- FPV CAUSATION EVIDENCE LEDGER (fable/fpv-causation, flag WFBE_C_FPV_CAUSE_LOG default 1,
+//--- ARMED - log-only observability, fits repo diagnostic-line policy, zero behavior change):
+//--- separate from WFBE_FPV_BLAST_LEDGER above (that ledger drives REAL attribution fallback in
+//--- RequestOnUnitKilled.sqf; this one is read-only evidence for a later pass to judge whether that
+//--- fallback, or any other kill near this drone blast, actually earned suicide-chopper credit -
+//--- addressing the owner report that AH6J attack-run kills were sometimes scored as FPV kills.
+//--- Bounded ring, hard cap 20, drop-oldest (array-minus idiom, A2-safe) - count-bound only, no
+//--- time-based prune, matching the task spec. Entry shape: [time, position, side, controller].
+if (((missionNamespace getVariable ["WFBE_C_FPV_CAUSE_LOG", 1]) > 0) && {!isNull _driver}) then {
+	Private ["_causeRing","_causeRingPruned"];
+	_causeRing = missionNamespace getVariable ["WFBE_FPV_CAUSE_RING", []];
+	if (typeName _causeRing != "ARRAY") then {_causeRing = []};
+	_causeRingPruned = [];
+	{ _causeRingPruned set [count _causeRingPruned, _x]; } forEach _causeRing;
+	if ((count _causeRingPruned) >= 20) then { _causeRingPruned set [0, -1]; _causeRingPruned = _causeRingPruned - [-1]; };
+	_causeRingPruned set [count _causeRingPruned, [time, _dronePos, _matchSide, _driver]];
+	missionNamespace setVariable ["WFBE_FPV_CAUSE_RING", _causeRingPruned];
+};
+//--- fable/fpv-spawn-safety part 3 of 3 (owner: "exploded in their own base"): nothing in this
+//--- chain ever checked WHERE the warhead lands, so a drone that died on its own pad dropped a
+//--- live R_57mm_HE round (hit 150 / indirect 40 / r 12, no side affiliation) straight into the
+//--- friendly base. Parts 1-2 stop the pad death; this is the last-resort guard for every other
+//--- way a drone can die at home. Inside the standoff radius of the detonating side's OWN
+//--- structures the hull still dies - only the live warhead is suppressed. Enemy-facing lethality
+//--- is untouched: the check is against the pilot side's own buildings, nothing else.
+Private ["_fpvStand","_fpvOwn","_fpvNearOwn"];
+_fpvStand = missionNamespace getVariable ["WFBE_C_FPV_MIN_BLAST_RANGE", 120];
+_fpvNearOwn = false;
+if (_fpvStand > 0 && {_matchSide != sideUnknown}) then {
+	_fpvOwn = (_matchSide) Call WFBE_CO_FNC_GetSideStructures;
+	if (typeName _fpvOwn == "ARRAY") then {
+		{
+			if (!isNil "_x") then {
+				if (!isNull _x && {alive _x} && {(_x distance _dronePos) < _fpvStand}) then {_fpvNearOwn = true};
+			};
+		} forEach _fpvOwn;
+	};
+};
+if (_fpvNearOwn) then {
+	["WARNING", Format ["Support_FPV_Detonate.sqf: [%1] warhead SUPPRESSED - detonation at %2 is within %3m of an own-side structure (friendly-base guard).", str _matchSide, _dronePos, _fpvStand]] Call WFBE_CO_FNC_LogContent;
+	diag_log Format ["FPVGUARD|v1|suppressed|side=%1|pos=%2|standoff=%3", str _matchSide, _dronePos, _fpvStand];
+} else {
+	createVehicle [_ammoClass, _dronePos, [], 0, "NONE"];
+};

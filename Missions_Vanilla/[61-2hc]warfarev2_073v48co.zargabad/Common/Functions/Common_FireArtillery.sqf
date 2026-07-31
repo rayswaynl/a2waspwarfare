@@ -14,7 +14,7 @@ if (isPlayer _gunner) exitWith {["WARNING", Format ["Common_FireArtillery.sqf: A
 //--- NUMERIC: WFBE_C_ARTILLERY 0 = Disabled (Init_CommonConstants). Divisor must never be 0
 //--- (range max / 0 -> scalar NaN). Exit clean before ARTY_Prep locks the piece.
 if ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) <= 0) exitWith {
-	["WARNING", Format ["Common_FireArtillery.sqf: Artillery fire missions disabled (WFBE_C_ARTILLERY=%1).", missionNamespace getVariable ["WFBE_C_ARTILLERY", 0]]] Call WFBE_CO_FNC_LogContent;
+	["WARNING", Format ["Common_FireArtillery.sqf: Artillery fire missions disabled (WFBE_C_ARTILLERY=%1).", missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]]] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- WFBE_C_ARTILLERY_DISABLED_GUARD

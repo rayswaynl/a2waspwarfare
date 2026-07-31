@@ -1,5 +1,5 @@
 private["_capacity", "_clear", "_firstDelay", "_mapHalf", "_mapSize", "_maxPerCycle", "_scanCentre", "_scanRadius",
-        "_perfActive", "_perfDeleted", "_perfItemStart", "_perfMines", "_perfScanned",
+        "_perfActive", "_perfDeleted", "_perfDispatched", "_perfItemStart", "_perfMines", "_perfScanned",
         "_perfStart", "_perfWeaponholders", "_scanItems", "_timer", "_perfExtra"];
 
 // AI-lane (Ray spec, B40 2026-06-16): full-island weaponholder sweep on a ~10-minute cadence.
@@ -72,6 +72,7 @@ while {!WFBE_GameOver} do {
 	_perfDeleted = 0;
 	_perfWeaponholders = 0;
 	_perfMines = 0;
+	_perfDispatched = 0;
 
 	//--- Shared per-cycle deletion budget. _capacity is the remaining number of objects we may
 	//--- delete this cycle; leftovers wait for the next cycle.
@@ -85,7 +86,23 @@ while {!WFBE_GameOver} do {
 	_perfScanned = _perfScanned + _perfWeaponholders;
 	{
 		if (_capacity <= 0) exitWith {};
-		_perfItemStart = diag_tickTime;deleteVehicle _x;_perfActive = _perfActive + (diag_tickTime - _perfItemStart);_perfDeleted = _perfDeleted + 1;_capacity = _capacity - 1;sleep 0.5;
+		//--- fable/cleanup-locality-2 (PVF-class hunt, CRITICAL): deleteVehicle on a NON-LOCAL object
+		//--- silently no-ops in A2 OA - and weaponholders from PLAYER deaths are local to that player's
+		//--- client, from HC-delegated AI deaths local to that HC. This cleaner was the ONLY cleanup
+		//--- path for them and it counted every holder as "deleted" while the piles stayed forever.
+		//--- Non-local holders now go to their owner via the TrashObject channel idiom - but through a
+		//--- DEDICATED receiver case: holders are "alive", so the cleanup-trash-object case's !alive
+		//--- gate can never pass them. Receiver re-checks local + reap stamp + isKindOf WeaponHolder.
+		_perfItemStart = diag_tickTime;
+		if (local _x) then {
+			deleteVehicle _x;
+			_perfDeleted = _perfDeleted + 1;
+		} else {
+			_x setVariable ["wfbe_trash_reap", true, true];
+			[_x, "HandleSpecial", ["cleanup-weaponholder", _x]] Call WFBE_CO_FNC_SendToClient;
+			_perfDispatched = _perfDispatched + 1;
+		};
+		_perfActive = _perfActive + (diag_tickTime - _perfItemStart);_capacity = _capacity - 1;sleep 0.5;
 	} forEach _clear;
 
 	//--- Mines: NOT scanned here. mines_cleaner.sqf tracks every createMine via the global `mines`
@@ -94,7 +111,7 @@ while {!WFBE_GameOver} do {
 
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
-			_perfExtra = Format["scanned:%1;deleted:%2;weaponholders:%3;mines:%4;cap:%5;cycleMs:%6", _perfScanned, _perfDeleted, _perfWeaponholders, _perfMines, _maxPerCycle, round ((diag_tickTime - _perfStart) * 1000)];
+			_perfExtra = Format["scanned:%1;deleted:%2;weaponholders:%3;mines:%4;cap:%5;cycleMs:%6;dispatched:%7", _perfScanned, _perfDeleted, _perfWeaponholders, _perfMines, _maxPerCycle, round ((diag_tickTime - _perfStart) * 1000), _perfDispatched];
 			["cleaner_droppeditems", _perfActive, _perfExtra, "SERVER"] Call PerformanceAudit_Record;
 		};
 	};

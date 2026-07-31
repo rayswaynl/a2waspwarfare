@@ -73,7 +73,11 @@ while {alive player && dialog} do {
 	_enable = false; //added-MrNiceGuy
 	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_enable = true}};
 	[11005, true] call _setWFMenuState; //--- Command war-room: always openable on WEST/EAST; the dialog gates internally (Take Command vs war room). JIP-safe.
-	[11008, _enable] call _setWFMenuState; //--- Commander Menu
+	//--- fable/econ-regate (self-correction of #1561): 11008 is the ECONOMY button on WEST/EAST
+	//--- (Dialogs.hpp Button_H, $STR_WF_MAIN_EconomyMenu, MenuAction 8) - NOT the Towns button (that
+	//--- is 11023/MenuAction 26, fixed by arming WFBE_C_TOWNS_TAB_GARRISON). Restore the original
+	//--- commander-only gate; #1561 briefly opened the Economy menu to every W/E player by mistake.
+	[11008, _enable] call _setWFMenuState; //--- Economy (commander-gated on W/E)
 	[11006, commandInRange && (player == leader WFBE_Client_Team)] call _setWFMenuState; //--- Special Menu
 	[11007, commandInRange] call _setWFMenuState; //--- Upgrade Menu
 		};
@@ -304,6 +308,8 @@ while {alive player && dialog} do {
 				closeDialog 0;
 				createDialog "WFBE_GDirCommissarMenu";
 			} else {
+				//--- fable/towns-button-we: with WFBE_C_TOWNS_TAB_GARRISON armed this branch is only
+				//--- reachable if a server rolls the flag back to 0 - keep the honest legacy hint.
 				hint "Town garrison actions are for resistance (GUER) players.";
 			};
 		};

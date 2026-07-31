@@ -136,6 +136,23 @@ if (_unit_kind in (missionNamespace getVariable ["WFBE_C_GUER_FOB_TRUCKS", []]))
 	}];
 };
 
+//--- fable/guer-field-utils (owner 2026-07-28 "They should also be able to lockpick vehicles"):
+//--- insurgent lockpick - a resistance player can crack any LOCKED, stationary, non-static vehicle
+//--- with a timed channel (WFBE_C_GUER_LOCKPICK_TIME, 20 s). Registered on every client for every
+//--- non-Man/non-static vehicle; the condition string keeps it invisible to everyone else.
+if (!(_unit isKindOf "Man") && {!(_unit isKindOf "StaticWeapon")}) then {
+	_unit addAction [
+		"<t color='#F5C242'>Lockpick vehicle</t>",
+		"Client\Action\Action_GuerLockpick.sqf",
+		[],
+		90,
+		false,
+		true,
+		"",
+		"(missionNamespace getVariable ['WFBE_C_GUER_LOCKPICK', 0]) > 0 && {side group player == resistance} && {locked _target} && {alive _target} && {player distance _target < 6} && {speed _target < 2} && {vehicle player == player}"
+	];
+};
+
 if (_unit isKindOf "Tank") then { //--- Tanks.
 	//--- Valhalla Low gear.
 	_unit addAction ["<t color='#FFBD4C'>"+(localize "STR_ACT_LowGearOn")+"</t>","Client\Module\Valhalla\LowGear_Toggle.sqf", [], 91, false, true, "", "(vehicle player == _target) && !(_target getVariable ['WFBE_HighClimbingEnabled', missionNamespace getVariable ['WFBE_HighClimbingDefaultEnabled', false]]) && canMove _target"];

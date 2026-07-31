@@ -56,13 +56,14 @@ while {!WFBE_GameOver} do {
 		_cands = [];
 		{
 			_u = _x; //--- capture before any inner forEach rebinds _x.
-			//--- v2 (hc-locality-group-owner bughunt 2026-07-30 / re-land of fable/hc-registry-heal-v2):
-			//--- candidacy is by OWNER IDENTITY, not group membership. The old `side==civilian` +
-			//--- `!(group in list)` pair was blind to every observed failure mode: a shared-group
-			//--- member's group IS the hot HC's registered entry, and a WEST/EAST re-grabbed HC failed
-			//--- the civ gate before the list test even ran. An HC is broken iff NO registry entry's
-			//--- leader carries its owner id - side and group shape irrelevant. Human safety unchanged:
-			//--- the HCSTAT heartbeat join below is the identity test (humans never emit HCStat).
+			//--- v2 (fable/hc-registry-heal-v2, live 2026-07-27: HCDELEG liveHC=1 for 2h while 4 HCs
+			//--- heartbeated and this loop stayed SILENT): candidacy is by OWNER IDENTITY, not group
+			//--- membership. The old `side==civilian` + `!(group in list)` pair was blind to every
+			//--- observed failure mode: a shared-group member's group IS the hot HC's registered entry,
+			//--- and a WEST/EAST re-grabbed HC failed the civ gate before the list test even ran. An HC
+			//--- is broken iff NO registry entry's leader carries its owner id - side and group shape
+			//--- irrelevant. Human safety unchanged: the HCSTAT heartbeat join below is the identity
+			//--- test (humans never emit HCStat), the civ gate was only ever belt-and-braces.
 			if (!isNull _u && {alive _u} && {isPlayer _u} && {(owner _u) > 2}) then {
 				_grp = group _u;
 				_isRegLeader = false;

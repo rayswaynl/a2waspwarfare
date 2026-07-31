@@ -156,6 +156,41 @@ missionNamespace setVariable ['WFBE_NEURODEF_RESERVE_EAST', [
 	['Land_Campfire',			[2,2.5,0],	0],
 	['FlagCarrierGUE',			[0,-2.5,0],	180]
 ]];
+//--- fable/c9-quickwins S22 (owner-approved 2026-07-28; supersedes the 2026-06-14 lean mandate for
+//--- the GUARD layer only): the WDDM preset library's reserve_guard_west/east (index.html ~:1281,
+//--- authored, starred, never shipped) - base themed cluster + 2 flank MGs + 1 AT overwatch with
+//--- nests/camo/wire. COMBINED with the base props into one template because
+//--- Server_SpawnStructureDressing overwrites wfbe_dressing on a second call (first set would leak
+//--- its cleanup). Guns are crewed by Construction_MediumSite.sqf when WFBE_C_RESERVE_GUARD > 0;
+//--- flag 0 = plain WFBE_NEURODEF_RESERVE_* above, byte-identical behaviour.
+missionNamespace setVariable ['WFBE_NEURODEF_RESERVE_WEST_GUARDED', [
+	['USBasicAmmunitionBox_EP1',[-2,1.5,0],0],
+	['USBasicAmmunitionBox_EP1',[-2,-0.5,0],90],
+	['Land_fort_bagfence_long',[2,0.5,0],90],
+	['Land_Campfire',[2,2.5,0],0],
+	['FlagCarrierGUE',[0,-2.5,0],180],
+	['M2StaticMG',[-13,6,0],330],['Land_fort_bagfence_round',[-13,6,0],0],
+	['M2StaticMG',[13,6,0],30],['Land_fort_bagfence_round',[13,6,0],0],
+	['TOW_TriPod_US_EP1',[-10,-9,0],200],['Land_fort_bagfence_round',[-10,-9,0],0],
+	['Land_CamoNetVar_NATO',[-10,-9,0],0],
+	['Land_HBarrier_large',[0,11,0],0],
+	['USBasicAmmunitionBox_EP1',[6,-9,0],0],
+	['Fort_RazorWire',[-8,12,0],0],['Fort_RazorWire',[8,12,0],0]
+]];
+missionNamespace setVariable ['WFBE_NEURODEF_RESERVE_EAST_GUARDED', [
+	['TKBasicAmmunitionBox_EP1',[-2,1.5,0],0],
+	['TKBasicAmmunitionBox_EP1',[-2,-0.5,0],90],
+	['Land_fort_bagfence_long',[2,0.5,0],90],
+	['Land_Campfire',[2,2.5,0],0],
+	['FlagCarrierGUE',[0,-2.5,0],180],
+	['DSHKM_TK_INS_EP1',[-13,6,0],340],['Land_fort_bagfence_round',[-13,6,0],0],
+	['DSHKM_TK_INS_EP1',[13,6,0],20],['Land_fort_bagfence_round',[13,6,0],0],
+	['SPG9_TK_INS_EP1',[-10,-9,0],200],['Land_fort_bagfence_round',[-10,-9,0],0],
+	['Land_CamoNetVar_EAST',[-10,-9,0],0],
+	['Land_HBarrier_large',[0,11,0],0],
+	['TKBasicAmmunitionBox_EP1',[6,-9,0],0],
+	['Hedgehog',[-8,12,0],0],['Hedgehog',[8,12,0],0]
+]];
 
 //=============================================================================
 // CBR (Counter Battery Radar) composition dressing — task 37 visual rework.
@@ -929,22 +964,24 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then 
 		['Land_fort_bagfence_round',[5,3,0],0]
 	]];
 
-	//--- MIXED STRONGPOINT (HEAVY, 3 AI) WEST — twin .50 + TOW + COVERED INFANTRY BUNKER fallback (unmanned), HBarrier horseshoe, forward wire.
+	//--- MIXED STRONGPOINT (HEAVY, 4 AI since fable/c9-quickwins S21) WEST — twin .50 + TOW + MANNED bunker rear gun, HBarrier horseshoe, forward wire.
 	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_HEAVY_WEST',[
 		['M2StaticMG',[-9,3,0],330],
 		['M2StaticMG',[9,3,0],30],
 		['TOW_TriPod_US_EP1',[0,6,0],0],
 		['Land_fortified_nest_small_EP1',[0,-6,0],0],
+		['M2StaticMG',[0,-6,0],180], //--- fable/c9-quickwins S21 (owner-approved): the nest shell was naked filler - this position charged full Heavy price (5000) for 3 crewed guns while every sibling Heavy fields 4. Rear-security gun IN the shell, same idiom as the Heavy tier's other rear pickets.
 		['Land_fort_bagfence_round',[-9,3,0],0],
 		['Land_fort_bagfence_round',[9,3,0],0]
 	]];
 
-	//--- MIXED STRONGPOINT (HEAVY, 3 AI) EAST — twin DShK + Metis + COVERED INFANTRY BUNKER fallback (unmanned), HBarrier horseshoe + rear screen, forward traps.
+	//--- MIXED STRONGPOINT (HEAVY, 4 AI since fable/c9-quickwins S21) EAST — twin DShK + Metis + MANNED bunker rear gun, HBarrier horseshoe + rear screen, forward traps.
 	missionNamespace setVariable ['WFBE_NEURODEF_MIXEDPOS_HEAVY_EAST',[
 		['DSHKM_TK_INS_EP1',[-9,3,0],330],
 		['DSHKM_TK_INS_EP1',[9,3,0],30],
 		['Metis_TK_EP1',[0,6,0],0],
 		['Land_fortified_nest_small_EP1',[0,-6,0],0],
+		['DSHKM_TK_INS_EP1',[0,-6,0],180], //--- fable/c9-quickwins S21: EAST mirror of the price-parity fix above.
 		['Land_fort_bagfence_round',[-9,3,0],0],
 		['Land_fort_bagfence_round',[9,3,0],0]
 	]];
@@ -958,13 +995,32 @@ if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2_POSITIONS", 1]) > 0) then 
 //--- Fortification menu rows. Always defined (harmless if a side's menu list omits the anchor).
 //======================================================================================
 //--- ROADBLOCK / CHECKPOINT (fortification, side-neutral) — staggered concrete chicane forces vehicles single-file, gate stop line, mutually-supporting bag-fence guard positions, rear camo-netted shelter, shoulder tank traps, warning sign/cones, tie-in wire.
+//--- fable/c9-quickwins R1 (owner-approved default-ON 2026-07-28): the intended 17-object checkpoint
+//--- (docs/design/compositions/fort_roadblock_checkpoint.wddm.json) was authored but never pasted -
+//--- only its 6-object predecessor shipped (GT-WDDM drift finding). Restored here with one fix: the
+//--- design file's guard nests sat at (-6,3)/(6,1), 2m off the wildcard script's hardcoded DShKM
+//--- offsets (-6,1)/(6,-1) - the nests are re-anchored onto the REAL gun coordinates (the
+//--- coincide-gun-and-bagfence idiom, same as WFBE_NEURODEF_AAPOS_WEST). Spawn/teardown loops are
+//--- generic over array length - pure data change. Shoulder Hedgehogs+wire are FUNCTIONAL: they
+//--- close the drive-around-the-chicane gap.
 missionNamespace setVariable ['WFBE_NEURODEF_FORT_CHECKPOINT',[
 	['Land_CncBlock_Stripes',[-3,5,0],0],
 	['Land_CncBlock_Stripes',[3,2,0],0],
 	['Land_CncBlock_Stripes',[-3,-1,0],0],
-	['Land_CncBlock_Stripes',[0,3.5,0],0],
-	['Land_fort_bagfence_long',[-6,3,0],90],
-	['Land_fort_bagfence_long',[6,1,0],90]
+	['Land_BarGate2',[0,3.5,0],0],
+	['Land_fort_bagfence_corner',[-6,1,0],0],
+	['Land_fort_bagfence_long',[-6,1,0],90],
+	['Land_fort_bagfence_corner',[6,-1,0],270],
+	['Land_fort_bagfence_long',[6,-1,0],90],
+	['Misc_cargo_cont_small',[-5,-3,0],90],
+	['Land_CamoNetVar_NATO',[-5,-2.4,0],0],
+	['Hedgehog',[-8,5,0],0],
+	['Hedgehog',[8,5,0],0],
+	['Fort_RazorWire',[-8,2,0],0],
+	['Fort_RazorWire',[8,-1,0],0],
+	['Sign_Danger',[2,6,0],180],
+	['RoadCone',[-1.5,7,0],0],
+	['RoadCone',[1.5,7,0],0]
 ]];
 
 //======================================================================================

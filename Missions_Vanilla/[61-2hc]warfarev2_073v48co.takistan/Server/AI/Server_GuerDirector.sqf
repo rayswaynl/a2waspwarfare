@@ -280,7 +280,6 @@ while {!WFBE_GameOver} do {
 
     {_sources set [count _sources, _x]} forEach _stateOpp;
     {_sources set [count _sources, _x]} forEach _stateSafe;
-    //--- Shuffle surplus order when spread is armed (otherwise index 0 always feeds first dests).
     if (_cellSpreadOn && {(count _sources) > 1}) then {
         private ["_spI2","_spJ2","_spTmp2"];
         for "_spI2" from ((count _sources) - 1) to 1 step -1 do {
@@ -289,7 +288,6 @@ while {!WFBE_GameOver} do {
             _sources set [_spI2, _sources select _spJ2];
             _sources set [_spJ2, _spTmp2];
         };
-        _srcIdx = 0;
     };
 
     {
@@ -298,7 +296,6 @@ while {!WFBE_GameOver} do {
         _dstStr = _dst select 2;
         _dstBase= _dst select 1;
         _needed = _dstBase - _dstStr;
-        //--- Soft-cap pending inbound so one town cannot absorb every surplus cell while others starve.
         if (_cellSpreadOn && {(_dst select 3) > (_dstBase * _cellTransitFrac)}) then {_needed = 0};
         if (_needed > 0.05 && {count _sources > 0}) then {
             while {_srcIdx < count _sources && {(((_sources select _srcIdx) select 2) - ((_sources select _srcIdx) select 1) * 0.5) <= 0.05}} do {
@@ -495,58 +492,50 @@ while {!WFBE_GameOver} do {
                         if (_cKind == "qrfInsert" || {_cKind == "qrfGunship"} || {_cKind == "qrfCombo"}) then {
                             if (_cTownObj getVariable ["wfbe_active", false]) then {
                                 //--- Town under attack - fire QRF.
-                                private ["_spawnPos","_cTownPos"];
+                                private ["_spawnPos","_spawnPosB","_cTownPos","_qrfSrcTown","_qrfSrcDist","_qrfLRec","_qrfLTown","_qrfLSide","_qrfLD","_qrfGDir"];
                                 _cTownPos  = getPos _cTownObj;
-                                _spawnPos  = [_cTownPos select 0, _cTownPos select 1, 50];
-
-                                //--- WFBE_C_GUER_PRESENCE_PULSE (default 0, Grok idea #15): today the QRF
-                                //--- materializes directly over the town center, which is exactly where the
-                                //--- contact is fresh (<120s) - i.e. on top of the players who triggered it.
-                                //--- Armed, bias the spawn onto the RING between the contact town (proxy for
-                                //--- the player cluster - contact is fresh, so players are physically there)
-                                //--- and the nearest OTHER GUER/unknown town already in the ledger (a believable
-                                //--- "reinforcements are coming from home turf" origin). Reuses the ledger's own
-                                //--- town-position data (already resident, no new nearEntities/allUnits/allGroups
-                                //--- scan) and the two dead AICOMV2_GDIR_MIN_SPAWN_M / AICOMV2_GDIR_AMBUSH_BUBBLE_M
-                                //--- constants (declared at startup, never previously consumed in this file) as the
-                                //--- ring's inner/outer radius. WHEN/HOW MANY (contact-freshness gate, group-cap
-                                //--- check, cooldown/contract machinery) are untouched - this only moves WHERE the
-                                //--- already-decided QRF spawns. Flag-off: identical to the two lines above.
-                                if ((missionNamespace getVariable ["WFBE_C_GUER_PRESENCE_PULSE", 0]) > 0) then {
-                                    private ["_ppSrcTown","_ppSrcDist","_ppLedgerRec","_ppLedgerTown","_ppLedgerSide","_ppD"];
-                                    _ppSrcTown = objNull;
-                                    _ppSrcDist = 1e9;
-                                    {
-                                        _ppLedgerRec  = _x;
-                                        _ppLedgerTown = _ppLedgerRec select 0;
-                                        if (_ppLedgerTown != _cTownObj) then {
-                                            _ppLedgerSide = _ppLedgerTown getVariable ["sideID", WFBE_C_UNKNOWN_ID];
-                                            if (_ppLedgerSide == WFBE_C_GUER_ID || {_ppLedgerSide == WFBE_C_UNKNOWN_ID}) then {
-                                                _ppD = _cTownPos distance (getPos _ppLedgerTown);
-                                                if (_ppD < _ppSrcDist) then {
-                                                    _ppSrcDist = _ppD;
-                                                    _ppSrcTown = _ppLedgerTown;
-                                                };
+                                //--- fable/qrf-ground-spawn (owner 2026-07-28 "QRF helicopters immediately blow up - spawn on
+                                //--- the ground at a safe GUER town, crew boards, then move"): the old air-spawn placed the hull
+                                //--- 50 m over the CONTESTED town center (on top of the fresh contact that triggered the QRF),
+                                //--- and the combo path put BOTH hulls on the same point - pair collision on materialise. Now:
+                                //--- the nearest OTHER GUER/unknown ledger town is the home pad; hulls spawn ON THE GROUND there
+                                //--- (combo second hull on its own pad 90 degrees off), crew spawns beside and BOARDS
+                                //--- (assignAs + orderGetIn - also cheaper than air-starting live physics), and the existing
+                                //--- waypoint + posture stamps fly them out. No safe town in the ledger -> ground ring 900 m out.
+                                _qrfSrcTown = objNull;
+                                _qrfSrcDist = 1e9;
+                                {
+                                    _qrfLRec  = _x;
+                                    _qrfLTown = _qrfLRec select 0;
+                                    if (_qrfLTown != _cTownObj) then {
+                                        _qrfLSide = _qrfLTown getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+                                        if (_qrfLSide == WFBE_C_GUER_ID || {_qrfLSide == WFBE_C_UNKNOWN_ID}) then {
+                                            _qrfLD = _cTownPos distance (getPos _qrfLTown);
+                                            if (_qrfLD < _qrfSrcDist) then {
+                                                _qrfSrcDist = _qrfLD;
+                                                _qrfSrcTown = _qrfLTown;
                                             };
                                         };
-                                    } forEach _ledger;
-
-                                    if (!isNull _ppSrcTown) then {
-                                        private ["_ppSrcPos","_ppDirX","_ppDirY","_ppDirLen","_ppRingM","_ppBx","_ppBy"];
-                                        _ppSrcPos = getPos _ppSrcTown;
-                                        _ppDirX   = (_cTownPos select 0) - (_ppSrcPos select 0);
-                                        _ppDirY   = (_cTownPos select 1) - (_ppSrcPos select 1);
-                                        _ppDirLen = sqrt ((_ppDirX * _ppDirX) + (_ppDirY * _ppDirY));
-                                        if (_ppDirLen > 1) then {
-                                            _ppDirX  = _ppDirX / _ppDirLen;
-                                            _ppDirY  = _ppDirY / _ppDirLen;
-                                            _ppRingM = _minSpawnM + (random (_ambushBubbleM - _minSpawnM));
-                                            _ppBx    = (_cTownPos select 0) - (_ppDirX * _ppRingM);
-                                            _ppBy    = (_cTownPos select 1) - (_ppDirY * _ppRingM);
-                                            _spawnPos = [_ppBx, _ppBy, 50];
-                                        };
                                     };
+                                } forEach _ledger;
+                                if (!isNull _qrfSrcTown) then {
+                                    _qrfGDir = ((_cTownPos select 0) - ((getPos _qrfSrcTown) select 0)) atan2 ((_cTownPos select 1) - ((getPos _qrfSrcTown) select 1));
+                                    _spawnPos  = [getPos _qrfSrcTown, 120, _qrfGDir] Call GetPositionFrom;
+                                    _spawnPos  = [_spawnPos select 0, _spawnPos select 1, 0];
+                                    _spawnPosB = [getPos _qrfSrcTown, 120, _qrfGDir + 90] Call GetPositionFrom;
+                                    _spawnPosB = [_spawnPosB select 0, _spawnPosB select 1, 0];
+                                } else {
+                                    _qrfGDir = random 360;
+                                    _spawnPos  = [_cTownPos, 900, _qrfGDir] Call GetPositionFrom;
+                                    _spawnPos  = [_spawnPos select 0, _spawnPos select 1, 0];
+                                    _spawnPosB = [_cTownPos, 900, _qrfGDir + 8] Call GetPositionFrom;
+                                    _spawnPosB = [_spawnPosB select 0, _spawnPosB select 1, 0];
                                 };
+
+                                //--- fable/qrf-ground-spawn: the WFBE_C_GUER_PRESENCE_PULSE ring override (Grok idea #15,
+                                //--- default 0, never armed) is superseded by the always-on safe-town ground spawn above and
+                                //--- was removed - it re-pointed _spawnPos to a mid-air ring position, contradicting the
+                                //--- grounded design. Flag registration left in place; it now has no consumer.
 
                                 //--- Group-cap check before materializing. qrfCombo creates TWO groups
                                 //--- (gunship + insert); reserve headroom for both or the single-slot
@@ -559,22 +548,17 @@ while {!WFBE_GameOver} do {
                                 if ((_curGuerGrps + _qrfSlots) <= _grpBudgetMax) then {
                                     //--- Authorized new air execution path for A1 panel (no V1 GUER air path existed).
                                     private ["_hClass","_h","_hGrp","_qrfGunPool","_qrfGunOk","_qrfGunPick"];
-                                    //--- Pick QRF gunship classname (flag-gated pool; default hardcoded Mi24_P).
                                     _qrfGunPick = "Mi24_P";
                                     if ((missionNamespace getVariable ["WFBE_C_GDIR_QRF_AIRFRAME_POOL", 0]) > 0) then {
                                         _qrfGunPool = missionNamespace getVariable ["WFBE_C_GDIR_QRF_GUNSHIP_POOL", ["Mi24_P","Ka60_GL_PMC","Ka60_PMC"]];
                                         if (typeName _qrfGunPool != "ARRAY") then {_qrfGunPool = ["Mi24_P"]};
                                         _qrfGunOk = [];
-                                        {
-                                            if (typeName _x == "STRING" && {_x != ""} && {isClass (configFile >> "CfgVehicles" >> _x)}) then {
-                                                _qrfGunOk set [count _qrfGunOk, _x];
-                                            };
-                                        } forEach _qrfGunPool;
+                                        {if (typeName _x == "STRING" && {_x != ""} && {isClass (configFile >> "CfgVehicles" >> _x)}) then {_qrfGunOk set [count _qrfGunOk, _x]}} forEach _qrfGunPool;
                                         if (count _qrfGunOk == 0) then {_qrfGunOk = ["Mi24_P"]};
                                         _qrfGunPick = _qrfGunOk select (floor random (count _qrfGunOk));
                                     };
                                     _hClass = "Ka137_MG_PMC"; //--- GUER insert: Ka-137 from Core_GUE.sqf.
-                                    if (_cKind == "qrfGunship") then {_hClass = _qrfGunPick};  //--- GUER gunship from pool or Mi24_P.
+                                    if (_cKind == "qrfGunship") then {_hClass = _qrfGunPick};  //--- GUER gunship.
                                     if (_cKind == "qrfCombo") then {
                                         //--- Spawn both. Gunship first (FIX: _hClass was never set to the gunship
                                         //--- here, so combo fired two Ka-137s and the telemetry lied).
@@ -585,11 +569,20 @@ while {!WFBE_GameOver} do {
                                         //--- proven wildcard-GUER pattern: CreateUnit into the group + moveIn*.
                                         private ["_uPilot","_uGun"];
                                         _uPilot = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                        if (!isNull _uPilot) then {_uPilot moveInDriver _h};
+                                        if (!isNull _uPilot) then {_uPilot assignAsDriver _h; [_uPilot] orderGetIn true};
                                         _uGun = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                        if (!isNull _uGun) then {_uGun moveInGunner _h};
-                                        _h setPos _spawnPos;
+                                        if (!isNull _uGun) then {_uGun assignAsGunner _h; [_uGun] orderGetIn true};
                                         _hGrp addWaypoint [_cTownPos, 200];
+                                        //--- fable/qrf-ground-spawn: grounded start - no velocity kick, no setPos re-seat. Cruise
+                                        //--- height + posture apply once the boarded crew lifts off (flyInHeight is sticky pre-takeoff).
+                                        private ["_qrfDir","_qrfFly"];
+                                        _qrfFly = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_HEIGHT", 120];
+                                        _qrfDir = ((_cTownPos select 0) - (_spawnPos select 0)) atan2 ((_cTownPos select 1) - (_spawnPos select 1));
+                                        _h setDir _qrfDir;
+                                        _h flyInHeight _qrfFly;
+                                        _hGrp setBehaviour "COMBAT";
+                                        _hGrp setCombatMode "RED";
+                                        _hGrp setSpeedMode "NORMAL";
                                         //--- LEAK FIX (fix/alife-leak-hardening #4): raw createGroup above bypassed
                                         //--- WFBE_CO_FNC_CreateGroup entirely (no 140-cap emergency GC, no wfbe_group_src
                                         //--- tag) and the hull/group had no cleanup lifecycle at all - each fired QRF left
@@ -631,6 +624,7 @@ while {!WFBE_GameOver} do {
                                         diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=%3 town=%4 fundedBy=%5",
                                             _elmin, _cId, _hClass, _cTown, _cUid];
                                         _hClass = "Ka137_MG_PMC";
+                                        _spawnPos = _spawnPosB; //--- fable/qrf-ground-spawn: second hull on its OWN pad - the same-point pair spawn was the "immediately blow up".
                                     };
                                     _h    = _hClass createVehicle _spawnPos;
                                     //--- Ka137 HP multiplier EH (mirrors WFBE_CO_FNC_CreateVehicle hook; raw createVehicle misses it).
@@ -648,14 +642,22 @@ while {!WFBE_GameOver} do {
                                     //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64).
                                     private ["_uPilot2","_uGun2"];
                                     _uPilot2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                    if (!isNull _uPilot2) then {_uPilot2 moveInDriver _h};
-                                    //--- Crew a gunner on armed gunship hulls (pool may include Ka60_GL / Mi24 variants).
+                                    if (!isNull _uPilot2) then {_uPilot2 assignAsDriver _h; [_uPilot2] orderGetIn true};
                                     if (_hClass != "Ka137_MG_PMC") then {
                                         _uGun2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
-                                        if (!isNull _uGun2) then {_uGun2 moveInGunner _h};
+                                        if (!isNull _uGun2) then {_uGun2 assignAsGunner _h; [_uGun2] orderGetIn true};
                                     };
-                                    _h setPos _spawnPos;
                                     _hGrp addWaypoint [_cTownPos, 200];
+                                    //--- fable/qrf-ground-spawn: grounded start - no velocity kick, no setPos re-seat. Cruise
+                                    //--- height + posture apply once the boarded crew lifts off (flyInHeight is sticky pre-takeoff).
+                                    private ["_qrfDir","_qrfFly"];
+                                    _qrfFly = missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_HEIGHT", 120];
+                                    _qrfDir = ((_cTownPos select 0) - (_spawnPos select 0)) atan2 ((_cTownPos select 1) - (_spawnPos select 1));
+                                    _h setDir _qrfDir;
+                                    _h flyInHeight _qrfFly;
+                                    _hGrp setBehaviour "COMBAT";
+                                    _hGrp setCombatMode "RED";
+                                    _hGrp setSpeedMode "NORMAL";
                                     //--- LEAK FIX (fix/alife-leak-hardening #4): same hull/group lifecycle registration
                                     //--- as the combo-gunship block above - see that comment for the full rationale.
                                     [_h] spawn WFBE_SE_FNC_HandleEmptyVehicle;

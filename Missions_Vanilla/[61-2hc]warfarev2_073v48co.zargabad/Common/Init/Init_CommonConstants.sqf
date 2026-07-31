@@ -256,9 +256,10 @@ if (worldName == "Zargabad") then {
 //--- self-cleaning so it can't blow up FPS. Only relevant when the GUER playable faction is enabled.
 	if (isNil "WFBE_C_GUER_AIRDEF_ENABLE") then {WFBE_C_GUER_AIRDEF_ENABLE = 1};        //--- master switch (set 0 to disable the loop entirely).
 	if (isNil "WFBE_C_GUER_AIRDEF_INTERVAL") then {WFBE_C_GUER_AIRDEF_INTERVAL = 120};  //--- seconds between maintain sweeps.
+	if (isNil "WFBE_C_GUER_AIRDEF_THREAT_ONLY") then {WFBE_C_GUER_AIRDEF_THREAT_ONLY = 1}; //--- ARMED 2026-07-28 (owner: "make the Ka-137 appear less ... every town activation gets a bunch in the air"): defenders spawn only for towns with a live W/E foe in range - idle activation no longer summons air. 0 = legacy always-spawn.
 	if (isNil "WFBE_C_GUER_AIRDEF_MAX") then {WFBE_C_GUER_AIRDEF_MAX = 2};              //--- owner design 2026-07-23 06:03: 4->3 (fewer drones, better payloads; drops to 2 when the GUER ground-raider ships - see wasp-guer-harassment-unit card). Rollback: 4. [Ray-dir 2026-07-24: 3->2 - the drop the 4->3 note anticipated once the GUER ground-raider is in; fewer air-def drones = less spawn churn + fewer AI; rollback 3.]
 	if (isNil "WFBE_C_GUER_AIRDEF_AT_CHANCE") then {WFBE_C_GUER_AIRDEF_AT_CHANCE = 0.45}; //--- owner design 2026-07-23 06:03: 0.20->0.45 - fewer drones, each likelier to carry the EASA AT (Konkurs/AT-5) punch. Rollback: 0.20.
-	if (isNil "WFBE_C_GUER_AIRDEF_MI24_CHANCE") then {WFBE_C_GUER_AIRDEF_MI24_CHANCE = 0.25}; //--- chance a LARGE GUER town under attack fields a Mi-24 gunship instead.
+	if (isNil "WFBE_C_GUER_AIRDEF_MI24_CHANCE") then {WFBE_C_GUER_AIRDEF_MI24_CHANCE = 0.40}; //--- chance a LARGE GUER town under attack fields a Mi-24 gunship instead. [Ray-dir 2026-07-28: 0.25->0.40 - threat-only spawning cut total air volume, so the events that DO fire bias toward the interesting gunship response; rollback 0.25.]
 	if (isNil "WFBE_C_GUER_AIRDEF_AA_CHANCE") then {WFBE_C_GUER_AIRDEF_AA_CHANCE = 0.75}; //--- chance a Ka-137 fields the EASA Igla AA loadout when ENEMY AIR is near the town (counter-air; takes priority over Mi-24/AT roll).
 	if (isNil "WFBE_C_GUER_AIRDEF_CLASS_KA") then {WFBE_C_GUER_AIRDEF_CLASS_KA = "Ka137_MG_PMC"}; //--- default light air defender (recon/strike).
 	if (isNil "WFBE_C_GUER_AIRDEF_CLASS_MI24") then {WFBE_C_GUER_AIRDEF_CLASS_MI24 = "Mi24_P"};   //--- heavy gunship for large contested towns.
@@ -277,7 +278,7 @@ if (worldName == "Zargabad") then {
 //--- they formation-fly as a drone flock. Extras COUNT toward WFBE_C_GUER_AIRDEF_MAX; the roll is skipped once the
 //--- cap is reached, so a swarm never exceeds the air budget. Only relevant when the GUER AIRDEF loop is enabled.
 	if (isNil "WFBE_C_GUER_KA137_SWARM") then {WFBE_C_GUER_KA137_SWARM = 1};                //--- master switch (1 = swarm rolls enabled, 0 = single drone only).
-	if (isNil "WFBE_C_GUER_KA137_SWARM_CHANCE") then {WFBE_C_GUER_KA137_SWARM_CHANCE = 0.15}; //--- chance a combat Ka-137 spawn also fields a 2nd drone in the same group. [Ray-dir 2026-07-24 CHURN: 0.25->0.15 (fewer multi-drone spawns per event; aligns with the 4->3 MAX "fewer drones" intent); rollback 0.25.]
+	if (isNil "WFBE_C_GUER_KA137_SWARM_CHANCE") then {WFBE_C_GUER_KA137_SWARM_CHANCE = 0.25}; //--- chance a combat Ka-137 spawn also fields a 2nd drone in the same group. [Ray-dir 2026-07-28: 0.15->0.25 - the threat-only spawn gate removed the idle-town churn behind the 07-24 cut AND finally leaves the cap headroom the roll needs; a pair is the visible "swarm". Rollback 0.15. Prior: 2026-07-24 CHURN 0.25->0.15.]
 	if (isNil "WFBE_C_GUER_KA137_SWARM_CHANCE3") then {WFBE_C_GUER_KA137_SWARM_CHANCE3 = 0.10}; //--- chance (only if the 2nd rolled) for a 3rd drone in the same group. [Ray-dir 2026-07-24 CHURN: 0.15->0.10 (fewer 3-drone flocks); rollback 0.15.]
 
 //--- KA-137 FLARE STOCK (cmdcon42 item2, Ray 2026-07-02; retuned 5-20 same day): AI-spawned Ka-137s (leader +
@@ -370,7 +371,7 @@ if (worldName == "Zargabad") then {
 	WFBE_C_AICOM_TEAMS_PC_MID  = 17;           //--- Ray 2026-07-26: 7 -> 17 -> effective 16 at 3-5 players (owner: 16 each side). HIGH/FULL deliberately NOT raised - 16 teams/side on a populated server would sink FPS. Prior Build83: ~20% trim, 8->7.
 	WFBE_C_AICOM_TEAMS_PC_HIGH = 4;            //--- Build83: ~20% trim, 5->4.
 	WFBE_C_AICOM_TEAMS_PC_FULL = 3;            //--- rollback the whole curve: set all four to 2.
-	WFBE_C_AICOM_TEAMS_HARD_CAP = 16;          //--- Ray 2026-07-26: 10 -> 16 max teams/side ALL MAPS (owner). NOTE the PC curve still gates the real target (PC_LOW 9 - delta 1 = 8 effective); this only lifts the ceiling above it. Prior Ray 2026-06-29: 8 -> 10 max teams/side (Ray: low-pop fielding; reverts the 2026-06-28 10->8). [prior B752 2026-06-25: back to 8 max teams (13 over-throttled the per-side TOTAL_AI cap + fed the hoard in the 12h TK soak). Shared CH+TK via LoadoutManager. HARD ceiling on the AI-commander founding target regardless of the PC curve + banking valve (was fielding ~15 at low pop = base 12 + valve 3). Clamped in AI_Commander_Teams.sqf. Rollback: 99 (effectively off).
+	WFBE_C_AICOM_TEAMS_HARD_CAP = 12;          //--- Ray 2026-07-28: 16 -> 12 max teams/side ALL MAPS (owner; 6h m0727h session showed the 16-team envelope grinding server+HC memory into the 32-bit wall by hour 4 - fps 47->14 at constant AI). Prior Ray 2026-07-26: 10 -> 16 max teams/side ALL MAPS (owner). NOTE the PC curve still gates the real target (PC_LOW 9 - delta 1 = 8 effective); this only lifts the ceiling above it. Prior Ray 2026-06-29: 8 -> 10 max teams/side (Ray: low-pop fielding; reverts the 2026-06-28 10->8). [prior B752 2026-06-25: back to 8 max teams (13 over-throttled the per-side TOTAL_AI cap + fed the hoard in the 12h TK soak). Shared CH+TK via LoadoutManager. HARD ceiling on the AI-commander founding target regardless of the PC curve + banking valve (was fielding ~15 at low pop = base 12 + valve 3). Clamped in AI_Commander_Teams.sqf. Rollback: 99 (effectively off).
 	//--- cmdcon42-k (Ray 2026-07-02): DROP N teams off EACH AI commander's BASE founding target on BOTH maps (the new
 	//--- dynamic transport/patrol/swarm systems in Build 87 add per-team AI; HQ teams now hand the server too much AI to
 	//--- handle). DELTA is applied to the PC-scaled base team target (WFBE_C_AICOM_TEAMS_PC_* after the curve overwrites
@@ -395,6 +396,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_TEST_POPTIER_PIN") then {WFBE_C_TEST_POPTIER_PIN = -1}; //--- Test-only scale pin: forces the effective human count (drives WFBE_PopTier + the AI-team curve) so an EMPTY box spawns full-scale load for stress tests. -1 = off; e.g. 12 = force FULL tier. Additive real spawns (NOT sim-gating/antistack).
 	if (isNil "WFBE_C_TEST_TEAM_CAP") then {WFBE_C_TEST_TEAM_CAP = -1}; //--- Test-only fast-bench team cap: hard-clamps each AI commander's founding target to at most N teams/side, for "2 teams + 1 town" minutes-fast dev loops (pairs with WFBE_C_TEST_POPTIER_PIN + WF_Debug). Read next to the poptier pin; applied as the FINAL ceiling in AI_Commander_Teams.sqf (after the PC curve/delta/banking-valve/hard-cap/econ-surge/veteran-slot, right before the founding gate) so it composes with every existing clamp instead of racing them. -1 = off (no effect on live play).
 	if (isNil "WFBE_C_TEST_TOWN_CAP") then {WFBE_C_TEST_TOWN_CAP = -1}; //--- Test-only fast-bench town cap: when >0, keeps only the N towns nearest EACH side's start position ACTIVE (Server\Init\Init_Towns.sqf) and marks every other town wfbe_inactive - the SAME "town doesn't exist for gameplay" mechanism Common\Init\Init_Town.sqf already uses for TownTemplate-disabled towns, so town-AI garrison/supply/patrol loops only run against a tiny map slice without deleting any town object/camp/depot model. -1/0 = off (no effect on live play).
+	if (isNil "WFBE_C_BOMB_PROBE") then {WFBE_C_BOMB_PROBE = 0}; //--- TEST HARNESS - never arm on the live box. Stage-A bomb-release/turret-vs-hull verification harness (Server\Functions\Server_BombProbe.sqf, docs\plans\2026-07-28-bomb-stage-a-runbook.md). Armed only, spawns 5 throwaway AI-crewed hulls offshore, applies the EASA-AI kit table, orders reveal/doTarget/doFire at a spawned ground cluster, logs BOMBPROBE|v1|* RPT evidence, then deletes everything it created. 0 = off (no effect on live play, byte-identical).
+	if (isNil "WFBE_C_BOMB_PROBE_ORIGIN") then {WFBE_C_BOMB_PROBE_ORIGIN = [500,500,300]}; //--- TEST HARNESS - never arm on the live box. Fixed offshore/corner spawn position for Server_BombProbe.sqf (best-effort SW-corner guess on Chernarus - VERIFY clear terrain/water on your test box before arming WFBE_C_BOMB_PROBE and override this constant if it is not.
 	WFBE_C_TOTAL_AI_MAX_BY_TIER       = [180,170,150,120];     //--- Ray 2026-07-26: 250 max AI/side ALL MAPS (owner) - was [140,130,100,80]. 4-HC box soak: the 16-team target needs ~128 units/side, the old ceiling refused founding at sideAI>cap (FOUND_SKIP reason=side_ai_cap). Rollback: [140,130,100,80]. per-side commander-AI ceiling (founding gate + AI_Commander_Produce)
 	WFBE_C_AICOM_LOWPOP_EXTRA_BY_TIER = [3,2,0,0];            //--- funds-valve extra teams (valve only fires pop<=5 = LOW/MID)
 	WFBE_C_TOWNS_DEFENDER_BY_TIER     = [2,2,2,1];            //--- town garrison difficulty -> COEF (Medium/Medium/Medium/Light)
@@ -409,7 +412,7 @@ if (worldName == "Zargabad") then {
 	//--- === Build 83 / cmdcon35 constants (claude-gaming 2026-07-01) ===
 	if (isNil "WFBE_C_AICOM_HQ_NUDGE_MAX_R") then {WFBE_C_AICOM_HQ_NUDGE_MAX_R = 200};  //--- AI HQ off-road nudge: max expanding-ring radius (m) before using best off-road candidate.
 	if (isNil "WFBE_C_AICOM_HQ_NUDGE_STEP") then {WFBE_C_AICOM_HQ_NUDGE_STEP = 25};     //--- AI HQ off-road nudge: ring radius growth per step (m).
-	if (isNil "WFBE_C_GUER_AIRDEF_DROP_CHANCE") then {WFBE_C_GUER_AIRDEF_DROP_CHANCE = 0.18}; //--- Ka-137 cargo/paradrop roll when a GUER town is under GROUND attack.
+	if (isNil "WFBE_C_GUER_AIRDEF_DROP_CHANCE") then {WFBE_C_GUER_AIRDEF_DROP_CHANCE = 0.25}; //--- Ka-137 cargo/paradrop roll when a GUER town is under GROUND attack. [Ray-dir 2026-07-28: 0.18->0.25 - same "fewer but more interesting" retune as the Mi-24 chance; rollback 0.18.]
 	if (isNil "WFBE_C_GUER_AIRDEF_DROP_COUNT") then {WFBE_C_GUER_AIRDEF_DROP_COUNT = 5};      //--- troopers per Ka-137 paradrop stick.
 	if (isNil "WFBE_C_GUER_AIRDEF_DROP_MAX") then {WFBE_C_GUER_AIRDEF_DROP_MAX = 2};          //--- global alive cap on paradropped GUER squads (anti-spam).
 	if (isNil "WFBE_C_KA137_REWARD_COEF") then {WFBE_C_KA137_REWARD_COEF = 0.4};              //--- Build83 (Ray 2026-07-01): Ka-137 kill/salvage reward -60%. Applied gated on Ka137_MG_PMC in bounty + salvage paths.
@@ -471,8 +474,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_OILFIELD_ROAD_CLEAR") then {WFBE_C_OILFIELD_ROAD_CLEAR = 60};        //--- candidate rejected if any road within this (m) (nearRoads).
 	if (isNil "WFBE_C_OILFIELD_TOWN_CLEAR") then {WFBE_C_OILFIELD_TOWN_CLEAR = 500};       //--- candidate rejected if any town center (towns list) within this (m).
 	if (isNil "WFBE_C_OILFIELD_HOUSE_CLEAR") then {WFBE_C_OILFIELD_HOUSE_CLEAR = 80};      //--- candidate rejected if any building ("House") within this (m).
-	if (isNil "WFBE_C_PATROL_T3_CASH") then {WFBE_C_PATROL_T3_CASH = 8000};                //--- Build83 (Ray): one-time CASH granted to a side on completing Patrol upgrade level 3 (split among alive players via BankPayout). 0 = off.
-	if (isNil "WFBE_C_PATROL_T4_SUPPLY") then {WFBE_C_PATROL_T4_SUPPLY = 1500};             //--- Build83 (Ray): one-time SUPPLY granted to a side's pool on completing Patrol upgrade level 4 (ChangeSideSupply, clamped). 0 = off.
+	if (isNil "WFBE_C_PATROL_T3_CASH") then {WFBE_C_PATROL_T3_CASH = 8000};                //--- [ORPHANED 2026-07-28 fable/patrol-reimagine: reward code removed from Server_ProcessUpgrade.sqf per owner order; constant retained per repo policy, value unused.] Was: one-time CASH on completing Patrol L3.
+	if (isNil "WFBE_C_PATROL_T4_SUPPLY") then {WFBE_C_PATROL_T4_SUPPLY = 1500};             //--- [ORPHANED 2026-07-28 fable/patrol-reimagine: reward code removed from Server_ProcessUpgrade.sqf per owner order; constant retained per repo policy, value unused.] Was: one-time SUPPLY on completing Patrol L4.
 	if (isNil "WFBE_C_AICOM_PLANE_AIRSTART") then {WFBE_C_AICOM_PLANE_AIRSTART = 1};        //--- Build83 (Ray): founded PLANES air-start (FLY) at the captured airfield, aligned to the runway logic, de-conflicted (helis/ground unchanged). 0 = old grounded/scattered FORM behavior.
 	if (isNil "WFBE_C_AICOM_PLANE_STACK_DEG") then {WFBE_C_AICOM_PLANE_STACK_DEG = 25};     //--- Build83: per-plane heading fan (deg) so a multi-plane team's air-started hulls don't spawn stacked.
 	if (isNil "WFBE_C_AICOM_AIR_TEAM_MAX_HULLS") then {WFBE_C_AICOM_AIR_TEAM_MAX_HULLS = 0}; //--- Lane 179: 0 = off. >0 caps retained Air hulls created by one CreateTeam pass; intended for AICOM air founding templates.
@@ -504,6 +507,12 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_AIRMOBILE") then {WFBE_C_AICOM_AIRMOBILE = 1};                        //--- 1 = fly ordered legs with the team's own retained transport heli (default). 0 = always road-march (legacy).
 	if (isNil "WFBE_C_AICOM_AIRMOBILE_MIN_DIST") then {WFBE_C_AICOM_AIRMOBILE_MIN_DIST = 1200};  //--- m: only air-mobile when the ordered destination is farther than this (short legs road-march - not worth a fly-out).
 	if (isNil "WFBE_C_AICOM_AIR_RETAIN") then {WFBE_C_AICOM_AIR_RETAIN = 1};                     //--- cmdcon42-f (Ray): 1 = the FOUNDING air-insert KEEPS the team's transport heli (returns to base + holds via the shared AICOMAirReturn path) so the AIR-MOBILE branch above can fly the team's next orders. ECONOMICS BY DESIGN: retaining FORGOES the legacy off-map refund (the hull's QUERYUNITPRICE credited back to the AI treasury) - the side keeps a REAL transport asset instead of the credit (HQ air squads should BE air squads). 0 = legacy fly-off + delete + refund (byte-identical).
+	//--- fable/heli-quickstart (owner 2026-07-28: helicopters linger way too long in base before flying off
+	//--- after spawning): tunable boarding-wait cap for a founded team's OWN air transport
+	//--- (Common_RunCommanderTeam.sqf, the "Let everyone board first" wait before the run-in), replacing the
+	//--- previous hardcoded 30s. Air-only - gates only the transport-insert Spawn enclosed by !isNull _airVeh
+	//--- (an Air hull with transportSoldier>0); ground transports are never affected.
+	if (isNil "WFBE_C_AICOM_BOARD_WAIT") then {WFBE_C_AICOM_BOARD_WAIT = 12};              //--- s: max wait for pax to mount the team's own air transport before the run-in begins. 30 = legacy value.
 	//--- Grok U6 idle-air retirement: all three defaults are 0 so the existing air lifecycle is unchanged until explicitly configured.
 	if (isNil "WFBE_C_AICOM_AIR_IDLE_RTB") then {WFBE_C_AICOM_AIR_IDLE_RTB = 0};
 	if (isNil "WFBE_C_AICOM_AIR_IDLE_MINUTES") then {WFBE_C_AICOM_AIR_IDLE_MINUTES = 0};
@@ -568,6 +577,7 @@ if (worldName == "Zargabad") then {
 		if (isNil "WFBE_C_AICOM_VEHICLE_SELFREPAIR")   then {WFBE_C_AICOM_VEHICLE_SELFREPAIR   = 1};
 		if (isNil "WFBE_C_AICOM_SELFREPAIR_SAFE_DIST") then {WFBE_C_AICOM_SELFREPAIR_SAFE_DIST = 250}; //--- m: no non-friendly Man/LandVehicle within this radius before a repair starts or completes.
 		if (isNil "WFBE_C_AICOM_SELFREPAIR_DELAY")     then {WFBE_C_AICOM_SELFREPAIR_DELAY     = 30};  //--- s the crew must hold a safe window before the field repair completes.
+		if (isNil "WFBE_C_AICOM_SELFREPAIR_AIRSHIP")   then {WFBE_C_AICOM_SELFREPAIR_AIRSHIP   = 1};   //--- 0 = OFF, byte-identical to HEAD (field repair stays LandVehicle-only). >0 = immobilised AIR and SHIP hulls also get the crew field repair, and the threat scan additionally looks for enemy Air. Closes two observed gaps: a damaged helicopter that force-lands is excluded from in-place repair AND cannot travel to an airfield for AICOMServiceTick AND is never reaped by Server_HandleEmptyVehicle.sqf (its fuse resets while crew are aboard), so it sits crewed and immobile until an enemy destroys it; and Ship is likewise excluded, matching the repeatedly-stuck GUER flotilla (USVFLOTILLA|UNSTUCK streak=5, SKIPLEG). Rollback: 0.
 		if (isNil "WFBE_C_AICOM_STUCK_REPAIR")         then {WFBE_C_AICOM_STUCK_REPAIR         = 1};  //--- TP-15: 1 = at a tier-2/3 UNSTUCK event, restore+rearm the stuck lead hull IN PLACE (no town detour), reusing the SELFREPAIR safe-dist gate. 0 = off (byte-identical).
 		//--- B754 (Ray 2026-06-25) RELATIVE ROUND-CLOSER GATE: the absolute 12-town HQ-strike gate is unreachable in a lopsided game (b753 soak: WEST held 11 vs EAST's dug-in 2, myEff 70 vs 53, never hit 12 -> 8.4h with no winner). Let a runaway leader close BELOW the absolute gate when dominant on EFFECTIVE strength AND (enemy collapsed to <= ENEMY_MAX towns OR own >= TOWN_RATIO town lead), plus a STALL_OVERRIDE after N dominant-but-passive stall ticks. Never fires while behind on towns/strength.
 		if (isNil "WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX")      then {WFBE_C_AICOM_HQSTRIKE_ENEMY_MAX      = 2};
@@ -1254,6 +1264,23 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_SMOKE_COOLDOWN")          then {WFBE_C_AICOM_SMOKE_COOLDOWN = 120};        //--- s between smoke uses per team.
 	if (isNil "WFBE_C_AICOM_ARMOR_SCREEN")    then {WFBE_C_AICOM_ARMOR_SCREEN = 0};    //--- armor-screen: tanks screen outward on arrival instead of SAD with infantry (0=off, default).
 	if (isNil "WFBE_C_AICOM_ARMOR_SCREEN_R")  then {WFBE_C_AICOM_ARMOR_SCREEN_R = 80}; //--- m stand-off radius for the outward screen position.
+	if (isNil "WFBE_C_GEAR_MAG_SLOTS")                then {WFBE_C_GEAR_MAG_SLOTS = 12};              //--- fable/gear-charge-fix: formal registration (was read with an inline 12 default at the cap sites, never registered - policy gap). Magazine slots a bought loadout is capped to; the charge is computed AFTER this cap.
+	if (isNil "WFBE_C_CLIENT_CRATER_CLEANER")         then {WFBE_C_CLIENT_CRATER_CLEANER = 1};        //--- ARMED 2026-07-28 (owner: crash craters persist): per-client CraterLong/CraterLong_small sweep - craters are engine-spawned CLIENT-LOCAL, invisible to the server-side crater_cleaner. Age + combat-quiet guarded. 0 = off.
+	if (isNil "WFBE_C_CLIENT_CRATER_PERIOD")          then {WFBE_C_CLIENT_CRATER_PERIOD = 120};       //--- sweep cadence seconds (floor 30).
+	if (isNil "WFBE_C_CLIENT_CRATER_AGE")             then {WFBE_C_CLIENT_CRATER_AGE = 600};          //--- crater minimum age before deletion (stamped at first sight - engine craters carry no timestamp).
+	if (isNil "WFBE_C_CLIENT_CRATER_QUIET_R")         then {WFBE_C_CLIENT_CRATER_QUIET_R = 150};      //--- any live soldier besides the player within this radius keeps the scar (no mid-firefight vanishing).
+	if (isNil "WFBE_C_CLIENT_CRATER_RADIUS")          then {WFBE_C_CLIENT_CRATER_RADIUS = 2000};      //--- scan radius around the player.
+	if (isNil "WFBE_C_TAC_T4")                        then {WFBE_C_TAC_T4 = 1};                       //--- ARMED 2026-07-28 (owner picked Tactical mockup T4 "Fire Support vs Strategic split", wave 1): STRATEGIC ORDNANCE + ROUTINE SUPPORT zone cards in the Tactical Center - pure accelerators over the existing listbox/combo flows (SCUD saturation, ICBM, Paratroopers, Fast Travel), every legacy control retained, all confirms/costs/server checks unchanged. 0 = cards hidden, dialog identical to HEAD.
+	if (isNil "WFBE_C_CMD_DECK")                      then {WFBE_C_CMD_DECK = 0};                     //--- ARMED 2026-07-28 (owner picked mockup C4 "Console Deck"): the Command war room gains a live header strip (funds/posture/doctrine/focus/teams/AI), zone titles, ACTIVE-state lighting on posture + field-order buttons, and ONE order combo + GIVE ORDER applying to the roster selection (replacing the 9 separate order buttons - A2 listboxes cannot host per-row widgets). 0 = today's war room, pixel-identical (new controls carry show=0 and are never admitted).
+	if (isNil "WFBE_C_GUER_TOWN_AIR_REARM")           then {WFBE_C_GUER_TOWN_AIR_REARM = 1};          //--- armed 2026-07-28 owner order ("GUER players should be able to rearm air in towns"): resistance air rearm proceeds at a GUER-HELD town depot (Client_SupportRearm.sqf exemption). 0 = old blanket refusal.
+	if (isNil "WFBE_C_GUER_LOCKPICK")                  then {WFBE_C_GUER_LOCKPICK = 1};                 //--- armed 2026-07-28 owner order ("They should also be able to lockpick vehicles"): resistance-only timed lockpick action on locked stationary vehicles (Init_Unit registration + Action_GuerLockpick.sqf). 0 = action hidden.
+	if (isNil "WFBE_C_GUER_LOCKPICK_TIME")             then {WFBE_C_GUER_LOCKPICK_TIME = 20};           //--- lockpick channel seconds.
+	if (isNil "WFBE_C_STRUCTURES_ENEMY_TOWN_RADIUS")  then {WFBE_C_STRUCTURES_ENEMY_TOWN_RADIUS = 550};  //--- m: player structures cannot be placed within this range of a town your side does not own. Was a hardcoded 600 in Init_Client.sqf; halved 2026-07-29 after the owner reported "restricted area nearly everywhere" - with GUER holding 33 towns the 600m bubbles covered most of the map. 0 disables the town rule entirely (the enemy-base-area block still applies).
+	if (isNil "WFBE_C_AICOM_NUDGE_BOMB_YIELD")        then {WFBE_C_AICOM_NUDGE_BOMB_YIELD = 1};      //--- ARMED 2026-07-28 (owner: "AI is still not using other loadouts like bombs"): the heli cannon-nudge yields when the gunner already has a bomb launcher selected, instead of yanking it back to the cannon every 7s. Its anti-standoff-ATGM purpose is unaffected. 0 = legacy (nudge always overrides).
+	if (isNil "WFBE_C_AIR_RUNWAY_MAX_DIST")           then {WFBE_C_AIR_RUNWAY_MAX_DIST = 2500};      //--- m: a player-bought plane is only relocated to a runway within this range of the factory. The runway scan is map-wide (100km), so without this a buyer at a base with no airfield had their plane teleported to a distant owned airfield and reported it as "not spawning" (live, player 777, 2026-07-28). 0 = uncapped (legacy).
+	if (isNil "WFBE_C_AIR_RUNWAY_SPAWN")              then {WFBE_C_AIR_RUNWAY_SPAWN = 1};              //--- armed 2026-07-27 owner go ("planes dont even spawn on the runway! That has to happen"): PLAYER-bought fixed-wing relocate from the factory apron to the nearest OWNED land runway, parked aligned to the strip (Common_GetRunwaySpawn.sqf). AI plane buys already air-start via _special="FLY" in Server_BuyUnit and are untouched. 0 = old apron behaviour.
+	if (isNil "WFBE_C_AIR_RUNWAY_OFFSET")             then {WFBE_C_AIR_RUNWAY_OFFSET = 60};             //--- metres from the airport logic (hangar) along the strip heading to the first parking slot; occupied slots slide +30 m (max 3).
+	if (isNil "WFBE_C_NAVAL_TWIN_GAP")                then {WFBE_C_NAVAL_TWIN_GAP = 26};               //--- iteration 2 (owner 2026-07-28: "still the gap" at 32 on m0727h) - geometry is file-documented BEST-GUESS and the model origin may not sit on the hull centreline, so step to 26 (6 m overlap if beam really is 32). Was hard-coded 42 -> 32 -> 26. Tune per restart; rollback 42.
 	if (isNil "WFBE_C_NAVAL_TWIN_HULLS")              then {WFBE_C_NAVAL_TWIN_HULLS = 1};              //--- Khe Sanh: outer carriers become deck-bridged TWIN-HULL super-carriers (middle keeps the SCUD, single hull).
 	if (isNil "WFBE_C_NAVAL_WEST_AAV")                then {WFBE_C_NAVAL_WEST_AAV = 0};                //--- Lane 45: default-off WEST AAV buy-row metadata hook for future naval-map beach-assault work.
 	if (isNil "WFBE_C_COASTAL_UTILITY_BOATS")         then {WFBE_C_COASTAL_UTILITY_BOATS = 0};         //--- Lane 184: default-off cheap PBX/RHIB-class Light-factory utility boats on coastal/naval maps only.
@@ -1549,6 +1576,12 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_BASE_AREA") then {WFBE_C_BASE_AREA = 2}; //--- Force the bases to be grouped by areas.
 	if (isNil "WFBE_C_BASE_DEFENSE_MAX_AI") then {WFBE_C_BASE_DEFENSE_MAX_AI = 40}; //--- Maximum AIs that will be able to man defense within the barracks area.
 	if (isNil "WFBE_C_BASE_DEFENSE_MANNING_RANGE") then {WFBE_C_BASE_DEFENSE_MANNING_RANGE = 250}; //--- Within x meters, defenses may be manned.
+	//--- build/defense audit 2026-07-28: Server_HandleDefense.sqf's base-defense re-man watcher used to
+	//--- re-check gunner liveness only once per sleep 420 (~7 min worst case before an empty gun refills).
+	//--- Bounded-poll interval (s) between liveness checks once a gunner is seated; a Killed EH on the
+	//--- seated gunner can wake the poll early. Correctness fix (not a feature gate) - lowering this only
+	//--- shortens worst-case re-man latency, the total idle-wait cap (420s) is unchanged.
+	if (isNil "WFBE_C_DEFENSE_REMAN_POLL") then {WFBE_C_DEFENSE_REMAN_POLL = 15};
 	if (isNil "WFBE_C_BASE_START_TOWN") then {WFBE_C_BASE_START_TOWN = 1}; //--- Remove the spawn locations which are too far away from the towns.
 	if (isNil "WFBE_C_BASE_STARTING_MODE") then {WFBE_C_BASE_STARTING_MODE = 2}; //--- Starting Locations Mode: 0 = WN|ES; 1 = WS|EN; 2 = Random. cmdcon41 (Ray): default 0 -> 2 (spawns "didn't seem random" - they were the fixed Build84 default).
 	if (isNil "WFBE_C_BASE_RANDOM_PURE") then {WFBE_C_BASE_RANDOM_PURE = 1}; //--- cmdcon41 (Ray): random-PURE default (original unfiltered Miksuu random). //--- Build84 (backlog#2): 1 = Miksuu-original UNFILTERED pure-random when MODE=2 (skips the B62 airfield / B66 egress-edge / rotation filters in Init_Server); 0 = hardened filtered random (default).
@@ -2138,7 +2171,7 @@ if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST =
 	if (isNil "WFBE_C_EASA_CATEGORIES") then {WFBE_C_EASA_CATEGORIES = 1}; // EASA loadout category tags [AA]/[AG]/[MR] prefixed on each row (display-only)
 	if (isNil "WFBE_C_AIRFIELDS") then {WFBE_C_AIRFIELDS = 1}; // Airfield capture points (NWAF/NEAF/Balota): repair-point + exclusive hangar on capture
 	if (isNil "WFBE_C_CAPTURE_UNLOCKS") then {WFBE_C_CAPTURE_UNLOCKS = 1}; // Holding trigger towns unlocks premium ACR units at own factories (Krasnostav->T72M4CZ lvl4 Heavy; NWAF->RM70_ACR lvl4 Light)
-	if (isNil "WFBE_C_PATROL_CONVOY_PAY") then {WFBE_C_PATROL_CONVOY_PAY = 750}; // Task 41: cash pool paid to the side each time a convoy patrol stops at a town (split equally among living players)
+	if (isNil "WFBE_C_PATROL_CONVOY_PAY") then {WFBE_C_PATROL_CONVOY_PAY = 750}; // [ORPHANED 2026-07-28 fable/patrol-reimagine: convoy truck + payout removed from Common_RunSidePatrol.sqf/Server_HandleSpecial.sqf per owner order; constant retained per repo policy, value unused.] Was: per-stop convoy cash pool.
 	if (isNil "WFBE_C_SKIN_SELECTOR") then {WFBE_C_SKIN_SELECTOR = 0}; // Command Deck: join-time skin selector (1 enabled, 0 disabled)
 	if (isNil "WFBE_C_VEHICLE_MARKINGS") then {WFBE_C_VEHICLE_MARKINGS = 0}; // Miksuu vehicle visuals master gate: per-side recognition markings (Common_AddVehicleMarking.sqf) + side-gated body skins / WEST matte-black (Common_AddVehicleTexture.sqf). 1 enabled, 0 disabled. DEFAULT 0 (experimental, OFF): the marking impl attaches up to 3 dim local #lightpoints PER created vehicle and the WEST case repaints EVERY blufor hull matte-black - both are unverified in-engine and FPS-sensitive. Flip to 1 only after an in-engine attach/FPS test. (Infantry skin selector is separate: WFBE_C_SKIN_SELECTOR.)
 	//--- Vehicle FACTION FLAGS (Common_AddVehicleFlag.sqf): when ON, every created vehicle flies its side's
@@ -2231,6 +2264,20 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil 'WFBE_C_STRUCTURES_MAX_CBRadar') then {WFBE_C_STRUCTURES_MAX_CBRadar = 1};
 	if (isNil 'WFBE_C_STRUCTURES_MAX_AARadar') then {WFBE_C_STRUCTURES_MAX_AARadar = 1};
 	if (isNil 'WFBE_C_STRUCTURES_RADAR_PENDING_WINDOW') then {WFBE_C_STRUCTURES_RADAR_PENDING_WINDOW = 180}; //--- fable/ew-economy: CBRadar/AARadar one-per-side reservation window (s) to close the duplicate-build race (mirrors WFBE_C_ECONOMY_BANK_PENDING_WINDOW above), RequestStructure.sqf.
+	//--- build/defense audit 2026-07-28: server-side cap + PENDING-reservation guard for the MULTI-INSTANCE
+	//--- economy structures (Barracks/Light/Heavy/Aircraft/ServicePoint/CommandCenter), extending the
+	//--- CBRadar/AARadar/Bank single-instance idiom above (RequestStructure.sqf, Construction_SmallSite.sqf,
+	//--- Construction_MediumSite.sqf). 1 (default, armed) = server re-checks the SAME WFBE_C_STRUCTURES_MAX_
+	//--- <type> caps the AI commander already obeys server-side (AI_Commander_Base.sqf) before accepting a
+	//--- player build request; it only rejects what the declared caps already forbid. 0 = legacy client-only
+	//--- enforcement (coin_interface.sqf wfbe_structures_live), byte-identical to HEAD.
+	if (isNil "WFBE_C_STRUCTURES_CAP_SERVER") then {WFBE_C_STRUCTURES_CAP_SERVER = 1};
+	//--- Reservation window (s) for the multi-instance PENDING array above: an entry older than this is
+	//--- treated as stale and pruned on the next read, so a construction-side release path that somehow
+	//--- never fires cannot permanently wedge a side's cap. Separate tunable from
+	//--- WFBE_C_STRUCTURES_RADAR_PENDING_WINDOW / WFBE_C_ECONOMY_BANK_PENDING_WINDOW so those existing
+	//--- single-instance defaults are untouched.
+	if (isNil "WFBE_C_STRUCTURES_PENDING_WINDOW") then {WFBE_C_STRUCTURES_PENDING_WINDOW = 180};
 
 //--- Apply a towns unit coeficient.
 	WFBE_C_TOWNS_UNITS_COEF = switch (WFBE_C_TOWNS_OCCUPATION) do {case 1: {1}; case 2: {1.5}; case 3: {2}; case 4: {2.5}; default {1}};
@@ -2281,7 +2328,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 		WFBE_C_TOTAL_AI_MAX_BY_TIER = [180,170,150,120]; //--- ZG (owner 2026-07-26): 250 max AI/side on the 4-HC soak box, was [90,85,75,60]. EXPLICITLY re-opens the 2026-07-23 pullback - that pullback was measured on the OLD 2-HC Xeon box (FPS 15 at AI_TOT 383); this box is 4 HCs on 8 uniform cores and exists to find the real ceiling. If FPS collapses, roll back to [90,85,75,60]. Prior ZG pullback note (owner live-tune final 2026-07-23, after [110,100,85,70]: FPS 15 at AI_TOT 383). Prior: [80,80,70,60] pre-2-HC-split raise, then [110,100,85,70]. Rollback: [110,100,85,70]. CH/TK stay [140,130,100,80].
 		//--- (2) per-side COMMANDER-TEAM hard ceiling. Fewer teams, each still founds at 8 units (TEAM_SIZE untouched)
 		//--- = concentration, not sprawl. 5 x 8 = ~40 core + garrisons stays under the 80 AI cap above.
-		WFBE_C_AICOM_TEAMS_HARD_CAP = 16;              //--- ZG (owner 2026-07-26, was 8). Now MATCHES the global 16 - kept explicit so a global rollback does not silently re-clamp ZG. 4-HC soak box: 8 was the clamp pinning effective team target to 8 despite PC_LOW=9. Real ceiling is now WFBE_C_TOTAL_AI_MAX_BY_TIER (90/side low-pop), not the team count. Rollback: 8.
+		WFBE_C_AICOM_TEAMS_HARD_CAP = 12;              //--- ZG (owner 2026-07-28, 16 -> 12 with the global). Prior: owner 2026-07-26, 8 -> 16. Still MATCHES the global - kept explicit so a global rollback does not silently re-clamp ZG. 4-HC soak box: 8 was the clamp pinning effective team target to 8 despite PC_LOW=9. Real ceiling is now WFBE_C_TOTAL_AI_MAX_BY_TIER (90/side low-pop), not the team count. Rollback: 8.
 		//--- (3) low/mid-pop PC-scaled base founding target (DELTA -1 then FLOOR/hard-cap clamp still apply): keep the
 		//--- base under the new hard cap so the curve, not just the clamp, sets team count. LOW 6-1=5, MID 5-1=4.
 		WFBE_C_AICOM_TEAMS_PC_LOW  = 17;               //--- ZG (owner 2026-07-26, was 9 -> LOW 17-1=16). Rollback: 9.
@@ -2332,7 +2379,7 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_AIR_CEILING_MAX_M")     then {AICOMV2_GDIR_AIR_CEILING_MAX_M = 600}; //--- Air above this m NEVER activates the AA tier.
 //--- Amendment A1: Player Commissar Panel dials (panel switch AICOMV2_GDIR_PANEL default 0).
 	if (isNil "AICOMV2_GDIR_PANEL")                 then {AICOMV2_GDIR_PANEL = 1};               //--- A1 Commissar Panel gate: 0=off (byte-identical). Requires AICOMV2_LANE_GUER_DIRECTOR=1.
-	if (isNil "AICOMV2_GDIR_PANEL_COOLDOWN_SEC")    then {AICOMV2_GDIR_PANEL_COOLDOWN_SEC = 600};//--- Per-town action cooldown (s) between panel buys.
+	if (isNil "AICOMV2_GDIR_PANEL_COOLDOWN_SEC")    then {AICOMV2_GDIR_PANEL_COOLDOWN_SEC = 180};//--- Per-town action cooldown (s) between panel buys. 600 -> 180 owner ruling 2026-07-27 (GUER town-defence purchases were too slow to matter). Read by BOTH the client display (GUI_Menu_GuerCommissar.sqf:354) and the server-authoritative check (RequestGDirPanel.sqf:241), so one value covers both. Rollback: 600.
 	if (isNil "AICOMV2_GDIR_PANEL_CONTRACTS_MAX")   then {AICOMV2_GDIR_PANEL_CONTRACTS_MAX = 2}; //--- Max active contracts per town simultaneously.
 	if (isNil "AICOMV2_GDIR_PANEL_INSTANT_MULT")    then {AICOMV2_GDIR_PANEL_INSTANT_MULT = 1.5};//--- Price multiplier for instant delivery vs convoy.
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_REINF")     then {AICOMV2_GDIR_PANEL_PRICE_REINF = 1600}; //--- Base price: Action 1 convoy reinforcement.
@@ -2374,9 +2421,11 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_PANEL_PRICE_RELIEF")     then {AICOMV2_GDIR_PANEL_PRICE_RELIEF = 800};  //--- Base price: relief squad (infantry-only fast buy). 1/2x of REINF base.
 	if (isNil "WFBE_C_GDIR_GARRISON_GAIN") then {WFBE_C_GDIR_GARRISON_GAIN = 1}; //--- owner 2026-07-07: ARMED at 1.0 (Director-reinforced GUER towns wake with +~50% real garrison at max funded surge; floored at V1).
 	if (isNil "WFBE_C_GUER_PRESENCE_PULSE") then {WFBE_C_GUER_PRESENCE_PULSE = 0}; //--- Grok idea #15 (2026-07-25): PLACEMENT ONLY. Biases the Director's QRF materialization spawn onto the ring (AICOMV2_GDIR_MIN_SPAWN_M..AICOMV2_GDIR_AMBUSH_BUBBLE_M) between the contact town and the nearest other GUER/unknown ledger town, instead of directly over the town center where fresh contact already means players are standing. Does NOT change GUER volume/budget/cooldown - see AICOMV2_GDIR_GROUP_BUDGET_MAX / WFBE_C_GUER_GROUPS_MAX (PR #1372 restoration pending) for that axis. 0 = byte-identical to HEAD.
+	if (isNil "WFBE_C_GARRISON_SV_SCALE") then {WFBE_C_GARRISON_SV_SCALE = 0};       //--- fable/garrison-sv-scale (backlog #14): >0 arms supply-value garrison scaling in Server_GetTownGroupsDefender.sqf - a town holding MORE supply than its startingSupplyValue fields a proportionally bigger defender garrison (bonus = (sv/start - 1) * this scale, capped at MAXBONUS). ADDITIVE-ONLY: never reduces a garrison (no-GUER-nerf). 0 = off, byte-identical.
+	if (isNil "WFBE_C_GARRISON_SV_MAXBONUS") then {WFBE_C_GARRISON_SV_MAXBONUS = 0.5}; //--- cap on the sv-scaling garrison bonus (+50% groups max).
 	if (isNil "WFBE_C_TOWN_GARRISON_SCALE") then {WFBE_C_TOWN_GARRISON_SCALE = 0.7}; //--- owner 2026-07-22 18:52 (task wasp-town-garrison-minus20): BASE GUER town-defender garrison scale. 0.8 = -20% (entice player reinforcement + free AI budget for A-life); 1.0 = legacy/byte-identical. Applied in Server_GetTownGroupsDefender.sqf to the post-difficulty-coef base group count, BEFORE the GDIR surge and CTL-link overlays (both stack on / derive from the scaled base). Floored at 1 group. [Ray-dir 2026-07-24 AI-COUNT: 0.8->0.7 - deepen the GUER town-defender cut to -30% (AI-count is the profiler-confirmed #1 fps driver: fps 12@445 units vs 40+@300); rollback 0.8.]
 	if (isNil "WFBE_C_TOWN_GARRISON_SCALE_WE") then {WFBE_C_TOWN_GARRISON_SCALE_WE = 0.7}; //--- Ray-dir 2026-07-24: extend the town-defender garrison cut to the CONVENTIONAL sides. Scales WEST/EAST-owned town garrisons (Server_GetTownGroups.sqf) by this factor, applied to the post-units-coef base BEFORE the CTL ledger overlay, floored at 1 - mirrors the GUER WFBE_C_TOWN_GARRISON_SCALE (defender path). 0.7 = -30%; 1.0 = legacy/byte-identical.
-	if (isNil "WFBE_C_TOWNS_TAB_GARRISON") then {WFBE_C_TOWNS_TAB_GARRISON = 0}; //--- townsviz: 0=legacy Towns route; 1=read-only own-side live garrison view.
+	if (isNil "WFBE_C_TOWNS_TAB_GARRISON") then {WFBE_C_TOWNS_TAB_GARRISON = 1}; //--- ARMED 2026-07-28 (owner "The towns button is not working for Blufor / Opfor"): 1 = the built read-only own-side garrison view (GUI_Menu_TownsGarrison.sqf) opens for ALL sides. At 0 the button was a hint-only dead end for WEST/EAST and the panel was unreachable dead code. GUER keeps its Commissar panel via the resistance branch. Rollback: 0.
 	if (isNil "WFBE_C_TOWNS_PERIMETER") then {WFBE_C_TOWNS_PERIMETER = 1}; //--- owner 2026-07-07: town defenders spawn in a bearing-even ring at the town EDGE (0.70-0.95x range) instead of camp/center clusters. 0 = legacy. //--- Tier-1 ledger->real-garrison gain: 0=off (byte-identical). >0 = a Director-reinforced GUER town (wfbe_gdir_str ratio>1) wakes with +min(groups, round(groups*(ratio-1)*GAIN)) real defender groups, floored at V1 (no-nerf). ~1.0 => +50% at max funded surge (ratio 1.5).
 //--- End AICOM V2 Lane 800 constants.
 if (isNil "WFBE_C_GUER_LOCKOUT_MIN") then {WFBE_C_GUER_LOCKOUT_MIN = 0}; //--- fable/guer-lockout (owner 2026-07-07, re-confirmed pick A4 2026-07-08): GUER activation delay in MINUTES; Parameters.hpp default=0 MUST stay in sync; 0 = off. Gates: respawn-timer clamp (GUI_RespawnMenu), WF-menu buy/gear/TownActions (GUI_Menu), start-confine (Client_GuerLockout.sqf).
@@ -2623,6 +2672,24 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- attachTo static per boat (AA/ROCKET/HMG). Master gate default 0 = byte-identical to HEAD.
 //--- Piggybacks on IS_naval_map (see Server_USVFlotilla.sqf header) - no new map define needed.
 	if (isNil "WFBE_C_USV_FLOTILLA_ENABLE")   then {WFBE_C_USV_FLOTILLA_ENABLE = 1};   //--- armed 2026-07-27 owner go: #1519 fixes the gate-reopen-after-quiet-despawn bug and #1504 ships the waypoints. In-engine water-safety is still unproven; QUIET_DESPAWN reaps strays.
+	if (isNil "WFBE_C_USV_FLOTILLA_PLAYER_GATE")    then {WFBE_C_USV_FLOTILLA_PLAYER_GATE = 1};    //--- ARMED 2026-07-28 (owner: "USVs also seem active the entire time... Waste of ai"): the coastal-town gate branch additionally requires a live non-HC player within PLAYER_RADIUS of the active coastal town - no audience, no flotilla. 0 = legacy activation-only gate.
+	if (isNil "WFBE_C_USV_FLOTILLA_PLAYER_RADIUS")  then {WFBE_C_USV_FLOTILLA_PLAYER_RADIUS = 1500}; //--- m; player-to-coastal-town distance that counts as an audience for branch (a). Carrier branch keeps its own WFBE_C_USV_CARRIER_APPROACH_RADIUS.
+	if (isNil "WFBE_C_PATROL_AIR_TIER")             then {WFBE_C_PATROL_AIR_TIER = 1};              //--- ARMED 2026-07-28 (owner: "Reimagine Patrol tiers... maybe at Tier 3-4 we can do something with air units? perhaps even from off-map?"): patrol upgrade L3+ rolls an off-map single-pass air strike when a side patrol reaches its objective town; L4 = pair. Replaces the removed T3/T4 money/SV rewards. W/E only. 0 = off (rewards stay removed).
+	if (isNil "WFBE_C_PATROL_AIR_CHANCE")           then {WFBE_C_PATROL_AIR_CHANCE = 0.35};         //--- server-side roll per eligible patrol town-arrival.
+	if (isNil "WFBE_C_PATROL_AIR_COOLDOWN")         then {WFBE_C_PATROL_AIR_COOLDOWN = 300};        //--- s between passes per side.
+	if (isNil "WFBE_C_PATROL_AIR_PASS_TIME")        then {WFBE_C_PATROL_AIR_PASS_TIME = 90};        //--- s of attack run before the edge exit starts (W13 window).
+	if (isNil "WFBE_C_AICOM_SUPPLY_SQUAD")          then {WFBE_C_AICOM_SUPPLY_SQUAD = 1};           //--- ARMED 2026-07-28 (owner: "Allow the ai commander to run a small supply squad by itself once it reaches its unlock gates (Truck, or helicopter)" - supersedes the old do-not-re-propose "AI supply trucks" entry): one autonomous supply squad per AI-commanded W/E side; truck at Light-Factory, heli at AIR>=3; each round trip credits the side supply pool. 0 = off.
+	if (isNil "WFBE_C_AICOM_SUPPLY_GRANT")          then {WFBE_C_AICOM_SUPPLY_GRANT = 300};         //--- side-supply credit per completed round trip (ChangeSideSupply, clamped at the economy ceiling).
+	if (isNil "WFBE_C_AICOM_SUPPLY_TICK")           then {WFBE_C_AICOM_SUPPLY_TICK = 15};           //--- s maintain-loop cadence (floor 5).
+	if (isNil "WFBE_C_AICOM_SUPPLY_DWELL")          then {WFBE_C_AICOM_SUPPLY_DWELL = 20};          //--- s "loading" dwell at the town before the return leg.
+	if (isNil "WFBE_C_AICOM_SUPPLY_COOLDOWN")       then {WFBE_C_AICOM_SUPPLY_COOLDOWN = 300};      //--- s respawn cooldown after the squad is destroyed - killing it matters.
+	if (isNil "WFBE_C_AICOM_SUPPLY_AI_ONLY")        then {WFBE_C_AICOM_SUPPLY_AI_ONLY = 1};         //--- 1 = only while wfbe_aicom_running (human commander runs his own logistics; squad stands down player-safe on takeover). 0 = also under human command.
+	if (isNil "WFBE_C_AICOM_AIRLIFT_REQ")           then {WFBE_C_AICOM_AIRLIFT_REQ = 0};             //--- OFF 2026-07-28 (live evidence): AICOM teams requesting a paid airmobile transport. The grant+delivery half works (55/55 on the live server in one match) but the LIFT half is structurally unreachable - the air-insert code runs once at team founding, before the loop that later creates the transport - so 100% of granted helicopters (4928 funds each, ~271k/match) parked at the aircraft factory with only a pilot while the team walked. 1 = re-enable ONLY after the lift is implemented at the in-loop delivery point.
+	if (isNil "WFBE_C_FPV_SPAWN_OFFSET")            then {WFBE_C_FPV_SPAWN_OFFSET = 40};            //--- fable/fpv-spawn-safety (owner 2026-07-28 "suicide choppers spawned into each other"): m of radial offset from the launch anchor, with a height stagger + clearance retry, so two launches at one command centre cannot materialise inside each other. Floor 10.
+	if (isNil "WFBE_C_FPV_ARM_DELAY")               then {WFBE_C_FPV_ARM_DELAY = 3};                //--- s before the FPV impact fuze arms; damage is then measured as a DELTA from the arming baseline, so spawn scuffing cannot detonate the warhead on the pad ("never left base ... exploded in their own base").
+	if (isNil "WFBE_C_FPV_MIN_BLAST_RANGE")         then {WFBE_C_FPV_MIN_BLAST_RANGE = 120};        //--- m: within this range of the FIRING side's own structures the live warhead is suppressed (hull still dies). Enemy-facing lethality unchanged. 0 = off (legacy: blast anywhere).
+	if (isNil "WFBE_C_FPV_COOLDOWN")                then {WFBE_C_FPV_COOLDOWN = 60};                //--- s between FPV launches per player. Formal registration - was lobby-param + inline code fallback only (Support_FPV.sqf), against repo flag policy; value matches the previous fallback.
+	if (isNil "WFBE_C_RESERVE_GUARD")               then {WFBE_C_RESERVE_GUARD = 1};                //--- ARMED 2026-07-28 (owner picker, C9 S22): Reserve structures field the WDDM reserve-guard preset (2 flank MGs + AT overwatch, 3 crewed AI) on top of the themed cluster. 0 = plain lean dressing, byte-identical to pre-S22.
 	if (isNil "WFBE_C_NAVAL_THEATER_RUMOR")  then {WFBE_C_NAVAL_THEATER_RUMOR = 0};    //--- 0 = no naval theatre activity announcements; >0 = announce existing gate flips.
 	if (isNil "WFBE_C_NAVAL_THEATER_RUMOR_INTERVAL") then {WFBE_C_NAVAL_THEATER_RUMOR_INTERVAL = 120}; //--- seconds between announcements for the same gate.
 	if (isNil "WFBE_C_USV_FLOTILLA_COUNT")    then {WFBE_C_USV_FLOTILLA_COUNT = 3};    //--- boats roaming at once (owner: 3). Bumping this is a one-line tune; roles cycle round-robin.
@@ -2673,7 +2740,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 //---   Has no effect unless WFBE_C_NAVAL_INLINE_HULLS > 0.
 //======================================================================================
 	if (isNil "WFBE_C_NAVAL_INLINE_HULLS") then {WFBE_C_NAVAL_INLINE_HULLS  = 1};   //--- 0 = lateral HEAD behaviour; >0 = inline bow-to-stern axis
-	if (isNil "WFBE_C_NAVAL_INLINE_GAP")   then {WFBE_C_NAVAL_INLINE_GAP    = -265}; //--- Hull B aft offset metres (body Y); tune -258..-275 in-editor
+	if (isNil "WFBE_C_NAVAL_INLINE_GAP")   then {WFBE_C_NAVAL_INLINE_GAP    = -252}; //--- Hull B aft offset metres (body Y). [Ray-dir 2026-07-28 "decks still not touching": -265->-252. NOTE the two earlier gap tunes (TWIN_GAP 42->32->26) edited the LATERAL constant, which is SKIPPED while WFBE_C_NAVAL_INLINE_HULLS=1 - THIS is the live knob. Wasp-class LOA ~253m, so -252 should butt stern to bow; slight part interpenetration is fine (statics). If a sliver remains next report: -245. Rollback -265.]
 	if (isNil "WFBE_C_NAVAL_SEAM_BRIDGE")  then {WFBE_C_NAVAL_SEAM_BRIDGE   = 0};   //--- 0 = no bridge piers; >0 = 4x Land_nav_pier_m_1 at seam
 //--- fable/naval-camps-on-deck (Ray 2026-07-07):
 //--- WFBE_C_NAVAL_CAMPS_DECK: when 1 (default), re-seat Khe Sanh camp logics/models/flags +
@@ -2752,8 +2819,9 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_DEF_FORTIF_CAP") then {WFBE_C_DEF_FORTIF_CAP = 6};
 //--- SML-1 Squad Micro Layer: camp-split captures (GR-2026-07-03a). Flag-gated default 0.
 	if (isNil "WFBE_C_SML_CAMP_SPLIT")    then {WFBE_C_SML_CAMP_SPLIT    = 1};   //--- 1=enable per-unit doStop/doMove camp-split; 0=byte-identical legacy behaviour.
+	if (isNil "WFBE_C_SML_CAMP_SPLIT_MIN_FOOT") then {WFBE_C_SML_CAMP_SPLIT_MIN_FOOT = 2};  //--- armed 2026-07-27 owner go (was hard-coded 3 in Common_SMLCampSplit.sqf). Minimum foot infantry before SML-1 will split across two unheld camps. At 3 a small or attrited team fell under the floor and silently deferred to the caller sequential nearest-camp loop, which has no stall protection while mode-2 stall-bail is deliberately disabled - the Dubrovka failure shape (51 min, camps=1/2, footMen=8). 2 permits a 1+1 split (_half = floor(2/2) = 1), which is the minimum that can contest both camps of a 2-camp town at once. Directly serves the smaller-better-groups directive, which otherwise pushes teams UNDER a 3-man floor. Rollback: 3.
 	if (isNil "WFBE_C_SML_WATCHDOG_TTL") then {WFBE_C_SML_WATCHDOG_TTL = 240};  //--- s: per-unit TTL before the watchdog forces doFollow back (covers all exit paths).
-	if (isNil "WFBE_C_SML_CAPTURE_TTL") then {WFBE_C_SML_CAPTURE_TTL = 0};  //--- s: capture-phase TTL override for SML-1 camp-split + SML-2 dismounts ONLY. 0 = OFF, byte-identical to HEAD (both keep reading the shared WFBE_C_SML_WATCHDOG_TTL). >0 = use this value instead, so the watchdog can never remount infantry BEFORE the camp-first window it exists to cover has ended; owner arms it explicitly (same idiom as WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE). Suggested arming value: 360, matching WFBE_C_AICOM_ASSAULT_HOLD. Live evidence 2026-07-27 (4-HC soak, HC1+HC3 RPTs): 78 BEGIN_CAPTURE vs 23 SML DISMOUNT, with SML|v1|REMOUNT|reason=ttl elapsed=241 firing inside a 360s _campFirstEnd - the shared 240s TTL was ending dismounts 120s early, putting cargo infantry back in their hulls for the last third of every camp-first phase where the camp nearEntities["Man"] scan can no longer see them. SML-4 overwatch / SML-5 retreat deliberately KEEP the shorter shared WFBE_C_SML_WATCHDOG_TTL (combat-reactive, not capture-phase). Rollback: set to 240.
+	if (isNil "WFBE_C_SML_CAPTURE_TTL") then {WFBE_C_SML_CAPTURE_TTL = 360};  //--- s: capture-phase TTL override for SML-1 camp-split + SML-2 dismounts ONLY. 0 = OFF, byte-identical to HEAD (both keep reading the shared WFBE_C_SML_WATCHDOG_TTL). >0 = use this value instead, so the watchdog can never remount infantry BEFORE the camp-first window it exists to cover has ended; owner arms it explicitly (same idiom as WFBE_C_AICOM_HIGHCLIMB_ZEROPULSE). Suggested arming value: 360, matching WFBE_C_AICOM_ASSAULT_HOLD. Live evidence 2026-07-27 (4-HC soak, HC1+HC3 RPTs): 78 BEGIN_CAPTURE vs 23 SML DISMOUNT, with SML|v1|REMOUNT|reason=ttl elapsed=241 firing inside a 360s _campFirstEnd - the shared 240s TTL was ending dismounts 120s early, putting cargo infantry back in their hulls for the last third of every camp-first phase where the camp nearEntities["Man"] scan can no longer see them. SML-4 overwatch / SML-5 retreat deliberately KEEP the shorter shared WFBE_C_SML_WATCHDOG_TTL (combat-reactive, not capture-phase). Rollback: set to 240.
 //--- SML-2: real dismounts (cargo infantry advance on foot; driver/gunner stay mounted for fire support). Flag-gated default 0.
 	if (isNil "WFBE_C_SML_DISMOUNTS")              then {WFBE_C_SML_DISMOUNTS              = 1};   //--- 1=enable real dismounts; 0=byte-identical legacy behaviour.
 //--- SML-3: graceful retreats (mauled individuals pull back while healthy units keep fighting). Flag default 0.
@@ -2872,6 +2940,7 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_FPV_DRONE_COST") then {WFBE_C_FPV_DRONE_COST = 2500};        //--- Purchase price (deducted client-side in fpv.sqf).
 	if (isNil "WFBE_C_FPV_DRONE_TTL")  then {WFBE_C_FPV_DRONE_TTL  = 240};         //--- s: battery life; expiry DISARMS then scuttles (no parked bomb).
 	if (isNil "WFBE_C_FPV_DRONE_AMMO") then {WFBE_C_FPV_DRONE_AMMO = "R_57mm_HE"}; //--- Warhead ammo class (RPG-warhead scale: hit 150 / indirect 40 / r 12).
+	if (isNil "WFBE_C_FPV_CAUSE_LOG")  then {WFBE_C_FPV_CAUSE_LOG  = 1};           //--- fable/fpv-causation (owner 2026-07-28 "AH6J also counts as suicide chopper - misattribution evidence ledger"): log-only causation evidence, ARMED by default (diagnostic-line policy, zero behavior change - see PR body). Ring write in Support_FPV_Detonate.sqf; FPVCAUSE|v1 diag_log lines in RequestOnUnitKilled.sqf. 0 = fully inert (no ring writes, no log lines).
 
 //--- AWACS PLATFORM RADAR (fable/awacs-radar, flag WFBE_C_AWACS default 0, lobby param):
 //--- while a CREWED friendly airframe from WFBE_C_AWACS_TYPES is airborne above MINALT the
@@ -2951,8 +3020,9 @@ if (isNil "WFBE_C_RADIUSHOLD_ENABLE") then {WFBE_C_RADIUSHOLD_ENABLE = 1}; //---
 if (isNil "WFBE_C_RADIUSHOLD_TICK_SECS") then {WFBE_C_RADIUSHOLD_TICK_SECS = 5}; //--- fable/radius-hold-primitive: shared dispatcher tick cadence (seconds) for all registered holds.
 if (isNil "WFBE_C_RADIUSHOLD_CONTEST_DECAY") then {WFBE_C_RADIUSHOLD_CONTEST_DECAY = 0}; //--- fable/radius-hold-primitive: per-tick progress decay applied only when contestMode=1 while a hold is contested.
 if (isNil "WFBE_C_RADIUSHOLD_MAX_ACTIVE") then {WFBE_C_RADIUSHOLD_MAX_ACTIVE = 8}; //--- fable/radius-hold-primitive: hard cap on simultaneously-registered holds.
-if (isNil "WFBE_C_NAVALHVT_BUBBLE_ENABLE") then {WFBE_C_NAVALHVT_BUBBLE_ENABLE = 0}; //--- fable/fix-carrier-capture (owner live 2026-07-10 "carrier not capturing while on its deck"): default was 1, which SKIPS the camps-on-deck capture-drain (server_town.sqf:285) and registers proximity bubbles that do not grant deck capture - so a carrier could never be captured by standing on it. Restored to 0 = the DARK/intended default this comment already documented; camps-on-deck (with the B755 deckZ+12 height fix) is the live capture path.
+if (isNil "WFBE_C_NAVALHVT_BUBBLE_ENABLE") then {WFBE_C_NAVALHVT_BUBBLE_ENABLE = 1}; //--- armed 2026-07-27 owner go: KOTH-style carrier capture bubble ON, now that contest mode 2 BEAT-DOWN (#1529) fixes the 2026-07-10 regression this comment used to describe (a carrier ALWAYS carries a GUER garrison, so sole-presence contest read permanently CONTESTED and the bubble never granted deck capture - commit 7ec25d16f5 disarmed it). While armed the camps-on-deck path is skipped entirely (Init_NavalHVT.sqf), so deck camps no longer spawn; capture = beat the garrison down to <= WFBE_C_RADIUSHOLD_BEATDOWN_FLOOR bodies, then hold uncontested for WFBE_C_NAVALHVT_BUBBLE_HOLDSECS (120s, cumulative - pauses while contested, does not reset). Rollback: 0 (restores camps-on-deck capture).
 if (isNil "WFBE_C_NAVALHVT_BUBBLE_RADIUS") then {WFBE_C_NAVALHVT_BUBBLE_RADIUS = 180}; //--- fable/radius-hold-primitive: carrier bubble radius (metres) when WFBE_C_NAVALHVT_BUBBLE_ENABLE=1.
+if (isNil "WFBE_C_RADIUSHOLD_BEATDOWN_FLOOR") then {WFBE_C_RADIUSHOLD_BEATDOWN_FLOOR = 2}; //--- contest-mode-2 only: the objective owner stops counting toward contest at or below this many bodies present, so an attacker must beat the garrison down before the hold accrues. Owner ruling 2026-07-27 ("garrison has to be beaten down first"). Raise to make carriers harder to take, 0 = must be fully cleared.
 if (isNil "WFBE_C_NAVALHVT_BUBBLE_HOLDSECS") then {WFBE_C_NAVALHVT_BUBBLE_HOLDSECS = 120}; //--- fable/radius-hold-primitive: uncontested seconds of eligible presence required to complete the carrier bubble hold.
 if (isNil "WFBE_C_ZG_KOTH_ENABLE") then {WFBE_C_ZG_KOTH_ENABLE = 1}; //--- fable/radius-hold-primitive consumer (GR-2026-07-08a, stacked on PR #916): Zargabad KotH city-core hold master flag. ARMED by default (1) since ee3f8193 "release: enable all feature flags at launch" (2026-07-09, owner-authorized) - merged dark (0); map-gated to Zargabad regardless (Init_ZgKoth.sqf).
 if (isNil "WFBE_C_ZG_KOTH_RADIUS") then {WFBE_C_ZG_KOTH_RADIUS = 150}; //--- fable/radius-hold-primitive consumer: ZG KotH hold-zone radius (metres) at city core. Owner-TBD, tune after test.
@@ -3133,7 +3203,7 @@ if (isNil "WFBE_C_HS_DISPATCH_LOG") then {WFBE_C_HS_DISPATCH_LOG = 1}; //--- ARM
 //--- healer loop spawns, no heartbeat publishes and every touched path keeps its original
 //--- computation (the constants below are declared unconditionally like every other WFBE_C_* flag;
 //--- sub-tunables are only read while their master is on).
-	if (isNil "WFBE_C_HCREG_HEAL") then {WFBE_C_HCREG_HEAL = 1}; //--- ARMED (owner 2026-07-23: re-register the starved HC so foundings balance across both HCs - the live AFK-teams root cause). //--- SLICE 1 master: 0=off (default - Init_Server never spawns Server\FSM\server_hcreg_heal.sqf), 1=on (60s sweep: a connected HC with a fresh HCSTAT heartbeat that is missing from WFBE_HEADLESSCLIENTS_ID for > WFBE_C_HCREG_HEAL_WAIT s gets the connected-hc registration re-run server-side; HCREG|v1 lines).
+	if (isNil "WFBE_C_HCREG_HEAL") then {WFBE_C_HCREG_HEAL = 1}; //--- ARMED (owner 2026-07-23: re-register the starved HC so foundings balance across both HCs - the live AFK-teams root cause). //--- SLICE 1 master: the isNil fallback above is 1 (ARMED, owner 2026-07-23) - Init_Server DOES spawn Server\FSM\server_hcreg_heal.sqf by default; this tail previously claimed 0=default, which was wrong. 0=off, 1=on (60s sweep: a connected HC with a fresh HCSTAT heartbeat that is missing from WFBE_HEADLESSCLIENTS_ID for > WFBE_C_HCREG_HEAL_WAIT s gets the connected-hc registration re-run server-side; HCREG|v1 lines).
 	if (isNil "WFBE_C_HCREG_HEAL_WAIT") then {WFBE_C_HCREG_HEAL_WAIT = 120}; //--- s an HC must be continuously unregistered before a heal fires; also the per-owner retry cooldown. Only read while WFBE_C_HCREG_HEAL > 0.
 	if (isNil "WFBE_C_AICOM_ORPHAN_HEAL") then {WFBE_C_AICOM_ORPHAN_HEAL = 1}; //--- ARMED (owner 2026-07-23: sweep+re-drive teams orphaned when an HC drops). //--- SLICE 2 master: 0=off (default - no sweep loop, no heartbeat publish), 1=on (Common_RunCommanderTeam publishes wfbe_aicom_hb_t ~60s; Server\FSM\server_aicom_orphan_heal.sqf sweeps 60s for dead-thread wfbe_aicom_hc teams: stale-topup refund + wiped-slot release + never-moved force-recycle + player-safe field retire; HCHEAL|v1 lines).
 	if (isNil "WFBE_C_AICOM_ORPHAN_STALE") then {WFBE_C_AICOM_ORPHAN_STALE = 180}; //--- s heartbeat age that marks a founding thread dead (3 missed ~60s beats). Only read while WFBE_C_AICOM_ORPHAN_HEAL > 0.
@@ -3173,7 +3243,7 @@ if (isNil "WFBE_C_GDIR_CONTRACTS_FIX") then {WFBE_C_GDIR_CONTRACTS_FIX = 1};
 //--- ACR CONTENT GAP (owner 2026-07-24): opt-in registration of the Czech static-defense
 //--- trio and player gear-menu exposure. Full ACR must first be unlocked on the live host;
 //--- 0 keeps the pre-existing catalog and gear lists unchanged.
-if (isNil "WFBE_C_ACR_CONTENT_GAP") then {WFBE_C_ACR_CONTENT_GAP = 0};
+if (isNil "WFBE_C_ACR_CONTENT_GAP") then {WFBE_C_ACR_CONTENT_GAP = 1}; //--- ARMED 2026-07-28 (owner "lift the ACR shelf" 09:15): activates the proven+priced ACR statics (DSHKM_CZ_EP1/AGS_CZ_EP1/2b14_82mm_CZ_EP1, Core_ACR.sqf) and the CZ805/Scorpion/Phantom small-arms rows (Loadout_US/RU/GUE, Gear_US). Full ACR verified on the live box; isClass guards make every row self-defending. Rollback: 0.
 
 //--- supportgate SECURITY (2026-07-24): Server_HandleSpecial.sqf Paratroops/ParaVehi/ParaAmmo/uav
 //--- call-ins used to spawn on request with NO server-side cost or rate check - only a client-side
@@ -3268,12 +3338,16 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_
 //--- name list is the sole working exclusion there. Derive the list from a slot count so adding HC5 is one
 //--- number rather than a repo-wide grep. Runs before Init_Common.sqf (initJIPCompatible.sqf:140 Call vs
 //--- :329 ExecVM), so WFBE_C_HC_NAMES is always defined before any consumer compiles.
-if (isNil "WFBE_C_HC_SLOTS") then {WFBE_C_HC_SLOTS = 4}; //--- HC-AI-Control-<n> slots the mission ships (PR #1456 added 3 and 4). Bump this alone for HC5.
+if (isNil "WFBE_C_HC_SLOTS") then {WFBE_C_HC_SLOTS = 2}; //--- HC-AI-Control-<n> slots the mission SHIPS in mission.sqm. Back to 2 on owner order 2026-07-30 ("PLS NO MORE HC IN BLUFOR / OPFOR"): the live box runs Start-Wasp-2HC.ps1 (2 HC processes), so slots 3 and 4 only ever sat unfilled in the lobby. The exclusion NAME list below deliberately still covers 4 - see there.
 if (isNil "WFBE_C_HC_NAMES") then {
 	private ["_hcNameList"];
 	_hcNameList = ["HC"]; //--- legacy single-HC profile name, still present in older box configs.
-	if ((typeName WFBE_C_HC_SLOTS) != "SCALAR") then {WFBE_C_HC_SLOTS = 4}; //--- a mistyped override must not throw inside the for below.
-	for "_hcSlot" from 1 to WFBE_C_HC_SLOTS do {_hcNameList set [count _hcNameList, Format ["HC-AI-Control-%1", _hcSlot]]};
+	if ((typeName WFBE_C_HC_SLOTS) != "SCALAR") then {WFBE_C_HC_SLOTS = 2}; //--- a mistyped override must not throw inside the for below.
+	//--- Name list is an EXCLUSION net ("is this body a real human?"), so a SUPERSET is the safe
+	//--- direction: it must keep covering HC-AI-Control-3/4 even now that the mission ships 2 slots,
+	//--- because the box still has WaspHC3/WaspHC4 launchers on disk and a stray one connecting must
+	//--- not be counted as a player (that exact drift is what broke spawn vetoes in #1456).
+	for "_hcSlot" from 1 to (WFBE_C_HC_SLOTS max 4) do {_hcNameList set [count _hcNameList, Format ["HC-AI-Control-%1", _hcSlot]]};
 	WFBE_C_HC_NAMES = _hcNameList;
 };
 
@@ -3289,9 +3363,9 @@ if (isNil "WFBE_C_HC_NAMES") then {
 //--- selection, in the deadspawn holding area, before base placement.
 //--- 0 (default) = OFF, byte-identical to HEAD: the server-side authority is never launched
 //--- (Init_Server.sqf) and the client-side hold is never entered (Init_Client.sqf).
-if (isNil "WFBE_C_HC_LOBBY_LOCK") then {WFBE_C_HC_LOBBY_LOCK = 0}; //--- Master gate: 0=off (byte-identical), 1=on.
-if (isNil "WFBE_C_HC_LOBBY_TIMEOUT") then {WFBE_C_HC_LOBBY_TIMEOUT = 90}; //--- s of mission time: hard fail-open. A permanently missing HC opens the server anyway (logged loudly) instead of locking it out forever. Also the window in which the client-side gate is armed at all, so an ordinary mid-match JIP joiner never sees it. Keep it under the ~120s deadspawn-transit invulnerability budget in Init_Client.sqf.
-if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = if (!isNil "WFBE_C_HC_SLOTS" && {(typeName WFBE_C_HC_SLOTS) == "SCALAR"}) then {WFBE_C_HC_SLOTS} else {4}}; //--- Expected seated-HC count. Defaults to WFBE_C_HC_SLOTS (4 today, defined just above by the HC-name registry) so the repo keeps ONE number for how many headless clients this mission ships - bumping WFBE_C_HC_SLOTS to 5 carries here automatically, which is exactly the hardcoded-list drift that registry was added to end. Falls back to a literal 4 only if that constant is absent or mistyped. 0 disables the lock. -1 opts in to RUNTIME DERIVATION from the mission's own playable CIV slot count instead.
+if (isNil "WFBE_C_HC_LOBBY_LOCK") then {WFBE_C_HC_LOBBY_LOCK = 1}; //--- ARMED on owner order 2026-07-30 ("flip the lobby lock on"). Master gate: 0=off (byte-identical), 1=on. Joining players are held in the deadspawn pen, invulnerable, until both HCs have registered (or WFBE_C_HC_LOBBY_TIMEOUT expires, which fails OPEN and logs loudly). Rollback = set this back to 0 and rebuild; watch for HCLOBBY|v1|OPEN|reason=timeout in the server RPT, which means the hold bought nothing.
+if (isNil "WFBE_C_HC_LOBBY_TIMEOUT") then {WFBE_C_HC_LOBBY_TIMEOUT = 240}; //--- s of mission time: hard fail-open. A permanently missing HC opens the server anyway (logged loudly) instead of locking it out forever. Also the window in which the client-side gate is armed at all, so an ordinary mid-match JIP joiner never sees it. Keep it under the ~120s deadspawn-transit invulnerability budget in Init_Client.sqf. RAISED 90 -> 150 on 2026-07-30 after an adversarial review of the arming: this clock starts when Init_Server.sqf ExecVMs the lock (Init_Server.sqf:198), which is BEFORE the waitUntil {commonInitComplete && townInit} at :225 and therefore before MATCH|v1|START| is emitted at :246 - the very signal Start-Wasp-2HC.ps1 waits on before it launches either HC. So the timeout clock has a head start over the whole HC launch sequence and 90 could expire before HC2 registers, failing OPEN on every cold start and making the lock pointless. Measured on the live box 2026-07-30 (m0730g): HC-AI-Control-1 registered at mission time ~3s and HC-AI-Control-2 at ~57s, so 150 carries ~2.6x margin over the observed worst case. Exceeding the ~120s deadspawn-transit invulnerability budget is safe HERE specifically because the client-side hold re-asserts allowDamage false on every tick of the hold and re-arms a fresh 120s watchdog on release (Init_Client.sqf, the HC-lobby-lock block) - do not copy this number to any other hold that lacks those two guarantees. RAISED AGAIN 150 -> 240 on 2026-07-30 to UNBLOCK the HC launch-gate fix: HC1 still takes a WEST player slot because it connects while the mission is still loading (engineSide=WEST in HCSIDE|v1|preseat, vs HC2 which connects ~10s before mission-live and gets CIV). The cure is to make Start-Wasp-2HC.ps1 actually wait for MATCH|v1|START before launching either HC - but then the HCs finish loading AFTER the mission clock starts and register around mission time 140-200s instead of ~4s, which a 150s timeout would fail open on. 240 covers that with margin and caps the worst-case hold at 4 minutes. Safe to ship BEFORE the launcher change: while the HCs still register at ~4s the timeout is only an unused ceiling.
+if (isNil "WFBE_C_HC_LOBBY_EXPECTED") then {WFBE_C_HC_LOBBY_EXPECTED = if (!isNil "WFBE_C_HC_SLOTS" && {(typeName WFBE_C_HC_SLOTS) == "SCALAR"}) then {WFBE_C_HC_SLOTS} else {2}}; //--- Expected seated-HC count. Defaults to WFBE_C_HC_SLOTS (2 today - back to 2 on owner order 2026-07-30, defined just above by the HC-name registry) so the repo keeps ONE number for how many headless clients this mission ships - bumping WFBE_C_HC_SLOTS to 5 carries here automatically, which is exactly the hardcoded-list drift that registry was added to end. Falls back to a literal 4 only if that constant is absent or mistyped. 0 disables the lock. -1 opts in to RUNTIME DERIVATION from the mission's own playable CIV slot count instead.
 
 //--- AICOM AIR BOMBS (owner request 2026-07-26, "make sure AI commander aircraft can also use FABs"): the
 //--- EASA-on-AI kit table in Common_RunCommanderTeam.sqf (~L462-513) REPLACES rather than extends the A10 and
@@ -3332,9 +3406,118 @@ if (isNil "WFBE_C_SPECTATOR_UIDS") then {WFBE_C_SPECTATOR_UIDS = ["7656119804682
 if (isNil "WFBE_C_SPECTATOR_SPEED") then {WFBE_C_SPECTATOR_SPEED = 15};
 if (isNil "WFBE_C_SPECTATOR_BOOST") then {WFBE_C_SPECTATOR_BOOST = 4};
 if (isNil "WFBE_C_SPECTATOR_SLOW") then {WFBE_C_SPECTATOR_SLOW = 0.25};
-if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 300};
+if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 25};	//--- owner playtest 2026-07-30: 300 deg per full UI-width was unusable; 80 is a broadcast-friendly base. PgUp/PgDn adjust live in-session.
 if (isNil "WFBE_C_SPECTATOR_FOV_MIN") then {WFBE_C_SPECTATOR_FOV_MIN = 0.05};
 if (isNil "WFBE_C_SPECTATOR_FOV_MAX") then {WFBE_C_SPECTATOR_FOV_MAX = 1.2};
+
+//--- Spectator v3 director: explicit opt-in. All director code paths read this master gate.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR") then {WFBE_C_SPECTATOR_DIRECTOR = 1}; //--- ARMED on owner order 2026-07-30 ("fold v3 in now"), after an adversarial review found and a fix landed for the blocker that made this feature silently do nothing: the poll thread was started after the movement loop had already exited. Blast radius is one client - spectator entry is gated to WFBE_C_SPECTATOR_UIDS - so this only ever runs for an allowlisted caster. Rollback = set to 0 and rebuild.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_DWELL = 20};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP") then {WFBE_C_SPECTATOR_DIRECTOR_DWELL_STEP = 5};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_DWELL_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_DWELL_MIN = 5};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_DWELL_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_DWELL_MAX = 120};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ORBIT_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_ORBIT_RADIUS = 40};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ORBIT_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_ORBIT_HEIGHT = 25};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ORBIT_DEG_PER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_ORBIT_DEG_PER_SEC = 6};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TOWN_POLL_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_TOWN_POLL_SEC = 8};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TOWN_CONTEST_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_TOWN_CONTEST_RADIUS = 200};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TEAM_CONTACT_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_TEAM_CONTACT_RADIUS = 150};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS = 100};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_HQ_CONTACT_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_HQ_CONTACT_RADIUS = 250};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_REVEAL_ENEMY_HQ") then {WFBE_C_SPECTATOR_DIRECTOR_REVEAL_ENEMY_HQ = 0};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_COOLDOWN_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_COOLDOWN_SEC = 45};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_CONTEST") then {WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_CONTEST = 1000}; //--- 2026-07-30: contact must dominate town size/trend.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_TREND") then {WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_TREND = 10}; //--- 2026-07-30: retain a small recency signal under contact-first scoring.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_SIZE") then {WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_SIZE = 2};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_W_TEAM_CONTACT") then {WFBE_C_SPECTATOR_DIRECTOR_W_TEAM_CONTACT = 1000}; //--- 2026-07-30: one live contact outranks team size by an order of magnitude.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_W_TEAM_SIZE") then {WFBE_C_SPECTATOR_DIRECTOR_W_TEAM_SIZE = 2}; //--- 2026-07-30: size is a tie-breaker behind contact.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_CONTACT") then {WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_CONTACT = 1000}; //--- 2026-07-30: one live contact outranks player base score.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_BASE") then {WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_BASE = 10}; //--- 2026-07-30: base remains a small idle tie-breaker.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_W_HQ_BASE") then {WFBE_C_SPECTATOR_DIRECTOR_W_HQ_BASE = 15}; //--- 2026-07-30: base remains below any active contact.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_W_HQ_UNDER_ATTACK") then {WFBE_C_SPECTATOR_DIRECTOR_W_HQ_UNDER_ATTACK = 1000}; //--- 2026-07-30: one live contact outranks HQ base score.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY") then {WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY = 250}; //--- 2026-07-30: idle targets lose unless no contact target exists.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_SMOOTHING") then {WFBE_C_SPECTATOR_DIRECTOR_SMOOTHING = 5}; //--- 2026-07-30: director camera convergence rate, per second.
+
+//--- Spectator v3.2 shot grammar, engagement framing, and director pacing.
+//--- director-auto seconds between friendly HQ base check-ins.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_BASE_CHECK_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_BASE_CHECK_SEC = 420};
+//--- director-auto seconds allowed without a WIDE establish shot.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ESTABLISH_FLOOR_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_ESTABLISH_FLOOR_SEC = 120};
+//--- absolute per-shot dwell floor in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL = 1.5};
+//--- candidate score margin required over the current target.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_HYSTERESIS_MARGIN") then {WFBE_C_SPECTATOR_DIRECTOR_HYSTERESIS_MARGIN = 0.2};
+//--- score margin required to repeat the current target.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_REPEAT_SCORE_MARGIN") then {WFBE_C_SPECTATOR_DIRECTOR_REPEAT_SCORE_MARGIN = 0.5};
+//--- continuous aim and orbit ceiling in degrees per second.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC = 8};
+//--- aim delta in degrees that becomes a hard cut.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_CUT_DEG") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_CUT_DEG = 35};
+//--- maximum in-shot FOV change per second.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE") then {WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE = 0.05};
+//--- seconds manual wheel zoom suppresses director FOV control.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC = 10};
+//--- fallback getDir engagement look-ahead distance in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ENGAGEMENT_AIM_DISTANCE") then {WFBE_C_SPECTATOR_DIRECTOR_ENGAGEMENT_AIM_DISTANCE = 150};
+//--- WIDE and BASE lower FOV bound.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MIN = 0.8};
+//--- WIDE and BASE upper FOV bound.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MAX = 0.95};
+//--- WIDE lower dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_MIN_DWELL = 4};
+//--- WIDE upper dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_MAX_DWELL = 7};
+//--- BASE lower dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_BASE_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_BASE_MIN_DWELL = 6};
+//--- BASE upper dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_BASE_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_BASE_MAX_DWELL = 9};
+//--- MEDIUM lower FOV bound.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN = 0.5};
+//--- MEDIUM upper FOV bound.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX = 0.65};
+//--- MEDIUM lower dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL = 3};
+//--- MEDIUM upper dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL = 5};
+//--- TIGHT lower FOV bound.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN = 0.35};
+//--- TIGHT upper FOV bound.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX = 0.5};
+//--- TIGHT lower dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL = 1.5};
+//--- TIGHT upper dwell bound in seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MAX_DWELL = 3};
+//--- WIDE and BASE camera standoff radius in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS = 180};
+//--- WIDE and BASE camera height above target in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT = 110};
+//--- WIDE and BASE orbit rate in degrees per second.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_ORBIT_DEG_PER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_ORBIT_DEG_PER_SEC = 4};
+//--- MEDIUM camera standoff radius in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS = 18};
+//--- MEDIUM camera height above target in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT = 12};
+//--- TIGHT camera standoff radius in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS = 8};
+//--- TIGHT camera height above target in metres.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT = 4};
+//--- seconds of velocity feed-forward for moving director and manual-follow subjects.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_LEAD_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_LEAD_SEC = 0.4};
+//--- multiplier for position convergence when subject speed exceeds 8 m/s.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FAST_GAIN_MULT") then {WFBE_C_SPECTATOR_DIRECTOR_FAST_GAIN_MULT = 2.5};
+//--- standoff multiplier for non-Man director subjects.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_VEH_STANDOFF_MULT") then {WFBE_C_SPECTATOR_DIRECTOR_VEH_STANDOFF_MULT = 2.5};
+//--- minimum FOV for non-Air vehicle director subjects.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_VEH_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_VEH_FOV_MIN = 0.55};
+//--- standoff multiplier for Air director subjects.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_AIR_STANDOFF_MULT") then {WFBE_C_SPECTATOR_DIRECTOR_AIR_STANDOFF_MULT = 4.0};
+//--- minimum FOV for Air director subjects.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN = 0.45};
+
+//--- Spectator broadcast HUD: opt-in styled title overlay + dialog map fallback.
+//--- 0 (default) leaves the existing 12455 cutText spectator card path unchanged.
+//--- Layer 12456 is reserved for this title; 12450-12452/12454/12455/12461 remain occupied.
+if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 0};
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

@@ -34,6 +34,17 @@ _camp_gear_enabled = if (_gear_mode in [1,2,3]) then {true} else {false};
 		};
 		if !(isNull _nObject) then {_add = true};
 	};
+	//--- fable/gear-charge-fix (gear audit 2026-07-28): PARITY with the action grant. The FSM
+	//--- (updateavailableactions.fsm, Ray 3B / GR-2026-07-03a) opens the gear menu for base-less GUER
+	//--- near a friendly depot/camp within WFBE_C_UNITS_PURCHASE_GEAR_RANGE (150m), but this list
+	//--- builder had no such branch - TOWNS_GEAR=1 limits the camp path to 5m/45m ranges, so the
+	//--- menu opened with the player missing from (or shadowed out of) the target list and squad AI
+	//--- never listed. Same gates and ranges as the FSM branch.
+	if (!_add && {sideJoined == resistance} && {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0} && {(missionNamespace getVariable ["WFBE_C_GUER_GEAR_PROXIMITY", 1]) > 0}) then {
+		_nGearSrc = [vehicle _unit, missionNamespace getVariable "WFBE_C_UNITS_PURCHASE_GEAR_RANGE"] Call WFBE_CL_FNC_GetClosestDepot;
+		if (isNull _nGearSrc) then {_nGearSrc = [vehicle _unit, missionNamespace getVariable "WFBE_C_UNITS_PURCHASE_GEAR_RANGE"] Call WFBE_CL_FNC_GetClosestCamp};
+		if !(isNull _nGearSrc) then {_add = true};
+	};
 	if (_add && local _unit) then {[_units, _unit] Call WFBE_CO_FNC_ArrayPush};
 } forEach _temp;
 
@@ -42,7 +53,11 @@ if !(WF_A2_Vanilla) then {
 };
 
 _temp = _units + _vehicles;
-if (count _temp == 0) then {_temp = [player]};
+//--- fable/gear-charge-fix: the old fallback only fired when BOTH lists were empty - any local
+//--- vehicle in gear range shadowed the player entry out of the dropdown entirely (menu open,
+//--- self un-gearable). The dialog only opens through the FSM's player-centric gearInRange
+//--- checks, so when this list is being built the player IS gear-eligible - always list him.
+if !(player in _temp) then {_temp = [player] + _temp};
 for '_i' from 0 to count(_temp)-1 do {
 	_unit = _temp select _i;
 	_label = if (_unit isKindOf "Man") then {Format["[%1] %2",(_unit) Call WFBE_CL_FNC_GetAIID, name _unit]} else {getText(configFile >> "CfgVehicles" >> typeOf _unit >> "displayName")};

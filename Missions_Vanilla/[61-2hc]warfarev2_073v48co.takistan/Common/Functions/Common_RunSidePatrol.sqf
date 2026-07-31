@@ -21,8 +21,7 @@
 
 Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units","_vehicles",
          "_team","_ldr","_target","_alive","_candidates",
-         "_upgLvl","_truckCls","_truckVeh","_truckDriver","_truckList",
-         "_paidThisVisit","_convoyPay","_sweepDone",
+         "_upgLvl","_paidThisVisit","_sweepDone",
          "_townCamps","_campObj","_sweepStart","_allOurs","_ups",
          "_campRange","_liveUnits","_inVehicle","_dismounted","_veh",
          "_driver","_cargo","_u","_settleTimeout","_lastLdrPos","_stuckTicks","_pLdr","_pPos","_pVeh","_pNear","_pRds","_pNode",
@@ -111,32 +110,12 @@ if (isServer) then {
 
 ["INFORMATION", Format["Common_RunSidePatrol.sqf: [%1] patrol spawned at [%2] (%3 units, %4 vehicles).", _side, _homeTown getVariable "name", count _units, count _vehicles]] Call WFBE_CO_FNC_LogContent;
 
-//--- Task 41: check upgrade level; at level 4 spawn a convoy supply truck joined to the group.
-_truckVeh  = objNull;
-_convoyPay = if (isNil "WFBE_C_PATROL_CONVOY_PAY") then {750} else {WFBE_C_PATROL_CONVOY_PAY};
+//--- fable/patrol-reimagine (owner 2026-07-28): the L4 convoy supply truck + its per-stop pay are
+//--- REMOVED with the patrol money rewards - the truck existed only to feed the payout and would
+//--- be dead weight in the group without it. The upgrade-level read STAYS: it now gates the T3/T4
+//--- OFF-MAP AIR PASS rolled at the town-arrival hook below.
 _ups       = (_side) Call WFBE_CO_FNC_GetSideUpgrades;
 _upgLvl    = if (count _ups > WFBE_UP_PATROLS) then {_ups select WFBE_UP_PATROLS} else {0};
-
-if (_upgLvl >= 4) then {
-	_truckList = missionNamespace getVariable Format["WFBE_%1SUPPLYTRUCKS", str _side];
-	if (!isNil "_truckList" && {count _truckList > 0}) then {
-		//--- Prefer the T810 as the convoy truck when ACR is present; fall back to the
-		//--- side's first supply truck so it still works without the ACR DLC.
-		_truckCls = if (isClass (configFile >> "CfgVehicles" >> "T810_CZ_EP1")) then {"T810_CZ_EP1"} else {_truckList select 0};
-		_truckVeh    = _truckCls createVehicle _position;
-		_truckVeh    setPos _position;
-		//--- Fix 2026-06-11: the driver was created with the TRUCK classname (a vehicle
-		//--- class as a soldier = no driver, truck never moves, convoy pay never fires).
-		//--- Use the side's crew soldier class instead (same source HandleDefense uses).
-		//--- Fix 2026-06-19: the OFP/A1 string-form `_class createUnit [..]` RETURNS Nothing,
-		//--- so _truckDriver was undefined and moveInDriver did nothing (truck spawned
-		//--- driverless, never moved). Use the returning CreateUnit helper (same source
-		//--- Server_HandleDefense uses) and guard moveInDriver on a non-null result.
-		_truckDriver = [(missionNamespace getVariable Format["WFBE_%1SOLDIER", _side]), _team, _position, _sideID] Call WFBE_CO_FNC_CreateUnit;
-		if (!isNull _truckDriver) then {_truckDriver moveInDriver _truckVeh};
-		["INFORMATION", Format["Common_RunSidePatrol.sqf: [%1] convoy truck [%2] spawned for L4 patrol.", _side, _truckCls]] Call WFBE_CO_FNC_LogContent;
-	};
-};
 
 //--- Frontline gravitation: always head for the nearest town we do NOT own; when it
 //--- flips to us (we helped cap it or a teammate did), pick the next one. If we own
@@ -195,7 +174,7 @@ while {!WFBE_GameOver && _alive} do {
 			};
 		} else {
 		if (isNull _target) then {
-			_paidThisVisit = false; //--- new objective: reset convoy-pay guard
+			_paidThisVisit = false; //--- new objective: reset the once-per-visit hook guard (air pass since fable/patrol-reimagine)
 			_perfPickStart = diag_tickTime;
 			_perfNavalSkipped = 0;
 			_perfAvoided = 0;
@@ -400,14 +379,20 @@ while {!WFBE_GameOver && _alive} do {
 					};
 				};
 
-				//--- Task 41: convoy payout on arrival (at most once per town visit).
-				if (!_paidThisVisit && {!isNull _truckVeh} && {alive _truckVeh}
-				    && {(leader _team) distance _truckVeh < 150}) then {
+				//--- fable/patrol-reimagine (owner 2026-07-28): T3/T4 OFF-MAP AIR PASS - replaces the
+				//--- removed convoy payout at the same arrival point. Once per town visit (_paidThisVisit,
+				//--- reset on each new objective), patrol upgrade L3+ only. GUER never fires it by
+				//--- construction: its forced patrol level never advances the real wfbe_upgrades array,
+				//--- so _upgLvl stays 0 there. Routed through HandleSpecial like the other patrol events
+				//--- so it works whether this script runs on the server or an HC; the SERVER case owns
+				//--- the chance roll + per-side cooldown + spawn (Server_PatrolAirPass.sqf).
+				if (!_paidThisVisit && {_upgLvl >= 3}
+				    && {(missionNamespace getVariable ["WFBE_C_PATROL_AIR_TIER", 0]) > 0}) then {
 					_paidThisVisit = true;
 					if (isServer) then {
-						["sidepatrol-convoy-stop", _sideID, _target] Call HandleSpecial;
+						["sidepatrol-airpass", _sideID, _target, _upgLvl] Call HandleSpecial;
 					} else {
-						["RequestSpecial", ["sidepatrol-convoy-stop", _sideID, _target]] Call WFBE_CO_FNC_SendToServer;
+						["RequestSpecial", ["sidepatrol-airpass", _sideID, _target, _upgLvl]] Call WFBE_CO_FNC_SendToServer;
 					};
 				};
 

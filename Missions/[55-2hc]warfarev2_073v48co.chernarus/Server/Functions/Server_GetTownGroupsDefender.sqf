@@ -26,51 +26,51 @@ switch (_town getVariable "wfbe_town_type") do { // _units = [[group type, force
 		_groups_max = 3;
 	};
 	case "SmallTown1": {
-		_units = [["Squad", 1, 0],["Team", 1, 0],["Squad_Advanced", 1, 0], ["Team", 1, 0],["Team_AT", 1, 0],["AA_Light", 1, 1],["Motorized", 1, 1],["Mechanized", 1, 1]];
+		_units = [["Squad", 1, 0],["Team", 1, 0],["Squad_Advanced", 1, 0], ["Team", 1, 0],["Team_AT", 1, 0],["AA_Light", 1, 1],["Motorized", 1, 1],["Mechanized", 1, 1],["Technical_Pair", 1, 1],["MANPADS_Screen", 1, 1],["Roadblock", 1, 1],["Sleeper_Cell", 1, 1]];
 		_percentage_inf = 80;
 		_groups_max = 5;
 	};
 	case "SmallTown2": {
-		_units = [["Squad_Advanced", 1, 0],["Team", 1, 0],["Team_MG", 1, 0],["Team_AT", 2, 0],["Motorized", 1, 1],["AA_Light", 1, 1],["Armored_Light", 1, 1]];
+		_units = [["Squad_Advanced", 1, 0],["Team", 1, 0],["Team_MG", 1, 0],["Team_AT", 2, 0],["Motorized", 1, 1],["AA_Light", 1, 1],["Armored_Light", 1, 1],["Technical_Pair", 1, 1],["MANPADS_Screen", 1, 1],["Roadblock", 1, 1],["Sleeper_Cell", 1, 1]];
 		_percentage_inf = 80;
 		_groups_max = 5;
 	};
 	case "MediumTown1": {
-		_units = [["Team", 3, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Team_AT", 1, 0],["Motorized", 1, 1],["Mechanized", 1, 1],["AA_Light", 1, 1],["Mechanized_Heavy", 2, 1],["Armored_Light", 1, 1]];
+		_units = [["Team", 3, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Team_AT", 1, 0],["Motorized", 1, 1],["Mechanized", 1, 1],["AA_Light", 1, 1],["Mechanized_Heavy", 2, 1],["Armored_Light", 1, 1],["Technical_Pair", 1, 1],["AT_Ambush", 1, 1],["MANPADS_Screen", 1, 1],["Mechanized_QRF", 1, 1],["Roadblock", 1, 1],["Sleeper_Cell", 1, 1]];
 		_percentage_inf = 80;
 		_groups_max = 6;
 	};
 	case "MediumTown2": {
-		_units = [["Team", 3, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Team_AT", 1, 0],["Motorized", 1, 1],["Mechanized", 2, 1],["AA_Light", 1, 1],["Mechanized_Heavy", 1, 1],["Armored_Light", 1, 1]];
+		_units = [["Team", 3, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Team_AT", 1, 0],["Motorized", 1, 1],["Mechanized", 2, 1],["AA_Light", 1, 1],["Mechanized_Heavy", 1, 1],["Armored_Light", 1, 1],["Technical_Pair", 1, 1],["AT_Ambush", 1, 1],["MANPADS_Screen", 1, 1],["Mechanized_QRF", 1, 1],["Roadblock", 1, 1],["Sleeper_Cell", 1, 1]];
 		_percentage_inf = 80;
 		_groups_max = 6;
 	};
 	case "LargeTown1": {
 		//--- cmdcon35 (role-diversity): shifted 1 weight off bland Team (2->1) onto specialist Team_AT (1->2).
 		//--- Net infantry weight is unchanged, so _groups_max stays 7; the LARGE garrison just skews toward AT.
-		_units = [["Squad", 1, 0],["Team", 1, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 1, 0],["AA_Light", 2, 1],["Team_AT", 2, 0],["Mechanized_Heavy", 2, 1],["Armored_Light", 2, 1],["Armored_Heavy", 1, 1]];
+		_units = [["Squad", 1, 0],["Team", 1, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 1, 0],["AA_Light", 2, 1],["Team_AT", 2, 0],["Mechanized_Heavy", 2, 1],["Armored_Light", 2, 1],["Armored_Heavy", 1, 1],["AT_Ambush", 1, 1],["MANPADS_Screen", 1, 1],["Mechanized_QRF", 1, 1],["Armored_Captured", 1, 1],["Roadblock", 1, 1],["Sleeper_Cell", 1, 1]];
 		_percentage_inf = 75;
 		_groups_max = 7;
 	};
 	case "LargeTown2": {
-		_units = [["Squad_Advanced", 1, 0],["Team", 2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 1, 0],["AA_Light", 2, 1],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 1, 1],["Armored_Heavy", 2, 1]];
+		_units = [["Squad_Advanced", 1, 0],["Team", 2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 1, 0],["AA_Light", 2, 1],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 1, 1],["Armored_Heavy", 2, 1],["AT_Ambush", 1, 1],["MANPADS_Screen", 1, 1],["Mechanized_QRF", 1, 1],["Armored_Captured", 1, 1],["Roadblock", 1, 1],["Sleeper_Cell", 1, 1]];
 		_percentage_inf = 75;
 		_groups_max = 7;
 	};
 	case "HugeTown1": {
-		_units = [["Squad", 3, 0],["Team", 2, 0],["Squad_Advanced",2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 1, 0],["AA_Heavy", 2, 1],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 2, 1],["Armored_Heavy", 2, 1]];
+		_units = [["Squad", 3, 0],["Team", 2, 0],["Squad_Advanced",2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 1, 0],["AA_Heavy", 2, 1],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 2, 1],["Armored_Heavy", 2, 1],["AT_Ambush", 1, 1],["MANPADS_Screen", 1, 1],["Mechanized_QRF", 1, 1],["Armored_Captured", 1, 1],["Roadblock", 1, 1],["Sleeper_Cell", 1, 1]];
 		_percentage_inf = 75;
 		_groups_max = 8;
 	};
 	case "HugeTown2": {
 		//--- cmdcon35 (role-diversity): shifted 1 weight off bland Team (3->2) onto the elite Squad_Contractor (1->2).
 		//--- Net infantry weight is unchanged, so _groups_max stays 8; the HUGE garrison just skews toward the PMC squad.
-		_units = [["Squad", 2, 0],["Team", 2, 0],["Squad_Advanced",2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 2, 0],["AA_Heavy", 2, 1],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 2, 1],["Armored_Heavy", 2, 1]];
+		_units = [["Squad", 2, 0],["Team", 2, 0],["Squad_Advanced",2, 0],["Team_Sniper", 1, 0],["Team_MG", 1, 0],["Squad_Contractor", 2, 0],["AA_Heavy", 2, 1],["Team_AT", 2, 0],["Mechanized_Heavy", 1, 1],["Armored_Light", 2, 1],["Armored_Heavy", 2, 1],["AT_Ambush", 1, 1],["MANPADS_Screen", 1, 1],["Mechanized_QRF", 1, 1],["Armored_Captured", 1, 1],["Roadblock", 1, 1],["Sleeper_Cell", 1, 1]];
 		_percentage_inf = 75;
 		_groups_max = 8;
 	};
 	case "PMCAirfield": { //--- Airfield capture point: mid-game defended objective with PMC garrison
-		_units = [["Squad", 1, 0],["Team", 1, 0],["Team_AT", 1, 0],["Team_Sniper", 1, 0],["Motorized", 2, 1],["AA_Light", 1, 1]];
+		_units = [["Squad", 1, 0],["Team", 1, 0],["Team_AT", 1, 0],["Team_Sniper", 1, 0],["Motorized", 2, 1],["AA_Light", 1, 1],["MANPADS_Screen", 1, 1],["Roadblock", 1, 1],["Sleeper_Cell", 1, 1]];
 		_percentage_inf = 70;
 		_groups_max = 6;
 	};
@@ -109,6 +109,25 @@ _garrScale = missionNamespace getVariable ["WFBE_C_TOWN_GARRISON_SCALE", 1];
 if (_garrScale != 1) then {
 	_groups_max = round (_groups_max * _garrScale);
 	if (_groups_max < 1) then {_groups_max = 1};
+};
+
+//--- fable/garrison-sv-scale (backlog #14, 2026-07-28): _sv was read at the top of this file and never
+//--- consumed - garrison size ignored how SUPPLIED the town actually is. Armed (flag > 0), a town whose
+//--- CURRENT supplyValue exceeds its startingSupplyValue fields a proportionally larger garrison,
+//--- capped at +MAXBONUS. ADDITIVE-ONLY by construction (the max 0 clamp): a drained town is never
+//--- reduced below its normal count - no-GUER-nerf constraint holds. Carriers (SV 80 vs start 50)
+//--- get properly beefy decks. Flag default 0 = byte-identical to HEAD.
+private ["_svScale","_svRef","_svBonus"];
+_svScale = missionNamespace getVariable ["WFBE_C_GARRISON_SV_SCALE", 0];
+if (_svScale > 0 && {_sv > 0}) then {
+	_svRef = _town getVariable ["startingSupplyValue", 30];
+	if (_svRef < 1) then {_svRef = 30};
+	_svBonus = ((_sv - _svRef) / _svRef) max 0;
+	_svBonus = (_svBonus * _svScale) min (missionNamespace getVariable ["WFBE_C_GARRISON_SV_MAXBONUS", 0.5]);
+	if (_svBonus > 0) then {
+		_groups_max = round (_groups_max * (1 + _svBonus));
+		diag_log Format ["GARRSV|v1|town=%1|sv=%2|ref=%3|bonus=%4|groups=%5", _town getVariable ["name","?"], _sv, _svRef, _svBonus, _groups_max];
+	};
 };
 
 //--- Tier-1 (flag WFBE_C_GDIR_GARRISON_GAIN, default 0): a GUER town the Director judges REINFORCED
@@ -231,9 +250,7 @@ _contentsKind = [];
 _fi = 0;
 {
 	_get = missionNamespace getVariable Format ["WFBE_%1_GROUPS_%2", _side, _x];
-	//--- TEMPLATE INTEGRITY (g1606): only register non-empty resolved rosters. Empty GROUP
-	//--- tables or empty variants previously still entered _contents (isNil is false for []),
-	//--- so town AI pre-created group shells for zero-asset templates.
+	//--- TEMPLATE INTEGRITY (g1606): do not register empty GROUP tables or empty variants.
 	if !(isNil '_get') then {
 		if ((typeName _get == "ARRAY") && {(count _get) > 0}) then {
 			private ["_pick"];

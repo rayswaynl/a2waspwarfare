@@ -151,9 +151,22 @@ while {!WFBE_GameOver} do {
 	_gateActive = false;
 	_gateReason = "";
 	{
-		if ((_x getVariable ["wfbe_is_coastal", false]) && {_x getVariable ["wfbe_active", false]}) exitWith {
+		private ["_gTown"];
+		_gTown = _x;
+		//--- fable/usv-player-gate (owner 2026-07-28: "USVs also seem active the entire time... Waste
+		//--- of ai"): town activation is mostly AI-driven and on this coastline some coastal town is
+		//--- active nearly all match - branch (a) alone held the flotilla (6 AI + 6 objects) up
+		//--- permanently. The flotilla is coastal THEATER: without a player audience it is pure sim
+		//--- load. When armed, this branch additionally requires a live non-HC player near the active
+		//--- coastal town (same playableUnits + HC-name idiom as the carrier branch below, which
+		//--- already required a player). 0 = legacy activation-only gate. _gTown is captured BEFORE
+		//--- the count - count {} rebinds _x (A2 trap; the carrier branch below logs a post-count _x).
+		if ((_gTown getVariable ["wfbe_is_coastal", false])
+			&& {_gTown getVariable ["wfbe_active", false]}
+			&& {((missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_PLAYER_GATE", 0]) <= 0)
+				|| {({isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _gTown) < (missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_PLAYER_RADIUS", 1500])}} count playableUnits) > 0}}) exitWith {
 			_gateActive = true;
-			_gateReason = format ["coastal_town:%1", _x getVariable ["name","?"]];
+			_gateReason = format ["coastal_town:%1", _gTown getVariable ["name","?"]];
 		};
 	} forEach towns;
 

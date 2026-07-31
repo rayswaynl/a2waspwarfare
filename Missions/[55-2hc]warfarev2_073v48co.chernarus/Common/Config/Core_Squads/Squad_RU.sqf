@@ -59,24 +59,6 @@ _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
 _aiTeamTypes = _aiTeamTypes + [0];
 _aiTeamUpgrades = _aiTeamUpgrades + [[1,0,0,0]];
 
-//--- (4) Motorized - Kamaz Rifle Squad
-_u		= ["Kamaz"];
-_u = _u + ["RU_Soldier_SL"];
-_u = _u + ["RU_Soldier_TL"];
-_u = _u + ["RU_Soldier_AR"];
-_u = _u + ["RU_Soldier_MG"];
-_u = _u + ["RU_Soldier_GL"];
-_u = _u + ["RU_Soldier_LAT"];
-_u = _u + ["RU_Soldier_AT"];
-_u = _u + ["RU_Soldier_Medic"];
-_u = _u + ["RU_Soldier"];
-_u = _u + ["RU_Soldier2"];
-_aiTeamTemplateName = _aiTeamTemplateName + ["Motorized - Kamaz Rifle Squad"];
-_aiTeamTemplates = _aiTeamTemplates + [_u];
-_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,true,false,false]];
-_aiTeamTypes = _aiTeamTypes + [1];
-_aiTeamUpgrades = _aiTeamUpgrades + [[0,1,0,0]];
-
 //--- (5) Motorized - Vodnik Patrol
 _u		= ["GAZ_Vodnik_HMG"];
 _u = _u + ["RU_Soldier_TL"];
@@ -114,12 +96,9 @@ _u		= ["BMP2_INS"];
 _u = _u + ["RU_Soldier_SL"];
 _u = _u + ["RU_Soldier_AR"];
 _u = _u + ["RU_Soldier_MG"];
-_u = _u + ["RU_Soldier_GL"];
 _u = _u + ["RU_Soldier_LAT"];
 _u = _u + ["RU_Soldier_AT"];
 _u = _u + ["RU_Soldier_Medic"];
-_u = _u + ["RU_Soldier_AR"];
-_u = _u + ["RU_Soldier"];
 _aiTeamTemplateName = _aiTeamTemplateName + ["Mechanized - BMP-2 Rifle Squad"];
 _aiTeamTemplates = _aiTeamTemplates + [_u];
 _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
@@ -539,6 +518,132 @@ if (missionNamespace getVariable ["WFBE_C_AICOM_AIR_COUNCIL_PACK", 0] > 0) then 
 	_aiTeamTemplateName = _aiTeamTemplateName + ["Air - An-2 Paratroop Lift"];
 	_aiTeamTemplates = _aiTeamTemplates + [_u]; _aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,false,true]]; _aiTeamTypes = _aiTeamTypes + [3]; _aiTeamUpgrades = _aiTeamUpgrades + [[0,0,0,1]];
 };
+
+//--- ===== C8 ROSTER EXPANSION (owner-approved 2026-07-27) =====
+//--- EAST variety pass per OWNER-RULINGS.md R9 + c8-unit-rosters/r2/r2-east-rosters.md.
+//--- Kamaz Rifle Squad deleted above (unarmed hull + 0 seats, R6b/R7 anti-pattern);
+//--- BMP-2 Rifle Squad trimmed 9->6 dismounts above. 10 new templates below: 8 from the
+//--- approved design paper (B1,L1-L3,H1-H4) + 2 implementer-verified extras (E1,E2) that
+//--- fill genuinely unused Core_RU.sqf classnames / an empty BARRACKS-2 tier without
+//--- reskinning any existing or paper template. All classnames verified against
+//--- Common\Config\Core\Core_RU.sqf (RU-native) or Core_INS.sqf (BMP2_INS, already
+//--- live in 4 existing templates above). No MVD/Spetsnaz classnames used.
+
+//--- (B1) Infantry - Urban Assault Squad (urban assault / camp-clearing, BARRACKS-1)
+_u		= ["RU_Soldier_SL"];
+_u = _u + ["RU_Soldier_AR"];
+_u = _u + ["RU_Soldier_GL"];
+_u = _u + ["RU_Soldier_GL"];
+_u = _u + ["RU_Soldier_Medic"];
+_u = _u + ["RU_Soldier"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Infantry - Urban Assault Squad"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
+_aiTeamTypes = _aiTeamTypes + [0];
+_aiTeamUpgrades = _aiTeamUpgrades + [[1,0,0,0]];
+
+//--- (L1) Motorized - AGS Recon Screen (recon/screen, LIGHT-1 - the only armed hull at this tier)
+_u		= ["UAZ_AGS30_RU"];
+_u = _u + ["RU_Soldier_Spotter"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Motorized - AGS Recon Screen"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,true,false,false]];
+_aiTeamTypes = _aiTeamTypes + [1];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,1,0,0]];
+
+//--- (L2) Motorized - AGS Interdiction Section (harass/interdiction, LIGHT-1, 2x AGS jeep)
+_u		= ["UAZ_AGS30_RU"];
+_u = _u + ["UAZ_AGS30_RU"];
+_u = _u + ["RU_Soldier_TL"];
+_u = _u + ["RU_Soldier_LAT"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Motorized - AGS Interdiction Section"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,true,false,false]];
+_aiTeamTypes = _aiTeamTypes + [1];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,1,0,0]];
+
+//--- (L3) Motorized - BTR-90 Quick Reaction Force (mobile reserve, LIGHT-3, lean/fast)
+_u		= ["BTR90"];
+_u = _u + ["RU_Soldier_TL"];
+_u = _u + ["RU_Soldier_MG"];
+_u = _u + ["RU_Soldier_Medic"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Motorized - BTR-90 Quick Reaction Force"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,true,false,false]];
+_aiTeamTypes = _aiTeamTypes + [1];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,3,0,0]];
+
+//--- (H1) Mechanized - BMP-2 Recon Screen (recon/screen, HEAVY-1)
+_u		= ["BMP2_INS"];
+_u = _u + ["RU_Soldier_TL"];
+_u = _u + ["RU_Soldier_Marksman"];
+_u = _u + ["RU_Soldier_Spotter"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Mechanized - BMP-2 Recon Screen"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,1,0]];
+
+//--- (H2) Mechanized - BMP-2 AT Hunter-Killer (AT hunter-killer, HEAVY-1)
+_u		= ["BMP2_INS"];
+_u = _u + ["RU_Soldier_TL"];
+_u = _u + ["RU_Soldier_AT"];
+_u = _u + ["RU_Soldier_HAT"];
+_u = _u + ["RU_Soldier_Medic"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Mechanized - BMP-2 AT Hunter-Killer"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,1,0]];
+
+//--- (H3) Mechanized - BMP-2 Fire Support Section (fire support, HEAVY-1, 2x BMP2 MG overwatch)
+_u		= ["BMP2_INS"];
+_u = _u + ["BMP2_INS"];
+_u = _u + ["RU_Soldier_TL"];
+_u = _u + ["RU_Soldier_MG"];
+_u = _u + ["RU_Soldier_MG"];
+_u = _u + ["RU_Soldier_Medic"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Mechanized - BMP-2 Fire Support Section"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,1,0]];
+
+//--- (H4) Mechanized - BMP-2 Urban Assault Squad (urban assault, HEAVY-1, GL-heavy clearing)
+_u		= ["BMP2_INS"];
+_u = _u + ["RU_Soldier_SL"];
+_u = _u + ["RU_Soldier_AR"];
+_u = _u + ["RU_Soldier_GL"];
+_u = _u + ["RU_Soldier_Medic"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Mechanized - BMP-2 Urban Assault Squad"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[false,false,true,false]];
+_aiTeamTypes = _aiTeamTypes + [2];
+_aiTeamUpgrades = _aiTeamUpgrades + [[0,0,1,0]];
+
+//--- (E1) Infantry - Sniper Recon Team (implementer extra: dedicated long-range recon/sniper
+//--- cell, BARRACKS-2. RU_Soldier_Marksman/_Spotter/_Sniper were unused in this file before this
+//--- template; fills BARRACKS tier-2, which had zero candidates before this pass.)
+_u		= ["RU_Soldier_TL"];
+_u = _u + ["RU_Soldier_Sniper"];
+_u = _u + ["RU_Soldier_Spotter"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Infantry - Sniper Recon Team"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
+_aiTeamTypes = _aiTeamTypes + [0];
+_aiTeamUpgrades = _aiTeamUpgrades + [[2,0,0,0]];
+
+//--- (E2) Infantry - Marksman Overwatch Team (implementer extra: cheap DM + MG suppression/
+//--- overwatch element, BARRACKS-1. Distinct from Weapons Team AT/AA (no AT/AA content) and
+//--- from Sniper Recon Team (direct-fire support role at a cheaper tier, not stealth recon).)
+_u		= ["RU_Soldier_TL"];
+_u = _u + ["RU_Soldier_Marksman"];
+_u = _u + ["RU_Soldier_MG"];
+_aiTeamTemplateName = _aiTeamTemplateName + ["Infantry - Marksman Overwatch Team"];
+_aiTeamTemplates = _aiTeamTemplates + [_u];
+_aiTeamTemplateRequires = _aiTeamTemplateRequires + [[true,false,false,false]];
+_aiTeamTypes = _aiTeamTypes + [0];
+_aiTeamUpgrades = _aiTeamUpgrades + [[1,0,0,0]];
 
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATES", _side], _aiTeamTemplates];
 missionNamespace setVariable [Format["WFBE_%1AITEAMTEMPLATEREQUIRES", _side], _aiTeamTemplateRequires];

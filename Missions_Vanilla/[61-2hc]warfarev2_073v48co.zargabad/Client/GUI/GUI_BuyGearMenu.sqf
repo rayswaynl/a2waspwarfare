@@ -467,6 +467,14 @@ while {true} do {
 	if (_purchase) then {
 		_purchase = false;
 		if ((Call WFBE_CL_FNC_GetClientFunds) >= _price) then {
+			//--- fable/gear-charge-fix: snapshot the pre-purchase ("old") side of every UpdatePrice pair
+			//--- BEFORE the four lines below overwrite them with the new selection - needed to recompute
+			//--- the true post-cap charge when the magazine cap discards part of the selection (see below).
+			Private ["_old_weapons","_old_magazines","_old_bp","_old_veh"];
+			_old_weapons = +_target_weapons;
+			_old_magazines = +_target_magazines;
+			_old_bp = +_gear_sel_backpack;
+			_old_veh = +_gear_sel_vehicle;
 			_target_weapons = +_gear_sel_weapons;
 			_target_magazines = +_gear_sel_magazines;
 			_gear_sel_backpack = _gear_backpack_content call _bpCopy;
@@ -496,8 +504,27 @@ while {true} do {
 				_msg = _msg + Format["<t color='#B6F563'>%1</t>", [configFile >> 'CfgVehicles' >> typeOf _target, "displayName"] Call WFBE_CO_FNC_GetConfigEntry];
 				[vehicle _target, _gear_sel_vehicle] Call WFBE_CO_FNC_EquipVehicle;
 			};
-			-(_price) Call WFBE_CL_FNC_ChangeClientFunds;
+			//--- fable/gear-charge-fix (gear audit 2026-07-28): TWO money bugs lived on this one line.
+			//--- (a) OVERCHARGE: _price came from _update_inventory using the UNCAPPED magazine selection,
+			//---     but the cap above trims the granted list to WFBE_C_GEAR_MAG_SLOTS - the player paid
+			//---     full add-price for magazines that were then discarded.
+			//--- (b) CHARGE-ON-NOTHING: the deduction sat OUTSIDE the "did anything change" gate. After an
+			//---     overflow purchase, _gear_sel_magazines keeps the over-cap rows, so the next
+			//---     _update_inventory re-prices the discarded mags as adds -> every further Buy click
+			//---     deducted that phantom _price while granting nothing ("The gear was not purchased
+			//---     since nothing has changed"), repeatably.
+			//--- Fix: on overflow, recompute the delta with the ORIGINAL old side (snapshots taken before
+			//--- the reuse-overwrite) against the CAPPED grant - same pair shape as the _update_inventory
+			//--- pricing call; capping can only lower the total, so the funds gate above stays sufficient.
+			//--- And the deduction moves inside the gate so a no-op click is free. Non-overflow purchases
+			//--- charge exactly what they did before.
 			if (_has_inv_changed || _has_veh_changed) then {
+				if (_mag_overflow) then {
+					Private ["_paidPrices"];
+					_paidPrices = [[_old_weapons,_gear_sel_weapons],[_old_magazines,_target_magazines],[_old_bp, _gear_backpack_content],[_old_veh, _gear_vehicle_content]] Call WFBE_CL_FNC_UI_Gear_UpdatePrice;
+					_price = _paidPrices select 0;
+				};
+				-(_price) Call WFBE_CL_FNC_ChangeClientFunds;
 				Private ["_hint_overflow"];
 				_hint_overflow = if (_mag_overflow) then {Format ["<br /><br /><t color='#F56363'>Loadout exceeds inventory capacity (%1 magazine slots) - extra magazines were discarded.</t>", _cap]} else {""};
 				hint parseText Format["<t color='#42b6ff' size='1.2' underline='1' shadow='1'>Information:</t><br /><br /><t>Purchased Equipement to %1 for $<t color='#F5D363'>%2</t>.</t>%3",_msg,_price,_hint_overflow];

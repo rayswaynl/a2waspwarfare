@@ -1856,21 +1856,40 @@ switch (_args select 0) do {
 		missionNamespace setVariable ["WFBE_ACTIVE_PATROLS", _pnew];
 		publicVariable "WFBE_ACTIVE_PATROLS";
 	};
-	//--- Task 41: convoy reached a town — pay the owning side.
-	case "sidepatrol-convoy-stop": {
-		Private ["_cSideID","_cTown","_cSide","_cPool","_cShare","_cCount"];
-		_cSideID = _args select 1;
-		_cTown   = _args select 2;
-		_cSide   = (_cSideID) Call WFBE_CO_FNC_GetSideFromID;
-		_cPool   = if (isNil "WFBE_C_PATROL_CONVOY_PAY") then {750} else {WFBE_C_PATROL_CONVOY_PAY};
-
-		_cCount = 0;
-		{if ((isPlayer _x) && (alive _x) && (side _x == _cSide)) then {_cCount = _cCount + 1}} forEach playableUnits;
-		_cShare = round (_cPool / (_cCount max 1));
-
-		[_cSide, "BankPayout", [_cShare]] Call WFBE_CO_FNC_SendToClients;
-		[_cSide, _cShare] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (BankPayout keeps only the message).
-		["INFORMATION", Format ["Server_HandleSpecial.sqf: [%1] convoy payout $%2 x %3 players at [%4].", str _cSide, _cShare, _cCount, if (!isNull _cTown) then {_cTown getVariable ["name","?"]} else {"?"}]] Call WFBE_CO_FNC_LogContent;
+	//--- fable/patrol-reimagine (owner 2026-07-28): the convoy payout case that lived here is
+	//--- REMOVED with the patrol money rewards. Its replacement is the T3/T4 off-map air pass:
+	//--- server-authoritative chance roll + per-side cooldown, then Server_PatrolAirPass flies
+	//--- one (L3) or two (L4) attack aircraft in from off-map for a single pass over the town
+	//--- and exits them via the nearest map edge. Sender: Common_RunSidePatrol.sqf arrival hook.
+	case "sidepatrol-airpass": {
+		Private ["_apSideID","_apTown","_apLvl","_apSide","_apLast","_apCd"];
+		_apSideID = _args select 1;
+		_apTown   = _args select 2;
+		_apLvl    = if (count _args > 3) then {_args select 3} else {3};
+		_apSide   = (_apSideID) Call WFBE_CO_FNC_GetSideFromID;
+		if ((missionNamespace getVariable ["WFBE_C_PATROL_AIR_TIER", 0]) > 0
+			&& {!isNull _apTown}
+			&& {(_apSide == west) || {_apSide == east}}
+			&& {!isNil "WFBE_SE_FNC_PatrolAirPass"}) then {
+			_apCd   = missionNamespace getVariable ["WFBE_C_PATROL_AIR_COOLDOWN", 300];
+			_apLast = missionNamespace getVariable [Format ["wfbe_patrolair_last_%1", str _apSide], -99999];
+			if ((time - _apLast) >= _apCd && {(random 1) < (missionNamespace getVariable ["WFBE_C_PATROL_AIR_CHANCE", 0.35])}) then {
+				missionNamespace setVariable [Format ["wfbe_patrolair_last_%1", str _apSide], time];
+				[_apSide, _apSideID, _apTown, _apLvl] Spawn WFBE_SE_FNC_PatrolAirPass;
+			};
+		};
+	};
+	//--- fable/cleanup-locality-2 (PVF-class hunt, HIGH): server-side registration for PLAYER-placed
+	//--- mines. DropRPG.sqf's Fired EH runs on the placing player's CLIENT where the `mines` global
+	//--- (seeded only by the server-only mines_cleaner.sqf) is nil - so on every dedicated server the
+	//--- registration silently no-oped and player mines were never age-reaped. typeOf-validated:
+	//--- worst a forged dispatch can do is enroll a real mine for its normal timed deletion.
+	case "register-mine": {
+		Private ["_rmMine"];
+		_rmMine = _args select 1;
+		if (!isNil "mines" && {!isNull _rmMine} && {(typeOf _rmMine) in ["Mine","MineE"]}) then {
+			mines set [count mines, [_rmMine, time]];
+		};
 	};
 	//--- HC SEATING TELEMETRY (task #34): pure RPT logging, no gameplay effect. Mirrors the HCSIDE|v1|connect
 	//--- line below so "did an HC land on WEST this boot, and did the script reseat fix it" is directly
@@ -2134,7 +2153,7 @@ switch (_args select 0) do {
 		diag_log Format ["GUERVBIED|v2|request|result=%1|driver=%2", if (_vbiedOK) then {"accepted"} else {"denied"}, if (isNull _driver) then {"?"} else {name _driver}];
 		if (_vbiedOK) then {
 			[_veh, _driver] spawn {
-				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand","_structVictims","_sStructs","_struct","_facBounty","_facScore","_fobIdx","_fobAvail"];
+				Private ["_veh","_driver","_drvGrp","_drvUID","_p","_radius","_coef","_victims","_payout","_get","_persBounty","_persScore","_get2","_cand","_structVictims","_sStructs","_struct","_facBounty","_facScore","_fobIdx","_fobAvail","_vbClass","_wsk_victimUID","_wsk_sideNum","_wsk_victimSide","_wsk_dist","_wsk_cat","_wsk_hw","_wsk_kUID"];
 				_veh = _this select 0;
 				_driver = _this select 1;
 				_drvGrp = group _driver;   //--- capture before the blast: the suicide driver dies in it.
@@ -2142,6 +2161,7 @@ switch (_args select 0) do {
 				//--- team payout below. Capture the driver object + its UID NOW, while still alive, because the
 				//--- suicide driver is gone by the time we settle (getPlayerUID on a dead/deleted unit is unreliable).
 				_drvUID = getPlayerUID _driver;
+				_vbClass = typeOf _veh; //--- fable/vbied-kill-visibility: capture PRE-blast - the hull is a wreck (typeOf can go "") or deleted by settle time.
 				_p = getPosATL _veh;
 				_radius = missionNamespace getVariable ["WFBE_C_GUER_VBIED_BLAST_RADIUS", 30];
 				_coef = missionNamespace getVariable ["WFBE_C_GUER_KILL_BOUNTY_COEF", 0.5];
@@ -2228,6 +2248,49 @@ switch (_args select 0) do {
 							//--- WFBE_C_GUER_HELIDROP_CREDIT_KILLS block for the identical "instigator dies with the ordnance"
 							//--- shape) is what actually gates the M113/BRDM/T-tier depot unlocks - GUI_UpgradeMenu.sqf,
 							//--- Root_GUE_PlayerOverlay.sqf and Client_UpdateRHUD.sqf all read WFBE_GUER_PLAYER_KILLS directly.
+							//--- fable/vbied-kill-visibility (owner 2026-07-27 "add vbied to the same concept"): the FPV
+							//--- blast-ledger route is IMPOSSIBLE here by design - the detonation gate above requires the
+							//--- detonator to be DRIVING the live hull, and _veh setDamage 1 kills them the same instant as
+							//--- their victims, so any alive-killer path (stamp OR ledger) can never fire (#924 proved and
+							//--- reverted the stamp for exactly this). Credit is already paid death-proof below; what VBIED
+							//--- kills lacked was VISIBILITY - no WASPSTAT|KILL row, so no dashboard/leaderboard/recap entry.
+							//--- Emit the row here from the settled snapshot, replicating RequestOnUnitKilled.sqf:241-300
+							//--- field-for-field (fixed field count - box parser folds killerSide; no extra fields).
+							//--- Traps handled: a DEAD unit's side collapses to CIV, so victimSide comes from config side
+							//--- (same idiom as the renegade fallback at RequestOnUnitKilled.sqf:107); victim UID is left
+							//--- blank because getPlayerUID on a dead/deleted unit is unreliable (this file's own _drvUID
+							//--- comment); killer weapon is the pre-blast _vbClass. Gated on WFBE_C_STATLOG like every
+							//--- other WASPSTAT emit; telemetry only, independent of the CREDIT_KILLS reward gate below.
+							if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
+								_wsk_kUID = _drvUID;
+								if (!isNil "WFBE_SE_FNC_IsHeadlessUid") then {
+									if (_wsk_kUID call WFBE_SE_FNC_IsHeadlessUid) then {_wsk_kUID = ""};
+								};
+								_wsk_sideNum = getNumber (configFile >> "CfgVehicles" >> (typeOf _x) >> "side");
+								_wsk_victimSide = switch (_wsk_sideNum) do {case 0: {"EAST"}; case 1: {"WEST"}; case 2: {"GUER"}; default {"CIV"}};
+								_wsk_dist = round (_x distance _p);
+								_wsk_cat = "INF";
+								if (!(_x isKindOf "Man")) then {
+									if (_x isKindOf "Air") then {_wsk_cat = "AIR"} else {
+										if (_x isKindOf "StaticWeapon") then {_wsk_cat = "STATIC"} else {_wsk_cat = "VEH"};
+									};
+								};
+								_wsk_hw = "";
+								if (!(_x isKindOf "Man")) then {
+									_wsk_hw = if (_x isKindOf "Helicopter") then {"HELI"} else {
+										if (_x isKindOf "Plane") then {"JET"} else {
+											if (_x isKindOf "Tank") then {"ARMOR"} else {
+												if (_x isKindOf "Ship") then {"SHIP"} else {
+													if (_x isKindOf "Car") then {"CAR"} else {"OTHER"}
+												}
+											}
+										}
+									};
+								};
+								if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
+								WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
+								diag_log ("WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ + "|KILL|" + _wsk_kUID + "||GUER|" + _wsk_victimSide + "|" + _vbClass + "|" + str _wsk_dist + "|" + _wsk_cat + "|hw=" + _wsk_hw + "|vc=" + (typeOf _x) + "|t=" + str (round time));
+							};
 							if ((missionNamespace getVariable ["WFBE_C_GUER_VBIED_CREDIT_KILLS", 1]) > 0) then {
 								//--- Driver dies with the VBIED before RequestOnUnitKilled reaches its stats path, so mirror its category-aware stat credit here.
 								if (_drvUID != "") then {
@@ -2326,7 +2389,36 @@ switch (_args select 0) do {
 				diag_log ("GUERVBIED|v1|drvUID=" + (str _drvUID) + "|victims=" + (str (count _victims)) + "|payout=" + (str _payout) + "|persBounty=" + (str _persBounty) + "|persScore=" + (str _persScore)); //--- Ray 2026-06-27: definitive trace of a GUER VBIED payout (always-on).
 					if (_drvUID != "" && {_persBounty > 0}) then {
 					[_drvUID, "GuerVbiedBounty", _persBounty] Call WFBE_CO_FNC_SendToClients;
-					if (!isNull _drvGrp) then { [_drvGrp, _persBounty] Call WFBE_CO_FNC_ChangeTeamFunds }; //--- J1 funds authority: credit the PRE-BLAST captured slot group (the suicide driver is guaranteed dead at settle, so any alive/UID-scan resolve would pay nobody; his client handler no longer writes the wallet).
+					//--- fable/vbied-respawn-payout (owner 2026-07-28 "still no reward on VBIED - you die to the
+					//--- explosion yourself"): the J1 pay-the-pre-blast-group assumption is FALSE under respawn
+					//--- re-homing - Client_OnRespawnHandler.sqf documents that a respawned player lands in a
+					//--- DIFFERENT group and re-points clientTeam at it, so the credit parked in the orphaned old
+					//--- group where no wallet ever reads it (live-proven: GUERVBIED|v1 persBounty=266 computed +
+					//--- paid, owner wallet unchanged). Defer instead: resolve the detonator's LIVE body by UID
+					//--- (up to 10 min - deadspawn + respawn UI), then credit THAT body's current group. If they
+					//--- never return, fall back to the old group (exactly today's behaviour, loses nothing).
+					[_drvUID, _persBounty, _drvGrp] spawn {
+						private ["_uid","_amt","_fallbackGrp","_deadline","_target","_u"];
+						_uid = _this select 0;
+						_amt = _this select 1;
+						_fallbackGrp = _this select 2;
+						_deadline = time + 600;
+						_target = grpNull;
+						while {isNull _target && {time < _deadline}} do {
+							{
+								_u = _x;
+								if (!isNull _u && {alive _u} && {isPlayer _u} && {getPlayerUID _u == _uid}) exitWith {_target = group _u};
+							} forEach playableUnits;
+							if (isNull _target) then {sleep 5};
+						};
+						if (isNull _target) then {_target = _fallbackGrp};
+						if (!isNull _target) then {
+							[_target, _amt] Call WFBE_CO_FNC_ChangeTeamFunds;
+							diag_log ("GUERVBIED|v3|paid|uid=" + _uid + "|amount=" + str _amt);
+						} else {
+							diag_log ("GUERVBIED|v3|pay-failed|uid=" + _uid + "|amount=" + str _amt);
+						};
+					};
 					["INFORMATION", Format ["Server_HandleSpecial.sqf: GUER VBIED personal bounty [%1] + score [%2] paid to detonator UID [%3].", _persBounty, _persScore, _drvUID]] Call WFBE_CO_FNC_LogContent;
 				};
 				if (!isNull _driver && {_persScore > 0}) then {

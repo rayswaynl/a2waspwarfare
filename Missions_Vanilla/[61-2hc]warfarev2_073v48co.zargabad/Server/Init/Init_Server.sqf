@@ -83,6 +83,7 @@ WFBE_SE_FNC_AI_SetTownAttackPath = Compile preprocessFileLineNumbers "Server\Fun
 //--- CHAT RELAY REWORK: server-only, free chat blocked-pending-BE because display-24 semantics are not proven here.
 WFBE_SE_FNC_ChatRelayEvent = Compile preprocessFileLineNumbers "Server\Functions\Server_ChatRelayEvent.sqf";
 WFBE_SE_FNC_AI_SetTownAttackPath_PathIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PathIsSafe.sqf";
+WFBE_SE_FNC_PatrolAirPass = Compile preprocessFileLineNumbers "Server\Functions\Server_PatrolAirPass.sqf"; //--- fable/patrol-reimagine: T3/T4 off-map air pass (replaces the removed patrol money/SV rewards).
 WFBE_SE_FNC_AI_SetTownAttackPath_PosIsSafe = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_SetTownAttackPath_PosIsSafe.sqf";
 WFBE_SE_FNC_AI_Com_Upgrade = Compile preprocessFileLineNumbers "Server\Functions\Server_AI_Com_Upgrade.sqf";
 //--- feat/ai-commander: revival workers + supervisor.
@@ -156,6 +157,7 @@ WFBE_SE_FNC_SpawnStructureDressing = Compile preprocessFileLineNumbers "Server\F
 WFBE_SE_FNC_BankIncome = Compile preprocessFileLineNumbers "Server\Functions\Server_BankIncome.sqf";
 WFBE_SE_FNC_SiteClearance = Compile preprocessFileLineNumbers "Server\Functions\Server_SiteClearance.sqf";
 WFBE_SE_FNC_CmdSupportAir = Compile preprocessFileLineNumbers "Server\Functions\Server_CmdSupportAir.sqf"; //--- COMMAND V2 (c): granted heli-support escort lifecycle. Spawned only from the aicom-support-air case while WFBE_C_CMD_SUPPORT_AIR > 0.
+WFBE_SE_FNC_BombProbe = Compile preprocessFileLineNumbers "Server\Functions\Server_BombProbe.sqf"; //--- fable/bomb-stage-a (2026-07-28): Stage-A bomb-release/turret-vs-hull TEST HARNESS, gated WFBE_C_BOMB_PROBE default 0 (see docs\plans\2026-07-28-bomb-stage-a-runbook.md). Always compiled here (cheap, no behavior until the flag-gated spawn call below invokes it).
 //--- CBR: per-side registries (populated as CBRs are built; pruned lazily during checks).
 if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
 	missionNamespace setVariable ["WFBE_CBR_WEST", []];
@@ -195,6 +197,15 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
 if ((missionNamespace getVariable ["WFBE_C_HC_LOBBY_LOCK", 0]) > 0) then {
 	[] execVM "Server\Init\Init_HcLobbyLock.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Init_HcLobbyLock.sqf launched (WFBE_C_HC_LOBBY_LOCK>0)."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- fable/bomb-stage-a (2026-07-28) STAGE A TEST HARNESS: default-off Server_BombProbe.sqf spawns
+//--- 5 throwaway AI-crewed hulls to answer the bomb-release + turret-vs-hull EASA-AI questions in
+//--- docs\plans\2026-07-28-bomb-stage-a-runbook.md. The probe file itself waits on commonInitComplete
+//--- and self-guards on WFBE_C_BOMB_PROBE, so this launch is safe to fire early. NEVER arm on the live box.
+if ((missionNamespace getVariable ["WFBE_C_BOMB_PROBE", 0]) > 0) then {
+	[] Spawn WFBE_SE_FNC_BombProbe;
+	["WARNING", "Init_Server.sqf: Server_BombProbe.sqf STAGE A TEST HARNESS launched (WFBE_C_BOMB_PROBE>0) - this must NEVER be true on the live box."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- NEURO: Special Condition.
@@ -945,6 +956,35 @@ _vehicle addAction ["<t color='"+"#00E4FF"+"'>STEALTH ON</t>","Client\Module\Eng
 	};
 } forEach [[_present_east, east, _startE],[_present_west, west, _startW]];
 
+//--- fable/fob-init-park (owner 2026-07-28 "GUER FOB deploy still non existent"): NOTHING ever seeded
+//--- wfbe_upgrades on the RESISTANCE side logic (the loop above covers only WEST/EAST), so
+//--- Init_Unit.sqf's waitUntil {!isNil {_logik getVariable "wfbe_upgrades"}} parked FOREVER on every
+//--- client for every GUER-bought unit - the ENTIRE client-side unit init (Build-FOB actions, deploy
+//--- hints, gear toggles) never ran for GUER vehicles. This is the second, independent break in the
+//--- FOB chain (#1531 fixed the buy-crash half). Seed an all-zero table of the same shape (upgrade
+//--- ids are side-uniform) so the wait releases; every consumer reads levels, and 0 = not researched
+//--- (e.g. the Zeta airlift gate correctly stays closed).
+private ["_guerLogik","_guerUpg","_guerUpgLen"];
+_guerLogik = (resistance) Call WFBE_CO_FNC_GetSideLogic;
+if (!isNull _guerLogik && {isNil {_guerLogik getVariable "wfbe_upgrades"}}) then {
+	_guerUpgLen = count (missionNamespace getVariable ["WFBE_C_UPGRADES_WEST_LEVELS", []]);
+	if (_guerUpgLen < 1) then {_guerUpgLen = 20};
+	_guerUpg = [];
+	for '_i' from 0 to (_guerUpgLen - 1) do {[_guerUpg, 0] Call WFBE_CO_FNC_ArrayPush};
+	_guerLogik setVariable ["wfbe_upgrades", _guerUpg, true];
+	diag_log Format ["[WFBE (INIT)] fable/fob-init-park: seeded zero wfbe_upgrades (%1 slots) on the RESISTANCE logic - releases Init_Unit client-side init for GUER units.", _guerUpgLen];
+	//--- fable/fob-structures-seed (hunter finding 1, 2026-07-28): wfbe_structures was ALSO W/E-only.
+	//--- Construction_SmallSite/MediumSite append the finished FOB with a 1-arg read ((nil)+[_site]
+	//--- never lands), so RequestFOBStructure's completion gate read the site as unregistered and
+	//--- reported EVERY successful GUER FOB build as FAILED - token refunded, truck re-armed, real
+	//--- structure left standing untracked (no marker, no JIP replay). The removal path
+	//--- (Server_BuildingKilled) already carried a GUER isNil guard; the add path never did.
+	if (isNil {_guerLogik getVariable "wfbe_structures"}) then {
+		_guerLogik setVariable ["wfbe_structures", [], true];
+		diag_log "[WFBE (INIT)] fable/fob-structures-seed: seeded empty wfbe_structures on the RESISTANCE logic.";
+	};
+};
+
 //--- GUER "Insurgents" player faction team-registration + economy (gated on WFBE_C_GUER_PLAYERSIDE).
 //--- The 4 RESISTANCE player slots are synced to LocationLogicOwnerResistance (WFBE_L_GUE); register each as a
 //--- zero-fund harass team (stipend, not commander economy), then start the GUER economy loop.
@@ -1122,6 +1162,14 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_HVT", 1]) == 1) then {
 if ((missionNamespace getVariable ["WFBE_C_USV_FLOTILLA_ENABLE", 0]) == 1) then {
 	[] execVM "Server\Server_USVFlotilla.sqf";
 	["INITIALIZATION", "Init_Server.sqf: Server_USVFlotilla.sqf launched (WFBE_C_USV_FLOTILLA_ENABLE=1)."] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- AICOM SUPPLY SQUAD (fable/aicom-supply-squad, owner 2026-07-28): one autonomous W/E supply
+//--- squad per AI-commanded side once its unlock gate is met (Light Factory -> truck, AIR>=3 ->
+//--- heli). Standalone registry loop (USV pattern) - does NOT consume an AICOM combat-team slot.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_SUPPLY_SQUAD", 0]) > 0) then {
+	[] execVM "Server\Server_AicomSupplySquad.sqf";
+	["INITIALIZATION", "Init_Server.sqf: Server_AicomSupplySquad.sqf launched (WFBE_C_AICOM_SUPPLY_SQUAD=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
 //--- cmdcon41 LAND ICBM TEL (feature 3, Ray 2026-07-02): compiles the TEL spawn/fire functions + gates on

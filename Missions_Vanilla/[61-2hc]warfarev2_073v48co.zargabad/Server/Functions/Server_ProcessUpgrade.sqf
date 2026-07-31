@@ -67,41 +67,14 @@ _logic setVariable ["wfbe_upgrading_id", -1, true];
 // phantom countdown on clients between upgrades.
 _logic setVariable ["wfbe_upgrading_end_time", -1, true];
 
-//--- Patrol upgrade economy rewards (Ray 2026-07-01): reward reaching the top patrol tiers.
-//--- Runs exactly once when a level completes (this file is the completion hook), on the server.
-//---   T3 (new level 3) = one-time CASH grant to the side, split among alive owning-side players
-//---     (mirrors Server_BankIncome / convoy-pay BankPayout pattern).
-//---   T4 (new level 4) = one-time small SUPPLY grant to the side pool (mirrors the
-//---     GuerFobCleared / bank-destruction ChangeSideSupply pattern; ChangeSideSupply clamps
-//---     at the supply ceiling server-side).
-//--- One-time-on-completion (NOT a passive per-tick drip) keeps it a clean research incentive
-//--- with zero extra loops. Amounts are tunable via missionNamespace getVariable [NAME,default].
-if (_upgrade_id == WFBE_UP_PATROLS) then {
-	_patrolNewLevel = _upgrades select _upgrade_id;
-	if (_patrolNewLevel == 3) then {
-		_patrolCashPool = missionNamespace getVariable ["WFBE_C_PATROL_T3_CASH", 8000];
-		if (_patrolCashPool > 0) then {
-			_patrolPlayers = 0;
-			{if ((isPlayer _x) && (alive _x) && (side _x == _side)) then {_patrolPlayers = _patrolPlayers + 1}} forEach playableUnits;
-			_patrolShare = round (_patrolCashPool / (_patrolPlayers max 1));
-			if (_patrolPlayers < 1) then {
-				[_side, _patrolCashPool, "Patrol upgrade T3 no-player reward fallback.", false] Call ChangeSideSupply;
-				["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Patrol T3 cash reward pool %2 redirected to side supply (no alive players).", str _side, _patrolCashPool]] Call WFBE_CO_FNC_LogContent;
-			} else {
-				[_side, "BankPayout", [_patrolShare]] Call WFBE_CO_FNC_SendToClients;
-				[_side, _patrolShare] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (BankPayout keeps only the message).
-				["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Patrol T3 cash reward $%2 x %3 players (pool %4).", str _side, _patrolShare, _patrolPlayers, _patrolCashPool]] Call WFBE_CO_FNC_LogContent;
-			};
-		};
-	};
-	if (_patrolNewLevel == 4) then {
-		_patrolSupply = missionNamespace getVariable ["WFBE_C_PATROL_T4_SUPPLY", 1500];
-		if (_patrolSupply > 0) then {
-			[_side, _patrolSupply, "Patrol upgrade T4 reward.", false] Call ChangeSideSupply;
-			["INFORMATION", Format ["Server_ProcessUpgrade.sqf: [%1] Patrol T4 supply reward +%2.", str _side, _patrolSupply]] Call WFBE_CO_FNC_LogContent;
-		};
-	};
-};
+//--- fable/patrol-reimagine (owner 2026-07-28 "Reimagine Patrol tiers, Remove money and SV
+//--- rewards from them"): the T3 one-time cash grant (WFBE_C_PATROL_T3_CASH split among alive
+//--- side players, side-supply fallback) and the T4 one-time supply grant (WFBE_C_PATROL_T4_SUPPLY)
+//--- that lived here are REMOVED. The patrol upgrade's payoff is capability only now: L3+ unlocks
+//--- the off-map air pass (Common_RunSidePatrol.sqf arrival hook -> "sidepatrol-airpass" ->
+//--- Server_PatrolAirPass.sqf), L4 doubles it to a pair. The constants stay registered but
+//--- orphaned (repo policy: leave constants defined). The L4 convoy truck + its per-stop pay
+//--- went in the same pass (Common_RunSidePatrol.sqf / Server_HandleSpecial.sqf).
 
 // Marty: Existing artillery, such as pre-upgrade M119 static guns, does not pass through buy/build equipment init again.
 // Scan every vehicle known by the server because artillery pieces may be deployed far away from the base.

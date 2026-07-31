@@ -35,9 +35,11 @@ private ["_timeout","_expected","_override","_source","_probe","_tries","_seated
 _timeout = missionNamespace getVariable ["WFBE_C_HC_LOBBY_TIMEOUT", 90];
 if (_timeout < 10) then {_timeout = 10}; //--- floor: a sub-10s window cannot cover any real HC seat.
 
-//--- EXPECTED SEATED-HC COUNT. WFBE_C_HC_LOBBY_EXPECTED is the source of truth and ships at the owner's
-//--- default of 4 (2026-07-26): the box runs 4 headless clients, and all three terrains carry exactly 4
-//--- forceHeadlessClient CIV slots today (mission.sqm, post-#1456). Setting it to -1 opts in to the RUNTIME
+//--- EXPECTED SEATED-HC COUNT. WFBE_C_HC_LOBBY_EXPECTED is the source of truth. It shipped at 4 on
+//--- 2026-07-26; since the owner's 2026-07-30 order it derives to 2, because all three terrains now carry
+//--- exactly 2 forceHeadlessClient CIV slots (mission.sqm) and WFBE_C_HC_SLOTS = 2
+//--- (Init_CommonConstants.sqf). The literal 4 in the getVariable below is only the isNil fallback for a
+//--- mission that never registered the constant - it is NOT the production value, do not read it as one. Setting it to -1 opts in to the RUNTIME
 //--- DERIVATION below instead: nothing in A2 OA can parse mission.sqm at runtime, so the slot count is read
 //--- from its runtime equivalent, the playable CIV units. Every HC slot on every terrain is a playable
 //--- civilian (Functionary1, side CIV, forceHeadlessClient=1) and no other playable civilian slot exists, so

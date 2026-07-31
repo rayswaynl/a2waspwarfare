@@ -121,7 +121,7 @@ if !(_spawnInside) then {
 		};
 		if !(_usedFallbackPos) then {
 			if (_t getVariable ["wfbe_is_naval_hvt", false]) then {
-				_unit setPosASL [(getPos _t) select 0, (getPos _t) select 1, ((_t getVariable ["wfbe_naval_deckz", 16]) + 2)];
+				_unit setPosASL [(getPos _t) select 0, (getPos _t) select 1, ((_t getVariable ["wfbe_naval_deckz", 16]) + 0.5)]; //--- fable/carrier-seam (owner 2026-07-28 "spawns a tiny bit too high"): +2 was a safety margin from before deckz was measured per-carrier; vehicles already spawn at deckz+0. 0.5 keeps interpenetration margin without the visible drop.
 			} else {
 				_unit setPos ([getPos _t, 5, 15] Call GetRandomPosition);
 			};
@@ -132,7 +132,7 @@ if !(_spawnInside) then {
 		//--- above); otherwise keep the normal town/base respawn. _spawn is an object here, so the
 		//--- getVariable[name,default] reads are reliable (object namespace, A2-OA-safe).
 		if (!isNull _spawn && {_spawn getVariable ["wfbe_is_naval_hvt", false]} && {(_spawn getVariable ["sideID", -1]) == WFBE_Client_SideID}) then {
-			_unit setPosASL [(getPos _spawn) select 0, (getPos _spawn) select 1, ((_spawn getVariable ["wfbe_naval_deckz", 16]) + 2)];
+			_unit setPosASL [(getPos _spawn) select 0, (getPos _spawn) select 1, ((_spawn getVariable ["wfbe_naval_deckz", 16]) + 0.5)]; //--- fable/carrier-seam: same 2 -> 0.5 as the GUER branch above.
 		} else {
 			_unit setPos ([getPos _spawn,10,20] Call GetRandomPosition);
 		};

@@ -17,6 +17,9 @@
 Private ["_body"];
 
 if !(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) exitWith {}; //--- already exited / never entered.
+if ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"]) == "director") then {
+	diag_log "SPECTATE|v3|mode-off|reason=exit";
+};
 WFBE_C_VAR_SpectatorActive = false; //--- first: stops the movement loop in Client_SpectatorEnter.sqf on its next tick.
 
 _body = missionNamespace getVariable ["WFBE_C_VAR_SpectatorBody", objNull];
@@ -47,6 +50,12 @@ if (!isNil "WFBE_C_VAR_SpectatorWheelIdx") then {
 };
 
 hintSilent ""; //--- v2: clear the hint overlay even if it was mid-update.
+if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
+	if (dialog) then {closeDialog 0};
+	12456 cutText ["", "PLAIN", 0];
+};
+12455 cutText ["", "PLAIN", 0]; //--- clear the legacy cutText card layer; the broadcast path uses 12456.
+WFBE_C_VAR_SpectatorCardLast = ""; //--- reset the redraw cache for the next session (flicker fix, merged)
 
 WFBE_C_VAR_SpectatorMode = "free";
 WFBE_C_VAR_SpectatorTarget = objNull;
