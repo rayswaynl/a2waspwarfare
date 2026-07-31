@@ -40,9 +40,21 @@ if (isNull _defence) exitWith {
 	[_teams]
 };
 
-if !(isNull (gunner _defence)) exitWith {
+//--- r71b crew-seat: a DEAD gunner corpse still occupies the gunner slot (isNull false) and used
+//--- to block remanning forever. HandleDefense already uses isNull||!alive; match that here so HC
+//--- static reman (and any other CreateUnitForStaticDefence caller) can reseat after a KIA gunner.
+if (!(isNull (gunner _defence)) && {alive (gunner _defence)}) exitWith {
 	["INFORMATION", Format["Common_CreateUnitForStaticDefence.sqf: [%1] skipped duplicate request for [%2], gunner already alive.", _side, typeOf _defence]] Call WFBE_CO_FNC_LogContent;
 	[_teams]
+};
+//--- Dead corpse still seated: free the slot so assignAsGunner/moveInGunner can take it.
+if (!(isNull (gunner _defence)) && {!(alive (gunner _defence))}) then {
+	private ["_deadGun"];
+	_deadGun = gunner _defence;
+	if (!isNull _deadGun) then {
+		unassignVehicle _deadGun;
+		moveOut _deadGun;
+	};
 };
 
 _assignedUnit = _defence getVariable "WFBE_StaticDefenseAssignedUnit";

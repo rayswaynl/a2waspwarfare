@@ -25,6 +25,11 @@ _cargo = (crew _vehicle) - [driver _vehicle, gunner _vehicle, commander _vehicle
 			};
 			if (_routeUID != "") then {
 				[_routeUID, "HandleSpecial", ["action-perform", _x, "EJECT", _vehicle]] Call WFBE_CO_FNC_SendToClients;
+			} else {
+				//--- r71b crew-seat: AI cargo local to an HC (or any non-player leader) had no UID route and
+				//--- was silently skipped - sticky passengers stayed aboard. Route eject to the unit's owning
+				//--- machine via unit-targeted SendToClient (same channel as town-defense gunner cleanup).
+				[_x, "HandleSpecial", ["action-perform", _x, "EJECT", _vehicle]] Call WFBE_CO_FNC_SendToClient;
 			};
 		};
 	};
