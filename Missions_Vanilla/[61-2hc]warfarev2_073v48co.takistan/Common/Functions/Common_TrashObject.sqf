@@ -61,9 +61,21 @@ if !(isNull _object) then {
 	//--- (A2 OA refuses deleteVehicle on a crewed hull).
 	if (_isMan && {!isNull _object} && {vehicle _object != _object} && {(alive (vehicle _object)) || {({alive _x} count crew (vehicle _object)) > 0}}) exitWith {
 		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
+		_object setVariable ["wfbe_trashed", nil]; //--- crash 014EFCF4 review: without this reset the collector NEVER re-queues the deferred body (server_collector_garbage only re-spawns TrashObject when wfbe_trashed is nil), so the defer traded the crash for a permanent body leak. Established idiom: server_groupsGC.sqf.
 		["INFORMATION", Format["Common_TrashObject.sqf: deferring corpse [%1] still seated in live vehicle [%2].", _object, vehicle _object]] Call WFBE_CO_FNC_LogContent;
 	};
 
+	//--- crash 014EFCF4 instrumentation (always-on, unconditional diag_log): captures seat state at the
+	//--- exact instant of every real delete so the NEXT crash window - if any - shows second-by-second
+	//--- whether a seated-corpse delete preceded the fault, discriminating this hypothesis from the
+	//--- CargoAirdrop/ParaVehicles attach-then-delete race.
+	diag_log Format ["WASPCRASH014E|TRASH|obj=%1|isMan=%2|seat=%3|seatAlive=%4|seatCrewAlive=%5|t=%6",
+		_object, _isMan,
+		(if (_isMan) then {vehicle _object} else {objNull}),
+		(if (_isMan && {vehicle _object != _object}) then {str (alive (vehicle _object))} else {"-"}),
+		(if (_isMan && {vehicle _object != _object}) then {str ({alive _x} count crew (vehicle _object))} else {"-"}),
+		diag_tickTime
+	];
 	["INFORMATION", Format["Server_TrashObject.sqf: Deleting [%1], it has been [%2] seconds.", _object, _delay]] Call WFBE_CO_FNC_LogContent;
 
 	//--- LOCALITY GATE (WFBE_C_TRASH_REMOTE_DELETE, default 1 = locality-aware cleanup). A server-side
@@ -81,6 +93,7 @@ if !(isNull _object) then {
 		//--- rejects a mid-flight seat race, the next collector pass re-queues it instead of leaking the body;
 		//--- if the owner deleted it, the reference nulls and the collector's objNull prune drops it.
 		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
+		_object setVariable ["wfbe_trashed", nil]; //--- crash 014EFCF4 review: same re-queue reset as the seat-defer above - an owner-side refusal must not leak the body forever.
 	} else {
 		deleteVehicle _object;
 	};
