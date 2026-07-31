@@ -300,7 +300,7 @@ while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} d
 		};
 	};
 
-	if ((_queu select 0) in [_queu2 select 0]) then {
+	if ((count _queu > 0) && {count _queu2 > 0} && {(_queu select 0) in [_queu2 select 0]}) then {  //--- queue-fix: empty-guard the head-compare (mirror Server_BuyUnit.sqf:201) - a bare `_queu select 0` on an emptied shared queue is undefined on A2-OA.
 		if (_ret > _longest) then {
 			if (count _queu > 0) then {
 				_queu = _building getVariable "queu";
@@ -309,7 +309,7 @@ while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} d
 			};
 		};
 	};
-	if !((count _queu) in [count _queu2]) then {
+	if ((count _queu > 0) && {count _queu2 > 0} && {!((_queu select 0) in [_queu2 select 0])}) then {  //--- queue-fix (mirror Server_BuyUnit.sqf:210, 2026-06-14 head-based fix): reset the stuck-head purge timer ONLY when the head token actually ADVANCES, not on any shared-queue COUNT change. The old count-based reset let a busy shared factory (concurrent player/AI buys + cancels churning the count) continually zero _ret so `_ret > _longest` never fired - a dead head token (e.g. a disconnected buyer whose coroutine died) then jammed the whole factory build queue permanently for every player behind it. Head-based reset lets _ret accumulate to _longest and purge the stuck head, exactly as the AI path already does.
 		_ret = 0;
 		_queu2 = _building getVariable "queu";
 	};
