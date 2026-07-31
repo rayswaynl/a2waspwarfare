@@ -90,19 +90,31 @@ _target = _this select 0;
         _array = _target nearEntities [["Man","Car","Motorcycle","Tank","Ship","Air","StaticWeapon"], _radiation_range];
 
         {
-            _x setDammage (getDammage _x + 0.03);
-            {_x setDammage (getDammage _x + 0.05)} forEach crew _x;
-
-            // Playing radiation sound on client when object is a player:
-            if (isPlayer _x) then 
+            //--- LOCALITY: setDammage takes LOCAL arguments - executed server-side (radzone
+            //--- runs on the server) against a client- or HC-local unit it silently no-ops
+            //--- (this codebase's own convention: AI_Commander_Wildcard.sqf ":859" /
+            //--- Common_AICOMServiceTick.sqf ":13"). A player unit is local to that player's
+            //--- OWN client, so the old server-side setDammage on players never landed - the
+            //--- radiation zone dealt ZERO damage to players (they only heard the geiger cue).
+            //--- Apply each dose where the unit is local: directly for server-owned units, and
+            //--- for players route the dose to the owning client via the existing PLAYER_RADIATED
+            //--- channel (its OnEventHandler runs on that owner, where the player is local).
+            _radHull = _x;
             {
-                //--- LOCALITY/PV: targeted publicVariableClient to the radiated player only.
-                //--- Old publicVariable spammed ALL clients every tick and only the last write
-                //--- in a multi-player loop was reliable (shared global name collision).
-                _PLAYER_Radiated = _x;
-                missionNamespace setVariable ["PLAYER_RADIATED", _PLAYER_Radiated];
-                (owner _x) publicVariableClient "PLAYER_RADIATED";
-            };
+                _radDose = if (_forEachIndex == 0) then {0.03} else {0.05};
+                if (isPlayer _x) then
+                {
+                    //--- targeted publicVariableClient to the radiated player only; per-owner
+                    //--- write immediately before the send (the old plain publicVariable spammed
+                    //--- ALL clients every tick and raced on the shared global name).
+                    missionNamespace setVariable ["PLAYER_RADIATED", [_x, _radDose]];
+                    (owner _x) publicVariableClient "PLAYER_RADIATED";
+                }
+                else
+                {
+                    if (local _x) then {_x setDammage (getDammage _x + _radDose)};
+                };
+            } forEach ([_radHull] + crew _radHull);
 
         } forEach _array;
 
