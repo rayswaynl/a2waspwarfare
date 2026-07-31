@@ -122,6 +122,27 @@ _findPosition = {
 			};
 		};
 
+		//--- r39 alife FOB/structures: suppress near player-built bases (HQ + side structure registry).
+		//--- Player-radius alone misses empty bases when no human is currently in range.
+		if (!_tooClose) then {
+			private ["_structR","_sideX","_hqX","_structsX"];
+			_structR = missionNamespace getVariable ["WFBE_C_AMBIENT_SKIRMISH_STRUCTURE_RADIUS", _playerRadius];
+			if (_structR < 250) then {_structR = 250};
+			{
+				_sideX = _x;
+				_hqX = _sideX Call WFBE_CO_FNC_GetSideHQ;
+				if (!isNull _hqX && {alive _hqX} && {_hqX distance _candidate < _structR}) then {_tooClose = true};
+				if (!_tooClose) then {
+					_structsX = _sideX Call WFBE_CO_FNC_GetSideStructures;
+					if (typeName _structsX == "ARRAY") then {
+						{
+							if (!isNull _x && {alive _x} && {_x distance _candidate < _structR}) then {_tooClose = true};
+						} forEach _structsX;
+					};
+				};
+			} forEach [west, east, resistance];
+		};
+
 		if (!_tooClose) exitWith {_found = _candidate};
 	};
 
