@@ -11,7 +11,19 @@ _logik = (_side) Call WFBE_CO_FNC_GetSideLogic;
 if (typeName _position == "OBJECT") then {_position = position _position};
 
 /* Handle the LAG. */
-waitUntil {!(_logik getVariable "wfbe_hqinuse")};
+//--- r60 waitUntil: bare waitUntil hard-spins and never times out if wfbe_hqinuse sticks true
+//--- (mid-script crash between set true and set false). Match AI_Commander_MHQReloc: sleep + deadline +
+//--- defaulted getVariable; force-clear stale lock so mobilize/deploy cannot permanently jam.
+private ["_hqLockDeadline"];
+_hqLockDeadline = time + (missionNamespace getVariable ["WFBE_C_HQ_INUSE_WAIT", 45]);
+waitUntil {
+	sleep 0.5;
+	time > _hqLockDeadline || {!(_logik getVariable ["wfbe_hqinuse", false])}
+};
+if (_logik getVariable ["wfbe_hqinuse", false]) then {
+	["WARNING", Format ["Construction_HQSite.sqf: [%1] wfbe_hqinuse stuck true past wait; force-clear.", _sideText]] Call WFBE_CO_FNC_LogContent;
+	_logik setVariable ["wfbe_hqinuse", false];
+};
 _logik setVariable ["wfbe_hqinuse", true];
 
 _HQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
