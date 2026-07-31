@@ -1,5 +1,7 @@
 Private ['_airCoef','_artCoef','_cts','_distanceMin','_heaCoef','_hitCfg','_hitName','_hitPoints','_i','_ligCoef','_name','_nearIsDP','_nearIsRT','_nearIsSP','_price','_repairRange','_repTime','_spType','_supportRange','_supports','_typeRepair','_veh'];
 _veh = _this select 0;
+//--- r59 fail-clean: null vehicle aborts before typeOf/distance work.
+if (isNull _veh) exitWith {};
 _price = if ((count _this) > 4) then {_this select 4} else {0};
 if (_veh getVariable ["wfbe_repair_inProgress", false]) exitWith {if (_price > 0) then {_price Call ChangePlayerFunds;};hint "Repair already in progress."};
 _veh setVariable ["wfbe_repair_inProgress", true];
@@ -67,7 +69,7 @@ while {true} do {
 	_cts = 0;
 	{
 		_distanceMin = if ((typeOf _x) in _typeRepair) then {_repairRange} else {_supportRange};
-		if ((alive _x) && ((_veh distance _x) < _distanceMin)) then {_cts = _cts + 1};
+		if (!isNull _x && {alive _x} && {!isNull _veh} && {(_veh distance _x) < _distanceMin}) then {_cts = _cts + 1};
 	} forEach _supports;
 	
 	_i = _i + 1;
