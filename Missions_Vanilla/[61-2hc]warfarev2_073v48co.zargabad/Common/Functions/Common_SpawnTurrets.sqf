@@ -12,8 +12,12 @@ while {_i < (count _turrets)} do {
 	_thisTurret = _path + [_turretIndex];
 
 	if (isNull (_vehicle turretUnit _thisTurret)) then {
+		//--- r50 fail-clean: CreateUnit returns objNull at group/unit cap or bad crew class; moveInTurret
+		//--- on null throws and aborts the recursive turret walk mid-tree (remaining turrets stay empty).
 		_unit = [_crew,_team,getPos _vehicle,side _team] Call WFBE_CO_FNC_CreateUnit;
-		_unit moveInTurret [_vehicle, _thisTurret];
+		if !(isNull _unit) then {
+			_unit moveInTurret [_vehicle, _thisTurret];
+		};
 	};
 	
 	//Spawn units into subturrets.

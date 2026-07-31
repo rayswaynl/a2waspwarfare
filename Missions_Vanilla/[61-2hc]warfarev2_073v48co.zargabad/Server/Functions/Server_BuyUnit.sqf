@@ -244,6 +244,14 @@ if (_refunded || {!(alive _building)} || {isNull _team} || {isPlayer (leader _te
 
 if (_unitType isKindOf "Man") then {
 	_soldier = [_unitType,_team,_position,_sideID] Call WFBE_CO_FNC_CreateUnit;
+	//--- r50 fail-clean (sibling of vehicle N8 BUYFAIL above + Client_BuildUnit infantry BUYFAIL):
+	//--- CreateUnit returns objNull at group/unit cap or bad class. Prior path still bumped UnitsCreated
+	//--- and never refunded the treasury already charged at order time (AI_Commander_Produce).
+	if (isNull _soldier) exitWith {
+		if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+		["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL AI infantry [%1] produced objNull - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent;
+		diag_log Format ["BUYFAIL|v1|aicom-infantry|side=%1|class=%2|spawnPos=%3", _sideText, _unitType, _position];
+	};
 	[_sideText,'UnitsCreated',1] Call UpdateStatistics;
 	//--- AI FACTORY RALLY (task #25): the AI commander stamps wfbe_aicom_factory_rally (a forward,
 	//--- road-snapped egress point) on factories it builds. Without a destination a fresh AI unit just

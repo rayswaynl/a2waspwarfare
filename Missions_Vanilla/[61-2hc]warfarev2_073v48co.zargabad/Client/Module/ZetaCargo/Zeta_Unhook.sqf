@@ -4,7 +4,19 @@ _lifter = _this select 0;
 _caller = _this select 1;
 _actionID = _this select 2;
 _param = _this select 3;
-_vehicle = _param select 0;
+_vehicle = if ((typeName _param) == "ARRAY" && {count _param > 0}) then {_param select 0} else {objNull};
+
+//--- r50 fail-clean: cargo/lifter can be deleted mid-flight (empty-vehicle GC, combat) before Detach is used.
+if (isNull _vehicle) exitWith {
+	if (!isNull _lifter) then {
+		_lifter setVariable ["Attached",false];
+		_lifter removeAction _actionID;
+	};
+};
+if (isNull _lifter) exitWith {
+	detach _vehicle;
+	_vehicle setVariable ["wfbe_airlifted", false, true];
+};
 
 _lifter setVariable ["Attached",false];
 detach _vehicle;
@@ -34,4 +46,7 @@ _lifter removeAction _actionID;
 
 sleep 1;
 
-if ((getPos _vehicle) select 2 < 0) then {_vehicle setPos [(getPos _vehicle) select 0,(getPos _vehicle) select 1,0];_vehicle setVelocity [0,0,-0.1]};
+//--- r50: hull may be deleted during the 1s settle sleep — getPos on null throws.
+if (!isNull _vehicle) then {
+	if ((getPos _vehicle) select 2 < 0) then {_vehicle setPos [(getPos _vehicle) select 0,(getPos _vehicle) select 1,0];_vehicle setVelocity [0,0,-0.1]};
+};
