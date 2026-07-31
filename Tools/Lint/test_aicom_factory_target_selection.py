@@ -20,7 +20,7 @@ def test_target_aware_factory_selection_is_opt_in_and_mirrored():
         sources.append(produce.encode("utf-8"))
         constants.append(common_constants.encode("utf-8"))
 
-        assert 'WFBE_C_AICOM_FACTORY_TARGET_ENABLE = 0' in common_constants
+        assert 'WFBE_C_AICOM_FACTORY_TARGET_ENABLE = 1' in common_constants
         assert 'missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_TARGET_ENABLE", 0]' in produce
         assert '_factoryOrder = _team getVariable "wfbe_aicom_order";' in produce
         assert '_factoryAnchor = _factoryOrder select 2;' in produce

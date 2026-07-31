@@ -347,18 +347,50 @@ if (isNull _victim) exitWith {};                  //--- nothing redundant to sel
 //--- FUNDS refund (built via ChangeAICommanderFunds) + crew delete + prune wfbe_aicom_arty_reg.
 _refund = round (_victimCost * ((missionNamespace getVariable ["WFBE_C_AICOM_SELL_REFUND_FRAC", 0.5]) max 0));
 if (_victimType == "CommanderArtillery") then {
-	if (_refund > 0) then {[_side, _refund] Call ChangeAICommanderFunds};
-	{deleteVehicle _x} forEach (crew _victim);
-	_artyReg = _logik getVariable ["wfbe_aicom_arty_reg", []];
-	if (typeName _artyReg != "ARRAY") then {_artyReg = []};
-	_artyRegLive = [];
-	{
-		if (!isNull _x && {_x != _victim} && {alive _x}) then {_artyRegLive set [count _artyRegLive, _x]};
-	} forEach _artyReg;
-	_logik setVariable ["wfbe_aicom_arty_reg", _artyRegLive];
-	deleteVehicle _victim;
-	["INFORMATION", Format ["AI_Commander_BaseSell.sqf: [%1] SOLD stranded base-artillery (cost %2, refunded %3 funds).", _sideText, _victimCost, _refund]] Call WFBE_CO_FNC_AICOMLog;
-	diag_log ("AICOM2|v1|SELL|" + _sideText + "|" + str (round (time / 60)) + "|event=BASE_SELL|type=CommanderArtillery|cost=" + str _victimCost + "|refund=" + str _refund);
+	//--- LOCALITY (armed-flag audit 2026-07-31, RE-DARK finding fixed at arm time): commander artillery
+	//--- is manned via HC delegation, so the manned hull is HC-LOCAL and a server-side deleteVehicle
+	//--- SILENTLY NO-OPS (the exact trap server_groupsGC.sqf:463 documents for this exact tag). The
+	//--- original block refunded funds and logged SOLD unconditionally - on the live 2-HC box that is
+	//--- a repeating free-funds printer (piece never dies, re-sold every interval). Now: local pieces
+	//--- sell exactly as before; non-local pieces refund/prune ONCE, are stamped sale-pending, and the
+	//--- deletion is dispatched to the owning machine via the established HandleSpecial channel with a
+	//--- public reap stamp the receiver requires (same auth-narrowing as cleanup-commander-arty-wreck).
+	//--- A dropped dispatch re-enters here next interval and takes the pending branch: re-dispatch only,
+	//--- never a second refund.
+	if (local _victim) then {
+		if (_refund > 0) then {[_side, _refund] Call ChangeAICommanderFunds};
+		{deleteVehicle _x} forEach (crew _victim);
+		_artyReg = _logik getVariable ["wfbe_aicom_arty_reg", []];
+		if (typeName _artyReg != "ARRAY") then {_artyReg = []};
+		_artyRegLive = [];
+		{
+			if (!isNull _x && {_x != _victim} && {alive _x}) then {_artyRegLive set [count _artyRegLive, _x]};
+		} forEach _artyReg;
+		_logik setVariable ["wfbe_aicom_arty_reg", _artyRegLive];
+		deleteVehicle _victim;
+		["INFORMATION", Format ["AI_Commander_BaseSell.sqf: [%1] SOLD stranded base-artillery (cost %2, refunded %3 funds).", _sideText, _victimCost, _refund]] Call WFBE_CO_FNC_AICOMLog;
+		diag_log ("AICOM2|v1|SELL|" + _sideText + "|" + str (round (time / 60)) + "|event=BASE_SELL|type=CommanderArtillery|cost=" + str _victimCost + "|refund=" + str _refund);
+	} else {
+		if !(_victim getVariable ["wfbe_arty_sale_pending", false]) then {
+			//--- first pass for this piece: pay/prune once, then hand the deletion to its owner.
+			if (_refund > 0) then {[_side, _refund] Call ChangeAICommanderFunds};
+			_artyReg = _logik getVariable ["wfbe_aicom_arty_reg", []];
+			if (typeName _artyReg != "ARRAY") then {_artyReg = []};
+			_artyRegLive = [];
+			{
+				if (!isNull _x && {_x != _victim} && {alive _x}) then {_artyRegLive set [count _artyRegLive, _x]};
+			} forEach _artyReg;
+			_logik setVariable ["wfbe_aicom_arty_reg", _artyRegLive];
+			_victim setVariable ["wfbe_arty_sale_pending", true]; //--- server-local re-entry guard: never refund twice.
+			_victim setVariable ["wfbe_arty_sale_reap", true, true]; //--- public reap stamp: the receiver refuses unstamped dispatches.
+			[_victim, "HandleSpecial", ["cleanup-commander-arty-sale", _victim]] Call WFBE_CO_FNC_SendToClient;
+			["INFORMATION", Format ["AI_Commander_BaseSell.sqf: [%1] stranded base-artillery sale DISPATCHED to owner (cost %2, refunded %3 funds).", _sideText, _victimCost, _refund]] Call WFBE_CO_FNC_AICOMLog;
+			diag_log ("AICOM2|v1|SELL|" + _sideText + "|" + str (round (time / 60)) + "|event=BASE_SELL_DISPATCH|type=CommanderArtillery|cost=" + str _victimCost + "|refund=" + str _refund);
+		} else {
+			//--- retry: the piece survived a dropped dispatch; re-dispatch only, no economy effects.
+			[_victim, "HandleSpecial", ["cleanup-commander-arty-sale", _victim]] Call WFBE_CO_FNC_SendToClient;
+		};
+	};
 } else {
 	if ((missionNamespace getVariable ["WFBE_C_ECONOMY_CURRENCY_SYSTEM", 0]) == 0 && {_refund > 0}) then {
 		[_side, _refund, "AI commander base-sell refund.", false] Call ChangeSideSupply;

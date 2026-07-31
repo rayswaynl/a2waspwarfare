@@ -100,6 +100,19 @@ switch (_request) do {
 		_wreck = _args select 0;
 		if (!isNull _wreck && {local _wreck} && {!alive _wreck} && {(_wreck getVariable ["WFBE_CommanderArtillery", false])}) then {deleteVehicle _wreck};
 	};
+	//--- fix(arm-audit 2026-07-31): delete a LIVE stranded commander-artillery piece the server is
+	//--- SELLING (BaseSell Pass-3, WFBE_C_AICOM_RELOC_SELL/ARTY_SELL_STRANDED era). Mirrors the wreck
+	//--- case above but for an alive hull: crew must go first (A2 OA refuses deleteVehicle on a crewed
+	//--- hull). Forgeable-PVF narrowing: requires the tag AND the server-set public wfbe_arty_sale_reap
+	//--- stamp, so the worst a forged dispatch can do is despawn a piece the server already sold.
+	case "cleanup-commander-arty-sale": {
+		Private ["_salePiece"];
+		_salePiece = _args select 0;
+		if (!isNull _salePiece && {local _salePiece} && {(_salePiece getVariable ["WFBE_CommanderArtillery", false])} && {(_salePiece getVariable ["wfbe_arty_sale_reap", false])}) then {
+			{deleteVehicle _x} forEach (crew _salePiece);
+			deleteVehicle _salePiece;
+		};
+	};
 	//--- fix/heli-husk-reaper (mirrors cleanup-commander-arty-wreck directly above): delete a dead
 	//--- commander-attack-helicopter hull that is LOCAL TO THIS machine. server_groupsGC.sqf's heli
 	//--- reaper cannot delete a non-local wreck directly (HC-manned hulls are HC-local; a server-side
