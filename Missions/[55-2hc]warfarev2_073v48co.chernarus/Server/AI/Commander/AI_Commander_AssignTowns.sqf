@@ -110,6 +110,14 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					_logik setVariable [_bandKey, _bandVal + 1];
 					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_ARRIVED|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|elapsed=" + str _elapsed);
 					_team setVariable ["wfbe_aicom_dispatch_open", false];
+					//--- r40 intel freshness: arrival proves reachability - clear side-abandon memory for this town.
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST", 1]) > 0) then {
+						private ["_sbaArr","_sbaArrKeep"];
+						_sbaArr = _logik getVariable ["wfbe_aicom_side_abandons", []];
+						_sbaArrKeep = [];
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 0) != _dtgt}) then {_sbaArrKeep set [count _sbaArrKeep, _x]} } forEach _sbaArr;
+						if ((count _sbaArrKeep) != (count _sbaArr)) then {_logik setVariable ["wfbe_aicom_side_abandons", _sbaArrKeep]};
+					};
 					//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, claude-gaming 2026-07-02): the team reached a town
 					//--- this dispatch - a successful journey. Reset its failed-journey counter AND its per-pass
 					//--- orbiter watch state so a fresh leg starts clean. A2-OA-safe (plain setVariable).
@@ -550,7 +558,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 												private ["_sba","_newSba","_sFound","_sCnt"];
 												_sba = _logik getVariable ["wfbe_aicom_side_abandons", []];
 												_newSba = []; _sFound = false; _sCnt = 0;
-												{ if ((_x select 0) == _goto) then {_sFound = true; _sCnt = (_x select 1) + 1; _newSba set [count _newSba, [_goto, _sCnt]]} else {_newSba set [count _newSba, _x]} } forEach _sba;
+												//--- r40 intel freshness: drop null/deleted town keys while rewriting.
+												{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)}) then {
+													if ((_x select 0) == _goto) then {_sFound = true; _sCnt = (_x select 1) + 1; _newSba set [count _newSba, [_goto, _sCnt]]} else {_newSba set [count _newSba, _x]};
+												} } forEach _sba;
 												if (!_sFound) then {_sCnt = 1; _newSba set [count _newSba, [_goto, 1]]};
 												_logik setVariable ["wfbe_aicom_side_abandons", _newSba];
 												if (_sCnt >= (missionNamespace getVariable ["WFBE_C_AICOM_SIDE_ABANDON", 3])) then {
@@ -703,7 +714,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 													private ["_sba","_newSba","_sFound","_sCnt"];
 													_sba = _logik getVariable ["wfbe_aicom_side_abandons", []];
 													_newSba = []; _sFound = false; _sCnt = 0;
-													{ if ((_x select 0) == _goto) then {_sFound = true; _sCnt = (_x select 1) + 1; _newSba set [count _newSba, [_goto, _sCnt]]} else {_newSba set [count _newSba, _x]} } forEach _sba;
+													//--- r40 intel freshness: drop null/deleted town keys while rewriting.
+													{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)}) then {
+														if ((_x select 0) == _goto) then {_sFound = true; _sCnt = (_x select 1) + 1; _newSba set [count _newSba, [_goto, _sCnt]]} else {_newSba set [count _newSba, _x]};
+													} } forEach _sba;
 													if (!_sFound) then {_sCnt = 1; _newSba set [count _newSba, [_goto, 1]]};
 													_logik setVariable ["wfbe_aicom_side_abandons", _newSba];
 													if (_sCnt >= (missionNamespace getVariable ["WFBE_C_AICOM_SIDE_ABANDON", 3])) then {
@@ -956,8 +970,20 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					//--- side stops sending teams there. The empty-pool guardrail below clears _blTowns (incl these) so a
 					//--- team is never left idle. Flag-gated WFBE_C_AICOM_SIDE_BLACKLIST (default on), reversible. A2-safe.
 					if ((missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST", 1]) > 0) then {
-						private "_sbl"; _sbl = _logik getVariable ["wfbe_aicom_side_blacklist", []];
-						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time} && {!((_x select 0) in _blTowns)}) then {_blTowns set [count _blTowns, (_x select 0)]} } forEach _sbl;
+						private ["_sbl","_sblLive","_sba","_sbaKeep"];
+						_sbl = _logik getVariable ["wfbe_aicom_side_blacklist", []];
+						_sblLive = [];
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {
+							_sblLive set [count _sblLive, (_x select 0)];
+							if (!((_x select 0) in _blTowns)) then {_blTowns set [count _blTowns, (_x select 0)]};
+						} } forEach _sbl;
+						//--- r40 intel freshness: side_abandons is permanent 'unreachable town' contact memory.
+						//--- After blacklist cooldown, count stayed >= threshold so ONE abandon re-banned forever.
+						//--- Age abandon tallies with the live side blacklist so intelligence expires with the ban.
+						_sba = _logik getVariable ["wfbe_aicom_side_abandons", []];
+						_sbaKeep = [];
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 0) in _sblLive}) then {_sbaKeep set [count _sbaKeep, _x]} } forEach _sba;
+						if ((count _sbaKeep) != (count _sba)) then {_logik setVariable ["wfbe_aicom_side_abandons", _sbaKeep]};
 					};
 					_uncapturedF = _uncaptured - _blTowns;
 					if (count _uncapturedF == 0) then {
