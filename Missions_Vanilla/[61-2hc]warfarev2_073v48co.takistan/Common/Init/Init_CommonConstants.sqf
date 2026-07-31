@@ -750,10 +750,10 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_BASE_SELL_INTERVAL")    then {WFBE_C_AICOM_BASE_SELL_INTERVAL    = 120};  //--- s between sell evaluations per side (slow; selling is rare).
 	if (isNil "WFBE_C_AICOM_SELL_REFUND_FRAC")      then {WFBE_C_AICOM_SELL_REFUND_FRAC      = 0.5};  //--- fraction of the structure's build cost refunded to side SUPPLY on sell (0..1). Never over-refunds (clamped).
 	if (isNil "WFBE_C_AICOM_SELL_REDUNDANT_MAX")    then {WFBE_C_AICOM_SELL_REDUNDANT_MAX    = 2};    //--- self-contained trigger (pre-cap): sell only when the side holds MORE than this many DUPLICATE structures of any one sellable type (a 2nd+ Barracks/Light/Heavy/etc). Once item 1/4's base/building cap lands, the cap becomes the primary trigger and this is the floor.
-	if (isNil "WFBE_C_AICOM_ARTY_SELL_STRANDED") then {WFBE_C_AICOM_ARTY_SELL_STRANDED = 0}; //--- 1 = BaseSell Pass-3 recycles stranded commander base-artillery (WFBE_CommanderArtillery SPGs not in wfbe_structures) after MHQ relocate so the 2/2 cap can rebuild near the new HQ (RPT-DEEPDIVE-20260730 sec 2.5). 0 = dark (default). AI-commander only.
+	if (isNil "WFBE_C_AICOM_ARTY_SELL_STRANDED") then {WFBE_C_AICOM_ARTY_SELL_STRANDED = 1}; //--- 1 = BaseSell Pass-3 recycles stranded commander base-artillery (WFBE_CommanderArtillery SPGs not in wfbe_structures) after MHQ relocate so the 2/2 cap can rebuild near the new HQ (RPT-DEEPDIVE-20260730 sec 2.5). 0 = dark (default). AI-commander only. //--- ARMED on owner order 2026-07-31 ("turn all the suggested on"): m0730q flag wave.
 	if (isNil "WFBE_C_AICOM_ARTY_SELL_STRANDED_DIST") then {WFBE_C_AICOM_ARTY_SELL_STRANDED_DIST = 1500}; //--- m: commander SPG must be farther than this from current HQ to count as stranded (floor = BASE_RADIUS). Wider than factory Pass-1 so echelon-forward guns near the front are less likely to look stranded.
 	//--- AICOM relocation sell: default-off cleanup of the previous base cluster after a real MHQ move.
-	if (isNil "WFBE_C_AICOM_RELOC_SELL") then {WFBE_C_AICOM_RELOC_SELL = 0};
+	if (isNil "WFBE_C_AICOM_RELOC_SELL") then {WFBE_C_AICOM_RELOC_SELL = 1}; //--- ARMED on owner order 2026-07-31 ("turn all the suggested on"): m0730q flag wave.
 	//--- Minimum movement between the remembered live base center and the current deployed HQ.
 	if (isNil "WFBE_C_AICOM_RELOC_SELL_DIST") then {WFBE_C_AICOM_RELOC_SELL_DIST = 500};
 	//--- Radius used to classify the old base cluster and protect the live current base.
@@ -987,7 +987,7 @@ if (worldName == "Zargabad") then {
 	//--- already-eligible tier. >=COMP_GARRISON_HEAVY camps -> boost AT/MG-containing templates;
 	//--- open village (supplyValue <= COMP_OPEN_SV) -> boost mech-infantry. Factory-tier gating unchanged.
 	//--- Flag 0 = inert (default OFF). A2-OA-safe (getVariable default, plain arithmetic).
-	if (isNil "WFBE_C_AICOM_TARGET_AWARE_COMP")   then {WFBE_C_AICOM_TARGET_AWARE_COMP   = 0};  //--- master switch: 1 = active, 0 = inert (default OFF).
+	if (isNil "WFBE_C_AICOM_TARGET_AWARE_COMP")   then {WFBE_C_AICOM_TARGET_AWARE_COMP   = 1};  //--- master switch: 1 = active, 0 = inert (default OFF). //--- ARMED on owner order 2026-07-31 ("turn all the suggested on"): m0730q flag wave.
 	if (isNil "WFBE_C_AICOM_COMP_GARRISON_HEAVY") then {WFBE_C_AICOM_COMP_GARRISON_HEAVY = 3};  //--- camp count (camps = town getVariable "camps") at or above which a town is "garrison-heavy" -> AT/MG boost.
 	if (isNil "WFBE_C_AICOM_COMP_OPEN_SV")        then {WFBE_C_AICOM_COMP_OPEN_SV        = 50}; //--- supplyValue at or below which a target is an "open village" -> mech-infantry boost.
 	if (isNil "WFBE_C_AICOM_COMP_ATMG_MULT")      then {WFBE_C_AICOM_COMP_ATMG_MULT      = 3.0};//--- weight multiplier applied to templates that contain an AT/MG hull or unit when garrison-heavy.
@@ -1488,7 +1488,7 @@ if (worldName == "Zargabad") then {
 if (isNil "WFBE_C_AICOM_SVC_TRIGGER_DIST") then {WFBE_C_AICOM_SVC_TRIGGER_DIST = 300}; //--- B49: relaxed START gate (m). A disengaged team detours to service if NO enemy within this (was the full SAFE_DIST=600, which blocked every grinding team so the feature never fired). The hard en-route abort still uses SAFE_DIST; COMBAT teams are still never pulled out.
 	WFBE_C_AI_COMMANDER_REINFORCE_RANGE = 1200;   //--- V0.5: Produce only refills teams this close to base (wiped teams reform at base).
 	WFBE_C_AICOM_FWD_REINFORCE_RANGE = 900;       //--- FILL-FIX 2026-06-18: 500->900 (rollback 500) - forward spearheads 500-900m out of the rear base couldn't refill and bled toward ~4 units; widen so front-line teams top up from the nearest forward factory. Still requires an OWNED town within range (never resupplies on enemy ground). --- FORWARD-REINFORCE (claude-gaming 2026-06-13): deep teams beyond REINFORCE_RANGE may still refill if their leader hugs an owned town within this radius (fixes the deep-spearhead bleed-out / EAST snowball). Refill spawns at the factory nearest the team, so a captured forward town resupplies its own front instead of a lone unit trekking from the rear base.
-	if (isNil "WFBE_C_AICOM_FACTORY_TARGET_ENABLE") then {WFBE_C_AICOM_FACTORY_TARGET_ENABLE = 0}; //--- owner bug 07-24: 1 = refill from the eligible side-owned factory closest to the team's assigned AICOM objective, including player-built additional factories; 0 = legacy closest-to-leader selection.
+	if (isNil "WFBE_C_AICOM_FACTORY_TARGET_ENABLE") then {WFBE_C_AICOM_FACTORY_TARGET_ENABLE = 1}; //--- owner bug 07-24: 1 = refill from the eligible side-owned factory closest to the team's assigned AICOM objective, including player-built additional factories; 0 = legacy closest-to-leader selection. //--- ARMED on owner order 2026-07-31 ("turn all the suggested on"): m0730q flag wave.
 	WFBE_C_AICOM_CRITICAL_STRENGTH = 0.55;        //--- FILL-FIX 2026-06-18: 0.30->0.55 (rollback 0.30) - a 4/10=40% team sat ABOVE the old 0.30 gate so only got the slow 3/cycle dribble and lingered at ~4; at 0.55 any team under ~55% rush-fills to full in one funds-permitting cycle. Bounded by funds/factory/AI-cap (130). --- RANK-2 health-gated refill (claude-gaming 2026-06-13): a server-local AI-commander team below this fraction of its template size is rushed to FULL strength in one Produce cycle (full-deficit batch), so just-founded teams form WHOLE and depleted teams stop lingering as 2-man remnants (cuts group count + drains the stuck war chest). Bounded by funds/factory/AI-cap. 0 disables.
 	WFBE_C_AICOM_PRODUCE_BATCH = 4;               //--- FILL-FIX 2026-06-18: healthy-team refill batch (units/cycle for a team still ABOVE CRITICAL_STRENGTH); was implicit default 3 at AI_Commander_Produce.sqf:23. 4 lets a lightly-attrited team top off in ~1-2 cycles. Cash-gated + AI-cap bounded. Rollback: 3.
 	WFBE_C_AI_DELEGATION_FPS_INTERVAL = 60 * 3; //--- A client send it's FPS average each x seconds to the server.
@@ -1911,10 +1911,10 @@ if (isNil "WFBE_C_AICOM_WATER_LEG_GATE") then {WFBE_C_AICOM_WATER_LEG_GATE = 1};
 	WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE = 2500; //--- Ray 2026-06-28: extra fee per DISTINCT VEHICLE taken along.
 	if (isNil "WFBE_C_GAMEPLAY_FAST_TRAVEL_RECHECK") then {WFBE_C_GAMEPLAY_FAST_TRAVEL_RECHECK = 1}; //--- lane197: recheck destination eligibility at fire time (integrity fix). Default 1 (active).
 	WFBE_C_GAMEPLAY_VOTE_TIME = if (WF_Debug) then {3} else {40};
-	if (isNil "WFBE_C_FIX_ENGINE_STEALTH_STATE_PUBLIC") then {WFBE_C_FIX_ENGINE_STEALTH_STATE_PUBLIC = 0}; //--- Default-off: publish stealth-engine stopped state across locality changes; 0 keeps legacy local vehicle state.
-	if (isNil "WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL") then {WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL = 0}; //--- Default-off: show the already-recorded GUER endgame stats as a third stats-panel column.
-	if (isNil "WFBE_C_FIX_VOTE_LIST_PRUNE") then {WFBE_C_FIX_VOTE_LIST_PRUNE = 0}; //--- Default-off: safer vote-dialog live-team row prune (reverse pass + stale index guard). 0 = legacy forward delete behaviour.
-	if (isNil "WFBE_C_FIX_VOTE_QA_EXECUTION") then {WFBE_C_FIX_VOTE_QA_EXECUTION = 0}; //--- Default-off: vote QA follow-up fixes for stored-index row color and commander primitive placeholder confirms.
+	if (isNil "WFBE_C_FIX_ENGINE_STEALTH_STATE_PUBLIC") then {WFBE_C_FIX_ENGINE_STEALTH_STATE_PUBLIC = 1}; //--- Default-off: publish stealth-engine stopped state across locality changes; 0 keeps legacy local vehicle state. //--- ARMED on owner order 2026-07-31 ("turn all the suggested on"): m0730q flag wave.
+	if (isNil "WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL") then {WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL = 1}; //--- Default-off: show the already-recorded GUER endgame stats as a third stats-panel column. //--- ARMED on owner order 2026-07-31 ("turn all the suggested on"): m0730q flag wave.
+	if (isNil "WFBE_C_FIX_VOTE_LIST_PRUNE") then {WFBE_C_FIX_VOTE_LIST_PRUNE = 1}; //--- Default-off: safer vote-dialog live-team row prune (reverse pass + stale index guard). 0 = legacy forward delete behaviour. //--- ARMED on owner order 2026-07-31 ("turn all the suggested on"): m0730q flag wave.
+	if (isNil "WFBE_C_FIX_VOTE_QA_EXECUTION") then {WFBE_C_FIX_VOTE_QA_EXECUTION = 1}; //--- Default-off: vote QA follow-up fixes for stored-index row color and commander primitive placeholder confirms. //--- ARMED on owner order 2026-07-31 ("turn all the suggested on"): m0730q flag wave.
 	if (isNil "WFBE_C_AMBIENT_SKIRMISH") then {WFBE_C_AMBIENT_SKIRMISH = 0}; //--- Ray 2026-07-06: back to default-OFF (live test done; the GUER Director program + air-contact AA tier now own ambient life). Lane 180: ambient WEST/EAST skirmish cells; server-only, one active cell cap, no AICOM/town/supply budget integration.
 	if (isNil "WFBE_C_AMBIENT_SKIRMISH_INTERVAL") then {WFBE_C_AMBIENT_SKIRMISH_INTERVAL = 600}; //--- Seconds between spawn attempts while enabled.
 	if (isNil "WFBE_C_AMBIENT_SKIRMISH_LIFETIME") then {WFBE_C_AMBIENT_SKIRMISH_LIFETIME = 120}; //--- Seconds before the ambient cell self-cleans.
@@ -3525,7 +3525,7 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECT
 //--- Spectator broadcast HUD: opt-in styled title overlay + dialog map fallback.
 //--- 0 (default) leaves the existing 12455 cutText spectator card path unchanged.
 //--- Layer 12456 is reserved for this title; 12450-12452/12454/12455/12461 remain occupied.
-if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 0};
+if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 1}; //--- ARMED on owner order 2026-07-31 ("turn all the suggested on"): m0730q flag wave.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
