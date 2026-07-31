@@ -5103,7 +5103,7 @@ class Mission
 				};
 			};
 		};
-	class Item138
+		class Item138
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5120,7 +5120,7 @@ class Mission
 				};
 			};
 		};
-	class Item139
+		class Item139
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5137,7 +5137,7 @@ class Mission
 				};
 			};
 		};
-	class Item140
+		class Item140
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5154,7 +5154,7 @@ class Mission
 				};
 			};
 		};
-	class Item141
+		class Item141
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5171,7 +5171,7 @@ class Mission
 				};
 			};
 		};
-	class Item142
+		class Item142
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5188,7 +5188,7 @@ class Mission
 				};
 			};
 		};
-	class Item143
+		class Item143
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5205,7 +5205,7 @@ class Mission
 				};
 			};
 		};
-	class Item144
+		class Item144
 		{
 			side="LOGIC";
 			class Vehicles
@@ -5222,7 +5222,7 @@ class Mission
 				};
 			};
 		};
-	class Item145
+		class Item145
 		{
 			side="LOGIC";
 			class Vehicles
