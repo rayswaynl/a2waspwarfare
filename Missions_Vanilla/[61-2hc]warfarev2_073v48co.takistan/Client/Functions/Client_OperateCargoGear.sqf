@@ -25,13 +25,16 @@ switch (_operate) do {
 		};
 	};
 	case "substract": {
-		if (_itemcount < 2) then {
-			(_array select 0) set [_index, false];
-			(_array select 1) set [_index, false];
-			_array set [0, (_array select 0) - [false]];
-			_array set [1, (_array select 1) - [false]];
-		} else {
-			(_array select 1) set [_index, ((_array select 1) select _index) - 1];
+		//--- r40 associative-lookup: find miss => _index==-1; A2 set/select -1 is Zero divisor / last-slot corruption on the parallel [items,counts] map. No-op when key absent (add path already branches on _itemcount==-1).
+		if (_index != -1) then {
+			if (_itemcount < 2) then {
+				(_array select 0) set [_index, false];
+				(_array select 1) set [_index, false];
+				_array set [0, (_array select 0) - [false]];
+				_array set [1, (_array select 1) - [false]];
+			} else {
+				(_array select 1) set [_index, ((_array select 1) select _index) - 1];
+			};
 		};
 	};
 };

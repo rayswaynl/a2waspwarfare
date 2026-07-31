@@ -1,7 +1,7 @@
 //*****************************************************************************************
 //Description: Creates a small construction site.
 //*****************************************************************************************
-Private ["_buildStage","_completion","_construct","_constructed","_constructionLogicLost","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_startResultKey","_completionResultKey","_rlType","_side","_sideID","_site","_siteName","_stage2Objects","_stage3Objects","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type"];
+Private ["_buildStage","_completion","_construct","_constructed","_constructionLogicLost","_defenses","_direction","_group","_index","_logik","_nearLogic","_objects","_position","_startResultKey","_completionResultKey","_rlIdx","_rlType","_side","_sideID","_site","_siteName","_stage2Objects","_stage3Objects","_startTime","_structures","_structuresNames","_time","_timeNextUpdate","_type"];
 _type = _this select 0;
 _side = _this select 1;
 _position = _this select 2;
@@ -21,7 +21,15 @@ _siteName = missionNamespace getVariable Format["WFBE_%1CONSTRUCTIONSITE",str _s
 // Refactor to get the parameters from RequestStructure.sqf, no need to run duplicate code
 _structures = missionNamespace getVariable Format ['WFBE_%1STRUCTURES',str _side];
 _structuresNames = missionNamespace getVariable Format ['WFBE_%1STRUCTURENAMES',str _side];
-_rlType = _structures select (_structuresNames find _type);
+//--- r40 associative-lookup: unguarded find->select on STRUCTURENAMES/STRUCTURES parallel map.
+//--- Miss => find -1 => select -1 Zero divisor / wrong last rlType (pending release, walls, wfbe_structure_type).
+//--- Callers (RequestStructure/FOB/AI_Commander_Base) already guard; worker still fail-cleans (B62 GetStructureMarkerLabel shape).
+_rlIdx = _structuresNames find _type;
+if (_rlIdx < 0) exitWith {
+	if (_startResultKey != "") then {missionNamespace setVariable [_startResultKey, [-1,"unknown structure type"]]};
+	diag_log Format ["CONSTRUCTION|v1|reject|reason=unknown-structure-type|script=MediumSite|type=%1|pos=%2", _type, _position];
+};
+_rlType = _structures select _rlIdx;
 
 if (WF_Debug) then {["DEBUG (Construction_MediumSite.sqf)", Format ["Variables - Type: %1, Side: %2, Position: %3, Direction: %4, Index: %5, Logik: %6, SideID: %7, Time: %8, SiteName: %9, Structures: %10, StructuresNames: %11, RLType: %12", _type, _side, _position, _direction, _index, _logik, _sideID, _time, _siteName, _structures, _structuresNames, _rlType]] Call WFBE_CO_FNC_LogContent};
 

@@ -255,6 +255,8 @@ while {true} do {
 			switch (_view) do {
 				case "backpack": {
 					_kind = switch (true) do { case ((_get select 4) < 6): {0}; case ((_get select 4) in [100,101]): {1}; default {-1}};
+					//--- r40 associative-lookup: default kind -1 must not feed select/set (Zero divisor); mirrors add-path guard below.
+					if (_kind == -1) exitWith {};
 					_gear_backpack_content set [_kind, [_gear_backpack_content select _kind, "substract", if (_kind == 0) then {_item_selected} else {_get select 6}] Call WFBE_CL_FNC_OperateCargoGear];
 					[_lb_cargo, _gear_backpack_content, true] Call WFBE_CL_FNC_UI_Gear_FillCargoList;
 					_has_inv_changed = true;
@@ -262,6 +264,8 @@ while {true} do {
 				};
 				case "vehicle": {
 					_kind = switch (true) do { case ((_get select 4) < 6): {0}; case ((_get select 4) in [100,101]): {1}; case ((_get select 4) in [200,201]): {2}; default {-1}};
+					//--- r40 associative-lookup: default kind -1 must not feed select/set (Zero divisor); mirrors add-path guard.
+					if (_kind == -1) exitWith {};
 					_gear_vehicle_content set [_kind, [_gear_vehicle_content select _kind, "substract", if (_kind == 1) then {_get select 6} else {_item_selected}] Call WFBE_CL_FNC_OperateCargoGear];
 					[_lb_cargo, _gear_vehicle_content, true] Call WFBE_CL_FNC_UI_Gear_FillCargoList;
 					_has_veh_changed = true;
