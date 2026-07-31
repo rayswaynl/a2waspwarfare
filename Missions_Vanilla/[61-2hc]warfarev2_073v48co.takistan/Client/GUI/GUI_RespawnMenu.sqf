@@ -150,7 +150,7 @@ Open the Team Menu -> Save Gear to store it as a preset.";
 			//--- nil leaked to lines below + GetClosestEntity). Detect-good-keep never touches nil _x.
 			private ["_cleanLocs"];
 			_cleanLocs = [];
-			{ if (!isNil "_x" && {typeName _x == "OBJECT"} && {!isNull _x}) then {_cleanLocs = _cleanLocs + [_x]} } forEach _spawn_locations;
+			{ if (!isNil "_x" && {typeName _x == "OBJECT"} && {!isNull _x} && {alive _x}) then {_cleanLocs = _cleanLocs + [_x]} } forEach _spawn_locations;
 			_spawn_locations = _cleanLocs;
 
 		//--- v2 feature 8: first-refresh pre-select of last remembered spawn.
