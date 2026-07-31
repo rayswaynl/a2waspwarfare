@@ -1155,7 +1155,16 @@ if (_isMan) then {
 
 	if (_unit isKindOf "Air") then {
 		//--- Countermeasures.
-			if (getNumber(configFile >> "CfgVehicles" >> typeOf _vehicle >> "incommingmissliedetectionsystem") > 8) then {_vehicle addeventhandler ['IncomingMissile',{_this spawn HandleAlarm;}]};
+			//--- A2 OA: no CfgVehicles incomingMissileDetectionSystem (A3). Misspelled key always getNumber 0 → EH never attached.
+		//--- Prefer real property when present (A3/mod packs); otherwise fail-open inbound alarm for all player-built Air.
+		Private ["_imdCfg","_imd"];
+		_imdCfg = configFile >> "CfgVehicles" >> typeOf _vehicle >> "incomingMissileDetectionSystem";
+		if (isNumber _imdCfg) then {
+			_imd = getNumber _imdCfg;
+			if (_imd > 8) then {_vehicle addeventhandler ['IncomingMissile',{_this spawn HandleAlarm;}]};
+		} else {
+			_vehicle addeventhandler ['IncomingMissile',{_this spawn HandleAlarm;}];
+		};
 		if !(WF_A2_Vanilla) then {
 			switch (missionNamespace getVariable "WFBE_C_MODULE_WFBE_FLARES") do { //--- Remove CM if needed.
 				case 0: {(_vehicle) Call WFBE_CO_FNC_RemoveCountermeasures}; //--- Disabled.

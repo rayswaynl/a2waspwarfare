@@ -105,7 +105,13 @@ _hcNames = WFBE_C_HC_NAMES;
 
 if (_killer_side == sideEnemy) then { //--- Make sure the killer is not renegade, if so, get the side from the config.
 	if !(_killer isKindOf "Man") then {_killer_type = typeOf effectiveCommander(vehicle _killer)};
-	_killer_side = switch (getNumber(configFile >> "CfgVehicles" >> _killer_type >> "side")) do {case 0: {east}; case 1: {west}; case 2: {resistance}; default {civilian}};
+	//--- Missing CfgVehicles class: getNumber returns 0 (silent default) which maps to EAST — false kill credit.
+	//--- Require isClass; else leave civilian so the exit below drops undetermined renegade attribution.
+	if (typeName _killer_type == "STRING" && {_killer_type != ""} && {isClass (configFile >> "CfgVehicles" >> _killer_type)}) then {
+		_killer_side = switch (getNumber(configFile >> "CfgVehicles" >> _killer_type >> "side")) do {case 0: {east}; case 1: {west}; case 2: {resistance}; default {civilian}};
+	} else {
+		_killer_side = civilian;
+	};
 };
 
 if (_killer_side == civilian) exitWith {}; //--- Side couldn't be determined? exit.
