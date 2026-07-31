@@ -60,7 +60,8 @@ _assigned = [];
 				if (typeName _curTgt == "OBJECT" && {!isNull _curTgt}) then {
 					//--- Only count it as committed mass if the town is still contestable
 					//--- (not ours yet); a captured town frees the team to roll forward.
-					if ((_curTgt getVariable "sideID") != _sideID) then {
+					//--- r36 wave/staging: bare getVariable sideID can nil-poison concentration pre-seed
+					if ((_curTgt getVariable ["sideID", -1]) != _sideID) then {
 						_assigned set [count _assigned, _curTgt];
 					};
 				};
@@ -1089,6 +1090,13 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 									};
 									[_team, "move"] Call SetTeamMoveMode;
 									[_team, getPos _footStageTown] Call SetTeamMovePos;
+									//--- r36 assault-staging: HC driver reads ONLY wfbe_aicom_order (WAVE-1 A3 pattern from Strategy
+									//--- relief). Relying solely on Execute's move-mode dual-write left FOOT_STAGE teams waiting a
+									//--- full supervisor tick (or stuck if Execute debounce held) while foot_stage=true excluded
+									//--- them from the wedge watchdog - publish the order here.
+									if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+										_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "move", getPos _footStageTown], true];
+									};
 									_team setVariable ["wfbe_aicom_foot_stage", true];
 									_team setVariable ["wfbe_aicom_foot_stage_pos", getPos _footStageTown];
 									_team setVariable ["wfbe_aicom_townorder", [], false];
@@ -1125,10 +1133,15 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						//--- run inline exactly as before (byte-identical).
 						_waveDelay = 0;
 						if (((missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER", 0]) > 0) && {({_x == _target} count _assigned) > 0}) then {
-							private "_waveJit";
+							private ["_waveJit","_waveMin","_waveMax"];
 							_waveJit = _team getVariable "wfbe_aicom_lanejit";
-							if (isNil "_waveJit") then {_waveJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _waveJit, true]};
-							_waveDelay = (missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MIN", 30]) + (((_waveJit + 1) / 2) * ((missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MAX", 90]) - (missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MIN", 30])));
+							//--- r36 wave-sync: non-scalar / missing lanejit must not throw in the delay arithmetic
+							if (isNil "_waveJit" || {typeName _waveJit != "SCALAR"}) then {_waveJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _waveJit, true]};
+							_waveMin = missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MIN", 30];
+							_waveMax = missionNamespace getVariable ["WFBE_C_AICOM_WAVE_STAGGER_MAX", 90];
+							if (typeName _waveMin != "SCALAR" || {_waveMin < 0}) then {_waveMin = 30};
+							if (typeName _waveMax != "SCALAR" || {_waveMax < _waveMin}) then {_waveMax = _waveMin + 60};
+							_waveDelay = _waveMin + (((_waveJit + 1) / 2) * (_waveMax - _waveMin));
 						};
 						//--- hc-locality-group-owner: demote HC flag if leader is server-local (HC drop) so this
 						//--- branch falls through to AIMoveTo / SetTownAttackPath instead of publishing a dead order.
@@ -1246,7 +1259,12 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 						_priorOpen = [_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool;
 						_sameTgt   = (count _priorOrd >= 1) && {(typeName (_priorOrd select 0)) == "OBJECT"} && {(_priorOrd select 0) == _target};
 						_priorDispT0 = if (count _priorOrd >= 2) then {_priorOrd select 1} else {time};
-						_dispT0    = if (_priorOpen && _sameTgt && {count _priorOrd >= 2}) then {_priorDispT0} else {time};
+						//--- r36 wave-sync: WAVE_STAGGER defers the actual MOVE/order by _waveDelay, but the assault
+						//--- strand clock used to start at assignment time - second+ teams lost 30-90s of budget while
+						//--- sitting still. New dispatches start the clock when the delayed march is due to fire.
+						_dispT0    = if (_priorOpen && _sameTgt && {count _priorOrd >= 2}) then {_priorDispT0} else {
+							if (!isNil "_waveDelay" && {typeName _waveDelay == "SCALAR"} && {_waveDelay > 0}) then {time + _waveDelay} else {time}
+						};
 						//--- FIX A: distance/mobility-aware assault timeout (fable, GR-2026-07-08a; design ASSAULT-DYNTIMEOUT-DESIGN.md
 						//--- S2.5). _asltSpeed/_asltDist/_asltToSecs are in the top-of-file private list. _mounted/_teamAir are the
 						//--- SAME locals the reach gate above already computed this iteration (no re-scan of units _team).
