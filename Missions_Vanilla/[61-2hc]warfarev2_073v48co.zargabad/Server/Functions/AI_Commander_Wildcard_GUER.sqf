@@ -343,9 +343,13 @@ while {!gameOver} do {
 									         (_spawnPos select 1) - (_tRelPos select 0) * (sin _dir) + (_tRelPos select 1) * (cos _dir),
 									         0];
 									_obj = createVehicle [_tCls, [0,0,0], [], 0, "NONE"];
-									_obj setDir (_dir - _tRelDir);
-									_obj setPos _wPos;
-									_cpObjs set [count _cpObjs, _obj];
+									if (isNull _obj) then {
+										["WARNING", Format ["AI_Commander_Wildcard_GUER.sqf: checkpoint fort class [%1] create failed at %2.", _tCls, _wPos]] Call WFBE_CO_FNC_LogContent;
+									} else {
+										_obj setDir (_dir - _tRelDir);
+										_obj setPos _wPos;
+										_cpObjs set [count _cpObjs, _obj];
+									};
 								} forEach _cpTmpl;
 
 								//--- Manning vehicle sits BEHIND the chicane on the road axis (bounty=true, road-aligned).
