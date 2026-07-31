@@ -68,11 +68,18 @@ if ((count _town_teams) > 0 || (count _town_vehicles) > 0) then {["RequestSpecia
 		
 		if (isNull _team) exitWith {};
 		private "_wDeadline"; _wDeadline = time + 600; //--- wiki-wins: cap the watcher (was unbounded; a zombified/never-emptied group leaked this spawned thread for the rest of the mission)
-			while {count (units _team) > 0 && time < _wDeadline} do {sleep 1};
+		//--- r40 handoff: re-check isNull after sleep — peer cleanup / commander reclaim can null mid-wait.
+		while {!isNull _team && {(count (units _team)) > 0} && {time < _wDeadline}} do {sleep 1};
 		if (!isNull _team) then {
 			_remaining = +units _team;
-			{["hc-townai-watch-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach _remaining;
-			deleteGroup _team;
+			//--- isNull+local before delete; deleteGroup only when empty (AICOM/HC may own residual units).
+			{
+				if (!isNull _x) then {
+					["hc-townai-watch-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete;
+					if (local _x) then {deleteVehicle _x};
+				};
+			} forEach _remaining;
+			if (!isNull _team && {(count (units _team)) == 0}) then {deleteGroup _team};
 		};
 	};
 } forEach _town_teams; //--- Delete the group client-sided once it naturally becomes empty.

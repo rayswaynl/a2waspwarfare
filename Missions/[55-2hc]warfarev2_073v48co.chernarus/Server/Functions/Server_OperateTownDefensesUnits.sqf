@@ -6,7 +6,7 @@
 		- Action ("spawn"/"remove").
 */
 
-Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
+Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_op","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -42,13 +42,18 @@ switch (_action) do {
 			};
 		};
 		//--- Fallback: if group creation failed (cap reached), use the global DefenseTeam.
-		if (isNull _team) then {_team = missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side]};
+		//--- r40 handoff: DefenseTeam may be unset (nil) when group cap blocked createGroup — never leave _team as nil for RevealArea/setBehaviour.
+if (isNull _team) then {
+	_team = missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side];
+	if (isNil "_team") then {_team = grpNull};
+};
 
 		//--- Man the defenses.
 		{
 			_defense = _x getVariable "wfbe_defense";
 			_use_server = true;
-			if !(isNil '_defense') then {
+			//--- r40 handoff: objNull is not nil — skip null/dead hulls before manning.
+			if (!(isNil '_defense') && {!isNull _defense} && {alive _defense}) then {
 				_positions = [];
 				_groups = [];
 				if !(alive gunner _defense) then { //--- Make sure that the defense gunner is null or dead.
@@ -127,7 +132,7 @@ switch (_action) do {
 		{
 			_defense = _x getVariable "wfbe_defense";
 
-			if !(isNil '_defense') then {
+			if (!(isNil '_defense') && {!isNull _defense}) then {
 				_unit = gunner _defense;
 				if !(isNull _unit) then { //--- Make sure that we do not remove a player's unit.
 					//--- fix(alife) proper #1370 audit: the bare deleteVehicle below silently no-ops when
@@ -154,7 +159,11 @@ switch (_action) do {
 				_defense lock true;
 			};
 			if !(isNil {_x getVariable "wfbe_defense_operator"}) then { //--- Delete the original gunner if he's still around.
-				if (alive(_x getVariable "wfbe_defense_operator")) then {deleteVehicle (_x getVariable "wfbe_defense_operator")};
+				//--- r40 handoff: bare deleteVehicle no-ops on HC-local operators (ambient defense vs commander reclaim).
+				_op = _x getVariable "wfbe_defense_operator";
+				if (!isNull _op && {alive _op}) then {
+					if (local _op) then {deleteVehicle _op} else {[_op, "HandleSpecial", ["cleanup-town-defense-gunner", _op, "remove-case"]] Call WFBE_CO_FNC_SendToClient};
+				};
 				_x setVariable ["wfbe_defense_operator", nil];
 			};
 		} forEach (_town getVariable "wfbe_town_defenses");
