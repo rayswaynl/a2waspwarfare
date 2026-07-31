@@ -3529,7 +3529,7 @@ if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD
 
 //--- Spectator v4 streaming pass (owner 2026-07-31: autonomous TikTok/Twitch/Kick broadcast cam).
 if (isNil "WFBE_C_SPECTATOR_TICK") then {WFBE_C_SPECTATOR_TICK = 0.01}; //--- camera loop sleep; 0.05 hard-capped updates at 20Hz = judder on a 60fps capture.
-if (isNil "WFBE_C_SPECTATOR_AUTOSTART") then {WFBE_C_SPECTATOR_AUTOSTART = 0}; //--- 1 = allowlisted caster auto-enters spectator + director-auto (hands-off stream box). Entry still UID-gated.
+if (isNil "WFBE_C_SPECTATOR_AUTOSTART") then {WFBE_C_SPECTATOR_AUTOSTART = 1}; //--- 1 = allowlisted caster auto-enters spectator + director-auto (hands-off stream box). Entry still UID-gated. //--- ARMED 2026-07-31 with the v4 fold: caster UID auto-enters spectator+director+orbit on join (OBS flow); non-allowlisted clients unaffected.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_MIN_DEG_PER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_MIN_DEG_PER_SEC = 25}; //--- adaptive slew floor.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_MAX_DEG_PER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_MAX_DEG_PER_SEC = 240}; //--- adaptive slew ceiling.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_EASE") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_EASE = 6}; //--- rate = clamp(err*EASE, MIN, MAX); ease-out near the frame.
