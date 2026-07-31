@@ -1004,14 +1004,15 @@ while {!WFBE_GameOver} do {
 								//--- current, possibly-overwritten, per-town flag. Default true (count) for any untagged
 								//--- group so pre-existing/edge-case groups keep the old behaviour - this only narrows
 								//--- counting for groups explicitly tagged air-only.
+								private ["_deactGrp"]; _deactGrp = _x; //--- deact-group-clobber fix: capture the GROUP before the inner forEach loops below rebind _x to units (A2 inner-forEach _x-clobber trap) - the deleteGroup at the bottom must target the group, not the last (deleted) unit ref.
 								if (_ctlLaneOn && {([_x, "wfbe_ctl_ground_wave", true] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- sweep-fix #936: _x is a GROUP; 2-arg getVariable returns nil-not-default on groups (G1 trap) - route through the group-safe wrapper.
 									{if (alive _x) then {_ctlSurviving = _ctlSurviving + 1}} forEach units _x;
 								};
 								//--- B67 [wiki-wins]: never delete a player unit. The old loop deleted
 								//--- every server-local unit; a player whose unit is server-local (e.g. a
 								//--- JIP/HC-handoff edge) would be wiped on despawn. Guard with !isPlayer.
-								{if (local _x && !(isPlayer _x)) then {["town-sweep-unit", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach units _x;
-								if (({!(local _x)} count units _x) == 0) then {deleteGroup _x};
+								{if (local _x && !(isPlayer _x)) then {["town-sweep-unit", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach units _deactGrp;
+								if (({!(local _x)} count units _deactGrp) == 0) then {deleteGroup _deactGrp};
 							};
 						};
 					} forEach _town_teams;
