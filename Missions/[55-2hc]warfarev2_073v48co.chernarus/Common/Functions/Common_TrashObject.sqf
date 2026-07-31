@@ -50,6 +50,20 @@ if !(isNull _object) then {
 		if (isNull _object) exitWith {};
 	};
 
+	//--- crash 014EFCF4 #4 (2026-07-30 09:44 live, m0730j): all four faults sit in the engine's vehicle
+	//--- move-out position math. This pass had deleted seated corpses out of a still-crewed vehicle team
+	//--- (one body 19s before the fault) and 15 more out of a fresh AAV wreck in one frame, and the fault
+	//--- registers held a sibling crew corpse mid-GetOutAny. Never deleteVehicle a body still seated while
+	//--- its hull is alive or holds living crew - the engine's dead-crew eject / survivor get-out walks
+	//--- those seats exactly then. Release the body back to the collector (airlifted-wreck idiom above) so
+	//--- deletion is retried ~65s later, once the hull is a cold wreck. Cold-wreck seat deletion (hull dead,
+	//--- crew all dead) keeps today's behaviour so the later hull pass still finds an empty wreck
+	//--- (A2 OA refuses deleteVehicle on a crewed hull).
+	if (_isMan && {!isNull _object} && {vehicle _object != _object} && {(alive (vehicle _object)) || {({alive _x} count crew (vehicle _object)) > 0}}) exitWith {
+		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
+		["INFORMATION", Format["Common_TrashObject.sqf: deferring corpse [%1] still seated in live vehicle [%2].", _object, vehicle _object]] Call WFBE_CO_FNC_LogContent;
+	};
+
 	["INFORMATION", Format["Server_TrashObject.sqf: Deleting [%1], it has been [%2] seconds.", _object, _delay]] Call WFBE_CO_FNC_LogContent;
 
 	//--- LOCALITY GATE (WFBE_C_TRASH_REMOTE_DELETE, default 1 = locality-aware cleanup). A server-side
@@ -63,6 +77,10 @@ if !(isNull _object) then {
 		_object setVariable ["wfbe_trash_reap", true, true];
 		["INFORMATION", Format["Common_TrashObject.sqf: [%1] is not server-local; dispatching the delete to its owner.", _object]] Call WFBE_CO_FNC_LogContent;
 		[_object, "HandleSpecial", ["cleanup-trash-object", _object]] Call WFBE_CO_FNC_SendToClient;
+		//--- crash 014EFCF4 #4: release the dispatched body back to the collector. If the owner-side executor
+		//--- rejects a mid-flight seat race, the next collector pass re-queues it instead of leaking the body;
+		//--- if the owner deleted it, the reference nulls and the collector's objNull prune drops it.
+		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
 	} else {
 		deleteVehicle _object;
 	};

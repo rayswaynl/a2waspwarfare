@@ -209,7 +209,12 @@ switch (_request) do {
 		if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) <= 0) exitWith {};
 		if (count _args < 1) exitWith {};
 		_trashObj = _args select 0;
-		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])}) then {deleteVehicle _trashObj};
+		//--- crash 014EFCF4 #4 (2026-07-30): executor half of the seated-corpse defer in Common_TrashObject.sqf.
+		//--- Never delete a Man out of a hull that is alive or still holds living crew - the engine's dead-crew
+		//--- eject / survivor get-out walks those seats. This runs on the OWNER, so the vehicle/crew reads are
+		//--- authoritative. Fails closed; the sender defers hot bodies itself and releases dispatched ones back
+		//--- to its collector, so a rejection here is re-queued on the next pass, never leaked.
+		if (!isNull _trashObj && {local _trashObj} && {!alive _trashObj} && {(_trashObj getVariable ["wfbe_trash_reap", false])} && {!(_trashObj isKindOf "Man") || {vehicle _trashObj == _trashObj} || {!(alive (vehicle _trashObj)) && {({alive _x} count crew (vehicle _trashObj)) == 0}}}) then {deleteVehicle _trashObj};
 	};
 	//--- fable/cleanup-locality-2: owner-side half of the weaponholder sweep (droppeditems_cleaner.sqf).
 	//--- Weaponholders are "alive", so the trash case above can never pass them - dedicated case with
