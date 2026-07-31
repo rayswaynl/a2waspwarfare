@@ -33,6 +33,13 @@
    as pure backup. DELIBERATELY still no disableUserInput (v1 rejection
    stands: unrecoverable-if-script-fails on a live community server).
 
+   v4 streaming pass (design: docs/plans/2026-07-31-spectator-v4-streaming-design.md):
+   per-frame camera tick (WFBE_C_SPECTATOR_TICK, was a 20Hz hard cap = judder),
+   smoothed follow-cam, EMA subject velocity + speed-scaled lead, adaptive
+   director pan (PAN_MIN/MAX/EASE, mid-shot cut 70deg), FOV snaps on target
+   cuts, town cams gated to active fights + hot linger (Client_SpectatorDirector.sqf),
+   WFBE_C_SPECTATOR_AUTOSTART hands-off entry (Client_SpectatorAttach.sqf).
+
    A2-OA-1.64 safe commands used: camCreate / camSetPos / camSetTarget /
    camSetFov / camCommit / camCommitted / cameraEffect / camDestroy /
    allowDamage / setCaptive / getPlayerUID / getPos / getDir / setDir /
@@ -72,6 +79,7 @@ WFBE_C_VAR_DirectorRecent = [];
 WFBE_C_VAR_DirectorLastSwitch = 0;
 WFBE_C_VAR_DirectorLastTownPoll = 0;
 WFBE_C_VAR_DirectorTownData = [];
+WFBE_C_VAR_DirectorTownHot = []; //--- v4: per-town last-contest timestamps for the hot linger.
 WFBE_C_VAR_DirectorAutoTime = 0;
 WFBE_C_VAR_DirectorLastBaseCheck = 0;
 WFBE_C_VAR_DirectorLastEstablish = -120;
@@ -89,6 +97,7 @@ WFBE_C_VAR_SpectatorLastManualZoom = 0;
 WFBE_C_VAR_SpectatorHideHint = false;
 WFBE_C_VAR_SpectatorHudMode = 2; //--- 2=FULL, 1=MINIMAL, 0=OFF; only read when the broadcast flag is armed.
 WFBE_C_VAR_SpectatorMouseBaseline = true; //--- first MouseMoving event only sets the baseline (recentre-bias fix)
+WFBE_C_VAR_SpectatorVelEma = [0,0,0]; //--- v4: EMA of the watched subject's velocity; raw networked velocity stair-steps and jittered the feed-forward.
 
 _pos0 = getPos player;
 _yaw0 = getDir player;
@@ -161,6 +170,33 @@ WFBE_CL_FNC_SpectatorCycleTarget = {
 	};
 	WFBE_C_VAR_SpectatorTarget = _next;
 	systemChat Format ["[WASP] Spectator target: %1 (F follow, V eyes)", name _next];
+};
+
+//--- v4: shared subject kinematics for follow/director. _this = [target, dt].
+//--- Returns [subject, subjectPos, leadOffset, emaSpeed]. Velocity runs through an EMA
+//--- (VEL_EMA_RATE per-second blend) because remote-unit velocity arrives in network
+//--- stair-steps; the lead scales with smoothed speed up to LEAD_MAX_SEC at
+//--- LEAD_FULL_SPEED m/s, so walking infantry get ~no lead (was: flat 0.4s raw).
+WFBE_CL_FNC_SpectatorKinematics = {
+	Private ["_t","_dt","_subject","_pos","_vel","_a","_ema","_speed","_leadSec","_leadMax","_fullSpeed"];
+	_t = _this select 0;
+	_dt = _this select 1;
+	_subject = vehicle _t;
+	_pos = getPos _subject;
+	_vel = velocity _subject;
+	_a = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_VEL_EMA_RATE", 8]) * _dt) min 1;
+	_ema = missionNamespace getVariable ["WFBE_C_VAR_SpectatorVelEma", [0,0,0]];
+	_ema = [
+		(_ema select 0) + (((_vel select 0) - (_ema select 0)) * _a),
+		(_ema select 1) + (((_vel select 1) - (_ema select 1)) * _a),
+		(_ema select 2) + (((_vel select 2) - (_ema select 2)) * _a)
+	];
+	WFBE_C_VAR_SpectatorVelEma = _ema;
+	_speed = sqrt (((_ema select 0) ^ 2) + ((_ema select 1) ^ 2) + ((_ema select 2) ^ 2));
+	_leadMax = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_LEAD_MAX_SEC", 0.5];
+	_fullSpeed = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_LEAD_FULL_SPEED", 25]) max 1;
+	_leadSec = _leadMax min (_leadMax * (_speed / _fullSpeed));
+	[_subject, _pos, [(_ema select 0) * _leadSec, (_ema select 1) * _leadSec, (_ema select 2) * _leadSec], _speed]
 };
 
 //--- Broadcast HUD renderer. This helper never suspends: display/control references exist
@@ -494,7 +530,7 @@ WFBE_C_VAR_SpectatorWheelIdx = (findDisplay 46) displayAddEventHandler ["MouseZC
 diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_SpectatorKeyDownIdx, WFBE_C_VAR_SpectatorMouseMovingIdx];
 
 [] spawn {
-	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d","_center","_radius","_height","_rate","_angle","_dirCard","_wantPos","_wantAim","_smoothPos","_smoothAim","_smoothFactor","_smoothK","_lastDirectorTarget","_lastDirectorShotType","_shotChanged","_shotType","_engaged","_shotRadius","_shotHeight","_shotDir","_targetFov","_fovStep","_fovDelta","_manualZoomLock","_baseRemain","_subject","_leadSec","_subjectPos","_subjectVelocity","_leadOffset","_subjectSpeed","_standoffMult","_subjectFovMin","_lastDirectorStandoffTarget"];
+	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d","_center","_radius","_height","_rate","_angle","_dirCard","_wantPos","_wantAim","_smoothPos","_smoothAim","_smoothFactor","_smoothK","_lastDirectorTarget","_lastDirectorShotType","_shotChanged","_shotType","_engaged","_shotRadius","_shotHeight","_shotDir","_targetFov","_fovStep","_fovDelta","_manualZoomLock","_baseRemain","_subject","_leadSec","_subjectPos","_subjectVelocity","_leadOffset","_subjectSpeed","_standoffMult","_subjectFovMin","_lastDirectorStandoffTarget","_lastFollowTarget","_followSmoothPos","_followSmoothAim","_kin"];
 	_body = WFBE_C_VAR_SpectatorBody;
 	_lockPos = getPos _body;
 	_lockDir = getDir _body; //--- direction lock added in v2: the body must not spin under the mouse.
@@ -502,6 +538,9 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 	_lastDirectorTarget = objNull;
 	_lastDirectorShotType = "";
 	_lastDirectorStandoffTarget = objNull;
+	_lastFollowTarget = objNull;
+	_followSmoothPos = WFBE_C_VAR_SpectatorPos;
+	_followSmoothAim = WFBE_C_VAR_SpectatorPos;
 	diag_log "SPECTATE|v2|loop-alive";
 	//--- START THE DIRECTOR POLL THREAD **BEFORE** the movement loop below, not after it.
 	//--- It used to sit after that loop's closing brace, which is plain sequential SQF: the loop only
@@ -515,7 +554,7 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 		Call WFBE_CL_FNC_DirectorLoopStart;
 	};
 	while {WFBE_C_VAR_SpectatorActive && {!(missionNamespace getVariable ["WFBE_gameover", false])}} do {
-		sleep 0.05;
+		sleep (missionNamespace getVariable ["WFBE_C_SPECTATOR_TICK", 0.01]); //--- v4: was sleep 0.05 = 20Hz hard cap - judder on a 60fps capture
 		//--- Safety: auto-exit if the parked body died while unattended (allowDamage/setCaptive should
 		//--- prevent this outright, but this loop is the last line of defence against a dangling camera).
 		if (isNull _body || {!alive _body}) exitWith {[] Call WFBE_CL_FNC_SpectatorExit};
@@ -553,16 +592,38 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 		if !(isNull WFBE_C_VAR_SpectatorCam) then {
 			switch (_mode) do {
 				case "follow": {
-					_subject = vehicle _t;
-					_subjectPos = getPos _subject;
-					_subjectVelocity = velocity _subject;
-					_leadSec = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_LEAD_SEC", 0.4];
-					_leadOffset = [(_subjectVelocity select 0) * _leadSec, (_subjectVelocity select 1) * _leadSec, (_subjectVelocity select 2) * _leadSec];
-					_p = _subject modelToWorld [0, -8, 3];
-					_p = [(_p select 0) + (_leadOffset select 0), (_p select 1) + (_leadOffset select 1), (_p select 2) + (_leadOffset select 2)];
-					_tx = (_subjectPos select 0) + (_leadOffset select 0);
-					_ty = (_subjectPos select 1) + (_leadOffset select 1);
-					_tz = (_subjectPos select 2) + (_leadOffset select 2) + 1.5;
+					_kin = [_t, _dt] Call WFBE_CL_FNC_SpectatorKinematics;
+					_subject = _kin select 0;
+					_subjectPos = _kin select 1;
+					_leadOffset = _kin select 2;
+					_subjectSpeed = _kin select 3;
+					_wantPos = _subject modelToWorld [0, -8, 3];
+					_wantPos = [(_wantPos select 0) + (_leadOffset select 0), (_wantPos select 1) + (_leadOffset select 1), (_wantPos select 2) + (_leadOffset select 2)];
+					_wantAim = [(_subjectPos select 0) + (_leadOffset select 0), (_subjectPos select 1) + (_leadOffset select 1), (_subjectPos select 2) + (_leadOffset select 2) + 1.5];
+					//--- v4: exponential smoothing on BOTH camera pos and aim (was: raw per-tick snap = the yanky follow-cam). Snaps only on a target switch.
+					if (_t != _lastFollowTarget) then {
+						_lastFollowTarget = _t;
+						_followSmoothPos = _wantPos;
+						_followSmoothAim = _wantAim;
+					} else {
+						_smoothK = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_SMOOTHING", 5];
+						if (_subjectSpeed > 8) then {_smoothK = _smoothK * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FAST_GAIN_MULT", 2.5])};
+						_smoothFactor = ((_smoothK * _dt) min 1) max 0;
+						_followSmoothPos = [
+							(_followSmoothPos select 0) + (((_wantPos select 0) - (_followSmoothPos select 0)) * _smoothFactor),
+							(_followSmoothPos select 1) + (((_wantPos select 1) - (_followSmoothPos select 1)) * _smoothFactor),
+							(_followSmoothPos select 2) + (((_wantPos select 2) - (_followSmoothPos select 2)) * _smoothFactor)
+						];
+						_followSmoothAim = [
+							(_followSmoothAim select 0) + (((_wantAim select 0) - (_followSmoothAim select 0)) * _smoothFactor),
+							(_followSmoothAim select 1) + (((_wantAim select 1) - (_followSmoothAim select 1)) * _smoothFactor),
+							(_followSmoothAim select 2) + (((_wantAim select 2) - (_followSmoothAim select 2)) * _smoothFactor)
+						];
+					};
+					_p = _followSmoothPos;
+					_tx = _followSmoothAim select 0;
+					_ty = _followSmoothAim select 1;
+					_tz = _followSmoothAim select 2;
 					_hd = sqrt (((_tx - (_p select 0)) ^ 2) + ((_ty - (_p select 1)) ^ 2));
 					_y = (((_tx - (_p select 0)) atan2 (_ty - (_p select 1))) + 360) % 360;
 					_pt = (((_tz - (_p select 2)) atan2 (_hd max 0.01)) max -80) min 80;
@@ -582,13 +643,12 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 				case "director": {
 					if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {!isNull _t}) then {
 						_center = _t call WFBE_C_VAR_SpectatorDirectorPosFn;
-						_subject = vehicle _t;
-						_subjectPos = getPos _subject;
-						_subjectVelocity = velocity _subject;
-						_leadSec = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_LEAD_SEC", 0.4];
-						_leadOffset = [(_subjectVelocity select 0) * _leadSec, (_subjectVelocity select 1) * _leadSec, (_subjectVelocity select 2) * _leadSec];
+						_kin = [_t, _dt] Call WFBE_CL_FNC_SpectatorKinematics;
+						_subject = _kin select 0;
+						_subjectPos = _kin select 1;
+						_leadOffset = _kin select 2;
+						_subjectSpeed = _kin select 3;
 						_center = [(_subjectPos select 0) + (_leadOffset select 0), (_subjectPos select 1) + (_leadOffset select 1), (_subjectPos select 2) + (_leadOffset select 2)];
-						_subjectSpeed = sqrt (((_subjectVelocity select 0) ^ 2) + ((_subjectVelocity select 1) ^ 2) + ((_subjectVelocity select 2) ^ 2));
 						_shotType = WFBE_C_VAR_SpectatorDirectorShotType;
 						_wantAim = [_t, WFBE_C_VAR_SpectatorDirectorClass, _center] Call WFBE_CL_FNC_DirectorAimPoint;
 						_engaged = WFBE_C_VAR_DirectorEngagementActive;
@@ -655,6 +715,11 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 							_smoothAim = _wantAim;
 							_lastDirectorTarget = _t;
 							_lastDirectorShotType = _shotType;
+							WFBE_C_VAR_SpectatorVelEma = velocity _subject; //--- v4: re-seed the EMA at the new subject; stale velocity must not bleed past the cut.
+							//--- v4: a target cut snaps FOV with the frame (was: kept easing from the previous shot's FOV = "too slow zoomed in" after every switch).
+							if ((time - WFBE_C_VAR_SpectatorLastManualZoom) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC", 10])) then {
+								WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorDirectorTargetFov;
+							};
 						} else {
 							_shotChanged = _shotType != _lastDirectorShotType;
 							_smoothK = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_SMOOTHING", 5];
@@ -708,7 +773,7 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 				_manualZoomLock = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC", 10];
 				if ((time - WFBE_C_VAR_SpectatorLastManualZoom) >= _manualZoomLock) then {
 					_targetFov = WFBE_C_VAR_SpectatorDirectorTargetFov;
-					_fovStep = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE", 0.05]) * _dt;
+					_fovStep = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE", 0.35]) * _dt;
 					_fovDelta = _targetFov - WFBE_C_VAR_SpectatorFov;
 					if (abs _fovDelta > _fovStep) then {
 						if (_fovDelta > 0) then {WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorFov + _fovStep} else {WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorFov - _fovStep};
