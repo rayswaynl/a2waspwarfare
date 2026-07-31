@@ -101,7 +101,8 @@ while {alive player && dialog} do {
 	
 	if (MenuAction == 1) then {
 		MenuAction = -1;
-		if ((_transferAmount != 0)&&((_list_Players select _curSel) != group player)) then {
+		//--- r62 select-bounds: lbCurSel 13008 can be -1 or stale vs _list_Players (Zero divisor).
+		if (_curSel >= 0 && {_curSel < count _list_Players} && {(_transferAmount != 0)} && {((_list_Players select _curSel) != group player)}) then {
 			//--- N1 fix (GR-2026-07-08a): same client-authoritative ChangeTeamFunds/ChangePlayerFunds
 			//--- sink as the old GUI_TransferMenu.sqf path (this is the classic WF menu's alternate
 			//--- entry point to the identical bug) - any modified client could forge the target team
@@ -120,7 +121,8 @@ while {alive player && dialog} do {
 		// Marty: Teach players the faster map selection/disband shortcuts whenever they use the classic WF menu button.
 		titleText [localize "STR_WF_TEAM_MapShortcutDisbandTip", "PLAIN DOWN", 3];
 		_curUnitSel = lbCurSel 13013;
-		if (_curUnitSel != -1) then {
+		//--- r62 select-bounds: require in-range index (stale lb after death/disband race -> Zero divisor).
+		if (_curUnitSel != -1 && {_curUnitSel < count _units}) then {
 			Private ["_targetUnit","_liveCrew"];
 			_targetUnit = _units select _curUnitSel;
 			_vehicle = vehicle _targetUnit;
