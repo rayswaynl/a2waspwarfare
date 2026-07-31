@@ -1145,7 +1145,10 @@ if ((missionNamespace getVariable ["WFBE_C_ZG_KOTH_ENABLE", 0]) == 1) then {
 //--- Map-gated to Takistan inside the file (worldName check), plus the WFBE_C_OILFIELD_ENABLE flag (default 1).
 //--- The file self-waits townInit and self-gates internally, so launching it here is safe + strictly additive.
 if ((missionNamespace getVariable ["WFBE_C_OILFIELD_ENABLE", 1]) == 1 && {toLower worldName == "takistan"}) then {
-	[] execVM "Server\Server_Oilfields.sqf";
+	//--- r65 script-handle lifecycle: store oilfield loop handle so coreloop supervisor can
+	//--- terminate-before-restart if RESTART is armed (OBSERVE default still only alerts).
+	//--- Without this, restart would double-spawn derrick composition (script is not replay-safe).
+	missionNamespace setVariable ["wfbe_coreloop_handle_oilfield", [] execVM "Server\Server_Oilfields.sqf"];
 	["INITIALIZATION", "Init_Server.sqf: Server_Oilfields.sqf launched (WFBE_C_OILFIELD_ENABLE=1, Takistan)."] Call WFBE_CO_FNC_LogContent;
 };
 
