@@ -295,9 +295,22 @@ if (!isDedicated && !isHeadLessClient) then {
 
 		if (local player) then {skipTime (time / 3600)}; //--- If we're dealing with a client, he may have JIP half way through the game. Sync him via skipTime with the mission time.
 
-		// Ray 2026-06-24 (directive #2): PERMANENT DAYLIGHT. With the accelerated cycle OFF the engine clock still drifts toward night over a long round, so the server clamps daytime into the [START, END] band (08:00->17:00) and loops back to START. Server-authoritative; setDate replicates to all clients/HC. Disable with WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP=0.
+		// Ray 2026-06-24 (directive #2): PERMANENT DAYLIGHT. With the accelerated cycle OFF the engine clock still drifts toward night over a long round, so every machine clamps daytime into the [START, END] band (08:00->17:00) and loops back to START.
+		// r78 wraparound: A2 setDate/skipTime are NOT auto-synced across MP (each machine owns its clock). The old isServer-only clamp left clients free-running into night after JIP skipTime(time/3600) while the server stayed in-band — permanent-day broken on clients/HC.
 		// fable/permanent-daytime (Build84): WFBE_C_PERMANENT_DAY > 0 force-enables the clamp regardless of WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP.
-		if (isServer && {((missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") == 1) || {(missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0]) > 0}}) then {
+		if (((missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") == 1) || {(missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0]) > 0}) then {
+			//--- Immediate fold after JIP skipTime so the first frame is not a black night sky waiting up to CHECK seconds.
+			private ["_loStartNow","_loEndNow"];
+			_loStartNow = missionNamespace getVariable ["WFBE_C_ENVIRONMENT_DAYLIGHT_START", 8];
+			_loEndNow = missionNamespace getVariable ["WFBE_C_ENVIRONMENT_DAYLIGHT_END", 17];
+			if (typeName _loStartNow != "SCALAR") then {_loStartNow = 8};
+			if (typeName _loEndNow != "SCALAR") then {_loEndNow = 17};
+			//--- Guard inverted band (END <= START) so wrap arithmetic cannot thrash setDate every check.
+			if (_loEndNow > _loStartNow) then {
+				if (daytime >= _loEndNow || daytime < _loStartNow) then {
+					setDate [(date select 0),(date select 1),(date select 2),_loStartNow,0];
+				};
+			};
 			[] Spawn {
 				private ["_loStart","_loEnd","_check","_permDay"];
 				_loStart = missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_START";
@@ -307,7 +320,13 @@ if (!isDedicated && !isHeadLessClient) then {
 				if (isNil "_loStart") then {_loStart = 8};
 				if (isNil "_loEnd") then {_loEnd = 17};
 				if (isNil "_check") then {_check = 30};
-				diag_log format ["DAYLIGHT| clamp armed band=%1->%2 check=%3s start_daytime=%4 PERMANENT_DAY=%5", _loStart, _loEnd, _check, (round (daytime * 100) / 100), _permDay];
+				if (typeName _loStart != "SCALAR") then {_loStart = 8};
+				if (typeName _loEnd != "SCALAR") then {_loEnd = 17};
+				if (typeName _check != "SCALAR" || {_check < 1}) then {_check = 30};
+				if (_loEnd <= _loStart) exitWith {
+					diag_log format ["DAYLIGHT| clamp ABORT inverted band start=%1 end=%2", _loStart, _loEnd];
+				};
+				diag_log format ["DAYLIGHT| clamp armed band=%1->%2 check=%3s start_daytime=%4 PERMANENT_DAY=%5 machine=%6", _loStart, _loEnd, _check, (round (daytime * 100) / 100), _permDay, if (isServer) then {"server"} else {"client"}];
 				while {((missionNamespace getVariable "WFBE_C_ENVIRONMENT_DAYLIGHT_CLAMP") == 1) || {(missionNamespace getVariable ["WFBE_C_PERMANENT_DAY", 0]) > 0}} do {
 					if (daytime >= _loEnd || daytime < _loStart) then {
 						setDate [(date select 0),(date select 1),(date select 2),_loStart,0];
