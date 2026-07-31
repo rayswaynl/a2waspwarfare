@@ -80,17 +80,23 @@ while {alive player && dialog} do {
 		
 		if (MenuAction == 3) then {
 			MenuAction = -1;
-			
-			if (_currentPercent != _income) then {
-				WFBE_Client_Logic setVariable ["wfbe_commander_percent", _income, true];
+			//--- r71 commander-authority: only the seated commander may change the public income split.
+			//--- Server re-validates via RequestCommanderPercent (do not public-setVariable from any client).
+			_isCommanderPct = false;
+			if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_isCommanderPct = true}};
+			if (_isCommanderPct) then {
+				if (_currentPercent != _income) then {
+					["RequestCommanderPercent", [sideJoined, _income, player]] Call WFBE_CO_FNC_SendToServer;
+				};
 			};
 		};
 	};
 	
-	//--- ST Handler.
+	//--- ST Handler + income-set button: commander-only actions.
+	_isCommander = false;
+	if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_isCommander = true}};
+	if (_incomeSystem in [3,4]) then {ctrlEnable [23012, _isCommander]};
 	if (_supplySystem == 0) then {
-		_isCommander = false;
-		if (!isNull(commanderTeam)) then {if (commanderTeam == group player) then {_isCommander = true}};
 		ctrlEnable [23016,if (time - _lastUse > 5 && _isCommander) then {true} else {false}];
 	};
 	

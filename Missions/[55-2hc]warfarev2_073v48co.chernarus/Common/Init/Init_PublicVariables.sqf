@@ -12,6 +12,7 @@ _l = _l + ["RequestChangeScore"];
 _l = _l + ["RequestCommanderVote"];
 _l = _l + ["RequestNewCommander"];
 _l = _l + ["RequestClaimCommander"]; //--- mid-round "TAKE COMMAND" claim of an empty (AI-run) commander seat (Server\PVFunctions\RequestClaimCommander.sqf).
+_l = _l + ["RequestCommanderPercent"]; //--- r71: server-authoritative commander income-split write (Server\PVFunctions\RequestCommanderPercent.sqf).
 _l = _l + ["RequestStructure"];
 _l = _l + ["RequestFOBStructure"]; //--- B75 (guer-tech): GUER FOB field-factory build (Server\PVFunctions\RequestFOBStructure.sqf).
 _l = _l + ["RequestDefense"];

@@ -54,13 +54,15 @@ while {alive player && dialog} do {
 		_storedIndex = lnbValue [509100,[_index, 0]];
 		_isPrimitivePlaceholder = false;
 		_validStoredTeam = true;
-		if ((missionNamespace getVariable ["WFBE_C_FIX_VOTE_QA_EXECUTION", 0]) > 0) then {
-			if (WFBE_CVOTE_USING_PRIMS && _index > 0 && _storedIndex < 0) then {_isPrimitivePlaceholder = true};
-			if (_storedIndex >= 0) then {
-				_validStoredTeam = false;
-				if (_storedIndex < count(WFBE_Client_Teams)) then {
-					_team = WFBE_Client_Teams select _storedIndex;
-					if !(isNil "_team") then {_validStoredTeam = isPlayer leader _team};
+		//--- Always fail-clean on primitive placeholders and OOB/nil team indexes (flag path kept as
+		//--- extra QA color/name gates elsewhere; confirm must not `group leader` a nil/OOB slot).
+		if (WFBE_CVOTE_USING_PRIMS && _index > 0 && _storedIndex < 0) then {_isPrimitivePlaceholder = true};
+		if (_storedIndex >= 0) then {
+			_validStoredTeam = false;
+			if (_storedIndex < count(WFBE_Client_Teams)) then {
+				_team = WFBE_Client_Teams select _storedIndex;
+				if !(isNil "_team") then {
+					if (!isNull _team) then {_validStoredTeam = isPlayer leader _team};
 				};
 			};
 		};
@@ -68,7 +70,8 @@ while {alive player && dialog} do {
 		if (!(_isPrimitivePlaceholder) && {_validStoredTeam}) then {
 			_voted_commander = if (_storedIndex < 0) then {objNull} else {group leader (WFBE_Client_Teams select _storedIndex)};
 
-			["RequestNewCommander", [side group player, _voted_commander]] Call WFBE_CO_FNC_SendToServer;
+			//--- r71: carry acting player so server can bind sitting-commander transfer authority.
+			["RequestNewCommander", [side group player, _voted_commander, player]] Call WFBE_CO_FNC_SendToServer;
 			voted = true;
 			closeDialog 0;
 		};
