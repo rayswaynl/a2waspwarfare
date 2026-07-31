@@ -602,7 +602,7 @@ while {!WFBE_GameOver} do {
 						_teams = [];
 						//--- fable/garrison-tonight (owner 2026-07-07): PERIMETER spread - ring the defenders around the
 						//--- town EDGE by bearing instead of clustering at camps/center. WFBE_C_TOWNS_PERIMETER 0 = legacy.
-						private ["_perimeterOn","_grpTotalP","_townRangeP","_townCenP","_bearingP","_distP","_ctlNewGrp"];
+						private ["_perimeterOn","_grpTotalP","_townRangeP","_townCenP","_bearingP","_distP","_ctlNewGrp","_wtryP"];
 						_perimeterOn = (missionNamespace getVariable ["WFBE_C_TOWNS_PERIMETER", 0]) > 0;
 						_grpTotalP   = count _groups; if (_grpTotalP < 1) then {_grpTotalP = 1};
 						_townRangeP  = _town getVariable ["range", 300]; if (_townRangeP < 120) then {_townRangeP = 120};
@@ -613,6 +613,20 @@ while {!WFBE_GameOver} do {
 								_bearingP = (360 / _grpTotalP) * _groupIndex + (random 40) - 20;
 								_distP    = _townRangeP * (0.70 + (random 0.25));
 								_position = [(_townCenP select 0) + _distP * (sin _bearingP), (_townCenP select 1) + _distP * (cos _bearingP), 0];
+								//--- COASTAL WATER GUARD (bughunt r29): the perimeter seed is a raw bearing offset handed
+								//--- straight to GetEmptyPosition, whose isFlatEmpty test does NOT reject water (the codebase
+								//--- pairs isFlatEmpty with a SEPARATE surfaceIsWater everywhere it must stay off the sea - see
+								//--- Common_AICOMAirLeg.sqf). The legacy else-branch seeds through GetRandomPosition, which
+								//--- rejects water; the perimeter branch (LIVE default WFBE_C_TOWNS_PERIMETER=1) did not, so at a
+								//--- coastal town the edge ring dropped land garrison groups into the water. Re-roll the bearing
+								//--- off water with the SAME bounded 20-try idiom Common_GetRandomPosition uses.
+								_wtryP = 0;
+								while {surfaceIsWater _position && {_wtryP < 20}} do {
+									_bearingP = random 360;
+									_distP    = _townRangeP * (0.70 + (random 0.25));
+									_position = [(_townCenP select 0) + _distP * (sin _bearingP), (_townCenP select 1) + _distP * (cos _bearingP), 0];
+									_wtryP = _wtryP + 1;
+								};
 							} else {
 								if (count _camps > 0 && random 100 > 50) then {
 									_camp = _camps select floor (random count _camps);
