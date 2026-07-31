@@ -84,18 +84,41 @@ WFBE_CL_FNC_HQ_SetStatus = {
 };
 
 WFBE_CL_FNC_Perform_Action = {
-	Private ['_action','_from','_unit'];
-	_unit = _this select 0;
-	_action = _this select 1;
-	_from = _this select 2;
+Private ['_action','_from','_unit'];
+_unit = _this select 0;
+_action = _this select 1;
+_from = _this select 2;
 
+if (isNil "_unit" || {isNull _unit}) exitWith {};
+if (isNil "_from" || {isNull _from}) exitWith {};
+if !(alive _unit) exitWith {};
+
+//--- r72: high-altitude "HALO" route from Action_EjectCargo for remote players.
+if (_action == "HALO") then {
+	if (vehicle _unit == _from) then {
+		_unit setVariable ["wfbe_halo_scripted", true];
+		unassignVehicle _unit;
+		_unit action ["EJECT", _from];
+		_unit setVelocity [0,0,0];
+		[_unit] Exec "ca\air2\Halo\data\Scripts\HALO_getout.sqs";
+	};
+} else {
 	_unit action [_action, _from];
-
 	switch (_action) do {
-		case "EJECT": {unassignVehicle _unit};
+		case "EJECT": {
+			unassignVehicle _unit;
+			//--- r72: remote high-alt bare EJECT still needs freefall chute for players.
+			if (isPlayer _unit && {_from isKindOf "Air"} && {((getPos _from) select 2) >= 50}) then {
+				if !(_unit getVariable ["wfbe_halo_scripted", false]) then {
+					_unit setVariable ["wfbe_halo_scripted", true];
+					_unit setVelocity [0,0,0];
+					[_unit] Exec "ca\air2\Halo\data\Scripts\HALO_getout.sqs";
+				};
+			};
+		};
 	};
 };
-
+};
 WFBE_CL_FNC_Reveal_UAV = {
 	Private ['_marker','_size','_target','_uav'];
 	_uav = _this select 0;

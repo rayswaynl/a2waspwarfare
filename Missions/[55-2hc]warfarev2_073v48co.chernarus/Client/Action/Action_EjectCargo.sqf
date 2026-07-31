@@ -1,30 +1,48 @@
-Private ["_cargo","_vehicle"];
+Private ["_cargo","_isHigh","_minH","_routeUID","_vehicle"];
 
 _vehicle = _this select 0;
 
-//--- Get the crew.
+if (isNil "_vehicle" || {isNull _vehicle}) exitWith {};
+
+//--- Get the crew (cargo only).
 _cargo = (crew _vehicle) - [driver _vehicle, gunner _vehicle, commander _vehicle];
 
+//--- High-altitude cargo eject without HALO freefall leaves players to die on impact.
+_minH = missionNamespace getVariable ["WFBE_C_PLAYERS_HALO_HEIGHT", 200];
+if (typeName _minH != "SCALAR") then {_minH = 200};
+//--- Trigger HALO path well below menu HALO height (50m still lethal freefall without chute).
+_isHigh = (_vehicle isKindOf "Air") && {((getPos _vehicle) select 2) >= 50};
+
 {
-	if (alive _x && _vehicle == vehicle _x) then {
+	//--- Vehicle may despawn mid-loop (sleep 1); re-validate each iteration.
+	if (isNull _vehicle) exitWith {};
+	if (alive _x && {_vehicle == vehicle _x}) then {
 		if (local _x) then {
-			//--- Dealing with a local unit, probably an AI.
-			unassignVehicle _x;
-			_x action ["EJECT", _vehicle];
+			if (_isHigh && {isPlayer _x}) then {
+				_x setVariable ["wfbe_halo_scripted", true];
+				unassignVehicle _x;
+				_x action ["EJECT", _vehicle];
+				_x setVelocity [0,0,0];
+				[_x] Exec "ca\air2\Halo\data\Scripts\HALO_getout.sqs";
+			} else {
+				unassignVehicle _x;
+				_x action ["EJECT", _vehicle];
+			};
 		} else {
-			//--- Dealing with a player or a non local unit.
-			//--- wiki-wins (N-FEATUREBUG-1): the action MUST run on the client where _x is LOCAL, not on
-			//--- the leader's client. A passenger who is HIMSELF a player owns his own unit, so route to his
-			//--- OWN UID; an AI subordinate is local to the player leading its group, so route to that leader.
-			private "_routeUID";
+			//--- Route to the client where the unit is local (player UID or AI leader).
 			_routeUID = "";
 			if (isPlayer _x) then {
 				_routeUID = getPlayerUID _x;
 			} else {
-				if (isPlayer(leader (group _x))) then {_routeUID = getPlayerUID(leader(group _x))};
+				if (isPlayer (leader (group _x))) then {_routeUID = getPlayerUID (leader (group _x))};
 			};
 			if (_routeUID != "") then {
-				[_routeUID, "HandleSpecial", ["action-perform", _x, "EJECT", _vehicle]] Call WFBE_CO_FNC_SendToClients;
+				//--- High-alt player path: "HALO" action kind handled in Perform_Action.
+				if (_isHigh && {isPlayer _x}) then {
+					[_routeUID, "HandleSpecial", ["action-perform", _x, "HALO", _vehicle]] Call WFBE_CO_FNC_SendToClients;
+				} else {
+					[_routeUID, "HandleSpecial", ["action-perform", _x, "EJECT", _vehicle]] Call WFBE_CO_FNC_SendToClients;
+				};
 			};
 		};
 	};
