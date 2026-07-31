@@ -79,7 +79,7 @@ _groupAlive = {
 
 _findPosition = {
 	Private ["_center","_radius","_tries","_playerRadius","_townRadius","_found","_playersOnline","_i",
-		"_ang","_dist","_candidate","_tooClose"];
+		"_ang","_dist","_candidate","_tooClose","_hcNames"];
 	_center       = _this select 0;
 	_radius       = _this select 1;
 	_tries        = _this select 2;
@@ -88,8 +88,12 @@ _findPosition = {
 	_found = [];
 	_playersOnline = 0;
 
+	//--- r35 HC-lifecycle: HCs are isPlayer; without name exclusion empty-server+HC only looks online
+	//--- and HC park positions veto ambient spawns as if they were humans.
+	_hcNames = missionNamespace getVariable ["WFBE_C_HC_NAMES", ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]];
+	if (typeName _hcNames != "ARRAY") then {_hcNames = ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]};
 	{
-		if (isPlayer _x) then {_playersOnline = _playersOnline + 1};
+		if (isPlayer _x && {!((name _x) in _hcNames)}) then {_playersOnline = _playersOnline + 1};
 	} forEach allUnits;
 
 	if (_playersOnline < 1) exitWith {[]};
@@ -104,10 +108,8 @@ _findPosition = {
 
 		if (!_tooClose) then {
 			{
-				if (isPlayer _x) then {
-					if (alive _x) then {
-						if ((vehicle _x) distance _candidate < _playerRadius) then {_tooClose = true};
-					};
+				if (isPlayer _x && {alive _x} && {!((name _x) in _hcNames)}) then {
+					if ((vehicle _x) distance _candidate < _playerRadius) then {_tooClose = true};
 				};
 			} forEach allUnits;
 		};

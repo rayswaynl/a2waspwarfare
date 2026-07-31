@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_buildings','_commander','_funds','_get','_hcGroup','_hq','_id','_isHCDisconnect','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik','_lease','_leaseExpires','_leaseGen'];
+Private ['_buildings','_commander','_funds','_get','_hcGroup','_hcList','_hcKeep','_hq','_id','_isHCDisconnect','_name','_old_unit','_old_unit_group','_respawnLoc','_side','_team','_units','_uid','_playerScore','_oldScore','_playerScoreDiff','_result','_logik','_lease','_leaseExpires','_leaseGen'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -42,7 +42,15 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
 		if !(isNil '_get') then {_hcGroup = _get; _isHCDisconnect = true};
 	};
 	if (_isHCDisconnect) then {
-		missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", (missionNamespace getVariable "WFBE_HEADLESSCLIENTS_ID") - [_hcGroup]];
+		//--- r35 HC-lifecycle: bare getVariable can nil-throw and abort the whole disconnect handler
+		//--- (UID/OWNER keys never clear, demote spawn never arms). Default [] + prune nulls.
+		_hcList = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
+		if (typeName _hcList != "ARRAY") then {_hcList = []};
+		if (!isNull _hcGroup) then {_hcList = _hcList - [_hcGroup]};
+		_hcList = _hcList - [grpNull];
+		_hcKeep = [];
+		{ if (!isNull _x) then { if (!(_x in _hcKeep)) then {_hcKeep = _hcKeep + [_x]} } } forEach _hcList;
+		missionNamespace setVariable ["WFBE_HEADLESSCLIENTS_ID", _hcKeep];
 		missionNamespace setVariable [Format["WFBE_HEADLESS_OWNER_%1", _id], nil];
 		if (_uid != "") then {
 			missionNamespace setVariable [Format["WFBE_HEADLESS_%1", _uid], nil];
@@ -71,8 +79,10 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
 						_g = _x;
 						if (!isNull _g && {[_g, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}) then {
 							_ldr = leader _g;
-							//--- local leader on server = units transferred off the dead HC (A2 OA has no setGroupOwner rehome).
-							if (!isNull _ldr && {alive _ldr} && {local _ldr}) then {
+							//--- r35 HC-lifecycle: demote when server-local OR ownership is dead/orphaned (owner 0 or still
+							//--- the dropped HC owner). Local-only left groups stuck wfbe_aicom_hc=true while owner still
+							//--- pointed at the dead client -> server path never laid waypoints until orphan-heal.
+							if (!isNull _ldr && {alive _ldr} && {local _ldr || {(owner _ldr) == 0} || {(owner _ldr) == _oldOwner}}) then {
 								_g setVariable ["wfbe_aicom_hc", false, true];
 								if (!([_g, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool)) then {
 									_g setVariable ["wfbe_aicom_founded", true, true];
