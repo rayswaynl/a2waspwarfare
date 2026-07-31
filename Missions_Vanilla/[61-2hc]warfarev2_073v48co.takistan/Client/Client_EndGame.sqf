@@ -2,6 +2,17 @@ Private ['_HQ','_base','_blist','_camShotOrder','_camera','_musicTrack','_nvgsta
 
 _side = _this;
 
+//--- Spectator (Client_SpectatorEnter.sqf) owns the view + input handlers while active. Tear it
+//--- down before the endgame outro camera - mirrors the same teardown Client_OnKilled.sqf does
+//--- before the death camera. The spectator movement loop exits on WFBE_gameover WITHOUT calling
+//--- exit, so without this a caster who was spectating at round-end keeps the MouseMoving handler
+//--- re-centering the cursor every frame and the KeyDown handler consuming WASD/N/B/F/V/Backspace
+//--- all through the end-of-game stats screen + victory fly-over. WFBE_CL_FNC_SpectatorExit is
+//--- registered unconditionally (Init_Client.sqf) and is idempotent (no-op when not active).
+if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) then {
+	[] Call WFBE_CL_FNC_SpectatorExit;
+};
+
 //--- B67 [wiki-wins]: the payload IS the winner. The old block inverted _side
 //--- (west<->east, with a "_side is the looser" comment), which named the WRONG
 //--- side in the victory banner and skipped resistance entirely. Inversion removed:
