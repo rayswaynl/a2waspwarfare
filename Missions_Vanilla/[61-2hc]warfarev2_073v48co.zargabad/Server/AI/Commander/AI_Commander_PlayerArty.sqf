@@ -55,7 +55,22 @@ if (_ownNear == 0) then {
 	//--- built, so this scan finds nothing and the call is a safe no-op until a build adds artillery.
 	//--- Ray 2026-06-29 SELF-PROPELLED-ONLY: scan only vehicle hulls (Tank/Car/Wheeled/Tracked APC), NOT
 	//--- StaticWeapon - fire only from tracked/wheeled self-propelled artillery, never a static gun.
-	_pieces = (getPos ((_side) Call WFBE_CO_FNC_GetSideHQ)) nearEntities [["Tank","Car","Wheeled_APC","Tracked_APC"], 250];
+	//--- ECHELON parity with AI_Commander_Strategy: when WFBE_C_AICOM_ARTY_ECHELON is on, guns may be
+	//--- repositioned outside the HQ 250 m ring; use the live arty registry so player ARTILLERY-HERE
+	//--- (threat reaction / CB return-fire requests) still finds them. HQ-null safe.
+	private ["_echPA","_hqPA","_regPA","_regLivePA"];
+	_echPA = (missionNamespace getVariable ["WFBE_C_AICOM_ARTY_ECHELON", 0]) > 0;
+	if (_echPA) then {
+		_regPA = _logik getVariable ["wfbe_aicom_arty_reg", []];
+		if (typeName _regPA != "ARRAY") then {_regPA = []};
+		_regLivePA = [];
+		{ if (!isNull _x && {alive _x} && {(_x getVariable ["WFBE_CommanderArtillery", false])} && {(_x getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText}) then {_regLivePA set [count _regLivePA, _x]} } forEach _regPA;
+		_logik setVariable ["wfbe_aicom_arty_reg", _regLivePA];
+		_pieces = _regLivePA;
+	} else {
+		_hqPA = (_side) Call WFBE_CO_FNC_GetSideHQ;
+		_pieces = if (isNull _hqPA) then {[]} else {(getPos _hqPA) nearEntities [["Tank","Car","Wheeled_APC","Tracked_APC"], 250]};
+	};
 	_fired = false;
 	{
 		_p = _x;
