@@ -14,9 +14,21 @@ Private ["_backpack","_backpack_content","_cap","_capped","_eligible","_magazine
 _unit = _this select 0;
 _weapons = _this select 1;
 _magazines = _this select 2;
-_eligible = _this select 3;
+_eligible = if (count _this > 3) then {_this select 3} else {[]};
 _backpack = if (count _this > 4) then {_this select 4} else {""};
 _backpack_content = if (count _this > 5) then {_this select 5} else {[]};
+
+//--- r72b loadout-equip-null: fail-clean when unit is null/dead or any loadout slot is nil/non-array
+//--- (short AI/custom gear rows, profile desync, or caller select past end). Bare forEach/count on nil
+//--- aborts the equip script mid-strip and leaves the unit naked.
+if (isNull _unit || {!(alive _unit)}) exitWith {
+	["WARNING", "Common_EquipUnit.sqf: skipped equip - unit null/dead."] Call WFBE_CO_FNC_LogContent;
+};
+if (isNil "_weapons" || {typeName _weapons != "ARRAY"}) then {_weapons = []};
+if (isNil "_magazines" || {typeName _magazines != "ARRAY"}) then {_magazines = []};
+if (isNil "_eligible" || {typeName _eligible != "ARRAY"}) then {_eligible = []};
+if (isNil "_backpack" || {typeName _backpack != "STRING"}) then {_backpack = ""};
+if (isNil "_backpack_content" || {typeName _backpack_content != "ARRAY"}) then {_backpack_content = []};
 
 //--- Cap magazine count to inventory capacity.
 _cap = missionNamespace getVariable ["WFBE_C_GEAR_MAG_SLOTS", 12];
@@ -34,8 +46,8 @@ removeAllItems _unit;
 //--- another modpack (e.g. ACE_AK74M_PSO) throws the engine 'No entry CfgWeapons...' dialog on apply.
 //--- Drop unknown classes here (the one choke every loadout passes through) with a single WARNING.
 _okW = []; _okA = []; _dropped = [];
-{ if (_x != "" && {isClass (configFile >> "CfgWeapons" >> _x)}) then {_okW set [count _okW, _x]} else {_dropped set [count _dropped, _x]} } forEach _weapons;
-{ if (_x != "" && {isClass (configFile >> "CfgMagazines" >> _x)}) then {_okA set [count _okA, _x]} else {_dropped set [count _dropped, _x]} } forEach _magazines;
+{ if (typeName _x == "STRING" && {_x != ""} && {isClass (configFile >> "CfgWeapons" >> _x)}) then {_okW set [count _okW, _x]} else {_dropped set [count _dropped, _x]} } forEach _weapons;
+{ if (typeName _x == "STRING" && {_x != ""} && {isClass (configFile >> "CfgMagazines" >> _x)}) then {_okA set [count _okA, _x]} else {_dropped set [count _dropped, _x]} } forEach _magazines;
 if (count _dropped > 0) then { diag_log Format ["[WFBE] WARNING: loadout dropped %1 unknown classname(s): %2", count _dropped, _dropped] };
 _weapons = _okW; _magazines = _okA;
 //--- Mission registry scrub (item #416): strip engine-valid classnames that are not in any
@@ -70,11 +82,16 @@ _unit addWeapon "Put";
 
 //--- Get a proper muzzle.
 _use = "";
-{if (_x != "") exitWith {_use = _x}} forEach _eligible;
+{if (typeName _x == "STRING" && {_x != ""}) exitWith {_use = _x}} forEach _eligible;
 
-if (_use != "") then { 
-	_muzzles = getArray (configFile >> "CfgWeapons" >> _use >> "muzzles"); 
-	if !("this" in _muzzles) then {_unit selectWeapon (_muzzles select 0)} else {_unit selectWeapon _use}; 
+if (_use != "") then {
+	_muzzles = getArray (configFile >> "CfgWeapons" >> _use >> "muzzles");
+	//--- r72b: empty muzzles array + no "this" used to selectWeapon nil (config hole / stripped class).
+	if (count _muzzles == 0 || {"this" in _muzzles}) then {
+		_unit selectWeapon _use;
+	} else {
+		_unit selectWeapon (_muzzles select 0);
+	};
 };
 
 //--- Backpack handling.
