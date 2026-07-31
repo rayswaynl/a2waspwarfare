@@ -908,8 +908,8 @@ while {!gameOver} do {
 											};
 											_w13TargetPos = getPos _w13TargetTown;
 											_w13Heli flyInHeight 200;
-											_w13Grp setBehaviour "COMBAT"; _w13Grp setCombatMode "RED";
 											[_w13Grp, _w13TargetPos, 200] Call AIPatrol;
+											_w13Grp setBehaviour "COMBAT"; _w13Grp setCombatMode "RED";  //--- posture set AFTER AIPatrol: AI_Patrol.sqf:8-11 unconditionally resets the group to AWARE/YELLOW/COLUMN/NORMAL, so COMBAT/RED set BEFORE the call was silently clobbered (the dispatched aircraft downgraded to a passive patrol pass). Mirrors the proven AI_Commander_AirResp.sqf N5 fix (AIPatrol first, then posture).
 											[_w13Heli, _w13Grp] spawn {
 												private ["_heli","_grp"];
 												_heli = _this select 0; _grp = _this select 1;
@@ -1146,9 +1146,9 @@ while {!gameOver} do {
 											if (!isNull _w22Gunner) then { _w22Gunner moveInGunner _w22Plane; };
 										};
 										_w22Plane flyInHeight 600;
-										_w22Grp setBehaviour "COMBAT"; _w22Grp setCombatMode "RED";
 										_w22TargetPos = if (!isNull _w22Target) then {getPos _w22Target} else {_hqPos};
 										[_w22Grp, _w22TargetPos, 800] Call AIPatrol;
+										_w22Grp setBehaviour "COMBAT"; _w22Grp setCombatMode "RED";  //--- posture set AFTER AIPatrol: AI_Patrol.sqf:8-11 unconditionally resets the group to AWARE/YELLOW/COLUMN/NORMAL, so COMBAT/RED set BEFORE the call was silently clobbered (the dispatched aircraft downgraded to a passive patrol pass). Mirrors the proven AI_Commander_AirResp.sqf N5 fix (AIPatrol first, then posture).
 										[_w22Plane, _w22Grp] spawn {
 											private ["_pl","_grp"];
 											_pl = _this select 0; _grp = _this select 1;
