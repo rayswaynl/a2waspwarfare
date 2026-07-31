@@ -618,6 +618,17 @@ if (_airMaxTotalP > 0) then {
 			if ((missionNamespace getVariable ["WFBE_C_AICOM_RETREAT_WALKHOME", 1]) > 0) then {
 				[_team, "towns"] Call SetTeamMoveMode;
 			};
+			//--- r68 objective rebind: HC teams read ONLY wfbe_aicom_order (not teammode). Retreat stamped
+			//--- move/defense@HQ; clearing refit + SetTeamMoveMode alone left HC drivers parked at base until
+			//--- the wedge watchdog (~stuck timer). Mirror Strategy WAVE-1 A3 (c) relief-release: bump order
+			//--- to towns so AssignTowns can rebind a real spearhead next cycle. Server-local ignores order.
+			if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+				_refitOrder = _team getVariable "wfbe_aicom_order";
+				_refitSeq = if (isNil "_refitOrder") then {0} else {(_refitOrder select 0) + 1};
+				_refitLdr = leader _team;
+				_refitPos = if (!isNull _refitLdr) then {getPos _refitLdr} else {[0,0,0]};
+				_team setVariable ["wfbe_aicom_order", [_refitSeq, "towns", _refitPos], true];
+			};
 			_refitDur = round (time - _refitStart);
 			if (_refitDur < 0) then {_refitDur = 0};
 			if ([_team, "wfbe_aicom_refit_prev", false] Call WFBE_CO_FNC_GroupGetBool) then { //--- read the persisted per-team flag: script-scoped _refitWas is never assigned when the aliveNow>0 init path was skipped (freshly wiped team)
