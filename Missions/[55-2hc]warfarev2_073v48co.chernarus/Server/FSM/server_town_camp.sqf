@@ -40,7 +40,10 @@ while {!WFBE_GameOver} do {
 	for "_i" from 0 to ((count _camps) - 1) step 1 do
 	{
 		_camp = _camps select _i;
-		_flag = _flags select _i;
+		//--- r69: flags[] must stay index-parallel with camps[] (Init_Town HANGGUARD fix). A short/misaligned
+		//--- list previously threw on select or paired capture with the wrong pole; heal to objNull and skip texture.
+		_flag = if (_i < count _flags) then {_flags select _i} else {objNull};
+		if (isNil "_flag") then {_flag = objNull};
 
 		_base = _camp getVariable "wfbe_camp_bunker";
 		//--- cmdcon44q live-spam fix (2026-07-04, 6592 err lines in 15 min): a camp DELETED mid-match leaves
@@ -136,9 +139,14 @@ while {!WFBE_GameOver} do {
 					private ["_capSideC","_capUidC"];
 					_capSideC = _newSide;
 					{ if (isPlayer _x && {alive _x} && {side _x == _capSideC}) then {_capUidC = getPlayerUID _x; if (_capUidC != "") then {[_capUidC, WFBE_STAT_CAPTURES_CAMP, 1] call WFBE_SE_FNC_RecordStat}} } forEach _objects;
-					_flag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG",str _newSide]); _flag setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG",str _newSide]]); processInitCommands; //--- qol-polish-pack: JIP-safe flag (bare setFlagTexture is local-only; bake into object init so late joiners replay it)
+					//--- r69: null-guard live capture flag (parity with bulk FLIPS_CAMPS / SetCampsToSide).
+				if (!isNull _flag) then {
+					_flag setFlagTexture (missionNamespace getVariable Format["WFBE_%1FLAG",str _newSide]);
+					_flag setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format["WFBE_%1FLAG",str _newSide]]);
+					processInitCommands; //--- qol-polish-pack: JIP-safe flag (bare setFlagTexture is local-only; bake into object init so late joiners replay it)
+				};
 
-					[nil, "CampCaptured", [_camp,_newSID,_sideID]] Call WFBE_CO_FNC_SendToClients;
+				[nil, "CampCaptured", [_camp,_newSID,_sideID]] Call WFBE_CO_FNC_SendToClients;
 					if ((missionNamespace getVariable ["WFBE_C_STATLOG", 0]) == 1) then {
 						if (isNil "WFBE_WASPSTAT_SEQ") then { WFBE_WASPSTAT_SEQ = 0 };
 						WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;

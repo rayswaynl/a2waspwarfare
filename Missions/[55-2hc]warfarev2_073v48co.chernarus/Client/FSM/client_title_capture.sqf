@@ -51,27 +51,32 @@ while {!WFBE_GameOver} do {
 		};
 
 		if (_town_capture_mode != 0 && !isNull _camp) then {
-			_campBunker = _camp getVariable ["wfbe_camp_bunker", objNull];
-			if (!isNull _campBunker && {alive _campBunker}) then {
-				_campActive = true;
-				_sideID = _camp getVariable ["sideID", WFBE_C_UNKNOWN_ID];
-				_curSV = _camp getVariable ["supplyValue", 0];
-				_campStartSV = _nearest getVariable ["startingSupplyValue", _safeMaxSV];
-				_txt = "";
-				if (_captureDetail) then {
-					_baseText = Format ["%1  -  Camp SV %2/%3", (_nearest getVariable ["name", ""]), _curSV, _campStartSV];
-					_txt = _baseText;
-					if (_town_capture_mode == 2) then {_txt = Format ["%1  |  Camps %2/%3", _baseText, _campHeld, _campTotal]};
-				};
-				if (_lastCheck == "Town") then {_delay = 0};
-				_lastCheck = "Camp";
-				_lastEntity = objNull;
-				_lastSV = -1;
-				_lastUpdate = time;
-			};
+	_campBunker = _camp getVariable ["wfbe_camp_bunker", objNull];
+	if (!isNull _campBunker && {alive _campBunker}) then {
+		_campActive = true;
+		_sideID = _camp getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+		_curSV = _camp getVariable ["supplyValue", 0];
+		_campStartSV = _nearest getVariable ["startingSupplyValue", _safeMaxSV];
+		//--- r69: camp SV heals/drains against town startingSupplyValue, not maxSupplyValue.
+		//--- Bar width used town maxSV so a full camp (SV==starting) looked partial (e.g. 30/100).
+		if (isNil "_campStartSV" || {typeName _campStartSV != "SCALAR"} || {_campStartSV < 1}) then {_campStartSV = _safeMaxSV};
+		if (_campStartSV < 1) then {_campStartSV = 1};
+		_safeMaxSV = _campStartSV;
+		_txt = "";
+		if (_captureDetail) then {
+			_baseText = Format ["%1  -  Camp SV %2/%3", (_nearest getVariable ["name", ""]), _curSV, _campStartSV];
+			_txt = _baseText;
+			if (_town_capture_mode == 2) then {_txt = Format ["%1  |  Camps %2/%3", _baseText, _campHeld, _campTotal]};
 		};
+		if (_lastCheck == "Town") then {_delay = 0};
+		_lastCheck = "Camp";
+		_lastEntity = objNull;
+		_lastSV = -1;
+		_lastUpdate = time;
+	};
+};
 
-		if (!_campActive) then {
+if (!_campActive) then {
 			_baseText = Format ["%1  -  %2", (_nearest getVariable ["name",""]), (Format [localize "STR_WF_TownSV", _curSV,_maxSV])];
 			_txt = _baseText;
 			if (_captureDetail) then {
