@@ -557,15 +557,18 @@ if (_sideOrigin != _sideJoined) then {
 };
 
 //--- Set the current player funds. NO-CLOBBER (2026-07-04): never overwrite a positive group wallet with
-//--- nil/0 at connect - if the computed value is empty but the group already holds money, keep the group's
-//--- value and repair the record to match (the record is authoritative only when it is a real number > 0).
+//--- a MISSING (nil) computed value at connect - if the record is absent but the group already holds
+//--- money (same-slot mid-double-resolve), keep the group's value and repair the record.
+//--- r69b (2026-07-31): do NOT treat a legitimate scalar 0 the same as nil. A real spend-to-0 writes 0
+//--- into the lock-step record; elevating from a vacated-slot leftover (or any foreign positive
+//--- wallet) would MINT funds into the record. Only nil-computed may adopt the group wallet.
 private ["_grpCurF"];
 _grpCurF = _team getVariable "wfbe_funds";
-if ((isNil "_funds" || {_funds <= 0}) && {!isNil "_grpCurF"} && {_grpCurF > 0}) then {
+if (isNil "_funds" && {!isNil "_grpCurF"} && {_grpCurF > 0}) then {
 	_funds = _grpCurF;
 	_get set [1, _grpCurF];
 	missionNamespace setVariable [format["WFBE_JIP_USER%1",_uid], _get];
-	diag_log (Format ["[WFBE][JIPFUNDS] no-clobber: kept group wallet %1 for [%2] (computed was 0/nil); record repaired.", _grpCurF, _uid]);
+	diag_log (Format ["[WFBE][JIPFUNDS] no-clobber: kept group wallet %1 for [%2] (computed was nil); record repaired.", _grpCurF, _uid]);
 };
 _funds = if (isNil "_funds") then {0} else {_funds};
 _team setVariable ["wfbe_funds", _funds, true];

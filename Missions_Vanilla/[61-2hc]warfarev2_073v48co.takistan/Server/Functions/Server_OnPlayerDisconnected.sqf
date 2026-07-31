@@ -175,7 +175,28 @@ if ((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0) then {
 
 //--- We attempt to get the player information in case that he joined before.
 _get = missionNamespace getVariable format["WFBE_JIP_USER%1",_uid];
-if (isNil '_get') exitWith {["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] don't have any information stored", _name, _uid]] Call WFBE_CO_FNC_LogContent};
+//--- r69b ghost-slot-on-pre-funds-disconnect (2026-07-31): a CIV-deferred / incomplete enroll can
+//--- stamp wfbe_uid + teamleader (and possibly a wallet) BEFORE WFBE_JIP_USER is created. The old
+//--- early-exit left that stamp forever -> ghost ownership blocks reclaim and leftover funds feed
+//--- the vacated-wallet mint. Scan + release + zero; do not delete units here (no full team path).
+if (isNil '_get') exitWith {
+Private ["_ghostTeam"];
+_ghostTeam = grpNull;
+{
+{
+if !(isNil {_x getVariable "wfbe_uid"}) then {if ((_x getVariable "wfbe_uid") == _uid) then {_ghostTeam = _x}};
+if !(isNull _ghostTeam) exitWith {};
+} forEach ((_x Call WFBE_CO_FNC_GetSideLogic) getVariable ["wfbe_teams", []]);
+if !(isNull _ghostTeam) exitWith {};
+} forEach WFBE_PRESENTSIDES;
+if !(isNull _ghostTeam) then {
+_ghostTeam setVariable ["wfbe_uid", nil];
+_ghostTeam setVariable ["wfbe_teamleader", nil];
+_ghostTeam setVariable ["wfbe_funds", 0, true];
+};
+missionNamespace setVariable [Format ["WFBE_JIP_BODY_%1", _uid], nil];
+["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] don't have any information stored (ghost uid released if present)", _name, _uid]] Call WFBE_CO_FNC_LogContent
+};
 
 //--- Determine the root team.
 _side = _get select 3;
@@ -300,6 +321,15 @@ if !(isNil "WFBE_SE_PLAYERLIST") then {
 //--- Release the UID.
 _team setVariable ["wfbe_uid", nil];
 _team setVariable ["wfbe_teamleader", nil];
+
+//--- r69b vacated-wallet-bleed (2026-07-31): the disconnect snapshot above wrote cash into
+//--- WFBE_JIP_USER<uid> but historically LEFT the group's wfbe_funds untouched. A later joiner
+//--- landing on that vacated slot with a nil/0 record (legit spend-to-0, or first-join race)
+//--- hit Server_OnPlayerConnected's no-clobber path (or RequestFundsResend branch-2 rebroadcast)
+//--- and MINTED the leftover into their wallet/record. Zero AFTER uid release so ChangeTeamFunds
+//--- lock-step cannot re-enter SyncFundsRecord against this uid; same player reconnects from the
+//--- record (authoritative). A2-OA-1.64-safe public setVariable.
+_team setVariable ["wfbe_funds", 0, true];
 
 //--- If AI delegation is enabled, we remove the player's variable.
 if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 1) then {
