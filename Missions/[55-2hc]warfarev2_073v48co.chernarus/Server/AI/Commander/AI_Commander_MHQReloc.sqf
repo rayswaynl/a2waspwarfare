@@ -324,7 +324,20 @@ diag_log ("AICOMSTAT|v1|MHQRELOC|" + _sideText + "|" + str (round (time / 60)) +
 			_drv = [_soldier, _drvGrp, getPos _mhq, _myID] Call WFBE_CO_FNC_CreateUnit;
 			if (!isNull _drv) then {
 				_mhq lock false;
+				//--- r71b crew-seat: bare moveInDriver can silently fail (same-frame / lock race). Pair
+				//--- assignAsDriver + orderGetIn + seat-verify/retry (Client_BuildUnit cmdcon44s idiom) so a
+				//--- failed seat does not leave a foot AI while the MHQ sits driverless mid-reloc.
+				[_drv] allowGetIn true;
+				_drv assignAsDriver _mhq;
+				[_drv] orderGetIn true;
 				_drv moveInDriver _mhq;
+				if (driver _mhq != _drv) then {
+					sleep 0.5;
+					_drv moveInDriver _mhq;
+				};
+				if (driver _mhq != _drv) then {
+					["WARNING", Format ["AI_Commander_MHQReloc.sqf: [%1] MHQ driver seat failed after retry - reloc may stall.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+				};
 				_drvGrp setBehaviour "CARELESS";
 				_drvGrp setCombatMode "BLUE";
 				_drvGrp setSpeedMode "FULL";
