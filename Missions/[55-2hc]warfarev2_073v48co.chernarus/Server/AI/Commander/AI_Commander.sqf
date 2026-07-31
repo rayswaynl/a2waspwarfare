@@ -1138,7 +1138,10 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					if (_aliveN > 0) then {
 						_foundedN = _foundedN + 1;
 						_aliveSum = _aliveSum + _aliveN;
-						_tt = _cmdrGrp getVariable ["wfbe_teamtype", -1];
+						//--- GROUPGETVAR trap (repo hard-stop list): the 2-arg getVariable default form is
+						//--- unreliable on a GROUP receiver in A2 OA - use 1-arg + isNil (fixed at fold time).
+						_tt = _cmdrGrp getVariable "wfbe_teamtype";
+						if (isNil "_tt") then {_tt = -1};
 						//--- SOAK DRAFT: classify the team as VEHICLE (Tank or non-transport heli in its
 						//--- template = the founding-pad's _isBigVeh rule, Teams.sqf:294-297) vs INFANTRY,
 						//--- so the per-bucket average isolates the real infantry dribble. Unknown _tt =>
