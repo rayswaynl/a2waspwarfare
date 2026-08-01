@@ -153,6 +153,61 @@ perceived quality win, independently shippable.
   strictly bigger events (town assault > skirmish). Text pattern: side + force size class + town
   ("OPFOR armour closing on Figari").
 
+## 7a. Caster operator UI (owner 2026-08-01: "UI for casting player can be much improved")
+
+**Current state.** The spectator draws one always-on card — `SHOT <mode>` / `TARGET <name> |
+DIRECTOR AUTO <on/off>` — plus, in FULL mode, a two-line wall of every keybind. That is an
+operator debug readout: it describes the *camera* and says nothing about the *war*. It is also
+permanently on screen, so on a single-PC stream it is burned into the broadcast.
+
+**The constraint that shapes this whole section:** with one PC, the caster's screen IS the stream.
+There is no privileged operator monitor. So every pixel is either designed for the viewer, or it
+is visible clutter. The answer is not "hide the operator UI" — the caster genuinely needs it — but
+to split it by *lifetime*:
+
+- **Broadcast chrome** — persistent, designed, viewer-facing: the §7 score bar and caption slot.
+- **Operator chrome** — transient, summoned: appears on the action that needs it, fades on a timer.
+
+**Rules for operator chrome**
+
+1. **The keybind wall is summoned, not resident.** It fades ~6 s after the last input and returns
+   on `H`. A caster needs it for the first minute of a session and never again; the viewer never
+   needs it.
+2. **The status line compresses to a corner tag** — one short mono line, low opacity, e.g.
+   `CLOSE · 3rd Rifle · AUTO`. Mono because it is instrumentation (brand rule); corner because it
+   must never compete with the caption slot.
+3. **Every transient element fades on the same timer** so the screen resolves to a clean frame
+   between actions. A caster who stops touching the controls should be left with a broadcast
+   picture, automatically.
+
+**What is missing and worth adding — the shot list.** The single highest-value addition, and it is
+nearly free: the director *already* builds a scored candidate list every poll (towns, teams,
+players, and GUER once 5b lands). Today it scores them, picks one, and throws the rest away.
+Surfacing the **top 3 alternatives** as a small ranked peek — label, class, contact count — turns
+the caster from reactive to proactive: instead of discovering the fight after the cut, they can see
+"Meaux 6 contacts / 2nd Armoured 4 / Figari 2" and choose. With the P2 snapshot it gets better
+still: anticipation-tier candidates can appear in that list *before* contact, which is the whole
+point of the omniscient-camera design.
+
+The shot list is operator chrome — summoned (a key, or auto-shown briefly after each auto-cut so
+the caster sees what was passed over), never resident.
+
+**What the caster still lacks and should get**
+
+- **Where am I** — town/grid name of the current subject, not just its unit name.
+- **What is happening here** — contact count and side mix at the current subject, which the
+  director already computes for scoring and currently discards.
+- **Why did it cut** — a one-word cut reason on auto-cuts (`CONTACT`, `CAPTURE`, `ESTABLISH`), so
+  the caster can narrate the director's logic instead of guessing at it.
+
+**Not in scope here:** the WAR ROOM analyst panel (§2) is a *mode*, not operator chrome; it is
+viewer-facing and stays persistent while selected.
+
+Acceptance: after 10 s of no input the screen shows only broadcast chrome; `H` restores the
+keybind wall; the shot list shows the director's true next-best candidates (cross-check against
+`SPECTATE`/director telemetry); every operator element is mono, corner-anchored, and never overlaps
+the caption slot.
+
 ## 8. Spectator entry is caster-seat-only (owner decision 2026-08-01)
 
 The UID allowlist alone leaves the spectator action attached to an allowlisted player even in a
@@ -173,6 +228,7 @@ Flag-off = no snapshot builder runs, no PVC traffic, spectator behaves exactly a
 1. **P1 follow-cam attachTo + caster-seat-only entry gate** (fixes live jank + slot clutter; no new systems)
 2. **P2 snapshot + PVC channel + WAR ROOM overlay** (data first — visible value, no director change)
 3. **P3 BROADCAST mode** (score bar + danger-close captions off the same snapshot)
+   - and the **caster operator UI (7a)**: fade-timer chrome, corner status tag, shot list
    - also here: **camera-language re-tune (5a)** and **GUER target class (5b)** — both are
      director-local, need no snapshot, and can land earlier if P2 slips
 4. **P4 director anticipation tier + seize/release polish**
