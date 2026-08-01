@@ -954,7 +954,15 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 			WFBE_C_VAR_SpectatorCam camSetFov WFBE_C_VAR_SpectatorFov;
 			WFBE_C_VAR_SpectatorCam camCommit 0;
 		};
-		WFBE_C_VAR_SpectatorPos = _p;
+		//--- v5 P4 HOTFIX (owner live repro m0801h: "impossible to manually control, pitches very
+		//--- hard, no steering"): when the frame handler owns the free-cam, this writeback was
+		//--- STOMPING its render-rate position with the loop's stale top-of-iteration _p snapshot
+		//--- ~100x/s - two writers fighting = jitter-locked camera. The frame handler is the ONLY
+		//--- position writer while alive; yaw/pitch stay loop-written (the mouse handler owns them
+		//--- and _y/_pt are pass-through reads, not integrations).
+		if (!((_mode == "free") && {(missionNamespace getVariable ["WFBE_C_SPECTATOR_FREECAM_FRAME", 1]) > 0} && {(diag_tickTime - (missionNamespace getVariable ["WFBE_C_VAR_SpectatorAimFrameTick", -99])) < 1})) then {
+			WFBE_C_VAR_SpectatorPos = _p;
+		};
 		WFBE_C_VAR_SpectatorYaw = _y;
 		WFBE_C_VAR_SpectatorPitch = _pt;
 		if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
