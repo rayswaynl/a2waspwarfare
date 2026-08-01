@@ -34,6 +34,22 @@ if ((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0 && {_uid != ""})
 	["JOIN", _name, "player joined"] Call WFBE_SE_FNC_ChatRelayEvent;
 };
 
+//--- CASTER SLOTS (feat 2026-08-01): a human seated in a CIV "Caster N" slot never enrolls into a team,
+//--- so skip the resolver outright. Without this the loop below spins its full timeout (~2 min of log
+//--- noise) before bailing, because a caster body's group is never wfbe_side-stamped and its side is CIV -
+//--- all three lookups miss BY DESIGN, this skip just makes that explicit and quiet. Identified by the
+//--- slot marker the sqm init stamps on every machine (not by name or UID - no list to drift). If the
+//--- seat has not surfaced yet on either path the resolver still runs and still bails harmlessly: a CIV
+//--- body cannot pass the [west, east, resistance] gates below, so this skip is an optimisation, not a guard.
+private "_casterBody";
+_casterBody = missionNamespace getVariable [Format ["WFBE_JIP_BODY_%1", _uid], objNull];
+if (isNull _casterBody) then {
+	{ if (!isNull _x && {(getPlayerUID _x) == _uid}) exitWith {_casterBody = _x}; } forEach playableUnits;
+};
+if (!isNull _casterBody && {_casterBody getVariable ["wfbe_caster_slot", false]}) exitWith {
+	diag_log Format ["[WFBE][B761 CONNECT] skip enrollment resolver for caster slot [%1] [%2].", _name, _uid];
+};
+
 //--- We try to get the player and it's group from the playableUnits.
 //--- B74.2.2: was 10 (a 5s ceiling). Widened to 60 (30s) so a JIP seat under heavy-AI / low-server-FPS
 //--- load has time to surface in playableUnits with a resolved getPlayerUID before we bail. 30s matches
