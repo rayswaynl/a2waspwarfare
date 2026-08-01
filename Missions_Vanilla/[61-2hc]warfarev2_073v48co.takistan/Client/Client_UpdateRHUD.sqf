@@ -5,6 +5,12 @@ if (isNil "RUBHUD") then {RUBHUD = true};
 if !(isNil "BIS_CONTROL_CAM") then {RUBHUD = false};
 CutRsc["OptionsAvailable","PLAIN",0];
 
+//--- CASTER EXIT (owner live repro m0801f, 389 errors/session): the caster deadspawn exemption
+//--- lets CIV caster bodies reach this combat HUD, whose upgrade/arty reads are nil on CIV
+//--- (GetSideUpgrades -> nil select). Casters use the spectator HUD; the resource HUD is not for
+//--- them. CutRsc above stays - it keeps scroll-action icons (incl. Enter Spectator) alive.
+if (player getVariable ["wfbe_caster_slot", false]) exitWith {};
+
 waituntil{!isnil"totalTowns"};
 
 // Marty: Cache RHUD controls and values so hidden/unchanged HUD state does not rewrite UI every second.
