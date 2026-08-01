@@ -54,12 +54,22 @@ WFBE_Allow_HostileGearSaving = true;
 //--- permanently invulnerable. Initial join + JIP rejoin both pass through here; respawns do not.
 player allowDamage false;
 missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", false];
+//--- CASTER SLOTS (fix 2026-08-01, owner live repro): a Caster seat never enrolls and never
+//--- transits, so nothing ever sets DeadspawnEscaped for it -> the spectator addAction gate and
+//--- the caster auto-enter both waited forever, the pen positioning below dumped the body into
+//--- the offshore holding pen, and the 120s watchdogs re-enabled damage on a body nobody would
+//--- ever move - the caster drowned in the pen. Exempt the whole flow: mark escaped instantly
+//--- (unlocks the spectator gates), and the guards added to both watchdogs + the pen setPos keep
+//--- the body invulnerable at its editor slot until Client_SpectatorEnter parks it properly.
+if (player getVariable ["wfbe_caster_slot", false]) then {
+	missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", true];
+};
 [] spawn {
 	private ["_t0"];
 	_t0 = time;
 	waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
 	sleep 3;
-	if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
+	if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) && {!(player getVariable ["wfbe_caster_slot", false])}) then {
 		if (alive player) then { player allowDamage true };
 	};
 };
@@ -85,9 +95,13 @@ if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_REDESIGN", 0]) > 0) then {
 	//--- owner's live report ("deadspawn was at my team HQ"). Fixed the same way the ELSE branch two lines
 	//--- below already avoids this exact hazard (its own comment: "Common is not yet init'd so we call is
 	//--- straight away") - compile the function inline instead of depending on the async registration.
-	player setPos ([] call Compile preprocessFile "Common\Functions\Common_DeadspawnPenPos.sqf");
+	if (!(player getVariable ["wfbe_caster_slot", false])) then {
+		player setPos ([] call Compile preprocessFile "Common\Functions\Common_DeadspawnPenPos.sqf");
+	};
 } else {
-	player setPos ([getMarkerPos Format["%1TempRespawnMarker",sideJoinedText],1,10] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");
+	if (!(player getVariable ["wfbe_caster_slot", false])) then {
+		player setPos ([getMarkerPos Format["%1TempRespawnMarker",sideJoinedText],1,10] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");
+	};
 };
 (vehicle player) addEventHandler ["Fired",{_this Spawn HandleAT}]; (vehicle player) addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
 // Marty: Only attach the combat marker blinking Fired EH when the mission parameter enables the feature.
@@ -838,10 +852,13 @@ if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0) then {[] spawn W
 //--- watchdog, and finally the UID allowlist (casters are merged into WFBE_C_SPECTATOR_UIDS by
 //--- Init_CommonConstants). A non-allowlisted human in the seat just gets a hint and keeps the disarmed,
 //--- invulnerable civilian body - nothing else in the mission changes for them.
-if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_CASTER_AUTOSPECTATE", 0]) > 0} && {player getVariable ["wfbe_caster_slot", false]}) then {
+if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_CASTER_AUTOSPECTATE", 0]) > 0}) then {
 	[] spawn {
 		private ["_casterUID"];
 		waitUntil { sleep 1; !isNull player && {alive player} };
+		//--- fix 2026-08-01: seat marker read AFTER the player body is valid - the old outer-condition
+		//--- read raced JIP (player not yet seated when Init_Client evaluated it) and never armed.
+		if (!(player getVariable ["wfbe_caster_slot", false])) exitWith {};
 		waitUntil { sleep 1; missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false] };
 		_casterUID = getPlayerUID player;
 		if !(_casterUID in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []])) exitWith {
@@ -1309,7 +1326,7 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 	_t0 = time;
 	waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
 	sleep 3;
-	if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
+	if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) && {!(player getVariable ["wfbe_caster_slot", false])}) then {
 		if (alive player) then { player allowDamage true };
 	};
 };
