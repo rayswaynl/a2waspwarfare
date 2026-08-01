@@ -157,11 +157,17 @@ WFBE_CL_FNC_SpectatorCycleTarget = {
 		if (!isNil "_x") then {
 			//--- HC bodies are isPlayer-true; never offer them as watch targets (owner 2026-07-30).
 			if (alive _x && {isPlayer _x} && {!(_x == player)} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {_list = _list + [_x]};
+			//--- v5 P3 (5b, owner 2026-08-01): GUER is AI-only, so the isPlayer test above excluded the
+			//--- ENTIRE insurgency from the watch cycle. Add GUER GROUP LEADERS only - GUER volume is
+			//--- deliberately uncapped, one entry per squad keeps the cycle usable.
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_TARGET_GUER", 1]) > 0) then {
+				if (alive _x && {!(isPlayer _x)} && {(side _x) == resistance} && {_x == (leader (group _x))}) then {_list = _list + [_x]};
+			};
 		};
 	} forEach allUnits;
 	if (count _list == 0) exitWith {
 		WFBE_C_VAR_SpectatorTarget = objNull;
-		systemChat "[WASP] Spectator: no other alive players to watch.";
+		systemChat "[WASP] Spectator: nothing to watch (no other players, no live GUER squads).";
 	};
 	_cur = WFBE_C_VAR_SpectatorTarget;
 	_idx = -1;
@@ -176,7 +182,11 @@ WFBE_CL_FNC_SpectatorCycleTarget = {
 		_next = _list select ((_idx + _step + (count _list)) % (count _list));
 	};
 	WFBE_C_VAR_SpectatorTarget = _next;
-	systemChat Format ["[WASP] Spectator target: %1 (F follow, V eyes)", name _next];
+	if ((side _next) == resistance) then {
+		systemChat Format ["[WASP] Spectator target: GUER squad (%1 alive) (F follow, V eyes)", ({alive _x} count (units (group _next)))];
+	} else {
+		systemChat Format ["[WASP] Spectator target: %1 (F follow, V eyes)", name _next];
+	};
 };
 
 //--- v4: shared subject kinematics for follow/director. _this = [target, dt].
@@ -721,7 +731,12 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 							_lastDirectorStandoffTarget = _t;
 							if (!(_subject isKindOf "Man")) then {diag_log Format ["SPECTATE|v3|veh-standoff|mult=%1", _standoffMult]};
 						};
-						if (_engaged && {(_shotType == "TIGHT") || {_shotType == "MEDIUM"}}) then {
+						//--- v5 P3 (owner 2026-08-01): the old engaged branch PINNED the camera static behind the
+						//--- subject on TIGHT/MEDIUM - firing exactly when action peaked, and the source of the
+						//--- "very close close-ups" complaint. Engaged subjects now orbit like any other; the
+						//--- standoff retune (radius x~4, FOV /~3) keeps subject size on screen unchanged.
+						//--- Static-behind survives only as the explicit manual orbit-off pose (O toggle).
+						if (false) then {
 							_shotDir = getDir _t;
 							_angle = (_shotDir + 180) % 360;
 						} else {
@@ -735,6 +750,11 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 							} else {
 								_angle = WFBE_C_VAR_SpectatorOrbitAngle;
 							};
+						};
+						//--- v5 P3: flatten while TRACKING (orbit off) to see down the line of travel; keep the
+						//--- taller angle while ORBITING. Height only - radius/apparent size unchanged.
+						if (!WFBE_C_VAR_SpectatorOrbit) then {
+							_shotHeight = _shotHeight * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TRACK_HEIGHT_MULT", 0.45]);
 						};
 						_wantPos = [(_center select 0) + (_shotRadius * sin _angle), (_center select 1) + (_shotRadius * cos _angle), (_center select 2) + _shotHeight];
 						if (_t != _lastDirectorTarget) then {
