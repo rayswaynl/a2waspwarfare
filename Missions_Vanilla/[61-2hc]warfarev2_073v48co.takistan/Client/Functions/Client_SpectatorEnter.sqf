@@ -483,8 +483,11 @@ WFBE_CL_FNC_SpectatorMouseMoving = {
 		WFBE_C_VAR_SpectatorLastMouseX = _x;
 		WFBE_C_VAR_SpectatorLastMouseY = _y;
 		WFBE_C_VAR_SpectatorMouseBaseline = false;
-		WFBE_C_VAR_SpectatorMouseSdx = 0;
-		WFBE_C_VAR_SpectatorMouseSdy = 0;
+		//--- v4.2 (owner jank report): do NOT zero the EMA here. Entry already initialises
+		//--- Sdx/Sdy to 0; this branch also runs after every EDGE WARP, and zeroing there
+		//--- hitched the camera mid-swipe each time the cursor crossed the warp margin.
+		//--- Keeping the smoothed momentum across the warp is exactly what makes a long
+		//--- continuous swipe feel continuous.
 	} else {
 		_dx = _x - WFBE_C_VAR_SpectatorLastMouseX;
 		_dy = _y - WFBE_C_VAR_SpectatorLastMouseY;
@@ -506,7 +509,10 @@ WFBE_CL_FNC_SpectatorMouseMoving = {
 			WFBE_C_VAR_SpectatorYaw = WFBE_C_VAR_SpectatorYaw + _sdx * _sens;
 			WFBE_C_VAR_SpectatorPitch = ((WFBE_C_VAR_SpectatorPitch - _sdy * _sens) max -89) min 89;
 		};
-		if (_x < 0.2 || {_x > 0.8} || {_y < 0.2} || {_y > 0.8}) then {
+		//--- v4.2: margins widened 0.2/0.8 -> 0.1/0.9 - the old band warped every ~0.6 screen
+		//--- widths of travel, so long swipes stuttered; the wider band halves warp frequency
+		//--- while still keeping the cursor safely away from the real screen edge.
+		if (_x < 0.1 || {_x > 0.9} || {_y < 0.1} || {_y > 0.9}) then {
 			setMousePosition [0.5, 0.5];
 			WFBE_C_VAR_SpectatorMouseBaseline = true; //--- next event re-anchors at the warped position
 		} else {
