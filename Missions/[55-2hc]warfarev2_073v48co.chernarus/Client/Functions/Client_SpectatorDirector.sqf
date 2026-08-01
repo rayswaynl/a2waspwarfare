@@ -25,7 +25,10 @@ WFBE_CL_FNC_DirectorContactCount = {
 	_originSide = _this select 2;
 	_count = 0;
 	{
-		if (!isNull _x && {alive _x}) then {
+		//--- m0801h6 (Codex audit, owner ruling): contact means a GENUINE combatant - non-captive,
+		//--- armed, belligerent-side. Captive pen/park bodies and unarmed civ-model population
+		//--- fabricated "fights" here (scored 1000/contact) and steered the auto director to them.
+		if (!isNull _x && {alive _x} && {!(captive _x)} && {(count (weapons _x)) > 0} && {(side _x) in [west, east, resistance]}) then {
 			_unitSide = side _x;
 			if (_unitSide != _originSide) then {_count = _count + 1};
 		};
@@ -221,7 +224,7 @@ WFBE_CL_FNC_DirectorBuildClusters = {
 	{
 		if (!isNil "_x") then {
 			_u = _x; //--- capture before the inner forEach rebinds _x (A2-OA gotcha)
-			if (alive _u && {(side _u) in [west, east, resistance]} && {(count (weapons _u)) > 0} && {!((name _u) in _hcNames)}) then {
+			if (alive _u && {!(captive _u)} && {(side _u) in [west, east, resistance]} && {(count (weapons _u)) > 0} && {!((name _u) in _hcNames)}) then { //--- m0801h6: captive = held pen/park body, never a fight
 				_pos = getPos _u;
 				_px = _pos select 0;
 				_py = _pos select 1;
