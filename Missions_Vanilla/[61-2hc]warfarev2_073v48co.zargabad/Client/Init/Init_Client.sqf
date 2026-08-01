@@ -61,7 +61,10 @@ missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", false];
 //--- Derive the seat CLIENT-LOCALLY from replication-free facts: the only CIV playables in this
 //--- mission are 2 HC + 2 Caster, and HC names are excluded via WFBE_C_HC_NAMES. A human on CIV
 //--- that is not an HC is therefore a Caster, by construction of the slot table.
-if ((side player) == civilian && {!((name player) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {
+//--- (review 2026-08-01: MUST be the corrected sideJoined, never raw `side player` - the CIV-SIDE
+//--- GUARD above documents the engine transiently reporting civilian for real combat players during
+//--- JIP churn; a raw read here would tag such a soldier as caster = permanently invulnerable.)
+if (sideJoined == civilian && {!((name player) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {
 	player setVariable ["wfbe_caster_slot", true];
 	diag_log Format ["SPECTATE|v5|caster-seat-derived|name=%1|uid=%2", name player, getPlayerUID player];
 };
