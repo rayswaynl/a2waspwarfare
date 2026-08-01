@@ -528,9 +528,13 @@ WFBE_CL_FNC_DirectorEvTerms = {
 };
 
 //--- Stamp the SHOT SNAPSHOT (the only channel from the poll to the camera).
-//--- _this = [kind, key, centerXY, aimXYZ, radiusM(track spread), label, sidesText, score, samePoi]
+//--- _this = [kind, key, centerXY, aimXYZ, radiusM(track spread), label, sidesText, score, samePoi,
+//---          allowPreloadWait]
+//--- allowPreloadWait (optional, default false) is passed ONLY by the AUTO poll path - it permits
+//--- the bounded preload suspension below. Never pass it from an unscheduled caller (key handlers):
+//--- waitUntil outside a scheduled script is an engine error.
 WFBE_CL_FNC_DirectorStamp = {
-	Private ["_kind","_key","_cxy","_aim","_spread","_label","_sidesText","_score","_same","_compact","_stand","_hgt","_fov","_odir","_osw","_base","_shotType","_reason","_cutId","_oldShot","_ring","_pref","_ost","_prog"];
+	Private ["_kind","_key","_cxy","_aim","_spread","_label","_sidesText","_score","_same","_compact","_stand","_hgt","_fov","_odir","_osw","_base","_shotType","_reason","_cutId","_oldShot","_ring","_pref","_ost","_prog","_allowWait","_pcam","_pcap","_pt0"];
 	_kind = _this select 0;
 	_key = _this select 1;
 	_cxy = _this select 2;
@@ -540,6 +544,8 @@ WFBE_CL_FNC_DirectorStamp = {
 	_sidesText = _this select 6;
 	_score = _this select 7;
 	_same = _this select 8;
+	_allowWait = false;
+	if ((count _this) > 9) then {_allowWait = _this select 9};
 	_compact = (_spread < (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FIGHT_COMPACT_M", 120]));
 	_shotType = "MEDIUM";
 	_reason = "CONTACT";
@@ -593,6 +599,18 @@ WFBE_CL_FNC_DirectorStamp = {
 		_ring = _ring + [[_key, time]];
 		if ((count _ring) > 2) then {_ring = [_ring select ((count _ring) - 2), _ring select ((count _ring) - 1)]};
 		WFBE_C_VAR_DirShownRing = _ring;
+	};
+	//--- PRELOAD (flag WFBE_C_SPECTATOR_PRELOAD, default 0): on a REAL cut from the AUTO poll only,
+	//--- stream the incoming shot's camera position before the snapshot flips. Without it the frame
+	//--- handler snaps the camera onto the new POI on the very next frame and the opening moments
+	//--- of the shot render unloaded terrain - the most visible defect on a broadcast. Position
+	//--- mirrors the cut-frame geometry in Client_SpectatorAimFrame.sqf (centre + standoff at
+	//--- _base angle, height _hgt); the orbit reveal has not started yet at cut time.
+	if (_allowWait && {!_same} && {(missionNamespace getVariable ["WFBE_C_SPECTATOR_PRELOAD", 0]) > 0}) then {
+		_pcam = [(_cxy select 0) + (_stand * sin _base), (_cxy select 1) + (_stand * cos _base), _hgt];
+		_pcap = missionNamespace getVariable ["WFBE_C_SPECTATOR_PRELOAD_MAX_SEC", 1.5];
+		_pt0 = diag_tickTime;
+		waitUntil {(preloadCamera _pcam) || {(diag_tickTime - _pt0) > _pcap}};
 	};
 	WFBE_C_VAR_SpectShot = [_cutId, _key, [_cxy select 0, _cxy select 1, 0], _aim, _stand, _hgt, _fov, time, _odir, time + (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_DELAY_SEC", 3]), _osw, _base, _label, _shotType, _reason, _sidesText];
 	WFBE_C_VAR_SpectatorDirectorTargetLabel = _label;
@@ -853,7 +871,7 @@ WFBE_CL_FNC_DirectorAutoStep = {
 				_cy = (getPos _town) select 1;
 				WFBE_C_VAR_DirCurTown = _town;
 				WFBE_C_VAR_SpectatorTarget = _town;
-				["GLANCE", Format ["T:%1", _town getVariable ["name", "Town"]], [_cx, _cy], [_cx, _cy, 1.5], 500, _town getVariable ["name", "Town"], "", 0, false] Call WFBE_CL_FNC_DirectorStamp;
+				["GLANCE", Format ["T:%1", _town getVariable ["name", "Town"]], [_cx, _cy], [_cx, _cy, 1.5], 500, _town getVariable ["name", "Town"], "", 0, false, true] Call WFBE_CL_FNC_DirectorStamp;
 			};
 		};
 	};
@@ -872,7 +890,7 @@ WFBE_CL_FNC_DirectorCutTo = {
 		_aim = _tr Call WFBE_CL_FNC_DirectorTrackAim;
 		WFBE_C_VAR_DirCurTown = objNull;
 		WFBE_C_VAR_SpectatorTarget = objNull;
-		[_kind, _entry select 0, [_tr select 1, _tr select 2], _aim, _tr select 3, _entry select 4, _entry select 5, _entry select 2, _same] Call WFBE_CL_FNC_DirectorStamp;
+		[_kind, _entry select 0, [_tr select 1, _tr select 2], _aim, _tr select 3, _entry select 4, _entry select 5, _entry select 2, _same, true] Call WFBE_CL_FNC_DirectorStamp;
 	} else {
 		_town = _entry select 3;
 		if (!isNull _town) then {
@@ -880,7 +898,7 @@ WFBE_CL_FNC_DirectorCutTo = {
 			_cy = (getPos _town) select 1;
 			WFBE_C_VAR_DirCurTown = _town;
 			WFBE_C_VAR_SpectatorTarget = _town;
-			[_kind, _entry select 0, [_cx, _cy], [_cx, _cy, 1.5], 500, _entry select 4, _entry select 5, _entry select 2, _same] Call WFBE_CL_FNC_DirectorStamp;
+			[_kind, _entry select 0, [_cx, _cy], [_cx, _cy, 1.5], 500, _entry select 4, _entry select 5, _entry select 2, _same, true] Call WFBE_CL_FNC_DirectorStamp;
 		};
 	};
 };

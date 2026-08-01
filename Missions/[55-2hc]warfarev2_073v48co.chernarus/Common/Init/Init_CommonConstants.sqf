@@ -3644,6 +3644,11 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FIGHT_STAND_H") then {WFBE_C_SPECTATOR_DIRE
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PEN_EXCLUDE_M") then {WFBE_C_SPECTATOR_DIRECTOR_PEN_EXCLUDE_M = 200}; //--- eligibility exclusion radius around the deadspawn pens/parks.
 if (isNil "WFBE_C_SPECTATOR_FRAME_AIM_GAIN") then {WFBE_C_SPECTATOR_FRAME_AIM_GAIN = 2.5}; //--- frame-handler aim ease gain (per second).
 if (isNil "WFBE_C_SPECTATOR_FRAME_STAND_GAIN") then {WFBE_C_SPECTATOR_FRAME_STAND_GAIN = 0.6}; //--- frame-handler standoff/height ease gain (push-in glide ~5s).
+//--- Director cut preload (flag, default 0 = inert). Streams terrain/models around the NEXT
+//--- shot's camera position before the snapshot flips, so a cut does not reveal unloaded
+//--- ground on stream. AUTO director cuts only; manual N/B cuts stay instant.
+if (isNil "WFBE_C_SPECTATOR_PRELOAD") then {WFBE_C_SPECTATOR_PRELOAD = 0}; //--- 1 = preload before auto director cuts.
+if (isNil "WFBE_C_SPECTATOR_PRELOAD_MAX_SEC") then {WFBE_C_SPECTATOR_PRELOAD_MAX_SEC = 1.5}; //--- hard cap on the pre-cut wait; a slow disk can never stall the director longer than this.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
