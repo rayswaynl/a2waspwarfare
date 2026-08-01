@@ -24,8 +24,8 @@ class Mission
 	randomSeed=10034581;
 	class Intel
 	{
-		briefingName="WASP Warfare Build 91 (Zargabad)";
-		briefingDescription="Build 91: Zargabad towns are now capturable (the stale-file fix) with capture-chain armor, plus WDDM-designed defense positions & fortifications with thin-tower flak, a big AI commander wave (SCUD research restored, armor screens, target-aware team comps, feints, stuck-team watchers, air discipline), town AA fixed to guard active-air towns, ambient skirmish cells, GUER respawn fixes, JIP state sync, artillery-radar structures, economy divide-by-zero and crew-dismiss fixes, endgame summary, and a QoL batch.";
+		briefingName="WASP Warfare (Zargabad)";
+		briefingDescription="Combined-arms Warfare CTI in the dense streets of Zargabad. Two AI commanders fight each other and a GUER insurgency for every district: capture and upgrade town blocks to grow your economy, buy infantry, armour and aircraft, run supply and repair convoys, call artillery and close air support, and command your own AI teams from the map. Close urban ground turns every street into a fight. Headless clients carry the AI load so the server stays fast in large battles.";
 		resistanceWest=0;
 		startWeather=0;
 		forecastWeather=0;
