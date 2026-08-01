@@ -3467,7 +3467,7 @@ if (isNil "WFBE_C_SPECTATOR_HUD_FADE_SEC") then {WFBE_C_SPECTATOR_HUD_FADE_SEC =
 //--- settings dialog for the broadcast toggles (director auto, orbit, GUER targets, eyes-cam
 //--- cadence, HUD fade, idle dwell, cam speed + live sens readout). Default 0 = fully inert:
 //--- both open paths (addAction install, J KeyDown case) check this flag.
-if (isNil "WFBE_C_SPECTATOR_STREAMER_MENU") then {WFBE_C_SPECTATOR_STREAMER_MENU = 0};
+if (isNil "WFBE_C_SPECTATOR_STREAMER_MENU") then {WFBE_C_SPECTATOR_STREAMER_MENU = 1}; //--- owner armed 2026-08-01 (was 0/dark at first ship)
 
 //--- Spectator v3 director: explicit opt-in. All director code paths read this master gate.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR") then {WFBE_C_SPECTATOR_DIRECTOR = 1}; //--- ARMED on owner order 2026-07-30 ("fold v3 in now"), after an adversarial review found and a fix landed for the blocker that made this feature silently do nothing: the poll thread was started after the movement loop had already exited. Blast radius is one client - spectator entry is gated to WFBE_C_SPECTATOR_UIDS - so this only ever runs for an allowlisted caster. Rollback = set to 0 and rebuild.
