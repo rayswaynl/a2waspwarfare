@@ -3463,6 +3463,9 @@ if (isNil "WFBE_C_SPECTATOR_FREECAM_FRAME") then {WFBE_C_SPECTATOR_FREECAM_FRAME
 //--- v6 (research ruleset, docs/plans/2026-08-01-director-v6-research-ruleset.md):
 //--- rule 4 - TIGHT framing needs a real fight, not one bystander.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_CONTACT") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_CONTACT = 2};
+//--- v7 POI director (owner ruling 2026-08-01): fight-cluster proximity link distance in metres -
+//--- armed units of fighting sides within this range of a cluster centroid merge into that cluster.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_LINK_M") then {WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_LINK_M = 300};
 //--- rule 3 - minimum hold on any shot that has live contact (fire lock).
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC = 7};
 //--- v5 P3b (spec 7a): seconds of no caster input after which transient operator chrome (keybind
@@ -3582,7 +3585,7 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECT
 //--- Spectator broadcast HUD: opt-in styled title overlay + dialog map fallback.
 //--- 0 (default) leaves the existing 12455 cutText spectator card path unchanged.
 //--- Layer 12456 is reserved for this title; 12450-12452/12454/12455/12461 remain occupied.
-if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 0};
+if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 1}; //--- owner armed 2026-08-01 (the caster overlay: "NO OVERLAY" on the h5 stream was this flag still 0/dark - the cutRsc broadcast HUD never drew)
 
 //--- Spectator v4 streaming pass (owner 2026-07-31: autonomous TikTok/Twitch/Kick broadcast cam).
 if (isNil "WFBE_C_SPECTATOR_TICK") then {WFBE_C_SPECTATOR_TICK = 0.01}; //--- camera loop sleep; 0.05 hard-capped updates at 20Hz = judder on a 60fps capture.

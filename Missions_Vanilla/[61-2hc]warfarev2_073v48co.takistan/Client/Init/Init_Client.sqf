@@ -903,6 +903,10 @@ if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNames
 	waitUntil {(!isNil "clientInitComplete" && {clientInitComplete}) || ((time - _t0) > 90)};
 	diag_log format ["[WFBE][B64 RECON] reconciliation live after %1s cic=%2", round (time - _t0), (!isNil "clientInitComplete" && {clientInitComplete})];
 	waitUntil {!isNil "WFBE_Client_SideID"};
+	//--- CIV caster bail (owner client RPT 2026-08-01, Init_Client.sqf:945): civilian has no side
+	//--- logic - the wfbe_hq read on objNull returned Nothing and the undefined _hqObj killed this
+	//--- reconciliation spawn. A caster has no own-side teams/structures to heal; mirror cmdcon26.
+	if (sideJoined == civilian) exitWith { diag_log "[WFBE][B64 RECON] CIV-ABORT: skipped on civilian client."; };
 	_sideText = WFBE_Client_SideJoinedText;
 	_logik = WFBE_Client_Logic;
 	_didTeams = false;
@@ -1185,6 +1189,9 @@ waitUntil {(sideJoined == civilian) || {!isNil {WFBE_Client_Logic getVariable "w
 
 [] Spawn {
 	Private ["_commanderTeam"];
+	//--- CIV caster bail (2026-08-01): objNull side logic never carries wfbe_commander - this
+	//--- waitUntil parked a leaked script forever on caster clients.
+	if (sideJoined == civilian) exitWith {};
 	waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_commander"}};
 	/* Commander Handling */
 	["INITIALIZATION", "Init_Client.sqf: Initializing the Commander Update FSM"] Call WFBE_CO_FNC_LogContent;
@@ -1205,7 +1212,12 @@ if (isNil "WFBE_Client_BriefingLoaded") then {
 //--- builds the matching wfbe_radio_hq speaker on WFBE_L_GUE under the same gate (Init_Server.sqf), so the
 //--- waitUntil below resolves. west/east and the civilian pass-through keep their exact previous behaviour;
 //--- resistance stays skipped (sideHQ=objNull) when GUER is AI-defender-only (no human resistance slots exist).
-if ((sideJoined != resistance) || {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}) then {
+//--- CIV caster fix (owner client RPT 2026-08-01, ZG h5): civilian passed the resistance-only
+//--- gate, entered this block, and the wfbe_radio_hq waitUntil on objNull side logic NEVER
+//--- resolved - the whole rest of Init_Client (through clientInitComplete, line ~2145) hung
+//--- forever on every caster client (RPT: cic=false at 90s and no line after :945 ever ran).
+//--- Casters take the objNull sideHQ pass-through instead.
+if ((sideJoined != civilian) && {(sideJoined != resistance) || {(missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0}}) then {
 waitUntil {!isNil {WFBE_Client_Logic getVariable "wfbe_radio_hq"}};
 _HQRadio = WFBE_Client_Logic getVariable "wfbe_radio_hq";
 ["INITIALIZATION", Format["Init_Client.sqf: Initialized the Radio Announcer [%1]", _HQRadio]] Call WFBE_CO_FNC_LogContent;
@@ -1437,6 +1449,12 @@ if (!isNil {WFBE_Client_Logic getVariable "wfbe_startpos"}) then {
 };
 ["INITIALIZATION", "Init_Client.sqf: Retrieving the client spawn location."] Call WFBE_CO_FNC_LogContent;
 _base = objNull;
+//--- CIV caster (owner client RPT 2026-08-01): civilian has no side logic/startpos - the old
+//--- W/E branch read objNull and teleported the caster body to the [0,0] sea corner (live RPT:
+//--- enter pos=[39.9,10.0]). Keep the body where the caster flow already parked it.
+if (sideJoined == civilian) then {
+	_base = getPos player;
+} else {
 if (sideJoined == resistance) then {
 	private ["_fr"]; _fr = [];
 	{ if (((_x getVariable ["sideID",-1]) != WFBE_C_WEST_ID) && {(_x getVariable ["sideID",-1]) != WFBE_C_EAST_ID}) then {_fr = _fr + [_x]} } forEach towns;
@@ -1466,16 +1484,19 @@ if (time < 30) then {
 	    if (isNull _base || {!alive _base}) then { _base = WFBE_Client_Logic getVariable "wfbe_startpos" };
 };
 };
+}; //--- close the civilian branch (2026-08-01)
 
 ["INITIALIZATION", Format["Init_Client.sqf: Client spawn location has been determined at [%1].", _base]] Call WFBE_CO_FNC_LogContent;
 
 /* Position the client at the previously defined location */
-player setPos ([_base,20,30] Call GetRandomPosition);
+if (sideJoined != civilian) then {player setPos ([_base,20,30] Call GetRandomPosition)}; //--- CIV caster: never relocate the caster body (2026-08-01)
 missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", true]; //--- DEADSPAWN SAFETY: escaped the holding area to base - let the spawn-protection watchdog re-enable damage.
 
 /* HQ Building Init. */
 _isDeployed = true; //--- B751: default so resistance/GUER (which skips the block below) never reads an undefined _isDeployed at the `!isServer && !_isDeployed` HQ-killed-EH guard (~L824). WEST/EAST reassign the real status below.
-if (sideJoined != resistance) then {
+//--- 2026-08-01: civilian excluded too - GetSideHQDeployStatus on a CIV caster returns Nothing,
+//--- which would leave _isDeployed undefined and abort the rest of this file at the next if.
+if (!(sideJoined in [resistance, civilian])) then {
 waitUntil {(sideJoined == civilian) || !isNil {WFBE_Client_Logic getVariable "wfbe_hq_deployed"}};
 ["INITIALIZATION", "Init_Client.sqf: Initializing COIN Module."] Call WFBE_CO_FNC_LogContent;
 _isDeployed = (sideJoined) Call WFBE_CO_FNC_GetSideHQDeployStatus;
@@ -1908,7 +1929,9 @@ if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1)
 //--- B745 (Ray 2026-06-24): intro video removed (Videos\intro720p.ogv deleted, ~2.3MB mission shrink). Playback line disabled.
 
 /* Vote System, define whether a vote is already running or not */
-if (sideJoined != resistance) then {
+//--- 2026-08-01: civilian excluded - the civ bail below let a caster fall through to the
+//--- unguarded wfbe_votetime read on objNull logic (Nothing > 0 = abort of the file tail).
+if (!(sideJoined in [resistance, civilian])) then {
 waitUntil {(sideJoined == civilian) || !isNil {WFBE_Client_Logic getVariable "wfbe_votetime"}};
 ["INITIALIZATION", "Init_Client.sqf: Vote system is initialized."] Call WFBE_CO_FNC_LogContent;
 if ((WFBE_Client_Logic getVariable "wfbe_votetime") > 0) then {createDialog "WFBE_VoteMenu"};

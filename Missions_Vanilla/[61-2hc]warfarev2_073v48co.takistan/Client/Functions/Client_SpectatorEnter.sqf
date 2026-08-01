@@ -482,7 +482,11 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 		};
 		case 36: { //--- J: open/close the streamer settings menu (v5 P5); DIK 36 is not used by the spectator key set.
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_STREAMER_MENU", 0]) > 0) then {
-				if (dialog) then {closeDialog 0} else {createDialog "WFBE_StreamerMenu"};
+				if (dialog) then {closeDialog 0} else {
+					//--- h6 diag (owner report "no streamer menu"): prove the open path fires and whether
+					//--- the engine actually created the dialog.
+					diag_log Format ["SPECTATE|v5|streamer-menu|createDialog=%1", createDialog "WFBE_StreamerMenu"];
+				};
 			} else {
 				_handled = false;
 			};
@@ -762,12 +766,21 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 				case "director": {
 					if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {!isNull _t}) then {
 						_center = _t call WFBE_C_VAR_SpectatorDirectorPosFn;
-						_kin = [_t, _dt] Call WFBE_CL_FNC_SpectatorKinematics;
-						_subject = _kin select 0;
-						_subjectPos = _kin select 1;
-						_leadOffset = _kin select 2;
-						_subjectSpeed = _kin select 3;
-						_center = [(_subjectPos select 0) + (_leadOffset select 0), (_subjectPos select 1) + (_leadOffset select 1), (_subjectPos select 2) + (_leadOffset select 2)];
+						//--- v7 POI director (owner ruling 2026-08-01): TOWN/HQ/FIGHT shots orbit the STATIC
+						//--- POI point - no kinematics, no velocity lead, no per-frame subject tracking.
+						if (WFBE_C_VAR_SpectatorDirectorClass in ["TOWN","HQ","FIGHT"]) then {
+							_subject = vehicle _t;
+							_subjectPos = _center;
+							_leadOffset = [0,0,0];
+							_subjectSpeed = 0;
+						} else {
+							_kin = [_t, _dt] Call WFBE_CL_FNC_SpectatorKinematics;
+							_subject = _kin select 0;
+							_subjectPos = _kin select 1;
+							_leadOffset = _kin select 2;
+							_subjectSpeed = _kin select 3;
+							_center = [(_subjectPos select 0) + (_leadOffset select 0), (_subjectPos select 1) + (_leadOffset select 1), (_subjectPos select 2) + (_leadOffset select 2)];
+						};
 						_shotType = WFBE_C_VAR_SpectatorDirectorShotType;
 						_wantAim = [_t, WFBE_C_VAR_SpectatorDirectorClass, _center] Call WFBE_CL_FNC_DirectorAimPoint;
 						_engaged = WFBE_C_VAR_DirectorEngagementActive;
@@ -796,9 +809,17 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 								_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT", 110];
 							};
 						};
+						//--- v7 POI director: hot cluster = TIGHT FOV band at MEDIUM standoff - zoomed-in
+						//--- action from distance, never a close chase (owner ruling 2026-08-01).
+						if (WFBE_C_VAR_SpectatorDirectorClass == "FIGHT") then {
+							_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS", 70];
+							_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT", 30];
+						};
 						_standoffMult = 1;
 						_subjectFovMin = 0;
-						if (!(_subject isKindOf "Man")) then {
+						//--- v7: POI shots frame a place, not the anchor body - never scale standoff by the
+						//--- anchor's vehicle class.
+						if (!(WFBE_C_VAR_SpectatorDirectorClass in ["TOWN","HQ","FIGHT"]) && {!(_subject isKindOf "Man")}) then {
 							_standoffMult = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_VEH_STANDOFF_MULT", 2.5];
 							_subjectFovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_VEH_FOV_MIN", 0.55];
 							if (_subject isKindOf "Air") then {
