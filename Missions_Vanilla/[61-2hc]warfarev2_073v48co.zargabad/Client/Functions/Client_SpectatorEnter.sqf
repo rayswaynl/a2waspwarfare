@@ -172,7 +172,10 @@ WFBE_CL_FNC_SpectatorCycleTarget = {
 			//--- ENTIRE insurgency from the watch cycle. Add GUER GROUP LEADERS only - GUER volume is
 			//--- deliberately uncapped, one entry per squad keeps the cycle usable.
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_TARGET_GUER", 1]) > 0) then {
-				if (alive _x && {!(isPlayer _x)} && {(side _x) == resistance} && {_x == (leader (group _x))}) then {_list = _list + [_x]};
+				//--- owner live repro m0801h/ZG: town population spawns RESISTANCE-side in civilian models -
+				//--- side-GUER in code, unarmed locals on screen. An unarmed "squad leader" is population,
+				//--- not insurgency: require a weapon to be watchable.
+				if (alive _x && {!(isPlayer _x)} && {(side _x) == resistance} && {_x == (leader (group _x))} && {(count (weapons _x)) > 0}) then {_list = _list + [_x]};
 			};
 		};
 	} forEach allUnits;

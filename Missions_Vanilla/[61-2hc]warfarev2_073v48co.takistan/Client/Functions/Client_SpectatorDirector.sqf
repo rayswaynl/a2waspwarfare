@@ -107,7 +107,7 @@ WFBE_CL_FNC_DirectorBuildPlayers = {
 			//--- Derive squads client-locally instead: every AI group LEADER of a fighting side, scored by
 			//--- the same contact logic as players (lower base, so humans win ties). GUER leaders class as
 			//--- GUER, west/east as TEAM (keeps them in the tier-2 build-up pool).
-			if (alive _x && {!(isPlayer _x)} && {_x == (leader (group _x))} && {(side _x) != civilian} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {
+			if (alive _x && {!(isPlayer _x)} && {_x == (leader (group _x))} && {(side _x) != civilian} && {(count (weapons _x)) > 0} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then { //--- weapons check: ZG town population is resistance-side in civ models (owner 2026-08-01)
 				_contact = [_x, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100], side _x] Call WFBE_CL_FNC_DirectorContactCount;
 				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_AI_BASE", 6]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_CONTACT", 1000]));
 				if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
