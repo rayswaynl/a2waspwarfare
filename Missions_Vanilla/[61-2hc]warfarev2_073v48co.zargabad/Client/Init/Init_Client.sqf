@@ -831,6 +831,26 @@ if ((missionNamespace getVariable ["WFBE_C_CAMP_REPAIR_PRESENCE", 0]) > 0) then 
 [] execVM "Client\FSM\updateaicommarkers.sqf"; //--- AI-commander team direction arrows (task #3).
 if ((missionNamespace getVariable ["WFBE_C_AWACS", 0]) > 0) then {[] execVM "Client\Module\AWACS\awacs_pilot_watch.sqf"}; //--- fable/awacs-radar: AWACS pilot watch (ground MTI sweep). Flag default 0 = never launched.
 if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0) then {[] spawn WFBE_CL_FNC_SpectatorAttach}; //--- fable/spectator-v1: UID-allowlisted free-camera spectator overlay; inert for everyone not on WFBE_C_SPECTATOR_UIDS.
+//--- CASTER SLOTS (feat 2026-08-01): an allowlisted caster seated in a "Caster N" slot auto-enters the
+//--- spectator instead of hunting for the addAction. Gates in order: master spectator flag, the caster
+//--- autospectate flag (default 0), the sqm slot marker, then the same deadspawn-transit gate the attach
+//--- addAction condition uses (WFBE_Client_DeadspawnEscaped) so this can never fight the join-transit
+//--- watchdog, and finally the UID allowlist (casters are merged into WFBE_C_SPECTATOR_UIDS by
+//--- Init_CommonConstants). A non-allowlisted human in the seat just gets a hint and keeps the disarmed,
+//--- invulnerable civilian body - nothing else in the mission changes for them.
+if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNamespace getVariable ["WFBE_C_CASTER_AUTOSPECTATE", 0]) > 0} && {player getVariable ["wfbe_caster_slot", false]}) then {
+	[] spawn {
+		private ["_casterUID"];
+		waitUntil { sleep 1; !isNull player && {alive player} };
+		waitUntil { sleep 1; missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false] };
+		_casterUID = getPlayerUID player;
+		if !(_casterUID in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []])) exitWith {
+			hintSilent "This slot is reserved for match casters.\nAsk an admin to add your UID to WFBE_C_CASTER_UIDS.";
+		};
+		[] spawn WFBE_CL_FNC_SpectatorEnter;
+	};
+};
+
 
 //--- B62 (Ray 2026-06-21): OWN-SIDE MARKER RECONCILIATION / SELF-HEAL.
 //--- THE BUG (Ray RPT, OPFOR/insurgent JIP join): own-side FACTORY/structure markers AND own-side HQ-team

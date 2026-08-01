@@ -3331,6 +3331,20 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE") then {WFBE_C_AICOM_CARGO_A
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST = 35000}; //--- AICOM-treasury $ added on top of WFBE_C_AICOM_CARGO_AIRDROP_COST only on a call that actually spawns the escort this time; anchored near A10_US_EP1's registered 32,320 unit price plus a pilot.
 if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES = ["A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]}; //--- fixed-wing attack-jet candidates only (Plane-kind subset of AI_Commander_AirResp.sqf's allowlist); intersected against the side's own WFBE_<SIDE>AIRCRAFTUNITS roster at dispatch so the pick is always side-safe/reachable, never hardcoded to one faction.
 
+//--- CASTER SLOTS (feat 2026-08-01, owner order): two CIV "Caster 1/2" playable slots ship in
+//--- mission.sqm on every terrain (plain playable seats, NOT forceHeadlessClient - humans only).
+//--- WFBE_C_CASTER_UIDS is the caster allowlist; it is MERGED into WFBE_C_SPECTATOR_UIDS below, so
+//--- every existing spectator gate (Attach addAction visibility, Enter belt-and-braces re-check)
+//--- accepts casters without editing the spectator files themselves (deliberate: the v3/v4 spectator
+//--- rewrites are in flight in other lanes and this must not conflict with them). Defaults are inert:
+//--- empty list = the merge is a no-op; flag 0 = the Init_Client auto-enter block never arms. The slot
+//--- bodies mark themselves via their sqm init line (this setVariable ["wfbe_caster_slot", true]) -
+//--- sqm init runs on EVERY machine, so the marker is globally readable with no publicVariable and no
+//--- name-list drift (contrast the HC registry right below).
+if (isNil "WFBE_C_CASTER_UIDS") then {WFBE_C_CASTER_UIDS = []}; //--- Steam UIDs allowed to cast from a Caster slot; merged into the spectator allowlist below.
+if (isNil "WFBE_C_CASTER_AUTOSPECTATE") then {WFBE_C_CASTER_AUTOSPECTATE = 0}; //--- 1 = an allowlisted caster seated in a Caster slot auto-enters the spectator once past the deadspawn-transit window.
+{ if !(_x in WFBE_C_SPECTATOR_UIDS) then {WFBE_C_SPECTATOR_UIDS = WFBE_C_SPECTATOR_UIDS + [_x]}; } forEach WFBE_C_CASTER_UIDS;
+
 //--- HEADLESS-CLIENT NAME REGISTRY (fix 2026-07-26). The 4-HC rollout (#1456) added a fourth HC, but every
 //--- "is this a real human player" test carried its OWN hardcoded HC name list and they drifted - the
 //--- proximity helper still listed only HC-AI-Control-1..3, so HC4's body counted as a player and vetoed
