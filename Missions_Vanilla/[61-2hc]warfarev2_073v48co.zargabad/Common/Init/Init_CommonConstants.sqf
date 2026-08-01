@@ -3468,6 +3468,14 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_CONTACT") then {WFBE_C_SPECTATOR_
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_LINK_M") then {WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_LINK_M = 300};
 //--- rule 3 - minimum hold on any shot that has live contact (fire lock).
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC = 7};
+//--- ARTY RANGE RINGS (owner live repro 2026-08-01 13:30, "orange circle spam"): the RM70 parity
+//--- fix registered RM70 on TK/ZG for the first time - every battery rings 9000m in orange on
+//--- terrains a fraction of that size, burying the map. Rings stay ON for Chernarus (long-standing
+//--- feature there); small terrains default OFF. Explicit pre-set of WFBE_C_ARTY_RING still wins.
+if (isNil "WFBE_C_ARTY_RING") then {
+	WFBE_C_ARTY_RING = 1;
+	if ((toLower worldName) in ["zargabad", "takistan"]) then {WFBE_C_ARTY_RING = 0};
+};
 //--- v5 P3b (spec 7a): seconds of no caster input after which transient operator chrome (keybind
 //--- wall + shot list) fades, leaving only the compact status line. On a single-PC stream the
 //--- caster screen IS the stream, so idle must resolve to a clean broadcast frame by itself.
