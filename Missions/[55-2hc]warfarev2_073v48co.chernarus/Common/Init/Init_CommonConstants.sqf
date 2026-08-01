@@ -3355,6 +3355,12 @@ if (isNil "WFBE_C_CASTER_UIDS") then {WFBE_C_CASTER_UIDS = ["76561198046825568"]
 if (isNil "WFBE_C_CASTER_AUTOSPECTATE") then {WFBE_C_CASTER_AUTOSPECTATE = 1};
 //--- v5 (spec 8): 1 = the spectator addAction requires a Caster SEAT as well as the UID allowlist.
 if (isNil "WFBE_C_SPECTATOR_CASTER_SEAT_ONLY") then {WFBE_C_SPECTATOR_CASTER_SEAT_ONLY = 1}; //--- 1 = an allowlisted caster seated in a Caster slot auto-enters the spectator once past the deadspawn-transit window.
+//--- ROOT-CAUSE FIX (owner live repro m0801h4, adversarial review flagged it pre-merge): branch
+//--- merges reordered this file so this merge loop ran BEFORE the WFBE_C_SPECTATOR_UIDS isNil
+//--- definition further down. The undefined read threw at runtime and ABORTED THE REST OF THIS
+//--- FILE - every constant below (all spectator/director/HUD/menu flags) stayed nil for the whole
+//--- session: J fell through to the WF menu, no overlay, defaults everywhere. Order-independent now.
+if (isNil "WFBE_C_SPECTATOR_UIDS") then {WFBE_C_SPECTATOR_UIDS = []};
 { if !(_x in WFBE_C_SPECTATOR_UIDS) then {WFBE_C_SPECTATOR_UIDS = WFBE_C_SPECTATOR_UIDS + [_x]}; } forEach WFBE_C_CASTER_UIDS;
 
 //--- HEADLESS-CLIENT NAME REGISTRY (fix 2026-07-26). The 4-HC rollout (#1456) added a fourth HC, but every
