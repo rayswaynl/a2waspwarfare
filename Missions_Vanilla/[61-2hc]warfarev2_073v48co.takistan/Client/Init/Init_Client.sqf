@@ -307,6 +307,7 @@ WFBE_CL_FNC_BlinkMapIcon = Compile preprocessFileLineNumbers "Client\Functions\C
 //--- attaches. The UID allowlist check itself lives inside Client_SpectatorAttach.sqf.
 WFBE_CL_FNC_SpectatorAttach = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorAttach.sqf";
 WFBE_CL_FNC_SpectatorEnter = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorEnter.sqf";
+WFBE_CL_FNC_SpectatorAimFrame = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorAimFrame.sqf"; //--- v5 P1: unscheduled follow-aim easing (onEachFrame body)
 Call Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorDirector.sqf"; //--- spectator v3 director helpers; definitions only, loop starts from Enter when flag is armed.
 WFBE_CL_FNC_SpectatorExit = Compile preprocessFileLineNumbers "Client\Functions\Client_SpectatorExit.sqf";
 

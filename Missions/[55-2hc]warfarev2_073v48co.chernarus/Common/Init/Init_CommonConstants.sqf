@@ -3424,6 +3424,7 @@ if (isNil "WFBE_C_SPECTATOR_BOOST") then {WFBE_C_SPECTATOR_BOOST = 4};
 if (isNil "WFBE_C_SPECTATOR_SLOW") then {WFBE_C_SPECTATOR_SLOW = 0.25};
 if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 25};	//--- owner playtest 2026-07-30: 300 deg per full UI-width was unusable; 80 is a broadcast-friendly base. PgUp/PgDn adjust live in-session.
 if (isNil "WFBE_C_SPECTATOR_FOV_MIN") then {WFBE_C_SPECTATOR_FOV_MIN = 0.05};
+if (isNil "WFBE_C_SPECTATOR_AIM_RATE") then {WFBE_C_SPECTATOR_AIM_RATE = 3.5}; //--- v5 P1 follow-aim easing rate (1/s): time-constant ~0.29s, council C8 band 0.25-0.4s. Only read by Client_SpectatorAimFrame.sqf.
 if (isNil "WFBE_C_SPECTATOR_FOV_MAX") then {WFBE_C_SPECTATOR_FOV_MAX = 1.2};
 
 //--- Spectator v3 director: explicit opt-in. All director code paths read this master gate.

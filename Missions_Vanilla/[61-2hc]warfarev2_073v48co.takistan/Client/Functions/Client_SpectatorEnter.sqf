@@ -126,6 +126,16 @@ WFBE_C_VAR_SpectatorCam camSetTarget [
 	(_pos0 select 2) + 2
 ];
 WFBE_C_VAR_SpectatorCam camCommit 0; //--- instant commit; no waitUntil (movement loop re-commits within 50ms anyway)
+//--- v5 P1 (council C8): arm the unscheduled aim handler. If onEachFrame is unavailable on this
+//--- build the statement fails and execution continues (A2 failed-statement semantics); the
+//--- liveness stamp then stays stale and the movement loop keeps the v4 scheduled aim fallback.
+WFBE_C_VAR_SpectatorAttachedTo = objNull;
+WFBE_C_VAR_SpectatorAimFrameTick = -99;
+WFBE_C_VAR_SpectatorAimLastT = diag_tickTime;
+WFBE_C_VAR_SpectatorAimGoal = [];
+WFBE_C_VAR_SpectatorAimCur = [];
+WFBE_C_VAR_SpectatorFrameAimArmed = true;
+onEachFrame {Call WFBE_CL_FNC_SpectatorAimFrame};
 
 WFBE_C_VAR_SpectatorPos = [_pos0 select 0, _pos0 select 1, (_pos0 select 2) + 2];
 WFBE_C_VAR_SpectatorYaw = _yaw0;
@@ -556,7 +566,7 @@ WFBE_C_VAR_SpectatorWheelIdx = (findDisplay 46) displayAddEventHandler ["MouseZC
 diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_SpectatorKeyDownIdx, WFBE_C_VAR_SpectatorMouseMovingIdx];
 
 [] spawn {
-	Private ["_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d","_center","_radius","_height","_rate","_angle","_dirCard","_wantPos","_wantAim","_smoothPos","_smoothAim","_smoothFactor","_smoothK","_lastDirectorTarget","_lastDirectorShotType","_shotChanged","_shotType","_engaged","_shotRadius","_shotHeight","_shotDir","_targetFov","_fovStep","_fovDelta","_manualZoomLock","_baseRemain","_subject","_leadSec","_subjectPos","_subjectVelocity","_leadOffset","_subjectSpeed","_standoffMult","_subjectFovMin","_lastDirectorStandoffTarget","_lastFollowTarget","_followSmoothPos","_followSmoothAim","_kin","_wantVel","_accel","_accelF","_vel","_fovRate","_fovWasDirector"];
+	Private ["_vd","_followVeh","_followPiloted","_mode","_t","_k","_p","_y","_pt","_cy","_sy","_cp","_sp","_fwd","_right","_spd","_dt","_last","_tx","_ty","_tz","_body","_lockPos","_lockDir","_hd","_tgtTxt","_e","_d","_center","_radius","_height","_rate","_angle","_dirCard","_wantPos","_wantAim","_smoothPos","_smoothAim","_smoothFactor","_smoothK","_lastDirectorTarget","_lastDirectorShotType","_shotChanged","_shotType","_engaged","_shotRadius","_shotHeight","_shotDir","_targetFov","_fovStep","_fovDelta","_manualZoomLock","_baseRemain","_subject","_leadSec","_subjectPos","_subjectVelocity","_leadOffset","_subjectSpeed","_standoffMult","_subjectFovMin","_lastDirectorStandoffTarget","_lastFollowTarget","_followSmoothPos","_followSmoothAim","_kin","_wantVel","_accel","_accelF","_vel","_fovRate","_fovWasDirector"];
 	_body = WFBE_C_VAR_SpectatorBody;
 	_lockPos = getPos _body;
 	_lockDir = getDir _body; //--- direction lock added in v2: the body must not spin under the mouse.
@@ -613,6 +623,19 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 		_spd = missionNamespace getVariable ["WFBE_C_SPECTATOR_SPEED", 15];
 		if (_k select 6) then {_spd = _spd * (missionNamespace getVariable ["WFBE_C_SPECTATOR_BOOST", 4])};
 		if (_k select 7) then {_spd = _spd * (missionNamespace getVariable ["WFBE_C_SPECTATOR_SLOW", 0.25])};
+		//--- v5 P1 (council C8): any tick where we are NOT in follow but still attached means we just
+		//--- left follow (WASD seize, F toggle-off, target lost, director cut). Detach and hand the
+		//--- free-cam the camera's exact rendered pose - a zero-frame seize with no snap.
+		if (_mode != "follow" && {!isNull WFBE_C_VAR_SpectatorAttachedTo}) then {
+			detach WFBE_C_VAR_SpectatorCam;
+			WFBE_C_VAR_SpectatorAttachedTo = objNull;
+			WFBE_C_VAR_SpectatorPos = getPos WFBE_C_VAR_SpectatorCam;
+			_vd = vectorDir WFBE_C_VAR_SpectatorCam;
+			_hd = sqrt (((_vd select 0) ^ 2) + ((_vd select 1) ^ 2));
+			WFBE_C_VAR_SpectatorYaw = (((_vd select 0) atan2 (_vd select 1)) + 360) % 360;
+			WFBE_C_VAR_SpectatorPitch = ((((_vd select 2) atan2 (_hd max 0.01))) max -80) min 80;
+			WFBE_C_VAR_SpectatorAimGoal = [];
+		};
 		_p = WFBE_C_VAR_SpectatorPos;
 		_y = WFBE_C_VAR_SpectatorYaw;
 		_pt = WFBE_C_VAR_SpectatorPitch;
@@ -648,15 +671,43 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 							(_followSmoothAim select 2) + (((_wantAim select 2) - (_followSmoothAim select 2)) * _smoothFactor)
 						];
 					};
-					_p = _followSmoothPos;
+					//--- v5 P1 (council C8, 4/4 APPROVE): position is ENGINE-driven via attachTo - immune to
+					//--- SQF scheduler starvation, which no scripted per-tick camSetPos cadence can be. Aim is
+					//--- eased per render frame by Client_SpectatorAimFrame.sqf (onEachFrame); if its liveness
+					//--- stamp goes stale we fall back to the v4 scheduled aim below. Player-piloted subjects
+					//--- keep the v4 kinematic follow (council-flagged attach quirk on player-driven vehicles).
+					_followVeh = vehicle _subject;
+					_followPiloted = isPlayer _followVeh || {!isNull (driver _followVeh) && {isPlayer (driver _followVeh)}};
+					if (!_followPiloted) then {
+						if (WFBE_C_VAR_SpectatorAttachedTo != _followVeh) then {
+							if (!isNull WFBE_C_VAR_SpectatorAttachedTo) then {detach WFBE_C_VAR_SpectatorCam};
+							WFBE_C_VAR_SpectatorCam attachTo [_followVeh, [0, -8, 3]];
+							WFBE_C_VAR_SpectatorAttachedTo = _followVeh;
+							WFBE_C_VAR_SpectatorAimCur = _wantAim; //--- hard cut on switch: no easing across a cut
+							_followSmoothAim = _wantAim;
+						};
+						WFBE_C_VAR_SpectatorAimGoal = _wantAim;
+						_p = getPos WFBE_C_VAR_SpectatorCam;
+						if ((diag_tickTime - (missionNamespace getVariable ["WFBE_C_VAR_SpectatorAimFrameTick", -99])) > 1) then {
+							//--- frame-aim dead or unavailable: v4 scheduled aim keeps the camera usable.
+							WFBE_C_VAR_SpectatorCam camSetTarget _followSmoothAim;
+							WFBE_C_VAR_SpectatorCam camCommit 0;
+						};
+					} else {
+						if (!isNull WFBE_C_VAR_SpectatorAttachedTo) then {
+							detach WFBE_C_VAR_SpectatorCam;
+							WFBE_C_VAR_SpectatorAttachedTo = objNull;
+						};
+						WFBE_C_VAR_SpectatorCam camSetPos _followSmoothPos;
+						WFBE_C_VAR_SpectatorCam camSetTarget _followSmoothAim;
+						_p = _followSmoothPos;
+					};
 					_tx = _followSmoothAim select 0;
 					_ty = _followSmoothAim select 1;
 					_tz = _followSmoothAim select 2;
 					_hd = sqrt (((_tx - (_p select 0)) ^ 2) + ((_ty - (_p select 1)) ^ 2));
 					_y = (((_tx - (_p select 0)) atan2 (_ty - (_p select 1))) + 360) % 360;
 					_pt = (((_tz - (_p select 2)) atan2 (_hd max 0.01)) max -80) min 80;
-					WFBE_C_VAR_SpectatorCam camSetPos _p;
-					WFBE_C_VAR_SpectatorCam camSetTarget [_tx, _ty, _tz];
 				};
 				case "eyes": {
 					_e = eyePos _t;
