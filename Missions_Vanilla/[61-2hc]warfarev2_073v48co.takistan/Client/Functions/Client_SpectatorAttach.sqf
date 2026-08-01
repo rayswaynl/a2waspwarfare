@@ -69,6 +69,22 @@ while {!(missionNamespace getVariable ["WFBE_gameover", false])} do {
 			"",
 			"missionNamespace getVariable ['WFBE_C_VAR_SpectatorActive', false]"
 		];
+		//--- v5 P5 (flag WFBE_C_SPECTATOR_STREAMER_MENU, default 0): streamer settings menu on
+		//--- the caster body. In-camera the same dialog opens on J through the spectator KeyDown
+		//--- EH; this action is the out-of-camera route. Object-bound like the two actions above,
+		//--- so the same wfbe_spectator_actions_added re-attach guard covers it after respawn.
+		if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_STREAMER_MENU", 0]) > 0) then {
+			player addAction [
+				"<t color='#b48cff'>Streamer Menu</t>",
+				"Client\Action\Action_StreamerMenu.sqf",
+				[],
+				1.5,
+				false,
+				true,
+				"",
+				"alive player"
+			];
+		};
 		diag_log Format ["SPECTATE|v1|actions-attached|uid=%1", _myUID];
 	};
 	//--- v4 autostart (flag default 0): hands-off director entry for the stream box.

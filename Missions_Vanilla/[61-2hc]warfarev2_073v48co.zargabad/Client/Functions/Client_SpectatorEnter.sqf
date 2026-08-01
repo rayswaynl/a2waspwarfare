@@ -477,6 +477,13 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 				if (WFBE_C_VAR_SpectatorHideHint) then {12455 cutText ["", "PLAIN", 0]}; WFBE_C_VAR_SpectatorCardLast = ""; //--- reset the card cache either way so the next draw re-cuts (flicker fix, merged)
 			};
 		};
+		case 36: { //--- J: open/close the streamer settings menu (v5 P5); DIK 36 is not used by the spectator key set.
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_STREAMER_MENU", 0]) > 0) then {
+				if (dialog) then {closeDialog 0} else {createDialog "WFBE_StreamerMenu"};
+			} else {
+				_handled = false;
+			};
+		};
 		case 50: { //--- M: open/close spectator map dialog; DIK 50 is not used by the spectator key set.
 			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
 				if (dialog) then {closeDialog 0} else {createDialog "WFBE_SpectatorMapDialog"};
