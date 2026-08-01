@@ -811,7 +811,9 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 						};
 						//--- v7 POI director: hot cluster = TIGHT FOV band at MEDIUM standoff - zoomed-in
 						//--- action from distance, never a close chase (owner ruling 2026-08-01).
-						if (WFBE_C_VAR_SpectatorDirectorClass == "FIGHT") then {
+						//--- m0801h9: WIDE fight shots (spread battle) keep the WIDE standoff from the
+						//--- switch above so the whole engagement fits the frame.
+						if (WFBE_C_VAR_SpectatorDirectorClass == "FIGHT" && {_shotType != "WIDE"}) then {
 							_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS", 70];
 							_shotHeight = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT", 30];
 						};

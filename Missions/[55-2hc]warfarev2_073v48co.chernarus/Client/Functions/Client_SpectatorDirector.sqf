@@ -216,11 +216,11 @@ WFBE_CL_FNC_DirectorBuildClusters = {
 	//--- contact = units outside the cluster's biggest side (the same enemies-present signal
 	//--- WFBE_CL_FNC_DirectorContactCount reads, computed once over the whole cluster).
 	//--- Deadspawn-parked bots are single-side by construction, so no cluster ever forms there.
-	Private ["_list","_link","_clusters","_c","_u","_pos","_px","_py","_sideIdx","_best","_bestD","_cx","_cy","_d","_i","_n","_sides","_maxSide","_contact","_score","_hcNames"];
+	Private ["_list","_link","_clusters","_c","_u","_pos","_px","_py","_sideIdx","_best","_bestD","_cx","_cy","_d","_i","_n","_sides","_maxSide","_contact","_score","_hcNames","_members","_m","_mx","_my","_dc","_cnt","_bestCount","_bestDist","_aimX","_aimY","_radius","_densR2"];
 	_list = [];
 	_link = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_LINK_M", 300];
 	_hcNames = missionNamespace getVariable ["WFBE_C_HC_NAMES", []];
-	_clusters = []; //--- per cluster: [sumX, sumY, n, westN, eastN, guerN, anchorUnit]
+	_clusters = []; //--- per cluster: [sumX, sumY, n, westN, eastN, guerN, anchorUnit, memberXY]
 	{
 		if (!isNil "_x") then {
 			_u = _x; //--- capture before the inner forEach rebinds _x (A2-OA gotcha)
@@ -242,7 +242,7 @@ WFBE_CL_FNC_DirectorBuildClusters = {
 					_i = _i + 1;
 				} forEach _clusters;
 				if (_best < 0) then {
-					_c = [_px, _py, 1, 0, 0, 0, _u];
+					_c = [_px, _py, 1, 0, 0, 0, _u, [[_px, _py]]];
 					_c set [3 + _sideIdx, 1];
 					_clusters = _clusters + [_c];
 				} else {
@@ -251,6 +251,7 @@ WFBE_CL_FNC_DirectorBuildClusters = {
 					_c set [1, (_c select 1) + _py];
 					_c set [2, (_c select 2) + 1];
 					_c set [3 + _sideIdx, (_c select (3 + _sideIdx)) + 1];
+					_c set [7, (_c select 7) + [[_px, _py]]];
 				};
 			};
 		};
@@ -264,7 +265,36 @@ WFBE_CL_FNC_DirectorBuildClusters = {
 			_maxSide = ((_c select 3) max (_c select 4)) max (_c select 5);
 			_contact = (_n - _maxSide) max 1;
 			_score = (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_CONTEST", 1000])) + (_n * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_SIZE", 2]));
-			_list = _list + [[Format ["Fight (%1)", _n], _c select 6, "FIGHT", WFBE_CL_FNC_DirectorPosPoi, _score, _contact, [(_c select 0) / (_n max 1), (_c select 1) / (_n max 1), 0]]];
+			//--- m0801h9 (owner live repro: "zooms in on dirt"): the raw centroid of a spread fight is
+			//--- the empty ground BETWEEN the sides. Aim at the density peak instead - the member with
+			//--- the most fellow members within DENSITY_M (ties -> closest to centroid). Also track the
+			//--- cluster radius (max member distance from centroid) so the shot type can refuse TIGHT
+			//--- framing on a spread battle. The centroid stays the orbit CENTER (stable orbit).
+			_cx = (_c select 0) / (_n max 1);
+			_cy = (_c select 1) / (_n max 1);
+			_members = _c select 7;
+			_densR2 = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_DENSITY_M", 75]) ^ 2;
+			_bestCount = -1;
+			_bestDist = 1e9;
+			_aimX = _cx;
+			_aimY = _cy;
+			_radius = 0;
+			{
+				_m = _x; //--- capture before the inner forEach rebinds _x (A2-OA gotcha)
+				_mx = _m select 0;
+				_my = _m select 1;
+				_dc = sqrt (((_mx - _cx) ^ 2) + ((_my - _cy) ^ 2));
+				if (_dc > _radius) then {_radius = _dc};
+				_cnt = 0;
+				{ if ((((_mx - (_x select 0)) ^ 2) + ((_my - (_x select 1)) ^ 2)) <= _densR2) then {_cnt = _cnt + 1} } forEach _members;
+				if ((_cnt > _bestCount) || {(_cnt == _bestCount) && {_dc < _bestDist}}) then {
+					_bestCount = _cnt;
+					_bestDist = _dc;
+					_aimX = _mx;
+					_aimY = _my;
+				};
+			} forEach _members;
+			_list = _list + [[Format ["Fight (%1)", _n], _c select 6, "FIGHT", WFBE_CL_FNC_DirectorPosPoi, _score, _contact, [_cx, _cy, 0], [_aimX, _aimY, 0], _radius]];
 		};
 	} forEach _clusters;
 	_list
@@ -292,7 +322,7 @@ WFBE_CL_FNC_DirectorBuildAll = {
 };
 
 WFBE_CL_FNC_DirectorShotType = {
-    Private ["_entry","_target","_class","_contact","_radius"];
+    Private ["_entry","_target","_class","_contact","_radius","_result","_cradius"];
     _entry = _this;
     _target = _entry select 1;
     _class = _entry select 2;
@@ -308,7 +338,19 @@ WFBE_CL_FNC_DirectorShotType = {
     } else {
         //--- v6 research rule 4: max zoom only for a REAL fight - over-zoom is almost always a
         //--- single idle-ish unit winning by default. 2+ contacts = TIGHT, 1 = MEDIUM, 0 = MEDIUM.
-        if (_contact >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_CONTACT", 2])) then {"TIGHT"} else {"MEDIUM"}
+        _result = "MEDIUM";
+        if (_contact >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_CONTACT", 2])) then {_result = "TIGHT"};
+        //--- m0801h9 zoom-by-compactness (owner: "zooms in on dirt"): a tight shot of a spread
+        //--- battle is always wrong. TIGHT only below COMPACT_M cluster radius; at WIDE_M+ the
+        //--- shot goes WIDE (and keeps the WIDE standoff) so the whole engagement stays framed.
+        if (_class == "FIGHT" && {(count _entry) > 8}) then {
+            _cradius = _entry select 8;
+            if (_cradius >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FIGHT_COMPACT_M", 120])) then {
+                if (_result == "TIGHT") then {_result = "MEDIUM"};
+            };
+            if (_cradius >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FIGHT_WIDE_M", 200])) then {_result = "WIDE"};
+        };
+        _result
     }
 };
 
@@ -409,6 +451,12 @@ WFBE_CL_FNC_DirectorAimPoint = {
         _active = WFBE_C_VAR_DirectorEngagementActive;
     };
     _aim = _center;
+    //--- m0801h9: FIGHT shots aim at the stamped density peak (the busiest knot of the cluster)
+    //--- while the orbit keeps circling the centroid - the raw centroid of a spread fight frames
+    //--- the empty dirt between the sides.
+    if (_class == "FIGHT") then {
+        _aim = missionNamespace getVariable ["WFBE_C_VAR_DirectorPoiAim", _center];
+    };
     if (_active) then {
         _dir = getDir _target;
         _shotType = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorShotType", "MEDIUM"];
@@ -498,7 +546,11 @@ WFBE_CL_FNC_DirectorCycleTarget = {
 	WFBE_C_VAR_SpectatorTarget = _entry select 1;
 	WFBE_C_VAR_SpectatorDirectorPosFn = _entry select 3;
 	WFBE_C_VAR_SpectatorDirectorTargetLabel = _entry select 0;
-	if ((count _entry) > 6) then {WFBE_C_VAR_DirectorPoiPos = _entry select 6}; //--- v7: FIGHT entries carry their centroid.
+	if ((count _entry) > 6) then { //--- v7 centroid orbit + m0801h9 density-peak aim.
+		WFBE_C_VAR_DirectorPoiPos = _entry select 6;
+		WFBE_C_VAR_DirectorPoiAim = _entry select 6;
+		if ((count _entry) > 8) then {WFBE_C_VAR_DirectorPoiAim = _entry select 7};
+	};
 	WFBE_C_VAR_SpectatorOrbitAngle = 0;
 	systemChat Format ["[WASP] Director target: %1", _entry select 0];
 };
@@ -646,6 +698,13 @@ WFBE_CL_FNC_DirectorLoopStart = {
                     //--- director error. Target death still exits via the loop safety immediately.
                     _dwell = _dwell max (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC", 7]);
                 };
+                //--- m0801h9: a FIGHT whose anchor died no longer earns the fire-lock hold - cap the
+                //--- shot at the idle glance so a wiped/despawned cluster cannot pin 7s of corpse dirt.
+                //--- (A deleted anchor already cuts within 1s via the isNull safety below; a live fight
+                //--- that merely lost its anchor re-forms with a fresh anchor on the very next pick.)
+                if ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorClass", "PLAYER"]) == "FIGHT" && {!(alive WFBE_C_VAR_SpectatorTarget)}) then {
+                    _dwell = _dwell min (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC", 3]);
+                };
                 _shotAge = WFBE_C_VAR_DirectorAutoTime - WFBE_C_VAR_DirectorLastSwitch;
                 if (isNull WFBE_C_VAR_SpectatorTarget || {_shotAge >= _dwell}) then {
                     if (WFBE_C_VAR_DirectorReturnPending) then {
@@ -688,6 +747,10 @@ WFBE_CL_FNC_DirectorLoopStart = {
                         //--- 2026-08-01: orbit + zoom on action around POIs - never unit-follow in auto).
                         if ((_entry select 2) == "FIGHT" && {(count _entry) > 6}) then {
                             WFBE_C_VAR_DirectorPoiPos = _entry select 6;
+                            //--- m0801h9: the AIM goal is the density peak, never the raw centroid -
+                            //--- the centroid of a spread fight is the empty dirt between the sides.
+                            WFBE_C_VAR_DirectorPoiAim = _entry select 6;
+                            if ((count _entry) > 8) then {WFBE_C_VAR_DirectorPoiAim = _entry select 7};
                         };
                         //--- v5 P3b (spec 7a): the pool is scored every poll and everything but the
                         //--- winner was thrown away. Keep the top runners-up so the caster HUD can show

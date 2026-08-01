@@ -3466,6 +3466,12 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_CONTACT") then {WFBE_C_SPECTATOR_
 //--- v7 POI director (owner ruling 2026-08-01): fight-cluster proximity link distance in metres -
 //--- armed units of fighting sides within this range of a cluster centroid merge into that cluster.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_LINK_M") then {WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_LINK_M = 300};
+//--- m0801h9 (owner live repro "zooms in on dirt"): FIGHT aim = density peak - the member with the
+//--- most fellow members inside DENSITY_M (ties -> nearest the centroid); never the raw centroid.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_DENSITY_M") then {WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_DENSITY_M = 75};
+//--- m0801h9 zoom-by-compactness: TIGHT band only under COMPACT_M cluster radius; WIDE_M+ = WIDE shot.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FIGHT_COMPACT_M") then {WFBE_C_SPECTATOR_DIRECTOR_FIGHT_COMPACT_M = 120};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FIGHT_WIDE_M") then {WFBE_C_SPECTATOR_DIRECTOR_FIGHT_WIDE_M = 200};
 //--- rule 3 - minimum hold on any shot that has live contact (fire lock).
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC = 7};
 //--- ARTY RANGE RINGS (owner live repro 2026-08-01 13:30, "orange circle spam"): the RM70 parity
