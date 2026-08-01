@@ -3620,5 +3620,30 @@ if (isNil "WFBE_C_SPECTATOR_MOUSE_SMOOTH") then {WFBE_C_SPECTATOR_MOUSE_SMOOTH =
 if (isNil "WFBE_C_SPECTATOR_SENS_REF_FOV") then {WFBE_C_SPECTATOR_SENS_REF_FOV = 0.8}; //--- FOV at which SENS applies 1:1; sensitivity scales linearly with zoom (scoped-aim feel).
 if (isNil "WFBE_C_SPECTATOR_SENS_MIN_FACTOR") then {WFBE_C_SPECTATOR_SENS_MIN_FACTOR = 0.05}; //--- never let zoom-scaled sensitivity drop below this fraction of SENS.
 
+//--- ===== Spectator v8 DEFINITIVE rebuild (owner mandate 2026-08-01) ===== ---
+if (isNil "WFBE_C_SPECTATOR_EVENTFEED") then {WFBE_C_SPECTATOR_EVENTFEED = 1}; //--- server/HC Fired-Killed event feed for the caster auto-director (Common_SpectatorEventFeed.sqf).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TRACK_TTL_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_TRACK_TTL_SEC = 15}; //--- unmatched fight tracks age out after this many seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TRACK_MATCH_OVERLAP") then {WFBE_C_SPECTATOR_DIRECTOR_TRACK_MATCH_OVERLAP = 0.25}; //--- member-overlap fraction that keeps a track id across re-forms.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_EV_ASSIGN_TRACK_M") then {WFBE_C_SPECTATOR_DIRECTOR_EV_ASSIGN_TRACK_M = 150}; //--- event-to-track assignment slack beyond the track radius.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_EV_ASSIGN_TOWN_M") then {WFBE_C_SPECTATOR_DIRECTOR_EV_ASSIGN_TOWN_M = 250}; //--- event-to-town fallback assignment radius.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_HOLD_MIN_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_HOLD_MIN_SEC = 7}; //--- fight minimum hold (fire lock).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_HOLD_MAX_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_HOLD_MAX_SEC = 12}; //--- extended hold ceiling while action continues.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_CUT_RATIO") then {WFBE_C_SPECTATOR_DIRECTOR_CUT_RATIO = 1.5}; //--- a rival must outscore the live shot by this ratio to steal the camera.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_RECENT_PENALTY") then {WFBE_C_SPECTATOR_DIRECTOR_RECENT_PENALTY = 0.75}; //--- last-2-shown POIs score at 75 percent...
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_RECENT_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_RECENT_SEC = 30}; //--- ...for this many seconds (bypassed at 2x the current score).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_GLANCE_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_GLANCE_SEC = 3}; //--- cold-town WIDE glance duration.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TOWN_COOLDOWN_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_TOWN_COOLDOWN_SEC = 45}; //--- per-town cooldown after a glance.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_DELAY_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_DELAY_SEC = 3}; //--- static settle before the orbit reveal starts.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_RATE") then {WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_RATE = 6}; //--- reveal sweep speed, degrees per second.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_SWEEP_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_SWEEP_MIN = 60}; //--- minimum reveal arc, degrees.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_SWEEP_RAND") then {WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_SWEEP_RAND = 30}; //--- random extra arc on top (60-90 total).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PUSH_RATIO") then {WFBE_C_SPECTATOR_DIRECTOR_PUSH_RATIO = 1.5}; //--- escalation ratio (vs the stamp-time score) that earns the one push-in.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PUSH_SCALE") then {WFBE_C_SPECTATOR_DIRECTOR_PUSH_SCALE = 0.85}; //--- push-in standoff multiplier (15 percent closer, eased over ~5s by the frame handler).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FIGHT_STAND_M") then {WFBE_C_SPECTATOR_DIRECTOR_FIGHT_STAND_M = 70}; //--- compact-fight standoff radius (live-proven values).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FIGHT_STAND_H") then {WFBE_C_SPECTATOR_DIRECTOR_FIGHT_STAND_H = 30}; //--- compact-fight standoff height.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PEN_EXCLUDE_M") then {WFBE_C_SPECTATOR_DIRECTOR_PEN_EXCLUDE_M = 200}; //--- eligibility exclusion radius around the deadspawn pens/parks.
+if (isNil "WFBE_C_SPECTATOR_FRAME_AIM_GAIN") then {WFBE_C_SPECTATOR_FRAME_AIM_GAIN = 2.5}; //--- frame-handler aim ease gain (per second).
+if (isNil "WFBE_C_SPECTATOR_FRAME_STAND_GAIN") then {WFBE_C_SPECTATOR_FRAME_STAND_GAIN = 0.6}; //--- frame-handler standoff/height ease gain (push-in glide ~5s).
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

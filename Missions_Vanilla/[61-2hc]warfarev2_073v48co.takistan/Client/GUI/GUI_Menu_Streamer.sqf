@@ -29,18 +29,13 @@ while {alive player && dialog} do {
 		ctrlSetText [102644, Format ["Director Auto: %1", if (_directorOn) then {"ON"} else {"OFF"}]];
 		_v = true;
 		if (!isNil "WFBE_C_VAR_SpectatorOrbit") then {_v = WFBE_C_VAR_SpectatorOrbit};
-		ctrlSetText [102645, Format ["Orbit: %1", if (_v) then {"ON"} else {"OFF (static)"}]];
+		ctrlSetText [102645, Format ["Orbit Reveals: %1", if (_v) then {"ON"} else {"OFF (all static)"}]];
 	} else {
 		ctrlSetText [102644, "Director Auto: - (camera off)"];
-		ctrlSetText [102645, "Orbit: - (camera off)"];
+		ctrlSetText [102645, "Orbit Reveals: - (camera off)"];
 	};
 	ctrlSetText [102646, Format ["GUER Targets: %1", if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_TARGET_GUER", 1]) > 0) then {"ON"} else {"OFF"}]];
-	_v = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_EYES_EVERY", 5];
-	_txt = "OFF";
-	if (_v == 3) then {_txt = "EVERY 3RD"};
-	if (_v == 5) then {_txt = "EVERY 5TH"};
-	if (!(_v in [0,3,5])) then {_txt = Format ["EVERY %1", _v]};
-	ctrlSetText [102647, Format ["Eyes-Cam: %1", _txt]];
+	ctrlSetText [102647, Format ["Arty Rings: %1", if ((missionNamespace getVariable ["WFBE_C_ARTY_RING", 1]) > 0) then {"ON"} else {"OFF"}]];
 	ctrlSetText [102648, Format ["Idle Dwell: %1s", missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC", 3]]];
 	ctrlSetText [102650, Format ["Cam Speed: %1 m/s", missionNamespace getVariable ["WFBE_C_SPECTATOR_SPEED", 15]]];
 	_v = missionNamespace getVariable ["WFBE_C_SPECTATOR_HUD_FADE_SEC", 6];
@@ -99,13 +94,15 @@ while {alive player && dialog} do {
 		systemChat Format ["[WASP] GUER watch targets: %1", if (_v > 0) then {"ON"} else {"OFF"}];
 	};
 
-	//--- Eyes-cam cadence cycle 5 -> 3 -> 0(off) -> 5; any odd value lands back on the default 5.
-	if (WFBE_StreamerMenuAction == 4) then {
+	//--- Arty ring overlay toggle (v8): client-local map rings; casters ship OFF by default so
+	//--- the broadcast map stays clean - this row opts back in live (Client_ArtyRangeRings.sqf
+	//--- re-checks the flag every pass and tears down/redraws accordingly).
+	if (WFBE_StreamerMenuAction == 8) then {
 		WFBE_StreamerMenuAction = -1;
-		_v = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_EYES_EVERY", 5];
-		_v = switch (_v) do {case 5: {3}; case 3: {0}; default {5}};
-		missionNamespace setVariable ["WFBE_C_SPECTATOR_DIRECTOR_EYES_EVERY", _v];
-		diag_log Format ["SPECTATE|v5|menu|eyes-every=%1", _v];
+		_v = if ((missionNamespace getVariable ["WFBE_C_ARTY_RING", 1]) > 0) then {0} else {1};
+		missionNamespace setVariable ["WFBE_C_ARTY_RING", _v];
+		diag_log Format ["SPECTATE|v8|menu|arty-ring=%1", _v];
+		systemChat Format ["[WASP] Artillery range rings: %1", if (_v > 0) then {"ON"} else {"OFF"}];
 	};
 
 	//--- HUD fade cycle 6s -> NEVER(9999) -> 3s -> 6s.

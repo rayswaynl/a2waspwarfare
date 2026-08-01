@@ -34,6 +34,7 @@ _l = _l + ["HCStat"];
 _l = _l + ["RequestAFKKick"]; //--- SG14: client reports AFK threshold exceeded; server validates and issues the BE kick.
 _l = _l + ["RequestGDirPanel"]; //--- A1 (Commissar Panel): GUER player buy/contract request -> server validates, debits wallet, emits GDIR_ORDER, pushes result to caller (Server\PVFunctions\RequestGDirPanel.sqf).
 _l = _l + ["RequestVehicleSell"]; //--- item #43 hardening: vehicle sell-back - server recomputes the refund (price table * fraction * health), validates seller/ownership/crew, credits the buying team and deletes (Server\PVFunctions\RequestVehicleSell.sqf).
+_l = _l + ["SpectatorEvents"]; //--- spectator v8: HC -> server Fired/Killed event batches for the caster director feed (Server\PVFunctions\SpectatorEvents.sqf).
 
 _serverCommandPV = _l;
 
@@ -120,5 +121,17 @@ WFBE_GDIR_ORDER_MSG = "";
 if (!isServer || {local player}) then {
     "WFBE_GDIR_ORDER_MSG" addPublicVariableEventHandler {
         if (sideJoined == resistance) then {hint (_this select 1)};
+    };
+};
+
+//--- Spectator v8 event feed (owner mandate 2026-08-01): the server publishes
+//--- WFBE_SPECTATOR_EVENTS = [seq, serverTime, [[t,x,y,sideID,kind], ...]] at <=1Hz
+//--- (Common_SpectatorEventFeed.sqf). Clients cache the packet + a local arrival stamp so
+//--- the caster director can age events without any cross-machine clock assumptions.
+if (isNil "WFBE_SPECTATOR_EVENTS") then {WFBE_SPECTATOR_EVENTS = [0, 0, []]};
+if (!isServer || {local player}) then {
+    "WFBE_SPECTATOR_EVENTS" addPublicVariableEventHandler {
+        WFBE_CL_SpectEvPkt = _this select 1;
+        WFBE_CL_SpectEvPktTick = diag_tickTime;
     };
 };

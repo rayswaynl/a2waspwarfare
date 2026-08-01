@@ -71,6 +71,13 @@ WFBE_C_VAR_SpectatorCardLast = ""; //--- reset the redraw cache for the next ses
 WFBE_C_VAR_SpectatorMode = "free";
 WFBE_C_VAR_SpectatorTarget = objNull;
 WFBE_C_VAR_SpectatorHideHint = false;
+//--- v8: clear the shot snapshot + director track state for the next session.
+WFBE_C_VAR_SpectShot = [];
+WFBE_C_VAR_DirTracks = [];
+WFBE_C_VAR_DirTownEv = [];
+WFBE_C_VAR_DirCurKey = "";
+WFBE_C_VAR_DirCurKind = "";
+WFBE_C_VAR_DirCurTown = objNull;
 
 if (!isNull _body) then {
 	if (alive _body) then {_body allowDamage true};

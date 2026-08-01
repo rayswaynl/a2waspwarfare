@@ -1676,3 +1676,8 @@ if ((missionNamespace getVariable ["WFBE_C_HC_CIV_RESLOT", 0]) > 0) then {
 		};
 	};
 };
+
+//--- spectator v8 (owner mandate 2026-08-01): server-side Fired/Killed event feed for the
+//--- caster auto-director. Self-gates on WFBE_C_SPECTATOR / WFBE_C_SPECTATOR_EVENTFEED after
+//--- commonInitComplete; inert when either flag is 0.
+[] ExecVM "Common\Functions\Common_SpectatorEventFeed.sqf";

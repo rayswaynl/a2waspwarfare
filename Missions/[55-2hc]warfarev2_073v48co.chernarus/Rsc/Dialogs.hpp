@@ -5517,9 +5517,9 @@ class WFBE_StreamerMenu {
 			text = "Director Auto: OFF";
 			action = "WFBE_StreamerMenuAction = 1";
 		};
-		class CA_Orbit     : CA_DirAuto { idc = 102645; x = 0.505; y = 0.135 + 0.115; text = "Orbit: ON";           action = "WFBE_StreamerMenuAction = 2"; };
+		class CA_Orbit     : CA_DirAuto { idc = 102645; x = 0.505; y = 0.135 + 0.115; text = "Orbit Reveals: ON";   action = "WFBE_StreamerMenuAction = 2"; };
 		class CA_GuerTgt   : CA_DirAuto { idc = 102646; x = 0.29;  y = 0.135 + 0.162; text = "GUER Targets: ON";    action = "WFBE_StreamerMenuAction = 3"; };
-		class CA_EyesFreq  : CA_DirAuto { idc = 102647; x = 0.505; y = 0.135 + 0.162; text = "Eyes-Cam: EVERY 5TH"; action = "WFBE_StreamerMenuAction = 4"; };
+		class CA_ArtyRings : CA_DirAuto { idc = 102647; x = 0.505; y = 0.135 + 0.162; text = "Arty Rings: OFF";     action = "WFBE_StreamerMenuAction = 8"; };
 		class CA_IdleDwell : CA_DirAuto { idc = 102648; x = 0.29;  y = 0.135 + 0.209; w = 0.42; text = "Idle Dwell: 3s"; action = "WFBE_StreamerMenuAction = 6"; };
 
 		//--- ===== CAMERA + HUD =====

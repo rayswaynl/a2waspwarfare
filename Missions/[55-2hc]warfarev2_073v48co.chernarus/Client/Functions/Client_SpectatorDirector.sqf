@@ -1,33 +1,28 @@
 /* Client_SpectatorDirector.sqf
-   WASP Spectator v3 director helpers for Arma 2 OA 1.64.
-   Client-only target discovery: players, HQ teams, towns, and mobile HQ objects.
-   No Display references, no serialization directive, and no A3-only array helpers.
-   v4 streaming pass (design: docs/plans/2026-07-31-spectator-v4-streaming-design.md):
-   town picks hard-gated to active fights (belligerent side mix + 45s hot linger),
-   tiered auto-pick (contact > units > wide establishing), adaptive aim slew.
+   WASP Spectator v8 DEFINITIVE auto-director (owner mandate 2026-08-01; Codex council design).
+   AUTO candidates are TOWNS and PERSISTENT FIGHT TRACKS ONLY - a fight is an integer track id,
+   never a unit. ACTION comes from server-forwarded Fired/Killed events (Common_SpectatorEventFeed.sqf
+   -> WFBE_SPECTATOR_EVENTS), never from proximity. The 1s poll here owns SCORING and the SHOT
+   SNAPSHOT (WFBE_C_VAR_SpectShot); Client_SpectatorAimFrame.sqf is the only camera writer and
+   consumes the snapshot at render rate. Polls update scoring - they never drag the live camera.
+   Deleted from v3-v7 (Codex list): auto PLAYER/TEAM/GUER/HQ/base candidates (builders kept for
+   manual N/B), proximity contact scoring + 1000-weights, anchor-unit identity, centroid-as-aim,
+   moving-unit look-ahead, the 120s establish interpretation, ALL scheduled camera writes.
+   No Display references, no serialization directive, A2-OA-1.64 commands only.
 */
 
 WFBE_CL_FNC_DirectorPosObject = {
 	getPos _this
 };
 
-WFBE_CL_FNC_DirectorPosPoi = {
-	//--- v7 POI director (owner ruling 2026-08-01 12:01): FIGHT-cluster picks orbit a STATIC
-	//--- centroid stamped at cut time, never a moving unit - the anchor object passed in is only
-	//--- used for liveness checks. Falls back to the anchor position if the stamp is missing.
-	missionNamespace getVariable ["WFBE_C_VAR_DirectorPoiPos", getPos _this]
-};
-
 WFBE_CL_FNC_DirectorContactCount = {
+	//--- MANUAL-MODE helper only (N/B pools); the AUTO director never scores by proximity.
 	Private ["_origin","_radius","_originSide","_count","_unitSide"];
 	_origin = _this select 0;
 	_radius = _this select 1;
 	_originSide = _this select 2;
 	_count = 0;
 	{
-		//--- m0801h6 (Codex audit, owner ruling): contact means a GENUINE combatant - non-captive,
-		//--- armed, belligerent-side. Captive pen/park bodies and unarmed civ-model population
-		//--- fabricated "fights" here (scored 1000/contact) and steered the auto director to them.
 		if (!isNull _x && {alive _x} && {!(captive _x)} && {(count (weapons _x)) > 0} && {(side _x) in [west, east, resistance]}) then {
 			_unitSide = side _x;
 			if (_unitSide != _originSide) then {_count = _count + 1};
@@ -51,7 +46,7 @@ WFBE_CL_FNC_DirectorPollTowns = {
 		{
 			if (!isNull _x && {alive _x}) then {
 				_unitSide = side _x;
-				//--- v4: belligerents only - a parked CIV caster body or neutral crew must not fake a contest.
+				//--- belligerents only - a parked CIV caster body or neutral crew must not fake a contest.
 				if (_unitSide in [west, east, resistance]) then {
 					_headcount = _headcount + 1;
 					if !(_unitSide in _sides) then {_sides = _sides + [_unitSide]};
@@ -66,8 +61,6 @@ WFBE_CL_FNC_DirectorPollTowns = {
 		} forEach _oldData;
 		_delta = _current - _oldValue;
 		_contact = ((count _sides) - 1) max 0;
-		//--- v4 hot linger: a contested town stays fight-pickable for TOWN_LINGER_SEC after
-		//--- the last enemy leaves/dies, so a pausing firefight does not flicker the shot.
 		if (_contact > 0) then {
 			_hotFound = false;
 			_hotIdx = 0;
@@ -79,7 +72,6 @@ WFBE_CL_FNC_DirectorPollTowns = {
 			} forEach _hotSet;
 			if (!_hotFound) then {
 				_hotSet = _hotSet + [[_town, time]];
-				diag_log Format ["SPECTATE|v4|town-hot|state=on|town=%1", _town getVariable ["name", "Town"]];
 			};
 		};
 		_hot = (_contact > 0);
@@ -97,35 +89,20 @@ WFBE_CL_FNC_DirectorPollTowns = {
 	_newData
 };
 
+//--- MANUAL N/B pools (kept per owner ruling: unit follow lives ONLY behind manual keys).
 WFBE_CL_FNC_DirectorBuildPlayers = {
-	Private ["_list","_contact","_score"];
+	Private ["_list"];
 	_list = [];
 	{
 		if (!isNil "_x") then {
-			if (alive _x && {isPlayer _x} && {(side _x) != civilian} && {!(_x == player)} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then { //--- HC bodies are isPlayer-true and CIV humans are caster bodies; never offer either (owner 2026-07-30 + 2026-08-01)
-				_contact = [_x, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100], side _x] Call WFBE_CL_FNC_DirectorContactCount;
-				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_BASE", 10]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_CONTACT", 1000]));
-				if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
-				//--- v5: an AFK/idle body (stationary, no contact) is the worst possible shot - keep it
-				//--- selectable as a last resort but never over anything that moves or fights.
-				if (_contact == 0 && {(speed _x) < 1}) then {_score = _score * 0.25};
-				_list = _list + [[name _x, _x, "PLAYER", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
+			if (alive _x && {isPlayer _x} && {(side _x) != civilian} && {!(_x == player)} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {
+				_list = _list + [[name _x, _x, "PLAYER", WFBE_CL_FNC_DirectorPosObject, 0, 0]];
 			};
-			//--- v5 hotfix (owner live repro m0801e: "blufor and guer never show on the spectator cam"):
-			//--- the only non-player sources were AICOM TEAM entries from a registry that is SERVER-scoped,
-			//--- so a spectating client saw no BLUFOR/OPFOR AI at all, and GUER was never pooled anywhere.
-			//--- Derive squads client-locally instead: every AI group LEADER of a fighting side, scored by
-			//--- the same contact logic as players (lower base, so humans win ties). GUER leaders class as
-			//--- GUER, west/east as TEAM (keeps them in the tier-2 build-up pool).
-			if (alive _x && {!(isPlayer _x)} && {_x == (leader (group _x))} && {(side _x) != civilian} && {(count (weapons _x)) > 0} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then { //--- weapons check: ZG town population is resistance-side in civ models (owner 2026-08-01)
-				_contact = [_x, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100], side _x] Call WFBE_CL_FNC_DirectorContactCount;
-				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_AI_BASE", 6]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_CONTACT", 1000]));
-				if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
-				if (_contact == 0 && {(speed _x) < 1}) then {_score = _score * 0.25};
+			if (alive _x && {!(isPlayer _x)} && {_x == (leader (group _x))} && {(side _x) != civilian} && {(count (weapons _x)) > 0} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {
 				if ((side _x) == resistance) then {
-					_list = _list + [[Format ["GUER squad (%1)", {alive _x} count (units (group _x))], _x, "GUER", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
+					_list = _list + [[Format ["GUER squad (%1)", {alive _x} count (units (group _x))], _x, "GUER", WFBE_CL_FNC_DirectorPosObject, 0, 0]];
 				} else {
-					_list = _list + [[Format ["%1 squad (%2)", side _x, {alive _x} count (units (group _x))], _x, "TEAM", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
+					_list = _list + [[Format ["%1 squad (%2)", side _x, {alive _x} count (units (group _x))], _x, "TEAM", WFBE_CL_FNC_DirectorPosObject, 0, 0]];
 				};
 			};
 		};
@@ -134,7 +111,7 @@ WFBE_CL_FNC_DirectorBuildPlayers = {
 };
 
 WFBE_CL_FNC_DirectorBuildTeams = {
-	Private ["_list","_feed","_entry","_leader","_sid","_grp","_alive","_contact","_score","_label"];
+	Private ["_list","_feed","_entry","_leader","_sid","_grp","_alive","_label"];
 	_list = [];
 	_feed = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
 	{
@@ -147,11 +124,8 @@ WFBE_CL_FNC_DirectorBuildTeams = {
 				_leader = leader _grp;
 				if (!isNull _leader && {alive _leader}) then {
 					_alive = ({alive _x} count units _grp);
-					_contact = [_leader, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TEAM_CONTACT_RADIUS", 150], side _leader] Call WFBE_CL_FNC_DirectorContactCount;
-					_score = (_alive * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TEAM_SIZE", 2])) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TEAM_CONTACT", 1000]));
-					if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
-					_label = Format ["TEAM %1 (%2/%3)", _sid, _alive, _contact];
-					_list = _list + [[_label, _leader, "TEAM", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
+					_label = Format ["TEAM %1 (%2)", _sid, _alive];
+					_list = _list + [[_label, _leader, "TEAM", WFBE_CL_FNC_DirectorPosObject, 0, 0]];
 				};
 			};
 		};
@@ -160,35 +134,21 @@ WFBE_CL_FNC_DirectorBuildTeams = {
 };
 
 WFBE_CL_FNC_DirectorBuildTowns = {
-	Private ["_list","_data","_town","_contact","_hot","_delta","_headcount","_score","_label"];
+	Private ["_list","_data","_town","_headcount","_label"];
 	_data = missionNamespace getVariable ["WFBE_C_VAR_DirectorTownData", []];
 	if (count _data == 0) then {_data = Call WFBE_CL_FNC_DirectorPollTowns};
 	_list = [];
 	{
 		_town = _x select 0;
-		_delta = _x select 2;
 		_headcount = _x select 4;
-		_contact = _x select 5;
-		_hot = _x select 6;
-		//--- v4 hard gate (owner 2026-07-31: town cams only on active fights): only HOT
-		//--- towns (live contest or inside the linger window) keep the contact-driven score
-		//--- and a nonzero pick-contact field. Cold towns keep a small size/trend score so
-		//--- they remain available as WIDE establishing shots but can never win an action pick.
-		if (_hot) then {
-			_score = (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_CONTEST", 1000])) + (((-_delta) max 0) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_TREND", 10])) + (_headcount * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_SIZE", 2]));
-			if (_contact == 0) then {_contact = 1}; //--- linger-hot counts as fight-adjacent for tier 1.
-		} else {
-			_score = (((-_delta) max 0) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_TREND", 10])) + (_headcount * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_SIZE", 2]));
-			_contact = 0;
-		};
 		_label = _town getVariable ["name", "Town"];
-		_list = _list + [[_label, _town, "TOWN", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
+		_list = _list + [[_label, _town, "TOWN", WFBE_CL_FNC_DirectorPosObject, _headcount, _x select 5]];
 	} forEach _data;
 	_list
 };
 
 WFBE_CL_FNC_DirectorBuildHQs = {
-	Private ["_list","_sides","_side","_reveal","_hq","_contact","_label","_score"];
+	Private ["_list","_sides","_side","_reveal","_hq","_label"];
 	_list = [];
 	_sides = [west, east, resistance];
 	_reveal = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_REVEAL_ENEMY_HQ", 0]) > 0;
@@ -197,106 +157,11 @@ WFBE_CL_FNC_DirectorBuildHQs = {
 		if (_reveal || {_side == side player}) then {
 			_hq = _side Call WFBE_CO_FNC_GetSideHQ;
 			if (!isNull _hq) then {
-				_contact = [_hq, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_HQ_CONTACT_RADIUS", 250], _side] Call WFBE_CL_FNC_DirectorContactCount;
 				_label = switch (_side) do {case west: {"WEST HQ"}; case east: {"EAST HQ"}; default {"GUER HQ"}};
-				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_HQ_BASE", 15]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_HQ_UNDER_ATTACK", 1000]));
-				if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
-				_list = _list + [[_label, _hq, "HQ", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
+				_list = _list + [[_label, _hq, "HQ", WFBE_CL_FNC_DirectorPosObject, 0, 0]];
 			};
 		};
 	} forEach _sides;
-	_list
-};
-
-WFBE_CL_FNC_DirectorBuildClusters = {
-	//--- v7 POI director (owner ruling 2026-08-01 12:01): auto candidates are TOWNS and FIGHT
-	//--- CLUSTERS only - never individual units. Greedy proximity clustering (~300m link) over the
-	//--- armed live units of the fighting sides; a cluster holding 2+ sides is a FIGHT POI.
-	//--- Centroid = orbit point (static between picks - no per-frame target tracking, no jitter);
-	//--- contact = units outside the cluster's biggest side (the same enemies-present signal
-	//--- WFBE_CL_FNC_DirectorContactCount reads, computed once over the whole cluster).
-	//--- Deadspawn-parked bots are single-side by construction, so no cluster ever forms there.
-	Private ["_list","_link","_clusters","_c","_u","_pos","_px","_py","_sideIdx","_best","_bestD","_cx","_cy","_d","_i","_n","_sides","_maxSide","_contact","_score","_hcNames","_members","_m","_mx","_my","_dc","_cnt","_bestCount","_bestDist","_aimX","_aimY","_radius","_densR2"];
-	_list = [];
-	_link = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_LINK_M", 300];
-	_hcNames = missionNamespace getVariable ["WFBE_C_HC_NAMES", []];
-	_clusters = []; //--- per cluster: [sumX, sumY, n, westN, eastN, guerN, anchorUnit, memberXY]
-	{
-		if (!isNil "_x") then {
-			_u = _x; //--- capture before the inner forEach rebinds _x (A2-OA gotcha)
-			if (alive _u && {!(captive _u)} && {(side _u) in [west, east, resistance]} && {(count (weapons _u)) > 0} && {!((name _u) in _hcNames)}) then { //--- m0801h6: captive = held pen/park body, never a fight
-				_pos = getPos _u;
-				_px = _pos select 0;
-				_py = _pos select 1;
-				_sideIdx = 2;
-				if ((side _u) == west) then {_sideIdx = 0};
-				if ((side _u) == east) then {_sideIdx = 1};
-				_best = -1;
-				_bestD = _link;
-				_i = 0;
-				{
-					_cx = (_x select 0) / ((_x select 2) max 1);
-					_cy = (_x select 1) / ((_x select 2) max 1);
-					_d = sqrt (((_px - _cx) ^ 2) + ((_py - _cy) ^ 2));
-					if (_d < _bestD) then {_bestD = _d; _best = _i};
-					_i = _i + 1;
-				} forEach _clusters;
-				if (_best < 0) then {
-					_c = [_px, _py, 1, 0, 0, 0, _u, [[_px, _py]]];
-					_c set [3 + _sideIdx, 1];
-					_clusters = _clusters + [_c];
-				} else {
-					_c = _clusters select _best;
-					_c set [0, (_c select 0) + _px];
-					_c set [1, (_c select 1) + _py];
-					_c set [2, (_c select 2) + 1];
-					_c set [3 + _sideIdx, (_c select (3 + _sideIdx)) + 1];
-					_c set [7, (_c select 7) + [[_px, _py]]];
-				};
-			};
-		};
-	} forEach allUnits;
-	{
-		_c = _x;
-		_n = _c select 2;
-		_sides = 0;
-		{ if (_x > 0) then {_sides = _sides + 1} } forEach [_c select 3, _c select 4, _c select 5];
-		if (_sides >= 2 && {!isNull (_c select 6)} && {alive (_c select 6)}) then {
-			_maxSide = ((_c select 3) max (_c select 4)) max (_c select 5);
-			_contact = (_n - _maxSide) max 1;
-			_score = (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_CONTEST", 1000])) + (_n * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_TOWN_SIZE", 2]));
-			//--- m0801h9 (owner live repro: "zooms in on dirt"): the raw centroid of a spread fight is
-			//--- the empty ground BETWEEN the sides. Aim at the density peak instead - the member with
-			//--- the most fellow members within DENSITY_M (ties -> closest to centroid). Also track the
-			//--- cluster radius (max member distance from centroid) so the shot type can refuse TIGHT
-			//--- framing on a spread battle. The centroid stays the orbit CENTER (stable orbit).
-			_cx = (_c select 0) / (_n max 1);
-			_cy = (_c select 1) / (_n max 1);
-			_members = _c select 7;
-			_densR2 = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_DENSITY_M", 75]) ^ 2;
-			_bestCount = -1;
-			_bestDist = 1e9;
-			_aimX = _cx;
-			_aimY = _cy;
-			_radius = 0;
-			{
-				_m = _x; //--- capture before the inner forEach rebinds _x (A2-OA gotcha)
-				_mx = _m select 0;
-				_my = _m select 1;
-				_dc = sqrt (((_mx - _cx) ^ 2) + ((_my - _cy) ^ 2));
-				if (_dc > _radius) then {_radius = _dc};
-				_cnt = 0;
-				{ if ((((_mx - (_x select 0)) ^ 2) + ((_my - (_x select 1)) ^ 2)) <= _densR2) then {_cnt = _cnt + 1} } forEach _members;
-				if ((_cnt > _bestCount) || {(_cnt == _bestCount) && {_dc < _bestDist}}) then {
-					_bestCount = _cnt;
-					_bestDist = _dc;
-					_aimX = _mx;
-					_aimY = _my;
-				};
-			} forEach _members;
-			_list = _list + [[Format ["Fight (%1)", _n], _c select 6, "FIGHT", WFBE_CL_FNC_DirectorPosPoi, _score, _contact, [_cx, _cy, 0], [_aimX, _aimY, 0], _radius]];
-		};
-	} forEach _clusters;
 	_list
 };
 
@@ -305,236 +170,732 @@ WFBE_CL_FNC_DirectorBuildActive = {
 	_class = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorClass", "PLAYER"];
 	switch (_class) do {
 		case "TEAM": {Call WFBE_CL_FNC_DirectorBuildTeams};
-		case "FIGHT": {Call WFBE_CL_FNC_DirectorBuildClusters};
 		case "TOWN": {Call WFBE_CL_FNC_DirectorBuildTowns};
 		case "HQ": {Call WFBE_CL_FNC_DirectorBuildHQs};
 		default {Call WFBE_CL_FNC_DirectorBuildPlayers};
 	}
 };
 
-WFBE_CL_FNC_DirectorBuildAll = {
-	Private ["_list"];
-	//--- v7 POI director (owner ruling 2026-08-01 12:01, BINDING): the AUTO pool is POIs only -
-	//--- towns, HQs and fight clusters. Unit follow (players/teams/GUER leaders) is retired from
-	//--- auto entirely ("Following individual units is JANKY JITTERY"); N/B/F/V manual modes keep it.
-	_list = (Call WFBE_CL_FNC_DirectorBuildTowns) + (Call WFBE_CL_FNC_DirectorBuildHQs) + (Call WFBE_CL_FNC_DirectorBuildClusters);
-	_list
+//--- Deadspawn pen/park exclusion points (owner ruling: nothing within 200m of the pens may
+//--- enter the candidate pool). Per-side AI pens sit at the shared pen +sideID*200m on X
+//--- (Server\AI\AI_AdvancedRespawn.sqf:45); the player deadspawn park is the base point itself.
+WFBE_CL_FNC_DirectorPenPoints = {
+	Private ["_pts","_base","_i"];
+	_pts = missionNamespace getVariable ["WFBE_C_VAR_DirPenPts", []];
+	if ((count _pts) > 0) exitWith {_pts};
+	_base = [];
+	if (!isNil "WFBE_CO_FNC_DeadspawnPenPos") then {_base = [] Call WFBE_CO_FNC_DeadspawnPenPos};
+	if ((typeName _base) != "ARRAY" || {(count _base) < 2}) exitWith {[]};
+	_pts = [];
+	_i = 0;
+	while {_i < 3} do {
+		_pts = _pts + [[(_base select 0) + (_i * 200), _base select 1]];
+		_i = _i + 1;
+	};
+	WFBE_C_VAR_DirPenPts = _pts;
+	_pts
 };
 
-WFBE_CL_FNC_DirectorShotType = {
-    Private ["_entry","_target","_class","_contact","_radius","_result","_cradius"];
-    _entry = _this;
-    _target = _entry select 1;
-    _class = _entry select 2;
-    _contact = 0;
-    if (_class == "FIGHT") then {_contact = _entry select 5}; //--- v7: cluster-wide enemies, counted at build time.
-    if ((_class == "PLAYER" || {_class == "TEAM"} || {_class == "GUER"}) && {!isNull _target} && {alive _target}) then {
-        _radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100];
-        if (_class != "PLAYER") then {_radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TEAM_CONTACT_RADIUS", 150]};
-        _contact = [_target, _radius, side _target] Call WFBE_CL_FNC_DirectorContactCount;
-    };
-    if ((_class == "TOWN") || {_class == "HQ"}) then {
-        "WIDE"
-    } else {
-        //--- v6 research rule 4: max zoom only for a REAL fight - over-zoom is almost always a
-        //--- single idle-ish unit winning by default. 2+ contacts = TIGHT, 1 = MEDIUM, 0 = MEDIUM.
-        _result = "MEDIUM";
-        if (_contact >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_CONTACT", 2])) then {_result = "TIGHT"};
-        //--- m0801h9 zoom-by-compactness (owner: "zooms in on dirt"): a tight shot of a spread
-        //--- battle is always wrong. TIGHT only below COMPACT_M cluster radius; at WIDE_M+ the
-        //--- shot goes WIDE (and keeps the WIDE standoff) so the whole engagement stays framed.
-        if (_class == "FIGHT" && {(count _entry) > 8}) then {
-            _cradius = _entry select 8;
-            if (_cradius >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FIGHT_COMPACT_M", 120])) then {
-                if (_result == "TIGHT") then {_result = "MEDIUM"};
-            };
-            if (_cradius >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FIGHT_WIDE_M", 200])) then {_result = "WIDE"};
-        };
-        _result
-    }
+WFBE_CL_FNC_DirectorNearestTownName = {
+	Private ["_px","_py","_best","_bestD","_tp","_d"];
+	_px = _this select 0;
+	_py = _this select 1;
+	_best = "the front";
+	_bestD = 1e9;
+	{
+		if (!isNull _x) then {
+			_tp = getPos _x;
+			_d = (((_tp select 0) - _px) ^ 2) + (((_tp select 1) - _py) ^ 2);
+			if (_d < _bestD) then {_bestD = _d; _best = _x getVariable ["name", "the front"]};
+		};
+	} forEach towns;
+	_best
 };
 
-WFBE_CL_FNC_DirectorShotBounds = {
-    Private ["_type","_minDwell","_maxDwell","_fovMin","_fovMax"];
-    _type = _this;
-    _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL", 1.5];
-    _maxDwell = _minDwell;
-    _fovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN", 0.5];
-    _fovMax = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX", 0.65];
-    switch (_type) do {
-        case "BASE": {
-            _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_BASE_MIN_DWELL", 6];
-            _maxDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_BASE_MAX_DWELL", 9];
-            _fovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MIN", 0.8];
-            _fovMax = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MAX", 0.95];
-        };
-        case "WIDE": {
-            _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_MIN_DWELL", 4];
-            _maxDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_MAX_DWELL", 7];
-            _fovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MIN", 0.8];
-            _fovMax = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MAX", 0.95];
-        };
-        case "TIGHT": {
-            _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL", 3];
-            _maxDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MAX_DWELL", 6];
-            _fovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN", 0.35];
-            _fovMax = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX", 0.5];
-        };
-        case "MEDIUM": {
-            _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL", 4];
-            _maxDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL", 7];
-        };
-    };
-    if (_minDwell < (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL", 1.5])) then {
-        _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL", 1.5];
-    };
-    if (_maxDwell < _minDwell) then {_maxDwell = _minDwell};
-    [_minDwell, _maxDwell, _fovMin, _fovMax]
+/* Track registry: WFBE_C_VAR_DirTracks - one entry per persistent fight track:
+   [0 id, 1 cx, 2 cy, 3 radius, 4 members, 5 wN, 6 eN, 7 gN, 8 armedN, 9 movingN,
+    10 lastSeen(time), 11 lastFire(time), 12 lastKill(time), 13 evF, 14 evK, 15 score, 16 sidesN]
+   evF/evK entries: [birthTick(diag_tickTime domain), x, y].
+   Reconcile every 1s poll: same-side member overlap >= 25 percent first, else centroid distance
+   <= max(100, oldR+newR+50). Split/merge keeps the strongest-overlap old id; a new id only when
+   nothing matches. THIS is what kills camera-pans-away - locks and dwell survive re-forms. */
+WFBE_CL_FNC_DirectorTracksUpdate = {
+	Private ["_penPts","_penR2","_link","_hcNames","_clusters","_u","_pos","_px","_py","_sideIdx","_best","_bestD","_c","_cx","_cy","_d","_i","_n","_penOk","_pp","_members","_radius","_mx","_my","_moving","_tracks","_pairs","_mOld","_mNew","_shared","_ov","_ci","_ti","_usedC","_usedT","_bestOv","_bestPair","_pair","_newTracks","_cl","_tr","_newR","_oldR","_ttl","_nid","_movingN","_mm"];
+	_penPts = Call WFBE_CL_FNC_DirectorPenPoints;
+	_penR2 = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PEN_EXCLUDE_M", 200]) ^ 2;
+	_link = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_LINK_M", 300];
+	_hcNames = missionNamespace getVariable ["WFBE_C_HC_NAMES", []];
+	_clusters = []; //--- per cluster: [sumX, sumY, n, wN, eN, gN, memberObjs]
+	{
+		if (!isNil "_x") then {
+			_u = _x; //--- capture before the inner forEach rebinds _x (A2-OA gotcha)
+			if (alive _u && {!(captive _u)} && {(side _u) in [west, east, resistance]} && {(count (weapons _u)) > 0} && {!((name _u) in _hcNames)}) then {
+				_pos = getPos _u;
+				_px = _pos select 0;
+				_py = _pos select 1;
+				//--- pen/park eligibility gate (owner): parked bodies must not fabricate fights.
+				_penOk = true;
+				{
+					_pp = _x;
+					if (((( _pp select 0) - _px) ^ 2) + (((_pp select 1) - _py) ^ 2) < _penR2) then {_penOk = false};
+				} forEach _penPts;
+				if (_penOk) then {
+					_sideIdx = 2;
+					if ((side _u) == west) then {_sideIdx = 0};
+					if ((side _u) == east) then {_sideIdx = 1};
+					_best = -1;
+					_bestD = _link;
+					_i = 0;
+					{
+						_cx = (_x select 0) / ((_x select 2) max 1);
+						_cy = (_x select 1) / ((_x select 2) max 1);
+						_d = sqrt (((_px - _cx) ^ 2) + ((_py - _cy) ^ 2));
+						if (_d < _bestD) then {_bestD = _d; _best = _i};
+						_i = _i + 1;
+					} forEach _clusters;
+					if (_best < 0) then {
+						_c = [_px, _py, 1, 0, 0, 0, [_u]];
+						_c set [3 + _sideIdx, 1];
+						_clusters = _clusters + [_c];
+					} else {
+						_c = _clusters select _best;
+						_c set [0, (_c select 0) + _px];
+						_c set [1, (_c select 1) + _py];
+						_c set [2, (_c select 2) + 1];
+						_c set [3 + _sideIdx, (_c select (3 + _sideIdx)) + 1];
+						_c set [6, (_c select 6) + [_u]];
+					};
+				};
+			};
+		};
+	} forEach allUnits;
+	//--- finalize cluster geometry: [cx, cy, radius, members, wN, eN, gN, movingN]
+	Private ["_fin"];
+	_fin = [];
+	{
+		_c = _x;
+		_n = _c select 2;
+		_cx = (_c select 0) / (_n max 1);
+		_cy = (_c select 1) / (_n max 1);
+		_members = _c select 6;
+		_radius = 0;
+		_movingN = 0;
+		{
+			if (!isNull _x && {alive _x}) then {
+				_pos = getPos _x;
+				_mx = _pos select 0;
+				_my = _pos select 1;
+				_d = sqrt (((_mx - _cx) ^ 2) + ((_my - _cy) ^ 2));
+				if (_d > _radius) then {_radius = _d};
+				if ((speed _x) > 3) then {_movingN = _movingN + 1};
+			};
+		} forEach _members;
+		_fin = _fin + [[_cx, _cy, _radius, _members, _c select 3, _c select 4, _c select 5, _movingN]];
+	} forEach _clusters;
+	//--- reconcile against the persistent registry.
+	_tracks = missionNamespace getVariable ["WFBE_C_VAR_DirTracks", []];
+	_pairs = [];
+	_ci = 0;
+	{
+		_cl = _x;
+		_mNew = _cl select 3;
+		_ti = 0;
+		{
+			_tr = _x;
+			_mOld = _tr select 4;
+			_shared = 0;
+			{
+				_mm = _x;
+				if (!isNull _mm && {_mm in _mOld}) then {_shared = _shared + 1};
+			} forEach _mNew;
+			_ov = _shared / (((count _mOld) min (count _mNew)) max 1);
+			if (_ov >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TRACK_MATCH_OVERLAP", 0.25])) then {
+				_pairs = _pairs + [[_ov, _ci, _ti]];
+			};
+			_ti = _ti + 1;
+		} forEach _tracks;
+		_ci = _ci + 1;
+	} forEach _fin;
+	//--- greedy strongest-overlap assignment (no A3 sort on 1.64; pair counts are tiny).
+	_usedC = [];
+	_usedT = [];
+	Private ["_matchC","_matchT","_go"];
+	_matchC = []; //--- parallel arrays: cluster idx -> track idx
+	_matchT = [];
+	_go = true;
+	while {_go} do {
+		_bestOv = -1;
+		_bestPair = [];
+		{
+			_pair = _x;
+			if (!((_pair select 1) in _usedC) && {!((_pair select 2) in _usedT)} && {(_pair select 0) > _bestOv}) then {
+				_bestOv = _pair select 0;
+				_bestPair = _pair;
+			};
+		} forEach _pairs;
+		if ((count _bestPair) == 0) then {
+			_go = false;
+		} else {
+			_usedC = _usedC + [_bestPair select 1];
+			_usedT = _usedT + [_bestPair select 2];
+			_matchC = _matchC + [_bestPair select 1];
+			_matchT = _matchT + [_bestPair select 2];
+		};
+	};
+	//--- centroid fallback for unmatched clusters: distance <= max(100, oldR+newR+50), nearest wins.
+	_ci = 0;
+	{
+		_cl = _x;
+		if (!(_ci in _usedC)) then {
+			_best = -1;
+			_bestD = 1e9;
+			_ti = 0;
+			{
+				_tr = _x;
+				if (!(_ti in _usedT)) then {
+					_oldR = _tr select 3;
+					_newR = _cl select 2;
+					_d = sqrt ((((_cl select 0) - (_tr select 1)) ^ 2) + (((_cl select 1) - (_tr select 2)) ^ 2));
+					if (_d <= (((_oldR + _newR + 50) max 100)) && {_d < _bestD}) then {_bestD = _d; _best = _ti};
+				};
+				_ti = _ti + 1;
+			} forEach _tracks;
+			if (_best >= 0) then {
+				_usedC = _usedC + [_ci];
+				_usedT = _usedT + [_best];
+				_matchC = _matchC + [_ci];
+				_matchT = _matchT + [_best];
+			};
+		};
+		_ci = _ci + 1;
+	} forEach _fin;
+	//--- build the new registry (copy-on-write; whole-variable assign at the end).
+	_newTracks = [];
+	_i = 0;
+	{
+		_cl = _x;
+		_ti = -1;
+		Private ["_mi"];
+		_mi = 0;
+		{
+			if (_x == _i) then {_ti = _matchT select _mi};
+			_mi = _mi + 1;
+		} forEach _matchC;
+		if (_ti >= 0) then {
+			_tr = _tracks select _ti;
+			_newTracks = _newTracks + [[_tr select 0, _cl select 0, _cl select 1, _cl select 2, _cl select 3, _cl select 4, _cl select 5, _cl select 6, count (_cl select 3), _cl select 7, time, _tr select 11, _tr select 12, _tr select 13, _tr select 14, 0, 0]];
+		} else {
+			_nid = missionNamespace getVariable ["WFBE_C_VAR_DirTrackNextId", 1];
+			WFBE_C_VAR_DirTrackNextId = _nid + 1;
+			_newTracks = _newTracks + [[_nid, _cl select 0, _cl select 1, _cl select 2, _cl select 3, _cl select 4, _cl select 5, _cl select 6, count (_cl select 3), _cl select 7, time, -999, -999, [], [], 0, 0]];
+		};
+		_i = _i + 1;
+	} forEach _fin;
+	//--- unmatched old tracks age out on TRACK_TTL, so a pausing fight keeps its identity.
+	_ttl = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TRACK_TTL_SEC", 15];
+	_ti = 0;
+	{
+		_tr = _x;
+		if (!(_ti in _usedT) && {(time - (_tr select 10)) < _ttl}) then {
+			_newTracks = _newTracks + [_tr];
+		};
+		_ti = _ti + 1;
+	} forEach _tracks;
+	WFBE_C_VAR_DirTracks = _newTracks;
+	_newTracks
 };
 
-WFBE_CL_FNC_DirectorPickEstablish = {
-    Private ["_list","_entry","_best","_bestScore","_current","_score"];
-    _list = (Call WFBE_CL_FNC_DirectorBuildTowns) + (Call WFBE_CL_FNC_DirectorBuildHQs);
-    _current = WFBE_C_VAR_SpectatorTarget;
-    _best = [];
-    _bestScore = -1e9;
-    {
-        _entry = _x;
-        _score = _entry select 4;
-        if ((_entry select 1) != _current && {_score > _bestScore}) then {
-            _best = _entry;
-            _bestScore = _score;
-        };
-    } forEach _list;
-    if (count _best == 0) then {
-        _bestScore = -1e9;
-        {
-            _entry = _x;
-            _score = _entry select 4;
-            if (_score > _bestScore) then {
-                _best = _entry;
-                _bestScore = _score;
-            };
-        } forEach _list;
-    };
-    _best
+//--- Consume the server event feed (seq-guarded, consume-once) and assign each fresh event to
+//--- the nearest track (within radius+150m) else the nearest town (within 250m); else drop.
+WFBE_CL_FNC_DirectorEvConsume = {
+	Private ["_pkt","_seq","_srvNow","_arr","_arrTick","_ev","_age0","_birth","_ex","_ey","_kind","_tracks","_best","_bestD","_ti","_tr","_d","_evArr","_tApprox","_townReg","_bt","_bd","_town","_te","_found","_idx"];
+	_pkt = missionNamespace getVariable ["WFBE_CL_SpectEvPkt", []];
+	if ((typeName _pkt) != "ARRAY" || {(count _pkt) < 3}) exitWith {};
+	_seq = _pkt select 0;
+	if (_seq == (missionNamespace getVariable ["WFBE_C_VAR_DirEvSeq", -1])) exitWith {};
+	WFBE_C_VAR_DirEvSeq = _seq;
+	_srvNow = _pkt select 1;
+	_arr = _pkt select 2;
+	_arrTick = missionNamespace getVariable ["WFBE_CL_SpectEvPktTick", diag_tickTime];
+	_tracks = missionNamespace getVariable ["WFBE_C_VAR_DirTracks", []];
+	_townReg = missionNamespace getVariable ["WFBE_C_VAR_DirTownEv", []];
+	{
+		_ev = _x;
+		if ((typeName _ev) == "ARRAY" && {(count _ev) >= 5}) then {
+			_age0 = (_srvNow - (_ev select 0)) max 0;
+			_birth = _arrTick - _age0;
+			if ((diag_tickTime - _birth) <= 10) then {
+				_ex = _ev select 1;
+				_ey = _ev select 2;
+				_kind = _ev select 4;
+				_tApprox = time - (diag_tickTime - _birth);
+				_best = -1;
+				_bestD = 1e9;
+				_ti = 0;
+				{
+					_tr = _x;
+					_d = sqrt ((((_tr select 1) - _ex) ^ 2) + (((_tr select 2) - _ey) ^ 2));
+					if (_d <= ((_tr select 3) + (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_EV_ASSIGN_TRACK_M", 150])) && {_d < _bestD}) then {_bestD = _d; _best = _ti};
+					_ti = _ti + 1;
+				} forEach _tracks;
+				if (_best >= 0) then {
+					_tr = _tracks select _best;
+					if (_kind == 1) then {
+						_evArr = _tr select 14;
+						_tr set [14, _evArr + [[_birth, _ex, _ey]]];
+						_tr set [12, _tApprox];
+					} else {
+						_evArr = _tr select 13;
+						_tr set [13, _evArr + [[_birth, _ex, _ey]]];
+						_tr set [11, _tApprox];
+					};
+				} else {
+					//--- nearest town fallback (arty strikes, one-sided raids still watchable).
+					_bt = objNull;
+					_bd = 1e9;
+					{
+						if (!isNull _x) then {
+							_d = sqrt ((((getPos _x) select 0) - _ex) ^ 2 + ((((getPos _x) select 1) - _ey) ^ 2));
+							if (_d <= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_EV_ASSIGN_TOWN_M", 250]) && {_d < _bd}) then {_bd = _d; _bt = _x};
+						};
+					} forEach towns;
+					if (!isNull _bt) then {
+						_found = false;
+						_idx = 0;
+						{
+							_te = _x;
+							if ((_te select 0) == _bt) then {
+								if (_kind == 1) then {
+									_te set [2, (_te select 2) + [[_birth, _ex, _ey]]];
+									_te set [4, _tApprox];
+								} else {
+									_te set [1, (_te select 1) + [[_birth, _ex, _ey]]];
+									_te set [3, _tApprox];
+								};
+								_found = true;
+							};
+							_idx = _idx + 1;
+						} forEach _townReg;
+						if (!_found) then {
+							if (_kind == 1) then {
+								_townReg = _townReg + [[_bt, [], [[_birth, _ex, _ey]], -999, _tApprox]];
+							} else {
+								_townReg = _townReg + [[_bt, [[_birth, _ex, _ey]], [], _tApprox, -999]];
+							};
+						};
+					};
+				};
+			};
+		};
+	} forEach _arr;
+	WFBE_C_VAR_DirTownEv = _townReg;
 };
 
-WFBE_CL_FNC_DirectorPickBase = {
-    Private ["_list","_friendlyHQ","_entry","_best"];
-    _list = Call WFBE_CL_FNC_DirectorBuildHQs;
-    _friendlyHQ = (side player) Call WFBE_CO_FNC_GetSideHQ;
-    _best = [];
-    {
-        _entry = _x;
-        if ((_entry select 1) == _friendlyHQ) then {_best = _entry};
-    } forEach _list;
-    _best
+//--- Weighted event terms per the binding spec: Fired 1.0 (<=2s) / 0.5 (2-5s) cap 3;
+//--- Killed 1.0 (<=3s) / 0.5 (3-10s) cap 2. _this = [evF, evK]; returns [F, K, prunedF, prunedK].
+WFBE_CL_FNC_DirectorEvTerms = {
+	Private ["_evF","_evK","_f","_k","_pf","_pk","_age","_nowTick"];
+	_evF = _this select 0;
+	_evK = _this select 1;
+	_nowTick = diag_tickTime;
+	_f = 0;
+	_k = 0;
+	_pf = [];
+	_pk = [];
+	{
+		if (!isNil "_x") then {
+			_age = _nowTick - (_x select 0);
+			if (_age <= 10) then {
+				_pf = _pf + [_x];
+				if (_age <= 2) then {_f = _f + 1} else {
+					if (_age <= 5) then {_f = _f + 0.5};
+				};
+			};
+		};
+	} forEach _evF;
+	{
+		if (!isNil "_x") then {
+			_age = _nowTick - (_x select 0);
+			if (_age <= 10) then {
+				_pk = _pk + [_x];
+				if (_age <= 3) then {_k = _k + 1} else {_k = _k + 0.5};
+			};
+		};
+	} forEach _evK;
+	if (_f > 3) then {_f = 3};
+	if (_k > 2) then {_k = 2};
+	[_f, _k, _pf, _pk]
 };
 
-WFBE_CL_FNC_DirectorAimPoint = {
-    Private ["_target","_class","_center","_radius","_contact","_active","_previous","_dir","_distance","_aim","_shotType","_shotRadius"];
-    _target = _this select 0;
-    _class = _this select 1;
-    _center = _this select 2;
-    _active = false;
-    _previous = WFBE_C_VAR_DirectorEngagementActive;
-    if ((_class == "PLAYER" || {_class == "TEAM"}) && {!isNull _target} && {alive _target}) then {
-        if ((_target != WFBE_C_VAR_DirectorContactTarget) || {(time - WFBE_C_VAR_DirectorLastContactScan) >= 1}) then {
-            _radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100];
-            if (_class == "TEAM") then {_radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TEAM_CONTACT_RADIUS", 150]};
-            _contact = [_target, _radius, side _target] Call WFBE_CL_FNC_DirectorContactCount;
-            WFBE_C_VAR_DirectorEngagementActive = (_contact > 0);
-            WFBE_C_VAR_DirectorContactTarget = _target;
-            WFBE_C_VAR_DirectorLastContactScan = time;
-        };
-        _active = WFBE_C_VAR_DirectorEngagementActive;
-    };
-    _aim = _center;
-    //--- m0801h9: FIGHT shots aim at the stamped density peak (the busiest knot of the cluster)
-    //--- while the orbit keeps circling the centroid - the raw centroid of a spread fight frames
-    //--- the empty dirt between the sides.
-    if (_class == "FIGHT") then {
-        _aim = missionNamespace getVariable ["WFBE_C_VAR_DirectorPoiAim", _center];
-    };
-    if (_active) then {
-        _dir = getDir _target;
-        _shotType = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorShotType", "MEDIUM"];
-        _shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS", 8];
-        if (_shotType == "MEDIUM") then {_shotRadius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS", 18]};
-        //--- fix (v3.2 review): cap the look-ahead bias to the shot's own standoff radius so the aim point
-        //--- stays near the subject; the flat 150m distance put the aim ~150m past a 8-18m-radius camera,
-        //--- pitching the shot nearly level instead of down at the engaged unit.
-        _distance = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ENGAGEMENT_AIM_DISTANCE", 150]) min (_shotRadius * 0.5);
-        _aim = [
-            (_center select 0) + (_distance * sin _dir),
-            (_center select 1) + (_distance * cos _dir),
-            (_center select 2) + 1.5
-        ];
-    };
-    if (_active) then {
-        if (!_previous) then {diag_log Format ["SPECTATE|v3|engagement|state=on|class=%1", _class]};
-    } else {
-        if (_previous) then {diag_log Format ["SPECTATE|v3|engagement|state=off|class=%1", _class]};
-    };
-    WFBE_C_VAR_DirectorEngagementActive = _active;
-    _aim
+//--- Stamp the SHOT SNAPSHOT (the only channel from the poll to the camera).
+//--- _this = [kind, key, centerXY, aimXYZ, radiusM(track spread), label, sidesText, score, samePoi]
+WFBE_CL_FNC_DirectorStamp = {
+	Private ["_kind","_key","_cxy","_aim","_spread","_label","_sidesText","_score","_same","_compact","_stand","_hgt","_fov","_odir","_osw","_base","_shotType","_reason","_cutId","_oldShot","_ring","_pref","_ost","_prog"];
+	_kind = _this select 0;
+	_key = _this select 1;
+	_cxy = _this select 2;
+	_aim = _this select 3;
+	_spread = _this select 4;
+	_label = _this select 5;
+	_sidesText = _this select 6;
+	_score = _this select 7;
+	_same = _this select 8;
+	_compact = (_spread < (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FIGHT_COMPACT_M", 120]));
+	_shotType = "MEDIUM";
+	_reason = "CONTACT";
+	if (_kind == "FIGHT" && {_compact}) then {
+		//--- zoom tight only when the track is compact (<120m) - never TIGHT a spread battle.
+		_stand = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FIGHT_STAND_M", 70];
+		_hgt = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FIGHT_STAND_H", 30];
+		_fov = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN", 0.12]) + (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX", 0.2])) / 2;
+		_shotType = "TIGHT";
+	} else {
+		_stand = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS", 180];
+		_hgt = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT", 110];
+		_fov = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN", 0.28]) + (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX", 0.4])) / 2;
+	};
+	if (_kind == "GLANCE") then {
+		_fov = ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MIN", 0.8]) + (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_FOV_MAX", 0.95])) / 2;
+		_shotType = "WIDE";
+		_reason = "GLANCE";
+	};
+	if (_kind == "MANUAL") then {_reason = "MANUAL"};
+	//--- ORBIT = reveal only: after 3s static, 6 deg/s, 60-90 degrees; glances stay static.
+	_odir = 0;
+	_osw = 0;
+	_base = random 360;
+	_pref = missionNamespace getVariable ["WFBE_C_VAR_SpectatorOrbit", true];
+	_oldShot = missionNamespace getVariable ["WFBE_C_VAR_SpectShot", []];
+	if (_same && {(count _oldShot) >= 16}) then {
+		//--- same-POI re-stamp: keep angle continuity (current effective angle becomes the base).
+		_base = _oldShot select 11;
+		if ((_oldShot select 8) != 0) then {
+			_ost = _oldShot select 9;
+			if (time >= _ost) then {
+				_prog = (time - _ost) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_RATE", 6]);
+				if (_prog > (_oldShot select 10)) then {_prog = _oldShot select 10};
+				_base = _base + ((_oldShot select 8) * _prog);
+			};
+		};
+	};
+	if (_pref && {_kind != "GLANCE"}) then {
+		WFBE_C_VAR_DirOrbitFlip = !(missionNamespace getVariable ["WFBE_C_VAR_DirOrbitFlip", false]);
+		_odir = 1;
+		if (missionNamespace getVariable ["WFBE_C_VAR_DirOrbitFlip", false]) then {_odir = -1};
+		_osw = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_SWEEP_MIN", 60]) + (random (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_SWEEP_RAND", 30]));
+	};
+	_cutId = missionNamespace getVariable ["WFBE_C_VAR_SpectShotCutN", 0];
+	if (!_same) then {
+		_cutId = _cutId + 1;
+		WFBE_C_VAR_SpectShotCutN = _cutId;
+		//--- last-2-shown ring for the repeat penalty.
+		_ring = missionNamespace getVariable ["WFBE_C_VAR_DirShownRing", []];
+		_ring = _ring + [[_key, time]];
+		if ((count _ring) > 2) then {_ring = [_ring select ((count _ring) - 2), _ring select ((count _ring) - 1)]};
+		WFBE_C_VAR_DirShownRing = _ring;
+	};
+	WFBE_C_VAR_SpectShot = [_cutId, _key, [_cxy select 0, _cxy select 1, 0], _aim, _stand, _hgt, _fov, time, _odir, time + (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_DELAY_SEC", 3]), _osw, _base, _label, _shotType, _reason, _sidesText];
+	WFBE_C_VAR_SpectatorDirectorTargetLabel = _label;
+	WFBE_C_VAR_SpectatorDirectorShotType = _shotType;
+	WFBE_C_VAR_DirectorCutReason = _reason;
+	WFBE_C_VAR_DirCurKey = _key;
+	WFBE_C_VAR_DirCurKind = _kind;
+	WFBE_C_VAR_DirCurStart = time;
+	WFBE_C_VAR_DirCurStampScore = _score;
+	WFBE_C_VAR_DirCurPushed = false;
+	diag_log Format ["SPECTATE|v8|stamp|kind=%1|key=%2|score=%3|shot=%4|same=%5|label=%6", _kind, _key, round _score, _shotType, _same, _label];
 };
 
-WFBE_CL_FNC_DirectorAimStep = {
-    Private ["_camPos","_oldAim","_wantAim","_dt","_allowCut","_oldDx","_oldDy","_newDx","_newDy","_oldRange","_newRange","_oldDir","_newDir","_delta","_panRate","_maxSlew","_cutAngle","_factor","_stepDir","_result"];
-    _camPos = _this select 0;
-    _oldAim = _this select 1;
-    _wantAim = _this select 2;
-    _dt = _this select 3;
-    _allowCut = _this select 4;
-    _oldDx = (_oldAim select 0) - (_camPos select 0);
-    _oldDy = (_oldAim select 1) - (_camPos select 1);
-    _newDx = (_wantAim select 0) - (_camPos select 0);
-    _newDy = (_wantAim select 1) - (_camPos select 1);
-    _oldRange = sqrt ((_oldDx ^ 2) + (_oldDy ^ 2));
-    _newRange = sqrt ((_newDx ^ 2) + (_newDy ^ 2));
-    _result = _wantAim;
-    if (_oldRange > 0.01 && {_newRange > 0.01}) then {
-        _oldDir = ((_oldDx atan2 _oldDy) + 360) % 360;
-        _newDir = ((_newDx atan2 _newDy) + 360) % 360;
-        _delta = _newDir - _oldDir;
-        if (_delta > 180) then {_delta = _delta - 360};
-        if (_delta < -180) then {_delta = _delta + 360};
-        //--- v4 adaptive slew: fast while far off-axis, ease-out near the frame (was a flat
-        //--- 8 deg/s that sprinting targets outran); the cut threshold now gates only true breaks.
-        _panRate = (((abs _delta) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_EASE", 6])) max (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_MIN_DEG_PER_SEC", 25])) min (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_MAX_DEG_PER_SEC", 240]);
-        _maxSlew = _panRate * _dt;
-        _cutAngle = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PAN_CUT_DEG", 35];
-        if (abs _delta > _cutAngle && {_allowCut}) then {
-            if (!WFBE_C_VAR_DirectorAimHardCut) then {
-                diag_log Format ["SPECTATE|v3|aim-cut|delta=%1|threshold=%2", round (abs _delta), _cutAngle];
-            };
-            WFBE_C_VAR_DirectorAimHardCut = true;
-        } else {
-            WFBE_C_VAR_DirectorAimHardCut = false;
-            if (_maxSlew > 0 && {abs _delta > _maxSlew}) then {
-                _factor = _maxSlew / (abs _delta);
-                _stepDir = _oldDir + (_delta * _factor);
-                _result = [
-                    (_camPos select 0) + (_oldRange * sin _stepDir),
-                    (_camPos select 1) + (_oldRange * cos _stepDir),
-                    (_oldAim select 2) + (((_wantAim select 2) - (_oldAim select 2)) * _factor)
-                ];
-            };
-        };
-    };
-    _result
+//--- Density-peak aim for a track (NEVER the raw centroid - the centroid of a spread fight is
+//--- the empty dirt between the sides). Peak = member with the most fellow members within
+//--- DENSITY_M, event positions (<=10s) count double; ties resolve toward the centroid.
+WFBE_CL_FNC_DirectorTrackAim = {
+	Private ["_tr","_cx","_cy","_members","_evs","_densR2","_bestCnt","_bestDist","_ax","_ay","_m","_mx","_my","_dc","_cnt","_pos","_e"];
+	_tr = _this;
+	_cx = _tr select 1;
+	_cy = _tr select 2;
+	_members = _tr select 4;
+	_evs = (_tr select 13) + (_tr select 14);
+	_densR2 = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_DENSITY_M", 75]) ^ 2;
+	_bestCnt = -1;
+	_bestDist = 1e9;
+	_ax = _cx;
+	_ay = _cy;
+	{
+		if (!isNull _x && {alive _x}) then {
+			_m = _x; //--- capture before the inner forEach rebinds _x (A2-OA gotcha)
+			_pos = getPos _m;
+			_mx = _pos select 0;
+			_my = _pos select 1;
+			_dc = sqrt (((_mx - _cx) ^ 2) + ((_my - _cy) ^ 2));
+			_cnt = 0;
+			{
+				if (!isNull _x && {alive _x}) then {
+					if (((((getPos _x) select 0) - _mx) ^ 2) + ((((getPos _x) select 1) - _my) ^ 2) <= _densR2) then {_cnt = _cnt + 1};
+				};
+			} forEach _members;
+			{
+				_e = _x;
+				if (!isNil "_e") then {
+					if ((diag_tickTime - (_e select 0)) <= 10 && {((((_e select 1) - _mx) ^ 2) + (((_e select 2) - _my) ^ 2)) <= _densR2}) then {_cnt = _cnt + 2};
+				};
+			} forEach _evs;
+			if ((_cnt > _bestCnt) || {(_cnt == _bestCnt) && {_dc < _bestDist}}) then {
+				_bestCnt = _cnt;
+				_bestDist = _dc;
+				_ax = _mx;
+				_ay = _my;
+			};
+		};
+	} forEach _members;
+	[_ax, _ay, 1.5]
 };
+
+//--- The 1s auto brain: reconcile, consume events, score, hold/cut per the binding rules.
+WFBE_CL_FNC_DirectorAutoStep = {
+	Private ["_tracks","_tr","_terms","_f","_k","_m2","_sidesN","_mult","_score","_cands","_townReg","_te","_town","_row","_head","_rSidesN","_label","_curKey","_curKind","_curScore","_curLF","_curLK","_curTrack","_nowT","_lockUntil","_holdMin","_holdMax","_best","_bestEff","_entry","_eff","_ring","_penalized","_cool","_glTown","_glBest","_cx","_cy","_aim","_sidesText","_curStart","_shot","_newCool","_keep","_intensity","_bestEntry","_townName"];
+	_nowT = time;
+	Call WFBE_CL_FNC_DirectorTracksUpdate;
+	Call WFBE_CL_FNC_DirectorEvConsume;
+	_tracks = missionNamespace getVariable ["WFBE_C_VAR_DirTracks", []];
+	_cands = []; //--- [key, kind, score, ref, label, sidesText, lastFire, lastKill, aimSrc]
+	{
+		_tr = _x;
+		_terms = [_tr select 13, _tr select 14] Call WFBE_CL_FNC_DirectorEvTerms;
+		_f = _terms select 0;
+		_k = _terms select 1;
+		_tr set [13, _terms select 2];
+		_tr set [14, _terms select 3];
+		_sidesN = 0;
+		{if (_x > 0) then {_sidesN = _sidesN + 1}} forEach [_tr select 5, _tr select 6, _tr select 7];
+		_tr set [16, _sidesN];
+		_score = 0;
+		//--- FIGHT requires 2 armed belligerent sides AND F+K>0 within 10s. ACTION = events, not proximity.
+		if (_sidesN >= 2 && {((count (_tr select 13)) + (count (_tr select 14))) > 0}) then {
+			_mult = 1;
+			if (_sidesN == 2) then {_mult = 1.2};
+			if (_sidesN >= 3) then {_mult = 1.35};
+			_m2 = (_tr select 9) min 3;
+			_score = _mult * ((40 * _f) + (100 * _k) + (8 * _m2) + (4 * ((_tr select 8) min 8)));
+		};
+		_tr set [15, _score];
+		if (_score > 0) then {
+			_townName = [_tr select 1, _tr select 2] Call WFBE_CL_FNC_DirectorNearestTownName;
+			_sidesText = "";
+			if ((_tr select 5) > 0) then {_sidesText = "WEST"};
+			if ((_tr select 6) > 0) then {if (_sidesText != "") then {_sidesText = _sidesText + " vs EAST"} else {_sidesText = "EAST"}};
+			if ((_tr select 7) > 0) then {if (_sidesText != "") then {_sidesText = _sidesText + " vs GUER"} else {_sidesText = "GUER"}};
+			_cands = _cands + [[Format ["F:%1", _tr select 0], "FIGHT", _score, _tr, Format ["FIRE FIGHT near %1", _townName], _sidesText, _tr select 11, _tr select 12]];
+		};
+	} forEach _tracks;
+	//--- event-towns (arty strikes / raids with no reconciled track nearby).
+	_townReg = missionNamespace getVariable ["WFBE_C_VAR_DirTownEv", []];
+	Private ["_newReg"];
+	_newReg = [];
+	{
+		_te = _x;
+		_town = _te select 0;
+		if (!isNull _town) then {
+			_terms = [_te select 1, _te select 2] Call WFBE_CL_FNC_DirectorEvTerms;
+			_f = _terms select 0;
+			_k = _terms select 1;
+			_te set [1, _terms select 2];
+			_te set [2, _terms select 3];
+			if (((count (_te select 1)) + (count (_te select 2))) > 0) then {
+				_newReg = _newReg + [_te];
+				_row = [];
+				{
+					if ((_x select 0) == _town) then {_row = _x};
+				} forEach (missionNamespace getVariable ["WFBE_C_VAR_DirectorTownData", []]);
+				_head = 0;
+				_rSidesN = 1;
+				if ((count _row) >= 5) then {_head = _row select 4; _rSidesN = _row select 3};
+				_mult = 1;
+				if (_rSidesN == 2) then {_mult = 1.2};
+				if (_rSidesN >= 3) then {_mult = 1.35};
+				_score = _mult * ((40 * _f) + (100 * _k) + (4 * (_head min 8)));
+				if (_score > 0) then {
+					_label = _town getVariable ["name", "Town"];
+					_cands = _cands + [[Format ["T:%1", _label], "TOWN", _score, _town, _label, Format ["%1 under fire", _label], _te select 3, _te select 4]];
+				};
+			};
+		};
+	} forEach _townReg;
+	WFBE_C_VAR_DirTownEv = _newReg;
+	//--- current-shot bookkeeping.
+	_curKey = missionNamespace getVariable ["WFBE_C_VAR_DirCurKey", ""];
+	_curKind = missionNamespace getVariable ["WFBE_C_VAR_DirCurKind", ""];
+	_curStart = missionNamespace getVariable ["WFBE_C_VAR_DirCurStart", -999];
+	_curScore = 0;
+	_curLF = -999;
+	_curLK = -999;
+	_curTrack = [];
+	{
+		_entry = _x;
+		if ((_entry select 0) == _curKey) then {
+			_curScore = _entry select 2;
+			_curLF = _entry select 6;
+			_curLK = _entry select 7;
+			if ((_entry select 1) == "FIGHT") then {_curTrack = _entry select 3};
+		};
+	} forEach _cands;
+	_intensity = "QUIET";
+	if (_curScore > 0) then {_intensity = "CONTACT"};
+	if (_curScore >= 80) then {_intensity = "SKIRMISH"};
+	if (_curScore >= 250) then {_intensity = "HEAVY"};
+	WFBE_C_VAR_DirIntensity = _intensity;
+	//--- best OTHER candidate with the last-2-shown penalty (25 percent for 30s, bypass at 2x current).
+	_ring = missionNamespace getVariable ["WFBE_C_VAR_DirShownRing", []];
+	_best = -1;
+	_bestEff = 0;
+	_bestEntry = [];
+	{
+		_entry = _x;
+		if ((_entry select 0) != _curKey) then {
+			_eff = _entry select 2;
+			_penalized = false;
+			{
+				if ((_x select 0) == (_entry select 0) && {(_nowT - (_x select 1)) < (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_RECENT_SEC", 30])}) then {_penalized = true};
+			} forEach _ring;
+			if (_penalized && {(_entry select 2) < (2 * (_curScore max 1))}) then {
+				_eff = _eff * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_RECENT_PENALTY", 0.75]);
+			};
+			if (_eff > _bestEff) then {_bestEff = _eff; _bestEntry = _entry};
+		};
+	} forEach _cands;
+	_holdMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_HOLD_MIN_SEC", 7];
+	_holdMax = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_HOLD_MAX_SEC", 12];
+	//--- GLANCE shots: 3s wide look then 45s cooldown on that town.
+	if (_curKind == "GLANCE") then {
+		if ((_nowT - _curStart) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_GLANCE_SEC", 3])) then {
+			_glTown = missionNamespace getVariable ["WFBE_C_VAR_DirCurTown", objNull];
+			if (!isNull _glTown) then {
+				_cool = missionNamespace getVariable ["WFBE_C_VAR_DirTownCool", []];
+				_cool = _cool + [[_glTown, _nowT + (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TOWN_COOLDOWN_SEC", 45])]];
+				WFBE_C_VAR_DirTownCool = _cool;
+			};
+			WFBE_C_VAR_DirCurKey = "";
+			_curKey = "";
+			_curKind = "";
+		};
+	};
+	if (_curKey != "" && {_curKind != "GLANCE"}) then {
+		//--- FIGHT/TOWN hold: lockUntil = max(shotStart+7, lastFire+7, lastKill+2), capped at start+12.
+		_lockUntil = _curStart + _holdMin;
+		if ((_curLF + _holdMin) > _lockUntil) then {_lockUntil = _curLF + _holdMin};
+		if ((_curLK + 2) > _lockUntil) then {_lockUntil = _curLK + 2};
+		if (_lockUntil > (_curStart + _holdMax)) then {_lockUntil = _curStart + _holdMax};
+		if (_curScore > 0 && {_nowT < _lockUntil}) then {
+			//--- PUSH-IN = escalation only (score >= 1.5x the stamp sample), compact tracks only, once.
+			if (!(missionNamespace getVariable ["WFBE_C_VAR_DirCurPushed", false]) && {_curKind == "FIGHT"} && {(count _curTrack) > 0} && {(_curTrack select 3) < (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_FIGHT_COMPACT_M", 120])} && {_curScore >= ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PUSH_RATIO", 1.5]) * ((missionNamespace getVariable ["WFBE_C_VAR_DirCurStampScore", 1]) max 1))}) then {
+				_shot = missionNamespace getVariable ["WFBE_C_VAR_SpectShot", []];
+				if ((count _shot) >= 16) then {
+					_shot set [4, (_shot select 4) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PUSH_SCALE", 0.85])];
+					_shot set [5, (_shot select 5) * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PUSH_SCALE", 0.85])];
+					WFBE_C_VAR_DirCurPushed = true;
+					diag_log Format ["SPECTATE|v8|push-in|key=%1|score=%2", _curKey, round _curScore];
+				};
+			};
+		} else {
+			if (_curScore > 0) then {
+				//--- lock expired, action continues: cut only on a 1.5x better rival, else extend to 12s
+				//--- then re-stamp the SAME POI continuously (fresh framing, no hard cut).
+				if (_bestEff >= (_curScore * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_CUT_RATIO", 1.5])) && {(count _bestEntry) > 0}) then {
+					[_bestEntry] Call WFBE_CL_FNC_DirectorCutTo;
+				} else {
+					if ((_nowT - _curStart) >= _holdMax) then {
+						{
+							_entry = _x;
+							if ((_entry select 0) == _curKey) then {[_entry, true] Call WFBE_CL_FNC_DirectorCutTo};
+						} forEach _cands;
+					};
+				};
+			} else {
+				//--- current shot's action died: move on to the best candidate or a glance.
+				if ((count _bestEntry) > 0) then {
+					[_bestEntry] Call WFBE_CL_FNC_DirectorCutTo;
+				} else {
+					WFBE_C_VAR_DirCurKey = "";
+					_curKey = "";
+				};
+			};
+		};
+	};
+	if (_curKey == "") then {
+		if ((count _bestEntry) > 0) then {
+			[_bestEntry] Call WFBE_CL_FNC_DirectorCutTo;
+		} else {
+			//--- nothing fights anywhere: 3s WIDE town glances on rotation (45s cooldown each).
+			//--- Empty bases/HQs are NEVER shown (owner ruling).
+			_cool = missionNamespace getVariable ["WFBE_C_VAR_DirTownCool", []];
+			_newCool = [];
+			{
+				if (!isNil "_x") then {
+					if ((_x select 1) > _nowT) then {_newCool = _newCool + [_x]};
+				};
+			} forEach _cool;
+			WFBE_C_VAR_DirTownCool = _newCool;
+			_glBest = [];
+			Private ["_glHead"];
+			_glHead = -1;
+			{
+				_row = _x;
+				_town = _row select 0;
+				_keep = true;
+				{
+					if ((_x select 0) == _town) then {_keep = false};
+				} forEach _newCool;
+				if (_keep && {(_row select 4) > _glHead}) then {_glHead = _row select 4; _glBest = _row};
+			} forEach (missionNamespace getVariable ["WFBE_C_VAR_DirectorTownData", []]);
+			if ((count _glBest) > 0) then {
+				_town = _glBest select 0;
+				_cx = (getPos _town) select 0;
+				_cy = (getPos _town) select 1;
+				WFBE_C_VAR_DirCurTown = _town;
+				WFBE_C_VAR_SpectatorTarget = _town;
+				["GLANCE", Format ["T:%1", _town getVariable ["name", "Town"]], [_cx, _cy], [_cx, _cy, 1.5], 500, _town getVariable ["name", "Town"], "", 0, false] Call WFBE_CL_FNC_DirectorStamp;
+			};
+		};
+	};
+};
+
+//--- Cut/extend helper: _this = [candEntry] (hard cut to a new POI) or [candEntry, true]
+//--- (same-POI continuous re-stamp after the 12s ceiling).
+WFBE_CL_FNC_DirectorCutTo = {
+	Private ["_entry","_same","_kind","_tr","_aim","_town","_cx","_cy"];
+	_entry = _this select 0;
+	_same = false;
+	if ((count _this) > 1) then {_same = _this select 1};
+	_kind = _entry select 1;
+	if (_kind == "FIGHT") then {
+		_tr = _entry select 3;
+		_aim = _tr Call WFBE_CL_FNC_DirectorTrackAim;
+		WFBE_C_VAR_DirCurTown = objNull;
+		WFBE_C_VAR_SpectatorTarget = objNull;
+		[_kind, _entry select 0, [_tr select 1, _tr select 2], _aim, _tr select 3, _entry select 4, _entry select 5, _entry select 2, _same] Call WFBE_CL_FNC_DirectorStamp;
+	} else {
+		_town = _entry select 3;
+		if (!isNull _town) then {
+			_cx = (getPos _town) select 0;
+			_cy = (getPos _town) select 1;
+			WFBE_C_VAR_DirCurTown = _town;
+			WFBE_C_VAR_SpectatorTarget = _town;
+			[_kind, _entry select 0, [_cx, _cy], [_cx, _cy, 1.5], 500, _entry select 4, _entry select 5, _entry select 2, _same] Call WFBE_CL_FNC_DirectorStamp;
+		};
+	};
+};
+
+//--- MANUAL N/B: arms the next/previous entry in the pinned class. In director mode a manual
+//--- pick pauses auto and stamps a STATIC framing of the pick (F/V still engage unit modes).
 WFBE_CL_FNC_DirectorCycleTarget = {
-	Private ["_step","_list","_current","_index","_i","_entry"];
+	Private ["_step","_list","_current","_index","_i","_entry","_pos","_stand","_hgt","_fov","_cls"];
 	_step = _this;
 	_list = Call WFBE_CL_FNC_DirectorBuildActive;
 	if (count _list == 0) exitWith {
 		WFBE_C_VAR_SpectatorTarget = objNull;
 		systemChat "[WASP] Director: no live targets in this class.";
 	};
-	_current = WFBE_C_VAR_SpectatorTarget;
+	_current = missionNamespace getVariable ["WFBE_C_VAR_SpectatorTarget", objNull];
 	_index = -1;
 	_i = 0;
 	{
@@ -544,289 +905,53 @@ WFBE_CL_FNC_DirectorCycleTarget = {
 	if (_index < 0) then {_index = 0} else {_index = (_index + _step + (count _list)) % (count _list)};
 	_entry = _list select _index;
 	WFBE_C_VAR_SpectatorTarget = _entry select 1;
-	WFBE_C_VAR_SpectatorDirectorPosFn = _entry select 3;
 	WFBE_C_VAR_SpectatorDirectorTargetLabel = _entry select 0;
-	if ((count _entry) > 6) then { //--- v7 centroid orbit + m0801h9 density-peak aim.
-		WFBE_C_VAR_DirectorPoiPos = _entry select 6;
-		WFBE_C_VAR_DirectorPoiAim = _entry select 6;
-		if ((count _entry) > 8) then {WFBE_C_VAR_DirectorPoiAim = _entry select 7};
+	if ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"]) == "director") then {
+		if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorAuto", false]) then {
+			WFBE_C_VAR_SpectatorDirectorAuto = false;
+			systemChat "[WASP] Director auto paused for manual browsing (G resumes).";
+		};
+		_pos = getPos (_entry select 1);
+		_cls = _entry select 2;
+		if (_cls == "TOWN" || {_cls == "HQ"}) then {
+			_stand = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS", 180];
+			_hgt = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT", 110];
+			_fov = 0.6;
+		} else {
+			_stand = 30;
+			_hgt = 15;
+			_fov = 0.5;
+		};
+		WFBE_C_VAR_DirCurTown = objNull;
+		["MANUAL", Format ["M:%1:%2", _entry select 0, missionNamespace getVariable ["WFBE_C_VAR_SpectShotCutN", 0]], [_pos select 0, _pos select 1], [_pos select 0, _pos select 1, 1.5], (_stand min 119), _entry select 0, "", 0, false] Call WFBE_CL_FNC_DirectorStamp;
+		//--- MANUAL framing overrides the compact/spread geometry from the stamp.
+		Private ["_shot"];
+		_shot = missionNamespace getVariable ["WFBE_C_VAR_SpectShot", []];
+		if ((count _shot) >= 16) then {
+			_shot set [4, _stand];
+			_shot set [5, _hgt];
+			_shot set [6, _fov];
+		};
 	};
-	WFBE_C_VAR_SpectatorOrbitAngle = 0;
 	systemChat Format ["[WASP] Director target: %1", _entry select 0];
 };
 
-WFBE_CL_FNC_DirectorPickNext = {
-    Private ["_list","_current","_recent","_cooldown","_best","_bestScore","_entry","_target","_score","_skip","_pinned","_currentEntry","_currentScore","_bestAlt","_bestAltScore","_repeatMargin","_hysteresisMargin","_pool","_tier","_currentInPool"];
-    _pinned = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorPinned", false];
-    if (_pinned) then {_list = Call WFBE_CL_FNC_DirectorBuildActive} else {_list = Call WFBE_CL_FNC_DirectorBuildAll};
-    if (count _list == 0) exitWith {[]};
-    //--- v4 tiering (owner 2026-07-31: town cams only on active fights; hybrid idle):
-    //--- tier 1 = live-contact entries (hot towns carry contact >= 1, cold towns 0);
-    //--- tier 2 = players/teams (build-up footage when nothing fights);
-    //--- tier 3 = the full list (quiet towns/HQ = WIDE establishing shots only).
-    _pool = [];
-    {
-        if (!isNil "_x") then {if ((_x select 5) > 0) then {_pool = _pool + [_x]}};
-    } forEach _list;
-    _tier = 1;
-    if (count _pool == 0) then {
-        _tier = 2;
-        {
-            if (!isNil "_x") then {if ((_x select 2) == "PLAYER" || {(_x select 2) == "TEAM"}) then {_pool = _pool + [_x]}};
-        } forEach _list;
-    };
-    if (count _pool == 0) then {_tier = 3; _pool = _list};
-    WFBE_C_VAR_DirectorPool = _pool; //--- v5 hotfix: cut-site shot list reads this global; _list is Private to this function.
-    WFBE_C_VAR_DirectorLastPickTier = _tier;
-    _current = WFBE_C_VAR_SpectatorTarget;
-    _recent = missionNamespace getVariable ["WFBE_C_VAR_DirectorRecent", []];
-    _cooldown = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_COOLDOWN_SEC", 45];
-    _repeatMargin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_REPEAT_SCORE_MARGIN", 0.5];
-    _hysteresisMargin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_HYSTERESIS_MARGIN", 0.2];
-    _currentEntry = [];
-    _currentScore = -1e9;
-    {
-        _entry = _x;
-        if ((_entry select 1) == _current) then {
-            _currentEntry = _entry;
-            _currentScore = _entry select 4;
-        };
-    } forEach _list;
-    _currentInPool = false;
-    {
-        if (!isNil "_x") then {if ((_x select 1) == _current) then {_currentInPool = true}};
-    } forEach _pool;
-    //--- fix (v3.2 review): loop1 finds the best candidate that clears BOTH cooldown and the
-    //--- hysteresis margin (the switch-worthy pick). _bestAlt tracks the best candidate that
-    //--- only clears cooldown (ignoring hysteresis) - the true runner-up used below to decide
-    //--- whether to hold on the current target or force a repeat-margin switch. The old
-    //--- fallback loop re-scanned ignoring cooldown AND hysteresis on every hysteresis skip
-    //--- (not just when cooldown blocked everything), which silently defeated both mechanisms.
-    _best = [];
-    _bestScore = -1e9;
-    _bestAlt = [];
-    _bestAltScore = -1e9;
-    {
-        _entry = _x;
-        _target = _entry select 1;
-        _score = _entry select 4;
-        if (_target != _current) then {
-            _skip = false;
-            {
-                if ((_x select 0) == _target && {(time - (_x select 1)) < _cooldown}) then {_skip = true};
-            } forEach _recent;
-            if (!_skip) then {
-                if (_score > _bestAltScore) then {
-                    _bestAlt = _entry;
-                    _bestAltScore = _score;
-                };
-                if ((_currentScore <= 0 || {_score >= (_currentScore * (1 + _hysteresisMargin))}) && {_score > _bestScore}) then {
-                    _best = _entry;
-                    _bestScore = _score;
-                };
-            };
-        };
-    } forEach _pool;
-    if (count _best == 0 && {count _bestAlt == 0}) then {
-        //--- genuinely nothing survives cooldown at all; ignore cooldown rather than get stuck.
-        _bestScore = -1e9;
-        {
-            _entry = _x;
-            _target = _entry select 1;
-            _score = _entry select 4;
-            if (_target != _current) then {
-                if (_score > _bestScore) then {
-                    _best = _entry;
-                    _bestScore = _score;
-                };
-            };
-        } forEach _pool;
-    };
-    if (count _best == 0 && {count _currentEntry > 0} && {_currentInPool}) then {
-        if (count _bestAlt == 0) then {
-            _best = _currentEntry;
-        } else {
-            if (_bestAltScore > _currentScore) then {
-                //--- a rival outscores current but not by the hysteresis margin; hold - this is
-                //--- exactly what hysteresis exists to do, do not let repeat-margin re-litigate it.
-                _best = _currentEntry;
-            } else {
-                //--- current is the top scorer outright; spec item C only allows repeating it
-                //--- when it clears the runner-up by the repeat margin, else force a switch.
-                if (_currentScore >= (_bestAltScore * (1 + _repeatMargin))) then {
-                    _best = _currentEntry;
-                } else {
-                    _best = _bestAlt;
-                };
-            };
-        };
-    };
-    _best
-};
-
 WFBE_CL_FNC_DirectorLoopStart = {
-    [] spawn {
-        Private ["_next","_entry","_recent","_recentKeep","_recentStart","_i","_pinned","_oldClass","_now","_autoDelta","_pollSec","_shotAge","_minDwell","_maxDwell","_dwell","_shotType","_bounds","_forcedType","_forcedEstablish","_baseDue","_forceEstablish","_target","_subject","_subjectFovMin"];
-        _now = time;
-        diag_log "SPECTATE|v3|director-thread-start";
-        while {missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false] && {!(missionNamespace getVariable ["WFBE_gameover", false])}} do {
-            sleep 1;
-            if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"] == "director" && {missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorAuto", false]}) then {
-                _autoDelta = time - _now;
-                _now = time;
-                if (_autoDelta < 0) then {_autoDelta = 0};
-                WFBE_C_VAR_DirectorAutoTime = WFBE_C_VAR_DirectorAutoTime + _autoDelta;
-                _pollSec = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TOWN_POLL_SEC", 8];
-                if ((time - (missionNamespace getVariable ["WFBE_C_VAR_DirectorLastTownPoll", 0])) >= _pollSec) then {
-                    Call WFBE_CL_FNC_DirectorPollTowns;
-                    WFBE_C_VAR_DirectorLastTownPoll = time;
-                };
-                _minDwell = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MIN_DWELL", 1.5];
-                if (WFBE_C_VAR_SpectatorDirectorShotMinDwell > _minDwell) then {_minDwell = WFBE_C_VAR_SpectatorDirectorShotMinDwell};
-                _maxDwell = WFBE_C_VAR_SpectatorDirectorShotMaxDwell;
-                if (_maxDwell < _minDwell) then {_maxDwell = _minDwell};
-                _dwell = (WFBE_C_VAR_SpectatorDirectorDwell max _minDwell) min _maxDwell;
-                //--- v5 (owner 2026-08-01: "active town or fight and it skips to an afk unit... after 3
-                //--- seconds"): a shot that had NO contact at cut time only deserves a glance - cap its
-                //--- dwell so the next pick (which prefers tier-1 live contact) happens within ~3s. Shots
-                //--- WITH contact keep their full dwell.
-                if ((missionNamespace getVariable ["WFBE_C_VAR_DirectorCurContact", 0]) == 0) then {
-                    _dwell = _dwell min (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC", 3]);
-                } else {
-                    //--- v6 research rule 3 (fire lock, the unanimous esports finding): once a shot
-                    //--- HAS action, hold it - premature cut-away from a live firefight is the worst
-                    //--- director error. Target death still exits via the loop safety immediately.
-                    _dwell = _dwell max (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC", 7]);
-                };
-                //--- m0801h9: a FIGHT whose anchor died no longer earns the fire-lock hold - cap the
-                //--- shot at the idle glance so a wiped/despawned cluster cannot pin 7s of corpse dirt.
-                //--- (A deleted anchor already cuts within 1s via the isNull safety below; a live fight
-                //--- that merely lost its anchor re-forms with a fresh anchor on the very next pick.)
-                if ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorClass", "PLAYER"]) == "FIGHT" && {!(alive WFBE_C_VAR_SpectatorTarget)}) then {
-                    _dwell = _dwell min (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC", 3]);
-                };
-                _shotAge = WFBE_C_VAR_DirectorAutoTime - WFBE_C_VAR_DirectorLastSwitch;
-                if (isNull WFBE_C_VAR_SpectatorTarget || {_shotAge >= _dwell}) then {
-                    if (WFBE_C_VAR_DirectorReturnPending) then {
-                        WFBE_C_VAR_SpectatorDirectorClass = WFBE_C_VAR_DirectorReturnClass;
-                        WFBE_C_VAR_DirectorReturnPending = false;
-                    };
-                    _next = [];
-                    _forcedType = "";
-                    _forcedEstablish = false;
-                    _baseDue = (WFBE_C_VAR_DirectorAutoTime - WFBE_C_VAR_DirectorLastBaseCheck) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_BASE_CHECK_SEC", 420]);
-                    if (_baseDue) then {
-                        WFBE_C_VAR_DirectorLastBaseCheck = WFBE_C_VAR_DirectorAutoTime;
-                        _next = Call WFBE_CL_FNC_DirectorPickBase;
-                        if (count _next > 0) then {
-                            _forcedType = "BASE";
-                            _forcedEstablish = true;
-                        };
-                    };
-                    if (count _next == 0) then {
-                        _forceEstablish = (WFBE_C_VAR_DirectorAutoTime - WFBE_C_VAR_DirectorLastEstablish) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ESTABLISH_FLOOR_SEC", 120]);
-                        if (_forceEstablish) then {
-                            _next = Call WFBE_CL_FNC_DirectorPickEstablish;
-                            if (count _next > 0) then {_forcedEstablish = true};
-                        };
-                    };
-                    if (count _next == 0) then {_next = Call WFBE_CL_FNC_DirectorPickNext};
-                    if (count _next > 0) then {
-                        _entry = _next;
-                        _pinned = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorPinned", false];
-                        _oldClass = missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorClass", "PLAYER"];
-                        if (_pinned && {_forcedEstablish}) then {
-                            WFBE_C_VAR_DirectorReturnClass = _oldClass;
-                            WFBE_C_VAR_DirectorReturnPending = true;
-                        };
-                        if (!_pinned || {_forcedEstablish}) then {WFBE_C_VAR_SpectatorDirectorClass = _entry select 2};
-                        WFBE_C_VAR_SpectatorTarget = _entry select 1;
-                        WFBE_C_VAR_SpectatorDirectorPosFn = _entry select 3;
-                        WFBE_C_VAR_SpectatorDirectorTargetLabel = _entry select 0;
-                        //--- v7 POI director: orbit a STATIC centroid for fight clusters (owner ruling
-                        //--- 2026-08-01: orbit + zoom on action around POIs - never unit-follow in auto).
-                        if ((_entry select 2) == "FIGHT" && {(count _entry) > 6}) then {
-                            WFBE_C_VAR_DirectorPoiPos = _entry select 6;
-                            //--- m0801h9: the AIM goal is the density peak, never the raw centroid -
-                            //--- the centroid of a spread fight is the empty dirt between the sides.
-                            WFBE_C_VAR_DirectorPoiAim = _entry select 6;
-                            if ((count _entry) > 8) then {WFBE_C_VAR_DirectorPoiAim = _entry select 7};
-                        };
-                        //--- v5 P3b (spec 7a): the pool is scored every poll and everything but the
-                        //--- winner was thrown away. Keep the top runners-up so the caster HUD can show
-                        //--- what it is passing over ("shot list"), and record WHY this cut happened so
-                        //--- the caster can narrate the director instead of guessing.
-                        WFBE_C_VAR_DirectorShotList = [];
-                        {
-                            if ((count WFBE_C_VAR_DirectorShotList) < 3 && {(_x select 1) != (_entry select 1)}) then {
-                                WFBE_C_VAR_DirectorShotList = WFBE_C_VAR_DirectorShotList + [[_x select 0, _x select 2, _x select 5]];
-                            };
-                        //--- v5 HOTFIX (owner live repro m0801e: "pans 5 degrees resets", dirt-cam): _list is
-                        //--- Private to the pick functions - referencing it here threw "Undefined variable _list"
-                        //--- EVERY cut, and the A2 error abort skipped the rest of this block, so DirectorLastSwitch
-                        //--- was never stamped -> the dwell clock never reset -> a cut every poll: orbit angle reset
-                        //--- ~every second and every 5th rapid cut was an eyes-cam slammed into the ground.
-                        } forEach (missionNamespace getVariable ["WFBE_C_VAR_DirectorPool", []]);
-                        WFBE_C_VAR_DirectorCutReason = "ESTABLISH";
-                        if ((_entry select 5) > 0) then {WFBE_C_VAR_DirectorCutReason = "CONTACT"};
-                        WFBE_C_VAR_DirectorCurContact = _entry select 5; //--- v5: idle-dwell cap reads this.
-                        //--- v5 P3b: every Nth cut becomes a first-person look at the subject. Man only -
-                        //--- a vehicle eyePos sits inside the hull and renders as a black frame.
-                        WFBE_C_VAR_DirectorCutCount = (missionNamespace getVariable ["WFBE_C_VAR_DirectorCutCount", 0]) + 1;
-                        //--- v7 POI director (owner ruling 2026-08-01): eyes-cam is OFF in auto - POV
-                        //--- cuts on units are the unit-follow class this rewrite retires. Manual V only.
-                        WFBE_C_VAR_DirectorEyesUntil = 0;
-                        WFBE_C_VAR_SpectatorOrbitAngle = 0;
-                        _shotType = _entry Call WFBE_CL_FNC_DirectorShotType;
-                        if (_forcedType != "") then {_shotType = _forcedType};
-                        _bounds = _shotType Call WFBE_CL_FNC_DirectorShotBounds;
-                        _target = _entry select 1;
-                        _subject = vehicle _target;
-                        _subjectFovMin = 0;
-                        if (!(_subject isKindOf "Man")) then {
-                            _subjectFovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_VEH_FOV_MIN", 0.55];
-                            if (_subject isKindOf "Air") then {_subjectFovMin = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN", 0.45]};
-                        };
-                        WFBE_C_VAR_SpectatorDirectorShotType = _shotType;
-                        WFBE_C_VAR_SpectatorDirectorShotMinDwell = _bounds select 0;
-                        WFBE_C_VAR_SpectatorDirectorShotMaxDwell = _bounds select 1;
-                        WFBE_C_VAR_SpectatorDirectorTargetFov = (((_bounds select 2) + (_bounds select 3)) / 2) max _subjectFovMin;
-                        WFBE_C_VAR_DirectorContactTarget = objNull;
-                        WFBE_C_VAR_DirectorLastContactScan = 0;
-                        WFBE_C_VAR_DirectorEngagementActive = false;
-                        if ((time - WFBE_C_VAR_SpectatorLastManualZoom) >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC", 10])) then {
-                            WFBE_C_VAR_SpectatorFov = WFBE_C_VAR_SpectatorDirectorTargetFov;
-                        };
-                        WFBE_C_VAR_DirectorLastSwitch = WFBE_C_VAR_DirectorAutoTime;
-                        if ((_shotType == "WIDE") || {_shotType == "BASE"}) then {
-                            WFBE_C_VAR_DirectorLastEstablish = WFBE_C_VAR_DirectorAutoTime;
-                        };
-                        _recent = missionNamespace getVariable ["WFBE_C_VAR_DirectorRecent", []];
-                        _recent = _recent + [[_entry select 1, time]];
-                        if (count _recent > 6) then {
-                            _recentKeep = [];
-                            _recentStart = (count _recent) - 6;
-                            _i = 0;
-                            {
-                                if (_i >= _recentStart) then {_recentKeep = _recentKeep + [_x]};
-                                _i = _i + 1;
-                            } forEach _recent;
-                            _recent = _recentKeep;
-                        };
-                        WFBE_C_VAR_DirectorRecent = _recent;
-                        if (_forcedType == "BASE") then {
-                            diag_log Format ["SPECTATE|v3|base-checkin|target=%1|shot=%2|hold=%3", _entry select 0, _shotType, _bounds select 1];
-                        };
-                        if (!_pinned || {(_entry select 2) != _oldClass} || {_forcedEstablish}) then {
-                            diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3|shot=%4|fov=%5|dwell=%6|transition=cut|pooled=1|tier=%7", _entry select 2, _entry select 0, _entry select 4, _shotType, WFBE_C_VAR_SpectatorDirectorTargetFov, _bounds select 1, missionNamespace getVariable ["WFBE_C_VAR_DirectorLastPickTier", 1]];
-                        } else {
-                            diag_log Format ["SPECTATE|v3|auto-pick|class=%1|target=%2|score=%3|shot=%4|fov=%5|dwell=%6|transition=cut|tier=%7", _entry select 2, _entry select 0, _entry select 4, _shotType, WFBE_C_VAR_SpectatorDirectorTargetFov, _bounds select 1, missionNamespace getVariable ["WFBE_C_VAR_DirectorLastPickTier", 1]];
-                        };
-                    };
-                };
-            } else {
-                _now = time;
-            };
-        };
-    };
+	[] spawn {
+		Private ["_pollSec"];
+		diag_log "SPECTATE|v8|director-thread-start";
+		while {missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false] && {!(missionNamespace getVariable ["WFBE_gameover", false])}} do {
+			sleep 1;
+			if ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorMode", "free"]) == "director") then {
+				_pollSec = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TOWN_POLL_SEC", 8];
+				if ((time - (missionNamespace getVariable ["WFBE_C_VAR_DirectorLastTownPoll", 0])) >= _pollSec) then {
+					Call WFBE_CL_FNC_DirectorPollTowns;
+					WFBE_C_VAR_DirectorLastTownPoll = time;
+				};
+				if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorAuto", false]) then {
+					Call WFBE_CL_FNC_DirectorAutoStep;
+				};
+			};
+		};
+	};
 };
