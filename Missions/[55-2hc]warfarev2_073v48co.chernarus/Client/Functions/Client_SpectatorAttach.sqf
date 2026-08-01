@@ -33,6 +33,11 @@ Private ["_myUID"];
 if !((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0) exitWith {};
 
 _myUID = getPlayerUID player;
+//--- v5 (spec 8, owner 2026-08-01 "normal player slot does still have spectator camera?"): the
+//--- UID allowlist alone left the action on an allowlisted player in a COMBAT slot - clutter and
+//--- one misclick from parking a live soldier mid-firefight. Require the Caster seat too.
+//--- Set 0 to restore UID-only entry for solo testing on missions without caster seats.
+if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_CASTER_SEAT_ONLY", 1]) > 0 && {!(player getVariable ["wfbe_caster_slot", false])}) exitWith {};
 if !(_myUID in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []])) exitWith {};
 
 if (isNil "WFBE_C_VAR_SpectatorActive") then {WFBE_C_VAR_SpectatorActive = false};
