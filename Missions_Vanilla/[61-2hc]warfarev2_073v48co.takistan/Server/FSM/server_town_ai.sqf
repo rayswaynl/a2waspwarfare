@@ -191,8 +191,8 @@ while {!WFBE_GameOver} do {
 								if (!local _gdirVehRecoveryHull || {({isPlayer _x} count (crew _gdirVehRecoveryHull)) > 0}) then {
 									_gdirVehRecoveryCanRetry = false;
 								} else {
-									{if (!isPlayer _x && {local _x}) then {["gdir-recover-crew", _x, Format ["town=%1", _gdirVehRecoveryTown getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (crew _gdirVehRecoveryHull);
-									["gdir-recover-hull", _gdirVehRecoveryHull, Format ["town=%1", _gdirVehRecoveryTown getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gdirVehRecoveryHull;
+									["gdir-recover-hull-precrew", _gdirVehRecoveryHull, Format ["town=%1", _gdirVehRecoveryTown getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; //--- crash 014EFCF4 sweep: crew+hull now torn down together via the Spawn helper below (was two separate {forEach crew}+deleteVehicle lines); fire-and-forget, this FSM-adjacent file is unscheduled so Spawn (not inline sleep) is required.
+									[_gdirVehRecoveryHull, true] Spawn WFBE_CO_FNC_SafeCrewDelete;
 								};
 							};
 							if (!isNull _gdirVehRecoveryTeam && {_gdirVehRecoveryTeamOrderId == _gdirVehRecoveryOrderId}) then {

@@ -210,7 +210,7 @@ if (_greenlight) then {
 //--- In any case, cleanup the transporters.
 {
 	_transporter = _x;
-	{deleteVehicle _x} forEach crew _transporter;//--- Remove the crew.
+	{deleteVehicle _x; sleep 0} forEach crew _transporter;//--- Remove the crew. //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
 	deleteVehicle _transporter;//--- Remove the vehicle.
 } forEach _vehicles;
 
