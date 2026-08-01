@@ -1,5 +1,57 @@
 # JOURNAL — a2waspwarfare-experital
 
+## Working State 2026-08-01 — crash 014EFCF4 crew-delete sweep [fix/014e-crew-delete-sweep-20260801]
+
+Task: sweep the remaining direct crew-delete sites for crash 014EFCF4 (deleteVehicle on a Man still
+seated in a live/crewed hull, racing the engine's own seat-array move-out math — register-level
+proven, memory `wasp-crash-014efcf4-mechanism.md`, 2026-07-31). Shipped mitigations before this task:
+seated-corpse defer in `Common_TrashObject.sqf` and the inline `{deleteVehicle _x; sleep 0} forEach
+(crew _h)` fix in `AI_Commander_AirResp.sqf` (left untouched — already correct, out of this task's scope).
+
+**New helper**: `Common/Functions/Common_SafeCrewDelete.sqf`, registered as `WFBE_CO_FNC_SafeCrewDelete`
+in `Common/Init/Init_Common.sqf`. Called `[_hull, _alsoDeleteHull] Spawn WFBE_CO_FNC_SafeCrewDelete`.
+Spawn always creates a fresh SCHEDULED thread, so `sleep` is legal even when the call site itself is
+unscheduled (Compile-Call'd function, or an FSM-adjacent .sqf) — lets one helper serve every caller
+without duplicating the fix. Diag_log telemetry tagged `WASPCRASH014E|SWEEP` mirrors the seat-state
+shape already proven in `Common_TrashObject.sqf`'s `WASPCRASH014E|TRASH` line.
+
+**Classification used per site** (`grep -rn -i "forEach (crew"` across the CH mission, plus a second
+pass for the no-parens `forEach crew` idiom): (a) skipped if the block doesn't actually deleteVehicle
+a crew Man (several matches were doMove/reveal/dismount/counting only — not touched); (b) FIRE-AND-
+FORGET (nothing downstream depends on the crew/hull already being gone) → replaced with the Spawn
+helper; (c) ORDER-DEPENDENT (an immediately-following `deleteGroup`, or a `units _grp` sweep, assumes
+the crew is already removed from the group) → kept the existing synchronous shape and inserted inline
+`sleep 0` between deletes (matches the already-shipped AirResp pattern) rather than deferring async,
+since deferring would let a later `units`-based delete in the SAME routine hit the crash again via a
+different code path; (d) all Client/* sites skipped untouched (crash is server-side only).
+
+**Fire-and-forget → Spawn helper (3 sites)**: `AI_Commander_BaseSell.sqf:143`, `Support_ScudStrike.sqf:218`,
+`server_town_ai.sqf:194` (FSM-adjacent/unscheduled — Spawn is what makes this one safe at all).
+
+**Order-dependent → inline `sleep 0` (27 sites)**: `AI_Commander_Wildcard.sqf` (941, 1186),
+`AI_Commander_Wildcard_GUER.sqf` (174, 540, 544, 555, 560, 683), `Server_PatrolAirPass.sqf:106`,
+`Init_NavalHVT.sqf` (154, 1207, 1208, 1211, 1212, 1213, 1215, 1216), `Server_AicomSupplySquad.sqf:95`,
+`Server_GuerAirDef.sqf` (346, 392, 400), `Server_USVFlotilla.sqf` (243, 244),
+`Support_GuerHeliDrop.sqf:280`, `Support_CargoAirdrop.sqf` (344, 351), `Support_Paratroopers.sqf:213`.
+
+**Not a delete (skipped)**: `Common_AICOMAirLeg.sqf` (doMove only), `Common_FireArtillery.sqf` (getOut
+action only), `Common_LogVehDelete.sqf` (string building only), `Common_RunCommanderTeam.sqf:3098,3133`
+(unassignVehicle/doMove dismount only, no delete), `AI_Commander_AirStrike.sqf:308` (reveal/doTarget/
+doFire only), `AI_Commander_MHQReloc.sqf:250` (isPlayer read-only), `Server_CmdSupportAir.sqf:131`
+(reveal only), `server_town.sqf:889` and `Server_Oilfields.sqf:728` (counting only).
+
+**Verification done**: lint gate (`Tools/Lint/check_sqf.py` full --select list) — zero new findings in
+any edited/new file. Net bracket delta (`{}`/`[]`/`()`) verified zero per edited file against HEAD.
+Correctness fix, no flag gate needed per repo convention. LoadoutManager mirror run clean (`dotnet run
+-c RELEASE`), TK/ZG version.sqf.template restored + spot-verified (WF_MAXPLAYERS/STARTING_DISTANCE/
+IS_CHERNARUS_MAP_DEPENDENT/IS_NAVAL_MAP all correct per-map). TK/ZG mirrors of `Common_SafeCrewDelete.sqf`
+byte-diffed identical to CH source, CRLF-clean.
+
+**Discovered issue (not part of this sweep)**: another concurrent session briefly ran a bulk inline-
+`sleep 0` pass over the same 8 files in this shared (non-worktree) checkout before standing down in
+my favor — no data was lost (it self-reverted before I re-applied), but it's a live reminder this repo
+root is shared by multiple concurrent agents; worktree isolation is safer for any future sweep like this.
+
 ## Working State 2026-07-28 ~12:15 — m0728e CUTOVER IN FLIGHT (owner GO "deploy autonomously", changelog DM'd first per order)
 
 - **Deploy**: 26-PR update packed from tip `2d1c6a3263` (3 PBOs, read_pbo 939/939 byte-identical), staged to box `C:\WASP\staging-m0728e`, one-shot schtask `WaspCutoverM0728e` FIRED ~12:10 CEST. Cutover script = m0728c clone MINUS bounce2hc (it re-broke HC1 seating) + allocator check at end. Server+HC launchers now `-malloc=system` (owner order; server was mimalloc, HCs tbb — both switched, .pre-sysmalloc.bak backups on box).

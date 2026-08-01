@@ -171,7 +171,7 @@ while {!gameOver} do {
 										"Bo_FAB_250" createVehicle _p; "Bo_FAB_250" createVehicle _p; "Bo_FAB_250" createVehicle _p;
 									};
 									sleep 3;
-									{deleteVehicle _x} forEach (crew _v);
+									{deleteVehicle _x; sleep 0} forEach (crew _v); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
 									if (!isNull _v) then {deleteVehicle _v};
 									if (!isNull _g) then {deleteGroup _g};
 								};
@@ -537,11 +537,11 @@ while {!gameOver} do {
 									{
 										_s = _x;   //--- capture outer _x before the inner crew forEach (house rule).
 										if (!isNull _s && {({isPlayer _x} count (crew _s)) == 0}) then {
-											{deleteVehicle _x} forEach (crew _s);
+											{deleteVehicle _x; sleep 0} forEach (crew _s); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
 											deleteVehicle _s;
 										};
 									} forEach _stats;
-									if (!isNull _v && {({isPlayer _x} count (crew _v)) == 0}) then {{deleteVehicle _x} forEach (crew _v); deleteVehicle _v};
+									if (!isNull _v && {({isPlayer _x} count (crew _v)) == 0}) then {{deleteVehicle _x; sleep 0} forEach (crew _v); deleteVehicle _v}; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
 									if (!isNull _g) then {{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _g); deleteGroup _g};
 									deleteMarker _marker;
 								};
@@ -552,12 +552,12 @@ while {!gameOver} do {
 									{
 										_seatStatic = _x;
 										if (!isNull _seatStatic && {({isPlayer _x} count (crew _seatStatic)) == 0}) then {
-											{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (crew _seatStatic);
+											{if (!(isPlayer _x)) then {deleteVehicle _x; sleep 0}} forEach (crew _seatStatic); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
 											deleteVehicle _seatStatic;
 										};
 									} forEach _statics;
 									if (!isNull _veh && {({isPlayer _x} count (crew _veh)) == 0}) then {
-										{if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (crew _veh);
+										{if (!(isPlayer _x)) then {deleteVehicle _x; sleep 0}} forEach (crew _veh); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
 										deleteVehicle _veh;
 									};
 									if (!isNull _grp) then {
@@ -680,7 +680,7 @@ while {!gameOver} do {
 							};
 
 							//--- CLEANUP: husk + crew + foot + group + marker.
-							if (!isNull _v) then {{deleteVehicle _x} forEach (crew _v); deleteVehicle _v};
+							if (!isNull _v) then {{deleteVehicle _x; sleep 0} forEach (crew _v); deleteVehicle _v}; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
 							{deleteVehicle _x} forEach (units _g);
 							if (!isNull _g) then {deleteGroup _g};
 							deleteMarker _marker;

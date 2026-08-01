@@ -240,8 +240,8 @@ while {!WFBE_GameOver} do {
 			_boatHasPlayer   = if (isNull _eBoat) then {false} else {({isPlayer _x} count (crew _eBoat)) > 0};
 			_staticHasPlayer = if (isNull _eStatic) then {false} else {({isPlayer _x} count (crew _eStatic)) > 0};
 			if (!_boatHasPlayer && !_staticHasPlayer) then {
-				if (!isNull _eStatic && {alive _eStatic}) then { {["usv-static-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _eStatic); ["usv-static-hull", _eStatic, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eStatic; };
-				if (!isNull _eBoat   && {alive _eBoat})   then { {["usv-boat-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _eBoat);   ["usv-boat-hull", _eBoat, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eBoat;   };
+				if (!isNull _eStatic && {alive _eStatic}) then { {["usv-static-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _eStatic); ["usv-static-hull", _eStatic, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eStatic; }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
+				if (!isNull _eBoat   && {alive _eBoat})   then { {["usv-boat-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _eBoat);   ["usv-boat-hull", _eBoat, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eBoat;   }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
 				//--- r70 empty-group lifecycle: wipe path only deleted crew when hulls still ALIVE; corpse-only
 //--- groups made deleteGroup a silent no-op. Purge non-player group members first.
 if (!isNull _eGrp) then {

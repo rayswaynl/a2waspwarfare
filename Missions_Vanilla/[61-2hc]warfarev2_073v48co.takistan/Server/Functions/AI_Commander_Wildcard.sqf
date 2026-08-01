@@ -938,7 +938,7 @@ while {!gameOver} do {
 												//--- SERVER-LOCAL because W13 spawns directly here and is never delegate-aicom-team'd). deleteGroup is
 												//--- skipped on that branch too - the dead crew are still in the group; TrashObject reaps it once empty.
 												if (alive _heli) then {
-													{deleteVehicle _x} forEach (crew _heli);
+													{deleteVehicle _x; sleep 0} forEach (crew _heli); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
 													if (!isNull _heli) then {deleteVehicle _heli};
 													if (!isNull _grp) then {deleteGroup _grp};
 												};
@@ -1183,7 +1183,7 @@ while {!gameOver} do {
 											//--- unconditionally, reaping the WRECK of a top-gun plane that was shot down inside the window.
 											//--- Despawn only a still-live airframe; a destroyed one is left to the generic pipeline.
 											if (alive _pl) then {
-												{deleteVehicle _x} forEach (crew _pl);
+												{deleteVehicle _x; sleep 0} forEach (crew _pl); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
 												if (!isNull _pl) then {deleteVehicle _pl};
 												if (!isNull _grp) then {deleteGroup _grp};
 											};
