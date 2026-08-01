@@ -56,11 +56,31 @@ if (_vehi != player) then {player action ["EJECT", _vehi];_vehi = player};
 _vehi setVelocity [0,0,-0.1];
 _vehi setPos ([getPos _hq,20,30] Call GetRandomPosition);
 
+//--- Death/observer camera lifecycle (bughunt r36 residual): live death cam is WFBE_DeathCamera
+//--- (Client_OnKilled / GUI_RespawnMenu). The legacy DeathCamera name was never assigned after the
+//--- WFBE_ rename, so endgame left the Internal death cam + colorCorrections/dynamicBlur latched
+//--- under the victory flyover and leaked the camera object. Tear down both names; always clear PP;
+//--- also fail-clean free-cam spectator if active (cam + display EHs + parked-body invuln).
+if (!isNil "WFBE_DeathCamera") then {
+	if (!isNull WFBE_DeathCamera) then {
+		WFBE_DeathCamera cameraEffect ["TERMINATE", "BACK"];
+		camDestroy WFBE_DeathCamera;
+	};
+	WFBE_DeathCamera = nil;
+};
 if (!isNil "DeathCamera") then {
-	DeathCamera cameraEffect["TERMINATE","BACK"];
-	camDestroy DeathCamera;
-	"colorCorrections" ppEffectEnable false;
-	"dynamicBlur" ppEffectEnable false;
+	if (!isNull DeathCamera) then {
+		DeathCamera cameraEffect ["TERMINATE", "BACK"];
+		camDestroy DeathCamera;
+	};
+	DeathCamera = nil;
+};
+"colorCorrections" ppEffectEnable false;
+"dynamicBlur" ppEffectEnable false;
+if (!isNil "WFBE_CL_FNC_SpectatorExit") then {
+	if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) then {
+		[] Call WFBE_CL_FNC_SpectatorExit;
+	};
 };
 
 _camera = "camera" camCreate (getPos (_blist select 0));

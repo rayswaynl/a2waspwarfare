@@ -891,4 +891,9 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 		};
 		};
 	};
+	//--- Fail-clean: while can exit on WFBE_gameover (or Active cleared externally) without the
+	//--- death-watchdog exitWith path, leaving cam + display EHs + parked-body invuln/captive latched.
+	if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) then {
+		[] Call WFBE_CL_FNC_SpectatorExit;
+	};
 };
