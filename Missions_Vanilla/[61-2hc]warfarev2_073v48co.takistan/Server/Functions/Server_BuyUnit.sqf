@@ -357,7 +357,11 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 	emptyQueu = emptyQueu + [_vehicle];
 	[_vehicle] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
-	if (_vehicle distance (leader _team) < 200) then {(units _team) allowGetIn true;_team addVehicle _vehicle};
+	//--- AI refills may be spawned at a forward factory while the team is still up to the
+	//--- commander reinforce range away. Register the hull with the team unconditionally;
+	//--- the distance gate left a crewed, paid vehicle outside the team's vehicle graph.
+	(units _team) allowGetIn true;
+	_team addVehicle _vehicle;
 
 	//--- Clear the vehicle.
 	(_vehicle) call WFBE_CO_FNC_ClearVehicleCargo;
