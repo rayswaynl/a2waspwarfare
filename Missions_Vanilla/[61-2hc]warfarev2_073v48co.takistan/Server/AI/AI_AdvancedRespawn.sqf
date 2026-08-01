@@ -1,5 +1,5 @@
 /* Enhanced Respawn Management via Multiplayer Event Handler - Experimental */
-Private ['_autonomous','_availableSpawn','_buildings','_checks','_closestRespawn','_corpse','_deadspawnGuardApplied','_deathLoc','_hq','_i','_isForcedRespawn','_mobileRespawns','_moveMode','_pos','_ran','_range','_rcm','_rd','_respawn','_respawnLoc','_respawnedUnit','_side','_sideID','_sideText','_skip','_team','_update','_upgrades'];
+Private ['_autonomous','_availableSpawn','_buildings','_checks','_closestRespawn','_corpse','_deadspawnGuardApplied','_deathLoc','_hq','_i','_isForcedRespawn','_mobileRespawns','_moveMode','_penParked','_penPos','_pos','_ran','_range','_rcm','_rd','_respawn','_respawnLoc','_respawnedUnit','_side','_sideID','_sideText','_skip','_team','_update','_upgrades'];
 
 _respawnedUnit = _this select 0;
 _corpse = _this select 1;
@@ -27,7 +27,22 @@ _respawnedUnit removeAllEventHandlers "Killed";
 _respawnedUnit addEventHandler ['Killed', Format["[_this select 0,_this select 1,%1] Spawn WFBE_CO_FNC_OnUnitKilled", _sideID]];
 
 //--- Place the leader on a 'safe' position.
-_respawnedUnit setPos getMarkerPos Format["%1TempRespawnMarker",_sideText];
+//--- fable/deadspawn-ai-pen (owner 2026-08-01): same relocation as AI_SquadRespawn.sqf - park the
+//--- waiting body at the shared in-bounds underwater pen (Common_DeadspawnPenPos.sqf) instead of
+//--- the land TempRespawnMarker ring near the northern front. Resolver output passes the same
+//--- WFBE_BOUNDARIESXY square Client_IsOnMap.sqf tests, so the offmap force-kill can never fire
+//--- on the pen. isNil guard: resolver not yet registered (Init_Common.sqf execVM race) falls
+//--- back to the legacy marker park.
+_penParked = false;
+_penPos = [];
+if (((missionNamespace getVariable ["WFBE_C_DEADSPAWN_AI_PEN", 0]) > 0) && {!isNil "WFBE_CO_FNC_DeadspawnPenPos"}) then {
+	_penPos = [] Call WFBE_CO_FNC_DeadspawnPenPos;
+	_respawnedUnit setPos _penPos;
+	_penParked = true;
+	["INFORMATION", Format ["DEADSPAWN_AI_PEN|park|side=%1|unit=%2|pos=%3", _sideText, _respawnedUnit, _penPos]] Call WFBE_CO_FNC_LogContent;
+} else {
+	_respawnedUnit setPos getMarkerPos Format["%1TempRespawnMarker",_sideText];
+};
 
 	//--- DEADSPAWN GUARD (fable/deadspawn-guard, Ray 2026-07-04): the leader is now parked on its side's
 	//--- TempRespawnMarker for the respawn wait below. The three side markers sit 44-128m apart on one
@@ -37,7 +52,11 @@ _respawnedUnit setPos getMarkerPos Format["%1TempRespawnMarker",_sideText];
 	//--- the hold: setCaptive true stops it firing on / being targeted by other sides, allowDamage false
 	//--- stops stray fire killing it there. Restored before it leaves the marker (see release below). Same
 	//--- allowDamage/setCaptive idiom as WFBE_HC_FNC_ParkDeadspawn (Init_HC.sqf). A2-OA-1.64 safe.
-	if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_GUARD", 1]) > 0 && {alive _respawnedUnit}) then {
+	//--- fable/deadspawn-ai-pen: a pen-parked body waits ~8m under water - the invulnerability hold
+	//--- below is MANDATORY there (drowning is engine damage; allowDamage false blocks it), so the
+	//--- pen path forces the hold regardless of the WFBE_C_DEADSPAWN_GUARD toggle (which keeps its
+	//--- existing meaning for the legacy land park).
+	if ((_penParked || {(missionNamespace getVariable ["WFBE_C_DEADSPAWN_GUARD", 1]) > 0}) && {alive _respawnedUnit}) then {
 		_respawnedUnit setCaptive true;
 		_respawnedUnit allowDamage false;
 		_deadspawnGuardApplied = true;
@@ -83,6 +102,9 @@ if (isPlayer(_respawnedUnit) || !(alive _respawnedUnit)) then {_skip = true};
 
 //--- A skipped player handoff bypasses normal AI movement, so restore the state here.
 if (_skip && _deadspawnGuardApplied && {alive _respawnedUnit}) then {
+	//--- fable/deadspawn-ai-pen: surface the body BEFORE damage returns - releasing it 8m under
+	//--- water would let the engine drown the bot (or the just-joined player) at the pen.
+	if (_penParked && {(count _penPos) > 1}) then {_respawnedUnit setPos [_penPos select 0, _penPos select 1, 0]};
 	_respawnedUnit setCaptive false;
 	_respawnedUnit allowDamage true;
 	["INFORMATION", Format ["DEADSPAWN_GUARD|release|side=%1|unit=%2|skip=%3", _sideText, _respawnedUnit, _skip]] Call WFBE_CO_FNC_LogContent;
@@ -143,6 +165,10 @@ if !(_skip) then {
 	
 	//--- Normal AI remains guarded until immediately before it leaves the temp marker.
 	if (_deadspawnGuardApplied && {alive _respawnedUnit}) then {
+		//--- fable/deadspawn-ai-pen: surface first - the null-respawnLoc branch below keeps the park,
+		//--- and an armed-again body must never be left 8m under water. The normal branch setPos to
+		//--- _respawnLoc right after makes this a harmless double move.
+		if (_penParked && {(count _penPos) > 1}) then {_respawnedUnit setPos [_penPos select 0, _penPos select 1, 0]};
 		_respawnedUnit setCaptive false;
 		_respawnedUnit allowDamage true;
 		["INFORMATION", Format ["DEADSPAWN_GUARD|release|side=%1|unit=%2|skip=%3", _sideText, _respawnedUnit, _skip]] Call WFBE_CO_FNC_LogContent;
