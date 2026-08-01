@@ -167,7 +167,7 @@ WFBE_CL_FNC_SpectatorCycleTarget = {
 	{
 		if (!isNil "_x") then {
 			//--- HC bodies are isPlayer-true; never offer them as watch targets (owner 2026-07-30).
-			if (alive _x && {isPlayer _x} && {!(_x == player)} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {_list = _list + [_x]};
+			if (alive _x && {isPlayer _x} && {(side _x) != civilian} && {!(_x == player)} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {_list = _list + [_x]}; //--- CIV humans = caster/HC bodies, never watchable (owner 2026-08-01)
 			//--- v5 P3 (5b, owner 2026-08-01): GUER is AI-only, so the isPlayer test above excluded the
 			//--- ENTIRE insurgency from the watch cycle. Add GUER GROUP LEADERS only - GUER volume is
 			//--- deliberately uncapped, one entry per squad keeps the cycle usable.
@@ -880,6 +880,9 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 					};
 				};
 				default {
+					//--- v5 P4: frame handler owns the free-cam while its stamp is fresh; this scheduled
+					//--- path is the graceful fallback only (stale >1s = onEachFrame lost).
+					if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_FREECAM_FRAME", 1]) > 0 && {(diag_tickTime - (missionNamespace getVariable ["WFBE_C_VAR_SpectatorAimFrameTick", -99])) < 1}) exitWith {};
 					_cy = cos _y; _sy = sin _y; _cp = cos _pt; _sp = sin _pt;
 					_fwd = [_sy * _cp, _cy * _cp, _sp];
 					_right = [_cy, -_sy, 0];
