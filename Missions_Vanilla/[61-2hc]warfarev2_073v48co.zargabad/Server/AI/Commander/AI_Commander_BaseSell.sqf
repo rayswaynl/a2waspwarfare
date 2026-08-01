@@ -140,7 +140,7 @@ if (isNull _victim) exitWith {};                  //--- nothing redundant to sel
 _refund = round (_victimCost * ((missionNamespace getVariable ["WFBE_C_AICOM_SELL_REFUND_FRAC", 0.5]) max 0));
 if (_victimType == "CommanderArtillery") then {
 	if (_refund > 0) then {[_side, _refund] Call ChangeAICommanderFunds};
-	{deleteVehicle _x} forEach (crew _victim);
+	[_victim, true] Spawn WFBE_CO_FNC_SafeCrewDelete; //--- crash 014EFCF4 sweep: was {deleteVehicle _x} forEach (crew _victim); ... deleteVehicle _victim; fire-and-forget (nothing below depends on crew/hull already being gone), hull delete folded into the helper (_alsoDeleteHull=true).
 	_artyReg = _logik getVariable ["wfbe_aicom_arty_reg", []];
 	if (typeName _artyReg != "ARRAY") then {_artyReg = []};
 	_artyRegLive = [];
@@ -148,7 +148,6 @@ if (_victimType == "CommanderArtillery") then {
 		if (!isNull _x && {_x != _victim} && {alive _x}) then {_artyRegLive set [count _artyRegLive, _x]};
 	} forEach _artyReg;
 	_logik setVariable ["wfbe_aicom_arty_reg", _artyRegLive];
-	deleteVehicle _victim;
 	["INFORMATION", Format ["AI_Commander_BaseSell.sqf: [%1] SOLD stranded base-artillery (cost %2, refunded %3 funds).", _sideText, _victimCost, _refund]] Call WFBE_CO_FNC_AICOMLog;
 	diag_log ("AICOM2|v1|SELL|" + _sideText + "|" + str (round (time / 60)) + "|event=BASE_SELL|type=CommanderArtillery|cost=" + str _victimCost + "|refund=" + str _refund);
 } else {

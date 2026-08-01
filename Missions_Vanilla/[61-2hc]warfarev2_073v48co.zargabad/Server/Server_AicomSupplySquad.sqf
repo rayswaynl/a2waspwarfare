@@ -92,7 +92,7 @@ while {!WFBE_GameOver} do {
 
 		if (_drop) then {
 			if (_reason != "destroyed" && {!isNull _eVeh} && {({isPlayer _x} count (crew _eVeh)) == 0}) then {
-				{["aicomsupply-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _eVeh);
+				{["aicomsupply-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _eVeh); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
 				["aicomsupply-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh;
 				if (!isNull _eGrp) then {deleteGroup _eGrp};
 			};

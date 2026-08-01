@@ -341,14 +341,14 @@ if (!_dropReady) then {
 	{if (!isNull _x) then {deleteVehicle _x}} forEach _pendingCargo;
 };
 if (!isNull _vehicle) then {
-	{deleteVehicle _x} forEach crew _vehicle;
+	{deleteVehicle _x; sleep 0} forEach crew _vehicle; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
 	deleteVehicle _vehicle;
 };
 if (!isNull _pilot) then {deleteVehicle _pilot};
 //--- Stage B escort cleanup: members deleted BEFORE the shared group (deleteGroup silently no-ops
 //--- on a non-empty group - the same trap already fixed in Support_ParaVehicles.sqf).
 if (!isNull _escortJet) then {
-	{deleteVehicle _x} forEach crew _escortJet;
+	{deleteVehicle _x; sleep 0} forEach crew _escortJet; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
 	deleteVehicle _escortJet;
 };
 if (!isNull _escortPilot) then {deleteVehicle _escortPilot};
