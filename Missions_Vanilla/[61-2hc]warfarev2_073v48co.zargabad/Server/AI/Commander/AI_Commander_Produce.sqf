@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_capRemaining","_capCost","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_factoryTargetOn","_factoryOrder","_factoryAnchor","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
+private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_capRemaining","_capCost","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_crewSlots","_hasCommander","_hasGunner","_extraTurretCount","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_factoryTargetOn","_factoryOrder","_factoryAnchor","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
 
 _side = _this;
 _sideText = str _side;
@@ -548,10 +548,29 @@ if (_airMaxTotalP > 0) then {
 
 				_ud = missionNamespace getVariable _toBuild;
 				if (isNil "_ud") exitWith {};
-				//--- Reserve the maximum bodies Server_BuyUnit can materialize from this async order.
-				//--- Vehicle orders request driver, gunner, commander, and every configured turret crew.
+				//--- Match Server_BuyUnit's driver + optional-seat contract to the effective catalog tuple.
+				//--- QUERYUNITCREW = [commander, gunner, totalCrewIncludingDriver, extraTurrets].
+				_crewSlots = _ud select QUERYUNITCREW;
+				_hasCommander = false;
+				_hasGunner = false;
+				_extraTurretCount = 0;
 				_capCost = 1;
-				if (!(_toBuild isKindOf "Man")) then {_capCost = 3 + count (_ud select QUERYUNITTURRETS)};
+				if (!(_toBuild isKindOf "Man")) then {
+					_extraTurretCount = count (_ud select QUERYUNITTURRETS);
+					if (typeName _crewSlots == "ARRAY") then {
+						_hasCommander = _crewSlots select 0;
+						_hasGunner = _crewSlots select 1;
+					} else {
+						//--- Backward-compatible scalar crew tuple: driver, gunner, commander.
+						switch (_crewSlots) do {
+							case 2: {_hasGunner = true};
+							case 3: {_hasGunner = true; _hasCommander = true};
+						};
+					};
+					if (_hasGunner) then {_capCost = _capCost + 1};
+					if (_hasCommander) then {_capCost = _capCost + 1};
+					_capCost = _capCost + _extraTurretCount;
+				};
 				if (_capRemaining < _capCost) exitWith {};
 
 				_typeName = _fac select 0;
@@ -601,7 +620,7 @@ if (_airMaxTotalP > 0) then {
 					if (_funds < _priceCharged) exitWith {}; //--- Cannot afford the actual discounted charge; stop batch.
 					[_side, -_priceCharged] Call ChangeAICommanderFunds;
 					diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|UNIT_PRODUCED|class=" + _toBuild + "|factory=" + _typeName + "|cost=" + str _priceCharged + "|listCost=" + str _price + "|batch=" + str (_batchOrdered + 1));
-				_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true,true,true,true]};
+				_isVeh = if (_toBuild isKindOf "Man") then {[]} else {[true, _hasGunner, _hasCommander, (_extraTurretCount > 0)]};
 				_id = [floor (random 1000000)];
 				_q = _team getVariable "wfbe_queue";
 				if (isNil "_q") then {_q = []};
