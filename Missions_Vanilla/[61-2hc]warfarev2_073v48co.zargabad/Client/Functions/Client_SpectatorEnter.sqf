@@ -981,11 +981,15 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 		//--- ~100x/s - two writers fighting = jitter-locked camera. The frame handler is the ONLY
 		//--- position writer while alive; yaw/pitch stay loop-written (the mouse handler owns them
 		//--- and _y/_pt are pass-through reads, not integrations).
+		//--- v5 P4 HOTFIX 2 (owner: "mouse view still impossible"): yaw/pitch writeback was left
+		//--- unconditional on the theory they are pass-through - WRONG: the mouse handler updates the
+		//--- globals BETWEEN this loop's top-read and this bottom-write, so under scheduler load the
+		//--- stale write-back ERASED most mouse input. Same two-writer stomp as position; same guard.
 		if (!((_mode == "free") && {(missionNamespace getVariable ["WFBE_C_SPECTATOR_FREECAM_FRAME", 1]) > 0} && {(diag_tickTime - (missionNamespace getVariable ["WFBE_C_VAR_SpectatorAimFrameTick", -99])) < 1})) then {
 			WFBE_C_VAR_SpectatorPos = _p;
+			WFBE_C_VAR_SpectatorYaw = _y;
+			WFBE_C_VAR_SpectatorPitch = _pt;
 		};
-		WFBE_C_VAR_SpectatorYaw = _y;
-		WFBE_C_VAR_SpectatorPitch = _pt;
 		if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_BROADCAST_HUD", 0]) > 0) then {
 			[] Call WFBE_CL_FNC_SpectatorBroadcastHudUpdate;
 		} else {
