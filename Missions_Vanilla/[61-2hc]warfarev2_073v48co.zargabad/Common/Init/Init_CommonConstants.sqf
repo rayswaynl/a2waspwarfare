@@ -3426,6 +3426,24 @@ if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 25};	//--- owne
 if (isNil "WFBE_C_SPECTATOR_FOV_MIN") then {WFBE_C_SPECTATOR_FOV_MIN = 0.05};
 if (isNil "WFBE_C_SPECTATOR_AIM_RATE") then {WFBE_C_SPECTATOR_AIM_RATE = 3.5}; //--- v5 P1 follow-aim easing rate (1/s): time-constant ~0.29s, council C8 band 0.25-0.4s. Only read by Client_SpectatorAimFrame.sqf.
 if (isNil "WFBE_C_SPECTATOR_FOV_MAX") then {WFBE_C_SPECTATOR_FOV_MAX = 1.2};
+//--- v5 P3 (owner 2026-08-01): when the director TRACKS a subject (orbit off) the camera should
+//--- sit FLATTER than when it orbits - a near-horizontal angle looks down the line of travel and
+//--- sees further, reading as a chase/broadcast shot; the taller angle is what keeps a CIRCLING
+//--- shot legible. Scales shot HEIGHT only, so radius/apparent size are unchanged.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TRACK_HEIGHT_MULT") then {WFBE_C_SPECTATOR_DIRECTOR_TRACK_HEIGHT_MULT = 0.45};
+//--- v5 P3: occasional first-person cut - every Nth director cut becomes an eyes/POV shot on the
+//--- armed subject (Man subjects only; a vehicle eyePos sits inside the hull). 0 = never.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_EYES_EVERY") then {WFBE_C_SPECTATOR_DIRECTOR_EYES_EVERY = 5};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_EYES_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_EYES_SEC = 6};
+//--- v5 P3 (5b): allow GUER (resistance) AI group leaders as manual N/B watch targets. GUER is
+//--- AI-only, so the isPlayer filter in the cycle excluded the entire insurgency.
+if (isNil "WFBE_C_SPECTATOR_TARGET_GUER") then {WFBE_C_SPECTATOR_TARGET_GUER = 1};
+//--- v5: max seconds a NO-contact shot may hold the screen before the director re-picks.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC = 3};
+//--- v5 P3b (spec 7a): seconds of no caster input after which transient operator chrome (keybind
+//--- wall + shot list) fades, leaving only the compact status line. On a single-PC stream the
+//--- caster screen IS the stream, so idle must resolve to a clean broadcast frame by itself.
+if (isNil "WFBE_C_SPECTATOR_HUD_FADE_SEC") then {WFBE_C_SPECTATOR_HUD_FADE_SEC = 6};
 
 //--- Spectator v3 director: explicit opt-in. All director code paths read this master gate.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR") then {WFBE_C_SPECTATOR_DIRECTOR = 1}; //--- ARMED on owner order 2026-07-30 ("fold v3 in now"), after an adversarial review found and a fix landed for the blocker that made this feature silently do nothing: the poll thread was started after the movement loop had already exited. Blast radius is one client - spectator entry is gated to WFBE_C_SPECTATOR_UIDS - so this only ever runs for an allowlisted caster. Rollback = set to 0 and rebuild.
@@ -3489,17 +3507,17 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_BASE_MIN_DWELL") then {WFBE_C_SPECTATOR_DIR
 //--- BASE upper dwell bound in seconds.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_BASE_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_BASE_MAX_DWELL = 9};
 //--- MEDIUM lower FOV bound.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN = 0.5};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN = 0.28};
 //--- MEDIUM upper FOV bound.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX = 0.65};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX = 0.4};
 //--- MEDIUM lower dwell bound in seconds.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL = 4};
 //--- MEDIUM upper dwell bound in seconds.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL = 7};
 //--- TIGHT lower FOV bound.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN = 0.35};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN = 0.12};
 //--- TIGHT upper FOV bound.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX = 0.5};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX = 0.2};
 //--- TIGHT lower dwell bound in seconds.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL = 3}; //--- v4: 1.5-3s tight shots ended before the (now faster) zoom arrived.
 //--- TIGHT upper dwell bound in seconds.
@@ -3511,13 +3529,13 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT") then {WFBE_C_SPECTATOR_DIRECT
 //--- WIDE and BASE orbit rate in degrees per second.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_ORBIT_DEG_PER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_ORBIT_DEG_PER_SEC = 4};
 //--- MEDIUM camera standoff radius in metres.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS = 18};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS = 70};
 //--- MEDIUM camera height above target in metres.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT = 12};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT = 30};
 //--- TIGHT camera standoff radius in metres.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS = 8};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS = 35};
 //--- TIGHT camera height above target in metres.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT = 4};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT = 14};
 //--- seconds of velocity feed-forward for moving director and manual-follow subjects.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_LEAD_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_LEAD_SEC = 0.4};
 //--- multiplier for position convergence when subject speed exceeds 8 m/s.

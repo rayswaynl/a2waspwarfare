@@ -67,6 +67,7 @@ _myUID = getPlayerUID player;
 if !(_myUID in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []])) exitWith {}; //--- belt-and-braces re-check; the addAction condition already gates this.
 
 WFBE_C_VAR_SpectatorActive = true;
+WFBE_C_VAR_SpectatorLastInput = time; //--- v5 hotfix: seed the HUD fade clock so keybinds show on entry.
 WFBE_C_VAR_SpectatorBody = player; //--- pin the exact body this session belongs to.
 WFBE_C_VAR_SpectatorMode = "free";
 WFBE_C_VAR_SpectatorTarget = objNull;
@@ -167,11 +168,17 @@ WFBE_CL_FNC_SpectatorCycleTarget = {
 		if (!isNil "_x") then {
 			//--- HC bodies are isPlayer-true; never offer them as watch targets (owner 2026-07-30).
 			if (alive _x && {isPlayer _x} && {!(_x == player)} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {_list = _list + [_x]};
+			//--- v5 P3 (5b, owner 2026-08-01): GUER is AI-only, so the isPlayer test above excluded the
+			//--- ENTIRE insurgency from the watch cycle. Add GUER GROUP LEADERS only - GUER volume is
+			//--- deliberately uncapped, one entry per squad keeps the cycle usable.
+			if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_TARGET_GUER", 1]) > 0) then {
+				if (alive _x && {!(isPlayer _x)} && {(side _x) == resistance} && {_x == (leader (group _x))}) then {_list = _list + [_x]};
+			};
 		};
 	} forEach allUnits;
 	if (count _list == 0) exitWith {
 		WFBE_C_VAR_SpectatorTarget = objNull;
-		systemChat "[WASP] Spectator: no other alive players to watch.";
+		systemChat "[WASP] Spectator: nothing to watch (no other players, no live GUER squads).";
 	};
 	_cur = WFBE_C_VAR_SpectatorTarget;
 	_idx = -1;
@@ -186,7 +193,11 @@ WFBE_CL_FNC_SpectatorCycleTarget = {
 		_next = _list select ((_idx + _step + (count _list)) % (count _list));
 	};
 	WFBE_C_VAR_SpectatorTarget = _next;
-	systemChat Format ["[WASP] Spectator target: %1 (F follow, V eyes)", name _next];
+	if ((side _next) == resistance) then {
+		systemChat Format ["[WASP] Spectator target: GUER squad (%1 alive) (F follow, V eyes)", ({alive _x} count (units (group _next)))];
+	} else {
+		systemChat Format ["[WASP] Spectator target: %1 (F follow, V eyes)", name _next];
+	};
 };
 
 //--- v4: shared subject kinematics for follow/director. _this = [target, dt].
@@ -243,17 +254,35 @@ WFBE_CL_FNC_SpectatorBroadcastHudUpdate = {
 	if (_mode == "director") then {_shot = toUpper (missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorShotType", "WIDE"])};
 	_auto = "OFF";
 	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0 && {missionNamespace getVariable ["WFBE_C_VAR_SpectatorDirectorAuto", false]}) then {_auto = "ON"};
+	//--- v5 P3b (spec 7a): on a single-PC stream the caster screen IS the stream, so operator
+	//--- chrome is split by LIFETIME rather than hidden: one compact status line stays, the
+	//--- keybind wall and shot list fade after WFBE_C_SPECTATOR_HUD_FADE_SEC of no input and
+	//--- return on the next keypress. A caster who stops touching the controls is left with a
+	//--- clean broadcast frame automatically.
+	Private ["_idle","_reason","_shotList","_listHtml","_entryS"];
+	_idle = time - (missionNamespace getVariable ["WFBE_C_VAR_SpectatorLastInput", 0]);
+	_reason = missionNamespace getVariable ["WFBE_C_VAR_DirectorCutReason", ""];
 	_topHtml = Format [
-		"<t align='left' size='1.05' color='#FFFFFF' shadow='2'>SHOT %1</t><br/><t align='left' size='0.92' color='#D8F3FF' shadow='2'>TARGET %2 | DIRECTOR AUTO %3</t>",
+		"<t align='left' size='0.85' color='#D8F3FF' shadow='2'>%1 | %2 | AUTO %3%4</t>",
 		_shot,
 		_targetText,
-		_auto
+		_auto,
+		if (_reason != "") then {" | " + _reason} else {""}
 	];
 	_topBg ctrlShow true;
 	_topText ctrlShow true;
 	_topText ctrlSetStructuredText (parseText _topHtml);
-	if (_hudMode > 1) then {
-		_keysHtml = "<t align='left' size='0.95' color='#FFFFFF' shadow='2'>H HUD: FULL > MINIMAL > OFF  |  M MAP  |  WASD MOVE  |  SPACE/CTRL ALTITUDE</t><br/><t align='left' size='0.88' color='#D8F3FF' shadow='2'>N/B TARGET  |  F FOLLOW  |  V EYES  |  G DIRECTOR  |  BACKSPACE EXIT</t>";
+	if (_hudMode > 1 && {_idle < (missionNamespace getVariable ["WFBE_C_SPECTATOR_HUD_FADE_SEC", 6])}) then {
+		//--- shot list: the director's runners-up this poll, so the caster can see what is being
+		//--- passed over instead of discovering it after the cut.
+		_listHtml = "";
+		_shotList = missionNamespace getVariable ["WFBE_C_VAR_DirectorShotList", []];
+		{
+			_entryS = _x;
+			_listHtml = _listHtml + Format ["  %1 (%2/%3)", _entryS select 0, _entryS select 1, _entryS select 2];
+		} forEach _shotList;
+		if (_listHtml != "") then {_listHtml = "<br/><t align='left' size='0.82' color='#9FD8B0' shadow='2'>NEXT:" + _listHtml + "</t>"};
+		_keysHtml = "<t align='left' size='0.95' color='#FFFFFF' shadow='2'>H HUD: FULL > MINIMAL > OFF  |  M MAP  |  WASD MOVE  |  SPACE/CTRL ALTITUDE</t><br/><t align='left' size='0.88' color='#D8F3FF' shadow='2'>N/B TARGET  |  F FOLLOW  |  V EYES  |  G DIRECTOR  |  BACKSPACE EXIT</t>" + _listHtml;
 		_keysBg ctrlShow true;
 		_keysText ctrlShow true;
 		_keysText ctrlSetStructuredText (parseText _keysHtml);
@@ -458,6 +487,7 @@ WFBE_CL_FNC_SpectatorKeyDown = {
 		case 14: {[] Call WFBE_CL_FNC_SpectatorExit}; //--- Backspace: quick exit
 		default {_handled = false}; //--- unhandled keys (Esc, chat, etc.) fall through to the game.
 	};
+	if (_handled) then {WFBE_C_VAR_SpectatorLastInput = time}; //--- v5 P3b: fade-timer reference for operator chrome (spec 7a).
 	_handled //--- consume handled keys so the parked body never acts on camera input.
 };
 
@@ -772,7 +802,12 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 							_lastDirectorStandoffTarget = _t;
 							if (!(_subject isKindOf "Man")) then {diag_log Format ["SPECTATE|v3|veh-standoff|mult=%1", _standoffMult]};
 						};
-						if (_engaged && {(_shotType == "TIGHT") || {_shotType == "MEDIUM"}}) then {
+						//--- v5 P3 (owner 2026-08-01): the old engaged branch PINNED the camera static behind the
+						//--- subject on TIGHT/MEDIUM - firing exactly when action peaked, and the source of the
+						//--- "very close close-ups" complaint. Engaged subjects now orbit like any other; the
+						//--- standoff retune (radius x~4, FOV /~3) keeps subject size on screen unchanged.
+						//--- Static-behind survives only as the explicit manual orbit-off pose (O toggle).
+						if (false) then {
 							_shotDir = getDir _t;
 							_angle = (_shotDir + 180) % 360;
 						} else {
@@ -786,6 +821,12 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 							} else {
 								_angle = WFBE_C_VAR_SpectatorOrbitAngle;
 							};
+						};
+						//--- v5 P3: flatten while TRACKING (orbit off) to see down the line of travel; keep the
+						//--- taller angle while ORBITING. Height only - radius/apparent size unchanged.
+						if (!WFBE_C_VAR_SpectatorOrbit) then {
+							_shotHeight = _shotHeight * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TRACK_HEIGHT_MULT", 0.45]);
+							if (_shotHeight < 8) then {_shotHeight = 8}; //--- v5 hotfix: floor vs terrain microrelief.
 						};
 						_wantPos = [(_center select 0) + (_shotRadius * sin _angle), (_center select 1) + (_shotRadius * cos _angle), (_center select 2) + _shotHeight];
 						if (_t != _lastDirectorTarget) then {
@@ -824,8 +865,18 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 						_hd = sqrt (((_tx - (_p select 0)) ^ 2) + ((_ty - (_p select 1)) ^ 2));
 						_y = (((_tx - (_p select 0)) atan2 (_ty - (_p select 1))) + 360) % 360;
 						_pt = (((_tz - (_p select 2)) atan2 (_hd max 0.01)) max -80) min 80;
-						WFBE_C_VAR_SpectatorCam camSetPos _smoothPos;
-						WFBE_C_VAR_SpectatorCam camSetTarget _smoothAim;
+						//--- v5 P3b: scheduled first-person window (every Nth cut, Man subjects only). Overrides
+						//--- the composed shot for EYES_SEC, then falls back to the normal orbit with no cut -
+						//--- _smoothPos/_smoothAim keep tracking underneath, so the return is continuous.
+						if (time < (missionNamespace getVariable ["WFBE_C_VAR_DirectorEyesUntil", 0]) && {!isNull _t} && {alive _t} && {_t isKindOf "Man"}) then {
+							_e = eyePos _t;
+							_d = eyeDirection _t;
+							WFBE_C_VAR_SpectatorCam camSetPos _e;
+							WFBE_C_VAR_SpectatorCam camSetTarget [(_e select 0) + (_d select 0) * 100, (_e select 1) + (_d select 1) * 100, (_e select 2) + (_d select 2) * 100];
+						} else {
+							WFBE_C_VAR_SpectatorCam camSetPos _smoothPos;
+							WFBE_C_VAR_SpectatorCam camSetTarget _smoothAim;
+						};
 					};
 				};
 				default {

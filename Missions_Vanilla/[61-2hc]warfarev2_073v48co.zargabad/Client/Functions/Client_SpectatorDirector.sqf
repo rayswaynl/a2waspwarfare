@@ -96,7 +96,27 @@ WFBE_CL_FNC_DirectorBuildPlayers = {
 				_contact = [_x, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100], side _x] Call WFBE_CL_FNC_DirectorContactCount;
 				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_BASE", 10]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_CONTACT", 1000]));
 				if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
+				//--- v5: an AFK/idle body (stationary, no contact) is the worst possible shot - keep it
+				//--- selectable as a last resort but never over anything that moves or fights.
+				if (_contact == 0 && {(speed _x) < 1}) then {_score = _score * 0.25};
 				_list = _list + [[name _x, _x, "PLAYER", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
+			};
+			//--- v5 hotfix (owner live repro m0801e: "blufor and guer never show on the spectator cam"):
+			//--- the only non-player sources were AICOM TEAM entries from a registry that is SERVER-scoped,
+			//--- so a spectating client saw no BLUFOR/OPFOR AI at all, and GUER was never pooled anywhere.
+			//--- Derive squads client-locally instead: every AI group LEADER of a fighting side, scored by
+			//--- the same contact logic as players (lower base, so humans win ties). GUER leaders class as
+			//--- GUER, west/east as TEAM (keeps them in the tier-2 build-up pool).
+			if (alive _x && {!(isPlayer _x)} && {_x == (leader (group _x))} && {(side _x) != civilian} && {!((name _x) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {
+				_contact = [_x, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100], side _x] Call WFBE_CL_FNC_DirectorContactCount;
+				_score = (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_AI_BASE", 6]) + (_contact * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_PLAYER_CONTACT", 1000]));
+				if (_contact == 0) then {_score = _score - (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_W_IDLE_PENALTY", 250])};
+				if (_contact == 0 && {(speed _x) < 1}) then {_score = _score * 0.25};
+				if ((side _x) == resistance) then {
+					_list = _list + [[Format ["GUER squad (%1)", {alive _x} count (units (group _x))], _x, "GUER", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
+				} else {
+					_list = _list + [[Format ["%1 squad (%2)", side _x, {alive _x} count (units (group _x))], _x, "TEAM", WFBE_CL_FNC_DirectorPosObject, _score, _contact]];
+				};
 			};
 		};
 	} forEach allUnits;
@@ -424,6 +444,7 @@ WFBE_CL_FNC_DirectorPickNext = {
         } forEach _list;
     };
     if (count _pool == 0) then {_tier = 3; _pool = _list};
+    WFBE_C_VAR_DirectorPool = _pool; //--- v5 hotfix: cut-site shot list reads this global; _list is Private to this function.
     WFBE_C_VAR_DirectorLastPickTier = _tier;
     _current = WFBE_C_VAR_SpectatorTarget;
     _recent = missionNamespace getVariable ["WFBE_C_VAR_DirectorRecent", []];
@@ -533,6 +554,13 @@ WFBE_CL_FNC_DirectorLoopStart = {
                 _maxDwell = WFBE_C_VAR_SpectatorDirectorShotMaxDwell;
                 if (_maxDwell < _minDwell) then {_maxDwell = _minDwell};
                 _dwell = (WFBE_C_VAR_SpectatorDirectorDwell max _minDwell) min _maxDwell;
+                //--- v5 (owner 2026-08-01: "active town or fight and it skips to an afk unit... after 3
+                //--- seconds"): a shot that had NO contact at cut time only deserves a glance - cap its
+                //--- dwell so the next pick (which prefers tier-1 live contact) happens within ~3s. Shots
+                //--- WITH contact keep their full dwell.
+                if ((missionNamespace getVariable ["WFBE_C_VAR_DirectorCurContact", 0]) == 0) then {
+                    _dwell = _dwell min (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC", 3]);
+                };
                 _shotAge = WFBE_C_VAR_DirectorAutoTime - WFBE_C_VAR_DirectorLastSwitch;
                 if (isNull WFBE_C_VAR_SpectatorTarget || {_shotAge >= _dwell}) then {
                     if (WFBE_C_VAR_DirectorReturnPending) then {
@@ -571,6 +599,35 @@ WFBE_CL_FNC_DirectorLoopStart = {
                         WFBE_C_VAR_SpectatorTarget = _entry select 1;
                         WFBE_C_VAR_SpectatorDirectorPosFn = _entry select 3;
                         WFBE_C_VAR_SpectatorDirectorTargetLabel = _entry select 0;
+                        //--- v5 P3b (spec 7a): the pool is scored every poll and everything but the
+                        //--- winner was thrown away. Keep the top runners-up so the caster HUD can show
+                        //--- what it is passing over ("shot list"), and record WHY this cut happened so
+                        //--- the caster can narrate the director instead of guessing.
+                        WFBE_C_VAR_DirectorShotList = [];
+                        {
+                            if ((count WFBE_C_VAR_DirectorShotList) < 3 && {(_x select 1) != (_entry select 1)}) then {
+                                WFBE_C_VAR_DirectorShotList = WFBE_C_VAR_DirectorShotList + [[_x select 0, _x select 2, _x select 5]];
+                            };
+                        //--- v5 HOTFIX (owner live repro m0801e: "pans 5 degrees resets", dirt-cam): _list is
+                        //--- Private to the pick functions - referencing it here threw "Undefined variable _list"
+                        //--- EVERY cut, and the A2 error abort skipped the rest of this block, so DirectorLastSwitch
+                        //--- was never stamped -> the dwell clock never reset -> a cut every poll: orbit angle reset
+                        //--- ~every second and every 5th rapid cut was an eyes-cam slammed into the ground.
+                        } forEach (missionNamespace getVariable ["WFBE_C_VAR_DirectorPool", []]);
+                        WFBE_C_VAR_DirectorCutReason = "ESTABLISH";
+                        if ((_entry select 5) > 0) then {WFBE_C_VAR_DirectorCutReason = "CONTACT"};
+                        WFBE_C_VAR_DirectorCurContact = _entry select 5; //--- v5: idle-dwell cap reads this.
+                        //--- v5 P3b: every Nth cut becomes a first-person look at the subject. Man only -
+                        //--- a vehicle eyePos sits inside the hull and renders as a black frame.
+                        WFBE_C_VAR_DirectorCutCount = (missionNamespace getVariable ["WFBE_C_VAR_DirectorCutCount", 0]) + 1;
+                        WFBE_C_VAR_DirectorEyesUntil = 0;
+                        if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_EYES_EVERY", 5]) > 0) then {
+                            if ((WFBE_C_VAR_DirectorCutCount % (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_EYES_EVERY", 5])) == 0 && {!isNull (_entry select 1)} && {(_entry select 1) isKindOf "Man"} && {alive (_entry select 1)}) then {
+                            WFBE_C_VAR_DirectorEyesUntil = time + (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_EYES_SEC", 6]);
+                            WFBE_C_VAR_DirectorCutReason = "POV";
+                            diag_log Format ["SPECTATE|v5|eyes-cut|target=%1|sec=%2", _entry select 0, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_EYES_SEC", 6]];
+                            };
+                        };
                         WFBE_C_VAR_SpectatorOrbitAngle = 0;
                         _shotType = _entry Call WFBE_CL_FNC_DirectorShotType;
                         if (_forcedType != "") then {_shotType = _forcedType};
