@@ -59,6 +59,8 @@ while {!isNull _defense && {alive _defense} && {_sideStillValid}} do {
 		//--- walk), the barracks is irrelevant to whether the gun can be manned. So: man the gun
 		//--- ALWAYS (gun alive + gunner slot empty). _moveInGunner is hardcoded true (l.16), so the legacy
 		//--- _closest cover-position math never ran; that dead branch has been dropped and crews seat at the gun.
+		//--- Null-guard before getPosATL (014EFCF4 class): structure can vanish mid-loop between alive checks.
+		if (isNull _defense || {!alive _defense}) exitWith {};
 		_position = getPosATL _defense;
 
 		_HC = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
@@ -146,7 +148,7 @@ while {!isNull _defense && {alive _defense} && {_sideStillValid}} do {
 	//--- original cadence when no death occurs (a 15s poll of one local variable is trivially cheap).
 	_defense setVariable ["WFBE_DefenseRecheckDue", false];
 	_reManPollWaited = 0;
-	while {_reManPollWaited < 420 && {!(_defense getVariable ["WFBE_DefenseRecheckDue", false])}} do {
+	while {_reManPollWaited < 420 && {!isNull _defense} && {alive _defense} && {!(_defense getVariable ["WFBE_DefenseRecheckDue", false])}} do {
 		sleep _reManPollInterval;
 		_reManPollWaited = _reManPollWaited + _reManPollInterval;
 	};
