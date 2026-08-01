@@ -571,6 +571,29 @@ WFBE_CL_FNC_DirectorLoopStart = {
                         WFBE_C_VAR_SpectatorTarget = _entry select 1;
                         WFBE_C_VAR_SpectatorDirectorPosFn = _entry select 3;
                         WFBE_C_VAR_SpectatorDirectorTargetLabel = _entry select 0;
+                        //--- v5 P3b (spec 7a): the pool is scored every poll and everything but the
+                        //--- winner was thrown away. Keep the top runners-up so the caster HUD can show
+                        //--- what it is passing over ("shot list"), and record WHY this cut happened so
+                        //--- the caster can narrate the director instead of guessing.
+                        WFBE_C_VAR_DirectorShotList = [];
+                        {
+                            if ((count WFBE_C_VAR_DirectorShotList) < 3 && {(_x select 1) != (_entry select 1)}) then {
+                                WFBE_C_VAR_DirectorShotList = WFBE_C_VAR_DirectorShotList + [[_x select 0, _x select 2, _x select 5]];
+                            };
+                        } forEach _list;
+                        WFBE_C_VAR_DirectorCutReason = "ESTABLISH";
+                        if ((_entry select 5) > 0) then {WFBE_C_VAR_DirectorCutReason = "CONTACT"};
+                        //--- v5 P3b: every Nth cut becomes a first-person look at the subject. Man only -
+                        //--- a vehicle eyePos sits inside the hull and renders as a black frame.
+                        WFBE_C_VAR_DirectorCutCount = (missionNamespace getVariable ["WFBE_C_VAR_DirectorCutCount", 0]) + 1;
+                        WFBE_C_VAR_DirectorEyesUntil = 0;
+                        if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_EYES_EVERY", 5]) > 0) then {
+                            if ((WFBE_C_VAR_DirectorCutCount % (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_EYES_EVERY", 5])) == 0 && {!isNull (_entry select 1)} && {(_entry select 1) isKindOf "Man"} && {alive (_entry select 1)}) then {
+                            WFBE_C_VAR_DirectorEyesUntil = time + (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_EYES_SEC", 6]);
+                            WFBE_C_VAR_DirectorCutReason = "POV";
+                            diag_log Format ["SPECTATE|v5|eyes-cut|target=%1|sec=%2", _entry select 0, missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_EYES_SEC", 6]];
+                            };
+                        };
                         WFBE_C_VAR_SpectatorOrbitAngle = 0;
                         _shotType = _entry Call WFBE_CL_FNC_DirectorShotType;
                         if (_forcedType != "") then {_shotType = _forcedType};

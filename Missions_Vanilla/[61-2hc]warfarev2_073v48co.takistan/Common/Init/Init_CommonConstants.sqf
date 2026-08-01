@@ -3437,6 +3437,10 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_EYES_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_
 //--- v5 P3 (5b): allow GUER (resistance) AI group leaders as manual N/B watch targets. GUER is
 //--- AI-only, so the isPlayer filter in the cycle excluded the entire insurgency.
 if (isNil "WFBE_C_SPECTATOR_TARGET_GUER") then {WFBE_C_SPECTATOR_TARGET_GUER = 1};
+//--- v5 P3b (spec 7a): seconds of no caster input after which transient operator chrome (keybind
+//--- wall + shot list) fades, leaving only the compact status line. On a single-PC stream the
+//--- caster screen IS the stream, so idle must resolve to a clean broadcast frame by itself.
+if (isNil "WFBE_C_SPECTATOR_HUD_FADE_SEC") then {WFBE_C_SPECTATOR_HUD_FADE_SEC = 6};
 
 //--- Spectator v3 director: explicit opt-in. All director code paths read this master gate.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR") then {WFBE_C_SPECTATOR_DIRECTOR = 1}; //--- ARMED on owner order 2026-07-30 ("fold v3 in now"), after an adversarial review found and a fix landed for the blocker that made this feature silently do nothing: the poll thread was started after the movement loop had already exited. Blast radius is one client - spectator entry is gated to WFBE_C_SPECTATOR_UIDS - so this only ever runs for an allowlisted caster. Rollback = set to 0 and rebuild.
