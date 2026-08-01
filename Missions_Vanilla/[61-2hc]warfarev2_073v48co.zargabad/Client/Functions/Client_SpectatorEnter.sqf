@@ -67,6 +67,7 @@ _myUID = getPlayerUID player;
 if !(_myUID in (missionNamespace getVariable ["WFBE_C_SPECTATOR_UIDS", []])) exitWith {}; //--- belt-and-braces re-check; the addAction condition already gates this.
 
 WFBE_C_VAR_SpectatorActive = true;
+WFBE_C_VAR_SpectatorLastInput = time; //--- v5 hotfix: seed the HUD fade clock so keybinds show on entry.
 WFBE_C_VAR_SpectatorBody = player; //--- pin the exact body this session belongs to.
 WFBE_C_VAR_SpectatorMode = "free";
 WFBE_C_VAR_SpectatorTarget = objNull;
@@ -252,11 +253,11 @@ WFBE_CL_FNC_SpectatorBroadcastHudUpdate = {
 	_idle = time - (missionNamespace getVariable ["WFBE_C_VAR_SpectatorLastInput", 0]);
 	_reason = missionNamespace getVariable ["WFBE_C_VAR_DirectorCutReason", ""];
 	_topHtml = Format [
-		"<t align='left' size='0.85' color='#D8F3FF' shadow='2'>%1 &#183; %2 &#183; AUTO %3%4</t>",
+		"<t align='left' size='0.85' color='#D8F3FF' shadow='2'>%1 | %2 | AUTO %3%4</t>",
 		_shot,
 		_targetText,
 		_auto,
-		if (_reason != "") then {" &#183; " + _reason} else {""}
+		if (_reason != "") then {" | " + _reason} else {""}
 	];
 	_topBg ctrlShow true;
 	_topText ctrlShow true;
@@ -774,6 +775,7 @@ diag_log Format ["SPECTATE|v2|handlers-attached|kd=%1|mm=%2", WFBE_C_VAR_Spectat
 						//--- taller angle while ORBITING. Height only - radius/apparent size unchanged.
 						if (!WFBE_C_VAR_SpectatorOrbit) then {
 							_shotHeight = _shotHeight * (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TRACK_HEIGHT_MULT", 0.45]);
+							if (_shotHeight < 8) then {_shotHeight = 8}; //--- v5 hotfix: floor vs terrain microrelief.
 						};
 						_wantPos = [(_center select 0) + (_shotRadius * sin _angle), (_center select 1) + (_shotRadius * cos _angle), (_center select 2) + _shotHeight];
 						if (_t != _lastDirectorTarget) then {

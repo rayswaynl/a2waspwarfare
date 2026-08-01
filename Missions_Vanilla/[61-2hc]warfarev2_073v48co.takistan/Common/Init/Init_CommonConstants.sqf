@@ -3437,6 +3437,8 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_EYES_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_
 //--- v5 P3 (5b): allow GUER (resistance) AI group leaders as manual N/B watch targets. GUER is
 //--- AI-only, so the isPlayer filter in the cycle excluded the entire insurgency.
 if (isNil "WFBE_C_SPECTATOR_TARGET_GUER") then {WFBE_C_SPECTATOR_TARGET_GUER = 1};
+//--- v5: max seconds a NO-contact shot may hold the screen before the director re-picks.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC = 3};
 //--- v5 P3b (spec 7a): seconds of no caster input after which transient operator chrome (keybind
 //--- wall + shot list) fades, leaving only the compact status line. On a single-PC stream the
 //--- caster screen IS the stream, so idle must resolve to a clean broadcast frame by itself.
