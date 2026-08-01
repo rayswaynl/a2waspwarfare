@@ -84,7 +84,24 @@ if (count _seaPos == 0) then { _seaPos = _seed }; //--- no water found (or landl
 //--- Init_DeadspawnPenEnclosure.sqf compute the same clamp), a no-op wherever the point was
 //--- already in-bounds (Chernarus/Takistan resolve exactly as before), and the final
 //--- surfaceIsWater check below re-decides wet/dry for any moved point.
-_boundary = missionNamespace getVariable ["WFBE_BOUNDARIESXY", 15360];
+//--- RACE HARDENING: Init_Client.sqf calls this resolver inline at join placement, BEFORE
+//--- Init_Common.sqf (which runs Init_Boundaries.sqf at line 416) is guaranteed to have run -
+//--- the two are independent execVM threads with no ordering (documented at
+//--- Init_Client.sqf:78-87). If WFBE_BOUNDARIESXY is still nil here, a bare 15360 default
+//--- would un-clamp Zargabad (8192) right back off the map on the racing client while the
+//--- server-side enclosure (post-Init_Common) clamps against the real value - divergence.
+//--- Derive the boundary from worldName instead when the variable is not yet set: same
+//--- idiom + table as Common_RunCommanderTeam.sqf ~904 / Init_Boundaries.sqf (worldSize is
+//--- A3-only), identical on every machine at every init phase.
+_boundary = missionNamespace getVariable ["WFBE_BOUNDARIESXY", -1];
+if (_boundary < 0) then {
+	_boundary = switch (toLower worldName) do {
+		case "chernarus": {15360};
+		case "takistan":  {12800};
+		case "zargabad":  {8192};
+		default {15360};
+	};
+};
 _margin = 100; //--- keeps the 8m Init_DeadspawnPenEnclosure.sqf ring plus its occupant clear of the kill boundary.
 _posXY = [_seaPos select 0, _seaPos select 1];
 if ((_posXY select 0) < _margin) then { _posXY set [0, _margin] };
