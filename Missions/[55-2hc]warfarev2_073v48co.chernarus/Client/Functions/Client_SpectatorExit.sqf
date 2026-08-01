@@ -26,7 +26,18 @@ _body = missionNamespace getVariable ["WFBE_C_VAR_SpectatorBody", objNull];
 
 diag_log Format ["SPECTATE|v2|exit|uid=%1", getPlayerUID player];
 
+//--- v5 P1: release the frame-aim handler and the attach BEFORE destroying the camera. The
+//--- onEachFrame body self-guards on SpectatorActive, but leaving a dead handler registered
+//--- costs a call per frame forever - clear it (guarded: only if we armed it this session).
+if (missionNamespace getVariable ["WFBE_C_VAR_SpectatorFrameAimArmed", false]) then {
+	onEachFrame {};
+	WFBE_C_VAR_SpectatorFrameAimArmed = false;
+};
+WFBE_C_VAR_SpectatorAttachedTo = objNull;
+WFBE_C_VAR_SpectatorAimGoal = [];
+WFBE_C_VAR_SpectatorAimCur = [];
 if (!isNil "WFBE_C_VAR_SpectatorCam" && {!isNull WFBE_C_VAR_SpectatorCam}) then {
+	detach WFBE_C_VAR_SpectatorCam;
 	WFBE_C_VAR_SpectatorCam cameraEffect ["TERMINATE", "BACK"];
 	camDestroy WFBE_C_VAR_SpectatorCam;
 };
