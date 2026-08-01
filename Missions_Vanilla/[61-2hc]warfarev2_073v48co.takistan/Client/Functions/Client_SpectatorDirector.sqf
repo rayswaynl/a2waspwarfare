@@ -221,15 +221,17 @@ WFBE_CL_FNC_DirectorShotType = {
     _target = _entry select 1;
     _class = _entry select 2;
     _contact = 0;
-    if ((_class == "PLAYER" || {_class == "TEAM"}) && {!isNull _target} && {alive _target}) then {
+    if ((_class == "PLAYER" || {_class == "TEAM"} || {_class == "GUER"}) && {!isNull _target} && {alive _target}) then {
         _radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_PLAYER_CONTACT_RADIUS", 100];
-        if (_class == "TEAM") then {_radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TEAM_CONTACT_RADIUS", 150]};
+        if (_class != "PLAYER") then {_radius = missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TEAM_CONTACT_RADIUS", 150]};
         _contact = [_target, _radius, side _target] Call WFBE_CL_FNC_DirectorContactCount;
     };
     if ((_class == "TOWN") || {_class == "HQ"}) then {
         "WIDE"
     } else {
-        if (_contact > 0) then {"TIGHT"} else {"MEDIUM"}
+        //--- v6 research rule 4: max zoom only for a REAL fight - over-zoom is almost always a
+        //--- single idle-ish unit winning by default. 2+ contacts = TIGHT, 1 = MEDIUM, 0 = MEDIUM.
+        if (_contact >= (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_CONTACT", 2])) then {"TIGHT"} else {"MEDIUM"}
     }
 };
 
@@ -560,6 +562,11 @@ WFBE_CL_FNC_DirectorLoopStart = {
                 //--- WITH contact keep their full dwell.
                 if ((missionNamespace getVariable ["WFBE_C_VAR_DirectorCurContact", 0]) == 0) then {
                     _dwell = _dwell min (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC", 3]);
+                } else {
+                    //--- v6 research rule 3 (fire lock, the unanimous esports finding): once a shot
+                    //--- HAS action, hold it - premature cut-away from a live firefight is the worst
+                    //--- director error. Target death still exits via the loop safety immediately.
+                    _dwell = _dwell max (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC", 7]);
                 };
                 _shotAge = WFBE_C_VAR_DirectorAutoTime - WFBE_C_VAR_DirectorLastSwitch;
                 if (isNull WFBE_C_VAR_SpectatorTarget || {_shotAge >= _dwell}) then {

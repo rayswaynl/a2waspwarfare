@@ -3444,6 +3444,11 @@ if (isNil "WFBE_C_SPECTATOR_TARGET_GUER") then {WFBE_C_SPECTATOR_TARGET_GUER = 1
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC = 3};
 //--- v5 P4: 1 = free-cam integrated per render frame in Client_SpectatorAimFrame (0 = old scheduled path).
 if (isNil "WFBE_C_SPECTATOR_FREECAM_FRAME") then {WFBE_C_SPECTATOR_FREECAM_FRAME = 1};
+//--- v6 (research ruleset, docs/plans/2026-08-01-director-v6-research-ruleset.md):
+//--- rule 4 - TIGHT framing needs a real fight, not one bystander.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_CONTACT") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_CONTACT = 2};
+//--- rule 3 - minimum hold on any shot that has live contact (fire lock).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC = 7};
 //--- v5 P3b (spec 7a): seconds of no caster input after which transient operator chrome (keybind
 //--- wall + shot list) fades, leaving only the compact status line. On a single-PC stream the
 //--- caster screen IS the stream, so idle must resolve to a clean broadcast frame by itself.
