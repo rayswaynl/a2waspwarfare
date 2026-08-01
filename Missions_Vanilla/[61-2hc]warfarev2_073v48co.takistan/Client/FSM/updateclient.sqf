@@ -136,7 +136,11 @@ while {!gameOver && !_afkKickRequested} do {
 	};
 
 	// Marty: Once the AFK timeout is exceeded, request the real BattleEye kick through the public variable filter.
-	if (_elapsedTime > _inactivityTimeout) then {
+	//--- v5 (owner 2026-08-01 "why tf do casters get afk kicked?"): a caster drives a CAMERA, not a
+	//--- unit - keyboard input goes to the spectator handler, so the body's lastActionTime never
+	//--- refreshes and a working caster read as AFK. Casters and anyone in the spectator cam are
+	//--- exempt client-side here AND rejected server-side in RequestAFKKick.sqf (defense in depth).
+	if (_elapsedTime > _inactivityTimeout && {!(player getVariable ["wfbe_caster_slot", false])} && {!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])}) then {
 		_afkKickRequested = true;
 		_namePlayer = name player;
 		["WARNING", Format ["AFK Diagnostic: kick requested for [%1]. elapsed [%2] countdown [%3] timeout [%4] rawMinutes [%5] movementResets [%6].", _namePlayer, round _elapsedTime, _countDownKick, _inactivityTimeout, _rawInactivityTimeout, _afkDiagnosticMovementResets]] Call WFBE_CO_FNC_LogContent;

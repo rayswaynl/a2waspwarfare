@@ -54,6 +54,17 @@ WFBE_Allow_HostileGearSaving = true;
 //--- permanently invulnerable. Initial join + JIP rejoin both pass through here; respawns do not.
 player allowDamage false;
 missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", false];
+//--- CASTER SEAT DETECTION (fix 2026-08-01 #2, owner live repro on m0801e): the sqm init
+//--- `this setVariable ["wfbe_caster_slot", true]` is the 2-ARG LOCAL form and editor inits run
+//--- where the unit is created - a JIP-joining caster's client never receives it, so every gate
+//--- below silently failed open and the caster still drowned in the pen with no spectator action.
+//--- Derive the seat CLIENT-LOCALLY from replication-free facts: the only CIV playables in this
+//--- mission are 2 HC + 2 Caster, and HC names are excluded via WFBE_C_HC_NAMES. A human on CIV
+//--- that is not an HC is therefore a Caster, by construction of the slot table.
+if ((side player) == civilian && {!((name player) in (missionNamespace getVariable ["WFBE_C_HC_NAMES", []]))}) then {
+	player setVariable ["wfbe_caster_slot", true];
+	diag_log Format ["SPECTATE|v5|caster-seat-derived|name=%1|uid=%2", name player, getPlayerUID player];
+};
 //--- CASTER SLOTS (fix 2026-08-01, owner live repro): a Caster seat never enrolls and never
 //--- transits, so nothing ever sets DeadspawnEscaped for it -> the spectator addAction gate and
 //--- the caster auto-enter both waited forever, the pen positioning below dumped the body into

@@ -3342,7 +3342,9 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_
 //--- sqm init runs on EVERY machine, so the marker is globally readable with no publicVariable and no
 //--- name-list drift (contrast the HC registry right below).
 if (isNil "WFBE_C_CASTER_UIDS") then {WFBE_C_CASTER_UIDS = ["76561198046825568"]}; //--- Steam UIDs allowed to cast from a Caster slot; merged into the spectator allowlist below.
-if (isNil "WFBE_C_CASTER_AUTOSPECTATE") then {WFBE_C_CASTER_AUTOSPECTATE = 1}; //--- 1 = an allowlisted caster seated in a Caster slot auto-enters the spectator once past the deadspawn-transit window.
+if (isNil "WFBE_C_CASTER_AUTOSPECTATE") then {WFBE_C_CASTER_AUTOSPECTATE = 1};
+//--- v5 (spec 8): 1 = the spectator addAction requires a Caster SEAT as well as the UID allowlist.
+if (isNil "WFBE_C_SPECTATOR_CASTER_SEAT_ONLY") then {WFBE_C_SPECTATOR_CASTER_SEAT_ONLY = 1}; //--- 1 = an allowlisted caster seated in a Caster slot auto-enters the spectator once past the deadspawn-transit window.
 { if !(_x in WFBE_C_SPECTATOR_UIDS) then {WFBE_C_SPECTATOR_UIDS = WFBE_C_SPECTATOR_UIDS + [_x]}; } forEach WFBE_C_CASTER_UIDS;
 
 //--- HEADLESS-CLIENT NAME REGISTRY (fix 2026-07-26). The 4-HC rollout (#1456) added a fourth HC, but every
