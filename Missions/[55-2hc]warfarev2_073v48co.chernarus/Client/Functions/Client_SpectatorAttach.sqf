@@ -21,6 +21,10 @@
    raises "Type code, expected String" and the action is never added
    (live-proven client RPT 2026-07-30). Same idiom as the working
    MHQ lock/build actions in updateclient.sqf.
+   v4 (owner 2026-07-31): WFBE_C_SPECTATOR_AUTOSTART (default 0) makes this loop
+   auto-enter spectator + director-auto for the allowlisted UID once the body is
+   alive past the deadspawn window - hands-off stream box, self-heals on respawn.
+
    A2-OA-1.64 safe: getPlayerUID / missionNamespace getVariable / addAction /
    `in` (array membership) / isNil / WFBE_gameover - no A3-only commands.
 */
@@ -61,6 +65,31 @@ while {!(missionNamespace getVariable ["WFBE_gameover", false])} do {
 			"missionNamespace getVariable ['WFBE_C_VAR_SpectatorActive', false]"
 		];
 		diag_log Format ["SPECTATE|v1|actions-attached|uid=%1", _myUID];
+	};
+	//--- v4 autostart (flag default 0): hands-off director entry for the stream box.
+	//--- Same gates as the addAction (alive + past deadspawn window); re-fires after
+	//--- respawn because SpectatorActive is false again while this loop keeps polling.
+	if ((missionNamespace getVariable ["WFBE_C_SPECTATOR_AUTOSTART", 0]) > 0) then {
+		if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) && {alive player} && {missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]}) then {
+			[] Call WFBE_CL_FNC_SpectatorEnter;
+			if ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]) && {(missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR", 0]) > 0}) then {
+				WFBE_C_VAR_SpectatorMode = "director";
+				WFBE_C_VAR_SpectatorDirectorPinned = false;
+				WFBE_C_VAR_SpectatorDirectorAuto = true;
+				WFBE_C_VAR_SpectatorOrbit = true;
+				WFBE_C_VAR_SpectatorOrbitAngle = 0;
+				WFBE_C_VAR_SpectatorTarget = objNull;
+				WFBE_C_VAR_DirectorLastSwitch = 0;
+				WFBE_C_VAR_DirectorAutoTime = 0;
+				WFBE_C_VAR_DirectorLastBaseCheck = 0;
+				WFBE_C_VAR_DirectorLastEstablish = -120;
+				WFBE_C_VAR_DirectorContactTarget = objNull;
+				WFBE_C_VAR_DirectorLastContactScan = 0;
+				WFBE_C_VAR_DirectorReturnPending = false;
+				diag_log Format ["SPECTATE|v4|autostart|uid=%1|mode=director-auto", _myUID];
+				systemChat "[WASP] Spectator autostart: director auto (G toggles).";
+			};
+		};
 	};
 	sleep 3;
 };

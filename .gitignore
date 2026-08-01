@@ -77,3 +77,6 @@ _recovered-pack-scripts/
 
 # deploy staging artifacts (regenerable PBOs, never commit)
 .deploy-stage/
+
+# local git worktrees (agent workspaces, never commit)
+.worktrees/

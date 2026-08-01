@@ -3454,9 +3454,9 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_REPEAT_SCORE_MARGIN") then {WFBE_C_SPECTATO
 //--- continuous aim and orbit ceiling in degrees per second.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_DEG_PER_SEC = 8};
 //--- aim delta in degrees that becomes a hard cut.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_CUT_DEG") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_CUT_DEG = 35};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_CUT_DEG") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_CUT_DEG = 70}; //--- v4: mid-shot snaps read as yanks on stream; 70deg gates only true breaks (a shot change still cuts).
 //--- maximum in-shot FOV change per second.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE") then {WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE = 0.05};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE") then {WFBE_C_SPECTATOR_DIRECTOR_FOV_RATE = 0.35}; //--- v4 (owner 2026-07-31): 0.05/s took 10-15s wide-to-tight - the zoom landed after the shot ended.
 //--- seconds manual wheel zoom suppresses director FOV control.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_MANUAL_ZOOM_LOCK_SEC = 10};
 //--- fallback getDir engagement look-ahead distance in metres.
@@ -3478,17 +3478,17 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN") then {WFBE_C_SPECTATOR_DIR
 //--- MEDIUM upper FOV bound.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX = 0.65};
 //--- MEDIUM lower dwell bound in seconds.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL = 3};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL = 4};
 //--- MEDIUM upper dwell bound in seconds.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL = 5};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL = 7};
 //--- TIGHT lower FOV bound.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN = 0.35};
 //--- TIGHT upper FOV bound.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX = 0.5};
 //--- TIGHT lower dwell bound in seconds.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL = 1.5};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL = 3}; //--- v4: 1.5-3s tight shots ended before the (now faster) zoom arrived.
 //--- TIGHT upper dwell bound in seconds.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MAX_DWELL = 3};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MAX_DWELL = 6};
 //--- WIDE and BASE camera standoff radius in metres.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_RADIUS = 180};
 //--- WIDE and BASE camera height above target in metres.
@@ -3520,6 +3520,25 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECT
 //--- 0 (default) leaves the existing 12455 cutText spectator card path unchanged.
 //--- Layer 12456 is reserved for this title; 12450-12452/12454/12455/12461 remain occupied.
 if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 0};
+
+//--- Spectator v4 streaming pass (owner 2026-07-31: autonomous TikTok/Twitch/Kick broadcast cam).
+if (isNil "WFBE_C_SPECTATOR_TICK") then {WFBE_C_SPECTATOR_TICK = 0.01}; //--- camera loop sleep; 0.05 hard-capped updates at 20Hz = judder on a 60fps capture.
+if (isNil "WFBE_C_SPECTATOR_AUTOSTART") then {WFBE_C_SPECTATOR_AUTOSTART = 0}; //--- 1 = allowlisted caster auto-enters spectator + director-auto (hands-off stream box). Entry still UID-gated.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_MIN_DEG_PER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_MIN_DEG_PER_SEC = 25}; //--- adaptive slew floor.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_MAX_DEG_PER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_MAX_DEG_PER_SEC = 240}; //--- adaptive slew ceiling.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PAN_EASE") then {WFBE_C_SPECTATOR_DIRECTOR_PAN_EASE = 6}; //--- rate = clamp(err*EASE, MIN, MAX); ease-out near the frame.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TOWN_LINGER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_TOWN_LINGER_SEC = 45}; //--- a town stays fight-pickable this long after the last enemy leaves; kills fight-pause flicker.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_LEAD_MAX_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_LEAD_MAX_SEC = 0.5}; //--- velocity lead cap; scales with EMA subject speed (supersedes the flat LEAD_SEC 0.4 raw feed-forward).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_LEAD_FULL_SPEED") then {WFBE_C_SPECTATOR_DIRECTOR_LEAD_FULL_SPEED = 25}; //--- m/s at which the full lead applies; walking infantry get ~none.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_VEL_EMA_RATE") then {WFBE_C_SPECTATOR_DIRECTOR_VEL_EMA_RATE = 8}; //--- per-second blend of the subject-velocity EMA; kills network stair-step feed-forward noise.
+
+//--- Spectator v4.1 free-cam pass (owner 2026-07-31: caster-grade user-driven cam).
+if (isNil "WFBE_C_SPECTATOR_ACCEL") then {WFBE_C_SPECTATOR_ACCEL = 6}; //--- free-cam velocity convergence per second while keys are held.
+if (isNil "WFBE_C_SPECTATOR_BRAKE") then {WFBE_C_SPECTATOR_BRAKE = 9}; //--- free-cam stop convergence per second when no key is held (faster than ACCEL so stops stay crisp).
+if (isNil "WFBE_C_SPECTATOR_ZOOM_RATE") then {WFBE_C_SPECTATOR_ZOOM_RATE = 8}; //--- manual wheel-zoom ease rate (FOV per second toward the wheel target).
+if (isNil "WFBE_C_SPECTATOR_MOUSE_SMOOTH") then {WFBE_C_SPECTATOR_MOUSE_SMOOTH = 0.55}; //--- per-event mouse-delta EMA blend (1=instant/off, lower=smoother).
+if (isNil "WFBE_C_SPECTATOR_SENS_REF_FOV") then {WFBE_C_SPECTATOR_SENS_REF_FOV = 0.8}; //--- FOV at which SENS applies 1:1; sensitivity scales linearly with zoom (scoped-aim feel).
+if (isNil "WFBE_C_SPECTATOR_SENS_MIN_FACTOR") then {WFBE_C_SPECTATOR_SENS_MIN_FACTOR = 0.05}; //--- never let zoom-scaled sensitivity drop below this fraction of SENS.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
