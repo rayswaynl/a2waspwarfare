@@ -855,7 +855,18 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_rumorLast = time;
 							};
 						};
-						_capGrp = createGroup resistance;
+						_capGrp = [resistance, "naval-cap"] Call WFBE_CO_FNC_CreateGroup;
+						//--- r89 fail-clean (bughunt group-cap/budget): the raw createGroup bypassed the
+						//--- WFBE_CO_FNC_CreateGroup wrapper - no 140-cap emergency GC, no wfbe_group_src tag
+						//--- (the group audited as "untagged"), and no grpNull path. At the 144/side engine cap
+						//--- the pilots' createUnit fallbacks retried into the same grpNull and the CAP hulls
+						//--- flew pilotless while tagged anti-reap (wfbe_naval_cap). Abort this arm cleanly:
+						//--- _armed=false makes the next 10s tick retry once the side is under the cap; the
+						//--- post-roll override below forces _capMode="NONE" so no spawn branch runs.
+						if (isNull _capGrp) then {
+							_armed = false;
+							["WARNING", Format ["Init_NavalHVT.sqf: CAP arm aborted at %1 - resistance group cap (createGroup grpNull).", _loc getVariable ["name", "?"]]] Call WFBE_CO_FNC_LogContent;
+						};
 
 						_navMode = missionNamespace getVariable ["WFBE_C_NAVAL_CAP_MODE", 1]; //--- fable/naval-cap-variety: 0=legacy CAP_L39/THREE_HINDS chain, >0=weighted roll (default).
 						if (_navMode > 0) then {
@@ -883,6 +894,8 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						//--- self-clean sub-thread (own group, own registry, own cooldown - WFBE_C_NAVAL_SKIRMISH_MAX_ACTIVE)
 						//--- only while a mission-wide slot is free, so a saturated cap falls back to the base CAP silently
 						//--- instead of dropping the arm event.
+						if (isNull _capGrp) then {_capMode = "NONE"}; //--- r89: re-apply AFTER the mode roll above -
+						//--- a grpNull arm-abort must match no spawn branch (SKIRMISH/L39/MI24/SUX; legacy else is guarded).
 						if (_capMode == "SKIRMISH") then {
 							_navSkirmishBase = missionNamespace getVariable ["WFBE_C_NAVAL_SKIRMISH_BASE_MODE", "MI24"];
 							if !(_navSkirmishBase in ["MI24","L39","SUX"]) then {_navSkirmishBase = "MI24"};
@@ -1074,6 +1087,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 
 									["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (1x Su34, rare).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
 								} else {
+									if (!isNull _capGrp) then { //--- r89: grpNull arm-abort must not spawn the legacy CAP
 								//--- STANDARD path (WFBE_C_NAVAL_CAP_L39=0, THREE_HINDS=0): Hind + An2.
 								//--- naval-air-spawn-easa FIX: An2 is fixed-wing. createVehicle ["FLY"]
 								//---   gives zero velocity at t=0 -> stall-dive. Set forward speed.
@@ -1117,6 +1131,7 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_biplane setVariable ["wfbe_naval_cap", true, true];
 
 								["INFORMATION", Format ["Init_NavalHVT.sqf : GUER CAP armed at %1 (Hind + An2, velocity-fixed).", _loc getVariable "name"]] Call WFBE_CO_FNC_LogContent;
+									}; //--- r89: closes the !isNull _capGrp legacy guard
 								}; //--- closes the SUX-vs-legacy else (fable/naval-cap-variety)
 							};
 						};
