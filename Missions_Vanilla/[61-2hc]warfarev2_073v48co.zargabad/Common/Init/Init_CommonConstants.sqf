@@ -2376,8 +2376,14 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 	if (isNil "AICOMV2_GDIR_GROUP_BUDGET_MAX")      then {AICOMV2_GDIR_GROUP_BUDGET_MAX = 110};   //--- GUER-side group ceiling for the materialiser (144 engine hard cap).
 	if (isNil "AICOMV2_GDIR_MIN_SPAWN_M")           then {AICOMV2_GDIR_MIN_SPAWN_M = 400};        //--- Minimum distance from any player for materialisation.
 	if (isNil "AICOMV2_GDIR_AMBUSH_BUBBLE_M")       then {AICOMV2_GDIR_AMBUSH_BUBBLE_M = 700};   //--- Route-point bubble radius for ambush-cell materialisation.
-	if (isNil "AICOMV2_GDIR_CELL_SPEED_MS")         then {AICOMV2_GDIR_CELL_SPEED_MS = 8};        //--- Virtual ground speed for cell movement (m/s).
+	if (isNil "AICOMV2_GDIR_CELL_SPEED_MS") then {
+		AICOMV2_GDIR_CELL_SPEED_MS = 8; //--- Virtual ground speed for cell movement (m/s).
+		AICOMV2_GDIR_CELL_SPEED_MS_OWNER_SET = false;
+	} else {
+		if (isNil "AICOMV2_GDIR_CELL_SPEED_MS_OWNER_SET") then {AICOMV2_GDIR_CELL_SPEED_MS_OWNER_SET = true};
+	};
 	if (isNil "AICOMV2_GDIR_SUPPRESS_SEC")          then {AICOMV2_GDIR_SUPPRESS_SEC = 600};       //--- Post-wipe offensive-suppression window (s).
+	if (isNil "AICOMV2_GDIR_SUPPRESS_WIRE")         then {AICOMV2_GDIR_SUPPRESS_WIRE = 0};         //--- 1 = wire the post-wipe suppression: on contact-end stamp ledger[4]=diag_tickTime+AICOMV2_GDIR_SUPPRESS_SEC so PHASE-3 defers reinforcement during the window. Default 0 keeps legacy always-eligible behaviour byte-identical. SOAK before arming.
 	if (isNil "AICOMV2_GDIR_RETAKE")                then {AICOMV2_GDIR_RETAKE = 0};               //--- Retake-cell aggression: 0=off, 1=low. Default 0 CH; TK profile may set 1.
 	if (isNil "AICOMV2_GDIR_PLAYER_SUPPORT")        then {AICOMV2_GDIR_PLAYER_SUPPORT = 0};       //--- Bias cells toward human GUER players (0=off).
 //--- Amendment A2: Air-Contact Activation Tier dials (folded under AICOMV2_LANE_GUER_DIRECTOR gate).
@@ -2401,7 +2407,15 @@ missionNamespace setVariable ["WFBE_C_NEUTRAL_COLOR", WFBE_C_NEUTRAL_COLOR];
 //--- Amendment: Hardening + Shop (fable/gdir-harden-shop).
 //--- P1 - Movement ETA-timeout: cells stuck past ETA teleport-merge into destination town.
 	if (isNil "AICOMV2_GDIR_HARDEN")                 then {AICOMV2_GDIR_HARDEN = 1};                //--- Master switch: 0=off (P1/P2 inert), 1=hardening active.
-	if (isNil "AICOMV2_GDIR_MOVE_TIMEOUT_FACTOR")    then {AICOMV2_GDIR_MOVE_TIMEOUT_FACTOR = 3};   //--- ETA safety factor: ETA = (dist/CELL_SPEED_MS)*factor seconds.
+	if (isNil "AICOMV2_GDIR_MOVE_TIMEOUT_FACTOR") then {
+		AICOMV2_GDIR_MOVE_TIMEOUT_FACTOR = 3; //--- ETA safety factor: ETA = (dist/CELL_SPEED_MS)*factor seconds.
+		AICOMV2_GDIR_MOVE_TIMEOUT_FACTOR_OWNER_SET = false;
+	} else {
+		if (isNil "AICOMV2_GDIR_MOVE_TIMEOUT_FACTOR_OWNER_SET") then {AICOMV2_GDIR_MOVE_TIMEOUT_FACTOR_OWNER_SET = true};
+	};
+//--- P5/P6 salvage: both additions are default-off; an enabled map profile never replaces an explicit owner dial.
+	if (isNil "AICOMV2_GDIR_MAP_PROFILE")            then {AICOMV2_GDIR_MAP_PROFILE = 0};            //--- 1 = enable per-world Director profile only where a dial remains at its registered default.
+	if (isNil "AICOMV2_GDIR_AICOM_HOOK")             then {AICOMV2_GDIR_AICOM_HOOK = 0};             //--- 1 = read-only WEST/EAST occupier snapshots for bounded Director coordination.
 //--- P2 - JIP PV snapshot: compact ledger snapshot pushed to late joiners.
 	if (isNil "AICOMV2_GDIR_JIP_SNAP_INTERVAL")      then {AICOMV2_GDIR_JIP_SNAP_INTERVAL = 60};   //--- Min seconds between snapshot rebroadcasts (throttle).
 //--- P3 - Weapons cache: per-town purchasable loadout tier for town defenders.

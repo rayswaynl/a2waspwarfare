@@ -48,7 +48,7 @@ _fnGuerGroups = {
 
 //--- Constants (read once at startup).
 private ["_tickSec","_regenFullSec","_surgeCap","_surgeCapPaid","_grpBudgetMax",
-         "_minSpawnM","_ambushBubbleM","_suppressSec","_retakeEnabled","_playerSupport"];
+         "_minSpawnM","_ambushBubbleM","_suppressSec","_retakeEnabled","_playerSupport","_suppressWire"];
 
 _tickSec        = missionNamespace getVariable ["AICOMV2_GDIR_TICK_SEC",         30];
 _regenFullSec   = missionNamespace getVariable ["AICOMV2_GDIR_REGEN_FULL_SEC",   1800];
@@ -60,6 +60,7 @@ _ambushBubbleM  = missionNamespace getVariable ["AICOMV2_GDIR_AMBUSH_BUBBLE_M", 
 _suppressSec    = missionNamespace getVariable ["AICOMV2_GDIR_SUPPRESS_SEC",     600];
 _retakeEnabled  = missionNamespace getVariable ["AICOMV2_GDIR_RETAKE",           0];
 _playerSupport  = missionNamespace getVariable ["AICOMV2_GDIR_PLAYER_SUPPORT",   0];
+_suppressWire   = (missionNamespace getVariable ["AICOMV2_GDIR_SUPPRESS_WIRE", 0]) > 0;
 //--- P1/P2 hardening flags (fable/gdir-harden-shop).
 private ["_hardenOn","_moveTimeoutFactor","_cellSpeedMs","_jipSnapInterval","_jipSnapLastT"];
 _hardenOn          = (missionNamespace getVariable ["AICOMV2_GDIR_HARDEN",             1]) > 0;
@@ -67,6 +68,64 @@ _moveTimeoutFactor = missionNamespace getVariable ["AICOMV2_GDIR_MOVE_TIMEOUT_FA
 _cellSpeedMs       = missionNamespace getVariable ["AICOMV2_GDIR_CELL_SPEED_MS",       8];
 _jipSnapInterval   = missionNamespace getVariable ["AICOMV2_GDIR_JIP_SNAP_INTERVAL",   60];
 _jipSnapLastT      = 0;
+
+//--- P5 salvage: world-specific movement dials. The default-off gate keeps the active
+//--- Director byte-for-byte behaviour-neutral. A profile writes only when a dial still has
+//--- its registered default, so a mission/lobby owner override always wins.
+private ["_mapProfileOn","_mapName","_mapProfileRows","_mapProfileRow","_mapProfileFound"];
+_mapProfileOn    = (missionNamespace getVariable ["AICOMV2_GDIR_MAP_PROFILE", 0]) > 0;
+_mapName         = toLower worldName;
+_mapProfileRows  = [];
+_mapProfileRow   = [];
+_mapProfileFound = false;
+if (_mapProfileOn) then {
+    _mapProfileRows = [
+        ["takistan", [
+            ["AICOMV2_GDIR_MOVE_TIMEOUT_FACTOR", 3, 5],
+            ["AICOMV2_GDIR_CELL_SPEED_MS", 8, 5]
+        ]]
+    ];
+    {
+        if (!_mapProfileFound && {(_x select 0) == _mapName}) then {
+            _mapProfileRow   = _x select 1;
+            _mapProfileFound = true;
+        };
+    } forEach _mapProfileRows;
+    if (_mapProfileFound) then {
+        {
+            private ["_profileKey","_profileDefault","_profileValue","_profileCurrent","_profileOwnerSet"];
+            _profileKey     = _x select 0;
+            _profileDefault = _x select 1;
+            _profileValue   = _x select 2;
+            _profileCurrent = missionNamespace getVariable [_profileKey, _profileDefault];
+            _profileOwnerSet = missionNamespace getVariable [(_profileKey + "_OWNER_SET"), false];
+            if (!_profileOwnerSet && {_profileCurrent == _profileDefault}) then {
+                missionNamespace setVariable [_profileKey, _profileValue];
+            } else {
+                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|0|GDIR_PROFILE ownerOverrideRespected key=%1 ownerVal=%2 profileVal=%3",
+                    _profileKey, _profileCurrent, _profileValue];
+            };
+        } forEach _mapProfileRow;
+        _moveTimeoutFactor = missionNamespace getVariable ["AICOMV2_GDIR_MOVE_TIMEOUT_FACTOR", 3];
+        _cellSpeedMs       = missionNamespace getVariable ["AICOMV2_GDIR_CELL_SPEED_MS", 8];
+        diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|0|GDIR_PROFILE map=%1 moveTimeoutFactor=%2 cellSpeedMs=%3",
+            _mapName, _moveTimeoutFactor, _cellSpeedMs];
+    };
+};
+
+//--- P6 salvage: the Director reads the two occupier snapshots but never writes AICOM state.
+//--- A missing/stale snapshot is deliberately neutral (multiplier 1.0), not a quiet-world signal.
+private ["_aicomHookOn","_coordMult","_coordMultPrev","_coordBaselineRestore","_westLogik","_eastLogik"];
+_aicomHookOn          = (missionNamespace getVariable ["AICOMV2_GDIR_AICOM_HOOK", 0]) > 0;
+_coordMult            = 1.0;
+_coordMultPrev        = 1.0;
+_coordBaselineRestore = [];
+_westLogik             = objNull;
+_eastLogik             = objNull;
+if (_aicomHookOn) then {
+    _westLogik = west Call WFBE_CO_FNC_GetSideLogic;
+    _eastLogik = east Call WFBE_CO_FNC_GetSideLogic;
+};
 
 //===================================================================================
 // LEDGER: array of records, one per GUER/unknown town.
@@ -173,6 +232,7 @@ while {!WFBE_GameOver} do {
                 _rec set [2, ((_rec select 2) * _ratio) max 0];
             };
             _rec set [5, 0];
+            if (_suppressWire) then {_rec set [4, diag_tickTime + _suppressSec]}; //--- stamp the post-wipe suppression deadline PHASE-3 :220 reads as _suppEnd < diag_tickTime; clock-consistent, was never written.
         };
         if (_active) then {
             _grps        = [_town] call _fnGuerGroups;
@@ -187,6 +247,81 @@ while {!WFBE_GameOver} do {
             _rec set [5, _nowGrpCount];
         };
     } forEach _ledger;
+
+    //--------------------------------------------------------------------
+    // P6: read-only occupier-awareness. ENEFF is the enemy-of-snapshot-side
+    // effectiveness; reading MYEFF here was the P5/P6 index bug and measures
+    // the wrong side. Only two valid snapshots may classify the world as quiet.
+    //--------------------------------------------------------------------
+    _coordMultPrev        = _coordMult;
+    _coordMult            = 1.0;
+    _coordBaselineRestore = [];
+    if (_aicomHookOn) then {
+        private ["_occTeamsW","_occTeamsE","_occEffW","_occEffE","_occTgtW","_occTgtE",
+                 "_westSnapOk","_eastSnapOk","_pressureW","_pressureE","_bothQuiet","_snapMaxAge"];
+        _occTeamsW = 0; _occTeamsE = 0;
+        _occEffW   = 0; _occEffE   = 0;
+        _occTgtW   = []; _occTgtE  = [];
+        _westSnapOk = false; _eastSnapOk = false;
+        _snapMaxAge = (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_STRATEGY_INTERVAL", 60]) + 5;
+
+        if (!isNull _westLogik) then {
+            private ["_westSnap","_westSnapAge"];
+            _westSnap = _westLogik getVariable ["wfbe_aicom2_snap", []];
+            if (typeName _westSnap == "ARRAY" && {count _westSnap > WFBE_SNAP_TGTTOWNOBJS}) then {
+                _westSnapAge = time - (_westSnap select WFBE_SNAP_TIME);
+                if (_westSnapAge >= 0 && {_westSnapAge <= _snapMaxAge}) then {
+                    _occTeamsW = count (_westSnap select WFBE_SNAP_TEAMS);
+                    _occEffW   = _westSnap select WFBE_SNAP_ENEFF;
+                    _occTgtW   = _westSnap select WFBE_SNAP_TGTTOWNOBJS;
+                    _westSnapOk = true;
+                };
+            };
+        };
+        if (!isNull _eastLogik) then {
+            private ["_eastSnap","_eastSnapAge"];
+            _eastSnap = _eastLogik getVariable ["wfbe_aicom2_snap", []];
+            if (typeName _eastSnap == "ARRAY" && {count _eastSnap > WFBE_SNAP_TGTTOWNOBJS}) then {
+                _eastSnapAge = time - (_eastSnap select WFBE_SNAP_TIME);
+                if (_eastSnapAge >= 0 && {_eastSnapAge <= _snapMaxAge}) then {
+                    _occTeamsE = count (_eastSnap select WFBE_SNAP_TEAMS);
+                    _occEffE   = _eastSnap select WFBE_SNAP_ENEFF;
+                    _occTgtE   = _eastSnap select WFBE_SNAP_TGTTOWNOBJS;
+                    _eastSnapOk = true;
+                };
+            };
+        };
+
+        _pressureW = _westSnapOk && {_occTeamsW >= 3} && {_occEffW >= 12};
+        _pressureE = _eastSnapOk && {_occTeamsE >= 3} && {_occEffE >= 12};
+        _bothQuiet = _westSnapOk && {_eastSnapOk} && {!_pressureW} && {!_pressureE};
+        if (_bothQuiet) then {_coordMult = 1.1};
+
+        //--- An occupier targeting a GUER ledger town gets a 10% priority baseline
+        //--- for this tick. It starts after regeneration and is restored before materialization.
+        if (_pressureW || {_pressureE}) then {
+            private ["_occTargets"];
+            _occTargets = [];
+            {if (!isNil "_x") then {_occTargets set [count _occTargets, _x]}} forEach _occTgtW;
+            {if (!isNil "_x") then {_occTargets set [count _occTargets, _x]}} forEach _occTgtE;
+            {
+                private ["_coordRec","_coordTown","_coordTargeted"];
+                _coordRec = _x;
+                _coordTown = _coordRec select 0;
+                _coordTargeted = false;
+                {if (!_coordTargeted && {_x == _coordTown}) then {_coordTargeted = true}} forEach _occTargets;
+                if (_coordTargeted) then {
+                    _coordBaselineRestore set [count _coordBaselineRestore, [_coordRec, _coordRec select 1]];
+                    _coordRec set [1, [(_coordRec select 1) * 1.1, 0, _surgeCapPaid] call _fnClamp];
+                };
+            } forEach _ledger;
+        };
+        if (_coordMult != _coordMultPrev) then {
+            diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_COORD mult=%2 westSnap=%3 eastSnap=%4 pressureW=%5 pressureE=%6",
+                _elmin, _coordMult, _westSnapOk, _eastSnapOk, _pressureW, _pressureE];
+        };
+    };
+
 
     //--------------------------------------------------------------------
     // PHASE 3: ASSESSMENT - classify each town.
@@ -305,7 +440,7 @@ while {!WFBE_GameOver} do {
                 _src    = _sources select _srcIdx;
                 _srcStr = _src select 2;
                 _srcBase= _src select 1;
-                _send   = [_needed * 0.5, 0, _srcStr - (_srcBase * 0.5)] call _fnClamp;
+                _send   = [_needed * 0.5 * _coordMult, 0, _srcStr - (_srcBase * 0.5)] call _fnClamp;
                 if (_send > 0.05) then {
                     _src set [2, _srcStr - _send];
                     _src set [3, (_src select 3) + _send];
@@ -340,7 +475,7 @@ while {!WFBE_GameOver} do {
                 _src    = _sources select _srcIdx;
                 _srcStr = _src select 2;
                 _srcBase= _src select 1;
-                _send   = [_needed * 0.3, 0, _srcStr - (_srcBase * 0.6)] call _fnClamp;
+                _send   = [_needed * 0.3 * _coordMult, 0, _srcStr - (_srcBase * 0.6)] call _fnClamp;
                 if (_send > 0.05) then {
                     _src set [2, _srcStr - _send];
                     _src set [3, (_src select 3) + _send];
@@ -784,6 +919,11 @@ while {!WFBE_GameOver} do {
             if (_hardenOn && {_eta > 0} && {(count _rec) > 6}) then {_rec set [6, 0]};
         };
     } forEach _ledger;
+
+    //--- GDIR_COORD_BASELINE_RESTORE: priority-only inflation must not persist into the next tick.
+    {
+        (_x select 0) set [1, _x select 1];
+    } forEach _coordBaselineRestore;
 
     //--------------------------------------------------------------------
     // PHASE 6: MATERIALIZATION - GDIR_VOLUME telemetry for active towns.
