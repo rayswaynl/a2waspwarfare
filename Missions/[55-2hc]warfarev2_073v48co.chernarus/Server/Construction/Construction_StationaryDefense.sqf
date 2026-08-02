@@ -49,8 +49,10 @@ if (_builtByRepairTruck) then {
 
 //--- If it's a minefield, we exit the script while spawning it.
 if (_type == 'Sign_Danger') exitWith {
-	Private ["_c","_h","_mine","_mineType","_toWorld"];
+	Private ["_c","_fieldID","_h","_mine","_mineType","_toWorld"];
 	_mineType = if (_side == west) then {'MineMine'} else {'MineMineE'};
+	//--- The Sign_Danger anchor is deleted below, so retain a shared identity for this purchased field.
+	_fieldID = str _defense;
 	_h = -4;
 	_c = 0;
 	for [{_z=0}, {_z<9}, {_z=_z+1}] do{
@@ -58,7 +60,7 @@ if (_type == 'Sign_Danger') exitWith {
 		_toWorld = _defense modelToWorld _array;
 		_toWorld set[2,0];
 		_mine = createMine [_mineType, _toWorld,[], 0];
-		mines set [count mines, [_mine, time]];
+		mines set [count mines, [_mine, time, _side, _fieldID]];
 
 		_c = _c + 4;
 	};
@@ -70,7 +72,7 @@ if (_type == 'Sign_Danger') exitWith {
 		_toWorld = _defense modelToWorld _array;
 		_toWorld set[2,0];
 		_mine = createMine [_mineType, _toWorld,[], 0];
-		mines set [count mines, [_mine, time]];
+		mines set [count mines, [_mine, time, _side, _fieldID]];
 		_c = _c + 4;
 	};
 
@@ -81,7 +83,7 @@ if (_type == 'Sign_Danger') exitWith {
 		_toWorld = _defense modelToWorld _array;
 		_toWorld set[2,0];
 		_mine = createMine [_mineType, _toWorld,[], 0];
-		mines set [count mines, [_mine, time]];
+		mines set [count mines, [_mine, time, _side, _fieldID]];
 		_c = _c + 4;
 	};
 	deleteVehicle _defense;
