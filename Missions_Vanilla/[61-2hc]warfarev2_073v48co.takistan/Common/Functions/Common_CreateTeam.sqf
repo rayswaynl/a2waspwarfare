@@ -1,5 +1,5 @@
 // Marty: Crew placement uses explicit private locals because town AI may be created on server, client, or headless client.
-Private ['_airTeamDelay','_airTeamHulls','_airTeamMaxHulls','_airTeamNext','_airTeamStagger','_airTeamStaggerKey','_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_isAirHull','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor','_warnKey','_warnLast','_planeDir','_planeAirStart','_planeIdx'];
+Private ['_airTeamDelay','_airTeamHulls','_airTeamMaxHulls','_airTeamNext','_airTeamStagger','_airTeamStaggerKey','_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_isAirHull','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor','_warnKey','_warnLast','_planeDir','_planeAirStart','_planeIdx','_aaEnrollList'];
 
 _list = _this select 0;
 _position = _this select 1;
@@ -227,6 +227,32 @@ _rearmor = {
 					_perfCrew = _perfCrew + count _vehicleCrews;
 					_vehicles = _vehicles + [_vehicle];
 					_perfVehicles = _perfVehicles + 1;
+					//--- fix/aa-hull-empty-reap-20260802 (owner-live report 2026-08-02, Takistan: "map is littered
+					//--- with...dead or empty shilka"). ROOT CAUSE (crewless-alive gap): a garrison/AI-founded AA
+					//--- vehicle (Server_GetTownGroups*.sqf's AA_Light/AA_Heavy templates, and AI-commander squad
+					//--- foundings such as Squad_RU.sqf's ZSU_INS entry - both round-trip through THIS function)
+					//--- is never enrolled anywhere once its crew dies: it is not in `allDead` (the hull itself
+					//--- is still alive, so server_collector_garbage.sqf's generic wreck sweep never sees it), it
+					//--- is not a player purchase (Client_BuildUnit.sqf's own "emptyVehicles" enrollment never runs
+					//--- for these), and it is not an AI-commander TEAM vehicle abandoned mid-tasking (Common_
+					//--- RunCommanderTeam.sqf's abandon-enrollment needs either a live crew (IMMOBILE-ABANDON) or
+					//--- a non-Tank/APC/Air hull (TRUCK-ABANDON) - an all-crew-dead AA hull satisfies neither). The
+					//--- destroyed-hull half of the report ("dead...shilka") is already covered by the generic
+					//--- allDead+TrashObject sweep; this closes only the alive-but-crewless half ("empty...shilka").
+					//--- FIX: enroll a known AA-vehicle hull into the SAME "emptyVehicles" watch-queue player
+					//--- purchases already use (Client_BuildUnit.sqf) at the moment it is founded WITH crew here.
+					//--- Server_HandleEmptyVehicle.sqf's existing crewless-timeout-then-locality-aware-delete logic
+					//--- (WFBE_C_UNITS_EMPTY_TIMEOUT, guer-fob-empty-exempt, airlift-exempt, bounded _reapAttempts/
+					//--- _reapRounds) does the rest unchanged - no new deletion logic, no flag: correctness/cleanup-
+					//--- coverage, not a volume or balance change (repo flag policy). Never reached for a hull that
+					//--- lost its whole crew at spawn - that case already `exitWith`s above (L220) before this
+					//--- point. Classname set mirrors Common_HandleSEADMissile.sqf's established AA-vehicle list
+					//--- (keep both in sync if a new AA hull class is ever added).
+					if (typeOf _vehicle in ["ZSU_CDF","ZSU_INS","ZSU_TK_EP1","2S6M_Tunguska","M6_EP1"]) then {
+						_aaEnrollList = (WF_Logic getVariable "emptyVehicles") + [_vehicle];
+						WF_Logic setVariable ["emptyVehicles", _aaEnrollList, true];
+						["INFORMATION", Format ["Common_CreateTeam.sqf: garrison/AI AA hull [%1] enrolled into the empty-vehicle collector (side %2).", typeOf _vehicle, _side]] Call WFBE_CO_FNC_LogContent;
+					};
 					if (_isAirHull) then {_airTeamHulls = _airTeamHulls + 1};
 					//--- carrier-air-deckspawn (claude 2026-07-27): CORRECTNESS FIX for the OWNER-REPORTED "units stuck on the
 					//--- carriers". AICOM founds AIR teams on a captured carrier via AI_Commander_Teams.sqf cmdcon41 (_spawnPos =
