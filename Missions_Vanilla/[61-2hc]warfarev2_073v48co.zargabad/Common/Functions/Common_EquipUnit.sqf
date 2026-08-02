@@ -68,6 +68,20 @@ _unit addWeapon "Put";
 //--- present, so the muzzle-bind RPT stays quiet (preserves the build-31 weapons-first fix).
 {_unit removeWeapon _x; _unit addWeapon _x} forEach _weapons;
 
+//--- INFORMATION (fable/m136-rocket-20260802): a disposable launcher's magazine classname equals its own
+//--- weapon classname (M136, RPG18, RPG7V, Strela, ...). If that magazine never makes it into _magazines
+//--- (missing loadout entry, registry-scrub drop, etc.) the launcher spawns empty - confirm the pairing
+//--- here so soak RPT scans catch a future regression at the equip site instead of a field report.
+{
+	if (isClass (configFile >> "CfgMagazines" >> _x)) then {
+		if (_x in _magazines) then {
+			["INFORMATION", Format ["Common_EquipUnit.sqf: disposable launcher [%1] equipped WITH its own magazine on %2.", _x, _unit]] Call WFBE_CO_FNC_LogContent;
+		} else {
+			["WARNING", Format ["Common_EquipUnit.sqf: disposable launcher [%1] equipped on %2 with NO matching magazine in loadout - launcher will fire empty.", _x, _unit]] Call WFBE_CO_FNC_LogContent;
+		};
+	};
+} forEach _weapons;
+
 //--- Get a proper muzzle.
 _use = "";
 {if (_x != "") exitWith {_use = _x}} forEach _eligible;
