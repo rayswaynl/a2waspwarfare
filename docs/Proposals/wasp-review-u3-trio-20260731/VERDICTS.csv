@@ -1,0 +1,4 @@
+worktree,branch,base,behind_master,insertions,verdict,confidence,superseding_pr,salvage_scope,followup_card
+client-qol,claude/u3-client-qol-20260725,639817de24,690,355,SALVAGE_PARTIAL,high,none (batch3 not 1382),"TOWNS_TAB_SV complete; cmd-tools nudge complete; CMD_DEST_PREVIEW incomplete stub",wasp-client-qol-batch3-towns-sv-20260731
+territorial-hud,claude/u3-territorial-hud-20260725,639817de24,690,171,SUPERSEDED_DISCARD,high,1422,none (master has superior server-snapshot countdown),hygiene-remove-worktree
+naval-rumor,claude/u3-naval-rumor-20260725,639817de24,690,57,SUPERSEDED_DISCARD,high,1420,none (master inline at same edges),hygiene-remove-worktree

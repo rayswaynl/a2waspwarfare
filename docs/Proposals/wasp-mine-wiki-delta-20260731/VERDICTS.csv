@@ -1,0 +1,47 @@
+Page,DeltaLines,LiveLines,Verdict,EasyWin,Notes
+Agent-Worklog.md,1836,28381,SUPERSEDED,no,Live append-only log
+_Sidebar.md,67,400,SUPERSEDED,no,Live program nav
+Home.md,66,99,SUPERSEDED,no,
+Progress-Dashboard.md,94,163,SUPERSEDED,no,
+LLM-Agent-Entry-Pack.md,36,92,SUPERSEDED,no,
+AI-Assistant-Guide.md,59,29,SUPERSEDED,no,Do not overwrite compact live gate
+AI-Assistant-Developer-Guide.md,67,71,SUPERSEDED,no,
+Coordination-Board.md,71,159,SUPERSEDED,no,
+Feature-Status-Register.md,194,380,SUPERSEDED,no,
+Bottleneck-Removal-Queue.md,74,86,SUPERSEDED,no,
+Wiki-Quality-Audit.md,105,21,SUPERSEDED,no,Live intentionally short
+Construction-And-CoIn-Systems-Atlas.md,23,371,SUPERSEDED,no,
+Gear-Loadout-And-EASA-Atlas.md,28,237,SUPERSEDED,no,
+Headless-Delegation-And-Failover-Playbook.md,27,201,SUPERSEDED,no,
+Town-AI-Vehicle-Despawn-Safety.md,36,145,SUPERSEDED,no,
+Paratrooper-Marker-Revival.md,45,115,SUPERSEDED,no,
+Arma-2-OA-Compatibility-Audit.md,78,179,SUPERSEDED,no,
+Economy-Towns-And-Supply.md,118,173,SUPERSEDED,no,
+Server-Gameplay-Runtime-Atlas.md,72,91,SUPERSEDED,no,
+Public-Variable-Channel-Index.md,122,140,SUPERSEDED,no,
+Networking-And-Public-Variables.md,179,166,SUPERSEDED,no,Live has more anchors
+PVF-Dispatch-Implementation-Playbook.md,170,258,SUPERSEDED,no,
+Client-Skill-Init-Idempotency.md,100,100,SUPERSEDED,no,
+Factory-Queue-Counter-Token-Cleanup.md,90,107,SUPERSEDED,no,
+Hosted-Server-FPS-Loop-Sleep.md,95,93,SUPERSEDED,no,
+WASP-Marker-Wait-Cleanup.md,104,93,SUPERSEDED,no,
+Supply-Mission-Scan-Narrowing.md,122,99,SUPERSEDED,low,Historical note only
+Tools-And-Build-Workflow.md,157,196,SUPERSEDED,no,
+SQF-Code-Atlas.md,229,254,SUPERSEDED,no,
+AI-Headless-And-Performance.md,109,176,SUPERSEDED,no,
+Commander-Reassignment-Call-Shape.md,101,146,SUPERSEDED,no,
+Developer-History-And-Upstream-Lessons.md,196,198,SUPERSEDED,no,
+PR8-And-Drone-Upstream-Lesson-Match.md,53,68,SUPERSEDED,no,
+Abandoned-Feature-Revival-Review.md,304,269,SUPERSEDED,low,No unique H2 vs live
+Client-UI-HUD-And-Menus.md,159,55,HARVEST,yes,Three matrices; re-source before publish
+Dead-Code-And-Stale-Code-Register.md,57,554,SUPERSEDED,no,Untracked in delta set
+Wiki-Pruning-And-Relevance-Ledger.md,36,589,SUPERSEDED,no,Untracked
+Source-Fix-Propagation-Queue.md,35,178,SUPERSEDED,no,Untracked
+Server-Memory-Allocator.md,59,0,STALE_SUPERSEDED,no,Live title Memory-Allocator-Research-And-WaspMalloc
+agent-collaboration.json,2032,18662,AGENT_RUNTIME,no,
+agent-compatibility-audit.json,425,298,AGENT_RUNTIME,no,
+agent-context.json,1172,1499,AGENT_RUNTIME,no,
+agent-events.jsonl,486,2302,AGENT_RUNTIME,no,
+agent-hardening-backlog.jsonl,31,161,AGENT_RUNTIME,no,
+agent-knowledge.jsonl,164,516,AGENT_RUNTIME,no,
+agent-status.json,588,2595,AGENT_RUNTIME,no,

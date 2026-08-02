@@ -1,0 +1,16 @@
+{
+  "task": "wasp-pr-queue-foldwave-program-20260801",
+  "agent": "grok-main-07311829-night",
+  "closed": "TASK_DONE",
+  "dropId": "20260801-035117-grok-main-07311829-night",
+  "payloadValid": true,
+  "console": "fs-visible",
+  "peachId": "dm:834428635896610886",
+  "peachOk": true,
+  "reportSha": "4CF618A5BBC05AB920D42FF4B01B5CC578B19C5070425464088C6E6F99F934A7",
+  "open": 126,
+  "mergeable": 80,
+  "conflicting": 46,
+  "unknown": 0,
+  "shape": "MILESTONE: ARTIFACT; DROP: 20260801-035117-grok-main-07311829-night; HASHES: VERIFIED; CONSOLE: 20260801-035117-grok-main-07311829-night-visible; PEACH: dm:834428635896610886; ATTACHMENT: PREVIEW-INDEX"
+}
