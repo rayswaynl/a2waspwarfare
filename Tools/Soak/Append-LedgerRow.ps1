@@ -14,6 +14,8 @@
     * rowId = YYYYMMDD-NNNN, NNNN one-based and scoped to the UTC date of this append.
     * A duplicate stampId is rejected (throws, appends nothing) unless the row is a SKIP_*
       status AND -AllowDuplicateSkip is set.
+    * Row-id allocation, duplicate checking, and replacement are serialized through a sidecar
+      lock; the ledger is staged in the same directory and atomically replaced.
     * Serialization is version-branched: pwsh 7 uses ConvertTo-Json; Windows PowerShell 5.1
       uses JavaScriptSerializer, because 5.1's ConvertTo-Json collapses single-element arrays.
 
@@ -118,18 +120,51 @@ function ConvertTo-LedgerLine($obj) {
     return $ser.Serialize($obj)
 }
 
+function Enter-LedgerLock([string]$path) {
+    $fullPath = [System.IO.Path]::GetFullPath($path)
+    $dir = [System.IO.Path]::GetDirectoryName($fullPath)
+    if ($dir -and -not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+    $lockPath = $fullPath + '.lock'
+    $deadline = (Get-Date).AddSeconds(30)
+    while ($true) {
+        try {
+            return [System.IO.File]::Open($lockPath, [System.IO.FileMode]::OpenOrCreate, [System.IO.FileAccess]::ReadWrite, [System.IO.FileShare]::None)
+        } catch [System.IO.IOException] {
+            if ((Get-Date) -ge $deadline) { throw "FAIL_LEDGER: timed out waiting for ledger lock '$lockPath'." }
+            Start-Sleep -Milliseconds 100
+        }
+    }
+}
+
 function Append-Line([string]$path, [string]$line) {
     $enc = New-Object System.Text.UTF8Encoding($false)   # BOM-free
-    if (-not (Test-Path -LiteralPath $path)) {
-        $dir = Split-Path -Parent $path
-        if ($dir -and -not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
-        [System.IO.File]::WriteAllText($path, $HEADER + "`n", $enc)
+    $fullPath = [System.IO.Path]::GetFullPath($path)
+    $dir = [System.IO.Path]::GetDirectoryName($fullPath)
+    if ($dir -and -not (Test-Path -LiteralPath $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
+    $tmp = Join-Path $dir ('.{0}.{1}.tmp' -f [System.IO.Path]::GetFileName($fullPath), [guid]::NewGuid().ToString('N'))
+    $backup = $tmp + '.bak'
+    try {
+        if (Test-Path -LiteralPath $fullPath) {
+            [System.IO.File]::Copy($fullPath, $tmp, $true)
+        } else {
+            [System.IO.File]::WriteAllText($tmp, $HEADER + "`n", $enc)
+        }
+        [System.IO.File]::AppendAllText($tmp, $line + "`n", $enc)
+        if (Test-Path -LiteralPath $fullPath) {
+            [System.IO.File]::Replace($tmp, $fullPath, $backup)
+        } else {
+            [System.IO.File]::Move($tmp, $fullPath)
+        }
+    } finally {
+        if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue }
+        if (Test-Path -LiteralPath $backup) { Remove-Item -LiteralPath $backup -Force -ErrorAction SilentlyContinue }
     }
-    [System.IO.File]::AppendAllText($path, $line + "`n", $enc)
 }
 
 # ---- read existing rows (for rowId + dedup) --------------------------------
 
+$ledgerLock = Enter-LedgerLock $LedgerPath
+try {
 $existing = @()
 if (Test-Path -LiteralPath $LedgerPath) {
     foreach ($ln in [System.IO.File]::ReadAllLines($LedgerPath)) {
@@ -312,3 +347,7 @@ $null = ($line | ConvertFrom-Json)   # throws if we produced invalid JSON
 
 Append-Line $LedgerPath $line
 Write-Output $rowId
+}
+finally {
+    if ($null -ne $ledgerLock) { $ledgerLock.Dispose() }
+}
