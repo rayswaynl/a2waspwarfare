@@ -3,8 +3,8 @@
  Contributors : 	Marty
 */
 
-disableSerialization;
-_display = _this select 0;
+//--- OA 1.64: this scheduled loop must not retain a Display/Control local across sleep. Re-fetch the dialog from uiNamespace at every use.
+uiNamespace setVariable ["wfbe_display_unitcamera", _this select 0];
 MenuAction = -1;
 mouseButtonUp = -1;
 WF_MenuAction = -1; 
@@ -63,9 +63,8 @@ _type = if (!(difficultyEnabled "3rdPersonView")) then {["Internal"]} else {["In
 {lbAdd[21006,_x]} forEach _type;
 lbSetCurSel[21006,0];
 
-_map = _display displayCtrl 21007;
-_map ctrlMapAnimAdd [0,.25,getPos _currentUnit];
-ctrlMapAnimCommit _map;
+((uiNamespace getVariable "wfbe_display_unitcamera") displayCtrl 21007) ctrlMapAnimAdd [0,.25,getPos _currentUnit];
+ctrlMapAnimCommit ((uiNamespace getVariable "wfbe_display_unitcamera") displayCtrl 21007);
 
 while {true} do {
 	sleep 0.1;
@@ -76,7 +75,7 @@ while {true} do {
 	//--- Map click.
 	if (mouseButtonUp == 0) then {
 		mouseButtonUp = -1;
-		_near = _map PosScreenToWorld[mouseX,mouseY];
+		_near = ((uiNamespace getVariable "wfbe_display_unitcamera") displayCtrl 21007) PosScreenToWorld[mouseX,mouseY];
 		_list = _near nearEntities [["Man","Car","Motorcycle","Ship","Tank","Air"],200];
 		if (count _list > 0) then {
 			_objects = [];
@@ -153,13 +152,14 @@ while {true} do {
 	
 	//--- Update the Camera.
 	if (_cameraSwap) then {
-		ctrlMapAnimClear _map;
-		_map ctrlMapAnimAdd [1,.25,getPos _currentUnit];
-		ctrlMapAnimCommit _map;
+		ctrlMapAnimClear ((uiNamespace getVariable "wfbe_display_unitcamera") displayCtrl 21007);
+		((uiNamespace getVariable "wfbe_display_unitcamera") displayCtrl 21007) ctrlMapAnimAdd [1,.25,getPos _currentUnit];
+		ctrlMapAnimCommit ((uiNamespace getVariable "wfbe_display_unitcamera") displayCtrl 21007);
 		_currentUnit switchCamera _currentMode;
 	};
 };
 
+uiNamespace setVariable ["wfbe_display_unitcamera", nil];
 closeDialog 0;
 //--- Always restore the player to Internal on exit. Restoring _currentMode left External/Gunner/Group
 //--- latched after watching another unit (observer teardown); Internal is the only safe player view.

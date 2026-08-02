@@ -1,5 +1,5 @@
 scriptName "Client\GUI\GUI_RespawnMenu.sqf";
-disableSerialization; //--- cmdcon42 (Ray 2026-07-02): scheduled dialog loop touches display/controls across sleep; guard against "does not support serialization" (matches the convention already in the other GUI_Menu_* handlers).
+//--- OA 1.64: never call disableSerialization in this scheduled loop; it cannot survive sleep. Display access below is re-fetched from uiNamespace at each use.
 
 uiNamespace setVariable ["wfbe_display_respawn", _this select 0];
 
