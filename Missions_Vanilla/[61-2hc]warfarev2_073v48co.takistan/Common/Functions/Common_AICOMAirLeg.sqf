@@ -463,10 +463,10 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 		//--- aloft to a LIVE heli - release it safely under the heli so it is never carried off / lost.
 		//--- P1.1 TERMINAL VEHLIFT TELEMETRY (claude 2026-07-19): a lift WAS attempted (non-null/alive _lveh) but
 		//--- the deep-drop leg above did not complete (heli/driver lost en route, or _vdrop never resolved to a
-		//--- valid array) - distinct from a full drop-success. Checked BEFORE the altitude-gated safety-detach so
+		//--- valid array) - distinct from a full drop-success. Checked before the unconditional safety-detach so
 		//--- it still reports even when the vehicle already settled on its own. Flag default 0.
 		if (!isNull _lveh && {alive _lveh} && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0}) then {diag_log ("AICOMAIR|v1|" + str _sID + "|" + str (round (time / 60)) + "|stage=vehlift|reason=drop-safety-release|veh=" + (typeOf _lveh) + "|team=" + (str _tm))};
-		if (!isNull _lveh && {alive _lveh} && {((getPos _lveh) select 2) > 3}) then {
+		if (!isNull _lveh && {alive _lveh}) then {
 			detach _lveh;
 			_lveh setVelocity [0,0,0];
 			_lveh setPos [(getPos _lveh) select 0, (getPos _lveh) select 1, 0.5];
