@@ -11,10 +11,12 @@
 #>
 param(
   [string]$RptFile,
-  [string]$Host_ = 'Administrator@78.46.107.142',
-  [string]$RemoteRpt = 'C:/Users/Administrator/AppData/Local/ArmA 2 OA/arma2oaserver.RPT'
+  [string]$Host_ = $env:WASP_REMOTE_SSH_TARGET,   # user@host for the RPT SSH pull
+  [string]$RemoteRpt = $env:WASP_REMOTE_RPT       # remote RPT file path on that host
 )
 $lines = if ($RptFile) { Get-Content -LiteralPath $RptFile } else {
+  if (-not $Host_)     { throw 'WASP_REMOTE_SSH_TARGET is not set and -Host_ was not given (expected user@host for the RPT SSH pull).' }
+  if (-not $RemoteRpt) { throw 'WASP_REMOTE_RPT is not set and -RemoteRpt was not given (expected the remote RPT file path).' }
   ssh -o BatchMode=yes -o ConnectTimeout=20 $Host_ "findstr /C:`"TOWNPOS|v1|`" `"$RemoteRpt`""
 }
 $towns = @{}   # world -> ordered list of "Name":(x,y)
