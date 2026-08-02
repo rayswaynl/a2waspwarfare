@@ -37,7 +37,7 @@
 
 private ["_hcs", "_live", "_owners", "_counts", "_o", "_idx", "_bestLoad", "_ties", "_pick", "_x",
 	"_town", "_stickyOn", "_stickyOwner", "_stickyTs", "_stickyWindow", "_stickyIdx",
-	"_stickyLoad", "_totalLoad", "_maxRatio"];
+	"_stickyLoad", "_totalLoad", "_maxRatio", "_fpsReg", "_hcKey", "_fidx", "_slot", "_fresh"];
 
 //--- Optional town argument. A unary `Call ...` does NOT clear _this: the called scope INHERITS
 //--- the CALLER's _this. AI_Commander_Teams.sqf's own _this IS the side, and the town / static-
@@ -61,22 +61,26 @@ if (_stickyOn && {!isNil "_this"} && {typeName _this == "ARRAY"} && {count _this
 };
 
 _hcs = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
+_fpsReg = missionNamespace getVariable ["WFBE_HCFPS_REG", []];
 
 //--- Only LIVE HC groups: a stale registry entry (HC dropped between prunes) would route
-//--- the delegation to a null leader and the AI would silently never spawn.
+//--- the delegation to a dead channel and silently lose the AI command. owner()>0 is not enough:
+//--- A2 can retain the dropped HC body/group and its old owner id while the engine has already
+//--- removed the network channel. HC_StatLoop is unconditional and refreshes this server-side
+//--- row every 60s, so require its same <=150s freshness window before making the group routable.
 _live = [];
 {
-	//--- BUGFIX (2026-07-17, HC-founding zombie-picker): a registered HC group whose leader has
-	//--- owner()==0 (disconnected, or its unit locality silently transferred to the server - see
-	//--- Common_SendToClient.sqf's own "owner()==0 => drop, no publicVariableClient" guard) is NOT
-	//--- a routable delegation target: any send to it is ALREADY silently dropped downstream. Such
-	//--- a zombie entry still passes the isNull/alive test below and tallies ZERO owned units, so
-	//--- the argmin picker would otherwise select it FOREVER once it appears (it always looks like
-	//--- the least-loaded HC). Single-shot callers (AI_Commander_Teams / AI_Commander_Wildcard
-	//--- delegate-aicom-team) have no fallback if that happens - unlike the townai/static-defence
-	//--- callers, which round-robin past a bad slot. Excluding owner<=0 here can never regress a
-	//--- delivery that used to work (Common_SendToClient already dropped it either way).
-	if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}) then {_live = _live + [_x]};
+	_fresh = false;
+	if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 0}) then {
+		_hcKey = Format ["HC-%1", netId (leader _x)];
+		_fidx = -1;
+		{ if ((_x select 0) == _hcKey) exitWith {_fidx = _forEachIndex} } forEach _fpsReg;
+		if (_fidx >= 0) then {
+			_slot = _fpsReg select _fidx;
+			if ((time - (_slot select 2)) <= 150) then {_fresh = true};
+		};
+	};
+	if (_fresh) then {_live = _live + [_x]};
 } forEach _hcs;
 
 if (count _live == 0) exitWith {objNull};
