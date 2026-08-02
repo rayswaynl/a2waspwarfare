@@ -1,15 +1,41 @@
-Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_refunded","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_unitTypeGet","_vehicle","_waitTime"];
+Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_refunded","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_unitTypeGet","_vehicle","_waitTime","_authBad","_sideStructs","_unlockRes","_unitFound","_teamSide"];
+//--- BUYUNIT-AUTH (g1606 2026-07-30): envelope + class/side/team/factory authority before queue/spawn.
+//--- Does NOT retread #1607 nil-safe queue release (open draft); only rejects bad purchase payloads.
+//--- N8: exact funds/supply charged for THIS buy (threaded through from AI_Commander_Produce.sqf's
+//--- Spawn AIBuyUnit call so a live W15 Black Market discount refunds at the SAME rate it was charged).
+_authBad = "";
+_id = [];
+_building = objNull;
+_unitType = "";
+_side = sideUnknown;
+_team = grpNull;
+_isVehicle = false;
+_price = 0;
+if (typeName _this != "ARRAY" || {(count _this) < 6}) then {_authBad = "short/non-array buy payload"};
+if (_authBad == "") then {
 _id = _this select 0;
 _building = _this select 1;
 _unitType = _this select 2;
 _side = _this select 3;
-_sideID = (_side) Call GetSideID;
 _team = _this select 4;
 _isVehicle = _this select 5;
-//--- N8 fix: exact funds/supply charged for THIS buy (threaded through from AI_Commander_Produce.sqf's
-//--- Spawn AIBuyUnit call so a live W15 Black Market discount refunds at the SAME rate it was charged,
-//--- not re-derived from list price). Defaults to 0 for any other/older caller (defensive, back-compat).
 _price = if (count _this > 6) then {_this select 6} else {0};
+if (typeName _id != "ARRAY" || {(count _id) < 1}) then {_authBad = "invalid queue id token"};
+if (_authBad == "" && {typeName _building != "OBJECT"}) then {_authBad = "building is not OBJECT"};
+if (_authBad == "" && {typeName _unitType != "STRING" || {_unitType == ""}}) then {_authBad = "unitType is not a non-empty STRING"};
+if (_authBad == "" && {typeName _side != "SIDE" || {!(_side in [west,east,resistance])}}) then {_authBad = "side is not a playable SIDE"};
+if (_authBad == "" && {typeName _team != "GROUP" || {isNull _team}}) then {_authBad = "team is not a live GROUP"};
+if (_authBad == "" && {typeName _isVehicle != "BOOL"}) then {_authBad = "isVehicle flag type invalid"};
+if (_authBad == "" && {typeName _price != "SCALAR" || {_price < 0}}) then {_authBad = "price is not a non-negative SCALAR"};
+};
+if (_authBad != "") exitWith {
+["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH rejected payload: %1.", _authBad]] Call WFBE_CO_FNC_LogContent;
+if (typeName _side == "SIDE" && {_side in [west,east,resistance]} && {typeName _price == "SCALAR"} && {_price > 0}) then {
+[_side, _price] Call ChangeAICommanderFunds;
+};
+};
+
+_sideID = (_side) Call GetSideID;
 //--- fable/aicom-treasury-refund-on-abort: track whether the pre-charged _price has already been
 //--- refunded, so the mid-loop exitWith further below (which - per the ENGINE-VERIFIED note there -
 //--- only breaks the while loop and always falls through to the post-wait re-check) cannot pay out
@@ -18,16 +44,60 @@ _refunded = false;
 
 _sideText = str _side;
 
-if (!(alive _building)||{isNull _team}||{isPlayer (leader _team)}) exitWith {
-	if (!isNull _team) then {
-		_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
-	};
-	//--- fable/aicom-treasury-refund-on-abort: this early abort (before the build queue is even
-	//--- entered) still runs AFTER AI_Commander_Produce.sqf pre-charged _price - refund it, same
-	//--- idiom as the createVehicle->objNull guard further down.
-	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted pre-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
-	if !(alive _building) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
-	if (isPlayer (leader _team)) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent};
+//--- Forged classname / wrong-side roster: require registered unit data AND membership in a
+//--- side factory unit-list (IsUnitUnlocked _found). Unregistered classes previously fell through
+//--- with waitTime=0 and still CreateVehicle'd.
+_unitTypeGet = missionNamespace getVariable _unitType;
+if (isNil "_unitTypeGet" || {typeName _unitTypeGet != "ARRAY"}) exitWith {
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH forged/unregistered classname [%1] - refunded %2 to [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent;
+};
+_unlockRes = [_unitType, _sideText, (_side) Call WFBE_CO_FNC_GetSideUpgrades] Call WFBE_CO_FNC_IsUnitUnlocked;
+_unitFound = if (typeName _unlockRes == "ARRAY" && {(count _unlockRes) > 1}) then {_unlockRes select 1} else {false};
+if (!_unitFound) exitWith {
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH classname [%1] not on side [%2] factory rosters - refunded %3.", _unitType, _sideText, _price]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Team/side mismatch: claimed purchase side must match warfare team stamp (or engine side).
+_teamSide = _team getVariable "wfbe_side";
+if (isNil "_teamSide") then {_teamSide = side _team};
+if (typeName _teamSide != "SIDE" || {_teamSide != _side}) exitWith {
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH team/side mismatch (claim=%1 team=%2) for [%3] - refunded %4.", _side, _teamSide, _unitType, _price]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Man/vehicle flag must match the class (prevents wrong branch: free crew / empty hull path abuse).
+if ((_unitType isKindOf "Man") && {_isVehicle}) exitWith {
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH isVehicle flag mismatch for Man class [%1] - refunded %2.", _unitType, _price]] Call WFBE_CO_FNC_LogContent;
+};
+if (!(_unitType isKindOf "Man") && {!_isVehicle}) exitWith {
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH isVehicle flag mismatch for vehicle class [%1] - refunded %2.", _unitType, _price]] Call WFBE_CO_FNC_LogContent;
+};
+
+//--- Factory ownership: building must be an alive structure of the claimed side.
+_sideStructs = _side Call WFBE_CO_FNC_GetSideStructures;
+if (isNil "_sideStructs" || {typeName _sideStructs != "ARRAY"}) then {_sideStructs = []};
+if (isNull _building || {!alive _building} || {!(_building in _sideStructs)}) exitWith {
+if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted pre-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
+if (isNull _building || {!alive _building}) then {["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction has been stopped due to factory destruction.", _unitType]] Call WFBE_CO_FNC_LogContent};
+if (!isNull _building && {alive _building} && {!(_building in _sideStructs)}) then {["WARNING", Format ["Server_BuyUnit.sqf: BUY-AUTH factory not owned by side [%1] for [%2] - refunded %3.", _sideText, _unitType, _price]] Call WFBE_CO_FNC_LogContent};
+};
+
+if (isPlayer (leader _team)) exitWith {
+if (!isNull _team) then {
+_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
+};
+if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true; ["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] construction aborted pre-queue - refunded %2 to side [%3].", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent};
+["INFORMATION", Format ["Server_BuyUnit.sqf: Unit [%1] has been canceled, player [%2] has replace the ai.", _unitType, name (leader _team)]] Call WFBE_CO_FNC_LogContent;
 };
 
 ["INFORMATION", Format ["Server_BuyUnit.sqf: [%1] Team [%2] has purchased [%3].", _side,_team,_unitType]] Call WFBE_CO_FNC_LogContent;

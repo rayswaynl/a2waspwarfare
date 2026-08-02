@@ -479,6 +479,26 @@ class CheckSqfTests(unittest.TestCase):
         self.assertNotIn("DBLBOM", codes)
 
 
+class BuyMenuUpgradeRefreshTests(unittest.TestCase):
+    """The open shop must rebuild its catalogue after a replicated tech change."""
+
+    PATHS = (
+        Path("Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/GUI/GUI_Menu_BuyUnits.sqf"),
+        Path("Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/GUI/GUI_Menu_BuyUnits.sqf"),
+        Path("Missions_Vanilla/[61-2hc]warfarev2_073v48co.zargabad/Client/GUI/GUI_Menu_BuyUnits.sqf"),
+    )
+    SNAPSHOT = "_shopUpgradesSeen = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;"
+    REFRESH = "if (!(_shopUpgrades in [_shopUpgradesSeen])) then {_shopUpgradesSeen = _shopUpgrades + []; _update = true};"
+
+    def test_shop_rebuilds_after_side_upgrade_changes(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+        for relative_path in self.PATHS:
+            source = (root / relative_path).read_text(encoding="utf-8")
+            self.assertIn(self.SNAPSHOT, source, relative_path)
+            self.assertIn(self.REFRESH, source, relative_path)
+            self.assertLess(source.index(self.REFRESH), source.index("//--- Update tabs."), relative_path)
+
+
 class JipCivLatchOrderTests(unittest.TestCase):
     CONNECT_PATHS = (
         Path("Missions/[55-2hc]warfarev2_073v48co.chernarus/Server/Functions/Server_OnPlayerConnected.sqf"),
