@@ -811,12 +811,17 @@ Call _sliceYield;
 			_wPin = _wTeam getVariable "wfbe_aicom_manualpin";
 			if (!isNil "_wPin" && {(time - _wPin) < (missionNamespace getVariable ["WFBE_C_AICOM_MANUALPIN_TTL", 600])}) then {_wWatched = false};
 		};
+		//--- A relief group already stationed at its threatened town is deliberately holding, not wedged en route.
+		//--- Keep the watchdog armed until arrival so a genuinely stuck reliever still returns to offense for re-tasking.
+		private ["_wRelief"];
+		_wRelief = [_wTeam, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool;
+		_wLdr = leader _wTeam;
+		if (_wWatched && {_wMode == "defense"} && {!isNull _wRelief} && {!isNull _wLdr} && {(_wLdr distance _wRelief) <= (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_FAR", 300])}) then {_wWatched = false};
 		//--- Lane-325: last-stand recall deliberately parks defenders at HQ; do not let the
 		//--- wedge watchdog release them back to offense while that round-state is active.
 		if (_wWatched && {
 			(!_lastStand) || {(missionNamespace getVariable ["WFBE_C_AICOM_WATCHDOG_LASTSTAND_SKIP", 1]) <= 0}
 		}) then {
-			_wLdr = leader _wTeam;
 			if (!isNull _wLdr && {alive _wLdr} && {behaviour _wLdr != "COMBAT"}) then {
 				//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
 				_wBc = _wTeam getVariable "wfbe_aicom_wedge_bc";
