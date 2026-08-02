@@ -936,7 +936,7 @@ class RscTitles {
 			x = 0;
 			y = 2;
 			w = 1;
-			h = 0.07;
+			h = 0.31;
 			colorBackground[] = WFBE_EOGS_Background;
 		};
 
@@ -945,7 +945,7 @@ class RscTitles {
 			x = 0.05;
 			y = 2;
 			w = 0.9;
-			h = 0.06;
+			h = 0.3;
 			size = 0.018;
 			text = "";
 		};

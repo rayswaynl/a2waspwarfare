@@ -229,17 +229,25 @@ if (_guerPanel) then {
 
 if (_leaderboardFlag) then {
 	//--- Per-player round leaderboard, built entirely client-local from data the engine
-	//--- already tracks (score/side/name via allPlayers) - no new networking, no new
-	//--- persistent state. allPlayers already excludes Headless Clients. Deliberately NOT
-	//--- filtered by `alive` (unlike Common_RealPlayers.sqf) so a player who died late in
-	//--- the round still shows their final score.
+	//--- already tracks (score/side/name). `allPlayers` is an ARMA 3 command and does NOT
+	//--- exist on A2 OA 1.64 - use the allUnits + isPlayer idiom already established at
+	//--- server_victory_threeway.sqf:274-275, filtered against WFBE_C_HC_NAMES the same way
+	//--- Common_RealPlayers.sqf does (HCs occupy real player-controlled slots in this
+	//--- architecture and would otherwise rank/win an award). Deliberately NOT filtered by
+	//--- `alive` (unlike Common_RealPlayers.sqf) so a player who died late in the round
+	//--- still shows their final score.
 	_leaderboardCtrl = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90410;
 	_leaderboardBgCtrl = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90409;
 
+	_lbHcNames = missionNamespace getVariable ["WFBE_C_HC_NAMES", ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]];
+	if ((typeName _lbHcNames) != "ARRAY") then {_lbHcNames = ["HC","HC-AI-Control-1","HC-AI-Control-2","HC-AI-Control-3","HC-AI-Control-4"]};
+
 	_scoreRows = [];
 	{
-		_scoreRows set [count _scoreRows, [name _x, score _x, side _x]];
-	} forEach allPlayers;
+		if (isPlayer _x && {!((name _x) in _lbHcNames)}) then {
+			_scoreRows set [count _scoreRows, [name _x, score _x, side _x]];
+		};
+	} forEach allUnits;
 
 	//--- Descending insertion sort on score (index 1). Player counts are small (WF_MAXPLAYERS
 	//--- caps 31-33 across the three maps) so O(n^2) is fine; avoids any A3 sort-by-code command.
@@ -256,14 +264,14 @@ if (_leaderboardFlag) then {
 	_rankLimit = 5;
 	if (_rankLimit > (count _scoreRows)) then {_rankLimit = count _scoreRows};
 
-	_lbText = "<t size='1.2'>Top Players</t><br /><br />";
+	_lbText = "<t size='1.2'>Top Players</t><br />";
 	for "_i" from 0 to (_rankLimit - 1) do {
 		_lbRow = _scoreRows select _i;
 		_lbText = _lbText + Format ["%1. %2 - %3<br />", _i + 1, _lbRow select 0, _lbRow select 1];
 	};
 
 	if (_awardsFlag && {(count _scoreRows) > 0}) then {
-		_lbText = _lbText + "<br /><t size='1.2'>Awards</t><br />";
+		_lbText = _lbText + "<t size='1.2'>Awards</t><br />";
 
 		//--- "Top Killer" per side, derived from the same score rows above - a GUER top
 		//--- killer falls out of this for free without needing WFBE_GUER_PLAYER_KILLS (that
@@ -300,14 +308,14 @@ if (_leaderboardFlag) then {
 
 	if (!isNull _leaderboardCtrl) then {
 		_lbPos = CtrlPosition _leaderboardCtrl;
-		_lbPos Set[1, 0.925];
+		_lbPos Set[1, 0.55];
 		_leaderboardCtrl CtrlSetPosition _lbPos;
 		_leaderboardCtrl CtrlCommit 0;
 		_leaderboardCtrl CtrlSetStructuredText ParseText _lbText;
 	};
 	if (!isNull _leaderboardBgCtrl) then {
 		_lbBgPos = CtrlPosition _leaderboardBgCtrl;
-		_lbBgPos Set[1, 0.92];
+		_lbBgPos Set[1, 0.545];
 		_leaderboardBgCtrl CtrlSetPosition _lbBgPos;
 		_leaderboardBgCtrl CtrlCommit 0;
 	};
