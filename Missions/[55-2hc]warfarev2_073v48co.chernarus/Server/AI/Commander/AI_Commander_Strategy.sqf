@@ -1130,9 +1130,12 @@ if (_strikeOn) then {
 							//--- Idiom from Common_RunCommanderTeam.sqf (RICH_GEAR scan ~L452): secondaryWeapon is the launcher slot for
 							//--- AT/AA infantry in A2-OA; non-empty string = unit carries a launcher. Flag-off (0) adds 0 - fully inert.
 							if ((missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_AT_BONUS", 0]) > 0) then {
-								private ["_hasLauncher","_atBns"];
+								private ["_hasLauncher","_atBns","_launcherUnit"];
 								_hasLauncher = 0;
-								{ if (alive _x && {!(secondaryWeapon _x == "")}) then {_hasLauncher = _hasLauncher + 1} } forEach (units _team);
+								{
+									_launcherUnit = _x;
+									if (alive _launcherUnit && {[_launcherUnit] Call WFBE_CO_FNC_HasLoadedSecondaryWeapon}) then {_hasLauncher = _hasLauncher + 1};
+								} forEach (units _team);
 								if (_hasLauncher > 0) then {
 									_atBns = missionNamespace getVariable ["WFBE_C_AICOM_STRIKE_AT_BONUS", 0];
 									_score = _score + _atBns;

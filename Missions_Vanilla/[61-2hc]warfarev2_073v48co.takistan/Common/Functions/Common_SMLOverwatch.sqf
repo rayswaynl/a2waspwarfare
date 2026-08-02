@@ -30,7 +30,7 @@ _launcher = objNull;
 _found = false;
 {
     _uX = _x;
-    if (!_found && {alive _uX} && {secondaryWeapon _uX != ""} && {isNil {_uX getVariable "wfbe_sml_detach_at"}}) then {
+    if (!_found && {alive _uX} && {[_uX] Call WFBE_CO_FNC_HasLoadedSecondaryWeapon} && {isNil {_uX getVariable "wfbe_sml_detach_at"}}) then {
         _launcher = _uX;
         _found = true;
     };

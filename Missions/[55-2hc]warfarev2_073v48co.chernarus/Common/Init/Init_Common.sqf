@@ -132,6 +132,7 @@ WFBE_CO_FNC_AICOMServiceTick = Compile preprocessFileLineNumbers "Common\Functio
 WFBE_CO_FNC_AICOMLog = Compile preprocessFileLineNumbers "Common\Functions\Common_AICommanderLog.sqf";
 WFBE_CO_FNC_SafeCrewDelete = Compile preprocessFileLineNumbers "Common\Functions\Common_SafeCrewDelete.sqf"; //--- crash 014EFCF4 sweep: shared crew+hull teardown, Spawn-only (see file header).
 WFBE_CO_FNC_SmallArmsEffAntiAir = Compile preprocessFileLineNumbers "Common\Functions\Common_SmallArmsEffAntiAir.sqf"; //--- fable/smallarms-air-envelope: WEAPON-capability AA classifier (MANPAD launcher/missile) for the WFBE_C_SMALLARMS_AIR_ENVELOPE steering manager. Returns BOOL; true = immune to air-lock steering.
+WFBE_CO_FNC_HasLoadedSecondaryWeapon = Compile preprocessFileLineNumbers "Common\Functions\Common_HasLoadedSecondaryWeapon.sqf"; //--- AICOM/SML capability: a secondary launcher counts only while the unit retains a compatible magazine.
 WFBE_CO_FNC_SpawnFactionSmoke = Compile preprocessFileLineNumbers "Common\Functions\Common_SpawnFactionSmoke.sqf"; //--- Cosmetic: server-only triggered faction smoke (gated WFBE_C_FSMOKE_ENABLED; capped+TTL+cooldown).
 // Marty: Central createGroup wrapper (LEVER 2) - registered immediately after AICOMLog so the wrapper can call it.
 WFBE_CO_FNC_CreateGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_CreateGroup.sqf";
