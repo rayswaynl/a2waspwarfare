@@ -1203,24 +1203,33 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 					//--- fable/inland-sweep: never quiet-despawn a circuit CAP while it is on the INLAND leg
 					//--- (>2500 m from the carrier) - the old 120 s no-player rule deleted the sweep the moment
 					//--- it left the carrier bubble. The timer holds at 0 until the flight returns seaward.
-					if ((_capMode == "L39" || _capMode == "SUX") && {!isNull _jet1} && {alive _jet1} && {(_jet1 distance _loc) > 2500}) then {
+					//--- r86: the hold must key on EITHER airframe - with the lead (jet1) dead, a live wingman
+					//--- (jet2) deep inland lost the protection and the 120s no-player rule deleted it mid-sweep.
+					if ((_capMode == "L39" || _capMode == "SUX") && {(!isNull _jet1 && {alive _jet1} && {(_jet1 distance _loc) > 2500}) || {!isNull _jet2 && {alive _jet2} && {(_jet2 distance _loc) > 2500}}}) then {
 						_inactiveTime = 0;
 					};
 					if (_inactiveTime >= 120) then {
 						//--- Despawn CAP.
 						_armed = false;
 						_inactiveTime = 0;
+						//--- r86 group-first teardown (wildcard ambient-despawn idiom): A2 deleteGroup NO-OPS while
+						//--- ANY unit remains in the group, and a crew-only delete misses a pilot still WALKING to
+						//--- board (MI24 deck-spawn: assignAsDriver/orderGetIn) or one who bailed from a damaged
+						//--- airframe - he survived the despawn and pinned the group slot forever (nothing reaps him).
+						//--- Delete every non-player unit of the group first (sleep 0 keeps the crash 014EFCF4
+						//--- seat-walk sweep between deletes; already-scheduled spawn context), then live hulls.
+						if (!isNull _capGrp) then {{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach units _capGrp};
 						if (_capMode == "L39" || _capMode == "SUX") then {
-							if (!isNull _jet1 && alive _jet1) then { {deleteVehicle _x; sleep 0} forEach (crew _jet1); deleteVehicle _jet1 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
-							if (!isNull _jet2 && alive _jet2) then { {deleteVehicle _x; sleep 0} forEach (crew _jet2); deleteVehicle _jet2 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+							if (!isNull _jet1 && alive _jet1) then { deleteVehicle _jet1 };
+							if (!isNull _jet2 && alive _jet2) then { deleteVehicle _jet2 };
 						} else {
 							if (_capMode == "MI24") then {
-								if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x; sleep 0} forEach (crew _hind);  deleteVehicle _hind }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
-								if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x; sleep 0} forEach (crew _hind2); deleteVehicle _hind2 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
-								if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x; sleep 0} forEach (crew _hind3); deleteVehicle _hind3 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+								if (!isNull _hind  && alive _hind)  then { deleteVehicle _hind };
+								if (!isNull _hind2 && alive _hind2) then { deleteVehicle _hind2 };
+								if (!isNull _hind3 && alive _hind3) then { deleteVehicle _hind3 };
 							} else {
-								if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x; sleep 0} forEach (crew _hind);   deleteVehicle _hind }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
-								if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x; sleep 0} forEach (crew _biplane); deleteVehicle _biplane }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+								if (!isNull _hind   && alive _hind)   then { deleteVehicle _hind };
+								if (!isNull _biplane && alive _biplane) then { deleteVehicle _biplane };
 							};
 						};
 						if (!isNull _capGrp) then { deleteGroup _capGrp };
