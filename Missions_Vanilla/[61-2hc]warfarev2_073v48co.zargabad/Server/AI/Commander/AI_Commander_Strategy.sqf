@@ -759,6 +759,7 @@ _relieved = 0;
 				//--- when diverting it to relief, exactly as the FOOT_STAGE re-task does (AI_Commander_AssignTowns.sqf ~L1094-1095).
 				//--- Without this the AssignTowns assault watcher keeps counting the abandoned dispatch timeout against a team now
 				//--- doing relief, logging a spurious ASSAULT_STRANDED and tallying wfbe_aicom_failedjourneys (which can later recycle it).
+				if ([_free, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool) then {_logik setVariable ["wfbe_aicom_arrival_cleared", (_logik getVariable ["wfbe_aicom_arrival_cleared", 0]) + 1]}; //--- F1 fable/aicom-econ-triad: window outcome counter (ARRIVAL_BANDS cleared=)
 				_free setVariable ["wfbe_aicom_townorder", [], false];
 				_free setVariable ["wfbe_aicom_dispatch_open", false];
 				//--- r27 ownership: also drop a stale Allocator pin so offense does not re-grab this team mid-relief
