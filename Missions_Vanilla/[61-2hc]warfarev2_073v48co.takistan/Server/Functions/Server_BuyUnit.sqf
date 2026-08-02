@@ -405,7 +405,19 @@ if (_unitType isKindOf "Man") then {
 	if (_vehicle isKindOf "Plane" && (missionNamespace getVariable ["WFBE_C_JET_AA_SURVIVE", 1]) > 0) then {_vehicle addEventHandler ["HandleDamage", {_this Call HandleJetAADamage}];};
     if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];};
 	//--- B93 SEAD: tier-5 jets get anti-radar guidance EH when WFBE_C_SEAD > 0
-	if ((missionNamespace getVariable ["WFBE_C_SEAD", 0]) > 0 && {typeOf _vehicle in ["F35B","Su34"]}) then {_vehicle addeventhandler ["Fired",{_this spawn WFBE_CO_FNC_HandleSEADMissile}];};
+	if ((missionNamespace getVariable ["WFBE_C_SEAD", 0]) > 0 && {typeOf _vehicle in ["F35B","Su34"]}) then {
+		Private ["_seadEhIdx"];
+		_seadEhIdx = _vehicle addeventhandler ["Fired",{_this spawn WFBE_CO_FNC_HandleSEADMissile}];
+		//--- fix(sead-easa-row double-attach): stamp the same tracking vars EASA_AttachSEADRow.sqf uses so
+		//--- that if a player later takes control of this AI-bought jet and picks the [SEAD] EASA row (only
+		//--- reachable when WFBE_C_SEAD_EASA_ROW is armed), AttachSEADRow's existing "already active" guard
+		//--- refuses a second EH instead of stacking one - closes the AI-origin double-attach/shot-cap-race
+		//--- gap. Gated on the same flag so flag-off behavior (var never set) stays untouched.
+		if ((missionNamespace getVariable ["WFBE_C_SEAD_EASA_ROW", 0]) > 0) then {
+			_vehicle setVariable ["WFBE_SEAD_EhIndex", _seadEhIdx, true];
+			_vehicle setVariable ["WFBE_SEAD_EasaRowActive", true, true];
+		};
+	};
 	if ({(typeOf _vehicle) isKindOf _x} count ["LAV25_Base","M2A2_Base","BMP2_Base","BTR90_Base"] != 0) then {_vehicle addeventhandler ["fired",{_this spawn HandleReload;}]};
 	if(typeOf _vehicle in ['T90','BMP3']) then {_vehicle addeventhandler ['Fired',{_this spawn HandleATReload;}];};
 	if(typeOf _vehicle in ['Pandur2_ACR']) then {

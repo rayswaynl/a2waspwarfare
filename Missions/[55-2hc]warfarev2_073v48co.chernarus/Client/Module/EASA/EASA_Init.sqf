@@ -1,5 +1,5 @@
 Private ["_ammo","_ammoCfg","_easaDefault","_easaLoadout","_easaVehi","_is_AAMissile","_isMissile","_loadout","_loadout_line","_vehicle"];
-EASA_Equip = Compile preprocessFileLineNumbers 'Client\Module\EASA\EASA_Equip.sqf';EASA_RemoveLoadout = Compile preprocessFileLineNumbers 'Client\Module\EASA\EASA_RemoveLoadout.sqf';WFBE_EASA_FNC_LoadoutCat = Compile preprocessFileLineNumbers 'Client\Module\EASA\EASA_LoadoutCat.sqf';
+EASA_Equip = Compile preprocessFileLineNumbers 'Client\Module\EASA\EASA_Equip.sqf';EASA_RemoveLoadout = Compile preprocessFileLineNumbers 'Client\Module\EASA\EASA_RemoveLoadout.sqf';WFBE_EASA_FNC_LoadoutCat = Compile preprocessFileLineNumbers 'Client\Module\EASA\EASA_LoadoutCat.sqf';WFBE_EASA_FNC_AttachSEADRow = Compile preprocessFileLineNumbers 'Client\Module\EASA\EASA_AttachSEADRow.sqf';
 
 _easaDefault = [];
 _easaLoadout = [];
@@ -681,5 +681,30 @@ _easaLoadout = _easaLoadout + [
 ];
 };
 //LoadoutManagerGuerEasaInsert_END
+
+//LoadoutManagerSeadEasaInsert
+//--- SEAD opt-in row (owner ruling 2026-08-02): flag WFBE_C_SEAD_EASA_ROW default 0. Guidance-only,
+//--- empty weapon/ammo pair - does not touch the ordnance loadout; GUI_Menu_EASA.sqf special-cases
+//--- this row via WFBE_EASA_SEAD_ROW_F35B / WFBE_EASA_SEAD_ROW_SU34 instead of routing it through
+//--- EASA_Equip.sqf (which would strip the current weapons via its remove-old/add-new pass).
+if ((missionNamespace getVariable ["WFBE_C_SEAD_EASA_ROW", 0]) > 0) then {
+	private ["_seadIdx","_seadRow"];
+	_seadRow = [0,'[SEAD] Anti-radar guidance (electronics only, no weapon change)',[[],[]]];
+
+	_seadIdx = _easaVehi find 'F35B';
+	if (_seadIdx != -1) then {
+		_loadout = _easaLoadout select _seadIdx;
+		WFBE_EASA_SEAD_ROW_F35B = count _loadout;
+		_loadout set [count _loadout, _seadRow];
+	};
+
+	_seadIdx = _easaVehi find 'Su34';
+	if (_seadIdx != -1) then {
+		_loadout = _easaLoadout select _seadIdx;
+		WFBE_EASA_SEAD_ROW_SU34 = count _loadout;
+		_loadout set [count _loadout, _seadRow];
+	};
+};
+//LoadoutManagerSeadEasaInsert_END
 for '_i' from 0 to count(_easaVehi)-1 do {	_loadout = _easaLoadout select _i;		for '_j' from 0 to count(_loadout)-1 do {		_loadout_line = _loadout select _j;		_is_AAMissile = false;				{			_ammo = getText(configFile >> "CfgMagazines" >> _x >> "ammo");						if (_ammo != "") then {				_ammoCfg = configFile >> "CfgAmmo" >> _ammo; _isMissile = false; while {isClass _ammoCfg && {configName _ammoCfg != "CfgAmmo"} && {!_isMissile}} do {if (configName _ammoCfg == "MissileBase") then {_isMissile = true} else {_ammoCfg = inheritsFrom _ammoCfg}}; if (getNumber(configFile >> "CfgAmmo" >> _ammo >> "airLock") == 1 && _isMissile) exitWith {_is_AAMissile = true};			};		} forEach ((_loadout_line select 2) select 1);				_loadout_line set [3, if (_is_AAMissile) then {true} else {false}];	};};
 missionNamespace setVariable ['WFBE_EASA_Vehicles',_easaVehi];missionNamespace setVariable ['WFBE_EASA_Loadouts',_easaLoadout];missionNamespace setVariable ['WFBE_EASA_Default',_easaDefault];

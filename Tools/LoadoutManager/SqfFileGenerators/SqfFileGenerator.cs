@@ -29,6 +29,11 @@ public class SqfFileGenerator
             " 'Client\\Module\\EASA\\EASA_RemoveLoadout.sqf';";
         startOfTheEasaFile += "WFBE_EASA_FNC_LoadoutCat = Compile preprocessFileLineNumbers " +
             "'Client\\Module\\EASA\\EASA_LoadoutCat.sqf';";
+        // WFBE_EASA_FNC_AttachSEADRow (owner ruling 2026-08-02): applies the opt-in SEAD EASA row
+        // without going through EASA_Equip.sqf's remove-old/add-new weapon pass. See
+        // FileManager.GenerateSeadEasaRowBlock() for the row that calls this function.
+        startOfTheEasaFile += "WFBE_EASA_FNC_AttachSEADRow = Compile preprocessFileLineNumbers " +
+            "'Client\\Module\\EASA\\EASA_AttachSEADRow.sqf';";
         startOfTheEasaFile += "\n";
         startOfTheEasaFile += "\n_easaDefault = [];";
         startOfTheEasaFile += "\n_easaLoadout = [];";
@@ -41,13 +46,17 @@ public class SqfFileGenerator
     // GenerateEndOfTheEasaFile creates the concluding part of the SQF file.
     // It generates the logic for handling EASA vehicle loadouts and configurations.
     // The method returns a string that forms the concluding block of the SQF file.
-    // NOTE: The //LoadoutManagerGuerEasaInsert markers below are intentional — BaseTerrain.cs calls
-    // FileManager.InsertGeneratedCodeInToAFile to inject the Ka-137 GUER EASA block at post-write time.
+    // NOTE: The //LoadoutManagerGuerEasaInsert and //LoadoutManagerSeadEasaInsert markers below are
+    // intentional — BaseTerrain.cs calls FileManager.InsertGeneratedCodeInToAFile to inject the Ka-137
+    // GUER EASA block and the opt-in SEAD EASA row block at post-write time. Both marker pairs sit
+    // BEFORE the classification for-loop below so injected rows still get their row[3] (isAAMissile)
+    // slot computed like every combinatorial row.
     public static string GenerateEndOfTheEasaFile()
     {
         string endOfTheEasaFile = string.Empty;
 
         endOfTheEasaFile += "\n//LoadoutManagerGuerEasaInsert\n//LoadoutManagerGuerEasaInsert_END\n";
+        endOfTheEasaFile += "\n//LoadoutManagerSeadEasaInsert\n//LoadoutManagerSeadEasaInsert_END\n";
         endOfTheEasaFile += "for '_i' from 0 to count(_easaVehi)-1 do {";
         endOfTheEasaFile += "\t_loadout = _easaLoadout select _i;";
         endOfTheEasaFile += "\t";
