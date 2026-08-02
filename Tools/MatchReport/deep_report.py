@@ -548,6 +548,9 @@ def _coverage(dm):
         ["WASPSTAT KILL lines", _n(c["records"].get("KILL", 0))],
         ["WASPSTAT CAPTURE lines", _n(c["records"].get("CAPTURE", 0))],
         ["WASPSTAT ROUNDEND lines", _n(c["records"].get("ROUNDEND", 0))],
+        ["Other WASPSTAT records (CAMP / BUILDINGKILL / unknown)", "%s / %s / %s" % (
+            _n(c["records"].get("CAMP", 0)), _n(c["records"].get("BUILDINGKILL", 0)),
+            _n(c["records"].get("UNKNOWN", 0)))],
         ["MATCH START / END / MILESTONE", "%s / %s / %s" % (
             _n(c["match_family"].get("START", 0)), _n(c["match_family"].get("END", 0)),
             _n(c["match_family"].get("MILESTONE", 0)))],
