@@ -1057,13 +1057,46 @@ while {!WFBE_GameOver} do {
 					};
 
 					//--- Teams vehicles.
-					//--- Marty: same locality rule as above - HC-local vehicles die via cleanup-townai.
+					//--- fable/hull-leak-sources-20260802 SOURCE 2 fix: the "HC-local vehicles die via
+					//--- cleanup-townai" claim below was WRONG - verified against the cleanup-townai channel
+					//--- executor (Client_CleanupDelegatedTownAI.sqf): it only ever deletes UNITS from its
+					//--- own WFBE_CL_TownAI_Groups registry, which never stored a vehicle reference at all
+					//--- (Client_DelegateTownAI.sqf captures _town_vehicles from CreateTownUnits but never
+					//--- registers it anywhere for later cleanup). Common_CreateTownUnits.sqf also never
+					//--- wires a GetIn/GetOut pair to enroll these hulls in the passive emptyVehicles
+					//--- collector the way Common_CreateVehicle.sqf does for player purchases - so an
+					//--- HC-owned town vehicle had NO cleanup path at all: `local _x` is false on the
+					//--- server for an HC-delegated hull, the delete below silently no-oped, and this
+					//--- entire array is then unconditionally WIPED a few lines below
+					//--- (wfbe_active_vehicles = []), permanently losing the only reference to it - left
+					//--- alive+crewless forever, the primary "dead-but-empty hull" map-litter source
+					//--- alongside the AICOM cull (Source 1). Route the non-local case through the SAME
+					//--- server husk-collector pipeline the AICOM abandon sites use ("aicom-vehicle-
+					//--- abandoned" -> WF_Logic "emptyVehicles" -> emptyvehiclescollector.sqf ->
+					//--- Server_HandleEmptyVehicle.sqf), which already resolves locality correctly
+					//--- (direct deleteVehicle once local, HandleSpecial "cleanup-empty-vehicle" remote-
+					//--- delete dispatch via WFBE_CO_FNC_SendToClient while still HC-owned). This file
+					//--- (Server\FSM\server_town_ai.sqf, execVM'd only from Init_Server.sqf) is
+					//--- server-exclusive, so HandleSpecial is called directly - no isServer branch needed.
 					{
-						if (alive _x && {local _x}) then {
+						if (alive _x) then {
 							//--- B67 [wiki-wins]: the old check tested only the group leader; a player
 							//--- riding as a non-leader passenger/gunner would have their vehicle deleted
-							//--- out from under them. Scan the whole crew: delete only if zero players aboard.
-							if (({isPlayer _x} count crew _x) == 0) then {["town-sweep-hull", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x};
+							//--- out from under them. Scan the whole crew: act only if zero players aboard.
+							//--- (crew _x == 0 here structurally guarantees the count above never iterates,
+							//--- so _x is never rebound by it - safe to keep using _x as the vehicle below.)
+							if (({isPlayer _x} count crew _x) == 0) then {
+								if (local _x) then {
+									["town-sweep-hull", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete;
+									deleteVehicle _x;
+								} else {
+									if !(_x getVariable ["wfbe_aicom_abandoned", false]) then {
+										_x setVariable ["wfbe_aicom_abandoned", true];
+										["aicom-vehicle-abandoned", _x] Call HandleSpecial;
+										["INFORMATION", Format ["HULLGC|v1|townai-remote town=%1 hull=%2", _town getVariable ["name","?"], typeOf _x]] Call WFBE_CO_FNC_AICOMLog;
+									};
+								};
+							};
 						};
 					} forEach (_town getVariable 'wfbe_active_vehicles');
 

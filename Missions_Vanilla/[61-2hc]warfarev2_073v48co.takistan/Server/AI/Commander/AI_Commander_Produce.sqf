@@ -12,7 +12,7 @@
 	wealth-conversion), the effective batch cap doubles.
 */
 
-private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_capRemaining","_capCost","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_crewSlots","_hasCommander","_hasGunner","_extraTurretCount","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_factoryTargetOn","_factoryOrder","_factoryAnchor","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax"];
+private ["_side","_sideText","_logik","_cap","_capTiers","_capTier","_capTierLast","_sideAI","_capRemaining","_capCost","_teams","_templates","_upgrades","_buildings","_structTypes","_facDefs","_team","_type","_template","_want","_cur","_toBuild","_d","_have","_fac","_unitList","_typeName","_ud","_crewSlots","_hasCommander","_hasGunner","_extraTurretCount","_price","_kind","_factories","_isVeh","_id","_q","_canProduce","_funds","_hqP","_batchCap","_batchOrdered","_richFlag","_myID","_ownTowns","_nearFwd","_fwdR","_facObj","_ldr","_factoryTargetOn","_factoryOrder","_factoryAnchor","_effBatch","_ordered","_aliveNow","_retreatSeq","_retreatOrder","_homeR","_refitAtBase","_refitNow","_refitWas","_refitStart","_refitDur","_curDist","_rTries","_rLast","_rBudget","_rProgress","_rMinClose","_rIssues","_rMaxIssues","_rMaxDist","_slungVeh","_unitVeh","_mergeOn","_mergeRange","_mergeTeam","_mergeBest","_cand","_candLdr","_candAlive","_d2","_mergedInto","_sizeMax","_cullMember","_cullHull","_cullHulls"];
 
 _side = _this;
 _sideText = str _side;
@@ -451,6 +451,40 @@ if (_airMaxTotalP > 0) then {
 					} else {
 						//--- No eligible nearby team: cull then full reclaim (same ledger cleanup as merge).
 						//--- Non-player guard is belt-and-braces (this branch is already server-local non-HC, non-player-led).
+						//--- fable/hull-leak-sources-20260802 SOURCE 1 fix: this cull deleted only the surviving crew
+						//--- member below and never touched the hull they were riding, leaving it ALIVE and crewless
+						//--- forever - the majority "dead-but-empty hull" map-litter class (owner report 2026-08-02).
+						//--- Collect each member's hull BEFORE the cull loop (vehicle _x is meaningless once _x is
+						//--- deleted), skip any hull still carrying a live player, then enroll each unique hull with
+						//--- the SAME server husk-collector pipeline Common_RunCommanderTeam.sqf's TRUCK-ABANDON /
+						//--- IMMOBILE-ABANDON sites already use ("aicom-vehicle-abandoned" -> WF_Logic "emptyVehicles"
+						//--- -> emptyvehiclescollector.sqf -> Server_HandleEmptyVehicle.sqf), which already resolves
+						//--- locality correctly (direct deleteVehicle once local, HandleSpecial "cleanup-empty-vehicle"
+						//--- remote-delete dispatch via WFBE_CO_FNC_SendToClient while still HC-owned). A silent
+						//--- background reap fits this recycle path better than the disband executor's cook/grenade
+						//--- treatment (Common_AICOMDisbandTeam.sqf) - this cull is a no-progress bookkeeping recycle,
+						//--- not a witnessed battlefield death, so there is no audience for a visible explosion and no
+						//--- reason to spend the extra damage/EH churn. This file is Server-side-only (header comment,
+						//--- top of file), so HandleSpecial is called directly - no isServer/RequestSpecial branch.
+						_cullHulls = [];
+						{
+							_cullMember = _x;
+							if (!isNull _cullMember) then {
+								_cullHull = vehicle _cullMember;
+								if (_cullHull != _cullMember && {!isNull _cullHull} && {alive _cullHull} && {({isPlayer _x} count (crew _cullHull)) == 0} && {!(_cullHull in _cullHulls)}) then {
+									_cullHulls = _cullHulls + [_cullHull];
+								};
+							};
+						} forEach (units _team);
+						{
+							if !(_x getVariable ["wfbe_aicom_abandoned", false]) then {
+								_x setVariable ["wfbe_aicom_abandoned", true];
+								["aicom-vehicle-abandoned", _x] Call HandleSpecial;
+							};
+						} forEach _cullHulls;
+						if (count _cullHulls > 0) then {
+							["INFORMATION", Format ["HULLGC|v1|cull side=%1 team=%2 hulls=%3", _sideText, _team, count _cullHulls]] Call WFBE_CO_FNC_AICOMLog;
+						};
 						{ if (!(isPlayer _x)) then {["produce-cull-unit", _x, Format ["tries=%1 issues=%2", _rTries, _rIssues]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach (units _team);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] retreat-thrash CULLED (alive=%3, dist=%4, tries=%5, issues=%6) - recycled (no-progress OR issue-cap OR too-far).", _sideText, _team, _aliveNow, _curDist, _rTries, _rIssues]] Call WFBE_CO_FNC_AICOMLog;
 						_team setVariable ["wfbe_persistent", false, true];
