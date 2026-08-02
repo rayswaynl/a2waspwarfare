@@ -1,0 +1,127 @@
+number	mergeable	isDraft	title	headRef
+1249	CONFLICTING	True	feat(starfort): Star Fortress Phase 1 MVP [flag WFBE_C_STARFORT_ENABLE default 0]	feat/starfort-mvp
+1260	CONFLICTING	True	fix(teambar): ship slot-1 server heal (stranded on deploy/wave0722e) + assert-leader-first guard + skin-swap server ping	fix/teambar-slot1-ship-20260722
+1262	MERGEABLE	True	fix(startup): bound silent bootstrap hangs	codex/07221740-1-startup-hang-timeouts-20260722
+1278	MERGEABLE	True	fix(tools): refresh 11 stale PR8 static-smoke assertions vs master	codex/pr-harness-staleness-refresh-20260722
+1286	CONFLICTING	True	fix(aicom): exclude corpses and HCs from recovery vetoes	codex/main-07221740-2-realplayersnear-vetoes
+1293	CONFLICTING	True	fix(telemetry): exclude HCs from player counts	codex/07221740-1-playercount-telemetry-hc
+1342	CONFLICTING	True	fix(aicom): reject stale HC town delegation reports	codex/aicom-hc-locality-20260725
+1343	CONFLICTING	True	fix(alife): reject stale delegated town AI acknowledgments	codex/07241020-1-garrison-lifecycle-20260725
+1344	CONFLICTING	True	fix(jip): re-register resolved team into wfbe_teams on connect + nil filler-classname guard on disconnect	kimi/07241020-1-jip-session-lifecycle
+1395	CONFLICTING	True	harden(sec): sidepatrol-convoy-stop requires a matching active-patrol record	claude/u2-harden-convoy-pay-20260725
+1399	CONFLICTING	True	fix(security): bind ATTACK_WAVE_DETAILS activation to requester's own side	claude/u2-harden-attackwave-details-20260725
+1401	MERGEABLE	True	fix(security): re-derive ATTACK_WAVE_INIT discount input from server supply	claude/u2-harden-attackwave-init-20260725
+1404	CONFLICTING	True	harden(economy): server-owned supply-mission payout, watcher cap, UID derivation	claude/u2-harden-supplymission-20260725
+1436	CONFLICTING	True	fix: make side-patrol registry and convoy payout server-authoritative	codex/sidepatrol-registry-authority-20260725
+1464	CONFLICTING	True	feat(aicom): late-game teleport of base-idle AI teams to friendly frontline towns [flags, default 0]	fable/aicom-lategame-teleport-20260725
+1530	MERGEABLE	True	fix: wait for populated USV town roster	codex/main-07270840-1-usv-coastal-tag-init-race-20260727
+1536	MERGEABLE	True	fix(earplugs): duck all effect SFX and restore effects volume on toggle-off	claude/earplugs-full-sfx-20260728
+1537	MERGEABLE	True	fix: preserve static-defense crew fallback at group cap	codex/main-07270548-1-manned-defences
+1540	MERGEABLE	True	fix(aicom): chunk founding hot scans	codex/codex-main-07271028-1-teamsfound-chunking
+1543	CONFLICTING	True	feat(fob): forward operating base v1 - engineer/repair-truck built FOB [flag WFBE_C_STRUCTURES_FOB default 1]	codex/fob-v1-engineer-20260728
+1544	MERGEABLE	True	fix: preserve fortification preview color	codex/main-07280026-2-fortif-unbuildable
+1545	MERGEABLE	True	fix(usv): refill missing flotilla role	codex/main-07270715-2-usv-aa-role-refill-20260728
+1546	CONFLICTING	True	fix(gc): guard TrashObject remote-delete dispatch against null objects	claude/trash-nullobj-sendtoclient-drop-20260728
+1547	MERGEABLE	True	fix(airdef): bound enemy-air scan slices	codex/guer-airdef-slice-chernarus-20260728
+1548	MERGEABLE	True	fix(aicom): map-scale DECAP enemy-town gate	codex/main-07260818-ap1-decap-gate-maprelative-20260728
+1584	MERGEABLE	True	feat(aicom): add WEST fixed-wing team templates to USMC roster [flag WFBE_C_AICOM_WEST_JETS default 0]	fable/west-jet-templates
+1588	MERGEABLE	True	feat(aicom): implement AICOM airlift LIFT at the in-loop delivery point [flag WFBE_C_AICOM_AIRLIFT_V2 default 0]	fable/airlift-v2
+1589	MERGEABLE	True	feat(aicom): HC-safe single-team air quickstart at founding [flag WFBE_C_AICOM_AIR_QUICKSTART default 0]	fable/air-quickstart-v2
+1596	CONFLICTING	True	fix(hc): seat headless clients on CIV natively - swap HC slots to the lowest playable ids	fable/hc-civ-magnet-20260729
+1597	CONFLICTING	True	fix(townscan): nil-guard wfbe_active*/wfbe_active_air reads killing _dynRange (live RPT spam x169k)	fable/townscan-dynrange-nilguard-20260729
+1598	MERGEABLE	True	fix(aicom): seed _eligible/_pick epilogue reads on the server-local founding path (live RPT x47 pairs)	fable/teams-epilogue-nilguard-20260729
+1599	MERGEABLE	True	fix(lint): ignore diagnostic STR labels	codex/string-formatting-bughunt-20260729
+1600	CONFLICTING	True	fix(gc): re-null-check TrashObject after sleep / proximity hold	fix/trash-nullobj-post-sleep-20260729
+1602	MERGEABLE	True	fix(defense): null-guard getPosATL + reman poll	fix/defense-reman-nullguard-20260729
+1603	MERGEABLE	True	fix(aicom): durable CBR research latch across supervisor restart	fix/aicom-cbr-research-restart-durable-20260729
+1604	CONFLICTING	True	fix(aicom): disconnect-while-dead must not delete AI leadership successor	grok/alife-merge-leadership-disconnect-fix-on-master-20260729
+1605	CONFLICTING	True	fix(ui): TeamV2 Unit Designer tabs + global ctrlShow (A2 createDialog)	fix/teamv2-unit-designer-ctrlshow
+1606	MERGEABLE	True	fix: preserve respawn backpack cargo and EASA pricing	codex/loadout-gear-bughunt-20260729
+1607	MERGEABLE	True	fix(aicom): nil-safe buy-unit queue release so abort refunds always run	fix/aicom-produce-sidecap-recheck-20260730
+1608	CONFLICTING	True	fix(alife): knowsAbout crew expand + B5 reveal target + Man-only capture reveal	fix/alife-knowsabout-reveal-crew-20260730
+1609	CONFLICTING	True	fix(towns): capture ownership ΓÇö bulk camp SV heal + no bulk bounty	fix/town-capture-ownership-bulk-camp-20260730
+1610	MERGEABLE	True	fix(aicom): service tick refuels ground hulls and detours on low fuel	fix/aicom-service-refuel-ground-20260730
+1611	CONFLICTING	True	fix(alife): continuous SML retreat under fire + wheeled armor overwatch	fix/alife-suppression-stance-20260730
+1612	MERGEABLE	True	fix(ft/respawn): charge-after-success, start recheck, free-mode dedupe, mobile side gate	fix/ft-mobile-respawn-bughunt-20260730
+1614	MERGEABLE	True	fix(aicom): enforce HQ range on fallback placement	codex/aicom-hqrange-fallback-20260730
+1615	MERGEABLE	True	fix(alife): town detect range hysteresis (active 1.25x > idle 1x)	fix/alife-town-detect-hysteresis-20260730
+1616	MERGEABLE	True	fix(vote): election tally latch + ballot sanitize + claim/vote grant race	fix/commander-election-vote-tally-latch-20260730
+1617	MERGEABLE	True	fix(client): type-safe shared factory queue tokens (AI SCALAR vs player STRING)	fix/type-mismatch-queue-token-coercion-20260730
+1618	MERGEABLE	True	fix(aicom): man QUERYUNITTURRETS seats in Common_CreateTeam	fix/aicom-createteam-turret-crew-20260730
+1619	MERGEABLE	True	fix(supply): cargo transfer world revalidation + deliverer + exitWith latch	fix/supply-transport-cargo-bughunt-20260730
+1620	MERGEABLE	True	fix(guer-drones): align GUER SCUD menu cost to the server charge (WFBE_C_SCUD_COST)	claude/guer-scud-cost-align-20260730
+1621	MERGEABLE	True	fix(alife): group-first teardown for ambient/wildcard event despawns	fix/alife-ambient-event-triggers-20260730
+1622	MERGEABLE	True	fix(jip): disconnect must not delete preserved AI team leader	fix/mission-core-disconnect-slot-20260730
+1623	CONFLICTING	True	fix(sqf): bound water waypoint redraws + uniform random index draws	fix/sqf-randomness-nondeterminism-20260730
+1624	MERGEABLE	True	fix(aicom): config ingest ΓÇö paramsArray bounds, funds-sink lobby default, team-cap fallbacks	fix/aicom-config-param-ingest-20260730
+1625	MERGEABLE	True	fix(aicom): gate AI_Com_Upgrade research on LINKS (UR-H1)	fix/aicom-config-param-bughunt-20260730
+1626	MERGEABLE	True	fix(markers): unique paraDZ names + ICBM strike marker pre-delete	fix/sqf-marker-object-leaks-20260730
+1628	MERGEABLE	True	fix(sqf): eventhandler hygiene ΓÇö re-index-safe remove, no double Blink, skin restore	fix/sqf-eh-hygiene-20260730
+1629	MERGEABLE	True	fix(aicom): order-dispatch authority ΓÇö commander/same-side binds for ai-command/request-unit/arty/focus/TeamUpdate	fix/aicom-order-authority-20260730
+1630	CONFLICTING	True	fix(mission-core): PV handler bounds + enqueue/dequeue commander bind	fix/mission-core-pv-bounds-20260730
+1631	MERGEABLE	True	fix(alife): despawn budget integrity (HC shells + capture reclaim + GUER mid-sweep)	fix/alife-despawn-budget-20260730
+1632	MERGEABLE	True	fix(aicom): order-dispatch authority ΓÇö same-side bind for reinforce/posture/fieldorder (siblings #1629 missed)	fix/aicom-order-auth-siblings-20260730
+1633	MERGEABLE	True	fix(economy): funds transfer/donation authority envelope + atomic debit	fix/economy-funds-authority-g1606-20260730
+1636	MERGEABLE	True	fix(sqf): object/missionNamespace var pollution ΓÇö CBR registry, FPV PV, disconnect keys	fix/sqf-object-var-namespace-g1606-20260730
+1641	MERGEABLE	True	fix(buyunit): factory/purchase PV authority ΓÇö FOB envelope, sell envelope, BuyUnit class/side/team	fix/buyunit-payload-authority-g1606-20260730
+1655	MERGEABLE	True	fix(alife): tear down GUER carrier CAP when the naval HVT is captured	claude/naval-cap-capture-teardown-20260730
+1656	MERGEABLE	True	fix(gdir): wire dead post-wipe suppression timer (ledger[4] read at :220 but never written) [flag AICOMV2_GDIR_SUPPRESS_WIRE default 0]	claude/gdir-suppress-timer-wire-20260730
+1659	CONFLICTING	True	fix(sqf): coordinate-space - air 2D proximity + RadiusHold 2D ground-snap	fix/sqf-coord-space-r25-20260730
+1660	MERGEABLE	True	fix(alife): town-defender scalar skill wiped sub-skill spread (setSkill order)	claude/alife-town-defender-skill-order-20260730
+1661	MERGEABLE	True	fix(support): carrier SCUD must debit the firing side's own wallet (team/side bind)	claude/scudstrike-team-side-bind-20260730
+1662	CONFLICTING	True	fix(aicom): topology - naval HVT is not ground-front-adjacent (r26)	fix/aicom-town-adjacency-topology-r26-20260730
+1669	CONFLICTING	True	fix(hc-lobby-lock): anchor the lobby-lock deadline on mission-live	fable/hc-lobby-lock-mission-live-anchor-20260730
+1676	CONFLICTING	True	fix(mission-core): construction abort live-count rollback + AI live-inc + BuildingKilled bounds (r31)	bughunt/construction-livecount-r31-20260730
+1679	CONFLICTING	True	fix(sqf): getVariable fallback + setVariable public/JIP hygiene (r30)	fix/getvar-setvar-public-jip-r30-20260730
+1680	CONFLICTING	True	fix(sqf): createVehicle/crew init fail-clean + defense UnitsCreated hygiene (r32)	fix/createvehicle-crew-init-locality-grok1606-r32-20260730
+1682	CONFLICTING	True	fix(sqf): ammo paradrop + UAV create/crew fail-clean (r34)	fix/paraammo-uav-failclean-grok1606-r34-20260730
+1684	MERGEABLE	True	fix(alife): cached-group wakeup restores town patrol/defense fidelity (r32)	fix/alife-wakeup-cache-r32-20260730
+1686	CONFLICTING	True	fix(sqf): GDIR QRF create/crew + patrol convoy + airdef chute + HQ wreck fail-clean (r37)	fix/gdir-qrf-patrol-hqwreck-failclean-grok1606-r37-20260730
+1687	CONFLICTING	True	fix(sqf): paratroop/paravehi create/crew + def wall + USV fail-clean (r38)	fix/paratroop-paravehi-defwall-usv-failclean-grok1606-r38-20260730
+1692	CONFLICTING	True	fix(sqf): camp repair + naval HVT SCUD/camps/CAP L39 + HandleDefense fail-clean (r40)	fix/naval-camp-repair-cap-handledefense-failclean-grok1606-r40-20260730
+1699	CONFLICTING	True	fix(sqf): CoIn border/preview/helper + headbug Lada1 + DropRPG holder fail-clean (r44)	fix/coin-headbug-rpgdrop-failclean-grok1606-r44-20260730
+1700	CONFLICTING	True	fix(sqf): CoIn border/preview/helper + headbug Lada1 + DropRPG WeaponHolder fail-clean (r44)	fix/coin-headbug-rpgdrop-failclean-r44-20260730
+1715	MERGEABLE	True	fix(mission-core): death/observer camera lifecycle teardown residuals (r36)	fix/spectator-observer-camera-lifecycle-r36-g1606
+1718	CONFLICTING	True	fix(alife): weaponholder loot persistence ΓÇö locality + min-age + prox hold (r37)	fix/alife-dropped-gear-weaponholder-loot-persistence-r37-20260730
+1723	CONFLICTING	True	fix(sqf): droppeditems/ruins cleaners + HQ kill + sortie + def-ops fail-clean (r55)	fix/droppeditems-ruins-hqkill-sortie-defops-failclean-grok1606-r55-20260731
+1726	CONFLICTING	True	fix(sqf): townAI cleanup + AirResp + groupsGC + Produce + Trash fail-clean (r56)	fix/townai-airresp-groupsgc-produce-trash-failclean-grok1606-r56-20260731
+1738	MERGEABLE	True	fix(alife): rally regroup hold + live dest revalidation (r61)	fix/alife-rally-regroup-r61-g1606-20260731
+1750	CONFLICTING	True	fix(alife): corpse/wreck reap integrity ΓÇö dead-crew purge + airlift requeue (r66)	fix/alife-corpse-wreck-reap-r66-g1606-20260731
+1757	CONFLICTING	True	fix(aicom): paradrop tasking ΓÇö AI CD release + objective rebind (r70)	fix/aicom-paradrop-tasking-objective-r70-g1606-20260731
+1758	CONFLICTING	True	fix(mission-core): teamswap join fail-closed + RequestJoin null/target (r70)	fix/mission-teamswap-join-failclosed-r70-g1606-20260731
+1759	MERGEABLE	True	Fix ICBM radiation dealing zero damage to players (locality)	claude/fix-icbm-radiation-player-locality-r69-20260731
+1764	MERGEABLE	True	fix(mission-core): vote/commander authority ΓÇö income percent PVF + transfer bind (r71)	fix/mission-vote-commander-authority-r71-g1606-20260731
+1765	MERGEABLE	True	fix(sqf): vehicle crew seat getIn/getOut lifecycle integrity (r71b)	fix/sqf-crew-seat-getin-getout-r71b-g1606-20260731
+1766	MERGEABLE	True	fix(aicom): HC order rebind on HQ-strike edge-lost recall (r72)	fix/aicom-hqstrike-recall-order-r72-g1606-20260731
+1767	CONFLICTING	True	fix(sqf): loadout equip null integrity ΓÇö EquipUnit/Backpack/Vehicle + EASA + custom gear (r72b)	fix/sqf-loadout-equip-null-r72b-g1606-20260731
+1768	CONFLICTING	True	fix(mission-core): JIP re-push WFBE_HQ_REPAIR_AVG_SEC for correct MHQ repair-cost scaling on late joiners (r71)	claude/jip-repush-hq-repair-avg-r71
+1769	MERGEABLE	True	fix(aicom): order behaviour/formation/speed mode assignment integrity (r72)	fix/aicom-order-behaviour-formation-speed-r72-g1606-20260731
+1770	MERGEABLE	True	fix(sqf): radio SideMessage + map marker text + waypoint type + chat/CM fail-clean (r73b)	fix/sqf-radio-marker-waypoint-chat-r73b-g1606-20260731
+1771	MERGEABLE	True	fix(aicom): apply COMBAT/RED air posture AFTER AIPatrol (W13/W22/PatrolAirPass) (r72)	claude/aicom-air-posture-aipatrol-clobber-r72
+1772	CONFLICTING	True	fix(mission-core): player HALO occupant gate + landing invuln (r72)	fix/mission-halo-airborne-state-r72-g1606-20260731
+1773	CONFLICTING	True	fix(mission-core): player parachute/HALO airborne state integrity (r72)	fix/mission-parachute-airborne-r72-g1606-20260731
+1775	MERGEABLE	True	fix(sqf): player vehicle utility actions fail-clean (push/taxi/IR/sell/flip r74)	fix/sqf-player-vehicle-utility-actions-r74-g1606-20260731
+1776	MERGEABLE	True	fix(sqf): player construction/service actions fail-clean (cancel/eject/MHQ/build r75)	fix/sqf-player-construction-service-actions-r75-g1606-20260731
+1777	MERGEABLE	True	fix(sqf): skill actions + setSkill + daynight + arty shells + endgame score (r76b)	fix/sqf-skill-weather-score-arty-actions-r76b-g1606-20260731
+1778	MERGEABLE	True	fix(aicom): retreat/withdrawal/fallback after town loss (r76)	fix/aicom-retreat-withdrawal-fallback-r76-g1606-20260731
+1779	MERGEABLE	True	fix(alife): USV boat patrol driver-lost reap + water-only unstuck (r76)	fix/alife-usv-driver-lost-reap-r76-g1606-20260731
+1780	MERGEABLE	True	fix(alife): USV coastal boat patrol lifecycle integrity (r77)	fix/alife-naval-boat-patrol-lifecycle-r77-g1606-20260731
+1781	MERGEABLE	True	fix(aicom): town attack pathfind fail-clean (null leader/hops/camps/path-pos safe r78b)	fix/aicom-town-attack-pathfind-r78b-g1606-20260731
+1782	MERGEABLE	True	fix(mission-core): match stats emission + end-round report integrity (r78)	fix/mission-match-stats-endround-r78-g1606-20260731
+1783	MERGEABLE	True	fix(mission-core): upgrade UI + queue integrity fail-clean (r79b)	fix/upgrade-ui-queue-r79b-g1606-20260731
+1784	MERGEABLE	True	fix(sqf): trigger/waypoint statement-scope integrity (r79)	fix/sqf-trigger-waypoint-scope-r79-g1606-20260731
+1785	MERGEABLE	True	fix(aicom): cancel undelivered airlift on order retarget/abort (r78)	fix/aicom-order-cancel-airlift-clear-r78-g1606-20260731
+1786	MERGEABLE	True	feat(spectator): v4 streaming pass ΓÇö smooth director cam, fight-gated town cams, autostart + free-cam overhaul	fable/spectator-v4-streaming-20260731
+1787	MERGEABLE	True	fix(mission-core): player respawn gear + CM residual + HC PV + barracks queue + AAR detect (r80b)	fix/player-respawn-cm-hc-barracks-radar-r80b-g1606-20260731
+1788	MERGEABLE	True	fix(alife): air defence / MANPAD static site lifecycle integrity (r80)	fix/alife-airdef-manpad-r80-g1606-20260731
+1789	MERGEABLE	True	fix(mission-core): UAV terminal control handover lifecycle (r78)	fix/uav-terminal-handover-r78-g1606-20260731
+1790	MERGEABLE	True	fix(sqf): permanent-daylight clamp on all machines + JIP band fold (r78)	fix/daytime-skiptime-wrap-r78-g1606-20260731
+1791	MERGEABLE	True	docs: worktree triage report 2026-07-31	triage/worktree-triage-20260731
+1792	MERGEABLE	True	feat(ops): add -autoInit to server_launch.cmd (cold-boot lobby-idle fix)	kimi/ops-server-launch-autoinit
+1793	MERGEABLE	True	feat(lane194): victory-pack hold-ticks + HQ-loss winner + roundend flush [flags]	codex/fold-lane194-victory-pack-20260731
+1794	MERGEABLE	True	perf(server): antistack mainLoop active-slice audit (r2 fold)	codex/fold-perf-antistack-aicom-cleaner-r2-20260731
+1795	MERGEABLE	True	fix(aicom): preserve HC team marker feed on leader handoff (map-clarity fold)	codex/fold-map-clarity-team-marker-null-20260731
+1796	MERGEABLE	True	fix(spectator): parenthesise the IsRealPlayer Call so ! does not negate the array	fable/isrealplayer-call-precedence-20260731
+1797	MERGEABLE	True	fix(lobby): production mission descriptions, and drop the build number that rots	fix/mission-description-evergreen-20260801
+1798	MERGEABLE	True	feat(caster): Caster 1/2 spectator slots + caster allowlist [flag WFBE_C_CASTER_AUTOSPECTATE default 0]	feat/caster-slots-allowlist-20260801
+1799	MERGEABLE	True	fold(spectator): v4 streaming stack ΓÇö #1786 (v4/v4.1 free-cam + director) + #1715 (observer lifecycle teardown)	fold/spectator-stack-20260801
