@@ -369,8 +369,8 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_HELI_CANNON_NUDGE", 1]) > 0 || 
 												_rh setVariable ["wfbe_heli_baseidle_at", time];
 											} else {
 												if ((time - _rSeen) >= _reapTO) then {
-													{ if (!isPlayer _x) then {["aicomteam-L276", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} } forEach _rCrew;
-													["aicomteam-L277", _rh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _rh;
+													["aicomteam-L277", _rh, ""] Call WFBE_CO_FNC_LogVehDelete;
+													[_rh, true] Spawn WFBE_CO_FNC_SafeCrewDelete;
 													["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] B74.2 base-reaped idle attack heli %2 (idle %3s at base).", _sd, typeOf _rh, _reapTO]] Call WFBE_CO_FNC_AICOMLog;
 												};
 											};
