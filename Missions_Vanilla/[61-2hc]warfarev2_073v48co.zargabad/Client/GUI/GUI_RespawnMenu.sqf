@@ -113,14 +113,15 @@ while {WFBE_RespawnTime > 0 && dialog && alive player} do {
 		//--- fails). Capture the live inventory NOW so keep-current always has data; hint routes to Team Menu Save Gear
 		//--- to persist it. Fires only when toggling TO keep-current with no prior kit. A2-OA commands only.
 		if (!WFBE_RespawnDefaultGear && {isNil {player getVariable "wfbe_custom_gear"}}) then {
-			private ["_capBpObj","_capBp","_capPri","_capSec","_capPis","_capParsed"];
+			private ["_capBpObj","_capBp","_capBpContent","_capPri","_capSec","_capPis","_capParsed"];
 			_capBpObj = unitBackpack player;
 			_capBp = if (!isNull _capBpObj) then {typeOf _capBpObj} else {""};
+			_capBpContent = if (!isNull _capBpObj) then {[getWeaponCargo _capBpObj, getMagazineCargo _capBpObj]} else {[]};
 			_capParsed = [(weapons player), (magazines player), player] Call WFBE_CL_FNC_GetParsedGear;
 			_capPri = _capParsed select 0;
 			_capSec = _capParsed select 1;
 			_capPis = _capParsed select 2;
-			player setVariable ["wfbe_custom_gear", [(weapons player) - [_capBp], magazines player, _capBp, [], [_capPri, _capPis, _capSec]]];
+			player setVariable ["wfbe_custom_gear", [(weapons player) - [_capBp], magazines player, _capBp, _capBpContent, [_capPri, _capPis, _capSec]]];
 			player setVariable ["wfbe_custom_gear_cost", 0];
 			hint "Current kit captured for respawn.
 Open the Team Menu -> Save Gear to store it as a preset.";

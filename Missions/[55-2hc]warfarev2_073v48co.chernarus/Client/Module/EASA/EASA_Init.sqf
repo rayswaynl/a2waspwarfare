@@ -575,7 +575,7 @@ _easaVehi = _easaVehi + ['Mi24_D_CZ_ACR'];
 _easaDefault = _easaDefault + [[['AT9Launcher'],['8Rnd_AT9_Mi24V']]];
 _easaLoadout = _easaLoadout + [
 [
-[6800,'Ataka-V (8) | Stinger (2)',[['AT9Launcher','StingerLauncher_twice'],['8Rnd_AT9_Mi24V','2Rnd_Stinger']]]
+[7000,'Ataka-V (8) | Stinger (2)',[['AT9Launcher','StingerLauncher_twice'],['8Rnd_AT9_Mi24V','2Rnd_Stinger']]]
 ]
 ];
 
@@ -584,7 +584,7 @@ _easaVehi = _easaVehi + ['AH64D'];
 _easaDefault = _easaDefault + [[['TOWLauncherSingle'],['6Rnd_TOW2']]];
 _easaLoadout = _easaLoadout + [
 [
-[6800,'Stinger (2) | TOW-2 (6)',[['StingerLauncher_twice','TOWLauncherSingle'],['2Rnd_Stinger','6Rnd_TOW2']]]
+[7000,'Stinger (2) | TOW-2 (6)',[['StingerLauncher_twice','TOWLauncherSingle'],['2Rnd_Stinger','6Rnd_TOW2']]]
 ]
 ];
 
@@ -593,7 +593,7 @@ _easaVehi = _easaVehi + ['AH64D_EP1'];
 _easaDefault = _easaDefault + [[['HellfireLauncher'],['8Rnd_Hellfire']]];
 _easaLoadout = _easaLoadout + [
 [
-[6800,'AGM-114 (8) | Stinger (2)',[['HellfireLauncher','StingerLauncher_twice'],['8Rnd_Hellfire','2Rnd_Stinger']]]
+[7000,'AGM-114 (8) | Stinger (2)',[['HellfireLauncher','StingerLauncher_twice'],['8Rnd_Hellfire','2Rnd_Stinger']]]
 ]
 ];
 
@@ -602,7 +602,7 @@ _easaVehi = _easaVehi + ['BAF_Apache_AH1_D'];
 _easaDefault = _easaDefault + [[['HellfireLauncher'],['8Rnd_Hellfire']]];
 _easaLoadout = _easaLoadout + [
 [
-[6800,'AGM-114 (8) | Stinger (2)',[['HellfireLauncher','StingerLauncher_twice'],['8Rnd_Hellfire','2Rnd_Stinger']]]
+[7000,'AGM-114 (8) | Stinger (2)',[['HellfireLauncher','StingerLauncher_twice'],['8Rnd_Hellfire','2Rnd_Stinger']]]
 ]
 ];
 
@@ -611,7 +611,7 @@ _easaVehi = _easaVehi + ['AH1Z'];
 _easaDefault = _easaDefault + [[['HellfireLauncher'],['8Rnd_Hellfire','8Rnd_Hellfire']]];
 _easaLoadout = _easaLoadout + [
 [
-[3400,'AGM-114 (8) | AIM-9L (2)',[['HellfireLauncher','SidewinderLaucher_AH1Z'],['8Rnd_Hellfire','2Rnd_Sidewinder_AH1Z']]],
+[2400,'AGM-114 (8) | AIM-9L (2)',[['HellfireLauncher','SidewinderLaucher_AH1Z'],['8Rnd_Hellfire','2Rnd_Sidewinder_AH1Z']]],
 [1000,'AGM-114 (16)',[['HellfireLauncher'],['8Rnd_Hellfire','8Rnd_Hellfire']]]
 ]
 ];
@@ -621,9 +621,9 @@ _easaVehi = _easaVehi + ['AW159_Lynx_BAF'];
 _easaDefault = _easaDefault + [[['CRV7_HEPD','CTWS','SpikeLauncher_ACR'],['6Rnd_CRV7_HEPD','200Rnd_40mmHE_FV510','200Rnd_40mmSABOT_FV510','2Rnd_Spike_ACR','2Rnd_Spike_ACR']]];
 _easaLoadout = _easaLoadout + [
 [
-[8800,'Spike (2) | Stinger (2)',[['CRV7_HEPD','CTWS','SpikeLauncher_ACR','StingerLauncher_twice'],['6Rnd_CRV7_HEPD','200Rnd_40mmHE_FV510','200Rnd_40mmSABOT_FV510','2Rnd_Spike_ACR','2Rnd_Stinger']]],
+[9000,'Spike (2) | Stinger (2)',[['CRV7_HEPD','CTWS','SpikeLauncher_ACR','StingerLauncher_twice'],['6Rnd_CRV7_HEPD','200Rnd_40mmHE_FV510','200Rnd_40mmSABOT_FV510','2Rnd_Spike_ACR','2Rnd_Stinger']]],
 [5000,'Spike (4)',[['CRV7_HEPD','CTWS','SpikeLauncher_ACR'],['6Rnd_CRV7_HEPD','200Rnd_40mmHE_FV510','200Rnd_40mmSABOT_FV510','2Rnd_Spike_ACR','2Rnd_Spike_ACR']]],
-[10600,'Stinger (4)',[['CRV7_HEPD','CTWS','StingerLauncher_twice'],['6Rnd_CRV7_HEPD','200Rnd_40mmHE_FV510','200Rnd_40mmSABOT_FV510','2Rnd_Stinger','2Rnd_Stinger']]]
+[11000,'Stinger (4)',[['CRV7_HEPD','CTWS','StingerLauncher_twice'],['6Rnd_CRV7_HEPD','200Rnd_40mmHE_FV510','200Rnd_40mmSABOT_FV510','2Rnd_Stinger','2Rnd_Stinger']]]
 ]
 ];
 
@@ -632,7 +632,7 @@ _easaVehi = _easaVehi + ['Mi24_V'];
 _easaDefault = _easaDefault + [[['AT9Launcher'],['4Rnd_AT9_Mi24P']]];
 _easaLoadout = _easaLoadout + [
 [
-[6800,'Ataka-V (4) | Igla-V (2)',[['AT9Launcher','Igla_twice'],['4Rnd_AT9_Mi24P','2Rnd_Igla']]]
+[7000,'Ataka-V (4) | Igla-V (2)',[['AT9Launcher','Igla_twice'],['4Rnd_AT9_Mi24P','2Rnd_Igla']]]
 ]
 ];
 
@@ -641,9 +641,9 @@ _easaVehi = _easaVehi + ['Mi24_P'];
 _easaDefault = _easaDefault + [[['AT9Launcher','HeliBombLauncher'],['4Rnd_AT9_Mi24P','2Rnd_FAB_250']]];
 _easaLoadout = _easaLoadout + [
 [
-[2600,'Ataka-V (4) | FAB-250 (6)',[['AT9Launcher','AirBombLauncher'],['4Rnd_AT9_Mi24P','4Rnd_FAB_250','2Rnd_FAB_250']]],
-[6800,'Ataka-V (4) | Igla-V (2)',[['AT9Launcher','Igla_twice'],['4Rnd_AT9_Mi24P','2Rnd_Igla']]],
-[7400,'FAB-250 (6) | Igla-V (2)',[['AirBombLauncher','Igla_twice'],['4Rnd_FAB_250','2Rnd_FAB_250','2Rnd_Igla']]]
+[2900,'Ataka-V (4) | FAB-250 (6)',[['AT9Launcher','AirBombLauncher'],['4Rnd_AT9_Mi24P','4Rnd_FAB_250','2Rnd_FAB_250']]],
+[7000,'Ataka-V (4) | Igla-V (2)',[['AT9Launcher','Igla_twice'],['4Rnd_AT9_Mi24P','2Rnd_Igla']]],
+[7900,'FAB-250 (6) | Igla-V (2)',[['AirBombLauncher','Igla_twice'],['4Rnd_FAB_250','2Rnd_FAB_250','2Rnd_Igla']]]
 ]
 ];
 
@@ -652,7 +652,7 @@ _easaVehi = _easaVehi + ['Ka52'];
 _easaDefault = _easaDefault + [[['AT9Launcher'],['4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P']]];
 _easaLoadout = _easaLoadout + [
 [
-[6800,'Ataka-V (12) | Igla-V (2)',[['AT9Launcher','Igla_twice'],['4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','2Rnd_Igla']]]
+[7000,'Ataka-V (12) | Igla-V (2)',[['AT9Launcher','Igla_twice'],['4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','2Rnd_Igla']]]
 ]
 ];
 
@@ -661,7 +661,7 @@ _easaVehi = _easaVehi + ['Ka52Black'];
 _easaDefault = _easaDefault + [[['VikhrLauncher'],['12Rnd_Vikhr_KA50']]];
 _easaLoadout = _easaLoadout + [
 [
-[9000,'R-73 (2) | Vikhr (12)',[['R73Launcher_2','VikhrLauncher'],['2Rnd_R73','12Rnd_Vikhr_KA50']]]
+[10000,'R-73 (2) | Vikhr (12)',[['R73Launcher_2','VikhrLauncher'],['2Rnd_R73','12Rnd_Vikhr_KA50']]]
 ]
 ];
 
