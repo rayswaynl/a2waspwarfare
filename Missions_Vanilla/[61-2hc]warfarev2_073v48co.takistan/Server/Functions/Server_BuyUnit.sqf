@@ -360,7 +360,14 @@ if (_unitType isKindOf "Man") then {
 	//--- (Client_BuildUnit.sqf naval-air-spawn-easa): give the FLY-spawned fixed-wing the deck height so it
 	//--- air-starts with clearance instead of at sea level. wfbe_is_carrier_hvt / wfbe_naval_deckz are broadcast
 	//--- by Init_NavalHVT (public=true), so this reads correctly wherever the buy script runs.
-	if ((_unitType isKindOf "Plane") && {_building getVariable ["wfbe_is_carrier_hvt", false]}) then {
+	//--- fable/carrier-heli-deckspawn (2026-07-27): widened from isKindOf "Plane" to isKindOf "Air" - helis
+	//--- are "Helicopter", never "Plane" (identical class-gating bug already fixed in AI_Commander_Teams.sqf's
+	//--- cmdcon41, and already relied on correctly by THIS file's own _crew/_special/AA-missile isKindOf
+	//--- "Air" checks at lines 284/387 above). WFBE_AIRFIELD_UNITS (Init_Common.sqf) lists carrier-buyable
+	//--- helis (Mi17_Ins, Mi171Sh_rockets_CZ_EP1) alongside fixed-wing; without this widen they skipped this
+	//--- Z correction entirely and spawned at the waterline. Z-only, safe for any Air hull - mirrors the
+	//--- player path's unconditional carrier-deck Z assignment (Client_BuildUnit.sqf:710).
+	if ((_unitType isKindOf "Air") && {_building getVariable ["wfbe_is_carrier_hvt", false]}) then {
 		_position set [2, (_building getVariable ["wfbe_naval_deckz", 16])];
 	};
 	_vehicle = [_unitType, _position, _sideID, _dir, true, true, true, _special] Call WFBE_CO_FNC_CreateVehicle;
@@ -559,6 +566,30 @@ _vehicle allowCrewInImmobile true;
 	};
 	if (!isNil "_aiRally" && {typeName _aiRally == "ARRAY"} && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull (driver _vehicle)}) then {
 		(driver _vehicle) commandMove _aiRally;
+	};
+	//--- fable/carrier-heli-deckspawn (2026-07-27): CORRECTNESS FIX. Helis were previously invisible to both
+	//--- carrier gates in this file - "helis are 'Helicopter', never 'Plane'", the identical class-gating bug
+	//--- already fixed in AI_Commander_Teams.sqf's cmdcon41. Site 1 above now widens the pre-create
+	//--- deck-height Z correction to isKindOf "Air" so a carrier-bought helicopter's _position Z is set
+	//--- correctly before createVehicle - but A2-OA createVehicle over water can still seat the hull at the
+	//--- water surface despite that _position Z (the exact quirk the player path documents at
+	//--- Client_BuildUnit.sqf:737-744: "FORM createVehicle over water may seat the hull at the water surface
+	//--- despite _position Z"). Add the same belt-and-braces post-create reseat here, HELICOPTER-ONLY - the
+	//--- Plane arm immediately below is untouched, byte-identical, and already field-tested. Then cancel
+	//--- Common_CreateVehicle.sqf's setVelocity [0,0,-1] spawn kick (helis pass _special="NONE" here, which is
+	//--- != "FLY" and so receives that downward nudge) with setVelocity [0,0,0] and STOP - no flyInHeight, no
+	//--- doMove. Per the player path (Client_BuildUnit.sqf:743-745, Helicopter arm) and cmdcon41's own comment
+	//--- ("Keep the FLY air-start + runway heading + dispatch flag PLANE-only -> helis spawn GROUNDED"), a
+	//--- freshly-crewed rotary hull with no established rotor-borne flight state must NOT get the fixed-wing
+	//--- 80 m/s unstick kick - it is left parked, correctly seated on deck, ready to be tasked normally by the
+	//--- AI commander (same baseline as any ordinary land-factory heli).
+	if ((_building getVariable ["wfbe_is_carrier_hvt", false]) && {_vehicle isKindOf "Helicopter"}) then {
+		private ["_ccReseatZ","_ccReseatP"];
+		_ccReseatZ = _building getVariable ["wfbe_naval_deckz", 16];
+		_ccReseatP = getPosASL _vehicle;
+		_vehicle setPosASL [_ccReseatP select 0, _ccReseatP select 1, _ccReseatZ];
+		_vehicle setVelocity [0, 0, 0];
+		["INFORMATION", Format ["Server_BuyUnit.sqf: carrier deck reseat + heli settle applied to [%1].", _unitType]] Call WFBE_CO_FNC_LogContent;
 	};
 	//--- fable/aicom-carrier-velocity (2026-07-07): carrier fixed-wing air-start chip - the AI-path equivalent of
 	//--- Client_BuildUnit.sqf:598-604 (player carrier velocity override). Common_CreateVehicle's FLY kick is only
