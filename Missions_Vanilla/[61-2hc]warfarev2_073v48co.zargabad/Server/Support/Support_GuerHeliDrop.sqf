@@ -277,7 +277,7 @@ if (!_greenlight) then {
 
 //--- In any case, cleanup the transporter (r51: null-safe - vehicle/group may already be gone).
 if (!isNull _vehicle) then {
-	{if (!isNull _x) then {deleteVehicle _x}} forEach (crew _vehicle);
+	{if (!isNull _x) then {deleteVehicle _x; sleep 0}} forEach (crew _vehicle); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
 	deleteVehicle _vehicle;
 };
 if (!isNull _grp) then {deleteGroup _grp};

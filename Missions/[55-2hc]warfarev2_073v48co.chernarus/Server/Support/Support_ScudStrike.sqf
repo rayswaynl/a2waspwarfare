@@ -215,5 +215,5 @@ _caller = leader _playerTeam;
 
 	["INFORMATION", Format ["Support_ScudStrike.sqf : saturation delivered at %1 (%2 armour targets).", _dest, count _armour]] Call WFBE_CO_FNC_LogContent;
 
-	if (!isNull _ch) then { {deleteVehicle _x} forEach (crew _ch); deleteVehicle _ch; };
+	if (!isNull _ch) then { [_ch, true] Spawn WFBE_CO_FNC_SafeCrewDelete; }; //--- crash 014EFCF4 sweep: was {deleteVehicle _x} forEach (crew _ch); deleteVehicle _ch; fire-and-forget, last action in this script.
 };

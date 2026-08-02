@@ -343,7 +343,7 @@ while {!WFBE_GameOver} do {
 					if (isNull _v || {!(alive _v)}) exitWith {
 						if (!isNull _p && {!(isPlayer _p)}) then { ["guerairdef-flyaway-pilot-earlydead", _p, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _p; };
 						if (!isNull _gu && {!(isPlayer _gu)}) then { ["guerairdef-flyaway-gunner-earlydead", _gu, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gu; };
-						if (!isNull _v && {({isPlayer _x} count (crew _v)) == 0}) then { {["guerairdef-flyaway-unit-earlydead", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _v); ["guerairdef-flyaway-hull-earlydead", _v, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _v; };
+						if (!isNull _v && {({isPlayer _x} count (crew _v)) == 0}) then { {["guerairdef-flyaway-unit-earlydead", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _v); ["guerairdef-flyaway-hull-earlydead", _v, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _v; }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
 						if (!isNull _g && {({alive _x} count (units _g)) == 0}) then { deleteGroup _g; };
 						diag_log format ["GUERAIRDEF|FLYAWAYDESPAWN-EARLYDEAD|town=%1", (if (isNull _t) then {"?"} else {_t getVariable ["name","?"]})];
 					};
@@ -389,7 +389,7 @@ while {!WFBE_GameOver} do {
 					//--- here since a player could have boarded during the wait).
 					if (!isNull _p && {!(isPlayer _p)}) then { ["guerairdef-flyaway-pilot", _p, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _p; };
 					if (!isNull _gu && {!(isPlayer _gu)}) then { ["guerairdef-flyaway-gunner", _gu, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _gu; };
-					if (!isNull _v && {({isPlayer _x} count (crew _v)) == 0}) then { {["guerairdef-flyaway-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _v); ["guerairdef-flyaway-hull", _v, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _v; };
+					if (!isNull _v && {({isPlayer _x} count (crew _v)) == 0}) then { {["guerairdef-flyaway-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _v); ["guerairdef-flyaway-hull", _v, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _v; }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
 					if (!isNull _g && {({alive _x} count (units _g)) == 0}) then { deleteGroup _g; };
 					diag_log format ["GUERAIRDEF|FLYAWAYDESPAWN|town=%1|dist=%2|ticks=%3", (if (isNull _t) then {"?"} else {_t getVariable ["name","?"]}), _finalDist, _tick];
 				};
@@ -397,7 +397,7 @@ while {!WFBE_GameOver} do {
 			} else {
 				if (!isNull _ePilot && {!(isPlayer _ePilot)}) then { ["guerairdef-pilot", _ePilot, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _ePilot; };
 				if (!isNull _eGunner && {!(isPlayer _eGunner)}) then { ["guerairdef-gunner", _eGunner, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eGunner; };
-				if (!isNull _eVeh && {({isPlayer _x} count (crew _eVeh)) == 0}) then { {["guerairdef-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x} forEach (crew _eVeh); ["guerairdef-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh; };
+				if (!isNull _eVeh && {({isPlayer _x} count (crew _eVeh)) == 0}) then { {["guerairdef-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _eVeh); ["guerairdef-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh; }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
 				if (!isNull _eGrp) then { _prunedGroups = _prunedGroups + [_eGrp]; };
 				diag_log format ["GUERAIRDEF|DESPAWN|town=%1|reason=%2|alive=%3", (if (isNull _eTown) then {"?"} else {_eTown getVariable ["name","?"]}), _reason, (count _kept)];
 			};

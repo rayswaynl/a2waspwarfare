@@ -151,7 +151,7 @@ WFBE_NavalCap_FNC_SpawnSkirmish = {
 	};
 
 	_reason = if (_maxWait >= _lifetime) then {"lifetime"} else {"intruder_killed"};
-	if (!isNull _intruder && {({isPlayer _x} count (crew _intruder)) == 0}) then { {deleteVehicle _x} forEach (crew _intruder); deleteVehicle _intruder; };
+	if (!isNull _intruder && {({isPlayer _x} count (crew _intruder)) == 0}) then { {deleteVehicle _x; sleep 0} forEach (crew _intruder); deleteVehicle _intruder; }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
 	if (!isNull _intruderGrp) then { {if (!(isPlayer _x)) then {deleteVehicle _x}} forEach (units _intruderGrp); deleteGroup _intruderGrp; };
 	missionNamespace setVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", ((missionNamespace getVariable ["WFBE_NAVAL_SKIRMISH_ACTIVE", 1]) - 1) max 0];
 
@@ -1204,16 +1204,16 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 						_armed = false;
 						_inactiveTime = 0;
 						if (_capMode == "L39" || _capMode == "SUX") then {
-							if (!isNull _jet1 && alive _jet1) then { {deleteVehicle _x} forEach (crew _jet1); deleteVehicle _jet1 };
-							if (!isNull _jet2 && alive _jet2) then { {deleteVehicle _x} forEach (crew _jet2); deleteVehicle _jet2 };
+							if (!isNull _jet1 && alive _jet1) then { {deleteVehicle _x; sleep 0} forEach (crew _jet1); deleteVehicle _jet1 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+							if (!isNull _jet2 && alive _jet2) then { {deleteVehicle _x; sleep 0} forEach (crew _jet2); deleteVehicle _jet2 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
 						} else {
 							if (_capMode == "MI24") then {
-								if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x} forEach (crew _hind);  deleteVehicle _hind };
-								if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x} forEach (crew _hind2); deleteVehicle _hind2 };
-								if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x} forEach (crew _hind3); deleteVehicle _hind3 };
+								if (!isNull _hind  && alive _hind)  then { {deleteVehicle _x; sleep 0} forEach (crew _hind);  deleteVehicle _hind }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+								if (!isNull _hind2 && alive _hind2) then { {deleteVehicle _x; sleep 0} forEach (crew _hind2); deleteVehicle _hind2 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+								if (!isNull _hind3 && alive _hind3) then { {deleteVehicle _x; sleep 0} forEach (crew _hind3); deleteVehicle _hind3 }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
 							} else {
-								if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x} forEach (crew _hind);   deleteVehicle _hind };
-								if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x} forEach (crew _biplane); deleteVehicle _biplane };
+								if (!isNull _hind   && alive _hind)   then { {deleteVehicle _x; sleep 0} forEach (crew _hind);   deleteVehicle _hind }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+								if (!isNull _biplane && alive _biplane) then { {deleteVehicle _x; sleep 0} forEach (crew _biplane); deleteVehicle _biplane }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
 							};
 						};
 						if (!isNull _capGrp) then { deleteGroup _capGrp };
