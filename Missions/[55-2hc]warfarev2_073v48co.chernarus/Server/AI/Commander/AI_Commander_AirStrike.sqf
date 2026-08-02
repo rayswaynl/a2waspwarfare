@@ -357,9 +357,20 @@ if (_canDispatch) then {
 						};
 						//--- r70 empty-group lifecycle: purge ALL group members (not only current crew). Dead/dismounted
 						//--- stay in units _g after the alive-count while-exit; crew-only delete left corpse husks.
-						{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x}} forEach (units _g);
-						if (!isNull _h && {({isPlayer _x} count (crew _h)) == 0}) then {deleteVehicle _h};
-						if (!isNull _g && {({isPlayer _x} count (units _g)) == 0}) then {deleteGroup _g};
+						//--- r104 DESPAWN vs DESTROYED (same owner-reported class AIRRESP was fixed for - see the
+						//--- DESPAWN vs DESTROYED block in AI_Commander_AirResp.sqf): `alive _h` is one of the WHILE
+						//--- conditions above, so a SHOT-DOWN strike flight exits the loop and this teardown ran
+						//--- unconditionally - deleting the wreck AND the dead crew the moment it hit the ground,
+						//--- bypassing the killed-EH -> RequestOnUnitKilled -> TrashObject wreck/bodies pipeline.
+						//--- Branch the two apart: teardown only what is still alive (the despawn case: hold expired,
+						//--- no live enemy factory left, own HQ lost); a destroyed hull is left to the generic pipeline.
+						//--- crash 014EFCF4: sleep 0 between unit deletes (adjacent seats of the same live hull) -
+						//--- the yield AIRRESP/PatrolAirPass/NavalHVT already carry, this file never got.
+						if (alive _h) then {
+							{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach (units _g);
+							if (!isNull _h && {({isPlayer _x} count (crew _h)) == 0}) then {deleteVehicle _h};
+							if (!isNull _g && {({isPlayer _x} count (units _g)) == 0}) then {deleteGroup _g};
+						};
 					};
 					};
 				} else {
