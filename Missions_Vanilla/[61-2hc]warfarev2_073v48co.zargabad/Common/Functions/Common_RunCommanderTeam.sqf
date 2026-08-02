@@ -25,7 +25,7 @@ Private ["_townOrderArr","_chkVeh","_sideID","_template","_pos","_side","_team",
          "_rmHasVeh","_rmRoute","_rmWPs","_usTier","_arrivalGate","_arrivalDist","_arrivalTraceAt",
          "_govLdr","_govNz","_govSteep","_govStrk","_govWantSlow","_govIsSlow","_skillSend","_foundType",
          "_capPasses","_capMaxPasses","_capReleased","_isPlaneTeam","_planeDir","_pressPos","_pressOn","_pressAct","_pressSyn","_pressPrev",
-         "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady","_capMounted","_capClass","_hasIdleTransport","_idleRtbEnabled"];
+         "_seatRole","_seatState","_seatUnit","_seatVehicle","_seatSuccess","_transportCaps","_transportKeep","_transportVehicle","_transportStamp","_stampFound","_rmDriverReady","_capMounted","_capClass","_hasIdleTransport","_idleRtbEnabled","_hullVeh","_hullV","_corpse"];
 
 _sideID = _this select 0;
 _template = _this select 1;
@@ -3451,6 +3451,42 @@ if (isNull _team || {!([_team, "wfbe_aicom_ended_fired", false] Call WFBE_CO_FNC
 //--- r70 empty-group lifecycle: GetLiveUnits==0 still leaves corpses in units _team; bare
 //--- deleteGroup NO-OPs (Client_GroupsGC documents the HC husk leak). Purge non-player bodies first.
 if (!isNull _team) then {
+//--- fable/hull-leak-sources-20260802 SOURCE 1 sibling fix: a corpse purged below can still be
+//--- seated in an ALIVE hull (every crew member died - e.g. sniper/AT picks - without the same
+//--- event destroying the vehicle itself); deleting only the corpse left that hull behind as an
+//--- orphaned, crewless survivor - the same map-litter class the retreat-thrash cull produces
+//--- (AI_Commander_Produce.sqf). Collect each corpse's hull BEFORE the corpse-delete loop
+//--- (vehicle _x is meaningless once _x is deleted; capture outer _x into _corpse first - an
+//--- inner count/forEach over crew _hullV below would otherwise permanently rebind _x), skip
+//--- any hull still carrying a live player, then enroll each unique hull with the SAME
+//--- husk-collector pipeline the TRUCK-ABANDON/IMMOBILE-ABANDON sites above use
+//--- ("aicom-vehicle-abandoned" -> WF_Logic "emptyVehicles" -> emptyvehiclescollector.sqf ->
+//--- Server_HandleEmptyVehicle.sqf), which already resolves locality correctly. This function
+//--- runs on whichever machine owns the team (server or HC), so the isServer/RequestSpecial
+//--- branch mirrors the existing dispatch sites above verbatim.
+_hullVeh = [];
+{
+	_corpse = _x;
+	if (!isNull _corpse) then {
+		_hullV = vehicle _corpse;
+		if (_hullV != _corpse && {!isNull _hullV} && {alive _hullV} && {({isPlayer _x} count (crew _hullV)) == 0} && {!(_hullV in _hullVeh)}) then {
+			_hullVeh = _hullVeh + [_hullV];
+		};
+	};
+} forEach (units _team);
+{
+	if !(_x getVariable ["wfbe_aicom_abandoned", false]) then {
+		_x setVariable ["wfbe_aicom_abandoned", true];
+		if (isServer) then {
+			["aicom-vehicle-abandoned", _x] Call HandleSpecial;
+		} else {
+			["RequestSpecial", ["aicom-vehicle-abandoned", _x]] Call WFBE_CO_FNC_SendToServer;
+		};
+	};
+} forEach _hullVeh;
+if (count _hullVeh > 0) then {
+	["INFORMATION", Format ["HULLGC|v1|wipe side=%1 team=%2 hulls=%3", _sideID, _team, count _hullVeh]] Call WFBE_CO_FNC_AICOMLog;
+};
 {if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x}} forEach (units _team);
 if (({isPlayer _x} count (units _team)) == 0) then {deleteGroup _team};
 };
