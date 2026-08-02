@@ -258,11 +258,12 @@ _ltMerge = 0; //--- B69 SAME-HC depleted-team MERGE pass throttle (slow ~120s ca
 _ltIntent = 0; //--- COMMAND CONSOLE: throttle for the AI-INTENT publish block (now runs on the _active gate, not _canBuild, so the readout refreshes + reaches JIP/assist clients).
 _prevHuman = false; _prevState = "";
 _prevDelegate = true; //--- cmdcon27 THREAD B: init TRUE to match the new delegate default (avoids a spurious edge-reset at loop start). prev value of the AI-maneuver delegate flag, for the edge-reset that neutralises sticky orders on a mode flip.
-_cbrResearchAppended = false; //--- Tracks whether CBR research was reactively appended this round.
+//--- Persist one-shot latch on side logic (wfbe_aicom_cbr_research_appended).
+_cbrResearchAppended = _logik getVariable ["wfbe_aicom_cbr_research_appended", false];
 //--- V0.7 bootstrap stipend state.
 _prevStipendActive = false;
 _ltStipend = -1e8; //--- First-grant sentinel; keep aligned with the guard below.
-_noHumanSince = -1;
+_noHumanSince = _logik getVariable ["wfbe_aicom_no_human_since", -1]; //--- supervisor restart: retain the current no-human edge so an already-expired build grace does not restart.
 
 ["INITIALIZATION", Format ["AI_Commander.sqf: supervisor started for %1 (owner generation %2).", str _side, _ownerSeq]] Call WFBE_CO_FNC_AICOMLog;
 
@@ -376,8 +377,12 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- with no human commander - from match start, re-armed each time a human commander leaves.
 		if (_humanCmd) then {
 			_noHumanSince = -1;
+			_logik setVariable ["wfbe_aicom_no_human_since", _noHumanSince];
 		} else {
-			if (_noHumanSince < 0) then {_noHumanSince = time};
+			if (_noHumanSince < 0) then {
+				_noHumanSince = time;
+				_logik setVariable ["wfbe_aicom_no_human_since", _noHumanSince];
+			};
 		};
 		_canBuild = (_noHumanSince >= 0) && {(time - _noHumanSince) >= (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_BUILD_GRACE", 300])};
 
@@ -1032,6 +1037,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 					_order = missionNamespace getVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], []];
 					missionNamespace setVariable [Format ["WFBE_C_UPGRADES_%1_AI_ORDER", str _side], _order + [[WFBE_UP_CBRADAR,1],[WFBE_UP_CBRADAR,2]]];
 					_cbrResearchAppended = true;
+					_logik setVariable ["wfbe_aicom_cbr_research_appended", true];
 					["INFORMATION", Format ["AI_Commander.sqf: [%1] CBRadar research (lvl 1-2) appended to program - arty threat confirmed at %2 min.", str _side, round (time / 60)]] Call WFBE_CO_FNC_AICOMLog;
 				};
 			};
