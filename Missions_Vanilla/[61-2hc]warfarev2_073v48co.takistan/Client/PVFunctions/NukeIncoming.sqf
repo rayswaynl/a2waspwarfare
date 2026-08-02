@@ -4,4 +4,4 @@
 	returns: nothing
 */
 
-playSound ["airRaid",true];
+playSound ["inbound",true];
