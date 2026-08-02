@@ -181,7 +181,7 @@ missionNamespace setVariable [Format["WFBE_%1_DefaultGearOfficer", _side], [
 // Soldier
 missionNamespace setVariable [Format["WFBE_%1_DefaultGearSoldier", _side], [
 	['M4A1_Aim','M136','ItemCompass','ItemMap','ItemWatch','ItemRadio','Binocular','NVGoggles'],
-	['30Rnd_556x45_Stanag','30Rnd_556x45_Stanag','30Rnd_556x45_Stanag','30Rnd_556x45_Stanag','HandGrenade_West','HandGrenade_West','HandGrenade_West','HandGrenade_West'],
+	['30Rnd_556x45_Stanag','30Rnd_556x45_Stanag','30Rnd_556x45_Stanag','30Rnd_556x45_Stanag','M136','HandGrenade_West','HandGrenade_West','HandGrenade_West','HandGrenade_West'],
 	['M4A1_Aim']
 ]];
 
