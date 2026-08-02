@@ -3745,5 +3745,18 @@ if (isNil "WFBE_C_TERRVIC_HOLDTICKS") then {WFBE_C_TERRVIC_HOLDTICKS = 0};
 //--- paths (AntiStack on/off) persist scores. When 0, only the post-loop flush runs.
 if (isNil "WFBE_C_STATS_ROUNDEND_FLUSH") then {WFBE_C_STATS_ROUNDEND_FLUSH = 1};
 
+//======================================================================================
+//--- fable/endgame-awards (owner ruling 2026-08-02, SPEC-SCENARIO-POLISH-20260802.md lane 1):
+//--- END-OF-ROUND LEADERBOARD + NAMED AWARDS
+//--- When 1, GUI_EndOfGameStats.sqf renders a per-player round leaderboard (built client-
+//--- local from allPlayers/score/side - no new networking, no new persistent state). When
+//--- 0 (default OFF), the stats screen is byte-identical to pre-flag HEAD.
+if (isNil "WFBE_C_ENDGAME_LEADERBOARD") then {WFBE_C_ENDGAME_LEADERBOARD = 0};
+
+//--- Named round awards (Top Killer per side, Most Vehicles Lost) derived from the same
+//--- leaderboard data above. Dependent on WFBE_C_ENDGAME_LEADERBOARD - inert unless that is
+//--- also on. When 0 (default OFF), no awards section is appended.
+if (isNil "WFBE_C_ENDGAME_AWARDS") then {WFBE_C_ENDGAME_AWARDS = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

@@ -10,6 +10,11 @@ if (_side == Resistance) then {_sideText = Localize "STR_WF_PARAMETER_Side_Guer"
 _sideName = Format[Localize "STR_WF_END_Victory",_sideText];
 
 _guerPanel = (missionNamespace getVariable ["WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL", 0]) > 0;
+//--- WFBE_C_ENDGAME_LEADERBOARD / WFBE_C_ENDGAME_AWARDS (owner ruling 2026-08-02,
+//--- SPEC-SCENARIO-POLISH-20260802.md lane 1): per-player round leaderboard + named
+//--- awards bolted onto this existing stats screen. Awards depends on leaderboard.
+_leaderboardFlag = (missionNamespace getVariable ["WFBE_C_ENDGAME_LEADERBOARD", 0]) > 0;
+_awardsFlag = _leaderboardFlag && {(missionNamespace getVariable ["WFBE_C_ENDGAME_AWARDS", 0]) > 0};
 _width = if (_guerPanel) then {0.27} else {0.4};
 TitleText["","PLAIN"];
 sleep 0.5;
@@ -220,6 +225,92 @@ if (_guerPanel) then {
 	_position Set[2,_lost];
 	_guerLostBar CtrlSetPosition _position;
 	_guerLostBar CtrlCommit 8;
+};
+
+if (_leaderboardFlag) then {
+	//--- Per-player round leaderboard, built entirely client-local from data the engine
+	//--- already tracks (score/side/name via allPlayers) - no new networking, no new
+	//--- persistent state. allPlayers already excludes Headless Clients. Deliberately NOT
+	//--- filtered by `alive` (unlike Common_RealPlayers.sqf) so a player who died late in
+	//--- the round still shows their final score.
+	_leaderboardCtrl = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90410;
+	_leaderboardBgCtrl = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90409;
+
+	_scoreRows = [];
+	{
+		_scoreRows set [count _scoreRows, [name _x, score _x, side _x]];
+	} forEach allPlayers;
+
+	//--- Descending insertion sort on score (index 1). Player counts are small (WF_MAXPLAYERS
+	//--- caps 31-33 across the three maps) so O(n^2) is fine; avoids any A3 sort-by-code command.
+	for "_i" from 1 to ((count _scoreRows) - 1) do {
+		_j = _i;
+		while {_j > 0 && {(_scoreRows select (_j - 1) select 1) < (_scoreRows select _j select 1)}} do {
+			_sortTmp = _scoreRows select (_j - 1);
+			_scoreRows set [_j - 1, _scoreRows select _j];
+			_scoreRows set [_j, _sortTmp];
+			_j = _j - 1;
+		};
+	};
+
+	_rankLimit = 5;
+	if (_rankLimit > (count _scoreRows)) then {_rankLimit = count _scoreRows};
+
+	_lbText = "<t size='1.2'>Top Players</t><br /><br />";
+	for "_i" from 0 to (_rankLimit - 1) do {
+		_lbRow = _scoreRows select _i;
+		_lbText = _lbText + Format ["%1. %2 - %3<br />", _i + 1, _lbRow select 0, _lbRow select 1];
+	};
+
+	if (_awardsFlag && {(count _scoreRows) > 0}) then {
+		_lbText = _lbText + "<br /><t size='1.2'>Awards</t><br />";
+
+		//--- "Top Killer" per side, derived from the same score rows above - a GUER top
+		//--- killer falls out of this for free without needing WFBE_GUER_PLAYER_KILLS (that
+		//--- counter is a side-wide cumulative total, not attributable to one player).
+		{
+			_awSide = _x;
+			_sideLabel = Localize "STR_WF_PARAMETER_Side_East";
+			if (_awSide == west) then {_sideLabel = Localize "STR_WF_PARAMETER_Side_West"};
+			if (_awSide == resistance) then {_sideLabel = Localize "STR_WF_PARAMETER_Side_Guer"};
+
+			_topName = "";
+			_topScore = -1;
+			{
+				if ((_x select 2) == _awSide && {(_x select 1) > _topScore}) then {
+					_topName = _x select 0;
+					_topScore = _x select 1;
+				};
+			} forEach _scoreRows;
+
+			if (_topScore > -1) then {
+				_lbText = _lbText + Format ["Top Killer (%1): %2 - %3<br />", _sideLabel, _topName, _topScore];
+			};
+		} forEach ([west, east] + (if (_guerPanel) then {[resistance]} else {[]}));
+
+		//--- "Most Vehicles Lost" - side-level comic-relief award. No per-player vehicle-loss
+		//--- counter exists (only the WF_Logic side aggregates already displayed above), so
+		//--- this stays a side label rather than naming an individual player.
+		_lostLabel = Localize "STR_WF_PARAMETER_Side_West";
+		_lostMax = _westVehiclesLost;
+		if (_eastVehiclesLost > _lostMax) then {_lostLabel = Localize "STR_WF_PARAMETER_Side_East"; _lostMax = _eastVehiclesLost};
+		if (_guerPanel && {_guerVehiclesLost > _lostMax}) then {_lostLabel = Localize "STR_WF_PARAMETER_Side_Guer"; _lostMax = _guerVehiclesLost};
+		_lbText = _lbText + Format ["Most Vehicles Lost: %1 (%2)<br />", _lostLabel, _lostMax];
+	};
+
+	if (!isNull _leaderboardCtrl) then {
+		_lbPos = CtrlPosition _leaderboardCtrl;
+		_lbPos Set[1, 0.925];
+		_leaderboardCtrl CtrlSetPosition _lbPos;
+		_leaderboardCtrl CtrlCommit 0;
+		_leaderboardCtrl CtrlSetStructuredText ParseText _lbText;
+	};
+	if (!isNull _leaderboardBgCtrl) then {
+		_lbBgPos = CtrlPosition _leaderboardBgCtrl;
+		_lbBgPos Set[1, 0.92];
+		_leaderboardBgCtrl CtrlSetPosition _lbBgPos;
+		_leaderboardBgCtrl CtrlCommit 0;
+	};
 };
 
 _timePassed = 0;

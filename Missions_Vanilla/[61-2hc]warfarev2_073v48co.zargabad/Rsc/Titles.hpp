@@ -679,7 +679,8 @@ class RscTitles {
 					  EastVehiclesCreatedBar,EastVehiclesCreatedCount,WestVehiclesCreatedBar,WestVehiclesCreatedCount,
 					  EastVehiclesLostBar,EastVehiclesLostCount,WestVehiclesLostBar,WestVehiclesLostCount,
 					  GuerSoldiersRecruitedBar,GuerSoldiersRecruitedCount,GuerSoldiersLostBar,GuerSoldiersLostCount,
-					  GuerVehiclesCreatedBar,GuerVehiclesCreatedCount,GuerVehiclesLostBar,GuerVehiclesLostCount,PlayerSummaryText,CloseButton};
+					  GuerVehiclesCreatedBar,GuerVehiclesCreatedCount,GuerVehiclesLostBar,GuerVehiclesLostCount,PlayerSummaryText,CloseButton,
+					  LeaderboardBackground,LeaderboardPanel};
 
 		controlsBackground[] = {};
 
@@ -923,6 +924,30 @@ class RscTitles {
 			text = "Close";
 			action = "private ['_d']; _d = ['currentCutDisplay'] call BIS_FNC_GUIget; if (!isNull _d) then {_d closeDisplay 0};";
 			tooltip = "Hide end-round stats";
+		};
+
+		//--- WFBE_C_ENDGAME_LEADERBOARD / WFBE_C_ENDGAME_AWARDS (default 0, owner ruling 2026-08-02):
+		//--- both controls default OFF-SCREEN (y = 2) so flag-off leaves the screen byte-identical -
+		//--- GUI_EndOfGameStats.sqf only repositions + populates them when the leaderboard flag is on,
+		//--- mirroring the existing off-screen-by-default Guer* control idiom in this same class.
+		class LeaderboardBackground : RscText {
+			style = 128;
+			idc = 90409;
+			x = 0;
+			y = 2;
+			w = 1;
+			h = 0.07;
+			colorBackground[] = WFBE_EOGS_Background;
+		};
+
+		class LeaderboardPanel : RscStructuredText {
+			idc = 90410;
+			x = 0.05;
+			y = 2;
+			w = 0.9;
+			h = 0.06;
+			size = 0.018;
+			text = "";
 		};
 	};
 
