@@ -463,6 +463,16 @@ _aiCapTierLast = (count _aiCapTiers) - 1;
 if (_aiCapTierIndex > _aiCapTierLast) then {_aiCapTierIndex = _aiCapTierLast};
 _aiCapTier = _aiCapTiers select _aiCapTierIndex;
 _sideAINow = {alive _x && {side _x == _side} && {!isPlayer _x}} count _allUnits;
+//--- F2 fable/aicom-econ-triad (2026-08-02): count committed-but-unspawned production against the tier
+//--- cap when armed - the founding threshold check passes at cap-1 then spawns a WHOLE team via a latent
+//--- HC dispatch, compounding with Produce's queued builds. Ledger contract + flag: see the twin block at
+//--- the AI_Commander_Produce.sqf cap gate. Flag 0 = telemetry only (pending= on FOUND_SKIP), byte-identical gate.
+private ["_pendArrF","_pendKeepF","_pendSumF"];
+_pendArrF = _logik getVariable ["wfbe_aicom_pending_spawn", []];
+_pendKeepF = []; _pendSumF = 0;
+{ if ((typeName _x == "ARRAY") && {count _x >= 2} && {(_x select 1) > time}) then {_pendKeepF = _pendKeepF + [_x]; _pendSumF = _pendSumF + (_x select 0)} } forEach _pendArrF;
+if ((count _pendKeepF) != (count _pendArrF)) then {_logik setVariable ["wfbe_aicom_pending_spawn", _pendKeepF]};
+if ((missionNamespace getVariable ["WFBE_C_AICOM_CAP_PENDING", 0]) > 0) then {_sideAINow = _sideAINow + _pendSumF};
 if (_sideAINow >= _aiCapTier) exitWith {
 	["side_ai_cap"] Call _emitFoundSkip;
 	private "_foundCapCount";
@@ -472,7 +482,7 @@ if (_sideAINow >= _aiCapTier) exitWith {
 	_logik setVariable ["wfbe_aicom_foundcap_count", _foundCapCount];
 	if ((time - _foundCapLast) >= 300) then {
 		_logik setVariable ["wfbe_aicom_foundcap_log_t", time];
-		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOUND_SKIP|reason=side-cap|count=" + str _foundCapCount + "|sideAI=" + str _sideAINow + "|tierCap=" + str _aiCapTier + "|pc=" + str _pcN);
+		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOUND_SKIP|reason=side-cap|count=" + str _foundCapCount + "|sideAI=" + str _sideAINow + "|tierCap=" + str _aiCapTier + "|pc=" + str _pcN + "|pending=" + str _pendSumF);
 		_logik setVariable ["wfbe_aicom_foundcap_count", 0];
 	};
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founding skipped - side AI %2 >= tier cap %3 (tier %4, pc %5).", _sideText, _sideAINow, _aiCapTier, (missionNamespace getVariable ["WFBE_PopTier", 0]), _pcN]] Call WFBE_CO_FNC_AICOMLog;
@@ -1635,6 +1645,10 @@ if (count _live > 0) then {
 	//--- 8/9 of the inner array; after HandleSpecial strips the leading string they land at Common_RunCommanderTeam _this indices 7/8).
 	//--- Purely additive - every other delegate reader ignores them (count-guarded), so ground/heli founding is byte-identical.
 	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass, _foundType, _isJetTeam, _runwayDir]] Call WFBE_CO_FNC_SendToClient;
+	//--- F2 fable/aicom-econ-triad: book the dispatched founding on the pending-spawn ledger (contract at the
+	//--- Produce.sqf cap gate). count _template under-counts crewed-vehicle seats - acceptable: the ledger is a
+	//--- conservative brake, not bookkeeping, and entries age out.
+	_logik setVariable ["wfbe_aicom_pending_spawn", (_logik getVariable ["wfbe_aicom_pending_spawn", []]) + [[count _template, time + (missionNamespace getVariable ["WFBE_C_AICOM_CAP_PENDING_TTL", 180])]]]; //--- F2 fable/aicom-econ-triad: book committed-but-unspawned HC team founding on the pending ledger
 	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
 	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades

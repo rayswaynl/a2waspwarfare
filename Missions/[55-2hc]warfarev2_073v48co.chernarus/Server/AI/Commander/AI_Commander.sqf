@@ -916,6 +916,41 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 				diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|REQDRAW_ARM|funds=" + str _funds + "|teams=" + str _fTeams + "|target=" + str _dynTarget);
 			};
 
+			//--- F3 fable/aicom-econ-triad (2026-08-02): FUNDS->SUPPLY CONVERSION (flag WFBE_C_AICOM_F2S_ENABLE
+			//--- default 0 = dark). Overnight 2026-08-01 Takistan war: EAST ended at funds=1.44M climbing +29k/window
+			//--- while netSupply=-45k/window - in dual-currency mode every heavy sink (ECON_SINK research above, base
+			//--- construction) also charges SUPPLY, and no cash->supply channel exists (see the cmdcon42 note on the
+			//--- econ-sink block), so a supply-starved rich side hoards unspendable cash and the war stalls instead
+			//--- of concluding. When armed: once per cooldown, if the side is rich (funds >= FLOOR + AMOUNT) AND
+			//--- supply-starved (supply < LOW), burn AMOUNT funds for round(AMOUNT*RATIO) supply. Guards: dual-
+			//--- currency mode only; WFBE_C_SUPPLY_SERVER_FIX == 2 required (any other value makes the server-
+			//--- originated credit a silent publicVariableServer no-op - funds would vanish); human-seated commander
+			//--- pauses it (same contract as ECON_SINK/REQDRAW); west/east only by construction (this supervisor
+			//--- never runs for GUER). Stagnation multiplier explicitly bypassed (4th arg false, same as the
+			//--- bootstrap stipend) - this is a conversion, not income; the server handler still clamps the pool to
+			//--- WFBE_C_MAX_ECONOMY_SUPPLY_LIMIT. Conservative: at most AMOUNT per cooldown against a measured
+			//--- +29k/window income; FLOOR keeps non-rich sides untouched; LOW keeps healthy-supply sides untouched.
+			if ((missionNamespace getVariable ["WFBE_C_AICOM_F2S_ENABLE", 0]) > 0
+				&& {(missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM") == 0}
+				&& {(missionNamespace getVariable ["WFBE_C_SUPPLY_SERVER_FIX", 0]) == 2}
+				&& {!(_humanSeated && {(missionNamespace getVariable ["WFBE_C_AICOM_ECON_SINK_HUMAN_OFF", 1]) > 0})}) then {
+				private ["_f2sFloor","_f2sAmt","_f2sFunds","_f2sSupply","_f2sGain"];
+				_f2sFloor = missionNamespace getVariable ["WFBE_C_AICOM_F2S_FLOOR", 400000];
+				_f2sAmt   = missionNamespace getVariable ["WFBE_C_AICOM_F2S_AMOUNT", 25000];
+				_f2sFunds = (_side) Call GetAICommanderFunds; //--- fresh read - _funds is stale if ECON_SINK above spent this tick
+				if (_f2sFunds >= (_f2sFloor + _f2sAmt) && {(time - (_logik getVariable ["wfbe_aicom_f2s_t0", -1e10])) > (missionNamespace getVariable ["WFBE_C_AICOM_F2S_COOLDOWN", 300])}) then {
+					_f2sSupply = (_side) Call WFBE_CO_FNC_GetSideSupply;
+					if ((typeName _f2sSupply) != "SCALAR") then {_f2sSupply = 0};
+					if (_f2sSupply < (missionNamespace getVariable ["WFBE_C_AICOM_F2S_SUPPLY_LOW", 15000])) then {
+						_f2sGain = round (_f2sAmt * (missionNamespace getVariable ["WFBE_C_AICOM_F2S_RATIO", 1]));
+						[_side, -_f2sAmt] Call ChangeAICommanderFunds;
+						[_side, _f2sGain, "AICOM funds->supply conversion.", false] Call ChangeSideSupply;
+						_logik setVariable ["wfbe_aicom_f2s_t0", time];
+						diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|ECON_CONVERT|spent=" + str _f2sAmt + "|gained=" + str _f2sGain + "|fundsPre=" + str _f2sFunds + "|supplyPre=" + str _f2sSupply);
+					};
+				};
+			};
+
 			//--- Commander Town Ledger investment arm (fable/ctl-impl-v1, B6/B7). Flag-off
 			//--- (AICOMV2_LANE_CMD_TOWN_LEDGER=0 or AICOMV2_CTL_INVEST_ENABLE=0) => skipped
 			//--- silently - the lane flag gates existence, not just behaviour, so no telemetry
@@ -1095,11 +1130,26 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		_arrMed = _logik getVariable ["wfbe_aicom_arrival_med", 0];
 		_arrSlow = _logik getVariable ["wfbe_aicom_arrival_slow", 0];
 		_arrDisp = _logik getVariable ["wfbe_aicom_arrival_dispatched", 0];
-		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|ARRIVAL_BANDS|fast=" + str _arrFast + "|med=" + str _arrMed + "|slow=" + str _arrSlow + "|dispatched=" + str _arrDisp);
+		//--- F1 fable/aicom-econ-triad (2026-08-02): full per-window outcome accounting. stranded/retarget/died/
+		//--- cleared are bumped at the AssignTowns/Strategy resolution sites; inflight = live open-latch count at
+		//--- emit. Identity: dispatched ~= fast+med+slow+stranded+retarget+died+cleared+delta-inflight; residual =
+		//--- closes this ledger cannot see (HC-local ServiceTick detours; groups nulled by groupsGC pre-watcher).
+		private ["_arrStr","_arrRtg","_arrDie","_arrClr","_arrInf"];
+		_arrStr = _logik getVariable ["wfbe_aicom_arrival_stranded", 0];
+		_arrRtg = _logik getVariable ["wfbe_aicom_arrival_retarget", 0];
+		_arrDie = _logik getVariable ["wfbe_aicom_arrival_died", 0];
+		_arrClr = _logik getVariable ["wfbe_aicom_arrival_cleared", 0];
+		_arrInf = 0;
+		{ if (!isNull _x && {[_x, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool}) then {_arrInf = _arrInf + 1} } forEach (_logik getVariable ["wfbe_teams", []]);
+		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str _elMin + "|ARRIVAL_BANDS|fast=" + str _arrFast + "|med=" + str _arrMed + "|slow=" + str _arrSlow + "|dispatched=" + str _arrDisp + "|stranded=" + str _arrStr + "|retarget=" + str _arrRtg + "|died=" + str _arrDie + "|cleared=" + str _arrClr + "|inflight=" + str _arrInf);
 		_logik setVariable ["wfbe_aicom_arrival_fast", 0];
 		_logik setVariable ["wfbe_aicom_arrival_med", 0];
 		_logik setVariable ["wfbe_aicom_arrival_slow", 0];
 		_logik setVariable ["wfbe_aicom_arrival_dispatched", 0];
+		_logik setVariable ["wfbe_aicom_arrival_stranded", 0];
+		_logik setVariable ["wfbe_aicom_arrival_retarget", 0];
+		_logik setVariable ["wfbe_aicom_arrival_died", 0];
+		_logik setVariable ["wfbe_aicom_arrival_cleared", 0];
 
 		_ltStat = time; //--- advance the throttle BEFORE CMDRSTAT so a CMDRSTAT failure could never spam/stall the AICOMSTAT tick
 

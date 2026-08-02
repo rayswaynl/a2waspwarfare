@@ -32,6 +32,22 @@ _capTierLast = (count _capTiers) - 1;
 if (_capTier > _capTierLast) then {_capTier = _capTierLast};
 _cap = _capTiers select _capTier;   //--- B74.2: tiered per-side AI ceiling (was flat WFBE_C_AI_COMMANDER_TOTAL_AI_MAX).
 _sideAI = {alive _x && {side _x == _side} && {!isPlayer _x}} count allUnits;
+//--- F2 fable/aicom-econ-triad (2026-08-02): pending-spawn ledger. _sideAI counts ALIVE units only, but
+//--- every producer pipeline is latent (factory FIFO in Server_BuyUnit.sqf sleeps through build time; HC
+//--- founding/top-up dispatches spawn on the HC later), so committed-but-unspawned mass was invisible at
+//--- production time and WEST overshot its tier cap 226/170 (overnight 2026-08-01 Takistan war). Commit
+//--- sites below + the Teams.sqf founding dispatch append [units, expiry]; entries age out after
+//--- WFBE_C_AICOM_CAP_PENDING_TTL (spawn-complete decrements would have to cross server/HC machines -
+//--- expiry approximates them conservatively). Counted against the cap ONLY when WFBE_C_AICOM_CAP_PENDING
+//--- > 0 (default 0 = ledger + pending= telemetry only, cap behaviour byte-identical). Exempt spawners,
+//--- each tiny + own-capped: AI_Commander_AirResp (AIRRESP flight cap), Server_AicomSupplySquad (flag +
+//--- one squad). GUER runs neither this file nor Teams founding (WFBE_PRESENTSIDES - [resistance]).
+private ["_pendArr","_pendKeep","_pendSum"];
+_pendArr = _logik getVariable ["wfbe_aicom_pending_spawn", []];
+_pendKeep = []; _pendSum = 0;
+{ if ((typeName _x == "ARRAY") && {count _x >= 2} && {(_x select 1) > time}) then {_pendKeep = _pendKeep + [_x]; _pendSum = _pendSum + (_x select 0)} } forEach _pendArr;
+if ((count _pendKeep) != (count _pendArr)) then {_logik setVariable ["wfbe_aicom_pending_spawn", _pendKeep]};
+if ((missionNamespace getVariable ["WFBE_C_AICOM_CAP_PENDING", 0]) > 0) then {_sideAI = _sideAI + _pendSum};
 if (_sideAI >= _cap) exitWith {
 	private "_produceCapCount";
 	private "_produceCapLast";
@@ -40,7 +56,7 @@ if (_sideAI >= _cap) exitWith {
 	_logik setVariable ["wfbe_aicom_producecap_count", _produceCapCount];
 	if ((time - _produceCapLast) >= 300) then {
 		_logik setVariable ["wfbe_aicom_producecap_log_t", time];
-		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|PRODUCE_SKIP|reason=side-cap|count=" + str _produceCapCount + "|sideAI=" + str _sideAI + "|tierCap=" + str _cap + "|tier=" + str _capTier);
+		diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|PRODUCE_SKIP|reason=side-cap|count=" + str _produceCapCount + "|sideAI=" + str _sideAI + "|tierCap=" + str _cap + "|tier=" + str _capTier + "|pending=" + str _pendSum);
 		_logik setVariable ["wfbe_aicom_producecap_count", 0];
 	};
 };
@@ -172,6 +188,7 @@ if (_airMaxTotalP > 0) then {
 						_team setVariable ["wfbe_aicom_airlift_grant", [_alClass, getPosATL _alFactory, _alPrice, time], true];
 						_team setVariable ["wfbe_aicom_airlift_req", [], true];
 						_capRemaining = _capRemaining - _alCapCost;
+						_logik setVariable ["wfbe_aicom_pending_spawn", (_logik getVariable ["wfbe_aicom_pending_spawn", []]) + [[_alCapCost, time + (missionNamespace getVariable ["WFBE_C_AICOM_CAP_PENDING_TTL", 180])]]]; //--- F2 fable/aicom-econ-triad: book committed-but-unspawned airlift grant on the pending ledger
 						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_GRANT|team=" + str _team + "|class=" + _alClass + "|cost=" + str _alPrice);
 						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] transport requisition approved (%3 at aircraft factory, cost %4).", _sideText, _team, _alClass, _alPrice]] Call WFBE_CO_FNC_AICOMLog;
 					};
@@ -265,6 +282,7 @@ if (_airMaxTotalP > 0) then {
 								//--- (Common_RunCommanderTeam.sqf) can refund it exactly if this request ages out unfilled.
 								_team setVariable ["wfbe_aicom_topup_req", [_wm_missing, _wm_rallyPos, _wm_infCls, _wm_now, _wm_charge], true];
 								_capRemaining = _capRemaining - _wm_missing;
+								_logik setVariable ["wfbe_aicom_pending_spawn", (_logik getVariable ["wfbe_aicom_pending_spawn", []]) + [[_wm_missing, time + (missionNamespace getVariable ["WFBE_C_AICOM_CAP_PENDING_TTL", 180])]]]; //--- F2 fable/aicom-econ-triad: book committed-but-unspawned HC top-up request on the pending ledger
 								_team setVariable ["wfbe_aicom_topup_stamp", _wm_now, false]; //--- rate-limit stamp (local group var)
 								//--- VISIBILITY: UID-targeted command-chat line to the seated human commander ONLY (Client_HandlePVF
 								//--- STRING destination = exact player UID; LocalizeMessage "QuartermasterRefit" is a passthrough case).
@@ -630,6 +648,7 @@ if (_airMaxTotalP > 0) then {
 				//--- the SAME amount on a createVehicle spawn failure instead of re-deriving list price.
 				[_id, _facObj, _toBuild, _side, _team, _isVeh, _priceCharged] Spawn AIBuyUnit;
 				_capRemaining = _capRemaining - _capCost;
+				_logik setVariable ["wfbe_aicom_pending_spawn", (_logik getVariable ["wfbe_aicom_pending_spawn", []]) + [[_capCost, time + (missionNamespace getVariable ["WFBE_C_AICOM_CAP_PENDING_TTL", 180])]]]; //--- F2 fable/aicom-econ-triad: book committed-but-unspawned factory order on the pending ledger
 				_ordered = _ordered + [_toBuild]; //--- E7: record in-flight order so the selector counts it
 				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] ordering [%3] at %4 factory (cost %5, batch %6/%7 rich=%8).", _sideText, _team, _toBuild, _typeName, _price, _batchOrdered + 1, _batchCap, _richFlag]] Call WFBE_CO_FNC_AICOMLog;
 
