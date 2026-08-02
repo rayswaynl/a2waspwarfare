@@ -62,7 +62,7 @@ CIPHER_SortArray = {
 	_reverse = _this select 1;
 	_auxArray = if (count _this > 2) then {+(_this select 2)} else {[]};
 	
-	if (count _list == 0) exitWith {[]};
+	if (count _list == 0) exitWith {[[], []]};
 	_isString = if (typeName(_list select 0) == typeName "") then {true} else {false};
 
 	for '_i' from 0 to (count _list)-1 do {
@@ -98,7 +98,7 @@ CIPHER_SortArrayIndex = {
 	_auxArray = [];
 	for '_i' from 0 to (count _list)-1 do {_auxArray set [_i, _i]};	
 	
-	if (count _list == 0) exitWith {[]};
+	if (count _list == 0) exitWith {[[], []]};
 	_isString = if (typeName(_list select 0) == "STRING") then {true} else {false};
 
 	for '_i' from 0 to (count _list)-1 do {		
