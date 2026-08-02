@@ -26,7 +26,7 @@ waitUntil {commonInitComplete && serverInitFull};
 ["INFORMATION", Format ["Server_PlayerConnected.sqf: Player [%1] [%2] has joined the game", _name, _uid]] Call WFBE_CO_FNC_LogContent;
 
 //--- Skip this script if the server is trying to run this.
-if (_name == '__SERVER__' || _uid == '' || local player) exitWith {};
+if (_name == '__SERVER__' || _uid == '' || _uid == '0' || local player) exitWith {};
 
 //--- b761 (Ray 2026-06-26): a headless client is NOT a warfare player and must never run the human enrollment
 //--- resolver - it reseats itself to a civilian group (Init_HC) so it always bails the 3-retry self-heal and

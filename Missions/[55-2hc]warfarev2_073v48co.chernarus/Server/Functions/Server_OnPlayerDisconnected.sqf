@@ -162,7 +162,7 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
 };
 if (_isHCDisconnect) exitWith {};
 
-if (_uid == '') exitWith {};
+if (_uid == '' || _uid == '0') exitWith {};
 
 //--- r84 enroll-abort-on-disconnect: bump this uid's disconnect sequence so any in-flight
 //--- Server_OnPlayerConnected resolution loop (120s window, plus its re-arm chain) breaks early and

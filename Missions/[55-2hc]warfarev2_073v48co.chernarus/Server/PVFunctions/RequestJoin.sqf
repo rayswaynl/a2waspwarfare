@@ -5,6 +5,8 @@ _side = _this select 1;
 _name = name _player;
 
 _uid = getPlayerUID(_player);
+//--- Invalid/local-host UIDs are not identities: never allow them into shared JIP keyspace.
+if (_uid == "" || {_uid == "0"}) exitWith {};
 _canJoin = true;
 
 _teamJoinedConfirmed = missionNamespace getVariable Format["WFBE_JIP_USER%1_TEAM_JOINED", _uid];
