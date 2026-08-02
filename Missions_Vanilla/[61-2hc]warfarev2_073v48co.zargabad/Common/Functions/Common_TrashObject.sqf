@@ -4,7 +4,7 @@
 		- Object.
 */
 
-Private ["_delay","_group","_isMan","_object","_town"];
+Private ["_delay","_group","_isMan","_object","_town","_remoteAttempt","_remoteBackoff"];
 
 _object = _this;
 _town = [_object] Call GetClosestLocation;
@@ -110,8 +110,19 @@ if !(isNull _object) then {
 	//--- receiver refuse anything this function did not itself queue; combined with its own !alive test
 	//--- the worst a forged dispatch can do is despawn a corpse/wreck early - never a live object.
 	if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) > 0 && {!local _object}) then {
+		//--- RPT deep-dive 2026-08-01: owner dispatch is fire-and-forget. If the owner is
+		//--- unavailable or rejects a stale locality/seat state, clearing wfbe_trashed immediately
+		//--- lets the 5s collector spawn another 60s worker forever. Keep eventual retry, but add
+		//--- exponential collector cooldown (cleanup delay floored at 60s, then doubled up to
+		//--- a 900s cap) so one dead remote object cannot generate a one-minute dispatch storm.
+		//--- The normal worker sleep remains after the cooldown, preserving cleanup grace.
+		_remoteAttempt = (_object getVariable ["wfbe_trash_remote_attempts", 0]) + 1;
+		_remoteBackoff = ((_delay max 60) * (2 ^ ((_remoteAttempt - 1) min 4)));
+		if (_remoteBackoff > 900) then {_remoteBackoff = 900};
+		_object setVariable ["wfbe_trash_remote_attempts", _remoteAttempt];
+		_object setVariable ["wfbe_trash_remote_retry_after", diag_tickTime + _remoteBackoff];
 		_object setVariable ["wfbe_trash_reap", true, true];
-		["INFORMATION", Format["Common_TrashObject.sqf: [%1] is not server-local; dispatching the delete to its owner.", _object]] Call WFBE_CO_FNC_LogContent;
+		["INFORMATION", Format["Common_TrashObject.sqf: [%1] is not server-local; dispatching the delete to its owner (retry %2, backoff %3s).", _object, _remoteAttempt, _remoteBackoff]] Call WFBE_CO_FNC_LogContent;
 		[_object, "HandleSpecial", ["cleanup-trash-object", _object]] Call WFBE_CO_FNC_SendToClient;
 		//--- crash 014EFCF4 #4: release the dispatched body back to the collector. If the owner-side executor
 		//--- rejects a mid-flight seat race, the next collector pass re-queues it instead of leaking the body;
@@ -119,6 +130,8 @@ if !(isNull _object) then {
 		if !(isNil "gc_collector") then {gc_collector = gc_collector - [_object]};
 		_object setVariable ["wfbe_trashed", nil]; //--- crash 014EFCF4 review: same re-queue reset as the seat-defer above - an owner-side refusal must not leak the body forever.
 	} else {
+		_object setVariable ["wfbe_trash_remote_attempts", nil];
+		_object setVariable ["wfbe_trash_remote_retry_after", nil];
 		deleteVehicle _object;
 	};
 
