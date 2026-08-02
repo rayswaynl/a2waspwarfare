@@ -59,7 +59,7 @@ private ["_side","_logik","_snap","_sideID","_sideText","_enemySide","_enemyID",
 	"_senseTick","_sensed","_laneTown","_flightsIn","_flights","_f","_fg","_fh",
 	"_tgtTowns","_ownTowns","_cands","_x2","_lanePos","_nearCount","_bestTown","_bestCount","_inRange",
 	"_posCacheOn","_entPositions","_seenVeh","_ePlayer","_eVeh",
-	"_rollNow","_covered","_airAlive","_airSideOK","_hasAirFactory","_afStructNames","_afStructs","_afStructIdx","_afStructClass","_upgrades","_airOK","_townsOK","_canDispatch","_dispatched","_skipReason",
+	"_rollNow","_covered","_airAlive","_airSideOK","_late","_airMaxTotal","_hasAirFactory","_afStructNames","_afStructs","_afStructIdx","_afStructClass","_upgrades","_airOK","_townsOK","_canDispatch","_dispatched","_skipReason",
 	"_airList","_attackClasses","_pilotClass","_ang","_spawnPos","_class","_special","_heli","_grp","_pilot",
 	"_elMin"];
 
@@ -210,6 +210,9 @@ _airAlive = 0;
 		if (_airSideOK) then {_airAlive = _airAlive + 1};
 	};
 } forEach vehicles;
+_late = (time / 60) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_LATE_MINS", 45]);
+_airMaxTotal = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_TOTAL", 3];
+if (_late) then {_airMaxTotal = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_LATE", _airMaxTotal]};
 _hasAirFactory = false;
 _afStructNames = missionNamespace getVariable [Format ["WFBE_%1STRUCTURENAMES", _sideText], []];
 _afStructIdx = (missionNamespace getVariable [Format ["WFBE_%1STRUCTURES", _sideText], []]) find "Aircraft";
@@ -227,7 +230,7 @@ _townsOK = _myTowns >= _minTowns;
 _covered = false;
 { if ((_x select 2) == _laneTown) then {_covered = true} } forEach _flights;
 
-_canDispatch = _sensed && {_inRange} && {_airOK} && {_townsOK} && {!_covered} && {(count _flights) < _maxAir} && {!isNull _laneTown};
+_canDispatch = _sensed && {_inRange} && {_airOK} && {_townsOK} && {!_covered} && {_airAlive < _airMaxTotal} && {(count _flights) < _maxAir} && {!isNull _laneTown};
 
 //--- Liveness telemetry: report the first gate that prevented a flight, not merely dispatched=0.
 _skipReason = "ready";
@@ -237,8 +240,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) <= 0) the
 			if (!_airOK) then {_skipReason = "air-unavailable"} else {
 				if (!_townsOK) then {_skipReason = "not-established"} else {
 					if (_covered) then {_skipReason = "lane-covered"} else {
+						if (_airAlive >= _airMaxTotal) then {_skipReason = "air-cap"} else {
 						if ((count _flights) >= _maxAir) then {_skipReason = "flight-cap"} else {
 							if (isNull _laneTown) then {_skipReason = "no-lane"};
+						};
 						};
 					};
 				};
@@ -420,5 +425,6 @@ diag_log ("AICOM2|v1|AIRRESP|" + _sideText + "|" + str _elMin
 	+ "|myTowns=" + str _myTowns
 	+ "|airOK=" + (if (_airOK) then {"1"} else {"0"})
 	+ "|airAlive=" + str _airAlive
+	+ "|airMax=" + str _airMaxTotal
 	+ "|skip=" + _skipReason
 	+ "|flag=" + str (missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]));
