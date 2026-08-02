@@ -621,13 +621,18 @@ while {!WFBE_GameOver} do {
 			//--- loadout selector below; only would-spawn towns pay it). Quiet-recall already despawns when
 			//--- the threat ends - this is the symmetric spawn half. 0 = legacy always-spawn.
 			&& {((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_THREAT_ONLY", 0]) <= 0)
-				|| {({alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)])) > 0}}) then {
+				|| {
+					_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
+					_enemies > 0
+				}}) then {
 
 			_pos = getPos _town;
 
 			//--- Enemies near the town (west + east, GUER's foes).
 			//--- fix(hunt): nearEntities "Man" returns only DISMOUNTED infantry - fully mounted assaults were invisible (defenders recalled as "quiet" mid-attack, paradrop/Mi-24 response never triggered). Include vehicle hulls: a crewed hull carries its crew's side; empty hulls resolve CIVILIAN and stay filtered by the side check.
-			_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
+			if (!((missionNamespace getVariable ["WFBE_C_GUER_AIRDEF_THREAT_ONLY", 0]) > 0)) then {
+				_enemies = {alive _x && {((side _x) == west) || {(side _x) == east}}} count ((getPos _town) nearEntities [["Man","LandVehicle","Air","Ship"], ((_town getVariable ["range", 600]) max 600)]);
+			};
 
 			//--- Enemy AIR near the town (crewed west/east aircraft) - use the one bounded live-air
 			//--- cache built above. Empty parked hulls still read CIVILIAN and are excluded at cache build.
