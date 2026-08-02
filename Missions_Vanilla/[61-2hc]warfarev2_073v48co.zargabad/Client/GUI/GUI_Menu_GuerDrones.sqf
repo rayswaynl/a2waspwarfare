@@ -210,8 +210,11 @@ while {alive player && dialog} do {
 		};
 	};
 
-	//--- BACK.
-	if (MenuAction == 90) then {
+	//--- BACK. exitWith: without it the while{alive player && dialog} loop SURVIVED the
+	//--- transition (WF_Menu opens in the same pass, so dialog stays true) and kept consuming
+	//--- the shared MenuAction - a later "Purchase Units" click (MenuAction 1) could be eaten
+	//--- by the leaked loop and converted into a $5000 FPV launch. (r90 loop leak)
+	if (MenuAction == 90) exitWith {
 		MenuAction = -1;
 		_scudTargetPos = [];
 		_scudTargeting = false;

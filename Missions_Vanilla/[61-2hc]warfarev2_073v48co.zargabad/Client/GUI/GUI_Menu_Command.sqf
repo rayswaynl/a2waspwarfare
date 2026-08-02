@@ -697,7 +697,11 @@ while {alive player && dialog} do {
 		//--- (the camera's own player-team list is unchanged). Close this console first, then open the camera dialog. -----
 		if (MenuAction == 726) then {
 			MenuAction = -1;
-			if (!isNull _selTeam && {alive (leader _selTeam)}) then {
+			//--- exitWith (r90 loop leak): the unit camera opens in the same pass, so dialog
+			//--- stays true and the command loop SURVIVED - it kept eating the shared
+			//--- mouseButtonUp (dead camera minimap clicks) and could resolve an armed
+			//--- order against the CLOSED map control (bogus position, real server send).
+			if (!isNull _selTeam && {alive (leader _selTeam)}) exitWith {
 				WFBE_CmdCon_CamUnit = leader _selTeam;
 				activeAnimMarker = false;
 				closeDialog 0;
