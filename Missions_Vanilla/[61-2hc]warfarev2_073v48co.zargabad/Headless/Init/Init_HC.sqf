@@ -14,6 +14,9 @@ diag_log "Init_HC.sqf: Running the headless client initialization.";
 //--- object instead of always blocking the full interval; proceeds early once seated, never hangs.
 private "_hcInitDeadline"; _hcInitDeadline = diag_tickTime + 20;
 waitUntil { uiSleep 0.5; (!isNull player) || (diag_tickTime > _hcInitDeadline) };
+if (isNull player) exitWith {
+	diag_log "[WFBE][HC-PLAYER-INIT-TIMEOUT] Init_HC.sqf: player remained objNull after the 20s startup guard; aborting HC initialization instead of entering an unbounded readiness wait.";
+};
 
 //--- HC SIDE RESEAT (task #26): A2 OA can auto-seat this -client into a random free playable slot, and one
 //--- HC reliably lands on a SYNCHRONIZED WEST warfare slot (mission.sqm id=229, sync 255). That makes the
@@ -25,10 +28,8 @@ waitUntil { uiSleep 0.5; (!isNull player) || (diag_tickTime > _hcInitDeadline) }
 //--- NEVER a shared group - so owner(leader(group)) stays distinct per HC and delegation (owner-routed via
 //--- Common_SendToClient.sqf:11) never collapses onto a single HC. This runs HERE, before the connected-hc
 //--- notify below, so the server captures THIS civ group when it resolves `group _hc` (no server-side edit).
-//--- BOUNDED POLLING LOOP (task #29 follow-up): the single-shot fixed-sleep attempt missed whenever the
-//--- engine seated the HC late or locality hadn't transferred at the guard. We now wait for the player
-//--- object, then poll for up to ~60s, retrying the reseat until `side group player == civilian`. Idempotent.
-waitUntil {uiSleep 0.25; !isNull player}; //--- never run the guard before the player object exists.
+//--- BOUNDED POLLING LOOP (task #29 follow-up): after the bounded player-object guard above succeeds,
+//--- poll for up to ~60s, retrying the reseat until `side group player == civilian`. Idempotent.
 //--- HC-SENDTOSERVER-INIT-RACE (fable 2026-07-09): Common\Init\Init_Common.sqf:169 defines
 //--- WFBE_CO_FNC_SendToServer only after ~160 sequential Compile statements run. initJIPCompatible.sqf
 //--- fires that file (line 350, ExecVM) and this Init_HC.sqf (line 391, execVM) as two INDEPENDENT
