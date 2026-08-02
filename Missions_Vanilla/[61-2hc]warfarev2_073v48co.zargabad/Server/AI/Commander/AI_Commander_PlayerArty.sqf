@@ -21,7 +21,7 @@
 	Call shape copied verbatim from the Strategy arty block (AI_Commander_Strategy.sqf:741-793).
 */
 
-private ["_side","_sideText","_logik","_riArtyReq","_riArtyPos","_riArtyT0","_riArtyFresh","_riArtyX","_riArtyY","_artyTgt","_ownNear","_pieces","_p","_idx","_maxR","_minR","_fired"];
+private ["_side","_sideText","_logik","_riArtyReq","_riArtyPos","_riArtyT0","_riArtyFresh","_riArtyX","_riArtyY","_artyTgt","_artyCooldown","_artyIntervals","_artyLast","_artyUpgrades","_ownNear","_pieces","_p","_idx","_maxR","_minR","_fired"];
 
 _side = _this;
 if ((missionNamespace getVariable ["WFBE_C_AICOM_PLAYER_ARTY", 0]) <= 0) exitWith {};
@@ -46,6 +46,18 @@ if (!_riArtyFresh) exitWith {
 
 _sideText = str _side;
 _artyTgt = _riArtyPos;
+
+//--- Player-requested salvos share the side artillery cadence. Without this gate, repeated
+//--- map confirms could consume a different unrestricted tube on every supervisor tick.
+_artyCooldown = 0;
+_artyIntervals = missionNamespace getVariable ["WFBE_C_ARTILLERY_INTERVALS", []];
+_artyUpgrades = _side Call WFBE_CO_FNC_GetSideUpgrades;
+if (typeName _artyIntervals == "ARRAY" && {typeName _artyUpgrades == "ARRAY"} && {count _artyIntervals > 0} && {count _artyUpgrades > WFBE_UP_ARTYTIMEOUT}) then {
+	_artyCooldown = _artyIntervals select ((_artyUpgrades select WFBE_UP_ARTYTIMEOUT) min ((count _artyIntervals) - 1));
+	if (typeName _artyCooldown != "SCALAR") then {_artyCooldown = 0};
+};
+_artyLast = _logik getVariable ["wfbe_aicom_arty_last", -1e6];
+if (typeName _artyLast != "SCALAR") then {_artyLast = -1e6};
 
 //--- Friendly-fire guard: never drop near our own troops.
 _ownNear = 0;
@@ -74,7 +86,7 @@ if (_ownNear == 0) then {
 	_fired = false;
 	{
 		_p = _x;
-		if (!_fired && {alive _p} && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p} && {!(_p getVariable ["restricted", false])}) then { //--- r30 lifecycle: skip battery already mid fire-mission
+		if ((time - _artyLast) > _artyCooldown && {!_fired} && {alive _p} && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p} && {!(_p getVariable ["restricted", false])}) then { //--- r30 lifecycle: skip battery already mid fire-mission
 			_idx = [typeOf _p, _side] Call IsArtillery;
 			if (_idx >= 0) then {
 				_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1);
@@ -95,7 +107,13 @@ if (_ownNear == 0) then {
 		};
 	} forEach _pieces;
 	if (!_fired) then {
-		diag_log ("AICOM2|v1|ARTYREQ|" + _sideText + "|" + str (round (time / 60)) + "|NO_GUN_IN_RANGE|pos=" + str _artyTgt);
+		if ((time - _artyLast) <= _artyCooldown) then {
+			diag_log ("AICOM2|v1|ARTYREQ|" + _sideText + "|" + str (round (time / 60)) + "|COOLDOWN|left=" + str (round (_artyCooldown - (time - _artyLast))));
+		} else {
+			diag_log ("AICOM2|v1|ARTYREQ|" + _sideText + "|" + str (round (time / 60)) + "|NO_GUN_IN_RANGE|pos=" + str _artyTgt);
+		};
+	} else {
+		_logik setVariable ["wfbe_aicom_arty_last", time];
 	};
 } else {
 	diag_log ("AICOM2|v1|ARTYREQ|" + _sideText + "|" + str (round (time / 60)) + "|FRIENDLY_NEAR_SKIP|pos=" + str _artyTgt + "|own=" + str _ownNear);
