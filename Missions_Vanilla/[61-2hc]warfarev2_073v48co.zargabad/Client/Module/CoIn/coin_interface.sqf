@@ -154,7 +154,10 @@ _createBorder = {
 		_zpos = (_center select 2);
 
 		_a = "transparentwall" createVehicleLocal [_xpos,_ypos,_zpos];
-		_a setposasl [_xpos,_ypos,0];
+		//--- r105 bughunt: was setPosASL z=0 (sea level) - the whole border ring sat BURIED under any
+		//--- terrain above 0m ASL (all inland build areas on CH/TK/ZG), so the build-area boundary never
+		//--- rendered away from the coast. Ground-snap each segment instead (setPosATL z=0 = terrain surface).
+		_a setPosATL [_xpos,_ypos,0];
 		_a setdir (_dir + 90);
 		_border = _border + [_a];
 	};
