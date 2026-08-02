@@ -1204,6 +1204,28 @@ if (isNull _base) exitWith {
 			};
 		};
 	};
+	case "aicom-manualpin": {
+		//--- Direct map/ALL-HOLD UI orders originate on a client, whose mission clock may differ after JIP/load.
+		//--- Resolve and stamp the pin server-side so AssignTowns compares two values from the same clock.
+		private ["_mpSide","_mpTeam","_mpPlayer","_mpLogik","_mpCmd","_mpTeams","_mpAuth"];
+		_mpSide = _args select 1;
+		_mpTeam = grpNull;
+		_mpPlayer = objNull;
+		if (count _args > 2) then {_mpTeam = _args select 2};
+		if (count _args > 3) then {_mpPlayer = _args select 3};
+		if (_mpSide in [west, east] && {typeName _mpTeam == "GROUP"} && {!isNull _mpTeam}) then {
+			_mpLogik = (_mpSide) Call WFBE_CO_FNC_GetSideLogic;
+			if (!isNull _mpLogik) then {
+				_mpCmd = (_mpSide) Call WFBE_CO_FNC_GetCommanderTeam;
+				_mpTeams = _mpLogik getVariable ["wfbe_teams", []];
+				_mpAuth = (!isNull _mpPlayer) && {alive _mpPlayer} && {isPlayer _mpPlayer} && {!isNull _mpCmd} && {group _mpPlayer == _mpCmd} && {_mpTeam in _mpTeams};
+				if (_mpAuth) then {
+					_mpTeam setVariable ["wfbe_aicom_manualpin", time, true];
+				};
+			};
+		};
+	};
+
 	case "aicom-rally": {
 		//--- cmdcon41-w3d COMMAND-MENU V2 (RALLY): the human commander ordered ONE team to pull back to the nearest own
 		//--- HQ / OWN-side town centre. Client sends [side, teamIdx] (index into this side's wfbe_teams, resolved the SAME
