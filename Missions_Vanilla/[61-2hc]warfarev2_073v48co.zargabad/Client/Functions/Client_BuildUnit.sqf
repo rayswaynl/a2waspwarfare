@@ -824,8 +824,6 @@ if (_isMan) then {
 		["INFORMATION", Format ["Client_BuildUnit.sqf: TK-EASA variant '%1' armed on %2 (weapons %3).", (_tkeRow select 0), typeOf _vehicle, (_tkEasaKit select 0)]] Call WFBE_CO_FNC_LogContent;
 	};
 
-	_vehicles = (WF_Logic getVariable "emptyVehicles") + [_vehicle];
-	WF_Logic setVariable ["emptyVehicles",_vehicles,true];
 
 	if (isHostedServer) then {_vehicle setVariable ["WFBE_Taxi_Prohib", true]};
 
@@ -972,6 +970,15 @@ if (_isMan) then {
 		_vehicle setVariable ["wfbe_buyteam", clientTeam, true];
 		_vehicle addAction ["<t color='#e8c84a'>Sell Vehicle</t>", "Client\Action\Action_VehicleSell.sqf", [], 93, false, true, '', 'alive _target && {count crew _target == 0} && {(missionNamespace getVariable ["WFBE_C_VEHICLE_SELL", 1]) > 0} && {lightInRange || heavyInRange || depotInRange || aircraftInRange || hangarInRange} && {player == leader clientTeam || (!isNull commanderTeam && {commanderTeam == clientTeam})}'];
 	};
+	//--- r102 empty-enroll-race fix: enroll the fresh hull with the server empty-vehicle reaper via a
+	//--- server-routed request. Was: client-side read-modify-write on the STALE "emptyVehicles" replica
+	//--- (removed above the reveal call) - two players buying within one replication window read the
+	//--- same pre-buy snapshot and the second broadcast clobbered the first, silently dropping a hull
+	//--- from the reaper (an abandoned player hull was then never reaped and leaked for the rest of
+	//--- the match). Placed AFTER the wfbe_buyteam stamp above on purpose: the server endpoint
+	//--- ("player-vehicle-enroll-empty", Server_HandleSpecial.sqf) requires that tag, and same-sender
+	//--- PV/PVF traffic arrives in order.
+	["RequestSpecial", ["player-vehicle-enroll-empty", _vehicle]] Call WFBE_CO_FNC_SendToServer;
 
 	//--- GUER PLAYER VBIED: the buyable hilux1_civil_2_covered gets a driver-detonate action (Feature B player-side).
 	//--- The action is driver-only + resistance-only (condition) and asks the server to blast (mirrors AI wildcard W21)

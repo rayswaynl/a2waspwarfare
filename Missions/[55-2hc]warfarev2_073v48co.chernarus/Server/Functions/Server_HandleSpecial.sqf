@@ -1877,7 +1877,7 @@ if (isNull _base) exitWith {
 		//--- emptyQueu de-dupe SET. This handler previously appended only to emptyQueu and spawned the
 		//--- handler inline, so the collector loop never saw the hull and the abandoned-hull enrollment
 		//--- never actually went through the collector. Retarget to enroll into "emptyVehicles" exactly
-		//--- like every other producer (Client_BuildUnit.sqf:314-315); the collector then owns dedupe
+		//--- like the server-side producers (player buys now arrive server-routed via the "player-vehicle-enroll-empty" case below); the collector then owns dedupe
 		//--- (emptyQueu), the WFBE_SE_FNC_HandleEmptyVehicle spawn, and removal from the list - keeping
 		//--- the crew-safe delete timer authoritative and avoiding a double-spawn. The emptyQueu guard
 		//--- still skips a hull already in flight from a previous enrollment.
@@ -1886,6 +1886,35 @@ if (isNull _base) exitWith {
 		if (!isNull _avVeh && {alive _avVeh} && {!(_avVeh in _avList)} && {!(_avVeh in emptyQueu)}) then {
 			WF_Logic setVariable ["emptyVehicles", _avList + [_avVeh], true];
 			["INFORMATION", Format ["Server_HandleSpecial.sqf: aicom-vehicle-abandoned enrolled hull [%1] type [%2] into empty-collector.", _avVeh, typeOf _avVeh]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
+	//--- PLAYER-BUY EMPTY-VEHICLE ENROLLMENT (r102 bughunt): Client_BuildUnit previously appended its
+	//--- freshly bought hull to WF_Logic "emptyVehicles" with a client-side read-modify-write on a
+	//--- STALE REPLICA - two players buying within one replication window clobbered each other's append
+	//--- (and could erase a concurrent server-side aicom enrollment), silently dropping hulls from the
+	//--- empty-vehicle reaper: an abandoned player hull was never reaped and leaked for the rest of the
+	//--- match (the disconnecting-owner case included). The client now REQUESTS enrollment and the
+	//--- server appends authoritatively - server-side read+write has no replication window and matches
+	//--- the collector's own re-read-at-write hardening (emptyvehiclescollector.sqf). NARROWINGS
+	//--- (RequestSpecial is an unauthenticated bus): object-typed, alive, non-null, non-Man, and the
+	//--- buy-time wfbe_buyteam tag must be present - a forged enroll can then only target the exact
+	//--- hull class already subject to this reaper, and the crew-safe delete timer
+	//--- (Server_HandleEmptyVehicle.sqf) still gates the actual delete. Worst case = early reaper
+	//--- enrollment of a player-bought hull = the accepted class of aicom-vehicle-abandoned above.
+	case "player-vehicle-enroll-empty": {
+		Private ["_pvVeh","_pvList"];
+		if (count _args < 2) exitWith {};
+		_pvVeh = _args select 1;
+		if (typeName _pvVeh != "OBJECT") exitWith {};
+		if (isNull _pvVeh || {!alive _pvVeh} || {_pvVeh isKindOf "Man"}) exitWith {};
+		if (isNil {_pvVeh getVariable "wfbe_buyteam"}) exitWith {
+			["WARNING", Format ["Server_HandleSpecial.sqf: player-vehicle-enroll-empty rejected hull [%1] type [%2] - no buy-team tag (forged request, or the tag broadcast lost the arrival-order race).", _pvVeh, typeOf _pvVeh]] Call WFBE_CO_FNC_LogContent;
+		};
+		_pvList = WF_Logic getVariable "emptyVehicles";
+		if (isNil "_pvList") then {_pvList = []};
+		if (!(_pvVeh in _pvList) && {!(_pvVeh in emptyQueu)}) then {
+			WF_Logic setVariable ["emptyVehicles", _pvList + [_pvVeh], true];
+			["INFORMATION", Format ["Server_HandleSpecial.sqf: player-vehicle-enroll-empty enrolled hull [%1] type [%2] into empty-collector.", _pvVeh, typeOf _pvVeh]] Call WFBE_CO_FNC_LogContent;
 		};
 	};
 	//--- HELI FLY-OFF REFUND (user request): a commander team's empty AIR transport flew off
