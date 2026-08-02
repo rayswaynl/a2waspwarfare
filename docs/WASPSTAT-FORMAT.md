@@ -23,7 +23,7 @@ WASPSTAT|v1|<seq>|<record-type>|...
 | `WASPSTAT` | Fixed literal marker — grep anchor for the RPT parser. |
 | `v1` | Format version. Increment if the field layout changes incompatibly. |
 | `seq` | Monotonically increasing integer, server-global, shared across **all** record types. Counter name: `WFBE_WASPSTAT_SEQ`. |
-| `record-type` | One of: `KILL`, `CAPTURE`, `ROUNDEND`. Per-player stat records have **no** keyword here — the parser identifies them by the absence of a keyword after `seq` (see PLAYERSTATS below). |
+| `record-type` | Core records are `KILL`, `CAPTURE`, and `ROUNDEND`; maintained mission copies also emit the auxiliary `CAMP` and `BUILDINGKILL` records below. Per-player stat records have **no** keyword here — the parser identifies them by the presence of a `uid:fields` token after `seq` (see PLAYERSTATS below). |
 
 The sequence is initialised lazily to `0` by the first emitter that runs and is incremented once
 per emitted line. Lines from different record types are totally ordered by `seq`.
@@ -148,6 +148,32 @@ WASPSTAT|v1|<seq>|ROUNDEND|<winnerSide>|<durationSec>|<map>
 | `winnerSide` | `str _x` — the winning side object (e.g. `"WEST"`, `"EAST"`, `"RESISTANCE"`). |
 | `durationSec` | `round(time)` — mission uptime in seconds at match end. Same source as `GlobalGameStats.sqf`'s `_uptime`. |
 | `map` | `worldName` — Arma 2 world name string (e.g. `"chernarus"`, `"takistan"`). |
+
+### CAMP — camp ownership change
+
+Maintained mission copies emit a camp-specific record in addition to the town `CAPTURE`
+record. The in-depth report counts this auxiliary record in Telemetry coverage but does not
+fold it into the town-capture event table.
+
+```
+WASPSTAT|v1|<seq>|CAMP|<townName>|<oldSide>|<newSide>|t=<seconds>|by=<player|ai>|pN=<players>|aiN=<ai>|who=<names>
+```
+
+The `t=`, `by=`, player-count, AI-count and display-name fields are diagnostic context and may
+be empty when the capture was AI-only.
+
+### BUILDINGKILL — structure destruction
+
+Maintained mission copies emit this record for the dashboard's base-building-kill feed. The
+in-depth report counts it in Telemetry coverage but does not treat it as a unit `KILL` record.
+
+```
+WASPSTAT|v1|<seq>|BUILDINGKILL|<killerUID>|<killerSide>|<victimSide>|<class>|<type>
+```
+
+These auxiliary records share the global sequence counter with the core records. An unknown
+record type is retained as an `UNKNOWN` coverage count by the in-depth parser rather than being
+silently classified as `PLAYERSTATS`.
 
 ---
 
