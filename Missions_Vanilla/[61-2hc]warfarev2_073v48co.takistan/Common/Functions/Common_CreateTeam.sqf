@@ -180,6 +180,26 @@ _rearmor = {
 						_vehicle setVariable ["WFBE_CommanderAttackHeliSide", str _side, true];
 					};
 
+					//--- fix(irsmoke): this founding compositor is the ONLY vehicle-creation path AICOM team founding
+					//--- (Common_RunCommanderTeam.sqf), side patrols (Common_RunSidePatrol.sqf), and town garrisons
+					//--- (server_town.sqf / Common_CreateTownUnits.sqf) ever call - it never wired the IR Smoke module
+					//--- that Server_BuyUnit.sqf (AI refill path) and Client_BuildUnit.sqf (player purchase path) both
+					//--- carry, so no AICOM/town/patrol Tank or Car hull ever got wfbe_irs_flares set or the
+					//--- incomingMissile->IRS handler attached, regardless of the IRSMOKE upgrade being researched -
+					//--- matches the owner report "IR smoke not being used" even after unlocking it. Mirrors the exact
+					//--- IRS block at Server_BuyUnit.sqf (AI8: buying side _side, not client-side sideJoined).
+					if (((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") && {(missionNamespace getVariable "WFBE_C_MODULE_WFBE_IRSMOKE") > 0}) then {
+						if (((_side) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_IRSMOKE > 0) then {
+							private ["_irsGet"];
+							_irsGet = missionNamespace getVariable Format ["%1_IRS", (typeOf _vehicle)];
+							if !(isNil '_irsGet') then {
+								_vehicle setVariable ["wfbe_irs_flares", _irsGet select 1, true];
+								_vehicle addEventHandler ["incomingMissile", {_this spawn WFBE_CO_MOD_IRS_OnIncomingMissile}];
+								["INFORMATION", Format ["Common_CreateTeam.sqf: IRS wired for AICOM hull [%1] side [%2] flares=%3.", typeOf _vehicle, _side, _irsGet select 1]] Call WFBE_CO_FNC_LogContent;
+							};
+						};
+					};
+
 					_type = if (_vehicle isKindOf 'Man') then {missionNamespace getVariable Format ['WFBE_%1SOLDIER',_side]} else {if (_vehicle isKindOf 'Air') then {missionNamespace getVariable Format ['WFBE_%1PILOT',_side]} else {missionNamespace getVariable Format ['WFBE_%1CREW',_side]}};
 					_vehicleCrews = [];
 					// Marty: Assign crew roles before moveIn so locked or delegated town vehicles keep their crews mounted.
