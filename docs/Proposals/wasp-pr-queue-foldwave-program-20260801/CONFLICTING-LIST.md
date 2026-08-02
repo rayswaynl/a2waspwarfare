@@ -1,0 +1,49 @@
+# CONFLICTING open drafts (n=46)
+# Priority recuts from task: #1596 (cold-boot HC WEST-preseat), #1773, #1767, #1669 — NOT #1665 (closed superseded)
+
+- #1249 | 21/07/2026 | feat/starfort-mvp | feat(starfort): Star Fortress Phase 1 MVP [flag WFBE_C_STARFORT_ENABLE default 0]
+- #1260 | 22/07/2026 | fix/teambar-slot1-ship-20260722 | fix(teambar): ship slot-1 server heal (stranded on deploy/wave0722e) + assert-leader-first guard + skin-swap server ping
+- #1286 | 22/07/2026 | codex/main-07221740-2-realplayersnear-vetoes | fix(aicom): exclude corpses and HCs from recovery vetoes
+- #1293 | 22/07/2026 | codex/07221740-1-playercount-telemetry-hc | fix(telemetry): exclude HCs from player counts
+- #1342 | 24/07/2026 | codex/aicom-hc-locality-20260725 | fix(aicom): reject stale HC town delegation reports
+- #1343 | 24/07/2026 | codex/07241020-1-garrison-lifecycle-20260725 | fix(alife): reject stale delegated town AI acknowledgments
+- #1344 | 24/07/2026 | kimi/07241020-1-jip-session-lifecycle | fix(jip): re-register resolved team into wfbe_teams on connect + nil filler-classname guard on disconnect
+- #1395 | 25/07/2026 | claude/u2-harden-convoy-pay-20260725 | harden(sec): sidepatrol-convoy-stop requires a matching active-patrol record
+- #1399 | 25/07/2026 | claude/u2-harden-attackwave-details-20260725 | fix(security): bind ATTACK_WAVE_DETAILS activation to requester's own side
+- #1404 | 25/07/2026 | claude/u2-harden-supplymission-20260725 | harden(economy): server-owned supply-mission payout, watcher cap, UID derivation
+- #1436 | 25/07/2026 | codex/sidepatrol-registry-authority-20260725 | fix: make side-patrol registry and convoy payout server-authoritative
+- #1464 | 25/07/2026 | fable/aicom-lategame-teleport-20260725 | feat(aicom): late-game teleport of base-idle AI teams to friendly frontline towns [flags, default 0]
+- #1543 | 28/07/2026 | codex/fob-v1-engineer-20260728 | feat(fob): forward operating base v1 - engineer/repair-truck built FOB [flag WFBE_C_STRUCTURES_FOB default 1]
+- #1546 | 28/07/2026 | claude/trash-nullobj-sendtoclient-drop-20260728 | fix(gc): guard TrashObject remote-delete dispatch against null objects
+- #1596 | 29/07/2026 | fable/hc-civ-magnet-20260729 | fix(hc): seat headless clients on CIV natively - swap HC slots to the lowest playable ids **[PRIORITY cold-boot HC WEST-preseat race]**
+- #1597 | 29/07/2026 | fable/townscan-dynrange-nilguard-20260729 | fix(townscan): nil-guard wfbe_active*/wfbe_active_air reads killing _dynRange (live RPT spam x169k)
+- #1600 | 29/07/2026 | fix/trash-nullobj-post-sleep-20260729 | fix(gc): re-null-check TrashObject after sleep / proximity hold
+- #1604 | 29/07/2026 | grok/alife-merge-leadership-disconnect-fix-on-master-20260729 | fix(aicom): disconnect-while-dead must not delete AI leadership successor
+- #1605 | 29/07/2026 | fix/teamv2-unit-designer-ctrlshow | fix(ui): TeamV2 Unit Designer tabs + global ctrlShow (A2 createDialog)
+- #1608 | 29/07/2026 | fix/alife-knowsabout-reveal-crew-20260730 | fix(alife): knowsAbout crew expand + B5 reveal target + Man-only capture reveal
+- #1609 | 29/07/2026 | fix/town-capture-ownership-bulk-camp-20260730 | fix(towns): capture ownership ΓÇö bulk camp SV heal + no bulk bounty
+- #1611 | 30/07/2026 | fix/alife-suppression-stance-20260730 | fix(alife): continuous SML retreat under fire + wheeled armor overwatch
+- #1623 | 30/07/2026 | fix/sqf-randomness-nondeterminism-20260730 | fix(sqf): bound water waypoint redraws + uniform random index draws
+- #1630 | 30/07/2026 | fix/mission-core-pv-bounds-20260730 | fix(mission-core): PV handler bounds + enqueue/dequeue commander bind
+- #1659 | 30/07/2026 | fix/sqf-coord-space-r25-20260730 | fix(sqf): coordinate-space - air 2D proximity + RadiusHold 2D ground-snap
+- #1662 | 30/07/2026 | fix/aicom-town-adjacency-topology-r26-20260730 | fix(aicom): topology - naval HVT is not ground-front-adjacent (r26)
+- #1669 | 30/07/2026 | fable/hc-lobby-lock-mission-live-anchor-20260730 | fix(hc-lobby-lock): anchor the lobby-lock deadline on mission-live **[recut-list]**
+- #1676 | 30/07/2026 | bughunt/construction-livecount-r31-20260730 | fix(mission-core): construction abort live-count rollback + AI live-inc + BuildingKilled bounds (r31)
+- #1679 | 30/07/2026 | fix/getvar-setvar-public-jip-r30-20260730 | fix(sqf): getVariable fallback + setVariable public/JIP hygiene (r30)
+- #1680 | 30/07/2026 | fix/createvehicle-crew-init-locality-grok1606-r32-20260730 | fix(sqf): createVehicle/crew init fail-clean + defense UnitsCreated hygiene (r32)
+- #1682 | 30/07/2026 | fix/paraammo-uav-failclean-grok1606-r34-20260730 | fix(sqf): ammo paradrop + UAV create/crew fail-clean (r34)
+- #1686 | 30/07/2026 | fix/gdir-qrf-patrol-hqwreck-failclean-grok1606-r37-20260730 | fix(sqf): GDIR QRF create/crew + patrol convoy + airdef chute + HQ wreck fail-clean (r37)
+- #1687 | 30/07/2026 | fix/paratroop-paravehi-defwall-usv-failclean-grok1606-r38-20260730 | fix(sqf): paratroop/paravehi create/crew + def wall + USV fail-clean (r38)
+- #1692 | 30/07/2026 | fix/naval-camp-repair-cap-handledefense-failclean-grok1606-r40-20260730 | fix(sqf): camp repair + naval HVT SCUD/camps/CAP L39 + HandleDefense fail-clean (r40)
+- #1699 | 30/07/2026 | fix/coin-headbug-rpgdrop-failclean-grok1606-r44-20260730 | fix(sqf): CoIn border/preview/helper + headbug Lada1 + DropRPG holder fail-clean (r44)
+- #1700 | 30/07/2026 | fix/coin-headbug-rpgdrop-failclean-r44-20260730 | fix(sqf): CoIn border/preview/helper + headbug Lada1 + DropRPG WeaponHolder fail-clean (r44)
+- #1718 | 30/07/2026 | fix/alife-dropped-gear-weaponholder-loot-persistence-r37-20260730 | fix(alife): weaponholder loot persistence ΓÇö locality + min-age + prox hold (r37)
+- #1723 | 30/07/2026 | fix/droppeditems-ruins-hqkill-sortie-defops-failclean-grok1606-r55-20260731 | fix(sqf): droppeditems/ruins cleaners + HQ kill + sortie + def-ops fail-clean (r55)
+- #1726 | 30/07/2026 | fix/townai-airresp-groupsgc-produce-trash-failclean-grok1606-r56-20260731 | fix(sqf): townAI cleanup + AirResp + groupsGC + Produce + Trash fail-clean (r56)
+- #1750 | 31/07/2026 | fix/alife-corpse-wreck-reap-r66-g1606-20260731 | fix(alife): corpse/wreck reap integrity ΓÇö dead-crew purge + airlift requeue (r66)
+- #1757 | 31/07/2026 | fix/aicom-paradrop-tasking-objective-r70-g1606-20260731 | fix(aicom): paradrop tasking ΓÇö AI CD release + objective rebind (r70)
+- #1758 | 31/07/2026 | fix/mission-teamswap-join-failclosed-r70-g1606-20260731 | fix(mission-core): teamswap join fail-closed + RequestJoin null/target (r70)
+- #1767 | 31/07/2026 | fix/sqf-loadout-equip-null-r72b-g1606-20260731 | fix(sqf): loadout equip null integrity ΓÇö EquipUnit/Backpack/Vehicle + EASA + custom gear (r72b) **[recut-list]**
+- #1768 | 31/07/2026 | claude/jip-repush-hq-repair-avg-r71 | fix(mission-core): JIP re-push WFBE_HQ_REPAIR_AVG_SEC for correct MHQ repair-cost scaling on late joiners (r71)
+- #1772 | 31/07/2026 | fix/mission-halo-airborne-state-r72-g1606-20260731 | fix(mission-core): player HALO occupant gate + landing invuln (r72)
+- #1773 | 31/07/2026 | fix/mission-parachute-airborne-r72-g1606-20260731 | fix(mission-core): player parachute/HALO airborne state integrity (r72) **[recut-list]**

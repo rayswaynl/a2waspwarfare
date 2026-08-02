@@ -872,3 +872,115 @@ rotation entry at the next stop window; log `C:\WASP	k-swap-m0730g.log`).
 tree carries the 2-slot fix). `server-config/provision/Start-Wasp-4HC.ps1` documents an
 `-HcCount` parameter it does not actually declare, and hardcodes `1..4` - would fail if
 invoked as the README instructs.
+
+---
+
+## 2026-08-01 — Deadspawn AI holding relocated to underwater pen (draft PR #1807)
+
+Owner ruling 2026-08-01: DEADSPAWNS AI holding too close to action, accumulates visible items/gear.
+
+**Consumer audit result**: only `Server/AI/AI_SquadRespawn.sqf:31` + `Server/AI/AI_AdvancedRespawn.sqf:30`
+park dead AI at `%1TempRespawnMarker` (NE hills, next to the DEADSPAWNS label at ~[15439,15237]).
+Human joins already pen-parked (WFBE_C_DEADSPAWN_REDESIGN=1 live); HC bodies sea-park (ParkSeaHC).
+DEADSPAWNS / "DEADSPAWNS, DO NOT ENTER!" label markers: ZERO script refs on CH/TK/ZG (verified per map;
+TK/ZG each have the 3 TempRespawnMarkers too — earlier truncated grep suggested otherwise, wrong).
+
+**Change** (branch `fable/deadspawn-ai-pen-20260801`, worktree C:/tmp/claudewt/deadspawn-ai-pen-20260801,
+draft PR #1807): flag `WFBE_C_DEADSPAWN_AI_PEN` default 1 (Init_CommonConstants.sqf). Pen path parks via
+`WFBE_CO_FNC_DeadspawnPenPos` (isNil-guarded fallback to legacy marker); captive+allowDamage hold FORCED
+independent of WFBE_C_DEADSPAWN_GUARD (drowning = engine damage, blocked by allowDamage false); body
+surfaced to z=0 on EVERY release path (normal/handoff/skip/null-respawnLoc) before damage returns.
+Offmap force-kill (Client_HandleOnMap) is player-only AND pen is in-bounds by construction (same
+WFBE_BOUNDARIESXY square as Client_IsOnMap).
+
+**Deliberate non-change**: NO new litter janitor — `Server/FSM/cleaners/droppeditems_cleaner.sqf`
+already sweeps weapon holders island-wide every ~10 min with locality-aware dispatch (non-local
+deleteVehicle silently no-ops in A2; a naive janitor would re-hit that trap). Labels + markers stay
+in mission.sqm (flag-0 fallback + engine respawn_* markers + DeadspawnWall).
+
+**Gates**: lint 168→168 (0 new, 0 in edited files); bracket deltas balanced (asserted by patcher);
+LoadoutManager mirrored CH→TK/ZG; TK/ZG version.sqf.template restored (31/7500, 33/5000). Peach+ DM sent.
+
+**Discovered (not fixed, out of scope)**: GUER playable slots editor-start ON GuerTempRespawnMarker
+(mission.sqm ~4990-5075) — transient at boot only. `_loadout` missing from AI_AdvancedRespawn.sqf
+Private list (pre-existing).
+
+**Update 2026-08-01 11:05**: owner order - #1807 marked READY (undrafted) + queued for next merge wave: appended to mission-core-r-series in WAVE-QUEUES.md (Fleet drop 20260801-035117-grok-main-07311829-night, n=26->27), PR comment posted, GitHub MERGEABLE. Peach+ DM sent.
+
+---
+
+## 2026-08-01 13:55 — m0801h6 fast lane COMPLETE: all 4 Codex-audited spectator/pen findings staged
+
+Worktree C:/tmp/wasp-h, branch deploy/m0801h-20260801, tip 5fe1e4e300 (pushed).
+Findings 1/2/4 were already in ca012abeaf (earlier session: CIV caster init repair, Labels_Upgrades
+nil guards, POI-only auto director). This pass added finding 3 + director belt-and-braces
+(commit 5fe1e4e300, rebased over fleet's 4e34650c8a arty-ring default-OFF which is included in the build):
+
+- **AI_SquadRespawn.sqf / AI_AdvancedRespawn.sqf**: per-side pen ALWAYS (+200m/side ID, surfaceIsWater
+  re-verified; dry/landlocked -> own side's TempRespawnMarker — kills the ZG sandhill mixed-side park);
+  loadout stored on unit (`wfbe_penWeapons`/`wfbe_penMagazines`) + removeAllWeapons at guard park;
+  restored on every release path (handoff restores before body handover; normal path restores before
+  EquipUnit); null-respawnLoc routes to own side marker, never re-armed at the pen.
+  AdvancedRespawn uses `((_side) Call GetSideID)` deliberately (_sideID there is pre-civilian-remap).
+- **Client_SpectatorDirector.sqf**: DirectorContactCount = non-captive + armed + belligerent side only;
+  fight-cluster collector excludes captive units.
+
+**Gates**: lint 168->168 (0 new, 0 in edited files); per-patch brace/bracket deltas balanced;
+mirrors CH->TK/ZG byte-identical; TK/ZG version.sqf.template restored (31/7500, 33/5000);
+pack self-check OK all 3 maps.
+**Staged** C:\WASP\staging-m0801h (via h6tmp + Copy-Item -LiteralPath), byte-verified:
+CH 14,749,610 / TK 16,821,414 / ZG 16,770,056. Marker candidate=m0801h6-20260801|git=5fe1e4e300.
+Live server NOT touched; owner fires WaspCutoverM0801h. Peach+ DM delivered (dm:8344...).
+
+**Discovered (out of scope, NOT fixed)**: Common_DeadspawnPenPos.sqf boundary guard falls back to the
+SEED it just rejected (lines 79-82) — on ZG the seed [10000,400] is beyond the ~6.4km terrain, so the
+HUMAN join pen (WFBE_C_DEADSPAWN_REDESIGN) still resolves off-map/dry there (AI no longer goes there
+after this fix; offmap force-kill is player-scoped with a 50s timeout — worth a per-terrain seed or an
+in-terrain clamp in the v6 rework lane).
+
+
+---
+
+## 2026-08-01 ~16:00 - LIVE CRASH 15:37:23 root-caused + m0801i-crashfix staged (this session)
+
+**Verdict: CONFIRMED recurrence of crash 014EFCF4 (register-proven). The h6 pen commit
+5fe1e4e300 is EXONERATED - its code never executed in the crashed session.**
+
+Evidence (arma2oaserver.RPT on the 4-HC box, crashed session = Takistan m0801h6,
+t=0..5991s = 13:56 cutover -> 15:37 crash):
+- Fault: `ACCESS_VIOLATION at 014EFCF4`, fault bytes `F3 0F 10 09 F3 0F 5C 08` - identical
+  to the proven 07-31 mechanism. Registers: **ESI=41D16260 = tk_crew corpse 461863**.
+- That corpse: 4x `Getting out while IsMoveOutInProgress` (t~5941-5988), then
+  `GetOutAny ... already in landscape` ~8s before its GC delete at t=5991.56
+  ("not server-local; dispatching the delete to its owner") - the last mission action
+  before the fault block. Its two crew-mates (461860/461861) deleted seconds earlier.
+- Pen commit: ZERO lines from AI_AdvancedRespawn / AI_SquadRespawn / DEADSPAWN_GUARD /
+  DEADSPAWN_AI_PEN|park in the whole captured session (t=2451-5991). The crashed h6 build
+  ALSO already contained the morning 23-site sweep (283c246495) - crash came through the
+  one unswept path.
+
+**Mechanism gap:** corpse was queued for trash while SEATED in its dead hull;
+Common_TrashObject sleeps 60s; engine ejected the corpse during that sleep; post-sleep
+seat check saw `vehicle == self` so the m0730n seated-corpse defer passed it to
+deleteVehicle ~8s post-eject, while engine move-out bookkeeping still held the pointer.
+
+**Fix (commit b3c0b14374 on deploy/m0801h-20260801, pushed):** Common_TrashObject.sqf -
+stamp `wfbe_seatSeen` at queue time (pre-sleep) + at the seated-defer; if a stamped corpse
+is UNSEATED at delete time, release it to the collector for one more cycle (>=60s) so the
+delete clears the eject window; stamp cleared, next pass deletes normally. Unstamped
+(infantry) corpses byte-identical path. Diag line gains `seatSeen=%7`.
+Pen constant NOT flipped - task condition was "guilty or unclear"; it is neither.
+
+Gates: lint 168->168 (0 in edited files), brackets 0-delta, mirrors byte-identical,
+TK/ZG templates restored (31/7500, 33/5000).
+
+**Staged (verified byte-identical local vs box C:\WASP\staging-m0801h):**
+- [55-2hc]warfarev2_073v48co_m0801h.chernarus.pbo | 14742532
+- [61-2hc]warfarev2_073v48co_m0801h.takistan.pbo  | 16814336
+- [61-2hc]warfarev2_073v48co_m0801h.zargabad.pbo  | 16762978
+Marker: `WASPRELEASE|v1|candidate=m0801i-crashfix-20260801|git=b3c0b14374`. Filenames stay
+*_m0801h. Owner triggers the cutover (server auto-healed, currently re-running h6 -
+same crash window re-arms ~100min into AI-heavy sessions until cutover).
+
+Residual (not this crash, watch seatSeen diag): cold-wreck SEATED corpse deletes keep
+today's behaviour; HC-side executor unchanged.
