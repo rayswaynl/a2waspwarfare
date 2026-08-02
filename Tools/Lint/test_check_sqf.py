@@ -223,6 +223,59 @@ class CheckSqfTests(unittest.TestCase):
         codes = lint_codes(src)
         self.assertGreaterEqual(codes.count("A3CMD"), 7)
 
+    # ── A3_TRAPS: allPlayers gap closure (PR #1915 review) ─────────────────────
+    def test_allplayers_and_siblings_are_flagged(self) -> None:
+        """allPlayers shipped in PR #1915 uncaught; close it and its A3-only
+        siblings surfaced by the same audit (BI wiki 'Introduced with Arma 3',
+        no A2/OA scripting-commands category entry)."""
+        src = (
+            "_x = allPlayers;\n"
+            "_y = allUnitsUAV;\n"
+            "_z = allDeadMen;\n"
+            "_w = allSites;\n"
+            "_v = allMines;\n"
+            "_u = curatorCamera;\n"
+            '_t = getUnitTrait [player, "engineer"];\n'
+            'setUnitTrait [player, "engineer", true];\n'
+            "_s = addForce [[0,0,1],[0,0,0]];\n"
+            "_r = getPlayerScores player;\n"
+        )
+        codes = lint_codes(src)
+        self.assertEqual(codes.count("A3CMD"), 10)
+
+    def test_alldead_is_not_flagged_a2oa_safe_sibling_of_alldeadmen(self) -> None:
+        """`allDead` (A2 OA 1.57+) must never be confused with the A3-only
+        `allDeadMen` (Arma 3 0.50) - only the latter is a trap."""
+        codes = lint_codes("_d = allDead;\n")
+        self.assertNotIn("A3CMD", codes)
+
+    def test_playernumber_idioms_are_not_flagged_a2oa_safe(self) -> None:
+        """playersNumber / playableUnits predate Arma 3 and are the A2/OA-safe
+        replacements for allPlayers; they must never be flagged."""
+        codes = lint_codes('_n = playersNumber west;\n_p = playableUnits;\n')
+        self.assertNotIn("A3CMD", codes)
+
+    def test_allplayers_noqa_suppresses(self) -> None:
+        codes = lint_codes("_x = allPlayers;  // noqa: A3CMD\n")
+        self.assertNotIn("A3CMD", codes)
+
+    # ── BAREEXIT ────────────────────────────────────────────────────────────────
+    def test_bareexit_bare_statement_start_is_flagged(self) -> None:
+        codes = lint_codes("if (true) then { exitWith {1} };\n")
+        self.assertIn("BAREEXIT", codes)
+
+    def test_bareexit_after_semicolon_is_flagged(self) -> None:
+        codes = lint_codes("_x = 1; exitWith {_x};\n")
+        self.assertIn("BAREEXIT", codes)
+
+    def test_bareexit_directly_after_if_paren_is_not_flagged(self) -> None:
+        codes = lint_codes("if (_x > 0) exitWith {_x};\n")
+        self.assertNotIn("BAREEXIT", codes)
+
+    def test_bareexit_in_comment_not_flagged(self) -> None:
+        codes = lint_codes("// exitWith {1}\n_x = 1;\n")
+        self.assertNotIn("BAREEXIT", codes)
+
     # ── PUBVARSV ──────────────────────────────────────────────────────────────
     def test_pubvarsv_in_server_file_is_flagged(self) -> None:
         """publicVariableServer inside a /Server/ path should fire PUBVARSV."""
