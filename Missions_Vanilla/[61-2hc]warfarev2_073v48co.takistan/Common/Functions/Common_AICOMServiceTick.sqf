@@ -58,13 +58,14 @@ if (_state == "enroute") then {
 	_svcPos   = _team getVariable "wfbe_aicom_svcpos";
 	_deadline = _team getVariable "wfbe_aicom_svcdeadline";
 	if (isNil "_svcPos" || {isNil "_deadline"}) exitWith {
-		_team setVariable ["wfbe_aicom_svcstate", ""];
+		_team setVariable ["wfbe_aicom_svcstate", "", true]; //--- r80 FIX: broadcast - the r27 ownership readers (Allocate/AssignTowns/Strategy) run SERVER-side; a local HC write never reaches them, so they kept re-tasking an en-route team
 	};
 	if (_enemyNear > 0 || {time > _deadline}) exitWith {
 		//--- threatened or timed out -> drop the detour, retarget to the front and fight
-		_team setVariable ["wfbe_aicom_svcstate", ""];
+		_team setVariable ["wfbe_aicom_svcstate", "", true]; //--- r80 FIX: broadcast - the r27 ownership readers (Allocate/AssignTowns/Strategy) run SERVER-side; a local HC write never reaches them, so they kept re-tasking an en-route team
 		_team setVariable ["wfbe_teamgoto", objNull, true];
-		_team setVariable ["wfbe_aicom_townorder", [], false];
+		_team setVariable ["wfbe_aicom_townorder", [], true]; //--- r80 FIX: broadcast - the server-side assault watcher reads this tuple; a local clear left the stale dispatch open
+		_team setVariable ["wfbe_aicom_dispatch_open", false, true]; //--- r80 FIX: close the retired dispatch server-side too - else the assault watcher later closes it as STRANDED (phantom failed-journey)
 		_team setVariable ["wfbe_teammode", "towns", true];
 	};
 	if ((_ldr distance _svcPos) <= _supRange) then {
@@ -92,9 +93,10 @@ if (_state == "enroute") then {
 		} forEach _vehicles;
 		diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|SERVICE_DONE|" + (str _team));
 		//--- clear + retarget to the front (same idiom as the on-capture re-task)
-		_team setVariable ["wfbe_aicom_svcstate", ""];
+		_team setVariable ["wfbe_aicom_svcstate", "", true]; //--- r80 FIX: broadcast - the r27 ownership readers (Allocate/AssignTowns/Strategy) run SERVER-side; a local HC write never reaches them, so they kept re-tasking an en-route team
 		_team setVariable ["wfbe_teamgoto", objNull, true];
-		_team setVariable ["wfbe_aicom_townorder", [], false];
+		_team setVariable ["wfbe_aicom_townorder", [], true]; //--- r80 FIX: broadcast - the server-side assault watcher reads this tuple; a local clear left the stale dispatch open
+		_team setVariable ["wfbe_aicom_dispatch_open", false, true]; //--- r80 FIX: close the retired dispatch server-side too - else the assault watcher later closes it as STRANDED (phantom failed-journey)
 		_team setVariable ["wfbe_teammode", "towns", true];
 	};
 	//--- else: still driving; the MOVE waypoint laid below carries it (never frozen).
@@ -200,14 +202,14 @@ if (_state == "enroute") then {
 
 	//--- DETOUR: road-march MOVE + stamp state/pos/deadline (en-route drive cap)
 	_svcPos = getPos _best;
-	_team setVariable ["wfbe_aicom_svcstate", "enroute"];
+	_team setVariable ["wfbe_aicom_svcstate", "enroute", true]; //--- r80 FIX: broadcast (see abort path note) so the server-side commander workers honour the r27 ownership claim
 	_team setVariable ["wfbe_aicom_svcpos", _svcPos];
 	_team setVariable ["wfbe_aicom_svcdeadline", time + (missionNamespace getVariable ["WFBE_C_AICOM_SVC_TIMEOUT", 300])];
 	//--- r27 ownership: retire the OPEN offensive dispatch when claiming this group for logistics
 	//--- (same contract as Strategy RELIEF ~L752-753). Without this AssignTowns/Allocate keep rewriting
 	//--- assault waypoints every tick while ServiceTick holds a MOVE to the depot -> oscillation.
-	_team setVariable ["wfbe_aicom_townorder", [], false];
-	_team setVariable ["wfbe_aicom_dispatch_open", false];
+	_team setVariable ["wfbe_aicom_townorder", [], true]; //--- r80 FIX: broadcast - the server-side assault watcher reads this tuple; a local clear left the stale dispatch open
+	_team setVariable ["wfbe_aicom_dispatch_open", false, true]; //--- r80 FIX: broadcast - the server assault watcher (AssignTowns) must close the retired dispatch NOW, else it later closes it as STRANDED = phantom failed-journey -> premature recycle latch
 	[_team, _svcPos, 'MOVE', 40] Spawn WFBE_CO_FNC_WaypointSimple;
 	diag_log ("AICOMSTAT|v1|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|SERVICE_ENROUTE|" + (_best getVariable ["name", "?"]));
 };
