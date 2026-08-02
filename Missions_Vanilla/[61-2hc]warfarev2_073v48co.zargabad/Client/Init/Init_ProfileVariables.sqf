@@ -123,7 +123,17 @@ _profile_var = profileNamespace getVariable Format["WFBE_PERSISTENT_TM2_PRESETS_
 if !(isNil "_profile_var") then {
 	if (typeName _profile_var == "ARRAY") then {
 		if (count _profile_var == 4) then {
-			WFBE_TM2_Presets = _profile_var;
+			_profile_valid = true;
+			{
+				if (typeName (_profile_var select _x) == "ARRAY") then {
+					if (count (_profile_var select _x) == 0) then {} else {
+					if (count (_profile_var select _x) == 5) then {
+						if (typeName ((_profile_var select _x) select 0) == "ARRAY" && {typeName ((_profile_var select _x) select 1) == "ARRAY"} && {typeName ((_profile_var select _x) select 2) == "STRING"} && {typeName ((_profile_var select _x) select 3) == "ARRAY"} && {typeName ((_profile_var select _x) select 4) == "ARRAY"}) then {} else {_profile_valid = false};
+					} else {_profile_valid = false};
+				};
+				} else {_profile_valid = false};
+			} forEach [0,1,2,3];
+			if (_profile_valid) then {WFBE_TM2_Presets = _profile_var};
 		};
 	};
 };
@@ -135,7 +145,17 @@ _profile_var = profileNamespace getVariable Format["WFBE_PERSISTENT_UD_TEMPLATES
 if !(isNil "_profile_var") then {
 	if (typeName _profile_var == "ARRAY") then {
 		if (count _profile_var == 4) then {
-			WFBE_UD_Templates = _profile_var;
+			_profile_valid = true;
+			{
+				if (typeName (_profile_var select _x) == "ARRAY") then {
+					if (count (_profile_var select _x) == 0) then {} else {
+					if (count (_profile_var select _x) == 5) then {
+						if (typeName ((_profile_var select _x) select 0) == "ARRAY" && {typeName ((_profile_var select _x) select 1) == "ARRAY"} && {typeName ((_profile_var select _x) select 2) == "STRING"} && {typeName ((_profile_var select _x) select 3) == "ARRAY"} && {typeName ((_profile_var select _x) select 4) == "ARRAY"}) then {} else {_profile_valid = false};
+					} else {_profile_valid = false};
+				};
+				} else {_profile_valid = false};
+			} forEach [0,1,2,3];
+			if (_profile_valid) then {WFBE_UD_Templates = _profile_var};
 		};
 	};
 };
