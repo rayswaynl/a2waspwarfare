@@ -43,7 +43,7 @@ _wps = [];
 //--- unaffected (they never stamp WFBE_TownAI_Group). A2 GROUPGETVAR: 1-arg + isNil (2-arg default is nil).
 _rbTownAI = _team getVariable "WFBE_TownAI_Group";
 if (isNil "_rbTownAI") then {_rbTownAI = false};
-_rbEnabled = ((missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0) && {!((vehicle (leader _team)) isKindOf "Air")} && {!_rbTownAI};
+_rbEnabled = ((missionNamespace getVariable ["WFBE_C_PATROLS_ROADBIAS", 1]) > 0) && {!((vehicle (leader _team)) isKindOf "Air")} && {!_rbTownAI} && {!([_team, "wfbe_garrison_sortie", false] Call WFBE_CO_FNC_GroupGetBool)};
 if (_rbEnabled) then {
 	_rbSideID = (side _team) Call WFBE_CO_FNC_GetSideID;
 	_rbOwned = [];
