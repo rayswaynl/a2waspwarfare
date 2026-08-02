@@ -15,6 +15,9 @@ _sideID = (_side) Call GetSideID;
 if (_side == civilian) then {
 	_side = switch (getNumber(configFile >> "CfgVehicles" >> typeOf _respawnedUnit >> "side")) do {case 0: {east}; case 1: {west}; case 2: {resistance}; default {civilian}};
 };
+//--- The CfgVehicles fallback can replace civilian with a fighting side; keep the Killed EH's
+//--- attribution ID aligned with that resolved side rather than retaining the initial CIV ID.
+_sideID = (_side) Call GetSideID;
 _sideText = str _side;
 _team = group _respawnedUnit;
 _respawn = (_team) Call GetTeamRespawn;

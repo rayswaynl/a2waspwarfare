@@ -2,16 +2,13 @@ if (!isServer || time > 30) exitWith {diag_log Format["[WFBE (WARNING)][frameno:
 
 ["INITIALIZATION", Format ["Init_Server.sqf: Server initialization begins at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 
-//--- Allow resistance group to be spawned without a placeholder.
+//--- Allow resistance group to be spawned without a placeholder.  Side relations are global
+//--- server state, so configure both directions here even when GUER is AI-only.
 createCenter resistance;
 resistance setFriend [west,0];
 resistance setFriend [east,0];
-//--- GUER harass: setFriend is one-directional, so WEST/EAST must ALSO treat resistance as hostile or their AI
-//--- won't return fire on GUER players. Gated on the GUER param so the base WEST-vs-EAST mission is unchanged when OFF.
-if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0) then {
-	west setFriend [resistance, 0];
-	east setFriend [resistance, 0];
-};
+west setFriend [resistance,0];
+east setFriend [resistance,0];
 
 AIBuyUnit = Compile preprocessFile "Server\Functions\Server_BuyUnit.sqf";
 //--- AICOM HIGH-CLIMB (claude-gaming 2026-07-01): give AI-commander tanks the Valhalla low-gear terrain
