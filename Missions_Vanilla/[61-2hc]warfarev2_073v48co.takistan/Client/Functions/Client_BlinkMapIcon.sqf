@@ -4,6 +4,10 @@ _unit = _this select 0;
 _flashRed = _this select 1;
 _marker = _unit getVariable "unitMarkerBlink";
 _markerColor = _unit getVariable "OriginalMarkerColor";
+if (_unit == player) then {
+    _marker = Format["%1AdvancedSquadOWNMarker",sideJoinedText];
+    _markerColor = "ColorOrange";
+};
 _blinks = _unit getVariable "Blinks";
 _LFTB = _unit getVariable "LFTB";
 
