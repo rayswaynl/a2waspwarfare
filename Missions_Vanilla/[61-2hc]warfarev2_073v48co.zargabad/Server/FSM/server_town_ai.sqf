@@ -202,7 +202,8 @@ while {!WFBE_GameOver} do {
 			_town setVariable ["wfbe_sortie_started", 0];
 			_town setVariable ["wfbe_sortie_rtb", false];
 		};
-		_town_teams = _town getVariable "wfbe_town_teams";
+		_town_teams = _town getVariable ["wfbe_town_teams", []];
+		if (typeName _town_teams != "ARRAY") then {_town_teams = []};
 		//--- Patrols v2: town-based patrol gating retired (see Server\FSM\server_side_patrols.sqf).
 
 		_sideID = _town getVariable "sideID";
