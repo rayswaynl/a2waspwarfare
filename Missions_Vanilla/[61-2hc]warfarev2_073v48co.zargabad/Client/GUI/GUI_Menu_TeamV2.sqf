@@ -273,6 +273,8 @@ while {alive player && dialog} do {
 
 	//--- ── GEAR PRESET APPLY (slots 1-4 = MenuAction 1011-1014) ─────────────────
 	if (MenuAction >= 1011 && {MenuAction <= 1014}) then {
+		//--- r95: call-scope wrap - validation exitWith below must skip this handler only, not kill the dialog loop (zombie menu).
+		call {
 		private ["_slotIdx2","_gear2","_upgNow","_topT","_sw3","_sb3","_id3","_it3"];
 		_slotIdx2 = MenuAction - 1011;
 		MenuAction = -1;
@@ -393,10 +395,13 @@ while {alive player && dialog} do {
 		player setVariable ["wfbe_custom_gear", [_cleanWeps, _cleanMags, _cleanBp, _cleanBpCnt, _wpCombined]];
 		player setVariable ["wfbe_custom_gear_cost", _presetCost];
 		hint Format ["Preset %1 applied ($%2 charged).", _slotIdx2 + 1, _presetCost];
+		};
 	};
 
 	//--- ── GEAR PRESET REBUY (set as rebuy-on-death kit: 1021-1024) ─────────────
 	if (MenuAction >= 1021 && {MenuAction <= 1024}) then {
+		//--- r95: call-scope wrap - validation exitWith below must skip this handler only, not kill the dialog loop (zombie menu).
+		call {
 		private ["_slotIdx3","_gear3","_upgNow3","_topT3","_sw4","_sb4","_id4","_it4"];
 		_slotIdx3 = MenuAction - 1021;
 		MenuAction = -1;
@@ -493,6 +498,7 @@ while {alive player && dialog} do {
 		player setVariable ["wfbe_custom_gear", [_rCleanWeps, _rCleanMags, _rCleanBp, _rCleanBpCnt, _rbpWpCombined]];
 		player setVariable ["wfbe_custom_gear_cost", _rebuyCost];
 		hint Format ["Preset %1 set as rebuy-on-death kit (cost: $%2).", _slotIdx3 + 1, _rebuyCost];
+		};
 	};
 
 	//--- ── SQUAD: DISBAND (MenuAction 3 — reuses existing disband logic from V1) ──
@@ -565,6 +571,8 @@ while {alive player && dialog} do {
 	//--- INTENTIONALLY FREE: field-recovery QoL, not a purchase (no WFBE_CL_FNC_ChangeClientFunds call).
 	if (MenuAction == 2002) then {
 		MenuAction = -1;
+		//--- r95: call-scope wrap - validation exitWith below must skip this handler only, not kill the dialog loop (zombie menu).
+		call {
 		_curUnitSel = lbCurSel 13071;
 		if (_curUnitSel != -1 && {_curUnitSel < count _units}) then {
 			private ["_repUnit","_repVeh"];
@@ -642,6 +650,7 @@ while {alive player && dialog} do {
 				};
 				if (!isNull _rv) then {_rv setVariable ["wfbe_tm2_repair_lock", false, true]};
 			};
+		};
 		};
 	};
 
@@ -747,6 +756,8 @@ while {alive player && dialog} do {
 
 		//--- UD Activate/toggle (2111-2114): set or clear active template slot.
 		if (MenuAction >= 2111 && {MenuAction <= 2114}) then {
+			//--- r95: call-scope wrap - validation exitWith below must skip this handler only, not kill the dialog loop (zombie menu).
+			call {
 			_udSlotIdx = MenuAction - 2111;
 			MenuAction = -1;
 			_udTemplates = missionNamespace getVariable ["WFBE_UD_Templates", [[],[],[],[]]];
@@ -773,6 +784,7 @@ while {alive player && dialog} do {
 			} else {
 				(_display displayCtrl 13101) ctrlSetText "Active: None  (no template applied on AI buys)";
 				hint "UD: Template deactivated.";
+			};
 			};
 		};
 
