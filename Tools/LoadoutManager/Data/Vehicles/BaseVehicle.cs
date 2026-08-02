@@ -150,16 +150,16 @@ public abstract class BaseVehicle : InterfaceVehicle
 
         // Turret-aware removal (C6 council #5): the removed weapon sits on the vehicle's main turret,
         // and a vehicle-level removeWeapon on a turret weapon desyncs the turret's weapon<->magazine
-        // binding on A2 OA. Strip the weapon's own magazines with it - a magazine left aboard with no
-        // weapon able to use it makes OA flood the RPT with "Cannot use magazine X in muzzle Y" on
-        // every reload evaluation and every rearm cycle.
+        // binding on A2 OA. Strip the weapon's own magazines before the weapon itself - a magazine
+        // left aboard with no weapon able to use it makes OA flood the RPT with "Cannot use magazine X
+        // in muzzle Y" on every reload evaluation and every rearm cycle.
         sb.AppendLine($"{facLevelVariable} = ((_this getVariable [\"wfbe_balance_side\", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select {facTypeVariable}; ");
         sb.AppendLine($"if ({facLevelVariable} < {weaponsToRemoveUntilFactoryLevelOnAVehicle.First().Value}) then {{");
-        sb.AppendLine($"    _this removeWeaponTurret [\"{EnumExtensions.GetEnumMemberAttrValue(weaponTypeToRemove)}\", [{turretPos}]];");
         foreach (string magazineClassname in GetMagazineClassnamesForWeaponType(weaponTypeToRemove))
         {
             sb.AppendLine($"    _this removeMagazineTurret [\"{magazineClassname}\", [{turretPos}]];");
         }
+        sb.AppendLine($"    _this removeWeaponTurret [\"{EnumExtensions.GetEnumMemberAttrValue(weaponTypeToRemove)}\", [{turretPos}]];");
         sb.AppendLine("};");
 
         return sb.ToString();
@@ -182,15 +182,16 @@ public abstract class BaseVehicle : InterfaceVehicle
 
         WeaponType turretWeaponTypeToRemove = weaponsOnTheTurretToRemoveUntilFactoryLevelOnAVehicle.First().Key;
 
-        // Strip the removed turret weapon's own magazines with it (C6 council #5) - see
-        // GenerateSQFCodeForWeaponRemoval above for the RPT-flood rationale.
+        // Strip the removed turret weapon's own magazines before the weapon itself (C6 council #5).
+        // Removing the weapon first leaves its magazine on the shared turret path, where OA can
+        // re-evaluate it against the next remaining muzzle and flood the RPT with a mismatch.
         sb.AppendLine($"{facLevelVariable} = ((_this getVariable [\"wfbe_balance_side\", side group player]) Call WFBE_CO_FNC_GetSideUpgrades) select {facTypeVariable}; ");
         sb.AppendLine($"if ({facLevelVariable} < {weaponsOnTheTurretToRemoveUntilFactoryLevelOnAVehicle.First().Value}) then {{");
-        sb.AppendLine($"    _this removeWeaponTurret [\"{EnumExtensions.GetEnumMemberAttrValue(turretWeaponTypeToRemove)}\", [{turretPos}]];");
         foreach (string magazineClassname in GetMagazineClassnamesForWeaponType(turretWeaponTypeToRemove))
         {
             sb.AppendLine($"    _this removeMagazineTurret [\"{magazineClassname}\", [{turretPos}]];");
         }
+        sb.AppendLine($"    _this removeWeaponTurret [\"{EnumExtensions.GetEnumMemberAttrValue(turretWeaponTypeToRemove)}\", [{turretPos}]];");
         sb.AppendLine("};");
 
         return sb.ToString();
