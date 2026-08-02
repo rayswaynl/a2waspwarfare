@@ -139,12 +139,11 @@ if (isMultiplayer) then {Call Compile preprocessFileLineNumbers "Common\Init\Ini
 
 Call Compile preprocessFileLineNumbers "Common\Init\Init_CommonConstants.sqf"; //--- Set the constants and the parameters, skip the params if they're already defined.
 
-//--- GUER PLAYERSIDE force (dedicated-MP): WFBE_C_GUER_PLAYERSIDE is the LAST mission param, so on a dedicated
-//--- server the cached paramsArray can be stale/short for it (an out-of-range `select` -> nil -> 0), which makes
-//--- the lobby value unreliable (esp. on a map that previously ran with fewer params). Re-read it from the param
-//--- DEFAULT the build sets (1 live / 0 git gate-off) - same dedicated-MP override pattern as the economy block
-//--- below; keeps the gate-off design working (git default stays 0).
-WFBE_C_GUER_PLAYERSIDE = getNumber (missionConfigFile >> "Params" >> "WFBE_C_GUER_PLAYERSIDE" >> "default");
+//--- GUER PLAYERSIDE: preserve a valid lobby choice. A dedicated server can have a stale/short trailing
+//--- paramsArray slot; Init_Parameters then leaves this variable nil, so only that invalid/missing value falls
+//--- back to the schema default. Do not overwrite an explicit lobby-disabled (0) choice before Common derives
+//--- WFBE_ISTHREEWAY from this gate.
+if (isNil "WFBE_C_GUER_PLAYERSIDE") then {WFBE_C_GUER_PLAYERSIDE = getNumber (missionConfigFile >> "Params" >> "WFBE_C_GUER_PLAYERSIDE" >> "default")};
 
 //--- VIEW DISTANCE force (dedicated-MP): same stale-paramsArray failure as WFBE_C_GUER_PLAYERSIDE above -
 //--- Init_Parameters reads paramsArray positionally, so a server whose per-mission lobby cache was written by an
