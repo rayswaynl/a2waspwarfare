@@ -67,6 +67,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import os
+import re
 import struct
 import sys
 from pathlib import Path
@@ -193,6 +194,177 @@ def ensure_version_sqf(
     files.append(("version.sqf", template.read_bytes()))
 
 
+def _mask_quoted_config_text(text: str) -> str:
+    """Return same-length config text with quoted contents and comments intact."""
+    chars = list(text)
+    in_string = False
+    i = 0
+    while i < len(chars):
+        if chars[i] == '"':
+            # mission.sqm escapes a literal quote as two consecutive quotes.
+            if in_string and i + 1 < len(chars) and chars[i + 1] == '"':
+                chars[i] = chars[i + 1] = " "
+                i += 2
+                continue
+            in_string = not in_string
+            chars[i] = " "
+            i += 1
+            continue
+        if in_string:
+            chars[i] = " "
+        i += 1
+    return "".join(chars)
+
+
+def _mask_config_comments(text: str) -> str:
+    """Return same-length config text with comments blanked, strings intact."""
+    chars = list(text)
+    in_string = False
+    in_line_comment = False
+    in_block_comment = False
+    i = 0
+    while i < len(chars):
+        if in_line_comment:
+            if chars[i] in "\r\n":
+                in_line_comment = False
+            else:
+                chars[i] = " "
+            i += 1
+            continue
+        if in_block_comment:
+            if chars[i] == "*" and i + 1 < len(chars) and chars[i + 1] == "/":
+                chars[i] = chars[i + 1] = " "
+                in_block_comment = False
+                i += 2
+            else:
+                if chars[i] not in "\r\n":
+                    chars[i] = " "
+                i += 1
+            continue
+        if in_string:
+            if chars[i] == '"':
+                # mission.sqm escapes a literal quote as two consecutive quotes.
+                if i + 1 < len(chars) and chars[i + 1] == '"':
+                    i += 2
+                    continue
+                in_string = False
+            i += 1
+            continue
+        if chars[i] == '"':
+            in_string = True
+            i += 1
+            continue
+        if chars[i] == "/" and i + 1 < len(chars):
+            if chars[i + 1] == "/":
+                chars[i] = chars[i + 1] = " "
+                in_line_comment = True
+                i += 2
+                continue
+            if chars[i + 1] == "*":
+                chars[i] = chars[i + 1] = " "
+                in_block_comment = True
+                i += 2
+                continue
+        i += 1
+    return "".join(chars)
+
+
+def _innermost_config_block(text: str, masked: str, index: int) -> str:
+    """Return the config object block enclosing a declaration at ``index``."""
+    depth = 0
+    opening = -1
+    for i in range(index, -1, -1):
+        if masked[i] == "}":
+            depth += 1
+        elif masked[i] == "{":
+            if depth == 0:
+                opening = i
+                break
+            depth -= 1
+    if opening < 0:
+        return ""
+
+    depth = 1
+    for i in range(opening + 1, len(masked)):
+        if masked[i] == "{":
+            depth += 1
+        elif masked[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[opening : i + 1]
+    return text[opening:]
+
+
+def _slot_capacity(mission_sqm: bytes) -> Tuple[int, int, int]:
+    """Count total, HC-reserved, and caster-reserved player slots in mission.sqm."""
+    text = mission_sqm.decode("latin-1")
+    masked = _mask_config_comments(_mask_quoted_config_text(text))
+    player_pattern = re.compile(r"\bplayer\s*=\s*")
+    headless_pattern = re.compile(r"(?m)^\s*forceHeadlessClient\s*=\s*[1-9][0-9]*\s*;")
+    caster_pattern = re.compile(
+        r'\bwfbe_caster_slot\b|^\s*description\s*=\s*"Caster\b',
+        re.IGNORECASE | re.MULTILINE,
+    )
+
+    total = 0
+    headless = 0
+    caster = 0
+    for match in player_pattern.finditer(masked):
+        block = _innermost_config_block(text, masked, match.start())
+        if not block:
+            raise PackError(
+                f"ABORT: could not resolve the mission.sqm slot block at byte {match.start()}"
+            )
+        structural_block = _mask_config_comments(_mask_quoted_config_text(block))
+        visible_block = _mask_config_comments(block)
+        total += 1
+        headless += int(bool(headless_pattern.search(structural_block)))
+        caster += int(bool(caster_pattern.search(visible_block)))
+    return total, headless, caster
+
+
+def check_slot_header_consistency(
+    source: Path, files: List[Tuple[str, bytes]]
+) -> None:
+    """Reject a PBO whose header capacity disagrees with its authored lobby slots.
+
+    ``WF_MAXPLAYERS`` is the human capacity advertised by Rsc/Header.hpp.  The
+    mission.sqm also contains reserved HC seats and optional CIV caster seats;
+    neither consumes that human capacity.  A real mission must have a slot
+    census, while tiny packer unit fixtures without player declarations remain
+    structural-only smoke inputs.
+    """
+    mission_entry = next((data for rel, data in files if rel == "mission.sqm"), None)
+    if mission_entry is None:
+        return
+
+    total, headless, caster = _slot_capacity(mission_entry)
+    if total == 0:
+        return
+
+    version_entry = next((data for rel, data in files if rel == "version.sqf"), None)
+    if version_entry is None:
+        raise PackError("ABORT: mission.sqm declares player slots but version.sqf is missing")
+    version_text = version_entry.decode("latin-1")
+    max_match = re.search(
+        r"(?m)^\s*#define\s+WF_MAXPLAYERS\s+([0-9]+)\s*$", version_text
+    )
+    if not max_match:
+        raise PackError(
+            f"ABORT: WF_MAXPLAYERS define missing from version.sqf for {source}"
+        )
+
+    max_players = int(max_match.group(1))
+    human = total - headless - caster
+    if human < 0 or max_players != human:
+        raise PackError(
+            "ABORT: WF_MAXPLAYERS={0} disagrees with mission.sqm slot capacity "
+            "(player={1}, headless={2}, caster={3}, human={4}) for {5}".format(
+                max_players, total, headless, caster, human, source
+            )
+        )
+
+
 def check_debug_guard(files: List[Tuple[str, bytes]], allow_debug: bool, quiet: bool) -> None:
     """Universal guard present in every recovered script, in one form or
     another: never pack a mission with an active (uncommented) WF_DEBUG
@@ -311,6 +483,7 @@ def pack(
 
     ensure_version_sqf(source, files, strict_version, quiet)
     check_lowercase_collisions(files)
+    check_slot_header_consistency(source, files)
     check_debug_guard(files, allow_debug, quiet)
     check_no_init_contamination(files)
 
