@@ -63,11 +63,43 @@ function Get-Median($values) {
 function Get-Min($values) { $nums=@(); foreach($v in @($values)){ if($null -ne $v){$nums+=[double]$v} }; if($nums.Count -eq 0){return $null}; return ($nums | Measure-Object -Minimum).Minimum }
 function Get-Max($values) { $nums=@(); foreach($v in @($values)){ if($null -ne $v){$nums+=[double]$v} }; if($nums.Count -eq 0){return $null}; return ($nums | Measure-Object -Maximum).Maximum }
 function Round1($x){ if($null -eq $x){return $null} return [math]::Round([double]$x,1) }
+function ConvertTo-JsonSafe($value) {
+    if ($null -eq $value) { return $null }
+    if ($value -is [string]) { return [string]$value }
+    if ($value -is [bool]) { return [bool]$value }
+    if ($value -is [ValueType]) { return $value }
+    if ($value -is [System.Collections.IDictionary]) {
+        $out = [ordered]@{}
+        foreach ($entry in $value.GetEnumerator()) { $out[[string]$entry.Key] = ConvertTo-JsonSafe $entry.Value }
+        return ,$out
+    }
+    if ($value -is [pscustomobject]) {
+        $out = [ordered]@{}
+        foreach ($property in $value.PSObject.Properties) {
+            $out[[string]$property.Name] = ConvertTo-JsonSafe $property.Value
+        }
+        return ,$out
+    }
+    if ($value -is [System.Array]) {
+        $out = New-Object 'System.Collections.Generic.List[object]'
+        foreach ($item in $value) { [void]$out.Add((ConvertTo-JsonSafe $item)) }
+        return ,$out.ToArray()
+    }
+    if ($value -is [System.Collections.IEnumerable]) {
+        $out = New-Object 'System.Collections.Generic.List[object]'
+        foreach ($item in $value) { [void]$out.Add((ConvertTo-JsonSafe $item)) }
+        return ,$out.ToArray()
+    }
+    return [string]$value
+}
+
 function ToJson($obj){
     if ($PSVersionTable.PSVersion.Major -ge 6) { return ($obj | ConvertTo-Json -Depth 30) }
     Add-Type -AssemblyName System.Web.Extensions -ErrorAction Stop
     $ser = New-Object System.Web.Script.Serialization.JavaScriptSerializer
-    $ser.MaxJsonLength = [int]::MaxValue; return $ser.Serialize($obj)
+    $ser.MaxJsonLength = [int]::MaxValue
+    $safeObj = ConvertTo-JsonSafe $obj
+    return $ser.Serialize($safeObj)
 }
 function FlagPairs($flags){
     $out = @(); if ($null -eq $flags) { return $out }
@@ -229,7 +261,7 @@ $bootSmoke = $null
 $bootTool = Join-Path (Split-Path -Parent $soakDir) 'Smoke\Test-WaspBootSmoke.ps1'
 if (Test-Path -LiteralPath $bootTool) {
     try {
-        $bsJson = & $bootTool -RptPath $FromRpt -Json 2>$null
+        $bsJson = & $bootTool -ServerRpt $FromRpt -Json 2>$null
         if ($bsJson) {
             $bs = ($bsJson | ConvertFrom-Json)
             $bootSmoke = [ordered]@{ ran = $true; verdict = $bs.verdict; tool = $bootTool }
