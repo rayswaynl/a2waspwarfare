@@ -4,7 +4,7 @@ _logic = WF_Logic;
 if (!isNull playerUAV) then {if (!alive playerUAV) then {playerUAV = objNull}};
 if (!isNull playerUAV) exitWith {
 	//--- Disable targetting.
-	{(driver playerUAV) disableAI _x} forEach ["TARGET","AUTOTARGET"];
+	Private ["_drvTmp"]; _drvTmp = driver playerUAV; if (!isNull _drvTmp) then {{_drvTmp disableAI _x} forEach ["TARGET","AUTOTARGET"]};
 	if (WF_A2_Vanilla) then {
 		ExecVM "Client\Module\UAV\uav_interface.sqf";
 	} else {
@@ -46,7 +46,7 @@ _driver = [missionNamespace getVariable Format ["WFBE_%1SOLDIER",sideJoinedText]
 _driver moveInDriver _uav;
 
 //--- Disable targetting.
-{(driver playerUAV) disableAI _x} forEach ["TARGET","AUTOTARGET"];
+Private ["_drvTmp"]; _drvTmp = driver playerUAV; if (!isNull _drvTmp) then {{_drvTmp disableAI _x} forEach ["TARGET","AUTOTARGET"]};
 
 _built = 1;
 //--- OPFOR Uav has no gunner slot.
