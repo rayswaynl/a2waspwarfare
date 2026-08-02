@@ -1211,8 +1211,8 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//---                deployed PBO filename (missionName), which the deploy convention bumps with the cmdcon token
 		//---                per the wiki filename-cache rule. We parse the cmdcon<...> token out of missionName ONCE and
 		//---                cache it in wfbe_buildtag (falls back to the raw missionName if no cmdcon token is present).
-		//---   hc_fps=<n>   min diag_fps across HCs that reported (via the existing 60s HCStat channel, cached in
-		//---                WFBE_HCFPS_REG by Server/PVFunctions/HCStat.sqf) within the last ~2 min; -1 if none fresh.
+		//---   hc_fps=<n>   min diag_fps across REGISTERED live HCs that reported (via the existing 60s HCStat channel,
+		//---                cached in WFBE_HCFPS_REG by Server/PVFunctions/HCStat.sqf) within the last ~2 min; -1 if none fresh.
 		private ["_aiW","_aiE","_aiG","_humN","_tier","_bt","_mn","_ci","_hcFps","_hcReg2"]; _aiW=0;_aiE=0;_aiG=0;_humN=0; { if (isPlayer _x) then {_humN=_humN+1} else { switch (side _x) do { case west:{_aiW=_aiW+1}; case east:{_aiE=_aiE+1}; case resistance:{_aiG=_aiG+1} } } } forEach allUnits; _tier = missionNamespace getVariable ["WFBE_PopTier",0];
 		_bt = missionNamespace getVariable ["wfbe_buildtag", ""];
 		if (_bt == "") then {
@@ -1239,8 +1239,14 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		//--- keyed by netId via HCStat.sqf). Single HC -> hc2fps == hc_fps; no fresh HC -> both -1. New key `hc2fps=`
 		//--- follows the SAME shape as the existing `hc_fps=` (which already contains the substring `fps=`), so pipe-
 		//--- anchored `|fps=` greps and longest-key KV parsers keep resolving each field distinctly (no TFPS-style collision).
-		private ["_hc2Fps"]; _hc2Fps = -1;
-		{ if (((time - (_x select 2)) <= 120) && {(typeName (_x select 1)) == "SCALAR"}) then { if ((_hcFps < 0) || {(_x select 1) < _hcFps}) then {_hcFps = _x select 1}; if ((_hc2Fps < 0) || {(_x select 1) > _hc2Fps}) then {_hc2Fps = _x select 1} } } forEach _hcReg2;
+		private ["_hc2Fps","_hcLiveKeys","_hcGroups","_hcLeader"]; _hc2Fps = -1; _hcLiveKeys = []; _hcGroups = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
+		{
+			if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 2}) then {
+				_hcLeader = leader _x;
+				_hcLiveKeys set [count _hcLiveKeys, Format ["HC-%1", netId _hcLeader]];
+			};
+		} forEach _hcGroups;
+		{ if ((typeName _x) == "ARRAY" && {(count _x) >= 3} && {(_x select 0) in _hcLiveKeys} && {(typeName (_x select 1)) == "SCALAR"} && {(typeName (_x select 2)) == "SCALAR"} && {((time - (_x select 2)) <= 120)}) then { if ((_hcFps < 0) || {(_x select 1) < _hcFps}) then {_hcFps = _x select 1}; if ((_hc2Fps < 0) || {(_x select 1) > _hc2Fps}) then {_hc2Fps = _x select 1} } } forEach _hcReg2;
 		//--- APPENDED v2-EXT telemetry (all CHEAP reads of state the systems already maintain; NO new allUnits/allGroups walk):
 		//---   townsW/E/G  per-side towns held: iterate `towns` ONCE bucketing by the SAME `sideID` var GetTownsHeld reads
 		//---               (W=0 E=1 G=2). Also collect the per-town sortie flag in the SAME pass -> `sort` (active sorties).
