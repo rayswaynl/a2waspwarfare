@@ -2989,6 +2989,19 @@ WFBE_STATS_DIRTY_UIDS = [];
 	if (isNil "WFBE_C_AIRFIELD_OWNERSHIP_GATE")    then {WFBE_C_AIRFIELD_OWNERSHIP_GATE = 1};    //--- 0=off (default, byte-identical); 1=on (block aircraft purchase at enemy-owned airfields).
 	if (isNil "WFBE_C_AIRFIELD_OWNER_TOWN_RADIUS") then {WFBE_C_AIRFIELD_OWNER_TOWN_RADIUS = 500}; //--- m: radius for nearest-town ownership lookup. 500m safely binds each airport to its depot (max separation ~80m on all terrains; nearest non-airfield town is 679m+).
 
+//--- AIRFIELD SERVICE POINT (fable/airfield-service, GR-2026-07-08a): captured airfields only get a
+//--- CBR + buy-menu roster today (Client\GUI\GUI_Menu_Service.sqf:314-368 shows only base structures /
+//--- repair trucks as service points). When >0, Server_ProvisionAirfieldHangar.sqf also provisions a
+//--- rearm/repair/refuel structure at the airfield for its current owner, reusing the exact
+//--- WarfareBVehicleServicePoint + WFBE_RepairTruckServicePoint tag pattern the Task-12 real-capture
+//--- block in server_town.sqf already builds (WFBE_C_AIRFIELDS, default 1) - GUI_Menu_Service.sqf,
+//--- Client_GetRepairTruckServicePoints.sqf and updateavailableactions.fsm already scan for that tag,
+//--- so no client-side code changes are needed. Closes the one remaining gap: airfields that start
+//--- pre-owned (Init_Town.sqf sideID default) never fire a real capture transition, so they got a
+//--- hangar (fable/fix-hangar-aircraft-buy) but no service point until first captured.
+//--- Flag-off (0) = byte-identical to HEAD.
+	if (isNil "WFBE_C_AIRFIELD_SERVICE") then {WFBE_C_AIRFIELD_SERVICE = 0}; //--- 0=off (default, byte-identical); 1=on (provision a service point at pre-owned airfields too).
+
 //--- FPV STRIKE DRONE (fable/fpv-strike-drone): player-piloted kamikaze mini-UAV bought from the
 //--- Tactical Center (sibling of the UAV support call). Client module: Client/Module/FPV/.
 //--- Flag-off (0) = no menu row, module exits on entry = byte-identical behavior.
