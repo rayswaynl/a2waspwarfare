@@ -230,7 +230,7 @@ while {!WFBE_GameOver} do {
 	};
 	sleep _interval;
 
-	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore","_prunedGroups","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_enemyAirScanBudget","_enemyAirScanCount","_enemyAirScanned"];
+	private ["_now","_kept","_townsWithAir","_aliveCount","_perfStart","_perfAirBefore","_perfDropsBefore","_prunedGroups","_flyAwayGroups","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_enemyAirScanBudget","_enemyAirScanCount","_enemyAirScanned"];
 	_perfStart = diag_tickTime;
 	_perfAirBefore = count _defenders;
 	_perfDropsBefore = count _drops;
@@ -247,6 +247,7 @@ while {!WFBE_GameOver} do {
 	_kept         = [];
 	_townsWithAir = [];
 	_prunedGroups = [];
+	_flyAwayGroups = [];
 	{
 		private ["_entry","_eTown","_eVeh","_eGrp","_ePilot","_eGunner","_eSpawn","_eLastEnemy","_drop","_reason","_enemiesNow","_townSide","_townActive","_flyAway"];
 		_entry      = _x;
@@ -321,10 +322,21 @@ while {!WFBE_GameOver} do {
 				&& {({isPlayer _x} count (crew _eVeh)) == 0};
 
 			if (_flyAway) then {
-				//--- Self-contained: this thread does its OWN player-safe teardown and only frees the
-				//--- group once it is empty (alive-unit count == 0), so it never races the deferred
-				//--- group-teardown post-pass below for a swarm-shared group. _eGrp is deliberately NOT
-				//--- added to _prunedGroups on this path.
+				//--- fix(airdef) AIRDEFGC v1: the comment this replaces claimed _eGrp deliberately staying
+				//--- OUT of _prunedGroups meant this path "never races the deferred group-teardown post-pass"
+				//--- - that was false. The post-pass frees any pruned group no longer referenced by a KEPT
+				//--- registry entry, and a flyaway-dropped entry is ALSO absent from _kept (dropped either
+				//--- way, same as immediate despawn). With WFBE_C_GUER_KA137_SWARM sharing one group across
+				//--- a leader + extras, if a SIBLING in the group prunes via the immediate path in the SAME
+				//--- tick this entry takes the flyaway path, the post-pass deleted the WHOLE shared group -
+				//--- including this thread's still-alive, still-flying pilot+gunner - out from under it,
+				//--- leaving the hull a crewless derelict (visibly "not despawning") until this thread's own
+				//--- bounded wait eventually notices the empty crew and tears the hull down itself. Register
+				//--- the group as flyaway-owned so the post-pass leaves it strictly to this thread, which
+				//--- already only frees the group once it holds no living unit (see below) - restoring the
+				//--- "never touch a group another live claim still needs" idiom (mirrors #1862's ambient-air
+				//--- group-first teardown).
+				_flyAwayGroups = _flyAwayGroups + [_eGrp];
 				[_eTown, _eVeh, _eGrp, _ePilot, _eGunner, _flyHeight] Spawn {
 					private ["_t","_v","_g","_p","_gu","_h","_tPos","_vPos","_dx","_dy","_ang","_flyPos","_climbH","_timeout","_tick","_done","_finalDist"];
 					_t = _this select 0;
@@ -414,13 +426,20 @@ while {!WFBE_GameOver} do {
 	//--- registry entry still references it (leader + every swarm extra that shared it have
 	//--- ALL been pruned). Any pruned group still shared by a surviving sibling is left alone -
 	//--- its crew/hull were untouched above, so the sibling keeps its group and orders intact.
+	//--- fix(airdef) AIRDEFGC v1: a group still owned by an in-flight flyaway thread (_flyAwayGroups,
+	//--- populated above) must never be torn down here - see that block for why a swarm-shared group
+	//--- raced this sweep otherwise. One always-on diag_log line marks every time this guard actually
+	//--- has to hold a group back, so a soak can grep AIRDEFGC to confirm the race is closed.
 	private ["_keptGroups"];
 	_keptGroups = [];
 	{ _keptGroups = _keptGroups + [(_x select 2)]; } forEach _defenders;
 	{
 		private ["_pg"];
 		_pg = _x;
-		if (!isNull _pg && {!(_pg in _keptGroups)}) then {
+		if (!isNull _pg && {_pg in _flyAwayGroups}) then {
+			diag_log format ["AIRDEFGC|v1|flyaway-group-protect|grp=%1", _pg];
+		};
+		if (!isNull _pg && {!(_pg in _keptGroups)} && {!(_pg in _flyAwayGroups)}) then {
 			{if (!(isPlayer _x)) then {["guerairdef-L254", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _pg);
 			deleteGroup _pg;
 		};
