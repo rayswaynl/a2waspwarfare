@@ -184,7 +184,7 @@ if (_airMaxTotalP > 0) then {
 		//--- gets an infantry top-up. We CHARGE the side up front (per-missing-unit flat cost) and broadcast a
 		//--- wfbe_aicom_topup_req [count,pos,classes,issuedTime] the owning HC driver consumes to spawn the bodies into the team. Rate-limited to
 		//--- one top-up per team per COOLDOWN via a group stamp. Never fires in COMBAT (rallying/parked implies not) or while pending disband (PR #542).
-		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag","_wm_costOn","_wm_afford","_wm_existingReq","_wm_hasPending"];
+		private ["_wm_rally","_wm_parked","_wm_disbanding","_wm_hqP","_wm_myID","_wm_rallyPos","_wm_missing","_wm_now","_wm_lastTU","_wm_cd","_wm_unitCost","_wm_charge","_wm_curFunds","_wm_infCls","_wm_barr","_wm_cmdTeam","_wm_humanSeated","_wm_mult","_wm_cmdUID","_wm_humanTag","_wm_costOn","_wm_afford","_wm_existingReq","_wm_hasPending","_wm_townParked"];
 		if (_wm_alive < 6 && {behaviour _wm_ldr != "COMBAT"}) then {
 			_wm_rally = _team getVariable "wfbe_aicom_rallying";
 			_wm_rally = (!isNil "_wm_rally" && {_wm_rally});
@@ -194,7 +194,26 @@ if (_airMaxTotalP > 0) then {
 			if (!isNull _wm_hqP && {(_wm_ldr distance _wm_hqP) < 400}) then {_wm_parked = true};
 			if (!_wm_parked) then {
 				_wm_myID = (_side) Call WFBE_CO_FNC_GetSideID;
-				{ if (((_x getVariable ["sideID", -1]) == _wm_myID) && {(_wm_ldr distance _x) < 400}) exitWith {_wm_parked = true} } forEach towns;
+				_wm_townParked = false;
+				{ if (((_x getVariable ["sideID", -1]) == _wm_myID) && {(_wm_ldr distance _x) < 400}) exitWith {_wm_townParked = true} } forEach towns;
+				//--- BARRACKS-PRESENT GUARD (flag WFBE_C_AICOM_TOPUP_REQUIRE_BARRACKS, default 0, fix
+				//--- fable/founding-placement-20260802): the legacy town-only test above matched ANY owned
+				//--- town regardless of whether it hosts a Barracks - a captured airfield-only town (no
+				//--- production structure at all) still granted "parked", so the TOPUP_REQ dispatch below
+				//--- conjured fresh infantry at the leader's exact rally position there (the same "magic
+				//--- infantry" anti-pattern WFBE_C_AICOM_FOUND_REQUIRE_FACTORY was armed to stop for
+				//--- founding). When armed, require an ALIVE owned Barracks within the SAME 400m range
+				//--- instead of merely town ownership - the earlier HQ-parked check above is unaffected
+				//--- (the HQ always carries the home base's own factories). Flag 0 => byte-identical.
+				if ((missionNamespace getVariable ["WFBE_C_AICOM_TOPUP_REQUIRE_BARRACKS", 0]) > 0) then {
+					_wm_parked = false;
+					{ if ((_x getVariable ["wfbe_structure_type", ""]) == "Barracks" && {alive _x} && {(_wm_ldr distance _x) < 400}) exitWith {_wm_parked = true} } forEach ((_side) Call WFBE_CO_FNC_GetSideStructures);
+					if (_wm_townParked && {!_wm_parked}) then {
+						["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] TOPUP_REQ withheld - parked near an owned town with no alive Barracks within 400m (TOPUP_REQUIRE_BARRACKS armed).", _sideText, _team]] Call WFBE_CO_FNC_AICOMLog;
+					};
+				} else {
+					_wm_parked = _wm_townParked;
+				};
 			};
 			_wm_disbanding = _team getVariable "wfbe_aicom_disband";
 			_wm_disbanding = (!isNil "_wm_disbanding" && {_wm_disbanding});
