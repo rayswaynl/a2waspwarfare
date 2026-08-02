@@ -25,7 +25,7 @@
 	The VD slider is polled each tick (like the Team menu idc 13003), so dragging it applies instantly.
 */
 
-disableSerialization;
+//--- A2 OA: this scheduled controller uses IDC-based UI commands, so it needs no serialization override.
 private ["_hud","_aar","_bomb","_amb","_kill","_irs","_bip","_acue","_autoOn","_target","_maxVD","_curVD","_sliderVD","_lastSliderVD","_chosenVD","_hc","_maxTG","_curTG","_sliderTG","_lastSliderTG","_chosenTG","_tags","_tagsAI"];
 
 if (!alive player) exitWith {};
