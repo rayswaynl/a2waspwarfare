@@ -1,4 +1,4 @@
-Private ["_towns","_townReadyCount","_wTownMode"];
+Private ["_towns","_townReadyCount","_wTownMode","_wTown"];
 
 //--- J6 HANGGUARD: town mode must not stall the entire town census forever.
 _wTownMode = 0;
@@ -16,18 +16,15 @@ _towns = [0,0,0] nearEntities [["LocationLogicDepot"], 100000];
 //--- a broken match. wfbe_inactive is a terminal skip state and is not a town[] entry.
 
 //--- Await for a proper initialization.
-//--- FIX D6a (WFBE hang-guard): mirrors the bounded-wait idiom at initJIPCompatible.sqf:366-382 (B56
-//--- JIP-HANG FIX). Was unbounded per town, SERIAL across ~46 depot logics - if one town's own Init_Town.sqf
-//--- instance never sets sideID or wfbe_inactive, this forEach hung on it FOREVER, starving townInit and
-//--- every consumer gated on it (Init_Server.sqf:192, Init_Client.sqf:960/1261, the whole match) - silently.
-//--- Bounded per-town to 30s (120 x 0.25s uiSleep, real-time). Fallback is SAFE: it writes NOTHING to the
-//--- stuck object - it only stops blocking and moves on; the town's own Init_Town.sqf may still complete and
-//--- self-register later. Happy path is byte-identical (the while is false on first check when sideID is
-//--- already set - the common case - so zero extra ticks run, exactly like the original waitUntil).
+//--- FIX D6a/D6b (WFBE hang-guard): mirrors the bounded-wait idiom at initJIPCompatible.sqf:366-382 (B56
+//--- JIP-HANG FIX). The old D6a loop gave each of ~46 depot logics its own serial 30s wait, so one
+//--- failed Init_Town.sqf could make the census spend about 23 minutes checking independent objects.
+//--- Poll all depots in one shared 30s window instead. Fallback is SAFE: it writes NOTHING to a stuck
+//--- object - it only stops blocking and moves on; the town's own Init_Town.sqf may still complete and
+//--- self-register later. Happy path remains a zero-sleep fast path when every depot is already ready.
+_wTown = 0;
+while {(_wTown < 120) && (({isNil {_x getVariable "sideID"} && {isNil {_x getVariable "wfbe_inactive"}}} count _towns) > 0)} do { uiSleep 0.25; _wTown = _wTown + 1; };
 {
-	Private ["_wTown"];
-	_wTown = 0;
-	while {isNil {_x getVariable "sideID"} && isNil {_x getVariable "wfbe_inactive"} && (_wTown < 120)} do { uiSleep 0.25; _wTown = _wTown + 1; };
 	if (isNil {_x getVariable "sideID"} && isNil {_x getVariable "wfbe_inactive"}) then {
 		diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Towns.sqf: town depot logic never set sideID/wfbe_inactive after 30s - SKIPPING it (name=%1 type=%2 pos=%3) so the rest of the match can start.", (_x getVariable ["name", "?"]), typeOf _x, mapGridPosition _x];
 	};
