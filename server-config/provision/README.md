@@ -24,6 +24,11 @@ parameters at run time. Never commit them here (public repo).
 
 Steps 1-4 are idempotent — re-run freely. Step 3 can resume (scp per-directory).
 
+`Verify-4HC.ps1` reads the dedicated server RPT from
+`$env:USERPROFILE\AppData\Local\ArmA 2 OA\arma2oaserver.RPT`, matching the launcher
+default. Pass `-ServerRpt <path>` when the server runs under a different account or
+the RPT was redirected.
+
 ## Affinity map (Ryzen 7 7700: 8 physical cores, 16 logical with SMT)
 
 Applied by `Set-WaspAffinity.ps1` (called from `Start-Wasp-4HC.ps1`; safe to re-run any time):
