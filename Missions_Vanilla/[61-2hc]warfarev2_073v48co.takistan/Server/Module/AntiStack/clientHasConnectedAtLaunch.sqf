@@ -8,7 +8,10 @@
 
 	if (!(isNil "_uid")) then {
 		// Marty: This side tracking is teamswap protection and must remain active even when AntiStack skill balancing is disabled.
-		missionNamespace setVariable [format ["WFBE_PLAYER_%1_CONNECTED_AT_LAUNCH", _uid], side _player];
+		//--- caster seats are not a team (owner repro 2026-08-02): never record CIV at launch.
+		if ((side _player) != civilian) then {
+			missionNamespace setVariable [format ["WFBE_PLAYER_%1_CONNECTED_AT_LAUNCH", _uid], side _player];
+		};
 
 		WFBE_P_HAS_CONNECTED_AT_LAUNCH_ACK = true;
 
