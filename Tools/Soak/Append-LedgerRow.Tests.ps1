@@ -97,6 +97,52 @@ try {
     $threw = $false
     try { & $script -LedgerPath $ledger -Status POSTED | Out-Null } catch { $threw = $true }
     Assert $threw "POSTED without -StampPath throws"
+
+    Write-Host "`n[6] atomic append contract"
+    $writerText = [System.IO.File]::ReadAllText($script)
+    Assert ($writerText -match '(?m)^\s*\$ledgerLock\s*=\s*Enter-LedgerLock') "row-id and dedup read runs under the ledger lock"
+    Assert ($writerText -match '\[System\.IO\.File\]::WriteAllText\(\$tmp') "atomic writer stages the header/ledger in a temp file"
+    Assert ($writerText -match '\[System\.IO\.File\]::Replace\(\$tmp') "atomic writer replaces the ledger from the same-directory temp file"
+    Assert (-not ($writerText -match '\[System\.IO\.File\]::AppendAllText\(\$path')) "writer does not append directly to the live ledger"
+
+    Write-Host "`n[7] concurrent appends get unique row IDs"
+    $concurrentLedger = Join-Path $work 'concurrent.jsonl'
+    $jobs = @()
+    for ($j = 1; $j -le 4; $j++) {
+        $concurrentStamp = Join-Path $work ("concurrent-stamp-{0}.json" -f $j)
+        $stampObj = [ordered]@{ stampId = "concurrent-$j"; candidate = "candidate-$j"; terrain = 'chernarus' }
+        [System.IO.File]::WriteAllText($concurrentStamp, ($stampObj | ConvertTo-Json), (New-Object System.Text.UTF8Encoding($false)))
+        $jobs += Start-Job -ScriptBlock {
+            param($appenderPath, $ledgerPath, $stampPath)
+            try {
+                & $appenderPath -LedgerPath $ledgerPath -Status POSTED_LEDGER_ONLY -StampPath $stampPath | Out-Null
+                'OK'
+            } catch {
+                Write-Error $_
+                exit 1
+            }
+        } -ArgumentList $script, $concurrentLedger, $concurrentStamp
+    }
+    $null = $jobs | Wait-Job -Timeout 60
+    $states = @($jobs | Select-Object -ExpandProperty State)
+    $incompleteJobs = @($jobs | Where-Object { $_.State -ne 'Completed' })
+    Assert ($incompleteJobs.Count -eq 0) "all concurrent appends complete"
+    if ($incompleteJobs.Count -gt 0) { $incompleteJobs | Stop-Job -ErrorAction SilentlyContinue }
+    $jobResults = @($jobs | Receive-Job -ErrorAction SilentlyContinue)
+    Assert (@($jobResults | Where-Object { $_ -eq 'OK' }).Count -eq 4) "all concurrent appends report success"
+    $hasConcurrentLedger = Test-Path -LiteralPath $concurrentLedger
+    Assert $hasConcurrentLedger "concurrent appends create the ledger"
+    $concurrentRows = if ($hasConcurrentLedger) { @(Read-Rows $concurrentLedger) } else { @() }
+    $concurrentIds = @($concurrentRows | Select-Object -ExpandProperty rowId)
+    Assert ($concurrentRows.Count -eq 4) "concurrent appends retain all four rows"
+    Assert (@($concurrentIds | Sort-Object -Unique).Count -eq 4) "concurrent appends allocate unique row IDs"
+    if ($hasConcurrentLedger) {
+        $concurrentLines = [System.IO.File]::ReadAllLines($concurrentLedger)
+        Assert ($concurrentLines.Count -gt 0 -and $concurrentLines[0].StartsWith('#')) "concurrent ledger keeps the comment header"
+        Assert (@($concurrentRows | Where-Object { $_.schema -ne 'a2wasp-soak-ledger-row-v1' }).Count -eq 0) "concurrent rows preserve the ledger schema"
+    }
+    Assert (@(Get-ChildItem -LiteralPath $work -File | Where-Object { $_.Name -match '\.(tmp|bak)$' }).Count -eq 0) "atomic replacement leaves no temp or backup artifacts"
+    $jobs | Remove-Job -Force -ErrorAction SilentlyContinue
 }
 finally {
     Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
