@@ -1739,12 +1739,13 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
 	diag_log Format ["COINPLACE|v1|placement-method-fallback|value=%1", missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING"];
 };
 		missionNamespace setVariable ["WFBE_C_STRUCTURES_PLACEMENT_METHOD",{
-           		 Private ["_color","_itemcategory","_preview","_area","_eside","_restricted"];
+		Private ["_color","_itemcategory","_preview","_area","_enemySides","_restricted"];
 			_restricted = false;
 			_itemcategory = _this select 0;
 			_preview = _this select 1;
 			_color = _this select 2;
-            _eside = if (side commanderTeam == west) then {east} else {west};
+            //--- GUER can be playable: every other playable side is hostile, not only a west/east opposite.
+            _enemySides = [west, east, resistance] - [sideJoined];
             	_affected = ["Warfare_HQ_base_unfolded","Base_WarfareBBarracks","Base_WarfareBLightFactory","Base_WarfareBHeavyFactory",
             					"Base_WarfareBAircraftFactory","Base_WarfareBUAVterminal","Base_WarfareBVehicleServicePoint","BASE_WarfareBAntiAirRadar"];
 			_area = [_preview,((sidejoined) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity2;
@@ -1805,11 +1806,10 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
 				};
 
 			}else{
-				private ["_objects","_sideEfacs","_object"];
-				_sideEfacs = if (side commanderTeam == west) then {east} else {west};
+				private ["_objects","_object"];
 				_objects = nearestObjects [_preview,["WarfareBBaseStructure","Base_WarfareBContructionSite"],25];
 				if (count _objects > 0) then {
-					if (side (_objects select 0) == _sideEfacs && _preview distance (_objects select 0) < 10)then {_color = _colorRed};
+					if (side (_objects select 0) in _enemySides && _preview distance (_objects select 0) < 10)then {_color = _colorRed};
 				};
 			};
 
@@ -1838,7 +1838,8 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
 				Private ["_town","_townside","_eArea"];
 				_town = [_preview] Call GetClosestLocation;
 			    _townside =  (_town getVariable "sideID") Call GetSideFromID;
-			    _eArea = [_preview,((_eside) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity3;
+			    _eArea = objNull;
+			    {if (isNull _eArea) then {_eArea = [_preview,((_x) Call WFBE_CO_FNC_GetSideLogic) getVariable "wfbe_basearea"] Call WFBE_CO_FNC_GetClosestEntity3}} forEach _enemySides;
 	            //--- fable/restricted-diag (owner live 2026-07-29: "near impossible to find a spot where
 	            //--- you are allowed to build factories ... says i entered a restricted area nearly
 	            //--- everywhere"). Radius is now a constant, but set to 550 per owner 2026-07-29 (was 600).
@@ -1862,24 +1863,15 @@ if ((missionNamespace getVariable "WFBE_C_STRUCTURES_COLLIDING") != 1) then {
 	        };
 
             	if( !((typeOf _preview) iskindOf "Warfare_HQ_base_unfolded"))then{
-                    _current_side  = side commanderTeam;
-                    _opposite_side = east;
-
-                    if(_current_side == west)then{
-                        _opposite_side = east;
-	} else{
-                        _opposite_side = west;
-	};
-
             		_detected = if (isNull _area) then {[]} else {(_area nearEntities [["Man","Car","Motorcycle","Tank","Air","Ship"], missionNamespace getVariable "WFBE_C_BASE_AREA_RANGE"]) unitsBelowHeight 20}; //--- patch R1: guard null _area (GetClosestEntity2 -> objNull when no base area) that made nearEntities throw ~89x/session
             		if (missionNamespace getVariable ["WFBE_C_DEFENSE_CLIENT_GATE_ALIGN", 0] > 0) then {
-            			if (_itemcategory != 0 && ({side _x == _opposite_side} count _detected) >= (missionNamespace getVariable ["WFBE_C_DEFENSE_THREAT_MIN", 3])) then {
+				if (_itemcategory != 0 && ({side _x in _enemySides} count _detected) >= (missionNamespace getVariable ["WFBE_C_DEFENSE_THREAT_MIN", 3])) then {
             				_color = _colorRed;
             				if (!((typeOf _preview) isKindOf "StaticWeapon")) then { hintSilent parseText "<t color='#fb0808'> Enemies are detected near your base! </t>"; };
             			};
             		} else {
             			{
-            				if(_itemcategory !=0 && side _x == _opposite_side)exitwith{
+				if(_itemcategory !=0 && side _x in _enemySides)exitwith{
             					_color = _colorRed;
             					if (!((typeOf _preview) isKindOf "StaticWeapon")) then { hintSilent parseText "<t color='#fb0808'> Enemies are detected near your base! </t>"; };
             				};
