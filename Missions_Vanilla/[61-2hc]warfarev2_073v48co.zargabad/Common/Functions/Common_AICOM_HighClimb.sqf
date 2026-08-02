@@ -140,8 +140,17 @@ WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 
 	//--- Target assist speed: help only while below this. Mirror the player assist values.
 	_min = 30;
-	//--- Minimum speed before boosting: never push a stopped/parked tank.
-	_minBoostSpeed = 3;
+	//--- Minimum speed before boosting: never push a stopped/parked tank. CORRECTNESS FIX (2026-08-02): raised
+	//--- from 3 to a floor the from-zero pulse (ZEROPULSE, below) can actually clear. The pulse tops out at
+	//--- 2.5 m/s (its own hardcoded ceiling, see the _pulseSpd clamp below) and decays under gravity every
+	//--- 0.1s tick of this loop on a real incline, so at floor=3 a successfully-pulsed hull could NEVER reach
+	//--- this branch - an unconditional dead zone between the two assists, independent of any flag/tuning
+	//--- value, which is why standstill / steep-Takistan hulls kept re-triggering the pulse until
+	//--- PULSE_MAX_STRIKES exhausted and control handed off to the heavier stuck/strand ladder
+	//--- (Common_RunCommanderTeam.sqf UNSTUCK tiers - see that file, cmdcon43-j note: "this tier-1 wedge
+	//--- recovery fires FAR more on steep Takistan"). 1.5 gives the multiplicative forward-assist a tick or
+	//--- two of margin to catch a decaying pulse before it stalls back to zero.
+	_minBoostSpeed = 1.5;
 	//--- Progressive multiplier: gentle at low speed, stronger on steep climbs.
 	_baseBoostCoef = 1.05;
 	_maxBoostCoef  = 1.30;
@@ -254,7 +263,13 @@ WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 								if ((diag_tickTime - _pulseLast) >= _pulseCd && {_pulseStrikes < _pulseMax}) then {
 									_pulseHead = getDir _vehicle;
 									_pulseSpd = missionNamespace getVariable ["WFBE_C_AICOM_HIGHCLIMB_PULSE_SPEED", 2.5];
-									if (_pulseSpd > 2.5) then {_pulseSpd = 2.5};
+									//--- CORRECTNESS FIX (2026-08-02): this ceiling was hardcoded to 2.5, silently overriding
+									//--- the constant's OWN documented range - Init_CommonConstants.sqf's
+									//--- WFBE_C_AICOM_HIGHCLIMB_PULSE_SPEED comment reads "deliberation spec: ~2-3 m/s" - so no
+									//--- owner arming of that constant above 2.5 could ever take effect. Ceiling raised to 3 to
+									//--- match the documented spec exactly. Default stays 2.5, under both the old and new
+									//--- ceiling, so this is byte-identical behaviour at the current default.
+									if (_pulseSpd > 3) then {_pulseSpd = 3};
 									if (_pulseSpd < 0) then {_pulseSpd = 0};
 									_pulseVel = [(sin _pulseHead) * _pulseSpd, (cos _pulseHead) * _pulseSpd, (_vel select 2)];
 									_vehicle setVelocity _pulseVel;
