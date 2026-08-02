@@ -88,6 +88,14 @@ _vehicles = [];
 _vehicle_pilot = missionNamespace getVariable Format ["WFBE_%1PILOT",str _side];
 _ran = floor(random count _ranPos);
 _grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
+//--- r89 fail-clean (bughunt group-cap/budget): at the 144/side group cap the wrapper
+//--- returns grpNull. Continuing would run Common_CreateUnit's fresh-"misc"-group fallbacks
+//--- (one leaked group per pilot), set behaviour/waypoints on grpNull, and fly the
+//--- transports pilotless. Abort before the spawn loop instead; nothing exists yet to clean up.
+if (isNull _grp) exitWith {
+	["ERROR", Format["Support_Paratroopers.sqf : [%1] paratroop group create failed (side group cap); aborting drop.", _side]] Call WFBE_CO_FNC_LogContent;
+	if (!_isAI) then {[_playerTeam, 8500, "group create failed (side cap)"] Call _refundParaSetup};
+};
 _built = 0;
 
 for '_i' from 1 to _vehicle_count do {
