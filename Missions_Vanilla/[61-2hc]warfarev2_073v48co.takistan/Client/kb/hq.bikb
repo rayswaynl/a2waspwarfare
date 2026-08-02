@@ -23,6 +23,13 @@ class NAME \
 		class Arguments {class 1 {type = "simple";};class 2 {type = "simple";};}; \
 	};
 
+#define SENTENCE_TEXT(NAME,TEXT) \
+	class NAME \
+	{ \
+		text = TEXT; \
+		speech[] = {%1, ##NAME##, %2}; \
+		class Arguments {class 1 {type = "simple";};class 2 {type = "simple";};}; \
+	};
 
 class Sentences
 {
@@ -128,7 +135,7 @@ class Sentences
     SENTENCE(Cancelled)
     SENTENCE(CanDoWereOnIt)
     SENTENCE(Captured)
-    SENTENCE_KEY(HC_OrderReceived,"Order Received")
+    SENTENCE_TEXT(HC_OrderReceived,"Order Received")
     SENTENCE1(CiviliansUnderEnemyFireIn)
     SENTENCE_KEY(Constructed,STRwfstructureconstructed)
     SENTENCE(Deployed)
