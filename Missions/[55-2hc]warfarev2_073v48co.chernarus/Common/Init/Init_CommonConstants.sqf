@@ -2725,24 +2725,30 @@ WFBE_STATS_DIRTY_UIDS = [];
 //---   (middle-carrier detection, SCUD, air-shop, CAP) is unchanged.
 //---   When 0: exact HEAD behaviour (lateral offset if WFBE_C_NAVAL_TWIN_HULLS=1).
 //---
-//--- WFBE_C_NAVAL_INLINE_GAP  (default -265):
+//--- WFBE_C_NAVAL_INLINE_GAP  (default -245):
 //---   Hull B anchor offset along the ship's LONG axis, in metres (body-space Y).
 //---   Negative = aft of Hull A anchor.  Tunable at mission start without a code
-//---   edit: read as getVariable ["WFBE_C_NAVAL_INLINE_GAP", -265] at spawn time.
-//---   Safe iterate range for in-editor seam alignment: -258 to -275.
-//---   Derivation: 128m (Hull A stern-to-anchor) + 9m (Hull A stern overhang)
-//---               + 8m (Hull B bow overhang) + 120m (Hull B anchor-to-bow) = 265m.
+//---   edit: read as getVariable ["WFBE_C_NAVAL_INLINE_GAP", -245] at spawn time.
+//---   Safe iterate range for in-engine seam alignment: -238 to -265.  Smaller
+//---   magnitude = hulls closer together (more butt overlap); larger = further apart.
+//---   Paper derivation was 128m (Hull A stern-to-anchor) + 9m (Hull A stern overhang)
+//---               + 8m (Hull B bow overhang) + 120m (Hull B anchor-to-bow) = 265m,
+//---   but in-engine reports have walked it in twice (07-28, 08-02): the model overhangs
+//---   are smaller than the paper figures, so trust the live report over the derivation.
 //---
 //--- WFBE_C_NAVAL_SEAM_BRIDGE  (default 0):
 //---   When > 0, spawn 4x Land_nav_pier_m_1 bridge segments across the Hull A
-//---   stern / Hull B bow seam.  Placed at body-space Y offsets (-131,-134,-137,-140
-//---   from Hull A anchor) at the averaged deck-Z of both hulls.
+//---   stern / Hull B bow seam, at the averaged deck-Z of both hulls.  The four
+//---   body-space Y offsets are DERIVED from WFBE_C_NAVAL_INLINE_GAP (straddling the
+//---   seam mid-point at half the gap), so tuning the gap moves the piers with it;
+//---   they no longer need a matching hand-edit.  At the original -265 the derivation
+//---   reproduces the old literals exactly: -131,-134,-137,-140.
 //---   Escalation-ladder step 2: flush-butt geometry is tried first (inline=1,
 //---   seam=0); add piers only if the seam wheeled-vehicle test requires it.
 //---   Has no effect unless WFBE_C_NAVAL_INLINE_HULLS > 0.
 //======================================================================================
 	if (isNil "WFBE_C_NAVAL_INLINE_HULLS") then {WFBE_C_NAVAL_INLINE_HULLS  = 1};   //--- 0 = lateral HEAD behaviour; >0 = inline bow-to-stern axis
-	if (isNil "WFBE_C_NAVAL_INLINE_GAP")   then {WFBE_C_NAVAL_INLINE_GAP    = -252}; //--- Hull B aft offset metres (body Y). [Ray-dir 2026-07-28 "decks still not touching": -265->-252. NOTE the two earlier gap tunes (TWIN_GAP 42->32->26) edited the LATERAL constant, which is SKIPPED while WFBE_C_NAVAL_INLINE_HULLS=1 - THIS is the live knob. Wasp-class LOA ~253m, so -252 should butt stern to bow; slight part interpenetration is fine (statics). If a sliver remains next report: -245. Rollback -265.]
+	if (isNil "WFBE_C_NAVAL_INLINE_GAP")   then {WFBE_C_NAVAL_INLINE_GAP    = -245}; //--- Hull B aft offset metres (body Y). [Ray-dir 2026-08-02 "still a small gap, move a bit more": -252->-245, the fallback pre-registered by the 07-28 tune. Ladder so far: -265 (paper derivation) -> -252 (Ray-dir 07-28 "decks still not touching") -> -245. NOTE the two earlier gap tunes (TWIN_GAP 42->32->26) edited the LATERAL constant, which is SKIPPED while WFBE_C_NAVAL_INLINE_HULLS=1 - THIS is the live knob. Wasp-class LOA ~253m, so -245 deliberately overlaps the butt by ~8m; the LHD parts are statics, so interpenetration is cosmetic and costs no collision work. If a sliver STILL remains next report: -238. Rollback -252.]
 	if (isNil "WFBE_C_NAVAL_SEAM_BRIDGE")  then {WFBE_C_NAVAL_SEAM_BRIDGE   = 0};   //--- 0 = no bridge piers; >0 = 4x Land_nav_pier_m_1 at seam
 //--- fable/naval-camps-on-deck (Ray 2026-07-07):
 //--- WFBE_C_NAVAL_CAMPS_DECK: when 1 (default), re-seat Khe Sanh camp logics/models/flags +
