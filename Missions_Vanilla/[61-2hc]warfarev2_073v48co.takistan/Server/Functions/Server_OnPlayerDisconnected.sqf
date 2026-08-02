@@ -162,7 +162,7 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 2) then {
 };
 if (_isHCDisconnect) exitWith {};
 
-if (_uid == '') exitWith {};
+if (_uid == '' || _uid == '0') exitWith {};
 
 if ((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0) then {
 	["LEAVE", _name, "player left"] Call WFBE_SE_FNC_ChatRelayEvent;
