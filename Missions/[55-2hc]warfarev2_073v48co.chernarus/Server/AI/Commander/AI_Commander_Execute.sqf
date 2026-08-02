@@ -121,7 +121,7 @@ if (isNil "_teams") exitWith {};
 							//--- build83 fold (console road-route, agent 06190dac): a SERVER-LOCAL ground-vehicle team on a long leg (>700m) gets a road-node-snapped MOVE chain (same builder the AI-strategy town path uses) instead of a single cross-country AIMoveTo that A2 pathfinding stutters through; pure-infantry/short legs keep the direct AIMoveTo (driver does not road-lock foot squads).
 							_slOrigin = getPos (leader _team);
 							_slHasVeh = false;
-							{ if (vehicle _x != _x && {alive (vehicle _x)} && {!((vehicle _x) isKindOf "Air")} && {canMove (vehicle _x)}) exitWith {_slHasVeh = true} } forEach (units _team);
+							{ if (vehicle _x != _x && {alive (vehicle _x)} && {!((vehicle _x) isKindOf "Air")} && {!((vehicle _x) isKindOf "Ship")} && {canMove (vehicle _x)}) exitWith {_slHasVeh = true} } forEach (units _team);
 							if (_slHasVeh && {(_slOrigin distance _goto) > 700}) then {
 								_laneJit = _team getVariable "wfbe_aicom_lanejit";
 								if (isNil "_laneJit") then {_laneJit = (random 2) - 1; _team setVariable ["wfbe_aicom_lanejit", _laneJit, true]};
