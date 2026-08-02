@@ -1264,8 +1264,8 @@ if(typeOf _vehicle in ['2S6M_Tunguska','M6_EP1']) then {
 	_vehicle addeventhandler ['Fired',{_this spawn HandleAAMissiles;}];
 };
 
-//--- B93 SEAD: tier-5 jets get anti-radar guidance EH when WFBE_C_SEAD > 0
-if ((missionNamespace getVariable ["WFBE_C_SEAD", 0]) > 0 && {typeOf _vehicle in ["F35B","Su34"]}) then {
+//--- B93 SEAD: tier-5 jets get anti-radar guidance EH when WFBE_C_SEAD > 0. When WFBE_C_SEAD_EASA_ROW is armed the EASA row is the opt-in for PLAYER buys; this auto-attach is skipped here so picking the row is the only way to arm guidance (AI buys via Server_BuyUnit.sqf are untouched and keep the unconditional attach).
+if ((missionNamespace getVariable ["WFBE_C_SEAD", 0]) > 0 && {typeOf _vehicle in ["F35B","Su34"]} && {!((missionNamespace getVariable ["WFBE_C_SEAD_EASA_ROW", 0]) > 0)}) then {
 	_vehicle addeventhandler ["Fired",{_this spawn WFBE_CO_FNC_HandleSEADMissile}];
 };
 
