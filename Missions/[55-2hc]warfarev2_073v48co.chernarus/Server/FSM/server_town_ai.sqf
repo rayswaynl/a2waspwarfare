@@ -922,7 +922,7 @@ while {!WFBE_GameOver} do {
 								_sortieProximityRange = missionNamespace getVariable ["WFBE_C_TOWNS_SORTIES_PROXIMITY_RANGE", 1500];
 								_sortieProximityOk = false;
 								{
-									if (isPlayer _x && {alive _x} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _town) < _sortieProximityRange}) exitWith { _sortieProximityOk = true; };
+									if (isPlayer _x && {alive _x} && {!(captive _x)} && {(side _x) != civilian} && {!((name _x) in WFBE_C_HC_NAMES)} && {(_x distance _town) < _sortieProximityRange}) exitWith { _sortieProximityOk = true; };
 								} forEach playableUnits;
 							};
 
