@@ -1445,6 +1445,7 @@ while {!WFBE_GameOver && _alive} do {
 												_uFlushSeq = _uFlushOrder select 0;
 												_uFlushMode = _uFlushOrder select 1;
 												_uFlushDest = _uFlushOrder select 2;
+												_uTeam setVariable ["wfbe_aicom_route_seq", _uFlushSeq + 1, true]; //--- r85: keep the current chain valid across this flush re-issue.
 												_uTeam setVariable ["wfbe_aicom_order", [_uFlushSeq + 1, _uFlushMode, _uFlushDest], true];
 												diag_log ("AICOMSTAT|v2|EVENT|" + str _uSide + "|" + str (round (time / 60)) + "|TELEPORT_ORDER_FLUSH|team=" + (str _uTeam) + "|seq=" + str (_uFlushSeq + 1) + "|mode=" + str _uFlushMode + "|kind=vehicle");
 											};
@@ -1536,6 +1537,7 @@ while {!WFBE_GameOver && _alive} do {
 												_uFlushSeq = _uFlushOrder select 0;
 												_uFlushMode = _uFlushOrder select 1;
 												_uFlushDest = _uFlushOrder select 2;
+												_uTeam setVariable ["wfbe_aicom_route_seq", _uFlushSeq + 1, true]; //--- r85: keep the current chain valid across this flush re-issue.
 												_uTeam setVariable ["wfbe_aicom_order", [_uFlushSeq + 1, _uFlushMode, _uFlushDest], true];
 												diag_log ("AICOMSTAT|v2|EVENT|" + str _uSide + "|" + str (round (time / 60)) + "|TELEPORT_ORDER_FLUSH|team=" + (str _uTeam) + "|seq=" + str (_uFlushSeq + 1) + "|mode=" + str _uFlushMode + "|kind=foot");
 											};
@@ -1879,6 +1881,13 @@ while {!WFBE_GameOver && _alive} do {
 					//--- A2: groups do not support the [name, default] getVariable form; plain get + isNil.
 					_rmRoute = _team getVariable "wfbe_aicom_route";
 					if (isNil "_rmRoute") then {_rmRoute = []};
+					//--- r85 STALE-CHAIN GUARD (wasp-bughunt-aicom-order-watchdog-r85): relief/rally/foot-stage/
+					//--- release order publishers bump the order seq WITHOUT refreshing wfbe_aicom_route, so the
+					//--- transit lay below would otherwise follow the PREVIOUS order's road chain (march toward the
+					//--- old target, then jump to the new dest). The chain is only valid for the order seq it was
+					//--- published with (wfbe_aicom_route_seq, written by every route publisher + the flush sites).
+					private "_rmRouteSeq"; _rmRouteSeq = _team getVariable "wfbe_aicom_route_seq";
+					if (isNil "_rmRouteSeq" || {_rmRouteSeq != _seq}) then {_rmRoute = []};
 
 					//--- CONVOY COHESION (Grok #5, gate WFBE_C_AICOM_CONVOY_COHESION default 0, update wave 2026-07-25):
 					//--- pure waypoint-parameter tuning, no new units/scans/PV. Engages only when the flag is on, this
@@ -1948,6 +1957,9 @@ while {!WFBE_GameOver && _alive} do {
 					private "_marchCM"; _marchCM = if ((missionNamespace getVariable ["WFBE_C_AICOM_MARCH_YELLOW", 1]) > 0) then {"YELLOW"} else {"RED"};
 					_rmRoute = _team getVariable "wfbe_aicom_route";
 					if (isNil "_rmRoute") then {_rmRoute = []};
+					//--- r85 STALE-CHAIN GUARD: same seq binding as the vehicle branch above.
+					private "_rmRouteSeq"; _rmRouteSeq = _team getVariable "wfbe_aicom_route_seq";
+					if (isNil "_rmRouteSeq" || {_rmRouteSeq != _seq}) then {_rmRoute = []};
 					if (((leader _team) distance _dest > (missionNamespace getVariable ["WFBE_C_AICOM_FOOT_ROUTE_DIST", 700])) && {count _rmRoute > 0}) then {
 						//--- Long foot leg WITH a road chain: build node-by-node MOVE waypoints (fast column), wide
 						//--- intermediate completion so the squad flows, then a tight final MOVE on the destination.

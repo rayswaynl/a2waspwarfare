@@ -108,6 +108,7 @@ if (isNil "_teams") exitWith {};
 							//--- A2: groups do not support the [name,default] getVariable form - plain get + isNil for the seq read.
 							_hcSeq = _team getVariable "wfbe_aicom_order";
 							_hcSeq = if (isNil "_hcSeq" || {count _hcSeq < 1}) then {0} else {(_hcSeq select 0) + 1};
+							_team setVariable ["wfbe_aicom_route_seq", _hcSeq, true]; //--- r85: bind the route above to THIS order's seq (driver stale-chain guard).
 							_team setVariable ["wfbe_aicom_order", [_hcSeq, _hcMode, _goto], true];
 							_team setVariable ["wfbe_exec_lastmode", _modeL];
 							_team setVariable ["wfbe_exec_lastgoto", _goto];
