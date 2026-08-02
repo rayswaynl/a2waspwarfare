@@ -10,8 +10,9 @@ WF_SkinSelector_Hotkey = {
 			};
 		};
 	};
+
+	false
 };
-player addEventHandler ["KeyDown", WF_SkinSelector_Hotkey];
 
 /* Gear keybinding */
 WF_Gear_Hotkeys = {
@@ -37,5 +38,20 @@ WF_Gear_Hotkeys = {
 	if (_key in (actionKeys "User20")) then {
 		WF_Logic setVariable ['filler','misc'];
 	};
+
+	false
 };
+
+//--- Display 46 persists across player-unit replacement, so it owns these client keybinds.
+//--- KeyDown is a display event in A2/OA; attaching it to the player silently leaves both
+//--- the Skin Selector and gear filler binds unarmed. A repeated client-init replaces only
+//--- this pair, preventing duplicate callbacks while preserving unrelated display handlers.
+if (!isNil "WF_SkinSelector_Hotkey_EH") then {
+	(findDisplay 46) displayRemoveEventHandler ["KeyDown", WF_SkinSelector_Hotkey_EH];
+};
+if (!isNil "WF_Gear_Hotkeys_EH") then {
+	(findDisplay 46) displayRemoveEventHandler ["KeyDown", WF_Gear_Hotkeys_EH];
+};
+WF_SkinSelector_Hotkey_EH = (findDisplay 46) displayAddEventHandler ["KeyDown", "_this call WF_SkinSelector_Hotkey"];
+WF_Gear_Hotkeys_EH = (findDisplay 46) displayAddEventHandler ["KeyDown", "_this call WF_Gear_Hotkeys"];
 
