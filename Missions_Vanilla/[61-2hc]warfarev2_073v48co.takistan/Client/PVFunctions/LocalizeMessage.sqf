@@ -57,6 +57,7 @@ switch (_localize) do {
 	case "BankAlreadyBuilt": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "BankAlreadyBuilt"};
 	case "BankTooCloseToBase": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "BankTooCloseToBase"};
 	case "StructureCapReached": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = Localize "StructureCapReached"}; //--- build/defense audit 2026-07-28
+	case "StructurePlacementInvalid": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = "Structure build rejected: choose dry ground with a clear factory footprint."};
 	//--- FANOUT-R29: RequestStructure.sqf reject path sends this key with [refundPrice, liveIndex] for side-mismatch / missing requester. Without a case the tail still group/command-chatted empty text and never refunded or rolled back wfbe_structures_live.
 	case "StructureRequesterMismatch": {if (count _this > 1) then {(_this select 1) Call WFBE_STRUCT_REFUND}; if (count _this > 2) then {(_this select 2) Call WFBE_STRUCT_LIVE_ROLLBACK}; _txt = "Structure build rejected: requester not authorized for that side."};
 	case "BankDestroyed": {
