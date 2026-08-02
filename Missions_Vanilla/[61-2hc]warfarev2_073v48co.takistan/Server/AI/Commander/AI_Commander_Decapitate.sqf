@@ -200,6 +200,12 @@ if (_committed) then {
 	};
 };
 
+//--- Telemetry truthfulness: a committed closer no longer waits on an ARM gate.
+//--- The gate ladder above is evaluated before the state transition, so a still-
+//--- committed side could otherwise be reported as enemy-towns/not-dominant/
+//--- no-proximity even while its press stamps are being maintained below.
+if (_state == "COMMITTED") then {_gateReason = "committed"};
+
 _logik setVariable ["wfbe_aicom2_decap_streak", _streak];
 _logik setVariable ["wfbe_aicom2_decap_committed", _committed];
 _logik setVariable ["wfbe_aicom2_decap_t0", _t0];
