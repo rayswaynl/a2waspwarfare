@@ -83,6 +83,12 @@ while {!WFBE_GameOver} do {
 			_drop = true; _reason = "destroyed";
 			missionNamespace setVariable [Format ["wfbe_aicomsupply_cd_%1", str _eSide], _now];
 		};
+		//--- A live transport without a live driver cannot execute its route. This includes a pilot that
+		//--- ejected from a damaged helicopter: retain neither its orphaned hull nor its group slot.
+		if (!_drop && {isNull (driver _eVeh) || {!(alive (driver _eVeh))}}) then {
+			_drop = true; _reason = "driver-lost";
+			missionNamespace setVariable [Format ["wfbe_aicomsupply_cd_%1", str _eSide], _now];
+		};
 
 		//--- Human took command (AI_ONLY): stand the squad down, player-safe.
 		if (!_drop && {_aiOnly > 0}) then {
@@ -91,11 +97,13 @@ while {!WFBE_GameOver} do {
 		};
 
 		if (_drop) then {
-			if (_reason != "destroyed" && {!isNull _eVeh} && {({isPlayer _x} count (crew _eVeh)) == 0}) then {
-				{["aicomsupply-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _eVeh); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
-				["aicomsupply-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh;
-				if (!isNull _eGrp) then {deleteGroup _eGrp};
+			if (_reason != "destroyed" && {!isNull _eGrp}) then {
+				{if (!isNull _x && {!isPlayer _x}) then {["aicomsupply-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0}} forEach (units _eGrp); //--- crash 014EFCF4 sweep: includes a pilot no longer returned by crew _eVeh after ejection.
 			};
+			if (_reason != "destroyed" && {!isNull _eVeh} && {({isPlayer _x} count (crew _eVeh)) == 0}) then {
+				["aicomsupply-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh;
+			};
+			if (_reason != "destroyed" && {!isNull _eGrp} && {({isPlayer _x} count (units _eGrp)) == 0}) then {deleteGroup _eGrp};
 			diag_log Format ["AICOMSUPPLY|DESPAWN|side=%1|reason=%2", str _eSide, _reason];
 		} else {
 			//--- Re-check hull after prune gate (TOCTOU): concurrent destroy between isNull and getPos/velocity is native-crash class (014EFCF4).

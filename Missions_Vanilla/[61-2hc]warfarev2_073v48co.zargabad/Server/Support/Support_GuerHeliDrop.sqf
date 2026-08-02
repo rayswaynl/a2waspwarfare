@@ -276,8 +276,12 @@ if (!_greenlight) then {
 };
 
 //--- In any case, cleanup the transporter (r51: null-safe - vehicle/group may already be gone).
-if (!isNull _vehicle) then {
-	{if (!isNull _x) then {deleteVehicle _x; sleep 0}} forEach (crew _vehicle); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
+//--- An ejected pilot is no longer in crew _vehicle; delete the group members first so that survivor
+//--- cannot keep this one-shot helibomb group alive after the hull has gone.
+if (!isNull _grp) then {
+	{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach (units _grp); //--- crash 014EFCF4 sweep: yield between seated/deboarding crew deletes.
+};
+if (!isNull _vehicle && {({isPlayer _x} count (crew _vehicle)) == 0}) then {
 	deleteVehicle _vehicle;
 };
-if (!isNull _grp) then {deleteGroup _grp};
+if (!isNull _grp && {({isPlayer _x} count (units _grp)) == 0}) then {deleteGroup _grp};
