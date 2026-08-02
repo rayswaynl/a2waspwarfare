@@ -38,7 +38,9 @@ def test_readiness_uses_registered_towns_not_inactive_markers() -> None:
     assert "_townReadyCount = _townReadyCount + 1;" not in gate
 
     worker = (CH / TOWN_WORKER).read_text(encoding="utf-8")
-    inactive_start = worker.index('if ((str _town) in TownTemplate) exitWith {')
+    # r93 (PR #1904, folded 2026-08-02): the removal check compares the town NAME argument, not
+    # str-of-logic — str of a depot LOGIC is "<id>: <class>" and could never match a bare name.
+    inactive_start = worker.index('if (_townName in TownTemplate) exitWith {')
     inactive_end = worker.index('if (isNull _town || (_town getVariable "wfbe_inactive")) exitWith {};')
     inactive_path = worker[inactive_start:inactive_end]
     assert 'setVariable ["wfbe_inactive", true]' in inactive_path
