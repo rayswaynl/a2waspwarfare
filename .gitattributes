@@ -1,2 +1,12 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# LoadoutManager-generated SQF trio (per-mission copies under Missions/, Missions_Vanilla/
+# and Tools/PerfTest/): the generator (Tools/LoadoutManager FileManager.WriteAllTextCrlf)
+# always writes CRLF. Pin the working-tree EOL to CRLF so a fresh checkout matches the
+# generator output byte-for-byte on ANY core.autocrlf/core.eol setting. Without this,
+# clones or worktrees with autocrlf=false get LF checkouts that fight the CRLF generator
+# output, producing pure-CRLF phantom dirt across worktrees (see PR #1791 triage).
+**/Client/Module/EASA/EASA_Init.sqf text eol=crlf
+**/Common/Functions/Common_BalanceInit.sqf text eol=crlf
+**/Common/Common_ReturnAircraftNameFromItsType.sqf text eol=crlf
