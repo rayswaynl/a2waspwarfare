@@ -132,8 +132,12 @@ if (!isNil "_foPos" && {typeName _foPos == "STRING"} && {!isNil "_foT0"} && {(ti
 //--- FALLBACK engage lever (lands between the posture engage bias and the :54 _engageMin consumption): push the
 //--- engage threshold UP so the side stops clashing and pulls back to owned towns.
 if (_foFresh && {_foPos == "FALLBACK"}) then {_engageMin = _engageMin + (missionNamespace getVariable ["WFBE_C_AICOM_NUDGE_FALLBACK_DELTA", 20])};
+//--- Strategy owns the losing-PRESS decision. The V2 allocator overwrites Strategy's target every tick, so it
+//--- must consume the same state here or a behind-but-viable side remains trapped in the neutral-only pool.
+private "_losingPress";
+_losingPress = _logik getVariable ["wfbe_aicom_losing_press", false];
 _expandFirst = false;
-if (_engageMin > 0 && {_myTowns < _engageMin} && {!_engContested} && {!(_pfDominant && {(missionNamespace getVariable ["WFBE_C_AICOM2_PRESS_ENGAGE_BYPASS", 1]) > 0})}) then {   //--- FIX C (fable, GR-2026-07-08a): OR-compose with BUG-1 - bypass the neutral-only gate when EITHER the enemy is contested-ahead OR we are dominant.
+if (_engageMin > 0 && {_myTowns < _engageMin} && {!_engContested} && {!_losingPress} && {!(_pfDominant && {(missionNamespace getVariable ["WFBE_C_AICOM2_PRESS_ENGAGE_BYPASS", 1]) > 0})}) then {   //--- FIX C (fable, GR-2026-07-08a): OR-compose with BUG-1 - bypass the neutral-only gate when contested, losing-PRESS, or dominant.
 		private ["_neutPool","_sid","_guerID","_softPool"];
 		_neutPool = [];
 		_softPool = [];
