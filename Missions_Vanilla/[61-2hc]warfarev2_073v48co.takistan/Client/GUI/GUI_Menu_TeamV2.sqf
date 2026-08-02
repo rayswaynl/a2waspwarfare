@@ -1,6 +1,6 @@
 disableSerialization;
 
-private ["_display","_units","_upgLevel","_presets","_i","_slot","_preset","_badge","_desc","_finalNumber","_isInVehicle","_descVehi","_targetUnit","_vehicle","_liveCrew","_destroy","_hitPoints","_hitCfg","_hitName","_curUnitSel","_need_save","_tier","_topTier","_weapons","_mags","_bp","_bpContent","_combo","_x","_crewList","_repairTimer","_udTemplates","_udActive","_udSlotIdx","_udTemplate","_udWList","_udMList","_udBpCls","_udBpCnt","_udWpCombined","_udCleanWeps","_udCleanMags","_udCleanBp","_udCleanBpCnt","_udCost","_udItem","_udNameIDCs","_udActiveIDCs","_udPresetIDCs","_udUDIDCs","_udSN","_udSW","_udSWItem"];
+private ["_display","_units","_upgLevel","_presets","_presetIndex","_udTemplateIndex","_i","_slot","_preset","_badge","_desc","_finalNumber","_isInVehicle","_descVehi","_targetUnit","_vehicle","_liveCrew","_destroy","_hitPoints","_hitCfg","_hitName","_curUnitSel","_need_save","_tier","_topTier","_weapons","_mags","_bp","_bpContent","_combo","_x","_crewList","_repairTimer","_udTemplates","_udActive","_udSlotIdx","_udTemplate","_udWList","_udMList","_udBpCls","_udBpCnt","_udWpCombined","_udCleanWeps","_udCleanMags","_udCleanBp","_udCleanBpCnt","_udCost","_udItem","_udNameIDCs","_udActiveIDCs","_udPresetIDCs","_udUDIDCs","_udSN","_udSW","_udSWItem"];
 
 _display = _this select 0;
 MenuAction = -1;
@@ -67,7 +67,8 @@ private ["_badgeIDCs"];
 _badgeIDCs = [13051, 13055, 13059, 13063];
 
 {
-	_slot = _presets select _forEachIndex;
+	_presetIndex = _forEachIndex;
+	_slot = _presets select _presetIndex;
 	_badge = "---";
 	if (count _slot > 0) then {
 		_topTier = 0;
@@ -91,7 +92,7 @@ _badgeIDCs = [13051, 13055, 13059, 13063];
 		};
 		_badge = "[T" + str _topTier + "]";
 	};
-	ctrlSetText [_badgeIDCs select _forEachIndex, _badge];
+	ctrlSetText [_badgeIDCs select _presetIndex, _badge];
 } forEach _presets;
 
 //--- Helper macro: apply/rebuy button grey-out based on tier gate + slot content.
@@ -101,7 +102,8 @@ _applyIDCs = [13053, 13057, 13061, 13065];
 _rebuyIDCs = [13054, 13058, 13062, 13066];
 
 {
-	_slot = _presets select _forEachIndex;
+	_presetIndex = _forEachIndex;
+	_slot = _presets select _presetIndex;
 	private ["_isEmpty","_topTier2","_canApply"];
 	_isEmpty = (count _slot == 0);
 	_topTier2 = 0;
@@ -125,8 +127,8 @@ _rebuyIDCs = [13054, 13058, 13062, 13066];
 		};
 	};
 	_canApply = (!_isEmpty) && {_topTier2 <= _upgLevel};
-	ctrlEnable [_applyIDCs select _forEachIndex, _canApply];
-	ctrlEnable [_rebuyIDCs select _forEachIndex, _canApply];
+	ctrlEnable [_applyIDCs select _presetIndex, _canApply];
+	ctrlEnable [_rebuyIDCs select _presetIndex, _canApply];
 } forEach _presets;
 
 //--- ============================================================
@@ -150,8 +152,9 @@ if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
 	_udNameIDCs   = [13102,13106,13110,13114];
 	_udActiveIDCs = [13104,13108,13112,13116];
 	{
-		_udTemplate = _udTemplates select _forEachIndex;
-		_udSN = "--- Slot " + str (_forEachIndex + 1) + " empty ---";
+		_udTemplateIndex = _forEachIndex;
+		_udTemplate = _udTemplates select _udTemplateIndex;
+		_udSN = "--- Slot " + str (_udTemplateIndex + 1) + " empty ---";
 		if (count _udTemplate > 0) then {
 			_udSW = _udTemplate select 0;
 			//--- UD tier badge (reuses the Presets tier-badge lookup, see :78-91): forEach over
@@ -176,17 +179,17 @@ if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
 			if (count _udSW > 0) then {
 				_udSWItem = missionNamespace getVariable (_udSW select 0);
 				if !(isNil "_udSWItem") then {
-					_udSN = "Slot " + str (_forEachIndex + 1) + ": " + (_udSWItem select 1) + " [T" + str _topTier + "]";
+					_udSN = "Slot " + str (_udTemplateIndex + 1) + ": " + (_udSWItem select 1) + " [T" + str _topTier + "]";
 				} else {
-					_udSN = "Slot " + str (_forEachIndex + 1) + ": (custom) [T" + str _topTier + "]";
+					_udSN = "Slot " + str (_udTemplateIndex + 1) + ": (custom) [T" + str _topTier + "]";
 				};
 			};
 		};
-		ctrlSetText [_udNameIDCs select _forEachIndex, _udSN];
-		if (_forEachIndex == _udActive) then {
-			ctrlSetText [_udActiveIDCs select _forEachIndex, "* Active " + str (_forEachIndex + 1)];
+		ctrlSetText [_udNameIDCs select _udTemplateIndex, _udSN];
+		if (_udTemplateIndex == _udActive) then {
+			ctrlSetText [_udActiveIDCs select _udTemplateIndex, "* Active " + str (_udTemplateIndex + 1)];
 		} else {
-			ctrlSetText [_udActiveIDCs select _forEachIndex, "Activate " + str (_forEachIndex + 1)];
+			ctrlSetText [_udActiveIDCs select _udTemplateIndex, "Activate " + str (_udTemplateIndex + 1)];
 		};
 	} forEach _udTemplates;
 	if (_udActive >= 0 && {_udActive <= 3}) then {
@@ -249,7 +252,8 @@ while {alive player && dialog} do {
 			//--- Refresh badges and button state.
 			{
 				private ["_s2","_b2","_t2","_sw2","_sb2","_id2","_it2","_ca2"];
-				_s2 = _presets select _forEachIndex;
+				_presetIndex = _forEachIndex;
+				_s2 = _presets select _presetIndex;
 				_b2 = "---";
 				if (count _s2 > 0) then {
 					_t2 = 0;
@@ -259,13 +263,13 @@ while {alive player && dialog} do {
 					if (_sb2 != "") then {_id2 = missionNamespace getVariable _sb2; if !(isNil "_id2") then {_it2 = _id2 select 3; if (_it2 > _t2) then {_t2 = _it2}}};
 					_b2 = "[T" + str _t2 + "]";
 					_ca2 = (_t2 <= _upgLevel);
-					ctrlEnable [_applyIDCs select _forEachIndex, _ca2];
-					ctrlEnable [_rebuyIDCs select _forEachIndex, _ca2];
+					ctrlEnable [_applyIDCs select _presetIndex, _ca2];
+					ctrlEnable [_rebuyIDCs select _presetIndex, _ca2];
 				} else {
-					ctrlEnable [_applyIDCs select _forEachIndex, false];
-					ctrlEnable [_rebuyIDCs select _forEachIndex, false];
+					ctrlEnable [_applyIDCs select _presetIndex, false];
+					ctrlEnable [_rebuyIDCs select _presetIndex, false];
 				};
-				ctrlSetText [_badgeIDCs select _forEachIndex, _b2];
+				ctrlSetText [_badgeIDCs select _presetIndex, _b2];
 			} forEach _presets;
 			hint Format ["Preset %1 saved.", _slotIdx + 1];
 		};
