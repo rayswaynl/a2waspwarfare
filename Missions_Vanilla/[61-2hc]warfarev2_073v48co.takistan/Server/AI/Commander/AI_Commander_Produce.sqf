@@ -386,7 +386,12 @@ if (_airMaxTotalP > 0) then {
 							if (!isNull _cand && {_cand != _team}) then {
 								_candLdr = leader _cand;
 								//--- (b) server-local + non-HC: leader local to server AND not an HC team.
-								if (local _candLdr && {!(isPlayer _candLdr)} && {(behaviour _candLdr) != "COMBAT"} && {!([_cand, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
+								//--- r87 merge-target re-check: never absorb the survivor into a team already flagged
+								//--- wfbe_aicom_disband/wfbe_aicom_recycle (recycle->disband converter above, Teams PC-cleanup,
+								//--- DisbandLowTier, Strategy) - disband is a DESTRUCTIVE grenade-drop of every member, so the
+								//--- "body preserved" merge would be grenaded on the target team next driver tick. Fall through
+								//--- to the cull instead (same net group/unit count).
+								if (local _candLdr && {!(isPlayer _candLdr)} && {(behaviour _candLdr) != "COMBAT"} && {!([_cand, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_cand, "wfbe_aicom_disband", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_cand, "wfbe_aicom_recycle", false] Call WFBE_CO_FNC_GroupGetBool)}) then {
 									_candAlive = {alive _x} count (units _cand);
 									//--- (c) alive>=2 healthy, (d) below the 12 ceiling so the merge can't overflow
 									//--- 8-12 policy: surviving body count must still fit (_candAlive + _aliveNow <= MAX).

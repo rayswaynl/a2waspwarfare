@@ -870,7 +870,9 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 						_townRange   = 600 * (missionNamespace getVariable ["WFBE_C_TOWNS_DETECTION_RANGE_COEF", 1]);
 						_mopupEnd   = time + (missionNamespace getVariable ["WFBE_C_TOWNS_MOPUP_TTL", 600]);
 
-						while {_scanActive && !isNull _squadGrp && {count (units _squadGrp) > 0} && {time < _mopupEnd}} do {
+						//--- r87: alive-only guard - `units` includes dead-but-unreaped bodies, so a fully wiped squad
+						//--- kept 30s-scanning until the TTL. Exit as soon as no live member remains.
+						while {_scanActive && !isNull _squadGrp && {({alive _x} count (units _squadGrp)) > 0} && {time < _mopupEnd}} do {
 							sleep 30;
 
 							//--- Hard-despawn if town deactivated or flipped.
@@ -902,7 +904,10 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 
 						//--- Despawn the mop-up squad.
 						if !(isNull _squadGrp) then {
-							{if (!isNull _x && alive _x) then {deleteVehicle _x}} forEach (units _squadGrp);
+							//--- r87 despawn-integrity: purge corpses too (no alive filter) - A2 deleteGroup silently NO-OPS
+							//--- on a non-empty group, so dead-but-unreaped members held the group slot until the corpse GC.
+							//--- Match the town_ai deactivation teardown shape; !isPlayer guard kept (B67 wiki-wins).
+							{if (!isNull _x && !(isPlayer _x)) then {deleteVehicle _x}} forEach (units _squadGrp);
 							{if (!isNull _x && alive _x) then {deleteVehicle _x}} forEach _squadVehicles;
 							if !(isNull _squadGrp) then {deleteGroup _squadGrp};
 						};
