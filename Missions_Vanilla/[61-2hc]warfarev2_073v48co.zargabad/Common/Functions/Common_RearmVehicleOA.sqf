@@ -1,4 +1,4 @@
-Private['_amount','_get','_isArtillery','_side','_type','_vehicle','_sam'];
+Private['_amount','_get','_isArtillery','_side','_type','_vehicle','_sam','_seadWasActive'];
 
 _vehicle = _this select 0;
 _side = _this select 1;
@@ -55,6 +55,12 @@ if (_vehicle isKindOf "Air") then {
 if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_EASA") > 0) then {
 	if (_type in (missionNamespace getVariable 'WFBE_EASA_Vehicles')) then {
 		_get = _vehicle getVariable 'WFBE_EASA_Setup';
-		if !(isNil '_get') then {[_vehicle, _get] Call EASA_Equip};
+		if !(isNil '_get') then {
+			//--- fix(sead-easa-row rearm-fix): same rearm no-op-reapply issue as Common_RearmVehicle.sqf -
+			//--- see that file for the full comment. Re-attach if the SEAD row was active before the call.
+			_seadWasActive = _vehicle getVariable ["WFBE_SEAD_EasaRowActive", false];
+			[_vehicle, _get] Call EASA_Equip;
+			if (_seadWasActive) then {[_vehicle] Call WFBE_EASA_FNC_AttachSEADRow};
+		};
 	};
 };
