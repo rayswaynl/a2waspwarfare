@@ -696,7 +696,7 @@ _relieved = 0;
 	if (_relieved < _reliefMax) then {
 		//--- Already has a reliever?
 		_free = grpNull;
-		{ if (!isNull _x && {([_x, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) == _town}) exitWith {_free = _x} } forEach _teams;
+		{ if (!isNull _x && {(count ((units _x) Call WFBE_CO_FNC_GetLiveUnits)) > 0} && {([_x, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) == _town}) exitWith {_free = _x} } forEach _teams;
 		if (isNull _free) then {
 			//--- Nearest eligible team: AI-led, alive, plain towns-mode (not garrison/strike/relief/HC).
 			_freeD = 1e9;
