@@ -1,5 +1,5 @@
 // Marty: Crew placement uses explicit private locals because town AI may be created on server, client, or headless client.
-Private ['_airTeamDelay','_airTeamHulls','_airTeamMaxHulls','_airTeamNext','_airTeamStagger','_airTeamStaggerKey','_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_isAirHull','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor','_warnKey','_warnLast','_planeDir','_planeAirStart','_planeIdx','_aaEnrollList'];
+Private ['_airTeamDelay','_airTeamHulls','_airTeamMaxHulls','_airTeamNext','_airTeamStagger','_airTeamStaggerKey','_canCreate','_commander','_crewRole','_crewUnit','_crews','_driver','_firstDone','_global','_groupCountCiv','_groupCountEast','_groupCountGuer','_groupCountLogic','_groupCountSide','_groupCountWest','_groupCountUnknown','_groupMachine','_groupSide','_gunner','_isAirHull','_list','_lockVehicles','_perfCrew','_perfInfantry','_perfScope','_perfSkipped','_perfStart','_perfVehicles','_position','_probability','_side','_sideID','_team','_type','_unit','_units','_vehicle','_vehicleCrews','_vehicles','_rearmor','_warnKey','_warnLast','_planeDir','_planeAirStart','_planeIdx','_aaEnrollList','_deferGlobalInitQueued'];
 
 _list = _this select 0;
 _position = _this select 1;
@@ -32,6 +32,7 @@ _perfInfantry = 0;
 _perfVehicles = 0;
 _perfCrew = 0;
 _perfSkipped = 0;
+_deferGlobalInitQueued = false;
 
 if (typeName _list != "ARRAY") then { _list = [_list] };
 
@@ -121,11 +122,12 @@ _rearmor = {
 		} else {
 		if (_x isKindOf 'Man') then {
 			// Marty: Forward the team global-init flag so town AI infantry can skip client marker/action setup.
-			_unit = [_x,_team,_position,_sideID,_global] Call WFBE_CO_FNC_CreateUnit;
+			_unit = [_x,_team,_position,_sideID,_global,"FORM",true] Call WFBE_CO_FNC_CreateUnit;
 			// Marty: Count and track only units the engine actually created.
 			if (isNull _unit) then {
 				_perfSkipped = _perfSkipped + 1;
 			} else {
+				_deferGlobalInitQueued = _deferGlobalInitQueued || _global;
 				_units = _units + [_unit];
 				_perfInfantry = _perfInfantry + 1;
 			};
@@ -189,8 +191,9 @@ _rearmor = {
 						_crewRole = _x;
 						call {
 							if ((_vehicle emptyPositions _crewRole) <= 0) exitWith {};
-							_crewUnit = [_type,_team,_position,_sideID,_global] Call WFBE_CO_FNC_CreateUnit;
+							_crewUnit = [_type,_team,_position,_sideID,_global,"FORM",true] Call WFBE_CO_FNC_CreateUnit;
 							if (isNull _crewUnit) exitWith {};
+							_deferGlobalInitQueued = _deferGlobalInitQueued || _global;
 							[_crewUnit] allowGetIn true;
 
 							switch (_crewRole) do {
@@ -297,6 +300,8 @@ _rearmor = {
 		_perfSkipped = _perfSkipped + 1;
 	};
 } forEach _list;
+
+if (_deferGlobalInitQueued) then {processInitCommands};
 
 //--- TEMPLATE INTEGRITY (g1606): cargo seat mismatch at spawn. Mixed vehicle+infantry
 //--- rosters (town Motorized variants, side-patrol MTVR/LAV/technical dismount packs) used
