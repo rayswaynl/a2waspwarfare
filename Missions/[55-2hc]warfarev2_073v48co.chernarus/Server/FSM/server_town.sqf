@@ -435,7 +435,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			};
 		};
 
-		if(_captured) then {
+		if(_captured && !WFBE_GameOver) then {
 			["INFORMATION", Format ["server_town.sqf: Town [%1] was captured by [%2] From [%3].", _location, _newSide, _side]] Call WFBE_CO_FNC_LogContent;
 
 			if (_sideID != WFBE_C_UNKNOWN_ID) then {
