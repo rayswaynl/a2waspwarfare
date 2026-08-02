@@ -791,6 +791,18 @@ Call _sliceYield;
 				case "move": {_wWatched = true};
 			};
 		};
+		//--- r85 MANUAL-PIN EXEMPTION (wasp-bughunt-aicom-order-watchdog-r85): a team under a FRESH
+		//--- human console order (wfbe_aicom_manualpin, stamped by the war-room handlers in
+		//--- Server_HandleSpecial.sqf, TTL WFBE_C_AICOM_MANUALPIN_TTL=600s) is DELIBERATELY stationary
+		//--- on its HOLD/defend point - the 210s wedge release below revoked live human orders ~7min
+		//--- early and force-flipped the team back to offense mid-pin. AssignTowns honours the same pin;
+		//--- the watchdog now does too. Pin expiry re-arms the watchdog with a fresh breadcrumb via the
+		//--- else-branch clear below. A2-OA-safe: 1-arg get + isNil (G1), numeric compare only.
+		if (_wWatched) then {
+			private "_wPin";
+			_wPin = _wTeam getVariable "wfbe_aicom_manualpin";
+			if (!isNil "_wPin" && {(time - _wPin) < (missionNamespace getVariable ["WFBE_C_AICOM_MANUALPIN_TTL", 600])}) then {_wWatched = false};
+		};
 		//--- Lane-325: last-stand recall deliberately parks defenders at HQ; do not let the
 		//--- wedge watchdog release them back to offense while that round-state is active.
 		if (_wWatched && {

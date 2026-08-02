@@ -1258,15 +1258,19 @@ _waterBlocks = {
 									//--- stale order silently - the newer order wins. Only publish when the seq is unchanged.
 									if (!isNull _wsTeam && {({alive _x} count (units _wsTeam)) > 0} && {_wsSeqNow == _wsSeqSnap}) then {
 										_wsTeam setVariable ["wfbe_aicom_route", _wsRoute, true];
+										_wsTeam setVariable ["wfbe_aicom_route_seq", _wsSeqSnap + 1, true]; //--- r85: bind the chain to THIS order's seq (driver stale-chain guard).
 										_wsTeam setVariable ["wfbe_aicom_unstuck", _wsStrk, true];
 										_wsTeam setVariable ["wfbe_aicom_order", [_wsSeqSnap + 1, "towns-target", _wsDest, _wsStrk], true]; //--- feat/aicom-wave-stagger: same order-broadcast statement as the synchronous else-branch, just deferred; seq guarded above so a stale wave never clobbers a fresher retask.
 										diag_log ("AICOMSTAT|v2|EVENT|" + _wsSideText + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_PUBLISHED|team=" + (str _wsTeam) + "|mode=towns-target|wave=1|delay=" + str (round _wsDelay));
 									};
 								};
 							} else {
+								private "_hcSeqNew";
+								_hcSeqNew = (if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1;
 								_team setVariable ["wfbe_aicom_route", _hcRoute, true];
+								_team setVariable ["wfbe_aicom_route_seq", _hcSeqNew, true]; //--- r85: bind the chain to THIS order's seq (driver stale-chain guard).
 								_team setVariable ["wfbe_aicom_unstuck", _hcStrk, true];
-								_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns-target", _hcDest, _hcStrk], true]; //--- UNSTUCK FIX (Ray 2026-06-16): carry the strike tier as order element 3 so it stays in sync with the seq it belongs to (reader: Common_RunCommanderTeam). The wfbe_aicom_unstuck flag (line ~367) is kept for the gear-slow governor + logging.
+								_team setVariable ["wfbe_aicom_order", [_hcSeqNew, "towns-target", _hcDest, _hcStrk], true]; //--- UNSTUCK FIX (Ray 2026-06-16): carry the strike tier as order element 3 so it stays in sync with the seq it belongs to (reader: Common_RunCommanderTeam). The wfbe_aicom_unstuck flag (line ~367) is kept for the gear-slow governor + logging.
 								diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|CAPTURE_TRACE|ORDER_PUBLISHED|team=" + (str _team) + "|mode=towns-target|town=" + (_target getVariable ["name","town"]) + "|dist=" + str (round (_hcOrigin distance _hcDest)) + "|route=" + str (count _hcRoute) + "|strike=" + str _hcStrk);
 							};
 						} else {
@@ -1282,10 +1286,21 @@ _waterBlocks = {
 									//--- team while this wave-stagger thread slept (seq bumped by a fresher retask), drop this
 									//--- stale direct move silently - the newer order wins. Only issue when the seq is unchanged.
 									if (!isNull _wsTeam && {!isNull _wsTarget} && {({alive _x} count (units _wsTeam)) > 0} && {_wsSeqNow == _wsSeqSnap}) then {
-										if (_wsArc) then {
-											[_wsTeam, _wsTarget] Call WFBE_SE_FNC_AI_SetTownAttackPath;
-										} else {
-											[_wsTeam, getPos _wsTarget, "SAD", 200] Call AIMoveTo;
+										//--- r85 SERVER-LOCAL STALENESS GUARD: the seq check above is toothless on this branch -
+										//--- a fresher SERVER-LOCAL re-task (Execute's explicit-order AIMoveTo, a relief divert, a
+										//--- wedge release) never bumps wfbe_aicom_order, so a stale delayed issue would clobber it.
+										//--- Require the team's live mode/goto to still be THIS dispatch (SetTeamMoveMode "towns" +
+										//--- SetTeamMovePos _wsTarget were written synchronously just before this thread spawned; any
+										//--- fresher tasking changes one of them). A2-OA-safe: GroupGetBool (G1), typeName, == on objects.
+										private ["_wsModeNow","_wsGotoNow"];
+										_wsModeNow = toLower ([_wsTeam, "wfbe_teammode", "towns"] Call WFBE_CO_FNC_GroupGetBool);
+										_wsGotoNow = [_wsTeam, "wfbe_teamgoto", objNull] Call WFBE_CO_FNC_GroupGetBool;
+										if (_wsModeNow == "towns" && {typeName _wsGotoNow == "OBJECT"} && {_wsGotoNow == _wsTarget}) then {
+											if (_wsArc) then {
+												[_wsTeam, _wsTarget] Call WFBE_SE_FNC_AI_SetTownAttackPath;
+											} else {
+												[_wsTeam, getPos _wsTarget, "SAD", 200] Call AIMoveTo;
+											};
 										};
 									};
 								};
