@@ -210,8 +210,9 @@ if ((side group player) == resistance && {(missionNamespace getVariable ["WFBE_C
 				if ((lnbCurSelRow 504001) == _xlinkRow) then {
 					WFBE_MenuAction = -1;
 					if (((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0) && {(missionNamespace getVariable ["AICOMV2_GDIR_PANEL", 0]) > 0}) then {
-						closeDialog 0;
-						createDialog "WFBE_GDirCommissarMenu";
+						//--- r95: exitWith on the dialog switch (parity with the Back handler below). Without it this loop
+						//--- survives into the Commissar panel and every later dialog, eating WFBE_MenuAction every 0.25s.
+						exitWith {closeDialog 0; createDialog "WFBE_GDirCommissarMenu"};
 					} else {
 						hint parseText "<t color='#F56363'>Commission Panel is not available (GUER Director inactive).</t>";
 					};
