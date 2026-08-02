@@ -15,6 +15,9 @@ if ((count _this) > 6) then {
 };
 _townRange = 600;
 
+//--- TOWNENTRY|v1: prove the mission.sqm execVM reached this worker before the readiness gate.
+diag_log format ["TOWNENTRY|v1|START|name=%1|modeNil=%2|paramsNil=%3|templateNil=%4", _townName, isNil "townModeSet", isNil "WFBE_Parameters_Ready", isNil "TownTemplate"];
+
 if(isNil "WFBE_Parameters_Ready")then{
 	WFBE_Parameters_Ready = false;
 };
@@ -38,6 +41,9 @@ while {(!townModeSet || !WFBE_Parameters_Ready || isNil "TownTemplate") && (_wTo
 if (!townModeSet || !WFBE_Parameters_Ready || isNil "TownTemplate") then {
 	diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: town mode/parameters were not ready after 60s - proceeding (town=%1).", (_town getVariable ["name", "?"])];
 };
+
+//--- TOWNGATE|v1: pair with TOWNENTRY to distinguish a queued worker from a gate stall/timeout.
+diag_log format ["TOWNGATE|v1|AFTER|name=%1|waitTicks=%2|mode=%3|params=%4|templateNil=%5", _townName, _wTownMode, townModeSet, WFBE_Parameters_Ready, isNil "TownTemplate"];
 
 //--- Prevent the isServer bug on the client.
 sleep (1.2 + random 0.2);
