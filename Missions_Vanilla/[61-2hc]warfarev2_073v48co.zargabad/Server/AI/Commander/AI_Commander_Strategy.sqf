@@ -108,7 +108,7 @@ if (_snapOk) then {
 //--- Exclude stranded lone-survivor remnants (alive < N AND far from HQ) and in-refit teams so a few far-flung
 //--- survivors do not deflate strength below the enemy and falsely trip the defensive gates (the b67 "EAST amasses
 //--- but never attacks" stall). A2-OA: plain get + isNil for the GROUP refit var ([name,default] is unreliable on groups).
-private ["_myHQ","_loneAlive","_loneFar","_tAlive","_rf","_isRemnant"];
+private ["_myHQ","_enHQfb","_loneAlive","_loneFar","_tAlive","_rf","_isRemnant"];
 if (!_snapOk) then {
 	_myHQ = (_side) Call WFBE_CO_FNC_GetSideHQ;
 	_loneAlive = missionNamespace getVariable ["WFBE_C_AICOM_STR_LONE_ALIVE", 2];
@@ -127,8 +127,23 @@ if (!_snapOk) then {
 		};
 	} forEach _teams;
 	Call _sliceYield;
+	//--- r100 (force-strength symmetry): same enemy-side policy as AICOM2_Snapshot - exclude enemy
+	//--- in-refit teams + stranded lone remnants from _enStr, mirroring the _myStr rules above, so the
+	//--- fallback path does not over-rate the enemy by its refit pool (see Snapshot r100 note).
+	_enHQfb = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;
 	_enStr = 0;
-	{ if (!isNull _x) then {_enStr = _enStr + ({alive _x} count (units _x))} } forEach (_enemyLogik getVariable ["wfbe_teams", []]);
+	{
+		if (!isNull _x) then {
+			_tAlive = {alive _x} count (units _x);
+			if (_tAlive > 0) then {
+				_isRemnant = false;
+				_rf = _x getVariable "wfbe_aicom_refit";
+				if (!isNil "_rf" && {_rf}) then {_isRemnant = true};
+				if (!_isRemnant && {_tAlive < _loneAlive} && {_loneFar > 0} && {!isNull (leader _x)} && {!isNull _enHQfb} && {((leader _x) distance _enHQfb) > _loneFar}) then {_isRemnant = true};
+				if (!_isRemnant) then {_enStr = _enStr + _tAlive};
+			};
+		};
+	} forEach (_enemyLogik getVariable ["wfbe_teams", []]);
 };
 
 //--- 0) LAST-STAND: fewer than 2 own towns AND clearly outnumbered - recall all, skip attack.
@@ -1176,7 +1191,10 @@ if (_strikeOn) then {
 		//--- real weight at the enemy base instead of a 3-team poke that never razed it. Floor at 3 for a small army.
 		private ["_strikeLive","_strikeTarget"];
 		_strikeLive = 0;
-		{ if (!isNull _x && {!isPlayer (leader _x)} && {({alive _x} count (units _x)) > 0}) then {_strikeLive = _strikeLive + 1} } forEach _teams;
+		//--- r100: count only GRAB-ELIGIBLE field teams (no garrison/relief/refit) so the CAP_FRAC target
+		//--- is half the committable force - the old all-alive count inflated _strikeTarget with untaskable
+		//--- groups and the grab loop then committed every eligible team trying to reach it.
+		{ if (!isNull _x && {!isPlayer (leader _x)} && {({alive _x} count (units _x)) > 0} && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _x} && {isNull ([_x, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool)} && {!([_x, "wfbe_aicom_refit", false] Call WFBE_CO_FNC_GroupGetBool)}) then {_strikeLive = _strikeLive + 1} } forEach _teams;
 		_strikeTarget = ceil (_strikeLive * (missionNamespace getVariable [format ["WFBE_C_AICOM_HQSTRIKE_CAP_FRAC_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_HQSTRIKE_CAP_FRAC", 0.5]]));
 		if (_strikeTarget < 3) then {_strikeTarget = 3};
 		while {_strikeCount < _strikeTarget} do {
@@ -1185,7 +1203,7 @@ if (_strikeOn) then {
 			_team = _x;
 			//--- CAPTURE LOCK (GR-2026-07-03a): do not GRAB a mid-capture-drain team for the HQ strike (it would abandon a near-complete drain).
 			//--- WFBE_CO_FNC_CapLock is a plain BOOL and self-clears (captured/dead/TTL/town-ours), so the team is strike-eligible again after.
-			if (!isNull _team && {!isPlayer (leader _team)} && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_team] Call WFBE_CO_FNC_CapLock)}) then { //--- fix(hunt): G1-safe - freshly founded teams (no arrival yet) were silently unpickable for the HQ strike
+			if (!isNull _team && {!isPlayer (leader _team)} && {!([_team, "wfbe_aicom_strike", false] Call WFBE_CO_FNC_GroupGetBool)} && {!([_team] Call WFBE_CO_FNC_CapLock)} && {!([_team, "wfbe_aicom_refit", false] Call WFBE_CO_FNC_GroupGetBool)}) then { //--- fix(hunt): G1-safe - freshly founded teams (no arrival yet) were silently unpickable for the HQ strike; r100: refit-flagged teams (Produce B61 ordered them home to reform) are NOT grabbed - the strike was re-tasking depleted teams mid-refit and their bodies stayed excluded from _myStr while they marched
 				if (isNull ([_team, "wfbe_aicom_relief", objNull] Call WFBE_CO_FNC_GroupGetBool) && {(_logik getVariable ["wfbe_aicom_garrison", grpNull]) != _team}) then {
 					_alive = {alive _x} count (units _team);
 					if (_alive > 0) then {
