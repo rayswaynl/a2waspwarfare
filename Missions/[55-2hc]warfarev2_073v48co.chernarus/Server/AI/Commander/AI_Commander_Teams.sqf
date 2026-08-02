@@ -455,7 +455,8 @@ _aiCapTierIndex = (missionNamespace getVariable ["WFBE_PopTier", 0]) max 0;
 _aiCapTierLast = (count _aiCapTiers) - 1;
 if (_aiCapTierIndex > _aiCapTierLast) then {_aiCapTierIndex = _aiCapTierLast};
 _aiCapTier = _aiCapTiers select _aiCapTierIndex;
-_sideAINow = {alive _x && {side _x == _side} && {!isPlayer _x}} count _allUnits;
+//--- Reuse the exact side-live census above for the cap gate; avoid a second allUnits scan in the same tick.
+_sideAINow = _aicomSideLive;
 if (_sideAINow >= _aiCapTier) exitWith {
 	["side_ai_cap"] Call _emitFoundSkip;
 	private "_foundCapCount";
