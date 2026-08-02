@@ -129,7 +129,7 @@ _launcher setVariable ["wfbe_sml_detach_at", nil];
 if (alive _launcher) then {
     _launcher setUnitPos "AUTO";
     //--- Match SML-2 W1: never doFollow a null/dead leader (leader_dead exit races here).
-    if (!isNull (leader _team) && {alive (leader _team)}) then {
+    if (_launcher in (units _team) && {!isNull (leader _team)} && {alive (leader _team)}) then {
         _launcher doFollow (leader _team);
     };
 };
