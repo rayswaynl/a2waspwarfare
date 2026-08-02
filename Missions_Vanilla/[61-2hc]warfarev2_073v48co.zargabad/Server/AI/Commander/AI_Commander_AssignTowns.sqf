@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage","_footStagePos","_stageGoto","_waveDelay","_priorDispT0"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state; +_waveDelay: feat/aicom-wave-stagger
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage","_footStagePos","_stageGoto","_waveDelay","_priorDispT0","_aicomProgressAnchor"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state; +_waveDelay: feat/aicom-wave-stagger
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -19,6 +19,21 @@ if (isNil "_logik") exitWith {};
 
 _teams = _logik getVariable "wfbe_teams";
 if (isNil "_teams") exitWith {};
+
+//--- A convoy can keep a team stranded while its leader has dismounted and walks ahead.
+//--- Watch actual movable land-hull progress when present; infantry-only teams retain the leader anchor.
+_aicomProgressAnchor = {
+	private ["_paTeam","_paLeader","_paVehicle","_paCandidate"];
+	_paTeam = _this select 0;
+	_paLeader = leader _paTeam;
+	_paVehicle = objNull;
+	{
+		_paCandidate = vehicle _x;
+		if (isNull _paVehicle && {_paCandidate != _x} && {alive _paCandidate} && {_paCandidate isKindOf "LandVehicle"} && {canMove _paCandidate}) then {_paVehicle = _paCandidate};
+	} forEach (units _paTeam);
+	if (!isNull _paVehicle) then {_paLeader = _paVehicle};
+	_paLeader
+};
 
 //--- AICOM v2 (consolidate, Ray): after the fist captures a town the Allocator stamps wfbe_aicom_consolidate_until.
 //--- PER-TEAM SCOPING FIX (Ray): the OLD side-wide exitWith froze EVERY team for the window (harasser + en-route +
@@ -90,14 +105,15 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 	//--- STRANDED (timeout exceeded, still far). Latched by wfbe_aicom_dispatch_open so it fires
 	//--- once per dispatch; a re-dispatch in Hook A re-opens the latch. Logging only, no behaviour.
 	if ([_team, "wfbe_aicom_dispatch_open", false] Call WFBE_CO_FNC_GroupGetBool) then {
-		private ["_dord","_dtgt","_dt0","_dldr","_ddist","_arrR","_toSecs","_elapsed","_bandKey","_bandVal"];
+		private ["_dord","_dtgt","_dt0","_dldr","_danchor","_ddist","_arrR","_toSecs","_elapsed","_bandKey","_bandVal"];
 		_dord = [_team, "wfbe_aicom_townorder", []] Call WFBE_CO_FNC_GroupGetBool;
 		if (count _dord >= 2) then {
 			_dtgt = _dord select 0;
 			_dt0  = _dord select 1;
 			if (typeName _dtgt == "OBJECT" && {!isNull _dtgt}) then {
 				_dldr   = leader _team;
-				_ddist  = _dldr distance _dtgt;
+				_danchor = [_team] Call _aicomProgressAnchor;
+				_ddist  = _danchor distance _dtgt;
 				_arrR   = missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_ARRIVE_RADIUS", 250];
 				_toSecs = if (count _dord >= 4) then {_dord select 3} else {missionNamespace getVariable ["WFBE_C_AICOM_ASSAULT_TIMEOUT", 420]};   //--- FIX A (fable, GR-2026-07-08a): per-dispatch dyn-timeout if the 4th tuple element is present (WFBE_C_AICOM_ASSAULT_DYNTIMEOUT), else legacy flat default. _dord already declared/guarded count>=2 above.
 				_elapsed = round (time - _dt0);
@@ -171,7 +187,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					if ((time - _dt0) > _toSecs) then {
 						private ["_moved","_stuck"];
 						_moved = -1;
-						if (count _dord >= 3) then {_moved = _dldr distance (_dord select 2)};
+						if (count _dord >= 3) then {_moved = _danchor distance (_dord select 2)};
 						_stuck = (behaviour _dldr != "COMBAT") && {_moved >= 0} && {_moved < (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_MOVED", 200])};
 						diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|ASSAULT_STRANDED|team=" + (str _team) + "|town=" + (_dtgt getVariable ["name","town"]) + "|dist=" + str (round _ddist) + "|elapsed=" + str _elapsed + "|moved=" + str (round _moved) + "|stuck=" + str _stuck);
 						if ((missionNamespace getVariable ["WFBE_C_AICOM_STRAND_RECOVERY", 0]) > 0 && {_moved >= 0} && {_moved < 200}) then {
@@ -475,7 +491,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							if (count _ord < 3 || {(_ord select 0) != _goto}) then {
 								//--- No bookkeeping yet (legacy order) or goto changed under us: book it
 								//--- once without re-issuing waypoints; the stuck check takes over from here.
-								_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos (leader _team)]];
+								_team setVariable ["wfbe_aicom_townorder", [_goto, time, getPos ([_team] Call _aicomProgressAnchor)]];
 								//--- STALL-ADVANCE FLOOR (Build84, claude-gaming 2026-07-02): stamp the "on this goto
 								//--- since" clock the moment a NEW/changed goto is booked. The uncap-parked branch below
 								//--- reads it to force a prompt retarget when a team parks on an unflippable depot for
@@ -483,8 +499,9 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 								_team setVariable ["wfbe_aicom_goto_since", time];
 							} else {
 								if (time - (_ord select 1) > (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_SECS", 210])) then {
-									private ["_ldr","_movedThr","_farThr","_airborne","_goalDeltaOn","_notProgressing"]; //--- claude/aicom-west-stuck: +2 privates for the goal-delta stuck test below
+									private ["_ldr","_anchor","_movedThr","_farThr","_airborne","_goalDeltaOn","_notProgressing"]; //--- claude/aicom-west-stuck: +2 privates for the goal-delta stuck test below
 									_ldr = leader _team;
+									_anchor = [_team] Call _aicomProgressAnchor;
 									_movedThr = missionNamespace getVariable ["WFBE_C_AICOM_STUCK_MOVED", 200];
 									_farThr   = missionNamespace getVariable ["WFBE_C_AICOM_STUCK_FAR", 300];
 									//--- cmdcon42-f AIR-MOBILE EXEMPTION: a team FLYING an air-mobile leg is progressing, not
@@ -512,7 +529,7 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 									//--- claude/aicom-west-stuck: orders are already live in this file (object distance breadcrumb, object distance obj).
 									//--- claude/aicom-west-stuck: A2-OA-safe: numeric subtraction, no ==/!= on Booleans, no A3 commands, no group 2-arg getVariable.
 									_goalDeltaOn = (missionNamespace getVariable ["WFBE_C_AICOM_STUCK_GOALDELTA", 0]) > 0;
-									_notProgressing = if (_goalDeltaOn) then {((_goto distance (_ord select 2)) - (_goto distance _ldr)) < _movedThr} else {(_ldr distance (_ord select 2)) < _movedThr};
+									_notProgressing = if (_goalDeltaOn) then {((_goto distance (_ord select 2)) - (_goto distance _anchor)) < _movedThr} else {(_anchor distance (_ord select 2)) < _movedThr};
 									if ((!_airborne) && {behaviour _ldr != "COMBAT"} && {_notProgressing} && {_ldr distance _goto > _farThr}) then {
 										_needs = true; //--- parked far from target, not in contact: re-issue (unstick)
 										//--- REAL UNSTUCK (task #14/#16): the old remedy just re-emitted the same
