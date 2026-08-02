@@ -32,7 +32,7 @@ _cumSum = 0;
 if (_cumSum > 0) then {
 	//--- DE-CORRELATION: second independent random call mixed in (mirrors AI_Commander_Wildcard.sqf).
 	_entropy = random 1;
-	_roll = (random _cumSum) + _entropy * 0.0001;
+	_roll = ((random _cumSum) + _entropy * 0.0001) min (_cumSum - 0.00001);
 	_i = 0;
 	_cumSum2 = 0;
 	while {_i < count _weightPairs && {isNil "_chosen"}} do {
