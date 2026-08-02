@@ -94,10 +94,12 @@ _team allowFleeing 0;
 //--- AICOM-Teams HC dispatch (delegate-aicom-team) sends it (0.85 when the veteran flag was set, else 0);
 //--- the W6/W19 server-local 3-arg calls omit it, so guard on count. AI-only; _units are local on the
 //--- founding HC/server. typeName guard (not A3 isEqualType) keeps this A2 OA safe. [needs live verification]
+_team setVariable ["wfbe_aicom_veteran_skill", 0, true];
 if (count _this > 3) then {
 	_skillSend = _this select 3;
 	if (typeName _skillSend == "SCALAR" && {_skillSend > 0}) then {
 		{_x setSkill _skillSend} forEach _units;
+		_team setVariable ["wfbe_aicom_veteran_skill", _skillSend, true];
 	};
 };
 //--- STANCE (task #1): set an aggressive posture ONCE at founding so the team is "advance and
@@ -3226,7 +3228,7 @@ while {!WFBE_GameOver && _alive} do {
 	//--- groups); typeName guards (no A3 isEqualType); clear the var by setting [] and testing count>0 (A2 setVariable
 	//--- nil on groups is unreliable). Never create if _team is null. Never-frozen: additions inherit the team order.
 	if (_alive && {!isNull _team}) then {
-		private ["_topReq","_topN","_topPos","_topCls","_topIssued","_topTtl","_topMade","_topFail","_topDefer","_topNear","_topClass","_topUnit","_topCharge","_topPerUnit","_topRefund"];
+		private ["_topReq","_topN","_topPos","_topCls","_topIssued","_topTtl","_topMade","_topFail","_topDefer","_topNear","_topClass","_topUnit","_topSkill","_topCharge","_topPerUnit","_topRefund"];
 		_topReq = _team getVariable "wfbe_aicom_topup_req";
 		if (!isNil "_topReq" && {(typeName _topReq) == "ARRAY"} && {count _topReq >= 3}) then {
 			_topN   = _topReq select 0;
@@ -3286,6 +3288,8 @@ while {!WFBE_GameOver && _alive} do {
 						while {(_topMade + _topFail) < _topN && {(_topMade + _topFail) < 4}} do {
 							_topClass = _topCls select ((_topMade + _topFail) mod (count _topCls));
 							_topUnit = [_topClass, _team, _topPos, _sideID] Call WFBE_CO_FNC_CreateUnit; //--- canonical mission createUnit-in-group idiom (Common_RunSidePatrol.sqf:113).
+							_topSkill = _team getVariable "wfbe_aicom_veteran_skill";
+							if (!isNull _topUnit && {!isNil "_topSkill"} && {typeName _topSkill == "SCALAR"} && {_topSkill > 0}) then {_topUnit setSkill _topSkill};
 							if (!isNull _topUnit) then {_topMade = _topMade + 1} else {_topFail = _topFail + 1};
 						};
 						//--- REFUND the unfilled share: proportional slice of the request's stored charge (element
