@@ -37,9 +37,19 @@ _penParked = false;
 _penPos = [];
 if (((missionNamespace getVariable ["WFBE_C_DEADSPAWN_AI_PEN", 0]) > 0) && {!isNil "WFBE_CO_FNC_DeadspawnPenPos"}) then {
 	_penPos = [] Call WFBE_CO_FNC_DeadspawnPenPos;
-	_respawnedUnit setPos _penPos;
-	_penParked = true;
-	["INFORMATION", Format ["DEADSPAWN_AI_PEN|park|side=%1|unit=%2|pos=%3", _sideText, _respawnedUnit, _penPos]] Call WFBE_CO_FNC_LogContent;
+	//--- m0801h6 (Codex audit, owner live repro): ONE shared pen point parked BOTH sides together,
+	//--- and on landlocked terrains the resolver's dry z=0 fallback put that mixed-side crowd on
+	//--- open ground. Per-side positions ALWAYS: offset the confirmed-water pen per side ID and
+	//--- re-verify water; a dry or unverified point routes this side to its OWN legacy marker.
+	//--- ((_side) Call GetSideID) is deliberate - _sideID above is read pre-civilian-remap.
+	_penPos set [0, (_penPos select 0) + (((_side) Call GetSideID) * 200)];
+	if (((_penPos select 2) < 0) && {surfaceIsWater [(_penPos select 0), (_penPos select 1), 0]}) then {
+		_respawnedUnit setPos _penPos;
+		_penParked = true;
+		["INFORMATION", Format ["DEADSPAWN_AI_PEN|park|side=%1|unit=%2|pos=%3", _sideText, _respawnedUnit, _penPos]] Call WFBE_CO_FNC_LogContent;
+	} else {
+		_respawnedUnit setPos getMarkerPos Format["%1TempRespawnMarker",_sideText];
+	};
 } else {
 	_respawnedUnit setPos getMarkerPos Format["%1TempRespawnMarker",_sideText];
 };
@@ -59,6 +69,11 @@ if (((missionNamespace getVariable ["WFBE_C_DEADSPAWN_AI_PEN", 0]) > 0) && {!isN
 	if ((_penParked || {(missionNamespace getVariable ["WFBE_C_DEADSPAWN_GUARD", 1]) > 0}) && {alive _respawnedUnit}) then {
 		_respawnedUnit setCaptive true;
 		_respawnedUnit allowDamage false;
+		//--- m0801h6 (Codex audit): NO ARMED UNITS IN DEADSPAWNS includes the weapon itself - store
+		//--- the loadout on the unit and strip it for the hold; every release path restores it first.
+		_respawnedUnit setVariable ["wfbe_penWeapons", weapons _respawnedUnit];
+		_respawnedUnit setVariable ["wfbe_penMagazines", magazines _respawnedUnit];
+		removeAllWeapons _respawnedUnit;
 		_deadspawnGuardApplied = true;
 		["INFORMATION", Format ["DEADSPAWN_GUARD|park|side=%1|unit=%2", _sideText, _respawnedUnit]] Call WFBE_CO_FNC_LogContent;
 	};
@@ -105,6 +120,12 @@ if (_skip && _deadspawnGuardApplied && {alive _respawnedUnit}) then {
 	//--- fable/deadspawn-ai-pen: surface the body BEFORE damage returns - releasing it 8m under
 	//--- water would let the engine drown the bot (or the just-joined player) at the pen.
 	if (_penParked && {(count _penPos) > 1}) then {_respawnedUnit setPos [_penPos select 0, _penPos select 1, 0]};
+	//--- m0801h6 (Codex audit): hand the stored loadout back before the player takes the body.
+	{_respawnedUnit addMagazine _x} forEach (_respawnedUnit getVariable ["wfbe_penMagazines", []]);
+	{_respawnedUnit addWeapon _x} forEach (_respawnedUnit getVariable ["wfbe_penWeapons", []]);
+	if ((primaryWeapon _respawnedUnit) != "") then {_respawnedUnit selectWeapon (primaryWeapon _respawnedUnit)};
+	_respawnedUnit setVariable ["wfbe_penWeapons", []];
+	_respawnedUnit setVariable ["wfbe_penMagazines", []];
 	_respawnedUnit setCaptive false;
 	_respawnedUnit allowDamage true;
 	["INFORMATION", Format ["DEADSPAWN_GUARD|release|side=%1|unit=%2|skip=%3", _sideText, _respawnedUnit, _skip]] Call WFBE_CO_FNC_LogContent;
@@ -112,6 +133,16 @@ if (_skip && _deadspawnGuardApplied && {alive _respawnedUnit}) then {
 
 //--- Make sure that the AI didn't die or that a player hasn't replaced him before going any further.
 if !(_skip) then {
+	//--- m0801h6 (Codex audit): give the stored pen loadout back FIRST - EquipUnit below strips and
+	//--- re-equips when a side loadout table exists, so this restore decides the no-table case (and
+	//--- the null-respawnLoc route further down must never move an unarmed unit out of the hold).
+	if (_deadspawnGuardApplied && {alive _respawnedUnit}) then {
+		{_respawnedUnit addMagazine _x} forEach (_respawnedUnit getVariable ["wfbe_penMagazines", []]);
+		{_respawnedUnit addWeapon _x} forEach (_respawnedUnit getVariable ["wfbe_penWeapons", []]);
+		if ((primaryWeapon _respawnedUnit) != "") then {_respawnedUnit selectWeapon (primaryWeapon _respawnedUnit)};
+		_respawnedUnit setVariable ["wfbe_penWeapons", []];
+		_respawnedUnit setVariable ["wfbe_penMagazines", []];
+	};
 	//--- Equip the AI.
 	//--- Guard: _upgrades may be [] for civilian/unknown sides (Common_GetSideUpgrades default branch returns []).
 	if (count _upgrades > 13) then {
@@ -175,7 +206,11 @@ if !(_skip) then {
 	};
 	//--- fail-clean r48: null HQ + no buildings + empty availableSpawn => getPos throws, unit stuck on temp marker.
 	if (isNull _respawnLoc) then {
-		["WARNING", Format ["AI_AdvancedRespawn.sqf: [%1] AI unit [%2] null respawnLoc - keeping temp marker park.", _sideText, _respawnedUnit]] Call WFBE_CO_FNC_LogContent;
+		//--- m0801h6 (Codex audit): the guard released above - NEVER leave a re-armed, vulnerable
+		//--- unit standing at the shared pen. Route it to its OWN side's legacy marker (pre-pen r48
+		//--- behaviour, per-side by construction) so no mixed-side crowd can form anywhere.
+		_respawnedUnit setPos getMarkerPos Format["%1TempRespawnMarker",_sideText];
+		["WARNING", Format ["AI_AdvancedRespawn.sqf: [%1] AI unit [%2] null respawnLoc - routed to side temp marker.", _sideText, _respawnedUnit]] Call WFBE_CO_FNC_LogContent;
 	} else {
 	_pos = [getPos _respawnLoc,20,30] Call GetRandomPosition;
 	_pos set [2,0];

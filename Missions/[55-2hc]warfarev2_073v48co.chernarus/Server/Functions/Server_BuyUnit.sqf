@@ -255,11 +255,16 @@ if (_unitType isKindOf "Man") then {
 	[_sideText,'UnitsCreated',1] Call UpdateStatistics;
 	//--- AI FACTORY RALLY (task #25): the AI commander stamps wfbe_aicom_factory_rally (a forward,
 	//--- road-snapped egress point) on factories it builds. Without a destination a fresh AI unit just
-	//--- stands on the factory apron (the "troops standing still in base" bug). Walk it out to the
-	//--- rally. Player factories never set the var, so the count-guard makes this AI-only.
-	private "_aiRally";
+	//--- stands on the factory apron (the "troops standing still in base" bug). If the stamp is absent,
+	//--- rejoin the live team position only when that team is already clear of the factory; a team parked
+	//--- at the factory needs no arbitrary extra route. Player-led teams remain outside this AI-only guard.
+	private ["_aiRally","_aiLeader"];
 	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
-	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull _soldier}) then {
+	if (isNil "_aiRally" || {typeName _aiRally != "ARRAY"} || {count _aiRally < 2}) then {
+		_aiLeader = leader _team;
+		if (!isNull _aiLeader && {alive _aiLeader} && {(_aiLeader distance _building) > 200}) then {_aiRally = getPosATL _aiLeader;};
+	};
+	if (!isNil "_aiRally" && {typeName _aiRally == "ARRAY"} && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull _soldier}) then {
 		_soldier commandMove _aiRally;
 	};
 } else {
@@ -357,7 +362,11 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 	emptyQueu = emptyQueu + [_vehicle];
 	[_vehicle] Spawn WFBE_SE_FNC_HandleEmptyVehicle;
-	if (_vehicle distance (leader _team) < 200) then {(units _team) allowGetIn true;_team addVehicle _vehicle};
+	//--- AI refills may be spawned at a forward factory while the team is still up to the
+	//--- commander reinforce range away. Register the hull with the team unconditionally;
+	//--- the distance gate left a crewed, paid vehicle outside the team's vehicle graph.
+	(units _team) allowGetIn true;
+	_team addVehicle _vehicle;
 
 	//--- Clear the vehicle.
 	(_vehicle) call WFBE_CO_FNC_ClearVehicleCargo;
@@ -458,11 +467,15 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 
 _vehicle allowCrewInImmobile true;
 	//--- AI FACTORY RALLY (task #25): drive the fresh hull off the apron toward the commander's
-	//--- forward rally (set on the factory by AI_Commander_Base). commandMove the driver so the
-	//--- vehicle takes the lane out instead of idling in base. AI-only via the count-guard.
-	private "_aiRally";
+	//--- forward rally (set on the factory by AI_Commander_Base). Ground-only fallback below keeps
+	//--- air/ship orders out of a ground command; the carrier plane climb-out remains the next path.
+	private ["_aiRally","_aiLeader"];
 	_aiRally = _building getVariable "wfbe_aicom_factory_rally";
-	if (!isNil "_aiRally" && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull (driver _vehicle)}) then {
+	if (isNil "_aiRally" || {typeName _aiRally != "ARRAY"} || {count _aiRally < 2}) then {
+		_aiLeader = leader _team;
+		if (!isNull _aiLeader && {alive _aiLeader} && {_vehicle isKindOf "LandVehicle"} && {(_aiLeader distance _building) > 200}) then {_aiRally = getPosATL _aiLeader;};
+	};
+	if (!isNil "_aiRally" && {typeName _aiRally == "ARRAY"} && {count _aiRally >= 2} && {!isPlayer (leader _team)} && {!isNull (driver _vehicle)}) then {
 		(driver _vehicle) commandMove _aiRally;
 	};
 	//--- fable/aicom-carrier-velocity (2026-07-07): carrier fixed-wing air-start chip - the AI-path equivalent of

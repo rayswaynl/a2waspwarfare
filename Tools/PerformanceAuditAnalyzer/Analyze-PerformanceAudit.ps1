@@ -722,7 +722,7 @@ function Write-HtmlReport {
 	$maintenanceAudit = New-ProbeDetailRows `
 		-Rows $Rows `
 		-Scripts @("cleaner_droppeditems","cleaner_craters","cleaner_ruins","cleaner_mines","restorer_buildings") `
-		-ExtraKeys @("scanned","deleted","weaponholders","mines","mineE","small","long","tracked","restored","cycleMs") `
+		-ExtraKeys @("scanned","deleted","weaponholders","mines","mineE","small","long","tracked","restored","cap","processed","deferred","cycleMs") `
 		-Limit 100
 
 	$labels = @{
@@ -834,6 +834,9 @@ function Write-HtmlReport {
 		extra_long = "Long"
 		extra_tracked = "Tracked"
 		extra_restored = "Restored"
+		extra_cap = "Cycle cap"
+		extra_processed = "Processed"
+		extra_deferred = "Deferred"
 	}
 
 	$lines.Add("<!doctype html>")
@@ -1042,7 +1045,7 @@ function Write-HtmlReport {
 		-Title "Server Maintenance Probes" `
 		-Description "Focused view for cleaners and restorers. These are usually periodic spike candidates rather than permanent FPS causes, but scanned/deleted/restored counts make their impact visible." `
 		-Rows $maintenanceAudit `
-		-Columns @("session_index","map","scope","script","calls","avg_ms","max_ms","extra_scanned","extra_deleted","extra_weaponholders","extra_mines","extra_mineE","extra_small","extra_long","extra_tracked","extra_restored","extra_cycleMs") `
+		-Columns @("session_index","map","scope","script","calls","avg_ms","max_ms","extra_scanned","extra_deleted","extra_weaponholders","extra_mines","extra_mineE","extra_small","extra_long","extra_tracked","extra_restored","extra_cap","extra_processed","extra_deferred","extra_cycleMs") `
 		-Labels $labels `
 		-Kind "spike"
 
@@ -1312,6 +1315,7 @@ $extraKeys = @(
 	"defenses","spawned","removed","mode","changed","focus","alive",
 	"towns","groupUnits","textWrites","distanceChecks","map","gps","watched","recovered",
 	"scanned","deleted","weaponholders","mines","mineE","small","long","tracked","restored",
+	"cap","processed","deferred",
 	"bounty","locked","special","isAir","isTank","isCar"
 )
 $expandedRows = @(New-ExpandedAuditRows $allRows $extraKeys)

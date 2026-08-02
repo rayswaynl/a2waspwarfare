@@ -1203,6 +1203,9 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_AICOM_WITHDRAW_EVAL")           then {WFBE_C_AICOM_WITHDRAW_EVAL = 1};           //--- graceful-withdrawal evaluator: bleeding HC teams get a "rally" order to the nearest own HQ/town (Ray: reinforce at friendly towns).
 	if (isNil "WFBE_C_AICOM_WITHDRAW_MIN_ALIVE")      then {WFBE_C_AICOM_WITHDRAW_MIN_ALIVE = 3};      //--- alive-count floor that triggers the withdrawal (MBT/attack-heli teams exempt).
 	if (isNil "WFBE_C_AICOM_WITHDRAW_COOLDOWN")       then {WFBE_C_AICOM_WITHDRAW_COOLDOWN = 240};     //--- claude/aicom-west-stuck (bug M): min seconds between auto-rally re-arms for the SAME understrength team - ends the rally-arrive-rally livelock, gives a bounded assault window between withdrawal episodes. Explicit driver wantrally requests bypass this.
+	if (isNil "WFBE_C_AICOM_DISBAND_MERGE_ENABLE")    then {WFBE_C_AICOM_DISBAND_MERGE_ENABLE = 0};  //--- fable/aicom-disband-merge (2026-08-02): master flag - decimated-team merge/disband diversion in the withdrawal evaluator (0 = off, byte-identical to HEAD). Arm to 1 after soak review.
+	if (isNil "WFBE_C_AICOM_DISBAND_ALIVE_MAX")       then {WFBE_C_AICOM_DISBAND_ALIVE_MAX = 2};     //--- alive-count at or below which a repeat auto-withdraw (post-cooldown, prior rally already burned, no pending top-up) becomes a merge/disband instead of another barren rally march (2026-08-01 overnight: 53 RALLY_ORDER cycles at alive=1).
+	if (isNil "WFBE_C_AICOM_DISBAND_MERGE_RANGE")     then {WFBE_C_AICOM_DISBAND_MERGE_RANGE = 500}; //--- max leader-to-leader metres to fold survivors into a same-side same-owner foot-infantry keeper team (B69 aicom-team-merge executor); no keeper in range -> wfbe_aicom_disband destructive retire.
 	if (isNil "WFBE_C_AICOM_LOSS_RETREAT")            then {WFBE_C_AICOM_LOSS_RETREAT = 1};            //--- claude/u3-loss-retreat-20260725 (Grok #1): combat-loss retreat latch master flag - default OFF, fully inert. See AI_Commander_AssignTowns.sqf.
 	if (isNil "WFBE_C_AICOM_LOSS_RETREAT_FRACTION")   then {WFBE_C_AICOM_LOSS_RETREAT_FRACTION = 0.5}; //--- fraction of a team's living strength lost within the sample window that latches the retreat (0.5 = half the team wiped).
 	if (isNil "WFBE_C_AICOM_LOSS_RETREAT_WINDOW")     then {WFBE_C_AICOM_LOSS_RETREAT_WINDOW = 120};   //--- s: sliding sample window for the loss-fraction check (matches WFBE_C_AI_COMMANDER_TOWN_INTERVAL, the worker's own tick cadence).
@@ -3028,7 +3031,12 @@ WFBE_STATS_DIRTY_UIDS = [];
 //--- these with the same inline default, so behavior is identical with or without this block).
 	if (isNil "WFBE_C_VEHICLE_SELL") then {WFBE_C_VEHICLE_SELL = 1}; //--- #43: sell-back action on purchased vehicles at base. 0 = no action shown.
 	if (isNil "WFBE_C_VEHICLE_SELL_FRACTION") then {WFBE_C_VEHICLE_SELL_FRACTION = 0.5}; //--- #43: refund fraction of purchase price, scaled by hull health.
-	if (isNil "WFBE_C_ARTY_RING") then {WFBE_C_ARTY_RING = 1}; //--- #90: client-local range ellipse per friendly artillery piece.
+	//--- #90: client-local range ellipse per friendly artillery piece. Small-map defaults stay
+	//--- OFF because the TK/ZG artillery registry contains 8-9km weapons; an explicit pre-set wins.
+	if (isNil "WFBE_C_ARTY_RING") then {
+		WFBE_C_ARTY_RING = 1;
+		if ((toLower worldName) in ["zargabad", "takistan"]) then {WFBE_C_ARTY_RING = 0};
+	};
 	if (isNil "WFBE_C_ARTY_RING_VISUAL_CAP") then {WFBE_C_ARTY_RING_VISUAL_CAP = 2000}; //--- #90 owner 2026-07-22: cap the DRAWN ring radius (m); real range survives in the marker label. 0 = legacy uncapped.
 	if (isNil "WFBE_C_TAGS_AI") then {WFBE_C_TAGS_AI = 1}; //--- TAGS: nametags above friendly AI infantry + vehicles (shares the 18-slot pool).
 	if (isNil "WFBE_C_GDIR_VIS") then {WFBE_C_GDIR_VIS = 1}; //--- Commissar visibility pack: wallet label, heatmap, order broadcasts, QRF feedback.
@@ -3364,8 +3372,16 @@ if (isNil "WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_
 //--- bodies mark themselves via their sqm init line (this setVariable ["wfbe_caster_slot", true]) -
 //--- sqm init runs on EVERY machine, so the marker is globally readable with no publicVariable and no
 //--- name-list drift (contrast the HC registry right below).
-if (isNil "WFBE_C_CASTER_UIDS") then {WFBE_C_CASTER_UIDS = []}; //--- Steam UIDs allowed to cast from a Caster slot; merged into the spectator allowlist below.
-if (isNil "WFBE_C_CASTER_AUTOSPECTATE") then {WFBE_C_CASTER_AUTOSPECTATE = 0}; //--- 1 = an allowlisted caster seated in a Caster slot auto-enters the spectator once past the deadspawn-transit window.
+if (isNil "WFBE_C_CASTER_UIDS") then {WFBE_C_CASTER_UIDS = ["76561198046825568"]}; //--- Steam UIDs allowed to cast from a Caster slot; merged into the spectator allowlist below.
+if (isNil "WFBE_C_CASTER_AUTOSPECTATE") then {WFBE_C_CASTER_AUTOSPECTATE = 1};
+//--- v5 (spec 8): 1 = the spectator addAction requires a Caster SEAT as well as the UID allowlist.
+if (isNil "WFBE_C_SPECTATOR_CASTER_SEAT_ONLY") then {WFBE_C_SPECTATOR_CASTER_SEAT_ONLY = 1}; //--- 1 = an allowlisted caster seated in a Caster slot auto-enters the spectator once past the deadspawn-transit window.
+//--- ROOT-CAUSE FIX (owner live repro m0801h4, adversarial review flagged it pre-merge): branch
+//--- merges reordered this file so this merge loop ran BEFORE the WFBE_C_SPECTATOR_UIDS isNil
+//--- definition further down. The undefined read threw at runtime and ABORTED THE REST OF THIS
+//--- FILE - every constant below (all spectator/director/HUD/menu flags) stayed nil for the whole
+//--- session: J fell through to the WF menu, no overlay, defaults everywhere. Order-independent now.
+if (isNil "WFBE_C_SPECTATOR_UIDS") then {WFBE_C_SPECTATOR_UIDS = []};
 { if !(_x in WFBE_C_SPECTATOR_UIDS) then {WFBE_C_SPECTATOR_UIDS = WFBE_C_SPECTATOR_UIDS + [_x]}; } forEach WFBE_C_CASTER_UIDS;
 
 //--- HEADLESS-CLIENT NAME REGISTRY (fix 2026-07-26). The 4-HC rollout (#1456) added a fourth HC, but every
@@ -3447,7 +3463,55 @@ if (isNil "WFBE_C_SPECTATOR_BOOST") then {WFBE_C_SPECTATOR_BOOST = 4};
 if (isNil "WFBE_C_SPECTATOR_SLOW") then {WFBE_C_SPECTATOR_SLOW = 0.25};
 if (isNil "WFBE_C_SPECTATOR_SENS") then {WFBE_C_SPECTATOR_SENS = 25};	//--- owner playtest 2026-07-30: 300 deg per full UI-width was unusable; 80 is a broadcast-friendly base. PgUp/PgDn adjust live in-session.
 if (isNil "WFBE_C_SPECTATOR_FOV_MIN") then {WFBE_C_SPECTATOR_FOV_MIN = 0.05};
+if (isNil "WFBE_C_SPECTATOR_AIM_RATE") then {WFBE_C_SPECTATOR_AIM_RATE = 3.5}; //--- v5 P1 follow-aim easing rate (1/s): time-constant ~0.29s, council C8 band 0.25-0.4s. Only read by Client_SpectatorAimFrame.sqf.
 if (isNil "WFBE_C_SPECTATOR_FOV_MAX") then {WFBE_C_SPECTATOR_FOV_MAX = 1.2};
+//--- v5 P3 (owner 2026-08-01): when the director TRACKS a subject (orbit off) the camera should
+//--- sit FLATTER than when it orbits - a near-horizontal angle looks down the line of travel and
+//--- sees further, reading as a chase/broadcast shot; the taller angle is what keeps a CIRCLING
+//--- shot legible. Scales shot HEIGHT only, so radius/apparent size are unchanged.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TRACK_HEIGHT_MULT") then {WFBE_C_SPECTATOR_DIRECTOR_TRACK_HEIGHT_MULT = 0.45};
+//--- v5 P3: occasional first-person cut - every Nth director cut becomes an eyes/POV shot on the
+//--- armed subject (Man subjects only; a vehicle eyePos sits inside the hull). 0 = never.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_EYES_EVERY") then {WFBE_C_SPECTATOR_DIRECTOR_EYES_EVERY = 5};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_EYES_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_EYES_SEC = 6};
+//--- v5 P3 (5b): allow GUER (resistance) AI group leaders as manual N/B watch targets. GUER is
+//--- AI-only, so the isPlayer filter in the cycle excluded the entire insurgency.
+if (isNil "WFBE_C_SPECTATOR_TARGET_GUER") then {WFBE_C_SPECTATOR_TARGET_GUER = 1};
+//--- v5: max seconds a NO-contact shot may hold the screen before the director re-picks.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_IDLE_DWELL_SEC = 3};
+//--- v5 P4: 1 = free-cam integrated per render frame in Client_SpectatorAimFrame (0 = old scheduled path).
+if (isNil "WFBE_C_SPECTATOR_FREECAM_FRAME") then {WFBE_C_SPECTATOR_FREECAM_FRAME = 1};
+//--- v6 (research ruleset, docs/plans/2026-08-01-director-v6-research-ruleset.md):
+//--- rule 4 - TIGHT framing needs a real fight, not one bystander.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_CONTACT") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_CONTACT = 2};
+//--- v7 POI director (owner ruling 2026-08-01): fight-cluster proximity link distance in metres -
+//--- armed units of fighting sides within this range of a cluster centroid merge into that cluster.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_LINK_M") then {WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_LINK_M = 300};
+//--- m0801h9 (owner live repro "zooms in on dirt"): FIGHT aim = density peak - the member with the
+//--- most fellow members inside DENSITY_M (ties -> nearest the centroid); never the raw centroid.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_DENSITY_M") then {WFBE_C_SPECTATOR_DIRECTOR_CLUSTER_DENSITY_M = 75};
+//--- m0801h9 zoom-by-compactness: TIGHT band only under COMPACT_M cluster radius; WIDE_M+ = WIDE shot.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FIGHT_COMPACT_M") then {WFBE_C_SPECTATOR_DIRECTOR_FIGHT_COMPACT_M = 120};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FIGHT_WIDE_M") then {WFBE_C_SPECTATOR_DIRECTOR_FIGHT_WIDE_M = 200};
+//--- rule 3 - minimum hold on any shot that has live contact (fire lock).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_HOT_HOLD_SEC = 7};
+//--- ARTY RANGE RINGS (owner live repro 2026-08-01 13:30, "orange circle spam"): the RM70 parity
+//--- fix registered RM70 on TK/ZG for the first time - every battery rings 9000m in orange on
+//--- terrains a fraction of that size, burying the map. Rings stay ON for Chernarus (long-standing
+//--- feature there); small terrains default OFF. Explicit pre-set of WFBE_C_ARTY_RING still wins.
+if (isNil "WFBE_C_ARTY_RING") then {
+	WFBE_C_ARTY_RING = 1;
+	if ((toLower worldName) in ["zargabad", "takistan"]) then {WFBE_C_ARTY_RING = 0};
+};
+//--- v5 P3b (spec 7a): seconds of no caster input after which transient operator chrome (keybind
+//--- wall + shot list) fades, leaving only the compact status line. On a single-PC stream the
+//--- caster screen IS the stream, so idle must resolve to a clean broadcast frame by itself.
+if (isNil "WFBE_C_SPECTATOR_HUD_FADE_SEC") then {WFBE_C_SPECTATOR_HUD_FADE_SEC = 6};
+//--- v5 P5: caster streamer menu (J in-camera / body action out-of-camera) - WF-menu-idiom
+//--- settings dialog for the broadcast toggles (director auto, orbit, GUER targets, eyes-cam
+//--- cadence, HUD fade, idle dwell, cam speed + live sens readout). Default 0 = fully inert:
+//--- both open paths (addAction install, J KeyDown case) check this flag.
+if (isNil "WFBE_C_SPECTATOR_STREAMER_MENU") then {WFBE_C_SPECTATOR_STREAMER_MENU = 1}; //--- owner armed 2026-08-01 (was 0/dark at first ship)
 
 //--- Spectator v3 director: explicit opt-in. All director code paths read this master gate.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR") then {WFBE_C_SPECTATOR_DIRECTOR = 1}; //--- ARMED on owner order 2026-07-30 ("fold v3 in now"), after an adversarial review found and a fix landed for the blocker that made this feature silently do nothing: the poll thread was started after the movement loop had already exited. Blast radius is one client - spectator entry is gated to WFBE_C_SPECTATOR_UIDS - so this only ever runs for an allowlisted caster. Rollback = set to 0 and rebuild.
@@ -3511,17 +3575,17 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_BASE_MIN_DWELL") then {WFBE_C_SPECTATOR_DIR
 //--- BASE upper dwell bound in seconds.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_BASE_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_BASE_MAX_DWELL = 9};
 //--- MEDIUM lower FOV bound.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN = 0.5};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MIN = 0.28};
 //--- MEDIUM upper FOV bound.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX = 0.65};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_FOV_MAX = 0.4};
 //--- MEDIUM lower dwell bound in seconds.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MIN_DWELL = 4};
 //--- MEDIUM upper dwell bound in seconds.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_MAX_DWELL = 7};
 //--- TIGHT lower FOV bound.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN = 0.35};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MIN = 0.12};
 //--- TIGHT upper FOV bound.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX = 0.5};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_FOV_MAX = 0.2};
 //--- TIGHT lower dwell bound in seconds.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_MIN_DWELL = 3}; //--- v4: 1.5-3s tight shots ended before the (now faster) zoom arrived.
 //--- TIGHT upper dwell bound in seconds.
@@ -3533,13 +3597,13 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_HEIGHT") then {WFBE_C_SPECTATOR_DIRECT
 //--- WIDE and BASE orbit rate in degrees per second.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_WIDE_ORBIT_DEG_PER_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_WIDE_ORBIT_DEG_PER_SEC = 4};
 //--- MEDIUM camera standoff radius in metres.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS = 18};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_RADIUS = 70};
 //--- MEDIUM camera height above target in metres.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT = 12};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_MEDIUM_HEIGHT = 30};
 //--- TIGHT camera standoff radius in metres.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS = 8};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_RADIUS = 35};
 //--- TIGHT camera height above target in metres.
-if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT = 4};
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT") then {WFBE_C_SPECTATOR_DIRECTOR_TIGHT_HEIGHT = 14};
 //--- seconds of velocity feed-forward for moving director and manual-follow subjects.
 if (isNil "WFBE_C_SPECTATOR_DIRECTOR_LEAD_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_LEAD_SEC = 0.4};
 //--- multiplier for position convergence when subject speed exceeds 8 m/s.
@@ -3556,7 +3620,7 @@ if (isNil "WFBE_C_SPECTATOR_DIRECTOR_AIR_FOV_MIN") then {WFBE_C_SPECTATOR_DIRECT
 //--- Spectator broadcast HUD: opt-in styled title overlay + dialog map fallback.
 //--- 0 (default) leaves the existing 12455 cutText spectator card path unchanged.
 //--- Layer 12456 is reserved for this title; 12450-12452/12454/12455/12461 remain occupied.
-if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 0};
+if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 1}; //--- owner armed 2026-08-01 (the caster overlay: "NO OVERLAY" on the h5 stream was this flag still 0/dark - the cutRsc broadcast HUD never drew)
 
 //--- Spectator v4 streaming pass (owner 2026-07-31: autonomous TikTok/Twitch/Kick broadcast cam).
 if (isNil "WFBE_C_SPECTATOR_TICK") then {WFBE_C_SPECTATOR_TICK = 0.01}; //--- camera loop sleep; 0.05 hard-capped updates at 20Hz = judder on a 60fps capture.
@@ -3576,6 +3640,36 @@ if (isNil "WFBE_C_SPECTATOR_ZOOM_RATE") then {WFBE_C_SPECTATOR_ZOOM_RATE = 8}; /
 if (isNil "WFBE_C_SPECTATOR_MOUSE_SMOOTH") then {WFBE_C_SPECTATOR_MOUSE_SMOOTH = 0.55}; //--- per-event mouse-delta EMA blend (1=instant/off, lower=smoother).
 if (isNil "WFBE_C_SPECTATOR_SENS_REF_FOV") then {WFBE_C_SPECTATOR_SENS_REF_FOV = 0.8}; //--- FOV at which SENS applies 1:1; sensitivity scales linearly with zoom (scoped-aim feel).
 if (isNil "WFBE_C_SPECTATOR_SENS_MIN_FACTOR") then {WFBE_C_SPECTATOR_SENS_MIN_FACTOR = 0.05}; //--- never let zoom-scaled sensitivity drop below this fraction of SENS.
+
+//--- ===== Spectator v8 DEFINITIVE rebuild (owner mandate 2026-08-01) ===== ---
+if (isNil "WFBE_C_SPECTATOR_EVENTFEED") then {WFBE_C_SPECTATOR_EVENTFEED = 1}; //--- server/HC Fired-Killed event feed for the caster auto-director (Common_SpectatorEventFeed.sqf).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TRACK_TTL_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_TRACK_TTL_SEC = 15}; //--- unmatched fight tracks age out after this many seconds.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TRACK_MATCH_OVERLAP") then {WFBE_C_SPECTATOR_DIRECTOR_TRACK_MATCH_OVERLAP = 0.25}; //--- member-overlap fraction that keeps a track id across re-forms.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_EV_ASSIGN_TRACK_M") then {WFBE_C_SPECTATOR_DIRECTOR_EV_ASSIGN_TRACK_M = 150}; //--- event-to-track assignment slack beyond the track radius.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_EV_ASSIGN_TOWN_M") then {WFBE_C_SPECTATOR_DIRECTOR_EV_ASSIGN_TOWN_M = 250}; //--- event-to-town fallback assignment radius.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_HOLD_MIN_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_HOLD_MIN_SEC = 7}; //--- fight minimum hold (fire lock).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_HOLD_MAX_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_HOLD_MAX_SEC = 12}; //--- extended hold ceiling while action continues.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_CUT_RATIO") then {WFBE_C_SPECTATOR_DIRECTOR_CUT_RATIO = 1.5}; //--- a rival must outscore the live shot by this ratio to steal the camera.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_RECENT_PENALTY") then {WFBE_C_SPECTATOR_DIRECTOR_RECENT_PENALTY = 0.75}; //--- last-2-shown POIs score at 75 percent...
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_RECENT_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_RECENT_SEC = 30}; //--- ...for this many seconds (bypassed at 2x the current score).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_GLANCE_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_GLANCE_SEC = 3}; //--- cold-town WIDE glance duration.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_TOWN_COOLDOWN_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_TOWN_COOLDOWN_SEC = 45}; //--- per-town cooldown after a glance.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_DELAY_SEC") then {WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_DELAY_SEC = 3}; //--- static settle before the orbit reveal starts.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_RATE") then {WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_RATE = 6}; //--- reveal sweep speed, degrees per second.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_SWEEP_MIN") then {WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_SWEEP_MIN = 60}; //--- minimum reveal arc, degrees.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_SWEEP_RAND") then {WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_SWEEP_RAND = 30}; //--- random extra arc on top (60-90 total).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PUSH_RATIO") then {WFBE_C_SPECTATOR_DIRECTOR_PUSH_RATIO = 1.5}; //--- escalation ratio (vs the stamp-time score) that earns the one push-in.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PUSH_SCALE") then {WFBE_C_SPECTATOR_DIRECTOR_PUSH_SCALE = 0.85}; //--- push-in standoff multiplier (15 percent closer, eased over ~5s by the frame handler).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FIGHT_STAND_M") then {WFBE_C_SPECTATOR_DIRECTOR_FIGHT_STAND_M = 70}; //--- compact-fight standoff radius (live-proven values).
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_FIGHT_STAND_H") then {WFBE_C_SPECTATOR_DIRECTOR_FIGHT_STAND_H = 30}; //--- compact-fight standoff height.
+if (isNil "WFBE_C_SPECTATOR_DIRECTOR_PEN_EXCLUDE_M") then {WFBE_C_SPECTATOR_DIRECTOR_PEN_EXCLUDE_M = 200}; //--- eligibility exclusion radius around the deadspawn pens/parks.
+if (isNil "WFBE_C_SPECTATOR_FRAME_AIM_GAIN") then {WFBE_C_SPECTATOR_FRAME_AIM_GAIN = 2.5}; //--- frame-handler aim ease gain (per second).
+if (isNil "WFBE_C_SPECTATOR_FRAME_STAND_GAIN") then {WFBE_C_SPECTATOR_FRAME_STAND_GAIN = 0.6}; //--- frame-handler standoff/height ease gain (push-in glide ~5s).
+//--- Director cut preload (flag, default 0 = inert). Streams terrain/models around the NEXT
+//--- shot's camera position before the snapshot flips, so a cut does not reveal unloaded
+//--- ground on stream. AUTO director cuts only; manual N/B cuts stay instant.
+if (isNil "WFBE_C_SPECTATOR_PRELOAD") then {WFBE_C_SPECTATOR_PRELOAD = 0}; //--- 1 = preload before auto director cuts.
+if (isNil "WFBE_C_SPECTATOR_PRELOAD_MAX_SEC") then {WFBE_C_SPECTATOR_PRELOAD_MAX_SEC = 1.5}; //--- hard cap on the pre-cut wait; a slow disk can never stall the director longer than this.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

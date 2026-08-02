@@ -5,6 +5,12 @@ if (isNil "RUBHUD") then {RUBHUD = true};
 if !(isNil "BIS_CONTROL_CAM") then {RUBHUD = false};
 CutRsc["OptionsAvailable","PLAIN",0];
 
+//--- CASTER EXIT (owner live repro m0801f, 389 errors/session): the caster deadspawn exemption
+//--- lets CIV caster bodies reach this combat HUD, whose upgrade/arty reads are nil on CIV
+//--- (GetSideUpgrades -> nil select). Casters use the spectator HUD; the resource HUD is not for
+//--- them. CutRsc above stays - it keeps scroll-action icons (incl. Enter Spectator) alive.
+if (player getVariable ["wfbe_caster_slot", false]) exitWith {};
+
 waituntil{!isnil"totalTowns"};
 
 // Marty: Cache RHUD controls and values so hidden/unchanged HUD state does not rewrite UI every second.
@@ -269,15 +275,25 @@ _RHUDSetFullPosition = {
 // Optional shared artillery cooldown: legacy reads fireMissionTime; WFBE_C_ARTY_SHARED_COOLDOWN
 // also reads the side-logic wfbe_arty_last_fire stamp broadcast by the server.
 _RHUDUpdateArty = {
-	private ["_fireTime", "_intervals", "_ups", "_elapsed", "_remain", "_last", "_logik", "_sharedLast"];
+	private ["_fireTime", "_intervals", "_ups", "_elapsed", "_remain", "_last", "_logik", "_sharedLast", "_artyUpgradeIndex", "_artyLevel", "_artyIntervalIndex"];
 	//--- b760: folded into the FPS C/S line as a compact "  Arty ..." suffix (no standalone box).
 	//--- Returns the suffix string ("" when this side fields no artillery); the FPS-row builder appends it.
 	if ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 0]) <= 0) exitWith {""};
 
-	_intervals = missionNamespace getVariable "WFBE_C_ARTILLERY_INTERVALS";
-	if (isNil "_intervals") exitWith {""};
+	_intervals = missionNamespace getVariable ["WFBE_C_ARTILLERY_INTERVALS", []];
+	if ((typeName _intervals != "ARRAY") || {count _intervals == 0}) exitWith {""};
 	_ups = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
-	_fireTime = _intervals select (_ups select WFBE_UP_ARTYTIMEOUT);
+	if ((typeName _ups != "ARRAY") || {count _ups == 0}) exitWith {""};
+	_artyUpgradeIndex = missionNamespace getVariable ["WFBE_UP_ARTYTIMEOUT", 0];
+	if ((typeName _artyUpgradeIndex != "SCALAR") || {_artyUpgradeIndex < 0}) then {_artyUpgradeIndex = 0};
+	_artyUpgradeIndex = floor _artyUpgradeIndex;
+	_artyUpgradeIndex = _artyUpgradeIndex min ((count _ups) - 1);
+	_artyLevel = _ups select _artyUpgradeIndex;
+	if (isNil "_artyLevel" || {typeName _artyLevel != "SCALAR"} || {_artyLevel < 0}) then {_artyLevel = 0};
+	_artyLevel = floor _artyLevel;
+	_artyIntervalIndex = _artyLevel min ((count _intervals) - 1);
+	_fireTime = _intervals select _artyIntervalIndex;
+	if (isNil "_fireTime" || {typeName _fireTime != "SCALAR"} || {_fireTime < 0}) exitWith {""};
 
 	_last = fireMissionTime;
 	if (isNil "_last") then {_last = -1000};

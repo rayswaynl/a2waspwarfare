@@ -207,6 +207,10 @@ private "_reseatResult"; _reseatResult = if ((side group player == civilian) && 
 //--- HC load telemetry: HCSTAT lines on the server RPT (fps + local unit/group counts).
 [] ExecVM "Headless\HC_StatLoop.sqf";
 
+//--- spectator v8: HC-local Fired/Killed event capture, forwarded to the server feed
+//--- (Common_SpectatorEventFeed.sqf; AI EHs fire on the hosting machine's locality).
+[] ExecVM "Common\Functions\Common_SpectatorEventFeed.sqf";
+
 //--- claude-gaming (2026-06-15): HC-LOCAL empty-group reaper. The HC owns ~12-16 delegated
 //--- commander-team/town groups that are local to it. Their self-reap in
 //--- Common_RunCommanderTeam.sqf:789 (deleteGroup _team on GetLiveUnits==0) NO-OPs whenever
