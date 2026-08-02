@@ -1,5 +1,73 @@
 # JOURNAL — a2waspwarfare-experital
 
+## Working State 2026-08-02 -- AICOM founding/placement fix [fable/founding-placement-20260802]
+
+Task: owner live bug report (m0801h-era, Takistan, mid-match 2026-08-02 16:47) - two AICOM
+production-placement defects. Worktree C:/tmp/claudewt/founding-fix, branch
+fable/founding-placement-20260802, base master (6ea2bcf17b at clone time).
+
+### Symptom 1: infantry founding/reinforcing at an owned airfield with no Barracks
+
+Root cause found: NOT the B74/cmdcon41 airfield-runway relocation (that only fires for a real
+isKindOf "Air" template, gated on _hasAirfield, and only relocates a team that IS an air team).
+The actual defect is in AI_Commander_Produce.sqf's always-on "(4) TOWN-CENTER TOP-UP DISPATCHER"
+(cmdcon41-w2, unconditional - not behind any flag). Its "parked" test (~line 195-198 pre-fix)
+accepted ANY owned town within 400m of the team leader (sideID match only), with NO check that the
+town hosts a Barracks or any production structure. An infantry team resting/rallying near a
+captured airfield-only town (no Barracks ever built there) still satisfied "parked", so the
+topup_req dispatch conjured fresh infantry bodies directly at the leader's exact rally position -
+the same "magic infantry" anti-pattern WFBE_C_AICOM_FOUND_REQUIRE_FACTORY was armed (2026-07-10) to
+stop for founding, just never wired into this reinforcement path. (Confirmed towns[] includes
+airfields uniformly with city/village markers - AI_Commander_Teams.sqf:526 does the identical
+wfbe_is_airfield scan over the same towns array.) The separate AI_Commander_HCTopUp.sqf file has
+the identical unstructured-town defect but is inert by default (WFBE_C_AICOM_HC_TOPUP_ENABLE=0),
+so it is not the live cause.
+
+Fix: new flag WFBE_C_AICOM_TOPUP_REQUIRE_BARRACKS (default 0, byte-identical at 0). When armed,
+the town-proximity "parked" grant is replaced with "an alive owned Barracks within the same 400m
+range" (HQ-parked branch untouched). One always-on INFORMATION line logs the withheld case.
+
+### Symptom 2: AI commander refuses to build/found units at forward factories
+
+Root cause found: WFBE_C_AICOM_FACTORY_TARGET_ENABLE (default 0) governs ONLY the deficit-fill
+refill loop in AI_Commander_Produce.sqf, which per the B57/Build83 comments in
+AI_Commander_Teams.sqf only serves SERVER-LOCAL, NON-HC teams - "100% of the live army" is now
+HC-founded and explicitly SKIPPED by Produce.sqf's _canProduce gate (line ~297: excludes
+wfbe_aicom_hc teams). So that flag's own effect is nearly moot for the live game; it is NOT purely
+the dark flag "working as designed" causing the report - a separate, bigger defect sits upstream.
+
+The actual bug: AI_Commander_Teams.sqf's HC-team FOUNDING factory pick (the "doctrine factory"
+scan, and the OWNED-FACTORY-GATE re-anchor scan) both resolve the spawn structure via a bare
+forEach+exitWith over wfbe_structures - which is APPEND-ONLY build order (new structures are
+always `+ [_site]`, confirmed in Construction_SmallSite.sqf/_MediumSite.sqf), never distance-sorted.
+So the AI commander ALWAYS spawns founded units from the FIRST factory of the matching type it ever
+built (the original rear base), and a later player-built FORWARD factory of the same type is never
+reached no matter how close to the front it stands, or how depleted/far the rear one is.
+
+Fix: new Common function WFBE_CO_FNC_PickForwardFactory (Common/Functions/Common_PickForwardFactory.sqf)
+scans all alive matching-type structures and picks the one nearest an unowned/enemy town (the most
+forward one). Wired behind new flag WFBE_C_AICOM_FOUND_FACTORY_FORWARD (default 0, byte-identical at
+0) at both factory-selection call sites in AI_Commander_Teams.sqf. One always-on INFORMATION line
+logs each forward pick.
+
+### Owner judgment needed
+
+Both new flags default 0 (mission byte-identical to HEAD until armed) per repo flag policy - these
+are behavior changes, not crash/nil-deref fixes, so neither is armed in this PR. See PR body /
+final report for the arm recommendation.
+
+### Gates run
+
+- Lint gate (full select list, --no-classname-index): 0 new findings in any edited/created file
+  across all 3 terrains (168 pre-existing findings unchanged).
+- Bracket delta (git diff origin/master, curly+square): 0 on every edited file, all 3 terrains.
+- Mirror regen (dotnet run -c RELEASE, A2WASP_SKIP_ZIP=1): CH/TK/ZG all DONE; --check reports zero
+  drift; version.sqf.template needed no restore (untouched by this change).
+- Test-WaspVersionTemplates.ps1: all PASS (CH/TK/ZG).
+- pytest Tools/Lint: 15 failed / 480 passed on THIS branch - identical 15 failing test IDs and
+  identical count confirmed on origin/master baseline (stash-and-rerun). Zero new failures.
+
+
 ## Working State 2026-08-01 — crash 014EFCF4 crew-delete sweep [fix/014e-crew-delete-sweep-20260801]
 
 Task: sweep the remaining direct crew-delete sites for crash 014EFCF4 (deleteVehicle on a Man still

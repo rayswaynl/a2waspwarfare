@@ -22,7 +22,8 @@ private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_
               "_w11FreeFlag",
               "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
               "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger",
-              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending","_constructionExpired","_constructionSince","_constructionTTL","_grp","_censusOn","_censusLast","_censusRows","_censusKind","_censusLdr","_censusLdrTxt","_scanChunkOn","_scanChunkSleep","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_sliceCut","_sliceYield"]; //--- B66
+              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending","_constructionExpired","_constructionSince","_constructionTTL","_grp","_censusOn","_censusLast","_censusRows","_censusKind","_censusLdr","_censusLdrTxt","_scanChunkOn","_scanChunkSleep","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_sliceCut","_sliceYield",
+              "_foundFwdOn","_gateFacObj"]; //--- B66 + fable/founding-placement-20260802
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -1449,11 +1450,25 @@ if (count _live > 0) then {
 	_facNames = missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES", _sideText];
 	_structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 	_facObj = objNull;
+	//--- FOUNDING FORWARD-FACTORY FIX (flag WFBE_C_AICOM_FOUND_FACTORY_FORWARD, default 0): the legacy
+	//--- inner forEach below stops on the FIRST alive matching-type structure in wfbe_structures, which
+	//--- is APPEND-ONLY build order (oldest first - Construction_SmallSite.sqf/_MediumSite.sqf always
+	//--- `+ [_site]`), so every HC founding (100% of the live army per B57) keeps spawning from the
+	//--- FIRST factory of that type the side ever built and never reaches a later player-built FORWARD
+	//--- factory, however close to the front it stands. When armed, WFBE_CO_FNC_PickForwardFactory scans
+	//--- every alive matching-type structure and picks the one nearest an unowned/enemy town (the most
+	//--- forward one) instead. Flag 0 => byte-identical legacy first-match scan.
+	_foundFwdOn = (missionNamespace getVariable ["WFBE_C_AICOM_FOUND_FACTORY_FORWARD", 0]) > 0;
 	{
 		_facIdx = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES", _sideText]) find _x;
 		if (_facIdx >= 0) then {
 			_facClass = _facNames select _facIdx;
-			{ if (typeOf _x == _facClass && {alive _x}) exitWith {_facObj = _x} } forEach _structures;
+			if (_foundFwdOn) then {
+				_facObj = [_facClass, _structures, _sideID] Call WFBE_CO_FNC_PickForwardFactory;
+				if (!isNull _facObj) then {["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] FOUND_FACTORY_FORWARD picked %2 (class %3) for doctrine spawn.", _sideText, _facObj, _facClass]] Call WFBE_CO_FNC_AICOMLog};
+			} else {
+				{ if (typeOf _x == _facClass && {alive _x}) exitWith {_facObj = _x} } forEach _structures;
+			};
 		};
 		if (!isNull _facObj) exitWith {};
 	} forEach (if (_doc == "HF") then {["Heavy","Light","Barracks"]} else {["Light","Heavy","Barracks"]});
@@ -1530,7 +1545,13 @@ if (count _live > 0) then {
 				_aIdx = (missionNamespace getVariable Format ["WFBE_%1STRUCTURES", _sideText]) find _aStruct;
 				if (_aIdx >= 0) then {
 					_aClass = _facNames select _aIdx;
-					{ if (typeOf _x == _aClass && {alive _x}) exitWith {_gateFacObj = _x} } forEach _structures;
+					//--- Same FOUND_FACTORY_FORWARD fix as the doctrine-walk scan above - the owned-factory-gate
+					//--- re-anchor had the identical first-in-build-order defect.
+					if (_foundFwdOn) then {
+						_gateFacObj = [_aClass, _structures, _sideID] Call WFBE_CO_FNC_PickForwardFactory;
+					} else {
+						{ if (typeOf _x == _aClass && {alive _x}) exitWith {_gateFacObj = _x} } forEach _structures;
+					};
 				};
 				if (!isNull _gateFacObj) exitWith {};
 			} forEach (switch (_wantType) do {

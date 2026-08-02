@@ -3745,5 +3745,10 @@ if (isNil "WFBE_C_TERRVIC_HOLDTICKS") then {WFBE_C_TERRVIC_HOLDTICKS = 0};
 //--- paths (AntiStack on/off) persist scores. When 0, only the post-loop flush runs.
 if (isNil "WFBE_C_STATS_ROUNDEND_FLUSH") then {WFBE_C_STATS_ROUNDEND_FLUSH = 1};
 
+
+//--- fable/founding-placement-20260802 (owner live bug 2026-08-02, m0801h-era): two AICOM production
+//--- placement defects. Both default 0 (byte-identical to HEAD until armed).
+if (isNil "WFBE_C_AICOM_TOPUP_REQUIRE_BARRACKS") then {WFBE_C_AICOM_TOPUP_REQUIRE_BARRACKS = 0}; //--- Produce.sqf TOWN-CENTER TOP-UP DISPATCHER 'parked' test matched ANY owned town (sideID-only, no structure check), so an infantry team resting at a captured airfield with NO Barracks still got fresh bodies conjured at its exact position - the same 'magic infantry' anti-pattern WFBE_C_AICOM_FOUND_REQUIRE_FACTORY was armed to stop for founding. 1 = also require an alive owned Barracks within the same 400m parked-range before granting town-parked status (HQ-parked path is unaffected - HQ always carries the home base's own factories). 0 = pre-fix any-owned-town behaviour.
+if (isNil "WFBE_C_AICOM_FOUND_FACTORY_FORWARD") then {WFBE_C_AICOM_FOUND_FACTORY_FORWARD = 0}; //--- AI_Commander_Teams.sqf resolved the founding/owned-factory-gate spawn point via forEach+exitWith over wfbe_structures, which is APPEND-ONLY build order (oldest first) - so HC founding (100% of the live army per B57) always used the side's FIRST factory of the matching type and a later player-built FORWARD factory was never reached. 1 = pick the alive matching-type factory nearest an unowned/enemy town instead (WFBE_CO_FNC_PickForwardFactory). 0 = pre-fix first-in-array selection.
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
