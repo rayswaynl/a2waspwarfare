@@ -3400,6 +3400,21 @@ if (isNull _team || {!([_team, "wfbe_aicom_ended_fired", false] Call WFBE_CO_FNC
 //--- r70 empty-group lifecycle: GetLiveUnits==0 still leaves corpses in units _team; bare
 //--- deleteGroup NO-OPs (Client_GroupsGC documents the HC husk leak). Purge non-player bodies first.
 if (!isNull _team) then {
-{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x}} forEach (units _team);
-if (({isPlayer _x} count (units _team)) == 0) then {deleteGroup _team};
+[_team] Spawn {
+	Private ["_cleanupTeam","_cleanupUnits","_cleanupUnit"];
+	_cleanupTeam = _this select 0;
+	if (isNull _cleanupTeam) exitWith {};
+	_cleanupUnits = +(units _cleanupTeam);
+	{
+		_cleanupUnit = _x;
+		if (!isNull _cleanupUnit && {!isPlayer _cleanupUnit}) then {
+			["aicom-team-ended-unit", _cleanupUnit, ""] Call WFBE_CO_FNC_LogVehDelete;
+			deleteVehicle _cleanupUnit;
+			sleep 0;
+		};
+	} forEach _cleanupUnits;
+	if (!isNull _cleanupTeam && {({isPlayer _x} count (units _cleanupTeam)) == 0}) then {
+		deleteGroup _cleanupTeam;
+	};
+};
 };
