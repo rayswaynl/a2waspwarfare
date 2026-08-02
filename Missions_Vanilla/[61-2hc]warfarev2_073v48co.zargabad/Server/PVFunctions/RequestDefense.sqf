@@ -1,14 +1,51 @@
-Private ["_builtByRepairTruck","_defenseType","_dir","_index","_manned","_pos","_reqPlayer","_side","_structure"];
-_side            = _this select 0;
-_defenseType     = _this select 1;
-_pos             = _this select 2;
-_dir             = _this select 3;
-_manned          = _this select 4;
-_builtByRepairTruck = if (count _this > 5) then {_this select 5} else {false};
-_reqPlayer          = if (count _this > 6) then {_this select 6} else {objNull};
-// Defense auto-manning defaults on client-side and Custom Action 16 can still toggle it off/on.
+Private ["_builtByRepairTruck","_defenseType","_defenses","_dir","_index","_manned","_pos","_reqPlayer","_side","_structure"];
 
-_index = (missionNamespace getVariable Format["WFBE_%1DEFENSENAMES",str _side]) find _defenseType;
+//--- Client PV ingress: validate the complete envelope before selecting any field.
+//--- RequestDefense constructs server-local objects, so a malformed short or mistyped array
+//--- must fail cleanly instead of throwing mid-handler and leaving partial request state.
+if (isNil "_this") exitWith {
+	["WARNING", "RequestDefense.sqf: rejected nil payload."] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _this != "ARRAY") exitWith {
+	["WARNING", "RequestDefense.sqf: rejected non-array payload."] Call WFBE_CO_FNC_LogContent;
+};
+if (count _this < 7) exitWith {
+	["WARNING", Format ["RequestDefense.sqf: rejected short payload (%1 args).", count _this]] Call WFBE_CO_FNC_LogContent;
+};
+
+_side = _this select 0;
+_defenseType = _this select 1;
+_pos = _this select 2;
+_dir = _this select 3;
+_manned = _this select 4;
+_builtByRepairTruck = _this select 5;
+_reqPlayer = _this select 6;
+
+if (typeName _side != "SIDE" || {!(_side in WFBE_PRESENTSIDES)}) exitWith {
+	["WARNING", Format ["RequestDefense.sqf: rejected invalid side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _defenseType != "STRING" || {_defenseType == ""}) exitWith {
+	["WARNING", "RequestDefense.sqf: rejected invalid defense classname."] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _pos != "ARRAY" || {count _pos < 3}) exitWith {
+	["WARNING", "RequestDefense.sqf: rejected invalid placement payload."] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName (_pos select 0) != "SCALAR" || {typeName (_pos select 1) != "SCALAR"} || {typeName (_pos select 2) != "SCALAR"} || {typeName _dir != "SCALAR"}) exitWith {
+	["WARNING", "RequestDefense.sqf: rejected invalid placement payload."] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _manned != "BOOL" || {typeName _builtByRepairTruck != "BOOL"}) exitWith {
+	["WARNING", "RequestDefense.sqf: rejected invalid defense options."] Call WFBE_CO_FNC_LogContent;
+};
+if (typeName _reqPlayer != "OBJECT" || {isNull _reqPlayer} || {!isPlayer _reqPlayer} || {side group _reqPlayer != _side}) exitWith {
+	["WARNING", "RequestDefense.sqf: rejected invalid requester."] Call WFBE_CO_FNC_LogContent;
+};
+
+// Defense auto-manning defaults on client-side and Custom Action 16 can still toggle it off/on.
+_defenses = missionNamespace getVariable [Format ["WFBE_%1DEFENSENAMES", str _side], []];
+if (typeName _defenses != "ARRAY") exitWith {
+	["WARNING", Format ["RequestDefense.sqf: rejected unavailable defense list for side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+};
+_index = _defenses find _defenseType;
 if (_index != -1) then {
 	//--- Position anchors spawn a whole WDDM composition; everything else is a single defense.
 	//--- Release-merge (WDDM + engineer-EASA): the single-defense path keeps the EASA repair-truck tagging args
