@@ -24,7 +24,7 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) == 0)
 //--- Payload fail-clean: client PV path (CounterBatteryFired) can deliver null/malformed tuples
 //--- when the firer is deleted mid-burst. Never side/getPos a bad object.
 if (isNil "_this" || {typeName _this != "ARRAY"} || {count _this < 2}) exitWith {};
-Private ["_unit","_fpos","_firingSide","_opposingSideKey","_detectSide","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt","_aliveCbrs","_opposingLogik","_opposingSides","_oppSide","_fireMissCount","_missWindow","_lastMiss","_cbrSide","_cbrLogic"];
+Private ["_unit","_fpos","_firingSide","_opposingSideKey","_detectSide","_cbrs","_i","_cbr","_r","_upgs","_lvl","_lastPing","_d","_t","_h","_tStr","_markerPos","_pkt","_aliveCbrs","_opposingLogik","_opposingSides","_oppSide","_fireMissCount","_missWindow","_lastMiss","_cbrSide","_cbrLogic","_detected"];
 
 _unit  = _this select 0;
 _fpos  = _this select 1;
@@ -83,6 +83,7 @@ _opposingSides = [];
 	_detectSide = _oppSide;
 	_cbrs = missionNamespace getVariable [_opposingSideKey, []];
 	if (count _cbrs > 0) then {
+	_detected = false;
 	//--- Scan each registered CBR for range match.
 	{
 	    _cbr = _x;
@@ -105,7 +106,8 @@ _opposingSides = [];
 	        };
 
 	        _d = _fpos distance (getPos _cbr);
-	        if (_d <= _r) then {
+	        if (_d <= _r && {!_detected}) then {
+	            _detected = true;
 	            //--- Mark rate-limit on the firing unit.
 	            _unit setVariable ["wfbe_cbr_lastping", time];
 
