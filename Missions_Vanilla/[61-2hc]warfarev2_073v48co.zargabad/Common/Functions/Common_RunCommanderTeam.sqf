@@ -1701,8 +1701,15 @@ while {!WFBE_GameOver && _alive} do {
 							//--- funds it was burning, the air cap stops filling with idle hulls, and no
 							//--- behaviour is lost that was ever actually happening. Set the flag to 1 only
 							//--- once the lift is re-implemented INSIDE the loop at the delivery point.
-							if ((missionNamespace getVariable ["WFBE_C_AICOM_AIRLIFT_REQ", 0]) > 0) then {
+							//--- fable/airlift-v2 (PR #1579 follow-up, owner 2026-07-28): the request gate now fires when EITHER
+							//--- the legacy AIRLIFT_REQ flag OR the new in-loop-lift AIRLIFT_V2 flag is armed - V2 alone is
+							//--- sufficient to enable the whole request->grant->deliver->LIFT pipeline (Common_AICOMAirliftV2Deliver.sqf,
+							//--- called from the AIRMOBILE TRANSPORT GRANT CONSUMER below); it does not require or re-arm AIRLIFT_REQ.
+							if (((missionNamespace getVariable ["WFBE_C_AICOM_AIRLIFT_REQ", 0]) > 0) || {(missionNamespace getVariable ["WFBE_C_AICOM_AIRLIFT_V2", 0]) > 0}) then {
 								_team setVariable ["wfbe_aicom_airlift_req", [time, getPosATL (leader _team)], true];
+								if ((missionNamespace getVariable ["WFBE_C_AICOM_AIRLIFT_V2", 0]) > 0) then {
+									diag_log ("AIRLIFT2|v1|stage=request|team=" + str _team + "|side=" + str _sideID + "|dist=" + str (round ((leader _team) distance _dest)));
+								};
 							};
 							diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_REQ|team=" + str _team + "|dist=" + str (round ((leader _team) distance _dest)));
 							["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] has no transport heli for a long airmobile leg - requisition requested.", _side, _team]] Call WFBE_CO_FNC_AICOMLog;
@@ -3339,8 +3346,20 @@ while {!WFBE_GameOver && _alive} do {
 					_alHull = _alNewVehicles select 0;
 					_alSeats = if (isNull _alHull) then {-1} else {_alHull emptyPositions "cargo"};
 					_alFoot = {alive _x && {vehicle _x == _x}} count ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
-					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_DELIVERED|team=" + str _team + "|class=" + _alClass + "|cargoSeats=" + str _alSeats + "|footPax=" + str _alFoot + "|liftedHere=0-by-design-see-airlift-parking-lot");
+					//--- fable/airlift-v2: the fixed "0-by-design" tail is only true while AIRLIFT_V2 is OFF - when it is
+					//--- armed, the LIFT Spawn below attempts a lift for this exact delivery, so say so instead of
+					//--- leaving a stale "never lifts" claim in the RPT during a V2 soak.
+					private ["_alLiftedTail"];
+					_alLiftedTail = if ((missionNamespace getVariable ["WFBE_C_AICOM_AIRLIFT_V2", 0]) > 0) then {"see-AIRLIFT2-stage-log"} else {"0-by-design-see-airlift-parking-lot"};
+					diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|AIRMOBILE_REQUISITION_DELIVERED|team=" + str _team + "|class=" + _alClass + "|cargoSeats=" + str _alSeats + "|footPax=" + str _alFoot + "|liftedHere=" + _alLiftedTail);
 					["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] received paid transport %3 at factory.", _side, _team, _alClass]] Call WFBE_CO_FNC_AICOMLog;
+					//--- fable/airlift-v2 (PR #1579 follow-up, owner 2026-07-28): the LIFT half. Gate WFBE_C_AICOM_AIRLIFT_V2
+					//--- default 0 (stays OFF until soaked). Spawned so the 8s order-loop tick is never blocked by a
+					//--- multi-minute flight; the helper self-contains mount/liftoff/unload/rtb/abort with its own bounded
+					//--- waits and AIRLIFT2|v1|stage= telemetry (Common_AICOMAirliftV2Deliver.sqf).
+					if ((missionNamespace getVariable ["WFBE_C_AICOM_AIRLIFT_V2", 0]) > 0) then {
+						[_alHull, _team, _side, _sideID] Spawn WFBE_CO_FNC_AICOMAirliftV2Deliver;
+					};
 				} else {
 					_alRefund = if ((typeName _alCharge) == "SCALAR") then {_alCharge} else {0};
 					if (_alRefund > 0) then {
