@@ -212,7 +212,9 @@ WFBE_COMM_FNC_RefreshWallet = {
 	_selTownId = _this select 0;
 	_townFundKey = Format ["AICOMV2_GDIR_TOWN_FUND_%1", _selTownId];
 	_townFund = missionNamespace getVariable [_townFundKey, 0];
-	_walletTxt = Format ["Wallet: $%1 | Town Fund: $%2", round _wallet, round _townFund];
+	//--- floor, not round: gates below compare the RAW fractional wallet (assist bounties can credit x.5),
+	//--- so a rounded-up display ($800 shown vs 799.5 spendable) would contradict the disabled buttons/deny.
+	_walletTxt = Format ["Wallet: $%1 | Town Fund: $%2", floor _wallet, floor _townFund];
 	ctrlSetText [31070, _walletTxt];
 	[_wallet, _townFund]
 };
