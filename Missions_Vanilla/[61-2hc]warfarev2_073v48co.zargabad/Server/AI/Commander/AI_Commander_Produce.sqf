@@ -139,7 +139,7 @@ if (_airMaxTotalP > 0) then {
 		//--- (3) AIRMOBILE TRANSPORT REQUISITION: the local driver requests a transport only
 		//--- for a long airmobile leg without one. Server owns class/unlock/factory/treasury/cap
 		//--- validation, then publishes a paid grant for the HC-local CreateTeam consumer.
-		private ["_alReq","_alGrant","_alUnits","_alClass","_alData","_alTryData","_alKind","_alFactories","_alFactory","_alPrice","_alFunds","_alCapCost","_alAirOK","_alGrantPending"];
+		private ["_alReq","_alGrant","_alUnits","_alClass","_alData","_alTryData","_alKind","_alFactories","_alFactory","_alPrice","_alFunds","_alCapCost","_alCrewSlots","_alHasCommander","_alHasGunner","_alAirOK","_alGrantPending"];
 		_alReq = _team getVariable "wfbe_aicom_airlift_req";
 		_alGrant = _team getVariable "wfbe_aicom_airlift_grant";
 		_alGrantPending = !isNil "_alGrant" && {(typeName _alGrant) == "ARRAY"} && {count _alGrant > 0};
@@ -164,7 +164,23 @@ if (_airMaxTotalP > 0) then {
 				_alFactory = _alFactories select 0;
 				{ if ((_x distance _wm_ldr) < (_alFactory distance _wm_ldr)) then {_alFactory = _x} } forEach _alFactories;
 				_alPrice = _alData select QUERYUNITPRICE;
-				_alCapCost = 3 + count (_alData select QUERYUNITTURRETS);
+				//--- Reserve exactly the crew CreateTeam can materialize for this transport:
+				//--- driver plus the class-specific gunner/commander primary seats.
+				_alCrewSlots = _alData select QUERYUNITCREW;
+				_alHasCommander = false;
+				_alHasGunner = false;
+				if (typeName _alCrewSlots == "ARRAY") then {
+					_alHasCommander = _alCrewSlots select 0;
+					_alHasGunner = _alCrewSlots select 1;
+				} else {
+					switch (_alCrewSlots) do {
+						case 2: {_alHasGunner = true};
+						case 3: {_alHasGunner = true; _alHasCommander = true};
+					};
+				};
+				_alCapCost = 1;
+				if (_alHasGunner) then {_alCapCost = _alCapCost + 1};
+				if (_alHasCommander) then {_alCapCost = _alCapCost + 1};
 				_alFunds = (_side) Call GetAICommanderFunds;
 				if (_capRemaining >= _alCapCost) then {
 					if (_alFunds >= _alPrice) then {
