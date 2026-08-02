@@ -6,7 +6,7 @@
 		- Max Radius
 */
 
-Private["_position","_origin","_radius","_direction","_maxRadius","_minRadius","_iter"];
+Private["_position","_origin","_radius","_direction","_maxRadius","_minRadius","_iter","_boundariesXY"];
 
 //--- F3 guard: bad/short input would throw on the _this select lines below; bail to a safe [0,0,0].
 if (typeName _this != "ARRAY" || {count _this < 3}) exitWith {[0,0,0]};
@@ -33,5 +33,13 @@ _position = [(_origin select 0)+((sin _direction)*_radius),(_origin select 1)+((
 //--- and hang the respawn/placement caller. After 50 tries we accept the last candidate.
 _iter = 0;
 while {surfaceIsWater _position && _iter < 50}do {_iter = _iter + 1;_direction = random 360;_radius = (random (_maxRadius - _minRadius)) + _minRadius;_position = [(_origin select 0)+((sin _direction)*_radius),(_origin select 1)+((cos _direction)*_radius),(_origin select 2)]};
+
+//--- Map-edge safety: A-Life town/patrol callers may originate close to a terrain edge. Clamp both
+//--- generated axes so a valid random offset cannot spawn a group outside the playable world.
+_boundariesXY = missionNamespace getVariable ["WFBE_BOUNDARIESXY", -1];
+if (typeName _boundariesXY == "SCALAR" && {_boundariesXY > 0}) then {
+	_position set [0, ((_position select 0) max 0) min _boundariesXY];
+	_position set [1, ((_position select 1) max 0) min _boundariesXY];
+};
 
 _position
