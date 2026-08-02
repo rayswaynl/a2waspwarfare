@@ -201,7 +201,7 @@ if (_index != -1) then {
 			//     Compositions are exempt (cap is B3b above); only single
 			//     defenses hit per-category budget.
 			//------------------------------------------------------------------
-			private ["_catStatics","_catForts","_catMines","_pendingS","_pendingF","_pendingM","_capS","_capF","_capM","_countS","_countF","_countM","_allDefNames"];
+			private ["_catStatics","_catForts","_catMines","_pendingS","_pendingF","_pendingM","_capS","_capF","_capM","_countS","_countF","_countM","_allDefNames","_mineEntry","_mineObj","_mineSide","_mineFieldID","_mineFields"];
 
 			if (!_isAnchor) then {
 				//--- Single defenses only: count pending objects against per-category caps.
@@ -246,9 +246,23 @@ if (_index != -1) then {
 					} forEach (nearestObjects [_nearestCenter, _catForts, _baseRange]);
 				};
 				if (count _catMines > 0 && _pendingM > 0) then {
-					{
-						if (alive _x && !(_x getVariable ["WFBE_WDDMPositionChild", false])) then {_countM = _countM + 1}
-					} forEach (nearestObjects [_nearestCenter, _catMines, _baseRange]);
+					//--- Sign_Danger deletes its anchor after creating 26 mines, so count the shared
+					//--- field identities kept by Construction_StationaryDefense instead of the dead anchor.
+					_mineFields = [];
+					if (!isNil "mines") then {
+						{
+							_mineEntry = _x;
+							if (typeName _mineEntry == "ARRAY" && {count _mineEntry >= 4}) then {
+								_mineObj = _mineEntry select 0;
+								_mineSide = _mineEntry select 2;
+								_mineFieldID = _mineEntry select 3;
+								if (!isNull _mineObj && {_mineSide == _side} && {(_mineObj distance _nearestCenter) < _baseRange} && {!(_mineFieldID in _mineFields)}) then {
+									_mineFields = _mineFields + [_mineFieldID];
+								};
+							};
+						} forEach mines;
+					};
+					_countM = count _mineFields;
 				};
 
 				if (_pendingS > 0 && (_countS + _pendingS) > _capS) then {
