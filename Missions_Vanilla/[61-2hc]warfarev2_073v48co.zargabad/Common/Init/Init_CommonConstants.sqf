@@ -2630,6 +2630,16 @@ WFBE_STATS_DIRTY_UIDS = [];
 	//--- own ParkDeadspawn behaviour, not the human join-placement this flag controls).
 	if (isNil "WFBE_C_DEADSPAWN_REDESIGN") then {WFBE_C_DEADSPAWN_REDESIGN = 1};
 
+	//--- fable/deadspawn-ai-pen (owner ruling 2026-08-01): the DEADSPAWNS land holding area (the
+	//--- three TempRespawnMarker points in the NE hills) is too close to the game action and
+	//--- accumulates visible bodies/gear. Flag >0: the dead-AI respawn wait (AI_AdvancedRespawn.sqf /
+	//--- AI_SquadRespawn.sqf) parks at the same in-bounds underwater pen the human join flow already
+	//--- uses (Common_DeadspawnPenPos.sqf), with the setCaptive/allowDamage hold forced on for the
+	//--- underwater window and the body surfaced on every release path. Weapon-holder litter at both
+	//--- sites remains covered by the whole-island droppeditems_cleaner.sqf sweep (~10 min cadence).
+	//--- 0 = legacy TempRespawnMarker land park, behaviour-identical to HEAD.
+	if (isNil "WFBE_C_DEADSPAWN_AI_PEN") then {WFBE_C_DEADSPAWN_AI_PEN = 1};
+
 //--- TP-17 (fable/tp17-marker-destination): HQ team map markers DESTINATION-direction mode.
 //--- When flag>0, team arrows point toward the leader's active movement destination instead of
 //--- current facing direction. Falls back to facing when no valid destination is available.
