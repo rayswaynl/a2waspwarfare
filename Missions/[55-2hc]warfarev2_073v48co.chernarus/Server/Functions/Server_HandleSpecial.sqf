@@ -352,7 +352,16 @@ case "RespawnST": {
 			if (_ctlSide7 == west || {_ctlSide7 == east}) then {
 				private ["_ctlUnits7"];
 				_ctlUnits7 = 0;
-				{ if (!isNull _x && {_x getVariable ["wfbe_ctl_ground_wave", false]}) then {_ctlUnits7 = _ctlUnits7 + (count units _x)} } forEach _teams;
+				//--- r87 group-var read fix: _x is a GROUP - the 2-arg [name,default] form returns nil-not-default
+				//--- when UNSET on a group (G1 trap), and `if (... && {nil})` throws "Type Nothing", aborting the
+				//--- rest of this update-town-delegation case (lastspawn credit, active_vehicles append, empty-vehicle
+				//--- handlers). Route through GroupGetBool. Default TRUE (count), not false: the delegated groups in
+				//--- _teams are fresh HC/client-local groups (Client_DelegateTownAI.sqf replaces the empty stamped
+				//--- server shells), so the per-group stamp never survives delegation - default false credited ZERO
+				//--- delegated spawn units to wfbe_ctl_lastspawn while the deactivation numerator (server_town_ai.sqf
+				//--- GroupGetBool default true) still counts their survivors, inflating the survival ratio to the
+				//--- 1.0 clamp = CTL attrition silently skipped for every delegated wave.
+				{ if (!isNull _x && {([_x, "wfbe_ctl_ground_wave", true] Call WFBE_CO_FNC_GroupGetBool)}) then {_ctlUnits7 = _ctlUnits7 + (count units _x)} } forEach _teams;
 				//--- CTL single-writer (fable/ctl-readback-singlewriter): accumulate the HC/client-delegated
 				//--- Man-unit count into the per-town spawn scalar (per-town, so the wave-side snapshot only
 				//--- gates WHETHER to credit - no valid snapshot => skip - not which record to touch).
