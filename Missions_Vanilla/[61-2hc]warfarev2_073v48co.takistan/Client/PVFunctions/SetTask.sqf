@@ -22,7 +22,7 @@ taskHint [format [localize "str_taskNew" + "\n%1",_task], [1,1,1,1], "taskNew"];
 	
 	_timer = 0;
 	_succeed = false;
-	while {(taskDestination _task) select 0 == (_pos select 0) && !_succeed} do {
+	while {((taskDestination _task) select 0) == (_pos select 0) && !_succeed} do {
 		sleep 5;
 		if (player distance _pos < 250) then {_timer = _timer + 5};
 		if (_timer > _duration) then {_succeed = true};
