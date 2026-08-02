@@ -54,6 +54,14 @@ if (!_reject && _index == 0) then {
 	};
 };
 
+//--- The CoIn preview check is advisory. Re-validate its submitted position server-side before any
+//--- pending reservation or construction worker can commit a water/invalid-footprint factory.
+if (!_reject && {!([_side, _structureType, _pos] Call WFBE_SE_FNC_ValidatePlayerStructurePlacement)}) then {
+	_reject = true;
+	_rejectMsg = "StructurePlacementInvalid";
+	["WARNING", Format ["RequestStructure.sqf: [%1] %2 build rejected - invalid player placement at %3.", str _side, _rlType, _pos]] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- CBR requires an alive AAR on the same side.
 if (_rlType == "CBRadar") then {
 	private ["_aarClass","_aarAlive","_structs"];
