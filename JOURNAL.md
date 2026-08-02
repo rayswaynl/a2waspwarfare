@@ -1052,3 +1052,60 @@ same crash window re-arms ~100min into AI-heavy sessions until cutover).
 
 Residual (not this crash, watch seatSeen diag): cold-wreck SEATED corpse deletes keep
 today's behaviour; HC-side executor unchanged.
+
+
+## 2026-08-02 22:30 NL - wave0802 DEPLOYED to the live box (176.9.104.115)
+
+Owner instruction: "deploy + Play Zargabad > Chernarus > Takistan". Done and verified live.
+
+VERIFIED LIVE at 22:47 NL (13:47 box, UTC-7):
+  RPT: WASPRELEASE|v1|candidate=wave0802|git=update/wave-20260802|terrain=zargabad
+  RPT: MISSINIT: missionName=[61] Miksuu's Warfare Zargabad
+  A2S: map=zargabad  players=1/37   server fps ~45.5
+  Rotation in effect: Zargabad -> Chernarus -> Takistan (owner order)
+
+Build inputs:
+  branch update/wave-20260802 @ 5f32327cdd, gates 605 pass / 13 fail (zero new vs master)
+  PBO sha256 - ch 772ceed6..., tk 76438e98..., zg d204f4bf... (hash-matched on box)
+
+THREE BLOCKERS HIT AND FIXED (all worth remembering):
+
+1. pack_pbo.py WF_MAXPLAYERS guard aborted all three terrains. Cause: the untracked,
+   generated version.sqf files carried FOLDER-LABEL numbers (55/61/61) while the guard
+   computes human = total - headless - caster = 32/31/33, which is exactly what the
+   tracked version.sqf.template files already said. Fix: regenerate version.sqf from
+   version.sqf.template, as the template's own header instructs ("Copy to version.sqf
+   at deploy time"), and stamp a fresh WF_RELEASE_MARKER. The stale marker had read
+   candidate=build89-cmdcon44t-20260704 since July.
+
+2. EDITED THE WRONG CFG - cost a live restart and one player's match.
+   C:\WASP\server-pr8.cfg (root) is a STALE DECOY: it still read wave0722g / single
+   Takistan / maxPlayers=56. The server reads ONLY the path in its own command line,
+   -config=C:\WASP\profiles-pr8\server-pr8.cfg, which was already a 3-map m0801h
+   rotation at 58. There is NO propagation between the copies, contrary to the repo
+   header (now corrected in server-config/server-pr8.cfg). Always read the -config=
+   path out of the RPT boot banner first.
+
+3. The cfg is file-locked while arma2oaserver.exe runs. Correct order is: build and
+   validate the new text while the server is still UP (fail fast, nothing touched) ->
+   stop the chain -> write -> restart. Same as Deploy-Wasp.ps1 "BUG 1".
+
+TOOLING HAZARD (not fixed, documented): Tools/Ops/Set-MissionTemplate.ps1 rewrites
+EVERY matching `template = "...";` line to one mission name and only Write-Warnings on
+>1 match (Set-MissionTemplate.ps1:89-98). Against a 3-map rotation cfg it collapses all
+three entries into the same map. Deploy-Wasp.ps1 -Apply would therefore have destroyed
+the rotation. The cfg was written as a whole block instead.
+
+Also corrected a wrong belief of mine: the box DOES init the mission unattended. The
+"empty box never starts the mission" note is wrong for this box - Start-Wasp-4HC.ps1
+documents a measured 540-601s cold boot to MATCH|v1|START|, and the HC launch waits on
+that marker (900s timeout, then a legacy 45s settle). That wait is why a restart looks
+wedged for ~16 min with hc=0. It is not wedged.
+
+Rollback ready if the 01:00 allocator bench turns up trouble:
+  m0801h PBOs for all 3 terrains retained in MPMissions
+  C:\WASP\profiles-pr8\server-pr8.cfg.bak-20260802-132922 (pre-deploy effective cfg)
+
+RESOLVED 22:48 NL: HC2 seated - A2S players=2/37, both HCs connected. HC1 seated
+clean too (HCSIDE|v1|reseat|result=done|sideNow=CIV). Full 2-HC topology restored; the
+~17 min hc=0 window was the documented MATCH|v1|START| wait, not a failure.
