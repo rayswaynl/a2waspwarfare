@@ -3718,5 +3718,18 @@ if (isNil "WFBE_C_SPECTATOR_FRAME_STAND_GAIN") then {WFBE_C_SPECTATOR_FRAME_STAN
 if (isNil "WFBE_C_SPECTATOR_PRELOAD") then {WFBE_C_SPECTATOR_PRELOAD = 0}; //--- 1 = preload before auto director cuts.
 if (isNil "WFBE_C_SPECTATOR_PRELOAD_MAX_SEC") then {WFBE_C_SPECTATOR_PRELOAD_MAX_SEC = 1.5}; //--- hard cap on the pre-cut wait; a slow disk can never stall the director longer than this.
 
+//======================================================================================
+//--- lane194-victory-pack fold (wave2 2026-07-31): TERRITORIAL VICTORY HOLD-TICKS
+//--- When 1, the territorial victory clock counts QUALIFYING LOOP TICKS rather than raw
+//--- wall-time. Prevents banking wall-time across a mid-window threshold dip.
+//--- When 0 (default OFF), existing wall-time clock is used (legacy / flag-off inert).
+if (isNil "WFBE_C_TERRVIC_HOLDTICKS") then {WFBE_C_TERRVIC_HOLDTICKS = 0};
+
+//======================================================================================
+//--- lane194-victory-pack fold (wave2 2026-07-31): STATS ROUND-END FLUSH
+//--- When 1 (default ON), per-player stats flush inline at winner declaration so all exit
+//--- paths (AntiStack on/off) persist scores. When 0, only the post-loop flush runs.
+if (isNil "WFBE_C_STATS_ROUNDEND_FLUSH") then {WFBE_C_STATS_ROUNDEND_FLUSH = 1};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
