@@ -97,7 +97,7 @@ if (isNull _victim && {(missionNamespace getVariable ["WFBE_C_AICOM_ARTY_SELL_ST
 		{
 			_artyPiece = _x;
 			if (!isNull _artyPiece && {alive _artyPiece}) then {
-				if ((_artyPiece getVariable ["WFBE_CommanderArtillery", false]) && {(_artyPiece getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {[_artyPiece, _side] Call IsMobileArtillery}) then {
+				if ((_artyPiece getVariable ["WFBE_CommanderArtillery", false]) && {(_artyPiece getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {[_artyPiece, _side] Call IsMobileArtillery} && {({(alive _x) && {isPlayer _x || {side _x != _side}}} count (crew _artyPiece)) == 0}) then { //--- r101: never sell a captured gun - the build-time side tag does not flip when a player/enemy crews it
 					if ((_artyPiece distance _hqPos) > _artyStrandedDist) then {
 						_artyFar set [count _artyFar, _artyPiece];
 					} else {

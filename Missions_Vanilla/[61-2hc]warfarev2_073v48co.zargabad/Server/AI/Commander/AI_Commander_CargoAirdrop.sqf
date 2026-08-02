@@ -74,7 +74,7 @@ if (count _attacked > 0) then {
 if (isNull _target) exitWith {};
 
 //--- Shared air-budget reservation. Stage A adds one Air hull (the cargo plane); vehicles are ground payloads.
-//--- Match AI_Commander_Teams.sqf: count alive side-resolved Air hulls, including crewless wfbe_side-tagged hulls.
+//--- Match AI_Commander_Teams.sqf: count alive side-resolved Air hulls, including crewless wfbe_side_id-stamped hulls (r101: wfbe_side is never stamped on vehicle hulls).
 _airMax = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_TOTAL", 3];
 if ((time / 60) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_LATE_MINS", 45])) then {
 	_airMax = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_LATE", _airMax];
@@ -86,7 +86,7 @@ _airAlive = 0;
 		if ((count crew _x) > 0) then {
 			if (side ((crew _x) select 0) == _side) then {_airSideOK = true};
 		} else {
-			if ((_x getVariable ["wfbe_side", sideUnknown]) == _side) then {_airSideOK = true};
+			if ((_x getVariable ["wfbe_side_id", -1]) == ((_side) Call WFBE_CO_FNC_GetSideID)) then {_airSideOK = true};
 		};
 		if (_airSideOK) then {_airAlive = _airAlive + 1};
 	};

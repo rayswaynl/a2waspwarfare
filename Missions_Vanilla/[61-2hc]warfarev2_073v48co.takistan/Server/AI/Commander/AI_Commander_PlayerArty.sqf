@@ -74,7 +74,7 @@ if (_ownNear == 0) then {
 	_fired = false;
 	{
 		_p = _x;
-		if (!_fired && {alive _p} && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {someAmmo _p} && {!(_p getVariable ["restricted", false])}) then { //--- r30 lifecycle: skip battery already mid fire-mission
+		if (!_fired && {alive _p} && {[_p, _side] Call IsMobileArtillery} && {(_p getVariable ["WFBE_CommanderArtillery", false])} && {(_p getVariable ["WFBE_CommanderArtillerySide", ""]) == _sideText} && {!isNull (gunner _p)} && {alive (gunner _p)} && {side (gunner _p) == _side} && {someAmmo _p} && {!(_p getVariable ["restricted", false])}) then { //--- r30 lifecycle: skip battery already mid fire-mission. r101: gunner-side gate - a captured gun (losing-side crew) must not execute its old owner's fire missions (FireArtillery only blocks PLAYER gunners)
 			_idx = [typeOf _p, _side] Call IsArtillery;
 			if (_idx >= 0) then {
 				_maxR = ((missionNamespace getVariable Format ["WFBE_%1_ARTILLERY_RANGES_MAX", _sideText]) select _idx) / ((missionNamespace getVariable ["WFBE_C_ARTILLERY", 1]) max 1);

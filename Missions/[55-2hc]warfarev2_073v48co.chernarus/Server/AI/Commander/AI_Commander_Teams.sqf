@@ -700,7 +700,7 @@ if (count _live > 0) then {
 	//---
 	//--- COUNT = all ALIVE isKindOf "Air" on this side - non-transport (attack/plane) AND transport, crewed or not. To avoid
 	//--- double-counting TOWN/GARRISON air, a hull counts only when its SIDE resolves to _side (crewed -> side of (crew select 0);
-	//--- crewless -> the wfbe_side hull tag). In this mission town garrisons are ground-only (town templates carry no aircraft),
+	//--- crewless -> the wfbe_side_id hull stamp (r101: wfbe_side is only ever stamped on structures/groups, never on vehicle hulls - the old fallback was dead code and crewless own hulls fell out of the cap). In this mission town garrisons are ground-only (town templates carry no aircraft),
 	//--- so every side-resolved airframe is commander-fielded (own founded air teams + their lift transports). A2-OA-safe:
 	//--- isKindOf "Air" + crew/side resolve (mirrors the old heli-cap detector), count over the _allVehicles snapshot (not allUnits).
 	//--- Build84 LATE-GAME AIR SCALING (Ray 2026-07-01): late in the match, raise the flat air ceiling and lean the
@@ -723,7 +723,7 @@ if (count _live > 0) then {
 				if ((count crew _x) > 0) then {
 					if (side ((crew _x) select 0) == _side) then {_airSideOK = true};
 				} else {
-					if ((_x getVariable ["wfbe_side", sideUnknown]) == _side) then {_airSideOK = true};
+					if ((_x getVariable ["wfbe_side_id", -1]) == ((_side) Call WFBE_CO_FNC_GetSideID)) then {_airSideOK = true};
 				};
 				if (_airSideOK) then {_airAlive = _airAlive + 1};
 			};
@@ -781,7 +781,7 @@ if (count _live > 0) then {
 				if ((count crew _x) > 0 && {side ((crew _x) select 0) == _side}) then {
 					_artyAlive = _artyAlive + 1;
 				} else {
-					if ((count crew _x) == 0 && {(_x getVariable ["wfbe_side", sideUnknown]) == _side}) then {_artyAlive = _artyAlive + 1};
+					if ((count crew _x) == 0 && {(_x getVariable ["wfbe_side_id", -1]) == ((_side) Call WFBE_CO_FNC_GetSideID)}) then {_artyAlive = _artyAlive + 1};
 				};
 			};
 		} forEach _allVehicles;
@@ -917,7 +917,7 @@ if (count _live > 0) then {
 					if ((count crew _x) > 0) then {
 						if (side ((crew _x) select 0) == _side) then {_hsSideOK = true};
 					} else {
-						if ((_x getVariable ["wfbe_side", sideUnknown]) == _side) then {_hsSideOK = true};
+						if ((_x getVariable ["wfbe_side_id", -1]) == ((_side) Call WFBE_CO_FNC_GetSideID)) then {_hsSideOK = true};
 					};
 					if (_hsSideOK) then {
 						_hsAirAlive = _hsAirAlive + 1;
