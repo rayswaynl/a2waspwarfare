@@ -2116,7 +2116,7 @@ while {!WFBE_GameOver && _alive} do {
 						//--- cmdcon41-w3 ASSAULT APPROACH SMOKE (gate WFBE_C_AICOM_SMOKE default 1): the moment the team latches
 						//--- arrival on a towns-target (NON-rally) objective, before the assault SAD is laid, pop ONE covering
 						//--- volley of 2 smoke shells ~45-60m AHEAD of the leader toward _dest so the final approach is screened.
-						//--- HC-local, bounded (2 createVehicle, no loop/sleep), rate-limited to one smoke event per team per
+						//--- HC-local, bounded (2 createVehicle plus a scheduled 20s reaper), rate-limited to one smoke event per team per
 						//--- WFBE_C_AICOM_SMOKE_COOLDOWN (120s) via the SAME group-var stamp the break-off smoke uses (get + isNil,
 						//--- A2-safe - groups reject the [name,default] form). Bearing leader->_dest via the atan2 position-delta
 						//--- idiom already used in this file. createVehicle [class,pos,[],0,'NONE'] is A2-OA-safe. Never-frozen:
@@ -2150,6 +2150,14 @@ while {!WFBE_GameOver && _alive} do {
 								_asS1 = createVehicle [_asCls, _asP1, [], 0, "NONE"];
 								if (isNull _asS0) then {["WARNING", Format ["Common_RunCommanderTeam.sqf: AICOM assault smoke create failed at %1 class %2.", _asP0, _asCls]] Call WFBE_CO_FNC_LogContent;};
 								if (isNull _asS1) then {["WARNING", Format ["Common_RunCommanderTeam.sqf: AICOM assault smoke create failed at %1 class %2.", _asP1, _asCls]] Call WFBE_CO_FNC_LogContent;};
+								[_asS0, _asS1] spawn {
+									private ["_smoke0","_smoke1"];
+									_smoke0 = _this select 0;
+									_smoke1 = _this select 1;
+									sleep 20;
+									if (!isNull _smoke0) then {deleteVehicle _smoke0};
+									if (!isNull _smoke1) then {deleteVehicle _smoke1};
+								};
 								_team setVariable ["wfbe_aicom_smoke_last", time];
 								diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|SMOKE|ASSAULT|team=" + (str _team) + "|cls=" + _asCls);
 							};
@@ -2820,7 +2828,7 @@ while {!WFBE_GameOver && _alive} do {
 								_team setVariable ["wfbe_aicom_wantrally", true, true];
 								//--- cmdcon41-w3 BREAK-OFF SMOKE (gate WFBE_C_AICOM_SMOKE default 1): as the out-fought remnant breaks off
 								//--- it pops covering smoke so the fighting withdrawal is screened instead of running exposed. HC-local,
-								//--- bounded (2 createVehicle, no loop/sleep), rate-limited to one smoke event per team per
+								//--- bounded (2 createVehicle plus a scheduled 20s reaper), rate-limited to one smoke event per team per
 								//--- WFBE_C_AICOM_SMOKE_COOLDOWN (120s) via a plain group-var stamp (get + isNil, A2-safe - groups reject the
 								//--- [name,default] form). Two shells in a ~15m ring around the leader offset by the enemy bearing (the
 								//--- _resNear ring gave us the enemy already this tick) so the screen sits between us and them. createVehicle
@@ -2858,6 +2866,14 @@ while {!WFBE_GameOver && _alive} do {
 										_smkS1 = createVehicle [_smkCls, _smkP1, [], 0, "NONE"];
 										if (isNull _smkS0) then {["WARNING", Format ["Common_RunCommanderTeam.sqf: AICOM breakoff smoke create failed at %1 class %2.", _smkP0, _smkCls]] Call WFBE_CO_FNC_LogContent;};
 										if (isNull _smkS1) then {["WARNING", Format ["Common_RunCommanderTeam.sqf: AICOM breakoff smoke create failed at %1 class %2.", _smkP1, _smkCls]] Call WFBE_CO_FNC_LogContent;};
+										[_smkS0, _smkS1] spawn {
+											private ["_smoke0","_smoke1"];
+											_smoke0 = _this select 0;
+											_smoke1 = _this select 1;
+											sleep 20;
+											if (!isNull _smoke0) then {deleteVehicle _smoke0};
+											if (!isNull _smoke1) then {deleteVehicle _smoke1};
+										};
 										_team setVariable ["wfbe_aicom_smoke_last", time];
 										diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|SMOKE|BREAKOFF|team=" + (str _team) + "|cls=" + _smkCls);
 									};
