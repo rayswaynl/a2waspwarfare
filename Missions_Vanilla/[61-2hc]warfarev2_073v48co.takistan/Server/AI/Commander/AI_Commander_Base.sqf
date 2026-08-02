@@ -527,6 +527,15 @@ _findBuildPos = {
 	//--- The fallback and either terminal nudge can move a candidate beyond the hard build leash.
 	//--- Return an explicit no-position sentinel so callers skip the spend and retry next commander pass.
 	if (!(_p call _hqRangeOK)) exitWith {[]};
+	//--- r96 (bughunt): enforce the documented "never water" contract of the fallback chain above.
+	//--- When the WHOLE try budget finds no dry candidate, every recorded tier (_best/_bestBC/
+	//--- _bestClear/_stepBest) stays unset and the raw last-throw _p - which can be WATER - falls
+	//--- through. Neither terminal nudge catches it (they only fire on road/overlap failures), so the
+	//--- finder returned a sea position and the caller spent supply/funds building on water (the
+	//--- forward-outpost annulus off a coastal town is the live case: the anchor point itself is dry,
+	//--- the 60-110m ring around it need not be). Return the same no-position sentinel as the leash
+	//--- check above; every _findBuildPos caller is already gated on _isBuildPosUsable.
+	if (surfaceIsWater _p) exitWith {[]};
 	diag_log (format ["AICOMPLACE|near=%1|via=%2|pos=%3|onRoad=%4|clr=%5|nf=%6|floorOK=%7", _nearRoad, _via, _p, (count (_p nearRoads 12) > 0), (_p call _buildPosClear), (round (_p call _nearestFactoryDist)), (_p call _farFromStructs)]);
 	_p
 };
@@ -748,7 +757,10 @@ _structures = (_side) Call WFBE_CO_FNC_GetSideStructures;
 					//--- the carriageway + road-rejected), NOT ON a road node. The old code set _pos = getPos roadNode,
 					//--- so the SP sat ON the road (Ray report). Vehicles still reach it; it no longer blocks the lane.
 					_pos = [(missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MIN", 60]), (missionNamespace getVariable ["WFBE_C_AICOM_FACTORY_RING_MAX", 110]), 1] Call _findBuildPos;
-					if (!(surfaceIsWater _pos)) then {_placed = true};
+					//--- r96: _findBuildPos can now return the [] no-position sentinel (leash/water fail) -
+					//--- shape-gate BEFORE the water test (surfaceIsWater on [] is unsafe) so a failed
+					//--- near-road pass falls through to the off-road ring retry below instead of throwing.
+					if ((count _pos >= 2) && {!(surfaceIsWater _pos)}) then {_placed = true};
 				};
 				//--- task #25 + Ray 2026-06-29 req #2: the SPAWN-POINT factories (Barracks/Light/Heavy/Aircraft -
 				//--- the player respawn structures per Client_GetRespawnAvailable) are placed road-ADJACENT and
