@@ -1,6 +1,6 @@
-# Start-Wasp-4HC.ps1 - start server + HC1..HC4, then pin affinity.
+# Start-Wasp-4HC.ps1 - start server + HC1..HC<N>, then pin affinity.
 # ORDER MATTERS: hc_launch.cmd (HC1) begins with 'taskkill /f /im ArmA2OA.exe' which
-# kills EVERY HC - so HC1 must always start before HC2/HC3/HC4.
+# kills EVERY HC - so HC1 must always start before the remaining HCs.
 # Run from the RDP console or a scheduled task - NOT from a bare ssh session
 # (Windows sshd kills detached children when the session closes).
 # PowerShell 5.1 compatible. Run elevated.
@@ -19,6 +19,7 @@
 #   a marker change can never wedge the boot.
 Param(
     [String]$WaspDir = 'C:\WASP',
+    [ValidateRange(1, 4)][Int]$HcCount = 4,
     [Int]$ServerSettleSeconds = 45,          # legacy fallback only (see MissionLiveTimeoutSeconds)
     [Int]$HcStaggerSeconds = 20,
     [Int]$AffinityDelaySeconds = 60,
@@ -38,7 +39,7 @@ if (-not (Test-Path $serverCmd)) {
 }
 
 $launchers = @()
-foreach ($n in 1..4) {
+foreach ($n in 1..$HcCount) {
     if ($n -eq 1) { $name = 'hc_launch.cmd' } else { $name = ('hc{0}_launch.cmd' -f $n) }
     $path = Join-Path $WaspDir $name
     if (-not (Test-Path $path)) { throw ("Missing launcher: {0} (copy the repo server-config versions to {1} first)" -f $name, $WaspDir) }
@@ -118,8 +119,8 @@ Write-Host ("Waiting {0}s for HC processes to spawn (sandboxed Steam warmup incl
 Start-Sleep -Seconds $AffinityDelaySeconds
 
 Write-Host '== Applying affinity map =='
-& (Join-Path $here 'Set-WaspAffinity.ps1')
+& (Join-Path $here 'Set-WaspAffinity.ps1') -HcCount $HcCount
 if ($LASTEXITCODE -ne 0) {
-    Write-Warning 'Not all 5 processes were pinned - HCs may still be warming up. Re-run Set-WaspAffinity.ps1 in ~2 minutes.'
+    Write-Warning ("Not all {0} processes were pinned - HCs may still be warming up. Re-run Set-WaspAffinity.ps1 in ~2 minutes." -f (1 + $HcCount))
 }
 Write-Host 'DONE Start-Wasp-4HC. Next: Verify-4HC.ps1 (give HCs ~2-3 min to connect first).'
