@@ -625,8 +625,12 @@ while {true} do {
 		};
 	};
 	
-	//--- EASA. TBD: Add dialog;
-	if (MenuAction == 7) then {
+	//--- EASA. TBD: Add dialog. exitWith (r90 loop leak): the while{true} loop only dies on
+	//--- !dialog, and EASA/WF_Menu keep dialog true - without exitWith the leaked loop kept
+	//--- running beside the next menu and its batch handlers (MenuAction 11/12/13/15) could
+	//--- swallow WF_Menu clicks (Headbug fix = 11, Parameters = 12) and CHARGE the stale
+	//--- rearm/repair batch price for them.
+	if (MenuAction == 7) exitWith {
 		MenuAction = -1;
 		closeDialog 0;
 		createDialog "RscMenu_EASA";

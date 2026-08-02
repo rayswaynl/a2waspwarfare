@@ -10,13 +10,24 @@
 	(base "GrenadeHand" is impact-fused with fuseDistance=5 and can fail to arm at rest).
 */
 
-Private ["_team","_leader","_units","_vehicles","_vehicle","_sideID","_cmd","_uCount","_vCount"];
+Private ["_team","_leader","_units","_vehicles","_vehicle","_sideID","_cmd","_uCount","_vCount","_disbandDone"];
 
 if (count _this < 1) exitWith {false};
 _team = _this select 0;
 if (isNull _team) exitWith {false};
 _leader = leader _team;
 if (isNull _leader || {!local _leader}) exitWith {false};
+
+//--- r90 single-execution gate: an explicit commander disband (Server_HandleSpecial
+//--- "aicom-team-disband") stamps wfbe_aicom_disband AND routes "aicom-team-disband-execute"
+//--- to the leader owner, so TWO executors reach this function for the same team - the
+//--- team's own driver loop (Common_RunCommanderTeam.sqf, fires on the flag) and the routed
+//--- handler (after its combat wait). The second call used to land inside the 4s grenade
+//--- fuse window: every soldier still alive ate a SECOND live grenade and a duplicate
+//--- aicom-team-ended went out. The first call is synchronous and stamps ended_fired below,
+//--- so a later duplicate exits here. 1-arg getVariable + isNil (GROUP receiver).
+_disbandDone = _team getVariable "wfbe_aicom_ended_fired";
+if (!isNil "_disbandDone" && {_disbandDone}) exitWith {false};
 
 _sideID = (side _team) Call WFBE_CO_FNC_GetSideID;
 _cmd = _team getVariable "wfbe_aicom_disband_cmd";

@@ -515,7 +515,11 @@ waitUntil {
 		["RequestGDirPanel", [player, "relief", _selTownId, "none"]] Call WFBE_CO_FNC_SendToServer;
 		ctrlSetText [31078, "Relief squad order sent. Awaiting result..."];
 	};
-	if (MenuAction == 90) then {
+	//--- exitWith (r90 loop leak): the waitUntil body re-runs while dialog is true, and
+	//--- WF_Menu opens in the same pass - without exitWith the stale loop persisted with its
+	//--- OLD _selTownId, and a purchase click after reopening the panel could be consumed by
+	//--- the stale loop, sending the PAID order to the previously selected town.
+	if (MenuAction == 90) exitWith {
 		MenuAction = -1;
 		deleteMarkerLocal _selMarker;
 		closeDialog 0;
