@@ -27,13 +27,16 @@ if !(_armed) exitWith {
 };
 
 _fps = diag_fps;
+_wasEngaged = missionNamespace getVariable ["WFBE_CollectorLoadScaleEngaged", false];
 _multiplier = 1;
 if (_fps <= 20 && _fps > 15) then {_multiplier = 1.2};
 if (_fps <= 15 && _fps > 10) then {_multiplier = 1.5};
 if (_fps <= 10 && _fps > 5)  then {_multiplier = 2.0};
 if (_fps <= 5)                then {_multiplier = 2.5};
+//--- Hysteresis: after shedding engages at <=20 fps, retain the light back-off until the server
+//--- clears 22 fps. Without this gap, a 20/21 fps sample sawtooths the collectors every pass.
+if (_wasEngaged && {_fps > 20} && {_fps <= 22}) then {_multiplier = 1.2};
 
-_wasEngaged = missionNamespace getVariable ["WFBE_CollectorLoadScaleEngaged", false];
 if (_multiplier > 1 && !_wasEngaged) then {
 	WFBE_CollectorLoadScaleEngaged = true;
 	diag_log Format ["WFBE_COLLECTOR_LOAD_SCALE: engaged (fps:%1 multiplier:%2)", round _fps, _multiplier];
