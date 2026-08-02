@@ -53,8 +53,10 @@ if (isNil "TownTemplate") then {
 	diag_log format ["[WFBE (INIT)] HANGGUARD| Init_Town.sqf: TownTemplate was still undefined after the readiness wait - defaulting to [] (town=%1).", (_town getVariable ["name", "?"])];
 };
 
-//todo, opposite system.
-if ((str _town) in TownTemplate) exitWith {
+//--- r93 equality/identity: TownTemplate holds hand-written town NAME strings (mission.sqm Towns_Removed*
+//--- lists); str of a depot LOGIC is the engine handle form ("<id>: <class>") and can never match a
+//--- bare name - compare the town-name argument instead so the Towns-amount lobby mode actually removes towns.
+if (_townName in TownTemplate) exitWith {
 	["INITIALIZATION",Format ["Init_Town.sqf : Removed town [%1] since it is disabled.", _townName]] Call WFBE_CO_FNC_LogContent;
 	_town setVariable ["wfbe_inactive", true];
 };
