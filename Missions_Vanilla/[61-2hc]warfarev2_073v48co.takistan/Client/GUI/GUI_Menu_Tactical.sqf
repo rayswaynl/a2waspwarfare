@@ -251,6 +251,7 @@ _textAnimHandler = [] spawn {};
 
 MenuAction = -1;
 mouseButtonUp = -1;
+_tacticalCamHandoff = false; //--- r106: set by the Units_Camera handoff case; checked directly in the loop body (exitWith in a nested then-block would not break the loop).
 //--- FPV rearm is server-authoritative; both menus read the shared per-UID launch gate.
 while {alive player && dialog} do {
 	if (side group player != sideJoined) exitWith {deleteMarkerLocal _marker;deleteMarkerLocal _area;{deleteMarkerLocal _x} forEach _markers;closeDialog 0};
@@ -572,6 +573,12 @@ while {alive player && dialog} do {
 				ExecVM "Client\Module\FPV\fpv.sqf";
 			};
 			case "Units_Camera": {
+				//--- r106 display-handoff: the camera dialog keeps `dialog` true, so without a handoff exit this
+				//--- controller kept running against the dead tactical display for the whole camera session: it raced
+				//--- the camera loop for the shared mouseButtonUp global (camera map clicks randomly eaten) and fired
+				//--- a selection-reload against a -1 lbCurSel on the camera display every handoff. The post-loop marker
+				//--- cleanup below is safe to run at handoff (the tactical display is already closed here).
+				_tacticalCamHandoff = true;
 				closeDialog 0;
 				createDialog "RscMenu_UnitCamera";
 			};
@@ -579,6 +586,9 @@ while {alive player && dialog} do {
 		
 		// _forceReload = true;
 	};
+	
+	//--- r106: camera handoff armed above - terminate this controller (loop-body level, same exit idiom as the Back button).
+	if (_tacticalCamHandoff) exitWith {};
 	
 	artyRange = floor (sliderPosition 17005);
 	if (_lastRange != artyRange) then {_area setMarkerSizeLocal [artyRange,artyRange];};

@@ -42,11 +42,12 @@ mouseButtonUp = -1;
 //--- above covers the cross-dialog stale-click on open.)
 if (isNil "mouseX") then {mouseX = 0.5};
 if (isNil "mouseY") then {mouseY = 0.5};
+_cmdCamHandoff = false; //--- r106: set by the MenuAction 726 camera handoff; checked at loop-body level below.
 
 private ["_display","_map","_sid","_armed","_lastSend","_cool","_artyOn","_now","_position",
          "_reqTypes","_reqLabels","_selTeam","_lastState","_lastRosterHash","_lastCmdTeams","_lastEcon","_lastIntent","_posture","_disbandArm",
          "_deckOn","_deckOrders","_deckOrderActs","_lastDeckHdr","_deckDoctrine",
-         "_disbandSelArm","_disbandSelIdx","_focusArmed","_lastDirect","_directCool","_tnArmed","_tdNext"];
+         "_disbandSelArm","_disbandSelIdx","_focusArmed","_lastDirect","_directCool","_tnArmed","_tdNext","_cmdCamHandoff"];
 
 _display = _this select 0;
 _map = _display displayCtrl 14002;
@@ -698,6 +699,11 @@ while {alive player && dialog} do {
 		if (MenuAction == 726) then {
 			MenuAction = -1;
 			if (!isNull _selTeam && {alive (leader _selTeam)}) then {
+				//--- r106 display-handoff: the camera dialog keeps `dialog` true, so without a handoff exit this
+				//--- controller kept running against the dead war-room display for the whole camera session: it raced
+				//--- the camera loop for the shared mouseButtonUp global (camera map clicks randomly eaten) and kept
+				//--- writing global-form ctrlSetText into the camera display every 0.1s. Post-loop tail is safe at handoff.
+				_cmdCamHandoff = true;
 				WFBE_CmdCon_CamUnit = leader _selTeam;
 				activeAnimMarker = false;
 				closeDialog 0;
@@ -706,6 +712,8 @@ while {alive player && dialog} do {
 				hintSilent parseText "<t color='#F8D664'>Select a live team in the roster first.</t>";
 			};
 		};
+		//--- r106: camera handoff armed above - terminate this controller (same nesting as the proven Back buttons).
+		if (_cmdCamHandoff) exitWith {};
 
 		//--- ----- SQUAD-COMMAND MODE TOGGLE (14625): DIRECT (player maneuvers) <-> AI STRATEGY
 		//--- (the AI maneuver-brain runs Strategy+AssignTowns UNDER the human commander while the player keeps the
