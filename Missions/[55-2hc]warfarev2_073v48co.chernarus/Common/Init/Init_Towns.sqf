@@ -1,4 +1,4 @@
-Private ["_towns","_wTownMode"];
+Private ["_towns","_townReadyCount","_wTownMode"];
 
 //--- J6 HANGGUARD: town mode must not stall the entire town census forever.
 _wTownMode = 0;
@@ -9,6 +9,11 @@ if (!townModeSet) then {
 
 //--- Get all of the city logics.
 _towns = [0,0,0] nearEntities [["LocationLogicDepot"], 100000];
+
+//--- TOWNINIT|v1|: only release the server/client startup gate when at least one
+//--- authored depot registered in the active towns[] collection. A zero-ready census
+//--- must fail closed; otherwise Init_Server.sqf can emit MATCH|START|towns=0 and start
+//--- a broken match. wfbe_inactive is a terminal skip state and is not a town[] entry.
 
 //--- Await for a proper initialization.
 //--- FIX D6a (WFBE hang-guard): mirrors the bounded-wait idiom at initJIPCompatible.sqf:366-382 (B56
@@ -28,6 +33,14 @@ _towns = [0,0,0] nearEntities [["LocationLogicDepot"], 100000];
 	};
 } forEach _towns;
 
-townInit = true;
+_townReadyCount = count towns;
 
-["INITIALIZATION", "Init_Towns.sqf: Towns initialization is done."] Call WFBE_CO_FNC_LogContent;
+if (_townReadyCount > 0) then {
+	townInit = true;
+	diag_log format ["TOWNINIT|v1|READY|ready=%1|candidates=%2", _townReadyCount, count _towns];
+	["INITIALIZATION", "Init_Towns.sqf: Towns initialization is done."] Call WFBE_CO_FNC_LogContent;
+} else {
+	townInit = false;
+	diag_log format ["TOWNINIT|v1|BLOCK|reason=NO_READY_TOWNS|candidates=%1", count _towns];
+	["WARNING", "Init_Towns.sqf: Town census blocked startup because no depot initialized."] Call WFBE_CO_FNC_LogContent;
+};
