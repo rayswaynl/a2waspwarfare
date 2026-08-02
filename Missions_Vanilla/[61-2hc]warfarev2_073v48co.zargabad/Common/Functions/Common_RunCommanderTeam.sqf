@@ -2670,7 +2670,7 @@ while {!WFBE_GameOver && _alive} do {
 							{
 								if (alive _x && {vehicle _x != _x}) then {
 									_veh = vehicle _x;
-									if !(_x == driver _veh || _x == gunner _veh) then {unassignVehicle _x; [_x] orderGetIn false};
+									if !(_x == driver _veh || _x == gunner _veh) then {unassignVehicle _x; [_x] orderGetIn false; if (vehicle _x != _x) then {moveOut _x}};
 								};
 							} forEach _footInf;
 							{if (alive _x) then {_x doMove _campTgtPos}} forEach _footInf;
@@ -3129,7 +3129,7 @@ while {!WFBE_GameOver && _alive} do {
 								{
 									if (alive _x) then {
 										unassignVehicle _x;
-										[_x] orderGetIn false;
+										[_x] orderGetIn false; if (vehicle _x != _x) then {moveOut _x};
 										_left = _left + [_x];
 									};
 								} forEach (crew _abVeh);
@@ -3164,7 +3164,7 @@ while {!WFBE_GameOver && _alive} do {
 						{
 							if (alive _x) then {
 								unassignVehicle _x;
-								[_x] orderGetIn false;
+								[_x] orderGetIn false; if (vehicle _x != _x) then {moveOut _x};
 								_x doMove _dropPos;
 							};
 						} forEach (crew _cv);

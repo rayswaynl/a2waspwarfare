@@ -24,7 +24,7 @@ Private ["_sideID","_template","_homeTown","_side","_position","_retVal","_units
          "_upgLvl","_paidThisVisit","_sweepDone",
          "_townCamps","_campObj","_sweepStart","_allOurs","_ups",
          "_campRange","_liveUnits","_inVehicle","_dismounted","_veh",
-         "_driver","_cargo","_u","_settleTimeout","_lastLdrPos","_stuckTicks","_pLdr","_pPos","_pVeh","_pNear","_pRds","_pNode",
+         "_driver","_cargo","_u","_remountPending","_remountUnit","_remountVeh","_remountSeats","_settleTimeout","_lastLdrPos","_stuckTicks","_pLdr","_pPos","_pVeh","_pNear","_pRds","_pNode",
          "_pUnstuckStreak","_pUnstuckMax","_pBridgeTier","_pWedgePos","_pAvoid","_pAvoidKeep","_pAvoidCd","_cIsAvoided",
          "_cIsNaval","_navSkipLogged",
          "_rosterChoices","_rosterKey",
@@ -340,15 +340,26 @@ while {!WFBE_GameOver && _alive} do {
 							//--- Dwell at camp (~75 s total including settle phase).
 							sleep 75;
 
-							//--- REMOUNT: re-assign cargo and order back in (25 s grace, then proceed regardless).
+							//--- REMOUNT: distribute passengers across every live transport's actual cargo capacity.
+							//--- A patrol can start with several vehicles; assigning every dismount to _vehicles select 0
+							//--- strands the excess when that first hull fills. Keep the normal orderGetIn animation and grace.
 							if (count _vehicles > 0 && count _dismounted > 0) then {
-								_veh = _vehicles select 0;
+								_remountPending = +_dismounted;
 								{
-									if (alive _x && alive _veh) then {
-										_x assignAsCargo _veh;
-										[_x] orderGetIn true;
+									_remountVeh = _x;
+									if (alive _remountVeh) then {
+										_remountSeats = _remountVeh emptyPositions "cargo";
+										while {count _remountPending > 0 && {_remountSeats > 0}} do {
+											_remountUnit = _remountPending select 0;
+											_remountPending = _remountPending - [_remountUnit];
+											if (alive _remountUnit) then {
+												_remountUnit assignAsCargo _remountVeh;
+												[_remountUnit] orderGetIn true;
+												_remountSeats = _remountSeats - 1;
+											};
+										};
 									};
-								} forEach _dismounted;
+								} forEach _vehicles;
 								sleep 25;
 							};
 							}; //--- end per-camp null-camp guard (r83)
