@@ -224,18 +224,26 @@ foreach ($as in @($spec.asserts)) {
     }
 }
 
-# 4) opportunistic boot-smoke gate (present only once test-harness PR-4 lands on this base)
+# 4) opportunistic boot-smoke gate (present on bases carrying the smoke harness)
 $bootSmoke = $null
 $bootTool = Join-Path (Split-Path -Parent $soakDir) 'Smoke\Test-WaspBootSmoke.ps1'
 if (Test-Path -LiteralPath $bootTool) {
     try {
-        $bsJson = & $bootTool -RptPath $FromRpt -Json 2>$null
-        if ($bsJson) {
-            $bs = ($bsJson | ConvertFrom-Json)
+        # Test-WaspBootSmoke.ps1 names its input -ServerRpt. Join the captured
+        # output so Windows PowerShell 5.1 cannot feed ConvertFrom-Json one
+        # physical JSON line at a time.
+        $bsRaw = @(& $bootTool -ServerRpt $FromRpt -Json 2>$null)
+        if ($bsRaw.Count -gt 0) {
+            $bs = (($bsRaw -join [Environment]::NewLine) | ConvertFrom-Json)
+            if ($null -eq $bs -or [string]::IsNullOrWhiteSpace([string]$bs.verdict)) {
+                throw 'boot-smoke emitted no verdict JSON'
+            }
             $bootSmoke = [ordered]@{ ran = $true; verdict = $bs.verdict; tool = $bootTool }
-            if ($bs.verdict -eq 'FAIL' -and $rank['FAIL'] -gt $rank[$verdict]) { $verdict = 'FAIL' }
+            if ($bs.verdict -in @('FAIL','ERROR') -and $rank['FAIL'] -gt $rank[$verdict]) { $verdict = 'FAIL' }
+        } else {
+            throw 'boot-smoke emitted no JSON result'
         }
-    } catch { $bootSmoke = [ordered]@{ ran = $true; verdict = 'ERROR'; tool = $bootTool; error = "$_" } }
+    } catch { $bootSmoke = [ordered]@{ ran = $true; verdict = 'ERROR'; tool = $bootTool; error = $_.Exception.Message } }
 } else {
     $bootSmoke = [ordered]@{ ran = $false; verdict = $null; tool = $bootTool; note = 'boot-smoke gate not on this base (test-harness PR-4)' }
 }
@@ -256,7 +264,7 @@ if (-not [string]::IsNullOrWhiteSpace($HcRpt)) { $hcRptArg = $HcRpt }
 
 $perfLensFailed = $assertResults | Where-Object { $_.metric -like '*Fps*' -and $_.pass -eq $false }
 $worstLens  = 'perf'; if ($verdict -eq 'PASS')            { $worstLens  = $null }
-$errorsLens = 'PASS'; if ($bootSmoke.verdict -eq 'FAIL')  { $errorsLens = 'FAIL' }
+$errorsLens = 'PASS'; if ($bootSmoke.verdict -in @('FAIL','ERROR')) { $errorsLens = 'FAIL' }
 $perfLens   = 'PASS'; if ($perfLensFailed)                { $perfLens   = $verdict }
 $lensObj = [ordered]@{
     overall   = $verdict
@@ -281,6 +289,22 @@ if ($null -ne $hcRptArg) { $appendArgs.HcRptPath = $hcRptArg }
 $rowId = & $appender @appendArgs
 
 # 7) write the Standard Run-Result JSON
+$resultPath = Join-Path $ResultsDir "$runId.json"
+function PlainStringOrNull($value) {
+    if ($null -eq $value) { return $null }
+    return [string]$value
+}
+$bootSmokeResult = $null
+if ($null -ne $bootSmoke) {
+    $bootSmokeResult = [ordered]@{
+        ran     = [bool]$bootSmoke['ran']
+        verdict = PlainStringOrNull $bootSmoke['verdict']
+        tool    = PlainStringOrNull $bootSmoke['tool']
+    }
+    foreach ($optionalKey in @('error','note')) {
+        if ($bootSmoke.Contains($optionalKey)) { $bootSmokeResult[$optionalKey] = PlainStringOrNull $bootSmoke[$optionalKey] }
+    }
+}
 $result = [ordered]@{
     schema      = 'a2wasp-run-result-v1'
     runId       = $runId
@@ -303,15 +327,14 @@ $result = [ordered]@{
     }
     asserts     = $assertResults
     verdict     = $verdict
-    bootSmoke   = $bootSmoke
-    ledgerRowId = $rowId
+    bootSmoke   = $bootSmokeResult
+    ledgerRowId = PlainStringOrNull $rowId
     artifacts   = [ordered]@{
-        analyzeJson = $aJsonPath; lensJson = $lensPath
-        serverRpt = $FromRpt; hcRpt = $hcRptArg
-        resultJson = (Join-Path $ResultsDir "$runId.json")
+        analyzeJson = PlainStringOrNull $aJsonPath; lensJson = PlainStringOrNull $lensPath
+        serverRpt = PlainStringOrNull $FromRpt; hcRpt = PlainStringOrNull $hcRptArg
+        resultJson = PlainStringOrNull $resultPath
     }
 }
-$resultPath = Join-Path $ResultsDir "$runId.json"
 [System.IO.File]::WriteAllText($resultPath, (ToJson $result), (New-Object System.Text.UTF8Encoding($false)))
 
 # 8) regenerate the HTML chart report (opt-in). Charts are always emitted from the accumulated
