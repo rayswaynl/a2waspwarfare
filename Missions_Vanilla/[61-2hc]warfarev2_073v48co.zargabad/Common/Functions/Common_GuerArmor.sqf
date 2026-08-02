@@ -26,7 +26,7 @@ _vehicle = _this select 0;
 if (isNull _vehicle) exitWith {};
 
 _armor = {
-	private ["_sel","_dam","_ammo","_base","_tier","_step","_max","_eff","_class","_isMob","_out"];
+	private ["_sel","_dam","_ammo","_base","_tier","_step","_max","_eff","_class","_isMob","_out","_contains","_hitAny"];
 	_sel  = _this select 1;
 	_dam  = _this select 2;
 	_ammo = _this select 4;
@@ -46,28 +46,44 @@ _armor = {
 	if (_eff > _max) then {_eff = _max};
 
 	//--- classify the incoming round. 0 = AT (no reduction), 1 = explosive/HE (half), 2 = small-arms (full).
+	//--- A2-safe substring scan: string find is A3-only; on A2 OA 1.64 it throws "Type String, expected
+	//--- Array" (RPT-confirmed class, Client_BuildUnit.sqf "TKV_" burn). Sliding-window toArray compare,
+	//--- case-sensitive like A3 string find (ammo classnames are case-stable).
+	_contains = {
+		private ["_hayA","_nA","_hl","_nl","_i","_j","_ok","_found"];
+		_hayA = toArray (_this select 0);
+		_nA = toArray (_this select 1);
+		_hl = count _hayA;
+		_nl = count _nA;
+		_found = false;
+		if (_nl > 0 && _nl <= _hl) then {
+			for "_i" from 0 to (_hl - _nl) do {
+				if (!_found) then {
+					_ok = true;
+					for "_j" from 0 to (_nl - 1) do {
+						if ((_hayA select (_i + _j)) != (_nA select _j)) exitWith {_ok = false};
+					};
+					if (_ok) then {_found = true};
+				};
+			};
+		};
+		_found
+	};
 	_class = 2;
 	if (isNil "_ammo") then {_ammo = ""};
 	if (typeName _ammo != "STRING") then {_ammo = ""};
 	if (_ammo != "") then {
-		if (
-			(_ammo find "_AT") >= 0 || {(_ammo find "PG7") >= 0} || {(_ammo find "PG9") >= 0}
-			|| {(_ammo find "HEAT") >= 0} || {(_ammo find "TOW") >= 0} || {(_ammo find "Maverick") >= 0}
-			|| {(_ammo find "Hellfire") >= 0} || {(_ammo find "AT13") >= 0} || {(_ammo find "Metis") >= 0}
-			|| {(_ammo find "Kornet") >= 0} || {(_ammo find "Vikhr") >= 0} || {(_ammo find "AT5") >= 0}
-			|| {(_ammo find "AT4") >= 0} || {(_ammo find "SVIR") >= 0} || {(_ammo find "M_47") >= 0}
-			|| {(_ammo find "RPG") >= 0}
-		) then {
+		_hitAny = false;
+		{
+			if (!_hitAny && {[_ammo, _x] call _contains}) then {_hitAny = true};
+		} forEach ["_AT","PG7","PG9","HEAT","TOW","Maverick","Hellfire","AT13","Metis","Kornet","Vikhr","AT5","AT4","SVIR","M_47","RPG"];
+		if (_hitAny) then {
 			_class = 0;
 		} else {
-			if (
-				(_ammo find "_HE") >= 0 || {(_ammo find "Sh_") >= 0} || {(_ammo find "FFAR") >= 0}
-				|| {(_ammo find "S8") >= 0} || {(_ammo find "Hydra") >= 0} || {(_ammo find "GRAD") >= 0}
-				|| {(_ammo find "FAB") >= 0} || {(_ammo find "Rocket") >= 0} || {(_ammo find "Grenade") >= 0}
-				|| {(_ammo find "G_") >= 0}
-			) then {
-				_class = 1;
-			};
+			{
+				if (!_hitAny && {[_ammo, _x] call _contains}) then {_hitAny = true};
+			} forEach ["_HE","Sh_","FFAR","S8","Hydra","GRAD","FAB","Rocket","Grenade","G_"];
+			if (_hitAny) then {_class = 1};
 		};
 	};
 
@@ -77,10 +93,11 @@ _armor = {
 	//--- mobility-part bonus (non-AT only). HEURISTIC: engine selection names vary per model in A2 OA.
 	_isMob = false;
 	if (typeName _sel == "STRING" && {_sel != ""}) then {
-		if (
-			(_sel find "wheel") >= 0 || {(_sel find "motor") >= 0} || {(_sel find "engine") >= 0}
-			|| {(_sel find "palivo") >= 0} || {(_sel find "fuel") >= 0}
-		) then {
+		_hitAny = false;
+		{
+			if (!_hitAny && {[_sel, _x] call _contains}) then {_hitAny = true};
+		} forEach ["wheel","motor","engine","palivo","fuel"];
+		if (_hitAny) then {
 			_isMob = true;
 			_eff = _eff + (missionNamespace getVariable ["WFBE_C_GUER_IMPROVISED_ARMOR_MOBILITY_BONUS", 0]);
 			if (_eff > _max) then {_eff = _max};

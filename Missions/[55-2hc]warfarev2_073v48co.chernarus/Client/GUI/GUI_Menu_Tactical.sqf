@@ -488,10 +488,22 @@ while {alive player && dialog} do {
 	//--- Request (MenuAction 20). No costs, confirms, cooldowns or server checks are bypassed.
 	if (MenuAction == 90) then {
 		MenuAction = -1;
-		private ["_t4i","_t4hit"];
+		private ["_t4i","_t4hit","_t4txtA","_t4scudA","_t4pre","_t4j"];
 		_t4hit = -1;
+		_t4scudA = toArray "SCUD";
 		for '_t4i' from 0 to ((lbSize 17008) - 1) do {
-			if (_t4hit < 0 && {(toUpper (lbText [17008, _t4i])) find "SCUD" == 0}) then {_t4hit = _t4i};
+			if (_t4hit < 0) then {
+				//--- A2-safe "starts with SCUD": string find is A3-only and throws "Type String, expected Array"
+				//--- on A2 OA 1.64 (RPT-confirmed class, see Client_BuildUnit.sqf _isTkvToken). Leading-byte compare.
+				_t4txtA = toArray (toUpper (lbText [17008, _t4i]));
+				_t4pre = (count _t4txtA) >= (count _t4scudA);
+				if (_t4pre) then {
+					for "_t4j" from 0 to ((count _t4scudA) - 1) do {
+						if ((_t4txtA select _t4j) != (_t4scudA select _t4j)) exitWith {_t4pre = false};
+					};
+				};
+				if (_t4pre) then {_t4hit = _t4i};
+			};
 		};
 		if (_t4hit >= 0) then {
 			lbSetCurSel [17008, _t4hit];
