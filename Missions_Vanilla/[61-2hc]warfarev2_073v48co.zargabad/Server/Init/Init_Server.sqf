@@ -289,13 +289,17 @@ Call {
 	if (!isDedicated) exitWith {};
 
 	_oc = 0.05;
+	_rain = 0;
 	switch (_weat) do {
 		case 0: {_oc = 0};
 		case 1: {_oc = 0.5};
-		case 2: {_oc = 1};
+		case 2: {_oc = 1; _rain = 0.5};
 	};
 	60 setOvercast _oc;
-	if (_weat == 2) then {60 setRain 0.5}; //--- lane199(e): Rainy lobby option now actually sets rain.
+	60 setRain _rain;
+	//--- OA weather commands are local. Publish the authoritative transition so remote clients and JIP replay the remaining duration only.
+	WFBE_ENVIRONMENT_WEATHER_STATE = [time, 60, _oc, _rain];
+	publicVariable "WFBE_ENVIRONMENT_WEATHER_STATE";
 };
 
 ["INITIALIZATION", "Init_Server.sqf: Weather module is loaded."] Call WFBE_CO_FNC_LogContent;

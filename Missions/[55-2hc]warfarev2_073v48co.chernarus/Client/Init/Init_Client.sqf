@@ -603,23 +603,46 @@ missionNamespace setVariable ['WFBE_C_QUEUE_DEPOT',0];
 missionNamespace setVariable ['WFBE_C_QUEUE_DEPOT_MAX',4];
 
 //--- Handle the weather.
-// Marty: Accelerated skipTime makes low clouds stutter, so day/night owns the weather and keeps each client sky clear.
-Call {
+// OA weather commands are local, so replay the server-authored state rather than restart an independent 60-second transition on each client.
+WFBE_CL_FNC_ApplyEnvironmentWeather = {
+	private ["_state","_remaining","_overcast","_rain"];
+	_state = _this;
+	if ((typeName _state) != "ARRAY" || {(count _state) < 4}) exitWith {};
+	if ((typeName (_state select 0)) != "SCALAR" || {(typeName (_state select 1)) != "SCALAR"} || {(typeName (_state select 2)) != "SCALAR"} || {(typeName (_state select 3)) != "SCALAR"}) exitWith {};
+	_remaining = (_state select 1) - (time - (_state select 0));
+	_remaining = _remaining max 0;
+	_overcast = (_state select 2) max 0 min 1;
+	_rain = (_state select 3) max 0 min 1;
+	_remaining setOvercast _overcast;
+	_remaining setRain _rain;
+};
+
+"WFBE_ENVIRONMENT_WEATHER_STATE" addPublicVariableEventHandler {
+	[_this select 1] Call WFBE_CL_FNC_ApplyEnvironmentWeather;
+};
+
+_state = missionNamespace getVariable ["WFBE_ENVIRONMENT_WEATHER_STATE", []];
+if ((typeName _state) == "ARRAY" && {(count _state) >= 4}) then {
+	[_state] Call WFBE_CL_FNC_ApplyEnvironmentWeather;
+} else {
+	//--- Fallback only while server initialization has not yet published its state.
 	_weat = missionNamespace getVariable "WFBE_C_ENVIRONMENT_WEATHER";
-	if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) exitWith {
+	if ((missionNamespace getVariable "WFBE_DAYNIGHT_ENABLED") == 1) then {
 		0 setOvercast 0;
 		0 setRain 0;
+	} else {
+		if (_weat != 3) then {
+			_oc = 0.05;
+			_rain = 0;
+			switch (_weat) do {
+				case 0: {_oc = 0};
+				case 1: {_oc = 0.5};
+				case 2: {_oc = 1; _rain = 0.5};
+			};
+			60 setOvercast _oc;
+			60 setRain _rain;
+		};
 	};
-	if (_weat == 3) exitWith {};
-
-	_oc = 0.05;
-	switch (_weat) do {
-		case 0: {_oc = 0};
-		case 1: {_oc = 0.5};
-		case 2: {_oc = 1};
-	};
-	60 setOvercast _oc;
-	if (_weat == 2) then {60 setRain 0.5}; //--- Keep rainy lobby weather consistent with the server-local path.
 };
 
 // Marty: Volumetric clouds are disabled globally; never start the BIS cloud system on clients.
