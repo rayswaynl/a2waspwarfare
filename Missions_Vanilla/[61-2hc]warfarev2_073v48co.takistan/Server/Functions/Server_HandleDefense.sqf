@@ -1,4 +1,4 @@
-Private ["_buildings","_closest","_defense","_groups","_HC","_liveHCs","_manningLoopActive","_moveInGunner","_position","_positions","_side","_sideID","_soldier","_team","_type","_unit","_commander","_sideStillValid","_defenseArea","_areaTeam","_reManPollInterval","_reManPollWaited"];
+Private ["_buildings","_closest","_defense","_groups","_HC","_liveHCs","_delegated","_manningLoopActive","_moveInGunner","_position","_positions","_side","_sideID","_soldier","_team","_type","_unit","_commander","_sideStillValid","_defenseArea","_areaTeam","_reManPollInterval","_reManPollWaited"];
 _defense = _this select 0;
 _side = _this select 1;
 _team = _this select 2;
@@ -66,22 +66,26 @@ while {!isNull _defense && {alive _defense} && {_sideStillValid}} do {
 		if (_liveHCs > 0) then {
 			_groups = [] + [missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side]];
 			_positions = [] + [_position];
-			[_side, _groups, _positions, _team, _defense, _moveInGunner] Call WFBE_CO_FNC_DelegateAIStaticDefenceHeadless;
+			//--- The delegate returns the number of requests actually dispatched. A stale/orphaned
+			//--- registry can pass the caller's liveness check but dispatch zero; do not spend the
+			//--- full grace window waiting for a request that was never sent.
+			_delegated = [_side, _groups, _positions, _team, _defense, _moveInGunner] Call WFBE_CO_FNC_DelegateAIStaticDefenceHeadless;
 
 			//--- Server-side fallback watchdog (mirrors the working town path's CreateUnit fallback at
 			//--- Server_OperateTownDefensesUnits.sqf:72-84). HC delegation here is fire-and-forget to a
 			//--- RANDOM HC with no retry; if it is dropped (HC busy/desynced, or an HC-local AI stalls
 			//--- boarding a server-local static) the gun would otherwise sit empty until the next 420s
 			//--- tick. Give the delegation a grace window; if no gunner is seated, fill server-side.
-			[_defense,_side,_team] Spawn {
-				Private ["_defense","_side","_team","_deadline","_sideID","_type","_soldier","_position"];
+			[_defense,_side,_team, if (_delegated > 0) then {45} else {0}] Spawn {
+				Private ["_defense","_side","_team","_grace","_deadline","_sideID","_type","_soldier","_position"];
 				_defense = _this select 0;
 				_side    = _this select 1;
 				_team    = _this select 2;
-				_deadline = time + 45;
+				_grace   = _this select 3;
+				_deadline = time + _grace;
 				waitUntil {
-					sleep 5;
-					(time > _deadline) || {!alive _defense} || {(!isNull (gunner _defense)) && {alive gunner _defense}}
+					if (_grace > 0) then {sleep 5};
+					(_grace <= 0) || {(time > _deadline)} || {!alive _defense} || {(!isNull (gunner _defense)) && {alive gunner _defense}}
 				};
 				//--- Respect the existing "gunner already alive" skip - do NOT double-man.
 				if (!isNull _defense && {alive _defense} && {isNull (gunner _defense) || {!alive gunner _defense}}) then {
