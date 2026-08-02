@@ -193,7 +193,7 @@ missionNamespace setVariable [Format["WFBE_%1_DefaultGearOfficer", _side], [
 // Soldier
 missionNamespace setVariable [Format["WFBE_%1_DefaultGearSoldier", _side], [
 	['AKS_74_kobra', 'RPG18', 'ItemCompass','ItemMap','ItemWatch','ItemRadio','Binocular','NVGoggles'],
-	['30Rnd_545x39_AK','30Rnd_545x39_AK','30Rnd_545x39_AK','30Rnd_545x39_AK','HandGrenade_East','HandGrenade_East','HandGrenade_East','HandGrenade_East'],
+	['30Rnd_545x39_AK','30Rnd_545x39_AK','30Rnd_545x39_AK','30Rnd_545x39_AK','RPG18','HandGrenade_East','HandGrenade_East','HandGrenade_East','HandGrenade_East'],
 	['AKS_74_kobra']
 ]];
 
