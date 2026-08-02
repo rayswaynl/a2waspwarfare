@@ -1,8 +1,14 @@
-private["_clear","_mapHalf","_mapSize","_perfActive","_perfDeleted","_perfItemStart","_perfScanned","_perfStart","_scanCentre","_scanRadius","_timer"];
+private["_batchCount","_batchSize","_clear","_mapHalf","_mapSize","_perfActive","_perfDeleted","_perfItemStart","_perfScanned","_perfStart","_scanCentre","_scanRadius","_timer"];
 
 _timer = missionNamespace getVariable ["WFBE_C_RUINS_CLEANER_TIME_PERIOD", 1800];
 if (isNil "_timer" || {typeName _timer != "SCALAR"}) then {_timer = 1800};
 if (_timer < 1800) then {_timer = 1800};
+
+//--- Batch cooperative sleeps so large ruin sweeps stay yielded without paying 0.5s per object.
+_batchSize = missionNamespace getVariable ["WFBE_C_RUINS_CLEANER_BATCH_SIZE", 8];
+if (isNil "_batchSize" || {typeName _batchSize != "SCALAR"}) then {_batchSize = 8};
+if (_batchSize < 1) then {_batchSize = 8};
+_batchSize = floor _batchSize;
 
 _scanCentre = [7000,7500,0];
 _scanRadius = 20000;
@@ -25,6 +31,7 @@ while {!WFBE_GameOver} do {
 	_clear = nearestObjects [_scanCentre,["Ruins"],_scanRadius];
 	_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
 	_perfScanned = count _clear;
+	_batchCount = 0;
 	{
 		//--- r55 fail-clean: skip nulls after cooperative sleep; count only real deletes.
 		if (!isNull _x) then {
@@ -33,7 +40,8 @@ while {!WFBE_GameOver} do {
 			_perfActive = _perfActive + (diag_tickTime - _perfItemStart);
 			_perfDeleted = _perfDeleted + 1;
 		};
-		sleep 0.5;
+		_batchCount = _batchCount + 1;
+		if (_batchCount >= _batchSize) then {_batchCount = 0; sleep 0.5};
 	} forEach _clear;
 	if !(isNil "PerformanceAudit_Record") then {
 		if (missionNamespace getVariable ["PerformanceAuditEnabled", true]) then {
