@@ -59,7 +59,7 @@ private ["_side","_logik","_snap","_sideID","_sideText","_enemySide","_enemyID",
 	"_senseTick","_sensed","_laneTown","_flightsIn","_flights","_f","_fg","_fh",
 	"_tgtTowns","_ownTowns","_cands","_x2","_lanePos","_nearCount","_bestTown","_bestCount","_inRange",
 	"_posCacheOn","_entPositions","_seenVeh","_ePlayer","_eVeh",
-	"_rollNow","_covered","_airAlive","_airSideOK","_hasAirFactory","_afStructNames","_afStructs","_afStructIdx","_afStructClass","_upgrades","_airOK","_townsOK","_canDispatch","_dispatched","_skipReason",
+	"_rollNow","_covered","_airAlive","_airSideOK","_late","_airMaxTotal","_hasAirFactory","_afStructNames","_afStructs","_afStructIdx","_afStructClass","_upgrades","_airOK","_townsOK","_canDispatch","_dispatched","_skipReason",
 	"_airList","_attackClasses","_pilotClass","_ang","_spawnPos","_class","_special","_heli","_grp","_pilot",
 	"_elMin"];
 
@@ -210,6 +210,9 @@ _airAlive = 0;
 		if (_airSideOK) then {_airAlive = _airAlive + 1};
 	};
 } forEach vehicles;
+_late = (time / 60) >= (missionNamespace getVariable ["WFBE_C_AICOM_AIR_LATE_MINS", 45]);
+_airMaxTotal = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_TOTAL", 3];
+if (_late) then {_airMaxTotal = missionNamespace getVariable ["WFBE_C_AICOM_AIR_MAX_LATE", _airMaxTotal]};
 _hasAirFactory = false;
 _afStructNames = missionNamespace getVariable [Format ["WFBE_%1STRUCTURENAMES", _sideText], []];
 _afStructIdx = (missionNamespace getVariable [Format ["WFBE_%1STRUCTURES", _sideText], []]) find "Aircraft";
@@ -227,7 +230,7 @@ _townsOK = _myTowns >= _minTowns;
 _covered = false;
 { if ((_x select 2) == _laneTown) then {_covered = true} } forEach _flights;
 
-_canDispatch = _sensed && {_inRange} && {_airOK} && {_townsOK} && {!_covered} && {(count _flights) < _maxAir} && {!isNull _laneTown};
+_canDispatch = _sensed && {_inRange} && {_airOK} && {_townsOK} && {!_covered} && {_airAlive < _airMaxTotal} && {(count _flights) < _maxAir} && {!isNull _laneTown};
 
 //--- Liveness telemetry: report the first gate that prevented a flight, not merely dispatched=0.
 _skipReason = "ready";
@@ -237,8 +240,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) <= 0) the
 			if (!_airOK) then {_skipReason = "air-unavailable"} else {
 				if (!_townsOK) then {_skipReason = "not-established"} else {
 					if (_covered) then {_skipReason = "lane-covered"} else {
+						if (_airAlive >= _airMaxTotal) then {_skipReason = "air-cap"} else {
 						if ((count _flights) >= _maxAir) then {_skipReason = "flight-cap"} else {
 							if (isNull _laneTown) then {_skipReason = "no-lane"};
+						};
 						};
 					};
 				};
@@ -252,6 +257,51 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_
 	_airList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
 	_attackClasses = [];
 	{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Ka52","Ka52Black","Mi24_D","Mi24_D_TK_EP1","Mi24_V","Mi24_P","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]) then {_attackClasses = _attackClasses + [_x]} } forEach _airList;
+	//--- OWNER FIX 2026-08-01 ("AI commanders can build units from factory levels they haven't
+	//--- unlocked yet"): the allowlist pick above bypassed the per-class QUERYUNITUPGRADE tier check
+	//--- every sibling AI buy path runs (Common_IsUnitUnlocked) - a tier-5 airframe (Su34/Ka52Black)
+	//--- could spawn at researched AIR tier 0 because _airOK is a binary capability signal, not a
+	//--- per-class gate. Owner pick: FOUNDING PARITY (AI_Commander_Teams.sqf:518-596) - a held
+	//--- airfield waives heli+plane AIR tiers (B74 free-buy), a live Aircraft Factory waives HELI
+	//--- tiers only (Build83), everything else passes the same per-class check the player UI runs.
+	//--- _hasAirFactory/_upgrades computed above; airfield scan mirrors Teams.sqf:519-529 verbatim;
+	//--- the waiver-copy idiom (`+ []`, AIR slot -> 1e6) mirrors Teams.sqf:588-594. The helper is
+	//--- FAIL-OPEN for unmapped classnames and FAIL-CLOSED on nil _upgrades, so missing research
+	//--- data grounds planes (no airfield) while the factory waiver still fields helis - Build83
+	//--- intent preserved.
+	private ["_afTownNames","_hasAirfield","_freeAirWaive","_airHeliWaive","_gatedClasses","_cnUpgrades","_afWaive","_tierPass"];
+	_hasAirfield = false;
+	if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_REQUIRE_AIRFIELD", 1]) > 0) then {
+		_afTownNames = ["NWAF","NEAF","Balota","Rasman AF"];
+		{
+			if (!((_x select 1) in _afTownNames)) then {_afTownNames = _afTownNames + [_x select 1]};
+		} forEach (missionNamespace getVariable [Format ["WFBE_%1_CAPTURE_UNLOCKS", _sideText], []]);
+		{
+			if (((_x getVariable ["sideID", -1]) == _sideID) && {(_x getVariable ["wfbe_is_airfield", false]) || {(_x getVariable ["name",""]) in _afTownNames} || {!(isNull (_x getVariable ["wfbe_airfield_hangar_obj", objNull]))}}) exitWith {_hasAirfield = true};
+		} forEach towns;
+	} else {
+		_hasAirfield = true;
+	};
+	_freeAirWaive = _hasAirfield && {(missionNamespace getVariable ["WFBE_C_AICOM_AIRFIELD_FREE_AIR", 1]) > 0};
+	_airHeliWaive = _hasAirFactory && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_FACTORY_ENABLES_HELI", 1]) > 0};
+	_gatedClasses = [];
+	{
+		_afWaive = _freeAirWaive || {_airHeliWaive && {!(_x isKindOf "Plane")}};
+		_tierPass = false;
+		if (_afWaive) then {
+			_cnUpgrades = [0,0,0,0];
+			if (!isNil "_upgrades") then {_cnUpgrades = _upgrades + []};
+			_cnUpgrades set [WFBE_UP_AIR, 1e6];
+			_tierPass = ([_x, _sideText, _cnUpgrades] Call WFBE_CO_FNC_IsUnitUnlocked) select 0;
+		} else {
+			_tierPass = ([_x, _sideText, _upgrades] Call WFBE_CO_FNC_IsUnitUnlocked) select 0;
+		};
+		if (_tierPass) then {_gatedClasses = _gatedClasses + [_x]};
+	} forEach _attackClasses;
+	if ((count _gatedClasses) < (count _attackClasses)) then {
+		diag_log Format ["AICOM2|v1|AIRRESP|%1|tiergate|all=%2|ok=%3|waiveAF=%4|waiveHeli=%5", _sideText, count _attackClasses, count _gatedClasses, _freeAirWaive, _airHeliWaive];
+	};
+	_attackClasses = _gatedClasses;
 	_pilotClass = missionNamespace getVariable [Format ["WFBE_%1PILOT", _sideText], ""];
 	if (count _attackClasses > 0 && {_pilotClass != ""}) then {
 		_lanePos = getPos _laneTown;
@@ -378,5 +428,6 @@ diag_log ("AICOM2|v1|AIRRESP|" + _sideText + "|" + str _elMin
 	+ "|myTowns=" + str _myTowns
 	+ "|airOK=" + (if (_airOK) then {"1"} else {"0"})
 	+ "|airAlive=" + str _airAlive
+	+ "|airMax=" + str _airMaxTotal
 	+ "|skip=" + _skipReason
 	+ "|flag=" + str (missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]));
