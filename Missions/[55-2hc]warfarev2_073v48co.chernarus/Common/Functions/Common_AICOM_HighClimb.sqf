@@ -101,7 +101,7 @@ WFBE_CO_FNC_AICOM_HighClimb_Eligible = {
 //--- _this = tank object.
 //--- ============================================================================
 WFBE_CO_FNC_AICOM_HighClimb_Boost = {
-	private ["_vehicle","_direction","_min","_minBoostSpeed","_baseBoostCoef","_maxBoostCoef",
+	private ["_vehicle","_direction","_min","_minBoostSpeed","_boostFloor","_baseBoostCoef","_maxBoostCoef",
 	         "_sleepDelay","_driver","_speed","_vel","_currentCommand","_canAssist","_isMovingForward","_boostCoef",
 	         "_lastLog","_pulseOrd","_pulseGoal","_pulseGoalValid","_pulseTrackedGoal","_pulseDist","_pulseLastDist",
 	         "_pulseDwell","_pulseMax","_pulseCd","_pulseLast","_pulseStrikes","_pulseHead","_pulseSpd","_pulseVel",
@@ -140,17 +140,15 @@ WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 
 	//--- Target assist speed: help only while below this. Mirror the player assist values.
 	_min = 30;
-	//--- Minimum speed before boosting: never push a stopped/parked tank. CORRECTNESS FIX (2026-08-02): raised
-	//--- from 3 to a floor the from-zero pulse (ZEROPULSE, below) can actually clear. The pulse tops out at
-	//--- 2.5 m/s (its own hardcoded ceiling, see the _pulseSpd clamp below) and decays under gravity every
-	//--- 0.1s tick of this loop on a real incline, so at floor=3 a successfully-pulsed hull could NEVER reach
-	//--- this branch - an unconditional dead zone between the two assists, independent of any flag/tuning
-	//--- value, which is why standstill / steep-Takistan hulls kept re-triggering the pulse until
-	//--- PULSE_MAX_STRIKES exhausted and control handed off to the heavier stuck/strand ladder
-	//--- (Common_RunCommanderTeam.sqf UNSTUCK tiers - see that file, cmdcon43-j note: "this tier-1 wedge
-	//--- recovery fires FAR more on steep Takistan"). 1.5 gives the multiplicative forward-assist a tick or
-	//--- two of margin to catch a decaying pulse before it stalls back to zero.
-	_minBoostSpeed = 1.5;
+	//--- Minimum speed before boosting: never push a stopped/parked tank (floor 3, unchanged for ordinary
+	//--- driving - k-turns, convoy slowdowns, careful maneuvering stay outside the assist, and the ZEROPULSE
+	//--- eligibility below (_speed <= _minBoostSpeed) keeps its original <=3 window). CORRECTNESS FIX
+	//--- (2026-08-02, review round 2): the from-zero pulse tops out at 2.5-3 m/s and decays under gravity
+	//--- every 0.1s tick, so a floor of 3 meant a successfully-pulsed hull could NEVER enter the forward
+	//--- assist - an unconditional dead zone between the two assists. The handoff is now closed ONLY for a
+	//--- hull that pulsed within the last 10s (see the boost branch below): its effective floor drops to 1.5
+	//--- so the assist can catch the decaying pulse; every other hull keeps the original floor untouched.
+	_minBoostSpeed = 3;
 	//--- Progressive multiplier: gentle at low speed, stronger on steep climbs.
 	_baseBoostCoef = 1.05;
 	_maxBoostCoef  = 1.30;
@@ -184,7 +182,12 @@ WFBE_CO_FNC_AICOM_HighClimb_Boost = {
 				if (_canAssist && {_isMovingForward}) then {
 					//--- Climbing assist only: boost when already moving forward but too slow.
 					//--- No braking above the target speed.
-					if (_speed > _minBoostSpeed && {_speed < _min}) then {
+					//--- Post-pulse handoff (review round 2): a hull that ZEROPULSEd within the last 10s uses a 1.5
+					//--- floor so the assist can catch the decaying pulse; 10s sits under the 15s pulse cooldown, so
+					//--- this can never blanket ordinary low-speed driving.
+					_boostFloor = _minBoostSpeed;
+					if ((diag_tickTime - (_vehicle getVariable ["AICOM_HighClimb_PulseLast", -9999])) < 10) then {_boostFloor = 1.5};
+					if (_speed > _boostFloor && {_speed < _min}) then {
 						_boostCoef = _baseBoostCoef + (((_min - _speed) / _min) * (_maxBoostCoef - _baseBoostCoef));
 						if (_boostCoef > _maxBoostCoef) then {_boostCoef = _maxBoostCoef};
 
