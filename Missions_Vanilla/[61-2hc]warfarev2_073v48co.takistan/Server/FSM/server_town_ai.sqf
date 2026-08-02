@@ -636,7 +636,10 @@ while {!WFBE_GameOver} do {
 									_position = ([getPos _town, 50, 300] call WFBE_CO_FNC_GetRandomPosition);
 								};
 							};
-							_position = [_position, 50] call WFBE_CO_FNC_GetEmptyPosition;
+							//--- Town-AI slots are already bounded by the wave/group loop. Keep the
+							//--- empty-position probe bounded too; a crowded activation can otherwise
+							//--- spend 1000 isFlatEmpty checks before accepting the widened fallback.
+							_position = [_position, 50, 256] call WFBE_CO_FNC_GetEmptyPosition;
 							[_positions, _position] call WFBE_CO_FNC_ArrayPush;
 							_ctlNewGrp = ([_side, "town-ai"] Call WFBE_CO_FNC_CreateGroup);
 							//--- r50 fail-clean: CreateGroup returns grpNull at side group-cap; setVariable on null

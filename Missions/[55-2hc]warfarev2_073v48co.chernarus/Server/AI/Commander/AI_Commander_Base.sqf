@@ -330,7 +330,10 @@ _findBuildPos = {
 				//--- settle onto flat-empty ground with a SMALL radius so it cannot drift back
 				//--- onto the lane, then validate: dry, and a clear drivable strip between the
 				//--- build pos and the carriageway (sample the midpoint - not water/road-snapped).
-				_cand = [_cand, 8] Call WFBE_CO_FNC_GetEmptyPosition;
+				//--- This settle runs inside the factory placement try loop. Keep its probe budget
+				//--- bounded so a crowded road candidate does not multiply 1000 isFlatEmpty checks
+				//--- before the outer loop tries the next candidate.
+				_cand = [_cand, 8, 32] Call WFBE_CO_FNC_GetEmptyPosition;
 				if (!(surfaceIsWater _cand)) then {
 					if (!_haveDry) then {_best = _cand; _haveDry = true};
 					_blocked = false;
