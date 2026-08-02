@@ -40,7 +40,7 @@
 
 private ["_team","_footInf","_sideID","_side","_capSeq","_campFirstEnd"];
 private ["_ttl","_stamp","_exitReason","_detachedBySML2","_dismountCount","_seatedStill"];
-private ["_aliveCheck","_disbandFlag","_ordN","_grpChg","_uX"];
+private ["_aliveCheck","_disbandFlag","_ordN","_grpChg","_uX","_leaderAtDetach"];
 
 _team         = _this select 0;
 _footInf      = _this select 1;
@@ -103,6 +103,7 @@ diag_log Format ["SML|v1|DISMOUNT|side=%1 team=%2 dismounted=%3 seated_still=%4 
 //--- Poll until any exit condition fires, then clear stamps and doFollow.
 //--- exitWith inside while {}-do {} leaves the while only; it does NOT propagate through forEach.
 _stamp      = time;
+_leaderAtDetach = leader _team;
 _exitReason = "ttl";
 
 while {true} do {
@@ -114,8 +115,8 @@ while {true} do {
     if (time >= _campFirstEnd) exitWith {_exitReason = "campfirst_end"};
 
     //--- (c) leader death
-    _aliveCheck = !isNull leader _team;
-    if (_aliveCheck) then {_aliveCheck = alive (leader _team)};
+    _aliveCheck = !isNull _leaderAtDetach;
+    if (_aliveCheck) then {_aliveCheck = alive _leaderAtDetach};
     if (!_aliveCheck) exitWith {_exitReason = "leader_dead"};
 
     //--- (d) team disband flag (GROUP variable; use 1-arg getVariable + isNil per A2 OA trap)
