@@ -164,6 +164,13 @@ if (_isHCDisconnect) exitWith {};
 
 if (_uid == '') exitWith {};
 
+//--- r84 enroll-abort-on-disconnect: bump this uid's disconnect sequence so any in-flight
+//--- Server_OnPlayerConnected resolution loop (120s window, plus its re-arm chain) breaks early and
+//--- does NOT re-arm for a session that has already ended. Placed ahead of the ghost/normal paths so
+//--- even a pre-enrollment quit (nil WFBE_JIP_USER) is observed. A2-OA-1.64-safe 2-arg get/setVariable.
+private "_dcSeq"; _dcSeq = missionNamespace getVariable [Format ["WFBE_CONNECT_DCSEQ_%1", _uid], 0];
+missionNamespace setVariable [Format ["WFBE_CONNECT_DCSEQ_%1", _uid], _dcSeq + 1];
+
 if ((missionNamespace getVariable ["WFBE_C_CHAT_RELAY", 0]) > 0) then {
 	["LEAVE", _name, "player left"] Call WFBE_SE_FNC_ChatRelayEvent;
 };
