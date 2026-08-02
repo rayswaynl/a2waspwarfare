@@ -7,7 +7,7 @@ _easaVehi = [];
 
 /* [[Price], [Description], [Weapon, Ammos], [Weapon, Ammos]...] */
 
-// Su-34 [AF5] - 10 pylons
+// Su-34 [AF5 = Aircraft Factory tier 5, not an airfield] - 10 pylons
 _easaVehi = _easaVehi + ['Su34'];
 _easaDefault = _easaDefault + [[['Ch29Launcher_Su34','R73Launcher_2'],['6Rnd_Ch29','2Rnd_R73','2Rnd_R73']]];
 _easaLoadout = _easaLoadout + [
@@ -101,7 +101,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// Su-25A [AF3] - 6 pylons
+// Su-25A [AF3 = Aircraft Factory tier 3, not an airfield] - 6 pylons
 _easaVehi = _easaVehi + ['Su25_Ins'];
 _easaDefault = _easaDefault + [[[],[]]];
 _easaLoadout = _easaLoadout + [
@@ -129,7 +129,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// Su-25T [AF4] - 8 pylons
+// Su-25T [AF4 = Aircraft Factory tier 4, not an airfield] - 8 pylons
 _easaVehi = _easaVehi + ['Su25_TK_EP1'];
 _easaDefault = _easaDefault + [[['AT9Launcher','R73Launcher_2','S8Launcher'],['4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','2Rnd_R73','40Rnd_S8T']]];
 _easaLoadout = _easaLoadout + [
@@ -191,7 +191,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// Su-39 [AF5] - 10 pylons
+// Su-39 [AF5 = Aircraft Factory tier 5, not an airfield] - 10 pylons
 _easaVehi = _easaVehi + ['Su39'];
 _easaDefault = _easaDefault + [[['R73Launcher_2','S8Launcher','VikhrLauncher'],['2Rnd_R73','40Rnd_S8T','40Rnd_S8T','12Rnd_Vikhr_KA50']]];
 _easaLoadout = _easaLoadout + [
@@ -306,7 +306,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// L-39 [AF3] - 4 pylons
+// L-39 [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 _easaVehi = _easaVehi + ['L39_TK_EP1'];
 _easaDefault = _easaDefault + [[['R73Launcher_2','57mmLauncher'],['2Rnd_R73','64Rnd_57mm']]];
 _easaLoadout = _easaLoadout + [
@@ -324,7 +324,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// F-35B [AF5] - 6 pylons
+// F-35B [AF5 = Aircraft Factory tier 5, not an airfield] - 6 pylons
 _easaVehi = _easaVehi + ['F35B'];
 _easaDefault = _easaDefault + [[['MaverickLauncher','SidewinderLaucher_F35','BombLauncherF35'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_F35','2Rnd_GBU12']]];
 _easaLoadout = _easaLoadout + [
@@ -342,7 +342,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// L-159 [AF3] - 6 pylons
+// L-159 [AF3 = Aircraft Factory tier 3, not an airfield] - 6 pylons
 _easaVehi = _easaVehi + ['L159_ACR'];
 _easaDefault = _easaDefault + [[['MaverickLauncher','SidewinderLaucher_AH1Z','FFARLauncher'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z','38Rnd_FFAR']]];
 _easaLoadout = _easaLoadout + [
@@ -373,7 +373,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// A-10A [AF3] - 4 pylons
+// A-10A [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 _easaVehi = _easaVehi + ['A10'];
 _easaDefault = _easaDefault + [[['FFARLauncher','Mk82BombLauncher_6'],['38Rnd_FFAR','6Rnd_Mk82']]];
 _easaLoadout = _easaLoadout + [
@@ -389,7 +389,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// A-10C [AF4] - 8 pylons
+// A-10C [AF4 = Aircraft Factory tier 4, not an airfield] - 8 pylons
 _easaVehi = _easaVehi + ['A10_US_EP1'];
 _easaDefault = _easaDefault + [[['MaverickLauncher','SidewinderLaucher_AH1Z','FFARLauncher','Mk82BombLauncher_6'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z','38Rnd_FFAR','6Rnd_Mk82']]];
 _easaLoadout = _easaLoadout + [
@@ -467,7 +467,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// AV8B (LGB) [AF4] - 8 pylons
+// AV8B (LGB) [AF4 = Aircraft Factory tier 4, not an airfield] - 8 pylons
 _easaVehi = _easaVehi + ['AV8B'];
 _easaDefault = _easaDefault + [[['BombLauncherF35'],['2Rnd_GBU12','2Rnd_GBU12','2Rnd_GBU12']]];
 _easaLoadout = _easaLoadout + [
@@ -477,7 +477,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// AV8B [AF5] - 8 pylons
+// AV8B [AF5 = Aircraft Factory tier 5, not an airfield] - 8 pylons
 _easaVehi = _easaVehi + ['AV8B2'];
 _easaDefault = _easaDefault + [[['MaverickLauncher','SidewinderLaucher_AH1Z'],['2Rnd_Maverick_A10','2Rnd_Maverick_A10','2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z']]];
 _easaLoadout = _easaLoadout + [
@@ -570,7 +570,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// Mi-24V (CZ) [AF3] - 4 pylons
+// Mi-24V (CZ) [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 _easaVehi = _easaVehi + ['Mi24_D_CZ_ACR'];
 _easaDefault = _easaDefault + [[['AT9Launcher'],['8Rnd_AT9_Mi24V']]];
 _easaLoadout = _easaLoadout + [
@@ -579,7 +579,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// AH-64D (TOW) [AF3] - 4 pylons
+// AH-64D (TOW) [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 _easaVehi = _easaVehi + ['AH64D'];
 _easaDefault = _easaDefault + [[['TOWLauncherSingle'],['6Rnd_TOW2']]];
 _easaLoadout = _easaLoadout + [
@@ -588,7 +588,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// AH-64D (Hellfire) [AF4] - 4 pylons
+// AH-64D (Hellfire) [AF4 = Aircraft Factory tier 4, not an airfield] - 4 pylons
 _easaVehi = _easaVehi + ['AH64D_EP1'];
 _easaDefault = _easaDefault + [[['HellfireLauncher'],['8Rnd_Hellfire']]];
 _easaLoadout = _easaLoadout + [
@@ -597,7 +597,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// Apache AH1 [AF4] - 4 pylons
+// Apache AH1 [AF4 = Aircraft Factory tier 4, not an airfield] - 4 pylons
 _easaVehi = _easaVehi + ['BAF_Apache_AH1_D'];
 _easaDefault = _easaDefault + [[['HellfireLauncher'],['8Rnd_Hellfire']]];
 _easaLoadout = _easaLoadout + [
@@ -606,7 +606,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// AH-1Z [AF5] - 4 pylons
+// AH-1Z [AF5 = Aircraft Factory tier 5, not an airfield] - 4 pylons
 _easaVehi = _easaVehi + ['AH1Z'];
 _easaDefault = _easaDefault + [[['HellfireLauncher'],['8Rnd_Hellfire','8Rnd_Hellfire']]];
 _easaLoadout = _easaLoadout + [
@@ -616,7 +616,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// Wildcat AH11 [AF3] - 4 pylons
+// Wildcat AH11 [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 _easaVehi = _easaVehi + ['AW159_Lynx_BAF'];
 _easaDefault = _easaDefault + [[['CRV7_HEPD','CTWS','SpikeLauncher_ACR'],['6Rnd_CRV7_HEPD','200Rnd_40mmHE_FV510','200Rnd_40mmSABOT_FV510','2Rnd_Spike_ACR','2Rnd_Spike_ACR']]];
 _easaLoadout = _easaLoadout + [
@@ -627,7 +627,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// Mi-24V [AF3] - 4 pylons
+// Mi-24V [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 _easaVehi = _easaVehi + ['Mi24_V'];
 _easaDefault = _easaDefault + [[['AT9Launcher'],['4Rnd_AT9_Mi24P']]];
 _easaLoadout = _easaLoadout + [
@@ -636,7 +636,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// Mi-24P [AF3] - 4 pylons
+// Mi-24P [AF3 = Aircraft Factory tier 3, not an airfield] - 4 pylons
 _easaVehi = _easaVehi + ['Mi24_P'];
 _easaDefault = _easaDefault + [[['AT9Launcher','HeliBombLauncher'],['4Rnd_AT9_Mi24P','2Rnd_FAB_250']]];
 _easaLoadout = _easaLoadout + [
@@ -647,7 +647,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// Ka-52 [AF4] - 8 pylons
+// Ka-52 [AF4 = Aircraft Factory tier 4, not an airfield] - 8 pylons
 _easaVehi = _easaVehi + ['Ka52'];
 _easaDefault = _easaDefault + [[['AT9Launcher'],['4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P']]];
 _easaLoadout = _easaLoadout + [
@@ -656,7 +656,7 @@ _easaLoadout = _easaLoadout + [
 ]
 ];
 
-// Ka-52 (Black) [AF5] - 4 pylons
+// Ka-52 (Black) [AF5 = Aircraft Factory tier 5, not an airfield] - 4 pylons
 _easaVehi = _easaVehi + ['Ka52Black'];
 _easaDefault = _easaDefault + [[['VikhrLauncher'],['12Rnd_Vikhr_KA50']]];
 _easaLoadout = _easaLoadout + [
