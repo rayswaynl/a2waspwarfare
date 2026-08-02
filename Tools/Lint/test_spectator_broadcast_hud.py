@@ -52,8 +52,10 @@ class SpectatorBroadcastHudContractTests(unittest.TestCase):
         titles = read(SOURCE, "Rsc/Titles.hpp")
         dialogs = read(SOURCE, "Rsc/Dialogs.hpp")
 
+        # Owner armed 2026-08-01 (folded via staging wave 2026-08-02): the caster overlay was dark
+        # on the h5 stream ("NO OVERLAY") because this still defaulted 0 — deliberate default change.
         self.assertIn(
-            'if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 0}',
+            'if (isNil "WFBE_C_SPECTATOR_BROADCAST_HUD") then {WFBE_C_SPECTATOR_BROADCAST_HUD = 1}',
             constants,
         )
         self.assertIn("class WFBE_SpectatorBroadcastHud", titles)
@@ -73,7 +75,8 @@ class SpectatorBroadcastHudContractTests(unittest.TestCase):
         )
         self.assertIn("WFBE_C_VAR_SpectatorHudMode = 2", enter)
         self.assertIn("case 35: { //--- H: FULL -> MINIMAL -> OFF", enter)
-        self.assertIn("WFBE_C_VAR_SpectatorHudMode = (WFBE_C_VAR_SpectatorHudMode + 1) % 3", enter)
+        # v8 rebuild (staging wave 2026-08-02): the cycle uses a namespace-safe read of the mode.
+        self.assertIn('WFBE_C_VAR_SpectatorHudMode = ((missionNamespace getVariable ["WFBE_C_VAR_SpectatorHudMode", 2]) + 1) % 3', enter)
         self.assertIn("case 50: { //--- M: open/close spectator map dialog", enter)
         self.assertIn("createDialog \"WFBE_SpectatorMapDialog\"", enter)
         self.assertIn("WFBE_C_VAR_SpectatorHideHint", enter)
