@@ -85,6 +85,10 @@ _allVehicles = vehicles;
 //--- The founding gate uses foundedTeams + HC pending + server-local construction reservations vs the target.
 _foundedTeams = 0;
 _editorTeams  = 0;
+//--- Reuse the live-body counts from the founding census for FIELDSPLIT telemetry.
+//--- The old second pass repeated units _x for every real team in the same tick.
+_aicomTeamUnits = 0;
+_aicomHusk = 0;
 _constructionPending = 0;
 _constructionExpired = [];
 _constructionTTL = 300; //--- A failed no-HC reservation gets one production window, then is retired for a clean retry.
@@ -133,6 +137,8 @@ _censusRows = "";
 			_censusRows = _censusRows + ";" + _censusKind + "," + str (count (units _grp)) + "," + str _liveCount + "," + _censusLdrTxt;
 		};
 		if (_real) then {
+			_aicomTeamUnits = _aicomTeamUnits + _liveCount;
+			if (_liveCount < 4 && {[_grp, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool}) then {_aicomHusk = _aicomHusk + 1};
 			//--- C3 husk accounting: a deleted/wiped founded group is no longer a
 			//--- live slot. Keep the HC registry untouched; only the founding census
 			//--- stops treating a null-body group as satisfying the target.
@@ -217,20 +223,6 @@ _aicomPatrolList = missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []];
 	};
 } forEach _aicomPatrolList;
 _aicomTeams = _foundedTeams;
-_aicomTeamUnits = 0;
-_aicomHusk = 0;
-{
-	if (!isNull _x) then {
-		private ["_c3Live","_c3Real","_c3Hc"];
-		_c3Hc = [_x, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool;
-		_c3Real = _c3Hc || {[_x, "wfbe_aicom_founded", false] Call WFBE_CO_FNC_GroupGetBool};
-		if (_c3Real) then {
-			_c3Live = {alive _x && {side _x == _side} && {!isPlayer _x}} count (units _x);
-			_aicomTeamUnits = _aicomTeamUnits + _c3Live;
-			if (_c3Hc && {_c3Live < 4}) then {_aicomHusk = _aicomHusk + 1};
-		};
-	};
-} forEach _teams;
 _aicomLive = _aicomTeamUnits;
 _aicomOther = (_aicomSideLive - _aicomLive - _aicomPatrol) max 0;
 _aicomMean = if (_aicomTeams > 0) then {_aicomTeamUnits / _aicomTeams} else {0};
