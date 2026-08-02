@@ -34,6 +34,8 @@ _updateDetails = true;
 _updateList = true;
 _updateMap = true;
 _val = 0;
+//--- Keep the open catalogue in step with replicated research completions.
+_shopUpgradesSeen = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
 //--- B74.2: per-player AI cap now follows the live pop-tier (WFBE_PopTier is publicVariable'd, read live on the client).
 _mbu = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX'; //--- fallback scalar if the tiered array is unset
 _mbuByTier = missionNamespace getVariable 'WFBE_C_PLAYERS_AI_MAX_BY_TIER';
@@ -456,6 +458,10 @@ _IDCS = _IDCS - [_currentIDC];
 			_tabI = _tabI + 1;
 		} forEach _tabIDC;
 	
+	//--- Rebuild the catalogue when a side upgrade completes while this dialog remains open.
+	_shopUpgrades = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
+	if (!(_shopUpgrades in [_shopUpgradesSeen])) then {_shopUpgradesSeen = _shopUpgrades + []; _update = true};
+
 	//--- Update tabs.
 	if (_update) then {
 		_listUnits = missionNamespace getVariable Format ['WFBE_%1%2UNITS',sideJoinedText,_type];
