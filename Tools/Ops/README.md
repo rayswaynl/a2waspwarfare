@@ -89,9 +89,12 @@ folders for lobby-slot drift:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Tools\Ops\Test-WaspSlotCountConsistency.ps1
 ```
 
-The check compares `WF_MAXPLAYERS` in each `version.sqf.template` with the playable
-`player="...";` declarations in the matching `mission.sqm`. It is read-only and exits
-nonzero when a terrain drifts.
+The check compares `WF_MAXPLAYERS` in each `version.sqf.template` with the human
+capacity in the matching `mission.sqm`. It counts authored `player="...";` declarations,
+then excludes reserved `forceHeadlessClient=1` HC seats and caster seats identified by
+the `wfbe_caster_slot` marker or `description="Caster ..."`. It is read-only and exits
+nonzero when a terrain drifts. The output keeps the declared/reserved breakdown so a
+new reserved seat cannot hide a real human-capacity mismatch.
 
 ## Local Checks
 
