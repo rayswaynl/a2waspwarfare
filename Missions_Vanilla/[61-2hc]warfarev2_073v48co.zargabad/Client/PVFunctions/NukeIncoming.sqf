@@ -4,4 +4,4 @@
 	returns: nothing
 */
 
-playSound ["airRaid",true];
+playSound ["inbound",true]; //--- airRaid is not declared by this mission; use the registered global alert cue.
