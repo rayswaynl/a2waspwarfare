@@ -2,7 +2,7 @@
 	Marker selector for a selected respawn location.
 */
 
-Private ["_erase","_marker","_marker_difference","_marker_expand","_marker_dir","_marker_min_size","_marker_max_size","_marker_size","_target"];
+Private ["_erase","_marker","_marker_difference","_marker_expand","_marker_dir","_marker_min_size","_marker_max_size","_marker_size","_target","_markerPos","_trackPos"];
 
 _marker_size = 1.4;
 _marker_min_size = 1.4;
@@ -28,7 +28,9 @@ while {!isNil 'WFBE_MarkerTracking'} do {
 	if (_marker_expand) then {_marker_size = _marker_size + _marker_difference} else {_marker_size = _marker_size - _marker_difference};
 
 	if (!isNil 'WFBE_MarkerTracking') then {
-		if (getMarkerPos _marker distance WFBE_MarkerTracking > 1) then {_marker setMarkerPosLocal getPos WFBE_MarkerTracking};
+		_trackPos = getPos WFBE_MarkerTracking;
+		_markerPos = getMarkerPos _marker;
+		if (_markerPos distance [_trackPos select 0, _trackPos select 1, 0] > 1) then {_marker setMarkerPosLocal _trackPos};
 	};
 };
 
