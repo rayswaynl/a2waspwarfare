@@ -144,6 +144,12 @@ private ["_respawnWaitT0"]; _respawnWaitT0 = time;
 //--- SCHEDULER-LEAK: sleep + 10 min bound if respawn never restores alive player.
 waitUntil {sleep 0.2; alive player || {(time - _respawnWaitT0) > 600}};
 
+//--- The bound prevents a suspended death handler from leaking forever, but it does not create a
+//--- replacement body. Do not run leader/EH/menu restore work against the still-dead body after it expires.
+if (!alive player) exitWith {
+	diag_log "[WFBE][RESPAWN TIMEOUT] Client_OnKilled: no living replacement body after 600s; restore aborted.";
+};
+
 //--- fable/onkilled-team-resync (owner report "units kept renumbering themselves after I die",
 //--- correctness fix): resync WFBE_Client_Team to the player's POST-RESPAWN group BEFORE the
 //--- leader-reassert and TEAMBAR slot-1 guards below evaluate it. GROUP respawn (respawn=3) can
