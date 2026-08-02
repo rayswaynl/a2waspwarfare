@@ -103,7 +103,9 @@ for "_shipI" from 1 to _ships do {
 						//--- become standing AI); a destroyed one is left to the normal wreck pipeline.
 						if (!isNull _heli && {alive _heli} && {({isPlayer _x} count (crew _heli)) == 0}) then {
 							diag_log Format ["PATROLAIR|EXIT|class=%1", typeOf _heli];
-							{deleteVehicle _x; sleep 0} forEach (crew _heli); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled spawn context).
+							//--- r86 group-first: a bailed pilot is no longer in (crew _heli); a crew-only delete left
+							//--- him alive and pinned the group (A2 deleteGroup no-ops on a non-empty group).
+							if (!isNull _grp) then {{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach units _grp}; //--- crash 014EFCF4 sweep: sleep 0 between unit deletes (already-scheduled spawn context).
 							if (!isNull _heli) then {deleteVehicle _heli};
 							if (!isNull _grp) then {deleteGroup _grp};
 						};

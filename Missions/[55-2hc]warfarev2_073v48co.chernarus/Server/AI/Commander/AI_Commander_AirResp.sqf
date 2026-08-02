@@ -339,7 +339,10 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM2_AIRRESP_ENABLE", 1]) > 0 && {_
 							//--- crash 014EFCF4: yield a frame between crew deletes so the engine's dead-crew-eject /
 							//--- survivor get-out seat walk never overlaps a script deleteVehicle on an adjacent seat of
 							//--- the same live hull (see Common_TrashObject.sqf). Legal here: scheduled context (spawn, sleeps).
-							{deleteVehicle _x; sleep 0} forEach (crew _h);
+							//--- r86 group-first: a pilot/gunner who EJECTED from the still-live hull is no longer
+							//--- in (crew _h) - a crew-only delete left him alive mid-map and pinned the group slot
+							//--- forever (A2 deleteGroup no-ops on a non-empty group). Wildcard ambient-despawn idiom.
+							if (!isNull _g) then {{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x; sleep 0}} forEach units _g};
 							if (!isNull _h) then {deleteVehicle _h};
 							if (!isNull _g) then {deleteGroup _g};
 						};
