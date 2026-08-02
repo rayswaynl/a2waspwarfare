@@ -611,7 +611,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 			//---   That is perpendicular to heading-90 — correct for lateral.
 			//---   Same rotation identity (cos/sin of the same _dir); only the axis changes.
 			//=============================================================================
-			private ["_inlineGap","_inlineAnchor","_inlineParts","_deckZB","_bridgeZ","_seam_Y_offsets","_bY","_bwX","_bwY","_seamPier"];
+			private ["_inlineGap","_inlineAnchor","_inlineParts","_deckZB","_bridgeZ","_seamMid","_seam_Y_offsets","_bY","_bwX","_bwY","_seamPier"];
 			_inlineGap = abs (missionNamespace getVariable ["WFBE_C_NAVAL_INLINE_GAP", -265]);
 			//--- Tuner guard: a gap of 0 would place Hull B exactly on Hull A (silent overlap). Self-heal to the
 			//--- design default and warn in RPT so a bad lobby/constants value is diagnosable, not invisible.
@@ -629,9 +629,9 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 			//--- Seam-bridge piers (only when WFBE_C_NAVAL_SEAM_BRIDGE > 0).
 			//--- 4x Land_nav_pier_m_1 across the Hull A stern / Hull B bow join.
 			//--- Z = average of Hull A and Hull B deck heights (conservative floor to avoid float).
-			//--- Body-space Y offsets from Hull A anchor: nominally -131,-134,-137,-140
-			//--- (i.e. 131-140m aft of the Hull A anchor, inside the seam zone).
-			//--- VERIFY in-editor: adjust these Y values until piers land in the gap centre.
+			//--- Body-space Y offsets from Hull A anchor are DERIVED from the live inline gap
+			//--- (see below), so they follow WFBE_C_NAVAL_INLINE_GAP tunes instead of drifting
+			//--- away from the seam every time the hulls are moved closer together.
 			if ((missionNamespace getVariable ["WFBE_C_NAVAL_SEAM_BRIDGE", 0]) > 0) then {
 				//--- Probe Hull B deckZ from part[3] (same pattern as Hull A above).
 				_deckZB = _ocDeckZ;
@@ -644,7 +644,14 @@ if ((missionNamespace getVariable ["WFBE_C_NAVAL_TWIN_HULLS", 1]) == 1) then {
 					};
 				};
 				_bridgeZ = (_ocDeckZ + _deckZB) / 2;
-				_seam_Y_offsets = [-131, -134, -137, -140];
+				//--- Seam mid-point sits at half the hull-to-hull offset, aft of the Hull A anchor.
+				//--- The four piers keep the original straddle pattern about it: 1.5m fore, then
+				//--- 1.5 / 4.5 / 7.5m aft.  Written as (literal - _seamMid) rather than -(...) so
+				//--- every minus sign is a negative numeric literal, never a unary operator.
+				//--- Identity check: at the original gap 265, _seamMid = 132.5 and this yields
+				//--- exactly [-131, -134, -137, -140] - the literals it replaces.
+				_seamMid = _inlineGap / 2;
+				_seam_Y_offsets = [(1.5 - _seamMid), (-1.5 - _seamMid), (-4.5 - _seamMid), (-7.5 - _seamMid)];
 				{
 					_bY  = _x;
 					//--- Convert body-space Y offset to world coords using the ship heading.
