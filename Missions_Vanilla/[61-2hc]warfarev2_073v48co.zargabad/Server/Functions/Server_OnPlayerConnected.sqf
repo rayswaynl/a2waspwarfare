@@ -334,6 +334,16 @@ if !(isNull _jipLogik) then {
 	diag_log format ["[WFBE][JIP-HQSNAP] re-broadcast HQ/base snapshot (hq_deployed=%1) for side %2 to joiner %3", (_jipLogik getVariable ["wfbe_hq_deployed", false]), _sideJoined, _name];
 };
 
+//--- Commander state is an object variable and the assignment/disconnect notifications are event-only.
+//--- Re-dirty the current value so a late joiner receives an existing human commander OR the objNull
+//--- vacancy left by a disconnect, instead of waiting for a later election/assignment transition.
+if !(isNull _jipLogik) then {
+	if !(isNil {_jipLogik getVariable "wfbe_commander"}) then {
+		_jipLogik setVariable ["wfbe_commander", (_jipLogik getVariable "wfbe_commander"), true];
+		diag_log format ["[WFBE][JIP-COMMANDER] re-broadcast commander state for side %1 to joiner %2", _sideJoined, _name];
+	};
+};
+
 //--- JIP-replay hardening, Finding #2 (wfbe_votetime): Init_Client.sqf:1581 waits unbounded on this var;
 //--- Server_VoteForCommander.sqf only re-broadcasts it once per second WHILE a vote is actively counting
 //--- down, so a joiner arriving between votes (or mid-vote, if the broadcast slow-syncs under load per
