@@ -93,11 +93,10 @@ while {alive player && {dialog}} do {
 			private "_lg"; _lg = (_rows select _sel) select 0;
 			//--- exitWith (r90 loop-leak class): the unit camera opens in this same pass, so this loop must
 			//--- end or it survives into the camera dialog. Guard-form only - a bare exitWith parse-fails the file.
-			if (!isNull _lg && {alive (leader _lg)}) exitWith {
-				WFBE_CmdCon_CamUnit = leader _lg;
-				closeDialog 0;
-				createDialog "RscMenu_UnitCamera";
-			} else {
+			//--- 2026-08-03: split - no `else` chained onto exitWith (its result is not Code).
+			private ["_vwOk"];
+			_vwOk = (!isNull _lg && {alive (leader _lg)});
+			if (!_vwOk) then {
 				hintSilent parseText "<t color='#F8D664'>That group has no live leader to view.</t>";
 			};
 		} else {

@@ -706,13 +706,19 @@ while {alive player && dialog} do {
 			//--- stays true and the command loop SURVIVED - it kept eating the shared
 			//--- mouseButtonUp (dead camera minimap clicks) and could resolve an armed
 			//--- order against the CLOSED map control (bogus position, real server send).
-			if (!isNull _selTeam && {alive (leader _selTeam)}) exitWith {
+			//--- 2026-08-03: `exitWith {..} else {..}` chains `else` onto exitWith's result, which is not
+			//--- Code - the else throws on the false branch and its hint never shows. Split into a plain
+			//--- guard + a guard-form exitWith so both branches are unambiguous A2 OA SQF.
+			private ["_camOk"];
+			_camOk = (!isNull _selTeam && {alive (leader _selTeam)});
+			if (!_camOk) then {
+				hintSilent parseText "<t color='#F8D664'>Select a live team in the roster first.</t>";
+			};
+			if (_camOk) exitWith {
 				WFBE_CmdCon_CamUnit = leader _selTeam;
 				activeAnimMarker = false;
 				closeDialog 0;
 				createDialog "RscMenu_UnitCamera";
-			} else {
-				hintSilent parseText "<t color='#F8D664'>Select a live team in the roster first.</t>";
 			};
 		};
 
@@ -1050,12 +1056,16 @@ while {alive player && dialog} do {
 			//--- exitWith (r90 loop-leak class, same as MenuAction 726 above): TroopMon opens in this same
 			//--- pass so `dialog` stays true and this command loop would SURVIVE into the new dialog, eating
 			//--- its MenuAction every 0.25s. Guard-form exitWith only (never bare - that parse-fails the file).
-			if ((missionNamespace getVariable ["WFBE_C_COMMANDER_TROOPMON", 0]) > 0) exitWith {
+			//--- 2026-08-03: split - see the MenuAction 726 note above (no `else` chained onto exitWith).
+			private ["_tmOk"];
+			_tmOk = ((missionNamespace getVariable ["WFBE_C_COMMANDER_TROOPMON", 0]) > 0);
+			if (!_tmOk) then {
+				hintSilent parseText "<t color='#F8D664'>Troop monitor is not enabled.</t>";
+			};
+			if (_tmOk) exitWith {
 				activeAnimMarker = false;
 				closeDialog 0;
 				createDialog "RscMenu_TroopMon";
-			} else {
-				hintSilent parseText "<t color='#F8D664'>Troop monitor is not enabled.</t>";
 			};
 		};
 		if (MenuAction == 791) then {
