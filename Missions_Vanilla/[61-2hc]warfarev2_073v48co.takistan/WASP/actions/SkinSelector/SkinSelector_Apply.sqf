@@ -246,7 +246,11 @@ if (_usedSwapGrp) then {
 //--- Switch player.
 diag_log format ["[WFBE (SKIN)] B4 selectPlayer -> '%1' grp=%2 wasLeader=%3",
 	_chosenClass, group _newUnit, _wasLeader];
-selectPlayer _newUnit;
+//--- fable/teamswitch-freeze-guard: routed through the shared cross-group selectPlayer guard
+//--- (Common_SelectPlayerCrossGroup.sqf). This call is always same-group (the swap unit is
+//--- created inside the player's own slot group above), so the guard's fast path takes over
+//--- and this is a plain selectPlayer - byte-identical to the previous bare call.
+[_newUnit] call WFBE_CO_FNC_SelectPlayerCrossGroup;
 
 //--- VERIFY the transfer actually took: player must BE the new unit within ~5s. In A2 MP a
 //--- selectPlayer into a non-local group (or mid-JIP) can silently fail, leaving the player in the

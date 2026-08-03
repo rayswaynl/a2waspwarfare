@@ -529,6 +529,11 @@ WFBE_SPECIAL_UNIT_HINTS = [
 //--- handler). One-line no-op on machines without the mod. See Common_AsrFiredGuard.sqf.
 Call Compile preprocessFileLineNumbers "Common\Functions\Common_AsrFiredGuard.sqf";
 
+//--- fable/teamswitch-freeze-guard (preventive infra, no live bug - 2026-08-03 mining pass): drop-in
+//--- selectPlayer replacement for a genuine future cross-group control handoff. Flag
+//--- WFBE_C_FIX_TEAMSWITCH_CROSSGROUP_AIFREEZE default 0; flag-off or same-group is a plain selectPlayer.
+WFBE_CO_FNC_SelectPlayerCrossGroup = Compile preprocessFileLineNumbers "Common\Functions\Common_SelectPlayerCrossGroup.sqf";
+
 //--- Common initilization is complete at this point.
 ["INITIALIZATION", Format ["Init_Common.sqf: Common initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 commonInitComplete = true;
