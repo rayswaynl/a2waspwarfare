@@ -36,7 +36,12 @@ while {!gameOver && (alive _vehicle)} do { //--- wiki-wins: exit when the truck 
 			if (_wreckSideID < 0) then {_wreckSideID = _x getVariable ["sideID", -1]};
 			_isNeeded = _x getVariable 'keepAlive';
 		
-			if ((isNil '_isNeeded') && {(_wreckSideID < 0) || {_wreckSideID != _playerSideID}}) then {
+			//--- r101 salvage-claim integrity: never credit a null hole (the credit ran above the delete-side
+			//--- null guard), never credit a wreck already claimed for deletion (wfbe_trash_reap is set by our
+			//--- own remote-delete dispatch AND by Common_TrashObject's HC-local reap - two salvage ticks or
+			//--- trucks could otherwise both credit the same hull), and exempt slung wrecks (wfbe_airlifted -
+			//--- the exemption every other reaper honors).
+			if (!isNull _x && {isNil '_isNeeded'} && {(_wreckSideID < 0) || {_wreckSideID != _playerSideID}} && {!(_x getVariable ["wfbe_trash_reap", false])} && {!(_x getVariable ["wfbe_airlifted", false])}) then {
 				_get = missionNamespace getVariable (typeOf _x);
 				_salvageCost = 250;
 				if !(isNil '_get') then {
