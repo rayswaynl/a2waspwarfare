@@ -6,7 +6,7 @@
 		- Side
 */
 
-Private ["_deadline","_deletedGroups","_deletedUnits","_entry","_entryGroup","_entrySide","_entryTown","_group","_groups","_keptGroups","_logGroupCount","_registry","_registryNew","_side","_town","_townName","_units"];
+Private ["_deadline","_deletedGroups","_deletedUnits","_entry","_entryGroup","_entrySide","_entryTown","_group","_groups","_keptGroups","_logGroupCount","_registry","_registryCurrent","_registryNew","_side","_town","_townName","_units"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -100,19 +100,20 @@ _logGroupCount = {
 	};
 } forEach _groups;
 
+//--- The cleanup loop yields while local deletes settle. Re-read the registry before rebuilding so
+//--- a newer delegate-townai batch registered during that wait is retained; remove only the groups
+//--- selected from the original cleanup snapshot.
+_registryCurrent = missionNamespace getVariable ["WFBE_CL_TownAI_Groups", []];
 _registryNew = [];
 {
 	_entry = _x;
 	call {
 		if (count _entry < 3) exitWith {};
-		_entryTown = _entry select 0;
-		_entrySide = _entry select 1;
 		_entryGroup = _entry select 2;
 		if (isNull _entryGroup) exitWith {};
-		if (_entryTown == _town && _entrySide == _side) exitWith {};
-		_registryNew set [count _registryNew, _entry];
+		if !(_entryGroup in _groups) then {_registryNew set [count _registryNew, _entry]};
 	};
-} forEach _registry;
+} forEach _registryCurrent;
 missionNamespace setVariable ["WFBE_CL_TownAI_Groups", _registryNew];
 
 // Marty: Log the count after deleteGroup has run locally so the RPT shows whether group slots are recovered.

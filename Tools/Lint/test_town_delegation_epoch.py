@@ -36,6 +36,14 @@ class TownDelegationEpochContractTests(unittest.TestCase):
             self.assertIn('"cleanup-townai", _town, _reportedSide', handler)
             self.assertIn('_reportedEpoch == (_town getVariable ["wfbe_town_ai_epoch", 0])', handler)
 
+    def test_cleanup_preserves_a_group_registered_while_it_waits(self):
+        """A cleanup worker yields, so its final rebuild must merge current entries."""
+        for root in ROOTS:
+            cleanup = (root / "Client" / "Functions" / "Client_CleanupDelegatedTownAI.sqf").read_text(encoding="utf-8")
+
+            self.assertIn('_registryCurrent = missionNamespace getVariable ["WFBE_CL_TownAI_Groups", []]', cleanup)
+            self.assertIn('if !(_entryGroup in _groups) then {_registryNew set [count _registryNew, _entry]}', cleanup)
+
 
 if __name__ == "__main__":
     unittest.main()
