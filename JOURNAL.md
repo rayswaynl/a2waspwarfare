@@ -67,6 +67,72 @@ final report for the arm recommendation.
 - pytest Tools/Lint: 15 failed / 480 passed on THIS branch - identical 15 failing test IDs and
   identical count confirmed on origin/master baseline (stash-and-rerun). Zero new failures.
 
+## Working State 2026-08-02 — endgame leaderboard + awards [fable/endgame-awards-20260802]
+
+Task: owner ruling 2026-08-02 17:17 authorized SPEC-SCENARIO-POLISH-20260802.md lane 1 ONLY - a
+per-player end-of-round leaderboard + named awards bolted onto the existing `GUI_EndOfGameStats.sqf`
+screen. All other lanes from that spec run are out of scope. Worktree `C:\tmp\claudewt\endgame-awards`,
+branch `fable/endgame-awards-20260802` from `origin/update/wave-20260802`.
+
+**Scope discipline honored**: no new networking, no new persistent state, no server-side changes.
+The leaderboard is built entirely client-local inside `GUI_EndOfGameStats.sqf` from `allPlayers` +
+the engine's own native `score`/`side`/`name` commands (the same `score player` already displayed
+per-client at line 96 pre-existing) - not the spec's original server-side
+`WFBE_CO_FNC_CollectRoundScores` + `publicVariable` recommendation, which would have been new
+networking. Deviation noted in the PR body.
+
+**Flags**: `WFBE_C_ENDGAME_LEADERBOARD` (default 0) and `WFBE_C_ENDGAME_AWARDS` (default 0, dependent
+on leaderboard). Both registered in `Common/Init/Init_CommonConstants.sqf`.
+
+**Files touched (CH source only; TK/ZG are LoadoutManager mirror output, byte-identical to CH)**:
+- `Client/GUI/GUI_EndOfGameStats.sqf` - flag reads near `_guerPanel`; new `if (_leaderboardFlag)`
+  block (collect `allPlayers` scores, insertion-sort descending, render Top 5 + awards as
+  structured text) inserted after the existing guer-vehicle-lost-bar block, before the counter
+  animation loop starts.
+- `Rsc/Titles.hpp` - two new controls in `class EndOfGameStats`: `LeaderboardBackground` (idc 90409)
+  and `LeaderboardPanel` (idc 90410, `RscStructuredText`). Both default positioned OFF-SCREEN
+  (y=2), mirroring the existing off-screen-by-default `Guer*` control idiom already in this class -
+  SQF only repositions them onscreen (y=0.92/0.925) when the leaderboard flag is on. This keeps
+  flag-off byte-identical without needing any `#ifdef`/preprocessor branching in the static config.
+- `Common/Init/Init_CommonConstants.sqf` - the two flag registrations, appended at file end (after
+  the existing `WFBE_C_STATS_ROUNDEND_FLUSH` block, before the `INITIALIZATION` log line).
+
+**Layout decision**: did NOT try to reflow the existing tightly-packed East/West/Guer bar columns
+(measured: default gap between East/West bars is only ~0.10 screen-width; with the Guer panel on,
+two ~0.065 gaps) - reflowing those would have meant repositioning 8-24 existing controls and real
+regression risk to a screen other PRs may also touch. Instead the new panel lives in genuinely free
+space BELOW the existing stats panel (y 0.92-0.99), fully additive, zero risk to existing controls.
+Renders regardless of `WFBE_C_FIX_GUER_ENDGAME_STATS_PANEL` state (no collision to design around).
+
+**Deviations from spec** (spec wins where explicitly owner-approved; code reality wins otherwise):
+1. Leaderboard built client-local (see above) instead of server-side + publicVariable.
+2. "GUER MVP" implemented as "Top Killer (GUER)" from the same per-player score rows, NOT from the
+   cumulative `WFBE_GUER_PLAYER_KILLS` counter the spec named - that counter is side-wide, not
+   attributable to one player; a true per-player version needs a new counter, which is out of scope
+   per the owner's "no new persistent state" constraint. The spec's own text flagged this same gap.
+3. "Most Vehicles Lost" implemented as a side-level award (West/East/GUER), not a named individual -
+   no per-player vehicle-loss counter exists (only the WF_Logic side aggregates already displayed).
+4. Does not depend on/reference `WFBE_C_STATS_ROUNDEND_FLUSH` or `WFBE_CO_CURRENT_SCORE_PLAYER_*` at
+   all - native `score` already reflects the full round live, independent of that persistence flush.
+
+**Gates run**: lint gate (168 findings before and after - 0 new, none in touched files); bracket
+delta 0 on all 3 CH files; mirror ran (`A2WASP_SKIP_ZIP=1`), `--check` clean, TK/ZG
+`version.sqf.template` untouched by the run (no restore needed), `Test-WaspVersionTemplates.ps1`
+all PASS; TK/ZG mirror output diffed byte-identical to CH source for both touched files.
+
+**Not yet done / open items**: no runtime (box) smoke test - static validation only, per repo
+evidence-wording rules. Draft PR not yet opened as of this note (see PR section once created).
+
+**Wave reconcile 2026-08-03** (worktree `C:\tmp\reconwt\pr1915`, branch `recon/pr1915-20260803`):
+merged cleanly onto `origin/update/wave-20260802`. Only conflicts were pure-addition collisions in
+`Init_CommonConstants.sqf` (all 3 terrains, both PR #1912's barracks/forward-factory flags and this
+PR's two flags appended at the same anchor point - combined, no logic change to either) and this
+JOURNAL.md file. `GUI_EndOfGameStats.sqf` and `Rsc/Titles.hpp` merged with zero conflicts on all 3
+terrains - nothing else in the wave touches those files at this branch point (confirmed via `git log`
+on the merge-base..wave range). #1777 (separate open draft, null-guard fixes to the same file) is
+NOT yet merged into the wave, so there was no overlap to resolve against it.
+
+---
 
 ## Working State 2026-08-01 — crash 014EFCF4 crew-delete sweep [fix/014e-crew-delete-sweep-20260801]
 
