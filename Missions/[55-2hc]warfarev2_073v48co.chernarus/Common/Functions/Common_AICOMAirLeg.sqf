@@ -256,8 +256,9 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_VEHLIFT", 1]) > 0) then {
 			if (!(surfaceIsWater _candPos)) then {
 				private "_fe";
 				_fe = _candPos isFlatEmpty [15, 0, 3, 15, 0, false, objNull];
-				if (count _fe > 0) then {_vehDrop = _fe} else {_vehDrop = _candPos};
-				_ok = true;
+				if (count _fe > 0) then {_vehDrop = _fe; _ok = true} else {
+					if (_tryDepth <= 0) then {_vehDrop = _candPos; _ok = true};
+				};
 			};
 			if (!_ok) then {
 				if (_tryDepth <= 0) exitWith {_vehDrop = _dest; _ok = true}; //--- even dest is water (rare): use it anyway, loop ends.
