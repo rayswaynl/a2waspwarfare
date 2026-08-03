@@ -1079,6 +1079,9 @@ if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNames
 [] spawn {
 	private ["_grp","_f","_n","_done","_sentAny","_t0","_grace"];
 	waitUntil {(!isNil "WFBE_Client_SideJoinedText") && {!isNil "WFBE_Client_SideJoined"}};
+	if (player getVariable ["wfbe_caster_slot", false]) exitWith {
+		diag_log "[WFBE][B76 FUNDS-HEAL] CASTER-ABORT: skipped on caster client.";
+	};
 	//--- Let the normal connect-handler funds broadcast have a moment to land first (avoids a needless request on
 	//--- a healthy fast join). Re-resolve group player each tick: a JIP/respawn can swap the player's group.
 	sleep 8;
