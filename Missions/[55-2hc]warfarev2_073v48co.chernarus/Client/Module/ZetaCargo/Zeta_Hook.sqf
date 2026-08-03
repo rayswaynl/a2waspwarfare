@@ -29,7 +29,7 @@ _position = Zeta_DefaultPos;
 _index = Zeta_Special find _type;
 if (_index != -1) then {_position = Zeta_SpecialPosition select _index};
 
-if (count crew(_vehicle) > 0) exitWith {hint (localize 'STR_WF_INFO_Hook_Manned')};
+if ({alive _x} count crew _vehicle > 0) exitWith {hint (localize 'STR_WF_INFO_Hook_Manned')};
 
 _vehicle attachTo [_lifter,_position];
 _vehicle setVariable ["wfbe_airlifted", true, true]; //--- fable/airlift-gc-exempt: mark cargo so Server_HandleEmptyVehicle does not delete the (necessarily crewless) lifted hull mid-flight
