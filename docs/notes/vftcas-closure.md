@@ -22,10 +22,22 @@ only, never lowers the heli, so it cannot force one into terrain.
 
 ## Evidence checked in this worktree (branch `claude/vftcas-doc-closure`, base `6ea2bcf17b`)
 
-- Introducing commit: **474c222840** ("cmdcon41 wave-3f/.../3j/3k... — w3j aircraft: heli
-  terrain-guard ported to HCs").
+- Shipped in three separate commits, not one:
+  - **13c29b4e56** ("cmdcon29: AI vehicle crew self-repair + PR#122 QoL pack") — introduces
+    `Server\server_heli_terrain_guard.sqf` itself, flag `WFBE_C_AIHELI_TERRAIN_GUARD`
+    defaulted **0 (opt-in/off)** at that point.
+  - **b99393d94b** ("fix(qol): enable AI-heli terrain guard by default") — flips
+    `WFBE_C_AIHELI_TERRAIN_GUARD` from 0 to **1 (ON)** in `Init_CommonConstants.sqf`; no
+    other files changed besides the matching header comment.
+  - **474c222840** ("cmdcon41 wave-3f/.../3j/3k... — w3j aircraft: heli terrain-guard ported
+    to HCs") — adds the new HC twin file `Common\Functions\Common_AICOM_HeliTerrainGuard.sqf`,
+    registers it in `Headless\Init\Init_HC.sqf`, and in `Server\Init\Init_Server.sqf` appends
+    an explanatory comment to the pre-existing `server_heli_terrain_guard.sqf` ExecVM line
+    plus a new `spawn` call registering the HC-twin file on the server too (no-HC fallback
+    coverage) — it does **not** introduce the server-local guard itself, which had already
+    shipped (off, then ON) two commits earlier.
 - Flag: `WFBE_C_AIHELI_TERRAIN_GUARD`, registered in
-  `Common\Init\Init_CommonConstants.sqf`, **default 1 (ON)**.
+  `Common\Init\Init_CommonConstants.sqf`, **default 1 (ON)** as of `b99393d94b`.
 - Registration confirmed on both hosts that can carry AICOM air:
   - `Server\Init\Init_Server.sqf` spawns `Common_AICOM_HeliTerrainGuard.sqf` on the server.
   - `Headless\Init\Init_HC.sqf` spawns the same file on every Headless Client.
@@ -44,5 +56,6 @@ defaulted ON, and already covers both server-local and HC-delegated AICOM air. N
 functional gap was found. No implementation work is needed for this ticket.
 
 This closure note exists so the ticket stops resurfacing in future mining passes; the
-mining register / wiki triage entry should be marked CLOSED-DUPLICATE citing commit
-474c222840.
+mining register / wiki triage entry should be marked CLOSED-DUPLICATE citing commits
+13c29b4e56 (server-local guard shipped, opt-in), b99393d94b (flag flipped to default ON),
+and 474c222840 (HC twin added, full coverage).
