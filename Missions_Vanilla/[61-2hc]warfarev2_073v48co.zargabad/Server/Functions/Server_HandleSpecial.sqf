@@ -2247,9 +2247,10 @@ if (isNull _base) exitWith {
 	//--- tree, so its only consumer (the WFBE_CLIENT_%1_OBJECTS disconnect cleanup in
 	//--- Server_OnPlayerDisconnected.sqf) could never run either; removed together.
 	case "repair-camp": {
-		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY"];
+		Private ["_camp_sideID","_logic","_repairSideID","_townModel","_campXY","_repairRequester"];
 		_logic = _args select 1;
 		_repairSideID = _args select 2;
+		_repairRequester = if ((count _args) > 3 && {(typeName (_args select 3)) == "OBJECT"}) then {_args select 3} else {objNull};
 
 		//--- harden-repair-camp (2026-07-25): reentrancy guard, mirrors Server_MHQRepair.sqf's
 		//--- precedent (PR #1361) - check+set BEFORE the alive read so two near-simultaneous
@@ -2258,12 +2259,14 @@ if (isNull _base) exitWith {
 		//--- server-internal presence-repair `call HandleSpecial` (server_town_camp.sqf) hit this
 		//--- safely. Released on every exit branch below.
 		if (_logic getVariable ["wfbe_camp_repairing", false]) exitWith {
+			if (!isNull _repairRequester && {isPlayer _repairRequester}) then {[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair is already in progress."]] Call WFBE_CO_FNC_SendToClient};
 			["WARNING", "Server_HandleSpecial.sqf/repair-camp: rejected - repair already in progress."] Call WFBE_CO_FNC_LogContent;
 		};
 		_logic setVariable ["wfbe_camp_repairing", true, true];
 
 		if (alive (_logic getVariable 'wfbe_camp_bunker')) exitWith {
 			_logic setVariable ["wfbe_camp_repairing", false, true];
+			if (!isNull _repairRequester && {isPlayer _repairRequester}) then {[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair is no longer needed."]] Call WFBE_CO_FNC_SendToClient};
 		};
 
 		//--- fable/fix-camp-placement (2026-07-08): same ATL ground-snap as Init_Town.sqf's seeder - a
@@ -2316,6 +2319,7 @@ if (isNull _base) exitWith {
 
 		//--- harden-repair-camp: release the reentrancy flag taken above now the repair is complete.
 		_logic setVariable ["wfbe_camp_repairing", false, true];
+		if (!isNull _repairRequester && {isPlayer _repairRequester}) then {[_repairRequester, "HandleSpecial", ["repair-camp-result", true, "Camp repair completed."]] Call WFBE_CO_FNC_SendToClient};
 	};
 
 	//--- GUER PLAYER VBIED manual detonation (Feature B player-side, Ray 2026-06-16). The GUER player driver

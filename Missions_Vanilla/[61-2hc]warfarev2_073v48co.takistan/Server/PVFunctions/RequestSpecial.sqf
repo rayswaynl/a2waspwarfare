@@ -1,4 +1,20 @@
-private ["_requestType"];
+private ["_repairCampReply","_requestType"];
+
+//--- Paid camp repair debits the caller before this server PVF validates the final state.
+//--- Return an explicit result so a server reject cannot strand that optimistic debit.
+_repairCampReply = {
+	Private ["_ok","_replyTo","_text"];
+	_replyTo = _this select 0;
+	_ok = _this select 1;
+	_text = _this select 2;
+	if (!isNull _replyTo && {isPlayer _replyTo}) then {
+		if (WF_A2_Vanilla) then {
+			[getPlayerUID _replyTo, "HandleSpecial", ["repair-camp-result", _ok, _text]] Call WFBE_CO_FNC_SendToClients;
+		} else {
+			[_replyTo, "HandleSpecial", ["repair-camp-result", _ok, _text]] Call WFBE_CO_FNC_SendToClient;
+		};
+	};
+};
 
 //--- Block E: RequestSpecial is a broad command bus, so keep the PVF guard to the shared envelope.
 if (isNil "_this") exitWith {
@@ -46,12 +62,15 @@ if (_requestType == "repair-camp" && {!(isPlayer (_this select 3))}) exitWith {
 	["WARNING", Format ["RequestSpecial.sqf: rejected repair-camp non-player requester [%1].", (_this select 3)]] Call WFBE_CO_FNC_LogContent;
 };
 if (_requestType == "repair-camp" && {!(alive (_this select 3))}) exitWith {
+	[(_this select 3), false, "Camp repair was rejected because the requester is no longer alive."] Call _repairCampReply;
 	["WARNING", Format ["RequestSpecial.sqf: rejected repair-camp dead requester [%1].", name (_this select 3)]] Call WFBE_CO_FNC_LogContent;
 };
 if (_requestType == "repair-camp" && {((_this select 3) distance (_this select 1)) > (missionNamespace getVariable ["WFBE_C_CAMPS_REPAIR_SERVER_RADIUS", 50])}) exitWith {
+	[(_this select 3), false, "Camp repair was rejected because the requester is out of range."] Call _repairCampReply;
 	["WARNING", Format ["RequestSpecial.sqf: rejected repair-camp out-of-range requester [%1] dist=%2.", name (_this select 3), (_this select 3) distance (_this select 1)]] Call WFBE_CO_FNC_LogContent;
 };
 if (_requestType == "repair-camp" && {(side group (_this select 3)) != ((_this select 2) Call WFBE_CO_FNC_GetSideFromID)}) exitWith {
+	[(_this select 3), false, "Camp repair was rejected because the requested side does not match."] Call _repairCampReply;
 	["WARNING", Format ["RequestSpecial.sqf: rejected repair-camp side mismatch requester=%1 claimedSideID=%2.", side group (_this select 3), (_this select 2)]] Call WFBE_CO_FNC_LogContent;
 };
 
