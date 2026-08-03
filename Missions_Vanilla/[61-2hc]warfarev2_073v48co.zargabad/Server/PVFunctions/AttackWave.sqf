@@ -13,6 +13,35 @@
             [(_player), "LocalizeMessage", ["AttackModeActiveJIP"]] call WFBE_CO_FNC_SendToClient;
         };
     };
+
+    //--- FOB-JIP replay (moved from Server_OnPlayerConnected.sqf, sqf-fn-binding r122): replay ACTIVE GUER
+    //--- FOB markers to a GUER joiner (#846 known gap). Fired from CLIENT_INIT_READY - published by the
+    //--- client at the END of Init_Client, after commonInitComplete (WFBE_PVF_* PVEHs installed) and the
+    //--- WFBE_CL_FNC_HandlePVF compile - so the joiner can actually consume the push; the old connect-time
+    //--- fire raced that init and was silently dropped. Targeted publicVariableClient (only the joiner
+    //--- re-receives, no side-wide re-create), ledger copied (+) against concurrent clears, client handler
+    //--- idempotent (delete-then-create), sleep keeps successive writes to the same PV name from coalescing.
+    //--- NOTE: the var-write + publicVariableClient pair is not atomic across overlapping joiner threads,
+    //--- but every GUER replay iterates the same ledger, so a crossover still delivers a valid FOB payload
+    //--- (same worst case as the original connect-time design).
+    if ((side _player) == resistance) then {
+        [_player] Spawn {
+            private ["_fobOwner","_fobPlayer","_fobReplay"];
+            _fobPlayer = _this select 0;
+            _fobReplay = + (missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []]);
+            if ((count _fobReplay) > 0) then {
+                _fobOwner = owner _fobPlayer;
+                if (_fobOwner > 0) then {
+                    diag_log Format ["[WFBE][FOB-JIP] replaying %1 active FOB marker(s) to ready joiner %2", count _fobReplay, name _fobPlayer];
+                    {
+                        WFBE_PVF_WildcardMarker = [resistance, "CLTFNCWildcardMarker", ["create", _x select 0, _x select 1, "ColorGreen", "mil_objective", Format ["FOB %1", _x select 2], "forward base active - spawn and resupply here"]];
+                        _fobOwner publicVariableClient "WFBE_PVF_WildcardMarker";
+                        sleep 0.5;
+                    } forEach _fobReplay;
+                };
+            };
+        };
+    };
 };
 
 
