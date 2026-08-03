@@ -68,6 +68,11 @@ Never use — these are A3-only or wrong-spelling and will silently corrupt or c
 - `regexFind`, `remoteExecCall`
 - Array-form `reveal`, A3 `find` on strings, substring `select [a, b]`, sort-by-code
 - `#` array selector (`_arr # 0`) — use `(_arr select 0)` instead
+- Bare `exitWith` not directly preceded by `if (..)` — **parse-fails the ENTIRE file** on A2 OA, so
+  the script silently never runs (a dialog still opens from its `.hpp` controls but stays empty).
+  Lint code `BAREEXIT`. Burned live 2026-08-03: an empty Factory Upgrade Menu for every side.
+  ⚠️ Run the gate command from THIS file verbatim — never a selector remembered from an earlier
+  session; that is exactly how this shipped (the rule existed and was already wired here).
 - `inline private _x =` — use `private ["_x"]`
 - `==` / `!=` with Boolean operands — use `if (_flag)` / `if (!_flag)`
 - `missionNamespace setVariable` with a third (public) argument — NSSETVAR3 trap; A2/OA runtime error
