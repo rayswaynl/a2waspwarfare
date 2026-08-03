@@ -39,5 +39,6 @@ def test_hc_topup_requests_reserve_the_same_remaining_side_cap() -> None:
 
     assert '_wm_missing = ((6 - _wm_alive) min 4) min _capRemaining;' in text
     assert '_capRemaining = _capRemaining - _wm_missing;' in text
-    assert text.index('_wm_missing = ((6 - _wm_alive) min 4) min _capRemaining;') < text.index('"wfbe_aicom_topup_req"')
-    assert text.index('_capRemaining = _capRemaining - _wm_missing;') > text.index('"wfbe_aicom_topup_req"')
+    request_write = text.index('_team setVariable ["wfbe_aicom_topup_req",')
+    assert text.index('_wm_missing = ((6 - _wm_alive) min 4) min _capRemaining;') < request_write
+    assert text.index('_capRemaining = _capRemaining - _wm_missing;') > request_write
