@@ -681,7 +681,7 @@ while {alive player && dialog} do {
 				if (_unlVeh == _unlUnit) exitWith {hint "Unit is not in a vehicle."};
 				if (_unlVeh getVariable ["wfbe_tm2_unload_lock", false]) exitWith {hint "Unload already in progress on this vehicle."};
 				_unlVeh setVariable ["wfbe_tm2_unload_lock", true, true]; //--- broadcast so other clients see the lock (mirrors the repair-lock idiom above).
-				[_unlVeh] Spawn WFBE_CO_FNC_SquadUnloadAll;
+				[_unlVeh, group player] Spawn WFBE_CO_FNC_SquadUnloadAll;
 			};
 		};
 

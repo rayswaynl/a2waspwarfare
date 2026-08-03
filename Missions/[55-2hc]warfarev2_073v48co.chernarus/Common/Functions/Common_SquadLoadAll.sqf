@@ -37,17 +37,17 @@ _squadUnits = ((units _grp) Call GetLiveUnits) - [player];
 		if (vehicle _du == _du) then {
 			if ((_du distance _veh) <= _range) then {
 				[_du] allowGetIn true;
-				if (isNull (driver _veh)) then {
+				if ((_veh emptyPositions "driver") > 0) then {
 					_du moveInDriver _veh;
-					_mounted = _mounted + 1;
+					if (vehicle _du != _du) then {_mounted = _mounted + 1};
 				} else {
-					if (isNull (gunner _veh)) then {
+					if ((_veh emptyPositions "gunner") > 0) then {
 						_du moveInGunner _veh;
-						_mounted = _mounted + 1;
+						if (vehicle _du != _du) then {_mounted = _mounted + 1};
 					} else {
 						if ((_veh emptyPositions "cargo") > 0) then {
 							_du moveInCargo _veh;
-							_mounted = _mounted + 1;
+							if (vehicle _du != _du) then {_mounted = _mounted + 1};
 						};
 					};
 				};
