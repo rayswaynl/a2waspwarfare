@@ -654,7 +654,14 @@ Call _sliceYield;
 				//--- back to a fresh "towns" seq here; AssignTowns then re-issues a real attack target next cycle.
 				//--- Server-local teams ignore the order var and are driven by SetTeamMoveMode above (harmless).
 				if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
-					_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos (leader _team)], true];
+					//--- r108: guard the leader read - a wiped relief team (corpses reaped, group slot not yet
+					//--- retired) has leader objNull and getPos objNull = [0,0,0], which would broadcast a
+					//--- map-corner position as this team's release order.
+					private "_relLdr";
+					_relLdr = leader _team;
+					if (!isNull _relLdr && {alive _relLdr}) then {
+						_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos _relLdr], true];
+					};
 				};
 				["INFORMATION", Format ["AI_Commander_Strategy.sqf: [%1] team [%2] released from relief duty at [%3]%4.", _sideText, _team, _relTown getVariable ["name", "town"], if (_relExpired) then {" (hold expired -> offense)"} else {""}]] Call WFBE_CO_FNC_AICOMLog;
 			};
