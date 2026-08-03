@@ -1229,6 +1229,15 @@ if (_strikeOn) then {
 		if (isNull _best) exitWith {};
 		private "_bestAlive"; _bestAlive = {alive _x} count (units _best);
 			_best setVariable ["wfbe_aicom_strike", true];
+			//--- STRIKE-HANDOFF OWNERSHIP: retire the abandoned town dispatch before the
+			//--- group changes to HQ-goto. Otherwise AssignTowns' server-side outcome watcher
+			//--- later closes the old journey as ASSAULT_STRANDED and the allocator pin can
+			//--- steer the post-strike handback to a stale town. Mirror the relief handoff
+			//--- cleanup contract above; no movement or strike policy changes here.
+			_best setVariable ["wfbe_aicom_townorder", [], false];
+			_best setVariable ["wfbe_aicom_dispatch_open", false];
+			_best setVariable ["wfbe_aicom_alloc_target", nil];
+			_best setVariable ["wfbe_aicom_alloc_tick", nil];
 		[_best, "move"] Call SetTeamMoveMode;
 		_best setVariable ["wfbe_aicom_foot_stage", false];
 		_best setVariable ["wfbe_aicom_foot_stage_pos", []];
