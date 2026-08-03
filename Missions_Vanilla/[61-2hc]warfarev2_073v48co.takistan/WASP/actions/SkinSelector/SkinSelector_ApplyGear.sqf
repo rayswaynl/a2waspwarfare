@@ -45,18 +45,36 @@ while {_i < count _mags} do {
 
 //--- Backpack.
 if (_bp != "") then {
+	//--- Remove any default backpack first (same pattern as Common_EquipBackpack.sqf):
+	//--- an A2 OA unit holds ONE backpack and addBackpack on an occupied slot does not
+	//--- reliably replace it.
+	if !(isNull (unitBackpack _unit)) then {removeBackpack _unit};
 	_unit addBackpack _bp;
 	_bpObj = unitBackpack _unit;
 	if (!(isNull _bpObj)) then {
-		_i = 0;
-		while {_i < count _bpWeapons} do {
-			_bpObj addWeaponCargo [(_bpWeapons select _i), 1];
-			_i = _i + 1;
+		//--- r109 backpack-cargo-shape fix: _bpWeapons/_bpMags are getWeaponCargo/
+		//--- getMagazineCargo PAIRS [classNames[], counts[]] (CopyGear stores
+		//--- GetBackpackContent output verbatim), NOT flat classname lists. Iterating
+		//--- the pair directly passed an ARRAY as the classname -> "Type Array, expected
+		//--- String" on the FIRST iteration (even for an empty-contents backpack: count
+		//--- [[],[]] == 2), aborting this script before selectWeapon and silently
+		//--- dropping ALL backpack contents on every skin swap. Unpack the pair and
+		//--- keep the real counts (the old hard-coded 1 also collapsed stacked mags).
+		//--- *CargoGlobal variants: this runs before the selectPlayer locality wait,
+		//--- so a non-Global add is not guaranteed to land (matches Common_EquipBackpack).
+		if (typeName _bpWeapons == "ARRAY" && {count _bpWeapons == 2}) then {
+			_i = 0;
+			while {_i < count (_bpWeapons select 0)} do {
+				_bpObj addWeaponCargoGlobal [((_bpWeapons select 0) select _i), ((_bpWeapons select 1) select _i)];
+				_i = _i + 1;
+			};
 		};
-		_i = 0;
-		while {_i < count _bpMags} do {
-			_bpObj addMagazineCargo [(_bpMags select _i), 1];
-			_i = _i + 1;
+		if (typeName _bpMags == "ARRAY" && {count _bpMags == 2}) then {
+			_i = 0;
+			while {_i < count (_bpMags select 0)} do {
+				_bpObj addMagazineCargoGlobal [((_bpMags select 0) select _i), ((_bpMags select 1) select _i)];
+				_i = _i + 1;
+			};
 		};
 	};
 };
