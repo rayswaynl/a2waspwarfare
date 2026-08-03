@@ -162,7 +162,7 @@ while {!gameOver} do {
 					_destBx = (_destPos select 0) - (getPos player select 0);
 					_destBy = (_destPos select 1) - (getPos player select 1);
 					if (abs _destBx > 0.01 || {abs _destBy > 0.01}) then {
-						_ownDir = (_destBx atan2 _destBy) % 360;
+						_ownDir = ((_destBx atan2 _destBy) + 360) % 360;
 					};
 				};
 			};
@@ -484,7 +484,7 @@ while {!gameOver} do {
 								_destDx = (_destPos select 0) - (getPos _leader select 0);
 								_destDy = (_destPos select 1) - (getPos _leader select 1);
 								if (abs _destDx > 0.01 || {abs _destDy > 0.01}) then {
-									_dir = (_destDx atan2 _destDy) % 360;
+									_dir = ((_destDx atan2 _destDy) + 360) % 360;
 								};
 							};
 						};
