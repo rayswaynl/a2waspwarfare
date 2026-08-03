@@ -231,6 +231,35 @@ waitUntil {commonInitComplete && townInit};
 diag_log ("SELFTEST|v1|townsMax=" + str (missionNamespace getVariable ["WFBE_C_TOWNS_ACTIVE_MAX", -1]) + "|delegation=" + str (missionNamespace getVariable ["WFBE_C_AI_DELEGATION", -1]) + "|aicomLock=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_LOCK", -1]) + "|aicomEnabled=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_ENABLED", -1]) + "|totalAiMax=" + str (missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TOTAL_AI_MAX", -1]) + "|wildcardAlways=" + str (missionNamespace getVariable ["WFBE_C_WILDCARD_ALWAYS", 1]) + "|statlog=" + str (missionNamespace getVariable ["WFBE_C_STATLOG", -1]) + "|arm=" + (missionNamespace getVariable ["WFBE_C_AB_ARM", "LEGACY"]) + "|simGating=" + str (missionNamespace getVariable ["WFBE_C_SIM_GATING", 0]));
 
 //--- MATCH|v1|START|: one-shot match-identity line; feeds Stats V2 match-report pipeline.
+//--- Resolve the pipe-free build token before emitting START. The later WASPSCALE
+//--- loop also derives this from missionName, but it starts after this one-shot
+//--- identity record; waiting for it made MATCH report the raw PBO name instead.
+if (isNil "wfbe_buildtag" || {(missionNamespace getVariable ["wfbe_buildtag", ""]) == ""}) then {
+	private ["_mtName","_mtNameArray","_mtNeedle","_mtNeedleLength","_mtStart","_mtIndex","_mtMatches","_mtTokenArray","_mtChar","_mtBuildToken"];
+	_mtName = missionName;
+	if (typeName _mtName != "STRING") then {_mtName = ""};
+	_mtNameArray = toArray _mtName;
+	_mtNeedle = toArray "cmdcon";
+	_mtNeedleLength = count _mtNeedle;
+	_mtIndex = -1;
+	for "_mtStart" from 0 to ((count _mtNameArray) - _mtNeedleLength) do {
+		_mtMatches = true;
+		{if ((_mtNameArray select (_mtStart + _forEachIndex)) != _x) exitWith {_mtMatches = false}} forEach _mtNeedle;
+		if (_mtMatches) exitWith {_mtIndex = _mtStart};
+	};
+	if (_mtIndex >= 0) then {
+		_mtTokenArray = [];
+		for "_mtStart" from _mtIndex to ((count _mtNameArray) - 1) do {
+			_mtChar = _mtNameArray select _mtStart;
+			if ((_mtChar == 95) || (_mtChar == 46)) exitWith {};
+			_mtTokenArray = _mtTokenArray + [_mtChar];
+		};
+		if ((count _mtTokenArray) > 0) then {_mtBuildToken = toString _mtTokenArray} else {_mtBuildToken = _mtName};
+	} else {_mtBuildToken = _mtName};
+	if (_mtBuildToken == "") then {_mtBuildToken = "unknown"};
+	missionNamespace setVariable ["wfbe_buildtag", _mtBuildToken];
+};
+
 //--- Emitted here (after params + constants are final, before side-init) so every key lobby value
 //--- is readable. Gated on WFBE_C_MATCH_TELEMETRY (default 1 = additive telemetry ON).
 if ((missionNamespace getVariable ["WFBE_C_MATCH_TELEMETRY", 1]) > 0) then {
