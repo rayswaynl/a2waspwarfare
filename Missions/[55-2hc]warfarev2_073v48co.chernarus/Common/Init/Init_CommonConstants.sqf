@@ -3294,12 +3294,12 @@ if (isNil "WFBE_C_CMD_TEAM_STATUS")            then {WFBE_C_CMD_TEAM_STATUS = 1}
 //---     Reuses the SAME own-side team registry resolve as the war-room roster (GUI_Menu_Command.sqf);
 //---     Client_TroopMonBuildList.sqf builds its row array on a cached timer rather than a full rescan
 //---     on every dialog open / filter change (WFBE_C_COMMANDER_TROOPMON_REFRESH gates the rebuild).
-if (isNil "WFBE_C_COMMANDER_TROOPMON")          then {WFBE_C_COMMANDER_TROOPMON = 0};
+if (isNil "WFBE_C_COMMANDER_TROOPMON")          then {WFBE_C_COMMANDER_TROOPMON = 1}; //--- ARMED 2026-08-03 owner go (wave0803c)
 if (isNil "WFBE_C_COMMANDER_TROOPMON_REFRESH")  then {WFBE_C_COMMANDER_TROOPMON_REFRESH = 2}; //--- s minimum cache age before the roster array is rebuilt; a dialog open/filter change inside this window reuses the cached array untouched.
 //--- (f) RECON CAM - free-flying commander camera (Client_CommanderFreelook.sqf). Commander-only;
 //---     cleanly returns control to the player's own body on exit (ESC, death, lost commander seat,
 //---     or the flag going to 0 mid-flight all tear it down the same way).
-if (isNil "WFBE_C_COMMANDER_CAM")               then {WFBE_C_COMMANDER_CAM = 0};
+if (isNil "WFBE_C_COMMANDER_CAM")               then {WFBE_C_COMMANDER_CAM = 1}; //--- ARMED 2026-08-03 owner go (wave0803c)
 if (isNil "WFBE_C_COMMANDER_CAM_SPEED")         then {WFBE_C_COMMANDER_CAM_SPEED = 25};      //--- m/s base fly speed.
 if (isNil "WFBE_C_COMMANDER_CAM_SPEED_FAST")    then {WFBE_C_COMMANDER_CAM_SPEED_FAST = 75}; //--- m/s fly speed while the sprint key is held.
 if (isNil "WFBE_C_COMMANDER_CAM_MAX_ALT")       then {WFBE_C_COMMANDER_CAM_MAX_ALT = 400};   //--- m altitude ceiling above the terrain directly under the camera.
@@ -3781,12 +3781,12 @@ if (isNil "WFBE_C_TOWNS_FOCUS_PATROL_POSTURE") then {WFBE_C_TOWNS_FOCUS_PATROL_P
 //--- When 1, GUI_EndOfGameStats.sqf renders a per-player round leaderboard (built client-
 //--- local from allPlayers/score/side - no new networking, no new persistent state). When
 //--- 0 (default OFF), the stats screen is byte-identical to pre-flag HEAD.
-if (isNil "WFBE_C_ENDGAME_LEADERBOARD") then {WFBE_C_ENDGAME_LEADERBOARD = 0};
+if (isNil "WFBE_C_ENDGAME_LEADERBOARD") then {WFBE_C_ENDGAME_LEADERBOARD = 1}; //--- ARMED 2026-08-03 owner go (wave0803c)
 
 //--- Named round awards (Top Killer per side, Most Vehicles Lost) derived from the same
 //--- leaderboard data above. Dependent on WFBE_C_ENDGAME_LEADERBOARD - inert unless that is
 //--- also on. When 0 (default OFF), no awards section is appended.
-if (isNil "WFBE_C_ENDGAME_AWARDS") then {WFBE_C_ENDGAME_AWARDS = 0};
+if (isNil "WFBE_C_ENDGAME_AWARDS") then {WFBE_C_ENDGAME_AWARDS = 1}; //--- ARMED 2026-08-03 owner go (wave0803c)
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
