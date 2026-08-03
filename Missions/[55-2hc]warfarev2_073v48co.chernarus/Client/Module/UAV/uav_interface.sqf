@@ -1,5 +1,5 @@
 disableSerialization;
-Private ['_IGUI_update','_alt','_defaultTeamswitch','_defaultvalue','_displayEH_keydown','_displayEH_mousebuttondown','_displayEH_mousezchanged','_locked','_logic','_mapEH_mousebttondown','_newalt','_newspeed','_ppBlur','_ppColor','_ppGrain','_ppInversion','_speed','_uav'];
+Private ['_IGUI_update','_alt','_defaultTeamswitch','_defaultvalue','_displayEH_keydown','_displayEH_mousebuttondown','_displayEH_mousezchanged','_driver','_locked','_logic','_mapEH_mousebttondown','_newalt','_newspeed','_ppBlur','_ppColor','_ppGrain','_ppInversion','_speed','_uav'];
 _defaultTeamswitch = teamswitchenabled;
 
 startLoadingScreen ["UAV","RscDisplayLoadMission"];
@@ -8,6 +8,7 @@ _uav = playerUAV;
 
 //--- UAV destroyed
 if (isnull _uav) exitwith {endLoadingScreen;hintc format [localize "strwfbasestructuredestroyed",localize "str_uav_action"]};
+_driver = driver _uav;
 
 //--- Switch view
 //--- r78 handover: pick live control unit (gunner preferred; OPFOR has no gunner slot).
@@ -278,15 +279,13 @@ endLoadingScreen;
 
 //--- TERMINATE
 waituntil {!isnil "bis_uav_terminate" || !alive _uav || !alive player};
-Private ["_playerDied","_drv","_mkId","_mkName","_ppNvg"];
+Private ["_playerDied","_mkId","_mkName","_ppNvg"];
 _playerDied = !alive player;
 if (!alive _uav) then {
 	hintc format [localize "strwfbasestructuredestroyed",localize "str_uav_action"];
-} else {
-	//--- Reenable targetting (null-safe so teardown cannot abort mid-cleanup).
-	_drv = driver _uav;
-	if (!isNull _drv) then {{_drv enableAI _x} forEach ["TARGET","AUTOTARGET"]};
 };
+//--- Restore the originally disabled pilot even if the UAV hull was destroyed first.
+if (!isNull _driver && {alive _driver}) then {{_driver enableAI _x} forEach ["TARGET","AUTOTARGET"]};
 if (!isNull _uav) then {_uav lock _locked};
 titletext ["","black in"];
 bis_uav_terminate = nil;
