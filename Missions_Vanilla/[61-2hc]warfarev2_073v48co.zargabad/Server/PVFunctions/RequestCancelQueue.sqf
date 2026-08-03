@@ -1,0 +1,25 @@
+/* Server-owned cancellation for the side-shared player factory queue. */
+private ["_player","_building","_factory","_team","_uid","_queu","_costs","_cpts","_labels","_idx","_locked","_token","_paid","_cpt","_refund","_base","_maxRefund","_new","_i","_prefix","_reply"];
+_reply = {[_this select 0, "HandleSpecial", ["cancel-queue-result", _this select 1, _this select 2, _this select 3, _this select 4]] Call WFBE_CO_FNC_SendToClient};
+if ((count _this) < 3) exitWith {};
+_player = _this select 0; _building = _this select 1; _factory = _this select 2;
+if (isNull _player || {!isPlayer _player} || {isNull _building} || {!alive _building}) exitWith {};
+_team = group _player; if (isNull _team) exitWith {};
+_uid = getPlayerUID _player; if (_uid == "") exitWith {};
+_locked = false;
+isNil {if (isNil {_building getVariable "wfbe_cancel_queue_lock"}) then {_building setVariable ["wfbe_cancel_queue_lock", true]; _locked = true}};
+if (!_locked) exitWith {[_player, false, 0, _factory, 0] call _reply};
+_queu = _building getVariable ["queu", []]; _costs = _building getVariable ["queu_costs", []]; _cpts = _building getVariable ["queu_cpts", []]; _labels = _building getVariable ["queu_labels", []];
+_prefix = toArray _uid; _idx = -1;
+{if ((typeName _x) == "STRING" && {(count _prefix) <= (count toArray _x)}) then {private ["_same","_j"]; _same = true; for "_j" from 0 to ((count _prefix) - 1) do {if ((toArray _x select _j) != (_prefix select _j)) exitWith {_same = false}}; if (_same) then {_idx = _forEachIndex}}} forEach _queu;
+if (_idx < 0) exitWith {_building setVariable ["wfbe_cancel_queue_lock", nil]; [_player, false, 0, _factory, 0] call _reply};
+_token = _queu select _idx; _paid = if (_idx < count _costs) then {_costs select _idx} else {0}; _cpt = if (_idx < count _cpts) then {_cpts select _idx} else {1};
+_refund = _paid; if (ATTACK_WAVE_PRICE_MODIFIER < 1.0 && {UNIT_COST_MODIFIER > 0}) then {_base = _paid / (ATTACK_WAVE_PRICE_MODIFIER * UNIT_COST_MODIFIER); _maxRefund = round (_base * 0.5); if (_refund > _maxRefund) then {_refund = _maxRefund}};
+_queu = _queu - [_token];
+_new=[]; _i=0; {if (_i != _idx) then {_new=_new+[_x]}; _i=_i+1} forEach _costs; _costs=_new;
+_new=[]; _i=0; {if (_i != _idx) then {_new=_new+[_x]}; _i=_i+1} forEach _cpts; _cpts=_new;
+_new=[]; _i=0; {if (_i != _idx) then {_new=_new+[_x]}; _i=_i+1} forEach _labels; _labels=_new;
+_building setVariable ["queu", _queu, true]; _building setVariable ["queu_costs", _costs, true]; _building setVariable ["queu_cpts", _cpts, true]; _building setVariable ["queu_labels", _labels, true];
+if (_refund > 0) then {[_team, _refund] Call ChangeTeamFunds};
+_building setVariable ["wfbe_cancel_queue_lock", nil];
+[_player, true, _refund, _factory, _cpt] call _reply;
