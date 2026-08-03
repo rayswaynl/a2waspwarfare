@@ -39,36 +39,9 @@
 
 #include "Sounds\description.ext"
 
-//--- fable/colorgray-fix (owner rig-test 2026-07-09): A2 OA 1.64 has NO built-in "ColorGray" marker color,
-//--- so the AFK grey-out (updateteamsmarkers.sqf) + neutral-town markers (WFBE_C_NEUTRAL_COLOR) silently
-//--- no-op'd ("No entry 'bin\config.bin/CfgMarkerColors.ColorGray'" in the client RPT). Define it so
-//--- setMarkerColor "ColorGray" resolves. Mission CfgMarkerColors are additive (no engine name collision).
-class CfgMarkerColors
-{
-	class ColorGray
-	{
-		name = "Gray";
-		color[] = {0.6,0.6,0.6,1};
-	};
-
-	//--- fable/koth-marker-colors (2026-07-26): same class of bug as ColorGray above. A2 OA 1.64 has no
-	//--- built-in "ColorWest"/"ColorEast" marker colors, so Init_ZgKoth.sqf's holder/winner recolor
-	//--- silently no-op'd ("No entry 'bin\config.bin/CfgMarkerColors.ColorEast'" x238 in the client RPT)
-	//--- and the KOTH hill marker never showed who held it. These must be ABSOLUTE colors, not the
-	//--- viewer-relative WFBE_C_WEST_COLOR/WFBE_C_EAST_COLOR constants - ZgKoth runs server-side and
-	//--- broadcasts one marker color to every client, so a perspective-relative color would be wrong
-	//--- for half the players. Blue=WEST / red=EAST per standard Arma side convention.
-	class ColorWest
-	{
-		name = "West";
-		color[] = {0,0.3,0.6,1};
-	};
-	class ColorEast
-	{
-		name = "East";
-		color[] = {0.5,0,0,1};
-	};
-};
+//--- Marker scripts use only Arma 2/OA built-in colors (ColorBlue, ColorRed, ColorBlack).
+//--- Mission-local CfgMarkerColors entries do not satisfy the runtime bin\config.bin lookup used
+//--- by setMarkerColor; keeping custom names here only hides the failure until the marker updates.
 
 #include "Music\description.ext"
 
