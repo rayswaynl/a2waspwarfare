@@ -1,5 +1,5 @@
 /* Enhanced Respawn Management via Multiplayer Event Handler - Experimental */
-Private ['_autonomous','_availableSpawn','_buildings','_checks','_closestRespawn','_corpse','_deadspawnGuardApplied','_deathLoc','_hq','_i','_isForcedRespawn','_mobileRespawns','_moveMode','_penParked','_penPos','_pos','_ran','_range','_rcm','_rd','_respawn','_respawnLoc','_respawnedUnit','_side','_sideID','_sideText','_skip','_team','_update','_upgrades'];
+Private ['_autonomous','_availableSpawn','_buildings','_campBunker','_checks','_closestRespawn','_corpse','_deadspawnGuardApplied','_deathLoc','_hq','_i','_isForcedRespawn','_liveSpawn','_mobileRespawns','_moveMode','_penParked','_penPos','_pos','_ran','_range','_rcm','_rd','_respawn','_respawnLoc','_respawnedUnit','_side','_sideID','_sideText','_skip','_team','_update','_upgrades'];
 
 _respawnedUnit = _this select 0;
 _corpse = _this select 1;
@@ -190,6 +190,30 @@ if !(_skip) then {
 		};
 	};
 	
+	//--- r106 (kimi/bughunt-aicom-medevac): the spawn snapshot above predates the respawn wait (_rd).
+	//--- An ambulance can be destroyed and a camp can flip or be torn down while the leader waits,
+	//--- and the pick below would then respawn it onto a burning wreck or an enemy-held camp.
+	//--- Re-validate each entry the same way it was admitted: camps must still be ours with a live
+	//--- bunker; plain vehicles (the ambulances) must still be alive hulls. The OBJECT-form _respawn
+	//--- above already gets the same alive/isNull re-check - the snapshot list did not.
+	if (count _availableSpawn > 0) then {
+		_liveSpawn = [];
+		{
+			if (!isNull _x) then {
+				_campBunker = _x getVariable "wfbe_camp_bunker";
+				if (!isNil "_campBunker") then {
+					if (!isNull _campBunker && {alive _campBunker} && {(_x getVariable ["sideID", -1]) == _sideID}) then {_liveSpawn = _liveSpawn + [_x]};
+				} else {
+					if (alive _x) then {_liveSpawn = _liveSpawn + [_x]};
+				};
+			};
+		} forEach _availableSpawn;
+		if (count _liveSpawn < count _availableSpawn) then {
+			["INFORMATION", Format ["AI_AdvancedRespawn.sqf: [%1] dropped %2 stale respawn point(s) (wrecked ambulance / flipped camp) captured before the respawn wait.", _sideText, (count _availableSpawn) - (count _liveSpawn)]] Call WFBE_CO_FNC_LogContent;
+		};
+		_availableSpawn = _liveSpawn;
+	};
+
 	//--- Alternative spawn location.
 	if (count _availableSpawn > 0) then {
 		_respawnLoc = _availableSpawn select floor (random count _availableSpawn);
