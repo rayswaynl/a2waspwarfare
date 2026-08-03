@@ -144,7 +144,7 @@ if (_emit) then {
 				if (side (_crew select 0) == _side) then {_sideOK = true};
 				if (({isPlayer _x} count _crew) > 0) then {_isPlayerAir = true};
 			} else {
-				if ((_veh getVariable ["wfbe_side", sideUnknown]) == _side) then {_sideOK = true};
+				if ((_veh getVariable ["wfbe_side_id", -1]) == _sideID) then {_sideOK = true};
 			};
 			if (_sideOK) then {
 				_airAlive = _airAlive + 1;
