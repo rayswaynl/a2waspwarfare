@@ -23,8 +23,12 @@
 		3: _g     NUMBER, optional, gravity in m/s^2. Defaults to 9.81.
 
 	Returns: NUMBER, elevation angle in DEGREES above the horizontal (may be negative when the
-	         target is below the shooter), or -1 (sentinel, NOT a valid angle) if the target is
-	         out of range at the given speed (negative discriminant) or _dist <= 0.
+	         target is below the shooter), or -999 (sentinel, OUTSIDE the valid atan range of
+	         (-90,90) so it can never collide with a real solution - a plain -1 would, since -1
+	         degrees is itself an ordinary low-arc result) if the target is out of range at the
+	         given speed (negative discriminant) or _dist <= 0. Callers MUST check
+	         `if (_theta > -999)` (or an explicit `!= -999`), never assume any in-domain value
+	         signals failure.
 */
 
 private ["_dist","_dz","_speed","_g","_v2","_disc","_theta"];
@@ -34,7 +38,7 @@ _dz = _this select 1;
 _speed = _this select 2;
 _g = if (count _this > 3) then {_this select 3} else {9.81};
 
-_theta = -1;
+_theta = -999;
 
 if (_dist > 0) then {
 	_v2 = _speed * _speed;

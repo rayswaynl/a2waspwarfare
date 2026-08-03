@@ -40,6 +40,35 @@ asserting it, logging the result to RPT. **Next agent/owner should**: arm
 `DELAYLESS same-frame=...` line, and only then treat `Common_DelaylessCall` as safe to adopt on
 a real hot path in a follow-up PR. See `docs/design/SQF-UTIL-LIB.md` for the full writeup.
 
+### Review-fix pass (same day, before PR)
+
+A second reviewer flagged two issues against the above; both verified against A2 SQF semantics
+and fixed:
+
+1. **MAJOR, confirmed — `Common_VectElevationSolve.sqf` sentinel collision.** The original `-1`
+   failure sentinel is itself an ordinary, in-range low-arc angle (e.g. `[200, -23.117, 100]`
+   solves to `theta ~ -1.000`), so a caller checking `_theta > -1` per the documented contract
+   would wrongly treat a real solution as "unreachable." Fixed by moving the sentinel to `-999`,
+   which sits outside `atan`'s valid `(-90,90)` output range and can never collide with a real
+   result. Updated the function header, `docs/design/SQF-UTIL-LIB.md`, and the one self-test
+   assertion that referenced the old sentinel (`Common_UtilLibSelfTest.sqf`).
+2. **minor, confirmed — `Common_VectLeadAngle.sqf` under-length `_targetVel`.** If a caller ever
+   passes a `_targetVel` with fewer dimensions than `_targetPos`, the old loop's
+   `_targetVel select _i` goes out of range on the last axis; per this repo's own verified A2
+   trap (a failed statement doesn't abort the script, it's skipped — see
+   `a2-failed-statement-continues.md`), that silently left a hole in the returned `_aimPoint`
+   instead of erroring loudly. Currently unreachable (zero call sites) but cheap to harden: the
+   loop now defaults any missing `_targetVel` component to `0` instead of indexing out of range,
+   and the header documents the same-dimensionality expectation.
+
+Both fixes are additive/defensive only — behavior for well-formed same-dimensionality inputs is
+unchanged. Re-verified after the fix: lint gate clean (zero findings in touched files), net
+bracket delta zero per file, LoadoutManager mirror re-run clean across CH/TK/ZG (byte-identical
+diffs across all three terrains), `version.sqf.template` untouched by the regen this time,
+`Test-WaspVersionTemplates.ps1` all PASS.
+
+Rejected: none — both review findings were confirmed against source and fixed.
+
 ---
 
 ## Working State 2026-08-01 — crash 014EFCF4 crew-delete sweep [fix/014e-crew-delete-sweep-20260801]

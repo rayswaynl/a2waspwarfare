@@ -52,7 +52,7 @@ verification item above).
 | `WFBE_CO_FNC_VectDot` | `[_a, _b]` (each `[x,y,z]` or `[x,y]`) | dot product, NUMBER |
 | `WFBE_CO_FNC_VectCross` | `[_a, _b]` | cross product, `[x,y,z]` |
 | `WFBE_CO_FNC_VectMagnitude` | `[_a]` | length, NUMBER >= 0 |
-| `WFBE_CO_FNC_VectElevationSolve` | `[_dist, _dz, _speed]` or `[_dist, _dz, _speed, _g]` | low-arc ballistic elevation angle in **degrees** (SQF trig is degree-based), or `-1` sentinel if unreachable |
+| `WFBE_CO_FNC_VectElevationSolve` | `[_dist, _dz, _speed]` or `[_dist, _dz, _speed, _g]` | low-arc ballistic elevation angle in **degrees** (SQF trig is degree-based), or `-999` sentinel if unreachable (deliberately outside the valid `atan` range of `(-90,90)` so it never collides with a real result — a plain `-1` would, since `-1` degrees is itself an ordinary low-arc angle) |
 | `WFBE_CO_FNC_VectLeadAngle` | `[_shooterPos, _targetPos, _targetVel, _speed]` | `[_aimPoint, _t]` on success, `[]` if no positive-time solution exists |
 | `WFBE_CO_FNC_VectSurfaceNormal` | `[_pos]` or `[_pos, _radius]` | unit-length `[x,y,z]` terrain normal, sampled via `getTerrainHeightASL` (A2 OA has no native `surfaceNormal`) |
 

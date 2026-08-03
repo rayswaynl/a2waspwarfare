@@ -61,7 +61,7 @@ _mag = [[3,4,0]] call WFBE_CO_FNC_VectMagnitude;
 if (abs (_mag - 5) < 0.001) then {_pass = _pass + 1} else {_fail = _fail + 1; ["WARNING", Format ["UtilLibSelfTest: VECT magnitude FAILED (%1)", _mag]] Call WFBE_CO_FNC_LogContent};
 
 _solveOk = [100, 0, 50] call WFBE_CO_FNC_VectElevationSolve;
-if (_solveOk > -1) then {_pass = _pass + 1} else {_fail = _fail + 1; ["WARNING", "UtilLibSelfTest: VECT elevation-solve FAILED (in-range case returned sentinel)"] Call WFBE_CO_FNC_LogContent};
+if (_solveOk > -999) then {_pass = _pass + 1} else {_fail = _fail + 1; ["WARNING", "UtilLibSelfTest: VECT elevation-solve FAILED (in-range case returned sentinel)"] Call WFBE_CO_FNC_LogContent};
 
 _lead = [[0,0,0], [100,0,0], [0,10,0], 50] call WFBE_CO_FNC_VectLeadAngle;
 if (count _lead > 0) then {_pass = _pass + 1} else {_fail = _fail + 1; ["WARNING", "UtilLibSelfTest: VECT lead-angle FAILED (solvable case returned empty)"] Call WFBE_CO_FNC_LogContent};

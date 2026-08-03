@@ -24,7 +24,9 @@
 		0: _shooterPos  ARRAY [x,y,z] (or [x,y]).
 		1: _targetPos   ARRAY [x,y,z] (or [x,y]), target's CURRENT position.
 		2: _targetVel   ARRAY [x,y,z] (or [x,y]), target's current velocity vector (m/s per
-		                 axis, e.g. `velocity _target`).
+		                 axis, e.g. `velocity _target`). If _targetVel has FEWER components than
+		                 _targetPos, missing trailing components default to 0 (never a silent
+		                 array hole in the returned _aimPoint).
 		3: _speed       NUMBER, projectile speed in m/s, > 0.
 
 	Returns: ARRAY. On success: [_aimPoint, _t] where _aimPoint is the predicted intercept
@@ -34,7 +36,7 @@
 	         `count _result > 0` before indexing it.
 */
 
-private ["_shooterPos","_targetPos","_targetVel","_speed","_rel","_a","_b","_c","_disc","_t","_t1","_t2","_result","_aimPoint","_dim","_i"];
+private ["_shooterPos","_targetPos","_targetVel","_speed","_rel","_a","_b","_c","_disc","_t","_t1","_t2","_result","_aimPoint","_dim","_i","_velComponent"];
 
 _shooterPos = _this select 0;
 _targetPos = _this select 1;
@@ -75,7 +77,9 @@ if (_t > 0) then {
 	_aimPoint = [];
 	_i = 0;
 	while {_i < _dim} do {
-		_aimPoint set [_i, (_targetPos select _i) + ((_targetVel select _i) * _t)];
+		_velComponent = 0;
+		if (_i < count _targetVel) then {_velComponent = _targetVel select _i};
+		_aimPoint set [_i, (_targetPos select _i) + (_velComponent * _t)];
 		_i = _i + 1;
 	};
 	_result = [_aimPoint, _t];
