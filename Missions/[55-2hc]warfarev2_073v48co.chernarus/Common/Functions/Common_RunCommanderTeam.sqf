@@ -3128,6 +3128,7 @@ while {!WFBE_GameOver && _alive} do {
 							if (alive _x) then {
 								unassignVehicle _x;
 								[_x] orderGetIn false;
+								if (vehicle _x != _x) then {moveOut _x};
 								_x doMove _dropPos;
 							};
 						} forEach (crew _cv);
