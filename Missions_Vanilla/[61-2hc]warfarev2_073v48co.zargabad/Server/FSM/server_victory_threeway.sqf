@@ -231,6 +231,7 @@ while {!gameOver} do {
 				} else {
 					if (_towns == _total) then {
 						_winSide = _x;
+						[nil, "DashboardAnnounce", [Format ["%1 has WON by SUPREMACY - captured every town on the map!", str _x]]] Call WFBE_CO_FNC_SendToClients;
 					} else {
 						//--- L194 HQ-LOSS WINNER: present sides minus defender minus loser; most towns wins.
 						private ["_candidateWinners","_bestSide","_bestCount","_candSide","_candTowns"];
@@ -251,6 +252,7 @@ while {!gameOver} do {
 						} else {
 							if (_x == west) then { _winSide = east } else { _winSide = west };
 						};
+						[nil, "DashboardAnnounce", [Format ["%1 has WON - %2's command HQ and last factory were destroyed!", str _winSide, str _x]]] Call WFBE_CO_FNC_SendToClients;
 					};
 				};
 				[nil, "HandleSpecial", ["endgame", (_winSide) Call WFBE_CO_FNC_GetSideID]] Call WFBE_CO_FNC_SendToClients;
