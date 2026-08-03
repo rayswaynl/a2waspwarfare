@@ -2,6 +2,7 @@ private ["_u","_am","_rkt","_jetSide","_aa","_nearest","_shots",
 "_fp","_sspd","_spd","_sltd","_acc","_agl","_prd","_t",
 "_dis","_trvldis","_trgp","_trgv","_ttimp",
 "_vl","_vlnr","_vlnrd","_vc","_vcnr","_vcnrd","_vg","_vgnr","_vgnrd"];
+scopeName "OUT";
 
 //--- SEAD missile guidance (Build 93). Spawned via Fired EH on tier-5 jets.
 //--- Guides Maverick (F35B) or Ch29 (Su34) toward the nearest enemy AA radar vehicle
@@ -127,5 +128,4 @@ While {!isNull _rkt && {!isNull _nearest} && {alive _nearest}} do {
 
 };
 
-scopeName "OUT";
 exit;
