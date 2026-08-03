@@ -3554,5 +3554,17 @@ if (isNil "WFBE_C_SPECTATOR_MOUSE_SMOOTH") then {WFBE_C_SPECTATOR_MOUSE_SMOOTH =
 if (isNil "WFBE_C_SPECTATOR_SENS_REF_FOV") then {WFBE_C_SPECTATOR_SENS_REF_FOV = 0.8}; //--- FOV at which SENS applies 1:1; sensitivity scales linearly with zoom (scoped-aim feel).
 if (isNil "WFBE_C_SPECTATOR_SENS_MIN_FACTOR") then {WFBE_C_SPECTATOR_SENS_MIN_FACTOR = 0.05}; //--- never let zoom-scaled sensitivity drop below this fraction of SENS.
 
+
+//--- bughunt r124 (dead guards never armed): six mission-core levers whose only reference was a
+//--- getVariable fallback at the read site - the fallback applied forever and the documented
+//--- off/retune switch did not exist. Defaults equal the in-code fallbacks, so live behaviour is
+//--- unchanged; the levers are now real and overridable.
+if (isNil "WFBE_C_AB_AMPLE_ECON") then {WFBE_C_AB_AMPLE_ECON = 1}; //--- read initJIPCompatible.sqf:182 (fallback 1): B36.1 starting-economy override (30000 funds / 12800 supply per side). 0 disables; previously unarmable.
+if (isNil "WFBE_C_ICBM_TEL_NUKE_COST") then {WFBE_C_ICBM_TEL_NUKE_COST = 75000}; //--- read Server/Init/Init_IcbmTel.sqf:729 (fallback 75000): NUKE munition price - the only TEL cost never registered (SAT/RECON/FASCAM/RAIN/BUSTER all were).
+if (isNil "WFBE_C_GUER_VBIED_CREDIT_KILLS") then {WFBE_C_GUER_VBIED_CREDIT_KILLS = 1}; //--- read Server/Functions/Server_HandleSpecial.sqf:2400 (fallback 1): VBIED driver kill-stat credit + WFBE_GUER_PLAYER_KILLS tier progress. 0 disables; previously unarmable.
+if (isNil "WFBE_C_DISCONNECT_ZOMBIE_TIMEOUT") then {WFBE_C_DISCONNECT_ZOMBIE_TIMEOUT = 600}; //--- read Server/FSM/server_groupsGC.sqf:373 (fallback 600): orphaned-team zombie reaper timeout (s). The read-site comment "set the param to 0 to disable" now works.
+if (isNil "WFBE_C_MARKER_REBUILD_FPS") then {WFBE_C_MARKER_REBUILD_FPS = 15}; //--- read Common/Common_MarkerLoop.sqf:49 (fallback 15): auto map-marker rebuild while client fps stays below this. 0 disables; previously unarmable.
+if (isNil "WFBE_C_MARKER_BUDGET_PER_TICK") then {WFBE_C_MARKER_BUDGET_PER_TICK = 30}; //--- read Common/Common_MarkerLoop.sqf:83 (fallback 30): fixed per-tick marker-refresh ceiling; the BUDGET_ADAPT block above references it as "above" but it was never declared.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
