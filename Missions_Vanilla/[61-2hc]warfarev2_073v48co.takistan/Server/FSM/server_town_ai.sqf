@@ -231,7 +231,8 @@ while {!WFBE_GameOver} do {
 		_enemies = 0; //--- perf-dice fix (livetest 2026-07-06): must exist in TOWN-LOOP scope - assigned inside the _doScan block, and SQF inner-block assignments do not escape unless the var pre-exists in an outer scope (RPT: 'Undefined variable _enemies' at the deactivation check).
 
 		_town = towns select _i;
-		_town_teams = _town getVariable "wfbe_town_teams";
+		_town_teams = _town getVariable ["wfbe_town_teams", []];
+		if (typeName _town_teams != "ARRAY") then {_town_teams = []};
 		//--- Patrols v2: town-based patrol gating retired (see Server\FSM\server_side_patrols.sqf).
 
 		//--- Nil-safe sideID (parity with server_town_camp N9 / capture ownership bughunt): 1-arg
