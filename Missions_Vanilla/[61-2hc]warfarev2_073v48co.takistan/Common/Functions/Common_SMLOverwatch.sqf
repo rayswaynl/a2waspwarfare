@@ -130,7 +130,10 @@ waitUntil {
 _launcher setVariable ["wfbe_sml_detach_at", nil];
 if (alive _launcher) then {
     _launcher setUnitPos "AUTO";
-    _launcher doFollow (leader _team);
+    //--- A launcher transferred to a different group before rejoin fires (group_change exit) must not be ordered to follow its former team leader.
+    if (_launcher in (units _team)) then {
+        _launcher doFollow (leader _team);
+    };
 };
 
 diag_log Format ["SML|v1|OVERWATCH_REJOIN|side=%1 team=%2 reason=%3 elapsed=%4", _side, _team, _reason, (time - _startTime)];
