@@ -550,6 +550,23 @@ if ((missionNamespace getVariable "WFBE_C_AI_DELEGATION") == 1) then {
 	missionNamespace setVariable [format["WFBE_AI_DELEGATION_%1", _uid], [0,0,_id]];
 };
 
+//--- RESTART JIP REPLAY: A2 OA does not replay an earlier publicVariable/PVF broadcast to a
+//--- late joiner. Recompute the live remaining interval here, after this human's team/leader is
+//--- resolved, and deliver the ordinary client PVF directly. This is deliberately before the
+//--- JIPFUNDS latch below, whose duplicate-connect exitWith must not suppress the warning.
+private ["_restartJipAt","_restartJipWarn","_restartJipUntil","_restartJipMinutes","_restartJipMsg"];
+if ((missionNamespace getVariable ["WFBE_C_RESTART_ENABLED", 0]) == 1) then {
+	_restartJipAt = missionNamespace getVariable ["WFBE_C_RESTART_AT_MIN", 90];
+	_restartJipWarn = missionNamespace getVariable ["WFBE_C_RESTART_WARN_MIN", 5];
+	_restartJipUntil = _restartJipAt * 60;
+	if (_restartJipWarn > 0 && {_restartJipUntil > time} && {(_restartJipUntil - time) <= (_restartJipWarn * 60)}) then {
+		_restartJipMinutes = ceil ((_restartJipUntil - time) / 60);
+		_restartJipMsg = missionNamespace getVariable ["WFBE_C_RESTART_MSG", "SERVER RESTART IN %1 MINUTE(S) - finish up and find cover."];
+		[leader _team, "RestartAnnounce", [Format [_restartJipMsg, _restartJipMinutes]]] Call WFBE_CO_FNC_SendToClient;
+		diag_log Format ["RESTART|JIP_REPLAY|uid=%1|remaining=%2", _uid, _restartJipMinutes];
+	};
+};
+
 //--- JIPFUNDS GUARDS (2026-07-04, live evidence: connect handler resolves TWICE per join; pass 2 arrives with
 //--- side CIV mid-sync, hits the teamswap branch, looks up FUNDS_START_CIVILIAN (absent) and clobbers the fresh
 //--- seed with nil/0). Guard 1: per-uid latch - a second resolve within 15s skips the funds block entirely.
