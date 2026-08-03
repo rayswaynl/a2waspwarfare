@@ -25,12 +25,12 @@ _armorR = missionNamespace getVariable ["WFBE_C_SML_AT_OVERWATCH_ARMOR_R", 500];
 _offset = missionNamespace getVariable ["WFBE_C_SML_AT_OVERWATCH_OFFSET", 80];
 _startTime = time;
 
-//--- Step 1: Find a launcher soldier (secondaryWeapon != "") not already stamped.
+//--- Step 1: Find a loaded anti-armour launcher soldier, never a MANPAD, not already stamped.
 _launcher = objNull;
 _found = false;
 {
     _uX = _x;
-    if (!_found && {alive _uX} && {[_uX] Call WFBE_CO_FNC_HasLoadedSecondaryWeapon} && {isNil {_uX getVariable "wfbe_sml_detach_at"}}) then {
+    if (!_found && {alive _uX} && {[_uX] Call WFBE_CO_FNC_HasLoadedSecondaryWeapon} && {!([_uX] Call WFBE_CO_FNC_SmallArmsEffAntiAir)} && {isNil {_uX getVariable "wfbe_sml_detach_at"}}) then {
         _launcher = _uX;
         _found = true;
     };
