@@ -3789,6 +3789,12 @@ if (isNil "WFBE_C_ENDGAME_LEADERBOARD") then {WFBE_C_ENDGAME_LEADERBOARD = 1}; /
 //--- leaderboard data above. Dependent on WFBE_C_ENDGAME_LEADERBOARD - inert unless that is
 //--- also on. When 0 (default OFF), no awards section is appended.
 if (isNil "WFBE_C_ENDGAME_AWARDS") then {WFBE_C_ENDGAME_AWARDS = 1}; //--- ARMED 2026-08-03 owner go (wave0803c)
+//--- Team Menu V2 squad bulk mount/dismount (pattern studied from the rhs_cargosystem whole-squad
+//--- bulk-load/staggered-dismount idiom, remade in vanilla A2 SQF). Master flag default 0 -
+//--- Load/Unload Squad buttons stay hidden and MenuAction 2003/2004 no-op with the flag off.
+if (isNil "WFBE_C_SQUAD_BULK_MOUNT") then {WFBE_C_SQUAD_BULK_MOUNT = 0};
+if (isNil "WFBE_C_SQUAD_BULK_MOUNT_RANGE") then {WFBE_C_SQUAD_BULK_MOUNT_RANGE = 10}; //--- metres; Load Squad only mounts units already within this range of the target vehicle (v1: no path-walking).
+if (isNil "WFBE_C_SQUAD_BULK_MOUNT_STAGGER") then {WFBE_C_SQUAD_BULK_MOUNT_STAGGER = 0.15}; //--- seconds between staggered per-unit GetOut actions on Unload Squad, so a full vehicle does not dismount on a single tick.
 
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

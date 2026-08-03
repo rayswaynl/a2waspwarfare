@@ -226,6 +226,8 @@ WFBE_CO_FNC_RadiusHold_Register = Compile preprocessFileLineNumbers "Common\Func
 WFBE_CO_FNC_WeightedDraw = Compile preprocessFileLineNumbers "Common\Functions\Common_WeightedDraw.sqf"; //--- fable/radius-hold-primitive (GR-2026-07-08a): pure weighted-roll primitive extracted from AI_Commander_Wildcard.sqf proven algorithm.
 if (isNil "WFBE_RADIUSHOLD_REGISTRY") then { WFBE_RADIUSHOLD_REGISTRY = []; }; //--- fable/radius-hold-primitive: registry init (defense-in-depth; Common_RadiusHold.sqf also isNil-guards this on first register).
 WFBE_CO_FNC_DeadspawnPenPos = Compile preprocessFileLineNumbers "Common\Functions\Common_DeadspawnPenPos.sqf"; //--- fable/deadspawn-redesign: underwater join-pen position resolver, flag WFBE_C_DEADSPAWN_REDESIGN default 1.
+WFBE_CO_FNC_SquadLoadAll = Compile preprocessFileLineNumbers "Common\Functions\Common_SquadLoadAll.sqf"; //--- Team Menu V2 bulk mount, flag WFBE_C_SQUAD_BULK_MOUNT default 0.
+WFBE_CO_FNC_SquadUnloadAll = Compile preprocessFileLineNumbers "Common\Functions\Common_SquadUnloadAll.sqf"; //--- Team Menu V2 staggered bulk dismount, flag WFBE_C_SQUAD_BULK_MOUNT default 0.
 
 WFBE_CO_FNC_RequestIcbmTelFire = Compile preprocessFileLineNumbers "Common\Functions\Common_RequestIcbmTelFire.sqf"; //--- sender-bound, one-shot ICBM/TEL launch capability.
 WFBE_CO_FNC_RequestIcbmTelPurchase = Compile preprocessFileLineNumbers "Common\Functions\Common_RequestIcbmTelPurchase.sqf"; //--- server-issued proof for a legitimate player SCUD purchase.

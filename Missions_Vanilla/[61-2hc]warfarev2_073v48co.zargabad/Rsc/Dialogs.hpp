@@ -1943,6 +1943,26 @@ class RscMenu_TeamV2 {
 			action = "MenuAction = 2002";
 			tooltip = "AI crew dismounts and restores mobility (wheels/tracks/engine), then remounts";
 		};
+		/* Load Squad button (WFBE_C_SQUAD_BULK_MOUNT; ctrlShow-managed by GUI_Menu_TeamV2.sqf) */
+		class CA_SQ_LoadAll : RscButton_WFBE_Action {
+			idc = 13075;
+			x = 0.192941;
+			y = 0.535;
+			w = 0.135;
+			text = "Load Squad";
+			action = "MenuAction = 2003";
+			tooltip = "Mount squad AI already near the vehicle under your cursor";
+		};
+		/* Unload Squad button (WFBE_C_SQUAD_BULK_MOUNT; ctrlShow-managed by GUI_Menu_TeamV2.sqf) */
+		class CA_SQ_UnloadAll : RscButton_WFBE_Action {
+			idc = 13076;
+			x = 0.337941;
+			y = 0.535;
+			w = 0.135;
+			text = "Unload Squad";
+			action = "MenuAction = 2004";
+			tooltip = "Staggered dismount of all AI crew from the selected unit's vehicle";
+		};
 		/* Separator: squad / preferences */
 		class Line_V2_Sep2 : RscText {
 			x = 0.192941;
