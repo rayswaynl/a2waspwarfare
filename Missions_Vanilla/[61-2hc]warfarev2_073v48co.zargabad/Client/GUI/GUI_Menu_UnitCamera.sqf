@@ -59,7 +59,10 @@ _units = (Units (group player) - [player]) Call GetLiveUnits;
 } forEach _units;
 // Marty end.
 
-_type = if (!(difficultyEnabled "3rdPersonView")) then {["Internal"]} else {["Internal","External","Ironsight","Group"]};
+//--- r119 difficulty-branch drift: labels must come from the SAME array MenuAction 103 applies (line 12).
+//--- The duplicate literal said "Ironsight" at index 2 while _cameraModes applies "Gunner" there - A2 OA has
+//--- no IRONSIGHT switchCamera mode (INTERNAL/EXTERNAL/GUNNER/GROUP only), so the label lied on non-Veteran.
+_type = if (!(difficultyEnabled "3rdPersonView")) then {["Internal"]} else {_cameraModes};
 {lbAdd[21006,_x]} forEach _type;
 lbSetCurSel[21006,0];
 
