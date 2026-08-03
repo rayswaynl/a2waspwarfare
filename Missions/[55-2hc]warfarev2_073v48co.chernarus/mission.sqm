@@ -35,7 +35,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=153;
+		items=155;
 		class Item134
 		{
 			side="LOGIC";
@@ -5419,6 +5419,50 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; this allowdamage false; this setVariable [""wfbe_caster_slot"", true];";
 					description="Caster 2";
+				};
+			};
+		};
+		class Item153
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={2264.6794,512.27637,15300.721};
+					id=9107;
+					side="WEST";
+					vehicle="FR_Miles";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={255};
+				};
+			};
+		};
+		class Item154
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={1938.7078,544.75983,15283.936};
+					id=9108;
+					side="EAST";
+					vehicle="RUS_Soldier1";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={256};
 				};
 			};
 		};

@@ -37,8 +37,8 @@ git checkout origin/master -- \
 ```
 
 Verify the TK and ZG templates contain their correct per-map values (not CH values):
-- TK: `WF_MAXPLAYERS 31`, `STARTING_DISTANCE 7500`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`
-- ZG: `WF_MAXPLAYERS 33`, `STARTING_DISTANCE 5000`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`
+- TK: `WF_MAXPLAYERS 34`, `STARTING_DISTANCE 7500`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`
+- ZG: `WF_MAXPLAYERS 34`, `STARTING_DISTANCE 5000`, no `IS_CHERNARUS_MAP_DEPENDENT`, no `IS_NAVAL_MAP`
 
 (The bracketed number in the mission folder name, e.g. `[61-2hc]`, is a player-slot label,
 not the `WF_MAXPLAYERS` define — do not re-derive WF_MAXPLAYERS from the folder name. These

@@ -42,7 +42,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=102;
+		items=105;
 		class Item0
 		{
 			side="LOGIC";
@@ -3775,6 +3775,72 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; this allowdamage false; this setVariable [""wfbe_caster_slot"", true];";
 					description="Caster 2";
+				};
+			};
+		};
+		class Item102
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7183.7349,41.073147,12773.034};
+					id=7036;
+					side="WEST";
+					vehicle="FR_Miles";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		};
+		class Item103
+		{
+			side="WEST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7185.2349,41.073147,12774.534};
+					id=7037;
+					side="WEST";
+					vehicle="FR_Miles";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Soldier (Double team size, Camps restore)";
+					synchronizations[]={49};
+				};
+			};
+		};
+		class Item104
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={7456.0591,270.25867,58.5201};
+					id=7038;
+					side="EAST";
+					vehicle="RU_Soldier_Sniper";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this";
+					description="Sniper (Spot marks on map, Lockpick, Camps restore)";
+					synchronizations[]={50};
 				};
 			};
 		};

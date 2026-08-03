@@ -37,7 +37,7 @@ class Mission
 	};
 	class Groups
 	{
-		items=66;
+		items=67;
 		class Item0
 		{
 			side="LOGIC";
@@ -1694,6 +1694,28 @@ class Mission
 					skill=0.60000002;
 					init="removeAllWeapons this; this allowdamage false; this setVariable [""wfbe_caster_slot"", true];";
 					description="Caster 2";
+				};
+			};
+		};
+		class Item66
+		{
+			side="EAST";
+			class Vehicles
+			{
+				items=1;
+				class Item0
+				{
+					position[]={20.8459,5.660299999999999,852.3643};
+					id=118;
+					side="EAST";
+					vehicle="TK_Soldier_EP1";
+					player="PLAY CDG";
+					leader=1;
+					rank="LIEUTENANT";
+					skill=0.60000002;
+					init="removeAllWeapons this; this setVariable [""task"",""medic""];";
+					description="Medic (Fast heal, Camps restore)";
+					synchronizations[]={49};
 				};
 			};
 		};
