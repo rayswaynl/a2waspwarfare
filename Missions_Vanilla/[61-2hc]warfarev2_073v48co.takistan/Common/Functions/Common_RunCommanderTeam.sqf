@@ -3487,6 +3487,27 @@ _hullVeh = [];
 if (count _hullVeh > 0) then {
 	["INFORMATION", Format ["HULLGC|v1|wipe side=%1 team=%2 hulls=%3", _sideID, _team, count _hullVeh]] Call WFBE_CO_FNC_AICOMLog;
 };
-{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x}} forEach (units _team);
-if (({isPlayer _x} count (units _team)) == 0) then {deleteGroup _team};
+//--- fable/aicom-team-cleanup-followup-20260802 (wave reconcile of #1942): the direct
+//--- forEach+deleteVehicle sweep above matched the 014EFCF4 seat-array/delete race
+//--- (units _team can still hold a Man seated in a vehicle). Scheduled in a Spawn so each
+//--- non-player deletion yields sleep 0, snapshots the unit list up front, records VEHDEL
+//--- telemetry via the existing LogVehDelete probe, and only deletes the group once no
+//--- player unit remains.
+[_team] Spawn {
+	Private ["_cleanupTeam","_cleanupUnits","_cleanupUnit"];
+	_cleanupTeam = _this select 0;
+	if (isNull _cleanupTeam) exitWith {};
+	_cleanupUnits = +(units _cleanupTeam);
+	{
+		_cleanupUnit = _x;
+		if (!isNull _cleanupUnit && {!isPlayer _cleanupUnit}) then {
+			["aicom-team-ended-unit", _cleanupUnit, ""] Call WFBE_CO_FNC_LogVehDelete;
+			deleteVehicle _cleanupUnit;
+			sleep 0;
+		};
+	} forEach _cleanupUnits;
+	if (!isNull _cleanupTeam && {({isPlayer _x} count (units _cleanupTeam)) == 0}) then {
+		deleteGroup _cleanupTeam;
+	};
+};
 };
