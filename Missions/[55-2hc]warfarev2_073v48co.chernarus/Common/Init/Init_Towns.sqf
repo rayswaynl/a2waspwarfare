@@ -40,4 +40,25 @@ if (_townReadyCount > 0) then {
 	townInit = false;
 	diag_log format ["TOWNINIT|v1|BLOCK|reason=NO_READY_TOWNS|candidates=%1", count _towns];
 	["WARNING", "Init_Towns.sqf: Town census blocked startup because no depot initialized."] Call WFBE_CO_FNC_LogContent;
+	//--- D6c LATE-RELEASE (2026-08-03): fail-closed must not mean fail-frozen. On a slow dedicated
+	//--- boot the shared 30s window above runs on REAL time (uiSleep) while every town's own
+	//--- Init_Town.sqf instance is still frozen in the mission-load phase, so the census can expire
+	//--- at zero ready towns on a perfectly healthy mission (burned live on wave0802, 2026-08-03:
+	//--- two boots wedged, zero RPT errors - Init_Server stalls on townInit and serverInitFull
+	//--- never sets). Keep the gate closed while towns[] is genuinely empty - a truly town-less
+	//--- mission stays blocked, preserving the zero-town match-start guard - but release it as soon
+	//--- as the first town self-registers (Init_Town.sqf:262 towns = towns + [_town]). Heartbeat
+	//--- every 60s so a held gate is visible in the RPT instead of silent.
+	[] Spawn {
+		private ["_wLate"];
+		_wLate = 0;
+		while {(count towns) < 1} do {
+			uiSleep 1;
+			_wLate = _wLate + 1;
+			if ((_wLate mod 60) == 0) then { diag_log format ["TOWNINIT|v1|WAIT|held=%1s", _wLate] };
+		};
+		townInit = true;
+		diag_log format ["TOWNINIT|v1|LATE_READY|ready=%1|held=%2s", count towns, _wLate];
+		["INITIALIZATION", "Init_Towns.sqf: Towns initialization released late (census recovered after load)."] Call WFBE_CO_FNC_LogContent;
+	};
 };
