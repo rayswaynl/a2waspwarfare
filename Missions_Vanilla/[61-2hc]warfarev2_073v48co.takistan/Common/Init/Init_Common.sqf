@@ -63,6 +63,7 @@ GetTownsHeld = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTow
 GetTownsIncome = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTownsIncome.sqf";
 GetUnitVehicle = Compile preprocessFileLineNumbers "Common\Functions\Common_GetUnitVehicle.sqf";
 HandleIncomingMissile = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleIncomingMissile.sqf";
+WFBE_CO_FNC_AutoCM_OA = Compile preprocessFileLineNumbers "Client\Module\CM\CM_AutoCM_OA.sqf"; //--- r120: compile in Common scope - the client-only lazy compile left the propagated incomingMissile EH spawning a nil symbol on server/HC per incoming missile.
 HandleShootBombs = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleShootBombs.sqf";
 HandleShootMissiles = Compile preprocessFileLineNumbers "Common\Functions\Common_HandleShootMissiles.sqf";
 IsArtillery = Compile preprocessFileLineNumbers "Common\Functions\Common_IsArtillery.sqf";

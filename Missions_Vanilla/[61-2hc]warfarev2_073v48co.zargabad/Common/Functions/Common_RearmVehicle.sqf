@@ -1,4 +1,4 @@
-Private["_amount","_get","_isArtillery","_magazines","_side","_type","_vehicle","_sam"];
+Private["_amount","_get","_irsCapacity","_isArtillery","_magazines","_side","_type","_vehicle","_sam"];
 
 _vehicle = _this select 0;
 _side = _this select 1;
@@ -34,7 +34,8 @@ if ((missionNamespace getVariable "WFBE_C_MODULE_WFBE_IRSMOKE") > 0) then {
 	//--- Make sure that the unit is defined in IRS_Init.
 	_get = missionNamespace getVariable Format ["%1_IRS", _type];
 	if (!isNil '_get' && !isNil {_vehicle getVariable "wfbe_irs_flares"}) then {
-		if ((_vehicle getVariable "wfbe_irs_flares") != (_get select 1)) then {_vehicle setVariable ["wfbe_irs_flares", _get select 1, true]};
+		_irsCapacity = (_get select 1) * (if (((_side) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_IRSMOKE > 1) then {2} else {1}); //--- r120: scale the refill by the upgrade level - the L2 doubling (Client_BuildUnit) was wiped back to the base count on every rearm.
+		if ((_vehicle getVariable "wfbe_irs_flares") != _irsCapacity) then {_vehicle setVariable ["wfbe_irs_flares", _irsCapacity, true]};
 	};
 };
 
