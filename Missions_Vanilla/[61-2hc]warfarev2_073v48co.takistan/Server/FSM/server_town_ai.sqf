@@ -87,6 +87,15 @@ for "_k" from 0 to ((count towns) - 1) step 1 do
 	//--- leg (WFBE_C_TOWNS_SORTIES_RTB); seeded here purely for clarity - the manager already defaults
 	//--- this to false via getVariable, so flag-off behaviour is unaffected either way.
 	_town setVariable ["wfbe_sortie_rtb", false];
+	//--- Terrain sector classifier (WFBE_C_TERRAIN_CLASSIFY_SECTORS, default 0 = INERT): once per town at
+	//--- boot, averages 5 jittered selectBestPlaces samples per axis (Houses/Trees/Forest/Hills) via
+	//--- Common_TerrainClassifySector.sqf and caches garrison/bush-camp/open-maneuver on the town object
+	//--- (wfbe_sector_class / wfbe_sector_classified) for the AICOM composition nudge in
+	//--- Server_GetTownGroups.sqf / _Defender.sqf (gated separately on WFBE_C_TERRAIN_SECTOR_COMPOSITION).
+	//--- Classify-only: flag-off leaves wfbe_sector_classified unset and the mission byte-identical to HEAD.
+	if ((missionNamespace getVariable ["WFBE_C_TERRAIN_CLASSIFY_SECTORS", 0]) > 0) then {
+		[_town] Call WFBE_CO_FNC_TerrainClassifySector;
+	};
 	sleep _townInitSleep;
 };
 

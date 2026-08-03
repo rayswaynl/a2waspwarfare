@@ -81,6 +81,23 @@ switch (_town getVariable "wfbe_town_type") do { // _units = [[group type, force
 	};
 };
 
+//--- Terrain sector composition nudge (WFBE_C_TERRAIN_SECTOR_COMPOSITION, default 0 = INERT): small
+//--- clamped bias to _percentage_inf from the phase-1 terrain classifier (Common_TerrainClassifySector.sqf,
+//--- WFBE_C_TERRAIN_CLASSIFY_SECTORS). Hard-dependent on wfbe_sector_classified == true - never a
+//--- getVariable default, so an unclassified town (phase 1 off, or not yet reached in the boot loop)
+//--- gets zero nudge. Never touches _groups_max/total spawn count - GUER-volume doctrine preserved.
+if ((missionNamespace getVariable ["WFBE_C_TERRAIN_SECTOR_COMPOSITION", 0]) > 0 && {_town getVariable ["wfbe_sector_classified", false]}) then {
+	private ["_sectorClass","_sectorNudge"];
+	_sectorClass = _town getVariable ["wfbe_sector_class", ""];
+	_sectorNudge = 0;
+	if (_sectorClass == "garrison") then {_sectorNudge = missionNamespace getVariable ["WFBE_C_TERRAIN_SECTOR_NUDGE_GARRISON", 8]};
+	if (_sectorClass == "bush-camp") then {_sectorNudge = missionNamespace getVariable ["WFBE_C_TERRAIN_SECTOR_NUDGE_BUSHCAMP", 4]};
+	if (_sectorClass == "open-maneuver") then {_sectorNudge = missionNamespace getVariable ["WFBE_C_TERRAIN_SECTOR_NUDGE_OPEN", -8]};
+	if (_sectorNudge != 0) then {
+		_percentage_inf = (_percentage_inf + _sectorNudge) max 10 min 90;
+	};
+};
+
 //--- B74.2: re-derive the defender unit coef from the LIVE pop-tier instead of the static
 //--- WFBE_C_TOWNS_UNITS_DEFENDER_COEF (which was computed once at init from WFBE_C_TOWNS_DEFENDER).
 //--- WFBE_C_TOWNS_DEFENDER_BY_TIER is the tiered version of that same difficulty knob, so scaling the
