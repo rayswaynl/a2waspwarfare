@@ -1,358 +1,402 @@
 {
-  "Client/Client_EndGame.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Client/FSM/updatesalvage.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Client/Functions/Client_CleanupDelegatedTownAI.sqf": {
-    "probed": 1,
-    "total": 1
-  },
-  "Client/Functions/Client_DelegateTownAI.sqf": {
-    "probed": 1,
-    "total": 1
-  },
-  "Client/Functions/Client_FNC_OnFired.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Client/Functions/Client_TeambarEnsureSlot1.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Client/GUI/GUI_Menu.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Client/Module/CM/CM_AutoCM_OA.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Client/Module/CoIn/coin_interface.sqf": {
-    "probed": 0,
-    "total": 20
-  },
-  "Client/Module/FPV/fpv.sqf": {
-    "probed": 0,
-    "total": 3
-  },
-  "Client/Module/FPV/fpv_interface.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Client/Module/Nuke/damage.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Client/Module/Nuke/nuke.sqf": {
-    "probed": 0,
-    "total": 10
-  },
-  "Client/Module/Nuke/nukeincoming.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Client/Module/Nuke/radzone.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Client/Module/Skill/Skill_Salvage.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Client/Module/UAV/uav.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Client/PVFunctions/HandleSpecial.sqf": {
-    "probed": 0,
-    "total": 12
-  },
-  "Common/Functions/Common_AddVehicleMarking.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Common/Functions/Common_ChangeUnitGroup.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Common/Functions/Common_CreateTeam.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Common/Functions/Common_CreateTownUnits.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Common/Functions/Common_HandleIncomingMissile.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Common/Functions/Common_HandleShootBombs.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Common/Functions/Common_HandleShootMissiles.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Common/Functions/Common_RunCommanderTeam.sqf": {
-    "probed": 2,
-    "total": 3
-  },
-  "Common/Functions/Common_RunSidePatrol.sqf": {
-    "probed": 0,
-    "total": 3
-  },
-  "Common/Functions/Common_SpawnFactionSmoke.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Common/Functions/Common_TrashObject.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Common/Init/Init_CommonConstants.sqf": {
-    "probed": 0,
-    "total": 4
-  },
-  "Common/Module/Arty/ARTY_HandleILLUM.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Common/Module/Arty/ARTY_HandleSADARM.sqf": {
-    "probed": 0,
-    "total": 7
-  },
-  "Common/Module/IRS/IRS_CreateSmoke.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Common/Module/IRS/IRS_DeploySmoke.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/AI/Commander/AI_Commander_AirResp.sqf": {
-    "probed": 0,
-    "total": 4
-  },
-  "Server/AI/Commander/AI_Commander_BaseSell.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Server/AI/Commander/AI_Commander_DisbandLowTier.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/AI/Commander/AI_Commander_MHQReloc.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Server/AI/Commander/AI_Commander_Produce.sqf": {
-    "probed": 1,
-    "total": 2
-  },
-  "Server/AI/Commander/AI_Commander_Teams.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/AI/Server_GuerDirector.sqf": {
-    "probed": 0,
-    "total": 5
-  },
-  "Server/Construction/Construction_HQSite.sqf": {
-    "probed": 0,
-    "total": 3
-  },
-  "Server/Construction/Construction_MediumSite.sqf": {
-    "probed": 0,
-    "total": 4
-  },
-  "Server/Construction/Construction_SmallSite.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Server/Construction/Construction_StationaryDefense.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Server/FSM/basearea.sqf": {
-    "probed": 0,
-    "total": 4
-  },
-  "Server/FSM/cleaners/crater_cleaner.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Server/FSM/cleaners/droppeditems_cleaner.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/FSM/cleaners/mines_cleaner.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/FSM/cleaners/ruins_cleaner.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/FSM/server_aicom_orphan_heal.sqf": {
-    "probed": 2,
-    "total": 4
-  },
-  "Server/FSM/server_groupsGC.sqf": {
-    "probed": 7,
-    "total": 15
-  },
-  "Server/FSM/server_side_patrols.sqf": {
-    "probed": 2,
-    "total": 2
-  },
-  "Server/FSM/server_town.sqf": {
-    "probed": 0,
-    "total": 12
-  },
-  "Server/FSM/server_town_ai.sqf": {
-    "probed": 5,
-    "total": 9
-  },
-  "Server/Functions/AI_Commander_Wildcard.sqf": {
-    "probed": 0,
-    "total": 9
-  },
-  "Server/Functions/AI_Commander_Wildcard_GUER.sqf": {
-    "probed": 0,
-    "total": 22
-  },
-  "Server/Functions/Server_BuildingKilled.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/Functions/Server_HandleEmptyVehicle.sqf": {
-    "probed": 2,
-    "total": 2
-  },
-  "Server/Functions/Server_MHQRepair.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/Functions/Server_ManageTownDefenses.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/Functions/Server_NavalHVT_BubbleComplete.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/Functions/Server_OnHQKilled.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Server/Functions/Server_OnPlayerConnected.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/Functions/Server_OnPlayerDisconnected.sqf": {
-    "probed": 0,
-    "total": 4
-  },
-  "Server/Functions/Server_OperateTownDefensesUnits.sqf": {
-    "probed": 0,
-    "total": 4
-  },
-  "Server/Functions/Server_ProvisionAirfieldHangar.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/Functions/Server_SpawnStructureDressing.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/Init/Init_IcbmTel.sqf": {
-    "probed": 0,
-    "total": 6
-  },
-  "Server/Init/Init_NavalHVT.sqf": {
-    "probed": 0,
-    "total": 18
-  },
-  "Server/Init/Init_Server.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Server/Init/Init_ZgKoth.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/PVFunctions/RequestFOBStructure.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/PVFunctions/RequestOnUnitKilled.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "Server/PVFunctions/RequestVehicleSell.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Server/Server_AmbientSkirmish.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Server/Server_GarrisonSortie.sqf": {
-    "probed": 3,
-    "total": 2
-  },
-  "Server/Server_GuerAirDef.sqf": {
-    "probed": 28,
-    "total": 29
-  },
-  "Server/Server_Oilfields.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "Server/Server_TownGarrisonDressing.sqf": {
-    "probed": 8,
-    "total": 8
-  },
-  "Server/Server_USVFlotilla.sqf": {
-    "probed": 4,
-    "total": 5
-  },
-  "Server/Support/Support_GuerHeliDrop.sqf": {
-    "probed": 0,
-    "total": 5
-  },
-  "Server/Support/Support_ParaAmmo.sqf": {
-    "probed": 0,
-    "total": 5
-  },
-  "Server/Support/Support_ParaVehicles.sqf": {
-    "probed": 0,
-    "total": 4
-  },
-  "Server/Support/Support_Paratroopers.sqf": {
-    "probed": 0,
-    "total": 3
-  },
-  "Server/Support/Support_ScudStrike.sqf": {
-    "probed": 0,
-    "total": 2
-  },
-  "WASP/actions/SkinSelector/SkinSelector_Apply.sqf": {
-    "probed": 0,
-    "total": 9
-  },
-  "WASP/actions/SkinSelector/SkinSelector_CopyGear.sqf": {
-    "probed": 0,
-    "total": 1
-  },
-  "WASP/rpg_dropping/DropRPG.sqf": {
-    "probed": 0,
-    "total": 2
-  }
+ "Client/Client_EndGame.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Client/FSM/client_crater_cleaner.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Client/FSM/updatesalvage.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Client/Functions/Client_CleanupDelegatedTownAI.sqf": {
+  "probed": 1,
+  "total": 2
+ },
+ "Client/Functions/Client_DelegateTownAI.sqf": {
+  "probed": 1,
+  "total": 1
+ },
+ "Client/Functions/Client_FNC_OnFired.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Client/Functions/Client_TeambarEnsureSlot1.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Client/GUI/GUI_Menu.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Client/Module/CM/CM_AutoCM_OA.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Client/Module/CoIn/coin_interface.sqf": {
+  "probed": 0,
+  "total": 20
+ },
+ "Client/Module/FPV/fpv.sqf": {
+  "probed": 0,
+  "total": 3
+ },
+ "Client/Module/FPV/fpv_interface.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Client/Module/Nuke/damage.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Client/Module/Nuke/nuke.sqf": {
+  "probed": 0,
+  "total": 10
+ },
+ "Client/Module/Nuke/nukeincoming.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Client/Module/Nuke/radzone.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Client/Module/Skill/Skill_Salvage.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Client/Module/UAV/uav.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Client/PVFunctions/HandleSpecial.sqf": {
+  "probed": 0,
+  "total": 16
+ },
+ "Common/Functions/Common_AddVehicleMarking.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Common/Functions/Common_ChangeUnitGroup.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Common/Functions/Common_CreateTeam.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Common/Functions/Common_CreateTownUnits.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Common/Functions/Common_HandleIncomingMissile.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Common/Functions/Common_HandleShootBombs.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Common/Functions/Common_HandleShootMissiles.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Common/Functions/Common_RunCommanderTeam.sqf": {
+  "probed": 6,
+  "total": 5
+ },
+ "Common/Functions/Common_RunSidePatrol.sqf": {
+  "probed": 0,
+  "total": 3
+ },
+ "Common/Functions/Common_RunUnstuckRecovery.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Common/Functions/Common_SafeCrewDelete.sqf": {
+  "probed": 0,
+  "total": 5
+ },
+ "Common/Functions/Common_SpawnFactionSmoke.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Common/Functions/Common_TrashObject.sqf": {
+  "probed": 0,
+  "total": 4
+ },
+ "Common/Init/Init_CommonConstants.sqf": {
+  "probed": 0,
+  "total": 4
+ },
+ "Common/Module/Arty/ARTY_HandleILLUM.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Common/Module/Arty/ARTY_HandleSADARM.sqf": {
+  "probed": 0,
+  "total": 10
+ },
+ "Common/Module/IRS/IRS_CreateSmoke.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Common/Module/IRS/IRS_DeploySmoke.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/AI/Commander/AI_Commander_AirResp.sqf": {
+  "probed": 0,
+  "total": 8
+ },
+ "Server/AI/Commander/AI_Commander_AirStrike.sqf": {
+  "probed": 0,
+  "total": 6
+ },
+ "Server/AI/Commander/AI_Commander_BaseSell.sqf": {
+  "probed": 0,
+  "total": 5
+ },
+ "Server/AI/Commander/AI_Commander_DisbandLowTier.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/AI/Commander/AI_Commander_MHQReloc.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Server/AI/Commander/AI_Commander_Produce.sqf": {
+  "probed": 1,
+  "total": 3
+ },
+ "Server/AI/Commander/AI_Commander_Teams.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/AI/Server_GuerDirector.sqf": {
+  "probed": 0,
+  "total": 5
+ },
+ "Server/Construction/Construction_HQSite.sqf": {
+  "probed": 0,
+  "total": 4
+ },
+ "Server/Construction/Construction_MediumSite.sqf": {
+  "probed": 0,
+  "total": 5
+ },
+ "Server/Construction/Construction_SmallSite.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Server/Construction/Construction_StationaryDefense.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Server/FSM/basearea.sqf": {
+  "probed": 0,
+  "total": 4
+ },
+ "Server/FSM/cleaners/crater_cleaner.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Server/FSM/cleaners/droppeditems_cleaner.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Server/FSM/cleaners/mines_cleaner.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/FSM/cleaners/ruins_cleaner.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Server/FSM/server_aicom_orphan_heal.sqf": {
+  "probed": 2,
+  "total": 4
+ },
+ "Server/FSM/server_groupsGC.sqf": {
+  "probed": 7,
+  "total": 16
+ },
+ "Server/FSM/server_side_patrols.sqf": {
+  "probed": 2,
+  "total": 2
+ },
+ "Server/FSM/server_town.sqf": {
+  "probed": 0,
+  "total": 12
+ },
+ "Server/FSM/server_town_ai.sqf": {
+  "probed": 4,
+  "total": 9
+ },
+ "Server/Functions/AI_Commander_Wildcard.sqf": {
+  "probed": 0,
+  "total": 13
+ },
+ "Server/Functions/AI_Commander_Wildcard_GUER.sqf": {
+  "probed": 0,
+  "total": 22
+ },
+ "Server/Functions/Server_BombProbe.sqf": {
+  "probed": 0,
+  "total": 6
+ },
+ "Server/Functions/Server_BuildingKilled.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Server/Functions/Server_ForwardFOBKilled.sqf": {
+  "probed": 0,
+  "total": 3
+ },
+ "Server/Functions/Server_HandleEmptyVehicle.sqf": {
+  "probed": 3,
+  "total": 2
+ },
+ "Server/Functions/Server_HandleSpecial.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Server/Functions/Server_MHQRepair.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/Functions/Server_ManageTownDefenses.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/Functions/Server_NavalHVT_BubbleComplete.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/Functions/Server_OnHQKilled.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Server/Functions/Server_OnPlayerConnected.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/Functions/Server_OnPlayerDisconnected.sqf": {
+  "probed": 0,
+  "total": 4
+ },
+ "Server/Functions/Server_OperateTownDefensesUnits.sqf": {
+  "probed": 0,
+  "total": 5
+ },
+ "Server/Functions/Server_PatrolAirPass.sqf": {
+  "probed": 0,
+  "total": 4
+ },
+ "Server/Functions/Server_ProvisionAirfieldHangar.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/Functions/Server_SpawnStructureDressing.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/Init/Init_IcbmTel.sqf": {
+  "probed": 0,
+  "total": 6
+ },
+ "Server/Init/Init_NavalHVT.sqf": {
+  "probed": 0,
+  "total": 26
+ },
+ "Server/Init/Init_Server.sqf": {
+  "probed": 0,
+  "total": 7
+ },
+ "Server/Init/Init_ZgKoth.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/PVFunctions/RequestFOBStructure.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/PVFunctions/RequestForwardFOB.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/PVFunctions/RequestOnUnitKilled.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "Server/PVFunctions/RequestVehicleSell.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Server/Server_AicomSupplySquad.sqf": {
+  "probed": 4,
+  "total": 4
+ },
+ "Server/Server_AmbientSkirmish.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "Server/Server_GarrisonSortie.sqf": {
+  "probed": 3,
+  "total": 2
+ },
+ "Server/Server_GuerAirDef.sqf": {
+  "probed": 28,
+  "total": 29
+ },
+ "Server/Server_Oilfields.sqf": {
+  "probed": 0,
+  "total": 3
+ },
+ "Server/Server_TownGarrisonDressing.sqf": {
+  "probed": 8,
+  "total": 8
+ },
+ "Server/Server_USVFlotilla.sqf": {
+  "probed": 5,
+  "total": 6
+ },
+ "Server/Support/Support_CargoAirdrop.sqf": {
+  "probed": 0,
+  "total": 21
+ },
+ "Server/Support/Support_GuerHeliDrop.sqf": {
+  "probed": 0,
+  "total": 5
+ },
+ "Server/Support/Support_ParaAmmo.sqf": {
+  "probed": 0,
+  "total": 9
+ },
+ "Server/Support/Support_ParaVehicles.sqf": {
+  "probed": 0,
+  "total": 9
+ },
+ "Server/Support/Support_Paratroopers.sqf": {
+  "probed": 0,
+  "total": 3
+ },
+ "Server/Support/Support_ScudStrike.sqf": {
+  "probed": 0,
+  "total": 2
+ },
+ "WASP/actions/SkinSelector/SkinSelector_Apply.sqf": {
+  "probed": 0,
+  "total": 4
+ },
+ "WASP/actions/SkinSelector/SkinSelector_CopyGear.sqf": {
+  "probed": 0,
+  "total": 1
+ },
+ "WASP/rpg_dropping/DropRPG.sqf": {
+  "probed": 0,
+  "total": 2
+ }
 }

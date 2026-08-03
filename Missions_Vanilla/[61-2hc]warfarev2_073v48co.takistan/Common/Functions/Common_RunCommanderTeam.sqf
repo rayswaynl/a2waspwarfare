@@ -2155,8 +2155,8 @@ while {!WFBE_GameOver && _alive} do {
 									_smoke0 = _this select 0;
 									_smoke1 = _this select 1;
 									sleep 20;
-									if (!isNull _smoke0) then {deleteVehicle _smoke0};
-									if (!isNull _smoke1) then {deleteVehicle _smoke1};
+									if (!isNull _smoke0) then {["aicomteam-smoke", _smoke0, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _smoke0};
+									if (!isNull _smoke1) then {["aicomteam-smoke", _smoke1, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _smoke1};
 								};
 								_team setVariable ["wfbe_aicom_smoke_last", time];
 								diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|SMOKE|ASSAULT|team=" + (str _team) + "|cls=" + _asCls);
@@ -2871,8 +2871,8 @@ while {!WFBE_GameOver && _alive} do {
 											_smoke0 = _this select 0;
 											_smoke1 = _this select 1;
 											sleep 20;
-											if (!isNull _smoke0) then {deleteVehicle _smoke0};
-											if (!isNull _smoke1) then {deleteVehicle _smoke1};
+											if (!isNull _smoke0) then {["aicomteam-smoke", _smoke0, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _smoke0};
+											if (!isNull _smoke1) then {["aicomteam-smoke", _smoke1, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _smoke1};
 										};
 										_team setVariable ["wfbe_aicom_smoke_last", time];
 										diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|SMOKE|BREAKOFF|team=" + (str _team) + "|cls=" + _smkCls);
@@ -3487,6 +3487,6 @@ _hullVeh = [];
 if (count _hullVeh > 0) then {
 	["INFORMATION", Format ["HULLGC|v1|wipe side=%1 team=%2 hulls=%3", _sideID, _team, count _hullVeh]] Call WFBE_CO_FNC_AICOMLog;
 };
-{if (!isNull _x && {!isPlayer _x}) then {deleteVehicle _x}} forEach (units _team);
+{if (!isNull _x && {!isPlayer _x}) then {["aicomteam-wipe", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _team);
 if (({isPlayer _x} count (units _team)) == 0) then {deleteGroup _team};
 };

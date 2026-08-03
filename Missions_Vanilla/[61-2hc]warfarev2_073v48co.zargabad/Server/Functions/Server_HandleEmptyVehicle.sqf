@@ -55,7 +55,8 @@ while {alive _vehicle && {_reapRounds < _maxReapRounds}} do {
 		_reapAttempts = _reapAttempts + 1;
 		["empty-timeout-hull", _vehicle, Format ["delay=%1 attempt=%2/%3 round=%4/%5", _delay, _reapAttempts, _maxReapAttempts, _reapRounds + 1, _maxReapRounds]] Call WFBE_CO_FNC_LogVehDelete;
 		if (local _vehicle) then {
-			deleteVehicle _vehicle;
+			["emptyveh-reap", _vehicle, ""] Call WFBE_CO_FNC_LogVehDelete;
+	deleteVehicle _vehicle;
 		} else {
 			if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) > 0) then {
 				_vehicle setVariable ["wfbe_empty_vehicle_reap", true, true];

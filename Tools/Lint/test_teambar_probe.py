@@ -102,7 +102,9 @@ class TeambarProbeTests(unittest.TestCase):
         killed = code("Client/Functions/Client_OnKilled.sqf")
         resync = 'if (!isNull (group player)) then {WFBE_Client_Team = group player};'
         self.assertIn(resync, killed)
-        self.assertLess(killed.index('waitUntil {alive player}'), killed.index(resync))
+        # scheduler-leak fold reshaped the respawn wait (bounded sleep-poll form);
+        # anchor on its stable prefix - the resync must still follow it.
+        self.assertLess(killed.index('waitUntil {sleep 0.2; alive player'), killed.index(resync))
         self.assertLess(killed.index(resync), killed.index('if (group player == WFBE_Client_Team) then {'))
         self.assertLess(killed.index(resync), killed.index('"respawn", "rejoin-check"'))
 

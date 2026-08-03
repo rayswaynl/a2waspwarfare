@@ -37,10 +37,15 @@ def test_requester_side_is_verified_before_any_build_gate():
             "_reqPlayer = if (count _this > 4) then {_this select 4} else {objNull};"
         )
 
-        # A verified same-side player is required - client-claimed _side is never
-        # trusted on its own (mirrors RequestMHQRepair.sqf / RequestSiteClearance.sqf).
-        player_check = text.index('if (!isNull _reqPlayer && {isPlayer _reqPlayer}) then {')
+        # HARDEN u2 (60-audit) shape - STRONGER than the original fix: a missing or
+        # non-player requester is rejected for EVERY structure index (the old
+        # index-0/CommandCenter no-player exception is gone; the HQ caller sends the
+        # real player object), and client-claimed _side is never trusted on its own.
+        player_check = text.index('if (isNull _reqPlayer || {!isPlayer _reqPlayer}) then {')
         assert capture < player_check
+        no_player_block = text[player_check: player_check + 400]
+        assert '_reject = true;' in no_player_block
+        assert 'StructureRequesterMismatch' in no_player_block
 
         side_gate = text.index('if !((side group _reqPlayer) in [_side]) then {')
         assert player_check < side_gate
@@ -48,14 +53,13 @@ def test_requester_side_is_verified_before_any_build_gate():
         assert '_reject = true;' in side_gate_block
         assert 'StructureRequesterMismatch' in side_gate_block
 
-        # The no-player branch only tolerates a missing requester for structure
-        # index 0 (CommandCenter / HQ mobilize toggle) - every other structure
-        # index is rejected, not silently waved through.
-        no_player_gate = text.index('if (_index != 0) then {')
+        # HQ deploy/pack (index 0) additionally requires the acting commander
+        # team's group - any same-side player is no longer enough.
+        no_player_gate = text.index('if (!_reject && _index == 0) then {')
         assert side_gate < no_player_gate
-        no_player_block = text[no_player_gate: no_player_gate + 400]
+        no_player_block = text[no_player_gate: no_player_gate + 500]
         assert '_reject = true;' in no_player_block
-        assert 'StructureRequesterMismatch' in no_player_block
+        assert 'GetCommanderTeam' in no_player_block
 
         # The side-binding gate runs BEFORE any of the CBRadar/AARadar/Bank
         # duplicate-race pending-reservation gates, so a forged/mismatched

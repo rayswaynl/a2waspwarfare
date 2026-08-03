@@ -251,10 +251,10 @@ while {!WFBE_GameOver} do {
 										diag_log Format ["AICOMSUPPLY|SPAWN|side=%1|mode=%2|class=%3", _sideText, _mode, _cls];
 										["INFORMATION", Format ["Server_AicomSupplySquad.sqf: [%1] %2 supply squad spawned (%3).", _sideText, _mode, _cls]] Call WFBE_CO_FNC_LogContent;
 									} else {
-										deleteVehicle _veh; deleteGroup _grp;
+										["supplysquad-teardown", _veh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _veh; deleteGroup _grp;
 									};
 								} else {
-									deleteVehicle _veh;
+									["supplysquad-reap", _veh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _veh;
 									if (!isNull _grp) then {deleteGroup _grp};
 								};
 							};
