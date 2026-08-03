@@ -485,7 +485,13 @@ _IDCS = _IDCS - [_currentIDC];
 	
 	//--- Rebuild the catalogue when a side upgrade completes while this dialog remains open.
 	_shopUpgrades = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;
-	if (!(_shopUpgrades in [_shopUpgradesSeen])) then {_shopUpgradesSeen = _shopUpgrades + []; _update = true};
+	//--- 2026-08-03 LIVE FIX: this was `if (!(_shopUpgrades in [_shopUpgradesSeen]))`. On A2 OA `in`
+	//--- compares ARRAYS BY REFERENCE, so a rebuilt array never matches the stored copy - the test was
+	//--- true on EVERY loop pass, forcing _update every tick: the catalogue rebuilt continuously and
+	//--- the player's selection snapped back to the top of the list on every click (owner report).
+	//--- Compare by VALUE via str; equal contents give equal strings, so a rebuild happens only when
+	//--- the side's upgrade set actually changes - the original intent.
+	if ((str _shopUpgrades) != (str _shopUpgradesSeen)) then {_shopUpgradesSeen = _shopUpgrades + []; _update = true};
 
 	//--- Update tabs.
 	if (_update) then {

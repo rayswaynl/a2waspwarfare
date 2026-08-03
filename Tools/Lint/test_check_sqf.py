@@ -541,7 +541,12 @@ class BuyMenuUpgradeRefreshTests(unittest.TestCase):
         Path("Missions_Vanilla/[61-2hc]warfarev2_073v48co.zargabad/Client/GUI/GUI_Menu_BuyUnits.sqf"),
     )
     SNAPSHOT = "_shopUpgradesSeen = (sideJoined) Call WFBE_CO_FNC_GetSideUpgrades;"
-    REFRESH = "if (!(_shopUpgrades in [_shopUpgradesSeen])) then {_shopUpgradesSeen = _shopUpgrades + []; _update = true};"
+    # 2026-08-03: the original contract asserted `if (!(_shopUpgrades in [_shopUpgradesSeen]))`.
+    # On A2 OA `in` compares arrays BY REFERENCE, so that test was true on every loop pass and the
+    # shop rebuilt continuously - the player's selection snapped back to the top of the list on
+    # every click (owner-reported live regression). The contract is now the value comparison.
+    REFRESH = "if ((str _shopUpgrades) != (str _shopUpgradesSeen)) then {_shopUpgradesSeen = _shopUpgrades + []; _update = true};"
+    FORBIDDEN_REFRESH = "_shopUpgrades in [_shopUpgradesSeen]"
 
     def test_shop_rebuilds_after_side_upgrade_changes(self) -> None:
         root = Path(__file__).resolve().parents[2]
@@ -549,6 +554,8 @@ class BuyMenuUpgradeRefreshTests(unittest.TestCase):
             source = (root / relative_path).read_text(encoding="utf-8")
             self.assertIn(self.SNAPSHOT, source, relative_path)
             self.assertIn(self.REFRESH, source, relative_path)
+            # Reference-comparison form must never come back: it forces a rebuild every pass.
+            self.assertNotIn(self.FORBIDDEN_REFRESH, source, relative_path)
             self.assertLess(source.index(self.REFRESH), source.index("//--- Update tabs."), relative_path)
 
 
