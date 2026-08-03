@@ -7,7 +7,8 @@ B74.1's scripted razer in AI_Commander_Strategy.sqf only ever runs when `_strike
 permanently unreachable. This suite asserts the NEW post-HQ-death mop-up closer breaks that
 dependency entirely: its arm condition does not reference `_strikeOn` at all, it is declared textually
 AFTER the DECAP-gated V1 block closes (i.e. it is not nested inside the suppressed block and cannot
-inherit that suppression), and its own flag defaults to 0 (byte-identical to HEAD when off). It also
+inherit that suppression), and its owner-directed flag registration remains explicitly armed at 1;
+the rollback value 0 remains byte-identical to HEAD when off. It also
 asserts the companion BASE-ASSAULT engage-gate patch exists behind the SAME flag, since a reachable
 trigger with no engage-gate patch reproduces the exact same live-idle failure with a different name.
 """
@@ -34,10 +35,10 @@ class OverrunRazerReachabilityTests(unittest.TestCase):
         self.driver = code("Common/Functions/Common_RunCommanderTeam.sqf")
         self.constants = code("Common/Init/Init_CommonConstants.sqf")
 
-    def test_new_flag_defaults_to_zero_and_is_never_reassigned(self) -> None:
+    def test_new_flag_is_armed_and_never_reassigned(self) -> None:
         idx = self.constants.index('if (isNil "%s")' % FLAG)
         line = self.constants[idx: self.constants.index("\n", idx)]
-        self.assertIn("= 0}", line)
+        self.assertIn("= 1}", line)
         # Exactly one declaration site (append-only convention; never re-defaulted elsewhere).
         self.assertEqual(self.constants.count('"%s"' % FLAG), 1)
 
