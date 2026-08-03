@@ -607,6 +607,8 @@ if (worldName == "Zargabad") then {
 		if (isNil "WFBE_C_AICOM_MOTOR_BIAS") then {WFBE_C_AICOM_MOTOR_BIAS = 1.5}; //--- B757 (Ray 2026-07-20) ROSTER COUNCIL: mix-first inf reduction instead of bias push (B756 overshoot guard).
 		//--- B755 RE-MOUNT FOR THE LONG LEG: a team re-tasked to a far town after a prior capture has its infantry ON FOOT (the capture dismount unassigned them). 1 = re-seat them into the team's drivable hulls before the road-march so they RIDE the long leg instead of foot-marching (no-op on the first march). 0 = old behaviour.
 		if (isNil "WFBE_C_AICOM_REMOUNT_LONG_LEG") then {WFBE_C_AICOM_REMOUNT_LONG_LEG = 1};
+		//--- r108 B66 REAL-LEG GUER-AVOID: re-run the hostile-town route scan on the ACTUAL leg (leader -> live order dest) at the long-leg road-march; when a hostile garrison sits astride the drive path the re-mount is skipped and seated cargo riders dismount (the founding mount-block scans leader->spawn - no objective exists at founding - so it never protected a real route). 0 = legacy (no live scan).
+		if (isNil "WFBE_C_AICOM_GUER_AVOID_REALLEG") then {WFBE_C_AICOM_GUER_AVOID_REALLEG = 0};
 		//--- B756 (Ray 2026-06-26) DISMOUNT-CARRIER bias: within the team-template draw, multiply a template's weight if it carries INFANTRY dismounts (so IFV/APC + squad beat bare MBTs in the heavy bucket = "infantry seated in armed vehicles" rather than gun-tanks). 1.0 = no-op.
 		if (isNil "WFBE_C_AICOM_DISMOUNT_BIAS") then {WFBE_C_AICOM_DISMOUNT_BIAS = 1.7}; //--- B757 (Ray 2026-07-20) ROSTER COUNCIL: mix-first inf reduction instead of bias push (B756 overshoot guard).
 	//--- Codex review MEDIUM fix: crew-only dismount (Common_RunCommanderTeam.sqf) threat-gate radius - see the dismount-decision block there.
