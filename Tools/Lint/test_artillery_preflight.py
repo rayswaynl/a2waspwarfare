@@ -30,6 +30,12 @@ def test_player_artillery_discards_stale_or_malformed_request():
     assert 'setVariable ["wfbe_aicom_arty_request", []]' in source[branch_start:branch_end]
 
 
+def test_player_crew_eject_routes_to_the_unit_owner():
+    text = SOURCE.read_text(encoding="utf-8-sig")
+    assert '[_x, "HandleSpecial", ["action-perform", _x, "getOut", _artillery]] Call WFBE_CO_FNC_SendToClient;' in text
+
+
 if __name__ == "__main__":
     test_artillery_reservation_follows_preflight_validation()
     test_player_artillery_discards_stale_or_malformed_request()
+    test_player_crew_eject_routes_to_the_unit_owner()
