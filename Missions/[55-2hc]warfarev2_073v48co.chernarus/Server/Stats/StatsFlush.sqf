@@ -42,7 +42,7 @@ while {true} do {
 		WFBE_WASPSTAT_SEQ = WFBE_WASPSTAT_SEQ + 1;
 		_line = "WASPSTAT|v1|" + str WFBE_WASPSTAT_SEQ;
 		{
-			private ["_uid","_buf","_sideNum","_csv"];
+			private ["_uid","_buf","_sideNum","_csv","_playerName","_safeName","_char"];
 			_uid = _x;
 			_buf = missionNamespace getVariable ["WFBE_STAT_BUF_" + _uid, []];
 			//--- HC RETROACTIVE PURGE: RecordStat now refuses stamped HC uids, but rows can still be
@@ -62,7 +62,16 @@ while {true} do {
 				_csv = "";
 				{ _csv = _csv + (str _x) + ","; } forEach _buf;   // 15 deltas
 				_csv = _csv + (str _sideNum);                      // + trailing side
-				_line = _line + "|" + _uid + ":" + _csv + "~" + (missionNamespace getVariable ["WFBE_STAT_NAME_" + _uid, ""]); //--- PR#84: append ~<name> after the numeric csv+side (numeric stays before the ~).
+				//--- Player names are untrusted text. WASPSTAT is pipe-delimited and diag_log quotes each RPT line, so remove field/line/quote delimiters and bound the display tail before appending it.
+				_playerName = missionNamespace getVariable ["WFBE_STAT_NAME_" + _uid, ""];
+				_safeName = "";
+				{
+					if ((count _safeName) < 48) then {
+						_char = if (_x in [10,13,34,124,126]) then {"_"} else {toString [_x]};
+						_safeName = _safeName + _char;
+					};
+				} forEach (toArray _playerName);
+				_line = _line + "|" + _uid + ":" + _csv + "~" + _safeName; //--- PR#84: append ~<name> after the numeric csv+side (numeric stays before the ~).
 				missionNamespace setVariable ["WFBE_STAT_BUF_" + _uid, nil];   // clear buffer (delta sent)
 				missionNamespace setVariable ["WFBE_STAT_NAME_" + _uid, nil]; //--- PR#84: clear cached name.
 			};
