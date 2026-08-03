@@ -131,6 +131,27 @@ while {!WFBE_GameOver} do {
     _tick  = _tick + 1;
     _elmin = floor (diag_tickTime / 60);
 
+    //--- Ledger membership is not static: GUER can capture a WEST/EAST town after this
+    //--- worker has seeded. Adopt it once so the next regen/assessment/funding passes
+    //--- include its defender state. Keep lost GUER records for the existing retake path.
+    {
+        private ["_adoptTown","_adoptSide","_adoptKnown","_adoptGrps","_adoptBase","_adoptRec"];
+        _adoptTown = _x;
+        _adoptSide = _adoptTown getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+        if (_adoptSide == WFBE_C_GUER_ID || {_adoptSide == WFBE_C_UNKNOWN_ID}) then {
+            _adoptKnown = false;
+            { if ((_x select 0) == _adoptTown) then {_adoptKnown = true} } forEach _ledger;
+            if (!_adoptKnown) then {
+                _adoptGrps = [_adoptTown] call _fnGuerGroups;
+                _adoptBase = if (count _adoptGrps > 0) then {1.0} else {0.5};
+                _adoptRec = [_adoptTown, _adoptBase, _adoptBase, 0, 0, count _adoptGrps, 0];
+                _ledger set [count _ledger, _adoptRec];
+                _ledgerCount = _ledgerCount + 1;
+                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_LEDGER_ADOPT town=%2 baseline=%3", _elmin, _adoptTown, _adoptBase];
+            };
+        };
+    } forEach towns;
+
     //--------------------------------------------------------------------
     // PHASE 1: REGEN - advance each town strength toward baseline.
     //--------------------------------------------------------------------
