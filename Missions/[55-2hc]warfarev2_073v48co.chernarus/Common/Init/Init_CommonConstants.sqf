@@ -3554,5 +3554,10 @@ if (isNil "WFBE_C_SPECTATOR_MOUSE_SMOOTH") then {WFBE_C_SPECTATOR_MOUSE_SMOOTH =
 if (isNil "WFBE_C_SPECTATOR_SENS_REF_FOV") then {WFBE_C_SPECTATOR_SENS_REF_FOV = 0.8}; //--- FOV at which SENS applies 1:1; sensitivity scales linearly with zoom (scoped-aim feel).
 if (isNil "WFBE_C_SPECTATOR_SENS_MIN_FACTOR") then {WFBE_C_SPECTATOR_SENS_MIN_FACTOR = 0.05}; //--- never let zoom-scaled sensitivity drop below this fraction of SENS.
 
+//--- SQF utility library adoption (card #25, GR-2026-07-08a): arms Common_UtilLibSelfTest.sqf
+//--- only - the hash/vector/delayless-dispatch functions themselves are unconditional and are
+//--- NOT gated by this flag (see Common_UtilLibSelfTest.sqf, Init_Common.sqf).
+if (isNil "WFBE_C_UTIL_LIB_SELFTEST") then {WFBE_C_UTIL_LIB_SELFTEST = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
