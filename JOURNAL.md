@@ -1,5 +1,47 @@
 # JOURNAL — a2waspwarfare-experital
 
+## Working State 2026-08-03 — SQF utility library adoption [claude/sqf-util-lib]
+
+**Card**: #25 in the FLEET-20260802 mining-review batch ("CBA-derived SQF utility adoption:
+hash/dict store + 3D vector math + delayless dispatch"). Effort S / Risk low / "Clear to build".
+
+**Delivered** (5 commits, all three maps mirrored via LoadoutManager):
+1. `Common_HashCreate/Get/Set/HasKey/Rem.sqf` - parallel-array key/value store, documented
+   as an honest linear scan, not a perf win over `Server_CmdTownLedger.sqf`'s existing idiom.
+   `HashSet` mutates in place; `HashRem` returns a new handle (no `deleteAt` on A2 OA).
+2. `Common_VectDot/Cross/Magnitude/ElevationSolve/LeadAngle/SurfaceNormal.sqf` - manual-
+   arithmetic vector math (not wrapping any native `vect*` command).
+3. `Common_DelaylessCall.sqf` + `Common/FSM/delayless.fsm` - execFSM-based zero-scheduler-
+   delay dispatch for hot-path one-shot calls, as an alternative to `spawn`.
+4. `Common_UtilLibSelfTest.sqf`, registration in `Init_Common.sqf`, flag
+   `WFBE_C_UTIL_LIB_SELFTEST` (default 0, boot smoke-test only) in `Init_CommonConstants.sqf`.
+5. `docs/design/SQF-UTIL-LIB.md` - API reference.
+
+Pure additive, no call-site migrations (card names no explicit demonstrative adoption target -
+future consumers are #1/#12/#14, all separate flag-gated PRs). Lint gate clean (zero findings
+in any touched/new file), bracket delta zero per file, mirrors identical across CH/TK/ZG,
+`Test-WaspVersionTemplates.ps1` all PASS.
+
+**Discovered issue / unresolved blocker (soft, matches the card's own note)**: this session ran
+with no network access (role-locked), so the `a2oa-verify-command` skill's rungs 1-2 (repo wiki,
+BI wiki) could not be climbed for two claims:
+- whether A2 OA 1.64 natively exposes any vector command equivalent to
+  `VectDot`/`VectCross`/`VectMagnitude` (if so, the manual-arithmetic versions here are
+  functionally fine but partially redundant);
+- whether an FSM's `Init` state genuinely executes its `init` code in the same frame
+  `execFSM` is called, with the `execFSM` argument bound to `_this` inside that state (the
+  premise `Common_DelaylessCall.sqf` is built on).
+
+Mitigated by writing both as clean-room implementations that don't call any commands whose
+existence is in question, and by having `Common_UtilLibSelfTest.sqf` (flag-gated, default off)
+empirically MEASURE the delayless same-frame behavior via global marker variables rather than
+asserting it, logging the result to RPT. **Next agent/owner should**: arm
+`WFBE_C_UTIL_LIB_SELFTEST=1` on a real server once, read the RPT for the
+`DELAYLESS same-frame=...` line, and only then treat `Common_DelaylessCall` as safe to adopt on
+a real hot path in a follow-up PR. See `docs/design/SQF-UTIL-LIB.md` for the full writeup.
+
+---
+
 ## Working State 2026-08-01 — crash 014EFCF4 crew-delete sweep [fix/014e-crew-delete-sweep-20260801]
 
 Task: sweep the remaining direct crew-delete sites for crash 014EFCF4 (deleteVehicle on a Man still
