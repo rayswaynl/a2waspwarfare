@@ -787,6 +787,14 @@ if (isNull _base) exitWith {
 		if (!isNull _clogik) then {
 			_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
 			if ((_clogik getVariable ["wfbe_aicom_pending", 0]) <= 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
+			//--- r114 (founding-charge ledger): dispatch delivered - pop the head charge, no refund.
+			//--- Sentinel-pop removes exactly the head (A2 `-` would remove every equal price).
+			private ["_fifo","_r114Pop"];
+			_fifo = _clogik getVariable ["wfbe_aicom_pending_funds", []];
+			if ((count _fifo) > 0) then {
+				_fifo set [0, "WFBE_R114_POP"];
+				_clogik setVariable ["wfbe_aicom_pending_funds", _fifo - ["WFBE_R114_POP"]];
+			};
 			if (!isNull _cteam) then {
 				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
 				//--- Direction-arrow marker feed (mirrors WFBE_ACTIVE_PATROLS): register
@@ -1267,6 +1275,19 @@ if (isNull _base) exitWith {
 									_rfAfford = true;
 									if (_rfCostOn) then {_rfAfford = (_rfFunds >= _rfCharge)};
 									if (_rfAfford) then {
+										//--- r114: this verb restamps wfbe_aicom_topup_req unconditionally below
+										//--- (unlike Produce/HCTopUp, which gate on a pending request). An unconsumed
+										//--- charged request (element 4 > 0) would be silently overwritten and its
+										//--- up-front treasury charge lost - refund it before restamping.
+										private ["_rfOldReq","_rfOldCharge"];
+										_rfOldReq = _rfTeam getVariable "wfbe_aicom_topup_req";
+										if (!isNil "_rfOldReq" && {(typeName _rfOldReq) == "ARRAY"} && {count _rfOldReq > 4}) then {
+											_rfOldCharge = _rfOldReq select 4;
+											if ((typeName _rfOldCharge) == "SCALAR" && {_rfOldCharge > 0}) then {
+												[_rfSide, _rfOldCharge] Call ChangeAICommanderFunds;
+												diag_log ("AICOM2|v1|ORDER|aicom-refit|OVERWRITE_REFUND|" + str _rfSide + "|idx=" + str _rfIdx + "|refund=" + str _rfOldCharge);
+											};
+										};
 										_rfChargedAmt = 0;
 										if (_rfCostOn) then {[_rfSide, -_rfCharge] Call ChangeAICommanderFunds; _rfChargedAmt = _rfCharge};
 										//--- fable/aicom-topup-refund-on-stale: store the ACTUAL charged amount (0 on the
@@ -1789,9 +1810,25 @@ if (isNull _base) exitWith {
 		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _clogik) then {
 			if (isNull _cteam) then {
-				//--- Creation failed before registration: just release the pending slot.
+				//--- Creation failed before registration: release the pending slot AND refund its booked
+				//--- treasury charge (r114 founding-charge ledger) - Teams.sqf pre-charged the full
+				//--- template price before dispatch; the HC reported CreateTeam failure.
 				_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
 				if ((_clogik getVariable ["wfbe_aicom_pending", 0]) <= 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
+				private ["_fifo","_r114Pop","_r114Side"];
+				_fifo = _clogik getVariable ["wfbe_aicom_pending_funds", []];
+				if ((count _fifo) > 0) then {
+					_r114Pop = _fifo select 0;
+					_fifo set [0, "WFBE_R114_POP"];
+					_clogik setVariable ["wfbe_aicom_pending_funds", _fifo - ["WFBE_R114_POP"]];
+					if ((typeName _r114Pop) == "SCALAR" && {_r114Pop > 0}) then {
+						_r114Side = (_csideID) Call WFBE_CO_FNC_GetSideFromID;
+						if (_r114Side in [west,east,resistance]) then {
+							[_r114Side, _r114Pop] Call ChangeAICommanderFunds;
+							diag_log ("AICOMSTAT|v1|EVENT|" + str _csideID + "|" + str (round (time / 60)) + "|FOUND_FAIL_REFUND|refund=" + str _r114Pop);
+						};
+					};
+				};
 			} else {
 				_cteams = _clogik getVariable ["wfbe_teams", []];
 				_cregistered = false;

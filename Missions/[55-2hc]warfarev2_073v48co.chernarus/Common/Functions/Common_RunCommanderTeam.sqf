@@ -3345,7 +3345,11 @@ while {!WFBE_GameOver && _alive} do {
 					_alRefund = if ((typeName _alCharge) == "SCALAR") then {_alCharge} else {0};
 					if (_alRefund > 0) then {
 						if (isServer) then {[_side, _alRefund] Call ChangeAICommanderFunds} else {
-							WFBE_PVF_RequestSpecial = ["SRVFNCRequestSpecial", ["aicom-topup-refund", _sideID, _alRefund]];
+							//--- r114: route through aicom-heli-refunded (server re-derives the price from
+							//--- the class) instead of aicom-topup-refund, whose landing clamps to
+							//--- 4x WFBE_C_AICOM_TOPUP_UNIT_COST x1.5 (1800) and truncated every transport
+							//--- grant refund above that.
+							WFBE_PVF_RequestSpecial = ["SRVFNCRequestSpecial", ["aicom-heli-refunded", _sideID, _alRefund, _alClass]];
 							publicVariableServer "WFBE_PVF_RequestSpecial";
 						};
 					};
@@ -3384,6 +3388,46 @@ while {!WFBE_GameOver && _alive} do {
 	};
 
 	sleep 8;
+};
+
+//--- r114 treasury closure: the driver loop is over (wipe, disband, or game end) - a charged
+//--- top-up request (element 4) or a paid airlift grant (element 2) still pending on this team can
+//--- never be consumed now, so refund both to the side treasury exactly once (vars cleared below;
+//--- the in-loop consumers are unreachable past this point and clear the same vars when they fire).
+//--- Locality split mirrors the in-loop refunds; the airlift share rides aicom-heli-refunded (price
+//--- re-derived server-side) because aicom-topup-refund clamps to the infantry top-up cap.
+if (!isNull _team) then {
+	private ["_endReq","_endGrant","_endTopRefund","_endAlRefund","_endAlClass"];
+	_endTopRefund = 0;
+	_endAlRefund = 0;
+	_endAlClass = "";
+	_endReq = _team getVariable "wfbe_aicom_topup_req";
+	if (!isNil "_endReq" && {(typeName _endReq) == "ARRAY"} && {count _endReq > 4}) then {
+		_endTopRefund = _endReq select 4;
+		if ((typeName _endTopRefund) != "SCALAR" || {_endTopRefund < 0}) then {_endTopRefund = 0};
+		_team setVariable ["wfbe_aicom_topup_req", [], true];
+	};
+	_endGrant = _team getVariable "wfbe_aicom_airlift_grant";
+	if (!isNil "_endGrant" && {(typeName _endGrant) == "ARRAY"} && {count _endGrant >= 3}) then {
+		_endAlRefund = _endGrant select 2;
+		if ((typeName _endAlRefund) != "SCALAR" || {_endAlRefund < 0}) then {_endAlRefund = 0};
+		_endAlClass = _endGrant select 0;
+		_team setVariable ["wfbe_aicom_airlift_grant", [], true];
+	};
+	if (_endTopRefund > 0) then {
+		if (isServer) then {[_side, _endTopRefund] Call ChangeAICommanderFunds} else {
+			WFBE_PVF_RequestSpecial = ["SRVFNCRequestSpecial", ["aicom-topup-refund", _sideID, _endTopRefund]];
+			publicVariableServer "WFBE_PVF_RequestSpecial";
+		};
+		diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TEAM_END_TOPUP_REFUND|team=" + str _team + "|refund=" + str _endTopRefund);
+	};
+	if (_endAlRefund > 0) then {
+		if (isServer) then {[_side, _endAlRefund] Call ChangeAICommanderFunds} else {
+			WFBE_PVF_RequestSpecial = ["SRVFNCRequestSpecial", ["aicom-heli-refunded", _sideID, _endAlRefund, _endAlClass]];
+			publicVariableServer "WFBE_PVF_RequestSpecial";
+		};
+		diag_log ("AICOMSTAT|v1|EVENT|" + str _sideID + "|" + str (round (time / 60)) + "|TEAM_END_GRANT_REFUND|team=" + str _team + "|refund=" + str _endAlRefund);
+	};
 };
 
 //--- Team wiped: release the brain's slot. (night-fold review fix 2026-07-22: the destructive

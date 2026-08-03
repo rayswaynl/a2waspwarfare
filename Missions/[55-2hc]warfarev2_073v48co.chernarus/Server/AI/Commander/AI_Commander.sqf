@@ -922,10 +922,13 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 			//--- at all fires when either master switch is off.
 			if ((missionNamespace getVariable ["AICOMV2_LANE_CMD_TOWN_LEDGER", 0]) > 0
 				&& {(missionNamespace getVariable ["AICOMV2_CTL_INVEST_ENABLE", 0]) > 0}) then {
-				private ["_ctlHumanBlock","_ctlFundsOk","_ctlCooldownOk","_ctlSkipReason","_ctlNow2"];
+				private ["_ctlHumanBlock","_ctlFundsOk","_ctlCooldownOk","_ctlSkipReason","_ctlNow2","_ctlFunds"];
 				_ctlNow2       = time;
 				_ctlHumanBlock = _humanSeated && {(missionNamespace getVariable ["AICOMV2_CTL_INVEST_HUMAN_OFF", 1]) > 0};
-				_ctlFundsOk    = _funds >= ((missionNamespace getVariable ["AICOMV2_CTL_INVEST_COST", 50000]) + (missionNamespace getVariable ["AICOMV2_CTL_INVEST_FLOOR", 250000]));
+				//--- r114: re-read the treasury HERE - _funds was snapshotted before the ECON_SINK debit
+				//--- above, so gating on it could commit COST while the real balance is already under FLOOR.
+				_ctlFunds      = (_side) Call GetAICommanderFunds;
+				_ctlFundsOk    = _ctlFunds >= ((missionNamespace getVariable ["AICOMV2_CTL_INVEST_COST", 50000]) + (missionNamespace getVariable ["AICOMV2_CTL_INVEST_FLOOR", 250000]));
 				_ctlCooldownOk = (_ctlNow2 - (_logik getVariable ["WFBE_CTL_INVEST_T0", -1e10])) > (missionNamespace getVariable ["AICOMV2_CTL_INVEST_COOLDOWN", 480]);
 				_ctlSkipReason = "";
 				if (_ctlHumanBlock) then {_ctlSkipReason = "human"};
@@ -952,7 +955,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 							_val = _town getVariable ["wfbe_town_value", 0];
 							if (_val > _ctlBestVal || {_val == _ctlBestVal && {_str < _ctlBestStr}}) then {_ctlBestVal = _val; _ctlBestStr = _str; _ctlTarget = _ctlI};
 						};
-						if (_eligible && {_str >= 1.0 && {_str < 1.5}} && {_funds >= (missionNamespace getVariable ["AICOMV2_CTL_INVEST_SURGE_FLOOR", 600000])}) then {
+						if (_eligible && {_str >= 1.0 && {_str < 1.5}} && {_ctlFunds >= (missionNamespace getVariable ["AICOMV2_CTL_INVEST_SURGE_FLOOR", 600000])}) then {
 							_val = _town getVariable ["wfbe_town_value", 0];
 							if (_val > _ctlBestVal || {_val == _ctlBestVal && {_str < _ctlBestStr}}) then {_ctlBestVal = _val; _ctlBestStr = _str; _ctlTarget = _ctlI};
 						};
@@ -975,7 +978,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 						_logik setVariable ["WFBE_CTL_INVEST_T0", _ctlNow2];
 						[_side, -_ctlCost] Call ChangeAICommanderFunds;
 						diag_log Format ["AICOMSTAT|v2|EVENT|%1|%2|CTL_INVEST|town=%3|tier=%4|cost=%5|str=%6|funds=%7|fundedBy=aicom",
-							str _side, round (time / 60), (_ctlRec select 0) getVariable ["name", "?"], _ctlTier, _ctlCost, _ctlNewStr, _funds - _ctlCost];
+							str _side, round (time / 60), (_ctlRec select 0) getVariable ["name", "?"], _ctlTier, _ctlCost, _ctlNewStr, _ctlFunds - _ctlCost];
 					} else {
 						_ctlSkipReason = "noTarget";
 					};

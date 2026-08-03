@@ -398,6 +398,20 @@ if (_pending > 0) then {
 	if ((time - _pendSince) > _pendTimeout) then {
 		_pending = _pending - 1;
 		_logik setVariable ["wfbe_aicom_pending", _pending];
+		//--- r114 (founding-charge ledger): refund the reaped slot's booked charge (FIFO head) - a
+		//--- reaped dispatch was never delivered, so its template price must not stay spent.
+		private ["_fifo","_r114Pop"];
+		_fifo = _logik getVariable ["wfbe_aicom_pending_funds", []];
+		if ((count _fifo) > 0) then {
+			_r114Pop = _fifo select 0;
+			_fifo set [0, "WFBE_R114_POP"];
+			_fifo = _fifo - ["WFBE_R114_POP"];
+			_logik setVariable ["wfbe_aicom_pending_funds", _fifo];
+			if ((typeName _r114Pop) == "SCALAR" && {_r114Pop > 0}) then {
+				[_side, _r114Pop] Call ChangeAICommanderFunds;
+				diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH_REAP_REFUND|refund=" + str _r114Pop);
+			};
+		};
 		if (_pending > 0) then {_logik setVariable ["wfbe_aicom_pending_since", time]} else {_logik setVariable ["wfbe_aicom_pending_since", -1]};
 		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH_REAP|pending->" + str _pending + "|reason=ack-timeout");
 		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC dispatch pending slot reaped after timeout (pending->%2, age=%3s, timeout=%4s).", _sideText, _pending, round (time - _pendSince), _pendTimeout]] Call WFBE_CO_FNC_AICOMLog;
@@ -1547,6 +1561,12 @@ if (count _live > 0) then {
 	} else {
 		_logik setVariable ["wfbe_aicom_free_refound", false];
 	};
+	//--- r114 (founding-charge ledger): FIFO of per-dispatch treasury charges, index-locked to
+	//--- wfbe_aicom_pending. aicom-team-created pops the head (delivered - no refund); the
+	//--- aicom-team-ended grpNull path and the B69 ack-timeout reaper pop + refund the head, closing
+	//--- the leak where an HC CreateTeam failure or a lost dispatch kept the full template price.
+	//--- W11 free refounds book a 0 entry so the FIFO stays aligned with the pending counter.
+	_logik setVariable ["wfbe_aicom_pending_funds", (_logik getVariable ["wfbe_aicom_pending_funds", []]) + [(if (_w11FreeFlag) then {0} else {_price})]];
 	_logik setVariable ["wfbe_aicom_pending", _pending + 1];
 	if (_pending <= 0) then {_logik setVariable ["wfbe_aicom_pending_since", time]};
 	//--- V0.6.4: name the receiving HC in the log - the random pick spreads load across
