@@ -31,7 +31,7 @@ WFBE_ASR_FIRED_PATCHED = true;
 
 //--- Faithful reimplementation of the mod's asr_ai_sys_aiskill_fnc_fired with a post-sleep null guard.
 asr_ai_sys_aiskill_fnc_fired = {
-	private ["_shooter","_weapon","_muzzle","_mode","_ammo","_magazine","_projectile","_cfg","_snda","_snd","_range","_k","_sdweap","_sdammo","_distance","_detectupto","_audible","_ammofactor","_burst"];
+	private ["_shooter","_weapon","_muzzle","_mode","_ammo","_magazine","_projectile","_cfg","_snda","_snd","_range","_k","_sdweap","_sdammo","_distance","_detectupto","_audible","_ammofactor","_burst","_forceStopped"];
 	_shooter = _this select 0;
 	_weapon = _this select 1;
 	_muzzle = _this select 2;
@@ -109,11 +109,13 @@ asr_ai_sys_aiskill_fnc_fired = {
 	_burst = [_cfg >> "burst", "number", 1] call CBA_fnc_getConfigEntry;
 	
 	//--- little hack to prevent AI gunners shooting long bursts while turning around
+	_forceStopped = false;
 	if (!isPlayer _shooter) then {
 		if (vehicle _shooter == _shooter) then {
 			if (_burst > 3) then {
 				if (isNil {_shooter getVariable "asr_ai_sys_aiskill_shooting"}) then {
 					_shooter forceSpeed 0;
+					_forceStopped = true;
 				};
 			};
 		};
@@ -125,13 +127,15 @@ asr_ai_sys_aiskill_fnc_fired = {
 	//--- a stale objNull here poisons the reveal loop below (mod fnc_fired.sqf:115). Exit cleanly.
 	if (isNull _shooter) exitWith { asr_ai_sys_aiskill_fired = nil };
 	
-	if (!isPlayer _shooter) then {
-		if (vehicle _shooter == _shooter) then {
-			if (_burst > 3) then {
-				if (isNil {_shooter getVariable "asr_ai_sys_aiskill_shooting"}) then {
-					_shooter forceSpeed -1;
-				};
-			};
+	//--- FORCESPEED-RESTORE FIX (r111): restore whenever THIS handler applied the stop, not only
+	//--- when the shooter is STILL on foot. The mod re-evaluated (vehicle _shooter == _shooter)
+	//--- after sleep _burst, so a shooter who BOARDED a vehicle during the sleep kept forceSpeed 0
+	//--- for the rest of the mission (inert on any later dismount; as driver it also froze the
+	//--- hull). Gate on the captured apply-flag instead. The shooting-var guard is kept so the
+	//--- mod's own shooting routine still wins when it took the unit over during the sleep.
+	if (_forceStopped) then {
+		if (alive _shooter && {isNil {_shooter getVariable "asr_ai_sys_aiskill_shooting"}}) then {
+			_shooter forceSpeed -1;
 		};
 	};
 	
