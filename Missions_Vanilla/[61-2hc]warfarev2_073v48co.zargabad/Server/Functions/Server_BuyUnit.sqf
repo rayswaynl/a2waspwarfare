@@ -1,4 +1,4 @@
-Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_refunded","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitType","_unitTypeGet","_vehicle","_waitTime"];
+Private ["_building","_built","_config","_crew","_direction","_dir","_distance","_factoryType","_factoryPosition","_id","_index","_isVehicle","_longest","_position","_price","_queu","_queu2","_refunded","_ret","_side","_sideID","_sideText","_soldier","_team","_turrets","_type","_unitConfig","_unitType","_unitTypeGet","_vehicle","_waitTime"];
 _id = _this select 0;
 _building = _this select 1;
 _unitType = _this select 2;
@@ -15,8 +15,19 @@ _price = if (count _this > 6) then {_this select 6} else {0};
 //--- only breaks the while loop and always falls through to the post-wait re-check) cannot pay out
 //--- the same refund twice for one abort.
 _refunded = false;
-
 _sideText = str _side;
+
+//--- AICOM can be handed a mission-listed asset whose addon/config is unavailable on this runtime.
+//--- Reject it before any isKindOf/queue work: release this team's pending token and refund the
+//--- exact pre-charged price. AI_Commander_Produce skips the bad template entry and can select
+//--- a valid sibling instead; this guard also protects direct/older AIBuyUnit callers.
+_unitConfig = configFile >> "CfgVehicles" >> _unitType;
+if !(isClass _unitConfig) exitWith {
+	if (!isNull _team) then {_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]]};
+	if (!_refunded && {_price > 0}) then {[_side, _price] Call ChangeAICommanderFunds; _refunded = true};
+	["WARNING", Format ["Server_BuyUnit.sqf: BUYFAIL unavailable CfgVehicles classname [%1] - refunded %2 to side [%3]; no queue/spawn attempted.", _unitType, _price, _sideText]] Call WFBE_CO_FNC_LogContent;
+	diag_log Format ["BUYFAIL|v1|aicom-unavailable-class|side=%1|class=%2", _sideText, _unitType];
+};
 
 if (!(alive _building)||{isNull _team}||{isPlayer (leader _team)}) exitWith {
 	if (!isNull _team) then {
