@@ -40,7 +40,11 @@ while {!isNull _defense && {alive _defense} && {_sideStillValid}} do {
 				["INFORMATION", Format ["Server_HandleDefense.sqf: [%1] base area changed hands — stopping re-manning for [%2].", str _side, typeOf _defense]] Call WFBE_CO_FNC_LogContent;
 			};
 		};
-		if (!_sideStillValid) exitWith {};
+		if (!_sideStillValid) exitWith {
+			//--- The base-area handoff terminates this loop while the defense remains alive; release its
+			//--- duplicate-manning latch so the new owner can start its own manning loop.
+			_defense setVariable ["WFBE_DefenseManningLoopActive", false, true];
+		};
 
 		//--- crash 014EFCF4: the defense can be deleted after the 7s sleep and area checks.
 		if (isNull _defense || {!alive _defense}) exitWith {};
