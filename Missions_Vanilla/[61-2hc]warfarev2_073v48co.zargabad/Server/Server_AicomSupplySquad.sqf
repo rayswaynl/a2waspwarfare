@@ -91,16 +91,32 @@ while {!WFBE_GameOver} do {
 		};
 
 		if (_drop) then {
+			//--- CREW/GROUP LEAK FIX (r121): always reap the squad GROUP, not just the hull crew. The
+			//--- destroyed path dropped the registry entry with NO cleanup at all, and the despawn path
+			//--- deleted only (crew _eVeh): a survivor of a truck kill (cargo escorts/drivers eject in A2)
+			//--- or a unit that never boarded is in NO team registry, is never re-tasked, and idles forever
+			//--- while its group slot counts toward the 144-groups/side cap (A2 deleteGroup no-ops on a
+			//--- group still holding units - Common_CreateGroup.sqf:45; server_groupsGC only reaps groups
+			//--- with zero units). Squad AI are script-spawned (never players); corpses stay for the normal
+			//--- corpse GC, whose pass then lets groupsGC reap the emptied husk.
+			if (!isNull _eGrp) then {
+				{if (alive _x) then {["aicomsupply-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0}} forEach (units _eGrp); //--- crash 014EFCF4 sweep: sleep 0 between unit deletes (order-dependent on the deleteGroup below; already-scheduled).
+				deleteGroup _eGrp;
+			};
 			if (_reason != "destroyed" && {!isNull _eVeh} && {({isPlayer _x} count (crew _eVeh)) == 0}) then {
-				{["aicomsupply-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _eVeh); //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
 				["aicomsupply-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh;
-				if (!isNull _eGrp) then {deleteGroup _eGrp};
 			};
 			diag_log Format ["AICOMSUPPLY|DESPAWN|side=%1|reason=%2", str _eSide, _reason];
 		} else {
 			//--- Re-check hull after prune gate (TOCTOU): concurrent destroy between isNull and getPos/velocity is native-crash class (014EFCF4).
 			if (isNull _eVeh || {!alive _eVeh}) then {
 				missionNamespace setVariable [Format ["wfbe_aicomsupply_cd_%1", str _eSide], _now];
+				//--- r121: same crew/group reap as the main drop path - a hull lost between the prune
+				//--- gate and here leaks its surviving squad AI + group slot exactly the same way.
+				if (!isNull _eGrp) then {
+					{if (alive _x) then {["aicomsupply-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0}} forEach (units _eGrp);
+					deleteGroup _eGrp;
+				};
 				diag_log Format ["AICOMSUPPLY|DESPAWN|side=%1|reason=destroyed_race", str _eSide];
 			} else {
 			//--- State machine: outbound -> loading (dwell) -> inbound -> deliver -> outbound.
@@ -167,7 +183,7 @@ while {!WFBE_GameOver} do {
 						} else {
 							Private ["_ang2"];
 							_ang2 = ((_eObj select 0) - (_eCur select 0)) atan2 ((_eObj select 1) - (_eCur select 1));
-							_eVeh setPos [(_eCur select 0) + 60 * sin _ang2, (_eCur select 1) + 60 * cos _ang2, 0];
+							_eVeh setPosATL [(_eCur select 0) + 60 * sin _ang2, (_eCur select 1) + 60 * cos _ang2, 0]; //--- r121: was setPos z=0 (ASL) - buried the truck under elevated terrain; ATL z=0 ground-snaps.
 						};
 						diag_log Format ["AICOMSUPPLY|UNSTUCK|side=%1|near=%2", str _eSide, _playerNear];
 					};
@@ -233,7 +249,12 @@ while {!WFBE_GameOver} do {
 										if (_mode == "truck") then {
 											//--- Small squad: one cargo escort so ambushing it is a fight, not a freebie.
 											_esc = [_crewCls, _grp, _basePos, _sideID] Call WFBE_CO_FNC_CreateUnit;
-											if (!isNull _esc) then {_esc moveInCargo _veh};
+											if (!isNull _esc) then {
+												_esc moveInCargo _veh;
+												//--- r121: moveInCargo fails silently on a full/no-cargo hull - a never-boarded
+												//--- escort idled at the pad for the whole match. Delete it at the source.
+												if !(_esc in (crew _veh)) then {["aicomsupply-unit", _esc, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _esc};
+											};
 										} else {
 											_veh flyInHeight 80;
 										};
