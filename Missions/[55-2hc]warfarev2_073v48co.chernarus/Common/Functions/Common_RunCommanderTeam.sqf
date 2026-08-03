@@ -1431,6 +1431,8 @@ while {!WFBE_GameOver && _alive} do {
 							_uPlayerNearResult = [getPos _uVeh, _uPGR] Call WFBE_CO_FNC_RealPlayersNear;
 							if ((typeName _uPlayerNearResult) == "SCALAR" && {_uPlayerNearResult > 0}) then {_uPlayerNear = true};
 							if (!_uPlayerNear) then {
+								private "_uSnapped";
+								_uSnapped = false;
 								_uRds = (getPos _uVeh) nearRoads 150;
 								if (count _uRds > 0) then {
 									_uNode = [getPos _uVeh, _uRds] Call WFBE_CO_FNC_GetClosestEntity;
@@ -1448,8 +1450,12 @@ while {!WFBE_GameOver && _alive} do {
 											};
 										};
 										["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 unstuck teleport-nudge to road node (map=%3).", _uSide, _uTeam, worldName]] Call WFBE_CO_FNC_AICOMLog; //--- cmdcon43-j: +map= for per-map ladder attribution.
+										_uSnapped = true;
 									};
-								} else {
+								};
+								//--- fix(sqf-terrain r116): NOROAD_STEP when nearRoads is empty OR the nearest node is water/invalid (was a silent
+								//--- no-op on a wet road node - the same r34 hole Common_RunUnstuckRecovery / Common_RunSidePatrol already fixed).
+								if (!_uSnapped) then {
 									//--- NO-ROAD SHELF FALLBACK (cmdcon44i, gate WFBE_C_AICOM_RECOVERY_NOROAD_STEP default 1, same wedge-escape as the foot branch below): a
 									//--- MOUNTED hull wedged on a roadless shelf gets NO road snap either (nearRoads empty). Step the HULL toward the order dest onto the
 									//--- nearest isFlatEmpty non-water spot - the flat-empty gate rejects steep/occupied ground so a hull is only moved to a drivable pad
@@ -1522,6 +1528,8 @@ while {!WFBE_GameOver && _alive} do {
 									_uSlopeZ = (surfaceNormal (getPos _uLdr)) select 2;
 									if ((_uSlopeZ < (missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_SLOPE_Z", 0.85])) || _uForceRoad) then {_uFootR = missionNamespace getVariable ["WFBE_C_AICOM_RECOVERY_FOOT_ROAD_R", 200]};
 								};
+								private "_uFootSnapped";
+								_uFootSnapped = false;
 								_uFootRds = (getPos _uLdr) nearRoads _uFootR;
 								if (count _uFootRds > 0) then {
 									_uFootNode = [getPos _uLdr, _uFootRds] Call WFBE_CO_FNC_GetClosestEntity;
@@ -1541,8 +1549,11 @@ while {!WFBE_GameOver && _alive} do {
 										//--- Re-form the squad on the relocated leader so dismounts/stragglers regroup (never idle).
 										{ if (alive _x && {_x != _uLdr} && {vehicle _x == _x}) then {_x doFollow _uLdr} } forEach (units _uTeam);
 										["INFORMATION", Format ["Common_RunCommanderTeam.sqf: [%1] team [%2] TIER3 FOOT/dead-hull unstuck teleport-nudge to road node (re-formed on leader) (map=%3).", _uSide, _uTeam, worldName]] Call WFBE_CO_FNC_AICOMLog; //--- cmdcon43-j: +map= for per-map ladder attribution.
+										_uFootSnapped = true;
 									};
-								} else {
+								};
+								//--- fix(sqf-terrain r116): foot NOROAD_STEP when nearRoads is empty OR the nearest node is water/invalid (same r34 hole).
+								if (!_uFootSnapped) then {
 									//--- NO-ROAD SHELF FALLBACK (cmdcon44i, claude-gaming 2026-07-04, gate WFBE_C_AICOM_RECOVERY_NOROAD_STEP default 1): the road-snap above does
 									//--- NOTHING when nearRoads finds no road inside the ring - exactly the roadless mountain-shelf founding case (live cmdcon44i Zargabad:
 									//--- EAST foot teams O 1-1-E/O 1-1-G founded on the SE spawn shelf, frozen at dist=1771m for ~24min, tiers 1-4 cycled with ZERO effect
