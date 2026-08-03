@@ -105,7 +105,7 @@
  },
  "Common/Functions/Common_RunCommanderTeam.sqf": {
   "probed": 6,
-  "total": 5
+  "total": 6
  },
  "Common/Functions/Common_RunSidePatrol.sqf": {
   "probed": 0,
