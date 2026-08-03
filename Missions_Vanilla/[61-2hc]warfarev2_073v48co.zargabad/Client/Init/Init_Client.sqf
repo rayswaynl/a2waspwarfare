@@ -54,15 +54,24 @@ WFBE_Allow_HostileGearSaving = true;
 //--- permanently invulnerable. Initial join + JIP rejoin both pass through here; respawns do not.
 player allowDamage false;
 missionNamespace setVariable ["WFBE_Client_DeadspawnEscaped", false];
-[] spawn {
-	private ["_t0"];
-	_t0 = time;
-	waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
-	sleep 3;
-	if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
-		if (alive player) then { player allowDamage true };
+//--- The damage command is not reference-counted: every re-arm invalidates older watchdogs
+//--- before they can release the current deadspawn hold.
+WFBE_CL_FNC_ArmDeadspawnDamageGuard = {
+	private ["_epoch"];
+	_epoch = (missionNamespace getVariable ["WFBE_Client_DeadspawnDamageGuardEpoch", 0]) + 1;
+	missionNamespace setVariable ["WFBE_Client_DeadspawnDamageGuardEpoch", _epoch];
+	[_epoch] spawn {
+		private ["_epoch", "_t0"];
+		_epoch = _this select 0;
+		_t0 = time;
+		waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) || (_epoch != (missionNamespace getVariable ["WFBE_Client_DeadspawnDamageGuardEpoch", 0])) };
+		if (_epoch == (missionNamespace getVariable ["WFBE_Client_DeadspawnDamageGuardEpoch", 0])) then {
+			sleep 3;
+			if (_epoch == (missionNamespace getVariable ["WFBE_Client_DeadspawnDamageGuardEpoch", 0]) && {!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])} && {alive player}) then {player allowDamage true};
+		};
 	};
 };
+[] Call WFBE_CL_FNC_ArmDeadspawnDamageGuard;
 
 // Set the default target fps to 60
 missionNamespace setVariable ["AUTO_DISTANCE_VIEW_TARGET_FPS", 60];
@@ -1302,17 +1311,9 @@ if (isMultiplayer && ((missionNamespace getVariable "WFBE_C_GAMEPLAY_TEAMSWAP_DI
 //--- that gate is still holding the player in the deadspawn holding area. The gate above now re-asserts
 //--- `allowDamage false` for as long as it holds, which means nothing would ever re-enable damage once
 //--- that first watchdog has gone. This is the same re-arm the HC lobby lock below already performs on
-//--- release; both watchdogs firing is harmless (allowDamage true is idempotent) and both exit at once
-//--- on WFBE_Client_DeadspawnEscaped.
-[] spawn {
-	private ["_t0"];
-	_t0 = time;
-	waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
-	sleep 3;
-	if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
-		if (alive player) then { player allowDamage true };
-	};
-};
+//--- release; re-arming invalidates prior watchdogs so only the current hold may restore damage.
+//--- All watchdogs still exit once WFBE_Client_DeadspawnEscaped becomes true.
+[] Call WFBE_CL_FNC_ArmDeadspawnDamageGuard;
 
 //--- HC LOBBY LOCK (feat/hc-lobby-lock 2026-07-26, WFBE_C_HC_LOBBY_LOCK default 0): hold a joining player
 //--- HERE - after the existing join / anti-teamswap gate above, still parked in the deadspawn holding area,
@@ -1379,17 +1380,9 @@ if ((missionNamespace getVariable ["WFBE_C_HC_LOBBY_LOCK", 0]) > 0) then {
 			diag_log Format ["HCLOBBY|v1|CLIENT-RELEASE|name=%1|heldFor=%2|at=%3", name player, _hcllWaited, round time];
 			//--- Re-arm the deadspawn damage restore: the original watchdog near the top of this file may
 			//--- already have expired during the hold, and nothing else re-enables damage once the code below
-			//--- sets WFBE_Client_DeadspawnEscaped. Same shape and 120s budget as that watchdog; both firing
-			//--- is harmless (allowDamage true is idempotent).
-			[] spawn {
-				private ["_t0"];
-				_t0 = time;
-				waitUntil { sleep 0.5; (missionNamespace getVariable ["WFBE_Client_DeadspawnEscaped", false]) || (time - _t0 > 120) };
-				sleep 3;
-				if (!(missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false])) then {
-					if (alive player) then { player allowDamage true };
-				};
-			};
+			//--- sets WFBE_Client_DeadspawnEscaped. The guarded helper retains the same 120s budget while
+			//--- invalidating older watchdogs that could otherwise release this newer hold.
+			[] Call WFBE_CL_FNC_ArmDeadspawnDamageGuard;
 		};
 	};
 };
