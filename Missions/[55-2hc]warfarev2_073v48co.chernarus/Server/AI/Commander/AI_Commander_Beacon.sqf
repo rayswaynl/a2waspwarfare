@@ -18,7 +18,7 @@
 	+ setVariable broadcast; nearEntities/nearRoads; if/else for bool latches.
 */
 
-private ["_side","_sideText","_logik","_hq","_hqPos","_ambArr","_amb","_max","_standoff","_refwd","_cooldown","_beacons","_targets","_target","_tgtPos","_myID","_fwdTown","_fwdBestD","_townSide","_fwdPos","_dx","_dy","_d","_pos","_dir","_blocked","_price","_data","_funds","_veh","_curBeacon","_curPos","_lastBuilt"];
+private ["_side","_sideText","_logik","_hq","_hqPos","_ambArr","_amb","_max","_standoff","_refwd","_cooldown","_beacons","_targets","_target","_tgtPos","_myID","_fwdTown","_fwdBestD","_townSide","_fwdPos","_dx","_dy","_d","_pos","_dir","_blocked","_price","_data","_funds","_veh","_curBeacon","_curBlocked","_curPos","_lastBuilt"];
 
 //--- 0) Gate: enabled + valid side logic + alive deployed HQ (forward standoff is measured from the HQ).
 if ((missionNamespace getVariable ["WFBE_C_AICOM_SPAWNBEACON_ENABLE", 0]) <= 0) exitWith {};
@@ -113,11 +113,22 @@ _dir = ((_tgtPos select 0) - (_pos select 0)) atan2 ((_tgtPos select 1) - (_pos 
 if (_beacons >= _max) exitWith {
 	if (!isNull _curBeacon) then {
 		_curPos = getPos _curBeacon;
-		if ((_curPos distance _pos) > _refwd) then {
+		//--- r106 (kimi/bughunt-aicom-medevac): the 500m enemy-town gate above only gates the BUY and
+		//--- the forward re-stand. When the front COLLAPSES past the beacon (its anchor town flips to
+		//--- the enemy), a sub-REFWD shift never fires the re-stand below, so the beacon keeps serving
+		//--- as a forward spawn parked next to an enemy-held town - own-side AI and players respawn
+		//--- into enemy hands. Force the re-stand (to the already gate-passed _pos) whenever the
+		//--- beacon's own position now fails the same enemy-town gate it was placed under.
+		_curBlocked = false;
+		{
+			_townSide = _x getVariable ["sideID", -1];
+			if (_townSide != _myID && {_townSide != -1} && {(_curPos distance _x) < 500}) exitWith {_curBlocked = true};
+		} forEach towns;
+		if (_curBlocked || {(_curPos distance _pos) > _refwd}) then {
 			//--- A2-OA-safe relocate: setPos the existing (locked) beacon to the new (gate-passed) standoff, re-aim it.
 			_curBeacon setPos _pos;
 			_curBeacon setDir _dir;
-			["INFORMATION", Format ["AI_Commander_Beacon.sqf: [%1] spawn-beacon RE-STOOD forward to %2 (front advanced > %3m).", _sideText, _pos, _refwd]] Call WFBE_CO_FNC_AICOMLog;
+			["INFORMATION", Format ["AI_Commander_Beacon.sqf: [%1] spawn-beacon RE-STOOD to %2 (front advanced > %3m or current ground enemy-held).", _sideText, _pos, _refwd]] Call WFBE_CO_FNC_AICOMLog;
 			diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SPAWNBEACON_RESTOOD|pos=" + str _pos + "|tgt=" + (_target getVariable ["name", "?"]));
 		};
 	};
