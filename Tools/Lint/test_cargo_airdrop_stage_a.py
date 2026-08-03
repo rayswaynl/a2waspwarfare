@@ -9,10 +9,10 @@ def read(relative):
     return (MISSION / relative).read_text(encoding="utf-8")
 
 
-def test_stage_a_constants_are_present_and_inert_by_default():
+def test_stage_a_constants_keep_owner_armed_defaults():
     source = read("Common/Init/Init_CommonConstants.sqf")
 
-    assert 'WFBE_C_AICOM_CARGO_AIRDROP_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_ENABLE = 0}' in source
+    assert 'WFBE_C_AICOM_CARGO_AIRDROP_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_ENABLE = 1}' in source
     assert 'WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN") then {WFBE_C_AICOM_CARGO_AIRDROP_COOLDOWN = 1800}' in source
     assert 'WFBE_C_AICOM_CARGO_AIRDROP_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_COST = 60000}' in source
     assert 'WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX") then {WFBE_C_AICOM_CARGO_AIRDROP_VEHICLES_MAX = 2}' in source
@@ -21,7 +21,7 @@ def test_stage_a_constants_are_present_and_inert_by_default():
 def test_stage_a_worker_is_registered_and_triggered():
     # NOTE: this test originally also asserted 'ESCORT not in trigger' as proof Stage A
     # shipped with no escort code. Stage B (test_cargo_airdrop_stage_b.py) intentionally
-    # adds escort logic to AI_Commander_CargoAirdrop.sqf behind its own default-0 flag, so
+    # adds escort logic to AI_Commander_CargoAirdrop.sqf behind its own flag, so
     # that assertion is now retired here and re-asserted (as "escort is flag-gated, not
     # unconditional") in the Stage B test file instead.
     init_server = read("Server/Init/Init_Server.sqf")
