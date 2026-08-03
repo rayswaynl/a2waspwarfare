@@ -4,7 +4,7 @@
 		- Object.
 */
 
-Private ["_delay","_group","_isMan","_object","_town","_remoteAttempt","_remoteBackoff"];
+Private ["_delay","_group","_isMan","_object","_town","_remoteAttempt","_remoteBackoff","_remoteOwner"];
 
 _object = _this;
 _town = [_object] Call GetClosestLocation;
@@ -110,6 +110,7 @@ if !(isNull _object) then {
 	//--- receiver refuse anything this function did not itself queue; combined with its own !alive test
 	//--- the worst a forged dispatch can do is despawn a corpse/wreck early - never a live object.
 	if ((missionNamespace getVariable ["WFBE_C_TRASH_REMOTE_DELETE", 0]) > 0 && {!local _object}) then {
+		_remoteOwner = owner _object;
 		//--- RPT deep-dive 2026-08-01: owner dispatch is fire-and-forget. If the owner is
 		//--- unavailable or rejects a stale locality/seat state, clearing wfbe_trashed immediately
 		//--- lets the 5s collector spawn another 60s worker forever. Keep eventual retry, but add
@@ -122,8 +123,12 @@ if !(isNull _object) then {
 		_object setVariable ["wfbe_trash_remote_attempts", _remoteAttempt];
 		_object setVariable ["wfbe_trash_remote_retry_after", diag_tickTime + _remoteBackoff];
 		_object setVariable ["wfbe_trash_reap", true, true];
-		["INFORMATION", Format["Common_TrashObject.sqf: [%1] is not server-local; dispatching the delete to its owner (retry %2, backoff %3s).", _object, _remoteAttempt, _remoteBackoff]] Call WFBE_CO_FNC_LogContent;
-		[_object, "HandleSpecial", ["cleanup-trash-object", _object]] Call WFBE_CO_FNC_SendToClient;
+		["INFORMATION", Format["Common_TrashObject.sqf: [%1] is not server-local; remote owner %4; retry %2, backoff %3s.", _object, _remoteAttempt, _remoteBackoff, _remoteOwner]] Call WFBE_CO_FNC_LogContent;
+		//--- owner() can be zero while HC locality is transferring. Common_SendToClient drops that
+		//--- packet by design; keep the retry state but avoid constructing an impossible PVF.
+		if (_remoteOwner > 0) then {
+			[_object, "HandleSpecial", ["cleanup-trash-object", _object]] Call WFBE_CO_FNC_SendToClient;
+		};
 		//--- crash 014EFCF4 #4: release the dispatched body back to the collector. If the owner-side executor
 		//--- rejects a mid-flight seat race, the next collector pass re-queues it instead of leaking the body;
 		//--- if the owner deleted it, the reference nulls and the collector's objNull prune drops it.
