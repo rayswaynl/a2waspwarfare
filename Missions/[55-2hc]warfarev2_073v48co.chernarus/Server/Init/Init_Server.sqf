@@ -286,7 +286,7 @@ Call {
 		0 setRain 0;
 	};
 	if (_weat == 3) exitWith {};
-	if (!isDedicated) exitWith {};
+	if (!isServer) exitWith {};
 
 	_oc = 0.05;
 	switch (_weat) do {
