@@ -231,13 +231,13 @@ while {!gameOver} do {
 				         "_existingTeams","_sideIDLocal","_crew1","_crew2",
 				         "_healed","_fieldHospitalUnits","_humanCmd","_skipAI","_w11Eligible","_w3Max",
 				         "_dAng","_spawnPos","_dp","_placed","_dPos",
-	         "_w13Eligible","_w13AirList","_w13AttackClasses","_w13TargetTown","_w13MaxCluster","_w13BestDist","_w13Class","_w13Special","_w13Ang","_w13SpawnPos","_w13Heli","_w13Pilot","_w13TargetPos","_w13Grp","_w13PilotClass","_clustTown","_nearEnemies","_w13Enemies",
+	         "_w13Eligible","_w13AirList","_w13AttackClasses","_w13TargetTown","_w13BestDist","_w13Class","_w13Special","_w13Ang","_w13SpawnPos","_w13Heli","_w13Pilot","_w13TargetPos","_w13Grp","_w13PilotClass","_clustTown","_w13D",
 	         "_w14Eligible","_w14AAClass","_w14Target","_w14Pos","_w14Placed","_w14Ang","_w14DPos","_w14AA","_w14i","_w14Grp","_w14Gunner","_w14PilotClass",
 	         "_w15Eligible","_w15Exp",
 	         "_w16Eligible","_maxLevels","_raisableTiers","_chosenUpID","_newUpgrades","_tierName",
 	         "_w17Eligible","_w17TruckClass","_w17Truck","_w17Grp","_w17Driver","_w17Gunner","_w17Target","_w17TargetPos","_w17MarkerName","_w17SpawnPos","_w17Ang",
 	         "_w18Eligible","_w18OfficerClass","_w18ParaL3","_w18Pos","_w18Grp","_w18HVT","_w18MarkerID","_w18Target","_w18Near","_w1Eligible",
-		         "_w19Eligible","_w19TownObj","_w19Town","_w19BestThreat","_w19Threat","_w19TownPos","_w19SpawnPos","_w19NearD","_w19D","_w19HcUnit","_w19Price","_w19PriceCN","_w19PriceUD","_wW19","_wW20",
+		         "_w19Eligible","_w19TownObj","_w19Town","_w19BestAlert","_w19Alert","_w19TownPos","_w19SpawnPos","_w19NearD","_w19D","_w19HcUnit","_w19Price","_w19PriceCN","_w19PriceUD","_wW19","_wW20",
 		         "_w20Eligible","_w20SupIDs","_w20Raisable","_w20ChosenID","_w20NewUpgrades","_w20TierName","_w20MaxLevels","_w20SupID",
 				         "_w21Eligible","_wW21","_w21VbiedClass","_w21Grp","_w21Truck","_w21Drv","_w21Target","_w21TargetPos","_w21SpawnPos","_w21Ang","_w21Try","_w21Roads",
 		         "_wNameMap","_wName","_wDesc",
@@ -394,17 +394,15 @@ while {!gameOver} do {
 				//--- (their draw credits the commander team's wfbe_funds, which IS useful).
 				_w1Eligible = _humanCmd || {((_side) Call GetAICommanderFunds) < (2 * (missionNamespace getVariable [Format ["WFBE_C_ECONOMY_FUNDS_START_%1", _side], 100000]))};
 
-				//--- W13: gunship strike - air tier unlocked + attack-capable class + 3+ enemy cluster near an enemy town.
+				//--- W13: gunship strike - air tier unlocked + attack-capable class + an existing active-town alert.
 				_w13Eligible = false;
 				if (!isNil "_upgrades" && {count _upgrades > WFBE_UP_AIR} && {(_upgrades select WFBE_UP_AIR) > 0} && {count _cands > 0}) then {
 					_w13AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
 					_w13AttackClasses = [];
 					{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Ka52","Ka52Black","Mi24_D","Mi24_D_TK_EP1","Mi24_V","Mi24_P","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
 					if (count _w13AttackClasses > 0) then {
-						//--- one allUnits pass: the alive/side filter is town-invariant, only the distance is per-town
-						_w13Enemies = [];
-						{ if (alive _x && {(side _x) == _enemySide}) then {_w13Enemies set [count _w13Enemies, _x]} } forEach allUnits;
-						{ _clustTown = _x; _nearEnemies = {(_x distance _clustTown) < 300} count _w13Enemies; if (_nearEnemies >= 3) exitWith {_w13Eligible = true} } forEach _cands;
+						//--- Consume the town activation system's existing alert; do not inspect enemy units globally.
+						{ _clustTown = _x; if ((_clustTown getVariable ["wfbe_active", false]) || {_clustTown getVariable ["wfbe_active_air", false]}) exitWith {_w13Eligible = true} } forEach _cands;
 					};
 				};
 
@@ -476,17 +474,14 @@ while {!gameOver} do {
 				_w12Exp  = missionNamespace getVariable _w12Key;
 				_w12Eligible = (isNil "_w12Exp") || {_w12Exp <= time};
 
-				//--- W19: HELIBORNE QRF - air-insert a QRF squad to the friendly town MOST under threat.
-				//--- Eligible when: the side OWNS at least one town with enemy units within ~600m (under
-				//--- threat) AND the side can field a transport heli. The transport requirement REUSES W6's
-				//--- resolved air-assault template (_w6Eligible / _w6AirTemplate - its first class is a
-				//--- troop-capable Air transport, the SAME thing that drives Common_RunCommanderTeam's
-				//--- air-insertion); if W6 resolved no air template for the side, W19 is ineligible too.
+				//--- W19: HELIBORNE QRF - air-insert a QRF squad to an owned town with an existing alert.
+				//--- The transport requirement REUSES W6's resolved air-assault template; W19 consumes the
+				//--- town activation system's alert instead of discovering enemy units through a global scan.
 				_w19Eligible = false;
 				if (_w6Eligible && {count _w6AirTemplate > 0} && {count _owned > 0}) then {
 					{
 						_w19TownObj = _x;
-						if (({alive _x && {(side _x) == _enemySide} && {(_x distance _w19TownObj) < 600}} count allUnits) > 0) exitWith {_w19Eligible = true};
+						if ((_w19TownObj getVariable ["wfbe_active", false]) || {_w19TownObj getVariable ["wfbe_active_air", false]}) exitWith {_w19Eligible = true};
 					} forEach _owned;
 				};
 
@@ -886,13 +881,15 @@ while {!gameOver} do {
 							_w13AirList = missionNamespace getVariable [Format ["WFBE_%1AIRCRAFTUNITS", _sideText], []];
 							_w13AttackClasses = [];
 							{ if (_x in ["AH64D","AH64D_EP1","AH1Z","Ka50","Ka52","Ka52Black","Mi24_D","Mi24_D_TK_EP1","Mi24_V","Mi24_P","A10","A10_US_EP1","AV8B","AV8B2","Su25_Ins","Su25_TK_EP1","Su34","Su39"]) then {_w13AttackClasses = _w13AttackClasses + [_x]} } forEach _w13AirList;
-							_w13TargetTown = objNull; _w13MaxCluster = 0; _w13BestDist = 1e9;
-							//--- one allUnits pass: the alive/side filter is town-invariant, only the distance is per-town
-							_w13Enemies = [];
-							{ if (alive _x && {(side _x) == _enemySide}) then {_w13Enemies set [count _w13Enemies, _x]} } forEach allUnits;
-							{ _clustTown = _x; _nearEnemies = {(_x distance _clustTown) < 300} count _w13Enemies;
-							  if (_nearEnemies > _w13MaxCluster || {_nearEnemies == _w13MaxCluster && {(_clustTown distance _hq) < _w13BestDist}}) then {_w13MaxCluster = _nearEnemies; _w13TargetTown = _clustTown; _w13BestDist = _clustTown distance _hq} } forEach _cands;
-							if (count _w13AttackClasses > 0 && {!isNull _w13TargetTown} && {_w13MaxCluster >= 3}) then {
+							_w13TargetTown = objNull; _w13BestDist = 1e9;
+							//--- Choose the nearest already-active enemy town; never reveal a hidden enemy cluster to the planner.
+							{ _clustTown = _x;
+							  if ((_clustTown getVariable ["wfbe_active", false]) || {_clustTown getVariable ["wfbe_active_air", false]}) then {
+								_w13D = _clustTown distance _hq;
+								if (_w13D < _w13BestDist) then {_w13TargetTown = _clustTown; _w13BestDist = _w13D};
+							  };
+							} forEach _cands;
+							if (count _w13AttackClasses > 0 && {!isNull _w13TargetTown}) then {
 								_hqPos = getPos _hq;
 								_w13Ang = random 360;
 								_w13SpawnPos = [(_hqPos select 0) + 4000 * sin _w13Ang, (_hqPos select 1) + 4000 * cos _w13Ang, 1500];
@@ -943,7 +940,7 @@ while {!gameOver} do {
 													if (!isNull _grp) then {deleteGroup _grp};
 												};
 											};
-											_detail = Format ["class=%1 target=%2 cluster=%3", _w13Class, _w13TargetTown getVariable ["name","?"], _w13MaxCluster];
+											_detail = Format ["class=%1 target=%2 alert=active", _w13Class, _w13TargetTown getVariable ["name","?"]];
 											};
 										} else {
 											if (!isNull _w13Heli) then {deleteVehicle _w13Heli}; if (!isNull _w13Grp) then {deleteGroup _w13Grp};
@@ -957,7 +954,7 @@ while {!gameOver} do {
 									_result = "ineligible"; _detail = Format ["W13 createVehicle null for %1", _w13Class];
 								};
 							} else {
-								_result = "ineligible"; _detail = Format ["W13 no class/target (cluster=%1)", _w13MaxCluster];
+								_result = "ineligible"; _detail = "W13 no class/active target";
 							};
 						};
 
@@ -1030,15 +1027,14 @@ while {!gameOver} do {
 									_result = "ineligible";
 									_detail = "W19 QRF no air-assault transport template for side";
 								} else {
-									//--- MOST-THREATENED FRIENDLY town: among OWNED towns, the one with the most enemy
-									//--- units within ~600m. FALLBACK if none strictly under threat: the friendly town
-									//--- nearest the front (nearest any enemy town; if no enemy town, nearest the HQ-rear).
+									//--- Choose an owned town with the strongest existing activation alert: ground activity
+									//--- outranks air-only activity. FALLBACK if no alert remains: the friendly town nearest the front.
 									_w19Town       = objNull;
-									_w19BestThreat = 0;
+									_w19BestAlert = 0;
 									{
 										_w19TownObj = _x;
-										_w19Threat  = {alive _x && {(side _x) == _enemySide} && {(_x distance _w19TownObj) < 600}} count allUnits;
-										if (_w19Threat > _w19BestThreat) then {_w19BestThreat = _w19Threat; _w19Town = _w19TownObj};
+										_w19Alert = if (_w19TownObj getVariable ["wfbe_active", false]) then {2} else {if (_w19TownObj getVariable ["wfbe_active_air", false]) then {1} else {0}};
+										if (_w19Alert > _w19BestAlert) then {_w19BestAlert = _w19Alert; _w19Town = _w19TownObj};
 									} forEach _owned;
 									//--- Fallback: friendly town nearest the front (nearest enemy town, else nearest HQ).
 									if (isNull _w19Town) then {
@@ -1080,7 +1076,7 @@ while {!gameOver} do {
 											[_sideID, _w6AirTemplate, _w19SpawnPos] Spawn WFBE_CO_FNC_RunCommanderTeam;
 										};
 						
-										_detail = Format ["air_template=%1 lead=%2 tier=%3 town=%4 threat=%5 price=%6 free hc=%7 humanCmd=%8", _w6AirTemplate, _w6AirTemplate select 0, _w6AirTier, _w19Town getVariable ["name","?"], _w19BestThreat, _w19Price, !isNull _w19HcUnit, _humanCmd];
+										_detail = Format ["air_template=%1 lead=%2 tier=%3 town=%4 alert=%5 price=%6 free hc=%7 humanCmd=%8", _w6AirTemplate, _w6AirTemplate select 0, _w6AirTier, _w19Town getVariable ["name","?"], _w19BestAlert, _w19Price, !isNull _w19HcUnit, _humanCmd];
 									};
 								};
 							};
