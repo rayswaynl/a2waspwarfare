@@ -95,6 +95,11 @@ private "_warCtrls";
 //--- cmdcon41-w3d COMMAND-MENU V2: +14628/14629/14630 STEERING VERBS (RALLY/REFIT/HOLD) appended below when flag on.
 _warCtrls = [14660,14661,14620,14621,14622,14623,14624,14625,14626,14627,14610,14611,14640,14641,14642,14690,14691];
 if ((missionNamespace getVariable ["WFBE_C_CMD_MENU_V2", 1]) > 0) then {_warCtrls = _warCtrls + [14628,14629,14630]};
+//--- fable/cmd-troopmon-freelook: commander tooling, own module (never touches the Spectator v8 lane).
+//--- Each button is admitted ONLY while its own default-0 flag is on - both at 0 leaves the header band
+//--- exactly as HEAD (idc 14710/14711 carry show=0 and are never ctrlShow-ed).
+if ((missionNamespace getVariable ["WFBE_C_COMMANDER_TROOPMON", 0]) > 0) then {_warCtrls = _warCtrls + [14710]};
+if ((missionNamespace getVariable ["WFBE_C_COMMANDER_CAM", 0]) > 0) then {_warCtrls = _warCtrls + [14711]};
 //--- cmdcon41-w3i (Ray 2026-07-02) UI CONSOLIDATION: the SCUD (14631) + TEL SATURATE/RECON (14632/14633) war-room buttons
 //--- were REMOVED — all SCUD/TEL fire now lives in the Tactical menu (GUI_Menu_Tactical.sqf) beside the classic ICBM/NUKE.
 //--- So they are no longer added to _warCtrls (and their gating/arm/fire blocks below were deleted). idcs 14631/14632/14633 free.
@@ -1035,6 +1040,31 @@ while {alive player && dialog} do {
 			};
 		};
 		(_display displayCtrl 14650) ctrlSetStructuredText (parseText _st);
+
+		//--- ----- COMMANDER TOOLING (fable/cmd-troopmon-freelook): TROOP MONITOR (14710/790) opens the
+		//--- filterable own-side roster dialog; RECON CAM (14711/791) spawns the free-flying commander
+		//--- camera. Both re-check their own flag (buttons are hidden at flag-off, but a stray/modified
+		//--- client press must never bite). Independent module - neither touches Client_Spectator*.sqf. -----
+		if (MenuAction == 790) then {
+			MenuAction = -1;
+			if ((missionNamespace getVariable ["WFBE_C_COMMANDER_TROOPMON", 0]) > 0) then {
+				activeAnimMarker = false;
+				closeDialog 0;
+				createDialog "RscMenu_TroopMon";
+			} else {
+				hintSilent parseText "<t color='#F8D664'>Troop monitor is not enabled.</t>";
+			};
+		};
+		if (MenuAction == 791) then {
+			MenuAction = -1;
+			if ((missionNamespace getVariable ["WFBE_C_COMMANDER_CAM", 0]) > 0) then {
+				activeAnimMarker = false;
+				closeDialog 0;
+				[] spawn WFBE_CL_FNC_CommanderFreelook;
+			} else {
+				hintSilent parseText "<t color='#F8D664'>Recon camera is not enabled.</t>";
+			};
+		};
 
 		//--- Back.
 		if (MenuAction == 4) exitWith {MenuAction = -1; activeAnimMarker = false; closeDialog 0; createDialog "WF_Menu"};
