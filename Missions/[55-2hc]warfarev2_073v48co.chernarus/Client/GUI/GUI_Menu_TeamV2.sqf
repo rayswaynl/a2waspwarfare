@@ -1,6 +1,6 @@
 disableSerialization;
 
-private ["_display","_units","_upgLevel","_presets","_i","_slot","_preset","_badge","_desc","_finalNumber","_isInVehicle","_descVehi","_targetUnit","_vehicle","_liveCrew","_destroy","_hitPoints","_hitCfg","_hitName","_curUnitSel","_need_save","_tier","_topTier","_weapons","_mags","_bp","_bpContent","_combo","_x","_crewList","_repairTimer","_udTemplates","_udActive","_udSlotIdx","_udTemplate","_udWList","_udMList","_udBpCls","_udBpCnt","_udWpCombined","_udCleanWeps","_udCleanMags","_udCleanBp","_udCleanBpCnt","_udCost","_udItem","_udNameIDCs","_udActiveIDCs","_udPresetIDCs","_udUDIDCs","_udSN","_udSW","_udSWItem"];
+private ["_display","_units","_upgLevel","_presets","_i","_slot","_preset","_badge","_desc","_finalNumber","_isInVehicle","_descVehi","_targetUnit","_vehicle","_liveCrew","_destroy","_hitPoints","_hitCfg","_hitName","_curUnitSel","_need_save","_tier","_topTier","_weapons","_mags","_bp","_bpContent","_combo","_x","_crewList","_repairTimer","_udTemplates","_udActive","_udSlotIdx","_udTemplate","_udWList","_udMList","_udBpCls","_udBpCnt","_udWpCombined","_udCleanWeps","_udCleanMags","_udCleanBp","_udCleanBpCnt","_udCost","_udItem","_udNameIDCs","_udActiveIDCs","_udPresetIDCs","_udUDIDCs","_udSN","_udSW","_udSWItem","_loadTgt","_loadCount","_unlUnit","_unlVeh"];
 
 _display = _this select 0;
 MenuAction = -1;
@@ -200,6 +200,13 @@ if ((missionNamespace getVariable ["WFBE_C_UNIT_DESIGNER", 1]) > 0) then {
 		{(_display displayCtrl _x) ctrlShow false} forEach _udPresetIDCs;
 		{(_display displayCtrl _x) ctrlShow true } forEach _udUDIDCs;
 	};
+};
+
+//--- Squad bulk mount/dismount buttons (IDC 13075-13076; WFBE_C_SQUAD_BULK_MOUNT, default 0).
+//--- Hidden unless armed so flag-off stays byte-identical to legacy Team Menu V2 behavior.
+{(_display displayCtrl _x) ctrlShow false} forEach [13075, 13076];
+if ((missionNamespace getVariable ["WFBE_C_SQUAD_BULK_MOUNT", 0]) > 0) then {
+	{(_display displayCtrl _x) ctrlShow true} forEach [13075, 13076];
 };
 
 _repairTimer = 0; //--- used to pace the "repair in progress" hint.
@@ -639,6 +646,45 @@ while {alive player && dialog} do {
 				if (!isNull _rv) then {_rv setVariable ["wfbe_tm2_repair_lock", false, true]};
 			};
 		};
+	};
+
+	//--- ── SQUAD: BULK LOAD/UNLOAD (WFBE_C_SQUAD_BULK_MOUNT) ─────────
+	//--- Pattern studied from the rhs_cargosystem whole-squad bulk-load/staggered-dismount
+	//--- idiom, remade as two Team Menu actions in vanilla A2 SQF.
+	if ((missionNamespace getVariable ["WFBE_C_SQUAD_BULK_MOUNT", 0]) > 0) then {
+
+		//--- LOAD ALL (MenuAction 2003): mounts squad AI already within boarding range of the
+		//--- vehicle under the player's cursor. v1 does not path-walk distant units - only units
+		//--- already in range are moved (owner-recommended scope).
+		if (MenuAction == 2003) then {
+			MenuAction = -1;
+			_loadTgt = cursorTarget;
+			if (isNull _loadTgt) exitWith {hint "No vehicle targeted. Look at a vehicle first."};
+			if (!(_loadTgt isKindOf "AllVehicles")) exitWith {hint "No vehicle targeted. Look at a vehicle first."};
+			if (!(alive _loadTgt)) exitWith {hint "Target vehicle is destroyed."};
+			_loadCount = [group player, _loadTgt] Call WFBE_CO_FNC_SquadLoadAll;
+			if (_loadCount > 0) then {
+				hint Format ["Loaded %1 squad member(s) into %2.", _loadCount, [typeOf _loadTgt, 'displayName'] Call GetConfigInfo];
+			} else {
+				hint "No squad members in boarding range to load.";
+			};
+		};
+
+		//--- UNLOAD ALL (MenuAction 2004): staggers AI crew dismount across frames (Common_SquadUnloadAll.sqf)
+		//--- so a full vehicle does not all GetOut on the same tick.
+		if (MenuAction == 2004) then {
+			MenuAction = -1;
+			_curUnitSel = lbCurSel 13071;
+			if (_curUnitSel != -1 && {_curUnitSel < count _units}) then {
+				_unlUnit = _units select _curUnitSel;
+				_unlVeh  = vehicle _unlUnit;
+				if (_unlVeh == _unlUnit) exitWith {hint "Unit is not in a vehicle."};
+				if (_unlVeh getVariable ["wfbe_tm2_unload_lock", false]) exitWith {hint "Unload already in progress on this vehicle."};
+				_unlVeh setVariable ["wfbe_tm2_unload_lock", true, true]; //--- broadcast so other clients see the lock (mirrors the repair-lock idiom above).
+				[_unlVeh] Spawn WFBE_CO_FNC_SquadUnloadAll;
+			};
+		};
+
 	};
 
 	//--- ── FX / vote / high-climb (same as V1) ─────────────────────────────────
