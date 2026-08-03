@@ -529,6 +529,33 @@ WFBE_SPECIAL_UNIT_HINTS = [
 //--- handler). One-line no-op on machines without the mod. See Common_AsrFiredGuard.sqf.
 Call Compile preprocessFileLineNumbers "Common\Functions\Common_AsrFiredGuard.sqf";
 
+//--- SQF utility library adoption (card #25, GR-2026-07-08a): CBA-inspired hash/dict store,
+//--- clean-room 3D vector math helpers, and a zero-scheduler-delay dispatch primitive. Pure
+//--- scaffolding - unconditionally registered like the existing Common_Handle* family, produces
+//--- zero behavior until a future PR calls into it. WFBE_C_UTIL_LIB_SELFTEST (default 0) arms an
+//--- optional boot smoke-test only (see Common_UtilLibSelfTest.sqf); it does not gate the
+//--- functions themselves.
+WFBE_CO_FNC_HashCreate = Compile preprocessFileLineNumbers "Common\Functions\Common_HashCreate.sqf";
+WFBE_CO_FNC_HashGet = Compile preprocessFileLineNumbers "Common\Functions\Common_HashGet.sqf";
+WFBE_CO_FNC_HashSet = Compile preprocessFileLineNumbers "Common\Functions\Common_HashSet.sqf";
+WFBE_CO_FNC_HashHasKey = Compile preprocessFileLineNumbers "Common\Functions\Common_HashHasKey.sqf";
+WFBE_CO_FNC_HashRem = Compile preprocessFileLineNumbers "Common\Functions\Common_HashRem.sqf";
+WFBE_CO_FNC_VectDot = Compile preprocessFileLineNumbers "Common\Functions\Common_VectDot.sqf";
+WFBE_CO_FNC_VectCross = Compile preprocessFileLineNumbers "Common\Functions\Common_VectCross.sqf";
+WFBE_CO_FNC_VectMagnitude = Compile preprocessFileLineNumbers "Common\Functions\Common_VectMagnitude.sqf";
+WFBE_CO_FNC_VectElevationSolve = Compile preprocessFileLineNumbers "Common\Functions\Common_VectElevationSolve.sqf";
+WFBE_CO_FNC_VectLeadAngle = Compile preprocessFileLineNumbers "Common\Functions\Common_VectLeadAngle.sqf";
+WFBE_CO_FNC_VectSurfaceNormal = Compile preprocessFileLineNumbers "Common\Functions\Common_VectSurfaceNormal.sqf";
+WFBE_CO_FNC_DelaylessCall = Compile preprocessFileLineNumbers "Common\Functions\Common_DelaylessCall.sqf";
+WFBE_CO_FNC_UtilLibSelfTest = Compile preprocessFileLineNumbers "Common\Functions\Common_UtilLibSelfTest.sqf";
+
+//--- Server-only, one-shot: run the library self-test only if explicitly armed.
+if (isServer) then {
+	if ((missionNamespace getVariable "WFBE_C_UTIL_LIB_SELFTEST") > 0) then {
+		[] call WFBE_CO_FNC_UtilLibSelfTest;
+	};
+};
+
 //--- Common initilization is complete at this point.
 ["INITIALIZATION", Format ["Init_Common.sqf: Common initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
 commonInitComplete = true;

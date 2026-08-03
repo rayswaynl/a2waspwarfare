@@ -132,6 +132,95 @@ terrains - nothing else in the wave touches those files at this branch point (co
 on the merge-base..wave range). #1777 (separate open draft, null-guard fixes to the same file) is
 NOT yet merged into the wave, so there was no overlap to resolve against it.
 
+## Working State 2026-08-03 — SQF utility library adoption [claude/sqf-util-lib]
+
+**Card**: #25 in the FLEET-20260802 mining-review batch ("CBA-derived SQF utility adoption:
+hash/dict store + 3D vector math + delayless dispatch"). Effort S / Risk low / "Clear to build".
+
+**Delivered** (5 commits, all three maps mirrored via LoadoutManager):
+1. `Common_HashCreate/Get/Set/HasKey/Rem.sqf` - parallel-array key/value store, documented
+   as an honest linear scan, not a perf win over `Server_CmdTownLedger.sqf`'s existing idiom.
+   `HashSet` mutates in place; `HashRem` returns a new handle (no `deleteAt` on A2 OA).
+2. `Common_VectDot/Cross/Magnitude/ElevationSolve/LeadAngle/SurfaceNormal.sqf` - manual-
+   arithmetic vector math (not wrapping any native `vect*` command).
+3. `Common_DelaylessCall.sqf` + `Common/FSM/delayless.fsm` - execFSM-based zero-scheduler-
+   delay dispatch for hot-path one-shot calls, as an alternative to `spawn`.
+4. `Common_UtilLibSelfTest.sqf`, registration in `Init_Common.sqf`, flag
+   `WFBE_C_UTIL_LIB_SELFTEST` (default 0, boot smoke-test only) in `Init_CommonConstants.sqf`.
+5. `docs/design/SQF-UTIL-LIB.md` - API reference.
+
+Pure additive, no call-site migrations (card names no explicit demonstrative adoption target -
+future consumers are #1/#12/#14, all separate flag-gated PRs). Lint gate clean (zero findings
+in any touched/new file), bracket delta zero per file, mirrors identical across CH/TK/ZG,
+`Test-WaspVersionTemplates.ps1` all PASS.
+
+**Discovered issue / unresolved blocker (soft, matches the card's own note)**: this session ran
+with no network access (role-locked), so the `a2oa-verify-command` skill's rungs 1-2 (repo wiki,
+BI wiki) could not be climbed for two claims:
+- whether A2 OA 1.64 natively exposes any vector command equivalent to
+  `VectDot`/`VectCross`/`VectMagnitude` (if so, the manual-arithmetic versions here are
+  functionally fine but partially redundant);
+- whether an FSM's `Init` state genuinely executes its `init` code in the same frame
+  `execFSM` is called, with the `execFSM` argument bound to `_this` inside that state (the
+  premise `Common_DelaylessCall.sqf` is built on).
+
+Mitigated by writing both as clean-room implementations that don't call any commands whose
+existence is in question, and by having `Common_UtilLibSelfTest.sqf` (flag-gated, default off)
+empirically MEASURE the delayless same-frame behavior via global marker variables rather than
+asserting it, logging the result to RPT. **Next agent/owner should**: arm
+`WFBE_C_UTIL_LIB_SELFTEST=1` on a real server once, read the RPT for the
+`DELAYLESS same-frame=...` line, and only then treat `Common_DelaylessCall` as safe to adopt on
+a real hot path in a follow-up PR. See `docs/design/SQF-UTIL-LIB.md` for the full writeup.
+
+### Review-fix pass (same day, before PR)
+
+A second reviewer flagged two issues against the above; both verified against A2 SQF semantics
+and fixed:
+
+1. **MAJOR, confirmed — `Common_VectElevationSolve.sqf` sentinel collision.** The original `-1`
+   failure sentinel is itself an ordinary, in-range low-arc angle (e.g. `[200, -23.117, 100]`
+   solves to `theta ~ -1.000`), so a caller checking `_theta > -1` per the documented contract
+   would wrongly treat a real solution as "unreachable." Fixed by moving the sentinel to `-999`,
+   which sits outside `atan`'s valid `(-90,90)` output range and can never collide with a real
+   result. Updated the function header, `docs/design/SQF-UTIL-LIB.md`, and the one self-test
+   assertion that referenced the old sentinel (`Common_UtilLibSelfTest.sqf`).
+2. **minor, confirmed — `Common_VectLeadAngle.sqf` under-length `_targetVel`.** If a caller ever
+   passes a `_targetVel` with fewer dimensions than `_targetPos`, the old loop's
+   `_targetVel select _i` goes out of range on the last axis; per this repo's own verified A2
+   trap (a failed statement doesn't abort the script, it's skipped — see
+   `a2-failed-statement-continues.md`), that silently left a hole in the returned `_aimPoint`
+   instead of erroring loudly. Currently unreachable (zero call sites) but cheap to harden: the
+   loop now defaults any missing `_targetVel` component to `0` instead of indexing out of range,
+   and the header documents the same-dimensionality expectation.
+
+Both fixes are additive/defensive only — behavior for well-formed same-dimensionality inputs is
+unchanged. Re-verified after the fix: lint gate clean (zero findings in touched files), net
+bracket delta zero per file, LoadoutManager mirror re-run clean across CH/TK/ZG (byte-identical
+diffs across all three terrains), `version.sqf.template` untouched by the regen this time,
+`Test-WaspVersionTemplates.ps1` all PASS.
+
+Rejected: none — both review findings were confirmed against source and fixed.
+
+**Wave reconcile 2026-08-03** (worktree `C:\tmp\reconwt3\pr2033`, branch `recon3/pr2033-20260803`,
+supersedes PR #2033): merged cleanly onto `origin/update/wave-20260802`. Collision check requested
+by the reconcile task — searched the wave for any existing `WFBE_CO_FNC_Hash*`, `WFBE_CO_FNC_Vect*`,
+`WFBE_CO_FNC_DelaylessCall`, `Common_UtilLibSelfTest`, or `WFBE_C_UTIL_LIB_SELFTEST` symbols and any
+`Common_Hash*`/`Common_Vect*`/`Common_Delayless*`/`delayless.fsm` files already in the wave: none
+found, so no rename-collision to resolve. All new function/FSM files (all 3 terrains) applied with
+zero conflicts. `Init_Common.sqf` (all 3 terrains) auto-merged cleanly — the wave has not touched
+that registration region since this PR's base commit. Only conflicts were the same append-only
+collision shape as the #1912/#1915 reconcile above: `Init_CommonConstants.sqf` (all 3 terrains, this
+PR's `WFBE_C_UTIL_LIB_SELFTEST` flag registration landing at the same end-of-file anchor as several
+other wave PRs' flag blocks — combined, no logic change to any of them) and this JOURNAL.md file.
+Note for the owner: this PR's own PR body/header comments assert "A2 OA has no native `surfaceNormal`"
+as the reason for `Common_VectSurfaceNormal.sqf`'s manual `getTerrainHeightASL`-sampling
+reimplementation — that claim does not hold up against this repo's own code: `surfaceNormal` is
+called natively and extensively elsewhere in the wave (`Common_RunCommanderTeam.sqf`,
+`Client_BuildUnit.sqf`, `AI_Commander_Base.sqf`, `Server_Oilfields.sqf`, `Init_CommonConstants.sqf`
+comments). Not a naming collision (no function shares the `surfaceNormal` name) and not fixed in this
+reconcile since `Common_VectSurfaceNormal` has zero call sites (inert, additive-only) — flagged here
+so a future adopting PR reaches for the native command instead of this library function.
+
 ---
 
 ## Working State 2026-08-01 — crash 014EFCF4 crew-delete sweep [fix/014e-crew-delete-sweep-20260801]
