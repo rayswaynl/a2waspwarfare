@@ -1,5 +1,5 @@
 disableSerialization;
-Private ['_action_leave','_defaultTeamswitch','_displayEH_keydown','_displayEH_mousebuttondown','_locked','_logic','_mapEH_mousebttondown','_ppColor','_uav'];
+Private ['_action_leave','_defaultTeamswitch','_displayEH_keydown','_displayEH_mousebuttondown','_driver','_locked','_logic','_mapEH_mousebttondown','_ppColor','_uav'];
 _defaultTeamswitch = teamswitchenabled;
 
 startLoadingScreen ["UAV","RscDisplayLoadMission"];
@@ -8,6 +8,7 @@ _uav = playerUAV;
 
 //--- UAV destroyed
 if (isnull _uav) exitwith {endLoadingScreen;hint format [localize "strwfbasestructuredestroyed",localize "str_uav_action"]};
+_driver = driver _uav;
 
 //--- Switch view
 //--- r78 handover: OPFOR UAV has no gunner slot (uav.sqf) - remoteControl gunner was a no-op and
@@ -131,15 +132,13 @@ endLoadingScreen;
 
 //--- TERMINATE
 waituntil {!isnil "bis_uav_terminate" || !alive _uav || !alive player};
-Private ["_playerDied","_drv","_mkId","_mkName"];
+Private ["_playerDied","_mkId","_mkName"];
 _playerDied = !alive player;
 if (!alive _uav) then {
 	hint format [localize "strwfbasestructuredestroyed",localize "str_uav_action"];
-} else {
-	//--- Reenable targetting (null-safe: dead/trashed driver must not abort the rest of teardown).
-	_drv = driver _uav;
-	if (!isNull _drv) then {{_drv enableAI _x} forEach ["TARGET","AUTOTARGET"]};
 };
+//--- Restore the originally disabled pilot even if the UAV hull was destroyed first.
+if (!isNull _driver && {alive _driver}) then {{_driver enableAI _x} forEach ["TARGET","AUTOTARGET"]};
 
 if (!isNull _uav) then {_uav lock _locked};
 titletext ["","black in"];
