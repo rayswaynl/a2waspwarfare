@@ -92,11 +92,19 @@ if (_type == "Ins_Soldier_AT") then {
 
 // Add custom RPG-7 VR soldier (MVD_Soldier_AT)
 if (_type == "MVD_Soldier_AT") then {
+	private ["_mvdMuzzles", "_mvdPreviousWeapon"];
+	_mvdPreviousWeapon = currentWeapon _unit;
 	_unit removeMagazine "PG7VL";
 	_unit removeMagazine "PG7VL";
 	_unit removeMagazine "OG7";
+	// Bind PG7VR to the RPG-7V muzzle instead of the built-in Pecheneg muzzle.
+	_unit removeWeapon "RPG7V";
+	_unit addWeapon "RPG7V";
+	_mvdMuzzles = getArray (configFile >> "CfgWeapons" >> "RPG7V" >> "muzzles");
+	if (count _mvdMuzzles == 0 || {"this" in _mvdMuzzles}) then {_unit selectWeapon "RPG7V"} else {_unit selectWeapon (_mvdMuzzles select 0)};
 	_unit addMagazine "PG7VR";
 	_unit addMagazine "PG7VR";
+	if (_mvdPreviousWeapon != "" && {_unit hasWeapon _mvdPreviousWeapon}) then {_unit selectWeapon _mvdPreviousWeapon};
 };
 
 if (_global) then {
