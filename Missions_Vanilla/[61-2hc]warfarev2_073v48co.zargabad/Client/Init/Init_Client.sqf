@@ -707,6 +707,9 @@ player setVariable ["lastPosition", position player];
 
 _display displayAddEventHandler ["KeyDown", "_this call WFBE_CO_FNC_HandleAFKkeys"];
 
+//--- The single updateclient AFK clock also treats mouse-driven map/terminal activity as input.
+_display displayAddEventHandler ["MouseButtonDown", "if (!isNull player) then {player setVariable ['lastActionTime', time]}; false"];
+
 //--- ============================================================================
 //--- b67 item #3 (claude-gaming 2026-06-21): VEHICLE-TINT LEGEND (top-right pop-up).
 //--- Explains the faction body TINTS set in Common_AddVehicleTexture.sqf (WEST/BLUFOR = matte black,
@@ -776,7 +779,8 @@ if (WFBE_CL_VAR_TintLegendEnabled) then {
 };
 //--- ============================================================================
 
-[] execVM "Client\Module\AFKkick\monitorAFK.sqf";
+//--- updateclient.sqf owns the lobby-configured AFK timeout. Do not start the legacy
+//--- fixed 30-minute monitor here: two clocks can otherwise kick at conflicting times.
 
 //--- wiki-wins: removed duplicate HandleAT Fired EH (already added near the top of Init_Client); was double-spawning HandleAT per AT rocket
 execVM "WASP\global_marking_monitor.sqf";
