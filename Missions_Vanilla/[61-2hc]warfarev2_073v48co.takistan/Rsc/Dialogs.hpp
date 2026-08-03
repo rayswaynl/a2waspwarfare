@@ -3198,6 +3198,33 @@ class RscMenu_Command {
 			tooltip = "Apply the selected order to the highlighted team. Position orders (Move/Defend/Patrol/Arty) then ask for a map click.";
 			show = 0;
 		};
+		/* fable/cmd-troopmon-freelook: two independent commander-tooling entry points in the top header
+		   band (y 0.001-0.053, clear of the situation map which starts at y=0.056 and the title which ends
+		   at x=0.3) - avoids any layout collision with the packed left-column war-room controls below.
+		   show=0 STRUCTURAL GUARD -> STATE-B (commander) only; each is admitted to _warCtrls in
+		   GUI_Menu_Command.sqf ONLY when its own default-0 flag is on, so with both flags at 0 neither
+		   button is ever admitted and this dialog is pixel-identical to HEAD. Independent of the
+		   Spectator v8 lane - opens RscMenu_TroopMon / spawns Client_CommanderFreelook.sqf, never touches
+		   Client_Spectator*.sqf. */
+		class CA_Cmd_TroopMon : RscButton_Main {
+			idc = 14710;
+			x = 0.620000; y = 0.008000; w = 0.170000; h = 0.036000;
+			show = 0;
+			text = "TROOP MONITOR";
+			action = "MenuAction = 790";
+			tooltip = "Browse a filterable list of every own-side group (AI-led and player-led).";
+			colorBackground[] = {0.15, 0.3, 0.45, 0.85};
+			colorBackgroundActive[] = {0.2, 0.42, 0.6, 1};
+		};
+		class CA_Cmd_ReconCam : CA_Cmd_TroopMon {
+			idc = 14711;
+			x = 0.800000; y = 0.008000; w = 0.170000;
+			text = "RECON CAM";
+			action = "MenuAction = 791";
+			tooltip = "Fly a free camera around the map (ESC returns to your body).";
+			colorBackground[] = {0.45, 0.3, 0.1, 0.85};
+			colorBackgroundActive[] = {0.6, 0.42, 0.15, 1};
+		};
 		class Back_Button : RscButton_Back {
 			x = 0.892507;
 			y = 0.953825;
@@ -3210,6 +3237,92 @@ class RscMenu_Command {
 			y = 0.953825;
 			onButtonClick = "closeDialog 0;";
 			tooltip = $STR_WF_TOOLTIP_CloseButton;
+		};
+	};
+};
+
+//--- fable/cmd-troopmon-freelook: filterable own-side troop/group monitor, opened from the
+//--- RscMenu_Command war-room TROOP MONITOR button (idc 14710, MenuAction 790). Own module - never
+//--- touches WFBE_SpectatorMapDialog or any Spectator v8 class. Modeled on WFBE_TownsGarrisonMenu
+//--- (same background/header/footer idiom) with one added TYPE filter combo.
+class RscMenu_TroopMon {
+	movingEnable = 1;
+	idd = 33000;
+	onLoad = "(_this) ExecVM 'Client\GUI\GUI_Menu_TroopMon.sqf'";
+
+	class controlsBackground {
+		class BG : RscText {
+			x = 0.170; y = 0.170; w = 0.660; h = 0.660;
+			colorBackground[] = WFBE_Background_Color;
+			moving = 1;
+		};
+		class Header : RscText {
+			x = 0.170; y = 0.170; w = 0.660; h = 0.055;
+			colorBackground[] = WFBE_Background_Color_Header;
+			moving = 1;
+		};
+		class Footer : RscText {
+			x = 0.170; y = 0.775; w = 0.660; h = 0.055;
+			colorBackground[] = WFBE_Background_Color_Sub;
+		};
+	};
+
+	class controls {
+		class Title : RscText_Title {
+			x = 0.185; y = 0.178; w = 0.560; h = 0.040;
+			text = "TROOP MONITOR";
+		};
+		class Btn_X : RscButton_Main {
+			x = 0.785; y = 0.178; w = 0.032; h = 0.040;
+			text = "X";
+			shadow = 2;
+			action = "closeDialog 0;";
+		};
+		class Lbl_Info : RscText {
+			x = 0.190; y = 0.225; w = 0.610; h = 0.035;
+			text = "OWN-SIDE INTEL | every own-side group, AI-led and player-led | read-only";
+			sizeEx = 0.020;
+			colorText[] = {0.2588, 0.7137, 1, 0.85};
+			shadow = 2;
+		};
+		class Lbl_FilterCaption : RscText {
+			x = 0.190; y = 0.268; w = 0.090; h = 0.033;
+			text = "TYPE:";
+			sizeEx = 0.020;
+			colorText[] = {1, 1, 1, 0.85};
+			shadow = 2;
+		};
+		class Combo_Type : RscCombo {
+			idc = 33010;
+			x = 0.280; y = 0.266; w = 0.200; h = 0.035;
+		};
+		class LB_Troops : RscListBox {
+			idc = 33011;
+			x = 0.190; y = 0.315; w = 0.610; h = 0.330;
+			rowHeight = 0.040;
+		};
+		class Status : RscText {
+			idc = 33012;
+			x = 0.190; y = 0.655; w = 0.610; h = 0.035;
+			text = "0 groups shown";
+			sizeEx = 0.019;
+			colorText[] = {0.8, 0.9, 1, 0.8};
+			shadow = 2;
+		};
+		class Btn_Refresh : RscButton_Main {
+			x = 0.190; y = 0.785; w = 0.196; h = 0.035;
+			text = "REFRESH";
+			action = "MenuAction = 11;";
+		};
+		class Btn_View : RscButton_Main {
+			x = 0.397; y = 0.785; w = 0.196; h = 0.035;
+			text = "VIEW";
+			action = "MenuAction = 12;";
+		};
+		class Btn_Back : RscButton_Main {
+			x = 0.604; y = 0.785; w = 0.196; h = 0.035;
+			text = "< BACK";
+			action = "MenuAction = 10;";
 		};
 	};
 };
