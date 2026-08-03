@@ -65,6 +65,17 @@ diag_log format ["[WFBE (TEAMSWITCH)] cross-group selectPlayer: from=%1 (grp=%2)
 
 selectPlayer _targetUnit;
 
+//--- VERIFY the handoff actually took before touching either group's AI. Per SkinSelector_Apply.sqf's
+//--- own documented A2 MP behavior (its B5_FAIL comment): "a selectPlayer into a non-local group (or
+//--- mid-JIP) can silently fail, leaving the player in the OLD body". A same-frame check (no waitUntil -
+//--- this function runs via `call` and a future caller's scheduling context is unknown, so a
+//--- suspend-capable wait here would be unsafe) is enough to catch that silent-fail case: if it fired,
+//--- player is still _fromUnit and pulsing doFollow on either group would be acting on a handoff that
+//--- never happened.
+if (player != _targetUnit) exitWith {
+	diag_log format ["[WFBE (TEAMSWITCH)] cross-group selectPlayer VERIFY FAILED: player=%1 target=%2 - transfer did not take, skipping doFollow pulse", player, _targetUnit];
+};
+
 //--- doFollow pulse on the group being LEFT: same idiom as Common_RunUnstuckRecovery.sqf /
 //--- Common_SMLCampSplit.sqf. Un-sticks any AI whose move/doFollow state stalled the moment its
 //--- leader/member stopped being player-controlled.
