@@ -9,7 +9,7 @@
 		- {PLacement}
 */
 
-Private ["_get", "_global", "_globalInitMode", "_leaderIsPlayer", "_perfScope", "_perfStart", "_position", "_side", "_sideValue", "_skill", "_special", "_team", "_teamLeader", "_trackInfantry", "_type", "_unit"];
+Private ["_deferGlobalInit", "_get", "_global", "_globalInitMode", "_leaderIsPlayer", "_perfScope", "_perfStart", "_position", "_side", "_sideValue", "_skill", "_special", "_team", "_teamLeader", "_trackInfantry", "_type", "_unit"];
 
 _type = _this select 0;
 _team = _this select 1;
@@ -17,6 +17,7 @@ _position = _this select 2;
 _side = _this select 3;
 _global = if (count _this > 4) then {_this select 4} else {true};
 _special = if (count _this > 5) then {_this select 5} else {"FORM"};
+_deferGlobalInit = if (count _this > 6) then {_this select 6} else {false};
 // Marty: Performance Audit tracks whether unit creation causes global client initialization.
 _perfStart = diag_tickTime;
 _globalInitMode = "globalFalse";
@@ -109,7 +110,7 @@ if (_global) then {
 			if ((missionNamespace getVariable "WFBE_C_UNITS_TRACK_INFANTRY") > 0) then {
 				_globalInitMode = "vehicleInit";
 				_unit setVehicleInit Format["[this,%1] ExecVM 'Common\Init\Init_Unit.sqf';", _side];
-				processInitCommands;
+				if (!_deferGlobalInit) then {processInitCommands};
 			} else {
 				_leaderIsPlayer = isPlayer leader _team;
 				if (_leaderIsPlayer) then {
