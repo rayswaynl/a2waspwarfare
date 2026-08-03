@@ -1403,7 +1403,7 @@ while {!gameOver && {(missionNamespace getVariable [_ownerKey, _ownerSeq]) == _o
 		private ["_hcReg","_hcLive","_hcOwners","_hcCounts","_ho","_hidx","_hMax","_hMin","_hCsv","_hRatio","_hc"];
 		_hcReg = missionNamespace getVariable ["WFBE_HEADLESSCLIENTS_ID", []];
 		_hcLive = [];
-		{ if (!isNull _x && {!isNull leader _x} && {alive leader _x}) then {_hcLive = _hcLive + [_x]} } forEach _hcReg;
+		{ if (!isNull _x && {!isNull leader _x} && {alive leader _x} && {(owner (leader _x)) > 2}) then {_hcLive = _hcLive + [_x]} } forEach _hcReg;
 		if (count _hcLive > 0) then {
 			_hcOwners = []; _hcCounts = [];
 			{ _hcOwners set [_forEachIndex, owner (leader _x)]; _hcCounts set [_forEachIndex, 0] } forEach _hcLive;
