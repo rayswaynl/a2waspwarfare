@@ -423,20 +423,21 @@ waitUntil {
 	};
 	//--- WFBE_C_GDIR_VIS: armed QRF contract indicator for selected town.
 	if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
-		private ["_contracts","_ctrSz","_ci","_qrfArmed"];
-		_contracts = missionNamespace getVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", []];
-		_qrfArmed = false;
-		_ctrSz = count _contracts;
-		_ci = 0;
-		while {_ci < _ctrSz} do {
-			private ["_ctrR","_cKindR","_cTownR","_cStateR"];
-			_ctrR   = _contracts select _ci;
-			_cKindR = _ctrR select 1;
-			_cTownR = _ctrR select 2;
-			_cStateR = _ctrR select 7;
-			if (_cTownR == _selTownId && {_cStateR == "armed"} && {_cKindR != "counterAttack"}) then {_qrfArmed = true};
-			_ci = _ci + 1;
-		};
+        private ["_gdirSnap","_snapContracts","_ctrSz","_ci","_qrfArmed"];
+        _gdirSnap = missionNamespace getVariable ["WFBE_COMM_GDIR_SNAP", []];
+        _snapContracts = [];
+        if (typeName _gdirSnap == "ARRAY" && {count _gdirSnap > 6}) then {_snapContracts = _gdirSnap select 6};
+        _qrfArmed = false;
+        _ctrSz = if (typeName _snapContracts == "ARRAY") then {count _snapContracts} else {0};
+        _ci = 0;
+        while {_ci < _ctrSz} do {
+            private ["_ctrR","_cKindR","_cTownR"];
+            _ctrR   = _snapContracts select _ci;
+            _cTownR = _ctrR select 0;
+            _cKindR = _ctrR select 1;
+            if (_cTownR == _selTownId && {_cKindR != "counterAttack"}) then {_qrfArmed = true};
+            _ci = _ci + 1;
+        };
 		if (_qrfArmed) then {
 			if (_cdText != "") then {
 				_cdText = Format ["[QRF ARMED] %1", _cdText];

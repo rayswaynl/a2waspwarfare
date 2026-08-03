@@ -841,16 +841,26 @@ while {!WFBE_GameOver} do {
     //--------------------------------------------------------------------
     if (_hardenOn && {(diag_tickTime - _jipSnapLastT) >= _jipSnapInterval}) then {
         _jipSnapLastT = diag_tickTime;
-        private ["_snapNames","_snapStr","_snapBase","_snapFund","_snapCD","_snapTransit"];
+        private ["_snapNames","_snapStr","_snapBase","_snapFund","_snapCD","_snapTransit","_snapContracts"];
         _snapNames = [];
         _snapStr   = [];
         _snapBase  = [];
         _snapFund  = [];
         _snapCD    = [];
         _snapTransit = []; //--- fable/guer-town-intel: in-transit strength per town (snap index 5)
-        private ["_snapNowT","_cdMap"];
+        _snapContracts = []; //--- r129: sanitized [townName, kind] pairs for armed QRF/counter contracts (snap index 6)
+        private ["_snapNowT","_cdMap","_snapContractRows"];
         _snapNowT = diag_tickTime;
         _cdMap    = missionNamespace getVariable ["AICOMV2_GDIR_COOLDOWN_MAP", []];
+        _snapContractRows = missionNamespace getVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", []];
+        {
+            private ["_ctrSnap"];
+            _ctrSnap = _x;
+            if (typeName _ctrSnap == "ARRAY" && {count _ctrSnap > 7} && {(_ctrSnap select 7) == "armed"}) then {
+                //--- Do not expose requester UID, price, or timestamps to clients; the indicator only needs town + kind.
+                _snapContracts set [count _snapContracts, [_ctrSnap select 2, _ctrSnap select 1]];
+            };
+        } forEach _snapContractRows;
         {
             private ["_sRec","_sTown","_sName","_sFundKey","_sFund","_sCD"];
             _sRec  = _x;
@@ -869,7 +879,7 @@ while {!WFBE_GameOver} do {
             _snapCD    set [count _snapCD,    _sCD];
             _snapTransit set [count _snapTransit, _sRec select 3];
         } forEach _ledger;
-        AICOMV2_GDIR_JIP_SNAP = [_snapNames, _snapStr, _snapBase, _snapFund, _snapCD, _snapTransit]; //--- fable/guer-town-intel: index 5 appended - existing consumers read 0-4 unaffected
+        AICOMV2_GDIR_JIP_SNAP = [_snapNames, _snapStr, _snapBase, _snapFund, _snapCD, _snapTransit, _snapContracts]; //--- fable/guer-town-intel: indices 5/6 appended - existing consumers read 0-4 unaffected
         publicVariable "AICOMV2_GDIR_JIP_SNAP";
         diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_JIP_SNAP published towns=%2", _elmin, count _snapNames];
     };
