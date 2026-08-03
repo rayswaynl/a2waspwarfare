@@ -3554,5 +3554,31 @@ if (isNil "WFBE_C_SPECTATOR_MOUSE_SMOOTH") then {WFBE_C_SPECTATOR_MOUSE_SMOOTH =
 if (isNil "WFBE_C_SPECTATOR_SENS_REF_FOV") then {WFBE_C_SPECTATOR_SENS_REF_FOV = 0.8}; //--- FOV at which SENS applies 1:1; sensitivity scales linearly with zoom (scoped-aim feel).
 if (isNil "WFBE_C_SPECTATOR_SENS_MIN_FACTOR") then {WFBE_C_SPECTATOR_SENS_MIN_FACTOR = 0.05}; //--- never let zoom-scaled sensitivity drop below this fraction of SENS.
 
+//--- Terrain sector classifier (owner-shortlist item): averages jittered selectBestPlaces samples per
+//--- axis (Houses/Forest/Trees/Hills) to classify each town sector for AICOM composition biasing.
+//--- Phase 1 classify+cache (WFBE_C_TERRAIN_CLASSIFY_SECTORS, default 0 = INERT): once per town at
+//--- boot, Common_TerrainClassifySector.sqf caches garrison/bush-camp/open-maneuver on the town
+//--- object (wfbe_sector_class / wfbe_sector_classified). Zero composition effect on its own.
+if (isNil "WFBE_C_TERRAIN_CLASSIFY_SECTORS") then {WFBE_C_TERRAIN_CLASSIFY_SECTORS = 0};
+//--- Number of jittered selectBestPlaces samples averaged per axis. Card spec: 5.
+if (isNil "WFBE_C_TERRAIN_CLASSIFY_SAMPLES") then {WFBE_C_TERRAIN_CLASSIFY_SAMPLES = 5};
+//--- selectBestPlaces precision argument (higher = finer/slower scan).
+if (isNil "WFBE_C_TERRAIN_CLASSIFY_PRECISION") then {WFBE_C_TERRAIN_CLASSIFY_PRECISION = 5};
+//--- Max per-sample position jitter offset in metres (capped low so all 5 samples stay within the
+//--- same town sector, never wandering into a neighbouring town's terrain).
+if (isNil "WFBE_C_TERRAIN_CLASSIFY_JITTER_M") then {WFBE_C_TERRAIN_CLASSIFY_JITTER_M = 20};
+//--- Phase 2 composition nudge (WFBE_C_TERRAIN_SECTOR_COMPOSITION, default 0 = INERT): hard-dependent
+//--- on phase 1 having actually classified the town (wfbe_sector_classified == true, never a
+//--- getVariable default) - applies a small clamped nudge to _percentage_inf in
+//--- Server_GetTownGroups.sqf / _Defender.sqf. Never touches _groups_max/total spawn count -
+//--- GUER-volume doctrine preserved by construction.
+if (isNil "WFBE_C_TERRAIN_SECTOR_COMPOSITION") then {WFBE_C_TERRAIN_SECTOR_COMPOSITION = 0};
+//--- Infantry-percentage nudge for a "garrison" classified sector (+8 = more infantry).
+if (isNil "WFBE_C_TERRAIN_SECTOR_NUDGE_GARRISON") then {WFBE_C_TERRAIN_SECTOR_NUDGE_GARRISON = 8};
+//--- Infantry-percentage nudge for a "bush-camp" classified sector (+4 = mild infantry/ambush skew).
+if (isNil "WFBE_C_TERRAIN_SECTOR_NUDGE_BUSHCAMP") then {WFBE_C_TERRAIN_SECTOR_NUDGE_BUSHCAMP = 4};
+//--- Infantry-percentage nudge for an "open-maneuver" classified sector (-8 = more vehicles).
+if (isNil "WFBE_C_TERRAIN_SECTOR_NUDGE_OPEN") then {WFBE_C_TERRAIN_SECTOR_NUDGE_OPEN = -8};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
