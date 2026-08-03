@@ -9,12 +9,12 @@ def read(relative):
     return (MISSION / relative).read_text(encoding="utf-8")
 
 
-def test_stage_b_constants_are_present_and_inert_by_default():
+def test_stage_b_constants_keep_owner_armed_defaults():
     source = read("Common/Init/Init_CommonConstants.sqf")
 
-    assert 'WFBE_C_AICOM_CARGO_AIRDROP_CREW_VEHICLES") then {WFBE_C_AICOM_CARGO_AIRDROP_CREW_VEHICLES = 0}' in source
+    assert 'WFBE_C_AICOM_CARGO_AIRDROP_CREW_VEHICLES") then {WFBE_C_AICOM_CARGO_AIRDROP_CREW_VEHICLES = 1}' in source
     assert 'WFBE_C_AICOM_CARGO_AIRDROP_PARATROOP_EXTRA") then {WFBE_C_AICOM_CARGO_AIRDROP_PARATROOP_EXTRA = 0}' in source
-    assert 'WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE = 0}' in source
+    assert 'WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_ENABLE = 1}' in source
     assert 'WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_COST = 35000}' in source
     assert 'WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES") then {WFBE_C_AICOM_CARGO_AIRDROP_ESCORT_CLASSES' in source
 
