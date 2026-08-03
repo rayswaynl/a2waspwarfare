@@ -1139,6 +1139,8 @@ if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNames
 //--- absolute stored value, never adds), so even a redundant request cannot duplicate money. Covers WEST/EAST/GUER
 //--- (all three keep wfbe_funds on the group). A2-OA-1.64 safe: group player / getVariable / typeName == / mod;
 //--- no A3 commands. No frozen AI / no sim-gating touched.
+//--- Caster seats are civilian spectator bodies, never warfare wallets: skip the retry loop.
+if !(player getVariable ["wfbe_caster_slot", false]) then {
 [] spawn {
 	private ["_grp","_f","_n","_done","_sentAny","_t0","_grace"];
 	waitUntil {(!isNil "WFBE_Client_SideJoinedText") && {!isNil "WFBE_Client_SideJoined"}};
@@ -1183,6 +1185,7 @@ if ((missionNamespace getVariable ["WFBE_C_SPECTATOR", 0]) > 0 && {(missionNames
 		sleep 3;
 	};
 	if (!_done && _sentAny) then { diag_log format ["[WFBE][B76 FUNDS-HEAL] GAVE UP after %1 polls; funds never landed on own group.", _n]; };
+};
 };
 
 [] execFSM "Client\FSM\updateactions.fsm";
