@@ -292,6 +292,11 @@ WFBE_CL_FNC_UI_Gear_UpdatePrice = Compile preprocessFileLineNumbers "Client\Func
 WFBE_CL_FNC_UI_Gear_UpdateTarget = Compile preprocessFileLineNumbers "Client\Functions\Client_UI_Gear_UpdateTarget.sqf";
 WFBE_CL_FNC_UI_Gear_UpdateView = Compile preprocessFileLineNumbers "Client\Functions\Client_UI_Gear_UpdateView.sqf";
 WFBE_CL_FNC_UI_Respawn_Selector = Compile preprocessFileLineNumbers "Client\Functions\Client_UI_Respawn_Selector.sqf";
+//--- fable/cmd-troopmon-freelook: commander tooling, own module (never touches Client_Spectator*.sqf).
+//--- TroopMonBuildList is a plain cached-array data function (called from GUI_Menu_TroopMon.sqf); the
+//--- freelook camera is spawned from GUI_Menu_Command.sqf's new RECON CAM war-room button.
+WFBE_CL_FNC_TroopMonBuildList = Compile preprocessFileLineNumbers "Client\Functions\Client_TroopMonBuildList.sqf";
+WFBE_CL_FNC_CommanderFreelook = Compile preprocessFileLineNumbers "Client\Functions\Client_CommanderFreelook.sqf";
 WFBE_CL_FNC_SupplyMissionCompletedMessage = Call Compile preprocessFileLineNumbers "Client\Module\supplyMission\supplyMissionCompletedMessage.sqf";
 WFBE_CL_FNC_TownSupplyStatus = Call Compile preprocessFileLineNumbers "Client\Module\supplyMission\townSupplyStatus.sqf";
 //--- SM9/XR2: removed dead WFBE_CL_FNC_CheckCCProximity (checkCCProximity.sqf) -- compiled, zero callers.

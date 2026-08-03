@@ -3184,6 +3184,25 @@ if (isNil "WFBE_C_CMD_SUPPORT_JET")            then {WFBE_C_CMD_SUPPORT_JET = 0}
 //---     skipped entirely and the header is byte-identical to pre-feature HEAD.
 if (isNil "WFBE_C_CMD_TEAM_STATUS")            then {WFBE_C_CMD_TEAM_STATUS = 1};              //--- master flag: 1 = on. 0 reverts GUI_Menu_Command.sqf's 14600 repaint to byte-identical pre-feature output.
 
+//--- COMMANDER TOOLING (fable/cmd-troopmon-freelook): two independent client-only modules for the human
+//---     commander. Both are pure additive GUI/camera work with no server footprint; 0 = mission is
+//---     byte-identical to HEAD (no new controls admitted, no camera ever created). Owner note: an
+//---     unrelated Spectator v8 lane is in flight on separate staged branches - these two flags/files
+//---     are their own module and never touch Client_SpectatorEnter/Director/Attach/Exit.sqf.
+//--- (e) TROOP MONITOR - filterable read-only roster dialog (RscMenu_TroopMon / GUI_Menu_TroopMon.sqf).
+//---     Reuses the SAME own-side team registry resolve as the war-room roster (GUI_Menu_Command.sqf);
+//---     Client_TroopMonBuildList.sqf builds its row array on a cached timer rather than a full rescan
+//---     on every dialog open / filter change (WFBE_C_COMMANDER_TROOPMON_REFRESH gates the rebuild).
+if (isNil "WFBE_C_COMMANDER_TROOPMON")          then {WFBE_C_COMMANDER_TROOPMON = 0};
+if (isNil "WFBE_C_COMMANDER_TROOPMON_REFRESH")  then {WFBE_C_COMMANDER_TROOPMON_REFRESH = 2}; //--- s minimum cache age before the roster array is rebuilt; a dialog open/filter change inside this window reuses the cached array untouched.
+//--- (f) RECON CAM - free-flying commander camera (Client_CommanderFreelook.sqf). Commander-only;
+//---     cleanly returns control to the player's own body on exit (ESC, death, lost commander seat,
+//---     or the flag going to 0 mid-flight all tear it down the same way).
+if (isNil "WFBE_C_COMMANDER_CAM")               then {WFBE_C_COMMANDER_CAM = 0};
+if (isNil "WFBE_C_COMMANDER_CAM_SPEED")         then {WFBE_C_COMMANDER_CAM_SPEED = 25};      //--- m/s base fly speed.
+if (isNil "WFBE_C_COMMANDER_CAM_SPEED_FAST")    then {WFBE_C_COMMANDER_CAM_SPEED_FAST = 75}; //--- m/s fly speed while the sprint key is held.
+if (isNil "WFBE_C_COMMANDER_CAM_MAX_ALT")       then {WFBE_C_COMMANDER_CAM_MAX_ALT = 400};   //--- m altitude ceiling above the terrain directly under the camera.
+
 //--- TRASH-OBJECT LOCALITY (2026-07-21 hardening extras): Common_TrashObject.sqf ends in an unconditional
 //--- deleteVehicle, which SILENTLY NO-OPS on an object that is not local to the machine running it - the same
 //--- documented A2-OA fact the BASE-GC and the commander-artillery wreck reaper already guard against with
