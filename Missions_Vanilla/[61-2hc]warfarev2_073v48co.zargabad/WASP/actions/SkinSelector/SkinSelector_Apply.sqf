@@ -449,8 +449,7 @@ if ((missionNamespace getVariable ["WFBE_C_SKINSWAP_FUNDS_CARRY", 1]) > 0) then 
 	};
 };
 
-//--- Re-add the User11 KeyDown EH — it lived on the old (deleted) unit.
-player addEventHandler ["KeyDown", WF_SkinSelector_Hotkey];
+//--- User11 lives on persistent display 46 (Init_Keybind.sqf), not the replaced player unit.
 
 //--- Restore commander HQ build action if applicable.
 if (!(isNull commanderTeam)) then {
