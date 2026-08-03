@@ -699,14 +699,22 @@ while {alive player && dialog} do {
 		if (MenuAction == 2003) then {
 			MenuAction = -1;
 			_loadTgt = cursorTarget;
-			if (isNull _loadTgt) exitWith {hint "No vehicle targeted. Look at a vehicle first."};
-			if (!(_loadTgt isKindOf "AllVehicles")) exitWith {hint "No vehicle targeted. Look at a vehicle first."};
-			if (!(alive _loadTgt)) exitWith {hint "Target vehicle is destroyed."};
-			_loadCount = [group player, _loadTgt] Call WFBE_CO_FNC_SquadLoadAll;
-			if (_loadCount > 0) then {
-				hint Format ["Loaded %1 squad member(s) into %2.", _loadCount, [typeOf _loadTgt, 'displayName'] Call GetConfigInfo];
+			//--- 2026-08-03: these validation guards were `exitWith` inside the menu loop - a rejected click
+			//--- ended the WHOLE loop, leaving the dialog open but dead (zombie menu). Nested if/else instead:
+			//--- hint and keep the menu alive. (Reachable only with WFBE_C_SQUAD_BULK_MOUNT armed.)
+			if (isNull _loadTgt || {!(_loadTgt isKindOf "AllVehicles")}) then {
+				hint "No vehicle targeted. Look at a vehicle first.";
 			} else {
-				hint "No squad members in boarding range to load.";
+				if (!(alive _loadTgt)) then {
+					hint "Target vehicle is destroyed.";
+				} else {
+					_loadCount = [group player, _loadTgt] Call WFBE_CO_FNC_SquadLoadAll;
+					if (_loadCount > 0) then {
+						hint Format ["Loaded %1 squad member(s) into %2.", _loadCount, [typeOf _loadTgt, 'displayName'] Call GetConfigInfo];
+					} else {
+						hint "No squad members in boarding range to load.";
+					};
+				};
 			};
 		};
 
@@ -718,10 +726,17 @@ while {alive player && dialog} do {
 			if (_curUnitSel != -1 && {_curUnitSel < count _units}) then {
 				_unlUnit = _units select _curUnitSel;
 				_unlVeh  = vehicle _unlUnit;
-				if (_unlVeh == _unlUnit) exitWith {hint "Unit is not in a vehicle."};
-				if (_unlVeh getVariable ["wfbe_tm2_unload_lock", false]) exitWith {hint "Unload already in progress on this vehicle."};
-				_unlVeh setVariable ["wfbe_tm2_unload_lock", true, true]; //--- broadcast so other clients see the lock (mirrors the repair-lock idiom above).
-				[_unlVeh, group player] Spawn WFBE_CO_FNC_SquadUnloadAll;
+				//--- 2026-08-03: same zombie-menu fix as MenuAction 2003 above - nested if/else, never exitWith.
+				if (_unlVeh == _unlUnit) then {
+					hint "Unit is not in a vehicle.";
+				} else {
+					if (_unlVeh getVariable ["wfbe_tm2_unload_lock", false]) then {
+						hint "Unload already in progress on this vehicle.";
+					} else {
+						_unlVeh setVariable ["wfbe_tm2_unload_lock", true, true]; //--- broadcast so other clients see the lock (mirrors the repair-lock idiom above).
+						[_unlVeh, group player] Spawn WFBE_CO_FNC_SquadUnloadAll;
+					};
+				};
 			};
 		};
 

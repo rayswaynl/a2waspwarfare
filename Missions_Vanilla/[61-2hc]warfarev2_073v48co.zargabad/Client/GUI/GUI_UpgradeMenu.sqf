@@ -210,9 +210,15 @@ if ((side group player) == resistance && {(missionNamespace getVariable ["WFBE_C
 				if ((lnbCurSelRow 504001) == _xlinkRow) then {
 					WFBE_MenuAction = -1;
 					if (((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0) && {(missionNamespace getVariable ["AICOMV2_GDIR_PANEL", 0]) > 0}) then {
-						//--- r95: exitWith on the dialog switch (parity with the Back handler below). Without it this loop
-						//--- survives into the Commissar panel and every later dialog, eating WFBE_MenuAction every 0.25s.
-						exitWith {closeDialog 0; createDialog "WFBE_GDirCommissarMenu"};
+						//--- 2026-08-03 LIVE REGRESSION FIX: r95 wrapped these two statements in a BARE `exitWith`.
+						//--- On A2 OA `exitWith` is BINARY - it must be directly preceded by `if (..)` - so the bare
+						//--- form parse-failed this ENTIRE FILE at compile time. The dialog still opened (its controls
+						//--- come from Rsc/Dialogs.hpp) but NO population code ever ran: the Upgrade Menu rendered
+						//--- EMPTY for WEST/EAST/GUER alike. Restored to the origin/master two-statement form that
+						//--- shipped for months. r95's loop-survival concern is real but pre-existing and must be
+						//--- re-done with an `if (..) exitWith` form, verified in game.
+						closeDialog 0;
+						createDialog "WFBE_GDirCommissarMenu";
 					} else {
 						hint parseText "<t color='#F56363'>Commission Panel is not available (GUER Director inactive).</t>";
 					};

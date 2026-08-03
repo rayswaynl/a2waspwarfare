@@ -91,7 +91,9 @@ while {alive player && {dialog}} do {
 		private "_sel"; _sel = lbCurSel 33011;
 		if (_sel >= 0 && {_sel < count _rows}) then {
 			private "_lg"; _lg = (_rows select _sel) select 0;
-			if (!isNull _lg && {alive (leader _lg)}) then {
+			//--- exitWith (r90 loop-leak class): the unit camera opens in this same pass, so this loop must
+			//--- end or it survives into the camera dialog. Guard-form only - a bare exitWith parse-fails the file.
+			if (!isNull _lg && {alive (leader _lg)}) exitWith {
 				WFBE_CmdCon_CamUnit = leader _lg;
 				closeDialog 0;
 				createDialog "RscMenu_UnitCamera";

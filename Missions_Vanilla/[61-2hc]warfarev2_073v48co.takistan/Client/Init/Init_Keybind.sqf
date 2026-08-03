@@ -42,16 +42,9 @@ WF_Gear_Hotkeys = {
 	false
 };
 
-//--- Display 46 persists across player-unit replacement, so it owns these client keybinds.
-//--- KeyDown is a display event in A2/OA; attaching it to the player silently leaves both
-//--- the Skin Selector and gear filler binds unarmed. A repeated client-init replaces only
-//--- this pair, preventing duplicate callbacks while preserving unrelated display handlers.
-if (!isNil "WF_SkinSelector_Hotkey_EH") then {
-	(findDisplay 46) displayRemoveEventHandler ["KeyDown", WF_SkinSelector_Hotkey_EH];
-};
-if (!isNil "WF_Gear_Hotkeys_EH") then {
-	(findDisplay 46) displayRemoveEventHandler ["KeyDown", WF_Gear_Hotkeys_EH];
-};
-WF_SkinSelector_Hotkey_EH = (findDisplay 46) displayAddEventHandler ["KeyDown", "_this call WF_SkinSelector_Hotkey"];
-WF_Gear_Hotkeys_EH = (findDisplay 46) displayAddEventHandler ["KeyDown", "_this call WF_Gear_Hotkeys"];
+//--- REVERTED 2026-08-03 (live regression, wave0803c): #1960 armed these on display 46. In game
+//--- the Skin Selector dialog then opened on unrelated keys (owner-reported: SHIFT, and repeatedly
+//--- while the map was open), thrashing dialog create/close and tanking CLIENT fps. The pre-#1960
+//--- player-unit form was inert but harmless and shipped for months. Left UNARMED until the
+//--- User11 match condition is fixed and verified IN GAME on the test box, not just at boot.
 

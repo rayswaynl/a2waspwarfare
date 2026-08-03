@@ -1047,7 +1047,10 @@ while {alive player && dialog} do {
 		//--- client press must never bite). Independent module - neither touches Client_Spectator*.sqf. -----
 		if (MenuAction == 790) then {
 			MenuAction = -1;
-			if ((missionNamespace getVariable ["WFBE_C_COMMANDER_TROOPMON", 0]) > 0) then {
+			//--- exitWith (r90 loop-leak class, same as MenuAction 726 above): TroopMon opens in this same
+			//--- pass so `dialog` stays true and this command loop would SURVIVE into the new dialog, eating
+			//--- its MenuAction every 0.25s. Guard-form exitWith only (never bare - that parse-fails the file).
+			if ((missionNamespace getVariable ["WFBE_C_COMMANDER_TROOPMON", 0]) > 0) exitWith {
 				activeAnimMarker = false;
 				closeDialog 0;
 				createDialog "RscMenu_TroopMon";
