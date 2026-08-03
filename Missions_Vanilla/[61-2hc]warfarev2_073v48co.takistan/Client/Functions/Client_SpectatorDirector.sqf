@@ -534,7 +534,7 @@ WFBE_CL_FNC_DirectorEvTerms = {
 //--- the bounded preload suspension below. Never pass it from an unscheduled caller (key handlers):
 //--- waitUntil outside a scheduled script is an engine error.
 WFBE_CL_FNC_DirectorStamp = {
-	Private ["_kind","_key","_cxy","_aim","_spread","_label","_sidesText","_score","_same","_compact","_stand","_hgt","_fov","_odir","_osw","_base","_shotType","_reason","_cutId","_oldShot","_ring","_pref","_ost","_prog","_allowWait","_pcam","_pcap","_pt0"];
+	Private ["_kind","_key","_cxy","_aim","_spread","_label","_sidesText","_score","_same","_compact","_stand","_hgt","_fov","_odir","_osw","_base","_shotType","_reason","_cutId","_oldShot","_ring","_pref","_ost","_prog","_allowWait","_pcam","_pcap","_pt0","_pwait"];
 	_kind = _this select 0;
 	_key = _this select 1;
 	_cxy = _this select 2;
@@ -611,6 +611,11 @@ WFBE_CL_FNC_DirectorStamp = {
 		_pcap = missionNamespace getVariable ["WFBE_C_SPECTATOR_PRELOAD_MAX_SEC", 1.5];
 		_pt0 = diag_tickTime;
 		waitUntil {(preloadCamera _pcam) || {(diag_tickTime - _pt0) > _pcap}};
+		//--- always-on: this is the only evidence a box smoke can quote. capped=true means the
+		//--- preload did NOT finish in time and the cut went ahead anyway (still correct, just
+		//--- not fully preloaded) - a run of those means PRELOAD_MAX_SEC is too tight.
+		_pwait = diag_tickTime - _pt0;
+		diag_log Format ["SPECTATE|v8|preload|cut=%1|key=%2|wait=%3|capped=%4", _cutId, _key, ((round (_pwait * 100)) / 100), str (_pwait > _pcap)];
 	};
 	WFBE_C_VAR_SpectShot = [_cutId, _key, [_cxy select 0, _cxy select 1, 0], _aim, _stand, _hgt, _fov, time, _odir, time + (missionNamespace getVariable ["WFBE_C_SPECTATOR_DIRECTOR_ORBIT_REVEAL_DELAY_SEC", 3]), _osw, _base, _label, _shotType, _reason, _sidesText];
 	WFBE_C_VAR_SpectatorDirectorTargetLabel = _label;

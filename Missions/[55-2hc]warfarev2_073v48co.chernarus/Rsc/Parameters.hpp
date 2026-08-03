@@ -793,4 +793,18 @@
 		default = 2;
 	};
 
+	// feat(spectator): lobby arming for the director cut preload - see the WFBE_C_SPECTATOR_PRELOAD
+	// block in Common\Init\Init_CommonConstants.sqf and the preload wait in
+	// Client\Functions\Client_SpectatorDirector.sqf (WFBE_CL_FNC_DirectorStamp).
+	// Default 0 keeps the feature inert, matching the script constant. Exists so a caster/test
+	// session can arm it from the lobby for a smoke without editing the constant and rebuilding.
+	// Init_Parameters.sqf binds this by class name, and a lobby value overrides the isNil-guarded
+	// script constant - so this class is now the effective default for the flag.
+	class WFBE_C_SPECTATOR_PRELOAD {
+		title = "Spectator director: preload shot before cut";
+		values[] = {0,1};
+		texts[] = {"$STR_WF_Disabled","$STR_WF_Enabled"};
+		default = 0;
+	};
+
 };
