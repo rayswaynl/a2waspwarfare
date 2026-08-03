@@ -3554,5 +3554,10 @@ if (isNil "WFBE_C_SPECTATOR_MOUSE_SMOOTH") then {WFBE_C_SPECTATOR_MOUSE_SMOOTH =
 if (isNil "WFBE_C_SPECTATOR_SENS_REF_FOV") then {WFBE_C_SPECTATOR_SENS_REF_FOV = 0.8}; //--- FOV at which SENS applies 1:1; sensitivity scales linearly with zoom (scoped-aim feel).
 if (isNil "WFBE_C_SPECTATOR_SENS_MIN_FACTOR") then {WFBE_C_SPECTATOR_SENS_MIN_FACTOR = 0.05}; //--- never let zoom-scaled sensitivity drop below this fraction of SENS.
 
+//--- r110 (alife close-terrain formation/spacing): stamp STAG COLUMN/RED on camp-FOCUS town
+//--- patrols (Common_WaypointPatrol.sqf, server_town_patrol.sqf focus path at radius/4).
+//--- Default 0 = INERT: legacy engine-default posture (WEDGE/YELLOW) kept, byte-identical to HEAD.
+if (isNil "WFBE_C_TOWNS_FOCUS_PATROL_POSTURE") then {WFBE_C_TOWNS_FOCUS_PATROL_POSTURE = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
