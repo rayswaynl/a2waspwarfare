@@ -276,7 +276,7 @@ _qTailFn = {
 	if (_more > 0) then {_joined = _joined + Format [" +%1 more", _more]};
 	_joined
 };
-while {!(_unique in [_queu select 0]) && alive _building && !isNull _building} do {
+while {(count _queu > 0) && {!(_unique in [_queu select 0]) && alive _building && !isNull _building}} do {  //--- r127: empty-queue escape - our token can only be absent if it was removed (cancel/purge); waiting on would re-evaluate `[] select 0` (A2-OA error, coroutine dies before the counter tail). An empty queue falls through to the _qIdx < 0 cancel path below - clean exit, no spawn.
 	sleep 4;
 	_show = true;
 	_ret = _ret + 4;

@@ -136,6 +136,24 @@ if (_airMaxTotalP > 0) then {
 			};
 		};
 
+		//--- (2b) DRIVERLESS DISBAND CONSUMER (r127): wfbe_aicom_disband's only autonomous executor is the
+		//--- owning machine's RunCommanderTeam driver. A team whose leader is SERVER-LOCAL has no HC driver -
+		//--- a no-HC fallback founding never spawns one, and an HC-drop demotion kills it - so a flag set before
+		//--- the demotion (or by the recycle pass above for such a team) latched forever and the retire never
+		//--- ran, permanently holding a founding slot. Mirror the console _dDispatch idiom
+		//--- (Server_HandleSpecial.sqf): execute locally when the leader is server-local; the executor itself
+		//--- re-checks leader locality, the ended-stamp guard prevents a double-fire against a surviving
+		//--- server-local driver, and clearing the flag makes that driver no-op.
+		private ["_wm_disFlag","_wm_disEnded"];
+		_wm_disFlag = _team getVariable "wfbe_aicom_disband";
+		_wm_disEnded = _team getVariable "wfbe_aicom_ended_fired";
+		if (!isNil "_wm_disFlag" && {_wm_disFlag} && {isNil "_wm_disEnded"} && {local _wm_ldr}) then {
+			if ([_team] Call WFBE_CO_FNC_AICOMDisbandTeam) then {
+				_team setVariable ["wfbe_aicom_disband", false, true];
+				["INFORMATION", Format ["AI_Commander_Produce.sqf: [%1] team [%2] DRIVERLESS_DISBAND executed server-side (no live driver for a server-local leader).", _sideText, _team]] Call WFBE_CO_FNC_AICOMLog;
+			};
+		};
+
 		//--- (3) AIRMOBILE TRANSPORT REQUISITION: the local driver requests a transport only
 		//--- for a long airmobile leg without one. Server owns class/unlock/factory/treasury/cap
 		//--- validation, then publishes a paid grant for the HC-local CreateTeam consumer.

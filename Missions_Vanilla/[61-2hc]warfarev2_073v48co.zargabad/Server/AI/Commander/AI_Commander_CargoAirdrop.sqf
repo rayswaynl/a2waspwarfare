@@ -149,5 +149,7 @@ if (isNull _grp) then {
 		["INFORMATION", Format ["AI_Commander_CargoAirdrop.sqf: [%1] cargo drop called to [%2] (para level %3, cost %4, escort %5, air %6/%7).", _sideText, _objName, _paraLvl, _cost, _spawnEscort, _airAlive + 2, _airMax]] Call WFBE_CO_FNC_AICOMLog;
 		diag_log ("AICOMSTAT|v1|EVENT|" + _sideText + "|" + str (round (_now / 60)) + "|CARGO_AIRDROP|" + _objName + "|para=" + str _paraLvl + "|cost=" + str _cost + "|escort=" + str _spawnEscort + "|air=" + str (_airAlive + 2) + "/" + str _airMax);
 	};
-	["CargoAirdrop", _side, getPos _target, _grp, _spawnEscort] Spawn KAT_CargoAirdrop;
+	//--- r127: pass the exact debit (6th arg) so the worker refunds it and releases the cooldown
+	//--- if the drop aborts during setup before any delivery (mirrors the group-null refund above).
+	["CargoAirdrop", _side, getPos _target, _grp, _spawnEscort, _cost] Spawn KAT_CargoAirdrop;
 };
