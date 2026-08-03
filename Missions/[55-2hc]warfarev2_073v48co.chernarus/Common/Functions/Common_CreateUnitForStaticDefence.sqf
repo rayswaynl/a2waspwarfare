@@ -135,6 +135,15 @@ for '_i' from 0 to count(_groups)-1 do {
 		} else {
 			_built = _built + 1;
 			_defence setVariable ["WFBE_StaticDefenseAssignedUnit", _unit, true];
+			//--- r128 alife-crew-bailout: town-static gunners created on THIS path (HC-delegated)
+			//--- never received WFBE_IsTownDefenderAI, but BOTH receiver-gated remote de-man paths
+			//--- require it (HandleSpecial "cleanup-town-defense-gunner" gates on local + !isPlayer
+			//--- + this tag) - so the r62 remove-case dispatch and the #1370 GUER capture-teardown
+			//--- reap silently no-op'd for exactly the HC-local gunners they were built for. Tag
+			//--- only TOWN statics (the hull carries the tag from Server_SpawnTownDefense.sqf);
+			//--- base statics stay untagged so the town-wake exclusion / garrison UI / AICOM
+			//--- telemetry readers of the tag are unaffected.
+			if (_defence getVariable ["WFBE_IsTownDefenderAI", false]) then {_unit setVariable ["WFBE_IsTownDefenderAI", true, true]};
 
 			if (_diagEnabled) then {
 				["TOWN_DEFENSE_DIAG", Format ["static_create_unit_result side:%1;template:%2;unitNull:%3;teamNull:%4;defense:%5;moveIn:%6;localServer:%7;hasInterface:%8", _side, _groups select _i, isNull _unit, isNull _team, typeOf _defence, _moveInGunner, isServer, hasInterface]] Call WFBE_CO_FNC_LogContent;

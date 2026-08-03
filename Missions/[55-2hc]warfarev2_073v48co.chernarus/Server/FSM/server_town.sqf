@@ -903,7 +903,7 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 						//--- Despawn the mop-up squad.
 						if !(isNull _squadGrp) then {
 							{if (!isNull _x && alive _x) then {deleteVehicle _x}} forEach (units _squadGrp);
-							{if (!isNull _x && alive _x) then {deleteVehicle _x}} forEach _squadVehicles;
+							{if (!isNull _x && {alive _x} && {({isPlayer _x} count (crew _x)) == 0}) then {deleteVehicle _x}} forEach _squadVehicles; //--- r128: player-crew guard - a player (GUER is playable) riding a mop-up squad vehicle must not be deleted with the hull
 							if !(isNull _squadGrp) then {deleteGroup _squadGrp};
 						};
 						_loc setVariable ["wfbe_mopup_group", grpNull, false];
