@@ -244,7 +244,12 @@ class MatchData:
         self.catcount  = Counter(k[4] for k in self.kills)
         self.weapcount = Counter(k[3] for k in self.kills)
         self.topweap   = self.weapcount.most_common(1)[0] if self.weapcount else ("—", 0)
-        self.longest   = max(self.kills, key=lambda k: k[5]) if self.kills else (0, None, "west", "—", "INF", 0)
+        # dist -1 = the engine could not measure this kill (null victim). Exclude those from the
+        # ranking instead of letting them win it, mirroring deepmatch.py's `measured` filter.
+        # render.py's LONGEST KILL card prints longest[5] unguarded, so an all-unmeasured match
+        # would otherwise render "-1 m"; falling back to the zero-tuple keeps that card at "0 m".
+        _measured      = [k for k in self.kills if k[5] >= 0]
+        self.longest   = max(_measured, key=lambda k: k[5]) if _measured else (0, None, "west", "—", "INF", 0)
         if not self.total_kills:
             self.total_kills = len(self.kills)
         # HONEST kill accounting: total_kills counts ALL forces (incl. AI-vs-AI). Also expose a
