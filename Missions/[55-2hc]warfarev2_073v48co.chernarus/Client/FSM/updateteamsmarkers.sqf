@@ -329,9 +329,8 @@ while {!gameOver} do {
 								//--- colour cues (see the PRECEDENCE note above): skips own-squad (ColorOrange
 								//--- stays highest identity) and skips when the wound-tint above already fired,
 								//--- so an AFK-but-wounded ally still reads as wounded, not silently grey.
-								//--- "ColorGray" (not "Grey") matches the spelling this codebase already ships
-								//--- live for neutral markers (Init_CommonConstants.sqf WFBE_C_NEUTRAL_COLOR).
-								if (!(player == _leader) && {!_teamMarkerWoundTinted}) then {_markerColor = "ColorGray"};
+								//--- ColorBlack is an Arma 2/OA built-in neutral fallback.
+								if (!(player == _leader) && {!_teamMarkerWoundTinted}) then {_markerColor = "ColorBlack"};
 							};
 						};
 						// Marty: WF_Debug map-side probe confirms the marker loop sees the networked AFK state.

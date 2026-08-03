@@ -1380,7 +1380,7 @@ if ((missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0) the
 				};
 				switch (_state) do {
 					case "cooldown": {
-						_color = "ColorGray";
+						_color = "ColorBlack";
 						_text = Format ["%1 - cooldown", _cName];
 					};
 					case "holding": {
@@ -1388,8 +1388,8 @@ if ((missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0) the
 						_ss = _progress - (_mm * 60);
 						_ssStr = if (_ss < 10) then {Format ["0%1", _ss]} else {Format ["%1", _ss]};
 						_color = "ColorYellow";
-						if (_holderSide == _westId) then {_color = "ColorWest"};
-						if (_holderSide == _eastId) then {_color = "ColorEast"};
+						if (_holderSide == _westId) then {_color = "ColorBlue"};
+						if (_holderSide == _eastId) then {_color = "ColorRed"};
 						if (_holderSide == _guerId) then {_color = "ColorGreen"};
 						_text = Format ["%1 - CAPTURING %2:%3/%4:%5", _cName, _mm, _ssStr, _holdMM, _holdSSStr];
 					};
@@ -1403,8 +1403,8 @@ if ((missionNamespace getVariable ["WFBE_C_NAVALHVT_BUBBLE_ENABLE", 0]) > 0) the
 					};
 					default {
 						_color = "ColorGreen";
-						if (_ownSID == _westId) then {_color = "ColorWest"};
-						if (_ownSID == _eastId) then {_color = "ColorEast"};
+						if (_ownSID == _westId) then {_color = "ColorBlue"};
+						if (_ownSID == _eastId) then {_color = "ColorRed"};
 						_text = Format ["%1 - capture zone", _cName];
 					};
 				};
