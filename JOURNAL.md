@@ -1,5 +1,20 @@
 # JOURNAL — a2waspwarfare-experital
 
+## 2026-08-04 — A-Life field-repair damaged-hitpoint recovery (Codex r131)
+
+- Confirmed that the tier-2/3 `WFBE_C_AICOM_STUCK_REPAIR` branch in
+  `Common_RunCommanderTeam.sqf` cleared only the vehicle damage scalar. In OA, per-hitpoint
+  damage does not follow that scalar reset, so a destroyed wheel, track, or engine could keep the
+  recovered hull immobile and drive unnecessary recovery escalation.
+- Added the existing self-repair path's config-driven, local-object hitpoint clear to the stuck
+  repair branch, then regenerated the maintained Takistan/Zargabad mirrors. This runs only inside
+  the pre-existing default-off stuck-repair gate and preserves its no-threat, live-hull, and
+  locality checks.
+- Regression: `Tools/Lint/test_aicom_stuck_repair_hitpoints.py` was RED before the repair and
+  GREEN across all three terrain copies after mirroring. Scoped SQF lint: 0 findings; mirror
+  dry-check: no drift; all three changed SQF files share SHA-256
+  `1FB4BDDF444574D8848130F394D92A0A6182F6A378A8561EED50C4BD9E466E60`.
+
 ## Working State 2026-08-01 — crash 014EFCF4 crew-delete sweep [fix/014e-crew-delete-sweep-20260801]
 
 Task: sweep the remaining direct crew-delete sites for crash 014EFCF4 (deleteVehicle on a Man still
