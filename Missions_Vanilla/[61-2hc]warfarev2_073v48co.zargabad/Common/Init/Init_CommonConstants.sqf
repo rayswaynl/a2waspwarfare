@@ -3823,5 +3823,10 @@ if (isNil "WFBE_C_TERRAIN_SECTOR_NUDGE_BUSHCAMP") then {WFBE_C_TERRAIN_SECTOR_NU
 //--- Infantry-percentage nudge for an "open-maneuver" classified sector (-8 = more vehicles).
 if (isNil "WFBE_C_TERRAIN_SECTOR_NUDGE_OPEN") then {WFBE_C_TERRAIN_SECTOR_NUDGE_OPEN = -8};
 
+//--- SQF utility library adoption (card #25, GR-2026-07-08a): arms Common_UtilLibSelfTest.sqf
+//--- only - the hash/vector/delayless-dispatch functions themselves are unconditional and are
+//--- NOT gated by this flag (see Common_UtilLibSelfTest.sqf, Init_Common.sqf).
+if (isNil "WFBE_C_UTIL_LIB_SELFTEST") then {WFBE_C_UTIL_LIB_SELFTEST = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

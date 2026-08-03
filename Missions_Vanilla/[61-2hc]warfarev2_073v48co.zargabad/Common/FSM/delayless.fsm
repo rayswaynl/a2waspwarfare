@@ -1,0 +1,54 @@
+/*%FSM<COMPILE "delayless">*/
+/*%FSM<HEAD>*/
+/*
+item0[] = {"Init",0,250,-64.944939,-176.579712,25.055046,-126.579880,0.000000,"Init"};
+item1[] = {"End",1,250,-64.944939,-56.267544,25.055046,-6.267582,0.000000,"End"};
+link0[] = {0,1};
+globals[] = {0.000000,0,0,0,0,640,480,1,29,6316128,1,-200.000000,200.000000,100.000000,-100.000000,407,514,1};
+window[] = {0,-1,-1,-1,-1,834,200,1460,200,1,425};
+*//*%FSM</HEAD>*/
+class FSM
+{
+  fsmName = "delayless";
+  class States
+  {
+    /*%FSM<STATE "Init">*/
+    class Init
+    {
+      name = "Init";
+      init = /*%FSM<STATEINIT""">*/"(_this select 0) call (_this select 1);"/*%FSM</STATEINIT""">*/;
+      precondition = /*%FSM<STATEPRECONDITION""">*/""/*%FSM</STATEPRECONDITION""">*/;
+      class Links
+      {
+        /*%FSM<LINK "_">*/
+        class _
+        {
+          priority = 0.000000;
+          to="End";
+          precondition = /*%FSM<CONDPRECONDITION""">*/""/*%FSM</CONDPRECONDITION""">*/;
+          condition=/*%FSM<CONDITION""">*/""/*%FSM</CONDITION""">*/;
+          action=/*%FSM<ACTION""">*/""/*%FSM</ACTION""">*/;
+        };
+        /*%FSM</LINK>*/
+      };
+    };
+    /*%FSM</STATE>*/
+    /*%FSM<STATE "End">*/
+    class End
+    {
+      name = "End";
+      init = /*%FSM<STATEINIT""">*/""/*%FSM</STATEINIT""">*/;
+      precondition = /*%FSM<STATEPRECONDITION""">*/""/*%FSM</STATEPRECONDITION""">*/;
+      class Links
+      {
+      };
+    };
+    /*%FSM</STATE>*/
+  };
+  initState="Init";
+  finalStates[] =
+  {
+    "End",
+  };
+};
+/*%FSM</COMPILE>*/
