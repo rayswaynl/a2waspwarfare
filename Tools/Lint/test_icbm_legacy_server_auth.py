@@ -49,7 +49,10 @@ class IcbmLegacyServerAuthTests(unittest.TestCase):
                     source,
                 )
                 # The original unvalidated flow survives inside the flag-0 branch.
-                self.assertIn("waitUntil {!alive _target || isNull _target};", source)
+                self.assertIn(
+                    "!alive _target || {isNull _target} || {time > _cruiseDeadline}",
+                    source,
+                )
                 self.assertEqual(source.count("[_base] Spawn NukeDammage;"), 2)
 
     def test_case_icbm_server_branch_validates_authority(self) -> None:
