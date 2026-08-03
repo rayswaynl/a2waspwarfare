@@ -85,6 +85,7 @@ if (alive (if (isNil {_camp getVariable 'wfbe_camp_bunker'}) then {objNull} else
 //--- Repair order is sent to the server.
 //--- harden-repair-camp (2026-07-25): now sends `player` too so the server can verify the requester
 //--- is a live player, near the camp, and actually of the claimed repair side (RequestSpecial.sqf).
+missionNamespace setVariable ["WFBE_CampRepairPending", true];
 ["RequestSpecial", ["repair-camp", _camp, WFBE_Client_SideID, player]] Call WFBE_CO_FNC_SendToServer;
 
 sleep 4;
