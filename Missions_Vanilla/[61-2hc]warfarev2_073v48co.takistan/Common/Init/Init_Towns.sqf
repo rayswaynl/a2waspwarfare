@@ -32,33 +32,39 @@ while {(_wTown < 120) && (({isNil {_x getVariable "sideID"} && {isNil {_x getVar
 
 _townReadyCount = count towns;
 
-if (_townReadyCount > 0) then {
-	townInit = true;
-	diag_log format ["TOWNINIT|v1|READY|ready=%1|candidates=%2", _townReadyCount, count _towns];
-	["INITIALIZATION", "Init_Towns.sqf: Towns initialization is done."] Call WFBE_CO_FNC_LogContent;
-} else {
+//--- D6c REVISED (2026-08-03, second live burn): the zero-REGISTERED census gate deadlocks startup.
+//--- Every Init_Town.sqf worker holds a GAME-TIME sleep before it registers, and game time is frozen
+//--- until the match starts - but match start was gated on townInit, which waited for registration.
+//--- Proven on the dev box: 46/46 workers logged TOWNENTRY+TOWNGATE then parked on the sleep while
+//--- the census held the gate for 300s+ (TOWNINIT|v1|WAIT). The pre-guard code never deadlocked
+//--- because it released unconditionally and towns registered moments after match start.
+//--- So: hard-block ONLY when there are no depot ENTITIES at all (candidates==0 - a genuinely
+//--- town-less/broken mission, which is what the zero-town match-start guard was written for).
+//--- When depots exist, release startup; registration completes once game time runs. A zero-ready
+//--- release logs DEFER plus a watcher that confirms (or alarms) actual registration afterwards.
+if ((count _towns) == 0) then {
 	townInit = false;
-	diag_log format ["TOWNINIT|v1|BLOCK|reason=NO_READY_TOWNS|candidates=%1", count _towns];
-	["WARNING", "Init_Towns.sqf: Town census blocked startup because no depot initialized."] Call WFBE_CO_FNC_LogContent;
-	//--- D6c LATE-RELEASE (2026-08-03): fail-closed must not mean fail-frozen. On a slow dedicated
-	//--- boot the shared 30s window above runs on REAL time (uiSleep) while every town's own
-	//--- Init_Town.sqf instance is still frozen in the mission-load phase, so the census can expire
-	//--- at zero ready towns on a perfectly healthy mission (burned live on wave0802, 2026-08-03:
-	//--- two boots wedged, zero RPT errors - Init_Server stalls on townInit and serverInitFull
-	//--- never sets). Keep the gate closed while towns[] is genuinely empty - a truly town-less
-	//--- mission stays blocked, preserving the zero-town match-start guard - but release it as soon
-	//--- as the first town self-registers (Init_Town.sqf:262 towns = towns + [_town]). Heartbeat
-	//--- every 60s so a held gate is visible in the RPT instead of silent.
-	[] Spawn {
-		private ["_wLate"];
-		_wLate = 0;
-		while {(count towns) < 1} do {
-			uiSleep 1;
-			_wLate = _wLate + 1;
-			if ((_wLate mod 60) == 0) then { diag_log format ["TOWNINIT|v1|WAIT|held=%1s", _wLate] };
+	diag_log format ["TOWNINIT|v1|BLOCK|reason=NO_DEPOT_ENTITIES|candidates=%1", count _towns];
+	["WARNING", "Init_Towns.sqf: Town census blocked startup because the mission has no depot logics."] Call WFBE_CO_FNC_LogContent;
+} else {
+	townInit = true;
+	if (_townReadyCount > 0) then {
+		diag_log format ["TOWNINIT|v1|READY|ready=%1|candidates=%2", _townReadyCount, count _towns];
+	} else {
+		diag_log format ["TOWNINIT|v1|DEFER|ready=0|candidates=%1", count _towns];
+		//--- Post-release confirmation watcher: real-time heartbeat until the first registration lands,
+		//--- so a build whose towns NEVER register (the failure the guard feared) is loud in the RPT
+		//--- instead of silently starting a townless match.
+		[] Spawn {
+			private ["_wLate"];
+			_wLate = 0;
+			while {(count towns) < 1} do {
+				uiSleep 30;
+				_wLate = _wLate + 30;
+				diag_log format ["TOWNINIT|v1|UNREGISTERED|elapsed=%1s|candidates-still-empty", _wLate];
+			};
+			diag_log format ["TOWNINIT|v1|LATE_REGISTERED|ready=%1|after=%2s", count towns, _wLate];
 		};
-		townInit = true;
-		diag_log format ["TOWNINIT|v1|LATE_READY|ready=%1|held=%2s", count towns, _wLate];
-		["INITIALIZATION", "Init_Towns.sqf: Towns initialization released late (census recovered after load)."] Call WFBE_CO_FNC_LogContent;
 	};
+	["INITIALIZATION", "Init_Towns.sqf: Towns initialization is done."] Call WFBE_CO_FNC_LogContent;
 };
