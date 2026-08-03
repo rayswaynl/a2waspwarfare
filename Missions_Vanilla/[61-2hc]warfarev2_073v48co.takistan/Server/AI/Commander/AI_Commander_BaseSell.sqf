@@ -139,6 +139,11 @@ if (isNull _victim) exitWith {};                  //--- nothing redundant to sel
 //--- FUNDS refund (built via ChangeAICommanderFunds) + crew delete + prune wfbe_aicom_arty_reg.
 _refund = round (_victimCost * ((missionNamespace getVariable ["WFBE_C_AICOM_SELL_REFUND_FRAC", 0.5]) max 0));
 if (_victimType == "CommanderArtillery") then {
+	//--- A player can board after the stranded-artillery scan selected this hull. Recheck before
+	//--- refunding, unregistering, or scheduling crew deletion so a human-operated gun stays whole.
+	if (({isPlayer _x} count (crew _victim)) > 0) exitWith {
+		["INFORMATION", Format ["AI_Commander_BaseSell.sqf: retaining player-crewed stranded artillery [%1].", _victim]] Call WFBE_CO_FNC_AICOMLog;
+	};
 	if (_refund > 0) then {[_side, _refund] Call ChangeAICommanderFunds};
 	[_victim, true] Spawn WFBE_CO_FNC_SafeCrewDelete; //--- crash 014EFCF4 sweep: was {deleteVehicle _x} forEach (crew _victim); ... deleteVehicle _victim; fire-and-forget (nothing below depends on crew/hull already being gone), hull delete folded into the helper (_alsoDeleteHull=true).
 	_artyReg = _logik getVariable ["wfbe_aicom_arty_reg", []];
