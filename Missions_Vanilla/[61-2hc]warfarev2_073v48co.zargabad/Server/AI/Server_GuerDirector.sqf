@@ -754,7 +754,15 @@ while {!WFBE_GameOver} do {
                 };
             } forEach _stateThr;
         };
-        missionNamespace setVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", _updContracts];
+        //--- r126 long-match hygiene: prune fired/expired contract records before write-back.
+        //--- Every reader (this poll, the auto-arm check above, RequestGDirPanel gate 5, the
+        //--- Commissar panel indicator) matches state == "armed" only, so dead records were pure
+        //--- growth: each fire/re-arm cycle appended one permanent record and the per-tick scans
+        //--- above walked the whole match history for the rest of the round.
+        private ["_liveContracts"];
+        _liveContracts = [];
+        {if ((_x select 7) == "armed") then {_liveContracts set [count _liveContracts, _x]}} forEach _updContracts;
+        missionNamespace setVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", _liveContracts];
     };
 
     //--------------------------------------------------------------------
