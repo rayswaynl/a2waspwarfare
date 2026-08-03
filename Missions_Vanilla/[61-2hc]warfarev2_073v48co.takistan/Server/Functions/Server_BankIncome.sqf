@@ -9,10 +9,10 @@
      1 - owning side
 
    Payout mechanism (J1 funds authority): the server credits each eligible player group directly
-   (WFBE_SE_FNC_CreditSidePlayers); the side-targeted BankPayout PVF keeps only the chat notification.
+   with an exact base-and-remainder split; the side-targeted BankPayout PVF keeps only the chat notification.
    This mirrors TownCaptured.sqf's pattern for side-targeted client payouts.
 */
-Private ["_bank","_side","_interval","_pool","_share","_playerCount","_logik","_hqAlive"];
+Private ["_bank","_side","_interval","_pool","_share","_playerCount","_logik","_hqAlive","_eligible","_i","_remainder","_payout"];
 
 _bank   = _this select 0;
 _side   = _this select 1;
@@ -34,13 +34,28 @@ while {alive _bank && {!WFBE_GameOver}} do {
 	if (!_hqAlive) then {
 		["INFORMATION", Format ["Server_BankIncome.sqf: [%1] Payout skipped — no deployed HQ.", str _side]] Call WFBE_CO_FNC_LogContent;
 	} else {
-		//--- Split the pool among living players on the owning side.
-		_playerCount = 0;
-		{if ((isPlayer _x) && (alive _x) && (side _x == _side) && {!((name _x) in WFBE_C_HC_NAMES)}) then {_playerCount = _playerCount + 1}} forEach playableUnits;
-		_share = round (_pool / (_playerCount max 1));
-		[_side, "BankPayout", [_share]] Call WFBE_CO_FNC_SendToClients;
-		[_side, _share] Call WFBE_SE_FNC_CreditSidePlayers; //--- J1 funds authority: server-side credit (BankPayout keeps only the message).
-		["INFORMATION", Format ["Server_BankIncome.sqf: [%1] Dividend $%2 x %3 players sent (pool %4).", str _side, _share, _playerCount, _pool]] Call WFBE_CO_FNC_LogContent;
+		//--- Split the fixed pool exactly among living players on the owning side. A rounded per-player
+		//--- share can mint or lose funds whenever the player count does not divide the pool.
+		_eligible = [];
+		{
+			if ((isPlayer _x) && {alive _x} && {side _x == _side} && {!((name _x) in WFBE_C_HC_NAMES)}) then {
+				_eligible set [count _eligible, _x];
+			};
+		} forEach playableUnits;
+		_playerCount = count _eligible;
+		if (_playerCount > 0) then {
+			_share = floor (_pool / _playerCount);
+			_remainder = _pool - (_share * _playerCount);
+			_i = 0;
+			{
+				_payout = _share;
+				if (_i < _remainder) then {_payout = _payout + 1};
+				[group _x, _payout] Call WFBE_CO_FNC_ChangeTeamFunds;
+				_i = _i + 1;
+			} forEach _eligible;
+			[_side, "BankPayout", [_pool, _playerCount]] Call WFBE_CO_FNC_SendToClients;
+			["INFORMATION", Format ["Server_BankIncome.sqf: [%1] Exact dividend pool %2: base $%3 x %4 players, remainder %5.", str _side, _pool, _share, _playerCount, _remainder]] Call WFBE_CO_FNC_LogContent;
+		};
 	};
 };
 
