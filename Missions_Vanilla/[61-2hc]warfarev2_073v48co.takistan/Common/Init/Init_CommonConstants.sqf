@@ -3554,5 +3554,12 @@ if (isNil "WFBE_C_SPECTATOR_MOUSE_SMOOTH") then {WFBE_C_SPECTATOR_MOUSE_SMOOTH =
 if (isNil "WFBE_C_SPECTATOR_SENS_REF_FOV") then {WFBE_C_SPECTATOR_SENS_REF_FOV = 0.8}; //--- FOV at which SENS applies 1:1; sensitivity scales linearly with zoom (scoped-aim feel).
 if (isNil "WFBE_C_SPECTATOR_SENS_MIN_FACTOR") then {WFBE_C_SPECTATOR_SENS_MIN_FACTOR = 0.05}; //--- never let zoom-scaled sensitivity drop below this fraction of SENS.
 
+//--- Team Menu V2 squad bulk mount/dismount (pattern studied from the rhs_cargosystem whole-squad
+//--- bulk-load/staggered-dismount idiom, remade in vanilla A2 SQF). Master flag default 0 -
+//--- Load/Unload Squad buttons stay hidden and MenuAction 2003/2004 no-op with the flag off.
+if (isNil "WFBE_C_SQUAD_BULK_MOUNT") then {WFBE_C_SQUAD_BULK_MOUNT = 0};
+if (isNil "WFBE_C_SQUAD_BULK_MOUNT_RANGE") then {WFBE_C_SQUAD_BULK_MOUNT_RANGE = 10}; //--- metres; Load Squad only mounts units already within this range of the target vehicle (v1: no path-walking).
+if (isNil "WFBE_C_SQUAD_BULK_MOUNT_STAGGER") then {WFBE_C_SQUAD_BULK_MOUNT_STAGGER = 0.15}; //--- seconds between staggered per-unit GetOut actions on Unload Squad, so a full vehicle does not dismount on a single tick.
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 
