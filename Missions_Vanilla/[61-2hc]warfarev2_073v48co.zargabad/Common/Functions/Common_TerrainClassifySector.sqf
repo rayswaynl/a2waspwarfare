@@ -32,10 +32,11 @@ if (_range < 50) then {_range = 50};
 _sampleCount = missionNamespace getVariable ["WFBE_C_TERRAIN_CLASSIFY_SAMPLES", 5];
 if (_sampleCount < 1) then {_sampleCount = 1};
 _precision = missionNamespace getVariable ["WFBE_C_TERRAIN_CLASSIFY_PRECISION", 5];
+if (_precision < 1) then {_precision = 1};
 _jitterMax = missionNamespace getVariable ["WFBE_C_TERRAIN_CLASSIFY_JITTER_M", 20];
 if (_jitterMax < 0) then {_jitterMax = 0};
 
-_axisList = ["Houses","Forest","Trees","Hills"];
+_axisList = ["houses","forest","trees","hills"];
 _axisScores = [];
 
 {
@@ -49,7 +50,7 @@ _axisScores = [];
 			_jDist = random _jitterMax;
 			_jitterPos = [(_pos select 0) + _jDist * sin _jAng, (_pos select 1) + _jDist * cos _jAng, 0];
 		};
-		_sample = _jitterPos selectBestPlaces [_range, _axis, _precision];
+		_sample = selectBestPlaces [_jitterPos, _range, _axis, _precision, 1];
 		//--- Validate before select 0 select 1 - a bad/empty sample must never poison the average.
 		if ((typeName _sample == "ARRAY") && {(count _sample) > 0}) then {
 			_top = _sample select 0;

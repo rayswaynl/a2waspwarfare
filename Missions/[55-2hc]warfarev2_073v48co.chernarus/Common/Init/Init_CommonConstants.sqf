@@ -3562,8 +3562,9 @@ if (isNil "WFBE_C_SPECTATOR_SENS_MIN_FACTOR") then {WFBE_C_SPECTATOR_SENS_MIN_FA
 if (isNil "WFBE_C_TERRAIN_CLASSIFY_SECTORS") then {WFBE_C_TERRAIN_CLASSIFY_SECTORS = 0};
 //--- Number of jittered selectBestPlaces samples averaged per axis. Card spec: 5.
 if (isNil "WFBE_C_TERRAIN_CLASSIFY_SAMPLES") then {WFBE_C_TERRAIN_CLASSIFY_SAMPLES = 5};
-//--- selectBestPlaces precision argument (higher = finer/slower scan).
-if (isNil "WFBE_C_TERRAIN_CLASSIFY_PRECISION") then {WFBE_C_TERRAIN_CLASSIFY_PRECISION = 5};
+//--- selectBestPlaces precision argument (higher = finer/slower scan; engine samples ~(2*radius/precision)^2
+//--- points per call - keep this well above the engine-doc's slow low-end, default chosen for boot-time safety).
+if (isNil "WFBE_C_TERRAIN_CLASSIFY_PRECISION") then {WFBE_C_TERRAIN_CLASSIFY_PRECISION = 50};
 //--- Max per-sample position jitter offset in metres (capped low so all 5 samples stay within the
 //--- same town sector, never wandering into a neighbouring town's terrain).
 if (isNil "WFBE_C_TERRAIN_CLASSIFY_JITTER_M") then {WFBE_C_TERRAIN_CLASSIFY_JITTER_M = 20};
