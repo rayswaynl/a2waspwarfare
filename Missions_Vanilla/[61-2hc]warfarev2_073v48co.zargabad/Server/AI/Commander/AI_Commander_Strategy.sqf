@@ -358,6 +358,55 @@ for "_i" from 1 to _want do {
 	if (!isNull _bestTown) then {_targets = _targets + [_bestTown]};
 };
 Call _sliceYield;
+//--- cmdcon41-w2 FRONT/SPEARHEAD HYSTERESIS (Fable F2; flag WFBE_C_AICOM_FRONT_DWELL default 480s). The picker re-scores
+//--- the primary spearhead every ~60s, so the FRONT target flipped ~every 4 min (122 EAST changes in a 7h soak) and
+//--- 20-min journeys died administratively on each flip. Once a primary is chosen, DWELL on it: keep the same primary
+//--- (skip the re-scoring flip) until the dwell elapses OR the town flips to us / becomes null. The stall-blacklist
+//--- re-pick below still overrides (a genuinely stuck primary gets blacklisted, invalidating the dwell next tick).
+//--- Selection-only: this reorders _targets before publish; it never moves a unit. A2-OA-safe: OBJECT/time/getVariable,
+//--- ==/!= only on the sideID scalar + object-null via isNull, string mode literals untouched.
+//--- r107 HOIST: this block moved ABOVE the B61 stall detector so the stall/progress memory
+//--- judges the PUBLISHED (dwell-held) primary, not the raw scorer #1. Under an active dwell the
+//--- raw #1 is by design a town nobody was sent to - the old order stall-blacklisted those phantom
+//--- primaries (poisoning valid towns) while a genuinely stalled DWELLED primary was re-prepended
+//--- here and its ban ignored for the rest of the dwell window.
+private ["_fhDwell","_fhPrim","_fhT0","_fhFresh","_fhValid"];
+_fhDwell = missionNamespace getVariable [format ["WFBE_C_AICOM_FRONT_DWELL_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_FRONT_DWELL", 480]];
+if (_fhDwell > 0 && {count _targets > 0}) then {
+	_fhFresh = _targets select 0;
+	_fhPrim = _logik getVariable "wfbe_aicom_front_prim";
+	_fhT0   = _logik getVariable "wfbe_aicom_front_t0";
+	//--- Is the stored dwell pick still a VALID enemy/neutral target (not null, not captured by us)?
+	_fhValid = false;
+	if (!isNil "_fhPrim" && {!isNull _fhPrim} && {!isNil "_fhT0"}) then {
+		//--- Lane-323: reject neutralised towns (sideID -1) as dwell targets — a recaptured-neutral
+		//--- town has no enemy affiliation and must not be kept as the active front priority.
+		//--- Review note (PR #530): cache sideID once to avoid double-read in the lazy-and expression.
+		private "_fhSID"; _fhSID = _fhPrim getVariable ["sideID", -1];
+		if (_fhSID != _sideID && {_fhSID != -1}) then {_fhValid = true};
+	};
+	//--- r107: a town on the LIVE spearhead stall-blacklist is not a valid dwell pick - the old
+	//--- sideID-only check reinstated a just-blacklisted stalled primary as the published front.
+	if (_fhValid) then {
+		private ["_fhBlHit"];
+		_fhBlHit = false;
+		{ if ((typeName (_x select 0) == "OBJECT") && {(_x select 0) == _fhPrim} && {(_x select 1) > time}) then {_fhBlHit = true} } forEach (_logik getVariable ["wfbe_aicom_spearhead_bl", []]);
+		if (_fhBlHit) then {_fhValid = false};
+	};
+	if (_fhValid && {(time - _fhT0) < _fhDwell}) then {
+		//--- Dwell still active + pick still valid: keep it as primary. If it is not already the scored primary,
+		//--- move it to slot 0 (drop any duplicate, prepend) so AssignTowns keeps concentrating on the dwelled town.
+		if (_fhFresh != _fhPrim) then {
+			_targets = _targets - [_fhPrim];
+			_targets = [_fhPrim] + _targets;
+			diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FRONT_DWELL_HOLD|kept=" + (_fhPrim getVariable ["name","?"]) + "|scored=" + (_fhFresh getVariable ["name","?"]) + "|age=" + str (round (time - _fhT0)));
+		};
+	} else {
+		//--- No valid dwell (first pick, elapsed, or invalidated): adopt the freshly-scored primary + restamp the clock.
+		_logik setVariable ["wfbe_aicom_front_prim", _fhFresh];
+		_logik setVariable ["wfbe_aicom_front_t0", time];
+	};
+};
 //--- B61 (Ray 2026-06-21) SPEARHEAD RE-PICK: per-side progress memory + stall detection on the PRIMARY.
 //--- PROGRESS SIGNAL = the ASSAULTING TEAMS' best (min) approach to the primary target town - NOT raw
 //--- distFront (distance-to-OWN-town), which stays flat while a town is being contested and would yank the
@@ -369,7 +418,7 @@ Call _sliceYield;
 //--- _targets next cycle). Empty-set guardrail above guarantees a target survives the blacklist.
 if (count _targets > 0) then {
 	private ["_prim","_spMinGain","_spEvals"];
-	_prim = _targets select 0;
+	_prim = _targets select 0; //--- r107: FRONT_DWELL now runs ABOVE this block, so _targets is dwell-adjusted and this IS the published primary (was the raw scorer #1 - see hoist note below)
 	_spMinGain = missionNamespace getVariable ["WFBE_C_AICOM_REPICK_MIN_GAIN", 150];
 	_spEvals   = missionNamespace getVariable ["WFBE_C_AICOM_REPICK_STALL_EVALS", 4];
 	_spBlCd    = missionNamespace getVariable ["WFBE_C_AICOM_BLACKLIST_COOLDOWN", 600];
@@ -536,42 +585,6 @@ if (count _targets > 0) then {
 	};
 };
 Call _sliceYield;
-//--- cmdcon41-w2 FRONT/SPEARHEAD HYSTERESIS (Fable F2; flag WFBE_C_AICOM_FRONT_DWELL default 480s). The picker re-scores
-//--- the primary spearhead every ~60s, so the FRONT target flipped ~every 4 min (122 EAST changes in a 7h soak) and
-//--- 20-min journeys died administratively on each flip. Once a primary is chosen, DWELL on it: keep the same primary
-//--- (skip the re-scoring flip) until the dwell elapses OR the town flips to us / becomes null. The stall-blacklist
-//--- re-pick above still overrides (a genuinely stuck primary gets blacklisted, invalidating the dwell next tick).
-//--- Selection-only: this reorders _targets before publish; it never moves a unit. A2-OA-safe: OBJECT/time/getVariable,
-//--- ==/!= only on the sideID scalar + object-null via isNull, string mode literals untouched.
-private ["_fhDwell","_fhPrim","_fhT0","_fhFresh","_fhValid"];
-_fhDwell = missionNamespace getVariable [format ["WFBE_C_AICOM_FRONT_DWELL_%1", _side], missionNamespace getVariable ["WFBE_C_AICOM_FRONT_DWELL", 480]];
-if (_fhDwell > 0 && {count _targets > 0}) then {
-	_fhFresh = _targets select 0;
-	_fhPrim = _logik getVariable "wfbe_aicom_front_prim";
-	_fhT0   = _logik getVariable "wfbe_aicom_front_t0";
-	//--- Is the stored dwell pick still a VALID enemy/neutral target (not null, not captured by us)?
-	_fhValid = false;
-	if (!isNil "_fhPrim" && {!isNull _fhPrim} && {!isNil "_fhT0"}) then {
-		//--- Lane-323: reject neutralised towns (sideID -1) as dwell targets — a recaptured-neutral
-		//--- town has no enemy affiliation and must not be kept as the active front priority.
-		//--- Review note (PR #530): cache sideID once to avoid double-read in the lazy-and expression.
-		private "_fhSID"; _fhSID = _fhPrim getVariable ["sideID", -1];
-		if (_fhSID != _sideID && {_fhSID != -1}) then {_fhValid = true};
-	};
-	if (_fhValid && {(time - _fhT0) < _fhDwell}) then {
-		//--- Dwell still active + pick still valid: keep it as primary. If it is not already the scored primary,
-		//--- move it to slot 0 (drop any duplicate, prepend) so AssignTowns keeps concentrating on the dwelled town.
-		if (_fhFresh != _fhPrim) then {
-			_targets = _targets - [_fhPrim];
-			_targets = [_fhPrim] + _targets;
-			diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FRONT_DWELL_HOLD|kept=" + (_fhPrim getVariable ["name","?"]) + "|scored=" + (_fhFresh getVariable ["name","?"]) + "|age=" + str (round (time - _fhT0)));
-		};
-	} else {
-		//--- No valid dwell (first pick, elapsed, or invalidated): adopt the freshly-scored primary + restamp the clock.
-		_logik setVariable ["wfbe_aicom_front_prim", _fhFresh];
-		_logik setVariable ["wfbe_aicom_front_t0", time];
-	};
-};
 //--- Telemetry: is the chosen primary actually on the front (vs a deep fallback)?
 _anyFront = false;
 if (count _targets > 0) then {

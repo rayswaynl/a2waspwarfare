@@ -151,11 +151,21 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					_team setVariable ["wfbe_aicom_dispatch_open", false];
 					//--- r40 intel freshness: arrival proves reachability - clear side-abandon memory for this town.
 					if ((missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST", 1]) > 0) then {
-						private ["_sbaArr","_sbaArrKeep"];
+						private ["_sbaArr","_sbaArrKeep","_sblArr","_sblArrKeep"];
 						_sbaArr = _logik getVariable ["wfbe_aicom_side_abandons", []];
 						_sbaArrKeep = [];
 						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 0) != _dtgt}) then {_sbaArrKeep set [count _sbaArrKeep, _x]} } forEach _sbaArr;
 						if ((count _sbaArrKeep) != (count _sbaArr)) then {_logik setVariable ["wfbe_aicom_side_abandons", _sbaArrKeep]};
+						//--- r107: arrival is positive reachability proof - lift a LIVE side ban on this town too,
+						//--- not just the tally. Otherwise a proven-reachable town stays excluded side-wide until
+						//--- the ban's blind expiry (up to WFBE_C_AICOM_SIDE_BLACKLIST_COOLDOWN seconds).
+						_sblArr = _logik getVariable ["wfbe_aicom_side_blacklist", []];
+						_sblArrKeep = [];
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 0) != _dtgt}) then {_sblArrKeep set [count _sblArrKeep, _x]} } forEach _sblArr;
+						if ((count _sblArrKeep) != (count _sblArr)) then {
+							_logik setVariable ["wfbe_aicom_side_blacklist", _sblArrKeep];
+							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|SIDE_BLACKLIST_LIFT|town=" + (_dtgt getVariable ["name","town"]) + "|reason=arrival");
+						};
 					};
 					//--- FAILED-JOURNEY RECYCLE (cmdcon41-w2, claude-gaming 2026-07-02): the team reached a town
 					//--- this dispatch - a successful journey. Reset its failed-journey counter AND its per-pass
@@ -479,7 +489,12 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							_dwKeep set [count _dwKeep, [_dwTgt, time + _dwCd]];
 							_team setVariable ["wfbe_aicom_blacklist", _dwKeep];
 							_team setVariable ["wfbe_aicom_stuckstrikes", 0];
-							_team setVariable ["wfbe_aicom_dwell_town0", nil];
+							//--- r107: this clear must REACH the HC stamper - Common_RunCommanderTeam holds its own copy
+							//--- of wfbe_aicom_dwell_town0 and only re-stamps when its stored town differs. A local-only
+							//--- nil left the HC copy stale, so the HC never re-stamped and the dwell trigger stayed dead
+							//--- on every later visit to this town. Broadcast a concrete sentinel ([objNull,0] reads as
+							//--- "no clock" on both machines; the HC guard restamps fresh on the next capture phase).
+							_team setVariable ["wfbe_aicom_dwell_town0", [objNull, 0], true];
 							diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|DWELL_ABANDON|team=" + (str _team) + "|town=" + (_dwTgt getVariable ["name","town"]) + "|cumDwell=" + str (round _dwCum));
 							//--- WASPSCALE aband counter (feat/abandon-telemetry): cumulative abandon/recycle events this match, read by the AI_Commander.sqf WASPSCALE emit (aband=). Counter-only, no behaviour change.
 							missionNamespace setVariable ["wfbe_waspscale_aband", (missionNamespace getVariable ["wfbe_waspscale_aband", 0]) + 1];
@@ -497,7 +512,10 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 							};
 						};
 					} else {
-						_team setVariable ["wfbe_aicom_dwell_town0", nil];
+						//--- r107: same broadcast-sentinel clear as the abandon path (was a local-only nil the HC
+						//--- never saw). Only rewrite a REAL stale town entry - the [objNull,0] sentinel itself needs
+						//--- no re-clear (avoids one group broadcast per worker pass per idle team).
+						if ((typeName _dwTgt == "OBJECT") && {!isNull _dwTgt}) then {_team setVariable ["wfbe_aicom_dwell_town0", [objNull, 0], true]};
 					};
 				};
 			};
@@ -1039,7 +1057,7 @@ _waterBlocks = {
 					//--- side stops sending teams there. The empty-pool guardrail below clears _blTowns (incl these) so a
 					//--- team is never left idle. Flag-gated WFBE_C_AICOM_SIDE_BLACKLIST (default on), reversible. A2-safe.
 					if ((missionNamespace getVariable ["WFBE_C_AICOM_SIDE_BLACKLIST", 1]) > 0) then {
-						private ["_sbl","_sblLive","_sba","_sbaKeep"];
+						private ["_sbl","_sblLive","_sblAll","_sba","_sbaKeep"];
 						_sbl = _logik getVariable ["wfbe_aicom_side_blacklist", []];
 						_sblLive = [];
 						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 1) > time}) then {
@@ -1049,9 +1067,18 @@ _waterBlocks = {
 						//--- r40 intel freshness: side_abandons is permanent 'unreachable town' contact memory.
 						//--- After blacklist cooldown, count stayed >= threshold so ONE abandon re-banned forever.
 						//--- Age abandon tallies with the live side blacklist so intelligence expires with the ban.
+						//--- r107 FIX: the r40 keep-test (town in _sblLive) dropped every tally whose town was NOT
+						//--- currently banned - i.e. every tally still ACCUMULATING toward WFBE_C_AICOM_SIDE_ABANDON.
+						//--- The first selector pass after any TARGET_ABANDON wiped the count, so the tally could
+						//--- never reach the threshold and the side blacklist never formed (dead on default flags).
+						//--- Keep tallies for towns still accumulating (no ban entry at all) AND towns under a live
+						//--- ban; drop a tally only when its town's ban has LAPSED (stored but expired) - intel
+						//--- expires WITH the ban, not before it can ever exist.
+						_sblAll = [];
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)}) then {_sblAll set [count _sblAll, (_x select 0)]} } forEach _sbl;
 						_sba = _logik getVariable ["wfbe_aicom_side_abandons", []];
 						_sbaKeep = [];
-						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {(_x select 0) in _sblLive}) then {_sbaKeep set [count _sbaKeep, _x]} } forEach _sba;
+						{ if ((typeName (_x select 0) == "OBJECT") && {!isNull (_x select 0)} && {((_x select 0) in _sblLive) || {!((_x select 0) in _sblAll)}}) then {_sbaKeep set [count _sbaKeep, _x]} } forEach _sba;
 						if ((count _sbaKeep) != (count _sba)) then {_logik setVariable ["wfbe_aicom_side_abandons", _sbaKeep]};
 					};
 					_uncapturedF = _uncaptured - _blTowns;
