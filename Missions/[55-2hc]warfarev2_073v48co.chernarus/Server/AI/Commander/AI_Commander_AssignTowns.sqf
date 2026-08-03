@@ -9,7 +9,7 @@
 	AIMoveTo fallback (=0).
 */
 
-private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage","_footStagePos","_stageGoto","_waveDelay","_priorDispT0","_aicomProgressAnchor"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state; +_waveDelay: feat/aicom-wave-stagger
+private ["_side","_sideID","_sideText","_logik","_teams","_uncaptured","_assigned","_team","_aliveCount","_mode","_goto","_needs","_avail","_target","_useArc","_humanCmd","_cmdTeam","_autonomous","_modeNow","_canDrive","_explicitMode","_gar","_garDead","_garAlive","_hqG","_ord","_spear","_spearT","_perTown","_concBase","_ownedCount","_bootstrap","_hqObj","_bestBoot","_bestBootScore","_bootScore","_bootDist","_ltBootLog","_mounted","_teamReach","_ldrPos","_reachFoot","_reachMounted","_nearReach","_nearReachD","_tgtDist","_blTowns","_blList","_blKeep","_uncapturedF","_consolidating","_fistSet","_consolRad","_allocTgt","_pin","_jcOrd","_jcBc","_jcTgt","_jcProg","_jcRecycle","_asltSpeed","_asltDist","_asltToSecs","_strandRecovery","_strandTarget","_footStage","_footStagePos","_stageGoto","_waveDelay","_priorDispT0","_aicomProgressAnchor","_guardTowns"]; //--- cmdcon41-w2: journey-commit privates + TK arrivals M3 one-shot recovery state; +_waveDelay: feat/aicom-wave-stagger
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -966,24 +966,37 @@ _bootstrap = ((missionNamespace getVariable ["WFBE_C_AICOM_BOOTSTRAP_BIAS", 1]) 
 					//--- V0.7 BOOTSTRAP BIAS: side owns 0 towns - pick the nearest-to-HQ,
 					//--- lowest-supplyValue uncaptured town so we grab income as fast as possible.
 					//--- Score = -(distance to HQ) - (supplyValue * 10): small near towns win.
+					//--- r98: (a) a NULL HQ (destroyed/undeployed before the first capture) zeroed the
+					//--- distance term, reducing the pick to "lowest supplyValue town anywhere on the map" -
+					//--- a cross-map (or offshore) opening dispatch. Skip the bootstrap pick when the HQ is
+					//--- gone; the normal picks run again next pass once HQRecovery redeploys. (b) The loop
+					//--- had no B756 naval-HVT gate, so the opening rush could send a ground team to an
+					//--- offshore carrier - mirror the spearhead/near-reach gate.
 					_hqObj = (_side) Call WFBE_CO_FNC_GetSideHQ;
-					_bestBoot = objNull;
-					_bestBootScore = -1e9;
-					{
-						_bootDist = if (!isNull _hqObj) then {_x distance _hqObj} else {0};
-						_bootScore = (0 - _bootDist) - ((_x getVariable ["supplyValue", 0]) * 10);
-						if (isNil "_bootScore") then {
-							diag_log ("CAPDBG|BOOT|" + (_x getVariable ["name","?"]) + "|residual");
+					if (!isNull _hqObj) then {
+						private "_bootAir";
+						_bootAir = false;
+						{ if (!_bootAir && {alive _x} && {(vehicle _x) isKindOf "Helicopter"} && {(getNumber (configFile >> "CfgVehicles" >> (typeOf (vehicle _x)) >> "transportSoldier")) > 0}) then {_bootAir = true} } forEach (units _team); //--- B756 idiom (see _teamAir below)
+						_bestBoot = objNull;
+						_bestBootScore = -1e9;
+						{
+							if (((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_x getVariable ["wfbe_is_naval_hvt", false])} || _bootAir) then {
+								_bootDist = _x distance _hqObj;
+								_bootScore = (0 - _bootDist) - ((_x getVariable ["supplyValue", 0]) * 10);
+								if (isNil "_bootScore") then {
+									diag_log ("CAPDBG|BOOT|" + (_x getVariable ["name","?"]) + "|residual");
+								};
+								_bootScore = if (isNil "_bootScore") then {-9999999} else {_bootScore};
+								if (_bootScore > _bestBootScore) then {_bestBootScore = _bootScore; _bestBoot = _x};
+							};
+						} forEach _uncaptured;
+						if (!isNull _bestBoot) then {_target = _bestBoot};
+						//--- Debounced log: at most once per 300 s per side.
+						_ltBootLog = _logik getVariable ["wfbe_aicom_bootstrap_lt", -1e9];
+						if (time - _ltBootLog > 300) then {
+							["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] BOOTSTRAP targeting active (0 towns owned) - biasing to nearest low-value town.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
+							_logik setVariable ["wfbe_aicom_bootstrap_lt", time];
 						};
-						_bootScore = if (isNil "_bootScore") then {-9999999} else {_bootScore};
-						if (_bootScore > _bestBootScore) then {_bestBootScore = _bootScore; _bestBoot = _x};
-					} forEach _uncaptured;
-					if (!isNull _bestBoot) then {_target = _bestBoot};
-					//--- Debounced log: at most once per 300 s per side.
-					_ltBootLog = _logik getVariable ["wfbe_aicom_bootstrap_lt", -1e9];
-					if (time - _ltBootLog > 300) then {
-						["INFORMATION", Format ["AI_Commander_AssignTowns.sqf: [%1] BOOTSTRAP targeting active (0 towns owned) - biasing to nearest low-value town.", _sideText]] Call WFBE_CO_FNC_AICOMLog;
-						_logik setVariable ["wfbe_aicom_bootstrap_lt", time];
 					};
 				} else {
 					//--- V0.8: MASS force on the strategy worker's spearhead targets first, in
@@ -1170,6 +1183,18 @@ _waterBlocks = {
 							_tgtDist = _ldrPos distance _x;
 							if (_tgtDist <= _teamReach && {_tgtDist < _nearReachD} && {((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_x getVariable ["wfbe_is_naval_hvt", false])} || _teamAir} && {!([_ldrPos, getPos _x] Call _waterBlocks)}) then {_nearReachD = _tgtDist; _nearReach = _x}; //--- B756 naval-HVT + r37 water-leg gate
 						} forEach _avail;
+						//--- r98 GUARDRAIL FILTER: the never-idle fallback below took the closest of ALL
+						//--- uncaptured towns with none of the B756/r37 gates the spearhead/near-reach picks
+						//--- apply - a land team could be routed to an offshore carrier or across a water leg
+						//--- and strand at the shoreline. Build the fallback pool with the same gates; only if
+						//--- gating empties the pool fall back to the unfiltered list (never-idle still wins).
+						_guardTowns = [];
+						{
+							if (((missionNamespace getVariable ["WFBE_C_AICOM_NAVAL_AIR_ONLY", 1]) <= 0) || {!(_x getVariable ["wfbe_is_naval_hvt", false])} || _teamAir) then {
+								if (!([_ldrPos, getPos _x] Call _waterBlocks)) then {_guardTowns set [count _guardTowns, _x]};
+							};
+						} forEach _uncapturedF;
+						if (count _guardTowns == 0) then {_guardTowns = _uncapturedF};
 						if (!isNull _nearReach) then {
 							_target = _nearReach;
 						} else {
@@ -1227,10 +1252,10 @@ _waterBlocks = {
 									_explicitMode = false;
 									diag_log ("AICOMSTAT|v2|EVENT|" + _sideText + "|" + str (round (time / 60)) + "|FOOT_STAGE|team=" + (str _team) + "|town=" + (_footStageTown getVariable ["name","town"]));
 								} else {
-									_target = [leader _team, _uncapturedF] Call WFBE_CO_FNC_GetClosestEntity;
+									_target = [leader _team, _guardTowns] Call WFBE_CO_FNC_GetClosestEntity; //--- r98: gated pool
 								};
 							} else {
-							_target = [leader _team, _uncapturedF] Call WFBE_CO_FNC_GetClosestEntity; //--- WAVE-1 CAUSE-2: _uncapturedF (blacklist-filtered; guardrail above guarantees non-empty). B36.1 (Ray 2026-06-15): FULL uncaptured list, NOT the _assigned-reduced _avail. A team that just captured its town has dismounted + abandoned its trucks, so it scans on-foot (3500m reach); on a sparse map no town is in reach, this guardrail fires, and the old _avail (minus teammates' targets) sent it to a FARTHER town -> it milled at the just-capped centre. Nearest-of-all advances it to the adjacent town (concentration is fine for an isolated foot team).
+							_target = [leader _team, _guardTowns] Call WFBE_CO_FNC_GetClosestEntity; //--- r98: gated pool. WAVE-1 CAUSE-2: _uncapturedF (blacklist-filtered; guardrail above guarantees non-empty). B36.1 (Ray 2026-06-15): FULL uncaptured list, NOT the _assigned-reduced _avail. A team that just captured its town has dismounted + abandoned its trucks, so it scans on-foot (3500m reach); on a sparse map no town is in reach, this guardrail fires, and the old _avail (minus teammates' targets) sent it to a FARTHER town -> it milled at the just-capped centre. Nearest-of-all advances it to the adjacent town (concentration is fine for an isolated foot team).
 							};
 						};
 					};

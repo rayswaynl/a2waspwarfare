@@ -26,6 +26,11 @@ AICOMV2_GDIR_INSTANCE = 1;
 waitUntil {!isNil "towns"};
 waitUntil {count towns > 0};
 
+//--- r98: also wait for the STARTING-MODE assignment (Server\Init\Init_Towns.sqf sets
+//--- townInitServer=true when done; Init_Server launches this worker BEFORE that file runs).
+//--- Seeding off pre-assignment sideIDs would register every map-default DEFENDER town as GUER.
+waitUntil {!isNil "townInitServer"};
+
 //--- Short delay to let town ownership settle before seeding ledger.
 sleep 5;
 
@@ -189,6 +194,57 @@ while {!WFBE_GameOver} do {
     sleep _tickSec;
     _tick  = _tick + 1;
     _elmin = floor (diag_tickTime / 60);
+
+    //--------------------------------------------------------------------
+    // PHASE 0 (r98): MEMBERSHIP REFRESH - re-apply the seed filter every tick.
+    //--- The ledger was seeded ONCE and never re-validated: a town captured by
+    //--- WEST/EAST kept its record forever (regen, wfbe_gdir_str publish, PHASE-4
+    //--- reinforcement cells and auto-armed QRF contracts all kept acting on a town
+    //--- GUER no longer holds), and a town that flipped TO GUER mid-match never got
+    //--- a record at all. Pick up new GUER/unknown towns; drop lost ones. A record
+    //--- with an ARMED counter-attack contract survives the drop (the contract's
+    //--- retake boost looks the record up by town name) until it fires or expires.
+    //--------------------------------------------------------------------
+    {
+        private ["_pTown","_pSide","_pFound","_pGrps","_pBase"];
+        _pTown = _x;
+        _pSide = _pTown getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+        if (_pSide == WFBE_C_GUER_ID || {_pSide == WFBE_C_UNKNOWN_ID}) then {
+            _pFound = false;
+            {if ((_x select 0) == _pTown) then {_pFound = true}} forEach _ledger;
+            if (!_pFound) then {
+                _pGrps = [_pTown] call _fnGuerGroups;
+                _pBase = 0.5;
+                if (count _pGrps > 0) then {_pBase = 1.0};
+                _ledger set [count _ledger, [_pTown, _pBase, _pBase, 0, 0, count _pGrps, 0]];
+                diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_PICKUP town=%2", _elmin, _pTown getVariable ["name", "?"]];
+            };
+        };
+    } forEach towns;
+    private ["_mContracts","_kept"];
+    _mContracts = missionNamespace getVariable ["AICOMV2_GDIR_CONTRACT_RECORDS", []];
+    _kept = [];
+    {
+        private ["_rec","_mTown","_mSide","_mName","_mKeep"];
+        _rec   = _x;
+        _mTown = _rec select 0;
+        _mSide = _mTown getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+        _mKeep = (_mSide == WFBE_C_GUER_ID || {_mSide == WFBE_C_UNKNOWN_ID});
+        if (!_mKeep) then {
+            _mName = _mTown getVariable ["name", ""];
+            {if ((_x select 1) == "counterAttack" && {(_x select 2) == _mName} && {(_x select 7) == "armed"}) then {_mKeep = true}} forEach _mContracts;
+        };
+        if (_mKeep) then {
+            _kept set [count _kept, _rec];
+        } else {
+            //--- Neutralize the stale sizing ratio: Server_GetTownGroupsDefender reads
+            //--- wfbe_gdir_str for the town's CURRENT owner, so a GUER value must not linger.
+            _mTown setVariable ["wfbe_gdir_str", 1];
+            diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_DROP town=%2 side=%3", _elmin, _mTown getVariable ["name", "?"], _mSide];
+        };
+    } forEach _ledger;
+    _ledger = _kept;
+    _ledgerCount = count _ledger;
 
     //--------------------------------------------------------------------
     // PHASE 1: REGEN - advance each town strength toward baseline.

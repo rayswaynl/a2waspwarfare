@@ -20,6 +20,11 @@ AICOMV2_CTL_INSTANCE = 1;
 
 waitUntil {!isNil "towns"};
 waitUntil {count towns > 0};
+//--- r98: wait for the STARTING-MODE assignment before seeding (Init_Server launches this
+//--- worker BEFORE Server\Init\Init_Towns.sqf runs). Seeding pre-assignment sideIDs found
+//--- zero W/E towns; the tick pickup then re-seeded the entire starting empire at
+//--- _captureSeed (0.25) instead of the seed-pass 1.0.
+waitUntil {!isNil "townInitServer"};
 sleep 5;
 
 private ["_tickSec","_regenFullSec","_captureSeed"];
@@ -61,6 +66,7 @@ _fnSeedSide = {
 			//--- clear any stale pending/counter scalars (restart hygiene - same reason as the tick seed)
 			_town setVariable ["wfbe_ctl_pending_ratio", -1];
 			_town setVariable ["wfbe_ctl_pending_invest", 0];
+			_town setVariable ["wfbe_ctl_pending_invest_cost", 0]; //--- r98 refund scalar
 			_town setVariable ["wfbe_ctl_lastspawn", 0];
 			_rec = [_town, _baseGroups, 1.0, 0, 0, diag_tickTime];
 			_ledger set [count _ledger, _rec];
@@ -119,6 +125,8 @@ while {!WFBE_GameOver} do {
 					_ledger set [count _ledger, _rec];
 					_town setVariable ["wfbe_ctl_pending_ratio", -1];
 					_town setVariable ["wfbe_ctl_pending_invest", 0];
+					//--- r98: do NOT clear wfbe_ctl_pending_invest_cost here - the losing side's
+					//--- drop pass below runs later in the SAME tick pair and needs it for the refund.
 					_town setVariable ["wfbe_ctl_lastspawn", 0];
 					diag_log Format ["CTLSTAT|v1|%1|SEED|town=%2|str=%3", str _side, _town getVariable ["name", "?"], _captureSeed];
 				};
@@ -133,7 +141,21 @@ while {!WFBE_GameOver} do {
 			_rec   = _x;
 			_town  = _rec select 0;
 			_tSide = _town getVariable ["sideID", WFBE_C_UNKNOWN_ID];
-			if (_tSide == _sideId) then {_kept set [count _kept, _rec]};
+			if (_tSide == _sideId) then {_kept set [count _kept, _rec]} else {
+				//--- r98 INVEST REFUND: the commander debited funds when it published
+				//--- wfbe_ctl_pending_invest (AI_Commander.sqf). If the town flips side before
+				//--- the tick applies it, the record is dropped here and the pending gain is
+				//--- wiped (by the capture FSM on a GUER take, or by the enemy pickup pass
+				//--- above) - the money vanished with no log. Refund the published cost.
+				private ["_dCost"];
+				_dCost = _town getVariable ["wfbe_ctl_pending_invest_cost", 0];
+				if (_dCost > 0) then {
+					[_side, _dCost] Call ChangeAICommanderFunds;
+					_town setVariable ["wfbe_ctl_pending_invest", 0];
+					_town setVariable ["wfbe_ctl_pending_invest_cost", 0];
+					diag_log Format ["CTLSTAT|v1|%1|REFUND|town=%2|cost=%3", str _side, _town getVariable ["name", "?"], _dCost];
+				};
+			};
 		} forEach _ledger;
 		_ledger = _kept;
 		
@@ -156,6 +178,7 @@ while {!WFBE_GameOver} do {
 				_recP set [2, ((_recP select 2) + _pInvest) min (missionNamespace getVariable ["AICOMV2_CTL_PAID_MAX", 1.5])];
 				_recP set [4, time];
 				_pTown setVariable ["wfbe_ctl_pending_invest", 0];
+				_pTown setVariable ["wfbe_ctl_pending_invest_cost", 0]; //--- r98: consumed, no refund due
 				diag_log Format ["CTLSTAT|v1|%1|INVEST_APPLY|town=%2|str=%3", str _side, _pTown getVariable ["name", "?"], _recP select 2];
 			};
 			_recP set [3, _pTown getVariable ["wfbe_ctl_lastspawn", 0]];
