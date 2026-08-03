@@ -9,7 +9,7 @@
 		- {Backpack content}
 */
 
-Private ["_backpack","_backpack_content","_cap","_capped","_eligible","_magazines","_mi","_muzzles","_unit","_use","_weapons","_okW","_okA","_dropped"];
+Private ["_backpack","_backpack_content","_bound","_cap","_capped","_compatMuzzles","_eligible","_entry","_mag","_magazines","_mi","_muzzles","_unit","_use","_weapon","_weapons","_okW","_okA","_dropped"];
 
 _unit = _this select 0;
 _weapons = _this select 1;
@@ -60,7 +60,34 @@ if (isPlayer _unit && {(missionNamespace getVariable ["WFBE_C_LOADOUT_REGISTRY_S
 _unit addWeapon "Throw";
 _unit addWeapon "Put";
 {_unit addWeapon _x} forEach _weapons;
-{_unit addMagazine _x} forEach _magazines;
+//--- addMagazine binds against the unit's current muzzle.  Selecting a compatible
+//--- weapon/muzzle for each magazine prevents a later launcher round (e.g. PG7VL)
+//--- from being evaluated against a machine-gun muzzle (e.g. m8_SAW).
+_compatMuzzles = [];
+{
+	_weapon = _x;
+	_muzzles = getArray (configFile >> "CfgWeapons" >> _weapon >> "muzzles");
+	if (count _muzzles == 0 || {"this" in _muzzles}) then {
+		_compatMuzzles set [count _compatMuzzles, [_weapon, getArray (configFile >> "CfgWeapons" >> _weapon >> "magazines")]];
+	} else {
+		{
+			_compatMuzzles set [count _compatMuzzles, [_x, getArray (configFile >> "CfgWeapons" >> _weapon >> _x >> "magazines")]];
+		} forEach _muzzles;
+	};
+} forEach (["Throw","Put"] + _weapons);
+{
+	_mag = _x;
+	_bound = false;
+	{
+		_entry = _x;
+		if (!_bound && {_mag in (_entry select 1)}) then {
+			_unit selectWeapon (_entry select 0);
+			_unit addMagazine _mag;
+			_bound = true;
+		};
+	} forEach _compatMuzzles;
+	if (!_bound) then {_unit addMagazine _mag};
+} forEach _magazines;
 
 //--- A weapon added BEFORE its magazines spawns UNLOADED in OA (players must hand-reload every gun on
 //--- respawn; addMagazine afterwards never chambers it). Re-add each weapon now that the magazines are
