@@ -100,8 +100,9 @@ while {!WFBE_GameOver} do {
 		if (_drop) then {
 			//--- Player-safe teardown: never deleteVehicle a player-occupied body.
 			if (!isNull _eGrp) then {
-				{ if (!(isPlayer _x)) then { ["garrisonsortie-cleanup", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; }; } forEach (units _eGrp);
-				if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
+				//--- r55 fail-clean: skip null units (stale units array after concurrent cleanup).
+				{ if (!isNull _x && {!(isPlayer _x)}) then { ["garrisonsortie-cleanup", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; }; } forEach (units _eGrp);
+				if (({!isNull _x && {isPlayer _x}} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 			};
 			diag_log format ["GARSORTIE|DESPAWN|town=%1|reason=%2|remaining=%3", (if (isNull _eTown) then {"?"} else {_eTown getVariable ["name","?"]}), _reason, (count _kept)];
 		} else {
