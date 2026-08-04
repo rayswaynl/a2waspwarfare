@@ -780,27 +780,44 @@ if (isNull _base) exitWith {
 		};
 	};
 	case "aicom-team-created": {
-		Private ["_csideID","_cteam","_clogik","_caicomList","_cdir","_cldr"];
+		Private ["_csideID","_cteam","_clogik","_caicomList","_cdir","_cldr","_cpendingId","_cpendingIds","_cpendingKeep","_cpendingKnown"];
 		_csideID = _args select 1;
 		_cteam = _args select 2;
 		_clogik = ((_csideID) Call WFBE_CO_FNC_GetSideFromID) Call WFBE_CO_FNC_GetSideLogic;
 		if (!isNull _clogik) then {
-			_clogik setVariable ["wfbe_aicom_pending", ((_clogik getVariable ["wfbe_aicom_pending", 1]) - 1) max 0];
-			if ((_clogik getVariable ["wfbe_aicom_pending", 0]) <= 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
+			_cpendingId = -1;
+			if (!isNull _cteam) then {_cpendingId = _cteam getVariable "wfbe_aicom_pending_id"; if (isNil "_cpendingId") then {_cpendingId = -1}};
+			_cpendingIds = _clogik getVariable ["wfbe_aicom_pending_ids", []];
+			_cpendingKeep = [];
+			_cpendingKnown = false;
+			{
+				if (typeName _x == "ARRAY" && {count _x > 0} && {(_x select 0) == _cpendingId}) then {_cpendingKnown = true} else {_cpendingKeep set [count _cpendingKeep, _x]};
+			} forEach _cpendingIds;
+			if (_cpendingId >= 0) then {
+				_clogik setVariable ["wfbe_aicom_pending_ids", _cpendingKeep];
+				_clogik setVariable ["wfbe_aicom_pending", count _cpendingKeep];
+				if ((count _cpendingKeep) == 0) then {_clogik setVariable ["wfbe_aicom_pending_since", -1]};
+			};
 			if (!isNull _cteam) then {
-				_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
-				//--- Direction-arrow marker feed (mirrors WFBE_ACTIVE_PATROLS): register
-				//--- [leader, sideID, dir, team] so every client can draw a side-coloured
-				//--- mil_arrow2 at the commander team's leader. dir is patched later by the
-				//--- aicom-team-heading case once the HC's heading loop reports a bearing.
-				_cldr = leader _cteam;
-				if (!isNull _cldr) then {
-					_cdir = getDir _cldr;
-					_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
-					missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomList + [[_cldr, _csideID, _cdir, _cteam]]];
-					publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+				if (_cpendingId >= 0 && {!_cpendingKnown}) then {
+					//--- The original request timed out and was replaced; do not register both teams.
+					_cteam setVariable ["wfbe_aicom_disband", true, true];
+					["WARNING", Format ["Server_HandleSpecial.sqf: rejected late HC team acknowledgement %1 (expired pending id %2).", _cteam, _cpendingId]] Call WFBE_CO_FNC_AICOMLog;
+				} else {
+					_clogik setVariable ["wfbe_teams", (_clogik getVariable ["wfbe_teams", []]) + [_cteam], true];
+					//--- Direction-arrow marker feed (mirrors WFBE_ACTIVE_PATROLS): register
+					//--- [leader, sideID, dir, team] so every client can draw a side-coloured
+					//--- mil_arrow2 at the commander team's leader. dir is patched later by the
+					//--- aicom-team-heading case once the HC's heading loop reports a bearing.
+					_cldr = leader _cteam;
+					if (!isNull _cldr) then {
+						_cdir = getDir _cldr;
+						_caicomList = missionNamespace getVariable ["WFBE_ACTIVE_AICOM_TEAMS", []];
+						missionNamespace setVariable ["WFBE_ACTIVE_AICOM_TEAMS", _caicomList + [[_cldr, _csideID, _cdir, _cteam]]];
+						publicVariable "WFBE_ACTIVE_AICOM_TEAMS";
+					};
+					["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 registered (%3 units).", _csideID, _cteam, count units _cteam]] Call WFBE_CO_FNC_AICOMLog;
 				};
-				["INFORMATION", Format ["Server_HandleSpecial.sqf: [sideID %1] HC commander team %2 registered (%3 units).", _csideID, _cteam, count units _cteam]] Call WFBE_CO_FNC_AICOMLog;
 			};
 		};
 	};

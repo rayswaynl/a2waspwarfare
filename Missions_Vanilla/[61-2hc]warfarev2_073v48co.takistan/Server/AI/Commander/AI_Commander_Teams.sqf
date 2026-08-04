@@ -22,7 +22,7 @@ private ["_side","_sideID","_sideText","_logik","_teams","_target","_aiTeams","_
               "_w11FreeFlag",
               "_buckets","_eu","_bClass","_mix","_dWeights","_wSum","_roll","_acc","_chosen","_clsOrder","_bi","_ti",
               "_storedTypes","_hasAirfield","_afNames","_unlockList","_holdsTrigger",
-              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending","_constructionExpired","_constructionSince","_constructionTTL","_grp","_censusOn","_censusLast","_censusRows","_censusKind","_censusLdr","_censusLdrTxt","_scanChunkOn","_scanChunkSleep","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_sliceCut","_sliceYield"]; //--- B66
+              "_d4Flag","_d4Target","_d4Camps","_d4SV","_d4GarHeavy","_d4OpenSV","_d4AtmgMult","_d4MechMult","_d4CwIdx2","_d4HasAtmg","_d4HasMech","_perfStart","_emitFoundSkip","_aicomLive","_aicomTeams","_aicomMean","_aicomHusk","_aicomTownDef","_aicomPatrol","_aicomOther","_aicomPatrolList","_aicomPatrolGroups","_aicomTeamUnits","_aicomFunds","_aicomSideLive","_aicomSkipLast","_constructionPending","_constructionExpired","_constructionSince","_constructionTTL","_grp","_censusOn","_censusLast","_censusRows","_censusKind","_censusLdr","_censusLdrTxt","_scanChunkOn","_scanChunkSleep","_perfActive","_perfSliceMax","_perfSlices","_sliceDt","_sliceT0","_chunkSleepTotal","_sliceCut","_sliceYield","_pendingIds","_pendingNext","_pendingEntry","_pendingNew"]; //--- B66
 
 _side = _this;
 _sideID = (_side) Call WFBE_CO_FNC_GetSideID;
@@ -172,6 +172,12 @@ if (_censusOn) then {
 };
 _aiTeams = _foundedTeams + _editorTeams; //--- legacy alias; used in server-local log below.
 _pending = _logik getVariable ["wfbe_aicom_pending", 0];
+//--- Pending dispatches are identity-bearing reservations, not an anonymous scalar.  A late HC
+//--- acknowledgement must not consume a newer replacement's slot after the oldest timeout.
+_pendingIds = _logik getVariable "wfbe_aicom_pending_ids";
+if (isNil "_pendingIds" || {typeName _pendingIds != "ARRAY"}) then {_pendingIds = []};
+_pending = count _pendingIds;
+_logik setVariable ["wfbe_aicom_pending", _pending];
 Call _sliceYield;
 
 //--- C3 consensus telemetry: keep founding-skip reasons debounced per side-logic so the
@@ -242,6 +248,9 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
 	};
 };
 Call _sliceYield;
+
+//--- A round can end while the optional chunked census yielded; never commit a late team purchase.
+if (gameOver) exitWith {};
 
 //--- V0.6.6: dynamic target - banked funds scale the founding threshold so losing
 //--- AIs convert wealth into pressure instead of hoarding.
@@ -395,11 +404,17 @@ if (_pending > 0) then {
 	if (_pendSince < 0) then {_pendSince = time; _logik setVariable ["wfbe_aicom_pending_since", _pendSince]};
 	diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH|pending=" + str _pending + "|founded=" + str _foundedTeams + "|target=" + str _target + "|pendingAgeSec=" + str (round (time - _pendSince)));
 	//--- B69 (pending-slot-timeout-reaper): a lost HC dispatch ack would pin _pending>0 forever, starving founding via the (_foundedTeams+_pending+_constructionPending)>=_target guard below. After a timeout, reap the oldest still-pending slot so founding resumes. (_pending is a single per-side counter, so this ages the oldest pending slot, not a per-slot timer.)
+	_pendingEntry = _pendingIds select 0;
+	if (typeName (_pendingEntry select 1) == "SCALAR") then {_pendSince = _pendingEntry select 1};
 	if ((time - _pendSince) > _pendTimeout) then {
-		_pending = _pending - 1;
+		_pendingNew = [];
+		for "_i" from 1 to ((count _pendingIds) - 1) do {_pendingNew set [count _pendingNew, _pendingIds select _i]};
+		_pendingIds = _pendingNew;
+		_pending = count _pendingIds;
+		_logik setVariable ["wfbe_aicom_pending_ids", _pendingIds];
 		_logik setVariable ["wfbe_aicom_pending", _pending];
 		if (_pending > 0) then {_logik setVariable ["wfbe_aicom_pending_since", time]} else {_logik setVariable ["wfbe_aicom_pending_since", -1]};
-		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH_REAP|pending->" + str _pending + "|reason=ack-timeout");
+		diag_log ("AICOMSTAT|v2|EVENT|" + (str _side) + "|" + str (round (time / 60)) + "|HCDISPATCH_REAP|pending->" + str _pending + "|reason=ack-timeout|id=" + str (_pendingEntry select 0));
 		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC dispatch pending slot reaped after timeout (pending->%2, age=%3s, timeout=%4s).", _sideText, _pending, round (time - _pendSince), _pendTimeout]] Call WFBE_CO_FNC_AICOMLog;
 	};
 } else {
@@ -1533,6 +1548,28 @@ if (count _live > 0) then {
 	};
 
 	if (isNull _facObj) then {_facObj = (_side) Call WFBE_CO_FNC_GetSideHQ};
+	//--- Reserve every body this HC template can materialize before committing its pending slot.
+	//--- A one-slot side-cap remainder previously admitted a whole eight-man (or crewed-vehicle) team.
+	private ["_foundCapCost", "_foundCapData", "_foundCapClass"];
+	_foundCapCost = 0;
+	{
+		_foundCapClass = _x;
+		_foundCapData = missionNamespace getVariable _foundCapClass;
+		if (_foundCapClass isKindOf "Man") then {
+			_foundCapCost = _foundCapCost + 1;
+		} else {
+			if (isNil "_foundCapData") then {
+				//--- Unknown vehicle crew size is unsafe to reserve optimistically; refuse this pass.
+				_foundCapCost = _aiCapTier + 1;
+			} else {
+				_foundCapCost = _foundCapCost + (3 + count (_foundCapData select QUERYUNITTURRETS));
+			};
+		};
+	} forEach _template;
+	if ((_sideAINow + _foundCapCost) > _aiCapTier) exitWith {
+		["side_ai_cap_template"] Call _emitFoundSkip;
+		["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] founding skipped - template population %2 would exceed tier cap (%3 + %2 > %4).", _sideText, _foundCapCost, _sideAINow, _aiCapTier]] Call WFBE_CO_FNC_AICOMLog;
+	};
 	if (isNull _facObj) exitWith {
 		if ((missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0) then {
 			[_side, "reject-no-spawn", _foundedTeams, _pending, _target, (if (_hasAirfield) then {1} else {0}), (if (_hasAirFactory) then {1} else {0}), _telemBucket, (count (_buckets select 3)), _allVehicles] Call WFBE_CO_FNC_AICOMAirFoundTelemetry;
@@ -1547,8 +1584,13 @@ if (count _live > 0) then {
 	} else {
 		_logik setVariable ["wfbe_aicom_free_refound", false];
 	};
-	_logik setVariable ["wfbe_aicom_pending", _pending + 1];
-	if (_pending <= 0) then {_logik setVariable ["wfbe_aicom_pending_since", time]};
+	_pendingNext = (_logik getVariable ["wfbe_aicom_pending_seq", 0]) + 1;
+	_logik setVariable ["wfbe_aicom_pending_seq", _pendingNext];
+	_pendingIds = _pendingIds + [[_pendingNext, time]];
+	_pending = count _pendingIds;
+	_logik setVariable ["wfbe_aicom_pending_ids", _pendingIds];
+	_logik setVariable ["wfbe_aicom_pending", _pending];
+	if (_pending <= 1) then {_logik setVariable ["wfbe_aicom_pending_since", time]};
 	//--- V0.6.4: name the receiving HC in the log - the random pick spreads load across
 	//--- all live HCs, and the server RPT should show the split without reading HC RPTs.
 	//--- Commander teams are the BIG atomic lumps (a whole platoon lands on ONE HC), so
@@ -1634,8 +1676,8 @@ if (count _live > 0) then {
 	//--- PLANE AIR-START (Ray 2026-07-01, PLANE-ONLY): append the is-jet-team flag + runway heading as trailing delegate args (slots
 	//--- 8/9 of the inner array; after HandleSpecial strips the leading string they land at Common_RunCommanderTeam _this indices 7/8).
 	//--- Purely additive - every other delegate reader ignores them (count-guarded), so ground/heli founding is byte-identical.
-	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass, _foundType, _isJetTeam, _runwayDir]] Call WFBE_CO_FNC_SendToClient;
-	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending + 1, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
+	[_hcUnit, "HandleSpecial", ['delegate-aicom-team', _sideID, _template, _spawnPos, _w7SkillSend, _pick, _padClass, _foundType, _isJetTeam, _runwayDir, _pendingNext]] Call WFBE_CO_FNC_SendToClient;
+	["INFORMATION", Format ["AI_Commander_Teams.sqf: [%1] HC team founding dispatched to HC [%2] (template %3, cost %4, doctrine %5, founded %6 editor %7 pending->%8 target %9 veteran_skill=%10).", _sideText, name _hcUnit, _pick, _price, _doc, _foundedTeams, _editorTeams, _pending, _target, _w7SkillSend]] Call WFBE_CO_FNC_AICOMLog;
 	//--- PRODUCTION class telemetry (claude-gaming 2026-06-15): classify the founded team's
 	//--- template by its min-upgrade requirements ([barracks,light,heavy,air] = _tmplUpgrades
 	//--- select _pick) so the infantry-vs-vehicle mix is visible. air>0 -> air, else heavy>0 ->
