@@ -206,24 +206,19 @@ if ((side group player) == resistance && {(missionNamespace getVariable ["WFBE_C
 				};
 			};
 			//--- B3: cross-link action - double-click or Upgrade button (MenuAction 1) on the cross-link row.
-			if (_xlink && {WFBE_MenuAction == 1}) then {
-				if ((lnbCurSelRow 504001) == _xlinkRow) then {
-					WFBE_MenuAction = -1;
-					if (((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0) && {(missionNamespace getVariable ["AICOMV2_GDIR_PANEL", 0]) > 0}) then {
-						//--- 2026-08-03 LIVE REGRESSION FIX: r95 wrapped these two statements in a BARE `exitWith`.
-						//--- On A2 OA `exitWith` is BINARY - it must be directly preceded by `if (..)` - so the bare
-						//--- form parse-failed this ENTIRE FILE at compile time. The dialog still opened (its controls
-						//--- come from Rsc/Dialogs.hpp) but NO population code ever ran: the Upgrade Menu rendered
-						//--- EMPTY for WEST/EAST/GUER alike. Restored to the origin/master two-statement form that
-						//--- shipped for months. r95's loop-survival concern is real but pre-existing and must be
-						//--- re-done with an `if (..) exitWith` form, verified in game.
-						closeDialog 0;
-						createDialog "WFBE_GDirCommissarMenu";
-					} else {
-						hint parseText "<t color='#F56363'>Commission Panel is not available (GUER Director inactive).</t>";
-					};
+			//--- 2026-08-04 (r95 intent, done correctly): the dialog switch is a DIRECT statement of the
+			//--- while-loop body in valid guard form, so the loop actually ENDS instead of surviving into
+			//--- the Commissar panel and eating its WFBE_MenuAction every 0.25s. The inactive-state hint
+			//--- stays in plain then/else - only the dialog-switch path exits.
+			_xlinkClicked = (_xlink && {WFBE_MenuAction == 1} && {(lnbCurSelRow 504001) == _xlinkRow});
+			if (_xlinkClicked) then {
+				WFBE_MenuAction = -1;
+				if (!(((missionNamespace getVariable ["AICOMV2_LANE_GUER_DIRECTOR", 0]) > 0) && {(missionNamespace getVariable ["AICOMV2_GDIR_PANEL", 0]) > 0})) then {
+					_xlinkClicked = false;
+					hint parseText "<t color='#F56363'>Commission Panel is not available (GUER Director inactive).</t>";
 				};
 			};
+			if (_xlinkClicked) exitWith {closeDialog 0; createDialog "WFBE_GDirCommissarMenu"};
 			if (WFBE_MenuAction == 1000) exitWith {WFBE_MenuAction = -1; closeDialog 0; createDialog "WF_Menu"};
 			WFBE_MenuAction = -1;
 			sleep 0.25;
@@ -284,7 +279,7 @@ WFBE_MenuAction = -1;
 // Ownership: this spawn writes 504006 ONLY while an upgrade is running (running branch below).
 // The idle branch no longer blanks 504006 — that would erase the footer's "Queued:" list.
 [_upgrade_labels, _upgrade_times] spawn {
-	Private ["_html","_labels","_lastRemaining","_remaining","_remainingMinutes","_remainingSeconds","_remainingSecondsText","_runningEndTime","_runningId","_runningLabel","_runningLevel","_runningState","_runningTime","_serverEndTime","_storedEndTime","_storedId","_times","_upgrades"];
+	Private ["_html","_labels","_lastRemaining","_remaining","_remainingMinutes","_remainingSeconds","_remainingSecondsText","_runningEndTime","_runningId","_runningLabel","_runningLevel","_runningState","_runningTime","_serverEndTime","_storedEndTime","_storedId","_times","_upgrades","_xlinkClicked"];
 
 	disableSerialization;
 

@@ -608,8 +608,13 @@ while {alive player && dialog} do {
 								for "_i" from 0 to (_hl - _nl) do {
 									if (!_found) then {
 										_ok = true;
+										//--- 2026-08-04: boolean sentinel, not exitWith - exitWith inside a for-body block does
+										//--- not do what it looks like on A2 OA (CLAUDE.md hard-stop rule). Same pattern as the
+										//--- MenuAction 2003 fix above.
 										for "_j" from 0 to (_nl - 1) do {
-											if ((_hayA select (_i + _j)) != (_nA select _j)) exitWith {_ok = false};
+											if (_ok) then {
+												if ((_hayA select (_i + _j)) != (_nA select _j)) then {_ok = false};
+											};
 										};
 										if (_ok) then {_found = true};
 									};
