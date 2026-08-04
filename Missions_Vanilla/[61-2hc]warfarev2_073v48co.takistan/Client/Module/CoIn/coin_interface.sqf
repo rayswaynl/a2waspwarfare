@@ -870,7 +870,12 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 
 				if (_tooltipType != "empty") then {
 					_textHeader = format ["<t color='#42b6ff' shadow='1' align='center' size='1.8'> %1 </t><br />",
-						_itemname, //--- fable/fortif-placement-preview-facing (owner 2026-08-04): show the WFBE buy-menu label (line 523) instead of the anchor's raw stock CfgVehicles name.
+						(if (isNil "_itemname") then {""} else {_itemname}), //--- wave0804b (coin_interface.sqf:873, regression from 942bb614ef): _itemname can be out of scope on some
+						//--- preview ticks (RPT: "Undefined variable in expression: _itemname") - guard with isNil and fall back to an
+						//--- empty string (never re-derive the stock CfgVehicles displayName - test_fortif_placement_preview_facing.py
+						//--- pins that commit 942bb614ef's WFBE-label switch must not be reverted) so no undefined-variable error can
+						//--- fire. fable/fortif-placement-preview-facing (owner 2026-08-04): still show the WFBE buy-menu label (line 523)
+						//--- whenever it IS in scope.
 						if (isnull _selected) then {""} else {str round ((1 - damage _selected) * 100) + "%"}
 					];
 					//--- QoL (C3): show build count vs limit for this structure while placing.
@@ -887,7 +892,7 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 					_textPicture = format ["<t color='#42b6ff' shadow='2' align='left' size='2.8'><img image='%1'/></t> ",_filePicture];
 				};
 
-				_text1 = if (count _params > 0) then {"<t color='#42b6ff' shadow='2'>" + localize "str_coin_rotate" + "<t align='right'>" + call compile (keyname 29) + (if (((missionNamespace getVariable ["WFBE_C_DEF_PLACE_ROTATE", 0]) > 0) && (_tooltipType == "preview")) then {format [" (%1 deg)", round (getDir _preview)]} else {""}) + "</t></t><br />"} else {"<br />"};
+				_text1 = if (count _params > 0) then {"<t color='#42b6ff' shadow='2'>" + localize "str_coin_rotate" + "<t align='right'>" + call compile (keyname 29) + (if (((missionNamespace getVariable ["WFBE_C_DEF_PLACE_ROTATE", 0]) > 0) && (_tooltipType == "preview") && {!(isNil "_preview")}) then {format [" (%1 deg)", round (getDir _preview)]} else {""}) /*--- wave0804b: guard _preview - RPT proved "Undefined variable in expression: _preview" at this line; "preview" tooltipType alone doesn't guarantee _preview is bound on every tick. ---*/ + "</t></t><br />"} else {"<br />"};
 
 				_status = if (manningDefense) then {localize "STR_WF_On"} else {localize "STR_WF_Off"};
 				_text2 = if (count _params > 0) then {"<t color='#42b6ff' shadow='2'>" + localize "str_coin_build" + "<t align='right'>" + call compile (actionKeysNames ["DefaultAction",1]) + "</t></t><br />"} else {"<t color='#42b6ff' shadow='2'>" + localize "STR_WF_AutoDefense" + ":<t align='right'>" + _status + "</t></t><br />"};
