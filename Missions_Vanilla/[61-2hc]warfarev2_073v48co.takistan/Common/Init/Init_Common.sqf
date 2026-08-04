@@ -181,6 +181,7 @@ WFBE_CO_FNC_GetSideSupply = Compile preprocessFileLineNumbers "Common\Functions\
 WFBE_CO_FNC_GetSideStructures = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideStructures.sqf";
 WFBE_CO_FNC_PickForwardFactory = Compile preprocessFileLineNumbers "Common\Functions\Common_PickForwardFactory.sqf"; //--- fable/founding-placement-20260802: forward-factory selection for HC-team founding (WFBE_C_AICOM_FOUND_FACTORY_FORWARD).
 WFBE_CO_FNC_GetSideUpgrades = Compile preprocessFileLineNumbers "Common\Functions\Common_GetSideUpgrades.sqf";
+WFBE_CO_FNC_RefreshAirCountermeasures = Compile preprocessFileLineNumbers "Common\Functions\Common_RefreshAirCountermeasures.sqf";
 WFBE_CO_FNC_IsUnitUnlocked = Compile preprocessFileLineNumbers "Common\Functions\Common_IsUnitUnlocked.sqf"; //--- feat/common-isunitunlocked: shared per-unit facMap/QUERYUNITUPGRADE tier-unlock check (was duplicated across AI_Commander_Teams.sqf/Produce.sqf/Base.sqf); returns [unlocked,found].
 WFBE_CO_FNC_GetTeamFunds = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTeamFunds.sqf";
 WFBE_CO_FNC_GetTotalCamps = Compile preprocessFileLineNumbers "Common\Functions\Common_GetTotalCamps.sqf";
