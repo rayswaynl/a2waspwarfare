@@ -113,7 +113,16 @@ if (!_reject) then {
 	//--- Survivability scaler. Camp_EP1 inherits armor=250 from Strategic; the town-camp models are 2500
 	//--- (Land_Fort_Watchtower_EP1) / 20000 (WarfareBCamp), so an un-scaled tent would make a $25k capped
 	//--- asset die to a rifle burst. Exact same divisor EH the town camps already use (Init_Town.sqf:137-140).
-	_tent addEventHandler ["handleDamage", {getDammage (_this select 0) + ((_this select 2) / (missionNamespace getVariable ["WFBE_C_FOB_HEALTH_COEF", 10]))}];
+	//--- 2026-08-04 (owner report): A2 vehicle-collision damage is large enough to one-shot the tent
+	//--- through the /10 coef. Collision arrives with an EMPTY projectile string (_this select 4), so
+	//--- ammo-less damage gets an extra divisor: taps and parking mistakes are survivable, weapon fire
+	//--- (real projectile) keeps the original coef and still kills the FOB as designed.
+	_tent addEventHandler ["handleDamage", {
+		private ["_fobCoef"];
+		_fobCoef = missionNamespace getVariable ["WFBE_C_FOB_HEALTH_COEF", 10];
+		if ((_this select 4) == "") then {_fobCoef = _fobCoef * (missionNamespace getVariable ["WFBE_C_FOB_COLLISION_COEF_MULT", 8])};
+		getDammage (_this select 0) + ((_this select 2) / _fobCoef)
+	}];
 
 	//--- Identity mast beside the tent (owner ruling 1). Land_Vysilac_FM is already live in this tree as the
 	//--- Radio Tower model (Structures_CO_US.sqf:112) - base-A2 CAStructures, all-map safe.

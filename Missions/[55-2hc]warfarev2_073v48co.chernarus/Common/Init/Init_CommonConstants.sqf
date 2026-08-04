@@ -3211,6 +3211,7 @@ if (isNil "WFBE_C_FOB_SERVICE_STEP") then {WFBE_C_FOB_SERVICE_STEP = 0.05};     
 //--- (Init_Town.sqf:137-140): incoming damage is divided by this. Still destructible (owner ruling 2) -
 //--- it just takes a real raid rather than a passing burst. Tune during soak.
 if (isNil "WFBE_C_FOB_HEALTH_COEF") then {WFBE_C_FOB_HEALTH_COEF = 10};          //--- incoming-damage divisor for the FOB tent.
+if (isNil "WFBE_C_FOB_COLLISION_COEF_MULT") then {WFBE_C_FOB_COLLISION_COEF_MULT = 8}; //--- EXTRA divisor for ammo-less (collision) damage on the FOB tent - owner report 2026-08-04: a truck bump one-shot a $25k FOB through the /10 coef. Collision now /80 total: parking mistakes survivable, deliberate weapon fire unchanged.
 
 //--- AICOM AIR-FOUNDING TELEMETRY (P1.1 diagnosis, claude 2026-07-19; wording corrected 2026-07-19 per
 //--- codex-main-sol-review-airpower-20260719 REJECT "not literal byte/execution identity"): reason-coded
