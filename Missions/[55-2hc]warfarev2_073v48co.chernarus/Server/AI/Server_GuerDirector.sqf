@@ -756,6 +756,9 @@ while {!WFBE_GameOver} do {
                                         _hClass = _qrfGunPick;
                                         _h    = _hClass createVehicle _spawnPos;
                                         _hGrp = [resistance, "qrf-air"] Call WFBE_CO_FNC_CreateGroup;
+                                        if (isNull _hGrp) then {
+                                            deleteVehicle _h;
+                                        } else {
                                         //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64). Crew via the
                                         //--- proven wildcard-GUER pattern: CreateUnit into the group + moveIn*.
                                         private ["_uPilot","_uGun"];
@@ -814,6 +817,7 @@ while {!WFBE_GameOver} do {
                                         };
                                         diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_FIRE class=%3 town=%4 fundedBy=%5",
                                             _elmin, _cId, _hClass, _cTown, _cUid];
+                                        };
                                         _hClass = "Ka137_MG_PMC";
                                         _spawnPos = _spawnPosB; //--- fable/qrf-ground-spawn: second hull on its OWN pad - the same-point pair spawn was the "immediately blow up".
                                     };
@@ -830,6 +834,9 @@ while {!WFBE_GameOver} do {
                                         }];
                                     };
                                     _hGrp = [resistance, "qrf-air"] Call WFBE_CO_FNC_CreateGroup;
+                                    if (isNull _hGrp) then {
+                                        deleteVehicle _h;
+                                    } else {
                                     //--- FIX: createVehicleCrew is TKOH/A3-only (absent on OA 1.64).
                                     private ["_uPilot2","_uGun2"];
                                     _uPilot2 = ["GUE_Soldier_Pilot", _hGrp, _spawnPos, resistance] Call WFBE_CO_FNC_CreateUnit;
@@ -877,6 +884,7 @@ while {!WFBE_GameOver} do {
                                     if ((missionNamespace getVariable ["WFBE_C_GDIR_VIS", 1]) > 0) then {
                                         WFBE_GDIR_ORDER_MSG = Format ["COMMISSAR: %1 inbound to %2", _cKind, _cTown];
                                         publicVariable "WFBE_GDIR_ORDER_MSG";
+                                    };
                                     };
                                 } else {
                                     diag_log Format ["AICOMSTAT|v3|DIRECTOR|GUER|%1|GDIR_CONTRACT cId=%2 QRF_SKIP groupCapExceeded=%3/%4",
