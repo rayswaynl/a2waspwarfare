@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+"""Regression checks for Chernarus town-mode lists and editor bindings."""
+
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[2]
+MISSION = ROOT / "Missions/[55-2hc]warfarev2_073v48co.chernarus/mission.sqm"
+STALE_REMOVAL_NAMES = ("Pogorevka", "Orlovets", "Kozlovka")
+EDITOR_LABELS = {
+    "NovySobor": "Novy Sobor",
+    "StarySobor": "Stary Sobor",
+}
+
+
+def test_town_removal_lists_do_not_name_unplaced_chernarus_towns() -> None:
+    source = MISSION.read_text(encoding="utf-8")
+    for town_name in STALE_REMOVAL_NAMES:
+        assert town_name not in source, (
+            f"{town_name} is not an Init_Town entity but is still counted in a Towns_Removed list"
+        )
+
+
+def test_multiword_town_editor_labels_match_init_town_names() -> None:
+    source = MISSION.read_text(encoding="utf-8")
+    for editor_label, town_name in EDITOR_LABELS.items():
+        assert f'text="{editor_label}";' not in source
+        assert f'text="{town_name}";' in source
+
+
+if __name__ == "__main__":
+    test_town_removal_lists_do_not_name_unplaced_chernarus_towns()
+    test_multiword_town_editor_labels_match_init_town_names()
