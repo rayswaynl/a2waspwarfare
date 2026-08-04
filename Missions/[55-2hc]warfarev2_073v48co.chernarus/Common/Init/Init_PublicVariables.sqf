@@ -36,6 +36,7 @@ _l = _l + ["RequestAFKKick"]; //--- SG14: client reports AFK threshold exceeded;
 _l = _l + ["RequestGDirPanel"]; //--- A1 (Commissar Panel): GUER player buy/contract request -> server validates, debits wallet, emits GDIR_ORDER, pushes result to caller (Server\PVFunctions\RequestGDirPanel.sqf).
 _l = _l + ["RequestVehicleSell"]; //--- item #43 hardening: vehicle sell-back - server recomputes the refund (price table * fraction * health), validates seller/ownership/crew, credits the buying team and deletes (Server\PVFunctions\RequestVehicleSell.sqf).
 _l = _l + ["SpectatorEvents"]; //--- spectator v8: HC -> server Fired/Killed event batches for the caster director feed (Server\PVFunctions\SpectatorEvents.sqf).
+_l = _l + ["RequestCancelQueue"]; //--- factory queue cancellation is a server-owned shared-object transaction.
 
 _serverCommandPV = _l;
 

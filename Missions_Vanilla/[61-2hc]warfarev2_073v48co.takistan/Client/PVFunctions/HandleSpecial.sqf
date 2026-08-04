@@ -792,6 +792,15 @@ switch (_request) do {
 	hintSilent parseText Format ["<t color='#F8D664'>%1</t>", _msg];
 	systemChat _msg;
 };
+	case "cancel-queue-result": {
+		Private ["_ok","_refund","_factory","_cpt"];
+		_ok = _args select 0; _refund = _args select 1; _factory = _args select 2; _cpt = _args select 3;
+		if (_ok) then {
+			unitQueu = (unitQueu - _cpt) max 0;
+			missionNamespace setVariable [Format ["WFBE_C_QUEUE_%1", _factory], ((missionNamespace getVariable [Format ["WFBE_C_QUEUE_%1", _factory], 0]) - 1) max 0];
+			hint parseText Format ["<t color='#00e83e'>Queue cancelled.</t><br/>Refunded: <t color='#ffe066'>$%1</t>", _refund];
+		} else {hint parseText "<t color='#ff9900'>You have no unit in this factory's queue.</t>"};
+	};
 
 case "guer-helibomb-result": {
 		Private ["_ok","_msg"];
