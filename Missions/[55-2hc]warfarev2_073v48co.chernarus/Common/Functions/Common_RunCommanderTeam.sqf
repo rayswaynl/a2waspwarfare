@@ -2805,8 +2805,17 @@ while {!WFBE_GameOver && _alive} do {
 									};
 								} forEach (_campTgtPos nearEntities [["Man"], 60]);
 								if (count _campEnemy > 0) then {
-									_campFoe = _campEnemy select 0;
-									{if (alive _x) then {_x doTarget _campFoe; _x doFire _campFoe}} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
+									{
+										if (alive _x) then {
+											private ["_campFoe"];
+											_campFoe = [_x, _campEnemy] Call WFBE_CO_FNC_GetClosestEntity;
+											if (!isNull _campFoe) then {
+												_x reveal _campFoe;
+												_x doTarget _campFoe;
+												_x doFire _campFoe;
+											};
+										};
+									} forEach ((units _team) Call WFBE_CO_FNC_GetLiveUnits);
 								};
 							};
 							//--- Settle: up to ~20s or leader inside the 10m camp range (mirrors the
