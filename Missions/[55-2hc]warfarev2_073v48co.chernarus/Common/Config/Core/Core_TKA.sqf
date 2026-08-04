@@ -215,23 +215,23 @@ _i = _i + [['','',2800,0,1,0,'Defense',0,'Takistani Army',[]]];
 
 /* Defense Structures */
 _c = _c + ['TK_WarfareBBarrier5x_EP1'];
-_i = _i + [['','',50,0,0,0,'Fortification',0,'Takistani Army',[]]];
+_i = _i + [['Barrier Wall (5x)','',50,0,0,0,'Fortification',0,'Takistani Army',[]]];
 
 _c = _c + ['TK_WarfareBBarrier10x_EP1'];
-_i = _i + [['','',100,0,0,0,'Fortification',0,'Takistani Army',[]]];
+_i = _i + [['Barrier Wall (10x)','',100,0,0,0,'Fortification',0,'Takistani Army',[]]];
 
 _c = _c + ['TK_WarfareBBarrier10xTall_EP1'];
-_i = _i + [['','',200,0,0,0,'Fortification',0,'Takistani Army',[]]];
+_i = _i + [['Barrier Wall (10x Tall)','',200,0,0,0,'Fortification',0,'Takistani Army',[]]];
 
 //--- cmdcon42-g: WFBE_C_DEFMENU_V2 recategorises camo nets Strategic -> Fortification.
 _c = _c + ['Land_CamoNet_EAST_EP1'];
-_i = _i + [['','',35,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'Takistani Army',[]]];
+_i = _i + [['Camo Net','',35,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'Takistani Army',[]]];
 
 _c = _c + ['Land_CamoNetVar_EAST_EP1'];
-_i = _i + [['','',45,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'Takistani Army',[]]];
+_i = _i + [['Camo Net (Var)','',45,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'Takistani Army',[]]];
 
 _c = _c + ['Land_CamoNetB_EAST_EP1'];
-_i = _i + [['','',55,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'Takistani Army',[]]];
+_i = _i + [['Camo Net (B)','',55,0,0,0,(if ((missionNamespace getVariable ["WFBE_C_DEFMENU_V2", 1]) > 0) then {'Fortification'} else {'Strategic'}),0,'Takistani Army',[]]];
 
 _c = _c + ['TKOrdnanceBox_EP1'];
 _i = _i + [['','',850,0,0,0,'Ammo',0,'Takistani Army',[]]];

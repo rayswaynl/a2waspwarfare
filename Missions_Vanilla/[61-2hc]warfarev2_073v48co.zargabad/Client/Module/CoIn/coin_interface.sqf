@@ -1006,6 +1006,19 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 						_cashValue = _cashValues select _itemcash;
 						_cashDescription = if (count _fundsDescription > _itemcash) then {_fundsDescription select _itemcash} else {"?"};
 						_itemname = if (count _x > 3) then {_x select 3} else {getText (configFile >> "CfgVehicles" >> _itemclass >> "displayName")};
+						//--- wave0804b (build-menu apostrophe corruption): _itemname rides into _arrayParams (below) which is
+						//--- embedded as the single-quoted %3 payload in the vanilla BIS_fnc_createmenu click-handler (line ~1038,
+						//--- `call compile '%3'`). Any apostrophe/quote in the resolved label prematurely closes that single-quoted
+						//--- string and corrupts every sibling item's click handler in the same category. Strip ASCII 39 (') and
+						//--- ASCII 34 (") before it ever reaches _arrayParams. regexReplace does NOT exist on A2 OA 1.64 (A3
+						//--- 2.06+ only) - use the toArray/toString filter idiom (precedent: GUI_EndOfGameStats.sqf HC-name strip).
+						_wc19Chars = toArray _itemname;
+						_wc19Clean = [];
+						for "_wc19i" from 0 to (count _wc19Chars - 1) do {
+							_wc19c = _wc19Chars select _wc19i;
+							if (_wc19c != 39 && {_wc19c != 34}) then {_wc19Clean set [count _wc19Clean, _wc19c]};
+						};
+						_itemname = toString _wc19Clean;
 						//--- Build Limit reached?
 						_buildLimit = false;
 						_find = _buildingsNames find _itemclass;
