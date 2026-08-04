@@ -3833,5 +3833,34 @@ if (isNil "WFBE_C_TERRAIN_SECTOR_NUDGE_OPEN") then {WFBE_C_TERRAIN_SECTOR_NUDGE_
 //--- NOT gated by this flag (see Common_UtilLibSelfTest.sqf, Init_Common.sqf).
 if (isNil "WFBE_C_UTIL_LIB_SELFTEST") then {WFBE_C_UTIL_LIB_SELFTEST = 0};
 
+//======================================================================================
+//--- fable/fortif-placement-preview-facing (owner live report 2026-08-04, verbatim: "The issue
+//--- is placement, preview, facing direction indications" for defense/fortification building).
+//--- WDDM PLACEMENT-GHOST PREVIEW MAP: coin_interface.sqf's ghost-preview lookup (getText
+//--- CfgVehicles >> _itemclass >> "ghostpreview") always falls through to the raw WDDM anchor
+//--- classname because no CfgVehicles class defines that property anywhere in this mission tree
+//--- - so the placement ghost for every WDDM-composition item (walls, HESCO, LoS screen, gate,
+//--- hedgehog line, flak tower) is a random cheap decoy prop (cargo container / industrial tank /
+//--- concrete slab) that looks nothing like what actually gets built and is too near-symmetric for
+//--- a facing change to read visually. WFBE_ANCHOR_PREVIEW_MAP maps each affected WDDM anchor to
+//--- ONE lightweight, correctly-shaped representative object already spawned by the real
+//--- composition (Server_ConstructPosition.sqf / Init_Defenses.sqf WFBE_NEURODEF_* arrays) - not
+//--- the whole multi-object composition (would churn 3-10 spawn/despawn (createVehicleLocal) pairs
+//--- every preview-refresh tick). Every representative classname below is pairwise-distinct from
+//--- every other entry AND from every WDDM anchor classname itself, so the existing
+//--- "typeof _preview != _itemclass_preview" respawn check (coin_interface.sqf) still detects
+//--- switching between adjacent buy-menu items. 0 (default) = coin_interface.sqf's read path is
+//--- untouched - byte-identical to HEAD.
+if (isNil "WFBE_C_DEF_PREVIEW_MAP") then {WFBE_C_DEF_PREVIEW_MAP = 0};
+WFBE_ANCHOR_PREVIEW_MAP = [
+	['Misc_cargo_cont_small', 'Hedgehog_EP1'],			//--- Hedgehog Line -> real WFBE_NEURODEF_HEDGEHOGLINE child
+	['Land_Ind_TankSmall', 'Land_Ind_IlluminantTower'],		//--- Flak Tower -> WFBE_C_DEF_FLAKTOWER_STRUCTURE default host
+	['Misc_cargo_cont_net1', 'Concrete_Wall_EP1'],		//--- Wall Row -> real WFBE_NEURODEF_FORTIF_WALL_ROW child
+	['Misc_cargo_cont_net2', 'Land_HBarrier3'],			//--- Wall Corner -> real WFBE_NEURODEF_WALL_CORNER hub piece
+	['Misc_cargo_cont_net3', 'Base_WarfareBBarrier10xTall'],	//--- LoS Screen -> real WFBE_NEURODEF_FORTIF_LOS_SCREEN child
+	['Misc_cargo_cont_tiny', 'Land_HBarrier_large'],		//--- HESCO Line -> real WFBE_NEURODEF_FORTIF_HESCO_LINE child
+	['Misc_concrete_High', 'Land_BarGate2']			//--- Gate Complex -> real WFBE_NEURODEF_FORTIF_GATE_COMPLEX gate
+];
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

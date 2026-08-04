@@ -523,6 +523,15 @@ while {!isNil "BIS_CONTROL_CAM"} do {
 			_itemname = if (count _params > 3) then {_params select 3} else {getText (configFile >> "CfgVehicles" >> _itemclass >> "displayName")};
 			_itemclass_preview = getText (configFile >> "CfgVehicles" >> _itemclass >> "ghostpreview");
 			if (_itemclass_preview == "") then {_itemclass_preview = _itemclass};
+			//--- fable/fortif-placement-preview-facing (owner 2026-08-04): ghostpreview is never authored
+			//--- anywhere in this mission's configs (see WFBE_ANCHOR_PREVIEW_MAP, Init_CommonConstants.sqf),
+			//--- so every WDDM anchor fell back to its own raw decoy classname above. Override from the
+			//--- shared preview map when armed - flag 0 (default) leaves the two lines above byte-identical.
+			if ((missionNamespace getVariable ["WFBE_C_DEF_PREVIEW_MAP", 0]) > 0) then {
+				{
+					if ((_x select 0) == _itemclass) exitWith {_itemclass_preview = _x select 1};
+				} forEach (missionNamespace getVariable ["WFBE_ANCHOR_PREVIEW_MAP", []]);
+			};
 
 			//--- Preview building
 			_preview = camtarget BIS_CONTROL_CAM;
