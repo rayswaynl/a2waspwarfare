@@ -10,6 +10,31 @@ WFBE_CL_FNC_HandlePVF = Compile preprocessFileLineNumbers "Client\Functions\Clie
 ["INITIALIZATION", "Init_HC.sqf: Running the headless client initialization."] Call WFBE_CO_FNC_LogContent;
 diag_log "Init_HC.sqf: Running the headless client initialization.";
 
+//--- HC WEATHER PARITY (r117): A2 OA weather is per-machine (BIKI setRain: pre-A3 each client
+//--- and the server hold their own values). The server (Init_Server.sqf) and every player client
+//--- (Init_Client.sqf: "Keep rainy lobby weather consistent with the server-local path") apply the
+//--- lobby weather locally, but this HC path never did - HCs sat at mission.sqm startWeather=0
+//--- (clear) all round. Town defence/AICOM AI are LOCAL to the HC they were delegated to, so in
+//--- Cloudy/Rainy rounds HC-local AI sensed under clear weather (rain feeds the AI hearing model)
+//--- while server-local AI and player visuals ran the lobby weather. Mirror the server block here.
+Call {
+	_weat = missionNamespace getVariable ["WFBE_C_ENVIRONMENT_WEATHER", 0];
+	if ((missionNamespace getVariable ["WFBE_DAYNIGHT_ENABLED", 0]) == 1) exitWith {
+		0 setOvercast 0;
+		0 setRain 0;
+	};
+
+	_oc = 0.05;
+	switch (_weat) do {
+		case 0: {_oc = 0};
+		case 1: {_oc = 0.5};
+		case 2: {_oc = 1};
+	};
+	60 setOvercast _oc;
+	if (_weat == 2) then {60 setRain 0.5}; //--- Same as Init_Server.sqf: rain only for the Rainy lobby option.
+};
+diag_log Format ["Init_HC.sqf: lobby weather applied locally (WFBE_C_ENVIRONMENT_WEATHER=%1).", missionNamespace getVariable ["WFBE_C_ENVIRONMENT_WEATHER", 0]];
+
 //--- wiki-wins: was a blind `sleep 20` that raced server init. Wait (bounded ~20s) for the player
 //--- object instead of always blocking the full interval; proceeds early once seated, never hangs.
 private "_hcInitDeadline"; _hcInitDeadline = diag_tickTime + 20;
