@@ -2156,7 +2156,8 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FRAME_TELEMETRY", 0]) > 0) the
 //--- placed after init completes - same guarded-spawn pattern as the onboarding call above.
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_TipRotation.sqf";
 
-//--- Late-join catch-up card. Self-gates on WFBE_C_JIP_CATCHUP_BRIEFING and reads only local or join-seeded state.
+//--- Late-join catch-up card. The uiNamespace latch is per-round, unlike session-wide onboarding.
+uiNamespace setVariable ["WFBE_JIP_CATCHUP_SHOWN", nil];
 [] spawn Compile preprocessFileLineNumbers "Client\Functions\Client_JIPCatchupBriefing.sqf";
 
 ["INITIALIZATION", Format ["Init_Client.sqf: Client initialization ended at [%1]", time]] Call WFBE_CO_FNC_LogContent;
