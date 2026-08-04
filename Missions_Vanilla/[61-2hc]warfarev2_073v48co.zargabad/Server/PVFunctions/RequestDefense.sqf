@@ -23,27 +23,76 @@ _reqPlayer = _this select 6;
 
 if (typeName _side != "SIDE" || {!(_side in WFBE_PRESENTSIDES)}) exitWith {
 	["WARNING", Format ["RequestDefense.sqf: rejected invalid side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
 };
 if (typeName _defenseType != "STRING" || {_defenseType == ""}) exitWith {
 	["WARNING", "RequestDefense.sqf: rejected invalid defense classname."] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
 };
 if (typeName _pos != "ARRAY" || {count _pos < 3}) exitWith {
 	["WARNING", "RequestDefense.sqf: rejected invalid placement payload."] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
 };
 if (typeName (_pos select 0) != "SCALAR" || {typeName (_pos select 1) != "SCALAR"} || {typeName (_pos select 2) != "SCALAR"} || {typeName _dir != "SCALAR"}) exitWith {
 	["WARNING", "RequestDefense.sqf: rejected invalid placement payload."] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
 };
 if (typeName _manned != "BOOL" || {typeName _builtByRepairTruck != "BOOL"}) exitWith {
 	["WARNING", "RequestDefense.sqf: rejected invalid defense options."] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
 };
 if (typeName _reqPlayer != "OBJECT" || {isNull _reqPlayer} || {!isPlayer _reqPlayer} || {side group _reqPlayer != _side}) exitWith {
 	["WARNING", "RequestDefense.sqf: rejected invalid requester."] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
 };
 
 // Defense auto-manning defaults on client-side and Custom Action 16 can still toggle it off/on.
 _defenses = missionNamespace getVariable [Format ["WFBE_%1DEFENSENAMES", str _side], []];
 if (typeName _defenses != "ARRAY") exitWith {
 	["WARNING", Format ["RequestDefense.sqf: rejected unavailable defense list for side [%1].", _side]] Call WFBE_CO_FNC_LogContent;
+
+	//--- 2026-08-04: the client charged optimistically BEFORE this reject - never eat the payment
+	//--- silently (owner in-game report "items broken"). Classname send -> client refunds via its own
+	//--- price lookup (B5 idiom below); forged/garbage payloads resolve to no refund by construction.
+	if (typeName _reqPlayer == "OBJECT" && {!(isNull _reqPlayer)} && {isPlayer _reqPlayer} && {typeName _defenseType == "STRING"}) then {
+		[_reqPlayer, "LocalizeMessage", ["DefenseRequestRejected", _defenseType]] Call WFBE_CO_FNC_SendToClient;
+	};
 };
 _index = _defenses find _defenseType;
 if (_index != -1) then {
