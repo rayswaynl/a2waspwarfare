@@ -10,12 +10,13 @@
 
 //--- Malformed-payload guard: ensure _this is ARRAY with >= 3 elements (camp, newSide, oldSide).
 if (!((typeName _this) in ["ARRAY"]) || {count _this < 3}) exitWith {};
-Private ["_camps","_closest","_is_repair","_marker","_side","_side_new","_sideID_new","_sideID_old","_town","_feedbackLast"];
+Private ["_camps","_closest","_is_bulk","_is_repair","_marker","_side","_side_new","_sideID_new","_sideID_old","_town","_feedbackLast"];
 
 _camp = _this select 0;
 _sideID_new = _this select 1;
 _sideID_old = _this select 2;
 _is_repair = if (count _this > 3) then {_this select 3} else {false};
+_is_bulk = if (count _this > 4) then {_this select 4} else {false};
 
 //--- r69: null/invalid camp aborts before getVariable/town (deleted camp mid-broadcast).
 if (isNil "_camp" || {typeName _camp != "OBJECT"} || {isNull _camp}) exitWith {};
@@ -35,6 +36,8 @@ if (WFBE_Client_SideID == _sideID_new) then {
 
 	//--- Skip the reset upon repair.
 	if (_is_repair) exitWith {};
+	//--- Bulk town-capture camp flip: marker/FOW only; no per-player bounty or score.
+	if (_is_bulk) exitWith {};
 
 	if ((missionNamespace getVariable ["WFBE_C_TOWNS_CAPTURE_BAR_DETAIL", 0]) > 0) then {
 		//--- Client-local feedback copy; no server state or public variable is changed.

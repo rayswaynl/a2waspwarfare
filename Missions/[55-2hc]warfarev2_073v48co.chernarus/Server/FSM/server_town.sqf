@@ -81,7 +81,9 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 		_startingSupplyValue = _location getVariable ["startingSupplyValue", 30];
 		_maxSupplyValue = _location getVariable ["maxSupplyValue", 30];
 
-				_sideID = _location getVariable "sideID";
+				//--- Nil-safe sideID: an unset value must not poison GetSideFromID with sideLogic.
+				_sideID = _location getVariable ["sideID", WFBE_C_UNKNOWN_ID];
+				if (isNil "_sideID") then {_sideID = WFBE_C_UNKNOWN_ID};
 				_side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
 
 				//--- fable/fix-hangar-aircraft-buy: airfields tagged wfbe_skip_auto_hangar (NWAF/NEAF/Balota)
@@ -489,10 +491,12 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 			//--- capture-rate mechanic), but once the town falls, leftover old-side camps are stale enemy
 			//--- spawn points inside the captured town. Mirrors the individual-flip effects (sideID +
 			//--- JIP-safe flag texture + CampCaptured broadcast); no per-player capture credit for bulk flips.
+			//--- Reset bulk-flipped camp supply and mark the client event as bulk so no bounty is paid.
 			if ((missionNamespace getVariable ["WFBE_C_TOWN_CAPTURE_FLIPS_CAMPS", 1]) > 0) then {
-				private ["_ccCamps","_ccCamp","_ccOldSID","_ccFlag","_ccFlags","_ccNewSide","_ccFlipped"];
+				private ["_ccCamps","_ccCamp","_ccOldSID","_ccFlag","_ccFlags","_ccNewSide","_ccFlipped","_ccStartSV"];
 				_ccNewSide = (_newSID) Call WFBE_CO_FNC_GetSideFromID;
 				_ccCamps = _location getVariable ["camps", []];
+				_ccStartSV = _location getVariable ["startingSupplyValue", _startingSupplyValue];
 				_ccFlipped = 0;
 				{
 					_ccCamp = _x;
@@ -500,12 +504,13 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 						_ccOldSID = _ccCamp getVariable ["sideID", WFBE_C_UNKNOWN_ID];
 						if (_ccOldSID != _newSID) then {
 							_ccCamp setVariable ["sideID", _newSID, true];
+							_ccCamp setVariable ["supplyValue", _ccStartSV, true];
 							_ccFlag = _ccCamp getVariable ["wfbe_flag", objNull];
 							if (!isNull _ccFlag) then {
 								_ccFlag setFlagTexture (missionNamespace getVariable Format ["WFBE_%1FLAG", str _ccNewSide]);
 								_ccFlag setVehicleInit (Format ["this setFlagTexture '%1'", missionNamespace getVariable Format ["WFBE_%1FLAG", str _ccNewSide]]);
 							};
-							[nil, "CampCaptured", [_ccCamp, _newSID, _ccOldSID]] Call WFBE_CO_FNC_SendToClients;
+							[nil, "CampCaptured", [_ccCamp, _newSID, _ccOldSID, false, true]] Call WFBE_CO_FNC_SendToClients;
 							_ccFlipped = _ccFlipped + 1;
 						};
 					};
