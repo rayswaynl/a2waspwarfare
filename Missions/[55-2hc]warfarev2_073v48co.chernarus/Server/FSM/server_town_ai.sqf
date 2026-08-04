@@ -1021,7 +1021,7 @@ while {!WFBE_GameOver} do {
 								//--- B67 [wiki-wins]: never delete a player unit. The old loop deleted
 								//--- every server-local unit; a player whose unit is server-local (e.g. a
 								//--- JIP/HC-handoff edge) would be wiped on despawn. Guard with !isPlayer.
-								{if (local _x && !(isPlayer _x)) then {["town-sweep-unit", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach units _deactGrp;
+								{if (local _x && !(isPlayer _x)) then {["town-sweep-unit", _x, Format ["town=%1", _town getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0.05}} forEach units _deactGrp;
 								if (({!(local _x)} count units _deactGrp) == 0) then {deleteGroup _deactGrp};
 							};
 						};
