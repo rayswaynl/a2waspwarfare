@@ -808,9 +808,7 @@ emptyQueu = [];
 		_hq addEventHandler ["hit",{_this Spawn BuildingDamaged}];
 
         if (_side == west && !(IS_chernarus_map_dependent))then{
-	        _hq setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]";
-	        _hq setVehicleInit "this setObjectTexture [1,""Textures\lavbody2_coD.paa""]";
-	        _hq setVehicleInit "this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
+	        _hq setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]; this setObjectTexture [1,""Textures\lavbody2_coD.paa""]; this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
 			processinitcommands;
 		};
 

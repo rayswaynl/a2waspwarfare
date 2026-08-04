@@ -58,9 +58,7 @@ if (isNull _MHQ) exitWith {
 	["WARNING", Format ["Server_MHQRepair.sqf: [%1] replacement MHQ creation failed.", _sideText]] Call WFBE_CO_FNC_LogContent;
 };
 if (_side == west && !(IS_chernarus_map_dependent)) then {
-	_MHQ setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]";
-	_MHQ setVehicleInit "this setObjectTexture [1,""Textures\lavbody2_coD.paa""]";
-	_MHQ setVehicleInit "this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
+	_MHQ setVehicleInit "this setObjectTexture [0,""Textures\lavbody_coD.paa""]; this setObjectTexture [1,""Textures\lavbody2_coD.paa""]; this setObjectTexture [2,""Textures\lav_hq_coD.paa""]";
 	processinitcommands;
 	};
 _MHQ setVariable ["WFBE_Taxi_Prohib", true];
