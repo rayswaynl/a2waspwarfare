@@ -249,6 +249,9 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_C3_TELEMETRY", 0]) > 0) then {
 };
 Call _sliceYield;
 
+//--- A round can end while the optional chunked census yielded; never commit a late team purchase.
+if (gameOver) exitWith {};
+
 //--- V0.6.6: dynamic target - banked funds scale the founding threshold so losing
 //--- AIs convert wealth into pressure instead of hoarding.
 _base             = missionNamespace getVariable ["WFBE_C_AI_COMMANDER_TEAMS_TARGET",        4];

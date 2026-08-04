@@ -32,6 +32,9 @@ _template = _this select 1;
 _pos = _this select 2;
 _side = (_sideID) Call WFBE_CO_FNC_GetSideFromID;
 
+//--- Drop an HC-delegated creation request that arrived after the endgame signal.
+if (gameOver || {WFBE_GameOver}) exitWith {};
+
 //--- LAB QUIESCENCE PIN (perf proving-ground): when the lab sets WFBE_C_TEST_TEAM_CAP=0 the synthetic
 //--- benchmark wants ZERO AICOM-founded teams. AI_Commander_Teams.sqf gates its OWN founding path on
 //--- this, but wildcard events (W6/W19/W23/W24) dispatch here directly and would otherwise smuggle one
