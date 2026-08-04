@@ -38,6 +38,18 @@ _refundParaSetup = {
 	["WARNING", Format["Support_Paratroopers.sqf: setup abort refund $%1 to team %2 (%3).", _cost, _team, _reason]] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- r127 AICOM cooldown release: the AI paratroop worker stamps wfbe_aicom_para_last BEFORE dispatch
+//--- (AI_Commander_Paratroops.sqf) and AI drops pay no call-in fee, so a setup abort only needs to hand
+//--- the cooldown back - otherwise the side is locked out of AI para for the full interval with no delivery.
+_releaseParaAICOMCooldown = {
+	if (_isAI) then {
+		private "_ptLogik";
+		_ptLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+		if (!isNil "_ptLogik" && {!isNull _ptLogik}) then {_ptLogik setVariable ["wfbe_aicom_para_last", -1e9]};
+		["WARNING", Format["Support_Paratroopers.sqf: [%1] AI paratroop setup abort - AICOM cooldown released.", _side]] Call WFBE_CO_FNC_LogContent;
+	};
+};
+
 ["INFORMATION", Format["Support_Paratroopers.sqf : [%1] Team [%2] has requested paratroopers (ai:%3).", _side, _playerTeam, _isAI]] Call WFBE_CO_FNC_LogContent;
 
 //--- Determine a random spawn location.
@@ -73,6 +85,7 @@ _vehicle_model = missionNamespace getVariable Format ["WFBE_%1PARACARGO", str _s
 if (isNil '_units' || isNil '_vehicle_model') exitWith {
 	["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle or units are not defined (level %2).", _side, _currentLevel]] Call WFBE_CO_FNC_LogContent;
 	if (!_isAI) then {[_playerTeam, 8500, Format ["undefined roster/model L%1", _currentLevel]] Call _refundParaSetup};
+	Call _releaseParaAICOMCooldown;
 };
 
 //--- Determine how many vehicles do we need.
@@ -80,6 +93,7 @@ _vehicle_cargo = getNumber(configFile >> 'CfgVehicles' >> _vehicle_model >> 'tra
 if (_vehicle_cargo == 0) exitWith {
 	["ERROR", Format["Support_Paratroopers.sqf : [%1] Paratrooping vehicle [%2] has no cargo capacity.", _side, _vehicle_model]] Call WFBE_CO_FNC_LogContent;
 	if (!_isAI) then {[_playerTeam, 8500, Format ["zero cargo %1", _vehicle_model]] Call _refundParaSetup};
+	Call _releaseParaAICOMCooldown;
 };
 _vehicle_count = ceil((count _units) / _vehicle_cargo);
 
@@ -129,6 +143,7 @@ if ((count _vehicles) == 0) exitWith {
 	["ERROR", Format["Support_Paratroopers.sqf : [%1] no transport survived create; aborting.", _side]] Call WFBE_CO_FNC_LogContent;
 	if (!isNull _grp) then {deleteGroup _grp};
 	if (!_isAI) then {[_playerTeam, 8500, "transport create failed"] Call _refundParaSetup};
+	Call _releaseParaAICOMCooldown;
 };
 
 //--- Create the units.

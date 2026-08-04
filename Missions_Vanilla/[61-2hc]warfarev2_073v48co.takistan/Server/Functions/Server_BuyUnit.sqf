@@ -270,7 +270,11 @@ while {(count _queu == 0) || {!((_id select 0) in [_queu select 0])}} do {  //--
 			_team setVariable ["wfbe_queue", (_team getVariable "wfbe_queue") - [_id]];
 		};
 		_queu = _building getVariable "queu";
-		if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_queu select 0]};
+		//--- r127 wrong-victim fix: remove OUR token, never the shared head. This abort only fires
+		//--- while our token is NOT at the head (the while condition above exits the loop the moment
+		//--- it is), so the old head-removal always deleted another buyer's queued slot - a player
+		//--- victim then waited forever (or the coroutine died on `[] select 0` once the queue drained).
+		if (!isNil "_queu" && {count _queu > 0}) then {_queu = _queu - [_id select 0]};
 		_building setVariable ["queu",_queu,true];
 		//--- fable/aicom-treasury-refund-on-abort: refund the pre-charged _price here (the flag guards
 		//--- against the post-wait re-check below also paying out for this same abort, since - per the
