@@ -1313,6 +1313,12 @@ if (_strikeOn) then {
 			_team setVariable ["wfbe_aicom_foot_stage", false];
 			_team setVariable ["wfbe_aicom_foot_stage_pos", []];
 				_team setVariable ["wfbe_aicom_townorder", []];
+				//--- r72: HC drivers read ONLY wfbe_aicom_order. Strike stamped "goto"@HQ; clearing
+				//--- strike + SetTeamMoveMode alone left HC strikers parked/assaulting after edge-lost recall.
+				//--- Mirror WAVE-1 A3 relief release + wedge watchdog: bump order to towns.
+				if ([_team, "wfbe_aicom_hc", false] Call WFBE_CO_FNC_GroupGetBool) then {
+					_team setVariable ["wfbe_aicom_order", [(if (isNil {_team getVariable "wfbe_aicom_order"}) then {-1} else {(_team getVariable "wfbe_aicom_order") select 0}) + 1, "towns", getPos (leader _team)], true];
+				};
 			};
 		} forEach _teams;
 	};
