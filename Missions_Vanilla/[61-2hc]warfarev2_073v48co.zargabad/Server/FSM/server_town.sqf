@@ -583,6 +583,41 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 
 			//--- FM-5: clear the old garrison's active flags on capture so the new owner re-garrisons immediately (prevents an up-to-WFBE_C_TOWNS_UNITS_INACTIVE undefended window on rapid recapture).
 			//--- Also clear episode latch so the new owner's activation episode is not blocked.
+			//--- DESPAWN-BUDGET INTEGRITY (2026-07-30): FM-5 used to clear only the active/episode flags.
+			//--- That left the previous owner's mobile town AI in wfbe_town_teams + live on HC while the new
+			//--- owner could immediately re-activate and APPEND a second garrison into the same registry.
+			//--- Deactivation cleanup is side-scoped (cleanup-townai + current owner), so the old-side HC
+			//--- groups never got reaped and kept burning the GUER/side group budget after capture.
+			//--- Reclaim here with the same locality rules as server_town_ai deactivation: broadcast
+			//--- cleanup-townai for the OLD side, delete server-local units, free empty groups, then
+			//--- wipe the registry so the new owner's first episode starts clean. Static defenses still
+			//--- use the separate DEFENDER_LINGER path below (Task 32).
+			private ["_capOldTeams","_capOldTeam","_capOldVehs"];
+			_capOldTeams = _location getVariable ["wfbe_town_teams", []];
+			if (typeName _capOldTeams != "ARRAY") then {_capOldTeams = []};
+			if (isMultiplayer) then {
+				[nil, "HandleSpecial", ["cleanup-townai", _location, _side]] Call WFBE_CO_FNC_SendToClients;
+			};
+			{
+				_capOldTeam = _x;
+				if (!isNil "_capOldTeam" && {!isNull _capOldTeam}) then {
+					{if (local _x && {!(isPlayer _x)}) then {["town-capture-unit", _x, Format ["town=%1", _location getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _capOldTeam);
+					if (({!(local _x)} count (units _capOldTeam)) == 0) then {deleteGroup _capOldTeam};
+				};
+			} forEach _capOldTeams;
+			_capOldVehs = _location getVariable ["wfbe_active_vehicles", []];
+			if (typeName _capOldVehs != "ARRAY") then {_capOldVehs = []};
+			{
+				if (!isNull _x && {alive _x} && {local _x} && {({isPlayer _x} count (crew _x)) == 0}) then {
+					["town-capture-hull", _x, Format ["town=%1", _location getVariable ["name","?"]]] Call WFBE_CO_FNC_LogVehDelete;
+					deleteVehicle _x;
+				};
+			} forEach _capOldVehs;
+			_location setVariable ["wfbe_town_teams", []];
+			_location setVariable ["wfbe_active_vehicles", []];
+			_location setVariable ["wfbe_sortie_grp", grpNull, true];
+			_location setVariable ["wfbe_sortie_started", 0];
+			_location setVariable ["wfbe_sortie_rtb", false];
 			_location setVariable ["wfbe_active", false];
 			_location setVariable ["wfbe_active_air", false];
 			_location setVariable ["wfbe_episode_spawned", false];
