@@ -336,7 +336,7 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 	} forEach _pax;
 	if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)}) exitWith {
 		//--- Heli lost mid-lift: any survivors still aboard/around get an unconditional move.
-		{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false}; _x doMove _obj}} forEach _pax;
+	{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false; if (vehicle _x != _x) then {moveOut _x}}; _x doMove _obj}} forEach _pax;
 		//--- P1.1 TERMINAL VEHLIFT TELEMETRY (claude 2026-07-19): true ABORT outcome - a vehicle was slung but the
 		//--- heli was lost before the pax even boarded/reached the LZ. Checked BEFORE the detach below (which nils
 		//--- nothing but keep the guard on the still-attached hull, mirroring the detach condition). Flag default 0.
@@ -365,7 +365,7 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 	};
 	if (_approachLimited) then {(group (driver _h)) setSpeedMode "FULL"};
 	if (isNull _h || {!alive _h} || {isNull (driver _h)} || {!alive (driver _h)}) exitWith {
-		{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false}; _x doMove _obj}} forEach _pax;
+		{if (alive _x) then {if (vehicle _x != _x) then {unassignVehicle _x; [_x] orderGetIn false; if (vehicle _x != _x) then {moveOut _x}}; _x doMove _obj}} forEach _pax;
 		//--- P1.1 TERMINAL VEHLIFT TELEMETRY (claude 2026-07-19): true ABORT outcome - the heli was lost during the
 		//--- run-in to the LZ (pax boarded, deep-drop never reached). Flag default 0.
 		if (!isNull _lveh && {alive _lveh} && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_TELEMETRY", 0]) > 0}) then {diag_log ("AICOMAIR|v1|" + str _sID + "|" + str (round (time / 60)) + "|stage=vehlift|reason=abort-runin|veh=" + (typeOf _lveh) + "|team=" + (str _tm))};
