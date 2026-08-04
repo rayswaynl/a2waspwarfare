@@ -477,7 +477,7 @@ if ((typeOf _vehicle) isKindOf "Tank" || (typeOf _vehicle) isKindOf "Car") then 
 		if (((_side) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_IRSMOKE > 0) then { //--- AI8: use the buying side (_side), not client-side sideJoined (wrong/nil on a dedicated server). Make sure the unit is defined in IRS_Init and the upgrade is available.
 			_get = missionNamespace getVariable Format ["%1_IRS", (typeOf _vehicle)];
 			if !(isNil '_get') then {
-				_vehicle setVariable ["wfbe_irs_flares", _get select 1, true];
+				_vehicle setVariable ["wfbe_irs_flares", (_get select 1) * (if (((_side) Call WFBE_CO_FNC_GetSideUpgrades) select WFBE_UP_IRSMOKE > 1) then {2} else {1}), true]; //--- r120: mirror the Client_BuildUnit L2 doubling - AI-bought armor was stuck at the base smoke count.
 				_vehicle addEventHandler ["incomingMissile", {_this spawn WFBE_CO_MOD_IRS_OnIncomingMissile}];
 			};
 		};
