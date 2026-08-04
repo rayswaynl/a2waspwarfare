@@ -221,5 +221,5 @@ if (_rlType in ["Barracks", "Light", "CommandCenter", "Heavy", "Aircraft", "Serv
 _index = (missionNamespace getVariable Format ["WFBE_%1STRUCTURENAMES",str _side]) find _structureType;
 if (_index != -1) then { //--- refund-sweep: reject already exited above; build the accepted structure.
 	_script = (missionNamespace getVariable Format ["WFBE_%1STRUCTURESCRIPTS",str _side]) select _index;
-	[_structureType,_side,_pos,_dir,_index] ExecVM (Format["Server\Construction\Construction_%1.sqf",_script]);
+	[_structureType,_side,_pos,_dir,_index,"","",_reqPlayer] ExecVM (Format["Server\Construction\Construction_%1.sqf",_script]); //--- r31: pass the verified placer through to the construction worker for post-accept rollback.
 };

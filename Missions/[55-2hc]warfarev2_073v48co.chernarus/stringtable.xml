@@ -5844,6 +5844,10 @@
       <English>This structure type has reached its build limit for your side.</English>
       <Russian>Достигнут лимит построек этого типа для вашей стороны.</Russian>
     </Key>
+    <Key ID="StructureBuildFailed">
+      <English>Construction failed. Your structure cost has been refunded and the build slot freed.</English>
+      <Russian>Строительство не удалось. Стоимость возвращена, слот освобождён.</Russian>
+    </Key>
     <Key ID="BankDestroyed">
       <English>%1 has destroyed the %2 bank! The economic stronghold has fallen.</English>
       <Russian>%1 уничтожил банк стороны %2! Экономический оплот пал.</Russian>
