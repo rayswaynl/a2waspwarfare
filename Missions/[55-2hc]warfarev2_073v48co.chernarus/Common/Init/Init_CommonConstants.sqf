@@ -3886,5 +3886,15 @@ if (isNil "WFBE_C_DISCONNECT_ZOMBIE_TIMEOUT") then {WFBE_C_DISCONNECT_ZOMBIE_TIM
 if (isNil "WFBE_C_MARKER_REBUILD_FPS") then {WFBE_C_MARKER_REBUILD_FPS = 15}; //--- read Common/Common_MarkerLoop.sqf:49 (fallback 15): auto map-marker rebuild while client fps stays below this. 0 disables; previously unarmable.
 if (isNil "WFBE_C_MARKER_BUDGET_PER_TICK") then {WFBE_C_MARKER_BUDGET_PER_TICK = 30}; //--- read Common/Common_MarkerLoop.sqf:83 (fallback 30): fixed per-tick marker-refresh ceiling; the BUDGET_ADAPT block above references it as "above" but it was never declared.
 
+//--- PR #1464 reconcile: late-game teleport for fully-AI, base-idle WEST/EAST teams.
+//--- Decision runs after relief/withdrawal and before HQ hunt; execution stays on the
+//--- existing team driver so HC and server-local teams move only where they are local.
+//--- All defaults are 0: the feature is inert until the owner arms and tunes the complete set.
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE") then {WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_TIME") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_TIME = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN") then {WFBE_C_AICOM_ENDGAME_TELEPORT_COOLDOWN = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MAX_PER_TICK = 0};
+if (isNil "WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST") then {WFBE_C_AICOM_ENDGAME_TELEPORT_MIN_DIST = 0};
+
 ["INITIALIZATION", "Init_CommonConstants.sqf: Constants are defined."] Call WFBE_CO_FNC_LogContent;
 

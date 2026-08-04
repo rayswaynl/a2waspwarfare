@@ -1075,6 +1075,14 @@ if ((missionNamespace getVariable ["WFBE_C_AICOM_WITHDRAW_EVAL", 1]) > 0) then {
 	} forEach _teams;
 };
 
+//--- END-GAME TELEPORT (reconciled PR #1464): inspect base-idle, fully-AI teams after the
+//--- relief/withdrawal decisions settle and before HQ hunt. The worker reuses this tick's
+//--- _teams/_attacked/_ownTownObjs and the current front pick; its flag-off first line is inert.
+if ((missionNamespace getVariable ["WFBE_C_AICOM_ENDGAME_TELEPORT_ENABLE", 0]) > 0) then {
+	if (isNil "_myHQ") then {_myHQ = (_side) Call WFBE_CO_FNC_GetSideHQ};
+	[_side, _teams, _attacked, _ownTownObjs, _myHQ] Call WFBE_SE_FNC_AI_Com_EndgameTeleport;
+};
+
 //--- 3) HQ HUNT: strike when clearly winning; stand down when the edge is gone.
 _enemyHQ = (_enemySide) Call WFBE_CO_FNC_GetSideHQ;
 _wasStrike = _logik getVariable ["wfbe_aicom_strike_on", false];
