@@ -63,7 +63,7 @@ if (_factoryType in ["Light"]) then {
 		};
 	};
 	if (count _free > 0) then {
-		_selpad =_free  call BIS_fnc_selectRandom;
+		_selpad = _free select floor random count _free;
 		_position = [_selpad select 0 select 0,_selpad select 0 select 1,_selpad select 1];
 		_position set [2, .5];
 		_spawnpaddir=5;//dirswitch to prevent overwrite dir later
@@ -89,7 +89,7 @@ if (_factoryType in ["Heavy"]) then {
 		};
 	};
 	if (count _free > 0) then {
-		_selpad =_free  call BIS_fnc_selectRandom;
+		_selpad = _free select floor random count _free;
 		_position = [_selpad select 0 select 0,_selpad select 0 select 1,_selpad select 1];
 		_position set [2, .5];
 		_spawnpaddir=5;//dirswitch to prevent overwrite dir later
@@ -115,7 +115,7 @@ if (_factoryType in ["Aircraft"]) then {
 		};
 	};
 	if (count _free > 0) then {
-		_selpad =_free  call BIS_fnc_selectRandom;
+		_selpad = _free select floor random count _free;
 		_position = [_selpad select 0 select 0,_selpad select 0 select 1,_selpad select 1];
 		_position set [2, .5];
 		_spawnpaddir=5;//dirswitch to prevent overwrite dir later
@@ -139,7 +139,7 @@ if (_factoryType in ["Aircraft"]) then {
 		};
 	};
 	if (count _free > 0) then {
-		_selpad =_free  call BIS_fnc_selectRandom;
+		_selpad = _free select floor random count _free;
 		_position = [_selpad select 0 select 0,_selpad select 0 select 1,_selpad select 1];
 		_position set [2, .5];
 		_spawnpaddir=5;//dirswitch to prevent overwrite dir later

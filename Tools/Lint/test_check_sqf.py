@@ -514,5 +514,29 @@ class JipCivLatchOrderTests(unittest.TestCase):
             )
 
 
+class A2CommandAvailabilityTests(unittest.TestCase):
+    BUILD_UNIT_PATHS = (
+        Path("Missions/[55-2hc]warfarev2_073v48co.chernarus/Client/Functions/Client_BuildUnit.sqf"),
+        Path("Missions_Vanilla/[61-2hc]warfarev2_073v48co.takistan/Client/Functions/Client_BuildUnit.sqf"),
+        Path("Missions_Vanilla/[61-2hc]warfarev2_073v48co.zargabad/Client/Functions/Client_BuildUnit.sqf"),
+    )
+
+    def test_build_unit_pad_selection_uses_a2_native_random_index(self) -> None:
+        root = Path(__file__).resolve().parents[2]
+
+        for relative_path in self.BUILD_UNIT_PATHS:
+            text = (root / relative_path).read_text(encoding="utf-8")
+            self.assertEqual(
+                text.count("BIS_fnc_selectRandom"),
+                0,
+                f"A2/OA-incompatible selector in {relative_path}",
+            )
+            self.assertEqual(
+                text.count("_free select floor random count _free"),
+                4,
+                f"all four pad-selection branches must use the A2-native selector in {relative_path}",
+            )
+
+
 if __name__ == "__main__":
     unittest.main()
