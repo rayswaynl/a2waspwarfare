@@ -12,7 +12,7 @@
 		  town+side entry is torn down as before.
 */
 
-Private ["_deadline","_deletedGroups","_deletedUnits","_entry","_entryEpoch","_entryGroup","_entrySide","_entryTown","_epochGate","_group","_groups","_keptGroups","_logGroupCount","_registry","_registryNew","_side","_town","_townName","_units"];
+Private ["_deadline","_deletedGroups","_deletedUnits","_entry","_entryEpoch","_entryGroup","_entrySide","_entryTown","_epochGate","_group","_groups","_keptGroups","_keptRegistryGroups","_logGroupCount","_registry","_registryCurrent","_registryNew","_side","_town","_townName","_units"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -21,6 +21,7 @@ _side = _this select 1;
 _epochGate = if (count _this > 2) then {_this select 2} else {-1};
 _registry = missionNamespace getVariable ["WFBE_CL_TownAI_Groups", []];
 _groups = [];
+_keptRegistryGroups = [];
 
 {
 	_entry = _x;
@@ -88,8 +89,8 @@ _logGroupCount = {
 		if (isNull _group) exitWith {};
 		//--- fix(exitWith-control-flow g1606): mismatch exitWith was nested in then{} so it only left the
 		//--- then-block and FALLS THROUGH into deleteVehicle (wrong-town/side stamp was ignored).
-		if (!(isNil {_group getVariable "WFBE_TownAI_Town"}) && {(_group getVariable "WFBE_TownAI_Town") != _town}) exitWith {};
-		if (!(isNil {_group getVariable "WFBE_TownAI_Side"}) && {(_group getVariable "WFBE_TownAI_Side") != _side}) exitWith {};
+		if (!(isNil {_group getVariable "WFBE_TownAI_Town"}) && {(_group getVariable "WFBE_TownAI_Town") != _town}) exitWith {_keptRegistryGroups set [count _keptRegistryGroups, _group]};
+		if (!(isNil {_group getVariable "WFBE_TownAI_Side"}) && {(_group getVariable "WFBE_TownAI_Side") != _side}) exitWith {_keptRegistryGroups set [count _keptRegistryGroups, _group]};
 
 		_units = +units _group;
 		{["hc-townai-cleanup-unit", _x, Format ["town=%1", _townName]] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; _deletedUnits = _deletedUnits + 1} forEach _units;
@@ -100,6 +101,7 @@ _logGroupCount = {
 		if (isNull _group) exitWith {_deletedGroups = _deletedGroups + 1};
 		if (count (units _group) > 0) exitWith {
 			_keptGroups = _keptGroups + 1;
+			_keptRegistryGroups set [count _keptRegistryGroups, _group];
 			["WARNING", Format ["TOWN_AI_HC_CLEANUP group_not_empty town:%1 side:%2 group:%3 remainingUnits:%4", _townName, _side, _group, count (units _group)]] Call WFBE_CO_FNC_LogContent;
 		};
 
@@ -108,6 +110,10 @@ _logGroupCount = {
 	};
 } forEach _groups;
 
+//--- The cleanup loop yields while local deletes settle. Re-read the registry before rebuilding so
+//--- a newer delegate-townai batch registered during that wait is retained. Remove only original
+//--- cleanup groups; groups that were not actually torn down remain registered.
+_registryCurrent = missionNamespace getVariable ["WFBE_CL_TownAI_Groups", []];
 _registryNew = [];
 {
 	_entry = _x;
@@ -118,13 +124,14 @@ _registryNew = [];
 		_entryGroup = _entry select 2;
 		_entryEpoch = if (count _entry >= 4) then {_entry select 3} else {-1};
 		if (isNull _entryGroup) exitWith {};
-		//--- fix-1375: only drop this entry from the registry if it was actually torn down above
-		//--- (same town+side+epoch-gate condition as the delete pass) - an entry protected by the
-		//--- epoch gate (the current, live batch) must survive into _registryNew unchanged.
-		if (_entryTown == _town && _entrySide == _side && {(_epochGate == -1) || {_entryEpoch != _epochGate}}) exitWith {};
+		if (_entryGroup in _groups) then {
+			if (_entryTown == _town && _entrySide == _side && {(_epochGate == -1) || {_entryEpoch != _epochGate}}) then {
+				if !(_entryGroup in _keptRegistryGroups) exitWith {};
+			};
+		};
 		_registryNew set [count _registryNew, _entry];
 	};
-} forEach _registry;
+} forEach _registryCurrent;
 missionNamespace setVariable ["WFBE_CL_TownAI_Groups", _registryNew];
 
 // Marty: Log the count after deleteGroup has run locally so the RPT shows whether group slots are recovered.
