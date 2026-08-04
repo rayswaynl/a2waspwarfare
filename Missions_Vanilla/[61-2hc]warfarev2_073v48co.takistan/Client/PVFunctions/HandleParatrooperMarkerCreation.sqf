@@ -1,4 +1,3 @@
-
 //--- Malformed-payload guard: ensure _this is ARRAY with >= 2 elements (unit, sideID).
 if (!((typeName _this) in ["ARRAY"]) || {count _this < 2}) exitWith {};
 Private ["_side","_sideID","_unit","_unit_kind"];
@@ -51,8 +50,13 @@ if (time - _lastParaSound > 8) then {
 	missionNamespace setVariable ["WFBE_C_LastParatroopSound", time];
 	playSound "commanderNotification";
 
-	Private ["_dzMarker"];
-	_dzMarker = createMarkerLocal [Format ["paraDZ_%1", round time], position _unit];
+	//--- Unique name: round time alone collides when a stick of troopers registers in the same second
+	//--- (second createMarkerLocal fails/steals the name; the sleep-30 delete then hits the wrong marker).
+	//--- Sound throttle still limits to one DZ marker + chime per 8s; uniqueness is belt-and-suspenders.
+	Private ["_dzMarker","_dzName"];
+	_dzName = Format ["paraDZ_%1_%2", unitMarker, round (random 1000000)];
+	if (markerType _dzName != "") then {deleteMarkerLocal _dzName};
+	_dzMarker = createMarkerLocal [_dzName, position _unit];
 	_dzMarker setMarkerTypeLocal "mil_objective";
 	_dzMarker setMarkerColorLocal _color;
 	_dzMarker setMarkerTextLocal "Paradrop";
@@ -60,7 +64,7 @@ if (time - _lastParaSound > 8) then {
 		Private ["_m"];
 		_m = _this select 0;
 		sleep 30;
-		deleteMarkerLocal _m;
+		if (markerType _m != "") then {deleteMarkerLocal _m};
 	};
 };
 
