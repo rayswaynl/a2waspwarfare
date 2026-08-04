@@ -801,9 +801,9 @@ emptyQueu = [];
 		//--- HQ init.
 		_hq = [missionNamespace getVariable Format["WFBE_%1MHQNAME", _side], _pos, _sideID, getDir _pos, true, false, true] Call WFBE_CO_FNC_CreateVehicle;
 		_hq setVariable ["WFBE_Taxi_Prohib", true];
-		_hq setVariable ["wfbe_side", _side];
+		_hq setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
 		_hq setVariable ["wfbe_trashable", false];
-		_hq setVariable ["wfbe_structure_type", "Headquarters"];
+		_hq setVariable ["wfbe_structure_type", "Headquarters", true]; //--- r30 getvar-jip
 		_hq addEventHandler ['killed', {_this Spawn WFBE_SE_FNC_OnHQKilled}];
 		_hq addEventHandler ["hit",{_this Spawn BuildingDamaged}];
 

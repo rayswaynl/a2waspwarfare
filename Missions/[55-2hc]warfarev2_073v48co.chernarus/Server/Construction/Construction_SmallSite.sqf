@@ -181,8 +181,8 @@ if (isNull _site) exitWith {
 };
 _site setDir _direction;
 _site setPos _position;
-_site setVariable ["wfbe_side", _side];
-_site setVariable ["wfbe_structure_type", _rlType];
+_site setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
+_site setVariable ["wfbe_structure_type", _rlType, true]; //--- r30 getvar-jip: JIP clients need type
 //--- build/defense audit 2026-07-28: release the RequestStructure.sqf cap reservation now that the
 //--- real structure is registered (no-op for types _releaseCapPending does not recognize).
 Call _releaseCapPending;

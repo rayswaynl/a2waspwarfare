@@ -38,7 +38,8 @@ if ((_side) Call WFBE_CO_FNC_GetSideHQDeployStatus) then {
 	_hq = [missionNamespace getVariable Format["WFBE_%1MHQNAME", _side], getPos _structure, (_side) Call WFBE_CO_FNC_GetSideID, getDir _structure, false, false, false] Call WFBE_CO_FNC_CreateVehicle;
 	_hq setPos (getPos _structure);
 	_hq setVariable ["wfbe_trashable", false];
-	_hq setVariable ["wfbe_side", _side];
+	_hq setVariable ["wfbe_side", _side, true]; //--- r30 getvar-jip
+	_hq setVariable ["wfbe_structure_type", "Headquarters", true]; //--- r30 getvar-jip
 	_hq setDamage 1;
 
 	// Marty : from now on, the marker must track the newly created dead MHQ wreck,
