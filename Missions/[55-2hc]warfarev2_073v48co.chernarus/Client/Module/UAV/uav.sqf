@@ -60,7 +60,9 @@ if (sideJoined == west) then {
 
 sleep 0.02;
 
-if ((count units _uav) > 1) then {[driver _uav] join grpnull};
+//--- r71b crew-seat: units expects a Group; count units on a vehicle is a type trap (RPT + abort).
+//--- Use crew (seat occupants) to decide driver split when a gunner is also present.
+if ((count (crew _uav)) > 1) then {[driver _uav] join grpNull};
 
 _radius = 1000;
 _wpcount = 4;

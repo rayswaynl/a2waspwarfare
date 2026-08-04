@@ -187,6 +187,11 @@ while {!WFBE_GameOver} do {
 
                         if (!isNull _crew) then {
                             //--- Move in as gunner; retry once (Common_CreateUnitForStaticDefence idiom).
+                            //--- r71b crew-seat: pair allowGetIn/assignAsGunner/orderGetIn before moveIn so a
+                            //--- failed instant seat still has a walk-in reservation (bare moveIn only).
+                            [_crew] allowGetIn true;
+                            _crew assignAsGunner _gun;
+                            [_crew] orderGetIn true;
                             _crew moveInGunner _gun;
                             if ((gunner _gun) != _crew) then {
                                 sleep 1;
