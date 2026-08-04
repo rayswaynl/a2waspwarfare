@@ -11,14 +11,15 @@
 	Caller keeps its action "armed" while this returns false (do not reset its MenuAction),
 	so the player's next click re-enters the handler and confirms.
 */
-private ["_key","_msg","_pendKey","_pendTime"];
+private ["_key","_msg","_pendKey","_pendTime","_confirmElapsed"];
 _key  = _this select 0;
 _msg  = _this select 1;
 
 _pendKey  = uiNamespace getVariable ["wfbe_confirm_key", ""];
 _pendTime = uiNamespace getVariable ["wfbe_confirm_time", -1000];
+_confirmElapsed = time - _pendTime;
 
-if (_pendKey == _key && (time - _pendTime) < 6) exitWith {
+if (_pendKey == _key && {_confirmElapsed >= 0} && {_confirmElapsed < 6}) exitWith {
 	uiNamespace setVariable ["wfbe_confirm_key", ""];
 	hintSilent "";
 	true
