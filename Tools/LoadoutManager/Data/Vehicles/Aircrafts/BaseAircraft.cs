@@ -7,6 +7,8 @@ using System.Text.RegularExpressions;
 // loadouts, calculating weapon counts, and managing ammunition types, among others.
 public abstract class BaseAircraft : BaseVehicle, InterfaceAircraft
 {
+    private string factoryLoadoutPayload = string.Empty;
+
     // Number of pylons available on the aircraft.
     public int pylonAmount { get; set; }
 
@@ -108,6 +110,11 @@ public abstract class BaseAircraft : BaseVehicle, InterfaceAircraft
             var loadout = GenerateLoadoutForCombination(combination);
             if (loadout.Item1 != "" && loadout.Item2 != "")
             {
+                if (IsFactoryLoadoutPayload(loadout.Item1))
+                {
+                    continue;
+                }
+
                 combinationDictionary.Add(loadout.Item1, loadout.Item2);
             }
         }
@@ -152,30 +159,43 @@ public abstract class BaseAircraft : BaseVehicle, InterfaceAircraft
     {
         (string, string) ammunitionArray = ("", "");
 
-        if (vehicleType == VehicleType.MI24P)
-        {
-            ammunitionArray = GenerateLoadoutRow(defaultLoadout.AmmunitionTypesWithCount, false);
-            ammunitionArray.Item1 = "\n_easaDefault = _easaDefault + " + ammunitionArray.Item1 + ";";
-            return ammunitionArray.Item1;
-        }
-
-        // Calculate for turret (like for aircrafts, the Su34)
-        if (defaultLoadoutOnTurret.AmmunitionTypesWithCount.Count > 0) // Convert this to list if needed later on
-        {
-            ammunitionArray = GenerateLoadoutRow(defaultLoadoutOnTurret.AmmunitionTypesWithCount, false);
-        }
-        else
-        {
-            ammunitionArray = GenerateLoadoutRow(defaultLoadout.AmmunitionTypesWithCount, false);
-        }
+        ammunitionArray = GenerateLoadoutRow(GetFactoryLoadout().AmmunitionTypesWithCount, false);
 
         if (ammunitionArray.Item1 == "")
         {
             return "";
         }
 
+        factoryLoadoutPayload = ammunitionArray.Item1.Substring(1, ammunitionArray.Item1.Length - 2);
         ammunitionArray.Item1 = "\n_easaDefault = _easaDefault + " + ammunitionArray.Item1 + ";";
         return ammunitionArray.Item1;
+    }
+
+    private Loadout GetFactoryLoadout()
+    {
+        if (vehicleType == VehicleType.MI24P)
+        {
+            return defaultLoadout;
+        }
+
+        return defaultLoadoutOnTurret.AmmunitionTypesWithCount.Count > 0
+            ? defaultLoadoutOnTurret
+            : defaultLoadout;
+    }
+
+    private bool IsFactoryLoadoutPayload(string _generatedRow)
+    {
+        if (factoryLoadoutPayload == "")
+        {
+            return false;
+        }
+
+        int payloadStart = _generatedRow.LastIndexOf("[[", StringComparison.Ordinal);
+        return payloadStart >= 0 &&
+            string.Equals(
+                _generatedRow.Substring(payloadStart, _generatedRow.Length - payloadStart - 1),
+                factoryLoadoutPayload,
+                StringComparison.Ordinal);
     }
 
     // Calculates the total price for a given ammunition type, applying a cost modifier if available.
