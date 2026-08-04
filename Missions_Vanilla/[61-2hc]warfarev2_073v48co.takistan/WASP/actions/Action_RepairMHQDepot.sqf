@@ -1,14 +1,17 @@
 Private ["_currency","_currencySym","_currency_system","_hq","_repairPrice","_vehicle","_commander","_towns","_logik","_get"];
 
 _vehicle = _this select 0;
+//--- Null/dead truck or missing/alive HQ: setPos on null HQ throws; only DESTROYED HQ is repairable.
+if (isNull _vehicle || {!alive _vehicle}) exitWith {hint (localize "STR_WF_INFO_Repair_MHQ_None")};
 _commander = (sidejoined) call GetCommanderTeam;
 _logik = (sidejoined) Call WFBE_CO_FNC_GetSideLogic;
+if (isNull _logik) exitWith {};
 _get = _logik getVariable ["cashrepaired", false]; //--- wiki-wins: default false so a never-set flag does not nil-error the if (_get) check below
 _hq = (sideJoined) Call WFBE_CO_FNC_GetSideHQ;
-if (alive _hq ) exitWith {hint (localize "STR_WF_INFO_Repair_MHQ_None")};
+if (isNull _hq || {alive _hq}) exitWith {hint (localize "STR_WF_INFO_Repair_MHQ_None")};
 if (_get) exitWith {hint "HQ cannot be repaired using cash twice!"};
 //--- Is HQ already being fixed?
-if (WFBE_Client_Logic getVariable "wfbe_hq_repairing") exitWith {hint (localize "STR_WF_INFO_Repair_MHQ_BeingRepaired")};
+if (WFBE_Client_Logic getVariable ["wfbe_hq_repairing", false]) exitWith {hint (localize "STR_WF_INFO_Repair_MHQ_BeingRepaired")};
 
 _currency_system = missionNamespace getVariable "WFBE_C_ECONOMY_CURRENCY_SYSTEM";
 _repairPrice = (missionNameSpace getVariable "WFBE_C_BASE_HQ_REPAIR_PRICE_CASH");

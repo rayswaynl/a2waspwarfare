@@ -12,16 +12,27 @@
 	    values). It is kept as a safeguard against future config edge cases.
 */
 
-private ["_building","_factory","_queu","_queuCosts","_queuCpts","_queuLabels","_uid","_idx","_paidCost","_cpt","_basePrice","_refund","_maxRefund","_newArr","_i","_uidPrefix"];
+private ["_building","_factory","_queu","_queuCosts","_queuCpts","_queuLabels","_uid","_idx","_paidCost","_cpt","_basePrice","_refund","_maxRefund","_newArr","_i","_uidPrefix","_args"];
 
-_building = _this select 1;               // object the action is attached to (the factory building)
-_factory  = (_this select 3) select 0;   // params[0] = factory type string (e.g. "Barracks")
+//--- addAction _this = [target, caller, id, args]. Target is the factory (not the caller).
+//--- Lost fix 4aaafe2dea (select 0) never landed on master; select 1 always no-op'd cancel/refund.
+if (typeName _this != "ARRAY" || {count _this < 4}) exitWith {};
+_building = _this select 0;
+if (isNull _building || {!alive _building}) exitWith {};
+_args = _this select 3;
+if (typeName _args != "ARRAY" || {count _args < 1}) exitWith {};
+_factory = _args select 0;
+if (typeName _factory != "STRING" || {_factory == ""}) exitWith {};
 
 _uid = getPlayerUID player;
 _queu      = _building getVariable ["queu",        []];
 _queuCosts = _building getVariable ["queu_costs",  []];
 _queuCpts  = _building getVariable ["queu_cpts",   []];
 _queuLabels = _building getVariable ["queu_labels", []];
+if (typeName _queu != "ARRAY") then {_queu = []};
+if (typeName _queuCosts != "ARRAY") then {_queuCosts = []};
+if (typeName _queuCpts != "ARRAY") then {_queuCpts = []};
+if (typeName _queuLabels != "ARRAY") then {_queuLabels = []};
 
 //--- A2-fix (2026-06-14): "token starts with UID" test. `string find string` is ARMA-3-only and
 //--- throws "find: Type String, expected Array" on A2 OA (it fired every time a player cancelled a
