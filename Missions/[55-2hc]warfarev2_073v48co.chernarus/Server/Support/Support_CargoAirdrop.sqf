@@ -24,7 +24,7 @@
         left on, sharing the group's waypoints/return leg/cleanup.
 */
 
-private ["_args","_bd","_cargoClass","_cargoVehicle","_cargoVehicles","_chuteClass","_currentLevel","_currentUpgrades","_destination","_dropReady","_i","_isAI","_offset","_origin","_paratroopers","_pilot","_pilotClass","_planeClass","_playerTeam","_ran","_ranDir","_ranPos","_releasedCargo","_returnStart","_side","_sideID","_starttime","_units","_unit","_vehicle","_vehicleCargo","_vehicleCount","_vehicleIndex","_vehicleCoord","_positionCoord","_builtInf","_transportGroup","_pendingCargo","_delay","_spawnEscort","_crewVehicles","_paratroopExtra","_extraCount","_escortJet","_escortPilot","_escortGunner","_escortClasses","_escortAirList","_escortCandidates","_escortClass","_escortOrigin"];
+private ["_args","_bd","_cargoClass","_cargoVehicle","_cargoVehicles","_chuteClass","_currentLevel","_currentUpgrades","_destination","_dropReady","_i","_isAI","_offset","_origin","_paratroopers","_pilot","_pilotClass","_planeClass","_playerTeam","_ran","_ranDir","_ranPos","_releasedCargo","_returnStart","_side","_sideID","_starttime","_units","_unit","_vehicle","_vehicleCargo","_vehicleCount","_vehicleIndex","_vehicleCoord","_positionCoord","_builtInf","_transportGroup","_pendingCargo","_delay","_spawnEscort","_aicomCost","_refundAICOMSetup","_crewVehicles","_paratroopExtra","_extraCount","_escortJet","_escortPilot","_escortGunner","_escortClasses","_escortAirList","_escortCandidates","_escortClass","_escortOrigin"];
 
 _args = _this;
 _side = _args select 1;
@@ -35,6 +35,23 @@ if (typeName _spawnEscort != "BOOL") then {_spawnEscort = false};
 _sideID = _side Call GetSideID;
 _isAI = !(isPlayer (leader _playerTeam));
 _starttime = time;
+
+//--- r127 AICOM setup-abort refund: the AI commander debits its treasury and stamps the per-side
+//--- cooldown BEFORE dispatching this worker (AI_Commander_CargoAirdrop.sqf), so a PRE-DELIVERY setup
+//--- abort below must hand both back - the commander worker's own group-null refund sets the precedent
+//--- that a non-delivered call is not a charged call. _aicomCost is the exact debit passed as optional
+//--- 6th arg; 0/absent = not an AI-paid call, so any other caller stays byte-identical.
+_aicomCost = if (count _args > 5) then {_args select 5} else {0};
+if (typeName _aicomCost != "SCALAR") then {_aicomCost = 0};
+_refundAICOMSetup = {
+	if (_aicomCost > 0) then {
+		[_side, _aicomCost] Call ChangeAICommanderFunds;
+		private "_caLogik";
+		_caLogik = (_side) Call WFBE_CO_FNC_GetSideLogic;
+		if (!isNil "_caLogik" && {!isNull _caLogik}) then {_caLogik setVariable ["wfbe_aicom_cargo_last", -1e9]};
+		["WARNING", Format ["Support_CargoAirdrop.sqf: [%1] cargo drop aborted before delivery - refunded %2 to the AI treasury and released the AICOM cooldown.", str _side, _aicomCost]] Call WFBE_CO_FNC_LogContent;
+	};
+};
 
 _bd = missionNamespace getVariable "WFBE_BOUNDARIESXY";
 _ranPos = [];
@@ -67,11 +84,13 @@ if (_paratroopExtra < 0) then {_paratroopExtra = 0};
 
 if (isNil "_units" || {isNil "_planeClass"} || {isNil "_pilotClass"} || {(_vehicleCount > 0) && {isNil "_cargoClass"}} || {(_vehicleCount > 0) && {isNil "_chuteClass"}}) exitWith {
 	["ERROR", Format ["Support_CargoAirdrop.sqf: [%1] required cargo configuration is missing.", str _side]] Call WFBE_CO_FNC_LogContent;
+	Call _refundAICOMSetup;
 };
-if (typeName _units != "ARRAY") exitWith {};
+if (typeName _units != "ARRAY") exitWith {Call _refundAICOMSetup};
 _vehicleCargo = getNumber(configFile >> "CfgVehicles" >> _planeClass >> "transportSoldier");
 if (_vehicleCargo <= 0) exitWith {
 	["ERROR", Format ["Support_CargoAirdrop.sqf: [%1] cargo plane [%2] cannot carry the infantry roster (%3/%4).", str _side, _planeClass, count _units, _vehicleCargo]] Call WFBE_CO_FNC_LogContent;
+	Call _refundAICOMSetup;
 };
 //--- Stage B: extra paratroopers beyond the tiered stick, cycling the SAME tiered classes (no new
 //--- config surface). Clamped to whatever headroom the plane's own transportSoldier capacity leaves -
@@ -87,19 +106,23 @@ if (_paratroopExtra > 0 && {count _units > 0}) then {
 };
 if (_vehicleCargo < count _units) exitWith {
 	["ERROR", Format ["Support_CargoAirdrop.sqf: [%1] cargo plane [%2] cannot carry the infantry roster (%3/%4).", str _side, _planeClass, count _units, _vehicleCargo]] Call WFBE_CO_FNC_LogContent;
+	Call _refundAICOMSetup;
 };
 
 _transportGroup = [_side, "aicom_cargo_transport"] Call WFBE_CO_FNC_CreateGroup;
 if (isNull _transportGroup) exitWith {
+	Call _refundAICOMSetup;
 	if (!isNull _playerTeam) then {deleteGroup _playerTeam};
 };
 _vehicle = createVehicle [_planeClass, _origin, [], (_ranDir select _ran), "FLY"];
 if (isNull _vehicle) exitWith {
+	Call _refundAICOMSetup;
 	if (!isNull _transportGroup) then {deleteGroup _transportGroup};
 	if (!isNull _playerTeam) then {deleteGroup _playerTeam};
 };
 _pilot = [_pilotClass, _transportGroup, [100,12000,0], _sideID] Call WFBE_CO_FNC_CreateUnit;
 if (isNull _pilot) exitWith {
+	Call _refundAICOMSetup;
 	if (!isNull _vehicle) then {deleteVehicle _vehicle};
 	if (!isNull _transportGroup) then {deleteGroup _transportGroup};
 	if (!isNull _playerTeam) then {deleteGroup _playerTeam};
@@ -111,6 +134,7 @@ if (driver _vehicle != _pilot) exitWith {
 	if (!isNull _transportGroup) then {deleteGroup _transportGroup};
 	if (!isNull _playerTeam) then {deleteGroup _playerTeam};
 	["WARNING", Format ["Support_CargoAirdrop.sqf: [%1] transport pilot seat failed; aborting drop.", str _side]] Call WFBE_CO_FNC_LogContent;
+	Call _refundAICOMSetup;
 };
 _vehicle flyInHeight (300 + random(75));
 _transportGroup setBehaviour "CARELESS";
@@ -134,6 +158,7 @@ _builtInf = 0;
 	};
 } forEach _units;
 if (_builtInf <= 0) exitWith {
+	Call _refundAICOMSetup;
 	{if (!isNull _x) then {deleteVehicle _x}} forEach _paratroopers;
 	if (!isNull _playerTeam) then {deleteGroup _playerTeam};
 	if (!isNull _pilot) then {deleteVehicle _pilot};
