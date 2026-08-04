@@ -2379,7 +2379,13 @@ if (isNull _base) exitWith {
 		//--- fable/fix-camp-placement (2026-07-08): same ATL ground-snap as Init_Town.sqf's seeder - a
 		//--- repaired camp must not re-bury itself on ZG (see Init_Town.sqf for full rationale + citations).
 		_campXY = getPos _logic;
+		//--- FAIL-CLEAN (r40): create bunker first; null must not setDir/setPos/EH/stamp bunker or leave repairing latched.
 		_townModel = (missionNamespace getVariable "WFBE_C_CAMP") createVehicle [_campXY select 0, _campXY select 1, 0];
+		if (isNull _townModel) exitWith {
+			_logic setVariable ["wfbe_camp_repairing", false, true];
+			if (!isNull _repairRequester && {isPlayer _repairRequester}) then {[_repairRequester, "HandleSpecial", ["repair-camp-result", false, "Camp repair failed because the bunker could not be created."]] Call WFBE_CO_FNC_SendToClient};
+			["WARNING", Format ["Server_HandleSpecial.sqf/repair-camp: camp bunker createVehicle FAILED at %1 - repair aborted, flag released.", _campXY]] Call WFBE_CO_FNC_LogContent;
+		};
 		_townModel setDir ((getDir _logic) + (missionNamespace getVariable "WFBE_C_CAMP_RDIR"));
 		//--- kimi/naval-deckcamp-repair (2026-07-20): naval deck camps (HeliHEmpty stand-in logics,
 		//--- Init_NavalHVT.sqf) carry wfbe_camp_deckz - reseat the revived bunker ON the deck
