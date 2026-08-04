@@ -180,6 +180,13 @@ if ((missionNamespace getVariable ["WFBE_C_GUER_PLAYERSIDE", 0]) > 0 && {sideJoi
 	};
 };
 
+//--- Star Fortress Phase 1: commander-only map-click request. The server repeats every gate.
+if !(_unit getVariable ["wfbe_starfort_action_added", false]) then {
+	_unit setVariable ["wfbe_starfort_action_added", true];
+	_unit addAction ["<t color='#e8c84a'>Star Fortress</t>","Client\Action\Action_StarFort.sqf", [], 6, false, true, "",
+		'alive _target && {(missionNamespace getVariable ["WFBE_C_STARFORT_ENABLE", 0]) > 0} && {sideJoined != resistance} && {!isNull commanderTeam && {commanderTeam == group player}}'];
+};
+
 //--- fable/marker-combat-flash (owner 2026-07-09) RESPAWN-BLINK-EH FIX: Common\Init\Init_Unit.sqf
 //--- attaches WFBE_BlinkFiredEH (the Fired handler that drives combat-icon-blink / teammate marker
 //--- flash) exactly once, at unit CREATION (Common_CreateUnit.sqf / Common_CreateVehicle.sqf). This

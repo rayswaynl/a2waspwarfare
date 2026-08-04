@@ -39,6 +39,7 @@ WFBE_SE_FNC_AI_Com_BaseSell = Compile preprocessFileLineNumbers "Server\AI\Comma
 WFBE_SE_FNC_AI_Com_FundsSink = Compile preprocessFileLineNumbers "Server\AI\Commander\AI_Commander_FundsSink.sqf";
 HandleBuildingDamage = Compile preprocessFile "Server\Functions\Server_HandleBuildingDamage.sqf";
 HandleDefense = Compile preprocessFile "Server\Functions\Server_HandleDefense.sqf";
+WFBE_SE_FNC_StarFortSite = Compile preprocessFileLineNumbers "Server\Construction\Construction_StarFortSite.sqf";
 //--- HS-TRACE (picklist 4 phase 1, 2026-07-22): LineNumbers so a parse failure in the
 //--- 55-case switch names file:line in the RPT instead of an anonymous error.
 HandleSpecial = Compile preprocessFileLineNumbers "Server\Functions\Server_HandleSpecial.sqf";
@@ -170,6 +171,17 @@ if ((missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) 
 if ((missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	missionNamespace setVariable ["WFBE_BANK_WEST", objNull];
 	missionNamespace setVariable ["WFBE_BANK_EAST", objNull];
+};
+//--- Star Fortress: per-side single-instance registries plus public state flags. Default 0 is inert.
+if ((missionNamespace getVariable ["WFBE_C_STARFORT_ENABLE", 0]) > 0) then {
+	missionNamespace setVariable ["WFBE_STARFORT_WEST", objNull];
+	publicVariable "WFBE_STARFORT_WEST";
+	missionNamespace setVariable ["WFBE_STARFORT_EAST", objNull];
+	publicVariable "WFBE_STARFORT_EAST";
+	wfbe_starfort_keepalive_west = false; publicVariable "wfbe_starfort_keepalive_west";
+	wfbe_starfort_keepalive_east = false; publicVariable "wfbe_starfort_keepalive_east";
+	wfbe_starfort_breached_west = false; publicVariable "wfbe_starfort_breached_west";
+	wfbe_starfort_breached_east = false; publicVariable "wfbe_starfort_breached_east";
 };
 //--- Least-loaded HC picker (single source of truth for delegation balance). Compiled
 //--- unconditionally - the commander/patrol/wildcard delegation sites are not gated by the
