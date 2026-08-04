@@ -203,11 +203,14 @@ for '_i' from 0 to count(_groups)-1 do {
 				_skillSpot    = 0.70 + random 0.25;
 				_skillSpeed   = 0.70 + random 0.25;
 				_skillCourage = 0.80 + random 0.20;
+				//--- The number-form setSkill resets EVERY sub-skill, so apply the scalar base FIRST,
+				//--- then the per-sub-skill overrides - otherwise the scalar below wiped the aim/spot
+				//--- spread and made every garrison uniform-accurate (matches Common_RunSidePatrol.sqf).
+				_x setSkill _skillScalar;
 				_x setSkill ["aimingAccuracy", _skillAcc];
 				_x setSkill ["aimingSpeed",    _skillSpeed];
 				_x setSkill ["spotDistance",   _skillSpot];
 				_x setSkill ["courage",        _skillCourage];
-				_x setSkill _skillScalar;
 
 				//--- fable/gdir-cache-materializer (GR-2026-07-08a): AICOMV2_GDIR_CACHE loadout-apply
 				//--- hook. Cumulative by tier (a town holds ONE tier; higher tiers include lower-tier
