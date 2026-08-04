@@ -244,8 +244,17 @@ while {!WFBE_GameOver} do {
 			_boatHasPlayer   = if (isNull _eBoat) then {false} else {({isPlayer _x} count (crew _eBoat)) > 0};
 			_staticHasPlayer = if (isNull _eStatic) then {false} else {({isPlayer _x} count (crew _eStatic)) > 0};
 			if (!_boatHasPlayer && !_staticHasPlayer) then {
-				if (!isNull _eStatic && {alive _eStatic}) then { {["usv-static-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _eStatic); ["usv-static-hull", _eStatic, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eStatic; }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
-				if (!isNull _eBoat   && {alive _eBoat})   then { {["usv-boat-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _eBoat);   ["usv-boat-hull", _eBoat, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eBoat;   }; //--- crash 014EFCF4 sweep: sleep 0 between crew deletes (order-dependent on the deleteGroup below; already-scheduled).
+				//--- r77: delete alive mounts OR dead wrecks. Prior path only deleted alive hulls, so sunken/
+				//--- destroyed boats left permanent wrecks while the slot freed - coastal repopulation still
+				//--- collided with debris and attached statics never dismounted after hull death.
+				if (!isNull _eStatic) then {
+					if (alive _eStatic) then { {["usv-static-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _eStatic); };
+					["usv-static-hull", _eStatic, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eStatic;
+				};
+				if (!isNull _eBoat) then {
+					if (alive _eBoat) then { {["usv-boat-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0} forEach (crew _eBoat); };
+					["usv-boat-hull", _eBoat, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eBoat;
+				};
 				//--- r70 empty-group lifecycle: wipe path only deleted crew when hulls still ALIVE; corpse-only
 //--- groups made deleteGroup a silent no-op. Purge non-player group members first.
 if (!isNull _eGrp) then {
@@ -258,6 +267,12 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 			//--- Movement only while the gate is active - a despawn-pending boat just drifts.
 			if (_gateActive && {count _route > 0} && {!isNull _eBoat} && {alive _eBoat}) then {
 				_target = _route select _eRouteI;
+				//--- r77: a deleted/null route GameLogic must not abort the maintain loop.
+				if (isNull _target) then {
+					_eRouteI = (_eRouteI + 1) mod (count _route);
+					_target = _route select _eRouteI;
+				};
+				if (!isNull _target) then {
 				_curPos = getPos _eBoat;
 				_dist = _curPos distance (getPos _target);
 
@@ -284,14 +299,18 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 						} else {
 							//--- No player near: setPos to a known-good WATER route point (prev first).
 							//--- r76: if prev WP is dry (misplaced logic), scan route for water instead of beaching.
-							private ["_uPos","_uTry","_uI","_uP"];
-							_uPos = getPos (_route select ((_eRouteI - 1 + (count _route)) mod (count _route)));
-							if (!(surfaceIsWater _uPos)) then {
+							private ["_uPos","_uTry","_uI","_uP","_uLogic"];
+							_uLogic = _route select ((_eRouteI - 1 + (count _route)) mod (count _route));
+							_uPos = if (isNull _uLogic) then {[0,0,0]} else {getPos _uLogic};
+							if (isNull _uLogic || {!(surfaceIsWater _uPos)}) then {
 								_uTry = 0;
-								while {_uTry < (count _route) && {!(surfaceIsWater _uPos)}} do {
+								while {_uTry < (count _route) && {(isNull _uLogic) || {!(surfaceIsWater _uPos)}}} do {
 									_uI = (_eRouteI + _uTry) mod (count _route);
-									_uP = getPos (_route select _uI);
-									if (surfaceIsWater _uP) then {_uPos = _uP};
+									_uLogic = _route select _uI;
+									if (!isNull _uLogic) then {
+										_uP = getPos _uLogic;
+										if (surfaceIsWater _uP) then {_uPos = _uP};
+									};
 									_uTry = _uTry + 1;
 								};
 							};
@@ -307,7 +326,8 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 					};
 				};
 
-				if (!isNull _eDriver && {alive _eDriver}) then { _eDriver doMove (getPos _target); };
+				if (!isNull _target && {!isNull _eDriver} && {alive _eDriver}) then { _eDriver doMove (getPos _target); };
+				}; //--- closes !isNull _target
 			};
 
 			_kept = _kept + [[_eRole, _eBoat, _eStatic, _eGunner, _eDriver, _eGrp, _eSpawn, _eRouteI, _eStuck, _eLastPos, _eUnstuck]];
@@ -341,13 +361,34 @@ if (({isPlayer _x} count (units _eGrp)) == 0) then { deleteGroup _eGrp; };
 			//--- Spread new boats along the route rather than clumping at waypoint 0.
 			_startI = floor (((count _flotilla) * (count _route)) / (_count max 1)) mod (count _route);
 			_nextI  = (_startI + 1) mod (count _route);
-			_spawnPos = getPos (_route select _startI);
-			_nextWpPos = getPos (_route select _nextI);
+			//--- r77: never spawn on a dry/null route logic; scan for a water anchor and skip if none.
+			private ["_spLogic","_spTry","_spI"];
+			_spLogic = _route select _startI;
+			_spawnPos = if (isNull _spLogic) then {[0,0,0]} else {getPos _spLogic};
+			if (isNull _spLogic || {!(surfaceIsWater _spawnPos)}) then {
+				_spTry = 0;
+				while {_spTry < (count _route) && {(isNull _spLogic) || {!(surfaceIsWater _spawnPos)}}} do {
+					_spI = (_startI + _spTry) mod (count _route);
+					_spLogic = _route select _spI;
+					if (!isNull _spLogic) then {
+						_spawnPos = getPos _spLogic;
+						if (surfaceIsWater _spawnPos) then {_startI = _spI; _nextI = (_startI + 1) mod (count _route);};
+					};
+					_spTry = _spTry + 1;
+				};
+			};
+			_nextWpPos = if (isNull (_route select _nextI)) then {_spawnPos} else {getPos (_route select _nextI)};
+			if (!(surfaceIsWater _nextWpPos)) then {_nextWpPos = _spawnPos};
 			_spawnDir = random 360;
 
 			//--- Boat, crewless first (createVehicle + CreateUnit/moveInDriver idiom, matches
 			//--- Common_RunSidePatrol.sqf:100-117 / AI_Commander_Wildcard_GUER.sqf:348).
-			_boat = [_hull, _spawnPos, resistance, _spawnDir, false, true] Call WFBE_CO_FNC_CreateVehicle;
+			_boat = objNull;
+			if (surfaceIsWater _spawnPos) then {
+				_boat = [_hull, _spawnPos, resistance, _spawnDir, false, true] Call WFBE_CO_FNC_CreateVehicle;
+			} else {
+				diag_log format ["USVFLOTILLA-WARN: no water spawn anchor on route (fleet=%1) - skip spawn tick.", count _flotilla];
+			};
 
 			if (!isNull _boat) then {
 				_grp = [resistance, "usv-flotilla"] Call WFBE_CO_FNC_CreateGroup;
