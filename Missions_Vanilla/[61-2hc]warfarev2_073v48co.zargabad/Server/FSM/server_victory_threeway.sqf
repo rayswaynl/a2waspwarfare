@@ -178,7 +178,20 @@ while {!gameOver} do {
 			//--- treat nil as "HQ dead": at boot factories are 0 too, and that would end the
 			//--- round instantly. The old code threw on the nil instead (16x/boot in RPT).
 			if (isNil "_hq") exitWith {};
-			if (isNull _hq) exitWith {};
+			//--- 2026-08-04 LIVE FIX (owner report "opfor has no HQ and no factories yet match didn't end"):
+			//--- a destroyed HQ whose wreck was garbage-collected reads objNull here, and the bare isNull
+			//--- skip treated that like "not registered yet" - so the side's HQ-loss check was skipped
+			//--- FOREVER once cleanup ran (EAST t=128 HQ dead -> only SUPREMACY at t=139 ended the round).
+			//--- Latch "this side has had a live HQ" on the side logic; after that, objNull counts as dead.
+			private ["_hqLogic","_hqEverLive","_hqDead"];
+			_hqLogic = (_side) Call WFBE_CO_FNC_GetSideLogic;
+			_hqEverLive = false;
+			if (!isNull _hqLogic) then {
+				if (!isNull _hq && {alive _hq}) then {_hqLogic setVariable ["wfbe_hq_ever_live", true]};
+				_hqEverLive = _hqLogic getVariable ["wfbe_hq_ever_live", false];
+			};
+			if (isNull _hq && {!_hqEverLive}) exitWith {};
+			_hqDead = (isNull _hq) || {!(alive _hq)};
 
 			_factories = 0;
 			{
@@ -204,7 +217,7 @@ while {!gameOver} do {
 			//--- Now: fire only while NOT already over, for a clear supremacy/HQ-loss win;
 			//--- WFBE_GameOver also short-circuits any later side in the same forEach pass.
 			//--- cmdcon41-w3b: the territorial clock (_terrWin) is OR-ed in as a third win trigger.
-			if ( !WFBE_GameOver && ( (!(alive _hq) && _factories == 0 && !_hqRecoveryPending) || (_towns == _total) || _terrWin ) ) then {
+			if ( !WFBE_GameOver && ( (_hqDead && _factories == 0 && !_hqRecoveryPending) || (_towns == _total) || _terrWin ) ) then {
 				//--- Preserve the exact trigger for downstream telemetry/reporting; town counts alone cannot distinguish a base wipe from territorial control.
 				private ["_victoryCause"];
 				if (_terrWin) then {
