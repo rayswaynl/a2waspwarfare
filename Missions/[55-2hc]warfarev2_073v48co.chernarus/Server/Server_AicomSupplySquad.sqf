@@ -97,18 +97,22 @@ while {!WFBE_GameOver} do {
 		};
 
 		if (_drop) then {
-			if (_reason != "destroyed" && {!isNull _eGrp}) then {
+			if (!isNull _eGrp) then {
 				{if (!isNull _x && {!isPlayer _x}) then {["aicomsupply-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0}} forEach (units _eGrp); //--- crash 014EFCF4 sweep: includes a pilot no longer returned by crew _eVeh after ejection.
 			};
 			if (_reason != "destroyed" && {!isNull _eVeh} && {({isPlayer _x} count (crew _eVeh)) == 0}) then {
 				["aicomsupply-hull", _eVeh, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _eVeh;
 			};
-			if (_reason != "destroyed" && {!isNull _eGrp} && {({isPlayer _x} count (units _eGrp)) == 0}) then {deleteGroup _eGrp};
+			if (!isNull _eGrp && {({isPlayer _x} count (units _eGrp)) == 0}) then {deleteGroup _eGrp};
 			diag_log Format ["AICOMSUPPLY|DESPAWN|side=%1|reason=%2", str _eSide, _reason];
 		} else {
 			//--- Re-check hull after prune gate (TOCTOU): concurrent destroy between isNull and getPos/velocity is native-crash class (014EFCF4).
 			if (isNull _eVeh || {!alive _eVeh}) then {
 				missionNamespace setVariable [Format ["wfbe_aicomsupply_cd_%1", str _eSide], _now];
+				if (!isNull _eGrp) then {
+					{if (!isNull _x && {!isPlayer _x}) then {["aicomsupply-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x; sleep 0}} forEach (units _eGrp);
+					if (({isPlayer _x} count (units _eGrp)) == 0) then {deleteGroup _eGrp};
+				};
 				diag_log Format ["AICOMSUPPLY|DESPAWN|side=%1|reason=destroyed_race", str _eSide];
 			} else {
 			//--- State machine: outbound -> loading (dwell) -> inbound -> deliver -> outbound.
@@ -175,7 +179,7 @@ while {!WFBE_GameOver} do {
 						} else {
 							Private ["_ang2"];
 							_ang2 = ((_eObj select 0) - (_eCur select 0)) atan2 ((_eObj select 1) - (_eCur select 1));
-							_eVeh setPos [(_eCur select 0) + 60 * sin _ang2, (_eCur select 1) + 60 * cos _ang2, 0];
+							_eVeh setPosATL [(_eCur select 0) + 60 * sin _ang2, (_eCur select 1) + 60 * cos _ang2, 0];
 						};
 						diag_log Format ["AICOMSUPPLY|UNSTUCK|side=%1|near=%2", str _eSide, _playerNear];
 					};
@@ -241,7 +245,10 @@ while {!WFBE_GameOver} do {
 										if (_mode == "truck") then {
 											//--- Small squad: one cargo escort so ambushing it is a fight, not a freebie.
 											_esc = [_crewCls, _grp, _basePos, _sideID] Call WFBE_CO_FNC_CreateUnit;
-											if (!isNull _esc) then {_esc moveInCargo _veh};
+											if (!isNull _esc) then {
+												_esc moveInCargo _veh;
+												if (!(_esc in (crew _veh))) then {["aicomsupply-unit", _esc, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _esc};
+											};
 										} else {
 											_veh flyInHeight 80;
 										};
