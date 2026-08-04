@@ -203,6 +203,7 @@ _rearmor = {
 					};
 
 					_type = if (_vehicle isKindOf 'Man') then {missionNamespace getVariable Format ['WFBE_%1SOLDIER',_side]} else {if (_vehicle isKindOf 'Air') then {missionNamespace getVariable Format ['WFBE_%1PILOT',_side]} else {missionNamespace getVariable Format ['WFBE_%1CREW',_side]}};
+if (isNil "_type") then {_type = missionNamespace getVariable Format ["WFBE_%1SOLDIER",_side]};
 					_vehicleCrews = [];
 					// Marty: Assign crew roles before moveIn so locked or delegated town vehicles keep their crews mounted.
 					_vehicle allowCrewInImmobile true;
@@ -238,6 +239,31 @@ _rearmor = {
 							_vehicleCrews = _vehicleCrews + [_crewUnit];
 						};
 					} forEach ["driver","gunner","commander"];
+
+//--- Turret seats (parity with Server_BuyUnit.sqf): founding/CreateTeam only manned
+//--- driver/gunner/commander, so multi-turret APCs/MBTs arrived with silent secondary weapons.
+//--- QUERYUNITTURRETS is the same unit-data field BuyUnit uses for refill crews.
+private ["_udTur","_turrets","_turPath"];
+_udTur = missionNamespace getVariable (typeOf _vehicle);
+if (!isNil "_udTur" && {typeName _udTur == "ARRAY"} && {!isNil "QUERYUNITTURRETS"} && {(count _udTur) > QUERYUNITTURRETS}) then {
+_turrets = _udTur select QUERYUNITTURRETS;
+if (!isNil "_turrets" && {typeName _turrets == "ARRAY"}) then {
+{
+_turPath = _x;
+if (isNull (_vehicle turretUnit _turPath)) then {
+if (!isNil "_type") then {
+_crewUnit = [_type,_team,_position,_sideID,_global] Call WFBE_CO_FNC_CreateUnit;
+if (!isNull _crewUnit) then {
+[_crewUnit] allowGetIn true;
+_crewUnit moveInTurret [_vehicle, _turPath];
+_crewUnit addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+_vehicleCrews = _vehicleCrews + [_crewUnit];
+};
+};
+};
+} forEach _turrets;
+};
+};
 
 					// Marty: A town combat vehicle without any crew is worse than no vehicle; remove it immediately.
 					if (count _vehicleCrews == 0) exitWith {
