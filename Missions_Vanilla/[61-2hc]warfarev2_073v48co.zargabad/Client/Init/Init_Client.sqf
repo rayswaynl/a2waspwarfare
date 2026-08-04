@@ -694,7 +694,13 @@ keyPressedForAutoSendSpawnedUnitsToWaypoint = compile preprocessFile "Common\Fun
 keyPressedForAdjustingViewDistance = compile preprocessFile "Common\Functions\Common_AdjustViewDistance.sqf";
 _display = findDisplay 46;
 _display displayAddEventHandler ["KeyDown","_this call keyPressed"];
-_display displayAddEventHandler ["KeyDown","_this call keyPressedForAutoSendSpawnedUnitsToWaypoint"];
+private ["_autoSendEH"];
+_autoSendEH = uiNamespace getVariable ["WFBE_CL_VAR_AutoSendWaypointKeyDownEH", -1];
+if ((typeName _autoSendEH) == "SCALAR" && {_autoSendEH >= 0}) then {
+	_display displayRemoveEventHandler ["KeyDown", _autoSendEH];
+};
+_autoSendEH = _display displayAddEventHandler ["KeyDown","_this call keyPressedForAutoSendSpawnedUnitsToWaypoint"];
+uiNamespace setVariable ["WFBE_CL_VAR_AutoSendWaypointKeyDownEH", _autoSendEH];
 if ((missionNamespace getVariable ["WFBE_C_CLIENT_AUTORUN", 1]) > 0) then {
 	[] call WFBE_CL_FNC_AutoRunAttach;
 	//--- Autorun toggle keybind (User12, bindable in Configure Controls). Attached ONCE here
