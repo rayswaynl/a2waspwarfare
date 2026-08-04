@@ -13,7 +13,7 @@
 	lowers it, so it cannot force a heli into the ground; worst case it briefly delays a low pass. Gated by WFBE_C_AIHELI_TERRAIN_GUARD.
 */
 if (!isServer) exitWith {};
-if ((missionNamespace getVariable ["WFBE_C_AIHELI_TERRAIN_GUARD", 0]) < 1) exitWith {};
+if ((missionNamespace getVariable ["WFBE_C_AIHELI_TERRAIN_GUARD", 1]) < 1) exitWith {};
 
 private ["_probe","_lookAhead","_clearance"];
 _lookAhead = missionNamespace getVariable ["WFBE_C_AIHELI_GUARD_LOOKAHEAD", 250];
