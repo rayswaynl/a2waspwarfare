@@ -262,7 +262,7 @@ if (_rlType in ["Reserve","ArtilleryRadar"]) then {
 		if (!isNull _gGrp && {!isNil "_gCrewCls"}) then {
 			_gGuns = 0;
 			{
-				if ((_x isKindOf "StaticWeapon") && {(count crew _x) == 0}) then {
+				if (alive _x && {_x isKindOf "StaticWeapon"} && {({alive _x} count crew _x) == 0}) then {
 					_gUnit = [_gCrewCls, _gGrp, getPos _x, (_side) Call GetSideID] Call WFBE_CO_FNC_CreateUnit;
 					if (!isNull _gUnit) then {
 						_gUnit moveInGunner _x;
