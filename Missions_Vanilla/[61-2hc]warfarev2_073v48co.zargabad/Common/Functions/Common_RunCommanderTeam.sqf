@@ -2212,7 +2212,7 @@ while {!WFBE_GameOver && _alive} do {
 							//--- every WFBE_C_AI_COMMANDER_TOWN_INTERVAL (~120s), so without a hold WP the group sat idle in the
 							//--- open until retasked (r61 B1). Fresh towns-target order still clears via WaypointsAdd clear=true.
 							//--- A2-OA-safe: broadcast setVariable + existing WaypointsAdd defense idiom.
-							[_team, true, [[_dest, 'SAD', 100, 30, [], [], [_stB,_stC,"WEDGE","NORMAL]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
+							[_team, true, [[_dest, 'SAD', 100, 30, [], [], [_stB,_stC,"WEDGE","NORMAL"]]]] Spawn WFBE_CO_FNC_WaypointsAdd;
 							_team setVariable ["wfbe_aicom_rallying", false, true];
 							_team setVariable ["wfbe_teamgoto", objNull, true];        //--- drop the rally goto -> AssignTowns retargets next tick (isNull _goto => _needs=true)
 							_team setVariable ["wfbe_aicom_townorder", [], false];     //--- 2-arg (NOT broadcast) to match existing townorder writes
