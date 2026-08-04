@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_sideJoined','_sideOrigin','_team','_uid','_units'];
+Private ['_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_scudJipKey','_sideJoined','_sideOrigin','_team','_telJipKey','_uid','_units'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -272,6 +272,11 @@ if (!isNil "WFBE_GUER_VEHICLE_TIER") then {_id publicVariableClient "WFBE_GUER_V
 if (!isNil "WFBE_GUER_FOB_AVAIL") then {_id publicVariableClient "WFBE_GUER_FOB_AVAIL"}; //--- B75: GUER FOB availability JIP catch-up (depot FOB trucks + RHUD).
 if (!isNil "AICOMV2_GDIR_JIP_SNAP") then {_id publicVariableClient "AICOMV2_GDIR_JIP_SNAP"}; //--- J10: GUER Director snapshot is not JIP-durable in A2-OA; target the current value to this joiner.
 if (!isNil "WFBE_PopTier") then {_id publicVariableClient "WFBE_PopTier"}; //--- B74.2: player-pop tier JIP catch-up (AI cap + RHUD scaling).
+//--- Runtime TEL/SCUD object handles need an explicit JIP replay; publicVariable only reaches current clients.
+_telJipKey = Format ["WFBE_ICBM_TEL_%1", str _sideJoined];
+_scudJipKey = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _sideJoined];
+if !(isNil {missionNamespace getVariable _telJipKey}) then {_id publicVariableClient _telJipKey};
+if !(isNil {missionNamespace getVariable _scudJipKey}) then {_id publicVariableClient _scudJipKey};
 //--- r68 (marker JIP + public-state fidelity): the MHQ/HQ wreck-marker feed is a set of missionNamespace
 //--- PRIMITIVES broadcast with plain publicVariable in Server_OnHQKilled.sqf (false + wreck payload) and
 //--- Server_MHQRepair.sqf (true + []). Per the B63 note above, a plain publicVariable is NOT replayed to a
