@@ -372,7 +372,8 @@ _myActionKey = Format ["wfbe_cancel_action_%1", getPlayerUID player];
 _myActionID = _building getVariable [_myActionKey, -1];
 if (_myActionID >= 0) then {
 	_building removeAction _myActionID;
-	_building setVariable [_myActionKey, -1];
+	//--- object-var-namespace: nil the per-UID key (was left as -1 forever on the factory object).
+	_building setVariable [_myActionKey, nil];
 };
 
 //--- E1: was this slot CANCELLED during its build? Action_CancelQueue removed _unique from the queue,

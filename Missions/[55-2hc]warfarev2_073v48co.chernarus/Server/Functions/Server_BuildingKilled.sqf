@@ -130,6 +130,29 @@ else
     ["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] Structure [%2] has been destroyed by [%3].", str _side, _type, _killer]] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- CBRadar special case: unregister from per-side missionNamespace registry on kill.
+//--- Bank already clears WFBE_BANK_* here; CBRadar previously relied only on lazy prune inside
+//--- Server_CounterBattery.sqf (runs only when enemy arty fires). A destroyed CBR with no
+//--- subsequent fire left a dead/null entry in WFBE_CBR_WEST/EAST for the rest of the match.
+if ((_structure getVariable ["wfbe_structure_type", ""]) == "CBRadar" && (missionNamespace getVariable ["WFBE_C_STRUCTURES_COUNTERBATTERY", 0]) > 0) then {
+	private ["_cbrKey","_cbrReg","_cbrLive","_cbrRegKey","_cbrEntry"];
+	_cbrKey = if (_side == west) then {"WFBE_CBR_WEST"} else {"WFBE_CBR_EAST"};
+	//--- Also drop from the opposite registry in case ownership flipped mid-life (airfield path does both).
+	{
+		_cbrRegKey = _x;
+		_cbrReg = missionNamespace getVariable [_cbrRegKey, []];
+		if (typeName _cbrReg == "ARRAY") then {
+			_cbrLive = [];
+			{
+				_cbrEntry = _x;
+				if (!isNull _cbrEntry && {_cbrEntry != _structure} && {alive _cbrEntry}) then {_cbrLive = _cbrLive + [_cbrEntry]};
+			} forEach _cbrReg;
+			missionNamespace setVariable [_cbrRegKey, _cbrLive];
+		};
+	} forEach ["WFBE_CBR_WEST", "WFBE_CBR_EAST"];
+	["INFORMATION", Format ["Server_BuildingKilled.sqf: [%1] CBRadar unregistered from %2 (size now %3).", str _side, _cbrKey, count (missionNamespace getVariable [_cbrKey, []])]] Call WFBE_CO_FNC_LogContent;
+};
+
 //--- Bank special case: raid reward split, global broadcast, registry cleanup + marker delete.
 if ((_structure getVariable ["wfbe_structure_type", ""]) == "Bank" && (missionNamespace getVariable ["WFBE_C_ECONOMY_BANK", 0]) > 0) then {
 	_bankKey = if (_side == west) then {"WFBE_BANK_WEST"} else {"WFBE_BANK_EAST"};

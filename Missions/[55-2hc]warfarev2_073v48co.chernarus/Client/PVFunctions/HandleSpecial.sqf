@@ -406,6 +406,16 @@ switch (_request) do {
 		if (typeName _fpvAuthChallenge != "STRING" || {_fpvAuthChallenge != (missionNamespace getVariable [_fpvChallengeKey, ""])}) exitWith {};
 		missionNamespace setVariable [Format ["wfbe_fpv_cap_client_%1", getPlayerUID player], [_fpvToken, _fpvExpires]];
 	};
+	//--- Private rearm stamp after FPV flight ends (server no longer publicVariable's per-UID nextKey).
+	//--- Forge-safe: only mutates THIS client's local cooldown display; server enforces rearm on purchase.
+	case "fpv-rearm-cooldown": {
+		Private ["_fpvNext","_fpvNextKey"];
+		if (count _args < 1) exitWith {};
+		_fpvNext = _args select 0;
+		if (typeName _fpvNext != "SCALAR") exitWith {};
+		_fpvNextKey = Format ["wfbe_fpv_next_%1", getPlayerUID player];
+		missionNamespace setVariable [_fpvNextKey, _fpvNext];
+	};
 	//--- Purchase results carry the private capability and exact objects. Fake/stale client-bus
 	//--- packets cannot change stats, cooldown, or tear down a newer flight.
 	case "fpv-purchase-result": {

@@ -396,6 +396,20 @@ if !(isNull (_commander)) then {
 
 // Marty: When AntiStack is disabled, the score sampling loop is not running; skip DB persistence to avoid false missing-score errors.
 if ((missionNamespace getVariable ["WFBE_C_ANTISTACK_ENABLED", 1]) == 0) exitWith {
+	//--- object-var-namespace: still drop UID-keyed transient missionNamespace keys (FPV/auth).
+	if (_uid != "") then {
+		{
+			missionNamespace setVariable [Format [_x, _uid], nil];
+		} forEach [
+			"wfbe_fpv_active_%1",
+			"wfbe_fpv_next_%1",
+			"wfbe_fpv_cap_server_%1",
+			"wfbe_fpv_purchase_inflight_%1",
+			"wfbe_fpv_purchase_result_server_%1",
+			"wfbe_fpv_auth_last_%1",
+			"WFBE_CO_CURRENT_SCORE_PLAYER_%1"
+		];
+	};
 	["INFORMATION", Format ["Server_PlayerDisconnected.sqf: AntiStack is disabled; skipped score DB save for player [%1] [%2].", _name, _uid]] Call WFBE_CO_FNC_LogContent;
 };
 
@@ -419,5 +433,22 @@ _playerScoreDiff = _playerScore - _oldScore;
 
 _result = ["STORE", [_uid, _playerScoreDiff]] call WFBE_SE_FNC_CallDatabaseStore;
 _result = ["STORE_SIDE", [_uid, "NONE"]] call WFBE_SE_FNC_CallDatabaseStoreSide;
+
+//--- object-var-namespace bughunt: CURRENT score is re-stamped every sample while online; keep OLD
+//--- (used for next-join delta) but nil CURRENT so departed UIDs do not permanently occupy
+//--- missionNamespace. Also drop FPV per-UID server keys that would otherwise linger all match.
+if (_uid != "") then {
+	missionNamespace setVariable [format ["WFBE_CO_CURRENT_SCORE_PLAYER_%1", _uid], nil];
+	{
+		missionNamespace setVariable [Format [_x, _uid], nil];
+	} forEach [
+		"wfbe_fpv_active_%1",
+		"wfbe_fpv_next_%1",
+		"wfbe_fpv_cap_server_%1",
+		"wfbe_fpv_purchase_inflight_%1",
+		"wfbe_fpv_purchase_result_server_%1",
+		"wfbe_fpv_auth_last_%1"
+	];
+};
 
 ["INFORMATION", Format ["Server_PlayerDisconnected.sqf: Player [%1] [%2] has disconnected.", _name, _uid]] Call WFBE_CO_FNC_LogContent;
