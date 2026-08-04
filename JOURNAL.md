@@ -1559,3 +1559,49 @@ Rollback ready if the 01:00 allocator bench turns up trouble:
 RESOLVED 22:48 NL: HC2 seated - A2S players=2/37, both HCs connected. HC1 seated
 clean too (HCSIDE|v1|reseat|result=done|sideNow=CIV). Full 2-HC topology restored; the
 ~17 min hc=0 window was the documented MATCH|v1|START| wait, not a failure.
+
+
+## 2026-08-04 - Serial fold of 12 resolved wave0804 branches (worktree C:\tmp\fixwt\update0802)
+
+Sole writer in this worktree. Folded exactly 12 `resolved/wave0804-NNNN` branches (each a
+merge of old-wave-tip + PR head, pre-resolved and adversarially verified) into
+`update/wave-20260802` with `git merge --no-ff`, in the deliberate dependency-safe order:
+1607, 2082, 1615, 2097, 2061, 2071, 2078, 2084, 2093, 2098, 2100, 2101.
+2060 and 2066 were explicitly excluded (superseded - their fixes already on tip).
+
+### Per-branch merge result
+
+| # | Result |
+|---|---|
+| 1607 | clean |
+| 2082 | auto-merged clean (git's ort resolved Server_BuyUnit.sqf on its own); verified both #1607's `_tq` nil/array queue-release guard AND #2082's r127 wrong-victim-token fix survive at every queue-release site, CH+TK+ZG |
+| 1615 | clean |
+| 2097 | auto-merged clean (git's ort resolved server_town_ai.sqf on its own); verified #1615's hysteresis comment + `WFBE_C_TOWNS_DETECTION_RANGE_ACTIVE_COEF=1.25` AND #2097's GARRISON_CAP_DEFER/TOWN_AI_GROUP_CAP_DEFER activation-deferral both present, nil-safe `getVariable ["wfbe_active", false]` reads intact |
+| 2061 | clean |
+| 2071 | **hand-resolved** - real conflict in Init_CommonConstants.sqf (CH+TK+ZG): both HEAD (fortification placement/preview/facing constants block) and #2071 (bughunt r124 dead-guard constants block) appended new content at the same anchor. First byte-surgery attempt at C:\tmp\resolve_2071.py had a bug - naive `"=======\r\n"` search matched inside HEAD's own 86-`=`-char divider comment line instead of the real conflict separator, gluing the blocks together wrong. Caught before commit by reading the resolved region back; reset via `git checkout -m` to regenerate clean markers, rewrote the script to anchor the mid-marker search on `"\r\n=======\r\n"` (only matches a standalone marker line), re-ran, verified both blocks intact in order, bracket delta zero (pre-existing 203/202 `[`/`]` imbalance unchanged by the edit) |
+| 2078 | clean |
+| 2084 | auto-merged clean |
+| 2093 | clean |
+| 2098 | clean |
+| 2100 | clean |
+| 2101 | clean |
+
+No real 7-char conflict markers anywhere post-fold (`git grep -nP "^<{7}(?!<)|^={7}(?!=)|^>{7}(?!>)" -- "*.sqf"` empty). The 13 pre-existing 8-char decorative banner files under Modded_Missions (AntiStackPreparation legacy merge artifacts) are unchanged and untouched by any of the 12 folds.
+
+### Gate suite (all run after all 12 merges)
+
+1. **LoadoutManager --check**: `Takistan drift: none`, `Zargabad drift: none`, exit 0. No drift despite the resolved branches predating the fortification mirror-state commits - the mirrors were already in sync going in.
+2. **pytest Tools/**: first run 848 passed / 2 failed. Both diagnosed as gate-engineer calls, not merge breakage:
+   - `test_town_defer_sideeffects.py::test_deferred_activation_skips_all_creation_side_effects` asserted `_activationDeferred = true;` count == 2 (implementation literal). Git-archaeology confirmed count was 2 immediately before #2097's merge and 4 immediately after (fold #2097 legitimately adds two new deferral gates, GARRISON_CAP_DEFER and TOWN_AI_GROUP_CAP_DEFER, ahead of the two pre-existing budget-defer sites) - all four still gate the same guard block with all required side effects intact. Realigned the assertion to 4 with an explanatory comment.
+   - `test_veh_delete_probe.py::test_ratchet_manifest_matches_the_entire_tree` - the deleteVehicle inventory ratchet drifted on 2 files: `Server_OperateTownDefensesUnits.sqf` (5->6, #2084 adds an "operator" cleanup site mirroring the existing "gunner" cleanup, AI-only) and `Init_NavalHVT.sqf` (26->34, #2100 adds unmanned-aircraft CAP pilot-fallback deletes, AI-only). Both new sites keep `probed=0` consistent with the pre-existing convention in those files (probe is for player-vehicle-usage tracking only). Regenerated `vehdel_inventory.json` via a script matching the test's own computation; diffed to confirm only those two entries changed.
+   Re-run after both fixes: **850 passed, 0 failed.**
+3. **check_sqf.py lint gate** (exact command from CLAUDE.md, `--select A3CMD,A3HASH,A3MARKER,A3NUMGATE,A3PRIVATE,A3REVEAL,A3SELECT,A3SORT,A3STRING,BAREEXIT,BOOLCMP,BRACKET,DBLBOM,DEADNOQA,FLAGGATE,GROUPGETVAR,MILMARKER,NSSETVAR3,PUBVARSV,TRAILCOMMA --no-classname-index`): **168 findings, all A3MARKER, zero new** - cross-referenced the 168 finding files against the full list of 90 `.sqf` files touched across all 12 folds: zero overlap.
+4. WF_MAXPLAYERS spot-check: all three `version.sqf.template` (CH/TK/ZG) still read `34`, untouched by any fold - matches this branch's own CLAUDE.md convention.
+5. No `Co-Authored-By` trailer in any of the 14 new commits (12 merges + this gate-fix + journal commit).
+
+### Commits added (old-wave-tip `c0135273` -> tip)
+
+12 merge commits (`fold #NNNN into wave0804 (conflict-resolved)`), one gate-fix commit
+(`b37f7008cf`, realigns the two contract tests above), this journal commit.
+
+Pushed to `origin/update/wave-20260802`.
