@@ -607,7 +607,7 @@ while {alive player && dialog} do {
 				if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0) then {
 					-(_currentFee) Call ChangePlayerFunds;
 				};
-				["RequestSpecial", ["Paratroops",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+				["RequestSpecial", ["Paratroops",sideJoined,_callPos,clientTeam,0,player]] Call WFBE_CO_FNC_SendToServer;
 				
 				hint (localize "STR_WF_INFO_Paratroop_Info");
 			} else {
@@ -957,7 +957,7 @@ while {alive player && dialog} do {
 				if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0) then {
 					-_currentFee Call ChangePlayerFunds;
 				};
-				["RequestSpecial", ["ParaVehi",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+				["RequestSpecial", ["ParaVehi",sideJoined,_callPos,clientTeam,player]] Call WFBE_CO_FNC_SendToServer;
 			} else {
 				ctrlSetText [17027, "Cannot paradrop a vehicle on water - pick a land position."];
 				_lastUpdate = 0;
@@ -976,7 +976,7 @@ while {alive player && dialog} do {
 				if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0) then {
 					-_currentFee Call ChangePlayerFunds;
 				};
-				["RequestSpecial", ["ParaAmmo",sideJoined,_callPos,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+				["RequestSpecial", ["ParaAmmo",sideJoined,_callPos,clientTeam,player]] Call WFBE_CO_FNC_SendToServer;
 			} else {
 				ctrlSetText [17027, "Cannot paradrop ammo on water - pick a land position."];
 				_lastUpdate = 0;

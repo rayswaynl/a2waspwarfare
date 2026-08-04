@@ -60,19 +60,18 @@ switch (_args select 0) do {
 		//--- Flag WFBE_C_SUPPORT_SERVER_AUTH (default 0): at 0 unconditional spawn (client debit is sole fee).
 		//--- failure-signalling r38: when AUTH is armed and Authorize returns false, notify the caller
 		//--- (previously silent deny after client stamped lastParaCall / may have already debited).
-		Private ["_authOk","_callerTeam","_callerLead","_denyMsg"];
+		Private ["_authOk","_caller","_denyMsg"];
 		_authOk = true;
 		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) > 0) then {
 			_authOk = ["Paratroops", _args, 8500, missionNamespace getVariable ["WFBE_C_PLAYERS_SUPPORT_PARATROOPERS_DELAY", 1200]] Call WFBE_SE_FNC_AuthorizeSupportCallin;
 			if (!_authOk) then {
-				_callerTeam = if (count _args > 3) then {_args select 3} else {grpNull};
-				_callerLead = if (!isNull _callerTeam) then {leader _callerTeam} else {objNull};
+				_caller = if (count _args > 5) then {_args select 5} else {objNull};
 				_denyMsg = "Paratroop call denied by server (funds or cooldown). No charge was taken server-side.";
-				if (!isNull _callerLead && {isPlayer _callerLead}) then {
+				if (!isNull _caller && {isPlayer _caller}) then {
 					if (WF_A2_Vanilla) then {
-						[getPlayerUID _callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
+						[getPlayerUID _caller, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
 					} else {
-						[_callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
+						[_caller, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
 					};
 				};
 			};
@@ -83,19 +82,18 @@ switch (_args select 0) do {
 
 case "ParaVehi": {
 		//--- supportgate SECURITY + failure-signalling r38 deny notify (see Paratroops case).
-		Private ["_authOk","_callerTeam","_callerLead","_denyMsg"];
+		Private ["_authOk","_caller","_denyMsg"];
 		_authOk = true;
 		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) > 0) then {
 			_authOk = ["ParaVehi", _args, 3500, 600] Call WFBE_SE_FNC_AuthorizeSupportCallin;
 			if (!_authOk) then {
-				_callerTeam = if (count _args > 3) then {_args select 3} else {grpNull};
-				_callerLead = if (!isNull _callerTeam) then {leader _callerTeam} else {objNull};
+				_caller = if (count _args > 4) then {_args select 4} else {objNull};
 				_denyMsg = "Vehicle paradrop denied by server (funds or cooldown). No charge was taken server-side.";
-				if (!isNull _callerLead && {isPlayer _callerLead}) then {
+				if (!isNull _caller && {isPlayer _caller}) then {
 					if (WF_A2_Vanilla) then {
-						[getPlayerUID _callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
+						[getPlayerUID _caller, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
 					} else {
-						[_callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
+						[_caller, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
 					};
 				};
 			};
@@ -106,19 +104,18 @@ case "ParaVehi": {
 
 case "ParaAmmo": {
 		//--- supportgate SECURITY + failure-signalling r38 deny notify (see Paratroops case).
-		Private ["_authOk","_callerTeam","_callerLead","_denyMsg"];
+		Private ["_authOk","_caller","_denyMsg"];
 		_authOk = true;
 		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) > 0) then {
 			_authOk = ["ParaAmmo", _args, 9500, 800] Call WFBE_SE_FNC_AuthorizeSupportCallin;
 			if (!_authOk) then {
-				_callerTeam = if (count _args > 3) then {_args select 3} else {grpNull};
-				_callerLead = if (!isNull _callerTeam) then {leader _callerTeam} else {objNull};
+				_caller = if (count _args > 4) then {_args select 4} else {objNull};
 				_denyMsg = "Ammo paradrop denied by server (funds or cooldown). No charge was taken server-side.";
-				if (!isNull _callerLead && {isPlayer _callerLead}) then {
+				if (!isNull _caller && {isPlayer _caller}) then {
 					if (WF_A2_Vanilla) then {
-						[getPlayerUID _callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
+						[getPlayerUID _caller, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
 					} else {
-						[_callerLead, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
+						[_caller, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
 					};
 				};
 			};
@@ -209,7 +206,23 @@ case "RespawnST": {
 		//--- mirrors Client\Module\UAV\uav.sqf:50. No client-side call interval exists (the client only
 		//--- gates on "!(alive playerUAV)", itself spoofable) - 60s is a flood-prevention floor only,
 		//--- independent of live-UAV timing.
-		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) <= 0 || {["uav", _args, 12500, 60] Call WFBE_SE_FNC_AuthorizeSupportCallin}) then {
+		Private ["_authOk","_caller","_denyMsg"];
+		_authOk = true;
+		if ((missionNamespace getVariable ["WFBE_C_SUPPORT_SERVER_AUTH", 0]) > 0) then {
+			_authOk = ["uav", _args, 12500, 60] Call WFBE_SE_FNC_AuthorizeSupportCallin;
+			if (!_authOk) then {
+				_caller = if (count _args > 3) then {_args select 3} else {objNull};
+				_denyMsg = "UAV request denied by server (funds or cooldown). No charge was taken server-side.";
+				if (!isNull _caller && {isPlayer _caller}) then {
+					if (WF_A2_Vanilla) then {
+						[getPlayerUID _caller, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClients;
+					} else {
+						[_caller, "HandleSpecial", ["support-callin-result", false, _denyMsg]] Call WFBE_CO_FNC_SendToClient;
+					};
+				};
+			};
+		};
+		if (_authOk) then {
 			_args spawn KAT_UAV;
 		};
 	};

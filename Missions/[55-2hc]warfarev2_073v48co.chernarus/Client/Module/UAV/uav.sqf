@@ -32,7 +32,7 @@ if (count _this <= 0) exitWith {
 		};
 
 		if (isNull _closest) exitWith {};
-		["RequestSpecial", ["uav",sideJoined,clientTeam]] Call WFBE_CO_FNC_SendToServer;
+		["RequestSpecial", ["uav",sideJoined,clientTeam,player]] Call WFBE_CO_FNC_SendToServer;
 	};
 };
 _uav = _this select 0;
