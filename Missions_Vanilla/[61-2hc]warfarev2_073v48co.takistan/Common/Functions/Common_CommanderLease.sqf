@@ -77,14 +77,30 @@ WFBE_CO_FNC_CommanderLeaseHolderPresent = {
 
 WFBE_CO_FNC_CommanderLeaseRequestGrant = {
     //--- params: [side, team-or-objNull, source]. objNull team = explicit AI hand-back.
-    Private ["_side","_team","_source","_logic"];
+    Private ["_side","_team","_source","_logic","_pending","_skipClaim"];
     _side = _this select 0;
     _team = _this select 1;
     _source = _this select 2;
     if (_side == civilian) exitWith {};
     _logic = (_side) Call WFBE_CO_FNC_GetSideLogic;
     if (isNull _logic) exitWith {};
-    _logic setVariable ["wfbe_commander_lease_cmd_grant", [_team, _source, time]];
+    //--- Claim must not clobber an unconsumed vote election result. Grant slots are
+    //--- single-value overwrite; without this, TAKE COMMAND in the ~1s executor poll
+    //--- after a vote ends can supersede the elected team while the seat still looks empty.
+    //--- assign (commander pass) may still supersede intentionally.
+    //--- Latch (not exitWith-in-then): A2-OA exitWith only exits the then{} block.
+    _skipClaim = false;
+    if (_source == "claim") then {
+        _pending = _logic getVariable "wfbe_commander_lease_cmd_grant";
+        if (!isNil "_pending") then {
+            if ((typeName _pending) == "ARRAY" && {count _pending > 1} && {(_pending select 1) == "vote"}) then {
+                _skipClaim = true;
+            };
+        };
+    };
+    if (!_skipClaim) then {
+        _logic setVariable ["wfbe_commander_lease_cmd_grant", [_team, _source, time]];
+    };
 };
 
 WFBE_CO_FNC_CommanderLeaseRequestReclaim = {
@@ -118,7 +134,7 @@ WFBE_CO_FNC_CommanderLeaseRequestStandDown = {
 //--- pins that their only Call sites are inside the executor loop.
 
 WFBE_CO_FNC_CommanderLeaseExecGrant = {
-    Private ["_side","_logic","_cmd","_team","_source","_gen","_leader","_uid"];
+    Private ["_side","_logic","_cmd","_team","_source","_gen","_leader","_uid","_currentCommander","_claimOccupied"];
     _side = _this select 0;
     _logic = _this select 1;
     _cmd = _this select 2;
@@ -138,6 +154,18 @@ WFBE_CO_FNC_CommanderLeaseExecGrant = {
     if (!([_side, _team] Call WFBE_CO_FNC_CommanderLeaseEligible)) exitWith {
         ["WARNING", Format ["CommanderLease ExecGrant: [%1] DENIED ineligible %2 request for team %3 - seat unchanged.", _side, _source, _team]] Call WFBE_CO_FNC_LogContent;
     };
+
+    //--- Re-validate claim empty-seat at executor time (request-time check is TOCTOU vs vote/assign).
+    //--- Latch + top-scope exit — exitWith inside then{} falls through on A2-OA.
+    _claimOccupied = false;
+    if (_source == "claim") then {
+        _currentCommander = _logic getVariable ["wfbe_commander", objNull];
+        if (!isNull _currentCommander) then {
+            _claimOccupied = true;
+            ["WARNING", Format ["CommanderLease ExecGrant: [%1] DENIED claim - seat already held by %2.", _side, _currentCommander]] Call WFBE_CO_FNC_LogContent;
+        };
+    };
+    if (_claimOccupied) exitWith {};
 
     _leader = leader _team;
     _uid = getPlayerUID _leader;
