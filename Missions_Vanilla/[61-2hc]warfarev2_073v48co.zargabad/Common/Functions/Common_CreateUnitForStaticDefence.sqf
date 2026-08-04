@@ -11,6 +11,12 @@
 
 Private ["_assignedUnit", "_built", "_defence", "_diagEnabled", "_groups", "_hcGrpIdx", "_hcGrpKey", "_hcLocalGrp", "_manningInProgress", "_moveInGunner", "_perfActive", "_perfItemStart", "_perfScope", "_perfStart", "_position", "_positions", "_serverTeam", "_side", "_sideID", "_team", "_teamLeader", "_teams", "_unit"];
 
+//--- r80 fail-clean: short/malformed call must not throw on select or leave latches half-set.
+if (isNil "_this" || {typeName _this != "ARRAY"} || {count _this < 6}) exitWith {
+	["WARNING", "Common_CreateUnitForStaticDefence.sqf: short/malformed args - static manning aborted."] Call WFBE_CO_FNC_LogContent;
+	[[]]
+};
+
 _side = _this select 0;
 _groups = _this select 1;
 _positions = _this select 2;
@@ -24,6 +30,12 @@ _teams = [];
 _perfStart = diag_tickTime;
 _perfActive = 0;
 _diagEnabled = missionNamespace getVariable ["TownDefenseDiagnosticsEnabled", false];
+
+//--- r80: groups/positions must be arrays (nil/wrong type throws on count/select mid-manning).
+if (isNil "_groups" || {typeName _groups != "ARRAY"} || {isNil "_positions"} || {typeName _positions != "ARRAY"}) exitWith {
+	["WARNING", Format["Common_CreateUnitForStaticDefence.sqf: [%1] groups/positions not arrays - static manning aborted.", _side]] Call WFBE_CO_FNC_LogContent;
+	[_teams]
+};
 
 if (isNull _defence) exitWith {
 	//--- D3 2026-06-19: a null defence object is an EXPECTED, benign no-op for sides/towns
@@ -79,7 +91,20 @@ if (_manningInProgress) exitWith {
 };
 _defence setVariable ["WFBE_StaticDefenseManningInProgress", true, true];
 
-for '_i' from 0 to count(_groups)-1 do {
+//--- r80: clamp to shared length so positions select never OOB (OOB threw mid-loop and left
+//--- WFBE_StaticDefenseManningInProgress=true forever - AA/static reman permanently blocked).
+private ["_pairCount"];
+_pairCount = (count _groups) min (count _positions);
+if (_pairCount < (count _groups)) then {
+	["WARNING", Format["Common_CreateUnitForStaticDefence.sqf: [%1] groups/positions length mismatch (g=%2 p=%3) - clamping.", _side, count _groups, count _positions]] Call WFBE_CO_FNC_LogContent;
+};
+if (_pairCount < 1) exitWith {
+	_defence setVariable ["WFBE_StaticDefenseManningInProgress", false, true];
+	["WARNING", Format["Common_CreateUnitForStaticDefence.sqf: [%1] empty groups/positions - manning latch cleared.", _side]] Call WFBE_CO_FNC_LogContent;
+	[_teams]
+};
+
+for '_i' from 0 to (_pairCount - 1) do {
 	_position = _positions select _i;
 
 	["INFORMATION", Format["Common_CreateUnitForStaticDefence.sqf: [%1] will create a team template %2 at %3", _side, _groups select _i, _position]] Call WFBE_CO_FNC_LogContent;
