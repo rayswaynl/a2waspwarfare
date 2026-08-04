@@ -53,37 +53,41 @@ if (_guerPanel) then {
 	_guerCasualtiesRate = _guerCasualties / 5 * .1;
 };
 
+//--- r76b: wait for cut display, then pin once; abort if still null before DisplayCtrl throws.
 waitUntil {!isNull (["currentCutDisplay"] call BIS_FNC_GUIget)};
-((["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90001) CtrlSetText _sideName;
+private ["_cutDisp"];
+_cutDisp = ["currentCutDisplay"] call BIS_FNC_GUIget;
+if (isNull _cutDisp) exitWith {};
+(_cutDisp DisplayCtrl 90001) CtrlSetText _sideName;
 
-_westRecruitedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90200;
-_westRecruitedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90201;
-_westCasualtyCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90202;
-_westCasualtyBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90203;
-_westCreatedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90204;
-_westCreatedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90205;
-_westLostCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90206;
-_westLostBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90207;
-_playerSummary = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90010;
+_westRecruitedCounter = _cutDisp DisplayCtrl 90200;
+_westRecruitedBar = _cutDisp DisplayCtrl 90201;
+_westCasualtyCounter = _cutDisp DisplayCtrl 90202;
+_westCasualtyBar = _cutDisp DisplayCtrl 90203;
+_westCreatedCounter = _cutDisp DisplayCtrl 90204;
+_westCreatedBar = _cutDisp DisplayCtrl 90205;
+_westLostCounter = _cutDisp DisplayCtrl 90206;
+_westLostBar = _cutDisp DisplayCtrl 90207;
+_playerSummary = _cutDisp DisplayCtrl 90010;
 
-_eastRecruitedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90101;
-_eastRecruitedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90102;
-_eastCasualtyCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90103;
-_eastCasualtyBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90104;
-_eastCreatedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90105;
-_eastCreatedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90106;
-_eastLostCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90107;
-_eastLostBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90108;
+_eastRecruitedCounter = _cutDisp DisplayCtrl 90101;
+_eastRecruitedBar = _cutDisp DisplayCtrl 90102;
+_eastCasualtyCounter = _cutDisp DisplayCtrl 90103;
+_eastCasualtyBar = _cutDisp DisplayCtrl 90104;
+_eastCreatedCounter = _cutDisp DisplayCtrl 90105;
+_eastCreatedBar = _cutDisp DisplayCtrl 90106;
+_eastLostCounter = _cutDisp DisplayCtrl 90107;
+_eastLostBar = _cutDisp DisplayCtrl 90108;
 
 if (_guerPanel) then {
-	_guerRecruitedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90300;
-	_guerRecruitedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90301;
-	_guerCasualtyCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90302;
-	_guerCasualtyBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90303;
-	_guerCreatedCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90304;
-	_guerCreatedBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90305;
-	_guerLostCounter = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90306;
-	_guerLostBar = (["currentCutDisplay"] call BIS_FNC_GUIget) DisplayCtrl 90307;
+	_guerRecruitedCounter = _cutDisp DisplayCtrl 90300;
+	_guerRecruitedBar = _cutDisp DisplayCtrl 90301;
+	_guerCasualtyCounter = _cutDisp DisplayCtrl 90302;
+	_guerCasualtyBar = _cutDisp DisplayCtrl 90303;
+	_guerCreatedCounter = _cutDisp DisplayCtrl 90304;
+	_guerCreatedBar = _cutDisp DisplayCtrl 90305;
+	_guerLostCounter = _cutDisp DisplayCtrl 90306;
+	_guerLostBar = _cutDisp DisplayCtrl 90307;
 
 	{
 		_position = CtrlPosition (_x select 0);
@@ -98,12 +102,17 @@ if (_guerPanel) then {
 	];
 };
 
-_playerScore = score player;
+//--- r76b: endgame can fire while player is null (disconnect race) or funds helpers not compiled / non-scalar.
+_playerScore = if (isNull player) then {0} else {score player};
 _playerFunds = 0;
 _playerIncome = 0;
-if (!isNil "GetPlayerFunds" && {!isNil "clientTeam"}) then {_playerFunds = Call GetPlayerFunds};
-if (!isNil "GetIncome") then {_playerIncome = (sideJoined) Call GetIncome};
-_playerSummary CtrlSetText Format ["Your round  |  Score %1  |  Funds $%2  |  Income $%3/min", _playerScore, round _playerFunds, round _playerIncome];
+if (!isNil "GetPlayerFunds" && {!isNil "clientTeam"} && {!isNull player}) then {_playerFunds = Call GetPlayerFunds};
+if (!isNil "GetIncome" && {!isNil "sideJoined"}) then {_playerIncome = (sideJoined) Call GetIncome};
+if (isNil "_playerFunds" || {typeName _playerFunds != "SCALAR"}) then {_playerFunds = 0};
+if (isNil "_playerIncome" || {typeName _playerIncome != "SCALAR"}) then {_playerIncome = 0};
+if (!isNull _playerSummary) then {
+	_playerSummary CtrlSetText Format ["Your round  |  Score %1  |  Funds $%2  |  Income $%3/min", _playerScore, round _playerFunds, round _playerIncome];
+};
 
 _position = CtrlPosition _westRecruitedBar;
 _recruited = _width * (_westUnitsCreated / 500);
