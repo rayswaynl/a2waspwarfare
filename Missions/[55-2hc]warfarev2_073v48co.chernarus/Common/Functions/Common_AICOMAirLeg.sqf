@@ -378,6 +378,35 @@ diag_log ("AICOMSTAT|v2|EVENT|" + str _sideID + "|" + str (round (time / 60)) + 
 		_tm setVariable ["wfbe_aicom_airborne_until", 0, true];
 	};
 
+	//--- ARRIVAL HOT-LZ RECHECK: the decision-time scan above can be stale after boarding + a long
+	//--- run-in. Re-read town ownership and hostile presence before descending; a newly hot LZ takes
+	//--- the existing para-unload path so the transport never lands into a flipped/contested objective.
+	private ["_arrivalAbort","_hotTown","_arrivalScanR","_arrivalMinHostiles","_arrivalHostiles","_arrivalReason"];
+	_arrivalAbort = false;
+	_arrivalReason = "";
+	if (count _fl > 0 && {(missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP", 1]) > 0}) then {
+		_hotTown = objNull;
+		if (count towns > 0) then {_hotTown = [_lz, towns] Call WFBE_CO_FNC_GetClosestEntity};
+		if (!isNull _hotTown && {(_hotTown getVariable ["sideID", -1]) != _sID}) then {
+			_arrivalAbort = true;
+			_arrivalReason = "town-flipped";
+		};
+		if (!_arrivalAbort) then {
+			_arrivalScanR = missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP_SCAN_R", 400];
+			_arrivalMinHostiles = (missionNamespace getVariable ["WFBE_C_AICOM_AIR_PARADROP_MIN_HOSTILE", 2]) max 1;
+			_arrivalHostiles = {!isNull _x && {alive _x} && {((side _tm) getFriend (side _x)) < 0.6} && {!(_x isKindOf "Man") || {(vehicle _x) == _x}}} count (_lz nearEntities [["Man","LandVehicle","Tank"], _arrivalScanR]);
+			if (_arrivalHostiles >= _arrivalMinHostiles) then {
+				_arrivalAbort = true;
+				_arrivalReason = "contested";
+			};
+		};
+		if (_arrivalAbort) then {
+			_fl = [];
+			diag_log ("AICOMSTAT|v2|EVENT|" + str _sID + "|" + str (round (time / 60)) + "|AIRMOBILE_HOT_LZ_ABORT|team=" + (str _tm) + "|reason=" + _arrivalReason);
+			["WARNING", Format ["Common_AICOMAirLeg.sqf: [%1] team [%2] aborting land at newly hot LZ (%3); paradropping instead.", _sd, _tm, _arrivalReason]] Call WFBE_CO_FNC_AICOMLog;
+		};
+	};
+
 	if (count _fl > 0) then {
 		//--- COLD LZ: land + disembark (GET OUT).
 		_h land "GET OUT";
