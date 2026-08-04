@@ -305,9 +305,9 @@ _base = switch (true) do {
 	//--- switch, not alternatives - #952's own body admits it left PC_HIGH/PC_FULL stale ("follow-up,
 	//--- needs owner decision"), and #963's body says it's syncing those two fields "in the two files
 	//--- that already had PC_LOW/PC_MID... synced". Values below match live Init_CommonConstants.sqf
-	//--- (:358-361) exactly: LOW=10, MID=7, HIGH=4, FULL=3.
-	case (_sidePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  10]};
-	case (_sidePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  7]};
+	//--- (:358-361) exactly: LOW=17, MID=17, HIGH=4, FULL=3.
+	case (_sidePcN <= 2): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_LOW",  17]};
+	case (_sidePcN <= 5): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_MID",  17]};
 	case (_sidePcN <= 9): {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_HIGH", 4]};
 	default          {missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_PC_FULL", 3]};
 };
@@ -358,7 +358,7 @@ if (_base != _tgtLogPrev || {_sidePcN != _tgtPcPrev}) then {
 
 //--- B747.1 HARD CAP (Ray 2026-06-24): clamp the founding target to a ceiling regardless of the PC curve +
 //--- banking valve. AICOM was fielding ~15 teams at low pop (base 12 + valve 3); Ray wants max 8 going forward.
-private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 10];
+private "_teamsHardCap"; _teamsHardCap = missionNamespace getVariable ["WFBE_C_AICOM_TEAMS_HARD_CAP", 12];
 if (_target > _teamsHardCap) then {_target = _teamsHardCap; _extra = (_target - _base) max 0};
 
 //--- ECON SINK team-cap surge (cmdcon41-w2, Ray-approved): when the commander is pinned rich (AI_Commander.sqf set
