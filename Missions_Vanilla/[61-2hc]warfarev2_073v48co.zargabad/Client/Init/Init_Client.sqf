@@ -128,23 +128,27 @@ if ((missionNamespace getVariable ["WFBE_C_DEADSPAWN_REDESIGN", 0]) > 0) then {
 		player setPos ([getMarkerPos Format["%1TempRespawnMarker",sideJoinedText],1,10] Call Compile preprocessFile "Common\Functions\Common_GetRandomPosition.sqf");
 	};
 };
-(vehicle player) addEventHandler ["Fired",{_this Spawn HandleAT}]; (vehicle player) addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}];
+//--- fix/sqf-eh-hygiene-20260730: store FEH indices + BlinkFired handle so PreRespawn /
+//--- MarkerLoop can remove by index (A2 re-index safe when removed high-to-low).
+WFBE_PLAYERFEH_UNIT = vehicle player;
+WFBE_PLAYERFEH_UNIT setVariable ["WFBE_PLAYERFEH_AT", WFBE_PLAYERFEH_UNIT addEventHandler ["Fired",{_this Spawn HandleAT}]];
+WFBE_PLAYERFEH_UNIT setVariable ["WFBE_PLAYERFEH_TRACER", WFBE_PLAYERFEH_UNIT addEventHandler ["Fired",{_this Spawn HandleRocketTraccer}]];
 // Marty: Only attach the combat marker blinking Fired EH when the mission parameter enables the feature.
 if ((missionNamespace getVariable ["WFBE_C_MAP_ICON_BLINKING_ENABLED", 0]) == 1) then {
-	(vehicle player) addEventHandler ["Fired", {
+	WFBE_PLAYERFEH_UNIT setVariable ["WFBE_BlinkFiredEH", WFBE_PLAYERFEH_UNIT addEventHandler ["Fired", {
 		_u = _this select 0;                 // unit that fired
 		_u Call WFBE_CL_FNC_SetMapIconStatusInCombat;
-	}];
+	}], false];
 };
 
 //--- wiring-sweep 2026-07-22: satchel TK-near-structure detection (Client_FNC_OnFired.sqf, compiled
 //--- below but never attached anywhere until now) - flag-gated attach, ships default 0 (owner call).
 //--- isNil guard: the compile at the bottom of this file runs a moment after this line.
 if ((missionNamespace getVariable ["WFBE_C_SATCHEL_TK_DETECT", 0]) > 0) then {
-	(vehicle player) addEventHandler ["Fired", {if (!isNil "WFBE_CL_FNC_OnFired") then {_this Call WFBE_CL_FNC_OnFired}}];
+	WFBE_PLAYERFEH_UNIT addEventHandler ["Fired", {if (!isNil "WFBE_CL_FNC_OnFired") then {_this Call WFBE_CL_FNC_OnFired}}];
 };
 
-(vehicle player) setVariable ["OriginalMarkerColor", "ColorOrange", false];
+WFBE_PLAYERFEH_UNIT setVariable ["OriginalMarkerColor", "ColorOrange", false];
 
 _rearmor = {
    				_ammo = _this select 4;
@@ -166,7 +170,11 @@ _rearmor = {
 //--- Command Deck: store _rearmor code in a global so SkinSelector_Apply.sqf can re-attach it post-swap.
 WFBE_CL_VAR_ReArmorCode = _rearmor;
 
-player addeventhandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+//--- fix/sqf-eh-hygiene-20260730: store HandleDamage index + unit so PreRespawn can remove
+//--- before re-add (first-life previously left the handle untracked).
+_rearmorEH = player addEventHandler ["HandleDamage",format ["_this Call %1", _rearmor]];
+player setVariable ["WFBE_PLAYERHDMEH", _rearmorEH, false];
+WFBE_PLAYERHDMEH_UNIT = player;
 [] execVM "Common\Functions\Common_Bipod.sqf";
 
 UpdateMarker = Compile preprocessFile "Common\Functions\Common_UpdateMarker.sqf";
