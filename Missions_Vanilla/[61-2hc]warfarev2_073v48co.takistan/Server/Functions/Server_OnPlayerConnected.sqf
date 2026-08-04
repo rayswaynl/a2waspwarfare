@@ -5,7 +5,7 @@
 		- User Name
 */
 
-Private ['_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_sideJoined','_sideOrigin','_team','_uid','_units'];
+Private ['_funds','_get','_id','_jipLogik','_jipSupplyKey','_max','_name','_oldLease','_oldLogic','_prevSideJoined','_scudJipKey','_sideJoined','_sideOrigin','_team','_telJipKey','_uid','_units'];
 _uid = _this select 0;
 _name = _this select 1;
 _id = _this select 2;
@@ -270,8 +270,15 @@ if (!isNil "WFBE_ACTIVE_GUER_AIR") then {_id publicVariableClient "WFBE_ACTIVE_G
 if (!isNil "WFBE_GUER_PLAYER_KILLS") then {_id publicVariableClient "WFBE_GUER_PLAYER_KILLS"}; //--- B75: GUER kill-based tech counter JIP catch-up (drives buy pool + barracks AI cap + RHUD).
 if (!isNil "WFBE_GUER_VEHICLE_TIER") then {_id publicVariableClient "WFBE_GUER_VEHICLE_TIER"}; //--- B75: GUER vehicle tier JIP catch-up (kill-derived).
 if (!isNil "WFBE_GUER_FOB_AVAIL") then {_id publicVariableClient "WFBE_GUER_FOB_AVAIL"}; //--- B75: GUER FOB availability JIP catch-up (depot FOB trucks + RHUD).
-if (!isNil "AICOMV2_GDIR_JIP_SNAP") then {_id publicVariableClient "AICOMV2_GDIR_JIP_SNAP"}; //--- J10: GUER Director snapshot is not JIP-durable in A2-OA; target the current value to this joiner.
+if (_sideJoined == resistance) then {
+	if (!isNil "AICOMV2_GDIR_JIP_SNAP") then {_id publicVariableClient "AICOMV2_GDIR_JIP_SNAP"}; //--- J10: GUER Director snapshot is not JIP-durable in A2-OA; target the current value only to a Resistance joiner.
+};
 if (!isNil "WFBE_PopTier") then {_id publicVariableClient "WFBE_PopTier"}; //--- B74.2: player-pop tier JIP catch-up (AI cap + RHUD scaling).
+//--- Runtime TEL/SCUD object handles need an explicit JIP replay; publicVariable only reaches current clients.
+_telJipKey = Format ["WFBE_ICBM_TEL_%1", str _sideJoined];
+_scudJipKey = Format ["WFBE_TK_SCUD_PLATFORMS_%1", str _sideJoined];
+if !(isNil {missionNamespace getVariable _telJipKey}) then {_id publicVariableClient _telJipKey};
+if !(isNil {missionNamespace getVariable _scudJipKey}) then {_id publicVariableClient _scudJipKey};
 //--- r68 (marker JIP + public-state fidelity): the MHQ/HQ wreck-marker feed is a set of missionNamespace
 //--- PRIMITIVES broadcast with plain publicVariable in Server_OnHQKilled.sqf (false + wreck payload) and
 //--- Server_MHQRepair.sqf (true + []). Per the B63 note above, a plain publicVariable is NOT replayed to a
@@ -286,29 +293,14 @@ if (!isNil "IS_WEST_HQ_ALIVE") then {_id publicVariableClient "IS_WEST_HQ_ALIVE"
 if (!isNil "IS_EAST_HQ_ALIVE") then {_id publicVariableClient "IS_EAST_HQ_ALIVE"};
 if (!isNil "HQ_WEST_MARKER_INFOS") then {_id publicVariableClient "HQ_WEST_MARKER_INFOS"};
 if (!isNil "HQ_EAST_MARKER_INFOS") then {_id publicVariableClient "HQ_EAST_MARKER_INFOS"};
-//--- fable/fob-polish (2026-07-07): replay ACTIVE GUER FOB markers to a GUER late joiner (#846 known gap).
-//--- WildcardMarker creates are fire-and-forget publicVariables, so a client that joined after the broadcast
-//--- never saw them. The server-side WFBE_GUER_FOB_ACTIVE ledger (added in RequestFOBStructure, retired in
-//--- Server_BuildingKilled's GuerFobCleared branch) is replayed with a TARGETED publicVariableClient of the
-//--- same wire payload WFBE_CO_FNC_SendToClients builds, so ONLY the joiner re-receives it (no side-wide
-//--- re-create, no repeated command-chat line). The client handler is idempotent (delete-then-create).
-//--- Spawned so the connect handler is not delayed; the sleep keeps successive writes to the same PV name
-//--- from coalescing into a single delivery. The ledger is copied (+) so a concurrent clear cannot mutate
-//--- the array mid-iteration.
-if ((_sideJoined == resistance) && {(count (missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []])) > 0}) then {
-	[_id, _name] Spawn {
-		private ["_rid","_rname","_fobReplay"];
-		_rid = _this select 0;
-		_rname = _this select 1;
-		_fobReplay = + (missionNamespace getVariable ["WFBE_GUER_FOB_ACTIVE", []]);
-		diag_log Format ["[WFBE][FOB-JIP] replaying %1 active FOB marker(s) to joiner %2", count _fobReplay, _rname];
-		{
-			WFBE_PVF_WildcardMarker = [resistance, "CLTFNCWildcardMarker", ["create", _x select 0, _x select 1, "ColorGreen", "mil_objective", Format ["FOB %1", _x select 2], "forward base active - spawn and resupply here"]];
-			_rid publicVariableClient "WFBE_PVF_WildcardMarker";
-			sleep 0.5;
-		} forEach _fobReplay;
-	};
-};
+//--- fable/fob-polish (2026-07-07): the ACTIVE GUER FOB marker replay for late joiners (#846 known gap)
+//--- MOVED to the CLIENT_INIT_READY PVEH (Server/PVFunctions/AttackWave.sqf) in sqf-fn-binding r122. Fired
+//--- at connect time it raced the joiner's own init: the WFBE_PVF_WildcardMarker PVEH (installed from
+//--- Init_Common's Init_PublicVariables) and WFBE_CL_FNC_HandlePVF (compiled at Init_Client.sqf:277) did
+//--- not exist yet on the joiner, so the replayed markers were silently dropped - and successive writes to
+//--- the single WFBE_PVF_WildcardMarker var overwrote each other, so even a poll-adopt could only have
+//--- recovered the LAST marker. CLIENT_INIT_READY is published at the END of the joiner's Init_Client,
+//--- the first moment a targeted publicVariableClient can actually be consumed.
 
 //--- B63.2: late joiners also need side logic/object economy state that is only published on change.
 //--- wfbe_upgrades lives on the side logic object, so re-setting the same value with public=true dirties the

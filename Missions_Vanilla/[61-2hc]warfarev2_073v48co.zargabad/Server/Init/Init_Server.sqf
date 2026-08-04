@@ -1359,6 +1359,22 @@ if ((missionNamespace getVariable ["WFBE_C_CLIENT_FPS_REPORT", 0]) == 1) then {
 	["INITIALIZATION", "Init_Server.sqf: Client FPS telemetry receiver armed (WFBE_C_CLIENT_FPS_REPORT=1)."] Call WFBE_CO_FNC_LogContent;
 };
 
+//--- Target resistance-only director intelligence. `publicVariable` reaches every client, so
+//--- the GUER ledger snapshot and order text must use per-client delivery rather than UI-side filtering.
+WFBE_SE_FNC_PublishResistanceState = {
+    Private ["_name","_receiver","_id"];
+    _name = _this select 0;
+    if (typeName _name != "STRING" || {_name == ""}) exitWith {};
+    {
+        _receiver = _x;
+        if (isPlayer _receiver && {side (group _receiver) == resistance}) then {
+            _id = owner _receiver;
+            if (_id > 0) then {_id publicVariableClient _name};
+        };
+    } forEach playableUnits;
+};
+["INITIALIZATION", "Init_Server.sqf: resistance-only director state publisher armed."] Call WFBE_CO_FNC_LogContent;
+
 //--- B74.2 (Ray 2026-06-23): OWN-SIDE MARKER FEED-GAP RECOVERY (the recurring "my player marker gone").
 //--- A publicVariable is NOT JIP-durable in A2-OA, and the B63 connect catch-up (Server_OnPlayerConnected
 //--- targeted publicVariableClient) can be MISSED on some joins (it races the connect/init path). When that
