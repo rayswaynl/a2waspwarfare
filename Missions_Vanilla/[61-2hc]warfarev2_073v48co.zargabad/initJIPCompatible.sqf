@@ -251,6 +251,13 @@ if (isServer) then {diag_log ("[WFBE (INIT)] WF_DEBUG_STATE WF_Debug=" + str WF_
 //--- in missionNamespace, so a late-installed EH still sees the value). A2-OA-1.64-safe: typeName ==, count, no
 //--- A3 commands. Side-keyed to the TWO sides that have a commander vote (WEST/EAST); GUER has no vote roster.
 if (!isDedicated && !isHeadLessClient) then {
+	//--- PVF-PRELOAD (sqf-fn-binding r122): compile the client PVF dispatcher BEFORE Init_Common's
+	//--- Init_PublicVariables installs the WFBE_PVF_* PVEHs that spawn it. initJIPCompatible execVMs
+	//--- Init_Common async (line below) and Init_Client's own compile (Init_Client.sqf:277) races the
+	//--- PVEH install on a second thread - a PVF landing in that window spawned a nil handle and the
+	//--- event was dropped with a script error. Same file recompiled identically at Init_Client.sqf:277
+	//--- (and Init_HC.sqf:8 on HCs), so this is a pure ordering fix, not a behavior change.
+	WFBE_CL_FNC_HandlePVF = Compile preprocessFileLineNumbers "Client\Functions\Client_HandlePVF.sqf";
 	WFBE_JIP_ROSTER_PRIMS = [];
 	WFBE_JIP_ROSTER_COUNT = 0;
 	private "_rosterKeys";
