@@ -17,7 +17,7 @@ while {!WFBE_GameOver} do {
 
 	gc_collector = gc_collector - [objNull];
 	{
-		if (isNil {_x getVariable "wfbe_trashable"} && isNil {_x getVariable "wfbe_trashed"} && !(_x getVariable ["wfbe_airlifted", false]) && !(_x in gc_collector)  && (_x != _whq) && (_x != _ehq)) then {
+		if (!isNull _x && {isNil {_x getVariable "wfbe_trashable"} && isNil {_x getVariable "wfbe_trashed"} && !(_x getVariable ["wfbe_airlifted", false]) && !(_x in gc_collector)  && (_x != _whq) && (_x != _ehq)}) then {
 			// Marty: Performance Audit counter for trash handlers spawned by the garbage collector.
 			_perfSpawned = _perfSpawned + 1;
 			_x spawn TrashObject;
