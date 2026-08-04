@@ -14,6 +14,10 @@
 // screen. The deliberate player Command Console disband confirmation (14626/14627) is unchanged.
 Private ["_aiId","_alt","_candidate","_candidateDistance","_candidatePosition","_candidatePosition2D","_candidateVehicle","_clickPosition2D","_confirmData","_confirmEnabled","_confirmExpires","_confirmTarget","_ctrlPressed","_disbandNow","_distance","_group","_message","_position","_range","_selectedUnits","_shift","_storedPosition","_target","_units","_plainClick","_selectedGroupUnits","_targetVehicle","_driver","_gunner","_commander","_crewPriority","_crewUnit","_selectionHandled","_isSelectableMapUnit","_isVehicleIcon"];
 
+//--- Map callbacks remain armed on Display 46 across death and spectator camera handoff.
+//--- Only an active, conscious player may alter squad state, issue a map order, or consume the debug teleport.
+if (isNull player || {!alive player} || {lifeState player == "UNCONSCIOUS"} || {missionNamespace getVariable ["WFBE_C_VAR_SpectatorActive", false]}) exitWith {false};
+
 _position = _this select 0;
 _shift = _this select 1;
 _alt = _this select 2;
