@@ -288,7 +288,7 @@
   "probed": 0
  },
  "Server/Functions/Server_OperateTownDefensesUnits.sqf": {
-  "total": 5,
+  "total": 6,
   "probed": 0
  },
  "Server/Functions/Server_PatrolAirPass.sqf": {
@@ -308,7 +308,7 @@
   "probed": 0
  },
  "Server/Init/Init_NavalHVT.sqf": {
-  "total": 26,
+  "total": 34,
   "probed": 0
  },
  "Server/Init/Init_Server.sqf": {

@@ -19,7 +19,9 @@ def test_deferred_activation_skips_all_creation_side_effects() -> None:
 
     guard = 'if (!_activationDeferred) then {'
     assert '_activationDeferred = false;' in source
-    assert source.count('_activationDeferred = true;') == 2
+    # 2 legacy budget-defer sites + 2 sites added by fold #2097 (GARRISON_CAP_DEFER,
+    # TOWN_AI_GROUP_CAP_DEFER) - all four gate the same guarded block below.
+    assert source.count('_activationDeferred = true;') == 4
     assert guard in source
 
     guard_start = source.index(guard)
