@@ -35,7 +35,10 @@ class SupplyCompletionAuthorityTests(unittest.TestCase):
             '(_dx * _dx) + (_dy * _dy)',
             '((getPos _associatedSupplyTruck) select 0) - (_cp select 0)',
             '((getPos _associatedSupplyTruck) select 1) - (_cp select 1)',
-            '_sidePlayer = side _playerObject',
+            # fold #1619 (fix(supply): cargo transfer world revalidation...): never trust the
+            # client-provided side slot - derive it from the credited player, and use
+            # `side group` (more stable than bare `side unit` when the unit is mid-state-change).
+            '_sidePlayer = side group _playerObject',
         ):
             self.assertIn(token, handler)
 
