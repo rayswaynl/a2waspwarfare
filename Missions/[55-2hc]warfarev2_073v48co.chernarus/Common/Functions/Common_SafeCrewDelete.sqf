@@ -23,14 +23,17 @@
 	before the inner `count` sub-expression rebinds _x, no params/pushBack/isEqualType/isEqualType, Spawn/Call
 	capitalized per repo style, if/then blocks only (no ternary).
 */
-Private ["_hull","_alsoDeleteHull","_crewMember"];
+Private ["_hull","_alsoDeleteHull","_crewMember","_playerCrewPresent"];
 _hull = _this select 0;
 _alsoDeleteHull = _this select 1;
 if (isNull _hull) exitWith {};
 
 {
 	_crewMember = _x;
-	if (!isNull _crewMember && {_crewMember != _hull}) then {
+	//--- Re-evaluate every scheduled pass: a player can board after the caller's preflight
+	//--- or while the previous crew deletion yields a frame. Keep the whole hull intact then.
+	_playerCrewPresent = ({isPlayer _x} count (crew _hull)) > 0;
+	if (!_playerCrewPresent && {!isNull _crewMember} && {_crewMember != _hull}) then {
 		diag_log Format ["WASPCRASH014E|SWEEP|obj=%1|isMan=%2|seat=%3|seatAlive=%4|seatCrewAlive=%5|t=%6",
 			_crewMember, true, _hull, str (alive _hull), str ({alive _x} count crew _hull), diag_tickTime];
 		deleteVehicle _crewMember;
@@ -38,7 +41,8 @@ if (isNull _hull) exitWith {};
 	};
 } forEach (crew _hull);
 
-if (_alsoDeleteHull && {!isNull _hull}) then {
+_playerCrewPresent = ({isPlayer _x} count (crew _hull)) > 0;
+if (_alsoDeleteHull && {!isNull _hull} && {!_playerCrewPresent}) then {
 	sleep 0.05;
 	deleteVehicle _hull;
 };
