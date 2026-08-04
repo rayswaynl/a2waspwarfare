@@ -89,7 +89,6 @@ _easaLoadout = _easaLoadout + [
 [8600,'Kh-29 (4) | R-73 (6)',[['Ch29Launcher_Su34','R73Launcher_2'],['4Rnd_Ch29','2Rnd_R73','2Rnd_R73','2Rnd_R73']]],
 [22400,'Kh-29 (4) | S-8 (120)',[['Ch29Launcher_Su34','S8Launcher'],['4Rnd_Ch29','40Rnd_S8T','40Rnd_S8T','40Rnd_S8T']]],
 [14000,'Kh-29 (6) | R-73 (2) | S-8 (40)',[['Ch29Launcher_Su34','R73Launcher_2','S8Launcher'],['6Rnd_Ch29','2Rnd_R73','40Rnd_S8T']]],
-[8400,'Kh-29 (6) | R-73 (4)',[['Ch29Launcher_Su34','R73Launcher_2'],['6Rnd_Ch29','2Rnd_R73','2Rnd_R73']]],
 [17600,'Kh-29 (6) | S-8 (80)',[['Ch29Launcher_Su34','S8Launcher'],['6Rnd_Ch29','40Rnd_S8T','40Rnd_S8T']]],
 [8200,'Kh-29 (8) | R-73 (2)',[['Ch29Launcher_Su34','R73Launcher_2'],['4Rnd_Ch29','4Rnd_Ch29','2Rnd_R73']]],
 [12800,'Kh-29 (8) | S-8 (40)',[['Ch29Launcher_Su34','S8Launcher'],['4Rnd_Ch29','4Rnd_Ch29','40Rnd_S8T']]],
@@ -157,7 +156,6 @@ _easaLoadout = _easaLoadout + [
 [14800,'Ataka-V (8) | GBU-12 (2) | R-73 (2)',[['AT9Launcher','BombLauncherF35','R73Launcher_2'],['4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','2Rnd_GBU12','2Rnd_R73']]],
 [19400,'Ataka-V (8) | GBU-12 (2) | S-8 (40)',[['AT9Launcher','BombLauncherF35','S8Launcher'],['4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','2Rnd_GBU12','40Rnd_S8T']]],
 [20400,'Ataka-V (8) | GBU-12 (4)',[['AT9Launcher','BombLauncherF35'],['4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','2Rnd_GBU12','2Rnd_GBU12']]],
-[12800,'Ataka-V (8) | R-73 (2) | S-8 (40)',[['AT9Launcher','R73Launcher_2','S8Launcher'],['4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','2Rnd_R73','40Rnd_S8T']]],
 [16400,'Ataka-V (8) | S-8 (80)',[['AT9Launcher','S8Launcher'],['4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','40Rnd_S8T','40Rnd_S8T']]],
 [6200,'Ataka-V (12) | FAB-250 (6)',[['AT9Launcher','AirBombLauncher'],['4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','4Rnd_FAB_250','2Rnd_FAB_250']]],
 [13600,'Ataka-V (12) | GBU-12 (2)',[['AT9Launcher','BombLauncherF35'],['4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','4Rnd_AT9_Mi24P','2Rnd_GBU12']]],
@@ -295,7 +293,6 @@ _easaLoadout = _easaLoadout + [
 [8200,'Kh-29 (8) | R-73 (2)',[['Ch29Launcher_Su34','R73Launcher_2'],['4Rnd_Ch29','4Rnd_Ch29','2Rnd_R73']]],
 [12800,'Kh-29 (8) | S-8 (40)',[['Ch29Launcher_Su34','S8Launcher'],['4Rnd_Ch29','4Rnd_Ch29','40Rnd_S8T']]],
 [7000,'Kh-29 (10)',[['Ch29Launcher_Su34'],['6Rnd_Ch29','4Rnd_Ch29']]],
-[16800,'R-73 (2) | S-8 (80) | Vikhr (12)',[['R73Launcher_2','S8Launcher','VikhrLauncher'],['2Rnd_R73','40Rnd_S8T','40Rnd_S8T','12Rnd_Vikhr_KA50']]],
 [27400,'R-73 (2) | S-8 (160)',[['R73Launcher_2','S8Launcher'],['2Rnd_R73','40Rnd_S8T','40Rnd_S8T','40Rnd_S8T','40Rnd_S8T']]],
 [4200,'R-73 (2) | Vikhr (24)',[['R73Launcher_2','VikhrLauncher'],['2Rnd_R73','12Rnd_Vikhr_KA50','12Rnd_Vikhr_KA50']]],
 [12200,'R-73 (4) | S-8 (40) | Vikhr (12)',[['R73Launcher_2','S8Launcher','VikhrLauncher'],['2Rnd_R73','2Rnd_R73','40Rnd_S8T','12Rnd_Vikhr_KA50']]],
@@ -318,7 +315,6 @@ _easaLoadout = _easaLoadout + [
 [4000,'FAB-250 (6) | R-73 (2)',[['AirBombLauncher','R73Launcher_2'],['4Rnd_FAB_250','2Rnd_FAB_250','2Rnd_R73']]],
 [3600,'FAB-250 (6) | S-5 (64)',[['AirBombLauncher','57mmLauncher'],['4Rnd_FAB_250','2Rnd_FAB_250','64Rnd_57mm']]],
 [2200,'FAB-250 (12)',[['AirBombLauncher'],['4Rnd_FAB_250','2Rnd_FAB_250','4Rnd_FAB_250','2Rnd_FAB_250']]],
-[4400,'R-73 (2) | S-5 (64)',[['R73Launcher_2','57mmLauncher'],['2Rnd_R73','64Rnd_57mm']]],
 [3800,'R-73 (4)',[['R73Launcher_2'],['2Rnd_R73','2Rnd_R73']]],
 [3000,'S-5 (128)',[['57mmLauncher'],['64Rnd_57mm','64Rnd_57mm']]]
 ]
@@ -329,7 +325,6 @@ _easaVehi = _easaVehi + ['F35B'];
 _easaDefault = _easaDefault + [[['MaverickLauncher','SidewinderLaucher_F35','BombLauncherF35'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_F35','2Rnd_GBU12']]];
 _easaLoadout = _easaLoadout + [
 [
-[13600,'AGM-65 (2) | AIM-9L (2) | GBU-12 (2)',[['MaverickLauncher','SidewinderLaucher_F35','BombLauncherF35'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_F35','2Rnd_GBU12']]],
 [6000,'AGM-65 (2) | AIM-9L (4)',[['MaverickLauncher','SidewinderLaucher_F35'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_F35','2Rnd_Sidewinder_F35']]],
 [19200,'AGM-65 (2) | GBU-12 (4)',[['MaverickLauncher','BombLauncherF35'],['2Rnd_Maverick_A10','2Rnd_GBU12','2Rnd_GBU12']]],
 [5800,'AGM-65 (4) | AIM-9L (2)',[['MaverickLauncher','SidewinderLaucher_F35'],['2Rnd_Maverick_A10','2Rnd_Maverick_A10','2Rnd_Sidewinder_F35']]],
@@ -351,7 +346,6 @@ _easaLoadout = _easaLoadout + [
 [4600,'AGM-114 (8) | AIM-9L (2)',[['HellfireLauncher','SidewinderLaucher_AH1Z'],['8Rnd_Hellfire','2Rnd_Sidewinder_AH1Z']]],
 [4200,'AGM-114 (8) | Hydra (38)',[['HellfireLauncher','FFARLauncher'],['8Rnd_Hellfire','38Rnd_FFAR']]],
 [3800,'AGM-114 (8) | MK-82 (6)',[['HellfireLauncher','Mk82BombLauncher_6'],['8Rnd_Hellfire','6Rnd_Mk82']]],
-[6600,'AGM-65 (2) | AIM-9L (2) | Hydra (38)',[['MaverickLauncher','SidewinderLaucher_AH1Z','FFARLauncher'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z','38Rnd_FFAR']]],
 [6200,'AGM-65 (2) | AIM-9L (2) | MK-82 (6)',[['MaverickLauncher','SidewinderLaucher_AH1Z','Mk82BombLauncher_6'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z','6Rnd_Mk82']]],
 [6000,'AGM-65 (2) | AIM-9L (4)',[['MaverickLauncher','SidewinderLaucher_AH1Z'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z','2Rnd_Sidewinder_AH1Z']]],
 [5800,'AGM-65 (2) | Hydra (38) | MK-82 (6)',[['MaverickLauncher','FFARLauncher','Mk82BombLauncher_6'],['2Rnd_Maverick_A10','38Rnd_FFAR','6Rnd_Mk82']]],
@@ -381,7 +375,6 @@ _easaLoadout = _easaLoadout + [
 [4200,'AGM-65 (2) | Hydra (38)',[['MaverickLauncher','FFARLauncher'],['2Rnd_Maverick_A10','38Rnd_FFAR']]],
 [3800,'AGM-65 (2) | MK-82 (6)',[['MaverickLauncher','Mk82BombLauncher_6'],['2Rnd_Maverick_A10','6Rnd_Mk82']]],
 [3600,'AGM-65 (2) | Stinger (2)',[['MaverickLauncher','StingerLauncher_twice'],['2Rnd_Maverick_A10','2Rnd_Stinger']]],
-[3600,'Hydra (38) | MK-82 (6)',[['FFARLauncher','Mk82BombLauncher_6'],['38Rnd_FFAR','6Rnd_Mk82']]],
 [3400,'Hydra (38) | Stinger (2)',[['FFARLauncher','StingerLauncher_twice'],['38Rnd_FFAR','2Rnd_Stinger']]],
 [3000,'Hydra (76)',[['FFARLauncher'],['38Rnd_FFAR','38Rnd_FFAR']]],
 [3000,'MK-82 (6) | Stinger (2)',[['Mk82BombLauncher_6','StingerLauncher_twice'],['6Rnd_Mk82','2Rnd_Stinger']]],
@@ -412,7 +405,6 @@ _easaLoadout = _easaLoadout + [
 [15600,'AGM-65 (2) | AIM-9L (2) | GBU-12 (2) | Hydra (38)',[['MaverickLauncher','SidewinderLaucher_AH1Z','BombLauncherF35','FFARLauncher'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z','2Rnd_GBU12','38Rnd_FFAR']]],
 [15200,'AGM-65 (2) | AIM-9L (2) | GBU-12 (2) | MK-82 (6)',[['MaverickLauncher','SidewinderLaucher_AH1Z','BombLauncherF35','Mk82BombLauncher_6'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z','2Rnd_GBU12','6Rnd_Mk82']]],
 [21600,'AGM-65 (2) | AIM-9L (2) | GBU-12 (4)',[['MaverickLauncher','SidewinderLaucher_AH1Z','BombLauncherF35'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z','2Rnd_GBU12','2Rnd_GBU12']]],
-[8200,'AGM-65 (2) | AIM-9L (2) | Hydra (38) | MK-82 (6)',[['MaverickLauncher','SidewinderLaucher_AH1Z','FFARLauncher','Mk82BombLauncher_6'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z','38Rnd_FFAR','6Rnd_Mk82']]],
 [7600,'AGM-65 (2) | AIM-9L (2) | Hydra (76)',[['MaverickLauncher','SidewinderLaucher_AH1Z','FFARLauncher'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z','38Rnd_FFAR','38Rnd_FFAR']]],
 [6800,'AGM-65 (2) | AIM-9L (2) | MK-82 (12)',[['MaverickLauncher','SidewinderLaucher_AH1Z','Mk82BombLauncher_6'],['2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z','6Rnd_Mk82','6Rnd_Mk82']]],
 [14800,'AGM-65 (2) | GBU-12 (2) | Hydra (38) | MK-82 (6)',[['MaverickLauncher','BombLauncherF35','FFARLauncher','Mk82BombLauncher_6'],['2Rnd_Maverick_A10','2Rnd_GBU12','38Rnd_FFAR','6Rnd_Mk82']]],
@@ -527,7 +519,6 @@ _easaLoadout = _easaLoadout + [
 [7000,'AGM-65 (4) | Hydra (38) | MK-82 (6)',[['MaverickLauncher','FFARLauncher','Mk82BombLauncher_6'],['2Rnd_Maverick_A10','2Rnd_Maverick_A10','38Rnd_FFAR','6Rnd_Mk82']]],
 [6400,'AGM-65 (4) | Hydra (76)',[['MaverickLauncher','FFARLauncher'],['2Rnd_Maverick_A10','2Rnd_Maverick_A10','38Rnd_FFAR','38Rnd_FFAR']]],
 [5600,'AGM-65 (4) | MK-82 (12)',[['MaverickLauncher','Mk82BombLauncher_6'],['2Rnd_Maverick_A10','2Rnd_Maverick_A10','6Rnd_Mk82','6Rnd_Mk82']]],
-[7000,'AGM-65 (6) | AIM-9L (2)',[['MaverickLauncher','SidewinderLaucher_AH1Z'],['2Rnd_Maverick_A10','2Rnd_Maverick_A10','2Rnd_Maverick_A10','2Rnd_Sidewinder_AH1Z']]],
 [13600,'AGM-65 (6) | GBU-12 (2)',[['MaverickLauncher','BombLauncherF35'],['2Rnd_Maverick_A10','2Rnd_Maverick_A10','2Rnd_Maverick_A10','2Rnd_GBU12']]],
 [6600,'AGM-65 (6) | Hydra (38)',[['MaverickLauncher','FFARLauncher'],['2Rnd_Maverick_A10','2Rnd_Maverick_A10','2Rnd_Maverick_A10','38Rnd_FFAR']]],
 [6200,'AGM-65 (6) | MK-82 (6)',[['MaverickLauncher','Mk82BombLauncher_6'],['2Rnd_Maverick_A10','2Rnd_Maverick_A10','2Rnd_Maverick_A10','6Rnd_Mk82']]],
@@ -611,8 +602,7 @@ _easaVehi = _easaVehi + ['AH1Z'];
 _easaDefault = _easaDefault + [[['HellfireLauncher'],['8Rnd_Hellfire','8Rnd_Hellfire']]];
 _easaLoadout = _easaLoadout + [
 [
-[3400,'AGM-114 (8) | AIM-9L (2)',[['HellfireLauncher','SidewinderLaucher_AH1Z'],['8Rnd_Hellfire','2Rnd_Sidewinder_AH1Z']]],
-[1000,'AGM-114 (16)',[['HellfireLauncher'],['8Rnd_Hellfire','8Rnd_Hellfire']]]
+[3400,'AGM-114 (8) | AIM-9L (2)',[['HellfireLauncher','SidewinderLaucher_AH1Z'],['8Rnd_Hellfire','2Rnd_Sidewinder_AH1Z']]]
 ]
 ];
 
@@ -622,7 +612,6 @@ _easaDefault = _easaDefault + [[['CRV7_HEPD','CTWS','SpikeLauncher_ACR'],['6Rnd_
 _easaLoadout = _easaLoadout + [
 [
 [8800,'Spike (2) | Stinger (2)',[['CRV7_HEPD','CTWS','SpikeLauncher_ACR','StingerLauncher_twice'],['6Rnd_CRV7_HEPD','200Rnd_40mmHE_FV510','200Rnd_40mmSABOT_FV510','2Rnd_Spike_ACR','2Rnd_Stinger']]],
-[5000,'Spike (4)',[['CRV7_HEPD','CTWS','SpikeLauncher_ACR'],['6Rnd_CRV7_HEPD','200Rnd_40mmHE_FV510','200Rnd_40mmSABOT_FV510','2Rnd_Spike_ACR','2Rnd_Spike_ACR']]],
 [10600,'Stinger (4)',[['CRV7_HEPD','CTWS','StingerLauncher_twice'],['6Rnd_CRV7_HEPD','200Rnd_40mmHE_FV510','200Rnd_40mmSABOT_FV510','2Rnd_Stinger','2Rnd_Stinger']]]
 ]
 ];
