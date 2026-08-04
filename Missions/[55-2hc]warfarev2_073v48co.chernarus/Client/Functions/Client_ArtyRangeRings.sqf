@@ -18,7 +18,7 @@ _known    = [];
 //--- 0 = legacy uncapped. The REAL range survives in the marker label when capped.
 _visualCap = missionNamespace getVariable ["WFBE_C_ARTY_RING_VISUAL_CAP", 2000];
 
-while {true} do {
+while {!gameOver} do {
 	//--- Re-read per tick: late-joiners resolve CLASSNAMES after their own init.
 	_artyNames  = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_CLASSNAMES",  _sideText], []];
 	_artyRanges = missionNamespace getVariable [Format ["WFBE_%1_ARTILLERY_RANGES_MAX",   _sideText], []];
@@ -93,3 +93,5 @@ while {true} do {
 
 	sleep 8;
 };
+
+{deleteMarkerLocal (_x select 1)} forEach _rings;

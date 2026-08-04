@@ -13,13 +13,14 @@ private ["_list","_tracked","_keep","_unit","_sid","_mk","_known","_i","_k","_po
 //--- B63 (Ray 2026-06-21): bounded gate (mirrors updateaicommarkers) so a stalled client init can't
 //--- suppress the friendly patrol arrows forever; proceed after 90s of in-game time at the latest.
 _t0 = time;
-waitUntil {(!isNil "clientInitComplete" && {clientInitComplete}) || ((time - _t0) > 90)};
+waitUntil {gameOver || {(!isNil "clientInitComplete" && {clientInitComplete}) || ((time - _t0) > 90)}};
+if (gameOver) exitWith {};
 
 _tracked = []; //--- [unit, markerName] pairs
 _trackedAir = []; //--- B67: GUER air-defense [vehicle, markerName, lastPos, lastDir]
 _i = 0;
 
-while {true} do {
+while {!gameOver} do {
 	_list = missionNamespace getVariable ["WFBE_ACTIVE_PATROLS", []];
 
 	//--- New friendly patrols.
@@ -159,3 +160,12 @@ while {true} do {
 
 	if (visibleMap || shownGPS) then {sleep 0.5} else {sleep 5};  //--- A2-fix 2026-06-14: map-aware cadence (smooth arrows while map open, idle slow otherwise)
 };
+
+{
+	_mk = _x select 1;
+	if (markerType _mk != "") then {deleteMarkerLocal _mk};
+} forEach _tracked;
+{
+	_mk = _x select 1;
+	if (markerType _mk != "") then {deleteMarkerLocal _mk};
+} forEach _trackedAir;

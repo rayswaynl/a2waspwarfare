@@ -26,7 +26,7 @@ _lastLvl = -1;
 //--- Helper: current redeploy radius for this side from the respawn-range upgrade level.
 _range = 0;
 
-while {true} do {
+while {!gameOver} do {
 	//--- B748: per-player Settings opt-out. OFF = tear down live rings + idle until re-enabled.
 	if !(missionNamespace getVariable ["WFBE_AMBULANCE_CIRCLES_ENABLED", true]) then {
 		{deleteMarkerLocal (_x select 1)} forEach (+_rings);
@@ -74,3 +74,5 @@ while {true} do {
 	sleep 5;
 	};
 };
+
+{deleteMarkerLocal (_x select 1)} forEach _rings;
