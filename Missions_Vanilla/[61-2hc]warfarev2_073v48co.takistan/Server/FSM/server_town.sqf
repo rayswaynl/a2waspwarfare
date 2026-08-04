@@ -943,7 +943,9 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 							//--- on a non-empty group, so dead-but-unreaped members held the group slot until the corpse GC.
 							//--- Match the town_ai deactivation teardown shape; !isPlayer guard kept (B67 wiki-wins).
 							{if (!isNull _x && !(isPlayer _x)) then {["town-mopup-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _squadGrp);
-							{if (!isNull _x && alive _x) then {["town-mopup-vehicle", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach _squadVehicles;
+							//--- r128: player-crew guard merged with r87 VEHDEL probe - a player (GUER is playable) riding
+							//--- a mop-up squad vehicle must not be deleted with the hull.
+							{if (!isNull _x && {alive _x} && {({isPlayer _x} count (crew _x)) == 0}) then {["town-mopup-vehicle", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach _squadVehicles;
 							if !(isNull _squadGrp) then {deleteGroup _squadGrp};
 						};
 						_loc setVariable ["wfbe_mopup_group", grpNull, false];

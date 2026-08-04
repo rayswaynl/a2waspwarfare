@@ -6,7 +6,7 @@
 		- Action ("spawn"/"remove").
 */
 
-Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_op","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
+Private ["_action","_ai_delegation_enabled","_defense","_groups","_grpKey","_grpIdx","_grpVar","_liveHCs","_op","_opPrev","_positions","_side","_sideID","_spawn","_team","_town","_unit","_units","_use_server"];
 
 _town = _this select 0;
 _side = _this select 1;
@@ -98,7 +98,19 @@ if (isNull _team) then {
 							};
 						};
 						if (isNull _team) then {_team = missionNamespace getVariable Format ["WFBE_%1_DefenseTeam", _side]};
-						_unit = [missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side], _team, getPos _x, _side] Call WFBE_CO_FNC_CreateUnit;
+						//--- r128 alife-crew-bailout: a live previous operator who is OUT of the seat (burning-gun
+						//--- bail / engine eject) must be RE-SEATED, not replaced. The old code spawned a fresh
+						//--- gunner and overwrote wfbe_defense_operator, orphaning the live ex-gunner: untracked by
+						//--- every reap path (remove-case deletes only the CURRENT operator), holding his per-town
+						//--- gunner group non-empty forever (wfbe_persistent, never empty-GC-able) and counting
+						//--- against the side AI budget. Parity with the HC path's WFBE_StaticDefenseAssignedUnit
+						//--- alive-branch in Common_CreateUnitForStaticDefence.sqf.
+						_unit = objNull;
+						if !(isNil {_x getVariable "wfbe_defense_operator"}) then {
+							_opPrev = _x getVariable "wfbe_defense_operator";
+							if (!isNull _opPrev && {alive _opPrev} && {!isPlayer _opPrev}) then {_unit = _opPrev};
+						};
+						if (isNull _unit) then {_unit = [missionNamespace getVariable Format ["WFBE_%1SOLDIER", _side], _team, getPos _x, _side] Call WFBE_CO_FNC_CreateUnit};
 						if (isNull _unit) then {
 							["WARNING", Format ["Server_OperateTownDefensesUnits.sqf: Town [%1] failed to create a defense gunner for [%2].", _town getVariable "name", typeOf _defense]] Call WFBE_CO_FNC_LogContent;
 						} else {
@@ -191,6 +203,26 @@ if (isNull _team) then {
 					if (local _opUnit) then {deleteVehicle _opUnit} else {[_opUnit, "HandleSpecial", ["cleanup-town-defense-gunner", _opUnit, "remove-case"]] Call WFBE_CO_FNC_SendToClient};
 				};
 				_x setVariable ["wfbe_defense_operator", nil];
+			};
+			//--- r128 alife-crew-bailout: the HC-delegated manning path tracks its gunner in
+			//--- WFBE_StaticDefenseAssignedUnit (Common_CreateUnitForStaticDefence.sqf), NOT in
+			//--- wfbe_defense_operator. A live assigned gunner who is OUT of the seat at de-man
+			//--- (walk-in boarding still in progress, burning-gun bail) was missed by BOTH delete
+			//--- blocks above (gunner _defense null, operator nil) and survived deactivation in an
+			//--- untracked wfbe_persistent group with no reap path. Reap him with the same locality
+			//--- dispatch as the operator block; a dead/current-gunner unit fails the alive check.
+			//--- The var lives on the defense HULL (set in Common_CreateUnitForStaticDefence.sqf),
+			//--- not on the position object _x.
+			if (!(isNil "_defense") && {!isNull _defense}) then {
+				if !(isNil {_defense getVariable "WFBE_StaticDefenseAssignedUnit"}) then {
+					private "_asgUnit"; _asgUnit = _defense getVariable "WFBE_StaticDefenseAssignedUnit";
+					if (!isNull _asgUnit && {alive _asgUnit} && {!isPlayer _asgUnit}) then {
+						if (isNil {(group _asgUnit) getVariable "wfbe_funds"}) then {
+							if (local _asgUnit) then {deleteVehicle _asgUnit} else {[_asgUnit, "HandleSpecial", ["cleanup-town-defense-gunner", _asgUnit, "remove-case"]] Call WFBE_CO_FNC_SendToClient};
+						};
+					};
+					_defense setVariable ["WFBE_StaticDefenseAssignedUnit", nil];
+				};
 			};
 		} forEach (_town getVariable "wfbe_town_defenses");
 
