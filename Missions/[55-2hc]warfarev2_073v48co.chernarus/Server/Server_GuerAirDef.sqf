@@ -638,7 +638,20 @@ while {!WFBE_GameOver} do {
 
 			//--- Enemy AIR near the town (crewed west/east aircraft) - use the one bounded live-air
 			//--- cache built above. Empty parked hulls still read CIVILIAN and are excluded at cache build.
-			_enemyAir = {(_x distance _town) < ((_town getVariable ["range", 600]) max 600)} count _enemyAirVehicles;
+			//--- COORD-SPACE (r25 bughunt): 3D distance(_air,town) folds altitude into the radius, so a
+			//--- gunship loitering at 150-200m AGL near the town rim can fail a 600m ground radius that
+			//--- 2D XY would pass - AA loadout branch never arms. Use squared XY distance (A2 has no distance2D).
+			private ["_airR","_airR2","_txy"];
+			_airR = (_town getVariable ["range", 600]) max 600;
+			_airR2 = _airR * _airR;
+			_txy = getPos _town;
+			_enemyAir = {
+				private ["_p","_dx","_dy"];
+				_p = getPos _x;
+				_dx = (_p select 0) - (_txy select 0);
+				_dy = (_p select 1) - (_txy select 1);
+				((_dx * _dx) + (_dy * _dy)) < _airR2
+			} count _enemyAirVehicles;
 
 			//--- LARGE-town test: by maxSupplyValue threshold OR by town_type tier (Large/Huge).
 			_maxSV    = _town getVariable ["maxSupplyValue", 0];
