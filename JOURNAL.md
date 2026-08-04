@@ -1,5 +1,163 @@
 # JOURNAL — a2waspwarfare-experital
 
+## wave0804b hotfix — 2026-08-04 [update/wave-20260802]
+
+Task: implement four fixes for three live regressions root-caused by a 6-agent triage
+workflow with adversarial verification (results file `wamco7bqt.output`, not part of this
+repo — the 'result' field's three lane entries carry the file:line evidence, verified fix
+shapes, and verifier `corrections`/`fixRisk`). Worktree `C:\tmp\fixwt\update0802`, sole
+writer, branch `update/wave-20260802`, tip at start `47364d446b` (the LIVE Arma 2 OA 1.64
+build).
+
+### FIX 1 — build-menu apostrophe/quote corruption (DONE — commit `eb7fa20752`)
+
+BIS_fnc_createmenu (vanilla, `coin_interface.sqf:1038` `call compile '%3'`) formats each
+category's WHOLE `_arrayParams` array into a SINGLE-quoted string. Any apostrophe/quote in
+one item's resolved label corrupted every sibling's click handler in the same category —
+this is why "LoS Screen (Tall)" (itself clean) read as broken: collateral damage from a
+TKA/EAST sibling in the same Fortification category payload.
+
+- `coin_interface.sqf` (~line 1008-1021): sanitize `_itemname` right after it's resolved
+  and before it reaches `_arrayParams` (~line 1028) — strip ASCII 39 (`'`) and ASCII 34
+  (`"`) via the A2-safe `toArray` → filter → `toString` idiom (precedent:
+  `GUI_EndOfGameStats.sqf` HC-name strip). **Verifier-confirmed: `regexReplace` does NOT
+  exist on A2 OA 1.64** (A3 2.06+ only) — never used.
+- `Core_TKA.sqf` (lines 217-234): gave the six TKA empty-label Fortification items real,
+  apostrophe-free labels (`Barrier Wall (5x)`, `Barrier Wall (10x)`, `Barrier Wall (10x
+  Tall)`, `Camo Net`, `Camo Net (Var)`, `Camo Net (B)`) so the stock-displayName fallback
+  never fires for them at all (defense in depth alongside the sanitize).
+- Tests: `Tools/Lint/test_coin_menu_label_apostrophe_sanitize.py`,
+  `Tools/Lint/test_tka_fortification_item_labels.py`.
+
+### FIX 2 — tooltip `_itemname`/`_preview` undefined-variable RPT spam (DONE — commit `4ce0bf9b4a`)
+
+PROVEN regression from today's commit `942bb614ef`. RPT: "Undefined variable in expression:
+_itemname" at `coin_interface.sqf:873` and a matching `_preview` undefined at `:890`, every
+preview tick.
+
+- Line ~873: `(if (isNil "_itemname") then {""} else {_itemname})`. Deliberately fell back
+  to `""`, **not** the pre-942bb614ef stock-CfgVehicles-displayName re-derivation — the
+  existing pinned test `test_fortif_placement_preview_facing.py::
+  test_tooltip_header_uses_itemname_not_type_displayname` asserts that expression must
+  never reappear in the header `format[]` args (it would silently revert 942bb614ef's
+  intent). Confirmed this test still passes.
+- Line ~890: guarded the rotate-readout's `round (getDir _preview)` the same way —
+  `&& {!(isNil "_preview")}`.
+- Tests: `Tools/Lint/test_coin_tooltip_itemname_preview_guard.py`.
+
+### FIX 3 — placement rejected inside HQ circle (DONE — commit `14e662d665`)
+
+Arming `WFBE_C_DEF_PREVIEW_MAP` made `typeOf _preview` a REAL WDDM composition-child
+classname, tripping the itemcategory==2 same-classname/DEFENSENAMES proximity checks
+against any pre-existing composition nearby (HQ walls etc.) — rejecting placement well
+inside the 200m HQ circle.
+
+- `Init_CommonConstants.sqf`: added `WFBE_ANCHOR_PREVIEW_CLASSES` (flat list built via
+  `forEach`, never A3 `apply`) right after `WFBE_ANCHOR_PREVIEW_MAP`.
+- `Init_Client.sqf` (~1797-1839): wrapped ONLY the two same-classname/DEFENSENAMES checks
+  (~1802-1805) in `if !((typeOf _preview) in WFBE_ANCHOR_PREVIEW_CLASSES) then {...}`. The
+  factory-clearance ring check (~1808-1831) is intentionally left unconditional — comment
+  documents that real density/spacing control stays server-side
+  (`WFBE_C_WDDM_COMP_CAP`/fortification cap in `RequestDefense.sqf`).
+- Tests: `Tools/Lint/test_fortif_preview_classes_proximity_exemption.py`.
+
+### FIX 4 — whitelisted caster kicked after faction stint (HELD — NOT applied)
+
+PROVEN dead code: `Server/PVFunctions/RequestJoin.sqf`'s CIV-caster always-allowed override
+(`if (_side == civilian) then {_canJoin = true};`, ~line 88) sits inside
+`if (WF_A2_Vanilla) then {...}` (~85-95), and `WF_A2_Vanilla` is a compile-time
+`#ifdef VANILLA` flag (`initJIPCompatible.sqf`) that is FALSE on the deployed OA/CombinedOps
+build, so the override never runs live — a caster who played a real faction earlier in the
+session gets bounced to the lobby re-joining the CIV seat.
+
+**Not applied, and deliberately excluded from this hotfix wave**, for two independent,
+concrete reasons found while reading the repo before coding (as instructed):
+
+1. `CLAUDE.md` "Owner constraints" (line 229): *"Never touch: HC architecture, player
+   enrollment/JIP flow, deploy/box scripts."* `RequestJoin.sqf` is exactly player
+   enrollment/JIP flow. No carve-out for correctness fixes exists in that section (the
+   separate Flag Policy section's "correctness fixes ship unflagged" governs flag-gating
+   only, not the file-touch ban — independent axes).
+2. `Tools/Lint/test_commander_lease.py` already encodes a **dated, independent owner
+   ruling** to the identical effect: *"Round 4 (owner ruling 2026-07-21): the side-change
+   stand-down enqueue was relocated OFF RequestJoin.sqf - a JIP-flow file agents must never
+   modify... RequestJoin.sqf is now pinned byte-identical to its pre-C1 base."* (see
+   `test_07b_requestjoin_is_untouched_jip_flow_file`).
+
+The triage workflow's own adversarial verifier reached the same conclusion independently
+(lane 3 `fixRisk`): *"This fix must not be shipped/PR'd without explicit owner sign-off
+overriding that constraint; the lane should escalate rather than proceed on 'correctness
+fix' reasoning alone."*
+
+**Action taken**: flagged the conflict, held the fix, and did not touch `RequestJoin.sqf`.
+Added `Tools/Lint/test_requestjoin_civ_caster_override_unconditional.py` with both
+assertions `@pytest.mark.skip`'d (reason references this journal entry) so CI stays green
+while the intended contract is captured and re-runnable the moment this is authorized.
+
+**Ready-to-apply patch (verified against current source, held pending owner sign-off)** —
+apply via the standard targeted-Python CRLF-preserving edit workflow, mirror CH→TK/ZG, then
+un-skip the two tests above:
+
+```
+--- Server/PVFunctions/RequestJoin.sqf (current, live-broken)
++++ Server/PVFunctions/RequestJoin.sqf (proposed)
+@@ -83,11 +83,15 @@
+ };
+
+-if (WF_A2_Vanilla) then {
++//--- caster seat target: always allowed regardless of any check above (observer, not a
++//--- team). Hoisted OUT of the WF_A2_Vanilla conditional below: WF_A2_Vanilla is a
++//--- compile-time #ifdef VANILLA flag (initJIPCompatible.sqf) that is FALSE on the
++//--- deployed OA/CombinedOps build, so nesting this override inside `if (WF_A2_Vanilla)`
++//--- made it unreachable dead code on live - a caster with a stored prior-faction side
++//--- kept getting the raw (false) _canJoin from the teamswap-mismatch branch above and
++//--- was bounced to the lobby.
++if (_side == civilian) then {_canJoin = true};
++
++if (WF_A2_Vanilla) then {
+
+-	//--- caster seat target: always allowed regardless of any check above (observer, not a team).
+-	if (_side == civilian) then {_canJoin = true};
+ 	[_uid, "HandleSpecial", ["join-answer", _canJoin, _skillBLUFOR, _skillOPFOR]] Call WFBE_CO_FNC_SendToClients;
+
+ } else {
+```
+
+Net bracket delta zero (pure statement relocation + comment). Byte-identical in the
+`WF_A2_Vanilla == true` branch; only changes behavior for a civilian join target on the
+live (`else`, `WF_A2_Vanilla == false`) path — exactly the branch that's currently broken.
+
+**To ship**: get explicit fresh owner confirmation to override the standing "never touch
+RequestJoin.sqf" ruling, apply the patch above with the mandatory Python CRLF-preserving
+edit workflow, mirror, un-skip
+`Tools/Lint/test_requestjoin_civ_caster_override_unconditional.py`, re-run all gates, amend
+`test_07b_requestjoin_is_untouched_jip_flow_file`'s docstring/scope in
+`test_commander_lease.py` if the owner ruling itself is being formally revised (or get a
+second, narrower ruling that exempts this specific hoist), and commit separately.
+
+### Gates (fixes 1-3 + tests)
+
+- Mirror: `dotnet run -c RELEASE` (CH→TK/ZG) clean, `-- --check` reports zero drift on both.
+  `version.sqf.template` restored to **branch HEAD** (not `origin/master` — this branch is
+  ahead of master on the WF_MAXPLAYERS=34 bump) on TK/ZG; all three CH/TK/ZG templates
+  confirmed `WF_MAXPLAYERS 34`.
+- `python -m pytest Tools/ -q` → 864 passed, 2 skipped (the held FIX 4 contract), 0 failed.
+- CLAUDE.md lint gate verbatim → 168 findings, all pre-existing `A3MARKER` (none in any file
+  touched by this wave).
+- Bracket delta zero (curly + square) per edited file vs `origin/master`: confirmed for all
+  four hand-edited Chernarus files.
+
+### Discovered Issues (off-scope, not fixed here)
+
+- `Tools/Ops/Test-WaspVersionTemplates.ps1` is **stale**: it asserts
+  `WF_MAXPLAYERS 32/31/33` (Chernarus/Takistan/Zargabad), last touched 2026-07-21. The
+  actual branch HEAD (already true *before* this session touched anything, confirmed via
+  `git show HEAD:.../version.sqf.template`) and CLAUDE.md's documented current values are
+  all `34`. This script was already failing before this session started; it is not one of
+  this task's required gates (which specify mirror `--check` clean + templates restored to
+  branch HEAD with all three = 34, not this script), so left as-is and flagged here rather
+  than silently "fixed" by rewriting someone else's stale ops guard mid-hotfix.
+
 ## Working State 2026-08-04 — fortification placement/preview/facing fix package [update/wave-20260802]
 
 Task: owner complaint "The issue is placement, preview, facing direction indications" for
