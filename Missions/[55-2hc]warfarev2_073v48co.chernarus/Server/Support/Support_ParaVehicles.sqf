@@ -46,7 +46,7 @@ _refundParaVehiSetup = {
 	};
 	["WARNING", Format ["Support_ParaVehicles.sqf: setup abort refund $%1 (%2).", _cost, _reason]] Call WFBE_CO_FNC_LogContent;
 };
-_ran = round(random((count _ranPos)-1));
+_ran = floor (random (count _ranPos)); //--- uniform
 _grp = [_side, "paradrop"] Call WFBE_CO_FNC_CreateGroup;
 if (isNull _grp) exitWith {
 	["WARNING", Format ["Support_ParaVehicles.sqf: [%1] paradrop group create failed.", str _side]] Call WFBE_CO_FNC_LogContent;
