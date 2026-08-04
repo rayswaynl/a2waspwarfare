@@ -673,7 +673,7 @@ private ["_atkTownCheck","_reliefEnemyDist","_reliefMax"];
 	//--- _x because the nearEntities count below rebinds _x. A2-OA-safe (nearEntities/side/alive/count).
 	{
 		_atkTownCheck = _x;
-		if ((_atkTownCheck getVariable "sideID") == _sideID && {_atkTownCheck getVariable ["wfbe_active", false]}) then {
+		if ((_atkTownCheck getVariable "sideID") == _sideID && {_atkTownCheck getVariable ["wfbe_contested", false]}) then {
 			if (({alive _x && {(side _x) != _side && {(side _x) != civilian}}} count ((getPos _atkTownCheck) nearEntities [["Man","LandVehicle","Air"], _reliefEnemyDist])) > 0) then {_attacked = _attacked + [_atkTownCheck]};
 		};
 	} forEach towns;
