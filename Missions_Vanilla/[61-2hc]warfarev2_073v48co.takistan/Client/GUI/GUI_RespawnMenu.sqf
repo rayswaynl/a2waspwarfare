@@ -319,11 +319,13 @@ if (alive player) then {
 				createDialog "WFBE_RespawnMenu";
 			} else {
 				//--- Normal exit.
+				private ["_deathLoc"];
+				_deathLoc = WFBE_DeathLocation;
 				WFBE_DeathLocation = nil;
 				WFBE_RespawnTime = nil;
 				
 				//--- Execute actions on respawn.
-				[player,_this] Call OnRespawnHandler;
+				[player,_this,_deathLoc] Call OnRespawnHandler;
 				
 				//--- Destroy the camera.
 				if !(isNil 'WFBE_DeathCamera') then {
@@ -347,11 +349,13 @@ if (alive player) then {
 		};
 	} else {
 		//--- Normal exit.
+		private ["_deathLoc"];
+		_deathLoc = WFBE_DeathLocation;
 		WFBE_DeathLocation = nil;
 		WFBE_RespawnTime = nil;
 		
 		//--- Execute actions on respawn.
-		[player,_spawn_at_current] Call OnRespawnHandler;
+		[player,_spawn_at_current,_deathLoc] Call OnRespawnHandler;
 		
 		//--- Destroy the camera.
 		if !(isNil 'WFBE_DeathCamera') then {

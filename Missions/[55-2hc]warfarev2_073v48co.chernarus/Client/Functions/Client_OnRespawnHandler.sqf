@@ -1,4 +1,4 @@
-Private ["_allowCustom","_buildings","_charge","_funds","_gear_cost","_get","_loadDefault","_listbp","_mode","_price","_skip","_spawn","_spawnInside","_typeof","_unit","_weaps"];
+Private ["_allowCustom","_buildings","_charge","_deathLoc","_funds","_gear_cost","_get","_loadDefault","_listbp","_mode","_price","_respawnAvailable","_skip","_spawn","_spawnInside","_typeof","_unit","_weaps"];
 
 //--- r80b player-respawn-gear: short/malformed call args used to throw on select 0/1 and abort the whole
 //--- respawn path (naked body, no gear, no re-attach EHs). Fail-closed when unit is missing.
@@ -7,6 +7,10 @@ _unit = _this select 0;
 if (isNil "_unit" || {typeName _unit != "OBJECT"} || {isNull _unit}) exitWith {};
 _spawn = if (count _this > 1) then {_this select 1} else {objNull};
 if (isNil "_spawn" || {typeName _spawn != "OBJECT"}) then {_spawn = objNull};
+//--- r131 respawn-destination validity: the menu refresh is asynchronous, so a selected base, camp, mobile, or town can be destroyed, moved, or captured after its last UI tick. Rebuild the canonical availability list at execution time from the preserved death location; an ineligible handle must take the existing null fallback instead of being placed on stale ground.
+_deathLoc = if (count _this > 2 && {typeName (_this select 2) == "ARRAY"}) then {_this select 2} else {getPos _unit};
+_respawnAvailable = [sideJoined, _deathLoc] Call GetRespawnAvailable;
+if !(_spawn in _respawnAvailable) then {_spawn = objNull};
 _loadDefault = true;
 _typeof = if (isNull _spawn) then {""} else {typeOf _spawn};
 
