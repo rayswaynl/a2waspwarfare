@@ -647,7 +647,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 					if !(isNull _airLogicRef) then {
 						//--- Delete previous owner's hangar.
 						_oldHangar = _location getVariable ["wfbe_airfield_hangar_obj", objNull];
-						if !(isNull _oldHangar) then { deleteVehicle _oldHangar };
+						if !(isNull _oldHangar) then { ["town-hangar-old", _oldHangar, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _oldHangar };
 
 						//--- Spawn new hangar for the new owner (same pattern as ~line 492 airfield block).
 						//--- B74.2: place at the carrier DECK height (deckZ), not sea level, so the re-captured
@@ -698,7 +698,7 @@ while {!WFBE_GameOver && {(missionNamespace getVariable [_clOwnerKey, _clOwnerSe
 								_x setVariable ["wfbe_structures", _navSpOldStructures - [_navSpOld], true];
 							};
 						} forEach [WFBE_L_BLU, WFBE_L_OPF, WFBE_L_GUE];
-						deleteVehicle _navSpOld;
+						["town-navsp-old", _navSpOld, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _navSpOld;
 					};
 
 					//--- Deck placement: modelToWorld XY off the stored hull reference part, then setPosASL to deckZ
@@ -815,13 +815,13 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 								_oldGunner = gunner _def;
 								if (!isNull _oldGunner && {!isPlayer _oldGunner}) then {
 									if (local _oldGunner) then {
-										deleteVehicle _oldGunner;
+										["town-defense-gunner-reap", _oldGunner, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _oldGunner;
 									} else {
 										[_oldGunner, "HandleSpecial", ["cleanup-town-defense-gunner", _oldGunner, "capture-teardown"]] Call WFBE_CO_FNC_SendToClient;
 									};
 								};
 							};
-							deleteVehicle _def;
+							["town-defense-structure", _def, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _def;
 						};
 						_x setVariable ["wfbe_defense", nil];
 					} forEach (_location getVariable ["wfbe_town_defenses", []]);
@@ -942,8 +942,8 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 							//--- r87 despawn-integrity: purge corpses too (no alive filter) - A2 deleteGroup silently NO-OPS
 							//--- on a non-empty group, so dead-but-unreaped members held the group slot until the corpse GC.
 							//--- Match the town_ai deactivation teardown shape; !isPlayer guard kept (B67 wiki-wins).
-							{if (!isNull _x && !(isPlayer _x)) then {deleteVehicle _x}} forEach (units _squadGrp);
-							{if (!isNull _x && alive _x) then {deleteVehicle _x}} forEach _squadVehicles;
+							{if (!isNull _x && !(isPlayer _x)) then {["town-mopup-unit", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach (units _squadGrp);
+							{if (!isNull _x && alive _x) then {["town-mopup-vehicle", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach _squadVehicles;
 							if !(isNull _squadGrp) then {deleteGroup _squadGrp};
 						};
 						_loc setVariable ["wfbe_mopup_group", grpNull, false];
@@ -971,7 +971,7 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 						if !(isNull _garUnit) then {
 							if (alive _garUnit) then {
 								if (local _garUnit) then {
-									deleteVehicle _garUnit;
+									["town-garrison-unit-cleanup", _garUnit, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _garUnit;
 								};
 								//--- Non-local units are cleaned up by the broadcast below.
 							};
@@ -1012,7 +1012,7 @@ if (isNull _navSp) then { //--- r49 fail-clean: null create must not setPos/regi
 							_x setVariable ["wfbe_structures", _oldStructures - [_oldSP], true];
 						};
 					} forEach [WFBE_L_BLU, WFBE_L_OPF, WFBE_L_GUE];
-					deleteVehicle _oldSP;
+					["town-sp-old", _oldSP, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _oldSP;
 				};
 
 				//--- Create new repair point 80m north of the airfield logic position.
@@ -1065,8 +1065,8 @@ if (isNull _sp) then { //--- r49 fail-clean: null create must not setPos/registe
 						missionNamespace setVariable ["WFBE_CBR_EAST", (missionNamespace getVariable ["WFBE_CBR_EAST", []]) - [_oldRadar]];
 						//--- Delete dressing props explicitly (Killed EH won't fire on deleteVehicle).
 						_oldDressing = _oldRadar getVariable ["wfbe_dressing", []];
-						{if !(isNull _x) then {deleteVehicle _x}} forEach _oldDressing;
-						deleteVehicle _oldRadar;
+						{if !(isNull _x) then {["town-dressing-prop", _x, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _x}} forEach _oldDressing;
+						["town-radar-old", _oldRadar, ""] Call WFBE_CO_FNC_LogVehDelete; deleteVehicle _oldRadar;
 						["INFORMATION", Format ["server_town.sqf: [%1] airfield CBR removed on recapture.", str _side]] Call WFBE_CO_FNC_LogContent;
 					};
 
