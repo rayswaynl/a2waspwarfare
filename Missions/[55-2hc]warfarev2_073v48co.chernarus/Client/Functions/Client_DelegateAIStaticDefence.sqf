@@ -22,6 +22,9 @@ _moveInGunner = _this select 5;
 
 sleep (random 1); //--- Delay a bit to prevent a bandwidth congestion.
 
+//--- round-end guard: never land static-defence gunners after the round ended - no cleanup follows a post-flag spawn.
+if (missionNamespace getVariable ["WFBE_GameOver", false]) exitWith {};
+
 //--- GROUP BLOAT REDUCTION: do NOT pre-create a group here.  _team is the server-side
 //--- per-town group (non-local on this HC).  Common_CreateUnitForStaticDefence will
 //--- bridge to (or create) a per-town HC-local group keyed on _team.  Pre-creating a

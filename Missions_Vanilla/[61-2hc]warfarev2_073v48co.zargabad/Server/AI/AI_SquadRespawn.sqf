@@ -14,11 +14,13 @@ sleep (random 0.5);
 while {!gameOver} do {
 	if (isPlayer leader _team) exitWith {};
 	[str _side,'UnitsCreated',1] Call UpdateStatistics;
-	waitUntil {!alive leader _team || isPlayer leader _team};
+	waitUntil {!alive leader _team || isPlayer leader _team || gameOver};
+	if (gameOver) exitWith {};
 	_deathLoc = getPos (leader _team);
 	["INFORMATION", Format ["AI_AdvancedRespawn.sqf: [%1] AI Team Leader [%2] [%3] has respawned.", _sideText, _team, leader _team]] Call WFBE_CO_FNC_LogContent;
 	if (isPlayer leader _team) exitWith {};
-	waitUntil {alive leader _team || isPlayer leader _team};
+	waitUntil {alive leader _team || isPlayer leader _team || gameOver};
+	if (gameOver) exitWith {};
 	if (isPlayer leader _team) exitWith {};
 
 	_respawn = (_team) Call GetTeamRespawn;
@@ -102,6 +104,7 @@ while {!gameOver} do {
 	};
 	
 	sleep _rd;
+	if (gameOver) exitWith {}; //--- round ended during the respawn hold - do not equip/teleport the leader post-teardown
 
 	//--- A player/death transition can land during the respawn sleep.
 	if (isPlayer _leader || !(alive _leader)) then {

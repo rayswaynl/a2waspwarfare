@@ -913,6 +913,9 @@ while {!WFBE_GameOver} do {
 									//--- Let the delivery bird approach the town before troops appear overhead.
 									sleep 20;
 									if (isNull _g) exitWith {};
+									//--- Round ended while the drop was inbound: do not land a fresh squad after teardown -
+									//--- every reaper has already stood down, so these troops would never be cleaned up.
+									if (WFBE_GameOver) exitWith {};
 
 									//--- Phase 1: create the whole stick at altitude over the town + chute each man, quickly
 									//--- (0.3s apart, like the supply-drop cadence) so the stick descends TOGETHER, not serially.
