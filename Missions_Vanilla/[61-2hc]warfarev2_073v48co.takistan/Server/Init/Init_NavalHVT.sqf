@@ -940,8 +940,11 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 							_jet1 flyInHeight 550;
 							_jetPilot1 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 							if (isNull _jetPilot1) then {_jetPilot1 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-							_jetPilot1 moveInDriver _jet1;
-							_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 550]; //--- fable/l39-circuit: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
+							if (isNull _jetPilot1) then {deleteVehicle _jet1; ["WARNING", "Init_NavalHVT.sqf: CAP L39 pilot fallback failed; deleted unmanned jet."] Call WFBE_CO_FNC_LogContent};
+							if (!(isNull _jetPilot1)) then {
+								_jetPilot1 moveInDriver _jet1;
+								_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 550]; //--- fable/l39-circuit: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
+							};
 
 							_jet2 = createVehicle ["L39_TK_EP1", [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650], [], 0, "FLY"];
 							_jet2 setPosASL [(_pos select 0) - 300 * (sin _jetDir), (_pos select 1) - 300 * (cos _jetDir), 650];
@@ -950,8 +953,11 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 							_jet2 flyInHeight 600;
 							_jetPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 							if (isNull _jetPilot2) then {_jetPilot2 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: complete #990 coverage - same fallback as _hindPilot2/_hindPilot3
-							_jetPilot2 moveInDriver _jet2;
-							_jetPilot2 doMove [(_pos select 0) - 800, (_pos select 1), 600];
+							if (isNull _jetPilot2) then {deleteVehicle _jet2; ["WARNING", "Init_NavalHVT.sqf: CAP L39 pilot fallback failed; deleted unmanned jet."] Call WFBE_CO_FNC_LogContent};
+							if (!(isNull _jetPilot2)) then {
+								_jetPilot2 moveInDriver _jet2;
+								_jetPilot2 doMove [(_pos select 0) - 800, (_pos select 1), 600];
+							};
 
 							_capGrp setBehaviour "AWARE";
 							//--- fable/inland-sweep: YELLOW, not RED - the circuit overflies towns and a RED jet strafes
@@ -1022,9 +1028,12 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot) then {_hindPilot = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-								_hindPilot setPosASL [(_capPad1 select 0) + 5, (_capPad1 select 1) + 5, _capDeckZ];
-								_hindPilot assignAsDriver _hind; [_hindPilot] orderGetIn true;
-								_hind flyInHeight 350;
+								if (isNull _hindPilot) then {deleteVehicle _hind; ["WARNING", "Init_NavalHVT.sqf: CAP Hind pilot fallback failed; deleted unmanned helicopter."] Call WFBE_CO_FNC_LogContent};
+								if (!(isNull _hindPilot)) then {
+									_hindPilot setPosASL [(_capPad1 select 0) + 5, (_capPad1 select 1) + 5, _capDeckZ];
+									_hindPilot assignAsDriver _hind; [_hindPilot] orderGetIn true;
+									_hind flyInHeight 350;
+								};
 
 								_hind2 = createVehicle ["Mi24_P", [_capPad2 select 0, _capPad2 select 1, 0], [], 0, "NONE"];
 								_hind2 setPosASL [_capPad2 select 0, _capPad2 select 1, _capDeckZ];
@@ -1044,9 +1053,12 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot2 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot2) then {_hindPilot2 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: mirror the _hindPilot fallback so a bad WFBE_GUER_PILOT_CLASS does not leave the Hind pilotless
-								_hindPilot2 setPosASL [(_capPad2 select 0) + 5, (_capPad2 select 1) - 5, _capDeckZ];
-								_hindPilot2 assignAsDriver _hind2; [_hindPilot2] orderGetIn true;
-								_hind2 flyInHeight 350;
+								if (isNull _hindPilot2) then {deleteVehicle _hind2; ["WARNING", "Init_NavalHVT.sqf: CAP Hind pilot fallback failed; deleted unmanned helicopter."] Call WFBE_CO_FNC_LogContent};
+								if (!(isNull _hindPilot2)) then {
+									_hindPilot2 setPosASL [(_capPad2 select 0) + 5, (_capPad2 select 1) - 5, _capDeckZ];
+									_hindPilot2 assignAsDriver _hind2; [_hindPilot2] orderGetIn true;
+									_hind2 flyInHeight 350;
+								};
 
 								_hind3 = createVehicle ["Mi24_P", [_capPad3 select 0, _capPad3 select 1, 0], [], 0, "NONE"];
 								_hind3 setPosASL [_capPad3 select 0, _capPad3 select 1, _capDeckZ];
@@ -1066,9 +1078,12 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot3 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot3) then {_hindPilot3 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: same fallback as _hindPilot2
-								_hindPilot3 setPosASL [(_capPad3 select 0) - 5, (_capPad3 select 1) + 5, _capDeckZ];
-								_hindPilot3 assignAsDriver _hind3; [_hindPilot3] orderGetIn true;
-								_hind3 flyInHeight 350;
+								if (isNull _hindPilot3) then {deleteVehicle _hind3; ["WARNING", "Init_NavalHVT.sqf: CAP Hind pilot fallback failed; deleted unmanned helicopter."] Call WFBE_CO_FNC_LogContent};
+								if (!(isNull _hindPilot3)) then {
+									_hindPilot3 setPosASL [(_capPad3 select 0) - 5, (_capPad3 select 1) + 5, _capDeckZ];
+									_hindPilot3 assignAsDriver _hind3; [_hindPilot3] orderGetIn true;
+									_hind3 flyInHeight 350;
+								};
 
 								_capGrp setBehaviour "AWARE";
 								_capGrp setCombatMode "RED";
@@ -1103,8 +1118,11 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 									_jet1 flyInHeight 600;
 									_jetPilot1 = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 									if (isNull _jetPilot1) then {_jetPilot1 = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-									_jetPilot1 moveInDriver _jet1;
-									_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 600]; //--- fable/l39-circuit idiom: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
+									if (isNull _jetPilot1) then {deleteVehicle _jet1; ["WARNING", "Init_NavalHVT.sqf: CAP Su34 pilot fallback failed; deleted unmanned jet."] Call WFBE_CO_FNC_LogContent};
+									if (!(isNull _jetPilot1)) then {
+										_jetPilot1 moveInDriver _jet1;
+										_jetPilot1 doMove [(_pos select 0) + 800, (_pos select 1), 600]; //--- fable/l39-circuit idiom: immediate order - waypointless fixed-wing AI pitches into the sea within seconds
+									};
 
 									_capGrp setBehaviour "AWARE";
 									_capGrp setCombatMode "RED";
@@ -1149,7 +1167,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								};
 								_hindPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _hindPilot) then {_hindPilot = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]};
-								_hindPilot moveInDriver _hind;
+								if (isNull _hindPilot) then {deleteVehicle _hind; ["WARNING", "Init_NavalHVT.sqf: CAP Hind pilot fallback failed; deleted unmanned helicopter."] Call WFBE_CO_FNC_LogContent};
+								if (!(isNull _hindPilot)) then {
+									_hindPilot moveInDriver _hind;
+								};
 								_capGrp setBehaviour "AWARE";
 								_capGrp setCombatMode "RED";
 								_hind flyInHeight 350;
@@ -1164,7 +1185,10 @@ missionNamespace setVariable ["WFBE_NAVAL_HVT_LOGICS", [_lhdAlphaLogic, _lhdBrav
 								_biplane flyInHeight 550;
 								_biplPilot = _capGrp createUnit [(missionNamespace getVariable ["WFBE_GUERRESPILOT", "GUE_Soldier_Pilot"]), [_pos select 0, _pos select 1, 0], [], 0, "NONE"];
 								if (isNull _biplPilot) then {_biplPilot = _capGrp createUnit ["GUE_Soldier_Pilot", [_pos select 0, _pos select 1, 0], [], 0, "NONE"]}; //--- fable/fix-naval-cap-pilot-nilguard: complete #990 coverage - same fallback as _hindPilot2/_hindPilot3
-								_biplPilot moveInDriver _biplane;
+								if (isNull _biplPilot) then {deleteVehicle _biplane; ["WARNING", "Init_NavalHVT.sqf: CAP An2 pilot fallback failed; deleted unmanned aircraft."] Call WFBE_CO_FNC_LogContent};
+								if (!(isNull _biplPilot)) then {
+									_biplPilot moveInDriver _biplane;
+								};
 
 								//--- Tag both as CAP so GC/groupsGC don't reap them.
 								_capGrp setVariable ["wfbe_naval_cap", true, true];
