@@ -6,7 +6,7 @@
 	state, same as every other lock write in this mission).
 */
 
-private ["_veh","_t","_dur","_ok","_startPos"];
+private ["_veh","_dur","_ok","_startPos","_started","_deadline","_progress"];
 
 _veh = _this select 0;
 if (isNull _veh || {!alive _veh} || {!(locked _veh)}) exitWith {};
@@ -15,12 +15,15 @@ _dur = missionNamespace getVariable ["WFBE_C_GUER_LOCKPICK_TIME", 20];
 if (_dur < 1) then {_dur = 1};
 _startPos = getPos player;
 _ok = true;
-_t = 0;
-while {_t < _dur && _ok} do {
+_started = time;
+_deadline = _started + _dur;
+while {time < _deadline && _ok} do {
 	sleep 1;
-	_t = _t + 1;
 	if (isNull _veh || {!alive _veh} || {!(locked _veh)} || {player distance _veh > 8} || {(getPos player) distance _startPos > 10} || {vehicle player != player} || {!alive player}) then {_ok = false};
-	if (_ok) then {hintSilent Format ["Lockpicking... %1%2", floor ((_t / _dur) * 100), "%"]};
+	if (_ok) then {
+		_progress = (((time - _started) / _dur) * 100) min 100;
+		hintSilent Format ["Lockpicking... %1%2", floor _progress, "%"];
+	};
 };
 
 if (_ok && {!isNull _veh} && {alive _veh} && {locked _veh}) then {

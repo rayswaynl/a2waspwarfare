@@ -103,6 +103,7 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 	[_tel] Call WFBE_SE_FNC_IcbmTelTheatrics;
 
 	missionNamespace setVariable [_key, _tel];
+	publicVariable _key;
 	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] TEL registered in missionNamespace (%2) — isNull=%3.", _sideText, _key, isNull _tel]] Call WFBE_CO_FNC_LogContent;
 	diag_log (Format ["ICBMTEL|v1|REGISTER|%1|key=%2|isNull=%3", _sideText, _key, isNull _tel]);
 	//--- Clear any stale countdown latch on (re)spawn.
@@ -119,6 +120,7 @@ WFBE_SE_FNC_SpawnIcbmTel = {
 		//--- Clear the stored ref if it points at this corpse.
 		if ((missionNamespace getVariable [Format ["WFBE_ICBM_TEL_%1", _dSideText], objNull]) == _dead) then {
 			missionNamespace setVariable [Format ["WFBE_ICBM_TEL_%1", _dSideText], objNull];
+			publicVariable (Format ["WFBE_ICBM_TEL_%1", _dSideText]);
 		};
 		//--- Was a NUKE counting down? (only NUKE arms a countdown latch.) If so -> CANCEL.
 		_cdEnd = missionNamespace getVariable [Format ["WFBE_ICBM_TEL_CD_%1", _dSideText], -1];
@@ -170,7 +172,7 @@ WFBE_SE_FNC_TkScudPlatforms = {
 	_live = [];
 	{ if (!isNull _x && {alive _x}) then {_live set [count _live, _x]} } forEach _arr;
 	//--- write back only if it shrank (avoid needless broadcasts).
-	if (count _live != count _arr) then { missionNamespace setVariable [_key, _live] };
+	if (count _live != count _arr) then { missionNamespace setVariable [_key, _live]; publicVariable _key };
 	_live
 };
 
@@ -274,6 +276,7 @@ WFBE_SE_FNC_TkScudRegister = {
 	_veh setVariable ["wfbe_is_tk_scud", true, true];
 	_arr = _live + [_veh];
 	missionNamespace setVariable [_key, _arr];
+	publicVariable _key;
 	_veh addEventHandler ["Killed", {
 		private ["_dead","_dSide","_dKey","_dArr","_dLive","_x"];
 		_dead = _this select 0;
@@ -285,6 +288,7 @@ WFBE_SE_FNC_TkScudRegister = {
 		_dLive = [];
 		{if (!isNull _x && {alive _x} && {_x != _dead}) then {_dLive set [count _dLive, _x]}} forEach _dArr;
 		missionNamespace setVariable [_dKey, _dLive];
+		publicVariable _dKey;
 		diag_log (Format ["ICBMTEL|v1|SCUD-DESTROYED|%1|remaining=%2 (no respawn)", str _dSide, count _dLive]);
 	}];
 	["INFORMATION", Format ["Init_IcbmTel.sqf : [%1] bought-SCUD REGISTERED (%2/%3 live, serverCost=%4, ai=%5).", str _side, count _arr, _max, _cost, _isAiRegister]] Call WFBE_CO_FNC_LogContent;
@@ -838,7 +842,7 @@ WFBE_SE_FNC_IcbmTelLaunchMarker = {
 //--- If the TEL is destroyed mid-countdown the killed-EH clears the latch and this bails (cancel handled there).
 //------------------------------------------------------------------------------------
 WFBE_SE_FNC_IcbmTelNuke = {
-	private ["_side","_tel","_tgtPos","_sideText","_cdKey","_secs","_fuzz","_enemySides","_pingPos","_ang","_r","_steps"];
+	private ["_side","_tel","_tgtPos","_sideText","_cdKey","_secs","_fuzz","_enemySides","_pingPos","_ang","_r","_deadline"];
 	_side   = _this select 0;
 	_tel    = _this select 1;
 	_tgtPos = _this select 2;
@@ -848,9 +852,10 @@ WFBE_SE_FNC_IcbmTelNuke = {
 	_fuzz = missionNamespace getVariable ["WFBE_C_ICBM_TEL_PING_FUZZ", 400];
 
 	//--- Arm the countdown latch (the killed-EH reads this to know a NUKE is in flight -> destroy = cancel).
-	missionNamespace setVariable [_cdKey, time + _secs];
+	_deadline = time + _secs;
+	missionNamespace setVariable [_cdKey, _deadline];
 	//--- pack-missiles: broadcast [launchTime, impactTime] to all clients for the countdown/warning HUD.
-	[nil, "HandleSpecial", ["icbm-countdown", time, time + _secs]] Call WFBE_CO_FNC_SendToClients;
+	[nil, "HandleSpecial", ["icbm-countdown", time, _deadline]] Call WFBE_CO_FNC_SendToClients;
 
 
 	//--- Theatrics at the TEL (erect + smoke) for the whole countdown feel.
@@ -868,10 +873,10 @@ WFBE_SE_FNC_IcbmTelNuke = {
 	} forEach _enemySides;
 
 	//--- COUNTDOWN. Poll so a mid-count destroy (killed EH clears the latch) aborts cleanly.
-	_steps = 0;
-	while {_steps < _secs} do {
+	//--- Use the same absolute deadline the HUD receives: a delayed scheduler resume must not add one
+	//--- nominal second per pass and leave players at T-0 while the server still waits to launch.
+	while {time < _deadline} do {
 		sleep 1;
-		_steps = _steps + 1;
 		if (isNull _tel || {!alive _tel}) exitWith {};
 		if ((missionNamespace getVariable [_cdKey, -1]) <= 0) exitWith {};   //--- latch cleared => canceled (destroyed).
 	};
