@@ -466,6 +466,8 @@ if (worldName == "Zargabad") then {
 	if (isNil "WFBE_C_OILFIELD_GUER_RAID_INTERVAL") then {WFBE_C_OILFIELD_GUER_RAID_INTERVAL = 1500}; //--- min seconds between GUER raid spawns on the field.
 	if (isNil "WFBE_C_OILFIELD_GUER_RAID_SIZE") then {WFBE_C_OILFIELD_GUER_RAID_SIZE = 4}; //--- GUER foot raiders per raid party.
 	if (isNil "WFBE_C_OILFIELD_GUER_RAID_GRPCAP") then {WFBE_C_OILFIELD_GUER_RAID_GRPCAP = 120}; //--- do NOT spawn a raid if resistance group count is at/above this (leaves headroom below the 144 hard cap).
+	if (isNil "WFBE_C_OILFIELD_GUER_RAID_PLAYER_RADIUS") then {WFBE_C_OILFIELD_GUER_RAID_PLAYER_RADIUS = 400}; //--- defer materialisation when a real player is within this radius of the actual raid ring position; HCs are excluded.
+	if (isNil "WFBE_C_OILFIELD_GUER_RAID_DENY_LOG_INTERVAL") then {WFBE_C_OILFIELD_GUER_RAID_DENY_LOG_INTERVAL = 300}; //--- minimum seconds between repeated player-near defer receipts; the gate still re-evaluates every scan.
 	//--- === cmdcon42-oilrig DYNAMIC placement (Ray placement spec 2026-07-02: derrick on open ground BETWEEN the teams) ===
 	if (isNil "WFBE_C_OILFIELD_DYNAMIC") then {WFBE_C_OILFIELD_DYNAMIC = 1};               //--- 1 = per-match dynamic placement: HQ-midpoint + open-ground ring search + spawned derrick composition. 0 = legacy fixed-anchor auto-snap (no composition).
 	if (isNil "WFBE_C_OILFIELD_HQ_WAIT") then {WFBE_C_OILFIELD_HQ_WAIT = 600};             //--- max seconds to wait for BOTH start HQs to exist before falling back to the legacy anchor.
