@@ -101,7 +101,7 @@ if ((missionNamespace getVariable "WFBE_C_RESPAWN_MOBILE") > 0 && !_isForcedResp
 	
 	_checks = _deathLoc nearEntities[_mobileRespawns,_range];
 	if (count _checks > 0) then {
-		{if (alive _x) then {_availableSpawn = _availableSpawn + [_x]}} forEach _checks;
+		{if (alive _x && {side _x == _side}) then {_availableSpawn = _availableSpawn + [_x]}} forEach _checks; //--- bughunt-20260730: friendly-side gate for mobile MEV
 	};
 };
 

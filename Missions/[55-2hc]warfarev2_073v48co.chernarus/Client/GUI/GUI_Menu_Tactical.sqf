@@ -642,9 +642,12 @@ while {alive player && dialog} do {
 			//---       so the next map click re-enters and the second call returns true.
 			//---   C2: exitWith only exits its own block; gate the WHOLE travel sequence with _doTravel latch.
 			//---   C3: original surcharge loop below is the SOLE charger; never add another deduction above it.
-			private ["_doTravel","_ftRecheckOk","_ftConfirmMsg","_ftBaseFee","_ftVehFee","_ftVehCount","_ftVehList","_ftFundsShort","_ftBilledVehList"];
+			private ["_doTravel","_ftRecheckOk","_ftConfirmMsg","_ftBaseFee","_ftVehFee","_ftVehCount","_ftVehList","_ftFundsShort","_ftBilledVehList","_ftConfirmFee","_ftFinalFee","_ftStartLost"];
 			_doTravel = false;
 			_ftFundsShort = false;
+			_ftStartLost = false;
+			_ftBilledVehList = [];
+			_ftFinalFee = 0;
 			_callPos = _map PosScreenToWorld[mouseX,mouseY];
 			_destination = [_callPos,_FTLocations] Call WFBE_CO_FNC_GetClosestEntity;
 			if (_callPos distance _destination < 500) then {
@@ -724,7 +727,6 @@ while {alive player && dialog} do {
 				//--- full bill now (flat + per-km + the per-vehicle surcharge for the vehicles taken along) and
 				//--- deny via the menu's established ctrlSetText[17027] feedback rather than charge into the red.
 				if (_ftRecheckOk && _ft == 2) then {
-					private ["_ftConfirmFee"];
 					_ftConfirmFee = (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_FEE") + round(((player distance _destination)/1000) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM"));
 					//--- fable/fasttravel-campflag round2: bill only the surviving members of the quoted
 					//--- _ftQuoteVehList snapshot (captured at click-1) - never re-scan the squad here (that would
@@ -753,110 +755,147 @@ while {alive player && dialog} do {
 						_lastUpdate = 0;
 					};
 				};
+				//--- bughunt-20260730: fire-time start-point recheck. Destination was revalidated above, but
+				//--- _startPoint/_FTLocations can be up to 15s stale. Leaving the start radius (or immobilizing)
+				//--- after the scan still let the player pay and fire an empty/partial travel roster.
+				if (_ftRecheckOk) then {
+					if (isNull _startPoint || {!(alive _startPoint)} || {player distance _startPoint > _ftr} || {!(canMove (vehicle player))}) then {
+						_ftRecheckOk = false;
+						_ftStartLost = true;
+						ctrlSetText [17027, "Fast Travel start lost - return to a valid start point."];
+						_lastUpdate = 0;
+					};
+				};
 				if (!_ftRecheckOk) then {
-					//--- Destination flipped or funds fell short; deny and force a fresh location scan.
+					//--- Destination flipped, start lost, or funds fell short; deny and force a fresh location scan.
 					//--- (funds-short path already wrote its own 17027 message and set _ftFundsShort.)
-					if (!_ftFundsShort) then {ctrlSetText [17027, "Destination lost - town was captured. Pick another."]};
+					if (!_ftFundsShort && {!_ftStartLost}) then {
+						ctrlSetText [17027, "Destination lost - town was captured. Pick another."];
+					};
 					_lastUpdate = 0;
 				} else {
-					closeDialog 0;
-					deleteMarkerLocal _marker;
-					deleteMarkerLocal _area;
-					
-					//--- Remove Markers.
-					{
-						_track = (_x select 0);
-						_vehicle = (_x select 1);
-						
-						_vehicle setVariable ['WFBE_A_Tracked', nil];
-
-						deleteMarkerLocal Format ["WFBE_A_Large%1",_track];
-						deleteMarkerLocal Format ["WFBE_A_Small%1",_track];
-					} forEach _trackingArrayID;
-					_mode = -1;
-
-					//--- SOLE charger: flat fee + per-km (C3: do not add another deduction elsewhere).
-					if (_ft == 2) then {
-						_fee = (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_FEE") + round(((player distance _destination)/1000) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM"));
-						-(_fee) Call ChangePlayerFunds;
-					};
-					
+					//--- Build travel roster BEFORE any charge so we can abort unpaid if the local player would not move.
 					if (_ft == 2) then {
 						//--- fable/fasttravel-campflag round2: fee mode travels with exactly the revalidated, quoted
-						//--- _ftBilledVehList snapshot (billed above) plus any foot units, never a fresh rescan.
+						//--- _ftBilledVehList snapshot plus any foot units, never a fresh rescan.
 						_travelingWith = +_ftBilledVehList;
 						{if (_x distance _startPoint < _ftr && (vehicle _x) isKindOf "Man" && !(_x in _travelingWith) && canMove _x && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"])) then {_travelingWith = _travelingWith + [_x]}} forEach units (group player);
 					} else {
-						//--- fable/fasttravel-campflag round2: non-fee modes restored to the original always-fresh
-						//--- scan exactly (no fee snapshot is ever taken for them - out of this fix's scope).
+						//--- bughunt-20260730: free/non-fee mode dedupe by DISTINCT vehicle (PR #1213 deferred this).
+						//--- Prior predicate tested unit membership in a vehicle list, so multi-crew hulls were
+						//--- PlaceSafe'd once per crew member (N random hops; last write wins).
 						_travelingWith = [];
-						{if (_x distance _startPoint < _ftr && !(_x in _travelingWith) && canMove _x && !(vehicle _x isKindOf "StaticWeapon") && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"])) then {_travelingWith = _travelingWith + [vehicle _x]}} forEach units (group player);
+						{
+							private ["_ftFreeVeh"];
+							_ftFreeVeh = vehicle _x;
+							if (_x distance _startPoint < _ftr && !(_ftFreeVeh in _travelingWith) && canMove _x && !(_ftFreeVeh isKindOf "StaticWeapon") && !stopped _x && !((currentCommand _x) in ["WAIT","STOP"])) then {
+								_travelingWith = _travelingWith + [_ftFreeVeh];
+							};
+						} forEach units (group player);
 					};
-					//--- FAST TRAVEL per-vehicle surcharge (Ray 2026-06-28): charge WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE once per DISTINCT vehicle in the revalidated _ftBilledVehList (same set funds-checked above; a vehicle that died/departed since the quote is silently not billed, one that arrived since the quote is never billed).
-					if (_ft == 2) then {{-(missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE") Call ChangePlayerFunds} forEach _ftBilledVehList;};
-					
-					ForceMap true;
-					_compass = shownCompass;
-					_GPS = shownGPS;
-					_pad = shownPad;
-					_radio = shownRadio;
-					_watch = shownWatch;
+					//--- bughunt-20260730: player must be on the travel roster (foot or as their vehicle) or we
+					//--- would charge base fee while leaving the payer behind (drove off after scan / failed crew gate).
+					if (!((vehicle player) in _travelingWith) && {!(player in _travelingWith)}) then {
+						ctrlSetText [17027, "Fast Travel cancelled - you are not in the travel group at the start point."];
+						_lastUpdate = 0;
+					} else {
+						closeDialog 0;
+						deleteMarkerLocal _marker;
+						deleteMarkerLocal _area;
+						
+						//--- Remove Markers.
+						{
+							_track = (_x select 0);
+							_vehicle = (_x select 1);
+							
+							_vehicle setVariable ['WFBE_A_Tracked', nil];
 
-					showCompass false;
-					showGPS false;
-					showPad false;
-					showRadio false;
-					showWatch false;
+							deleteMarkerLocal Format ["WFBE_A_Large%1",_track];
+							deleteMarkerLocal Format ["WFBE_A_Small%1",_track];
+						} forEach _trackingArrayID;
+						_mode = -1;
 
-					mapAnimClear;
-					mapAnimCommit;
-
-					_locationPosition = getPos _destination;
-					_camera = "camera" camCreate _locationPosition;
-					_camera camSetDir 0;
-					_camera camSetFov 1;
-					_camera cameraEffect["Internal","TOP"];
-
-					_camera camSetTarget _locationPosition;
-					_camera camSetPos [_locationPosition select 0,(_locationPosition select 1) + 2,100];
-					_camera camCommit 0;
-					
-					mapAnimAdd [0,0.05,GetPos _startPoint];
-					mapAnimCommit;
-					
-					_delay = ((_startPoint distance _destination) / 50) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_TIME_COEF");
-					mapAnimAdd [_delay,.18,getPos _destination];
-					mapAnimCommit;
-					
-					waitUntil {mapAnimDone || !alive player};
-					_skip = false;
-					if (!alive player) then {_skip = true};
-					if (!_skip) then {
-						{[_x,_locationPosition,120] Call PlaceSafe} forEach _travelingWith;
-					};
-					sleep 1;
-					
-					ForceMap false;
-					showCompass _compass;
-					showGPS _GPS;
-					showPad _pad;
-					showRadio _radio;
-					showWatch _watch;
-					
-					_camera cameraEffect["TERMINATE","BACK"];
-					camDestroy _camera;
-
-					//--- Q9 (B69): arrival confirmation for the dropped squad (all client-local).
-					if (!_skip) then {
-						_destName = "destination";
-						if (!isNull _destination) then {
-							_dn = _destination getVariable ["name",""];
-							if (typeName _dn == "STRING" && {_dn != ""}) then {_destName = _dn};
+						//--- Fee is charged ONLY after a successful teleport (below). Pre-anim debit left a paid-no-travel
+						//--- hole when the player died during the map animation delay. Stash the confirm-time bill so post-
+						//--- PlaceSafe player distance cannot change the per-km leg.
+						if (_ft == 2) then {
+							if (isNil "_ftConfirmFee") then {
+								_ftConfirmFee = (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_FEE") + round(((player distance _destination)/1000) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_PRICE_KM"));
+							};
+							_ftFinalFee = _ftConfirmFee;
+						} else {
+							_ftFinalFee = 0;
 						};
-						titleText [Format ["Arrived: %1", _destName], "PLAIN DOWN"];
-						playSound "cashierSound"; //--- soft confirmation chime (project CfgSounds, already used for FundsTransfer)
-						systemChat Format ["Fast travel complete - %1 unit(s) moved to %2.", count _travelingWith, _destName];
-					};
+						
+						ForceMap true;
+						_compass = shownCompass;
+						_GPS = shownGPS;
+						_pad = shownPad;
+						_radio = shownRadio;
+						_watch = shownWatch;
+
+						showCompass false;
+						showGPS false;
+						showPad false;
+						showRadio false;
+						showWatch false;
+
+						mapAnimClear;
+						mapAnimCommit;
+
+						_locationPosition = getPos _destination;
+						_camera = "camera" camCreate _locationPosition;
+						_camera camSetDir 0;
+						_camera camSetFov 1;
+						_camera cameraEffect["Internal","TOP"];
+
+						_camera camSetTarget _locationPosition;
+						_camera camSetPos [_locationPosition select 0,(_locationPosition select 1) + 2,100];
+						_camera camCommit 0;
+						
+						mapAnimAdd [0,0.05,GetPos _startPoint];
+						mapAnimCommit;
+						
+						_delay = ((_startPoint distance _destination) / 50) * (missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_TIME_COEF");
+						mapAnimAdd [_delay,.18,getPos _destination];
+						mapAnimCommit;
+						
+						waitUntil {mapAnimDone || !alive player};
+						_skip = false;
+						if (!alive player) then {_skip = true};
+						if (!_skip) then {
+							{[_x,_locationPosition,120] Call PlaceSafe} forEach _travelingWith;
+							//--- SOLE charger AFTER successful placement (C3: one debit site). Death mid-anim = no charge.
+							//--- Use stashed confirm-time base fee + revalidated vehicle list (never recompute distance post-PlaceSafe).
+							if (_ft == 2) then {
+								-(_ftFinalFee) Call ChangePlayerFunds;
+								{-(missionNamespace getVariable "WFBE_C_GAMEPLAY_FAST_TRAVEL_VEH_FEE") Call ChangePlayerFunds} forEach _ftBilledVehList;
+							};
+						};
+						sleep 1;
+						
+						ForceMap false;
+						showCompass _compass;
+						showGPS _GPS;
+						showPad _pad;
+						showRadio _radio;
+						showWatch _watch;
+						
+						_camera cameraEffect["TERMINATE","BACK"];
+						camDestroy _camera;
+
+						//--- Q9 (B69): arrival confirmation for the dropped squad (all client-local).
+						if (!_skip) then {
+							_destName = "destination";
+							if (!isNull _destination) then {
+								_dn = _destination getVariable ["name",""];
+								if (typeName _dn == "STRING" && {_dn != ""}) then {_destName = _dn};
+							};
+							titleText [Format ["Arrived: %1", _destName], "PLAIN DOWN"];
+							playSound "cashierSound"; //--- soft confirmation chime (project CfgSounds, already used for FundsTransfer)
+							systemChat Format ["Fast travel complete - %1 unit(s) moved to %2.", count _travelingWith, _destName];
+						};
+					}; //--- end player-on-roster gate
 				};
 			};
 		};
