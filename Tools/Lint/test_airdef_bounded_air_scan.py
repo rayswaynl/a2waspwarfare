@@ -19,6 +19,12 @@ def test_enemy_air_cache_yields_while_scanning_global_vehicle_registry():
     assert "Call _sliceYield;" in source[source.index("_enemyAirVehicles = [];") : source.index("//=== (3) MAINTAIN")]
 
 
+def test_enemy_air_cache_limits_each_slice_to_four_registry_entries():
+    source = SOURCE.read_text(encoding="utf-8")
+    scan = source[source.index("_enemyAirVehicles = [];") : source.index("//=== (3) MAINTAIN")]
+    assert "_enemyAirScanBudget = 4;" in scan
+
+
 def test_per_town_enemy_air_uses_the_cached_candidates():
     source = SOURCE.read_text(encoding="utf-8")
     maintain = source[source.index("//=== (3) MAINTAIN") :]
